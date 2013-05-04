@@ -1,0 +1,71 @@
+libdbus_internal_la-dbus-pipe.lo libdbus_internal_la-dbus-pipe.o:  \
+ dbus-pipe.c ../config.h dbus-pipe.h /usr/mips-linux-gnu/include/stdint.h \
+  /usr/mips-linux-gnu/include/features.h \
+  /usr/mips-linux-gnu/include/sys/cdefs.h \
+  /usr/mips-linux-gnu/include/gnu/stubs.h \
+  /usr/mips-linux-gnu/include/bits/wchar.h \
+  /usr/mips-linux-gnu/include/bits/wordsize.h \
+  /usr/mips-linux-gnu/include/inttypes.h ../dbus/dbus-types.h \
+  /usr/lib/gcc/mips-linux-gnu/4.1.2/include/stddef.h \
+  ../dbus/dbus-arch-deps.h ../dbus/dbus-macros.h ../dbus/dbus-errors.h \
+  ../dbus/dbus-protocol.h ../dbus/dbus-string.h ../dbus/dbus-memory.h \
+  /usr/lib/gcc/mips-linux-gnu/4.1.2/include/stdarg.h \
+  ../dbus/dbus-sysdeps.h ../dbus/dbus-file.h \
+  /usr/mips-linux-gnu/include/string.h \
+  /usr/mips-linux-gnu/include/bits/string.h \
+  /usr/mips-linux-gnu/include/bits/string2.h \
+  /usr/mips-linux-gnu/include/stdlib.h \
+  /usr/mips-linux-gnu/include/sys/poll.h \
+  /usr/mips-linux-gnu/include/bits/poll.h
+
+../config.h:
+
+dbus-pipe.h:
+
+/usr/mips-linux-gnu/include/stdint.h:
+
+/usr/mips-linux-gnu/include/features.h:
+
+/usr/mips-linux-gnu/include/sys/cdefs.h:
+
+/usr/mips-linux-gnu/include/gnu/stubs.h:
+
+/usr/mips-linux-gnu/include/bits/wchar.h:
+
+/usr/mips-linux-gnu/include/bits/wordsize.h:
+
+/usr/mips-linux-gnu/include/inttypes.h:
+
+../dbus/dbus-types.h:
+
+/usr/lib/gcc/mips-linux-gnu/4.1.2/include/stddef.h:
+
+../dbus/dbus-arch-deps.h:
+
+../dbus/dbus-macros.h:
+
+../dbus/dbus-errors.h:
+
+../dbus/dbus-protocol.h:
+
+../dbus/dbus-string.h:
+
+../dbus/dbus-memory.h:
+
+/usr/lib/gcc/mips-linux-gnu/4.1.2/include/stdarg.h:
+
+../dbus/dbus-sysdeps.h:
+
+../dbus/dbus-file.h:
+
+/usr/mips-linux-gnu/include/string.h:
+
+/usr/mips-linux-gnu/include/bits/string.h:
+
+/usr/mips-linux-gnu/include/bits/string2.h:
+
+/usr/mips-linux-gnu/include/stdlib.h:
+
+/usr/mips-linux-gnu/include/sys/poll.h:
+
+/usr/mips-linux-gnu/include/bits/poll.h:

@@ -1,0 +1,170 @@
+dbus_daemon_launch_helper-config-loader-expat.o \
+  dbus_daemon_launch_helper-config-loader-expat.o: config-loader-expat.c \
+  ../config.h config-parser.h ../dbus/dbus.h ../dbus/dbus-arch-deps.h \
+  ../dbus/dbus-macros.h ../dbus/dbus-address.h ../dbus/dbus-types.h \
+  /usr/lib/gcc/mips-linux-gnu/4.1.2/include/stddef.h \
+  ../dbus/dbus-errors.h ../dbus/dbus-protocol.h ../dbus/dbus-bus.h \
+  ../dbus/dbus-connection.h ../dbus/dbus-memory.h ../dbus/dbus-message.h \
+  /usr/lib/gcc/mips-linux-gnu/4.1.2/include/stdarg.h \
+  ../dbus/dbus-shared.h ../dbus/dbus-misc.h ../dbus/dbus-pending-call.h \
+  ../dbus/dbus-server.h ../dbus/dbus-signature.h ../dbus/dbus-threads.h \
+  ../dbus/dbus-string.h ../dbus/dbus-list.h ../dbus/dbus-internals.h \
+  ../dbus/dbus-sysdeps.h /usr/mips-linux-gnu/include/stdint.h \
+  /usr/mips-linux-gnu/include/features.h \
+  /usr/mips-linux-gnu/include/sys/cdefs.h \
+  /usr/mips-linux-gnu/include/gnu/stubs.h \
+  /usr/mips-linux-gnu/include/bits/wchar.h \
+  /usr/mips-linux-gnu/include/bits/wordsize.h ../dbus/dbus-file.h \
+  /usr/mips-linux-gnu/include/string.h \
+  /usr/mips-linux-gnu/include/xlocale.h \
+  /usr/mips-linux-gnu/include/bits/string.h \
+  /usr/mips-linux-gnu/include/bits/string2.h \
+  /usr/mips-linux-gnu/include/stdlib.h \
+  /usr/mips-linux-gnu/include/sys/poll.h \
+  /usr/mips-linux-gnu/include/bits/poll.h ../dbus/dbus-threads-internal.h \
+  ../dbus/dbus-hash.h /usr/mips-linux-gnu/include/inttypes.h bus.h \
+  ../dbus/dbus-mainloop.h ../dbus/dbus-pipe.h \
+  /home/dingkang/expat_bin/include/expat.h \
+  /usr/mips-linux-gnu/include/bits/waitflags.h \
+  /usr/mips-linux-gnu/include/bits/waitstatus.h \
+  /usr/mips-linux-gnu/include/endian.h \
+  /usr/mips-linux-gnu/include/bits/endian.h \
+  /usr/mips-linux-gnu/include/sys/types.h \
+  /usr/mips-linux-gnu/include/bits/types.h \
+  /usr/mips-linux-gnu/include/bits/typesizes.h \
+  /usr/mips-linux-gnu/include/time.h \
+  /usr/mips-linux-gnu/include/sys/select.h \
+  /usr/mips-linux-gnu/include/bits/select.h \
+  /usr/mips-linux-gnu/include/bits/sigset.h \
+  /usr/mips-linux-gnu/include/bits/time.h \
+  /usr/mips-linux-gnu/include/sys/sysmacros.h \
+  /usr/mips-linux-gnu/include/bits/pthreadtypes.h \
+  /usr/mips-linux-gnu/include/bits/sched.h \
+  /usr/mips-linux-gnu/include/alloca.h \
+  /home/dingkang/expat_bin/include/expat_external.h
+
+../config.h:
+
+config-parser.h:
+
+../dbus/dbus.h:
+
+../dbus/dbus-arch-deps.h:
+
+../dbus/dbus-macros.h:
+
+../dbus/dbus-address.h:
+
+../dbus/dbus-types.h:
+
+/usr/lib/gcc/mips-linux-gnu/4.1.2/include/stddef.h:
+
+../dbus/dbus-errors.h:
+
+../dbus/dbus-protocol.h:
+
+../dbus/dbus-bus.h:
+
+../dbus/dbus-connection.h:
+
+../dbus/dbus-memory.h:
+
+../dbus/dbus-message.h:
+
+/usr/lib/gcc/mips-linux-gnu/4.1.2/include/stdarg.h:
+
+../dbus/dbus-shared.h:
+
+../dbus/dbus-misc.h:
+
+../dbus/dbus-pending-call.h:
+
+../dbus/dbus-server.h:
+
+../dbus/dbus-signature.h:
+
+../dbus/dbus-threads.h:
+
+../dbus/dbus-string.h:
+
+../dbus/dbus-list.h:
+
+../dbus/dbus-internals.h:
+
+../dbus/dbus-sysdeps.h:
+
+/usr/mips-linux-gnu/include/stdint.h:
+
+/usr/mips-linux-gnu/include/features.h:
+
+/usr/mips-linux-gnu/include/sys/cdefs.h:
+
+/usr/mips-linux-gnu/include/gnu/stubs.h:
+
+/usr/mips-linux-gnu/include/bits/wchar.h:
+
+/usr/mips-linux-gnu/include/bits/wordsize.h:
+
+../dbus/dbus-file.h:
+
+/usr/mips-linux-gnu/include/string.h:
+
+/usr/mips-linux-gnu/include/xlocale.h:
+
+/usr/mips-linux-gnu/include/bits/string.h:
+
+/usr/mips-linux-gnu/include/bits/string2.h:
+
+/usr/mips-linux-gnu/include/stdlib.h:
+
+/usr/mips-linux-gnu/include/sys/poll.h:
+
+/usr/mips-linux-gnu/include/bits/poll.h:
+
+../dbus/dbus-threads-internal.h:
+
+../dbus/dbus-hash.h:
+
+/usr/mips-linux-gnu/include/inttypes.h:
+
+bus.h:
+
+../dbus/dbus-mainloop.h:
+
+../dbus/dbus-pipe.h:
+
+/home/dingkang/expat_bin/include/expat.h:
+
+/usr/mips-linux-gnu/include/bits/waitflags.h:
+
+/usr/mips-linux-gnu/include/bits/waitstatus.h:
+
+/usr/mips-linux-gnu/include/endian.h:
+
+/usr/mips-linux-gnu/include/bits/endian.h:
+
+/usr/mips-linux-gnu/include/sys/types.h:
+
+/usr/mips-linux-gnu/include/bits/types.h:
+
+/usr/mips-linux-gnu/include/bits/typesizes.h:
+
+/usr/mips-linux-gnu/include/time.h:
+
+/usr/mips-linux-gnu/include/sys/select.h:
+
+/usr/mips-linux-gnu/include/bits/select.h:
+
+/usr/mips-linux-gnu/include/bits/sigset.h:
+
+/usr/mips-linux-gnu/include/bits/time.h:
+
+/usr/mips-linux-gnu/include/sys/sysmacros.h:
+
+/usr/mips-linux-gnu/include/bits/pthreadtypes.h:
+
+/usr/mips-linux-gnu/include/bits/sched.h:
+
+/usr/mips-linux-gnu/include/alloca.h:
+
+/home/dingkang/expat_bin/include/expat_external.h:

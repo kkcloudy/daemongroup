@@ -1,0 +1,78 @@
+--/*******************************************************************************
+--Copyright (C) Autelan Technology
+
+
+--This software file is owned and distributed by Autelan Technology 
+--********************************************************************************
+
+
+--THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
+--ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED 
+--WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE 
+--DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR 
+--ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+--(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; 
+--LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON 
+--ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT 
+--(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS 
+--SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+--********************************************************************************
+--* dot11-group-smi
+--*
+--*
+--* CREATOR:
+--* autelan.software.Network Dep. team
+--*
+--* DESCRIPTION:
+--* Mount  dot11-group-smi private mibs under SNMPv2-SMI,if want to mount 
+--* private mibs ,you must first mount this mib.
+--*
+--*
+--*******************************************************************************/
+
+DOT11-GROUP-SMI   DEFINITIONS ::= BEGIN
+
+IMPORTS
+	MODULE-IDENTITY,
+	enterprises
+		FROM SNMPv2-SMI;
+Dot11 MODULE-IDENTITY
+	LAST-UPDATED "200902130000Z"
+	ORGANIZATION "AuteLan Network Management Working Group
+		      http://www.autelan.com"
+	CONTACT-INFO
+	   	"General Discussion: support@autelan.com
+         	To Subscribe: http://www.autelan.com
+		
+		Liu Tao
+	         Autelan Technology Ltd.,NO.1 Agricultural University Sourth Street,Haidian
+	         District,Beijing,China(100084)
+	         Email:  liutao@autelan.com
+
+         	Wang Peng
+	        Autelan Technology Ltd.,NO.1 Agricultural University Sourth Street,Haidian
+	        District,Beijing,China(100084)
+	        Email: wangpeng@autelan.com
+
+		Tang Siqi
+	        Autelan Technology Ltd.,NO.1 Agricultural University Sourth Street,Haidian
+	        District,Beijing,China(100084)
+	        Email: tangsq@autelan.com"
+	DESCRIPTION
+	   "The autelan private MIB."
+	REVISION "200902130000Z"
+	DESCRIPTION
+	  "Copyright (C) 2009 The Internet Society.  This version of
+         the MIB module is part of RFC xxx; see the RFC itself
+         for full legal notices.
+
+         This MIB module contains managed object definitions for
+         the AuteLan Protocol."
+	::= {enterprises  31656}
+    PhysAddress ::=
+               OCTET STRING
+
+dot11-mib  OBJECT IDENTIFIER	::={ Dot11  6 }
+dot11-wireless  OBJECT IDENTIFIER ::={ dot11-mib 1 }
+
+END

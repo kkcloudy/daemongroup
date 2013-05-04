@@ -1,0 +1,37 @@
+--PROCEDURE [	RUA_Connect,	RUA_DirectTransfer,	RUA_Disconnect,	RUA_ConnectionlessTransfer,	RUA_Error_Indication,	RUA_PrivateMessage]
+PROCEDURE : RUA_Disconnect
+
+--CRITICALITY [reject=0,ignore=1,notify=2]
+RUA_Disconnect_PDU :
+{
+--CN_Domain_ID[CS_domain=0, PS_domain=1]
+  CN_Domain_ID{CRITICALITY:1, VALUE:1},
+  
+  Context_ID{CRITICALITY:1, VALUE:111},
+
+//CHOICE_CAUSE [nothing = 0, RadioNetwork = 1, Transport = 2, Protocol = 3, Misc = 4]
+//Cause RadioNetwork_normal = 0,
+//Cause RadioNetwork_connect_failed = 1,
+//Cause RadioNetwork_network_release = 2,
+//Cause RadioNetwork_unspecified = 3
+
+//Cause Transport_transport_resource_unavailable	= 0,
+//Cause Transport_unspecified	= 1
+
+//Cause Protocol_transfer_syntax_error = 0,
+//Cause Protocol_abstract_syntax_error_reject = 1,
+//Cause Protocol_abstract_syntax_error_ignore_and_notify = 2,
+//Cause Protocol_message_not_compatible_with_receiver_state = 3,
+//Cause Protocol_semantic_error = 4,
+//Cause Protocol_unspecified = 5,
+//Cause Protocol_abstract_syntax_error_falsely_constructed_message = 6
+
+//Cause Misc_ProcessingOverload	= 0,
+//Cause Misc_HardwareFailure	= 1,
+//Cause Misc_O&M_Intervention	= 2,
+//Cause Misc_Unspecified	= 3
+
+  Cause {CRITICALITY:1, VALUE:CHOICE{present=1,value=1}}
+  
+  RANAP_Message{CRITICALITY:1, VALUE:20014003000000},
+}

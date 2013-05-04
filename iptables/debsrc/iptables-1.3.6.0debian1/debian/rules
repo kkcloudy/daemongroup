@@ -1,0 +1,80 @@
+#!/usr/bin/make -f
+
+IPTABLES = iptables_profectio
+KERNEL = kernel_profectio
+
+BUILD_DIR := $(CURDIR)/debian/build
+SRC_DIR := $(BUILD_DIR)/$(IPTABLES)
+STAMP_DIR := $(BUILD_DIR)/stamp
+DOCS_DIR := $(BUILD_DIR)/docs
+
+MANDIR := MANDIR=/usr/share/man
+BINDIR := BINDIR=/sbin
+LIBDIR := LIBDIR=/lib
+DESTDIR := DESTDIR=$(CURDIR)/debian/iptables
+KERNEL_DIR := KERNEL_DIR=$(BUILD_DIR)/$(KERNEL)
+
+BUILD_VARS := $(LIBDIR) $(KERNEL_DIR)
+INSTALL_VARS := $(DESTDIR) $(MANDIR) $(LIBDIR) $(BINDIR) $(KERNEL_DIR)
+BUILD_TARGETS := all ip6tables-save ip6tables-restore iptables.8 ip6tables.8 
+
+build_howtos := $(foreach howto,$(wildcard $(CURDIR)/howtos/*.sgml),sgml2html $(howto);) 
+
+manregex := $(SHELL) $(CURDIR)/scripts/manregex
+MAN_PAGES := $(SRC_DIR)/*.8 
+
+prep: $(STAMP_DIR)/prep
+$(STAMP_DIR)/prep:
+	install -d $(STAMP_DIR)
+	cp -a iptables $(BUILD_DIR)/$(IPTABLES)
+	cp -a linux $(BUILD_DIR)/$(KERNEL)
+	touch $@
+
+howtos: $(STAMP_DIR)/howtos
+$(STAMP_DIR)/howtos:
+	install -d $(DOCS_DIR)
+	cd $(DOCS_DIR); $(build_howtos)
+	touch $@
+
+build: prep howtos
+	dh_testdir
+
+	$(MAKE) -C $(SRC_DIR) $(BUILD_TARGETS) $(BUILD_VARS)
+	
+	$(manregex) $(MAN_PAGES) 
+
+	cd $(SRC_DIR); ar rcs libiptables.a iptables.o
+	cd $(SRC_DIR); ar rcs libip6tables.a ip6tables.o
+
+clean:
+	dh_testdir
+	rm -rf $(BUILD_DIR)
+	dh_clean
+
+install: build
+	dh_testdir
+	dh_testroot
+
+	$(MAKE) -C $(SRC_DIR) install $(INSTALL_VARS)
+	install -m0644 -D $(CURDIR)/debian/iptables.lintian \
+		$(CURDIR)/debian/iptables/usr/share/lintian/overrides/iptables
+
+binary-indep: build install
+
+binary-arch: build install
+	dh_testdir
+	dh_testroot
+	dh_install
+	dh_installdocs
+	dh_installchangelogs
+	dh_strip
+	dh_compress
+	dh_fixperms
+	dh_shlibdeps -X.so
+	dh_installdeb
+	dh_gencontrol
+	dh_md5sums
+	dh_builddeb
+
+binary: binary-indep binary-arch
+.PHONY: prep howtos build clean binary-indep binary-arch binary install

@@ -1,0 +1,187 @@
+
+
+ASN_MODULE_SOURCES=	\
+	Criticality.c	\
+	Presence.c	\
+	PrivateIE-ID.c	\
+	ProcedureCode.c	\
+	ProtocolIE-ID.c	\
+	TriggeringMessage.c	\
+	HNBAP-ProtocolIE-Container.c	\
+	ProtocolIE-Single-Container.c	\
+	ProtocolIE-Field.c	\
+	ProtocolIE-ContainerList.c	\
+	ProtocolExtensionContainer.c	\
+	ProtocolExtensionField.c	\
+	PrivateIE-Container.c	\
+	PrivateIE-Field.c	\
+	Access-stratum-release-indicator.c	\
+	AltitudeAndDirection.c	\
+	BackoffTimer.c	\
+	HNBAP-Cause.c	\
+	HNBAP-CauseRadioNetwork.c	\
+	CauseTransport.c	\
+	CauseProtocol.c	\
+	CauseMisc.c	\
+	CellIdentity.c	\
+	Context-ID.c	\
+	CriticalityDiagnostics.c	\
+	CriticalityDiagnostics-IE-List.c	\
+	CSG-ID.c	\
+	CSG-Indicator.c	\
+	CSGMembershipStatus.c	\
+	CGI.c	\
+	CI.c	\
+	CN-DomainIndicator.c	\
+	ESN.c	\
+	GeographicalLocation.c	\
+	GeographicalCoordinates.c	\
+	HNB-Cell-Access-Mode.c	\
+	HNB-Location-Information.c	\
+	HNB-Identity.c	\
+	HNB-Identity-Info.c	\
+	IMEI.c	\
+	IMSI.c	\
+	IMSIDS41.c	\
+	IMSIESN.c	\
+	IP-Address.c	\
+	Ipv4Address.c	\
+	Ipv6Address.c	\
+	LAC.c	\
+	LAI.c	\
+	MacroCoverageInformation.c	\
+	MacroCellID.c	\
+	MuxPortNumber.c	\
+	PLMNidentity.c	\
+	PTMSI.c	\
+	PTMSIRAI.c	\
+	RAC.c	\
+	RAI.c	\
+	Registration-Cause.c	\
+	RNC-ID.c	\
+	SAC.c	\
+	TMSILAI.c	\
+	TMSIDS41.c	\
+	TypeOfError.c	\
+	UE-Capabilities.c	\
+	UTRANCellID.c	\
+	UE-Identity.c	\
+	HNBRegisterRequest.c	\
+	HNBRegisterAccept.c	\
+	HNBRegisterReject.c	\
+	HNBDe-Register.c	\
+	UERegisterRequest.c	\
+	UERegisterAccept.c	\
+	UERegisterReject.c	\
+	UEDe-Register.c	\
+	CSGMembershipUpdate.c	\
+	ErrorIndication.c	\
+	PrivateMessage.c	\
+	HNBAP-PDU.c	\
+	InitiatingMessage.c	\
+	SuccessfulOutcome.c	\
+	UnsuccessfulOutcome.c
+
+ASN_MODULE_HEADERS=	\
+	Criticality.h	\
+	Presence.h	\
+	PrivateIE-ID.h	\
+	ProcedureCode.h	\
+	ProtocolIE-ID.h	\
+	TriggeringMessage.h	\
+	HNBAP-ProtocolIE-Container.h	\
+	ProtocolIE-Single-Container.h	\
+	ProtocolIE-Field.h	\
+	ProtocolIE-ContainerList.h	\
+	ProtocolExtensionContainer.h	\
+	ProtocolExtensionField.h	\
+	PrivateIE-Container.h	\
+	PrivateIE-Field.h	\
+	Access-stratum-release-indicator.h	\
+	AltitudeAndDirection.h	\
+	BackoffTimer.h	\
+	HNBAP-Cause.h	\
+	HNBAP-CauseRadioNetwork.h	\
+	CauseTransport.h	\
+	CauseProtocol.h	\
+	CauseMisc.h	\
+	CellIdentity.h	\
+	Context-ID.h	\
+	CriticalityDiagnostics.h	\
+	CriticalityDiagnostics-IE-List.h	\
+	CSG-ID.h	\
+	CSG-Indicator.h	\
+	CSGMembershipStatus.h	\
+	CGI.h	\
+	CI.h	\
+	CN-DomainIndicator.h	\
+	ESN.h	\
+	GeographicalLocation.h	\
+	GeographicalCoordinates.h	\
+	HNB-Cell-Access-Mode.h	\
+	HNB-Location-Information.h	\
+	HNB-Identity.h	\
+	HNB-Identity-Info.h	\
+	IMEI.h	\
+	IMSI.h	\
+	IMSIDS41.h	\
+	IMSIESN.h	\
+	IP-Address.h	\
+	Ipv4Address.h	\
+	Ipv6Address.h	\
+	LAC.h	\
+	LAI.h	\
+	MacroCoverageInformation.h	\
+	MacroCellID.h	\
+	MuxPortNumber.h	\
+	PLMNidentity.h	\
+	PTMSI.h	\
+	PTMSIRAI.h	\
+	RAC.h	\
+	RAI.h	\
+	Registration-Cause.h	\
+	RNC-ID.h	\
+	SAC.h	\
+	TMSILAI.h	\
+	TMSIDS41.h	\
+	TypeOfError.h	\
+	UE-Capabilities.h	\
+	UTRANCellID.h	\
+	UE-Identity.h	\
+	HNBRegisterRequest.h	\
+	HNBRegisterAccept.h	\
+	HNBRegisterReject.h	\
+	HNBDe-Register.h	\
+	UERegisterRequest.h	\
+	UERegisterAccept.h	\
+	UERegisterReject.h	\
+	UEDe-Register.h	\
+	CSGMembershipUpdate.h	\
+	ErrorIndication.h	\
+	PrivateMessage.h	\
+	HNBAP-PDU.h	\
+	InitiatingMessage.h	\
+	SuccessfulOutcome.h	\
+	UnsuccessfulOutcome.h
+	
+	
+lib_LTLIBRARIES=libsomething.la
+libsomething_la_SOURCES=$(ASN_MODULE_SOURCES) $(ASN_MODULE_HEADERS)
+
+# This file may be used as an input for make(3)
+# Remove the lines below to convert it into a pure .am file
+CFLAGS += -I.
+CFLAGS += -I../pub
+
+TARGET =${ASN_MODULE_SOURCES:.c=.o} ${ASN_CONVERTER_SOURCES:.c=.o}
+
+.SUFFIXES:
+.SUFFIXES: .c .o
+
+all: $(TARGET)
+.c.o:
+	$(CC) $(CFLAGS) -o $@ -c $< 
+
+clean:
+	rm -f $(TARGET)
+

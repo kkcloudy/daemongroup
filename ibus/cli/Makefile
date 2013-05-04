@@ -1,0 +1,72 @@
+
+#CC = mips-linux-gnu-gcc
+
+#LDFLAGS = -lssl -lcrypto -lpthread -ldl -D_REENTRANT
+#LDFLAGS = ./static/libssl.a ./static/libcrypto.a -lpthread -ldl -D_REENTRANT
+
+
+#INCLUDES = -I/opt/cvs/userv/quagga/x86build -I/opt/cvs/userv/quagga/debsrc/quagga-0.99.5/ -I/opt/cvs/userv/quagga/debsrc/quagga-0.99.5/lib -I$(ACCAPI_DIR)
+
+COMMANDDIR=../../quagga/debsrc/quagga-0.99.5/lib/
+MAPIDIR=../mapi/
+
+INCLUDES = -I$(QUAGGA_DIR)/${BUILDDIR} -I$(QUAGGA_DIR)/debsrc/quagga-0.99.5 -I$(QUAGGA_DIR)/debsrc/quagga-0.99.5/lib -I$(COMMANDDIR) -I$(MAPIDIR)
+
+
+INCLUDES += -I$(ACCAPI_DIR) -I$(BUILDROOTDIR)/usr/include -I$(BUILDROOTDIR)/usr/include/dbus-1.0 -I$(BUILDROOTDIR)/usr/lib/dbus-1.0/include
+INCLUDES += ../../accapi/iuh
+
+LD_PATH = -L$(BUILDROOTDIR)/usr/lib
+DEFS = -DHAVE_CONFIG_H $(DCLI_HAS_WCPSS)
+LDFLAGS = -shared -Wl,-soname,$@
+
+# Memory leak
+#LDFLAGS += ../dmalloc-5.5.0/libdmallocth.a
+#CFLAGS += -DDMALLOC
+
+# Capwap Debugging
+#CFLAGS += -DCW_DEBUGGING
+
+CFLAGS = -Wall -g -O0 -I.
+CFLAGS += -I/opt/mipslibs/usr/include/libxml2
+CFLAGS += -I../../dcli/src/lib
+CFLAGS += -I../../quagga/mipsbuild
+CFLAGS += -I../../accapi
+
+DBUS_LIBS = -ldbus-1
+
+
+
+PUB_LIB = libdcliiuhcli.so
+PUB_LIB0 = libdcliiuhcli.so.0 
+PUB_LIB01 = libdcliiuhcli.so.0.1
+PUB_OBJS = dcli_hnb.o dcli_iu.o dcli_sigtran2udp.o
+ 
+
+.PHONY: all
+all:$(PUB_LIB01)
+
+.PHONY: clean
+clean:
+	$(RM) *.o $(PUB_LIB) $(PUB_LIB0) $(PUB_LIB01)
+
+$(PUB_LIB01): $(PUB_OBJS)
+	$(RM) $(LIB_EXPORT_DIR)/$(PUB_LIB01) $(LIB_EXPORT_DIR)/$(PUB_LIB0) $(LIB_EXPORT_DIR)/$(PUB_LIB)
+	$(CC) ${LDFLAGS} $(LD_PATH) -o $@ $^ $(DBUS_LIBS)
+	cp $(PUB_LIB01) $(LIB_EXPORT_DIR)/
+	ln -sf $(PUB_LIB01) $(PUB_LIB0)
+	ln -sf $(PUB_LIB01) $(PUB_LIB)
+	ln -sf $(PUB_LIB01) $(LIB_EXPORT_DIR)/$(PUB_LIB0) 
+	ln -sf $(PUB_LIB01) $(LIB_EXPORT_DIR)/$(PUB_LIB)             
+	
+%.o: %.c
+	${RM} $@
+	$(CC) -c $(DEFS) $(INCLUDES) $(CFLAGS) -o $*.o $<
+
+
+
+
+
+
+
+

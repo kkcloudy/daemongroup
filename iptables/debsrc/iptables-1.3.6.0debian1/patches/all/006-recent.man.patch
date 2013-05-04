@@ -1,0 +1,16 @@
+--- old/iptables_profectio/extensions/libipt_recent.man 
++++ new/iptables_profectio/extensions/libipt_recent.man 
+@@ -50,6 +50,13 @@
+ useful if you have problems with people faking their source address in
+ order to DoS you via this module by disallowing others access to your
+ site by sending bogus packets to you.
++\fB\-\-name \fIname\fR
++Name of the recent list to be used.  DEFAULT used if none given.
++\fB\-\-rsource\fR
++Match/Save the source address of each packet in the recent list table (default).
++\fB\-\-rdest\fR
++Match/Save the destination address of each packet in the recent list table.
++
+ .P
+ Examples:
+ .IP

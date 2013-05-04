@@ -1,0 +1,9 @@
+0101-changelog.patch
+0102-howtos.patch
+0103-sgml_errors.patch
+0401-ipt_recent_missing_opts.man.patch
+0402-physdev_truncated.man.patch
+0403-libipq_missing.man.patch
+0404-apostrophe.man.patch
+0405-hyphenation.man.patch
+0600-makefile_jedi_handwaving.patch

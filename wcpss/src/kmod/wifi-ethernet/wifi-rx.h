@@ -1,0 +1,82 @@
+
+#ifndef __WIFI_RX_H__
+#define __WIFI_RX_H__
+/* 802.11 Mac Header Parse */
+#define	IEEE80211_FC0_VERSION_MASK		0x03
+#define	IEEE80211_FC0_VERSION_SHIFT		0
+#define	IEEE80211_FC0_VERSION_0			0x00
+#define	IEEE80211_FC0_TYPE_MASK			0x0c
+#define	IEEE80211_FC0_TYPE_SHIFT			2
+#define	IEEE80211_FC0_TYPE_MGT			0x00
+#define	IEEE80211_FC0_TYPE_CTL			0x04
+#define	IEEE80211_FC0_TYPE_DATA			0x08
+#define	IEEE80211_FC0_SUBTYPE_MASK		0xf0
+#define	IEEE80211_FC0_SUBTYPE_SHIFT		4
+
+/* for TYPE_DATA (bit combination) */
+#define	IEEE80211_FC0_SUBTYPE_DATA				0x00
+#define	IEEE80211_FC0_SUBTYPE_CF_ACK				0x10
+#define	IEEE80211_FC0_SUBTYPE_CF_POLL			0x20
+#define	IEEE80211_FC0_SUBTYPE_CF_ACPL			0x30
+#define	IEEE80211_FC0_SUBTYPE_NODATA			0x40
+#define	IEEE80211_FC0_SUBTYPE_CFACK				0x50
+#define	IEEE80211_FC0_SUBTYPE_CFPOLL				0x60
+#define	IEEE80211_FC0_SUBTYPE_CF_ACK_CF_ACK	0x70
+#define	IEEE80211_FC0_SUBTYPE_QOS				0x80
+#define	IEEE80211_FC0_SUBTYPE_QOS_NULL			0xc0
+
+#define	IEEE80211_FC1_DIR_MASK		0x03
+#define	IEEE80211_FC1_DIR_NODS		0x00  /* STA->STA */
+#define	IEEE80211_FC1_DIR_TODS		0x01  /* STA->AP  */
+#define	IEEE80211_FC1_DIR_FROMDS		0x02  /* AP ->STA */
+#define	IEEE80211_FC1_DIR_DSTODS		0x03  /* AP ->AP  */
+
+#define	IEEE80211_FC1_MORE_FRAG		0x04
+#define	IEEE80211_FC1_RETRY			0x08
+#define	IEEE80211_FC1_PWR_MGT		0x10
+#define	IEEE80211_FC1_MORE_DATA		0x20
+#define	IEEE80211_FC1_WEP				0x40
+#define	IEEE80211_FC1_ORDER			0x80
+
+
+/* Length and offset of Fields of 802.11 Mac Header */
+#define IEEE80211_FC_START			0x0
+#define IEEE80211_FC_LEN			0x02
+#define IEEE80211_DUR_START 		0x02
+#define IEEE80211_DUR_LEN 			0x02
+#define IEEE80211_ADDR1_START 		0x04
+#define IEEE80211_ADDR2_START		0x0a
+#define IEEE80211_ADDR3_START   	0x10
+#define IEEE80211_SEQ_START		0x16
+#define IEEE80211_SEQ_LEN			0x02
+#define IEEE80211_ADDR4_START		0x18
+#define IEEE80211_HAS_ADDR4_QOS 	0x1e
+#define IEEE80211_NO_ADDR4_QOS  	0x18
+#define IEEE80211_QOS_LEN			0x02
+#define IEEE80211_LLC_LEN			0x08
+
+/* Sequence Number field */
+/* 0xab 0xcd Frag = 0xb Seq = 0xcda*/
+#define IEEE80211_SEQ_MASK				0x0f
+#define	IEEE80211_NWID_LEN			32
+#define	IEEE80211_QOS_TXOP			0x00ff
+
+/* bit 8 is reserved */
+#define	IEEE80211_QOS_ACKPOLICY		0x60
+#define	IEEE80211_QOS_ACKPOLICY_S	5
+#define	IEEE80211_QOS_EOSP			0x10
+#define	IEEE80211_QOS_EOSP_S			4
+#define	IEEE80211_QOS_TID				0x0f
+
+
+//minimality net data len
+#define MIN_NET_DATA_LEN 76
+#define MIN_80211_MGMT_LEN 40
+/*updhdr(8) + capwap hdr(16) + 802.11hdr(24)*/
+#define MIN_DATA_LEN 48			
+#define MIN_WIFI_DOT11_DATA_LEN (8+16+24/*802.11*/+8/*LLC+2*/)
+#define MIN_WIFI_DOT3_DATA_LEN (8+16+14/*ether header*/)
+
+int wifi_kernel_rx(struct sk_buff *skb);
+#endif
+

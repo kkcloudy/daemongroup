@@ -1,0 +1,14 @@
+#!/bin/bash
+
+#################################################
+# Download src package, etch stable is presumed as preferred source
+if [ ! -d debsrc ]; then
+  mkdir debsrc
+  pushd debsrc
+  apt-get source quagga
+  popd
+fi
+
+./configpkg
+./makepkg
+

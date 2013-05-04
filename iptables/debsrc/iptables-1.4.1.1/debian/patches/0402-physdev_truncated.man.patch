@@ -1,0 +1,22 @@
+Index: b/extensions/libxt_physdev.man
+===================================================================
+--- a/extensions/libxt_physdev.man	2008-07-11 13:06:17.930197947 -0400
++++ b/extensions/libxt_physdev.man	2008-07-11 13:07:15.553197844 -0400
+@@ -12,7 +12,7 @@
+ .B PREROUTING
+ chains). If the interface name ends in a "+", then any
+ interface which begins with this name will match. If the packet didn't arrive
+-through a bridge device, this packet won't match this option, unless '!' is used.
++through a bridge device, this packet won't match this option, unless \&'!' is used.
+ .TP
+ [\fB!\fP] \fB--physdev-out\fP \fIname\fP
+ Name of a bridge port via which a packet is going to be sent (for packets
+@@ -29,7 +29,7 @@
+ .B "filter OUTPUT"
+ chain. If the packet won't leave by a bridge device or it is yet unknown what
+ the output device will be, then the packet won't match this option, unless
+-'!' is used.
++\&'!' is used.
+ .TP
+ [\fB!\fP] \fB--physdev-is-in\fP
+ Matches if the packet has entered through a bridge interface.

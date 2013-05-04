@@ -1,0 +1,25 @@
+#! /bin/sh /usr/share/dpatch/dpatch-run
+## 25_ospfd__ospfd.h__gcc4.dpatch by  <ch@debian.org>
+##
+## All lines beginning with `## DP:' are a description of the patch.
+## DP: ospfd__ospfd.h__gcc4
+
+@DPATCH@
+
+#
+# Subject: Bug#300949: quagga: FTBFS (amd64/gcc-4.0): array type has incomplete element type
+# Date: Tue, 22 Mar 2005 22:01:53 +0100
+#
+# With the attached patch 'quagga' can be compiled
+# on amd64 using gcc-4.0. - Andreas Jochens
+#
+--- old/ospfd/ospfd.orig	2005-05-03 09:12:41.350896825 +0200
++++ new/ospfd/ospfd.h	2005-05-03 09:12:48.652755639 +0200
+@@ -24,6 +24,7 @@
+ #define _ZEBRA_OSPFD_H
+ 
+ #include "filter.h"
++#include "lib/log.h"
+ #include "log.h"
+ 
+ #define OSPF_VERSION            2

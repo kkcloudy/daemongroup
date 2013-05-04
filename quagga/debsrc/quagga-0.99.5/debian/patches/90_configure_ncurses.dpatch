@@ -1,0 +1,51 @@
+#! /bin/sh /usr/share/dpatch/dpatch-run
+## 99-unnamed.dpatch by  <ch@debian.org>
+##
+## All lines beginning with `## DP:' are a description of the patch.
+## DP: To make checklib happy. See:
+## DP: http://rerun.lefant.net/checklib/log.quagga_0.99.5-1.html
+
+@DPATCH@
+
+--- old/configure	2006-09-26 01:23:53.000000000 +0200
++++ new/configure	2006-09-26 01:51:59.000000000 +0200
+@@ -11031,7 +11036,8 @@
+   echo $ECHO_N "(cached) $ECHO_C" >&6
+ else
+   ac_check_lib_save_LIBS=$LIBS
+-LIBS="-ltermcap  $LIBS"
++#42#DEBIAN# LIBS="-ltermcap  $LIBS"
++LIBS="$LIBS"
+ cat >conftest.$ac_ext <<_ACEOF
+ /* confdefs.h.  */
+ _ACEOF
+@@ -11090,7 +11096,8 @@
+ echo "$as_me:$LINENO: result: $ac_cv_lib_termcap_tputs" >&5
+ echo "${ECHO_T}$ac_cv_lib_termcap_tputs" >&6
+ if test $ac_cv_lib_termcap_tputs = yes; then
+-  LIBREADLINE="$LIBREADLINE -ltermcap"
++  #42#DEBIAN# LIBREADLINE="$LIBREADLINE -ltermcap"
++  LIBREADLINE="$LIBREADLINE "
+ else
+   echo "$as_me:$LINENO: checking for tputs in -ltinfo" >&5
+ echo $ECHO_N "checking for tputs in -ltinfo... $ECHO_C" >&6
+@@ -11165,7 +11172,8 @@
+   echo $ECHO_N "(cached) $ECHO_C" >&6
+ else
+   ac_check_lib_save_LIBS=$LIBS
+-LIBS="-lcurses  $LIBS"
++#42#DEBIAN# LIBS="-lcurses  $LIBS"
++LIBS="$LIBS"
+ cat >conftest.$ac_ext <<_ACEOF
+ /* confdefs.h.  */
+ _ACEOF
+@@ -11291,7 +11299,8 @@
+ echo "$as_me:$LINENO: result: $ac_cv_lib_ncurses_tputs" >&5
+ echo "${ECHO_T}$ac_cv_lib_ncurses_tputs" >&6
+ if test $ac_cv_lib_ncurses_tputs = yes; then
+-  LIBREADLINE="$LIBREADLINE -lncurses"
++  #42#DEBIAN# LIBREADLINE="$LIBREADLINE -lncurses"
++  LIBREADLINE="$LIBREADLINE"
+ fi
+ 
+ 

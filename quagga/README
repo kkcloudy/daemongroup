@@ -1,0 +1,4 @@
+1. After checkout quagga, run configpkg to configure package.
+2. After modified source code, run maakepkg to build package.
+3. Use bootpkg download package and build it from scratch.
+

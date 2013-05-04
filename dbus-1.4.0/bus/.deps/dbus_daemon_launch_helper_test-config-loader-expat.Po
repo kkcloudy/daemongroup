@@ -1,0 +1,154 @@
+dbus_daemon_launch_helper_test-config-loader-expat.o \
+  dbus_daemon_launch_helper_test-config-loader-expat.o:  \
+ config-loader-expat.c ../config.h config-parser.h ../dbus/dbus.h \
+  ../dbus/dbus-arch-deps.h ../dbus/dbus-macros.h ../dbus/dbus-address.h \
+  ../dbus/dbus-types.h /usr/lib/gcc/i486-linux-gnu/4.1.2/include/stddef.h \
+  ../dbus/dbus-errors.h ../dbus/dbus-protocol.h ../dbus/dbus-bus.h \
+  ../dbus/dbus-connection.h ../dbus/dbus-memory.h ../dbus/dbus-message.h \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/include/stdarg.h \
+  ../dbus/dbus-shared.h ../dbus/dbus-misc.h ../dbus/dbus-pending-call.h \
+  ../dbus/dbus-server.h ../dbus/dbus-signature.h ../dbus/dbus-threads.h \
+  ../dbus/dbus-string.h ../dbus/dbus-list.h ../dbus/dbus-internals.h \
+  ../dbus/dbus-sysdeps.h /usr/include/stdint.h /usr/include/features.h \
+  /usr/include/sys/cdefs.h /usr/include/gnu/stubs.h \
+  /usr/include/bits/wchar.h /usr/include/bits/wordsize.h \
+  ../dbus/dbus-file.h /usr/include/string.h /usr/include/xlocale.h \
+  /usr/include/bits/string.h /usr/include/bits/string2.h \
+  /usr/include/endian.h /usr/include/bits/endian.h \
+  /usr/include/bits/types.h /usr/include/bits/typesizes.h \
+  /usr/include/stdlib.h /usr/include/sys/poll.h /usr/include/bits/poll.h \
+  ../dbus/dbus-threads-internal.h ../dbus/dbus-hash.h \
+  /usr/include/inttypes.h bus.h ../dbus/dbus-mainloop.h \
+  ../dbus/dbus-pipe.h /usr/include/expat.h /usr/include/bits/waitflags.h \
+  /usr/include/bits/waitstatus.h /usr/include/sys/types.h \
+  /usr/include/time.h /usr/include/sys/select.h \
+  /usr/include/bits/select.h /usr/include/bits/sigset.h \
+  /usr/include/bits/time.h /usr/include/sys/sysmacros.h \
+  /usr/include/bits/pthreadtypes.h /usr/include/bits/sched.h \
+  /usr/include/alloca.h /usr/include/expat_external.h
+
+../config.h:
+
+config-parser.h:
+
+../dbus/dbus.h:
+
+../dbus/dbus-arch-deps.h:
+
+../dbus/dbus-macros.h:
+
+../dbus/dbus-address.h:
+
+../dbus/dbus-types.h:
+
+/usr/lib/gcc/i486-linux-gnu/4.1.2/include/stddef.h:
+
+../dbus/dbus-errors.h:
+
+../dbus/dbus-protocol.h:
+
+../dbus/dbus-bus.h:
+
+../dbus/dbus-connection.h:
+
+../dbus/dbus-memory.h:
+
+../dbus/dbus-message.h:
+
+/usr/lib/gcc/i486-linux-gnu/4.1.2/include/stdarg.h:
+
+../dbus/dbus-shared.h:
+
+../dbus/dbus-misc.h:
+
+../dbus/dbus-pending-call.h:
+
+../dbus/dbus-server.h:
+
+../dbus/dbus-signature.h:
+
+../dbus/dbus-threads.h:
+
+../dbus/dbus-string.h:
+
+../dbus/dbus-list.h:
+
+../dbus/dbus-internals.h:
+
+../dbus/dbus-sysdeps.h:
+
+/usr/include/stdint.h:
+
+/usr/include/features.h:
+
+/usr/include/sys/cdefs.h:
+
+/usr/include/gnu/stubs.h:
+
+/usr/include/bits/wchar.h:
+
+/usr/include/bits/wordsize.h:
+
+../dbus/dbus-file.h:
+
+/usr/include/string.h:
+
+/usr/include/xlocale.h:
+
+/usr/include/bits/string.h:
+
+/usr/include/bits/string2.h:
+
+/usr/include/endian.h:
+
+/usr/include/bits/endian.h:
+
+/usr/include/bits/types.h:
+
+/usr/include/bits/typesizes.h:
+
+/usr/include/stdlib.h:
+
+/usr/include/sys/poll.h:
+
+/usr/include/bits/poll.h:
+
+../dbus/dbus-threads-internal.h:
+
+../dbus/dbus-hash.h:
+
+/usr/include/inttypes.h:
+
+bus.h:
+
+../dbus/dbus-mainloop.h:
+
+../dbus/dbus-pipe.h:
+
+/usr/include/expat.h:
+
+/usr/include/bits/waitflags.h:
+
+/usr/include/bits/waitstatus.h:
+
+/usr/include/sys/types.h:
+
+/usr/include/time.h:
+
+/usr/include/sys/select.h:
+
+/usr/include/bits/select.h:
+
+/usr/include/bits/sigset.h:
+
+/usr/include/bits/time.h:
+
+/usr/include/sys/sysmacros.h:
+
+/usr/include/bits/pthreadtypes.h:
+
+/usr/include/bits/sched.h:
+
+/usr/include/alloca.h:
+
+/usr/include/expat_external.h:

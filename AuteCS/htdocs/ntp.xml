@@ -1,0 +1,5 @@
+<?xml version="1.0" ?> 
+<root>
+  <lstatus>enable</lstatus>
+  <drift>/var/lib/ntp/ntp.drift</drift>
+</root>

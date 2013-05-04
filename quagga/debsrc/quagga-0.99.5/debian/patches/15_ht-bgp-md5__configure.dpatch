@@ -1,0 +1,39 @@
+#! /bin/sh /usr/share/dpatch/dpatch-run
+## 15_ht-20050110-0.98.0-bgp-md5__configure.dpatch by  <ch@debian.org>
+##
+## All lines beginning with `## DP:' are a description of the patch.
+## DP: ht-20050110-0.98.0-bgp-md5__configure
+
+@DPATCH@
+
+#
+# Addition to the patch that makes autoreconf unneccessary.
+#
+# FIXME: This is very ugly.
+#
+--- old/configure.orig	2005-01-07 15:10:08.000000000 +0100
++++ new/configure	2005-01-13 02:43:04.000000000 +0100
+@@ -9190,6 +9190,11 @@
+ 
+ fi
+ 
++cat >>confdefs.h <<\_ACEOF
++#define HAVE_TCP_MD5
++_ACEOF
++
++
+ echo "$as_me:$LINENO: checking if zebra should be configurable to send Route Advertisements" >&5
+ echo $ECHO_N "checking if zebra should be configurable to send Route Advertisements... $ECHO_C" >&6
+ if test "${enable_rtadv}" != "no"; then
+--- old/config.h.in	2005-01-07 15:10:53.000000000 +0100
++++ new/config.h.in	2005-01-13 03:03:44.000000000 +0100
+@@ -213,6 +213,9 @@
+ /* OSPF TE */
+ #undef HAVE_OSPF_TE
+ 
++/* Linux TCP MD5 Signature Option */
++#define HAVE_TCP_MD5 1
++
+ /* Have pam_misc.h */
+ #undef HAVE_PAM_MISC_H
+ 

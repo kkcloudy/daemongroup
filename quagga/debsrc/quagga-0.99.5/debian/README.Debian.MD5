@@ -1,0 +1,9 @@
+The MD5 patch was made by Hasso Tepper and downloaded from his web site
+        http://hasso.linux.ee/quagga/bgp-md5.en.php
+
+According to this site you also have to patch your kernel to make it work.
+
+For further background information read:
+        http://www.faqs.org/rfcs/rfc2385.html
+        http://www.kerneltraffic.net/kernel-traffic/kt20020401_160.html#1
+        http://www.us-cert.gov/cas/techalerts/TA04-111A.html

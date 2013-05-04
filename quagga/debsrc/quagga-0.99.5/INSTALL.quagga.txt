@@ -1,0 +1,100 @@
+# $Id: INSTALL.quagga.txt,v 1.1.1.1 2007/12/14 05:02:39 chenbin Exp $
+
+--------------------------------------------------------------------------
+Building and Installing Quagga from releases or snapshots:
+
+The 'INSTALL' file contains generic instructions on how to use 'configure'
+scripts.
+
+Quagga requires a C compiler supporting the C99 standard.
+
+Quagga requires a reasonable make.  It is considered a bug if quagga
+does not compile with the system make on recent FreeBSD, NetBSD or
+OpenBSD, and a very serious bug if it does not compile with GNU make.
+
+Quagga expects a POSIX.2 compliant system, more or less.  Clean
+workarounds for POSIX non-compliance are welcome.
+
+It is considered a bug if Quagga fails to build and run on any of the
+following systems (where .x indicates the most recent release), or
+such systems "-current" versions.  (Note that considering it a bug is
+not a guarantee of support, merely "we agree that it is broken".)
+
+  FreeBSD 4.x
+  FreeBSD 5.x
+  Linux [kernel/distribution information needed]
+  NetBSD 1.6.x
+  NetBSD 2.x
+  OpenBSD ? [info needed on what should work]
+  Solaris 9
+  Solaris 10
+
+
+For further Quagga specific information on 'configure' and build-time
+configuration of the software, please read the Quagga info
+documentation, (doc/quagga.info).  To read the info page included with
+the Quagga sources without first installing Quagga:
+
+  cd doc
+  # one of the following, depending on your info viewer preferences
+  info quagga.info
+  pinfo -r quagga.info
+  emacs -eval '(info "quagga.info")'
+
+The Quagga website (http://www.quagga.net) currently has the info
+files available in various formats.
+
+--------------------------------------------------------------------------
+Building Quagga from CVS checkouts:
+
+In order to build from CVS, you will need recent versions of several GNU
+tools, particularly autoconf, automake, libtool, GNU awk and texinfo.  Note
+that the CVS snapshots on the Quagga website should not require these tools;
+everything is already setup ready to run 'configure'.  If you have trouble
+building from CVS checkout it is recommended that you try a CVS snapshot
+instead.
+
+If you are building from plain CVS checkouts, the versions which
+should work at least with:
+
+	automake:	1.8.5
+	autoconf:	2.59
+	libtool:	1.5.6
+	texinfo:	4.7
+	GNU AWK:	3.1 [XXX is GNU version really needed?  BSD?]
+	texinfo		4.7
+
+Becuase some systems provide texinfo 4.6 (4.7 is new), quagga.info is
+checked in so that texinfo will generally not be invoked.  When
+texinfo 4.7 is widespread, quagga.info will be removed from CVS and
+texinfo will become required again.  (4.7 has figure support, needed
+for the route server docs, which is why 4.6 doesn't work.)
+
+In order to create PostScript or PDF versions of the Texinfo documentation,
+you will need the convert utility, from the ImageMagick toolset installed,
+and epstopdf from the TeTeX suite.
+
+To create the required autotools files (Makefile.in, configure, etc.),
+run either the 'update-autotools' script provided, or else the
+'autoreconf -i' command supplied with your autoconf package.  After this
+you may run configure.
+
+Please refer to "Building and Installing Quagga" above for further
+instructions.
+
+--------------------------------------------------------------------------
+Notes on required versions:
+
+The general goal is to use a modern baseline of tools, while not
+imposing pain on those tracking stable distributions.  The notes below
+explain what versions are present in various environments.
+
+NetBSD 1.6.2 and 2.0 provide texinfo 4.6.
+NetBSD 2.99.15 provides texinfo 4.7 (so NetBSD 3 will as well).
+NetBSD pkgsrc provides automake 1.9.1 autoconf 2.59 libtool 1.5.6
+NetBSD pgksrc provides texinfo 4.7 (devel/gtexinfo)
+
+OpenBSD 3.6 provides texinfo 4.2.
+OpenBSD [3.6] ports provides automake 1.4-p6 autoconf 2.5.9 libtool 1.5.8
+
+--------------------------------------------------------------------------

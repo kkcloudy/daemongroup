@@ -1,0 +1,51 @@
+#! /bin/sh /usr/share/dpatch/dpatch-run
+## 100_vtysh__vtysh.c__privs.dpatch by  <ch@debian.org>
+##
+## All lines beginning with `## DP:' are a description of the patch.
+## DP: vtysh__vtysh.c__privs
+
+@DPATCH@
+
+--- old/vtysh/vtysh.c.orig	2004-10-30 23:16:08.000000000 +0200
++++ new/vtysh/vtysh.c	2004-10-30 23:16:41.000000000 +0200
+@@ -26,6 +26,8 @@
+ #include <sys/wait.h>
+ #include <sys/resource.h>
+ #include <sys/stat.h>
++#include <sys/types.h>
++#include <grp.h>
+ 
+ #include <readline/readline.h>
+ #include <readline/history.h>
+@@ -1638,6 +1646,9 @@
+   FILE *fp;
+   char *integrate_sav = NULL;
+ 
++  /* Setting file permissions */
++  struct group *quagga_vty_group;
++
+   integrate_sav = malloc (strlen (integrate_default) +
+ 			  strlen (CONF_BACKUP_EXT) + 1);
+   strcpy (integrate_sav, integrate_default);
+@@ -1669,6 +1680,21 @@
+   vtysh_config_dump (fp);
+ 
+   fclose (fp);
++	
++  errno = 0;
++  if ((quagga_vty_group = getgrnam(VTY_GROUP)) == NULL) 
++    {
++      fprintf (stdout, "%% Can't get group %s: %s (%d)\n",
++        VTY_GROUP, strerror(errno), errno);
++      return CMD_WARNING;
++    }    
++
++  if ((chown(integrate_default, -1, quagga_vty_group->gr_gid)) != 0)
++    {
++      fprintf (stdout,"%% Can't chown configuration file %s: %s (%d)\n", 
++	integrate_default, strerror(errno), errno);
++      return CMD_WARNING;
++    }
+ 
+   if (chmod (integrate_default, CONFIGFILE_MASK) != 0)
+     {

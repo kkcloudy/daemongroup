@@ -1,0 +1,451 @@
+#! /bin/sh /usr/share/dpatch/dpatch-run
+## 20_ht-20050110-0.98.0-bgp-md5.dpatch by  <ch@debian.org>
+##
+## All lines beginning with `## DP:' are a description of the patch.
+## DP: Based on latest MD5 patch from Hasso.
+## DP: Modified LIST_LOOP to new 0.99.1 macros. -ch-
+## DP: The configure.ac block has been removed so that no automatic autoreconf
+## DP: is done which overwrites patches to Makefile.in.
+
+@DPATCH@
+diff -Nur quagga-0.99.1.ORIG/bgpd/bgpd.c quagga-0.99.1/bgpd/bgpd.c
+--- quagga-0.99.1.ORIG/bgpd/bgpd.c	2005-04-08 17:40:37.000000000 +0200
++++ quagga-0.99.1/bgpd/bgpd.c	2005-05-07 06:23:28.969954946 +0200
+@@ -706,6 +706,7 @@
+   peer->status = Idle;
+   peer->ostatus = Idle;
+   peer->weight = 0;
++  peer->password = NULL;
+ 
+   /* Set default flags.  */
+   for (afi = AFI_IP; afi < AFI_MAX; afi++)
+@@ -1169,7 +1170,18 @@
+   peer->last_reset = PEER_DOWN_NEIGHBOR_DELETE;
+   bgp_stop (peer);
+   bgp_fsm_change_status (peer, Idle); /* stops all timers */
+-  
++
++#ifdef HAVE_TCP_MD5
++  /* Password configuration */
++  if (peer->password)
++    {
++      if (! CHECK_FLAG (peer->sflags, PEER_STATUS_GROUP)
++          && sockunion_family (&peer->su) == AF_INET)
++       bgp_md5_unset (bm->sock, peer, peer->password);
++      free (peer->password);
++    }
++#endif /* HAVE_TCP_MD5 */
++ 
+   /* Stop all timers - should already have been done in bgp_stop */
+   BGP_TIMER_OFF (peer->t_start);
+   BGP_TIMER_OFF (peer->t_connect);
+@@ -1390,6 +1402,26 @@
+   else
+     peer->v_routeadv = BGP_DEFAULT_EBGP_ROUTEADV;
+ 
++#ifdef HAVE_TCP_MD5
++  /* password apply */
++  if (CHECK_FLAG (conf->flags, PEER_FLAG_PASSWORD))
++    {
++      if (peer->password)
++	free (peer->password);
++      peer->password = strdup (conf->password);
++
++      if (sockunion_family (&peer->su) == AF_INET)
++	bgp_md5_set (bm->sock, peer, peer->password);
++    }
++  else if (peer->password)
++    {
++      if (sockunion_family (&peer->su) == AF_INET)
++        bgp_md5_unset (bm->sock, peer, peer->password);
++      free (peer->password);
++      peer->password = NULL;
++    }
++#endif /* HAVE_TCP_MD5 */
++
+   /* maximum-prefix */
+   peer->pmax[afi][safi] = conf->pmax[afi][safi];
+   peer->pmax_threshold[afi][safi] = conf->pmax_threshold[afi][safi];
+@@ -3269,6 +3301,121 @@
+   return 0;
+ }
+ 
++#ifdef HAVE_TCP_MD5
++/* Set password for authenticating with the peer. */
++int
++peer_password_set (struct peer *peer, const char *password)
++{
++  struct peer_group *group;
++  struct listnode *nn, *nnode;
++
++  if (peer->password && strcmp (peer->password, password) == 0
++      && ! CHECK_FLAG (peer->sflags, PEER_STATUS_GROUP))
++	return 0;
++
++  SET_FLAG (peer->flags, PEER_FLAG_PASSWORD);
++  if (peer->password)
++    free (peer->password);
++  peer->password = strdup (password);
++
++  if (! CHECK_FLAG (peer->sflags, PEER_STATUS_GROUP))
++    {
++      if (peer->status == Established)
++          bgp_notify_send (peer, BGP_NOTIFY_CEASE, BGP_NOTIFY_CEASE_CONFIG_CHANGE);
++      else
++        BGP_EVENT_ADD (peer, BGP_Stop);
++
++      if (sockunion_family (&peer->su) == AF_INET)
++	bgp_md5_set (bm->sock, peer, peer->password);
++      return 0;
++    }
++
++  group = peer->group;
++  /* #42# LIST_LOOP (group->peer, peer, nn) */
++  for (ALL_LIST_ELEMENTS (group->peer, nn, nnode, peer))
++    {
++      if (peer->password && strcmp (peer->password, password) == 0)
++	continue;
++
++      SET_FLAG (peer->flags, PEER_FLAG_PASSWORD);
++      if (peer->password)
++        free (peer->password);
++      peer->password = strdup (password);
++
++      if (peer->status == Established)
++        bgp_notify_send (peer, BGP_NOTIFY_CEASE, BGP_NOTIFY_CEASE_CONFIG_CHANGE);
++      else
++        BGP_EVENT_ADD (peer, BGP_Stop);
++
++      if (sockunion_family (&peer->su) == AF_INET)
++	bgp_md5_set (bm->sock, peer, peer->password);
++    }
++
++  return 0;
++}
++
++int
++peer_password_unset (struct peer *peer)
++{
++  struct peer_group *group;
++  struct listnode *nn, *nnode;
++
++  if (! CHECK_FLAG (peer->flags, PEER_FLAG_PASSWORD)
++      && ! CHECK_FLAG (peer->sflags, PEER_STATUS_GROUP))
++    return 0;
++
++  if (! CHECK_FLAG (peer->sflags, PEER_STATUS_GROUP))
++    {
++      if (peer_group_active (peer)
++	  && CHECK_FLAG (peer->group->conf->flags, PEER_FLAG_PASSWORD))
++	return BGP_ERR_PEER_GROUP_HAS_THE_FLAG;
++
++      if (peer->status == Established)
++        bgp_notify_send (peer, BGP_NOTIFY_CEASE, BGP_NOTIFY_CEASE_CONFIG_CHANGE);
++      else
++        BGP_EVENT_ADD (peer, BGP_Stop);
++
++      if (sockunion_family (&peer->su) == AF_INET)
++	bgp_md5_unset (bm->sock, peer, peer->password);
++
++      UNSET_FLAG (peer->flags, PEER_FLAG_PASSWORD);
++      if (peer->password)
++	free (peer->password);
++      peer->password = NULL;
++
++      return 0;
++    }
++
++  UNSET_FLAG (peer->flags, PEER_FLAG_PASSWORD);
++  if (peer->password)
++    free (peer->password);
++  peer->password = NULL;
++
++  group = peer->group;
++  /* #42# LIST_LOOP (group->peer, peer, nn) */
++  for (ALL_LIST_ELEMENTS (group->peer, nn, nnode, peer))
++    {
++      if (! CHECK_FLAG (peer->flags, PEER_FLAG_PASSWORD))
++	continue;
++
++      if (peer->status == Established)
++        bgp_notify_send (peer, BGP_NOTIFY_CEASE, BGP_NOTIFY_CEASE_CONFIG_CHANGE);
++      else
++        BGP_EVENT_ADD (peer, BGP_Stop);
++
++      if (sockunion_family (&peer->su) == AF_INET)
++	bgp_md5_unset (bm->sock, peer, peer->password);
++
++      UNSET_FLAG (peer->flags, PEER_FLAG_PASSWORD);
++      if (peer->password)
++        free (peer->password);
++      peer->password = NULL;
++    }
++
++  return 0;
++}
++#endif /* HAVE_TCP_MD5 */
++
+ /* Set distribute list to the peer. */
+ int
+ peer_distribute_set (struct peer *peer, afi_t afi, safi_t safi, int direct, 
+@@ -4307,6 +4454,16 @@
+ 	    ! CHECK_FLAG (g_peer->flags, PEER_FLAG_SHUTDOWN))
+ 	  vty_out (vty, " neighbor %s shutdown%s", addr, VTY_NEWLINE);
+ 
++#ifdef HAVE_TCP_MD5
++      /* Password. */
++      if (CHECK_FLAG (peer->flags, PEER_FLAG_PASSWORD))
++	if (! peer_group_active (peer)
++	    || ! CHECK_FLAG (g_peer->flags, PEER_FLAG_PASSWORD)
++	    || strcmp (peer->password, g_peer->password) != 0)
++	  vty_out (vty, " neighbor %s password %s%s", addr, peer->password,
++		   VTY_NEWLINE);
++#endif /* HAVE_TCP_MD5 */
++
+       /* BGP port. */
+       if (peer->port != BGP_PORT_DEFAULT)
+ 	vty_out (vty, " neighbor %s port %d%s", addr, peer->port, 
+@@ -4834,7 +4991,10 @@
+   bm->port = BGP_PORT_DEFAULT;
+   bm->master = thread_master_create ();
+   bm->start_time = time (NULL);
++#ifdef HAVE_TCP_MD5
++  bm->sock = -1;
++#endif /* HAVE_TCP_MD5 */
+ }
+
+ 
+ void
+diff -Nur quagga-0.99.1.ORIG/bgpd/bgpd.h quagga-0.99.1/bgpd/bgpd.h
+--- quagga-0.99.1.ORIG/bgpd/bgpd.h	2005-04-08 17:40:37.000000000 +0200
++++ quagga-0.99.1/bgpd/bgpd.h	2005-05-07 06:15:52.840226893 +0200
+@@ -45,6 +45,11 @@
+ #define BGP_OPT_NO_FIB                   (1 << 0)
+ #define BGP_OPT_MULTIPLE_INSTANCE        (1 << 1)
+ #define BGP_OPT_CONFIG_CISCO             (1 << 2)
++
++#ifdef HAVE_TCP_MD5
++  /* bgp receive socket */
++  int sock;
++#endif /* HAVE_TCP_MD5 */
+ };
+ 
+ /* BGP instance structure.  */
+@@ -335,6 +340,7 @@
+ 
+   /* NSF mode (graceful restart) */
+   u_char nsf[AFI_MAX][SAFI_MAX];
++#define PEER_FLAG_PASSWORD                  (1 << 9) /* password */
+ 
+   /* Per AF configuration flags. */
+   u_int32_t af_flags[AFI_MAX][SAFI_MAX];
+@@ -356,6 +362,9 @@
+ #define PEER_FLAG_MAX_PREFIX_WARNING        (1 << 15) /* maximum prefix warning-only */
+ #define PEER_FLAG_NEXTHOP_LOCAL_UNCHANGED   (1 << 16) /* leave link-local nexthop unchanged */ 
+ 
++  /* MD5 password */
++  char *password;
++
+   /* default-originate route-map.  */
+   struct
+   {
+@@ -916,6 +925,11 @@
+ int peer_maximum_prefix_unset (struct peer *, afi_t, safi_t);
+ 
+ extern int peer_unsuppress_map_set (struct peer *, afi_t, safi_t, const char *);
++#ifdef HAVE_TCP_MD5
++int peer_password_set (struct peer *, const char *);
++int peer_password_unset (struct peer *);
++#endif /* HAVE_TCP_MD5 */
++
+ extern int peer_unsuppress_map_unset (struct peer *, afi_t, safi_t);
+
+ extern int peer_maximum_prefix_set (struct peer *, afi_t, safi_t, u_int32_t, u_char, int, u_int16_t);
+diff -Nur quagga-0.99.1.ORIG/bgpd/bgp_network.c quagga-0.99.1/bgpd/bgp_network.c
+--- quagga-0.99.1.ORIG/bgpd/bgp_network.c	2005-04-07 09:30:20.000000000 +0200
++++ quagga-0.99.1/bgpd/bgp_network.c	2005-05-07 06:15:52.841226737 +0200
+@@ -38,6 +38,56 @@
+ extern struct zebra_privs_t bgpd_privs;
+ 
+ 
++#if defined(HAVE_TCP_MD5) && defined(GNU_LINUX)
++/* Set MD5 key to the socket.  */
++int
++bgp_md5_set (int sock, struct peer *peer, char *password)
++{
++  int ret;
++  struct tcp_rfc2385_cmd cmd;
++  struct in_addr *addr = &peer->su.sin.sin_addr;
++
++  cmd.command = TCP_MD5_AUTH_ADD;
++  cmd.address = addr->s_addr;
++  cmd.keylen = strlen (password);
++  cmd.key = password;
++
++  if ( bgpd_privs.change (ZPRIVS_RAISE) )
++    zlog_err ("bgp_md5_set: could not raise privs");
++
++  ret = setsockopt (sock, IPPROTO_TCP, TCP_MD5_AUTH, &cmd, sizeof cmd);
++
++  if (bgpd_privs.change (ZPRIVS_LOWER) )
++    zlog_err ("bgp_md5_set: could not lower privs");
++
++  return ret;
++}
++
++/* Unset MD5 key from the socket.  */
++int
++bgp_md5_unset (int sock, struct peer *peer, char *password)
++{
++  int ret;
++  struct tcp_rfc2385_cmd cmd;
++  struct in_addr *addr = &peer->su.sin.sin_addr;
++
++  cmd.command = TCP_MD5_AUTH_DEL;
++  cmd.address = addr->s_addr;
++  cmd.keylen = strlen (password);
++  cmd.key = password;
++
++  if ( bgpd_privs.change (ZPRIVS_RAISE) )
++    zlog_err ("bgp_md5_unset: could not raise privs");
++
++  ret = setsockopt (sock, IPPROTO_TCP, TCP_MD5_AUTH, &cmd, sizeof cmd);
++
++  if (bgpd_privs.change (ZPRIVS_LOWER) )
++    zlog_err ("bgp_md5_unset: could not lower privs");
++
++  return ret;
++}
++#endif /* defined(HAVE_TCP_MD5) && defined(GNU_LINUX) */
++
+ /* Accept bgp connection. */
+ static int
+ bgp_accept (struct thread *thread)
+@@ -238,6 +288,12 @@
+   sockopt_reuseaddr (peer->fd);
+   sockopt_reuseport (peer->fd);
+ 
++#ifdef HAVE_TCP_MD5
++  if (CHECK_FLAG (peer->flags, PEER_FLAG_PASSWORD))
++    if (sockunion_family (&peer->su) == AF_INET)
++      bgp_md5_set (peer->fd, peer, peer->password);
++#endif /* HAVE_TCP_MD5 */
++
+   /* Bind socket. */
+   bgp_bind (peer);
+ 
+@@ -346,6 +402,10 @@
+ 	  continue;
+ 	}
+ 
++#ifdef HAVE_TCP_MD5
++      bm->sock = sock;
++#endif /* HAVE_TCP_MD5 */
++
+       thread_add_read (master, bgp_accept, bgp, sock);
+     }
+   while ((ainfo = ainfo->ai_next) != NULL);
+@@ -406,6 +466,9 @@
+       close (sock);
+       return ret;
+     }
++#ifdef HAVE_TCP_MD5
++  bm->sock = sock;
++#endif /* HAVE_TCP_MD5 */
+ 
+   thread_add_read (bm->master, bgp_accept, bgp, sock);
+ 
+diff -Nur quagga-0.99.1.ORIG/bgpd/bgp_network.h quagga-0.99.1/bgpd/bgp_network.h
+--- quagga-0.99.1.ORIG/bgpd/bgp_network.h	2002-12-13 21:15:29.000000000 +0100
++++ quagga-0.99.1/bgpd/bgp_network.h	2005-05-07 06:15:52.841226737 +0200
+@@ -21,6 +21,27 @@
+ #ifndef _QUAGGA_BGP_NETWORK_H
+ #define _QUAGGA_BGP_NETWORK_H
+ 
++#if defined(HAVE_TCP_MD5) && defined(GNU_LINUX)
++/* setsockopt Number */
++#define TCP_MD5_AUTH 13
++
++/* Commands (used in the structure passed from userland) */
++#define TCP_MD5_AUTH_ADD 1
++#define TCP_MD5_AUTH_DEL 2
++
++struct tcp_rfc2385_cmd {
++  u_int8_t     command;    /* Command - Add/Delete */
++  u_int32_t    address;    /* IPV4 address associated */
++  u_int8_t     keylen;     /* MD5 Key len (do NOT assume 0 terminated ascii) */
++  void         *key;       /* MD5 Key */
++};
++#endif /* defined(HAVE_TCP_MD5) && defined(GNU_LINUX) */
++
++#ifdef HAVE_TCP_MD5
++int bgp_md5_set (int sock, struct peer *, char *);
++int bgp_md5_unset (int sock, struct peer *, char *);
++#endif /* HAVE_TCP_MD5 */
++
+ extern int bgp_socket (struct bgp *, unsigned short);
+ extern int bgp_connect (struct peer *);
+ extern void bgp_getsockname (struct peer *);
+diff -Nur quagga-0.99.1.ORIG/bgpd/bgp_vty.c quagga-0.99.1/bgpd/bgp_vty.c
+--- quagga-0.99.1.ORIG/bgpd/bgp_vty.c	2005-04-09 15:07:47.000000000 +0200
++++ quagga-0.99.1/bgpd/bgp_vty.c	2005-05-07 06:15:52.903217051 +0200
+@@ -1477,6 +1477,46 @@
+        "AS number used as local AS\n"
+        "Do not prepend local-as to updates from ebgp peers\n")
+ 
++#ifdef HAVE_TCP_MD5
++DEFUN (neighbor_password,
++       neighbor_password_cmd,
++       NEIGHBOR_CMD2 "password LINE",
++       NEIGHBOR_STR
++       NEIGHBOR_ADDR_STR2
++       "Set a password\n"
++       "The password\n")
++{
++  struct peer *peer;
++  int ret;
++
++  peer = peer_and_group_lookup_vty (vty, argv[0]);
++  if (! peer)
++    return CMD_WARNING;
++
++  ret = peer_password_set (peer, argv[1]);
++  return bgp_vty_return (vty, ret);
++}
++
++DEFUN (no_neighbor_password,
++       no_neighbor_password_cmd,
++       NO_NEIGHBOR_CMD2 "password",
++       NO_STR
++       NEIGHBOR_STR
++       NEIGHBOR_ADDR_STR2
++       "Set a password\n")
++{
++  struct peer *peer;
++  int ret;
++
++  peer = peer_and_group_lookup_vty (vty, argv[0]);
++  if (! peer)
++    return CMD_WARNING;
++
++  ret = peer_password_unset (peer);
++  return bgp_vty_return (vty, ret);
++}
++#endif /* HAVE_TCP_MD5 */
++
+ DEFUN (neighbor_activate,
+        neighbor_activate_cmd,
+        NEIGHBOR_CMD2 "activate",
+@@ -8705,6 +8745,12 @@
+   install_element (BGP_NODE, &no_neighbor_local_as_val_cmd);
+   install_element (BGP_NODE, &no_neighbor_local_as_val2_cmd);
+ 
++#ifdef HAVE_TCP_MD5
++  /* "neighbor password" commands. */
++  install_element (BGP_NODE, &neighbor_password_cmd);
++  install_element (BGP_NODE, &no_neighbor_password_cmd);
++#endif /* HAVE_TCP_MD5 */
++
+   /* "neighbor activate" commands. */
+   install_element (BGP_NODE, &neighbor_activate_cmd);
+   install_element (BGP_IPV4_NODE, &neighbor_activate_cmd);

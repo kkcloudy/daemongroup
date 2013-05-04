@@ -1,0 +1,4481 @@
+-- RANAP-PDU-Contents.asn
+--
+-- 3GPP TS 25.413 V9.2.0 (2010-03)
+-- http://www.3gpp.org/ftp/Specs/html-info/25413.htm
+--
+-- 9.3.3	PDU Definitions
+--
+-- $Id: RANAP-PDU-Contents.asn,v 1.1 2010/12/10 04:09:20 hanhui Exp $
+--
+
+-- **************************************************************
+--
+-- PDU definitions for RANAP.
+--
+-- **************************************************************
+
+RANAP-PDU-Contents {
+itu-t (0) identified-organization (4) etsi (0) mobileDomain (0)
+umts-Access (20) modules (3) ranap (0) version1 (1) ranap-PDU-Contents (1) }
+
+DEFINITIONS AUTOMATIC TAGS ::=
+
+BEGIN
+
+-- **************************************************************
+--
+-- IE parameter types from other modules.
+--
+-- **************************************************************
+
+IMPORTS
+	AccuracyFulfilmentIndicator,
+	APN,
+	BroadcastAssistanceDataDecipheringKeys,
+	LocationRelatedDataRequestType,
+	LocationRelatedDataRequestTypeSpecificToGERANIuMode,
+	DataVolumeReference,
+	CellLoadInformation,
+	AreaIdentity,
+	CN-DomainIndicator,
+	Cause,
+	Cell-Access-Mode,
+	ClientType,
+	CriticalityDiagnostics,
+	ChosenEncryptionAlgorithm,
+	ChosenIntegrityProtectionAlgorithm,
+	ClassmarkInformation2,
+	ClassmarkInformation3,
+	CSG-Id,
+	CSG-Id-List,
+	CSG-Membership-Status,
+	DL-GTP-PDU-SequenceNumber,
+	DL-N-PDU-SequenceNumber,
+	DataVolumeReportingIndication,
+	DeltaRAListofIdleModeUEs,
+	DRX-CycleLengthCoefficient,
+	EncryptionInformation,
+	EncryptionKey,
+	E-UTRAN-Service-Handover,
+	ExtendedRNC-ID,
+	FrequenceLayerConvergenceFlag,
+	GERAN-BSC-Container,
+	GERAN-Classmark,
+	GlobalCN-ID,
+	GlobalRNC-ID,
+	GTP-TEI,
+	IncludeVelocity,
+	InformationExchangeID,
+	InformationExchangeType,
+	InformationRequested,
+	InformationRequestType,
+	InformationTransferID,
+	InformationTransferType,
+	InterSystemInformationTransferType,
+	IntegrityProtectionInformation,
+	IntegrityProtectionKey,
+	InterSystemInformation-TransparentContainer,
+	IPMulticastAddress,
+	IuSignallingConnectionIdentifier,
+	IuTransportAssociation,
+	KeyStatus,
+	L3-Information,
+	LAI,
+	LastKnownServiceArea,
+	MBMS-PTP-RAB-ID,
+	MBMSBearerServiceType,
+	MBMSCountingInformation,
+	MBMSCNDe-Registration,
+	MBMSHCIndicator,
+	MBMSRegistrationRequestType,
+	MBMSServiceArea,
+	MBMSSessionDuration,
+	MBMSSessionIdentity,
+	MBMSSessionRepetitionNumber,
+	NAS-PDU,
+	NAS-SequenceNumber,
+	NAS-SynchronisationIndicator,
+	NewBSS-To-OldBSS-Information,
+	NonSearchingIndication,
+	NumberOfSteps,
+	OMC-ID,
+	OldBSS-ToNewBSS-Information,
+	PagingAreaID,
+	PagingCause,
+	PDP-TypeInformation,
+	PermanentNAS-UE-ID,
+	PLMNidentity,
+	PositionData,
+	PositionDataSpecificToGERANIuMode,
+	PositioningPriority,
+	ProvidedData,
+	RAB-ID,
+	RAB-Parameters,
+	RAC,
+	RAListofIdleModeUEs,
+	RAT-Type,
+	RedirectAttemptFlag,
+	RedirectionCompleted,
+	RejectCauseValue,
+	RelocationType,
+	RequestedGANSSAssistanceData,
+	RequestType,
+	Requested-RAB-Parameter-Values,
+	ResponseTime,
+	RRC-Container,
+	SAI,
+	SAPI,
+	Service-Handover,
+	SessionUpdateID,
+	SNA-Access-Information,
+	SourceBSS-ToTargetBSS-TransparentContainer,
+	SourceID,
+	Source-ToTarget-TransparentContainer,
+	SourceRNC-ToTargetRNC-TransparentContainer,
+	SRVCC-HO-Indication,
+	SRVCC-Information,
+	SRVCC-Operation-Possible,
+	TargetBSS-ToSourceBSS-TransparentContainer,
+	TargetID,
+	Target-ToSource-TransparentContainer,
+	TargetRNC-ToSourceRNC-TransparentContainer,
+	TemporaryUE-ID,
+	TimeToMBMSDataTransfer,
+	TMGI,
+	TracePropagationParameters,
+	TraceReference,
+	TraceType,
+	UnsuccessfullyTransmittedDataVolume,
+	TransportLayerAddress,
+	TriggerID,
+	UE-AggregateMaximumBitRate,
+	UE-ID,
+	UESBI-Iu,
+	UL-GTP-PDU-SequenceNumber,
+	UL-N-PDU-SequenceNumber,
+	UP-ModeVersions,
+	UserPlaneMode,
+	VelocityEstimate,
+	VerticalAccuracyCode,
+	Alt-RAB-Parameters,
+	Ass-RAB-Parameters,
+	PeriodicLocationInfo,
+	SubscriberProfileIDforRFP
+FROM RANAP-IEs
+
+
+	PrivateIE-Container{},
+	ProtocolExtensionContainer{},
+	ProtocolIE-ContainerList{},
+	ProtocolIE-ContainerPair{},
+	ProtocolIE-ContainerPairList{},
+	ProtocolIE-Container{},
+	RANAP-PRIVATE-IES,
+	RANAP-PROTOCOL-EXTENSION,
+	RANAP-PROTOCOL-IES,
+	RANAP-PROTOCOL-IES-PAIR
+FROM RANAP-Containers
+
+	maxNrOfDTs,
+	maxNrOfErrors,
+	maxNrOfIuSigConIds,
+	maxNrOfRABs,
+	maxNrOfVol,
+	maxnoofMulticastServicesPerUE,
+
+	id-AccuracyFulfilmentIndicator,
+	id-APN,
+	id-AreaIdentity,
+	id-Alt-RAB-Parameters,
+	id-Ass-RAB-Parameters,
+	id-BroadcastAssistanceDataDecipheringKeys,
+	id-LocationRelatedDataRequestType,
+	id-CN-DomainIndicator,
+	id-Cause,
+	id-Cell-Access-Mode,
+	id-ChosenEncryptionAlgorithm,
+	id-ChosenIntegrityProtectionAlgorithm,
+	id-ClassmarkInformation2,
+	id-ClassmarkInformation3,
+	id-ClientType,
+	id-CNMBMSLinkingInformation,
+	id-CriticalityDiagnostics,
+	id-CSG-Id,
+	id-CSG-Id-List,
+	id-CSG-Membership-Status,
+	id-DeltaRAListofIdleModeUEs,
+	id-DRX-CycleLengthCoefficient,
+	id-DirectTransferInformationItem-RANAP-RelocInf,
+	id-DirectTransferInformationList-RANAP-RelocInf,
+	id-DL-GTP-PDU-SequenceNumber,
+	id-EncryptionInformation,
+	id-EncryptionKey,
+	id-ExtendedRNC-ID,
+	id-FrequenceLayerConvergenceFlag,
+	id-GERAN-BSC-Container,
+	id-GERAN-Classmark,
+	id-GERAN-Iumode-RAB-Failed-RABAssgntResponse-Item,
+	id-GERAN-Iumode-RAB-FailedList-RABAssgntResponse,
+	id-GlobalCN-ID,
+	id-GlobalCN-IDCS,
+	id-GlobalCN-IDPS,
+	id-GlobalRNC-ID,
+	id-IncludeVelocity,
+	id-InformationExchangeID,
+	id-InformationExchangeType,
+	id-InformationRequested,
+	id-InformationRequestType,
+	id-InformationTransferID,
+	id-InformationTransferType,
+	id-IntegrityProtectionInformation,
+	id-IntegrityProtectionKey,
+	id-InterSystemInformationTransferType,
+	id-InterSystemInformation-TransparentContainer,
+	id-IPMulticastAddress,
+	id-IuSigConId,
+	id-OldIuSigConId,
+	id-OldIuSigConIdCS,
+	id-OldIuSigConIdPS,
+	id-IuSigConIdItem,
+	id-IuSigConIdList,
+	id-IuTransportAssociation,
+	id-JoinedMBMSBearerServicesList,
+	id-KeyStatus,
+	id-L3-Information,
+	id-LAI,
+	id-LastKnownServiceArea,
+	id-LeftMBMSBearerServicesList,
+	id-LocationRelatedDataRequestTypeSpecificToGERANIuMode,
+	id-MBMSBearerServiceType,
+	id-MBMSCountingInformation,
+	id-MBMSCNDe-Registration,
+	id-MBMSRegistrationRequestType,
+	id-MBMSSynchronisationInformation,
+	id-MBMSServiceArea,
+	id-MBMSSessionDuration,
+	id-MBMSSessionIdentity,
+	id-MBMSSessionRepetitionNumber,
+	id-NAS-PDU,
+	id-NAS-SequenceNumber,
+	id-NewBSS-To-OldBSS-Information,
+	id-NonSearchingIndication,
+	id-NumberOfSteps,
+	id-OMC-ID,
+	id-OldBSS-ToNewBSS-Information,
+	id-PagingAreaID,
+	id-PagingCause,
+	id-PDP-TypeInformation,
+	id-PermanentNAS-UE-ID,
+	id-PositionData,
+	id-PositionDataSpecificToGERANIuMode,
+	id-PositioningPriority,
+	id-ProvidedData,
+	id-RAB-ContextItem,
+	id-RAB-ContextList,
+	id-RAB-ContextFailedtoTransferItem,
+	id-RAB-ContextFailedtoTransferList,
+	id-RAB-ContextItem-RANAP-RelocInf,
+	id-RAB-ContextList-RANAP-RelocInf,
+	id-RAB-DataForwardingItem,
+	id-RAB-DataForwardingItem-SRNS-CtxReq,
+	id-RAB-DataForwardingList,
+	id-RAB-DataForwardingList-SRNS-CtxReq,
+	id-RAB-DataVolumeReportItem,
+	id-RAB-DataVolumeReportList,
+	id-RAB-DataVolumeReportRequestItem,
+	id-RAB-DataVolumeReportRequestList,
+	id-RAB-FailedItem,
+	id-RAB-FailedList,
+	id-RAB-FailedList-EnhRelocInfoRes,
+	id-RAB-FailedItem-EnhRelocInfoRes,
+	id-RAB-FailedtoReportItem,
+	id-RAB-FailedtoReportList,
+	id-RAB-ID,
+	id-RAB-ModifyList,
+	id-RAB-ModifyItem,
+	id-RAB-Parameters,
+	id-RAB-QueuedItem,
+	id-RAB-QueuedList,
+	id-RAB-ReleaseFailedList,
+	id-RAB-ReleaseItem,
+	id-RAB-ReleasedItem-IuRelComp,
+	id-RAB-ReleaseList,
+	id-RAB-ReleasedItem,
+	id-RAB-ReleasedList,
+	id-RAB-ReleasedList-IuRelComp,
+	id-RAB-RelocationReleaseItem,
+	id-RAB-RelocationReleaseList,
+	id-RAB-SetupItem-RelocReq,
+	id-RAB-SetupItem-RelocReqAck,
+	id-RAB-SetupList-RelocReq,
+	id-RAB-SetupList-RelocReqAck,
+	id-RAB-SetupList-EnhRelocInfoReq,
+	id-RAB-SetupItem-EnhRelocInfoReq,
+	id-RAB-SetupList-EnhRelocInfoRes,
+	id-RAB-SetupItem-EnhRelocInfoRes,
+	id-RAB-SetupList-EnhancedRelocCompleteReq,
+	id-RAB-SetupItem-EnhancedRelocCompleteReq,
+	id-RAB-SetupList-EnhancedRelocCompleteRes,
+	id-RAB-SetupItem-EnhancedRelocCompleteRes,
+	id-RAB-SetupOrModifiedItem,
+	id-RAB-SetupOrModifiedList,
+	id-RAB-SetupOrModifyItem,
+	id-RAB-SetupOrModifyList,
+	id-RAB-ToBeReleasedItem-EnhancedRelocCompleteRes,
+	id-RAB-ToBeReleasedList-EnhancedRelocCompleteRes,
+	id-RAC,
+	id-RAListofIdleModeUEs,
+	id-RAT-Type,
+	id-RedirectAttemptFlag,
+	id-RedirectionCompleted,
+	id-RedirectionIndication,
+	id-RejectCauseValue,
+	id-RelocationType,
+	id-Relocation-SourceRNC-ID,
+	id-Relocation-SourceExtendedRNC-ID,
+	id-Relocation-TargetRNC-ID,
+	id-Relocation-TargetExtendedRNC-ID,
+	id-RequestedGANSSAssistanceData,
+	id-RequestType,
+	id-ResponseTime,
+	id-SAI,
+	id-SAPI,
+	id-SelectedPLMN-ID,
+	id-SessionUpdateID,
+	id-SNA-Access-Information,
+	id-SourceBSS-ToTargetBSS-TransparentContainer,
+	id-SourceRNC-ID,
+	id-SourceExtendedRNC-ID,
+	id-SourceID,
+	id-Source-ToTarget-TransparentContainer,
+	id-SourceRNC-PDCP-context-info,
+	id-SRVCC-HO-Indication,
+	id-SRVCC-Information,
+	id-SRVCC-Operation-Possible,
+	id-TargetBSS-ToSourceBSS-TransparentContainer,
+	id-TargetID,
+	id-Target-ToSource-TransparentContainer,
+	id-TemporaryUE-ID,
+	id-TimeToMBMSDataTransfer,
+	id-TMGI,
+	id-TracePropagationParameters,
+	id-TraceReference,
+	id-TraceType,
+	id-TransportLayerAddress,
+	id-TransportLayerInformation,
+	id-TriggerID,
+	id-UE-AggregateMaximumBitRate,
+	id-UE-ID,
+	id-UESBI-Iu,
+	id-UL-GTP-PDU-SequenceNumber,
+	id-UnsuccessfulLinkingList,
+	id-VelocityEstimate,
+	id-VerticalAccuracyCode,
+	id-PeriodicLocationInfo,
+	id-BroadcastGANSSAssistanceDataDecipheringKeys,
+	id-SubscriberProfileIDforRFP,
+	id-E-UTRAN-Service-Handover,
+	id-IP-Source-Address
+
+FROM RANAP-Constants;
+
+
+-- **************************************************************
+--
+-- Common Container Lists
+--
+-- **************************************************************
+
+RAB-IE-ContainerList			{ RANAP-PROTOCOL-IES		: IEsSetParam }	::= SEQUENCE (SIZE(1.. maxNrOfRABs)) OF ProtocolIE-Container              {{IEsSetParam} } 
+--ProtocolIE-ContainerList		{ 1, maxNrOfRABs,				{IEsSetParam} }
+RAB-IE-ContainerPairList		{ RANAP-PROTOCOL-IES-PAIR	: IEsSetParam }	::= SEQUENCE (SIZE(1.. maxNrOfRABs)) OF ProtocolIE-ContainerPair              {{IEsSetParam} } 
+--ProtocolIE-ContainerPairList	{ 1, maxNrOfRABs,				{IEsSetParam} }
+ProtocolError-IE-ContainerList	{ RANAP-PROTOCOL-IES		: IEsSetParam }	::= ProtocolIE-ContainerList		{ 1, maxNrOfRABs,				{IEsSetParam} }
+IuSigConId-IE-ContainerList		{ RANAP-PROTOCOL-IES		: IEsSetParam }	::=  SEQUENCE (SIZE(1.. maxNrOfIuSigConIds)) OF ProtocolIE-Container              {{IEsSetParam} }
+--ProtocolIE-ContainerList		{ 1, maxNrOfIuSigConIds,	{IEsSetParam} }
+DirectTransfer-IE-ContainerList	{ RANAP-PROTOCOL-IES		: IEsSetParam }	::=  SEQUENCE (SIZE(1.. maxNrOfDTs)) OF ProtocolIE-Container              {{IEsSetParam} }
+--ProtocolIE-ContainerList		{ 1, maxNrOfDTs,				{IEsSetParam} }
+
+-- **************************************************************
+--
+-- Iu RELEASE ELEMENTARY PROCEDURE
+--
+-- **************************************************************
+
+-- **************************************************************
+--
+-- Iu Release Command
+--
+-- **************************************************************
+
+Iu-ReleaseCommand ::= SEQUENCE {
+	protocolIEs			ProtocolIE-Container			{ {Iu-ReleaseCommandIEs} },
+	protocolExtensions		ProtocolExtensionContainer	{ {Iu-ReleaseCommandExtensions} } 				OPTIONAL,
+	...
+}
+
+--this is changed by perl script automatically--
+myType-Cause RANAP-PROTOCOL-IES ::= 	{ ID id-Cause					CRITICALITY	 1	TYPE Cause	 				PRESENCE	 2	}
+
+
+Iu-ReleaseCommandIEs RANAP-PROTOCOL-IES ::= {
+		myType-Cause,
+	...
+}
+
+Iu-ReleaseCommandExtensions RANAP-PROTOCOL-EXTENSION ::= {
+	...
+}
+
+-- **************************************************************
+--
+-- Iu Release Complete
+--
+-- **************************************************************
+
+Iu-ReleaseComplete ::= SEQUENCE {
+	protocolIEs			ProtocolIE-Container			{ {Iu-ReleaseCompleteIEs} },
+	protocolExtensions		ProtocolExtensionContainer	{ {Iu-ReleaseCompleteExtensions} }				OPTIONAL,
+	...
+}
+
+--this is changed by perl script automatically--
+myType-RAB-DataVolumeReportList RANAP-PROTOCOL-IES ::= 	{ ID id-RAB-DataVolumeReportList		CRITICALITY	 1	TYPE RAB-DataVolumeReportList 			PRESENCE	 0	}
+
+myType-RAB-ReleasedList-IuRelComp RANAP-PROTOCOL-IES ::= 	{ ID id-RAB-ReleasedList-IuRelComp		CRITICALITY	 1	TYPE RAB-ReleasedList-IuRelComp			PRESENCE	 0	}
+
+myType-CriticalityDiagnostics RANAP-PROTOCOL-IES ::= 	{ ID id-CriticalityDiagnostics			CRITICALITY	 1	TYPE CriticalityDiagnostics 			PRESENCE	 0 	}
+
+
+Iu-ReleaseCompleteIEs RANAP-PROTOCOL-IES ::= {
+		myType-RAB-DataVolumeReportList |
+		myType-RAB-ReleasedList-IuRelComp |
+		myType-CriticalityDiagnostics,
+	...
+}
+
+RAB-DataVolumeReportList 				::= SEQUENCE (SIZE(1.. maxNrOfRABs)) OF ProtocolIE-Container { {RAB-DataVolumeReportItemIEs} }
+--RAB-IE-ContainerList { {RAB-DataVolumeReportItemIEs} }
+
+--this is changed by perl script automatically--
+myType-RAB-DataVolumeReportItem RANAP-PROTOCOL-IES ::= 	{ ID id-RAB-DataVolumeReportItem		CRITICALITY	 1	TYPE RAB-DataVolumeReportItem			PRESENCE	 2	}
+
+
+RAB-DataVolumeReportItemIEs RANAP-PROTOCOL-IES ::= {
+		myType-RAB-DataVolumeReportItem,
+	...
+}
+
+RAB-DataVolumeReportItem ::= SEQUENCE {
+	rAB-ID						RAB-ID,
+	dl-UnsuccessfullyTransmittedDataVolume		DataVolumeList		OPTIONAL
+	-- This IE shall always be present although its presence is optional --,
+	iE-Extensions					ProtocolExtensionContainer { {RAB-DataVolumeReportItem-ExtIEs} }			OPTIONAL,
+	...
+}
+
+RAB-DataVolumeReportItem-ExtIEs RANAP-PROTOCOL-EXTENSION ::= {
+	...
+}
+
+RAB-ReleasedList-IuRelComp				::= SEQUENCE (SIZE(1.. maxNrOfRABs)) OF ProtocolIE-Container { {RAB-ReleasedItem-IuRelComp-IEs} }
+--RAB-IE-ContainerList { {RAB-ReleasedItem-IuRelComp-IEs} }
+
+--this is changed by perl script automatically--
+myType-RAB-ReleasedItem-IuRelComp RANAP-PROTOCOL-IES ::= 	{ ID id-RAB-ReleasedItem-IuRelComp			CRITICALITY	 1	TYPE RAB-ReleasedItem-IuRelComp				PRESENCE	 2	}
+
+
+RAB-ReleasedItem-IuRelComp-IEs RANAP-PROTOCOL-IES ::= {
+		myType-RAB-ReleasedItem-IuRelComp,
+	...
+}
+
+RAB-ReleasedItem-IuRelComp	::= SEQUENCE {
+		rAB-ID						RAB-ID,
+		dL-GTP-PDU-SequenceNumber	DL-GTP-PDU-SequenceNumber 	OPTIONAL,
+		uL-GTP-PDU-SequenceNumber	UL-GTP-PDU-SequenceNumber 	OPTIONAL,
+		iE-Extensions				ProtocolExtensionContainer { {RAB-ReleasedItem-IuRelComp-ExtIEs} }			OPTIONAL,
+	...
+}
+
+RAB-ReleasedItem-IuRelComp-ExtIEs RANAP-PROTOCOL-EXTENSION ::= {
+	...
+}
+
+
+Iu-ReleaseCompleteExtensions RANAP-PROTOCOL-EXTENSION ::= {
+	...
+}
+
+-- **************************************************************
+--
+-- RELOCATION PREPARATION ELEMENTARY PROCEDURE
+--
+-- **************************************************************
+
+-- **************************************************************
+--
+-- Relocation Required
+--
+-- **************************************************************
+
+RelocationRequired ::= SEQUENCE {
+	protocolIEs			ProtocolIE-Container			{ {RelocationRequiredIEs} },
+	protocolExtensions		ProtocolExtensionContainer	{ {RelocationRequiredExtensions} }				OPTIONAL,
+...
+}
+
+--this is changed by perl script automatically--
+myType-RelocationType RANAP-PROTOCOL-IES ::= 	{ ID id-RelocationType				CRITICALITY	 0	TYPE RelocationType 				PRESENCE	 2	}
+
+myType-Causeid2 RANAP-PROTOCOL-IES ::= 	{ ID id-Cause					CRITICALITY	 1	TYPE Cause		 			PRESENCE	 2	}
+myType-SourceID RANAP-PROTOCOL-IES ::= 	{ ID id-SourceID				CRITICALITY	 1	TYPE SourceID	 				PRESENCE	 2	}
+
+myType-TargetID RANAP-PROTOCOL-IES ::= 	{ ID id-TargetID				CRITICALITY	 0	TYPE TargetID	 				PRESENCE	 2	}
+
+myType-ClassmarkInformation2 RANAP-PROTOCOL-IES ::= 	{ ID id-ClassmarkInformation2			CRITICALITY	 0	TYPE ClassmarkInformation2			PRESENCE	 1
+	-- This IE shall be present if the Target ID IE contains a CGI IE and Source BSS To Target BSS Transparent Container is not included --		}
+
+myType-ClassmarkInformationid2 RANAP-PROTOCOL-IES ::= 	{ ID id-ClassmarkInformation3			CRITICALITY	 1	TYPE ClassmarkInformation3			PRESENCE	 1
+	-- This IE shall be present if the Target ID IE contains a CGI IE and Source BSS To Target BSS Transparent Container is not included --		}
+
+myType-Source-ToTarget-TransparentContainer RANAP-PROTOCOL-IES ::= 	{ ID id-Source-ToTarget-TransparentContainer	
+							CRITICALITY	 0	TYPE Source-ToTarget-TransparentContainer PRESENCE	 1
+
+	-- This IE shall be present if the Target ID IE contains a RNC-ID IE or eNB-ID --												}
+
+myType-OldBSS-ToNewBSS-Information RANAP-PROTOCOL-IES ::= 	{ ID id-OldBSS-ToNewBSS-Information		CRITICALITY	 1	TYPE OldBSS-ToNewBSS-Information		PRESENCE	 0		}
+
+
+RelocationRequiredIEs RANAP-PROTOCOL-IES ::= {
+		myType-RelocationType |
+	myType-Causeid2 |
+		myType-SourceID |
+		myType-TargetID |
+	myType-ClassmarkInformation2 |
+	myType-ClassmarkInformationid2 |
+		myType-Source-ToTarget-TransparentContainer |
+		myType-OldBSS-ToNewBSS-Information ,
+	...
+}
+
+--this is changed by perl script automatically--
+
+-- Extension for Release 5 to enable GERAN support over Iu-cs --
+myType-GERAN-Classmark RANAP-PROTOCOL-EXTENSION ::= 	{ ID id-GERAN-Classmark					CRITICALITY	 1	EXTENSION GERAN-Classmark			PRESENCE	 0	}
+
+-- Extension for Release 6 to enable Inter-RAT PS Handover between UTRAN and GERAN A/Gb --
+myType-SourceBSS-ToTargetBSS-TransparentContainer RANAP-PROTOCOL-EXTENSION ::= 	{ ID id-SourceBSS-ToTargetBSS-TransparentContainer		CRITICALITY	 1	EXTENSION SourceBSS-ToTargetBSS-TransparentContainer		PRESENCE	 0	}
+
+-- Extension for Release 8 for SRVCC operation --
+myType-SRVCC-HO-Indication RANAP-PROTOCOL-EXTENSION ::= 	{ ID id-SRVCC-HO-Indication					CRITICALITY	 0	EXTENSION SRVCC-HO-Indication			PRESENCE	 0	}
+
+-- Extension for Release 9 to communicate to the CN the CSG id of the target cell --
+myType-CSG-Id RANAP-PROTOCOL-EXTENSION ::= 	{ ID id-CSG-Id 								CRITICALITY	 0 	EXTENSION CSG-Id 										PRESENCE	 0}
+
+-- Extension for Release 9 to communicate to the CN the hybrid access status of the target cell --
+myType-Cell-Access-Mode RANAP-PROTOCOL-EXTENSION ::= 	{ ID id-Cell-Access-Mode				CRITICALITY	 0	EXTENSION Cell-Access-Mode						PRESENCE	 0}
+
+
+RelocationRequiredExtensions RANAP-PROTOCOL-EXTENSION ::= {
+		myType-GERAN-Classmark |
+		myType-SourceBSS-ToTargetBSS-TransparentContainer|
+		myType-SRVCC-HO-Indication |
+		myType-CSG-Id |
+		myType-Cell-Access-Mode,
+	...
+}
+
+-- **************************************************************
+--
+-- Relocation Command
+--
+-- **************************************************************
+
+RelocationCommand ::= SEQUENCE {
+	protocolIEs			ProtocolIE-Container			{ {RelocationCommandIEs} },
+	protocolExtensions		ProtocolExtensionContainer	{ {RelocationCommandExtensions} }				OPTIONAL,
+	...
+}
+
+--this is changed by perl script automatically--
+myType-Target-ToSource-TransparentContainer RANAP-PROTOCOL-IES ::= 	{ ID id-Target-ToSource-TransparentContainer	
+							CRITICALITY	 0	TYPE Target-ToSource-TransparentContainer PRESENCE	 0	}
+
+myType-L3-Information RANAP-PROTOCOL-IES ::= 	{ ID id-L3-Information				CRITICALITY	 1	TYPE L3-Information				PRESENCE	 0	}
+
+myType-RAB-RelocationReleaseList RANAP-PROTOCOL-IES ::= 	{ ID id-RAB-RelocationReleaseList		CRITICALITY	 1	TYPE RAB-RelocationReleaseList 			PRESENCE	 0	}
+
+myType-RAB-DataForwardingList RANAP-PROTOCOL-IES ::= 	{ ID id-RAB-DataForwardingList			CRITICALITY	 1	TYPE RAB-DataForwardingList			PRESENCE	 0	}
+
+myType-CriticalityDiagnosticsid2 RANAP-PROTOCOL-IES ::= 	{ ID id-CriticalityDiagnostics			CRITICALITY	 1	TYPE CriticalityDiagnostics 			PRESENCE	 0	}
+
+RelocationCommandIEs RANAP-PROTOCOL-IES ::= {
+		myType-Target-ToSource-TransparentContainer |
+	myType-L3-Information |
+		myType-RAB-RelocationReleaseList |
+		myType-RAB-DataForwardingList |
+	myType-CriticalityDiagnosticsid2,
+	...
+}
+
+RAB-RelocationReleaseList 				::= SEQUENCE (SIZE(1.. maxNrOfRABs)) OF ProtocolIE-Container { {RAB-RelocationReleaseItemIEs} }
+--RAB-IE-ContainerList { {RAB-RelocationReleaseItemIEs} }
+
+--this is changed by perl script automatically--
+myType-RAB-RelocationReleaseItem RANAP-PROTOCOL-IES ::= 	{ ID id-RAB-RelocationReleaseItem		CRITICALITY	 1	TYPE RAB-RelocationReleaseItem			PRESENCE	 2	}
+
+
+RAB-RelocationReleaseItemIEs RANAP-PROTOCOL-IES ::= {
+		myType-RAB-RelocationReleaseItem,
+	...
+}
+
+RAB-RelocationReleaseItem ::= SEQUENCE {
+	rAB-ID						RAB-ID,
+	iE-Extensions					ProtocolExtensionContainer { {RAB-RelocationReleaseItem-ExtIEs} }			OPTIONAL,
+	...
+}
+
+RAB-RelocationReleaseItem-ExtIEs RANAP-PROTOCOL-EXTENSION ::= {
+	...
+}
+
+RAB-DataForwardingList 					::= SEQUENCE (SIZE(1.. maxNrOfRABs)) OF ProtocolIE-Container { {RAB-DataForwardingItemIEs} }
+--RAB-IE-ContainerList { {RAB-DataForwardingItemIEs} }
+
+--this is changed by perl script automatically--
+myType-RAB-DataForwardingItem RANAP-PROTOCOL-IES ::= 	{ ID id-RAB-DataForwardingItem			CRITICALITY	 1	TYPE RAB-DataForwardingItem			PRESENCE	 2	}
+
+
+RAB-DataForwardingItemIEs RANAP-PROTOCOL-IES ::= {
+		myType-RAB-DataForwardingItem,
+	...
+}
+
+RAB-DataForwardingItem ::= SEQUENCE {
+	rAB-ID						RAB-ID,
+	transportLayerAddress				TransportLayerAddress,
+	iuTransportAssociation				IuTransportAssociation,
+	iE-Extensions					ProtocolExtensionContainer { {RAB-DataForwardingItem-ExtIEs} }			OPTIONAL,
+	...
+}
+
+--this is changed by perl script automatically--
+
+-- Extension for Release 5 to allow transfer of a second pair of TLA and association --
+myType-TransportLayerAddress RANAP-PROTOCOL-EXTENSION ::= 	{ID id-TransportLayerAddress	CRITICALITY	 1	EXTENSION TransportLayerAddress	PRESENCE	 0}
+
+myType-IuTransportAssociation RANAP-PROTOCOL-EXTENSION ::= 	{ID id-IuTransportAssociation	CRITICALITY	 1	EXTENSION IuTransportAssociation	PRESENCE	 0}
+
+
+RAB-DataForwardingItem-ExtIEs RANAP-PROTOCOL-EXTENSION ::= {
+		myType-TransportLayerAddress |
+		myType-IuTransportAssociation,
+	...
+}
+
+--this is changed by perl script automatically--
+
+-- Extension for Release 5 to enable Inter RAN Load Information Exchange over Iu --
+myType-InterSystemInformation-TransparentContainer RANAP-PROTOCOL-EXTENSION ::= 	{ ID id-InterSystemInformation-TransparentContainer		CRITICALITY	 1	EXTENSION InterSystemInformation-TransparentContainer					PRESENCE	 0	}
+
+-- Extension for Release 6 to enable Inter-RAT PS Handover between UTRAN and GERAN A/Gb --
+myType-TargetBSS-ToSourceBSS-TransparentContainer RANAP-PROTOCOL-EXTENSION ::= 	{ ID id-TargetBSS-ToSourceBSS-TransparentContainer		CRITICALITY	 1	EXTENSION TargetBSS-ToSourceBSS-TransparentContainer		PRESENCE	 0	}
+
+-- Extension for Release 8 for SRVCC operation --
+myType-SRVCC-Information RANAP-PROTOCOL-EXTENSION ::= 	{ ID id-SRVCC-Information					CRITICALITY	 0	EXTENSION SRVCC-Information			PRESENCE	 0	}
+
+
+RelocationCommandExtensions RANAP-PROTOCOL-EXTENSION ::= {
+		myType-InterSystemInformation-TransparentContainer |
+		myType-TargetBSS-ToSourceBSS-TransparentContainer|
+		myType-SRVCC-Information,
+	...
+}
+
+-- **************************************************************
+--
+-- Relocation Preparation Failure
+--
+-- **************************************************************
+
+RelocationPreparationFailure ::= SEQUENCE {
+	protocolIEs			ProtocolIE-Container			{ {RelocationPreparationFailureIEs} },
+	protocolExtensions		ProtocolExtensionContainer	{ {RelocationPreparationFailureExtensions} }			OPTIONAL,
+...
+}
+
+--this is changed by perl script automatically--
+myType-Causeid3 RANAP-PROTOCOL-IES ::= 	{ ID id-Cause					CRITICALITY	 1	TYPE Cause					PRESENCE	 2	}
+myType-CriticalityDiagnosticsid3 RANAP-PROTOCOL-IES ::= 	{ ID id-CriticalityDiagnostics			CRITICALITY	 1	TYPE CriticalityDiagnostics 			PRESENCE	 0	}
+
+
+RelocationPreparationFailureIEs RANAP-PROTOCOL-IES ::= {
+	myType-Causeid3 |
+	myType-CriticalityDiagnosticsid3,
+	...
+}
+
+--this is changed by perl script automatically--
+
+-- Extension for Release 5 to enable Inter RAN Load Information Exchange over Iu --
+myType-InterSystemInformation-TransparentContainerid2 RANAP-PROTOCOL-EXTENSION ::= 	{ ID id-InterSystemInformation-TransparentContainer		CRITICALITY	 1	EXTENSION InterSystemInformation-TransparentContainer				PRESENCE	 0	}
+
+RelocationPreparationFailureExtensions RANAP-PROTOCOL-EXTENSION ::= {
+	myType-InterSystemInformation-TransparentContainerid2,
+	...
+}
+
+-- **************************************************************
+--
+-- RELOCATION RESOURCE ALLOCATION ELEMENTARY PROCEDURE
+--
+-- **************************************************************
+
+-- **************************************************************
+--
+-- Relocation Request
+--
+-- **************************************************************
+
+RelocationRequest ::= SEQUENCE {
+	protocolIEs			ProtocolIE-Container			{ {RelocationRequestIEs} },
+	protocolExtensions		ProtocolExtensionContainer	{ {RelocationRequestExtensions} }				OPTIONAL,
+	...
+}
+
+--this is changed by perl script automatically--
+myType-PermanentNAS-UE-ID RANAP-PROTOCOL-IES ::= 	{ ID id-PermanentNAS-UE-ID			CRITICALITY	 1	TYPE PermanentNAS-UE-ID 			PRESENCE	 0	}
+
+myType-Causeid4 RANAP-PROTOCOL-IES ::= 	{ ID id-Cause					CRITICALITY	 1	TYPE Cause					PRESENCE	 2	}
+myType-CN-DomainIndicator RANAP-PROTOCOL-IES ::= 	{ ID id-CN-DomainIndicator			CRITICALITY	 0	TYPE CN-DomainIndicator				PRESENCE	 2	}
+
+myType-Source-ToTarget-TransparentContainerid2 RANAP-PROTOCOL-IES ::= 	{ ID id-Source-ToTarget-TransparentContainer		
+							CRITICALITY	 0	TYPE SourceRNC-ToTargetRNC-TransparentContainer	PRESENCE	 2	}
+
+myType-RAB-SetupList-RelocReq RANAP-PROTOCOL-IES ::= 	{ ID id-RAB-SetupList-RelocReq			CRITICALITY	 0	TYPE RAB-SetupList-RelocReq			PRESENCE	 0	}
+
+myType-IntegrityProtectionInformation RANAP-PROTOCOL-IES ::= 	{ ID id-IntegrityProtectionInformation		CRITICALITY	 1	TYPE IntegrityProtectionInformation 		PRESENCE	 0	}
+
+myType-EncryptionInformation RANAP-PROTOCOL-IES ::= 	{ ID id-EncryptionInformation			CRITICALITY	 1	TYPE EncryptionInformation 			PRESENCE	 0	}
+
+myType-IuSigConId RANAP-PROTOCOL-IES ::= 	{ ID id-IuSigConId	CRITICALITY	 1 TYPE IuSignallingConnectionIdentifier PRESENCE	 2 }
+
+
+RelocationRequestIEs RANAP-PROTOCOL-IES ::= {
+		myType-PermanentNAS-UE-ID |
+	myType-Causeid4 |
+		myType-CN-DomainIndicator |
+	myType-Source-ToTarget-TransparentContainerid2 |
+		myType-RAB-SetupList-RelocReq |
+		myType-IntegrityProtectionInformation |
+		myType-EncryptionInformation |
+		myType-IuSigConId,
+	...
+}
+
+RAB-SetupList-RelocReq 					::= SEQUENCE (SIZE(1.. maxNrOfRABs)) OF ProtocolIE-Container { {RAB-SetupItem-RelocReq-IEs} }
+--RAB-IE-ContainerList { {RAB-SetupItem-RelocReq-IEs} }
+
+--this is changed by perl script automatically--
+myType-RAB-SetupItem-RelocReq RANAP-PROTOCOL-IES ::= 	{ ID id-RAB-SetupItem-RelocReq			CRITICALITY	 0	TYPE RAB-SetupItem-RelocReq			PRESENCE	 2 	}
+
+
+RAB-SetupItem-RelocReq-IEs RANAP-PROTOCOL-IES ::= {
+		myType-RAB-SetupItem-RelocReq,
+	...
+}
+
+RAB-SetupItem-RelocReq ::= SEQUENCE {
+	rAB-ID						RAB-ID,
+	nAS-SynchronisationIndicator	NAS-SynchronisationIndicator	OPTIONAL,
+	rAB-Parameters					RAB-Parameters,
+	dataVolumeReportingIndication			DataVolumeReportingIndication 	OPTIONAL
+	-- This IE shall be present if the CN domain indicator IE is set to "PS domain" --,
+	pDP-TypeInformation				PDP-TypeInformation		OPTIONAL
+	-- This IE shall be present if the CN domain indicator IE is set to "PS domain" --,
+	userPlaneInformation				UserPlaneInformation,
+	transportLayerAddress				TransportLayerAddress,
+	iuTransportAssociation				IuTransportAssociation,
+	service-Handover				Service-Handover		OPTIONAL,
+	iE-Extensions					ProtocolExtensionContainer { {RAB-SetupItem-RelocReq-ExtIEs} }			OPTIONAL,
+	...
+}
+
+--this is changed by perl script automatically--
+
+-- Extension for Release 4 to enable RAB Quality of Service negotiation over Iu --
+myType-Alt-RAB-Parameters RANAP-PROTOCOL-EXTENSION ::= 	{ID id-Alt-RAB-Parameters	CRITICALITY	 1		EXTENSION Alt-RAB-Parameters		PRESENCE	 0}
+
+-- Extension for Release 5 to enable GERAN support over Iu-cs --
+myType-GERAN-BSC-Container RANAP-PROTOCOL-EXTENSION ::= 	{ ID id-GERAN-BSC-Container					CRITICALITY	 1	EXTENSION GERAN-BSC-Container			PRESENCE	 0	}
+
+-- Extension for Release 8 to enable handover restriction to E-UTRAN --
+myType-E-UTRAN-Service-Handover RANAP-PROTOCOL-EXTENSION ::= 	{ ID id-E-UTRAN-Service-Handover			CRITICALITY	 1	EXTENSION E-UTRAN-Service-Handover			PRESENCE	 0	}
+
+
+RAB-SetupItem-RelocReq-ExtIEs RANAP-PROTOCOL-EXTENSION ::= {
+		myType-Alt-RAB-Parameters |
+		myType-GERAN-BSC-Container|
+		myType-E-UTRAN-Service-Handover,
+	...
+}
+
+UserPlaneInformation ::= SEQUENCE {
+	userPlaneMode					UserPlaneMode,
+	uP-ModeVersions					UP-ModeVersions,
+	iE-Extensions					ProtocolExtensionContainer { {UserPlaneInformation-ExtIEs} }			OPTIONAL,
+	...
+}
+
+UserPlaneInformation-ExtIEs RANAP-PROTOCOL-EXTENSION ::= {
+	...
+}
+
+--this is changed by perl script automatically--
+
+-- Extension for Release 4 --
+myType-GlobalCN-ID RANAP-PROTOCOL-EXTENSION ::= 	{ ID id-GlobalCN-ID				CRITICALITY	 0		EXTENSION GlobalCN-ID				PRESENCE	 0}
+
+-- Extension for Release 5 to enable shared networks in connected mode --
+myType-SNA-Access-Information RANAP-PROTOCOL-EXTENSION ::= 	{ ID id-SNA-Access-Information	CRITICALITY	 1		EXTENSION SNA-Access-Information	PRESENCE	 0}
+
+-- Extension for Release 5 to enable specific behaviour by the RNC in relation with early UE handling --
+myType-UESBI-Iu RANAP-PROTOCOL-EXTENSION ::= 	{ ID id-UESBI-Iu	CRITICALITY	 1		EXTENSION UESBI-Iu	PRESENCE	 0}
+
+-- Extension for Release 6 to convey the selected PLMN id in network sharing mobility scenarios --
+myType-SelectedPLMN-ID RANAP-PROTOCOL-EXTENSION ::= 	{ ID id-SelectedPLMN-ID	 	CRITICALITY	 1	EXTENSION PLMNidentity		PRESENCE	 0 	}
+
+-- Extension for Release 6 to enable MBMS UE linking at relocation --
+myType-CNMBMSLinkingInformation RANAP-PROTOCOL-EXTENSION ::= 	{ ID id-CNMBMSLinkingInformation	CRITICALITY	 1		EXTENSION CNMBMSLinkingInformation	PRESENCE	 0}
+
+myType-UE-AggregateMaximumBitRate RANAP-PROTOCOL-EXTENSION ::= 	{ ID id-UE-AggregateMaximumBitRate			CRITICALITY	 1	EXTENSION UE-AggregateMaximumBitRate	PRESENCE	 0	}
+
+-- Extension for Release 9 to communicate to the target cell the CSG id reported by the source --
+myType-CSG-Idid2 RANAP-PROTOCOL-EXTENSION ::= 	{ ID id-CSG-Id 								CRITICALITY	 0 	EXTENSION CSG-Id 										PRESENCE	 0}
+-- Extension for Release 9 for enabling UE prioritisation during access to hybrid cells --
+myType-CSG-Membership-Status RANAP-PROTOCOL-EXTENSION ::= 	{ ID id-CSG-Membership-Status		CRITICALITY	 1		EXTENSION CSG-Membership-Status		PRESENCE	 0	}
+
+
+RelocationRequestExtensions RANAP-PROTOCOL-EXTENSION ::= {
+		myType-GlobalCN-ID |
+		myType-SNA-Access-Information |
+		myType-UESBI-Iu|
+		myType-SelectedPLMN-ID|
+		myType-CNMBMSLinkingInformation |
+		myType-UE-AggregateMaximumBitRate |
+	myType-CSG-Idid2 |
+		myType-CSG-Membership-Status,
+	...
+}
+
+CNMBMSLinkingInformation ::= SEQUENCE {
+	joinedMBMSBearerService-IEs		JoinedMBMSBearerService-IEs,
+	iE-Extensions					ProtocolExtensionContainer { {CNMBMSLinkingInformation-ExtIEs} }		OPTIONAL,
+	...
+}
+
+CNMBMSLinkingInformation-ExtIEs RANAP-PROTOCOL-EXTENSION ::= {
+	...
+}
+
+JoinedMBMSBearerService-IEs ::= SEQUENCE (SIZE (1.. maxnoofMulticastServicesPerUE)) OF
+	SEQUENCE {
+		tMGI				TMGI,
+		mBMS-PTP-RAB-ID		MBMS-PTP-RAB-ID,
+		iE-Extensions		ProtocolExtensionContainer { {JoinedMBMSBearerService-ExtIEs} } OPTIONAL,
+		...
+	}
+
+JoinedMBMSBearerService-ExtIEs RANAP-PROTOCOL-EXTENSION ::= {
+	...
+}
+
+-- **************************************************************
+--
+-- Relocation Request Acknowledge
+--
+-- **************************************************************
+
+RelocationRequestAcknowledge ::= SEQUENCE {
+	protocolIEs			ProtocolIE-Container			{ {RelocationRequestAcknowledgeIEs} },
+	protocolExtensions		ProtocolExtensionContainer	{ {RelocationRequestAcknowledgeExtensions} }			OPTIONAL,
+	...
+}
+
+--this is changed by perl script automatically--
+myType-Target-ToSource-TransparentContainerid2 RANAP-PROTOCOL-IES ::= 	{ ID id-Target-ToSource-TransparentContainer							CRITICALITY	 1	TYPE TargetRNC-ToSourceRNC-TransparentContainer PRESENCE	 0	}
+
+myType-RAB-SetupList-RelocReqAck RANAP-PROTOCOL-IES ::= 	{ ID id-RAB-SetupList-RelocReqAck		CRITICALITY	 1	TYPE RAB-SetupList-RelocReqAck			PRESENCE	 0}
+
+myType-RAB-FailedList RANAP-PROTOCOL-IES ::= 	{ ID id-RAB-FailedList				CRITICALITY	 1	TYPE RAB-FailedList				PRESENCE	 0 }
+
+myType-ChosenIntegrityProtectionAlgorithm RANAP-PROTOCOL-IES ::= 	{ ID id-ChosenIntegrityProtectionAlgorithm	CRITICALITY	 1	TYPE ChosenIntegrityProtectionAlgorithm		PRESENCE	 0	}
+
+myType-ChosenEncryptionAlgorithm RANAP-PROTOCOL-IES ::= 	{ ID id-ChosenEncryptionAlgorithm		CRITICALITY	 1	TYPE ChosenEncryptionAlgorithm			PRESENCE	 0	}
+
+myType-CriticalityDiagnosticsid4 RANAP-PROTOCOL-IES ::= 	{ ID id-CriticalityDiagnostics			CRITICALITY	 1	TYPE CriticalityDiagnostics 			PRESENCE	 0	}
+
+
+RelocationRequestAcknowledgeIEs RANAP-PROTOCOL-IES ::= {
+	myType-Target-ToSource-TransparentContainerid2 |
+		myType-RAB-SetupList-RelocReqAck |
+		myType-RAB-FailedList|
+		myType-ChosenIntegrityProtectionAlgorithm |
+		myType-ChosenEncryptionAlgorithm |
+	myType-CriticalityDiagnosticsid4,
+	...
+}
+
+RAB-SetupList-RelocReqAck 				::= SEQUENCE (SIZE(1.. maxNrOfRABs)) OF ProtocolIE-Container { {RAB-SetupItem-RelocReqAck-IEs} }
+--RAB-IE-ContainerList { {RAB-SetupItem-RelocReqAck-IEs} }
+
+--this is changed by perl script automatically--
+myType-RAB-SetupItem-RelocReqAck RANAP-PROTOCOL-IES ::= 	{ ID id-RAB-SetupItem-RelocReqAck		CRITICALITY	 0	TYPE RAB-SetupItem-RelocReqAck			PRESENCE	 2 	}
+
+
+RAB-SetupItem-RelocReqAck-IEs RANAP-PROTOCOL-IES ::= {
+		myType-RAB-SetupItem-RelocReqAck,
+	...
+}
+
+RAB-SetupItem-RelocReqAck ::= SEQUENCE {
+	rAB-ID						RAB-ID,
+	transportLayerAddress				TransportLayerAddress	OPTIONAL,
+	iuTransportAssociation				IuTransportAssociation	OPTIONAL,
+	iE-Extensions					ProtocolExtensionContainer { {RAB-SetupItem-RelocReqAck-ExtIEs} }			OPTIONAL,
+	...
+}
+
+--this is changed by perl script automatically--
+
+-- Extension for Release 4 to enable RAB Quality of Service negotiation over Iu --
+myType-Ass-RAB-Parameters RANAP-PROTOCOL-EXTENSION ::= 	{ID id-Ass-RAB-Parameters	CRITICALITY	 1		EXTENSION Ass-RAB-Parameters		PRESENCE	 0	}
+
+-- Extension for Release 5 to allow transfer of a second pair of TLA and association --
+myType-TransportLayerAddressid2 RANAP-PROTOCOL-EXTENSION ::= 	{ID id-TransportLayerAddress	CRITICALITY	 1	EXTENSION TransportLayerAddress	PRESENCE	 0}
+myType-IuTransportAssociationid2 RANAP-PROTOCOL-EXTENSION ::= 	{ID id-IuTransportAssociation	CRITICALITY	 1	EXTENSION IuTransportAssociation	PRESENCE	 0}
+
+
+RAB-SetupItem-RelocReqAck-ExtIEs RANAP-PROTOCOL-EXTENSION ::= {
+		myType-Ass-RAB-Parameters |
+	myType-TransportLayerAddressid2 |
+	myType-IuTransportAssociationid2,
+	...
+}
+
+RAB-FailedList 						::= SEQUENCE (SIZE(1.. maxNrOfRABs)) OF ProtocolIE-Container { {RAB-FailedItemIEs} }
+--RAB-IE-ContainerList { {RAB-FailedItemIEs} }
+
+--this is changed by perl script automatically--
+myType-RAB-FailedItem RANAP-PROTOCOL-IES ::= 	{ ID id-RAB-FailedItem				CRITICALITY	 1	TYPE RAB-FailedItem				PRESENCE	 2	}
+
+
+RAB-FailedItemIEs RANAP-PROTOCOL-IES ::= {
+		myType-RAB-FailedItem,
+	...
+}
+
+RAB-FailedItem ::= SEQUENCE {
+	rAB-ID						RAB-ID,
+	cause						Cause,
+	iE-Extensions					ProtocolExtensionContainer { {RAB-FailedItem-ExtIEs} }			OPTIONAL,
+	...
+}
+
+RAB-FailedItem-ExtIEs RANAP-PROTOCOL-EXTENSION ::= {
+	...
+}
+
+--this is changed by perl script automatically--
+
+-- Extension for Release 5 to enable Inter RAN Load Information Exchange over Iu --
+myType-NewBSS-To-OldBSS-Information RANAP-PROTOCOL-EXTENSION ::= 	{ID id-NewBSS-To-OldBSS-Information	CRITICALITY	 1	EXTENSION NewBSS-To-OldBSS-Information		PRESENCE	 0	 }
+
+myType-CSG-Idid3 RANAP-PROTOCOL-EXTENSION ::= 	{ID id-CSG-Id						CRITICALITY	 1	EXTENSION CSG-Id								PRESENCE	 0	}
+
+RelocationRequestAcknowledgeExtensions RANAP-PROTOCOL-EXTENSION ::= {
+		myType-NewBSS-To-OldBSS-Information|
+	myType-CSG-Idid3,
+	...
+}
+
+-- **************************************************************
+--
+-- Relocation Failure
+--
+-- **************************************************************
+
+RelocationFailure ::= SEQUENCE {
+	protocolIEs			ProtocolIE-Container			{ {RelocationFailureIEs} },
+	protocolExtensions		ProtocolExtensionContainer	{ {RelocationFailureExtensions} }				OPTIONAL,
+	...
+}
+
+--this is changed by perl script automatically--
+myType-Causeid5 RANAP-PROTOCOL-IES ::= 	{ ID id-Cause					CRITICALITY	 1	TYPE Cause					PRESENCE	 2	}
+myType-CriticalityDiagnosticsid5 RANAP-PROTOCOL-IES ::= 	{ ID id-CriticalityDiagnostics			CRITICALITY	 1	TYPE CriticalityDiagnostics 			PRESENCE	 0	}
+
+
+RelocationFailureIEs RANAP-PROTOCOL-IES ::= {
+	myType-Causeid5 |
+	myType-CriticalityDiagnosticsid5,
+	...
+}
+
+--this is changed by perl script automatically--
+
+-- Extension for Release 5 to enable Inter RAN Load Information Exchange over Iu --
+myType-NewBSS-To-OldBSS-Informationid2 RANAP-PROTOCOL-EXTENSION ::= 	{ ID id-NewBSS-To-OldBSS-Information		CRITICALITY	 1	EXTENSION NewBSS-To-OldBSS-Information		PRESENCE	 0	}
+-- Extension for Release 5 to enable GERAN support over Iu-cs --
+myType-GERAN-Classmarkid2 RANAP-PROTOCOL-EXTENSION ::= 	{ ID id-GERAN-Classmark					CRITICALITY	 1	EXTENSION GERAN-Classmark			PRESENCE	 0	}
+
+
+RelocationFailureExtensions RANAP-PROTOCOL-EXTENSION ::= {
+	myType-NewBSS-To-OldBSS-Informationid2 |
+	myType-GERAN-Classmarkid2,
+	...
+}
+
+-- **************************************************************
+--
+-- RELOCATION CANCEL ELEMENTARY PROCEDURE
+--
+-- **************************************************************
+
+-- **************************************************************
+--
+-- Relocation Cancel
+--
+-- **************************************************************
+
+RelocationCancel ::= SEQUENCE {
+	protocolIEs			ProtocolIE-Container			{ {RelocationCancelIEs} },
+	protocolExtensions		ProtocolExtensionContainer	{ {RelocationCancelExtensions} }				OPTIONAL,
+	...
+}
+
+--this is changed by perl script automatically--
+myType-Causeid6 RANAP-PROTOCOL-IES ::= 	{ ID id-Cause					CRITICALITY	 1	TYPE Cause					PRESENCE	 2	}
+
+RelocationCancelIEs RANAP-PROTOCOL-IES ::= {
+	myType-Causeid6,
+	...
+}
+
+RelocationCancelExtensions RANAP-PROTOCOL-EXTENSION ::= {
+	...
+}
+
+-- **************************************************************
+--
+-- Relocation Cancel Acknowledge
+--
+-- **************************************************************
+
+RelocationCancelAcknowledge ::= SEQUENCE {
+	protocolIEs			ProtocolIE-Container			{ {RelocationCancelAcknowledgeIEs} },
+	protocolExtensions		ProtocolExtensionContainer	{ {RelocationCancelAcknowledgeExtensions} } 			OPTIONAL,
+	...
+}
+
+--this is changed by perl script automatically--
+myType-CriticalityDiagnosticsid6 RANAP-PROTOCOL-IES ::= 	{ ID id-CriticalityDiagnostics			CRITICALITY	 1	TYPE CriticalityDiagnostics			PRESENCE	 0	}
+
+RelocationCancelAcknowledgeIEs RANAP-PROTOCOL-IES ::= {
+	myType-CriticalityDiagnosticsid6,
+	...
+}
+
+RelocationCancelAcknowledgeExtensions RANAP-PROTOCOL-EXTENSION ::= {
+	...
+}
+
+-- **************************************************************
+--
+-- SRNS CONTEXT TRANSFER OPEARATION
+--
+-- **************************************************************
+
+-- **************************************************************
+--
+-- SRNS Context Request
+--
+-- **************************************************************
+
+SRNS-ContextRequest ::= SEQUENCE {
+	protocolIEs			ProtocolIE-Container			{ {SRNS-ContextRequestIEs} },
+	protocolExtensions		ProtocolExtensionContainer	{ {SRNS-ContextRequestExtensions} }				OPTIONAL,
+	...
+}
+
+--this is changed by perl script automatically--
+myType-RAB-DataForwardingList-SRNS-CtxReq RANAP-PROTOCOL-IES ::= 	{ ID id-RAB-DataForwardingList-SRNS-CtxReq	CRITICALITY	 1	TYPE RAB-DataForwardingList-SRNS-CtxReq		PRESENCE	 2	}
+
+
+SRNS-ContextRequestIEs RANAP-PROTOCOL-IES ::= {
+		myType-RAB-DataForwardingList-SRNS-CtxReq,
+	...
+}
+
+RAB-DataForwardingList-SRNS-CtxReq 			::= SEQUENCE (SIZE(1.. maxNrOfRABs)) OF ProtocolIE-Container { {RAB-DataForwardingItem-SRNS-CtxReq-IEs} }
+--RAB-IE-ContainerList { {RAB-DataForwardingItem-SRNS-CtxReq-IEs} }
+
+--this is changed by perl script automatically--
+myType-RAB-DataForwardingItem-SRNS-CtxReq RANAP-PROTOCOL-IES ::= 	{ ID id-RAB-DataForwardingItem-SRNS-CtxReq	CRITICALITY	 0	TYPE RAB-DataForwardingItem-SRNS-CtxReq		PRESENCE	 2	}
+
+
+RAB-DataForwardingItem-SRNS-CtxReq-IEs RANAP-PROTOCOL-IES ::= {
+		myType-RAB-DataForwardingItem-SRNS-CtxReq,
+	...
+}
+
+RAB-DataForwardingItem-SRNS-CtxReq ::= SEQUENCE {
+	rAB-ID						RAB-ID,
+	iE-Extensions					ProtocolExtensionContainer { {RAB-DataForwardingItem-SRNS-CtxReq-ExtIEs} }			OPTIONAL,
+	...
+}
+
+RAB-DataForwardingItem-SRNS-CtxReq-ExtIEs RANAP-PROTOCOL-EXTENSION ::= {
+	...
+}
+
+--this is changed by perl script automatically--
+
+-- The SGSN may include the IE, when available to indicate the RAT from which the context request originates, to correct measurement points in SRNC. --
+myType-RAT-Type RANAP-PROTOCOL-EXTENSION ::= 	{ID id-RAT-Type		CRITICALITY	 1	EXTENSION 	RAT-Type		PRESENCE	 0 }
+
+
+SRNS-ContextRequestExtensions RANAP-PROTOCOL-EXTENSION ::= {
+		myType-RAT-Type,
+	...
+}
+
+-- **************************************************************
+--
+-- SRNS Context Response
+--
+-- **************************************************************
+
+SRNS-ContextResponse ::= SEQUENCE {
+	protocolIEs			ProtocolIE-Container			{ {SRNS-ContextResponseIEs} },
+	protocolExtensions		ProtocolExtensionContainer	{ {SRNS-ContextResponseExtensions} }				OPTIONAL,
+	...
+}
+
+--this is changed by perl script automatically--
+myType-RAB-ContextList RANAP-PROTOCOL-IES ::= 	{ ID id-RAB-ContextList				CRITICALITY	 1	TYPE RAB-ContextList				PRESENCE	 0	}
+
+myType-RAB-ContextFailedtoTransferList RANAP-PROTOCOL-IES ::= 	{ ID id-RAB-ContextFailedtoTransferList		CRITICALITY	 1	TYPE RAB-ContextFailedtoTransferList		PRESENCE	 0	}
+
+myType-CriticalityDiagnosticsid7 RANAP-PROTOCOL-IES ::= 	{ ID id-CriticalityDiagnostics			CRITICALITY	 1	TYPE CriticalityDiagnostics			PRESENCE	 0	}
+
+SRNS-ContextResponseIEs RANAP-PROTOCOL-IES ::= {
+		myType-RAB-ContextList |
+		myType-RAB-ContextFailedtoTransferList|
+	myType-CriticalityDiagnosticsid7,
+	...
+}
+
+RAB-ContextList 					::= SEQUENCE (SIZE(1.. maxNrOfRABs)) OF ProtocolIE-Container { {RAB-ContextItemIEs} }
+--RAB-IE-ContainerList { {RAB-ContextItemIEs} }
+
+--this is changed by perl script automatically--
+myType-RAB-ContextItem RANAP-PROTOCOL-IES ::= 	{ ID id-RAB-ContextItem				CRITICALITY	 1	TYPE RAB-ContextItem				PRESENCE	 2	}
+
+
+RAB-ContextItemIEs RANAP-PROTOCOL-IES ::= {
+		myType-RAB-ContextItem,
+	...
+}
+
+RAB-ContextItem ::= SEQUENCE {
+	rAB-ID						RAB-ID,
+	dl-GTP-PDU-SequenceNumber			DL-GTP-PDU-SequenceNumber 	OPTIONAL,
+	ul-GTP-PDU-SequenceNumber			UL-GTP-PDU-SequenceNumber 	OPTIONAL,
+	dl-N-PDU-SequenceNumber				DL-N-PDU-SequenceNumber 	OPTIONAL,
+	ul-N-PDU-SequenceNumber				UL-N-PDU-SequenceNumber 	OPTIONAL,
+	iE-Extensions					ProtocolExtensionContainer { {RAB-ContextItem-ExtIEs} }			OPTIONAL,
+	...
+}
+
+RAB-ContextItem-ExtIEs RANAP-PROTOCOL-EXTENSION ::= {
+	...
+}
+
+RAB-ContextFailedtoTransferList 				::= SEQUENCE (SIZE(1.. maxNrOfRABs)) OF ProtocolIE-Container { {RABs-ContextFailedtoTransferItemIEs} }
+--RAB-IE-ContainerList { {RABs-ContextFailedtoTransferItemIEs} }
+
+--this is changed by perl script automatically--
+myType-RAB-ContextFailedtoTransferItem RANAP-PROTOCOL-IES ::= 	{ ID id-RAB-ContextFailedtoTransferItem		CRITICALITY	 1	TYPE RABs-ContextFailedtoTransferItem			PRESENCE	 2	}
+
+
+RABs-ContextFailedtoTransferItemIEs RANAP-PROTOCOL-IES ::= {
+		myType-RAB-ContextFailedtoTransferItem,
+	...
+}
+
+RABs-ContextFailedtoTransferItem::= SEQUENCE {
+	rAB-ID						RAB-ID,
+	cause						Cause,
+	iE-Extensions					ProtocolExtensionContainer { { RABs-ContextFailedtoTransferItem-ExtIEs} }			OPTIONAL,
+	...
+}
+
+
+RABs-ContextFailedtoTransferItem-ExtIEs RANAP-PROTOCOL-EXTENSION ::= {
+	...
+}
+
+SRNS-ContextResponseExtensions RANAP-PROTOCOL-EXTENSION ::= {
+	...
+}
+
+-- **************************************************************
+--
+-- SECURITY MODE CONTROL ELEMENTARY PROCEDURE
+--
+-- **************************************************************
+
+-- **************************************************************
+--
+-- Security Mode Command
+--
+-- **************************************************************
+
+SecurityModeCommand ::= SEQUENCE {
+	protocolIEs			ProtocolIE-Container			{ {SecurityModeCommandIEs} },
+	protocolExtensions		ProtocolExtensionContainer	{ {SecurityModeCommandExtensions} }				OPTIONAL,
+	...
+}
+
+--this is changed by perl script automatically--
+myType-IntegrityProtectionInformationid2 RANAP-PROTOCOL-IES ::= 	{ ID id-IntegrityProtectionInformation		CRITICALITY	 0	TYPE IntegrityProtectionInformation		PRESENCE	 2	}
+
+myType-EncryptionInformationid2 RANAP-PROTOCOL-IES ::= 	{ ID id-EncryptionInformation			CRITICALITY	 1	TYPE EncryptionInformation			PRESENCE	 0	}
+
+myType-KeyStatus RANAP-PROTOCOL-IES ::= 	{ ID id-KeyStatus						CRITICALITY	 0	TYPE KeyStatus						PRESENCE	 2}
+
+
+SecurityModeCommandIEs RANAP-PROTOCOL-IES ::= {
+	myType-IntegrityProtectionInformationid2 |
+	myType-EncryptionInformationid2 |
+		myType-KeyStatus,
+	...
+}
+
+SecurityModeCommandExtensions RANAP-PROTOCOL-EXTENSION ::= {
+	...
+}
+
+-- **************************************************************
+--
+-- Security Mode Complete
+--
+-- **************************************************************
+
+SecurityModeComplete ::= SEQUENCE {
+	protocolIEs			ProtocolIE-Container			{ {SecurityModeCompleteIEs} },
+	protocolExtensions		ProtocolExtensionContainer	{ {SecurityModeCompleteExtensions} }				OPTIONAL,
+	...
+}
+
+--this is changed by perl script automatically--
+myType-ChosenIntegrityProtectionAlgorithmid2 RANAP-PROTOCOL-IES ::= 	{ ID id-ChosenIntegrityProtectionAlgorithm	CRITICALITY	 0	TYPE ChosenIntegrityProtectionAlgorithm 	PRESENCE	 2	}
+
+myType-ChosenEncryptionAlgorithmid2 RANAP-PROTOCOL-IES ::= 	{ ID id-ChosenEncryptionAlgorithm		CRITICALITY	 1	TYPE ChosenEncryptionAlgorithm			PRESENCE	 0	}
+
+myType-CriticalityDiagnosticsid8 RANAP-PROTOCOL-IES ::= 	{ ID id-CriticalityDiagnostics			CRITICALITY	 1	TYPE CriticalityDiagnostics			PRESENCE	 0	}
+
+SecurityModeCompleteIEs RANAP-PROTOCOL-IES ::= {
+	myType-ChosenIntegrityProtectionAlgorithmid2 |
+	myType-ChosenEncryptionAlgorithmid2 |
+	myType-CriticalityDiagnosticsid8,
+	...
+}
+
+SecurityModeCompleteExtensions RANAP-PROTOCOL-EXTENSION ::= {
+	...
+}
+
+-- **************************************************************
+--
+-- Security Mode Reject
+--
+-- **************************************************************
+
+SecurityModeReject ::= SEQUENCE {
+	protocolIEs			ProtocolIE-Container			{ {SecurityModeRejectIEs} },
+	protocolExtensions		ProtocolExtensionContainer	{ {SecurityModeRejectExtensions} }				OPTIONAL,
+	...
+}
+
+--this is changed by perl script automatically--
+myType-Causeid7 RANAP-PROTOCOL-IES ::= 	{ ID id-Cause					CRITICALITY	 1	TYPE Cause					PRESENCE	 2	}
+myType-CriticalityDiagnosticsid9 RANAP-PROTOCOL-IES ::= 	{ ID id-CriticalityDiagnostics			CRITICALITY	 1	TYPE CriticalityDiagnostics 			PRESENCE	 0	}
+
+
+SecurityModeRejectIEs RANAP-PROTOCOL-IES ::= {
+	myType-Causeid7 |
+	myType-CriticalityDiagnosticsid9,
+	...
+}
+
+SecurityModeRejectExtensions RANAP-PROTOCOL-EXTENSION ::= {
+	...
+}
+
+-- **************************************************************
+--
+-- DATA VOLUME REPORT ELEMENTARY PROCEDURE
+--
+-- **************************************************************
+
+-- **************************************************************
+--
+-- Data Volume Report Request
+--
+-- **************************************************************
+
+DataVolumeReportRequest ::= SEQUENCE {
+	protocolIEs			ProtocolIE-Container			{ {DataVolumeReportRequestIEs} },
+	protocolExtensions		ProtocolExtensionContainer	{ {DataVolumeReportRequestExtensions} }			OPTIONAL,
+	...
+}
+
+--this is changed by perl script automatically--
+myType-RAB-DataVolumeReportRequestList RANAP-PROTOCOL-IES ::= 	{ ID id-RAB-DataVolumeReportRequestList		CRITICALITY	 1	TYPE RAB-DataVolumeReportRequestList		PRESENCE	 2	}
+
+
+DataVolumeReportRequestIEs RANAP-PROTOCOL-IES ::= {
+		myType-RAB-DataVolumeReportRequestList,
+	...
+}
+
+RAB-DataVolumeReportRequestList 			::= SEQUENCE (SIZE(1.. maxNrOfRABs)) OF ProtocolIE-Container { {RAB-DataVolumeReportRequestItemIEs} }
+--RAB-IE-ContainerList { {RAB-DataVolumeReportRequestItemIEs} }
+
+--this is changed by perl script automatically--
+myType-RAB-DataVolumeReportRequestItem RANAP-PROTOCOL-IES ::= 	{ ID id-RAB-DataVolumeReportRequestItem		CRITICALITY	 0	TYPE RAB-DataVolumeReportRequestItem		PRESENCE	 2	}
+
+
+RAB-DataVolumeReportRequestItemIEs RANAP-PROTOCOL-IES ::= {
+		myType-RAB-DataVolumeReportRequestItem,
+	...
+}
+
+RAB-DataVolumeReportRequestItem ::= SEQUENCE {
+	rAB-ID						RAB-ID,
+	iE-Extensions					ProtocolExtensionContainer { {RAB-DataVolumeReportRequestItem-ExtIEs} }			OPTIONAL,
+	...
+}
+
+RAB-DataVolumeReportRequestItem-ExtIEs RANAP-PROTOCOL-EXTENSION ::= {
+	...
+}
+
+DataVolumeReportRequestExtensions RANAP-PROTOCOL-EXTENSION ::= {
+	...
+}
+
+-- **************************************************************
+--
+-- Data Volume Report
+--
+-- **************************************************************
+
+DataVolumeReport ::= SEQUENCE {
+	protocolIEs			ProtocolIE-Container			{ {DataVolumeReportIEs} },
+	protocolExtensions		ProtocolExtensionContainer	{ {DataVolumeReportExtensions} }				OPTIONAL,
+	...
+}
+
+--this is changed by perl script automatically--
+myType-RAB-DataVolumeReportListid2 RANAP-PROTOCOL-IES ::= 	{ ID id-RAB-DataVolumeReportList		CRITICALITY	 1	TYPE RAB-DataVolumeReportList			PRESENCE	 0	}
+myType-RAB-FailedtoReportList RANAP-PROTOCOL-IES ::= 	{ ID id-RAB-FailedtoReportList			CRITICALITY	 1	TYPE RAB-FailedtoReportList			PRESENCE	 0	}
+
+myType-CriticalityDiagnosticsid10 RANAP-PROTOCOL-IES ::= 	{ ID id-CriticalityDiagnostics			CRITICALITY	 1	TYPE CriticalityDiagnostics			PRESENCE	 0	}
+
+
+DataVolumeReportIEs RANAP-PROTOCOL-IES ::= {
+	myType-RAB-DataVolumeReportListid2 |
+		myType-RAB-FailedtoReportList |
+	myType-CriticalityDiagnosticsid10,
+	...
+}
+
+DataVolumeReportExtensions RANAP-PROTOCOL-EXTENSION ::= {
+	...
+}
+
+RAB-FailedtoReportList 				::= SEQUENCE (SIZE(1.. maxNrOfRABs)) OF ProtocolIE-Container { {RABs-failed-to-reportItemIEs} }
+--RAB-IE-ContainerList { {RABs-failed-to-reportItemIEs} }
+
+--this is changed by perl script automatically--
+myType-RAB-FailedtoReportItem RANAP-PROTOCOL-IES ::= 	{ ID id-RAB-FailedtoReportItem		CRITICALITY	 1	TYPE RABs-failed-to-reportItem			PRESENCE	 2	}
+
+
+RABs-failed-to-reportItemIEs RANAP-PROTOCOL-IES ::= {
+		myType-RAB-FailedtoReportItem,
+	...
+}
+
+RABs-failed-to-reportItem::= SEQUENCE {
+	rAB-ID						RAB-ID,
+	cause						Cause,
+	iE-Extensions					ProtocolExtensionContainer { { RABs-failed-to-reportItem-ExtIEs} }			OPTIONAL,
+	...
+}
+
+
+RABs-failed-to-reportItem-ExtIEs RANAP-PROTOCOL-EXTENSION ::= {
+	...
+}
+
+
+-- **************************************************************
+--
+-- RESET ELEMENTARY PROCEDURE
+--
+-- **************************************************************
+
+-- **************************************************************
+--
+-- Reset
+--
+-- **************************************************************
+
+Reset ::= SEQUENCE {
+	protocolIEs			ProtocolIE-Container			{ {ResetIEs} },
+	protocolExtensions		ProtocolExtensionContainer	{ {ResetExtensions} }					OPTIONAL,
+	...
+}
+
+--this is changed by perl script automatically--
+myType-Causeid8 RANAP-PROTOCOL-IES ::= 	{ ID id-Cause					CRITICALITY	 1	TYPE Cause					PRESENCE	 2	}
+myType-CN-DomainIndicatorid2 RANAP-PROTOCOL-IES ::= 	{ ID id-CN-DomainIndicator			CRITICALITY	 0	TYPE CN-DomainIndicator				PRESENCE	 2	}
+
+myType-GlobalRNC-ID RANAP-PROTOCOL-IES ::= 	{ ID id-GlobalRNC-ID				CRITICALITY	 1	TYPE GlobalRNC-ID				PRESENCE	 0	}
+
+
+ResetIEs RANAP-PROTOCOL-IES ::= {
+	myType-Causeid8 |
+	myType-CN-DomainIndicatorid2 |
+		myType-GlobalRNC-ID,
+	...
+}
+
+--this is changed by perl script automatically--
+
+-- Extension for Release 4 --
+myType-GlobalCN-IDid2 RANAP-PROTOCOL-EXTENSION ::= 	{ ID id-GlobalCN-ID				CRITICALITY	 1		EXTENSION GlobalCN-ID				PRESENCE	 0}
+-- Extension for Release 7 to indicate extended RNC-ID --
+myType-ExtendedRNC-ID RANAP-PROTOCOL-EXTENSION ::= 	{ ID id-ExtendedRNC-ID				CRITICALITY	 0	EXTENSION ExtendedRNC-ID		PRESENCE	 0	}
+
+
+ResetExtensions RANAP-PROTOCOL-EXTENSION ::= {
+	myType-GlobalCN-IDid2|
+		myType-ExtendedRNC-ID,
+	...
+}
+
+-- **************************************************************
+--
+-- Reset Acknowledge
+--
+-- **************************************************************
+
+ResetAcknowledge ::= SEQUENCE {
+	protocolIEs			ProtocolIE-Container			{ {ResetAcknowledgeIEs} },
+	protocolExtensions		ProtocolExtensionContainer	{ {ResetAcknowledgeExtensions} }				OPTIONAL,
+	...
+}
+
+--this is changed by perl script automatically--
+myType-CN-DomainIndicatorid3 RANAP-PROTOCOL-IES ::= 	{ ID id-CN-DomainIndicator			CRITICALITY	 0	TYPE CN-DomainIndicator				PRESENCE	 2	}
+
+myType-CriticalityDiagnosticsid11 RANAP-PROTOCOL-IES ::= 	 { ID id-CriticalityDiagnostics			CRITICALITY	 1	TYPE CriticalityDiagnostics			PRESENCE	 0	}
+myType-GlobalRNC-IDid2 RANAP-PROTOCOL-IES ::= 	{ ID id-GlobalRNC-ID				CRITICALITY	 1	TYPE GlobalRNC-ID				PRESENCE	 0	}
+
+
+ResetAcknowledgeIEs RANAP-PROTOCOL-IES ::= {
+	myType-CN-DomainIndicatorid3 |
+	myType-CriticalityDiagnosticsid11 |
+	myType-GlobalRNC-IDid2,
+	...
+}
+
+--this is changed by perl script automatically--
+
+-- Extension for Release 4 --
+myType-GlobalCN-IDid3 RANAP-PROTOCOL-EXTENSION ::= 	{ ID id-GlobalCN-ID				CRITICALITY	 1		EXTENSION GlobalCN-ID				PRESENCE	 0}
+-- Extension for Release 7 to indicate extended RNC-ID --
+myType-ExtendedRNC-IDid2 RANAP-PROTOCOL-EXTENSION ::= 	{ ID id-ExtendedRNC-ID				CRITICALITY	 0	EXTENSION ExtendedRNC-ID		PRESENCE	 0	}
+
+
+ResetAcknowledgeExtensions RANAP-PROTOCOL-EXTENSION ::= {
+	myType-GlobalCN-IDid3|
+	myType-ExtendedRNC-IDid2,
+	...
+}
+-- **************************************************************
+--
+-- RESET RESOURCE ELEMENTARY PROCEDURE
+--
+-- **************************************************************
+
+
+-- **************************************************************
+--
+-- Reset Resource
+--
+-- **************************************************************
+
+ResetResource ::= SEQUENCE {
+	protocolIEs			ProtocolIE-Container			{ {ResetResourceIEs} },
+	protocolExtensions		ProtocolExtensionContainer	{ {ResetResourceExtensions} }					OPTIONAL,
+	...
+}
+
+--this is changed by perl script automatically--
+myType-CN-DomainIndicatorid4 RANAP-PROTOCOL-IES ::= 	{ ID id-CN-DomainIndicator			CRITICALITY	 0	TYPE CN-DomainIndicator				PRESENCE	 2	}
+myType-Causeid9 RANAP-PROTOCOL-IES ::= 	{ ID id-Cause					CRITICALITY	 1	TYPE Cause					PRESENCE	 2	}
+
+myType-IuSigConIdList RANAP-PROTOCOL-IES ::= 	{ ID id-IuSigConIdList				CRITICALITY	 1	TYPE ResetResourceList				PRESENCE	 2	}
+
+myType-GlobalRNC-IDid3 RANAP-PROTOCOL-IES ::= 	{ ID id-GlobalRNC-ID				CRITICALITY	 1	TYPE GlobalRNC-ID				PRESENCE	 0	}
+
+
+ResetResourceIEs RANAP-PROTOCOL-IES ::= {
+	myType-CN-DomainIndicatorid4 |
+	myType-Causeid9 |
+		myType-IuSigConIdList |
+	myType-GlobalRNC-IDid3,
+	...
+}
+
+ResetResourceList 	::=	SEQUENCE (SIZE(1.. maxNrOfIuSigConIds)) OF ProtocolIE-Container              {{ResetResourceItemIEs} }
+--IuSigConId-IE-ContainerList{ {ResetResourceItemIEs} }
+
+--this is changed by perl script automatically--
+myType-IuSigConIdItem RANAP-PROTOCOL-IES ::= 	{ ID id-IuSigConIdItem				CRITICALITY	 0	TYPE	ResetResourceItem			PRESENCE	 2	}
+
+
+ResetResourceItemIEs RANAP-PROTOCOL-IES ::= {
+		myType-IuSigConIdItem,
+	...
+}
+
+ResetResourceItem ::= SEQUENCE {
+	iuSigConId					IuSignallingConnectionIdentifier,
+	iE-Extensions				ProtocolExtensionContainer { { ResetResourceItem-ExtIEs} }			OPTIONAL,
+	...
+}
+
+ResetResourceItem-ExtIEs RANAP-PROTOCOL-EXTENSION ::= {
+	...
+}
+
+--this is changed by perl script automatically--
+
+-- Extension for Release 4 --
+myType-GlobalCN-IDid4 RANAP-PROTOCOL-EXTENSION ::= 	{ ID id-GlobalCN-ID				CRITICALITY	 1		EXTENSION GlobalCN-ID				PRESENCE	 0}
+-- Extension for Release 7 to indicate extended RNC-ID --
+myType-ExtendedRNC-IDid3 RANAP-PROTOCOL-EXTENSION ::= 	{ ID id-ExtendedRNC-ID			CRITICALITY	 0		EXTENSION ExtendedRNC-ID			PRESENCE	 0	}
+
+
+ResetResourceExtensions RANAP-PROTOCOL-EXTENSION ::= {
+	myType-GlobalCN-IDid4|
+	myType-ExtendedRNC-IDid3,
+	...
+}
+
+-- **************************************************************
+--
+-- Reset Resource Acknowledge
+--
+-- **************************************************************
+
+ResetResourceAcknowledge ::= SEQUENCE {
+	protocolIEs			ProtocolIE-Container			{ {ResetResourceAcknowledgeIEs} },
+	protocolExtensions		ProtocolExtensionContainer	{ {ResetResourceAcknowledgeExtensions} }				OPTIONAL,
+	...
+}
+
+--this is changed by perl script automatically--
+myType-CN-DomainIndicatorid5 RANAP-PROTOCOL-IES ::= 	{ ID id-CN-DomainIndicator			CRITICALITY	 0	TYPE CN-DomainIndicator				PRESENCE	 2	}
+myType-IuSigConIdListid2 RANAP-PROTOCOL-IES ::= 	{ ID id-IuSigConIdList				CRITICALITY	 1	TYPE ResetResourceAckList			PRESENCE	 2	}
+
+myType-GlobalRNC-IDid4 RANAP-PROTOCOL-IES ::= 	{ ID id-GlobalRNC-ID				CRITICALITY	 1	TYPE GlobalRNC-ID				PRESENCE	 0	}
+
+myType-CriticalityDiagnosticsid12 RANAP-PROTOCOL-IES ::= 	{ ID id-CriticalityDiagnostics			CRITICALITY	 1	TYPE CriticalityDiagnostics			PRESENCE	 0	}
+
+
+ResetResourceAcknowledgeIEs RANAP-PROTOCOL-IES ::= {
+	myType-CN-DomainIndicatorid5 |
+	myType-IuSigConIdListid2 |
+	myType-GlobalRNC-IDid4 |
+	myType-CriticalityDiagnosticsid12,
+	...
+}
+ResetResourceAckList 	::=	SEQUENCE (SIZE(1.. maxNrOfIuSigConIds)) OF ProtocolIE-Container              {{ResetResourceAckItemIEs} }
+--IuSigConId-IE-ContainerList{ {ResetResourceAckItemIEs} }
+
+--this is changed by perl script automatically--
+myType-IuSigConIdItemid2 RANAP-PROTOCOL-IES ::= 	{ ID id-IuSigConIdItem				CRITICALITY	 0	TYPE	ResetResourceAckItem			PRESENCE	 2	}
+
+ResetResourceAckItemIEs RANAP-PROTOCOL-IES ::= {
+	myType-IuSigConIdItemid2,
+	...
+}
+
+ResetResourceAckItem ::= SEQUENCE {
+	iuSigConId					IuSignallingConnectionIdentifier,
+	iE-Extensions				ProtocolExtensionContainer { { ResetResourceAckItem-ExtIEs} }			OPTIONAL,
+	...
+}
+
+ResetResourceAckItem-ExtIEs RANAP-PROTOCOL-EXTENSION ::= {
+	...
+}
+
+--this is changed by perl script automatically--
+
+-- Extension for Release 4 --
+myType-GlobalCN-IDid5 RANAP-PROTOCOL-EXTENSION ::= 	{ ID id-GlobalCN-ID				CRITICALITY	 1		EXTENSION GlobalCN-ID				PRESENCE	 0}
+-- Extension for Release 7 to indicate extended RNC-ID --
+myType-ExtendedRNC-IDid4 RANAP-PROTOCOL-EXTENSION ::= 	{ ID id-ExtendedRNC-ID				CRITICALITY	 0	EXTENSION ExtendedRNC-ID		PRESENCE	 0}
+
+
+ResetResourceAcknowledgeExtensions RANAP-PROTOCOL-EXTENSION ::= {
+	myType-GlobalCN-IDid5|
+	myType-ExtendedRNC-IDid4,
+	...
+}
+
+-- **************************************************************
+--
+-- RAB RELEASE REQUEST ELEMENTARY PROCEDURE
+--
+-- **************************************************************
+
+-- **************************************************************
+--
+-- RAB Release Request
+--
+-- **************************************************************
+
+RAB-ReleaseRequest ::= SEQUENCE {
+	protocolIEs			ProtocolIE-Container			{ {RAB-ReleaseRequestIEs} },
+	protocolExtensions		ProtocolExtensionContainer	{ {RAB-ReleaseRequestExtensions} }				OPTIONAL,
+	...
+}
+
+--this is changed by perl script automatically--
+myType-RAB-ReleaseList RANAP-PROTOCOL-IES ::= 	{ ID id-RAB-ReleaseList				CRITICALITY	 1	TYPE RAB-ReleaseList				PRESENCE	 2	}
+
+
+RAB-ReleaseRequestIEs RANAP-PROTOCOL-IES ::= {
+		myType-RAB-ReleaseList,
+	...
+}
+
+RAB-ReleaseList 					::= SEQUENCE (SIZE(1.. maxNrOfRABs)) OF ProtocolIE-Container { {RAB-ReleaseItemIEs} }
+--RAB-IE-ContainerList { {RAB-ReleaseItemIEs} }
+
+--this is changed by perl script automatically--
+myType-RAB-ReleaseItem RANAP-PROTOCOL-IES ::= 	{ ID id-RAB-ReleaseItem				CRITICALITY	 1	TYPE RAB-ReleaseItem				PRESENCE	 2	}
+
+
+RAB-ReleaseItemIEs RANAP-PROTOCOL-IES ::= {
+		myType-RAB-ReleaseItem,
+	...
+}
+
+RAB-ReleaseItem ::= SEQUENCE {
+	rAB-ID						RAB-ID,
+	cause						Cause,
+	iE-Extensions					ProtocolExtensionContainer { {RAB-ReleaseItem-ExtIEs} }			OPTIONAL,
+	...
+}
+
+RAB-ReleaseItem-ExtIEs RANAP-PROTOCOL-EXTENSION ::= {
+	...
+}
+
+RAB-ReleaseRequestExtensions RANAP-PROTOCOL-EXTENSION ::= {
+	...
+}
+
+-- **************************************************************
+--
+-- Iu RELEASE REQUEST ELEMENTARY PROCEDURE
+--
+-- **************************************************************
+
+-- **************************************************************
+--
+-- Iu Release Request
+--
+-- **************************************************************
+
+Iu-ReleaseRequest ::= SEQUENCE {
+	protocolIEs			ProtocolIE-Container			{ {Iu-ReleaseRequestIEs} },
+	protocolExtensions		ProtocolExtensionContainer	{ {Iu-ReleaseRequestExtensions} }				OPTIONAL,
+	...
+}
+
+--this is changed by perl script automatically--
+myType-Causeid10 RANAP-PROTOCOL-IES ::= 	{ ID id-Cause					CRITICALITY	 1	TYPE Cause					PRESENCE	 2	}
+
+Iu-ReleaseRequestIEs RANAP-PROTOCOL-IES ::= {
+	myType-Causeid10,
+	...
+}
+
+Iu-ReleaseRequestExtensions RANAP-PROTOCOL-EXTENSION ::= {
+	...
+}
+
+-- **************************************************************
+--
+-- RELOCATION DETECT ELEMENTARY PROCEDURE
+--
+-- **************************************************************
+
+-- **************************************************************
+--
+-- Relocation Detect
+--
+-- **************************************************************
+
+RelocationDetect ::= SEQUENCE {
+	protocolIEs			ProtocolIE-Container			{ {RelocationDetectIEs} },
+	protocolExtensions		ProtocolExtensionContainer	{ {RelocationDetectExtensions} }				OPTIONAL,
+	...
+}
+
+RelocationDetectIEs RANAP-PROTOCOL-IES ::= {
+	...
+}
+
+RelocationDetectExtensions RANAP-PROTOCOL-EXTENSION ::= {
+	...
+}
+
+-- **************************************************************
+--
+-- RELOCATION COMPLETE ELEMENTARY PROCEDURE
+--
+-- **************************************************************
+
+-- **************************************************************
+--
+-- Relocation Complete
+--
+-- **************************************************************
+
+RelocationComplete ::= SEQUENCE {
+	protocolIEs			ProtocolIE-Container			{ {RelocationCompleteIEs} },
+	protocolExtensions		ProtocolExtensionContainer	{ {RelocationCompleteExtensions} }				OPTIONAL,
+	...
+}
+
+RelocationCompleteIEs RANAP-PROTOCOL-IES ::= {
+	...
+}
+
+RelocationCompleteExtensions RANAP-PROTOCOL-EXTENSION ::= {
+	...
+}
+
+-- **************************************************************
+--
+-- ENHANCED RELOCATION COMPLETE ELEMENTARY PROCEDURE
+--
+-- **************************************************************
+
+-- **************************************************************
+--
+-- Enhanced Relocation Complete Request
+--
+-- **************************************************************
+
+EnhancedRelocationCompleteRequest ::= SEQUENCE {
+	protocolIEs			ProtocolIE-Container			{ {EnhancedRelocationCompleteRequestIEs} },
+	protocolExtensions		ProtocolExtensionContainer	{ {EnhancedRelocationCompleteRequestExtensions} }				OPTIONAL,
+	...
+}
+
+--this is changed by perl script automatically--
+myType-OldIuSigConId RANAP-PROTOCOL-IES ::= 	{ ID id-OldIuSigConId	CRITICALITY	 0 TYPE IuSignallingConnectionIdentifier	PRESENCE	 2 }
+
+myType-IuSigConIdid2 RANAP-PROTOCOL-IES ::= 	{ ID id-IuSigConId	CRITICALITY	 0 TYPE IuSignallingConnectionIdentifier	PRESENCE	 2 }
+
+myType-Relocation-SourceRNC-ID RANAP-PROTOCOL-IES ::= 	{ ID id-Relocation-SourceRNC-ID				CRITICALITY	 1	TYPE	GlobalRNC-ID				PRESENCE	 2 }
+
+myType-Relocation-SourceExtendedRNC-ID RANAP-PROTOCOL-IES ::= 	{ ID id-Relocation-SourceExtendedRNC-ID			CRITICALITY	 1		TYPE ExtendedRNC-ID			PRESENCE	 0	}
+
+myType-Relocation-TargetRNC-ID RANAP-PROTOCOL-IES ::= 	{ ID id-Relocation-TargetRNC-ID				CRITICALITY	 0	TYPE GlobalRNC-ID	 				PRESENCE	 2	}
+
+myType-Relocation-TargetExtendedRNC-ID RANAP-PROTOCOL-IES ::= 	{ ID id-Relocation-TargetExtendedRNC-ID			CRITICALITY	 0		TYPE ExtendedRNC-ID			PRESENCE	 0	}
+
+myType-RAB-SetupList-EnhancedRelocCompleteReq RANAP-PROTOCOL-IES ::= 	{ ID id-RAB-SetupList-EnhancedRelocCompleteReq			CRITICALITY	 0	TYPE RAB-SetupList-EnhancedRelocCompleteReq	PRESENCE	 0	}
+
+
+EnhancedRelocationCompleteRequestIEs RANAP-PROTOCOL-IES ::= {
+		myType-OldIuSigConId |
+	myType-IuSigConIdid2 |
+		myType-Relocation-SourceRNC-ID |
+		myType-Relocation-SourceExtendedRNC-ID |
+		myType-Relocation-TargetRNC-ID |
+		myType-Relocation-TargetExtendedRNC-ID |
+	myType-RAB-SetupList-EnhancedRelocCompleteReq
+,	...
+}
+
+RAB-SetupList-EnhancedRelocCompleteReq 				::= SEQUENCE (SIZE(1.. maxNrOfRABs)) OF ProtocolIE-Container { {RAB-SetupItem-EnhancedRelocCompleteReq-IEs} }
+--RAB-IE-ContainerList { { RAB-SetupItem-EnhancedRelocCompleteReq-IEs} }
+
+--this is changed by perl script automatically--
+myType-RAB-SetupItem-EnhancedRelocCompleteReq RANAP-PROTOCOL-IES ::= 	{ ID id-RAB-SetupItem-EnhancedRelocCompleteReq		CRITICALITY	 0	TYPE RAB-SetupItem-EnhancedRelocCompleteReq			PRESENCE	 2 	}
+
+
+RAB-SetupItem-EnhancedRelocCompleteReq-IEs RANAP-PROTOCOL-IES ::= {
+		myType-RAB-SetupItem-EnhancedRelocCompleteReq,
+	...
+}
+
+RAB-SetupItem-EnhancedRelocCompleteReq ::= SEQUENCE {
+	rAB-ID									RAB-ID,
+	transportLayerAddressReq1				TransportLayerAddress	OPTIONAL,
+	iuTransportAssociationReq1				IuTransportAssociation	OPTIONAL,
+	ass-RAB-Parameters						Ass-RAB-Parameters OPTIONAL,
+	iE-Extensions					ProtocolExtensionContainer { { RAB-SetupItem-EnhancedRelocCompleteReq-ExtIEs} }			OPTIONAL,
+	...
+}
+
+RAB-SetupItem-EnhancedRelocCompleteReq-ExtIEs RANAP-PROTOCOL-EXTENSION ::= {
+	...
+}
+
+--this is changed by perl script automatically--
+myType-ChosenIntegrityProtectionAlgorithmid3 RANAP-PROTOCOL-EXTENSION ::= 	{ ID id-ChosenIntegrityProtectionAlgorithm	CRITICALITY	 1	EXTENSION ChosenIntegrityProtectionAlgorithm		PRESENCE	 0	}
+myType-ChosenEncryptionAlgorithmid3 RANAP-PROTOCOL-EXTENSION ::= 	{ ID id-ChosenEncryptionAlgorithm		CRITICALITY	 1	EXTENSION ChosenEncryptionAlgorithm			PRESENCE	 0	}
+
+
+EnhancedRelocationCompleteRequestExtensions RANAP-PROTOCOL-EXTENSION ::= {
+	myType-ChosenIntegrityProtectionAlgorithmid3 |
+	myType-ChosenEncryptionAlgorithmid3,
+	...
+}
+
+-- **************************************************************
+--
+-- Enhanced Relocation Complete Response
+--
+-- **************************************************************
+
+EnhancedRelocationCompleteResponse ::= SEQUENCE {
+	protocolIEs			ProtocolIE-Container			{ {EnhancedRelocationCompleteResponseIEs} },
+	protocolExtensions		ProtocolExtensionContainer	{ {EnhancedRelocationCompleteResponseExtensions} }			OPTIONAL,
+	...
+}
+
+--this is changed by perl script automatically--
+myType-RAB-SetupList-EnhancedRelocCompleteRes RANAP-PROTOCOL-IES ::= 	{ ID id-RAB-SetupList-EnhancedRelocCompleteRes		CRITICALITY	 1	TYPE RAB-SetupList-EnhancedRelocCompleteRes	PRESENCE	 0}
+
+myType-RAB-ToBeReleasedList-EnhancedRelocCompleteRes RANAP-PROTOCOL-IES ::= 	{ ID id-RAB-ToBeReleasedList-EnhancedRelocCompleteRes		CRITICALITY	 1	TYPE RAB-ToBeReleasedList-EnhancedRelocCompleteRes	PRESENCE	 0}
+
+myType-CriticalityDiagnosticsid13 RANAP-PROTOCOL-IES ::= 	{ ID id-CriticalityDiagnostics			CRITICALITY	 1	TYPE CriticalityDiagnostics 			PRESENCE	 0	}
+
+EnhancedRelocationCompleteResponseIEs RANAP-PROTOCOL-IES ::= {
+		myType-RAB-SetupList-EnhancedRelocCompleteRes |
+		myType-RAB-ToBeReleasedList-EnhancedRelocCompleteRes |
+	myType-CriticalityDiagnosticsid13,
+	...
+}
+
+RAB-SetupList-EnhancedRelocCompleteRes ::= SEQUENCE (SIZE(1.. maxNrOfRABs)) OF ProtocolIE-Container { {RAB-SetupItem-EnhancedRelocCompleteRes-IEs} }
+--RAB-IE-ContainerList { {RAB-SetupItem-EnhancedRelocCompleteRes-IEs} }
+
+--this is changed by perl script automatically--
+myType-RAB-SetupItem-EnhancedRelocCompleteRes RANAP-PROTOCOL-IES ::= 	{ ID id-RAB-SetupItem-EnhancedRelocCompleteRes		CRITICALITY	 0	TYPE RAB-SetupItem-EnhancedRelocCompleteRes		PRESENCE	 2 	}
+
+
+RAB-SetupItem-EnhancedRelocCompleteRes-IEs RANAP-PROTOCOL-IES ::= {
+		myType-RAB-SetupItem-EnhancedRelocCompleteRes,
+	...
+}
+
+RAB-SetupItem-EnhancedRelocCompleteRes ::= SEQUENCE {
+	rAB-ID									RAB-ID,
+	rAB-Parameters							RAB-Parameters	OPTIONAL,
+	userPlaneInformation					UserPlaneInformation,
+	transportLayerAddressRes1				TransportLayerAddress	OPTIONAL,
+	iuTransportAssociationRes1				IuTransportAssociation	OPTIONAL,
+	rab2beReleasedList						RAB-ToBeReleasedList-EnhancedRelocCompleteRes OPTIONAL,
+	iE-Extensions							ProtocolExtensionContainer { { RAB-SetupItem-EnhancedRelocCompleteRes-ExtIEs} }			OPTIONAL,
+	...
+}
+
+RAB-SetupItem-EnhancedRelocCompleteRes-ExtIEs RANAP-PROTOCOL-EXTENSION ::= {
+	...
+}
+
+RAB-ToBeReleasedList-EnhancedRelocCompleteRes ::= SEQUENCE (SIZE(1.. maxNrOfRABs)) OF ProtocolIE-Container { {RAB-ToBeReleasedItem-EnhancedRelocCompleteRes-IEs} }
+--RAB-IE-ContainerList { {RAB-ToBeReleasedItem-EnhancedRelocCompleteRes-IEs} }
+
+--this is changed by perl script automatically--
+myType-RAB-ToBeReleasedItem-EnhancedRelocCompleteRes RANAP-PROTOCOL-IES ::= 	{ ID id-RAB-ToBeReleasedItem-EnhancedRelocCompleteRes		CRITICALITY	 1	TYPE RAB-ToBeReleasedItem-EnhancedRelocCompleteRes		PRESENCE	 2 	}
+
+
+RAB-ToBeReleasedItem-EnhancedRelocCompleteRes-IEs RANAP-PROTOCOL-IES ::= {
+		myType-RAB-ToBeReleasedItem-EnhancedRelocCompleteRes,
+	...
+}
+
+RAB-ToBeReleasedItem-EnhancedRelocCompleteRes ::= SEQUENCE {
+	rAB-ID						RAB-ID,
+	cause						Cause,
+	iE-Extensions				ProtocolExtensionContainer { { RAB-ToBeReleasedItem-EnhancedRelocCompleteRes-ExtIEs} }			OPTIONAL,
+	...
+}
+
+RAB-ToBeReleasedItem-EnhancedRelocCompleteRes-ExtIEs RANAP-PROTOCOL-EXTENSION ::= {
+	...
+}
+
+--this is changed by perl script automatically--
+myType-UE-AggregateMaximumBitRateid2 RANAP-PROTOCOL-EXTENSION ::= 	{ ID id-UE-AggregateMaximumBitRate			CRITICALITY	 1	EXTENSION UE-AggregateMaximumBitRate	PRESENCE	 0	}
+
+EnhancedRelocationCompleteResponseExtensions RANAP-PROTOCOL-EXTENSION ::= {
+	myType-UE-AggregateMaximumBitRateid2,
+	...
+}
+
+-- **************************************************************
+--
+-- Enhanced Relocation Complete Failure
+--
+-- **************************************************************
+
+EnhancedRelocationCompleteFailure ::= SEQUENCE {
+	protocolIEs			ProtocolIE-Container			{ {EnhancedRelocationCompleteFailureIEs} },
+	protocolExtensions		ProtocolExtensionContainer	{ {EnhancedRelocationCompleteFailureExtensions} }				OPTIONAL,
+	...
+}
+
+--this is changed by perl script automatically--
+myType-Causeid11 RANAP-PROTOCOL-IES ::= 	{ ID id-Cause					CRITICALITY	 1	TYPE Cause					PRESENCE	 2	}
+myType-CriticalityDiagnosticsid14 RANAP-PROTOCOL-IES ::= 	{ ID id-CriticalityDiagnostics			CRITICALITY	 1	TYPE CriticalityDiagnostics 			PRESENCE	 0	}
+
+
+EnhancedRelocationCompleteFailureIEs RANAP-PROTOCOL-IES ::= {
+	myType-Causeid11 |
+	myType-CriticalityDiagnosticsid14,
+	...
+}
+
+EnhancedRelocationCompleteFailureExtensions RANAP-PROTOCOL-EXTENSION ::= {
+	...
+}
+
+-- **************************************************************
+--
+-- Enhanced Relocation Complete Confirm
+--
+-- **************************************************************
+
+EnhancedRelocationCompleteConfirm ::= SEQUENCE {
+	protocolIEs			ProtocolIE-Container			{ {EnhancedRelocationCompleteConfirmIEs} },
+	protocolExtensions		ProtocolExtensionContainer	{ {EnhancedRelocationCompleteConfirmExtensions} }				OPTIONAL,
+	...
+}
+
+--this is changed by perl script automatically--
+myType-RAB-FailedListid2 RANAP-PROTOCOL-IES ::= 	{ ID id-RAB-FailedList				CRITICALITY	 1	TYPE RAB-FailedList				PRESENCE	 0 }
+
+
+EnhancedRelocationCompleteConfirmIEs RANAP-PROTOCOL-IES ::= {
+	myType-RAB-FailedListid2,
+	...
+}
+
+EnhancedRelocationCompleteConfirmExtensions RANAP-PROTOCOL-EXTENSION ::= {
+	...
+}
+
+
+-- **************************************************************
+--
+-- PAGING ELEMENTARY PROCEDURE
+--
+-- **************************************************************
+
+-- **************************************************************
+--
+-- Paging
+--
+-- **************************************************************
+
+Paging ::= SEQUENCE {
+	protocolIEs			ProtocolIE-Container			{ {PagingIEs} },
+	protocolExtensions		ProtocolExtensionContainer	{ {PagingExtensions} }					OPTIONAL,
+	...
+}
+
+--this is changed by perl script automatically--
+myType-CN-DomainIndicatorid6 RANAP-PROTOCOL-IES ::= 	{ ID id-CN-DomainIndicator				CRITICALITY	 1	TYPE CN-DomainIndicator					PRESENCE	 2	}
+myType-PermanentNAS-UE-IDid2 RANAP-PROTOCOL-IES ::= 	{ ID id-PermanentNAS-UE-ID 				CRITICALITY	 1	TYPE PermanentNAS-UE-ID					PRESENCE	 2	}
+
+myType-TemporaryUE-ID RANAP-PROTOCOL-IES ::= 	{ ID id-TemporaryUE-ID					CRITICALITY	 1	TYPE TemporaryUE-ID						PRESENCE	 0	}
+
+myType-PagingAreaID RANAP-PROTOCOL-IES ::= 	{ ID id-PagingAreaID					CRITICALITY	 1	TYPE PagingAreaID						PRESENCE	 0	}
+
+myType-PagingCause RANAP-PROTOCOL-IES ::= 	{ ID id-PagingCause						CRITICALITY	 1	TYPE PagingCause						PRESENCE	 0	}
+
+myType-NonSearchingIndication RANAP-PROTOCOL-IES ::= 	{ ID id-NonSearchingIndication			CRITICALITY	 1	TYPE NonSearchingIndication				PRESENCE	 0	}
+
+myType-DRX-CycleLengthCoefficient RANAP-PROTOCOL-IES ::= 	{ ID id-DRX-CycleLengthCoefficient		CRITICALITY	 1	TYPE DRX-CycleLengthCoefficient			PRESENCE	 0	}
+
+
+PagingIEs RANAP-PROTOCOL-IES ::= {
+	myType-CN-DomainIndicatorid6 |
+	myType-PermanentNAS-UE-IDid2 |
+		myType-TemporaryUE-ID |
+		myType-PagingAreaID |
+		myType-PagingCause |
+		myType-NonSearchingIndication |
+		myType-DRX-CycleLengthCoefficient ,
+	...
+}
+
+--this is changed by perl script automatically--
+
+-- Extension for Release 5 to enable NNSF --
+myType-GlobalCN-IDid6 RANAP-PROTOCOL-EXTENSION ::= 	{ ID id-GlobalCN-ID				CRITICALITY	 1	EXTENSION GlobalCN-ID				PRESENCE	 0	}
+-- Extension for Release 8 to support CSG --
+myType-CSG-Id-List RANAP-PROTOCOL-EXTENSION ::= 	{ ID id-CSG-Id-List				CRITICALITY	 1	EXTENSION CSG-Id-List				PRESENCE	 0	}
+
+
+PagingExtensions RANAP-PROTOCOL-EXTENSION ::= {
+	myType-GlobalCN-IDid6 |
+		myType-CSG-Id-List,
+	...
+}
+
+-- **************************************************************
+--
+-- COMMON ID ELEMENTARY PROCEDURE
+--
+-- **************************************************************
+
+-- **************************************************************
+--
+-- Common ID
+--
+-- **************************************************************
+
+CommonID ::= SEQUENCE {
+	protocolIEs			ProtocolIE-Container			{ {CommonID-IEs} },
+	protocolExtensions		ProtocolExtensionContainer	{ {CommonIDExtensions} }					OPTIONAL,
+	...
+}
+
+--this is changed by perl script automatically--
+myType-PermanentNAS-UE-IDid3 RANAP-PROTOCOL-IES ::= 	{ ID id-PermanentNAS-UE-ID			CRITICALITY	 1	TYPE PermanentNAS-UE-ID				PRESENCE	 2	}
+
+CommonID-IEs RANAP-PROTOCOL-IES ::= {
+	myType-PermanentNAS-UE-IDid3,
+	...
+}
+
+--this is changed by perl script automatically--
+
+-- Extension for Release 5 to enable shared networks in connected mode --
+myType-SNA-Access-Informationid2 RANAP-PROTOCOL-EXTENSION ::= 	{ ID id-SNA-Access-Information		CRITICALITY	 1	EXTENSION	SNA-Access-Information			PRESENCE	 0		}
+-- Extension for Release 5 to enable specific behaviour by the RNC in relation with early UE handling --
+myType-UESBI-Iuid2 RANAP-PROTOCOL-EXTENSION ::= 	{ ID id-UESBI-Iu	CRITICALITY	 1		EXTENSION UESBI-Iu	PRESENCE	 0}
+
+-- Extension for Release 6 to indicate the selected plmn in GWCN configuration for network sharing non-supporting UEs --
+myType-SelectedPLMN-IDid2 RANAP-PROTOCOL-EXTENSION ::= 	{ ID id-SelectedPLMN-ID	 	CRITICALITY	 1	EXTENSION PLMNidentity		PRESENCE	 0 	}
+
+-- Extension for Release 8 to indicate the Subscriber Profile ID for RAT/Frequency Selection Priority --
+myType-SubscriberProfileIDforRFP RANAP-PROTOCOL-EXTENSION ::= 	{ID id-SubscriberProfileIDforRFP		CRITICALITY	 1		EXTENSION SubscriberProfileIDforRFP					PRESENCE	 0}
+
+-- Extension for Release 8 for SRVCC operation --
+myType-SRVCC-Operation-Possible RANAP-PROTOCOL-EXTENSION ::= 	{ ID id-SRVCC-Operation-Possible		CRITICALITY	 1	EXTENSION SRVCC-Operation-Possible			PRESENCE	 0	}
+
+-- Extension for Release 9 to allow for UE prioritisation during access to hybrid cells --
+myType-CSG-Membership-Statusid2 RANAP-PROTOCOL-EXTENSION ::= 	{ ID id-CSG-Membership-Status		CRITICALITY	 1		EXTENSION CSG-Membership-Status		PRESENCE	 0	}
+
+
+CommonIDExtensions RANAP-PROTOCOL-EXTENSION ::= {
+	myType-SNA-Access-Informationid2 |
+	myType-UESBI-Iuid2|
+	myType-SelectedPLMN-IDid2|
+		myType-SubscriberProfileIDforRFP|
+		myType-SRVCC-Operation-Possible|
+	myType-CSG-Membership-Statusid2,
+	...
+}
+
+-- **************************************************************
+--
+-- CN INVOKE TRACE ELEMENTARY PROCEDURE
+--
+-- **************************************************************
+
+-- **************************************************************
+--
+-- CN Invoke Trace
+--
+-- **************************************************************
+
+CN-InvokeTrace ::= SEQUENCE {
+	protocolIEs				ProtocolIE-Container		{ {CN-InvokeTraceIEs} },
+	protocolExtensions		ProtocolExtensionContainer	{ {CN-InvokeTraceExtensions} }				OPTIONAL,
+	...
+}
+
+--this is changed by perl script automatically--
+myType-TraceType RANAP-PROTOCOL-IES ::= 	{ ID id-TraceType 				CRITICALITY	 1	TYPE TraceType 						PRESENCE	 0	}
+
+	-- This information is mandatory for GERAN Iu Mode, not applicable to UTRAN --
+myType-TraceReference RANAP-PROTOCOL-IES ::= 	{ ID id-TraceReference			CRITICALITY	 1	TYPE TraceReference					PRESENCE	 2	}
+
+myType-TriggerID RANAP-PROTOCOL-IES ::= 	{ ID id-TriggerID				CRITICALITY	 1	TYPE TriggerID						PRESENCE	 0	}
+
+	-- This information is mandatory for GERAN Iu Mode, not applicable to UTRAN --
+myType-UE-ID RANAP-PROTOCOL-IES ::= 	{ ID id-UE-ID					CRITICALITY	 1	TYPE UE-ID							PRESENCE	 0	}
+
+	-- This information is mandatory for UTRAN, optional for GERAN Iu mode --
+myType-OMC-ID RANAP-PROTOCOL-IES ::= 	{ ID id-OMC-ID					CRITICALITY	 1	TYPE OMC-ID							PRESENCE	 0	}
+
+	-- This information is mandatory for GERAN Iu Mode, not applicable to UTRAN --
+
+CN-InvokeTraceIEs RANAP-PROTOCOL-IES ::= {
+		myType-TraceType |
+		myType-TraceReference |
+		myType-TriggerID |
+		myType-UE-ID |
+		myType-OMC-ID,
+	...
+}
+
+--this is changed by perl script automatically--
+
+-- Extension for Release 6 to enable signalling based activation for Subscriber and Equipment Trace over Iu interface --
+myType-TracePropagationParameters RANAP-PROTOCOL-EXTENSION ::= 	{ ID id-TracePropagationParameters		CRITICALITY	 1	EXTENSION TracePropagationParameters			PRESENCE	 0	}
+
+
+CN-InvokeTraceExtensions RANAP-PROTOCOL-EXTENSION ::= {
+		myType-TracePropagationParameters ,
+	...
+}
+
+-- **************************************************************
+--
+-- CN DEACTIVATE TRACE ELEMENTARY PROCEDURE
+--
+-- **************************************************************
+
+-- **************************************************************
+--
+-- CN Deactivate Trace
+--
+-- **************************************************************
+
+CN-DeactivateTrace ::= SEQUENCE {
+	protocolIEs			ProtocolIE-Container			{ {CN-DeactivateTraceIEs} },
+	protocolExtensions		ProtocolExtensionContainer	{ {CN-DeactivateTraceExtensions} }				OPTIONAL,
+	...
+}
+
+--this is changed by perl script automatically--
+myType-TraceReferenceid2 RANAP-PROTOCOL-IES ::= 	{ ID id-TraceReference				CRITICALITY	 1	TYPE TraceReference				PRESENCE	 2 }
+myType-TriggerIDid2 RANAP-PROTOCOL-IES ::= 	{ ID id-TriggerID					CRITICALITY	 1	TYPE TriggerID					PRESENCE	 0 }
+
+	-- This information is optional for GERAN Iu Mode, not applicable to UTRAN --
+
+CN-DeactivateTraceIEs RANAP-PROTOCOL-IES ::= {
+	myType-TraceReferenceid2 |
+	myType-TriggerIDid2,
+	...
+}
+
+CN-DeactivateTraceExtensions RANAP-PROTOCOL-EXTENSION ::= {
+	...
+}
+
+-- **************************************************************
+--
+-- LOCATION REPORTING CONTROL ELEMENTARY PROCEDURE
+--
+-- **************************************************************
+
+-- **************************************************************
+--
+-- Location Reporting Control
+--
+-- **************************************************************
+
+LocationReportingControl ::= SEQUENCE {
+	protocolIEs				ProtocolIE-Container		{ {LocationReportingControlIEs} },
+	protocolExtensions		ProtocolExtensionContainer	{ {LocationReportingControlExtensions} }			OPTIONAL,
+	...
+}
+
+--this is changed by perl script automatically--
+myType-RequestType RANAP-PROTOCOL-IES ::= 	{ ID id-RequestType 				CRITICALITY	 1	TYPE RequestType 				PRESENCE	 2	}
+
+
+LocationReportingControlIEs RANAP-PROTOCOL-IES ::= {
+		myType-RequestType,
+	...
+}
+
+--this is changed by perl script automatically--
+
+-- Extension for Release 4 to enhance the location request over Iu --
+myType-VerticalAccuracyCode RANAP-PROTOCOL-EXTENSION ::= 	{ ID id-VerticalAccuracyCode 				CRITICALITY	 1	EXTENSION VerticalAccuracyCode 				PRESENCE	 0	}
+
+-- Extension for Release 4 to enhance the location request over Iu --
+myType-ResponseTime RANAP-PROTOCOL-EXTENSION ::= 	{ ID id-ResponseTime 						CRITICALITY	 1	EXTENSION ResponseTime 							PRESENCE	 0	}
+
+-- Extension for Release 4 to enhance the location request over Iu --
+myType-PositioningPriority RANAP-PROTOCOL-EXTENSION ::= 	{ ID id-PositioningPriority 				CRITICALITY	 1	EXTENSION PositioningPriority 				PRESENCE	 0	}
+
+-- Extension for Release 4 to enhance the location request over Iu --
+myType-ClientType RANAP-PROTOCOL-EXTENSION ::= 	{ ID id-ClientType 							CRITICALITY	 1	EXTENSION ClientType 							PRESENCE	 0	}
+
+-- Extension for Release 7 to allow the request of velocity over Iu --
+myType-IncludeVelocity RANAP-PROTOCOL-EXTENSION ::= 	{ ID id-IncludeVelocity 					CRITICALITY	 1	EXTENSION IncludeVelocity 						PRESENCE	 0 }
+
+-- Extension for Release 7 to allow periodic reporting over Iu --
+myType-PeriodicLocationInfo RANAP-PROTOCOL-EXTENSION ::= 	{ ID id-PeriodicLocationInfo 				CRITICALITY	 1	EXTENSION PeriodicLocationInfo 				PRESENCE	 0 }
+
+
+LocationReportingControlExtensions RANAP-PROTOCOL-EXTENSION ::= {
+		myType-VerticalAccuracyCode |
+		myType-ResponseTime |
+		myType-PositioningPriority |
+		myType-ClientType |
+		myType-IncludeVelocity |
+		myType-PeriodicLocationInfo,
+	...
+}
+
+-- **************************************************************
+--
+-- LOCATION REPORT ELEMENTARY PROCEDURE
+--
+-- **************************************************************
+
+-- **************************************************************
+--
+-- Location Report
+--
+-- **************************************************************
+
+LocationReport ::= SEQUENCE {
+	protocolIEs			ProtocolIE-Container			{ {LocationReportIEs} },
+	protocolExtensions		ProtocolExtensionContainer	{ {LocationReportExtensions} }				OPTIONAL,
+	...
+}
+
+--this is changed by perl script automatically--
+myType-AreaIdentity RANAP-PROTOCOL-IES ::= 	{ ID id-AreaIdentity				CRITICALITY	 1	TYPE AreaIdentity			PRESENCE	 0	}
+
+myType-Causeid12 RANAP-PROTOCOL-IES ::= 	{ ID id-Cause						CRITICALITY	 1	TYPE Cause					PRESENCE	 0	}
+myType-RequestTypeid2 RANAP-PROTOCOL-IES ::= 	{ ID id-RequestType 				CRITICALITY	 1	TYPE RequestType 			PRESENCE	 0	}
+
+
+LocationReportIEs RANAP-PROTOCOL-IES ::= {
+		myType-AreaIdentity |
+	myType-Causeid12 |
+	myType-RequestTypeid2	,
+	...
+}
+
+--this is changed by perl script automatically--
+
+-- Extension for Release 4 to enable report of Last Known Service Area with its Age over Iu --
+myType-LastKnownServiceArea RANAP-PROTOCOL-EXTENSION ::= 	{ ID id-LastKnownServiceArea	CRITICALITY	 1	EXTENSION LastKnownServiceArea	PRESENCE	 0}
+
+-- Extension for Release 5 to pass the positioning methods that have been used --
+myType-PositionData RANAP-PROTOCOL-EXTENSION ::= 	{ ID id-PositionData	CRITICALITY	 1		EXTENSION PositionData	PRESENCE	 0}
+
+-- Extension for Release 5 to pass the positioning methods that have been used for GERAN Iu mode --
+myType-PositionDataSpecificToGERANIuMode RANAP-PROTOCOL-EXTENSION ::= 	{ ID id-PositionDataSpecificToGERANIuMode		CRITICALITY	 1	EXTENSION PositionDataSpecificToGERANIuMode		PRESENCE	 0	}
+
+	-- This extension is optional for GERAN Iu mode only, not applicable for UTRAN --
+-- Extension for Release 6 to indicate whether the returned position estimate satisfies the requested accuracy or not --
+myType-AccuracyFulfilmentIndicator RANAP-PROTOCOL-EXTENSION ::= 	{ ID id-AccuracyFulfilmentIndicator	CRITICALITY	 1	EXTENSION AccuracyFulfilmentIndicator	PRESENCE	 0}
+
+-- Extension for Release 7 to provide a velocity estimate --
+myType-VelocityEstimate RANAP-PROTOCOL-EXTENSION ::= 	{ ID id-VelocityEstimate	CRITICALITY	 1	EXTENSION VelocityEstimate	PRESENCE	 0}
+
+
+LocationReportExtensions RANAP-PROTOCOL-EXTENSION ::= {
+		myType-LastKnownServiceArea |
+		myType-PositionData|
+		myType-PositionDataSpecificToGERANIuMode|
+		myType-AccuracyFulfilmentIndicator|
+		myType-VelocityEstimate,
+	...
+}
+
+-- **************************************************************
+--
+-- INITIAL UE MESSAGE ELEMENTARY PROCEDURE
+--
+-- **************************************************************
+
+-- **************************************************************
+--
+-- Initial UE Message
+--
+-- **************************************************************
+
+InitialUE-Message ::= SEQUENCE {
+	protocolIEs			ProtocolIE-Container				{ {InitialUE-MessageIEs} },
+	protocolExtensions		ProtocolExtensionContainer		{ {InitialUE-MessageExtensions} }				OPTIONAL,
+	...
+}
+
+--this is changed by perl script automatically--
+myType-CN-DomainIndicatorid7 RANAP-PROTOCOL-IES ::= 	{ ID id-CN-DomainIndicator			CRITICALITY	 1	TYPE CN-DomainIndicator		PRESENCE	 2	}
+myType-LAI RANAP-PROTOCOL-IES ::= 	{ ID id-LAI							CRITICALITY	 1	TYPE LAI					PRESENCE	 2	}
+
+myType-RAC RANAP-PROTOCOL-IES ::= 	{ ID id-RAC							CRITICALITY	 1	TYPE RAC					PRESENCE	 1	
+	-- This IE shall be present if the CN Domain Indicator IE is set to "PS domain"		--												}
+
+myType-SAI RANAP-PROTOCOL-IES ::= 	{ ID id-SAI							CRITICALITY	 1	TYPE SAI					PRESENCE	 2	}
+
+myType-NAS-PDU RANAP-PROTOCOL-IES ::= 	{ ID id-NAS-PDU						CRITICALITY	 1	TYPE NAS-PDU				PRESENCE	 2	}
+
+myType-IuSigConIdid3 RANAP-PROTOCOL-IES ::= 	{ ID id-IuSigConId					CRITICALITY	 1 	TYPE IuSignallingConnectionIdentifier		PRESENCE	 2 	}
+
+myType-GlobalRNC-IDid5 RANAP-PROTOCOL-IES ::= 	{ ID id-GlobalRNC-ID				CRITICALITY	 1	TYPE GlobalRNC-ID			PRESENCE	 2 	}
+
+
+InitialUE-MessageIEs RANAP-PROTOCOL-IES ::= {
+	myType-CN-DomainIndicatorid7 |
+		myType-LAI |
+		myType-RAC |
+		myType-SAI |
+		myType-NAS-PDU |
+	myType-IuSigConIdid3 |
+	myType-GlobalRNC-IDid5,
+	...
+}
+
+--this is changed by perl script automatically--
+
+-- Extension for Release 5 to enable GERAN support over Iu-cs --
+myType-GERAN-Classmarkid3 RANAP-PROTOCOL-EXTENSION ::= 	{ ID id-GERAN-Classmark					CRITICALITY	 1	EXTENSION GERAN-Classmark			PRESENCE	 0	}
+-- Extension for Release 6 to convey the selected PLMN id in shared networks --
+myType-SelectedPLMN-IDid3 RANAP-PROTOCOL-EXTENSION ::= 	{ ID id-SelectedPLMN-ID	 				CRITICALITY	 1	EXTENSION PLMNidentity				PRESENCE	 0 	}
+
+-- Extension for Release 6 to enable rerouting in MOCN configuration for network sharing non-supporting UEs --
+myType-PermanentNAS-UE-IDid4 RANAP-PROTOCOL-EXTENSION ::= 	{ ID id-PermanentNAS-UE-ID				CRITICALITY	 1	EXTENSION PermanentNAS-UE-ID		PRESENCE	 0	}
+
+-- Extension for Release 6 to enable rerouting in MOCN configuration for network sharing non-supporting UEs --
+myType-NAS-SequenceNumber RANAP-PROTOCOL-EXTENSION ::= 	{ ID id-NAS-SequenceNumber				CRITICALITY	 1	EXTENSION NAS-SequenceNumber		PRESENCE	 0	}
+
+-- Extension for Release 6 to indicate rerouting in MOCN configuration for network sharing non-supporting UEs --
+myType-RedirectAttemptFlag RANAP-PROTOCOL-EXTENSION ::= 	{ ID id-RedirectAttemptFlag				CRITICALITY	 1	EXTENSION RedirectAttemptFlag		PRESENCE	 0	}
+
+-- Extension for Release 7 to indicate extended RNC-ID --
+myType-ExtendedRNC-IDid5 RANAP-PROTOCOL-EXTENSION ::= 	{ ID id-ExtendedRNC-ID					CRITICALITY	 0	EXTENSION ExtendedRNC-ID			PRESENCE	 0	}
+
+-- Extension for Release 8 to support CSG --
+myType-CSG-Idid4 RANAP-PROTOCOL-EXTENSION ::= 	{ ID id-CSG-Id							CRITICALITY	 0	EXTENSION CSG-Id					PRESENCE	 0	}
+
+-- Extension for Release 9 to allow communication of the cell access mode -- 
+myType-Cell-Access-Modeid2 RANAP-PROTOCOL-EXTENSION ::= 	{ ID id-Cell-Access-Mode				CRITICALITY	 0	EXTENSION Cell-Access-Mode						PRESENCE	 0}
+
+
+InitialUE-MessageExtensions RANAP-PROTOCOL-EXTENSION ::= {
+	myType-GERAN-Classmarkid3 |
+	myType-SelectedPLMN-IDid3 |
+	myType-PermanentNAS-UE-IDid4 |
+		myType-NAS-SequenceNumber |
+		myType-RedirectAttemptFlag |
+	myType-ExtendedRNC-IDid5 |
+	myType-CSG-Idid4 |
+	myType-Cell-Access-Modeid2,
+	...
+}
+
+-- **************************************************************
+--
+-- DIRECT TRANSFER ELEMENTARY PROCEDURE
+--
+-- **************************************************************
+
+-- **************************************************************
+--
+-- Direct Transfer
+--
+-- **************************************************************
+
+DirectTransfer ::= SEQUENCE {
+	protocolIEs			ProtocolIE-Container			{ {DirectTransferIEs} },
+	protocolExtensions		ProtocolExtensionContainer	{ {DirectTransferExtensions} }				OPTIONAL,
+	...
+}
+
+--this is changed by perl script automatically--
+myType-NAS-PDUid2 RANAP-PROTOCOL-IES ::= 	{ ID id-NAS-PDU				CRITICALITY	 1	TYPE NAS-PDU				PRESENCE	 2	}
+
+myType-LAIid2 RANAP-PROTOCOL-IES ::= 	{ ID id-LAI					CRITICALITY	 1	TYPE LAI					PRESENCE	 0	}
+
+myType-RACid2 RANAP-PROTOCOL-IES ::= 	{ ID id-RAC					CRITICALITY	 1	TYPE RAC					PRESENCE	 0	}
+
+myType-SAIid2 RANAP-PROTOCOL-IES ::= 	{ ID id-SAI					CRITICALITY	 1	TYPE SAI					PRESENCE	 0	}
+
+myType-SAPI RANAP-PROTOCOL-IES ::= 	{ ID id-SAPI				CRITICALITY	 1	TYPE SAPI					PRESENCE	 0	}
+
+
+DirectTransferIEs RANAP-PROTOCOL-IES ::= {
+	myType-NAS-PDUid2 |
+	myType-LAIid2 |
+	myType-RACid2 |
+	myType-SAIid2 |
+		myType-SAPI,
+	...
+}
+
+--this is changed by perl script automatically--
+
+-- Extension for Release 6 to enable rerouting in MOCN configuration for network sharing non-supporting UEs --
+myType-RedirectionIndication RANAP-PROTOCOL-EXTENSION ::= 	{ ID id-RedirectionIndication			CRITICALITY	 1	EXTENSION RedirectionIndication					PRESENCE	 0	}
+
+-- Extension for Release 6 to indicate the MOCN rerouting is completed --
+myType-RedirectionCompleted RANAP-PROTOCOL-EXTENSION ::= 	{ ID id-RedirectionCompleted			CRITICALITY	 1	EXTENSION RedirectionCompleted					PRESENCE	 0	}
+
+-- Extension for Release 8 to indicate the Subscriber Profile ID for RAT/Frequency Selection Priority --
+myType-SubscriberProfileIDforRFPid2 RANAP-PROTOCOL-EXTENSION ::= 	{ID id-SubscriberProfileIDforRFP		CRITICALITY	 1		EXTENSION SubscriberProfileIDforRFP		PRESENCE	 0}
+
+
+DirectTransferExtensions RANAP-PROTOCOL-EXTENSION ::= {
+		myType-RedirectionIndication|
+		myType-RedirectionCompleted|
+	myType-SubscriberProfileIDforRFPid2,
+	...
+}
+
+RedirectionIndication ::= ProtocolIE-Container { {RedirectionIndication-IEs} }
+
+--this is changed by perl script automatically--
+myType-NAS-PDUid3 RANAP-PROTOCOL-IES ::= 	{	ID id-NAS-PDU				CRITICALITY	 1 TYPE NAS-PDU				PRESENCE	 2 }
+myType-RejectCauseValue RANAP-PROTOCOL-IES ::= 	{	ID id-RejectCauseValue		CRITICALITY	 1 TYPE RejectCauseValue	PRESENCE	 2}
+
+myType-NAS-SequenceNumberid2 RANAP-PROTOCOL-IES ::= 	{	ID id-NAS-SequenceNumber	CRITICALITY	 1 TYPE NAS-SequenceNumber	PRESENCE	 0}
+
+myType-PermanentNAS-UE-IDid5 RANAP-PROTOCOL-IES ::= 	{	ID id-PermanentNAS-UE-ID	CRITICALITY	 1 TYPE PermanentNAS-UE-ID	PRESENCE	 0}
+
+
+RedirectionIndication-IEs RANAP-PROTOCOL-IES ::= {
+	myType-NAS-PDUid3|
+		myType-RejectCauseValue|
+	myType-NAS-SequenceNumberid2|
+	myType-PermanentNAS-UE-IDid5,
+	...
+}
+
+-- **************************************************************
+--
+-- OVERLOAD CONTROL ELEMENTARY PROCEDURE
+--
+-- **************************************************************
+
+-- **************************************************************
+--
+-- Overload
+--
+-- **************************************************************
+
+Overload ::= SEQUENCE {
+	protocolIEs			ProtocolIE-Container			{ {OverloadIEs} },
+	protocolExtensions		ProtocolExtensionContainer	{ {OverloadExtensions} }					OPTIONAL,
+	...
+}
+
+--this is changed by perl script automatically--
+myType-NumberOfSteps RANAP-PROTOCOL-IES ::= 	{ ID id-NumberOfSteps				CRITICALITY	 1	TYPE NumberOfSteps				PRESENCE	 0	}
+
+myType-GlobalRNC-IDid6 RANAP-PROTOCOL-IES ::= 	{ ID id-GlobalRNC-ID				CRITICALITY	 1	TYPE GlobalRNC-ID				PRESENCE	 0	}
+
+
+OverloadIEs RANAP-PROTOCOL-IES ::= {
+		myType-NumberOfSteps |
+	myType-GlobalRNC-IDid6,
+	...
+}
+
+--this is changed by perl script automatically--
+
+-- Extension for Release 99 to enable the indication to the RNC which CN domain is suffering the signalling traffic overload --
+myType-CN-DomainIndicatorid8 RANAP-PROTOCOL-EXTENSION ::= 	{ ID id-CN-DomainIndicator			CRITICALITY	 1	EXTENSION CN-DomainIndicator	PRESENCE	 0	}
+-- Extension for Release 5 to enable NNSF --
+myType-GlobalCN-IDid7 RANAP-PROTOCOL-EXTENSION ::= 	{ ID id-GlobalCN-ID					CRITICALITY	 1	EXTENSION GlobalCN-ID			PRESENCE	 0	}
+
+-- Extension for Release 7 to indicate extended RNC-ID --
+myType-ExtendedRNC-IDid6 RANAP-PROTOCOL-EXTENSION ::= 	{ ID id-ExtendedRNC-ID				CRITICALITY	 0	EXTENSION ExtendedRNC-ID		PRESENCE	 0	}
+
+
+OverloadExtensions RANAP-PROTOCOL-EXTENSION ::= {
+	myType-CN-DomainIndicatorid8 |
+	myType-GlobalCN-IDid7 |
+	myType-ExtendedRNC-IDid6,
+	...
+}
+
+-- **************************************************************
+--
+-- ERROR INDICATION ELEMENTARY PROCEDURE
+--
+-- **************************************************************
+
+-- **************************************************************
+--
+-- Error Indication
+--
+-- **************************************************************
+
+ErrorIndication ::= SEQUENCE {
+	protocolIEs			ProtocolIE-Container			{ {ErrorIndicationIEs} },
+	protocolExtensions		ProtocolExtensionContainer	{ {ErrorIndicationExtensions} }				OPTIONAL,
+	...
+}
+
+--this is changed by perl script automatically--
+myType-Causeid13 RANAP-PROTOCOL-IES ::= 	{ ID id-Cause						CRITICALITY	 1	TYPE Cause						PRESENCE	 0	}
+myType-CriticalityDiagnosticsid15 RANAP-PROTOCOL-IES ::= 	{ ID id-CriticalityDiagnostics		CRITICALITY	 1	TYPE CriticalityDiagnostics		PRESENCE	 0	}
+
+myType-CN-DomainIndicatorid9 RANAP-PROTOCOL-IES ::= 	{ ID id-CN-DomainIndicator			CRITICALITY	 1	TYPE CN-DomainIndicator			PRESENCE	 0	}
+
+myType-GlobalRNC-IDid7 RANAP-PROTOCOL-IES ::= 	{ ID id-GlobalRNC-ID				CRITICALITY	 1	TYPE GlobalRNC-ID				PRESENCE	 0	}
+
+
+ErrorIndicationIEs RANAP-PROTOCOL-IES ::= {
+	myType-Causeid13 |
+	myType-CriticalityDiagnosticsid15 |
+	myType-CN-DomainIndicatorid9 |
+	myType-GlobalRNC-IDid7,
+	...
+}
+
+--this is changed by perl script automatically--
+
+-- Extension for Release 4 --
+myType-GlobalCN-IDid8 RANAP-PROTOCOL-EXTENSION ::= 	{ ID id-GlobalCN-ID				CRITICALITY	 1		EXTENSION GlobalCN-ID				PRESENCE	 0}
+-- Extension for Release 7 to indicate extended RNC-ID --
+myType-ExtendedRNC-IDid7 RANAP-PROTOCOL-EXTENSION ::= 	{ ID id-ExtendedRNC-ID			CRITICALITY	 0		EXTENSION ExtendedRNC-ID			PRESENCE	 0	}
+
+
+ErrorIndicationExtensions RANAP-PROTOCOL-EXTENSION ::= {
+	myType-GlobalCN-IDid8|
+	myType-ExtendedRNC-IDid7,
+	...
+}
+
+-- **************************************************************
+--
+-- SRNS DATA FORWARD ELEMENTARY PROCEDURE
+--
+-- **************************************************************
+
+-- **************************************************************
+--
+-- SRNS Data Forward Command
+--
+-- **************************************************************
+
+SRNS-DataForwardCommand ::= SEQUENCE {
+	protocolIEs			ProtocolIE-Container			{ {SRNS-DataForwardCommandIEs} },
+	protocolExtensions		ProtocolExtensionContainer	{ {SRNS-DataForwardCommandExtensions} }			OPTIONAL,
+	...
+}
+
+--this is changed by perl script automatically--
+myType-RAB-DataForwardingListid2 RANAP-PROTOCOL-IES ::= 	{ ID id-RAB-DataForwardingList			CRITICALITY	 1	TYPE RAB-DataForwardingList			PRESENCE	 0	}
+
+SRNS-DataForwardCommandIEs RANAP-PROTOCOL-IES ::= {
+	myType-RAB-DataForwardingListid2,
+	...
+}
+
+SRNS-DataForwardCommandExtensions RANAP-PROTOCOL-EXTENSION ::= {
+	...
+}
+
+-- **************************************************************
+--
+-- FORWARD SRNS CONTEXT ELEMENTARY PROCEDURE
+--
+-- **************************************************************
+
+-- **************************************************************
+--
+-- Forward SRNS Context
+--
+-- **************************************************************
+
+ForwardSRNS-Context ::= SEQUENCE {
+	protocolIEs			ProtocolIE-Container			{ {ForwardSRNS-ContextIEs} },
+	protocolExtensions		ProtocolExtensionContainer	{ {ForwardSRNS-ContextExtensions} }				OPTIONAL,
+	...
+}
+
+--this is changed by perl script automatically--
+myType-RAB-ContextListid2 RANAP-PROTOCOL-IES ::= 	{ ID id-RAB-ContextList				CRITICALITY	 1	TYPE RAB-ContextList				PRESENCE	 2	}
+
+ForwardSRNS-ContextIEs RANAP-PROTOCOL-IES ::= {
+	myType-RAB-ContextListid2,
+	...
+}
+
+--this is changed by perl script automatically--
+
+-- Extension for Release 5 to enable relocation of Source RNC PDCP context info --
+myType-SourceRNC-PDCP-context-info RANAP-PROTOCOL-EXTENSION ::= 	{ ID id-SourceRNC-PDCP-context-info		CRITICALITY	 1	EXTENSION RRC-Container	PRESENCE	 0}
+
+
+ForwardSRNS-ContextExtensions RANAP-PROTOCOL-EXTENSION ::= {
+		myType-SourceRNC-PDCP-context-info,
+	...
+}
+
+-- **************************************************************
+--
+-- RAB ASSIGNMENT ELEMENTARY PROCEDURE
+--
+-- **************************************************************
+
+-- **************************************************************
+--
+-- RAB Assignment Request
+--
+-- **************************************************************
+
+RAB-AssignmentRequest ::= SEQUENCE {
+	protocolIEs			ProtocolIE-Container			{ {RAB-AssignmentRequestIEs} },
+	protocolExtensions		ProtocolExtensionContainer	{ {RAB-AssignmentRequestExtensions} }			OPTIONAL,
+	...
+}
+
+--this is changed by perl script automatically--
+myType-RAB-SetupOrModifyList RANAP-PROTOCOL-IES ::= 	{ ID id-RAB-SetupOrModifyList			CRITICALITY	 1	TYPE RAB-SetupOrModifyList			PRESENCE	 0	}
+
+myType-RAB-ReleaseListid2 RANAP-PROTOCOL-IES ::= 	{ ID id-RAB-ReleaseList				CRITICALITY	 1	TYPE RAB-ReleaseList				PRESENCE	 0	}
+
+RAB-AssignmentRequestIEs RANAP-PROTOCOL-IES ::= {
+		myType-RAB-SetupOrModifyList |
+	myType-RAB-ReleaseListid2,
+	...
+}
+
+RAB-SetupOrModifyList 					::= 
+--ProtocolIE-ContainerPairList  { 1, maxNrOfRABs,                               {RAB-SetupOrModifyItem-IEs} }
+SEQUENCE (SIZE(1.. maxNrOfRABs)) OF ProtocolIE-ContainerPair              {{RAB-SetupOrModifyItem-IEs} } 
+--RAB-IE-ContainerPairList { {RAB-SetupOrModifyItem-IEs} }
+
+--this is changed by perl script automatically--
+myType-RAB-SetupOrModifyItem RANAP-PROTOCOL-IES-PAIR ::= 	{ ID id-RAB-SetupOrModifyItem			FIRST CRITICALITY	 0	FIRST TYPE RAB-SetupOrModifyItemFirst
+	 						SECOND CRITICALITY	 1	SECOND TYPE RAB-SetupOrModifyItemSecond	 
+
+																PRESENCE	 2	}
+
+
+RAB-SetupOrModifyItem-IEs RANAP-PROTOCOL-IES-PAIR ::= {
+		myType-RAB-SetupOrModifyItem,
+	...
+}
+
+RAB-SetupOrModifyItemFirst ::= SEQUENCE {
+	rAB-ID						RAB-ID,
+	nAS-SynchronisationIndicator	NAS-SynchronisationIndicator	OPTIONAL,
+	rAB-Parameters					RAB-Parameters		OPTIONAL,
+	userPlaneInformation				UserPlaneInformation		OPTIONAL,
+	transportLayerInformation				 TransportLayerInformation		OPTIONAL,
+	service-Handover					Service-Handover			OPTIONAL,
+	iE-Extensions					ProtocolExtensionContainer { {RAB-SetupOrModifyItemFirst-ExtIEs} }			OPTIONAL,
+	...
+}
+
+TransportLayerInformation ::= SEQUENCE {
+	transportLayerAddress			TransportLayerAddress,
+	iuTransportAssociation			IuTransportAssociation,
+	iE-Extensions					ProtocolExtensionContainer { {TransportLayerInformation-ExtIEs} }			OPTIONAL,
+	...
+}
+
+TransportLayerInformation-ExtIEs RANAP-PROTOCOL-EXTENSION ::= {
+	...
+}
+
+--this is changed by perl script automatically--
+
+-- Extension for Release 8 to enable handover restriction to E-UTRAN --
+myType-E-UTRAN-Service-Handoverid2 RANAP-PROTOCOL-EXTENSION ::= 	{ ID id-E-UTRAN-Service-Handover			CRITICALITY	 1	EXTENSION E-UTRAN-Service-Handover			PRESENCE	 0	}
+
+RAB-SetupOrModifyItemFirst-ExtIEs RANAP-PROTOCOL-EXTENSION ::= {
+	myType-E-UTRAN-Service-Handoverid2,
+	...
+}
+
+RAB-SetupOrModifyItemSecond ::= SEQUENCE {
+	pDP-TypeInformation				PDP-TypeInformation 			OPTIONAL,
+	dataVolumeReportingIndication			DataVolumeReportingIndication 	OPTIONAL,
+	dl-GTP-PDU-SequenceNumber			DL-GTP-PDU-SequenceNumber 	OPTIONAL,
+	ul-GTP-PDU-SequenceNumber			UL-GTP-PDU-SequenceNumber 	OPTIONAL,
+	dl-N-PDU-SequenceNumber				DL-N-PDU-SequenceNumber 	OPTIONAL,
+	ul-N-PDU-SequenceNumber				UL-N-PDU-SequenceNumber		OPTIONAL,
+	iE-Extensions					ProtocolExtensionContainer { {RAB-SetupOrModifyItemSecond-ExtIEs} }			OPTIONAL,
+	...
+}
+
+--this is changed by perl script automatically--
+
+-- Extension for Release 4 to enable RAB Quality of Service negotiation over Iu --
+myType-Alt-RAB-Parametersid2 RANAP-PROTOCOL-EXTENSION ::= 	{	ID id-Alt-RAB-Parameters	CRITICALITY	 1		EXTENSION Alt-RAB-Parameters		PRESENCE	 0	}
+-- Extension for Release 5 to enable GERAN support over Iu-cs --
+myType-GERAN-BSC-Containerid2 RANAP-PROTOCOL-EXTENSION ::= 	{ ID id-GERAN-BSC-Container					CRITICALITY	 1	EXTENSION GERAN-BSC-Container			PRESENCE	 0	}
+
+
+RAB-SetupOrModifyItemSecond-ExtIEs RANAP-PROTOCOL-EXTENSION ::= {
+	myType-Alt-RAB-Parametersid2 |
+	myType-GERAN-BSC-Containerid2 ,
+	...
+}
+
+--this is changed by perl script automatically--
+myType-UE-AggregateMaximumBitRateid3 RANAP-PROTOCOL-EXTENSION ::= 	{ ID id-UE-AggregateMaximumBitRate			CRITICALITY	 1	EXTENSION UE-AggregateMaximumBitRate	PRESENCE	 0	}
+
+RAB-AssignmentRequestExtensions RANAP-PROTOCOL-EXTENSION ::= {
+	myType-UE-AggregateMaximumBitRateid3,
+	...
+}
+
+-- **************************************************************
+--
+-- RAB Assignment Response
+--
+-- **************************************************************
+
+RAB-AssignmentResponse ::= SEQUENCE {
+	protocolIEs			ProtocolIE-Container			{ {RAB-AssignmentResponseIEs} },
+	protocolExtensions		ProtocolExtensionContainer	{ {RAB-AssignmentResponseExtensions} }			OPTIONAL,
+	...
+}
+
+--this is changed by perl script automatically--
+myType-RAB-SetupOrModifiedList RANAP-PROTOCOL-IES ::= 	{ ID id-RAB-SetupOrModifiedList			CRITICALITY	 1	TYPE RAB-SetupOrModifiedList			PRESENCE	 0	}
+
+myType-RAB-ReleasedList RANAP-PROTOCOL-IES ::= 	{ ID id-RAB-ReleasedList			CRITICALITY	 1	TYPE RAB-ReleasedList				PRESENCE	 0	}
+
+	
+myType-RAB-QueuedList RANAP-PROTOCOL-IES ::= 	{ ID id-RAB-QueuedList				CRITICALITY	 1	TYPE RAB-QueuedList				PRESENCE	 0	}
+
+myType-RAB-FailedListid3 RANAP-PROTOCOL-IES ::= 	{ ID id-RAB-FailedList				CRITICALITY	 1	TYPE RAB-FailedList				PRESENCE	 0	}
+myType-RAB-ReleaseFailedList RANAP-PROTOCOL-IES ::= 	{ ID id-RAB-ReleaseFailedList			CRITICALITY	 1	TYPE RAB-ReleaseFailedList			PRESENCE	 0	}
+
+myType-CriticalityDiagnosticsid16 RANAP-PROTOCOL-IES ::= 	{ ID id-CriticalityDiagnostics			CRITICALITY	 1	TYPE CriticalityDiagnostics		PRESENCE	 0 }
+
+
+RAB-AssignmentResponseIEs RANAP-PROTOCOL-IES ::= {
+		myType-RAB-SetupOrModifiedList |
+		myType-RAB-ReleasedList |
+		myType-RAB-QueuedList |
+	myType-RAB-FailedListid3 |
+		myType-RAB-ReleaseFailedList |
+	myType-CriticalityDiagnosticsid16,
+	...
+}
+
+RAB-SetupOrModifiedList 				::= SEQUENCE (SIZE(1.. maxNrOfRABs)) OF ProtocolIE-Container { {RAB-SetupOrModifiedItemIEs} }
+--RAB-IE-ContainerList { {RAB-SetupOrModifiedItemIEs} }
+
+--this is changed by perl script automatically--
+myType-RAB-SetupOrModifiedItem RANAP-PROTOCOL-IES ::= 	{ ID id-RAB-SetupOrModifiedItem			CRITICALITY	 1	TYPE RAB-SetupOrModifiedItem			PRESENCE	 2	}
+
+
+RAB-SetupOrModifiedItemIEs RANAP-PROTOCOL-IES ::= {
+		myType-RAB-SetupOrModifiedItem,
+	...
+}
+
+RAB-SetupOrModifiedItem ::= SEQUENCE {
+	rAB-ID						RAB-ID,
+	transportLayerAddress				TransportLayerAddress	OPTIONAL,
+	iuTransportAssociation				IuTransportAssociation	OPTIONAL,
+	dl-dataVolumes					DataVolumeList		OPTIONAL,
+	iE-Extensions					ProtocolExtensionContainer { {RAB-SetupOrModifiedItem-ExtIEs} }			OPTIONAL,
+	...
+}
+
+--this is changed by perl script automatically--
+
+-- Extension for Release 4 to enable RAB Quality of Service negotiation over Iu --
+myType-Ass-RAB-Parametersid2 RANAP-PROTOCOL-EXTENSION ::= 	{	ID id-Ass-RAB-Parameters	CRITICALITY	 1		EXTENSION Ass-RAB-Parameters		PRESENCE	 0	}
+
+RAB-SetupOrModifiedItem-ExtIEs RANAP-PROTOCOL-EXTENSION ::= {
+	myType-Ass-RAB-Parametersid2,
+	...
+}
+
+RAB-ReleasedList 					::= SEQUENCE (SIZE(1.. maxNrOfRABs)) OF ProtocolIE-Container { {RAB-ReleasedItemIEs} }
+--RAB-IE-ContainerList { {RAB-ReleasedItemIEs} }
+
+--this is changed by perl script automatically--
+myType-RAB-ReleasedItem RANAP-PROTOCOL-IES ::= 	{ ID id-RAB-ReleasedItem			CRITICALITY	 1	TYPE RAB-ReleasedItem				PRESENCE	 2	}
+
+
+RAB-ReleasedItemIEs RANAP-PROTOCOL-IES ::= {
+		myType-RAB-ReleasedItem,
+	...
+}
+
+RAB-ReleasedItem ::= SEQUENCE {
+	rAB-ID						RAB-ID,
+	dl-dataVolumes					DataVolumeList		OPTIONAL,
+	dL-GTP-PDU-SequenceNumber		DL-GTP-PDU-SequenceNumber			OPTIONAL,
+	uL-GTP-PDU-SequenceNumber		UL-GTP-PDU-SequenceNumber			OPTIONAL,
+	iE-Extensions					ProtocolExtensionContainer { {RAB-ReleasedItem-ExtIEs} }			OPTIONAL,
+	...
+}
+
+RAB-ReleasedItem-ExtIEs RANAP-PROTOCOL-EXTENSION ::= {
+	...
+}
+
+DataVolumeList ::= SEQUENCE (SIZE (1..maxNrOfVol)) OF
+	SEQUENCE {
+		dl-UnsuccessfullyTransmittedDataVolume		UnsuccessfullyTransmittedDataVolume,
+		dataVolumeReference				DataVolumeReference	OPTIONAL,
+		iE-Extensions					ProtocolExtensionContainer { {DataVolumeList-ExtIEs} }			OPTIONAL,
+		...
+	}
+
+DataVolumeList-ExtIEs RANAP-PROTOCOL-EXTENSION ::= {
+	...
+}
+
+RAB-QueuedList 						::= SEQUENCE (SIZE(1.. maxNrOfRABs)) OF ProtocolIE-Container { {RAB-QueuedItemIEs} }
+--RAB-IE-ContainerList { {RAB-QueuedItemIEs} }
+
+--this is changed by perl script automatically--
+myType-RAB-QueuedItem RANAP-PROTOCOL-IES ::= 	{ ID id-RAB-QueuedItem				CRITICALITY	 1	TYPE RAB-QueuedItem				PRESENCE	 2	}
+
+
+RAB-QueuedItemIEs RANAP-PROTOCOL-IES ::= {
+		myType-RAB-QueuedItem,
+	...
+}
+
+RAB-QueuedItem ::= SEQUENCE {
+	rAB-ID						RAB-ID,
+	iE-Extensions					ProtocolExtensionContainer { {RAB-QueuedItem-ExtIEs} }			OPTIONAL,
+	...
+}
+
+RAB-QueuedItem-ExtIEs RANAP-PROTOCOL-EXTENSION ::= {
+	...
+}
+
+RAB-ReleaseFailedList ::= RAB-FailedList
+
+--this is changed by perl script automatically--
+
+-- Extension for Release 5 to enable GERAN support over Iu-cs --
+myType-GERAN-Iumode-RAB-FailedList-RABAssgntResponse RANAP-PROTOCOL-EXTENSION ::= 	{ ID id-GERAN-Iumode-RAB-FailedList-RABAssgntResponse		CRITICALITY	 1	EXTENSION GERAN-Iumode-RAB-FailedList-RABAssgntResponse			PRESENCE	 0}
+
+
+RAB-AssignmentResponseExtensions RANAP-PROTOCOL-EXTENSION ::= {
+		myType-GERAN-Iumode-RAB-FailedList-RABAssgntResponse ,
+	...
+}
+
+GERAN-Iumode-RAB-FailedList-RABAssgntResponse		::= SEQUENCE (SIZE(1.. maxNrOfRABs)) OF ProtocolIE-Container { {GERAN-Iumode-RAB-Failed-RABAssgntResponse-ItemIEs} }
+--RAB-IE-ContainerList { {GERAN-Iumode-RAB-Failed-RABAssgntResponse-ItemIEs} }
+
+--this is changed by perl script automatically--
+myType-GERAN-Iumode-RAB-Failed-RABAssgntResponse-Item RANAP-PROTOCOL-IES ::= 	{ ID id-GERAN-Iumode-RAB-Failed-RABAssgntResponse-Item		CRITICALITY	 1	TYPE GERAN-Iumode-RAB-Failed-RABAssgntResponse-Item			PRESENCE	 2	}
+
+
+GERAN-Iumode-RAB-Failed-RABAssgntResponse-ItemIEs RANAP-PROTOCOL-IES ::= {
+		myType-GERAN-Iumode-RAB-Failed-RABAssgntResponse-Item,
+	...
+}
+
+GERAN-Iumode-RAB-Failed-RABAssgntResponse-Item ::= SEQUENCE {
+	rAB-ID						RAB-ID,
+	cause						Cause,
+	gERAN-Classmark				GERAN-Classmark		OPTIONAL,
+	iE-Extensions				ProtocolExtensionContainer { {GERAN-Iumode-RAB-Failed-RABAssgntResponse-Item-ExtIEs} }			OPTIONAL,
+	...
+}
+
+GERAN-Iumode-RAB-Failed-RABAssgntResponse-Item-ExtIEs RANAP-PROTOCOL-EXTENSION ::= {
+	...
+}
+
+-- **************************************************************
+--
+-- PRIVATE MESSAGE
+--
+-- **************************************************************
+
+PrivateMessage ::= SEQUENCE {
+	privateIEs		PrivateIE-Container		{ {PrivateMessage-IEs } },
+	...
+}
+
+PrivateMessage-IEs RANAP-PRIVATE-IES ::= {
+	...
+}
+
+-- **************************************************************
+--
+-- RANAP RELOCATION INFORMATION ELEMENTARY PROCEDURE
+--
+-- **************************************************************
+
+RANAP-RelocationInformation ::= SEQUENCE {
+	protocolIEs			ProtocolIE-Container			{ {RANAP-RelocationInformationIEs} },
+	protocolExtensions		ProtocolExtensionContainer	{ {RANAP-RelocationInformationExtensions} }			OPTIONAL,
+	...
+}
+
+--this is changed by perl script automatically--
+myType-DirectTransferInformationList-RANAP-RelocInf RANAP-PROTOCOL-IES ::= 	{ ID id-DirectTransferInformationList-RANAP-RelocInf	
+							CRITICALITY	 1	TYPE DirectTransferInformationList-RANAP-RelocInf		
+
+																PRESENCE	 0	}
+
+myType-RAB-ContextList-RANAP-RelocInf RANAP-PROTOCOL-IES ::= 	{ ID id-RAB-ContextList-RANAP-RelocInf		CRITICALITY	 1	TYPE RAB-ContextList-RANAP-RelocInf		PRESENCE	 0	}
+
+
+RANAP-RelocationInformationIEs RANAP-PROTOCOL-IES ::= {
+		myType-DirectTransferInformationList-RANAP-RelocInf |
+		myType-RAB-ContextList-RANAP-RelocInf,
+	...
+}
+
+DirectTransferInformationList-RANAP-RelocInf		::= SEQUENCE (SIZE(1.. maxNrOfDTs)) OF ProtocolIE-Container { {DirectTransferInformationItemIEs-RANAP-RelocInf} }
+--DirectTransfer-IE-ContainerList { {DirectTransferInformationItemIEs-RANAP-RelocInf} }
+
+--this is changed by perl script automatically--
+myType-DirectTransferInformationItem-RANAP-RelocInf RANAP-PROTOCOL-IES ::= 	{ ID id-DirectTransferInformationItem-RANAP-RelocInf
+							CRITICALITY	 1	TYPE DirectTransferInformationItem-RANAP-RelocInf
+
+																PRESENCE	 2	}
+
+
+DirectTransferInformationItemIEs-RANAP-RelocInf RANAP-PROTOCOL-IES ::= {
+		myType-DirectTransferInformationItem-RANAP-RelocInf,
+	...
+}
+
+DirectTransferInformationItem-RANAP-RelocInf ::= SEQUENCE {
+	nAS-PDU						NAS-PDU,
+	sAPI						SAPI,
+	cN-DomainIndicator			CN-DomainIndicator,
+	iE-Extensions					ProtocolExtensionContainer { {RANAP-DirectTransferInformationItem-ExtIEs-RANAP-RelocInf} }			OPTIONAL,
+	...
+}
+
+RANAP-DirectTransferInformationItem-ExtIEs-RANAP-RelocInf RANAP-PROTOCOL-EXTENSION ::= {
+	...
+}
+
+RAB-ContextList-RANAP-RelocInf 				::= SEQUENCE (SIZE(1.. maxNrOfRABs)) OF ProtocolIE-Container { {RAB-ContextItemIEs-RANAP-RelocInf} }
+--RAB-IE-ContainerList { {RAB-ContextItemIEs-RANAP-RelocInf} }
+
+--this is changed by perl script automatically--
+myType-RAB-ContextItem-RANAP-RelocInf RANAP-PROTOCOL-IES ::= 	{ ID id-RAB-ContextItem-RANAP-RelocInf		CRITICALITY	 1	TYPE RAB-ContextItem-RANAP-RelocInf			PRESENCE	 2	}
+
+
+RAB-ContextItemIEs-RANAP-RelocInf RANAP-PROTOCOL-IES ::= {
+		myType-RAB-ContextItem-RANAP-RelocInf,
+	...
+}
+
+RAB-ContextItem-RANAP-RelocInf ::= SEQUENCE {
+	rAB-ID				RAB-ID,
+	dl-GTP-PDU-SequenceNumber			DL-GTP-PDU-SequenceNumber 	OPTIONAL,
+	ul-GTP-PDU-SequenceNumber			UL-GTP-PDU-SequenceNumber 	OPTIONAL,
+	dl-N-PDU-SequenceNumber				DL-N-PDU-SequenceNumber		OPTIONAL,
+	ul-N-PDU-SequenceNumber				UL-N-PDU-SequenceNumber		OPTIONAL,
+	iE-Extensions						ProtocolExtensionContainer { {RAB-ContextItem-ExtIEs-RANAP-RelocInf} }		OPTIONAL,
+	...
+}
+
+RAB-ContextItem-ExtIEs-RANAP-RelocInf RANAP-PROTOCOL-EXTENSION ::= {
+	...
+}
+
+--this is changed by perl script automatically--
+
+-- Extension for Release 5 to enable relocation of Source RNC PDCP context info --
+myType-SourceRNC-PDCP-context-infoid2 RANAP-PROTOCOL-EXTENSION ::= 	{ ID id-SourceRNC-PDCP-context-info		CRITICALITY	 1	EXTENSION RRC-Container	PRESENCE	 0}
+
+RANAP-RelocationInformationExtensions RANAP-PROTOCOL-EXTENSION ::= {
+	myType-SourceRNC-PDCP-context-infoid2,
+	...
+}
+
+-- **************************************************************
+--
+-- RANAP ENHANCED RELOCATION INFORMATION ELEMENTARY PROCEDURE
+--
+-- **************************************************************
+
+-- **************************************************************
+--
+-- RANAP Enhanced Relocation Information Request
+--
+-- **************************************************************
+
+RANAP-EnhancedRelocationInformationRequest ::= SEQUENCE {
+	protocolIEs			ProtocolIE-Container			{ {RANAP-EnhancedRelocationInformationRequestIEs} },
+	protocolExtensions		ProtocolExtensionContainer	{ {RANAP-EnhancedRelocationInformationRequestExtensions} }			OPTIONAL,
+	...
+}
+
+--this is changed by perl script automatically--
+myType-Source-ToTarget-TransparentContainerid3 RANAP-PROTOCOL-IES ::= 	{ ID id-Source-ToTarget-TransparentContainer		
+							CRITICALITY	 0	TYPE SourceRNC-ToTargetRNC-TransparentContainer	PRESENCE	 2	}
+
+myType-OldIuSigConIdCS RANAP-PROTOCOL-IES ::= 	{ ID id-OldIuSigConIdCS	CRITICALITY	 1 TYPE IuSignallingConnectionIdentifier	PRESENCE	 0 }
+
+myType-GlobalCN-IDCS RANAP-PROTOCOL-IES ::= 	{ ID id-GlobalCN-IDCS				CRITICALITY	 0		TYPE GlobalCN-ID				PRESENCE	 0}
+
+myType-OldIuSigConIdPS RANAP-PROTOCOL-IES ::= 	{ ID id-OldIuSigConIdPS	CRITICALITY	 1 TYPE IuSignallingConnectionIdentifier	PRESENCE	 0 }
+
+myType-GlobalCN-IDPS RANAP-PROTOCOL-IES ::= 	{ ID id-GlobalCN-IDPS				CRITICALITY	 0		TYPE GlobalCN-ID				PRESENCE	 0}
+
+myType-RAB-SetupList-EnhRelocInfoReq RANAP-PROTOCOL-IES ::= 	{ ID id-RAB-SetupList-EnhRelocInfoReq			CRITICALITY	 0	TYPE RAB-SetupList-EnhRelocInfoReq			PRESENCE	 0	}
+
+myType-SNA-Access-Informationid3 RANAP-PROTOCOL-IES ::= 	{ ID id-SNA-Access-Information	CRITICALITY	 1		TYPE SNA-Access-Information	PRESENCE	 0}
+myType-UESBI-Iuid3 RANAP-PROTOCOL-IES ::= 	{ ID id-UESBI-Iu	CRITICALITY	 1		TYPE UESBI-Iu	PRESENCE	 0}
+
+myType-SelectedPLMN-IDid4 RANAP-PROTOCOL-IES ::= 	{ ID id-SelectedPLMN-ID	 	CRITICALITY	 1	TYPE PLMNidentity		PRESENCE	 0 	}
+
+myType-CNMBMSLinkingInformationid2 RANAP-PROTOCOL-IES ::= 	{ ID id-CNMBMSLinkingInformation	CRITICALITY	 1		TYPE CNMBMSLinkingInformation	PRESENCE	 0}
+
+
+RANAP-EnhancedRelocationInformationRequestIEs RANAP-PROTOCOL-IES ::= {
+	myType-Source-ToTarget-TransparentContainerid3 |
+		myType-OldIuSigConIdCS |
+		myType-GlobalCN-IDCS |
+		myType-OldIuSigConIdPS |
+		myType-GlobalCN-IDPS |
+		myType-RAB-SetupList-EnhRelocInfoReq |
+	myType-SNA-Access-Informationid3 |
+	myType-UESBI-Iuid3|
+	myType-SelectedPLMN-IDid4|
+	myType-CNMBMSLinkingInformationid2,
+	...
+}
+
+RAB-SetupList-EnhRelocInfoReq 					::= SEQUENCE (SIZE(1.. maxNrOfRABs)) OF ProtocolIE-Container { {RAB-SetupItem-EnhRelocInfoReq-IEs} }
+--RAB-IE-ContainerList { { RAB-SetupItem-EnhRelocInfoReq-IEs} }
+
+--this is changed by perl script automatically--
+myType-RAB-SetupItem-EnhRelocInfoReq RANAP-PROTOCOL-IES ::= 	{ ID id-RAB-SetupItem-EnhRelocInfoReq			CRITICALITY	 0	TYPE RAB-SetupItem-EnhRelocInfoReq			PRESENCE	 2 	}
+
+
+RAB-SetupItem-EnhRelocInfoReq-IEs RANAP-PROTOCOL-IES ::= {
+		myType-RAB-SetupItem-EnhRelocInfoReq,
+	...
+}
+
+RAB-SetupItem-EnhRelocInfoReq ::= SEQUENCE {
+	rAB-ID								RAB-ID,
+	cN-DomainIndicator					CN-DomainIndicator,
+	rAB-Parameters						RAB-Parameters,
+	dataVolumeReportingIndication			DataVolumeReportingIndication 	OPTIONAL
+	-- This IE shall be present if the CN domain indicator IE is set to "PS domain" --,
+	pDP-TypeInformation					PDP-TypeInformation		OPTIONAL
+	-- This IE shall be present if the CN domain indicator IE is set to "PS domain" --,
+	userPlaneInformation				UserPlaneInformation,
+	dataForwardingInformation			TNLInformationEnhRelInfoReq	OPTIONAL,
+	sourceSideIuULTNLInfo				TNLInformationEnhRelInfoReq	OPTIONAL,
+	
+	service-Handover					Service-Handover		OPTIONAL,
+	alt-RAB-Parameters					Alt-RAB-Parameters		OPTIONAL,
+	iE-Extensions						ProtocolExtensionContainer { { RAB-SetupItem-EnhRelocInfoReq-ExtIEs} }			OPTIONAL,
+	...
+}
+
+--this is changed by perl script automatically--
+
+-- Extension for Release 8 to enable handover restriction to E-UTRAN --
+myType-E-UTRAN-Service-Handoverid3 RANAP-PROTOCOL-EXTENSION ::= 	{ ID id-E-UTRAN-Service-Handover			CRITICALITY	 1	EXTENSION E-UTRAN-Service-Handover			PRESENCE	 0	}
+
+RAB-SetupItem-EnhRelocInfoReq-ExtIEs RANAP-PROTOCOL-EXTENSION ::= {
+	myType-E-UTRAN-Service-Handoverid3,
+	...
+}
+
+TNLInformationEnhRelInfoReq ::=SEQUENCE{
+	transportLayerAddress				TransportLayerAddress,
+	iuTransportAssociation				IuTransportAssociation,
+	iE-Extensions					ProtocolExtensionContainer { { TNLInformationEnhRelInfoReq-ExtIEs} }			OPTIONAL,
+	...
+}
+
+TNLInformationEnhRelInfoReq-ExtIEs RANAP-PROTOCOL-EXTENSION ::= {
+	...
+}
+
+
+--this is changed by perl script automatically--
+myType-IntegrityProtectionInformationid3 RANAP-PROTOCOL-EXTENSION ::= 	{ ID id-IntegrityProtectionInformation		CRITICALITY	 1	EXTENSION IntegrityProtectionInformation 		PRESENCE	 0	}
+myType-EncryptionInformationid3 RANAP-PROTOCOL-EXTENSION ::= 	{ ID id-EncryptionInformation			CRITICALITY	 1	EXTENSION EncryptionInformation 			PRESENCE	 0	}
+
+myType-UE-AggregateMaximumBitRateid4 RANAP-PROTOCOL-EXTENSION ::= 	{ ID id-UE-AggregateMaximumBitRate			CRITICALITY	 1	EXTENSION UE-AggregateMaximumBitRate	PRESENCE	 0	}
+
+
+RANAP-EnhancedRelocationInformationRequestExtensions RANAP-PROTOCOL-EXTENSION ::= {
+	myType-IntegrityProtectionInformationid3 |
+	myType-EncryptionInformationid3|
+	myType-UE-AggregateMaximumBitRateid4,
+	...
+}
+
+-- **************************************************************
+--
+-- RANAP Enhanced Relocation Information Response
+--
+-- **************************************************************
+
+RANAP-EnhancedRelocationInformationResponse ::= SEQUENCE {
+	protocolIEs			ProtocolIE-Container			{ {RANAP-EnhancedRelocationInformationResponseIEs} },
+	protocolExtensions		ProtocolExtensionContainer	{ {RANAP-EnhancedRelocationInformationResponseExtensions} }			OPTIONAL,
+	...
+}
+
+--this is changed by perl script automatically--
+myType-Target-ToSource-TransparentContainerid3 RANAP-PROTOCOL-IES ::= 	{ ID id-Target-ToSource-TransparentContainer							CRITICALITY	 1	TYPE TargetRNC-ToSourceRNC-TransparentContainer PRESENCE	 0	}
+
+myType-RAB-SetupList-EnhRelocInfoRes RANAP-PROTOCOL-IES ::= 	{ ID id-RAB-SetupList-EnhRelocInfoRes		CRITICALITY	 1	TYPE RAB-SetupList-EnhRelocInfoRes			PRESENCE	 0}
+
+myType-RAB-FailedList-EnhRelocInfoRes RANAP-PROTOCOL-IES ::= 	{ ID id-RAB-FailedList-EnhRelocInfoRes		CRITICALITY	 1	TYPE RAB-FailedList-EnhRelocInfoRes			PRESENCE	 0 }
+
+myType-CriticalityDiagnosticsid17 RANAP-PROTOCOL-IES ::= 	{ ID id-CriticalityDiagnostics			CRITICALITY	 1	TYPE CriticalityDiagnostics 			PRESENCE	 0	}
+
+
+RANAP-EnhancedRelocationInformationResponseIEs RANAP-PROTOCOL-IES ::= {
+	myType-Target-ToSource-TransparentContainerid3 |
+		myType-RAB-SetupList-EnhRelocInfoRes |
+		myType-RAB-FailedList-EnhRelocInfoRes|
+	myType-CriticalityDiagnosticsid17,
+	...
+}
+
+RAB-SetupList-EnhRelocInfoRes 				::= SEQUENCE (SIZE(1.. maxNrOfRABs)) OF ProtocolIE-Container { {RAB-SetupItem-EnhRelocInfoRes-IEs} }
+--RAB-IE-ContainerList { { RAB-SetupItem-EnhRelocInfoRes-IEs} }
+
+--this is changed by perl script automatically--
+myType-RAB-SetupItem-EnhRelocInfoRes RANAP-PROTOCOL-IES ::= 	{ ID id-RAB-SetupItem-EnhRelocInfoRes		CRITICALITY	 0	TYPE RAB-SetupItem-EnhRelocInfoRes			PRESENCE	 2 	}
+
+
+RAB-SetupItem-EnhRelocInfoRes-IEs RANAP-PROTOCOL-IES ::= {
+		myType-RAB-SetupItem-EnhRelocInfoRes,
+	...
+}
+
+RAB-SetupItem-EnhRelocInfoRes ::= SEQUENCE {
+	cN-DomainIndicator			CN-DomainIndicator,
+	rAB-ID						RAB-ID,
+	dataForwardingInformation		TNLInformationEnhRelInfoRes	OPTIONAL,
+	ass-RAB-Parameters					Ass-RAB-Parameters		OPTIONAL,
+	iE-Extensions						ProtocolExtensionContainer { { RAB-SetupItem-EnhRelocInfoRes-ExtIEs} }			OPTIONAL,
+	...
+}
+
+RAB-SetupItem-EnhRelocInfoRes-ExtIEs RANAP-PROTOCOL-EXTENSION ::= {
+	...
+}
+
+RAB-FailedList-EnhRelocInfoRes 				::= SEQUENCE (SIZE(1.. maxNrOfRABs)) OF ProtocolIE-Container { {RAB-FailedItem-EnhRelocInfoRes-IEs} }
+--RAB-IE-ContainerList { { RAB-FailedItem-EnhRelocInfoRes-IEs} }
+
+--this is changed by perl script automatically--
+myType-RAB-FailedItem-EnhRelocInfoRes RANAP-PROTOCOL-IES ::= 	{ ID id-RAB-FailedItem-EnhRelocInfoRes		CRITICALITY	 0	TYPE RAB-FailedItem-EnhRelocInfoRes			PRESENCE	 2 	}
+
+
+RAB-FailedItem-EnhRelocInfoRes-IEs RANAP-PROTOCOL-IES ::= {
+		myType-RAB-FailedItem-EnhRelocInfoRes,
+	...
+}
+
+RAB-FailedItem-EnhRelocInfoRes ::= SEQUENCE {
+	cN-DomainIndicator			CN-DomainIndicator,
+	rAB-ID						RAB-ID,
+	cause						Cause,
+	iE-Extensions					ProtocolExtensionContainer { { RAB-FailedItem-EnhRelocInfoRes-ExtIEs} }			OPTIONAL,
+	...
+}
+
+RAB-FailedItem-EnhRelocInfoRes-ExtIEs RANAP-PROTOCOL-EXTENSION ::= {
+	...
+}
+TNLInformationEnhRelInfoRes ::=SEQUENCE{
+	dl-forwardingTransportLayerAddress				TransportLayerAddress,
+	dl-forwardingTransportAssociation				IuTransportAssociation,
+	iE-Extensions						ProtocolExtensionContainer { { TNLInformationEnhRelInfoRes-ExtIEs} }			OPTIONAL,
+	...
+}
+
+TNLInformationEnhRelInfoRes-ExtIEs RANAP-PROTOCOL-EXTENSION ::= {
+	...
+}
+
+RANAP-EnhancedRelocationInformationResponseExtensions RANAP-PROTOCOL-EXTENSION ::= {
+	...
+}
+-- **************************************************************
+--
+-- RAB MODIFICATION REQUEST ELEMENTARY PROCEDURE
+--
+-- **************************************************************
+
+-- **************************************************************
+--
+-- RAB Modify Request
+--
+-- **************************************************************
+
+RAB-ModifyRequest ::= SEQUENCE {
+	protocolIEs			ProtocolIE-Container			{ {RAB-ModifyRequestIEs} },
+	protocolExtensions		ProtocolExtensionContainer	{ {RAB-ModifyRequestExtensions} }				OPTIONAL,
+	...
+}
+
+--this is changed by perl script automatically--
+myType-RAB-ModifyList RANAP-PROTOCOL-IES ::= 	{ ID id-RAB-ModifyList			CRITICALITY	 1	TYPE RAB-ModifyList			PRESENCE	 2}
+
+
+RAB-ModifyRequestIEs RANAP-PROTOCOL-IES ::= {
+		myType-RAB-ModifyList,
+	...
+}
+
+RAB-ModifyList 			::= SEQUENCE (SIZE(1.. maxNrOfRABs)) OF ProtocolIE-Container { {RAB-ModifyItemIEs} }
+--RAB-IE-ContainerList { {RAB-ModifyItemIEs} }
+
+--this is changed by perl script automatically--
+myType-RAB-ModifyItem RANAP-PROTOCOL-IES ::= 	{ ID id-RAB-ModifyItem		CRITICALITY	 1	TYPE RAB-ModifyItem		PRESENCE	 2	}
+
+
+RAB-ModifyItemIEs RANAP-PROTOCOL-IES ::= {
+		myType-RAB-ModifyItem,
+	...
+}
+
+RAB-ModifyItem ::= SEQUENCE {
+	rAB-ID						RAB-ID,
+	requested-RAB-Parameter-Values	Requested-RAB-Parameter-Values,
+	iE-Extensions					ProtocolExtensionContainer { {RAB-ModifyItem-ExtIEs} }			OPTIONAL,
+	...
+}
+
+RAB-ModifyItem-ExtIEs RANAP-PROTOCOL-EXTENSION ::= {
+	...
+}
+
+RAB-ModifyRequestExtensions RANAP-PROTOCOL-EXTENSION ::= {
+	...
+}
+
+-- **************************************************************
+--
+-- LOCATION RELATED DATA ELEMENTARY PROCEDURE
+--
+-- **************************************************************
+
+-- **************************************************************
+--
+-- Location Related Data Request
+--
+-- **************************************************************
+
+LocationRelatedDataRequest ::= SEQUENCE {
+	protocolIEs				ProtocolIE-Container		{ {LocationRelatedDataRequestIEs} },
+	protocolExtensions		ProtocolExtensionContainer	{ {LocationRelatedDataRequestExtensions} }				OPTIONAL,
+	...
+}
+
+--this is changed by perl script automatically--
+myType-LocationRelatedDataRequestType RANAP-PROTOCOL-IES ::= 	{ ID id-LocationRelatedDataRequestType		CRITICALITY	 0	TYPE LocationRelatedDataRequestType		PRESENCE	 0	}
+
+	-- This IE is mandatory for UTRAN, optional for GERAN Iu Mode ?
+
+LocationRelatedDataRequestIEs RANAP-PROTOCOL-IES ::= {
+		myType-LocationRelatedDataRequestType,
+	...
+}
+
+--this is changed by perl script automatically--
+
+-- Extension for Release 5 to enable LCS support for GERAN Iu mode --
+myType-LocationRelatedDataRequestTypeSpecificToGERANIuMode RANAP-PROTOCOL-EXTENSION ::= 	{ ID id-LocationRelatedDataRequestTypeSpecificToGERANIuMode		CRITICALITY	 0	EXTENSION LocationRelatedDataRequestTypeSpecificToGERANIuMode		PRESENCE	 0	}
+
+        -- The previous extension is optional for GERAN Iu Mode only, not applicable for UTRAN --
+        -- Extension for Release 7 to request GANSS Assistance Data. This IE shall be present if the Requested Location Related Data Type IE is set to
+        -- <91>Dedicated Assistance Data for Assisted GANSS<92> or `Dedicated Assistance Data for Assisted GPS and GANSS<92>--
+myType-RequestedGANSSAssistanceData RANAP-PROTOCOL-EXTENSION ::= 	{ ID id-RequestedGANSSAssistanceData							CRITICALITY	 0	EXTENSION RequestedGANSSAssistanceData							PRESENCE	 1	}
+
+
+LocationRelatedDataRequestExtensions RANAP-PROTOCOL-EXTENSION ::= {
+		myType-LocationRelatedDataRequestTypeSpecificToGERANIuMode|
+		myType-RequestedGANSSAssistanceData,
+	...
+}
+
+-- **************************************************************
+--
+-- Location Related Data Response
+--
+-- **************************************************************
+
+LocationRelatedDataResponse ::= SEQUENCE {
+	protocolIEs			ProtocolIE-Container			{ { LocationRelatedDataResponseIEs} },
+	protocolExtensions		ProtocolExtensionContainer	{ { LocationRelatedDataResponseExtensions} }				OPTIONAL,
+	...
+}
+
+--this is changed by perl script automatically--
+myType-BroadcastAssistanceDataDecipheringKeys RANAP-PROTOCOL-IES ::= 	{ ID id-BroadcastAssistanceDataDecipheringKeys		CRITICALITY	 1	TYPE BroadcastAssistanceDataDecipheringKeys		PRESENCE	 0	}
+
+
+LocationRelatedDataResponseIEs RANAP-PROTOCOL-IES ::= {
+		myType-BroadcastAssistanceDataDecipheringKeys,
+	...
+}
+
+--this is changed by perl script automatically--
+
+-- Extension for error handling
+myType-CriticalityDiagnosticsid18 RANAP-PROTOCOL-EXTENSION ::= 	{ ID id-CriticalityDiagnostics						CRITICALITY	 1	EXTENSION CriticalityDiagnostics							PRESENCE	 0	}
+
+myType-BroadcastGANSSAssistanceDataDecipheringKeys RANAP-PROTOCOL-EXTENSION ::= 	{ ID id-BroadcastGANSSAssistanceDataDecipheringKeys	CRITICALITY	 1	EXTENSION BroadcastAssistanceDataDecipheringKeys		PRESENCE	 0}
+
+
+LocationRelatedDataResponseExtensions RANAP-PROTOCOL-EXTENSION ::= {
+	myType-CriticalityDiagnosticsid18|
+		myType-BroadcastGANSSAssistanceDataDecipheringKeys,
+	...
+}
+
+-- **************************************************************
+--
+-- Location Related Data Failure
+--
+-- **************************************************************
+
+LocationRelatedDataFailure ::= SEQUENCE {
+	protocolIEs			ProtocolIE-Container			{ { LocationRelatedDataFailureIEs} },
+	protocolExtensions		ProtocolExtensionContainer	{ { LocationRelatedDataFailureExtensions} }				OPTIONAL,
+	...
+}
+
+--this is changed by perl script automatically--
+myType-Causeid14 RANAP-PROTOCOL-IES ::= 	{ ID id-Cause				CRITICALITY	 1	TYPE Cause					PRESENCE	 2	}
+
+LocationRelatedDataFailureIEs RANAP-PROTOCOL-IES ::= {
+	myType-Causeid14,
+	...
+}
+
+--this is changed by perl script automatically--
+
+-- Extension for error handling
+myType-CriticalityDiagnosticsid19 RANAP-PROTOCOL-EXTENSION ::= 	{ ID id-CriticalityDiagnostics		CRITICALITY	 1	EXTENSION CriticalityDiagnostics		PRESENCE	 0	}
+
+
+LocationRelatedDataFailureExtensions RANAP-PROTOCOL-EXTENSION ::= {
+	myType-CriticalityDiagnosticsid19,
+	...
+}
+
+-- **************************************************************
+--
+-- INFORMATION TRANSFER ELEMENTARY PROCEDURE
+--
+-- **************************************************************
+
+-- **************************************************************
+--
+-- Information Transfer Indication
+--
+-- **************************************************************
+
+InformationTransferIndication ::= SEQUENCE {
+	protocolIEs			ProtocolIE-Container			{ { InformationTransferIndicationIEs} },
+	protocolExtensions		ProtocolExtensionContainer	{ { InformationTransferIndicationExtensions} }				OPTIONAL,
+	...
+}
+
+--this is changed by perl script automatically--
+myType-InformationTransferID RANAP-PROTOCOL-IES ::= 	{ ID id-InformationTransferID		CRITICALITY	 0	TYPE InformationTransferID		PRESENCE	 2	}
+
+myType-ProvidedData RANAP-PROTOCOL-IES ::= 	{ ID id-ProvidedData				CRITICALITY	 0	TYPE ProvidedData				PRESENCE	 2	}
+
+myType-CN-DomainIndicatorid10 RANAP-PROTOCOL-IES ::= 	{ ID id-CN-DomainIndicator			CRITICALITY	 0	TYPE CN-DomainIndicator			PRESENCE	 2	}
+myType-GlobalCN-IDid9 RANAP-PROTOCOL-IES ::= 	{ ID id-GlobalCN-ID					CRITICALITY	 1	TYPE GlobalCN-ID				PRESENCE	 0}
+
+
+InformationTransferIndicationIEs RANAP-PROTOCOL-IES ::= {
+		myType-InformationTransferID |
+		myType-ProvidedData |
+	myType-CN-DomainIndicatorid10 |
+	myType-GlobalCN-IDid9,
+	...
+}
+
+InformationTransferIndicationExtensions RANAP-PROTOCOL-EXTENSION ::= {
+	...
+}
+
+-- **************************************************************
+--
+-- Information Transfer Confirmation
+--
+-- **************************************************************
+
+InformationTransferConfirmation ::= SEQUENCE {
+	protocolIEs			ProtocolIE-Container			{ { InformationTransferConfirmationIEs} },
+	protocolExtensions		ProtocolExtensionContainer	{ { InformationTransferConfirmationExtensions} }				OPTIONAL,
+	...
+}
+
+--this is changed by perl script automatically--
+myType-InformationTransferIDid2 RANAP-PROTOCOL-IES ::= 	{ ID id-InformationTransferID		CRITICALITY	 1	TYPE InformationTransferID		PRESENCE	 2	}
+myType-CN-DomainIndicatorid11 RANAP-PROTOCOL-IES ::= 	{ ID id-CN-DomainIndicator			CRITICALITY	 1	TYPE CN-DomainIndicator			PRESENCE	 2	}
+
+myType-CriticalityDiagnosticsid20 RANAP-PROTOCOL-IES ::= 	{ ID id-CriticalityDiagnostics		CRITICALITY	 1	TYPE CriticalityDiagnostics		PRESENCE	 0 	}
+
+myType-GlobalRNC-IDid8 RANAP-PROTOCOL-IES ::= 	{ ID id-GlobalRNC-ID				CRITICALITY	 1	TYPE GlobalRNC-ID				PRESENCE	 2	}
+
+
+InformationTransferConfirmationIEs RANAP-PROTOCOL-IES ::= {
+	myType-InformationTransferIDid2 |
+	myType-CN-DomainIndicatorid11 |
+	myType-CriticalityDiagnosticsid20 |
+	myType-GlobalRNC-IDid8,
+	...
+}
+
+--this is changed by perl script automatically--
+
+-- Extension for Release 7 to indicate extended RNC-ID --
+myType-ExtendedRNC-IDid8 RANAP-PROTOCOL-EXTENSION ::= 	{ ID id-ExtendedRNC-ID				CRITICALITY	 0	EXTENSION ExtendedRNC-ID		PRESENCE	 0	}
+
+
+InformationTransferConfirmationExtensions RANAP-PROTOCOL-EXTENSION ::= {
+	myType-ExtendedRNC-IDid8,
+	...
+}
+
+-- **************************************************************
+--
+-- Information Transfer Failure
+--
+-- **************************************************************
+
+InformationTransferFailure ::= SEQUENCE {
+	protocolIEs			ProtocolIE-Container			{ { InformationTransferFailureIEs} },
+	protocolExtensions		ProtocolExtensionContainer	{ { InformationTransferFailureExtensions} }				OPTIONAL,
+	...
+}
+
+--this is changed by perl script automatically--
+myType-InformationTransferIDid3 RANAP-PROTOCOL-IES ::= 	{ ID id-InformationTransferID		CRITICALITY	 1	TYPE InformationTransferID		PRESENCE	 2	}
+myType-CN-DomainIndicatorid12 RANAP-PROTOCOL-IES ::= 	{ ID id-CN-DomainIndicator			CRITICALITY	 1	TYPE CN-DomainIndicator			PRESENCE	 2	}
+
+myType-Causeid15 RANAP-PROTOCOL-IES ::= 	{ ID id-Cause						CRITICALITY	 1	TYPE Cause						PRESENCE	 2	}
+
+myType-CriticalityDiagnosticsid21 RANAP-PROTOCOL-IES ::= 	{ ID id-CriticalityDiagnostics		CRITICALITY	 1	TYPE CriticalityDiagnostics		PRESENCE	 0 	}
+
+myType-GlobalRNC-IDid9 RANAP-PROTOCOL-IES ::= 	{ ID id-GlobalRNC-ID				CRITICALITY	 1	TYPE GlobalRNC-ID				PRESENCE	 2	}
+
+
+InformationTransferFailureIEs RANAP-PROTOCOL-IES ::= {
+	myType-InformationTransferIDid3 |
+	myType-CN-DomainIndicatorid12 |
+	myType-Causeid15 |
+	myType-CriticalityDiagnosticsid21 |
+	myType-GlobalRNC-IDid9,
+	...
+}
+
+--this is changed by perl script automatically--
+
+-- Extension for Release 7 to indicate extended RNC-ID --
+myType-ExtendedRNC-IDid9 RANAP-PROTOCOL-EXTENSION ::= 	{ ID id-ExtendedRNC-ID				CRITICALITY	 0	EXTENSION ExtendedRNC-ID		PRESENCE	 0	}
+
+InformationTransferFailureExtensions RANAP-PROTOCOL-EXTENSION ::= {
+	myType-ExtendedRNC-IDid9,
+	...
+}
+
+-- **************************************************************
+--
+-- UE SPECIFIC INFORMATION ELEMENTARY PROCEDURE
+--
+-- **************************************************************
+
+-- **************************************************************
+--
+-- UE Specific Information Indication
+--
+-- **************************************************************
+
+UESpecificInformationIndication ::= SEQUENCE {
+	protocolIEs			ProtocolIE-Container			{ {UESpecificInformationIndicationIEs} },
+	protocolExtensions		ProtocolExtensionContainer	{ {UESpecificInformationIndicationExtensions} }					OPTIONAL,
+	...
+}
+
+--this is changed by perl script automatically--
+myType-UESBI-Iuid4 RANAP-PROTOCOL-IES ::= 	{ ID id-UESBI-Iu				CRITICALITY	 1	TYPE UESBI-Iu				PRESENCE	 0	}
+
+UESpecificInformationIndicationIEs RANAP-PROTOCOL-IES ::= {
+	myType-UESBI-Iuid4,
+	...
+}
+
+UESpecificInformationIndicationExtensions RANAP-PROTOCOL-EXTENSION ::= {
+	...
+}
+
+-- **************************************************************
+--
+-- DIRECT INFORMATION TRANSFER ELEMENTARY PROCEDURE
+--
+-- **************************************************************
+
+-- **************************************************************
+--
+-- Direct Information Transfer
+--
+-- **************************************************************
+
+DirectInformationTransfer ::= SEQUENCE {
+	protocolIEs			ProtocolIE-Container			{ { DirectInformationTransferIEs} },
+	protocolExtensions		ProtocolExtensionContainer	{ { DirectInformationTransferExtensions} }				OPTIONAL,
+	...
+}
+
+--this is changed by perl script automatically--
+myType-InterSystemInformationTransferType RANAP-PROTOCOL-IES ::= 	{ ID id-InterSystemInformationTransferType	CRITICALITY	 1	TYPE InterSystemInformationTransferType	PRESENCE	 0 }
+
+myType-CN-DomainIndicatorid13 RANAP-PROTOCOL-IES ::= 	{ ID id-CN-DomainIndicator					CRITICALITY	 1	TYPE CN-DomainIndicator							PRESENCE	 2 }
+myType-GlobalRNC-IDid10 RANAP-PROTOCOL-IES ::= 	{ ID id-GlobalRNC-ID 						CRITICALITY	 1	TYPE GlobalRNC-ID								PRESENCE	 0 }
+
+myType-GlobalCN-IDid10 RANAP-PROTOCOL-IES ::= 	{ ID id-GlobalCN-ID 						CRITICALITY	 1	TYPE GlobalCN-ID								PRESENCE	 0 }
+
+
+DirectInformationTransferIEs RANAP-PROTOCOL-IES ::= {
+		myType-InterSystemInformationTransferType |
+	myType-CN-DomainIndicatorid13 |
+	myType-GlobalRNC-IDid10 |
+	myType-GlobalCN-IDid10,
+	...
+}
+
+--this is changed by perl script automatically--
+
+-- Extension for Release 7 to indicate extended RNC-ID --
+myType-ExtendedRNC-IDid10 RANAP-PROTOCOL-EXTENSION ::= 	{ ID id-ExtendedRNC-ID			CRITICALITY	 0	EXTENSION ExtendedRNC-ID		PRESENCE	 0 }
+
+DirectInformationTransferExtensions RANAP-PROTOCOL-EXTENSION ::= {
+	myType-ExtendedRNC-IDid10,
+	...
+}
+
+-- **************************************************************
+--
+-- UPLINK INFORMATION EXCHANGE ELEMENTARY PROCEDURE
+--
+-- **************************************************************
+
+-- **************************************************************
+--
+-- Uplink Information Exchange Request
+--
+-- **************************************************************
+
+UplinkInformationExchangeRequest ::= SEQUENCE {
+	protocolIEs				ProtocolIE-Container		{ { UplinkInformationExchangeRequestIEs} },
+	protocolExtensions		ProtocolExtensionContainer	{ { UplinkInformationExchangeRequestExtensions} }			OPTIONAL,
+	...
+}
+
+--this is changed by perl script automatically--
+myType-InformationExchangeID RANAP-PROTOCOL-IES ::= 	{ ID id-InformationExchangeID		CRITICALITY	 0	TYPE InformationExchangeID		PRESENCE	 2	}
+
+myType-InformationExchangeType RANAP-PROTOCOL-IES ::= 	{ ID id-InformationExchangeType		CRITICALITY	 0	TYPE InformationExchangeType	PRESENCE	 2	}
+
+myType-InformationTransferType RANAP-PROTOCOL-IES ::= 	{ ID id-InformationTransferType		CRITICALITY	 0	TYPE InformationTransferType	PRESENCE	 1	
+	-- This IE shall be present if the Information Exchange Type IE is set to "transfer"	--											}
+
+myType-InformationRequestType RANAP-PROTOCOL-IES ::= 	{ ID id-InformationRequestType		CRITICALITY	 0	TYPE InformationRequestType	PRESENCE	 1	
+	-- This IE shall be present if the Information Exchange Type IE is set to "request"		--											}
+
+myType-CN-DomainIndicatorid14 RANAP-PROTOCOL-IES ::= 	{ ID id-CN-DomainIndicator			CRITICALITY	 0	TYPE CN-DomainIndicator			PRESENCE	 2	}
+myType-GlobalRNC-IDid11 RANAP-PROTOCOL-IES ::= 	{ ID id-GlobalRNC-ID				CRITICALITY	 0	TYPE GlobalRNC-ID				PRESENCE	 2	}
+
+
+UplinkInformationExchangeRequestIEs RANAP-PROTOCOL-IES ::= {
+		myType-InformationExchangeID |
+		myType-InformationExchangeType |
+		myType-InformationTransferType |
+		myType-InformationRequestType |
+	myType-CN-DomainIndicatorid14 |
+	myType-GlobalRNC-IDid11,
+	...
+}
+
+--this is changed by perl script automatically--
+
+-- Extension for Release 7 to indicate extended RNC-ID --
+myType-ExtendedRNC-IDid11 RANAP-PROTOCOL-EXTENSION ::= 	{ ID id-ExtendedRNC-ID				CRITICALITY	 0	EXTENSION ExtendedRNC-ID		PRESENCE	 0	}
+
+UplinkInformationExchangeRequestExtensions RANAP-PROTOCOL-EXTENSION ::= {
+	myType-ExtendedRNC-IDid11,
+	...
+}
+
+-- **************************************************************
+--
+-- Uplink Information Exchange Response
+--
+-- **************************************************************
+
+UplinkInformationExchangeResponse ::= SEQUENCE {
+	protocolIEs				ProtocolIE-Container		{ { UplinkInformationExchangeResponseIEs} },
+	protocolExtensions		ProtocolExtensionContainer	{ { UplinkInformationExchangeResponseExtensions} }		OPTIONAL,
+	...
+}
+
+--this is changed by perl script automatically--
+myType-InformationExchangeIDid2 RANAP-PROTOCOL-IES ::= 	{ ID id-InformationExchangeID		CRITICALITY	 1	TYPE InformationExchangeID		PRESENCE	 2	}
+myType-InformationRequested RANAP-PROTOCOL-IES ::= 	{ ID id-InformationRequested		CRITICALITY	 1	TYPE InformationRequested		PRESENCE	 0		}
+
+myType-CN-DomainIndicatorid15 RANAP-PROTOCOL-IES ::= 	{ ID id-CN-DomainIndicator			CRITICALITY	 1	TYPE CN-DomainIndicator			PRESENCE	 2	}
+
+myType-GlobalCN-IDid11 RANAP-PROTOCOL-IES ::= 	{ ID id-GlobalCN-ID					CRITICALITY	 1	TYPE GlobalCN-ID				PRESENCE	 0		}
+
+myType-CriticalityDiagnosticsid22 RANAP-PROTOCOL-IES ::= 	{ ID id-CriticalityDiagnostics		CRITICALITY	 1	TYPE CriticalityDiagnostics		PRESENCE	 0		}
+
+
+UplinkInformationExchangeResponseIEs RANAP-PROTOCOL-IES ::= {
+	myType-InformationExchangeIDid2 |
+		myType-InformationRequested |
+	myType-CN-DomainIndicatorid15 |
+	myType-GlobalCN-IDid11 |
+	myType-CriticalityDiagnosticsid22 ,
+	...
+}
+
+UplinkInformationExchangeResponseExtensions RANAP-PROTOCOL-EXTENSION ::= {
+	...
+}
+
+-- **************************************************************
+--
+-- Uplink Information Exchange Failure
+--
+-- **************************************************************
+
+UplinkInformationExchangeFailure ::= SEQUENCE {
+	protocolIEs			ProtocolIE-Container			{ { UplinkInformationExchangeFailureIEs} },
+	protocolExtensions		ProtocolExtensionContainer	{ { UplinkInformationExchangeFailureExtensions} }				OPTIONAL,
+	...
+}
+
+--this is changed by perl script automatically--
+myType-InformationExchangeIDid3 RANAP-PROTOCOL-IES ::= 	{ ID id-InformationExchangeID		CRITICALITY	 1	TYPE InformationExchangeID		PRESENCE	 2	}
+myType-CN-DomainIndicatorid16 RANAP-PROTOCOL-IES ::= 	{ ID id-CN-DomainIndicator			CRITICALITY	 1	TYPE CN-DomainIndicator			PRESENCE	 2	}
+
+myType-GlobalCN-IDid12 RANAP-PROTOCOL-IES ::= 	{ ID id-GlobalCN-ID					CRITICALITY	 1	TYPE GlobalCN-ID				PRESENCE	 0		}
+
+myType-Causeid16 RANAP-PROTOCOL-IES ::= 	{ ID id-Cause						CRITICALITY	 1	TYPE Cause						PRESENCE	 2	}
+
+myType-CriticalityDiagnosticsid23 RANAP-PROTOCOL-IES ::= 	{ ID id-CriticalityDiagnostics		CRITICALITY	 1	TYPE CriticalityDiagnostics		PRESENCE	 0		}
+
+
+UplinkInformationExchangeFailureIEs RANAP-PROTOCOL-IES ::= {
+	myType-InformationExchangeIDid3 |
+	myType-CN-DomainIndicatorid16 |
+	myType-GlobalCN-IDid12 |
+	myType-Causeid16 |
+	myType-CriticalityDiagnosticsid23 ,
+	...
+}
+
+UplinkInformationExchangeFailureExtensions RANAP-PROTOCOL-EXTENSION ::= {
+	...
+}
+
+-- **************************************************************
+--
+-- MBMS SESSION START PROCEDURE
+--
+-- **************************************************************
+
+-- **************************************************************
+--
+-- MBMS Session Start
+--
+-- **************************************************************
+
+MBMSSessionStart ::= SEQUENCE {
+	protocolIEs				ProtocolIE-Container		{ { MBMSSessionStartIEs} },
+	protocolExtensions		ProtocolExtensionContainer	{ { MBMSSessionStartExtensions} }			OPTIONAL,
+	...
+}
+
+--this is changed by perl script automatically--
+myType-TMGI RANAP-PROTOCOL-IES ::= 	{ ID id-TMGI						CRITICALITY	 0	TYPE TMGI									PRESENCE	 2	}
+
+myType-MBMSSessionIdentity RANAP-PROTOCOL-IES ::= 	{ ID id-MBMSSessionIdentity		CRITICALITY	 1	TYPE MBMSSessionIdentity						PRESENCE	 0	}
+
+myType-MBMSBearerServiceType RANAP-PROTOCOL-IES ::= 	{ ID id-MBMSBearerServiceType		CRITICALITY	 0	TYPE MBMSBearerServiceType					PRESENCE	 2	}
+
+myType-IuSigConIdid4 RANAP-PROTOCOL-IES ::= 	{ ID id-IuSigConId					CRITICALITY	 0 	TYPE IuSignallingConnectionIdentifier		PRESENCE	 2	}
+myType-RAB-Parameters RANAP-PROTOCOL-IES ::= 	{ ID id-RAB-Parameters				CRITICALITY	 0 	TYPE RAB-Parameters							PRESENCE	 2	}
+
+myType-PDP-TypeInformation RANAP-PROTOCOL-IES ::= 	{ ID id-PDP-TypeInformation			CRITICALITY	 1	TYPE PDP-TypeInformation					PRESENCE	 0		}
+
+myType-MBMSSessionDuration RANAP-PROTOCOL-IES ::= 	{ ID id-MBMSSessionDuration			CRITICALITY	 0	TYPE MBMSSessionDuration					PRESENCE	 2		}
+
+myType-MBMSServiceArea RANAP-PROTOCOL-IES ::= 	{ ID id-MBMSServiceArea				CRITICALITY	 0	TYPE MBMSServiceArea						PRESENCE	 2	}
+
+myType-FrequenceLayerConvergenceFlag RANAP-PROTOCOL-IES ::= 	{ ID id-FrequenceLayerConvergenceFlag	CRITICALITY	 1	TYPE FrequenceLayerConvergenceFlag	PRESENCE	 0		}
+
+myType-RAListofIdleModeUEs RANAP-PROTOCOL-IES ::= 	{ ID id-RAListofIdleModeUEs			CRITICALITY	 1	TYPE RAListofIdleModeUEs					PRESENCE	 0		}
+
+myType-GlobalCN-IDid13 RANAP-PROTOCOL-IES ::= 	{ ID id-GlobalCN-ID					CRITICALITY	 0	TYPE GlobalCN-ID							PRESENCE	 0		}
+
+myType-MBMSSessionRepetitionNumber RANAP-PROTOCOL-IES ::= 	{ ID id-MBMSSessionRepetitionNumber	CRITICALITY	 1	TYPE MBMSSessionRepetitionNumber			PRESENCE	 0		}
+
+myType-TimeToMBMSDataTransfer RANAP-PROTOCOL-IES ::= 	{ ID id-TimeToMBMSDataTransfer		CRITICALITY	 0	TYPE TimeToMBMSDataTransfer					PRESENCE	 2	}
+
+
+MBMSSessionStartIEs RANAP-PROTOCOL-IES ::= {
+		myType-TMGI |
+		myType-MBMSSessionIdentity |
+		myType-MBMSBearerServiceType |
+	myType-IuSigConIdid4|
+		myType-RAB-Parameters |
+		myType-PDP-TypeInformation |
+		myType-MBMSSessionDuration |
+		myType-MBMSServiceArea |
+		myType-FrequenceLayerConvergenceFlag |
+		myType-RAListofIdleModeUEs |
+	myType-GlobalCN-IDid13 |
+		myType-MBMSSessionRepetitionNumber |
+		myType-TimeToMBMSDataTransfer,
+	...
+}
+
+--this is changed by perl script automatically--
+
+-- Extension for Release 6 to enable MBMS counting in broadcast mode --
+myType-MBMSCountingInformation RANAP-PROTOCOL-EXTENSION ::= 	{ ID id-MBMSCountingInformation			CRITICALITY	 1		EXTENSION MBMSCountingInformation				PRESENCE	 0	}
+
+myType-MBMSSynchronisationInformation RANAP-PROTOCOL-EXTENSION ::= 	{ ID id-MBMSSynchronisationInformation	CRITICALITY	 1		EXTENSION MBMSSynchronisationInformation		PRESENCE	 0	}
+
+
+MBMSSessionStartExtensions RANAP-PROTOCOL-EXTENSION ::= {
+		myType-MBMSCountingInformation |
+		myType-MBMSSynchronisationInformation,
+	...
+}
+
+MBMSSynchronisationInformation ::= SEQUENCE {
+	mBMSHCIndicator					MBMSHCIndicator,
+	iPMulticastAddress				IPMulticastAddress,
+	gTPDLTEID						GTP-TEI,
+	iE-Extensions					ProtocolExtensionContainer { {MBMSSynchronisationInformation-ExtIEs} }			OPTIONAL,
+	...
+}
+
+--this is changed by perl script automatically--
+myType-IP-Source-Address RANAP-PROTOCOL-EXTENSION ::= 	{ ID id-IP-Source-Address			CRITICALITY	 0		EXTENSION IPMulticastAddress				PRESENCE	 0	}
+
+
+MBMSSynchronisationInformation-ExtIEs RANAP-PROTOCOL-EXTENSION ::= {
+		myType-IP-Source-Address,
+	...
+}
+
+-- **************************************************************
+--
+-- MBMS Session Start Response
+--
+-- **************************************************************
+
+MBMSSessionStartResponse::= SEQUENCE {
+	protocolIEs				ProtocolIE-Container		{ {MBMSSessionStartResponseIEs} },
+	protocolExtensions		ProtocolExtensionContainer	{ {MBMSSessionStartResponseExtensions} }		OPTIONAL,
+	...
+}
+
+--this is changed by perl script automatically--
+myType-TransportLayerInformation RANAP-PROTOCOL-IES ::= 	{ ID id-TransportLayerInformation		CRITICALITY	 1	TYPE TransportLayerInformation		PRESENCE	 0		}
+
+myType-Causeid17 RANAP-PROTOCOL-IES ::= 	{ ID id-Cause							CRITICALITY	 1	TYPE Cause							PRESENCE	 0		}
+myType-CriticalityDiagnosticsid24 RANAP-PROTOCOL-IES ::= 	{ ID id-CriticalityDiagnostics			CRITICALITY	 1	TYPE CriticalityDiagnostics			PRESENCE	 0		}
+
+
+MBMSSessionStartResponseIEs RANAP-PROTOCOL-IES ::= {
+		myType-TransportLayerInformation |
+	myType-Causeid17 |
+	myType-CriticalityDiagnosticsid24 ,
+	...
+}
+
+MBMSSessionStartResponseExtensions RANAP-PROTOCOL-EXTENSION ::= {
+	...
+}
+
+-- **************************************************************
+--
+-- MBMS Session Start Failure
+--
+-- **************************************************************
+
+MBMSSessionStartFailure ::= SEQUENCE {
+	protocolIEs				ProtocolIE-Container		{ { MBMSSessionStartFailureIEs} },
+	protocolExtensions		ProtocolExtensionContainer	{ { MBMSSessionStartFailureExtensions} }		OPTIONAL,
+	...
+}
+
+--this is changed by perl script automatically--
+myType-Causeid18 RANAP-PROTOCOL-IES ::= 	{ ID id-Cause							CRITICALITY	 1	TYPE Cause							PRESENCE	 2	}
+myType-CriticalityDiagnosticsid25 RANAP-PROTOCOL-IES ::= 	{ ID id-CriticalityDiagnostics			CRITICALITY	 1	TYPE CriticalityDiagnostics			PRESENCE	 0		}
+
+
+MBMSSessionStartFailureIEs RANAP-PROTOCOL-IES ::= {
+	myType-Causeid18 |
+	myType-CriticalityDiagnosticsid25 ,
+	...
+}
+
+MBMSSessionStartFailureExtensions RANAP-PROTOCOL-EXTENSION ::= {
+	...
+}
+
+-- **************************************************************
+--
+-- MBMS SESSION UPDATE PROCEDURE
+--
+-- **************************************************************
+
+-- **************************************************************
+--
+-- MBMS Session Update
+--
+-- **************************************************************
+
+MBMSSessionUpdate ::= SEQUENCE {
+	protocolIEs				ProtocolIE-Container		{ { MBMSSessionUpdateIEs} },
+	protocolExtensions		ProtocolExtensionContainer	{ { MBMSSessionUpdateExtensions} }			OPTIONAL,
+	...
+}
+
+--this is changed by perl script automatically--
+myType-SessionUpdateID RANAP-PROTOCOL-IES ::= 	{ ID id-SessionUpdateID				CRITICALITY	 0	TYPE SessionUpdateID						PRESENCE	 2	}
+
+myType-DeltaRAListofIdleModeUEs RANAP-PROTOCOL-IES ::= 	{ ID id-DeltaRAListofIdleModeUEs	CRITICALITY	 0	TYPE DeltaRAListofIdleModeUEs				PRESENCE	 2	}
+
+
+MBMSSessionUpdateIEs RANAP-PROTOCOL-IES ::= {
+		myType-SessionUpdateID |
+		myType-DeltaRAListofIdleModeUEs,
+	...
+}
+
+MBMSSessionUpdateExtensions RANAP-PROTOCOL-EXTENSION ::= {
+	...
+}
+
+-- **************************************************************
+--
+-- MBMS Session Update Response
+--
+-- **************************************************************
+
+MBMSSessionUpdateResponse ::= SEQUENCE {
+	protocolIEs				ProtocolIE-Container		{ { MBMSSessionUpdateResponseIEs} },
+	protocolExtensions		ProtocolExtensionContainer	{ { MBMSSessionUpdateResponseExtensions} }		OPTIONAL,
+	...
+}
+
+--this is changed by perl script automatically--
+myType-SessionUpdateIDid2 RANAP-PROTOCOL-IES ::= 	{ ID id-SessionUpdateID					CRITICALITY	 1	TYPE SessionUpdateID				PRESENCE	 2	}
+myType-TransportLayerInformationid2 RANAP-PROTOCOL-IES ::= 	{ ID id-TransportLayerInformation		CRITICALITY	 1	TYPE TransportLayerInformation		PRESENCE	 0		}
+
+myType-Causeid19 RANAP-PROTOCOL-IES ::= 	{ ID id-Cause							CRITICALITY	 1	TYPE Cause							PRESENCE	 0		}
+
+myType-CriticalityDiagnosticsid26 RANAP-PROTOCOL-IES ::= 	{ ID id-CriticalityDiagnostics			CRITICALITY	 1	TYPE CriticalityDiagnostics			PRESENCE	 0		}
+
+
+MBMSSessionUpdateResponseIEs RANAP-PROTOCOL-IES ::= {
+	myType-SessionUpdateIDid2 |
+	myType-TransportLayerInformationid2 |
+	myType-Causeid19 |
+	myType-CriticalityDiagnosticsid26 ,
+	...
+}
+
+MBMSSessionUpdateResponseExtensions RANAP-PROTOCOL-EXTENSION ::= {
+	...
+}
+
+-- **************************************************************
+--
+-- MBMS Session Update Failure
+--
+-- **************************************************************
+
+MBMSSessionUpdateFailure ::= SEQUENCE {
+	protocolIEs				ProtocolIE-Container		{ { MBMSSessionUpdateFailureIEs} },
+	protocolExtensions		ProtocolExtensionContainer	{ { MBMSSessionUpdateFailureExtensions} }		OPTIONAL,
+	...
+}
+
+--this is changed by perl script automatically--
+myType-SessionUpdateIDid3 RANAP-PROTOCOL-IES ::= 	{ ID id-SessionUpdateID					CRITICALITY	 1	TYPE SessionUpdateID				PRESENCE	 2	}
+myType-Causeid20 RANAP-PROTOCOL-IES ::= 	{ ID id-Cause							CRITICALITY	 1	TYPE Cause							PRESENCE	 2	}
+
+myType-CriticalityDiagnosticsid27 RANAP-PROTOCOL-IES ::= 	{ ID id-CriticalityDiagnostics			CRITICALITY	 1	TYPE CriticalityDiagnostics			PRESENCE	 0		}
+
+
+MBMSSessionUpdateFailureIEs RANAP-PROTOCOL-IES ::= {
+	myType-SessionUpdateIDid3 |
+	myType-Causeid20 |
+	myType-CriticalityDiagnosticsid27 ,
+	...
+}
+
+MBMSSessionUpdateFailureExtensions RANAP-PROTOCOL-EXTENSION ::= {
+	...
+}
+
+-- **************************************************************
+--
+-- MBMS SESSION STOP PROCEDURE
+--
+-- **************************************************************
+
+-- **************************************************************
+--
+-- MBMS Session Stop
+--
+-- **************************************************************
+
+MBMSSessionStop ::= SEQUENCE {
+	protocolIEs				ProtocolIE-Container		{ { MBMSSessionStopIEs} },
+	protocolExtensions		ProtocolExtensionContainer	{ { MBMSSessionStopExtensions} }			OPTIONAL,
+	...
+}
+
+--this is changed by perl script automatically--
+myType-MBMSCNDe-Registration RANAP-PROTOCOL-IES ::= 	{ ID id-MBMSCNDe-Registration	CRITICALITY	 0	TYPE MBMSCNDe-Registration				PRESENCE	 2	}
+
+
+MBMSSessionStopIEs RANAP-PROTOCOL-IES ::= {
+		myType-MBMSCNDe-Registration,
+	...
+}
+
+MBMSSessionStopExtensions RANAP-PROTOCOL-EXTENSION ::= {
+	...
+}
+
+-- **************************************************************
+--
+-- MBMS Session Stop Response
+--
+-- **************************************************************
+
+MBMSSessionStopResponse ::= SEQUENCE {
+	protocolIEs				ProtocolIE-Container		{ { MBMSSessionStopResponseIEs} },
+	protocolExtensions		ProtocolExtensionContainer	{ { MBMSSessionStopResponseExtensions} }		OPTIONAL,
+	...
+}
+
+--this is changed by perl script automatically--
+myType-Causeid21 RANAP-PROTOCOL-IES ::= 	{ ID id-Cause							CRITICALITY	 1	TYPE Cause							PRESENCE	 0		}
+myType-CriticalityDiagnosticsid28 RANAP-PROTOCOL-IES ::= 	{ ID id-CriticalityDiagnostics			CRITICALITY	 1	TYPE CriticalityDiagnostics			PRESENCE	 0		}
+
+
+MBMSSessionStopResponseIEs RANAP-PROTOCOL-IES ::= {
+	myType-Causeid21 |
+	myType-CriticalityDiagnosticsid28 ,
+	...
+}
+
+MBMSSessionStopResponseExtensions RANAP-PROTOCOL-EXTENSION ::= {
+	...
+}
+
+-- **************************************************************
+--
+-- MBMS UE LINKING PROCEDURE
+--
+-- **************************************************************
+
+-- **************************************************************
+--
+-- MBMS UE Linking Request
+--
+-- **************************************************************
+
+MBMSUELinkingRequest ::= SEQUENCE {
+	protocolIEs				ProtocolIE-Container		{ { MBMSUELinkingRequestIEs} },
+	protocolExtensions		ProtocolExtensionContainer	{ { MBMSUELinkingRequestExtensions} }			OPTIONAL,
+	...
+}
+
+--this is changed by perl script automatically--
+myType-JoinedMBMSBearerServicesList RANAP-PROTOCOL-IES ::= 	{ ID id-JoinedMBMSBearerServicesList	CRITICALITY	 0	TYPE JoinedMBMSBearerService-IEs		PRESENCE	 0	}
+
+myType-LeftMBMSBearerServicesList RANAP-PROTOCOL-IES ::= 	{ ID id-LeftMBMSBearerServicesList		CRITICALITY	 0	TYPE LeftMBMSBearerService-IEs			PRESENCE	 0	}
+
+
+MBMSUELinkingRequestIEs RANAP-PROTOCOL-IES ::= {
+		myType-JoinedMBMSBearerServicesList |
+		myType-LeftMBMSBearerServicesList,
+	...
+}
+
+LeftMBMSBearerService-IEs ::= SEQUENCE (SIZE (1.. maxnoofMulticastServicesPerUE)) OF
+	SEQUENCE {
+		tMGI				TMGI,
+		iE-Extensions		ProtocolExtensionContainer { {LeftMBMSBearerService-ExtIEs} } OPTIONAL,
+		...
+	}
+
+LeftMBMSBearerService-ExtIEs RANAP-PROTOCOL-EXTENSION ::= {
+	...
+}
+
+MBMSUELinkingRequestExtensions RANAP-PROTOCOL-EXTENSION ::= {
+	...
+}
+
+-- **************************************************************
+--
+-- MBMS UE Linking Response
+--
+-- **************************************************************
+
+MBMSUELinkingResponse ::= SEQUENCE {
+	protocolIEs				ProtocolIE-Container		{ { MBMSUELinkingResponseIEs} },
+	protocolExtensions		ProtocolExtensionContainer	{ { MBMSUELinkingResponseExtensions} }		OPTIONAL,
+	...
+}
+
+--this is changed by perl script automatically--
+myType-UnsuccessfulLinkingList RANAP-PROTOCOL-IES ::= 	{ ID id-UnsuccessfulLinkingList			CRITICALITY	 1	TYPE UnsuccessfulLinking-IEs		PRESENCE	 0		}
+
+myType-CriticalityDiagnosticsid29 RANAP-PROTOCOL-IES ::= 	{ ID id-CriticalityDiagnostics			CRITICALITY	 1	TYPE CriticalityDiagnostics			PRESENCE	 0		}
+
+MBMSUELinkingResponseIEs RANAP-PROTOCOL-IES ::= {
+		myType-UnsuccessfulLinkingList |
+	myType-CriticalityDiagnosticsid29 ,
+	...
+}
+
+UnsuccessfulLinking-IEs ::= SEQUENCE (SIZE (1.. maxnoofMulticastServicesPerUE)) OF
+	SEQUENCE {
+		tMGI				TMGI,
+		cause				Cause,
+		iE-Extensions		ProtocolExtensionContainer { {UnsuccessfulLinking-ExtIEs} } OPTIONAL,
+		...
+	}
+
+UnsuccessfulLinking-ExtIEs RANAP-PROTOCOL-EXTENSION ::= {
+	...
+}
+
+MBMSUELinkingResponseExtensions RANAP-PROTOCOL-EXTENSION ::= {
+	...
+}
+
+-- **************************************************************
+--
+-- MBMS REGISTRATION PROCEDURE
+--
+-- **************************************************************
+
+-- **************************************************************
+--
+-- MBMS Registration Request
+--
+-- **************************************************************
+
+MBMSRegistrationRequest ::= SEQUENCE {
+	protocolIEs				ProtocolIE-Container		{ { MBMSRegistrationRequestIEs} },
+	protocolExtensions		ProtocolExtensionContainer	{ { MBMSRegistrationRequestExtensions} }			OPTIONAL,
+	...
+}
+
+--this is changed by perl script automatically--
+myType-MBMSRegistrationRequestType RANAP-PROTOCOL-IES ::= 	{ ID id-MBMSRegistrationRequestType		CRITICALITY	 0	TYPE MBMSRegistrationRequestType				PRESENCE	 2	}
+
+myType-TMGIid2 RANAP-PROTOCOL-IES ::= 	{ ID id-TMGI						CRITICALITY	 0	TYPE TMGI									PRESENCE	 2	}
+myType-IPMulticastAddress RANAP-PROTOCOL-IES ::= 	{ ID id-IPMulticastAddress			CRITICALITY	 0	TYPE IPMulticastAddress						PRESENCE	 1	
+	-- This IE shall be present if the MBMS Registration Request Type IE is set to "register"	--								}
+
+myType-APN RANAP-PROTOCOL-IES ::= 	{ ID id-APN							CRITICALITY	 0	TYPE APN									PRESENCE	 1	
+	-- This IE shall be present if the MBMS Registration Request Type IE is set to "register"	--								}
+
+myType-GlobalRNC-IDid12 RANAP-PROTOCOL-IES ::= 	{ ID id-GlobalRNC-ID				CRITICALITY	 0	TYPE GlobalRNC-ID							PRESENCE	 0		}
+
+
+MBMSRegistrationRequestIEs RANAP-PROTOCOL-IES ::= {
+		myType-MBMSRegistrationRequestType |
+	myType-TMGIid2 |
+		myType-IPMulticastAddress |
+		myType-APN |
+	myType-GlobalRNC-IDid12,
+	...
+}
+
+--this is changed by perl script automatically--
+
+-- Extension for Release 7 to indicate extended RNC-ID --
+myType-ExtendedRNC-IDid12 RANAP-PROTOCOL-EXTENSION ::= 	{ ID id-ExtendedRNC-ID				CRITICALITY	 0	EXTENSION ExtendedRNC-ID		PRESENCE	 0	}
+
+MBMSRegistrationRequestExtensions RANAP-PROTOCOL-EXTENSION ::= {
+	myType-ExtendedRNC-IDid12,
+	...
+}
+
+-- **************************************************************
+--
+-- MBMS Registration Response
+--
+-- **************************************************************
+
+MBMSRegistrationResponse ::= SEQUENCE {
+	protocolIEs				ProtocolIE-Container		{ { MBMSRegistrationResponseIEs} },
+	protocolExtensions		ProtocolExtensionContainer	{ { MBMSRegistrationResponseExtensions} }		OPTIONAL,
+	...
+}
+
+--this is changed by perl script automatically--
+myType-TMGIid3 RANAP-PROTOCOL-IES ::= 	{ ID id-TMGI							CRITICALITY	 1	TYPE TMGI							PRESENCE	 0		}
+myType-GlobalCN-IDid14 RANAP-PROTOCOL-IES ::= 	{ ID id-GlobalCN-ID						CRITICALITY	 1	TYPE GlobalCN-ID					PRESENCE	 0		}
+
+myType-CriticalityDiagnosticsid30 RANAP-PROTOCOL-IES ::= 	{ ID id-CriticalityDiagnostics			CRITICALITY	 1	TYPE CriticalityDiagnostics			PRESENCE	 0		}
+
+
+MBMSRegistrationResponseIEs RANAP-PROTOCOL-IES ::= {
+	myType-TMGIid3 |
+	myType-GlobalCN-IDid14 |
+	myType-CriticalityDiagnosticsid30 ,
+	...
+}
+
+MBMSRegistrationResponseExtensions RANAP-PROTOCOL-EXTENSION ::= {
+	...
+}
+
+-- **************************************************************
+--
+-- MBMS Registration Failure
+--
+-- **************************************************************
+
+MBMSRegistrationFailure ::= SEQUENCE {
+	protocolIEs				ProtocolIE-Container		{ { MBMSRegistrationFailureIEs} },
+	protocolExtensions		ProtocolExtensionContainer	{ { MBMSRegistrationFailureExtensions} }		OPTIONAL,
+	...
+}
+
+--this is changed by perl script automatically--
+myType-TMGIid4 RANAP-PROTOCOL-IES ::= 	{ ID id-TMGI							CRITICALITY	 1	TYPE TMGI							PRESENCE	 0		}
+myType-GlobalCN-IDid15 RANAP-PROTOCOL-IES ::= 	{ ID id-GlobalCN-ID						CRITICALITY	 1	TYPE GlobalCN-ID					PRESENCE	 0		}
+
+myType-Causeid22 RANAP-PROTOCOL-IES ::= 	{ ID id-Cause							CRITICALITY	 1	TYPE Cause							PRESENCE	 2	}
+
+myType-CriticalityDiagnosticsid31 RANAP-PROTOCOL-IES ::= 	{ ID id-CriticalityDiagnostics			CRITICALITY	 1	TYPE CriticalityDiagnostics			PRESENCE	 0		}
+
+
+MBMSRegistrationFailureIEs RANAP-PROTOCOL-IES ::= {
+	myType-TMGIid4 |
+	myType-GlobalCN-IDid15 |
+	myType-Causeid22 |
+	myType-CriticalityDiagnosticsid31 ,
+	...
+}
+
+MBMSRegistrationFailureExtensions RANAP-PROTOCOL-EXTENSION ::= {
+	...
+}
+
+-- **************************************************************
+--
+-- MBMS CN DE-REGISTRATION PROCEDURE
+--
+-- **************************************************************
+
+-- **************************************************************
+--
+-- MBMS CN De-Registration Request
+--
+-- **************************************************************
+
+MBMSCNDe-RegistrationRequest ::= SEQUENCE {
+	protocolIEs				ProtocolIE-Container		{ { MBMSCNDe-RegistrationRequestIEs} },
+	protocolExtensions		ProtocolExtensionContainer	{ { MBMSCNDe-RegistrationRequestExtensions} }			OPTIONAL,
+	...
+}
+
+--this is changed by perl script automatically--
+myType-TMGIid5 RANAP-PROTOCOL-IES ::= 	{ ID id-TMGI						CRITICALITY	 0	TYPE TMGI									PRESENCE	 2	}
+myType-GlobalCN-IDid16 RANAP-PROTOCOL-IES ::= 	{ ID id-GlobalCN-ID					CRITICALITY	 0	TYPE GlobalCN-ID							PRESENCE	 0		}
+
+
+MBMSCNDe-RegistrationRequestIEs RANAP-PROTOCOL-IES ::= {
+	myType-TMGIid5 |
+	myType-GlobalCN-IDid16,
+	...
+}
+
+MBMSCNDe-RegistrationRequestExtensions RANAP-PROTOCOL-EXTENSION ::= {
+	...
+}
+
+-- **************************************************************
+--
+-- MBMS CN De-Registration Response
+--
+-- **************************************************************
+
+MBMSCNDe-RegistrationResponse ::= SEQUENCE {
+	protocolIEs				ProtocolIE-Container		{ { MBMSCNDe-RegistrationResponseIEs} },
+	protocolExtensions		ProtocolExtensionContainer	{ { MBMSCNDe-RegistrationResponseExtensions} }		OPTIONAL,
+	...
+}
+
+--this is changed by perl script automatically--
+myType-TMGIid6 RANAP-PROTOCOL-IES ::= 	{ ID id-TMGI							CRITICALITY	 1	TYPE TMGI							PRESENCE	 2	}
+myType-GlobalRNC-IDid13 RANAP-PROTOCOL-IES ::= 	{ ID id-GlobalRNC-ID					CRITICALITY	 1	TYPE GlobalRNC-ID					PRESENCE	 2	}
+
+myType-Causeid23 RANAP-PROTOCOL-IES ::= 	{ ID id-Cause							CRITICALITY	 1	TYPE Cause							PRESENCE	 0		}
+
+myType-CriticalityDiagnosticsid32 RANAP-PROTOCOL-IES ::= 	{ ID id-CriticalityDiagnostics			CRITICALITY	 1	TYPE CriticalityDiagnostics			PRESENCE	 0		}
+
+
+MBMSCNDe-RegistrationResponseIEs RANAP-PROTOCOL-IES ::= {
+	myType-TMGIid6 |
+	myType-GlobalRNC-IDid13 |
+	myType-Causeid23 |
+	myType-CriticalityDiagnosticsid32 ,
+	...
+}
+
+--this is changed by perl script automatically--
+
+-- Extension for Release 7 to indicate extended RNC-ID --
+myType-ExtendedRNC-IDid13 RANAP-PROTOCOL-EXTENSION ::= 	{ ID id-ExtendedRNC-ID				CRITICALITY	 0	EXTENSION ExtendedRNC-ID		PRESENCE	 0	}
+
+MBMSCNDe-RegistrationResponseExtensions RANAP-PROTOCOL-EXTENSION ::= {
+	myType-ExtendedRNC-IDid13,
+	...
+}
+
+-- **************************************************************
+--
+-- MBMS RAB ESTABLISHMENT INDICATION PROCEDURE
+--
+-- **************************************************************
+
+-- **************************************************************
+--
+-- MBMS RAB Establishment Indication
+--
+-- **************************************************************
+
+MBMSRABEstablishmentIndication ::= SEQUENCE {
+	protocolIEs				ProtocolIE-Container		{ { MBMSRABEstablishmentIndicationIEs} },
+	protocolExtensions		ProtocolExtensionContainer	{ { MBMSRABEstablishmentIndicationExtensions} }			OPTIONAL,
+	...
+}
+
+--this is changed by perl script automatically--
+myType-TransportLayerInformationid3 RANAP-PROTOCOL-IES ::= 	{ ID id-TransportLayerInformation		CRITICALITY	 1	TYPE TransportLayerInformation		PRESENCE	 2	}
+
+MBMSRABEstablishmentIndicationIEs RANAP-PROTOCOL-IES ::= {
+	myType-TransportLayerInformationid3 ,
+	...
+}
+
+MBMSRABEstablishmentIndicationExtensions RANAP-PROTOCOL-EXTENSION ::= {
+	...
+}
+
+-- **************************************************************
+--
+-- MBMS RAB RELEASE PROCEDURE
+--
+-- **************************************************************
+
+-- **************************************************************
+--
+-- MBMS RAB Release Request
+--
+-- **************************************************************
+
+MBMSRABReleaseRequest ::= SEQUENCE {
+	protocolIEs				ProtocolIE-Container		{ {MBMSRABReleaseRequestIEs} },
+	protocolExtensions		ProtocolExtensionContainer	{ {MBMSRABReleaseRequestExtensions} }			OPTIONAL,
+	...
+}
+
+--this is changed by perl script automatically--
+myType-Causeid24 RANAP-PROTOCOL-IES ::= 	{ ID id-Cause		CRITICALITY	 1	TYPE Cause				PRESENCE	 2	}
+
+MBMSRABReleaseRequestIEs RANAP-PROTOCOL-IES ::= {
+	myType-Causeid24,
+	...
+}
+
+
+MBMSRABReleaseRequestExtensions RANAP-PROTOCOL-EXTENSION ::= {
+	...
+}
+
+-- **************************************************************
+--
+-- MBMS RAB Release
+--
+-- **************************************************************
+
+MBMSRABRelease ::= SEQUENCE {
+	protocolIEs				ProtocolIE-Container		{ {MBMSRABReleaseIEs} },
+	protocolExtensions		ProtocolExtensionContainer	{ {MBMSRABReleaseExtensions} }			OPTIONAL,
+	...
+}
+
+--this is changed by perl script automatically--
+myType-Causeid25 RANAP-PROTOCOL-IES ::= 	{ ID id-Cause		CRITICALITY	 1	TYPE Cause	 			PRESENCE	 2	}
+myType-CriticalityDiagnosticsid33 RANAP-PROTOCOL-IES ::= 	{ ID id-CriticalityDiagnostics			CRITICALITY	 1	TYPE CriticalityDiagnostics			PRESENCE	 0		}
+
+
+MBMSRABReleaseIEs RANAP-PROTOCOL-IES ::= {
+	myType-Causeid25|
+	myType-CriticalityDiagnosticsid33,
+	...
+}
+
+MBMSRABReleaseExtensions RANAP-PROTOCOL-EXTENSION ::= {
+	...
+}
+
+-- **************************************************************
+--
+-- MBMS RAB Release Failure
+--
+-- **************************************************************
+
+MBMSRABReleaseFailure ::= SEQUENCE {
+	protocolIEs				ProtocolIE-Container		{ {MBMSRABReleaseFailureIEs} },
+	protocolExtensions		ProtocolExtensionContainer	{ {MBMSRABReleaseFailureExtensions} }			OPTIONAL,
+	...
+}
+
+--this is changed by perl script automatically--
+myType-Causeid26 RANAP-PROTOCOL-IES ::= 	{ ID id-Cause		CRITICALITY	 1	TYPE Cause				PRESENCE	 2	}
+myType-CriticalityDiagnosticsid34 RANAP-PROTOCOL-IES ::= 	{ ID id-CriticalityDiagnostics			CRITICALITY	 1	TYPE CriticalityDiagnostics			PRESENCE	 0		}
+
+
+MBMSRABReleaseFailureIEs RANAP-PROTOCOL-IES ::= {
+	myType-Causeid26|
+	myType-CriticalityDiagnosticsid34,
+	...
+}
+
+MBMSRABReleaseFailureExtensions RANAP-PROTOCOL-EXTENSION ::= {
+	...
+}
+
+-- **************************************************************
+--
+-- SRVCC PREPARATION ELEMENTARY PROCEDURE
+--
+-- **************************************************************
+
+-- **************************************************************
+--
+-- SRVCC CS Keys Request
+--
+-- **************************************************************
+
+SRVCC-CSKeysRequest ::= SEQUENCE {
+	protocolIEs			ProtocolIE-Container			{ {SRVCC-CSKeysRequestIEs} },
+	protocolExtensions		ProtocolExtensionContainer	{ {SRVCC-CSKeysRequestExtensions} }				OPTIONAL,
+	...
+}
+
+SRVCC-CSKeysRequestIEs RANAP-PROTOCOL-IES ::= {
+	...
+}
+
+SRVCC-CSKeysRequestExtensions RANAP-PROTOCOL-EXTENSION ::= {
+	...
+}
+
+-- **************************************************************
+--
+-- SRVCC CS Keys Response
+--
+-- **************************************************************
+
+SRVCC-CSKeysResponse ::= SEQUENCE {
+	protocolIEs			ProtocolIE-Container			{ {SRVCC-CSKeysResponseIEs} },
+	protocolExtensions		ProtocolExtensionContainer	{ {SRVCC-CSKeysResponseExtensions} }				OPTIONAL,
+	...
+}
+
+--this is changed by perl script automatically--
+myType-IntegrityProtectionKey RANAP-PROTOCOL-IES ::= 	{ ID id-IntegrityProtectionKey		CRITICALITY	 0	TYPE IntegrityProtectionKey		PRESENCE	 2	}
+
+myType-EncryptionKey RANAP-PROTOCOL-IES ::= 	{ ID id-EncryptionKey				CRITICALITY	 0	TYPE EncryptionKey				PRESENCE	 2	}
+
+myType-SRVCC-Informationid2 RANAP-PROTOCOL-IES ::= 	{ ID id-SRVCC-Information			CRITICALITY	 0	TYPE SRVCC-Information			PRESENCE	 2	}
+myType-CriticalityDiagnosticsid35 RANAP-PROTOCOL-IES ::= 	{ ID id-CriticalityDiagnostics		CRITICALITY	 1	TYPE CriticalityDiagnostics		PRESENCE	 0		}
+
+
+SRVCC-CSKeysResponseIEs RANAP-PROTOCOL-IES ::= {
+		myType-IntegrityProtectionKey|
+		myType-EncryptionKey|
+	myType-SRVCC-Informationid2|
+	myType-CriticalityDiagnosticsid35,
+	...
+}
+
+SRVCC-CSKeysResponseExtensions RANAP-PROTOCOL-EXTENSION ::= {
+	...
+}
+
+
+END

@@ -1,0 +1,90 @@
+
+ASD_CALLBACK_ASD=y
+
+ASD_CALLBACK_WIRED=y
+
+# IEEE 802.11F/IAPP
+#ASD_IAPP=y
+
+# WPA2/IEEE 802.11i RSN pre-authentication
+#ASD_RSN_PREAUTH=y
+
+# PeerKey handshake for Station to Station Link (IEEE 802.11e DLS)
+#ASD_PEERKEY=y
+
+# IEEE 802.11w (management frame protection)
+# This version is an experimental implementation based on IEEE 802.11w/D1.0
+# draft and is subject to change since the standard has not yet been finalized.
+# Driver support is also needed for IEEE 802.11w.
+#ASD_IEEE80211W=y
+
+# Integrated EAP server
+ASD_EAP=y
+
+# EAP-MD5 for the integrated EAP server
+ASD_EAP_MD5=y
+
+# EAP-TLS for the integrated EAP server
+ASD_EAP_TLS=y
+
+# EAP-MSCHAPv2 for the integrated EAP server
+ASD_EAP_MSCHAPV2=y
+
+# EAP-PEAP for the integrated EAP server
+ASD_EAP_PEAP=y
+
+# EAP-GTC for the integrated EAP server
+ASD_EAP_GTC=y
+
+# EAP-TTLS for the integrated EAP server
+ASD_EAP_TTLS=y
+
+# EAP-SIM for the integrated EAP server
+ASD_EAP_SIM=y
+
+# EAP-AKA for the integrated EAP server
+ASD_EAP_AKA=y
+
+# EAP-PAX for the integrated EAP server
+ASD_EAP_PAX=y
+
+# EAP-PSK for the integrated EAP server (this is _not_ needed for WPA-PSK)
+ASD_EAP_PSK=y
+
+# EAP-SAKE for the integrated EAP server
+ASD_EAP_SAKE=y
+
+# EAP-GPSK for the integrated EAP server
+#ASD_EAP_GPSK=y
+# Include support for optional SHA256 cipher suite in EAP-GPSK
+#ASD_EAP_GPSK_SHA256=y
+
+# EAP-FAST for the integrated EAP server
+# Note: Default OpenSSL package does not include support for all the
+# functionality needed for EAP-FAST. If EAP-FAST is enabled with OpenSSL,
+# the OpenSSL library must be patched (openssl-0.9.9-session-ticket.patch)
+# to add the needed functions.
+#ASD_EAP_FAST=y
+
+# EAP-IKEv2
+#ASD_EAP_IKEV2=y
+
+# PKCS#12 (PFX) support (used to read private key and certificate file from
+# a file that usually has extension .p12 or .pfx)
+#ASD_PKCS12=y
+
+# RADIUS authentication server. This provides access to the integrated EAP
+# server from external hosts using RADIUS.
+#ASD_RADIUS_SERVER=y
+
+# Build IPv6 support for RADIUS operations
+#ASD_IPV6=y
+
+# IEEE 802.11r/D4.1 (Fast BSS Transition)
+# This enables an experimental implementation of a draft version of
+# IEEE 802.11r. This draft is still subject to change, so it should be noted
+# that this version may not comply with the final standard.
+#ASD_IEEE80211R=y
+
+#IEEE 802.11n(High Throughput) support
+ASD_IEEE80211N=y

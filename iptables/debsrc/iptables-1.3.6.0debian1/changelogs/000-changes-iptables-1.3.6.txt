@@ -1,0 +1,109 @@
+Bugs fixed since 1.3.5:
+
+- Fix segfault on loading of invalid counters in ip[6]tables-restore
+  [ Bugzilla #437, Olaf Rempel ]
+
+- Fix double-free if a single match is used multiple times within a single rule
+  [ Bugzilla #440, Harald Welte ]
+
+- Don't try to resolve "-p all" using getprotoent()
+  [ Bugzilla #446, Harald Welte ]
+
+- Refuse never matching protocol specifications for ip6tables
+  [ Yasuyuki Kozakai ]
+
+- Fix iptables-save output of osf match
+  [ Daniel De Graaf ]
+
+- Fix esp/connbytes detection with newer kernels (x_tables)
+  [ Harald Welte ]
+
+- Fix loading of IPCMv6 match shared library
+  [ Yasuyuki Kozakai ]
+
+- Refuse invalid esp match SPI ranges 
+  [ Yasuyuki Kozakai ]
+
+- Fix out-of-bounds memory access when the unsupported "check" command was used
+  [ Bugzilla #463, Larry Stefani, Harald Welte ]
+
+- Fix out-of-bounds memory access when the "-c" option was used
+  [ Bugzilla #462, Larry Stefani, Harald Welte ]
+
+- Fix "Unknown error 4294967295" message
+  [ Bugzilla #460, Patrick McHardy ]
+
+- Use lower-case letters for realm match output
+  [ Simon Lodal ]
+
+- Fix example in connlimit manpage
+  [ Phil Oester ]
+
+- Refuse IP addresses as arguments to REDIRECT target
+  [ Bugzilla #482, Phil Oester ]
+
+- Fix set match negation
+  [ Jozsef Kadlecsik ]
+
+- Fix some compiler warnings
+  [ Bugzilla #457, Phil Oester ]
+
+- Refuse port ranges in ip6tables multiport match
+  [ Bugzilla #451, Phil Oester ]
+
+- Force user to specify --ipcmv6-type if ipcmv6 match is used
+  [ Bugzilla #461, Yasuyuki Kozakai ]
+
+- Fix libiptc symbol clash
+  [ Bugzilla #456, Phil Oester ]
+
+- Remove "hoho" message
+  [ Pierre-Yves Ritschard ]
+
+- Handle CIDR notation more sanely
+  [ Bugzilla #422, Phil Oester ]
+
+- Fix chain reference increment bug
+  [ Jesper Brouer ]
+
+- Fix counter clearing for policy counters
+  [ Bugzilla #502, Andy Gay ]
+
+- Remove warnings about interface names with non-alphanumeric characters
+  [ Patrick McHardy ]
+
+New features since 1.3.5:
+
+- Support multiple matches of the same type within a single rule
+  [ Jozsef Kadlecsik ]
+
+- DCCP/SCTP support for multiport match (needs kernel >= 2.6.18)
+  [ Patrick McHardy ]
+
+- SELinux SECMARK target (needs kernel >= 2.6.18)
+  [ James Morris ]
+
+- SELinux CONNSECMARK target (needs kernel >= 2.6.18)
+  [ James Morris ]
+
+- Add documentation for DNAT target :<port> syntax
+  [ Evan Miller ]
+
+- Add new exit value to indicate concurrency issues
+  [ Jesper Dangaard Brouer ]
+
+- Use gcc to build shared objects
+  [ Bugzilla #454, Phil Oester ]
+
+- Update quota match for version in current kernel, fix -D (needs kernel >= 2.6.18)
+  [ Phil Oester ]
+
+- Update MARK target documentation to include --and-mask/--or-mask
+  [ Eric Leblond ]
+
+- Add support for statistic match (needs kernel >= 2.6.18)
+  [ Patrick McHardy ]
+
+- Optionally read realm values from /etc/iproute2/rt_realms
+  [ Simon Lodal ]
+

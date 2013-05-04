@@ -1,0 +1,55 @@
+<html>
+<head>
+<title>Microsoft Internet Explorer                                </title>
+<script language="javascript" type="text/javascript">
+ function window.onload(){ 
+ 
+   var a= new Array("0","1");
+   var bus=window.dialogArguments;
+   if(bus.length>0){
+    for(i=0;i<bus.length-1;i++){
+    var btuObj=document.createElement("input");
+        btuObj.type="button";
+        btuObj.value=" "+bus[i]+" ";
+        btuObj.id=a[i];
+        btuObj.style.marginLeft="2px";
+        btuObj.style.marginRight="2px";
+        btuObj.onclick=function(){window.returnValue=event.srcElement.id;window.close();}
+        buttonbox.appendChild(btuObj);
+       }
+
+   
+   }else{
+    var btuObj=document.createElement("input");
+        btuObj.type="button";
+        btuObj.value=bus[0];
+        btuObj.onclick=function(){window.returnValue=event.srcElement.id;window.close();}
+        buttonbox.appendChild(btuObj);
+   }
+   msgbox.innerHTML=bus[bus.length-1];
+ }
+ 
+ function reSet(){
+  //window.returnValue=Event.value;
+  self.close();
+ }
+
+</script>
+</head>
+
+<body style="background-color:ButtonFace;margin:0px" scroll="no">
+
+<div id="outbox">
+<div style="font-size:12pt;line-height:12pt;padding:10px" id="msgbox">
+</div>
+<div style="font-size:12pt;line-height:12pt;padding:10px">
+</div>
+<div style="padding-left:10px;padding-right:10px;text-align:center" id="buttonbox">
+</div>
+</div>
+</body>
+
+
+
+</html>
+

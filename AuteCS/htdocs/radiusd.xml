@@ -1,0 +1,223 @@
+<?xml version="1.0" ?> 
+<root>
+<lstatus>disable</lstatus>
+<location_dir>
+prefix=/opt/radius 
+exec_prefix=${prefix} 
+sysconfdir=${prefix} 
+localstatedir=/var 
+sbindir=${exec_prefix}/sbin 
+logdir=${localstatedir}/log/radius 
+raddbdir=${sysconfdir}/raddb  
+radacctdir=${logdir}/radacct 
+confdir = ${raddbdir}
+run_dir = ${localstatedir}/run/
+db_dir=$(raddbdir) 
+libdir=/opt/lib 
+pidfile=/var/run/radius.pid
+</location_dir>
+<request>
+max_request_time=30  
+cleanup_delay=5  
+max_requests=1024
+</request>
+<listen attribute="authentication">
+	<value>authentication</value>
+	<content>
+	type=auth 
+	ipaddr=* 
+	port=0
+	</content>
+</listen>
+<listen attribute="account">
+	<value>account</value>
+	<content>
+	ipaddr=* 
+	port=0 
+	type=acct
+	</content>
+</listen>
+<host>hostname_lookups=no</host>
+<core_dump>allow_core_dumps=no</core_dump>
+<regular_expression>regular_expressions=yes 
+					extended_expressions=yes
+</regular_expression>
+<log>
+	destination=files
+	file=${logdir}/radius.log 
+	syslog_facility=daemon 
+	stripped_names=no 
+	auth=no 
+	auth_badpass=no 
+	auth_goodpass=no
+</log>
+<check>checkrad=${sbindir}/checkrad</check>
+<security>
+	max_attributes=200
+	reject_delay=1
+	status_server=yes
+</security>
+<proxy>proxy_requests=yes</proxy>
+<include>
+	<proxy>$INCLUDE proxy.conf</proxy>
+	<client>$INCLUDE clients.conf</client>
+	<snmp>$INCLUDE snmp.conf</snmp>
+	
+	<policy>$INCLUDE policy.conf</policy>
+	<enable>$INCLUDE sites-enabled/</enable>
+</include>
+<snmp>snmp=no</snmp>
+<threadpool>
+	start_servers=5
+	max_servers=32
+	min_spare_servers=3
+	max_spare_servers=10
+	max_requests_per_server=0
+</threadpool>
+
+	<eap>$INCLUDE eap.conf</eap>
+	<ldap>
+		<server></server>
+		<identify></identify>
+		<password></password>
+		<basedn></basedn>
+		<filter>filter=(uid=%{Stripped-User-Name:-%{User-Name}})</filter>
+		<access_attr>access_attr=uid</access_attr>
+		<connect>ldap_connections_number=5</connect>
+		<timeout>timeout=4</timeout>
+		<timelimit>timelimit=3</timelimit>
+		<net_time>net_timeout=1</net_time>
+		<tls>start_tls = no</tls>
+		<content>
+		dictionary_mapping=${confdir}/ldap.attrmap
+		password_attribute=userPassword
+		edir_account_policy_check=yes
+		set_auth_type=yes
+		</content>
+	</ldap>
+	<realm attribute="IPASS">
+		<value>IPASS</value>
+		<format>format=prefix</format>
+		<delimiter>delimiter="/"</delimiter>
+	</realm>
+	<realm attribute="suffix">
+		<value>suffix</value>
+		<format>format = suffix</format>
+		<delimiter>delimiter = "@"</delimiter>
+	</realm>
+	<realm attribute="realmpercent">
+		<value>realmpercent</value>
+		<format>format=suffix</format>
+		<delimiter>delimiter="%"</delimiter>
+	</realm>
+	<realm attribute="ntdomain">
+		<value>ntdomain</value>
+		<format>format=prefix</format>
+		<delimiter>delimiter="\\"</delimiter>
+	</realm>
+	<checkval>
+		item-name=Calling-Station-Id
+		check-name=Calling-Station-Id
+		data-type=string
+	</checkval>
+	<preprocess>
+		huntgroups=${confdir}/huntgroups
+		hints=${confdir}/hints
+		with_ascend_hack=no
+		ascend_channels_per_line=23
+		with_ntdomain_hack=no
+		with_specialix_jetstream_hack=no
+		with_cisco_vsa_hack=no
+	</preprocess>
+	<files>
+		usersfile=${confdir}/users
+		acctusersfile=${confdir}/acct_users
+		preproxy_usersfile=${confdir}/preproxy_users
+		compat=no
+	</files>
+	<detail>
+		detailfile=${radacctdir}/%{Client-IP-Address}/detail-%Y%m%d
+		detailperm=0600
+		header="%t"
+	</detail>
+	<acct_unique>
+		key = "User-Name, Acct-Session-Id, NAS-IP-Address, Client-IP-Address, NAS-Port"
+	</acct_unique>	
+	<always attribute="fail">
+		<value>fail</value>
+		<content>rcode=fail</content>
+	</always>
+	<always attribute="reject">
+		<value>reject</value>
+		<content>rcode=reject</content>
+	</always>
+	<always attribute="noop">
+		<value>noop</value>
+		<content>rcode=noop</content>
+	</always>
+	<always attribute="handled">
+		<value>handled</value>
+		<content>rcode=handled</content>
+	</always>
+	<always attribute="updated">
+		<value>updated</value>
+		<content>rcode=updated</content>
+	</always>
+	<always attribute="notfound">
+		<value>notfound</value>
+		<content>rcode=notfound</content>
+	</always>
+	<always attribute="ok">
+		<value>ok</value>
+		<content1>rcode=ok</content1>
+		<content2>simulcount=0</content2>
+		<content3>mpp=no</content3>
+	</always>
+	<expiration>reply-message="Password Has Expired\r\n"</expiration>
+	<logintime> 
+		<content>
+		reply-message="You are calling outside your allowed timespan\r\n"
+		minimum-timeout=60
+		</content>
+	</logintime>
+	<exec>
+		wait=yes
+		input_pairs=request
+		shell_escape=yes
+		output=none
+	</exec>
+	<exec attribute="echo">
+		<value>echo</value>
+		<content>
+		wait=yes
+		program="/bin/echo %{User-Name}"
+		input_pairs=request
+		output_pairs=reply
+		shell_escape=yes
+		</content>
+	</exec>
+	<ippool attribute="main_pool">
+		<value>main_pool</value>
+		<content>
+		range-start=192.168.1.1
+		range-stop=192.168.3.254
+		netmask=255.255.255.0
+		cache-size=800
+		session-db=${db_dir}/db.ippool
+		ip-index=${db_dir}/db.ipindex
+		override=no
+		maximum-timeout=0
+		</content>
+	</ippool>
+	<policy>
+		filename=${confdir}/policy.txt
+	</policy>
+
+<instantiate>
+	exec 
+	expr 
+	expiration  
+	logintime   
+</instantiate>
+<select>mysqlserver</select>
+</root>

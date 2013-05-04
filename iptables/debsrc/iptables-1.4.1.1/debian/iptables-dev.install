@@ -1,0 +1,2 @@
+debian/tmp/usr/include
+debian/tmp/howtos/netfilter*html usr/share/doc/iptables-dev/html

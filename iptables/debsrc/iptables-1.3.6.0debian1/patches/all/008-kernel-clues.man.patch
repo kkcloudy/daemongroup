@@ -1,0 +1,129 @@
+diff -urN old/iptables_profectio/extensions/libip6t_ROUTE.man new/iptables_profectio/extensions/libip6t_ROUTE.man
+--- old/iptables_profectio/extensions/libip6t_ROUTE.man	2006-09-04 21:56:48.000000000 -0400
++++ new/iptables_profectio/extensions/libip6t_ROUTE.man	2006-09-04 22:04:18.000000000 -0400
+@@ -1,4 +1,12 @@
+ This is used to explicitly override the core network stack's routing decision.
++
++(Please note: This target requires kernel support that
++might not be available in official Linux kernel sources or
++Debian's packaged Linux kernel sources.
++And if support for this target is available for the 
++specific Linux kernel source version, that support might 
++not be enabled in the current Linux kernel binary.)
++
+ .B mangle
+ table.
+ .TP
+diff -urN old/iptables_profectio/extensions/libipt_IPV4OPTSSTRIP.man new/iptables_profectio/extensions/libipt_IPV4OPTSSTRIP.man
+--- old/iptables_profectio/extensions/libipt_IPV4OPTSSTRIP.man	2006-09-04 21:56:48.000000000 -0400
++++ new/iptables_profectio/extensions/libipt_IPV4OPTSSTRIP.man	2006-09-04 22:04:46.000000000 -0400
+@@ -1,5 +1,12 @@
+ Strip all the IP options from a packet.
+ 
++(Please note: This target requires kernel support that
++might not be available in official Linux kernel sources or
++Debian's packaged Linux kernel sources.
++And if support for this target is available for the 
++specific Linux kernel source version, that support might 
++not be enabled in the current Linux kernel binary.)
++
+ The target doesn't take any option, and therefore is extremly easy to use :
+ 
+ # iptables -t mangle -A PREROUTING -j IPV4OPTSSTRIP
+diff -urN old/iptables_profectio/extensions/libipt_ROUTE.man new/iptables_profectio/extensions/libipt_ROUTE.man
+--- old/iptables_profectio/extensions/libipt_ROUTE.man	2006-09-04 21:56:48.000000000 -0400
++++ new/iptables_profectio/extensions/libipt_ROUTE.man	2006-09-04 22:05:01.000000000 -0400
+@@ -1,4 +1,12 @@
+ This is used to explicitly override the core network stack's routing decision.
++
++(Please note: This target requires kernel support that
++might not be available in official Linux kernel sources or
++Debian's packaged Linux kernel sources.
++And if support for this target is available for the 
++specific Linux kernel source version, that support might 
++not be enabled in the current Linux kernel binary.)
++
+ .B mangle
+ table.
+ .TP
+diff -urN old/iptables_profectio/extensions/libipt_TARPIT.man new/iptables_profectio/extensions/libipt_TARPIT.man
+--- old/iptables_profectio/extensions/libipt_TARPIT.man	2006-09-04 21:56:48.000000000 -0400
++++ new/iptables_profectio/extensions/libipt_TARPIT.man	2006-09-04 22:02:16.000000000 -0400
+@@ -5,6 +5,13 @@
+ Attempts to close the connection are ignored, forcing the remote side
+ to time out the connection in 12-24 minutes.
+ 
++(Please note: This target requires kernel support that
++might not be available in official Linux kernel sources or
++Debian's packaged Linux kernel sources.
++And if support for this target is available for the 
++specific Linux kernel source version, that support might 
++not be enabled in the current Linux kernel binary.)
++
+ This offers similar functionality to LaBrea
+ <http://www.hackbusters.net/LaBrea/> but doesn't require dedicated
+ hardware or IPs. Any TCP port that you would normally DROP or REJECT
+diff -urN old/iptables_profectio/extensions/libipt_iprange.man new/iptables_profectio/extensions/libipt_iprange.man
+--- old/iptables_profectio/extensions/libipt_iprange.man	2006-09-04 21:56:48.000000000 -0400
++++ new/iptables_profectio/extensions/libipt_iprange.man	2006-09-04 22:02:51.000000000 -0400
+@@ -1,4 +1,12 @@
+ This matches on a given arbitrary range of IPv4 addresses
++
++(Please note: This match requires kernel support that
++might not be available in official Linux kernel sources or
++Debian's packaged Linux kernel sources.
++And if support for this match is available for the 
++specific Linux kernel source version, that support might 
++not be enabled in the current Linux kernel binary.)
++
+ .TP
+ .BI "[!]" "--src-range " "ip-ip"
+ Match source IP in the specified range.
+diff -urN old/iptables_profectio/extensions/libipt_ipv4options.man new/iptables_profectio/extensions/libipt_ipv4options.man
+--- old/iptables_profectio/extensions/libipt_ipv4options.man	2006-09-04 21:56:48.000000000 -0400
++++ new/iptables_profectio/extensions/libipt_ipv4options.man	2006-09-04 22:03:36.000000000 -0400
+@@ -1,5 +1,13 @@
+ Match on IPv4 header options like source routing, record route,
+ timestamp and router-alert.
++
++(Please note: This match requires kernel support that
++might not be available in official Linux kernel sources or
++Debian's packaged Linux kernel sources.
++And if support for this match is available for the 
++specific Linux kernel source version, that support might 
++not be enabled in the current Linux kernel binary.)
++
+ .TP
+ .B "--ssrr"
+ To match packets with the flag strict source routing.
+diff -urN old/iptables_profectio/extensions/libipt_set.man new/iptables_profectio/extensions/libipt_set.man
+--- old/iptables_profectio/extensions/libipt_set.man	2006-09-04 22:06:11.000000000 -0400
++++ new/iptables_profectio/extensions/libipt_set.man	2006-09-04 22:07:11.000000000 -0400
+@@ -1,4 +1,12 @@
+ This modules matches IP sets which can be defined by ipset(8).
++
++(Please note: This match requires kernel support that
++might not be available in official Linux kernel sources or
++Debian's packaged Linux kernel sources.
++And if support for this match is available for the 
++specific Linux kernel source version, that support might 
++not be enabled in the current Linux kernel binary.)
++
+ .TP
+ .BR "--set " "setname flag[,flag...]"
+ where flags are
+diff -urN old/iptables_profectio/extensions/libipt_u32.man new/iptables_profectio/extensions/libipt_u32.man
+--- old/iptables_profectio/extensions/libipt_u32.man	2006-09-04 21:56:48.000000000 -0400
++++ new/iptables_profectio/extensions/libipt_u32.man	2006-09-04 22:06:15.000000000 -0400
+@@ -5,4 +5,11 @@
+ headers with lengths stored in the packet, as in IP or TCP header
+ lengths.
+ 
++(Please note: This match requires kernel support that
++might not be available in official Linux kernel sources or
++Debian's packaged Linux kernel sources.
++And if support for this match is available for the 
++specific Linux kernel source version, that support might 
++not be enabled in the current Linux kernel binary.)
++
+ Details and examples are in the kernel module source.

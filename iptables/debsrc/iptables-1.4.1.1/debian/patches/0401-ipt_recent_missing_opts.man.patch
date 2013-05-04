@@ -1,0 +1,20 @@
+Index: b/extensions/libipt_recent.man
+===================================================================
+--- a/extensions/libipt_recent.man	2008-07-11 13:06:17.962198066 -0400
++++ b/extensions/libipt_recent.man	2008-07-11 13:07:10.792198199 -0400
+@@ -50,6 +50,15 @@
+ useful if you have problems with people faking their source address in
+ order to DoS you via this module by disallowing others access to your
+ site by sending bogus packets to you.
++.TP
++\fB--name \fIname\fR
++Name of the recent list to be used.  DEFAULT used if none given.
++.TP
++\fB--rsource\fR
++Match/Save the source address of each packet in the recent list table (default).
++.TP
++\fB--rdest\fR
++Match/Save the destination address of each packet in the recent list table.
+ .P
+ Examples:
+ .IP

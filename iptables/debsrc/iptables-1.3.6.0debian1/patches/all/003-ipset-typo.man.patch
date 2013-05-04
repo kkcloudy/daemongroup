@@ -1,0 +1,9 @@
+diff -urN old/iptables_profectio/extensions/libipt_set.man new/iptables_profectio/extensions/libipt_set.man
+--- old/iptables_profectio/extensions/libipt_set.man
++++ new/iptables_profectio/extensions/libipt_set.man
+@@ -1,4 +1,4 @@
+-This modules macthes IP sets which can be defined by ipset(8).
++This modules matches IP sets which can be defined by ipset(8).
+ .TP
+ .BR "--set " "setname flag[,flag...]"
+ where flags are

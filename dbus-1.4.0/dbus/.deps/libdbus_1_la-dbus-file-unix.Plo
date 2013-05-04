@@ -1,0 +1,190 @@
+libdbus_1_la-dbus-file-unix.lo libdbus_1_la-dbus-file-unix.o:  \
+ dbus-file-unix.c ../config.h dbus-protocol.h dbus-errors.h \
+  ../dbus/dbus-macros.h ../dbus/dbus-types.h \
+  /usr/lib/gcc/mips-linux-gnu/4.1.2/include/stddef.h \
+  ../dbus/dbus-arch-deps.h ../dbus/dbus-protocol.h dbus-file.h \
+  ../dbus/dbus-string.h ../dbus/dbus-memory.h \
+  /usr/lib/gcc/mips-linux-gnu/4.1.2/include/stdarg.h \
+  ../dbus/dbus-errors.h dbus-internals.h \
+  /usr/mips-linux-gnu/include/stdio.h \
+  /usr/mips-linux-gnu/include/features.h \
+  /usr/mips-linux-gnu/include/sys/cdefs.h \
+  /usr/mips-linux-gnu/include/gnu/stubs.h \
+  /usr/mips-linux-gnu/include/bits/types.h \
+  /usr/mips-linux-gnu/include/bits/wordsize.h \
+  /usr/mips-linux-gnu/include/bits/typesizes.h \
+  /usr/mips-linux-gnu/include/libio.h \
+  /usr/mips-linux-gnu/include/_G_config.h \
+  /usr/mips-linux-gnu/include/wchar.h \
+  /usr/mips-linux-gnu/include/bits/wchar.h \
+  /usr/mips-linux-gnu/include/gconv.h \
+  /usr/mips-linux-gnu/include/bits/stdio_lim.h \
+  /usr/mips-linux-gnu/include/bits/sys_errlist.h \
+  /usr/mips-linux-gnu/include/bits/stdio.h ../dbus/dbus-sysdeps.h \
+  /usr/mips-linux-gnu/include/stdint.h ../dbus/dbus-file.h \
+  /usr/mips-linux-gnu/include/string.h \
+  /usr/mips-linux-gnu/include/bits/string.h \
+  /usr/mips-linux-gnu/include/bits/string2.h \
+  /usr/mips-linux-gnu/include/stdlib.h \
+  /usr/mips-linux-gnu/include/sys/poll.h \
+  /usr/mips-linux-gnu/include/bits/poll.h ../dbus/dbus-threads-internal.h \
+  ../dbus/dbus-threads.h dbus-sysdeps.h dbus-sysdeps-unix.h \
+  /usr/mips-linux-gnu/include/sys/stat.h \
+  /usr/mips-linux-gnu/include/time.h \
+  /usr/mips-linux-gnu/include/bits/stat.h \
+  /usr/mips-linux-gnu/include/sgidefs.h \
+  /usr/mips-linux-gnu/include/fcntl.h \
+  /usr/mips-linux-gnu/include/bits/fcntl.h \
+  /usr/mips-linux-gnu/include/sys/types.h \
+  /usr/mips-linux-gnu/include/endian.h \
+  /usr/mips-linux-gnu/include/bits/endian.h \
+  /usr/mips-linux-gnu/include/sys/select.h \
+  /usr/mips-linux-gnu/include/bits/select.h \
+  /usr/mips-linux-gnu/include/bits/sigset.h \
+  /usr/mips-linux-gnu/include/bits/time.h \
+  /usr/mips-linux-gnu/include/sys/sysmacros.h \
+  /usr/mips-linux-gnu/include/bits/pthreadtypes.h \
+  /usr/mips-linux-gnu/include/bits/sched.h \
+  /usr/mips-linux-gnu/include/unistd.h \
+  /usr/mips-linux-gnu/include/bits/posix_opt.h \
+  /usr/mips-linux-gnu/include/bits/confname.h \
+  /usr/mips-linux-gnu/include/getopt.h \
+  /usr/mips-linux-gnu/include/errno.h \
+  /usr/mips-linux-gnu/include/bits/errno.h \
+  /home/sushaohua/gitroot/aw2.0/src/kernel2.6.16.26cn/include/linux/errno.h \
+  /usr/mips-linux-gnu/include/asm/errno.h \
+  /home/sushaohua/gitroot/aw2.0/src/kernel2.6.16.26cn/include/asm-generic/errno-base.h
+
+../config.h:
+
+dbus-protocol.h:
+
+dbus-errors.h:
+
+../dbus/dbus-macros.h:
+
+../dbus/dbus-types.h:
+
+/usr/lib/gcc/mips-linux-gnu/4.1.2/include/stddef.h:
+
+../dbus/dbus-arch-deps.h:
+
+../dbus/dbus-protocol.h:
+
+dbus-file.h:
+
+../dbus/dbus-string.h:
+
+../dbus/dbus-memory.h:
+
+/usr/lib/gcc/mips-linux-gnu/4.1.2/include/stdarg.h:
+
+../dbus/dbus-errors.h:
+
+dbus-internals.h:
+
+/usr/mips-linux-gnu/include/stdio.h:
+
+/usr/mips-linux-gnu/include/features.h:
+
+/usr/mips-linux-gnu/include/sys/cdefs.h:
+
+/usr/mips-linux-gnu/include/gnu/stubs.h:
+
+/usr/mips-linux-gnu/include/bits/types.h:
+
+/usr/mips-linux-gnu/include/bits/wordsize.h:
+
+/usr/mips-linux-gnu/include/bits/typesizes.h:
+
+/usr/mips-linux-gnu/include/libio.h:
+
+/usr/mips-linux-gnu/include/_G_config.h:
+
+/usr/mips-linux-gnu/include/wchar.h:
+
+/usr/mips-linux-gnu/include/bits/wchar.h:
+
+/usr/mips-linux-gnu/include/gconv.h:
+
+/usr/mips-linux-gnu/include/bits/stdio_lim.h:
+
+/usr/mips-linux-gnu/include/bits/sys_errlist.h:
+
+/usr/mips-linux-gnu/include/bits/stdio.h:
+
+../dbus/dbus-sysdeps.h:
+
+/usr/mips-linux-gnu/include/stdint.h:
+
+../dbus/dbus-file.h:
+
+/usr/mips-linux-gnu/include/string.h:
+
+/usr/mips-linux-gnu/include/bits/string.h:
+
+/usr/mips-linux-gnu/include/bits/string2.h:
+
+/usr/mips-linux-gnu/include/stdlib.h:
+
+/usr/mips-linux-gnu/include/sys/poll.h:
+
+/usr/mips-linux-gnu/include/bits/poll.h:
+
+../dbus/dbus-threads-internal.h:
+
+../dbus/dbus-threads.h:
+
+dbus-sysdeps.h:
+
+dbus-sysdeps-unix.h:
+
+/usr/mips-linux-gnu/include/sys/stat.h:
+
+/usr/mips-linux-gnu/include/time.h:
+
+/usr/mips-linux-gnu/include/bits/stat.h:
+
+/usr/mips-linux-gnu/include/sgidefs.h:
+
+/usr/mips-linux-gnu/include/fcntl.h:
+
+/usr/mips-linux-gnu/include/bits/fcntl.h:
+
+/usr/mips-linux-gnu/include/sys/types.h:
+
+/usr/mips-linux-gnu/include/endian.h:
+
+/usr/mips-linux-gnu/include/bits/endian.h:
+
+/usr/mips-linux-gnu/include/sys/select.h:
+
+/usr/mips-linux-gnu/include/bits/select.h:
+
+/usr/mips-linux-gnu/include/bits/sigset.h:
+
+/usr/mips-linux-gnu/include/bits/time.h:
+
+/usr/mips-linux-gnu/include/sys/sysmacros.h:
+
+/usr/mips-linux-gnu/include/bits/pthreadtypes.h:
+
+/usr/mips-linux-gnu/include/bits/sched.h:
+
+/usr/mips-linux-gnu/include/unistd.h:
+
+/usr/mips-linux-gnu/include/bits/posix_opt.h:
+
+/usr/mips-linux-gnu/include/bits/confname.h:
+
+/usr/mips-linux-gnu/include/getopt.h:
+
+/usr/mips-linux-gnu/include/errno.h:
+
+/usr/mips-linux-gnu/include/bits/errno.h:
+
+/home/sushaohua/gitroot/aw2.0/src/kernel2.6.16.26cn/include/linux/errno.h:
+
+/usr/mips-linux-gnu/include/asm/errno.h:
+
+/home/sushaohua/gitroot/aw2.0/src/kernel2.6.16.26cn/include/asm-generic/errno-base.h:

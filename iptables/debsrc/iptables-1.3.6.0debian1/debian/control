@@ -1,0 +1,44 @@
+Source: iptables
+Section: net
+Priority: important
+Maintainer: Laurence J. Lane <ljlane@debian.org>
+Build-Depends: debhelper (>>4.0), linuxdoc-tools, libselinux1-dev
+Standards-Version: 3.7.2.0
+
+Package: iptables
+Architecture: any
+Priority: important
+Section: net
+Depends: ${shlibs:Depends}
+Description: administration tools for packet filtering and NAT
+ netfilter and iptables provide a Linux kernel framework for
+ stateful and stateless packet filtering, network and port address
+ translation, and other IP packet manipulation. The framework is
+ the successor to ipchains.
+ .
+ netfilter and iptables are used in applications such as Internet
+ connection sharing, firewalls, IP accounting, transparent proxying,
+ advanced routing and traffic control.
+ .
+ Please note: the iptables extensions included in this package
+ require kernel support that might not be available in official Linux
+ kernel sources or Debian's packaged Linux kernel sources. And if 
+ support for any extension is available for the specific Linux kernel
+ source version, that support might not be enabled in the Linux kernel
+ binary in use.
+ .
+ In particular, kernel patches for IPV4OPTSSTRIP, ROUTE, TARPIT,
+ ipv4options, u32 and set are currently located in patch-o-matic-ng
+ via the netfilter website. patch-o-matic-ng patches are often 
+ imported into the official Linux kernel source tree.
+ .
+ netfilter web site: http://www.netfilter.org/
+
+Package: iptables-dev
+Architecture: any
+Priority: optional
+Depends:
+Section: devel
+Description: development files for iptable's libipq and libiptc
+ Header files, static libs and documentation for libipq (iptables
+ user-space packet queuing library) and libiptc.

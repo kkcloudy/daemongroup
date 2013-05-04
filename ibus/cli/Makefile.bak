@@ -1,0 +1,45 @@
+
+CC = mips-linux-gnu-gcc
+
+INCLUDES = -I$(QUAGGA_DIR)/${BUILDDIR} -I$(QUAGGA_DIR)/debsrc/quagga-0.99.5 -I$(QUAGGA_DIR)/debsrc/quagga-0.99.5/lib 
+INCLUDES += -I$(ACCAPI_DIR) -I$(BUILDROOTDIR)/usr/include -I$(BUILDROOTDIR)/usr/include/dbus-1.0 -I$(BUILDROOTDIR)/usr/lib/dbus-1.0/include
+
+LD_PATH = -L$(BUILDROOTDIR)/usr/lib
+DEFS = -DHAVE_CONFIG_H $(DCLI_HAS_WCPSS)
+LDFLAGS = -shared -Wl,-soname,$@
+CFLAGS += -I/opt/mipslibs/usr/include/libxml2
+CFLAGS += -I../../dcli/src/lib
+CFLAGS += -I../../quagga/mipsbuild
+CFLAGS += -I../../accapi
+
+CFLAGS = -Wall -g -O0 -I.
+#CFLAGS += -DDMALLOC
+
+DBUS_LIBS = -ldbus-1
+
+PUB_LIB01 = libdclicli
+PUB_OBJS = dcli_hnb.o
+
+
+.PHONY: all
+all:$(PUB_LIB01)
+
+.PHONY: clean
+clean:
+	$(RM) *.o $(PUB_LIB01)
+
+$(PUB_LIB01): $(PUB_OBJS)
+	$(CC) ${LDFLAGS} $(LD_PATH) -o $@ $^ $(DBUS_LIBS)
+	
+#$(RM) $(LIB_EXPORT_DIR)/$(PUB_LIB01)
+	cp $(PUB_LIB01) $(LIB_EXPORT_DIR)/            
+	
+%.o: %.c
+	$(CC) -c $(DEFS) $(INCLUDES) $(CFLAGS) -o $*.o $<
+	
+#${RM} $@
+
+
+
+
+

@@ -1,0 +1,7 @@
+dhcp_root=/opt/bin/dhcp/;
+dhcp_relay_read=/opt/bin/dhcp/dhcrelay_read.sh;
+dhcp_relay_write=/opt/bin/dhcp/dhcrelay_write.sh;
+dhcp_relay_serv=/opt/bin/dhcp/dhcrelay_serv.sh;
+dhcp_relay_msg=/opt/bin/dhcp/dhcrelay.msg;
+quagga=/etc/Quagga.conf;
+

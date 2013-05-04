@@ -1,0 +1,12 @@
+help=Help;
+help=帮助;
+help_version=Version;
+help_version=版本;
+help_build=Built on;
+help_build=完成时间;
+help_time=Jun-18-2008;
+help_time=2008年6月18日;
+help_mc=Machine code;
+help_mc=机器码;
+help_acauth=AC auth-serial;
+help_acauth=AC授权序列号;

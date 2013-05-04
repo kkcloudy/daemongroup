@@ -1,0 +1,12 @@
+<?xml version="1.0" ?> 
+<root>
+<localhost>
+client localhost {
+	ipaddr = 127.0.0.1
+	secret		= testing123
+	require_message_authenticator = no
+	nastype     = other	
+}
+</localhost>
+
+</root>

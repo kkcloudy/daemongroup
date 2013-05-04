@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <statistics>300</statistics>
+  <sample>30</sample>
+  <heart_time>30</heart_time>
+  <trap_debug>0</trap_debug>
+  <cpu_threshold>50</cpu_threshold>
+  <memory_threshold>50</memory_threshold>
+  <temperature_threshold>50</temperature_threshold>
+  <band_threshold>50</band_threshold>
+  <drop_threshold>50</drop_threshold>
+  <user_threshold>50</user_threshold>
+  <radius_threshold>50</radius_threshold>
+  <ip_threshold>50</ip_threshold>
+  <loglevel>1</loglevel>
+</root>

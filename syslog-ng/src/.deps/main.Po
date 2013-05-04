@@ -1,0 +1,437 @@
+main.o main.o: main.c syslog-ng.h ../config.h \
+  /opt/mipslibs/usr/include/glib-2.0/glib.h \
+  /opt/mipslibs/usr/include/glib-2.0/glib/galloca.h \
+  /opt/mipslibs/usr/include/glib-2.0/glib/gtypes.h \
+  /opt/mipslibs/usr/lib/glib-2.0/include/glibconfig.h \
+  /opt/mipslibs/usr/include/glib-2.0/glib/gmacros.h \
+  /usr/lib/gcc/mips-linux-gnu/4.1.2/include/stddef.h \
+  /usr/lib/gcc/mips-linux-gnu/4.1.2/include/limits.h \
+  /usr/lib/gcc/mips-linux-gnu/4.1.2/include/syslimits.h \
+  /usr/mips-linux-gnu/include/limits.h \
+  /usr/mips-linux-gnu/include/features.h \
+  /usr/mips-linux-gnu/include/sys/cdefs.h \
+  /usr/mips-linux-gnu/include/gnu/stubs.h \
+  /usr/mips-linux-gnu/include/bits/posix1_lim.h \
+  /usr/mips-linux-gnu/include/bits/local_lim.h \
+  /usr/mips-linux-gnu/include/linux/limits.h \
+  /usr/mips-linux-gnu/include/bits/posix2_lim.h \
+  /usr/mips-linux-gnu/include/bits/xopen_lim.h \
+  /usr/mips-linux-gnu/include/bits/stdio_lim.h \
+  /usr/lib/gcc/mips-linux-gnu/4.1.2/include/float.h \
+  /opt/mipslibs/usr/include/glib-2.0/glib/garray.h \
+  /opt/mipslibs/usr/include/glib-2.0/glib/gasyncqueue.h \
+  /opt/mipslibs/usr/include/glib-2.0/glib/gthread.h \
+  /opt/mipslibs/usr/include/glib-2.0/glib/gerror.h \
+  /opt/mipslibs/usr/include/glib-2.0/glib/gquark.h \
+  /opt/mipslibs/usr/include/glib-2.0/glib/gatomic.h \
+  /opt/mipslibs/usr/include/glib-2.0/glib/gbacktrace.h \
+  /opt/mipslibs/usr/include/glib-2.0/glib/gbase64.h \
+  /opt/mipslibs/usr/include/glib-2.0/glib/gbookmarkfile.h \
+  /usr/mips-linux-gnu/include/time.h \
+  /usr/mips-linux-gnu/include/bits/time.h \
+  /usr/mips-linux-gnu/include/bits/types.h \
+  /usr/mips-linux-gnu/include/bits/wordsize.h \
+  /usr/mips-linux-gnu/include/bits/typesizes.h \
+  /usr/mips-linux-gnu/include/xlocale.h \
+  /opt/mipslibs/usr/include/glib-2.0/glib/gcache.h \
+  /opt/mipslibs/usr/include/glib-2.0/glib/glist.h \
+  /opt/mipslibs/usr/include/glib-2.0/glib/gmem.h \
+  /opt/mipslibs/usr/include/glib-2.0/glib/gslice.h \
+  /opt/mipslibs/usr/include/glib-2.0/glib/gcompletion.h \
+  /opt/mipslibs/usr/include/glib-2.0/glib/gconvert.h \
+  /opt/mipslibs/usr/include/glib-2.0/glib/gdataset.h \
+  /opt/mipslibs/usr/include/glib-2.0/glib/gdate.h \
+  /opt/mipslibs/usr/include/glib-2.0/glib/gdir.h \
+  /opt/mipslibs/usr/include/glib-2.0/glib/gfileutils.h \
+  /opt/mipslibs/usr/include/glib-2.0/glib/ghash.h \
+  /opt/mipslibs/usr/include/glib-2.0/glib/ghook.h \
+  /opt/mipslibs/usr/include/glib-2.0/glib/giochannel.h \
+  /opt/mipslibs/usr/include/glib-2.0/glib/gmain.h \
+  /opt/mipslibs/usr/include/glib-2.0/glib/gslist.h \
+  /opt/mipslibs/usr/include/glib-2.0/glib/gstring.h \
+  /opt/mipslibs/usr/include/glib-2.0/glib/gunicode.h \
+  /opt/mipslibs/usr/include/glib-2.0/glib/gutils.h \
+  /usr/lib/gcc/mips-linux-gnu/4.1.2/include/stdarg.h \
+  /opt/mipslibs/usr/include/glib-2.0/glib/gkeyfile.h \
+  /opt/mipslibs/usr/include/glib-2.0/glib/gmappedfile.h \
+  /opt/mipslibs/usr/include/glib-2.0/glib/gmarkup.h \
+  /opt/mipslibs/usr/include/glib-2.0/glib/gmessages.h \
+  /opt/mipslibs/usr/include/glib-2.0/glib/gnode.h \
+  /opt/mipslibs/usr/include/glib-2.0/glib/goption.h \
+  /opt/mipslibs/usr/include/glib-2.0/glib/gpattern.h \
+  /opt/mipslibs/usr/include/glib-2.0/glib/gprimes.h \
+  /opt/mipslibs/usr/include/glib-2.0/glib/gqsort.h \
+  /opt/mipslibs/usr/include/glib-2.0/glib/gqueue.h \
+  /opt/mipslibs/usr/include/glib-2.0/glib/grand.h \
+  /opt/mipslibs/usr/include/glib-2.0/glib/grel.h \
+  /opt/mipslibs/usr/include/glib-2.0/glib/gscanner.h \
+  /opt/mipslibs/usr/include/glib-2.0/glib/gshell.h \
+  /opt/mipslibs/usr/include/glib-2.0/glib/gspawn.h \
+  /opt/mipslibs/usr/include/glib-2.0/glib/gstrfuncs.h \
+  /opt/mipslibs/usr/include/glib-2.0/glib/gthreadpool.h \
+  /opt/mipslibs/usr/include/glib-2.0/glib/gtimer.h \
+  /opt/mipslibs/usr/include/glib-2.0/glib/gtree.h cfg.h \
+  /usr/mips-linux-gnu/include/sys/types.h \
+  /usr/mips-linux-gnu/include/endian.h \
+  /usr/mips-linux-gnu/include/bits/endian.h \
+  /usr/mips-linux-gnu/include/sys/select.h \
+  /usr/mips-linux-gnu/include/bits/select.h \
+  /usr/mips-linux-gnu/include/bits/sigset.h \
+  /usr/mips-linux-gnu/include/sys/sysmacros.h \
+  /usr/mips-linux-gnu/include/bits/pthreadtypes.h \
+  /usr/mips-linux-gnu/include/bits/sched.h \
+  /usr/mips-linux-gnu/include/regex.h messages.h syslog-ng.h \
+  ../eventlog/include/evtlog.h /usr/mips-linux-gnu/include/syslog.h \
+  /usr/mips-linux-gnu/include/sys/syslog.h \
+  /usr/mips-linux-gnu/include/bits/syslog-path.h \
+  ../eventlog/include/evtmaps.h memtrace.h children.h misc.h gsockaddr.h \
+  /usr/mips-linux-gnu/include/sys/socket.h \
+  /usr/mips-linux-gnu/include/sys/uio.h \
+  /usr/mips-linux-gnu/include/bits/uio.h \
+  /usr/mips-linux-gnu/include/bits/socket.h \
+  /usr/mips-linux-gnu/include/bits/sockaddr.h \
+  /usr/mips-linux-gnu/include/asm/socket.h \
+  /usr/mips-linux-gnu/include/asm/sockios.h \
+  /usr/mips-linux-gnu/include/asm/ioctl.h \
+  /usr/mips-linux-gnu/include/sys/un.h \
+  /usr/mips-linux-gnu/include/string.h \
+  /usr/mips-linux-gnu/include/unistd.h \
+  /usr/mips-linux-gnu/include/bits/posix_opt.h \
+  /usr/mips-linux-gnu/include/bits/environments.h \
+  /usr/mips-linux-gnu/include/bits/confname.h \
+  /usr/mips-linux-gnu/include/getopt.h \
+  /usr/mips-linux-gnu/include/errno.h \
+  /usr/mips-linux-gnu/include/bits/errno.h \
+  /usr/mips-linux-gnu/include/linux/errno.h \
+  /usr/mips-linux-gnu/include/asm/errno.h \
+  /usr/mips-linux-gnu/include/asm-generic/errno-base.h \
+  /usr/mips-linux-gnu/include/netinet/in.h \
+  /usr/mips-linux-gnu/include/stdint.h \
+  /usr/mips-linux-gnu/include/bits/wchar.h \
+  /usr/mips-linux-gnu/include/bits/in.h \
+  /usr/mips-linux-gnu/include/bits/byteswap.h stats.h dnscache.h \
+  /usr/mips-linux-gnu/include/stdio.h /usr/mips-linux-gnu/include/libio.h \
+  /usr/mips-linux-gnu/include/_G_config.h \
+  /usr/mips-linux-gnu/include/wchar.h /usr/mips-linux-gnu/include/gconv.h \
+  /usr/mips-linux-gnu/include/bits/sys_errlist.h \
+  /usr/mips-linux-gnu/include/stdlib.h \
+  /usr/mips-linux-gnu/include/bits/waitflags.h \
+  /usr/mips-linux-gnu/include/bits/waitstatus.h \
+  /usr/mips-linux-gnu/include/alloca.h \
+  /usr/mips-linux-gnu/include/signal.h \
+  /usr/mips-linux-gnu/include/bits/signum.h \
+  /usr/mips-linux-gnu/include/bits/siginfo.h \
+  /usr/mips-linux-gnu/include/bits/sigaction.h \
+  /usr/mips-linux-gnu/include/bits/sigcontext.h \
+  /usr/mips-linux-gnu/include/sgidefs.h \
+  /usr/mips-linux-gnu/include/bits/sigstack.h \
+  /usr/mips-linux-gnu/include/sys/ucontext.h \
+  /usr/mips-linux-gnu/include/bits/sigthread.h \
+  /usr/mips-linux-gnu/include/fcntl.h \
+  /usr/mips-linux-gnu/include/bits/fcntl.h \
+  /usr/mips-linux-gnu/include/sys/stat.h \
+  /usr/mips-linux-gnu/include/bits/stat.h \
+  /usr/mips-linux-gnu/include/sys/wait.h \
+  /usr/mips-linux-gnu/include/sys/resource.h \
+  /usr/mips-linux-gnu/include/bits/resource.h \
+  /usr/mips-linux-gnu/include/grp.h
+
+syslog-ng.h:
+
+../config.h:
+
+/opt/mipslibs/usr/include/glib-2.0/glib.h:
+
+/opt/mipslibs/usr/include/glib-2.0/glib/galloca.h:
+
+/opt/mipslibs/usr/include/glib-2.0/glib/gtypes.h:
+
+/opt/mipslibs/usr/lib/glib-2.0/include/glibconfig.h:
+
+/opt/mipslibs/usr/include/glib-2.0/glib/gmacros.h:
+
+/usr/lib/gcc/mips-linux-gnu/4.1.2/include/stddef.h:
+
+/usr/lib/gcc/mips-linux-gnu/4.1.2/include/limits.h:
+
+/usr/lib/gcc/mips-linux-gnu/4.1.2/include/syslimits.h:
+
+/usr/mips-linux-gnu/include/limits.h:
+
+/usr/mips-linux-gnu/include/features.h:
+
+/usr/mips-linux-gnu/include/sys/cdefs.h:
+
+/usr/mips-linux-gnu/include/gnu/stubs.h:
+
+/usr/mips-linux-gnu/include/bits/posix1_lim.h:
+
+/usr/mips-linux-gnu/include/bits/local_lim.h:
+
+/usr/mips-linux-gnu/include/linux/limits.h:
+
+/usr/mips-linux-gnu/include/bits/posix2_lim.h:
+
+/usr/mips-linux-gnu/include/bits/xopen_lim.h:
+
+/usr/mips-linux-gnu/include/bits/stdio_lim.h:
+
+/usr/lib/gcc/mips-linux-gnu/4.1.2/include/float.h:
+
+/opt/mipslibs/usr/include/glib-2.0/glib/garray.h:
+
+/opt/mipslibs/usr/include/glib-2.0/glib/gasyncqueue.h:
+
+/opt/mipslibs/usr/include/glib-2.0/glib/gthread.h:
+
+/opt/mipslibs/usr/include/glib-2.0/glib/gerror.h:
+
+/opt/mipslibs/usr/include/glib-2.0/glib/gquark.h:
+
+/opt/mipslibs/usr/include/glib-2.0/glib/gatomic.h:
+
+/opt/mipslibs/usr/include/glib-2.0/glib/gbacktrace.h:
+
+/opt/mipslibs/usr/include/glib-2.0/glib/gbase64.h:
+
+/opt/mipslibs/usr/include/glib-2.0/glib/gbookmarkfile.h:
+
+/usr/mips-linux-gnu/include/time.h:
+
+/usr/mips-linux-gnu/include/bits/time.h:
+
+/usr/mips-linux-gnu/include/bits/types.h:
+
+/usr/mips-linux-gnu/include/bits/wordsize.h:
+
+/usr/mips-linux-gnu/include/bits/typesizes.h:
+
+/usr/mips-linux-gnu/include/xlocale.h:
+
+/opt/mipslibs/usr/include/glib-2.0/glib/gcache.h:
+
+/opt/mipslibs/usr/include/glib-2.0/glib/glist.h:
+
+/opt/mipslibs/usr/include/glib-2.0/glib/gmem.h:
+
+/opt/mipslibs/usr/include/glib-2.0/glib/gslice.h:
+
+/opt/mipslibs/usr/include/glib-2.0/glib/gcompletion.h:
+
+/opt/mipslibs/usr/include/glib-2.0/glib/gconvert.h:
+
+/opt/mipslibs/usr/include/glib-2.0/glib/gdataset.h:
+
+/opt/mipslibs/usr/include/glib-2.0/glib/gdate.h:
+
+/opt/mipslibs/usr/include/glib-2.0/glib/gdir.h:
+
+/opt/mipslibs/usr/include/glib-2.0/glib/gfileutils.h:
+
+/opt/mipslibs/usr/include/glib-2.0/glib/ghash.h:
+
+/opt/mipslibs/usr/include/glib-2.0/glib/ghook.h:
+
+/opt/mipslibs/usr/include/glib-2.0/glib/giochannel.h:
+
+/opt/mipslibs/usr/include/glib-2.0/glib/gmain.h:
+
+/opt/mipslibs/usr/include/glib-2.0/glib/gslist.h:
+
+/opt/mipslibs/usr/include/glib-2.0/glib/gstring.h:
+
+/opt/mipslibs/usr/include/glib-2.0/glib/gunicode.h:
+
+/opt/mipslibs/usr/include/glib-2.0/glib/gutils.h:
+
+/usr/lib/gcc/mips-linux-gnu/4.1.2/include/stdarg.h:
+
+/opt/mipslibs/usr/include/glib-2.0/glib/gkeyfile.h:
+
+/opt/mipslibs/usr/include/glib-2.0/glib/gmappedfile.h:
+
+/opt/mipslibs/usr/include/glib-2.0/glib/gmarkup.h:
+
+/opt/mipslibs/usr/include/glib-2.0/glib/gmessages.h:
+
+/opt/mipslibs/usr/include/glib-2.0/glib/gnode.h:
+
+/opt/mipslibs/usr/include/glib-2.0/glib/goption.h:
+
+/opt/mipslibs/usr/include/glib-2.0/glib/gpattern.h:
+
+/opt/mipslibs/usr/include/glib-2.0/glib/gprimes.h:
+
+/opt/mipslibs/usr/include/glib-2.0/glib/gqsort.h:
+
+/opt/mipslibs/usr/include/glib-2.0/glib/gqueue.h:
+
+/opt/mipslibs/usr/include/glib-2.0/glib/grand.h:
+
+/opt/mipslibs/usr/include/glib-2.0/glib/grel.h:
+
+/opt/mipslibs/usr/include/glib-2.0/glib/gscanner.h:
+
+/opt/mipslibs/usr/include/glib-2.0/glib/gshell.h:
+
+/opt/mipslibs/usr/include/glib-2.0/glib/gspawn.h:
+
+/opt/mipslibs/usr/include/glib-2.0/glib/gstrfuncs.h:
+
+/opt/mipslibs/usr/include/glib-2.0/glib/gthreadpool.h:
+
+/opt/mipslibs/usr/include/glib-2.0/glib/gtimer.h:
+
+/opt/mipslibs/usr/include/glib-2.0/glib/gtree.h:
+
+cfg.h:
+
+/usr/mips-linux-gnu/include/sys/types.h:
+
+/usr/mips-linux-gnu/include/endian.h:
+
+/usr/mips-linux-gnu/include/bits/endian.h:
+
+/usr/mips-linux-gnu/include/sys/select.h:
+
+/usr/mips-linux-gnu/include/bits/select.h:
+
+/usr/mips-linux-gnu/include/bits/sigset.h:
+
+/usr/mips-linux-gnu/include/sys/sysmacros.h:
+
+/usr/mips-linux-gnu/include/bits/pthreadtypes.h:
+
+/usr/mips-linux-gnu/include/bits/sched.h:
+
+/usr/mips-linux-gnu/include/regex.h:
+
+messages.h:
+
+syslog-ng.h:
+
+../eventlog/include/evtlog.h:
+
+/usr/mips-linux-gnu/include/syslog.h:
+
+/usr/mips-linux-gnu/include/sys/syslog.h:
+
+/usr/mips-linux-gnu/include/bits/syslog-path.h:
+
+../eventlog/include/evtmaps.h:
+
+memtrace.h:
+
+children.h:
+
+misc.h:
+
+gsockaddr.h:
+
+/usr/mips-linux-gnu/include/sys/socket.h:
+
+/usr/mips-linux-gnu/include/sys/uio.h:
+
+/usr/mips-linux-gnu/include/bits/uio.h:
+
+/usr/mips-linux-gnu/include/bits/socket.h:
+
+/usr/mips-linux-gnu/include/bits/sockaddr.h:
+
+/usr/mips-linux-gnu/include/asm/socket.h:
+
+/usr/mips-linux-gnu/include/asm/sockios.h:
+
+/usr/mips-linux-gnu/include/asm/ioctl.h:
+
+/usr/mips-linux-gnu/include/sys/un.h:
+
+/usr/mips-linux-gnu/include/string.h:
+
+/usr/mips-linux-gnu/include/unistd.h:
+
+/usr/mips-linux-gnu/include/bits/posix_opt.h:
+
+/usr/mips-linux-gnu/include/bits/environments.h:
+
+/usr/mips-linux-gnu/include/bits/confname.h:
+
+/usr/mips-linux-gnu/include/getopt.h:
+
+/usr/mips-linux-gnu/include/errno.h:
+
+/usr/mips-linux-gnu/include/bits/errno.h:
+
+/usr/mips-linux-gnu/include/linux/errno.h:
+
+/usr/mips-linux-gnu/include/asm/errno.h:
+
+/usr/mips-linux-gnu/include/asm-generic/errno-base.h:
+
+/usr/mips-linux-gnu/include/netinet/in.h:
+
+/usr/mips-linux-gnu/include/stdint.h:
+
+/usr/mips-linux-gnu/include/bits/wchar.h:
+
+/usr/mips-linux-gnu/include/bits/in.h:
+
+/usr/mips-linux-gnu/include/bits/byteswap.h:
+
+stats.h:
+
+dnscache.h:
+
+/usr/mips-linux-gnu/include/stdio.h:
+
+/usr/mips-linux-gnu/include/libio.h:
+
+/usr/mips-linux-gnu/include/_G_config.h:
+
+/usr/mips-linux-gnu/include/wchar.h:
+
+/usr/mips-linux-gnu/include/gconv.h:
+
+/usr/mips-linux-gnu/include/bits/sys_errlist.h:
+
+/usr/mips-linux-gnu/include/stdlib.h:
+
+/usr/mips-linux-gnu/include/bits/waitflags.h:
+
+/usr/mips-linux-gnu/include/bits/waitstatus.h:
+
+/usr/mips-linux-gnu/include/alloca.h:
+
+/usr/mips-linux-gnu/include/signal.h:
+
+/usr/mips-linux-gnu/include/bits/signum.h:
+
+/usr/mips-linux-gnu/include/bits/siginfo.h:
+
+/usr/mips-linux-gnu/include/bits/sigaction.h:
+
+/usr/mips-linux-gnu/include/bits/sigcontext.h:
+
+/usr/mips-linux-gnu/include/sgidefs.h:
+
+/usr/mips-linux-gnu/include/bits/sigstack.h:
+
+/usr/mips-linux-gnu/include/sys/ucontext.h:
+
+/usr/mips-linux-gnu/include/bits/sigthread.h:
+
+/usr/mips-linux-gnu/include/fcntl.h:
+
+/usr/mips-linux-gnu/include/bits/fcntl.h:
+
+/usr/mips-linux-gnu/include/sys/stat.h:
+
+/usr/mips-linux-gnu/include/bits/stat.h:
+
+/usr/mips-linux-gnu/include/sys/wait.h:
+
+/usr/mips-linux-gnu/include/sys/resource.h:
+
+/usr/mips-linux-gnu/include/bits/resource.h:
+
+/usr/mips-linux-gnu/include/grp.h:

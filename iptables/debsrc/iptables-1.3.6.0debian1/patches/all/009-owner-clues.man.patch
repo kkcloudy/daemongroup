@@ -1,0 +1,61 @@
+diff -urN old/iptables_profectio/extensions/libip6t_owner.man new/iptables_profectio/extensions/libip6t_owner.man
+--- old/iptables_profectio/extensions/libip6t_owner.man	2006-09-04 21:58:39.000000000 -0400
++++ new/iptables_profectio/extensions/libip6t_owner.man	2006-09-04 22:11:37.000000000 -0400
+@@ -15,9 +15,21 @@
+ .BI "--pid-owner " "processid"
+ Matches if the packet was created by a process with the given
+ process id.
++(Please note: This option requires kernel support that
++might not be available in official Linux kernel sources or
++Debian's packaged Linux kernel sources.
++And if support for this option is available for the 
++specific Linux kernel source version, that support might 
++not be enabled in the current Linux kernel binary.)
+ .TP
+ .BI "--sid-owner " "sessionid"
+ Matches if the packet was created by a process in the given session
+ group.
++(Please note: This option requires kernel support that
++might not be available in official Linux kernel sources or
++Debian's packaged Linux kernel sources.
++And if support for this option is available for the 
++specific Linux kernel source version, that support might 
++not be enabled in the current Linux kernel binary.)
+ .TP
+ .B NOTE: pid, sid and command matching are broken on SMP
+diff -urN old/iptables_profectio/extensions/libipt_owner.man new/iptables_profectio/extensions/libipt_owner.man
+--- old/iptables_profectio/extensions/libipt_owner.man	2006-09-04 21:58:39.000000000 -0400
++++ new/iptables_profectio/extensions/libipt_owner.man	2006-09-04 22:12:29.000000000 -0400
+@@ -15,14 +15,30 @@
+ .BI "--pid-owner " "processid"
+ Matches if the packet was created by a process with the given
+ process id.
++(Please note: This option requires kernel support that
++might not be available in official Linux kernel sources or
++Debian's packaged Linux kernel sources.
++And if support for this option is available for the 
++specific Linux kernel source version, that support might 
++not be enabled in the current Linux kernel binary.)
+ .TP
+ .BI "--sid-owner " "sessionid"
+ Matches if the packet was created by a process in the given session
+ group.
++(Please note: This option requires kernel support that
++might not be available in official Linux kernel sources or
++Debian's packaged Linux kernel sources.
++And if support for this option is available for the 
++specific Linux kernel source version, that support might 
++not be enabled in the current Linux kernel binary.)
+ .TP
+ .BI "--cmd-owner " "name"
+ Matches if the packet was created by a process with the given command name.
+-(this option is present only if iptables was compiled under a kernel
+-supporting this feature)
++(Please note: This option requires kernel support that
++might not be available in official Linux kernel sources or
++Debian's packaged Linux kernel sources.
++And if support for this option is available for the 
++specific Linux kernel source version, that support might 
++not be enabled in the current Linux kernel binary.)
+ .TP
+ .B NOTE: pid, sid and command matching are broken on SMP

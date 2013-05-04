@@ -1,0 +1,347 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<trap_conf>
+  <wtpDownTrap>
+    <switch>1</switch>
+    <describe>AP is down</describe>
+  </wtpDownTrap>
+  <wtpSysStartTrap>
+    <switch>1</switch>
+    <describe>AP reboot</describe>
+  </wtpSysStartTrap>
+  <wtpChannelModifiedTrap>
+    <switch>1</switch>
+    <describe>channel is changed</describe>
+  </wtpChannelModifiedTrap>
+  <wtpIPChangeAlarmTrap>
+    <switch>1</switch>
+    <describe>AP ip address changed</describe>
+  </wtpIPChangeAlarmTrap>
+  <wtpFlashWriteFailTrap>
+    <switch>1</switch>
+    <describe>AP update failed</describe>
+  </wtpFlashWriteFailTrap>
+  <wtpColdStartTrap>
+    <switch>1</switch>
+    <describe>AP cold boot</describe>
+  </wtpColdStartTrap>
+  <wtpAuthModeChangeTrap>
+    <switch>1</switch>
+    <describe>AP auth mode changed</describe>
+  </wtpAuthModeChangeTrap>
+  <wtpPreSharedKeyChangeTrap>
+    <switch>1</switch>
+    <describe>Pre-share-key is changed</describe>
+  </wtpPreSharedKeyChangeTrap>
+  <wtpElectrifyRegisterCircleTrap>
+    <switch>1</switch>
+    <describe>Electricity-reg-circle is on</describe>
+  </wtpElectrifyRegisterCircleTrap>
+  <wtpAPUpdateTrap>
+    <switch>1</switch>
+    <describe>ap update</describe>
+  </wtpAPUpdateTrap>
+  <wtpCoverholeTrap>
+    <switch>1</switch>
+    <describe>AP cover hole</describe>
+  </wtpCoverholeTrap>
+  <CPUusageTooHighTrap>
+    <switch>1</switch>
+    <describe>AP CPU usage is over threshold</describe>
+  </CPUusageTooHighTrap>
+  <CPUusageTooHighRecovTrap>
+    <switch>1</switch>
+    <describe>AP CPU usage recovery</describe>
+  </CPUusageTooHighRecovTrap>
+  <MemUsageTooHighTrap>
+    <switch>1</switch>
+    <describe>AP MEM usage is over threshold</describe>
+  </MemUsageTooHighTrap>
+  <MemUsageTooHighRecovTrap>
+    <switch>1</switch>
+    <describe>AP MEM usage recovery</describe>
+  </MemUsageTooHighRecovTrap>
+  <TemperTooHighTrap>
+    <switch>1</switch>
+    <describe>AP temperature is too high</describe>
+  </TemperTooHighTrap>
+  <TemperTooHighRecoverTrap>
+    <switch>1</switch>
+    <describe>AP temperature is recover</describe>
+  </TemperTooHighRecoverTrap>
+  <APMtWorkModeChgTrap>
+    <switch>1</switch>
+    <describe>AP MTwork mode is changed</describe>
+  </APMtWorkModeChgTrap>
+  <SSIDkeyConflictTrap>
+    <switch>1</switch>
+    <describe>SSID key conflict</describe>
+  </SSIDkeyConflictTrap>
+  <wtpOnlineTrap>
+    <switch>1</switch>
+    <describe>AP status is running</describe>
+  </wtpOnlineTrap>
+  <wtpOfflineTrap>
+    <switch>1</switch>
+    <describe>AP status is quit</describe>
+  </wtpOfflineTrap>
+  <wtpCoverHoleClearTrap>
+    <switch>1</switch>
+    <describe>AP cover hole clear</describe>
+  </wtpCoverHoleClearTrap>
+  <wtpChannelObstructionTrap>
+    <switch>1</switch>
+    <describe>AP channel obstruction</describe>
+  </wtpChannelObstructionTrap>
+  <wtpAPInterferenceDetectedTrap>
+    <switch>1</switch>
+    <describe>AP interfere has detected</describe>
+  </wtpAPInterferenceDetectedTrap>
+  <wtpStaInterferenceDetectedTrap>
+    <switch>1</switch>
+    <describe>Station interfere has detected</describe>
+  </wtpStaInterferenceDetectedTrap>
+  <wtpDeviceInterferenceDetectedTrap>
+    <switch>1</switch>
+    <describe>Device interfere has detected</describe>
+  </wtpDeviceInterferenceDetectedTrap>
+  <wtpSubscriberDatabaseFullTrap>
+    <switch>1</switch>
+    <describe>AP can not add station</describe>
+  </wtpSubscriberDatabaseFullTrap>
+  <wtpDFSFreeCountBelowThresholdTrap>
+    <switch>1</switch>
+    <describe>Channel count minor</describe>
+  </wtpDFSFreeCountBelowThresholdTrap>
+  <wtpFileTransferTrap>
+    <switch>1</switch>
+    <describe>File is transfered</describe>
+  </wtpFileTransferTrap>
+  <wtpStationOffLineTrap>
+    <switch>1</switch>
+    <describe>wtp station offline</describe>
+  </wtpStationOffLineTrap>
+  <wtpSolveLinkVarifiedTrap>
+    <switch>1</switch>
+    <describe>Link varified fail clear</describe>
+  </wtpSolveLinkVarifiedTrap>
+  <wtpLinkVarifyFailedTrap>
+    <switch>1</switch>
+    <describe>Link varified fail</describe>
+  </wtpLinkVarifyFailedTrap>
+  <wtpStationOnLineTrap>
+    <switch>1</switch>
+    <describe>station has been on line</describe>
+  </wtpStationOnLineTrap>
+  <APInterfClearTrap>
+    <switch>1</switch>
+    <describe>AP interfere has been clear</describe>
+  </APInterfClearTrap>
+  <APStaInterfClearTrap>
+    <switch>1</switch>
+    <describe>Station interfere has been clear</describe>
+  </APStaInterfClearTrap>
+  <APOtherDevInterfClearTrap>
+    <switch>1</switch>
+    <describe>device interfere has been clear</describe>
+  </APOtherDevInterfClearTrap>
+  <APModuleTroubleTrap>
+    <switch>1</switch>
+    <describe>Wireless moudle show errors</describe>
+  </APModuleTroubleTrap>
+  <APModuleTroubleClearTrap>
+    <switch>1</switch>
+    <describe>Wireless moudle show errors clear</describe>
+  </APModuleTroubleClearTrap>
+  <APRadioDownTrap>
+    <switch>1</switch>
+    <describe>Wireless link show errors</describe>
+  </APRadioDownTrap>
+  <APRadioDownRecovTrap>
+    <switch>1</switch>
+    <describe>Wireless link show errors clear</describe>
+  </APRadioDownRecovTrap>
+  <APStaAuthErrorTrap>
+    <switch>1</switch>
+    <describe>Station auth fail</describe>
+  </APStaAuthErrorTrap>
+  <APStAssociationFailTrap>
+    <switch>1</switch>
+    <describe>Station assoc fail</describe>
+  </APStAssociationFailTrap>
+  <APUserWithInvalidCerInbreakNetTrap>
+    <switch>1</switch>
+    <describe>Invalid certification user attack</describe>
+  </APUserWithInvalidCerInbreakNetTrap>
+  <APStationRepititiveAttackTrap>
+    <switch>1</switch>
+    <describe>Client Re-attack</describe>
+  </APStationRepititiveAttackTrap>
+  <APTamperAttackTrap>
+    <switch>1</switch>
+    <describe>tamper attack</describe>
+  </APTamperAttackTrap>
+  <APLowSafeLevelAttackTrap>
+    <switch>1</switch>
+    <describe>low safe level attack</describe>
+  </APLowSafeLevelAttackTrap>
+  <APAddressRedirectionAttackTrap>
+    <switch>1</switch>
+    <describe>address redirect attack</describe>
+  </APAddressRedirectionAttackTrap>
+  <APAddUserFailClearTrap>
+    <switch>1</switch>
+    <describe>AP can not add station clear</describe>
+  </APAddUserFailClearTrap>
+  <APChannelTooLowClearTrap>
+    <switch>1</switch>
+    <describe>Channel count minor clear</describe>
+  </APChannelTooLowClearTrap>
+  <APFindUnsafeESSID>
+    <switch>1</switch>
+    <describe>AP find unsafe SSID</describe>
+  </APFindUnsafeESSID>
+  <APFindSYNAttack>
+    <switch>1</switch>
+    <describe>AP find syn attack</describe>
+  </APFindSYNAttack>
+  <ApNeighborChannelInterfTrap>
+    <switch>1</switch>
+    <describe>AP neighbor channel interfere</describe>
+  </ApNeighborChannelInterfTrap>
+  <ApNeighborChannelInterfTrapClear>
+    <switch>1</switch>
+    <describe>AP neighbor channel interfere clear</describe>
+  </ApNeighborChannelInterfTrapClear>
+  <acSystemRebootTrap>
+    <switch>1</switch>
+    <describe>AC reboot</describe>
+  </acSystemRebootTrap>
+  <acAPACTimeSynchroFailureTrap>
+    <switch>1</switch>
+    <describe>AC synoc time fail with ap</describe>
+  </acAPACTimeSynchroFailureTrap>
+  <acChangedIPTrap>
+    <switch>1</switch>
+    <describe>AC ip address has changed</describe>
+  </acChangedIPTrap>
+  <acTurntoBackupDeviceTrap>
+    <switch>1</switch>
+    <describe>AC turn to backup state</describe>
+  </acTurntoBackupDeviceTrap>
+  <acConfigurationErrorTrap>
+    <switch>1</switch>
+    <describe>AC configuration error</describe>
+  </acConfigurationErrorTrap>
+  <acSysColdStartTrap>
+    <switch>1</switch>
+    <describe>AC system cold start</describe>
+  </acSysColdStartTrap>
+  <acAPACTimeSynchroFailureTrapClear>
+    <switch>1</switch>
+    <describe>AC synoc time success with ap</describe>
+  </acAPACTimeSynchroFailureTrapClear>
+  <acDiscoveryDangerAPTrap>
+    <switch>1</switch>
+    <describe>AC discover danger ap</describe>
+  </acDiscoveryDangerAPTrap>
+  <acRadiusAuthenticationServerNotReachTrap>
+    <switch>1</switch>
+    <describe>Radius auth server can not reach</describe>
+  </acRadiusAuthenticationServerNotReachTrap>
+  <acRadiusAccountServerNotLinkTrap>
+    <switch>1</switch>
+    <describe>Radius accounting server can not reach</describe>
+  </acRadiusAccountServerNotLinkTrap>
+  <acPortalServerNotReachTrap>
+    <switch>1</switch>
+    <describe>Portal server can not reach</describe>
+  </acPortalServerNotReachTrap>
+  <acAPLostNetTrap>
+    <switch>1</switch>
+    <describe>AP has been lost network</describe>
+  </acAPLostNetTrap>
+  <acCPUUtilizationOverThresholdTrap>
+    <switch>1</switch>
+    <describe>AC CPU usage is over threshold</describe>
+  </acCPUUtilizationOverThresholdTrap>
+  <acMemUtilizationOverThresholdTrap>
+    <switch>1</switch>
+    <describe>AC MEM usage is over threshold</describe>
+  </acMemUtilizationOverThresholdTrap>
+  <acBandwithOverThresholdTrap>
+    <switch>1</switch>
+    <describe>AC bandwith is too high</describe>
+  </acBandwithOverThresholdTrap>
+  <acLostPackRateOverThresholdTrap>
+    <switch>1</switch>
+    <describe>AC drop pkg rate is too high</describe>
+  </acLostPackRateOverThresholdTrap>
+  <acMaxUsrNumOverThresholdTrap>
+    <switch>1</switch>
+    <describe>AC Max Online user is too high</describe>
+  </acMaxUsrNumOverThresholdTrap>
+  <acAuthSucRateBelowThresholdTrap>
+    <switch>1</switch>
+    <describe>AC radius auth suc rate is too low</describe>
+  </acAuthSucRateBelowThresholdTrap>
+  <acAveIPPoolOverThresholdTrap>
+    <switch>1</switch>
+    <describe>AC IP pool average rate is too high</describe>
+  </acAveIPPoolOverThresholdTrap>
+  <acMaxIPPoolOverThresholdTrap>
+    <switch>1</switch>
+    <describe>AC IP pool max rate is too high</describe>
+  </acMaxIPPoolOverThresholdTrap>
+  <acPowerOffTrap>
+    <switch>1</switch>
+    <describe>AC power is turned</describe>
+  </acPowerOffTrap>
+  <acPowerOffRecovTrap>
+    <switch>1</switch>
+    <describe>AC power is recovery</describe>
+  </acPowerOffRecovTrap>
+  <acCPUusageTooHighRecovTrap>
+    <switch>1</switch>
+    <describe>AC CPU usage is over threshold clear</describe>
+  </acCPUusageTooHighRecovTrap>
+  <acMemUsageTooHighRecovTrap>
+    <switch>1</switch>
+    <describe>AC MEM usage is over threshold clear</describe>
+  </acMemUsageTooHighRecovTrap>
+  <acTemperTooHighTrap>
+    <switch>1</switch>
+    <describe>AC temperature is too high</describe>
+  </acTemperTooHighTrap>
+  <acTemperTooHighRecovTrap>
+    <switch>1</switch>
+    <describe>AC temperature high recovered</describe>
+  </acTemperTooHighRecovTrap>
+  <acDHCPAddressExhaustTrap>
+    <switch>1</switch>
+    <describe>AC DHCP pool exhaust</describe>
+  </acDHCPAddressExhaustTrap>
+  <acDHCPAddressExhaustRecovTrap>
+    <switch>1</switch>
+    <describe>AC DHCP pool exhaust clear</describe>
+  </acDHCPAddressExhaustRecovTrap>
+  <acRadiusAuthServerAvailableTrap>
+    <switch>1</switch>
+    <describe>radius auth server can reached</describe>
+  </acRadiusAuthServerAvailableTrap>
+  <acRadiusAccServerAvailableTrap>
+    <switch>1</switch>
+    <describe>radius account server can reached</describe>
+  </acRadiusAccServerAvailableTrap>
+  <acRorterServerAvailableTrap>
+    <switch>1</switch>
+    <describe>Portal server can reached</describe>
+  </acRorterServerAvailableTrap>
+  <acFindAttackTrap>
+    <switch>1</switch>
+    <describe>AC find attack</describe>
+  </acFindAttackTrap>
+  <acHeartTimePackageTrap>
+    <switch>1</switch>
+    <describe>AC heart time break</describe>
+  </acHeartTimePackageTrap>
+</trap_conf>

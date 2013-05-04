@@ -1,0 +1,94 @@
+#!/bin/bash
+
+
+config_xcat()
+{
+export LDFLAGS+=-L${BUILDROOTDIR}/usr/lib 
+export CFLAGS+=-I${BUILDROOTDIR}/usr/include 
+	[ -d xcatbuild ] || mkdir xcatbuild
+	pushd xcatbuild
+	#../debsrc/quagga-0.99.5/configure --host=arm-none-linux-gnueabi --prefix=/opt --enable-vtysh --disable-bgpd --disable-ospfclient --disable-ipv6 --enable-netlink --disable-user --disable-group --disable-vty-group --enable-configfile-mask=0666 --enable-logfile-mask=0666 
+	../debsrc/quagga-0.99.5/configure --host=arm-none-linux-gnueabi --prefix=/opt --disable-isisd --disable-ospf6d --disable-ripngd --enable-vtysh --disable-bgpd --disable-ospfclient --disable-ipv6 --enable-netlink --disable-user --disable-group --disable-vty-group --enable-configfile-mask=0666 --enable-logfile-mask=0666 
+	popd
+
+}
+
+config_x86()
+{
+	[ -d x86build ] || mkdir x86build
+	pushd x86build
+	../debsrc/quagga-0.99.5/configure --enable-vtysh --disable-ospf6d --disable-ripngd --disable-bgpd --disable-ospfclient   
+	popd
+}
+
+
+config_mips()
+{
+	#################################################
+	#  Check whether dependent libs are ready
+	if [ -z "$MIPS_ADDITION_LIB_ROOT_PATH" ]; then
+	  echo "MIPS_ADDITION_LIB_ROOT_PATH is empty, please setup mips libs first."
+	  exit -1
+	else
+	  echo "MIPS_ADDITION_LIB_ROOT_PATH is"$MIPS_ADDITION_LIB_ROOT_PATH
+	fi
+
+
+	###################################################
+	# Set sysroot, but it is not supported by ld
+	#export CFLAGS="--sysroot=/opt/octeon-eth"
+
+	# Use libs and include inside mips rootfs
+	#export LDFLAGS="-nostdlib -L/home/bootstrap/octeon-etch/usr/lib -L/home/bootstrap/octeon-etch/lib -L/base/projects/quagga/libs/lib -L/base/projects/quagga/libs/usr/lib"
+	#export CPPFLAGS="-nostdinc -isystem /home/bootstrap/octeon-etch/usr/lib/gcc/mips-linux-gnu/4.1.2/include -isystem /home/bootstrap/octeon-etch/usr/include -isystem /base/projects/quagga/libs/usr/include"
+
+	# Or use libs and include provided by cross compiler
+	#export LDFLAGS="-nostdlib -L/usr/mips-linux-gnu/lib -L/base/projects/quagga/libs/lib -L/base/projects/quagga/libs/usr/lib"
+	#export CPPFLAGS="-nostdinc -isystem /usr/lib/gcc/mips-linux-gnu/4.2.3/include -isystem /usr/mips-linux-gnu/include -isystem /base/projects/quagga/libs/usr/include"
+
+	#####################################################################
+	# Use include and library provided by cross-compiler, only add additional path which is not included by gcc suit
+	LDFLAGS+=" -L"${BUILD_DIR}/${SNMP_ROOTDIR}/engine/lib" -L"$MIPS_ADDITION_LIB_ROOT_PATH"/usr/lib "$DCLI_EXPORT_LIB" "
+	CPPFLAGS+=" -I"$MIPS_ADDITION_LIB_ROOT_PATH"/usr/include "$DCLI_EXPORT_INCLUDE" "
+	CFLAGS+=" -I"${BUILD_DIR}/${SNMP_ROOTDIR}/engine/include" -I"$MIPS_ADDITION_LIB_ROOT_PATH"/usr/include "$DBUS_INCLUDE" "$DBUS_LIBS" "$DCLI_EXPORT_INCLUDE" "
+	#echo $LDFLAGS
+	#echo $CPPFLAGS
+	export LDFLAGS
+	export CPPFLAGS
+	export CFLAGS
+	#LIBS+=" "$DCLI_EXPORT_LIBS" -ldbus-1 " 
+	#export LIBS
+	[ -d mipsbuild ] || mkdir mipsbuild
+	pushd mipsbuild
+	##################Disable features that will not be used.
+	#../debsrc/quagga-0.99.5/configure --host=mips-linux-gnu --enable-vtysh --with-libpam --disable-ospf6d --disable-ripngd -disable-bgpd --disable-ospfclient --disable-ipv6 --disable-watchquagga
+	#../debsrc/quagga-0.99.5/configure --host=mips-linux-gnu --prefix=/opt  --enable-vtysh --disable-bgpd --disable-ospfclient --enable-netlink --disable-user --disable-group --disable-vty-group --enable-configfile-mask=0666 --enable-logfile-mask=0666 --enable-multipath=8 --enable-snmp
+	../debsrc/quagga-0.99.5/configure --host=mips-linux-gnu --prefix=/opt  --enable-vtysh --disable-ospf6d --disable-ripngd --disable-bgpd --disable-ospfclient --enable-netlink --disable-user --disable-group --disable-vty-group --enable-configfile-mask=0666 --enable-logfile-mask=0666 --enable-multipath=8 --enable-snmp
+	#../debsrc/quagga-0.99.5/configure --host=mips-linux-gnu --prefix=/opt  --enable-vtysh --disable-ospf6d --disable-ripngd --disable-bgpd --disable-ospfclient --enable-netlink --disable-user --disable-group --disable-vty-group --enable-configfile-mask=0666 --enable-logfile-mask=0666 --enable-multipath=8
+	popd
+}
+
+
+if [ $# -gt 0 ]
+then
+	if [ $1 = 'x86' ]
+	then 
+		echo "config for x86 cpu"
+		config_x86
+	elif [ $1 = 'mipsbuild' ]
+	then
+		echo "config for mips cpu"
+		config_mips
+	elif [ $1 = 'xcatbuild' ]
+	then
+		echo "config for mips cpu"
+		config_xcat
+	else
+		echo "unknow cpu type"
+	fi
+else
+	echo "Didn't specify cpu type, take mips as the default actions."
+	config_mips
+
+fi
+

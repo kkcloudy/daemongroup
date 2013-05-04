@@ -1,0 +1,121 @@
+libdbus_internal_la-dbus-marshal-byteswap.lo \
+  libdbus_internal_la-dbus-marshal-byteswap.o: dbus-marshal-byteswap.c \
+  ../config.h dbus-marshal-byteswap.h ../dbus/dbus-protocol.h \
+  ../dbus/dbus-marshal-recursive.h ../dbus/dbus-list.h \
+  ../dbus/dbus-internals.h ../dbus/dbus-memory.h ../dbus/dbus-macros.h \
+  /usr/lib/gcc/mips-linux-gnu/4.1.2/include/stddef.h \
+  /usr/mips-linux-gnu/include/stdio.h \
+  /usr/mips-linux-gnu/include/features.h \
+  /usr/mips-linux-gnu/include/sys/cdefs.h \
+  /usr/mips-linux-gnu/include/gnu/stubs.h \
+  /usr/mips-linux-gnu/include/bits/types.h \
+  /usr/mips-linux-gnu/include/bits/wordsize.h \
+  /usr/mips-linux-gnu/include/bits/typesizes.h \
+  /usr/mips-linux-gnu/include/libio.h \
+  /usr/mips-linux-gnu/include/_G_config.h \
+  /usr/mips-linux-gnu/include/wchar.h \
+  /usr/mips-linux-gnu/include/bits/wchar.h \
+  /usr/mips-linux-gnu/include/gconv.h \
+  /usr/lib/gcc/mips-linux-gnu/4.1.2/include/stdarg.h \
+  /usr/mips-linux-gnu/include/bits/stdio_lim.h \
+  /usr/mips-linux-gnu/include/bits/sys_errlist.h \
+  /usr/mips-linux-gnu/include/bits/stdio.h ../dbus/dbus-types.h \
+  ../dbus/dbus-arch-deps.h ../dbus/dbus-errors.h ../dbus/dbus-sysdeps.h \
+  /usr/mips-linux-gnu/include/stdint.h ../dbus/dbus-file.h \
+  ../dbus/dbus-string.h /usr/mips-linux-gnu/include/string.h \
+  /usr/mips-linux-gnu/include/bits/string.h \
+  /usr/mips-linux-gnu/include/bits/string2.h \
+  /usr/mips-linux-gnu/include/stdlib.h \
+  /usr/mips-linux-gnu/include/sys/poll.h \
+  /usr/mips-linux-gnu/include/bits/poll.h ../dbus/dbus-threads-internal.h \
+  ../dbus/dbus-threads.h dbus-marshal-basic.h \
+  /usr/mips-linux-gnu/include/byteswap.h \
+  /usr/mips-linux-gnu/include/bits/byteswap.h dbus-signature.h
+
+../config.h:
+
+dbus-marshal-byteswap.h:
+
+../dbus/dbus-protocol.h:
+
+../dbus/dbus-marshal-recursive.h:
+
+../dbus/dbus-list.h:
+
+../dbus/dbus-internals.h:
+
+../dbus/dbus-memory.h:
+
+../dbus/dbus-macros.h:
+
+/usr/lib/gcc/mips-linux-gnu/4.1.2/include/stddef.h:
+
+/usr/mips-linux-gnu/include/stdio.h:
+
+/usr/mips-linux-gnu/include/features.h:
+
+/usr/mips-linux-gnu/include/sys/cdefs.h:
+
+/usr/mips-linux-gnu/include/gnu/stubs.h:
+
+/usr/mips-linux-gnu/include/bits/types.h:
+
+/usr/mips-linux-gnu/include/bits/wordsize.h:
+
+/usr/mips-linux-gnu/include/bits/typesizes.h:
+
+/usr/mips-linux-gnu/include/libio.h:
+
+/usr/mips-linux-gnu/include/_G_config.h:
+
+/usr/mips-linux-gnu/include/wchar.h:
+
+/usr/mips-linux-gnu/include/bits/wchar.h:
+
+/usr/mips-linux-gnu/include/gconv.h:
+
+/usr/lib/gcc/mips-linux-gnu/4.1.2/include/stdarg.h:
+
+/usr/mips-linux-gnu/include/bits/stdio_lim.h:
+
+/usr/mips-linux-gnu/include/bits/sys_errlist.h:
+
+/usr/mips-linux-gnu/include/bits/stdio.h:
+
+../dbus/dbus-types.h:
+
+../dbus/dbus-arch-deps.h:
+
+../dbus/dbus-errors.h:
+
+../dbus/dbus-sysdeps.h:
+
+/usr/mips-linux-gnu/include/stdint.h:
+
+../dbus/dbus-file.h:
+
+../dbus/dbus-string.h:
+
+/usr/mips-linux-gnu/include/string.h:
+
+/usr/mips-linux-gnu/include/bits/string.h:
+
+/usr/mips-linux-gnu/include/bits/string2.h:
+
+/usr/mips-linux-gnu/include/stdlib.h:
+
+/usr/mips-linux-gnu/include/sys/poll.h:
+
+/usr/mips-linux-gnu/include/bits/poll.h:
+
+../dbus/dbus-threads-internal.h:
+
+../dbus/dbus-threads.h:
+
+dbus-marshal-basic.h:
+
+/usr/mips-linux-gnu/include/byteswap.h:
+
+/usr/mips-linux-gnu/include/bits/byteswap.h:
+
+dbus-signature.h:

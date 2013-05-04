@@ -1,0 +1,47 @@
+diff -urN old/iptables_profectio/extensions/Makefile new/iptables_profectio/extensions/Makefile
+--- old/iptables_profectio/extensions/Makefile
++++ new/iptables_profectio/extensions/Makefile
+@@ -118,8 +118,8 @@
+ EXTRAS += extensions/libipt_targets.man
+ extensions/libipt_targets.man: $(patsubst %,extensions/libipt_%.man,$(PF_EXT_MAN_ALL_TARGETS))
+ 	@for ext in $(PF_EXT_MAN_TARGETS); do \
+-	    echo ".SS $$ext" ;\
+-	    cat extensions/libipt_$$ext.man ;\
++	    test ! -f extensions/libipt_$$ext.so || echo ".SS $$ext" ;\
++	    test ! -f extensions/libipt_$$ext.so || cat extensions/libipt_$$ext.man ;\
+ 	done >extensions/libipt_targets.man
+ 	@if [ -n "$(PF_EXT_MAN_EXTRA_TARGETS)" ]; then \
+ 	    extra=$(PF_EXT_MAN_EXTRA_TARGETS) ;\
+@@ -132,8 +132,8 @@
+ EXTRAS += extensions/libipt_matches.man
+ extensions/libipt_matches.man: $(patsubst %,extensions/libipt_%.man,$(PF_EXT_MAN_ALL_MATCHES))
+ 	@for ext in $(PF_EXT_MAN_MATCHES); do \
+-	    echo ".SS $$ext" ;\
+-	    cat extensions/libipt_$$ext.man ;\
++	    test ! -f extensions/libipt_$$ext.so || echo ".SS $$ext" ;\
++	    test ! -f extensions/libipt_$$ext.so || cat extensions/libipt_$$ext.man ;\
+ 	done >extensions/libipt_matches.man
+ 	@if [ -n "$(PF_EXT_MAN_EXTRA_MATCHES)" ]; then \
+ 	    extra=$(PF_EXT_MAN_EXTRA_MATCHES) ;\
+@@ -146,8 +146,8 @@
+ EXTRAS += extensions/libip6t_targets.man
+ extensions/libip6t_targets.man: $(patsubst %, extensions/libip6t_%.man, $(PF6_EXT_MAN_ALL_TARGETS))
+ 	@for ext in $(PF6_EXT_MAN_TARGETS); do \
+-	    echo ".SS $$ext" ;\
+-	    cat extensions/libip6t_$$ext.man ;\
++	    test ! -f extensions/libip6t_$$ext.so || echo ".SS $$ext" ;\
++	    test ! -f extensions/libip6t_$$ext.so || cat extensions/libip6t_$$ext.man ;\
+ 	done >extensions/libip6t_targets.man
+ 	@if [ -n "$(PF6_EXT_MAN_EXTRA_TARGETS)" ]; then \
+ 	    extra=$(PF6_EXT_MAN_EXTRA_TARGETS) ;\
+@@ -160,8 +160,8 @@
+ EXTRAS += extensions/libip6t_matches.man
+ extensions/libip6t_matches.man: $(patsubst %, extensions/libip6t_%.man, $(PF6_EXT_MAN_ALL_MATCHES))
+ 	@for ext in $(PF6_EXT_MAN_MATCHES); do \
+-	    echo ".SS $$ext" ;\
+-	    cat extensions/libip6t_$$ext.man ;\
++	    test ! -f extensions/libip6t_$$ext.so || echo ".SS $$ext" ;\
++	    test ! -f extensions/libip6t_$$ext.so || cat extensions/libip6t_$$ext.man ;\
+ 	done >extensions/libip6t_matches.man
+ 	@if [ -n "$(PF6_EXT_MAN_EXTRA_MATCHES)" ]; then \
+ 	    extra=$(PF6_EXT_MAN_EXTRA_MATCHES) ;\

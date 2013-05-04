@@ -1,0 +1,139 @@
+--- old/iptables_profectio/iptables.c	(revisión: 6678)
++++ new/iptables_profectio/iptables.c	(copia de trabajo)
+@@ -273,8 +273,13 @@
+ 		   "invalid port/service `%s' specified", port);
+ }
+ 
+-struct in_addr *
+-dotted_to_addr(const char *dotted)
++enum {
++	IPT_DOTTED_ADDR = 0,
++	IPT_DOTTED_MASK
++};
++
++static struct in_addr *
++__dotted_to_addr(const char *dotted, int type)
+ {
+ 	static struct in_addr addr;
+ 	unsigned char *addrp;
+@@ -290,9 +295,21 @@
+ 
+ 	p = buf;
+ 	for (i = 0; i < 3; i++) {
+-		if ((q = strchr(p, '.')) == NULL)
+-			return (struct in_addr *) NULL;
++		if ((q = strchr(p, '.')) == NULL) {
++			if (type == IPT_DOTTED_ADDR) {
++				/* autocomplete, this is a network address */
++				if (string_to_number(p, 0, 255, &onebyte) == -1)
++					return (struct in_addr *) NULL;
+ 
++				addrp[i] = (unsigned char) onebyte;
++				while (i < 3)
++					addrp[++i] = 0;
++
++				return &addr;
++			} else
++				return (struct in_addr *) NULL;
++		}
++
+ 		*q = '\0';
+ 		if (string_to_number(p, 0, 255, &onebyte) == -1)
+ 			return (struct in_addr *) NULL;
+@@ -310,6 +327,18 @@
+ 	return &addr;
+ }
+ 
++struct in_addr *
++dotted_to_addr(const char *dotted)
++{
++	return __dotted_to_addr(dotted, IPT_DOTTED_ADDR);
++}
++
++struct in_addr *
++dotted_to_mask(const char *dotted)
++{
++	return __dotted_to_addr(dotted, IPT_DOTTED_MASK);
++}
++
+ static struct in_addr *
+ network_to_addr(const char *name)
+ {
+@@ -607,34 +636,6 @@
+ 	return (char *) NULL;
+ }
+ 
+-static void 
+-pad_cidr(char *cidr)
+-{
+-	char *p, *q;
+-	unsigned int onebyte;
+-	int i, j;
+-	char buf[20];
+-
+-	/* copy dotted string, because we need to modify it */
+-	strncpy(buf, cidr, sizeof(buf) - 1);
+-	buf[sizeof(buf) - 1] = '\0';
+-
+-	p = buf;
+-	for (i = 0; i <= 3; i++) {
+-		if ((q = strchr(p, '.')) == NULL)
+-			break;
+-		*q = '\0';
+-		if (string_to_number(p, 0, 255, &onebyte) == -1)
+-			return;
+-		p = q + 1;
+-	}
+-
+-	/* pad remaining octets with zeros */
+-	for (j = i; j < 3; j++) {
+-		strcat(cidr, ".0");
+-	}
+-}
+-
+ /*
+  *	All functions starting with "parse" should succeed, otherwise
+  *	the program fails.
+@@ -674,7 +675,7 @@
+ 		maskaddr.s_addr = 0xFFFFFFFF;
+ 		return &maskaddr;
+ 	}
+-	if ((addrp = dotted_to_addr(mask)) != NULL)
++	if ((addrp = dotted_to_mask(mask)) != NULL)
+ 		/* dotted_to_addr already returns a network byte order addr */
+ 		return addrp;
+ 	if (string_to_number(mask, 0, 32, &bits) == -1)
+@@ -703,8 +704,6 @@
+ 	if ((p = strrchr(buf, '/')) != NULL) {
+ 		*p = '\0';
+ 		addrp = parse_mask(p + 1);
+-		if (strrchr(p + 1, '.') == NULL)
+-			pad_cidr(buf);
+ 	} else
+ 		addrp = parse_mask(NULL);
+ 	inaddrcpy(maskp, addrp);
+
+
+--- old/iptables_profectio/extensions/libipt_NETMAP.c	(revisión: 6678)
++++ new/iptables_profectio/extensions/libipt_NETMAP.c	(copia de trabajo)
+@@ -86,7 +86,7 @@
+ 	range->min_ip = ip->s_addr;
+ 	if (slash) {
+ 		if (strchr(slash+1, '.')) {
+-			ip = dotted_to_addr(slash+1);
++			ip = dotted_to_mask(slash+1);
+ 			if (!ip)
+ 				exit_error(PARAMETER_PROBLEM, "Bad netmask `%s'\n",
+ 					   slash+1);
+
+--- old/iptables_profectio/include/iptables.h	(revisión: 6678)
++++ new/iptables_profectio/include/iptables.h	(copia de trabajo)
+@@ -154,6 +154,7 @@
+ extern int service_to_port(const char *name, const char *proto);
+ extern u_int16_t parse_port(const char *port, const char *proto);
+ extern struct in_addr *dotted_to_addr(const char *dotted);
++extern struct in_addr *dotted_to_mask(const char *dotted);
+ extern char *addr_to_dotted(const struct in_addr *addrp);
+ extern char *addr_to_anyname(const struct in_addr *addr);
+ extern char *mask_to_dotted(const struct in_addr *mask);
+

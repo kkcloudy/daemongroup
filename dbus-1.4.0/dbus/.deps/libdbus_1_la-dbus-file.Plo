@@ -1,0 +1,28 @@
+libdbus_1_la-dbus-file.lo libdbus_1_la-dbus-file.o: dbus-file.c \
+  ../config.h dbus-file.h ../dbus/dbus-string.h ../dbus/dbus-macros.h \
+  ../dbus/dbus-types.h /usr/lib/gcc/mips-linux-gnu/4.1.2/include/stddef.h \
+  ../dbus/dbus-arch-deps.h ../dbus/dbus-memory.h \
+  /usr/lib/gcc/mips-linux-gnu/4.1.2/include/stdarg.h \
+  ../dbus/dbus-errors.h ../dbus/dbus-protocol.h
+
+../config.h:
+
+dbus-file.h:
+
+../dbus/dbus-string.h:
+
+../dbus/dbus-macros.h:
+
+../dbus/dbus-types.h:
+
+/usr/lib/gcc/mips-linux-gnu/4.1.2/include/stddef.h:
+
+../dbus/dbus-arch-deps.h:
+
+../dbus/dbus-memory.h:
+
+/usr/lib/gcc/mips-linux-gnu/4.1.2/include/stdarg.h:
+
+../dbus/dbus-errors.h:
+
+../dbus/dbus-protocol.h:

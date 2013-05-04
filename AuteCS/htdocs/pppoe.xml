@@ -1,0 +1,66 @@
+<?xml version="1.0"?>
+<root>
+<radius>
+<serip></serip>
+<serdef></serdef>
+<log>auth_order radius 
+login_tries 4 
+login_timeout 60 
+nologin /etc/nologin
+</log>
+<auth></auth>
+<auport></auport>
+<acct></acct>
+<acport></acport>
+<dic>dictionary /etc/ppp/radius/dictionary</dic>
+<ser>servers /etc/ppp/radius/servers</ser>
+<def>mapfile /dev/null
+seqfile /tmp/radius.seq
+default_realm
+radius_timeout 10
+radius_retries 3
+login_local /bin/login
+</def>
+<timeout>5</timeout>
+<retry>3</retry> 
+</radius>
+<interface>
+<lstatus></lstatus>
+<max></max>
+<base></base>
+<myip></myip>
+<p3if></p3if>
+</interface>
+<dns>
+<hostip></hostip>
+<backip></backip>
+<defu>default-asyncmap
+auth
+lock
+hide-password
+mru 1492
+</defu>
+<mask>netmask 255.255.255.0
+noipdefault
+passive
+mtu 1492
+proxyarp
+</mask>
+<lcp>lcp-echo-interval 30
+lcp-echo-failure 4
+noipx
+nodefaultroute
+noktune
+</lcp>
+<logfile>/var/log/pppd.log</logfile>
+<plugin>plugin radius.so
+plugin radattr.so
+</plugin>
+</dns>
+<host>
+<hostdef></hostdef>
+<hostip></hostip>
+<hostname></hostname>
+</host>
+</root>
+

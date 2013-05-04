@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <cpu_average>50</cpu_average>
+  <cpu_peak>50</cpu_peak>
+  <memory_average>50</memory_average>
+  <memory_peak>50</memory_peak>
+  <temperature_average>50</temperature_average>
+  <temperature_peak>50</temperature_peak>
+  <band_average>50</band_average>
+  <band_peak>50</band_peak>
+  <drop_average>50</drop_average>
+  <drop_peak>50</drop_peak>
+  <user_average>50</user_average>
+  <user_peak>50</user_peak>
+  <radius_average>50</radius_average>
+  <radius_peak>50</radius_peak>
+  <ip_average>50</ip_average>
+  <ip_peak>50</ip_peak>
+</root>

@@ -1,0 +1,1420 @@
+--/*******************************************************************************
+--Copyright (C) Autelan Technology
+
+
+--This software file is owned and distributed by Autelan Technology 
+--********************************************************************************
+
+
+--THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
+--ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED 
+--WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE 
+--DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR 
+--ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+--(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; 
+--LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON 
+--ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT 
+--(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS 
+--SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+--********************************************************************************
+--* dot11-group-smi
+--*
+--*
+--* CREATOR:
+--* autelan.software.Network Dep. team
+--*
+--* DESCRIPTION:
+--* Mount  dot11-qos-mib private mibs.
+--* 
+--*
+--*
+--*******************************************************************************/
+
+--********************************************************************************
+--* DOT11-Ac-QoS-Capable-Parameter
+--********************************************************************************
+DOT11-QoS-MIB DEFINITIONS ::= BEGIN
+IMPORTS	
+	dot11-wireless
+			FROM DOT11-GROUP-SMI
+--   	PhysAddress, 
+--	TEXTUAL-CONVENTION, 
+	TruthValue,
+--   	NOTIFICATION-GROUP, 
+--	OBJECT-GROUP, 
+--	MODULE-COMPLIANCE
+--       			FROM SNMPv2-CONF
+	DisplayString,RowStatus
+				FROM SNMPv2-TC
+   	MODULE-IDENTITY, 
+	OBJECT-TYPE,
+	NOTIFICATION-TYPE,
+   	Integer32, 
+--	Unsigned32, 
+--	Counter32,
+--	TimeTicks,
+	enterprises
+       			FROM SNMPv2-SMI;
+       			
+dot11QosGroup MODULE-IDENTITY
+    LAST-UPDATED "201112080000Z"        -- Dec 8th, 2011
+    ORGANIZATION " AuteLan Network Management Working Group
+                  http://www.AuteLan.com"
+    CONTACT-INFO
+        "General Discussion: support@AuteLan.com
+         To Subscribe: http://www.AuteLan.com
+         Liu Tao
+         AuteLan Technology Ltd.,NO.1 Agricultural University Sourth Street,Haidian
+         District,Beijing,China(100084)
+         Email:  liutao@AuteLan.com."
+    DESCRIPTION
+        "Copyright (C) 2009 The Internet Society.  This version of
+         the MIB module is part of RFC xxx; see the RFC itself
+         for full legal notices.
+         This MIB module contains managed object definitions for
+         the AuteLan Protocol."
+    REVISION    "201112080000Z"
+    DESCRIPTION
+        "Initial version published as RFC xxx."
+         ::= { dot11-wireless  3 }
+      
+dot11QosCapability OBJECT IDENTIFIER::={ dot11QosGroup 2 }
+dot11QoSBasicConfig OBJECT IDENTIFIER::={ dot11QosGroup 1 }
+dot11QoSCreate OBJECT IDENTIFIER::={ dot11QosGroup 3 }
+dot11QosWirelessInfo OBJECT IDENTIFIER::={ dot11QosGroup 4 }
+dot11QosProfileTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF Dot11QosProfileEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "This table shows QOS profile information."
+    ::= { dot11QosCapability 1 }
+
+dot11QosProfileEntry  OBJECT-TYPE
+    SYNTAX      Dot11QosProfileEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "QOS profile information."
+    INDEX { qosProfileIndex }
+    ::= { dot11QosProfileTable 1 }
+
+Dot11QosProfileEntry ::=SEQUENCE{
+	qosProfileIndex				INTEGER,
+	qosProfileName				DisplayString,
+	qosRadioBestEffortDepth			INTEGER,
+	qosRadioBackGroundDepth			INTEGER,
+	qosClientBestEffortDepth		INTEGER,
+	qosClientBackGroundDepth		INTEGER,
+	qosWmmBestEffortMapPriority		INTEGER,
+	qosWmmBackGroundMapPriority		INTEGER
+	}
+
+qosProfileIndex 			OBJECT-TYPE
+					SYNTAX      	INTEGER
+					MAX-ACCESS  	read-only
+					STATUS      	current
+					DESCRIPTION
+					      "QoS profile index."
+					::= { dot11QosProfileEntry 1 }
+
+qosProfileName		 		OBJECT-TYPE
+					SYNTAX     	DisplayString 
+					MAX-ACCESS 	read-only
+					STATUS     	current
+					DESCRIPTION
+				        	"Qos profile name."
+					::= { dot11QosProfileEntry 2 }
+
+
+qosRadioBestEffortDepth	 		OBJECT-TYPE
+					SYNTAX     	INTEGER 
+					MAX-ACCESS 	read-only
+					STATUS     	current
+					DESCRIPTION
+				        	"Radio QoS besteffort queue depth."
+					::= { dot11QosProfileEntry 3 }
+
+qosRadioBackGroundDepth 		OBJECT-TYPE
+					SYNTAX      	INTEGER
+					MAX-ACCESS  	read-only
+					STATUS      	current
+					DESCRIPTION
+					      "Radio QoS background queue depth."
+					::= { dot11QosProfileEntry 4 }
+
+qosClientBestEffortDepth	 	OBJECT-TYPE
+					SYNTAX     	INTEGER 
+					MAX-ACCESS 	read-only
+					STATUS     	current
+					DESCRIPTION
+				        	"Client QoS besteffort queue depth."
+					::= { dot11QosProfileEntry 5 }
+
+qosClientBackGroundDepth 		OBJECT-TYPE
+					SYNTAX      	INTEGER
+					MAX-ACCESS  	read-only
+					STATUS      	current
+					DESCRIPTION
+					      "Client QoS background queue depth."
+					::= { dot11QosProfileEntry 6 }
+
+qosWmmBestEffortMapPriority 		OBJECT-TYPE
+					SYNTAX     	INTEGER 
+					MAX-ACCESS 	read-only
+					STATUS     	current
+					DESCRIPTION
+				        	"WMM besteffort map 802.11P priority.(While the number is 0,it means not mapped )"
+					::= { dot11QosProfileEntry 7 }
+
+qosWmmBackGroundMapPriority 		OBJECT-TYPE
+					SYNTAX     	INTEGER 
+					MAX-ACCESS 	read-only
+					STATUS     	current
+					DESCRIPTION
+				        	"WMM background map 802.11P priority."
+					::= { dot11QosProfileEntry 8 }
+
+--********************************************************************************
+--*   Qos  Table
+--********************************************************************************
+
+dot11AcQosTable 		OBJECT-TYPE
+				SYNTAX SEQUENCE OF Dot11AcQosEntry
+				MAX-ACCESS not-accessible
+				STATUS current
+				DESCRIPTION 
+        	       		"AC device configuration management functions QoS performance
+        	       		configuration parameters."
+				::= { dot11QosCapability 2 }
+		
+dot11AcQosEntry 		OBJECT-TYPE
+				SYNTAX  Dot11AcQosEntry
+				MAX-ACCESS not-accessible
+				STATUS current
+				DESCRIPTION
+				"dot11AcQoSEntry form of an entry."
+				INDEX { QosID,
+					dot11QosTrafficClass }
+				::= { dot11AcQosTable  1 }
+
+Dot11AcQosEntry ::=SEQUENCE {
+	dot11QosTrafficClass  		INTEGER,
+	dot11QosAIFS			INTEGER,
+	dot11QoSCWmin			INTEGER,
+	dot11QoSCWmax			INTEGER,
+	dot11QoSTXOPLim			INTEGER,
+	dot11AvgRate			INTEGER,
+	dot11MaxDegree			INTEGER,
+	dot11PolicyPRI			INTEGER,
+	dot11ResShovePRI		INTEGER,
+	dot11ResGrabPRI			INTEGER,
+	dot11MaxPallel 			INTEGER,
+	dot11Bandwidth			INTEGER,
+	dot11BandwidthScale		INTEGER,
+	dot11UseFlowEqtQueue		INTEGER,
+	dot11SingleFlowMaxQueue		INTEGER,
+	dot11FlowAvgRate		INTEGER,
+	dot11FlowMaxDegree		INTEGER,
+	dot11UseWREDPolicy		INTEGER,
+	dot11UseTrafficShaping		INTEGER,
+	QoSSvcPktLossRatio		INTEGER,
+	PktLossRatio			INTEGER,
+	SvcLoss				INTEGER,
+	QueAvgLen			INTEGER,
+	PutThroughRatio			INTEGER,
+	DropRatio			INTEGER,
+	VoiceExceedMaxUsersRequest	Counter32,
+	VideoExceedMaxUsersRequest	Counter32
+}
+			
+
+dot11QosTrafficClass 	OBJECT-TYPE
+			SYNTAX INTEGER { 
+					bestEffort(1), 
+					background(2),
+					video(3), 
+					voice(4)
+					}
+			MAX-ACCESS read-only
+			STATUS current
+			DESCRIPTION
+				" provide the type of business  QoS mechanisms"
+	    	  	::= { dot11AcQosEntry 1 }
+
+dot11QosAIFS		OBJECT-TYPE
+		        SYNTAX INTEGER(0..15)
+		        ACCESS read-write
+		        STATUS current
+		        DESCRIPTION  
+		        	"AIFS.(Range 0-15)"
+	    	   	::= { dot11AcQosEntry 2 }
+
+dot11QoSCWmin		OBJECT-TYPE
+		        SYNTAX INTEGER(0..15)
+		        ACCESS read-write
+		        STATUS current
+		        DESCRIPTION  
+		        	"CW min.(Range 0-15)"
+	    	   	::= { dot11AcQosEntry 3 }
+
+dot11QoSCWmax		OBJECT-TYPE
+		        SYNTAX INTEGER(0..15)
+		        ACCESS read-write
+		        STATUS current
+		        DESCRIPTION  
+		        	"CW max.(Range 0-15)"
+	    	   	::= { dot11AcQosEntry 4 }
+
+dot11QoSTXOPLim		OBJECT-TYPE
+		        SYNTAX INTEGER(0..8192)
+		        ACCESS read-write
+		        STATUS current
+		        DESCRIPTION  
+		        	"TXOP limit.(Range 0-8192)"
+	    	   	::= { dot11AcQosEntry 5 }
+
+
+dot11AvgRate  		OBJECT-TYPE
+		        SYNTAX INTEGER
+		        ACCESS read-write
+		        STATUS current
+		        DESCRIPTION  
+		        	"The average rate of business."
+	    	   	::= { dot11AcQosEntry 6 }
+
+dot11MaxDegree  	OBJECT-TYPE
+		        SYNTAX INTEGER
+		        ACCESS read-write
+		        STATUS current
+		        DESCRIPTION  
+		       	 	"The greatest degree of operational contingencies."
+	   	   	::= { dot11AcQosEntry 7 }
+	        
+dot11PolicyPRI    	OBJECT-TYPE
+		        SYNTAX INTEGER
+		        ACCESS read-write
+		        STATUS current
+		        DESCRIPTION  
+		        	"Operations scheduling priority."
+		    	::= { dot11AcQosEntry 8	}
+	    
+dot11ResShovePRI  	OBJECT-TYPE
+		        SYNTAX INTEGER
+		        ACCESS read-write
+		        STATUS current
+		        DESCRIPTION  
+		        	"Diverted resources to business priorities."
+		    	::= { dot11AcQosEntry  9 }
+	    
+dot11ResGrabPRI    	OBJECT-TYPE
+		        SYNTAX INTEGER
+		        ACCESS read-write
+		        STATUS current
+		        DESCRIPTION  
+		       	 	"Resources to seize business priority."
+		    	::= { dot11AcQosEntry  10 }
+	    
+dot11MaxPallel 		OBJECT-TYPE
+		        SYNTAX INTEGER
+		        ACCESS read-write
+		        STATUS current
+		        DESCRIPTION  
+		        	"The largest number of concurrent operations"
+		    	::= { dot11AcQosEntry 11 }
+	    
+dot11Bandwidth 		OBJECT-TYPE
+		        SYNTAX INTEGER
+		        ACCESS read-write
+		        STATUS current
+		        DESCRIPTION
+		        	"Operational bandwidth allocation"
+		    	::= { dot11AcQosEntry 12 }
+    
+dot11BandwidthScale 	OBJECT-TYPE
+		        SYNTAX INTEGER
+		        ACCESS read-write
+		        STATUS current
+		        DESCRIPTION
+		        	"Bandwidth occupied by the business allocation percentage of the total bandwidth"
+		    	::= { dot11AcQosEntry 13 }
+    
+dot11UseFlowEqtQueue 	OBJECT-TYPE
+		        SYNTAX INTEGER{
+		        		disable(0),
+		        		enable(1)		        		
+		        		}
+		        ACCESS read-only
+		        STATUS current
+		        DESCRIPTION
+		        	"Whether or not to use flow-based fair queuing."
+		    	::= { dot11AcQosEntry 14 }
+    
+dot11SingleFlowMaxQueue OBJECT-TYPE
+		        SYNTAX INTEGER
+		        ACCESS read-only
+		        STATUS current
+		        DESCRIPTION
+		        	"The largest single flow queue length."
+		    	::= { dot11AcQosEntry 15 }
+    
+dot11FlowAvgRate 	OBJECT-TYPE
+		        SYNTAX INTEGER
+		        ACCESS read-only
+		        STATUS current
+		        DESCRIPTION
+		        	"The average flow rate."
+		    	::= { dot11AcQosEntry 16 }
+    
+dot11FlowMaxDegree 	OBJECT-TYPE
+		        SYNTAX INTEGER
+		        ACCESS read-only
+		        STATUS current
+		        DESCRIPTION
+		        	 "the largest sudden degree of  flow "
+		    	::= { dot11AcQosEntry  17 }
+    
+dot11UseWREDPolicy 	OBJECT-TYPE
+	        	SYNTAX INTEGER{
+	        			disable(0),
+	        			enable(1)
+	        			}
+	        	ACCESS read-only
+		        STATUS current
+		        DESCRIPTION
+		       	 	"Whether or not to use WRED algorithm."
+		    	::= { dot11AcQosEntry  18 }
+    
+dot11UseTrafficShaping 	OBJECT-TYPE
+		        SYNTAX INTEGER{
+	        			disable(0),
+	        			enable(1)
+	        			}
+		        ACCESS read-only
+		        STATUS current
+		        DESCRIPTION
+		        	"Whether or not to use traffic shaping(Traffic Shaping)."
+		    	::= { dot11AcQosEntry   19 }
+		    	
+QoSSvcPktLossRatio 	OBJECT-TYPE
+		        SYNTAX INTEGER
+		        ACCESS read-only
+		        STATUS current
+		        DESCRIPTION
+		        	"The total packet loss rate of QoS."
+		    	::= { dot11AcQosEntry   20 }		 
+		    	
+PktLossRatio 		OBJECT-TYPE
+		        SYNTAX INTEGER
+		        ACCESS read-only
+		        STATUS current
+		        DESCRIPTION
+		        	"The packet loss rate of QoS."
+		    	::= { dot11AcQosEntry   21 }		    	   	
+		    	
+SvcLoss			OBJECT-TYPE
+		        SYNTAX INTEGER
+		        ACCESS read-only
+		        STATUS current
+		        DESCRIPTION
+		        	"The volume of business lost because of crowding."
+		    	::= { dot11AcQosEntry   22 }	
+		    	
+QueAvgLen		OBJECT-TYPE
+		        SYNTAX INTEGER
+		        ACCESS read-only
+		        STATUS current
+		        DESCRIPTION
+		        	"The average length of queue."
+		    	::= { dot11AcQosEntry   23 }		    		    	
+
+PutThroughRatio		OBJECT-TYPE
+		        SYNTAX INTEGER
+		        ACCESS read-only
+		        STATUS current
+		        DESCRIPTION
+		        	"Business Through Rate."
+		    	::= { dot11AcQosEntry   24 }			    		    	
+
+DropRatio		OBJECT-TYPE
+		        SYNTAX INTEGER
+		        ACCESS read-only
+		        STATUS current
+		        DESCRIPTION
+		        	"Business Drop Rate."
+		    	::= { dot11AcQosEntry   25 }
+
+VoiceExceedMaxUsersRequest	OBJECT-TYPE
+		        	SYNTAX Counter32
+		        	ACCESS read-only
+		        	STATUS current
+		        	DESCRIPTION
+		        		"The number of requests rejected when voice exceed max users."
+		    		::= { dot11AcQosEntry   26 }
+
+VideoExceedMaxUsersRequest	OBJECT-TYPE
+		        	SYNTAX Counter32
+		        	ACCESS read-only
+		        	STATUS current
+		        	DESCRIPTION
+		        		"The number of requests rejected when video exceed max users."
+		    		::= { dot11AcQosEntry   27 }
+
+--********************************************************************************
+--*   Qos 
+--********************************************************************************
+
+dot11QosBasicConfigTable 	OBJECT-TYPE
+				SYNTAX SEQUENCE OF Dot11QosBasicConfigEntry
+				MAX-ACCESS not-accessible
+				STATUS current
+				DESCRIPTION 
+        	       		"AC device basic config functions QoS performance
+        	       		configuration parameters."
+				::= { dot11QoSBasicConfig 1 }
+		
+dot11QosBasicConfigEntry 	OBJECT-TYPE
+				SYNTAX  Dot11QosBasicConfigEntry
+				MAX-ACCESS not-accessible
+				STATUS current
+				DESCRIPTION
+				"dot11QosBasicConfigEntry form of an entry."
+				INDEX { WirelessQosID }
+				::= { dot11QosBasicConfigTable  1 }
+
+Dot11QosBasicConfigEntry ::=SEQUENCE {
+	WirelessQosID		INTEGER,
+	dot11QosTotalBW		INTEGER,
+	dot11QosResScale	INTEGER,
+	dot11QosShareBW		INTEGER,
+	dot11QosResShareScale	INTEGER,
+	dot11OperAtpArithmetic	OCTET STRING,
+	dot11UseResGrabPolicy	INTEGER,
+	dot11ResPolicyName	OCTET STRING,
+	dot11UseResShovePolicy	INTEGER,
+	dot11ResShoveName	OCTET STRING,
+	QoSEnabled		TruthValue
+}
+WirelessQosID		OBJECT-TYPE
+		        SYNTAX  INTEGER
+		        ACCESS  read-write
+		        STATUS  current
+		        DESCRIPTION
+		        	"Wireless QoS ID."
+		        ::= {dot11QosBasicConfigEntry 1 }
+
+dot11QosTotalBW 	OBJECT-TYPE
+		        SYNTAX  INTEGER(1..25)
+			UNITS	"M"
+		        ACCESS  read-write
+		        STATUS  current
+		        DESCRIPTION
+		        	"QoS to protect the distribution of the total bandwidth of the business.(Range 1-25M)"
+		        ::= {dot11QosBasicConfigEntry 2 }
+		        
+dot11QosResScale 	OBJECT-TYPE
+		        SYNTAX  INTEGER
+			UNITS	"%"
+		        ACCESS  read-write
+		        STATUS  current
+		        DESCRIPTION
+		        	"QoS resources to protect business occupancy percentage."
+		        ::= {dot11QosBasicConfigEntry 3 }
+		        
+dot11QosShareBW 	OBJECT-TYPE
+			 SYNTAX  INTEGER 
+		        ACCESS  read-write
+		        STATUS  current
+		        DESCRIPTION
+		        	"QoS category of business shared bandwidth."
+		        ::= {dot11QosBasicConfigEntry 4 }
+		        
+dot11QosResShareScale 	OBJECT-TYPE
+		        SYNTAX  INTEGER
+			UNITS	"%"
+		        ACCESS  read-write
+		        STATUS  current
+		        DESCRIPTION
+		        	"QoS category of business shared bandwidth percentage of total 
+		        resources."
+		        ::= {dot11QosBasicConfigEntry 5 }
+		        
+dot11OperAtpArithmetic 	OBJECT-TYPE
+		        SYNTAX OCTET STRING
+		        ACCESS read-write
+		        STATUS current
+		        DESCRIPTION
+		        	"Between different types of operations scheduling algorithe name."
+		        ::= {dot11QosBasicConfigEntry 6 }
+		        
+dot11UseResGrabPolicy 	OBJECT-TYPE
+		        SYNTAX  INTEGER{
+		        		disable(0),
+		        		enable(1)
+		        		}
+		        ACCESS  read-write
+		        STATUS  current
+		        DESCRIPTION
+		        	"Whether or not to use the resources to seize Strategy."
+		        ::= {dot11QosBasicConfigEntry 7 }
+		        
+dot11ResPolicyName 	OBJECT-TYPE
+		        SYNTAX OCTET STRING
+		        ACCESS read-write
+		        STATUS current
+		        DESCRIPTION
+		        	" The name of resources strategy to seize"
+		        ::= {dot11QosBasicConfigEntry 8 }
+		        
+dot11UseResShovePolicy OBJECT-TYPE
+		        SYNTAX INTEGER{
+		        		disable(0),
+		        		enable(1)
+		        		}
+		        ACCESS read-write
+		        STATUS current
+		        DESCRIPTION
+		        "Whether the use of resources diverted Strategy."
+		        ::= { dot11QosBasicConfigEntry 9 }
+		        
+dot11ResShoveName 	OBJECT-TYPE
+		        SYNTAX  OCTET STRING
+		        ACCESS  read-write
+		        STATUS  current
+		        DESCRIPTION
+		        	"Strategy names of resources diverted."
+		        ::= { dot11QosBasicConfigEntry 10 }
+		        
+QoSEnabled	 	OBJECT-TYPE
+		        SYNTAX TruthValue
+		        ACCESS read-write
+		        STATUS current
+		        DESCRIPTION
+		        	"Whether to enable QOS."
+		    	::= { dot11QosBasicConfigEntry 11 }		        
+		        
+dot11CreateQosTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF Dot11CreateQosEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "This table create QOS profile."
+    ::= { dot11QoSCreate 1 }
+
+dot11CreateQosEntry  OBJECT-TYPE
+    SYNTAX      Dot11CreateQosEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Create QOS profile."
+    INDEX { QosID }
+    ::= { dot11CreateQosTable 1 }
+
+Dot11CreateQosEntry ::=SEQUENCE{
+	QosID				INTEGER,
+	QoSName				DisplayString,
+	QoSRowStatus			RowStatus
+	}
+QosID					OBJECT-TYPE
+					SYNTAX  INTEGER(1..15)
+					MAX-ACCESS read-create
+					STATUS     current
+					DESCRIPTION
+						"Create wlan ID."
+					::= { dot11CreateQosEntry 1 }
+					
+QoSName		 			OBJECT-TYPE
+					SYNTAX     	DisplayString(SIZE(1..15))
+					MAX-ACCESS 	read-create
+					STATUS     	current
+					DESCRIPTION
+				        	"Qos profile name."
+					::= { dot11CreateQosEntry 2 }
+
+QoSRowStatus				OBJECT-TYPE
+				    	SYNTAX      RowStatus
+				    	MAX-ACCESS  read-create
+				    	STATUS      current
+				    	DESCRIPTION
+				        	"This variable is used to create, modify, and/or delete a row
+				        	 in this table."
+				    	::= { dot11CreateQosEntry 3 }
+
+dot11QosWirelessTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF Dot11QosWirelessEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "This table Show QOS Wirelessinformation."
+    ::= { dot11QosWirelessInfo 1 }
+
+dot11QosWirelessEntry  OBJECT-TYPE
+    SYNTAX      Dot11QosWirelessEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Create QOS profile."
+    INDEX { WtpID ,
+            RadioLocalID,	
+            QosType}
+    ::= { dot11QosWirelessTable 1 }
+
+Dot11QosWirelessEntry ::=SEQUENCE{
+	WtpID				INTEGER,
+	RadioLocalID		        INTEGER,
+	QosType			        INTEGER,
+        QosWirelessAIFS                 INTEGER,
+        QosWirelessCWmin                INTEGER,
+        QoSWirelessCWmax                INTEGER,
+        QoSWirelessTXOPLim              INTEGER
+	}
+
+WtpID		 			OBJECT-TYPE
+					SYNTAX     	INTEGER 
+					MAX-ACCESS 	read-only
+					STATUS     	current
+					DESCRIPTION
+				        	"Wtp ID."
+					::= { dot11QosWirelessEntry 1 }
+
+RadioLocalID		 			OBJECT-TYPE
+					SYNTAX     	INTEGER 
+					MAX-ACCESS 	read-only
+					STATUS     	current
+					DESCRIPTION
+				        	"RadioLocal ID."
+					::= { dot11QosWirelessEntry 2 }
+
+QosType		 			OBJECT-TYPE
+					SYNTAX     	INTEGER { 
+								bestEffort(1), 
+								background(2),
+								video(3), 
+								voice(4)
+								}
+					MAX-ACCESS 	read-only
+					STATUS     	current
+					DESCRIPTION
+				        	"QosType."
+					::= { dot11QosWirelessEntry 3 }
+QosWirelessAIFS		 			OBJECT-TYPE
+					SYNTAX     	INTEGER(0..15) 
+					MAX-ACCESS 	read-write
+					STATUS     	current
+					DESCRIPTION
+				        	" QosWirelessAIFS."
+					::= { dot11QosWirelessEntry 4}
+
+QosWirelessCWmin		 			OBJECT-TYPE
+					SYNTAX     	INTEGER(0..15) 
+					MAX-ACCESS 	read-write
+					STATUS     	current
+					DESCRIPTION
+				        	"QosWirelessCWmin ."
+					::= { dot11QosWirelessEntry 5}
+
+QoSWirelessCWmax 		 			OBJECT-TYPE
+					SYNTAX     	INTEGER(0..15) 
+					MAX-ACCESS 	read-write
+					STATUS     	current
+					DESCRIPTION
+				        	"QoSWirelessCWmax."
+					::= { dot11QosWirelessEntry 6}
+
+QoSWirelessTXOPLim 		 			OBJECT-TYPE
+					SYNTAX     	INTEGER(0..8192) 
+					MAX-ACCESS 	read-write
+					STATUS     	current
+					DESCRIPTION
+				        	"QoSWirelessTXOPLim."
+					::= { dot11QosWirelessEntry 7}
+
+dot11QosWirelessBasicConfigTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF Dot11QosWirelessBasicConfigEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "This table Show QOS WirelessBasicConfig information."
+    ::= { dot11QosWirelessInfo 2 }
+
+dot11QosWirelessBasicConfigEntry  OBJECT-TYPE
+    SYNTAX      Dot11QosWirelessBasicConfigEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        " QOS profile."
+    INDEX { BcWtpID ,
+            BcRadioLocalID,	
+            BcQosType}
+    ::= { dot11QosWirelessBasicConfigTable 1 }
+
+Dot11QosWirelessBasicConfigEntry ::=SEQUENCE{
+	BcWtpID				INTEGER,
+	BcRadioLocalID		        Integer32,
+	BcQosType			Integer32,
+        NewQoSTrafficClass              Integer32,
+        NewQoSEnabled                   TruthValue,
+        NewQoSBW                        Integer32,
+        NewQoSResPercent                Integer32,
+        NewQoSsharedBW                  Integer32,
+        NewQoSsharedBWPercent           Integer32,
+        NewSchedAlgName                 DisplayString,
+        NewResPolicyEnabled                TruthValue,
+        NewResPolicyName                DisplayString,
+        NewBackgroundSvcAvgSpeed           Integer32,
+        NewBackgroundSvcMaxBurst          Integer32,
+        NewBackgroundSvcPriority          Integer32,
+        NewBackgroundSvcResPriority        Integer32,
+        NewBestEffortSvcAvgSpeed           Integer32,
+        NewBestEffortSvcMaxBurst           Integer32,
+        NewBestEffortSvcPriority           Integer32,
+        NewBestEffortSvcResPriority        Integer32, 
+        NewVoiceSvcAvgSpeed                Integer32,
+        NewVoiceSvcMaxBurst                Integer32,
+        NewVoiceSvcPriority                Integer32,
+        NewVoiceSvcResPriority             Integer32,
+        NewVideoSvcAvgSpeed                Integer32,
+        NewVideoSvcMaxBurst                Integer32,
+        NewVideoSvcPriority                Integer32,
+        NewVideoSvcResPriority             Integer32
+	}
+
+BcWtpID		 			OBJECT-TYPE
+					SYNTAX     	INTEGER 
+					MAX-ACCESS 	read-only
+					STATUS     	current
+					DESCRIPTION
+				        	"Wtp ID."
+					::= { dot11QosWirelessBasicConfigEntry 1 }
+
+BcRadioLocalID		 		OBJECT-TYPE
+					SYNTAX     	Integer32 
+					MAX-ACCESS 	read-only
+					STATUS     	current
+					DESCRIPTION
+				        	"RadioLocal ID."
+					::= { dot11QosWirelessBasicConfigEntry 2 }
+
+BcQosType		 		OBJECT-TYPE
+					SYNTAX     	Integer32 { 
+								bestEffort(1), 
+								background(2),
+								video(3), 
+								voice(4)
+								}
+					MAX-ACCESS 	read-only
+					STATUS     	current
+					DESCRIPTION
+				        	"QosType."
+					::= { dot11QosWirelessBasicConfigEntry 3 }
+NewQoSTrafficClass		 	OBJECT-TYPE
+					SYNTAX     	Integer32 
+					MAX-ACCESS 	read-write
+					STATUS     	current
+					DESCRIPTION
+				        	" NewQoSTrafficClass."
+					::= { dot11QosWirelessBasicConfigEntry 4}
+
+NewQoSEnabled		 		OBJECT-TYPE
+					SYNTAX     	TruthValue 
+					MAX-ACCESS 	read-write
+					STATUS     	current
+					DESCRIPTION
+				        	"NewQoSEnabled ."
+					::= { dot11QosWirelessBasicConfigEntry 5}
+
+NewQoSBW 		 			OBJECT-TYPE
+					SYNTAX     	Integer32 
+					MAX-ACCESS 	read-write
+					STATUS     	current
+					DESCRIPTION
+				        	"NewQoSBW."
+					::= { dot11QosWirelessBasicConfigEntry 6}
+
+NewQoSResPercent 		 	OBJECT-TYPE
+					SYNTAX     	Integer32 
+					MAX-ACCESS 	read-write
+					STATUS     	current
+					DESCRIPTION
+				        	"NewQoSResPercent."
+					::= { dot11QosWirelessBasicConfigEntry 7}
+
+NewQoSsharedBW 		 	         OBJECT-TYPE
+					SYNTAX     	Integer32 
+					MAX-ACCESS 	read-write
+					STATUS     	current
+					DESCRIPTION
+				        	"NewQoSsharedBW."
+					::= { dot11QosWirelessBasicConfigEntry 8}
+
+NewQoSsharedBWPercent 		 	OBJECT-TYPE
+					SYNTAX     	Integer32 
+					MAX-ACCESS 	read-write
+					STATUS     	current
+					DESCRIPTION
+				        	"NewQoSsharedBWPercent."
+					::= { dot11QosWirelessBasicConfigEntry 9}
+
+
+NewSchedAlgName 		 	OBJECT-TYPE
+					SYNTAX     	DisplayString 
+					MAX-ACCESS 	read-write
+					STATUS     	current
+					DESCRIPTION
+				        	"NewQoSsharedBW."
+					::= { dot11QosWirelessBasicConfigEntry 10}
+
+NewResPolicyEnabled 		 	OBJECT-TYPE
+					SYNTAX     	TruthValue 
+					MAX-ACCESS 	read-write
+					STATUS     	current
+					DESCRIPTION
+				        	"NewResPolicyEnabled."
+					::= { dot11QosWirelessBasicConfigEntry 11 }
+
+NewResPolicyName 		 	OBJECT-TYPE
+					SYNTAX     	DisplayString 
+					MAX-ACCESS 	read-write
+					STATUS     	current
+					DESCRIPTION
+				        	"NewResPolicyName."
+					::= { dot11QosWirelessBasicConfigEntry 12 }
+
+NewBackgroundSvcAvgSpeed 		OBJECT-TYPE
+					SYNTAX     	Integer32 
+					MAX-ACCESS 	read-write
+					STATUS     	current
+					DESCRIPTION
+				        	"NewBackgroundSvcAvgSpeed."
+					::= { dot11QosWirelessBasicConfigEntry 13 }
+
+NewBackgroundSvcMaxBurst 		 	OBJECT-TYPE
+					SYNTAX     	Integer32 
+					MAX-ACCESS 	read-write
+					STATUS     	current
+					DESCRIPTION
+				        	"NewBackgroundSvcMaxBurst."
+					::= { dot11QosWirelessBasicConfigEntry 14 }
+
+NewBackgroundSvcPriority 		 	OBJECT-TYPE
+					SYNTAX     	Integer32 
+					MAX-ACCESS 	read-write
+					STATUS     	current
+					DESCRIPTION
+				        	"NewBackgroundSvcPriority."
+					::= { dot11QosWirelessBasicConfigEntry 15 }
+
+NewBackgroundSvcResPriority 		 	OBJECT-TYPE
+					SYNTAX     	Integer32 
+					MAX-ACCESS 	read-write
+					STATUS     	current
+					DESCRIPTION
+				        	"NewBackgroundSvcResPriority."
+					::= { dot11QosWirelessBasicConfigEntry 16 }
+
+NewBestEffortSvcAvgSpeed 		 	OBJECT-TYPE
+					SYNTAX     	Integer32 
+					MAX-ACCESS 	read-write
+					STATUS     	current
+					DESCRIPTION
+				        	"NewBestEffortSvcAvgSpeed."
+					::= { dot11QosWirelessBasicConfigEntry 17 }
+
+NewBestEffortSvcMaxBurst 		 	OBJECT-TYPE
+					SYNTAX     	Integer32 
+					MAX-ACCESS 	read-write
+					STATUS     	current
+					DESCRIPTION
+				        	"NewBestEffortSvcMaxBurst."
+					::= { dot11QosWirelessBasicConfigEntry 18 }
+
+NewBestEffortSvcPriority 		OBJECT-TYPE
+					SYNTAX     	Integer32 
+					MAX-ACCESS 	read-write
+					STATUS     	current
+					DESCRIPTION
+				        	"NewBestEffortSvcPriority."
+					::= { dot11QosWirelessBasicConfigEntry 19 }
+
+NewBestEffortSvcResPriority 		OBJECT-TYPE
+					SYNTAX     	Integer32 
+					MAX-ACCESS 	read-write
+					STATUS     	current
+					DESCRIPTION
+				        	"NewBestEffortSvcResPriority."
+					::= { dot11QosWirelessBasicConfigEntry 20 }
+
+NewVoiceSvcAvgSpeed 		        OBJECT-TYPE
+					SYNTAX     	Integer32 
+					MAX-ACCESS 	read-write
+					STATUS     	current
+					DESCRIPTION
+				        	"NewVoiceSvcAvgSpeed."
+					::= { dot11QosWirelessBasicConfigEntry 21 }
+
+NewVoiceSvcMaxBurst 		        OBJECT-TYPE
+					SYNTAX     	Integer32 
+					MAX-ACCESS 	read-write
+					STATUS     	current
+					DESCRIPTION
+				        	"NewVoiceSvcMaxBurst."
+					::= { dot11QosWirelessBasicConfigEntry 22 }
+
+NewVoiceSvcPriority 		        OBJECT-TYPE
+					SYNTAX     	Integer32 
+					MAX-ACCESS 	read-write
+					STATUS     	current
+					DESCRIPTION
+				        	"NewVoiceSvcPriority."
+					::= { dot11QosWirelessBasicConfigEntry 23 }
+
+NewVoiceSvcResPriority 		        OBJECT-TYPE
+					SYNTAX     	Integer32 
+					MAX-ACCESS 	read-write
+					STATUS     	current
+					DESCRIPTION
+				        	"NewVoiceSvcResPriority."
+					::= { dot11QosWirelessBasicConfigEntry 24 }
+
+NewVideoSvcAvgSpeed 		        OBJECT-TYPE
+					SYNTAX     	Integer32 
+					MAX-ACCESS 	read-write
+					STATUS     	current
+					DESCRIPTION
+				        	"NewVideoSvcAvgSpeed."
+					::= { dot11QosWirelessBasicConfigEntry 25 }
+
+NewVideoSvcMaxBurst 		        OBJECT-TYPE
+					SYNTAX     	Integer32 
+					MAX-ACCESS 	read-write
+					STATUS     	current
+					DESCRIPTION
+				        	"NewVideoSvcMaxBurst."
+					::= { dot11QosWirelessBasicConfigEntry 26 }
+
+NewVideoSvcPriority 		        OBJECT-TYPE
+					SYNTAX     	Integer32 
+					MAX-ACCESS 	read-write
+					STATUS     	current
+					DESCRIPTION
+				        	"NewVideoSvcMaxBurst."
+					::= { dot11QosWirelessBasicConfigEntry 27 }
+
+NewVideoSvcResPriority 		        OBJECT-TYPE
+					SYNTAX     	Integer32 
+					MAX-ACCESS 	read-write
+					STATUS     	current
+					DESCRIPTION
+				        	"NewVideoSvcResPriority."
+					::= { dot11QosWirelessBasicConfigEntry 28 }
+
+dot11BackgroundQosTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF Dot11BackgroundQosEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "This table Show  Background QOS information."
+    ::= { dot11QosWirelessInfo 3 }
+
+dot11BackgroundQosEntry  OBJECT-TYPE
+    SYNTAX      Dot11BackgroundQosEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Create QOS profile."
+    INDEX {  BackgroundWtpID ,
+             BackgroundRadioLocalID	
+             }
+    ::= { dot11BackgroundQosTable 1 }
+
+Dot11BackgroundQosEntry ::=SEQUENCE{
+	BackgroundWtpID				INTEGER,
+	BackgroundRadioLocalID		        INTEGER,
+        BgMaxSvcCnt                             Integer32,
+        BgSvcBW                                 Integer32,
+        BgSvcBWPercent                          Integer32,
+        BgIsUseWREDAlg                          TruthValue,
+        BgIsUseTrafficShaping                   TruthValue
+	}
+
+BackgroundWtpID		 			OBJECT-TYPE
+					SYNTAX     	INTEGER 
+					MAX-ACCESS 	read-only
+					STATUS     	current
+					DESCRIPTION
+				        	"BackgroundWtpID."
+					::= { dot11BackgroundQosEntry 1 }
+
+BackgroundRadioLocalID		 			OBJECT-TYPE
+					SYNTAX     	INTEGER 
+					MAX-ACCESS 	read-only
+					STATUS     	current
+					DESCRIPTION
+				        	"BackgroundRadioLocalID."
+					::= { dot11BackgroundQosEntry 2 }
+BgMaxSvcCnt		 			OBJECT-TYPE
+					SYNTAX     	Integer32 
+					MAX-ACCESS 	read-write
+					STATUS     	current
+					DESCRIPTION
+				        	"BgMaxSvcCnt."
+					::= { dot11BackgroundQosEntry 3 }
+
+BgSvcBW		 			OBJECT-TYPE
+					SYNTAX     	Integer32 
+					MAX-ACCESS 	read-write
+					STATUS     	current
+					DESCRIPTION
+				        	"BgSvcBW."
+					::= { dot11BackgroundQosEntry 4 }
+
+BgSvcBWPercent		 	        OBJECT-TYPE
+					SYNTAX     	Integer32 
+					MAX-ACCESS 	read-write
+					STATUS     	current
+					DESCRIPTION
+				        	"BgSvcBWPercent."
+					::= { dot11BackgroundQosEntry 5 }
+
+BgIsUseWREDAlg		 	        OBJECT-TYPE
+					SYNTAX     	TruthValue 
+					MAX-ACCESS 	read-write
+					STATUS     	current
+					DESCRIPTION
+				        	"BgIsUseWREDAlg."
+					::= { dot11BackgroundQosEntry 6 }
+
+BgIsUseTrafficShaping	 	        OBJECT-TYPE
+					SYNTAX     	TruthValue 
+					MAX-ACCESS 	read-write
+					STATUS     	current
+					DESCRIPTION
+				        	"BgIsUseTrafficShaping."
+					::= { dot11BackgroundQosEntry 7 }
+
+dot11BestEffortQosTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF Dot11BestEffortQosEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "This table Show  BestEffort QOS information."
+    ::= { dot11QosWirelessInfo 4 }
+
+dot11BestEffortQosEntry  OBJECT-TYPE
+    SYNTAX      Dot11BestEffortQosEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Create QOS profile."
+    INDEX {  BestEffortWtpID ,
+             BestEffortRadioLocalID	
+             }
+    ::= { dot11BestEffortQosTable 1 }
+
+Dot11BestEffortQosEntry ::=SEQUENCE{
+	BestEffortWtpID				INTEGER,
+	BestEffortRadioLocalID		        INTEGER,
+        BestEffortMaxSvcCnt                             Integer32,
+        BestEffortSvcBW                                 Integer32,
+        BestEffortSvcBWPercent                          Integer32,
+        BestEffortIsUseWREDAlg                          TruthValue,
+        BestEffortIsUseTrafficShaping                   TruthValue
+	}
+
+BestEffortWtpID		 			OBJECT-TYPE
+					SYNTAX     	INTEGER 
+					MAX-ACCESS 	read-only
+					STATUS     	current
+					DESCRIPTION
+				        	"BestEffortWtpID."
+					::= { dot11BestEffortQosEntry 1 }
+
+BestEffortRadioLocalID		 			OBJECT-TYPE
+					SYNTAX     	INTEGER 
+					MAX-ACCESS 	read-only
+					STATUS     	current
+					DESCRIPTION
+				        	"BestEffortRadioLocalID."
+					::= { dot11BestEffortQosEntry 2 }
+BestEffortMaxSvcCnt		 			OBJECT-TYPE
+					SYNTAX     	Integer32 
+					MAX-ACCESS 	read-write
+					STATUS     	current
+					DESCRIPTION
+				        	"BestEffortMaxSvcCnt."
+					::= { dot11BestEffortQosEntry 3 }
+
+BestEffortSvcBW		 			OBJECT-TYPE
+					SYNTAX     	Integer32 
+					MAX-ACCESS 	read-write
+					STATUS     	current
+					DESCRIPTION
+				        	"BestEffortSvcBW."
+					::= { dot11BestEffortQosEntry 4 }
+
+BestEffortSvcBWPercent		 	        OBJECT-TYPE
+					SYNTAX     	Integer32 
+					MAX-ACCESS 	read-write
+					STATUS     	current
+					DESCRIPTION
+				        	"BestEffortSvcBWPercent."
+					::= { dot11BestEffortQosEntry 5 }
+
+BestEffortIsUseWREDAlg		 	        OBJECT-TYPE
+					SYNTAX     	TruthValue 
+					MAX-ACCESS 	read-write
+					STATUS     	current
+					DESCRIPTION
+				        	"BestEffortIsUseWREDAlg."
+					::= { dot11BestEffortQosEntry 6 }
+
+BestEffortIsUseTrafficShaping	 	        OBJECT-TYPE
+					SYNTAX     	TruthValue 
+					MAX-ACCESS 	read-write
+					STATUS     	current
+					DESCRIPTION
+				        	"BestEffortIsUseTrafficShaping."
+					::= { dot11BestEffortQosEntry 7 }
+
+dot11VoiceQosTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF Dot11VoiceQosEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "This table Show  Voice QOS information."
+    ::= { dot11QosWirelessInfo 5 }
+
+dot11VoiceQosEntry  OBJECT-TYPE
+    SYNTAX      Dot11VoiceQosEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Create QOS profile."
+    INDEX {  VoiceWtpID,
+             VoiceRadioLocalID	
+             }
+    ::= { dot11VoiceQosTable 1 }
+
+Dot11VoiceQosEntry ::=SEQUENCE{
+	VoiceWtpID				INTEGER,
+	VoiceRadioLocalID		        INTEGER,
+        VoiceMaxSvcCnt                          Integer32,
+        VoiceSvcBW                              Integer32,
+        VoiceSvcBWPercent                       Integer32,
+        VoiceIsUseStreamBasedQueue              TruthValue,
+        VoiceStreamMaxQueueLen                  Integer32,
+        VoiceStreamAvgSpeed                     Integer32,
+        VoiceStreamMaxBurst                     Integer32,
+        VoiceIsUseWREDAlg                       TruthValue,
+        VoiceIsUseTrafficShaping                TruthValue
+	} 
+
+VoiceWtpID		 			OBJECT-TYPE
+					SYNTAX     	INTEGER 
+					MAX-ACCESS 	read-only
+					STATUS     	current
+					DESCRIPTION
+				        	"VoiceWtpID."
+					::= { dot11VoiceQosEntry 1 }
+
+VoiceRadioLocalID		 			OBJECT-TYPE
+					SYNTAX     	INTEGER 
+					MAX-ACCESS 	read-only
+					STATUS     	current
+					DESCRIPTION
+				        	"VoiceRadioLocalID."
+					::= { dot11VoiceQosEntry 2 }
+VoiceMaxSvcCnt		 			OBJECT-TYPE
+					SYNTAX     	Integer32 
+					MAX-ACCESS 	read-write
+					STATUS     	current
+					DESCRIPTION
+				        	"VoiceMaxSvcCnt."
+					::= { dot11VoiceQosEntry 3 }
+
+VoiceSvcBW		 	        OBJECT-TYPE
+					SYNTAX     	Integer32 
+					MAX-ACCESS 	read-write
+					STATUS     	current
+					DESCRIPTION
+				        	"VoiceSvcBW."
+					::= { dot11VoiceQosEntry 4 }
+
+VoiceSvcBWPercent		 	OBJECT-TYPE
+					SYNTAX     	Integer32 
+					MAX-ACCESS 	read-write
+					STATUS     	current
+					DESCRIPTION
+				        	"VoiceSvcBWPercent."
+					::= { dot11VoiceQosEntry 5 }
+
+VoiceIsUseStreamBasedQueue		OBJECT-TYPE
+					SYNTAX     	TruthValue 
+					MAX-ACCESS 	read-write
+					STATUS     	current
+					DESCRIPTION
+				        	"VoiceIsUseStreamBasedQueue."
+					::= { dot11VoiceQosEntry 6 }
+
+VoiceStreamMaxQueueLen	 	        OBJECT-TYPE
+					SYNTAX     	Integer32 
+					MAX-ACCESS 	read-write
+					STATUS     	current
+					DESCRIPTION
+				        	"VoiceStreamMaxQueueLen."
+					::= { dot11VoiceQosEntry 7 }
+
+VoiceStreamAvgSpeed	 	        OBJECT-TYPE
+					SYNTAX     	Integer32 
+					MAX-ACCESS 	read-write
+					STATUS     	current
+					DESCRIPTION
+				        	"VoiceStreamAvgSpeed."
+					::= { dot11VoiceQosEntry 8 }
+
+VoiceStreamMaxBurst	 	        OBJECT-TYPE
+					SYNTAX     	Integer32 
+					MAX-ACCESS 	read-write
+					STATUS     	current
+					DESCRIPTION
+				        	"VoiceStreamMaxBurst."
+					::= { dot11VoiceQosEntry 9 }
+
+VoiceIsUseWREDAlg	 	        OBJECT-TYPE
+					SYNTAX     	TruthValue 
+					MAX-ACCESS 	read-write
+					STATUS     	current
+					DESCRIPTION
+				        	"VoiceIsUseWREDAlg."
+					::= { dot11VoiceQosEntry 10 }
+
+VoiceIsUseTrafficShaping	 	OBJECT-TYPE
+					SYNTAX     	TruthValue 
+					MAX-ACCESS 	read-write
+					STATUS     	current
+					DESCRIPTION
+				        	"VoiceIsUseTrafficShaping."
+					::= { dot11VoiceQosEntry 11 }
+
+dot11VideoQosTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF Dot11VideoQosEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "This table Show  Video QOS information."
+    ::= { dot11QosWirelessInfo 6 }
+
+dot11VideoQosEntry  OBJECT-TYPE
+    SYNTAX      Dot11VideoQosEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Show QOS profile."
+    INDEX {  VideoWtpID,
+             VideoRadioLocalID	
+             }
+    ::= { dot11VideoQosTable 1 }
+
+Dot11VideoQosEntry ::=SEQUENCE{
+	VideoWtpID				INTEGER,
+	VideoRadioLocalID		        INTEGER,
+        VideoMaxSvcCnt                          Integer32,
+        VideoSvcBW                              Integer32,
+        VideoSvcBWPercent                       Integer32,
+        VideoIsUseStreamBasedQueue              TruthValue,
+        VideoStreamMaxQueueLen                  Integer32,
+        VideoStreamAvgSpeed                     Integer32,
+        VideoStreamMaxBurst                     Integer32,
+        VideoIsUseWREDAlg                       TruthValue,
+        VideoIsUseTrafficShaping                TruthValue
+	} 
+
+VideoWtpID		 			OBJECT-TYPE
+					SYNTAX     	INTEGER 
+					MAX-ACCESS 	read-only
+					STATUS     	current
+					DESCRIPTION
+				        	"VideoWtpID."
+					::= { dot11VideoQosEntry 1 }
+
+VideoRadioLocalID		 			OBJECT-TYPE
+					SYNTAX     	INTEGER 
+					MAX-ACCESS 	read-only
+					STATUS     	current
+					DESCRIPTION
+				        	"VideoRadioLocalID."
+					::= { dot11VideoQosEntry 2 }
+VideoMaxSvcCnt		 			OBJECT-TYPE
+					SYNTAX     	Integer32 
+					MAX-ACCESS 	read-write
+					STATUS     	current
+					DESCRIPTION
+				        	"VideoMaxSvcCnt."
+					::= { dot11VideoQosEntry 3 }
+
+VideoSvcBW		 	        OBJECT-TYPE
+					SYNTAX     	Integer32 
+					MAX-ACCESS 	read-write
+					STATUS     	current
+					DESCRIPTION
+				        	"VideoSvcBW."
+					::= { dot11VideoQosEntry 4 }
+
+VideoSvcBWPercent		 	OBJECT-TYPE
+					SYNTAX     	Integer32 
+					MAX-ACCESS 	read-write
+					STATUS     	current
+					DESCRIPTION
+				        	"VideoSvcBWPercent."
+					::= { dot11VideoQosEntry 5 }
+
+VideoIsUseStreamBasedQueue		OBJECT-TYPE
+					SYNTAX     	TruthValue 
+					MAX-ACCESS 	read-write
+					STATUS     	current
+					DESCRIPTION
+				        	"VideoIsUseStreamBasedQueue."
+					::= { dot11VideoQosEntry 6 }
+
+VideoStreamMaxQueueLen	 	        OBJECT-TYPE
+					SYNTAX     	Integer32 
+					MAX-ACCESS 	read-write
+					STATUS     	current
+					DESCRIPTION
+				        	"VideoStreamMaxQueueLen."
+					::= { dot11VideoQosEntry 7 }
+
+VideoStreamAvgSpeed	 	        OBJECT-TYPE
+					SYNTAX     	Integer32 
+					MAX-ACCESS 	read-write
+					STATUS     	current
+					DESCRIPTION
+				        	"VideoStreamAvgSpeed."
+					::= { dot11VideoQosEntry 8 }
+
+VideoStreamMaxBurst	 	        OBJECT-TYPE
+					SYNTAX     	Integer32 
+					MAX-ACCESS 	read-write
+					STATUS     	current
+					DESCRIPTION
+				        	"VideoStreamMaxBurst."
+					::= { dot11VideoQosEntry 9 }
+
+VideoIsUseWREDAlg	 	        OBJECT-TYPE
+					SYNTAX     	TruthValue 
+					MAX-ACCESS 	read-write
+					STATUS     	current
+					DESCRIPTION
+				        	"VideoIsUseWREDAlg."
+					::= { dot11VideoQosEntry 10 }
+
+VideoIsUseTrafficShaping	 	OBJECT-TYPE
+					SYNTAX     	TruthValue 
+					MAX-ACCESS 	read-write
+					STATUS     	current
+					DESCRIPTION
+				        	"VideoIsUseTrafficShaping."
+					::= { dot11VideoQosEntry 11 }
+
+END
+

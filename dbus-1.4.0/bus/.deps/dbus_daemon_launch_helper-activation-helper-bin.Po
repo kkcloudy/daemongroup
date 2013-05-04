@@ -1,0 +1,148 @@
+dbus_daemon_launch_helper-activation-helper-bin.o \
+  dbus_daemon_launch_helper-activation-helper-bin.o:  \
+ activation-helper-bin.c ../config.h utils.h ../dbus/dbus.h \
+  ../dbus/dbus-arch-deps.h ../dbus/dbus-macros.h ../dbus/dbus-address.h \
+  ../dbus/dbus-types.h /usr/lib/gcc/mips-linux-gnu/4.1.2/include/stddef.h \
+  ../dbus/dbus-errors.h ../dbus/dbus-protocol.h ../dbus/dbus-bus.h \
+  /usr/mips-linux-gnu/include/stdio.h \
+  /usr/mips-linux-gnu/include/features.h \
+  /usr/mips-linux-gnu/include/sys/cdefs.h \
+  /usr/mips-linux-gnu/include/gnu/stubs.h \
+  /usr/mips-linux-gnu/include/bits/types.h \
+  /usr/mips-linux-gnu/include/bits/wordsize.h \
+  /usr/mips-linux-gnu/include/bits/typesizes.h \
+  /usr/mips-linux-gnu/include/libio.h \
+  /usr/mips-linux-gnu/include/_G_config.h \
+  /usr/mips-linux-gnu/include/wchar.h \
+  /usr/mips-linux-gnu/include/bits/wchar.h \
+  /usr/mips-linux-gnu/include/gconv.h \
+  /usr/lib/gcc/mips-linux-gnu/4.1.2/include/stdarg.h \
+  /usr/mips-linux-gnu/include/bits/stdio_lim.h \
+  /usr/mips-linux-gnu/include/bits/sys_errlist.h \
+  /usr/mips-linux-gnu/include/bits/stdio.h ../dbus/dbus-connection.h \
+  ../dbus/dbus-memory.h ../dbus/dbus-message.h ../dbus/dbus-shared.h \
+  ../dbus/dbus-misc.h ../dbus/dbus-pending-call.h ../dbus/dbus-server.h \
+  ../dbus/dbus-signature.h ../dbus/dbus-threads.h activation-helper.h \
+  activation-exit-codes.h /usr/mips-linux-gnu/include/stdlib.h \
+  /usr/mips-linux-gnu/include/sys/types.h \
+  /usr/mips-linux-gnu/include/time.h /usr/mips-linux-gnu/include/endian.h \
+  /usr/mips-linux-gnu/include/bits/endian.h \
+  /usr/mips-linux-gnu/include/sys/select.h \
+  /usr/mips-linux-gnu/include/bits/select.h \
+  /usr/mips-linux-gnu/include/bits/sigset.h \
+  /usr/mips-linux-gnu/include/bits/time.h \
+  /usr/mips-linux-gnu/include/sys/sysmacros.h \
+  /usr/mips-linux-gnu/include/bits/pthreadtypes.h \
+  /usr/mips-linux-gnu/include/bits/sched.h \
+  /usr/mips-linux-gnu/include/alloca.h \
+  /usr/mips-linux-gnu/include/string.h \
+  /usr/mips-linux-gnu/include/bits/string.h \
+  /usr/mips-linux-gnu/include/bits/string2.h
+
+../config.h:
+
+utils.h:
+
+../dbus/dbus.h:
+
+../dbus/dbus-arch-deps.h:
+
+../dbus/dbus-macros.h:
+
+../dbus/dbus-address.h:
+
+../dbus/dbus-types.h:
+
+/usr/lib/gcc/mips-linux-gnu/4.1.2/include/stddef.h:
+
+../dbus/dbus-errors.h:
+
+../dbus/dbus-protocol.h:
+
+../dbus/dbus-bus.h:
+
+/usr/mips-linux-gnu/include/stdio.h:
+
+/usr/mips-linux-gnu/include/features.h:
+
+/usr/mips-linux-gnu/include/sys/cdefs.h:
+
+/usr/mips-linux-gnu/include/gnu/stubs.h:
+
+/usr/mips-linux-gnu/include/bits/types.h:
+
+/usr/mips-linux-gnu/include/bits/wordsize.h:
+
+/usr/mips-linux-gnu/include/bits/typesizes.h:
+
+/usr/mips-linux-gnu/include/libio.h:
+
+/usr/mips-linux-gnu/include/_G_config.h:
+
+/usr/mips-linux-gnu/include/wchar.h:
+
+/usr/mips-linux-gnu/include/bits/wchar.h:
+
+/usr/mips-linux-gnu/include/gconv.h:
+
+/usr/lib/gcc/mips-linux-gnu/4.1.2/include/stdarg.h:
+
+/usr/mips-linux-gnu/include/bits/stdio_lim.h:
+
+/usr/mips-linux-gnu/include/bits/sys_errlist.h:
+
+/usr/mips-linux-gnu/include/bits/stdio.h:
+
+../dbus/dbus-connection.h:
+
+../dbus/dbus-memory.h:
+
+../dbus/dbus-message.h:
+
+../dbus/dbus-shared.h:
+
+../dbus/dbus-misc.h:
+
+../dbus/dbus-pending-call.h:
+
+../dbus/dbus-server.h:
+
+../dbus/dbus-signature.h:
+
+../dbus/dbus-threads.h:
+
+activation-helper.h:
+
+activation-exit-codes.h:
+
+/usr/mips-linux-gnu/include/stdlib.h:
+
+/usr/mips-linux-gnu/include/sys/types.h:
+
+/usr/mips-linux-gnu/include/time.h:
+
+/usr/mips-linux-gnu/include/endian.h:
+
+/usr/mips-linux-gnu/include/bits/endian.h:
+
+/usr/mips-linux-gnu/include/sys/select.h:
+
+/usr/mips-linux-gnu/include/bits/select.h:
+
+/usr/mips-linux-gnu/include/bits/sigset.h:
+
+/usr/mips-linux-gnu/include/bits/time.h:
+
+/usr/mips-linux-gnu/include/sys/sysmacros.h:
+
+/usr/mips-linux-gnu/include/bits/pthreadtypes.h:
+
+/usr/mips-linux-gnu/include/bits/sched.h:
+
+/usr/mips-linux-gnu/include/alloca.h:
+
+/usr/mips-linux-gnu/include/string.h:
+
+/usr/mips-linux-gnu/include/bits/string.h:
+
+/usr/mips-linux-gnu/include/bits/string2.h:

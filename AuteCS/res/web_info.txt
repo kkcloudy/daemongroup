@@ -1,0 +1,4 @@
+usr_man=/opt/bin/username/;
+checkpwd=/usr/bin/;
+quagga=/usr/local/etc/Quagga.conf;
+tempor=/var/run/apache2/temporary.xml;   

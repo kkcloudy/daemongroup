@@ -1,0 +1,212 @@
+-- RUA-PDU-Contents.asn
+--
+-- 3GPP TS 25.468 V9.1.0 (2010-03)
+-- http://www.3gpp.org/ftp/Specs/html-info/25468.htm
+--
+-- 9.3.3	PDU definitions
+--
+-- $Id: RUA-PDU-Contents.asn,v 1.1 2010/12/22 11:13:32 dongshu Exp $
+--
+
+-- **************************************************************
+--
+-- PDU definitions for RUA.
+--
+-- **************************************************************
+
+RUA-PDU-Contents {
+itu-t (0) identified-organization (4) etsi (0) mobileDomain (0) 
+umts-Access (20) modules (3) rua(5) version1 (1) rUA-PDU-Contents (1) }
+
+DEFINITIONS AUTOMATIC TAGS ::= 
+
+BEGIN
+
+-- **************************************************************
+--
+-- IE parameter types from other modules.
+--
+-- **************************************************************
+
+IMPORTS
+	Cause,
+	CriticalityDiagnostics,
+	Context-ID,
+	CN-DomainIndicator, 
+	CSGMembershipStatus,
+	IntraDomainNasNodeSelector,
+	RANAP-Message,
+	Establishment-Cause
+
+FROM RUA-IEs
+
+
+	ProtocolExtensionContainer{},
+	ProtocolIE-ContainerList{},
+	ProtocolIE-Container{},
+	ProtocolIE-Single-Container{},
+	PrivateIE-Container{},
+	RUA-PRIVATE-IES,
+	RUA-PROTOCOL-EXTENSION,
+	RUA-PROTOCOL-IES
+FROM RUA-Containers
+
+	id-Cause,
+	id-CriticalityDiagnostics,
+	id-Context-ID,
+	id-CN-DomainIndicator, 
+ 	id-CSGMembershipStatus,
+	id-RANAP-Message,
+	id-IntraDomainNasNodeSelector,
+	id-Establishment-Cause
+
+FROM RUA-Constants;
+
+
+-- **************************************************************
+--
+-- Connect
+--
+-- **************************************************************
+
+Connect ::= SEQUENCE {
+	protocolIEs			ProtocolIE-Container       { {ConnectIEs} },
+	protocolExtensions	ProtocolExtensionContainer { {ConnectExtensions} } 	OPTIONAL,
+	...
+}
+
+myType-CN-DomainIndicator RUA-PROTOCOL-IES ::= { ID id-CN-DomainIndicator				CRITICALITY 0	TYPE CN-DomainIndicator				PRESENCE 2 }
+myType-Context-ID RUA-PROTOCOL-IES ::= { ID id-Context-ID						CRITICALITY 0	TYPE Context-ID						PRESENCE 2 }
+myType-IntraDomainNasNodeSelector RUA-PROTOCOL-IES ::= { ID id-IntraDomainNasNodeSelector 		CRITICALITY 1	TYPE IntraDomainNasNodeSelector		PRESENCE 0 }
+myType-Establishment-Cause RUA-PROTOCOL-IES ::= { ID id-Establishment-Cause				CRITICALITY 0	TYPE Establishment-Cause			PRESENCE 2 }
+myType-RANAP-Message RUA-PROTOCOL-IES ::= { ID id-RANAP-Message					CRITICALITY 0	TYPE RANAP-Message					PRESENCE 2 }
+
+ConnectIEs RUA-PROTOCOL-IES ::= {
+	myType-CN-DomainIndicator|
+	myType-Context-ID|
+	myType-IntraDomainNasNodeSelector|
+	myType-Establishment-Cause|
+	myType-RANAP-Message,
+	...
+}
+
+myType-CSGMembershipStatus RUA-PROTOCOL-EXTENSION ::= { ID id-CSGMembershipStatus		CRITICALITY	 1		EXTENSION CSGMembershipStatus		PRESENCE 0	}
+ConnectExtensions RUA-PROTOCOL-EXTENSION ::= {
+	myType-CSGMembershipStatus,
+	...
+}
+
+
+-- **************************************************************
+--
+-- Direct Transfer
+--
+-- **************************************************************
+
+DirectTransfer ::= SEQUENCE {
+	protocolIEs			ProtocolIE-Container       { {DirectTransferIEs} },
+	protocolExtensions	ProtocolExtensionContainer { {DirectTransferExtensions} } 	OPTIONAL,
+	...
+}
+
+DirectTransferIEs RUA-PROTOCOL-IES ::= {
+	myType-CN-DomainIndicator|
+	myType-Context-ID|
+	myType-RANAP-Message,
+	...
+}
+
+DirectTransferExtensions RUA-PROTOCOL-EXTENSION ::= {
+	...
+}
+
+
+
+-- **************************************************************
+--
+-- Disconnect
+--
+-- **************************************************************
+
+Disconnect ::= SEQUENCE {
+	protocolIEs			ProtocolIE-Container       { {DisconnectIEs} },
+	protocolExtensions	ProtocolExtensionContainer { {DisconnectExtensions} } 	OPTIONAL,
+	...
+}
+myType-Cause RUA-PROTOCOL-IES ::= { ID id-Cause							CRITICALITY 0	TYPE Cause					PRESENCE 2 }
+DisconnectIEs RUA-PROTOCOL-IES ::= {
+	myType-CN-DomainIndicator|
+	myType-Context-ID|
+	myType-Cause|
+	myType-RANAP-Message,
+	-- RANAP message shall be included if Cause value is "normal"
+	...
+}
+
+DisconnectExtensions RUA-PROTOCOL-EXTENSION ::= {
+	...
+}
+
+-- **************************************************************
+--
+-- Connectionless Transfer
+--
+-- **************************************************************
+
+ConnectionlessTransfer ::= SEQUENCE {
+	protocolIEs			ProtocolIE-Container       { {ConnectionlessTransferIEs} },
+	protocolExtensions	ProtocolExtensionContainer { {ConnectionlessTransferExtensions} } 	OPTIONAL,
+	...
+}
+
+ConnectionlessTransferIEs RUA-PROTOCOL-IES ::= {
+	myType-RANAP-Message,
+	...
+}
+
+ConnectionlessTransferExtensions RUA-PROTOCOL-EXTENSION ::= {
+	...
+}
+
+
+
+
+-- **************************************************************
+--
+-- ERROR INDICATION
+--
+-- **************************************************************
+
+ErrorIndication ::= SEQUENCE {
+	protocolIEs			ProtocolIE-Container       { {ErrorIndicationIEs} },
+	protocolExtensions	ProtocolExtensionContainer { {ErrorIndicationExtensions} } 	OPTIONAL,
+	...
+}
+myType-CriticalityDiagnostics RUA-PROTOCOL-IES ::= { ID id-CriticalityDiagnostics		CRITICALITY 1	TYPE CriticalityDiagnostics		PRESENCE 0 }
+ErrorIndicationIEs RUA-PROTOCOL-IES ::= {
+	myType-Cause|
+	myType-CriticalityDiagnostics,
+	...
+}
+
+ErrorIndicationExtensions RUA-PROTOCOL-EXTENSION ::= {
+	...
+}
+
+-- **************************************************************
+--
+-- PRIVATE MESSAGE
+--
+-- **************************************************************
+
+PrivateMessage ::= SEQUENCE {
+	privateIEs		PrivateIE-Container  {{PrivateMessage-IEs}},
+	...
+}
+
+PrivateMessage-IEs RUA-PRIVATE-IES ::= {
+	...
+}
+
+
+END

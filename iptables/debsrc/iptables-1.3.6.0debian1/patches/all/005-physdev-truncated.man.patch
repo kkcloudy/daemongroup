@@ -1,0 +1,42 @@
+diff -urN old/iptables_profectio/extensions/libip6t_physdev.man new/iptables_profectio/iptables/extensions/libip6t_physdev.man
+--- old/iptables_profectio/extensions/libip6t_physdev.man	2006-01-30 03:41:00.000000000 -0500
++++ new/iptables_profectio/extensions/libip6t_physdev.man	2006-09-04 18:40:11.000000000 -0400
+@@ -12,7 +12,7 @@
+ .B PREROUTING
+ chains). If the interface name ends in a "+", then any
+ interface which begins with this name will match. If the packet didn't arrive
+-through a bridge device, this packet won't match this option, unless '!' is used.
++through a bridge device, this packet won't match this option, unless \&'!' is used.
+ .TP
+ .BR --physdev-out " [!] \fIname\fP"
+ Name of a bridge port via which a packet is going to be sent (for packets
+@@ -29,7 +29,7 @@
+ .B "filter OUTPUT"
+ chain. If the packet won't leave by a bridge device or it is yet unknown what
+ the output device will be, then the packet won't match this option, unless
+-'!' is used.
++\&'!' is used.
+ .TP
+ .RB "[!] " --physdev-is-in
+ Matches if the packet has entered through a bridge interface.
+diff -urN old/iptables_profectio/extensions/libipt_physdev.man new/iptables_profectio/iptables/extensions/libipt_physdev.man
+--- old/iptables_profectio/extensions/libipt_physdev.man	2006-01-30 03:41:00.000000000 -0500
++++ new/iptables_profectio/extensions/libipt_physdev.man	2006-09-04 18:39:55.000000000 -0400
+@@ -12,7 +12,7 @@
+ .B PREROUTING
+ chains). If the interface name ends in a "+", then any
+ interface which begins with this name will match. If the packet didn't arrive
+-through a bridge device, this packet won't match this option, unless '!' is used.
++through a bridge device, this packet won't match this option, unless \&'!' is used.
+ .TP
+ .BR --physdev-out " [!] \fIname\fP"
+ Name of a bridge port via which a packet is going to be sent (for packets
+@@ -29,7 +29,7 @@
+ .B "filter OUTPUT"
+ chain. If the packet won't leave by a bridge device or it is yet unknown what
+ the output device will be, then the packet won't match this option, unless
+-'!' is used.
++\&'!' is used.
+ .TP
+ .RB "[!] " --physdev-is-in
+ Matches if the packet has entered through a bridge interface.

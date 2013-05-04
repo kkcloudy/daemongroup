@@ -1,0 +1,92 @@
+#!/bin/sh
+#
+###########################################################################
+#
+#              Copyright (C) Autelan Technology
+#
+#This software file is owned and distributed by Autelan Technology 
+#
+############################################################################
+#THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
+#ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED 
+#WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE 
+#DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR 
+#ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+#(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; 
+#LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON 
+#ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT 
+#(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS 
+#SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+##############################################################################
+#
+# pdc_init
+#
+# CREATOR:
+# autelan.software.shaojunwu. team
+# 
+# DESCRIPTION: 
+#     Starts, stops pdc service
+#############################################################################
+
+
+
+PATH=/sbin:/bin:/opt/bin:/usr/sbin:/usr/bin
+DAEMON=/opt/bin/pdc
+
+
+NAME=pdc
+
+test -f $DAEMON || exit 0
+TYPE_LOCAL=1
+TYPE_REMOTE=0
+
+TYPE=$2
+INSID=$3
+
+if [ "x$TYPE" == "x" ];then
+	TYPE=$TYPE_LOCAL
+elif [ "x$TYPE" == "x0" ];then
+	TYPE=$TYPE_REMOTE
+elif [ "x$TYPE" == "x1" ];then
+	TYPE=$TYPE_LOCAL
+else
+	exit 2;
+fi
+
+if [ "x$INSID" == "x" ];then
+	INSID=0
+elif [ $INSID -gt 16 ];then
+	exit 2;
+fi
+
+DESC="pdc ${TYPE} ${INSID}"
+
+PIDFILE=/var/run/${NAME}_${TYPE}_${INSID}.pid
+
+
+case "$1" in
+  start)
+	echo -n "Starting $DESC: "
+	start-stop-daemon --start --quiet --pidfile ${PIDFILE} \
+		--exec $DAEMON ${TYPE} ${INSID}
+	echo "$NAME."
+	;;
+   restart)
+	$0 stop
+	sleep 1
+	$0 start
+	RETVAL=$?
+	;;
+  stop)
+	echo -n "Stopping $DESC: "
+	start-stop-daemon --oknodo --stop --quiet --signal USR2 --pidfile ${PIDFILE} \
+		--exec $DAEMON
+	;;
+  *)
+	N=$0
+	echo "Usage: $N {start|stop|restart|checkrunning}" >&2
+	exit 1
+	;;
+esac
+
+exit 0

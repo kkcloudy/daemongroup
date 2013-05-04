@@ -1,0 +1,39 @@
+# DHCP Snooping common Library
+#
+CC  = mips-linux-gnu-gcc
+CFLAGS = -g -Wall
+
+LDFLAGS = -g -shared -Wl,-soname,$(DHCPSNP_SHLIB_SONAME)
+
+INCLUDES += -I$(ACCAPI_DIR) 
+INCLUDES += -I/opt/mipslibs/usr/include
+
+DHCPSNP_LIB_OBJS = dhcp_snp_com.o dhcp_snp_log.o dhcp_snp_pkt.o dhcp_snp_options.o \
+									dhcp_snp_sqlite.o dhcp_snp_tbl.o dhcp_snp_dbus.o dhcp_snp_listener.o dhcp_snp_netlink.o 
+
+DHCPSNP_SHLIB_MAJOR = 0
+DHCPSNP_SHLIB_MINOR = 1
+
+
+DHCPSNP_SHLIB_LINKERNAME = libdhcpsnp.so
+DHCPSNP_SHLIB_SONAME = $(DHCPSNP_SHLIB_LINKERNAME).$(DHCPSNP_SHLIB_MAJOR)
+DHCPSNP_SHLIB_REALNAME = $(DHCPSNP_SHLIB_SONAME).$(DHCPSNP_SHLIB_MINOR)
+
+.PHONY: all
+all: $(DHCPSNP_SHLIB_REALNAME)
+
+$(DHCPSNP_SHLIB_REALNAME): $(DHCPSNP_LIB_OBJS)
+	rm -rf $(LIB_EXPORT_DIR)/$(DHCPSNP_SHLIB_REALNAME) $(LIB_EXPORT_DIR)/$(DHCPSNP_SHLIB_SONAME) $(LIB_EXPORT_DIR)/$(DHCPSNP_SHLIB_LINKERNAME)
+	$(CC) $(LDFLAGS) -o $@ $^
+	mv $(DHCPSNP_SHLIB_REALNAME) $(LIB_EXPORT_DIR)/
+	ln -s $(DHCPSNP_SHLIB_REALNAME)  $(LIB_EXPORT_DIR)/$(DHCPSNP_SHLIB_SONAME)
+	ln -s $(DHCPSNP_SHLIB_SONAME)  $(LIB_EXPORT_DIR)/$(DHCPSNP_SHLIB_LINKERNAME)
+
+%.o: %.c
+	$(RM) $@
+	$(CC) -c $(CFLAGS) $(DBUS_INCLUDE) $(INCLUDES) -o $*.o $<
+
+.PHONY: clean
+clean:
+	rm -rf *~ $(LIB_EXPORT_DIR)/$(DHCPSNP_SHLIB_REALNAME) $(LIB_EXPORT_DIR)/$(DHCPSNP_SHLIB_SONAME) $(LIB_EXPORT_DIR)/$(DHCPSNP_SHLIB_LINKERNAME) $(DHCPSNP_LIB_OBJS)
+

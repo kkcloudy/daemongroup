@@ -1,0 +1,10 @@
+#!/bin/sh
+
+for i in $@; do
+  echo "$(basename $0): $i"
+  perl -pi -e '/^\s*#/ or s@fB-@fB\\-@g' $i
+  perl -pi -e '/^\s*#/ or s@\[-@[\\-@g' $i
+  perl -pi -e '/^\s*#/ or s@--@-\\-@g' $i
+  perl -pi -e '/^\s*#/ or s@ -@ \\-@g' $i
+  perl -pi -e '/^\s*#/ or s@"-@"\\-@g' $i
+done

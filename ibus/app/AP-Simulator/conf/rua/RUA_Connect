@@ -1,0 +1,35 @@
+	--PROCEDURE [	RUA_Connect,	RUA_DirectTransfer,	RUA_Disconnect,	RUA_ConnectionlessTransfer,	RUA_Error_Indication,	RUA_PrivateMessage]
+PROCEDURE : RUA_Connect
+
+--CRITICALITY [reject=0,ignore=1,notify=2]
+RUA_Connect_PDU :
+{
+--CN_Domain_ID[CS_domain=0, PS_domain=1]
+  CN_Domain_ID{CRITICALITY:1, VALUE:1},
+  
+  Context_ID{CRITICALITY:1, VALUE:111},
+
+--version present[R99=1,later=2]
+--cn_type present[gsm=1,ansi=2]
+--routingbase present[local_(P)TMSI=1,(P)TMSI_same_PLMN=2,(P)TMSI_different_PLMN=3,IMSI_response_paging=4,iMSI_cause_UEinitiatedEvent=5,IMEI=6,spare1=7,spare2=8]
+  //Intra_Domain_NAS_Node_Selector{CRITICALITY:1, VALUE:struct{version=choice{present=2,value=11}}},
+  //Intra_Domain_NAS_Node_Selector{CRITICALITY:1, VALUE:struct{version=choice{present=1,value=struct{cn_type={choice{present=2,value=11}}}}}},
+  //Intra_Domain_NAS_Node_Selector{CRITICALITY:1, VALUE:struct{version=choice{present=1,value=struct{cn_type={choice{present=1,value=struct{dummy=0,routingbase=choice{present=1,value=11}}}}}}}},
+  //Intra_Domain_NAS_Node_Selector{CRITICALITY:1, VALUE:struct{version=choice{present=1,value=struct{cn_type={choice{present=1,value=struct{dummy=0,routingbase=choice{present=2,value=11}}}}}}}},
+  //Intra_Domain_NAS_Node_Selector{CRITICALITY:1, VALUE:struct{version=choice{present=1,value=struct{cn_type={choice{present=1,value=struct{dummy=0,routingbase=choice{present=3,value=11}}}}}}}},
+  //Intra_Domain_NAS_Node_Selector{CRITICALITY:1, VALUE:struct{version=choice{present=1,value=struct{cn_type={choice{present=1,value=struct{dummy=0,routingbase=choice{present=4,value=11}}}}}}}},
+  //Intra_Domain_NAS_Node_Selector{CRITICALITY:1, VALUE:struct{version=choice{present=1,value=struct{cn_type={choice{present=1,value=struct{dummy=0,routingbase=choice{present=5,value=11}}}}}}}},
+  //Intra_Domain_NAS_Node_Selector{CRITICALITY:1, VALUE:struct{version=choice{present=1,value=struct{cn_type={choice{present=1,value=struct{dummy=0,routingbase=choice{present=6,value=11}}}}}}}},
+  //Intra_Domain_NAS_Node_Selector{CRITICALITY:1, VALUE:struct{version=choice{present=1,value=struct{cn_type={choice{present=1,value=struct{dummy=0,routingbase=choice{present=7,value=11}}}}}}}},
+  //Intra_Domain_NAS_Node_Selector{CRITICALITY:1, VALUE:struct{version=choice{present=1,value=struct{cn_type={choice{present=1,value=struct{dummy=0,routingbase=choice{present=8,value=11}}}}}}}},
+
+--Establishment_Cause[emergency_call=0,Normal=1]
+  Establishment_Cause{CRITICALITY:1, VALUE:1},
+  
+  RANAP_Message{CRITICALITY:1, VALUE:20014003000000},
+  
+  //CSG_Membership_Status{CRITICALITY:1, VALUE:},
+}
+
+
+

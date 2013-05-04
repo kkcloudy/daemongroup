@@ -1,0 +1,5 @@
+debian/build/iptables_profectio/*.8 usr/share/man/man8
+debian/build/iptables_profectio/*-save sbin
+debian/build/iptables_profectio/*-restore sbin
+debian/build/docs/NAT* usr/share/doc/iptables/html
+debian/build/docs/packet-filtering* usr/share/doc/iptables/html

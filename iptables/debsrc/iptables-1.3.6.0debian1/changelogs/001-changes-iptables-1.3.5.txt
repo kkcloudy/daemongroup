@@ -1,0 +1,70 @@
+iptables v1.3.5 Changelog
+======================================================================
+This version requires kernel >= 2.4.0
+This version recommends kernel >= 2.4.18
+
+Bugs fixed from 1.3.4:
+
+- Fix conntrack --ctproto option in iptables-save
+	[ Phil Oester ]
+
+- Fix string match '--from' option in iptables-save
+	[ Michael Rash ]
+
+- Fix option parser of ttl match
+	[ Patrick McHardy ]
+
+- Get rid of gcc-4 warnings
+	[ Patrick McHardy ]
+
+- Fix spelling of 'address' in DNAT/SNAT manpage section
+	[ MJ Anthony ]
+
+- Fix 'tcp-rst' parsing in REJECT target
+	[ Torsten Hilbrich ]
+
+- Fix probing for supported revisions
+	[ Jones Desougi ]
+
+- Fix compilation of iptables on [old] systems that don't have IPT_F_GOTO
+	[ Harald Welte ]
+
+- Only set revisions on real targets, not on jumps
+	[ Pablo Neira ]
+
+- Fix memory leak in TC_COMMIT() of libiptc
+	[ Markus Sundberg ]
+
+- Correctly propagate errors of setsockopt to calling function
+	[ Harald Welte ]
+
+- Fix connbytes match iptables-save
+	[ Unknown ]
+
+- Fix sctp match compilation against recent kernel headers
+	[ Harald Welte ]
+
+- Fix conntrack match compilation against 2.4.0 kernel headers
+	[ Harald Welte ]
+
+Changes from 1.3.4:
+
+- Add support for ip6tables connmark match and target 
+	[ Harald Welte ]
+
+- Add support for ip6tables state match
+	[ Harald Welte ]
+
+- Add support for new policy ip[6]tables match
+	[ Patrick McHardy ]
+
+- Major manpage update
+	[ Yasuyuki Kozakai ]
+
+- Remove ippool support, it has been deprecated by ipset long time ago
+	[ Harald Welte ]
+
+Please note: Since version 1.2.7a, patch-o-matic is now no longer part of
+iptables but rather distributed as a seperate package
+(ftp://ftp.netfilter.org/pub/patch-o-matic-ng/snapshot)
+

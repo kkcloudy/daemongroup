@@ -1,0 +1,44 @@
+iptables v1.3.4 Changelog
+======================================================================
+This version requires kernel >= 2.4.0
+This version recommends kernel >= 2.4.18
+
+Bugs fixed from 1.3.3:
+
+- Fix parsing of NFQUEUE queue numbers
+	[ Eric Leblond ]
+
+- Add documentation of --queue-num parameter to NFQUEUE manpage
+	[ Eric Leblond ]
+
+- Fix 'hash-init' parameter of CLUSTERIP target
+	[ KOVACS Krisztian ]
+
+- Fix CONNMARK match and target: Marks are now always 32bit
+	[ Deti Fliegl ]
+
+- Print error message when multiple "--to" DNAT/SNAT args are used
+  with kernel >= 2.6.10
+  	[ Phil Oester ]
+
+- Fix compilation of connbytes match with 2.6.14 kernel
+	[ Harald Welte ]
+
+- Fix address inversion of conntrack match
+	[ Tom Eastep ]
+
+- Fix sorting of chain names 
+	[ Robert de Barth ]
+
+Changes from 1.3.2:
+
+- Add support for DCCP port and type matching
+	[ Harald Welte ]
+
+- Add support for new in-kernel string match
+	[ Pablo Neira ]
+
+Please note: Since version 1.2.7a, patch-o-matic is now no longer part of
+iptables but rather distributed as a seperate package
+(ftp://ftp.netfilter.org/pub/patch-o-matic-ng/snapshot)
+

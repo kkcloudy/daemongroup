@@ -1,0 +1,20 @@
+#! /bin/sh /usr/share/dpatch/dpatch-run
+## 50_vtysh__vtysh.conf.sample.dpatch by  <ch@debian.org>
+##
+## All lines beginning with `## DP:' are a description of the patch.
+## DP: vtysh__vtysh.conf.sample
+
+@DPATCH@
+
+--- old/vtysh/vtysh.conf.sample.orig	2004-10-30 23:07:40.000000000 +0200
++++ new/vtysh/vtysh.conf.sample	2004-10-30 23:08:24.000000000 +0200
+@@ -1,7 +1,7 @@
+ !
+ ! Sample configuration file for vtysh.
+ !
+-!service integrated-vtysh-config
++service integrated-vtysh-config
+ !hostname quagga-router
+-!username root nopassword
++username root nopassword
+ !

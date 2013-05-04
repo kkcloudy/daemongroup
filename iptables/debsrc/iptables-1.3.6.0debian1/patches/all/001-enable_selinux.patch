@@ -1,0 +1,11 @@
+--- old/iptables_profectio/Makefile	2006-10-22 22:48:15.000000000 -0400
++++ new/iptables_profectio/Makefile	2006-10-22 22:47:43.000000000 -0400
+@@ -33,7 +33,7 @@
+ 
+ # Enable linking to libselinux via enviornment 'DO_SELINUX=1'
+ ifndef DO_SELINUX
+-DO_SELINUX=0
++DO_SELINUX=1
+ endif
+ 
+ COPT_FLAGS:=-O2

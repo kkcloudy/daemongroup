@@ -1,0 +1,264 @@
+dnl Process this file with autoconf to produce a configure script.
+AC_INIT(src/main.c)
+
+dnl ***************************************************************************
+dnl definitions
+
+PACKAGE="syslog-ng"
+VERSION="`cat $srcdir/VERSION`"
+
+dnl ***************************************************************************
+dnl dependencies
+
+GLIB_VERSION="2.2"
+EVTLOG_VERSION="0.2"
+
+dnl ***************************************************************************
+dnl Initial setup
+
+if test -r $srcdir/dist.conf; then
+        # read defaults, dist.conf does not change
+        # values for parameters that are already set
+        source $srcdir/dist.conf
+fi
+
+if test "`uname -s`" = "Linux";then
+        CURRDATE=`date -R`
+else
+        CURRDATE=`date +"%a, %d %b %Y %H:%M:%S %Z"`
+fi
+
+
+
+AM_INIT_AUTOMAKE($PACKAGE, $VERSION)
+if test -n "$SNAPSHOT_VERSION"; then
+	VERSION=$VERSION+$SNAPSHOT_VERSION
+fi
+
+if test "x$prefix" = "xNONE"; then
+        prefix=$ac_default_prefix
+fi
+	
+AC_ARG_ENABLE(debug, 
+              [  --enable-debug      Enable debugging code.])
+
+AC_ARG_ENABLE(memtrace, 
+              [  --enable-memtrace   Enable alternative leak debugging code.])
+              
+dnl AC_ARG_ENABLE(ssl,
+dnl              [  --enable-ssl        Enable SSL support.])
+
+AC_ARG_ENABLE(dynamic-linking,
+              [  --enable-dynamic-linking        Link glib and eventlog dynamically instead of statically.])
+
+AC_ARG_ENABLE(static-linking,
+              [  --enable-static-linking         Link everything statically.])
+
+AC_ARG_ENABLE(ipv6,
+              [  --enable-ipv6           Enable support for IPv6.],,enable_ipv6="yes")
+
+AM_CONFIG_HEADER(config.h)
+
+dnl Checks for programs.
+AC_PROG_CC
+AM_PROG_CC_STDC
+AC_PROG_YACC
+AM_PROG_LEX
+AC_PROG_MAKE_SET
+AC_PROG_RANLIB
+
+AC_MSG_CHECKING(how to enable static linking for certain libraries)
+ldversion=`ld -V 2>&1 | head -1`
+ostype=`uname -s`
+if echo $ldversion | egrep "GNU|Solaris" > /dev/null; then
+        LD_START_STATIC="-Wl,-Bstatic"
+        LD_END_STATIC="-Wl,-Bdynamic"
+        AC_MSG_RESULT(GNU or Solaris)
+elif test $ostype = "HP-UX" > /dev/null; then
+        LD_START_STATIC="-a archive"
+        LD_END_STATIC="-a shared_archive"
+        AC_MSG_RESULT(HP-UX)
+elif test "$ostype" = "AIX"; then
+        LD_START_STATIC="-Wl,-bstatic"
+        LD_END_STATIC="-Wl,-bdynamic"
+        AC_MSG_RESULT(AIX)
+else
+        LD_START_STATIC=""
+        LD_END_STATIC=""
+        AC_MSG_RESULT([no clues, linking everything dynamically, please send appropriate ld arguments to syslog-ng@lists.balabit.hu])
+fi
+
+dnl Checks for libraries.
+
+dnl Checks for header files.
+AC_HEADER_STDC
+AC_CHECK_HEADER(dmalloc.h)
+AC_CHECK_HEADERS(strings.h openssl/ssl.h getopt.h stropts.h sys/strlog.h door.h)
+
+dnl Checks for typedefs, structures, and compiler characteristics.
+AC_STRUCT_TM
+
+AC_CHECK_MEMBER(struct tm.tm_gmtoff,AC_DEFINE(HAVE_STRUCT_TM_TM_GMTOFF,1,[Whether you have tm_gmtoff field in struct tm]),,[
+#if TM_IN_SYS_TIME
+#include <sys/time.h>
+#else
+#include <time.h>
+#endif])
+
+AC_CACHE_CHECK(for I_CONSLOG, blb_cv_c_i_conslog,
+  [AC_EGREP_CPP(I_CONSLOG,
+[
+#include <sys/strlog.h>
+I_CONSLOG
+],
+  blb_cv_c_i_conslog=no, blb_cv_c_i_conslog=yes)])
+
+old_CPPFLAGS=$CPPFLAGS
+CPPFLAGS=-D_GNU_SOURCE
+AC_CACHE_CHECK(for O_LARGEFILE, blb_cv_c_o_largefile,
+  [AC_EGREP_CPP(O_LARGEFILE,
+[
+#include <fcntl.h>
+O_LARGEFILE
+],
+  blb_cv_c_o_largefile=no, blb_cv_c_o_largefile=yes)])
+CPPFLAGS=$old_CPPFLAGS
+
+if test "x$blb_cv_c_o_largefile" = "xyes"; then
+        AC_DEFINE(HAVE_O_LARGEFILE, 1, [O_LARGEFILE is present])
+fi
+
+dnl Checks for library functions.
+AC_CHECK_LIB(door, door_create)
+AC_CHECK_LIB(socket, socket)
+AC_CHECK_LIB(rt, nanosleep)
+AC_CHECK_LIB(nsl, gethostbyname)
+AC_CHECK_LIB(regex, regexec)
+
+AC_CHECK_FUNCS(strdup strtol inet_aton inet_ntoa getopt_long getaddrinfo)
+
+dnl ***************************************************************************
+dnl Some more checks based on the detected settings above
+
+if test "x$ac_cv_lib_door_door_create" = "xyes"; then
+        AC_CHECK_HEADERS(pthread.h)
+        AC_CHECK_LIB(pthread, pthread_create)
+fi
+
+if test "x$enable_memtrace" = "xyes" ; then
+	AC_CHECK_LIB(dl, dlsym)
+fi
+
+
+dnl ***************************************************************************
+dnl export values as C defines
+
+AC_MSG_CHECKING(whether to enable Sun STREAMS support)
+if test "x$ac_cv_header_stropts_h" = "xyes" -a \
+        "x$ac_cv_header_sys_strlog_h" = "xyes" -a \
+        "x$enable_sun_streams" != "xno" -a \
+        "x$blb_cv_c_i_conslog" != "xno" -o \
+        "x$enable_sun_streams" = "xyes"; then
+        enable_sun_streams=yes
+        AC_MSG_RESULT(yes)
+else
+        AC_MSG_RESULT(no)
+fi
+
+AC_MSG_CHECKING(whether to enable Sun door support)
+if test "x$enable_sun_streams" = "xyes" -a "x$ac_cv_header_door_h" = "xyes" -a "x$ac_cv_header_pthread_h" = "xyes" -a "x$enable_sun_door" != "xno" -o "x$enable_sun_door" = "xyes"; then
+        enable_sun_door=yes
+        AC_MSG_RESULT(yes)
+else
+        enable_sun_door=no
+        AC_MSG_RESULT(no)
+fi
+
+enable_value()
+{
+        if test "x$1" = "xyes" ; then
+                echo 1
+        else
+                echo 0
+        fi
+}
+
+AC_DEFINE_UNQUOTED(ENABLE_SUN_STREAMS, `enable_value $enable_sun_streams`, [have STREAMS support])
+AC_DEFINE_UNQUOTED(ENABLE_SUN_DOOR, `enable_value $enable_sun_door`, [have Solaris door support])
+AC_DEFINE_UNQUOTED(ENABLE_DEBUG, `enable_value $enable_debug`, [Enable debugging])
+AC_DEFINE_UNQUOTED(ENABLE_MEM_TRACE, `enable_value $enable_memtrace`, [Enable memtrace])
+AC_DEFINE_UNQUOTED(ENABLE_SSL, `enable_value $enable_ssl`, [Enable SSL support])
+AC_DEFINE_UNQUOTED(ENABLE_IPV6, `enable_value $enable_ipv6`, [Enable IPv6 support])
+
+PKG_CHECK_MODULES(GLIB, glib-2.0,,)
+PKG_CHECK_MODULES(EVTLOG, eventlog,,)
+
+old_LIBS=$LIBS
+LIBS="$LD_START_STATIC $GLIB_LIBS $LD_END_STATIC"
+
+AC_CACHE_CHECK(for static GLib libraries,
+               blb_cv_static_glib,
+[AC_TRY_LINK([], [
+extern void g_hash_table_new(void);
+
+int main()
+{
+  void (*fn)(void) = g_hash_table_new;
+
+  return (int) fn;
+}
+
+],
+blb_cv_static_glib=yes,
+blb_cv_static_glib=no)])
+LIBS=$old_LIBS
+
+if test "x$enable_dynamic_linking" = "xyes" -a "x$enable_static_linking" = "xyes"; then
+	AC_MSG_ERROR([You cannot specify dynamic and static linking at the same time.])
+fi
+
+if test "x$enable_dynamic_linking" != "xyes" -a "x$blb_cv_static_glib" = "xno"; then
+	AC_MSG_ERROR([static GLib libraries not found (a file named libglib-2.0.a), either link GLib dynamically using the --enable-dynamic-linking or install a static GLib])
+fi
+
+CFLAGS="${CFLAGS} -Wall -g"
+if test "x$enable_debug" = "xyes"; then
+	CFLAGS="-Wall -g"
+fi
+
+DEPS_CPPFLAGS="$CPPFLAGS $GLIB_CFLAGS $EVTLOG_CFLAGS"
+CPPFLAGS="$DEPS_CPPFLAGS -D_GNU_SOURCE"
+
+if test "x$enable_dynamic_linking" = "xyes"; then
+	DEPS_LIBS="$LIBS $LEXLIB $GLIB_LIBS $EVTLOG_LIBS"
+elif test "x$enable_static_linking" = "xyes"; then
+	DEPS_LIBS="-static $LIBS $LEXLIB $GLIB_LIBS $EVTLOG_LIBS"	
+else
+	DEPS_LIBS="$LIBS $LD_START_STATIC $LEXLIB $GLIB_LIBS $EVTLOG_LIBS $LD_END_STATIC"
+fi
+LIBS="$DEPS_LIBS"
+YFLAGS="-d"
+
+AC_DEFINE_UNQUOTED(PATH_SYSCONFDIR, "`eval echo $sysconfdir`", [sysconfdir])
+
+AC_SUBST(DEPS_CPPFLAGS)
+AC_SUBST(DEPS_LIBS)
+AC_SUBST(YFLAGS)
+
+AC_SUBST(CURRDATE)
+AC_SUBST(RELEASE_TAG)
+AC_SUBST(SNAPSHOT_VERSION)
+AC_SUBST(SOURCE_REVISION)
+
+AC_OUTPUT(dist.conf
+          Makefile 
+	  syslog-ng.spec.bb
+	  src/Makefile 
+	  doc/Makefile
+          doc/docvars.xml
+	  contrib/Makefile
+	  tests/Makefile 
+	  solbuild/Makefile 
+          tests/unit/Makefile
+          tests/functional/Makefile
+          )

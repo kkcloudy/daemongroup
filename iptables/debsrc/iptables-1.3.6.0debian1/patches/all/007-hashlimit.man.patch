@@ -1,0 +1,13 @@
+--- old/iptables_profectio/extensions/libipt_hashlimit.man	2006-10-22 22:04:12.000000000 -0400
++++ new/iptables_profectio/extensions/libipt_hashlimit.man	2006-10-22 22:17:31.000000000 -0400
+@@ -16,8 +16,8 @@
+ .BI "--hashlimit-burst " "num"
+ Burst value, just like limit match
+ .TP
+-.BI "--hashlimit-mode " "destip | destip-destport"
+-Limit per IP or per port
++.BI "--hashlimit-mode " "dstip | dstport | srcip | srcport"
++Limit per IP or per ip+port
+ .TP
+ .BI "--hashlimit-name " "foo"
+ The name for the /proc/net/ipt_hashlimit/foo entry

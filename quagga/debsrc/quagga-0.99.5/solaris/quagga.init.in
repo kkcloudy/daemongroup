@@ -1,0 +1,124 @@
+#!/sbin/sh
+#
+# Copyright 2001,2003 Sun Microsystems, Inc. All rights reserved.
+# Use is subject to license terms.
+#
+# $Id: quagga.init.in,v 1.1.1.1 2007/12/14 05:02:39 chenbin Exp $
+#
+# Starts/stops the given daemon
+
+SMFINCLUDE=/lib/svc/share/smf_include.sh
+DAEMON_PATH=@sbindir@
+
+quagga_is_globalzone () {
+	if [ "${QUAGGA_INIT_ZONENAME:=`/sbin/zonename`}" != "global" ]; then
+		return 1
+	else
+		return 0
+	fi
+}
+
+# Include smf functions, if available. If not, define smf_present to indicate
+# there is no SMF. Should allow this script to work pre-S10.
+if [ -f "$SMFINCLUDE" ] ; then
+	. "$SMFINCLUDE";
+else
+	# pre-SMF system, fake up any functions and exit codes
+	# which SMFINCLUDE usually provides.
+	smf_present () {
+		return 1
+	}
+	SMF_EXIT_OK=0;
+	SMF_EXIT_ERR_CONFIG=96;
+	SMF_EXIT_ERR_FATAL=95;
+fi
+	
+# if there's no SMF, set some default DAEMON_ARGS
+smf_present || DAEMON_ARGS=""
+
+usage () {
+	if smf_present ; then
+		echo "Usage: $0 <daemon> <daemon arguments>";
+	else
+		echo "Usage: $0 <stop|start> <daemon> <daemon arguments>";
+	fi
+	echo "The --pid_file argument is implied";
+	echo "This help message: $0 <help|usage>";
+}
+
+# parse arguments, different according to SMF or not.
+case $1 in
+	'help' | 'usage')
+		usage
+		exit SMF_EXIT_OK
+		;;
+esac
+
+if smf_present ; then
+	QUAGGA_METHOD="start"
+else
+	QUAGGA_METHOD="$1"
+	shift;
+fi
+
+DAEMON="$1"
+shift
+DAEMON_ARGS="$@"
+
+# daemon path must be given
+if [ -z "$DAEMON_PATH/$DAEMON" ]; then
+	usage
+	exit $SMF_EXIT_ERR_FATAL
+fi
+
+# only bgpd is suitable for running in a non-global zone, at this
+# time.
+case "${DAEMON}" in
+	zebra)
+		quagga_is_globalzone || exit $SMF_EXIT_OK
+	;;
+	bgpd)
+	;;
+	ospfd | ospf6d | ripd | ripngd )
+		quagga_is_globalzone || exit $SMF_EXIT_OK
+	;;
+	*)
+		usage
+		exit $SMF_EXIT_ERR_CONFIG;
+	;;
+esac
+
+# we need @quagga_statedir@ to exist, it probably is on tmpfs.
+if [ ! -d @quagga_statedir@ ] ; then
+	mkdir -p @quagga_statedir@
+	chown @enable_user@:@enable_group@ @quagga_statedir@
+	chmod 751 @quagga_statedir@
+fi
+
+PIDFILE="@quagga_statedir@/${DAEMON}.pid"
+
+start () {
+	$DAEMON_PATH/$DAEMON $DAEMON_ARGS --pid_file ${PIDFILE} &
+}
+
+stop () {
+	if [ -f "${PIDFILE}" ]; then
+		/usr/bin/kill -TERM `/usr/bin/cat "${PIDFILE}"`
+	fi
+}
+
+case "$QUAGGA_METHOD" in
+'start')
+	start
+	;;
+'stop')
+	stop
+	;;
+
+*)
+	usage
+	exit SMF_EXIT_ERR_FATAL
+	;;
+esac	
+
+exit $SMF_EXIT_OK;

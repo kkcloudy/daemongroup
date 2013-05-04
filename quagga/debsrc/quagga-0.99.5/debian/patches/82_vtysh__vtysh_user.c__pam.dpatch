@@ -1,0 +1,15 @@
+#! /bin/sh /usr/share/dpatch/dpatch-run
+## 99-unnamed.dpatch by  <ch@debian.org>
+##
+## All lines beginning with `## DP:' are a description of the patch.
+## DP: Adds explanation why vtysh does not work if PAM fails.
+
+@DPATCH@
+
+--- old/vtysh/vtysh_user.c.orig	2006-11-03 01:53:58.000000000 +0100
++++ new/vtysh/vtysh_user.c	2006-11-03 01:59:02.000000000 +0100
+@@ -60,2 +60,4 @@ vtysh_pam (const char *user)
+     ret = pam_authenticate (pamh, 0);
++  if (ret != PAM_SUCCESS)
++    printf("Not authenticated. Check /etc/pam.d/quagga.\n");
+   /* printf ("ret %d\n", ret); */

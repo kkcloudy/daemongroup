@@ -1,0 +1,21 @@
+#! /bin/sh /usr/share/dpatch/dpatch-run
+## 10_doc__Makefiles__makeinfo-force.dpatch by  <ch@debian.org>
+##
+## All lines beginning with `## DP:' are a description of the patch.
+## DP: makeinfo
+
+@DPATCH@
+
+#
+# This patch is just for the Woody Backport.
+#
+--- /tmp/Makefile.in	2005-01-05 22:37:02.000000000 +0100
++++ new/doc/Makefile.in	2005-01-05 23:03:33.000000000 +0100
+@@ -191,6 +191,7 @@
+ sysconfdir = @sysconfdir@
+ target_alias = @target_alias@
+ EPSTOPDF = epstopdf
++MAKEINFOFLAGS = --force
+ 
+ # rather twisted logic because we have to build PDFs of the EPS figures
+ # and yet build one PDF, quagga.pdf, from texi source. Which means we cant

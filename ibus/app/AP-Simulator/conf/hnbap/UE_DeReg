@@ -1,0 +1,41 @@
+//PROCEDURE [HNB_Register,HNB_De_Register,UE_Register,UE_De_Register,Error_Indication,Private_Message,CSG_MemberShip_Update]
+PROCEDURE : UE_De_Register
+
+//CRITICALITY [reject=0,ignore=1,notify=2]
+UE_De_Register_PDU :
+{
+  Context_ID {CRITICALITY:1, VALUE:111},
+  
+//CHOICE_CAUSE [nothing = 0, RadioNetwork = 1, Transport = 2, Protocol = 3, Misc = 4]
+//Cause RadioNetwork_overload	= 0,
+//Cause RadioNetwork_unauthorised_Location	= 1,
+//Cause RadioNetwork_unauthorised_HNB	= 2,
+//Cause RadioNetwork_hNB_parameter_mismatch	= 3,
+//Cause RadioNetwork_invalid_UE_identity	= 4,
+//Cause RadioNetwork_uE_not_allowed_on_this_HNB	= 5,
+//Cause RadioNetwork_uE_unauthorised	= 6,
+//Cause RadioNetwork_connection_with_UE_lost	= 7,
+//Cause RadioNetwork_ue_RRC_telease	= 8,
+//Cause RadioNetwork_hNB_not_registered	= 9,
+//Cause RadioNetwork_unspecified	= 10,
+//Cause RadioNetwork_normal	= 11,
+//Cause RadioNetwork_uE_relocated	= 12,
+//Cause RadioNetwork_ue_registered_in_another_HNB	= 13
+
+//Cause Transport_TransportResourceUnavailable	= 0,
+//Cause Transport_Unspecified	= 1
+
+//Cause Protocol_TransferSyntaxError	= 0,
+//Cause Protocol_AbstractSyntaxErrorReject	= 1,
+//Cause Protocol_AbstractSyntaxErrorIgnoreAndNotify	= 2,
+//Cause Protocol_MessageNotCompatibleWithReceiverState	= 3,
+//Cause Protocol_SemanticError	= 4,
+//Cause Protocol_Unspecified	= 5,
+//Cause Protocol_AbstractSyntaxErrorFalselyConstructedMessage	= 6
+
+//Cause Misc_ProcessingOverload	= 0,
+//Cause Misc_HardwareFailure	= 1,
+//Cause Misc_O&M_Intervention	= 2,
+//Cause Misc_Unspecified	= 3
+  Cause {CRITICALITY:1, VALUE:CHOICE{present=1,value=1}}
+}

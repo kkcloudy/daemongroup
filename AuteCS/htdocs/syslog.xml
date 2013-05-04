@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root>
+  <options>chain_hostnames(0); time_reopen(10); time_reap(360); log_fifo_size(2048); create_dirs(yes); group(adm); perm(0640); dir_perm(0755); use_dns(no); stats_freq(0);</options> 
+<source>
+  <value>s_all</value> 
+  <content>unix-stream("/dev/log"); file("/proc/kmsg" log_prefix("kernel: "));</content> 
+  </source>
+<des attribute="sysip">
+  <value>df_sysip</value> 
+  <content/>
+  </des>
+<des attribute="sys">
+  <value>df_system</value> 
+  <content>file( "/var/log/system.log" template(":$MONTH_STR $DAY $HOUR:$MIN:$SEC:$USEC $YEAR $HOST_NAME $PROGRAM/$LEVEL_NUM/ $MSGONLY\n") );</content> 
+  </des>
+<des>
+  <value>df_service</value> 
+  <content>file( "/var/log/syslogservice.log" template(":$MONTH_STR $DAY $HOUR:$MIN:$SEC:$USEC $YEAR $HOST_NAME $PROGRAM/$LEVEL_NUM/ $MSGONLY\n") );</content> 
+  </des>
+  <des>
+  <value>df_at_least_info</value> 
+  <content>file( "/var/log/systemlog/$R_YEAR$R_MONTH$R_DAY/inform.log" template(":$MONTH_STR $DAY $HOUR:$MIN:$SEC:$USEC $YEAR $HOST_NAME $PROGRAM/$LEVEL_NUM/ $MSGONLY\n") );</content> 
+  </des>
+  <des>
+  <value>df_at_least_notice</value> 
+  <content>file( "/var/log/systemlog/$R_YEAR$R_MONTH$R_DAY/notice.log" template(":$MONTH_STR $DAY $HOUR:$MIN:$SEC:$USEC $YEAR $HOST_NAME $PROGRAM/$LEVEL_NUM/ $MSGONLY\n") );</content> 
+  </des>
+  <des>
+  <value>df_at_least_warn</value> 
+  <content>file( "/var/log/systemlog/$R_YEAR$R_MONTH$R_DAY/warning.log" template(":$MONTH_STR $DAY $HOUR:$MIN:$SEC:$USEC $YEAR $HOST_NAME $PROGRAM/$LEVEL_NUM/ $MSGONLY\n") );</content> 
+  </des>
+  <des>
+  <value>df_at_least_crit</value> 
+  <content>file( "/var/log/systemlog/$R_YEAR$R_MONTH$R_DAY/crit.log" template(":$MONTH_STR $DAY $HOUR:$MIN:$SEC:$USEC $YEAR $HOST_NAME $PROGRAM/$LEVEL_NUM/ $MSGONLY\n") );</content> 
+  </des>
+  <des>
+  <value>df_at_least_err</value> 
+  <content>file( "/var/log/systemlog/$R_YEAR$R_MONTH$R_DAY/err.log" template(":$MONTH_STR $DAY $HOUR:$MIN:$SEC:$USEC $YEAR $HOST_NAME $PROGRAM/$LEVEL_NUM/ $MSGONLY\n") );</content> 
+  </des>
+   <des>
+  <value>df_debug</value> 
+  <content>file( "/var/log/systemlog/$R_YEAR$R_MONTH$R_DAY/debug.log" template(":$MONTH_STR $DAY $HOUR:$MIN:$SEC:$USEC $YEAR $HOST_NAME $PROGRAM/$LEVEL_NUM/ $MSGONLY\n") );</content> 
+  </des>
+  <des>
+  <value>df_cli</value> 
+  <content>file( "/var/log/cli.log" template(":$MONTH_STR $DAY $HOUR:$MIN:$SEC:$USEC $YEAR $HOST_NAME $PROGRAM/$LEVEL_NUM/ $MSGONLY\n") );</content> 
+  </des> 
+  <des>
+  <value>df_trap</value> 
+  <content>file( "/var/log/trap.log" template("$DATE $PRIORITY $MSG\n") );</content> 
+  </des> 
+<filter attribute="auth">
+  <value>f_auth</value> 
+  <views>0</views>
+  <content>facility(auth, authpriv);</content> 
+  <infos>auth</infos>
+  </filter>
+<filter attribute="daemon">
+  <value>f_daemon</value>
+  <views>0</views>
+  <content>facility(daemon);</content>
+  <infos>daemon</infos>
+  </filter>
+<filter attribute="kern">
+  <value>f_kern</value> 
+  <views>0</views>
+  <content>facility(kern);</content> 
+  <infos>kern</infos>
+  </filter>
+<filter>
+<value>f_at_least_info</value>
+<views>1</views>
+<content>level(info..emerg) and facility(local7);</content>
+<infos>inform</infos>
+</filter>
+
+<filter>
+<value>f_at_least_notice</value>
+<views>1</views>
+<content>level(notice..emerg) and facility(local7);</content>
+<infos>notice</infos>
+</filter>
+
+<filter>
+<value>f_at_least_warn</value>
+<views>1</views>
+<content>level(warn..emerg) and facility(local7);</content>
+<infos>warning</infos>
+</filter>
+
+<filter>
+<value>f_at_least_err</value>
+<views>1</views>
+<content>level(err..emerg) and facility(local7);</content>
+<infos>err</infos>
+</filter>
+
+<filter>
+<value>f_at_least_crit</value>
+<views>1</views>
+<content>level(crit..emerg) and facility(local7);</content>
+<infos>crit</infos>
+</filter>
+
+<filter>
+<value>f_debug</value>
+<views>1</views>
+<content>level(debug..emerg) and facility(local7);</content>
+<infos>debug</infos>
+</filter>
+<filter>
+<value>f_cli</value> 
+<views>0</views> 
+<content>facility(local5);</content> 
+<infos>clilog</infos> 
+</filter>
+<filter>
+<value>f_loc3</value> 
+<views>0</views> 
+<content>facility(local3);</content> 
+<infos>loc3log</infos> 
+</filter>
+<filter>
+  <value>f_portal_debug</value> 
+  <views>0</views> 
+  <content>facility(local6);</content> 
+  <infos>local6</infos> 
+  </filter>
+<filter>
+  <value>f_eag</value> 
+  <views>0</views> 
+  <content>match("eag") or match("trap");</content> 
+  <infos>eaglog</infos> 
+  </filter>
+<filter>
+  <value>f_synflood</value> 
+  <views>0</views> 
+  <content>match("syn_flood") or match("sshd") or match("telnetd");</content> 
+  <infos>flood</infos> 
+  </filter>
+<filter>
+  <value>f_trap</value> 
+  <views>0</views> 
+  <content>match("send trap") and not match("Failed");</content> 
+  <infos>trap</infos> 
+  </filter>
+
+<log attribute="sysip">
+  <source>s_all</source> 
+  <filter>f_daemon</filter> 
+  <dest>df_system</dest> 
+  </log>
+<log attribute="sys">
+  <source>s_all</source> 
+  <filter>f_kern</filter> 
+  <dest>df_system</dest> 
+  </log>
+<log attribute="auth">
+  <source>s_all</source> 
+  <filter>f_auth</filter> 
+  <dest>df_system</dest>
+</log>
+<log>
+  <source>s_all</source> 
+  <filter>f_at_least_info</filter> 
+  <dest>df_service</dest>
+</log>
+<log>
+  <source>s_all</source> 
+  <filter>f_portal_debug</filter> 
+  <dest>df_system</dest> 
+  </log>
+<log>
+  <source>s_all</source> 
+  <filter>f_cli</filter> 
+  <dest>df_cli</dest> 
+  </log>
+<log>
+  <source>s_all</source> 
+  <filter>f_trap</filter> 
+  <dest>df_trap</dest> 
+  </log>
+</root>

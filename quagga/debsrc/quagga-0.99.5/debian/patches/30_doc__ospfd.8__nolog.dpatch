@@ -1,0 +1,20 @@
+#! /bin/sh /usr/share/dpatch/dpatch-run
+## 30_doc__ospfd.8__nolog.dpatch by  <ch@debian.org>
+##
+## All lines beginning with `## DP:' are a description of the patch.
+## DP: Removes documentation of nonexistant option. 
+
+@DPATCH@
+
+--- old/doc/ospfd.8	2006-07-15 20:27:52.000000000 +0200
++++ new/doc/ospfd.8	2006-07-15 20:28:09.000000000 +0200
+@@ -52,9 +52,6 @@
+ \fB\fIpid-file\fR.  The init system uses the recorded PID to stop or
+ restart ospfd.  The likely default is \fB\fI/var/run/ospfd.pid\fR.
+ .TP
+-\fB\-l\fR, \fB\-\-log_mode\fR
+-Turn verbose logging on.
+-.TP
+ \fB\-P\fR, \fB\-\-vty_port \fR\fIport-number\fR 
+ Specify the port that the ospfd VTY will listen on. This defaults to
+ 2604, as specified in \fB\fI/etc/services\fR.

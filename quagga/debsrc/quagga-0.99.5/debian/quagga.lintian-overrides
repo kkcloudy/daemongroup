@@ -1,0 +1,4 @@
+quagga: non-dev-pkg-with-shlib-symlink usr/lib/libospfapiclient.so.0.0.0 usr/lib/libospfapiclient.so
+quagga: non-dev-pkg-with-shlib-symlink usr/lib/libospf.so.0.0.0 usr/lib/libospf.so
+quagga: non-dev-pkg-with-shlib-symlink usr/lib/librte.so.0.0.0 usr/lib/librte.so
+quagga: package-name-doesnt-match-sonames libospfapiclient0 libospf0 librte0

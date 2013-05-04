@@ -1,0 +1,4 @@
+[D-BUS Service]
+Exec=/home/dingkang/dbus-1.4.0/test/test-service
+User=anyrandomuser
+

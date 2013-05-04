@@ -1,0 +1,16 @@
+prefix=
+exec_prefix=/home/dingkang/dbus_bin
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+system_bus_default_address=unix:path=/var/run/dbus/system_bus_socket
+sysconfdir=/etc
+session_bus_services_dir=/share/dbus-1/services
+system_bus_services_dir=/share/dbus-1/system-services
+interfaces_dir=/share/dbus-1/interfaces
+daemondir=/home/dingkang/dbus_bin/bin
+
+Name: dbus
+Description: Free desktop message bus
+Version: 1.4.0
+Libs: -L${libdir} -ldbus-1 -lpthread 
+Cflags: -I${includedir}/dbus-1.0 -I${libdir}/dbus-1.0/include

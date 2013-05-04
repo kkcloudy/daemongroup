@@ -1,0 +1,106 @@
+conf
+Create the configure dhcp_conf.conf sucessfull!!
+option
+/opt/service/option/dhcp_option
+Create the configure dhcp_option sucessfull!!
+status
+/opt/service/status/dhcp_status.status
+Create the configure dhcp_status.status sucessfull!!
+stop
+/opt/service/init/dhcp_init stop
+command /opt/service/init/dhcp_init stop failed!
+option
+/opt/service/option/dhcrelay_option
+Create the configure dhcrelay_option sucessfull!!
+status
+/opt/service/status/dhcrelay_status.status
+Create the configure dhcrelay_status.status sucessfull!!
+start
+/opt/service/init/dhcrelay_init start
+command /opt/service/init/dhcrelay_init start failed!
+Tue Jul  8 11:41:51 CST 2008
+file name:dhcp_status.status
+
+name:dhcp
+/opt/service/conf/dhcp_conf.conf
+2
+name:dhcp
+/opt/service/option/dhcp_option
+1
+name:dhcp
+/opt/service/status/dhcp_status.status
+1
+file name:dhcrelay_status.status
+
+name:dhcrelay
+/opt/service/conf/dhcrelay_conf.conf
+1
+name:dhcrelay
+/opt/service/option/dhcrelay_option
+1
+name:dhcrelay
+/opt/service/status/dhcrelay_status.status
+1
+Tue Jul  8 11:42:11 CST 2008
+file name:dhcp_status.status
+
+name:dhcp
+/opt/service/conf/dhcp_conf.conf
+2
+name:dhcp
+/opt/service/option/dhcp_option
+1
+name:dhcp
+/opt/service/status/dhcp_status.status
+1
+file name:dhcrelay_status.status
+
+name:dhcrelay
+/opt/service/conf/dhcrelay_conf.conf
+1
+name:dhcrelay
+/opt/service/option/dhcrelay_option
+1
+name:dhcrelay
+/opt/service/status/dhcrelay_status.status
+1
+Tue Jul  8 11:47:22 CST 2008
+name:dhcp
+save dhcp configure file..........
+/opt/service/conf/dhcp_conf.conf
+2
+configure dhcp file /opt/service/conf/dhcp_conf.conf sucessfull!
+name:dhcp
+/opt/service/option/dhcp_option
+1
+name:dhcp
+/opt/service/status/dhcp_status.status
+1
+name:dhcrelay
+save dhcrelay configure file..........
+/opt/service/conf/dhcrelay_conf.conf
+1
+configure dhcrelay file /opt/service/conf/dhcrelay_conf.conf sucessfull!
+name:dhcrelay
+/opt/service/option/dhcrelay_option
+1
+name:dhcrelay
+/opt/service/status/dhcrelay_status.status
+1
+Tue Jul  8 12:59:41 CST 2008
+name:dhcp
+save dhcp configure file.........................................................................
+configure dhcp file sucessfull!
+save dhcp option file............................................................
+save dhcp option file sucessfull!
+name:dhcp
+save dhcp status............................................
+save dhcp status sucessfull!
+name:dhcrelay
+save dhcrelay configure file.........................................................................
+configure dhcrelay file sucessfull!
+save dhcrelay option file............................................................
+save dhcrelay option file sucessfull!
+name:dhcrelay
+save dhcrelay status............................................
+save dhcrelay status sucessfull!

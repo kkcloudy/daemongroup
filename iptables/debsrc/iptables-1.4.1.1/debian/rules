@@ -1,0 +1,29 @@
+#!/usr/bin/make -f
+
+include /usr/share/quilt/quilt.make
+
+configure :=  --with-xtlibdir=/lib/xtables
+install :=  --exclude=multi
+
+%:
+	dh $@
+
+build: patch build-stamp
+build-stamp:
+	dh build --before dh_auto_configure
+	autoreconf
+	dh_auto_configure -- $(configure)
+	dh build --after dh_auto_configure
+	touch $@
+
+install: build
+	dh install --before dh_install
+	dh_install $(install)
+	### libxt_multiport.so was omitted somehow ...
+	cp -auv extensions/*.so debian/iptables/lib/xtables
+	dh install --after dh_install
+
+clean: unpatch
+	dh clean
+
+binary: install

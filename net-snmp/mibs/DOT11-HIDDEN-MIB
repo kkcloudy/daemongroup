@@ -1,0 +1,492 @@
+--/*******************************************************************************
+--Copyright (C) Autelan Technology
+
+
+--This software file is owned and distributed by Autelan Technology 
+--********************************************************************************
+
+
+--THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
+--ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED 
+--WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE 
+--DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR 
+--ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+--(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; 
+--LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON 
+--ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT 
+--(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS 
+--SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+--********************************************************************************
+--* dot11-group-smi
+--*
+--*
+--* CREATOR:
+--* autelan.software.Network Dep. team
+--*
+--* DESCRIPTION:
+--* This mib support for network dep system making. 
+--* 
+--*
+--*
+--*******************************************************************************/
+
+DOT11-HIDDEN-MIB DEFINITIONS ::= BEGIN
+IMPORTS	
+	dot11-wireless
+			FROM DOT11-GROUP-SMI
+	TEXTUAL-CONVENTION 
+       			FROM SNMPv2-CONF
+	TruthValue,
+	DisplayString
+			FROM SNMPv2-TC
+   	MODULE-IDENTITY, 
+	OBJECT-TYPE,
+	NOTIFICATION-TYPE,
+   	Integer32, 
+	Counter32,
+	TimeTicks,
+	enterprises
+       			FROM SNMPv2-SMI;
+       			
+dot11HiddenGroup MODULE-IDENTITY
+    LAST-UPDATED "201010200000Z"        -- Aug. 17th, 2009
+    ORGANIZATION " AuteLan Network Management Working Group
+                  http://www.AuteLan.com"
+    CONTACT-INFO
+        "General Discussion: support@AuteLan.com
+         To Subscribe: http://www.autelan.com
+
+         Qiao Jie
+         AuteLan Technology Ltd.,NO.1 Agricultural University Sourth Street,Haidian
+         District,Beijing,China(100084)
+         Email:  qiaojie@autelan.com"
+         
+    DESCRIPTION
+        "Copyright (C) 2009 The Internet Society.  This version of
+         the MIB module is part of RFC xxx; see the RFC itself
+         for full legal notices.
+         This MIB module contains managed object definitions for
+         the AuteLan Protocol."
+    REVISION    "201010200000Z"
+    DESCRIPTION
+        "Initial version published as RFC xxx."
+         ::= { dot11-wireless  6 }
+         
+dot11HiddenInfo OBJECT IDENTIFIER::={ dot11HiddenGroup 1 }
+         
+--********************************************************************************
+--*   dot11ApProfileTable
+--********************************************************************************      
+
+dot11ApProfileTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF Dot11ApProfileEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "This table shows AP profile information."
+    ::= { dot11HiddenInfo 1 }
+
+dot11ApProfileEntry  OBJECT-TYPE
+    SYNTAX      Dot11ApProfileEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "AP profile information."
+    INDEX { ApID}
+    ::= { dot11ApProfileTable 1 }
+
+Dot11ApProfileEntry ::=SEQUENCE{
+	ApID				INTEGER,
+	ApSN				DisplayString,
+	ApName				DisplayString,
+	ApModel				DisplayString,
+	ApManufacturer 			DisplayString,
+	ApLocation			DisplayString,
+	ApSoftwareVersion		DisplayString,
+	ApHardwareVersion		DisplayString,
+	ApStartTime			TimeTicks,
+	ApWorkTime			TimeTicks,
+	ApIPAddress			DisplayString,
+	ApMACAddress			DisplayString,
+	ApRunState			INTEGER,
+	ApWorkModel			INTEGER,
+	ApBindRadioID			DisplayString,
+	ApBindWLANID			DisplayString
+	}
+
+ApID		 			OBJECT-TYPE
+					SYNTAX      	INTEGER
+					MAX-ACCESS  	read-only
+					STATUS      	current
+					DESCRIPTION
+					      "AP ID."
+					::= { dot11ApProfileEntry 1 }
+
+ApSN			 		OBJECT-TYPE
+					SYNTAX     	DisplayString 
+					MAX-ACCESS 	read-only
+					STATUS     	current
+					DESCRIPTION
+				        	"AP SN."
+					::= { dot11ApProfileEntry 2 }
+
+
+ApName			 		OBJECT-TYPE
+					SYNTAX     	DisplayString 
+					MAX-ACCESS 	read-only
+					STATUS     	current
+					DESCRIPTION
+				        	"AP Name."
+					::= { dot11ApProfileEntry 3 }
+
+ApModel			 		OBJECT-TYPE
+					SYNTAX      	DisplayString
+					MAX-ACCESS  	read-only
+					STATUS      	current
+					DESCRIPTION
+					      "AP Model."
+					::= { dot11ApProfileEntry 4 }
+
+ApManufacturer			 	OBJECT-TYPE
+					SYNTAX     	DisplayString 
+					MAX-ACCESS 	read-only
+					STATUS     	current
+					DESCRIPTION
+				        	"AP Manufacturer."
+					::= { dot11ApProfileEntry 5 }
+
+ApLocation				OBJECT-TYPE
+					SYNTAX      	DisplayString
+					MAX-ACCESS  	read-only
+					STATUS      	current
+					DESCRIPTION
+					      "AP Location."
+					::= { dot11ApProfileEntry 6 }
+
+ApSoftwareVersion 			OBJECT-TYPE
+					SYNTAX     	DisplayString 
+					MAX-ACCESS 	read-only
+					STATUS     	current
+					DESCRIPTION
+				        	"The Software Version of AP."
+					::= { dot11ApProfileEntry 7 }
+		
+ApHardwareVersion 			OBJECT-TYPE
+					SYNTAX     	DisplayString 
+					MAX-ACCESS 	read-only
+					STATUS     	current
+					DESCRIPTION
+				        	"Hardware Version of AP."
+					::= { dot11ApProfileEntry 8 }
+
+ApStartTime 				OBJECT-TYPE
+					SYNTAX     	TimeTicks 
+					MAX-ACCESS 	read-only
+					STATUS     	current
+					DESCRIPTION
+				        	"The Start Time of AP."
+					::= { dot11ApProfileEntry 9 }
+					
+ApWorkTime 				OBJECT-TYPE
+					SYNTAX     	TimeTicks 
+					MAX-ACCESS 	read-only
+					STATUS     	current
+					DESCRIPTION
+				        	"The Work Time of AP."
+					::= { dot11ApProfileEntry 10 }	
+					
+ApIPAddress		 		OBJECT-TYPE
+					SYNTAX     	DisplayString 
+					MAX-ACCESS 	read-only
+					STATUS     	current
+					DESCRIPTION
+				        	"The IP Address of AP."
+					::= { dot11ApProfileEntry 11 }
+
+
+ApMACAddress		 		OBJECT-TYPE
+					SYNTAX     	DisplayString 
+					MAX-ACCESS 	read-only
+					STATUS     	current
+					DESCRIPTION
+				        	"The MAC Address of AP."
+					::= { dot11ApProfileEntry 12 }
+
+ApRunState		 		OBJECT-TYPE
+					SYNTAX      	INTEGER{
+							join(2),
+							configure(3),
+							datacheck(4),
+							run(5),
+							quit(7),
+							imagedata(8),
+							bak-run(9)
+							} 
+					MAX-ACCESS  	read-only
+					STATUS      	current
+					DESCRIPTION
+					      "The Run State of AP."
+					::= { dot11ApProfileEntry 13 }
+
+ApWorkModel			 	OBJECT-TYPE
+					SYNTAX     	INTEGER{
+							fat-ap(1),
+							bridge-mode(2),
+							ap-and-brige(3)
+							} 
+					MAX-ACCESS 	read-only
+					STATUS     	current
+					DESCRIPTION
+				        	"The Work Model of AP."
+					::= { dot11ApProfileEntry 14 }	
+					
+ApBindRadioID	 			OBJECT-TYPE
+					SYNTAX      	DisplayString
+					MAX-ACCESS  	read-only
+					STATUS      	current
+					DESCRIPTION
+					      "The Radio Global ID of AP binding."
+					::= { dot11ApProfileEntry 15 }
+					
+ApBindWLANID	 			OBJECT-TYPE
+					SYNTAX      	DisplayString
+					MAX-ACCESS  	read-only
+					STATUS      	current
+					DESCRIPTION
+					      "The WLAN ID of AP binding."
+					::= { dot11ApProfileEntry 16 }															
+
+--********************************************************************************
+--*   dot11RadioProfileTable
+--********************************************************************************      
+
+dot11RadioProfileTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF Dot11RadioProfileEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "This table shows Radio profile information."
+    ::= { dot11HiddenInfo 2 }
+
+dot11RadioProfileEntry  OBJECT-TYPE
+    SYNTAX      Dot11RadioProfileEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Radio profile information."
+    INDEX { RadioID}
+    ::= { dot11RadioProfileTable 1 }
+
+Dot11RadioProfileEntry ::=SEQUENCE{
+	RadioID				INTEGER,
+	RadioChannel			INTEGER,
+	RadioTxpower			INTEGER,
+	RadioRxpower			INTEGER,
+	RadioRate 			DisplayString,
+	RadioType			DisplayString,
+	RadioBindWLANID			DisplayString
+	}
+
+RadioID		 			OBJECT-TYPE
+					SYNTAX      	INTEGER
+					MAX-ACCESS  	read-only
+					STATUS      	current
+					DESCRIPTION
+					      "Radio Global ID."
+					::= { dot11RadioProfileEntry 1 }
+
+RadioChannel			 	OBJECT-TYPE
+					SYNTAX     	INTEGER 
+					MAX-ACCESS 	read-only
+					STATUS     	current
+					DESCRIPTION
+				        	"Radio Channel."
+					::= { dot11RadioProfileEntry 2 }
+
+
+RadioTxpower			 	OBJECT-TYPE
+					SYNTAX     	INTEGER 
+					MAX-ACCESS 	read-only
+					STATUS     	current
+					DESCRIPTION
+				        	"The TXPower of Radio."
+					::= { dot11RadioProfileEntry 3 }
+
+RadioRxpower			 	OBJECT-TYPE
+					SYNTAX      	INTEGER
+					MAX-ACCESS  	read-only
+					STATUS      	current
+					DESCRIPTION
+					      "The RXPower of Radio."
+					::= { dot11RadioProfileEntry 4 }
+
+RadioRate			 	OBJECT-TYPE
+					SYNTAX     	DisplayString 
+					MAX-ACCESS 	read-only
+					STATUS     	current
+					DESCRIPTION
+				        	"The Rate List of Radio Supported."
+					::= { dot11RadioProfileEntry 5 }
+
+RadioType				OBJECT-TYPE
+					SYNTAX      	DisplayString
+					MAX-ACCESS  	read-only
+					STATUS      	current
+					DESCRIPTION
+					      "The Type of Radio."
+					::= { dot11RadioProfileEntry 6 }
+
+RadioBindWLANID 			OBJECT-TYPE
+					SYNTAX     	DisplayString 
+					MAX-ACCESS 	read-only
+					STATUS     	current
+					DESCRIPTION
+				        	"The WLAN ID of Radio binding."
+					::= { dot11RadioProfileEntry 7 }
+		
+
+--********************************************************************************
+--*   dot11WlanProfileTable
+--********************************************************************************      
+
+dot11WlanProfileTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF Dot11WlanProfileEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "This table shows WLAN profile information."
+    ::= { dot11HiddenInfo 3 }
+
+dot11WlanProfileEntry  OBJECT-TYPE
+    SYNTAX      Dot11WlanProfileEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "WLAN profile information."
+    INDEX { WlanID}
+    ::= { dot11WlanProfileTable 1 }
+
+Dot11WlanProfileEntry ::=SEQUENCE{
+	WlanID				INTEGER,
+	WlanEssid			DisplayString,
+	WlanState			INTEGER,
+	WlanBindSecurityID		INTEGER
+	}
+
+WlanID		 			OBJECT-TYPE
+					SYNTAX      	INTEGER
+					MAX-ACCESS  	read-only
+					STATUS      	current
+					DESCRIPTION
+					      "WLAN ID."
+					::= { dot11WlanProfileEntry 1 }
+
+WlanEssid			 	OBJECT-TYPE
+					SYNTAX     	DisplayString 
+					MAX-ACCESS 	read-only
+					STATUS     	current
+					DESCRIPTION
+				        	"WLAN ESSID."
+					::= { dot11WlanProfileEntry 2 }
+
+
+WlanState			 	OBJECT-TYPE
+					SYNTAX     	INTEGER{
+							enable(1),
+							disable(0)
+							}
+					MAX-ACCESS 	read-only
+					STATUS     	current
+					DESCRIPTION
+				        	"WLAN State."
+					::= { dot11WlanProfileEntry 3 }
+
+WlanBindSecurityID		 	OBJECT-TYPE
+					SYNTAX      	INTEGER
+					MAX-ACCESS  	read-only
+					STATUS      	current
+					DESCRIPTION
+					      "The Security ID of WLAN binding."
+					::= { dot11WlanProfileEntry 4 }
+
+
+MaxWtpIDInfo                           OBJECT-TYPE
+                                       SYNTAX      INTEGER
+                                       MAX-ACCESS  read-only
+                                       STATUS      current
+                                       DESCRIPTION
+                                       "MaxWtpID information."
+                                        ::= { dot11HiddenInfo 4 }                                        
+ 
+--********************************************************************************
+--*   dot11APInfoTable
+--********************************************************************************                                      
+
+dot11APInfoTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF Dot11APInfoEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "This table shows Ap information."
+    ::= { dot11HiddenInfo 5 }
+
+dot11APInfoEntry  OBJECT-TYPE
+    SYNTAX      Dot11APInfoEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "AP information."
+    INDEX { WtpIDHidden}
+    ::= { dot11APInfoTable 1 }
+
+Dot11APInfoEntry ::=SEQUENCE{
+	WtpIDHidden			INTEGER,
+	WtpIPAddress			DisplayString,
+	WtpNetMask			DisplayString,
+	WtpMACAddress			DisplayString,
+	WtpName				DisplayString
+}
+
+WtpIDHidden	 			OBJECT-TYPE
+					SYNTAX      	INTEGER
+					MAX-ACCESS  	read-only
+					STATUS      	current
+					DESCRIPTION
+					      "AP ID."
+					::= { dot11APInfoEntry 1 }
+
+WtpIPAddress			 	OBJECT-TYPE
+					SYNTAX     	DisplayString 
+					MAX-ACCESS 	read-only
+					STATUS     	current
+					DESCRIPTION
+				        	"AP ipaddress."
+					::= { dot11APInfoEntry 2 }
+					
+WtpNetMask			 	OBJECT-TYPE
+					SYNTAX     	DisplayString 
+					MAX-ACCESS 	read-only
+					STATUS     	current
+					DESCRIPTION
+				        	"AP netmask."
+					::= { dot11APInfoEntry 3 }
+
+
+WtpMACAddress			 	OBJECT-TYPE
+					SYNTAX     	DisplayString 
+					MAX-ACCESS 	read-only
+					STATUS     	current
+					DESCRIPTION
+				        	"AP macaddress."
+					::= { dot11APInfoEntry 4 }
+
+WtpName			 	OBJECT-TYPE
+					SYNTAX     	DisplayString 
+					MAX-ACCESS 	read-only
+					STATUS     	current
+					DESCRIPTION
+				        	"AP name."
+					::= { dot11APInfoEntry 5 }                         
+             
+END
+

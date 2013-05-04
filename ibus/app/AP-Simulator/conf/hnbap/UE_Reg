@@ -1,0 +1,42 @@
+//PROCEDURE [HNB_Register,HNB_De_Register,UE_Register,UE_De_Register,Error_Indication,Private_Message,CSG_MemberShip_Update]
+PROCEDURE : UE_Register
+
+//CRITICALITY [reject=0,ignore=1,notify=2]
+UE_Register_PDU :
+{
+//UE_IDENTITY VALUE present:
+//UE_Identity_PR_iMSI = 1
+//UE_Identity_PR_tMSILAI = 2
+//UE_Identity_PR_pTMSIRAI = 3
+//UE_Identity_PR_iMEI = 4
+//UE_Identity_PR_eSN = 5
+//UE_Identity_PR_iMSIDS41 = 6
+//UE_Identity_PR_iMSIESN = 7
+//UE_Identity_PR_tMSIDS41 = 8
+  UE_IDENTITY {CRITICALITY:1, VALUE:choice{present=1,value=111}},
+  --UE_IDENTITY {CRITICALITY:1, VALUE:choice{present=2,value=struct{tmsi=1111,lai=struct{plmnid=111,lac=11}}}},
+  --UE_IDENTITY {CRITICALITY:1, VALUE:choice{present=3,value=struct{ptmsi=1111,rai=struct{lai=struct{plmnid=111,lac=11},rac=1}}}},
+  --UE_IDENTITY {CRITICALITY:1, VALUE:choice{present=4,value=11111111}},  
+  --UE_IDENTITY {CRITICALITY:1, VALUE:choice{present=5,value=1111}},
+  --UE_IDENTITY {CRITICALITY:1, VALUE:choice{present=6,value=11111}},
+  --UE_IDENTITY {CRITICALITY:1, VALUE:choice{present=7,value=struct{imsids41=11111,esn=1111}}}, 
+  --UE_IDENTITY {CRITICALITY:1, VALUE:choice{present=8,value=11111111}}, 
+
+//Registration_Cause:
+//emergency call=0
+//normal=1     
+  Registration_Cause {CRITICALITY:1, VALUE:1},
+
+//asr_indicator: 
+//R99 =0
+//Rel-4 =1
+//Rel-5 =2
+//Rel-6 =3
+//Rel-7 =4
+//Rel-8-and-beyond =5
+
+//csg_indicator:
+//CSG capable =0
+//Not CSG capable =1
+  UE_Capability {CRITICALITY:1 , VALUE:struct{asr_indicator=5,csg_indicator=1}},
+}

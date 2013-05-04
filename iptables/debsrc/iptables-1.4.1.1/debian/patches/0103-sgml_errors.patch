@@ -1,0 +1,30 @@
+Index: b/howtos/netfilter-hacking-HOWTO.sgml
+===================================================================
+--- a/howtos/netfilter-hacking-HOWTO.sgml	2008-07-11 13:06:59.722197714 -0400
++++ b/howtos/netfilter-hacking-HOWTO.sgml	2008-07-11 13:07:05.651197672 -0400
+@@ -1236,8 +1236,8 @@
+ 
+ <tag>flags</tag>A set of flags with one or more out of the following flgs:
+ <itemize>
+-<item>IP_CT_HELPER_F_REUSE_EXPECT</item>Reuse expectations if the limit (see
+-`max_expected` below) is reached.
++<item>IP_CT_HELPER_F_REUSE_EXPECT : Reuse expectations if the limit (see
++`max_expected` below) is reached.</item>
+ </itemize>
+ 
+ <tag>me</tag>A pointer to the module structure of the helper.  Intitialize this with  the `THIS_MODULE' macro.
+@@ -1372,10 +1372,10 @@
+ 
+ <tag>flags</tag>A set out of zero, one or more of the following flags:
+ <itemize>
+-<item>IP_NAT_HELPER_F_ALWAYS</item>Call the NAT helper for every packet,
+-not only for packets where conntrack has detected an expectation-cause.
+-<item>IP_NAT_HELPER_F_STANDALONE</item>Tell the NAT core that this protocol
+-doesn't have a conntrack helper, only a NAT helper.
++<item>IP_NAT_HELPER_F_ALWAYS : Call the NAT helper for every packet,
++not only for packets where conntrack has detected an expectation-cause.</item>
++<item>IP_NAT_HELPER_F_STANDALONE : Tell the NAT core that this protocol
++doesn't have a conntrack helper, only a NAT helper.</item>
+ </itemize>
+ 
+ <tag>me</tag>A pointer to the module structure of the helper.  Initialize

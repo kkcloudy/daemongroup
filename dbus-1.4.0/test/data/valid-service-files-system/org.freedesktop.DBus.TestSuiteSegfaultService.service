@@ -1,0 +1,5 @@
+[D-BUS Service]
+Name=org.freedesktop.DBus.TestSuiteSegfaultService
+Exec=/home/dingkang/dbus-1.4.0/test/test-segfault
+User=anyrandomuser
+

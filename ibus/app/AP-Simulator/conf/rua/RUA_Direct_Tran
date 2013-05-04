@@ -1,0 +1,13 @@
+--PROCEDURE [	RUA_Connect,	RUA_DirectTransfer,	RUA_Disconnect,	RUA_ConnectionlessTransfer,	RUA_Error_Indication,	RUA_PrivateMessage]
+PROCEDURE : RUA_DirectTransfer
+
+--CRITICALITY [reject=0,ignore=1,notify=2]
+RUA_DirectTransfer_PDU :
+{
+--CN_Domain_ID[CS_domain=0, PS_domain=1]
+  CN_Domain_ID{CRITICALITY:1, VALUE:1},
+  
+  Context_ID{CRITICALITY:1, VALUE:111},
+
+  RANAP_Message{CRITICALITY:1, VALUE:20014003000000},
+}

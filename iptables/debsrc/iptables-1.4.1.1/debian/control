@@ -1,0 +1,33 @@
+Source: iptables
+Section: net
+Priority: important
+Maintainer: Laurence J. Lane <ljlane@debian.org>
+Build-Depends: debhelper (>>7.0), linuxdoc-tools, quilt, autoconf, automake, libtool
+Standards-Version: 3.8.0
+Homepage: http://www.netfilter.org/
+
+
+Package: iptables
+Architecture: any
+Priority: important
+Section: net
+Depends: ${shlibs:Depends}
+Description: administration tools for packet filtering and NAT
+ These are the user-space administration tools for the Linux
+ kernel's netfilter and iptables. netfilter and iptables provide
+ a framework for stateful and stateless packet filtering, network
+ and port address translation, and other IP packet manipulation.
+ The framework is the successor to ipchains.
+ .
+ netfilter and iptables are used in applications such as Internet
+ connection sharing, firewalls, IP accounting, transparent proxying,
+ advanced routing and traffic control.
+
+Package: iptables-dev
+Architecture: any
+Priority: optional
+Depends:
+Section: devel
+Description: development files for iptable's libipq
+ Header files, static libs and documentation for libipq, iptables'
+ user-space packet queuing library.
