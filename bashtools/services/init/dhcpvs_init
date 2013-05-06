@@ -1,0 +1,129 @@
+#!/bin/sh
+#
+###########################################################################
+#
+#              Copyright (C) Autelan Technology
+#
+#This software file is owned and distributed by Autelan Technology 
+#
+############################################################################
+#THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
+#ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED 
+#WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE 
+#DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR 
+#ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+#(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; 
+#LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON 
+#ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT 
+#(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS 
+#SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+##############################################################################
+#
+# eag_init
+#
+# CREATOR:
+# autelan.software.liutao. team
+# 
+# DESCRIPTION: 
+#     Starts, stops dhcpvs service
+#############################################################################
+
+
+### BEGIN INIT INFO
+# Provides:          dhcpv6-server
+# Required-Start:    $network
+# Required-Stop:     $network
+# Should-Start:      $local_fs
+# Should-Stop:       $local_fs
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: DHCP server
+# Description:       Dynamic Host Configuration Protocol Server
+### END INIT INFO
+
+PATH=/sbin:/bin:/usr/sbin:/usr/bin
+
+test -f /usr/sbin/dhcpd || exit 0
+
+# It is not safe to start if we don't have a default configuration...
+if [ ! -f /opt/services/option/dhcpvs_option ]; then
+        echo "/opt/services/option/dhcpvs_option does not exist! - Aborting...">>/dev/null
+        echo "Run 'dpkg-reconfigure dhcpv6-server' to fix the problem.">>/dev/null
+        exit 0
+fi
+
+# Read init script configuration (so far only interfaces the daemon
+# should listen on.)
+. /opt/services/option/dhcpvs_option
+
+NAME=dhcpd6
+DESC="DHCP server"
+DHCPDPID=/var/run/dhcpd6.pid
+CONFIG=/opt/services/conf/dhcpvs_conf.conf
+
+test_config()
+{
+        if ! /usr/sbin/dhcpd -6 -cf $CONFIG -t > /dev/null 2>&1; then
+                echo "dhcpd self-test failed. Please fix the config file.">>/dev/null
+                echo "The error was: ">>/dev/null
+                /usr/sbin/dhcpd -t -6
+                exit 1
+        fi
+}
+
+# single arg is -v for messages, -q for none
+check_status()
+{
+    if [ ! -r "$DHCPDPID" ]; then
+        test "$1" != -v || echo "$NAME is not running.">>/dev/null
+        return 3
+    fi
+    if read pid < "$DHCPDPID" && ps -p "$pid" > /dev/null 2>&1; then
+        test "$1" != -v || echo "$NAME is running.">>/dev/null
+        return 0
+    else
+        test "$1" != -v || echo "$NAME is not running but $DHCPDPID exists.">>/dev/null
+        return 1
+    fi
+}
+
+case "$1" in
+        start)
+                test_config
+                echo -n "Starting $DESC: ">>/dev/null
+                /usr/sbin/dhcpd -6 -cf $CONFIG -q $INTERFACES
+                sleep 2
+
+                if check_status -q; then
+                        echo "$NAME.">>/dev/null
+                else
+                        echo "$NAME failed to start - check syslog for diagnostics.">>/dev/null
+                        exit 1
+                fi
+                ;;
+        stop)
+                echo -n "Stopping $DESC: $NAME">>/dev/null
+                start-stop-daemon --stop --signal 9 --quiet --pidfile $DHCPDPID
+                rm -f "$DHCPDPID"
+                echo ".">>/dev/null
+                ;;
+        restart | force-reload)
+                test_config
+                $0 stop
+                sleep 2
+                $0 start
+                if [ "$?" != "0" ]; then
+                        exit 1
+                fi
+                ;;
+        status)
+                echo -n "Status of $DESC: ">>/dev/null
+                check_status -v
+                exit "$?"
+                ;;
+        *)
+                echo "Usage: $0 {start|stop|restart|force-reload|status}"
+                exit 1 
+esac
+
+exit 0

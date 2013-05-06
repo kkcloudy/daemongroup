@@ -1,0 +1,82 @@
+#!/bin/sh
+# Start/stop the FreeRADIUS daemon.
+
+### BEGIN INIT INFO
+# Provides:          radiusd
+# Required-Start:    $network
+# Should-Start:      $time mysql ldap postgresql samba krb5-kdc
+# Required-Stop:
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Radius Daemon 
+# Description:       Extensible, configurable radius daemon
+### END INIT INFO
+
+set -e
+
+. /lib/lsb/init-functions
+
+PROG="radius"
+PROGRAM="/opt/bin/radiusd"
+PIDFILE="/var/run/radius.pid"
+DESCR="RADIUS daemon"
+
+test -f $PROGRAM || exit 0
+
+# /var/run may be a tmpfs
+if [ ! -d /var/run/radius ]; then
+  mkdir -p /var/run/radius
+# chown freerad:freerad /var/run/radius
+fi
+
+# /var/log/radacct is a directory for accounting log 
+if [ ! -d /var/log/radacct ]; then
+sudo  mkdir -p /var/log/radacct
+sudo  chmod 777 /var/log/radacct 
+fi
+
+# /var/log/radutmp  and  /var/log/sradutmp,these two files are used to check simultaneous attribute
+if [ ! -f /var/log/radutmp ]; then
+sudo   touch  /var/log/radutmp
+sudo  chmod 777 /var/log/radutmp 
+fi
+
+if [ ! -f /var/log/sradutmp ]; then
+sudo   touch  /var/log/sradutmp
+sudo  chmod 777 /var/log/sradutmp 
+fi
+
+ret=0
+
+case "$1" in
+        start)
+                log_daemon_msg "Starting $DESCR" "$PROG"
+                if start-stop-daemon --start --quiet --pidfile $PIDFILE --exec $PROGRAM -- -d /opt/radius/raddb; then
+                  ret=$?
+                fi
+                log_end_msg $ret
+                exit $ret
+                ;;
+        stop)
+                log_daemon_msg "Stopping $DESCR" "$PROG"
+                if [ -f "$PIDFILE" ] ; then
+                  if start-stop-daemon --stop --retry=TERM/30/KILL/5 --quiet --pidfile $PIDFILE; then
+                    ret=$?
+                  fi
+                  log_end_msg $ret
+                else 
+                  log_action_cont_msg "$PIDFILE not found"
+                  log_end_msg 0
+                fi
+                ;;
+        restart|force-reload)
+                $0 stop
+                $0 start
+                ;;
+        *)
+                echo "Usage: $0 start|stop|restart|force-reload"
+                exit 1 
+                ;;
+esac
+
+exit 0

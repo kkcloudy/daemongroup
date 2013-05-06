@@ -1,0 +1,82 @@
+#!/bin/sh
+#
+###########################################################################
+#
+#              Copyright (C) Autelan Technology
+#
+#This software file is owned and distributed by Autelan Technology 
+#
+############################################################################
+#THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
+#ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED 
+#WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE 
+#DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR 
+#ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+#(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; 
+#LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON 
+#ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT 
+#(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS 
+#SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+##############################################################################
+#
+# eag_init
+#
+# CREATOR:
+# autelan.software.liutao. team
+# 
+# DESCRIPTION: 
+#     Starts, stops dhcp relay service
+#############################################################################
+
+### BEGIN INIT INFO
+# Provides:          dhcp3-relay
+# Required-Start:    $network
+# Required-Stop:     $network
+# Should-Start:      $local_fs
+# Should-Stop:       $local_fs
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: DHCP relay
+# Description:       Dynamic Host Configuration Protocol Relay
+### END INIT INFO
+
+# It is not safe to start if we don't have a default configuration...
+if [ ! -f /opt/services/option/dhcrelay_option ]; then
+	echo "/opt/services/option/dhcrelay_option does not exist! - Aborting..."
+	echo "Run 'dpkg-reconfigure dhcp3-relay' to fix the problem."
+	exit 1
+fi
+
+# Read init script configuration (interfaces the daemon should listen on
+# and the DHCP server we should forward requests to.)
+. /opt/services/option/dhcrelay_option
+
+# Build command line for interfaces (will be passed to dhrelay below.)
+IFCMD=""
+if test "$INTERFACES" != ""; then
+	for I in $INTERFACES; do
+		IFCMD=${IFCMD}"-i "${I}" "
+	done
+fi
+
+DHCRELAYPID=/var/run/dhcrelay.pid
+
+case "$1" in
+	start)
+		start-stop-daemon --start --quiet --pidfile $DHCRELAYPID \
+			--exec /opt/bin/dhcrelay -- -q $OPTIONS $IFCMD $SERVERS
+		;;
+	stop)
+		start-stop-daemon --stop --signal 9 --quiet --pidfile $DHCRELAYPID
+		;;
+	restart | force-reload)
+		$0 stop
+		sleep 2
+		$0 start
+		;;
+	*)
+		echo "Usage: /opt/services/init/dhcrelay_init {start|stop|restart|force-reload}"
+		exit 1 
+esac
+
+exit 0

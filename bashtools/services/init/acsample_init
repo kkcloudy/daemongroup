@@ -1,0 +1,97 @@
+#!/bin/sh
+#
+###########################################################################
+#
+#              Copyright (C) Autelan Technology
+#
+#This software file is owned and distributed by Autelan Technology 
+#
+############################################################################
+#THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
+#ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED 
+#WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE 
+#DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR 
+#ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+#(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; 
+#LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON 
+#ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT 
+#(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS 
+#SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+##############################################################################
+#
+# eag_init
+#
+# CREATOR:
+# autelan.software.shaojunwu. team
+# 
+# DESCRIPTION: 
+#     Starts, stops eag service
+#############################################################################
+
+
+
+PATH=/sbin:/bin:/opt/bin:/usr/sbin:/usr/bin
+DAEMON=/opt/bin/acsample
+
+
+NAME=acsample
+DESC="AC sample daemon"
+
+test -f $DAEMON || exit 0
+
+case "$1" in
+  start)
+	echo -n "Starting $DESC: "
+
+   (crontab -l 2>&- | grep -v $0
+      echo "*/10 * * * * $0 checkrunning"
+   ) | crontab - 2>&-
+
+	start-stop-daemon --start --quiet --pidfile /var/run/$NAME.pid \
+		--exec $DAEMON
+   RETVAL=$?
+	echo "$NAME."
+	;;
+
+   checkrunning)
+      check=`start-stop-daemon --start --exec $DAEMON --test`
+      if [ x"$check" != x"$DAEMON already running." ] ; then
+         $0 start
+      fi
+   ;;
+
+   restart)
+      $0 stop
+      #sleep 1
+      $0 start
+      RETVAL=$?
+   ;;
+
+  stop)
+	echo -n "Stopping $DESC: "
+   
+   crontab -l 2>&- | grep -v $0 | crontab -
+
+
+	start-stop-daemon --oknodo --stop --quiet --signal USR2 --pidfile /var/run/$NAME.pid \
+		--exec $DAEMON
+	while true
+	do
+      check=`start-stop-daemon --start --exec $DAEMON --test`
+      if [ x"$check" != x"$DAEMON already running." ] ; then
+        break;
+      else
+        sleep 0.3 
+      fi
+	done
+	echo "$NAME."
+	;;
+
+  *)
+	N=/opt/services/init/$NAME
+	echo "Usage: $N {start|stop|restart|checkrunning}" >&2
+	exit 1
+	;;
+esac
+
+exit 0

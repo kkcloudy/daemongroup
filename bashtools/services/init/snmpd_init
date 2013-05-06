@@ -1,0 +1,308 @@
+#!/bin/sh
+#
+###########################################################################
+#
+#              Copyright (C) Autelan Technology
+#
+#This software file is owned and distributed by Autelan Technology 
+#
+############################################################################
+#THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
+#ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED 
+#WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE 
+#DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR 
+#ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+#(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; 
+#LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON 
+#ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT 
+#(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS 
+#SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+##############################################################################
+#
+# eag_init
+#
+# CREATOR:
+# autelan.software.liutao. team
+# 
+# DESCRIPTION: 
+#     Starts, stops snmp service
+#############################################################################
+
+### BEGIN INIT INFO
+# Provides:           snmpd snmptrapd
+# Required-Start:     $network $local_fs
+# Required-Stop:      $network $local_fs
+# Default-Start:      2 3 4 5
+# Default-Stop:       0 6
+# Short-Description:  SNMP agents
+# Description:        NET SNMP (Simple Network Management Protocol) Agents
+### END INIT INFO
+#
+# Author:    Jochen Friedrich <jochen@scram.de>
+#
+#set -e
+
+test -x /usr/sbin/snmpd || exit 0
+#test -x /usr/sbin/snmptrapd || exit 0
+times=0
+SNMPPIDFILE=/var/run/snmpd.pid
+COREMASKFILE=/proc/coremask
+
+test_snmppid()
+{
+	if [ -f $SNMPPIDFILE ];then   
+		rm $SNMPPIDFILE	 
+	fi 
+      	
+    Spid=`ps -C snmpd -o pid= | sed '2,200d'`
+    while [ "$Spid" == "" ];do
+    	times=$(($times+1))
+    	sleep 1;
+    	if [ $times -gt 10 ];then
+    		echo "fail get snmp pid" >> /var/log/nice_snmpd.log 2>&1
+    		return 1;
+    	fi
+    	Spid=`ps -C snmpd -o pid= | sed '2,200d'`
+    	echo "$times get snmpd pid [$pid]" >> /var/log/nice_snmpd.log 2>&1
+    done
+          
+	echo $Spid > $SNMPPIDFILE
+
+	return 0;
+}
+
+taskset_coremask()
+{
+	if [ -f $COREMASKFILE ];then
+		coremask=`cat /proc/coremask`
+		if [ "$coremask" != "0x01" ]; then
+			taskset -p 0xfffe `cat /var/run/snmpd.pid` >> /var/log/nice_snmpd.log 2>&1	
+		else
+			taskset -p 0xffff `cat /var/run/snmpd.pid` >> /var/log/nice_snmpd.log 2>&1
+		fi
+	else
+		taskset -p 0xffff `cat /var/run/snmpd.pid` >> /var/log/nice_snmpd.log 2>&1
+	fi
+}
+
+CONF_PATH="/opt/services/conf/snmpd_conf.conf"
+DEFAULT_CONF="sysobjectid .1.3.6.1.4.1.31656.2.2.6.605                                
+sysdescr Networking Device                                              
+sysname SYSTEM                                                          
+                                                                        
+master  agentx                                                          
+      
+dlmod subagent_plugin /opt/lib/subagent_plugin.so     
+smuxpeer .1.3.6.1.6.3.1 mypasswordIsGreat
+                                                                   
+agentSecName internal                                                   
+rouser internal                                                         
+linkUpDownNotifications yes                                             
+defaultMonitors yes                                                     
+"
+
+[ -r /etc/default/snmpd ] && . /etc/default/snmpd
+# Defaults
+export MIBDIRS=/usr/share/snmp/mibs
+SNMPDRUN=yes
+SNMPDOPTS='-LS 0-2 d -C -c /opt/services/conf/snmpd_conf.conf -p /var/run/snmpd.pid -f'
+#SNMPDOPTS+='-Lf /var/log/snmpd.log'
+TRAPDRUN=no
+TRAPSWITCH="/var/run/apache2/trapswitch"
+TRAPDOPTS='-Lsd -p /var/run/snmptrapd.pid'
+#SUB_STATUS_FILE_PATH=/opt/services/status/subagent_status.status
+TRAP_STATUS_FILE=/opt/services/status/trap-helper_status.status
+
+# Reads config file (will override defaults above)
+
+# Cd to / before starting any daemons.
+cd /
+
+case "$1" in
+  start)
+    echo -n "Starting network management services:"
+    if [ "$SNMPDRUN" = "yes" ]; then
+	if [ -f $CONF_PATH ]; then
+	
+		mod_flag=`cat "$CONF_PATH" |grep subagent_plugin |grep -v grep |wc -l` 
+		if [ $mod_flag -eq 0 ]; then
+			echo "dlmod subagent_plugin /opt/lib/subagent_plugin.so" >> $CONF_PATH
+		fi	
+		sudo  nice -n+2 /usr/sbin/snmpd $SNMPDOPTS >/dev/null 2>&1 &
+		test_snmppid
+		if [ $? -eq 0 ]; then
+			taskset_coremask
+		fi
+	#   	 if [ $? -eq 0 ];then
+	#		sleep 2 
+	#		/opt/bin/subagent &
+	#		sleep 2
+	#		/opt/bin/trap-helper &
+	#		/usr/bin/sfdetect.sh &
+	#	fi
+	else
+		echo "$DEFAULT_CONF" >/opt/services/conf/snmpd_conf.conf
+		chmod 777 /opt/services/conf/snmpd_conf.conf
+		sudo nice -n+2 /usr/sbin/snmpd  $SNMPDOPTS  >/dev/null 2>&1 &
+		test_snmppid
+		if [ $? -eq 0 ];then
+	 		taskset_coremask	
+		fi
+#		sleep 2
+#		/opt/bin/subagent &
+#		sleep 2
+#		/opt/bin/trap-helper &
+#		/usr/bin/sfdetect.sh &
+	fi
+	echo -n " snmpd"
+	
+	#snmpd has started success,then start or stop suagent.
+	#if [ -e $SUB_STATUS_FILE_PATH ];then
+	#	sub_state=`cat $SUB_STATUS_FILE_PATH`
+	#fi
+	#sub_exist=`ps -ef |grep subagent |grep -v grep |wc -l`
+	#if [ $sub_state = "start" ];then	
+	#	if [ $sub_exist -eq 0 ]; then		
+	#		sudo /opt/bin/subagent >/dev/null 2>&1 &		
+	#	fi
+	#else	
+	#if [ $sub_exist -ne 0 ]; then
+	#	sub_pid=`ps -C subagent -o sub_pid= | sed '2,200d'`
+	#	sudo kill -9 $sub_pid
+
+        if [ -e $TRAP_STATUS_FILE ]; then
+		trap_state=`cat $TRAP_STATUS_FILE`
+		trap_exist=`ps -ef |grep trap-helper |grep -v grep |wc -l`
+		if [ x$trap_state = x"start" ] ; then	
+			if [ $trap_exist -eq 0 ]; then		
+				sudo /opt/bin/trap-helper >/dev/null 2>&1 &		
+			fi
+		fi
+#		echo $trap_state
+#		echo -n "trap-helper"
+
+	fi
+    fi
+    #if [ "$TRAPDRUN" = "yes" -a -f /etc/snmp/snmptrapd.conf ]; then
+    #	start-stop-daemon --quiet --start --exec /usr/sbin/snmptrapd \
+    #  	    -- $TRAPDOPTS
+    #	echo -n " snmptrapd"
+    #fi
+    if [ ! -f $TRAPSWITCH ]; then
+	echo "no" >/var/run/apache2/trapswitch
+	chmod 777 /var/run/apache2/trapswitch
+    fi
+    echo "."
+if false; then
+    #at last init zebra smux
+    timesflag=0
+    while [ `netstat -antp | grep snmp |grep 199 | grep -v grep -c` -eq 0 ]
+    do
+    sleep 3
+    timesflag=$(($timesflag+1))
+    if [ $timesflag -eq 30 ]
+    then break
+    fi
+    done
+   cmdstr="configure terminal
+   smux peer ip .1.3.6.1.6.3.1 mypasswordIsGreat"
+    /opt/bin/vtysh -c "$cmdstr"
+fi
+    ;;
+  stop)
+if false; then
+  #at first stop
+  sleep 2
+  cmdstr="configure terminal
+  no smux peer ip"
+  /opt/bin/vtysh -c "$cmdstr"
+fi
+    echo -n "Stopping network management services:"
+    start-stop-daemon --quiet --signal 9 --stop --oknodo  --exec /usr/sbin/snmpd > /dev/null
+#    start-stop-daemon --quiet --signal 9 --stop --oknodo  --exec /opt/bin/trap-helper
+    echo -n " snmpd"
+    echo "snmpd_boot" > /mnt/.restart_flag
+   # start-stop-daemon --quiet --stop --oknodo --exec /usr/sbin/snmptrapd
+   # sleep 2
+   # echo -n " snmptrapd"
+    echo "."
+    ;;
+  restart)
+if false; then
+  #at first  stop zebra smux
+  	sleep 2
+	cmdstr="configure terminal
+	no smux peer ip"
+	/opt/bin/vtysh -c "$cmdstr"
+fi
+    echo -n "Restarting network management services:"
+    start-stop-daemon --quiet --signal 9 --stop --oknodo --exec /usr/sbin/snmpd
+ #   start-stop-daemon --quiet --signal 9 --stop --oknodo --exec /usr/sbin/snmptrapd
+    # Allow the daemons time to exit completely.
+ #   start-stop-daemon --quiet --signal 9 --stop --oknodo  --exec /opt/bin/subagent
+ #   start-stop-daemon --quiet --signal 9 --stop --oknodo  --exec /opt/bin/trap-helper
+    sleep 2
+    if [ "$SNMPDRUN" = "yes" ]; then
+	if [ -f $CONF_PATH ]; then
+		sudo nice -n+2 /usr/sbin/snmpd $SNMPDOPTS >/dev/null 2>&1 &
+		test_snmppid
+		if [ $? -eq 0 ];then
+	 		taskset_coremask
+		fi
+		sleep 1
+#		/opt/bin/subagent &
+#		/opt/bin/trap-helper &
+	else
+		echo "$DEFAULT_CONF" >/opt/services/conf/snmpd_conf.conf
+		chmod 777 /opt/services/conf/snmpd_conf.conf
+#		start-stop-daemon --quiet --start --exec /usr/sbin/snmpd \
+#	   	 -- $SNMPDOPTS
+		sudo nice -n+2 /usr/sbin/snmpd $SNMPDOPTS >/dev/null 2>&1 &
+		test_snmppid
+		if [ $? -eq 0 ];then
+	 		taskset_coremask	
+		fi
+		sleep 1
+#		/opt/bin/subagent &
+#		/opt/bin/trap-helper &
+	fi
+	echo -n " snmpd"
+if false; then
+    #at last init zebra smux
+    timesflag=0
+    while [ `netstat -antp | grep snmp |grep 199 | grep -v grep -c` -eq 0 ]
+    do
+    sleep 3
+    timesflag=$(($timesflag+1))
+    if [ $timesflag -eq 30 ]
+    then break
+    fi
+    done
+	cmdstr="configure terminal
+	smux peer ip .1.3.6.1.6.3.1 mypasswordIsGreat"
+	/opt/bin/vtysh -c "$cmdstr"
+    fi
+fi	
+  #  if [ "$TRAPDRUN" = "yes" -a -f /etc/snmp/snmptrapd.conf ]; then
+  # Allow snmpd time to start up.
+  #	sleep 1
+  #	start-stop-daemon --quiet --start --exec /usr/sbin/snmptrapd -- $TRAPDOPTS
+  #	echo -n " snmptrapd"
+  #  fi
+    echo "."
+    ;;
+  reload|force-reload)
+    echo -n "Reloading network management services:"
+    if [ "$SNMPDRUN" = "yes" -a -f $CONF_PATH ]; then
+        start-stop-daemon --quiet --stop --signal 1 \
+	    --pidfile /var/run/snmpd.pid --exec /usr/sbin/snmpd
+	echo -n " snmpd"
+    fi
+    echo "."
+    ;;
+  *)
+    echo "Usage: /etc/init.d/snmpd {start|stop|restart|reload|force-reload}"
+    exit 1
+esac
+
+exit 0

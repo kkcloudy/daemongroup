@@ -1,0 +1,51 @@
+#!/bin/bash
+
+source vtysh_start.sh
+export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/bin
+
+#debug
+#USER_INTERFACE="eth0-3"
+#FRAMED_IP_ADDRESS="3.4.5.56"
+#FLAG_OPT=del
+#WISPR_BANDWIDTH_MAX_UP=1000
+#WISPR_BANDWIDTH_MAX_DOWN=3000
+#debug end
+
+
+UP_LINK=eth0-1
+#force uplink to eth0-1
+
+DOWN_LINK=$USER_INTERFACE
+USER_IP=$FRAMED_IP_ADDRESS
+FLAG=$FLAG_OPT
+UP_FLUX=$WISPR_BANDWIDTH_MAX_UP
+DOWN_FLUX=$WISPR_BANDWIDTH_MAX_DOWN
+FLOWID=`echo $FRAMED_IP_ADDRESS | awk -v FS=. '{printf $4}'`
+
+if [ "$FLAG" == "add" ];then
+tc qdisc add dev $UP_LINK root handle 1: htb default 10 2>/dev/null
+tc class add dev $UP_LINK parent 1:0 classid 1:1 htb rate 100Mbit ceil 100Mbit burst 15k prio 1 2>/dev/null
+
+tc qdisc add dev  $DOWN_LINK root handle 1: htb default 10 2>/dev/null
+tc class add dev  $DOWN_LINK parent 1:0 classid 1:1 htb rate 100Mbit ceil 100Mbit burst 15k prio 1 2>/dev/null
+
+tc class $FLAG dev $UP_LINK parent 1:1 classid 1:$FLOWID htb rate ${UP_FLUX}Kbit ceil ${UP_FLUX}Kbit burst 15k prio 1
+tc filter $FLAG dev $UP_LINK parent 1:0 protocol ip prio 1 u32 match ip src ${USER_IP}/32 flowid 1:$FLOWID
+tc qdisc $FLAG dev $UP_LINK parent 1:$FLOWID handle $FLOWID: sfq perturb 10
+
+tc class $FLAG dev  $DOWN_LINK parent 1:1 classid 1:$FLOWID htb rate ${DOWN_FLUX}Kbit ceil ${DOWN_FLUX}Kbit burst 15k prio 1
+tc filter $FLAG dev $DOWN_LINK  parent 1:0 protocol ip prio 2 u32 match ip dst ${USER_IP}/32 flowid 1:$FLOWID
+tc qdisc $FLAG dev  $DOWN_LINK parent 1:$FLOWID handle $FLOWID: sfq perturb 10
+fi
+
+
+
+if [ "$FLAG" == "del" ];then
+tc qdisc $FLAG dev $UP_LINK parent 1:$FLOWID handle $FLOWID: sfq perturb 10
+tc filter $FLAG dev $UP_LINK parent 1:0 protocol ip prio 1 u32 match ip src ${USER_IP}/32 flowid 1:$FLOWID
+tc class $FLAG dev $UP_LINK parent 1:1 classid 1:$FLOWID htb rate ${UP_FLUX}Kbit ceil ${UP_FLUX}Kbit burst 15k prio 1
+
+tc qdisc $FLAG dev  $DOWN_LINK parent 1:$FLOWID handle $FLOWID: sfq perturb 10
+tc filter $FLAG dev $DOWN_LINK  parent 1:0 protocol ip prio 2 u32 match ip dst ${USER_IP}/32 flowid 1:$FLOWID
+tc class $FLAG dev  $DOWN_LINK parent 1:1 classid 1:$FLOWID htb rate ${DOWN_FLUX}Kbit ceil ${DOWN_FLUX}Kbit burst 15k prio 1
+fi

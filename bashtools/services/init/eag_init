@@ -1,0 +1,147 @@
+#!/bin/sh
+#
+###########################################################################
+#
+#              Copyright (C) Autelan Technology
+#
+#This software file is owned and distributed by Autelan Technology 
+#
+############################################################################
+#THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
+#ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED 
+#WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE 
+#DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR 
+#ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+#(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; 
+#LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON 
+#ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT 
+#(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS 
+#SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+##############################################################################
+#
+# eag_init
+#
+# CREATOR:
+# autelan.software.shaojunwu. team
+# 
+# DESCRIPTION: 
+#     Starts, stops eag service
+#############################################################################
+
+
+
+PATH=/sbin:/bin:/opt/bin:/usr/sbin:/usr/bin
+	DAEMON=/opt/bin/eag
+
+
+NAME=eag
+DESC="Easy Access Gateway"
+#CONFFILE=/opt/eag/eag.conf
+STATUSFILE=/opt/services/status/eag_status.status
+OPTS="--pidfile /var/run/$NAME.pid --conf $CONFFILE"
+#used for debug print
+#. /opt/services/conf/eag_conf.conf
+if [ "x$HS_DEBUG_LOG" == "xstart" ];then
+	OPTS+=" --debug --debugfacility 255  "
+fi
+
+
+test -f $DAEMON || exit 0
+test -f $CONFFILE || exit 0
+
+
+#check_required
+
+RETVAL=0
+
+
+case "$1" in
+  start)
+	echo -n "Starting $DESC: "
+   /sbin/modprobe tun >/dev/null 2>&1
+   #echo 1 > /proc/sys/net/ipv4/ip_forward
+
+   (crontab -l 2>&- | grep -v $0
+      test ${HS_ADMINTERVAL:-0} -gt 0 && echo "*/$HS_ADMINTERVAL * * * * $0 radconfig"
+      echo "*/10 * * * * $0 checkrunning"
+      #echo "*/2  * * * * $0 arping"
+   ) | crontab - 2>&-
+
+#   ifconfig $HS_LANIF 0.0.0.0
+
+	start-stop-daemon --start --quiet --pidfile /var/run/$NAME.pid \
+		--exec $DAEMON -- $OPTS
+   RETVAL=$?
+	echo "$NAME."
+	echo "start" > $STATUSFILE
+	;;
+
+   checkrunning)
+      check=`start-stop-daemon --start --exec $DAEMON --test`
+      if [ x"$check" != x"$DAEMON already running." ] ; then
+         $0 start
+      fi
+   ;;
+
+   radconfig)
+      [ -e $MAIN_CONF ] || writeconfig
+      radiusconfig
+   ;;
+
+   restart)
+      $0 stop
+      # sleep 3 
+      $0 start
+      RETVAL=$?
+   ;;
+
+  stop)
+	echo -n "Stopping $DESC: "
+   
+   crontab -l 2>&- | grep -v $0 | crontab -
+
+
+	start-stop-daemon --oknodo --stop --quiet --signal USR2 --pidfile /var/run/$NAME.pid \
+		--exec $DAEMON
+	# --retry 3600
+	# add by chensheng on 2010-04-28 wait for exit
+	while true
+	do
+		[ -f /var/run/${NAME}.pid ] || break
+		TMP_PID=$(cat /var/run/${NAME}.pid)
+		[ -n "${TMP_PID}" -a -d /proc/${TMP_PID} ] || break
+		P_NUM=$(ps -ef | awk '$2==P_ID && $8==P_NAME {print $0}' P_ID=${TMP_PID} P_NAME=${DAEMON} | wc -l)
+		[ ${P_NUM} > 0 ] || break
+		sleep 1
+	done
+	echo "$NAME."
+	echo "stop" > $STATUSFILE
+	;;
+
+  reload)
+	 echo "Reloading $DESC."
+	 start-stop-daemon --stop --signal 1 --quiet --pidfile \
+		/var/run/$NAME.pid --exec $DAEMON
+  ;;
+
+  condrestart)
+      check=`start-stop-daemon --start --exec $DAEMON --test`
+      if [ x"$check" != x"$DAEMON already running." ] ; then
+         $0 restart
+            RETVAL=$?
+      fi
+   ;;
+
+   status)
+      status eag
+      RETVAL=$?
+   ;;
+
+  *)
+	N=/etc/init.d/$NAME
+	echo "Usage: $N {start|stop|restart|condrestart|status|reload|radconfig}" >&2
+	exit 1
+	;;
+esac
+
+exit 0

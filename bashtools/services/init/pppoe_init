@@ -1,0 +1,133 @@
+#! /bin/sh -e
+#
+###########################################################################
+#
+#              Copyright (C) Autelan Technology
+#
+#This software file is owned and distributed by Autelan Technology 
+#
+############################################################################
+#THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
+#ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED 
+#WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE 
+#DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR 
+#ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+#(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; 
+#LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON 
+#ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT 
+#(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS 
+#SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+##############################################################################
+#
+# pppoe_init
+#
+# CREATOR:
+# autelan.software.zhouyanmei. team
+# 
+# DESCRIPTION: 
+#     start, stop pppoe service
+#############################################################################
+
+
+PATH=/sbin:/bin:/usr/sbin:/usr/bin
+. /lib/lsb/init-functions
+
+
+
+CONFSTAT=/opt/services/status/pppoe_status.status
+CONFIG=/opt/services/conf/pppoe.conf
+CONFXML=/opt/services/option/pppoe_option
+CONFXMLT=/opt/www/htdocs/pppoe.xml
+
+P3_SERVER=/etc/ppp/radius/servers
+P3_RCONF=/etc/radiusclient/radiusclient.conf
+P3_OPTION=/etc/ppp/options
+P3_HOST=/etc/hosts
+
+KEY=/usr/sbin/pppoe-server
+
+ret(){
+	cout=`ps aux | grep pppoe-server | wc -l`
+	return $cout
+}
+
+stop()
+{
+ppp_pid=`ps -ef | grep "$KEY" | sed '2,100d'|sed '/grep/d' | awk '{print $2}'`
+while [ $ppp_pid ]
+do
+        sudo kill -9 $ppp_pid
+        ppp_pid=`ps -ef | grep "$KEY" | sed '2,100d'|sed '/grep/d' | awk '{print $2}'`
+done
+}
+           
+start_stat(){  
+     echo "1" > $CONFSTAT
+     }    
+stop_stat(){
+     echo "0" > $CONFSTAT
+}           
+                
+ #写xml文件 
+ if ! test -f $CONFXML; then
+	sudo cp $CONFXMLT $CONFXML	
+        sudo chmod 666 $CONFXML 
+   else
+    sudo chmod 666 $CONFXML
+ fi
+           
+             
+#写状态文件    
+ if ! test -f $CONFSTAT; then
+        touch $CONFSTAT 
+        chmod 666 $CONFSTAT 
+   else
+    sudo chmod 666 $CONFSTAT
+ fi
+                 
+ #修改文件权限              
+   if ! test -f $P3_SERVER; then
+        touch $P3_SERVER 
+        chmod 666 $P3_SERVER                       
+   else
+    sudo chmod 666 $P3_SERVER
+ fi
+                 
+  #修改文件权限        
+   if ! test -f $P3_RCONF; then
+        touch $P3_RCONF 
+        chmod 666 $P3_RCONF                        
+   else
+    sudo chmod 666 $P3_RCONF
+ fi
+                 
+ #修改文件权限        
+   if ! test -f $P3_OPTION; then
+        touch $P3_OPTION 
+        chmod 666 $P3_OPTION                        
+   else
+    sudo chmod 666 $P3_OPTION
+ fi
+  
+   #修改文件权限        
+   if ! test -f $P3_HOST; then
+        touch $P3_HOST 
+        chmod 666 $P3_HOST                        
+   else
+    sudo chmod 666 $P3_HOST
+ fi
+
+case $1 in
+   start)  
+      sudo /etc/init.d/pppoe-server.sh
+      start_stat
+	  ret
+      ;;      
+   stop)   
+      stop    
+      stop_stat
+      ;;      
+   *)
+      echo "Usage $0 start stop"
+esac
+

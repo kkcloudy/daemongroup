@@ -1,0 +1,157 @@
+#!/bin/sh
+#
+###########################################################################
+#
+#              Copyright (C) Autelan Technology
+#
+#This software file is owned and distributed by Autelan Technology 
+#
+############################################################################
+#THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
+#ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED 
+#WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE 
+#DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR 
+#ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+#(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; 
+#LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON 
+#ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT 
+#(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS 
+#SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+##############################################################################
+#
+# eag_init
+#
+# CREATOR:
+# autelan.software.shaojunwu. team
+# 
+# DESCRIPTION: 
+#     Starts, stops syslog service
+#############################################################################
+
+
+### BEGIN INIT INFO
+# Provides:          syslog
+# Required-Start:    $local_fs $network $time
+# Required-Stop:     $local_fs $network $time
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Starting system logging daemon
+# Description:       Starting syslog-NG, the next generation
+#  syslog daemon.
+### END INIT INFO#
+#
+# skeleton      example file to build /etc/init.d/ scripts.
+#               This file should be used to construct scripts for /etc/init.d.
+#
+#               Written by Miquel van Smoorenburg <miquels@cistron.nl>.
+#               Modified for Debian GNU/Linux
+#               by Ian Murdock <imurdock@gnu.ai.mit.edu>.
+#
+# Version:      @(#)skeleton  1.8  03-Mar-1998  miquels@cistron.nl
+# This file was customized by SZALAY Attila <sasa@debian.org>
+
+PATH=/sbin:/bin:/usr/sbin:/usr/bin
+test -f /sbin/syslog-ng || exit 0
+#we source /etc/default/syslog-ng if exists
+[ -r /etc/default/syslog-ng ] && . /etc/default/syslog-ng
+
+case "x$CONSOLE_LOG_LEVEL" in
+  x[1-8])
+    dmesg -n $CONSOLE_LOG_LEVEL
+    ;;
+  x)
+    ;;
+  *)
+    echo "CONSOLE_LOG_LEVEL is of unaccepted value."
+    ;;
+esac
+
+if [ -n "$KERNEL_RINGBUF_SIZE" ]
+then
+  echo "KERNEL_RINGBUF_SIZE option is useless and therefore removed."
+fi
+
+# stop syslog-ng before changing its PID file!
+PIDFILE="/var/run/syslog-ng.pid"
+
+SYSLOGNG="/sbin/syslog-ng"
+NAME="syslog-ng"
+TEST="syslog_init"
+CONFIG=/opt/services/conf/syslog_conf.conf
+CONFXML=/opt/services/option/syslog_option
+CONFSTAT=/opt/services/status/syslog_status.status
+CONFXMLT=/opt/www/htdocs/syslog.xml
+CONFT=/etc/syslog-ng/syslog-ng.conf
+
+create_xconsole() {
+  if [ ! -e /dev/xconsole ]
+  then
+    mknod -m 640 /dev/xconsole p
+  fi
+}
+ 
+  if [ ! -e $CONFXML ]
+  then
+    sudo cp $CONFXMLT $CONFXML
+    sudo chmod 666 $CONFXML
+  fi
+  
+  if [ ! -e $CONFIG ]
+  then
+    sudo cp $CONFT $CONFIG
+    sudo chmod 666 $CONFIG
+  fi
+    
+                                
+syslogng_start() {
+    echo -n "Starting system logging: $TEST"
+    start-stop-daemon --start --quiet --exec "$SYSLOGNG" --pidfile "$PIDFILE" -- -p "$PIDFILE" --cfgfile "$CONFIG" \
+      || { echo " start failed."; return 1; }
+    echo "."
+    return 0
+}
+
+syslogng_stop() {
+    echo -n "Stopping system logging: $TEST"
+    start-stop-daemon --stop --quiet --name "$NAME" --retry 3 --pidfile "$PIDFILE" || { echo " not running."; return 1; }
+    echo "."
+    rm -f "$PIDFILE"
+    return 0
+}
+
+syslogng_reload() {
+    echo -n "Reload system logging: $TEST"
+    if /sbin/syslog-ng -s -f "$CONFIG"
+    then
+      start-stop-daemon --stop --signal 1 --quiet --exec "$SYSLOGNG" --pidfile "$PIDFILE" || return 1
+      echo "."
+      return 0
+    else
+      echo " Failed"
+      return 1
+    fi
+}
+
+
+case "$1" in
+  start)
+    if [ -f /var/run/syslog-ng.pid ] ; then syslogng_stop ; fi   
+    syslogng_start || exit 1
+    ;;
+  stop)
+    syslogng_stop || exit 1
+    ;;
+  reload|force-reload)
+    syslogng_reload || exit 1
+    ;;
+  restart)
+    syslogng_stop   
+    syslogng_start || exit 1
+    ;;
+  *)
+    echo "Usage: /opt/services/init/$TEST {start|stop|restart|reload|force-reload}" > /dev/null
+    exit 1
+    ;;
+esac
+
+exit 0
