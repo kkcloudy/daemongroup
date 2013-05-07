@@ -16,7 +16,7 @@ LDFLAGS = -shared -lrt -Wl,-soname,$@
 # Capwap Debugging
 #CFLAGS += -DCW_DEBUGGING
 CFLAGS += -D_D_WCPSS_
-CFLAGS += -I../../../net-snmp/engine/include
+CFLAGS += -I ${SNMP_ROOTDIR}/engine/include
 DBUS_LIBS = -ldbus-1
 
 

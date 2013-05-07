@@ -20,9 +20,10 @@ endif
 
 INCLUDES += -I$(ACCAPI_DIR) -I$(BUILDROOTDIR)/usr/include -I$(BUILDROOTDIR)/usr/include/dbus-1.0 -I$(BUILDROOTDIR)/usr/lib/dbus-1.0/include
 
-SNMP_PATH = ../../../AuteCS/cgic205/snmp_agent/
-EAG_PATH = ../../../AuteCS/cgic205/portal_multi_ins/
-CGI_PATH = ../../../AuteCS/cgic205/
+#SNMP_PATH = ../../../AuteCS/cgic205/snmp_agent/
+SNMP_PATH = ${CCGI_MOD}/cgic205/snmp_agent/
+EAG_PATH = ${CCGI_MOD}/cgic205/portal_multi_ins/
+CGI_PATH = ${CCGI_MOD}/cgic205/
 DCLI_WIRELESS_PATH = ./dcli_wireless/
 ACCAPIPATH=$(ACCAPI_DIR)
 
@@ -42,8 +43,8 @@ INCLUDES += -I $(ACCAPIPATH)/nm/public/
 INCLUDES += -I $(ACCAPIPATH)/nm/switch/             
 INCLUDES += -I $(ACCAPIPATH)/nm/system/             
 INCLUDES += -I $(ACCAPIPATH)/nm/wlan/ 
-INCLUDES += -I../../../net-snmp/engine/include
-INCLUDES += -I../../../AuteCS/cgic205/
+INCLUDES += -I ${SNMP_ROOTDIR}/engine/include
+INCLUDES += -I ${CGI_PATH}
 
 LD_PATH = -L../../../../rootfs/files/lib -L$(BUILDROOTDIR)/usr/lib -L../pub -L$(IBUS_PATH)/cli -L$(IBUS_PATH)/mapi -L../../../lib/nm 
 
