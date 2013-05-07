@@ -56,11 +56,11 @@ libeagintfsources=eag_conf.o eag_interface.o rdc_interface.o pdc_interface.o
 
 
 all:libeagintf.so pdc rdc eag
-	[ -d ../../../../auteware/files/opt/bin/ ] || mkdir -p ../../../../auteware/files/opt/bin/
-	[ -d ../../../../auteware/files/opt/lib/ ] || mkdir -p ../../../../auteware/files/opt/lib/
-	cp eag ../../../../auteware/files/opt/bin/
-	cp pdc ../../../../auteware/files/opt/bin/
-	cp rdc ../../../../auteware/files/opt/bin/
+	[ -d ${AUTEWAREFS_DIR}/files/opt/bin/ ] || mkdir -p ${AUTEWAREFS_DIR}/files/opt/bin/
+	[ -d ${AUTEWAREFS_DIR}/files/opt/lib/ ] || mkdir ${AUTEWAREFS_DIR}/files/opt/lib/
+	cp eag ${AUTEWAREFS_DIR}/files/opt/bin/
+	cp pdc ${AUTEWAREFS_DIR}/files/opt/bin/
+	cp rdc ${AUTEWAREFS_DIR}/files/opt/bin/
 	cp libeagintf.so $(LIB_EXPORT_DIR)
 	-ln -s $(shell pwd)/eag_conf.h $(shell pwd)/../../../accapi/nm/app/eag/eag_conf.h
 	-ln -s $(shell pwd)/eag_interface.h $(shell pwd)/../../../accapi/nm/app/eag/eag_interface.h

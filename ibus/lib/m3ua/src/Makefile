@@ -41,7 +41,7 @@ M3SRCPATH	= ../src
 #M3INCPATH	= ../inc
 M3INCPATH	= ../../../include/m3ua/inc/
 M3BUILDPATH	= .
-LIB_EXPORT_DIR	= ../../../../../rootfs/files/usr/lib/
+LIB_EXPORT_DIR	= ${BUILD_DIR}/rootfs/files/usr/lib/
 SRCFILES	= 	$(M3SRCPATH)/m3ua_as.c		\
 			$(M3SRCPATH)/m3ua_asp.c		\
 			$(M3SRCPATH)/m3ua_conn.c	\

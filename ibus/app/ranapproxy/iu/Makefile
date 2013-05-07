@@ -10,7 +10,7 @@ export GCC		= mips-linux-gnu-gcc
 PREREQ_FGW=$(shell if [ -d ${FGW_MOD} ] ; then echo "fgw"; fi )
 CLEAN_FGW=$(subst fgw,cleanfgw,${PREREQ_FGW})
 
-EXPORT_EXE_DIR	= ../../../../../rootfs/files/usr/lib/
+EXPORT_EXE_DIR	= ${BUILD_DIR}/rootfs/files/usr/lib/
 M3SRCPATH	= ../../../lib/m3ua/src 
 RANAPPATH	= ../../../lib/asn1/ranap 
 M3INCPATH	= ../../../include/m3ua/inc
@@ -36,7 +36,7 @@ INCLUDE		= 	-I$(M3INCPATH)	\
 			-I ../../../include/ranapd/include\
 			-I /opt/mipslibs/usr/include\
                         -I ../../../include/sccp/include/include\
-			-I ../../../../accapi
+			-I ${ACCAPI_DIR} 
 
 DBUS_INCLUDE=-I/opt/mipslibs/usr/include/dbus-1.0 -I/opt/mipslibs/usr/lib/dbus-1.0/include
 DBUS_LIBS=-ldbus-1
