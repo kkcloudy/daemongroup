@@ -20,31 +20,30 @@ endif
 
 INCLUDES += -I$(ACCAPI_DIR) -I$(BUILDROOTDIR)/usr/include -I$(BUILDROOTDIR)/usr/include/dbus-1.0 -I$(BUILDROOTDIR)/usr/lib/dbus-1.0/include
 
-#SNMP_PATH = ../../../AuteCS/cgic205/snmp_agent/
-SNMP_PATH = $(BUILDROOTDIR)/${CCGI_MOD}/cgic205/snmp_agent/
-EAG_PATH = $(BUILDROOTDIR)/${CCGI_MOD}/cgic205/portal_multi_ins/
-CGI_PATH = $(BUILDROOTDIR)/${CCGI_MOD}/cgic205/
+SNMP_PATH = ../../../AuteCS/cgic205/snmp_agent/
+EAG_PATH = ../../../AuteCS/cgic205/portal_multi_ins/
+CGI_PATH = ../../../AuteCS/cgic205/
 DCLI_WIRELESS_PATH = ./dcli_wireless/
 ACCAPIPATH=$(ACCAPI_DIR)
 
 IBUS_PATH = ../../../ibus
 
-INCLUDES += -I$(ACCAPIPATH)
-INCLUDES += -I$(ACCAPIPATH)/nm/app/
-INCLUDES += -I$(ACCAPIPATH)/nm/app/snmp/
-INCLUDES += -I$(ACCAPIPATH)/nm/app/eag/
-INCLUDES += -I$(ACCAPIPATH)/nm/app/drp/
-INCLUDES += -I$(ACCAPIPATH)/nm/app/sample/
-INCLUDES += -I$(ACCAPIPATH)/nm/app/manage/
-INCLUDES += -I$(ACCAPIPATH)/nm/app/firewall/
-INCLUDES += -I$(ACCAPIPATH)/nm/app/pppoe/
-INCLUDES += -I$(ACCAPIPATH)/nm/ip/
-INCLUDES += -I$(ACCAPIPATH)/nm/public/
-INCLUDES += -I$(ACCAPIPATH)/nm/switch/             
-INCLUDES += -I$(ACCAPIPATH)/nm/system/             
-INCLUDES += -I$(ACCAPIPATH)/nm/wlan/ 
-INCLUDES += -I$(BUILDROOTDIR)/${SNMP_ROOTDIR}/engine/include
-INCLUDES += -I${CGI_PATH}
+INCLUDES += -I $(ACCAPIPATH)
+INCLUDES += -I $(ACCAPIPATH)/nm/app/
+INCLUDES += -I $(ACCAPIPATH)/nm/app/snmp/
+INCLUDES += -I $(ACCAPIPATH)/nm/app/eag/
+INCLUDES += -I $(ACCAPIPATH)/nm/app/drp/
+INCLUDES += -I $(ACCAPIPATH)/nm/app/sample/
+INCLUDES += -I $(ACCAPIPATH)/nm/app/manage/
+INCLUDES += -I $(ACCAPIPATH)/nm/app/firewall/
+INCLUDES += -I $(ACCAPIPATH)/nm/app/pppoe/
+INCLUDES += -I $(ACCAPIPATH)/nm/ip/
+INCLUDES += -I $(ACCAPIPATH)/nm/public/
+INCLUDES += -I $(ACCAPIPATH)/nm/switch/             
+INCLUDES += -I $(ACCAPIPATH)/nm/system/             
+INCLUDES += -I $(ACCAPIPATH)/nm/wlan/ 
+INCLUDES += -I../../../net-snmp/engine/include
+INCLUDES += -I../../../AuteCS/cgic205/
 
 LD_PATH = -L../../../../rootfs/files/lib -L$(BUILDROOTDIR)/usr/lib -L../pub -L$(IBUS_PATH)/cli -L$(IBUS_PATH)/mapi -L../../../lib/nm 
 
@@ -59,7 +58,7 @@ CCFLAGS += -D_DISTRIBUTION_
 SNMPFLAGS = -I$(SNMP_PATH)
 EAGFLAGS = -I$(EAG_PATH)
 CGIFLAGS = -I$(CGI_PATH)
-XMLFLAGS = -I$(MIPS_ADDITION_LIB_ROOT_PATH)/usr/include/libxml2
+XMLFLAGS = -I $(MIPS_ADDITION_LIB_ROOT_PATH)/usr/include/libxml2
 PUB_PATH = -L../pub
 PUB_FLAGS = -ldclipub
 DRPLIB_PATH = -L$(LIB_EXPORT_DIR)
