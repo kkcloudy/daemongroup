@@ -4,9 +4,9 @@
 #[ -d mipsbuild ] || mkdir mipsbuild
 
 #OCT_KERNEL_ROOT="`pwd`/src/kernel2.6.32.27cn"
-OCT_KERNEL_ROOT=${KERNEL_ROOT}
+#OCT_KERNEL_ROOT=${KERNEL_ROOT}
 curdir=`pwd`
-
+echo ${OCT_KERNET_ROOT}
 cd ${BUILD_DIR}/${IPTABLES_MOD}/debsrc/iptables-1.4.6/
 ./configure --host=mips-linux-gnu --with-kernel=${OCT_KERNEL_ROOT} --with-xtlibdir=/opt/lib/iptables --enable-static
 
