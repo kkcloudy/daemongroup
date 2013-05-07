@@ -11,19 +11,20 @@ LD_PATH = -L$(MIPS_ADDITION_LIB_ROOT_PATH)/usr/lib
 
 LDFLAGS += -Wl,--gc-sections
 
-INCLUDE += -I ../../../iptables/debsrc/iptables-1.4.6/include
+#INCLUDE += -I ../../../iptables/debsrc/iptables-1.4.6/include
+INCLUDE += -I ${BUILD_DIR}/${IPTABLES_MOD}/debsrc/iptables-1.4.6/include
 INCLUDE += -I ./
 INCLUDE += -I $(MIPS_ADDITION_LIB_ROOT_PATH)/usr/include/libxml2
 INCLUDE += -I $(MIPS_ADDITION_LIB_ROOT_PATH)/usr/include
-INCLUDE += -I ../../../accapi
-INCLUDE += -I ../../../accapi/nm/app/eag
-INCLUDE += -I ../../../had/src/lib
+INCLUDE += -I ${ACCAPI_DIR}
+INCLUDE += -I ${ACCAPI_DIR}/nm/app/eag
+INCLUDE += -I ${BUILD_DIR}/${HAD_MOD}/src/lib
 INCLUDE += -I /opt/mipslibs/usr/include/
-INCLUDE += -I ../../../accapi/nm/public
+INCLUDE += -I ${ACCAPI_DIR}/nm/public
 INCLUDE += $(DBUS_INCLUDE)
 INCLUDE += -I ../
 #for openssl 
-INCLUDE += -I ../../../asd/src/app/wapi/include/
+INCLUDE += -I ${BUILD_DIR}/${ASD_MOD}/src/app/wapi/include/
 
 XML_LIB = $(LD_PATH) -lz
 #DBUS_LIB = -L$(MIPS_ADDITION_LIB_ROOT_PATH)/lib -ldbus-1
@@ -33,10 +34,10 @@ LDFLAGS += -L$(MIPS_ADDITION_LIB_ROOT_PATH)/lib
 LDFLAGS += -lpthread
 LOCAL_LIB = -L ./
 #for openssl
-LDFLAGS += -L ../../../asd/src/app/wapi -lwcrypto
+LDFLAGS += -L ${BUILD_DIR}/${ASD_MOD}/src/app/wapi -lwcrypto
 
 #soruces := $(shell ls *.c|grep -v main|grep -v radius|grep -v portal|grep -v redir|grep -v eag_ins|grep -v eag_thread)
-iptcsource = ../../../iptables/debsrc/iptables-1.4.6/libiptc/.libs/lib*.a
+iptcsource = ${BUILD_DIR}/${IPTABLES_MOD}/debsrc/iptables-1.4.6/libiptc/.libs/lib*.a
 
 publicsources = eag_log.o eag_blkmem.o  eag_thread.o eag_errcode.o eag_hansi.o eag_time.o hashtable.o eag_dbus.o eag_util.o eag_ifipaddr.o \
 		nmp_process.o md5.o portal_packet.o radius_packet.o
