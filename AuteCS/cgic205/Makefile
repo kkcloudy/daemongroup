@@ -17,7 +17,7 @@ INCLUDE += -I $(MIPS_ADDITION_LIB_ROOT_PATH)/usr/include/libxml2
 INCLUDE += -I ../../accapi 
 INCLUDE += -I ../../net-snmp/engine/include
 INCLUDE += -I ../../AuteCS/cgic205/portal_multi_ins
-INCLUDE += -I ../../../src/bsd/inc/
+INCLUDE += -I ../../bsd/inc/
 
 ACCAPIPATH=../../accapi/
 INCLUDE += -I $(ACCAPIPATH)
