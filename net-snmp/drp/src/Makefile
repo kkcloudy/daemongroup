@@ -39,7 +39,7 @@ libdrpintf_objs=$(libdrpintfsources:.o=.c)
 TARGET = drp
 
 all:drp libdrpintf.so
-	cp drp ../../../../auteware/files/opt/bin/
+	cp drp ${AUTEWAREFS_DIR}/files/opt/bin/
 	cp libdrpintf.so $(LIB_EXPORT_DIR)
 	-mkdir $(shell pwd)/../../../accapi/nm/app/drp/
 	-ln -s $(shell pwd)/drp_interface.h $(shell pwd)/../../../accapi/nm/app/drp/drp_interface.h

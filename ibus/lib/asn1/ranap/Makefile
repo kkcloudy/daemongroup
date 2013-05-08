@@ -1077,7 +1077,8 @@ ASN_MODULE_SOURCES+=ranapPDU.c
 # Remove the lines below to convert it into a pure .am file
 #TARGET = progname
 
-LIB_EXPORT_DIR	= ../../../../../rootfs/files/usr/lib/
+#LIB_EXPORT_DIR	= ../../../../../rootfs/files/usr/lib/
+#In top Makefile has" export LIB_EXPORT_DIR=${BUILD_DIR}/auteware/files/opt/lib"
 TARGET = libranap.so
 CFLAGS += -I. -I../pub/ -fPIC
 LFLAGS += -shared -Wl,-soname,$@

@@ -32,7 +32,8 @@ SCCPSRCPATH	= ../src
 #SCCPINCPATH	= ../inc
 SCCPINCPATH	= ../../../include/sccp/include
 SCCPBUILDPATH	= .
-LIB_EXPORT_DIR	= ../../../../../rootfs/files/usr/lib/ 
+#LIB_EXPORT_DIR	= ../../../../../rootfs/files/usr/lib/ 
+#In top Makefile has" export LIB_EXPORT_DIR=${BUILD_DIR}/auteware/files/opt/lib"
 SRCFILES	= 	$(SCCPSRCPATH)/mtp_pcap.c		\
 			$(SCCPSRCPATH)/mtp_level3.c		\
 			$(SCCPSRCPATH)/sccp.c	

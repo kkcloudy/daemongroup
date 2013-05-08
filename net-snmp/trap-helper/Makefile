@@ -1,6 +1,6 @@
 CC = mips-linux-gnu-gcc
 LDFLAGS = -lpthread -ldl -D_REENTRANT -L ../../../export/opt/lib 
-LIBS = -L../../../auteware/files/opt/lib -L/opt/mipslibs/usr/lib -L./  -lm -L/opt/mipslibs/usr/lib -lxml2 -lz -ldbus-1 -L ../../lib/nm -lnm -L ../../dcli/src/pub -ldclipub
+LIBS = -L${AUTEWAREFS_DIR}/files/opt/lib -L/opt/mipslibs/usr/lib -L./  -lm -L/opt/mipslibs/usr/lib -lxml2 -lz -ldbus-1 -L ../../lib/nm -lnm -L ../../dcli/src/pub -ldclipub
 LDFLAGS += -Wl,--gc-sections
 OBJCOPY=mips-linux-gnu-objcopy
 
