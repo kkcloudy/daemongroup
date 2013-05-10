@@ -45,7 +45,7 @@ INCLUDES += -I $(ACCAPIPATH)/nm/wlan/
 INCLUDES += -I../../../net-snmp/engine/include
 INCLUDES += -I../../../AuteCS/cgic205/
 
-LD_PATH = -L${ROOTFS_DIR}/files/lib -L$(BUILDROOTDIR)/usr/lib -L../pub -L$(IBUS_PATH)/cli -L$(IBUS_PATH)/mapi -L../../../lib/nm 
+LD_PATH = -L../../../../rootfs/files/lib -L$(BUILDROOTDIR)/usr/lib -L../pub -L$(IBUS_PATH)/cli -L$(IBUS_PATH)/mapi -L../../../lib/nm 
 
 
 DEFS = -DHAVE_CONFIG_H $(DCLI_HAS_WCPSS)
