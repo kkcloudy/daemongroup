@@ -205,7 +205,8 @@ unsigned char if_scope;
 unsigned char desc_scope;
 	#define INTERFACE_DESCIPTION_LOCAL			(1<<0)
 //	#define INTERFACE_DESCIPTION_GLOBAL			(1<<1)/*default is gobal, sync, every board is same*/
-
+unsigned char pass_flag;
+	#define SMUX_CHECK_OVER   (1<<0)/*gujd : 2013-05-09,pm 5:09. Add for smux.*/
 	
 };
 

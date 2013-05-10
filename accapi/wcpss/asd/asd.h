@@ -452,6 +452,7 @@ struct dcli_sta_info_v2
 	u_int32_t   no_flow_time;
 	u_int32_t   limit_flow;
 	unsigned int	auth_type;		//weichao add
+	int essidlen;
 };
 
 struct dcli_sta_base_info

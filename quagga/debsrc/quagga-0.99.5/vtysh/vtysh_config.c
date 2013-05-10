@@ -315,7 +315,10 @@ config_get (int index, const char *line,char * name)
   for (ALL_LIST_ELEMENTS (master, node, nnode, config_loop))
     {
       if (strncmp (config_loop->name+2, line,strlen(line)) == 0  )
-				config = config_loop;
+      {
+      	config = config_loop;
+      	break;
+      }			
     }
 
   if (! config)

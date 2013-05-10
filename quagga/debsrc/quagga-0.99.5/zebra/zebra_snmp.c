@@ -995,6 +995,7 @@ if_mibs_get (struct variable *v, oid objid[], size_t *objid_len,
 	zlog_debug("*objid_len = %u\n",*objid_len);
 	if( 4 == *objid_len )
 	{
+	#if 0
 		ifindex = objid[*objid_len-1];
 		if(debug_smux)
 		zlog_debug("ifindex = %u\n",ifindex);
@@ -1003,7 +1004,7 @@ if_mibs_get (struct variable *v, oid objid[], size_t *objid_len,
     	{
 			if (ifp->ifindex == ifindex)
 			{
-				break;
+				break;/**bingo the min**/
 			}
 			ifp = NULL;
  		}
@@ -1042,6 +1043,33 @@ if_mibs_get (struct variable *v, oid objid[], size_t *objid_len,
 			}
 			ifp = tmpifp;
 		}
+		
+	#else
+			/*gujd: 2013-05-09, pm:5:37. Before, we use the index to calculate . 
+			Now we use ifname. To avoid the one more virtual interface(index is 0)*/
+			for (ALL_LIST_ELEMENTS_RO(iflist, node, ifp))
+			{
+				if(!CHECK_FLAG(ifp->pass_flag,SMUX_CHECK_OVER))/*change the logic*/
+					{
+					  /*tIfindex = ifp->ifindex;*/
+						tmpifp = ifp;
+						/*to set flag*/
+						SET_FLAG(ifp->pass_flag,SMUX_CHECK_OVER);
+						break;
+					}
+			}
+		
+			if( NULL == node )
+			{
+				/*to clear the flag*/
+				for (ALL_LIST_ELEMENTS_RO(iflist, node, ifp))
+				{
+					UNSET_FLAG(ifp->pass_flag,SMUX_CHECK_OVER);
+				}
+				return NULL;
+			}
+	#endif
+
 	}
 	else
 	{
@@ -1053,6 +1081,7 @@ if_mibs_get (struct variable *v, oid objid[], size_t *objid_len,
 				&& strncmp(ifp->name,"sit0",4)!=0 
 				&& strncmp(ifp->name,"ppp",3)!=0)
 			{
+			   /*search the min ifindex */
 				if(tIfindex == 0)
 				{
 					tIfindex = ifp->ifindex;
@@ -1068,7 +1097,11 @@ if_mibs_get (struct variable *v, oid objid[], size_t *objid_len,
 				}
 			}
 		}
-		ifp = tmpifp;
+		ifp = tmpifp;/*bingo ifp, the most min ifindex */
+		if(ifp)/*to set this ifp flag, to avoid the reuse.*/
+		{
+			SET_FLAG(ifp->pass_flag,SMUX_CHECK_OVER);
+		}
 	}
 	
 	if(debug_smux)

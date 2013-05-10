@@ -4919,7 +4919,11 @@ DEFUN(show_patch_func,
 	char cmd[128];
 	int ret;
 	memset(cmd,0,128);
-	sprintf(cmd,"cd /mnt/patch/;ls *[.sp,.sps] 2> /dev/NULL | more 2> /dev/NULL");
+	//vty_out(vty,"show local board patch:");
+	sprintf(cmd,"cd /mnt/patch/;ls -l *.sp 2> /dev/NULL| grep ^[^d] | awk '{print $9}'");
+	ret = system (cmd);
+	memset(cmd,0,128);
+	sprintf(cmd,"cd /mnt/patch/;ls -l *.sps 2> /dev/NULL| grep ^[^d] | awk '{print $9}'");
 	ret = system (cmd);
 	return CMD_SUCCESS;
 }

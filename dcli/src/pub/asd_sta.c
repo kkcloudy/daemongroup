@@ -1237,6 +1237,7 @@ struct dcli_sta_info_v2* get_sta_info_by_mac_v2(DBusConnection *dcli_dbus_connec
 	DBusMessageIter	 iter;
 	DBusError	err;
 	struct dcli_sta_info_v2* sta = NULL;
+	int i = 0;
 	char *essid = NULL;	
 	char BUSNAME[PATH_LEN];
 	char OBJPATH[PATH_LEN];
@@ -1310,8 +1311,14 @@ struct dcli_sta_info_v2* get_sta_info_by_mac_v2(DBusConnection *dcli_dbus_connec
 			dbus_message_iter_get_basic(&iter,&(sta->addr[5]));	
 				
 			dbus_message_iter_next(&iter);	
-			dbus_message_iter_get_basic(&iter,&(essid));	
-			
+			dbus_message_iter_get_basic(&iter,&(sta->essidlen));	
+
+			essid = (char*)malloc(sta->essidlen+1);
+			memset(essid,0,sta->essidlen+1);
+			for(i=0;i<sta->essidlen;i++){
+				dbus_message_iter_next(&iter);	
+				dbus_message_iter_get_basic(&iter,&(essid[i]));	
+			}
 			dbus_message_iter_next(&iter);	
 			dbus_message_iter_get_basic(&iter,&(sta->flow_check));	
 			
@@ -1323,9 +1330,10 @@ struct dcli_sta_info_v2* get_sta_info_by_mac_v2(DBusConnection *dcli_dbus_connec
 			dbus_message_iter_next(&iter);	
 			dbus_message_iter_get_basic(&iter,&(sta->auth_type)); 
 
-			sta->essid = (char *)malloc(strlen(essid)+1);
-			memset(sta->essid, 0, strlen(essid)+1);
-			memcpy(sta->essid, essid,strlen(essid));
+			sta->essid = (char *)malloc(sta->essidlen+1);
+			memset(sta->essid, 0, sta->essidlen+1);
+			memcpy(sta->essid, essid,sta->essidlen);
+			free(essid);
 		}
 			
 	}	
@@ -1947,7 +1955,7 @@ struct dcli_ac_info* show_sta_base_info(DBusConnection *dcli_dbus_connection,int
 	DBusMessageIter	 iter;
 	DBusMessageIter	 iter_array;
 	DBusError	err;
-	int i,j;
+	int i,j,k;
 	struct dcli_base_bss_info *bss = NULL;
 	struct dcli_base_bss_info *bsshead = NULL;
 	struct dcli_base_bss_info *bsstail = NULL;
@@ -1985,7 +1993,8 @@ struct dcli_ac_info* show_sta_base_info(DBusConnection *dcli_dbus_connection,int
 		dbus_message_iter_next(&iter);	
 		dbus_message_iter_recurse(&iter,&iter_array);
 		for(i=0;i<(*bss_num);i++){
-			char *essid = NULL; 
+			char *essid = malloc(ESSID_DEFAULT_LEN+1); 
+			memset(essid,0,ESSID_DEFAULT_LEN+1);
 			DBusMessageIter iter_struct;
 			DBusMessageIter iter_sub_array;		
 			if((bss = (struct dcli_base_bss_info*)malloc(sizeof(*bss))) == NULL){
@@ -2035,9 +2044,10 @@ struct dcli_ac_info* show_sta_base_info(DBusConnection *dcli_dbus_connection,int
 			dbus_message_iter_next(&iter_struct);	
 			dbus_message_iter_get_basic(&iter_struct,&(bss->WlanID));	
 
-			dbus_message_iter_next(&iter_struct);	
-			dbus_message_iter_get_basic(&iter_struct,&(essid));	
-			
+			for(k=0;k<ESSID_DEFAULT_LEN;k++){
+				dbus_message_iter_next(&iter_struct);	
+				dbus_message_iter_get_basic(&iter_struct,&(essid[k]));	
+			}
 			dbus_message_iter_next(&iter_struct);
 			dbus_message_iter_recurse(&iter_struct,&iter_sub_array);
 			bss->WtpID = bss->Radio_G_ID/L_RADIO_NUM;
@@ -2086,9 +2096,9 @@ struct dcli_ac_info* show_sta_base_info(DBusConnection *dcli_dbus_connection,int
 					memset(sta->ip,0,strlen(in_addr)+1);
 					memcpy(sta->ip,in_addr,strlen(in_addr));
 				}
-				if((sta->essid = (unsigned char *)malloc(strlen(essid)+1)) != NULL) {
-					memset(sta->essid,0,strlen(essid)+1);
-					memcpy(sta->essid,essid,strlen(essid));
+				if((sta->essid = (unsigned char *)malloc(ESSID_DEFAULT_LEN+1)) != NULL) {
+					memset(sta->essid,0,ESSID_DEFAULT_LEN+1);
+					memcpy(sta->essid,essid,ESSID_DEFAULT_LEN);
 				}
 				memcpy(sta->wtp_addr,bss->mac,6);
 				sta->wtp_id = bss->WtpID;

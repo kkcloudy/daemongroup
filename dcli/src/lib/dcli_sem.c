@@ -2532,7 +2532,7 @@ DEFUN (delete_patch_single,
     				dbus_message_unref(reply);
     			}
     		}else{
-                vty_out(vty, "NO connection with slot %d\n",i);
+                //vty_out(vty, "NO connection with slot %d\n",i);
 			}
     	}
     return CMD_SUCCESS;

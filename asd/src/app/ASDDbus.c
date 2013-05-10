@@ -13987,6 +13987,7 @@ DBusMessage *asd_dbus_show_sta_v2(DBusConnection *conn, DBusMessage *msg, void *
 		int vlanid = 0;
 		unsigned int  auth_type = 0;
 		char *essid = NULL;
+		int essidlen = 0,i = 0;
 		int WTPID = 0;
 		DBusError err;
 		int ret = ASD_DBUS_SUCCESS;
@@ -14032,6 +14033,7 @@ DBusMessage *asd_dbus_show_sta_v2(DBusConnection *conn, DBusMessage *msg, void *
 
 				SecurityID = ASD_WLAN[stainfo->bss->WlanID]->SecurityID;
 				essid = ASD_WLAN[stainfo->bss->WlanID]->ESSID;
+				essidlen = strlen(essid);
 			}
 			WTPID = stainfo->bss->Radio_G_ID/L_RADIO_NUM;
 			if(WTPID < WTP_NUM && ASD_WTP_AP[WTPID] != NULL){
@@ -14083,8 +14085,12 @@ DBusMessage *asd_dbus_show_sta_v2(DBusConnection *conn, DBusMessage *msg, void *
 												 DBUS_TYPE_BYTE,
 												 &(mac[5]));	
 			dbus_message_iter_append_basic (&iter,
-												 DBUS_TYPE_STRING,
-												 &(essid));	
+												 DBUS_TYPE_UINT32,
+												 &(essidlen));	
+			for(i = 0;i<essidlen;i++)
+				dbus_message_iter_append_basic (&iter,
+													 DBUS_TYPE_BYTE,
+													 &(essid[i]));	
 			if(wlanid < 129)
 			{
 				dbus_message_iter_append_basic (&iter,
@@ -19136,7 +19142,7 @@ DBusMessage *asd_dbus_show_sta_base_info(DBusConnection *conn, DBusMessage *msg,
 		return NULL;	
 	}	
 	memset(bss,0,BSS_NUM*sizeof(struct asd_data *));
-	int i = 0;
+	int i = 0,k = 0;
 	unsigned int num = 0;
 	int ret = ASD_DBUS_SUCCESS;
 
@@ -19162,7 +19168,38 @@ DBusMessage *asd_dbus_show_sta_base_info(DBusConnection *conn, DBusMessage *msg,
 													DBUS_TYPE_BYTE_AS_STRING
 													DBUS_TYPE_BYTE_AS_STRING
 													DBUS_TYPE_BYTE_AS_STRING
-													DBUS_TYPE_STRING_AS_STRING
+													DBUS_TYPE_BYTE_AS_STRING//ESSID
+													DBUS_TYPE_BYTE_AS_STRING
+													DBUS_TYPE_BYTE_AS_STRING
+													DBUS_TYPE_BYTE_AS_STRING
+													DBUS_TYPE_BYTE_AS_STRING
+													DBUS_TYPE_BYTE_AS_STRING
+													DBUS_TYPE_BYTE_AS_STRING
+													DBUS_TYPE_BYTE_AS_STRING
+													DBUS_TYPE_BYTE_AS_STRING
+													DBUS_TYPE_BYTE_AS_STRING
+													DBUS_TYPE_BYTE_AS_STRING
+													DBUS_TYPE_BYTE_AS_STRING
+													DBUS_TYPE_BYTE_AS_STRING
+													DBUS_TYPE_BYTE_AS_STRING
+													DBUS_TYPE_BYTE_AS_STRING
+													DBUS_TYPE_BYTE_AS_STRING
+													DBUS_TYPE_BYTE_AS_STRING
+													DBUS_TYPE_BYTE_AS_STRING
+													DBUS_TYPE_BYTE_AS_STRING
+													DBUS_TYPE_BYTE_AS_STRING
+													DBUS_TYPE_BYTE_AS_STRING
+													DBUS_TYPE_BYTE_AS_STRING
+													DBUS_TYPE_BYTE_AS_STRING
+													DBUS_TYPE_BYTE_AS_STRING
+													DBUS_TYPE_BYTE_AS_STRING
+													DBUS_TYPE_BYTE_AS_STRING
+													DBUS_TYPE_BYTE_AS_STRING
+													DBUS_TYPE_BYTE_AS_STRING
+													DBUS_TYPE_BYTE_AS_STRING
+													DBUS_TYPE_BYTE_AS_STRING
+													DBUS_TYPE_BYTE_AS_STRING
+													DBUS_TYPE_BYTE_AS_STRING//ESSID
 													DBUS_TYPE_ARRAY_AS_STRING
 														DBUS_STRUCT_BEGIN_CHAR_AS_STRING
 															DBUS_TYPE_BYTE_AS_STRING
@@ -19179,18 +19216,15 @@ DBusMessage *asd_dbus_show_sta_base_info(DBusConnection *conn, DBusMessage *msg,
 			DBusMessageIter iter_struct;
 			DBusMessageIter iter_sub_array;
 			unsigned int wtpid = 0;
-			char *essid = NULL;
+			char essid[ESSID_DEFAULT_LEN] = {0};
 			asd_printf(ASD_DBUS,MSG_DEBUG,"sta_num:%d\n",bss[i]->num_sta);
 			wtpid = bss[i]->Radio_G_ID/4;
 			if(wtpid < WTP_NUM && ASD_WTP_AP[wtpid] != NULL){
 				memset(mac, 0, WID_MAC_LEN);
 				memcpy(mac, ASD_WTP_AP[wtpid]->WTPMAC, WID_MAC_LEN);
 			}
-			if(bss[i]->WlanID < WLAN_NUM && ASD_WLAN[bss[i]->WlanID] != NULL && ASD_WLAN[bss[i]->WlanID]->ESSID != NULL){
-				essid = ASD_WLAN[bss[i]->WlanID]->ESSID;
-			}else{
-				essid = " ";
-			}
+			if(bss[i]->WlanID < WLAN_NUM && ASD_WLAN[bss[i]->WlanID] != NULL && ASD_WLAN[bss[i]->WlanID]->ESSID != NULL)
+				memcpy(essid,ASD_WLAN[bss[i]->WlanID]->ESSID,strlen(ASD_WLAN[bss[i]->WlanID]->ESSID));
 			
 			dbus_message_iter_open_container (&iter_array,DBUS_TYPE_STRUCT,NULL,&iter_struct);
 			dbus_message_iter_append_basic(&iter_struct, DBUS_TYPE_UINT32, &(bss[i]->Radio_G_ID));
@@ -19204,7 +19238,8 @@ DBusMessage *asd_dbus_show_sta_base_info(DBusConnection *conn, DBusMessage *msg,
 			dbus_message_iter_append_basic(&iter_struct, DBUS_TYPE_BYTE, &(mac[5]));	
 
 			dbus_message_iter_append_basic(&iter_struct, DBUS_TYPE_BYTE, &(bss[i]->WlanID));
-			dbus_message_iter_append_basic(&iter_struct, DBUS_TYPE_STRING,&(essid));
+			for(k=0;k<ESSID_DEFAULT_LEN;k++)
+				dbus_message_iter_append_basic(&iter_struct, DBUS_TYPE_BYTE,&(essid[k]));
 			
 			dbus_message_iter_open_container (&iter_struct,
 											   DBUS_TYPE_ARRAY,
@@ -28237,7 +28272,59 @@ DBusMessage *asd_dbus_security_show_running_config(DBusConnection *conn, DBusMes
 							cursor = showStr + totalLen;	
 						}
 					}
-					
+					//Qiuchen add it for saving radius configuration!
+					if(SECURITY[i]->heart_test_on != 0)
+					{	
+						if(SECURITY[i]->ac_radius_name != NULL)
+						{
+							totalLen += sprintf(cursor," set ac_radius_name %s\n",SECURITY[i]->ac_radius_name);
+							cursor = showStr + totalLen;
+						}
+						if(SECURITY[i]->radius_res_fail_percent != RADIUS_RES_FAIL_PERCENT)
+						{
+							totalLen += sprintf(cursor," set radius_res_fail percent %f\n",SECURITY[i]->radius_res_fail_percent);
+							cursor = showStr + totalLen;
+
+						}
+						if(SECURITY[i]->radius_res_suc_percent != RADIUS_RES_SUC_PERCENT)
+						{
+							totalLen += sprintf(cursor," set radius_res_suc percent %f\n",SECURITY[i]->radius_res_suc_percent);
+							cursor = showStr + totalLen;
+						
+						}
+						if(SECURITY[i]->radius_access_test_interval != RADIUS_ACCESS_TEST_INTERVAL)
+						{
+							totalLen += sprintf(cursor," set radius_server access_test_interval %d\n",SECURITY[i]->radius_access_test_interval);
+							cursor = showStr + totalLen;
+						
+						}
+						if(SECURITY[i]->radius_server_change_test_timer != RADIUS_SERVER_CHANGE_TIMER)
+						{
+							totalLen += sprintf(cursor," set radius_server change_test timer %d\n",SECURITY[i]->radius_server_change_test_timer);
+							cursor = showStr + totalLen;
+						
+						}
+						if(SECURITY[i]->radius_server_reuse_test_timer != RADIUS_SERVER_REUSE_TIMER)
+						{
+							totalLen += sprintf(cursor," set radius_server reuse_test timer %d\n",SECURITY[i]->radius_server_reuse_test_timer);
+							cursor = showStr + totalLen;
+						
+						}
+						if(SECURITY[i]->radius_server_binding_type != RADIUS_SERVER_UNBINDED)
+						{
+							totalLen += sprintf(cursor," set radius_server binding enable\n");
+							cursor = showStr + totalLen;
+						
+						}
+						if(SECURITY[i]->radius_heart_test_type != RADIUS_AUTH_TEST)
+						{
+							totalLen += sprintf(cursor," set radius_server heart_test_type %s\n",(SECURITY[i]->radius_heart_test_type == RADIUS_ACCT_TEST)?"acct":"both");
+							cursor = showStr + totalLen;
+						
+						}
+						totalLen += sprintf(cursor," set radius heart test on\n");
+						cursor = showStr + totalLen;
+					}
 				}	
 				
 				if(SECURITY[i]->securityType == WAPI_AUTH){

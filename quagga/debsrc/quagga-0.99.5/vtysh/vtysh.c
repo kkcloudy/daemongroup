@@ -3482,10 +3482,10 @@ DEFUN (vtysh_write_terminal,
 		vtysh_config_dump (fp);
 		
 	for (i = 0; i < VTYSH_INDEX_MAX; i++)
-	{
+	
 		ret = vtysh_client_config (&vtysh_client[i], line);
-		vtysh_config_dump (fp);
-	}
+	vtysh_config_dump (fp);
+	
 #ifdef _D_WCPSS_	
 	for (i = HIDDENDEBUG_NODE; i < EBR_NODE1; i++)
 		if ((node = vector_slot (cmdvec, i)) && node->func )

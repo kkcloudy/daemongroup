@@ -1469,11 +1469,11 @@ int dcli_webservice_show_running_config(struct vty* vty)
                     memset(command, 0 ,sizeof(command));
                     if(vh->type == HTTP_SERVICE)
                     {
-                        sprintf(command, " add webconfig  %s %s http %d\n",vh->name, vh->address, vh->port);
+                        sprintf(command, " add webconfig  %s http %s %d\n",vh->name, vh->address, vh->port);
                     }
                     else if(vh->type == HTTPS_SERVICE)
                     {
-                        sprintf(command, " add webportal  %s %s https %d\n",vh->name, vh->address, vh->port);
+                        sprintf(command, " add webconfig  %s https %s %d\n",vh->name, vh->address, vh->port);
                     }
 
                     vtysh_add_show_string(command);
