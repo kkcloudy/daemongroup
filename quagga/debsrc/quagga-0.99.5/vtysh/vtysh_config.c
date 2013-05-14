@@ -245,7 +245,7 @@ static int intf_lacp_process_for_ospf(char *name)
 		}
 		else
 		{
-			syslog(LOG_WARNING,"param do not match ! %s",VTY_NEWLINE);
+			/*syslog(LOG_WARNING,"param do not match ! %s",VTY_NEWLINE);*/
 			return CMD_FAILURE;
 		}
 	}

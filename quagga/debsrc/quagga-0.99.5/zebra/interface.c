@@ -388,7 +388,7 @@ static int intf_lacp_process(struct vty *vty,char *name)
 		}
 		else
 		{
-			zlog_debug("param do not match ! \n");
+			/*zlog_debug("param do not match ! \n");*/
 			return CMD_FAILURE;
 		}
 	}
