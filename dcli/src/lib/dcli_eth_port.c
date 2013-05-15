@@ -9203,19 +9203,31 @@ DEFUN(diagnosis_read_port_rate_cmd_func,
 	dbus_message_iter_get_basic(&iter,&packetsumsent);
 	dbus_message_iter_next(&iter);	
 	
+	dbus_message_iter_get_basic(&iter,&ret);
+	dbus_message_iter_next(&iter);	
+	
 	dbus_message_unref(reply);
-		
-	vty_out(vty, "-------------------- RX ------------------\n");	
-	vty_out(vty, "%-20s %-15lld\n","bitRcv/s", bitsumrecv/3 * 8);
-	vty_out(vty, "%-20s %-15lld\n","byteRcv/s", bitsumrecv/3 );
-	vty_out(vty, "%-20s %-15lld\n","packRcv/s", packetsumrecv/3);
-	vty_out(vty, "-------------------- TX ------------------\n");		
-	vty_out(vty, "%-20s %-15lld\n","bitSent/s", bitsumsent/3 * 8);
-	vty_out(vty, "%-20s %-15lld\n","byteSent/s", bitsumsent/3 );
-	vty_out(vty, "%-20s %-15lld\n","packSent/s", packetsumsent/3);
-		
-	/* end */
-	return CMD_SUCCESS;  
+
+
+	if(ETHPORT_RETURN_CODE_UNSUPPORT == ret)
+	{
+		vty_out(vty,"port no support\n");
+		return CMD_WARNING;
+	}
+	else
+	{
+		vty_out(vty, "-------------------- RX ------------------\n");	
+		vty_out(vty, "%-20s %-15lld\n","bitRcv/s", bitsumrecv/3 * 8);
+		vty_out(vty, "%-20s %-15lld\n","byteRcv/s", bitsumrecv/3 );
+		vty_out(vty, "%-20s %-15lld\n","packRcv/s", packetsumrecv/3);
+		vty_out(vty, "-------------------- TX ------------------\n");		
+		vty_out(vty, "%-20s %-15lld\n","bitSent/s", bitsumsent/3 * 8);
+		vty_out(vty, "%-20s %-15lld\n","byteSent/s", bitsumsent/3 );
+		vty_out(vty, "%-20s %-15lld\n","packSent/s", packetsumsent/3);
+			
+		/* end */
+		return CMD_SUCCESS;  
+	}
 }
 
 
