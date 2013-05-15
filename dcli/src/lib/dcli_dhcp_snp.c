@@ -2114,6 +2114,87 @@ unsigned int dcli_dhcp_snp_config_intf
 			dbus_error_free_for_dcli(&err);
 		}
 		dbus_message_unref(reply);
+		return DHCP_SNP_RETURN_CODE_ERROR;
+	}
+}
+
+/**********************************************************************************
+ * dcli_dhcp_snp_add_router_config_intf
+ *
+ *	DESCRIPTION:
+ *		config DHCP-Snooping add router enable status on interface
+ *
+ *	INPUTS:
+ *	 	ifindex - interface ifindex
+ *	 	unsigned char slot_no,			- slot no of port
+ *	 	unsigned char local_port_no,		- port no of port
+ *		unsigned char trust_mode		- trust mode
+ *
+ *	OUTPUTS:
+ *		NULL
+ *
+ *	RETURN VALUE:
+ *		DHCP_SNP_RETURN_CODE_OK		- success
+ *		DHCP_SNP_RETURN_CODE_ERROR		- fail
+***********************************************************************************/
+unsigned int dcli_dhcp_snp_add_router_config_intf
+(
+	struct vty *vty,
+	char *ifname,
+	int flag,
+	int add_router_type
+)
+{
+	DBusMessage *query = NULL;
+	DBusMessage *reply = NULL;
+	DBusError err;
+
+	unsigned int ret = DHCP_SNP_RETURN_CODE_OK;
+
+	DBusConnection *dcli_dbus_connection = NULL;
+	dhcp_snp_reinitDbusConnection(&dcli_dbus_connection, vty);
+
+	query = dbus_message_new_method_call(
+								DHCPSNP_DBUS_BUSNAME,
+								DHCPSNP_DBUS_OBJPATH,
+								DHCPSNP_DBUS_INTERFACE,
+								DHCPSNP_DBUS_METHOD_INTERFACE_ADD_ROUTER_ENABLE);
+
+	dbus_error_init(&err);
+
+	dbus_message_append_args(query,
+							 DBUS_TYPE_STRING, &ifname,
+							 DBUS_TYPE_INT32, &flag,
+							 DBUS_TYPE_INT32, &add_router_type,
+							 DBUS_TYPE_INVALID);
+	
+	reply = dbus_connection_send_with_reply_and_block(dcli_dbus_connection, query, -1, &err);
+	
+	dbus_message_unref(query);
+	if (NULL == reply) {
+		printf("failed get args.\n");
+		if (dbus_error_is_set(&err)) {
+			printf("%s raised: %s", err.name, err.message);
+			dbus_error_free_for_dcli(&err);
+		}
+		dbus_message_unref(reply);
+		return DHCP_SNP_RETURN_CODE_ERROR;
+	}
+
+	if (dbus_message_get_args(reply, &err,
+							DBUS_TYPE_UINT32, &ret,
+							DBUS_TYPE_INVALID))
+	{
+		dbus_message_unref(reply);
+		return ret;
+	}
+	else {
+		printf("Failed get args.\n");
+		if (dbus_error_is_set(&err)) {
+			printf("%s raised: %s", err.name, err.message);
+			dbus_error_free_for_dcli(&err);
+		}
+		dbus_message_unref(reply);
 		
 		return DHCP_SNP_RETURN_CODE_ERROR;
 	}
@@ -4467,6 +4548,8 @@ DEFUN(config_dhcp_snp_wan_set_intf_cmd_func,
 		vty_out(vty, "%% Interface %s not correct or not exist.\n", name ? name : "nil");
 	}else if (DHCP_SNP_RETURN_CODE_EN_ANTI_ARP == ret) {
 		vty_out(vty, "%% Interface %s enable anti-arp-spoof, disable anti-arp-spoof first.\n", name ? name : "nil");
+	}else if (DHCP_SNP_RETURN_CODE_EN_ADD_ROUTE== ret) {
+		vty_out(vty, "%% Interface %s enable add-route, disable add-route first.\n", name ? name : "nil");
 	}
 	else{
 		vty_out(vty, "%% Config error %#x\n", ret);
@@ -4483,6 +4566,100 @@ ALIAS(config_dhcp_snp_wan_set_intf_cmd_func,
 	"Config dhcp snooping enable\n"
 	"Config dhcp snooping disable\n"
 );
+
+/*********************************************************
+ *	command: config dhcp-snooping IFNAME add router to host(enable|disable)
+ *
+ *	note : config dhcp-snooping on special interface
+ *
+ *	cmd Node: config node
+ *
+**********************************************************/
+DEFUN(config_dhcp_snp_add_router_intf_cmd_func,
+	config_dhcp_snp_add_router_intf_cmd,
+	"config dhcp-snooping add-router IFNAME (enable|disable)",
+	CONFIG_STR
+	DCLI_DHCP_SNP_STR
+	"Config dhcp snooping add-router\n"
+	"Config dhcp snooping add-router interface name\n"
+	"Config dhcp snooping add-router enable\n"
+	"Config dhcp snooping add-router disable\n"
+)
+{
+	unsigned int  ret = DHCP_SNP_RETURN_CODE_OK, ifindex = ~0UI;
+	char *ifname = NULL, name[IF_NAMESIZE] = {0};
+	int flag = DCLI_DHCP_SNP_DISABLE, argi = 0,Ret = 0;
+	int add_router_type = -1;
+
+	if((CONFIG_NODE == vty->node) || (HANSI_NODE == vty->node) || (LOCAL_HANSI_NODE == vty->node)) {
+		/* get 1st argument */
+		if(2 == argc) {
+			ifname = (char*)argv[0];
+			argi = 1;
+		}
+		else {
+			vty_out(vty, "%% Command argument error!\n");
+			return CMD_WARNING;
+		}
+	}
+	else if(INTERFACE_NODE == vty->node) {
+		ifname = vlan_eth_port_ifname;
+		argi = 0;
+	}
+	else {
+		vty_out(vty, "%% Wrong command node for dhcp snooping config!\n");
+		return CMD_WARNING;
+	}
+	/*
+	ifindex = if_nametoindex(ifname);
+	if(!ifindex) {
+		vty_out(vty, "%% Interface %s not correct or not exists!\n", ifname);
+		return CMD_WARNING;
+	}
+	*/
+	Ret = dcli_dhcp_snp_convert_ifname_check(vty, ifname);
+	if(2 == Ret)
+	dcli_dhcp_snp_convert_ifname(vty, ifname, name);
+	else if(1 == Ret){
+		sprintf(name, "%s", ifname);
+	}else{
+		vty_out(vty, "%% Wrong interfacename for dhcp snooping config!\n");
+		return CMD_WARNING;
+	}
+	if(0 == strncmp(name, "ve", 2))
+	dcli_dhcp_check_snp_interface(name);
+	
+	/* get 2nd argument : enable flag */
+	if (!strncmp(argv[argi], "enable", strlen(argv[argi]))) {
+		flag = DCLI_DHCP_SNP_ENABLE;
+	}
+	if(!strncmp(argv[argi], "disable", strlen(argv[argi]))) {
+		flag = DCLI_DHCP_SNP_DISABLE;
+	}
+
+	/* anti-arp-spoof type : 0 - via dhcp snooping interface, 1 - via normal interface */
+	add_router_type = 0;
+
+	ret = dcli_dhcp_snp_add_router_config_intf(vty, name, flag, add_router_type);
+
+	if (DHCP_SNP_RETURN_CODE_OK == ret) {
+		
+	}else if (DHCP_SNP_RETURN_CODE_NOT_ENABLE_GBL == ret) {
+		vty_out(vty, "%% DHCP snooping not enabled global.\n");
+	}else if (DHCP_SNP_RETURN_CODE_NOT_EN_INTF == ret) {
+		vty_out(vty, "%% DHCP snooping not enabled on interface %s.\n", ifname);
+	}else if (DHCP_SNP_RETURN_CODE_EN_INTF == ret) {
+		vty_out(vty, "%% DHCP snooping already enabled on interface %s.\n", ifname);
+	}else if (DHCP_SNP_RETURN_CODE_NO_SUCH_INTF == ret) {
+		vty_out(vty, "%% Interface %s not correct or not exist.\n", ifname ? ifname : "nil");
+	}else if (DHCP_SNP_RETURN_CODE_EN_ADD_ROUTE== ret) {
+		vty_out(vty, "%% Interface %s enable add-route, disable add-route first.\n", name ? name : "nil");
+	}else{
+		vty_out(vty, "%% Config error %#x\n", ret);
+	}
+
+	return CMD_SUCCESS;
+}
 
 /*********************************************************
  *	command: config dhcp-snooping IFNAME anti-arp-spoof (enable|disable)
@@ -4505,7 +4682,7 @@ DEFUN(config_dhcp_snp_wan_set_arp_intf_cmd_func,
 {
 	unsigned int  ret = DHCP_SNP_RETURN_CODE_OK, ifindex = ~0UI;
 	char *ifname = NULL, name[IF_NAMESIZE] = {0};
-	int flag = DCLI_DHCP_SNP_DISABLE, argi = 0;
+	int flag = DCLI_DHCP_SNP_DISABLE, argi = 0,Ret = 0;
 	int anti_arps_type = -1;
 
 	if((CONFIG_NODE == vty->node) || (HANSI_NODE == vty->node) || (LOCAL_HANSI_NODE == vty->node)) {
@@ -4535,7 +4712,17 @@ DEFUN(config_dhcp_snp_wan_set_arp_intf_cmd_func,
 	}
 	*/
 
+	Ret = dcli_dhcp_snp_convert_ifname_check(vty, ifname);
+	if(2 == Ret)
 	dcli_dhcp_snp_convert_ifname(vty, ifname, name);
+	else if(1 == Ret){
+		sprintf(name, "%s", ifname);
+	}else{
+		vty_out(vty, "%% Wrong interfacename for dhcp snooping config!\n");
+		return CMD_WARNING;
+	}
+	if(0 == strncmp(name, "ve", 2))
+	dcli_dhcp_check_snp_interface(name);
 	
 	/* get 2nd argument : enable flag */
 	if (!strncmp(argv[argi], "enable", strlen(argv[argi]))) {
@@ -4811,6 +4998,155 @@ DEFUN(show_dhcp_snp_wan_bindtable_cmd_func,
 		return CMD_WARNING;
 	}
 }
+unsigned int 
+dcli_dhcp_snp_del_route
+(
+	struct vty *vty ,
+	char *name
+)
+{
+	DBusMessage *query = NULL;
+	DBusMessage *reply = NULL;
+	DBusError err;
+	unsigned int ret = DHCP_SNP_RETURN_CODE_OK;
+
+	DBusConnection *dcli_dbus_connection = NULL;
+	dhcp_snp_reinitDbusConnection(&dcli_dbus_connection, vty);
+
+	query = dbus_message_new_method_call(
+								DHCPSNP_DBUS_BUSNAME,
+								DHCPSNP_DBUS_OBJPATH,
+								DHCPSNP_DBUS_INTERFACE,
+								DHCPSNP_DBUS_METHOD_DELETE_HOST_ROUTER);
+	dbus_error_init(&err);
+	dbus_message_append_args(query,
+							 DBUS_TYPE_STRING, &name,
+							 DBUS_TYPE_INVALID);
+	reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection, query, -1, &err);
+	dbus_message_unref(query);
+	if (NULL == reply) {
+		vty_out(vty, "failed get reply.\n");
+		if (dbus_error_is_set(&err)) {
+			vty_out(vty, "%s raised: %s", err.name, err.message);
+			dbus_error_free_for_dcli(&err);
+		}
+		return CMD_SUCCESS;
+	}
+	if (dbus_message_get_args(reply, &err,
+							DBUS_TYPE_UINT32, &ret,
+							DBUS_TYPE_INVALID))
+	{
+		dbus_message_unref(reply);
+		return ret;
+	}
+	else{
+		vty_out(vty, "Failed get args.\n");
+		if (dbus_error_is_set(&err)) {
+			vty_out(vty,"%s raised: %s", err.name, err.message);
+			dbus_error_free_for_dcli(&err);
+		}
+	}
+	dbus_message_unref(reply);
+	return CMD_SUCCESS;	
+
+}
+/*
+*delete all the host routers added as for "config dhcp-snooping add router IFNAME "
+*/
+DEFUN(delete_dhcp_snp_router_cmd_func_all,
+	delete_dhcp_snp_router_cmd_all,
+	"delete dhcp-snooping host-router all",
+	DCLI_DHCP_SNP_DEL_BINDING_STR
+	DCLI_DHCP_SNP_STR
+	"host-router\n"
+	"delete dhcp-snooping host-router all\n"
+)
+{
+	DBusMessage *query = NULL;
+	DBusMessage *reply = NULL;
+	DBusError err;
+	unsigned int ret = DHCP_SNP_RETURN_CODE_OK;
+	char ifname[IF_NAMESIZE] = {0};
+	//ETHERADDR macAddr;
+	//memset(&macAddr, 0, sizeof(ETHERADDR));
+	ret = dcli_dhcp_snp_del_route(vty,ifname);
+	if (DHCP_SNP_RETURN_CODE_ENABLE_GBL == ret) {
+		return CMD_SUCCESS;
+	}else if (DHCP_SNP_RETURN_CODE_NOT_ENABLE_GBL == ret) {
+		vty_out(vty, "%% DHCP-Snooping not enabled global.\n");
+	}else if (DHCP_SNP_RETURN_CODE_NOT_FOUND == ret) {
+		vty_out(vty, "%% Delete item not found.\n");
+	}else {
+		vty_out(vty, "%% Delete host-route failed\n");
+	}
+
+	return CMD_SUCCESS;
+}
+
+/*
+*delete all the host routers added as for "config dhcp-snooping add router IFNAME "
+*/
+DEFUN(delete_dhcp_snp_router_cmd_func,
+	delete_dhcp_snp_router_cmd,
+	"delete dhcp-snooping host-router by IFNAME",
+	DCLI_DHCP_SNP_DEL_BINDING_STR
+	DCLI_DHCP_SNP_STR
+	"host-router\n"
+	"delete dhcp-snooping host-router by\n"
+)
+{
+	DBusMessage *query = NULL;
+	DBusMessage *reply = NULL;
+	DBusError err;
+	unsigned int ret = DHCP_SNP_RETURN_CODE_OK;
+	char ifname[IF_NAMESIZE] = {0}, name[IF_NAMESIZE] = {0};
+	int Ret = 0;
+	//ETHERADDR macAddr;
+	//memset(&macAddr, 0, sizeof(ETHERADDR));
+	if((CONFIG_NODE == vty->node) || (HANSI_NODE == vty->node) || (LOCAL_HANSI_NODE == vty->node)) {
+		/* get 1st argument */
+		if(1 == argc){
+				memcpy(ifname, argv[0], strlen((char*)argv[0]));
+		}
+		else {
+			vty_out(vty, "%% Command without so many parameters!\n");
+			return CMD_WARNING;
+		}
+	}
+	else if(INTERFACE_NODE == vty->node) {
+		//ifname = vlan_eth_port_ifname;
+		memcpy(ifname, vlan_eth_port_ifname, strlen((char*)vlan_eth_port_ifname));
+	}
+	else {
+		vty_out(vty, "%% Wrong command node for dhcp snooping config!\n");
+		return CMD_WARNING;
+	}
+	Ret = dcli_dhcp_snp_convert_ifname_check(vty, ifname);
+	if(2 == Ret)
+	dcli_dhcp_snp_convert_ifname(vty, ifname, name);
+	else if(1 == Ret){
+		sprintf(name, "%s", ifname);
+	}else{
+		vty_out(vty, "%% Wrong interfacename for dhcp snooping config!\n");
+		return CMD_WARNING;
+	}
+	if(0 == strncmp(name, "ve", 2))
+	dcli_dhcp_check_snp_interface(name);
+	
+	ret = dcli_dhcp_snp_del_route(vty,name);
+	if (DHCP_SNP_RETURN_CODE_ENABLE_GBL == ret) {
+		return CMD_SUCCESS;
+	}else if (DHCP_SNP_RETURN_CODE_NOT_ENABLE_GBL == ret) {
+		vty_out(vty, "%% DHCP-Snooping not enabled global.\n");
+	}else if (DHCP_SNP_RETURN_CODE_NOT_FOUND == ret) {
+		vty_out(vty, "%% Delete item not found.\n");
+	}else {
+		vty_out(vty, "%% Delete host-route failed\n");
+	}
+
+	return CMD_SUCCESS;	
+}
+
 DEFUN(delete_dhcp_snp_wan_bindtable_by_mac_cmd_func,
 	delete_dhcp_snp_wan_bindtable_by_mac_cmd,
 	"delete dhcp-snooping bind-table mac MAC",
@@ -5182,6 +5518,7 @@ void dcli_dhcp_snp_element_init
 	install_element(CONFIG_NODE, &config_dhcp_snp_wan_set_intf_cmd);
 	install_element(INTERFACE_NODE, &config_dhcp_snp_wan_enable_intf_cmd);
 	install_element(CONFIG_NODE, &config_dhcp_snp_wan_set_arp_intf_cmd);
+	install_element(CONFIG_NODE, &config_dhcp_snp_add_router_intf_cmd);
 	install_element(INTERFACE_NODE, &config_dhcp_snp_wan_arp_enable_intf_cmd);
 	install_element(CONFIG_NODE, &config_anti_arp_spoof_cmd);
 	install_element(INTERFACE_NODE, &config_intf_anti_arp_spoof_cmd);
@@ -5193,6 +5530,8 @@ void dcli_dhcp_snp_element_init
 	install_element(CONFIG_NODE, &show_dhcp_snp_wan_bindtable_cmd);
 	install_element(CONFIG_NODE, &add_dhcp_snp_wan_bindtable_cmd);	
 	install_element(CONFIG_NODE, &delete_dhcp_snp_wan_bindtable_by_mac_cmd);
+	install_element(CONFIG_NODE, &delete_dhcp_snp_router_cmd);
+	install_element(CONFIG_NODE, &delete_dhcp_snp_router_cmd_all);
 	install_element(CONFIG_NODE, &config_dhcp_snp_arp_proxy_enable_cmd);
 
 
@@ -5201,18 +5540,24 @@ void dcli_dhcp_snp_element_init
 	install_element(HANSI_NODE, &config_dhcp_snp_wan_enable_cmd);
 	install_element(HANSI_NODE, &config_dhcp_snp_wan_set_intf_cmd);
 	install_element(HANSI_NODE, &config_dhcp_snp_wan_set_arp_intf_cmd);
+	install_element(HANSI_NODE, &config_dhcp_snp_add_router_intf_cmd);
 	install_element(HANSI_NODE, &debug_dhcp_snp_info_cmd);
 	install_element(HANSI_NODE, &no_debug_dhcp_snp_info_cmd);
 	install_element(HANSI_NODE, &add_dhcp_snp_wan_bindtable_cmd);
 	install_element(HANSI_NODE, &delete_dhcp_snp_wan_bindtable_by_mac_cmd);
+	install_element(HANSI_NODE, &delete_dhcp_snp_router_cmd);
+	install_element(HANSI_NODE, &delete_dhcp_snp_router_cmd_all);
 
 	install_element(LOCAL_HANSI_NODE, &config_dhcp_snp_wan_enable_cmd);
 	install_element(LOCAL_HANSI_NODE, &config_dhcp_snp_wan_set_intf_cmd);
 	install_element(LOCAL_HANSI_NODE, &config_dhcp_snp_wan_set_arp_intf_cmd);
+	install_element(LOCAL_HANSI_NODE, &config_dhcp_snp_add_router_intf_cmd);
 	install_element(LOCAL_HANSI_NODE, &debug_dhcp_snp_info_cmd);
 	install_element(LOCAL_HANSI_NODE, &no_debug_dhcp_snp_info_cmd);
 	install_element(LOCAL_HANSI_NODE, &add_dhcp_snp_wan_bindtable_cmd);
 	install_element(LOCAL_HANSI_NODE, &delete_dhcp_snp_wan_bindtable_by_mac_cmd);
+	install_element(LOCAL_HANSI_NODE, &delete_dhcp_snp_router_cmd);
+	install_element(LOCAL_HANSI_NODE, &delete_dhcp_snp_router_cmd_all);
 
 
 	return ;

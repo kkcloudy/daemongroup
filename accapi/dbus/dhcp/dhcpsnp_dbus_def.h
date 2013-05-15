@@ -88,6 +88,8 @@
  *		
 *****************************************************************/
 #define DHCPSNP_DBUS_METHOD_INTERFACE_ARP_ENABLE			"endis_intf_anti_arp_spoof"
+#define DHCPSNP_DBUS_METHOD_INTERFACE_ADD_ROUTER_ENABLE     "dhcp_snooping_add_router"
+
 
 /*****************************************************************
  * DESCRIPTION:
@@ -119,6 +121,7 @@
 
 #define DHCPSNP_DBUS_METHOD_SHOW_WAN_BIND_TABLE		"dhcp_snp_show_wan_bindtable"
 #define DHCPSNP_DBUS_METHOD_DELETE_WAN_TABLE		"dhcp_snp_delelte_wan_bind_table"
+#define DHCPSNP_DBUS_METHOD_DELETE_HOST_ROUTER		"dhcp_snp_delelte_host_router"
 #define DHCPSNP_DBUS_METHOD_CONFIG_AGING_TIME		"dhcp_snp_config_aging_time"
 #define DHCPSNP_DBUS_METHOD_ADD_WAN_TABLE		"dhcp_snp_add_wan_bind_table"
 #define DHCPSNP_DBUS_METHOD_ENABLE_ARP_PROXY		"dhcp_snp_enable_arp_proxy"

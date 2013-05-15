@@ -366,6 +366,11 @@ int dhcp_snp_listener_handle
 				pthread_mutex_unlock(&mutexDhcpsnpFdset);
 				return DHCP_SNP_RETURN_CODE_EN_ANTI_ARP;
 			}
+			if(node->add_router){
+				log_info("interface %s set add-route enable, disable first.\n", node->ifname);				
+				pthread_mutex_unlock(&mutexDhcpsnpFdset);
+				return DHCP_SNP_RETURN_CODE_EN_ADD_ROUTE;
+			}
 			
 			list_del(&(node->list));
 			if(dhcpsnp_sock_list->count) {
@@ -458,6 +463,28 @@ int dhcp_snp_listener_handle
 			}
 			node->no_arp = listener->no_arp;
 			break;
+		case DHCPSNP_LSTNER_SET_ADD_ROUTER:
+			__list_for_each(pos, curPtr) {
+			node = list_entry(pos, struct dhcp_snp_listener, list);
+			if(node) {
+				if(!strncmp(node->ifname, listener->ifname, IF_NAMESIZE)) {
+					found = 1;
+					syslog_ax_dhcp_snp_dbg("update listener(%s,fd %d) found(fd %d)!\n",	\
+											listener->ifname,listener->fd, node->fd);
+					break;
+				}
+				else {
+					;/* skip */
+				}
+			}
+		}
+		if(!found) {
+			syslog_ax_dhcp_snp_err("update listener(%s) but not found\n", listener->ifname);				
+			pthread_mutex_unlock(&mutexDhcpsnpFdset);
+			return DHCP_SNP_RETURN_CODE_NOT_FOUND;
+		}
+		node->add_router= listener->add_router;
+		break;
 	}
 
 	pthread_mutex_unlock(&mutexDhcpsnpFdset);
@@ -677,6 +704,53 @@ unsigned int	dhcp_snp_listener_query
 }
 
 /********************************************************************************************
+ * 	dhcp_snp_listener_handle_add_router
+ *
+ *	DESCRIPTION:
+ *             This function check out whether dhcp snooping is enabled on interface or not.
+ *
+ *	INPUT:
+ *             ifname - interface name
+ *
+ *	OUTPUT:
+ *               NONE
+ *
+ *	RETURNS:
+ *              GT_TRUE - indicate the packet is IPv4 packet
+ *              GT_FALSE - indicate the packet is not IPv4 packet
+ *
+ *	COMMENTS:
+ *             NONE.
+ *
+ **********************************************************************************************/
+unsigned int dhcp_snp_listener_handle_add_router
+(   
+	unsigned int isenable,
+	unsigned char  *ifname
+)
+{	
+	struct dhcp_snp_listener listener;
+	int ret = DHCP_SNP_RETURN_CODE_OK;
+	
+	if(!ifname) {
+		syslog_ax_dhcp_snp_err("query packet listener on null interface error!\n");
+		return DHCP_SNP_RETURN_CODE_PARAM_NULL;
+	}
+
+	memset(&listener, 0, sizeof(listener));
+	strncpy(listener.ifname, (char*)ifname, IF_NAMESIZE);
+	listener.add_router= isenable;
+
+	ret = dhcp_snp_listener_handle(&listener, DHCPSNP_LSTNER_SET_ADD_ROUTER);
+	if(DHCP_SNP_RETURN_CODE_OK == ret) {
+		syslog_ax_dhcp_snp_dbg("query found socket %d work on interface %s add_router is %d\n",listener.fd, ifname, isenable);
+		
+	}
+	
+	return ret; 
+}
+
+/********************************************************************************************
  * 	dhcp_snp_listener_query
  *
  *	DESCRIPTION:
@@ -770,6 +844,10 @@ int dhcp_snp_listener_save_cfg
 				cur = buffer + curLen;
 				if (node->no_arp) {
 					curLen += sprintf((char*)cur, "config dhcp-snooping anti-arp-spoof %s enable\n", node->ifname); 
+					cur = buffer + curLen;
+				}
+				if (node->add_router) {
+					curLen += sprintf((char*)cur, "config dhcp-snooping add-router %s enable\n", node->ifname); 
 					cur = buffer + curLen;
 				}
 			}
@@ -876,7 +954,11 @@ int dhcp_snp_listener_save_hansi_cfg
 						if (node->no_arp) {
 							curLen += sprintf((char*)cur, "config dhcp-snooping anti-arp-spoof wlan%d enable\n", value3); 
 							cur = buffer + curLen;
-						}			
+						}	
+						if (node->add_router) {
+							curLen += sprintf((char*)cur, "config dhcp-snooping add-router wlan%d enable\n", value3); 
+							cur = buffer + curLen;
+						}
 					} 
 				} 
 
@@ -888,6 +970,10 @@ int dhcp_snp_listener_save_hansi_cfg
 						cur = buffer + curLen;
 						if (node->no_arp) {
 							curLen += sprintf((char*)cur, "config dhcp-snooping anti-arp-spoof wlan%d enable\n", value3); 
+							cur = buffer + curLen;
+						}
+						if (node->add_router) {
+							curLen += sprintf((char*)cur, "config dhcp-snooping add-router wlan%d enable\n", value3); 
 							cur = buffer + curLen;
 						}			
 					}
@@ -903,7 +989,11 @@ int dhcp_snp_listener_save_hansi_cfg
 						if (node->no_arp) {
 							curLen += sprintf((char*)cur, "config dhcp-snooping anti-arp-spoof ebr%d enable\n", value3); 
 							cur = buffer + curLen;
-						}						
+						}	
+						if (node->add_router) {
+							curLen += sprintf((char*)cur, "config dhcp-snooping add-router ebr%d enable\n", value3); 
+							cur = buffer + curLen;
+						}
 					} 
 				} 
 
@@ -915,6 +1005,10 @@ int dhcp_snp_listener_save_hansi_cfg
 						cur = buffer + curLen;
 						if (node->no_arp) {
 							curLen += sprintf((char*)cur, "config dhcp-snooping anti-arp-spoof ebr%d enable\n", value3); 
+							cur = buffer + curLen;
+						}	
+						if (node->add_router) {
+							curLen += sprintf((char*)cur, "config dhcp-snooping add-router ebr%d enable\n", value3); 
 							cur = buffer + curLen;
 						}			
 					}

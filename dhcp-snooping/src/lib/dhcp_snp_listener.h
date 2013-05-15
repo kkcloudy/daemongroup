@@ -16,6 +16,7 @@ struct dhcp_snp_listener {
 	struct list_head list;
 	int fd;
 	int no_arp;
+	int add_router;
 	short ifflags;
 	char ifname[IF_NAMESIZE];
 };
@@ -37,6 +38,7 @@ enum dhcpsnp_listener_op {
 	DHCPSNP_LSTNER_UPDATE_E,
 	DHCPSNP_LSTNER_QUERY_E,	
 	DHCPSNP_LSTNER_SET_NO_ARP,
+	DHCPSNP_LSTNER_SET_ADD_ROUTER,
 	DHCPSNP_LSTNER_MAX
 };
 

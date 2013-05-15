@@ -627,6 +627,7 @@
 #define DHCP_SNP_RETURN_CODE_NOT_EN_INTF	(DHCP_SNP_RETURN_CODE_BASE + 21)/* dhcp snooping is not enabled on interface */
 #define DHCP_SNP_RETURN_CODE_NO_SUCH_INTF	(DHCP_SNP_RETURN_CODE_BASE + 22)/* interface is not exist */
 #define DHCP_SNP_RETURN_CODE_EN_ANTI_ARP	(DHCP_SNP_RETURN_CODE_BASE + 23)/* anti-arp-spoof is enabled on interface */
+#define DHCP_SNP_RETURN_CODE_EN_ADD_ROUTE	(DHCP_SNP_RETURN_CODE_BASE + 24)/* add-route is enabled on interface */
 
 
 /* DHCP SERVER branch */

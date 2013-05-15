@@ -938,6 +938,7 @@ void dhcp_snp_tbl_fill_bind
     }
 	if (NPD_DHCP_SNP_REQUEST_TIMEOUT != user->lease_time) {
 		item->cur_expire	= dhcp_snp_get_system_uptime() + user->lease_time;
+		
 	    item->lease_time = user->lease_time;
 	}
 	
@@ -1029,6 +1030,8 @@ unsigned int dhcp_snp_tbl_refresh_bind
 {
 	NPD_DHCP_SNP_TBL_ITEM_T *tmp = NULL;
 	unsigned int ret = DHCP_SNP_RETURN_CODE_OK;
+	char ifname[IF_NAMESIZE]={0};
+	char command[128] = {0};
 
 
     if ((!item) || (!user) || (!node)) {
@@ -1064,6 +1067,18 @@ unsigned int dhcp_snp_tbl_refresh_bind
 			}
 			dhcp_snp_listener_handle_host_ebtables(item->chaddr, item->ip_addr, DHCPSNP_EBT_DEL_E);
 		}
+	}
+	if (node->add_router) {  //delete router to host,next jump is the interface opening dhcp-snooping
+		if((0xFFFF == item->vlanId)&&(NPD_DHCP_SNP_BIND_STATE_BOUND == item->state)) {
+			
+			if(!if_indextoname(item->ifindex, ifname)) {
+				syslog_ax_dhcp_snp_err("no intf found as idx %d netlink error !\n", item->ifindex);
+				return DHCP_SNP_RETURN_CODE_ERROR;
+			}
+			sprintf(command,"sudo route del -host %u.%u.%u.%u dev %s",(item->ip_addr>>24)&0xff,\
+				(item->ip_addr>>16)&0xff,(item->ip_addr>>8)&0xff,(item->ip_addr>>0)&0xff,ifname);
+			system(command);
+			}
 	}
 
 	if (user->ip_addr) {
@@ -1111,6 +1126,18 @@ unsigned int dhcp_snp_tbl_refresh_bind
 				dhcp_snp_send_arp_solicit(item->ifindex, item->chaddr, item->ip_addr);
 			}
 		}
+	}
+	if (node->add_router) { //add router to host,next jump is the interface opening dhcp-snooping
+		if((0xFFFF == item->vlanId)&&(NPD_DHCP_SNP_BIND_STATE_BOUND == item->state)) {
+			
+			if(!if_indextoname(item->ifindex, ifname)) {
+				syslog_ax_dhcp_snp_err("no intf found as idx %d netlink error !\n", item->ifindex);
+				return DHCP_SNP_RETURN_CODE_ERROR;
+			}
+			sprintf(command,"sudo route add -host %u.%u.%u.%u dev %s",(item->ip_addr>>24)&0xff,\
+				(item->ip_addr>>16)&0xff,(item->ip_addr>>8)&0xff,(item->ip_addr>>0)&0xff,ifname);
+			system(command);
+			}
 	}
 
 	/* update record to db */
@@ -1492,6 +1519,8 @@ int dhcp_snp_aging_mechanism(void)
 	NPD_DHCP_SNP_TBL_ITEM_T *next = NULL;
 	unsigned int cur_time = 0;
 	int ret = -1;
+	char ifname[IF_NAMESIZE]={0};
+	char command[128] = {0};
 	
 	cur_time = dhcp_snp_get_system_uptime();
 	
@@ -1507,11 +1536,20 @@ int dhcp_snp_aging_mechanism(void)
 				tempItem->cur_expire, cur_time);
 			
 			if ((NPD_DHCP_SNP_BIND_TYPE_DYNAMIC == tempItem->bind_type)
-				&& (cur_time > tempItem->cur_expire)) {
+				&& (cur_time > tempItem->cur_expire)) {	  
 				if (tempItem->ip_addr) {
 					if((0xFFFF == tempItem->vlanId)&&(NPD_DHCP_SNP_BIND_STATE_BOUND == tempItem->state)) {
 						ret = dhcp_snp_netlink_do_ipneigh(DHCPSNP_RTNL_IPNEIGH_DEL_E,  \
 															tempItem->ifindex, tempItem->ip_addr, tempItem->chaddr);
+						 //delete router to host,next jump is the interface opening dhcp-snooping
+						if(!if_indextoname(tempItem->ifindex, ifname)) {
+							syslog_ax_dhcp_snp_err("no intf found as idx %d netlink error !\n", tempItem->ifindex);
+							return DHCP_SNP_RETURN_CODE_ERROR;
+						}
+						sprintf(command,"sudo route del -host %u.%u.%u.%u dev %s",(tempItem->ip_addr>>24)&0xff,\
+						(tempItem->ip_addr>>16)&0xff,(tempItem->ip_addr>>8)&0xff,(tempItem->ip_addr>>0)&0xff,ifname);
+						system(command);
+									
 						if(DHCP_SNP_RETURN_CODE_OK != ret) {
 							log_error("dhcp snp release item del ip neigh error %x\n", ret);
 						}

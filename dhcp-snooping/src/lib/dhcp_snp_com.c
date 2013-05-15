@@ -4630,6 +4630,126 @@ DBusMessage *dhcp_snp_dbus_config_intf
 } 
 
 /**********************************************************************************
+ * dhcp_snp_dbus_config_intf_add_router
+ *		config DHCP-Snooping enable status on interface
+ *
+ * 	INPUT:
+ *		DBusConnection *conn, 
+ *		DBusMessage *msg, 
+ *		void *user_data
+ *
+ *	OUTPUT:
+ * 		NULL
+ *
+ *	RETURN:
+ * 	 	reply
+ *		DHCP_SNP_RETURN_CODE_OK					- success
+ *		DHCP_SNP_RETURN_CODE_NOT_ENABLE_GBL		- not enable global
+ *		DHCP_SNP_RETURN_CODE_ALREADY_SET			- have set trust or no-bind port
+ **********************************************************************************/
+DBusMessage *dhcp_snp_dbus_config_intf_add_router
+(
+	DBusConnection *conn, 
+	DBusMessage *msg, 
+	void *user_data
+)
+{
+	DBusMessage* reply = NULL;
+	DBusMessageIter iter;
+	DBusError err;
+
+	unsigned int ret = DHCP_SNP_RETURN_CODE_OK, ifindex = ~0UI;
+	int status = 0, sockFd = -1;
+	char ifname[IF_NAMESIZE] = {0};
+	char *name = NULL;
+	int add_router_type  = -1;
+
+	dbus_error_init(&err);
+	if (!(dbus_message_get_args(msg, &err,
+								DBUS_TYPE_STRING, &name,
+								DBUS_TYPE_INT32, &status,
+								DBUS_TYPE_INT32, &add_router_type,
+								DBUS_TYPE_INVALID)))
+	{
+		syslog_ax_dhcp_snp_err("Unable to get input args ");
+		if (dbus_error_is_set(&err)) {
+			 syslog_ax_dhcp_snp_err("%s raised: %s", err.name, err.message);
+			dbus_error_free(&err);
+		}
+		syslog_ax_dhcp_snp_err("return error caused dbus.\n");
+		return NULL;
+	}
+
+	strncpy(ifname, name, sizeof(ifname)-1);
+	
+	if(0 == add_router_type) { /* anti ARP spoofing working on dhcp snooping interface */
+		ret = dhcp_snp_check_global_status();
+		if (ret == DHCP_SNP_RETURN_CODE_ENABLE_GBL)
+		{
+			if(if_nametoindex(ifname)) {
+				ret = dhcp_snp_listener_query((unsigned char*)ifname);
+				if(DHCP_SNP_ENABLE == status ) {/* enable */
+					if (DHCP_SNP_RETURN_CODE_OK == ret) {
+						//ret = dhcp_snp_set_intf_add_router(NPD_DHCP_SNP_ENABLE, ifname);
+						ret = dhcp_snp_listener_handle_add_router(NPD_DHCP_SNP_ENABLE, ifname);
+					}
+					else if (DHCP_SNP_RETURN_CODE_NOT_FOUND == ret)
+					{
+						syslog_ax_dhcp_snp_err("enable dhcp snooping on interface %s %s!\n",  \
+											ifname, (DHCP_SNP_RETURN_CODE_OK == ret) ? "ok":"fail");
+						ret = DHCP_SNP_RETURN_CODE_NOT_EN_INTF;
+					}
+				}
+				else /* disable */
+				{
+					if(DHCP_SNP_RETURN_CODE_NOT_FOUND == ret) {
+						syslog_ax_dhcp_snp_err("enable dhcp snooping on interface %s %s!\n",  \
+											ifname, (DHCP_SNP_RETURN_CODE_OK == ret) ? "ok":"fail");
+						ret = DHCP_SNP_RETURN_CODE_NOT_EN_INTF;
+					}
+					else if(DHCP_SNP_RETURN_CODE_OK == ret) {
+						//ret = dhcp_snp_set_intf_add_router(NPD_DHCP_SNP_DISABLE, ifname);	
+						ret = dhcp_snp_listener_handle_add_router(NPD_DHCP_SNP_DISABLE, ifname);
+					}
+				}
+			}
+			else {
+				syslog_ax_dhcp_snp_err("no interface found with index %d!\n", ifindex);
+				ret = DHCP_SNP_RETURN_CODE_NO_SUCH_INTF;
+			}
+		}
+		else {	
+			syslog_ax_dhcp_snp_warn("dhcp snooping global status not enabled.\n");
+		}
+	}
+	else if(1 == add_router_type) { /* anti ARP spoofing working on normal interface */
+		if(if_indextoname(ifindex, ifname)) {
+			if(DHCP_SNP_ENABLE == status ) {/* enable */
+				syslog_ax_dhcp_snp_dbg("enable add-route if %d name %s\n", ifindex, ifname);
+				ret = dhcp_snp_handle_intf_ebtables(ifname, DHCP_SNP_ENABLE);
+			}
+			else /* disable */
+			{
+				syslog_ax_dhcp_snp_dbg("disable add-route if %d name %s\n", ifindex, ifname);
+				ret = dhcp_snp_handle_intf_ebtables(ifname, DHCP_SNP_DISABLE);	
+			}
+		}
+		else {
+			syslog_ax_dhcp_snp_err("no interface found with index %d!\n", ifindex);
+			ret = DHCP_SNP_RETURN_CODE_NO_SUCH_INTF;
+		}
+	}
+
+	reply = dbus_message_new_method_return(msg);
+	
+	dbus_message_iter_init_append(reply, &iter);
+	dbus_message_iter_append_basic(&iter,
+									DBUS_TYPE_UINT32, &ret);
+
+	return reply;
+} 
+
+/**********************************************************************************
  * dhcp_snp_dbus_config_intf
  *		config DHCP-Snooping enable status on interface
  *
@@ -5249,6 +5369,80 @@ DBusMessage *dhcp_snp_dbus_show_wan_bind_table
 	show_items=NULL;
 	return reply;
 }
+DBusMessage *dhcp_snp_dbus_del_host_router
+(
+	DBusConnection *conn,
+	DBusMessage *msg, 
+	void *user_data
+)
+{
+	DBusMessage* reply = NULL;
+	DBusMessageIter iter;
+	DBusError err;
+	unsigned int ret = DHCP_SNP_RETURN_CODE_OK;
+	NPD_DHCP_SNP_USER_ITEM_T user;
+	NPD_DHCP_SNP_TBL_ITEM_T *item = NULL;
+	unsigned int record_count = NPD_DHCP_SNP_INIT_0;
+    NPD_DHCP_SNP_TBL_ITEM_T *show_items = NULL;
+	unsigned int i = NPD_DHCP_SNP_INIT_0;
+	char ifname[IF_NAMESIZE]={0};
+	char *name = NULL;
+	char command[128] = {0};
+	
+	dbus_error_init(&err);
+	if (!(dbus_message_get_args(msg, &err,
+							DBUS_TYPE_STRING, &name,
+							DBUS_TYPE_INVALID)))
+	{
+		syslog_ax_dhcp_snp_err("Unable to get input args ");
+		if (dbus_error_is_set(&err)) {
+			 syslog_ax_dhcp_snp_err("%s raised: %s", err.name, err.message);
+			dbus_error_free(&err);
+		}
+		syslog_ax_dhcp_snp_err("return error caused dbus.\n");
+		return NULL;
+	}
+	ret = dhcp_snp_check_global_status();
+	if (DHCP_SNP_RETURN_CODE_ENABLE_GBL == ret) {
+		pthread_mutex_lock(&mutexDhcpsnptbl);
+		record_count = dhcp_snp_tbl_mac_hash_foreach();
+		pthread_mutex_unlock(&mutexDhcpsnptbl);		
+
+		show_items = (NPD_DHCP_SNP_TBL_ITEM_T *)malloc(sizeof(NPD_DHCP_SNP_TBL_ITEM_T) * record_count);
+		if (!show_items) {
+			syslog_ax_dhcp_snp_err("show dhcp-snooping bind-table: malloc show_items failed\n");
+			return NULL;
+		}
+		
+		pthread_mutex_lock(&mutexDhcpsnptbl);
+		dhcp_snp_copy_bind_table(show_items, record_count);	
+		pthread_mutex_unlock(&mutexDhcpsnptbl);
+		for (i = 0; i < record_count; i++){
+			if(!if_indextoname(show_items[i].ifindex, ifname)) {
+				syslog_ax_dhcp_snp_err("no intf found as idx %d netlink error !\n", \
+										show_items[i].ifindex);
+				free(show_items);
+				show_items=NULL;
+				return NULL;
+			}
+			if((0 == strlen(name)) || (!strncmp(name,ifname,IF_NAMESIZE))){
+			sprintf(command,"sudo route del -host %u.%u.%u.%u dev %s",((show_items[i].ip_addr)>>24)&0xff,\
+				((show_items[i].ip_addr)>>16)&0xff,((show_items[i].ip_addr)>>8)&0xff,((show_items[i].ip_addr)>>0)&0xff,ifname);
+			system(command);
+			}
+			memset(ifname,0,IF_NAMESIZE);
+			memset(command,0,128);
+		}	
+	} 
+	reply = dbus_message_new_method_return(msg);
+	dbus_message_iter_init_append(reply, &iter);
+	dbus_message_iter_append_basic(&iter,
+									DBUS_TYPE_UINT32, &ret);
+	free(show_items);
+	show_items=NULL;
+	return reply;
+}
+
 DBusMessage *dhcp_snp_dbus_del_wan_bind_table
 (
 	DBusConnection *conn,

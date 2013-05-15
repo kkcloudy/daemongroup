@@ -526,6 +526,8 @@ unsigned int dhcp_snp_release_process
 	unsigned int ret = DHCP_SNP_RETURN_CODE_OK;
 	NPD_DHCP_SNP_USER_ITEM_T user;
 	NPD_DHCP_SNP_TBL_ITEM_T *item = NULL;
+	char ifname[IF_NAMESIZE]={0};
+	char command[128] = {0};
 
 	syslog_ax_dhcp_snp_dbg("receive DHCP RELEASE packet from vlan %d ifindex %d\n", vlanid, ifindex);
 	if (dhcp == NULL) {
@@ -566,6 +568,18 @@ unsigned int dhcp_snp_release_process
 				}
 				dhcp_snp_listener_handle_host_ebtables(item->chaddr, item->ip_addr, DHCPSNP_EBT_DEL_E);
 			}
+		}
+		if (node->add_router) {//delete router to host,next jump is the interface opening dhcp-snooping
+			if((0xFFFF == item->vlanId)&&(NPD_DHCP_SNP_BIND_STATE_BOUND == item->state)) {
+				
+				if(!if_indextoname(item->ifindex, ifname)) {
+					syslog_ax_dhcp_snp_err("no intf found as idx %d netlink error !\n", item->ifindex);
+					return DHCP_SNP_RETURN_CODE_ERROR;
+				}
+				sprintf(command,"sudo route del -host %u.%u.%u.%u dev %s",(item->ip_addr>>24)&0xff,\
+				(item->ip_addr>>16)&0xff,(item->ip_addr>>8)&0xff,(item->ip_addr>>0)&0xff,ifname);
+				system(command);
+				}
 		}
 		
 		ret = dhcp_snp_tbl_item_delete(item);

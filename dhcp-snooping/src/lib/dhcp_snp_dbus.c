@@ -229,6 +229,12 @@ static DBusHandlerResult dhcp_snp_dbus_message_handler
 		}
 		else if(dbus_message_is_method_call(message,
 										DHCPSNP_DBUS_INTERFACE,
+										DHCPSNP_DBUS_METHOD_INTERFACE_ADD_ROUTER_ENABLE)) 
+		{
+			reply = dhcp_snp_dbus_config_intf_add_router(connection, message, user_data);
+		}
+		else if(dbus_message_is_method_call(message,
+										DHCPSNP_DBUS_INTERFACE,
 										DHCPSNP_DBUS_METHOD_CHECK_SNP_INTERFACE_VE)) 
 		{
 			reply = dhcp_snp_dbus_check_snp_interface_ve(connection, message, user_data);
@@ -258,6 +264,14 @@ static DBusHandlerResult dhcp_snp_dbus_message_handler
 			pthread_mutex_lock(&mutexDhcpsnptbl);
 			reply = dhcp_snp_dbus_del_wan_bind_table(connection, message, user_data);
 			pthread_mutex_unlock(&mutexDhcpsnptbl);			
+		}
+		else if (dbus_message_is_method_call(message,
+										DHCPSNP_DBUS_INTERFACE,
+										DHCPSNP_DBUS_METHOD_DELETE_HOST_ROUTER))
+		{
+			//pthread_mutex_lock(&mutexDhcpsnptbl);
+			reply = dhcp_snp_dbus_del_host_router(connection, message, user_data);
+			//pthread_mutex_unlock(&mutexDhcpsnptbl);			
 		}
 		else if (dbus_message_is_method_call(message,
 										DHCPSNP_DBUS_INTERFACE,
