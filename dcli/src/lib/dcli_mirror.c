@@ -106,9 +106,11 @@ DEFUN(config_mirror_cmd_func,
 	unsigned int op_ret = 0;
 	unsigned int profile = -1;
 
-    if(argc == 1){
+    if(argc == 1)
+	{
 		profile = strtoul((char *)argv[0],NULL,0);
-		if((profile < 0)||profile > 6){
+		if((profile < 0)||profile > 6)
+		{
 	        vty_out(vty,"%% Bad parameter : %s !",argv[0]);
 			return CMD_WARNING;
 		}
@@ -125,9 +127,11 @@ DEFUN(config_mirror_cmd_func,
 	
 	reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection,query,-1, &err);
 	dbus_message_unref(query);
-	if (NULL == reply) {
+	if (NULL == reply) 
+	{
 		vty_out(vty,"failed get reply.\n");
-		if (dbus_error_is_set(&err)) {
+		if (dbus_error_is_set(&err)) 
+		{
 			printf("%s raised: %s",err.name,err.message);
 			dbus_error_free_for_dcli(&err);
 		}
@@ -136,18 +140,23 @@ DEFUN(config_mirror_cmd_func,
 	if (dbus_message_get_args ( reply, &err,
 		DBUS_TYPE_UINT32,&op_ret,
 		DBUS_TYPE_UINT32,&profile,
-		DBUS_TYPE_INVALID)){	
+		DBUS_TYPE_INVALID))
+	{	
 
-		if(MIRROR_RETURN_CODE_SUCCESS==op_ret){
-			if(CONFIG_NODE==(vty->node)){
+		if(MIRROR_RETURN_CODE_SUCCESS==op_ret)
+		{
+			if(CONFIG_NODE==(vty->node))
+			{
 					vty->node=MIRROR_NODE;	
 					vty->index = (void *)profile;
 			}
 		}
-		else if (COMMON_PRODUCT_NOT_SUPPORT_FUCTION == op_ret){
-			vty_out(vty,"%% Product not support this function!\n");
+		else if (COMMON_PRODUCT_NOT_SUPPORT_FUCTION == op_ret)
+		{
+			vty_out(vty,"%% Do not support config mirror on AX71_CRSMU or AX81_SMU!\n");
 		}
-		else {
+		else 
+		{
             vty_out(vty,dcli_mirror_err_msg[op_ret - MIRROR_RETURN_CODE_BASE]);
 		}
 	} 
@@ -180,7 +189,8 @@ DEFUN(debug_mirror_dest_port_cmd_func,
 	unsigned char   slot_no,port_no;	
 	unsigned int profile = 0;
 
-	if(argc > 2) {
+	if(argc > 2) 
+	{
 		vty_out(vty,"%% Input too many param\n");
 		return CMD_FAILURE;
 	}
@@ -263,31 +273,62 @@ DEFUN(mirror_dest_port_cmd_func,
 	unsigned char   slot_no,port_no;	
 	MIRROR_DIRECTION_TYPE direct = MIRROR_INGRESS_E;
 	unsigned int profile = 0;
+	char path_start_no[64];
+	char path_cnt[64];
+	int local_slot_id = 0,asic_port_start_no = 0,asic_port_cnt = 0;
+	
+	local_slot_id =	get_product_info("/dbm/local_board/slot_id");
+	
+	sprintf(path_start_no, "/dbm/product/slot/slot%d/asic_start_no", local_slot_id);
+	sprintf(path_cnt, "/dbm/product/slot/slot%d/asic_port_num", local_slot_id);
+	asic_port_start_no = get_product_info(path_start_no);
+	asic_port_cnt = get_product_info(path_cnt);
+    if((asic_port_start_no<0)||(asic_port_start_no>64))	
+    {
+		vty_out(vty,"get_num_from_file of slot %d return -1 !\n",local_slot_id);
+    }
 
-	if(argc > 2) {
+	if(argc > 2) 
+	{
 		vty_out(vty,"%% Input too many param\n");
 		return CMD_FAILURE;
 	}
 	
 	temp = parse_slotport_no((char*)argv[0],&slot_no,&port_no);
-	if (MIRROR_RETURN_CODE_SUCCESS != temp) {
+	if (MIRROR_RETURN_CODE_SUCCESS != temp) 
+	{
     	vty_out(vty,"%% Illegal format with slot/port!\n");
 		return CMD_FAILURE;
 	}
 
-	if(0 == strncmp("ingress",argv[1],strlen(argv[1]))) {
+	if(slot_no != local_slot_id)
+	{
+		vty_out(vty,"Do not support distributed command,please use mirror on local board!\n");
+		return CMD_WARNING;
+	}
+	else if((port_no < asic_port_start_no) || (port_no >= (asic_port_start_no+asic_port_cnt)))
+	{
+		vty_out(vty,"Param err,port num out of range !\n");
+		return CMD_WARNING;
+	}
+	if(0 == strncmp("ingress",argv[1],strlen(argv[1]))) 
+	{
 		direct = MIRROR_INGRESS_E;
 	}
-	else if(0 == strncmp("egress",argv[1],strlen(argv[1]))) {
+	else if(0 == strncmp("egress",argv[1],strlen(argv[1]))) 
+	{
 		direct = MIRROR_EGRESS_E;
 	}
-	else if(0 == strncmp("bidirection",argv[1],strlen(argv[1]))) {
+	else if(0 == strncmp("bidirection",argv[1],strlen(argv[1]))) 
+	{
 		direct = MIRROR_BIDIRECTION_E;
 	}
-	else {
+	else 
+	{
 		vty_out(vty,"%% Input bad param\n");
 		return CMD_FAILURE;
 	}
+	
 
 	if(MIRROR_NODE==vty->node)
 	{
@@ -308,9 +349,11 @@ DEFUN(mirror_dest_port_cmd_func,
 							 DBUS_TYPE_INVALID);
 	reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection,query,-1, &err);
 	dbus_message_unref(query);
-	if (NULL == reply) {
+	if (NULL == reply) 
+	{
 		vty_out(vty,"failed get reply.\n");
-		if (dbus_error_is_set(&err)) {
+		if (dbus_error_is_set(&err)) 
+		{
 			printf("%s raised: %s",err.name,err.message);
 			dbus_error_free_for_dcli(&err);
 		}
@@ -319,11 +362,14 @@ DEFUN(mirror_dest_port_cmd_func,
 	if (dbus_message_get_args ( reply, &err,
 		DBUS_TYPE_UINT32,&op_ret,
 		DBUS_TYPE_UINT32,&g_eth_index,
-		DBUS_TYPE_INVALID)){	
-		if (COMMON_PRODUCT_NOT_SUPPORT_FUCTION == op_ret){
+		DBUS_TYPE_INVALID))
+	{	
+		if (COMMON_PRODUCT_NOT_SUPPORT_FUCTION == op_ret)
+		{
 			vty_out(vty,"%% Product not support this function!\n");
 		}
-        else if(MIRROR_RETURN_CODE_SUCCESS!=op_ret){
+        else if(MIRROR_RETURN_CODE_SUCCESS!=op_ret)
+		{
 			#if 0
 		   vty_out(vty,dcli_mirror_err_msg[op_ret - MIRROR_RETURN_CODE_BASE]);
 			#endif
@@ -359,20 +405,48 @@ DEFUN(no_mirror_dest_port_cmd_func,
 	unsigned int	temp = 0,op_ret = 0,profile = 0;
 	unsigned char   slot_no = 0,port_no = 0;	
 	MIRROR_DIRECTION_TYPE direct = MIRROR_INGRESS_E;
+	char path_start_no[64];
+	char path_cnt[64];
+	int local_slot_id = 0,asic_port_start_no = 0,asic_port_cnt = 0;
+	
+	local_slot_id =	get_product_info("/dbm/local_board/slot_id");
+	
+	sprintf(path_start_no, "/dbm/product/slot/slot%d/asic_start_no", local_slot_id);
+	sprintf(path_cnt, "/dbm/product/slot/slot%d/asic_port_num", local_slot_id);
+	asic_port_start_no = get_product_info(path_start_no);
+	asic_port_cnt = get_product_info(path_cnt);
+    if((asic_port_start_no<0)||(asic_port_start_no>64))	
+    {
+		vty_out(vty,"get_num_from_file of slot %d return -1 !\n",local_slot_id);
+    }
 
 	temp = parse_slotport_no((char*)argv[0],&slot_no,&port_no);
-	
-	if (MIRROR_RETURN_CODE_SUCCESS != temp) {
-    	vty_out(vty,"%% Illegal format with slot/port!\n");
+
+	if(slot_no != local_slot_id)
+	{
+		vty_out(vty,"Do not support distributed command,please use mirror on local board!\n");
 		return CMD_FAILURE;
 	}
-	if(0 == strncmp("ingress",argv[1],strlen(argv[1]))) {
+	else if((port_no < asic_port_start_no) || (port_no >= (asic_port_start_no+asic_port_cnt)))
+	{
+		vty_out(vty,"Param err,port num out of range !\n");
+		return CMD_WARNING;
+	}
+	if (MIRROR_RETURN_CODE_SUCCESS != temp) 
+	{
+    	vty_out(vty,"%% Illegal format with slot/port!\n");
+		return CMD_WARNING;
+	}
+	if(0 == strncmp("ingress",argv[1],strlen(argv[1]))) 
+	{
 		direct = MIRROR_INGRESS_E;
 	}
-	else if(0 == strncmp("egress",argv[1],strlen(argv[1]))) {
+	else if(0 == strncmp("egress",argv[1],strlen(argv[1]))) 
+	{
 		direct = MIRROR_EGRESS_E;
 	}
-	else if(0 == strncmp("bidirection",argv[1],strlen(argv[1]))){
+	else if(0 == strncmp("bidirection",argv[1],strlen(argv[1])))
+	{
 		direct = MIRROR_BIDIRECTION_E;
 	}
 
@@ -405,12 +479,11 @@ DEFUN(no_mirror_dest_port_cmd_func,
 	}
 	if (dbus_message_get_args ( reply, &err,
 		DBUS_TYPE_UINT32,&op_ret,
-		DBUS_TYPE_INVALID)){	
-		if(MIRROR_RETURN_CODE_SUCCESS!=op_ret){
-			#if 0
+		DBUS_TYPE_INVALID))
+	{	
+		if(MIRROR_RETURN_CODE_SUCCESS!=op_ret)
+		{
 			vty_out(vty,dcli_mirror_err_msg[op_ret - MIRROR_RETURN_CODE_BASE]);
-			#endif
-			vty_out(vty,"delete destination port error !\n");
 		}
 	} 
 	else 
@@ -577,28 +650,59 @@ DEFUN(mirror_port_cmd_func,
 	unsigned int direct = 0;
 	unsigned char slot = 0,port = 0;
 	int ret = 0;
+	char path_start_no[64];
+	char path_cnt[64];
+	int local_slot_id = 0,asic_port_start_no = 0,asic_port_cnt = 0;
+	
+	local_slot_id =	get_product_info("/dbm/local_board/slot_id");
+	
+	sprintf(path_start_no, "/dbm/product/slot/slot%d/asic_start_no", local_slot_id);
+	sprintf(path_cnt, "/dbm/product/slot/slot%d/asic_port_num", local_slot_id);
+	asic_port_start_no = get_product_info(path_start_no);
+	asic_port_cnt = get_product_info(path_cnt);
+    if((asic_port_start_no<0)||(asic_port_start_no>64))	
+    {
+		vty_out(vty,"get_num_from_file of slot %d return -1 !\n",local_slot_id);
+    }
 
 	
 	ret = parse_slotport_no((char*)argv[0],&slot,&port);
-	if (MIRROR_RETURN_CODE_SUCCESS != ret) {
+	if (MIRROR_RETURN_CODE_SUCCESS != ret) 
+	{
     	vty_out(vty,"%% Illegal format with slot/port!\n");
 		return CMD_FAILURE;
 	}
-    else if(0 == slot){
+    else if(0 == slot)
+	{
         vty_out(vty,"%% Illegal slot no!\n");
 		return CMD_FAILURE;
 	}
-	if(0 == strncmp("ingress",argv[1],strlen(argv[1]))) {
+
+	if(slot != local_slot_id)
+	{
+		vty_out(vty,"Do not support distributed command,please use mirror on local board!\n");
+		return CMD_WARNING;
+	}
+	else if((port < asic_port_start_no) || (port >= (asic_port_start_no+asic_port_cnt)))
+	{
+		vty_out(vty,"Param err,port num out of range !\n");
+		return CMD_WARNING;
+	}
+	if(0 == strncmp("ingress",argv[1],strlen(argv[1]))) 
+	{
 		direct = MIRROR_INGRESS_E;
 	}
-	else if(0 == strncmp("egress",argv[1],strlen(argv[1]))) {
+	else if(0 == strncmp("egress",argv[1],strlen(argv[1]))) 
+	{
 		direct = MIRROR_EGRESS_E;
 	}
-	else if(0 == strncmp("bidirection",argv[1],strlen(argv[1]))){
+	else if(0 == strncmp("bidirection",argv[1],strlen(argv[1])))
+	{
 		direct = MIRROR_BIDIRECTION_E;
 	}
 	
-	if(MIRROR_NODE==vty->node) {
+	if(MIRROR_NODE==vty->node) 
+	{
 		profile = (unsigned int)(vty->index);
 	}
 
@@ -630,11 +734,13 @@ DEFUN(mirror_port_cmd_func,
 		DBUS_TYPE_UINT32,&ret,
 		DBUS_TYPE_INVALID))
 	{	
-		if (COMMON_PRODUCT_NOT_SUPPORT_FUCTION == ret){
+		if (COMMON_PRODUCT_NOT_SUPPORT_FUCTION == ret)
+		{
 			vty_out(vty,"%% Product not support mirror!\n");
 		}
-		else if(MIRROR_RETURN_CODE_SUCCESS!=ret){
-				vty_out(vty,dcli_mirror_err_msg[ret - MIRROR_RETURN_CODE_BASE]);						 
+		else if(MIRROR_RETURN_CODE_SUCCESS!=ret)
+		{
+			vty_out(vty,dcli_mirror_err_msg[ret - MIRROR_RETURN_CODE_BASE]);						 
 		}
 	} 
 	else 
@@ -845,24 +951,54 @@ DEFUN(no_mirror_port_cmd_func,
 	unsigned char slot = 0,port = 0;
 	unsigned int direct = 0;
 	int ret = 0;
+	char path_start_no[64];
+	char path_cnt[64];
+	int local_slot_id = 0,asic_port_start_no = 0,asic_port_cnt = 0;
+	
+	local_slot_id =	get_product_info("/dbm/local_board/slot_id");
+	
+	sprintf(path_start_no, "/dbm/product/slot/slot%d/asic_start_no", local_slot_id);
+	sprintf(path_cnt, "/dbm/product/slot/slot%d/asic_port_num", local_slot_id);
+	asic_port_start_no = get_product_info(path_start_no);
+	asic_port_cnt = get_product_info(path_cnt);
+    if((asic_port_start_no<0)||(asic_port_start_no>64))	
+    {
+		vty_out(vty,"get_num_from_file of slot %d return -1 !\n",local_slot_id);
+    }
 
 	
 	ret = parse_slotport_no((char*)argv[0],&slot,&port);
-	if (MIRROR_RETURN_CODE_SUCCESS != ret) {
+	if (MIRROR_RETURN_CODE_SUCCESS != ret) 
+	{
     	vty_out(vty,"%% Illegal format with slot/port!\n");
 		return CMD_FAILURE;
 	}
-	if(0 == strncmp("ingress",argv[1],strlen(argv[1]))) {
+	if(slot != local_slot_id)
+	{
+		vty_out(vty,"Do not support distributed command,please use mirror on local board!\n");
+		return CMD_WARNING;
+	}
+	else if((port < asic_port_start_no) || (port >= (asic_port_start_no+asic_port_cnt)))
+	{
+		vty_out(vty,"Param err,port num out of range !\n");
+		return CMD_WARNING;
+	}
+	
+	if(0 == strncmp("ingress",argv[1],strlen(argv[1]))) 
+	{
 			direct = MIRROR_INGRESS_E;
 	}
-	else if(0 == strncmp("egress",argv[1],strlen(argv[1]))) {
+	else if(0 == strncmp("egress",argv[1],strlen(argv[1]))) 
+	{
 		direct = MIRROR_EGRESS_E;
 	}
-	else if(0 == strncmp("bidirection",argv[1],strlen(argv[1]))){
+	else if(0 == strncmp("bidirection",argv[1],strlen(argv[1])))
+	{
 		direct = MIRROR_BIDIRECTION_E;
 	}
 	
-	if(MIRROR_NODE==vty->node) {
+	if(MIRROR_NODE==vty->node) 
+	{
 		profile = (unsigned int)(vty->index);
 	}
 
@@ -881,9 +1017,11 @@ DEFUN(no_mirror_port_cmd_func,
 							 DBUS_TYPE_INVALID);
 	reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection,query,-1, &err);
 	dbus_message_unref(query);
-	if (NULL == reply) {
+	if (NULL == reply) 
+	{
 		vty_out(vty,"failed get reply.\n");
-		if (dbus_error_is_set(&err)) {
+		if (dbus_error_is_set(&err)) 
+		{
 			printf("%s raised: %s",err.name,err.message);
 			dbus_error_free_for_dcli(&err);
 		}
@@ -895,7 +1033,16 @@ DEFUN(no_mirror_port_cmd_func,
 		DBUS_TYPE_UINT32,&ret,
 		DBUS_TYPE_INVALID))
 	{	
-		if(MIRROR_RETURN_CODE_SUCCESS!=ret){
+		if(MIRROR_RETURN_CODE_BAD_PARAM == ret)
+		{
+			vty_out(vty,"Do not support distributed command,please use mirror on local board!\n");
+		}
+		else if(MIRROR_RETURN_CODE_DESTINATION_NODE_NOTEXIST == ret)
+		{
+			vty_out(vty,"Param err,port num out of range !\n");
+		}
+		if(MIRROR_RETURN_CODE_SUCCESS!=ret)
+		{
 			vty_out(vty,dcli_mirror_err_msg[ret - MIRROR_RETURN_CODE_BASE]);						 
 		}
 	} 
