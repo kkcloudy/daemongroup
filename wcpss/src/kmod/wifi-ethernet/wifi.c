@@ -486,8 +486,9 @@ static void __exit wifi_cleanup_module(void)
 			}
 		}
 	}
-	
+#ifdef __wsm__	
 	wifi_cleanup_vm();
+#endif
 	wifi_dev_cleanup();
 	if(nl_sk != NULL){
 		sock_release(nl_sk->sk_socket);
