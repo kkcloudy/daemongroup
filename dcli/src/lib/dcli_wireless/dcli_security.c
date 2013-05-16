@@ -3883,16 +3883,16 @@ DEFUN(config_mac_auth_cmd_func,
 	dbus_message_iter_init(reply,&iter);
 	dbus_message_iter_get_basic(&iter,&ret);
 
-		if(ret == ASD_DBUS_SUCCESS)
-			vty_out(vty,"extensible authentication %s successfully\n",argv[0]);
-		else if (ret == ASD_SECURITY_NOT_EXIST)			
-			vty_out(vty,"<error> security profile does not exist.\n");			
-		else if(ret == ASD_SECURITY_WLAN_SHOULD_BE_DISABLE)			
-			vty_out(vty,"<error> this security profile is used by some wlans,please disable them first\n");
-		else if(ret == ASD_MAC_AUTH_NOT_SUPPORT)
-			vty_out(vty,"<error> the security type or other is not right!\n");
-		else
-			vty_out(vty,"<error>  %d\n",ret);
+	if(ret == ASD_DBUS_SUCCESS)
+		vty_out(vty,"mac auth %s successfully\n",argv[0]);
+	else if (ret == ASD_SECURITY_NOT_EXIST)			
+		vty_out(vty,"<error> security profile does not exist.\n");			
+	else if(ret == ASD_SECURITY_WLAN_SHOULD_BE_DISABLE)			
+		vty_out(vty,"<error> this security profile is used by some wlans,please disable them first\n");
+	else if(ret == ASD_MAC_AUTH_NOT_SUPPORT)
+		vty_out(vty,"<error> the security type or other is not right!\n");
+	else
+		vty_out(vty,"<error>  %d\n",ret);
 	dbus_message_unref(reply);
 	return CMD_SUCCESS;
 }
