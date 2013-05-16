@@ -21282,6 +21282,10 @@ DEFUN(set_ap_reboot_by_wlanid_func,
 	}
 	else if(ret == WLAN_ID_NOT_EXIST)
 		vty_out(vty,"<error> wlan id does not exist\n");
+	else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+	{
+		vty_out(vty, "<warning> you want to some wlan, and the operation of the wlan was not successful\n");
+	}
 	else
 	{
 		vty_out(vty,"<error>  %d\n",ret);

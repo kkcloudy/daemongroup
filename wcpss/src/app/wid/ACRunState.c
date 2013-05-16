@@ -844,7 +844,81 @@ CWBool ACEnterRun(int WTPIndex, CWProtocolMessage *msgPtr, CWBool dataFlag)
 					}	
 					free(BSS.BSSID);
 					//AC_WTP[WTPIndex]->WTP_Radio[0]->BSS[0]->State = 1;
-				}else{
+				}
+				else if ((zero == 0) /*&& (BSS.Radio_L_ID < L_RADIO_NUM)*/)
+				{
+					/*
+					 * This branch used to set this BSS's enable_wlan_flag,
+					 * when ac receive the disable-wlan-operation's success response from the special wtp.
+					 */
+
+					/*
+					 * The infomation from the ap, the wlanid is valid, but, the radioID is invalid.
+					 */
+					
+					/* if the user want to delete this wlan, set this flag to 1, 
+					 * and ignore this wlan's information for all the new created wtps
+					 * Huangleilei add it for AXSSZFI-1622 
+					 */
+					wid_syslog_debug_debug(WID_DEFAULT,"begin to clear AC_BSS...\n");
+					unsigned int BSSLIndex = 0;
+					unsigned int Radio_L_ID = 0;
+					int m1;
+					int m = 0;
+					
+					for(m1 = 0; m1 < L_BSS_NUM; m1++)
+					{
+						for (m = 0; m < L_RADIO_NUM; m++)
+						{
+							#if 0
+							if ((AC_WTP[WTPIndex]->WTP_Radio[m] != NULL) 
+								&& (AC_WTP[WTPIndex]->WTP_Radio[m]->del_flag == 1))
+							{
+								struct wlanid * wlan_point = NULL;
+								wlan_point = AC_RADIO[WTPIndex * L_RADIO_NUM + m]->Wlan_Id;
+								while ( wlan_point != NULL)
+								{
+									if (wlan_point->wlanid == BSS.WlanID)
+									{
+										Radio_L_ID = m;
+										wid_syslog_debug_debug(WID_DEFAULT, "Radio_L_ID: %d", Radio_L_ID);
+										break;
+									}
+									wlan_point = wlan_point->next;
+								}
+							}
+							#endif
+							if (AC_WTP[WTPIndex]->WTP_Radio[m] != NULL
+								&& AC_WTP[WTPIndex]->WTP_Radio[m]->BSS[m1] != NULL 
+								&& AC_WTP[WTPIndex]->WTP_Radio[m]->BSS[m1]->WlanID == BSS.WlanID)
+							{
+								struct wlanid * wlan_point = NULL;
+								wlan_point = AC_RADIO[WTPIndex * L_RADIO_NUM + m]->Wlan_Id;
+								while ( wlan_point != NULL)
+								{
+									if (wlan_point->wlanid == BSS.WlanID)
+									{
+										Radio_L_ID = m;
+										wid_syslog_debug_debug(WID_DEFAULT, "Radio_L_ID: %d", Radio_L_ID);
+										break;
+									}
+									wlan_point = wlan_point->next;
+								}
+								BSSLIndex = m1;
+								Radio_L_ID = m;
+								AC_WTP[WTPIndex]->WTP_Radio[Radio_L_ID]->BSS[BSSLIndex]->enable_wlan_flag = 0;
+								wid_syslog_debug_debug(WID_DEFAULT, "%s %d set wtp %d bss %d's enable_wlan_flag to '0(disable)'", __func__, __LINE__, WTPIndex, BSSLIndex);
+								break;
+							}
+						}
+					}
+					/*
+					if (AC_WTP[WTPIndex]->WTP_Radio[Radio_L_ID] != NULL
+						&& AC_WTP[WTPIndex]->WTP_Radio[Radio_L_ID]->BSS[BSSLIndex] != NULL)
+					{
+					}*/
+				}
+				else{
 					//wid_syslog_debug_debug(WID_DEFAULT,"WLAN delete success\n");
 				}
 			}
@@ -2549,6 +2623,10 @@ CWBool CWAssembleMsgElemAddWlan(CWProtocolMessage *msgPtr, int WTPIndex, unsigne
 				policy = AC_WTP[WTPIndex]->WTP_Radio[RadioID]->BSS[k1]->BSS_IF_POLICY;
 
 				tunnel = AC_WTP[WTPIndex]->WTP_Radio[RadioID]->BSS[k1]->BSS_TUNNEL_POLICY;
+				if (AC_WTP[WTPIndex]->WTP_Radio[RadioID]->BSS[k1]->enable_wlan_flag == 0)		/* Huangleilei add for ASXXZFI-1622 */
+				{
+					AC_WTP[WTPIndex]->WTP_Radio[RadioID]->BSS[k1]->enable_wlan_flag = 1;
+				}
 				//printf("MsgElemAddWlan tunnel %d\n",tunnel);
 				
 				break;
@@ -2671,6 +2749,7 @@ CWBool CWAssembleMsgElemAddWlan(CWProtocolMessage *msgPtr, int WTPIndex, unsigne
 				delete_ipip_tunnel(BSSIndex);
 			}
 		}*/
+		AC_WTP[WTPIndex]->WTP_Radio[RadioID]->BSS[AC_WLAN[i]->S_WTP_BSS_List[WTPIndex][RadioID] % L_BSS_NUM]->enable_wlan_flag = 0;
 		CW_CREATE_PROTOCOL_MESSAGE(*msgPtr, size, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
 	
 		CWProtocolStore8(msgPtr, RadioID);

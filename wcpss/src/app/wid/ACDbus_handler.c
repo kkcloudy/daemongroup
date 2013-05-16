@@ -29,6 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *
 *******************************************************************************/
 #include <string.h>
+#include <time.h>		/* Huangleilei add for ASXXZFI-1622 */
 #include <dbus/dbus.h>
 #include <stdbool.h>
 #include <unistd.h>
@@ -709,14 +710,155 @@ int WID_CREATE_NEW_WLAN(char *WlanName, unsigned char WlanID,unsigned char *ESSI
 	wid_syslog_debug_debug(WID_DEFAULT,"create a new wlan:%s,%s,%d,%d,%d,%d",AC_WLAN[WlanID]->WlanName,AC_WLAN[WlanID]->ESSID,AC_WLAN[WlanID]->WlanID,AC_WLAN[WlanID]->AAW,AC_WLAN[WlanID]->L3_IF_Index[0],AC_WLAN[WlanID]->Status);
 	return 0;
 }
+/* if spending too much time to delete the special wlan,
+  * use the struct below to notice the user when return 
+  * from free_wlan thread
+  */
+struct free_wlan_thread_stuct		/* Huangleilei add for ASXXZFI-1622 */
+{
+	int vty_fd;
+	FILE *fp;
+	unsigned char WlanID;
+};
+void * free_wlan(void * arg)
+{
+	int i = 0, j = 0;
+	int WlanID = 0;
+	int ret = 0;
+	unsigned int radioid;
+	WlanID = (int) arg;
+	if (WlanID & 0x80000000)
+	{
+		wid_pid_write_v2("free_AC_WLAN", 0, vrrid);
+		wid_syslog_debug_debug(WID_DEFAULT, "%s %d pid: %u", __func__, __LINE__, (unsigned int)getpid());
+		WlanID &= 0x000000FF;
+	}	
+	wid_syslog_debug_debug(WID_DEFAULT, "%s %d WlanID: %u", __func__, __LINE__, WlanID);
+	struct timeval tpstart, tpend;
+	struct timeval tpdel;
+	struct timeval time_check_start;
+	struct timeval time_check_end;
+	gettimeofday(&tpstart, NULL);
+	{
+		for( i = 0 ; i < WTP_NUM; i ++)
+		{
+			if (AC_WTP[ i ] != NULL && AC_WTP[ i ]->WTPStat == CW_ENTER_RUN)
+			{
+				gettimeofday(&time_check_start, NULL);
+				for(j = 0 ; j < AC_WTP[ i ]->RadioCount; j ++)
+				{
+					if (AC_WLAN[WlanID]->S_WTP_BSS_List[i][j] != 0
+						&& AC_WTP[i]->WTP_Radio[j]->BSS[AC_WLAN[WlanID]->S_WTP_BSS_List[i][j] % L_BSS_NUM] != NULL)
+					{
+						while (AC_WTP[i]->WTP_Radio[j]->BSS[AC_WLAN[WlanID]->S_WTP_BSS_List[i][j] % L_BSS_NUM]->enable_wlan_flag == 1
+							&& AC_WTP[i]->WTPStat == CW_ENTER_RUN)
+						{
+							usleep(10000);
+						}
+						gettimeofday(&time_check_end, NULL);
+						if (time_check_end.tv_sec - time_check_start.tv_sec > (CW_RETRANSMIT_INTERVAL_DEFAULT * CW_MAX_RETRANSMIT_DEFAULT))
+						{
+							wid_syslog_debug_debug(WID_DEFAULT, "%s %d too much time to wait: 25 seconds", __func__, __LINE__);
+							goto maybe_get_time_exprired;
+						}
+					}
+				}
+			}
+			maybe_get_time_exprired:
+				;						// do nothing, goto next circle
+		}
+	}
+	AsdWsm_WLANOp(WlanID, WID_DEL, 0);	
+	for(i=0;i<WTP_NUM;i++)
+		if(AC_WTP[i] != NULL){
+			for(j=0;j<AC_WTP[i]->RadioCount;j++){
+				if(AC_WLAN[WlanID]->S_WTP_BSS_List[i][j] != 0)
+				{
+					radioid = i*L_RADIO_NUM+j;
+					ret = WID_DELETE_WLAN_APPLY_RADIO(radioid,WlanID);
+					if(ret != 0)
+						wid_syslog_err("WID_DELETE_WLAN_APPLY_RADIO radio %d delete wlan %d error\n",radioid,WlanID);
+					continue;
+				}
+			}
+		}
+	if(AC_WLAN[WlanID]->wlan_if_policy == WLAN_INTERFACE){
+		Delete_Wlan_L3_BR_Interface(WlanID);
+	}
+	struct WID_TUNNEL_WLAN_VLAN * wlan_vlan = AC_WLAN[WlanID]->tunnel_wlan_vlan;
+	while(wlan_vlan != NULL)
+	{
+		AC_WLAN[WlanID]->tunnel_wlan_vlan = wlan_vlan->ifnext;
+		free(wlan_vlan);
+		wlan_vlan = NULL;
+		wlan_vlan = AC_WLAN[WlanID]->tunnel_wlan_vlan;
+	}
+	wid_auto_ap_if *iflist= NULL;
+	iflist = g_auto_ap_login.auto_ap_if;
+	while(iflist != NULL)
+	{
+		for(i=0; i<L_BSS_NUM; i++)
+		{
+			if(WlanID == iflist->wlanid[i])
+			{
+				iflist->wlanid[i] = 0;
+				for(j=i;((j+1)<L_BSS_NUM)&&(j<(iflist->wlannum));j++)
+				{
+					iflist->wlanid[j] = iflist->wlanid[j+1];
+				}
+				iflist->wlannum--;
+				break;
+			}
+		}	
+			iflist = iflist->ifnext;
+	}
+	struct ifi * wlan_ifi = AC_WLAN[WlanID]->Wlan_Ifi;
+	while(wlan_ifi != NULL)
+	{
+		AC_WLAN[WlanID]->Wlan_Ifi = wlan_ifi->ifi_next;
+		free(wlan_ifi);
+		wlan_ifi = NULL;
+		wlan_ifi = AC_WLAN[WlanID]->Wlan_Ifi;
+	}
+	free(AC_WLAN[WlanID]->WlanName);
+	AC_WLAN[WlanID]->WlanName = NULL;
+	free(AC_WLAN[WlanID]->ESSID);
+	AC_WLAN[WlanID]->ESSID = NULL;
+	free(AC_WLAN[WlanID]->eap_mac);//zhangshu add
+	AC_WLAN[WlanID]->eap_mac= NULL;
+	free(AC_WLAN[WlanID]);
+	AC_WLAN[WlanID] = NULL;
+	gettimeofday(&tpend, NULL);
+	if (tpend.tv_usec < tpstart.tv_usec)
+		tpdel.tv_sec = tpend.tv_sec - tpstart.tv_sec - 1;
+	else
+		tpdel.tv_sec = tpend.tv_sec - tpstart.tv_sec;
+	tpdel.tv_usec = (tpend.tv_usec < tpstart.tv_usec) ? (tpstart.tv_usec - tpend.tv_usec) : (tpend.tv_usec - tpstart.tv_usec);
+	wid_syslog_info("%s %d: before delete wlan has waited %d seconds %d usecond", __func__, __LINE__, tpdel.tv_sec, tpdel.tv_usec);
 
+	 return (void *)0;
+}
 int WID_DELETE_WLAN(unsigned char WlanID){
 	int i, j,ret = 0;
+	int create_thread_flag = 0;
 	unsigned int radioid;
+	int wlanid_temp = 0;
 	if(AC_WLAN[WlanID]->Status == 0){
 		return WLAN_BE_ENABLE;
 	}	
 
+	/* if the user want to delete this wlan, set this flag to 1, 
+	 * and ignore this wlan's information for all the new created wtps
+	 * Huangleilei add it for AXSSZFI-1622 
+	 */
+	 if (AC_WLAN[WlanID]->want_to_delete == 0)
+	 {
+		AC_WLAN[WlanID]->want_to_delete = 1;
+	 }
+	 else
+	 {
+	 	return WID_WANT_TO_DELETE_WLAN;
+	 }
 	/*fengwenchao add 20120509 for onlinebug-271*/
 	for(i=0;i<WTP_NUM;i++)
 	{
@@ -735,80 +877,82 @@ int WID_DELETE_WLAN(unsigned char WlanID){
 		}
 	}
 	/*fengwenchao add end*/	
-
-	
-	AsdWsm_WLANOp(WlanID, WID_DEL, 0);
-	struct ifi * wlan_ifi = AC_WLAN[WlanID]->Wlan_Ifi;
-	while(wlan_ifi != NULL)
+	sleep(1);
+	time_t before_wait;
+	time(&before_wait);
+	struct timeval tpstart, tpend;
+	struct timeval tpdel;
+	gettimeofday(&tpstart, NULL);
 	{
-		AC_WLAN[WlanID]->Wlan_Ifi = wlan_ifi->ifi_next;
-		free(wlan_ifi);
-		wlan_ifi = NULL;
-		wlan_ifi = AC_WLAN[WlanID]->Wlan_Ifi;
 		
-	}
-	free(AC_WLAN[WlanID]->WlanName);
-	AC_WLAN[WlanID]->WlanName = NULL;
-	free(AC_WLAN[WlanID]->ESSID);
-	AC_WLAN[WlanID]->ESSID = NULL;
-	free(AC_WLAN[WlanID]->eap_mac);//zhangshu add
-	AC_WLAN[WlanID]->eap_mac= NULL;
 	for(i=0;i<WTP_NUM;i++)
-		if(AC_WTP[i] != NULL){
-			for(j=0;j<AC_WTP[i]->RadioCount;j++){
-				if(AC_WLAN[WlanID]->S_WTP_BSS_List[i][j] != 0)
+		{
+			if (AC_WTP[i] != NULL && AC_WTP[i]->WTPStat == CW_ENTER_RUN)
+			{
+				for(j = 0;j < AC_WTP[i]->RadioCount; j ++)
 				{
-					radioid = i*L_RADIO_NUM+j;
-					ret = WID_DELETE_WLAN_APPLY_RADIO(radioid,WlanID);
+					if ((AC_WLAN[WlanID]->S_WTP_BSS_List[i][j] != 0)
+						&& AC_WTP[i]->WTP_Radio[j]->BSS[AC_WLAN[WlanID]->S_WTP_BSS_List[i][j] % L_BSS_NUM] != NULL)
+				{
+						while (/*AC_WLAN[WlanID]->S_WTP_BSS_List[i][j] != 0 */
+							AC_WTP[i]->WTP_Radio[j]->BSS[AC_WLAN[WlanID]->S_WTP_BSS_List[i][j] % L_BSS_NUM]->enable_wlan_flag == 1
+							&& AC_WTP[i]->WTPStat == CW_ENTER_RUN)
+						{
+							usleep(10000);
+
+							/* if delete-wlan-operation spends too much time (more than 3 seconds) in this thread, 
 					//printf("ret %d\n",ret);
-					if(ret != 0)
-						wid_syslog_err("WID_DELETE_WLAN_APPLY_RADIO radio %d delete wlan %d error\n",radioid,WlanID);
-					continue;
+							gettimeofday(&tpend, NULL);
+							if (tpend.tv_usec < tpstart.tv_usec)
+								tpdel.tv_sec = tpend.tv_sec - tpstart.tv_sec - 1;
+							else
+								tpdel.tv_sec = tpend.tv_sec - tpstart.tv_sec;
+							tpdel.tv_usec = (tpend.tv_usec < tpstart.tv_usec) ? (tpstart.tv_usec - tpend.tv_usec) : (tpend.tv_usec - tpstart.tv_usec);
+							if (tpdel.tv_sec >= 3)
+							{
+								wid_syslog_debug_debug(WID_DEFAULT, "%s %d: I did not want to wait it....it spend too much time: this is %d seconds %d usecond", __func__, __LINE__, tpdel.tv_sec, tpdel.tv_usec);
+								create_thread_flag = 1;
+								wid_syslog_debug_debug(WID_DEFAULT, "[%s %d] now, attend create a new thread to do the next operation, because of too much time spending", __func__, __LINE__);
+								goto create_thread_flag_out;
+								break;
 				}
 			}
 		}
-	if(AC_WLAN[WlanID]->wlan_if_policy == WLAN_INTERFACE){
 		//delete 3L interface
 		//Delete_Wlan_L3_Interface(WlanID);
-		Delete_Wlan_L3_BR_Interface(WlanID);
 	}
-
-	struct WID_TUNNEL_WLAN_VLAN * wlan_vlan = AC_WLAN[WlanID]->tunnel_wlan_vlan;
-	while(wlan_vlan != NULL)
-	{
-		AC_WLAN[WlanID]->tunnel_wlan_vlan = wlan_vlan->ifnext;
-		free(wlan_vlan);
-		wlan_vlan = NULL;
-		wlan_vlan = AC_WLAN[WlanID]->tunnel_wlan_vlan;
+			}
+		}
 		
 	}
 
-	//fengwenchao add 20110104
-	wid_auto_ap_if *iflist= NULL;
-	iflist = g_auto_ap_login.auto_ap_if;
-	while(iflist != NULL)
-	{
-		for(i=0; i<L_BSS_NUM; i++)
-		{
-			if(WlanID == iflist->wlanid[i])
+create_thread_flag_out:
+	wlanid_temp = WlanID;
+	wid_syslog_debug_debug(WID_DEFAULT, "%s %d WlanID: %u", __func__, __LINE__, wlanid_temp);
+	wlanid_temp &= 0x000000FF;		/* if delete wlan by create a new thread, then the first bit was setted to '1' */
+	//struct free_wlan_thread_stuct free_wlan_data;
+	//free_wlan_data.WlanID = WlanID;
+	//free_wlan_data.vty_fd = fd;
+	if (create_thread_flag == 1)
 			{
-				iflist->wlanid[i] = 0;
+		CWThread free_wlan_thread;	
+		wlanid_temp |= 0x80000000;
 				
-				for(j=i;((j+1)<L_BSS_NUM)&&(j<(iflist->wlannum));j++)
-				{
-					iflist->wlanid[j] = iflist->wlanid[j+1];
+		if(!CWErr(CWCreateThread(&free_wlan_thread, free_wlan, (void *)(wlanid_temp),0))) {
+			wid_syslog_crit("%s %d Error starting free_wlan Thread", __func__, __LINE__);
+			exit(1);
 				}
-				iflist->wlannum--;
-				break;
+		wid_syslog_debug_debug(WID_DEFAULT, "%s %d create a new thread to delete wlan %d information", __func__, __LINE__, WlanID);
+		return DELETE_WLAN_SPEN_TOO_MUCH_TIME;
 			}
-
-		}	
-			iflist = iflist->ifnext;
+	else
+	{
+		wid_syslog_debug_debug(WID_DEFAULT, "%s %d delete wlan %d information", __func__, __LINE__, WlanID);
+		free_wlan((void *)wlanid_temp);
+		return 0;
 	}
 
 	//fengwenchao add end
-	free(AC_WLAN[WlanID]);
-	AC_WLAN[WlanID] = NULL;
 	return 0;
 
 }
@@ -2656,6 +2800,11 @@ int WID_ENABLE_WLAN(unsigned char WlanID){
 	}
 	if(AC_WLAN[WlanID]->Status == 0)
 		return 0;
+	if (AC_WLAN[WlanID]->want_to_delete == 1)		/* Huangleilei add for ASXXZFI-1622 */
+	{
+		wid_syslog_err("operator want to delete wlan %d", WlanID);
+		return -1;
+	}
 	////////////////////////////////////////////////////
 	if(AC_WLAN[WlanID]->wlan_if_policy != NO_INTERFACE)
 	{
@@ -3175,6 +3324,7 @@ int WID_ENABLE_WLAN(unsigned char WlanID){
 	}
 	AC_WLAN[WlanID]->CMD = 0;	
 	AC_WLAN[WlanID]->Status = 0;		
+	AC_WLAN[WlanID]->want_to_delete = 0;		/* Huangleilei add for ASXXZFI-1622 */
 	AsdWsm_WLANOp(WlanID, WID_MODIFY, 0);
 
 	return 0;
@@ -8624,6 +8774,11 @@ int WID_ADD_WLAN_APPLY_RADIO(unsigned int RadioID,unsigned char WlanID){
 		wid_syslog_debug_debug(WID_DEFAULT,"*** you binding wlan does not exist **\n");
 		return WLAN_ID_NOT_EXIST;
 	}
+	if (AC_WLAN[WlanID]->want_to_delete == 1)		/* Huangleilei add for ASXXZFI-1622 */
+	{
+		wid_syslog_err("operator want to delete wlan %d", WlanID);
+		return -1;
+	}
 
 	if(AC_WLAN[WlanID]->Wlan_Ifi != NULL)
 	{
@@ -9060,6 +9215,11 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_VLANID(unsigned int RadioID,unsigned char Wlan
 		return WLAN_ID_NOT_EXIST;
 	}
 	
+	if (AC_WLAN[WlanID]->want_to_delete == 1)		/* Huangleilei add for ASXXZFI-1622 */
+	{
+		wid_syslog_err("operator want to delete wlan %d", WlanID);
+		return -1;
+	}
 	if(AC_WLAN[WlanID]->Wlan_Ifi != NULL)
 	{
 		if(AC_WTP[WtpID]->BindingSystemIndex != -1)
@@ -9469,6 +9629,11 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_NAS_PORT_ID(unsigned int RadioID,unsigned char
 		return WLAN_ID_NOT_EXIST;
 	}
 	
+	if (AC_WLAN[WlanID]->want_to_delete == 1)		/* Huangleilei add for ASXXZFI-1622 */
+	{
+		wid_syslog_err("operator want to delete wlan %d", WlanID);
+		return -1;
+	}
 	if(AC_WLAN[WlanID]->Wlan_Ifi != NULL)
 	{
 		if(AC_WTP[WtpID]->BindingSystemIndex != -1)
@@ -9908,6 +10073,11 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_HOTSPOT_ID(unsigned int RadioID,unsigned char 
 	if(AC_WLAN[WlanID] == NULL){
 		wid_syslog_debug_debug(WID_DEFAULT,"*** you binding wlan does not exist **\n");
 		return WLAN_ID_NOT_EXIST;
+	}
+	if (AC_WLAN[WlanID]->want_to_delete == 1)		/* Huangleilei add for ASXXZFI-1622 */
+	{
+		wid_syslog_err("operator want to delete wlan %d", WlanID);
+		return -1;
 	}
 	if(AC_WLAN[WlanID]->Wlan_Ifi != NULL)
 	{
@@ -11232,6 +11402,11 @@ int WID_ENABLE_WLAN_APPLY_RADIO(unsigned int RadioId, unsigned char WlanId)
 		return WLAN_BE_DISABLE;
 	}
 	
+	if (AC_WLAN[WlanId]->want_to_delete == 1)		/* Huangleilei add for ASXXZFI-1622 */
+	{
+		wid_syslog_err("operator want to delete wlan %d", WlanId);
+		return 0;
+	}
 	int ifind = 0;
 	
 	struct wlanid *wlan_id_next;
@@ -15311,6 +15486,8 @@ int WID_CHECK_WLAN_ID(u_int32_t Id){
 		ret = WLAN_ID_LARGE_THAN_MAX;
 	else if(AC_WLAN[Id] == NULL)
 		ret = WLAN_ID_NOT_EXIST;
+	else if (AC_WLAN[Id]->want_to_delete == 1)		/* Huangleilei add for ASXXZFI-1622 */
+		ret = WID_WANT_TO_DELETE_WLAN;
 		
 	return ret ;
 	
@@ -21091,7 +21268,7 @@ int WID_RADIO_SET_WDS_STATUS(unsigned int RadioID, unsigned char WLANID,unsigned
 	struct msgqlist *elem;
 	k = WLANID;
 	
-	if((AC_WLAN[k] != NULL))
+	if((AC_WLAN[k] != NULL) && (AC_WLAN[k]->want_to_delete != 1))		/* Huangleilei add for ASXXZFI-1622 */
 	{				
 
 		if(AC_WLAN[k]->S_WTP_BSS_List[wtpid][local_radioid] != 0)
@@ -21171,6 +21348,10 @@ int WID_RADIO_SET_WDS_STATUS(unsigned int RadioID, unsigned char WLANID,unsigned
 		{
 			return RADIO_NO_BINDING_WLAN;	
 		}
+	}
+	else if (AC_WLAN[k] != NULL && (AC_WLAN[k]->want_to_delete == 1))		/* Huangleilei add for ASXXZFI-1622 */
+	{
+		return WID_WANT_TO_DELETE_WLAN;
 	}
 	else
 	{
@@ -22998,7 +23179,7 @@ int wid_radio_set_wlan_traffic_limit_value(unsigned int wtpid,unsigned int l_rad
 }
 int wid_radio_set_wlan_traffic_limit_average_value(unsigned int wtpid,unsigned int l_radioid,unsigned char wlanid,unsigned int value,unsigned char issend)
 {
-	if((AC_WTP[wtpid] == NULL)||(AC_WLAN[wlanid] == NULL)||(AC_WTP[wtpid]->WTP_Radio[l_radioid] == NULL))
+	if((AC_WTP[wtpid] == NULL)||(AC_WLAN[wlanid] == NULL) || (AC_WLAN[wlanid] != NULL && AC_WLAN[wlanid]->want_to_delete == 1)||(AC_WTP[wtpid]->WTP_Radio[l_radioid] == NULL))		/* Huangleilei add for ASXXZFI-1622 */
 	{
 		return -1;
 	}

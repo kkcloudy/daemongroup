@@ -104,7 +104,7 @@ void WID_WLAN_CONFIG_SAVE(unsigned int WTPIndex,unsigned int local_radio)
 	{
 		{
 		AC_WTP[WTPIndex]->CMD->radiowlanid[local_radio][k] = 0;
-		if((AC_WLAN[k] != NULL)&&(AC_WLAN[k]->Status == 0))
+		if((AC_WLAN[k] != NULL)&&(AC_WLAN[k]->Status == 0) && (AC_WLAN[k]->want_to_delete == 0))	// Huangleilei add it for AXSSZFI-1622
 		{
 			wid_syslog_debug_debug(WID_DEFAULT,"***wtp index is %d\n",AC_WTP[WTPIndex]->BindingSystemIndex);
 			{

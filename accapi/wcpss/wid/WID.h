@@ -793,6 +793,7 @@ typedef struct {
 	char master_to_disable;//qiuchen add it for AXSSZFI-1191
 	unsigned char wsm_sta_info_reportswitch;
 	unsigned short wsm_sta_info_reportinterval;
+	unsigned char enable_wlan_flag;		/* wlan apply flag. Huangleilei add it for AXSSZFI-1622 */
 }WID_BSS;
 
 
@@ -1283,6 +1284,7 @@ struct wlan{
 	unsigned int  hotspot_id;	
 	u_int8_t	WLAN_TUNNEL_POLICY;
 	unsigned char multi_user_optimize_switch ;
+	unsigned char want_to_delete;		/* now, AC will begin to delete wlan,but it will wait until all the state of wlan of wtp used was disable. Huangleilei add it for AXSSZFI-1622 */
 	struct radius_client_data *radius;
 	struct asd_radius_servers *radius_server;
 };

@@ -12947,6 +12947,11 @@ DEFUN(bss_add_MAC_list_cmd_func,
 		vty_out(vty,"wlan %d is not exist!\n",wlan_id);
 		return CMD_SUCCESS;
 	}
+	else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+	{
+		vty_out(vty, "<warning> you want to some wlan, and the operation of the wlan was not successful\n");
+		return CMD_SUCCESS;
+	}
 	ReInitDbusPath_V2(localid,index,ASD_DBUS_BUSNAME,BUSNAME);
 	ReInitDbusPath_V2(localid,index,ASD_DBUS_STA_OBJPATH,OBJPATH);
 	ReInitDbusPath_V2(localid,index,ASD_DBUS_STA_INTERFACE,INTERFACE);
@@ -13132,6 +13137,11 @@ DEFUN(bss_del_MAC_list_cmd_func,
 		vty_out(vty,"wlan %d is not exist!\n",wlan_id);
 		return CMD_SUCCESS;
 	}
+	else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+	{
+		vty_out(vty, "<warning> you want to some wlan, and the operation of the wlan was not successful\n");
+		return CMD_SUCCESS;
+	}
 	ReInitDbusPath_V2(localid,index,ASD_DBUS_BUSNAME,BUSNAME);
 	ReInitDbusPath_V2(localid,index,ASD_DBUS_STA_OBJPATH,OBJPATH);
 	ReInitDbusPath_V2(localid,index,ASD_DBUS_STA_INTERFACE,INTERFACE);
@@ -13302,6 +13312,11 @@ DEFUN(bss_use_MAC_list_cmd_func,
 	else if(ret == WLAN_ID_NOT_EXIST)
 	{
 		vty_out(vty,"wlan %d is not exist!\n",wlan_id);
+		return CMD_SUCCESS;
+	}
+	else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+	{
+		vty_out(vty, "<warning> you want to some wlan, and the operation of the wlan was not successful\n");
 		return CMD_SUCCESS;
 	}
 	ReInitDbusPath_V2(localid,index,ASD_DBUS_BUSNAME,BUSNAME);

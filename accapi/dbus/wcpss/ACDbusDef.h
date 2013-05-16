@@ -161,7 +161,8 @@ enum wid_dbus_result_no_e {
 	ESSID_NOT_EXIT,					//weichao append,20110914
 	RADIO_IN_EBR,    //fengwenchao add for radio whether in ebr check
 	FLOW_CHECK_BE_DISABLE,
-	WID_MAC_ADD_ALREADY
+	WID_MAC_ADD_ALREADY,
+	WID_WANT_TO_DELETE_WLAN			/* Huangleilei add for ASXXZFI-1622 */
 };
 
 enum wid_radio_type {

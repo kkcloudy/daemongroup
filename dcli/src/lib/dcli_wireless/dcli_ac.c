@@ -9785,6 +9785,10 @@ DEFUN(set_wirelesscontrol_auto_ap_binding_wlan_func,
 	{
 		vty_out(vty,"<error> interface %s error, no index or interface down\n",argv[1]);
 	}
+	else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+	{
+		vty_out(vty, "<warning> you want to some wlan, and the operation of the wlan was not successful\n");
+	}
 	else
 	{
 		vty_out(vty,"<error>  other unknow error: %d\n", ret);
@@ -9921,6 +9925,10 @@ DEFUN(del_wirelesscontrol_auto_ap_binding_wlan_func,
 	else if(ret == APPLY_IF_FAIL)
 	{
 		vty_out(vty,"<error>input interface dosen't exist!\n");
+	}
+	else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+	{
+		vty_out(vty, "<warning> you want to some wlan, and the operation of the wlan was not successful\n");
 	}
 	else
 	{

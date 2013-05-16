@@ -5706,6 +5706,10 @@ DEFUN(set_wds_service_cmd_func,
 			vty_out(vty,"<error> radio doesn't bind wlan %s\n",argv[0]);
 		else if(ret==WTP_IS_NOT_BINDING_WLAN_ID)
 			vty_out(vty,"<error> radio doesn't bind wlan\n");
+		else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+		{
+			vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+		}
 		else if(ret == 0)
 			if((status&0x02) == 0){
 				vty_out(vty,"Radio %d-%d set wds status %s successfully .\n",radio_id/L_RADIO_NUM,radio_id%L_RADIO_NUM,argv[0]);
@@ -6741,8 +6745,16 @@ DEFUN(set_radio_bss_max_num_cmd_func,
 			vty_out(vty,"operation fail! .\n");
 		else if(ret == Wlan_IF_NOT_BE_BINDED)     //fengwenchao add 20110512
 			vty_out(vty,"wlan is not binded radio .\n");		
+		else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+		{
+			vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+		}
 		/*else if(ret==ASD_BSS_VALUE_INVALIDE)
 			//vty_out(vty,"more sta has accessed , before you set the max sta number\n",bss_index);*/
+		else
+		{
+			vty_out(vty,"<error> other unknow error happend: %d\n",ret);
+		}
 	dbus_message_unref(reply);
 	return CMD_SUCCESS;
 
@@ -7064,6 +7076,10 @@ DEFUN(set_radio_bss_l3_policy_cmd_func,
 			vty_out(vty,"<error> wlan id is not exist\n");
 		else if(ret == Wlan_IF_NOT_BE_BINDED)              //fengwenchao add 20110511
 			vty_out(vty,"<error> this wlan id is not binding radio\n");
+		else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+		{
+			vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+		}
 		else
 			vty_out(vty,"<error>  %d\n",ret);
 	
@@ -7320,6 +7336,10 @@ DEFUN(set_radio_apply_wlan_cmd_func,
 			vty_out(vty,"<error> wtp over max wep wlan count 4 or wep index conflict\n");
 		else if(ret == SECURITYINDEX_IS_SAME)   //fengwenchao add 20110112
 			vty_out(vty,"<error> radio apply bingding securityindex is same with other\n");
+		else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+		{
+			vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+		}
 		else 
 			vty_out(vty,"<error> radio %d-%d apply wlan %s fail\n",radio_id/L_RADIO_NUM,radio_id%L_RADIO_NUM,argv[0]);
 		
@@ -8011,6 +8031,10 @@ DEFUN(set_radio_bss_max_throughput_func,
 			vty_out(vty,"<error> RADIO is not exist\n");
 		else if(ret == WLAN_ID_NOT_EXIST)           //fengwenchao add 20110512
 			vty_out(vty,"<error> wlan id is not exist\n");		
+		else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+		{
+			vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+		}
 		else
 			vty_out(vty,"<error>  %d\n",ret);
 	
@@ -8424,6 +8448,10 @@ DEFUN(set_radio_delete_wlan_cmd_func,
 			vty_out(vty,"<error> wlan %d not exist\n",wlanid);
 		else if(ret == RADIO_IN_EBR)
 			vty_out(vty,"<error> radio interface is in ebr,please delete it from ebr first\n");
+		else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+		{
+			vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+		}
 		else 
 			vty_out(vty,"<error> radio %d-%d delete wlan %s fail\n",radio_id/L_RADIO_NUM,radio_id%L_RADIO_NUM,argv[0]);
 		
@@ -8669,6 +8697,10 @@ DEFUN(set_radio_enable_wlan_cmd_func,
 			vty_out(vty,"<error> radio is not binding this wlan\n");
 		else if(ret == WLAN_BE_DISABLE)
 			vty_out(vty,"<error> wlan is disable ,you should enable it first\n");
+		else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+		{
+			vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+		}
 		else 
 			vty_out(vty,"<error> radio %d-%d enable wlan %s fail\n",radio_id/L_RADIO_NUM,radio_id%L_RADIO_NUM,argv[0]);
 		
@@ -8897,6 +8929,10 @@ DEFUN(set_radio_disable_wlan_cmd_func,
 			vty_out(vty,"<error> radio %d-%d not exist\n",radio_id/L_RADIO_NUM,radio_id%L_RADIO_NUM);
 		else if(ret==WLAN_ID_NOT_EXIST)
 			vty_out(vty,"<error> wlan %d not exist\n",wlanid);
+		else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+		{
+			vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+		}
 		else 
 			vty_out(vty,"<error> radio %d-%d disable wlan %s fail\n",radio_id/L_RADIO_NUM,radio_id%L_RADIO_NUM,argv[0]);
 		
@@ -9476,6 +9512,10 @@ DEFUN(radio_apply_wlan_base_vlan_cmd_func,
 			vty_out(vty,"<error> wtp over max wep wlan count 4 or wep index conflict\n");
 		else if(ret == SECURITYINDEX_IS_SAME)   //fengwenchao add 20110112
 			vty_out(vty,"<error> radio apply bingding securityindex is same with other\n");
+		else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+		{
+			vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+		}
 		else
 			vty_out(vty,"<error>  %d\n",ret);
 	dbus_message_unref(reply);
@@ -9610,6 +9650,10 @@ DEFUN(radio_apply_wlan_base_nas_port_id_cmd_func,
 		vty_out(vty,"<error> wtp over max wep wlan count 4 or wep index conflict\n");
 	else if(ret == SECURITYINDEX_IS_SAME)   //fengwenchao add 20110112
 		vty_out(vty,"<error> radio apply bingding securityindex is same with other\n");
+	else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+	{
+		vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+	}
 	else
 		vty_out(vty,"<error>  %d\n",ret);
 
@@ -9716,6 +9760,10 @@ DEFUN(radio_apply_wlan_clean_nas_port_id_cmd_func,
 			vty_out(vty,"<error> radio is not binding this wlan \n");
 		else if(ret == BSS_BE_ENABLE)
 			vty_out(vty,"<error> bss is enable, you should disable it first\n");
+		else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+		{
+			vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+		}
 		else
 			vty_out(vty,"<error>  %d\n",ret);
 	dbus_message_unref(reply);
@@ -9849,6 +9897,10 @@ DEFUN(radio_apply_wlan_base_hotspot_cmd_func,
 			vty_out(vty,"<error> wtp over max wep wlan count 4 or wep index conflict\n");
 		else if(ret == SECURITYINDEX_IS_SAME)   
 			vty_out(vty,"<error> radio apply bingding securityindex is same with other\n");
+		else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+		{
+			vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+		}
 		else
 			vty_out(vty,"<error>  %d\n",ret);
 	dbus_message_unref(reply);
@@ -9951,6 +10003,10 @@ DEFUN(radio_apply_wlan_clean_hotspot_cmd_func,
 			vty_out(vty,"<error> radio is not binding this wlan \n");
 		else if(ret == BSS_BE_ENABLE)
 			vty_out(vty,"<error> bss is enable, you should disable it first\n");
+		else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+		{
+			vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+		}
 		else
 			vty_out(vty,"<error>  %d\n",ret);
 	dbus_message_unref(reply);
@@ -11153,6 +11209,10 @@ DEFUN(set_radio_l2_isolation_func,
 	{
 		vty_out(vty,"<error>  binding wlan error\n");
 	}
+	else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+	{
+		vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+	}
 	else
 	{
 		vty_out(vty,"<error>  %d\n",ret);
@@ -11442,6 +11502,10 @@ DEFUN(set_radio_11n_cwmmode_func,
 	{
 		vty_out(vty,"<error>  binding wlan error\n");
 	}
+	else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+	{
+		vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+	}
 	else
 	{
 		vty_out(vty,"<error>  %d\n",ret);
@@ -11716,6 +11780,10 @@ DEFUN(radio_wlan_wds_bssid_cmd_func,
 		vty_out(vty,"<error> radio doesn't bind wlan %s\n",argv[0]);
 	else if(ret==WTP_IS_NOT_BINDING_WLAN_ID)
 		vty_out(vty,"<error> radio doesn't bind wlan\n");
+	else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+	{
+		vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+	}
 	else if(ret == WID_DBUS_SUCCESS)
 	{
 		if((list_type&0x04) == 0){
@@ -11921,6 +11989,10 @@ DEFUN(show_wlan_wds_bssid_list_cmd_func,
 		dcli_radio_free_fun(WID_DBUS_RADIO_METHOD_SHOW_WDS_BSSID_INFO,RADIOINFO);
 	}else if (ret == WLAN_ID_NOT_EXIST)
 		vty_out(vty,"<error> wlan id does not exist\n");
+	else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+	{
+		vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+	}
 	else
 		vty_out(vty,"<error>  %d\n",ret);
 	return CMD_SUCCESS;
@@ -13150,6 +13222,10 @@ DEFUN(radio_bss_taffic_limit_func,
 		vty_out(vty,"<error> radio doesn't bind wlan\n");
 	else if(ret == WID_DBUS_SUCCESS)
 		vty_out(vty,"set wlan %s traffic limit %s successfully!\n",argv[0],argv[1]);
+	else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+	{
+		vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+	}
 	else
 		vty_out(vty,"<error> other error\n");
 	dbus_message_unref(reply);
@@ -13386,6 +13462,10 @@ DEFUN(radio_bss_taffic_limit_value_func,
 		vty_out(vty,"<error> radio doesn't bind wlan %s\n",argv[0]);
 	else if(ret == WID_DBUS_SUCCESS)
 		vty_out(vty,"set wlan %s traffic limit value %s successfully!\n",argv[0],argv[1]);
+	else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+	{
+		vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+	}
 	else
 		vty_out(vty,"<error> other error\n");
 	dbus_message_unref(reply);
@@ -13633,6 +13713,10 @@ DEFUN(radio_bss_taffic_limit_average_value_func,
 		vty_out(vty,"set wlan %s traffic limit station average value %s successfully!\n",argv[0],argv[1]);
 	else if(ret == IF_POLICY_CONFLICT)
 		vty_out(vty,"<error> station traffic limit value is more than bss traffic limit value\n");
+	else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+	{
+		vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+	}
 	else
 		vty_out(vty,"<error> other error\n");
 	dbus_message_unref(reply);
@@ -14240,6 +14324,10 @@ DEFUN(radio_bss_taffic_limit_cancel_sta_value_func,
 			vty_out(vty,"<error> radio doesn't bind wlan %s\n",argv[0]);
 		else if(ret == WID_DBUS_SUCCESS)
 			vty_out(vty,"set wlan %s traffic limit cancel station %s value successfully!\n",argv[0],argv[1]);
+		else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+		{
+			vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+		}
 		else
 			vty_out(vty,"<error> other error %d(wid)\n",ret);
 		dbus_message_unref(reply);
@@ -14485,6 +14573,10 @@ DEFUN(radio_bss_taffic_limit_send_value_func,
 		vty_out(vty,"<error> radio doesn't bind wlan %s\n",argv[0]);
 	else if(ret==WLAN_ID_NOT_EXIST)
 		vty_out(vty,"<error> wlan isn't existed\n");
+	else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+	{
+		vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+	}
 	else
 		vty_out(vty,"<error> other error\n");
 	dbus_message_unref(reply);
@@ -14735,6 +14827,10 @@ DEFUN(radio_bss_taffic_limit_average_send_value_func,
 		vty_out(vty,"set wlan %s traffic limit station average value %s successfully!\n",argv[0],argv[1]);
 	else if(ret==WLAN_ID_NOT_EXIST)
 		vty_out(vty,"<error> wlan isn't existed\n");
+	else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+	{
+		vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+	}
 	else
 		vty_out(vty,"<error> other error\n");
 	dbus_message_unref(reply);
@@ -15501,6 +15597,10 @@ DEFUN(radio_bss_taffic_limit_cancel_sta_send_value_func,
 			vty_out(vty,"<error> radio doesn't bind wlan %s\n",argv[0]);
 		else if(ret==WLAN_ID_NOT_EXIST)
 			vty_out(vty,"<error> wlan isn't existed\n");
+		else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+		{
+			vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+		}
 		else
 			vty_out(vty,"<error> other error %d(wid)\n",ret);
 		dbus_message_unref(reply);
@@ -15734,6 +15834,10 @@ DEFUN(radio_apply_wlan_clean_vlan_cmd_func,
 			vty_out(vty,"<error> radio is not binding this wlan \n");
 		else if(ret == BSS_BE_ENABLE)
 			vty_out(vty,"<error> bss is enable, you should disable it first\n");
+		else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+		{
+			vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+		}
 		else
 			vty_out(vty,"<error>  %d\n",ret);
 	dbus_message_unref(reply);
@@ -16442,6 +16546,10 @@ DEFUN(set_sta_dhcp_before_authorized_func,
 	{
 		vty_out(vty,"<error>  binding wlan error\n");
 	}
+	else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+	{
+		vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+	}
 	else
 	{
 		vty_out(vty,"<error>  %d\n",ret);
@@ -16801,6 +16909,10 @@ DEFUN(set_sta_ip_mac_binding_func,
 	else if (ret == WTP_OVER_MAX_BSS_NUM)
 	{
 		vty_out(vty,"<error> binding wlan error\n");
+	}
+	else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+	{
+		vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
 	}
 	else
 	{
@@ -20342,6 +20454,14 @@ DEFUN(set_wtp_list_sta_static_arp_enable_func,
 	else if(ret == APPLY_IF_FAIL){
 		vty_out(vty,"interface %s no exist\n",argv[3]);
 	}/*wcl add for AUTELAN-2836*/
+	else if (ret == WLAN_ID_NOT_EXIST)
+	{
+		vty_out(vty, "<error> wlan %d was not created before\n", wlanid);
+	}
+	else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+	{
+		vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+	}
 	else
 		vty_out(vty,"<error>  %d\n",ret);
 	
@@ -20562,6 +20682,10 @@ DEFUN(set_wtp_sta_static_arp_enable_func,
 	else if(ret == APPLY_IF_FAIL){
 		vty_out(vty,"interface %s no exist\n",argv[2]);
 	}/*wcl add for AUTELAN-2832*/
+	else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+	{
+		vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+	}
 	else
 		vty_out(vty,"<error>  %d\n",ret);
 	
@@ -21574,6 +21698,10 @@ DEFUN(set_radio_11n_puren_mixed_func,
 			vty_out(vty,"<error> radio %d-%d mode is not 11n,don't support this op\n", radio_id/L_RADIO_NUM, radio_id%L_RADIO_NUM);
 	else if(ret == WID_DBUS_ERROR) //fengwenchao add 20120716 for autelan-3057
 		vty_out(vty,"<error> now radio %d-%d mode is an or gn, belong to puren,you can set it to mixed\n", radio_id/L_RADIO_NUM, radio_id%L_RADIO_NUM);
+	else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+	{
+		vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+	}
 	else
 		vty_out(vty,"<error>  %d\n",ret);
 
@@ -22596,6 +22724,10 @@ DEFUN(set_radio_wlan_limit_rssi_access_sta_cmd_func,
 		   vty_out(vty,"<error> bss id does not exist\n");
 	  else if(ret == Wlan_IF_NOT_BE_BINDED)
 		    vty_out(vty,"<error> wlan is not bind by this radio\n");
+	  else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+	  {
+		  vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+	  }
 		return CMD_SUCCESS;    	
 }
 /*fengwenchao add end*/
@@ -22766,6 +22898,10 @@ DEFUN(set_ap_uni_muti_bro_cast_isolation_set_func,
 		vty_out(vty,"<error> radio %d-%d does support rate %d.\n",radioid/L_RADIO_NUM,radioid%L_RADIO_NUM,rate);
 	else if(ret == BSS_NOT_EXIST)
 		vty_out(vty,"<error> bss not exsit.");
+	else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+	{
+		vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+	}
 	else
 	{
 		vty_out(vty,"<error>  %d\n",ret);
@@ -22908,6 +23044,10 @@ DEFUN(set_ap_muti_bro_cast_rate_set_func,
 		vty_out(vty,"<error> radio %d-%d does support rate %d.\n",radioid/L_RADIO_NUM,radioid%L_RADIO_NUM,rate);
 	else if(ret == BSS_NOT_EXIST)
 		vty_out(vty,"<error> bss not exsit.");
+	else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+	{
+		vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+	}
 	else
 	{
 		vty_out(vty,"<error>  %d\n",ret);
@@ -23040,6 +23180,10 @@ DEFUN(set_ap_not_response_sta_probe_request_func,
 		vty_out(vty,"<error> radio %d-%d not bind wlan %d.\n",radioid/L_RADIO_NUM,radioid%L_RADIO_NUM,wlanid);
 	else if(ret == WLAN_ID_NOT_EXIST)
 		vty_out(vty,"<error> wlan %d does not exist\n",wlanid);
+	else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+	{
+		vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+	}
 	else
 	{
 		vty_out(vty,"<error>  %d\n",ret);
@@ -23347,6 +23491,10 @@ DEFUN(set_bss_multi_user_optimize_cmd_func,
 		vty_out(vty,"operation fail! .\n");
 	else if(ret == Wlan_IF_NOT_BE_BINDED)	  
 		vty_out(vty,"wlan is not binded radio .\n");
+	else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+	{
+		vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+	}
 	else
 		vty_out(vty,"<error>%d\n",ret);
 	dbus_message_unref(reply);
@@ -23460,8 +23608,11 @@ DEFUN( set_wsm_sta_info_reportswitch_cmd_func,
 		case WID_DBUS_SUCCESS:
 			vty_out(vty,"set wlanid %s wsm sta info reportswitch %s \n",argv[0],argv[1]);
 			break;
+		case WID_WANT_TO_DELETE_WLAN:		/* Huangleilei add for ASXXZFI-1622 */
+			vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+			break;
 		default:
-			vty_out(vty,"<error> other error\n");
+			vty_out(vty,"<error> other error: %d\n", ret);
 			break;
 	}
 	dbus_message_unref(reply);
@@ -23565,8 +23716,11 @@ DEFUN( set_wsm_sta_info_reportinterval_cmd_func,
 		case RADIO_NO_BINDING_WLAN:
 			vty_out(vty,"<error> radio doesn't bing wlan \n");
 			break;
+		case WID_WANT_TO_DELETE_WLAN:		/* Huangleilei add for ASXXZFI-1622 */
+			vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+			break;
 		default :
-			vty_out(vty,"<error> other error\n");
+			vty_out(vty,"<error> other error: %d\n", ret);
 			break;
 	}
 	dbus_message_unref(reply);

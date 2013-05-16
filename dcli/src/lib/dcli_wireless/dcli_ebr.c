@@ -1694,6 +1694,9 @@ DEFUN(ebr_set_bridge_ucast_solicit_func,
 		case WLAN_APPLY_SECURITY_FIRST:
 			vty_out(vty, "<error> apply security in this wlan first\n");
 			break;
+		case WID_WANT_TO_DELETE_WLAN:		/* Huangleilei add for ASXXZFI-1622 */
+			vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+			break;
 		default:
 			vty_out(vty,"<error> set set bridge_ucast_solicit unknow return value %d\n",ret);
 			break;
@@ -1854,6 +1857,9 @@ DEFUN(ebr_set_bridge_multicast_solicit_func,
 			break;
 		case WLAN_APPLY_SECURITY_FIRST:
 			vty_out(vty, "<error> apply security in this wlan first\n");
+			break;
+		case WID_WANT_TO_DELETE_WLAN:		/* Huangleilei add for ASXXZFI-1622 */
+			vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
 			break;
 		default:
 			vty_out(vty,"<error> set bridge_mcast_solicit unknow return value %d\n",ret);

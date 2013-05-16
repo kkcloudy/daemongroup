@@ -199,7 +199,9 @@ enum wid_dbus_result_no_e {
 	NO_IF_HAS_THIS_IP,
 	AC_STATE_IP_NOT_EXIST,
 	AC_STATE_FIRST_DISABLE,
-	WID_SINGLE_RADIO
+	WID_SINGLE_RADIO,
+	DELETE_WLAN_SPEN_TOO_MUCH_TIME,    // create a new thread to delete wlan. Huangleilei add it for AXSSZFI-1622
+	WID_WANT_TO_DELETE_WLAN		/* Huangleilei add for ASXXZFI-1622 */
 };
 
 enum wid_radio_type {

@@ -643,6 +643,10 @@ DEFUN(config_wlan_cmd_func,
 			dbus_message_unref(reply);
 			return CMD_WARNING;
 		}
+		else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+		{
+			vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+		}
 		else{
 			vty_out(vty,"<error>  %d\n",ret);
 			dbus_message_unref(reply);
@@ -1183,6 +1187,10 @@ DEFUN(show_wlan_cmd_func,
 			dcli_wlan_free_fun(WID_DBUS_CONF_METHOD_SHOWWLAN,WLANINFO);
 		}else if (ret == WLAN_ID_NOT_EXIST)
 			vty_out(vty,"<error> wlan id does not exist\n");
+		else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+		{
+			vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+		}
 		else
 			vty_out(vty,"<error>  %d\n",ret);
 	}
@@ -1295,6 +1303,10 @@ DEFUN(show_wlan_cmd_func,
 					dcli_wlan_free_fun(WID_DBUS_CONF_METHOD_SHOWWLAN,WLANINFO);
 				}else if (ret == WLAN_ID_NOT_EXIST)
 					vty_out(vty,"<error> wlan id does not exist\n");
+				else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+				{
+					vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+				}
 				else
 					vty_out(vty,"<error>  %d\n",ret);
 				vty_out(vty,"==============================================================================\n");
@@ -1409,6 +1421,10 @@ DEFUN(show_wlan_cmd_func,
 					dcli_wlan_free_fun(WID_DBUS_CONF_METHOD_SHOWWLAN,WLANINFO);
 				}else if (ret == WLAN_ID_NOT_EXIST)
 					vty_out(vty,"<error> wlan id does not exist\n");
+				else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+				{
+					vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+				}
 				else
 					vty_out(vty,"<error>  %d\n",ret);
 				vty_out(vty,"==============================================================================\n");
@@ -1509,6 +1525,14 @@ DEFUN(config_flow_check_cmd_func,
 				else
 					vty_out(vty,"the flow check disable successfully!\n");
 			}	
+			else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+			{
+				vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+			}
+			else 
+			{
+				vty_out(vty, "<error> other unknow error happend: %d\n", ret);
+			}
 		dbus_message_unref(reply);
 		return CMD_SUCCESS;
 	}
@@ -1597,6 +1621,14 @@ DEFUN(set_no_flow_time_cmd_func,
 			else if(ret == FLOW_CHECK_BE_DISABLE){
 				vty_out(vty,"set the no flow time successfully!(the flow check is disable)\n");
 			}
+			else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+			{
+				vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+			}
+			else 
+			{
+				vty_out(vty, "<error> other unknow error happend: %d\n", ret);
+			}
 		dbus_message_unref(reply);
 		return CMD_SUCCESS;
 	}
@@ -1681,6 +1713,14 @@ DEFUN(set_limit_min_flow_cmd_func,
 		
 			if(ret == WID_DBUS_SUCCESS)
 				vty_out(vty,"set the limit min flow successfully!\n");
+			else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+			{
+				vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+			}
+			else 
+			{
+				vty_out(vty, "<error> other unknow error happend: %d\n", ret);
+			}
 		dbus_message_unref(reply);
 		return CMD_SUCCESS;
 	}
@@ -1849,6 +1889,10 @@ DEFUN(config_wlan_service_cmd_func,
 			vty_out(vty,"<error> wlan bingding securithindex same\n");
 		else if(ret == WID_DBUS_ERROR)
 			vty_out(vty,"<error> wlan not bingding security\n");
+		else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+		{
+			vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+		}
 		else
 			vty_out(vty,"<error>  %d\n",ret);
 	dbus_message_unref(reply);
@@ -1965,6 +2009,10 @@ DEFUN(config_wds_service_cmd_func,
 		vty_out(vty,"<error> you map layer3 interace error\n");
 	else if(ret == WLAN_BE_DISABLE)
 		vty_out(vty,"<error> you must first service enable wlan\n");
+	else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+	{
+		vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+	}
 	else
 		vty_out(vty,"<error>  %d\n",ret);
 	
@@ -2270,6 +2318,10 @@ DEFUN(create_wlan_cmd_func_cn,
 		vty_out(vty,"<error> wlan id exist\n");
 	else if(ret == WID_ILLEGAL_INPUT)
 		vty_out(vty,"<error> illegal input.\n");
+	else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+	{
+		vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+	}
 	else
 		vty_out(vty,"<error>  %d\n",ret);
 	//dbus_message_unref(reply);
@@ -2388,6 +2440,12 @@ DEFUN(delete_wlan_cmd_func,
 			vty_out(vty,"<error> wlan is enable,please disable it first\n");
 		else if(ret == RADIO_IN_EBR)
 			vty_out(vty,"<error> some radios interface in ebr,please delete it from ebr first\n");
+		else if (ret == DELETE_WLAN_SPEN_TOO_MUCH_TIME) 			 /* Huangleilei add for AXSSZFI-1622 */
+			vty_out(vty, "<warning> AC has to create a new thread to delete this wlan\n");
+		else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+		{
+			vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+		}
 		else
 			vty_out(vty,"<error>  %d\n",ret);
 	dbus_message_unref(reply);
@@ -2499,6 +2557,10 @@ DEFUN(wlan_apply_security_cmd_func,
 			vty_out(vty,"<error> security rdc has not config!\n");
 		else if(ret == ASD_SECURITY_WLAN_SHOULD_BE_DISABLE)
 			vty_out(vty,"<error> wlan is enable,you should disable it first\n");
+		else 
+		{
+			vty_out(vty, "<error> other unknow error happend: %d\n", ret);
+		}
 	dbus_message_unref(reply);
 	return CMD_SUCCESS;
 }
@@ -2645,6 +2707,10 @@ DEFUN(wlan_apply_interface_cmd_func,
 		else if(ret == IF_BINDING_FLAG){
 			vty_out(vty,"<error>IPV4: interface %s has be binded in other hansi.\n",ifname);
 		}
+		else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+		{
+			vty_out(vty, "<warning> IPV4: you want to delete wlan, please do not operate like this\n");
+		}
 		else 
 			vty_out(vty,"<error>IPV4: wlan apply interface fail.errno is %d.\n",ret);
 		
@@ -2657,6 +2723,10 @@ DEFUN(wlan_apply_interface_cmd_func,
 			vty_out(vty,"<error>IPV6: wlan is enable,please disable it first\n");
 		else if (ret == WID_INTERFACE_NOT_BE_LOCAL_BOARD){
 			vty_out(vty,"<error> %s is no local interface, permission denial\n",ifname);
+		}		
+		else if (ret6 == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+		{
+			vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
 		}
 		else vty_out(vty,"<error>IPV6: wlan apply interface fail.errno is %d.\n",ret6);
 	}
@@ -2776,6 +2846,10 @@ DEFUN(wlan_apply_ipv6interface_cmd_func,
 	else if(ret == BINDING_IPV6_ADDRE_RROR){
 		vty_out(vty,"<error> wlan bingding ipv6 addr error make sure interface have ipv6 address\n");
 	}
+	else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+	{
+		vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+	}
 	
 	else{
 		vty_out(vty,"<error>  %d\n",ret);
@@ -2893,6 +2967,10 @@ DEFUN(wlan_delete_interface_cmd_func,
 	}
 	else if(ret == WLAN_BE_ENABLE){
 		vty_out(vty,"<error> wlan is enable,please disable it first\n");
+	}
+	else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+	{
+		vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
 	}
 	else{
 		vty_out(vty,"<error>  %d\n",ret);
@@ -3013,6 +3091,10 @@ DEFUN(wlan_hideessid_cmd_func,
 		vty_out(vty,"<error> wlan id does not exist\n");
 	else if(ret == WLAN_BE_ENABLE)
 		vty_out(vty,"<error> wlan is enable, please disable it first\n");
+	else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+	{
+		vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+	}
 	else
 		vty_out(vty,"<error>  %d\n",ret);
 	dbus_message_unref(reply);
@@ -3107,6 +3189,10 @@ DEFUN(wlan_map_interface_cmd_func,
 		vty_out(vty,"<error> wlan create layer3 interface failed\n");	
 	else if(ret == WLAN_BINDING_VLAN)
 		vty_out(vty,"WLAN have already binding vlan,please undo wlan-vlan binding first\n");
+	else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+	{
+		vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+	}
 	else
 		vty_out(vty,"<error>  %d\n",ret);
 	dbus_message_unref(reply);
@@ -3169,6 +3255,10 @@ DEFUN(wlan_unmap_interface_cmd_func,
 		vty_out(vty,"wlan is enable, please disable it first\n");
 	else if(ret == WLAN_CREATE_L3_INTERFACE_FAIL)
 		vty_out(vty,"wlan create layer3 interface failed\n");	
+	else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+	{
+		vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+	}
 	else
 		vty_out(vty,"<error>  %d\n",ret);
 	dbus_message_unref(reply);
@@ -3232,6 +3322,10 @@ DEFUN(wlan_bss_map_interface_cmd_func,
 		vty_out(vty,"<error> wlan is enable, please disable it first\n");
 	else if(ret == WLAN_CREATE_L3_INTERFACE_FAIL)
 		vty_out(vty,"<error> wlan create layer3 interface failed\n");	
+	else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+	{
+		vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+	}
 	else
 		vty_out(vty,"<error>  %d\n",ret);
 	dbus_message_unref(reply);
@@ -3294,6 +3388,10 @@ DEFUN(wlan_bss_unmap_interface_cmd_func,
 		vty_out(vty,"<error> wlan is enable, please disable it first\n");
 	else if(ret == WLAN_CREATE_L3_INTERFACE_FAIL)
 		vty_out(vty,"<error> wlan create layer3 interface failed\n");	
+	else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+	{
+		vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+	}
 	else
 		vty_out(vty,"<error>  %d\n",ret);
 	dbus_message_unref(reply);
@@ -3451,6 +3549,10 @@ DEFUN(wlan_max_num_cmd_func,
 		vty_out(vty,"<error> wlan id does not exist\n");
 	else if(ret == WID_DBUS_ERROR)
 		vty_out(vty,"<error> operation fail .\n");
+	else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+	{
+		vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+	}
 	else
 		vty_out(vty,"<error>  %d\n",ret);
 
@@ -3586,6 +3688,10 @@ DEFUN(set_interface_nasid_cmd_func,
 		else if(ret == IF_BINDING_FLAG){
 			vty_out(vty,"<error>interface %s has be binded in other hansi.\n",ifname);
 		}
+		else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+		{
+			vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+		}
 		else
 			vty_out(vty,"<error>  %d\n",ret);
 	dbus_message_unref(reply);
@@ -3699,6 +3805,10 @@ DEFUN(remove_interface_nasid_cmd_func,
 			vty_out(vty,"<error> no nas_id needed,please use <wlan apply interface IFNAME>,without nas_identifier\n");
 		else if(ret == WLAN_BE_ENABLE)
 			vty_out(vty,"<error> wlan be enable,please service disable first\n");		
+		else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+		{
+			vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+		}
 		else
 			vty_out(vty,"<error>  %d\n",ret);
 	dbus_message_unref(reply);
@@ -3806,6 +3916,10 @@ DEFUN(wlan_balance_parameter_cmd_func,
 		vty_out(vty,"<error> wlan id does not exist\n");
 	else if(ret == WID_DBUS_ERROR)
 		vty_out(vty,"<error> operation fail .\n");
+	else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+	{
+		vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+	}
 	else
 		vty_out(vty,"<error>  %d\n",ret);
 	
@@ -3914,6 +4028,10 @@ DEFUN(wlan_flow_balance_parameter_cmd_func,
 		vty_out(vty,"<error> wlan id does not exist\n");
 	else if(ret == WID_DBUS_ERROR)
 		vty_out(vty,"<error> operation fail .\n");
+	else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+	{
+		vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+	}
 	else
 		vty_out(vty,"<error>  %d\n",ret);
 	
@@ -4036,6 +4154,10 @@ DEFUN(wlan_set_eap_mac_func,
 		vty_out(vty,"<error> operation fail .\n");
 	else if(ret == WLAN_BE_ENABLE)//hanjunwei changed
 		vty_out(vty,"<error> wlan is enable,disable it first.\n");
+	else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+	{
+		vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+	}
 	else
 		vty_out(vty,"<error>  %d\n",ret);
 	
@@ -4144,6 +4266,10 @@ DEFUN(wlan_load_balance_cmd_func,
 		vty_out(vty,"<error> wlan id does not exist\n");
 	else if(ret == WID_DBUS_ERROR)
 		vty_out(vty,"<error> operation fail .\n");
+	else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+	{
+		vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+	}
 	else
 		vty_out(vty,"<error>  %d\n",ret);
 	
@@ -4259,6 +4385,10 @@ DEFUN(wlan_roam_policy_cmd_func,
 		vty_out(vty,"<error> wlan should be disable first\n");
 	else if(ret == RAOMING_DISABLE_FIRST)		
 		vty_out(vty,"<error> roaming should be disable first\n");		
+	else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+	{
+		vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+	}
 	else
 		vty_out(vty,"<error>  %d\n",ret);
 	
@@ -4364,6 +4494,10 @@ DEFUN(set_wlan_vlan_cmd_func,
 		vty_out(vty,"<error> wlan is in other L3 interface\n");
 	else if(ret == WLAN_BE_ENABLE)
 		vty_out(vty,"<error>  wlan should be disable first\n");
+	else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+	{
+		vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+	}
 	else
 		vty_out(vty,"<error>  %d\n",ret);
 	
@@ -4463,6 +4597,10 @@ DEFUN(set_nas_port_id_cmd_func,
 		vty_out(vty,"<error> wlan id does not exist\n");
 	else if(ret == WLAN_BE_ENABLE)
 		vty_out(vty,"<error>  wlan should be disable first\n");
+	else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+	{
+		vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+	}
 	else
 		vty_out(vty,"<error>  %d\n",ret);
 	
@@ -4559,6 +4697,10 @@ DEFUN(set_wlan_hotspot_id_cmd_func,
 		vty_out(vty,"<error> wlan id does not exist\n");
 	else if(ret == WLAN_BE_ENABLE)
 		vty_out(vty,"<error>  wlan should be disable first\n");
+	else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+	{
+		vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+	}
 	else
 		vty_out(vty,"<error>  %d\n",ret);
 	
@@ -4643,6 +4785,10 @@ DEFUN(clean_wlan_hotspot_id_cmd_func,
 		vty_out(vty,"<error> wlan id does not exist\n");
 	else if(ret == WLAN_BE_ENABLE)
 		vty_out(vty,"<error>  wlan should be disable first\n");
+	else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+	{
+		vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+	}
 	else
 		vty_out(vty,"<error>  %d\n",ret);
 	
@@ -4757,6 +4903,10 @@ DEFUN(set_wlan_vlan_priority_cmd_func,
 		vty_out(vty,"<error>  wlan should be disable first\n");
 	else if(ret == SYSTEM_CMD_ERROR)
 		vty_out(vty,"<error>  wlan is under tunnel wlan-vlan policy\n");
+	else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+	{
+		vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+	}
 	else
 		vty_out(vty,"<error>  %d\n",ret);
 	
@@ -4852,6 +5002,10 @@ DEFUN(undo_wlan_vlan_cmd_func,
 		vty_out(vty,"<error> wlan is in other L3 interface\n");
 	else if(ret == WLAN_BE_ENABLE)
 		vty_out(vty,"<error>  wlan should be disable first\n");
+	else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+	{
+		vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+	}
 	else
 		vty_out(vty,"<error>  %d\n",ret);
 	
@@ -4995,6 +5149,10 @@ DEFUN(show_wlan_vlan_info_cmd_func,
 	}
 	else if(ret == WLAN_ID_NOT_EXIST)
 		vty_out(vty,"<error> wlan id does not exist\n");
+	else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+	{
+		vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+	}
 	else
 		vty_out(vty,"<error>  %d\n",ret);
 	return CMD_SUCCESS;
@@ -5109,6 +5267,10 @@ DEFUN(wlan_set_bridge_isolation_func,
 	else if (ret == WLAN_APPLY_SECURITY_FIRST)
 	{
 		vty_out(vty, "<error> apply security in this wlan first\n");
+	}
+	else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+	{
+		vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
 	}
 	else
 		vty_out(vty,"<error>  %d\n",ret);
@@ -5229,6 +5391,10 @@ DEFUN(wlan_set_bridge_multicast_isolation_func,
 	{
 		vty_out(vty, "<error> apply security in this wlan first\n");
 	}	
+	else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+	{
+		vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+	}
 	else
 		vty_out(vty,"<error>  %d\n",ret);
 	
@@ -5344,6 +5510,10 @@ DEFUN(wlan_set_sameportswitch_func,
 	else if (ret == WLAN_APPLY_SECURITY_FIRST)
 	{
 		vty_out(vty, "<error> apply security in this wlan first\n");
+	}
+	else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+	{
+		vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
 	}
 	else
 		vty_out(vty,"<error>  %d\n",ret);
@@ -5491,6 +5661,10 @@ DEFUN(wlan_show_bridge_isolation_func,
 	}
 	else if(ret == WLAN_ID_NOT_EXIST)
 		vty_out(vty,"<error> wlan id does not exist\n");	
+	else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+	{
+		vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+	}
 	else
 		vty_out(vty,"<error>  %d\n",ret);
 	return CMD_SUCCESS;
@@ -5698,6 +5872,10 @@ DEFUN(set_tunnel_wlan_vlan_cmd_func,
 		vty_out(vty,"<error>  wlan is not in tunnel mode\n");
 	else if(ret == SYSTEM_CMD_ERROR)
 		vty_out(vty,"<error>  if is already %s,or system cmd error\n",argv[0]);
+	else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+	{
+		vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+	}
 	else
 		vty_out(vty,"<error>  %d\n",ret);
 	
@@ -5877,6 +6055,10 @@ DEFUN(show_tunnel_wlan_vlan_cmd_func,
 		vty_out(vty,"<error>  add if %s to br fail\n",argv[0]);
 	else if(ret == BSS_L3_INTERFACE_DEL_BR_FAIL)
 		vty_out(vty,"<error>  remove if %s from br fail\n",argv[0]);
+	else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+	{
+		vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+	}
 	else
 		vty_out(vty,"<error>  %d\n",ret);
 	return CMD_SUCCESS;
@@ -6020,6 +6202,10 @@ DEFUN(set_wlan_essid_func,
 	else if(ret == WLAN_BE_ENABLE)
 	{
 		vty_out(vty,"<error> wlan is enable,please disable it first\n");
+	}
+	else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+	{
+		vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
 	}
 	else
 	{
@@ -6199,6 +6385,10 @@ DEFUN(set_wlan_ascii_essid_func,
 	{
 		vty_out(vty,"<error> wlan is enable,please disable it first\n");
 	}
+	else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+	{
+		vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+	}
 	else
 	{
 		vty_out(vty,"<error>  %d\n",ret);
@@ -6308,6 +6498,10 @@ DEFUN(set_whole_wlan_traffic_limit_func,
 	{
 		vty_out(vty,"<error> wlan id does not exist\n");
 	}
+	else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+	{
+		vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+	}
 	else
 	{
 		vty_out(vty,"<error>  %d\n",ret);
@@ -6414,6 +6608,10 @@ DEFUN(set_whole_wlan_send_traffic_limit_func,
 	else if(ret == WLAN_ID_NOT_EXIST)
 	{
 		vty_out(vty,"<error> wlan id does not exist\n");
+	}
+	else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+	{
+		vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
 	}
 	else
 	{
@@ -6524,6 +6722,10 @@ DEFUN(set_whole_wlan_station_average_traffic_limit_func,
 	{
 		vty_out(vty,"<error> wlan id does not exist\n");
 	}
+	else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+	{
+		vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+	}
 	else
 	{
 		vty_out(vty,"<error>  %d\n",ret);
@@ -6631,6 +6833,10 @@ DEFUN(set_whole_wlan_station_average_send_traffic_limit_func,
 	{
 		vty_out(vty,"<error> wlan id does not exist\n");
 	}
+	else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+	{
+		vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+	}
 	else
 	{
 		vty_out(vty,"<error>  %d\n",ret);
@@ -6695,6 +6901,10 @@ DEFUN(set_wlan_sta_ip_mac_binding_func,
 	ret = dcli_wlan_sta_ip_mac_binding(index,localid,policy,wlanid,dcli_dbus_connection);
 	if(ret == 0)
 		vty_out(vty,"set wtp sta info report %s base successfully\n",argv[0]);
+	else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+	{
+		vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+	}
 	else
 		vty_out(vty,"<error>  %d\n",ret);
 	
@@ -6830,6 +7040,10 @@ DEFUN(set_wlan_servive_timer_func,
 		vty_out(vty,"set wlan %s service successfully\n",argv[0]);
 	else if(ret == WLAN_SERVICE_CONTROL_BE_USED)								//mahz add 2011.5.4
 		vty_out(vty,"the starttimer or stoptimer should be disabled\n");
+	else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+	{
+		vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+	}
 	else
 		vty_out(vty,"<error>  %d\n",ret);
 	
@@ -6903,6 +7117,10 @@ DEFUN(set_wlan_timer_able_func,
 	ret = dcli_wlan_timer_able(index,localid,policy,timer,wlanid,dcli_dbus_connection);
 	if(ret == 0)
 		vty_out(vty,"set wlan %s %s successfully\n",argv[0],argv[1]);
+	else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+	{
+		vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+	}
 	else
 		vty_out(vty,"<error>  %d\n",ret);
 	
@@ -7045,6 +7263,10 @@ DEFUN(show_wlan_ptk_info_cmd_func,
 	}
 	else if(ret == WLAN_ID_NOT_EXIST)
 		vty_out(vty,"<error> wlan id does not exist\n");
+	else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+	{
+		vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+	}
 	else
 		vty_out(vty,"<error>  %d\n",ret);
 	
@@ -8061,6 +8283,10 @@ DEFUN(set_wlan_uni_muti_bro_cast_isolation_set_func,
 		vty_out(vty,"<error> wlan %d does not exist\n",wlanid);
 	else if(ret == WLAN_BE_ENABLE)
 		vty_out(vty,"<error> wlan is enable, please disable it first\n");
+	else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+	{
+		vty_out(vty, "<warning> you want to some wlan, and the operation of the wlan was not successful\n");
+	}
 	else
 	{
 		vty_out(vty,"<error>  %d\n",ret);
@@ -8188,6 +8414,10 @@ DEFUN(set_wlan_muti_bro_cast_rate_set_func,
 		vty_out(vty,"<error> some radio not support rate %d.\n",rate);
 	else if(ret == WLAN_BE_ENABLE)
 		vty_out(vty,"<error> wlan is enable, please disable it first\n");
+	else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+	{
+		vty_out(vty, "<warning> you want to some wlan, and the operation of the wlan was not successful\n");
+	}
 	else
 	{
 		vty_out(vty,"<error>  %d\n",ret);
@@ -8310,6 +8540,10 @@ DEFUN(set_wlan_not_response_sta_probe_request_func,
 		vty_out(vty,"<error> wlan %d does not exist\n",wlanid);
 	else if(ret == WLAN_BE_ENABLE)
 		vty_out(vty,"<error> wlan is enable, please disable it first\n");
+	else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+	{
+		vty_out(vty, "<warning> you want to some wlan, and the operation of the wlan was not successful\n");
+	}
 	else
 	{
 		vty_out(vty,"<error>  %d\n",ret);
@@ -8525,6 +8759,10 @@ DEFUN(set_wlan_bss_allow_max_stanum_func,
 
 	if(ret == 0)
 		vty_out(vty,"set allow max sta num %d successful\n",stanum);
+	else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+	{
+		vty_out(vty, "<warning> you want to delete some wlan, and the operation of the wlan was not successful\n");
+	}
 	else
 		vty_out(vty,"<error> %d\n",ret);
 	
@@ -8629,6 +8867,10 @@ DEFUN(set_wlan_l2_isolation_func,
 
 	if(ret == 0)
 		vty_out(vty,"set wlan l2 isolation %s successful\n",argv[0]);
+	else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+	{
+		vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+	}
 	else
 		vty_out(vty,"<error> %d\n",ret);
 
@@ -8744,6 +8986,10 @@ DEFUN(set_wlan_bss_sta_static_arp_func,
 
 	if(ret == 0)
 		vty_out(vty,"set wlan bss sta_static_arp %s base %s successful\n",argv[0],argv[1]);
+	else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+	{
+		vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+	}
 	else
 		vty_out(vty,"<error> %d\n",ret);
 	
@@ -8845,6 +9091,10 @@ DEFUN(set_wlan_limit_rssi_access_sta_cmd_func,
 
 	if(ret == 0)
 		vty_out(vty,"set wlan access sta limit rssi %s\n",argv[0]);
+	else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+	{
+		vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+	}
 	else
 		vty_out(vty,"<error> %d\n",ret);
 
@@ -8938,6 +9188,10 @@ DEFUN(set_wlan_bss_multi_user_optimize_cmd_func,
 		vty_out(vty,"operation fail! .\n");
 	else if(ret == Wlan_IF_NOT_BE_BINDED)	  
 		vty_out(vty,"wlan is not binded radio .\n");
+	else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+	{
+		vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+	}
 	else
 		vty_out(vty,"<error>%d\n",ret);
 	dbus_message_unref(reply);
@@ -9021,6 +9275,10 @@ DEFUN(set_wlan_tunnel_mode_enable_cmd_func,
 		vty_out(vty,"set wlan tunnel mode %s failed! wlan is enable,please disable it first\n",argv[0]);
 	else if(ret == WLAN_ID_NOT_EXIST) //fengwenchao add 20121203 for axsszfi-1283
 		vty_out(vty,"<error>wlanid is not exist\n");
+	else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+	{
+		vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+	}
 	else
 		vty_out(vty,"set wlan tunnel mode %s failed %d\n",argv[0],ret);		
 	

@@ -187,6 +187,10 @@ int wid_interface_ifname_wlan(char *ptr,struct vty *vty, char *line)
 			vty_out(vty,"WLAN add bss interface to br fail\n");
 		else if(ret == BSS_L3_INTERFACE_DEL_BR_FAIL)
 			vty_out(vty,"WLAN del bss interface to br fail\n");
+		else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+		{
+			vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+		}
 		else
 			vty_out(vty,"error %d\n",ret);
 
@@ -1169,6 +1173,8 @@ int dcli_tunnel_mode_config(struct vty *vty,char * ifName,unsigned int ismode,un
 			vty_out(vty,"radio%d-%d.%d if is not exsit.",wtpid,radioid,wlanid);
 		else if(ret == INTERFACE_NOT_L3_IF)
 			vty_out(vty,"wlan %d is not L3 interface.",wlanid);
+		else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+			vty_out(vty, "<warning> you want to some wlan, and the operation of the wlan was not successful\n");
 		else
 			vty_out(vty,"error %d\n",ret);
 
