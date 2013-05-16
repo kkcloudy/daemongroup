@@ -203,6 +203,57 @@ execute_command (const char *command, int argc, const char *arg1,
   return 0;
 }
 
+#if 1
+/*gujd : 2012-10-29, pm 5:56. Add cli for contrling the radio interface netlink info to user space. */
+#define BUFFER_LEN 512
+DEFUN(interface_radio_netlink_info_level,
+		interface_radio_level_cmd,
+		"interface radio level (0|1|2)",
+		CONFIG_STR
+		"contrl the radio interface\n"
+		"nelink info level\n"
+		"all netlink info enable \n"
+		"nelink info enable for ip link\n"
+		"all netlink info disable\n"
+	)
+{
+	/*use sysctl or echo*/
+	int ret = 0;
+	unsigned char cmd[BUFFER_LEN] = {0};
+	int value = 0;
+
+	
+	if(1 != argc){
+		vty_out(vty, "%% Bad parameter!\n");
+		return CMD_WARNING;
+	}
+	
+	value = atoi(argv[0]);
+	if(value < 0 || value > 2)
+	{
+		vty_out(vty, "%% Bad parameter[%d]!\n",value);
+		return CMD_WARNING;
+	}
+	
+	/*/proc/sys/net/core/radio_level*/
+ /*	 snprintf(cmd,BUFFER_LEN,"sudo sysctl -w net.core.radio_level=%d", value);*/
+  	snprintf(cmd,BUFFER_LEN,"echo %d >/proc/sys/net/core/radio_level", value);
+	cmd[BUFFER_LEN - 1] = '\0';
+	ret = system(cmd);
+	ret = WEXITSTATUS(ret);
+				
+	if(CMD_SUCCESS != ret )
+	{
+		vty_out(vty,"Modify Interface Radio Level fail%s", VTY_NEWLINE);
+		return CMD_WARNING;
+	}
+	
+	return CMD_SUCCESS;
+	
+}
+
+#endif	
+
 
 DEFUN(show_route_mvdrv_entry_cmd_func,
 	show_route_mvdrv_entry_cmd,
@@ -816,6 +867,8 @@ void dcli_system_debug_init()
 	  install_element (HIDDENDEBUG_NODE, &vtysh_traceroute6_cmd);
 
 	  install_element (HIDDENDEBUG_NODE, &no_terminal_monitor_module_func_cmd); 
+	  
+	  install_element(SYSTEM_DEBUG_NODE,&interface_radio_level_cmd);
 
 //	  install_element (ENABLE_NODE, &show_process_cmd);
 //	   install_element (HIDDENDEBUG_NODE, &show_process_cmd);

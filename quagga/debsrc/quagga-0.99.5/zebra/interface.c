@@ -53,6 +53,7 @@
 extern product_inf *product;
 extern unsigned int radio_interface_enable ;
 extern int route_boot_errno;
+extern unsigned int radio_interface_show_enable;
 unsigned int time_interval = 300 ;
 extern struct cmd_node wireless_interface_node;
 extern  unsigned int if_nametoindex (const char *name);
@@ -3115,7 +3116,9 @@ if_dump_vty (struct vty *vty, struct interface *ifp)
 
   
   if((memcmp(ifp->name,"sit0",4) == 0)
-	||(memcmp(ifp->name,"pimreg",6) == 0)){
+	||(memcmp(ifp->name,"pimreg",6) == 0)
+	||((memcmp(ifp->name,"r",1) == 0)&&(radio_interface_show_enable == 0)))
+   {
 	return;
   }
 
@@ -3803,6 +3806,32 @@ for (ALL_LIST_ELEMENTS (ifp->connected, node, next, ifc))
 
 
   return CMD_SUCCESS;
+}
+
+/*gujd : 2013-02-22, pm 4:43. Add code for radio interface info switch.
+For radio get netlink info (used with under system debug node 
+of command :interface radio level (0|1|2) ) when show interface.*/
+DEFUN (radio_interface_show, 
+       radio_interface_show_cmd,
+       "radio interface show (enable|disable)",
+       "Interface specific description\n"
+       "Characters describing this interface\n"
+       "Display info\n"
+       "Display radio interface info\n"
+       "Hide radio interface info\n")
+{
+  struct interface *ifp;
+  struct listnode *node;
+  
+  if(strncmp(argv[0],"enable",6)== 0)
+  	radio_interface_show_enable = 1;
+  else if(strncmp(argv[0],"disable",7)== 0)
+	radio_interface_show_enable = 0;
+  else
+    return CMD_WARNING;
+
+  return CMD_SUCCESS;
+  
 }
 
 
@@ -6018,6 +6047,8 @@ zebra_if_init (void)
   install_element (VIEW_NODE, &show_wireless_if_config_cmd);
   /*radio interface*/
   install_element (CONFIG_NODE, &radio_interface_deal_cmd);
+  /*show radio interface infomation.*/
+  install_element (CONFIG_NODE, &radio_interface_show_cmd);
   
   install_element (INTERFACE_NODE, &interface_local_cmd);
   install_element (INTERFACE_NODE, &interface_global_cmd);

@@ -83,7 +83,9 @@ int tipc_zclient_debug = 0;
 extern struct thread_master *master;
 product_inf *product = NULL;
 int board_type = -1;
-unsigned int radio_interface_enable = 0;
+unsigned int radio_interface_enable = 0;/*for sync between product slots.*/
+/*for radio get netlink info (used with under system debug node of command :interface radio level (0|1|2) ) when show interface.*/
+unsigned int radio_interface_show_enable = 0;
 char seed_time_flags = 0;
 #define SEED_TIME_SET     (1 << 0)
 #define RANGE_MIN      10000

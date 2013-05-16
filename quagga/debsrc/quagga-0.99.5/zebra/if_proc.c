@@ -37,6 +37,7 @@
 #define _PATH_PROC_NET_DEV        "/proc/net/dev"
 #endif /* _PATH_PROC_NET_DEV */
 
+extern unsigned int radio_interface_show_enable;
 /* Return statistics data pointer. */
 static char *
 interface_name_cut (char *buf, char **name)
@@ -158,6 +159,10 @@ ifstat_update_proc (void)
   while (fgets (buf, PROCBUFSIZ, fp) != NULL)
     {
       stat = interface_name_cut (buf, &name);
+	  /*gujd : 2013-02-22, pm 4:43. Add code for radio interface info switch.*/
+	  if((memcmp(name,"r",1) == 0)&&(radio_interface_show_enable == 0))
+	  	continue;
+	  	
       ifp = if_get_by_name (name);
 	  /*judge the local real interface .*/
 	  if((memcmp(ifp->name,"radio",5) == 0) 		  
