@@ -901,7 +901,8 @@ int WID_DELETE_WLAN(unsigned char WlanID){
 							usleep(10000);
 
 							/* if delete-wlan-operation spends too much time (more than 3 seconds) in this thread, 
-					//printf("ret %d\n",ret);
+							 * it will create a new thread to spend it, allowing the parent thread retrun to DBUS the resut
+							 */
 							gettimeofday(&tpend, NULL);
 							if (tpend.tv_usec < tpstart.tv_usec)
 								tpdel.tv_sec = tpend.tv_sec - tpstart.tv_sec - 1;
@@ -915,17 +916,14 @@ int WID_DELETE_WLAN(unsigned char WlanID){
 								wid_syslog_debug_debug(WID_DEFAULT, "[%s %d] now, attend create a new thread to do the next operation, because of too much time spending", __func__, __LINE__);
 								goto create_thread_flag_out;
 								break;
+							}
+						}
+					}
 				}
 			}
 		}
-		//delete 3L interface
-		//Delete_Wlan_L3_Interface(WlanID);
 	}
-			}
-		}
-		
-	}
-
+	
 create_thread_flag_out:
 	wlanid_temp = WlanID;
 	wid_syslog_debug_debug(WID_DEFAULT, "%s %d WlanID: %u", __func__, __LINE__, wlanid_temp);
