@@ -610,8 +610,11 @@ void ShowWlandtaPage(char *m,char *n,char *t,char *f,char *pn,char *ins_id,struc
 					  fprintf(cgiOut,"<td id=td2>%d</td>",wlan->WLAN[0]->wlan_send_traffic_limit);
 		  		  }
 			  fprintf(cgiOut,"</tr>"\
-			    "<tr align=left>"\
-				  "<td id=td1>WDS</td>"); 
+			    "<tr align=left>");
+			  	  if(1 == get_product_info("/var/run/mesh_flag"))
+				  	fprintf(cgiOut,"<td id=td1>Mesh</td>"); 
+				  else
+					fprintf(cgiOut,"<td id=td1>WDS</td>"); 
 			      if((wlan)&&(wlan->WLAN[0])&&(wlan->WLAN[0]->WDSStat==1))
 				  	fprintf(cgiOut,"<td id=td2>enable</td>");
 				  else

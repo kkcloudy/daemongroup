@@ -602,8 +602,11 @@ int ShowWlanconPage(char *m,char *n,char *t,char *pn,char *ins_id,instance_param
 				fprintf(cgiOut,"<td><input name=wlan_downlink_traffic_limit_threshold size=15 maxLength=6 onkeypress=\"return event.keyCode>=48&&event.keyCode<=57\" value=\"\"></td>"\
 						"<td align=left><font color=red>(0--300000)</font></td>"\
 				"</tr>"\
-				"<tr height=30>"\
-					"<td>WDS %s:</td>",search(lwlan,"service"));
+				"<tr height=30>");
+					if(1 == get_product_info("/var/run/mesh_flag"))
+						fprintf(cgiOut,"<td>Mesh %s:</td>",search(lwlan,"service"));
+					else
+						fprintf(cgiOut,"<td>WDS %s:</td>",search(lwlan,"service"));
 					fprintf(cgiOut,"<td>");
 						if((result1 == 1)&&(whead)&&(whead->WLAN[0])&&(whead->WLAN[0]->Status==1))/*如果WLAN状态为disable，配置WDS状态的下拉框不可用*/
 				    	  fprintf(cgiOut,"<select name=wds_state id=wds_state style=width:100px disabled>");
@@ -612,8 +615,11 @@ int ShowWlanconPage(char *m,char *n,char *t,char *pn,char *ins_id,instance_param
 							fprintf(cgiOut,"<option value=>"\
 			    				"<option value=disable>disable"\
 							"<option value=enable>enable"\
-		 				"</select></td>"\
-					"<td align=left><font color=red>(%s)</font></td>",search(lwlan,"con_wds_service"));
+		 				"</select></td>");
+					if(1 == get_product_info("/var/run/mesh_flag"))
+					 	fprintf(cgiOut,"<td align=left><font color=red>(%s)</font></td>",search(lwlan,"con_mesh_service"));
+					else
+					  	fprintf(cgiOut,"<td align=left><font color=red>(%s)</font></td>",search(lwlan,"con_wds_service"));
 				fprintf(cgiOut,"</tr>"\
 				"<tr height=30>"\
 						"<td>%s:</td>",search(lwlan,"uplink_detect"));

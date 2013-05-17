@@ -280,9 +280,12 @@ void ShowWlanListPage(char *m,char *n,int p,struct list *lpublic,struct list *lw
 		fprintf(cgiOut,"<table frame=below rules=rows width=763 border=1>"\
 		"<tr align=left>"\
         "<th width=100><font id=%s>%s</font></th>",search(lpublic,"menu_thead"),search(lpublic,"name"));
-        fprintf(cgiOut,"<th width=50><font id=yingwen_thead>ID</font></th>"\
-		"<th width=100><font id=yingwen_thead>WDS</font></th>"\
-        "<th width=200><font id=yingwen_thead>ESSID</font></th>"\
+        fprintf(cgiOut,"<th width=50><font id=yingwen_thead>ID</font></th>");
+		if(1 == get_product_info("/var/run/mesh_flag"))
+		  fprintf(cgiOut,"<th width=100><font id=yingwen_thead>Mesh</font></th>");
+		else
+		  fprintf(cgiOut,"<th width=100><font id=yingwen_thead>WDS</font></th>");
+        fprintf(cgiOut,"<th width=200><font id=yingwen_thead>ESSID</font></th>"\
         "<th width=70><font id=%s>%s</font></th>",search(lpublic,"menu_thead"),search(lwlan,"status"));
 		fprintf(cgiOut,"<th width=120><font id=%s>%s</font><font id=yingwen_thead> ID</font></th>",search(lpublic,"menu_thead"),search(lpublic,"security"));
 		fprintf(cgiOut,"<th width=110><font id=%s>%s</font></th>",search(lpublic,"menu_thead"),search(lwlan,"if_policy"));
