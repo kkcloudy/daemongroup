@@ -165,6 +165,7 @@ struct portal_srv_t {
 	char domain[MAX_RADIUS_DOMAIN_LEN];
 	char acname[MAX_MULTPORTAL_ACNAME_LEN];	
 	int acip_to_url;
+	int usermac_to_url;
 	int nasid_to_url;
 	char url_suffix[MAX_PORTAL_URL_SUFFIX_LEN];	
 

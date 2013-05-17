@@ -1034,12 +1034,17 @@ eag_captive_add_interface(eag_captive_t * cap, char *intf)
 			    cap, intf, (NULL == intf) ? "" : intf);
 		return EAG_ERR_INPUT_PARAM_ERR;
 	}
-
+#if 0
     if (eag_check_interface(intf)) {
 		eag_log_err("eag_captive_add_interface add interface without setting the IP address!");
 		return EAG_ERR_CAPTIVE_INTERFACE_NOT_EXIST;
 	}
-
+#endif
+	if (!if_nametoindex(intf)) {
+		eag_log_err("eag_captive_add_interface no such interface %s\n", intf);
+		return EAG_ERR_CAPTIVE_INTERFACE_NOT_EXIST;
+	}
+	
 	if( cap->curr_ifnum >= CP_MAX_INTERFACE_NUM ){
 		eag_log_err("eag_captive_add_interface add interface num to limit!");
 		return EAG_ERR_CAPTIVE_INTERFACE_NUM_LIMIT;

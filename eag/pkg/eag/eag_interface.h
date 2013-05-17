@@ -41,6 +41,7 @@ struct eag_base_conf {
 	int status;
 	uint32_t nasip;
 	int is_distributed;
+	int pdc_distributed;
 	int rdcpdc_slotid;
 	int rdcpdc_insid;
 	uint16_t portal_port;
@@ -77,6 +78,7 @@ struct eag_base_conf {
 	int macauth_notice_bindserver;
 	int autelan_log;
 	int henan_log;
+	int l2super_vlan;
 };
 
 struct api_nasid_map_t {
@@ -444,6 +446,10 @@ int
 eag_set_distributed(DBusConnection *connection, 
 				int hansitype, int insid,
 				int distributed);
+int
+eag_set_pdc_distributed(DBusConnection *connection, 
+				int hansitype, int insid,
+				int pdc_distributed);
 
 int
 eag_set_rdcpdc_ins(DBusConnection *connection, 
@@ -539,6 +545,11 @@ int
 eag_set_portal_protocol(DBusConnection *connection, 
 				int hansitype, int insid,
 				int portal_protocol);
+
+int
+eag_set_l2super_vlan_switch(DBusConnection *connection, 
+				int hansitype, int insid,
+				int l2super_vlan_switch);
 
 int
 eag_set_macauth_switch(DBusConnection *connection, 
@@ -752,6 +763,14 @@ eag_set_portal_server_wlanapmac( DBusConnection *connection,
 				unsigned long keyid,
 				char *key_word,
 				int wlanapmac_to_url );
+
+int
+eag_set_portal_server_usermac_to_url( DBusConnection *connection, 
+				int hansitype, int insid, 	
+				PORTAL_KEY_TYPE key_type,
+				unsigned long keyid,
+				char *key_word,
+				int usermac_to_url );
 
 int
 eag_set_portal_server_wlanusermac( DBusConnection *connection, 

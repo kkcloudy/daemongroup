@@ -4451,7 +4451,12 @@ eag_multi_portal_config_show_running(struct vty* vty)
 													key_type, key);
 				vtysh_add_show_string(showStr);
 			}
-			
+			if( 1 == portalconf.portal_srv[i].usermac_to_url)
+			{
+				snprintf(showStr, sizeof(showStr), " set portal-server %s %s usermac-to-url enable",\
+													key_type, key);
+				vtysh_add_show_string(showStr);
+			}
 			if( 1 == portalconf.portal_srv[i].wlanparameter 
 				&& strlen(portalconf.portal_srv[i].deskey)>0)
 			{
@@ -4635,7 +4640,10 @@ eag_multi_portal_config_show_running_2(int localid, int slot_id, int index)
 			{
 				totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1, " set portal-server %s %s secret %s\n", key_type, key, portalconf.portal_srv[i].secret);
 			}
-			
+			if( 1 == portalconf.portal_srv[i].usermac_to_url)
+			{
+				totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1, " set portal-server %s %s usermac-to-url enable\n", key_type, key);
+			}
 			if( 1 == portalconf.portal_srv[i].wlanapmac)
 			{
 				totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1, " set portal-server %s %s wlanapmac enable\n", key_type, key);
@@ -5666,6 +5674,14 @@ eag_base_config_show_running(struct vty* vty)
 			snprintf(showStr, sizeof(showStr), " set log-format henan on");
 			vtysh_add_show_string(showStr);		
 		}
+		if (1 == baseconf.l2super_vlan) {
+			snprintf(showStr, sizeof(showStr), " set l2super-vlan enable");
+			vtysh_add_show_string(showStr);		
+		}
+		if (1 == baseconf.pdc_distributed) {
+			snprintf(showStr, sizeof(showStr), " set pdc-distributed on");
+			vtysh_add_show_string(showStr);	
+		}
 		if (1 == baseconf.status) {
 			snprintf(showStr, sizeof(showStr), " service enable");
 			vtysh_add_show_string(showStr);		
@@ -5811,6 +5827,12 @@ eag_base_config_show_running_2(int localid, int slot_id,int index)
 		}
 		if (1 == baseconf.henan_log) {
 			totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1, " set log-format henan on\n");
+		}
+		if (1 == baseconf.l2super_vlan) {
+			totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1, " set l2super-vlan enable\n");
+		}
+		if (1 == baseconf.pdc_distributed) {
+			totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1, " set pdc-distributed on\n");
 		}
 		if (1 == baseconf.status) {
 			totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1, " service enable\n");	
@@ -5981,6 +6003,12 @@ eag_has_config(void)
 			return 1;
 		}
 		if (1 == baseconf.henan_log) {
+			return 1;
+		}
+		if (1 == baseconf.l2super_vlan) {
+			return 1;
+		}
+		if (1 == baseconf.pdc_distributed) {
 			return 1;
 		}
 		if (1 == baseconf.status) {
@@ -6242,6 +6270,55 @@ DEFUN(set_eag_distributed_func,
 	}
 	
 	ret = eag_set_distributed(dcli_dbus_connection_curr, hansitype, insid, flag);
+	if (EAG_ERR_DBUS_FAILED == ret) {
+		vty_out(vty, "%% dbus error\n");
+	}
+	else if (EAG_ERR_UNKNOWN == ret) {
+		vty_out(vty, "%% unknown error: %d\n", ret);
+	}
+
+	return CMD_SUCCESS;
+}
+
+DEFUN(set_eag_pdc_distributed_func,
+	set_eag_pdc_distributed_cmd,
+	"set pdc-distributed (on|off)",
+	SETT_STR
+	"set pdc-distributed on/off\n"
+	"set pdc-distributed on!\n"
+	"set pdc-distributed off!\n"	
+)
+{
+	int ret;
+	int flag = 0;
+	
+	int hansitype = HANSI_LOCAL;	
+	int slot_id = HostSlotId;   
+	int insid = 0;
+	if(vty->node == EAG_NODE){
+		insid = 0;
+	}
+	else if (vty->node == HANSI_EAG_NODE) {
+		insid = (int)vty->index; 	
+		hansitype = HANSI_REMOTE;
+		slot_id = vty->slotindex; 
+	}
+	else if (vty->node == LOCAL_HANSI_EAG_NODE) {
+		insid = (int)vty->index;
+		hansitype = HANSI_LOCAL;
+		slot_id = vty->slotindex;
+	}
+	DBusConnection *dcli_dbus_connection_curr = NULL;
+	ReInitDbusConnection(&dcli_dbus_connection_curr,slot_id,distributFag);
+
+	flag = (strncmp(argv[0], "on", 2) == 0) ? 1 : 0;
+	
+	if (eag_ins_running_state(dcli_dbus_connection_curr, hansitype, insid)) {
+		vty_out(vty, "%% eag is running, please stop it first\n");
+		return CMD_FAILURE;
+	}
+	
+	ret = eag_set_pdc_distributed(dcli_dbus_connection_curr, hansitype, insid, flag);
 	if (EAG_ERR_DBUS_FAILED == ret) {
 		vty_out(vty, "%% dbus error\n");
 	}
@@ -7063,6 +7140,48 @@ DEFUN(set_eag_portal_protocol_func,
 	return CMD_SUCCESS;	
 }
 
+DEFUN(set_eag_l2super_vlan_status_func,
+	set_eag_l2super_vlan_status_cmd,
+	"set l2super-vlan (enable|disable)",
+	SETT_STR
+	"l2super-vlan\n"
+	"Enable\n"
+	"Disable\n"
+)
+{
+	int l2super_vlan_switch = 0;
+	int ret = -1;
+	
+	if (strncmp(argv[0], "enable", strlen(argv[0])) == 0) {
+		l2super_vlan_switch = 1;
+	} 
+	else if (strncmp(argv[0], "disable", strlen(argv[0])) == 0) {
+		l2super_vlan_switch = 0;
+	}
+	else {
+		vty_out(vty,"%% bad command parameter\n");
+		return CMD_WARNING;
+	}
+	
+	EAG_DCLI_INIT_HANSI_INFO
+#if 1		
+	if(eag_ins_running_state(dcli_dbus_connection_curr, hansitype, insid)){
+		vty_out(vty, "eag instance %d is running, please stop it first\n",insid);
+		return CMD_FAILURE;
+	}
+#endif	
+	ret = eag_set_l2super_vlan_switch(dcli_dbus_connection_curr, 
+											hansitype, insid, 
+											l2super_vlan_switch);
+	if (EAG_ERR_DBUS_FAILED == ret) {
+		vty_out(vty, "%% dbus error\n");
+	}
+	else if (EAG_RETURN_OK != ret) {
+		vty_out(vty, "%% unknown error: %d\n", ret);
+	}
+	return CMD_SUCCESS; 
+}
+
 DEFUN(set_eag_mac_auth_service_status_func,
 	set_eag_mac_auth_service_status_cmd,
 	"set mac-auth service (enable|disable)",
@@ -7459,6 +7578,8 @@ DEFUN(show_eag_base_conf_func,
 		vty_out(vty, "mac-auth notice-bindserver:%s\n", (1 == baseconf.macauth_notice_bindserver)?"enable":"disable");
 		vty_out(vty, "log-format autelan        :%s\n", (1 == baseconf.autelan_log)?"on":"off");
 		vty_out(vty, "log-format henan          :%s\n", (1 == baseconf.henan_log)?"on":"off");
+		vty_out(vty, "l2super-vlan              :%s\n", (1 == baseconf.l2super_vlan)?"enable":"disable");
+		vty_out(vty, "pdc-distributed switch    :%s\n", (1 == baseconf.pdc_distributed) ? "on" : "off");
 	}
 	else {
 		vty_out(vty, "%% unknown error: %d\n", ret);
@@ -9969,6 +10090,96 @@ DEFUN(set_eag_portal_server_wlanapmac_func,
 	return CMD_SUCCESS;
 }
 
+DEFUN(set_eag_portal_server_usermac_to_url_func,
+	set_eag_portal_server_usermac_to_url_cmd,
+	"set portal-server (wlanid|vlanid|wtpid|interface) KEY usermac-to-url (enable|disable)",
+	"set parameter of portal policy, if not exist, create it\n"
+	"portal policy\n"
+	"portal server index type wlanid\n" 
+	"portal server index type vlanid\n" 	
+	"portal server index type wtpid\n"	
+	"portal server index type l3interface name\n"
+	"key word name, specify a item of portal policy\n"
+	"add usermac infornation to url\n"
+	"add usermac infornation to url enable\n"
+	"add usermac infornation to url disable\n"
+)
+{
+	int ret = -1;
+	PORTAL_KEY_TYPE key_type;
+	unsigned long keyid = 0;
+	char *keystr = "";
+	int usermac_to_url = 0;
+
+	if (strncmp(argv[0], "wlanid", strlen(argv[0])) == 0) {
+		key_type = PORTAL_KEYTYPE_WLANID;
+		keyid = atoi(argv[1]);
+		if (keyid == 0 || keyid > 128){
+			vty_out(vty, "%% wlan id is out of range 1~128\n");
+			return CMD_SUCCESS;
+		}
+	}
+	else if (strncmp(argv[0], "vlanid", strlen(argv[0])) == 0) {
+		key_type = PORTAL_KEYTYPE_VLANID;
+		keyid = atoi(argv[1]);
+		if(keyid == 0 || keyid > 4096) {
+			vty_out(vty, "%% vlan id is out of range 1~4096\n");
+			return CMD_SUCCESS;
+		}		
+	}
+	else if (0 == strncmp(argv[0], "wtpid", strlen(argv[0]))){
+		keyid = atoi(argv[1]);
+		key_type = PORTAL_KEYTYPE_WTPID;
+	}
+	else if (0 == strncmp(argv[0], "interface", strlen(argv[0]))) {
+		key_type = PORTAL_KEYTYPE_INTF;
+		keystr = (char *)argv[1];
+	}
+	else {
+		vty_out(vty, "%% unknown index type %s\n", argv[0]);
+		return CMD_SUCCESS;
+	}
+
+	if (0 == strncmp(argv[2], "enable", strlen(argv[2])))
+	{
+		usermac_to_url = 1;
+	}
+	else if (0 == strncmp(argv[2], "disable", strlen(argv[2])))
+	{
+		usermac_to_url = 0;
+	}
+	else
+	{
+		vty_out(vty, "%% bad command parameter\n");
+		return CMD_SUCCESS;
+	}
+	EAG_DCLI_INIT_HANSI_INFO
+
+	ret = eag_set_portal_server_usermac_to_url( dcli_dbus_connection_curr,
+										hansitype,insid,
+										key_type,
+										keyid,
+										keystr,
+										usermac_to_url);
+	if(EAG_ERR_DBUS_FAILED == ret) {
+		vty_out(vty, "%% dbus error\n");
+	}
+	else if (EAG_ERR_UNKNOWN == ret) {
+		vty_out(vty, "%% unknown error\n");
+	}
+	else if (EAG_ERR_PORTAL_MODIFY_SRV_NOT_EXIST == ret) {
+		vty_out(vty, "%% the add key is not exist\n");
+	}
+	else if (EAG_ERR_PORTAL_MODIFY_SRV_ERR_TYPE == ret) {
+		vty_out(vty, "%% error index type\n");
+	}
+	else if (EAG_RETURN_OK != ret) {
+		vty_out(vty, "%% unknown error: %d\n", ret);
+	}
+	
+	return CMD_SUCCESS;
+}
+
 DEFUN(set_eag_portal_server_wlanusermac_func,
 	set_eag_portal_server_wlanusermac_cmd,
 	"set portal-server (wlanid|vlanid|wtpid|interface) KEY wlanusermac (enable|disable) [DESKEY]",
@@ -10281,7 +10492,7 @@ DEFUN(set_eag_portal_server_essid_func,
 	"set parameter of portal policy, if not exist, create it\n"
 	"portal policy\n"
 	"portal server index type essid\n"	
-	"eg:set portal-server essid KEY (ac-name|acip-to-url|nasid-to-url|url-suffix|wlanparameter|wlanuserfirsturl|secret|wlanapmac|wlanusermac|wisprlogin) params,the format like other keytypes.\n"		
+	"eg:set portal-server essid KEY (ac-name|acip-to-url|nasid-to-url|url-suffix|wlanparameter|wlanuserfirsturl|secret|wlanapmac|wlanusermac|wisprlogin|usermac-to-url) params,the format like other keytypes.\n"		
 )
 {
 	char *key_word = (char *)argv[0];
@@ -10328,6 +10539,9 @@ DEFUN(set_eag_portal_server_essid_func,
 				break;
 			} else if (0 == strcmp(argv[i], "wisprlogin")) {
 				func_type = 12;
+				break;
+			} else if (0 == strcmp(argv[i], "usermac-to-url")) {
+				func_type = 13;
 				break;
 			}
 			strncat(essid, " ", 1);
@@ -10545,7 +10759,25 @@ DEFUN(set_eag_portal_server_essid_func,
 		}
 		ret = eag_set_portal_server_wisprlogin(dcli_dbus_connection_curr, hansitype, insid,
 										key_type, keyid, key_word, if_enable, type);	
-		}break;
+		}
+		break;
+		case 13:
+		if ((i+2) == argc){
+			if (0 == strncmp(argv[i+1],"enable",strlen(argv[i+1]))) {
+				if_enable = 1;
+			} else if (0 == strncmp(argv[i+1],"disable",strlen(argv[i+1]))) {
+				if_enable = 0;
+			} else {
+				vty_out(vty, "%% argument is wrong\n");
+				return CMD_WARNING;
+			}
+		} else {
+			vty_out(vty, "%% argument is wrong\n");
+			return CMD_WARNING;
+		}
+		ret = eag_set_portal_server_usermac_to_url(dcli_dbus_connection_curr, hansitype, insid,
+										key_type, keyid, key_word, if_enable);
+		break;	
 	default:
 		break;
 	}
@@ -11977,11 +12209,11 @@ DEFUN(add_captive_portal_intfs_func,
 	int ret = -1;
 	char *intfs = (char *)argv[0];
 
+#if 0
 	if (!if_nametoindex(intfs)) {
 		vty_out(vty, "%% No such interface %s\n", intfs);
 		return CMD_WARNING;
 	}
-#if 0
 	if (eag_check_interface_addr(intfs)) {
 		vty_out(vty, "%% Interface without setting the IP address,"\
 				" please set IP address first.\n");
@@ -13743,7 +13975,15 @@ dcli_eag_init(void)
 	install_element(EAG_NODE, &set_eag_distributed_cmd);
 	install_element(HANSI_EAG_NODE, &set_eag_distributed_cmd);
 	install_element(LOCAL_HANSI_EAG_NODE, &set_eag_distributed_cmd);
-
+	
+	install_element(EAG_NODE, &set_eag_pdc_distributed_cmd);
+	install_element(HANSI_EAG_NODE, &set_eag_pdc_distributed_cmd);
+	install_element(LOCAL_HANSI_EAG_NODE, &set_eag_pdc_distributed_cmd);
+	
+	install_element(EAG_NODE, &set_eag_l2super_vlan_status_cmd);
+	install_element(HANSI_EAG_NODE, &set_eag_l2super_vlan_status_cmd);
+	install_element(LOCAL_HANSI_EAG_NODE, &set_eag_l2super_vlan_status_cmd);
+	
 	install_element(EAG_NODE, &set_eag_rdcpdc_hansi_cmd);
 	install_element(HANSI_EAG_NODE, &set_eag_rdcpdc_hansi_cmd);
 	install_element(LOCAL_HANSI_EAG_NODE, &set_eag_rdcpdc_hansi_cmd);
@@ -14004,6 +14244,10 @@ dcli_eag_init(void)
 	install_element(HANSI_EAG_NODE, &set_eag_portal_server_wlanapmac_cmd );
 	install_element(LOCAL_HANSI_EAG_NODE, &set_eag_portal_server_wlanapmac_cmd );
 
+	install_element(EAG_NODE, &set_eag_portal_server_usermac_to_url_cmd);
+	install_element(HANSI_EAG_NODE, &set_eag_portal_server_usermac_to_url_cmd);
+	install_element(LOCAL_HANSI_EAG_NODE, &set_eag_portal_server_usermac_to_url_cmd );
+	
 	install_element(EAG_NODE, &set_eag_portal_server_wlanusermac_cmd);
 	install_element(HANSI_EAG_NODE, &set_eag_portal_server_wlanusermac_cmd);
 	install_element(LOCAL_HANSI_EAG_NODE, &set_eag_portal_server_wlanusermac_cmd);

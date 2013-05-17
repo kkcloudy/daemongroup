@@ -728,7 +728,13 @@ eag_redirconn_build_redirurl( eag_redirconn_t *redirconn )
 		strncat( redirconn->redirurl, "&wlanapmac=", sizeof(redirconn->redirurl)-strlen(redirconn->redirurl));
 		strncat( redirconn->redirurl, apmac_str, sizeof(redirconn->redirurl)-strlen(redirconn->redirurl));
 	}
-	
+	/* usermac to url */
+	if (1 == portal_srv->usermac_to_url) {
+		char usermac_str[24];
+		mac2str( appconn->session.usermac, (char *)usermac_str, sizeof(usermac_str), ':');
+		strncat( redirconn->redirurl, "&usermac=", sizeof(redirconn->redirurl)-strlen(redirconn->redirurl));
+		strncat( redirconn->redirurl, usermac_str, sizeof(redirconn->redirurl)-strlen(redirconn->redirurl));
+	}
 	/* wlanusermac*/
 	if (1 == portal_srv->wlanusermac) {
 		char wlanusermac_str[100];
@@ -1019,6 +1025,7 @@ eag_redir_start(eag_redir_t * redir)
 	char ipstr[32] = "";
 	uint32_t nasip = 0;
 	int is_distributed = 0;
+	int pdc_distributed = 0;
 	
 	if (NULL == redir) {
 		eag_log_err("eag_redir_start input error");
@@ -1031,6 +1038,7 @@ eag_redir_start(eag_redir_t * redir)
 	}
 
 	is_distributed = eag_ins_get_distributed(redir->eagins);
+	pdc_distributed = eag_ins_get_pdc_distributed(redir->eagins);
 	nasip = eag_ins_get_nasip(redir->eagins);
 	redir->listen_fd = socket(AF_INET, SOCK_STREAM, 0);
 	if (redir->listen_fd < 0) {
@@ -1042,7 +1050,7 @@ eag_redir_start(eag_redir_t * redir)
 
 	memset(&addr, 0, sizeof (struct sockaddr_in));
 	addr.sin_family = AF_INET;
-	if (is_distributed) {
+	if (1 == is_distributed && 1 == pdc_distributed) {
 		addr.sin_addr.s_addr = htonl(redir->local_ip);
 		addr.sin_port = htons(redir->local_port);
 	} else {
@@ -1075,7 +1083,7 @@ eag_redir_start(eag_redir_t * redir)
 
 	eag_redir_event(EAG_REDIR_SERV, redir);
 
-	if (is_distributed) {
+	if (1 == is_distributed && 1 == pdc_distributed) {
 		eag_log_info("redir(%s:%u) fd(%d) start ok", 
 			ip2str(redir->local_ip, ipstr, sizeof(ipstr)),
 			redir->local_port,
@@ -1098,6 +1106,7 @@ eag_redir_stop(eag_redir_t *redir)
 	char ipstr[32] = "";
 	uint32_t nasip = 0;
 	int is_distributed = 0;
+    int pdc_distributed = 0;
 
 	if (NULL == redir) {
 		eag_log_err("eag_redir_stop input error");
@@ -1105,6 +1114,7 @@ eag_redir_stop(eag_redir_t *redir)
 	}
 
 	is_distributed = eag_ins_get_distributed(redir->eagins);
+	pdc_distributed = eag_ins_get_pdc_distributed(redir->eagins);
 	nasip = eag_ins_get_nasip(redir->eagins);
 	if (NULL != redir->t_accept) {
 		eag_thread_cancel(redir->t_accept);
@@ -1119,7 +1129,7 @@ eag_redir_stop(eag_redir_t *redir)
 			eag_redirconn_free(redirconn);
 	}
 
-	if (is_distributed) {
+	if (1 == is_distributed && 1 == pdc_distributed) {
 		eag_log_info("redir(%s:%u) stop ok",
 			ip2str(redir->local_ip, ipstr, sizeof(ipstr)),
 			redir->local_port);

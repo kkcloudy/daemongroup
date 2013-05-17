@@ -25,6 +25,7 @@
 /*base conf*/
 #define EAG_DBUS_METHOD_SET_NASIP			"eag_dbus_method_set_nasip"
 #define EAG_DBUS_METHOD_SET_DISTRIBUTED		"eag_dbus_method_set_distributed"
+#define EAG_DBUS_METHOD_SET_PDC_DISTRIBUTED	"eag_dbus_method_set_pdc_distributed"
 #define EAG_DBUS_METHOD_SET_PDCRDC_INS		"eag_dbus_method_set_rdcpdc_ins"
 
 #define EAG_DBUS_METHOD_SET_PORTAL_PORT				"eag_dbus_method_set_portal_port"
@@ -55,6 +56,7 @@
 #define EAG_DBUS_METHOD_SET_CLASS_TO_BANDWIDTH_SWITCH		"eag_dbus_method_set_class_to_bandwidth_switch"
 #define EAG_DBUS_METHOD_SET_PORTAL_PROTOCOL			"eag_dbus_method_set_portal_protocol"
 #define EAG_DBUS_METHOD_SET_MACAUTH_SWITCH			"eag_dbus_method_set_macauth_switch"
+#define EAG_DBUS_METHOD_SET_L2SUPER_VLAN_SWITCH		"eag_dbus_method_set_l2super_vlan_switch"
 #define EAG_DBUS_METHOD_SET_MACAUTH_IPSET_AUTH		"eag_dbus_method_set_macauth_ipset_auth"
 #define EAG_DBUS_METHOD_SET_MACAUTH_FLUX_FROM		"eag_dbus_method_set_macauth_flux_from"
 #define EAG_DBUS_METHOD_SET_MACAUTH_FLUX_INTERVAL	"eag_dbus_method_set_macauth_flux_interval"
@@ -93,6 +95,7 @@
 #define EAG_DBUS_METHOD_SET_URL_SUFFIX				"eag_dbus_method_set_url_suffix"
 #define EAG_DBUS_METHOD_SET_PORTAL_SECRET			"eag_dbus_method_set_portal_secret"
 #define EAG_DBUS_METHOD_SET_WLANAPMAC				"eag_dbus_method_set_wlanapmac"
+#define EAG_DBUS_METHOD_SET_USERMAC_TO_URL			"eag_dbus_method_set_usermac_to_url"
 #define EAG_DBUS_METHOD_SET_WLANUSERMAC				"eag_dbus_method_set_wlanusermac"
 #define EAG_DBUS_METHOD_SET_WISPRLOGIN				"eag_dbus_method_set_wisprlogin"
 
@@ -282,6 +285,48 @@ eag_set_distributed(DBusConnection *connection,
 	
 	dbus_message_append_args(	query,
 								DBUS_TYPE_INT32,  &distributed,
+								DBUS_TYPE_INVALID );
+
+	reply = dbus_connection_send_with_reply_and_block ( connection, query, -1, &err );
+
+	dbus_message_unref(query);
+	
+	if ( NULL == reply ){	
+		if (dbus_error_is_set(&err)){
+			dbus_error_free(&err);
+		}
+		return EAG_ERR_DBUS_FAILED;
+	}else{
+		dbus_message_get_args(	reply,
+								&err,
+								DBUS_TYPE_INT32, &iRet,
+								DBUS_TYPE_INVALID );
+	}
+
+	
+	dbus_message_unref(reply);
+	
+	return iRet;
+}
+
+int
+eag_set_pdc_distributed(DBusConnection *connection, 
+				int hansitype, int insid,
+				int pdc_distributed)
+{
+	DBusMessage *query, *reply;
+	DBusError err;
+	int iRet=EAG_ERR_UNKNOWN;
+	eag_dbus_path_reinit(hansitype,insid);
+	query = dbus_message_new_method_call(
+									EAG_DBUS_NAME,
+									EAG_DBUS_OBJPATH,
+									EAG_DBUS_INTERFACE, 
+									EAG_DBUS_METHOD_SET_PDC_DISTRIBUTED );
+	dbus_error_init(&err);
+	
+	dbus_message_append_args(	query,
+								DBUS_TYPE_INT32,  &pdc_distributed,
 								DBUS_TYPE_INVALID );
 
 	reply = dbus_connection_send_with_reply_and_block ( connection, query, -1, &err );
@@ -1106,6 +1151,45 @@ eag_set_portal_protocol(DBusConnection *connection,
 }
 
 int
+eag_set_l2super_vlan_switch(DBusConnection *connection, 
+				int hansitype, int insid,
+				int l2super_vlan_switch)
+{
+	DBusMessage *query, *reply;
+	DBusError err;
+	int iRet=EAG_ERR_UNKNOWN;
+	eag_dbus_path_reinit(hansitype,insid);
+	query = dbus_message_new_method_call(
+									EAG_DBUS_NAME,
+									EAG_DBUS_OBJPATH,
+									EAG_DBUS_INTERFACE, 
+									EAG_DBUS_METHOD_SET_L2SUPER_VLAN_SWITCH);
+	dbus_error_init(&err);
+	
+	dbus_message_append_args(	query,
+								DBUS_TYPE_INT32,  &l2super_vlan_switch,
+								DBUS_TYPE_INVALID );
+
+	reply = dbus_connection_send_with_reply_and_block ( connection, query, -1, &err );
+
+	dbus_message_unref(query);	
+	if ( NULL == reply ){	
+		if (dbus_error_is_set(&err)){
+			dbus_error_free(&err);
+		}
+		return EAG_ERR_DBUS_FAILED;
+	}else{
+		dbus_message_get_args(	reply,
+								&err,
+								DBUS_TYPE_INT32, &iRet,
+								DBUS_TYPE_INVALID );
+	}
+	dbus_message_unref(reply);
+	
+	return iRet;
+}
+
+int
 eag_set_macauth_switch(DBusConnection *connection, 
 				int hansitype, int insid,
 				int macauth_switch)
@@ -1474,6 +1558,8 @@ eag_get_base_conf( DBusConnection *connection,
 			dbus_message_iter_next(&iter);
 			dbus_message_iter_get_basic(&iter,&(baseconf->is_distributed));
 			dbus_message_iter_next(&iter);
+			dbus_message_iter_get_basic(&iter,&(baseconf->pdc_distributed));
+			dbus_message_iter_next(&iter);
 			dbus_message_iter_get_basic(&iter,&(baseconf->rdcpdc_slotid));
 			dbus_message_iter_next(&iter);
 			dbus_message_iter_get_basic(&iter,&(baseconf->rdcpdc_insid));			
@@ -1547,6 +1633,8 @@ eag_get_base_conf( DBusConnection *connection,
 			dbus_message_iter_get_basic(&iter,&(baseconf->autelan_log));
 			dbus_message_iter_next(&iter);
 			dbus_message_iter_get_basic(&iter,&(baseconf->henan_log));
+			dbus_message_iter_next(&iter);
+			dbus_message_iter_get_basic(&iter,&(baseconf->l2super_vlan));
 		}
 	}
 	
@@ -3920,6 +4008,73 @@ eag_set_portal_server_wlanapmac( DBusConnection *connection,
 								DBUS_TYPE_UINT32, &keyid,
 								DBUS_TYPE_STRING, &key_word,
 								DBUS_TYPE_INT32, &wlanapmac_to_url,
+								DBUS_TYPE_INVALID );
+	reply = dbus_connection_send_with_reply_and_block (
+						connection, query, -1, &err );
+
+	dbus_message_unref(query);
+	
+	if ( NULL == reply ){	
+		if (dbus_error_is_set(&err)){
+			dbus_error_free(&err);
+		}
+		return EAG_ERR_DBUS_FAILED;
+	}else{
+		
+		dbus_message_get_args( reply,
+								&err,
+								DBUS_TYPE_INT32, &iRet,
+								DBUS_TYPE_INVALID );
+	}
+	
+	dbus_message_unref(reply);
+	
+	return iRet;
+}
+
+int
+eag_set_portal_server_usermac_to_url( DBusConnection *connection, 
+				int hansitype, int insid, 	
+				PORTAL_KEY_TYPE key_type,
+				unsigned long keyid,
+				char *key_word,
+				int usermac_to_url )
+{
+	DBusMessage *query, *reply;
+	DBusError err;
+	int iRet = 0;
+
+	if( NULL == key_word ){
+		return EAG_ERR_INPUT_PARAM_ERR;
+	}
+
+	switch(key_type){
+	case PORTAL_KEYTYPE_ESSID:
+	case PORTAL_KEYTYPE_INTF:
+		keyid = 0;
+		break;
+	case PORTAL_KEYTYPE_WLANID:
+	case PORTAL_KEYTYPE_VLANID:
+	case PORTAL_KEYTYPE_WTPID:
+		key_word = "";
+		break;
+	default:
+		return EAG_ERR_PORTAL_ADD_SRV_ERR_TYPE;
+	}
+	
+	eag_dbus_path_reinit(hansitype,insid);
+	query = dbus_message_new_method_call(
+									EAG_DBUS_NAME,
+									EAG_DBUS_OBJPATH,
+									EAG_DBUS_INTERFACE, 
+									EAG_DBUS_METHOD_SET_USERMAC_TO_URL );
+	dbus_error_init(&err);
+
+	dbus_message_append_args(	query,
+								DBUS_TYPE_UINT32, &key_type,
+								DBUS_TYPE_UINT32, &keyid,
+								DBUS_TYPE_STRING, &key_word,
+								DBUS_TYPE_INT32, &usermac_to_url,
 								DBUS_TYPE_INVALID );
 	reply = dbus_connection_send_with_reply_and_block (
 						connection, query, -1, &err );

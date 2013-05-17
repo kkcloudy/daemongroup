@@ -36,6 +36,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <errno.h>
 #include <stdlib.h>
 #include <arpa/inet.h>
+#include <sys/wait.h>
 
 #include "nm_list.h"
 #include "hashtable.h"
@@ -105,6 +106,7 @@ int cmtest_no_notice_to_pdc = 0;
 int cmtest_no_notice_to_fastfwd = 0;
 int cmtest_no_arp_learn = 0;
 int cmtest_no_authorize = 0;
+int l2super_vlan_switch_t = 0;
 
 extern int notice_to_bindserver;
 
@@ -130,7 +132,8 @@ struct eag_ins {
 	uint8_t hansi_type;
 	uint8_t hansi_id;
 	int is_distributed;
-
+	int pdc_distributed;
+	
 	struct portal_conf portalconf;
 	struct radius_conf radiusconf;
 	struct nasid_conf nasidconf;
@@ -210,6 +213,82 @@ eagins_read_file_switch()
 			cmtest_no_notice_to_asd, cmtest_no_notice_to_pdc, cmtest_no_notice_to_fastfwd, 
 			cmtest_no_arp_learn, cmtest_no_authorize);
 	return 0;
+}
+
+static int eag_set_l2super_vlan_status(int l2super_vlan_switch)
+{
+	if(0 != l2super_vlan_switch && 1 != l2super_vlan_switch) {
+		return EAG_ERR_UNKNOWN;
+	}
+	
+	l2super_vlan_switch_t = l2super_vlan_switch;
+
+	return EAG_RETURN_OK;
+}
+
+static int eag_set_l2super_vlan( eag_ins_t *eagins, int l2super_vlan_switch )
+{
+	char nasip_str[32]= "";
+	uint32_t nasip = 0;
+	char dns_udp_dnat[256] = "";	/*udp port 53 dnat when dns hold*/
+	char dns_tcp_dnat[256] = "";	/*tcp port 53 dnat when dns hold*/
+	char redir_tcp_dnat[256] = "";	/*tcp port 80 to 3.4.5.6 dnat to nasip*/
+	char portal_udp_dnat[256] = "";	/*udp port 2000 to 3.4.5.6 dnat to nasip*/
+	char opt[8] = "";
+	int ret = 0;
+	
+	memset(dns_udp_dnat, 0, sizeof(dns_udp_dnat));
+	memset(dns_tcp_dnat, 0, sizeof(dns_tcp_dnat));
+	memset(redir_tcp_dnat, 0, sizeof(redir_tcp_dnat));
+	memset(portal_udp_dnat, 0, sizeof(portal_udp_dnat));
+	memset(opt, 0, sizeof(opt));
+	
+	nasip = eag_ins_get_nasip(eagins);
+	ip2str(nasip, nasip_str, sizeof(nasip_str));
+	
+	if(1 == l2super_vlan_switch) {	
+		strncpy(opt, "-I", sizeof(opt)-1);
+	} else if(0 == l2super_vlan_switch) {
+		strncpy(opt, "-D", sizeof(opt)-1);
+	} else {
+		return EAG_ERR_UNKNOWN;
+	}
+	
+	snprintf(dns_udp_dnat, sizeof(dns_udp_dnat) - 1,
+		"sudo /opt/bin/iptables -t nat %s PREROUTING -p udp -m udp --dport 53 -m string --hex-string '|617574656c616e39323303636f6d|' --algo bm --from 0 --to 65535 -j DNAT --to-destination %s", 
+		opt, nasip_str);
+	snprintf(dns_tcp_dnat, sizeof(dns_tcp_dnat) - 1,
+		"sudo /opt/bin/iptables -t nat %s PREROUTING -p tcp -m tcp --dport 53 -m string --hex-string '|617574656c616e39323303636f6d|' --algo bm --from 0 --to 65535 -j DNAT --to-destination %s", 
+		opt, nasip_str);
+	snprintf(redir_tcp_dnat, sizeof(redir_tcp_dnat) - 1,
+		"sudo /opt/bin/iptables -t nat %s PREROUTING -d 3.4.5.6/32 -p tcp -m tcp --dport 80 -j DNAT --to-destination %s", 
+		opt, nasip_str);
+	snprintf(portal_udp_dnat, sizeof(portal_udp_dnat) - 1, 
+		"sudo /opt/bin/iptables -t nat %s OUTPUT -d 3.4.5.6/32 -p udp -m udp --dport 2000 -j DNAT --to-destination %s", 
+		opt, nasip_str);
+
+	ret = system(dns_udp_dnat);
+	ret = WEXITSTATUS(ret); 
+	if( 0 != ret) {
+		return EAG_ERR_UNKNOWN;
+	}
+	ret = system(dns_tcp_dnat);
+	ret = WEXITSTATUS(ret); 
+	if( 0 != ret) {
+		return EAG_ERR_UNKNOWN;
+	}
+	ret = system(redir_tcp_dnat);
+	ret = WEXITSTATUS(ret); 
+	if( 0 != ret) {
+		return EAG_ERR_UNKNOWN;
+	}
+	ret = system(portal_udp_dnat);
+	ret = WEXITSTATUS(ret); 
+	if( 0 != ret) {
+		return EAG_ERR_UNKNOWN;
+	}
+
+	return EAG_RETURN_OK;
 }
 
 static void 
@@ -1586,7 +1665,7 @@ eag_ins_start(eag_ins_t *eagins)
 		return EAG_ERR_EAGINS_NASIP_IS_EMPTY;
 	}
 	
-	if (1 == eagins->is_distributed) {
+	if (1 == eagins->is_distributed && 1 == eagins->pdc_distributed) {
 		if (HANSI_LOCAL == eagins->hansi_type) {
 			eag_captive_set_redir_srv(eagins->captive,
 					SLOT_IPV4_BASE + 100 + eagins->hansi_id,
@@ -1677,6 +1756,9 @@ eag_ins_start(eag_ins_t *eagins)
 	eagins_read_file_switch();
 	
 	eagins->status = 1;
+	if (l2super_vlan_switch_t) {
+    	eag_set_l2super_vlan(eagins, l2super_vlan_switch_t);
+    }
 	return EAG_RETURN_OK;
 failed_7:
 	eag_macauth_stop(eagins->macauth);
@@ -1730,6 +1812,9 @@ eag_ins_stop(eag_ins_t *eagins)
 	eag_statistics_clear(eagins->eagstat);
 
 	eagins->status = 0;
+	if (l2super_vlan_switch_t) {
+    	eag_set_l2super_vlan(eagins, 0);
+    }
 	return EAG_RETURN_OK;
 }
 
@@ -2108,8 +2193,29 @@ eag_ins_set_distributed(eag_ins_t *eagins,
 	}
 	
 	eagins->is_distributed = is_distributed;
+	eagins->pdc_distributed = is_distributed;
 
 	eag_log_info("eagins set distributed %d", is_distributed);
+	return EAG_RETURN_OK;
+}
+
+int
+eag_ins_set_pdc_distributed(eag_ins_t *eagins,
+		int pdc_distributed)
+{
+	if (NULL == eagins) {
+		eag_log_err("eag_ins_set_pdc_distributed input error");
+		return -1;
+	}
+
+	if (eag_ins_is_running(eagins)) {
+		eag_log_warning("eag_ins_set_pdc_distributed eagins already started");
+		return EAG_ERR_EAGINS_SERVICE_ALREADY_ENABLE;
+	}
+	
+	eagins->pdc_distributed = pdc_distributed;
+
+	eag_log_info("eagins set pdc distributed %d", pdc_distributed);
 	return EAG_RETURN_OK;
 }
 
@@ -2117,6 +2223,12 @@ int
 eag_ins_get_distributed(eag_ins_t *eagins)
 {
 	return eagins->is_distributed;
+}
+
+int
+eag_ins_get_pdc_distributed(eag_ins_t *eagins)
+{
+	return eagins->pdc_distributed;
 }
 
 int
@@ -2252,6 +2364,58 @@ eag_dbus_method_set_distributed(
 	}
 	
 	ret = eag_ins_set_distributed(eagins, distributed);
+
+replyy:
+	dbus_message_iter_init_append(reply, &iter);
+	dbus_message_iter_append_basic(&iter,
+								DBUS_TYPE_INT32, &ret);
+	return reply;
+}
+
+DBusMessage *
+eag_dbus_method_set_pdc_distributed(
+				DBusConnection *conn, 
+				DBusMessage *msg, 
+				void *user_data )
+{
+	eag_ins_t *eagins = NULL;
+	DBusMessage *reply = NULL;
+	DBusMessageIter iter = {0};
+	DBusError err = {0};
+	int ret = EAG_RETURN_OK;
+	int pdc_distributed = 0;
+	
+	reply = dbus_message_new_method_return(msg);
+	if (NULL == reply) {
+		eag_log_err("eag_dbus_method_set_pdc_distributed "
+					"DBUS new reply message error");
+		return NULL;
+	}
+
+	eagins = (eag_ins_t *)user_data;
+	if (NULL == eagins) {
+		eag_log_err("eag_dbus_method_set_pdc_distributed "
+					"user_data error");
+		ret = EAG_ERR_UNKNOWN;
+		goto replyy;
+	}
+
+	dbus_error_init(&err);
+	if (!(dbus_message_get_args(msg ,&err,
+								DBUS_TYPE_INT32, &pdc_distributed,
+								DBUS_TYPE_INVALID))){
+		eag_log_err("eag_dbus_method_set_pdc_distributed "
+					"unable to get input args");
+		if (dbus_error_is_set(&err)) {
+			eag_log_err("eag_dbus_method_set_pdc_distributed %s raised:%s",
+						err.name, err.message);
+			dbus_error_free(&err);
+		}
+		ret = EAG_ERR_DBUS_FAILED;
+		goto replyy;
+	}
+	
+	ret = eag_ins_set_pdc_distributed(eagins, pdc_distributed);
 
 replyy:
 	dbus_message_iter_init_append(reply, &iter);
@@ -3297,7 +3461,8 @@ eag_dbus_method_get_base_conf(
 	int notice_bindserver = 0;
 	int autelan_log = 0;
 	int henan_log = 0;
-
+	int l2super_vlan = 0;
+	
 	reply = dbus_message_new_method_return(msg);
 	if (NULL == reply) {
 		eag_log_err("eag_dbus_method_get_base_conf "
@@ -3326,6 +3491,8 @@ replyx:
 								DBUS_TYPE_UINT32, &(eagins->nasip));
 		dbus_message_iter_append_basic(&iter,
 								DBUS_TYPE_INT32, &(eagins->is_distributed));
+		dbus_message_iter_append_basic(&iter,
+								DBUS_TYPE_INT32, &(eagins->pdc_distributed));
 		pdc_get_server_hansi(&rdcpdc_slotid, &rdcpdc_insid);
 		dbus_message_iter_append_basic(&iter,
 								DBUS_TYPE_INT32, &rdcpdc_slotid);
@@ -3430,6 +3597,9 @@ replyx:
 		henan_log = henan_log_switch;
 		dbus_message_iter_append_basic(&iter, 
 								DBUS_TYPE_INT32, &henan_log);
+		l2super_vlan= l2super_vlan_switch_t;
+		dbus_message_iter_append_basic(&iter, 
+								DBUS_TYPE_INT32, &l2super_vlan);
 	}
 	
 	return reply;
@@ -5749,6 +5919,86 @@ eag_dbus_method_set_wlanapmac(
 			goto replyx;
 		}	
 		portal_srv_t->wlanapmac = wlanapmac;
+		break;
+	default:
+		ret = EAG_ERR_PORTAL_MODIFY_SRV_ERR_TYPE;
+		break;
+	}
+	
+replyx:
+	dbus_message_iter_init_append(reply, &iter);
+	dbus_message_iter_append_basic(&iter,
+									DBUS_TYPE_INT32, &ret);
+	return reply;
+}
+
+DBusMessage *
+eag_dbus_method_set_usermac_to_url(
+				DBusConnection *conn, 
+				DBusMessage *msg, 
+				void *user_data )
+{
+	struct portal_conf *portal_conf = NULL;
+	DBusMessage* reply = NULL;
+	DBusMessageIter iter = {0};
+	DBusError		err = {0};
+	unsigned long  keytype = 0;
+	unsigned long  keyid = 0;
+	char		  *keyword = NULL;
+	int usermac_to_url = 0;
+	struct portal_srv_t * portal_srv_t = NULL;
+	int ret = 0;
+
+	reply = dbus_message_new_method_return(msg);
+	if (NULL == reply) {
+		eag_log_err("eag_dbus_method_set_acip_to_url "\
+					"DBUS new reply message error!\n");
+		return NULL;
+	}
+
+	portal_conf = (struct portal_conf *)user_data;
+	if( NULL == portal_conf){
+		eag_log_err("eag_dbus_method_set_acip_to_url user_data error!");
+		ret = EAG_ERR_UNKNOWN;
+		goto replyx;
+	}
+	
+	dbus_error_init(&err);
+	if (!(dbus_message_get_args(msg ,&err,
+								DBUS_TYPE_UINT32, &keytype,
+								DBUS_TYPE_UINT32, &keyid,
+								DBUS_TYPE_STRING, &keyword,
+								DBUS_TYPE_INT32, &usermac_to_url,
+								DBUS_TYPE_INVALID))){
+		eag_log_err("eag_dbus_method_set_acip_to_url "\
+					"unable to get input args\n");
+		if (dbus_error_is_set(&err)) {
+			eag_log_err("eag_dbus_method_set_acip_to_url %s raised:%s\n",
+							err.name, err.message);
+			dbus_error_free(&err);
+		}
+		ret = EAG_ERR_DBUS_FAILED;
+		goto replyx;
+	}
+	switch( keytype ){
+	case PORTAL_KEYTYPE_ESSID:
+	case PORTAL_KEYTYPE_INTF:
+		portal_srv_t = portal_srv_get_by_key(portal_conf, keytype,keyword);
+		if( NULL == portal_srv_t ){
+			ret = EAG_ERR_PORTAL_DEL_SRV_NOT_EXIST;
+			goto replyx;
+		}
+		portal_srv_t->usermac_to_url = usermac_to_url;
+		break;
+	case PORTAL_KEYTYPE_WLANID:
+	case PORTAL_KEYTYPE_VLANID:
+	case PORTAL_KEYTYPE_WTPID:
+		portal_srv_t = portal_srv_get_by_key(portal_conf, keytype,&keyid);
+		if( NULL == portal_srv_t ){
+			ret = EAG_ERR_PORTAL_MODIFY_SRV_NOT_EXIST;
+			goto replyx;
+		}	
+		portal_srv_t->usermac_to_url = usermac_to_url;
 		break;
 	default:
 		ret = EAG_ERR_PORTAL_MODIFY_SRV_ERR_TYPE;
@@ -8670,6 +8920,57 @@ replyx:
 }
 
 DBusMessage *
+eag_dbus_method_set_l2super_vlan_switch(
+				DBusConnection *conn, 
+				DBusMessage *msg, 
+				void *user_data )
+{
+	eag_ins_t *eagins = NULL;
+	DBusMessage *reply = NULL;
+	DBusMessageIter iter = {0};
+	DBusError err = {0};
+	int ret = EAG_RETURN_OK;
+	int l2super_vlan_switch = 0;
+
+	reply = dbus_message_new_method_return(msg);
+	if (NULL == reply) {
+		eag_log_err("eag_dbus_method_set_l2super_vlan_switch "
+					"DBUS new reply message error");
+		return NULL;
+	}
+
+	eagins = (eag_ins_t *)user_data;
+	if (NULL == eagins) {
+		eag_log_err("eag_dbus_method_set_l2super_vlan_switch user_data error");
+		ret = EAG_ERR_UNKNOWN;
+		goto replyx;
+	}
+	
+	dbus_error_init(&err);
+	if (!(dbus_message_get_args(msg ,&err,
+								DBUS_TYPE_INT32, &l2super_vlan_switch,
+								DBUS_TYPE_INVALID))) {
+		eag_log_err("eag_dbus_method_set_l2super_vlan_switch "
+					"unable to get input args");
+		if (dbus_error_is_set(&err)) {
+			eag_log_err("eag_dbus_method_set_l2super_vlan_switch %s raised:%s",
+						err.name, err.message);
+			dbus_error_free(&err);
+		}
+		ret = EAG_ERR_DBUS_FAILED;
+		goto replyx;
+	}
+	
+	ret = eag_set_l2super_vlan_status(l2super_vlan_switch);
+	
+replyx:
+	dbus_message_iter_init_append(reply, &iter);
+	dbus_message_iter_append_basic(&iter,
+								DBUS_TYPE_INT32, &ret);
+	return reply;
+}
+
+DBusMessage *
 eag_dbus_method_set_macauth_switch(
 				DBusConnection *conn, 
 				DBusMessage *msg, 
@@ -9689,6 +9990,8 @@ eagins_register_all_dbus_method(eag_ins_t *eagins)
 	eag_dbus_register_method(eagins->eagdbus,
 		EAG_DBUS_INTERFACE, eag_dbus_method_set_distributed, eagins);
 	eag_dbus_register_method(eagins->eagdbus,
+		EAG_DBUS_INTERFACE, eag_dbus_method_set_pdc_distributed, eagins);
+	eag_dbus_register_method(eagins->eagdbus,
 		EAG_DBUS_INTERFACE, eag_dbus_method_set_rdcpdc_ins, eagins);
 
 	eag_dbus_register_method(eagins->eagdbus,
@@ -9739,7 +10042,9 @@ eagins_register_all_dbus_method(eag_ins_t *eagins)
 		EAG_DBUS_INTERFACE, eag_dbus_method_show_relative_time, eagins);
 	
 	eag_dbus_register_method(eagins->eagdbus,
-			EAG_DBUS_INTERFACE, eag_dbus_method_set_portal_protocol, eagins);
+		EAG_DBUS_INTERFACE, eag_dbus_method_set_portal_protocol, eagins);
+	eag_dbus_register_method(eagins->eagdbus,
+		EAG_DBUS_INTERFACE, eag_dbus_method_set_l2super_vlan_switch, eagins);
 	eag_dbus_register_method(eagins->eagdbus,
 		EAG_DBUS_INTERFACE, eag_dbus_method_set_macauth_switch, eagins->macauth);
 	eag_dbus_register_method(eagins->eagdbus,
@@ -9809,6 +10114,8 @@ eagins_register_all_dbus_method(eag_ins_t *eagins)
 		EAG_DBUS_INTERFACE, eag_dbus_method_set_portal_secret, &(eagins->portalconf));
 	eag_dbus_register_method(eagins->eagdbus,
 		EAG_DBUS_INTERFACE, eag_dbus_method_set_wlanapmac, &(eagins->portalconf));
+	eag_dbus_register_method(eagins->eagdbus,
+		EAG_DBUS_INTERFACE, eag_dbus_method_set_usermac_to_url, &(eagins->portalconf));
 	eag_dbus_register_method(eagins->eagdbus,
 		EAG_DBUS_INTERFACE, eag_dbus_method_set_wlanusermac, &(eagins->portalconf));
 	eag_dbus_register_method(eagins->eagdbus,

@@ -114,7 +114,7 @@ static int dcli_web_vhost_add_valid(webHost host, unsigned int slot)
         {
             if(info->portal_flag == 1)
             {
-                if(info->slotid != slot)
+				if(info->slotid == slot)
                 {
                     web_list_flush(&infohead);
                     return WEB_PORTAL_ERROR;
@@ -153,11 +153,13 @@ static int dcli_web_vhost_add_valid(webHost host, unsigned int slot)
                 web_list_flush(&infohead);
                 return WEB_NAME_EXISIT;
             }
+            #if 0
             if(!strcmp(vh->address,host.address) && vh->port == host.port)
             {
                 web_list_flush(&infohead);
                 return WEB_EXISIT;
             }
+            #endif
         }
 	}
 	web_list_flush(&infohead);
@@ -1056,6 +1058,7 @@ DEFUN(enable_interval_portal_service_func,
 
     char buf[32];
     int flag = 1, ret, dslot;
+    static int webportal_en = 0;
     
     LINK_FOREACH(info, &infohead, entries)
     {
@@ -1065,9 +1068,8 @@ DEFUN(enable_interval_portal_service_func,
 
             if(info->server_stat&PORTAL_SERVICE_ENABLE)
             {
-                web_list_flush(&infohead);
-                vty_out(vty, "is running. failed\n");
-                return CMD_WARNING;
+                webportal_en ++;
+                continue;
             }
 
             dslot = info->slotid;
@@ -1091,6 +1093,9 @@ DEFUN(enable_interval_portal_service_func,
                 }
             }
         }
+    }
+    if (0 < webportal_en) {
+    	vty_out(vty, "is running. failed\n");
     }
     web_list_flush(&infohead);  
     
@@ -1122,6 +1127,7 @@ DEFUN(disable_interval_portal_service_func,
 
     char buf[32];
     int flag = 1, ret, dslot;
+    static int webportal_dis = 0;
     
     LINK_FOREACH(info, &infohead, entries)
     {
@@ -1131,9 +1137,8 @@ DEFUN(disable_interval_portal_service_func,
 
             if(!(info->server_stat&PORTAL_SERVICE_ENABLE))
             {
-                vty_out(vty, "not running. failed");
-                web_list_flush(&infohead);
-                return CMD_WARNING;
+				webportal_dis ++;
+				continue;
             }
 
             dslot = info->slotid;
@@ -1158,7 +1163,9 @@ DEFUN(disable_interval_portal_service_func,
             }
         }
     }
-
+    if (0 < webportal_dis) {
+    	vty_out(vty, "not running. failed");
+    }
 
     web_list_flush(&infohead);  
 
@@ -1418,6 +1425,7 @@ int dcli_webservice_show_running_config(struct vty* vty)
     webInfoPtr info;
     webHostPtr vh;
     webIfPtr in;
+    static int webportal_mark = 0;
     
     LINK_FOREACH(info, &infohead, entries)
     {
@@ -1456,7 +1464,7 @@ int dcli_webservice_show_running_config(struct vty* vty)
             }
 
             if(info->server_stat & PORTAL_SERVICE_ENABLE)
-                vtysh_add_show_string(" service webportal enable\n");
+				webportal_mark ++;
         }
 
         #ifdef __WITH_AUTEWARE_WEB
@@ -1496,7 +1504,9 @@ int dcli_webservice_show_running_config(struct vty* vty)
         }
         #endif
     }
-
+    if (0 < webportal_mark) {
+		vtysh_add_show_string(" service webportal enable\n");
+	}
 	vtysh_add_show_string( " exit\n" );
     web_list_flush(&infohead);  
     return CMD_SUCCESS;
