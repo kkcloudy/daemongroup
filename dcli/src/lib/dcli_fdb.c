@@ -5616,8 +5616,14 @@ DEFUN(show_fdb_port_cmd_func,
 	unsigned int trans_value2 = 0;
 	int op_ret = 0;
 	unsigned int k=0;
+	char path_start_no[64];
+	char path_cnt[64];
+	int asic_port_start_no = 0,asic_port_cnt = 0,asic_port_end_no;
+	
+	
 	op_ret =  parse_slotport_no((char*)argv[0],&slotNum,&portNum);
-	if (NPD_FAIL == op_ret) {
+	if (NPD_FAIL == op_ret) 
+	{
 		vty_out(vty,"%% Error,Unknow portno format!\n");
 		return CMD_SUCCESS;
 	}
@@ -5633,7 +5639,7 @@ DEFUN(show_fdb_port_cmd_func,
 	
 	if(is_distributed == DISTRIBUTED_SYSTEM)	
     {
-	    #if 1
+		#if 1
 		local_slot_id = get_product_info(SEM_LOCAL_SLOT_ID_PATH);
     	slotnum = get_product_info(SEM_SLOT_COUNT_PATH);
 		if((local_slot_id < 0) || (slotnum <0))
@@ -5641,121 +5647,147 @@ DEFUN(show_fdb_port_cmd_func,
 			vty_out(vty,"read file error ! \n");
 			return CMD_WARNING;
 		}
-           query = dbus_message_new_method_call(NPD_DBUS_BUSNAME,NPD_DBUS_FDB_OBJPATH,	\
-									NPD_DBUS_FDB_INTERFACE,NPD_DBUS_FDB_METHOD_SHOW_FDB_TABLE_PORT);
-
-            dbus_error_init(&err);
-			dbus_message_append_args(	query,
-							DBUS_TYPE_BYTE,&slotNum,
-						 	DBUS_TYPE_BYTE,&portNum,
-						 	DBUS_TYPE_INVALID);
-            if(local_slot_id == slotNum)
+		if(slotNum > slotnum)
+		{
+			vty_out(vty,"Param err,slotnum should be in <1-%d>\n",slotnum);
+			return CMD_WARNING;
+		}
+		sprintf(path_start_no, "/dbm/product/slot/slot%d/asic_start_no", slotNum);
+		sprintf(path_cnt, "/dbm/product/slot/slot%d/asic_port_num", slotNum);
+		asic_port_start_no = get_product_info(path_start_no);
+		asic_port_cnt = get_product_info(path_cnt);
+	    if((asic_port_start_no<0)||(asic_port_start_no>64))	
+	    {
+			vty_out(vty,"There is no board on slot %d!\n",slotNum);
+			return CMD_WARNING;
+	    }
+		asic_port_end_no = asic_port_start_no+asic_port_cnt-1;
+		if((portNum < asic_port_start_no) || (portNum > asic_port_end_no))
+		{
+			if((asic_port_start_no == 0) || (asic_port_cnt == 0))
 			{
-				reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection,query,-1, &err);
+				vty_out(vty,"Param err,this board has no asic ports\n");
+				return CMD_WARNING;
+			}
+			vty_out(vty,"Param err,portnum should be in <%d-%d>\n",asic_port_start_no,asic_port_end_no);
+			return CMD_WARNING;
+		}
+		
+		query = dbus_message_new_method_call(NPD_DBUS_BUSNAME,NPD_DBUS_FDB_OBJPATH,	\
+								NPD_DBUS_FDB_INTERFACE,NPD_DBUS_FDB_METHOD_SHOW_FDB_TABLE_PORT);
+
+		dbus_error_init(&err);
+		dbus_message_append_args(	query,
+						DBUS_TYPE_BYTE,&slotNum,
+					 	DBUS_TYPE_BYTE,&portNum,
+					 	DBUS_TYPE_INVALID);
+		if(local_slot_id == slotNum)
+		{
+			reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection,query,-1, &err);
+		}
+		else
+		{
+			if(NULL == dbus_connection_dcli[slotNum]->dcli_dbus_connection)
+			{
+			   	vty_out(vty,"Can not connect to slot:%d, check the slot please !\n",slotNum);	
+				return CMD_WARNING;
 			}
 			else
 			{
-				if(NULL == dbus_connection_dcli[slotNum]->dcli_dbus_connection)
-				{
-				   	vty_out(vty,"Can not connect to slot:%d, check the slot please !\n",slotNum);	
-	        		return CMD_WARNING;
-				}
-				else
-				{
-					reply = dbus_connection_send_with_reply_and_block (dbus_connection_dcli[slotNum]->dcli_dbus_connection,query,-1, &err);
-				}
+				reply = dbus_connection_send_with_reply_and_block (dbus_connection_dcli[slotNum]->dcli_dbus_connection,query,-1, &err);
 			}
-			
-			dbus_message_unref(query);
-			if (NULL == reply) {
-				vty_out(vty,"failed get reply.\n");
-				if (dbus_error_is_set(&err)) {
-					vty_out(vty,"%s raised: %s",err.name,err.message);
-					dbus_error_free_for_dcli(&err);
-				}
-				return CMD_SUCCESS;
+		}
+
+		dbus_message_unref(query);
+		if (NULL == reply) {
+			vty_out(vty,"failed get reply.\n");
+			if (dbus_error_is_set(&err)) {
+				vty_out(vty,"%s raised: %s",err.name,err.message);
+				dbus_error_free_for_dcli(&err);
 			}
-			dbus_message_iter_init(reply,&iter);
-			dbus_message_iter_get_basic(&iter,&dnumber);
+			return CMD_SUCCESS;
+		}
+		dbus_message_iter_init(reply,&iter);
+		dbus_message_iter_get_basic(&iter,&dnumber);
+
+		if (dnumber == 0){
+			vty_out(vty,"% THE ITEM IS NONE !\n");
+			return CMD_SUCCESS;
+		}
+
+		vty_out(vty,"Codes:  CPU - target port which connect to cpu via pci interface\n");
+		vty_out(vty,"		 HSC - high speed channel direct to cpu rgmii interface\n\n");
+
+		/* NOTICE We used 68 bytes here, we still got 12 bytes of summary info*/
+		vty_out(vty,"%-17s	%-8s%-11s%-8s%-8s%-6s\n","=================",	"======", "=========","======","======","======");
+		vty_out(vty,"%-17s	%-8s%-11s%-8s%-8s%-6s\n","MAC","VLAN","SLOT/PORT","TRUNK","VID","VIDX");
+		vty_out(vty,"%-17s	%-8s%-11s%-8s%-8s%-6s\n","=================",	"======", "=========","======","======","======");
+		dbus_message_iter_next(&iter);
+
+		dbus_message_iter_recurse(&iter,&iter_array);
+		for ( i=0; dnumber > i; i++)
+		{
+			DBusMessageIter iter_struct;
 			
-			if (dnumber == 0){
-				vty_out(vty,"% THE ITEM IS NONE !\n");
-				return CMD_SUCCESS;
-			}
-			
-			vty_out(vty,"Codes:  CPU - target port which connect to cpu via pci interface\n");
-			vty_out(vty,"		 HSC - high speed channel direct to cpu rgmii interface\n\n");
-			
-			/* NOTICE We used 68 bytes here, we still got 12 bytes of summary info*/
-			vty_out(vty,"%-17s	%-8s%-11s%-8s%-8s%-6s\n","=================",	"======", "=========","======","======","======");
-			vty_out(vty,"%-17s	%-8s%-11s%-8s%-8s%-6s\n","MAC","VLAN","SLOT/PORT","TRUNK","VID","VIDX");
-			vty_out(vty,"%-17s	%-8s%-11s%-8s%-8s%-6s\n","=================",	"======", "=========","======","======","======");
-			dbus_message_iter_next(&iter);
-			
-			dbus_message_iter_recurse(&iter,&iter_array);
-			for ( i=0; dnumber > i; i++)
-			{
-				DBusMessageIter iter_struct;
-				
-				dbus_message_iter_recurse(&iter_array,&iter_struct);
-				dbus_message_iter_get_basic(&iter_struct,&dcli_flag);
-				dbus_message_iter_next(&iter_struct);
-				dbus_message_iter_get_basic(&iter_struct,&vlanid);
-				dbus_message_iter_next(&iter_struct);
-				dbus_message_iter_get_basic(&iter_struct,&trans_value1);
-				dbus_message_iter_next(&iter_struct);
-				dbus_message_iter_get_basic(&iter_struct,&trans_value2);
-				dbus_message_iter_next(&iter_struct);
-				dbus_message_iter_get_basic(&iter_struct,&show_mac[0]);
-				dbus_message_iter_next(&iter_struct);
-				dbus_message_iter_get_basic(&iter_struct,&show_mac[1]);
-				dbus_message_iter_next(&iter_struct);
-				dbus_message_iter_get_basic(&iter_struct,&show_mac[2]);
-				dbus_message_iter_next(&iter_struct);
-				dbus_message_iter_get_basic(&iter_struct,&show_mac[3]);
-				dbus_message_iter_next(&iter_struct);
-				dbus_message_iter_get_basic(&iter_struct,&show_mac[4]);
-				dbus_message_iter_next(&iter_struct);
-				dbus_message_iter_get_basic(&iter_struct,&show_mac[5]);
-				if (dcli_flag == port_type){
-					if(CPU_PORT_VIRTUAL_SLOT == trans_value1) { /*static FDB to CPU or SPI (has the same virtual slot number)*/
-						vty_out(vty,"%02x:%02x:%02x:%02x:%02x:%02x	%-8d%-11s%-8s%-8s%-6s\n",	\
-									show_mac[0],show_mac[1],show_mac[2],show_mac[3],show_mac[4],show_mac[5],	\
-									vlanid,(CPU_PORT_VIRTUAL_PORT == trans_value2) ? "CPU": \
-									(SPI_PORT_VIRTUAL_PORT == trans_value2) ? "HSC":"ERR"," - "," - "," - ");
-					}
-					else {
-						vty_out(vty,"%02x:%02x:%02x:%02x:%02x:%02x	%-8d%5d/%-6d%-8s%-8s%-6s\n",   \
-									show_mac[0],show_mac[1],show_mac[2],show_mac[3],show_mac[4],show_mac[5],	\
-									vlanid,trans_value1,trans_value2," - "," - "," - ");
-					}
-				}
-				else if (dcli_flag == trunk_type){				
-					vty_out(vty,"%02x:%02x:%02x:%02x:%02x:%02x	%-8d%-11s%-8d%-8s%-6s\n",	 \
+			dbus_message_iter_recurse(&iter_array,&iter_struct);
+			dbus_message_iter_get_basic(&iter_struct,&dcli_flag);
+			dbus_message_iter_next(&iter_struct);
+			dbus_message_iter_get_basic(&iter_struct,&vlanid);
+			dbus_message_iter_next(&iter_struct);
+			dbus_message_iter_get_basic(&iter_struct,&trans_value1);
+			dbus_message_iter_next(&iter_struct);
+			dbus_message_iter_get_basic(&iter_struct,&trans_value2);
+			dbus_message_iter_next(&iter_struct);
+			dbus_message_iter_get_basic(&iter_struct,&show_mac[0]);
+			dbus_message_iter_next(&iter_struct);
+			dbus_message_iter_get_basic(&iter_struct,&show_mac[1]);
+			dbus_message_iter_next(&iter_struct);
+			dbus_message_iter_get_basic(&iter_struct,&show_mac[2]);
+			dbus_message_iter_next(&iter_struct);
+			dbus_message_iter_get_basic(&iter_struct,&show_mac[3]);
+			dbus_message_iter_next(&iter_struct);
+			dbus_message_iter_get_basic(&iter_struct,&show_mac[4]);
+			dbus_message_iter_next(&iter_struct);
+			dbus_message_iter_get_basic(&iter_struct,&show_mac[5]);
+			if (dcli_flag == port_type){
+				if(CPU_PORT_VIRTUAL_SLOT == trans_value1) { /*static FDB to CPU or SPI (has the same virtual slot number)*/
+					vty_out(vty,"%02x:%02x:%02x:%02x:%02x:%02x	%-8d%-11s%-8s%-8s%-6s\n",	\
 								show_mac[0],show_mac[1],show_mac[2],show_mac[3],show_mac[4],show_mac[5],	\
-								vlanid," - ",trans_value1," - "," - ");
-				}
-				else if (dcli_flag == vid_type){				
-					vty_out(vty,"%02x:%02x:%02x:%02x:%02x:%02x	%-8d%-11s%-8s%-8d%-6s\n",	  \
-							   show_mac[0],show_mac[1],show_mac[2],show_mac[3],show_mac[4],show_mac[5], 	\
-							   vlanid," - "," - ",trans_value1," - ");	
-				}			
-				else if (dcli_flag == vidx_type){				
-					vty_out(vty,"%02x:%02x:%02x:%02x:%02x:%02x	%-8d%-11s%-8s%-8s%-8d\n",	  \
-							   show_mac[0],show_mac[1],show_mac[2],show_mac[3],show_mac[4],show_mac[5], 	\
-							   vlanid," - "," - "," - ",trans_value1);				
+								vlanid,(CPU_PORT_VIRTUAL_PORT == trans_value2) ? "CPU": \
+								(SPI_PORT_VIRTUAL_PORT == trans_value2) ? "HSC":"ERR"," - "," - "," - ");
 				}
 				else {
-					vty_out (vty,"sorry interface type wrong !\n");
-					return -1;;
+					vty_out(vty,"%02x:%02x:%02x:%02x:%02x:%02x	%-8d%5d/%-6d%-8s%-8s%-6s\n",   \
+								show_mac[0],show_mac[1],show_mac[2],show_mac[3],show_mac[4],show_mac[5],	\
+								vlanid,trans_value1,trans_value2," - "," - "," - ");
 				}
-				
-				
-				dbus_message_iter_next(&iter_array);
 			}
-			dbus_message_unref(reply);
-        /*free(vlanName);*/
-		#endif
+			else if (dcli_flag == trunk_type){				
+				vty_out(vty,"%02x:%02x:%02x:%02x:%02x:%02x	%-8d%-11s%-8d%-8s%-6s\n",	 \
+							show_mac[0],show_mac[1],show_mac[2],show_mac[3],show_mac[4],show_mac[5],	\
+							vlanid," - ",trans_value1," - "," - ");
+			}
+			else if (dcli_flag == vid_type){				
+				vty_out(vty,"%02x:%02x:%02x:%02x:%02x:%02x	%-8d%-11s%-8s%-8d%-6s\n",	  \
+						   show_mac[0],show_mac[1],show_mac[2],show_mac[3],show_mac[4],show_mac[5], 	\
+						   vlanid," - "," - ",trans_value1," - ");	
+			}			
+			else if (dcli_flag == vidx_type){				
+				vty_out(vty,"%02x:%02x:%02x:%02x:%02x:%02x	%-8d%-11s%-8s%-8s%-8d\n",	  \
+						   show_mac[0],show_mac[1],show_mac[2],show_mac[3],show_mac[4],show_mac[5], 	\
+						   vlanid," - "," - "," - ",trans_value1);				
+			}
+			else {
+				vty_out (vty,"sorry interface type wrong !\n");
+				return -1;;
+			}
+			
+			
+			dbus_message_iter_next(&iter_array);
+		}
+		dbus_message_unref(reply);
+		/*free(vlanName);*/
+#endif
     }
 	else
 	{
