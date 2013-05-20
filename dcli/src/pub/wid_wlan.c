@@ -2262,6 +2262,10 @@ void *dcli_wlan_show_api_group(
 					dbus_message_iter_next(&iter_struct);
 					
 					dbus_message_iter_get_basic(&iter_struct,&(LIST->WLAN[i]->WDSStat));
+					
+					dbus_message_iter_next(&iter_struct);
+					
+					dbus_message_iter_get_basic(&iter_struct,&(LIST->WLAN[i]->wds_mesh));
 					if(LIST->WLAN[i]->Status == 0)
 					{
 						LIST->enable_num++;
@@ -2390,6 +2394,8 @@ void *dcli_wlan_show_api_group(
 
 				dbus_message_iter_next(&iter);		
 				dbus_message_iter_get_basic(&iter,&(LIST->WLAN[0]->WDSStat));
+				dbus_message_iter_next(&iter);		
+				dbus_message_iter_get_basic(&iter,&(LIST->WLAN[0]->wds_mesh));
                 /* book add for eap mac show,2011-11-15 */
 				dbus_message_iter_next(&iter);		
 				dbus_message_iter_get_basic(&iter,&(LIST->WLAN[0]->eap_mac_switch));

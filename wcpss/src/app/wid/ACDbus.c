@@ -2258,6 +2258,10 @@ DBusMessage * wid_dbus_interface_show_wlanconf(DBusConnection *conn, DBusMessage
 			(&iter,
 			  DBUS_TYPE_UINT32,
 			  &(WLAN->WDSStat));
+		dbus_message_iter_append_basic
+			(&iter,
+			  DBUS_TYPE_UINT32,
+			  &(WLAN->wds_mesh));
 	    /* book add for show wlan eap mac, 2011-11-15 */
 	    dbus_message_iter_append_basic
 			(&iter,
@@ -2372,6 +2376,7 @@ DBusMessage * wid_dbus_interface_show_wlanlist(DBusConnection *conn, DBusMessage
 											DBUS_TYPE_BYTE_AS_STRING
 											DBUS_TYPE_BYTE_AS_STRING
 											DBUS_TYPE_UINT32_AS_STRING
+											DBUS_TYPE_UINT32_AS_STRING
 									DBUS_STRUCT_END_CHAR_AS_STRING,
 									&iter_array);
 
@@ -2454,6 +2459,11 @@ DBusMessage * wid_dbus_interface_show_wlanlist(DBusConnection *conn, DBusMessage
 			(&iter_struct,
 			  DBUS_TYPE_UINT32,
 			  &(WLAN[i]->WDSStat));
+
+		dbus_message_iter_append_basic
+			(&iter_struct,
+			  DBUS_TYPE_UINT32,
+			  &(WLAN[i]->wds_mesh));
 		
 		dbus_message_iter_close_container (&iter_array, &iter_struct);
 		if(wlan_name != NULL){
