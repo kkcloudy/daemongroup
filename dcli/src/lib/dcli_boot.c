@@ -1284,13 +1284,12 @@ int get_ipaddr_and_slot_by_url(char *url,char *ipaddr,char *if_name,int *slot)
 	char url_str[512] = {0};
 	char *p_str = NULL;
 	char *host = NULL;
+	char *inf_str = NULL;
 
 	int vid =0;
 	FILE *fp=NULL;
 	char cmd_str[64]={0};
-	char iptemp1[16]={0};
-	char iptemp2[16]={0};
-	char temp[128]={0};
+	char buf[256] = {0};
 
 	p_str = strstr(url,"://");
 	if(NULL==p_str)
@@ -1310,9 +1309,9 @@ int get_ipaddr_and_slot_by_url(char *url,char *ipaddr,char *if_name,int *slot)
 	strncpy(ipaddr,host,strlen(host)+1);
 	strcat(ipaddr,"/32");
 	memset(cmd_str,0,64);
-	memset(iptemp1,0,16);
-	memset(iptemp2,0,16);
-	memset(temp,0,128);
+	memset(buf,0,256);
+	
+
 	
 	sprintf(cmd_str,"ip route get %s",host);
 	fp = popen(cmd_str,"r");
@@ -1320,8 +1319,21 @@ int get_ipaddr_and_slot_by_url(char *url,char *ipaddr,char *if_name,int *slot)
 	{		
    		return -1;	
 	} 
+	
+	fgets(buf, sizeof(buf), fp ); 
+	p_str = strstr(buf,"dev");
+	if(NULL==p_str)
+	{
+		return -1;
+	}
+	p_str +=4;
+	inf_str = strtok(p_str," ");
+	if(NULL==inf_str)
+	{
+		return -1;
+	}
 
-	fscanf(fp,"%s via %s dev %s %s",iptemp1,iptemp2,if_name,temp);
+	strncpy(if_name,inf_str,strlen(inf_str)+1);
 	pclose(fp);
 	
 	if(*if_name==0)
@@ -1361,17 +1373,15 @@ int get_ipaddr_and_slot_by_server(char *server_addr,char *ipaddr,char *if_name,i
 
 	int vid =0;
 	FILE *fp=NULL;
+	char *inf_str = NULL;
+	char *p_str = NULL;
 	char cmd_str[64]={0};
-	char iptemp1[16]={0};
-	char iptemp2[16]={0};
-	char temp[128]={0};
+	char buf[256] = {0};
 	 
 	strcpy(ipaddr,server_addr);
 	strcat(ipaddr,"/32");
 	memset(cmd_str,0,64);
-	memset(iptemp1,0,16);
-	memset(iptemp2,0,16);
-	memset(temp,0,128);
+	memset(buf,0,256);
 	
 	sprintf(cmd_str,"ip route get %s",server_addr);
 	fp = popen(cmd_str,"r");
@@ -1380,7 +1390,20 @@ int get_ipaddr_and_slot_by_server(char *server_addr,char *ipaddr,char *if_name,i
    		return -1;	
 	} 
 
-	fscanf(fp,"%s via %s dev %s %s",iptemp1,iptemp2,if_name,temp);
+	fgets(buf, sizeof(buf), fp ); 
+	p_str = strstr(buf,"dev");
+	if(NULL==p_str)
+	{
+		return -1;
+	}
+	p_str +=4;
+	inf_str = strtok(p_str," ");
+	if(NULL==inf_str)
+	{
+		return -1;
+	}
+
+	strncpy(if_name,inf_str,strlen(inf_str)+1);
 	pclose(fp);
 	
 	if(*if_name==0)
@@ -2607,8 +2630,8 @@ DEFUN (download_fastforward_func,
 	int ret;
 	char dbus_str_pre[128] = {0};
 	char dbus_str[256]={0};
-	char ipaddr[16] = {0};
-	char if_name[16]= {0};
+	char ipaddr[32] = {0};
+	char if_name[32]= {0};
 	int send_slot = 0;
 	ret = get_ipaddr_and_slot_by_url(argv[0],ipaddr,if_name,&send_slot);/*zhaocg add for pfm*/
 	if(ret != 0)
@@ -2820,8 +2843,8 @@ DEFUN (download_system_func,
 	char old_bootimg_name[64] = {0};
 	char dbus_str_pre[128] = {0};
 	char dbus_str[256]={0};
-	char ipaddr[16] = {0};
-	char if_name[16]= {0};
+	char ipaddr[32] = {0};
+	char if_name[32]= {0};
 	int send_slot = 0;
     /************************/
 	int i=0;
@@ -3224,8 +3247,8 @@ DEFUN (download_system_config_func,
 	char* filename=strrchr(argv[0],'/');
 	int ret;
 	char* temp;
-	char ipaddr[16] = {0};
-	char if_name[16]= {0};
+	char ipaddr[32] = {0};
+	char if_name[32]= {0};
 	int send_slot = 0;
 	ret = get_ipaddr_and_slot_by_url(argv[0],ipaddr,if_name,&send_slot);/*zhaocg add for pfm*/
 	if(ret != 0)
@@ -3419,8 +3442,8 @@ DEFUN (upload_system_config_func,
 	memset(cmd,0,512);
 	memset(temp,0,512);
 	
-	char ipaddr[16] = {0};
-	char if_name[16]= {0};
+	char ipaddr[32] = {0};
+	char if_name[32]= {0};
 	int send_slot = 0;
 	ret = get_ipaddr_and_slot_by_server(argv[0],ipaddr,if_name,&send_slot);/*zhaocg add for pfm*/
 	if(ret != 0)
@@ -3505,8 +3528,8 @@ DEFUN (upload_system_snapshot_func,
 	DBusError err = {0};
 	char cmd[1024];
 	int op_ret, func_ret, i, slot_id;
-	char ipaddr[16] = {0};
-	char if_name[16]= {0};
+	char ipaddr[32] = {0};
+	char if_name[32]= {0};
 	int send_slot = 0;
 	op_ret = get_ipaddr_and_slot_by_server(argv[0],ipaddr,if_name,&send_slot);/*zhaocg add for pfm*/
 	if(op_ret != 0)
@@ -3756,8 +3779,8 @@ DEFUN (download_dev_info_func,
 {
 	char cmd[256];
 	int ret;
-	char ipaddr[16] = {0};
-	char if_name[16]= {0};
+	char ipaddr[32] = {0};
+	char if_name[32]= {0};
 	int send_slot = 0;
 	ret = get_ipaddr_and_slot_by_url(argv[0],ipaddr,if_name,&send_slot);/*zhaocg add for pfm*/
 	if(ret != 0)
@@ -3929,8 +3952,8 @@ DEFUN (download_web_logo_func,
 {
 	char cmd[256];
 	int ret;
-	char ipaddr[16] = {0};
-	char if_name[16]= {0};
+	char ipaddr[32] = {0};
+	char if_name[32]= {0};
 	int send_slot = 0;
 	ret = get_ipaddr_and_slot_by_url(argv[0],ipaddr,if_name,&send_slot);/*zhaocg add for pfm*/
 	if(ret != 0)
@@ -4024,8 +4047,8 @@ DEFUN (download_wtpcompatible_func,
 {
 	char cmd[256];
 	int ret;
-	char ipaddr[16] = {0};
-	char if_name[16]= {0};
+	char ipaddr[32] = {0};
+	char if_name[32]= {0};
 	int send_slot = 0;
 	ret = get_ipaddr_and_slot_by_url(argv[0],ipaddr,if_name,&send_slot);/*zhaocg add for pfm*/
 	if(ret != 0)
@@ -4125,8 +4148,8 @@ DEFUN (download_bootrom_func,
 	int slot_count = get_product_info(SEM_SLOT_COUNT_PATH);
 	char* filename=strrchr(argv[0],'/');
 	int ret;
-	char ipaddr[16] = {0};
-	char if_name[16]= {0};
+	char ipaddr[32] = {0};
+	char if_name[32]= {0};
 	int send_slot = 0;
 	ret = get_ipaddr_and_slot_by_url(argv[0],ipaddr,if_name,&send_slot);/*zhaocg add for pfm*/
 	if(ret != 0)
@@ -4793,8 +4816,8 @@ DEFUN (upload_packet_file_func,
 	char cmd[512], spath[512];
 	char *path;
 	int slot_id, op_ret, func_ret, i;
-	char ipaddr[16] = {0};
-	char if_name[16]= {0};
+	char ipaddr[32] = {0};
+	char if_name[32]= {0};
 	int send_slot = 0;
 	op_ret = get_ipaddr_and_slot_by_server(argv[0],ipaddr,if_name,&send_slot);/*zhaocg add for pfm*/
 	if(op_ret != 0)
@@ -5375,8 +5398,8 @@ DEFUN (download_patch_func,
 	char cmd[1024];
 	char* filename=strrchr(argv[0],'/');
 	int ret;
-	char ipaddr[16] = {0};
-	char if_name[16]= {0};
+	char ipaddr[32] = {0};
+	char if_name[32]= {0};
 	int send_slot = 0;
 	ret = get_ipaddr_and_slot_by_url(argv[0],ipaddr,if_name,&send_slot);/*zhaocg add for pfm*/
 	if(ret != 0)
