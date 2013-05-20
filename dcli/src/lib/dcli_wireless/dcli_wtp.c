@@ -8859,6 +8859,16 @@ DEFUN (download_ap_image_func,
 	int ret = 0;
 	int quitreason = 0;
 	char *httpStr = NULL, *ftpStr = NULL;
+	
+	char ipaddr[32] = {0};
+	char if_name[32]= {0};
+	int send_slot = 0;
+	ret = get_ipaddr_and_slot_by_url(argv[0],ipaddr,if_name,&send_slot);/*zhaocg add for pfm*/
+	if(ret != 0)
+	{
+		vty_out(vty,"The URL is wrong,please check it\n");
+		return CMD_WARNING;
+	}
 
 	if(filename)
 	{
@@ -8867,13 +8877,13 @@ DEFUN (download_ap_image_func,
 
 		vty_out(vty,"downloading .................\n");
 		/* book add, 2011-11-18 */
-		if(pfm_download_config(0) != 0)         //set download to all ports
+		if(pfm_download_config(0,send_slot,ipaddr,if_name) != 0)         //set download to all ports
 		{
 			vty_out(vty,"config_pfm_failed");
 			return CMD_WARNING;
 		}
 		ret = system(cmd);
-		if(pfm_download_config(1) != 0)         //set function back
+		if(pfm_download_config(1,send_slot,ipaddr,if_name) != 0)         //set function back
 		{
 			vty_out(vty,"config_pfm_failed");
 			return CMD_WARNING;
@@ -8987,6 +8997,15 @@ DEFUN (download_certificate_image_func,
 	int ret = 0;
 	int quitreason = 0;
 	char *httpStr = NULL, *ftpStr = NULL;
+	char ipaddr[32] = {0};
+	char if_name[32]= {0};
+	int send_slot = 0;
+	ret = get_ipaddr_and_slot_by_url(argv[0],ipaddr,if_name,&send_slot);/*zhaocg add for pfm*/
+	if(ret != 0)
+	{
+		vty_out(vty,"The URL is wrong,please check it\n");
+		return CMD_WARNING;
+	}
 
 	if(filename)
 	{
@@ -8995,13 +9014,13 @@ DEFUN (download_certificate_image_func,
 
 		vty_out(vty,"downloading .................\n");
 		/* book add, 2011-11-18 */
-		if(pfm_download_config(0) != 0)         //set download to all ports
+		if(pfm_download_config(0,send_slot,ipaddr,if_name) != 0)         //set download to all ports
 		{
 			vty_out(vty,"config_pfm_failed");
 			return CMD_WARNING;
 		}
 		ret = system(cmd);
-		if(pfm_download_config(1) != 0)         //set download to all ports
+		if(pfm_download_config(1,send_slot,ipaddr,if_name) != 0)         //set download to all ports
 		{
 			vty_out(vty,"config_pfm_failed");
 			return CMD_WARNING;
