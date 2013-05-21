@@ -1335,6 +1335,9 @@ DEFUN(show_packet_statistic_func,
 	  vty_out(vty,"total ethernet output qinq packets = %llu\r\n",  fau64_info.fau_enet_output_packets_qinq);
 	  vty_out(vty,"total ethernet output eth pppoe  packets = %llu\r\n",  fau64_info.fau_enet_output_packets_eth_pppoe);
 	  vty_out(vty,"total ethernet output capwap pppoe packets = %llu\r\n",  fau64_info.fau_enet_output_packets_capwap_pppoe);
+	  vty_out(vty,"total ethernet output eth packets = %llu\r\n",  fau64_info.fau_enet_output_packets_eth);
+	  vty_out(vty,"total ethernet output capwap packets = %llu\r\n",  fau64_info.fau_enet_output_packets_capwap);
+	  vty_out(vty,"total ethernet output rpa packets = %llu\r\n",  fau64_info.fau_enet_output_packets_rpa);
 	  vty_out(vty,"total ethernet output error packets = %llu\r\n",fau64_info.fau_pko_errors);
 	  vty_out(vty,"total ethernet output bytes = %llu\r\n", fau64_info.fau_enet_output_bytes);
 	  vty_out(vty,"total ethernet output packets = %llu\r\n", fau64_info.fau_enet_output_packets);
@@ -1438,6 +1441,109 @@ DEFUN(fastfwd_learned_icmp_enable_func,
 	}
 	return CMD_SUCCESS;
 }
+
+DEFUN(fastfwd_pure_ip_enable_func,
+	  fastfwd_pure_ip_enable_cmd,
+	  "config  fast-pure-ip (enable|disable)",
+	  CONFIG_STR
+	  "fast pure ip feature\n"
+	  "fast_forward pure ip forward enable\n"
+	  "fast_forward pure ip forward disable\n"
+)
+{
+	
+	char *enable=(char *)argv[0];
+	int flag = FUNC_DISABLE;
+	se_interative_t  cmd_data;
+	int ret = -1,i = 0;
+	struct timeval overtime;
+	memset(&overtime,0,sizeof(overtime));
+	memset(&cmd_data,0,sizeof(cmd_data));
+	if(argc > 1) 
+	{
+		vty_out(vty,CMD_PARAMETER_NUM_ERROR);
+		return CMD_WARNING;
+	}
+	if(0==strncmp(enable,"disable",strlen(enable)))
+	{
+		flag=FUNC_DISABLE;
+	}
+	else if(0==strncmp(enable,"enable",strlen(enable)))
+	{
+		flag=FUNC_ENABLE;
+	}
+	else
+	{
+		vty_out(vty,CMD_PARAMETER_ERROR);
+		return CMD_FAILURE;
+	}
+	cmd_data.fccp_cmd.fccp_data.module_enable=flag;
+	strncpy(cmd_data.hand_cmd,SE_AGENT_PURE_IP_ENABLE,strlen(SE_AGENT_PURE_IP_ENABLE));
+	ret=sendto_agent(dcli_sockfd,(char*)&cmd_data,sizeof(cmd_data),vty);
+	if(ret<=0)
+	{
+		vty_out(vty,WRITE_FAIL_STR);
+		return CMD_FAILURE;
+	}
+	overtime.tv_sec=DCLI_WAIT_TIME;
+	ret=read_within_time(dcli_sockfd,(char*)&cmd_data,sizeof(cmd_data),&overtime);
+	if(ret==READ_ERROR)
+	{
+		vty_out(vty,AGENT_NO_RESPOND_STR);
+		return CMD_FAILURE;
+	}
+	if(cmd_data.cmd_result!=AGENT_RETURN_OK)
+	{
+		vty_out(vty,"%s\n",cmd_data.err_info);
+		return CMD_FAILURE;
+	}
+	return CMD_SUCCESS;
+}
+
+DEFUN(show_fwd_pure_ip_enable_func,
+	  show_fwd_pure_ip_enable_cmd,
+	  "show  fast-pure-ip enable",
+	  SHOW_STR
+	  "fast-pure-ip  \n"
+	  "fast_forward pure ip forward whether enable \n"
+)
+{
+	se_interative_t  cmd_data;
+	int ret = 0;
+	struct timeval overtime;
+	memset(&overtime, 0, sizeof(overtime));
+	memset(&cmd_data, 0, sizeof(cmd_data));
+	strncpy(cmd_data.hand_cmd, SE_AGENT_SHOW_PURE_IP_ENABLE, strlen(SE_AGENT_SHOW_PURE_IP_ENABLE));
+	ret = sendto_agent(dcli_sockfd, (char*)&cmd_data, sizeof(cmd_data), vty);
+	if(ret <= 0)
+	{
+		vty_out(vty,WRITE_FAIL_STR);
+		return CMD_FAILURE;
+	}
+	memset(&cmd_data, 0, sizeof(cmd_data));
+	overtime.tv_sec = DCLI_WAIT_TIME;
+ 	ret = read_within_time(dcli_sockfd, (char*)&cmd_data, sizeof(cmd_data), &overtime);
+ 	if(ret == READ_ERROR)
+	{
+		vty_out(vty, AGENT_NO_RESPOND_STR);
+		return CMD_FAILURE;
+	}
+	
+	if(cmd_data.cmd_result != AGENT_RETURN_OK)
+	{
+		vty_out(vty, "%s\n", cmd_data.err_info);
+		return CMD_FAILURE;
+	}
+	if(cmd_data.fccp_cmd.ret_val != FCCP_RETURN_OK)
+	{
+		vty_out(vty, COMMAND_FAIL_STR);
+		return CMD_FAILURE;
+	}
+	vty_out(vty, "fast_forward pure ip forward is %s\n", (cmd_data.fccp_cmd.fccp_data.module_enable == 1) ? "enable ": "disable");
+
+	return CMD_SUCCESS;
+}
+
 
 DEFUN(config_fast_forward_enable_func,
 	config_fast_forward_enable_cmd,
@@ -3816,6 +3922,8 @@ void dcli_se_agent_init(void)
 	install_element(FAST_FWD_NODE,&clear_packet_statistic_cmd);
 	install_element(FAST_FWD_NODE,&debug_ipfwd_learn_cmd);
 	install_element(FAST_FWD_NODE,&fastfwd_learned_icmp_enable_cmd);
+	install_element(FAST_FWD_NODE,&fastfwd_pure_ip_enable_cmd);
+	install_element(FAST_FWD_NODE,&show_fwd_pure_ip_enable_cmd);
 	install_element(FAST_FWD_NODE,&show_rule_stats_cmd);
 	install_element(FAST_FWD_NODE,&clear_rule_all_cmd);
 	install_element(FAST_FWD_NODE,&clear_aging_rule_cmd);
@@ -3854,6 +3962,8 @@ void dcli_se_agent_init(void)
 	install_element(HANSI_NODE,&show_packet_statistic_cmd);
 	install_element(HANSI_NODE,&clear_packet_statistic_cmd);
 	install_element(HANSI_NODE,&fastfwd_learned_icmp_enable_cmd);
+	install_element(HANSI_NODE,&fastfwd_pure_ip_enable_cmd);
+	install_element(HANSI_NODE,&show_fwd_pure_ip_enable_cmd);
 	install_element(HANSI_NODE,&show_fpa_buff_counter_cmd);
 	install_element(HANSI_NODE,&config_fast_forward_tag_type_cmd);
 	install_element(HANSI_NODE,&show_fast_forward_running_config_cmd);
@@ -3897,6 +4007,8 @@ void dcli_se_agent_init(void)
 	install_element(LOCAL_HANSI_NODE,&show_packet_statistic_cmd);
 	install_element(LOCAL_HANSI_NODE,&clear_packet_statistic_cmd);
 	install_element(LOCAL_HANSI_NODE,&fastfwd_learned_icmp_enable_cmd);
+	install_element(LOCAL_HANSI_NODE,&fastfwd_pure_ip_enable_cmd);
+	install_element(LOCAL_HANSI_NODE,&show_fwd_pure_ip_enable_cmd);
 	install_element(LOCAL_HANSI_NODE,&show_fpa_buff_counter_cmd);
 	install_element(LOCAL_HANSI_NODE,&config_fast_forward_tag_type_cmd);
 	install_element(LOCAL_HANSI_NODE,&show_fast_forward_running_config_cmd);
