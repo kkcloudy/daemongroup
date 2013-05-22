@@ -506,6 +506,35 @@ int se_agent_config_debug(struct vty *vty,char *level,unsigned int enable)
 	}
 	return CMD_SUCCESS;
 }
+
+char* detect_ipfwd_learn_module_name(void)
+{
+    FILE *file = NULL;
+    file = fopen("/sys/module/ipfwd_learn/parameters/learn_enable","r");
+    if(file !=NULL)
+    {
+        fclose(file);
+        return "ipfwd_learn";
+    }
+
+    file = fopen("/sys/module/ipfwd_learn_coexist/parameters/learn_enable","r");
+    if(file !=NULL)
+    {
+        fclose(file);
+        return "ipfwd_learn_coexist";
+    }
+
+    file = fopen("/sys/module/ipfwd_learn_standalone/parameters/learn_enable","r");
+    if(file !=NULL)
+    {
+        fclose(file);
+        return "ipfwd_learn_standalone";
+    }
+
+    return NULL;
+}
+
+
 DEFUN(debug_ipfwd_learn_func,
 		debug_ipfwd_learn_cmd,
 		"debug ipfwd_learn (default|emerge|alert|crit|error|waring|notice|info|icmp|debug)",
@@ -523,11 +552,12 @@ DEFUN(debug_ipfwd_learn_func,
 		MODULE_DEBUG_LEVEL_STR(ipfwd_learn,debug)
 )
 {
-	char strcmd[50]={0};
+	char strcmd[100]={0};
+	char* ipfwd_learn_name = NULL;
 	if(argc>1)
 	{
 		vty_out(vty,CMD_PARAMETER_NUM_ERROR);
-		return CMD_WARNING;
+		return CMD_FAILURE;
 	}
 	char *level=(char *)argv[0];
 	int flag = IPFWD_DEFAULT_LVL;
@@ -554,12 +584,21 @@ DEFUN(debug_ipfwd_learn_func,
 	else
 	{
 		vty_out(vty,CMD_PARAMETER_ERROR);
-		return CMD_WARNING;
+		return CMD_FAILURE;
 	}
-	sprintf(strcmd,"sudo echo %d > /sys/module/ipfwd_learn/parameters/log_level",flag);
+
+	ipfwd_learn_name = detect_ipfwd_learn_module_name();
+	if (NULL != ipfwd_learn_name)
+	{
+		sprintf(strcmd,"sudo echo %d > /sys/module/%s/parameters/log_level",flag, ipfwd_learn_name);
+	}
+
+	vty_out(vty,"%s",strcmd);
+
 	if((system(strcmd))<0)
 		vty_out(vty,"%s" COMMAND_FAIL_STR);
 
+	return CMD_SUCCESS;
 }
 
 /**********************************************************************************
@@ -1346,6 +1385,52 @@ DEFUN(show_packet_statistic_func,
 	  vty_out(vty,"===========================================================================\n");
 	  return CMD_SUCCESS;
 }
+
+DEFUN(show_part_packet_statistic_func,
+	  show_part_packet_statistic_cmd,
+	  "show  part packet statistic",
+	  SHOW_STR
+	  "part of process \n"
+	  "fast_forward  process packet\n"
+	  "fast_forward process packet  statistic information\n"
+)
+{
+	  se_interative_t  cmd_data;
+	  int ret = -1,i = 0;
+	  struct timeval overtime;
+	  fau64_part_info_t  fau64_part_info;
+	  memset(&overtime,0,sizeof(overtime));
+	  memset(&cmd_data,0,sizeof(cmd_data));
+	  memset(&fau64_part_info,0,sizeof(fau64_part_info));
+	  strncpy(cmd_data.hand_cmd,SE_AGENT_SHOW_PART_FAU64,strlen(SE_AGENT_SHOW_PART_FAU64));
+	  fill_cpu_tag(&cmd_data, vty);
+	  ret=sendto_agent(dcli_sockfd,(char*)&cmd_data,sizeof(cmd_data),vty);
+	  if(ret<=0)
+	  {
+		  vty_out(vty,WRITE_FAIL_STR);
+		  return CMD_FAILURE;
+	  }
+	  overtime.tv_sec=DCLI_WAIT_TIME;
+	  ret=read_within_time(dcli_sockfd,(char*)&cmd_data,sizeof(se_interative_t),&overtime);
+	  if(ret==READ_ERROR)
+	  {
+		  vty_out(vty,AGENT_NO_RESPOND_STR);
+		  return CMD_FAILURE;
+	  }
+	  if(cmd_data.cmd_result!=AGENT_RETURN_OK)
+      {
+    	  vty_out(vty,COMMAND_FAIL_STR);
+    	  return CMD_FAILURE;
+      }
+	  memcpy(&fau64_part_info, &cmd_data.fccp_cmd.fccp_data.fau64_part_info, sizeof(fau64_part_info_t));
+	  vty_out(vty,"===========================================================================\n");
+	  vty_out(vty,"total ethernet output eth packets = %llu\r\n",  fau64_part_info.fau_enet_output_packets_eth);
+	  vty_out(vty,"total ethernet output capwap packets = %llu\r\n",  fau64_part_info.fau_enet_output_packets_capwap);
+	  vty_out(vty,"total ethernet output rpa packets = %llu\r\n",  fau64_part_info.fau_enet_output_packets_rpa);
+	  vty_out(vty,"===========================================================================\n");
+	  return CMD_SUCCESS;
+}
+
 
 /*dcli command clear fau64  */
 DEFUN(  clear_packet_statistic_func,
@@ -3919,6 +4004,7 @@ void dcli_se_agent_init(void)
 	install_element(FAST_FWD_NODE,&read_register_fun_cmd);
 	install_element(FAST_FWD_NODE,&write_register_fun_cmd);
 	install_element(FAST_FWD_NODE,&show_packet_statistic_cmd);
+	install_element(FAST_FWD_NODE,&show_part_packet_statistic_cmd);
 	install_element(FAST_FWD_NODE,&clear_packet_statistic_cmd);
 	install_element(FAST_FWD_NODE,&debug_ipfwd_learn_cmd);
 	install_element(FAST_FWD_NODE,&fastfwd_learned_icmp_enable_cmd);
@@ -3949,7 +4035,7 @@ void dcli_se_agent_init(void)
 	//install_element(FAST_FWD_NODE,&show_fwd_debug_log_enable_cmd);  
 	//install_element(FAST_FWD_NODE,&config_fwd_debug_log_level_cmd);
 	//install_element(FAST_FWD_NODE,&show_fwd_debug_log_level_cmd);
-	install_element(FAST_FWD_NODE,&fastfwd_equipment_test_cmd);		/*zhaohan 2012.8.22 equipment test*/
+	//install_element(FAST_FWD_NODE,&fastfwd_equipment_test_cmd);		/*zhaohan 2012.8.22 equipment test*/
 	install_element(FAST_FWD_NODE,&show_user_statistic_cmd);
 	install_element(FAST_FWD_NODE,&config_clear_aged_rule_time_cmd);
 	install_element(FAST_FWD_NODE,&show_clear_aged_rule_time_cmd);
@@ -3960,6 +4046,7 @@ void dcli_se_agent_init(void)
 	install_element(HANSI_NODE,&config_fast_forward_aging_time_cmd);
 	install_element(HANSI_NODE,&show_fast_forward_aging_time_cmd);
 	install_element(HANSI_NODE,&show_packet_statistic_cmd);
+	install_element(HANSI_NODE,&show_part_packet_statistic_cmd);
 	install_element(HANSI_NODE,&clear_packet_statistic_cmd);
 	install_element(HANSI_NODE,&fastfwd_learned_icmp_enable_cmd);
 	install_element(HANSI_NODE,&fastfwd_pure_ip_enable_cmd);
@@ -4005,6 +4092,7 @@ void dcli_se_agent_init(void)
 	install_element(LOCAL_HANSI_NODE,&config_fast_forward_aging_time_cmd);
 	install_element(LOCAL_HANSI_NODE,&show_fast_forward_aging_time_cmd);
 	install_element(LOCAL_HANSI_NODE,&show_packet_statistic_cmd);
+	install_element(LOCAL_HANSI_NODE,&show_part_packet_statistic_cmd);
 	install_element(LOCAL_HANSI_NODE,&clear_packet_statistic_cmd);
 	install_element(LOCAL_HANSI_NODE,&fastfwd_learned_icmp_enable_cmd);
 	install_element(LOCAL_HANSI_NODE,&fastfwd_pure_ip_enable_cmd);
@@ -4055,6 +4143,7 @@ void dcli_se_agent_init(void)
 	install_element(HIDDENDEBUG_NODE,&config_fwd_debug_log_level_cmd);
 	install_element(HIDDENDEBUG_NODE,&show_fwd_debug_log_level_cmd);
 	install_element(HIDDENDEBUG_NODE,&clear_fwd_debug_log_cmd);
+	install_element(HIDDENDEBUG_NODE,&fastfwd_equipment_test_cmd);		/*zhaohan 2012.8.22 equipment test*/
 	
     /*SLAVE_FAST_FWD_NODE*/
     install_element(CONFIG_NODE,&config_slave_fastfwd_cmd);
@@ -4064,6 +4153,7 @@ void dcli_se_agent_init(void)
 	install_element(SLAVE_FAST_FWD_NODE,&show_fast_forward_tag_type_cmd);
 	install_element(SLAVE_FAST_FWD_NODE,&show_fast_forward_aging_time_cmd);
 	install_element(SLAVE_FAST_FWD_NODE,&show_packet_statistic_cmd);
+	install_element(SLAVE_FAST_FWD_NODE,&show_part_packet_statistic_cmd);
 	install_element(SLAVE_FAST_FWD_NODE,&clear_packet_statistic_cmd);
 	install_element(SLAVE_FAST_FWD_NODE,&show_rule_stats_cmd);
 	install_element(SLAVE_FAST_FWD_NODE,&clear_rule_all_cmd);

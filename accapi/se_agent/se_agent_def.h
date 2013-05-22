@@ -58,6 +58,14 @@
 #define FCCP_CMD_SHOW_FPA_BUFF 				41
 #define FCCP_CMD_ENABLE_PURE_IP             42
 #define FCCP_CMD_GET_PURE_IP_STATE    		43
+#define FCCP_CMD_SHOW_PART_FAU64 			44
+#define FCCP_CMD_SHOW_OUT_ETH_FAU64 		45
+#define FCCP_CMD_SHOW_OUT_CAPWAP_FAU64 		46
+#define FCCP_CMD_SHOW_OUT_RPA_FAU64 		47
+
+
+
+
 
 
 
@@ -295,6 +303,31 @@ typedef struct
 	int64_t fau_enet_output_packets_capwap;   /*64-bit counter used for total ethernet output capwap packets*/
 	int64_t fau_enet_output_packets_rpa;   /*64-bit counter used for total ethernet output rpa packets*/
 }fau64_info_t;
+
+typedef struct 
+{
+	int64_t fau_enet_output_packets_eth;   /*64-bit counter used for total ethernet output eth packets*/
+	int64_t fau_enet_output_packets_capwap;   /*64-bit counter used for total ethernet output capwap packets*/
+	int64_t fau_enet_output_packets_rpa;   /*64-bit counter used for total ethernet output rpa packets*/
+}fau64_part_info_t;
+
+typedef struct 
+{
+	int64_t fau_enet_output_packets_eth;   /*64-bit counter used for total ethernet output eth packets*/
+}fau64_out_eth_info_t;
+
+typedef struct 
+{
+	int64_t fau_enet_output_packets_capwap;   /*64-bit counter used for total ethernet output capwap packets*/
+}fau64_out_capwap_info_t;
+
+typedef struct 
+{
+	int64_t fau_enet_output_packets_rpa;   /*64-bit counter used for total ethernet output rpa packets*/
+}fau64_out_rpa_info_t;
+
+
+
 
 
 typedef struct 
@@ -555,6 +588,10 @@ typedef union
 	user_stats_t    user_stats;
 	user_rule_t     user_rule;
 	fau64_info_t    fau64_info;
+	fau64_part_info_t fau64_part_info;
+	fau64_out_eth_info_t fau64_out_eth_info;
+	fau64_out_capwap_info_t fau64_out_capwap_info;
+	fau64_out_rpa_info_t fau64_out_rpa_info;
 	uint32_t pool_buff_count[8];
 }fccp_data_t;
 
@@ -606,6 +643,10 @@ typedef struct se_interative_s
 #define SE_AGENT_READ_REG								"se_agent_read_reg"
 #define SE_AGENT_WRITE_REG							    "se_agent_write_reg"
 #define SE_AGENT_SHOW_FAU64                             "show_fau64"
+#define SE_AGENT_SHOW_PART_FAU64                        "show_part_fau64"
+#define SE_AGENT_SHOW_OUT_ETH_FAU64                     "show_out_eth_fau64"
+#define SE_AGENT_SHOW_OUT_CAPWAP_FAU64                  "show_out_capwap_fau64"
+#define SE_AGENT_SHOW_OUT_RPA_FAU64                     "show_out_rpa_fau64"
 #define SE_AGENT_CLEAR_FAU64							"clear_fau64"
 #define SE_AGENT_ICMP_ENABLE                            "config_icmp_enable"
 #define SE_AGENT_PURE_IP_ENABLE                         "config_pure_ip_enable"
@@ -633,18 +674,18 @@ typedef struct se_interative_s
 #define SE_AGENT_CONFIG_TRAFFIC_MONITOR                 "config_traffic_monitor"
 #define SE_AGENT_CLEAR_TRAFFIC_MONITOR                  "clear_traffic_monitor"
 #define SE_AGENT_SHOW_TRAFFIC_MONITOR                   "show_traffic_monitor"
-#define SE_AGENT_CLEAR_RULE_IP                          "clear_rule_ip" /*wangjian clear*/
-#define SE_AGENT_SHOW_FAST_FWD_INFO                     "show fast_fwd_info"    /*wangjian 2012.07.09 add fwd info */
-#define SE_AGENT_SHOW_RULE_IP                           "show_rule_ip"          /*wangjian 2012.07.09 add ip */
-#define SE_AGENT_CONFIG_FWDLOG_ENABLE                          "config_fwdlog_enable"  /*logsave*/
+#define SE_AGENT_CLEAR_RULE_IP                          "clear_rule_ip" 
+#define SE_AGENT_SHOW_FAST_FWD_INFO                     "show fast_fwd_info"   
+#define SE_AGENT_SHOW_RULE_IP                           "show_rule_ip"          
+#define SE_AGENT_CONFIG_FWDLOG_ENABLE                   "config_fwdlog_enable"  
 #define SE_AGENT_SHOW_FWDLOG_ENABLE						"show_fwdlog_enable"
 #define SE_AGENT_CONFIG_FWDLOG_LEVEL                    "config_fwdlog_level"
 #define SE_AGENT_SHOW_FWDLOG_LEVEL                      "show_fwdlog_level"
 #define SE_AGENT_CLEAR_FWDLOG                   		"clear_fwdlog"
 
-#define SE_AGENT_EQUIPMENT_TEST_ENABLE                 "equipment_test_enable"
+#define SE_AGENT_EQUIPMENT_TEST_ENABLE                 	"equipment_test_enable"
 #define SE_AGENT_SHOW_FWD_USER_STATS                    "show_fastfwd_user_stats"
-#define SE_AGENT_SHOW_FWD_USER_RULE_ALL                     "show_fastfwd_user_rule_all"
+#define SE_AGENT_SHOW_FWD_USER_RULE_ALL                 "show_fastfwd_user_rule_all"
 #define SE_AGENT_SET_CLEAR_AGED_RULE_TIME               "set_clear_aged_rule_time"
 #define SE_AGENT_GET_CLEAR_AGED_RULE_TIME               "get_clear_aged_rule_time"
 #define SE_AGENT_SHOW_USER_RULE_BY_IP                   "show_user_rule_by_ip"
