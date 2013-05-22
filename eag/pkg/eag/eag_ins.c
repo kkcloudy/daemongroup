@@ -236,12 +236,13 @@ static int eag_set_l2super_vlan( eag_ins_t *eagins, int l2super_vlan_switch )
 	char portal_udp_dnat[256] = "";	/*udp port 2000 to 3.4.5.6 dnat to nasip*/
 	char opt[8] = "";
 	int ret = 0;
+	#if 0
 	struct in_addr ipaddr_begin;
 	struct in_addr ipaddr_end;
 	char port[32] = "all";
 	memset(&ipaddr_begin, 0, sizeof(ipaddr_begin));
 	memset(&ipaddr_end, 0, sizeof(ipaddr_end));
-	
+	#endif
 	memset(dns_udp_dnat, 0, sizeof(dns_udp_dnat));
 	memset(dns_tcp_dnat, 0, sizeof(dns_tcp_dnat));
 	memset(redir_tcp_dnat, 0, sizeof(redir_tcp_dnat));
@@ -292,7 +293,7 @@ static int eag_set_l2super_vlan( eag_ins_t *eagins, int l2super_vlan_switch )
 	if( 0 != ret) {
 		return EAG_ERR_UNKNOWN;
 	}
-	
+	#if 0
 	inet_aton("3.4.5.6", &ipaddr_begin);
 	inet_aton("3.4.5.6", &ipaddr_end);
 	if(1 == l2super_vlan_switch) {
@@ -302,7 +303,7 @@ static int eag_set_l2super_vlan( eag_ins_t *eagins, int l2super_vlan_switch )
 	} else {
 		return EAG_ERR_UNKNOWN;
 	}
-	
+	#endif
 	return EAG_RETURN_OK;
 }
 
