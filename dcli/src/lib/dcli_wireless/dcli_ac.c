@@ -21220,6 +21220,7 @@ DEFUN(show_wireless_listen_if_cmd_func,
 	vty_out(vty,"==============================================================================\n");
 	if(ret == -1){
 		vty_out(vty, "<error> failed get reply.\n");
+		return CMD_WARNING;
 	}
 	if(Listen_IF->count == 0){
 	  vty_out(vty, "wid listenning interface:NULL\n");

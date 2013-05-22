@@ -4789,12 +4789,12 @@ int Bind_Interface_For_WID(struct ifi_info *ifi, int port,LISTEN_FLAG lic_flag){
 		//sock_set_port_cw(ifi->ifi_addr, htons(CW_CONTROL_PORT));
 		sock_set_port_cw(ifi->ifi_addr, htons(port));//zhanglei change
 		if(bind(sock, (struct sockaddr*) ifi->ifi_addr, CWNetworkGetAddressSize((CWNetworkLev4Address*)ifi->ifi_addr)) < 0) {
+			wid_syslog_info("%s,%d,errno = %d\n",__func__,__LINE__,errno);
 			close(sock);
-	
 			CWUseSockNtop(ifi->ifi_addr,
 			wid_syslog_debug_debug(WID_DEFAULT,"failed %s", str);
 			);
-			
+			return 1;
 			//CWNetworkRaiseSystemError(CW_ERROR_CREATING);
 		}
 

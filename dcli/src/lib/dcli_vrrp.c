@@ -5009,15 +5009,18 @@ DEFUN(show_vrrp_cmd_func,
 #endif
 	}
 	if(2 == argc){
-		if(strcmp(argv[1],"detail")){
-			vty_out(vty,"you should input as:config hansi 1-1 detail");
-			return CMD_SUCCESS;
-		}
+		if((!strcmp(argv[1],"detail"))||(!strncmp(argv[1],"d",1))||(!strncmp(argv[1],"de",2))||(!strncmp(argv[1],"det",3))\
+			||(!strncmp(argv[1],"deta",4))||(!strncmp(argv[1],"detai",5))){
 #ifdef DISTRIBUT
 		op_ret = dcli_show_hansi_profile_detail(vty,profile,slot_id);
 #else
 		op_ret = dcli_show_hansi_profile_detail(vty,profile);
 #endif
+		}
+		else{
+			vty_out(vty,"you should input as:config hansi 1-1 d de det or detail");
+			return CMD_SUCCESS;
+		}
 	}
 	if(DCLI_VRRP_RETURN_CODE_PROFILE_NOTEXIST == op_ret){
 	   vty_out(vty,"%% Hansi profile %d not exist!\n",profile);
@@ -6021,7 +6024,9 @@ DEFUN(vrrp_conf_failover_ip_func,
 				DBUS_TYPE_UINT32,&op_ret,
 				DBUS_TYPE_INVALID)){	
 		if(op_ret) {
-        	vty_out(vty, "%% Config failover failed %d!\n", op_ret);
+			vty_out(vty,dcli_vrrp_err_msg[op_ret - DCLI_VRRP_RETURN_CODE_OK]);
+			//not pretty
+        //	vty_out(vty, "%% Config failover failed %d!\n", op_ret);
 			return CMD_WARNING;
 		}
 	} 
@@ -6100,7 +6105,9 @@ DEFUN(vrrp_no_failover_ip_func,
 				DBUS_TYPE_UINT32,&op_ret,
 				DBUS_TYPE_INVALID)){	
 		if(op_ret) {
-			vty_out(vty, "%% Clear failover setting failed %d!\n", op_ret);
+			vty_out(vty,dcli_vrrp_err_msg[op_ret - DCLI_VRRP_RETURN_CODE_OK]);
+			//not pretty
+			//vty_out(vty, "%% Clear failover setting failed %d!\n", op_ret);
 			return CMD_WARNING;
 		}
 	} 
