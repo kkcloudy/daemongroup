@@ -22,43 +22,44 @@
 #define FCCP_MODULE_AGENT_DBG 104
 
 /* opcode definition */
-#define FCCP_CMD_INSERT                  1
-#define FCCP_CMD_DELETE                  2
-#define FCCP_CMD_SET_AGEING_TIMER        3
-#define FCCP_CMD_GET_AGEING_TIMER        4
-#define FCCP_CMD_RULE_CNT                5
-#define FCCP_CMD_INSERT_ICMP             6
-#define FCCP_CMD_ENABLE_ICMP             7
-#define FCCP_CMD_GET_ICMP_STATE          8
-#define FCCP_CMD_GET_RULE_STATS 9
-#define FCCP_CMD_CLEAR_RULE 10
-#define FCCP_CMD_CLEAR_AGING_RULE 11
-#define FCCP_CMD_SET_BUCKET_MAX_ENTRY 12
-#define FCCP_CMD_GET_BUCKET_MAX_ENTRY 13
-#define FCCP_CMD_ENABLE_TRAFFIC_MONITOR    14
-#define FCCP_CMD_CLEAR_TRAFFIC_MONITOR  15
-#define FCCP_CMD_GET_TRAFFIC_MONITOR   16
-#define FCCP_CMD_USER_ONLINE 17
-#define FCCP_CMD_USER_OFFLINE 18
-#define FCCP_CMD_USER_STATS_CLEAR 19
-#define FCCP_CMD_ENABLE_PURE_PAYLOAD_ACCT 20
-#define FCCP_CMD_DEL_RULE_BY_IP 21
-#define FCCP_CMD_TEST 22                /*wangjian 2012.07.09 add fwd info */
-#define FCCP_CMD_SHOW_RULE_BY_IP 23     /*wangjian 2012.07.09 add ip */
-#define FCCP_CMD_EQUIPMENT_TEST 24
-#define FCCP_CMD_ENABLE_LOG 25
-#define FCCP_CMD_TIMESYNC 26
-#define FCCP_CMD_ENABLE_LOG_SHOW 27
-#define FCCP_CMD_SET_LOG_LEVEL 28
-#define FCCP_CMD_SHOW_LOG_LEVEL 29
+#define FCCP_CMD_INSERT                  	1
+#define FCCP_CMD_DELETE                  	2
+#define FCCP_CMD_SET_AGEING_TIMER        	3
+#define FCCP_CMD_GET_AGEING_TIMER        	4
+#define FCCP_CMD_RULE_CNT                	5
+#define FCCP_CMD_INSERT_ICMP             	6
+#define FCCP_CMD_ENABLE_ICMP             	7
+#define FCCP_CMD_GET_ICMP_STATE          	8
+#define FCCP_CMD_GET_RULE_STATS 			9
+#define FCCP_CMD_CLEAR_RULE 				10
+#define FCCP_CMD_CLEAR_AGING_RULE 			11
+#define FCCP_CMD_SET_BUCKET_MAX_ENTRY 		12
+#define FCCP_CMD_GET_BUCKET_MAX_ENTRY 		13
+#define FCCP_CMD_ENABLE_TRAFFIC_MONITOR    	14
+#define FCCP_CMD_CLEAR_TRAFFIC_MONITOR  	15
+#define FCCP_CMD_GET_TRAFFIC_MONITOR   		16
+#define FCCP_CMD_USER_ONLINE 				17
+#define FCCP_CMD_USER_OFFLINE 				18
+#define FCCP_CMD_USER_STATS_CLEAR 			19
+#define FCCP_CMD_ENABLE_PURE_PAYLOAD_ACCT 	20
+#define FCCP_CMD_DEL_RULE_BY_IP 			21
+#define FCCP_CMD_TEST 						22              
+#define FCCP_CMD_SHOW_RULE_BY_IP 			23    
+#define FCCP_CMD_EQUIPMENT_TEST 			24
+#define FCCP_CMD_ENABLE_LOG 				25
+#define FCCP_CMD_TIMESYNC 					26
+#define FCCP_CMD_ENABLE_LOG_SHOW 			27
+#define FCCP_CMD_SET_LOG_LEVEL 				28
+#define FCCP_CMD_SHOW_LOG_LEVEL 			29
+#define FCCP_CMD_CONFIG_TAG_TYPE 			37
+#define FCCP_CMD_GET_TAG_TYPE 				38
+#define FCCP_CMD_SHOW_FAU64 				39
+#define FCCP_CMD_CLEAR_FAU64 				40
+#define FCCP_CMD_SHOW_FPA_BUFF 				41
+#define FCCP_CMD_ENABLE_PURE_IP             42
+#define FCCP_CMD_GET_PURE_IP_STATE    		43
 
 
-
-#define FCCP_CMD_CONFIG_TAG_TYPE 37
-#define FCCP_CMD_GET_TAG_TYPE 38
-#define FCCP_CMD_SHOW_FAU64 39
-#define FCCP_CMD_CLEAR_FAU64 40
-#define FCCP_CMD_SHOW_FPA_BUFF 41
 
 #define FCCP_RETURN_OK          0x12340000
 #define FCCP_RETURN_ERROR       0x12340001  
@@ -290,6 +291,9 @@ typedef struct
 	int64_t fau_enet_capwap_pppoe_nonip_packets;	/*64-bit counter used for total ethernet input capwap pppoe noneip packets*/
 	int64_t fau_enet_output_packets_eth_pppoe;			/*64-bit counter used for total ethernet output eth pppoe packets*/
 	int64_t fau_enet_output_packets_capwap_pppoe;   /*64-bit counter used for total ethernet output capwap pppoe packets*/
+	int64_t fau_enet_output_packets_eth;   /*64-bit counter used for total ethernet output eth packets*/
+	int64_t fau_enet_output_packets_capwap;   /*64-bit counter used for total ethernet output capwap packets*/
+	int64_t fau_enet_output_packets_rpa;   /*64-bit counter used for total ethernet output rpa packets*/
 }fau64_info_t;
 
 
@@ -604,6 +608,8 @@ typedef struct se_interative_s
 #define SE_AGENT_SHOW_FAU64                             "show_fau64"
 #define SE_AGENT_CLEAR_FAU64							"clear_fau64"
 #define SE_AGENT_ICMP_ENABLE                            "config_icmp_enable"
+#define SE_AGENT_PURE_IP_ENABLE                         "config_pure_ip_enable"
+#define SE_AGENT_SHOW_PURE_IP_ENABLE				    "show_pure_ip_enable"
 #define SE_AGENT_FASTFWD_ENABLE							"config_fastfwd_enable"
 #define SE_AGENT_DELETE_RULE                            "delete_specified_rule"
 #define SE_AGENT_SHOW_FIVE_TUPLE_ACL                    "show_specified_rule"
