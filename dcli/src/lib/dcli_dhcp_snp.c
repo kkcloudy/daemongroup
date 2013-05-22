@@ -1794,6 +1794,85 @@ int dcli_dhcp_snp_show_running_save_bind_tbl
 }
 
 /**********************************************************************************
+ *dcli_dhcp_snp_wan_global_show_running_hansi_config2()
+ *
+ *	DESCRIPTION:
+ *		show DHCP Snooping global running config
+ *
+ *	INPUTS:
+ *		NULL
+ *	
+ *	OUTPUTS:
+ *		NULL
+ *
+ *	RETURN VALUE:
+ *		NULL
+ *
+ ***********************************************************************************/
+char *  dcli_dhcp_snp_wan_global_show_running_hansi_config2
+(
+	unsigned int slot_id,unsigned int InstID, unsigned int islocaled 
+)
+	{	
+		char *showStr = NULL;
+		char * tmp = NULL;
+		DBusMessageIter  iter;
+		DBusMessage *query, *reply;
+		DBusError err;
+		int ret = 1;
+	
+		DBusConnection *dcli_dbus_connection = NULL;
+		ReInitDbusConnection(&dcli_dbus_connection, slot_id, distributFag); 
+		
+		query = dbus_message_new_method_call(
+											DHCPSNP_DBUS_BUSNAME,
+											DHCPSNP_DBUS_OBJPATH,
+											DHCPSNP_DBUS_INTERFACE,
+											DHCPSNP_DBUS_METHOD_SHOW_RUNNING_GLOBAL_HANSI_CONFIG);
+		dbus_error_init(&err);
+	
+		dbus_message_append_args(query,
+								 DBUS_TYPE_UINT32,&slot_id,
+								 DBUS_TYPE_UINT32,&InstID,
+								 DBUS_TYPE_UINT32,&islocaled,
+								 DBUS_TYPE_INVALID);
+	
+	
+		reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection,query,-1, &err);
+	
+		dbus_message_unref(query);
+		if (NULL == reply) {
+			printf("DHCP SNOOPING show running failed get reply.\n");
+			if (dbus_error_is_set(&err)) {
+				printf("%s raised: %s",err.name,err.message);
+				dbus_error_free_for_dcli(&err);
+			}
+			return NULL;
+		}
+		if (dbus_message_get_args ( reply, &err,
+						DBUS_TYPE_STRING, &showStr,
+						DBUS_TYPE_INVALID)) {
+		
+			tmp = (char *)malloc(strlen(showStr)+1);
+			memset(tmp, 0, strlen(showStr)+1);
+			memcpy(tmp,showStr,strlen(showStr));			
+			dbus_message_unref(reply);
+			return tmp; 
+		} 
+		else {
+			printf("Failed get args.\n");
+			if (dbus_error_is_set(&err)) {
+				printf("%s raised: %s",err.name,err.message);
+				dbus_error_free_for_dcli(&err);
+			}
+		}
+	
+		dbus_message_unref(reply);
+		return NULL;	
+	}
+
+
+/**********************************************************************************
  *dcli_dhcp_snp_wan_global_show_running_config()
  *
  *	DESCRIPTION:
@@ -4981,6 +5060,57 @@ DEFUN(no_debug_dhcp_snp_info ,
 	return CMD_SUCCESS;
 }
 
+DEFUN(show_dhcp_snp_running_config_cmd_func,
+	show_dhcp_snp_running_config_cmd,
+	"show dhcp-snooping running-config",
+	SHOW_STR
+	DCLI_DHCP_SNP_STR
+	"Show DHCP-Snooping running-config\n"
+)
+{
+	int slot_id = 0;int profile = 0;int localid = 0;char *tmp = NULL;
+	
+	if (CONFIG_NODE == vty->node) {
+		if ((slot_id = dcli_dhcp_get_board_slot_id()) < 0) {
+			return CMD_WARNING;
+		}
+		profile = 0;
+		localid = 1;
+
+	} else if ((HANSI_NODE == vty->node) || (LOCAL_HANSI_NODE == vty->node)) {
+		slot_id = (int)vty->slotindex;
+		profile = (int)vty->index;
+		localid = (LOCAL_HANSI_NODE == vty->node);
+	}
+	
+	tmp = dcli_dhcp_snp_show_running_config2(vty, slot_id); 		
+	if(tmp != NULL){
+		if (0 != strlen(tmp)) { 
+			vty_out(vty,"=================================================\n");
+			vty_out(vty,"%s",tmp);
+		}
+		free(tmp);
+		tmp = NULL;
+	}else{
+		return CMD_WARNING;
+	}
+	tmp = dcli_dhcp_snp_wan_global_show_running_hansi_config2(slot_id,profile,localid);	
+	if(tmp != NULL){
+			if (0 != strlen(tmp)) {
+				vty_out(vty, "%s", tmp);
+				vty_out(vty,"=================================================");
+			}else{
+				vty_out(vty,"=================================================");
+			}
+			free(tmp);
+			tmp = NULL;
+			return CMD_SUCCESS;
+		}else{
+			return CMD_WARNING;
+		}
+			
+}
+
 DEFUN(show_dhcp_snp_wan_bindtable_cmd_func,
 	show_dhcp_snp_wan_bindtable_cmd,
 	"show dhcp-snooping bind-table",
@@ -5494,7 +5624,8 @@ void dcli_dhcp_snp_element_init
 	install_element(VLAN_NODE, &config_dhcp_snp_set_vlan_port_mode_cmd);
 
 	install_element(CONFIG_NODE, &show_dhcp_snp_bindtable_cmd);
-	install_element(CONFIG_NODE, &show_dhcp_snp_trust_ports_cmd);
+	install_element(CONFIG_NODE, &show_dhcp_snp_trust_ports_cmd);	
+	install_element(CONFIG_NODE, &show_dhcp_snp_running_config_cmd);
 
 	install_element(CONFIG_NODE, &config_dhcp_snp_opt82_enable_cmd);
 	install_element(CONFIG_NODE, &config_dhcp_snp_opt82_format_cmd);
@@ -5535,7 +5666,8 @@ void dcli_dhcp_snp_element_init
 	install_element(CONFIG_NODE, &config_dhcp_snp_arp_proxy_enable_cmd);
 
 
-	/* hansi node */
+	/* hansi node */	
+	install_element(HANSI_NODE, &show_dhcp_snp_running_config_cmd);
 	install_element(HANSI_NODE, &show_dhcp_snp_wan_bindtable_cmd);
 	install_element(HANSI_NODE, &config_dhcp_snp_wan_enable_cmd);
 	install_element(HANSI_NODE, &config_dhcp_snp_wan_set_intf_cmd);
