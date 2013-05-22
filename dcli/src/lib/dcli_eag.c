@@ -5678,8 +5678,8 @@ eag_base_config_show_running(struct vty* vty)
 			snprintf(showStr, sizeof(showStr), " set l2super-vlan enable");
 			vtysh_add_show_string(showStr);		
 		}
-		if (1 == baseconf.pdc_distributed) {
-			snprintf(showStr, sizeof(showStr), " set pdc-distributed on");
+		if (1 == baseconf.is_distributed && 0 == baseconf.pdc_distributed) {
+			snprintf(showStr, sizeof(showStr), " set pdc-distributed off");
 			vtysh_add_show_string(showStr);	
 		}
 		if (1 == baseconf.status) {
@@ -5831,8 +5831,8 @@ eag_base_config_show_running_2(int localid, int slot_id,int index)
 		if (1 == baseconf.l2super_vlan) {
 			totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1, " set l2super-vlan enable\n");
 		}
-		if (1 == baseconf.pdc_distributed) {
-			totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1, " set pdc-distributed on\n");
+		if (1 == baseconf.is_distributed && 0 == baseconf.pdc_distributed) {
+			totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1, " set pdc-distributed off\n");
 		}
 		if (1 == baseconf.status) {
 			totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1, " service enable\n");	
@@ -6008,7 +6008,7 @@ eag_has_config(void)
 		if (1 == baseconf.l2super_vlan) {
 			return 1;
 		}
-		if (1 == baseconf.pdc_distributed) {
+		if (1 == baseconf.is_distributed && 0 == baseconf.pdc_distributed) {
 			return 1;
 		}
 		if (1 == baseconf.status) {
