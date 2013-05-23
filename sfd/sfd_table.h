@@ -8,6 +8,7 @@ struct sfd_user {
 	unsigned int syn;
 	unsigned int icmp;
 	unsigned int snmp;
+	unsigned int capwap_contl;
 	unsigned char mac[ETH_ALEN];
 	union {
 		__be32 ipv4addr;

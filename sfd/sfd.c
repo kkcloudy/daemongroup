@@ -25,12 +25,15 @@ static int tcp_enable;
 static int icmp_enable;
 static int snmp_enable;
 static int dns_enable;
+static int capwap_enable;
 
 static int timespan;
 static int limitpacket;
 static int limitpacket_snmp;
 static int limitpacket_tcp;
 static int limitpacket_icmp;
+static int limitpacket_capwap;
+
 static int arp_enable;
 static int arp_timespan;
 static int limitpacket_arp;
@@ -1119,6 +1122,8 @@ sfd_variables_process(DBusConnection *conn, DBusMessage *msg, void *user_data)
 		dbus_message_iter_append_basic (&iter,DBUS_TYPE_INT32,&arp_enable);
 		dbus_message_iter_append_basic (&iter,DBUS_TYPE_INT32,&limitpacket_arp);
 		dbus_message_iter_append_basic (&iter,DBUS_TYPE_INT32,&dns_enable);
+		dbus_message_iter_append_basic (&iter,DBUS_TYPE_INT32,&capwap_enable);
+		dbus_message_iter_append_basic (&iter,DBUS_TYPE_INT32,&limitpacket_capwap);
 	}
 	return reply;
 }
@@ -1428,6 +1433,8 @@ sfd_variables_recv(int *var)
 	limitpacket_tcp = *(var+10);
 	limitpacket_icmp = *(var+11);
 	limitpacket_arp = *(var+12);
+	capwap_enable = *(var+13);
+	limitpacket_capwap = *(var+14);
 	sfd_system_log(SFD_LOG_DEBUG, "variables receive success\n");
 	return;
 }

@@ -154,18 +154,23 @@ typedef struct _command
 #define FLAG_TCP  1
 #define FLAG_ICMP 2
 #define FLAG_SNMP 3
+#define FLAG_CAPWAP 4
+
 
 #define ENABLE_SFD 0x00
 #define ENABLE_TCP  0x01
 #define ENABLE_ICMP 0x02
 #define ENABLE_SNMP 0x03
 #define ENABLE_DNS 0x04
+#define ENABLE_CAPWAP 0x05
+
 
 #define DISABLE_SFD 0xFF
 #define DISABLE_TCP  0x10
 #define DISABLE_ICMP 0x20
 #define DISABLE_SNMP 0x30
 #define DISABLE_DNS 0x40
+#define DISABLE_CAPWAP 0x50
 
 #define TIMESPAN_DEF 1000
 #define PACKET_DEF 50
@@ -173,6 +178,8 @@ typedef struct _command
 #define TCP_PACKET_DEF 5000
 #define ICMP_PACKET_DEF 200
 #define ARP_PACKET_DEF 200
+#define CAPWAP_PACKET_DEF 100
+
 
 
 #endif

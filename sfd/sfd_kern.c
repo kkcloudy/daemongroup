@@ -79,6 +79,8 @@ static int debug_mode = 0;
 #define FLAG_TCP  1
 #define FLAG_ICMP 2
 #define FLAG_SNMP 3
+#define FLAG_CAPWAP 4
+
 
 #define ENABLE_SFD 0x00
 
@@ -86,17 +88,23 @@ static int debug_mode = 0;
 #define ENABLE_ICMP 0x02
 #define ENABLE_SNMP 0x03
 #define ENABLE_DNS 0x04
+#define ENABLE_CAPWAP 0x05
+
 
 #define DISABLE_TCP  0x10
 #define DISABLE_ICMP 0x20
 #define DISABLE_SNMP 0x30
 #define DISABLE_DNS 0x40
+#define DISABLE_CAPWAP 0x50
+
 
 static int sfd_enable = 0;
 static int tcp_enable = 0;
 static int icmp_enable = 0;
 static int snmp_enable = 0;
 static int dns_enable = 0;
+static int capwap_enable =0;
+
 
 
 #define TIMESPAN_DEF 100
@@ -105,6 +113,7 @@ static int dns_enable = 0;
 #define TCP_PACKET_DEF 5000
 #define ICMP_PACKET_DEF 200
 #define ARP_PACKET_DEF 200
+#define CAPWAP_PACKET_DEF 100
 
 
 static int timespan = TIMESPAN_DEF;
@@ -114,6 +123,7 @@ static int limitpacket = 50;
 static int limitpacket_snmp = SNMP_PACKET_DEF;
 static int limitpacket_tcp = TCP_PACKET_DEF;
 static int limitpacket_icmp = ICMP_PACKET_DEF;
+static int limitpacket_capwap = CAPWAP_PACKET_DEF;
 
 
 
@@ -158,6 +168,7 @@ static int parse_skb_packet_udp(unsigned char *, void *, void *, iptype);
 static int parse_skb_packet_icmp(unsigned char *, void *, void *, iptype);
 static int parse_skb_packet_dnsquery(unsigned char *, void *, void *, iptype);
 static int parse_skb_packet_snmp(unsigned char *, void *, void *, iptype);
+static int parse_skb_packet_capwap(unsigned char *, void *, void *, iptype);
 
 static int send_netlinkmsg(int pid, sfdMsg *msg);
 
@@ -260,7 +271,7 @@ utable_element_static_update(unsigned char *mac, void *ip, iptype type)
 	ty = mac[1];
 
 	head = user_tables[tx][ty];
-	user_key = *(unsigned int *)(mac + 2);
+	user_key = *(unsigned int *)(mac + 2)+*((__be16 *)ip+1);
 
 	for(tmp = head; tmp; tmp = tmp->next) {
 		if(user_key == tmp->key) {
@@ -276,6 +287,7 @@ utable_element_static_update(unsigned char *mac, void *ip, iptype type)
 			tmp->syn = 0;
 			tmp->icmp = 0;
 			tmp->snmp = 0;
+			tmp->capwap_contl = 0;
 			break;
 		}
 	}
@@ -286,6 +298,7 @@ utable_element_static_update(unsigned char *mac, void *ip, iptype type)
 		tmp->syn = 0;
 		tmp->icmp = 0;
 		tmp->snmp = 0;
+		tmp->capwap_contl = 0;
 		tmp->isStatic = 1;
 
 		memcpy(tmp->mac, mac, ETH_ALEN);
@@ -309,12 +322,16 @@ utable_element_dynamic_update(unsigned char *mac, void *ip, iptype type)
 {
 	struct sfd_user *head = NULL, *tmp = NULL;
 	unsigned int user_key = 0, tx = 0, ty = 0;
-
+    unsigned char *ipv4 = (unsigned char *)ip;
 	tx = mac[0];
 	ty = mac[1];
-
+	/*
+	print_log(SFD_LOG_DEBUG,
+						"ip = %u:%u:%u:%u  ip16=%u\n",
+						ipv4[0], ipv4[1], ipv4[2], ipv4[3],*((__be16 *)ip+1));
+	*/
 	head = user_tables[tx][ty];
-	user_key = *(unsigned int *)(mac + 2);
+	user_key = *(unsigned int *)(mac + 2)+*((__be16 *)ip+1);
 
 	for(tmp = head; tmp; tmp = tmp->next) {
 		if(user_key == tmp->key) {
@@ -329,6 +346,7 @@ utable_element_dynamic_update(unsigned char *mac, void *ip, iptype type)
 			tmp->syn = 0;
 			tmp->icmp = 0;
 			tmp->snmp = 0;
+			tmp->capwap_contl = 0;
 			tmp->isStatic = 0;
 			break;
 		}
@@ -340,6 +358,7 @@ utable_element_dynamic_update(unsigned char *mac, void *ip, iptype type)
 		tmp->syn = 0;
 		tmp->icmp = 0;
 		tmp->snmp = 0;
+		tmp->capwap_contl = 0;
 		tmp->isStatic = 0;
 
 		memcpy(tmp->mac, mac, ETH_ALEN);
@@ -407,7 +426,7 @@ utable_element_check(unsigned char *mac, void *ip, iptype type)
 	ty = mac[1];
 
 	head = user_tables[tx][ty];
-	user_key = *(unsigned int *)(mac + 2);
+	user_key = *(unsigned int *)(mac + 2)+*((__be16 *)ip+1);
 
 	for(tmp = head; tmp; tmp = tmp->next) {
 		if(user_key == tmp->key) {
@@ -447,6 +466,7 @@ utable_element_reset()
 				tmp->syn = 0;
 				tmp->icmp = 0;
 				tmp->snmp = 0;
+				tmp->capwap_contl = 0;
 				tmp = tmp->next;
 			}
 		}
@@ -995,6 +1015,11 @@ parse_skb_packet_udp(unsigned char *mac, void *ip, void *data, iptype type)
 		if(snmp_enable)
 			ret = parse_skb_packet_snmp(mac, ip, UDPMSG_DATA(data), type);
 	}
+	else if(hdr->dest == 5246) {
+		if(capwap_enable)
+			ret = parse_skb_packet_capwap(mac, ip, UDPMSG_DATA(data), type);
+	}
+	
 
 	return ret;
 }
@@ -1137,6 +1162,60 @@ static int parse_skb_packet_snmp(unsigned char *mac, void *ip, void *data, iptyp
 
 	return ret;
 }
+static int parse_skb_packet_capwap(unsigned char *mac, void *ip, void *data, iptype type)
+{
+	struct sfd_user *tmp = NULL;
+	int ret = 0;
+	unsigned char *ip_addr = (unsigned char *)ip;
+	if(!down_trylock(&utable_sema))
+	{
+		tmp = utable_element_check(mac, ip, type);
+		if(tmp) 
+		{
+			if(tmp->isStatic==1)
+			{
+					ret = 0;
+			}
+			else 
+			{
+				
+				if(tmp->capwap_contl== limitpacket_capwap)
+				{
+				/*
+					print_log(SFD_LOG_DEBUG,
+						"CAPWAP: %02X:%02X:%02X:%02X:%02X:%02X "
+						"attacking\n",
+						mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+				*/
+					print_log(SFD_LOG_DEBUG,"CAPWAP: %u.%u.%u.%u "
+						"attacking\n",ip_addr[0], ip_addr[1], ip_addr[2], ip_addr[3]);
+				}
+
+				tmp->capwap_contl++;
+				if(tmp->capwap_contl > limitpacket_capwap)
+				{
+					ret = 1;
+				}
+			}
+		}
+		else {
+			utable_element_dynamic_update(mac,ip,type);
+			/*
+			print_log(SFD_LOG_DEBUG,
+						"CAPWAP: %02X:%02X:%02X:%02X:%02X:%02X "
+						"not a legal user\n",
+						mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+			*/
+			print_log(SFD_LOG_DEBUG,"CAPWAP: %u.%u.%u.%u ""not a legal user\n",ip_addr[0], ip_addr[1], ip_addr[2], ip_addr[3]);
+						
+			ret = 1;
+		}
+		up(&utable_sema);
+	}
+
+	return ret;
+}
+
 
 
 #define ARP_SWITCH_PATH "/var/run/sfd/arp_switch"
@@ -1245,6 +1324,9 @@ sfd_switch_handler(int enable,int enabletype)
 			case ENABLE_DNS:
 					dns_enable = 1;
 					break;
+			case ENABLE_CAPWAP:
+					capwap_enable = 1;
+					break;
 			case DISABLE_TCP:
 					tcp_enable = 0;
 					break;
@@ -1257,12 +1339,16 @@ sfd_switch_handler(int enable,int enabletype)
 					break;	
 			case DISABLE_DNS:
 					dns_enable = 0;
-					break;	
+					break;
+			case DISABLE_CAPWAP:
+					capwap_enable = 0;
+					break;
 			case ENABLE_SFD :
 					tcp_enable =0;
 					icmp_enable = 0;
 					snmp_enable = 0;
 					dns_enable = 0;
+					capwap_enable = 0;
 					break;
 			default:	
 					break;
@@ -1342,6 +1428,9 @@ sfd_limitpacket_handler(int protoflag,int packet)
 			break;
 		case FLAG_ICMP:
 			limitpacket_icmp = packet;
+			break;
+		case FLAG_CAPWAP:
+			limitpacket_capwap = packet;
 			break;
 		default:
 			break;
@@ -1485,7 +1574,7 @@ sfd_variables_handler(int packet)
 	msg.cmd = sfdcmd_variables;
 	if(packet)
 	{
-		msg.datalen = sizeof(int)*13;
+		msg.datalen = sizeof(int)*15;
 		*(int *)msg.data = sfd_enable ;
 		*((int *)msg.data+1) = log_enable ;
 		*((int *)msg.data+2) = debug_mode;
@@ -1499,7 +1588,8 @@ sfd_variables_handler(int packet)
 		*((int *)msg.data+10) = limitpacket_tcp;
 		*((int *)msg.data+11) = limitpacket_icmp;
 		*((int *)msg.data+12) = limitpacket_arp;
-		
+		*((int *)msg.data+13) = capwap_enable;
+		*((int *)msg.data+14) = limitpacket_capwap;
 		send_netlinkmsg(sfd_pid, &msg);
 	}
 return;

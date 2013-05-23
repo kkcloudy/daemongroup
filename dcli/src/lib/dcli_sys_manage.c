@@ -2608,13 +2608,14 @@ DEFUN (dcli_sfd_debug_switch_slot,
 
 DEFUN (dcli_sfd_switch,
 		dcli_sfd_switch_cmd,
-		"service (sfd|sfdtcp|sfdicmp|sfdsnmp|sfddns) (enable|disable)",
+		"service (sfd|sfdtcp|sfdicmp|sfdsnmp|sfddns|sfdcapwap) (enable|disable)",
 		"config system service\n"
 		"config sfd service\n"
 		"config tcp detection for sfd service\n"
 		"config icmp detection for sfd service\n"
 		"config snmp detection for sfd service\n"
 		"config dns detection for sfd service\n"
+		"config capwap detection for sfd service\n"
 		"enable detection for sfd service\n"
 		"disable detection for sfd service\n")
 {
@@ -2672,6 +2673,14 @@ DEFUN (dcli_sfd_switch,
 			sfdflag=ENABLE_DNS;
 		else
 			sfdflag=DISABLE_DNS;	
+	}
+	else if(!strncmp("sfdcapwap", argv[0],strlen(argv[0])))
+	{
+		cmd = 1;
+		if(!strncmp("enable", argv[1],strlen(argv[1])))
+			sfdflag=ENABLE_CAPWAP;
+		else
+			sfdflag=DISABLE_CAPWAP;	
 	}
 	/*
 	vty_out(vty,"sfdlag=%d,cmd=%d\n",sfdflag,cmd);
@@ -2770,13 +2779,14 @@ DEFUN (dcli_sfd_switch,
 
 DEFUN (dcli_sfd_switch_slot,
 		dcli_sfd_switch_slot_cmd,
-		"service (sfd|sfdtcp|sfdicmp|sfdsnmp|sfddns) <1-15> (enable|disable)",
+		"service (sfd|sfdtcp|sfdicmp|sfdsnmp|sfddns|sfdcapwap) <1-15> (enable|disable)",
 		"config system service\n"
 		"config sfd service\n"
 		"config tcp detection for sfd service\n"
 		"config icmp detection for sfd service\n"
 		"config snmp detection for sfd service\n"
 		"config dns detection for sfd service\n"
+		"config capwap detection for sfd service\n"
 		"config slot <1-15> detection for sfd service\n"
 		"enable detection for sfd service\n"
 		"disable detection for sfd service\n")
@@ -2835,6 +2845,14 @@ DEFUN (dcli_sfd_switch_slot,
 			sfdflag=ENABLE_DNS;
 		else
 			sfdflag=DISABLE_DNS;	
+	}
+	else if(!strncmp("sfdcapwap", argv[0],strlen(argv[0])))
+	{
+		cmd = 1;
+		if(!strncmp("enable", argv[2],strlen(argv[2])))
+			sfdflag=ENABLE_CAPWAP;
+		else
+			sfdflag=DISABLE_CAPWAP;	
 	}
 	/*
 	vty_out(vty,"sfdlag=%d,cmd=%d\n",sfdflag,cmd);
@@ -3100,13 +3118,14 @@ DEFUN (dcli_sfd_timespan_slot,
 
 DEFUN (dcli_sfd_limitpacket,
 			dcli_sfd_limitpacket_cmd,
-			"service sfd packetlimit (tcp|icmp|snmp) <0-1073741824>",
+			"service sfd packetlimit (tcp|icmp|snmp|capwap) <0-1073741824>",
 			"config system service\n"
 			"config sfd service\n"
 			"config limit packets for sfd service\n"
 			"config limit packets for tcp detection\n"
 			"config limit packets for icmp detection\n"
 			"config limit packets for snmp detection\n"
+			"config limit packets for capwap detection\n"
 			"packets, limit packets of detection\n")
 {
 	DBusMessage *query = NULL, *reply = NULL;
@@ -3124,6 +3143,8 @@ DEFUN (dcli_sfd_limitpacket,
 		protoflag = FLAG_ICMP;
 	else if(strncmp(argv[0],"snmp",strlen(argv[0]))==0)
 		protoflag = FLAG_SNMP;
+	else if(strncmp(argv[0],"capwap",strlen(argv[0]))==0)
+		protoflag = FLAG_CAPWAP;
 	else
 		protoflag = 0;
 	
@@ -3194,7 +3215,7 @@ DEFUN (dcli_sfd_limitpacket,
 
 DEFUN (dcli_sfd_limitpacket_slot,
 		dcli_sfd_limitpacket_slot_cmd,
-		"service sfd packetlimit <1-15> (tcp|icmp|snmp) <0-1073741824>",
+		"service sfd packetlimit <1-15> (tcp|icmp|snmp|capwap) <0-1073741824>",
 		"config system service\n"
 		"config sfd service\n"
 		"config limit packets for sfd service\n"
@@ -3202,6 +3223,7 @@ DEFUN (dcli_sfd_limitpacket_slot,
 		"config limit packets for tcp detection\n"
 		"config limit packets for icmp detection\n"
 		"config limit packets for snmp detection\n"
+		"config limit packets for capwap detection\n"
 		"packets, limit packets of detection\n")
 {
 	DBusMessage *query = NULL, *reply = NULL;
@@ -3218,6 +3240,8 @@ DEFUN (dcli_sfd_limitpacket_slot,
 		protoflag = FLAG_ICMP;
 	else if(strncmp(argv[1],"snmp",strlen(argv[1]))==0)
 		protoflag = FLAG_SNMP;
+	else if(strncmp(argv[1],"capwap",strlen(argv[1]))==0)
+		protoflag = FLAG_CAPWAP;
 	else
 		protoflag = 0;
 	
@@ -4406,6 +4430,7 @@ DEFUN (dcli_sfd_show_var,
 	int icmp_enable = 0;
 	int snmp_enable = 0;
 	int dns_enable = 0;
+	int capwap_enable = 0;
 	int arp_enable = 0;
 
 	int timespan = 0;
@@ -4414,6 +4439,7 @@ DEFUN (dcli_sfd_show_var,
 	int limitpacket_tcp = 0;
 	int limitpacket_icmp = 0;
 	int limitpacket_arp = 0;
+	int limitpacket_capwap =0;
 	
 	
 	query = dbus_message_new_method_call(SFD_DBUS_BUSNAME, 
@@ -4481,6 +4507,10 @@ DEFUN (dcli_sfd_show_var,
 				dbus_message_iter_get_basic(&iter,&limitpacket_arp);
 				dbus_message_iter_next(&iter);	
 				dbus_message_iter_get_basic(&iter,&dns_enable);
+				dbus_message_iter_next(&iter);	
+				dbus_message_iter_get_basic(&iter,&capwap_enable);
+				dbus_message_iter_next(&iter);	
+				dbus_message_iter_get_basic(&iter,&limitpacket_capwap);
 				if(sfd_enable)
 					vty_out(vty,"service sfd is enable\n");
 				else
@@ -4517,7 +4547,10 @@ DEFUN (dcli_sfd_show_var,
 					vty_out(vty,"service sfd arp  is enable  LIMITPACKET is %d\n",limitpacket_arp);
 				else
 					vty_out(vty,"service sfd arp  is disable LIMITPACKET is %d\n",limitpacket_arp);
-					
+				if(capwap_enable)
+					vty_out(vty,"service sfd capwap is enable  LIMITPACKET is %d\n",limitpacket_capwap);
+				else
+					vty_out(vty,"service sfd capwap is disable LIMITPACKET is %d\n",limitpacket_capwap);	
 				if(dns_enable)
 					vty_out(vty,"service sfd dns  is enable\n");
 				else
@@ -4552,6 +4585,7 @@ DEFUN (dcli_sfd_show_var_slot,
 	int icmp_enable = 0;
 	int snmp_enable = 0;
 	int dns_enable = 0;
+	int capwap_enable = 0;
 	int arp_enable = 0;
 	int timespan = 0;
 	
@@ -4559,6 +4593,7 @@ DEFUN (dcli_sfd_show_var_slot,
 	int limitpacket_tcp = 0;
 	int limitpacket_icmp = 0;
 	int limitpacket_arp = 0;
+	int limitpacket_capwap = 0;
 	
 	slot_id= atoi(argv[0]);
 	
@@ -4620,7 +4655,10 @@ DEFUN (dcli_sfd_show_var_slot,
 				dbus_message_iter_get_basic(&iter,&limitpacket_arp);
 				dbus_message_iter_next(&iter);	
 				dbus_message_iter_get_basic(&iter,&dns_enable);
-		
+				dbus_message_iter_next(&iter);	
+				dbus_message_iter_get_basic(&iter,&capwap_enable);
+				dbus_message_iter_next(&iter);	
+				dbus_message_iter_get_basic(&iter,&limitpacket_capwap);
 				if(sfd_enable)
 					vty_out(vty,"service sfd is enable\n");
 				else
@@ -4657,7 +4695,10 @@ DEFUN (dcli_sfd_show_var_slot,
 					vty_out(vty,"service sfd arp  is enable  LIMITPACKET is %d\n",limitpacket_arp);
 				else
 					vty_out(vty,"service sfd arp  is disable LIMITPACKET is %d\n",limitpacket_arp);
-							
+				if(capwap_enable)
+					vty_out(vty,"service sfd capwap is enable  LIMITPACKET is %d\n",limitpacket_capwap);
+				else
+					vty_out(vty,"service sfd capwap is disable LIMITPACKET is %d\n",limitpacket_capwap);				
 				
 				if(dns_enable)
 					vty_out(vty,"service sfd dns  is enable\n");
@@ -4699,6 +4740,7 @@ int dcli_sfd_running(struct vty *vty)
 	int icmp_enable = 0;
 	int snmp_enable = 0;
 	int dns_enable = 0;
+	int capwap_enable = 0;
 	int arp_enable = 0;
 	int arpsuppress_enable = 0;
 	int arplimit_enable = 0;
@@ -4709,6 +4751,7 @@ int dcli_sfd_running(struct vty *vty)
 	int limitpacket_tcp = 0;
 	int limitpacket_icmp = 0;
 	int limitpacket_arp = 0;
+	int limitpacket_capwap = 0;
 	
 	sprintf(_tmpstr,BUILDING_MOUDLE,"SFD CONFIG");
 	vtysh_add_show_string(_tmpstr);
@@ -4776,6 +4819,10 @@ int dcli_sfd_running(struct vty *vty)
 				dbus_message_iter_get_basic(&iter,&limitpacket_arp);
 				dbus_message_iter_next(&iter);	
 				dbus_message_iter_get_basic(&iter,&dns_enable);
+				dbus_message_iter_next(&iter);	
+				dbus_message_iter_get_basic(&iter,&capwap_enable);
+				dbus_message_iter_next(&iter);	
+				dbus_message_iter_get_basic(&iter,&limitpacket_capwap);
 				if(sfd_enable)
 				{
 					sprintf(buf,"service sfd %d enable\n",i);
@@ -4828,7 +4875,12 @@ int dcli_sfd_running(struct vty *vty)
 					sprintf(buf,"service sfddns %d enable\n",i);
 					vtysh_add_show_string(buf);
 				}
-		
+
+				if(capwap_enable)
+				{
+					sprintf(buf,"service sfdcapwap %d enable\n",i);
+					vtysh_add_show_string(buf);
+				}
 				if(limitpacket_tcp != TCP_PACKET_DEF)
 				{
 					sprintf(buf,"service sfd packetlimit %d tcp %d\n",i,limitpacket_tcp);
@@ -4852,7 +4904,11 @@ int dcli_sfd_running(struct vty *vty)
 					sprintf(buf,"service sfd packetlimit %d arp %d\n",i,limitpacket_arp);
 					vtysh_add_show_string(buf);
 				}
-				
+				if(limitpacket_capwap!= CAPWAP_PACKET_DEF)
+				{
+					sprintf(buf,"service sfd packetlimit %d capwap %d\n",i,limitpacket_capwap);
+					vtysh_add_show_string(buf);
+				}
 			}
 			dbus_message_unref(reply);
 		}
@@ -4907,7 +4963,7 @@ int set_dns_str(const char **name,int num)
 
 	ptr=malloc(128);
 	if(!ptr)
-		{
+	{
 		fclose(fp);
 		return -1;
 	}
