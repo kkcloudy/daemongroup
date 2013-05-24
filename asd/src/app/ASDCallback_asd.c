@@ -4632,7 +4632,10 @@ void BSS_TRAFFIC_LIMIT_OP(TableMsg *msg){
 				wasd->sta_average_traffic_limit=msg->u.traffic_limit.average_value;
 				wasd->send_traffic_limit=msg->u.traffic_limit.send_value;
 				wasd->sta_average_send_traffic_limit=msg->u.traffic_limit.send_average_value;
-				update_sta_traffic_limit_info(wasd,0);
+				if(msg->u.traffic_limit.cancel_average_flag == 1)   //fengwenchao add for AXSSZFI-1374
+					cancel_sta_traffic_limit_average_info(wasd,0);
+				else
+					update_sta_traffic_limit_info(wasd,0);
 			}
 			break;
 		}

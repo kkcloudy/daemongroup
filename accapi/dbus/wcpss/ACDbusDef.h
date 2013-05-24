@@ -586,6 +586,9 @@ out arg list:  // in the order as they are appended in the dbus message.
 #define WID_DBUS_RADIO_METHOD_WLAN_TRAFFIC_LIMIT_ABLE	"radio_wlan_traffic_limit_able"
 #define WID_DBUS_RADIO_METHOD_WLAN_TRAFFIC_LIMIT_VALUE	"radio_wlan_traffic_limit_value"
 #define WID_DBUS_RADIO_METHOD_WLAN_TRAFFIC_LIMIT_AVERAGE_VALUE	"radio_wlan_traffic_limit_average_value"
+#define WID_DBUS_RADIO_METHOD_WLAN_TRAFFIC_LIMIT_CANCEL_AVERAGE_VALUE  "radio_wlan_traffic_limit_cancel_average_value"  //fengwenchao add 20130416 for AXSSZFI-1374
+#define WID_DBUS_RADIO_METHOD_WLAN_TRAFFIC_LIMIT_CANCEL_AVERAGE_SEND_VALUE "radio_wlan_traffic_limit_cancel_average_send_value"  //fengwenchao add 20130416 for AXSSZFI-1374
+
 #define WID_DBUS_RADIO_METHOD_WLAN_TRAFFIC_LIMIT_STA_VALUE	"radio_wlan_traffic_limit_sta_value"
 #define WID_DBUS_RADIO_METHOD_WLAN_TRAFFIC_LIMIT_CANCEL_STA_VALUE	"radio_wlan_traffic_limit_cancel_sta_value"
 

@@ -542,6 +542,7 @@ typedef struct{
 	unsigned int average_value;/*上行*/
 	unsigned int send_value;/*下行*/
 	unsigned int send_average_value;/*下行*/
+	unsigned int cancel_average_flag;/*fengwenchao add for AXSSZFI-1374*/
 }traffic_limit_info;
 typedef struct{
 	unsigned int bssindex;

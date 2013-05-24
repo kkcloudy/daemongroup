@@ -2282,6 +2282,43 @@ CWBool WidAsdStaWapiInfoUpdate(unsigned int WTPID,WIDStaWapiInfoList*valuesPtr)
 	
 	return CW_TRUE;	
 }
+/*fengwenchao add for AXSSZFI-1374*/
+CWBool wid_asd_bss_cancel_average_traffic_limit(unsigned int bssindex)
+{
+	TableMsg wASD;
+	int len;
+	if(!check_bssid_func(bssindex)){
+		wid_syslog_err("%s\n",__func__);
+		return CW_FALSE;
+	}else{
+	}
+	int i = (bssindex/L_BSS_NUM/L_RADIO_NUM)%SOCK_NUM;
+	int sock = sockPerThread[i];
+	wASD.Op = TRAFFIC_LIMIT;
+	wASD.Type = BSS_TRAFFIC_LIMIT_TYPE;
+	wASD.u.traffic_limit.able = AC_BSS[bssindex]->traffic_limit_able;
+	wASD.u.traffic_limit.bssindex = bssindex;
+	wASD.u.traffic_limit.value = AC_BSS[bssindex]->traffic_limit;
+	wASD.u.traffic_limit.average_value = AC_BSS[bssindex]->average_rate;
+	wASD.u.traffic_limit.send_value = AC_BSS[bssindex]->send_traffic_limit;
+	wASD.u.traffic_limit.send_average_value = AC_BSS[bssindex]->send_average_rate;
+	wASD.u.traffic_limit.cancel_average_flag = 1;
+	len = sizeof(wASD);
+	wid_syslog_debug_debug(WID_DEFAULT,"wid_asd_bss_traffic_limit1\n");
+	if(sendto(sock, &wASD, len, 0, (struct sockaddr *) &toASD.addr, toASD.addrlen) < 0){
+		wid_syslog_info("%s sendto %s",__func__,strerror(errno));
+		perror("send(wASDSocket)");
+
+		wid_syslog_info("wid_asd_bss_traffic_limit2\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"*** error wid_asd_bss_traffic_limit end***\n");
+		return CW_FALSE;
+	}
+	
+	wid_syslog_debug_debug(WID_DEFAULT,"wid_asd_bss_traffic_limit3\n");
+	return CW_TRUE; 
+
+}
+/*fengwenchao add end*/
 CWBool wid_asd_bss_traffic_limit(unsigned int bssindex)
 {
 	TableMsg wASD;

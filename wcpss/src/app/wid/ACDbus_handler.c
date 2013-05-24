@@ -22701,6 +22701,34 @@ int wid_set_bss_traffic_limit_value(unsigned int wtpid,unsigned int l_radioid,un
 	ret = wid_radio_set_extension_command(wtpid,apcmd);
 	return 0;
 }
+/*fengwenchao add for AXSSZFI-1374*/
+int wid_set_bss_traffic_limit_cancel_average_value(unsigned int wtpid,unsigned int l_radioid,unsigned char wlanid,unsigned int value,unsigned char issend)
+{
+	int ret = 0;
+	
+	char apcmd[WID_SYSTEM_CMD_LENTH];
+	memset(apcmd,0,WID_SYSTEM_CMD_LENTH);
+
+	if(issend == 1)
+	{
+		sprintf(apcmd,"autelan traffic_limit ath.%d-%d set_every_node_flag 0;autelan traffic_limit ath.%d-%d set_every_node_send %d",l_radioid,wlanid,l_radioid,wlanid,value);
+	}
+	else if(issend == 0)
+	{		
+		sprintf(apcmd,"autelan traffic_limit ath.%d-%d set_every_node_flag 0;autelan traffic_limit ath.%d-%d set_every_node %d",l_radioid,wlanid,l_radioid,wlanid,value);
+	}
+	else
+	{
+		wid_syslog_debug_debug(WID_DEFAULT,"wid_set_bss_traffic_limit_cancel_average_value error\n");
+	}
+//	printf("wid_set_bss_traffic_limit_average_value apcmd %s\n",apcmd);
+	wid_syslog_debug_debug(WID_DEFAULT,"wid_set_bss_traffic_limit_cancel_average_value apcmd %s\n",apcmd);
+
+	ret = wid_radio_set_extension_command(wtpid,apcmd);
+	return 0;
+
+}
+/*fengwenchao add end*/
 int wid_set_bss_traffic_limit_average_value(unsigned int wtpid,unsigned int l_radioid,unsigned char wlanid,unsigned int value,unsigned char issend)
 {
 	int ret = 0;
@@ -23253,6 +23281,85 @@ int wid_radio_set_wlan_traffic_limit_average_value(unsigned int wtpid,unsigned i
 	wid_asd_bss_traffic_limit(bssindex);
 	return 0;
 }
+/*fengwenchao add for AXSSZFI-1374*/
+int wid_radio_set_wlan_traffic_limit_cancel_average_value(unsigned int wtpid,unsigned int l_radioid,unsigned char wlanid,unsigned char issend)
+{
+	unsigned int value =0;
+	if((AC_WTP[wtpid] == NULL)||(AC_WLAN[wlanid] == NULL)||(AC_WTP[wtpid]->WTP_Radio[l_radioid] == NULL))
+	{
+		return -1;
+	}
+
+	int i = 0;
+	unsigned int bssindex = 0;
+	unsigned char bssid = 0;
+	for(i=0;i<L_BSS_NUM;i++)
+	{
+		if(AC_WTP[wtpid]->WTP_Radio[l_radioid]->BSS[i] != NULL)
+		{
+			if(AC_WTP[wtpid]->WTP_Radio[l_radioid]->BSS[i]->WlanID == wlanid)
+			{
+				bssindex = AC_WTP[wtpid]->WTP_Radio[l_radioid]->BSS[i]->BSSIndex;
+				bssid = i;
+				break;
+			}
+		}
+	}
+	#if 0
+	if(issend == 1)//下行
+	{
+		if(AC_WTP[wtpid]->WTP_Radio[l_radioid]->BSS[bssid]->send_traffic_limit != 0)
+		{
+			if(AC_WTP[wtpid]->WTP_Radio[l_radioid]->BSS[bssid]->send_traffic_limit < value)
+			{
+				return IF_POLICY_CONFLICT;
+			}
+		}
+	}
+	else if(issend == 0)//上行
+	{
+		if(AC_WTP[wtpid]->WTP_Radio[l_radioid]->BSS[bssid]->traffic_limit != 0)
+		{
+			if(AC_WTP[wtpid]->WTP_Radio[l_radioid]->BSS[bssid]->traffic_limit < value)
+			{
+				return IF_POLICY_CONFLICT;
+			}
+		}
+	}
+	else
+	{
+		return WID_DBUS_ERROR;
+	}
+	#endif
+	
+	//AC_WTP[wtpid]->WTP_Radio[l_radioid]->BSS[bssid]->traffic_limit_able = 1;
+	if(issend == 1)
+	{
+		//AC_WTP[wtpid]->WTP_Radio[l_radioid]->BSS[bssid]->send_average_rate = value;
+		value = AC_WTP[wtpid]->WTP_Radio[l_radioid]->BSS[bssid]->send_average_rate;
+		if(value == 0)
+			value = STA_DEFAULT_TRAFFIC_LIMIT;
+		else
+			AC_WTP[wtpid]->WTP_Radio[l_radioid]->BSS[bssid]->send_average_rate = 0;
+	}
+	else if(issend == 0)
+	{
+		//AC_WTP[wtpid]->WTP_Radio[l_radioid]->BSS[bssid]->average_rate = value;
+		value = AC_WTP[wtpid]->WTP_Radio[l_radioid]->BSS[bssid]->average_rate;
+		if(value == 0)
+			value = STA_DEFAULT_TRAFFIC_LIMIT;		
+		else
+			AC_WTP[wtpid]->WTP_Radio[l_radioid]->BSS[bssid]->average_rate = 0;
+	}
+	else
+	{
+		return WID_DBUS_ERROR;
+	}
+	wid_set_bss_traffic_limit_cancel_average_value(wtpid,l_radioid,wlanid,value,issend);
+	wid_asd_bss_cancel_average_traffic_limit(bssindex);
+	return 0;
+}
+/*fengwenchao add end*/
 int wid_radio_set_wlan_traffic_limit_sta_value(unsigned int wtpid
 														,unsigned int l_radioid
 														,unsigned char wlanid

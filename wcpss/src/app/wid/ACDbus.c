@@ -59951,6 +59951,158 @@ DBusMessage * wid_dbus_interface_set_radio_wlan_traffic_limit_average_value(DBus
 	return reply;	
 }
 #endif
+/*fengwenchao add 20130416 for AXSSZFI-1374*/
+DBusMessage * wid_dbus_interface_set_radio_wlan_traffic_limit_cancel_average_send_value(DBusConnection *conn, DBusMessage *msg, void *user_data)
+{
+	DBusMessage * reply = NULL;
+	DBusMessageIter  iter;
+	unsigned int radioid;
+	unsigned int l_radioid;
+	unsigned int wtpid;
+	unsigned char wlanid;
+	unsigned int ret = WID_DBUS_SUCCESS;
+	unsigned char issend = 1;
+	DBusError err;
+	dbus_error_init(&err);
+	if (!(dbus_message_get_args ( msg, &err,
+								DBUS_TYPE_UINT32,&radioid,								
+								DBUS_TYPE_BYTE,&wlanid,
+								DBUS_TYPE_INVALID))){
+
+		printf("Unable to get input args\n");
+				
+		if (dbus_error_is_set(&err)) {
+			printf("%s raised: %s",err.name,err.message);
+			dbus_error_free(&err);
+		}
+		return NULL;
+	}
+	wtpid = radioid/L_RADIO_NUM;
+	l_radioid = radioid%L_RADIO_NUM;
+	if(AC_WTP[wtpid] == NULL)
+	{
+		ret = WTP_ID_NOT_EXIST;
+	}
+	else if(AC_RADIO[radioid] == NULL)
+	{
+		ret = RADIO_ID_NOT_EXIST;
+	}
+	else if(AC_WLAN[wlanid] == NULL)
+	{
+		ret = WLAN_ID_NOT_EXIST;
+	}
+	else if(AC_WTP[wtpid]->WTP_Radio[l_radioid]->isBinddingWlan == 0)
+	{
+		ret = WTP_IS_NOT_BINDING_WLAN_ID;
+	}
+	else 
+	{
+		struct wlanid *wlan_id = AC_WTP[wtpid]->WTP_Radio[l_radioid]->Wlan_Id;
+		while(wlan_id != NULL)
+		{	
+			if(wlan_id->wlanid == wlanid)
+			{
+				ret = WID_DBUS_SUCCESS;
+				break;
+			}
+			wlan_id = wlan_id->next;
+		}
+		if(wlan_id == NULL)
+		{
+			ret = WTP_IS_NOT_BINDING_WLAN_ID;
+		}
+		
+	}
+
+	if(ret == WID_DBUS_SUCCESS)
+	{
+		ret = wid_radio_set_wlan_traffic_limit_cancel_average_value(wtpid,l_radioid,wlanid,issend);
+	}
+	reply = dbus_message_new_method_return(msg);
+	
+	dbus_message_iter_init_append (reply, &iter);
+	
+	dbus_message_iter_append_basic (&iter,DBUS_TYPE_UINT32,&ret);
+	
+	return reply;	
+
+}
+
+DBusMessage * wid_dbus_interface_set_radio_wlan_traffic_limit_cancel_average_value(DBusConnection *conn, DBusMessage *msg, void *user_data)
+{
+	DBusMessage * reply = NULL;
+	DBusMessageIter  iter;
+	unsigned int radioid;
+	unsigned int l_radioid;
+	unsigned int wtpid;
+	unsigned char wlanid;
+	unsigned int ret = WID_DBUS_SUCCESS;
+	unsigned char issend = 0;
+	DBusError err;
+	dbus_error_init(&err);
+	if (!(dbus_message_get_args ( msg, &err,
+								DBUS_TYPE_UINT32,&radioid,								
+								DBUS_TYPE_BYTE,&wlanid,
+								DBUS_TYPE_INVALID))){
+
+		printf("Unable to get input args\n");
+				
+		if (dbus_error_is_set(&err)) {
+			printf("%s raised: %s",err.name,err.message);
+			dbus_error_free(&err);
+		}
+		return NULL;
+	}
+	wtpid = radioid/L_RADIO_NUM;
+	l_radioid = radioid%L_RADIO_NUM;
+	if(AC_WTP[wtpid] == NULL)
+	{
+		ret = WTP_ID_NOT_EXIST;
+	}
+	else if(AC_RADIO[radioid] == NULL)
+	{
+		ret = RADIO_ID_NOT_EXIST;
+	}
+	else if(AC_WLAN[wlanid] == NULL)
+	{
+		ret = WLAN_ID_NOT_EXIST;
+	}
+	else if(AC_WTP[wtpid]->WTP_Radio[l_radioid]->isBinddingWlan == 0)
+	{
+		ret = WTP_IS_NOT_BINDING_WLAN_ID;
+	}
+	else 
+	{
+		struct wlanid *wlan_id = AC_WTP[wtpid]->WTP_Radio[l_radioid]->Wlan_Id;
+		while(wlan_id != NULL)
+		{	
+			if(wlan_id->wlanid == wlanid)
+			{
+				ret = WID_DBUS_SUCCESS;
+				break;
+			}
+			wlan_id = wlan_id->next;
+		}
+		if(wlan_id == NULL)
+		{
+			ret = WTP_IS_NOT_BINDING_WLAN_ID;
+		}
+		
+	}
+
+	if(ret == WID_DBUS_SUCCESS)
+	{
+		ret = wid_radio_set_wlan_traffic_limit_cancel_average_value(wtpid,l_radioid,wlanid,issend);
+	}
+	reply = dbus_message_new_method_return(msg);
+	
+	dbus_message_iter_init_append (reply, &iter);
+	
+	dbus_message_iter_append_basic (&iter,DBUS_TYPE_UINT32,&ret);
+	
+	return reply;	
+}
+/*fengwenchao add end*/
 DBusMessage * wid_dbus_interface_set_radio_wlan_traffic_limit_sta_value(DBusConnection *conn, DBusMessage *msg, void *user_data){
 	DBusMessage * reply;
 	DBusMessageIter  iter;
@@ -75955,6 +76107,12 @@ static DBusHandlerResult wid_dbus_message_handler (DBusConnection *connection, D
 		}
 		else if (dbus_message_is_method_call(message,WID_DBUS_RADIO_INTERFACE,WID_DBUS_RADIO_METHOD_WLAN_TRAFFIC_LIMIT_AVERAGE_VALUE)) {
 			reply = wid_dbus_interface_set_radio_wlan_traffic_limit_average_value(connection,message,user_data);
+		}
+		else if (dbus_message_is_method_call(message,WID_DBUS_RADIO_INTERFACE,WID_DBUS_RADIO_METHOD_WLAN_TRAFFIC_LIMIT_CANCEL_AVERAGE_VALUE)){//fengwenchao add 20130416 for AXSSZFI-1374
+			reply = wid_dbus_interface_set_radio_wlan_traffic_limit_cancel_average_value(connection,message,user_data);
+		}
+		else if (dbus_message_is_method_call(message,WID_DBUS_RADIO_INTERFACE,WID_DBUS_RADIO_METHOD_WLAN_TRAFFIC_LIMIT_CANCEL_AVERAGE_SEND_VALUE)){//fengwenchao add 20130416 for AXSSZFI-1374
+			reply = wid_dbus_interface_set_radio_wlan_traffic_limit_cancel_average_send_value(connection,message,user_data);
 		}
 		else if (dbus_message_is_method_call(message,WID_DBUS_RADIO_INTERFACE,WID_DBUS_RADIO_METHOD_WLAN_TRAFFIC_LIMIT_STA_VALUE)) {
 			reply = wid_dbus_interface_set_radio_wlan_traffic_limit_sta_value(connection,message,user_data);

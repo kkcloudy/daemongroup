@@ -2,6 +2,7 @@
 #define _ASDDBUS_HANDLER_H_
 
 int update_sta_traffic_limit_info(struct asd_data *wasd,unsigned char include_vip);
+int cancel_sta_traffic_limit_average_info(struct asd_data *wasd,unsigned char include_vip);//fengwenchao add for AXSSZFI-1374
 /*xm0723*/
 struct asd_data * AsdCheckBSSIndex(unsigned int BSSIndex);
 

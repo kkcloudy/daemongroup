@@ -1059,7 +1059,28 @@ int update_sta_traffic_limit_info(struct asd_data *wasd,unsigned char include_vi
 
 }
 
+/*fengwenchao add AXSSZFI-1374*/
+int cancel_sta_traffic_limit_average_info(struct asd_data *wasd,unsigned char include_vip){
+/*xm0723*/
+	struct sta_info *sta=NULL;
+		
+	if(wasd==NULL){
+		asd_printf(ASD_DBUS,MSG_DEBUG,"%s	wasd==NULL\n",__func__);
+		return -1;
+	}
 
+	for(sta=wasd->sta_list;sta!=NULL;sta=sta->next)
+	{
+		asd_printf(ASD_DBUS,MSG_DEBUG,"%s sta "MACSTR" flag %d\n",__func__,MAC2STR(sta->addr),sta->vip_flag);
+		if((sta->vip_flag & 0x03) == 0){
+			sta->sta_traffic_limit=wasd->traffic_limit;
+			sta->sta_send_traffic_limit=wasd->send_traffic_limit;
+		}
+	}
+	return 0;
+}
+
+/*fengwenchao add end*/
 struct asd_data * AsdCheckBSSIndex(unsigned int BSSIndex)
 {
 	struct wasd_interfaces *interfaces = (struct wasd_interfaces*) circle.user_data;

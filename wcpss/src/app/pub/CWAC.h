@@ -422,6 +422,8 @@ CWBool WidAsd_WTPTerminalStatisticsUpdate(unsigned int WTPID,unsigned int count,
 CWBool WidAsd_StationInfoUpdate(unsigned int WTPID,unsigned int count,WIDStationInfo valuesPtr[64]);
 CWBool AsdWsm_WTP_Channelchange_Op(unsigned int WtpID,unsigned int radioid,Operate op);
 CWBool wid_asd_bss_traffic_limit(unsigned int bssindex);
+CWBool wid_asd_bss_cancel_average_traffic_limit(unsigned int bssindex); //fengwenchao add for AXSSZFI-1374
+
 CWBool wid_asd_send_wids_able(unsigned int able);
 CWBool wid_asd_send_wids_info(struct tag_wids_device_ele * info,unsigned int WTPID);
 CWBool WIDWsm_VRRPIFOp(unsigned char* name,unsigned int ip, unsigned int op);

@@ -331,6 +331,8 @@ int wid_cancel_bss_traffic_limit_sta_value(unsigned int wtpid,unsigned int l_rad
 int wid_set_bss_traffic_limit_value(unsigned int wtpid,unsigned int l_radioid,unsigned char wlanid,unsigned int value,unsigned char issend);
 int wid_radio_set_wlan_traffic_limit_able(unsigned int wtpid,unsigned int l_radioid,unsigned char wlanid,unsigned char policy);
 int wid_radio_set_wlan_traffic_limit_average_value(unsigned int wtpid,unsigned int l_radioid,unsigned char wlanid,unsigned int value,unsigned char issend);
+int wid_radio_set_wlan_traffic_limit_cancel_average_value(unsigned int wtpid,unsigned int l_radioid,unsigned char wlanid,unsigned char issend);//fengwenchao add for AXSSZFU-1374
+
 int wid_radio_set_wlan_traffic_limit_sta_value(unsigned int wtpid
 											,unsigned int l_radioid
 											,unsigned char wlanid

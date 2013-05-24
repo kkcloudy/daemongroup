@@ -13724,6 +13724,231 @@ DEFUN(radio_bss_taffic_limit_average_value_func,
 	return CMD_SUCCESS; 
 }
 #endif
+/*fengwenchao add 20130416 for AXSSZFI-1374*/
+DEFUN(radio_bss_taffic_limit_cancel_average_value_func,
+		radio_bss_taffic_limit_cancel_average_value_cmd,
+		"wlan ID traffic limit cancel station average value",
+		"wlan configure\n"
+		"wlan id\n" 
+		"traffic limit\n" 
+		"traffic limit\n"
+		"traffic limit station value \n"
+		"traffic limit station average value\n"
+		"traffic limit station average value \n"
+		"traffic limit station average value (kbps)\n"
+		)
+{
+
+	DBusMessage *query = NULL, *reply = NULL;	
+	DBusMessageIter	 iter;
+	DBusError err;
+	unsigned int ret = 0;
+	unsigned int RadioID;
+	unsigned char wlan_id = 0;
+	//unsigned int value = 0;   
+	
+	wlan_id = atoi(argv[0]);
+	if(wlan_id >= WLAN_NUM || wlan_id == 0){
+		vty_out(vty,"<error> wlan id should be 1 to %d\n",WLAN_NUM-1);
+		return CMD_SUCCESS;
+	}
+	#if 0
+
+	ret = parse_int_ID((char *)argv[1],&value);
+	
+	if (ret != WID_DBUS_SUCCESS)
+	{	
+		vty_out(vty,"<error> input parameter %s error\n",argv[1]);
+		return CMD_SUCCESS;
+	} 
+	
+	if((value > 884736)||(value < 1))      /*fengwenchao add 20110228  108*1024*8 = 884736*/
+	{
+		vty_out(vty,"<error> input value should be 1 to 884736\n");
+		return CMD_SUCCESS;
+	}	
+	#endif
+	int index = 0;
+	int localid = 1;
+    	int slot_id = HostSlotId;
+	char BUSNAME[PATH_LEN];
+	char OBJPATH[PATH_LEN];
+	char INTERFACE[PATH_LEN];
+	if(vty->node == RADIO_NODE){
+		index = 0;			
+		RadioID = (int)vty->index;
+	}else if(vty->node == HANSI_RADIO_NODE){
+		index = vty->index; 		
+		localid = vty->local;
+        		slot_id = vty->slotindex;
+		RadioID = (int)vty->index_sub;
+	}else if (vty->node == LOCAL_HANSI_RADIO_NODE){
+	         index = vty->index;
+	         localid = vty->local;
+	         slot_id = vty->slotindex;
+		RadioID = (int)vty->index_sub;
+    }
+    DBusConnection *dcli_dbus_connection = NULL;
+    ReInitDbusConnection(&dcli_dbus_connection,slot_id,distributFag);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_BUSNAME,BUSNAME);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_RADIO_OBJPATH,OBJPATH);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_RADIO_INTERFACE,INTERFACE);
+	query = dbus_message_new_method_call(BUSNAME,OBJPATH,INTERFACE,WID_DBUS_RADIO_METHOD_WLAN_TRAFFIC_LIMIT_CANCEL_AVERAGE_VALUE);
+	
+
+	dbus_error_init(&err);
+
+	dbus_message_append_args(query,
+							DBUS_TYPE_UINT32,&RadioID,
+							DBUS_TYPE_BYTE,&wlan_id,
+							DBUS_TYPE_INVALID);
+
+	
+	reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection,query,-1, &err);
+	
+	dbus_message_unref(query);
+	
+	if (NULL == reply) {
+		cli_syslog_info("<error> failed get reply.\n");
+		if (dbus_error_is_set(&err)) {
+			cli_syslog_info("%s raised: %s",err.name,err.message);
+			dbus_error_free(&err);
+		}
+		return CMD_SUCCESS;
+	}
+	dbus_message_iter_init(reply,&iter);
+	dbus_message_iter_get_basic(&iter,&ret);
+	
+	if(ret==WLAN_ID_NOT_EXIST)
+		vty_out(vty,"<error> wlan isn't existed\n");
+	else if(ret == WTP_ID_NOT_EXIST)
+		vty_out(vty,"<error> wtp isn't existed\n");
+	else if(ret == RADIO_ID_NOT_EXIST)
+		vty_out(vty,"<error> radio isn't existed\n");
+	else if(ret==WTP_IS_NOT_BINDING_WLAN_ID)   
+		vty_out(vty,"<error> radio doesn't bind wlan %s\n",argv[0]);
+	else if(ret == WID_DBUS_SUCCESS)
+		vty_out(vty,"set wlan %s traffic limit cancel station average value successfully!\n",argv[0]);
+	else if(ret == IF_POLICY_CONFLICT)
+		vty_out(vty,"<error> station traffic limit value is more than bss traffic limit value\n");
+	else
+		vty_out(vty,"<error> other error\n");
+	dbus_message_unref(reply);
+
+	return CMD_SUCCESS; 
+}
+
+DEFUN(radio_bss_taffic_limit_cancel_average_send_value_func,
+		radio_bss_taffic_limit_cancel_average_send_value_cmd,
+		"wlan ID traffic limit cancel station average send value",
+		"wlan configure\n"
+		"wlan id\n" 
+		"traffic limit\n" 
+		"traffic limit\n"
+		"traffic limit station value \n"
+		"traffic limit station average value\n"
+		"traffic limit station average value \n"
+		"traffic limit station average value (kbps)\n"
+		)
+{
+
+	DBusMessage *query = NULL, *reply = NULL;	
+	DBusMessageIter	 iter;
+	DBusError err;
+	unsigned int ret = 0;
+	unsigned int RadioID;
+	unsigned char wlan_id = 0;
+	
+	wlan_id = atoi(argv[0]);
+	if(wlan_id >= WLAN_NUM || wlan_id == 0){
+		vty_out(vty,"<error> wlan id should be 1 to %d\n",WLAN_NUM-1);
+		return CMD_SUCCESS;
+	}
+	#if 0
+	ret = parse_int_ID((char *)argv[1],&value);
+	
+	if (ret != WID_DBUS_SUCCESS)
+	{	
+		vty_out(vty,"<error> input parameter %s error\n",argv[1]);
+		return CMD_SUCCESS;
+	} 
+	if((value > 884736)||(value < 1))      /*fengwenchao add 20110228  108*1024*8 = 884736*/
+	{
+		vty_out(vty,"<error> input value should be 1 to 884736\n");
+		return CMD_SUCCESS;
+	}
+	#endif
+	int index = 0;
+	int localid = 1;
+    	int slot_id = HostSlotId;
+	char BUSNAME[PATH_LEN];
+	char OBJPATH[PATH_LEN];
+	char INTERFACE[PATH_LEN];
+	if(vty->node == RADIO_NODE){
+		index = 0;			
+		RadioID = (int)vty->index;
+	}else if(vty->node == HANSI_RADIO_NODE){
+		index = vty->index; 		
+		localid = vty->local;
+        		slot_id = vty->slotindex;
+		RadioID = (int)vty->index_sub;
+	}else if (vty->node == LOCAL_HANSI_RADIO_NODE){
+	         index = vty->index;
+	         localid = vty->local;
+	         slot_id = vty->slotindex;
+		RadioID = (int)vty->index_sub;
+    }
+    DBusConnection *dcli_dbus_connection = NULL;
+    ReInitDbusConnection(&dcli_dbus_connection,slot_id,distributFag);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_BUSNAME,BUSNAME);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_RADIO_OBJPATH,OBJPATH);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_RADIO_INTERFACE,INTERFACE);
+	query = dbus_message_new_method_call(BUSNAME,OBJPATH,INTERFACE,WID_DBUS_RADIO_METHOD_WLAN_TRAFFIC_LIMIT_CANCEL_AVERAGE_SEND_VALUE);
+	
+
+	dbus_error_init(&err);
+
+	dbus_message_append_args(query,
+							DBUS_TYPE_UINT32,&RadioID,
+							DBUS_TYPE_BYTE,&wlan_id,
+							DBUS_TYPE_INVALID);
+
+	
+	reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection,query,-1, &err);
+	
+	dbus_message_unref(query);
+	
+	if (NULL == reply) {
+		cli_syslog_info("<error> failed get reply.\n");
+		if (dbus_error_is_set(&err)) {
+			cli_syslog_info("%s raised: %s",err.name,err.message);
+			dbus_error_free(&err);
+		}
+		return CMD_SUCCESS;
+	}
+	dbus_message_iter_init(reply,&iter);
+	dbus_message_iter_get_basic(&iter,&ret);
+	
+	if(ret==WLAN_ID_NOT_EXIST)
+		vty_out(vty,"<error> wlan isn't existed\n");
+	else if(ret == WTP_ID_NOT_EXIST)
+		vty_out(vty,"<error> wtp isn't existed\n");
+	else if(ret == RADIO_ID_NOT_EXIST)
+		vty_out(vty,"<error> radio isn't existed\n");
+	else if(ret==WTP_IS_NOT_BINDING_WLAN_ID)   
+		vty_out(vty,"<error> radio doesn't bind wlan %s\n",argv[0]);
+	else if(ret == WID_DBUS_SUCCESS)
+		vty_out(vty,"set wlan %s traffic limit cancel station average send value successfully!\n",argv[0]);
+	else if(ret == IF_POLICY_CONFLICT)
+		vty_out(vty,"<error> station traffic limit value is more than bss traffic limit value\n");
+	else
+		vty_out(vty,"<error> other error\n");
+	dbus_message_unref(reply);
+
+	return CMD_SUCCESS; 
+}
+
+/*fengwenchao add end*/
 #if 1
 DEFUN(radio_bss_taffic_limit_sta_value_func,
 		radio_bss_taffic_limit_sta_value_cmd,
@@ -24132,6 +24357,8 @@ void dcli_radio_init(void) {
 	install_element(HANSI_RADIO_NODE,&radio_bss_taffic_limit_cmd);
 	install_element(HANSI_RADIO_NODE,&radio_bss_taffic_limit_value_cmd);
 	install_element(HANSI_RADIO_NODE,&radio_bss_taffic_limit_average_value_cmd);
+	install_element(HANSI_RADIO_NODE,&radio_bss_taffic_limit_cancel_average_value_cmd);//fengwenchao add 20130416 for AXSSZFI-1374
+	install_element(HANSI_RADIO_NODE,&radio_bss_taffic_limit_cancel_average_send_value_cmd);//fengwenchao add 20130416 for AXSSZFI-1374
 	install_element(HANSI_RADIO_NODE,&radio_bss_taffic_limit_sta_value_cmd);
 	install_element(HANSI_RADIO_NODE,&radio_bss_taffic_limit_cancel_sta_value_cmd);
 	install_element(HANSI_RADIO_NODE,&radio_bss_taffic_limit_send_value_cmd);
@@ -24237,6 +24464,8 @@ void dcli_radio_init(void) {
 	install_element(LOCAL_HANSI_RADIO_NODE,&radio_bss_taffic_limit_cmd);
 	install_element(LOCAL_HANSI_RADIO_NODE,&radio_bss_taffic_limit_value_cmd);
 	install_element(LOCAL_HANSI_RADIO_NODE,&radio_bss_taffic_limit_average_value_cmd);
+	install_element(LOCAL_HANSI_RADIO_NODE,&radio_bss_taffic_limit_cancel_average_value_cmd);//fengwenchao add 20130416 for AXSSZFI-1374
+	install_element(LOCAL_HANSI_RADIO_NODE,&radio_bss_taffic_limit_cancel_average_send_value_cmd);//fengwenchao add 20130416 for AXSSZFI-1374
 	install_element(LOCAL_HANSI_RADIO_NODE,&radio_bss_taffic_limit_sta_value_cmd);
 	install_element(LOCAL_HANSI_RADIO_NODE,&radio_bss_taffic_limit_cancel_sta_value_cmd);
 	install_element(LOCAL_HANSI_RADIO_NODE,&radio_bss_taffic_limit_send_value_cmd);
