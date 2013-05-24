@@ -74,6 +74,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define FLUX_INTERVAL_FOR_IPTABLES_OR_WIRELESS	20
 
 extern nmp_mutex_t eag_iptables_lock;
+extern int username_check_switch;
 
 /*data base of appconn */
 struct appconn_db {
@@ -83,6 +84,7 @@ struct appconn_db {
 	uint32_t appindex;
 	hashtable *ip_htable;
 	hashtable *mac_htable;
+	hashtable *name_htable;
 
 	uint8_t hansi_type;
 	uint8_t hansi_id;
@@ -132,13 +134,17 @@ appconn_db_create(	uint8_t hansi_type,
 		eag_log_err("appconn_db_create mac hashtable create failed");
 		goto failed_2;
 	}
+	if (EAG_RETURN_OK != hashtable_create_table(&(appdb->name_htable), size)) {
+		eag_log_err("appconn_db_create name hashtable create failed");
+		goto failed_3;
+	}
 	if (EAG_RETURN_OK != eag_blkmem_create(&(appdb->conn_blkmem),
 							APPCONN_BLKMEM_NAME,
 							sizeof(struct app_conn_t),
 							APPCONN_BLKMEM_ITEMNUM, 
 							APPCONN_BLKMEM_MAXNUM)) {
 		eag_log_err("appconn_db_create blkmem_create failed");
-		goto failed_3;
+		goto failed_4;
 	}
 	INIT_LIST_HEAD(&(appdb->head));
 	appdb->hansi_type = hansi_type;
@@ -152,6 +158,8 @@ appconn_db_create(	uint8_t hansi_type,
 	
 	return appdb;
 
+failed_4:
+	hashtable_destroy_table(&(appdb->name_htable));
 failed_3:
 	hashtable_destroy_table(&(appdb->mac_htable));
 failed_2:
@@ -178,6 +186,9 @@ appconn_db_destroy(appconn_db_t *appdb)
 	}
 	if (NULL != appdb->mac_htable) {
 		hashtable_destroy_table(&(appdb->mac_htable));
+	}
+	if (NULL != appdb->name_htable) {
+		hashtable_destroy_table(&(appdb->name_htable));
 	}
 	eag_free(appdb);
 
@@ -258,6 +269,16 @@ appconn_update_mac_htable(appconn_db_t *appdb,
 					&(appconn->mac_hnode));
 }
 
+static int
+appconn_update_name_htable(appconn_db_t *appdb,
+						struct app_conn_t *appconn)
+{
+	return hashtable_check_add_node(appdb->name_htable,
+					&(appconn->session.username),
+					strlen(appconn->session.username),
+					&(appconn->name_hnode));
+}
+
 int
 appconn_add_to_db(appconn_db_t *appdb, 
 					struct app_conn_t *appconn)
@@ -270,6 +291,27 @@ appconn_add_to_db(appconn_db_t *appdb,
 	list_add_tail(&(appconn->node), &(appdb->head));
 	appconn_update_ip_htable(appdb, appconn);
 	appconn_update_mac_htable(appdb, appconn);
+	if (1 == username_check_switch 
+		&& NULL != appconn->session.username 
+		&& 0 != strlen(appconn->session.username)) {
+    	appconn_update_name_htable(appdb, appconn);
+	}else{
+		INIT_HLIST_NODE(&(appconn->name_hnode));
+	}
+
+	return EAG_RETURN_OK;
+}
+
+int
+appconn_add_name_to_db(appconn_db_t *appdb, 
+					struct app_conn_t *appconn)
+{
+	if (NULL == appdb || NULL == appconn) {
+		eag_log_err("appconn_add_naem_to_db input error");
+		return -1;
+	}
+	
+	appconn_update_name_htable(appdb, appconn);
 
 	return EAG_RETURN_OK;
 }
@@ -285,6 +327,26 @@ appconn_del_from_db(struct app_conn_t *appconn)
 	list_del(&(appconn->node));
 	hlist_del(&(appconn->ip_hnode));
 	hlist_del(&(appconn->mac_hnode));
+
+	return EAG_RETURN_OK;
+}
+
+int
+appconn_del_name_from_db(struct app_conn_t *appconn)
+{
+	if (NULL == appconn) {
+		eag_log_err("appconn_del_name_from_db input error");
+		return -1;
+	}
+
+	if (1 == username_check_switch 
+		&& NULL != appconn->session.username 
+		&& 0 != strlen(appconn->session.username)
+		&& NULL != appconn->name_hnode.next
+		&& NULL != appconn->name_hnode.pprev ) 
+	{
+    	hlist_del(&(appconn->name_hnode));
+	}
 
 	return EAG_RETURN_OK;
 }
@@ -341,6 +403,33 @@ appconn_find_by_usermac(appconn_db_t *appdb,
 
 	debug_appconn("appconn_find_by_usermac, not find user, usermac=%s",
 			macstr);
+	return NULL;
+}
+
+struct app_conn_t *
+appconn_find_by_username(appconn_db_t *appdb,
+					const uint8_t *username)
+{
+	struct app_conn_t *appconn = NULL;
+	struct hlist_head *head = NULL;
+	struct hlist_node *node = NULL;
+
+	head = hashtable_get_hash_list(appdb->name_htable, username, strlen(username));
+	if (NULL == head) {
+		eag_log_err("appconn_find_by_username "
+			"hashtable_get_hash_list failed, username %s", username);
+		return NULL;
+	}
+
+	hlist_for_each_entry(appconn, node, head, name_hnode) {
+		if (0 == memcmp(appconn->session.username, username,
+						sizeof(appconn->session.username))) {
+			return appconn;
+		}
+	}
+
+	debug_appconn("appconn_find_by_username, not find user, username=%s",
+			username);
 	return NULL;
 }
 

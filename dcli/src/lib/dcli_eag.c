@@ -5674,6 +5674,10 @@ eag_base_config_show_running(struct vty* vty)
 			snprintf(showStr, sizeof(showStr), " set log-format henan on");
 			vtysh_add_show_string(showStr);		
 		}
+		if (1 == baseconf.username_check) {
+			snprintf(showStr, sizeof(showStr), " set username-check on");
+			vtysh_add_show_string(showStr);		
+		}
 		if (1 == baseconf.l2super_vlan) {
 			snprintf(showStr, sizeof(showStr), " set l2super-vlan enable");
 			vtysh_add_show_string(showStr);		
@@ -5827,6 +5831,9 @@ eag_base_config_show_running_2(int localid, int slot_id,int index)
 		}
 		if (1 == baseconf.henan_log) {
 			totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1, " set log-format henan on\n");
+		}
+		if (1 == baseconf.username_check) {
+			totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1, " set username-check on\n");
 		}
 		if (1 == baseconf.l2super_vlan) {
 			totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1, " set l2super-vlan enable\n");
@@ -7578,6 +7585,7 @@ DEFUN(show_eag_base_conf_func,
 		vty_out(vty, "mac-auth notice-bindserver:%s\n", (1 == baseconf.macauth_notice_bindserver)?"enable":"disable");
 		vty_out(vty, "log-format autelan        :%s\n", (1 == baseconf.autelan_log)?"on":"off");
 		vty_out(vty, "log-format henan          :%s\n", (1 == baseconf.henan_log)?"on":"off");
+		vty_out(vty, "username check            :%s\n", (1 == baseconf.username_check)?"on":"off");
 		vty_out(vty, "l2super-vlan              :%s\n", (1 == baseconf.l2super_vlan)?"enable":"disable");
 		vty_out(vty, "pdc-distributed switch    :%s\n", (1 == baseconf.pdc_distributed) ? "on" : "off");
 	}
@@ -11173,6 +11181,7 @@ DEFUN(eag_show_portal_conf_func,
 			vty_out(vty, "mac server port			:%u\n", portalconf.portal_srv[i].mac_server_port);
 			
 			vty_out(vty, "portal acip-to-url		:%s\n", (1 == portalconf.portal_srv[i].acip_to_url)?"enable":"disable");
+			vty_out(vty, "portal usermac-to-url		:%s\n", (1 == portalconf.portal_srv[i].usermac_to_url)?"enable":"disable");			
 			vty_out(vty, "portal nasid-to-url		:%s\n", (1 == portalconf.portal_srv[i].nasid_to_url)?"enable":"disable");
 			vty_out(vty, "portal wlanparameter		:%s\n", (1==portalconf.portal_srv[i].wlanparameter)?"enable":"disable");
 			if (1 == portalconf.portal_srv[i].wlanparameter) {
@@ -13622,6 +13631,46 @@ DEFUN(eag_set_log_format_status_func,
 	return CMD_SUCCESS;
 }
 
+DEFUN(eag_set_username_check_status_func,
+	eag_set_username_check_status_cmd,
+	"set username-check (on|off)",
+	SETT_STR
+	"username-check\n"
+	"on\n"
+	"off\n"
+)
+{
+	int ret = 0;
+	int status = 0;
+
+	EAG_DCLI_INIT_HANSI_INFO
+
+	if (strncmp(argv[0], "on", strlen(argv[1])) == 0) {
+		status = 1;
+	}
+	else if (strncmp(argv[0], "off", strlen(argv[1])) == 0) {
+		status = 0;
+	}
+	else{
+		vty_out(vty, "%% unknown error\n");
+		return CMD_WARNING;
+	}
+	
+	ret = eag_set_username_check_status( dcli_dbus_connection_curr, hansitype, insid, status);
+
+	if (EAG_RETURN_OK == ret) {
+		return CMD_SUCCESS;
+	}
+	else if (EAG_ERR_DBUS_FAILED == ret) {
+		vty_out(vty, "%% dbus error\n");
+	}
+	else {
+		vty_out(vty, "%% unknown error: %d\n", ret);
+	}
+	
+	return CMD_SUCCESS;
+}
+
 DEFUN(config_eag_debug_cmd_func,
 	config_eag_debug_cmd,
 	"debug eag (all|error|warning|notice|info|debug) <0-1> <0-16>",
@@ -14339,6 +14388,10 @@ dcli_eag_init(void)
 	install_element(EAG_NODE, &eag_set_log_format_status_cmd);
 	install_element(HANSI_EAG_NODE, &eag_set_log_format_status_cmd);
 	install_element(LOCAL_HANSI_EAG_NODE, &eag_set_log_format_status_cmd);
+	
+	install_element(EAG_NODE, &eag_set_username_check_status_cmd);
+	install_element(HANSI_EAG_NODE, &eag_set_username_check_status_cmd);
+	install_element(LOCAL_HANSI_EAG_NODE, &eag_set_username_check_status_cmd);
 
 	install_element(EAG_NODE, &eag_add_debug_filter_cmd);
 	install_element(HANSI_EAG_NODE, &eag_add_debug_filter_cmd);

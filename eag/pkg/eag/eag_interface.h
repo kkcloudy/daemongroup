@@ -79,6 +79,7 @@ struct eag_base_conf {
 	int autelan_log;
 	int henan_log;
 	int l2super_vlan;
+	int username_check;
 };
 
 struct api_nasid_map_t {
@@ -921,6 +922,10 @@ int
 eag_set_log_format_status( DBusConnection *connection, 
 				int hansitype, int insid,
 				int key, int status);
+int
+eag_set_username_check_status( DBusConnection *connection, 
+				int hansitype, int insid,
+				int status);
 
 int
 eag_add_debug_filter( DBusConnection *connection, 

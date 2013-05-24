@@ -56,10 +56,16 @@ char * replaceStrPart(char *Src, const char * sReplace)
 		return -1;
 	}
 	char * replace = NULL;
+	int partLen = 0;
+	replace = strchr(Src, '?');
+	if (NULL != replace) {
+		//fprintf(stderr,"before replace=%s\n" ,replace );
+		partLen = strlen(replace);
+		memset(replace, 0, partLen);
+	}
 	replace = strrchr(Src, '//');
-	//fprintf(stderr,"before replace=%s\n" ,replace );
-	int partLen = strlen(replace);
-	memset(replace, "\0", partLen);
+	partLen = strlen(replace);
+	memset(replace, 0, partLen);
 	//fprintf(stderr,"inner Src=%s\n" ,Src );
 	memcpy(replace, sReplace, strlen(sReplace)+1);
 	//fprintf(stderr,"later Src=%s\n" ,Src );

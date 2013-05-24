@@ -83,6 +83,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 #define PORTAL_ERR_REASON_USER_NAME_WRONG	"Username length is too long or too short."
+#define PORTAL_ERR_REASON_USER_NAME_EXIT	"Username is already exit."
 #define PORTAL_ERR_REASON_USER_PASSWD_WRONG	"User password is wrong."
 #define PORTAL_ERR_REASON_USER_STATE_WRONG	"User session state is wrong."
 #define PORTAL_ERR_REASON_APPCONN_FAILED	"This is a wired user or user has no redir."
@@ -96,6 +97,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define PORTAL_ERR_REASON_UNKNOWN_ERR		"Other reason."
 
 int notice_to_bindserver  = 1; 	/* 默认为 浙江MAC认证 */
+int username_check_switch = 0; /*默认为 印尼Telkom*/
 
 typedef struct portal_sess portal_sess_t;
 
@@ -423,6 +425,16 @@ portal_detect_unique_reqid(eag_portal_t *portal)
 
 	eag_log_debug("eag_portal","portal_detect_unique_reqid reqid %#x", reqid);
 	return reqid;
+}
+
+int
+eag_portal_username_check_switch(int status)
+{
+	if (0 != status && 1 != status) {
+		return -1;
+	}
+
+	username_check_switch = status;
 }
 
 int
@@ -1438,6 +1450,7 @@ eag_portal_chapauth_proc(eag_portal_t *portal,
 	struct appsession tmpsession = {0};
 	char *err_reason = "";
 	char session_filter_prefix[512] = ""; /* add for debug-filter */
+	struct app_conn_t *appconn_by_name = NULL;
 	
 	if (NULL == portal || NULL == reqpkt) {
 		eag_log_err("eag_portal_chapauth_proc input error");
@@ -1606,7 +1619,27 @@ eag_portal_chapauth_proc(eag_portal_t *portal,
 			err_reason = PORTAL_ERR_REASON_USER_NAME_WRONG;
 			break;
 		}
-		
+
+		if (1 == username_check_switch) {
+			appconn_by_name = appconn_find_by_username(portal->appdb, appconn->session.username);
+	    
+			if (NULL != appconn_by_name && APPCONN_STATUS_AUTHED == appconn_by_name->session.state) {
+		        eag_log_warning("eag_portal_chapauth_proc username %s, "
+		            "appconn is not null", appconn->session.username);
+				tmp_appconn = appconn;
+		        if (PORTAL_PROTOCOL_TELECOM == portal_get_protocol_type()) {
+		            goto check_appconn;
+		        }
+		        rsppkt.err_code = PORTAL_AUTH_REJECT;
+		        err_reason = PORTAL_ERR_REASON_USER_NAME_EXIT;
+		        eag_log_filter(user_ipstr,"PortalReqAuth___UserIP:%s,UserName:%s,ChapAuth",
+		            user_ipstr, appconn->session.username);
+		        admin_log_notice("PortalReqAuth___UserIP:%s,UserName:%s,ChapAuth",
+		            user_ipstr, appconn->session.username);
+		        goto send;
+		    }
+		}
+
 		ret = appconn_config_radiussrv_by_domain(appconn, portal->radiusconf);
 		if (EAG_RETURN_OK != ret) {
 			eag_log_err("eag_portal_chapauth_proc userip %s, "
@@ -1771,12 +1804,16 @@ send:
 	}
 
 check_appconn:
-	if (EAG_ERR_APPCONN_APP_IS_CONFLICT == app_check_ret && NULL != tmp_appconn) {
+	if ((EAG_ERR_APPCONN_APP_IS_CONFLICT == app_check_ret && NULL != tmp_appconn) 
+		|| (1 == username_check_switch && NULL != appconn_by_name)) {
 		if (APPCONN_STATUS_AUTHED == tmp_appconn->session.state) {
 			terminate_appconn_nowait(tmp_appconn, portal->eagins, RADIUS_TERMINATE_CAUSE_LOST_CARRIER);
 		} else {
 			appconn_del_from_db(tmp_appconn);
 			appconn_free(tmp_appconn);
+			if (1 == username_check_switch && NULL != appconn_by_name) {
+				appconn = NULL;
+			}
 		}
 		tmp_appconn = NULL;
 	}
@@ -1809,6 +1846,7 @@ eag_portal_papauth_proc(eag_portal_t *portal,
 	struct appsession tmpsession = {0};
 	char *err_reason = "";
 	char session_filter_prefix[512] = ""; /* add for debug-filter */
+    struct app_conn_t *appconn_by_name = NULL;
 
 	if (NULL == portal || NULL == reqpkt) {
 		eag_log_err("eag_portal_papauth_proc input error");
@@ -1960,6 +1998,26 @@ eag_portal_papauth_proc(eag_portal_t *portal,
 			rsppkt.err_code = PORTAL_AUTH_REJECT;
 			err_reason = PORTAL_ERR_REASON_USER_NAME_WRONG;
 			break;
+		}
+		
+		if (1 == username_check_switch) {
+			appconn_by_name = appconn_find_by_username(portal->appdb, appconn->session.username);
+	    
+			if (NULL != appconn_by_name && APPCONN_STATUS_AUTHED == appconn_by_name->session.state) {
+		        eag_log_warning("eag_portal_chapauth_proc username %s, "
+		            "appconn is not null", appconn->session.username);
+				tmp_appconn = appconn;
+		        if (PORTAL_PROTOCOL_TELECOM == portal_get_protocol_type()) {
+		            goto check_appconn;
+		        }
+		        rsppkt.err_code = PORTAL_AUTH_REJECT;
+		        err_reason = PORTAL_ERR_REASON_USER_NAME_EXIT;
+		        eag_log_filter(user_ipstr,"PortalReqAuth___UserIP:%s,UserName:%s,PapAuth",
+		            user_ipstr, appconn->session.username);
+		        admin_log_notice("PortalReqAuth___UserIP:%s,UserName:%s,PapAuth",
+		            user_ipstr, appconn->session.username);
+		        goto send;
+		    }
 		}
 		
 		ret = appconn_config_radiussrv_by_domain(appconn,
@@ -2114,12 +2172,16 @@ send:
 	}
 
 check_appconn:
-	if (EAG_ERR_APPCONN_APP_IS_CONFLICT == app_check_ret && NULL != tmp_appconn) {
+	if ((EAG_ERR_APPCONN_APP_IS_CONFLICT == app_check_ret && NULL != tmp_appconn) 
+		|| (1 == username_check_switch && NULL != appconn_by_name)) {
 		if (APPCONN_STATUS_AUTHED == tmp_appconn->session.state) {
 			terminate_appconn_nowait(tmp_appconn, portal->eagins, RADIUS_TERMINATE_CAUSE_LOST_CARRIER);
 		} else {
 			appconn_del_from_db(tmp_appconn);
 			appconn_free(tmp_appconn);
+			if (1 == username_check_switch && NULL != appconn_by_name) {
+				appconn = NULL;
+			}
 		}
 		tmp_appconn = NULL;
 	}
@@ -3401,6 +3463,10 @@ eag_portal_auth_success(eag_portal_t *portal,
 	appconn->session.last_connect_ap_time = timenow;
 	appconn->session.last_acct_time = timenow;
 	appconn->session.last_flux_time = timenow;
+
+    if (1 == username_check_switch) {
+        appconn_add_name_to_db(portal->appdb, appconn);
+    }
 
 	/* acct */
 	radius_acct(portal->radius, appconn, RADIUS_STATUS_TYPE_START);

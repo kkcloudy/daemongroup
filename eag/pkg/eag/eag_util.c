@@ -149,7 +149,7 @@ mac2str(const uint8_t mac[6], char *str, size_t size, char separator)
 	}
 
 	memset(str, 0, size);
-	snprintf(str, size-1, "%02X%c%02X%c%02X%c%02X%c%02X%c%02X",
+	snprintf(str, size-1, "%02x%c%02x%c%02x%c%02x%c%02x%c%02x",
 		mac[0], separator, mac[1], separator, mac[2], separator,
 		mac[3], separator, mac[4], separator, mac[5]);
 

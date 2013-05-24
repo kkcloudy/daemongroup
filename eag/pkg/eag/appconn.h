@@ -55,6 +55,7 @@ struct app_conn_t {
 	struct list_head node;
 	struct hlist_node ip_hnode;
 	struct hlist_node mac_hnode;
+	struct hlist_node name_hnode;
 	appconn_db_t *appdb;
 	char sub_intf[MAX_IF_NAME_LEN];
 
@@ -94,8 +95,14 @@ int
 appconn_free(struct app_conn_t *appconn);
 
 int
+appconn_add_name_to_db(appconn_db_t *appdb,
+		struct app_conn_t *appconn);
+
+int
 appconn_add_to_db(appconn_db_t *appdb,
 		struct app_conn_t *appconn);
+int
+appconn_del_name_from_db(struct app_conn_t *appconn);
 
 int
 appconn_del_from_db(struct app_conn_t *appconn);

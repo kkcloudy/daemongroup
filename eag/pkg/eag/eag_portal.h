@@ -192,6 +192,9 @@ int
 eag_portal_log_all_portalsess(eag_portal_t *portal);
 
 int
+eag_portal_username_check_switch(int status);
+
+int
 eag_portal_set_macauth(eag_portal_t *portal,
 		eag_macauth_t *macauth);
 

@@ -66,6 +66,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define EAG_REDIR_BLKMEM_BLKNUM		256
 #define EAG_REDIR_BLKMEM_MAXNUM		16
 
+extern int username_check_switch;
+
 #define EAG_REDIR_READ_TIME_OUT		5
 #define EAG_REDIR_WRITE_TIME_OUT	5
 
@@ -712,27 +714,29 @@ eag_redirconn_build_redirurl( eag_redirconn_t *redirconn )
 		}
 	}
 
-	/*wlanuserfirsturl_to_url*/
-	if (1 == portal_srv->wlanuserfirsturl) {
-		char userfirsturl[512];
-		snprintf(userfirsturl, sizeof(userfirsturl)-1,"http://%s%s",
-						redirconn->request_host, redirconn->request_url);
-		strncat( redirconn->redirurl, "&wlanuserfirsturl=", sizeof(redirconn->redirurl)-strlen(redirconn->redirurl));
-		strncat( redirconn->redirurl, userfirsturl,
-				 sizeof(redirconn->redirurl)-strlen(redirconn->redirurl));
-	}
 	/* wlanapmac */
 	if (1 == portal_srv->wlanapmac) {
 		char apmac_str[20] = {0};
-		build_wlanapmac(apmac_str, appconn->session.apmac, sizeof(apmac_str));
-		strncat( redirconn->redirurl, "&wlanapmac=", sizeof(redirconn->redirurl)-strlen(redirconn->redirurl));
+		char para_apmac_name[16] = "&wlanapmac=";
+		if (1 == username_check_switch) {
+			memset(para_apmac_name, 0, sizeof(para_apmac_name));
+			strncpy(para_apmac_name, "&ap_mac=", sizeof(para_apmac_name)-1);
+		}
+		//build_wlanapmac(apmac_str, appconn->session.apmac, sizeof(apmac_str));	
+		mac2str( appconn->session.apmac, (char *)apmac_str, sizeof(apmac_str), ':');
+		strncat( redirconn->redirurl, para_apmac_name, sizeof(redirconn->redirurl)-strlen(redirconn->redirurl));
 		strncat( redirconn->redirurl, apmac_str, sizeof(redirconn->redirurl)-strlen(redirconn->redirurl));
 	}
 	/* usermac to url */
 	if (1 == portal_srv->usermac_to_url) {
 		char usermac_str[24];
+		char para_usermac_name[16] = "&usermac=";
+		if (1 == username_check_switch) {
+			memset(para_usermac_name, 0, sizeof(para_usermac_name));
+			strncpy(para_usermac_name, "&client_mac=", sizeof(para_usermac_name)-1);
+		}
 		mac2str( appconn->session.usermac, (char *)usermac_str, sizeof(usermac_str), ':');
-		strncat( redirconn->redirurl, "&usermac=", sizeof(redirconn->redirurl)-strlen(redirconn->redirurl));
+		strncat( redirconn->redirurl, para_usermac_name, sizeof(redirconn->redirurl)-strlen(redirconn->redirurl));
 		strncat( redirconn->redirurl, usermac_str, sizeof(redirconn->redirurl)-strlen(redirconn->redirurl));
 	}
 	/* wlanusermac*/
@@ -785,7 +789,12 @@ eag_redirconn_build_redirurl( eag_redirconn_t *redirconn )
 		strncat (redirconn->redirurl, wisprloginurl_encode, sizeof(redirconn->redirurl)-strlen(redirconn->redirurl));
 	}
 	/* essid */
-	strncat(redirconn->redirurl, "&ssid=", sizeof(redirconn->redirurl)-strlen(redirconn->redirurl));	
+    char para_essid_name[16] = "&ssid=";
+    if (1 == username_check_switch) {
+		memset(para_essid_name, 0, sizeof(para_essid_name));
+		strncpy(para_essid_name, "&wlan=", sizeof(para_essid_name)-1);
+    }
+	strncat(redirconn->redirurl, para_essid_name, sizeof(redirconn->redirurl)-strlen(redirconn->redirurl));	
 	strncat(redirconn->redirurl, appconn->session.essid, sizeof(redirconn->redirurl)-strlen(redirconn->redirurl));
 
 	/* url-suffix */
@@ -793,6 +802,21 @@ eag_redirconn_build_redirurl( eag_redirconn_t *redirconn )
 		strncat( redirconn->redirurl, "&", sizeof(redirconn->redirurl)-strlen(redirconn->redirurl));
 		strncat( redirconn->redirurl, portal_srv->url_suffix, sizeof(redirconn->redirurl)-strlen(redirconn->redirurl));
 	}
+	
+    /*wlanuserfirsturl_to_url*/
+    if (1 == portal_srv->wlanuserfirsturl) {
+        char userfirsturl[512];
+		char para_firsturl_name[32] = "&wlanuserfirsturl=";
+    	if (1 == username_check_switch) {
+			memset(para_firsturl_name, 0, sizeof(para_firsturl_name));
+			strncpy(para_firsturl_name, "&redirect=", sizeof(para_firsturl_name)-1);
+    	}
+        snprintf(userfirsturl, sizeof(userfirsturl)-1,"http://%s%s",
+                        redirconn->request_host, redirconn->request_url);
+        strncat( redirconn->redirurl, para_firsturl_name, sizeof(redirconn->redirurl)-strlen(redirconn->redirurl));
+        strncat( redirconn->redirurl, userfirsturl,
+                 sizeof(redirconn->redirurl)-strlen(redirconn->redirurl));
+    }
 
 	eag_log_info("eag_redirconn_build_redirurl userip %s, redirURL = (%s)",
 			user_ipstr, redirconn->redirurl);

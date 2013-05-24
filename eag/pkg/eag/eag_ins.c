@@ -109,6 +109,7 @@ int cmtest_no_authorize = 0;
 int l2super_vlan_switch_t = 0;
 
 extern int notice_to_bindserver;
+extern int username_check_switch;
 
 struct eag_ins {
 	int status;
@@ -808,6 +809,9 @@ terminate_appconn(struct app_conn_t *appconn,
 	}
 	
 	appconn_del_from_db(appconn);
+	if(1 == username_check_switch) {
+		appconn_del_name_from_db(appconn);
+	}
 	appconn_free(appconn);
 }
 
@@ -923,6 +927,9 @@ terminate_appconn_nowait(struct app_conn_t *appconn,
 	}
 	
 	appconn_del_from_db(appconn);
+	if(1 == username_check_switch) {
+		appconn_del_name_from_db(appconn);
+	}	
 	appconn_free(appconn);
 }
 
@@ -954,6 +961,9 @@ terminate_appconn_without_ntf(struct app_conn_t *appconn,
 	appdb_authed_user_num_decrease(eagins->appdb);
 
 	appconn_del_from_db(appconn);
+	if(1 == username_check_switch) {
+		appconn_del_name_from_db(appconn);
+	}	
 	appconn_free(appconn);
 }
 
@@ -1068,6 +1078,9 @@ terminate_appconn_without_backup(struct app_conn_t *appconn,
 	}
 	
 	appconn_del_from_db(appconn);
+	if(1 == username_check_switch) {
+		appconn_del_name_from_db(appconn);
+	}	
 	appconn_free(appconn);
 }
 
@@ -3477,6 +3490,7 @@ eag_dbus_method_get_base_conf(
 	int notice_bindserver = 0;
 	int autelan_log = 0;
 	int henan_log = 0;
+	int username_check = 0;
 	int l2super_vlan = 0;
 	
 	reply = dbus_message_new_method_return(msg);
@@ -3613,6 +3627,9 @@ replyx:
 		henan_log = henan_log_switch;
 		dbus_message_iter_append_basic(&iter, 
 								DBUS_TYPE_INT32, &henan_log);
+		username_check = username_check_switch;
+		dbus_message_iter_append_basic(&iter, 
+								DBUS_TYPE_INT32, &username_check);
 		l2super_vlan= l2super_vlan_switch_t;
 		dbus_message_iter_append_basic(&iter, 
 								DBUS_TYPE_INT32, &l2super_vlan);
@@ -5098,6 +5115,7 @@ eag_dbus_method_get_portal_conf(
 	char *domain=NULL;
 	char *acname = NULL;
 	int acip_to_url = 0;
+	int usermac_to_url = 0;
 	int nasid_to_url = 0;
 	int wlanparameter = 0;
 	char *deskey = NULL;
@@ -5155,7 +5173,8 @@ replyx:
 									DBUS_TYPE_STRING_AS_STRING/*acname*/
 									DBUS_TYPE_UINT32_AS_STRING/*mac bind server ip*/
 									DBUS_TYPE_UINT16_AS_STRING/*mac bind server port*/
-									DBUS_TYPE_INT32_AS_STRING/*acip to url*/
+									DBUS_TYPE_INT32_AS_STRING/*acip to url*/			
+        							DBUS_TYPE_INT32_AS_STRING/*usermac to url*/
 									DBUS_TYPE_INT32_AS_STRING/*nasid to url*/
 									DBUS_TYPE_INT32_AS_STRING/*wlanparameter*/
 									DBUS_TYPE_STRING_AS_STRING/*DES key*/
@@ -5235,6 +5254,10 @@ replyx:
 			acip_to_url = portal_srv[i].acip_to_url;
 			dbus_message_iter_append_basic(&iter_struct,
 											DBUS_TYPE_INT32, &acip_to_url);
+
+			usermac_to_url = portal_srv[i].usermac_to_url;
+			dbus_message_iter_append_basic(&iter_struct,
+											DBUS_TYPE_INT32, &usermac_to_url);
 
 			nasid_to_url = portal_srv[i].nasid_to_url;
 			dbus_message_iter_append_basic(&iter_struct,
@@ -9808,6 +9831,50 @@ replyx:
 	return reply;
 }
 
+DBusMessage *
+eag_dbus_method_set_username_check_status(
+				DBusConnection *conn, 
+				DBusMessage *msg, 
+				void *user_data )
+{
+	DBusMessage *reply = NULL;
+	DBusMessageIter iter = {0};
+	DBusError err = {0};
+	int ret = -1;
+	int status = 0;
+
+	reply = dbus_message_new_method_return(msg);
+	if (NULL == reply) {
+		eag_log_err("eag_dbus_method_set_username_check_status "
+					"DBUS new reply message error");
+		return NULL;
+	}
+
+	dbus_error_init(&err);
+	if (!(dbus_message_get_args(msg ,&err,
+								DBUS_TYPE_INT32, &status,
+								DBUS_TYPE_INVALID))){
+		eag_log_err("eag_dbus_method_set_username_check_status "
+					"unable to get input args");
+		if (dbus_error_is_set(&err)) {
+			eag_log_err("eag_dbus_method_set_username_check_status %s raised:%s",
+						err.name, err.message);
+			dbus_error_free(&err);
+		}
+		ret = EAG_ERR_DBUS_FAILED;
+		goto replyx;
+	}	
+
+	eag_portal_username_check_switch(status);
+	ret = EAG_RETURN_OK;
+
+replyx:
+	dbus_message_iter_init_append(reply, &iter);
+	dbus_message_iter_append_basic(&iter,
+								DBUS_TYPE_INT32, &ret);
+
+	return reply;
+}
 
 DBusMessage *
 eag_dbus_method_log_debug_on(
@@ -10209,6 +10276,8 @@ eagins_register_all_dbus_method(eag_ins_t *eagins)
 		EAG_DBUS_INTERFACE, eag_dbus_method_set_user_log_status, eagins);
 	eag_dbus_register_method(eagins->eagdbus,
 		EAG_DBUS_INTERFACE, eag_dbus_method_set_log_format_status, eagins);
+	eag_dbus_register_method(eagins->eagdbus,
+		EAG_DBUS_INTERFACE, eag_dbus_method_set_username_check_status, eagins);
 	eag_dbus_register_method(eagins->eagdbus,
 		EAG_DBUS_INTERFACE, eag_dbus_method_log_debug_on, eagins);
 	eag_dbus_register_method(eagins->eagdbus,
