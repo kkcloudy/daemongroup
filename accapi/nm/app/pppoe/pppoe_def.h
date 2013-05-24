@@ -1,3 +1,4 @@
+#ifndef _VERSION_18SP7_
 #ifndef _PPPOE_DEF_H
 #define _PPPOE_DEF_H
 
@@ -61,4 +62,6 @@ typedef enum {
 }PPPOELogToken;
 
 
-#endif
+#endif /* !_PPPOE_DEF_H */
+#endif /* !_VERSION_18SP7_ */
+

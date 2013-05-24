@@ -1267,6 +1267,7 @@ static void HANSI_DELETE_EAG( int InstID, int islocaled ){
 /*end add for del eag hansi*/
 
 /*lixiang add for del pppoe hansi 20120817*/
+#ifndef _VERSION_18SP7_
 static void HANSI_DELETE_PPPOE( int InstID, int islocaled ){
 	char command[256];
 	if( islocaled ){
@@ -1279,6 +1280,7 @@ static void HANSI_DELETE_PPPOE( int InstID, int islocaled ){
 		system(command);		
 	}
 }
+#endif
 /*end add for del pppoe hansi*/
 
 /*xiaodw add for delete femto iu&iuh*/
@@ -1336,7 +1338,9 @@ void HANSI_DELETE(int InstID, int islocaled){
 /*end add for del eag hansi*/
 
 	/*lixiang add for del pppoe hansi 20120817*/
+#ifndef _VERSION_18SP7_ 
 	HANSI_DELETE_PPPOE(InstID, islocaled);
+#endif
 	/*end add for del pppoe hansi*/
 
 	/*xiaodw add for del femto iu&iuh*/

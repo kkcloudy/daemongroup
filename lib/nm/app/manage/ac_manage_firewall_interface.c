@@ -266,6 +266,7 @@ ac_manage_del_firewall_rule(DBusConnection *connection, u_long rule_type, u_long
 	return ret;
 }
 
+#ifndef _VERSION_18SP7_
 int
 ac_manage_config_nat_udp_timeout(DBusConnection *connection, u_long timeout) {
 	DBusMessage *query, *reply;
@@ -303,7 +304,7 @@ ac_manage_config_nat_udp_timeout(DBusConnection *connection, u_long timeout) {
 	dbus_message_unref(reply);
 	return ret;
 }
-
+#endif
 
 int 
 ac_manage_show_firewall_rule(DBusConnection *connection, 

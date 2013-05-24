@@ -94,7 +94,9 @@ int downlink_leave_master_timer[VRRP_MAX_VRID] = {0};
 int transfer_timer_start[MAX_HANSI_PROFILE] = {0};
 int wid_transfer_state[MAX_HANSI_PROFILE]={0};
 int portal_transfer_state[MAX_HANSI_PROFILE]= {0};
+#ifndef _VERSION_18SP7_
 int pppoe_transfer_state[MAX_HANSI_PROFILE]= {0};
+#endif
 
 int service_enable[MAX_HANSI_PROFILE] = {0};
 /*
@@ -220,7 +222,9 @@ static char	PidDir[FILENAME_MAX+1];
 int uplink_ip_id = 0;
 int downlink_ip_id = 0;
 int global_protal = 1;/*eag is default running in 2.0!!! shaojunwu 2011-09-19*/
+#ifndef _VERSION_18SP7_
 int global_pppoe = 1;
+#endif
 int global_hmd = 1;
 int global_state_change_bit = 0;
 /* while notifying to trap set to 1 ,wid set to 2,portal set to 3,dhcp set to 4 */
@@ -5895,6 +5899,8 @@ DBUS_TYPE_UINT32					// opposite heartbeat ip address
 	global_notifying_flag = VRRP_NOTIFY_NONE;
 	return op_ret;
 }
+
+#ifndef _VERSION_18SP7_
 	int had_notify_to_pppoe
 (
 	vrrp_rt *vrrp,
@@ -6411,6 +6417,7 @@ DBUS_TYPE_UINT32					// opposite heartbeat ip address
 	global_notifying_flag = VRRP_NOTIFY_NONE;
 	return op_ret;
 }
+#endif
 
 /* book add for had_notify_hmd, 2011-5-10 */
 int had_notify_to_hmd
@@ -7814,9 +7821,11 @@ static void had_state_goto_master
 		if (global_protal) {
 		   had_notify_to_protal(vsrv,VRRP_STATE_BACK);
 		}
+	#ifndef _VERSION_18SP7_	
 		if(global_pppoe){
 			had_notify_to_pppoe(vsrv,VRRP_STATE_BACK);
 		}
+	#endif	
 had_notify_to_hmd(vsrv,VRRP_STATE_BACK);
 
 		had_notify_to_dhcp_failover(vsrv,VRRP_STATE_BACK);
@@ -7828,9 +7837,11 @@ had_notify_to_hmd(vsrv,VRRP_STATE_BACK);
 		if (global_protal) {
 		   had_notify_to_protal(vsrv,VRRP_STATE_MAST);
 		}
+	#ifndef _VERSION_18SP7_		
 		if (global_pppoe) {
 		   had_notify_to_pppoe(vsrv,VRRP_STATE_MAST);
 		}
+	#endif		
 	had_notify_to_hmd(vsrv,VRRP_STATE_MAST);
 		had_notify_to_dhcp_failover(vsrv,VRRP_STATE_MAST);
 	}
@@ -8231,9 +8242,11 @@ void had_state_leave_master
 		if (global_protal) {
 		   had_notify_to_protal(vsrv,VRRP_STATE_DISABLE);
 		}
+	#ifndef _VERSION_18SP7_
 		if(global_pppoe) {
 		   had_notify_to_pppoe(vsrv,VRRP_STATE_DISABLE);
 		}
+	#endif	
 		/* book add, 2011-5-11 */
 		had_notify_to_hmd(vsrv,VRRP_STATE_DISABLE);
 		
@@ -8301,9 +8314,11 @@ back:
 		if (global_protal) {
 		   had_notify_to_protal(vsrv,VRRP_STATE_BACK);
 		}
+	#ifndef _VERSION_18SP7_	
 		if (global_pppoe) {
 		   had_notify_to_pppoe(vsrv,VRRP_STATE_BACK);
 		}
+	#endif	
 		 had_notify_to_hmd(vsrv,VRRP_STATE_BACK);
 		had_notify_to_dhcp_failover(vsrv,VRRP_STATE_BACK);
 		#endif
@@ -9082,9 +9097,11 @@ void had_state_goto_disable
 	if (global_protal) {
 	   had_notify_to_protal(vsrv,VRRP_STATE_DISABLE);
 	}
+#ifndef _VERSION_18SP7_	
 	if (global_pppoe) {
 	   had_notify_to_pppoe(vsrv,VRRP_STATE_DISABLE);
 	}
+#endif	
 	/* book add, 2011-5-11 */
 	had_notify_to_hmd(vsrv,VRRP_STATE_DISABLE);
 	
@@ -9220,9 +9237,11 @@ int had_state_from_disable
 		if (global_protal) {
 		   had_notify_to_protal(vsrv, VRRP_STATE_BACK);
 		}
+	#ifndef _VERSION_18SP7_
 		if (global_pppoe) {
 		   had_notify_to_pppoe(vsrv, VRRP_STATE_BACK);
 		}
+	#endif	
 		/* book add, 2011-5-11 */
     	had_notify_to_hmd(vsrv, VRRP_STATE_BACK);
     	
@@ -9315,9 +9334,11 @@ int had_state_from_learn
 		if (global_protal) {
 		   had_notify_to_protal(vsrv, VRRP_STATE_BACK);
 		}
+	#ifndef _VERSION_18SP7_	
 		if (global_pppoe) {
 		   had_notify_to_pppoe(vsrv, VRRP_STATE_BACK);
 		}
+	#endif	
 		/* book add, 2011-5-11 */
     	 had_notify_to_hmd(vsrv, VRRP_STATE_BACK);
     	
@@ -9392,9 +9413,11 @@ int had_state_back
 	if (global_protal) {
 	   had_notify_to_protal(vsrv, VRRP_STATE_BACK);
 	}
+#ifndef _VERSION_18SP7_	
 	if (global_pppoe) {
 	   had_notify_to_pppoe(vsrv, VRRP_STATE_BACK);
 	}
+#endif	
 	/* book add, 2011-5-11 */
 	had_notify_to_hmd(vsrv, VRRP_STATE_BACK);
 	

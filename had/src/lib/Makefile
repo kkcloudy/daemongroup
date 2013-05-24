@@ -9,7 +9,7 @@ CP		= cp
 RM		= rm 
 
 CC 		= mips-linux-gnu-gcc #-E
-CFLAGS += -g -Wall -D_REENTRANT -D__LINUX__ -I$(ACCAPI_DIR)
+CFLAGS += -g -Wall -D_$(AWVERSION)_ -D_REENTRANT -D__LINUX__ -I$(ACCAPI_DIR)
 CPPFLAGS += -I$(MIPS_ADDITION_LIB_ROOT_PATH)/usr/include -ansi --std=c99
 LDFLAGS +=  -L$(MIPS_ADDITION_LIB_ROOT_PATH)/lib -L$(MIPS_ADDITION_LIB_ROOT_PATH)/usr/lib
 LIBS = -lpthread

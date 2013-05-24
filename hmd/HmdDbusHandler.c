@@ -257,11 +257,13 @@ int CheckAndCreateHansi(struct HmdMsgQ HMsgq){
 			/*end for eag*/
 
 			/* add for pppoe lixiang 20120817 */
+		#ifndef _VERSION_18SP7_ 	
 			memset(cmd, 0, SYS_COMMAND_LEN);
 			sprintf(cmd,"sudo /etc/init.d/pppoe start %d %d &",local, profile);
 			if (system(cmd)) {
 				hmd_syslog_err("create pppoe %d faild.\n", profile);
-			}			
+			}
+		#endif	
 			/* end for pppoe */
 			
 			/* check wheather wcpss instance started completely.

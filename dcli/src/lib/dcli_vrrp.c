@@ -5516,7 +5516,12 @@ DEFUN(config_vrrp_notify_cmd_func,
 	}
 	/*add pppoe*/
 	else if(!strncmp(argv[0], "pppoe", strlen(argv[0]))) {
+	#ifdef _VERSION_18SP7_
+		vty_out(vty, "This version not support pppoe!\n");
+		return CMD_WARNING;
+	#else /* !_VERSION_18SP7_ */
 		notify_obj = DCLI_VRRP_NOTIFY_OBJ_TYPE_PPPOE;
+	#endif	
 	}
 	else {
 		vty_out(vty, "%% Unknown notification object!\n");
@@ -6936,6 +6941,7 @@ int dcli_vrrp_show_running_cfg(struct vty *vty)
 			totalLen = 0;
 			
 			/* pppoe config*/
+		#ifndef _VERSION_18SP7_
 			tmp = dcli_pppoe_show_running_config(localid, slot_id, profile);
 			if (tmp){
 				if (strlen(tmp)) {
@@ -6958,6 +6964,7 @@ int dcli_vrrp_show_running_cfg(struct vty *vty)
 				free(tmp);
 				tmp = NULL;
 			}
+		#endif /* !_VERSION_18SP7_ */	
 			/*end*/
 		}
 		

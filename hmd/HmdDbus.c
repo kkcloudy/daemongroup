@@ -651,9 +651,11 @@ DBusMessage * hmd_dbus_interface_config_local_hansi(DBusConnection *conn, DBusMe
 					/*end for eag*/					
 
 					/* add for pppoe lixiang 20120817 */
+				#ifndef _VERSION_18SP7_ 	
 					memset(command, 0, 128);
 					sprintf(command,"sudo /etc/init.d/pppoe start 1 %d &",ID);
 					system(command);
+				#endif	
 					/*end for pppoe*/
 
 					arg = (HMDThreadArg *)malloc(sizeof(HMDThreadArg));
@@ -717,9 +719,11 @@ DBusMessage * hmd_dbus_interface_config_local_hansi(DBusConnection *conn, DBusMe
 						/*end for eag*/	
 
 						/* add for pppoe lixiang 20120817 */
+					#ifndef _VERSION_18SP7_ 		
 						memset(command, 0, 128);
 						sprintf(command,"sudo /etc/init.d/pppoe start 1 %d &",ID);
 						system(command);
+					#endif	
 						/*end for pppoe*/
 						
 						arg = (HMDThreadArg *)malloc(sizeof(HMDThreadArg));
@@ -837,9 +841,11 @@ DBusMessage * hmd_dbus_interface_config_remote_hansi(DBusConnection *conn, DBusM
 					/*end for eag*/					
 
 					/* add for pppoe lixiang 20120817 */
+				#ifndef _VERSION_18SP7_	
 					memset(command, 0, 128);
 					sprintf(command,"sudo /etc/init.d/pppoe start 0 %d &",ID);
 					system(command);
+				#endif	
 					/*end for pppoe*/
 					
             		memset(command, 0, 128);

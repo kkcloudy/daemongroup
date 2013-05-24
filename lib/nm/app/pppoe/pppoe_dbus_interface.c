@@ -1,4 +1,6 @@
 
+#ifndef _VERSION_18SP7_
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -1622,4 +1624,4 @@ out:
 	return ret;
 }
 
-
+#endif /* !_VERSION_18SP7_ */

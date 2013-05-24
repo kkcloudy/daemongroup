@@ -7781,7 +7781,9 @@ enum npd_dbus_result_no_e {
 *****************************************************************/
 
 #define VRRP_DBUS_METHOD_SET_PROTAL          "vrrp_set_protal"
+#ifndef _VERSION_18SP7_
 #define VRRP_DBUS_METHOD_SET_PPPOE          "vrrp_set_pppoe"
+#endif
 /*****************************************************************
  * DESCRIPTION:
  * 	when wid transfer over,call this method
@@ -7809,7 +7811,9 @@ enum npd_dbus_result_no_e {
 *****************************************************************/
 
 #define VRRP_DBUS_METHOD_SET_PORTAL_TRANSFER_STATE          "vrrp_set_portal_transfer_state"
+#ifndef _VERSION_18SP7_
 #define VRRP_DBUS_METHOD_SET_PPPOE_TRANSFER_STATE          "vrrp_set_pppoe_transfer_state"
+#endif
 #define VRRP_DBUS_METHOD_START_SEND_ARP   "vrrp_send_arp"
 
 /*****************************************************************

@@ -9,7 +9,9 @@ int ac_manage_change_firewall_index(DBusConnection *connection, u_long new_index
 
 int ac_manage_del_firewall_rule(DBusConnection *connection, u_long rule_type, u_long index);
 
+#ifndef _VERSION_18SP7_
 int ac_manage_config_nat_udp_timeout(DBusConnection *connection, u_long timeout);
+#endif
 
 int ac_manage_show_firewall_rule(DBusConnection *connection, 
 								u_long *service_status, u_long *timeout,

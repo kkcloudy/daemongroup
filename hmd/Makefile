@@ -5,7 +5,7 @@ LDFLAGS = -lpthread -ldl
 LDFLAGS += -L/opt/mipslibs/usr/lib 
 LDFLAGS += -lsctp
 
-CFLAGS = -Wall -g -O0 -I. 
+CFLAGS = -Wall -g -O0 -D_$(AWVERSION)_ -I. 
 #CFLAGS += -I$(ACCAPI_DIR)
 CFLAGS += -I/opt/mipslibs/usr/include
 CFLAGS += -I../accapi

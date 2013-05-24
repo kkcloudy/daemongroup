@@ -675,9 +675,10 @@ int dcli_local_hansi_show_running_config(struct vty *vty)
 			}else{
 				free(showRunningCfg_str);
 				return 1;
-			}		
-			
-			/* pppoe config*/
+			}
+					
+		/* pppoe config*/
+		#ifndef _VERSION_18SP7_
 			tmp = dcli_pppoe_show_running_config(localid, slot_id, profile);
 			if (tmp){
 				if (strlen(tmp)) {
@@ -688,6 +689,7 @@ int dcli_local_hansi_show_running_config(struct vty *vty)
 				free(tmp);
 				tmp = NULL;
 			}
+		#endif /* !_VERSION_18SP7_ */
 			/*end*/
 		}
 		

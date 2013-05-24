@@ -77,7 +77,9 @@ extern pthread_mutex_t StateMutex;
 extern int global_enable;
 extern int service_enable[MAX_HANSI_PROFILE];
 extern int global_protal;
+#ifndef _VERSION_18SP7_
 extern int global_pppoe;
+#endif
 extern int master_ipaddr_uplink[255];
 extern int master_ipaddr_downlink[255];
 extern char* global_ht_ifname;
@@ -86,7 +88,9 @@ extern int global_ht_state;
 extern int global_ht_opposite_ip;
 extern int wid_transfer_state[MAX_HANSI_PROFILE];
 extern int portal_transfer_state[MAX_HANSI_PROFILE];
+#ifndef _VERSION_18SP7_
 extern int pppoe_transfer_state[MAX_HANSI_PROFILE];
+#endif
 extern int uidSock;
 extern int global_ms_down_packet_count;
 extern int global_multi_link_detect;
@@ -680,10 +684,12 @@ void had_profile_config_save
 				curLen += sprintf(curPos, " config hansi notify dhcp-server off\n");
 				curPos = showBuf + curLen;
 			}
+		#ifndef _VERSION_18SP7_
 			if(!(vrrp->notify_flg&VRRP_NOTIFY_BIT_PPPOE)){
 				curLen += sprintf(curPos, " config hansi notify pppoe off\n");
 				curPos = showBuf + curLen;
 			}
+		#endif /* !_VERSION_18SP7_ */	
 		}	
 		/* dhcp-failover config */
 		if((~0UI != vrrp->failover.localip)&&(~0UI != vrrp->failover.peerip)) {
@@ -3765,6 +3771,7 @@ DBusMessage * had_dbus_set_portal_transfer_state(DBusConnection *conn, DBusMessa
 
 }
 /*add for pppoe*/
+#ifndef _VERSION_18SP7_
 DBusMessage * had_dbus_set_pppoe_transfer_state(DBusConnection *conn, DBusMessage *msg, void *user_data){
 	DBusMessage* reply;
 	DBusError err;
@@ -3804,6 +3811,7 @@ DBusMessage * had_dbus_set_pppoe_transfer_state(DBusConnection *conn, DBusMessag
 	return reply;
 
 }
+#endif
 
 DBusMessage * vrrp_dbus_snmp_get_vrrp_state(DBusConnection *conn, DBusMessage *msg, void *user_data){
 	DBusMessage* reply;
@@ -4227,6 +4235,7 @@ DBUS_TYPE_UINT32, &vrrp_count); 		// count of vrrp instance
 	return reply;
 }
 //for had notice to pppoe
+#ifndef _VERSION_18SP7_
 DBusMessage *had_dbus_set_pppoe
 (
 	DBusConnection *conn,
@@ -4592,6 +4601,7 @@ DBUS_TYPE_UINT32, &vrrp_count); 		// count of vrrp instance
 
 	return reply;
 }
+#endif
 
 DBusMessage * had_dbus_set_debug_value(DBusConnection *conn, DBusMessage *msg, void *user_data){
 	DBusMessage* reply;
@@ -5475,10 +5485,12 @@ static DBusHandlerResult had_dbus_message_handler
 			{
 				reply = had_dbus_set_protal(connection,message,user_data);
 			}
+		#ifndef _VERSION_18SP7_	
 			else if (dbus_message_is_method_call(message,VRRP_DBUS_INTERFACE,VRRP_DBUS_METHOD_SET_PPPOE))
 			{
 				reply = had_dbus_set_pppoe(connection,message,user_data);
 			}
+		#endif	
 			else if (dbus_message_is_method_call(message,VRRP_DBUS_INTERFACE,VRRP_DBUS_METHOD_SET_TRANSFER_STATE))
 			{
 				reply = had_dbus_set_wid_transfer_state(connection,message,user_data);
@@ -5487,10 +5499,12 @@ static DBusHandlerResult had_dbus_message_handler
 			{
 				reply = had_dbus_set_portal_transfer_state(connection,message,user_data);
 			}
+		#ifndef _VERSION_18SP7_	
 			else if (dbus_message_is_method_call(message,VRRP_DBUS_INTERFACE,VRRP_DBUS_METHOD_SET_PPPOE_TRANSFER_STATE))
 			{
 				reply = had_dbus_set_pppoe_transfer_state(connection,message,user_data);
 			}
+		#endif
 			else if (dbus_message_is_method_call(message,VRRP_DBUS_INTERFACE,VRRP_DBUS_METHOD_START_SEND_ARP))
 			{
 				reply = had_dbus_send_arp(connection,message,user_data);

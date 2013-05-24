@@ -1,4 +1,4 @@
-CFLAGS=-O3 -Wall -ffunction-sections -I$(ACCAPI_DIR) 
+CFLAGS=-O3 -Wall -ffunction-sections -D_$(AWVERSION)_ -I$(ACCAPI_DIR) 
 CC=mips-linux-gnu-gcc
 AR=mips-linux-gnu-ar
 OBJCOPY=mips-linux-gnu-objcopy

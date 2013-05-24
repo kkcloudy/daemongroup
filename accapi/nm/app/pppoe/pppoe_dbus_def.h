@@ -1,3 +1,4 @@
+#ifndef _VERSION_18SP7_
 #ifndef _PPPOE_DBUS_DEF_H
 #define _PPPOE_DBUS_DEF_H
 
@@ -37,5 +38,6 @@
 #define PPPOE_DBUS_DETECT_DEVICE_EXIST				"pppoe_dbus_detect_device_exist"
 #define PPPOE_DBUS_SHOW_RUNNING_CONFIG				"pppoe_dbus_show_running_config"
 
-#endif
+#endif /* !_PPPOE_DBUS_DEF_H */
+#endif /* !_VERSION_18SP7_ */
 

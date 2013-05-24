@@ -740,9 +740,11 @@ void dcli_init(void)
 	dcli_rdc_init();	
 	//add for femto iuh & iu
 	dcli_hnb_init();
-	dcli_iu_init();	
+	dcli_iu_init();
+#ifndef _VERSION_18SP7_
 	dcli_pppoe_init();
-	
+#endif /* !_VERSION_18SP7_ */
+
 /* syslog */
 	dcli_syslog_init();
 	dcli_timezone_init();

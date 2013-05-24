@@ -1,3 +1,4 @@
+#ifndef _VERSION_18SP7_
 #ifndef _PPPOE_DBUS_INTERFACE_H
 #define _PPPOE_DBUS_INTERFACE_H
 
@@ -108,4 +109,5 @@ int pppoe_device_kick_user(DBusConnection *connection,
 int pppoe_show_running_config(DBusConnection *connection, 
 			unsigned int local_id, unsigned int ins_id, char **configCmd);
 
-#endif
+#endif /* !_PPPOE_DBUS_INTERFACE_H */
+#endif /* !_VERSION_18SP7_ */

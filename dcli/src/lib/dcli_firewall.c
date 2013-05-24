@@ -2521,12 +2521,16 @@ void dcli_firewall_init
 	install_element(FIREWALL_NODE, &config_dnat_rule_cmd);
 	install_element(FIREWALL_NODE, &config_dnat_port_rule_cmd);
 
+#ifndef _VERSION_18SP7_
 	install_element(FIREWALL_NODE, &config_connlimit_rule_cmd);
+#endif
 
 	install_element(FIREWALL_NODE, &change_firewall_index_cmd);
 	install_element(FIREWALL_NODE, &del_firewall_cmd);
 
+#ifndef _VERSION_18SP7_
 	install_element(FIREWALL_NODE, &modify_nat_udp_timeout_cmd);
+#endif
 
 	install_element(FIREWALL_NODE, &show_firewall_rule_info_cmd);
 	install_element(FIREWALL_NODE, &show_firewall_running_config_cmd);

@@ -29,6 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 * FILE REVISION NUMBER:
 *  			
 *******************************************************************************/
+#ifndef _VERSION_18SP7_
 #ifdef __cplusplus
 
 extern "C"
@@ -2611,3 +2612,4 @@ dcli_pppoe_init(void) {
 #ifdef __cplusplus
 }
 #endif
+#endif /* !VERSION_2.0.18sp7 */

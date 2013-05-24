@@ -1,3 +1,4 @@
+#ifndef _VERSION_18SP7_
 #ifndef _PPPOE_INTERFACE_DEF_H
 #define _PPPOE_INTERFACE_DEF_H
 
@@ -85,4 +86,6 @@ struct pfm_table_entry {
 	unsigned int slot_id;	
 };
 
-#endif
+#endif /* !_PPPOE_INTERFACE_DEF_H */
+#endif /* !_VERSION_18SP7_ */
+

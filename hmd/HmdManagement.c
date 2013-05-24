@@ -368,9 +368,11 @@ void * HMDManagementC(){
 							/*end for eag*/
 
 							/* add for pppoe lixiang 20120817 */
+						#ifndef _VERSION_18SP7_	
 							memset(command, 0, 128);
 							sprintf(command,"sudo /etc/init.d/pppoe start 1 %d",InstID);
 							system(command);
+						#endif	
 							/* end for pppoe */
 							
 							HOST_BOARD->Hmd_Local_Inst[InstID]->wid_check = 0;
@@ -402,9 +404,11 @@ void * HMDManagementC(){
 							/*end for eag*/	
 
 							/* add for pppoe lixiang 20120817 */
+						#ifndef _VERSION_18SP7_	
 							memset(command, 0, 128);
 							sprintf(command,"sudo /etc/init.d/pppoe start 0 %d",InstID);
 							system(command);
+						#endif	
 							/* end for pppoe */
 							
 							memset(command, 0, 128);
@@ -809,9 +813,11 @@ void * HMDManagementS(){
 							/*end for eag*/	
 
 							/* add for pppoe lixiang 20120817 */
+						#ifndef _VERSION_18SP7_	
 							memset(command, 0, 128);
 							sprintf(command,"sudo /etc/init.d/pppoe start 1 %d",InstID);
 							system(command);
+						#endif	
 							/* end for pppoe */
 							
 							HOST_BOARD->Hmd_Local_Inst[InstID]->wid_check = 0;
@@ -851,9 +857,11 @@ void * HMDManagementS(){
 							/*end for eag*/	
 
 							/* add for pppoe lixiang 20120817 */
+						#ifndef _VERSION_18SP7_	
 							memset(command, 0, 128);
 							sprintf(command,"sudo /etc/init.d/pppoe start 0 %d",InstID);
 							system(command);
+						#endif
 							/* end for pppoe */
 							
 							memset(command, 0, 128);
