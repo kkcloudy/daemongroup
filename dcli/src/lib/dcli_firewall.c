@@ -2272,6 +2272,7 @@ DEFUN(del_firewall_func,
 	return CMD_WARNING;
 }
 
+#ifndef _VERSION_18SP7_
 DEFUN(config_connlimit_rule_func,
 	config_connlimit_rule_cmd,
 	"(add|modify) (firewall|input) INDEX IPADDR connlimit <0-4096> (enable|disable)",
@@ -2447,7 +2448,7 @@ DEFUN(modify_nat_udp_timeout_func,
 	
 	return CMD_SUCCESS;
 }
-
+#endif
 
 DEFUN(show_firewall_rule_info_func,
 	show_firewall_rule_info_cmd,
