@@ -862,7 +862,7 @@ DBusMessage * hmd_dbus_interface_config_remote_hansi(DBusConnection *conn, DBusM
 					HmdCreateThread(&(HOST_BOARD->Hmd_Inst[ID]->threadID), HMDHansiMonitor, arg, 0);					
 					HMDTimerRequest(HMD_CHECKING_TIMER,&(HOST_BOARD->Hmd_Inst[ID]->HmdTimerID), HMD_CHECKING, ID, 0);
 				}
-				sleep(5);
+				sleep(7); //fengwenchao change "5" to "7" for onlinebug-939
 			}			
 			if((MASTER_BACKUP_SLOT_NO != 0)&&(MASTER_BACKUP_SLOT_NO != slot_id)){
 				syn_hansi_info_to_backup(slot_id, ID, MASTER_BACKUP_SLOT_NO,0,HMD_HANSI_INFO_SYN_ADD,0);

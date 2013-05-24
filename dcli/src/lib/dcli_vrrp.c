@@ -1980,7 +1980,9 @@ DEFUN(config_hansi_cmd_func,
 	//vty_out(vty,"16\n");
 	dbus_message_unref(reply);
 	reply = NULL;
-
+	/*fengwenchao comment for onlinebug-939*/
+	/*HMD已经在启动HAD脚本时，执行了注释掉的动作*/
+	#if 0
     /* send msg to had */
     DBusConnection *dcli_dbus_connection2 = NULL;
     ReInitDbusConnection(&dcli_dbus_connection2,slot_id,distributFag);
@@ -2027,7 +2029,7 @@ DEFUN(config_hansi_cmd_func,
 		}
 	}
 	dbus_message_unref(reply2);
-	
+	#endif
 	return CMD_SUCCESS;
 }
 #endif

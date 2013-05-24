@@ -12384,7 +12384,7 @@ int had_init
 
 	state_thread = (pthread_t *)malloc(sizeof(pthread_t));
 	pthread_attr_init(&state_thread_attr);
-	pthread_create(state_thread,&state_thread_attr,(void*)had_state_thread_main,NULL);
+	ret = pthread_create(state_thread,&state_thread_attr,(void*)had_state_thread_main,NULL);
     if(0 != ret){
 	   pthread_join(*dbus_thread,NULL);
 	   pthread_join(*packet_thread2,NULL);
@@ -12395,7 +12395,7 @@ int had_init
 	}
 	link_thread = (pthread_t *)malloc(sizeof(pthread_t));
 	pthread_attr_init(&link_thread_attr);
-	pthread_create(link_thread,&link_thread_attr,(void*)had_link_thread_main,NULL);
+	ret = pthread_create(link_thread,&link_thread_attr,(void*)had_link_thread_main,NULL);
     if(0 != ret){
 	   pthread_join(*dbus_thread,NULL);
 	   pthread_join(*packet_thread2,NULL);
@@ -12406,7 +12406,7 @@ int had_init
 	}
 	arp_thread = (pthread_t *)malloc(sizeof(pthread_t));
 	pthread_attr_init(&arp_thread_attr);
-	pthread_create(arp_thread,&arp_thread_attr,(void*)had_arp_thread_main,NULL);
+	ret = pthread_create(arp_thread,&arp_thread_attr,(void*)had_arp_thread_main,NULL);
     if(0 != ret){
 	   pthread_join(*dbus_thread,NULL);
 	   pthread_join(*packet_thread2,NULL);
@@ -12424,7 +12424,7 @@ int had_init
 #else
 	timer_thread = (pthread_t *)malloc(sizeof(pthread_t));
 	pthread_attr_init(&timer_thread_attr);
-	pthread_create(timer_thread,&timer_thread_attr,(void*)vrrp_timer_thread_main,NULL);
+	ret = pthread_create(timer_thread,&timer_thread_attr,(void*)vrrp_timer_thread_main,NULL);
 #endif
 
     if(0 != ret){
