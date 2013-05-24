@@ -2479,6 +2479,7 @@ DEFUN(set_boot_env_var_func,
 	
 	memset(env_name, 0, 256);
 	strcpy(env_name, argv[1]);
+	char sel[64] = {0};
 	
     input_value = argv_concat(&argv[2], argc - 2, 0);
 	if(strlen(input_value) > BOOT_ENV_VALUE_LEN)
@@ -2494,7 +2495,38 @@ DEFUN(set_boot_env_var_func,
         return CMD_WARNING;
     }
 
+   if(strcmp(envname,"sefile") == 0)
+   {
+        if(!strncasecmp((argv[2]+strlen(argv[2])-4),".BIN",4))
+        {			
+			goto DBUS;   		
+    	}
+    	else
+    	{
+    		 vty_out(vty,"the sefile may not be the .bin file,you want to contnue? [yes/no]:\n");
+    		 fscanf(stdin, "%s", sel);
+    		 while(1)
+    		 {
+    		 	    if(!strncasecmp("yes", sel, strlen(sel)))
+    		 	    {
+						goto DBUS;
+    				}
+    				else if(!strncasecmp("no", sel, strlen(sel)))
+    				{
+                       return CMD_WARNING;
+                    }
+    				else
+    				{
+                        vty_out(vty,"% Please input 'yes' or 'no'.\n");
+                        vty_out(vty,"are you going on to set sefile [yes/no]:\n");
+                        memset(sel, 0, 64);
+                        fscanf(stdin, "%s", sel);
+                    }
+			}
+    	}
+    }
 
+DBUS:
 	query = dbus_sem_msg_new_method_call(SEM_DBUS_BUSNAME, SEM_DBUS_OBJPATH,
 												 SEM_DBUS_INTERFACE, SEM_DBUS_SET_ENVIRONMENT_VARIABLE);
 	dbus_error_init(&err);
