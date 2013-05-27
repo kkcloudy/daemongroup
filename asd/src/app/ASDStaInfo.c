@@ -1990,7 +1990,7 @@ int asd_get_ip_v2(struct sta_info *sta)
     sprintf(smac,"%02X:%02X:%02X:%02X:%02X:%02X",MAC2STR(sta->addr));
 	sprintf(buf,"sudo cat //proc/net/arp |grep %s > /var/run/wcpss/arp",smac);
 	system(buf);
-	fp = fopen("/temp/arp","r");
+	fp = fopen("/var/run/wcpss/arp","r");
     if(!fp)
     {
         asd_printf(ASD_DEFAULT,MSG_DEBUG,"File /proc/net/arp can't be read!\n");
@@ -2153,6 +2153,7 @@ struct sta_info * ap_sta_add(struct asd_data *wasd, const u8 *addr, int both)
 		sta->next = wasd->sta_list;
 		wasd->sta_list = sta;
 		wasd->num_sta++;
+		sta->wasd = wasd;//qiuchen add it to find bss from sta
 		ap_sta_hash_add(wasd, sta);
 		asd_sta_hash_add(sta);
 		sta->ssid = &wasd->conf->ssid;
@@ -2906,7 +2907,7 @@ unsigned int sta_acct_get_key(u8 *acct_id)
 {
 	unsigned int index = 0;
 	char tmp[ACCT_ID_LEN] = {0};
-	os_memcpy(tmp,acct_id+ACCT_ID_LEN-8,8);
+	os_memcpy(tmp,acct_id+ACCT_ID_LEN-2,2);
 	index = strtoul(tmp,NULL,16);
 	return index;
 }
@@ -2926,7 +2927,7 @@ void sta_acct_info_add(struct sta_info *sta)
 		return;
 	struct sta_acct_info *acct_info = NULL;
 	u8 acct_id[ACCT_ID_LEN] = {0};
-	u32 index = 0;
+	u8 index = 0;
 	os_snprintf((char *)acct_id, sizeof(acct_id), "%08X-%08X", sta->acct_session_id_hi, sta->acct_session_id_lo);			
 	acct_info = sta_acct_info_get(acct_id);
 	if(acct_info !=NULL)
@@ -2952,6 +2953,7 @@ init:
 void sta_acct_info_del(u8 *acct_id)
 {
 	struct  sta_acct_info*s = NULL;
+	struct  sta_acct_info*tmp = NULL;
 	unsigned int index;
 	index = sta_acct_get_key( acct_id);
 	s = ASD_ACCT_HASH[index];
@@ -2961,25 +2963,28 @@ void sta_acct_info_del(u8 *acct_id)
 		return;
 	}
 	if (os_memcmp(s->acct_id, acct_id, ACCT_ID_LEN) == 0) {
+		tmp = s;
 		ASD_ACCT_HASH[index] = s->next;
 		goto out;
 	}
 	while (s->next != NULL &&
 	       os_memcmp(s->next->acct_id, acct_id, ACCT_ID_LEN) != 0)
 		s = s->next;
-	if (s->next != NULL)
+	if (s->next != NULL){
+		tmp = s->next;
 		s->next = s->next->next;
+	}
 	else{
 		asd_printf(ASD_DEFAULT,MSG_ERROR, "GLOBAL HASH: could not remove acct_info %s", acct_id);
 		return;
 	}
 out:
-	if(s)
+	if(tmp)
 	{
-		asd_printf(ASD_DEFAULT,MSG_DEBUG,"func:%s  del acct_id %s\n",__func__,s->acct_id);
-		s->next = NULL;
-		os_free(s);
-		s = NULL;
+		asd_printf(ASD_DEFAULT,MSG_DEBUG,"func:%s  del acct_id %s\n",__func__,tmp->acct_id);
+		tmp->next = NULL;
+		os_free(tmp);
+		tmp = NULL;
 	}
 	return;
 }

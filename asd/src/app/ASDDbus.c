@@ -19216,7 +19216,7 @@ DBusMessage *asd_dbus_show_sta_base_info(DBusConnection *conn, DBusMessage *msg,
 			DBusMessageIter iter_struct;
 			DBusMessageIter iter_sub_array;
 			unsigned int wtpid = 0;
-			char essid[ESSID_DEFAULT_LEN] = {0};
+			char essid[ESSID_DEFAULT_LEN] = {0};/*中文essid不能用字符串传输，会导致dbus线程退出AXSSZFI-1658*/
 			asd_printf(ASD_DBUS,MSG_DEBUG,"sta_num:%d\n",bss[i]->num_sta);
 			wtpid = bss[i]->Radio_G_ID/4;
 			if(wtpid < WTP_NUM && ASD_WTP_AP[wtpid] != NULL){

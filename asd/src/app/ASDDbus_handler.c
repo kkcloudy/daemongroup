@@ -202,7 +202,22 @@ int Clear_WLAN_APPLY(unsigned char SecurityID){
 	ASD_WLAN_INF_OP(0, SecurityID, WID_DEL);
 	return 0;
 }
-
+struct asd_stainfo* ASD_SEARCH_STA(unsigned char *sa){
+	struct asd_stainfo * stainfo;
+	struct sta_info *sta = NULL;
+	sta = asd_sta_hash_get(sa);
+	if(sta == NULL || sta->wasd == NULL)
+		return NULL;
+	asd_printf(ASD_DBUS,MSG_DEBUG,"ASD_SEARCH_STA\n");
+	stainfo = (struct asd_stainfo *)os_zalloc(sizeof(struct asd_stainfo));
+	if(stainfo==NULL){
+		return NULL;  // 0608xm
+	}
+	stainfo->bss = sta->wasd;
+	stainfo->sta = sta;
+	return stainfo;
+}
+#if 0
 struct asd_stainfo* ASD_SEARCH_STA(unsigned char *sa){
 	struct asd_stainfo * stainfo;
 	stainfo = (struct asd_stainfo *)os_zalloc(sizeof(struct asd_stainfo));
@@ -246,7 +261,7 @@ struct asd_stainfo* ASD_SEARCH_STA(unsigned char *sa){
 	asd_printf(ASD_DBUS,MSG_DEBUG,"ASD_SEARCH_STA end\n");
 	return NULL;
 }
-
+#endif
 ///////////////////////////////////////////////////////////////////////////////
 //xm 08/10/08
 // Search all sta that access by wire.
@@ -510,7 +525,6 @@ int ASD_GET_CNUM(struct r_sta_wlan_info *r_sta_information,unsigned char type)
 }
 int ASD_GET_R_STA_BYWLAN(struct r_sta_wlan_info *r_sta_wlan)
 {
-	asd_printf(ASD_DEFAULT,MSG_DEBUG,"********func:%s,line:%d********\n",__func__,__LINE__);
 	struct wasd_interfaces *interfaces = (struct wasd_interfaces*) circle.user_data;
 	int i = 0, num = 0;
 	unsigned char wlanid = 0;

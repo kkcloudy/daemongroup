@@ -190,6 +190,7 @@ struct sta_info {
 	 }rflag;
 	 unsigned char logflag;//logflag = 1 henan mobile roaming log had printed!	0-not
 	 unsigned char preAPID;
+	 struct asd_data *wasd;
 };
 struct sta_acct_info{	
 	u8 acct_id[ACCT_ID_LEN+1];
