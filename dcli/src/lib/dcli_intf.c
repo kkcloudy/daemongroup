@@ -5688,10 +5688,14 @@ char dcli_vty_ifname[INTERFACE_NAMSIZ+1] = {0};
             }
             else if (!strncmp(argv[0],"bond",4))
             {
+				#if 0
                 if (CMD_SUCCESS != dcli_interface_ifname_bond(vty,(char *)argv[0]))
                 {
                     return CMD_WARNING;
                 }
+				#endif
+				vty_out(vty,"%% Bad param !\n");
+				return CMD_WARNING;
             }
             else 
             {
@@ -5867,10 +5871,14 @@ char dcli_vty_ifname[INTERFACE_NAMSIZ+1] = {0};
 			}
             else if (!strncmp(argv[0],"bond",4))
             {
+				#if 0
                 if (CMD_SUCCESS != dcli_no_interface_ifname_bond(vty,(char *)argv[0]))
                 {
                     return CMD_WARNING;
                 }
+				#endif
+				vty_out(vty, "%% Bad parameter %s!\n", argv[0]);
+				return CMD_WARNING;
             }
             else
             {
@@ -7604,8 +7612,6 @@ DEFUN(set_intf_pkt_refwd_cmd_func,
         //install_element(CONFIG_NODE, &config_del_sub_interface_cmd);*/
         install_node(&static_arp_node,dcli_intf_interface_static_arp_show_running,"STATIC_ARP_NODE");
 		install_element(CONFIG_NODE,  &config_dynamic_arp_cmd);
-        install_element(CONFIG_NODE,  &show_advanced_routing_cmd);
-        install_element(CONFIG_NODE,  &show_vlan_eth_port_advanced_routing_cmd);
         install_element(CONFIG_NODE,  &vtysh_no_interface_cmd);
         install_element(CONFIG_NODE,  &vtysh_interface_cmd);
 		/* jump for error, zhangdi 2012-02-13 */
@@ -7613,29 +7619,17 @@ DEFUN(set_intf_pkt_refwd_cmd_func,
         install_element(LOCAL_HANSI_NODE,  &vtysh_interface_cmd);
         install_element(HANSI_NODE,  &vtysh_no_interface_cmd);
         install_element(LOCAL_HANSI_NODE,  &vtysh_no_interface_cmd);
-        install_element(ENABLE_NODE,  &show_advanced_routing_cmd);
-        install_element(ENABLE_NODE,  &show_vlan_eth_port_advanced_routing_cmd);
+      
 		
 		install_element(INTERFACE_NODE,  &config_dynamic_arp_cmd);
-        install_element(INTERFACE_NODE,  &show_advanced_routing_cmd);
 		install_element(INTERFACE_NODE,  &config_set_arp_stale_time_cmd);
-        install_element(INTERFACE_NODE,  &show_vlan_eth_port_advanced_routing_cmd);
-        install_element(INTERFACE_NODE, &interface_advanced_routing_vlan_eth_port_cmd);
-        install_element(INTERFACE_NODE, &show_interface_advanced_routing_vlan_eth_port_cmd);
-        install_element(INTERFACE_NODE, &interface_bond_add_del_port_cmd);
-		install_element(INTERFACE_NODE, &interface_bond_set_mode_cmd);
-		install_element(INTERFACE_NODE, &interface_bond_set_lacp_rate_cmd);
-		install_element(INTERFACE_NODE, &interface_bond_set_xmit_hash_policy_cmd);
 		install_element(INTERFACE_NODE, &config_interface_static_arp_eth_port_cmd);
 
 		install_element(INTERFACE_NODE, &no_interface_static_arp_eth_port_cmd);
 		/*install_element(INTERFACE_NODE, &set_intf_change_intf_name_cmd);*/
 		install_element(INTERFACE_NODE, &set_eth_intf_l3_enable_cmd);
-        install_element(CONFIG_NODE,  &show_bond_slave_cmd);
-        install_element(ENABLE_NODE,  &show_bond_slave_cmd);
         install_element(CONFIG_NODE,  &show_cvm_rxmax_per_interrupt_cmd);
         install_element(CONFIG_NODE,  &set_cvm_rxmax_per_interrupt_cmd);
-        install_element(CONFIG_NODE,  &config_advanced_routing_default_vid_cmd);
         install_element(CONFIG_NODE,  &show_advanced_routing_default_vid_cmd);
 		install_element(INTERFACE_NODE, &set_intf_pkt_refwd_cmd);
         #if 0/*wangchao delete*/
@@ -7649,6 +7643,21 @@ DEFUN(set_intf_pkt_refwd_cmd_func,
 	    install_element(INTERFACE_NODE, &config_interface_static_arp_trunk_cmd); 
 	    install_element(INTERFACE_NODE, &no_interface_static_arp_cmd); 	
 	    install_element(INTERFACE_NODE, &no_interface_static_arp_trunk_cmd);
+		install_element(CONFIG_NODE,  &show_advanced_routing_cmd);
+		install_element(CONFIG_NODE,  &show_vlan_eth_port_advanced_routing_cmd);
+		install_element(ENABLE_NODE,  &show_advanced_routing_cmd);
+        install_element(ENABLE_NODE,  &show_vlan_eth_port_advanced_routing_cmd);
+		install_element(INTERFACE_NODE,  &show_advanced_routing_cmd);
+		install_element(INTERFACE_NODE,  &show_vlan_eth_port_advanced_routing_cmd);
+        install_element(INTERFACE_NODE, &interface_advanced_routing_vlan_eth_port_cmd);
+        install_element(INTERFACE_NODE, &show_interface_advanced_routing_vlan_eth_port_cmd);
+        install_element(INTERFACE_NODE, &interface_bond_add_del_port_cmd);
+		install_element(INTERFACE_NODE, &interface_bond_set_mode_cmd);
+		install_element(INTERFACE_NODE, &interface_bond_set_lacp_rate_cmd);
+		install_element(INTERFACE_NODE, &interface_bond_set_xmit_hash_policy_cmd);
+		install_element(CONFIG_NODE,  &show_bond_slave_cmd);
+        install_element(ENABLE_NODE,  &show_bond_slave_cmd);
+		install_element(CONFIG_NODE,  &config_advanced_routing_default_vid_cmd);
 		#endif
 #ifdef _D_WCPSS_
 
