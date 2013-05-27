@@ -176,7 +176,8 @@ __inline__ int parse_short_parse(char* str,unsigned short* shot){
 __inline__ int parse_slotport_no(char *str,unsigned char *slotno,unsigned char *portno) {
 	char *endptr = NULL;
 	char *endptr2 = NULL;
-
+    char c = 0;
+	
 	if (NULL == str) return NPD_FAIL;
 	/* add for AX7605i cscd port by qinhs@autelan.com 2009-11-18 */
 	if(!strncmp(tolower(str), "cscd", 4)) {
@@ -211,17 +212,20 @@ __inline__ int parse_slotport_no(char *str,unsigned char *slotno,unsigned char *
 		}
 		return NPD_SUCCESS;
 	}
-	*slotno = strtoul(str,&endptr,10);
-	
-	if ((SLOT_PORT_SPLIT_DASH == endptr[0])||(SLOT_PORT_SPLIT_SLASH == endptr[0])) {
-        if (endptr) {
-			*portno = strtoul((char *)&(endptr[1]),&endptr2,10);
-			if('\0' == endptr2[0]) {
-				return NPD_SUCCESS;
-			}
-		}
+	c = str[0];
+	if (c>='0' && c<='9'){
+	    *slotno = strtoul(str,&endptr,10);
+        if ((SLOT_PORT_SPLIT_DASH == endptr[0])||(SLOT_PORT_SPLIT_SLASH == endptr[0])) {
+            if (endptr) {
+        		*portno = strtoul((char *)&(endptr[1]),&endptr2,10);
+        		if('\0' == endptr2[0]) {
+        			return NPD_SUCCESS;
+        		}
+        	}
+        }
+	}else{
+    	return NPD_FAIL;
 	}
-	return NPD_FAIL;	
 }
 
 __inline__ int parse_slotport_ve_tag_no(char *str,unsigned char *slotno,unsigned char *portno,unsigned char *des_slot)
@@ -1968,6 +1972,7 @@ DEFUN(show_ethport_cn_attr_cmd_func,
 	unsigned char type = 0;
 	unsigned int value = 0;
 	int ret = 0;
+	int slotNum = get_product_info(SEM_SLOT_COUNT_PATH);
 
 	ret = parse_slotport_no((char *)argv[0],&slot_no,&port_no);
 
@@ -1975,7 +1980,18 @@ DEFUN(show_ethport_cn_attr_cmd_func,
     	vty_out(vty,"Unknow portno format.\n");
 		return CMD_WARNING;
 	}
-
+	
+    if(slot_no>slotNum||slot_no<1)
+    {
+        printf("Invaild slot number!\n");
+		return CMD_WARNING;
+	}
+	if(port_no>63||port_no<1)
+    {
+        printf("Invaild port number!\n");
+		return CMD_WARNING;
+	}
+	
 	DCLI_DEBUG(("392 :: show slot/port %d/%d info\n",slot_no,port_no));
 	
 	type = 0;
