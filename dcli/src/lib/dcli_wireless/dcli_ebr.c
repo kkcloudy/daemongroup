@@ -511,8 +511,8 @@ DEFUN(wid_show_ethereal_bridge_cmd_func,
 			vty_out(vty,"EBR isolation policy:		%s\n",(EBRINFO->EBR[0]->isolation_policy == 1)?en:dis);
 			vty_out(vty,"EBR multicast isolation policy:	%s\n",(EBRINFO->EBR[0]->multicast_isolation_policy == 1)?en:dis);
 			vty_out(vty,"EBR sameportswitch policy:	%s\n",(EBRINFO->EBR[0]->sameportswitch== 1)?en:dis);
-			vty_out(vty, "EBR unicast policy:\t%s\n", (EBRINFO->EBR[0]->bridge_ucast_solicit_stat == 1) ? en : dis);
-			vty_out(vty, "EBR multicast policy:\t%s\n", (EBRINFO->EBR[0]->bridge_mcast_solicit_stat == 1) ? en : dis);
+			vty_out(vty,"EBR unicast solicit policy:\t%s\n", (EBRINFO->EBR[0]->bridge_ucast_solicit_stat == 1) ? en : dis);
+			vty_out(vty,"EBR multicast solicit policy:\t%s\n", (EBRINFO->EBR[0]->bridge_mcast_solicit_stat == 1) ? en : dis);
 			vty_out(vty,"EBR multicast fdb learn policy:	%s\n",(EBRINFO->EBR[0]->multicast_fdb_learn == 1) ? en:dis);
 			if((EBRINFO)&&(EBRINFO->EBR[0])&&(EBRINFO->EBR[0]->iflist))
 			{	
@@ -603,8 +603,8 @@ DEFUN(wid_show_ethereal_bridge_cmd_func,
 					vty_out(vty,"EBR isolation policy:		%s\n",(EBRINFO->EBR[0]->isolation_policy == 1)?en:dis);
 					vty_out(vty,"EBR multicast isolation policy:	%s\n",(EBRINFO->EBR[0]->multicast_isolation_policy == 1)?en:dis);
 					vty_out(vty,"EBR sameportswitch policy:	%s\n",(EBRINFO->EBR[0]->sameportswitch== 1)?en:dis);
-					vty_out(vty, "EBR unicast policy:\t%s\n", (EBRINFO->EBR[0]->bridge_ucast_solicit_stat == 1) ? en : dis);
-					vty_out(vty, "EBR multicast policy:\t%s\n", (EBRINFO->EBR[0]->bridge_mcast_solicit_stat == 1) ? en : dis);
+					vty_out(vty,"EBR unicast solicit policy:\t%s\n", (EBRINFO->EBR[0]->bridge_ucast_solicit_stat == 1) ? en : dis);
+					vty_out(vty,"EBR multicast solicit policy:\t%s\n", (EBRINFO->EBR[0]->bridge_mcast_solicit_stat == 1) ? en : dis);
 					vty_out(vty,"EBR multicast fdb learn policy:	%s\n",(EBRINFO->EBR[0]->multicast_fdb_learn == 1) ? en:dis);
 					if((EBRINFO)&&(EBRINFO->EBR[0])&&(EBRINFO->EBR[0]->iflist))
 					{	
@@ -684,8 +684,8 @@ DEFUN(wid_show_ethereal_bridge_cmd_func,
 					vty_out(vty,"EBR isolation policy:		%s\n",(EBRINFO->EBR[0]->isolation_policy == 1)?en:dis);
 					vty_out(vty,"EBR multicast isolation policy:	%s\n",(EBRINFO->EBR[0]->multicast_isolation_policy == 1)?en:dis);
 					vty_out(vty,"EBR sameportswitch policy:	%s\n",(EBRINFO->EBR[0]->sameportswitch== 1)?en:dis);
-					vty_out(vty, "EBR unicast policy:\t%s\n", (EBRINFO->EBR[0]->bridge_ucast_solicit_stat == 1) ? en : dis);
-					vty_out(vty, "EBR multicast policy:\t%s\n", (EBRINFO->EBR[0]->bridge_mcast_solicit_stat == 1) ? en : dis);
+					vty_out(vty,"EBR unicast solicit policy:\t%s\n", (EBRINFO->EBR[0]->bridge_ucast_solicit_stat == 1) ? en : dis);
+					vty_out(vty,"EBR multicast solicit policy:\t%s\n", (EBRINFO->EBR[0]->bridge_mcast_solicit_stat == 1) ? en : dis);
 					vty_out(vty,"EBR multicast fdb learn policy:	%s\n",(EBRINFO->EBR[0]->multicast_fdb_learn == 1) ? en:dis);
 					if((EBRINFO)&&(EBRINFO->EBR[0])&&(EBRINFO->EBR[0]->iflist))
 					{	

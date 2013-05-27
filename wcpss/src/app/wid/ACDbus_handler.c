@@ -671,7 +671,7 @@ int WID_CREATE_NEW_WLAN(char *WlanName, unsigned char WlanID,unsigned char *ESSI
 	AC_WLAN[WlanID]->Roaming_Policy=0;
 	AC_WLAN[WlanID]->isolation_policy=1;
 	AC_WLAN[WlanID]->multicast_isolation_policy=1;
-	AC_WLAN[WlanID]->bridge_mcast_solicit_stat = 1;
+	AC_WLAN[WlanID]->bridge_mcast_solicit_stat = 0;     /* the default config is 0 as ebr, set by sysctl.conf. zhangdi@autelan.com 2013-05-27 */
 	AC_WLAN[WlanID]->bridge_ucast_solicit_stat = 1;
 	AC_WLAN[WlanID]->sameportswitch=0;
 	AC_WLAN[WlanID]->vlanid = 0;
@@ -18852,7 +18852,7 @@ int WID_ADD_ETHEREAL_BRIDGE(char *name,unsigned int ID)
 	WID_EBR[ID]->state = 0;
 	WID_EBR[ID]->isolation_policy = 1;/*sz change default value from 0 to 1 090723*/
 	WID_EBR[ID]->multicast_isolation_policy = 1;/*sz change default value from 0 to 1 090723*/
-	WID_EBR[ID]->bridge_mcast_solicit_stat = 1;
+	WID_EBR[ID]->bridge_mcast_solicit_stat = 0;  /* the default config is 0, set by sysctl.conf. zhangdi@autelan.com 2013-05-27 */
 	WID_EBR[ID]->bridge_ucast_solicit_stat = 1;
 	WID_EBR[ID]->sameportswitch = 0;
 	WID_EBR[ID]->iflist = NULL;
