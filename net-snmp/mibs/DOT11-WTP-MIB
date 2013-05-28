@@ -9988,6 +9988,14 @@ VerifyModeTrapDescription	 			OBJECT-TYPE
 			"An ApNeighborChannelInterfTrapClear Trap signifies that there has been an signal of ap_neighbor_channel_interfere_clear "
 	::= { wtpAplicationTrap 42 }
 	
+	wtpStationOffLineAbnormalTrap NOTIFICATION-TYPE
+		OBJECTS {
+				wtpMacAddr
+			}
+		STATUS		current
+		DESCRIPTION
+			"An wtpStationOffLineAbnormalTrap Trap signifies that there has been an signal of station_leave_abnormal "
+	::= { wtpAplicationTrap 44 }
 	
 	wtpUserLogoffAbnormalTrap NOTIFICATION-TYPE
 		OBJECTS {
