@@ -9431,13 +9431,15 @@ void dcli_eth_port_init(void) {
 	/*install_element(CONFIG_NODE,&config_no_interface_ethport_cmd);*/
 	install_element(HIDDENDEBUG_NODE,&config_ethport_link_state_cmd);
 	install_element(HIDDENDEBUG_NODE,&show_xg_ethport_cn_stat_cmd);
-	/*add by yinlm for port oct*/	
+	/*wangchong@autelan.com 20130528 for change,follow code is for 7605 and before board diagnosis*/
+	/*add by yinlm for port oct	
 	install_element(ETH_PORT_NODE,&config_ethport_vct_cmd);
 	install_element(CONFIG_NODE,&config_ethport_num_vct_cmd);
 	install_element(ETH_PORT_NODE,&read_ethport_vct_cmd);
 	install_element(CONFIG_NODE,&read_ethport_num_vct_cmd);
 	install_element(CONFIG_NODE, &diagnosis_read_port_rate_cmd);	
 	install_element(ENABLE_NODE, &diagnosis_read_port_rate_cmd);
+	*/
 }
 
 #ifdef __cplusplus
