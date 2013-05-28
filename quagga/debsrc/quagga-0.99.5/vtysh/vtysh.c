@@ -4035,7 +4035,7 @@ for (i = HIDDENDEBUG_NODE; i < EBR_NODE1; i++)
   return CMD_SUCCESS;
 }
 extern void (*dcli_sync_file)(const char* file, int syn_to_blk);
-
+int is_WriteConfig=0;
 
 DEFUN (vtysh_write_memory,
        vtysh_write_memory_cmd,
@@ -4092,7 +4092,9 @@ DEFUN (vtysh_write_memory,
 /* If integrated Quagga.conf explicitely set. */
   if (vtysh_writeconfig_integrated)
   {
+  		is_WriteConfig = 1;
 		ret = write_config_integrated();
+		is_WriteConfig = 0;
 		if(CMD_SUCCESS  == ret )
 		{
 			ret = system("srvsave.sh");
