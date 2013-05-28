@@ -1924,7 +1924,18 @@ DEFUN(show_ethport_cn_ipg_cmd_func,
 	if (NPD_FAIL == ret) {
     	vty_out(vty,"Unknow portno format.\n");
 		return CMD_WARNING;
-	}	
+	}
+
+	if (is_distributed == DISTRIBUTED_SYSTEM)	
+	{
+		int slotNum = get_product_info(SEM_SLOT_COUNT_PATH);
+		if(slot_no > slotNum || slot_no <= 0)
+		{
+			vty_out(vty,"%% NO SUCH SLOT %d!\n", slot_no);
+            return CMD_WARNING;
+		}
+	}
+	
 	type = 0;
 	value = slot_no;
 	value =  (value << 8) |port_no;
@@ -1972,24 +1983,22 @@ DEFUN(show_ethport_cn_attr_cmd_func,
 	unsigned char type = 0;
 	unsigned int value = 0;
 	int ret = 0;
-	int slotNum = get_product_info(SEM_SLOT_COUNT_PATH);
-
+	
 	ret = parse_slotport_no((char *)argv[0],&slot_no,&port_no);
 
 	if (NPD_FAIL == ret) {
     	vty_out(vty,"Unknow portno format.\n");
 		return CMD_WARNING;
 	}
-	
-    if(slot_no>slotNum||slot_no<1)
-    {
-        printf("Invaild slot number!\n");
-		return CMD_WARNING;
-	}
-	if(port_no>63||port_no<1)
-    {
-        printf("Invaild port number!\n");
-		return CMD_WARNING;
+
+	if (is_distributed == DISTRIBUTED_SYSTEM)	
+	{
+		int slotNum = get_product_info(SEM_SLOT_COUNT_PATH);
+		if(slot_no > slotNum || slot_no <= 0)
+		{
+			vty_out(vty,"%% NO SUCH SLOT %d!\n", slot_no);
+            return CMD_WARNING;
+		}
 	}
 	
 	DCLI_DEBUG(("392 :: show slot/port %d/%d info\n",slot_no,port_no));
@@ -2653,6 +2662,16 @@ DEFUN(show_ethport_cn_stat_cmd_func,
 		return CMD_WARNING;
 	}
 
+	if (is_distributed == DISTRIBUTED_SYSTEM)	
+	{
+		int slotNum = get_product_info(SEM_SLOT_COUNT_PATH);
+		if(slot_no > slotNum || slot_no <= 0)
+		{
+			vty_out(vty,"%% NO SUCH SLOT %d!\n", slot_no);
+            return CMD_WARNING;
+		}
+	}
+	
 	value = slot_no;
 	value = (value << 8) |port_no;
 	
@@ -3002,7 +3021,16 @@ DEFUN(clear_ethport_cn_stat_cmd_func,
 		return CMD_WARNING;
 	}
 	/*DCLI_DEBUG(("563 :: show slot/port %d/%d info\n",slot_no,port_no));*/
-
+	if (is_distributed == DISTRIBUTED_SYSTEM)	
+	{
+		int slotNum = get_product_info(SEM_SLOT_COUNT_PATH);
+		if(slot_no > slotNum || slot_no <= 0)
+		{
+			vty_out(vty,"%% NO SUCH SLOT %d!\n", slot_no);
+            return CMD_WARNING;
+		}
+	}
+	
 	value = slot_no;
 	value =  (value << 8) |port_no;
 
@@ -3056,7 +3084,6 @@ DEFUN(config_ethernet_port_cmd_func,
 	unsigned int port_index = 0;
 	unsigned char slot_no = 0, port_no = 0;
 	int local_slot_id = get_product_info(SEM_LOCAL_SLOT_ID_PATH);
-	int slot_count = get_product_info(SEM_SLOT_COUNT_PATH);
 
 	/*vty_out(vty,"before parse_vlan_no %s\n",argv[0]);*/
 	ret = parse_slotport_no((char*)argv[0],&slot_no,&port_no);
@@ -3065,15 +3092,16 @@ DEFUN(config_ethernet_port_cmd_func,
 		vty_out(vty, "% Bad parameter,slot/port illegal!\n");
 		return CMD_WARNING;
 	}
-    /* bugfix: AXSSZFI-1020 */
-	if(slot_no>slot_count)
-	{
-		vty_out(vty, "% Bad parameter,slot illegal!\n");
-		return CMD_WARNING;		
-	}
 	
 	if (is_distributed == DISTRIBUTED_SYSTEM)
 	{
+		int slotNum = get_product_info(SEM_SLOT_COUNT_PATH);
+		if(slot_no > slotNum || slot_no <= 0)
+		{
+			vty_out(vty,"%% NO SUCH SLOT %d!\n", slot_no);
+            return CMD_WARNING;
+		}
+		
 		query = dbus_message_new_method_call(
 							SEM_DBUS_BUSNAME,\
 							SEM_DBUS_OBJPATH,\
@@ -6295,6 +6323,17 @@ DEFUN(config_ethport_link_state_cmd_func,
 		vty_out(vty,"input bad slot/port!\n");
 		return CMD_SUCCESS;
 	}
+
+	if (is_distributed == DISTRIBUTED_SYSTEM)	
+	{
+		int slotNum = get_product_info(SEM_SLOT_COUNT_PATH);
+		if(slot_no > slotNum || slot_no <= 0)
+		{
+			vty_out(vty,"%% NO SUCH SLOT %d!\n", slot_no);
+            return CMD_WARNING;
+		}
+	}
+	
 	modeStr = (char*)argv[1];
 	if(strncmp(modeStr,"up",strlen(modeStr)) == 0){
 		isEnable = 1;
@@ -7183,6 +7222,16 @@ DEFUN(clear_ethport_arp_cn_cmd_func,
 		return CMD_WARNING;
 	}
 
+	if (is_distributed == DISTRIBUTED_SYSTEM)	
+	{
+		int slotNum = get_product_info(SEM_SLOT_COUNT_PATH);
+		if(slot_no > slotNum || slot_no <= 0)
+		{
+			vty_out(vty,"%% NO SUCH SLOT %d!\n", slot_no);
+            return CMD_WARNING;
+		}
+	}
+	
 	DCLI_DEBUG(("%d :: show slot/port %d/%d info\n",__LINE__,slot_no,port_no));
 	
 	type = 0;
@@ -7627,7 +7676,17 @@ DEFUN(show_ethport_arp_cn_cmd_func,
 		vty_out(vty,"input bad param\n");
 		return CMD_WARNING;
 	}
-	
+
+	if (is_distributed == DISTRIBUTED_SYSTEM)	
+	{
+		int slotNum = get_product_info(SEM_SLOT_COUNT_PATH);
+		if(slotno > slotNum || slotno <= 0)
+		{
+			vty_out(vty,"%% NO SUCH SLOT %d!\n", slotno);
+            return CMD_WARNING;
+		}
+	}
+		
 	type = 0;
 	value |= (slotno<<8);
 	value |= portno;
@@ -7660,7 +7719,17 @@ DEFUN(show_ethport_staticarp_cn_cmd_func,
 		vty_out(vty,"input bad param\n");
 		return CMD_WARNING;
 	}
-	
+
+	if (is_distributed == DISTRIBUTED_SYSTEM)	
+	{
+		int slotNum = get_product_info(SEM_SLOT_COUNT_PATH);
+		if(slotno > slotNum || slotno <= 0)
+		{
+			vty_out(vty,"%% NO SUCH SLOT %d!\n", slotno);
+            return CMD_WARNING;
+		}
+	}
+		
 	type = 0;
 	value |= (slotno<<8);
 	value |= portno;
@@ -7910,7 +7979,17 @@ DEFUN(show_ethport_nexthop_cn_cmd_func,
 		vty_out(vty,"input bad param\n");
 		return CMD_WARNING;
 	}
-	
+
+	if (is_distributed == DISTRIBUTED_SYSTEM)	
+	{
+		int slotNum = get_product_info(SEM_SLOT_COUNT_PATH);
+		if(slotno > slotNum || slotno <= 0)
+		{
+			vty_out(vty,"%% NO SUCH SLOT %d!\n", slotno);
+            return CMD_WARNING;
+		}
+	}
+		
 	type = 0;
 	value |= (slotno<<8);
 	value |= portno;
@@ -8206,7 +8285,17 @@ DEFUN(config_port_storm_control_pps_cn_cmd_func ,
 		vty_out(vty,"input bad param\n");
 		return CMD_WARNING;
 	}
-	
+
+	if (is_distributed == DISTRIBUTED_SYSTEM)	
+	{
+		int slotNum = get_product_info(SEM_SLOT_COUNT_PATH);
+		if(slotno > slotNum || slotno <= 0)
+		{
+			vty_out(vty,"%% NO SUCH SLOT %d!\n", slotno);
+            return CMD_WARNING;
+		}
+	}
+		
 	DCLI_DEBUG(("before parse, type %s,value %d\n",argv[1],argv[2]));
 	if(strncmp(argv[1] , "dlf",strlen((char*)argv[1])) == 0){
 		cntype = PORT_STORM_CONTROL_STREAM_DLF;
@@ -8332,6 +8421,16 @@ DEFUN(config_port_storm_control_bps_cn_cmd_func ,
 	if(0 != ret) {
 		vty_out(vty,"input bad param\n");
 		return CMD_WARNING;
+	}
+	
+	if (is_distributed == DISTRIBUTED_SYSTEM)	
+	{
+		int slotNum = get_product_info(SEM_SLOT_COUNT_PATH);
+		if(slotno > slotNum || slotno <= 0)
+		{
+			vty_out(vty,"%% NO SUCH SLOT %d!\n", slotno);
+            return CMD_WARNING;
+		}
 	}
 	
 	DCLI_DEBUG(("before parse, type %s,value %d\n",argv[1],argv[2]));
@@ -9154,6 +9253,16 @@ DEFUN(diagnosis_read_port_rate_cmd_func,
     	vty_out(vty,"Unknow portno format.\n");
 		return CMD_WARNING;
 	}	
+	
+	if (is_distributed == DISTRIBUTED_SYSTEM)	
+	{
+		int slotNum = get_product_info(SEM_SLOT_COUNT_PATH);
+		if(slot_no > slotNum || slot_no <= 0)
+		{
+			vty_out(vty,"%% NO SUCH SLOT %d!\n", slot_no);
+            return CMD_WARNING;
+		}
+	}
 	
 	value = slot_no;
 	value =  (value << 8) |port_no;
