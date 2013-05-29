@@ -21548,10 +21548,12 @@ DEFUN(set_ap_reboot_by_list_func,
 	int i = 0;
 	int n,num;
 	int len;
-	int list[DEFAULT_LEN];
+	int list[4096];
 	DBusMessage *query, *reply;	
 	DBusMessageIter	 iter;
+	DBusMessageIter iter_array;
 	DBusError err;
+	memset(list, 0, sizeof(list));
 
 	len = strlen(argv[0]);
 	if(len > 80)
@@ -21601,11 +21603,28 @@ DEFUN(set_ap_reboot_by_list_func,
 	dbus_message_iter_init_append (query, &iter);
 	
 	dbus_message_iter_append_basic (&iter,DBUS_TYPE_UINT32,&num);
-			
+
+	dbus_message_iter_open_container (&iter,
+									DBUS_TYPE_ARRAY,
+									DBUS_STRUCT_BEGIN_CHAR_AS_STRING
+											DBUS_TYPE_UINT32_AS_STRING
+									DBUS_STRUCT_END_CHAR_AS_STRING,
+									&iter_array);
+	
+	for(i = 0; i < num ; i++){			
+		DBusMessageIter iter_struct;		/* Huangleilei add it by AXSSZFI-1621: dbus may be not accept more than 255 elements, as string add to it */
+		dbus_message_iter_open_container(&iter_array, DBUS_TYPE_STRUCT,NULL, &iter_struct);
+		dbus_message_iter_append_basic(&iter_struct, DBUS_TYPE_UINT32, &list[i]);
+		dbus_message_iter_close_container (&iter_array, &iter_struct);
+	}
+	
+	dbus_message_iter_close_container (&iter, &iter_array);
+	#if 0
 	for(i = 0; i < num; i++)
 	{			
 		dbus_message_iter_append_basic (&iter,DBUS_TYPE_UINT32,&list[i]);		
 	}
+	#endif
 
 	reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection,query,-1, &err);
 	
@@ -24003,6 +24022,8 @@ DEFUN(optional_update_wtp_img_cmd_func,
 	int ret;
 	DBusMessage *query, *reply;	
 	DBusMessageIter  iter;
+	DBusMessageIter iter_array;
+	DBusMessageIter iter_array_fail;
 	DBusError err;
 
 	char *buf_version;
@@ -24148,6 +24169,22 @@ DEFUN(optional_update_wtp_img_cmd_func,
 										 DBUS_TYPE_UINT32,
 										 &num);
 	tmp = wtplist->wtpidlist;
+	dbus_message_iter_open_container (&iter,
+									DBUS_TYPE_ARRAY,
+									DBUS_STRUCT_BEGIN_CHAR_AS_STRING
+											DBUS_TYPE_UINT32_AS_STRING
+									DBUS_STRUCT_END_CHAR_AS_STRING,
+									&iter_array);
+	
+	for(i = 0; i < num; i++){			
+		DBusMessageIter iter_struct;		/* Huangleilei add it by AXSSZFI-1621: dbus may be not accept more than 255 elements, as string add to it */
+		dbus_message_iter_open_container(&iter_array, DBUS_TYPE_STRUCT, NULL, &iter_struct);
+		dbus_message_iter_append_basic(&iter_struct, DBUS_TYPE_UINT32, &(tmp->wtpid));
+		dbus_message_iter_close_container (&iter_array, &iter_struct);
+		tmp = tmp->next;
+	}
+	dbus_message_iter_close_container (&iter, &iter_array);
+	#if 0
 	for(i = 0; i < num; i++){
 		
 		dbus_message_iter_append_basic (&iter,
@@ -24156,7 +24193,8 @@ DEFUN(optional_update_wtp_img_cmd_func,
 		tmp = tmp->next;
 
 	}	
-	reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection,query,-1, &err);
+	#endif
+	reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection,query, 5000, &err);
 
 	dbus_message_unref(query);
 
@@ -24186,14 +24224,17 @@ DEFUN(optional_update_wtp_img_cmd_func,
 		vty_out(vty,"<error>  %d\n",ret);
 
 	/*fengwenchao add 20110516*/
+	dbus_message_iter_next(&iter);	
+	dbus_message_iter_recurse(&iter, &iter_array_fail);
 	if((fail_num != 0)&&(ret != WTP_ID_NOT_EXIST))
 	{
 		vty_out(vty,"WTP :");
-		for(i=0;i<fail_num;i++)
-		{		
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter,&fail_wtp);
+		for(i = 0; i < fail_num; i++){		/* Huangleilei add it by AXSSZFI-1621: dbus may be not accept more than 255 elements, as string add to it */
+			DBusMessageIter iter_struct;
+			dbus_message_iter_recurse(&iter_array_fail, &iter_struct);
+			dbus_message_iter_get_basic(&iter_struct, &fail_wtp);
 			vty_out(vty," %d ",fail_wtp);
+			dbus_message_iter_next(&iter_array_fail);
 		}
 		vty_out(vty," is not exist");
 	}
@@ -24220,6 +24261,7 @@ DEFUN(optional_clear_wtp_img_cmd_func,
 	int ret;
 	DBusMessage *query, *reply; 
 	DBusMessageIter  iter;
+	DBusMessageIter iter_array;
 	DBusError err;
 	unsigned int wtp_id;
 	int i;
@@ -24296,6 +24338,22 @@ DEFUN(optional_clear_wtp_img_cmd_func,
 										 DBUS_TYPE_UINT32,
 										 &num);
 	tmp = wtplist->wtpidlist;
+	dbus_message_iter_open_container (&iter,
+									DBUS_TYPE_ARRAY,
+									DBUS_STRUCT_BEGIN_CHAR_AS_STRING
+											DBUS_TYPE_UINT32_AS_STRING
+									DBUS_STRUCT_END_CHAR_AS_STRING,
+									&iter_array);
+	
+	for(i = 0; i < num; i++){			
+		DBusMessageIter iter_struct;		/* Huangleilei add it by AXSSZFI-1621: dbus may be not accept more than 255 elements, as string add to it */
+		dbus_message_iter_open_container(&iter_array,DBUS_TYPE_STRUCT,NULL,&iter_struct);
+		dbus_message_iter_append_basic(&iter_struct,DBUS_TYPE_UINT32,&(tmp->wtpid));
+		dbus_message_iter_close_container (&iter_array, &iter_struct);
+		tmp = tmp->next;
+	}
+	dbus_message_iter_close_container (&iter, &iter_array);
+	#if 0
 	for(i = 0; i < num; i++){
 		
 		dbus_message_iter_append_basic (&iter,
@@ -24304,6 +24362,7 @@ DEFUN(optional_clear_wtp_img_cmd_func,
 		tmp = tmp->next;
 
 	}	
+	#endif
 	reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection,query,-1, &err);
 
 	dbus_message_unref(query);
@@ -24322,7 +24381,7 @@ DEFUN(optional_clear_wtp_img_cmd_func,
 	dbus_message_iter_get_basic(&iter,&ret);
 
 	if(ret == 0)
-		vty_out(vty,"wtp update successfully\n");
+		vty_out(vty,"clear %s wtps image successfully\n", argv[0]);
 	else
 		vty_out(vty,"<error>  %d\n",ret);
 	
@@ -25285,6 +25344,7 @@ DEFUN(clear_update_fail_wtp_cmd_func,
 	int ret;
 	DBusMessage *query, *reply; 
 	DBusMessageIter  iter;
+	DBusMessageIter	 iter_array;
 	DBusError err;
 	unsigned int wtp_id;
 	int i;
@@ -25361,14 +25421,22 @@ DEFUN(clear_update_fail_wtp_cmd_func,
 										 DBUS_TYPE_UINT32,
 										 &num);
 	tmp = wtplist->wtpidlist;
-	for(i = 0; i < num; i++){
-		
-		dbus_message_iter_append_basic (&iter,
-											 DBUS_TYPE_UINT32,
-											 &(tmp->wtpid));
+	dbus_message_iter_open_container (&iter,
+									DBUS_TYPE_ARRAY,
+									DBUS_STRUCT_BEGIN_CHAR_AS_STRING
+											DBUS_TYPE_UINT32_AS_STRING
+									DBUS_STRUCT_END_CHAR_AS_STRING,
+									&iter_array);
+	
+	for(i = 0; i < num; i++){			
+		DBusMessageIter iter_struct;		/* Huangleilei add it for AXSSZFI-1621: dbus may be not accept more than 255 elements, as string add to it */
+		dbus_message_iter_open_container(&iter_array,DBUS_TYPE_STRUCT,NULL,&iter_struct);
+		dbus_message_iter_append_basic(&iter_struct,DBUS_TYPE_UINT32,&(tmp->wtpid));
+		dbus_message_iter_close_container (&iter_array, &iter_struct);
 		tmp = tmp->next;
-
-	}	
+	}
+	dbus_message_iter_close_container (&iter, &iter_array);
+	
 	reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection,query,-1, &err);
 
 	dbus_message_unref(query);
@@ -37983,9 +38051,15 @@ DEFUN(show_wtp_running_config_cmd_func,
 	}
 	
 	int wtp_max_num = WTP_NUM;
-	ret = show_wtp_running_config(index,localid,wtpid,dcli_dbus_connection,wtp_max_num);
+	char *showRunningCfg = NULL;
+	ret = show_wtp_running_config(index,localid,wtpid,dcli_dbus_connection,wtp_max_num, &showRunningCfg);
 
-	if(ret == -1){
+	if (ret == 0 && showRunningCfg != NULL)
+	{
+		vty_out(vty, "%s", showRunningCfg);
+		free(showRunningCfg);
+	}
+	else if(ret == -1){
 		printf("<error> failed get reply.\n");
 	}
 	else if(ret != 0)

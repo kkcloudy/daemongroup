@@ -5339,7 +5339,7 @@ DBusMessage *wid_dbus_interface_dbus_show_bss_mac_list(DBusConnection *conn, DBu
 	
 	for(i=radioid*L_BSS_NUM; i<(radioid+1)*L_BSS_NUM; i++){
 		if((AC_BSS[i] != NULL)&&(AC_BSS[i]->WlanID == wlanid)){
-			if (((AC_WLAN[wlanid] != NULL) && (AC_WLAN[wlanid]->want_to_delete != 1)))		/* Huangleilei add for ASXXZFI-1622 */
+			if (((AC_WLAN[wlanid] != NULL) && (AC_WLAN[wlanid]->want_to_delete == 1)))		/* Huangleilei add for ASXXZFI-1622, check for AXSSZFI-1701 */
 			{
 				continue;
 			}
@@ -14169,6 +14169,8 @@ DBusMessage * wid_dbus_interface_update_wtp_img_version_list(DBusConnection *con
 	DBusMessage * reply;
 	DBusMessageIter  iter;
 	DBusMessageIter  iter1;
+	DBusMessageIter  iter_array;
+	DBusMessageIter iter_array_fail;	
 	DBusError err;	
 	int ret = WID_DBUS_SUCCESS;
 	unsigned int i;
@@ -14195,10 +14197,15 @@ DBusMessage * wid_dbus_interface_update_wtp_img_version_list(DBusConnection *con
 	dbus_message_iter_next(&iter);	
 	dbus_message_iter_get_basic(&iter,&num);
 
-	for(i = 0; i < num; i++){
+	
+	dbus_message_iter_next(&iter);	
+	dbus_message_iter_recurse(&iter, &iter_array);
 
-		dbus_message_iter_next(&iter);	
-		dbus_message_iter_get_basic(&iter,&wtpid);
+	for(i = 0; i < num; i++){		/* Huangleilei add it by AXSSZFI-1621: dbus may be not accept more than 255 elements, as string add to it */		
+		DBusMessageIter iter_struct;
+		dbus_message_iter_recurse(&iter_array, &iter_struct);
+		dbus_message_iter_get_basic(&iter_struct, &wtpid);
+		dbus_message_iter_next(&iter_array);
 		//save parameter
 		if((AC_WTP[wtpid] != NULL))
 		{
@@ -14245,14 +14252,25 @@ DBusMessage * wid_dbus_interface_update_wtp_img_version_list(DBusConnection *con
 	}		
 	dbus_message_iter_append_basic(&iter1, DBUS_TYPE_UINT32, &ret);
 	dbus_message_iter_append_basic(&iter1, DBUS_TYPE_UINT32, &fail_num);  //fengwenchao add 20110516
+
+	dbus_message_iter_open_container (&iter1,
+							DBUS_TYPE_ARRAY,
+							DBUS_STRUCT_BEGIN_CHAR_AS_STRING
+									DBUS_TYPE_UINT32_AS_STRING
+							DBUS_STRUCT_END_CHAR_AS_STRING,
+							&iter_array_fail);
 	/*fengwenchao add 20110516*/
 	if(fail_num != 0)
 	{
-		for(i=0;i<fail_num;i++)
-		{
-			dbus_message_iter_append_basic(&iter1, DBUS_TYPE_UINT32, &fail_wtp[i]);			
+		for(i = 0; i < fail_num; i++){			
+			DBusMessageIter iter_struct;		/* Huangleilei add it by AXSSZFI-1621: dbus may be not accept more than 255 elements, as string add to it */
+			dbus_message_iter_open_container(&iter_array_fail, DBUS_TYPE_STRUCT, NULL, &iter_struct);
+			dbus_message_iter_append_basic(&iter_struct, DBUS_TYPE_UINT32, &fail_wtp[i]);
+			dbus_message_iter_close_container (&iter_array_fail, &iter_struct);
 		}
 	}	
+	
+	dbus_message_iter_close_container (&iter1, &iter_array_fail);
 	/*fengwenchao add end*/
 	return reply;	
 }
@@ -14261,6 +14279,7 @@ DBusMessage * wid_dbus_interface_clear_update_wtp_img_version_list(DBusConnectio
 	DBusMessage * reply;
 	DBusMessageIter  iter;
 	DBusMessageIter  iter1;
+	DBusMessageIter iter_array;
 	DBusError err;	
 	int ret = WID_DBUS_SUCCESS;
 	unsigned int i;
@@ -14271,7 +14290,30 @@ DBusMessage * wid_dbus_interface_clear_update_wtp_img_version_list(DBusConnectio
 	
 	dbus_message_iter_init(msg,&iter);
 	dbus_message_iter_get_basic(&iter,&num);
-
+	dbus_message_iter_next(&iter);	
+	dbus_message_iter_recurse(&iter, &iter_array);
+		
+	for (i = 0; i < num; i++) 		/* Huangleilei add it by AXSSZFI-1621: dbus may be not accept more than 255 elements, as string add to it */
+	{
+		DBusMessageIter iter_struct;
+		dbus_message_iter_recurse(&iter_array, &iter_struct);
+		dbus_message_iter_get_basic(&iter_struct, &wtpid);
+		
+		//save parameter
+		if((AC_WTP[wtpid] != NULL)&&(AC_WTP[wtpid]->updateversion != NULL))
+		{
+			free(AC_WTP[wtpid]->updateversion);
+			AC_WTP[wtpid]->updateversion = NULL;	
+		}
+		
+		if((AC_WTP[wtpid] != NULL)&&(AC_WTP[wtpid]->updatepath != NULL))
+		{
+			free(AC_WTP[wtpid]->updatepath);
+			AC_WTP[wtpid]->updatepath = NULL;
+		}
+		dbus_message_iter_next(&iter_array);
+	}
+#if 0
 	for(i = 0; i < num; i++){
 
 		dbus_message_iter_next(&iter);	
@@ -14290,6 +14332,7 @@ DBusMessage * wid_dbus_interface_clear_update_wtp_img_version_list(DBusConnectio
 		}
 
 	}
+	#endif
 
 	if(num == 0){
 		for(i = 0; i < WTP_NUM; i++){
@@ -14323,6 +14366,7 @@ DBusMessage * wid_dbus_interface_clear_update_fail_wtp_list(DBusConnection *conn
 	DBusMessage * reply;
 	DBusMessageIter  iter;
 	DBusMessageIter  iter1;
+	DBusMessageIter  iter_array;
 	DBusError err;	
 	int ret = WID_DBUS_SUCCESS;
 	unsigned int i;
@@ -14333,21 +14377,21 @@ DBusMessage * wid_dbus_interface_clear_update_fail_wtp_list(DBusConnection *conn
 	
 	dbus_message_iter_init(msg,&iter);
 	dbus_message_iter_get_basic(&iter,&num);
-
-	for(i = 0; i < num; i++){
-
-		dbus_message_iter_next(&iter);	
-		dbus_message_iter_get_basic(&iter,&wtpid);
-		//save parameter
-		if((AC_WTP[wtpid] != NULL)&&(find_in_uptfail_wtp_list(wtpid) == CW_TRUE))
+	
+	dbus_message_iter_next(&iter);	
+	dbus_message_iter_recurse(&iter, &iter_array);
+		
+	for (i = 0; i < num; i++) 		/* Huangleilei add it for AXSSZFI-1621: dbus may be not accept more than 255 elements, as string add to it */
+	{
+		DBusMessageIter iter_struct;
+		dbus_message_iter_recurse(&iter_array, &iter_struct);
+		dbus_message_iter_get_basic(&iter_struct, &wtpid);
+		if((AC_WTP[wtpid] != NULL) && (find_in_uptfail_wtp_list(wtpid) == CW_TRUE))
 		{
 			delete_uptfail_wtp_list(wtpid);
-
 		}
-
-
+		dbus_message_iter_next(&iter_array);
 	}
-
 	if(num == 0){
 		destroy_uptfail_wtp_list();
 	}
@@ -27368,7 +27412,7 @@ DBusMessage * wid_dbus_interface_wlan_l2_isolation_new(DBusConnection *conn, DBu
 		}
 
 	}
-	if (wlanid != 0 && (AC_WLAN[wlanid] != NULL) && (AC_WLAN[wlanid]->want_to_delete == 0))		/* Huangleilei add for ASXXZFI-1622 */
+	if (wlanid != 0 && (AC_WLAN[wlanid] != NULL) && (AC_WLAN[wlanid]->want_to_delete != 0))		/* Huangleilei add for ASXXZFI-1622, check for AXSSZFI-1701 */
 	{
 		ret = WID_WANT_TO_DELETE_WLAN;
 	}
@@ -54352,21 +54396,34 @@ DBusMessage * wid_dbus_interface_set_ap_reboot_by_list(DBusConnection *conn, DBu
 
 	DBusMessage* reply;
 	DBusMessageIter  iter;
+	DBusMessageIter iter_array;
 	int i = 0;
-	unsigned int list[DEFAULT_LEN];
+	unsigned int list[4096];
 	DBusError err;
 	int ret = WID_DBUS_SUCCESS;
 	int num = 0;
-	memset(list,0,DEFAULT_LEN);
+	memset(list,0, sizeof(list));
 	
 	dbus_error_init(&err);
 		
 	dbus_message_iter_init(msg,&iter);
 	
 	dbus_message_iter_get_basic(&iter,&num);
-	
+
+	dbus_message_iter_next(&iter);	
+	dbus_message_iter_recurse(&iter, &iter_array);
 	if(num > 0 )
 	{		
+		for (i = 0; i < num; i++) 		/* Huangleilei add it by AXSSZFI-1621: dbus may be not accept more than 255 elements, as string add to it */
+		{
+			DBusMessageIter iter_struct;
+			dbus_message_iter_recurse(&iter_array, &iter_struct);
+			dbus_message_iter_get_basic(&iter_struct, &list[i]);
+			dbus_message_iter_next(&iter_array);
+		}
+	}
+	#if 0
+	if(num > 0 )		/* Huangleilei add it by AXSSZFI-1621: dbus may be not accept more than 255 elements, as string add to it */	{		
 		dbus_message_iter_next(&iter);	
 		
 		for (i = 0; i < num; i++) 
@@ -54379,6 +54436,7 @@ DBusMessage * wid_dbus_interface_set_ap_reboot_by_list(DBusConnection *conn, DBu
 		}
 		
 	}
+	#endif
 
 	
 	for(i=0;i<num;i++)
@@ -66488,6 +66546,7 @@ DBusMessage * wid_dbus_interface_wtp_list_dhcp_snooping(DBusConnection *conn, DB
 	DBusMessage * reply;
 	DBusMessageIter  iter;
 	DBusMessageIter  iter1;
+	DBusMessageIter iter_array;
 	DBusError err;	
 	int ret = WID_DBUS_SUCCESS;
 	unsigned int i =0;
@@ -66507,7 +66566,66 @@ DBusMessage * wid_dbus_interface_wtp_list_dhcp_snooping(DBusConnection *conn, DB
 	dbus_message_iter_next(&iter);	
 	dbus_message_iter_get_basic(&iter,&num);
 	printf("%s num %d\n",__func__,num);
+	
+	dbus_message_iter_next(&iter);	
+	dbus_message_iter_recurse(&iter, &iter_array);
+		
+	for (i = 0; i < num; i++) 		/* Huangleilei add it by AXSSZFI-1621: dbus may be not accept more than 255 elements, as string add to it */
+	{
+		DBusMessageIter iter_struct;
+		dbus_message_iter_recurse(&iter_array, &iter_struct);
+		dbus_message_iter_get_basic(&iter_struct, &wtpid);
+		dbus_message_iter_next(&iter_array);
 
+		WTPIndex = wtpid;
+		if((AC_WTP[wtpid] != NULL)&&(AC_WTP[wtpid]->dhcp_snooping != policy))
+		{
+			printf("%s AC_WTP[wtpid]->dhcp_snooping %d\n",__func__,AC_WTP[wtpid]->dhcp_snooping);
+
+			AC_WTP[wtpid]->dhcp_snooping = policy;
+			
+			if((AC_WTP[wtpid] != NULL)&&(AC_WTP[wtpid]->WTPStat == 5))
+			{
+				CWThreadMutexLock(&(gWTPs[WTPIndex].WTPThreadMutex));
+				if(gWTPs[WTPIndex].isNotFree && (gWTPs[WTPIndex].currentState == CW_ENTER_RUN))
+				{
+					memset((char*)&msg, 0, sizeof(msg));
+					msg.mqid = WTPIndex%THREAD_NUM+1;
+					msg.mqinfo.WTPID = WTPIndex;
+					msg.mqinfo.type = CONTROL_TYPE;
+					msg.mqinfo.subtype = WTP_S_TYPE;
+					msg.mqinfo.u.WtpInfo.Wtp_Op = WTP_DHCP_SNOOPING;
+					msg.mqinfo.u.WtpInfo.value2 = policy;
+					if (msgsnd(ACDBUS_MSGQ, (msgq *)&msg, sizeof(msg.mqinfo), 0) == -1){
+						wid_syslog_crit("%s msgsend %s",__func__,strerror(errno));
+						perror("msgsnd");
+					}
+				}		
+				CWThreadMutexUnlock(&(gWTPs[WTPIndex].WTPThreadMutex));
+			}else if((AC_WTP[wtpid] != NULL)){
+				memset((char*)&msg, 0, sizeof(msg));
+				msg.mqid = WTPIndex%THREAD_NUM+1;
+				msg.mqinfo.WTPID = WTPIndex;
+				msg.mqinfo.type = CONTROL_TYPE;
+				msg.mqinfo.subtype = WTP_S_TYPE;
+				msg.mqinfo.u.WtpInfo.Wtp_Op = WTP_DHCP_SNOOPING;
+				msg.mqinfo.u.WtpInfo.value2 = policy;
+			
+				elem = (struct msgqlist*)malloc(sizeof(struct msgqlist));
+				if(elem == NULL){
+					wid_syslog_crit("%s malloc %s",__func__,strerror(errno));
+					perror("malloc");
+					return 0;
+				}
+				memset((char*)&(elem->mqinfo), 0, sizeof(msgqdetail));
+				elem->next = NULL;
+				memcpy((char*)&(elem->mqinfo),(char*)&(msg.mqinfo),sizeof(msg.mqinfo));
+				WID_INSERT_CONTROL_LIST(wtpid, elem);
+				elem = NULL;
+			}
+		}
+	}
+#if 0
 	for(i = 0; i < num; i++){
 
 		dbus_message_iter_next(&iter);	
@@ -66562,6 +66680,7 @@ DBusMessage * wid_dbus_interface_wtp_list_dhcp_snooping(DBusConnection *conn, DB
 			}
 		}
 	}
+	#endif
 	if(num == 0){
 		for(i = 1; i < WTP_NUM; i++){	
 			wtpid = i;
@@ -66872,6 +66991,7 @@ DBusMessage * wid_dbus_interface_wtp_list_sta_info_report(DBusConnection *conn, 
 	DBusMessage * reply;
 	DBusMessageIter  iter;
 	DBusMessageIter  iter1;
+	DBusMessageIter iter_array;
 	DBusError err;	
 	int ret = WID_DBUS_SUCCESS;
 	unsigned int i = 0;
@@ -66889,7 +67009,64 @@ DBusMessage * wid_dbus_interface_wtp_list_sta_info_report(DBusConnection *conn, 
 
 	dbus_message_iter_next(&iter);	
 	dbus_message_iter_get_basic(&iter,&num);
-
+	
+	dbus_message_iter_next(&iter);	
+	dbus_message_iter_recurse(&iter, &iter_array);
+		
+	for (i = 0; i < num; i++) 		/* Huangleilei add it by AXSSZFI-1621: dbus may be not accept more than 255 elements, as string add to it */
+	{
+		DBusMessageIter iter_struct;
+		dbus_message_iter_recurse(&iter_array, &iter_struct);
+		dbus_message_iter_get_basic(&iter_struct, &wtpid);
+		dbus_message_iter_next(&iter_array);
+		WTPIndex = wtpid;
+		if((AC_WTP[wtpid] != NULL)&&(AC_WTP[wtpid]->sta_ip_report!= policy))
+		{
+			printf("%s AC_WTP[wtpid]->sta_ip_report %d\n",__func__,AC_WTP[wtpid]->sta_ip_report);
+			AC_WTP[wtpid]->sta_ip_report = policy;
+			
+			if((AC_WTP[wtpid] != NULL)&&(AC_WTP[wtpid]->WTPStat == 5))
+			{
+				CWThreadMutexLock(&(gWTPs[WTPIndex].WTPThreadMutex));
+				if(gWTPs[WTPIndex].isNotFree && (gWTPs[WTPIndex].currentState == CW_ENTER_RUN))
+				{
+					memset((char*)&msg, 0, sizeof(msg));
+					msg.mqid = WTPIndex%THREAD_NUM+1;
+					msg.mqinfo.WTPID = WTPIndex;
+					msg.mqinfo.type = CONTROL_TYPE;
+					msg.mqinfo.subtype = WTP_S_TYPE;
+					msg.mqinfo.u.WtpInfo.Wtp_Op = WTP_STA_INFO_REPORT;
+					msg.mqinfo.u.WtpInfo.value2 = policy;
+					if (msgsnd(ACDBUS_MSGQ, (msgq *)&msg, sizeof(msg.mqinfo), 0) == -1){
+						wid_syslog_crit("%s msgsend %s",__func__,strerror(errno));
+						perror("msgsnd");
+					}
+				}		
+				CWThreadMutexUnlock(&(gWTPs[WTPIndex].WTPThreadMutex));
+			}else if((AC_WTP[wtpid] != NULL)){
+				memset((char*)&msg, 0, sizeof(msg));
+				msg.mqid = WTPIndex%THREAD_NUM+1;
+				msg.mqinfo.WTPID = WTPIndex;
+				msg.mqinfo.type = CONTROL_TYPE;
+				msg.mqinfo.subtype = WTP_S_TYPE;
+				msg.mqinfo.u.WtpInfo.Wtp_Op = WTP_STA_INFO_REPORT;
+				msg.mqinfo.u.WtpInfo.value2 = policy;
+			
+				elem = (struct msgqlist*)malloc(sizeof(struct msgqlist));
+				if(elem == NULL){
+					wid_syslog_crit("%s malloc %s",__func__,strerror(errno));
+					perror("malloc");
+					return 0;
+				}
+				memset((char*)&(elem->mqinfo), 0, sizeof(msgqdetail));
+				elem->next = NULL;
+				memcpy((char*)&(elem->mqinfo),(char*)&(msg.mqinfo),sizeof(msg.mqinfo));
+				WID_INSERT_CONTROL_LIST(wtpid, elem);
+				elem = NULL;
+			}
+		}
+	}
+#if 0
 	for(i = 0; i < num; i++){
 
 		dbus_message_iter_next(&iter);	
@@ -66942,6 +67119,7 @@ DBusMessage * wid_dbus_interface_wtp_list_sta_info_report(DBusConnection *conn, 
 			}
 		}
 	}
+	#endif
 	if(num == 0){
 		for(i = 1; i < WTP_NUM; i++){	
 			wtpid = i;
@@ -68738,7 +68916,7 @@ DBusMessage * wid_dbus_wlan_show_running_config_start(DBusConnection *conn, DBus
 	int i=0;
 	WID_WLAN *WLAN[WLAN_NUM];
 	while(i<WLAN_NUM){
-		if(AC_WLAN[i] != NULL)
+		if(AC_WLAN[i] != NULL && AC_WLAN[i]->want_to_delete != 1)		/* Huangleilei check wlan operation */
 		{
 			WLAN[num] = AC_WLAN[i];
 			num++;
@@ -68926,14 +69104,14 @@ DBusMessage * wid_dbus_wlan_show_running_config_start(DBusConnection *conn, DBus
 				}
 				cursor = showStr + totalLen;
 				/*fengwenchao add end*/				
-				if(WLAN[i]->chinaEssid == 0){
+				if(WLAN[i]->want_to_delete != 1 && WLAN[i]->chinaEssid == 0){		/* Huangleilei check wlan operation */
 					totalLen += sprintf(cursor,"create wlan %d %s %s\n",WLAN[i]->WlanID,WLAN[i]->WlanName,WLAN[i]->ESSID);
 					cursor = showStr + totalLen;
-				}else if(WLAN[i]->chinaEssid == 1){
+				}else if(WLAN[i]->want_to_delete != 1 && WLAN[i]->chinaEssid == 1){	/* Huangleilei check wlan operation */
 					totalLen += sprintf(cursor,"create wlan_ascii %d %s %s\n",WLAN[i]->WlanID,WLAN[i]->WlanName,WLAN[i]->ESSID_CN_STR);
 					cursor = showStr + totalLen;
 				}
-				if(((int)WLAN[i]->SecurityID > 0)||(WLAN[i]->Wlan_Ifi != NULL)||(WLAN[i]->HideESSid !=0)){			
+				if((((int)WLAN[i]->SecurityID > 0)||(WLAN[i]->Wlan_Ifi != NULL)||(WLAN[i]->HideESSid !=0)) && WLAN[i]->want_to_delete != 1){	/* Huangleilei check wlan operation */
 					totalLen += sprintf(cursor," config wlan %d\n",WLAN[i]->WlanID);
 					cursor = showStr + totalLen;
 					if((int)WLAN[i]->SecurityID > 0){
@@ -69221,7 +69399,7 @@ DBusMessage * wid_dbus_wlan_show_running_config_end(DBusConnection *conn, DBusMe
 	int i=0;
 	WID_WLAN *WLAN[WLAN_NUM];
 	while(i<WLAN_NUM){
-		if(AC_WLAN[i] != NULL)
+		if(AC_WLAN[i] != NULL && AC_WLAN[i]->want_to_delete != 1)		/* Huangleilei check wlan operation */
 		{
 			WLAN[num] = AC_WLAN[i];
 			num++;
@@ -69257,7 +69435,7 @@ DBusMessage * wid_dbus_wlan_show_running_config_end(DBusConnection *conn, DBusMe
 			}
 			for(i=0; i<num; i++){				
 				/*if(((int)WLAN[i]->SecurityID > 0)&&(WLAN[i]->Wlan_Ifi != NULL)&&(WLAN[i]->Status == 0)){*/
-				if(((int)WLAN[i]->SecurityID > 0)){
+				if(WLAN[i]->want_to_delete != 1 && ((int)WLAN[i]->SecurityID > 0)){	/* Huang Leilei fix for AXSSZFI-1694,  */
 					totalLen += sprintf(cursor,"config wlan %d\n",WLAN[i]->WlanID);
 					cursor = showStr + totalLen;
 					if((WLAN[i]->wlan_if_policy == WLAN_INTERFACE)&&(WLAN[i]->tunnel_wlan_vlan != NULL)){
@@ -70545,7 +70723,7 @@ DBusMessage * wid_dbus_wtp_show_running_config_start(DBusConnection *conn, DBusM
 			{
 				for(bss=0; bss<L_BSS_NUM; bss++)
 				{
-					if(iflist->wlanid[bss] != 0)
+					if(iflist->wlanid[bss] != 0 && AC_WLAN[iflist->wlanid[bss]]->want_to_delete != 1)		/* Huangleilei check wlan operation */
 					{
 						totalLen += sprintf(cursor,"set auto_ap_login wlan %d base interface %s\n",iflist->wlanid[bss],iflist->ifname);
 						cursor = showStr + totalLen;
@@ -71093,7 +71271,7 @@ DBusMessage * wid_dbus_wtp_show_running_config_end(DBusConnection *conn, DBusMes
 						cursor = showStr + totalLen;
 						for(k=0;k<L_BSS_NUM;k++)
 						{
-							if(WTP[i]->WTP_Radio[j]->BSS[k] != NULL)
+							if(WTP[i]->WTP_Radio[j]->BSS[k] != NULL && AC_WLAN[WTP[i]->WTP_Radio[j]->BSS[k]->WlanID]->want_to_delete != 1)	/* Huangleilei check wlan operation */
 							{
 								
 								if(WTP[i]->WTP_Radio[j]->BSS[k]->WDSStat == WDS_ANY)
@@ -71172,7 +71350,7 @@ DBusMessage * wid_dbus_wtp_show_running_config_end(DBusConnection *conn, DBusMes
 					
 					for(i=0; i<bss_num; i++){
 						conf = AC_BSS[bssid[i]]->acl_conf;
-						if( conf != NULL ) {
+						if( conf != NULL && AC_WLAN[AC_BSS[bssid[i]]->WlanID]->want_to_delete != 1) {		/* Huangleilei check wlan operation */
 							radio = AC_BSS[bssid[i]]->Radio_G_ID;
 							wlanid = AC_BSS[bssid[i]]->WlanID;
 							if( conf->macaddr_acl != 0 ) {

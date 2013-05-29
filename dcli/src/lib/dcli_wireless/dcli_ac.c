@@ -9621,6 +9621,10 @@ DEFUN(set_wirelesscontrol_auto_ap_binding_l3_interface_new_func,
 	{
 		vty_out(vty,"set wireless-control dynamic_ap_login_interface %s %s successfully\n",argv[0],argv[1]);
 	}
+	else if (ret == IF_BINDING_FLAG)		/* Huangleilei fixed for AXSSZFI-1615 */
+	{
+		vty_out(vty, "<error> interface %s has be binded in other hansi.\n", argv[1]);
+	}
 	else if(ret == SWITCH_IS_DISABLE)
 		vty_out(vty,"<error> auto ap login switch is enable,you should disable it first\n");
 	else if(ret == APPLY_IF_FAIL)

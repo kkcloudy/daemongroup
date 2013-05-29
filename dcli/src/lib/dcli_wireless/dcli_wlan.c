@@ -412,22 +412,23 @@ DEFUN(show_wlan_list_cmd_func,
 	    vty_out(vty,"==============================================================================\n");
 		{
 			int i = 0;
-			int mesh_cout = 0;
+			int wds_cout = 0;
 			if (ret == 0)
 			{
 				for (i = 0; i < WLANINFO->wlan_num; i++)
 				{
-					if (WLANINFO->WLAN[i]->wds_mesh == 1)
-						mesh_cout ++;
+					if (WLANINFO->WLAN[i]->wds_mesh == 0 && WLANINFO->WLAN[i]->WDSStat == 1)
+					{
+						wds_cout ++;
+					}
 				}
-				if ((mesh_cout >= WLANINFO->wlan_num / 2 && WLANINFO->wlan_num != 1)
-					|| (WLANINFO->wlan_num == 1 && WLANINFO->WLAN[0]->wds_mesh == 1))
+				if (wds_cout == WLANINFO->wlan_num)
 				{
-					vty_out(vty,"%-6s %-12s %-9s %-10s %-8s %-32s\n","WlanID","WlanName","WlanState","SecurityID","MESH","ESSID");
+					vty_out(vty,"%-6s %-12s %-9s %-10s %-8s %-32s\n","WlanID","WlanName","WlanState","SecurityID","WDS","ESSID");
 				}
 				else 
 				{
-					vty_out(vty,"%-6s %-12s %-9s %-10s %-8s %-32s\n","WlanID","WlanName","WlanState","SecurityID","WDS","ESSID");
+					vty_out(vty,"%-6s %-12s %-9s %-10s %-8s %-32s\n","WlanID","WlanName","WlanState","SecurityID","MESH","ESSID");
 				}
 			}
 		}
@@ -488,22 +489,23 @@ DEFUN(show_wlan_list_cmd_func,
 				vty_out(vty,"====================================================================\n");
 				{
 					int i = 0;
-					int mesh_cout = 0;
+					int wds_cout = 0;
 					if (ret == 0)
 					{
 						for (i = 0; i < WLANINFO->wlan_num; i++)
 						{
-							if (WLANINFO->WLAN[i]->wds_mesh == 1)
-								mesh_cout ++;
+							if (WLANINFO->WLAN[i]->wds_mesh == 0 && WLANINFO->WLAN[i]->WDSStat == 1)
+							{
+								wds_cout ++;
+							}
 						}
-						if ((mesh_cout >= WLANINFO->wlan_num / 2 && WLANINFO->wlan_num != 1)
-							|| (WLANINFO->wlan_num == 1 && WLANINFO->WLAN[0]->wds_mesh == 1))
+						if (wds_cout == WLANINFO->wlan_num)
 						{
-							vty_out(vty,"%-6s %-12s %-9s %-10s %-8s %-32s\n","WlanID","WlanName","WlanState","SecurityID","MESH","ESSID");
+							vty_out(vty,"%-6s %-12s %-9s %-10s %-8s %-32s\n","WlanID","WlanName","WlanState","SecurityID","WDS","ESSID");
 						}
 						else 
 						{
-							vty_out(vty,"%-6s %-12s %-9s %-10s %-8s %-32s\n","WlanID","WlanName","WlanState","SecurityID","WDS","ESSID");
+							vty_out(vty,"%-6s %-12s %-9s %-10s %-8s %-32s\n","WlanID","WlanName","WlanState","SecurityID","MESH","ESSID");
 						}
 					}
 				}
@@ -561,22 +563,23 @@ DEFUN(show_wlan_list_cmd_func,
 			vty_out(vty,"====================================================================\n");
 			{
 				int i = 0;
-				int mesh_cout = 0;
+				int wds_cout = 0;
 				if (ret == 0)
 				{
 					for (i = 0; i < WLANINFO->wlan_num; i++)
 					{
-						if (WLANINFO->WLAN[i]->wds_mesh == 1)
-							mesh_cout ++;
+						if (WLANINFO->WLAN[i]->wds_mesh == 0 && WLANINFO->WLAN[i]->WDSStat == 1)
+						{
+							wds_cout ++;
+						}
 					}
-					if ((mesh_cout >= WLANINFO->wlan_num / 2 && WLANINFO->wlan_num != 1)
-						|| (WLANINFO->wlan_num == 1 && WLANINFO->WLAN[0]->wds_mesh == 1))
+					if (wds_cout == WLANINFO->wlan_num)
 					{
-						vty_out(vty,"%-6s %-12s %-9s %-10s %-8s %-32s\n","WlanID","WlanName","WlanState","SecurityID","MESH","ESSID");
+						vty_out(vty,"%-6s %-12s %-9s %-10s %-8s %-32s\n","WlanID","WlanName","WlanState","SecurityID","WDS","ESSID");
 					}
 					else 
 					{
-						vty_out(vty,"%-6s %-12s %-9s %-10s %-8s %-32s\n","WlanID","WlanName","WlanState","SecurityID","WDS","ESSID");
+						vty_out(vty,"%-6s %-12s %-9s %-10s %-8s %-32s\n","WlanID","WlanName","WlanState","SecurityID","MESH","ESSID");
 					}
 				}
 			}
@@ -1188,9 +1191,9 @@ DEFUN(show_wlan_cmd_func,
 			vty_out(vty,"WLAN SEND TRAFFIC LIMIT: %d\n",WLANINFO->WLAN[0]->wlan_send_traffic_limit);
 			vty_out(vty,"WLAN STA AVERAGE TRAFFIC LIMIT: %d\n",WLANINFO->WLAN[0]->wlan_station_average_traffic_limit);
 			vty_out(vty,"WLAN STA AVERAGE SEND TRAFFIC LIMIT: %d\n",WLANINFO->WLAN[0]->wlan_station_average_send_traffic_limit);
-			if (WLANINFO->WLAN[0]->wds_mesh == 1)
+			if (WLANINFO->WLAN[0]->wds_mesh == 1 || WLANINFO->WLAN[0]->WDSStat == 0)
 				vty_out(vty,"WLAN MESH FUNCTION: %s\n",(WLANINFO->WLAN[0]->WDSStat==1)? en:dis);		
-			else if (WLANINFO->WLAN[0]->wds_mesh == 0)
+			else if (WLANINFO->WLAN[0]->wds_mesh == 0 && WLANINFO->WLAN[0]->WDSStat == 1)
 				vty_out(vty,"WLAN WDS FUNCTION: %s\n",(WLANINFO->WLAN[0]->WDSStat==1)? en:dis);
 			else
 			{
@@ -1318,9 +1321,9 @@ DEFUN(show_wlan_cmd_func,
 					vty_out(vty,"WLAN STA AVERAGE TRAFFIC LIMIT: %d\n",WLANINFO->WLAN[0]->wlan_station_average_traffic_limit);
 					vty_out(vty,"WLAN STA AVERAGE SEND TRAFFIC LIMIT: %d\n",WLANINFO->WLAN[0]->wlan_station_average_send_traffic_limit);
 
-					if (WLANINFO->WLAN[0]->wds_mesh == 1)
+					if (WLANINFO->WLAN[0]->wds_mesh == 1 || WLANINFO->WLAN[0]->WDSStat == 0)
 						vty_out(vty,"WLAN MESH FUNCTION: %s\n",(WLANINFO->WLAN[0]->WDSStat==1)? en:dis);		
-					else if (WLANINFO->WLAN[0]->wds_mesh == 0)
+					else if (WLANINFO->WLAN[0]->wds_mesh == 0 && WLANINFO->WLAN[0]->WDSStat == 1)
 						vty_out(vty,"WLAN WDS FUNCTION: %s\n",(WLANINFO->WLAN[0]->WDSStat==1)? en:dis);
 					else
 					{
@@ -1442,9 +1445,9 @@ DEFUN(show_wlan_cmd_func,
 					vty_out(vty,"WLAN SEND TRAFFIC LIMIT: %d\n",WLANINFO->WLAN[0]->wlan_send_traffic_limit);
 					vty_out(vty,"WLAN STA AVERAGE TRAFFIC LIMIT: %d\n",WLANINFO->WLAN[0]->wlan_station_average_traffic_limit);
 					vty_out(vty,"WLAN STA AVERAGE SEND TRAFFIC LIMIT: %d\n",WLANINFO->WLAN[0]->wlan_station_average_send_traffic_limit);
-					if (WLANINFO->WLAN[0]->wds_mesh == 1)
+					if (WLANINFO->WLAN[0]->wds_mesh == 1 || WLANINFO->WLAN[0]->WDSStat == 0)
 						vty_out(vty,"WLAN MESH FUNCTION: %s\n",(WLANINFO->WLAN[0]->WDSStat==1)? en:dis);		
-					else if (WLANINFO->WLAN[0]->wds_mesh == 0)
+					else if (WLANINFO->WLAN[0]->wds_mesh == 0 && WLANINFO->WLAN[0]->WDSStat == 1)
 						vty_out(vty,"WLAN WDS FUNCTION: %s\n",(WLANINFO->WLAN[0]->WDSStat==1)? en:dis);
 					else
 					{

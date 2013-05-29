@@ -1210,6 +1210,11 @@ CWBool AsdWsm_WLANOp(unsigned char WlanID, Operate op, int both){
 		if(AC_WLAN[WlanID] == NULL){
 			return CW_FALSE;
 		}
+		else if (AC_WLAN[WlanID]->want_to_delete == 1)		/* Huang leilei add for wlan check */
+		{
+			wid_syslog_info("%s %d operator want to delete this wlan: %d", __func__, __LINE__, WlanID);
+			return CW_FALSE;
+		}
 	}
 	TableMsg wASD;
 	int len;
@@ -1288,6 +1293,11 @@ CWBool AsdWsm_BSSOp(unsigned int BSSIndex, Operate op, int both){
 	}
 	if(AC_WLAN[wlan_id] == NULL){		
 		wid_syslog_info("%s wlan %d null\n",__func__,wlan_id);
+		return CW_FALSE;
+	}
+	else if (AC_WLAN[wlan_id]->want_to_delete == 1)			/* Huang leilei add for wlan check */
+	{
+		wid_syslog_info("%s %d operator want to delete this wlan: %d", __func__, __LINE__, wlan_id);
 		return CW_FALSE;
 	}
 	if(!check_wtpid_func(WTPID)){
@@ -1502,6 +1512,11 @@ CWBool AsdWsm_BssMacOp(unsigned int BSSIndex, Operate op){
 	}
 	if(AC_WLAN[wlan_id] == NULL){		
 		wid_syslog_info("%s wlan %d null\n",__func__,wlan_id);
+		return CW_FALSE;
+	}
+	else if (AC_WLAN[wlan_id]->want_to_delete == 1)			/* Huang leilei add for wlan check */
+	{
+		wid_syslog_info("%s %d operator want to delete this wlan: %d", __func__, __LINE__, wlan_id);
 		return CW_FALSE;
 	}
 	if(!check_wtpid_func(WTPID)){
