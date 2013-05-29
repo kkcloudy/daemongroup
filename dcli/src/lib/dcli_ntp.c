@@ -737,36 +737,35 @@ DEFUN(ntp_cronttab_config_func,
 	strncpy(type,argv[0],sizeof(type) - 1);
 	strncpy(time,argv[1],sizeof(time) - 1);
 	
-	flag_t = strcmp(type,"hour");
 	
-	if(flag_t < 0){
+	if(strcmp(type,"day") == 0){
 		temp = atoi(argv[1]);
-		if(temp > 0 && temp < 32){
+		if((temp > 0) && (temp < 32)){
 			sprintf(time_t,"%d^%s",temp,"days");
 		}
 		else {
 			vty_out(vty,"input is overflow\n");
-			return CMD_WARNING;
+			return CMD_SUCCESS;
 		}	
 	}
-	else if(flag_t == 0){
+	else if(strcmp(type,"hour") == 0){
 		temp = atoi(argv[1]);
-		if(temp > 0 && temp < 32){
+		if((temp > 0 )&&( temp < 24)){
 			sprintf(time_t,"%d^%s",temp,"hours");
 		}
 		else {
 			vty_out(vty,"input is overflow\n");
-			return CMD_WARNING;
+			return CMD_SUCCESS;
 		}
 	}
-	else{
+	else if(strcmp(type,"minute") == 0){
 		temp = atoi(argv[1]);
 		if(temp > 9 && temp < 60){
 			sprintf(time_t,"%d^%s",temp,"mins");
 		}
 		else {
 			vty_out(vty,"input is overflow\n");
-			return CMD_WARNING;
+			return CMD_SUCCESS;
 		}
 	}
 	

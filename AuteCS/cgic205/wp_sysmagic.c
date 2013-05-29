@@ -40,7 +40,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "ws_sysinfo.h"
 #include "ws_sndr_cfg.h"
 #include "ws_list_container.h"
-#include "ws_secondary_container.h"   //引用的新的
+#include "ws_secondary_container.h"
+#include "ws_dbus_list.h"
 
 
 
@@ -317,7 +318,9 @@ static int ShowPage(struct secondary_module_container *p )
   struct eth_port_s pt;        //声明存储port 信息的结构体变量  
   struct sys_envir sys;  
   int p_getid = 0;
- //_getid = get_product_info(PRODUCT_LOCAL_SERIAL);
+  p_getid = get_product_info("/dbm/product/product_serial");
+  int devicetype = 0;
+  devicetype = get_product_info("/dbm/product/product_type");
   unsigned int propid;
   unsigned int Mid=0;
   
@@ -379,12 +382,11 @@ static int ShowPage(struct secondary_module_container *p )
           "<td align=center>",height);
 		  retu=checkuser_group(m);
 		  
-		fprintf(stderr,"333333333333333\n");    
-		if(p_getid == 8)
+		if(devicetype == 4)
 		{
 			panel_86();
-		}
-		if(p_getid == 7)
+		}		
+		if((p_getid == 7)||(devicetype == 6))
 		{
 			panel_7605i();
 		}
@@ -392,22 +394,17 @@ static int ShowPage(struct secondary_module_container *p )
 		{
 		/*********************************7605 panel***********************************************/
 		if(nm_show_hw_config(0,&sl)==CCGI_SUCCESS)     /*如果读取信息成功*/
-			fprintf(stderr,"44444444444444\n");
         Mid=sl.module_id;
-		fprintf(stderr,"zzzzzzzzzzz\n");
 	    select_panel_id(Pid,value,sl,ptrsysver,pt,prt_no,retu,p->encry,lcon,m,Mid);
-		fprintf(stderr,"fffffffffffffffff\n");
        /***************************************end 7605 panel**************************************/
 		}
 
-	fprintf(stderr,"99999999999999\n");	
      fprintf(cgiOut,"</td>"\
      "</tr>"\
      "</table>"\
 	 "</td>"\
 	 "</tr>"\
 	 "</table>");
-	 fprintf(stderr,"88888888888888\n"); 
 
 release(lcon);
 free(prt_no);		  

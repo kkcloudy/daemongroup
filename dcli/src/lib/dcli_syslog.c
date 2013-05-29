@@ -85,6 +85,15 @@ DEFUN(conf_syslog_func,
 		vty->node = SYSLOG_NODE;
         ////if syslogxml and is not exist,
 		if_syslog_exist();
+		int i = 0;
+		for(i = 1; i < MAX_SLOT; i++)
+		{
+			if(dbus_connection_dcli[i]->dcli_dbus_connection) 
+			{
+				ac_manage_set_syslogstatus_rule(dbus_connection_dcli[i]->dcli_dbus_connection, "restart","all");
+			}
+		}
+		
 	}
 	else
 	{
