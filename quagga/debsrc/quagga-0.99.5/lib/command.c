@@ -2503,6 +2503,7 @@ DEFUN (config_exit,
 	case TC_NODE:
 	case STRICT_ACCESS_NODE:
 	case SPACIAL_CONFIG_NODE:
+	case DNS_SER_NODE:
       vty->node = CONFIG_NODE;
 	  vty->slotindex = 0;	  
       break;
@@ -3909,6 +3910,7 @@ install_default (enum node_type node)
 	||node == FAST_FWD_NODE  //add by pangyaoyang for fast_forward
 	||node == SLAVE_FAST_FWD_NODE
 	||node == VLAN_NODE
+	||node == DNS_SER_NODE
 #if (defined _D_WCPSS_ || defined _D_CC_)	
 	||node == EBR_NODE
 #endif

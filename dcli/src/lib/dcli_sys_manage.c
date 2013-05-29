@@ -6212,14 +6212,81 @@ close_return:
 	}
 	return ret;
 }
+struct cmd_node dns_ser_node =
+{
+  DNS_SER_NODE,
+  "%s(config-dns-server)# ",
+};
+DEFUN (config_dns_server_func,
+	 config_dns_server_cmd,
+	 "config dns server",
+	 CONFIG_STR
+	 "Dns server\n"
+	 "Dns server")
+{
+  vty->node = DNS_SER_NODE;
+  return CMD_SUCCESS;
+}
+
+DEFUN (service_dns_func,
+	 service_dns_cmd,
+	 "service dns (enable|disable)",
+	 "System service\n"
+	 "Dns server\n"
+	 "Dns server enable\n"
+	 "Dns server disable")
+{
+	
+  if(!strncmp(argv[0],"enable",strlen(argv[0])))
+  {
+	system("sudo /etc/init.d/bind9 start ");
+  }
+  else if(!strncmp(argv[0],"disable",strlen(argv[0])))
+  {
+	  system("sudo /etc/init.d/bind9 stop ");
+  }
+  return CMD_SUCCESS;
+}
 
 
-/*end by zhaocg 2012-10-12 pm 18:30*/
+
+
+int dcli_dns_server_write (struct vty *vty)
+{
+	int ret;
+	char str[128],cmd[256]={0};
+	char show_str[256]={0};
+	char *pstr;
+	FILE *fp =	NULL;
+
+	sprintf(cmd,"ps -ef | grep named | grep -v \"grep named\" | wc -l ");
+
+	fp = popen(cmd,"r");
+	
+	if(fp && fgets(str,128,fp))
+	{	
+		fprintf(stdout,"%s",str);
+		int i = atoi(str);
+		
+		fprintf(stdout,"%d",i);
+		if(atoi(str) > 0)		
+		{
+			sprintf(show_str,"config dns server\n service dns enable\n exit\n");
+			vtysh_add_show_string(show_str);
+		}
+
+	}
+	if(fp)
+		pclose(fp);
+	return 0;
+}
 
 void dcli_sys_manage_init()
 {
 
 	install_node(&system_mng_node,dcli_sys_manage_write,"SYS_MNG_NODE");
+	install_node(&dns_ser_node,dcli_dns_server_write,"DNS_SER_NODE");
+	install_default (DNS_SER_NODE);
 
 	/*install_element (CONFIG_NODE, &system_reboot_cmd);*/
 	/*nstall_element (ENABLE_NODE, &system_reboot_cmd);*/
@@ -6301,6 +6368,7 @@ void dcli_sys_manage_init()
 	install_element (ENABLE_NODE, &dcli_sfd_show_var_slot_cmd);
 	install_element (VIEW_NODE, &dcli_sfd_show_var_slot_cmd);
 	/* end - sfd by zhengbo */
+	install_element (CONFIG_NODE, &dcli_sfd_arpswitch_cmd);
 
 	/**hxx added for dns service**/
 	install_element (VIEW_NODE, &show_ip_dns_func_cmd);
@@ -6339,6 +6407,8 @@ void dcli_sys_manage_init()
   install_element (SYSTEM_DEBUG_NODE, &show_memory_stat_cmd);
 
  /*end by zhaocg 2012-10-12 pm 18:30*/
+ install_element (CONFIG_NODE, &config_dns_server_cmd);
+ install_element (DNS_SER_NODE, &service_dns_cmd);
 
 }
 

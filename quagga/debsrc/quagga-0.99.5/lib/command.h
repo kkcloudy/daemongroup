@@ -252,7 +252,6 @@ enum node_type
   FAST_FWD_NODE,  /*add by pangyaoyang for fast_forward*/
   SLAVE_FAST_FWD_NODE,/*add for slave_fast_forward   2013-03-19*/
   /*add by shaojunwu  end*/
-  VTY_NODE,				/* Vty node. */
  /*add by sunjc@autelan.com*/
   SIGTRANUDP_NODE,
   IU_NODE,
@@ -275,7 +274,9 @@ enum node_type
 IGMP_NODE_DISTRIBUTED,
   IGMP_VLAN_NODE,  
 MLD_NODE_DISTRIBUTED,
-  MLD_VLAN_NODE
+  MLD_VLAN_NODE,
+  DNS_SER_NODE,
+  VTY_NODE			  /* Vty node. */
 };
 
 /* Node which has some commands and prompt string and configuration

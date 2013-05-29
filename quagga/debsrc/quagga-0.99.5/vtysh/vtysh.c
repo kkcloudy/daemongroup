@@ -3943,7 +3943,7 @@ for (i = HIDDENDEBUG_NODE; i < EBR_NODE1; i++)
 	
 	}
 	vtysh_config_dump (fp);
-	for (i = EBR_NODE1; i < vector_active(cmdvec); i++)
+	for (i = EBR_NODE1; i < DNS_SER_NODE; i++)
 		if ((node = vector_slot (cmdvec, i)) && node->func )
 		{
 			if ((*node->func) (vty))
@@ -3968,6 +3968,21 @@ for (i = HIDDENDEBUG_NODE; i < EBR_NODE1; i++)
 	}
 	vtysh_config_dump (fp);
 #endif
+  for (i = DNS_SER_NODE; i < vector_active(cmdvec); i++)
+	  if ((node = vector_slot (cmdvec, i)) && node->func )
+	  {
+		  if ((*node->func) (vty))
+		  {
+			  vty_out(vty,"Module %s[%d] error \n",node->node_name,node->node);
+			  fclose (fp);
+			  unlink(integrate_sav);
+			  return CMD_WARNING;
+		  }
+	  
+	  
+	  }
+  
+  vtysh_config_dump (fp);
 
   fclose (fp);
   
