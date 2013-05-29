@@ -3790,6 +3790,12 @@ int Get_Interface_Info(char * ifname, struct ifi_info *ifi){
 	wid_syslog_debug_debug(WID_DEFAULT,"addr %s",inet_ntoa(((struct sockaddr_in*)(&ifr.ifr_addr))->sin_addr));
 	
 	ifi->addr_num = ipaddr_list(ifi->ifi_index, ifi->addr, IFI_ADDR_NUM);
+	if((ifi->addr_num < 0)||(ifi->addr_num > IFI_ADDR_NUM))  //fengwenchao add for AXSSZFI-1668
+	{
+		wid_syslog_err("%s from kernel addr_num = %d \n",__func__,ifi->addr_num);
+		close(sockfd);
+		return -1;
+	}
 	switch (ifr.ifr_addr.sa_family) {
 		case AF_INET:
 			sinptr = (struct sockaddr_in *) &ifr.ifr_addr;
