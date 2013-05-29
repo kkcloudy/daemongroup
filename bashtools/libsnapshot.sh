@@ -318,7 +318,7 @@ guardlog "Done get userlog"
 getconfig()
 {
 guardlog "Get software config"
-/opt/bin/vtysh -c "show running-conf" >  $SNAPSHOTDIR/softwareconf
+#/opt/bin/vtysh -c "show running-conf" >  $SNAPSHOTDIR/softwareconf
 cp /mnt/conf_xml.conf $SNAPSHOTDIR/
 syncnow
 guardlog "Done getconfig"
