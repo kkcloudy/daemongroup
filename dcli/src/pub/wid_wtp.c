@@ -5693,6 +5693,7 @@ void dcli_free_WtpList(struct WtpList *WtpNode)
 int dcli_wtp_list_set_dhcp_snooping(int index,int localid,int policy,struct tag_wtpid_list * wtplist,DBusConnection *dcli_dbus_connection){
 	DBusMessage *query, *reply; 
 	DBusMessageIter  iter;
+	DBusMessageIter iter_array;
 	DBusError err;
 	int i;
 	struct tag_wtpid *tmp = NULL;
@@ -5721,6 +5722,22 @@ int dcli_wtp_list_set_dhcp_snooping(int index,int localid,int policy,struct tag_
 										 DBUS_TYPE_UINT32,
 										 &num);
 	tmp = wtplist->wtpidlist;
+	dbus_message_iter_open_container (&iter,
+									DBUS_TYPE_ARRAY,
+									DBUS_STRUCT_BEGIN_CHAR_AS_STRING
+											DBUS_TYPE_UINT32_AS_STRING
+									DBUS_STRUCT_END_CHAR_AS_STRING,
+									&iter_array);
+	
+	for(i = 0; i < num; i++){			
+		DBusMessageIter iter_struct;		/* Huangleilei add it by AXSSZFI-1621: dbus may be not accept more than 255 elements, as string add to it */
+		dbus_message_iter_open_container(&iter_array, DBUS_TYPE_STRUCT,NULL, &iter_struct);
+		dbus_message_iter_append_basic(&iter_struct, DBUS_TYPE_UINT32, &(tmp->wtpid));
+		dbus_message_iter_close_container (&iter_array, &iter_struct);
+		tmp = tmp->next;
+	}
+	dbus_message_iter_close_container (&iter, &iter_array);
+	#if 0
 	for(i = 0; i < num; i++){
 		
 		dbus_message_iter_append_basic (&iter,
@@ -5729,6 +5746,7 @@ int dcli_wtp_list_set_dhcp_snooping(int index,int localid,int policy,struct tag_
 		tmp = tmp->next;
 
 	}	
+	#endif
 	reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection,query,-1, &err);
 
 	dbus_message_unref(query);
@@ -5846,6 +5864,7 @@ int set_wid_rogue_danger_unsafe_attack_trap_state_cmd_trap(int index,int localid
 int dcli_wtp_list_sta_info_report(int index,int localid,int policy,struct tag_wtpid_list * wtplist,DBusConnection *dcli_dbus_connection){
 	DBusMessage *query, *reply; 
 	DBusMessageIter  iter;
+	DBusMessageIter iter_array;
 	DBusError err;
 	int i;
 	struct tag_wtpid *tmp = NULL;
@@ -5874,6 +5893,22 @@ int dcli_wtp_list_sta_info_report(int index,int localid,int policy,struct tag_wt
 										 DBUS_TYPE_UINT32,
 										 &num);
 	tmp = wtplist->wtpidlist;
+	dbus_message_iter_open_container (&iter,
+									DBUS_TYPE_ARRAY,
+									DBUS_STRUCT_BEGIN_CHAR_AS_STRING
+											DBUS_TYPE_UINT32_AS_STRING
+									DBUS_STRUCT_END_CHAR_AS_STRING,
+									&iter_array);
+	
+	for(i = 0; i < num; i++){			
+		DBusMessageIter iter_struct;		/* Huangleilei add it by AXSSZFI-1621: dbus may be not accept more than 255 elements, as string add to it */
+		dbus_message_iter_open_container(&iter_array, DBUS_TYPE_STRUCT, NULL, &iter_struct);
+		dbus_message_iter_append_basic(&iter_struct, DBUS_TYPE_UINT32, &(tmp->wtpid));
+		dbus_message_iter_close_container (&iter_array, &iter_struct);
+		tmp = tmp->next;
+	}
+	dbus_message_iter_close_container (&iter, &iter_array);
+	#if 0
 	for(i = 0; i < num; i++){
 		
 		dbus_message_iter_append_basic (&iter,
@@ -5882,6 +5917,7 @@ int dcli_wtp_list_sta_info_report(int index,int localid,int policy,struct tag_wt
 		tmp = tmp->next;
 
 	}	
+	#endif
 	reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection,query,-1, &err);
 
 	dbus_message_unref(query);
@@ -18381,7 +18417,7 @@ struct WtpList * set_ap_sta_wapi_info_reportinterval_cmd_set_ap_sta_wapi_info_re
 }
 
 
-int show_wtp_running_config(int index,int localid,int wtpid,DBusConnection *dcli_dbus_connection,int wtp_max) {	
+int show_wtp_running_config(int index,int localid,int wtpid,DBusConnection *dcli_dbus_connection,int wtp_max, char **showRunningCfg) {	
 	char *showStr = NULL,*cursor = NULL;
 	DBusMessage *query, *reply;
 	DBusError err;
@@ -18435,7 +18471,8 @@ int show_wtp_running_config(int index,int localid,int wtpid,DBusConnection *dcli
 		/* add string "exit" */
 		totalLen += sprintf(cursor, "==================================================\n");
 		cursor = showRunningCfg_str + totalLen;
-		printf("%s", showRunningCfg_str);
+		*showRunningCfg = showRunningCfg_str;
+		//vty_out(vty, "%s", showRunningCfg_str);
 	} 
 	else 
 	{
@@ -18453,7 +18490,7 @@ int show_wtp_running_config(int index,int localid,int wtpid,DBusConnection *dcli
 		return -1;
 	}
 	dbus_message_unref(reply);
-	free(showRunningCfg_str);
+	//free(showRunningCfg_str);
 
 	return 0;	
 }
