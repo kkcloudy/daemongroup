@@ -1310,7 +1310,17 @@ DEFUN(add_delete_trunk_member_cmd_fun,
 				is_same_board_port = 1;
 			}
 			
-			close(fd);
+			/* munmap and close fd */
+		    op_ret = munmap(trunk_list,sb.st_size);
+		    if( op_ret != 0 )
+		    {
+		        vty_out(vty,"Failed to munmap for g_trunklist[]! %s\n", strerror(errno));			
+		    }	
+			op_ret = close(fd);
+			if( op_ret != 0 )
+		    {
+		        vty_out(vty,"close shm_vlan failed \n" );   
+		    }
 		}
 		query = dbus_message_new_method_call(NPD_DBUS_BUSNAME,	\
 											NPD_DBUS_TRUNK_OBJPATH,	\
@@ -2350,7 +2360,17 @@ DEFUN(show_current_trunk_cmd_fun,
 		}
 		vty_out(vty,"\n");
 		vty_out(vty,"====================================================================\n");
-		close(fd);
+		/* munmap and close fd */
+	    ret = munmap(trunk_list,sb.st_size);
+	    if( ret != 0 )
+	    {
+	        vty_out(vty,"Failed to munmap for g_trunklist[]! %s\n", strerror(errno));			
+	    }	
+		ret = close(fd);
+		if( ret != 0 )
+	    {
+	        vty_out(vty,"close shm_vlan failed \n" );   
+	    }
 	}
 	else
 	{
@@ -2562,7 +2582,17 @@ DEFUN(show_trunk_one_cmd_fun,
 		}
 		vty_out(vty,"\n");
 		vty_out(vty,"====================================================================\n");
-		close(fd); 
+		/* munmap and close fd */
+	    ret = munmap(trunk_list,sb.st_size);
+	    if( ret != 0 )
+	    {
+	        vty_out(vty,"Failed to munmap for g_trunklist[]! %s\n", strerror(errno));			
+	    }	
+		ret = close(fd);
+		if( ret != 0 )
+	    {
+	        vty_out(vty,"close shm_vlan failed \n" );   
+	    }
 	}
 	else
 	{
@@ -3064,7 +3094,17 @@ DEFUN(show_trunk_list_cmd_fun,
 		if(!trunk_exists)
 			vty_out(vty,"%% There is no vaild trunk exist !\n");
 		vty_out(vty,"====================================================================\n");
-		close(fd);
+		/* munmap and close fd */
+	    ret = munmap(trunk_list,sb.st_size);
+	    if( ret != 0 )
+	    {
+	        vty_out(vty,"Failed to munmap for g_trunklist[]! %s\n", strerror(errno));			
+	    }	
+		ret = close(fd);
+		if( ret != 0 )
+	    {
+	        vty_out(vty,"close shm_vlan failed \n" );   
+	    }
 	}
 	else
 	{
