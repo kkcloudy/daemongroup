@@ -59,9 +59,12 @@
 #define FCCP_CMD_ENABLE_PURE_IP             42
 #define FCCP_CMD_GET_PURE_IP_STATE    		43
 #define FCCP_CMD_SHOW_PART_FAU64 			44
-#define FCCP_CMD_SHOW_OUT_ETH_FAU64 		45
-#define FCCP_CMD_SHOW_OUT_CAPWAP_FAU64 		46
-#define FCCP_CMD_SHOW_OUT_RPA_FAU64 		47
+#define FCCP_CMD_SHOW_ETH_FAU64 			45
+#define FCCP_CMD_SHOW_CAPWAP_FAU64 			46
+#define FCCP_CMD_SHOW_RPA_FAU64 			47
+#define FCCP_CMD_CLEAR_PART_FAU64 			48
+
+
 
 
 
@@ -299,9 +302,6 @@ typedef struct
 	int64_t fau_enet_capwap_pppoe_nonip_packets;	/*64-bit counter used for total ethernet input capwap pppoe noneip packets*/
 	int64_t fau_enet_output_packets_eth_pppoe;			/*64-bit counter used for total ethernet output eth pppoe packets*/
 	int64_t fau_enet_output_packets_capwap_pppoe;   /*64-bit counter used for total ethernet output capwap pppoe packets*/
-	int64_t fau_enet_output_packets_eth;   /*64-bit counter used for total ethernet output eth packets*/
-	int64_t fau_enet_output_packets_capwap;   /*64-bit counter used for total ethernet output capwap packets*/
-	int64_t fau_enet_output_packets_rpa;   /*64-bit counter used for total ethernet output rpa packets*/
 }fau64_info_t;
 
 typedef struct 
@@ -309,22 +309,43 @@ typedef struct
 	int64_t fau_enet_output_packets_eth;   /*64-bit counter used for total ethernet output eth packets*/
 	int64_t fau_enet_output_packets_capwap;   /*64-bit counter used for total ethernet output capwap packets*/
 	int64_t fau_enet_output_packets_rpa;   /*64-bit counter used for total ethernet output rpa packets*/
+	int64_t fau_enet_input_packets_eth;   /*64-bit counter used for total ethernet input eth packets*/
+	int64_t fau_enet_input_packets_capwap;   /*64-bit counter used for total ethernet input capwap packets*/
+	int64_t fau_enet_input_packets_rpa;   /*64-bit counter used for total ethernet input rpa packets*/
+	int64_t fau_enet_output_bytes_eth;   /*64-bit counter used for total ethernet output eth bytes*/
+	int64_t fau_enet_output_bytes_capwap;   /*64-bit counter used for total ethernet output capwap bytes*/
+	int64_t fau_enet_output_bytes_rpa;   /*64-bit counter used for total ethernet output rpa bytes*/
+	int64_t fau_enet_input_bytes_eth;   /*64-bit counter used for total ethernet input eth bytes*/
+	int64_t fau_enet_input_bytes_capwap;   /*64-bit counter used for total ethernet input capwap bytes*/
+	int64_t fau_enet_input_bytes_rpa;   /*64-bit counter used for total ethernet input rpa bytes*/
+
 }fau64_part_info_t;
 
 typedef struct 
 {
 	int64_t fau_enet_output_packets_eth;   /*64-bit counter used for total ethernet output eth packets*/
-}fau64_out_eth_info_t;
+	int64_t fau_enet_input_packets_eth;   /*64-bit counter used for total ethernet input eth packets*/
+	int64_t fau_enet_output_bytes_eth;   /*64-bit counter used for total ethernet output eth bytes*/
+	int64_t fau_enet_input_bytes_eth;   /*64-bit counter used for total ethernet input eth bytes*/
+}fau64_eth_info_t;
 
 typedef struct 
 {
 	int64_t fau_enet_output_packets_capwap;   /*64-bit counter used for total ethernet output capwap packets*/
-}fau64_out_capwap_info_t;
+	int64_t fau_enet_input_packets_capwap;   /*64-bit counter used for total ethernet input capwap packets*/
+	int64_t fau_enet_output_bytes_capwap;   /*64-bit counter used for total ethernet output capwap bytes*/
+	int64_t fau_enet_input_bytes_capwap;   /*64-bit counter used for total ethernet input capwap bytes*/
+}fau64_capwap_info_t;
 
 typedef struct 
 {
 	int64_t fau_enet_output_packets_rpa;   /*64-bit counter used for total ethernet output rpa packets*/
-}fau64_out_rpa_info_t;
+	int64_t fau_enet_input_packets_rpa;   /*64-bit counter used for total ethernet input rpa packets*/
+	int64_t fau_enet_output_bytes_rpa;   /*64-bit counter used for total ethernet output rpa packets*/
+	int64_t fau_enet_input_bytes_rpa;   /*64-bit counter used for total ethernet input rpa packets*/
+}fau64_rpa_info_t;
+
+
 
 
 
@@ -589,9 +610,9 @@ typedef union
 	user_rule_t     user_rule;
 	fau64_info_t    fau64_info;
 	fau64_part_info_t fau64_part_info;
-	fau64_out_eth_info_t fau64_out_eth_info;
-	fau64_out_capwap_info_t fau64_out_capwap_info;
-	fau64_out_rpa_info_t fau64_out_rpa_info;
+	fau64_eth_info_t fau64_eth_info;
+	fau64_capwap_info_t fau64_capwap_info;
+	fau64_rpa_info_t fau64_rpa_info;
 	uint32_t pool_buff_count[8];
 }fccp_data_t;
 
@@ -643,10 +664,6 @@ typedef struct se_interative_s
 #define SE_AGENT_READ_REG								"se_agent_read_reg"
 #define SE_AGENT_WRITE_REG							    "se_agent_write_reg"
 #define SE_AGENT_SHOW_FAU64                             "show_fau64"
-#define SE_AGENT_SHOW_PART_FAU64                        "show_part_fau64"
-#define SE_AGENT_SHOW_OUT_ETH_FAU64                     "show_out_eth_fau64"
-#define SE_AGENT_SHOW_OUT_CAPWAP_FAU64                  "show_out_capwap_fau64"
-#define SE_AGENT_SHOW_OUT_RPA_FAU64                     "show_out_rpa_fau64"
 #define SE_AGENT_CLEAR_FAU64							"clear_fau64"
 #define SE_AGENT_ICMP_ENABLE                            "config_icmp_enable"
 #define SE_AGENT_PURE_IP_ENABLE                         "config_pure_ip_enable"
@@ -670,6 +687,12 @@ typedef struct se_interative_s
 #define SE_AGENT_USER_ONLINE                            "user_online"
 #define SE_AGENT_USER_OFFLINE                           "user_offline"
 #define SE_AGENT_GET_USER_FLOWS                         "get_user_flow_statistics"
+#define SE_AGENT_SHOW_ETH_FAU64                     	"show_eth_fau64"
+#define SE_AGENT_SHOW_CAPWAP_FAU64                  	"show_capwap_fau64"
+#define SE_AGENT_SHOW_RPA_FAU64                     	"show_rpa_fau64"
+#define SE_AGENT_SHOW_PART_FAU64                        "show_part_fau64"
+#define SE_AGENT_CLEAR_PART_FAU64                       "clear_part_fau64"
+
 #define SE_AGENT_CONFIG_PURE_PAYLOAD_ACCT               "config_pure_payload_acct"
 #define SE_AGENT_CONFIG_TRAFFIC_MONITOR                 "config_traffic_monitor"
 #define SE_AGENT_CLEAR_TRAFFIC_MONITOR                  "clear_traffic_monitor"

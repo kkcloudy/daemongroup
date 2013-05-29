@@ -1374,9 +1374,6 @@ DEFUN(show_packet_statistic_func,
 	  vty_out(vty,"total ethernet output qinq packets = %llu\r\n",  fau64_info.fau_enet_output_packets_qinq);
 	  vty_out(vty,"total ethernet output eth pppoe  packets = %llu\r\n",  fau64_info.fau_enet_output_packets_eth_pppoe);
 	  vty_out(vty,"total ethernet output capwap pppoe packets = %llu\r\n",  fau64_info.fau_enet_output_packets_capwap_pppoe);
-	  vty_out(vty,"total ethernet output eth packets = %llu\r\n",  fau64_info.fau_enet_output_packets_eth);
-	  vty_out(vty,"total ethernet output capwap packets = %llu\r\n",  fau64_info.fau_enet_output_packets_capwap);
-	  vty_out(vty,"total ethernet output rpa packets = %llu\r\n",  fau64_info.fau_enet_output_packets_rpa);
 	  vty_out(vty,"total ethernet output error packets = %llu\r\n",fau64_info.fau_pko_errors);
 	  vty_out(vty,"total ethernet output bytes = %llu\r\n", fau64_info.fau_enet_output_bytes);
 	  vty_out(vty,"total ethernet output packets = %llu\r\n", fau64_info.fau_enet_output_packets);
@@ -1424,15 +1421,61 @@ DEFUN(show_part_packet_statistic_func,
       }
 	  memcpy(&fau64_part_info, &cmd_data.fccp_cmd.fccp_data.fau64_part_info, sizeof(fau64_part_info_t));
 	  vty_out(vty,"===========================================================================\n");
+	  vty_out(vty,"total ethernet input eth packets = %llu\r\n",  fau64_part_info.fau_enet_input_packets_eth);
+	  vty_out(vty,"total ethernet input capwap packets = %llu\r\n",  fau64_part_info.fau_enet_input_packets_capwap);
+	  vty_out(vty,"total ethernet input rpa packets = %llu\r\n",  fau64_part_info.fau_enet_input_packets_rpa);
 	  vty_out(vty,"total ethernet output eth packets = %llu\r\n",  fau64_part_info.fau_enet_output_packets_eth);
 	  vty_out(vty,"total ethernet output capwap packets = %llu\r\n",  fau64_part_info.fau_enet_output_packets_capwap);
 	  vty_out(vty,"total ethernet output rpa packets = %llu\r\n",  fau64_part_info.fau_enet_output_packets_rpa);
+	  vty_out(vty,"total ethernet input eth bytes = %llu\r\n",  fau64_part_info.fau_enet_input_bytes_eth);
+	  vty_out(vty,"total ethernet input capwap bytes = %llu\r\n",  fau64_part_info.fau_enet_input_bytes_capwap);
+	  vty_out(vty,"total ethernet input rpa bytes = %llu\r\n",  fau64_part_info.fau_enet_input_bytes_rpa);
+	  vty_out(vty,"total ethernet output eth bytes = %llu\r\n",  fau64_part_info.fau_enet_output_bytes_eth);
+	  vty_out(vty,"total ethernet output capwap bytes = %llu\r\n",  fau64_part_info.fau_enet_output_bytes_capwap);
+	  vty_out(vty,"total ethernet output rpa bytes = %llu\r\n",  fau64_part_info.fau_enet_output_bytes_rpa);
 	  vty_out(vty,"===========================================================================\n");
 	  return CMD_SUCCESS;
 }
 
 
 /*dcli command clear fau64  */
+DEFUN(  clear_part_packet_statistic_func,
+			clear_part_packet_statistic_cmd,
+			"clear  part packet statistic",
+			CLEAR_STR
+			"part of process \n"
+			"fast_forward  process packet \n"
+	  		"fast_forward process packet  statistic information\n"
+)
+{
+	se_interative_t  cmd_data;
+	int ret = -1,i = 0;
+	struct timeval overtime;
+	memset(&overtime,0,sizeof(overtime));
+	memset(&cmd_data,0,sizeof(cmd_data));
+	strncpy(cmd_data.hand_cmd,SE_AGENT_CLEAR_PART_FAU64,strlen(SE_AGENT_CLEAR_PART_FAU64));
+	fill_cpu_tag(&cmd_data, vty);
+	ret=sendto_agent(dcli_sockfd,(char*)&cmd_data,sizeof(cmd_data),vty);
+	if(ret<=0)
+	{
+		vty_out(vty,WRITE_FAIL_STR);
+		return CMD_FAILURE;
+	}
+	overtime.tv_sec=DCLI_WAIT_TIME;
+	ret=read_within_time(dcli_sockfd,(char*)&cmd_data,sizeof(cmd_data),&overtime);
+	if(ret==READ_ERROR)
+	{
+		vty_out(vty,AGENT_NO_RESPOND_STR);
+		return CMD_FAILURE;
+	}
+	if(cmd_data.cmd_result!=AGENT_RETURN_OK)
+	{
+		vty_out(vty,"%s\n",cmd_data.err_info);
+		return CMD_FAILURE;
+	}
+	return CMD_SUCCESS;
+}
+
 DEFUN(  clear_packet_statistic_func,
 			clear_packet_statistic_cmd,
 			"clear  packet statistic",
@@ -1468,6 +1511,7 @@ DEFUN(  clear_packet_statistic_func,
 	}
 	return CMD_SUCCESS;
 }
+
 
 DEFUN(fastfwd_learned_icmp_enable_func,
 	  fastfwd_learned_icmp_enable_cmd,
@@ -2526,15 +2570,16 @@ DEFUN(show_acl_learned_func,
 		acl_cnt=cmd_data.fccp_cmd.fccp_data.acl_info.acl_cnt;
 		acl_static_cnt=cmd_data.fccp_cmd.fccp_data.acl_info.acl_static_cnt;
 		acl_static_index = cmd_data.fccp_cmd.fccp_data.acl_info.acl_static_index;
+		acl_dynamic_index = cmd_data.fccp_cmd.fccp_data.acl_info.acl_dynamic_index;
 	}
 	vty_out(vty,"acl learned total :%u\n",acl_cnt);
 	/* if(acl_cnt == 0) */
-	if(acl_static_cnt == 0)
+	if(acl_cnt == 0)
 		return CMD_SUCCESS;
 	vty_out(vty,"=====================================================\n");
 display_loop:
-	if(acl_static_cnt < DISPLAY_ACL_CNT)
-		loop = acl_static_cnt;
+	if(acl_cnt < DISPLAY_ACL_CNT)
+		loop = acl_cnt;
 	else
 		loop = DISPLAY_ACL_CNT;
 
@@ -2543,6 +2588,7 @@ display_loop:
 		memset(&overtime,0,sizeof(overtime));
 		memset(&cmd_data,0,sizeof(cmd_data));
 		cmd_data.fccp_cmd.fccp_data.acl_info.acl_static_index=acl_static_index;
+		cmd_data.fccp_cmd.fccp_data.acl_info.acl_dynamic_index=acl_dynamic_index;
 		strncpy(cmd_data.hand_cmd,SE_AGENT_SHOW_ACL_LEARNED,strlen(SE_AGENT_SHOW_ACL_LEARNED));
 		ret=sendto_agent(dcli_sockfd,(char*)&cmd_data,sizeof(cmd_data),vty);
 		if(ret<=0)
@@ -2564,13 +2610,14 @@ display_loop:
 			return CMD_FAILURE;
 		}
 		acl_static_index=cmd_data.fccp_cmd.fccp_data.acl_info.acl_static_index;
+		acl_dynamic_index=cmd_data.fccp_cmd.fccp_data.acl_info.acl_dynamic_index;
 		
 		dcli_show_fastfwd_rule(&cmd_data,vty);
 		
 	}
 display_end:
-	acl_static_cnt -= loop;
-	if(acl_static_cnt == 0)
+	acl_cnt -= loop;
+	if(acl_cnt == 0)
 		return CMD_SUCCESS;
 	else
 	{
@@ -2634,15 +2681,16 @@ DEFUN(show_acl_learning_func,
 		acl_cnt=cmd_data.fccp_cmd.fccp_data.acl_info.acl_cnt;
 		acl_static_cnt=cmd_data.fccp_cmd.fccp_data.acl_info.acl_static_cnt;
 		acl_static_index = cmd_data.fccp_cmd.fccp_data.acl_info.acl_static_index;
+		acl_dynamic_index = cmd_data.fccp_cmd.fccp_data.acl_info.acl_dynamic_index;
 	}
 	vty_out(vty,"acl learning total :%u\n",acl_cnt);
 	/* if(acl_cnt == 0) */
-	if(acl_static_cnt == 0)
+	if(acl_cnt == 0)
 		return CMD_SUCCESS;
 	vty_out(vty,"=====================================================\n");
 display_loop:
-	if(acl_static_cnt < DISPLAY_ACL_CNT)
-		loop = acl_static_cnt;
+	if(acl_cnt < DISPLAY_ACL_CNT)
+		loop = acl_cnt;
 	else
 		loop = DISPLAY_ACL_CNT;
 
@@ -2651,6 +2699,7 @@ display_loop:
 		memset(&overtime,0,sizeof(overtime));
 		memset(&cmd_data,0,sizeof(cmd_data));
 		cmd_data.fccp_cmd.fccp_data.acl_info.acl_static_index=acl_static_index;
+		cmd_data.fccp_cmd.fccp_data.acl_info.acl_dynamic_index=acl_dynamic_index;
 		strncpy(cmd_data.hand_cmd,SE_AGENT_SHOW_ACL_LEARNING,strlen(SE_AGENT_SHOW_ACL_LEARNING));
 		ret=sendto_agent(dcli_sockfd,(char*)&cmd_data,sizeof(cmd_data),vty);
 		if(ret<=0)
@@ -2672,12 +2721,13 @@ display_loop:
 			return CMD_FAILURE;
 		}
 		acl_static_index=cmd_data.fccp_cmd.fccp_data.acl_info.acl_static_index;
+		acl_dynamic_index=cmd_data.fccp_cmd.fccp_data.acl_info.acl_dynamic_index;
 		
 		dcli_show_fastfwd_rule(&cmd_data,vty);
 	}
 display_end:
-	acl_static_cnt -= loop;
-	if(acl_static_cnt == 0)
+	acl_cnt -= loop;
+	if(acl_cnt == 0)
 		return CMD_SUCCESS;
 	else
 	{
@@ -4006,6 +4056,7 @@ void dcli_se_agent_init(void)
 	install_element(FAST_FWD_NODE,&show_packet_statistic_cmd);
 	install_element(FAST_FWD_NODE,&show_part_packet_statistic_cmd);
 	install_element(FAST_FWD_NODE,&clear_packet_statistic_cmd);
+	//install_element(FAST_FWD_NODE,&clear_part_packet_statistic_cmd);
 	install_element(FAST_FWD_NODE,&debug_ipfwd_learn_cmd);
 	install_element(FAST_FWD_NODE,&fastfwd_learned_icmp_enable_cmd);
 	install_element(FAST_FWD_NODE,&fastfwd_pure_ip_enable_cmd);
@@ -4048,6 +4099,7 @@ void dcli_se_agent_init(void)
 	install_element(HANSI_NODE,&show_packet_statistic_cmd);
 	install_element(HANSI_NODE,&show_part_packet_statistic_cmd);
 	install_element(HANSI_NODE,&clear_packet_statistic_cmd);
+	//install_element(HANSI_NODE,&clear_part_packet_statistic_cmd);
 	install_element(HANSI_NODE,&fastfwd_learned_icmp_enable_cmd);
 	install_element(HANSI_NODE,&fastfwd_pure_ip_enable_cmd);
 	install_element(HANSI_NODE,&show_fwd_pure_ip_enable_cmd);
@@ -4094,6 +4146,7 @@ void dcli_se_agent_init(void)
 	install_element(LOCAL_HANSI_NODE,&show_packet_statistic_cmd);
 	install_element(LOCAL_HANSI_NODE,&show_part_packet_statistic_cmd);
 	install_element(LOCAL_HANSI_NODE,&clear_packet_statistic_cmd);
+	//install_element(LOCAL_HANSI_NODE,&clear_part_packet_statistic_cmd);
 	install_element(LOCAL_HANSI_NODE,&fastfwd_learned_icmp_enable_cmd);
 	install_element(LOCAL_HANSI_NODE,&fastfwd_pure_ip_enable_cmd);
 	install_element(LOCAL_HANSI_NODE,&show_fwd_pure_ip_enable_cmd);
@@ -4155,6 +4208,7 @@ void dcli_se_agent_init(void)
 	install_element(SLAVE_FAST_FWD_NODE,&show_packet_statistic_cmd);
 	install_element(SLAVE_FAST_FWD_NODE,&show_part_packet_statistic_cmd);
 	install_element(SLAVE_FAST_FWD_NODE,&clear_packet_statistic_cmd);
+	//install_element(SLAVE_FAST_FWD_NODE,&clear_part_packet_statistic_cmd);
 	install_element(SLAVE_FAST_FWD_NODE,&show_rule_stats_cmd);
 	install_element(SLAVE_FAST_FWD_NODE,&clear_rule_all_cmd);
 }
