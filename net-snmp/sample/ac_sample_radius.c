@@ -278,38 +278,41 @@ static load_radius_count_config_by_instance ( multi_sample_t *multi_sample, stru
     syslog(LOG_INFO, "load %s instance %d-%d radius count config\n", 
                      instance_config->local_id ? "Local-hansi" : "Remote-hansi", instance_config->slot_id, instance_config->instance_id);
 
-    int i = 0;
+	int i = 0;
+	int ret = 0;
 	for(i = 0; i < instance_config->radiusconf.current_num; i++) {
         
 		char count_ip[32] = { 0 };
 		char back_count_ip[32] = { 0 };
 		
-        PRADIUS_SERVER_STATUS_INFO radius_count_data = (PRADIUS_SERVER_STATUS_INFO)SAMPLE_MALLOC(sizeof(RADIUS_SERVER_STATUS_INFO));
-        if(NULL == radius_count_data) {
-            syslog(LOG_ERR,"load_radius_count_config_by_instance: malloc error memory full!\n");
-            return AS_RTN_MALLOC_ERR;
-        }
-        memset(radius_count_data, 0 , sizeof(*radius_count_data));
-        
-		inet_ntoa_ex(instance_config->radiusconf.radius_srv[i].acct_ip, count_ip, sizeof(count_ip));
-		
-        strncpy(radius_count_data->ip, count_ip, IP_STR_LEN - 1);                    
-        radius_count_data->port = instance_config->radiusconf.radius_srv[i].acct_port;
+		PRADIUS_SERVER_STATUS_INFO radius_count_data = (PRADIUS_SERVER_STATUS_INFO)SAMPLE_MALLOC(sizeof(RADIUS_SERVER_STATUS_INFO));
+		if(NULL == radius_count_data) {
+		    syslog(LOG_ERR,"load_radius_count_config_by_instance: malloc error memory full!\n");
+		    return AS_RTN_MALLOC_ERR;
+		}
+		memset(radius_count_data, 0 , sizeof(*radius_count_data));
 
-        if(instance_config->radiusconf.radius_srv[i].backup_acct_ip) { 
-            inet_ntoa_ex(instance_config->radiusconf.radius_srv[i].backup_acct_ip, back_count_ip, sizeof(back_count_ip));
-            strncpy(radius_count_data->backup_ip, back_count_ip, IP_STR_LEN - 1);
-            radius_count_data->backup_port = instance_config->radiusconf.radius_srv[i].backup_acct_port;
-        }
-        
-        radius_count_data->local_id = instance_config->local_id;
-        radius_count_data->instance_id = instance_config->instance_id;
-        
-        create_config_data_2(multi_sample, head, instance_config->radiusconf.radius_srv[i].acct_ip, radius_count_data);
-        syslog(LOG_DEBUG,"load_radius_auth_config: match_word (%u) ip (%s) port (%d) backup ip (%s) port (%d)",
-                                instance_config->radiusconf.radius_srv[i].acct_ip, radius_count_data->ip, radius_count_data->port, 
-                                radius_count_data->backup_ip, radius_count_data->backup_port ); //test
-	
+		inet_ntoa_ex(instance_config->radiusconf.radius_srv[i].acct_ip, count_ip, sizeof(count_ip));
+			
+		strncpy(radius_count_data->ip, count_ip, IP_STR_LEN - 1);                    
+		radius_count_data->port = instance_config->radiusconf.radius_srv[i].acct_port;
+
+		if(instance_config->radiusconf.radius_srv[i].backup_acct_ip) { 
+			inet_ntoa_ex(instance_config->radiusconf.radius_srv[i].backup_acct_ip, back_count_ip, sizeof(back_count_ip));
+			strncpy(radius_count_data->backup_ip, back_count_ip, IP_STR_LEN - 1);
+			radius_count_data->backup_port = instance_config->radiusconf.radius_srv[i].backup_acct_port;
+		}
+
+		radius_count_data->local_id = instance_config->local_id;
+		radius_count_data->instance_id = instance_config->instance_id;
+
+		ret = create_config_data_3(multi_sample, head, instance_config->radiusconf.radius_srv[i].acct_ip, radius_count_data);
+		syslog(LOG_DEBUG,"load_radius_auth_config: match_word (%u) ip (%s) port (%d) backup ip (%s) port (%d)",
+		                        instance_config->radiusconf.radius_srv[i].acct_ip, radius_count_data->ip, radius_count_data->port, 
+		                        radius_count_data->backup_ip, radius_count_data->backup_port ); //test
+		if (0 != ret) {
+			free(radius_count_data);
+		}	
 	}
 	
     syslog(LOG_DEBUG, "exit load_radius_count_config_by_instance\n");
@@ -317,41 +320,55 @@ static load_radius_count_config_by_instance ( multi_sample_t *multi_sample, stru
 }
 static int load_radius_count_config(multi_sample_t *multi_sample, struct list_head *head )
 {
-	//syslog(LOG_INFO,"load_radius_count_config: entry.\n"); //test
-		
-	if(NULL == multi_sample || NULL == head) {
-		return AS_RTN_NULL_POINTER;
+	syslog(LOG_DEBUG, "enter load_radius_count_config\n");
+	if (NULL == multi_sample || NULL == head) {
+		syslog(LOG_WARNING, "load_radius_count_config: input para error!\n");
+		return AS_RTN_PARAM_ERR;
 	}
 
-    DBusConnection *active_connection = ac_sample_dbus_get_active_connection();
-    if(NULL == active_connection) {
-        return AS_RTN_SAMPLE_DBUS_CONNECTION_ERR;
-    }
+	struct instance_radius_config *configHead = NULL;
+	unsigned int config_num = 0;
+	int ret = AC_MANAGE_SUCCESS;
+	instance_parameter *paraHead = NULL;
+	instance_parameter *paraNode = NULL;
 
-    struct instance_radius_config *config_array = NULL;
-    unsigned int config_num = 0;
-    int ret = AC_MANAGE_SUCCESS;
-    
-    syslog(LOG_INFO, "load_radius_count_config: before ac_manage_show_radius_config\n");
-    ret = ac_manage_show_radius_config(active_connection, &config_array, &config_num);
-    syslog(LOG_INFO, "load_radius_count_config: after ac_manage_show_radius_config, ret = %d\n", ret);
+	ret = get_master_instance_para(&paraHead);
+	if (0 != ret) {
+		syslog(LOG_WARNING, "load_radius_count_config: get_master_instance_para failed!\n");
+		return ret;
+	}
+
+	for (paraNode = paraHead; NULL != paraNode; paraNode = paraNode->next) {
+		struct instance_radius_config *configNode = (struct instance_radius_config *)malloc(sizeof(struct instance_portal_config));
+		if (NULL == configNode) {
+			syslog(LOG_WARNING, "load_radius_count_config: configNode malloc failed!\n");
+			free_master_instance_para(&paraHead);
+			return -1;
+		}
+		ret = eag_get_radius_conf(paraNode->connection, 
+                                        paraNode->parameter.local_id, 
+                                        paraNode->parameter.instance_id, 
+                                        "",
+                                        &configNode->radiusconf);
+		if (0 != ret) {
+			syslog(LOG_WARNING, "load_radius_count_config: eag_get_radius_conf failed!\n");
+			free(configNode);
+			continue;
+		}
+		configNode->slot_id = paraNode->parameter.slot_id;
+		configNode->local_id = paraNode->parameter.local_id;
+		configNode->instance_id = paraNode->parameter.instance_id;
+
+		ret = load_radius_count_config_by_instance(multi_sample, head, configNode);
+		if (0 != ret) {
+			syslog(LOG_INFO, "load_radius_count_config_by_instance error\n");
+		}
+		free(configNode);
+	}
+
+	free_master_instance_para(&paraHead);
+	return 0;
 	    
-    if(AC_MANAGE_SUCCESS == ret && config_array) {
-        int i = 0;
-        for(i = 0; i < config_num; i++) {
-            if(load_radius_count_config_by_instance(multi_sample, head, &(config_array[i]))) {
-                syslog(LOG_INFO, "load_radius_count_config_by_instance error\n");
-                continue;
-            }
-        }   
-        
-        free(config_array);
-    }
-    else {
-        return AS_RTN_ERR;
-    }
-        
-	return AS_RTN_OK;
 }
 
 
@@ -367,38 +384,42 @@ load_radius_auth_config_by_instance ( multi_sample_t *multi_sample, struct list_
     
     syslog(LOG_INFO, "load %s instance %d-%d radius auth config\n", 
                      instance_config->local_id ? "Local-hansi" : "Remote-hansi", instance_config->slot_id, instance_config->instance_id);
-	
-    int i = 0;
+
+	int i = 0;
+	int ret = 0;
 	for(i = 0; i < instance_config->radiusconf.current_num; i++) {
         
 		char auth_ip[32] = { 0 };
 		char back_auth_ip[32] = { 0 };
 		
-        PRADIUS_SERVER_STATUS_INFO radius_auth_data = (PRADIUS_SERVER_STATUS_INFO)SAMPLE_MALLOC(sizeof(RADIUS_SERVER_STATUS_INFO));
-        if(NULL == radius_auth_data) {
-            syslog(LOG_ERR,"load_radius_auth_config: malloc error memory full!\n");
-            return AS_RTN_MALLOC_ERR;
-        }
+		PRADIUS_SERVER_STATUS_INFO radius_auth_data = (PRADIUS_SERVER_STATUS_INFO)SAMPLE_MALLOC(sizeof(RADIUS_SERVER_STATUS_INFO));
+		if(NULL == radius_auth_data) {
+		    syslog(LOG_ERR,"load_radius_auth_config: malloc error memory full!\n");
+		    return AS_RTN_MALLOC_ERR;
+		}
 
-        memset(radius_auth_data, 0 , sizeof(*radius_auth_data));
-        
+		memset(radius_auth_data, 0 , sizeof(*radius_auth_data));
+
 		inet_ntoa_ex(instance_config->radiusconf.radius_srv[i].auth_ip, auth_ip, sizeof(auth_ip));
-        strncpy(radius_auth_data->ip, auth_ip, IP_STR_LEN - 1);                    
-        radius_auth_data->port = instance_config->radiusconf.radius_srv[i].auth_port;
+		strncpy(radius_auth_data->ip, auth_ip, IP_STR_LEN - 1);                    
+		radius_auth_data->port = instance_config->radiusconf.radius_srv[i].auth_port;
 
-        if(instance_config->radiusconf.radius_srv[i].backup_auth_ip) {
-            inet_ntoa_ex(instance_config->radiusconf.radius_srv[i].backup_auth_ip, back_auth_ip, sizeof(back_auth_ip));
-            strncpy(radius_auth_data->backup_ip, back_auth_ip, IP_STR_LEN - 1);                    
-            radius_auth_data->backup_port = instance_config->radiusconf.radius_srv[i].backup_auth_port;
-        }
-        
-        radius_auth_data->local_id = instance_config->local_id;
-        radius_auth_data->instance_id = instance_config->instance_id;
-        
-        create_config_data_2(multi_sample, head, instance_config->radiusconf.radius_srv[i].auth_ip, radius_auth_data);
-        syslog(LOG_DEBUG,"load_radius_auth_config: match_word (%u) ip (%s) port (%d) backup ip (%s) port (%d)",
-                                instance_config->radiusconf.radius_srv[i].auth_ip, radius_auth_data->ip, radius_auth_data->port, 
-                                radius_auth_data->backup_ip, radius_auth_data->backup_port ); //test
+		if(instance_config->radiusconf.radius_srv[i].backup_auth_ip) {
+		    inet_ntoa_ex(instance_config->radiusconf.radius_srv[i].backup_auth_ip, back_auth_ip, sizeof(back_auth_ip));
+		    strncpy(radius_auth_data->backup_ip, back_auth_ip, IP_STR_LEN - 1);                    
+		    radius_auth_data->backup_port = instance_config->radiusconf.radius_srv[i].backup_auth_port;
+		}
+
+		radius_auth_data->local_id = instance_config->local_id;
+		radius_auth_data->instance_id = instance_config->instance_id;
+
+		ret = create_config_data_3(multi_sample, head, instance_config->radiusconf.radius_srv[i].auth_ip, radius_auth_data);
+		syslog(LOG_DEBUG,"load_radius_auth_config: match_word (%u) ip (%s) port (%d) backup ip (%s) port (%d)",
+		                        instance_config->radiusconf.radius_srv[i].auth_ip, radius_auth_data->ip, radius_auth_data->port, 
+		                        radius_auth_data->backup_ip, radius_auth_data->backup_port ); //test
+		if (0 != ret) {
+			free(radius_auth_data);
+		}
 	
 	}
 	
@@ -408,41 +429,54 @@ load_radius_auth_config_by_instance ( multi_sample_t *multi_sample, struct list_
 
 static int load_radius_auth_config ( multi_sample_t *multi_sample, struct list_head *head )
 {
-	//syslog(LOG_INFO,"load_radius_count_config: entry.\n"); //test
-		
-	if(NULL == multi_sample || NULL == head) {
-		return AS_RTN_NULL_POINTER;
+	syslog(LOG_DEBUG, "enter load_radius_auth_config\n");
+	if (NULL == multi_sample || NULL == head) {
+		syslog(LOG_WARNING, "load_radius_auth_config: input para error!\n");
+		return AS_RTN_PARAM_ERR;
 	}
 
-    DBusConnection *active_connection = ac_sample_dbus_get_active_connection();
-    if(NULL == active_connection) {
-        return AS_RTN_SAMPLE_DBUS_CONNECTION_ERR;
-    }
-    
-    struct instance_radius_config *config_array = NULL;
-    unsigned int config_num = 0;
-    int ret = AC_MANAGE_SUCCESS;
-    
-    syslog(LOG_INFO, "load_radius_auth_config: before ac_manage_show_radius_config\n");
-    ret = ac_manage_show_radius_config(active_connection, &config_array, &config_num);
-    syslog(LOG_INFO, "load_radius_auth_config: after ac_manage_show_radius_config, ret = %d\n", ret);
-	    
-    if(AC_MANAGE_SUCCESS == ret && config_array) {
-        int i = 0;
-        for(i = 0; i < config_num; i++) {
-            if(load_radius_auth_config_by_instance(multi_sample, head, &(config_array[i]))) {
-                syslog(LOG_INFO, "load_radius_count_config_by_instance error\n");
-                continue;
-            }
-        }   
-        
-        free(config_array);
-    }
-    else {
-        return AS_RTN_ERR;
-    }
+	struct instance_radius_config *configHead = NULL;
+	unsigned int config_num = 0;
+	int ret = AC_MANAGE_SUCCESS;
+	instance_parameter *paraHead = NULL;
+	instance_parameter *paraNode = NULL;
 
-	return AS_RTN_OK;
+	ret = get_master_instance_para(&paraHead);
+	if (0 != ret) {
+		syslog(LOG_WARNING, "load_radius_auth_config: get_master_instance_para failed!\n");
+		return ret;
+	}
+
+	for (paraNode = paraHead; NULL != paraNode; paraNode = paraNode->next) {
+		struct instance_radius_config *configNode = (struct instance_radius_config *)malloc(sizeof(struct instance_portal_config));
+		if (NULL == configNode) {
+			syslog(LOG_WARNING, "load_radius_auth_config: configNode malloc failed!\n");
+			free_master_instance_para(&paraHead);
+			return -1;
+		}
+		ret = eag_get_radius_conf(paraNode->connection, 
+                                        paraNode->parameter.local_id, 
+                                        paraNode->parameter.instance_id,
+                                        "",
+                                        &configNode->radiusconf);
+		if (0 != ret) {
+			syslog(LOG_WARNING, "load_radius_auth_config: eag_get_radius_conf failed!\n");
+			free(configNode);
+			continue;
+		}
+		configNode->slot_id = paraNode->parameter.slot_id;
+		configNode->local_id = paraNode->parameter.local_id;
+		configNode->instance_id = paraNode->parameter.instance_id;
+
+		ret = load_radius_auth_config_by_instance(multi_sample, head, configNode);
+		if (0 != ret) {
+			syslog(LOG_INFO, "load_radius_auth_config_by_instance error\n");
+		}
+		free(configNode);
+	}
+
+	free_master_instance_para(&paraHead);
+	return 0;
 }
 
 

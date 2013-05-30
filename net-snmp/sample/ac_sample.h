@@ -1,6 +1,7 @@
 #ifndef _AC_SAMPLE_H
 #define _AC_SAMPLE_H
 #include "ac_sample_def.h"
+#include "ws_dbus_list_interface.h"
 extern struct timeval gTimeout;
 
 typedef struct ac_sample_t ac_sample_t;
@@ -89,10 +90,15 @@ int get_sample_threshold( ac_sample_t  *me );
 
 
 
-sample_window_t *get_sample_window( ac_sample_t *me );
+sample_window_t *get_sample_window( ac_sample_t *me);
 int get_sample_info( ac_sample_t *me, int *latest, int *average, int *max );
 
+int
+get_master_instance_para(instance_parameter **paraHead);
+void
+free_master_instance_para(instance_parameter **paraHead);
 
+int create_config_data_3( multi_sample_t *multi_sample, struct list_head *head, unsigned int match_word, void *subuser_data);
 
 unsigned int get_last_sample_time( ac_sample_t  *me );
 

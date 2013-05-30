@@ -36,6 +36,7 @@
 #include "eag_interface.h"
 #include "ac_manage_sample_interface.h"
 
+
 typedef struct {
     unsigned int local_id;
 	unsigned int instance_id;
@@ -121,6 +122,8 @@ static int do_sample_portal_state( ac_sample_t *me )
 	return cur_portal_state;
 }
 #endif
+
+
 static int load_portal_config_by_instance(multi_sample_t *multi_sample, struct list_head *head, struct instance_portal_config *instance_config)
 {	
     syslog(LOG_DEBUG, "enter load_portal_config_by_instance\n");
@@ -171,48 +174,86 @@ static int load_portal_config_by_instance(multi_sample_t *multi_sample, struct l
         portal_data->local_id = instance_config->local_id;
         portal_data->instance_id = instance_config->instance_id;
         
-        create_config_data_2( multi_sample, head, portal_ip, portal_data);
+	syslog(LOG_DEBUG, "load_portal_config_by_instance slotid=%d, insid=%d, ip=%s, port=%u\n", 
+			instance_config->slot_id, instance_config->instance_id, portal_data->str_ip, portal_data->port);
+       temp_ret = create_config_data_3(multi_sample, head, portal_ip, portal_data);
+       if(0 != temp_ret) {
+            free(portal_data);
+            continue;
+        }
     }
 	
     syslog(LOG_DEBUG, "exit load_portal_config_by_instance\n");
 	return AS_RTN_OK;
 }
 
+
+int
+get_all_portal_conf(multi_sample_t *multi_sample, struct list_head *head)
+{
+	syslog(LOG_DEBUG, "enter get_all_portal_conf\n");
+	if (NULL == multi_sample || NULL == head) {
+		syslog(LOG_WARNING, "get_all_portal_conf: input para error!\n");
+		return AS_RTN_PARAM_ERR;
+	}
+
+	struct instance_portal_config *configHead = NULL;
+	unsigned int config_num = 0;
+	int ret = AC_MANAGE_SUCCESS;
+	instance_parameter *paraHead = NULL;
+	instance_parameter *paraNode = NULL;
+
+	ret = get_master_instance_para(&paraHead);
+	if (0 != ret) {
+		syslog(LOG_WARNING, "get_all_portal_conf: get_master_instance_para failed!\n");
+		return ret;
+	}
+
+	for (paraNode = paraHead; NULL != paraNode; paraNode = paraNode->next) {
+		struct instance_portal_config *configNode = (struct instance_portal_config *)malloc(sizeof(struct instance_portal_config));
+		if (NULL == configNode) {
+			syslog(LOG_WARNING, "get_all_portal_conf: configNode malloc failed!\n");
+			free_master_instance_para(&paraHead);
+			return -1;
+		}
+		ret = eag_get_portal_conf(paraNode->connection, 
+                                        paraNode->parameter.local_id, 
+                                        paraNode->parameter.instance_id, 
+                                        &configNode->portalconf);
+		if (0 != ret) {
+			syslog(LOG_WARNING, "get_all_portal_conf: eag_get_portal_conf failed!\n");
+			free(configNode);
+			continue;
+		}
+		configNode->slot_id = paraNode->parameter.slot_id;
+		configNode->local_id = paraNode->parameter.local_id;
+		configNode->instance_id = paraNode->parameter.instance_id;
+
+		config_num++;
+		ret = load_portal_config_by_instance(multi_sample, head, configNode);
+		free(configNode);
+	}
+
+	free_master_instance_para(&paraHead);
+	return 0;
+	
+}
+
 static int portal_load_conf( multi_sample_t *multi_sample, struct list_head *head )
 {
 	syslog(LOG_DEBUG, "enter portal_load_conf\n");
+
+	int ret = 0;
 
 	if(NULL == multi_sample || NULL == head) {
 		return AS_RTN_NULL_POINTER;
 	}
 
-    DBusConnection *active_connection = ac_sample_dbus_get_active_connection();
-    if(NULL == active_connection) {
-        return AS_RTN_SAMPLE_DBUS_CONNECTION_ERR;
-    }
-
-    struct instance_portal_config *config_array = NULL;
-    unsigned int config_num = 0;
-    int ret = AC_MANAGE_SUCCESS;
-    
-    syslog(LOG_INFO, "portal_load_conf: before ac_manage_show_portal_config\n");
-    ret = ac_manage_show_portal_config(active_connection, &config_array, &config_num);
-    syslog(LOG_INFO, "portal_load_conf: after ac_manage_show_portal_config, ret = %d\n", ret);
-	    
-    if(AC_MANAGE_SUCCESS == ret && config_array) {
-        int i = 0;
-        for(i = 0; i < config_num; i++) {
-            if(load_portal_config_by_instance(multi_sample, head, &(config_array[i]))) {
-                syslog(LOG_INFO, "load_portal_config_by_instance error\n");
-                continue;
-            }
-        }   
-        
-        free(config_array);
-    }
-    else {
-        return AS_RTN_ERR;
-    }
+	ret = get_all_portal_conf(multi_sample, head);
+	if (0 != ret) {
+		syslog(LOG_WARNING, "portal_load_conf: get_all_portal_conf failed!\n");
+		return ret;
+	}
     
 	syslog(LOG_DEBUG, "exit portal_load_conf\n");
 	return AS_RTN_OK;

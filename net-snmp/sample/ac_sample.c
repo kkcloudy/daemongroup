@@ -7,6 +7,9 @@
 #include "ac_sample_err.h"
 #include "ac_sample_def.h"
 #include "ac_sample.h"
+#include "ac_manage_def.h"
+#include "board/board_define.h"
+#include "hmd/hmdpub.h"
 #include <mcheck.h>
 
 
@@ -1216,6 +1219,112 @@ int init_config_list ( struct list_head *head )
 }
 #endif
 
+
+int
+get_master_instance_para(instance_parameter **paraHead)
+{
+	syslog(LOG_DEBUG, "enter get_master_instance_para\n");
+	unsigned int local_slotID = 0;
+	if (VALID_DBM_FLAG == get_dbm_effective_flag()) {
+		local_slotID = sample_get_product_info(PRODUCT_LOCAL_SLOTID);
+	}
+	if (0 == local_slotID) {
+		return -1;
+	}
+
+	int ret = 0;
+	struct Hmd_Board_Info_show *instance_head = NULL;
+	ret = show_broad_instance_info(ac_sample_dbus_get_connection(), &instance_head);
+	syslog(LOG_DEBUG, "get_master_instance_para: after show_broad_instance_info, ret = %d\n", ret);
+	if (1 == ret && instance_head) {
+
+		struct Hmd_Board_Info_show *instance_node = NULL;
+		for (instance_node = instance_head->hmd_board_list; NULL != instance_node; instance_node = instance_node->next) {
+			if(instance_node->slot_no != local_slotID) {
+				syslog(LOG_DEBUG, "get_master_instance_para: init slot %d connection error\n", instance_node->slot_no);
+				continue;
+			}
+
+			unsigned int instance_state = 0;
+			int manual_ret = AC_MANAGE_SUCCESS;
+
+			manual_ret = ac_manage_show_snmp_manual_instance(ac_sample_dbus_get_connection(), &instance_state);
+			syslog(LOG_DEBUG,"get_all_portal_conf: after show slot %d manual set instance state: manual_ret = %d, instance_state = %d\n",
+			       instance_node->slot_no, manual_ret, instance_state);
+
+			int i = 0;
+			for(i = 0; i < instance_node->InstNum; i++) {
+				if(0 >= instance_node->Hmd_Inst[i]->Inst_ID) {
+					continue;
+				}
+
+				if ((1 == instance_node->Hmd_Inst[i]->isActive) ||
+				    (AC_MANAGE_SUCCESS == manual_ret && (instance_state & (0x1 << (instance_node->Hmd_Inst[i]->Inst_ID - 1))))) {
+				 	instance_parameter *paraNode = (instance_parameter *)malloc(sizeof(instance_parameter));
+					if (NULL == paraNode) {
+						syslog(LOG_WARNING, "get_master_instance_para: malloc remote instance %d-%d parameter fail\n",
+					                         instance_node->slot_no, instance_node->Hmd_Inst[i]->Inst_ID);
+						continue;
+					}
+
+					paraNode->parameter.instance_id = instance_node->Hmd_Inst[i]->Inst_ID;
+					paraNode->parameter.local_id = 0;
+					paraNode->parameter.slot_id = instance_node->slot_no;
+					paraNode->connection = ac_sample_dbus_get_slotconnection(instance_node->slot_no);
+					syslog(LOG_DEBUG, "get_master_instance_para: remote hansi %d-%d is master\n", 
+					                    instance_node->slot_no, instance_node->Hmd_Inst[i]->Inst_ID);
+
+					paraNode->next = *paraHead;
+					*paraHead = paraNode;
+				}
+			}
+
+			for(i = 0; i < instance_node->LocalInstNum; i++) {
+				if(0 >= instance_node->Hmd_Local_Inst[i]->Inst_ID) {
+					continue;
+				}
+
+				if((1 == instance_node->Hmd_Local_Inst[i]->isActive) ||
+				    (AC_MANAGE_SUCCESS == manual_ret && (instance_state & (0x1 << (instance_node->Hmd_Local_Inst[i]->Inst_ID + INSTANCE_NUM - 1))))) {
+					instance_parameter *paraNode = (instance_parameter *)malloc(sizeof(instance_parameter));
+					if (NULL == paraNode) {
+						syslog(LOG_WARNING, "get_master_instance_para: malloc local instance %d-%d parameter fail\n",
+					                         instance_node->slot_no, instance_node->Hmd_Local_Inst[i]->Inst_ID);
+						continue;
+					}
+
+					paraNode->parameter.instance_id = instance_node->Hmd_Local_Inst[i]->Inst_ID;
+					paraNode->parameter.local_id = 1;
+					paraNode->parameter.slot_id = instance_node->slot_no;
+					paraNode->connection = ac_sample_dbus_get_slotconnection(instance_node->slot_no);
+					syslog(LOG_DEBUG, "get_master_instance_para: local hansi %d-%d is master\n", 
+					                    instance_node->slot_no, instance_node->Hmd_Local_Inst[i]->Inst_ID);
+					                    
+					paraNode->next = *paraHead;
+					*paraHead = paraNode;
+				}
+			}
+		}
+	}
+
+	free_broad_instance_info(&instance_head);
+	return 0;	
+}
+
+void
+free_master_instance_para(instance_parameter **paraHead) 
+{
+    if(NULL == paraHead)
+        return ;
+
+    while(*paraHead) {
+        instance_parameter *paraNode = (*paraHead)->next;
+        free(*paraHead);
+        *paraHead = paraNode;
+    }
+    return ;
+}
+
 int create_config_data_1 ( multi_sample_t *multi_sample, struct list_head *head, int match_word_len, char *match_word, void *subuser_data)
 {
 	if ( NULL==multi_sample || NULL==head )
@@ -1269,6 +1378,38 @@ int create_config_data_2 ( multi_sample_t *multi_sample, struct list_head *head,
 	return AS_RTN_OK;
 }
 
+int create_config_data_3( multi_sample_t *multi_sample, struct list_head *head, unsigned int match_word, void *subuser_data)
+{
+	if ( NULL==multi_sample || NULL==head ) {
+		return AS_RTN_NULL_POINTER;
+	}
+
+	subsample_config_t *subsample_conf = NULL;
+	subsample_config_t *tmp = NULL;
+
+	list_for_each_entry(tmp, head, node) {
+		if (match_word == tmp->match_word) {
+			return -1;
+		} else if (match_word < tmp->match_word) {
+			break;
+		}
+	}
+	subsample_conf = (subsample_config_t*)SAMPLE_MALLOC(sizeof(subsample_config_t));
+	if (NULL==subsample_conf) {
+		return AS_RTN_MALLOC_ERR;
+	}
+	memset ( subsample_conf, 0, sizeof(subsample_config_t));
+
+	subsample_conf->match_word=match_word;
+	subsample_conf->subuser_data=subuser_data;
+	
+	if (list_is_last(&(tmp->node), head)) {
+		list_add(LPNLNODE(subsample_conf), &(tmp->node));
+	} else {
+		list_add_tail(LPNLNODE(subsample_conf), &(tmp->node));
+	}
+	return AS_RTN_OK;
+}
 
 int destroy_config_list ( struct list_head *head )
 {

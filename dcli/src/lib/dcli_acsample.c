@@ -137,10 +137,10 @@ DEFUN(set_acsample_resend_func,
 	unsigned int value=10;
 	int type = AC_SAMPLE_PARAM_TYPE_RESEND_INTERVAL;
 	
+#if 0	
 	conf_key = argv[0];
 	conf_value = argv[1];
 	value = strtoul(conf_value, NULL, 10);
-	
 	if(0 == strncmp(conf_key,SE_XML_ACSAMPLE_RESEND_INTERVAL, strlen(conf_key))) {	
 		type = AC_SAMPLE_PARAM_TYPE_RESEND_INTERVAL;
 	}
@@ -148,17 +148,20 @@ DEFUN(set_acsample_resend_func,
 		vty_out(vty, "%s : Do not has this param!\n", conf_value);
 		return CMD_FAILURE;
 	}
-	
-    int i = 1;
-    for(i = 1; i < MAX_SLOT; i++) {
-        if(dbus_connection_dcli[i]->dcli_dbus_connection) {                
-            int iRet = AS_RTN_OK;
-            iRet = dbus_set_sample_param(dbus_connection_dcli[i]->dcli_dbus_connection, type, value );
-            if (AS_RTN_OK != iRet){
-                vty_out(vty, "Slot(%d) :set %s to %d faild!\n", i, "resend time", value );
-            }
-        }
-    } 
+#endif	
+	conf_value = argv[0];
+	value = strtoul(conf_value, NULL, 10);
+
+	int i = 1;
+	for(i = 1; i < MAX_SLOT; i++) {
+		if(dbus_connection_dcli[i]->dcli_dbus_connection) {                
+			int iRet = AS_RTN_OK;
+			iRet = dbus_set_sample_param(dbus_connection_dcli[i]->dcli_dbus_connection, type, value );
+			if (AS_RTN_OK != iRet) {
+			    vty_out(vty, "Slot(%d) :set %s to %d faild!\n", i, "resend time", value );
+			}
+		}
+	} 
 
 	return CMD_SUCCESS;
 }
@@ -1246,16 +1249,17 @@ DEFUN(set_acsample_state_func,
 								"|"SAMPLE_NAME_FINE_SYN_ATTACK""\
 								"|"SAMPLE_NAME_CPURT""\
 								"|"SAMPLE_NAME_INTERFACE_FLOW") param "SE_XML_ACSAMPLE_SWITCH" (on|off)",
-			DCLI_SAMPLE_SET_STR
 			"set acsample sample\n"
 			"set acsample sample \n"
 			"set acsample sample \n"
-			""SAMPLE_NAME_DROPRATE""
-			""SAMPLE_NAME_MAX_USER""
-			""SAMPLE_NAME_RADIUS_REQ_SUC""
-			""SAMPLE_NAME_FINE_SYN_ATTACK""
-			""SAMPLE_NAME_CPURT""
-			""SAMPLE_NAME_INTERFACE_FLOW""
+			""SAMPLE_NAME_DROPRATE"\n"
+			""SAMPLE_NAME_MAX_USER"\n"
+			""SAMPLE_NAME_RADIUS_REQ_SUC"\n"
+			""SAMPLE_NAME_FINE_SYN_ATTACK"\n"
+			""SAMPLE_NAME_CPURT"\n"
+			""SAMPLE_NAME_INTERFACE_FLOW"\n"
+			"parameter\n"
+			"swithch on|off\n"
 			"switch on\n"
 			"switch off\n"
 		)
@@ -1386,14 +1390,15 @@ ALIAS(set_acsample_state_func,
 	set_acsample_slot_state_cmd,
 	"set acsample sample ("SAMPLE_NAME_PORTER_NOT_REACH""\
 						"|"SAMPLE_NAME_RADIUS_AUTH""\
-						"|"SAMPLE_NAME_RADIUS_COUNT") param "SE_XML_ACSAMPLE_SWITCH" (on|off) SLOT",
-	DCLI_SAMPLE_SET_STR
+						"|"SAMPLE_NAME_RADIUS_COUNT") param "SE_XML_ACSAMPLE_SWITCH" (on|off) <1-16>",
 	"set acsample sample\n"
 	"set acsample sample \n"
 	"set acsample sample \n"
-	""SAMPLE_NAME_PORTER_NOT_REACH""
-	""SAMPLE_NAME_RADIUS_AUTH""
-	""SAMPLE_NAME_RADIUS_COUNT""
+	""SAMPLE_NAME_PORTER_NOT_REACH"\n"
+	""SAMPLE_NAME_RADIUS_AUTH"\n"
+	""SAMPLE_NAME_RADIUS_COUNT"\n"
+	"parameter\n"
+	"switch on|off\n"
 	"switch on\n"
 	"switch off\n"
 	"slot_id <1-16>"
