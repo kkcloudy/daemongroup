@@ -1160,6 +1160,8 @@ int hansi_state_check(int InstID, int islocaled){
 			memset(buf, 0, 128);
 			sprintf(buf,"sudo /etc/init.d/wcpss start %d %d",islocaled, InstID);
 			system(buf);
+			hmd_syslog_info("###%s hmd begin load takesnapshot.sh ###\n",__func__);
+			system("takesnapshot.sh 1 3");
 			if(HOST_SLOT_NO != MASTER_SLOT_NO)
 				notice_hmd_server_state_change(InstID, islocaled, HMD_RESTART, 0);
 			if(HOST_BOARD->Hmd_Local_Inst[InstID]->slot_no == HOST_SLOT_NO)
@@ -1194,6 +1196,8 @@ int hansi_state_check(int InstID, int islocaled){
 			memset(buf, 0, 128);
 			sprintf(buf,"sudo /etc/init.d/had start %d", InstID);
 			system(buf);
+			hmd_syslog_info("###%s hmd begin load takesnapshot.sh ###\n",__func__);
+			system("takesnapshot.sh 1 3");
 			if(HOST_SLOT_NO != MASTER_SLOT_NO)
 				notice_hmd_server_state_change(InstID, islocaled, HMD_RESTART, 0);
 			
