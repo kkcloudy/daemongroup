@@ -33,11 +33,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *
 *******************************************************************************/
 
-
+#include <config/auteware_config.h>
 #include <stdio.h>
 #include "cgic.h"
 #include <string.h>
 #include <stdlib.h>
+#include <time.h>
 #include "wcpss/asd/asd.h"
 #include "wcpss/wid/WID.h"
 #include "dbus/wcpss/dcli_wid_wtp.h"
@@ -292,8 +293,29 @@ void ShowWtpdtaPage(char *m,char *n,char *t,char *ins_id,struct list *lpublic,st
 			  	  {
 					  fprintf(cgiOut,"<td id=td2>%s</td>",wtp->WTP[0]->WTPSN);
 			  	  }
-			  fprintf(cgiOut,"</tr>"\
-				"<tr align=left>"\
+			  fprintf(cgiOut,"</tr>");
+			  #ifdef __WITH_AP_CPU_FREQ
+			  	FILE *fp = NULL;
+			    char cpu_freq[256] = { 0 };
+				memset(cpu_freq,0,256);
+				
+			  	fp = fopen("/mnt/WtpCpuFreq","r");
+				if(fp)
+				{					
+					fgets(cpu_freq,256,fp);
+					fclose(fp);
+				}	
+				else
+				{
+					strncpy(cpu_freq, "500MHz", sizeof(cpu_freq)-1);
+				}
+		
+			  	fprintf(cgiOut,"<tr align=left>"\
+				  "<td id=td1>%s</td>",search(lwlan,"cpu_freq"));
+				  fprintf(cgiOut,"<td id=td2>%s</td>",cpu_freq);
+			    fprintf(cgiOut,"</tr>");
+			  #endif
+				fprintf(cgiOut,"<tr align=left>"\
 				  "<td id=td1>%s</td>",search(lwlan,"model"));
 			  	  if(wtp->WTP[0]->WTPModel)
 			  	  {
