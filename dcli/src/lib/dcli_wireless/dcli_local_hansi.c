@@ -2104,9 +2104,9 @@ DEFUN(set_hmd_timer_config_save_time_cmd_func,
 		return CMD_SUCCESS;
 	}
 
-	if((timer >1800)||(timer < 60))
+	if((timer >7200)||(timer < 60))
 	{
-		vty_out(vty,"<error> input parameter should be 60~1800\n",argv[0]);
+		vty_out(vty,"<error> input parameter should be 60~7200\n",argv[0]);
 		return CMD_SUCCESS;
 	}
 	

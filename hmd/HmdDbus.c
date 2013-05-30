@@ -411,12 +411,12 @@ DBusMessage * hmd_dbus_hansi_show_running(DBusConnection *conn, DBusMessage *msg
 			/*fengwenchao add 20130415 for hmd timer config save*/
 			if((isMaster)&&(isActive))
 			{
-				if(HANSI_TIMER != 300){
+				if(HANSI_TIMER != 1800){
 					totalLen += sprintf(cursor," set hmd-timer-config-save time %d\n",HANSI_TIMER);
 					cursor = showStr + totalLen; 
 				}
-				if(HANSI_TIMER_CONFIG_SAVE != 1){
-					totalLen += sprintf(cursor," set hansi-check disable\n");
+				if(HANSI_TIMER_CONFIG_SAVE != 0){
+					totalLen += sprintf(cursor," set hmd-timer-config-save enable\n");
 					cursor = showStr + totalLen; 
 				}		
 			}
@@ -431,12 +431,12 @@ DBusMessage * hmd_dbus_hansi_show_running(DBusConnection *conn, DBusMessage *msg
 			/*fengwenchao add 20130415 for hmd timer config save*/
 			if((isMaster)&&(isActive))
 			{
-				if(HANSI_TIMER != 300){
+				if(HANSI_TIMER != 1800){
 					totalLen += sprintf(cursor," set hmd-timer-config-save time %d\n",HANSI_TIMER);
 					cursor = showStr + totalLen; 
 				}
-				if(HANSI_TIMER_CONFIG_SAVE != 1){
-					totalLen += sprintf(cursor," set hansi-check disable\n");
+				if(HANSI_TIMER_CONFIG_SAVE != 0){
+					totalLen += sprintf(cursor," set hmd-timer-config-save enable\n");
 					cursor = showStr + totalLen; 
 				}		
 			}			

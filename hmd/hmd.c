@@ -67,8 +67,8 @@ int MASTER_SLOT_NO = 0;
 int MASTER_BACKUP_SLOT_NO = 0;
 int LicenseCount = 9;
 int HANSI_CHECK_OP = 1;
-int HANSI_TIMER_CONFIG_SAVE = 1; //fengwenchao add 20130412 for hmd timer config save
-int HANSI_TIMER = 300; //fengwenchao add 20130412 for hmd timer config save
+int HANSI_TIMER_CONFIG_SAVE = 0; //fengwenchao add 20130412 for hmd timer config save
+int HANSI_TIMER = 1800; //fengwenchao add 20130412 for hmd timer config save
 struct Hmd_Board_Info *HOST_BOARD;
 struct Hmd_Board_Info *HMD_BOARD[MAX_SLOT_NUM];
 struct Hmd_L_Inst_Mgmt_Summary *HMD_L_HANSI[MAX_INSTANCE];
