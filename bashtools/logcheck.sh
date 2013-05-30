@@ -250,6 +250,20 @@ check_syslog_state()
 	fi
 }
 
+clear_all_file_content_in_dir()
+{
+	for file in `ls  $1`
+	do
+		if [ -d $1"/"$file ] ; then
+			clear_all_file_content_in_dir $1"/"$file
+		else
+			local path=$1"/"$file
+			echo "logcheck.sh clear file $path" > /dev/console
+			echo > $path
+		fi
+	done
+}
+
 check_mem_state()
 {
 	# get free memory (MB)
@@ -261,7 +275,8 @@ check_mem_state()
 		sync
 		echo 2 > /proc/sys/vm/drop_caches
 		echo 3 > /proc/sys/vm/drop_caches
-		rm -rf /var/log/*
+		#rm -rf /var/log/*
+		clear_all_file_content_in_dir "/var/log"
 		rm -rf /mnt/patch/*
 		echo $MAXSIZE > /var/log/log_maxsize
 		touch /var/log/cron.log
