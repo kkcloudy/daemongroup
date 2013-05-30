@@ -6237,6 +6237,7 @@ ac_manage_dbus_set_syslog_status(DBusConnection *connection, DBusMessage *messag
 	char *status = NULL;
 	char *opt_type = NULL;
 	int ret = AC_MANAGE_SUCCESS;
+	char cmd[128] = {0};
 	dbus_error_init(&err);	
 	if (!(dbus_message_get_args(message, &err,
 								DBUS_TYPE_STRING, &status,
@@ -6262,6 +6263,12 @@ ac_manage_dbus_set_syslog_status(DBusConnection *connection, DBusMessage *messag
 	else if(0 == strncmp(opt_type,"eag",3))
 	{
 		mod_first_xmlnode(XML_FPATH, IF_EAGLOG, status);
+	}
+	else if(0 == strncmp(opt_type,"delete",6))
+	{
+		memset(cmd,0,sizeof(cmd));
+		sprintf(cmd,"sudo cp %s  %s",XML_SYS_D,XML_FPATH);
+		system(cmd);
 	}
 	save_syslog_file();
 	restart_syslog();

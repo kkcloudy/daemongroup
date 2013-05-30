@@ -90,7 +90,7 @@ DEFUN(conf_syslog_func,
 		{
 			if(dbus_connection_dcli[i]->dcli_dbus_connection) 
 			{
-				ac_manage_set_syslogstatus_rule(dbus_connection_dcli[i]->dcli_dbus_connection, "restart","all");
+				ac_manage_set_syslogstatus_rule(dbus_connection_dcli[i]->dcli_dbus_connection, "restart","restart");
 			}
 		}
 		
@@ -1258,6 +1258,31 @@ DEFUN(add_log_ruler_func,
 	return CMD_SUCCESS;	
 }
 
+DEFUN(clean_log_config_func,
+	clean_log_config_cmd,
+	"clean syslog configuration",
+	"clean syslog configuration\n"\
+	"clean syslog configuration\n"\
+	"clean syslog configuration\n"\
+)
+{
+    if (SYSLOG_NODE != vty->node) 
+	{
+		vty_out (vty, "Terminal mode change must under configure mode!\n");
+		return CMD_WARNING;
+	}
+
+	int i = 0;	
+	for(i = 1; i < MAX_SLOT; i++)
+	{
+		if(dbus_connection_dcli[i]->dcli_dbus_connection) 
+		{
+			ac_manage_set_syslogstatus_rule(dbus_connection_dcli[i]->dcli_dbus_connection, "delete","delete");
+		}
+	}
+	return CMD_SUCCESS;	
+}
+
 int dcli_syslog_show_running_config(struct vty* vty)
 {
     if_syslog_exist();
@@ -1372,6 +1397,7 @@ void dcli_syslog_init
 	install_element(SYSLOG_NODE,&show_syslog_log_cmd);	
 	install_element(SYSLOG_NODE,&delete_log_ruler_cmd);	
 	install_element(SYSLOG_NODE,&add_log_ruler_cmd);	
+	install_element(SYSLOG_NODE,&clean_log_config_cmd);
 	
 }
 
