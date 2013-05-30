@@ -4367,16 +4367,26 @@ DEFUN( config_arp_stale_time_cmd_func,
 	     DBusMessage *query, *reply;
 		 DBusError err;
 		 unsigned char slot = 0,port = 0;
-		 unsigned int stale_time = 0;
+		 int stale_time = 0;
 		 unsigned short vlanId = 0;
 		 unsigned int isVlanIntf = 0;
+		 unsigned char cpu_no, cpu_port_no;
 		 unsigned int  tag1 = 0,tag2 = 0;
 		 int ret = COMMON_SUCCESS;
 		 if (argc != 1) {
 			vty_out(vty, "argument error!\n");
 			return CMD_WARNING;
 		 }
+
+		 
 		 stale_time = atoi(argv[0]);
+		 /* max base_reachable_time_ms is 0xFFFFFFFF(4294967295)  */
+         if(stale_time > 4200000 || stale_time <= 0)
+         {
+			vty_out(vty,"%% the arp_stale time %s!\n", (stale_time>0)?"too big(should < 4200000)":"must Positive number");
+            return CMD_WARNING;
+		 }
+		 
 		 if(!strncmp(vlan_eth_port_ifname,"vlan",4)){
 			 isVlanIntf = IS_VLAN_ADVANCED;
 			 vlanId = (unsigned short)strtoul(vlan_eth_port_ifname+4,NULL,0);
@@ -4397,9 +4407,11 @@ DEFUN( config_arp_stale_time_cmd_func,
 		 }
 		 else if (!strncmp (vlan_eth_port_ifname, "ve",2)) {
 	  	   	isVlanIntf = IS_VE_INTERFACE;
-	  		ret = parse_slot_tag_no(vlan_eth_port_ifname ,&slot, &tag1, &tag2);		
+			/*wangchong for AXSSZFI-1540 ,the "port" used for "cpu_no&cpu_port_no"*/
+			ret = parse_ve_slot_cpu_tag_no(vlan_eth_port_ifname, &slot, &cpu_no, &cpu_port_no, &tag1, &tag2);
 			vlanId = (unsigned short)tag1;
-			
+			port = cpu_no;
+			port = ((port << 4) | cpu_port_no);						
 	     }
 		 else if(0 == strncmp(vlan_eth_port_ifname,"ebr",3) )/*ebr*/
          {
@@ -4607,6 +4619,7 @@ DEFUN(config_interface_static_arp_cmd_func,
       ETHERADDR macAddr;
       unsigned int isVlanIntf = 0;
       unsigned char slot = 0,port = 0;
+	  unsigned char cpu_no = 0, cpu_port_no = 0;
       unsigned int  tag1 = 0,tag2 = 0;
       unsigned int int_slot_no = 0,int_port_no = 0;
       unsigned int isAdd = TRUE;
@@ -4653,8 +4666,10 @@ DEFUN(config_interface_static_arp_cmd_func,
 	  }
 	  else if (!strncmp (vlan_eth_port_ifname, "ve",2)) {
 	  		isVlanIntf = IS_VE_INTERFACE;
-	  		ret = parse_slot_tag_no(vlan_eth_port_ifname ,&slot, &tag1, &tag2);		
+			ret = parse_ve_slot_cpu_tag_no(vlan_eth_port_ifname, &slot, &cpu_no, &cpu_port_no, &tag1, &tag2);
 			vlanId = (unsigned short)tag1;
+			port = cpu_no;
+			port = ((port << 4) | cpu_port_no);	
 			if(COMMON_SUCCESS != ret){
               vty_out(vty,"%% Bad parameter: ifname %s\n",vlan_eth_port_ifname);
               return CMD_WARNING;
