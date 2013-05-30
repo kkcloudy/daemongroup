@@ -27,7 +27,7 @@ int BSDServerTipcInit(unsigned int slotid);
 int BSDSendWTP(unsigned const int slotid);
 int BSDSendACVersion(unsigned const int slotid);
 int BSDAddMessageQueue(const unsigned int slotid, const char *src_path, const char *des_path, const int op);
-int BSDCopyFile(const unsigned int slotid, const char *source_dir, const char *target_dir);
+int BSDCopyFile(const unsigned int slotid, const char *source_dir, const char *target_dir, int op);
 int BSDSendMemeryCheckRequest(const unsigned int slotid, const char *src_path, const char *des_path, unsigned short event_id);
 int BSDSendFile(const unsigned int slotid, const char *src_path, const char *des_path, int op, char *md5Result);
 int BSDSendDir(const unsigned int slotid, const char *source_dir, const char *target_dir, const int op);
@@ -35,7 +35,7 @@ int BSDReceiveFile(const char *recvbuf, unsigned int recv_len, unsigned int ifla
 int BSDSynchronizeFilesToBoard(int syn_type, int slot_id);
 int BSDSynchronizeFiles(int syn_type);
 int BSDSynchronizeFilesV2(const char *src_path, const char *des_path, const int op);
-int BSDSendNotify(int slot_no, int stat, unsigned short event_id);
+int BSDSendNotify(int slot_no, int stat, unsigned short event_id, char * md5);
 int BSDGetAliveSlotIDs(int *ID, int op);
 int BSDMemeryCheck(const unsigned int slotid, const char *src_path, const char *des_path, unsigned short event_id);
 int BSDSendDesPathCheckRequest(const unsigned int slotid, const char *des_path, unsigned short event_id);

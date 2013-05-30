@@ -282,6 +282,7 @@ DEFUN(synchronize_cfcard_files_func,
 	int syn_type = 0;
 	int count = 0;
 	int ID[MAX_SLOT_NUM] = {0};
+	char res_md5[PATH_LEN] = {0};
 	int i = 0;
 	char a_returnString[BSD_COMMAND_BUF_LEN] = {0};
     
@@ -291,8 +292,10 @@ DEFUN(synchronize_cfcard_files_func,
     {
         for(i = 0; i < count; i++)
         {
+            memset(res_md5, 0, PATH_LEN);
             vty_out(vty,"start copying files to slot_%d,please wait...\n",ID[i]);
-            ret = dcli_bsd_copy_file_to_board(dcli_dbus_connection,ID[i],"/blk","/blk",0,BSD_TYPE_NORMAL);
+            ret = dcli_bsd_copy_file_to_board(dcli_dbus_connection,ID[i],"/blk","/blk",0,BSD_TYPE_NORMAL, res_md5);
+            vty_out(vty,"File md5 value on dest board is %s\n", (char*)res_md5);
             vty_out(vty,"%s", dcli_bsd_get_return_string(ret, a_returnString));
             
         }
@@ -326,12 +329,30 @@ DEFUN(synchronize_files_func,
 	  "synchronize specific files\n"
 	 )
 {
-    DBusMessage *query = NULL;
-    DBusMessage *reply = NULL;
-	DBusError err = {0};
+    //DBusMessage *query = NULL;
+    //DBusMessage *reply = NULL;
+	//DBusError err = {0};
 	int ret = 0;
-	int syn_type = BSD_SYNC_WTP;
+	//int syn_type = BSD_SYNC_WTP;
+	int count = 0;
+	int ID[MAX_SLOT_NUM] = {0};
 	char a_returnString[BSD_COMMAND_BUF_LEN] = {0};
+	char *src_path = "/mnt/wtp";
+	char *des_path = "/mnt/wtp";
+	int i = 0;
+
+    count = dcli_bsd_get_slot_ids(dcli_dbus_connection,ID,BSD_TYPE_BOOT_IMG);
+    
+    if(count != 0) {
+        for(i = 0; i < count; i++) {
+            vty_out(vty,"start copying files to slot_%d,please wait...\n",ID[i]);
+	        ret = dcli_bsd_copy_file_to_board_v2(dcli_dbus_connection,ID[i],src_path,des_path,1,BSD_TYPE_WTP_FOLDER);
+	        vty_out(vty,"%s", dcli_bsd_get_return_string(ret, a_returnString));
+	    }
+	}
+
+	
+#if 0
    
     query = dbus_message_new_method_call(BSD_DBUS_BUSNAME,BSD_DBUS_OBJPATH,\
 						BSD_DBUS_INTERFACE,BSD_SYNCHRONIZE_FILES_TO_OTHER_BOARDS);
@@ -362,6 +383,7 @@ DEFUN(synchronize_files_func,
 	}
 	
 	dbus_message_unref(reply);
+#endif
 
 	return CMD_SUCCESS;
 }

@@ -62,7 +62,8 @@ typedef enum bsd_file_type {
 	BSD_TYPE_SINGLE = 6,		//normal single file
 	BSD_TYPE_CMD = 7,			//command
 	BSD_TYPE_BLK = 8,
-	BSD_TYPE_COMPRESS = 9
+	BSD_TYPE_COMPRESS = 9,
+	BSD_TYPE_WTP_FOLDER = 10
 }bsd_file_type_t;
 #endif
 

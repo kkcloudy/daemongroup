@@ -87,13 +87,14 @@ int dcli_bsd_copy_files_to_boards(DBusConnection *connection,const char *src_pat
 ** DATE:
 **          2011-10-26
 *****************************************************/
-int dcli_bsd_copy_file_to_board(DBusConnection *connection, const int slot_id, const char *src_path, const char *des_path, const int flag, const int op)
+int dcli_bsd_copy_file_to_board(DBusConnection *connection, const int slot_id, const char *src_path, const char *des_path, const int flag, const int op, char *resMd5)
 {   
     int ret = 0;
     DBusMessage *query = NULL;
     DBusMessage *reply = NULL;
     DBusError err = {0};
 	int retu = 0;
+	char *md5 = NULL;
     
     char *tmp_src_path = src_path;
     char *tmp_des_path = des_path;
@@ -129,8 +130,9 @@ int dcli_bsd_copy_file_to_board(DBusConnection *connection, const int slot_id, c
 	//printf("3333\n");
 	if (dbus_message_get_args ( reply, &err,
 					DBUS_TYPE_UINT32,&ret,
+					DBUS_TYPE_STRING,&md5,
 					DBUS_TYPE_INVALID)) {
-		
+		strncpy(resMd5, md5, PATH_LEN);
 	}
 	//printf("4444\n");
 	dbus_message_unref(reply);

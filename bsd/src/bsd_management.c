@@ -24,6 +24,8 @@
 #define SAVE_BOOT_ENV 	1
 #define GET_BOOT_ENV	0
 
+extern char g_rePrintMd5[BSD_PATH_LEN];
+
 typedef struct boot_env
 {	
 	char name[64];	
@@ -249,6 +251,11 @@ static int bsdHandleFileState(const int iFileType, const char *pFilePath)
 	        sprintf(cmd, "sudo mount /blk; cp %s /mnt/patch/; sudo umount /blk;", pFilePath);
 	        system(cmd);
 	        break;
+	    case BSD_TYPE_WTP_FOLDER:
+	        /* add for AXSSZFI-1598 */
+	        sprintf(cmd, "sudo mount /blk; mkdir -p /blk/wtp; cp /mnt/wtp/* /blk/wtp/; sudo umount /blk;");
+	        system(cmd);
+	        break;
 	    case BSD_TYPE_WTP:
 	        /* add for AXSSZFI-1386 */
 	        BSDGetFileName(pFilePath, fileName);
@@ -324,6 +331,8 @@ void * bsdTipcManagement()
         if((fileInfo->file_head.file_state == BSD_FILE_FINISH)&&(BSD_BOARD[slotid]->state == BSD_FILE_FINISH)){
             //printf("recv msg type is BSD_FILE_FINISH\n");
             BsdThreadMutexLock(&fileStateMutex[slotid]);
+            memset(g_rePrintMd5, 0, BSD_PATH_LEN);
+		    memcpy(g_rePrintMd5, fileInfo->file_head.md5Result, BSD_PATH_LEN);
             BSD_BOARD[slotid]->state = BSD_FILE_UNKNOWN;
             BsdSignalThreadCondition(&fileStateCondition[slotid]);
             BsdThreadMutexUnlock(&fileStateMutex[slotid]);
@@ -349,7 +358,7 @@ void * bsdTipcManagement()
 		    system("sudo mount /blk");
 		    result = BSDCheckDesPath(fileInfo->file_head.uchFileName);
 		    system("sudo umount /blk");
-		    BSDSendNotify(slotid, result, last_event_id);
+		    BSDSendNotify(slotid, result, last_event_id, md5Value);
 		    continue;
 		} else if(fileInfo->file_head.file_state == BSD_FILE_DES_PATH_UNA) {
 		    BsdThreadMutexLock(&fileStateMutex[slotid]);
@@ -372,10 +381,12 @@ void * bsdTipcManagement()
 		        result = BSD_FILE_MEMERY_NOT_ENOUGH;
 		    }
 		    system("sudo umount /blk");
-		    BSDSendNotify(slotid, result, last_event_id);
+		    BSDSendNotify(slotid, result, last_event_id, md5Value);
 		    continue;
 		} else if(fileInfo->file_head.file_state == BSD_FILE_FAILURE) {
 		    BsdThreadMutexLock(&fileStateMutex[slotid]);
+		    memset(g_rePrintMd5, 0, BSD_PATH_LEN);
+		    memcpy(g_rePrintMd5, fileInfo->file_head.md5Result, BSD_PATH_LEN);
 		    BSD_BOARD[slotid]->state = BSD_FILE_FAILURE;
             BsdSignalThreadCondition(&fileStateCondition[slotid]);
             BsdThreadMutexUnlock(&fileStateMutex[slotid]);
@@ -476,16 +487,21 @@ void * bsdTipcManagement()
 				    || (fileInfo->file_head.file_type == BSD_TYPE_WTP)
 				    || ((fileInfo->file_head.file_type == BSD_TYPE_BLK))) {
 				    memset(md5Value, 0, BSD_COMMAND_BUF_LEN);
-				    if((BSDCalculateMd5((const char *)fileInfo->file_head.uchFileName, md5Value) != BSD_SUCCESS)
-				        || (memcmp(fileInfo->file_head.md5Result, md5Value, strnlen(md5Value, BSD_PATH_LEN)) != 0)){
-				        bsd_syslog_err("Error : md5 compare error, src_md5 = %s, md5 = %s.\n", \
-				            (char*)fileInfo->file_head.md5Result, (char*)md5Value);
-				        BSDSendNotify(slotid, BSD_FILE_FAILURE, last_event_id);
+				    if(BSDCalculateMd5((const char *)fileInfo->file_head.uchFileName, md5Value) != BSD_SUCCESS) {
+				        bsd_syslog_err("Error : calculate md5 value for file %s failed.", \
+				            (char*)fileInfo->file_head.uchFileName);
+				        BSDSendNotify(slotid, BSD_FILE_FAILURE, last_event_id, md5Value);
 				        continue;
+				    } 
+				    if(memcmp(fileInfo->file_head.md5Result, md5Value, strnlen(md5Value, BSD_PATH_LEN)) != 0) {
+				        bsd_syslog_err("Error : compare md5 value failed, src %s, dst %s.", \
+				            (char*)fileInfo->file_head.md5Result, (char*)md5Value);
+				        BSDSendNotify(slotid, BSD_FILE_FAILURE, last_event_id, md5Value);
+				        continue;    
 				    }
 				}
 				bsdHandleFileState(fileInfo->file_head.file_type, (const char *)fileInfo->file_head.uchFileName);
-				BSDSendNotify(slotid, BSD_FILE_FINISH, last_event_id);
+				BSDSendNotify(slotid, BSD_FILE_FINISH, last_event_id, md5Value);
 				system("sudo umount /blk");
             }
             else {
@@ -495,7 +511,7 @@ void * bsdTipcManagement()
     		    fileData = NULL;
     		    cursor = NULL;
     		    system("sudo umount /blk");
-    		    BSDSendNotify(slotid, BSD_FILE_FAILURE, last_event_id);
+    		    BSDSendNotify(slotid, BSD_FILE_FAILURE, last_event_id, md5Value);
                 continue;
             }
 		}

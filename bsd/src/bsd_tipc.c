@@ -410,8 +410,9 @@ int BSDSendFile(const unsigned int slotid, const char *src_path, const char *des
     fileInfo.file_head.event_id = g_unEventId;
     bsd_syslog_debug_debug(BSD_DEFAULT, "event_id = %d\n",fileInfo.file_head.event_id);
 
-    if(op == BSD_TYPE_COMPRESS)
+    if((op == BSD_TYPE_COMPRESS) || (op == BSD_TYPE_WTP_FOLDER)) {
 	    fileInfo.file_head.tar_flag = 1;
+	}
 	fileInfo.slot_no = HOST_SLOT_NO;
        
 	/* book add, 2011-09-15 */
@@ -479,7 +480,7 @@ int BSDSendFile(const unsigned int slotid, const char *src_path, const char *des
                         //fclose(fp);
                         //bsd_syslog_info("###    Send file over\n");
                         //fp = NULL;
-                        if(op == BSD_TYPE_COMPRESS) {
+                        if((op == BSD_TYPE_COMPRESS) || (op == BSD_TYPE_WTP_FOLDER)) {
                             memset(cmd, 0, BSD_COMMAND_BUF_LEN);
                             sprintf(cmd, "sudo rm %s;", (char*)src_path);
                             system(cmd);
@@ -691,7 +692,7 @@ int BSDReceiveFile(const char *recvbuf, unsigned int recv_len, unsigned int ifla
 ** DATE:
 **          2011-08-16
 *****************************************************/
-int BSDCopyFile(const unsigned int slotid, const char *source_dir, const char *target_dir)
+int BSDCopyFile(const unsigned int slotid, const char *source_dir, const char *target_dir, int op)
 {
     bsd_syslog_debug_debug(BSD_DEFAULT, "%s  %d: %s\n",__FILE__, __LINE__, __func__);
     int ret = 0;
@@ -712,10 +713,10 @@ int BSDCopyFile(const unsigned int slotid, const char *source_dir, const char *t
 	    memset(newDesPath, 0, PATH_LEN);
 	    sprintf(newDesPath, "%s.tar", target_dir);
 	    //printf("target_dir = %s\n",target_dir);
-	    ret = BSDSendFile(slotid, (const char*)newSrcPath, (const char*)newDesPath, BSD_TYPE_COMPRESS, md5Result);
+	    ret = BSDSendFile(slotid, (const char*)newSrcPath, (const char*)newDesPath, op, md5Result);
     }
     else{
-        ret = BSDSendDir(slotid, source_dir, target_dir, BSD_TYPE_NORMAL);
+        ret = BSDSendDir(slotid, source_dir, target_dir, op);
     }
     return ret;
 }
@@ -1035,7 +1036,7 @@ int BSDSynchronizeFilesV2(const char *src_path, const char *des_path, const int 
 ** DATE:
 **          2011-08-22
 *****************************************************/
-int BSDSendNotify(int slot_no, int stat, unsigned short event_id)
+int BSDSendNotify(int slot_no, int stat, unsigned short event_id, char *md5)
 {
     bsd_syslog_debug_debug(BSD_DEFAULT, "%s  %d: %s\n",__FILE__, __LINE__, __func__);
     int sd = BSD_BOARD[slot_no]->tipcfd;
@@ -1044,6 +1045,7 @@ int BSDSendNotify(int slot_no, int stat, unsigned short event_id)
     fileInfo.file_head.file_state = stat;
     fileInfo.file_head.event_id = event_id;
     fileInfo.slot_no = HOST_SLOT_NO;
+    memcpy(fileInfo.file_head.md5Result, md5, strnlen(md5, BSD_PATH_LEN));
 
     if(0 == wait_for_server(&(BSD_BOARD[slot_no]->tipcaddr.addr.name.name),10000))
     {
@@ -1273,6 +1275,7 @@ int BSDCopyFilesToBoards(const unsigned int iSlotId, const char *pSrcPath, const
     char md5Result[BSD_PATH_LEN] = {0};
     system("sudo mount /blk");
     source = opendir(pSrcPath);
+    iOpt = iOption;
     if(source == NULL) {
         bsd_syslog_debug_debug(BSD_DEFAULT, "copy single file.\n");
         if(iOption == BSD_TYPE_NORMAL) 
@@ -1282,7 +1285,10 @@ int BSDCopyFilesToBoards(const unsigned int iSlotId, const char *pSrcPath, const
     } else {//other condition
         bsd_syslog_debug_debug(BSD_DEFAULT, "copy folder.\n");
         tarFlag = iCompressFlag;
-        iReturnValue = BSDCopyFile(iSlotId, pSrcPath, pDesPath);
+        if(iCompressFlag && (iOption != BSD_TYPE_WTP_FOLDER)) {
+            iOpt = BSD_TYPE_COMPRESS;
+        }
+        iReturnValue = BSDCopyFile(iSlotId, pSrcPath, pDesPath, iOpt);
         tarFlag = 0;
         closedir(source);
     }

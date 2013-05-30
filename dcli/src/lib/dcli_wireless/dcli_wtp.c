@@ -8950,6 +8950,7 @@ DEFUN (download_ap_image_func,
     	int i = 0;
     	char src_path[PATH_LEN] = {0};
         char des_path[PATH_LEN] = {0};
+        char res_md5[PATH_LEN] = {0};
         sprintf(src_path, "/mnt/wtp%s", filename);
         sprintf(des_path, "/mnt/wtp%s", filename);
     	/* print md5 */
@@ -8958,8 +8959,10 @@ DEFUN (download_ap_image_func,
         board_count = dcli_bsd_get_slot_ids(dcli_dbus_connection,ID,BSD_TYPE_WTP);
         //printf("count = %d\n",board_count);
         for(i = 0; i < board_count; i++) {
+            memset(res_md5, 0, PATH_LEN);
             vty_out(vty,"Synchronize to slot_%d...\n",ID[i]);
-            ret = dcli_bsd_copy_file_to_board(dcli_dbus_connection,ID[i],src_path,des_path,0,BSD_TYPE_WTP);
+            ret = dcli_bsd_copy_file_to_board(dcli_dbus_connection,ID[i],src_path,des_path,0,BSD_TYPE_WTP, res_md5);
+            vty_out(vty,"File md5 value on dest board is %s\n", (char*)res_md5);
             if(ret == 0)
                 vty_out(vty,"successful.\n");
             else if(ret == -2)
@@ -9087,6 +9090,7 @@ DEFUN (download_certificate_image_func,
 	    /* print md5 */
 	    char src_path[PATH_LEN] = {0};
         char des_path[PATH_LEN] = {0};
+        char res_md5[PATH_LEN] = {0};
         sprintf(src_path, "/mnt/wtp%s", filename);
         sprintf(des_path, "/mnt/wtp%s", filename);
         sor_md5img(vty, src_path);
@@ -9098,8 +9102,10 @@ DEFUN (download_certificate_image_func,
         board_count = dcli_bsd_get_slot_ids(dcli_dbus_connection,ID,BSD_TYPE_WTP);
         //printf("count = %d\n",board_count);
         for(i = 0; i < board_count; i++) {
+            memset(res_md5, 0, PATH_LEN);
             vty_out(vty,"Synchronize to slot_%d...\n",ID[i]);
-            ret = dcli_bsd_copy_file_to_board(dcli_dbus_connection,ID[i],src_path,des_path,0,BSD_TYPE_WTP);
+            ret = dcli_bsd_copy_file_to_board(dcli_dbus_connection,ID[i],src_path,des_path,0,BSD_TYPE_WTP, res_md5);
+            vty_out(vty,"File md5 value on dest board is %s\n", (char*)res_md5);
             if(ret == 0)
                 vty_out(vty,"successful.\n");
             else if(ret == -2)

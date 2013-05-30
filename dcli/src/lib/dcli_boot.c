@@ -2814,6 +2814,7 @@ DEFUN (download_fastforward_func,
 					vty_out(vty,"Start synchronizing, please wait...\n");
 					char src_path[PATH_LEN] = {0};
 					char des_path[PATH_LEN] = {0};
+					char resMd5[PATH_LEN] = {0};
 					sprintf(src_path, "/blk/%s", filename);
 					sprintf(des_path, "/blk/%s", filename);
 	        #if 0
@@ -2823,8 +2824,10 @@ DEFUN (download_fastforward_func,
 					//printf("count = %d\n",board_count);
 					for(i = 0; i < board_count; i++)
 					{
+					    memset(resMd5, 0, PATH_LEN);
 						vty_out(vty,"start synchronizing to slot_%d...\n",ID[i]);
-						ret = dcli_bsd_copy_file_to_board(dcli_dbus_connection,ID[i],src_path,des_path,0,BSD_TYPE_BLK);
+						ret = dcli_bsd_copy_file_to_board(dcli_dbus_connection,ID[i],src_path,des_path,0,BSD_TYPE_BLK, resMd5);
+						vty_out(vty,"File md5 value on dest board is %s\n", (char*)resMd5);
 						vty_out(vty,"%s", dcli_bsd_get_return_string(ret, a_returnString));
 					}
 	        #endif
@@ -2990,6 +2993,7 @@ DEFUN (download_system_func,
                     vty_out(vty,"Start synchronizing, please wait...\n");
                     char src_path[PATH_LEN] = {0};
                     char des_path[PATH_LEN] = {0};
+                    char res_md5[PATH_LEN] = {0};
                     sprintf(src_path, "/blk/%s", filename);
                     sprintf(des_path, "/blk/%s", filename);
 #if 0
@@ -2999,8 +3003,10 @@ DEFUN (download_system_func,
                     //printf("count = %d\n",board_count);
                     for(i = 0; i < board_count; i++)
                     {
+                        memset(res_md5, 0, PATH_LEN);
                         vty_out(vty,"start synchronizing to slot_%d...\n",ID[i]);
-                        ret = dcli_bsd_copy_file_to_board(dcli_dbus_connection,ID[i],src_path,des_path,0,BSD_TYPE_BOOT_IMG);
+                        ret = dcli_bsd_copy_file_to_board(dcli_dbus_connection,ID[i],src_path,des_path,0,BSD_TYPE_BOOT_IMG, res_md5);
+                        vty_out(vty,"File md5 value on dest board is %s\n", (char*)res_md5);
                         vty_out(vty,"%s", dcli_bsd_get_return_string(ret, a_returnString));
                     }
 #endif
@@ -3197,6 +3203,7 @@ DEFUN (download_system_func,
 					vty_out(vty,"Start synchronizing, please wait...\n");
 					char src_path[PATH_LEN] = {0};
 			        char des_path[PATH_LEN] = {0};
+			        char res_md5[PATH_LEN] = {0};
 			        sprintf(src_path, "/blk/%s", filename);
 			        sprintf(des_path, "/blk/%s", filename);
 			        #if 0
@@ -3206,8 +3213,10 @@ DEFUN (download_system_func,
 			        //printf("count = %d\n",board_count);
 			        for(i = 0; i < board_count; i++)
 			        {
+			            memset(res_md5, 0, PATH_LEN);
 			            vty_out(vty,"start synchronizing to slot_%d...\n",ID[i]);
-                        ret = dcli_bsd_copy_file_to_board(dcli_dbus_connection,ID[i],src_path,des_path,0,BSD_TYPE_BOOT_IMG);
+                        ret = dcli_bsd_copy_file_to_board(dcli_dbus_connection,ID[i],src_path,des_path,0,BSD_TYPE_BOOT_IMG, res_md5);
+                        vty_out(vty,"File md5 value on dest board is %s\n", (char*)res_md5);
 			            vty_out(vty,"%s", dcli_bsd_get_return_string(ret, a_returnString));
 			        }
 			        #endif
@@ -3646,10 +3655,12 @@ DEFUN (upload_system_snapshot_func,
 	}
 
 	if(slot_id != HostSlotId) {
+	    char res_md5[PATH_LEN] = {0};
 		op_ret = dcli_bsd_copy_file_to_board(slot_dcli_dbus_connection,
 												HostSlotId, SNAPSHOT_PATH,
 												SNAPSHOT_PATH, 0,
-												BSD_TYPE_SINGLE);
+												BSD_TYPE_SINGLE, res_md5);
+		vty_out(vty,"File md5 value on dest board is %s\n", (char*)res_md5);
 		if(op_ret) {
 			vty_out(vty, "%% copy snapshot from slot %d failed: %d.\n", slot_id, op_ret);
 			return CMD_FAILURE;
@@ -4250,12 +4261,14 @@ DEFUN (download_bootrom_func,
 			vty_out(vty,"Finishing downloading system img file\n");
             char src_path[PATH_LEN] = {0};
 			char des_path[PATH_LEN] = {0};
+			char res_md5[PATH_LEN] = {0};
 			char a_returnString[BSD_COMMAND_BUF_LEN] = {0};
 			sprintf(src_path,"/blk/%s",filename);
 			sprintf(des_path,"/blk/%s",filename);
 
           	vty_out(vty, "start writing bootrom to flash SLOT %d *****Just a minute, please\n",slot_id);			
-            ret = dcli_bsd_copy_file_to_board(dcli_dbus_connection,slot_id,src_path,des_path,0,BSD_TYPE_BLK);
+            ret = dcli_bsd_copy_file_to_board(dcli_dbus_connection,slot_id,src_path,des_path,0,BSD_TYPE_BLK, res_md5);
+            vty_out(vty,"File md5 value on dest board is %s\n", (char*)res_md5);
 	        vty_out(vty,"%s",dcli_bsd_get_return_string(ret,a_returnString));        
 
 			
@@ -4900,10 +4913,12 @@ DEFUN (upload_packet_file_func,
 	sprintf(spath, "/opt/debugdown/%s", argv[4]);
 
 	if(slot_id != HostSlotId) {
+	    char res_md5[PATH_LEN] = {0};
 		op_ret = dcli_bsd_copy_file_to_board(slot_dcli_dbus_connection,
 												HostSlotId, spath,
 												PACKET_FILE, 0,
-												BSD_TYPE_SINGLE);
+												BSD_TYPE_SINGLE, res_md5);
+		vty_out(vty,"File md5 value on dest board is %s\n", (char*)res_md5);										
 		if(op_ret) {
 			vty_out(vty, "%% copy snapshot from slot %d failed: %d.\n", slot_id, op_ret);
 			return CMD_FAILURE;
@@ -5546,6 +5561,7 @@ DEFUN (download_patch_func,
 			        //char des_path[PATH_LEN] = {0};
 					char src_path[512] = {0};
 			        char des_path[512] = {0};
+			        char res_md5[PATH_LEN] = {0};
 			        sprintf(src_path, "/blk/patch/%s", filename);
 			        sprintf(des_path, "/blk/patch/%s", filename);
 			        #if 0
@@ -5556,8 +5572,10 @@ DEFUN (download_patch_func,
 					/*vty_out(vty,"baord-count[%d].\n",board_count);*/
 			        for(i = 0; i < board_count; i++)
 			        {
+			            memset(res_md5, 0, PATH_LEN);
 			            vty_out(vty,"start synchronizing to slot_%d...\n",ID[i]);
-                        ret = dcli_bsd_copy_file_to_board(dcli_dbus_connection,ID[i],src_path,des_path,0,BSD_TYPE_PATCH);
+                        ret = dcli_bsd_copy_file_to_board(dcli_dbus_connection,ID[i],src_path,des_path,0,BSD_TYPE_PATCH, res_md5);
+                        vty_out(vty,"File md5 value on dest board is %s\n", (char*)res_md5);
 			            vty_out(vty,"%s", dcli_bsd_get_return_string(ret, a_returnString));
 			        }
 			        #endif

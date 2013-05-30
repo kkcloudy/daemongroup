@@ -1033,6 +1033,7 @@ DEFUN (system_sync_version_file_to_slot,
 	int local_slot_id = 0;
 	int tar_switch = 0;
 	int op = BSD_TYPE_BOOT_IMG;
+	char *resultMd5 = NULL;
 
 	if(strncasecmp((argv[0]+strlen(argv[0])-4),".IMG",4))
 	{
@@ -1098,7 +1099,9 @@ DEFUN (system_sync_version_file_to_slot,
 	
 	if (dbus_message_get_args ( reply, &err,
 					DBUS_TYPE_UINT32,&ret,
+					DBUS_TYPE_STRING,&resultMd5,
 					DBUS_TYPE_INVALID)) {
+		vty_out(vty, "File md5 value on dest board is %s\n", resultMd5);
 		if(ret == 0){
 			vty_out(vty,"Copy version file %s to slot %d done.\n", version_file, slot_id);
 		}

@@ -28,6 +28,7 @@ static DBusConnection * bsd_dbus_connection2 = NULL;
 
 extern unsigned short g_unEventId;
 
+char g_rePrintMd5[BSD_PATH_LEN];
 
 
 /** 
@@ -301,6 +302,8 @@ DBusMessage * bsd_copy_files_between_boards(DBusConnection *conn, DBusMessage *m
     int op = 0;
     DIR *source = NULL;
     int curr_event_id = 0;
+    char *tmp_md5 = NULL;
+    int len = 0;
     dbus_error_init(&err);
     if (!(dbus_message_get_args ( msg, &err,
                              DBUS_TYPE_UINT32,&slotid,
@@ -333,11 +336,24 @@ DBusMessage * bsd_copy_files_between_boards(DBusConnection *conn, DBusMessage *m
     } else {// copy folder
         bsd_syslog_debug_debug(BSD_DEFAULT, "copy other files\n");
         tarFlag = tar_switch;
-        ret = BSDCopyFile(slotid, src_path, des_path);
+        ret = BSDCopyFile(slotid, src_path, des_path, op);
         tarFlag = 0;
         closedir(source);
     }
     
+    /* add for AXSSZFI-1563 */
+    len = strnlen(g_rePrintMd5, BSD_PATH_LEN);
+    //bsd_syslog_debug_debug(BSD_DEFAULT, "g_rePrintMd5 len = %d", len);
+    if(len > 0) {
+        tmp_md5 = (char*)malloc(len+1);
+        memset(tmp_md5, 0, len+1);
+        memcpy(tmp_md5, g_rePrintMd5, len);
+    }
+    else {
+        tmp_md5 = (char*)malloc(5);
+        memset(tmp_md5, 0, 5);
+        strcpy(tmp_md5, "none");
+    }
     if((ret != 0) && (BSD_BOARD[slotid]->state != BSD_FILE_UNKNOWN)) 
         BSD_BOARD[slotid]->state = BSD_FILE_UNKNOWN;
     
@@ -351,7 +367,12 @@ DBusMessage * bsd_copy_files_between_boards(DBusConnection *conn, DBusMessage *m
     
     dbus_message_iter_init_append (reply, &iter);
     dbus_message_iter_append_basic (&iter,DBUS_TYPE_UINT32,&ret);
+    dbus_message_iter_append_basic (&iter,DBUS_TYPE_STRING,&tmp_md5);
     
+    if(tmp_md5 != NULL) {
+        free(tmp_md5);
+        tmp_md5 = NULL;
+    }
     return reply;
     
 }
