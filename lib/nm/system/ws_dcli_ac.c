@@ -7982,6 +7982,7 @@ int set_wirelesscontrol_auto_ap_binding_l3_interface_new_cmd(dbus_parameter para
 																												/*返回-8表示is no local interface, permission denial*/
 																												/*返回-9表示interface argv[1] error*/
 																												/*返回-10表示interface has not been added or has already been deleted*/
+																												/*返回-11表示interface has be binded in other hansi*/
 																												/*返回SNMPD_CONNECTION_ERROR表示connection error*/
 {
 	if(NULL == connection)
@@ -8072,6 +8073,11 @@ int set_wirelesscontrol_auto_ap_binding_l3_interface_new_cmd(dbus_parameter para
 	{
 		retu = 1;
 		//vty_out(vty,"set wireless-control dynamic_ap_login_interface %s %s successfully\n",argv[0],argv[1]);
+	}
+	else if (ret == IF_BINDING_FLAG)		/* Huangleilei fixed for AXSSZFI-1615 */
+	{
+		retu = -11;
+		//vty_out(vty, "<error> interface %s has be binded in other hansi.\n", argv[1]);
 	}
 	else if(ret == SWITCH_IS_DISABLE)
 	{

@@ -18506,10 +18506,12 @@ int set_ap_reboot_by_list_func(dbus_parameter parameter, DBusConnection *connect
 	int i = 0;
 	int n = 0, num = 0;
 	int len;
-	int list[DEFAULT_LEN];
+	int list[4096];
 	DBusMessage *query, *reply;	
 	DBusMessageIter	 iter;
+	DBusMessageIter iter_array;
 	DBusError err;
+	memset(list, 0, sizeof(list));
 
 	len = strlen(ap_list);
 	if(len > 80)
@@ -18543,12 +18545,28 @@ int set_ap_reboot_by_list_func(dbus_parameter parameter, DBusConnection *connect
 	dbus_message_iter_init_append (query, &iter);
 	
 	dbus_message_iter_append_basic (&iter,DBUS_TYPE_UINT32,&num);
-			
+
+	dbus_message_iter_open_container (&iter,
+									DBUS_TYPE_ARRAY,
+									DBUS_STRUCT_BEGIN_CHAR_AS_STRING
+									DBUS_TYPE_UINT32_AS_STRING
+									DBUS_STRUCT_END_CHAR_AS_STRING,
+									&iter_array);
+	
+	for(i = 0; i < num ; i++){			
+		DBusMessageIter iter_struct;		/* Huangleilei add it by AXSSZFI-1621: dbus may be not accept more than 255 elements, as string add to it */
+		dbus_message_iter_open_container(&iter_array, DBUS_TYPE_STRUCT,NULL, &iter_struct);
+		dbus_message_iter_append_basic(&iter_struct, DBUS_TYPE_UINT32, &list[i]);
+		dbus_message_iter_close_container (&iter_array, &iter_struct);
+	}
+	
+	dbus_message_iter_close_container (&iter, &iter_array);
+	#if 0		
 	for(i = 0; i < num; i++)
 	{			
 		dbus_message_iter_append_basic (&iter,DBUS_TYPE_UINT32,&list[i]);		
 	}
-
+	#endif
 	reply = dbus_connection_send_with_reply_and_block (connection,query,-1, &err);
 	
 	dbus_message_unref(query);
@@ -20617,6 +20635,8 @@ int set_update_img_file_name(dbus_parameter parameter, DBusConnection *connectio
 	int ret,retu;
 	DBusMessage *query, *reply;	
 	DBusMessageIter  iter;
+	DBusMessageIter iter_array;
+	DBusMessageIter iter_array_fail;
 	DBusError err;
 	char *buf_version;
 	char *buf_path;
@@ -20752,6 +20772,22 @@ int set_update_img_file_name(dbus_parameter parameter, DBusConnection *connectio
 										 DBUS_TYPE_UINT32,
 										 &num);
 	tmp = wtplist->wtpidlist;
+	dbus_message_iter_open_container (&iter,
+									DBUS_TYPE_ARRAY,
+									DBUS_STRUCT_BEGIN_CHAR_AS_STRING
+									DBUS_TYPE_UINT32_AS_STRING
+									DBUS_STRUCT_END_CHAR_AS_STRING,
+									&iter_array);
+	
+	for(i = 0; i < num; i++){			
+		DBusMessageIter iter_struct;		/* Huangleilei add it by AXSSZFI-1621: dbus may be not accept more than 255 elements, as string add to it */
+		dbus_message_iter_open_container(&iter_array, DBUS_TYPE_STRUCT, NULL, &iter_struct);
+		dbus_message_iter_append_basic(&iter_struct, DBUS_TYPE_UINT32, &(tmp->wtpid));
+		dbus_message_iter_close_container (&iter_array, &iter_struct);
+		tmp = tmp->next;
+	}
+	dbus_message_iter_close_container (&iter, &iter_array);
+	#if 0
 	for(i = 0; i < num; i++){
 		
 		dbus_message_iter_append_basic (&iter,
@@ -20760,7 +20796,8 @@ int set_update_img_file_name(dbus_parameter parameter, DBusConnection *connectio
 		tmp = tmp->next;
 
 	}	
-	reply = dbus_connection_send_with_reply_and_block (connection,query,-1, &err);
+	#endif
+	reply = dbus_connection_send_with_reply_and_block (connection,query,5000, &err);
 
 	dbus_message_unref(query);
 
@@ -20805,6 +20842,7 @@ int clear_ap_img_info(dbus_parameter parameter, DBusConnection *connection,char 
 	int ret,retu;
 	DBusMessage *query, *reply; 
 	DBusMessageIter  iter;
+	DBusMessageIter iter_array;
 	DBusError err;
 	int i;
 	update_wtp_list *wtplist;
@@ -20865,6 +20903,22 @@ int clear_ap_img_info(dbus_parameter parameter, DBusConnection *connection,char 
 										 DBUS_TYPE_UINT32,
 										 &num);
 	tmp = wtplist->wtpidlist;
+	dbus_message_iter_open_container (&iter,
+									DBUS_TYPE_ARRAY,
+									DBUS_STRUCT_BEGIN_CHAR_AS_STRING
+											DBUS_TYPE_UINT32_AS_STRING
+									DBUS_STRUCT_END_CHAR_AS_STRING,
+									&iter_array);
+	
+	for(i = 0; i < num; i++){			
+		DBusMessageIter iter_struct;		/* Huangleilei add it by AXSSZFI-1621: dbus may be not accept more than 255 elements, as string add to it */
+		dbus_message_iter_open_container(&iter_array,DBUS_TYPE_STRUCT,NULL,&iter_struct);
+		dbus_message_iter_append_basic(&iter_struct,DBUS_TYPE_UINT32,&(tmp->wtpid));
+		dbus_message_iter_close_container (&iter_array, &iter_struct);
+		tmp = tmp->next;
+	}
+	dbus_message_iter_close_container (&iter, &iter_array);
+	#if 0
 	for(i = 0; i < num; i++){
 		
 		dbus_message_iter_append_basic (&iter,
@@ -20873,6 +20927,7 @@ int clear_ap_img_info(dbus_parameter parameter, DBusConnection *connection,char 
 		tmp = tmp->next;
 
 	}	
+	#endif
 	reply = dbus_connection_send_with_reply_and_block (connection,query,-1, &err);
 
 	dbus_message_unref(query);
@@ -21083,6 +21138,7 @@ int clear_update_fail_wtp(dbus_parameter parameter, DBusConnection *connection,c
 	int ret,retu;
 	DBusMessage *query, *reply; 
 	DBusMessageIter  iter;
+	DBusMessageIter	 iter_array;
 	DBusError err;
 	int i;
 	update_wtp_list *wtplist;
@@ -21142,14 +21198,23 @@ int clear_update_fail_wtp(dbus_parameter parameter, DBusConnection *connection,c
 										 DBUS_TYPE_UINT32,
 										 &num);
 	tmp = wtplist->wtpidlist;
+	dbus_message_iter_open_container (&iter,
+									DBUS_TYPE_ARRAY,
+									DBUS_STRUCT_BEGIN_CHAR_AS_STRING
+									DBUS_TYPE_UINT32_AS_STRING
+									DBUS_STRUCT_END_CHAR_AS_STRING,
+									&iter_array);
 	for(i = 0; i < num; i++){
 		
-		dbus_message_iter_append_basic (&iter,
-											 DBUS_TYPE_UINT32,
-											 &(tmp->wtpid));
+		DBusMessageIter iter_struct;
+		dbus_message_iter_open_container(&iter_array,DBUS_TYPE_STRUCT,NULL,&iter_struct);
+		dbus_message_iter_append_basic(&iter_struct,DBUS_TYPE_UINT32,&(tmp->wtpid));
+		dbus_message_iter_close_container (&iter_array, &iter_struct);
+		
 		tmp = tmp->next;
-
 	}	
+	dbus_message_iter_close_container (&iter, &iter_array);
+	
 	reply = dbus_connection_send_with_reply_and_block (connection,query,-1, &err);
 
 	dbus_message_unref(query);
