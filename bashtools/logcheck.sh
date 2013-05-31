@@ -138,11 +138,18 @@ archive_log()
 
 truncate_log()
 {
-	logf=$1
-	tail -n 100000 $logf > /var/log/templog
-	/opt/services/init/syslog_init stop
-	mv /var/log/templog $logf
-	/opt/services/init/syslog_init start
+       logf=$1
+       log_file=`basename $1`
+#       tail -n 100000 $logf > /var/log/templog
+#       /opt/services/init/syslog_init stop
+#       mv /var/log/templog $logf
+#       /opt/services/init/syslog_init start
+
+       /opt/services/init/syslog_init stop
+       mv $logf /mnt/$log_file
+       /usr/bin/sor.sh cp $log_file 30
+       rm /mnt/$log_file
+       /opt/services/init/syslog_init start
 }
 
 check_and_clean_log()
@@ -156,7 +163,7 @@ check_and_clean_log()
 		#	savelog -c 3 $LOG
 		logger -t $LOGTAG -p cron.notice "$LOG with size [$LOGSIZE] is larger than max size [$MAXSIZE] will be cleaned."
 		logger -t $LOGTAG -p daemon.notice "$LOG with size [$LOGSIZE] is larger than max size [$MAXSIZE] will be cleaned."
-		if [ $LOG = "/var/log/syslogservice.log" ] || [ $LOG = "/var/log/system.log" ] ; then
+		if [ $LOG = "/var/log/cli.log" ] || [ $LOG = "/var/log/system.log" ] ; then
 			truncate_log $LOG
 		else
 			archive_log $LOG
@@ -164,22 +171,22 @@ check_and_clean_log()
 		fi
 	fi
 
-	LOGSIZE=`ls -l $LOG | awk '{print $5}'`
-	decho "LOGSIZE is [$LOGSIZE]"
-	if [ $LOGSIZE -ge $MAXSIZE ] ; then
-		logger -t $LOGTAG -p cron.notice "$LOG still have size [$LOGSIZE], force delete it."
-		logger -t $LOGTAG -p daemon.notice "$LOG still have size [$LOGSIZE], force delete it."
-		rm -rf $LOG
-		if [ "x$LOG" == "x/var/log/system.log" || "x$LOG" == "x/var/log/cron.log" || "x$LOG" == "x/var/log/sudo.log" ] ; then
-			if [ -f $LOG ] ; then
-				pkill -9 syslog-ng
-				rm -rf $LOG
-				/opt/services/init/syslog_init start
-			else
-				/opt/services/init/syslog_init restart
-			fi
-		fi
-	fi
+#	LOGSIZE=`ls -l $LOG | awk '{print $5}'`
+#	decho "LOGSIZE is [$LOGSIZE]"
+#	if [ $LOGSIZE -ge $MAXSIZE ] ; then
+#		logger -t $LOGTAG -p cron.notice "$LOG still have size [$LOGSIZE], force delete it."
+#		logger -t $LOGTAG -p daemon.notice "$LOG still have size [$LOGSIZE], force delete it."
+#		> $LOG
+#		if [ "x$LOG" == "x/var/log/system.log" || "x$LOG" == "x/var/log/cron.log" || "x$LOG" == "x/var/log/sudo.log" ] ; then
+#			if [ -f $LOG ] ; then
+#				pkill -9 syslog-ng
+#				> $LOG
+#				/opt/services/init/syslog_init start
+#			else
+#				/opt/services/init/syslog_init restart
+#			fi
+#		fi
+#	fi
 }
 
 checkdir()

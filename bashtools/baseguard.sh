@@ -523,6 +523,7 @@ check_warrning()
   fi
 }
 
+COREMAXSIZE=$((20 * 1024 * 1024))
 
 check_core_dump()
 {
@@ -540,7 +541,12 @@ check_core_dump()
       if [ ${suffix} = "core" ] ; then
         obj="`echo ${file%_*}`"
         gdb /opt/bin/${obj} /opt/bin/core/${file} -batch --command=${cmd_file} > /blk/${file}.txt
-        rm /opt/bin/core/${file}
+        #CORESIZE=`ls -l /opt/bin/core/${file} | awk '{print $5}'`
+        #if [ $CORESIZE -lt $COREMAXSIZE ] ; then
+          cp /opt/bin/core/${file} /blk
+          sync
+        #fi
+        rm -rf /opt/bin/core/${file}
         echo "DEBUG: rm /opt/bin/core/${file}." >> /var/log/baseguard.log
       fi
     done
