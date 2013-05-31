@@ -69486,9 +69486,9 @@ DBusMessage * wid_dbus_wlan_show_running_config_end(DBusConnection *conn, DBusMe
 							totalLen += sprintf(cursor," set bridge_ucast_solicit disable\n");
 							cursor = showStr + totalLen;
 						}
-						if(WLAN[i]->bridge_mcast_solicit_stat != 0)
+						if(WLAN[i]->bridge_mcast_solicit_stat != 1)
 						{
-							totalLen += sprintf(cursor," set bridge_mcast_solicit enable\n");
+							totalLen += sprintf(cursor," set bridge_mcast_solicit disable\n");
 							cursor = showStr + totalLen;
 						}
 					}
@@ -71524,9 +71524,9 @@ DBusMessage * wid_dbus_ebr_show_running_config_end(DBusConnection *conn, DBusMes
 					totalLen += sprintf(cursor," set bridge_ucast_solicit disable\n");
 					cursor = showStr + totalLen;
 				}
-				if(EBR[i]->bridge_mcast_solicit_stat != 0)
+				if(EBR[i]->bridge_mcast_solicit_stat != 1)
 				{
-					totalLen += sprintf(cursor, " set bridge_mcast_solicit enable\n");
+					totalLen += sprintf(cursor, " set bridge_mcast_solicit disable\n");
 					cursor = showStr + totalLen;
 				}
 				if(EBR[i]->sameportswitch != 0)
