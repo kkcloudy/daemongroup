@@ -3263,8 +3263,10 @@ int find_lease_by_ip_addr PROTO ((struct lease **, struct iaddr,
 				  const char *, int));
 void uid_hash_add PROTO ((struct lease *));
 void uid_hash_delete PROTO ((struct lease *));
+void uid_hash_del PROTO ((struct lease *));
 void hw_hash_add PROTO ((struct lease *));
 void hw_hash_delete PROTO ((struct lease *));
+void hw_hash_del PROTO ((struct lease *));
 int write_leases PROTO ((void));
 int write_leases6(void);
 int lease_enqueue (struct lease *);

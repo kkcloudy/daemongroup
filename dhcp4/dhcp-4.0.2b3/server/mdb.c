@@ -2575,11 +2575,16 @@ int supersede_lease (comp, lease, commit, propogate, pimmediate)
 	}
 
 	/* Record the lease in the uid hash if necessary. */
-	if (comp->uid)
+	if (comp->uid){
+		if(propogate && ASN)
+		uid_hash_del(comp);//delete uid item in the hash,in case of allocate differet ip to the same mac
 		uid_hash_add(comp);
+	}
 
 	/* Record it in the hardware address hash if necessary. */
-	if (comp->hardware_addr.hlen) {	
+	if (comp->hardware_addr.hlen) {
+		if(propogate && ASN)
+		hw_hash_del(comp);//delete hw item in the hash,in case of allocate differet ip to the same mac
 		hw_hash_add(comp);
 	}
 
@@ -3426,6 +3431,37 @@ uid_hash_add(struct lease *lease)
 	}
 }
 
+/* delete uid item in the hash,in case of allocate differet ip to the same mac. */
+
+void uid_hash_del (lease)
+	struct lease *lease;
+{
+	struct lease *head = (struct lease *)0;
+//	struct lease *scan;
+
+	/* If it's not in the hash, we have no work to do. */
+	if (!find_lease_by_uid (&head, lease -> uid, lease -> uid_len, MDL)) {
+		if (lease -> n_uid)
+			lease_dereference (&lease -> n_uid, MDL);
+		return;
+	}
+
+	/* If the lease we're freeing is at the head of the list,
+	   remove the hash table entry and add a new one with the
+	   next lease on the list (if there is one). */
+	if(head)
+	lease_id_hash_delete(lease_uid_hash, lease->uid,
+			     lease->uid_len, MDL);
+	if (lease -> n_uid) {
+		lease_id_hash_add(lease_uid_hash, lease->n_uid->uid,
+				  lease->n_uid->uid_len, lease->n_uid,
+				  MDL);
+		lease_dereference (&lease -> n_uid, MDL);
+	}
+
+	lease_dereference (&head, MDL);
+}
+
 /* Delete the specified lease from the uid hash. */
 
 void uid_hash_delete (lease)
@@ -3549,6 +3585,45 @@ hw_hash_add(struct lease *lease)
 			lease_dereference(&cand, MDL);
 		lease_dereference(&head, MDL);
 	}
+}
+
+/* delete uid item in the hash,in case of allocate differet ip to the same mac. */
+void hw_hash_del (lease)
+	struct lease *lease;
+{
+	struct lease *head = (struct lease *)0;
+//	struct lease *next = (struct lease *)0;
+
+	/* If it's not in the hash, we have no work to do. */
+	if (!find_lease_by_hw_addr (&head, lease -> hardware_addr.hbuf,
+				    lease -> hardware_addr.hlen, MDL)) {
+		if (lease -> n_hw)
+			lease_dereference (&lease -> n_hw, MDL);
+		return;
+	}
+
+	/* If the lease we're freeing is at the head of the list,
+	   remove the hash table entry and add a new one with the
+	   next lease on the list (if there is one). */
+	if (head) {	
+		pthread_mutex_lock(&DhcpHashMutex);
+		lease_id_hash_delete(lease_hw_addr_hash,
+				     lease->hardware_addr.hbuf,
+				     lease->hardware_addr.hlen, MDL);
+		
+		pthread_mutex_unlock(&DhcpHashMutex);
+		if (lease->n_hw) {	
+			pthread_mutex_lock(&DhcpHashMutex);
+			lease_id_hash_add(lease_hw_addr_hash,
+					  lease->n_hw->hardware_addr.hbuf,
+					  lease->n_hw->hardware_addr.hlen,
+					  lease->n_hw, MDL);
+			pthread_mutex_unlock(&DhcpHashMutex);
+			lease_dereference(&lease->n_hw, MDL);
+		}
+	} 
+	if (head)
+		lease_dereference (&head, MDL);
 }
 
 /* Delete the specified lease from the hardware address hash. */
