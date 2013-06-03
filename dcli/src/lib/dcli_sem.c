@@ -1736,8 +1736,10 @@ DEFUN (sem_apply_patch,
        "patch name\n"
        "patch name string\n")
 {
-	DBusMessage *query, *reply;
+	DBusMessage *query=NULL; 
+	DBusMessage *reply=NULL;
 	DBusError err;
+	DBusMessageIter  iter;
 	int ret;
 	int slot_id;
 	char *endptr = NULL;
@@ -1745,15 +1747,15 @@ DEFUN (sem_apply_patch,
 	char *patch_result;
 	int i=0;
 	int slotNum = get_product_info(SEM_SLOT_COUNT_PATH);
-/*
-    slot_id = strtoul(argv[0], &endptr, 10);
-	if(slot_id > slotNum || slot_id <= 0)
-	{
-		vty_out(vty,"%% NO SUCH SLOT %d!\n", slot_id);
-        return CMD_WARNING;
-	}
-*/
+
 	patchname= (char *)argv[0];
+
+	ret = strlen(patchname);
+	if(ret > 100)
+	{
+        vty_out(vty, "patch name should less than 100Bytes.\n");
+		return CMD_WARNING;
+	}
 
 	for(i = 1;i <= slotNum;i++)
 	{
@@ -1761,7 +1763,7 @@ DEFUN (sem_apply_patch,
 		{
 			continue;
 		}
-		//vty_out(vty, "SLOT %d **********\n",i);
+		
 		if (dbus_connection_dcli[i]->dcli_dbus_connection) 
     	{
         	query = dbus_sem_msg_new_method_call(SEM_DBUS_BUSNAME, SEM_DBUS_OBJPATH,
@@ -1787,7 +1789,7 @@ DEFUN (sem_apply_patch,
     				dbus_error_free_for_dcli(&err);
     			}
     		}
-    		//vty_out(vty, "SLOT %d !!!!!!!!!!!!!!!!!!!!!!!!!\n",i);
+
         	if (dbus_message_get_args ( reply, &err,
         		                     DBUS_TYPE_INT32,&ret,
         		                     DBUS_TYPE_STRING,&patch_result,
@@ -1839,6 +1841,7 @@ DEFUN (sem_apply_patch,
 				dbus_error_free_for_dcli(&err);
 			}
 		}
+
     	if (dbus_message_get_args ( reply, &err,
     		                     DBUS_TYPE_INT32,&ret,
     		                     DBUS_TYPE_STRING,&patch_result,
@@ -1953,6 +1956,12 @@ DEFUN (sem_apply_patch_single,
 	}
 
 	patchname= (char *)argv[1];
+	ret = strlen(patchname);
+	if(ret > 100)
+	{
+        vty_out(vty, "patch name should less than 100Bytes.\n");
+    	return CMD_WARNING;
+	}
 
 	//vty_out(vty, "SLOT %d **********\n",i);
 	if (dbus_connection_dcli[slot_id]->dcli_dbus_connection) 
