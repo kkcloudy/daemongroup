@@ -1526,28 +1526,27 @@ void bak_update_bss_req(void *circle_ctx, void *timeout_ctx){
 					msg->Bu.U_ALL_BSS.bssindex_array[bss_num].bssindex = bss[bss_num]->BSSIndex;
 					msg->Bu.U_ALL_BSS.bssindex_array[bss_num].sta_num = bss[bss_num]->num_sta;
 					bss_num += 1;	
-					continue;
+					if(bss_num == 4096){
+						msg->Bu.U_ALL_BSS.count = bss_num;
+						asd_printf(ASD_DEFAULT,MSG_DEBUG,"************bss_num = %d**********\n",msg->Bu.U_ALL_BSS.count);
+						msg->Type = B_BSS_TYPE;
+						msg->Op = B_UPDATE;
+						len = sizeof(B_Msg);
+						
+						ret = sendto(asd_sock, buf, len+1,0,(struct sockaddr *)&M_addr, sizeof(struct sockaddr));
+						if(ret < 0){			
+							asd_printf(ASD_DEFAULT,MSG_WARNING,"errno = %d\n",errno);
+							asd_printf(ASD_DEFAULT,MSG_WARNING,"%s send %s",__func__,strerror(errno));
+						}
+						bss_num = 0;
+						memset(buf,0,sizeof(buf));
+						memset(bss,0,BSS_NUM*(sizeof(struct asd_data *)));
+					}
 				}
 			}
 			i++;
 		} else 
 			i += 4 - i%L_RADIO_NUM;
-		if(bss_num == BSS_NUM){
-			msg->Bu.U_ALL_BSS.count = bss_num;
-			asd_printf(ASD_DEFAULT,MSG_DEBUG,"************bss_num = %d**********\n",msg->Bu.U_ALL_BSS.count);
-			msg->Type = B_BSS_TYPE;
-			msg->Op = B_UPDATE;
-			len = sizeof(B_Msg);
-			
-			ret = sendto(asd_sock, buf, len+1,0,(struct sockaddr *)&M_addr, sizeof(struct sockaddr));
-			if(ret < 0){			
-				asd_printf(ASD_DEFAULT,MSG_WARNING,"errno = %d\n",errno);
-				asd_printf(ASD_DEFAULT,MSG_WARNING,"%s send %s",__func__,strerror(errno));
-			}
-			bss_num = 0;
-			memset(buf,0,sizeof(buf));
-			memset(bss,0,BSS_NUM*(sizeof(struct asd_data *)));
-		}
 	}
 	//end
 	//bss_num= ASD_SEARCH_ALL_BSS(bss,&msg);
