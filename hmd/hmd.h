@@ -75,5 +75,5 @@ int Set_Interface_binding_Info(char * ifname,char flag);//fengwenchao copy from 
 int HmdNoticeToClient_ForClearIfname(int slotid,char *ifname,int op);//fengwenchao copy from 1318 for AXSSZFI-839
 int HmdNoticeToClient_ForBakForeverConfig(struct HmdMsg *hmdmsg,int op);
 int Set_hmd_bakup_foreve_config(struct HmdMsg *hmdmsg);
-
+int hmd_config_save_timer_init(int method_flag);//fengwenchao add for hmd timer config save
 #endif

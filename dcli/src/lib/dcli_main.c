@@ -46,6 +46,7 @@ extern "C"
 #include <asm/types.h> 
 #include <errno.h>
 #include <dirent.h>
+#include "vtysh/vtysh.h"
 
 #include "sysdef/npd_sysdef.h"
 #include "dbus/npd/npd_dbus_def.h"
@@ -512,6 +513,23 @@ int dcli_stp_dbus_init(void) {
 	}
 
 }
+ /*fengwenchao add for hmd timer config save*/
+unsigned int check_hmd_config_save_flag(unsigned int* save_flag)
+{
+	int fd;
+	int len= 0;
+	int buff[1] = {0};
+	char cmd[64] = {0};
+	sprintf(cmd,"/var/run/hmd/config_save_hmd_flag");
+	fd= open(cmd,O_RDONLY);
+	if(fd <0)
+		return 0;
+	len = read(fd,buff,1);
+	close(fd);
+	parse_int_ID(buff,save_flag);
+	return 0;
+}
+/*fengwenchao add end*/
 
 void dcli_config_write(char * str, int local,int slotID, int hansiID,int opened, int closed)
 {
@@ -521,6 +539,16 @@ void dcli_config_write(char * str, int local,int slotID, int hansiID,int opened,
 	char cmd[256] = {0};
 	char defaultDir[] = "/var/run/config";
 	char defaultPath[] = "/var/run/config/Instconfig";
+	unsigned int save_flag =0;
+	if(is_WriteConfig == 1)
+	{
+	}
+	else
+	{
+		check_hmd_config_save_flag(&save_flag);
+		if(save_flag == 0)
+			return;
+	}
 	if(local)
 		sprintf(newpath,"%s%d-1-%d",defaultPath,slotID,hansiID);
 	else
@@ -561,6 +589,18 @@ void dcli_config_writev2(char * str,int slotID, int hansiID,char * filename,int 
 	char defaultDir[] = "/mnt/config";
 	char defaultSlotPath[] = "/mnt/config/slot";
 	char newSlotPath[128] = {0};	
+	unsigned int save_flag =0;
+	/*fengwenchao add for show running,hmd timer config save */
+	if(is_WriteConfig == 1)        
+	{
+	}
+	else
+	{
+		check_hmd_config_save_flag(&save_flag);
+		if(save_flag == 0)
+			return;
+	}
+	/*fengwenchao add end*/
 	if(slotID != 0){
 		sprintf(newSlotPath,"%s%d",defaultSlotPath,slotID);
 	}else{

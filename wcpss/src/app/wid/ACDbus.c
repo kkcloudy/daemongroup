@@ -71221,7 +71221,7 @@ DBusMessage * wid_dbus_wtp_show_running_config_end(DBusConnection *conn, DBusMes
 				cursor = showStr + totalLen;
 				//int rnum = WTP[i]->RadioCount;
 				//int j = 0;
-				if(WTP[i]->isused == 1)  //fengwenchao modify 20111221
+				if((WTP[i])&&(WTP[i]->isused == 1))  //fengwenchao modify 20111221
 				{
 					if((WTP[i]->wtp_login_mode == 1)&&(g_auto_ap_login.save_switch == 0))
 					{
@@ -71265,7 +71265,7 @@ DBusMessage * wid_dbus_wtp_show_running_config_end(DBusConnection *conn, DBusMes
 						cursor = showStr + totalLen;
 					}*/  //fengwenchao comment 20111214 for AUTELAN-2712
 					
-					if(WTP[i]->WTP_Radio[j] != NULL)
+					if((WTP[i])&&(WTP[i]->WTP_Radio[j] != NULL))
 					{
 						totalLen += sprintf(cursor,"config radio %d-%d\n",WTP[i]->WTPID,WTP[i]->WTP_Radio[j]->Radio_L_ID);
 						cursor = showStr + totalLen;
@@ -71290,6 +71290,7 @@ DBusMessage * wid_dbus_wtp_show_running_config_end(DBusConnection *conn, DBusMes
 								}
 								wlanid = WTP[i]->WTP_Radio[j]->BSS[k]->WlanID;
 								if((WTP[i]->WTP_Radio[j]->BSS[k]->BSS_IF_POLICY != NO_INTERFACE)\
+									&&(AC_WLAN[wlanid] != NULL)
 								&&(WTP[i]->WTP_Radio[j]->BSS[k]->BSS_TUNNEL_POLICY != AC_WLAN[wlanid]->WLAN_TUNNEL_POLICY)){
 									if(WTP[i]->WTP_Radio[j]->BSS[k]->BSS_TUNNEL_POLICY == CW_802_DOT_3_TUNNEL){
 										if(vrrid != 0){
@@ -73463,7 +73464,8 @@ int show_running_config_wtp(WID_WTP **WTP,int i,char *cursor,char **showStr2,cha
 											totalLen += sprintf(cursor," radio apply wlan %d base nas_port_id %s\n",radioWlanid->wlanid,WTP[i]->WTP_Radio[j]->BSS[l_bssid]->nas_port_id);
 											cursor = showStr + totalLen;
 										}
-										if(WTP[i]->WTP_Radio[j]->BSS[l_bssid]->hotspot_id != AC_WLAN[radioWlanid->wlanid]->hotspot_id)
+										if((AC_WLAN[radioWlanid->wlanid] != NULL)
+											&&(WTP[i]->WTP_Radio[j]->BSS[l_bssid]->hotspot_id != AC_WLAN[radioWlanid->wlanid]->hotspot_id))
 										{
 											if(vrrid != 0){
 												totalLen += sprintf(cursor," ");
@@ -73482,7 +73484,8 @@ int show_running_config_wtp(WID_WTP **WTP,int i,char *cursor,char **showStr2,cha
 											totalLen += sprintf(cursor," radio apply wlan %d\n",radioWlanid->wlanid);
 											cursor = showStr + totalLen;
 										}
-										if(WTP[i]->WTP_Radio[j]->BSS[l_bssid]->multi_user_optimize_switch != AC_WLAN[radioWlanid->wlanid]->multi_user_optimize_switch)
+										if(( AC_WLAN[radioWlanid->wlanid] != NULL)&&
+											(WTP[i]->WTP_Radio[j]->BSS[l_bssid]->multi_user_optimize_switch != AC_WLAN[radioWlanid->wlanid]->multi_user_optimize_switch))
 										{
 											if(vrrid != 0){
 												totalLen += sprintf(cursor," ");
@@ -73592,7 +73595,7 @@ int show_running_config_wtp(WID_WTP **WTP,int i,char *cursor,char **showStr2,cha
 								&& AC_WLAN[WTP[i]->WTP_Radio[j]->BSS[mm]->WlanID] != NULL 
 								&& AC_WLAN[WTP[i]->WTP_Radio[j]->BSS[mm]->WlanID]->want_to_delete != 1){		/* HuangLeilei add for AXSSZFI-1622 */
 								wlanid = WTP[i]->WTP_Radio[j]->BSS[mm]->WlanID;
-								if(WTP[i]->WTP_Radio[j]->BSS[mm]->bss_max_allowed_sta_num != AC_WLAN[wlanid]->bss_allow_max_sta_num){//fengwenchao modify 20120323
+								if((AC_WLAN[wlanid] != NULL)&&(WTP[i]->WTP_Radio[j]->BSS[mm]->bss_max_allowed_sta_num != AC_WLAN[wlanid]->bss_allow_max_sta_num)){//fengwenchao modify 20120323
 									if(vrrid != 0){
 										totalLen += sprintf(cursor," ");
 										cursor = showStr + totalLen;
@@ -73603,7 +73606,7 @@ int show_running_config_wtp(WID_WTP **WTP,int i,char *cursor,char **showStr2,cha
 
 								//printf("0,mm %d WTP[i]->WTP_Radio[j]->BSS[mm]->ath_l2_isolation %d\n",mm,WTP[i]->WTP_Radio[j]->BSS[mm]->ath_l2_isolation);
 
-								if(WTP[i]->WTP_Radio[j]->BSS[mm]->ath_l2_isolation != AC_WLAN[wlanid]->wlan_ath_l2_isolation)  //fengwenchao modify 20120323
+								if((AC_WLAN[wlanid] != NULL)&&(WTP[i]->WTP_Radio[j]->BSS[mm]->ath_l2_isolation != AC_WLAN[wlanid]->wlan_ath_l2_isolation)) //fengwenchao modify 20120323
 								{
 									if(vrrid != 0){
 										totalLen += sprintf(cursor," ");
@@ -73654,7 +73657,7 @@ int show_running_config_wtp(WID_WTP **WTP,int i,char *cursor,char **showStr2,cha
 										cursor = showStr + totalLen;
 									}
 								}
-								if(WTP[i]->WTP_Radio[j]->BSS[mm]->ip_mac_binding != AC_WLAN[wlanid]->sta_ip_mac_bind)//fengwenchao modify 20120323
+								if((AC_WLAN[wlanid] != NULL)&&(WTP[i]->WTP_Radio[j]->BSS[mm]->ip_mac_binding != AC_WLAN[wlanid]->sta_ip_mac_bind))//fengwenchao modify 20120323
 								{
 									if(vrrid != 0){
 										totalLen += sprintf(cursor," ");
@@ -73663,7 +73666,7 @@ int show_running_config_wtp(WID_WTP **WTP,int i,char *cursor,char **showStr2,cha
 									totalLen += sprintf(cursor," wlan %d sta ip_mac binding %s\n",WTP[i]->WTP_Radio[j]->BSS[mm]->WlanID,(WTP[i]->WTP_Radio[j]->BSS[mm]->ip_mac_binding == 1)?"enable":"disable");//fengwenchao modify 20120323
 									cursor = showStr + totalLen;
 								}
-								if((WTP[i]->WTP_Radio[j]->BSS[mm]->sta_static_arp_policy != AC_WLAN[wlanid]->wlan_sta_static_arp_policy)||(strcmp(WTP[i]->WTP_Radio[j]->BSS[mm]->arp_ifname,AC_WLAN[wlanid]->wlan_arp_ifname) != 0)){//fengwenchao modify 20120323
+								if((AC_WLAN[wlanid] != NULL)&&((WTP[i]->WTP_Radio[j]->BSS[mm]->sta_static_arp_policy != AC_WLAN[wlanid]->wlan_sta_static_arp_policy)||(strcmp(WTP[i]->WTP_Radio[j]->BSS[mm]->arp_ifname,AC_WLAN[wlanid]->wlan_arp_ifname) != 0))){//fengwenchao modify 20120323
 									if(vrrid != 0){
 										totalLen += sprintf(cursor," ");
 										cursor = showStr + totalLen;
@@ -73681,7 +73684,7 @@ int show_running_config_wtp(WID_WTP **WTP,int i,char *cursor,char **showStr2,cha
 									cursor = showStr + totalLen;
 								}
 								/*fengwenchao add 20120222 for RDIR-25*/
-								if(WTP[i]->WTP_Radio[j]->BSS[mm]->limit_sta_rssi != AC_WLAN[wlanid]->wlan_limit_sta_rssi){
+								if((AC_WLAN[wlanid] != NULL)&&(WTP[i]->WTP_Radio[j]->BSS[mm]->limit_sta_rssi != AC_WLAN[wlanid]->wlan_limit_sta_rssi)){
 									if(vrrid != 0){
 										totalLen += sprintf(cursor," ");
 										cursor = showStr + totalLen;
@@ -73690,10 +73693,10 @@ int show_running_config_wtp(WID_WTP **WTP,int i,char *cursor,char **showStr2,cha
 									cursor = showStr + totalLen;
 								}								
 								/*fengwenchao add end*/
-								if((WTP[i]->WTP_Radio[j]->BSS[mm]->muti_bro_cast_sw != AC_WLAN[wlanid]->wlan_muti_bro_cast_sw) 
+								if((AC_WLAN[wlanid] != NULL)&&((WTP[i]->WTP_Radio[j]->BSS[mm]->muti_bro_cast_sw != AC_WLAN[wlanid]->wlan_muti_bro_cast_sw) 
 									||(WTP[i]->WTP_Radio[j]->BSS[mm]->unicast_sw != AC_WLAN[wlanid]->wlan_unicast_sw)
 									||(WTP[i]->WTP_Radio[j]->BSS[mm]->muti_rate != AC_WLAN[wlanid]->wlan_muti_rate)
-									||(WTP[i]->WTP_Radio[j]->BSS[mm]->wifi_sw != AC_WLAN[wlanid]->wlan_wifi_sw)){ /*fengwenchao modify 20120323*/
+									||(WTP[i]->WTP_Radio[j]->BSS[mm]->wifi_sw != AC_WLAN[wlanid]->wlan_wifi_sw))){ /*fengwenchao modify 20120323*/
 									if((WTP[i]->WTP_Radio[j]->BSS[mm]->unicast_sw != AC_WLAN[wlanid]->wlan_unicast_sw)
 										&&(WTP[i]->WTP_Radio[j]->BSS[mm]->muti_bro_cast_sw != AC_WLAN[wlanid]->wlan_muti_bro_cast_sw)
 										&&(WTP[i]->WTP_Radio[j]->BSS[mm]->unicast_sw == WTP[i]->WTP_Radio[j]->BSS[mm]->muti_bro_cast_sw)){
@@ -73737,7 +73740,7 @@ int show_running_config_wtp(WID_WTP **WTP,int i,char *cursor,char **showStr2,cha
 									
 								}
 								/*fengwenchao add 20120331*/
-								if(WTP[i]->WTP_Radio[j]->BSS[mm]->noResToStaProReqSW != AC_WLAN[wlanid]->wlan_noResToStaProReqSW)
+								if((AC_WLAN[wlanid] != NULL)&&(WTP[i]->WTP_Radio[j]->BSS[mm]->noResToStaProReqSW != AC_WLAN[wlanid]->wlan_noResToStaProReqSW))
 								{
 									if(vrrid != 0){
 										totalLen += sprintf(cursor," ");

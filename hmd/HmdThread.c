@@ -645,6 +645,8 @@ void HmdHandleTimer(void* arg) {
 	else if(HMD_TIMER_CONFIG_SAVE == TimerType)     //fengwenchao add 20130412 for hmd timer config save
 	{
 		hmd_syslog_info("%s %d HMD_TIMER_CONFIG_SAVE begin\n",__func__,__LINE__);
+		hmd_config_save_timer_init(1);
+
 		sprintf(cmd,"sudo /opt/bin/vtysh -c  \"show running\n\"");
 		ret = system(cmd);
 		hmd_syslog_info("%s ret:%d(0 success)\n",__func__,ret);
@@ -653,7 +655,9 @@ void HmdHandleTimer(void* arg) {
 		{
 			hmd_syslog_err("%s HMD_TIMER_CONFIG_SAVE fail reason =%d\n",__func__,reason);
 		}
-		sleep(30);
+		sleep(5);
+		
+		hmd_config_save_timer_init(0);	
 		if((isMaster)&&(isActive)&&(HANSI_TIMER_CONFIG_SAVE == 1))
 			HMDTimerRequest(HANSI_TIMER,&(HOST_BOARD->HMDTimer_ConfigSave), HMD_TIMER_CONFIG_SAVE, 0, 0);		
 	}

@@ -132,6 +132,7 @@ extern void vtysh_sync_file_init(void);
 
 /* Child process execution flag. */
 extern int execute_flag;
+extern int is_WriteConfig;//fengwenchao add for hmd timer config save
 
 extern struct vty *vty;
 //extern 	int set_cli_syslog ;/*dongshu for del cli_syslog cmd*/

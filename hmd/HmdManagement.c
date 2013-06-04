@@ -179,7 +179,45 @@ int hmd_host_board_license_update(struct HmdMsg * tmsg){
 	}
 	return 0;
 }
-
+/*fengwenchao add for hmd timer config save*/
+int hmd_config_save_timer_init(int method_flag)
+{
+	if((isMaster)&&(isActive))
+	{
+		char HmdDir[] = "/var/run/hmd";
+		char command[128]= {0};
+		sprintf(command,"%s/config_save_hmd_flag",HmdDir);
+		int save_fd = 0;
+		save_fd = open(command,O_RDWR|O_CREAT);
+		if(save_fd <= 0)
+		{
+			hmd_syslog_err("%s,%d,invalid fd:%d.\n",__func__,__LINE__,save_fd);
+			return 1;
+		}
+		switch(method_flag)
+		{
+			case  0:
+				{
+					write(save_fd, "0", 1);
+					close(save_fd);
+					return 0;
+				}
+			break;
+			case 1:
+				{
+					write(save_fd, "1", 1);
+					close(save_fd);
+					return 0;
+				}				
+			break;
+			default: 
+				close(save_fd);
+				break;
+		}
+	}
+	return 1;
+}
+/*fengwenchao add end*/
 int hmd_hansi_synchronize_request(int slotid){
 	if(HMD_BOARD[slotid] == NULL){
 		return 0;

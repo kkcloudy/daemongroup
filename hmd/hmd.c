@@ -889,6 +889,7 @@ void HmdStateInit(){
 		printf("ok\n");
 		closedir(dir);
 	}
+
 	if(read_file_info(Product_Distributed_Path,tmpbuf) == 0){
 		if(parse_int_ID(tmpbuf,&is_distributed) == 0){
 			isDistributed = is_distributed;
@@ -1284,11 +1285,7 @@ void HmdInit(){
 			}
 			hmd_hansi_synchronize_request(MASTER_SLOT_NO);
 		}
-
-		/*fengwenchao add 20130412 for hmd timer config save*/
-		if((isMaster)&&(isActive)&&(HANSI_TIMER_CONFIG_SAVE == 1))
-			HMDTimerRequest(HANSI_TIMER,&(HOST_BOARD->HMDTimer_ConfigSave), HMD_TIMER_CONFIG_SAVE, 0, 0);
-		/*fengwenchao add end*/
+		hmd_config_save_timer_init(0);//fengwenchao add for hmd timer config save
 	}
 	return;
 }
