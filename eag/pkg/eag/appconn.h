@@ -95,14 +95,15 @@ int
 appconn_free(struct app_conn_t *appconn);
 
 int
-appconn_add_name_to_db(appconn_db_t *appdb,
-		struct app_conn_t *appconn);
+appconn_update_name_htable(appconn_db_t *appdb,
+						struct app_conn_t *appconn);
+
+int
+appconn_del_name_htable(struct app_conn_t *appconn);
 
 int
 appconn_add_to_db(appconn_db_t *appdb,
 		struct app_conn_t *appconn);
-int
-appconn_del_name_from_db(struct app_conn_t *appconn);
 
 int
 appconn_del_from_db(struct app_conn_t *appconn);
@@ -114,6 +115,10 @@ appconn_find_by_userip(appconn_db_t *appdb,
 struct app_conn_t *
 appconn_find_by_usermac(appconn_db_t *appdb,
 		const uint8_t *usermac);
+
+struct app_conn_t *
+appconn_find_by_username(appconn_db_t *appdb,
+					const char *username);
 
 int
 appconn_count_authed(appconn_db_t *appdb);

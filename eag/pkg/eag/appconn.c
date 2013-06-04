@@ -74,7 +74,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define FLUX_INTERVAL_FOR_IPTABLES_OR_WIRELESS	20
 
 extern nmp_mutex_t eag_iptables_lock;
-extern int username_check_switch;
 
 /*data base of appconn */
 struct appconn_db {
@@ -264,19 +263,27 @@ appconn_update_mac_htable(appconn_db_t *appdb,
 						struct app_conn_t *appconn)
 {
 	return hashtable_check_add_node(appdb->mac_htable,
-					&(appconn->session.usermac),
+					appconn->session.usermac,
 					sizeof(appconn->session.usermac),
 					&(appconn->mac_hnode));
 }
 
-static int
+int
 appconn_update_name_htable(appconn_db_t *appdb,
 						struct app_conn_t *appconn)
 {
 	return hashtable_check_add_node(appdb->name_htable,
-					&(appconn->session.username),
+					appconn->session.username,
 					strlen(appconn->session.username),
 					&(appconn->name_hnode));
+}
+
+int
+appconn_del_name_htable(struct app_conn_t *appconn)
+{
+	hlist_del(&(appconn->name_hnode));
+	
+	return EAG_RETURN_OK;
 }
 
 int
@@ -291,27 +298,6 @@ appconn_add_to_db(appconn_db_t *appdb,
 	list_add_tail(&(appconn->node), &(appdb->head));
 	appconn_update_ip_htable(appdb, appconn);
 	appconn_update_mac_htable(appdb, appconn);
-	if (1 == username_check_switch 
-		&& NULL != appconn->session.username 
-		&& 0 != strlen(appconn->session.username)) {
-    	appconn_update_name_htable(appdb, appconn);
-	}else{
-		INIT_HLIST_NODE(&(appconn->name_hnode));
-	}
-
-	return EAG_RETURN_OK;
-}
-
-int
-appconn_add_name_to_db(appconn_db_t *appdb, 
-					struct app_conn_t *appconn)
-{
-	if (NULL == appdb || NULL == appconn) {
-		eag_log_err("appconn_add_naem_to_db input error");
-		return -1;
-	}
-	
-	appconn_update_name_htable(appdb, appconn);
 
 	return EAG_RETURN_OK;
 }
@@ -327,26 +313,6 @@ appconn_del_from_db(struct app_conn_t *appconn)
 	list_del(&(appconn->node));
 	hlist_del(&(appconn->ip_hnode));
 	hlist_del(&(appconn->mac_hnode));
-
-	return EAG_RETURN_OK;
-}
-
-int
-appconn_del_name_from_db(struct app_conn_t *appconn)
-{
-	if (NULL == appconn) {
-		eag_log_err("appconn_del_name_from_db input error");
-		return -1;
-	}
-
-	if (1 == username_check_switch 
-		&& NULL != appconn->session.username 
-		&& 0 != strlen(appconn->session.username)
-		&& NULL != appconn->name_hnode.next
-		&& NULL != appconn->name_hnode.pprev ) 
-	{
-    	hlist_del(&(appconn->name_hnode));
-	}
 
 	return EAG_RETURN_OK;
 }
@@ -408,7 +374,7 @@ appconn_find_by_usermac(appconn_db_t *appdb,
 
 struct app_conn_t *
 appconn_find_by_username(appconn_db_t *appdb,
-					const uint8_t *username)
+					const char *username)
 {
 	struct app_conn_t *appconn = NULL;
 	struct hlist_head *head = NULL;
@@ -422,8 +388,8 @@ appconn_find_by_username(appconn_db_t *appdb,
 	}
 
 	hlist_for_each_entry(appconn, node, head, name_hnode) {
-		if (0 == memcmp(appconn->session.username, username,
-						sizeof(appconn->session.username))) {
+		if (APPCONN_STATUS_AUTHED == appconn->session.state
+			&& 0 == strcmp(appconn->session.username, username)) {
 			return appconn;
 		}
 	}
@@ -830,8 +796,11 @@ appconn_check_is_conflict(uint32_t userip, appconn_db_t *appdb, struct appsessio
 
 	*app = NULL;
 	session->user_ip = userip;
+	eag_log_debug("ipinfo_get", "eag_ipinfo_get before userip=%s", ipstr);
 	eag_ipinfo_get(session->intf, sizeof(session->intf)-1, session->usermac, userip);
 	mac2str(session->usermac, macstr, sizeof(macstr), ':');
+	eag_log_debug("ipinfo_get", "eag_ipinfo_get after userip=%s,usermac=%s,interface=%s",
+		ipstr, macstr, session->intf);
 
 	eag_log_debug("appconn", "appconn_check_is_conflict eag_ipinfo_get "
 		"userip %s, interface(%s), usermac(%s)", ipstr, session->intf, macstr);
@@ -919,7 +888,9 @@ appconn_create_no_arp(appconn_db_t * appdb, struct appsession *session)
 	appconn_set_debug_prefix(appconn);
 	appconn_set_filter_prefix(appconn, appdb->hansi_type, appdb->hansi_id); /* for debug-filter,add by zhangwl */
 	appconn_set_sessionid(appconn);
+	eag_log_debug("get_sub_intf", "appconn_get_sub_interface before");
  	appconn_get_sub_interface(appconn);
+	eag_log_debug("get_sub_intf", "appconn_get_sub_interface after");
 	
 	if (appconn->session.vlanid <= 0) {
 		appconn->session.vlanid = get_vlanid_by_intf(appconn->sub_intf);
@@ -969,10 +940,13 @@ appconn_find_by_ip_autocreate(appconn_db_t *appdb, uint32_t userip)
 	}
 	appconn->session.user_ip = userip;
 	appconn->session.nasip = eag_ins_get_nasip(appdb->eagins);
-	
+
+	eag_log_debug("ipinfo_get", "eag_ipinfo_get before userip=%s", ipstr);
 	eag_ipinfo_get(appconn->session.intf, sizeof(appconn->session.intf)-1,
 				appconn->session.usermac, userip);
 	mac2str(appconn->session.usermac, macstr, sizeof(macstr), '-');
+	eag_log_debug("ipinfo_get", "eag_ipinfo_get after userip=%s,usermac=%s,interface=%s",
+		ipstr, macstr, appconn->session.intf);
 	debug_appconn("eag_ipinfo_get userip %s, interface(%s), usermac(%s)",
 		ipstr, appconn->session.intf, macstr);
 	if (0 == memcmp(zero_mac, appconn->session.usermac, 6)
@@ -1026,8 +1000,9 @@ appconn_find_by_ip_autocreate(appconn_db_t *appdb, uint32_t userip)
 	}
 	
 	appconn_set_sessionid(appconn);
-	
+ 	eag_log_debug("get_sub_intf", "appconn_get_sub_interface before");
  	appconn_get_sub_interface(appconn);
+	eag_log_debug("get_sub_intf", "appconn_get_sub_interface after");
 	
 	if (appconn->session.vlanid <= 0)
 	{
@@ -1122,7 +1097,9 @@ appconn_create_by_sta_v2(appconn_db_t * appdb, struct appsession *session)
 	appconn_set_debug_prefix(appconn);
 	appconn_set_filter_prefix(appconn, appdb->hansi_type, appdb->hansi_id); /* for debug-filter,add by zhangwl */
 	appconn_set_sessionid(appconn);
+ 	eag_log_debug("get_sub_intf", "appconn_get_sub_interface before");
  	appconn_get_sub_interface(appconn);
+	eag_log_debug("get_sub_intf", "appconn_get_sub_interface after");
 	
 	if (appconn->session.vlanid <= 0)
 	{

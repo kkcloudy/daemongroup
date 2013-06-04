@@ -970,14 +970,14 @@ radius_acct_req(eag_radius_t *radius,
 			eag_bss_message_count(radius->eagstat, appconn, BSS_ACCT_REQUEST_UPDATE_COUNT, 1);
 			admin_log_notice("RadiusAcctRequestUpdate___UserName:%s,UserIP:%s,"
 				"Sessiontime:%lu,SSID:%s,authtype:%s,ApMAC:%s,UserMAC:%s,NasID:%s,"
-				"InputOctets:%llu,InputPackets:%lu,OutputOctets:%llu,OutputPackets:%lu",
+				"InputOctets:%llu,InputPackets:%u,OutputOctets:%llu,OutputPackets:%u",
 				appconn->session.username, user_ipstr, timediff, appconn->session.essid,
 				(EAG_AUTH_TYPE_MAC==appconn->session.server_auth_type)?"MAC":"Portal",
 				ap_macstr, user_macstr, appconn->session.nasid, appconn->session.output_octets,
 				appconn->session.output_packets, appconn->session.input_octets, appconn->session.input_packets);
 			log_app_filter(appconn,"RadiusAcctRequestUpdate___UserName:%s,UserIP:%s,"
 				"Sessiontime:%lu,SSID:%s,authtype:%s,ApMAC:%s,UserMAC:%s,NasID:%s,"
-				"InputOctets:%llu,InputPackets:%lu,OutputOctets:%llu,OutputPackets:%lu",
+				"InputOctets:%llu,InputPackets:%u,OutputOctets:%llu,OutputPackets:%u",
 				appconn->session.username, user_ipstr, timediff, appconn->session.essid,
 				(EAG_AUTH_TYPE_MAC==appconn->session.server_auth_type)?"MAC":"Portal",
 				ap_macstr,user_macstr, appconn->session.nasid, appconn->session.output_octets,
@@ -988,7 +988,7 @@ radius_acct_req(eag_radius_t *radius,
 			terminate_cause_str = radius_terminate_cause_to_str(appconn->session.terminate_cause);
 			admin_log_notice("RadiusAcctRequestStop___UserName:%s,UserIP:%s,"
 				"Sessiontime:%lu,SSID:%s,authtype:%s,ApMAC:%s,UserMAC:%s,NasID:%s,"
-				"InputOctets:%llu,InputPackets:%lu,OutputOctets:%llu,OutputPackets:%lu,OfflineReason:%s(%d)",
+				"InputOctets:%llu,InputPackets:%u,OutputOctets:%llu,OutputPackets:%u,OfflineReason:%s(%d)",
 				appconn->session.username, user_ipstr, timediff, appconn->session.essid,
 				(EAG_AUTH_TYPE_MAC==appconn->session.server_auth_type)?"MAC":"Portal",
 				ap_macstr,user_macstr, appconn->session.nasid, appconn->session.output_octets,
@@ -996,7 +996,7 @@ radius_acct_req(eag_radius_t *radius,
 				terminate_cause_str, appconn->session.terminate_cause);
 			log_app_filter(appconn,"RadiusAcctRequestStop___UserName:%s,UserIP:%s,"
 				"Sessiontime:%lu,SSID:%s,authtype:%s,ApMAC:%s,UserMAC:%s,NasID:%s,"
-				"InputOctets:%llu,InputPackets:%lu,OutputOctets:%llu,OutputPackets:%lu,OfflineReason:%s(%d)",
+				"InputOctets:%llu,InputPackets:%u,OutputOctets:%llu,OutputPackets:%u,OfflineReason:%s(%d)",
 				appconn->session.username, user_ipstr, timediff, appconn->session.essid,
 				(EAG_AUTH_TYPE_MAC==appconn->session.server_auth_type)?"MAC":"Portal",
 				ap_macstr,user_macstr, appconn->session.nasid, appconn->session.output_octets,

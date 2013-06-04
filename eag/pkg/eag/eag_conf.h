@@ -166,6 +166,10 @@ struct portal_srv_t {
 	char acname[MAX_MULTPORTAL_ACNAME_LEN];	
 	int acip_to_url;
 	int usermac_to_url;
+	int clientmac_to_url;
+	int apmac_to_url;
+	int wlan_to_url;
+	int redirect_to_url;
 	int nasid_to_url;
 	char url_suffix[MAX_PORTAL_URL_SUFFIX_LEN];	
 
@@ -278,6 +282,12 @@ int
 nasid_conf_add_map( struct nasid_conf *nasidconf,
 				    NASID_KEY_TYPE key_type,
 				    void *key, char *nasid, uint32_t conid);
+
+int
+nasid_conf_modify_map(struct nasid_conf *nasidconf,
+			NASID_KEY_TYPE key_type,
+			void *key, char *nasid, uint32_t conid);
+
 int
 nasid_conf_del_map( struct nasid_conf *nasidconf,
 				    NASID_KEY_TYPE key_type,

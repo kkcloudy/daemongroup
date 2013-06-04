@@ -726,6 +726,69 @@ nasid_conf_add_map(struct nasid_conf *nasidconf,
 
 	return 0;
 }
+
+int
+nasid_conf_totally_match_map_by_key(struct nasid_conf *nasidconf,
+		      NASID_KEY_TYPE key_type, void *key)
+{
+	struct nasid_map_t *nasidmap=NULL;
+	struct iprange_t *temp = NULL;
+	struct idrange_t *temp_1 = NULL;
+	int i=0;
+
+	if (NULL==key){
+		return EAG_ERR_INPUT_PARAM_ERR;
+	}
+
+	for(i=0;i<nasidconf->current_num;i++) {
+		nasidmap = &(nasidconf->nasid_map[i]);
+		if (nasidmap->key_type == key_type) {
+			switch (key_type) {
+			case NASID_KEYTYPE_WLANID:
+				temp_1 = (struct idrange_t*) key;
+				if (nasidmap->key.wlanidrange.id_begin != temp_1->id_begin
+					||nasidmap->key.wlanidrange.id_end != temp_1->id_end){
+					continue;
+				}
+				break;
+			case NASID_KEYTYPE_VLANID:
+				temp_1 = (struct idrange_t*) key;
+				if (nasidmap->key.vlanidrange.id_begin != temp_1->id_begin
+					||nasidmap->key.vlanidrange.id_end != temp_1->id_end){
+					continue;
+				}
+
+				break;
+			case NASID_KEYTYPE_WTPID:
+				temp_1 = (struct idrange_t*) key;
+				if (nasidmap->key.wtpidrange.id_begin != temp_1->id_begin
+					||nasidmap->key.wtpidrange.id_end != temp_1->id_end){
+					continue;
+				}
+				break;
+			case NASID_KEYTYPE_IPRANGE:
+				temp = (struct iprange_t*) key;
+				if (nasidmap->key.iprange.ip_begin != temp->ip_begin
+					||nasidmap->key.iprange.ip_end != temp->ip_end){
+					continue;
+				}
+				break;
+			case NASID_KEYTYPE_INTF:
+				if (0 != strcmp(nasidmap->key.intf, key)) {
+					continue;
+				}
+				break;
+			default:
+				return EAG_ERR_UNKNOWN;
+			}
+
+			return i;
+		}
+	}
+
+	return EAG_ERR_CONFIG_ITEM_NOT_FOUND;
+}
+
 int
 nasid_conf_modify_map(struct nasid_conf *nasidconf,
 			NASID_KEY_TYPE key_type, void *key, char *nasid, uint32_t conid)
@@ -865,69 +928,6 @@ nasid_conf_get_map_by_key(struct nasid_conf *nasidconf,
 
 	return EAG_ERR_CONFIG_ITEM_NOT_FOUND;
 }
-
-int
-nasid_conf_totally_match_map_by_key(struct nasid_conf *nasidconf,
-		      NASID_KEY_TYPE key_type, void *key)
-{
-	struct nasid_map_t *nasidmap=NULL;
-	struct iprange_t *temp = NULL;
-	struct idrange_t *temp_1 = NULL;
-	int i=0;
-
-	if (NULL==key){
-		return EAG_ERR_INPUT_PARAM_ERR;
-	}
-
-	for(i=0;i<nasidconf->current_num;i++) {
-		nasidmap = &(nasidconf->nasid_map[i]);
-		if (nasidmap->key_type == key_type) {
-			switch (key_type) {
-			case NASID_KEYTYPE_WLANID:
-				temp_1 = (struct idrange_t*) key;
-				if (nasidmap->key.wlanidrange.id_begin != temp_1->id_begin
-					||nasidmap->key.wlanidrange.id_end != temp_1->id_end){
-					continue;
-				}
-				break;
-			case NASID_KEYTYPE_VLANID:
-				temp_1 = (struct idrange_t*) key;
-				if (nasidmap->key.vlanidrange.id_begin != temp_1->id_begin
-					||nasidmap->key.vlanidrange.id_end != temp_1->id_end){
-					continue;
-				}
-
-				break;
-			case NASID_KEYTYPE_WTPID:
-				temp_1 = (struct idrange_t*) key;
-				if (nasidmap->key.wtpidrange.id_begin != temp_1->id_begin
-					||nasidmap->key.wtpidrange.id_end != temp_1->id_end){
-					continue;
-				}
-				break;
-			case NASID_KEYTYPE_IPRANGE:
-				temp = (struct iprange_t*) key;
-				if (nasidmap->key.iprange.ip_begin != temp->ip_begin
-					||nasidmap->key.iprange.ip_end != temp->ip_end){
-					continue;
-				}
-				break;
-			case NASID_KEYTYPE_INTF:
-				if (0 != strcmp(nasidmap->key.intf, key)) {
-					continue;
-				}
-				break;
-			default:
-				return EAG_ERR_UNKNOWN;
-			}
-
-			return i;
-		}
-	}
-
-	return EAG_ERR_CONFIG_ITEM_NOT_FOUND;
-}
-
 
 int
 nasid_conf_del_map( struct nasid_conf *nasidconf,

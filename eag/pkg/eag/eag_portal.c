@@ -428,16 +428,6 @@ portal_detect_unique_reqid(eag_portal_t *portal)
 }
 
 int
-eag_portal_username_check_switch(int status)
-{
-	if (0 != status && 1 != status) {
-		return -1;
-	}
-
-	username_check_switch = status;
-}
-
-int
 portal_packet_init_rsp(eag_portal_t *portal,
 		struct portal_packet_t *rsppkt,
 		const struct portal_packet_t *reqpkt)
@@ -1623,20 +1613,13 @@ eag_portal_chapauth_proc(eag_portal_t *portal,
 		if (1 == username_check_switch) {
 			appconn_by_name = appconn_find_by_username(portal->appdb, appconn->session.username);
 	    
-			if (NULL != appconn_by_name && APPCONN_STATUS_AUTHED == appconn_by_name->session.state) {
-		        eag_log_warning("eag_portal_chapauth_proc username %s, "
-		            "appconn is not null", appconn->session.username);
-				tmp_appconn = appconn;
-		        if (PORTAL_PROTOCOL_TELECOM == portal_get_protocol_type()) {
-		            goto check_appconn;
-		        }
+			if (NULL != appconn_by_name) {
+		        eag_log_warning("eag_portal_chapauth_proc userip %s username %s has already authed",
+					user_ipstr, appconn->session.username);
+		        portal_sess_free(portalsess);
 		        rsppkt.err_code = PORTAL_AUTH_REJECT;
 		        err_reason = PORTAL_ERR_REASON_USER_NAME_EXIT;
-		        eag_log_filter(user_ipstr,"PortalReqAuth___UserIP:%s,UserName:%s,ChapAuth",
-		            user_ipstr, appconn->session.username);
-		        admin_log_notice("PortalReqAuth___UserIP:%s,UserName:%s,ChapAuth",
-		            user_ipstr, appconn->session.username);
-		        goto send;
+		       break;
 		    }
 		}
 
@@ -1690,6 +1673,7 @@ eag_portal_chapauth_proc(eag_portal_t *portal,
 		memcpy(portalsess->secret, appconn->session.portal_srv.secret, PORTAL_SECRETSIZE);
 		portalsess->secretlen = appconn->session.portal_srv.secretlen;
 		portalsess->status = SESS_STATUS_ON_CHAPAUTH;
+		strncpy(portalsess->username, username, sizeof(portalsess->username));
 		eag_radius_get_retry_params(portal->radius, 
 				&retry_interval, &retry_times, &vice_retry_times);
 		portalsess->timeout = 
@@ -1804,16 +1788,12 @@ send:
 	}
 
 check_appconn:
-	if ((EAG_ERR_APPCONN_APP_IS_CONFLICT == app_check_ret && NULL != tmp_appconn) 
-		|| (1 == username_check_switch && NULL != appconn_by_name)) {
+	if (EAG_ERR_APPCONN_APP_IS_CONFLICT == app_check_ret && NULL != tmp_appconn) {
 		if (APPCONN_STATUS_AUTHED == tmp_appconn->session.state) {
 			terminate_appconn_nowait(tmp_appconn, portal->eagins, RADIUS_TERMINATE_CAUSE_LOST_CARRIER);
 		} else {
 			appconn_del_from_db(tmp_appconn);
 			appconn_free(tmp_appconn);
-			if (1 == username_check_switch && NULL != appconn_by_name) {
-				appconn = NULL;
-			}
 		}
 		tmp_appconn = NULL;
 	}
@@ -1936,6 +1916,7 @@ eag_portal_papauth_proc(eag_portal_t *portal,
 		err_reason = PORTAL_ERR_REASON_SESSION_FAILED;
 		goto send;
 	}
+	strncpy(portalsess->username, username, sizeof(portalsess->username));
 	
 	eag_log_debug("eag_portal", "eag_portal_papauth_proc "
 			"userip %s, sess_status %u, user_state %d",
@@ -2003,20 +1984,13 @@ eag_portal_papauth_proc(eag_portal_t *portal,
 		if (1 == username_check_switch) {
 			appconn_by_name = appconn_find_by_username(portal->appdb, appconn->session.username);
 	    
-			if (NULL != appconn_by_name && APPCONN_STATUS_AUTHED == appconn_by_name->session.state) {
-		        eag_log_warning("eag_portal_chapauth_proc username %s, "
-		            "appconn is not null", appconn->session.username);
-				tmp_appconn = appconn;
-		        if (PORTAL_PROTOCOL_TELECOM == portal_get_protocol_type()) {
-		            goto check_appconn;
-		        }
-		        rsppkt.err_code = PORTAL_AUTH_REJECT;
+			if (NULL != appconn_by_name) {
+		         eag_log_warning("eag_portal_chapauth_proc userip %s username %s has already authed",
+					user_ipstr, appconn->session.username);
+				portal_sess_free(portalsess);
+				rsppkt.err_code = PORTAL_AUTH_REJECT;
 		        err_reason = PORTAL_ERR_REASON_USER_NAME_EXIT;
-		        eag_log_filter(user_ipstr,"PortalReqAuth___UserIP:%s,UserName:%s,PapAuth",
-		            user_ipstr, appconn->session.username);
-		        admin_log_notice("PortalReqAuth___UserIP:%s,UserName:%s,PapAuth",
-		            user_ipstr, appconn->session.username);
-		        goto send;
+		        break;
 		    }
 		}
 		
@@ -2058,6 +2032,7 @@ eag_portal_papauth_proc(eag_portal_t *portal,
 		memcpy(portalsess->secret, appconn->session.portal_srv.secret, PORTAL_SECRETSIZE);
 		portalsess->secretlen = appconn->session.portal_srv.secretlen;
 		portalsess->status = SESS_STATUS_ON_PAPAUTH;
+		strncpy(portalsess->username, username, sizeof(portalsess->username));
 		eag_radius_get_retry_params(radius, 
 				&retry_interval, &retry_times, &vice_retry_times);
 		portalsess->timeout = 
@@ -2172,16 +2147,12 @@ send:
 	}
 
 check_appconn:
-	if ((EAG_ERR_APPCONN_APP_IS_CONFLICT == app_check_ret && NULL != tmp_appconn) 
-		|| (1 == username_check_switch && NULL != appconn_by_name)) {
+	if (EAG_ERR_APPCONN_APP_IS_CONFLICT == app_check_ret && NULL != tmp_appconn) {
 		if (APPCONN_STATUS_AUTHED == tmp_appconn->session.state) {
 			terminate_appconn_nowait(tmp_appconn, portal->eagins, RADIUS_TERMINATE_CAUSE_LOST_CARRIER);
 		} else {
 			appconn_del_from_db(tmp_appconn);
 			appconn_free(tmp_appconn);
-			if (1 == username_check_switch && NULL != appconn_by_name) {
-				appconn = NULL;
-			}
 		}
 		tmp_appconn = NULL;
 	}
@@ -3350,7 +3321,8 @@ eag_portal_auth_success(eag_portal_t *portal,
 
 	/* authorize */
 	eag_captive_authorize(portal->cap, &(appconn->session));
-
+	appconn_update_name_htable(portal->appdb, appconn);
+	
 	admin_log_notice("PortalUserOnline___UserName:%s,UserIP:%s,UserMAC:%s,NasID:%s",
 			appconn->session.username, user_ipstr, user_macstr, appconn->session.nasid);
 	eag_henan_log_notice("PORTAL_USER_LOGON_SUCCESS:-UserName=%s-IPAddr=%s-IfName=%s-VlanID=%u-MACAddr=%s; User got online successfully.",
@@ -3463,10 +3435,6 @@ eag_portal_auth_success(eag_portal_t *portal,
 	appconn->session.last_connect_ap_time = timenow;
 	appconn->session.last_acct_time = timenow;
 	appconn->session.last_flux_time = timenow;
-
-    if (1 == username_check_switch) {
-        appconn_add_name_to_db(portal->appdb, appconn);
-    }
 
 	/* acct */
 	radius_acct(portal->radius, appconn, RADIUS_STATUS_TYPE_START);

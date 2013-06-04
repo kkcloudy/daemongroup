@@ -774,6 +774,38 @@ eag_set_portal_server_usermac_to_url( DBusConnection *connection,
 				int usermac_to_url );
 
 int
+eag_set_portal_server_clientmac_to_url( DBusConnection *connection, 
+				int hansitype, int insid, 	
+				PORTAL_KEY_TYPE key_type,
+				unsigned long keyid,
+				char *key_word,
+				int clientmac_to_url );
+				
+int
+eag_set_portal_server_apmac_to_url( DBusConnection *connection, 
+				int hansitype, int insid, 	
+				PORTAL_KEY_TYPE key_type,
+				unsigned long keyid,
+				char *key_word,
+				int apmac_to_url );
+				
+int
+eag_set_portal_server_wlan_to_url( DBusConnection *connection, 
+				int hansitype, int insid, 	
+				PORTAL_KEY_TYPE key_type,
+				unsigned long keyid,
+				char *key_word,
+				int wlan_to_url );
+				
+int
+eag_set_portal_server_redirect_to_url( DBusConnection *connection, 
+				int hansitype, int insid, 	
+				PORTAL_KEY_TYPE key_type,
+				unsigned long keyid,
+				char *key_word,
+				int redirect_to_url );
+
+int
 eag_set_portal_server_wlanusermac( DBusConnection *connection, 
 				int hansitype, int insid, 	
 				PORTAL_KEY_TYPE key_type,

@@ -4456,6 +4456,30 @@ eag_multi_portal_config_show_running(struct vty* vty)
 				snprintf(showStr, sizeof(showStr), " set portal-server %s %s usermac-to-url enable",\
 													key_type, key);
 				vtysh_add_show_string(showStr);
+			}		
+			if( 1 == portalconf.portal_srv[i].clientmac_to_url)
+			{
+				snprintf(showStr, sizeof(showStr), " set portal-server %s %s clientmac_to_url enable",\
+													key_type, key);
+				vtysh_add_show_string(showStr);
+			}			
+			if( 1 == portalconf.portal_srv[i].apmac_to_url)
+			{
+				snprintf(showStr, sizeof(showStr), " set portal-server %s %s apmac_to_url enable",\
+													key_type, key);
+				vtysh_add_show_string(showStr);
+			}			
+			if( 1 == portalconf.portal_srv[i].wlan_to_url)
+			{
+				snprintf(showStr, sizeof(showStr), " set portal-server %s %s wlan_to_url enable",\
+													key_type, key);
+				vtysh_add_show_string(showStr);
+			}			
+			if( 1 == portalconf.portal_srv[i].redirect_to_url)
+			{
+				snprintf(showStr, sizeof(showStr), " set portal-server %s %s redirect_to_url enable",\
+													key_type, key);
+				vtysh_add_show_string(showStr);
 			}
 			if( 1 == portalconf.portal_srv[i].wlanparameter 
 				&& strlen(portalconf.portal_srv[i].deskey)>0)
@@ -4643,6 +4667,22 @@ eag_multi_portal_config_show_running_2(int localid, int slot_id, int index)
 			if( 1 == portalconf.portal_srv[i].usermac_to_url)
 			{
 				totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1, " set portal-server %s %s usermac-to-url enable\n", key_type, key);
+			}
+			if( 1 == portalconf.portal_srv[i].clientmac_to_url)
+			{
+				totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1, " set portal-server %s %s clientmac-to-url enable\n", key_type, key);
+			}
+			if( 1 == portalconf.portal_srv[i].apmac_to_url)
+			{
+				totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1, " set portal-server %s %s apmac-to-url enable\n", key_type, key);
+			}
+			if( 1 == portalconf.portal_srv[i].wlan_to_url)
+			{
+				totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1, " set portal-server %s %s wlan-to-url enable\n", key_type, key);
+			}
+			if( 1 == portalconf.portal_srv[i].redirect_to_url)
+			{
+				totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1, " set portal-server %s %s redirect_to_url enable\n", key_type, key);
 			}
 			if( 1 == portalconf.portal_srv[i].wlanapmac)
 			{
@@ -9320,9 +9360,8 @@ DEFUN(eag_add_portal_server_essid_func,
 	struct in_addr addr = {0};
 	const char *tmp_port = NULL;
 
-	for (i = 0; 0 != strncmp(argv[i], http_str, strlen(http_str))
-		&& 0 != strncmp(argv[i], https_str, strlen(https_str))
-		&& i < argc; i++) 
+	for (i = 0; i < argc && 0 != strncmp(argv[i], http_str, strlen(http_str))
+		&& 0 != strncmp(argv[i], https_str, strlen(https_str)); i++) 
 	{
 		if (0 != i) {
 			strncat(essid, " ", 1);
@@ -10188,6 +10227,366 @@ DEFUN(set_eag_portal_server_usermac_to_url_func,
 	return CMD_SUCCESS;
 }
 
+DEFUN(set_eag_portal_server_clientmac_to_url_func,
+	set_eag_portal_server_clientmac_to_url_cmd,
+	"set portal-server (wlanid|vlanid|wtpid|interface) KEY clientmac-to-url (enable|disable)",
+	"set parameter of portal policy, if not exist, create it\n"
+	"portal policy\n"
+	"portal server index type wlanid\n" 
+	"portal server index type vlanid\n" 	
+	"portal server index type wtpid\n"	
+	"portal server index type l3interface name\n"
+	"key word name, specify a item of portal policy\n"
+	"add clientmac infornation to url\n"
+	"add clientmac infornation to url enable\n"
+	"add clientmac infornation to url disable\n"
+)
+{
+	int ret = -1;
+	PORTAL_KEY_TYPE key_type;
+	unsigned long keyid = 0;
+	char *keystr = "";
+	int clientmac_to_url = 0;
+
+	if (strncmp(argv[0], "wlanid", strlen(argv[0])) == 0) {
+		key_type = PORTAL_KEYTYPE_WLANID;
+		keyid = atoi(argv[1]);
+		if (keyid == 0 || keyid > 128){
+			vty_out(vty, "%% wlan id is out of range 1~128\n");
+			return CMD_SUCCESS;
+		}
+	}
+	else if (strncmp(argv[0], "vlanid", strlen(argv[0])) == 0) {
+		key_type = PORTAL_KEYTYPE_VLANID;
+		keyid = atoi(argv[1]);
+		if(keyid == 0 || keyid > 4096) {
+			vty_out(vty, "%% vlan id is out of range 1~4096\n");
+			return CMD_SUCCESS;
+		}		
+	}
+	else if (0 == strncmp(argv[0], "wtpid", strlen(argv[0]))){
+		keyid = atoi(argv[1]);
+		key_type = PORTAL_KEYTYPE_WTPID;
+	}
+	else if (0 == strncmp(argv[0], "interface", strlen(argv[0]))) {
+		key_type = PORTAL_KEYTYPE_INTF;
+		keystr = (char *)argv[1];
+	}
+	else {
+		vty_out(vty, "%% unknown index type %s\n", argv[0]);
+		return CMD_SUCCESS;
+	}
+
+	if (0 == strncmp(argv[2], "enable", strlen(argv[2])))
+	{
+		clientmac_to_url = 1;
+	}
+	else if (0 == strncmp(argv[2], "disable", strlen(argv[2])))
+	{
+		clientmac_to_url = 0;
+	}
+	else
+	{
+		vty_out(vty, "%% bad command parameter\n");
+		return CMD_SUCCESS;
+	}
+	EAG_DCLI_INIT_HANSI_INFO
+
+	ret = eag_set_portal_server_clientmac_to_url( dcli_dbus_connection_curr,
+										hansitype,insid,
+										key_type,
+										keyid,
+										keystr,
+										clientmac_to_url);
+	if(EAG_ERR_DBUS_FAILED == ret) {
+		vty_out(vty, "%% dbus error\n");
+	}
+	else if (EAG_ERR_UNKNOWN == ret) {
+		vty_out(vty, "%% unknown error\n");
+	}
+	else if (EAG_ERR_PORTAL_MODIFY_SRV_NOT_EXIST == ret) {
+		vty_out(vty, "%% the add key is not exist\n");
+	}
+	else if (EAG_ERR_PORTAL_MODIFY_SRV_ERR_TYPE == ret) {
+		vty_out(vty, "%% error index type\n");
+	}
+	else if (EAG_RETURN_OK != ret) {
+		vty_out(vty, "%% unknown error: %d\n", ret);
+	}
+	
+	return CMD_SUCCESS;
+}
+
+DEFUN(set_eag_portal_server_apmac_to_url_func,
+	set_eag_portal_server_apmac_to_url_cmd,
+	"set portal-server (wlanid|vlanid|wtpid|interface) KEY apmac-to-url (enable|disable)",
+	"set parameter of portal policy, if not exist, create it\n"
+	"portal policy\n"
+	"portal server index type wlanid\n" 
+	"portal server index type vlanid\n" 	
+	"portal server index type wtpid\n"	
+	"portal server index type l3interface name\n"
+	"key word name, specify a item of portal policy\n"
+	"add apmac infornation to url\n"
+	"add apmac infornation to url enable\n"
+	"add apmac infornation to url disable\n"
+)
+{
+	int ret = -1;
+	PORTAL_KEY_TYPE key_type;
+	unsigned long keyid = 0;
+	char *keystr = "";
+	int apmac_to_url = 0;
+
+	if (strncmp(argv[0], "wlanid", strlen(argv[0])) == 0) {
+		key_type = PORTAL_KEYTYPE_WLANID;
+		keyid = atoi(argv[1]);
+		if (keyid == 0 || keyid > 128){
+			vty_out(vty, "%% wlan id is out of range 1~128\n");
+			return CMD_SUCCESS;
+		}
+	}
+	else if (strncmp(argv[0], "vlanid", strlen(argv[0])) == 0) {
+		key_type = PORTAL_KEYTYPE_VLANID;
+		keyid = atoi(argv[1]);
+		if(keyid == 0 || keyid > 4096) {
+			vty_out(vty, "%% vlan id is out of range 1~4096\n");
+			return CMD_SUCCESS;
+		}		
+	}
+	else if (0 == strncmp(argv[0], "wtpid", strlen(argv[0]))){
+		keyid = atoi(argv[1]);
+		key_type = PORTAL_KEYTYPE_WTPID;
+	}
+	else if (0 == strncmp(argv[0], "interface", strlen(argv[0]))) {
+		key_type = PORTAL_KEYTYPE_INTF;
+		keystr = (char *)argv[1];
+	}
+	else {
+		vty_out(vty, "%% unknown index type %s\n", argv[0]);
+		return CMD_SUCCESS;
+	}
+
+	if (0 == strncmp(argv[2], "enable", strlen(argv[2])))
+	{
+		apmac_to_url = 1;
+	}
+	else if (0 == strncmp(argv[2], "disable", strlen(argv[2])))
+	{
+		apmac_to_url = 0;
+	}
+	else
+	{
+		vty_out(vty, "%% bad command parameter\n");
+		return CMD_SUCCESS;
+	}
+	EAG_DCLI_INIT_HANSI_INFO
+
+	ret = eag_set_portal_server_apmac_to_url( dcli_dbus_connection_curr,
+										hansitype,insid,
+										key_type,
+										keyid,
+										keystr,
+										apmac_to_url);
+	if(EAG_ERR_DBUS_FAILED == ret) {
+		vty_out(vty, "%% dbus error\n");
+	}
+	else if (EAG_ERR_UNKNOWN == ret) {
+		vty_out(vty, "%% unknown error\n");
+	}
+	else if (EAG_ERR_PORTAL_MODIFY_SRV_NOT_EXIST == ret) {
+		vty_out(vty, "%% the add key is not exist\n");
+	}
+	else if (EAG_ERR_PORTAL_MODIFY_SRV_ERR_TYPE == ret) {
+		vty_out(vty, "%% error index type\n");
+	}
+	else if (EAG_RETURN_OK != ret) {
+		vty_out(vty, "%% unknown error: %d\n", ret);
+	}
+	
+	return CMD_SUCCESS;
+}
+
+DEFUN(set_eag_portal_server_wlan_to_url_func,
+	set_eag_portal_server_wlan_to_url_cmd,
+	"set portal-server (wlanid|vlanid|wtpid|interface) KEY wlan-to-url (enable|disable)",
+	"set parameter of portal policy, if not exist, create it\n"
+	"portal policy\n"
+	"portal server index type wlanid\n" 
+	"portal server index type vlanid\n" 	
+	"portal server index type wtpid\n"	
+	"portal server index type l3interface name\n"
+	"key word name, specify a item of portal policy\n"
+	"add wlan infornation to url\n"
+	"add wlan infornation to url enable\n"
+	"add wlan infornation to url disable\n"
+)
+{
+	int ret = -1;
+	PORTAL_KEY_TYPE key_type;
+	unsigned long keyid = 0;
+	char *keystr = "";
+	int wlan_to_url = 0;
+
+	if (strncmp(argv[0], "wlanid", strlen(argv[0])) == 0) {
+		key_type = PORTAL_KEYTYPE_WLANID;
+		keyid = atoi(argv[1]);
+		if (keyid == 0 || keyid > 128){
+			vty_out(vty, "%% wlan id is out of range 1~128\n");
+			return CMD_SUCCESS;
+		}
+	}
+	else if (strncmp(argv[0], "vlanid", strlen(argv[0])) == 0) {
+		key_type = PORTAL_KEYTYPE_VLANID;
+		keyid = atoi(argv[1]);
+		if(keyid == 0 || keyid > 4096) {
+			vty_out(vty, "%% vlan id is out of range 1~4096\n");
+			return CMD_SUCCESS;
+		}		
+	}
+	else if (0 == strncmp(argv[0], "wtpid", strlen(argv[0]))){
+		keyid = atoi(argv[1]);
+		key_type = PORTAL_KEYTYPE_WTPID;
+	}
+	else if (0 == strncmp(argv[0], "interface", strlen(argv[0]))) {
+		key_type = PORTAL_KEYTYPE_INTF;
+		keystr = (char *)argv[1];
+	}
+	else {
+		vty_out(vty, "%% unknown index type %s\n", argv[0]);
+		return CMD_SUCCESS;
+	}
+
+	if (0 == strncmp(argv[2], "enable", strlen(argv[2])))
+	{
+		wlan_to_url = 1;
+	}
+	else if (0 == strncmp(argv[2], "disable", strlen(argv[2])))
+	{
+		wlan_to_url = 0;
+	}
+	else
+	{
+		vty_out(vty, "%% bad command parameter\n");
+		return CMD_SUCCESS;
+	}
+	EAG_DCLI_INIT_HANSI_INFO
+
+	ret = eag_set_portal_server_wlan_to_url( dcli_dbus_connection_curr,
+										hansitype,insid,
+										key_type,
+										keyid,
+										keystr,
+										wlan_to_url);
+	if(EAG_ERR_DBUS_FAILED == ret) {
+		vty_out(vty, "%% dbus error\n");
+	}
+	else if (EAG_ERR_UNKNOWN == ret) {
+		vty_out(vty, "%% unknown error\n");
+	}
+	else if (EAG_ERR_PORTAL_MODIFY_SRV_NOT_EXIST == ret) {
+		vty_out(vty, "%% the add key is not exist\n");
+	}
+	else if (EAG_ERR_PORTAL_MODIFY_SRV_ERR_TYPE == ret) {
+		vty_out(vty, "%% error index type\n");
+	}
+	else if (EAG_RETURN_OK != ret) {
+		vty_out(vty, "%% unknown error: %d\n", ret);
+	}
+	
+	return CMD_SUCCESS;
+}
+
+DEFUN(set_eag_portal_server_redirect_to_url_func,
+	set_eag_portal_server_redirect_to_url_cmd,
+	"set portal-server (wlanid|vlanid|wtpid|interface) KEY redirect-to-url (enable|disable)",
+	"set parameter of portal policy, if not exist, create it\n"
+	"portal policy\n"
+	"portal server index type wlanid\n" 
+	"portal server index type vlanid\n" 	
+	"portal server index type wtpid\n"	
+	"portal server index type l3interface name\n"
+	"key word name, specify a item of portal policy\n"
+	"add redirect infornation to url\n"
+	"add redirect infornation to url enable\n"
+	"add redirect infornation to url disable\n"
+)
+{
+	int ret = -1;
+	PORTAL_KEY_TYPE key_type;
+	unsigned long keyid = 0;
+	char *keystr = "";
+	int redirect_to_url = 0;
+
+	if (strncmp(argv[0], "wlanid", strlen(argv[0])) == 0) {
+		key_type = PORTAL_KEYTYPE_WLANID;
+		keyid = atoi(argv[1]);
+		if (keyid == 0 || keyid > 128){
+			vty_out(vty, "%% wlan id is out of range 1~128\n");
+			return CMD_SUCCESS;
+		}
+	}
+	else if (strncmp(argv[0], "vlanid", strlen(argv[0])) == 0) {
+		key_type = PORTAL_KEYTYPE_VLANID;
+		keyid = atoi(argv[1]);
+		if(keyid == 0 || keyid > 4096) {
+			vty_out(vty, "%% vlan id is out of range 1~4096\n");
+			return CMD_SUCCESS;
+		}		
+	}
+	else if (0 == strncmp(argv[0], "wtpid", strlen(argv[0]))){
+		keyid = atoi(argv[1]);
+		key_type = PORTAL_KEYTYPE_WTPID;
+	}
+	else if (0 == strncmp(argv[0], "interface", strlen(argv[0]))) {
+		key_type = PORTAL_KEYTYPE_INTF;
+		keystr = (char *)argv[1];
+	}
+	else {
+		vty_out(vty, "%% unknown index type %s\n", argv[0]);
+		return CMD_SUCCESS;
+	}
+
+	if (0 == strncmp(argv[2], "enable", strlen(argv[2])))
+	{
+		redirect_to_url = 1;
+	}
+	else if (0 == strncmp(argv[2], "disable", strlen(argv[2])))
+	{
+		redirect_to_url = 0;
+	}
+	else
+	{
+		vty_out(vty, "%% bad command parameter\n");
+		return CMD_SUCCESS;
+	}
+	EAG_DCLI_INIT_HANSI_INFO
+
+	ret = eag_set_portal_server_redirect_to_url( dcli_dbus_connection_curr,
+										hansitype,insid,
+										key_type,
+										keyid,
+										keystr,
+										redirect_to_url);
+	if(EAG_ERR_DBUS_FAILED == ret) {
+		vty_out(vty, "%% dbus error\n");
+	}
+	else if (EAG_ERR_UNKNOWN == ret) {
+		vty_out(vty, "%% unknown error\n");
+	}
+	else if (EAG_ERR_PORTAL_MODIFY_SRV_NOT_EXIST == ret) {
+		vty_out(vty, "%% the add key is not exist\n");
+	}
+	else if (EAG_ERR_PORTAL_MODIFY_SRV_ERR_TYPE == ret) {
+		vty_out(vty, "%% error index type\n");
+	}
+	else if (EAG_RETURN_OK != ret) {
+		vty_out(vty, "%% unknown error: %d\n", ret);
+	}
+	
+	return CMD_SUCCESS;
+}
+
 DEFUN(set_eag_portal_server_wlanusermac_func,
 	set_eag_portal_server_wlanusermac_cmd,
 	"set portal-server (wlanid|vlanid|wtpid|interface) KEY wlanusermac (enable|disable) [DESKEY]",
@@ -10500,7 +10899,7 @@ DEFUN(set_eag_portal_server_essid_func,
 	"set parameter of portal policy, if not exist, create it\n"
 	"portal policy\n"
 	"portal server index type essid\n"	
-	"eg:set portal-server essid KEY (ac-name|acip-to-url|nasid-to-url|url-suffix|wlanparameter|wlanuserfirsturl|secret|wlanapmac|wlanusermac|wisprlogin|usermac-to-url) params,the format like other keytypes.\n"		
+	"eg:set portal-server essid KEY (ac-name|acip-to-url|nasid-to-url|url-suffix|wlanparameter|wlanuserfirsturl|secret|wlanapmac|wlanusermac|wisprlogin|usermac-to-url|clientmac-to-url|apmac-to-url|wlan-to-url|redirect-to-url) params,the format like other keytypes.\n"		
 )
 {
 	char *key_word = (char *)argv[0];
@@ -10550,6 +10949,18 @@ DEFUN(set_eag_portal_server_essid_func,
 				break;
 			} else if (0 == strcmp(argv[i], "usermac-to-url")) {
 				func_type = 13;
+				break;
+			} else if (0 == strcmp(argv[i], "clientmac-to-url")) {
+				func_type = 14;
+				break;
+			} else if (0 == strcmp(argv[i], "apmac-to-url")) {
+				func_type = 15;
+				break;
+			} else if (0 == strcmp(argv[i], "wlan-to-url")) {
+				func_type = 16;
+				break;
+			} else if (0 == strcmp(argv[i], "redirect-to-url")) {
+				func_type = 17;
 				break;
 			}
 			strncat(essid, " ", 1);
@@ -10785,7 +11196,75 @@ DEFUN(set_eag_portal_server_essid_func,
 		}
 		ret = eag_set_portal_server_usermac_to_url(dcli_dbus_connection_curr, hansitype, insid,
 										key_type, keyid, key_word, if_enable);
+		break;
+		case 14:
+		if ((i+2) == argc){
+			if (0 == strncmp(argv[i+1],"enable",strlen(argv[i+1]))) {
+				if_enable = 1;
+			} else if (0 == strncmp(argv[i+1],"disable",strlen(argv[i+1]))) {
+				if_enable = 0;
+			} else {
+				vty_out(vty, "%% argument is wrong\n");
+				return CMD_WARNING;
+			}
+		} else {
+			vty_out(vty, "%% argument is wrong\n");
+			return CMD_WARNING;
+		}
+		ret = eag_set_portal_server_clientmac_to_url(dcli_dbus_connection_curr, hansitype, insid,
+										key_type, keyid, key_word, if_enable);
+		break;
+		case 15:
+		if ((i+2) == argc){
+			if (0 == strncmp(argv[i+1],"enable",strlen(argv[i+1]))) {
+				if_enable = 1;
+			} else if (0 == strncmp(argv[i+1],"disable",strlen(argv[i+1]))) {
+				if_enable = 0;
+			} else {
+				vty_out(vty, "%% argument is wrong\n");
+				return CMD_WARNING;
+			}
+		} else {
+			vty_out(vty, "%% argument is wrong\n");
+			return CMD_WARNING;
+		}
+		ret = eag_set_portal_server_apmac_to_url(dcli_dbus_connection_curr, hansitype, insid,
+										key_type, keyid, key_word, if_enable);
+		break;
+		case 16:
+		if ((i+2) == argc){
+			if (0 == strncmp(argv[i+1],"enable",strlen(argv[i+1]))) {
+				if_enable = 1;
+			} else if (0 == strncmp(argv[i+1],"disable",strlen(argv[i+1]))) {
+				if_enable = 0;
+			} else {
+				vty_out(vty, "%% argument is wrong\n");
+				return CMD_WARNING;
+			}
+		} else {
+			vty_out(vty, "%% argument is wrong\n");
+			return CMD_WARNING;
+		}
+		ret = eag_set_portal_server_wlan_to_url(dcli_dbus_connection_curr, hansitype, insid,
+										key_type, keyid, key_word, if_enable);
 		break;	
+		case 17:
+		if ((i+2) == argc){
+			if (0 == strncmp(argv[i+1],"enable",strlen(argv[i+1]))) {
+				if_enable = 1;
+			} else if (0 == strncmp(argv[i+1],"disable",strlen(argv[i+1]))) {
+				if_enable = 0;
+			} else {
+				vty_out(vty, "%% argument is wrong\n");
+				return CMD_WARNING;
+			}
+		} else {
+			vty_out(vty, "%% argument is wrong\n");
+			return CMD_WARNING;
+		}
+		ret = eag_set_portal_server_redirect_to_url(dcli_dbus_connection_curr, hansitype, insid,
+										key_type, keyid, key_word, if_enable);
+		break;
 	default:
 		break;
 	}
@@ -10999,9 +11478,8 @@ DEFUN(eag_modify_portal_server_essid_func,
 	struct in_addr addr = {0};
 	const char *tmp_port = NULL;
 
-	for (i = 0; 0 != strncmp(argv[i], http_str, strlen(http_str))
-		&& 0 != strncmp(argv[i], https_str, strlen(https_str))
-		&& i < argc; i++) 
+	for (i = 0; i < argc && 0 != strncmp(argv[i], http_str, strlen(http_str))
+		&& 0 != strncmp(argv[i], https_str, strlen(https_str)); i++) 
 	{
 		if (0 != i) {
 			strncat(essid, " ", 1);
@@ -11181,7 +11659,11 @@ DEFUN(eag_show_portal_conf_func,
 			vty_out(vty, "mac server port			:%u\n", portalconf.portal_srv[i].mac_server_port);
 			
 			vty_out(vty, "portal acip-to-url		:%s\n", (1 == portalconf.portal_srv[i].acip_to_url)?"enable":"disable");
-			vty_out(vty, "portal usermac-to-url		:%s\n", (1 == portalconf.portal_srv[i].usermac_to_url)?"enable":"disable");			
+			vty_out(vty, "portal usermac-to-url		:%s\n", (1 == portalconf.portal_srv[i].usermac_to_url)?"enable":"disable");
+			vty_out(vty, "portal clientmac-to-url		:%s\n", (1 == portalconf.portal_srv[i].clientmac_to_url)?"enable":"disable");	
+			vty_out(vty, "portal apmac-to-url		:%s\n", (1 == portalconf.portal_srv[i].apmac_to_url)?"enable":"disable");	
+			vty_out(vty, "portal wlan-to-url		:%s\n", (1 == portalconf.portal_srv[i].wlan_to_url)?"enable":"disable");	
+			vty_out(vty, "portal redirect-to-url		:%s\n", (1 == portalconf.portal_srv[i].redirect_to_url)?"enable":"disable");			
 			vty_out(vty, "portal nasid-to-url		:%s\n", (1 == portalconf.portal_srv[i].nasid_to_url)?"enable":"disable");
 			vty_out(vty, "portal wlanparameter		:%s\n", (1==portalconf.portal_srv[i].wlanparameter)?"enable":"disable");
 			if (1 == portalconf.portal_srv[i].wlanparameter) {
@@ -11612,7 +12094,7 @@ DEFUN(eag_modify_radius_server_func,
 	if(EAG_ERR_RADIUS_DOAMIN_NOT_EXIST == ret) {
 		vty_out(vty, "%% domain not find\n") ;
 	}
-	if( EAG_ERR_RADIUS_DOMAIN_LEN_ERR == ret ){
+	else if( EAG_ERR_RADIUS_DOMAIN_LEN_ERR == ret ){
 		vty_out(vty, "%% domain len error. should be %d!\n", 
 						MAX_RADIUS_DOMAIN_LEN-1);
 	}
@@ -11690,6 +12172,10 @@ DEFUN(eag_del_radius_server_func,
 	if (EAG_ERR_DBUS_FAILED == ret) {
 		vty_out(vty, "%% dbus error\n");
 	}
+	else if( EAG_ERR_RADIUS_DOMAIN_LEN_ERR == ret ){
+		vty_out(vty, "%% domain len error. should be %d!\n", 
+						MAX_RADIUS_DOMAIN_LEN-1);
+	}
 	else if (EAG_ERR_RADIUS_DOAMIN_NOT_EXIST == ret) {
 		vty_out(vty, "%% the del domain is not exist\n");
 	}
@@ -11741,6 +12227,10 @@ DEFUN(eag_set_radius_remove_domainname_func,
 	if (EAG_ERR_DBUS_FAILED == ret) {
 		vty_out(vty, "%% dbus error\n");
 	}
+	else if( EAG_ERR_RADIUS_DOMAIN_LEN_ERR == ret ){
+		vty_out(vty, "%% domain len error. should be %d!\n", 
+						MAX_RADIUS_DOMAIN_LEN-1);
+	}
 	else if (EAG_ERR_RADIUS_DOAMIN_NOT_EXIST == ret) {
 		vty_out(vty, "%% radius domain %s is not exit\n", domain_name);
 	}
@@ -11791,6 +12281,10 @@ DEFUN(eag_set_radius_class_to_bandwidth_func,
 	if (EAG_ERR_DBUS_FAILED == ret) {
 		vty_out(vty, "%% dbus error\n");
 	}
+	else if( EAG_ERR_RADIUS_DOMAIN_LEN_ERR == ret ){
+		vty_out(vty, "%% domain len error. should be %d!\n", 
+						MAX_RADIUS_DOMAIN_LEN-1);
+	}
 	else if (EAG_ERR_RADIUS_DOAMIN_NOT_EXIST == ret) {
 		vty_out(vty, "%% radius domain %s is not exit\n", domain_name);
 	}
@@ -11830,6 +12324,10 @@ DEFUN(eag_show_radius_conf_func,
 
 	if( EAG_ERR_DBUS_FAILED == ret ){
 		vty_out(vty, "%% dbus error\n");
+	}
+	else if( EAG_ERR_RADIUS_DOMAIN_LEN_ERR == ret ){
+		vty_out(vty, "%% domain len error. should be %d!\n", 
+						MAX_RADIUS_DOMAIN_LEN-1);
 	}
 	else if( EAG_ERR_RADIUS_DOAMIN_NOT_EXIST == ret ){
 		vty_out(vty, "%% domain %s not find\n", domain);
@@ -14296,6 +14794,22 @@ dcli_eag_init(void)
 	install_element(EAG_NODE, &set_eag_portal_server_usermac_to_url_cmd);
 	install_element(HANSI_EAG_NODE, &set_eag_portal_server_usermac_to_url_cmd);
 	install_element(LOCAL_HANSI_EAG_NODE, &set_eag_portal_server_usermac_to_url_cmd );
+
+	install_element(EAG_NODE, &set_eag_portal_server_clientmac_to_url_cmd);
+	install_element(HANSI_EAG_NODE, &set_eag_portal_server_clientmac_to_url_cmd);
+	install_element(LOCAL_HANSI_EAG_NODE, &set_eag_portal_server_clientmac_to_url_cmd );
+	
+	install_element(EAG_NODE, &set_eag_portal_server_apmac_to_url_cmd);
+	install_element(HANSI_EAG_NODE, &set_eag_portal_server_apmac_to_url_cmd);
+	install_element(LOCAL_HANSI_EAG_NODE, &set_eag_portal_server_apmac_to_url_cmd );
+	
+	install_element(EAG_NODE, &set_eag_portal_server_wlan_to_url_cmd);
+	install_element(HANSI_EAG_NODE, &set_eag_portal_server_wlan_to_url_cmd);
+	install_element(LOCAL_HANSI_EAG_NODE, &set_eag_portal_server_wlan_to_url_cmd );
+	
+	install_element(EAG_NODE, &set_eag_portal_server_redirect_to_url_cmd);
+	install_element(HANSI_EAG_NODE, &set_eag_portal_server_redirect_to_url_cmd);
+	install_element(LOCAL_HANSI_EAG_NODE, &set_eag_portal_server_redirect_to_url_cmd );
 	
 	install_element(EAG_NODE, &set_eag_portal_server_wlanusermac_cmd);
 	install_element(HANSI_EAG_NODE, &set_eag_portal_server_wlanusermac_cmd);

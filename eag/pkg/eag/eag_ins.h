@@ -82,6 +82,9 @@ int
 eag_ins_get_distributed(eag_ins_t *eagins);
 
 int
+eag_ins_get_pdc_distributed(eag_ins_t *eagins);
+
+int
 eag_ins_set_flux_from(eag_ins_t *eagins,
 		int flux_from);
 

@@ -108,9 +108,6 @@ int cmtest_no_arp_learn = 0;
 int cmtest_no_authorize = 0;
 int l2super_vlan_switch_t = 0;
 
-extern int notice_to_bindserver;
-extern int username_check_switch;
-
 struct eag_ins {
 	int status;
 	eag_redir_t *redir;
@@ -426,6 +423,7 @@ eag_ins_do_syn_user_data(void *cbp, void *data, struct timeval *cb_tv)
 			goto ack_data;
 		}
 		appconn_add_to_db(eagins->appdb, appconn);
+		appconn_update_name_htable(eagins->appdb, appconn);
 		if (FLUX_FROM_FASTFWD == eagins->flux_from
 			||FLUX_FROM_FASTFWD_IPTABLES == eagins->flux_from)
 		{
@@ -479,6 +477,7 @@ eag_ins_do_syn_user_data(void *cbp, void *data, struct timeval *cb_tv)
 			appdb_authed_user_num_decrease(eagins->appdb);
 			
 			appconn_del_from_db(appconn);
+			appconn_del_name_htable(appconn);
 			appconn_free(appconn);
 		}
 	}
@@ -757,9 +756,9 @@ terminate_appconn(struct app_conn_t *appconn,
 		terminate_cause_str, terminate_cause,
 		appconn->session.session_stop_time-appconn->session.session_start_time);
 	eag_henan_log_notice("PORTAL_USER_LOGOFF:-UserName=%s-IPAddr=%s-IfName=%s-VlanID=%u-MACAddr=%s-Reason=%s"
-		"-InputOctets=%llu-OutputOctets=%llu-InputGigawords=%lu-OutputGigawords=%lu; User logged off.",
+		"-InputOctets=%u-OutputOctets=%u-InputGigawords=%u-OutputGigawords=%u; User logged off.",
 		appconn->session.username, user_ipstr, appconn->session.intf, appconn->session.vlanid, user_macstr, 
-		terminate_cause_str,  appconn->session.output_octets, appconn->session.input_octets, 
+		terminate_cause_str,  (uint32_t)(appconn->session.output_octets), (uint32_t)(appconn->session.input_octets), 
 		(uint32_t)((appconn->session.output_octets)>>32), (uint32_t)((appconn->session.input_octets)>>32));
 	appconn->session.state = APPCONN_STATUS_NONE;
 	
@@ -809,9 +808,7 @@ terminate_appconn(struct app_conn_t *appconn,
 	}
 	
 	appconn_del_from_db(appconn);
-	if(1 == username_check_switch) {
-		appconn_del_name_from_db(appconn);
-	}
+	appconn_del_name_htable(appconn);
 	appconn_free(appconn);
 }
 
@@ -880,9 +877,9 @@ terminate_appconn_nowait(struct app_conn_t *appconn,
 		terminate_cause_str, terminate_cause,
 		appconn->session.session_stop_time-appconn->session.session_start_time);
 	eag_henan_log_notice("PORTAL_USER_LOGOFF:-UserName=%s-IPAddr=%s-IfName=%s-VlanID=%u-MACAddr=%s-Reason=%s"
-		"-InputOctets=%llu-OutputOctets=%llu-InputGigawords=%lu-OutputGigawords=%lu; User logged off.",
+		"-InputOctets=%u-OutputOctets=%u-InputGigawords=%u-OutputGigawords=%u; User logged off.",
 		appconn->session.username, user_ipstr, appconn->session.intf, appconn->session.vlanid, user_macstr, 
-		terminate_cause_str,  appconn->session.output_octets, appconn->session.input_octets, 
+		terminate_cause_str,  (uint32_t)(appconn->session.output_octets), (uint32_t)(appconn->session.input_octets), 
 		(uint32_t)((appconn->session.output_octets)>>32), (uint32_t)((appconn->session.input_octets)>>32));
 	appconn->session.state = APPCONN_STATUS_NONE;
 	
@@ -927,9 +924,7 @@ terminate_appconn_nowait(struct app_conn_t *appconn,
 	}
 	
 	appconn_del_from_db(appconn);
-	if(1 == username_check_switch) {
-		appconn_del_name_from_db(appconn);
-	}	
+	appconn_del_name_htable(appconn);
 	appconn_free(appconn);
 }
 
@@ -961,9 +956,7 @@ terminate_appconn_without_ntf(struct app_conn_t *appconn,
 	appdb_authed_user_num_decrease(eagins->appdb);
 
 	appconn_del_from_db(appconn);
-	if(1 == username_check_switch) {
-		appconn_del_name_from_db(appconn);
-	}	
+	appconn_del_name_htable(appconn);
 	appconn_free(appconn);
 }
 
@@ -1033,9 +1026,9 @@ terminate_appconn_without_backup(struct app_conn_t *appconn,
 		terminate_cause_str, terminate_cause,
 		appconn->session.session_stop_time-appconn->session.session_start_time);
 	eag_henan_log_notice("PORTAL_USER_LOGOFF:-UserName=%s-IPAddr=%s-IfName=%s-VlanID=%u-MACAddr=%s-Reason=%s"
-		"-InputOctets=%llu-OutputOctets=%llu-InputGigawords=%lu-OutputGigawords=%lu; User logged off.",
+		"-InputOctets=%u-OutputOctets=%u-InputGigawords=%u-OutputGigawords=%u; User logged off.",
 		appconn->session.username, user_ipstr, appconn->session.intf, appconn->session.vlanid, user_macstr, 
-		terminate_cause_str,  appconn->session.output_octets, appconn->session.input_octets, 
+		terminate_cause_str,  (uint32_t)(appconn->session.output_octets), (uint32_t)(appconn->session.input_octets), 
 		(uint32_t)((appconn->session.output_octets)>>32), (uint32_t)((appconn->session.input_octets)>>32));
 	appconn->session.state = APPCONN_STATUS_NONE;
 	
@@ -1078,9 +1071,7 @@ terminate_appconn_without_backup(struct app_conn_t *appconn,
 	}
 	
 	appconn_del_from_db(appconn);
-	if(1 == username_check_switch) {
-		appconn_del_name_from_db(appconn);
-	}	
+	appconn_del_name_htable(appconn);
 	appconn_free(appconn);
 }
 
@@ -5116,6 +5107,10 @@ eag_dbus_method_get_portal_conf(
 	char *acname = NULL;
 	int acip_to_url = 0;
 	int usermac_to_url = 0;
+	int clientmac_to_url = 0;
+	int apmac_to_url = 0;
+	int wlan_to_url = 0;
+	int redirect_to_url = 0;
 	int nasid_to_url = 0;
 	int wlanparameter = 0;
 	char *deskey = NULL;
@@ -5175,6 +5170,10 @@ replyx:
 									DBUS_TYPE_UINT16_AS_STRING/*mac bind server port*/
 									DBUS_TYPE_INT32_AS_STRING/*acip to url*/			
         							DBUS_TYPE_INT32_AS_STRING/*usermac to url*/
+									DBUS_TYPE_INT32_AS_STRING/*clientmac to url*/
+									DBUS_TYPE_INT32_AS_STRING/*apmac to url*/
+									DBUS_TYPE_INT32_AS_STRING/*wlan to url*/
+									DBUS_TYPE_INT32_AS_STRING/*redirect to url*/
 									DBUS_TYPE_INT32_AS_STRING/*nasid to url*/
 									DBUS_TYPE_INT32_AS_STRING/*wlanparameter*/
 									DBUS_TYPE_STRING_AS_STRING/*DES key*/
@@ -5258,6 +5257,22 @@ replyx:
 			usermac_to_url = portal_srv[i].usermac_to_url;
 			dbus_message_iter_append_basic(&iter_struct,
 											DBUS_TYPE_INT32, &usermac_to_url);
+
+			clientmac_to_url = portal_srv[i].clientmac_to_url;
+			dbus_message_iter_append_basic(&iter_struct,
+											DBUS_TYPE_INT32, &clientmac_to_url);
+			
+			apmac_to_url = portal_srv[i].apmac_to_url;
+			dbus_message_iter_append_basic(&iter_struct,
+											DBUS_TYPE_INT32, &apmac_to_url);
+			
+			wlan_to_url = portal_srv[i].wlan_to_url;
+			dbus_message_iter_append_basic(&iter_struct,
+											DBUS_TYPE_INT32, &wlan_to_url);
+			
+			redirect_to_url = portal_srv[i].redirect_to_url;
+			dbus_message_iter_append_basic(&iter_struct,
+											DBUS_TYPE_INT32, &redirect_to_url);
 
 			nasid_to_url = portal_srv[i].nasid_to_url;
 			dbus_message_iter_append_basic(&iter_struct,
@@ -6052,6 +6067,326 @@ replyx:
 }
 
 DBusMessage *
+eag_dbus_method_set_clientmac_to_url(
+				DBusConnection *conn, 
+				DBusMessage *msg, 
+				void *user_data )
+{
+	struct portal_conf *portal_conf = NULL;
+	DBusMessage* reply = NULL;
+	DBusMessageIter iter = {0};
+	DBusError		err = {0};
+	unsigned long  keytype = 0;
+	unsigned long  keyid = 0;
+	char		  *keyword = NULL;
+	int clientmac_to_url = 0;
+	struct portal_srv_t * portal_srv_t = NULL;
+	int ret = 0;
+
+	reply = dbus_message_new_method_return(msg);
+	if (NULL == reply) {
+		eag_log_err("eag_dbus_method_set_clientmac_to_url "\
+					"DBUS new reply message error!\n");
+		return NULL;
+	}
+
+	portal_conf = (struct portal_conf *)user_data;
+	if( NULL == portal_conf){
+		eag_log_err("eag_dbus_method_set_clientmac_to_url user_data error!");
+		ret = EAG_ERR_UNKNOWN;
+		goto replyx;
+	}
+	
+	dbus_error_init(&err);
+	if (!(dbus_message_get_args(msg ,&err,
+								DBUS_TYPE_UINT32, &keytype,
+								DBUS_TYPE_UINT32, &keyid,
+								DBUS_TYPE_STRING, &keyword,
+								DBUS_TYPE_INT32, &clientmac_to_url,
+								DBUS_TYPE_INVALID))){
+		eag_log_err("eag_dbus_method_set_clientmac_to_url "\
+					"unable to get input args\n");
+		if (dbus_error_is_set(&err)) {
+			eag_log_err("eag_dbus_method_set_clientmac_to_url %s raised:%s\n",
+							err.name, err.message);
+			dbus_error_free(&err);
+		}
+		ret = EAG_ERR_DBUS_FAILED;
+		goto replyx;
+	}
+	switch( keytype ){
+	case PORTAL_KEYTYPE_ESSID:
+	case PORTAL_KEYTYPE_INTF:
+		portal_srv_t = portal_srv_get_by_key(portal_conf, keytype,keyword);
+		if( NULL == portal_srv_t ){
+			ret = EAG_ERR_PORTAL_DEL_SRV_NOT_EXIST;
+			goto replyx;
+		}
+		portal_srv_t->clientmac_to_url = clientmac_to_url;
+		break;
+	case PORTAL_KEYTYPE_WLANID:
+	case PORTAL_KEYTYPE_VLANID:
+	case PORTAL_KEYTYPE_WTPID:
+		portal_srv_t = portal_srv_get_by_key(portal_conf, keytype,&keyid);
+		if( NULL == portal_srv_t ){
+			ret = EAG_ERR_PORTAL_MODIFY_SRV_NOT_EXIST;
+			goto replyx;
+		}	
+		portal_srv_t->clientmac_to_url = clientmac_to_url;
+		break;
+	default:
+		ret = EAG_ERR_PORTAL_MODIFY_SRV_ERR_TYPE;
+		break;
+	}
+	
+replyx:
+	dbus_message_iter_init_append(reply, &iter);
+	dbus_message_iter_append_basic(&iter,
+									DBUS_TYPE_INT32, &ret);
+	return reply;
+}
+
+DBusMessage *
+eag_dbus_method_set_apmac_to_url(
+				DBusConnection *conn, 
+				DBusMessage *msg, 
+				void *user_data )
+{
+	struct portal_conf *portal_conf = NULL;
+	DBusMessage* reply = NULL;
+	DBusMessageIter iter = {0};
+	DBusError		err = {0};
+	unsigned long  keytype = 0;
+	unsigned long  keyid = 0;
+	char		  *keyword = NULL;
+	int apmac_to_url = 0;
+	struct portal_srv_t * portal_srv_t = NULL;
+	int ret = 0;
+
+	reply = dbus_message_new_method_return(msg);
+	if (NULL == reply) {
+		eag_log_err("eag_dbus_method_set_apmac_to_url "\
+					"DBUS new reply message error!\n");
+		return NULL;
+	}
+
+	portal_conf = (struct portal_conf *)user_data;
+	if( NULL == portal_conf){
+		eag_log_err("eag_dbus_method_set_apmac_to_url user_data error!");
+		ret = EAG_ERR_UNKNOWN;
+		goto replyx;
+	}
+	
+	dbus_error_init(&err);
+	if (!(dbus_message_get_args(msg ,&err,
+								DBUS_TYPE_UINT32, &keytype,
+								DBUS_TYPE_UINT32, &keyid,
+								DBUS_TYPE_STRING, &keyword,
+								DBUS_TYPE_INT32, &apmac_to_url,
+								DBUS_TYPE_INVALID))){
+		eag_log_err("eag_dbus_method_set_apmac_to_url "\
+					"unable to get input args\n");
+		if (dbus_error_is_set(&err)) {
+			eag_log_err("eag_dbus_method_set_apmac_to_url %s raised:%s\n",
+							err.name, err.message);
+			dbus_error_free(&err);
+		}
+		ret = EAG_ERR_DBUS_FAILED;
+		goto replyx;
+	}
+	switch( keytype ){
+	case PORTAL_KEYTYPE_ESSID:
+	case PORTAL_KEYTYPE_INTF:
+		portal_srv_t = portal_srv_get_by_key(portal_conf, keytype,keyword);
+		if( NULL == portal_srv_t ){
+			ret = EAG_ERR_PORTAL_DEL_SRV_NOT_EXIST;
+			goto replyx;
+		}
+		portal_srv_t->apmac_to_url = apmac_to_url;
+		break;
+	case PORTAL_KEYTYPE_WLANID:
+	case PORTAL_KEYTYPE_VLANID:
+	case PORTAL_KEYTYPE_WTPID:
+		portal_srv_t = portal_srv_get_by_key(portal_conf, keytype,&keyid);
+		if( NULL == portal_srv_t ){
+			ret = EAG_ERR_PORTAL_MODIFY_SRV_NOT_EXIST;
+			goto replyx;
+		}	
+		portal_srv_t->apmac_to_url = apmac_to_url;
+		break;
+	default:
+		ret = EAG_ERR_PORTAL_MODIFY_SRV_ERR_TYPE;
+		break;
+	}
+	
+replyx:
+	dbus_message_iter_init_append(reply, &iter);
+	dbus_message_iter_append_basic(&iter,
+									DBUS_TYPE_INT32, &ret);
+	return reply;
+}
+
+DBusMessage *
+eag_dbus_method_set_wlan_to_url(
+				DBusConnection *conn, 
+				DBusMessage *msg, 
+				void *user_data )
+{
+	struct portal_conf *portal_conf = NULL;
+	DBusMessage* reply = NULL;
+	DBusMessageIter iter = {0};
+	DBusError		err = {0};
+	unsigned long  keytype = 0;
+	unsigned long  keyid = 0;
+	char		  *keyword = NULL;
+	int wlan_to_url = 0;
+	struct portal_srv_t * portal_srv_t = NULL;
+	int ret = 0;
+
+	reply = dbus_message_new_method_return(msg);
+	if (NULL == reply) {
+		eag_log_err("eag_dbus_method_set_wlan_to_url "\
+					"DBUS new reply message error!\n");
+		return NULL;
+	}
+
+	portal_conf = (struct portal_conf *)user_data;
+	if( NULL == portal_conf){
+		eag_log_err("eag_dbus_method_set_wlan_to_url user_data error!");
+		ret = EAG_ERR_UNKNOWN;
+		goto replyx;
+	}
+	
+	dbus_error_init(&err);
+	if (!(dbus_message_get_args(msg ,&err,
+								DBUS_TYPE_UINT32, &keytype,
+								DBUS_TYPE_UINT32, &keyid,
+								DBUS_TYPE_STRING, &keyword,
+								DBUS_TYPE_INT32, &wlan_to_url,
+								DBUS_TYPE_INVALID))){
+		eag_log_err("eag_dbus_method_set_wlan_to_url "\
+					"unable to get input args\n");
+		if (dbus_error_is_set(&err)) {
+			eag_log_err("eag_dbus_method_set_wlan_to_url %s raised:%s\n",
+							err.name, err.message);
+			dbus_error_free(&err);
+		}
+		ret = EAG_ERR_DBUS_FAILED;
+		goto replyx;
+	}
+	switch( keytype ){
+	case PORTAL_KEYTYPE_ESSID:
+	case PORTAL_KEYTYPE_INTF:
+		portal_srv_t = portal_srv_get_by_key(portal_conf, keytype,keyword);
+		if( NULL == portal_srv_t ){
+			ret = EAG_ERR_PORTAL_DEL_SRV_NOT_EXIST;
+			goto replyx;
+		}
+		portal_srv_t->wlan_to_url = wlan_to_url;
+		break;
+	case PORTAL_KEYTYPE_WLANID:
+	case PORTAL_KEYTYPE_VLANID:
+	case PORTAL_KEYTYPE_WTPID:
+		portal_srv_t = portal_srv_get_by_key(portal_conf, keytype,&keyid);
+		if( NULL == portal_srv_t ){
+			ret = EAG_ERR_PORTAL_MODIFY_SRV_NOT_EXIST;
+			goto replyx;
+		}	
+		portal_srv_t->wlan_to_url = wlan_to_url;
+		break;
+	default:
+		ret = EAG_ERR_PORTAL_MODIFY_SRV_ERR_TYPE;
+		break;
+	}
+	
+replyx:
+	dbus_message_iter_init_append(reply, &iter);
+	dbus_message_iter_append_basic(&iter,
+									DBUS_TYPE_INT32, &ret);
+	return reply;
+}
+
+DBusMessage *
+eag_dbus_method_set_redirect_to_url(
+				DBusConnection *conn, 
+				DBusMessage *msg, 
+				void *user_data )
+{
+	struct portal_conf *portal_conf = NULL;
+	DBusMessage* reply = NULL;
+	DBusMessageIter iter = {0};
+	DBusError		err = {0};
+	unsigned long  keytype = 0;
+	unsigned long  keyid = 0;
+	char		  *keyword = NULL;
+	int redirect_to_url = 0;
+	struct portal_srv_t * portal_srv_t = NULL;
+	int ret = 0;
+
+	reply = dbus_message_new_method_return(msg);
+	if (NULL == reply) {
+		eag_log_err("eag_dbus_method_set_redirect_to_url "\
+					"DBUS new reply message error!\n");
+		return NULL;
+	}
+
+	portal_conf = (struct portal_conf *)user_data;
+	if( NULL == portal_conf){
+		eag_log_err("eag_dbus_method_set_redirect_to_url user_data error!");
+		ret = EAG_ERR_UNKNOWN;
+		goto replyx;
+	}
+	
+	dbus_error_init(&err);
+	if (!(dbus_message_get_args(msg ,&err,
+								DBUS_TYPE_UINT32, &keytype,
+								DBUS_TYPE_UINT32, &keyid,
+								DBUS_TYPE_STRING, &keyword,
+								DBUS_TYPE_INT32, &redirect_to_url,
+								DBUS_TYPE_INVALID))){
+		eag_log_err("eag_dbus_method_set_redirect_to_url "\
+					"unable to get input args\n");
+		if (dbus_error_is_set(&err)) {
+			eag_log_err("eag_dbus_method_set_redirect_to_url %s raised:%s\n",
+							err.name, err.message);
+			dbus_error_free(&err);
+		}
+		ret = EAG_ERR_DBUS_FAILED;
+		goto replyx;
+	}
+	switch( keytype ){
+	case PORTAL_KEYTYPE_ESSID:
+	case PORTAL_KEYTYPE_INTF:
+		portal_srv_t = portal_srv_get_by_key(portal_conf, keytype,keyword);
+		if( NULL == portal_srv_t ){
+			ret = EAG_ERR_PORTAL_DEL_SRV_NOT_EXIST;
+			goto replyx;
+		}
+		portal_srv_t->redirect_to_url = redirect_to_url;
+		break;
+	case PORTAL_KEYTYPE_WLANID:
+	case PORTAL_KEYTYPE_VLANID:
+	case PORTAL_KEYTYPE_WTPID:
+		portal_srv_t = portal_srv_get_by_key(portal_conf, keytype,&keyid);
+		if( NULL == portal_srv_t ){
+			ret = EAG_ERR_PORTAL_MODIFY_SRV_NOT_EXIST;
+			goto replyx;
+		}	
+		portal_srv_t->redirect_to_url = redirect_to_url;
+		break;
+	default:
+		ret = EAG_ERR_PORTAL_MODIFY_SRV_ERR_TYPE;
+		break;
+	}
+	
+replyx:
+	dbus_message_iter_init_append(reply, &iter);
+	dbus_message_iter_append_basic(&iter,
+									DBUS_TYPE_INT32, &ret);
+	return reply;
+}
+
+DBusMessage *
 eag_dbus_method_set_wlanusermac(
 				DBusConnection *conn, 
 				DBusMessage *msg, 
@@ -6165,7 +6500,6 @@ eag_dbus_method_set_wisprlogin(
 	unsigned long  keyid = 0;
 	char		  *keyword = NULL;
 	int 		  status = 0;
-	char	      *type = NULL;
 	struct portal_srv_t * portal_srv_t = NULL;
 	int ret = 0;
 
@@ -9865,7 +10199,7 @@ eag_dbus_method_set_username_check_status(
 		goto replyx;
 	}	
 
-	eag_portal_username_check_switch(status);
+	username_check_switch = status;
 	ret = EAG_RETURN_OK;
 
 replyx:
@@ -10199,6 +10533,14 @@ eagins_register_all_dbus_method(eag_ins_t *eagins)
 		EAG_DBUS_INTERFACE, eag_dbus_method_set_wlanapmac, &(eagins->portalconf));
 	eag_dbus_register_method(eagins->eagdbus,
 		EAG_DBUS_INTERFACE, eag_dbus_method_set_usermac_to_url, &(eagins->portalconf));
+	eag_dbus_register_method(eagins->eagdbus,
+		EAG_DBUS_INTERFACE, eag_dbus_method_set_clientmac_to_url, &(eagins->portalconf));
+	eag_dbus_register_method(eagins->eagdbus,
+		EAG_DBUS_INTERFACE, eag_dbus_method_set_apmac_to_url, &(eagins->portalconf));
+	eag_dbus_register_method(eagins->eagdbus,
+		EAG_DBUS_INTERFACE, eag_dbus_method_set_wlan_to_url, &(eagins->portalconf));
+	eag_dbus_register_method(eagins->eagdbus,
+		EAG_DBUS_INTERFACE, eag_dbus_method_set_redirect_to_url, &(eagins->portalconf));
 	eag_dbus_register_method(eagins->eagdbus,
 		EAG_DBUS_INTERFACE, eag_dbus_method_set_wlanusermac, &(eagins->portalconf));
 	eag_dbus_register_method(eagins->eagdbus,

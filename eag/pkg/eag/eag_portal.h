@@ -37,6 +37,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #define PORTAL_PORT_DEFAULT		2000
 
+extern int notice_to_bindserver;
+extern int username_check_switch;
+
 eag_portal_t *
 eag_portal_new(uint8_t hansi_type,
 		uint8_t hansi_id);
@@ -190,9 +193,6 @@ eag_portal_set_eag_dbus(eag_portal_t *portal,
 
 int
 eag_portal_log_all_portalsess(eag_portal_t *portal);
-
-int
-eag_portal_username_check_switch(int status);
 
 int
 eag_portal_set_macauth(eag_portal_t *portal,

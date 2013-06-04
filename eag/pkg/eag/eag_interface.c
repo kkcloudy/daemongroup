@@ -96,6 +96,10 @@
 #define EAG_DBUS_METHOD_SET_PORTAL_SECRET			"eag_dbus_method_set_portal_secret"
 #define EAG_DBUS_METHOD_SET_WLANAPMAC				"eag_dbus_method_set_wlanapmac"
 #define EAG_DBUS_METHOD_SET_USERMAC_TO_URL			"eag_dbus_method_set_usermac_to_url"
+#define EAG_DBUS_METHOD_SET_CLIENTMAC_TO_URL		"eag_dbus_method_set_clientmac_to_url"
+#define EAG_DBUS_METHOD_SET_APMAC_TO_URL			"eag_dbus_method_set_apmac_to_url"
+#define EAG_DBUS_METHOD_SET_WLAN_TO_URL				"eag_dbus_method_set_wlan_to_url"
+#define EAG_DBUS_METHOD_SET_REDIRECT_TO_URL			"eag_dbus_method_set_redirect_to_url"
 #define EAG_DBUS_METHOD_SET_WLANUSERMAC				"eag_dbus_method_set_wlanusermac"
 #define EAG_DBUS_METHOD_SET_WISPRLOGIN				"eag_dbus_method_set_wisprlogin"
 
@@ -3293,6 +3297,10 @@ eag_get_portal_conf( DBusConnection *connection,
 	char *acname = NULL;
 	int acip_to_url = 0;
 	int usermac_to_url = 0;
+	int clientmac_to_url = 0;
+	int apmac_to_url = 0;
+	int wlan_to_url = 0;
+	int redirect_to_url = 0;
 	int nasid_to_url = 0;
 	int wlanparameter = 0;
 	char *DESkey = NULL;
@@ -3412,6 +3420,18 @@ eag_get_portal_conf( DBusConnection *connection,
 					dbus_message_iter_next(&iter_struct);					
 					dbus_message_iter_get_basic(&iter_struct, &usermac_to_url);
 					portalconf->portal_srv[i].usermac_to_url = usermac_to_url;
+					dbus_message_iter_next(&iter_struct);					
+					dbus_message_iter_get_basic(&iter_struct, &clientmac_to_url);
+					portalconf->portal_srv[i].clientmac_to_url = clientmac_to_url;
+					dbus_message_iter_next(&iter_struct);					
+					dbus_message_iter_get_basic(&iter_struct, &apmac_to_url);
+					portalconf->portal_srv[i].apmac_to_url = apmac_to_url;
+					dbus_message_iter_next(&iter_struct);					
+					dbus_message_iter_get_basic(&iter_struct, &wlan_to_url);
+					portalconf->portal_srv[i].wlan_to_url = wlan_to_url;
+					dbus_message_iter_next(&iter_struct);					
+					dbus_message_iter_get_basic(&iter_struct, &redirect_to_url);
+					portalconf->portal_srv[i].redirect_to_url = redirect_to_url;
 					dbus_message_iter_next(&iter_struct);					
 					dbus_message_iter_get_basic(&iter_struct, &nasid_to_url);
 					portalconf->portal_srv[i].nasid_to_url = nasid_to_url;
@@ -4082,6 +4102,274 @@ eag_set_portal_server_usermac_to_url( DBusConnection *connection,
 								DBUS_TYPE_UINT32, &keyid,
 								DBUS_TYPE_STRING, &key_word,
 								DBUS_TYPE_INT32, &usermac_to_url,
+								DBUS_TYPE_INVALID );
+	reply = dbus_connection_send_with_reply_and_block (
+						connection, query, -1, &err );
+
+	dbus_message_unref(query);
+	
+	if ( NULL == reply ){	
+		if (dbus_error_is_set(&err)){
+			dbus_error_free(&err);
+		}
+		return EAG_ERR_DBUS_FAILED;
+	}else{
+		
+		dbus_message_get_args( reply,
+								&err,
+								DBUS_TYPE_INT32, &iRet,
+								DBUS_TYPE_INVALID );
+	}
+	
+	dbus_message_unref(reply);
+	
+	return iRet;
+}
+
+int
+eag_set_portal_server_clientmac_to_url( DBusConnection *connection, 
+				int hansitype, int insid, 	
+				PORTAL_KEY_TYPE key_type,
+				unsigned long keyid,
+				char *key_word,
+				int clientmac_to_url )
+{
+	DBusMessage *query, *reply;
+	DBusError err;
+	int iRet = 0;
+
+	if( NULL == key_word ){
+		return EAG_ERR_INPUT_PARAM_ERR;
+	}
+
+	switch(key_type){
+	case PORTAL_KEYTYPE_ESSID:
+	case PORTAL_KEYTYPE_INTF:
+		keyid = 0;
+		break;
+	case PORTAL_KEYTYPE_WLANID:
+	case PORTAL_KEYTYPE_VLANID:
+	case PORTAL_KEYTYPE_WTPID:
+		key_word = "";
+		break;
+	default:
+		return EAG_ERR_PORTAL_ADD_SRV_ERR_TYPE;
+	}
+	
+	eag_dbus_path_reinit(hansitype,insid);
+	query = dbus_message_new_method_call(
+									EAG_DBUS_NAME,
+									EAG_DBUS_OBJPATH,
+									EAG_DBUS_INTERFACE, 
+									EAG_DBUS_METHOD_SET_CLIENTMAC_TO_URL );
+	dbus_error_init(&err);
+
+	dbus_message_append_args(	query,
+								DBUS_TYPE_UINT32, &key_type,
+								DBUS_TYPE_UINT32, &keyid,
+								DBUS_TYPE_STRING, &key_word,
+								DBUS_TYPE_INT32, &clientmac_to_url,
+								DBUS_TYPE_INVALID );
+	reply = dbus_connection_send_with_reply_and_block (
+						connection, query, -1, &err );
+
+	dbus_message_unref(query);
+	
+	if ( NULL == reply ){	
+		if (dbus_error_is_set(&err)){
+			dbus_error_free(&err);
+		}
+		return EAG_ERR_DBUS_FAILED;
+	}else{
+		
+		dbus_message_get_args( reply,
+								&err,
+								DBUS_TYPE_INT32, &iRet,
+								DBUS_TYPE_INVALID );
+	}
+	
+	dbus_message_unref(reply);
+	
+	return iRet;
+}
+
+int
+eag_set_portal_server_apmac_to_url( DBusConnection *connection, 
+				int hansitype, int insid, 	
+				PORTAL_KEY_TYPE key_type,
+				unsigned long keyid,
+				char *key_word,
+				int apmac_to_url )
+{
+	DBusMessage *query, *reply;
+	DBusError err;
+	int iRet = 0;
+
+	if( NULL == key_word ){
+		return EAG_ERR_INPUT_PARAM_ERR;
+	}
+
+	switch(key_type){
+	case PORTAL_KEYTYPE_ESSID:
+	case PORTAL_KEYTYPE_INTF:
+		keyid = 0;
+		break;
+	case PORTAL_KEYTYPE_WLANID:
+	case PORTAL_KEYTYPE_VLANID:
+	case PORTAL_KEYTYPE_WTPID:
+		key_word = "";
+		break;
+	default:
+		return EAG_ERR_PORTAL_ADD_SRV_ERR_TYPE;
+	}
+	
+	eag_dbus_path_reinit(hansitype,insid);
+	query = dbus_message_new_method_call(
+									EAG_DBUS_NAME,
+									EAG_DBUS_OBJPATH,
+									EAG_DBUS_INTERFACE, 
+									EAG_DBUS_METHOD_SET_APMAC_TO_URL );
+	dbus_error_init(&err);
+
+	dbus_message_append_args(	query,
+								DBUS_TYPE_UINT32, &key_type,
+								DBUS_TYPE_UINT32, &keyid,
+								DBUS_TYPE_STRING, &key_word,
+								DBUS_TYPE_INT32, &apmac_to_url,
+								DBUS_TYPE_INVALID );
+	reply = dbus_connection_send_with_reply_and_block (
+						connection, query, -1, &err );
+
+	dbus_message_unref(query);
+	
+	if ( NULL == reply ){	
+		if (dbus_error_is_set(&err)){
+			dbus_error_free(&err);
+		}
+		return EAG_ERR_DBUS_FAILED;
+	}else{
+		
+		dbus_message_get_args( reply,
+								&err,
+								DBUS_TYPE_INT32, &iRet,
+								DBUS_TYPE_INVALID );
+	}
+	
+	dbus_message_unref(reply);
+	
+	return iRet;
+}
+
+int
+eag_set_portal_server_wlan_to_url( DBusConnection *connection, 
+				int hansitype, int insid, 	
+				PORTAL_KEY_TYPE key_type,
+				unsigned long keyid,
+				char *key_word,
+				int wlan_to_url )
+{
+	DBusMessage *query, *reply;
+	DBusError err;
+	int iRet = 0;
+
+	if( NULL == key_word ){
+		return EAG_ERR_INPUT_PARAM_ERR;
+	}
+
+	switch(key_type){
+	case PORTAL_KEYTYPE_ESSID:
+	case PORTAL_KEYTYPE_INTF:
+		keyid = 0;
+		break;
+	case PORTAL_KEYTYPE_WLANID:
+	case PORTAL_KEYTYPE_VLANID:
+	case PORTAL_KEYTYPE_WTPID:
+		key_word = "";
+		break;
+	default:
+		return EAG_ERR_PORTAL_ADD_SRV_ERR_TYPE;
+	}
+	
+	eag_dbus_path_reinit(hansitype,insid);
+	query = dbus_message_new_method_call(
+									EAG_DBUS_NAME,
+									EAG_DBUS_OBJPATH,
+									EAG_DBUS_INTERFACE, 
+									EAG_DBUS_METHOD_SET_WLAN_TO_URL );
+	dbus_error_init(&err);
+
+	dbus_message_append_args(	query,
+								DBUS_TYPE_UINT32, &key_type,
+								DBUS_TYPE_UINT32, &keyid,
+								DBUS_TYPE_STRING, &key_word,
+								DBUS_TYPE_INT32, &wlan_to_url,
+								DBUS_TYPE_INVALID );
+	reply = dbus_connection_send_with_reply_and_block (
+						connection, query, -1, &err );
+
+	dbus_message_unref(query);
+	
+	if ( NULL == reply ){	
+		if (dbus_error_is_set(&err)){
+			dbus_error_free(&err);
+		}
+		return EAG_ERR_DBUS_FAILED;
+	}else{
+		
+		dbus_message_get_args( reply,
+								&err,
+								DBUS_TYPE_INT32, &iRet,
+								DBUS_TYPE_INVALID );
+	}
+	
+	dbus_message_unref(reply);
+	
+	return iRet;
+}
+
+int
+eag_set_portal_server_redirect_to_url( DBusConnection *connection, 
+				int hansitype, int insid, 	
+				PORTAL_KEY_TYPE key_type,
+				unsigned long keyid,
+				char *key_word,
+				int redirect_to_url )
+{
+	DBusMessage *query, *reply;
+	DBusError err;
+	int iRet = 0;
+
+	if( NULL == key_word ){
+		return EAG_ERR_INPUT_PARAM_ERR;
+	}
+
+	switch(key_type){
+	case PORTAL_KEYTYPE_ESSID:
+	case PORTAL_KEYTYPE_INTF:
+		keyid = 0;
+		break;
+	case PORTAL_KEYTYPE_WLANID:
+	case PORTAL_KEYTYPE_VLANID:
+	case PORTAL_KEYTYPE_WTPID:
+		key_word = "";
+		break;
+	default:
+		return EAG_ERR_PORTAL_ADD_SRV_ERR_TYPE;
+	}
+	
+	eag_dbus_path_reinit(hansitype,insid);
+	query = dbus_message_new_method_call(
+									EAG_DBUS_NAME,
+									EAG_DBUS_OBJPATH,
+									EAG_DBUS_INTERFACE, 
+									EAG_DBUS_METHOD_SET_REDIRECT_TO_URL );
+	dbus_error_init(&err);
+
+	dbus_message_append_args(	query,
+								DBUS_TYPE_UINT32, &key_type,
+								DBUS_TYPE_UINT32, &keyid,
+								DBUS_TYPE_STRING, &key_word,
+								DBUS_TYPE_INT32, &redirect_to_url,
 								DBUS_TYPE_INVALID );
 	reply = dbus_connection_send_with_reply_and_block (
 						connection, query, -1, &err );
