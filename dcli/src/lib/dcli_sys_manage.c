@@ -6236,15 +6236,81 @@ DEFUN (service_dns_func,
 	 "Dns server enable\n"
 	 "Dns server disable")
 {
-	
+  char *cmd=NULL;
+  unsigned int i=0,ret=0;
+
+  DBusMessage *query=NULL; 
+  DBusMessage *reply=NULL;
+  DBusMessageIter  iter;
+  DBusError err;
+
+  cmd = malloc(256);
+  if(!cmd)
+  {
+	vty_out(vty,"system error!\n");
+	return CMD_WARNING;
+  }
   if(!strncmp(argv[0],"enable",strlen(argv[0])))
   {
+    sprintf(cmd,"sudo /etc/init.d/bind9 start" );
+/*	
 	system("sudo /etc/init.d/bind9 start ");
+*/	
   }
   else if(!strncmp(argv[0],"disable",strlen(argv[0])))
   {
+	  sprintf(cmd,"sudo /etc/init.d/bind9 stop" );
+/*
 	  system("sudo /etc/init.d/bind9 stop ");
+*/
   }
+/*  
+  system(cmd);
+*/
+  for(i = 0;i < MAX_SLOT ; i++)
+  {
+	  if(NULL != (dbus_connection_dcli[i] -> dcli_dbus_connection))
+	  {
+
+		  dbus_error_init(&err);
+
+		query = dbus_sem_msg_new_method_call(SEM_DBUS_BUSNAME, SEM_DBUS_OBJPATH,
+			 SEM_DBUS_INTERFACE,SEM_DBUS_EXECUTE_SYSTEM_COMMAND);
+
+
+		dbus_message_append_args(query,
+			DBUS_TYPE_UINT32, &i,
+			DBUS_TYPE_STRING, &cmd,
+						DBUS_TYPE_INVALID);
+
+		reply = dbus_connection_send_with_reply_and_block(dbus_connection_dcli[i] -> dcli_dbus_connection, query, 60000, &err);
+
+		dbus_message_unref(query);
+		if (NULL == reply)
+		{
+			vty_out(vty,"<error> failed get reply.\n");
+			
+			if (dbus_error_is_set(&err)) 
+			{
+				vty_out(vty,"%s raised: %s",err.name,err.message);
+				dbus_error_free_for_dcli(&err);
+			}
+			
+			if(cmd)
+			  free(cmd);
+			return CMD_WARNING;
+		}
+
+		dbus_message_iter_init(reply,&iter);
+		dbus_message_iter_get_basic(&iter,&ret);
+
+
+		dbus_message_unref(reply);
+		}
+
+  }
+  if(cmd)
+  	free(cmd);
   return CMD_SUCCESS;
 }
 
