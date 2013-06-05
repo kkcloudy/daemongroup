@@ -5011,8 +5011,8 @@ DEFUN(show_vrrp_cmd_func,
 #endif
 	}
 	if(2 == argc){
-		if((!strcmp(argv[1],"detail"))||(!strncmp(argv[1],"d",1))||(!strncmp(argv[1],"de",2))||(!strncmp(argv[1],"det",3))\
-			||(!strncmp(argv[1],"deta",4))||(!strncmp(argv[1],"detai",5))){
+		if((!strcmp(argv[1],"detail"))||(!strcmp(argv[1],"detai"))||(!strcmp(argv[1],"deta"))||\
+			(!strcmp(argv[1],"det"))||(!strcmp(argv[1],"de"))||(!strcmp(argv[1],"d"))){
 #ifdef DISTRIBUT
 		op_ret = dcli_show_hansi_profile_detail(vty,profile,slot_id);
 #else
@@ -5020,7 +5020,7 @@ DEFUN(show_vrrp_cmd_func,
 #endif
 		}
 		else{
-			vty_out(vty,"you should input as:config hansi 1-1 d de det or detail");
+			vty_out(vty,"you should input as:config hansi 1-1 d de det deta detai or detail");
 			return CMD_SUCCESS;
 		}
 	}

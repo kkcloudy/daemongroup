@@ -9363,6 +9363,8 @@ DEFUN(set_wlan_tunnel_mode_enable_cmd_func,
 	{
 		vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
 	}
+	else if(ret == RADIO_IN_EBR)
+		vty_out(vty,"<error>some radio interface in ebr\n");
 	else
 		vty_out(vty,"set wlan tunnel mode %s failed %d\n",argv[0],ret);		
 	

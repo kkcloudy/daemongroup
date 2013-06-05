@@ -503,7 +503,7 @@ int check_whether_in_ebr(unsigned int index,int wtpid, unsigned int radioid,unsi
 int set_balance_probe_extension_command(int wtpid, char * command)
 {//xm add 09.5.13
 	msgq msg;
-	struct msgqlist *elem;
+//	struct msgqlist *elem;
 
 	if(AC_WTP[wtpid]->WTP_Radio[0]->excommand!=NULL){
 		free(AC_WTP[wtpid]->WTP_Radio[0]->excommand);
@@ -527,8 +527,8 @@ int set_balance_probe_extension_command(int wtpid, char * command)
 			wid_syslog_crit("%s msgsend %s",__func__,strerror(errno));
 			perror("msgsnd");
 		}
-	}
-	else{
+	}//delete unuseful code
+	/*else{
 		elem = (struct msgqlist*)malloc(sizeof(struct msgqlist));
 		if(elem == NULL){			
 			wid_syslog_crit("%s malloc %s",__func__,strerror(errno));
@@ -539,7 +539,7 @@ int set_balance_probe_extension_command(int wtpid, char * command)
 		elem->next = NULL;
 		memcpy((char*)&(elem->mqinfo),(char*)&(msg.mqinfo),sizeof(msg.mqinfo));
 		WID_INSERT_CONTROL_LIST(wtpid, elem);
-	}
+	}*/
 
 	return 0;	
 }
@@ -2465,7 +2465,7 @@ int WID_SUSPEND_WTP(unsigned int WTPID)
 int WID_DISABLE_WLAN(unsigned char WlanID){
 	
 	msgq msg;
-	struct msgqlist *elem;
+//	struct msgqlist *elem;
 	if(AC_WLAN[WlanID]->Status == 0){
 		AC_WLAN[WlanID]->Status = 1;		
 		AsdWsm_WLANOp(WlanID, WID_MODIFY, 0);
@@ -2500,8 +2500,8 @@ int WID_DISABLE_WLAN(unsigned char WlanID){
 								wid_syslog_crit("%s msgsend %s",__func__,strerror(errno));
 								perror("msgsnd");
 							}
-						}
-						else{
+						}//delete unuseful code
+						/*else{
 							elem = (struct msgqlist*)malloc(sizeof(struct msgqlist));
 							if(elem == NULL){
 								wid_syslog_crit("%s malloc %s",__func__,strerror(errno));
@@ -2512,7 +2512,7 @@ int WID_DISABLE_WLAN(unsigned char WlanID){
 							elem->next = NULL;
 							memcpy((char*)&(elem->mqinfo),(char*)&(msg.mqinfo),sizeof(msg.mqinfo));
 							WID_INSERT_CONTROL_LIST(m, elem);
-						}
+						}*/
 						int type = 1;//manual
 						int flag = 0;//disable
 
@@ -2557,7 +2557,7 @@ int WLAN_FLOW_CHECK(unsigned char WlanID)
 	
 
 	msgq msg;
-	struct msgqlist *elem;
+//	struct msgqlist *elem;
 
 	int m = 0, m1 = 0;	
 	for(m = 0; m < WTP_NUM; m++){
@@ -2585,8 +2585,8 @@ int WLAN_FLOW_CHECK(unsigned char WlanID)
 								wid_syslog_crit("%s msgsend %s",__func__,strerror(errno));
 								perror("msgsnd");
 							}
-						}
-						else{
+						}//delete unuseful code
+						/*else{
 							elem = (struct msgqlist*)malloc(sizeof(struct msgqlist));
 							if(elem == NULL){			
 								wid_syslog_crit("%s malloc %s",__func__,strerror(errno));
@@ -2599,7 +2599,7 @@ int WLAN_FLOW_CHECK(unsigned char WlanID)
 							memcpy((char*)&(elem->mqinfo),(char*)&(msg.mqinfo),sizeof(msg.mqinfo));
 							
 							WID_INSERT_CONTROL_LIST(m, elem);
-						}
+						}*/
 						
 						
 							
@@ -2687,7 +2687,7 @@ int WID_wds_disable(unsigned char WlanID,unsigned char wds_mesh)
 int WID_wds_enable(unsigned char WlanID,unsigned char wds_mesh)
 {
 	msgq msg;
-	struct msgqlist *elem;
+//	struct msgqlist *elem;
 	
 	if(AC_WLAN[WlanID]->Status == 1)
 	{
@@ -2744,8 +2744,8 @@ int WID_wds_enable(unsigned char WlanID,unsigned char wds_mesh)
 									wid_syslog_crit("%s msgsend %s",__func__,strerror(errno));
 									perror("msgsnd");
 								}
-							}
-							else{
+							}//delete unuseful code
+							/*else{
 								elem = (struct msgqlist*)malloc(sizeof(struct msgqlist));
 								if(elem == NULL){
 									wid_syslog_crit("%s malloc %s",__func__,strerror(errno));
@@ -2758,7 +2758,7 @@ int WID_wds_enable(unsigned char WlanID,unsigned char wds_mesh)
 								WID_INSERT_CONTROL_LIST(m, elem);
 
 							
-							}
+							}*/
 
 							AC_BSS[BSSIndex]->WDSStat = WDS_ANY;
 						}
@@ -2778,7 +2778,7 @@ int WID_wds_enable(unsigned char WlanID,unsigned char wds_mesh)
 int WID_ENABLE_WLAN(unsigned char WlanID){
 	WTPQUITREASON quitreason = WTP_INIT;
 	msgq msg;
-	struct msgqlist *elem;
+//	struct msgqlist *elem;
 	unsigned int bssindex;	
 	char buf[DEFAULT_LEN];
 	struct wds_bssid *wds = NULL;
@@ -2787,7 +2787,7 @@ int WID_ENABLE_WLAN(unsigned char WlanID){
 	struct msgqlist *elem2;
 	
 	msgq msg4 ;
-	struct msgqlist *elem4 = NULL; 
+//	struct msgqlist *elem4 = NULL; 
 	char *command = NULL;
 	char *ath_str = NULL;
 	if(AC_WLAN[WlanID]->Wlan_Ifi == NULL)
@@ -3083,8 +3083,8 @@ int WID_ENABLE_WLAN(unsigned char WlanID){
 										wid_syslog_crit("%s msgsend %s",__func__,strerror(errno));
 										perror("msgsnd");
 									}
-								}
-								else{
+								}//delete unuseful code
+								/*else{
 									elem = (struct msgqlist*)malloc(sizeof(struct msgqlist));
 									if(elem == NULL){
 										wid_syslog_crit("%s malloc %s",__func__,strerror(errno));
@@ -3095,13 +3095,13 @@ int WID_ENABLE_WLAN(unsigned char WlanID){
 									elem->next = NULL;
 									memcpy((char*)&(elem->mqinfo),(char*)&(msg.mqinfo),sizeof(msg.mqinfo));
 									WID_INSERT_CONTROL_LIST(m, elem);
-								}
+								}*/
 								//wei chao add flow check 2011.11.03
 								
 							if((AC_WLAN[WlanID]->SecurityType == IEEE8021X)||(AC_WLAN[WlanID]->SecurityType ==WPA_E)||(AC_WLAN[WlanID]->SecurityType ==WPA2_E)||(AC_WLAN[WlanID]->SecurityType ==MD5))
 							{
 									msgq msg3;
-									struct msgqlist *elem3;
+//									struct msgqlist *elem3;
 									msg3.mqid = m%THREAD_NUM+1;
 									msg3.mqinfo.WTPID = m;
 									msg3.mqinfo.type = CONTROL_TYPE;
@@ -3117,8 +3117,8 @@ int WID_ENABLE_WLAN(unsigned char WlanID){
 											wid_syslog_crit("%s msgsend %s",__func__,strerror(errno));
 											perror("msgsnd");
 										}
-									}
-								else{
+									}//delete unuseful code
+								/*else{
 									elem3 = (struct msgqlist*)malloc(sizeof(struct msgqlist));
 									if(elem3 == NULL){			
 										wid_syslog_crit("%s malloc %s",__func__,strerror(errno));
@@ -3130,7 +3130,7 @@ int WID_ENABLE_WLAN(unsigned char WlanID){
 									elem3->next = NULL;
 									memcpy((char*)&(elem3->mqinfo),(char*)&(msg3.mqinfo),sizeof(msg3.mqinfo));
 									WID_INSERT_CONTROL_LIST(m, elem3);
-								}
+								}*/
 							}
 							//weichao add 
 								command = (char *)malloc(sizeof(char)*100);
@@ -3164,8 +3164,8 @@ int WID_ENABLE_WLAN(unsigned char WlanID){
 										wid_syslog_crit("%s msgsend %s",__func__,strerror(errno));
 										perror("msgsnd");
 									}
-								}
-								else{
+								}//delete unuseful code
+								/*else{
 									elem4 = (struct msgqlist*)malloc(sizeof(struct msgqlist));
 									if(elem4 == NULL){
 										wid_syslog_crit("%s malloc %s",__func__,strerror(errno));
@@ -3184,7 +3184,7 @@ int WID_ENABLE_WLAN(unsigned char WlanID){
 									elem4->next = NULL;
 									memcpy((char*)&(elem4->mqinfo),(char*)&(msg4.mqinfo),sizeof(msg4.mqinfo));
 									WID_INSERT_CONTROL_LIST(m, elem4);
-								}
+								}*/
 							
 							
 							free(command);
@@ -3542,7 +3542,7 @@ int wid_set_ap_eth_if_mtu(unsigned int wtpid,unsigned char eth_index)
 {
 //	int ret = 0;
 	msgq msg;
-	struct msgqlist *elem;
+//	struct msgqlist *elem;
 
 	if((AC_WTP[wtpid] != NULL)&&(AC_WTP[wtpid]->WTPStat == 5))
 	{
@@ -3564,7 +3564,8 @@ int wid_set_ap_eth_if_mtu(unsigned int wtpid,unsigned char eth_index)
 			}
 		}
 		CWThreadMutexUnlock(&(gWTPs[wtpid].WTPThreadMutex));
-	}else if((AC_WTP[wtpid] != NULL)){
+	}//delete unuseful code
+	/*else if((AC_WTP[wtpid] != NULL)){
 		memset((char*)&msg, 0, sizeof(msg));
 		msg.mqid = wtpid%THREAD_NUM+1;
 		msg.mqinfo.WTPID = wtpid;
@@ -3583,7 +3584,7 @@ int wid_set_ap_eth_if_mtu(unsigned int wtpid,unsigned char eth_index)
 		elem->next = NULL;
 		memcpy((char*)&(elem->mqinfo),(char*)&(msg.mqinfo),sizeof(msg.mqinfo));
 		WID_INSERT_CONTROL_LIST(wtpid, elem);
-	}
+	}*/
 	wid_syslog_debug_debug(WID_DEFAULT," wtpid %d,wid_set_ap_eth_if_mtu\n",wtpid);
 	return 0;
 }
@@ -3996,6 +3997,7 @@ int Delete_Bind_Interface_For_WID(struct ifi_info *ifi){
 		tmp = tmp_next;
 		tmp_next = tmp->if_next;
 	}
+	Check_gACSokcet_Poll(&gACSocket);
 	return 0;
 }
 void Check_Current_Interface_and_delete(char * ifname, struct ifi_info *ifi){
@@ -4288,6 +4290,7 @@ int Delete_listenning_IF(char * ifname){
 	{
 		wid_syslog_debug_debug(WID_DBUS, "%s %d gACSocket.count = 0\n", __func__, __LINE__);
 	}
+	Check_gACSokcet_Poll(&gACSocket);
 	if (WID_IF == NULL || gACSocket.interfaces== NULL)
 	{
 		wid_syslog_info("%s %d either WID_IF or gACSocket is empty!!!\n", __func__, __LINE__);
@@ -4390,6 +4393,7 @@ int Delete_listenning_IP(unsigned int ipaddr,LISTEN_FLAG flag){
 			tmp_next = tmp->if_next;
 		}
 	}
+	Check_gACSokcet_Poll(&gACSocket);
 	return 0;
 }
 
@@ -4589,7 +4593,8 @@ int Bind_BroadAddr_For_WID(struct ifi_info *ifi, int port){
 			p->if_next = NULL;
 		}
 		gACSocket.count++; // we add a socket to the multihomed socket
-		
+		Check_gACSokcet_Poll(&gACSocket);
+
 	}
 	return 0;
 }
@@ -4860,7 +4865,8 @@ int Bind_Interface_For_WID(struct ifi_info *ifi, int port,LISTEN_FLAG lic_flag){
 			p->if_next = NULL;
 		}
 		gACSocket.count++; // we add a socket to the multihomed socket
-		
+		Check_gACSokcet_Poll(&gACSocket);
+
 /*		
 		if (ifi->ifi_flags & IFF_BROADCAST) { // try to bind broadcast address
 			if((sock = socket(ifi->ifi_addr->sa_family, SOCK_DGRAM, 0)) < 0) {
@@ -4926,6 +4932,84 @@ int Bind_Interface_For_WID(struct ifi_info *ifi, int port,LISTEN_FLAG lic_flag){
 	return 0;
 }
 
+int Repair_WID_Listening_Socket(struct CWMultiHomedInterface *inf){
+	wid_syslog_info("$$$$$$%s,%d some socket error will repair it\n",__func__,__LINE__);
+	if(inf == NULL){return -1;}
+	struct CWMultiHomedInterface *tmp = gACSocket.interfaces;
+	struct CWMultiHomedInterface *pre = gACSocket.interfaces;
+	CWNetworkLev4Address *paddr = NULL;
+	struct sockaddr *ptmp = NULL;
+	int yes = 1;
+	CWSocket sock = -1;
+	if((gACSocket.count == 0)||(tmp == NULL))
+		return -1;
+	while(tmp != NULL){
+		pre = tmp;
+		if(memcmp(inf,tmp,sizeof(struct CWMultiHomedInterface)) == 0){
+			if(close(tmp->sock)< 0)
+				wid_syslog_info("%s,%d errror:%s\n",__func__,__LINE__,strerror(errno));
+			paddr = &(tmp->addr);
+			ptmp = (struct sockaddr*)&(tmp->addr);
+			/*if happen error wid not listen this socket*/
+			if((sock = socket(ptmp->sa_family, SOCK_DGRAM, 0)) < 0){
+				wid_syslog_info("%s,%d errror:%s\n",__func__,__LINE__,strerror(errno));
+				wid_syslog_info("%s,%d wid socket repair error\n",__func__,__LINE__);
+				pre = tmp->if_next;
+				free(tmp);
+				tmp = NULL;
+				return -1;
+			}
+			setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes));
+			/*if happen error wid not listen this socket*/
+			if(bind(sock, (struct sockaddr*) paddr, CWNetworkGetAddressSize((CWNetworkLev4Address*)paddr)) < 0) {
+				close(sock);
+				wid_syslog_info("%s,%d errror:%s\n",__func__,__LINE__,strerror(errno));
+				wid_syslog_info("%s,%d socket repair error\n",__func__,__LINE__);
+				pre = tmp->if_next;
+				free(tmp);
+				tmp = NULL;
+				return -1;
+			}
+			tmp->sock = sock;
+			break;
+		}
+		tmp = tmp->if_next;
+	}
+	return 0;
+}
+void Check_gACSokcet_Poll(CWMultiHomedSocket *ptr){
+
+	//poll it
+	//remalloc memory for pfd
+	struct pollfd *tmp = NULL;
+	int i = 0;
+	if(ptr == NULL) return;
+	struct CWMultiHomedInterface *inf = ptr->interfaces;
+	for(i = 0;(i<ptr->count)&&(inf);i++){
+		inf = inf->if_next;
+	}
+	ptr->count = i;
+	tmp = malloc(sizeof(struct pollfd)*(ptr->count + 1));// +1 for poll netlink socket
+	if(tmp == NULL){
+		wid_syslog_info("%s,%d malloc gACSocket.pfd failed\n",__func__,__LINE__);
+		return;
+	}
+	else{
+		if(ptr->pfd){
+			free(ptr->pfd);
+			ptr->pfd = NULL;
+
+		}
+		ptr->pfd = tmp;
+		memset(ptr->pfd,0,(sizeof(struct pollfd)*(ptr->count + 1)));
+	}
+	inf = ptr->interfaces;
+	for(i = 0;(i<ptr->count)&&(inf);i++){
+		ptr->pfd[i].fd = inf->sock;
+		ptr->pfd[i].events = POLLIN|POLLPRI;
+		inf = inf->if_next;
+	}
+}
 void Check_WLAN_WTP_IF_Index(struct ifi_info *ifi, char *ifname){
 	int i, j;
 	for(i = 1;i < WTP_NUM; i++){
@@ -6095,7 +6179,11 @@ int WID_WLAN_L3IF_POLICY_BR(unsigned char WlanID, unsigned char wlanPolicy)
 		wid_syslog_debug_debug(WID_DEFAULT,"from wlan to no");
 		
 		if(AC_WLAN[WlanID]->wlan_if_policy == WLAN_INTERFACE)
-			set_wlan_tunnel_mode(WlanID, 0);
+		ret = set_wlan_tunnel_mode(WlanID, 0);
+		if(ret != 0)
+		{
+			return ret;
+		}
 		ret = Delete_Wlan_L3_BR_Interface(WlanID);	
 		if(ret < 0)
 		{
@@ -6861,7 +6949,7 @@ int WID_RADIO_BSS_TUNNEL_MODE(unsigned char WlanID,unsigned int wtpID,unsigned c
 	
 	if(AC_BSS[BSSindex]->BSS_TUNNEL_POLICY != bssPolicy){
 		msgq msg;
-		struct msgqlist *elem;
+//		struct msgqlist *elem;
 		memset((char*)&msg, 0, sizeof(msg));
 		wid_syslog_debug_debug(WID_DEFAULT,"*** wtp binding wlan id match success**\n");
 		msg.mqid = wtpID%THREAD_NUM+1;
@@ -6879,8 +6967,8 @@ int WID_RADIO_BSS_TUNNEL_MODE(unsigned char WlanID,unsigned int wtpID,unsigned c
 				wid_syslog_crit("%s msgsend %s",__func__,strerror(errno));
 				perror("msgsnd");
 			}
-		}
-		else{
+		}//delete unuseful code
+		/*else{
 			elem = (struct msgqlist*)malloc(sizeof(struct msgqlist));
 			if(elem == NULL){
 				wid_syslog_crit("%s malloc %s",__func__,strerror(errno));
@@ -6891,7 +6979,7 @@ int WID_RADIO_BSS_TUNNEL_MODE(unsigned char WlanID,unsigned int wtpID,unsigned c
 			elem->next = NULL;
 			memcpy((char*)&(elem->mqinfo),(char*)&(msg.mqinfo),sizeof(msg.mqinfo));
 			WID_INSERT_CONTROL_LIST(wtpID, elem);
-		}
+		}*/
 	}
 	AC_BSS[BSSindex]->BSS_TUNNEL_POLICY = bssPolicy;
 
@@ -6935,7 +7023,7 @@ int WID_RADIO_WLAN_TUNNEL_MODE(unsigned char WlanID,unsigned char Policy,char no
 						{
 							AC_BSS[bssindex]->BSS_TUNNEL_POLICY = Policy;
 							msgq msg;
-							struct msgqlist *elem;
+//							struct msgqlist *elem;
 							memset((char*)&msg, 0, sizeof(msg));
 							wid_syslog_debug_debug(WID_DEFAULT,"*** wtp binding wlan id match success**\n");
 							msg.mqid = i%THREAD_NUM+1;
@@ -6954,7 +7042,8 @@ int WID_RADIO_WLAN_TUNNEL_MODE(unsigned char WlanID,unsigned char Policy,char no
 									perror("msgsnd");
 								}
 							}
-							else{
+							//delete unuseful code
+							/*else{
 								elem = (struct msgqlist*)malloc(sizeof(struct msgqlist));
 								if(elem == NULL){
 									wid_syslog_crit("%s malloc %s",__func__,strerror(errno));
@@ -6965,7 +7054,7 @@ int WID_RADIO_WLAN_TUNNEL_MODE(unsigned char WlanID,unsigned char Policy,char no
 								elem->next = NULL;
 								memcpy((char*)&(elem->mqinfo),(char*)&(msg.mqinfo),sizeof(msg.mqinfo));
 								WID_INSERT_CONTROL_LIST(i, elem);
-							}
+							}*/
 						}
 						else if(AC_BSS[bssindex]->BSS_IF_POLICY == NO_INTERFACE)
 						{
@@ -9062,7 +9151,7 @@ int WID_ADD_WLAN_APPLY_RADIO(unsigned int RadioID,unsigned char WlanID){
 		return 0;
 	}
 	msgq msg;
-	struct msgqlist *elem;
+//	struct msgqlist *elem;
 	//add to control list
 	if((AC_WTP[WtpID] != NULL)&&(AC_WTP[WtpID]->WTPStat == 5))
 	{
@@ -9090,8 +9179,8 @@ int WID_ADD_WLAN_APPLY_RADIO(unsigned int RadioID,unsigned char WlanID){
 				wid_syslog_crit("%s msgsend %s",__func__,strerror(errno));
 			perror("msgsnd");
 		}
-	}
-	else if((AC_WTP[WtpID] != NULL))
+	}//delete unuseful code
+	/*else if((AC_WTP[WtpID] != NULL))
 	{
 		memset((char*)&msg, 0, sizeof(msg));
 		msg.mqid = WtpID%THREAD_NUM+1;
@@ -9107,8 +9196,8 @@ int WID_ADD_WLAN_APPLY_RADIO(unsigned int RadioID,unsigned char WlanID){
 		msg.mqinfo.u.WlanInfo.KeyLen = AC_WLAN[WlanID]->KeyLen;
 		msg.mqinfo.u.WlanInfo.SecurityType = AC_WLAN[WlanID]->SecurityType;
 		msg.mqinfo.u.WlanInfo.SecurityIndex = AC_WLAN[WlanID]->SecurityIndex;
-		msg.mqinfo.u.WlanInfo.asic_hex = AC_WLAN[WlanID]->asic_hex;/* 0 asic; 1 hex*/
-		msg.mqinfo.u.WlanInfo.Roaming_Policy = AC_WLAN[WlanID]->Roaming_Policy;			/*Roaming (1 enable /0 disable)*/
+		msg.mqinfo.u.WlanInfo.asic_hex = AC_WLAN[WlanID]->asic_hex;
+		msg.mqinfo.u.WlanInfo.Roaming_Policy = AC_WLAN[WlanID]->Roaming_Policy;
 		memset(msg.mqinfo.u.WlanInfo.WlanEssid,0,ESSID_LENGTH);
 		memcpy(msg.mqinfo.u.WlanInfo.WlanEssid,AC_WLAN[WlanID]->ESSID,ESSID_LENGTH);
 		msg.mqinfo.u.WlanInfo.bssindex = AC_WLAN[WlanID]->S_WTP_BSS_List[WtpID][localradio_id];
@@ -9123,7 +9212,7 @@ int WID_ADD_WLAN_APPLY_RADIO(unsigned int RadioID,unsigned char WlanID){
 		elem->next = NULL;
 		memcpy((char*)&(elem->mqinfo),(char*)&(msg.mqinfo),sizeof(msg.mqinfo));
 		WID_INSERT_CONTROL_LIST(WtpID, elem);		
-	}
+	}*/
 	if(AC_WTP[WtpID]!=NULL){
 		if((AC_WLAN[WlanID])&&(AC_WLAN[WlanID]->Status == 0))
 			WLAN_FLOW_CHECK(WlanID);
@@ -9155,7 +9244,7 @@ int WID_ADD_WLAN_APPLY_RADIO(unsigned int RadioID,unsigned char WlanID){
 		
 	if((AC_BSS[bssindex])&&(AC_BSS[bssindex]->BSS_IF_POLICY != NO_INTERFACE)&&(AC_BSS[bssindex]->BSS_TUNNEL_POLICY != CW_802_DOT_11_TUNNEL)){
 		msgq msg;
-		struct msgqlist *elem;
+//		struct msgqlist *elem;
 		memset((char*)&msg, 0, sizeof(msg));
 		wid_syslog_debug_debug(WID_DEFAULT,"*** %s,%d.**\n",__func__,__LINE__);
 		msg.mqid = WtpID%THREAD_NUM+1;
@@ -9173,8 +9262,8 @@ int WID_ADD_WLAN_APPLY_RADIO(unsigned int RadioID,unsigned char WlanID){
 				wid_syslog_crit("%s msgsend %s",__func__,strerror(errno));
 				perror("msgsnd");
 			}
-		}
-		else{
+		}//delete unuseful code
+		/*else{
 			elem = (struct msgqlist*)malloc(sizeof(struct msgqlist));
 			if(elem == NULL){
 				wid_syslog_crit("%s malloc %s",__func__,strerror(errno));
@@ -9185,7 +9274,7 @@ int WID_ADD_WLAN_APPLY_RADIO(unsigned int RadioID,unsigned char WlanID){
 			elem->next = NULL;
 			memcpy((char*)&(elem->mqinfo),(char*)&(msg.mqinfo),sizeof(msg.mqinfo));
 			WID_INSERT_CONTROL_LIST(WtpID, elem);
-		}
+		}*/
 	}	
 	if((AC_BSS[bssindex])&&(AC_BSS[bssindex]->multi_user_optimize_switch == 1))
 	{
@@ -9499,7 +9588,7 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_VLANID(unsigned int RadioID,unsigned char Wlan
 		return 0;
 	}
 	msgq msg;
-	struct msgqlist *elem;
+//	struct msgqlist *elem;
 	//add to control list
 	if((AC_WTP[WtpID] != NULL)&&(AC_WTP[WtpID]->WTPStat == 5))
 	{
@@ -9528,8 +9617,8 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_VLANID(unsigned int RadioID,unsigned char Wlan
 			wid_syslog_crit("%s msgsend %s",__func__,strerror(errno));
 			perror("msgsnd");
 		}
-	}
-	else if((AC_WTP[WtpID] != NULL))
+	}//delete unuseful code
+	/*else if((AC_WTP[WtpID] != NULL))
 	{
 		memset((char*)&msg, 0, sizeof(msg));
 		msg.mqid = WtpID%THREAD_NUM+1;
@@ -9546,8 +9635,8 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_VLANID(unsigned int RadioID,unsigned char Wlan
 		msg.mqinfo.u.WlanInfo.KeyLen = AC_WLAN[WlanID]->KeyLen;
 		msg.mqinfo.u.WlanInfo.SecurityType = AC_WLAN[WlanID]->SecurityType;
 		msg.mqinfo.u.WlanInfo.SecurityIndex = AC_WLAN[WlanID]->SecurityIndex;
-		msg.mqinfo.u.WlanInfo.asic_hex = AC_WLAN[WlanID]->asic_hex;/* 0 asic; 1 hex*/
-		msg.mqinfo.u.WlanInfo.Roaming_Policy = AC_WLAN[WlanID]->Roaming_Policy;			/*Roaming (1 enable /0 disable)*/
+		msg.mqinfo.u.WlanInfo.asic_hex = AC_WLAN[WlanID]->asic_hex;
+		msg.mqinfo.u.WlanInfo.Roaming_Policy = AC_WLAN[WlanID]->Roaming_Policy;	
 		memset(msg.mqinfo.u.WlanInfo.WlanEssid,0,ESSID_LENGTH);
 		memcpy(msg.mqinfo.u.WlanInfo.WlanEssid,AC_WLAN[WlanID]->ESSID,ESSID_LENGTH);
 		msg.mqinfo.u.WlanInfo.bssindex = AC_WLAN[WlanID]->S_WTP_BSS_List[WtpID][localradio_id];
@@ -9562,11 +9651,11 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_VLANID(unsigned int RadioID,unsigned char Wlan
 		elem->next = NULL;
 		memcpy((char*)&(elem->mqinfo),(char*)&(msg.mqinfo),sizeof(msg.mqinfo));
 		WID_INSERT_CONTROL_LIST(WtpID, elem);		
-	}	
+	}*/
 	int bssindex = AC_WLAN[WlanID]->S_WTP_BSS_List[WtpID][localradio_id];
 	if((AC_BSS[bssindex])&&(AC_BSS[bssindex]->BSS_IF_POLICY != NO_INTERFACE)&&(AC_BSS[bssindex]->BSS_TUNNEL_POLICY != CW_802_DOT_11_TUNNEL)){
 		msgq msg;
-		struct msgqlist *elem;
+//		struct msgqlist *elem;
 		memset((char*)&msg, 0, sizeof(msg));
 		wid_syslog_debug_debug(WID_DEFAULT,"*** %s,%d.**\n",__func__,__LINE__);
 		msg.mqid = WtpID%THREAD_NUM+1;
@@ -9584,8 +9673,8 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_VLANID(unsigned int RadioID,unsigned char Wlan
 				wid_syslog_crit("%s msgsend %s",__func__,strerror(errno));
 				perror("msgsnd");
 			}
-		}
-		else{
+		}//delete unuseful cod
+		/*else{
 			elem = (struct msgqlist*)malloc(sizeof(struct msgqlist));
 			if(elem == NULL){
 				wid_syslog_crit("%s malloc %s",__func__,strerror(errno));
@@ -9596,7 +9685,7 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_VLANID(unsigned int RadioID,unsigned char Wlan
 			elem->next = NULL;
 			memcpy((char*)&(elem->mqinfo),(char*)&(msg.mqinfo),sizeof(msg.mqinfo));
 			WID_INSERT_CONTROL_LIST(WtpID, elem);
-		}
+		}*/
 	}
 	if(AC_WTP[WtpID]!=NULL){
 		if((AC_WLAN[WlanID])&&(AC_WLAN[WlanID]->Status == 0))
@@ -9909,7 +9998,7 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_NAS_PORT_ID(unsigned int RadioID,unsigned char
 		return 0;
 	}
 	msgq msg;
-	struct msgqlist *elem;
+//	struct msgqlist *elem;
 	//add to control list
 	if((AC_WTP[WtpID] != NULL)&&(AC_WTP[WtpID]->WTPStat == 5))
 	{
@@ -9938,8 +10027,8 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_NAS_PORT_ID(unsigned int RadioID,unsigned char
 			wid_syslog_crit("%s msgsend %s",__func__,strerror(errno));
 			perror("msgsnd");
 		}
-	}
-	else if((AC_WTP[WtpID] != NULL))
+	}//delete unuseful cod
+	/*else if((AC_WTP[WtpID] != NULL))
 	{
 		memset((char*)&msg, 0, sizeof(msg));
 		msg.mqid = WtpID%THREAD_NUM+1;
@@ -9956,8 +10045,8 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_NAS_PORT_ID(unsigned int RadioID,unsigned char
 		msg.mqinfo.u.WlanInfo.KeyLen = AC_WLAN[WlanID]->KeyLen;
 		msg.mqinfo.u.WlanInfo.SecurityType = AC_WLAN[WlanID]->SecurityType;
 		msg.mqinfo.u.WlanInfo.SecurityIndex = AC_WLAN[WlanID]->SecurityIndex;
-		msg.mqinfo.u.WlanInfo.asic_hex = AC_WLAN[WlanID]->asic_hex;/* 0 asic; 1 hex*/
-		msg.mqinfo.u.WlanInfo.Roaming_Policy = AC_WLAN[WlanID]->Roaming_Policy;			/*Roaming (1 enable /0 disable)*/
+		msg.mqinfo.u.WlanInfo.asic_hex = AC_WLAN[WlanID]->asic_hex;
+		msg.mqinfo.u.WlanInfo.Roaming_Policy = AC_WLAN[WlanID]->Roaming_Policy;	
 		memset(msg.mqinfo.u.WlanInfo.WlanEssid,0,ESSID_LENGTH);
 		memcpy(msg.mqinfo.u.WlanInfo.WlanEssid,AC_WLAN[WlanID]->ESSID,ESSID_LENGTH);
 		msg.mqinfo.u.WlanInfo.bssindex = AC_WLAN[WlanID]->S_WTP_BSS_List[WtpID][localradio_id];
@@ -9972,7 +10061,7 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_NAS_PORT_ID(unsigned int RadioID,unsigned char
 		elem->next = NULL;
 		memcpy((char*)&(elem->mqinfo),(char*)&(msg.mqinfo),sizeof(msg.mqinfo));
 		WID_INSERT_CONTROL_LIST(WtpID, elem);		
-	}	
+	}*/
 	if(AC_WTP[WtpID]!=NULL){
 		if((AC_WLAN[WlanID])&&(AC_WLAN[WlanID]->Status == 0))
 			WLAN_FLOW_CHECK(WlanID);
@@ -9980,7 +10069,7 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_NAS_PORT_ID(unsigned int RadioID,unsigned char
 	int bssindex = AC_WLAN[WlanID]->S_WTP_BSS_List[WtpID][localradio_id];
 	if((AC_BSS[bssindex])&&(AC_BSS[bssindex]->BSS_IF_POLICY != NO_INTERFACE)&&(AC_BSS[bssindex]->BSS_TUNNEL_POLICY != CW_802_DOT_11_TUNNEL)){
 		msgq msg;
-		struct msgqlist *elem;
+//		struct msgqlist *elem;
 		memset((char*)&msg, 0, sizeof(msg));
 		wid_syslog_debug_debug(WID_DEFAULT,"*** %s,%d.**\n",__func__,__LINE__);
 		msg.mqid = WtpID%THREAD_NUM+1;
@@ -9998,8 +10087,8 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_NAS_PORT_ID(unsigned int RadioID,unsigned char
 				wid_syslog_crit("%s msgsend %s",__func__,strerror(errno));
 				perror("msgsnd");
 			}
-		}
-		else{
+		}//delete unuseful cod
+		/*else{
 			elem = (struct msgqlist*)malloc(sizeof(struct msgqlist));
 			if(elem == NULL){
 				wid_syslog_crit("%s malloc %s",__func__,strerror(errno));
@@ -10010,7 +10099,7 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_NAS_PORT_ID(unsigned int RadioID,unsigned char
 			elem->next = NULL;
 			memcpy((char*)&(elem->mqinfo),(char*)&(msg.mqinfo),sizeof(msg.mqinfo));
 			WID_INSERT_CONTROL_LIST(WtpID, elem);
-		}
+		}*/
 	}
 	if((AC_RADIO[RadioID]->BSS[k1])&&(AC_RADIO[RadioID]->BSS[k1]->multi_user_optimize_switch == 1))
 	{
@@ -10342,7 +10431,7 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_HOTSPOT_ID(unsigned int RadioID,unsigned char 
 		return 0;
 	}
 	msgq msg;
-	struct msgqlist *elem;
+//	struct msgqlist *elem;
 	//add to control list
 	if((AC_WTP[WtpID] != NULL)&&(AC_WTP[WtpID]->WTPStat == 5))
 	{
@@ -10371,8 +10460,8 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_HOTSPOT_ID(unsigned int RadioID,unsigned char 
 			wid_syslog_crit("%s msgsend %s",__func__,strerror(errno));
 			perror("msgsnd");
 		}
-	}
-	else if((AC_WTP[WtpID] != NULL))
+	}//delete unuseful cod
+	/*else if((AC_WTP[WtpID] != NULL))
 	{
 		memset((char*)&msg, 0, sizeof(msg));
 		msg.mqid = WtpID%THREAD_NUM+1;
@@ -10389,8 +10478,8 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_HOTSPOT_ID(unsigned int RadioID,unsigned char 
 		msg.mqinfo.u.WlanInfo.KeyLen = AC_WLAN[WlanID]->KeyLen;
 		msg.mqinfo.u.WlanInfo.SecurityType = AC_WLAN[WlanID]->SecurityType;
 		msg.mqinfo.u.WlanInfo.SecurityIndex = AC_WLAN[WlanID]->SecurityIndex;
-		msg.mqinfo.u.WlanInfo.asic_hex = AC_WLAN[WlanID]->asic_hex;/* 0 asic; 1 hex*/
-		msg.mqinfo.u.WlanInfo.Roaming_Policy = AC_WLAN[WlanID]->Roaming_Policy;			/*Roaming (1 enable /0 disable)*/
+		msg.mqinfo.u.WlanInfo.asic_hex = AC_WLAN[WlanID]->asic_hex;
+		msg.mqinfo.u.WlanInfo.Roaming_Policy = AC_WLAN[WlanID]->Roaming_Policy;	
 		memset(msg.mqinfo.u.WlanInfo.WlanEssid,0,ESSID_LENGTH);
 		memcpy(msg.mqinfo.u.WlanInfo.WlanEssid,AC_WLAN[WlanID]->ESSID,ESSID_LENGTH);
 		msg.mqinfo.u.WlanInfo.bssindex = AC_WLAN[WlanID]->S_WTP_BSS_List[WtpID][localradio_id];
@@ -10405,7 +10494,7 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_HOTSPOT_ID(unsigned int RadioID,unsigned char 
 		elem->next = NULL;
 		memcpy((char*)&(elem->mqinfo),(char*)&(msg.mqinfo),sizeof(msg.mqinfo));
 		WID_INSERT_CONTROL_LIST(WtpID, elem);		
-	}	
+	}*/
 	if(AC_WTP[WtpID]!=NULL){
 		if((AC_WLAN[WlanID])&&(AC_WLAN[WlanID]->Status == 0))
 			WLAN_FLOW_CHECK(WlanID);
@@ -10413,7 +10502,7 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_HOTSPOT_ID(unsigned int RadioID,unsigned char 
 	int bssindex = AC_WLAN[WlanID]->S_WTP_BSS_List[WtpID][localradio_id];
 	if((AC_BSS[bssindex])&&(AC_BSS[bssindex]->BSS_IF_POLICY != NO_INTERFACE)&&(AC_BSS[bssindex]->BSS_TUNNEL_POLICY != CW_802_DOT_11_TUNNEL)){
 		msgq msg;
-		struct msgqlist *elem;
+//		struct msgqlist *elem;
 		memset((char*)&msg, 0, sizeof(msg));
 		wid_syslog_debug_debug(WID_DEFAULT,"*** %s,%d.**\n",__func__,__LINE__);
 		msg.mqid = WtpID%THREAD_NUM+1;
@@ -10431,8 +10520,8 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_HOTSPOT_ID(unsigned int RadioID,unsigned char 
 				wid_syslog_crit("%s msgsend %s",__func__,strerror(errno));
 				perror("msgsnd");
 			}
-		}
-		else{
+		}//delete unuseful cod
+		/*else{
 			elem = (struct msgqlist*)malloc(sizeof(struct msgqlist));
 			if(elem == NULL){
 				wid_syslog_crit("%s malloc %s",__func__,strerror(errno));
@@ -10443,7 +10532,7 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_HOTSPOT_ID(unsigned int RadioID,unsigned char 
 			elem->next = NULL;
 			memcpy((char*)&(elem->mqinfo),(char*)&(msg.mqinfo),sizeof(msg.mqinfo));
 			WID_INSERT_CONTROL_LIST(WtpID, elem);
-		}
+		}*/
 	}	
 	if((AC_RADIO[RadioID]->BSS[k1])&&(AC_RADIO[RadioID]->BSS[k1]->multi_user_optimize_switch == 1))
 	{
@@ -11379,7 +11468,7 @@ int WID_ENABLE_WLAN_APPLY_RADIO(unsigned int RadioId, unsigned char WlanId)
 {
 	msgq msg2;
 	msgq msg4 ;
-	struct msgqlist *elem4 = NULL; 
+//	struct msgqlist *elem4 = NULL; 
 	char *command = NULL;
 	char *ath_str = NULL;
 	struct msgqlist *elem2;
@@ -11649,7 +11738,7 @@ int WID_ENABLE_WLAN_APPLY_RADIO(unsigned int RadioId, unsigned char WlanId)
 		if((AC_WLAN[WlanId]->SecurityType == IEEE8021X)||(AC_WLAN[WlanId]->SecurityType ==WPA_E)||(AC_WLAN[WlanId]->SecurityType ==WPA2_E)||(AC_WLAN[WlanId]->SecurityType ==MD5))
 		{
 			msgq msg3;
-			struct msgqlist *elem3;
+//			struct msgqlist *elem3;
 			msg3.mqid = WtpID%THREAD_NUM +1;
 			msg3.mqinfo.WTPID = WtpID;
 			msg3.mqinfo.type = CONTROL_TYPE;
@@ -11665,8 +11754,8 @@ int WID_ENABLE_WLAN_APPLY_RADIO(unsigned int RadioId, unsigned char WlanId)
 					wid_syslog_crit("%s msgsend %s",__func__,strerror(errno));
 					perror("msgsnd");
 				}
-			}
-		else{
+			}//delete unuseful cod
+		/*else{
 				elem3 = (struct msgqlist*)malloc(sizeof(struct msgqlist));
 				if(elem3 == NULL){			
 					wid_syslog_crit("%s malloc %s",__func__,strerror(errno));
@@ -11678,7 +11767,7 @@ int WID_ENABLE_WLAN_APPLY_RADIO(unsigned int RadioId, unsigned char WlanId)
 				elem3->next = NULL;
 				memcpy((char*)&(elem3->mqinfo),(char*)&(msg3.mqinfo),sizeof(msg3.mqinfo));
 				WID_INSERT_CONTROL_LIST(WtpID, elem3);
-			}
+			}*/
 		}
 		//weichao add 
 			if(AC_WLAN[WlanId]->Status == 0){
@@ -11712,8 +11801,8 @@ int WID_ENABLE_WLAN_APPLY_RADIO(unsigned int RadioId, unsigned char WlanId)
 						wid_syslog_crit("%s msgsend %s",__func__,strerror(errno));
 						perror("msgsnd");
 					}
-				}
-			else{
+				}//delete unuseful cod
+			/*else{
 				elem4 = (struct msgqlist*)malloc(sizeof(struct msgqlist));
 				if(elem4 == NULL){			
 					wid_syslog_crit("%s malloc %s",__func__,strerror(errno));
@@ -11725,7 +11814,7 @@ int WID_ENABLE_WLAN_APPLY_RADIO(unsigned int RadioId, unsigned char WlanId)
 				elem4->next = NULL;
 				memcpy((char*)&(elem4->mqinfo),(char*)&(msg4.mqinfo),sizeof(msg4.mqinfo));
 				WID_INSERT_CONTROL_LIST(WtpID, elem4);
-			}
+			}*/
 			free(command);
 			command = NULL;
 			free(ath_str);
@@ -15752,7 +15841,7 @@ int wid_set_ap_statistics_interval(unsigned int wtpid,unsigned int apstatics_int
 {
 	int i = 0;
 	msgq msg;
-	struct msgqlist *elem;
+//	struct msgqlist *elem;
 	if(wtpid == 0){
 		for(i=0; i<WTP_NUM; i++)
 		{
@@ -15809,7 +15898,8 @@ int wid_set_ap_statistics_interval(unsigned int wtpid,unsigned int apstatics_int
 				}
 			}		
 			CWThreadMutexUnlock(&(gWTPs[WTPIndex].WTPThreadMutex));
-		}else if(AC_WTP[wtpid] != NULL){
+		}//delete unuseful cod
+		/*else if(AC_WTP[wtpid] != NULL){
 				memset((char*)&msg, 0, sizeof(msg));
 				msg.mqid = wtpid%THREAD_NUM+1;
 				msg.mqinfo.WTPID = wtpid;
@@ -15828,7 +15918,7 @@ int wid_set_ap_statistics_interval(unsigned int wtpid,unsigned int apstatics_int
 				elem->next = NULL;
 				memcpy((char*)&(elem->mqinfo),(char*)&(msg.mqinfo),sizeof(msg.mqinfo));
 				WID_INSERT_CONTROL_LIST(wtpid, elem);
-			}
+			}*/
 	}
 	return 0;
 
@@ -16472,9 +16562,9 @@ int wid_set_ap_timestamp(int timestamp)
 int wid_radio_set_extension_command(int wtpid, char * command)
 {
 	msgq msg;
-	struct msgqlist *elem;
+//	struct msgqlist *elem;
 	
-	int WTPIndex = wtpid;
+//	int WTPIndex = wtpid;
 	free(AC_WTP[wtpid]->WTP_Radio[0]->excommand);
 	AC_WTP[wtpid]->WTP_Radio[0]->excommand = NULL;
 	
@@ -16517,7 +16607,8 @@ int wid_radio_set_extension_command(int wtpid, char * command)
 			}
 		}		
 		CWThreadMutexUnlock(&(gWTPs[WTPIndex].WTPThreadMutex));
-	}else if((AC_WTP[wtpid] != NULL)){
+	}//delete unuseful cod
+	/*else if((AC_WTP[wtpid] != NULL)){
 		memset((char*)&msg, 0, sizeof(msg));
 		msg.mqid = WTPIndex%THREAD_NUM+1;
 		msg.mqinfo.WTPID = WTPIndex;
@@ -16536,15 +16627,13 @@ int wid_radio_set_extension_command(int wtpid, char * command)
 		elem->next = NULL;
 		memcpy((char*)&(elem->mqinfo),(char*)&(msg.mqinfo),sizeof(msg.mqinfo));
 		WID_INSERT_CONTROL_LIST(wtpid, elem);
-	}
-
-	
+	}*/	
 	return 0;	
 }
 int wid_radio_set_option60_parameter(int wtpid, char * parameter)
 {
 	msgq msg;
-	struct msgqlist *elem;
+//	struct msgqlist *elem;
 	
 	int WTPIndex = wtpid;
 	if(AC_WTP[WTPIndex]->option60_param != NULL){
@@ -16573,7 +16662,8 @@ int wid_radio_set_option60_parameter(int wtpid, char * parameter)
 			}
 		}		
 		CWThreadMutexUnlock(&(gWTPs[WTPIndex].WTPThreadMutex));
-	}else if((AC_WTP[wtpid] != NULL)){
+	}//delete unuseful cod
+	/*else if((AC_WTP[wtpid] != NULL)){
 		memset((char*)&msg, 0, sizeof(msg));
 		msg.mqid = WTPIndex%THREAD_NUM+1;
 		msg.mqinfo.WTPID = WTPIndex;
@@ -16592,9 +16682,7 @@ int wid_radio_set_option60_parameter(int wtpid, char * parameter)
 		elem->next = NULL;
 		memcpy((char*)&(elem->mqinfo),(char*)&(msg.mqinfo),sizeof(msg.mqinfo));
 		WID_INSERT_CONTROL_LIST(wtpid, elem);
-	}
-
-	
+	}*/	
 	return 0;	
 }
 
@@ -17069,7 +17157,7 @@ void channel_interference_detected(int wtpid)
 int wid_send_to_ap_extension_infomation(unsigned int wtpid)
 {
 	msgq msg;
-	struct msgqlist *elem;
+//	struct msgqlist *elem;
 	//if(gWTPs[wtpid].currentState != CW_ENTER_RUN)
 	{
 		//return WTP_NOT_IN_RUN_STATE;
@@ -17098,8 +17186,8 @@ int wid_send_to_ap_extension_infomation(unsigned int wtpid)
 			}
 		}
 		CWThreadMutexUnlock(&(gWTPs[wtpid].WTPThreadMutex));
-	}
-	else if((AC_WTP[wtpid] != NULL)){
+	}//delete unuseful cod
+	/*else if((AC_WTP[wtpid] != NULL)){
 			memset((char*)&msg, 0, sizeof(msg));
 			msg.mqid = wtpid%THREAD_NUM+1;
 			msg.mqinfo.WTPID = wtpid;
@@ -17117,7 +17205,7 @@ int wid_send_to_ap_extension_infomation(unsigned int wtpid)
 			elem->next = NULL;
 			memcpy((char*)&(elem->mqinfo),(char*)&(msg.mqinfo),sizeof(msg.mqinfo));
 			WID_INSERT_CONTROL_LIST(wtpid, elem);
-		}
+		}*/
 
 	return 0;
 	
@@ -17150,7 +17238,8 @@ int wid_radio_wsm_sta_info_report(unsigned int wtpid,unsigned int l_radioid,unsi
 			}
 		}
 		CWThreadMutexUnlock(&(gWTPs[wtpid].WTPThreadMutex));
-	}else if((AC_WTP[wtpid] != NULL)){
+	}//delete unuseful cod
+	/*else if((AC_WTP[wtpid] != NULL)){
 			memset((char*)&msg, 0, sizeof(msg));
 			msg.mqid = wtpid%THREAD_NUM+1;
 			msg.mqinfo.WTPID = wtpid;
@@ -17172,14 +17261,14 @@ int wid_radio_wsm_sta_info_report(unsigned int wtpid,unsigned int l_radioid,unsi
 			memcpy((char*)&(elem->mqinfo),(char*)&(msg.mqinfo),sizeof(msg.mqinfo));
 			WID_INSERT_CONTROL_LIST(wtpid, elem);
 			elem = NULL;
-		}
+		}*/
 	return 0;
 }
 int wid_send_to_ap_sta_deauth_report(unsigned int wtpid)
 {
 	wid_syslog_debug_debug(WID_DEFAULT,"in func %s :  set %d wtp deauth %s",__func__,wtpid,AC_WTP[wtpid]->sta_deauth_message_reportswitch?"enable":"disable");
 	msgq msg;
-	struct msgqlist *elem;	
+//	struct msgqlist *elem;	
 	if(AC_WTP[wtpid]->WTPStat == 5)
 	{		
 		CWThreadMutexLock(&(gWTPs[wtpid].WTPThreadMutex));
@@ -17198,8 +17287,8 @@ int wid_send_to_ap_sta_deauth_report(unsigned int wtpid)
 			}
 		}
 		CWThreadMutexUnlock(&(gWTPs[wtpid].WTPThreadMutex));
-	}
-	else if((AC_WTP[wtpid] != NULL)){
+	}//delete unuseful cod
+	/*else if((AC_WTP[wtpid] != NULL)){
 			memset((char*)&msg, 0, sizeof(msg));
 			msg.mqid = wtpid%THREAD_NUM+1;
 			msg.mqinfo.WTPID = wtpid;
@@ -17217,7 +17306,7 @@ int wid_send_to_ap_sta_deauth_report(unsigned int wtpid)
 			elem->next = NULL;
 			memcpy((char*)&(elem->mqinfo),(char*)&(msg.mqinfo),sizeof(msg.mqinfo));
 			WID_INSERT_CONTROL_LIST(wtpid, elem);
-		}
+		}*/
 
 	return 0;
 	
@@ -17227,7 +17316,7 @@ int wid_send_to_ap_sta_flow_information_report(unsigned int wtpid)
 {
 	wid_syslog_debug_debug(WID_DEFAULT,"in func %s :  set %d wtp flow information %s",__func__,wtpid,AC_WTP[wtpid]->sta_flow_information_reportswitch?"enable":"disable");
 	msgq msg;
-	struct msgqlist *elem;	
+//	struct msgqlist *elem;	
 	if(AC_WTP[wtpid]->WTPStat == 5)
 	{		
 		CWThreadMutexLock(&(gWTPs[wtpid].WTPThreadMutex));
@@ -17246,8 +17335,8 @@ int wid_send_to_ap_sta_flow_information_report(unsigned int wtpid)
 			}
 		}
 		CWThreadMutexUnlock(&(gWTPs[wtpid].WTPThreadMutex));
-	}
-	else if((AC_WTP[wtpid] != NULL)){
+	}//delete unuseful cod
+	/*else if((AC_WTP[wtpid] != NULL)){
 			memset((char*)&msg, 0, sizeof(msg));
 			msg.mqid = wtpid%THREAD_NUM+1;
 			msg.mqinfo.WTPID = wtpid;
@@ -17265,7 +17354,7 @@ int wid_send_to_ap_sta_flow_information_report(unsigned int wtpid)
 			elem->next = NULL;
 			memcpy((char*)&(elem->mqinfo),(char*)&(msg.mqinfo),sizeof(msg.mqinfo));
 			WID_INSERT_CONTROL_LIST(wtpid, elem);
-		}
+		}*/
 
 	return 0;
 	
@@ -17274,7 +17363,7 @@ int wid_send_to_ap_sta_flow_information_report(unsigned int wtpid)
 int wid_send_to_ap_Terminal_Disturb_info(unsigned int wtpid)
 {
 	msgq msg;
-	struct msgqlist *elem;
+//	struct msgqlist *elem;
 		
 	if(AC_WTP[wtpid]->WTPStat == 5)
 	{
@@ -17298,9 +17387,9 @@ int wid_send_to_ap_Terminal_Disturb_info(unsigned int wtpid)
 			}
 		}
 		CWThreadMutexUnlock(&(gWTPs[wtpid].WTPThreadMutex));
-	}
+	}//delete unuseful cod
 	
-	else if((AC_WTP[wtpid] != NULL)){
+	/*else if((AC_WTP[wtpid] != NULL)){
 			memset((char*)&msg, 0, sizeof(msg));
 			msg.mqid = wtpid%THREAD_NUM+1;
 			msg.mqinfo.WTPID = wtpid;
@@ -17318,7 +17407,7 @@ int wid_send_to_ap_Terminal_Disturb_info(unsigned int wtpid)
 			elem->next = NULL;
 			memcpy((char*)&(elem->mqinfo),(char*)&(msg.mqinfo),sizeof(msg.mqinfo));
 			WID_INSERT_CONTROL_LIST(wtpid, elem);
-		}
+		}*/
 
 	return 0;
 	
@@ -17328,7 +17417,7 @@ int wid_send_to_ap_Terminal_Disturb_info(unsigned int wtpid)
 int setWtpNoRespToStaProReq(unsigned int wtpid,unsigned char l_radioid,unsigned char wlanid,unsigned int policy)
 {
 	msgq msg;
-	struct msgqlist *elem;
+//	struct msgqlist *elem;
 	wid_syslog_debug_debug(WID_DBUS,"%s,%d,wtp %d l_radio %d wlan:%d,policy=%d.\n",__func__,__LINE__,wtpid,l_radioid,wlanid,policy);
 	if((AC_WTP[wtpid] != NULL)&&(AC_WTP[wtpid]->WTPStat == 5))
 	{
@@ -17355,9 +17444,9 @@ int setWtpNoRespToStaProReq(unsigned int wtpid,unsigned char l_radioid,unsigned 
 			}
 		}
 		CWThreadMutexUnlock(&(gWTPs[wtpid].WTPThreadMutex));
-	}
+	}//delete unuseful cod
 	
-	else if((AC_WTP[wtpid] != NULL)){
+	/*else if((AC_WTP[wtpid] != NULL)){
 			memset((char*)&msg, 0, sizeof(msg));
 			msg.mqid = wtpid%THREAD_NUM+1;
 			msg.mqinfo.WTPID = wtpid;
@@ -17378,7 +17467,7 @@ int setWtpNoRespToStaProReq(unsigned int wtpid,unsigned char l_radioid,unsigned 
 			elem->next = NULL;
 			memcpy((char*)&(elem->mqinfo),(char*)&(msg.mqinfo),sizeof(msg.mqinfo));
 			WID_INSERT_CONTROL_LIST(wtpid, elem);
-		}
+		}*/
 
 	return 0;
 	
@@ -17388,7 +17477,7 @@ int setWtpNoRespToStaProReq(unsigned int wtpid,unsigned char l_radioid,unsigned 
 int setWtpUniMutiBroCastIsolation(unsigned int wtpid,unsigned char radioid,unsigned char wlanid,unsigned char policy)
 {
 	msgq msg;
-	struct msgqlist *elem;
+//	struct msgqlist *elem;
 	wid_syslog_debug_debug(WID_DBUS,"%s,%d,radio %d wlan:%d,policy=%d.\n",__func__,__LINE__,radioid,wlanid,policy);
 	if((AC_WTP[wtpid] != NULL)&&(AC_WTP[wtpid]->WTPStat == 5))
 	{
@@ -17415,8 +17504,8 @@ int setWtpUniMutiBroCastIsolation(unsigned int wtpid,unsigned char radioid,unsig
 		}
 		CWThreadMutexUnlock(&(gWTPs[wtpid].WTPThreadMutex));
 	}
-	
-	else if((AC_WTP[wtpid] != NULL)){
+	//delete unuseful cod
+	/*else if((AC_WTP[wtpid] != NULL)){
 			memset((char*)&msg, 0, sizeof(msg));
 			msg.mqid = wtpid%THREAD_NUM+1;
 			msg.mqinfo.WTPID = wtpid;
@@ -17436,7 +17525,7 @@ int setWtpUniMutiBroCastIsolation(unsigned int wtpid,unsigned char radioid,unsig
 			elem->next = NULL;
 			memcpy((char*)&(elem->mqinfo),(char*)&(msg.mqinfo),sizeof(msg.mqinfo));
 			WID_INSERT_CONTROL_LIST(wtpid, elem);
-		}
+		}*/
 
 	return 0;
 	
@@ -17445,7 +17534,7 @@ int setWtpUniMutiBroCastIsolation(unsigned int wtpid,unsigned char radioid,unsig
 int setWtpUniMutiBroCastRate(unsigned int wtpid,unsigned char radioid,unsigned char wlanid,unsigned int rate)
 {
 	msgq msg;
-	struct msgqlist *elem;
+//	struct msgqlist *elem;
 	wid_syslog_debug_debug(WID_DBUS,"%s,%d,radio %d wlan:%d,rate=%d.\n",__func__,__LINE__,radioid,wlanid,rate);
 	if((AC_WTP[wtpid] != NULL)&&(AC_WTP[wtpid]->WTPStat == 5))
 	{
@@ -17471,9 +17560,9 @@ int setWtpUniMutiBroCastRate(unsigned int wtpid,unsigned char radioid,unsigned c
 			}
 		}
 		CWThreadMutexUnlock(&(gWTPs[wtpid].WTPThreadMutex));
-	}
+	}//delete unuseful cod
 	
-	else if((AC_WTP[wtpid] != NULL)){
+	/*else if((AC_WTP[wtpid] != NULL)){
 			memset((char*)&msg, 0, sizeof(msg));
 			msg.mqid = wtpid%THREAD_NUM+1;
 			msg.mqinfo.WTPID = wtpid;
@@ -17493,7 +17582,7 @@ int setWtpUniMutiBroCastRate(unsigned int wtpid,unsigned char radioid,unsigned c
 			elem->next = NULL;
 			memcpy((char*)&(elem->mqinfo),(char*)&(msg.mqinfo),sizeof(msg.mqinfo));
 			WID_INSERT_CONTROL_LIST(wtpid, elem);
-		}
+		}*/
 
 	return 0;
 	
@@ -20507,7 +20596,7 @@ int wid_parse_wtp_cpu_mem_trap_info(unsigned int wtpid)
 int wid_set_ap_sta_infomation_report(unsigned int wtpid)
 {
 	msgq msg;
-	struct msgqlist *elem;
+//	struct msgqlist *elem;
 		
 	if(AC_WTP[wtpid]->WTPStat == 5)
 	{
@@ -20528,8 +20617,8 @@ int wid_set_ap_sta_infomation_report(unsigned int wtpid)
 			}
 		}
 		CWThreadMutexUnlock(&(gWTPs[wtpid].WTPThreadMutex));
-	}
-	else if((AC_WTP[wtpid] != NULL)){
+	}//delete unuseful cod
+	/*else if((AC_WTP[wtpid] != NULL)){
 		memset((char*)&msg, 0, sizeof(msg));
 		msg.mqid = wtpid%THREAD_NUM+1;
 		msg.mqinfo.WTPID = wtpid;
@@ -20547,7 +20636,7 @@ int wid_set_ap_sta_infomation_report(unsigned int wtpid)
 		elem->next = NULL;
 		memcpy((char*)&(elem->mqinfo),(char*)&(msg.mqinfo),sizeof(msg.mqinfo));
 		WID_INSERT_CONTROL_LIST(wtpid, elem);
-	}
+	}*/
 
 	return 0;
 	
@@ -20556,7 +20645,7 @@ int wid_set_ap_sta_infomation_report(unsigned int wtpid)
 int  wtp_set_sta_info_report(unsigned int wtpid,int policy)
 {	
 	msgq msg;
-	struct msgqlist *elem;
+//	struct msgqlist *elem;
 	if((AC_WTP[wtpid] != NULL)&&(AC_WTP[wtpid]->sta_ip_report != policy))
 	{
 		printf("%s AC_WTP[%d]->sta_ip_report %d\n",__func__,wtpid,AC_WTP[wtpid]->sta_ip_report);
@@ -20580,7 +20669,8 @@ int  wtp_set_sta_info_report(unsigned int wtpid,int policy)
 				}
 			}		
 			CWThreadMutexUnlock(&(gWTPs[wtpid].WTPThreadMutex));
-		}else if((AC_WTP[wtpid] != NULL)){
+		}//delete unuseful cod
+		/*else if((AC_WTP[wtpid] != NULL)){
 			memset((char*)&msg, 0, sizeof(msg));
 			msg.mqid = wtpid%THREAD_NUM+1;
 			msg.mqinfo.WTPID = wtpid;
@@ -20600,7 +20690,7 @@ int  wtp_set_sta_info_report(unsigned int wtpid,int policy)
 			memcpy((char*)&(elem->mqinfo),(char*)&(msg.mqinfo),sizeof(msg.mqinfo));
 			WID_INSERT_CONTROL_LIST(wtpid, elem);
 			elem = NULL;
-		}
+		}*/
 	}
 	return 0;
 }
@@ -20609,7 +20699,7 @@ int  wtp_set_sta_info_report(unsigned int wtpid,int policy)
 int  wtp_set_wtp_dhcp_snooping(unsigned int wtpid,int policy)
 {	
 	msgq msg;
-	struct msgqlist *elem;
+//	struct msgqlist *elem;
 	if((AC_WTP[wtpid] != NULL)&&(AC_WTP[wtpid]->dhcp_snooping != policy))
 	{
 		printf("%s AC_WTP[%d]->dhcp_snooping %d\n",__func__,wtpid,AC_WTP[wtpid]->dhcp_snooping);
@@ -20633,7 +20723,8 @@ int  wtp_set_wtp_dhcp_snooping(unsigned int wtpid,int policy)
 				}
 			}		
 			CWThreadMutexUnlock(&(gWTPs[wtpid].WTPThreadMutex));
-		}else if((AC_WTP[wtpid] != NULL)){
+		}//delete unuseful cod
+		/*else if((AC_WTP[wtpid] != NULL)){
 			memset((char*)&msg, 0, sizeof(msg));
 			msg.mqid = wtpid%THREAD_NUM+1;
 			msg.mqinfo.WTPID = wtpid;
@@ -20653,7 +20744,7 @@ int  wtp_set_wtp_dhcp_snooping(unsigned int wtpid,int policy)
 			memcpy((char*)&(elem->mqinfo),(char*)&(msg.mqinfo),sizeof(msg.mqinfo));
 			WID_INSERT_CONTROL_LIST(wtpid, elem);
 			elem = NULL;
-		}
+		}*/
 	}
 	return 0;
 }
@@ -20662,7 +20753,7 @@ int  wtp_set_wtp_dhcp_snooping(unsigned int wtpid,int policy)
 int wid_set_ap_sta_wapi_info_report(unsigned int wtpid)
 {
 	msgq msg;
-	struct msgqlist *elem;
+//	struct msgqlist *elem;
 		
 	if(AC_WTP[wtpid]->WTPStat == 5)
 	{
@@ -20683,8 +20774,8 @@ int wid_set_ap_sta_wapi_info_report(unsigned int wtpid)
 			}
 		}
 		CWThreadMutexUnlock(&(gWTPs[wtpid].WTPThreadMutex));
-	}
-	else if((AC_WTP[wtpid] != NULL)){
+	}//delete unuseful cod
+	/*else if((AC_WTP[wtpid] != NULL)){
 					memset((char*)&msg, 0, sizeof(msg));
 					msg.mqid = wtpid%THREAD_NUM+1;
 					msg.mqinfo.WTPID = wtpid;
@@ -20702,7 +20793,7 @@ int wid_set_ap_sta_wapi_info_report(unsigned int wtpid)
 					elem->next = NULL;
 					memcpy((char*)&(elem->mqinfo),(char*)&(msg.mqinfo),sizeof(msg.mqinfo));
 					WID_INSERT_CONTROL_LIST(wtpid, elem);
-				}
+				}*/
 
 	return 0;
 	
@@ -20711,7 +20802,7 @@ int wid_set_ap_sta_wapi_info_report(unsigned int wtpid)
 int wid_set_ap_if_info_report(unsigned int wtpid)
 {
 	msgq msg;
-	struct msgqlist *elem;
+//	struct msgqlist *elem;
 		
 	if(AC_WTP[wtpid]->WTPStat == 5)
 	{
@@ -20732,8 +20823,8 @@ int wid_set_ap_if_info_report(unsigned int wtpid)
 			}
 		}
 		CWThreadMutexUnlock(&(gWTPs[wtpid].WTPThreadMutex));
-	}
-	else if((AC_WTP[wtpid] != NULL)){
+	}//delete unuseful cod
+	/*else if((AC_WTP[wtpid] != NULL)){
 		memset((char*)&msg, 0, sizeof(msg));
 		msg.mqid = wtpid%THREAD_NUM+1;
 		msg.mqinfo.WTPID = wtpid;
@@ -20751,7 +20842,7 @@ int wid_set_ap_if_info_report(unsigned int wtpid)
 		elem->next = NULL;
 		memcpy((char*)&(elem->mqinfo),(char*)&(msg.mqinfo),sizeof(msg.mqinfo));
 		WID_INSERT_CONTROL_LIST(wtpid, elem);
-	}
+	}*/
 
 	return 0;
 	
@@ -20917,7 +21008,7 @@ int wid_set_wtp_ntp(unsigned int wtpid)
 */
 	{
 			msgq msg;	
-			struct msgqlist *elem;
+//			struct msgqlist *elem;
 			
 			if(AC_WTP[wtpid]->WTPStat == 5)
 			{
@@ -20938,8 +21029,8 @@ int wid_set_wtp_ntp(unsigned int wtpid)
 					}
 				}
 				CWThreadMutexUnlock(&(gWTPs[wtpid].WTPThreadMutex));
-			}
-			else if((AC_WTP[wtpid] != NULL)){
+			}//delete unuseful cod
+			/*else if((AC_WTP[wtpid] != NULL)){
 				memset((char*)&msg, 0, sizeof(msg));
 				msg.mqid = wtpid%THREAD_NUM+1;
 				msg.mqinfo.WTPID = wtpid;
@@ -20957,7 +21048,7 @@ int wid_set_wtp_ntp(unsigned int wtpid)
 				elem->next = NULL;
 				memcpy((char*)&(elem->mqinfo),(char*)&(msg.mqinfo),sizeof(msg.mqinfo));
 				WID_INSERT_CONTROL_LIST(wtpid, elem);
-			}
+			}*/
 		
 			
 		}
@@ -21269,7 +21360,7 @@ int WID_RADIO_SET_WDS_STATUS(unsigned int RadioID, unsigned char WLANID,unsigned
 	int wtpid = RadioID/L_RADIO_NUM;
 	int local_radioid = RadioID%L_RADIO_NUM;
 	msgq msg;
-	struct msgqlist *elem;
+//	struct msgqlist *elem;
 	k = WLANID;
 	
 	if((AC_WLAN[k] != NULL) && (AC_WLAN[k]->want_to_delete != 1))		/* Huangleilei add for ASXXZFI-1622 */
@@ -21325,8 +21416,8 @@ int WID_RADIO_SET_WDS_STATUS(unsigned int RadioID, unsigned char WLANID,unsigned
 							wid_syslog_crit("%s msgsend %s",__func__,strerror(errno));
 							perror("msgsnd");
 						}
-					}
-					else{
+					}//delete unuseful cod
+					/*else{
 						elem = (struct msgqlist*)malloc(sizeof(struct msgqlist));
 						if(elem == NULL){
 							wid_syslog_crit("%s malloc %s",__func__,strerror(errno));
@@ -21338,7 +21429,7 @@ int WID_RADIO_SET_WDS_STATUS(unsigned int RadioID, unsigned char WLANID,unsigned
 						memcpy((char*)&(elem->mqinfo),(char*)&(msg.mqinfo),sizeof(msg.mqinfo));
 						WID_INSERT_CONTROL_LIST(wtpid, elem);
 						
-					}
+					}*/
 				}
 
 			}
@@ -22386,7 +22477,7 @@ int delete_ipip_tunnel(unsigned int BSSIndex)
 int wid_set_neighbordead_intervalt(unsigned int wtpid, int neighbordead_interval)
 {
 	msgq msg;	
-	struct msgqlist *elem;
+//	struct msgqlist *elem;
 
 	memset((char*)&msg, 0, sizeof(msg));
 	msg.mqid = wtpid%THREAD_NUM+1;
@@ -22402,8 +22493,8 @@ int wid_set_neighbordead_intervalt(unsigned int wtpid, int neighbordead_interval
 			wid_syslog_crit("%s msgsend %s",__func__,strerror(errno));
 			perror("msgsnd");
 		}
-	}
-	else
+	}//delete unuseful cod
+	/*else
 	{
 		elem = (struct msgqlist*)malloc(sizeof(struct msgqlist));
 		if(elem == NULL){
@@ -22416,7 +22507,7 @@ int wid_set_neighbordead_intervalt(unsigned int wtpid, int neighbordead_interval
 		memcpy((char*)&(elem->mqinfo),(char*)&(msg.mqinfo),sizeof(msg.mqinfo));
 		WID_INSERT_CONTROL_LIST(wtpid, elem);
 		
-	}
+	}*/
 
 	return 0;
 	
@@ -24817,7 +24908,7 @@ int wid_count_countermeasure_rogue_ap(Neighbor_AP_INFOS *paplist,int wtpid)
 int wid_radio_set_acktimeout_distance(unsigned int RadioID)
 {
 	msgq msg;
-	struct msgqlist *elem;
+//	struct msgqlist *elem;
 
 	int WTPIndex = RadioID/L_RADIO_NUM;
 	if((AC_WTP[WTPIndex] != NULL)&&(AC_WTP[AC_RADIO[RadioID]->WTPID]->WTPStat == 5))
@@ -24844,8 +24935,8 @@ int wid_radio_set_acktimeout_distance(unsigned int RadioID)
 
 		}
 		CWThreadMutexUnlock(&(gWTPs[WTPIndex].WTPThreadMutex));
-	}
-	else if((AC_WTP[WTPIndex] != NULL)){
+	}//delete unuseful cod
+	/*else if((AC_WTP[WTPIndex] != NULL)){
 		memset((char*)&msg, 0, sizeof(msg));
 		msg.mqid = WTPIndex%THREAD_NUM+1;
 		msg.mqinfo.WTPID = WTPIndex;
@@ -24866,7 +24957,7 @@ int wid_radio_set_acktimeout_distance(unsigned int RadioID)
 		memcpy((char*)&(elem->mqinfo),(char*)&(msg.mqinfo),sizeof(msg.mqinfo));
 		WID_INSERT_CONTROL_LIST(WTPIndex, elem);
 		elem = NULL;
-	}
+	}*/
 	
 	return 0;
 
@@ -24907,7 +24998,8 @@ int wid_radio_set_guard_interval(unsigned int RadioID)
 
 		}
 		CWThreadMutexUnlock(&(gWTPs[WTPIndex].WTPThreadMutex));
-	}else if((AC_WTP[WTPIndex] != NULL)){
+	}//delete unuseful cod
+	/*else if((AC_WTP[WTPIndex] != NULL)){
 		memset((char*)&msg, 0, sizeof(msg));
 		msg.mqid = WTPIndex%THREAD_NUM+1;
 		msg.mqinfo.WTPID = WTPIndex;
@@ -24928,7 +25020,7 @@ int wid_radio_set_guard_interval(unsigned int RadioID)
 		memcpy((char*)&(elem->mqinfo),(char*)&(msg.mqinfo),sizeof(msg.mqinfo));
 		WID_INSERT_CONTROL_LIST(WTPIndex, elem);
 		elem = NULL;
-	}
+	}*/
 
 	return 0;
 
@@ -24938,7 +25030,7 @@ int wid_radio_set_guard_interval(unsigned int RadioID)
 int wid_radio_set_ampdu_able(unsigned int RadioID, unsigned char type)
 {
 	msgq msg;
-	struct msgqlist *elem;
+//	struct msgqlist *elem;
 	//if((gWTPs[AC_RADIO[RadioID]->WTPID].currentState == CW_ENTER_RUN)&&(AC_RADIO[RadioID]->AdStat == 2))
 	{
 		//return RADIO_IS_DISABLE;
@@ -24977,8 +25069,8 @@ int wid_radio_set_ampdu_able(unsigned int RadioID, unsigned char type)
 
 		}
 		CWThreadMutexUnlock(&(gWTPs[WTPIndex].WTPThreadMutex));
-	}
-	else if((AC_WTP[WTPIndex] != NULL)){
+	}//delete unuseful cod
+	/*else if((AC_WTP[WTPIndex] != NULL)){
 		memset((char*)&msg, 0, sizeof(msg));
 		msg.mqid = WTPIndex%THREAD_NUM+1;
 		msg.mqinfo.WTPID = WTPIndex;
@@ -25006,7 +25098,7 @@ int wid_radio_set_ampdu_able(unsigned int RadioID, unsigned char type)
 		memcpy((char*)&(elem->mqinfo),(char*)&(msg.mqinfo),sizeof(msg.mqinfo));
 		WID_INSERT_CONTROL_LIST(WTPIndex, elem);
 		elem = NULL;
-	}
+	}*/
 	
 	return 0;
 
@@ -25015,7 +25107,7 @@ int wid_radio_set_ampdu_able(unsigned int RadioID, unsigned char type)
 int wid_radio_set_ampdu_limit(unsigned int RadioID, unsigned char type)
 {
 	msgq msg;
-	struct msgqlist *elem;
+//	struct msgqlist *elem;
 	
 	int WTPIndex = RadioID/L_RADIO_NUM;
 	if(AC_WTP[AC_RADIO[RadioID]->WTPID]->WTPStat == 5)
@@ -25050,7 +25142,8 @@ int wid_radio_set_ampdu_limit(unsigned int RadioID, unsigned char type)
 
 		}
 		CWThreadMutexUnlock(&(gWTPs[WTPIndex].WTPThreadMutex));
-	}else if((AC_WTP[WTPIndex] != NULL)){
+	}//delete unuseful cod
+	/*else if((AC_WTP[WTPIndex] != NULL)){
 		memset((char*)&msg, 0, sizeof(msg));
 		msg.mqid = WTPIndex%THREAD_NUM+1;
 		msg.mqinfo.WTPID = WTPIndex;
@@ -25078,7 +25171,7 @@ int wid_radio_set_ampdu_limit(unsigned int RadioID, unsigned char type)
 		memcpy((char*)&(elem->mqinfo),(char*)&(msg.mqinfo),sizeof(msg.mqinfo));
 		WID_INSERT_CONTROL_LIST(WTPIndex, elem);
 		elem = NULL;
-	}
+	}*/
 	return 0;
 
 }
@@ -27178,7 +27271,7 @@ int WID_RADIO_CHANGE_SUPPORT_RATE_BYGI_MCS_CWMODE(unsigned int RadioID)
 int wid_radio_set_ampdu_subframe(unsigned int RadioID, unsigned char type)
 {
 	msgq msg;
-	struct msgqlist *elem;
+//	struct msgqlist *elem;
 	//if((gWTPs[AC_RADIO[RadioID]->WTPID].currentState == CW_ENTER_RUN)&&(AC_RADIO[RadioID]->AdStat == 2))
 	{
 	//	return RADIO_IS_DISABLE;
@@ -27218,7 +27311,8 @@ int wid_radio_set_ampdu_subframe(unsigned int RadioID, unsigned char type)
 
 			}
 			CWThreadMutexUnlock(&(gWTPs[WTPIndex].WTPThreadMutex));
-			}else if((AC_WTP[WTPIndex] != NULL)){
+			}//delete unuseful cod
+			/*else if((AC_WTP[WTPIndex] != NULL)){
 			memset((char*)&msg, 0, sizeof(msg));
 			msg.mqid = WTPIndex%THREAD_NUM+1;
 			msg.mqinfo.WTPID = WTPIndex;
@@ -27246,7 +27340,7 @@ int wid_radio_set_ampdu_subframe(unsigned int RadioID, unsigned char type)
 			memcpy((char*)&(elem->mqinfo),(char*)&(msg.mqinfo),sizeof(msg.mqinfo));
 			WID_INSERT_CONTROL_LIST(WTPIndex, elem);
 			elem = NULL;
-		}
+		}*/
 
 	return 0;
 
@@ -27257,7 +27351,7 @@ int wid_radio_set_ampdu_subframe(unsigned int RadioID, unsigned char type)
 int wid_radio_set_mixed_puren_switch(unsigned int RadioID)
 {
 	msgq msg;
-	struct msgqlist *elem;
+//	struct msgqlist *elem;
 	//if((gWTPs[AC_RADIO[RadioID]->WTPID].currentState == CW_ENTER_RUN)&&(AC_RADIO[RadioID]->AdStat == 2))
 	{
 		//return RADIO_IS_DISABLE;
@@ -27289,7 +27383,8 @@ int wid_radio_set_mixed_puren_switch(unsigned int RadioID)
 
 		}
 		CWThreadMutexUnlock(&(gWTPs[WTPIndex].WTPThreadMutex));
-	}else if((AC_WTP[WTPIndex] != NULL)){
+	}//delete unuseful cod
+	/*else if((AC_WTP[WTPIndex] != NULL)){
 			memset((char*)&msg, 0, sizeof(msg));
 			msg.mqid = WTPIndex%THREAD_NUM+1;
 			msg.mqinfo.WTPID = WTPIndex;
@@ -27310,7 +27405,7 @@ int wid_radio_set_mixed_puren_switch(unsigned int RadioID)
 			memcpy((char*)&(elem->mqinfo),(char*)&(msg.mqinfo),sizeof(msg.mqinfo));
 			WID_INSERT_CONTROL_LIST(WTPIndex, elem);
 			elem = NULL;
-		}
+		}*/
 	wid_syslog_debug_debug(WID_DEFAULT,"set radio id is:%d, Mixed_Greenfield is %s",RadioID,(AC_RADIO[RadioID]->MixedGreenfield.Mixed_Greenfield == 1)?"puren":"mixed");
 	return 0;
 
@@ -27444,7 +27539,7 @@ int wid_set_ap_statistics_v1(int WTPID,int apstatics)
 int wid_radio_set_channel_Extoffset(unsigned int RadioID)
 {
 	msgq msg;
-	struct msgqlist *elem;
+//	struct msgqlist *elem;
 	//if((gWTPs[AC_RADIO[RadioID]->WTPID].currentState == CW_ENTER_RUN)&&(AC_RADIO[RadioID]->AdStat == 2))
 	{
 		//return RADIO_IS_DISABLE;
@@ -27476,7 +27571,8 @@ int wid_radio_set_channel_Extoffset(unsigned int RadioID)
 
 		}
 		CWThreadMutexUnlock(&(gWTPs[WTPIndex].WTPThreadMutex));
-	}	else if((AC_WTP[WTPIndex] != NULL)){
+	}//delete unuseful cod
+	/*else if((AC_WTP[WTPIndex] != NULL)){
 				memset((char*)&msg, 0, sizeof(msg));
 				msg.mqid = WTPIndex%THREAD_NUM+1;
 				msg.mqinfo.WTPID = WTPIndex;
@@ -27497,7 +27593,7 @@ int wid_radio_set_channel_Extoffset(unsigned int RadioID)
 				memcpy((char*)&(elem->mqinfo),(char*)&(msg.mqinfo),sizeof(msg.mqinfo));
 				WID_INSERT_CONTROL_LIST(WTPIndex, elem);
 				elem = NULL;
-			}
+			}*/
 	wid_syslog_debug_debug(WID_DEFAULT,"set radio id is:%d, channel_offset is %d",RadioID,AC_RADIO[RadioID]->channel_offset);
 	return 0;
 
@@ -27575,7 +27671,7 @@ int wid_radio_set_chainmask(unsigned int RadioID, unsigned char type)
 {
 	wid_syslog_debug_debug(WID_DEFAULT,"@@@@@@ in fuc wid_radio_set_chainmask @@@@@\n");
 	msgq msg;
-	struct msgqlist *elem;
+//	struct msgqlist *elem;
 	
 	wid_syslog_debug_debug(WID_DEFAULT,"set radio id is : %d\n",RadioID);
 	wid_syslog_debug_debug(WID_DEFAULT,"chainmask type is : %d\n",type);
@@ -27614,8 +27710,8 @@ int wid_radio_set_chainmask(unsigned int RadioID, unsigned char type)
 
 		}
 		CWThreadMutexUnlock(&(gWTPs[WTPIndex].WTPThreadMutex));
-	}
-	else if((AC_WTP[WTPIndex] != NULL))
+	}//delete unuseful cod
+	/*else if((AC_WTP[WTPIndex] != NULL))
 	{
 		memset((char*)&msg, 0, sizeof(msg));
 		msg.mqid = WTPIndex%THREAD_NUM+1;
@@ -27644,7 +27740,7 @@ int wid_radio_set_chainmask(unsigned int RadioID, unsigned char type)
 		memcpy((char*)&(elem->mqinfo),(char*)&(msg.mqinfo),sizeof(msg.mqinfo));
 		WID_INSERT_CONTROL_LIST(WTPIndex, elem);
 		elem = NULL;
-	}
+	}*/
 
 	return 0;
 
@@ -27686,8 +27782,8 @@ int wid_radio_set_mcs(unsigned int RadioID)
 
 		}
 		CWThreadMutexUnlock(&(gWTPs[WTPIndex].WTPThreadMutex));
-	}
-	else if((AC_WTP[WTPIndex] != NULL)){
+	}//delete unuseful cod
+	/*else if((AC_WTP[WTPIndex] != NULL)){
 				memset((char*)&msg, 0, sizeof(msg));
 				msg.mqid = WTPIndex%THREAD_NUM+1;
 				msg.mqinfo.WTPID = WTPIndex;
@@ -27708,7 +27804,7 @@ int wid_radio_set_mcs(unsigned int RadioID)
 				memcpy((char*)&(elem->mqinfo),(char*)&(msg.mqinfo),sizeof(msg.mqinfo));
 				WID_INSERT_CONTROL_LIST(WTPIndex, elem);
 				elem = NULL;
-			}
+			}*/
 
 	return 0;
 
@@ -27800,8 +27896,8 @@ int wid_radio_set_mcs_list(unsigned int RadioID)
 
 		}
 		CWThreadMutexUnlock(&(gWTPs[WTPIndex].WTPThreadMutex));
-	}
-	else if((AC_WTP[WTPIndex] != NULL)){
+	}//delete unuseful cod
+	/*else if((AC_WTP[WTPIndex] != NULL)){
 				memset((char*)&msg, 0, sizeof(msg));
 				msg.mqid = WTPIndex%THREAD_NUM+1;
 				msg.mqinfo.WTPID = WTPIndex;
@@ -27822,7 +27918,7 @@ int wid_radio_set_mcs_list(unsigned int RadioID)
 				memcpy((char*)&(elem->mqinfo),(char*)&(msg.mqinfo),sizeof(msg.mqinfo));
 				WID_INSERT_CONTROL_LIST(WTPIndex, elem);
 				elem = NULL;
-			}
+			}*/
 
 	return 0;
 
@@ -27863,7 +27959,8 @@ int wid_radio_set_cmmode(unsigned int RadioID)
 
 		}
 		CWThreadMutexUnlock(&(gWTPs[WTPIndex].WTPThreadMutex));
-	}else if((AC_WTP[WTPIndex] != NULL)){
+	}//delete unuseful cod
+	/*else if((AC_WTP[WTPIndex] != NULL)){
 			memset((char*)&msg, 0, sizeof(msg));
 			msg.mqid = WTPIndex%THREAD_NUM+1;
 			msg.mqinfo.WTPID = WTPIndex;
@@ -27884,7 +27981,7 @@ int wid_radio_set_cmmode(unsigned int RadioID)
 			memcpy((char*)&(elem->mqinfo),(char*)&(msg.mqinfo),sizeof(msg.mqinfo));
 			WID_INSERT_CONTROL_LIST(WTPIndex, elem);
 			elem = NULL;
-		}
+		}*/
 
 	return 0;
 
@@ -29800,7 +29897,7 @@ success:
 		p->if_next = NULL;
 	}
 	sockPtr->count++;
-			
+	Check_gACSokcet_Poll(sockPtr);		
 	return CW_TRUE;
 }
 
@@ -29815,7 +29912,8 @@ CWBool wid_multicast_listen_close(CWMultiHomedSocket *sockPtr){
 			sockPtr->interfaces = inf->if_next;
 			sockPtr->count--;
 			close(inf->sock);
-			free(inf);
+			free(inf);		
+			Check_gACSokcet_Poll(sockPtr);
 			return CW_TRUE;
 		}	
 	}
@@ -29831,7 +29929,7 @@ CWBool wid_multicast_listen_close(CWMultiHomedSocket *sockPtr){
 		}
 		inf = inf->if_next;
 	}
-
+	Check_gACSokcet_Poll(sockPtr);
 	return CW_TRUE;
 
 }
@@ -30134,7 +30232,7 @@ int wid_set_ap_username_password(unsigned int wtpid,char *username,char *passwd)
 {
 	wid_syslog_debug_debug(WID_DEFAULT,"the wtpid is %s\n",__func__);
 	msgq msg;
-	struct msgqlist *elem = NULL;
+//	struct msgqlist *elem = NULL;
 	int i =0;
 	if(wtpid == 0){
 		for(i = 0 ; i < WTP_NUM;i++)
@@ -30164,8 +30262,8 @@ int wid_set_ap_username_password(unsigned int wtpid,char *username,char *passwd)
 						}
 					}
 					CWThreadMutexUnlock(&(gWTPs[wtpid].WTPThreadMutex));
-				}
-				else if((AC_WTP[wtpid] != NULL)){
+				}//delete unuseful cod
+				/*else if((AC_WTP[wtpid] != NULL)){
 					memset((char*)&msg, 0, sizeof(msg));
 					msg.mqid = wtpid%THREAD_NUM+1;
 					msg.mqinfo.WTPID = wtpid;
@@ -30184,7 +30282,7 @@ int wid_set_ap_username_password(unsigned int wtpid,char *username,char *passwd)
 					elem->next = NULL;
 					memcpy((char*)&(elem->mqinfo),(char*)&(msg.mqinfo),sizeof(msg.mqinfo));
 					WID_INSERT_CONTROL_LIST(wtpid, elem);
-				}
+				}*/
 			}
 		}
 	}
@@ -30210,8 +30308,8 @@ int wid_set_ap_username_password(unsigned int wtpid,char *username,char *passwd)
 					}
 				}
 				CWThreadMutexUnlock(&(gWTPs[wtpid].WTPThreadMutex));
-			}
-		else if((AC_WTP[wtpid] != NULL)){
+			}//delete unuseful cod
+		/*else if((AC_WTP[wtpid] != NULL)){
 			memset((char*)&msg, 0, sizeof(msg));
 			msg.mqid = wtpid%THREAD_NUM+1;
 			msg.mqinfo.WTPID = wtpid;
@@ -30230,7 +30328,7 @@ int wid_set_ap_username_password(unsigned int wtpid,char *username,char *passwd)
 			elem->next = NULL;
 			memcpy((char*)&(elem->mqinfo),(char*)&(msg.mqinfo),sizeof(msg.mqinfo));
 			WID_INSERT_CONTROL_LIST(wtpid, elem);
-		}
+		}*/
 	}
 	return 0;
 	
@@ -30242,7 +30340,7 @@ void muti_user_optimize_switch(unsigned char wlanid, unsigned int radio_g_id,uns
 	wid_syslog_debug_debug(WID_DEFAULT,"the radioid is %d\n",radio_g_id);
 
 	msgq msg;
-	struct msgqlist *elem = NULL;
+//	struct msgqlist *elem = NULL;
 	unsigned char radio_l_id = 0;
 	unsigned int wtpid;
 	wtpid = radio_g_id/4;
@@ -30276,8 +30374,8 @@ void muti_user_optimize_switch(unsigned char wlanid, unsigned int radio_g_id,uns
 			}
 			CWThreadMutexUnlock(&(gWTPs[wtpid].WTPThreadMutex));
 			
-		}
-		else {
+		}//delete unuseful cod
+		/*else {
 			memset((char*)&msg, 0, sizeof(msg));
 			msg.mqid = wtpid%THREAD_NUM+1;
 			msg.mqinfo.WTPID = wtpid;
@@ -30297,7 +30395,7 @@ void muti_user_optimize_switch(unsigned char wlanid, unsigned int radio_g_id,uns
 			elem->next = NULL;
 			memcpy((char*)&(elem->mqinfo),(char*)&(msg.mqinfo),sizeof(msg.mqinfo));
 			WID_INSERT_CONTROL_LIST(wtpid, elem);
-		}
+		}*/
 	}
 	return ;
 }
@@ -30520,6 +30618,7 @@ int set_wlan_tunnel_mode(unsigned char WlanID, unsigned char state){
 	int j=0;
 	int k = 0;
 	int fd = 0;
+	int ebr_id = 0;
 	if_batch_info if_b_info;
 	memset(&if_b_info, 0 , sizeof(if_b_info));
 	if(AC_WLAN[WlanID] == NULL) //fengwenchao add 20121203 for AXSSZFI-1283
@@ -30607,7 +30706,33 @@ int set_wlan_tunnel_mode(unsigned char WlanID, unsigned char state){
 			k = 0;
 			memset(&if_b_info, 0 , sizeof(if_b_info));
 		}
-	}	else{		
+	}	else{
+	// check radio interface in ebr cannot delete
+		for(i=0; i<WTP_NUM; i++)
+		{
+			//if((AC_WTP[i]!=NULL)&&(AC_WTP[i]->isused == 1))
+			if(AC_WTP[i]!=NULL)
+			{
+				for(j=0; j<AC_WTP[i]->RadioCount; j++)
+				{
+					if(AC_WLAN[WlanID]->S_WTP_BSS_List[i][j] != 0)
+					{
+						int bssindex = AC_WLAN[WlanID]->S_WTP_BSS_List[i][j];
+						if(!check_bssid_func(bssindex)){
+							wid_syslog_err("bssindex %d not exist\n",WlanID);
+						}
+						else{
+							if(check_whether_in_ebr(vrrid,i,j,WlanID,&ebr_id))
+							{
+								wid_syslog_debug_debug(WID_DEFAULT,"%s,%d some radio in ebr\n",__func__,__LINE__);
+								return  RADIO_IN_EBR;
+	
+							}
+						}
+					}
+				}
+			}
+		}
 		if(AC_WLAN[WlanID]->wlan_if_policy == NO_INTERFACE){
 			return WID_DBUS_SUCCESS;
 		}

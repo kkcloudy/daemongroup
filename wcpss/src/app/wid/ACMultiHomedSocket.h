@@ -66,6 +66,7 @@ struct CWMultiHomedInterface{
 
 typedef struct {
 	int count;
+	struct pollfd *pfd;
 	struct CWMultiHomedInterface *interfaces;
 } CWMultiHomedSocket;
 

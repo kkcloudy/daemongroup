@@ -39,7 +39,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <netinet/in.h>
 #include <netinet/udp.h>
 #include <netdb.h>
-
+#include <poll.h>
 #include "CWStevens.h"
 
 typedef int CWSocket;

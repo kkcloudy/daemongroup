@@ -589,6 +589,7 @@ CWBool CWNetworkInitSocketServerMultiHomed(CWMultiHomedSocket *sockPtr, int port
 		// delete the list
 		CWDeleteList(&interfaceList, CWNetworkDeleteMHInterface);
 		
+		Check_gACSokcet_Poll(sockPtr);
 		return CW_TRUE;
 	}
 
@@ -609,7 +610,7 @@ void CWNetworkCloseMultiHomedSocket(CWMultiHomedSocket *sockPtr) {
 	sockPtr->count = 0;
 }
 
-
+#if 0
 // blocks until one ore more interfaces are ready to read something. When there is at least one packet pending, call CWManageIncomingPacket() for each
 // pending packet, then return.
 CWBool CWNetworkUnsafeMultiHomed(CWMultiHomedSocket *sockPtr, void (*CWManageIncomingPacket) (CWSocket, char *, int, int,int, CWNetworkLev4Address*,char *), CWBool peekRead) {
@@ -700,6 +701,103 @@ CWBool CWNetworkUnsafeMultiHomed(CWMultiHomedSocket *sockPtr, void (*CWManageInc
 	}
 
 	
+	return CW_TRUE;
+}
+#endif
+// blocks until one ore more interfaces are ready to read something. When there is at least one packet pending, call CWManageIncomingPacket() for each
+// pending packet, then return.
+//poll for select error socket repair
+CWBool CWNetworkUnsafeMultiHomed(CWMultiHomedSocket *sockPtr, void (*CWManageIncomingPacket) (CWSocket, char *, int, int,int, CWNetworkLev4Address*,char *), CWBool peekRead) {
+	int  i;
+	int t = 0;
+
+	CWNetworkLev4Address addr;
+	struct CWMultiHomedInterface *inf;
+	nfds_t nfds = 0;
+	int flags = ((peekRead != CW_FALSE) ? MSG_PEEK : 0);
+
+	char buf[CW_BUFFER_SIZE];
+	if(sockPtr == NULL || CWManageIncomingPacket == NULL) return CWErrorRaise(CW_ERROR_WRONG_ARG, NULL);
+
+	nfds = sockPtr->count +1;
+	inf = sockPtr->interfaces;
+
+
+	sockPtr->pfd[nfds-1].fd=netlink.sock;
+	sockPtr->pfd[nfds-1].events = POLLIN|POLLPRI;
+	t = 2000;// 2000 ms 2s
+	if(poll(sockPtr->pfd,nfds,t)<0){
+		wid_syslog_info("%s,%d,errno = %d,error:%s",__func__,__LINE__,errno,strerror(errno));
+	}
+
+	if(((sockPtr->pfd[nfds-1].revents&POLLIN) == POLLIN)||((sockPtr->pfd[nfds-1].revents&POLLPRI) == POLLPRI))
+	{
+		netlink_parse_info(netlink_information_fetch, &netlink);
+		return CW_TRUE;
+
+	}
+	else if(((sockPtr->pfd[nfds-1].revents&POLLERR) == POLLERR)||((sockPtr->pfd[nfds-1].revents&POLLNVAL) == POLLNVAL))
+	{
+		wid_syslog_info("%s,%d,I trust in netlink but it error\n",__func__,__LINE__);
+		return CW_FALSE;
+	}
+	else{
+
+		inf = sockPtr->interfaces;
+		for(i = 0; (i < sockPtr->count)&&(inf != NULL); i++) {
+			if(((sockPtr->pfd[i].revents&POLLIN) == POLLIN)||((sockPtr->pfd[i].revents&POLLPRI) == POLLPRI)){
+				int readBytes;
+
+				if(WID_WATCH_DOG_OPEN == 1){
+					if((inf->gIf_Index != -1)&&(inf->gIf_Index < gMaxInterfacesCount)){
+						if(gInterfaces[inf->gIf_Index].tcpdumpflag == 1){
+							gInterfaces[inf->gIf_Index].datacount++;
+						}
+					}else if(inf->gIf_Index == -1){
+						G_LocalHost_num++;
+					}
+				}
+				/*##			
+					
+					CWUseSockNtop(&(sockPtr->interfaces[i].addr),
+					wid_syslog_debug_debug("Ready on %s", str);
+				);*/
+				
+				CW_ZERO_MEMORY(buf, CW_BUFFER_SIZE);
+				
+				// message
+				if(!CWErr(CWNetworkReceiveUnsafe(inf->sock, buf, CW_BUFFER_SIZE-1, flags, &addr, &readBytes))) {
+					//sleep(1);			
+					if(inf->if_next == NULL)
+						break;
+					inf = inf->if_next;
+					continue;
+				}
+				if(is_secondary == 1){
+					return CW_FALSE;
+				}
+				if(readBytes > 4096){	
+					CWUseSockNtop(&addr,				
+						wid_syslog_err("%s  %s,readBytes = %d.readBytes more than 2048.\n",str,__func__,readBytes);
+					);
+		 			return CW_FALSE;
+				}
+				CWManageIncomingPacket(inf->sock, buf, readBytes,
+						CWNetworkGetInterfaceIndexFromSystemIndex(sockPtr, inf->systemIndex,inf->sock),inf->systemIndex, &addr, inf->ifname);
+			}
+			else if(((sockPtr->pfd[i].revents&POLLERR) == POLLERR)||((sockPtr->pfd[i].revents&POLLNVAL) == POLLNVAL)){
+				wid_syslog_info("%s,%d wid will repair the error socket\n",__func__,__LINE__);
+				if(Repair_WID_Listening_Socket(inf)<0){
+					wid_syslog_info("%s,%d wid repair socket error\n",__func__,__LINE__);
+				}
+				else{
+					wid_syslog_info("%s,%d wid repair socket successfully\n",__func__,__LINE__);
+				}
+			}
+			inf = inf->if_next;
+	//		else {wid_syslog_debug_debug("~~~~~~~Non Ready on....~~~~~~");}
+		}
+	}
 	return CW_TRUE;
 }
 // divide gInterfaceCount into ipv4 and ipv6

@@ -320,6 +320,7 @@ int ipv6_bind_interface_for_wid(struct ifi_info *ifi, int port)
 		
 	}
 	gACSocket.count++; // we add a socket to the multihomed socket
+	Check_gACSokcet_Poll(&gACSocket);
 
 	//display_ginterface_list();
 	//display_gmlltisock_list(&gACSocket);

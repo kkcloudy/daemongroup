@@ -187,6 +187,8 @@ int wid_interface_ifname_wlan(char *ptr,struct vty *vty, char *line)
 			vty_out(vty,"WLAN add bss interface to br fail\n");
 		else if(ret == BSS_L3_INTERFACE_DEL_BR_FAIL)
 			vty_out(vty,"WLAN del bss interface to br fail\n");
+		else if(ret == RADIO_IN_EBR)
+			vty_out(vty,"<error>some radio interface in ebr,please remove it from ebr");
 		else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
 		{
 			vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");

@@ -696,12 +696,15 @@ void Delete_Interface(char *ifname, int ifindex){
 			close(p->sock);
 			free(p);
 			p = NULL;
+			gACSocket.count--;
 			p = p1->if_next;
 			continue;
 		}
 		p1 = p;
 		p = p1->if_next;
 	}
+	Check_gACSokcet_Poll(&gACSocket);
+
 }
 
 void Modify_WLAN_WTP_SETTING(int index){	
@@ -1019,7 +1022,7 @@ void CWACManageIncomingPacket(CWSocket sock, char *buf, int readBytes, int incom
 	/*fengwenchao add end*/
 	if((wtpPtr != NULL)&&(wtpPtr->BAK_FLAG == 2)){
 		printf("wtp %d change ifindex%d\n",WTPID,incomingInterfaceIndex);
-
+		wtpPtr->interfaceIndex = incomingInterfaceIndex;	
 		for(j = 0; (AC_WTP[WTPID])&&(j < AC_WTP[WTPID]->RadioCount); j++){
 			if((AC_WTP[WTPID])&&(AC_WTP[WTPID]->WTP_Radio[j])){
 				for(k = 0;k < L_BSS_NUM;k++ ){
@@ -1031,7 +1034,6 @@ void CWACManageIncomingPacket(CWSocket sock, char *buf, int readBytes, int incom
 		}
 
 		
-		wtpPtr->interfaceIndex = incomingInterfaceIndex;	
 		/*fengwenchao modify begin 20110525*/
 		if((incomingInterfaceIndex <gMaxInterfacesCount)&&(incomingInterfaceIndex >= 0))
 		{

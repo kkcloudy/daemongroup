@@ -72,6 +72,9 @@ int WID_DISABLE_WLAN_APPLY_RADIO(unsigned int RadioId, unsigned char WlanId);
 int WID_ENABLE_WLAN_APPLY_RADIO(unsigned int RadioId, unsigned char WlanId);
 
 int Bind_Interface_For_WID(struct ifi_info *ifi, int port,LISTEN_FLAG lic_flag);
+void Check_gACSokcet_Poll(CWMultiHomedSocket *ptr);
+int Repair_WID_Listening_Socket(struct CWMultiHomedInterface *inf);
+
 int Bind_BroadAddr_For_WID(struct ifi_info *ifi, int port);
 int Match_And_Modify_Interface(struct CWMultiHomedInterface *p,struct CWMultiHomedInterface *pbr, struct ifi_info *ifi);
 int Modify_Interface(struct CWMultiHomedInterface *p, struct CWMultiHomedInterface *pbr,  struct ifi_info *ifi, int port);

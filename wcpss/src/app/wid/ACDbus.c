@@ -22077,6 +22077,8 @@ DBusMessage * wid_dbus_interface_del_wid_auto_ap_login_binding_wlan(DBusConnecti
 		{
 			ret = SWITCH_IS_DISABLE;//config required to disable the switch
 		}
+		//no use
+		/*
 		//check wlan iflist
 		else if(AC_WLAN[wlanid]->Wlan_Ifi != NULL)
 		{
@@ -22106,6 +22108,7 @@ DBusMessage * wid_dbus_interface_del_wid_auto_ap_login_binding_wlan(DBusConnecti
 			ret = Wlan_IF_NOT_BE_BINDED;
 		}	
 		//find ifname in the list,del wlanid from the if
+		*/
 		if(ret == WID_DBUS_SUCCESS)
 		{
 			wid_auto_ap_if *iflist = NULL;
@@ -66555,7 +66558,7 @@ DBusMessage * wid_dbus_interface_wtp_list_dhcp_snooping(DBusConnection *conn, DB
 	unsigned int num;
 	msgq msg;
 	int WTPIndex;
-	struct msgqlist *elem;
+//	struct msgqlist *elem;
 	
 	dbus_error_init(&err);
 	
@@ -66602,7 +66605,9 @@ DBusMessage * wid_dbus_interface_wtp_list_dhcp_snooping(DBusConnection *conn, DB
 					}
 				}		
 				CWThreadMutexUnlock(&(gWTPs[WTPIndex].WTPThreadMutex));
-			}else if((AC_WTP[wtpid] != NULL)){
+			}
+			//delete unuseful code
+			/*else if((AC_WTP[wtpid] != NULL)){
 				memset((char*)&msg, 0, sizeof(msg));
 				msg.mqid = WTPIndex%THREAD_NUM+1;
 				msg.mqinfo.WTPID = WTPIndex;
@@ -66622,7 +66627,7 @@ DBusMessage * wid_dbus_interface_wtp_list_dhcp_snooping(DBusConnection *conn, DB
 				memcpy((char*)&(elem->mqinfo),(char*)&(msg.mqinfo),sizeof(msg.mqinfo));
 				WID_INSERT_CONTROL_LIST(wtpid, elem);
 				elem = NULL;
-			}
+			}*/
 		}
 	}
 #if 0
@@ -66707,7 +66712,8 @@ DBusMessage * wid_dbus_interface_wtp_list_dhcp_snooping(DBusConnection *conn, DB
 						}
 					}		
 					CWThreadMutexUnlock(&(gWTPs[WTPIndex].WTPThreadMutex));
-				}else if((AC_WTP[wtpid] != NULL)){
+				}//delete unuseful code
+				/*else if((AC_WTP[wtpid] != NULL)){
 					memset((char*)&msg, 0, sizeof(msg));
 					msg.mqid = WTPIndex%THREAD_NUM+1;
 					msg.mqinfo.WTPID = WTPIndex;
@@ -66727,7 +66733,7 @@ DBusMessage * wid_dbus_interface_wtp_list_dhcp_snooping(DBusConnection *conn, DB
 					memcpy((char*)&(elem->mqinfo),(char*)&(msg.mqinfo),sizeof(msg.mqinfo));
 					WID_INSERT_CONTROL_LIST(wtpid, elem);
 					elem = NULL;
-				}
+				}*/
 			}
 
 		}
@@ -67000,7 +67006,7 @@ DBusMessage * wid_dbus_interface_wtp_list_sta_info_report(DBusConnection *conn, 
 	unsigned int num;
 	msgq msg;
 	int WTPIndex;
-	struct msgqlist *elem;
+//	struct msgqlist *elem;
 	
 	dbus_error_init(&err);
 	
@@ -67043,7 +67049,9 @@ DBusMessage * wid_dbus_interface_wtp_list_sta_info_report(DBusConnection *conn, 
 					}
 				}		
 				CWThreadMutexUnlock(&(gWTPs[WTPIndex].WTPThreadMutex));
-			}else if((AC_WTP[wtpid] != NULL)){
+			}//delete unusefule code
+			
+			/*else if((AC_WTP[wtpid] != NULL)){
 				memset((char*)&msg, 0, sizeof(msg));
 				msg.mqid = WTPIndex%THREAD_NUM+1;
 				msg.mqinfo.WTPID = WTPIndex;
@@ -67063,7 +67071,7 @@ DBusMessage * wid_dbus_interface_wtp_list_sta_info_report(DBusConnection *conn, 
 				memcpy((char*)&(elem->mqinfo),(char*)&(msg.mqinfo),sizeof(msg.mqinfo));
 				WID_INSERT_CONTROL_LIST(wtpid, elem);
 				elem = NULL;
-			}
+			}*/
 		}
 	}
 #if 0
@@ -67146,7 +67154,8 @@ DBusMessage * wid_dbus_interface_wtp_list_sta_info_report(DBusConnection *conn, 
 						}
 					}		
 					CWThreadMutexUnlock(&(gWTPs[WTPIndex].WTPThreadMutex));
-				}else if((AC_WTP[wtpid] != NULL)){
+				}//delete unuseful code
+				/*else if((AC_WTP[wtpid] != NULL)){
 					memset((char*)&msg, 0, sizeof(msg));
 					msg.mqid = WTPIndex%THREAD_NUM+1;
 					msg.mqinfo.WTPID = WTPIndex;
@@ -67166,7 +67175,7 @@ DBusMessage * wid_dbus_interface_wtp_list_sta_info_report(DBusConnection *conn, 
 					memcpy((char*)&(elem->mqinfo),(char*)&(msg.mqinfo),sizeof(msg.mqinfo));
 					WID_INSERT_CONTROL_LIST(wtpid, elem);
 					elem = NULL;
-				}
+				}*/
 			}
 
 		}
