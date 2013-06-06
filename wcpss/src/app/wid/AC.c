@@ -517,7 +517,7 @@ void CWACInit() {
 	
 	gACSocket.count = 0;//zhanglei mv it out
 	gACSocket.interfaces = NULL;
-	gACSocket.pfd = NULL;
+	memset(gACSocket.pfd,0,sizeof(gACSocket.pfd));
 	if(	!CWErr(CWNetworkInitSocketServerMultiHomed(&gACSocket, CW_CONTROL_PORT, gMulticastGroups, gMulticastGroupsCount))//	||
 	){ // error starting
 		wid_syslog_crit("Can't start AC");

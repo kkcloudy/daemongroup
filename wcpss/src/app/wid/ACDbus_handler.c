@@ -3075,7 +3075,8 @@ int WID_ENABLE_WLAN(unsigned char WlanID){
 								msg.mqinfo.u.WlanInfo.asic_hex = AC_WLAN[WlanID]->asic_hex;/* 0 asic; 1 hex*/
 								msg.mqinfo.u.WlanInfo.Roaming_Policy = AC_WLAN[WlanID]->Roaming_Policy; 		/*Roaming (1 enable /0 disable)*/
 								memset(msg.mqinfo.u.WlanInfo.WlanEssid,0,ESSID_LENGTH);
-								memcpy(msg.mqinfo.u.WlanInfo.WlanEssid,AC_WLAN[WlanID]->ESSID,ESSID_LENGTH);
+								//memcpy(msg.mqinfo.u.WlanInfo.WlanEssid,AC_WLAN[WlanID]->ESSID,ESSID_LENGTH);
+								memcpy(msg.mqinfo.u.WlanInfo.WlanEssid,AC_WLAN[WlanID]->ESSID,strlen(AC_WLAN[WlanID]->ESSID));
 								msg.mqinfo.u.WlanInfo.bssindex = AC_WLAN[WlanID]->S_WTP_BSS_List[m][n];
 								
 								if(AC_WTP[m]->WTPStat == 5){	
@@ -4816,7 +4817,8 @@ int Bind_Interface_For_WID(struct ifi_info *ifi, int port,LISTEN_FLAG lic_flag){
 		// store socket inside multihomed socket
 		
 		CW_CREATE_OBJECT_ERR(p, struct CWMultiHomedInterface, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
-		memset(p->ifname, 0, IFI_NAME);
+		memset(p,0,sizeof(struct CWMultiHomedInterface));
+		//memset(p->ifname, 0, IFI_NAME);
 		strncpy(p->ifname, ifi->ifi_name, IFI_NAME);
 		p->sock = sock;	
 		p->ipv6Flag = 0;
@@ -4980,29 +4982,17 @@ int Repair_WID_Listening_Socket(struct CWMultiHomedInterface *inf){
 void Check_gACSokcet_Poll(CWMultiHomedSocket *ptr){
 
 	//poll it
-	//remalloc memory for pfd
-	struct pollfd *tmp = NULL;
+
+
 	int i = 0;
 	if(ptr == NULL) return;
 	struct CWMultiHomedInterface *inf = ptr->interfaces;
+	memset(ptr->pfd,0,sizeof(ptr->pfd));
 	for(i = 0;(i<ptr->count)&&(inf);i++){
 		inf = inf->if_next;
 	}
 	ptr->count = i;
-	tmp = malloc(sizeof(struct pollfd)*(ptr->count + 1));// +1 for poll netlink socket
-	if(tmp == NULL){
-		wid_syslog_info("%s,%d malloc gACSocket.pfd failed\n",__func__,__LINE__);
-		return;
-	}
-	else{
-		if(ptr->pfd){
-			free(ptr->pfd);
-			ptr->pfd = NULL;
-
-		}
-		ptr->pfd = tmp;
-		memset(ptr->pfd,0,(sizeof(struct pollfd)*(ptr->count + 1)));
-	}
+	if(i  > gMaxInterfacesCount) return;
 	inf = ptr->interfaces;
 	for(i = 0;(i<ptr->count)&&(inf);i++){
 		ptr->pfd[i].fd = inf->sock;
@@ -9172,7 +9162,8 @@ int WID_ADD_WLAN_APPLY_RADIO(unsigned int RadioID,unsigned char WlanID){
 		msg.mqinfo.u.WlanInfo.asic_hex = AC_WLAN[WlanID]->asic_hex;/* 0 asic; 1 hex*/
 		msg.mqinfo.u.WlanInfo.Roaming_Policy = AC_WLAN[WlanID]->Roaming_Policy;			/*Roaming (1 enable /0 disable)*/
 		memset(msg.mqinfo.u.WlanInfo.WlanEssid,0,ESSID_LENGTH);
-		memcpy(msg.mqinfo.u.WlanInfo.WlanEssid,AC_WLAN[WlanID]->ESSID,ESSID_LENGTH);
+		//memcpy(msg.mqinfo.u.WlanInfo.WlanEssid,AC_WLAN[WlanID]->ESSID,ESSID_LENGTH);
+		memcpy(msg.mqinfo.u.WlanInfo.WlanEssid,AC_WLAN[WlanID]->ESSID,strlen(AC_WLAN[WlanID]->ESSID));
 		msg.mqinfo.u.WlanInfo.bssindex = AC_WLAN[WlanID]->S_WTP_BSS_List[WtpID][localradio_id];
 
 		if (msgsnd(ACDBUS_MSGQ, (msgq *)&msg, sizeof(msg.mqinfo), 0) == -1){
@@ -9610,7 +9601,8 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_VLANID(unsigned int RadioID,unsigned char Wlan
 		msg.mqinfo.u.WlanInfo.asic_hex = AC_WLAN[WlanID]->asic_hex;/* 0 asic; 1 hex*/
 		msg.mqinfo.u.WlanInfo.Roaming_Policy = AC_WLAN[WlanID]->Roaming_Policy;			/*Roaming (1 enable /0 disable)*/
 		memset(msg.mqinfo.u.WlanInfo.WlanEssid,0,ESSID_LENGTH);
-		memcpy(msg.mqinfo.u.WlanInfo.WlanEssid,AC_WLAN[WlanID]->ESSID,ESSID_LENGTH);
+		//memcpy(msg.mqinfo.u.WlanInfo.WlanEssid,AC_WLAN[WlanID]->ESSID,ESSID_LENGTH);
+		memcpy(msg.mqinfo.u.WlanInfo.WlanEssid,AC_WLAN[WlanID]->ESSID,strlen(AC_WLAN[WlanID]->ESSID));
 		msg.mqinfo.u.WlanInfo.bssindex = AC_WLAN[WlanID]->S_WTP_BSS_List[WtpID][localradio_id];
 		
 		if (msgsnd(ACDBUS_MSGQ, (msgq *)&msg, sizeof(msg.mqinfo), 0) == -1){
@@ -10020,7 +10012,8 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_NAS_PORT_ID(unsigned int RadioID,unsigned char
 		msg.mqinfo.u.WlanInfo.asic_hex = AC_WLAN[WlanID]->asic_hex;/* 0 asic; 1 hex*/
 		msg.mqinfo.u.WlanInfo.Roaming_Policy = AC_WLAN[WlanID]->Roaming_Policy;			/*Roaming (1 enable /0 disable)*/
 		memset(msg.mqinfo.u.WlanInfo.WlanEssid,0,ESSID_LENGTH);
-		memcpy(msg.mqinfo.u.WlanInfo.WlanEssid,AC_WLAN[WlanID]->ESSID,ESSID_LENGTH);
+		//memcpy(msg.mqinfo.u.WlanInfo.WlanEssid,AC_WLAN[WlanID]->ESSID,ESSID_LENGTH);
+		memcpy(msg.mqinfo.u.WlanInfo.WlanEssid,AC_WLAN[WlanID]->ESSID,strlen(AC_WLAN[WlanID]->ESSID));
 		msg.mqinfo.u.WlanInfo.bssindex = AC_WLAN[WlanID]->S_WTP_BSS_List[WtpID][localradio_id];
 		
 		if (msgsnd(ACDBUS_MSGQ, (msgq *)&msg, sizeof(msg.mqinfo), 0) == -1){
@@ -10453,7 +10446,8 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_HOTSPOT_ID(unsigned int RadioID,unsigned char 
 		msg.mqinfo.u.WlanInfo.asic_hex = AC_WLAN[WlanID]->asic_hex;/* 0 asic; 1 hex*/
 		msg.mqinfo.u.WlanInfo.Roaming_Policy = AC_WLAN[WlanID]->Roaming_Policy;			/*Roaming (1 enable /0 disable)*/
 		memset(msg.mqinfo.u.WlanInfo.WlanEssid,0,ESSID_LENGTH);
-		memcpy(msg.mqinfo.u.WlanInfo.WlanEssid,AC_WLAN[WlanID]->ESSID,ESSID_LENGTH);
+		//memcpy(msg.mqinfo.u.WlanInfo.WlanEssid,AC_WLAN[WlanID]->ESSID,ESSID_LENGTH);
+		memcpy(msg.mqinfo.u.WlanInfo.WlanEssid,AC_WLAN[WlanID]->ESSID,strlen(AC_WLAN[WlanID]->ESSID));
 		msg.mqinfo.u.WlanInfo.bssindex = AC_WLAN[WlanID]->S_WTP_BSS_List[WtpID][localradio_id];
 		
 		if (msgsnd(ACDBUS_MSGQ, (msgq *)&msg, sizeof(msg.mqinfo), 0) == -1){
@@ -11691,7 +11685,8 @@ int WID_ENABLE_WLAN_APPLY_RADIO(unsigned int RadioId, unsigned char WlanId)
 	msg.mqinfo.u.WlanInfo.asic_hex = AC_WLAN[WlanId]->asic_hex;/* 0 asic; 1 hex*/
 	msg.mqinfo.u.WlanInfo.Roaming_Policy = AC_WLAN[WlanId]->Roaming_Policy; 		/*Roaming (1 enable /0 disable)*/
 	memset(msg.mqinfo.u.WlanInfo.WlanEssid,0,ESSID_LENGTH);
-	memcpy(msg.mqinfo.u.WlanInfo.WlanEssid,AC_WLAN[WlanId]->ESSID,ESSID_LENGTH);
+	//memcpy(msg.mqinfo.u.WlanInfo.WlanEssid,AC_WLAN[WlanId]->ESSID,ESSID_LENGTH);
+	memcpy(msg.mqinfo.u.WlanInfo.WlanEssid,AC_WLAN[WlanId]->ESSID,strlen(AC_WLAN[WlanId]->ESSID));
 	msg.mqinfo.u.WlanInfo.bssindex = AC_WLAN[WlanId]->S_WTP_BSS_List[WtpID][local_radioid];
 	
 	if (msgsnd(ACDBUS_MSGQ, (msgq *)&msg, sizeof(msg.mqinfo), 0) == -1){
@@ -12227,7 +12222,8 @@ int WID_ENABLE_WLAN_APPLY_WTP(unsigned int WtpID, unsigned char WlanId)
 		msg.mqinfo.u.WlanInfo.asic_hex = AC_WLAN[WlanId]->asic_hex;/* 0 asic; 1 hex*/
 		msg.mqinfo.u.WlanInfo.Roaming_Policy = AC_WLAN[WlanId]->Roaming_Policy; 		/*Roaming (1 enable /0 disable)*/
 		memset(msg.mqinfo.u.WlanInfo.WlanEssid,0,ESSID_LENGTH);
-		memcpy(msg.mqinfo.u.WlanInfo.WlanEssid,AC_WLAN[WlanId]->ESSID,ESSID_LENGTH);
+		//memcpy(msg.mqinfo.u.WlanInfo.WlanEssid,AC_WLAN[WlanId]->ESSID,ESSID_LENGTH);
+		memcpy(msg.mqinfo.u.WlanInfo.WlanEssid,AC_WLAN[WlanId]->ESSID,strlen(AC_WLAN[WlanId]->ESSID));
 		msg.mqinfo.u.WlanInfo.bssindex = AC_WLAN[WlanId]->S_WTP_BSS_List[WtpID][j];
 		
 		if (msgsnd(ACDBUS_MSGQ, (msgq *)&msg, sizeof(msg.mqinfo), 0) == -1){

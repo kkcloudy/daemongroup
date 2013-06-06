@@ -2472,7 +2472,9 @@ DBusMessage * wid_dbus_interface_show_wlanlist(DBusConnection *conn, DBusMessage
 		else{
 			essid = (char *)malloc(ESSID_DEFAULT_LEN + 1);
 			memset(essid,0,(ESSID_DEFAULT_LEN + 1));
-			memcpy(essid,WLAN[i]->ESSID,ESSID_DEFAULT_LEN);
+			//memcpy use error
+			//memcpy(essid,WLAN[i]->ESSID,ESSID_DEFAULT_LEN);
+			memcpy(essid,WLAN[i]->ESSID,strlen(WLAN[i]->ESSID));
 		}
 		for(j=0;j<ESSID_DEFAULT_LEN;j++)
 		{
@@ -7513,8 +7515,10 @@ DBusMessage * wid_dbus_interface_show_wlan_stats_information(DBusConnection *con
 					char *wlan_essid = NULL;
 					wlan_essid = (char *)malloc(ESSID_DEFAULT_LEN+1);
 					memset(wlan_essid, 0, ESSID_DEFAULT_LEN+1);
-					if(WLAN->ESSID!=NULL)
-						memcpy(wlan_essid, WLAN->ESSID, ESSID_DEFAULT_LEN);
+					if(WLAN->ESSID!=NULL){
+						//memcpy(wlan_essid, WLAN->ESSID, ESSID_DEFAULT_LEN);
+						memcpy(wlan_essid, WLAN->ESSID, strlen(WLAN->ESSID));
+					}
 					else
 						memcpy(wlan_essid, " ", 1);
 					for(k = 0; k<TOTAL_AP_IF_NUM; k++){

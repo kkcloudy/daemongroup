@@ -66,7 +66,7 @@ struct CWMultiHomedInterface{
 
 typedef struct {
 	int count;
-	struct pollfd *pfd;
+	struct pollfd pfd[73];//listenning interface max num 72 + 1netlink
 	struct CWMultiHomedInterface *interfaces;
 } CWMultiHomedSocket;
 

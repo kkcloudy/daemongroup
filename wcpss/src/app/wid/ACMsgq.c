@@ -166,7 +166,8 @@ void WID_WLAN_CONFIG_SAVE(unsigned int WTPIndex,unsigned int local_radio)
 								msg.mqinfo.u.WlanInfo.asic_hex = AC_WLAN[k]->asic_hex;/* 0 asic; 1 hex*/
 								msg.mqinfo.u.WlanInfo.Roaming_Policy = AC_WLAN[k]->Roaming_Policy;		/*Roaming (1 enable /0 disable)*/
 								memset(msg.mqinfo.u.WlanInfo.WlanEssid,0,ESSID_LENGTH);
-								memcpy(msg.mqinfo.u.WlanInfo.WlanEssid,AC_WLAN[k]->ESSID,ESSID_LENGTH);
+								//memcpy(msg.mqinfo.u.WlanInfo.WlanEssid,AC_WLAN[k]->ESSID,ESSID_LENGTH);
+								memcpy(msg.mqinfo.u.WlanInfo.WlanEssid,AC_WLAN[k]->ESSID,strlen(AC_WLAN[k]->ESSID));
 								msg.mqinfo.u.WlanInfo.bssindex = AC_WLAN[k]->S_WTP_BSS_List[WTPIndex][local_radio];
 								
 								elem = (struct msgqlist*)malloc(sizeof(struct msgqlist));
