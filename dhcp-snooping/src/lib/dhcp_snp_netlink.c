@@ -91,6 +91,40 @@ int addattr_l(struct nlmsghdr *n, int maxlen, int type, const void *data,
 	n->nlmsg_len = NLMSG_ALIGN(n->nlmsg_len) + RTA_ALIGN(len);
 	return 0;
 }
+/**********************************************************************************
+ * addattr32
+ *	Add attribute to netlink message
+ *
+ *	INPUT:
+ *		n 	- message header
+ *		maxlen - maximum length
+ *		type - message type
+ *		data - message data
+ *		alen - message data length
+ *
+ *	OUTPUT:
+ *		NULL
+ *
+ *	RETURN:
+ *		0		- success
+ *	 	-1		- fail
+ **********************************************************************************/
+
+int addattr32(struct nlmsghdr *n, int maxlen, int type, __u32 data)
+{
+	int len = RTA_LENGTH(4);
+	struct rtattr *rta;
+	if (NLMSG_ALIGN(n->nlmsg_len) + len > maxlen) {
+		log_error("addattr32: Error! max allowed bound %d exceeded\n",maxlen);
+		return -1;
+	}
+	rta = NLMSG_TAIL(n);
+	rta->rta_type = type;
+	rta->rta_len = len;
+	memcpy(RTA_DATA(rta), &data, 4);
+	n->nlmsg_len = NLMSG_ALIGN(n->nlmsg_len) + len;
+	return 0;
+}
 
 /**********************************************************************************
  * dhcp_snp_netlink_init
@@ -304,6 +338,134 @@ int dhcp_snp_netlink_do_ipneigh
 	
 	return ret;
 }
+
+/**********************************************************************************
+ * dhcp_snp_netlink_add_static_route
+ *	Initialize DHCP snooping netlink socket
+ *
+ *	INPUT:
+ *		NULL
+ *
+ *	OUTPUT:
+ *		NULL
+ *
+ *	RETURN:
+ *		DHCP_SNP_RETURN_CODE_OK		- success
+ *	 	DHCP_SNP_RETURN_CODE_ERROR		- fail
+ **********************************************************************************/
+int dhcp_snp_netlink_add_static_route
+(
+	enum dhcpsnp_rtnl_static_route_op cmd,
+	unsigned int ifindex,
+	unsigned int ipaddr
+)
+{
+	int ret = DHCP_SNP_RETURN_CODE_OK, status = 0;;
+	int msg_type = 0, flags = 0;
+	char ifname[IF_NAMESIZE] = {0};
+	struct {
+			struct nlmsghdr 	n;
+			struct rtmsg		r;
+			char			buf[1024];
+		} req;
+	
+	if(!dhcpsnp_rtnl || FD_INVALID(dhcpsnp_rtnl->fd)) {
+		ret = dhcp_snp_netlink_init();
+		if(DHCP_SNP_RETURN_CODE_OK != ret) {
+			syslog_ax_dhcp_snp_err("init netlink error when %s ip neigh!\n", DCHPSNP_RTNL_IPNEIGH_DESC(cmd));
+			return ret;
+		}
+	}
+
+	
+	if(!if_indextoname(ifindex, ifname)) {
+		syslog_ax_dhcp_snp_err("no intf found as idx %d netlink error when %s ip neigh!\n", \
+								ifindex, DCHPSNP_RTNL_IPNEIGH_DESC(cmd));
+		return ret;
+	}
+
+	if (dhcp_snp_u32ip_check(ipaddr)) {
+		log_error("%s: invalid ip address %s\n", __func__, 
+			u32ip2str(ipaddr));
+		return DHCP_SNP_RETURN_CODE_ERROR;
+	}
+	
+	switch(cmd) {
+		default:
+		case DHCPSNP_RTNL_STATIC_ROUTE_UPDATE_E:
+			break;
+		case DHCPSNP_RTNL_STATIC_ROUTE_ADD_E:
+			flags = NLM_F_CREATE|NLM_F_EXCL;
+			msg_type = RTM_NEWROUTE;
+			break;
+		case DHCPSNP_RTNL_STATIC_ROUTE_DEL_E:
+			flags = 0;
+			msg_type = RTM_DELROUTE;
+			break;
+	}
+	
+	memset(&req, 0, sizeof(req));
+	
+	req.n.nlmsg_len = NLMSG_LENGTH(sizeof(struct rtmsg));
+	req.n.nlmsg_flags = NLM_F_REQUEST|flags;
+	req.n.nlmsg_type = msg_type;
+	req.r.rtm_family = AF_INET;  
+	req.r.rtm_table = 254;        
+	req.r.rtm_scope = 255;			
+	req.r.rtm_dst_len = 32;  //32 mask
+
+	if (cmd != DHCPSNP_RTNL_STATIC_ROUTE_DEL_E) {
+		req.r.rtm_protocol = RTPROT_BOOT;
+		req.r.rtm_scope = RT_SCOPE_UNIVERSE;
+		req.r.rtm_type = RTN_UNICAST;
+	}
+
+
+	/* add ip address */	
+	addattr_l(&req.n, sizeof(req), RTA_DST, &ipaddr, 4);
+	/* ifindex */
+	addattr32(&req.n, sizeof(req), RTA_OIF, ifindex);
+	/* update iov length */
+	//iov.iov_len = req.n.nlmsg_len;
+
+	if (cmd == DHCPSNP_RTNL_STATIC_ROUTE_DEL_E)
+		req.r.rtm_scope = RT_SCOPE_NOWHERE;
+	else
+		req.r.rtm_scope = RT_SCOPE_LINK;
+	
+	syslog_ax_dhcp_snp_dbg("host route op %s ifname %s ip %d.%d.%d.%d \n",  \
+				DCHPSNP_RTNL_ADD_STATIC_ROUTE_DESC(cmd), ifname, (ipaddr>>24)&0xFF, (ipaddr>>16)&0xFF, \
+				(ipaddr>>8)&0xFF, ipaddr&0xFF);
+
+	struct sockaddr_nl nladdr;
+		struct iovec iov = {
+			.iov_base = (void*) &req.n,
+			.iov_len = req.n.nlmsg_len
+		};
+		struct msghdr msg = {
+			.msg_name = &nladdr,
+			.msg_namelen = sizeof(nladdr),
+			.msg_iov = &iov,
+			.msg_iovlen = 1,
+		};
+		req.n.nlmsg_flags |= NLM_F_ACK;
+	
+	
+		memset(&nladdr, 0, sizeof(nladdr));
+		nladdr.nl_family = AF_NETLINK;
+		nladdr.nl_pid = 0;
+		nladdr.nl_groups = 0;
+	
+		req.n.nlmsg_seq = 0;
+	status = sendmsg(dhcpsnp_rtnl->fd, &msg, 0);
+	if(status < 0) {
+		syslog_ax_dhcp_snp_dbg("send netlink message error %s\n", strerror(errno));
+		ret = DHCP_SNP_RETURN_CODE_ERROR;
+	}
+
+	return ret;
+}
+
 
 /**********************************************************************************
  * dhcp_snp_netlink_ipneigh_ctrl

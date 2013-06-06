@@ -13,11 +13,23 @@ enum dhcpsnp_rtnl_ipneigh_op {
 	DHCPSNP_RTNL_IPNEIGH_UPDATE_E
 };
 
+/* dhcp snooping netlink add route operator */
+enum dhcpsnp_rtnl_static_route_op {
+	DHCPSNP_RTNL_STATIC_ROUTE_ADD_E,
+	DHCPSNP_RTNL_STATIC_ROUTE_DEL_E,
+	DHCPSNP_RTNL_STATIC_ROUTE_UPDATE_E
+};
+
 /* dhcp snooping netlink ip neigh description */
 #define DCHPSNP_RTNL_IPNEIGH_DESC(op) \
 	(DHCPSNP_RTNL_IPNEIGH_ADD_E == op) ? "add": \
 	(DHCPSNP_RTNL_IPNEIGH_DEL_E == op) ? "del": \
 	(DHCPSNP_RTNL_IPNEIGH_UPDATE_E == op) ? "update": "unkown"
+/* dhcp snooping netlink add host route description */
+#define DCHPSNP_RTNL_ADD_STATIC_ROUTE_DESC(op) \
+	(DHCPSNP_RTNL_STATIC_ROUTE_ADD_E == op) ? "add": \
+	(DHCPSNP_RTNL_STATIC_ROUTE_DEL_E == op) ? "del": \
+	(DHCPSNP_RTNL_STATIC_ROUTE_UPDATE_E == op) ? "update": "unkown"
 
 /* ip neigh command */
 #define DHCPSNP_RTNL_CMD_IPNEIGH_ADD	RTM_NEWNEIGH

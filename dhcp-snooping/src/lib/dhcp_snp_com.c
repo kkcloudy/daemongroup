@@ -62,6 +62,8 @@ extern "C"
 #include "dhcp_snp_listener.h"
 #include "dhcp_snp_com.h"
 #include "dhcp_snp_netlink.h"
+#include "sys/wait.h"
+#include "sys/types.h"
 
 /*********************************************************
 *	global variable define											*
@@ -5385,12 +5387,14 @@ DBusMessage *dhcp_snp_dbus_del_host_router
 	unsigned int record_count = NPD_DHCP_SNP_INIT_0;
     NPD_DHCP_SNP_TBL_ITEM_T *show_items = NULL;
 	unsigned int i = NPD_DHCP_SNP_INIT_0;
+	unsigned int ip  = NPD_DHCP_SNP_INIT_0;
 	char ifname[IF_NAMESIZE]={0};
 	char *name = NULL;
-	char command[128] = {0};
+//	char command[128] = {0};
 	
 	dbus_error_init(&err);
 	if (!(dbus_message_get_args(msg, &err,
+							DBUS_TYPE_UINT32, &ip,
 							DBUS_TYPE_STRING, &name,
 							DBUS_TYPE_INVALID)))
 	{
@@ -5425,15 +5429,28 @@ DBusMessage *dhcp_snp_dbus_del_host_router
 				show_items=NULL;
 				return NULL;
 			}
-			if((0 == strlen(name)) || (!strncmp(name,ifname,IF_NAMESIZE))){
-			sprintf(command,"sudo route del -host %u.%u.%u.%u dev %s",((show_items[i].ip_addr)>>24)&0xff,\
-				((show_items[i].ip_addr)>>16)&0xff,((show_items[i].ip_addr)>>8)&0xff,((show_items[i].ip_addr)>>0)&0xff,ifname);
-			system(command);
+			if(0 != strlen(name) && ip && (show_items[i].ip_addr == ip) && (!strncmp(name,ifname,IF_NAMESIZE))){
+				dhcp_snp_netlink_add_static_route(DHCPSNP_RTNL_STATIC_ROUTE_DEL_E,  \
+													show_items[i].ifindex, show_items[i].ip_addr);
+				ret = DHCP_SNP_RETURN_CODE_FOUND;
+				break;
+			}else if(!ip && ((0 == strlen(name)) || (!strncmp(name,ifname,IF_NAMESIZE)))){
+			//sprintf(command,"sudo route del -host %u.%u.%u.%u dev %s",((show_items[i].ip_addr)>>24)&0xff,\
+			//	((show_items[i].ip_addr)>>16)&0xff,((show_items[i].ip_addr)>>8)&0xff,((show_items[i].ip_addr)>>0)&0xff,ifname);
+			//system(command);
+				dhcp_snp_netlink_add_static_route(DHCPSNP_RTNL_STATIC_ROUTE_DEL_E,  \
+													show_items[i].ifindex, show_items[i].ip_addr);
+				
+				ret = DHCP_SNP_RETURN_CODE_FOUND;
 			}
 			memset(ifname,0,IF_NAMESIZE);
-			memset(command,0,128);
+			//memset(command,0,128);
 		}	
+	    if(DHCP_SNP_RETURN_CODE_ENABLE_GBL == ret){
+			ret = DHCP_SNP_RETURN_CODE_NOT_FOUND;
 	} 
+	}
+	
 	reply = dbus_message_new_method_return(msg);
 	dbus_message_iter_init_append(reply, &iter);
 	dbus_message_iter_append_basic(&iter,

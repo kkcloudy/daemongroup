@@ -1075,9 +1075,11 @@ unsigned int dhcp_snp_tbl_refresh_bind
 				syslog_ax_dhcp_snp_err("no intf found as idx %d netlink error !\n", item->ifindex);
 				return DHCP_SNP_RETURN_CODE_ERROR;
 			}
-			sprintf(command,"sudo route del -host %u.%u.%u.%u dev %s",(item->ip_addr>>24)&0xff,\
-				(item->ip_addr>>16)&0xff,(item->ip_addr>>8)&0xff,(item->ip_addr>>0)&0xff,ifname);
-			system(command);
+			dhcp_snp_netlink_add_static_route(DHCPSNP_RTNL_STATIC_ROUTE_DEL_E,  \
+													item->ifindex, item->ip_addr);
+			//sprintf(command,"sudo route del -host %u.%u.%u.%u dev %s",(item->ip_addr>>24)&0xff,\
+			//	(item->ip_addr>>16)&0xff,(item->ip_addr>>8)&0xff,(item->ip_addr>>0)&0xff,ifname);
+			//system(command);
 			}
 	}
 
@@ -1134,9 +1136,11 @@ unsigned int dhcp_snp_tbl_refresh_bind
 				syslog_ax_dhcp_snp_err("no intf found as idx %d netlink error !\n", item->ifindex);
 				return DHCP_SNP_RETURN_CODE_ERROR;
 			}
-			sprintf(command,"sudo route add -host %u.%u.%u.%u dev %s",(item->ip_addr>>24)&0xff,\
-				(item->ip_addr>>16)&0xff,(item->ip_addr>>8)&0xff,(item->ip_addr>>0)&0xff,ifname);
-			system(command);
+			dhcp_snp_netlink_add_static_route(DHCPSNP_RTNL_STATIC_ROUTE_ADD_E,  \
+													item->ifindex, item->ip_addr);
+			//sprintf(command,"sudo route add -host %u.%u.%u.%u dev %s",(item->ip_addr>>24)&0xff,\
+			//	(item->ip_addr>>16)&0xff,(item->ip_addr>>8)&0xff,(item->ip_addr>>0)&0xff,ifname);
+			//system(command);
 			}
 	}
 
@@ -1546,9 +1550,11 @@ int dhcp_snp_aging_mechanism(void)
 							syslog_ax_dhcp_snp_err("no intf found as idx %d netlink error !\n", tempItem->ifindex);
 							return DHCP_SNP_RETURN_CODE_ERROR;
 						}
-						sprintf(command,"sudo route del -host %u.%u.%u.%u dev %s",(tempItem->ip_addr>>24)&0xff,\
-						(tempItem->ip_addr>>16)&0xff,(tempItem->ip_addr>>8)&0xff,(tempItem->ip_addr>>0)&0xff,ifname);
-						system(command);
+						dhcp_snp_netlink_add_static_route(DHCPSNP_RTNL_STATIC_ROUTE_DEL_E,  \
+															tempItem->ifindex, tempItem->ip_addr);
+						//sprintf(command,"sudo route del -host %u.%u.%u.%u dev %s",(tempItem->ip_addr>>24)&0xff,\
+						//(tempItem->ip_addr>>16)&0xff,(tempItem->ip_addr>>8)&0xff,(tempItem->ip_addr>>0)&0xff,ifname);
+						//system(command);
 									
 						if(DHCP_SNP_RETURN_CODE_OK != ret) {
 							log_error("dhcp snp release item del ip neigh error %x\n", ret);

@@ -942,6 +942,7 @@ unsigned int dcli_dhcp_snp_show_wan_bind_table
 		vty_out(vty, "%-4s %-15s %-17s %-8s %-5s %-9s\n",
 					 "Type", "IP Address", "MAC Address", "Lease", "Vlan", "Interface");
 		vty_out(vty, "==== =============== ================= ======== ===== =========\n");
+		vty_out(vty,"total %d\n",record_count);
 		for (j = 0; j < record_count; j++) {
 			memset(macaddr, 0, 6);
 			bind_state = DCLI_DHCP_SNP_INIT_0;
@@ -5132,7 +5133,8 @@ unsigned int
 dcli_dhcp_snp_del_route
 (
 	struct vty *vty ,
-	char *name
+	char *name,
+    unsigned int ip
 )
 {
 	DBusMessage *query = NULL;
@@ -5150,6 +5152,7 @@ dcli_dhcp_snp_del_route
 								DHCPSNP_DBUS_METHOD_DELETE_HOST_ROUTER);
 	dbus_error_init(&err);
 	dbus_message_append_args(query,
+							 DBUS_TYPE_UINT32, &ip,
 							 DBUS_TYPE_STRING, &name,
 							 DBUS_TYPE_INVALID);
 	reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection, query, -1, &err);
@@ -5183,6 +5186,78 @@ dcli_dhcp_snp_del_route
 /*
 *delete all the host routers added as for "config dhcp-snooping add router IFNAME "
 */
+DEFUN(delete_dhcp_snp_router_one_cmd_func,
+	delete_dhcp_snp_router_one_cmd,
+	"delete dhcp-snooping host-router ip A.B.C.D iface IFNAME",
+	DCLI_DHCP_SNP_DEL_BINDING_STR
+	DCLI_DHCP_SNP_STR
+	"host-router\n"
+	"delete dhcp-snooping host-router by\n"
+)
+{
+	DBusMessage *query = NULL;
+	DBusMessage *reply = NULL;
+	DBusError err;
+	unsigned int ret = DHCP_SNP_RETURN_CODE_OK;
+	unsigned int ip      = DCLI_DHCP_SNP_INIT_0;
+	char ifname[IF_NAMESIZE] = {0}, name[IF_NAMESIZE] = {0};
+	int Ret = 0;
+	//ETHERADDR macAddr;
+	//memset(&macAddr, 0, sizeof(ETHERADDR));
+	if((CONFIG_NODE == vty->node) || (HANSI_NODE == vty->node) || (LOCAL_HANSI_NODE == vty->node)) {
+		/* get 1st argument */
+		if(2 == argc){
+				memcpy(ifname, argv[1], strlen((char*)argv[1]));
+		}
+		else {
+			vty_out(vty, "%% Command without wrong parameters!\n");
+			return CMD_WARNING;
+		}
+	}
+	else if(INTERFACE_NODE == vty->node) {
+		//ifname = vlan_eth_port_ifname;
+		memcpy(ifname, vlan_eth_port_ifname, strlen((char*)vlan_eth_port_ifname));
+	}
+	else {
+		vty_out(vty, "%% Wrong command node for dhcp snooping config!\n");
+		return CMD_WARNING;
+	}
+	if(1 != inet_pton(AF_INET, (char *)argv[0], &ip)) {
+		vty_out(vty, "%% invalid ip address %s\n", (char *)argv[0]);
+		return CMD_WARNING;
+	}
+	Ret = dcli_dhcp_snp_convert_ifname_check(vty, ifname);
+	if(2 == Ret)
+	dcli_dhcp_snp_convert_ifname(vty, ifname, name);
+	else if(1 == Ret){
+		sprintf(name, "%s", ifname);
+	}else{
+		vty_out(vty, "%% Wrong interfacename for dhcp snooping config!\n");
+		return CMD_WARNING;
+	}
+	if(0 == strncmp(name, "ve", 2))
+	dcli_dhcp_check_snp_interface(name);
+	
+	ret = dcli_dhcp_snp_del_route(vty,name,ip);
+	
+	if (DHCP_SNP_RETURN_CODE_ENABLE_GBL == ret) {
+			return CMD_SUCCESS;
+		}else if (DHCP_SNP_RETURN_CODE_FOUND == ret) {
+			return CMD_SUCCESS;
+		}else if (DHCP_SNP_RETURN_CODE_NOT_ENABLE_GBL == ret) {
+			vty_out(vty, "%% DHCP-Snooping not enabled global.\n");
+		}else if (DHCP_SNP_RETURN_CODE_NOT_FOUND == ret) {
+			vty_out(vty, "%% Delete route not found.\n");
+		}else {
+			vty_out(vty, "%% Delete host-route failed\n");
+		}	
+
+	return CMD_SUCCESS;	
+}
+
+/*
+*delete all the host routers added as for "config dhcp-snooping add router IFNAME "
+*/
 DEFUN(delete_dhcp_snp_router_cmd_func_all,
 	delete_dhcp_snp_router_cmd_all,
 	"delete dhcp-snooping host-router all",
@@ -5196,16 +5271,19 @@ DEFUN(delete_dhcp_snp_router_cmd_func_all,
 	DBusMessage *reply = NULL;
 	DBusError err;
 	unsigned int ret = DHCP_SNP_RETURN_CODE_OK;
+	unsigned int ip      = DCLI_DHCP_SNP_INIT_0;
 	char ifname[IF_NAMESIZE] = {0};
 	//ETHERADDR macAddr;
 	//memset(&macAddr, 0, sizeof(ETHERADDR));
-	ret = dcli_dhcp_snp_del_route(vty,ifname);
+	ret = dcli_dhcp_snp_del_route(vty,ifname,ip);
 	if (DHCP_SNP_RETURN_CODE_ENABLE_GBL == ret) {
 		return CMD_SUCCESS;
+	}else if (DHCP_SNP_RETURN_CODE_FOUND == ret) {
+			return CMD_SUCCESS;
 	}else if (DHCP_SNP_RETURN_CODE_NOT_ENABLE_GBL == ret) {
 		vty_out(vty, "%% DHCP-Snooping not enabled global.\n");
 	}else if (DHCP_SNP_RETURN_CODE_NOT_FOUND == ret) {
-		vty_out(vty, "%% Delete item not found.\n");
+		vty_out(vty, "%% Delete route not found.\n");
 	}else {
 		vty_out(vty, "%% Delete host-route failed\n");
 	}
@@ -5229,6 +5307,7 @@ DEFUN(delete_dhcp_snp_router_cmd_func,
 	DBusMessage *reply = NULL;
 	DBusError err;
 	unsigned int ret = DHCP_SNP_RETURN_CODE_OK;
+	unsigned int ip      = DCLI_DHCP_SNP_INIT_0;
 	char ifname[IF_NAMESIZE] = {0}, name[IF_NAMESIZE] = {0};
 	int Ret = 0;
 	//ETHERADDR macAddr;
@@ -5263,16 +5342,19 @@ DEFUN(delete_dhcp_snp_router_cmd_func,
 	if(0 == strncmp(name, "ve", 2))
 	dcli_dhcp_check_snp_interface(name);
 	
-	ret = dcli_dhcp_snp_del_route(vty,name);
+	ret = dcli_dhcp_snp_del_route(vty, name, ip);
+	
 	if (DHCP_SNP_RETURN_CODE_ENABLE_GBL == ret) {
-		return CMD_SUCCESS;
-	}else if (DHCP_SNP_RETURN_CODE_NOT_ENABLE_GBL == ret) {
-		vty_out(vty, "%% DHCP-Snooping not enabled global.\n");
-	}else if (DHCP_SNP_RETURN_CODE_NOT_FOUND == ret) {
-		vty_out(vty, "%% Delete item not found.\n");
-	}else {
-		vty_out(vty, "%% Delete host-route failed\n");
-	}
+			return CMD_SUCCESS;
+		}else if (DHCP_SNP_RETURN_CODE_FOUND == ret) {
+			return CMD_SUCCESS;
+		}else if (DHCP_SNP_RETURN_CODE_NOT_ENABLE_GBL == ret) {
+			vty_out(vty, "%% DHCP-Snooping not enabled global.\n");
+		}else if (DHCP_SNP_RETURN_CODE_NOT_FOUND == ret) {
+			vty_out(vty, "%% Delete route not found.\n");
+		}else {
+			vty_out(vty, "%% Delete host-route failed\n");
+		}	
 
 	return CMD_SUCCESS;	
 }
@@ -5662,7 +5744,8 @@ void dcli_dhcp_snp_element_init
 	install_element(CONFIG_NODE, &add_dhcp_snp_wan_bindtable_cmd);	
 	install_element(CONFIG_NODE, &delete_dhcp_snp_wan_bindtable_by_mac_cmd);
 	install_element(CONFIG_NODE, &delete_dhcp_snp_router_cmd);
-	install_element(CONFIG_NODE, &delete_dhcp_snp_router_cmd_all);
+	install_element(CONFIG_NODE, &delete_dhcp_snp_router_cmd_all);	
+	install_element(CONFIG_NODE, &delete_dhcp_snp_router_one_cmd);
 	install_element(CONFIG_NODE, &config_dhcp_snp_arp_proxy_enable_cmd);
 
 
@@ -5678,7 +5761,8 @@ void dcli_dhcp_snp_element_init
 	install_element(HANSI_NODE, &add_dhcp_snp_wan_bindtable_cmd);
 	install_element(HANSI_NODE, &delete_dhcp_snp_wan_bindtable_by_mac_cmd);
 	install_element(HANSI_NODE, &delete_dhcp_snp_router_cmd);
-	install_element(HANSI_NODE, &delete_dhcp_snp_router_cmd_all);
+	install_element(HANSI_NODE, &delete_dhcp_snp_router_cmd_all);	
+	install_element(HANSI_NODE, &delete_dhcp_snp_router_one_cmd);
 
 	install_element(LOCAL_HANSI_NODE, &config_dhcp_snp_wan_enable_cmd);
 	install_element(LOCAL_HANSI_NODE, &config_dhcp_snp_wan_set_intf_cmd);
@@ -5689,7 +5773,8 @@ void dcli_dhcp_snp_element_init
 	install_element(LOCAL_HANSI_NODE, &add_dhcp_snp_wan_bindtable_cmd);
 	install_element(LOCAL_HANSI_NODE, &delete_dhcp_snp_wan_bindtable_by_mac_cmd);
 	install_element(LOCAL_HANSI_NODE, &delete_dhcp_snp_router_cmd);
-	install_element(LOCAL_HANSI_NODE, &delete_dhcp_snp_router_cmd_all);
+	install_element(LOCAL_HANSI_NODE, &delete_dhcp_snp_router_cmd_all);	
+	install_element(LOCAL_HANSI_NODE, &delete_dhcp_snp_router_one_cmd);
 
 
 	return ;
