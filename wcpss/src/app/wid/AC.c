@@ -172,6 +172,11 @@ int gWTP_MAX_STA = 128;/*wcl add for globle variable*/
 int gNTP_STATE = 1;/*wcl add for globle variable*/
 int gNTP_INTERVAL = 3600;/*wcl add for globle variable*/
 
+/* Huangleilei copy from 1.3.18, 20130610 */
+char gMAX_WEB_REPORT_SNR = AP_SNR_MAX;
+char gMIN_WEB_REPORT_SNR = AP_SNR_MIN;
+/* Huangleilei copy end */
+
 int gWLAN_MAX_ALLOWED_STA_NUM = 65536;
 int gWLAN_MAX_ALLOWED_STA_NUM_FOR_BSS = 128;/*fengwenchao add 20120323*/
 unsigned char  gWLAN_ATH_L2_ISOLATION = 0; /*fengwenchao add 20120323*/

@@ -39358,6 +39358,130 @@ DEFUN(set_wtp_5g_able_cmd_func,
 	return CMD_SUCCESS;
 }
 
+/* Huangleilei copy from 1.3.18, 20130610 */
+DEFUN(wtp_set_web_report_ap_snr_range_cmd_func,
+	  wtp_set_web_report_ap_snr_range_cmd,
+	  "set web-report ap-snr-range MAXSNR MINSNR",
+	  WTP_SET
+	  "web report config\n"
+	  "ap snr value range\n"
+	  "max snr value,range(-120~-10)\n"
+	  "max snr value,range(-120~-10)\n"
+	 )
+{
+	DBusMessage *query = NULL, *reply = NULL;
+	DBusError err;
+	DBusMessageIter	iter;
+	int ret = 0;
+	int max_snr = 0;
+	int min_snr = 0;	
+	int index = 0;
+	int localid = 1;
+   	int slot_id = HostSlotId;
+	char BUSNAME[PATH_LEN] = {0};
+	char OBJPATH[PATH_LEN] = {0};
+	char INTERFACE[PATH_LEN] = {0};
+	
+	ret = parse_int_value(argv[0], &max_snr);
+	if (WID_DBUS_SUCCESS != ret)
+	{
+		vty_out(vty,"%% unknown id format %d\n",max_snr);
+		return CMD_SUCCESS;
+	}
+
+	ret = parse_int_value(argv[1], &min_snr);
+	if (WID_DBUS_SUCCESS != ret)
+	{
+		vty_out(vty,"%% unknown id format %d\n",min_snr);
+		return CMD_SUCCESS;
+	}
+	
+	if ((AP_SNR_MAX < max_snr) || (AP_SNR_MIN > max_snr))
+	{
+		vty_out(vty,"%% input max snr should be <-120~-10>\n");
+		return CMD_SUCCESS;
+	}
+	if ((AP_SNR_MAX < min_snr) || (AP_SNR_MIN > min_snr))
+	{
+		vty_out(vty,"%% input min snr should be <-120~-10>\n");
+		return CMD_SUCCESS;
+	}
+	if(min_snr >= max_snr)
+	{
+		vty_out(vty,"%% input max snr should be greater than min snr\n");
+		return CMD_SUCCESS;		
+	}
+
+	switch(vty->node)
+	{
+		case CONFIG_NODE:
+			index = 0;
+			localid = vty->local;
+			slot_id = vty->slotindex;
+			break;
+		case HANSI_NODE:
+			index = vty->index;
+			localid = vty->local;
+			slot_id = vty->slotindex;
+			break;
+		default:
+			vty_out(vty, "this node type was not supported\n");
+			return CMD_SUCCESS;
+			break;
+	}
+
+	DBusConnection *dcli_dbus_connection = NULL;
+	ReInitDbusConnection(&dcli_dbus_connection, slot_id, distributFag);
+
+	ReInitDbusPath_V2(localid,index,WID_DBUS_BUSNAME,BUSNAME);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_OBJPATH,OBJPATH);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_INTERFACE,INTERFACE);
+	
+	query = dbus_message_new_method_call(BUSNAME, OBJPATH, INTERFACE,
+											WID_DBUS_CONF_METHOD_SET_WEB_REPORT_SNR_RANGE);	
+
+	dbus_error_init(&err);
+	
+	dbus_message_append_args(query,
+							 DBUS_TYPE_INT32, &max_snr,
+							 DBUS_TYPE_INT32, &min_snr,
+							 DBUS_TYPE_INVALID);
+	reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection, query, -1, &err);	
+	dbus_message_unref(query);
+	if (NULL == reply) 
+	{
+		vty_out(vty,"%% failed get reply.\n");
+		if (dbus_error_is_set(&err)) 
+		{
+			vty_out(vty,"%s raised: %s", err.name,err.message);
+			dbus_error_free(&err);
+		}
+		return CMD_SUCCESS;
+	}	
+
+	dbus_message_iter_init(reply, &iter);
+	dbus_message_iter_get_basic(&iter, &ret);
+	dbus_message_unref(reply);
+
+	switch (ret)
+	{
+		case WID_DBUS_SUCCESS:
+			vty_out(vty, "command oprate successfully\n");
+			break;
+		case VALUE_OUT_OF_RANGE:
+			vty_out(vty, "<error> the range value you inputted was out of we accept\n");
+			break;
+		case MIN_LARGER_THAN_MAX:
+			vty_out(vty, "<error> the min [%c] is larger than the max [%c] you inputted\n", argv[1], argv[0]);
+			break;
+		default :
+			vty_out(vty,"<error> other unknow error happend: %d\n", ret);
+			break;
+	}
+	
+	return CMD_SUCCESS;
+}
+
 int dcli_wtp_show_running_config_start(struct vty*vty) {	
 	char *showStr = NULL,*cursor = NULL,ch = 0,tmpBuf[SHOWRUN_PERLINE_SIZE] = {0};
 	DBusMessage *query, *reply;
@@ -40050,6 +40174,7 @@ void dcli_wtp_init(void) {
 	install_element(CONFIG_NODE,&show_wtp_list_by_model_cmd);      //fengwenchao add  20110303
 	install_element(CONFIG_NODE,&show_wtp_list_by_version_cmd);    //fengwenchao add 20110314
 	install_element(CONFIG_NODE,&show_statistcs_information_of_all_wtp_whole_cmd);  //fengwenchao add 20110330
+	install_element(CONFIG_NODE, &wtp_set_web_report_ap_snr_range_cmd);			/* Huangleilei copy from 1.3.18, 20130610 */
 	
 	/************************************************WTP_NODE**************************************************/
 	install_element(WTP_NODE,&wtp_apply_interface_cmd);
@@ -40271,6 +40396,7 @@ void dcli_wtp_init(void) {
 			install_element(HANSI_NODE,&set_wtp_dhcp_snooping_enable_cmd);
 			install_element(HANSI_NODE,&set_ap_username_password_cmd);
 			install_element(HANSI_NODE,&set_wtp_5g_able_cmd);
+			install_element(HANSI_NODE, &wtp_set_web_report_ap_snr_range_cmd);		/* Huangleilei copy from 1.3.18, 20130610 */
 
 			/**************for globle variable end*******************/
 			/*********************************************HANSI_WTP_NODE***********************************************/

@@ -804,6 +804,7 @@ char WID_DBUS_CONF_METHOD_SHOW_AP_UPDATE_FAIL_COUNT[PATH_LEN]=	"wid_show_ap_upda
 char WID_DBUS_CONF_METHOD_WTPLIST_UPDATE_FAIL_LIST[PATH_LEN]=	"show_wtp_list_update_fail";
 char	WID_DBUS_WTP_METHOD_CLEAR_UPDATE_FAIL_WTP_LIST[PATH_LEN]=	"clear_update_fail_wtp_list";
 char WID_DBUS_CONF_METHOD_SHOW_OLD_AP_IMG[PATH_LEN]=		"show_old_ap_img_op";
+char	WID_DBUS_CONF_METHOD_SET_WEB_REPORT_SNR_RANGE[PATH_LEN]=	"set_web_report_snr_range";		/* Huangleilei copy from 1.3.18, 20130610 */
 
 /*zhanglei add for bak ac ip list group*/
 char	WID_DBUS_ACIPLIST_OBJPATH[PATH_LEN]=		"/aw/wid";

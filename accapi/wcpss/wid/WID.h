@@ -11,6 +11,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/un.h>
+#include <pthread.h>
 
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -606,6 +607,96 @@ struct  wlan_stats_info_profile{
 
 typedef struct wlan_stats_info_profile wlan_stats_info;
 
+/* Huang Leilei copy from 1.3.18, 20130610 */
+/* web manager stats from ap stats report */
+typedef struct web_mng_ath_stats_s{
+	unsigned int rx_pkt_unicast;
+	unsigned int tx_pkt_unicast;
+	unsigned int rx_pkt_multicast;
+	unsigned int tx_pkt_multicast;
+	unsigned int sub_rx_packets;
+	unsigned int sub_tx_packets;
+	unsigned int sub_tx_errors;
+	unsigned int sub_rx_errors;
+	unsigned int sub_tx_drops;
+	unsigned int sub_rx_drops;
+	unsigned long long sub_rx_bytes;
+	unsigned long long sub_tx_bytes;
+	unsigned int sub_ast_rx_crcerr;
+	unsigned int sub_ast_rx_badcrypt;
+	unsigned int sub_ast_rx_badmic;
+	unsigned int sub_ast_rx_phyerr;
+	unsigned int sub_rx_pkt_mgmt;
+	unsigned int sub_tx_pkt_mgmt;
+	unsigned long long sub_rx_mgmt;
+	unsigned long long sub_tx_mgmt;
+	unsigned long long sub_total_rx_bytes;
+	unsigned long long sub_total_tx_bytes;
+	unsigned long long sub_total_rx_pkt;
+	unsigned long long sub_total_tx_pkt;
+	unsigned int sub_tx_pkt_control;
+	unsigned int sub_rx_pkt_control;
+	unsigned int tx_pkt_signal;
+	unsigned int rx_pkt_signal;
+	unsigned int dwlink_retry_pkts;
+	unsigned int stats_retry_frames;
+	unsigned int rx_data_pkts;
+	unsigned int tx_data_pkts;		
+}web_mng_ath_stats_t;
+
+typedef struct web_mng_eth_stats_s{
+	unsigned int rx_pkt_broadcast;
+	unsigned int rx_pkt_unicast;
+	unsigned int tx_pkt_broadcast;
+	unsigned int tx_pkt_unicast;
+	unsigned int rx_pkt_multicast;
+	unsigned int tx_pkt_multicast;
+	unsigned int rx_packets;
+	unsigned int tx_packets;
+	unsigned int rx_errors;
+	unsigned int tx_errors;
+	unsigned long long rx_bytes;
+	unsigned long long tx_bytes;
+	unsigned int rx_drop;
+	unsigned int tx_drop;
+	unsigned long long rx_sum_bytes;
+	unsigned long long tx_sum_bytes;
+}web_mng_eth_stats_t;
+
+typedef struct web_mng_wifi_stats_s{
+	unsigned int wtp_rx_packets;
+	unsigned int wtp_tx_packets;	
+	unsigned long long wtp_rx_bytes;
+	unsigned long long wtp_tx_bytes;
+	unsigned int wtp_tx_errors;
+	unsigned int wtp_ast_rx_crcerr;
+	unsigned int wtp_ast_rx_badcrypt;
+	unsigned int wtp_ast_rx_badmic;
+	unsigned int wtp_ast_rx_phyerr;	
+}web_mng_wifi_stats_t;
+
+
+typedef struct web_manager_stats_s{
+	web_mng_ath_stats_t ath_stats[L_RADIO_NUM];
+	web_mng_eth_stats_t eth_stats[AP_ETH_IF_NUM];
+	web_mng_wifi_stats_t wifi_stats;
+	unsigned int sub_rx_packets_ath;
+	unsigned int sub_tx_packets_ath;
+	unsigned long long sub_rx_bytes_ath;
+	unsigned long long sub_tx_bytes_ath;
+	unsigned long long sub_total_rx_bytes_ath;
+	unsigned long long sub_total_tx_bytes_ath;
+	unsigned int sub_total_rx_pkt_ath;
+	unsigned int sub_total_tx_pkt_ath;
+	unsigned int rx_packets_eth;
+	unsigned int tx_packets_eth;
+	unsigned long long rx_bytes_eth;
+	unsigned long long tx_bytes_eth;
+	unsigned long long rx_sum_bytes_eth;
+	unsigned long long tx_sum_bytes_eth;
+}web_manager_stats_t; 
+/* Huangleilei add end */
+
 /*added end*/
 typedef struct{     
 	unsigned char radioId;
@@ -978,6 +1069,9 @@ struct wtp{
 	unsigned int  wtp_triger_num;/*xm add 08/12/04*/
 	unsigned int rx_echocount;
 	wlan_stats_info apstatsinfo[TOTAL_AP_IF_NUM]; /*ath 4 wifi 2 eth 2 total num 8*/
+	pthread_mutex_t mutex_web_report;				/* Huangleilei copy from 1.3.18, 20130610 */
+	web_manager_stats_t web_manager_stats;		/* Huangleilei copy from 1.3.18, 20130610 */
+	web_manager_stats_t pre_web_manager_stats;	/* Huangleilei copy from 1.3.18, 20130610 */
 	unsigned long long rx_bytes;/*total rx byte for this ap*/
 	unsigned long long tx_bytes;/*total tx byte for this ap*/
 	unsigned long long rx_bytes_before;/*tmp total rx byte for this ap*/

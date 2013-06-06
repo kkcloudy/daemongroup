@@ -61,6 +61,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "ACUpdateManage.h"
 #include "AC.h"
 #include "dbus/hmd/HmdDbusPath.h"
+#include "ACCheckReport.h"
 
 static DBusConnection * wid_dbus_connection = NULL;
 static DBusConnection * wid_dbus_connection2 = NULL;
@@ -1524,8 +1525,60 @@ DBusMessage * wid_dbus_interface_wtp_add_del_by_mac(DBusConnection *conn, DBusMe
 	
 }
 
+/* Huangleilei copy from 1.3.18, 20130610 */
+DBusMessage * wid_dbus_interface_set_web_report_snr_range(DBusConnection *conn, DBusMessage *msg, void *user_data)
+{
+	DBusMessage* reply = NULL;
+	DBusError err;
+	DBusMessageIter	iter;
+	int max_snr = 0;
+	int min_snr = 0;
+	int ret = WID_DBUS_SUCCESS;
 
+	dbus_error_init(&err);
+	if (!(dbus_message_get_args (msg, &err,
+								DBUS_TYPE_INT32,&max_snr,
+								DBUS_TYPE_INT32,&min_snr,
+								DBUS_TYPE_INVALID))){
 
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
+				
+		if (dbus_error_is_set(&err)) {
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
+			dbus_error_free(&err);
+		}
+		return NULL;
+	}
+	
+	if ((AP_SNR_MAX < max_snr) || (AP_SNR_MIN > max_snr))
+	{
+		ret = VALUE_OUT_OF_RANGE;
+	}
+	else if ((AP_SNR_MAX < min_snr) || (AP_SNR_MIN > min_snr))
+	{
+		ret = VALUE_OUT_OF_RANGE;
+
+	}
+	else if(min_snr >= max_snr)
+	{
+		ret = MIN_LARGER_THAN_MAX;	
+	}
+	else
+	{
+		gMAX_WEB_REPORT_SNR = max_snr;
+		gMIN_WEB_REPORT_SNR = min_snr;
+	}
+
+	reply = dbus_message_new_method_return(msg);
+	
+	dbus_message_iter_init_append (reply, &iter);
+	
+	dbus_message_iter_append_basic (&iter,
+									 DBUS_TYPE_UINT32,
+									 &ret);
+	return reply;	
+
+}
 
 DBusMessage * wid_dbus_interface_wlan_add_del(DBusConnection *conn, DBusMessage *msg, void *user_data){
 	
@@ -4075,6 +4128,7 @@ DBusMessage * wid_dbus_interface_show_wtp_para_information(DBusConnection *conn,
 	return reply;	
 }
 /*table 4*/
+#if 0
 /* book modify, 2011-1-25 */
 DBusMessage * wid_dbus_interface_show_wtp_wireless_ifstats_information(DBusConnection *conn, DBusMessage *msg, void *user_data){
 	
@@ -4924,6 +4978,573 @@ DBusMessage * wid_dbus_interface_show_wtp_wireless_ifstats_information(DBusConne
 	
 	return reply;	
 }
+#endif
+/* book modify, 2011-5-19 */
+DBusMessage * wid_dbus_interface_show_wtp_wireless_ifstats_information(DBusConnection *conn, DBusMessage *msg, void *user_data){
+	
+	DBusMessage* reply;	
+	DBusMessageIter	 iter;
+	DBusMessageIter	 iter_array;
+	DBusMessageIter iter_sub_array;
+	DBusMessageIter iter_struct;
+	DBusMessageIter iter_sub_struct;
+	DBusError err;
+	dbus_error_init(&err);
+	int ret = WID_DBUS_SUCCESS;
+	int i=0,j=0,k=0;
+	unsigned int wtp_num = 0;
+	unsigned char num_of_radio = 0;
+	char *default_essid = "none";
+	struct Neighbor_AP_ELE *phead = NULL;   //fengwenchao add 20110521
+	int neighbor_ap_count = 0;     //fengwenchao add 20110521
+	unsigned int  default_wtpid = 0;
+	unsigned char wtp_ath_updown_times = 0;
+	unsigned char default_char_value = 0;
+	//unsigned int default_int_value = 0;
+	double defalt_double_value = 0;
+	double avr_snr = 0.0;
+	WID_WTP **WTP = NULL;	
+	unsigned char *mac = NULL;
+	
+	WTP = (WID_WTP **)malloc(WTP_NUM*(sizeof(WID_WTP *)));
+	if(NULL == WTP)
+	{
+		wid_syslog_info("%s %d: ERR out of memory\n",__func__,__LINE__);
+		return NULL;
+	}
+	memset(WTP,0,WTP_NUM*(sizeof(WID_WTP *)));
+
+	mac = (unsigned char *)malloc(MAC_LEN+1);
+	if(NULL == mac)
+	{
+		wid_syslog_info("%s %d: ERR out of memory\n",__func__,__LINE__);
+		return NULL;
+	}
+	memset(mac, 0, MAC_LEN+1);	
+
+	if(hide_quit_wtp_in_showting == 0){
+		wtp_num = Wid_Find_Wtp(WTP);
+	}
+	else if (hide_quit_wtp_in_showting == 1){
+		wtp_num = Wid_Find_Running_Wtp(WTP);
+	}
+	
+	if(wtp_num == 0)
+		ret = WTP_ID_NOT_EXIST;
+	
+	reply = dbus_message_new_method_return(msg);
+		
+	dbus_message_iter_init_append (reply, &iter);
+		
+	dbus_message_iter_append_basic (&iter,
+									DBUS_TYPE_UINT32,
+									&ret);
+
+	dbus_message_iter_append_basic (&iter,
+									DBUS_TYPE_UINT32,
+									&wtp_num);
+
+    if(wtp_num != 0)
+    {
+    	dbus_message_iter_open_container (&iter,
+    									DBUS_TYPE_ARRAY,
+    									DBUS_STRUCT_BEGIN_CHAR_AS_STRING
+    											DBUS_TYPE_UINT32_AS_STRING
+
+    											DBUS_TYPE_BYTE_AS_STRING
+    											DBUS_TYPE_BYTE_AS_STRING
+    											DBUS_TYPE_BYTE_AS_STRING
+    											DBUS_TYPE_BYTE_AS_STRING
+    											DBUS_TYPE_BYTE_AS_STRING
+    											DBUS_TYPE_BYTE_AS_STRING
+
+    											DBUS_TYPE_BYTE_AS_STRING		//wifi_info_switch
+												
+    											DBUS_TYPE_UINT32_AS_STRING			//s1
+    											DBUS_TYPE_UINT32_AS_STRING
+    											DBUS_TYPE_UINT32_AS_STRING
+    											
+    											DBUS_TYPE_UINT64_AS_STRING			//wtp_rx_bytes
+    											DBUS_TYPE_UINT64_AS_STRING			//wtp_tx_bytes
+    											DBUS_TYPE_UINT32_AS_STRING
+    											
+    											DBUS_TYPE_UINT32_AS_STRING
+    											DBUS_TYPE_UINT32_AS_STRING
+    											DBUS_TYPE_UINT32_AS_STRING			//s9
+    											
+    											/*fengwenchao add 20110521*/
+												DBUS_TYPE_UINT32_AS_STRING      // roge_num
+												DBUS_TYPE_ARRAY_AS_STRING
+		    										DBUS_STRUCT_BEGIN_CHAR_AS_STRING
+		    											DBUS_TYPE_UINT32_AS_STRING    //neighbor wtpid
+
+														DBUS_TYPE_ARRAY_AS_STRING
+															DBUS_STRUCT_BEGIN_CHAR_AS_STRING
+																DBUS_TYPE_BYTE_AS_STRING         //neighbor essid
+															DBUS_STRUCT_END_CHAR_AS_STRING
+													DBUS_STRUCT_END_CHAR_AS_STRING
+											/*fengwenchao add end*/
+    											DBUS_TYPE_BYTE_AS_STRING		//wtp_radio_num
+    											DBUS_TYPE_ARRAY_AS_STRING
+    												DBUS_STRUCT_BEGIN_CHAR_AS_STRING
+    														
+														DBUS_TYPE_BYTE_AS_STRING
+														DBUS_TYPE_BYTE_AS_STRING
+
+    													DBUS_TYPE_UINT32_AS_STRING		//rx_pkt_unicast
+    													DBUS_TYPE_UINT32_AS_STRING		//tx_pkt_unicast
+    													DBUS_TYPE_UINT32_AS_STRING		//rx_pkt_multicast
+    													DBUS_TYPE_UINT32_AS_STRING		//tx_pkt_multicast
+
+														DBUS_TYPE_UINT32_AS_STRING		//c1
+														DBUS_TYPE_UINT32_AS_STRING
+														DBUS_TYPE_UINT32_AS_STRING		//sub_tx_errors
+														DBUS_TYPE_UINT32_AS_STRING		//sub_rx_errors
+														DBUS_TYPE_UINT32_AS_STRING		//sub_tx_drops
+														DBUS_TYPE_UINT32_AS_STRING		//sub_rx_drops
+														DBUS_TYPE_UINT64_AS_STRING
+														DBUS_TYPE_UINT64_AS_STRING
+														DBUS_TYPE_UINT32_AS_STRING
+														DBUS_TYPE_UINT32_AS_STRING
+														DBUS_TYPE_UINT32_AS_STRING
+														DBUS_TYPE_UINT32_AS_STRING		//c9
+    													DBUS_TYPE_BYTE_AS_STRING		//snr cur	
+    													DBUS_TYPE_BYTE_AS_STRING
+    													DBUS_TYPE_BYTE_AS_STRING
+    													DBUS_TYPE_DOUBLE_AS_STRING		//snr aver
+    													/*add for new mgmt infor requrement 20100809 */
+    													DBUS_TYPE_UINT32_AS_STRING		//sub_rx_pkt_mgmt
+    													DBUS_TYPE_UINT32_AS_STRING		//sub_tx_pkt_mgmt
+    													DBUS_TYPE_UINT64_AS_STRING		//sub_rx_mgmt
+    													DBUS_TYPE_UINT64_AS_STRING		//sub_tx_mgmt
+    													DBUS_TYPE_UINT64_AS_STRING		//sub_total_rx_bytes
+    													DBUS_TYPE_UINT64_AS_STRING		//sub_total_tx_bytes
+    													DBUS_TYPE_UINT64_AS_STRING		//sub_total_rx_pkt
+    													DBUS_TYPE_UINT64_AS_STRING		//sub_total_tx_pkt
+    													DBUS_TYPE_UINT32_AS_STRING		//sub_tx_pkt_control zhangshu add
+    													DBUS_TYPE_UINT32_AS_STRING		//sub_rx_pkt_control
+    													DBUS_TYPE_UINT32_AS_STRING		//tx_signal_pkt
+    													DBUS_TYPE_UINT32_AS_STRING		//rx_signal_pkt
+    													DBUS_TYPE_UINT32_AS_STRING		//retry 1
+    													DBUS_TYPE_UINT32_AS_STRING		//retry 2
+    													DBUS_TYPE_UINT32_AS_STRING     //rx_data_pkts    fengwenchao add 20110617
+    													DBUS_TYPE_UINT32_AS_STRING     //tx_data_pkts    fengwenchao add 20110617
+    												DBUS_STRUCT_END_CHAR_AS_STRING
+    									DBUS_STRUCT_END_CHAR_AS_STRING,
+    									&iter_array);
+		for(i = 0; i < wtp_num; i++)
+		{
+    		memset(mac, 0, MAC_LEN+1);
+    		if(NULL != WTP[i]->WTPMAC)
+    		{
+    			memcpy(mac, WTP[i]->WTPMAC, MAC_LEN);
+			}    		
+    		num_of_radio = WTP[i]->RadioCount;
+    		
+    		dbus_message_iter_open_container (&iter_array,DBUS_TYPE_STRUCT,NULL,&iter_struct);
+    		
+    		dbus_message_iter_append_basic(&iter_struct,DBUS_TYPE_UINT32,&(WTP[i]->WTPID));
+    			
+    		dbus_message_iter_append_basic(&iter_struct,DBUS_TYPE_BYTE,&(mac[0]));
+    		dbus_message_iter_append_basic(&iter_struct,DBUS_TYPE_BYTE,&(mac[1]));
+    		dbus_message_iter_append_basic(&iter_struct,DBUS_TYPE_BYTE,&(mac[2]));
+    		dbus_message_iter_append_basic(&iter_struct,DBUS_TYPE_BYTE,&(mac[3]));
+    		dbus_message_iter_append_basic(&iter_struct,DBUS_TYPE_BYTE,&(mac[4]));
+    		dbus_message_iter_append_basic(&iter_struct,DBUS_TYPE_BYTE,&(mac[5]));
+
+    		dbus_message_iter_append_basic (&iter_struct,
+    										DBUS_TYPE_BYTE,
+    										&(WTP[i]->wifi_extension_reportswitch)); 
+			
+			pthread_mutex_lock(&(WTP[i]->mutex_web_report));
+			
+    		dbus_message_iter_append_basic(&iter_struct,
+    									  DBUS_TYPE_UINT32,
+    									  &(WTP[i]->web_manager_stats.wifi_stats.wtp_rx_packets)); 	
+    		dbus_message_iter_append_basic(&iter_struct,
+    									  DBUS_TYPE_UINT32,
+    									  &(WTP[i]->web_manager_stats.wifi_stats.wtp_tx_packets)); 	
+    		dbus_message_iter_append_basic(&iter_struct,
+    									  DBUS_TYPE_UINT32,
+    									  &(WTP[i]->web_manager_stats.wifi_stats.wtp_tx_errors));
+    						
+    		dbus_message_iter_append_basic(&iter_struct,
+    									  DBUS_TYPE_UINT64,
+    									  &(WTP[i]->web_manager_stats.wifi_stats.wtp_tx_bytes));
+    		dbus_message_iter_append_basic(&iter_struct,
+    									  DBUS_TYPE_UINT64,
+    									  &(WTP[i]->web_manager_stats.wifi_stats.wtp_rx_bytes));	
+    		dbus_message_iter_append_basic(&iter_struct,
+    									  DBUS_TYPE_UINT32,
+    									  &(WTP[i]->web_manager_stats.wifi_stats.wtp_ast_rx_crcerr));	
+    		
+    		dbus_message_iter_append_basic(&iter_struct,
+    									  DBUS_TYPE_UINT32,
+    									  &(WTP[i]->web_manager_stats.wifi_stats.wtp_ast_rx_badcrypt));
+    		dbus_message_iter_append_basic(&iter_struct,
+    									  DBUS_TYPE_UINT32,
+    									  &(WTP[i]->web_manager_stats.wifi_stats.wtp_ast_rx_badmic));	
+    		dbus_message_iter_append_basic(&iter_struct,
+    									  DBUS_TYPE_UINT32,
+    									  &(WTP[i]->web_manager_stats.wifi_stats.wtp_ast_rx_phyerr));
+			pthread_mutex_unlock(&(WTP[i]->mutex_web_report));
+			/*fengwenchao add 20110521*/
+			DBusMessageIter iter_neighbor_array;
+			DBusMessageIter iter_neighbor_struct;
+			DBusMessageIter iter_sub_neighbor_array;
+			DBusMessageIter iter_sub_neighbor_struct;
+
+			if(WTP[i]->NeighborAPInfos == NULL)
+			{
+				neighbor_ap_count = 0;
+			}
+			else
+			{
+				neighbor_ap_count = WTP[i]->NeighborAPInfos->neighborapInfosCount;
+				phead = WTP[i]->NeighborAPInfos->neighborapInfos;
+			}
+
+			dbus_message_iter_append_basic (&iter_struct,
+										 	DBUS_TYPE_UINT32,
+										 	&(neighbor_ap_count));	
+
+    			dbus_message_iter_open_container (&iter_struct,
+											DBUS_TYPE_ARRAY,
+
+		    									DBUS_STRUCT_BEGIN_CHAR_AS_STRING
+		    											DBUS_TYPE_UINT32_AS_STRING    //neighbor wtpid
+
+														DBUS_TYPE_ARRAY_AS_STRING
+															DBUS_STRUCT_BEGIN_CHAR_AS_STRING
+																DBUS_TYPE_BYTE_AS_STRING         //neighbor essid
+														DBUS_STRUCT_END_CHAR_AS_STRING
+
+    											DBUS_STRUCT_END_CHAR_AS_STRING,
+    										&iter_neighbor_array);		
+
+			if(neighbor_ap_count > 0)
+			{
+				for(j = 0; (j < neighbor_ap_count)&&(phead); j++)
+				{
+					dbus_message_iter_open_container (&iter_neighbor_array,
+														DBUS_TYPE_STRUCT,
+														NULL,
+														&iter_neighbor_struct);
+
+					dbus_message_iter_append_basic(&iter_neighbor_struct,
+													DBUS_TYPE_UINT32,
+													&phead->wtpid);
+
+					dbus_message_iter_open_container (&iter_neighbor_struct,
+											   		DBUS_TYPE_ARRAY,
+											   			DBUS_STRUCT_BEGIN_CHAR_AS_STRING  
+												  			DBUS_TYPE_BYTE_AS_STRING
+											   			DBUS_STRUCT_END_CHAR_AS_STRING, 
+											   		&iter_sub_neighbor_array);
+
+					for(k =0;k <ESSID_DEFAULT_LEN+1;k++)
+					{
+										
+						dbus_message_iter_open_container (&iter_sub_neighbor_array,
+															DBUS_TYPE_STRUCT,
+															NULL,
+														  	&iter_sub_neighbor_struct);
+
+						dbus_message_iter_append_basic	(&iter_sub_neighbor_struct,
+									  					DBUS_TYPE_BYTE,
+									  					&(phead->ESSID[k]));					
+
+						dbus_message_iter_close_container (&iter_sub_neighbor_array, &iter_sub_neighbor_struct);
+					}	
+					
+					dbus_message_iter_close_container (&iter_neighbor_struct, &iter_sub_neighbor_array);
+					dbus_message_iter_close_container (&iter_neighbor_array, &iter_neighbor_struct);
+					phead = phead->next;
+				}			
+			}
+			else
+			{
+				dbus_message_iter_open_container (&iter_neighbor_array,
+												DBUS_TYPE_STRUCT,
+												NULL,
+												&iter_neighbor_struct);
+				
+				dbus_message_iter_append_basic(&iter_neighbor_struct,
+												DBUS_TYPE_UINT32,
+												&default_wtpid);
+				
+				dbus_message_iter_open_container (&iter_neighbor_struct,
+												DBUS_TYPE_ARRAY,
+													DBUS_STRUCT_BEGIN_CHAR_AS_STRING  
+													  DBUS_TYPE_BYTE_AS_STRING
+												   	DBUS_STRUCT_END_CHAR_AS_STRING, 
+												&iter_sub_neighbor_array);
+
+				for(k =0;k <ESSID_DEFAULT_LEN+1;k++)
+				{	
+					dbus_message_iter_open_container (&iter_sub_neighbor_array,
+													DBUS_TYPE_STRUCT,
+													NULL,
+													&iter_sub_neighbor_struct);
+
+					dbus_message_iter_append_basic	(&iter_sub_neighbor_struct,
+								  					DBUS_TYPE_BYTE,
+								  					&(default_essid[k]));						
+
+					dbus_message_iter_close_container (&iter_sub_neighbor_array, &iter_sub_neighbor_struct);	
+				}	
+				dbus_message_iter_close_container (&iter_neighbor_struct, &iter_sub_neighbor_array);
+				dbus_message_iter_close_container (&iter_neighbor_array, &iter_neighbor_struct);
+			}
+			dbus_message_iter_close_container (&iter_struct, &iter_neighbor_array);	
+			/*fengwenchao add end*/
+
+    			dbus_message_iter_append_basic(&iter_struct, 
+    										DBUS_TYPE_BYTE,
+    										&(num_of_radio));
+
+			dbus_message_iter_open_container (&iter_struct,
+												DBUS_TYPE_ARRAY,
+											  	 	DBUS_STRUCT_BEGIN_CHAR_AS_STRING
+													   
+													    DBUS_TYPE_BYTE_AS_STRING
+														DBUS_TYPE_BYTE_AS_STRING
+
+														DBUS_TYPE_UINT32_AS_STRING		//rx_pkt_unicast
+														DBUS_TYPE_UINT32_AS_STRING		//tx_pkt_unicast
+														DBUS_TYPE_UINT32_AS_STRING		//rx_pkt_broadcast
+														DBUS_TYPE_UINT32_AS_STRING		//tx_pkt_broadcast
+
+														DBUS_TYPE_UINT32_AS_STRING		//c1
+														DBUS_TYPE_UINT32_AS_STRING
+														DBUS_TYPE_UINT32_AS_STRING		//sub_tx_errors
+														DBUS_TYPE_UINT32_AS_STRING		//sub_rx_errors
+														DBUS_TYPE_UINT32_AS_STRING		//sub_tx_drop
+														DBUS_TYPE_UINT32_AS_STRING		//sub_rx_drop
+														DBUS_TYPE_UINT64_AS_STRING		//c4
+														DBUS_TYPE_UINT64_AS_STRING		//c5
+														DBUS_TYPE_UINT32_AS_STRING
+														DBUS_TYPE_UINT32_AS_STRING
+														DBUS_TYPE_UINT32_AS_STRING
+														DBUS_TYPE_UINT32_AS_STRING		//c9
+
+														DBUS_TYPE_BYTE_AS_STRING		//snr cur	
+														DBUS_TYPE_BYTE_AS_STRING
+														DBUS_TYPE_BYTE_AS_STRING
+														DBUS_TYPE_DOUBLE_AS_STRING		//snr aver
+														/*add for new mgmt infor requrement 20100809 */
+														DBUS_TYPE_UINT32_AS_STRING		//sub_rx_pkt_mgmt
+														DBUS_TYPE_UINT32_AS_STRING		//sub_tx_pkt_mgmt
+														DBUS_TYPE_UINT64_AS_STRING		//sub_rx_mgmt
+														DBUS_TYPE_UINT64_AS_STRING		//sub_tx_mgmt
+														DBUS_TYPE_UINT64_AS_STRING		//sub_total_rx_bytes
+														DBUS_TYPE_UINT64_AS_STRING		//sub_total_tx_bytes
+														DBUS_TYPE_UINT64_AS_STRING		//sub_total_rx_pkt
+														DBUS_TYPE_UINT64_AS_STRING		//sub_total_tx_pkt
+														DBUS_TYPE_UINT32_AS_STRING		//sub_tx_pkt_control zhangshu add
+													    DBUS_TYPE_UINT32_AS_STRING		//sub_rx_pkt_control
+													    DBUS_TYPE_UINT32_AS_STRING		//tx_signal_pkt
+													    DBUS_TYPE_UINT32_AS_STRING		//rx_signal_pkt
+													    DBUS_TYPE_UINT32_AS_STRING		//retry 1
+													    DBUS_TYPE_UINT32_AS_STRING		//retry 2
+													    DBUS_TYPE_UINT32_AS_STRING     //rx_data_pkts    fengwenchao add 20110617
+													    DBUS_TYPE_UINT32_AS_STRING     //tx_data_pkts    fengwenchao add 20110617
+													DBUS_STRUCT_END_CHAR_AS_STRING,
+												&iter_sub_array);
+			pthread_mutex_lock(&(WTP[i]->mutex_web_report));
+	    		for(k = 0; k < num_of_radio; k++)
+			{
+	    			wtp_ath_updown_times = 0;
+
+	    			wtp_ath_updown_times = WTP[i]->WTP_Radio[k]->upcount + WTP[i]->WTP_Radio[k]->downcount;//book modify, 2011-1-20
+	    		
+	    			dbus_message_iter_open_container (&iter_sub_array,
+	    											   DBUS_TYPE_STRUCT,
+	    											   NULL,
+	    											   &iter_sub_struct);
+
+	    			dbus_message_iter_append_basic	 (&iter_sub_struct,
+	    											  DBUS_TYPE_BYTE,
+	    											  &(WTP[i]->WTP_Radio[k]->Radio_L_ID));
+	    			
+	    			dbus_message_iter_append_basic	 (&iter_sub_struct,
+	    											  DBUS_TYPE_BYTE,
+	    											  &(wtp_ath_updown_times));
+	    			
+	    			dbus_message_iter_append_basic	 (&iter_sub_struct,
+	    											  DBUS_TYPE_UINT32,
+	    											  &(WTP[i]->web_manager_stats.ath_stats[k].rx_pkt_unicast));
+	    			
+	    			dbus_message_iter_append_basic	 (&iter_sub_struct,
+	    											  DBUS_TYPE_UINT32,
+	    											  &(WTP[i]->web_manager_stats.ath_stats[k].tx_pkt_unicast));
+	    			
+	    			dbus_message_iter_append_basic	 (&iter_sub_struct,
+	    											  DBUS_TYPE_UINT32,
+	    											  &(WTP[i]->web_manager_stats.ath_stats[k].rx_pkt_multicast));
+	    			
+	    			dbus_message_iter_append_basic	 (&iter_sub_struct,
+	    											  DBUS_TYPE_UINT32,
+	    											  &(WTP[i]->web_manager_stats.ath_stats[k].tx_pkt_multicast));
+
+	    			dbus_message_iter_append_basic	 (&iter_sub_struct,
+	    											  DBUS_TYPE_UINT32,
+	    											  &(WTP[i]->web_manager_stats.ath_stats[k].sub_rx_packets));								//c1
+	    			dbus_message_iter_append_basic	 (&iter_sub_struct,
+	    											  DBUS_TYPE_UINT32,
+	    											  &(WTP[i]->web_manager_stats.ath_stats[k].sub_tx_packets));
+	    			dbus_message_iter_append_basic	 (&iter_sub_struct,
+	    											  DBUS_TYPE_UINT32,
+	    											  &(WTP[i]->web_manager_stats.ath_stats[k].sub_tx_errors));								//c3
+	    			dbus_message_iter_append_basic	 (&iter_sub_struct,
+	    											  DBUS_TYPE_UINT32,
+	    											  &(WTP[i]->web_manager_stats.ath_stats[k].sub_rx_errors));							
+	    			dbus_message_iter_append_basic	 (&iter_sub_struct,
+	    											  DBUS_TYPE_UINT32,
+	    											  &(WTP[i]->web_manager_stats.ath_stats[k].sub_tx_drops));								
+	    			dbus_message_iter_append_basic	 (&iter_sub_struct,
+	    											  DBUS_TYPE_UINT32,
+	    											  &(WTP[i]->web_manager_stats.ath_stats[k].sub_rx_drops));								
+
+	    			dbus_message_iter_append_basic	 (&iter_sub_struct,
+	    											  DBUS_TYPE_UINT64,
+	    											  &(WTP[i]->web_manager_stats.ath_stats[k].sub_rx_bytes));									//c4
+	    			dbus_message_iter_append_basic	 (&iter_sub_struct,
+	    											  DBUS_TYPE_UINT64,
+	    											  &(WTP[i]->web_manager_stats.ath_stats[k].sub_tx_bytes));
+
+	    			dbus_message_iter_append_basic	 (&iter_sub_struct,
+	    											  DBUS_TYPE_UINT32,
+	    											  &(WTP[i]->web_manager_stats.ath_stats[k].sub_ast_rx_crcerr));							//c6
+	    			
+	    			dbus_message_iter_append_basic	 (&iter_sub_struct,
+	    											  DBUS_TYPE_UINT32,
+	    											  &(WTP[i]->web_manager_stats.ath_stats[k].sub_ast_rx_badcrypt));							//c7
+	    			dbus_message_iter_append_basic	 (&iter_sub_struct,
+	    											  DBUS_TYPE_UINT32,
+	    											  &(WTP[i]->web_manager_stats.ath_stats[k].sub_ast_rx_badmic));
+	    			dbus_message_iter_append_basic	 (&iter_sub_struct,
+	    											  DBUS_TYPE_UINT32,
+	    											  &(WTP[i]->web_manager_stats.ath_stats[k].sub_ast_rx_phyerr));							//c9
+				/*fengwenchao add 20110926*/
+				if((WTP[i]->wifi_extension_reportswitch != 0)&&(WTP[i]->wifi_extension_info.wifi_snr_new[k] != 0))
+				{
+					char wifi_snr_radio = (char)WTP[i]->wifi_extension_info.wifi_snr_new[k] - (char)WTP[i]->wifi_extension_info.wifi_noise_new[k];
+					char snr_max_value_radio = (char)WTP[i]->apcminfo.wifi_snr[k].snr_max_value - (char)WTP[i]->wifi_extension_info.wifi_noise_new[k];
+					char snr_min_value_radio = (char)WTP[i]->apcminfo.wifi_snr[k].snr_min_value - (char)WTP[i]->wifi_extension_info.wifi_noise_new[k];
+					double snr_math_average_radio = WTP[i]->apcminfo.wifi_snr[k].snr_math_average - (double)WTP[i]->wifi_extension_info.wifi_noise_new[k];
+					
+					
+					check_snr_v2(&wifi_snr_radio,NULL,0);
+		    			dbus_message_iter_append_basic (&iter_sub_struct, 
+		    											DBUS_TYPE_BYTE, 
+		    											&wifi_snr_radio);
+					
+					check_snr_v2(&snr_max_value_radio,NULL,1);
+		    			dbus_message_iter_append_basic (&iter_sub_struct,
+		    											DBUS_TYPE_BYTE,
+		    											&snr_max_value_radio); 
+						
+		    			check_snr_v2(&snr_min_value_radio,NULL,2);
+		    			dbus_message_iter_append_basic (&iter_sub_struct,
+		    											DBUS_TYPE_BYTE,
+		    											&snr_min_value_radio); 
+					avr_snr = ((double)snr_max_value_radio + (double)snr_min_value_radio)/2.0;
+					check_snr_v2(&snr_math_average_radio,&avr_snr,3);
+			    		dbus_message_iter_append_basic (&iter_sub_struct,
+			    										DBUS_TYPE_DOUBLE,
+			    										&snr_math_average_radio); 				
+				}
+				else
+				{
+					dbus_message_iter_append_basic (&iter_sub_struct, 
+		    										DBUS_TYPE_BYTE, 
+		    										&default_char_value);
+
+		    			dbus_message_iter_append_basic (&iter_sub_struct,
+		    											DBUS_TYPE_BYTE,
+		    											&default_char_value); 
+		    			
+		    			dbus_message_iter_append_basic (&iter_sub_struct,
+		    											DBUS_TYPE_BYTE,
+		    											&default_char_value); 
+
+		    			dbus_message_iter_append_basic (&iter_sub_struct,
+		    											DBUS_TYPE_DOUBLE,
+		    											&defalt_double_value); 
+				}
+				/*fengwenchao add end*/
+	    			/*add for new mgmt infor requrement 20100809 */
+	    			dbus_message_iter_append_basic	(&iter_sub_struct, 
+	    											DBUS_TYPE_UINT32, 
+	    											&(WTP[i]->web_manager_stats.ath_stats[k].sub_rx_pkt_mgmt));
+	    			dbus_message_iter_append_basic	(&iter_sub_struct, 
+	    											DBUS_TYPE_UINT32, 
+	    											&(WTP[i]->web_manager_stats.ath_stats[k].sub_tx_pkt_mgmt));
+	    			dbus_message_iter_append_basic	(&iter_sub_struct, 
+	    											DBUS_TYPE_UINT64, 
+	    											&(WTP[i]->web_manager_stats.ath_stats[k].sub_rx_mgmt));
+	    			dbus_message_iter_append_basic	(&iter_sub_struct, 
+	    											DBUS_TYPE_UINT64, 
+	    											&(WTP[i]->web_manager_stats.ath_stats[k].sub_tx_mgmt));
+
+	    			dbus_message_iter_append_basic	(&iter_sub_struct, 
+	    											DBUS_TYPE_UINT64, 
+	    											&(WTP[i]->web_manager_stats.ath_stats[k].sub_total_rx_bytes));
+	    			dbus_message_iter_append_basic	(&iter_sub_struct, 
+	    											DBUS_TYPE_UINT64, 
+	    											&(WTP[i]->web_manager_stats.ath_stats[k].sub_total_tx_bytes));
+	    			dbus_message_iter_append_basic	(&iter_sub_struct, 
+	    											DBUS_TYPE_UINT64, 
+	    											&(WTP[i]->web_manager_stats.ath_stats[k].sub_total_rx_pkt));
+	    			dbus_message_iter_append_basic	(&iter_sub_struct, 
+	    											DBUS_TYPE_UINT64, 
+	    											&(WTP[i]->web_manager_stats.ath_stats[k].sub_total_tx_pkt));
+	    			dbus_message_iter_append_basic	(&iter_sub_struct, 
+	    											DBUS_TYPE_UINT32, 
+	    											&(WTP[i]->web_manager_stats.ath_stats[k].sub_tx_pkt_control));
+	    			dbus_message_iter_append_basic	(&iter_sub_struct, 
+	    											DBUS_TYPE_UINT32, 
+	    											&(WTP[i]->web_manager_stats.ath_stats[k].sub_rx_pkt_control));
+	    			dbus_message_iter_append_basic  (&iter_sub_struct,
+	            									  DBUS_TYPE_UINT32,
+	            									  &(WTP[i]->web_manager_stats.ath_stats[k].tx_pkt_signal));	
+	        		dbus_message_iter_append_basic  (&iter_sub_struct,
+	            									  DBUS_TYPE_UINT32,
+	            									  &(WTP[i]->web_manager_stats.ath_stats[k].rx_pkt_signal));
+	    			dbus_message_iter_append_basic  (&iter_sub_struct, 
+	    											DBUS_TYPE_UINT32, 
+	    											&(WTP[i]->web_manager_stats.ath_stats[k].dwlink_retry_pkts));
+	    			
+	    			dbus_message_iter_append_basic  (&iter_sub_struct, 
+	    											DBUS_TYPE_UINT32,
+	    											&(WTP[i]->web_manager_stats.ath_stats[k].stats_retry_frames));
+				/*fengwenchao add 20110617*/
+	    			dbus_message_iter_append_basic  (&iter_sub_struct, 
+	    											DBUS_TYPE_UINT32,
+	    											&(WTP[i]->web_manager_stats.ath_stats[k].rx_data_pkts));
+
+	    			dbus_message_iter_append_basic  (&iter_sub_struct, 
+	    											DBUS_TYPE_UINT32,
+	    											&(WTP[i]->web_manager_stats.ath_stats[k].tx_data_pkts));
+				/*fengwenchao add 20110617*/    			
+
+    			dbus_message_iter_close_container (&iter_sub_array, &iter_sub_struct);
+    		}
+			pthread_mutex_unlock(&(WTP[i]->mutex_web_report));
+    		dbus_message_iter_close_container (&iter_struct, &iter_sub_array);			
+    		dbus_message_iter_close_container (&iter_array, &iter_struct);
+    	}
+    				
+    	dbus_message_iter_close_container (&iter, &iter_array);
+    }
+				
+	CW_FREE_OBJECT(WTP);
+	CW_FREE_OBJECT(mac);
+	
+	return reply;	
+}
+
 //mahz add 2011.1.21
 DBusMessage * wid_dbus_interface_show_radio_info_bywtpid_wid(DBusConnection *conn, DBusMessage *msg, void *user_data){
 	
@@ -9660,6 +10281,253 @@ DBusMessage * wid_dbus_interface_show_wtp_radio_config_information(DBusConnectio
 	return reply;	
 }
 /*table 14 b16*/
+DBusMessage * wid_dbus_interface_show_wtp_wired_if_stats_information(DBusConnection *conn, DBusMessage *msg, void *user_data)
+{
+	DBusMessage* reply;	
+	DBusMessageIter	 iter;
+	DBusMessageIter	 iter_array;
+	DBusMessageIter iter_struct;
+	DBusMessageIter iter_sub_struct;
+	DBusMessageIter iter_sub_array;
+	DBusError err;
+	
+	dbus_error_init(&err);
+	int ret = WID_DBUS_SUCCESS;
+	
+	unsigned int wtp_num = 0;
+	int i=0,j=0/*,k=0*/;
+	unsigned char ethid = 0;
+ 	unsigned char *mac = NULL;
+ 	WID_WTP **WTP=NULL;
+	
+	WTP = malloc(WTP_NUM*(sizeof(WID_WTP *)));
+	if( WTP == NULL){
+		wid_syslog_debug_debug(WID_DBUS,"%s :malloc fail.\n",__func__);
+		exit(1);
+	}
+	memset(WTP,0,WTP_NUM*(sizeof(WID_WTP *)));
+ 	mac = (unsigned char *)malloc(MAC_LEN+1);
+	
+	if(hide_quit_wtp_in_showting == 0){
+		wtp_num = Wid_Find_Wtp(WTP);
+	}
+	else if (hide_quit_wtp_in_showting == 1){
+		wtp_num = Wid_Find_Running_Wtp(WTP);
+	}
+	if(wtp_num == 0)
+		ret = WTP_ID_NOT_EXIST;
+
+	reply = dbus_message_new_method_return(msg);
+		
+	dbus_message_iter_init_append (reply, &iter);
+		
+	dbus_message_iter_append_basic (&iter,
+										 DBUS_TYPE_UINT32,
+										 &ret);
+	// Total slot count
+	dbus_message_iter_append_basic (&iter,
+										 DBUS_TYPE_UINT32,
+										 &wtp_num);
+
+	dbus_message_iter_open_container (&iter,
+									DBUS_TYPE_ARRAY,
+									DBUS_STRUCT_BEGIN_CHAR_AS_STRING
+											DBUS_TYPE_UINT32_AS_STRING		//wtpid
+ 											DBUS_TYPE_BYTE_AS_STRING		 //mac 0
+											DBUS_TYPE_BYTE_AS_STRING
+											DBUS_TYPE_BYTE_AS_STRING
+											DBUS_TYPE_BYTE_AS_STRING
+											DBUS_TYPE_BYTE_AS_STRING
+											DBUS_TYPE_BYTE_AS_STRING		//mac 5
+											DBUS_TYPE_BYTE_AS_STRING		//eth_num
+
+												DBUS_TYPE_ARRAY_AS_STRING
+														DBUS_STRUCT_BEGIN_CHAR_AS_STRING
+															DBUS_TYPE_BYTE_AS_STRING		//ifindex
+															DBUS_TYPE_BYTE_AS_STRING		//updown num
+
+															DBUS_TYPE_UINT32_AS_STRING		//wifi_extension_info 1
+                											DBUS_TYPE_UINT32_AS_STRING
+                											DBUS_TYPE_UINT32_AS_STRING
+                											
+                											DBUS_TYPE_UINT32_AS_STRING
+                											DBUS_TYPE_UINT32_AS_STRING
+                											DBUS_TYPE_UINT32_AS_STRING		//wifi_extension_info 6
+
+                											DBUS_TYPE_UINT32_AS_STRING		//apstatsinfo 1
+                											DBUS_TYPE_UINT32_AS_STRING
+                											DBUS_TYPE_UINT32_AS_STRING
+                											DBUS_TYPE_UINT32_AS_STRING
+                											
+                											DBUS_TYPE_UINT64_AS_STRING
+                											DBUS_TYPE_UINT64_AS_STRING
+                											DBUS_TYPE_UINT32_AS_STRING		
+                											DBUS_TYPE_UINT32_AS_STRING		//apstatsinfo 8
+
+                											DBUS_TYPE_UINT64_AS_STRING		// rx_sum_bytes 20101008  add by zhangshu
+                										    DBUS_TYPE_UINT64_AS_STRING		// tx_sum_bytes 20101008
+												DBUS_STRUCT_END_CHAR_AS_STRING
+  									DBUS_STRUCT_END_CHAR_AS_STRING,
+									&iter_array);
+
+	for(i = 0; i < wtp_num; i++){	
+		//unsigned char radiocount = 0;
+		
+		memset(mac,0,MAC_LEN+1);
+		if(WTP[i]->WTPMAC != NULL)
+			memcpy(mac,WTP[i]->WTPMAC,MAC_LEN);
+		
+		dbus_message_iter_open_container (&iter_array,
+											DBUS_TYPE_STRUCT,
+											NULL,
+											&iter_struct);
+		
+		dbus_message_iter_append_basic(&iter_struct,
+										DBUS_TYPE_UINT32,
+										&(WTP[i]->WTPID));
+		
+  		dbus_message_iter_append_basic(&iter_struct,
+										DBUS_TYPE_BYTE,
+										&(mac[0]));
+		dbus_message_iter_append_basic(&iter_struct,
+										DBUS_TYPE_BYTE,
+										&(mac[1]));
+		dbus_message_iter_append_basic(&iter_struct,
+										DBUS_TYPE_BYTE,
+										&(mac[2]));
+		dbus_message_iter_append_basic(&iter_struct,
+										DBUS_TYPE_BYTE,
+										&(mac[3]));
+		dbus_message_iter_append_basic(&iter_struct,
+										DBUS_TYPE_BYTE,
+										&(mac[4]));
+		dbus_message_iter_append_basic(&iter_struct,
+										DBUS_TYPE_BYTE,
+										&(mac[5]));
+		
+		dbus_message_iter_append_basic (&iter_struct,
+										DBUS_TYPE_BYTE,
+										&(WTP[i]->apifinfo.eth_num));
+
+		dbus_message_iter_open_container (&iter_struct,
+										DBUS_TYPE_ARRAY,
+											DBUS_STRUCT_BEGIN_CHAR_AS_STRING
+													DBUS_TYPE_BYTE_AS_STRING
+													DBUS_TYPE_BYTE_AS_STRING
+
+													DBUS_TYPE_UINT32_AS_STRING		//apstatsinfo 1
+	        										DBUS_TYPE_UINT32_AS_STRING      
+	        										DBUS_TYPE_UINT32_AS_STRING
+	        										
+	        										DBUS_TYPE_UINT32_AS_STRING
+	        										DBUS_TYPE_UINT32_AS_STRING
+	        										DBUS_TYPE_UINT32_AS_STRING		
+
+	        										DBUS_TYPE_UINT32_AS_STRING		
+	        										DBUS_TYPE_UINT32_AS_STRING
+	        										DBUS_TYPE_UINT32_AS_STRING
+	        										DBUS_TYPE_UINT32_AS_STRING
+	        										
+	        										DBUS_TYPE_UINT64_AS_STRING
+	        										DBUS_TYPE_UINT64_AS_STRING
+	        										DBUS_TYPE_UINT32_AS_STRING		
+	        										DBUS_TYPE_UINT32_AS_STRING		//apstatsinfo 14
+	        										
+	        										DBUS_TYPE_UINT64_AS_STRING		// rx_sum_bytes 20100910
+	        										DBUS_TYPE_UINT64_AS_STRING		// tx_sum_bytes 20100910
+											DBUS_STRUCT_END_CHAR_AS_STRING,
+										&iter_sub_array);
+		pthread_mutex_lock(&(WTP[i]->mutex_web_report));
+		for(j = 0; j < WTP[i]->apifinfo.eth_num; j++)
+		{
+			ethid= (unsigned char)j;
+			dbus_message_iter_open_container (&iter_sub_array,
+												DBUS_TYPE_STRUCT,
+												NULL,
+												&iter_sub_struct);
+			
+			dbus_message_iter_append_basic (&iter_sub_struct,
+											DBUS_TYPE_BYTE,
+											&(ethid));
+			
+			dbus_message_iter_append_basic (&iter_sub_struct,
+											DBUS_TYPE_BYTE,
+											&(WTP[i]->wifi_extension_info.eth_updown_time[j]));
+
+			dbus_message_iter_append_basic(&iter_sub_struct, 
+    										DBUS_TYPE_UINT32, 
+    										&(WTP[i]->web_manager_stats.eth_stats[ethid].rx_pkt_broadcast));			
+    		
+    		dbus_message_iter_append_basic(&iter_sub_struct, 
+    										DBUS_TYPE_UINT32, 
+    										&(WTP[i]->web_manager_stats.eth_stats[ethid].rx_pkt_unicast));
+
+    		dbus_message_iter_append_basic(&iter_sub_struct, 
+    										DBUS_TYPE_UINT32, 
+    										&(WTP[i]->web_manager_stats.eth_stats[ethid].tx_pkt_broadcast));
+    		
+    		dbus_message_iter_append_basic(&iter_sub_struct,
+    										DBUS_TYPE_UINT32, 
+    										&(WTP[i]->web_manager_stats.eth_stats[ethid].tx_pkt_unicast));
+
+    		dbus_message_iter_append_basic(&iter_sub_struct, 
+    										DBUS_TYPE_UINT32, 
+    										&(WTP[i]->web_manager_stats.eth_stats[ethid].rx_pkt_multicast));
+    		
+    		dbus_message_iter_append_basic(&iter_sub_struct, 
+    										DBUS_TYPE_UINT32, 
+    										&(WTP[i]->web_manager_stats.eth_stats[ethid].tx_pkt_multicast));			
+
+    		dbus_message_iter_append_basic(&iter_sub_struct,
+    										DBUS_TYPE_UINT32,
+    							 			&(WTP[i]->web_manager_stats.eth_stats[ethid].rx_packets));
+    		dbus_message_iter_append_basic(&iter_sub_struct,
+    										DBUS_TYPE_UINT32,
+    										&(WTP[i]->web_manager_stats.eth_stats[ethid].tx_packets));
+    		dbus_message_iter_append_basic(&iter_sub_struct,
+    										DBUS_TYPE_UINT32,
+    										&(WTP[i]->web_manager_stats.eth_stats[ethid].rx_errors));
+    		dbus_message_iter_append_basic(&iter_sub_struct,
+    										DBUS_TYPE_UINT32,
+    										&(WTP[i]->web_manager_stats.eth_stats[ethid].tx_errors));
+
+    		dbus_message_iter_append_basic(&iter_sub_struct,
+    										DBUS_TYPE_UINT64,
+    										&(WTP[i]->web_manager_stats.eth_stats[ethid].rx_bytes));
+    		dbus_message_iter_append_basic(&iter_sub_struct,
+    										DBUS_TYPE_UINT64,
+    										&(WTP[i]->web_manager_stats.eth_stats[ethid].tx_bytes));	
+    		dbus_message_iter_append_basic(&iter_sub_struct,
+    										DBUS_TYPE_UINT32,
+    										&(WTP[i]->web_manager_stats.eth_stats[ethid].rx_drop));
+    		dbus_message_iter_append_basic(&iter_sub_struct,
+											DBUS_TYPE_UINT32,
+    										&(WTP[i]->web_manager_stats.eth_stats[ethid].tx_drop));	
+    		/******add for total rx ,tx bytes for new require begin 20100910*******/
+    		dbus_message_iter_append_basic(&iter_sub_struct,
+    										DBUS_TYPE_UINT64,
+    										&(WTP[i]->web_manager_stats.eth_stats[ethid].rx_sum_bytes));	
+    		
+    		dbus_message_iter_append_basic(&iter_sub_struct,
+    										DBUS_TYPE_UINT64,
+    										&(WTP[i]->web_manager_stats.eth_stats[ethid].tx_sum_bytes));
+            /************************** end *****************************/
+        
+			dbus_message_iter_close_container (&iter_sub_array, &iter_sub_struct);
+		}
+		pthread_mutex_unlock(&(WTP[i]->mutex_web_report));
+		dbus_message_iter_close_container (&iter_struct, &iter_sub_array);
+		dbus_message_iter_close_container (&iter_array, &iter_struct);
+	}
+	dbus_message_iter_close_container (&iter, &iter_array);
+
+	CW_FREE_OBJECT(WTP);
+	CW_FREE_OBJECT(mac);
+
+	return reply;	
+}
+
+#if 0
 DBusMessage * wid_dbus_interface_show_wtp_wired_if_stats_information(DBusConnection *conn, DBusMessage *msg, void *user_data){
 	
 	DBusMessage* reply;	
@@ -9674,7 +10542,7 @@ DBusMessage * wid_dbus_interface_show_wtp_wired_if_stats_information(DBusConnect
 	int ret = WID_DBUS_SUCCESS;
 	
 	unsigned int wtp_num = 0;
-	int i=0,/*j=0,*/k=0,kk=0;
+	int i=0,/*j=0,*//*k=0,*/kk=0;
  	unsigned char *mac = NULL;
  	WID_WTP **WTP;
 	
@@ -9804,37 +10672,38 @@ DBusMessage * wid_dbus_interface_show_wtp_wired_if_stats_information(DBusConnect
 										DBUS_STRUCT_END_CHAR_AS_STRING,
 										&iter_sub_array);
 		
+		pthread_mutex_lock(&(WTP[i]->mutex_web_report));
 		for(kk = 0; kk < WTP[i]->apifinfo.eth_num; kk++){	
 			unsigned char ifindex = (char)kk;
 
-			unsigned int rx_packets = 0;
-    		unsigned int tx_packets = 0;
-    		unsigned int rx_errors = 0;
-    		unsigned int tx_errors = 0;
-    		unsigned long long rx_bytes = 0;
-    		unsigned long long tx_bytes = 0;
-    		unsigned int rx_drop = 0;
-    		unsigned int tx_drop = 0;
+	//		unsigned int rx_packets = 0;
+    	//	unsigned int tx_packets = 0;
+    	//	unsigned int rx_errors = 0;
+    	//	unsigned int tx_errors = 0;
+    	//	unsigned long long rx_bytes = 0;
+    	//	unsigned long long tx_bytes = 0;
+    	//	unsigned int rx_drop = 0;
+    	//	unsigned int tx_drop = 0;
 
-    		unsigned int rx_pkt_broadcast =0;//zhaoruijia,20100831,根据需求接收的是包数,start
-    		unsigned int rx_pkt_unicast = 0;
-    		unsigned int tx_pkt_broadcast =0; 
-    		unsigned int tx_pkt_unicast = 0;
-    		unsigned int rx_pkt_multicast = 0;
-    		unsigned int tx_pkt_multicast = 0;//zhaoruijia,20100831,根据需求接收的是包数,end
+    	//	unsigned int rx_pkt_broadcast =0;//zhaoruijia,20100831,根据需求接收的是包数,start
+    	//	unsigned int rx_pkt_unicast = 0;
+    	//	unsigned int tx_pkt_broadcast =0; 
+    	//	unsigned int tx_pkt_unicast = 0;
+    	//	unsigned int rx_pkt_multicast = 0;
+    	//	unsigned int tx_pkt_multicast = 0;//zhaoruijia,20100831,根据需求接收的是包数,end
 
-    		unsigned long long rx_sum_bytes = 0;  // 新加    （接口收到的总字节数）
-       		unsigned long long tx_sum_bytes = 0;  // 新加    （接口发出的总字节数）
-
+    	//	unsigned long long rx_sum_bytes = 0;  // 新加    （接口收到的总字节数）
+       	//	unsigned long long tx_sum_bytes = 0;  // 新加    （接口发出的总字节数）
+#if 0
        		for(k=0;k<TOTAL_AP_IF_NUM;k++){
     			if((WTP[i]->apstatsinfo[k].radioId < TOTAL_AP_IF_NUM+1)
     				&&(WTP[i]->apstatsinfo[k].type == 1)
     				&&(WTP[i]->apstatsinfo[k].wlanId == ifindex)){
     				
-    				rx_packets = WTP[i]->apstatsinfo[k].rx_packets;
-    				tx_packets = WTP[i]->apstatsinfo[k].tx_packets;
-    				rx_errors  = WTP[i]->apstatsinfo[k].rx_errors;
-    				tx_errors  = WTP[i]->apstatsinfo[k].tx_errors;
+    				rx_packets = WTP[i]->web_manager_stats.eth_stats[ethid].rx_packets;
+    				tx_packets = WTP[i]->web_manager_stats.eth_stats[ethid].tx_packets;
+    				rx_errors  = WTP[i]->web_manager_stats.eth_stats[ethid]].rx_errors;
+    				tx_errors  = WTP[i]->web_manager_stats.eth_stats[ethid].tx_errors;
 				if(!wireddata_switch)
 				{
 					rx_bytes = WTP[i]->apstatsinfo[k].rx_bytes;
@@ -9952,6 +10821,78 @@ DBusMessage * wid_dbus_interface_show_wtp_wired_if_stats_information(DBusConnect
     										  DBUS_TYPE_UINT64,
     										   &(tx_sum_bytes));
             /************************** end *****************************/
+			#endif
+			dbus_message_iter_open_container (&iter_sub_array,
+												DBUS_TYPE_STRUCT,
+												NULL,
+												&iter_sub_struct);
+			
+			dbus_message_iter_append_basic (&iter_sub_struct,
+											DBUS_TYPE_BYTE,
+											&(ifindex));
+			
+			dbus_message_iter_append_basic (&iter_sub_struct,
+											DBUS_TYPE_BYTE,
+											&(WTP[i]->wifi_extension_info.eth_updown_time[kk]));
+
+			dbus_message_iter_append_basic(&iter_sub_struct, 
+    										DBUS_TYPE_UINT32, 
+    										&(WTP[i]->web_manager_stats.eth_stats[ifindex].rx_pkt_broadcast));			
+    		
+    		dbus_message_iter_append_basic(&iter_sub_struct, 
+    										DBUS_TYPE_UINT32, 
+    										&(WTP[i]->web_manager_stats.eth_stats[ifindex].rx_pkt_unicast));
+
+    		dbus_message_iter_append_basic(&iter_sub_struct, 
+    										DBUS_TYPE_UINT32, 
+    										&(WTP[i]->web_manager_stats.eth_stats[ifindex].tx_pkt_broadcast));
+    		
+    		dbus_message_iter_append_basic(&iter_sub_struct,
+    										DBUS_TYPE_UINT32, 
+    										&(WTP[i]->web_manager_stats.eth_stats[ifindex].tx_pkt_unicast));
+
+    		dbus_message_iter_append_basic(&iter_sub_struct, 
+    										DBUS_TYPE_UINT32, 
+    										&(WTP[i]->web_manager_stats.eth_stats[ifindex].rx_pkt_multicast));
+    		
+    		dbus_message_iter_append_basic(&iter_sub_struct, 
+    										DBUS_TYPE_UINT32, 
+    										&(WTP[i]->web_manager_stats.eth_stats[ifindex].tx_pkt_multicast));			
+
+    		dbus_message_iter_append_basic(&iter_sub_struct,
+    										DBUS_TYPE_UINT32,
+    							 			&(WTP[i]->web_manager_stats.eth_stats[ifindex].rx_packets));
+    		dbus_message_iter_append_basic(&iter_sub_struct,
+    										DBUS_TYPE_UINT32,
+    										&(WTP[i]->web_manager_stats.eth_stats[ifindex].tx_packets));
+    		dbus_message_iter_append_basic(&iter_sub_struct,
+    										DBUS_TYPE_UINT32,
+    										&(WTP[i]->web_manager_stats.eth_stats[ifindex].rx_errors));
+    		dbus_message_iter_append_basic(&iter_sub_struct,
+    										DBUS_TYPE_UINT32,
+    										&(WTP[i]->web_manager_stats.eth_stats[ifindex].tx_errors));
+
+    		dbus_message_iter_append_basic(&iter_sub_struct,
+    										DBUS_TYPE_UINT64,
+    										&(WTP[i]->web_manager_stats.eth_stats[ifindex].rx_bytes));
+    		dbus_message_iter_append_basic(&iter_sub_struct,
+    										DBUS_TYPE_UINT64,
+    										&(WTP[i]->web_manager_stats.eth_stats[ifindex].tx_bytes));	
+    		dbus_message_iter_append_basic(&iter_sub_struct,
+    										DBUS_TYPE_UINT32,
+    										&(WTP[i]->web_manager_stats.eth_stats[ifindex].rx_drop));
+    		dbus_message_iter_append_basic(&iter_sub_struct,
+											DBUS_TYPE_UINT32,
+    										&(WTP[i]->web_manager_stats.eth_stats[ifindex].tx_drop));	
+    		/******add for total rx ,tx bytes for new require begin 20100910*******/
+    		dbus_message_iter_append_basic(&iter_sub_struct,
+    										DBUS_TYPE_UINT64,
+    										&(WTP[i]->web_manager_stats.eth_stats[ifindex].rx_sum_bytes));	
+    		
+    		dbus_message_iter_append_basic(&iter_sub_struct,
+    										DBUS_TYPE_UINT64,
+    										&(WTP[i]->web_manager_stats.eth_stats[ifindex].tx_sum_bytes));
+            /************************** end *****************************/
         
 			dbus_message_iter_close_container (&iter_sub_array, &iter_sub_struct);
 		}
@@ -9965,6 +10906,7 @@ DBusMessage * wid_dbus_interface_show_wtp_wired_if_stats_information(DBusConnect
 
 	return reply;	
 }
+#endif
 DBusMessage * wid_dbus_show_terminal_info_of_all_wtp(DBusConnection *conn, DBusMessage *msg, void *user_data){
 	DBusMessage* reply;	
 	DBusMessageIter	iter;
@@ -69846,6 +70788,12 @@ DBusMessage * wid_dbus_wtp_show_running_config_start(DBusConnection *conn, DBusM
 			totalLen += sprintf(cursor,"set wireless-control max wtp %d\n",gMaxWTPs );
 			cursor = showStr + totalLen; 
 		}
+		
+		if((AP_SNR_MAX != gMAX_WEB_REPORT_SNR) || (AP_SNR_MIN != gMIN_WEB_REPORT_SNR))
+		{
+			totalLen += sprintf(cursor," set web-report ap-snr-range %d %d\n", gMAX_WEB_REPORT_SNR, gMIN_WEB_REPORT_SNR);
+			cursor = showStr + totalLen;
+		}
 
 		wid_syslog_debug_debug(WID_DBUS,"no wtp config\n");
 	}else{
@@ -70467,6 +71415,11 @@ DBusMessage * wid_dbus_wtp_show_running_config_start(DBusConnection *conn, DBusM
 			{
 				totalLen += sprintf(cursor,"set wireless-control max wtp %d\n",gMaxWTPs );
 				cursor = showStr + totalLen; 
+			}
+			if((AP_SNR_MAX != gMAX_WEB_REPORT_SNR) || (AP_SNR_MIN != gMIN_WEB_REPORT_SNR))
+			{
+				totalLen += sprintf(cursor," set web-report ap-snr-range %d %d\n", gMAX_WEB_REPORT_SNR, gMIN_WEB_REPORT_SNR);
+				cursor = showStr + totalLen;
 			}
 			for(i=0; i<num; i++){
 				show_running_config_wtp(WTP,i,cursor,&showStr,showStr_new,&totalLen,&str_len);
@@ -74802,7 +75755,9 @@ static DBusHandlerResult wid_dbus_message_handler (DBusConnection *connection, D
 			reply = wid_dbus_interface_wtp_add_del_by_mac(connection,message,user_data);
 		}
 
-
+		else if (dbus_message_is_method_call(message,WID_DBUS_INTERFACE,WID_DBUS_CONF_METHOD_SET_WEB_REPORT_SNR_RANGE)) {
+			reply = wid_dbus_interface_set_web_report_snr_range(connection,message,user_data);
+		}
 		else if (dbus_message_is_method_call(message,WID_DBUS_INTERFACE,WID_DBUS_CONF_METHOD_WLAN_SHOW_RUNNING_CONFIG_START)) {
 			reply = wid_dbus_wlan_show_running_config_start(connection,message,user_data);
 		}

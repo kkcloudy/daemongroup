@@ -162,7 +162,9 @@ enum wid_dbus_result_no_e {
 	RADIO_IN_EBR,    //fengwenchao add for radio whether in ebr check
 	FLOW_CHECK_BE_DISABLE,
 	WID_MAC_ADD_ALREADY,
-	WID_WANT_TO_DELETE_WLAN			/* Huangleilei add for ASXXZFI-1622 */
+	WID_WANT_TO_DELETE_WLAN,			/* Huangleilei add for ASXXZFI-1622 */
+	VALUE_OUT_OF_RANGE,					/* Huangleilei copy from 1.3.18, 20130610 */
+	MIN_LARGER_THAN_MAX					/* Huangleilei copy from 1.3.18, 20130610 */
 };
 
 enum wid_radio_type {
@@ -1076,6 +1078,7 @@ Wid config infomation
 #define WID_DBUS_RADIO_METHOD_SET_MIMO	"radio_set_mimo"
 #define WID_DBUS_RADIO_METHOD_MOLTI_USER_OPTIMIZE_SWITH "radio_multi_user_optimize_switch"
 #define WID_DBUS_WTP_METHOD_5G_SWITH "set_wtp_5g_switch"
+#define WID_DBUS_CONF_METHOD_SET_WEB_REPORT_SNR_RANGE		"set_web_report_snr_range"		/* Huangleilei copy from 1.3.18, 20130610 */
 
 #define WID_DBUS_RADIO_METHOD_WSM_STA_INFO_REPORTSWITCH  						"wsm_sta_info_reportswitch"
 #define WID_DBUS_RADIO_METHOD_WSM_STA_INFO_REPORTINTERVAL 						"wsm_sta_info_reportinterval" 

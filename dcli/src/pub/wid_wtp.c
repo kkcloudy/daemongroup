@@ -232,6 +232,40 @@ int parse_int_ID(char* str,unsigned int* ID){
 		return WID_UNKNOWN_ID;
 }
 
+int parse_int_value(char* str, int* ID){
+	char *endptr = NULL;
+	char c;
+	c = str[0];
+	if (('-' == c) || (('0' <= c) && ('9' >= c)))
+	{
+		*ID= strtol(str, &endptr, 10);
+		if(('0' == c) && ('\0' != str[1]))
+		{
+			 return WID_UNKNOWN_ID;
+		}
+		if(('-' == c) && ('\0' == str[1]))
+		{
+			return WID_UNKNOWN_ID;
+		}
+		if(('-' == c) && ('0' == str[1]))
+		{
+			 return WID_UNKNOWN_ID;
+		}
+		if((endptr[0] == '\0')||(endptr[0] == '\n'))
+		{
+			return WID_DBUS_SUCCESS;
+		}
+		else
+		{
+			return WID_UNKNOWN_ID;
+		}
+	}
+	else
+	{
+		return WID_UNKNOWN_ID;
+	}
+}
+
 int read_ac_info(char *FILENAME,char *buff)
 {
 	int len,fd;
@@ -11582,6 +11616,241 @@ struct WtpWiredIfStatsInfo* show_WtpWiredIfStatsInfo_of_all_wtp(int index,int lo
 	
 	struct WtpWiredIfStatsInfo *WtpNode = NULL;
 	struct WtpWiredIfStatsInfo *WtpHead = NULL;
+	//struct WtpWiredIfStatsInfo *WtpSearchNode = NULL;
+	struct WiredIfStatsInfo *EthTail = NULL;
+	struct WiredIfStatsInfo *EthNode = NULL;
+	int i=0,k=0;
+	unsigned int rx_pkt_broadcast = 0;//zhaoruijia,20100831,根据需求接收的是包数,start
+	unsigned int rx_pkt_unicast = 0;
+	unsigned int tx_pkt_broadcast = 0; 
+	unsigned int tx_pkt_unicast = 0;
+	unsigned int rx_pkt_multicast = 0;
+	unsigned int tx_pkt_multicast = 0; //zhaoruijia,20100831,根据需求接收的是包数,end
+	unsigned int rx_packets = 0;
+	unsigned int tx_packets = 0;
+	unsigned int rx_errors = 0;
+	unsigned int tx_errors = 0;
+	unsigned long long rx_bytes = 0;
+	unsigned long long tx_bytes = 0;
+	unsigned int rx_drop = 0;
+	unsigned int tx_drop = 0;
+
+	unsigned long long rx_sum_bytes =0;  // zhangshu add , 2010-10-08
+   	unsigned long long tx_sum_bytes = 0; // zhangshu add , 2010-10-08
+
+	char BUSNAME[PATH_LEN];
+	char OBJPATH[PATH_LEN];
+	char INTERFACE[PATH_LEN];
+
+	//ReInitDbusPath(index,WID_DBUS_BUSNAME,BUSNAME);
+	//ReInitDbusPath(index,WID_DBUS_OBJPATH,OBJPATH);
+	//ReInitDbusPath(index,WID_DBUS_INTERFACE,INTERFACE);
+	
+	ReInitDbusPath_V2(localid,index,WID_DBUS_BUSNAME,BUSNAME);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_OBJPATH,OBJPATH);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_INTERFACE,INTERFACE);
+	query = dbus_message_new_method_call(BUSNAME,OBJPATH,\
+						INTERFACE,WID_DBUS_CONF_METHOD_SHOW_ALL_WTP_WIRED_STATS_INFORMATION);
+	
+	dbus_error_init(&err);
+	reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection,query,-1, &err);	
+	dbus_message_unref(query);
+	
+	if (NULL == reply) {
+		*ret = WID_DBUS_ERROR;
+		if (dbus_error_is_set(&err)) {
+			dbus_error_free(&err);
+		}
+		return NULL;
+	}
+	
+	dbus_message_iter_init(reply,&iter);
+	dbus_message_iter_get_basic(&iter,ret);
+
+	if(*ret == 0){
+		if((WtpHead = (struct WtpWiredIfStatsInfo*)malloc(sizeof(struct WtpWiredIfStatsInfo))) == NULL){
+				*ret = MALLOC_ERROR;
+				dbus_message_unref(reply);
+				return NULL;
+			}
+		memset(WtpHead,0,sizeof(struct WtpWiredIfStatsInfo));
+		WtpHead->WtpWiredIfStatsInfo_list = NULL;
+		WtpHead->WtpWiredIfStatsInfo_last = NULL;
+			
+		dbus_message_iter_next(&iter);	
+		dbus_message_iter_get_basic(&iter,num);
+
+		dbus_message_iter_next(&iter);	
+		dbus_message_iter_recurse(&iter,&iter_array);
+			
+		for (i = 0; i < *num; i++) {
+			if((WtpNode = (struct WtpWiredIfStatsInfo*)malloc(sizeof(struct WtpWiredIfStatsInfo))) == NULL){
+					dcli_free_wtp_WiredIfStats_Info(WtpHead);
+					*ret = MALLOC_ERROR;
+					dbus_message_unref(reply);
+					return NULL;
+			}
+			
+			memset(WtpNode,0,sizeof(struct WtpWiredIfStatsInfo));
+			WtpNode->next = NULL;
+
+			WtpNode->wtpMacAddr = (unsigned char *)malloc(MAC_LEN +1);
+			memset(WtpNode->wtpMacAddr,0,(MAC_LEN +1));
+
+			if(WtpHead->WtpWiredIfStatsInfo_list == NULL){
+				WtpHead->WtpWiredIfStatsInfo_list = WtpNode;
+				WtpHead->next = WtpNode;
+			}
+			else{
+				WtpHead->WtpWiredIfStatsInfo_last->next = WtpNode;
+			}
+			WtpHead->WtpWiredIfStatsInfo_last = WtpNode;
+			
+			dbus_message_iter_recurse(&iter_array,&iter_struct);
+			dbus_message_iter_get_basic(&iter_struct,&(WtpNode->wtpCurrID));
+		
+			dbus_message_iter_next(&iter_struct);	
+			dbus_message_iter_get_basic(&iter_struct,&(WtpNode->wtpMacAddr[0]));
+			dbus_message_iter_next(&iter_struct);	
+			dbus_message_iter_get_basic(&iter_struct,&(WtpNode->wtpMacAddr[1]));
+			dbus_message_iter_next(&iter_struct);	
+			dbus_message_iter_get_basic(&iter_struct,&(WtpNode->wtpMacAddr[2]));
+			
+			dbus_message_iter_next(&iter_struct);	
+			dbus_message_iter_get_basic(&iter_struct,&(WtpNode->wtpMacAddr[3]));
+			dbus_message_iter_next(&iter_struct);	
+			dbus_message_iter_get_basic(&iter_struct,&(WtpNode->wtpMacAddr[4]));
+			dbus_message_iter_next(&iter_struct);	
+			dbus_message_iter_get_basic(&iter_struct,&(WtpNode->wtpMacAddr[5]));
+
+			dbus_message_iter_next(&iter_struct);	
+			dbus_message_iter_get_basic(&iter_struct,&(WtpNode->wtpWireIfNum));
+
+			dbus_message_iter_next(&iter_struct);
+			dbus_message_iter_recurse(&iter_struct,&iter_sub_array);
+			
+			for(k=0;k<WtpNode->wtpWireIfNum;k++){
+
+                if((EthNode = (struct WiredIfStatsInfo*)malloc(sizeof(struct WiredIfStatsInfo))) == NULL){
+			        dcli_free_wtp_WiredIfStats_Info(WtpHead);
+    				*ret = MALLOC_ERROR;
+    				dbus_message_unref(reply);
+    				return NULL;
+    			}
+        		memset(EthNode,0,sizeof(struct WiredIfStatsInfo));
+        		EthNode->next = NULL;
+
+        		if(WtpNode->EthInfo == NULL){
+    				WtpNode->EthInfo = EthNode;
+    				EthTail = EthNode;
+    			}
+    			else{
+    			    EthTail->next = EthNode;
+    			    EthTail = EthNode;	
+    			}
+
+    			rx_pkt_broadcast = 0;
+            	rx_pkt_unicast = 0;
+            	tx_pkt_broadcast = 0;
+            	tx_pkt_unicast = 0;
+            	rx_pkt_multicast = 0;
+            	tx_pkt_multicast = 0;
+            	rx_packets = 0;
+            	tx_packets = 0;
+            	rx_errors = 0;
+            	tx_errors = 0;
+            	rx_bytes = 0;
+            	tx_bytes = 0;
+            	rx_drop = 0;
+            	tx_drop = 0;
+            	rx_sum_bytes =0;
+               	tx_sum_bytes = 0;
+			
+				dbus_message_iter_recurse(&iter_sub_array,&iter_sub_struct);
+				dbus_message_iter_get_basic(&iter_sub_struct,&(EthNode->wtpIfIndex));	
+				
+				dbus_message_iter_next(&iter_sub_struct);
+				dbus_message_iter_get_basic(&iter_sub_struct,&(EthNode->wtpWiredififUpDwnTimes));	
+
+                dbus_message_iter_next(&iter_sub_struct);	
+    			dbus_message_iter_get_basic(&iter_sub_struct,&(rx_pkt_broadcast));
+    			dbus_message_iter_next(&iter_sub_struct);	
+    			dbus_message_iter_get_basic(&iter_sub_struct,&(rx_pkt_unicast));
+    			dbus_message_iter_next(&iter_sub_struct);	
+    			dbus_message_iter_get_basic(&iter_sub_struct,&(tx_pkt_broadcast));
+
+    			dbus_message_iter_next(&iter_sub_struct);	
+    			dbus_message_iter_get_basic(&iter_sub_struct,&(tx_pkt_unicast));
+    			dbus_message_iter_next(&iter_sub_struct);	
+    			dbus_message_iter_get_basic(&iter_sub_struct,&(rx_pkt_multicast));
+    			dbus_message_iter_next(&iter_sub_struct);	
+    			dbus_message_iter_get_basic(&iter_sub_struct,&(tx_pkt_multicast));
+
+    			dbus_message_iter_next(&iter_sub_struct);	
+    			dbus_message_iter_get_basic(&iter_sub_struct,&(rx_packets));
+    			dbus_message_iter_next(&iter_sub_struct);	
+    			dbus_message_iter_get_basic(&iter_sub_struct,&(tx_packets));
+    			dbus_message_iter_next(&iter_sub_struct);	
+    			dbus_message_iter_get_basic(&iter_sub_struct,&(rx_errors));
+    			dbus_message_iter_next(&iter_sub_struct);	
+    			dbus_message_iter_get_basic(&iter_sub_struct,&(tx_errors));
+    			
+    			dbus_message_iter_next(&iter_sub_struct);	
+    			dbus_message_iter_get_basic(&iter_sub_struct,&(rx_bytes));
+    			dbus_message_iter_next(&iter_sub_struct);	
+    			dbus_message_iter_get_basic(&iter_sub_struct,&(tx_bytes));
+    			dbus_message_iter_next(&iter_sub_struct);	
+    			dbus_message_iter_get_basic(&iter_sub_struct,&(rx_drop));
+    			dbus_message_iter_next(&iter_sub_struct);	
+    			dbus_message_iter_get_basic(&iter_sub_struct,&(tx_drop));
+
+    			/*zhangshu add , 2010-10-08*/
+    			dbus_message_iter_next(&iter_sub_struct);	
+    			dbus_message_iter_get_basic(&iter_sub_struct,&(rx_sum_bytes));
+    			dbus_message_iter_next(&iter_sub_struct);	
+    			dbus_message_iter_get_basic(&iter_sub_struct,&(tx_sum_bytes));
+
+    			EthNode->wtpWiredifInUcastPkts = rx_pkt_unicast; 
+    			EthNode->wtpWiredififInNUcastPkts = rx_pkt_multicast; //book modify, 2011-1-20
+    			EthNode->wtpWiredififOutUcastPkts = tx_pkt_unicast; 
+    			EthNode->wtpWiredififOutNUcastPkts = tx_pkt_multicast; //book modify, 2011-1-20
+
+    			EthNode->wtpWiredififInPkts = rx_packets; 
+    			EthNode->wtpWiredififInDiscardPkts = rx_drop; 
+    			EthNode->wtpWiredififInErrors = rx_errors; 
+    			EthNode->wtpWiredififOutPkts = tx_packets; 
+    			EthNode->wtpWiredififOutDiscardPkts = tx_drop; 
+    			EthNode->wtpWiredififOutErrors = tx_errors; 
+    			EthNode->wtpWiredififInOctets = rx_bytes; 
+    			EthNode->wtpWiredififOutOctets = tx_bytes; 
+
+    			EthNode->rx_sum_bytes = rx_sum_bytes; //zhangshu add 2010-10-08 
+    			EthNode->tx_sum_bytes = tx_sum_bytes; //zhangshu add 2010-10-08
+				
+				dbus_message_iter_next(&iter_sub_array);
+			}
+			dbus_message_iter_next(&iter_array);
+		}
+	}
+
+	dbus_message_unref(reply);
+
+	return WtpHead;
+}
+#if 0
+
+struct WtpWiredIfStatsInfo* show_WtpWiredIfStatsInfo_of_all_wtp(int index,int localid,DBusConnection *dcli_dbus_connection, unsigned int *num, unsigned int *ret)
+{
+	DBusMessage *query, *reply;
+	DBusError err;
+	DBusMessageIter	 iter;
+	DBusMessageIter	 iter_array;	
+	DBusMessageIter iter_struct;
+	DBusMessageIter	 iter_sub_array;
+	DBusMessageIter	 iter_sub_struct;
+	
+	struct WtpWiredIfStatsInfo *WtpNode = NULL;
+	struct WtpWiredIfStatsInfo *WtpHead = NULL;
 	struct WiredIfStatsInfo *EthTail = NULL;
 	struct WiredIfStatsInfo *EthNode = NULL;
 	
@@ -11803,6 +12072,7 @@ struct WtpWiredIfStatsInfo* show_WtpWiredIfStatsInfo_of_all_wtp(int index,int lo
 
 	return WtpHead;
 }
+#endif
 
 /*for showing WtpWirelessIfStatsInfo  by nl 20100526 table 17*/
 struct WtpWirelessIfInfo* show_WtpWirelessIfStatsInfo_of_all_wtp(int index,int localid,DBusConnection *dcli_dbus_connection, unsigned int *num, unsigned int *ret)

@@ -3,6 +3,13 @@
 #define _DCLI_WTP_H
 
 #define DCLI_GROUP 0
+/* Huangleilei copy from 1.3.18, 20130610 */
+#define AP_SNR_MAX (-10)		
+#define AP_SNR_MIN (-120)
+
+#define WTP_WTP "wtp config\n"
+#define WTP_SET "set wtp configuration\n"
+/* Huangleilei copy end */
 
 typedef struct
 {

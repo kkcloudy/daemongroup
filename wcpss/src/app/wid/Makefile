@@ -21,7 +21,7 @@ LIBS = -L/opt/mipslibs/usr/lib -L./  -lm -L/opt/mipslibs/usr/lib -lxml2 -lz
 RM = /bin/rm -f 
 
 # list of generated object files for AC. 
-WID_OBJS = AC.o ACConfigFile.o ACMainLoop.o ACDiscoveryState.o ACJoinState.o ACReset.o ACImageData.o ACConfigureState.o ACDataCheckState.o ACRunState.o ACProtocol_User.o ACRetransmission.o ACMultiHomedSocket.o  ACProtocol.o ACBinding.o ACTxpowerControl.o ACChannelSelection.o ACInterface.o ACSTARoaming.o  ACSettingsFile.o ACDbus.o ACDbus_handler.o ACMsgq.o iplist.o ACNetlink.o ACBak.o ACIPv6Addr.o ACAccessCheck.o ACUpdateManage.o ACDbusPathInit.o ACLoadbanlance.o ACChannelSelection2.o
+WID_OBJS = AC.o ACConfigFile.o ACMainLoop.o ACDiscoveryState.o ACJoinState.o ACReset.o ACImageData.o ACConfigureState.o ACDataCheckState.o ACRunState.o ACProtocol_User.o ACRetransmission.o ACMultiHomedSocket.o  ACProtocol.o ACBinding.o ACTxpowerControl.o ACChannelSelection.o ACInterface.o ACSTARoaming.o  ACSettingsFile.o ACDbus.o ACDbus_handler.o ACMsgq.o iplist.o ACNetlink.o ACBak.o ACIPv6Addr.o ACAccessCheck.o ACUpdateManage.o ACDbusPathInit.o ACLoadbanlance.o ACChannelSelection2.o ACCheckReport.o
  
 WID_SRCS = $(WID_OBJS:.o=.c) 
 

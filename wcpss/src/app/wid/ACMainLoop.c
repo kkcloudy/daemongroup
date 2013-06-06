@@ -220,6 +220,11 @@ void STA_OP(TableMsg *msg){
 	unsigned char WLANID = 0;
 	msgq msginfo;
 	if((AC_WTP[WTPIndex] != NULL)&&(AC_WTP[WTPIndex]->WTPStat == 5)){
+		if (AC_BSS[BSSIndex] == NULL)			/* Huangleilei move for AXSSZFI-1718 */
+		{
+			wid_syslog_err("%s %d AC_BSS[%d] is NULL", __func__, __LINE__, BSSIndex);
+			return ;
+		}
 		/*while((AC_WTP[WTPIndex]->CMD->staCMD > 0)&&(i < 10)){
 			printf("please waiting seconds\n");			
 			i++;
@@ -257,15 +262,43 @@ void STA_OP(TableMsg *msg){
 		{		
 			unsigned char mac[MAC_LEN] ;
 			memcpy(mac, msg->u.STA.STAMAC, MAC_LEN);	
+			if (AC_BSS[BSSIndex] == NULL 
+				&& AC_WLAN[AC_BSS[BSSIndex]->WlanID] == NULL
+				&& (AC_WLAN[AC_BSS[BSSIndex]->WlanID] != NULL && (AC_WLAN[AC_BSS[BSSIndex]->WlanID]->want_to_delete == 1)))		/* Huangleilei move for AXSSZFI-1718 */
+			{
+				wid_syslog_err("%s %d AC_BSS[%d] or AC_WLAN is NULL", __func__, __LINE__, BSSIndex);
+				return ;
+			}
 			wid_radio_set_wlan_traffic_limit_sta_value(WTPIndex,(msg->u.STA.BSSIndex/L_BSS_NUM)%L_RADIO_NUM,AC_BSS[BSSIndex]->WlanID,mac[0],mac[1],mac[2],mac[3],mac[4],mac[5], msg->u.STA.send_traffic_limit,1);
+			if (AC_BSS[BSSIndex] == NULL 
+				&& AC_WLAN[AC_BSS[BSSIndex]->WlanID] == NULL
+				&& (AC_WLAN[AC_BSS[BSSIndex]->WlanID] != NULL && (AC_WLAN[AC_BSS[BSSIndex]->WlanID]->want_to_delete == 1)))		/* Huangleilei move for AXSSZFI-1718 */
+			{
+				wid_syslog_err("%s %d AC_BSS[%d] or AC_WLAN is NULL", __func__, __LINE__, BSSIndex);
+				return ;
+			}
 			wid_radio_set_wlan_traffic_limit_sta_value(WTPIndex,(msg->u.STA.BSSIndex/L_BSS_NUM)%L_RADIO_NUM,AC_BSS[BSSIndex]->WlanID,mac[0],mac[1],mac[2],mac[3],mac[4],mac[5], msg->u.STA.traffic_limit,0);
 		}
 		msginfo.mqinfo.u.StaInfo.Radio_L_ID = (msg->u.STA.BSSIndex/L_BSS_NUM)%L_RADIO_NUM;
 		memcpy(msginfo.mqinfo.u.StaInfo.STAMAC, msg->u.STA.STAMAC, MAC_LEN);	
+		if (AC_BSS[BSSIndex] == NULL 
+			&& AC_WLAN[AC_BSS[BSSIndex]->WlanID] == NULL
+			&& (AC_WLAN[AC_BSS[BSSIndex]->WlanID] != NULL && (AC_WLAN[AC_BSS[BSSIndex]->WlanID]->want_to_delete == 1))) 	/* Huangleilei move for AXSSZFI-1718 */
+		{
+			wid_syslog_err("%s %d AC_BSS[%d] or AC_WLAN is NULL", __func__, __LINE__, BSSIndex);
+			return ;
+		}
 		msginfo.mqinfo.u.StaInfo.WLANID = AC_BSS[BSSIndex]->WlanID;
 		if (msgsnd(ASD_WIDMSGQ, (msgq *)&msginfo, sizeof(msginfo.mqinfo), 0) == -1){
 			wid_syslog_info("%s msgsend %s",__func__,strerror(errno));
 			perror("msgsnd");
+		}
+		if (AC_BSS[BSSIndex] == NULL 
+			&& AC_WLAN[AC_BSS[BSSIndex]->WlanID] == NULL
+			&& (AC_WLAN[AC_BSS[BSSIndex]->WlanID] != NULL && (AC_WLAN[AC_BSS[BSSIndex]->WlanID]->want_to_delete == 1))) 	/* Huangleilei move for AXSSZFI-1718 */
+		{
+			wid_syslog_err("%s %d AC_BSS[%d] or AC_WLAN is NULL", __func__, __LINE__, BSSIndex);
+			return ;
 		}
 
 		WLANID = AC_BSS[BSSIndex]->WlanID;
@@ -278,6 +311,15 @@ void STA_OP(TableMsg *msg){
 				memset(STA_ROAM.STAMAC,0,MAC_LEN);
 				STA_ROAM.STAOP = msg->Op;
 				memcpy(STA_ROAM.STAMAC, msg->u.STA.STAMAC, MAC_LEN);
+				if (AC_BSS[BSSIndex] == NULL 
+					&& AC_WLAN[AC_BSS[BSSIndex]->WlanID] == NULL
+					&& (AC_WLAN[AC_BSS[BSSIndex]->WlanID] != NULL && (AC_WLAN[AC_BSS[BSSIndex]->WlanID]->want_to_delete == 1))) 	/* Huangleilei move for AXSSZFI-1718 */
+				{
+					wid_syslog_err("%s %d AC_BSS[%d] or AC_WLAN is NULL", __func__, __LINE__, BSSIndex);
+					//CWSignalThreadCondition(&gSTARoamingWait);
+					CWThreadMutexUnlock(&(gSTARoamingMutex));
+					return ;
+				}
 				STA_ROAM.WLANDomain = AC_BSS[BSSIndex]->WlanID;
 				CWSignalThreadCondition(&gSTARoamingWait);
 			CWThreadMutexUnlock(&(gSTARoamingMutex));
@@ -3092,9 +3134,14 @@ void CWDownWTP(unsigned int WTPIndex){
 	syslog(LOG_INFO|LOG_LOCAL7, "WTP %d down,WTP MAC:"MACSTR",WTP IP:%s,Down Time:%s\n",
 		WTPIndex,MAC2STR(AC_WTP[WTPIndex]->WTPMAC),AC_WTP[WTPIndex]->WTPIP,ctime(&now));
 	
-	unsigned int rand_num = rand() * now % 100;	
-	if(gtrapflag>=1 && AC_WTP[WTPIndex]->wid_trap.ignore_percent <= rand_num){
-    	wid_dbus_trap_ap_run_quit(WTPIndex,state);
+	unsigned int rand_num = rand() * now % 100;
+	
+	if(gtrapflag>=1 && AC_WTP[WTPIndex]->wid_trap.ignore_percent <= rand_num)
+	{
+		if (gWTPs[WTPIndex].currentState == CW_ENTER_RUN)
+		{
+			wid_dbus_trap_ap_run_quit(WTPIndex,state);
+		}
     }
 	else{
 	    AC_WTP[WTPIndex]->wid_trap.ignore_switch = 1;

@@ -201,7 +201,9 @@ enum wid_dbus_result_no_e {
 	AC_STATE_FIRST_DISABLE,
 	WID_SINGLE_RADIO,
 	DELETE_WLAN_SPEN_TOO_MUCH_TIME,    // create a new thread to delete wlan. Huangleilei add it for AXSSZFI-1622
-	WID_WANT_TO_DELETE_WLAN		/* Huangleilei add for ASXXZFI-1622 */
+	WID_WANT_TO_DELETE_WLAN,		/* Huangleilei add for ASXXZFI-1622 */
+	VALUE_OUT_OF_RANGE,				/* Huangleilei copy from 1.3.18 */
+	MIN_LARGER_THAN_MAX				/* Huangleilei copy from 1.3.18 */
 };
 
 enum wid_radio_type {
@@ -249,6 +251,7 @@ extern char WID_DBUS_CONF_METHOD_WTPLIST_UPDATE[PATH_LEN];
 extern char WID_DBUS_CONF_METHOD_AC_ACCESS_WTPLIST[PATH_LEN];
 extern char WID_DBUS_CONF_METHOD_CLEAN_AC_ACCESS_WTPLIST[PATH_LEN];
 extern char WID_DBUS_CONF_METHOD_OLD_AP_IMG[PATH_LEN];
+extern char WID_DBUS_CONF_METHOD_SET_WEB_REPORT_SNR_RANGE[PATH_LEN];	/* Huangleilei copy from 1.3.18, 20130610 */
 
 
 extern char WID_DBUS_CONF_METHOD_ACVERSION[PATH_LEN];

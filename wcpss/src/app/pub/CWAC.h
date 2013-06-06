@@ -54,6 +54,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #define LOG_FILE_NAME					"ac.log.txt"
 
+/* Huangleilei copy from 1.3.18, 20130610 */
+/* web report avoid  */
+#define AP_SNR_MAX (-10)
+#define AP_SNR_MIN (-120)
+/* Huangleilei copy end */
+
 /*_____________________________________________________*/
 /*  *******************___TYPES___*******************  */
 typedef struct {			
@@ -281,6 +287,11 @@ extern int gWTP_FLOW_TRIGER;
 extern int gWTP_MAX_STA;
 extern int gNTP_STATE;
 extern int gNTP_INTERVAL;
+
+/* Huangleilei copy from 1.3.18, 20130610 */
+extern char gMAX_WEB_REPORT_SNR;
+extern char gMIN_WEB_REPORT_SNR;
+/* Huangleilei copy end */
 
 /****************globle variable*****************/
 

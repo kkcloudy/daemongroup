@@ -33,6 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "wcpss/wid/WID.h"
 #include "CWAC.h"
 #include "ACDbus_handler.h"
+#include "ACCheckReport.h"
 
 #ifdef DMALLOC
 #include "../dmalloc-5.5.0/dmalloc.h"
@@ -1859,6 +1860,11 @@ CWBool CWParseMsgElemAPExtensionInfo(CWProtocolMessage *msgPtr, int len, wid_wif
 		{
 			valPtr->wifi_snr_new[i] = CWProtocolRetrieve8(msgPtr);
 			valPtr->wifi_noise_new[i] = CWProtocolRetrieve16(msgPtr);
+			if((gMAX_WEB_REPORT_SNR < (valPtr->wifi_snr_new[i] - valPtr->wifi_noise_new[i]))
+				|| (gMIN_WEB_REPORT_SNR > (valPtr->wifi_snr_new[i] - valPtr->wifi_noise_new[i])))
+			{
+				wid_syslog_info("%s %d: ERR wifi%d snr %d,noise %d", __func__, __LINE__, i, valPtr->wifi_snr_new[i], valPtr->wifi_noise_new[i]);
+			}
 			wid_syslog_debug_debug(WID_WTPINFO,"CWParseMsgElemAPExtensionInfo ap send radio %d wifi_snr_new  %d\n",i,valPtr->wifi_snr_new[i]);
 			wid_syslog_debug_debug(WID_WTPINFO,"CWParseMsgElemAPExtensionInfo ap send radio %d wifi_noise_new  %d\n",i,valPtr->wifi_noise_new[i]);
 		}	
@@ -1868,6 +1874,11 @@ CWBool CWParseMsgElemAPExtensionInfo(CWProtocolMessage *msgPtr, int len, wid_wif
 		for(i=0;i<valPtr->wifi_count;i++){
 			valPtr->wifi_snr_new[i] = valPtr->wifi_snr;
 			valPtr->wifi_noise_new[i] = 95;
+			if((gMAX_WEB_REPORT_SNR < (valPtr->wifi_snr_new[i] - valPtr->wifi_noise_new[i]))
+				|| (gMIN_WEB_REPORT_SNR > (valPtr->wifi_snr_new[i] - valPtr->wifi_noise_new[i])))
+			{
+				wid_syslog_info("%s %d: ERR wifi%d snr %d,default_noise 95", __func__, __LINE__, i, valPtr->wifi_snr_new[i]);
+			}
 			wid_syslog_debug_debug(WID_WTPINFO,"CWParseMsgElemAPExtensionInfo not receiv  %d wifi_snr_new  %d\n",i,valPtr->wifi_snr_new[i]);
 			wid_syslog_debug_debug(WID_WTPINFO,"CWParseMsgElemAPExtensionInfo not receiv %d wifi_noise_new	%d\n",i,valPtr->wifi_noise_new[i]);
 		}
@@ -3216,6 +3227,8 @@ CWBool CWParseAPStatisInfo_v2(CWProtocolMessage *msgPtr, int len,char *valPtr, i
 
 		
 	}
+	
+	get_ap_stats_v2(WTPIndex);
 
 	return CW_TRUE;
 }

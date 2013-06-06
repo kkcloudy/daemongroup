@@ -260,6 +260,9 @@ CWBool ACEnterDataCheck (int WTPIndex, CWProtocolMessage *msgPtr)
 		}
 	}
 	//fengwenchao add end
+	
+	memset(&(AC_WTP[WTPIndex]->pre_web_manager_stats), 0, sizeof(web_manager_stats_t));
+	
 	return CW_TRUE;
 }
 
