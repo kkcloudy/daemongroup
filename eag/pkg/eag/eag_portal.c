@@ -342,12 +342,12 @@ static int
 reqid_is_used(eag_portal_t *portal, uint16_t reqid)
 {
 	portal_sess_t *sess = NULL;
-	int is_distributed = 0;
+	//int is_distributed = 0;
 	int pdc_distributed = 0;
 
-	is_distributed = eag_ins_get_distributed(portal->eagins);
+	//is_distributed = eag_ins_get_distributed(portal->eagins);
 	pdc_distributed = eag_ins_get_pdc_distributed(portal->eagins);
-	if (1 == is_distributed && 1 == pdc_distributed) {
+	if (1 == pdc_distributed) {
 		list_for_each_entry(sess, &(portal->sess_head), node) {
 			if ((SESS_STATUS_CHALLENGED == sess->status
 				|| SESS_STATUS_ON_CHAPAUTH == sess->status)
@@ -378,14 +378,14 @@ portal_detect_unique_reqid(eag_portal_t *portal)
 	static uint16_t prev_reqid = 0;
 	int found = 0;
 	uint16_t hansi_id = portal->hansi_id;
-	int is_distributed = 0;
+	//int is_distributed = 0;
 	int pdc_distributed = 0;
 
 	eag_log_debug("eag_portal","portal_detect_unique_reqid begin, prev_reqid=%#x", prev_reqid);
-	is_distributed = eag_ins_get_distributed(portal->eagins);
+	//is_distributed = eag_ins_get_distributed(portal->eagins);
 	pdc_distributed = eag_ins_get_pdc_distributed(portal->eagins);
 	/* (A % 0X1000) == (A & 0XFFF) */
-	if (1 == is_distributed && 1 == pdc_distributed) {
+	if (1 == pdc_distributed) {
 		for (reqid = (prev_reqid + 1) & 0XFFF; 
 				(reqid & 0XFFF) != (prev_reqid & 0XFFF); 
 				reqid = (reqid + 1) & 0XFFF) {
@@ -480,7 +480,7 @@ eag_portal_send_packet(eag_portal_t *portal,
 	struct sockaddr_in addr = {0};
 	ssize_t nbyte = 0;
 	char portal_ipstr[32] = "";
-	int is_distributed = 0;
+	//int is_distributed = 0;
 	int pdc_distributed = 0;
 	
 	if (NULL == portal || NULL == packet) {
@@ -488,7 +488,7 @@ eag_portal_send_packet(eag_portal_t *portal,
 		return -1;
 	}
 	
-	is_distributed = eag_ins_get_distributed(portal->eagins);
+	//is_distributed = eag_ins_get_distributed(portal->eagins);
 	pdc_distributed = eag_ins_get_pdc_distributed(portal->eagins);
 	length = portal_packet_get_length(packet);
 
@@ -507,7 +507,7 @@ eag_portal_send_packet(eag_portal_t *portal,
 #endif
 
 	//portal_packet_hton(packet);
-	if (1 == is_distributed && 1 == pdc_distributed) {
+	if (1 == pdc_distributed) {
 		nbyte = pdc_sendto(portal->sockfd, packet, length, 0,
 					(struct sockaddr *)&addr, sizeof(addr));
 		if (nbyte < 0) {
@@ -639,7 +639,7 @@ eag_portal_start(eag_portal_t *portal)
 	struct sockaddr_in addr = {0};
 	char ipstr[32] = "";
 	uint32_t nasip = 0;
-	int is_distributed = 0;
+	//int is_distributed = 0;
 	int pdc_distributed = 0;
 	
 	if (NULL == portal) {
@@ -653,7 +653,7 @@ eag_portal_start(eag_portal_t *portal)
 		return EAG_RETURN_OK;
 	}
 	
-	is_distributed = eag_ins_get_distributed(portal->eagins);
+	//is_distributed = eag_ins_get_distributed(portal->eagins);
 	pdc_distributed = eag_ins_get_pdc_distributed(portal->eagins);
 	nasip = eag_ins_get_nasip(portal->eagins);
 	portal->sockfd = socket(AF_INET, SOCK_DGRAM, 0);
@@ -666,7 +666,7 @@ eag_portal_start(eag_portal_t *portal)
 
 	memset(&addr, 0, sizeof(struct sockaddr_in));
 	addr.sin_family = AF_INET;
-	if (1 == is_distributed && 1 == pdc_distributed) {
+	if (1 == pdc_distributed) {
 		addr.sin_addr.s_addr = htonl(portal->local_ip);
 		addr.sin_port = htons(portal->local_port);
 	} else {
@@ -695,7 +695,7 @@ eag_portal_start(eag_portal_t *portal)
 
 	eag_portal_event(EAG_PORTAL_READ, portal);
 
-	if (1 == is_distributed && 1 == pdc_distributed) {
+	if (1 == pdc_distributed) {
 		eag_log_info("portal(%s:%u) fd(%d) start ok", 
 			ip2str(portal->local_ip, ipstr, sizeof(ipstr)),
 			portal->local_port,
@@ -717,7 +717,7 @@ eag_portal_stop(eag_portal_t *portal)
 	portal_sess_t *next = NULL;
 	char ipstr[32] = "";
 	uint32_t nasip = 0;
-	int is_distributed = 0;
+	//int is_distributed = 0;
 	int pdc_distributed = 0;
 	
 	if (NULL == portal) {
@@ -725,7 +725,7 @@ eag_portal_stop(eag_portal_t *portal)
 		return -1;
 	}
 
-	is_distributed = eag_ins_get_distributed(portal->eagins);
+	//is_distributed = eag_ins_get_distributed(portal->eagins);
 	pdc_distributed = eag_ins_get_pdc_distributed(portal->eagins);
 	nasip = eag_ins_get_nasip(portal->eagins);
 	if (NULL != portal->t_read) {
@@ -740,7 +740,7 @@ eag_portal_stop(eag_portal_t *portal)
 		portal_sess_free(portalsess);
 	}
 	
-	if (1 == is_distributed && 1 == pdc_distributed) {
+	if (1 == pdc_distributed) {
 		eag_log_info("portal(%s:%u) stop ok",
 			ip2str(portal->local_ip, ipstr, sizeof(ipstr)),
 			portal->local_port);
@@ -3007,7 +3007,7 @@ portal_receive(eag_thread_t *thread)
 	char ipstr[32] = "";
 	uint32_t portal_ip = 0;
 	uint16_t portal_port = 0;
-	int is_distributed = 0;
+	//int is_distributed = 0;
 	int pdc_distributed = 0;
 	int portal_minsize = 0;
 	
@@ -3021,11 +3021,11 @@ portal_receive(eag_thread_t *thread)
 		eag_log_err("portal_receive portal is null");
 		return EAG_ERR_NULL_POINTER;
 	}
-	is_distributed = eag_ins_get_distributed(portal->eagins);
+	//is_distributed = eag_ins_get_distributed(portal->eagins);
     pdc_distributed = eag_ins_get_pdc_distributed(portal->eagins);
 
 	len = sizeof(addr);
-	if (1 == is_distributed && 1 == pdc_distributed) {
+	if (1 == pdc_distributed) {
 		nbyte = pdc_recvfrom(portal->sockfd, &reqpkt, sizeof(reqpkt), 0,
 							(struct sockaddr *)&addr, &len);
 		if (nbyte < 0) {

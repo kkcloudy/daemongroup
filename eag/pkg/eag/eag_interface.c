@@ -24,9 +24,12 @@
 
 /*base conf*/
 #define EAG_DBUS_METHOD_SET_NASIP			"eag_dbus_method_set_nasip"
-#define EAG_DBUS_METHOD_SET_DISTRIBUTED		"eag_dbus_method_set_distributed"
+//#define EAG_DBUS_METHOD_SET_DISTRIBUTED		"eag_dbus_method_set_distributed"
+#define EAG_DBUS_METHOD_SET_RDC_DISTRIBUTED	"eag_dbus_method_set_rdc_distributed"
 #define EAG_DBUS_METHOD_SET_PDC_DISTRIBUTED	"eag_dbus_method_set_pdc_distributed"
-#define EAG_DBUS_METHOD_SET_PDCRDC_INS		"eag_dbus_method_set_rdcpdc_ins"
+//#define EAG_DBUS_METHOD_SET_PDCRDC_INS		"eag_dbus_method_set_rdcpdc_ins"
+#define EAG_DBUS_METHOD_SET_RDC_INS			"eag_dbus_method_set_rdc_ins"
+#define EAG_DBUS_METHOD_SET_PDC_INS			"eag_dbus_method_set_pdc_ins"
 
 #define EAG_DBUS_METHOD_SET_PORTAL_PORT				"eag_dbus_method_set_portal_port"
 #define EAG_DBUS_METHOD_SET_PORTAL_RETRY_PARAMS		"eag_dbus_method_set_portal_retry_params"
@@ -272,6 +275,7 @@ eag_set_nasip(DBusConnection *connection,
 	return iRet;
 }
 
+/*
 int
 eag_set_distributed(DBusConnection *connection, 
 				int hansitype, int insid,
@@ -290,6 +294,49 @@ eag_set_distributed(DBusConnection *connection,
 	
 	dbus_message_append_args(	query,
 								DBUS_TYPE_INT32,  &distributed,
+								DBUS_TYPE_INVALID );
+
+	reply = dbus_connection_send_with_reply_and_block ( connection, query, -1, &err );
+
+	dbus_message_unref(query);
+	
+	if ( NULL == reply ){	
+		if (dbus_error_is_set(&err)){
+			dbus_error_free(&err);
+		}
+		return EAG_ERR_DBUS_FAILED;
+	}else{
+		dbus_message_get_args(	reply,
+								&err,
+								DBUS_TYPE_INT32, &iRet,
+								DBUS_TYPE_INVALID );
+	}
+
+	
+	dbus_message_unref(reply);
+	
+	return iRet;
+}
+*/
+
+int
+eag_set_rdc_distributed(DBusConnection *connection, 
+				int hansitype, int insid,
+				int rdc_distributed)
+{
+	DBusMessage *query, *reply;
+	DBusError err;
+	int iRet=EAG_ERR_UNKNOWN;
+	eag_dbus_path_reinit(hansitype,insid);
+	query = dbus_message_new_method_call(
+									EAG_DBUS_NAME,
+									EAG_DBUS_OBJPATH,
+									EAG_DBUS_INTERFACE, 
+									EAG_DBUS_METHOD_SET_RDC_DISTRIBUTED );
+	dbus_error_init(&err);
+	
+	dbus_message_append_args(	query,
+								DBUS_TYPE_INT32,  &rdc_distributed,
 								DBUS_TYPE_INVALID );
 
 	reply = dbus_connection_send_with_reply_and_block ( connection, query, -1, &err );
@@ -356,6 +403,7 @@ eag_set_pdc_distributed(DBusConnection *connection,
 	return iRet;
 }
 
+/*
 int
 eag_set_rdcpdc_ins(DBusConnection *connection, 
 				int hansitype, int insid,
@@ -375,6 +423,93 @@ eag_set_rdcpdc_ins(DBusConnection *connection,
 	dbus_message_append_args(	query,
 								DBUS_TYPE_INT32,  &rdcpdc_slotid,
 								DBUS_TYPE_INT32,  &rdcpdc_insid,
+								DBUS_TYPE_INVALID );
+
+	reply = dbus_connection_send_with_reply_and_block ( connection, query, -1, &err );
+
+	dbus_message_unref(query);
+	
+	if ( NULL == reply ){	
+		if (dbus_error_is_set(&err)){
+			dbus_error_free(&err);
+		}
+		return EAG_ERR_DBUS_FAILED;
+	}else{
+		dbus_message_get_args(	reply,
+								&err,
+								DBUS_TYPE_INT32, &iRet,
+								DBUS_TYPE_INVALID );
+	}
+
+	
+	dbus_message_unref(reply);
+	
+	return iRet;
+}
+*/
+
+int
+eag_set_rdc_ins(DBusConnection *connection, 
+				int hansitype, int insid,
+				int rdc_slotid, int rdc_insid)
+{
+	DBusMessage *query, *reply;
+	DBusError err;
+	int iRet=EAG_ERR_UNKNOWN;
+	eag_dbus_path_reinit(hansitype,insid);
+	query = dbus_message_new_method_call(
+									EAG_DBUS_NAME,
+									EAG_DBUS_OBJPATH,
+									EAG_DBUS_INTERFACE, 
+									EAG_DBUS_METHOD_SET_RDC_INS );
+	dbus_error_init(&err);
+	
+	dbus_message_append_args(	query,
+								DBUS_TYPE_INT32,  &rdc_slotid,
+								DBUS_TYPE_INT32,  &rdc_insid,
+								DBUS_TYPE_INVALID );
+
+	reply = dbus_connection_send_with_reply_and_block ( connection, query, -1, &err );
+
+	dbus_message_unref(query);
+	
+	if ( NULL == reply ){	
+		if (dbus_error_is_set(&err)){
+			dbus_error_free(&err);
+		}
+		return EAG_ERR_DBUS_FAILED;
+	}else{
+		dbus_message_get_args(	reply,
+								&err,
+								DBUS_TYPE_INT32, &iRet,
+								DBUS_TYPE_INVALID );
+	}
+
+	
+	dbus_message_unref(reply);
+	
+	return iRet;
+}
+
+int
+eag_set_pdc_ins(DBusConnection *connection, 
+				int hansitype, int insid,
+				int pdc_slotid, int pdc_insid)
+{
+	DBusMessage *query, *reply;
+	DBusError err;
+	int iRet=EAG_ERR_UNKNOWN;
+	eag_dbus_path_reinit(hansitype,insid);
+	query = dbus_message_new_method_call(
+									EAG_DBUS_NAME,
+									EAG_DBUS_OBJPATH,
+									EAG_DBUS_INTERFACE, 
+									EAG_DBUS_METHOD_SET_PDC_INS );
+	dbus_error_init(&err);
+	
+	dbus_message_append_args(	query,
+								DBUS_TYPE_INT32,  &pdc_slotid,
+								DBUS_TYPE_INT32,  &pdc_insid,
 								DBUS_TYPE_INVALID );
 
 	reply = dbus_connection_send_with_reply_and_block ( connection, query, -1, &err );
@@ -1560,15 +1695,24 @@ eag_get_base_conf( DBusConnection *connection,
 			dbus_message_iter_get_basic(&iter,&(baseconf->status));
 			dbus_message_iter_next(&iter);
 			dbus_message_iter_get_basic(&iter,&(baseconf->nasip));
+			/* dbus_message_iter_next(&iter);
+			dbus_message_iter_get_basic(&iter,&(baseconf->is_distributed)); */
 			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter,&(baseconf->is_distributed));
+			dbus_message_iter_get_basic(&iter,&(baseconf->rdc_distributed));
 			dbus_message_iter_next(&iter);
 			dbus_message_iter_get_basic(&iter,&(baseconf->pdc_distributed));
-			dbus_message_iter_next(&iter);
+			/* dbus_message_iter_next(&iter);
 			dbus_message_iter_get_basic(&iter,&(baseconf->rdcpdc_slotid));
 			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter,&(baseconf->rdcpdc_insid));			
-
+			dbus_message_iter_get_basic(&iter,&(baseconf->rdcpdc_insid)); */			
+			dbus_message_iter_next(&iter);
+			dbus_message_iter_get_basic(&iter,&(baseconf->rdc_slotid));
+			dbus_message_iter_next(&iter);
+			dbus_message_iter_get_basic(&iter,&(baseconf->rdc_insid));	
+			dbus_message_iter_next(&iter);
+			dbus_message_iter_get_basic(&iter,&(baseconf->pdc_slotid));
+			dbus_message_iter_next(&iter);
+			dbus_message_iter_get_basic(&iter,&(baseconf->pdc_insid));	
 			dbus_message_iter_next(&iter);
 			dbus_message_iter_get_basic(&iter,&(baseconf->portal_port));
 			dbus_message_iter_next(&iter);

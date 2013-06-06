@@ -4682,7 +4682,7 @@ eag_multi_portal_config_show_running_2(int localid, int slot_id, int index)
 			}
 			if( 1 == portalconf.portal_srv[i].redirect_to_url)
 			{
-				totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1, " set portal-server %s %s redirect_to_url enable\n", key_type, key);
+				totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1, " set portal-server %s %s redirect-to-url enable\n", key_type, key);
 			}
 			if( 1 == portalconf.portal_srv[i].wlanapmac)
 			{
@@ -5637,13 +5637,31 @@ eag_base_config_show_running(struct vty* vty)
 				baseconf.flux_interval);
 			vtysh_add_show_string(showStr);
 		}
-		if (1 == baseconf.is_distributed) {
+		/* if (1 == baseconf.is_distributed) {
 			snprintf(showStr, sizeof(showStr), " set distributed on");
 			vtysh_add_show_string(showStr);	
+		} */
+		if (1 == baseconf.rdc_distributed) {
+			snprintf(showStr, sizeof(showStr), " set rdc-distributed on");
+			vtysh_add_show_string(showStr);	
 		}
-		if (1 != baseconf.rdcpdc_slotid || 0 != baseconf.rdcpdc_insid) {
+		if (1 == baseconf.pdc_distributed) {
+			snprintf(showStr, sizeof(showStr), " set pdc-distributed on");
+			vtysh_add_show_string(showStr);	
+		}
+		/* if (1 != baseconf.rdcpdc_slotid || 0 != baseconf.rdcpdc_insid) {
 			snprintf(showStr, sizeof(showStr), " set rdcpdc-hansi %d-%d",
 				baseconf.rdcpdc_slotid, baseconf.rdcpdc_insid);
+			vtysh_add_show_string(showStr);		
+		} */
+		if (1 != baseconf.rdc_slotid || 0 != baseconf.rdc_insid) {
+			snprintf(showStr, sizeof(showStr), " set rdc-hansi %d-%d",
+				baseconf.rdc_slotid, baseconf.rdc_insid);
+			vtysh_add_show_string(showStr);		
+		}
+		if (1 != baseconf.pdc_slotid || 0 != baseconf.pdc_insid) {
+			snprintf(showStr, sizeof(showStr), " set pdc-hansi %d-%d",
+				baseconf.pdc_slotid, baseconf.pdc_insid);
 			vtysh_add_show_string(showStr);		
 		}
 		if (1000 != baseconf.input_correct_factor
@@ -5721,10 +5739,6 @@ eag_base_config_show_running(struct vty* vty)
 		if (1 == baseconf.l2super_vlan) {
 			snprintf(showStr, sizeof(showStr), " set l2super-vlan enable");
 			vtysh_add_show_string(showStr);		
-		}
-		if (1 == baseconf.is_distributed && 0 == baseconf.pdc_distributed) {
-			snprintf(showStr, sizeof(showStr), " set pdc-distributed off");
-			vtysh_add_show_string(showStr);	
 		}
 		if (1 == baseconf.status) {
 			snprintf(showStr, sizeof(showStr), " service enable");
@@ -5815,12 +5829,26 @@ eag_base_config_show_running_2(int localid, int slot_id,int index)
 			totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1, " set flux-interval %d\n", baseconf.flux_interval);
 		}
 		
-		if (1 == baseconf.is_distributed) {
+		/* if (1 == baseconf.is_distributed) {
 			totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1, " set distributed on\n");
+		} */
+		if (1 == baseconf.rdc_distributed) {
+			totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1, " set rdc-distributed on\n");
 		}
-		if (1 != baseconf.rdcpdc_slotid || 0 != baseconf.rdcpdc_insid) {
+		if (1 == baseconf.pdc_distributed) {
+			totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1, " set pdc-distributed on\n");
+		}
+		/* if (1 != baseconf.rdcpdc_slotid || 0 != baseconf.rdcpdc_insid) {
 			totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1, " set rdcpdc-hansi %d-%d\n",
 				baseconf.rdcpdc_slotid, baseconf.rdcpdc_insid );
+		} */
+		if (1 != baseconf.rdc_slotid || 0 != baseconf.rdc_insid) {
+			totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1, " set rdc-hansi %d-%d\n",
+				baseconf.rdc_slotid, baseconf.rdc_insid );
+		}
+		if (1 != baseconf.pdc_slotid || 0 != baseconf.pdc_insid) {
+			totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1, " set pdc-hansi %d-%d\n",
+				baseconf.pdc_slotid, baseconf.pdc_insid );
 		}
 		if (1000 != baseconf.input_correct_factor
 			|| 1000 != baseconf.output_correct_factor) {
@@ -5877,9 +5905,6 @@ eag_base_config_show_running_2(int localid, int slot_id,int index)
 		}
 		if (1 == baseconf.l2super_vlan) {
 			totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1, " set l2super-vlan enable\n");
-		}
-		if (1 == baseconf.is_distributed && 0 == baseconf.pdc_distributed) {
-			totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1, " set pdc-distributed off\n");
 		}
 		if (1 == baseconf.status) {
 			totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1, " service enable\n");	
@@ -6020,10 +6045,22 @@ eag_has_config(void)
 		if (1000 != baseconf.threshold_onlineusernum) {
 			return 1;
 		}
-		if (1 == baseconf.is_distributed) {
+		/* if (1 == baseconf.is_distributed) {
+			return 1;
+		} */
+		if (1 == baseconf.rdc_distributed) {
 			return 1;
 		}
-		if (1 != baseconf.rdcpdc_slotid || 0 != baseconf.rdcpdc_insid) {
+		if (1 == baseconf.pdc_distributed) {
+			return 1;
+		}
+		/* if (1 != baseconf.rdcpdc_slotid || 0 != baseconf.rdcpdc_insid) {
+			return 1;	
+		} */
+		if (1 != baseconf.rdc_slotid || 0 != baseconf.rdc_insid) {
+			return 1;	
+		}
+		if (1 != baseconf.pdc_slotid || 0 != baseconf.pdc_insid) {
 			return 1;	
 		}
 		if (1000 != baseconf.input_correct_factor
@@ -6053,9 +6090,6 @@ eag_has_config(void)
 			return 1;
 		}
 		if (1 == baseconf.l2super_vlan) {
-			return 1;
-		}
-		if (1 == baseconf.is_distributed && 0 == baseconf.pdc_distributed) {
 			return 1;
 		}
 		if (1 == baseconf.status) {
@@ -6287,6 +6321,11 @@ DEFUN(set_eag_distributed_func,
 	"set distributed off!\n"	
 )
 {
+	if (!boot_flag) {
+		vty_out(vty, "You should use new command 'set rdc-distributed/pdc-distributed', this command only use in boot time\n");
+		return CMD_SUCCESS;
+	}
+
 	int ret;
 	int flag = 0;
 	
@@ -6316,7 +6355,58 @@ DEFUN(set_eag_distributed_func,
 		return CMD_FAILURE;
 	}
 	
-	ret = eag_set_distributed(dcli_dbus_connection_curr, hansitype, insid, flag);
+	//ret = eag_set_distributed(dcli_dbus_connection_curr, hansitype, insid, flag);
+	ret = eag_set_rdc_distributed(dcli_dbus_connection_curr, hansitype, insid, flag);
+	ret = eag_set_pdc_distributed(dcli_dbus_connection_curr, hansitype, insid, flag);
+	if (EAG_ERR_DBUS_FAILED == ret) {
+		vty_out(vty, "%% dbus error\n");
+	}
+	else if (EAG_ERR_UNKNOWN == ret) {
+		vty_out(vty, "%% unknown error: %d\n", ret);
+	}
+
+	return CMD_SUCCESS;
+}
+
+DEFUN(set_eag_rdc_distributed_func,
+	set_eag_rdc_distributed_cmd,
+	"set rdc-distributed (on|off)",
+	SETT_STR
+	"set rdc-distributed on/off\n"
+	"set rdc-distributed on!\n"
+	"set rdc-distributed off!\n"	
+)
+{
+	int ret;
+	int flag = 0;
+	
+	int hansitype = HANSI_LOCAL;	
+	int slot_id = HostSlotId;   
+	int insid = 0;
+	if(vty->node == EAG_NODE){
+		insid = 0;
+	}
+	else if (vty->node == HANSI_EAG_NODE) {
+		insid = (int)vty->index; 	
+		hansitype = HANSI_REMOTE;
+		slot_id = vty->slotindex; 
+	}
+	else if (vty->node == LOCAL_HANSI_EAG_NODE) {
+		insid = (int)vty->index;
+		hansitype = HANSI_LOCAL;
+		slot_id = vty->slotindex;
+	}
+	DBusConnection *dcli_dbus_connection_curr = NULL;
+	ReInitDbusConnection(&dcli_dbus_connection_curr,slot_id,distributFag);
+
+	flag = (strncmp(argv[0], "on", 2) == 0) ? 1 : 0;
+	
+	if (eag_ins_running_state(dcli_dbus_connection_curr, hansitype, insid)) {
+		vty_out(vty, "%% eag is running, please stop it first\n");
+		return CMD_FAILURE;
+	}
+	
+	ret = eag_set_rdc_distributed(dcli_dbus_connection_curr, hansitype, insid, flag);
 	if (EAG_ERR_DBUS_FAILED == ret) {
 		vty_out(vty, "%% dbus error\n");
 	}
@@ -6384,6 +6474,11 @@ DEFUN(set_eag_rdcpdc_hansi_func,
 	"set eag rdcpdc-hansi slotid-insid\n"
 )
 {
+	if (!boot_flag) {
+		vty_out(vty, "You should use new command 'set rdc-hansi/pdc-hansi', this command only use in boot time\n");
+		return CMD_SUCCESS;
+	}
+
 	int ret;
 	int flag=0;
 	
@@ -6425,8 +6520,134 @@ DEFUN(set_eag_rdcpdc_hansi_func,
 		return CMD_FAILURE;
 	}
 #endif	
-	ret = eag_set_rdcpdc_ins(dcli_dbus_connection_curr, hansitype, insid, 
+	//ret = eag_set_rdcpdc_ins(dcli_dbus_connection_curr, hansitype, insid, 
+						//pdcrdc_slotid, pdcrdc_insid);
+	ret = eag_set_rdc_ins(dcli_dbus_connection_curr, hansitype, insid, 
 						pdcrdc_slotid, pdcrdc_insid);
+	ret = eag_set_pdc_ins(dcli_dbus_connection_curr, hansitype, insid, 
+						pdcrdc_slotid, pdcrdc_insid);
+	if (EAG_ERR_DBUS_FAILED == ret) {
+		vty_out(vty, "%% dbus error\n");
+	}
+	else if (EAG_ERR_UNKNOWN == ret) {
+		vty_out(vty, "%% unknown error: %d\n", ret);
+	}
+
+	return CMD_SUCCESS;
+}
+
+DEFUN(set_eag_rdc_hansi_func,
+	set_eag_rdc_hansi_cmd,
+	"set rdc-hansi PARAM",
+	SETT_STR
+	"set eag rdc-hansi slotid-insid\n"
+	"set eag rdc-hansi slotid-insid\n"
+)
+{
+	int ret;
+	int flag=0;
+	
+	int hansitype = HANSI_LOCAL;	
+	int slot_id = HostSlotId;   
+	int insid = 0;
+	int rdc_slotid=0;
+	int rdc_insid=0;
+	if(vty->node == EAG_NODE) {
+		insid = 0;
+	}
+	else if (vty->node == HANSI_EAG_NODE) {
+		insid = (int)vty->index; 	
+		hansitype = HANSI_REMOTE;
+		slot_id = vty->slotindex; 
+	}
+	else if (vty->node == LOCAL_HANSI_EAG_NODE) {
+		insid = (int)vty->index;
+		hansitype = HANSI_LOCAL;
+		slot_id = vty->slotindex;
+	}
+	DBusConnection *dcli_dbus_connection_curr = NULL;
+	ReInitDbusConnection(&dcli_dbus_connection_curr, slot_id, distributFag);
+
+	ret = sscanf(argv[0], "%d-%d", &rdc_slotid, &rdc_insid);
+	if (ret != 2) {
+		vty_out(vty, "%% the PARAM should format like 1-3(slotid-insid)!\n");
+		return CMD_FAILURE;
+	}
+
+	if (rdc_slotid > 10 || rdc_insid > 16 ||
+		rdc_slotid < 0 || rdc_insid < 0) {
+		vty_out(vty, "%% Slot id should less than 10 and insid shold less than 16\n");		
+		return CMD_FAILURE;
+	}
+#if 0	
+	if(eag_ins_running_state(dcli_dbus_connection_curr, hansitype, insid)){
+		vty_out(vty, "eag instance %d is running, please stop it first\n",insid);
+		return CMD_FAILURE;
+	}
+#endif	
+	ret = eag_set_rdc_ins(dcli_dbus_connection_curr, hansitype, insid, 
+						rdc_slotid, rdc_insid);
+	if (EAG_ERR_DBUS_FAILED == ret) {
+		vty_out(vty, "%% dbus error\n");
+	}
+	else if (EAG_ERR_UNKNOWN == ret) {
+		vty_out(vty, "%% unknown error: %d\n", ret);
+	}
+
+	return CMD_SUCCESS;
+}
+
+DEFUN(set_eag_pdc_hansi_func,
+	set_eag_pdc_hansi_cmd,
+	"set pdc-hansi PARAM",
+	SETT_STR
+	"set eag pdc-hansi slotid-insid\n"
+	"set eag pdc-hansi slotid-insid\n"
+)
+{
+	int ret;
+	int flag=0;
+	
+	int hansitype = HANSI_LOCAL;	
+	int slot_id = HostSlotId;   
+	int insid = 0;
+	int pdc_slotid=0;
+	int pdc_insid=0;
+	if(vty->node == EAG_NODE) {
+		insid = 0;
+	}
+	else if (vty->node == HANSI_EAG_NODE) {
+		insid = (int)vty->index; 	
+		hansitype = HANSI_REMOTE;
+		slot_id = vty->slotindex; 
+	}
+	else if (vty->node == LOCAL_HANSI_EAG_NODE) {
+		insid = (int)vty->index;
+		hansitype = HANSI_LOCAL;
+		slot_id = vty->slotindex;
+	}
+	DBusConnection *dcli_dbus_connection_curr = NULL;
+	ReInitDbusConnection(&dcli_dbus_connection_curr, slot_id, distributFag);
+
+	ret = sscanf(argv[0], "%d-%d", &pdc_slotid, &pdc_insid);
+	if (ret != 2) {
+		vty_out(vty, "%% the PARAM should format like 1-3(slotid-insid)!\n");
+		return CMD_FAILURE;
+	}
+
+	if (pdc_slotid > 10 || pdc_insid > 16 ||
+		pdc_slotid < 0 || pdc_insid < 0) {
+		vty_out(vty, "%% Slot id should less than 10 and insid shold less than 16\n");		
+		return CMD_FAILURE;
+	}
+#if 0	
+	if(eag_ins_running_state(dcli_dbus_connection_curr, hansitype, insid)){
+		vty_out(vty, "eag instance %d is running, please stop it first\n",insid);
+		return CMD_FAILURE;
+	}
+#endif	
+	ret = eag_set_pdc_ins(dcli_dbus_connection_curr, hansitype, insid, 
+						pdc_slotid, pdc_insid);
 	if (EAG_ERR_DBUS_FAILED == ret) {
 		vty_out(vty, "%% dbus error\n");
 	}
@@ -7569,8 +7790,12 @@ DEFUN(show_eag_base_conf_func,
 		vty_out(vty, "service status            :%s\n", (1 == baseconf.status) ? "enable" : "disable");
 		ip2str( baseconf.nasip, nasip_str, sizeof(nasip_str)-1);
 		vty_out(vty, "nas ip                    :%s\n", nasip_str);
-		vty_out(vty, "distributed switch        :%s\n", (1 == baseconf.is_distributed) ? "on" : "off");
-		vty_out(vty, "distributed rdc pdc param :%d-%d\n", baseconf.rdcpdc_slotid, baseconf.rdcpdc_insid);
+		//vty_out(vty, "distributed switch        :%s\n", (1 == baseconf.is_distributed) ? "on" : "off");	
+		vty_out(vty, "rdc-distributed switch    :%s\n", (1 == baseconf.rdc_distributed) ? "on" : "off");
+		vty_out(vty, "pdc-distributed switch    :%s\n", (1 == baseconf.pdc_distributed) ? "on" : "off");
+		//vty_out(vty, "distributed rdc pdc param :%d-%d\n", baseconf.rdcpdc_slotid, baseconf.rdcpdc_insid);
+		vty_out(vty, "distributed rdc param     :%d-%d\n", baseconf.rdc_slotid, baseconf.rdc_insid);
+		vty_out(vty, "distributed pdc param     :%d-%d\n", baseconf.pdc_slotid, baseconf.pdc_insid);
 		vty_out(vty, "portal port               :%hu\n", baseconf.portal_port);
 		vty_out(vty, "portal retry interval     :%d\n", baseconf.portal_retry_interval);
 		vty_out(vty, "portal retry times        :%d\n", baseconf.portal_retry_times);
@@ -7603,7 +7828,7 @@ DEFUN(show_eag_base_conf_func,
 		vty_out(vty, "trap-switch abnormal logoff:%s\n", (1 == baseconf.trap_switch_abnormal_logoff)?"on":"off");
 		vty_out(vty, "trap-switch online-user-num:%s\n",
 								(1==baseconf.trap_onlineusernum_switch)?"on":"off");
-		vty_out(vty,"threshold online-user-num: %d\n",baseconf.threshold_onlineusernum);
+		vty_out(vty,"threshold online-user-num  :%d\n",baseconf.threshold_onlineusernum);
 		vty_out(vty, "portal protocol           :%s\n", (PORTAL_PROTOCOL_MOBILE == baseconf.portal_protocol)?"mobile":"telecom");
  		if (FLUX_FROM_IPTABLES_L2 == baseconf.macauth_flux_from) {
 			macauth_flux_from = "iptables_L2";
@@ -7625,9 +7850,8 @@ DEFUN(show_eag_base_conf_func,
 		vty_out(vty, "mac-auth notice-bindserver:%s\n", (1 == baseconf.macauth_notice_bindserver)?"enable":"disable");
 		vty_out(vty, "log-format autelan        :%s\n", (1 == baseconf.autelan_log)?"on":"off");
 		vty_out(vty, "log-format henan          :%s\n", (1 == baseconf.henan_log)?"on":"off");
-		vty_out(vty, "username check            :%s\n", (1 == baseconf.username_check)?"on":"off");
 		vty_out(vty, "l2super-vlan              :%s\n", (1 == baseconf.l2super_vlan)?"enable":"disable");
-		vty_out(vty, "pdc-distributed switch    :%s\n", (1 == baseconf.pdc_distributed) ? "on" : "off");
+		vty_out(vty, "username check            :%s\n", (1 == baseconf.username_check)?"on":"off");
 	}
 	else {
 		vty_out(vty, "%% unknown error: %d\n", ret);
@@ -14522,6 +14746,10 @@ dcli_eag_init(void)
 	install_element(EAG_NODE, &set_eag_distributed_cmd);
 	install_element(HANSI_EAG_NODE, &set_eag_distributed_cmd);
 	install_element(LOCAL_HANSI_EAG_NODE, &set_eag_distributed_cmd);
+
+	install_element(EAG_NODE, &set_eag_rdc_distributed_cmd);
+	install_element(HANSI_EAG_NODE, &set_eag_rdc_distributed_cmd);
+	install_element(LOCAL_HANSI_EAG_NODE, &set_eag_rdc_distributed_cmd);
 	
 	install_element(EAG_NODE, &set_eag_pdc_distributed_cmd);
 	install_element(HANSI_EAG_NODE, &set_eag_pdc_distributed_cmd);
@@ -14534,6 +14762,14 @@ dcli_eag_init(void)
 	install_element(EAG_NODE, &set_eag_rdcpdc_hansi_cmd);
 	install_element(HANSI_EAG_NODE, &set_eag_rdcpdc_hansi_cmd);
 	install_element(LOCAL_HANSI_EAG_NODE, &set_eag_rdcpdc_hansi_cmd);
+
+	install_element(EAG_NODE, &set_eag_rdc_hansi_cmd);
+	install_element(HANSI_EAG_NODE, &set_eag_rdc_hansi_cmd);
+	install_element(LOCAL_HANSI_EAG_NODE, &set_eag_rdc_hansi_cmd);
+	
+	install_element(EAG_NODE, &set_eag_pdc_hansi_cmd);
+	install_element(HANSI_EAG_NODE, &set_eag_pdc_hansi_cmd);
+	install_element(LOCAL_HANSI_EAG_NODE, &set_eag_pdc_hansi_cmd);
 
 	install_element(EAG_NODE, &set_eag_portal_port_cmd);
 	install_element(HANSI_EAG_NODE, &set_eag_portal_port_cmd);

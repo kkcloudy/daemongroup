@@ -1076,7 +1076,7 @@ eag_redir_start(eag_redir_t * redir)
 	struct sockaddr_in addr;
 	char ipstr[32] = "";
 	uint32_t nasip = 0;
-	int is_distributed = 0;
+	//int is_distributed = 0;
 	int pdc_distributed = 0;
 	
 	if (NULL == redir) {
@@ -1089,7 +1089,7 @@ eag_redir_start(eag_redir_t * redir)
 		return EAG_RETURN_OK;
 	}
 
-	is_distributed = eag_ins_get_distributed(redir->eagins);
+	//is_distributed = eag_ins_get_distributed(redir->eagins);
 	pdc_distributed = eag_ins_get_pdc_distributed(redir->eagins);
 	nasip = eag_ins_get_nasip(redir->eagins);
 	redir->listen_fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -1102,7 +1102,7 @@ eag_redir_start(eag_redir_t * redir)
 
 	memset(&addr, 0, sizeof (struct sockaddr_in));
 	addr.sin_family = AF_INET;
-	if (1 == is_distributed && 1 == pdc_distributed) {
+	if (1 == pdc_distributed) {
 		addr.sin_addr.s_addr = htonl(redir->local_ip);
 		addr.sin_port = htons(redir->local_port);
 	} else {
@@ -1135,7 +1135,7 @@ eag_redir_start(eag_redir_t * redir)
 
 	eag_redir_event(EAG_REDIR_SERV, redir);
 
-	if (1 == is_distributed && 1 == pdc_distributed) {
+	if (1 == pdc_distributed) {
 		eag_log_info("redir(%s:%u) fd(%d) start ok", 
 			ip2str(redir->local_ip, ipstr, sizeof(ipstr)),
 			redir->local_port,
@@ -1157,7 +1157,7 @@ eag_redir_stop(eag_redir_t *redir)
 	eag_redirconn_t *next = NULL;
 	char ipstr[32] = "";
 	uint32_t nasip = 0;
-	int is_distributed = 0;
+	//int is_distributed = 0;
     int pdc_distributed = 0;
 
 	if (NULL == redir) {
@@ -1165,7 +1165,7 @@ eag_redir_stop(eag_redir_t *redir)
 		return -1;
 	}
 
-	is_distributed = eag_ins_get_distributed(redir->eagins);
+	//is_distributed = eag_ins_get_distributed(redir->eagins);
 	pdc_distributed = eag_ins_get_pdc_distributed(redir->eagins);
 	nasip = eag_ins_get_nasip(redir->eagins);
 	if (NULL != redir->t_accept) {
@@ -1181,7 +1181,7 @@ eag_redir_stop(eag_redir_t *redir)
 			eag_redirconn_free(redirconn);
 	}
 
-	if (1 == is_distributed && 1 == pdc_distributed) {
+	if (1 == pdc_distributed) {
 		eag_log_info("redir(%s:%u) stop ok",
 			ip2str(redir->local_ip, ipstr, sizeof(ipstr)),
 			redir->local_port);

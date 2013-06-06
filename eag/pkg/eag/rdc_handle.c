@@ -63,6 +63,14 @@ rdc_set_server_hansi( int slotid, int insid )
 	return 0;
 }
 
+int
+rdc_get_server_hansi( int *slotid, int *insid )
+{
+	*slotid = rdc_server_slotid;
+	*insid = rdc_server_insid;
+	return 0;
+}
+
 #if 0
 static int
 rdc_get_active_master_slotid(  )

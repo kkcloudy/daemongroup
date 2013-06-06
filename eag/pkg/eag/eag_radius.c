@@ -402,7 +402,8 @@ sock_radius_start(sock_radius_t *sockradius)
 	char ipstr[32] = "";
 	eag_radius_t *radius = NULL;
 	uint32_t nasip = 0;
-	int is_distributed = 0;
+	//int is_distributed = 0;
+	int rdc_distributed = 0;
 	
 	if (NULL == sockradius) {
 		eag_log_err("sock_radius_start input error");
@@ -410,7 +411,7 @@ sock_radius_start(sock_radius_t *sockradius)
 	}
 	radius = sockradius->radius;
 	
-	is_distributed = eag_ins_get_distributed(radius->eagins);
+	rdc_distributed = eag_ins_get_rdc_distributed(radius->eagins);
 	nasip = eag_ins_get_nasip(radius->eagins);
 	if (sockradius->sockfd >= 0) {
 		eag_log_err("sock_radius_start already start fd(%d)", 
@@ -428,7 +429,7 @@ sock_radius_start(sock_radius_t *sockradius)
 
 	memset(&addr, 0, sizeof(struct sockaddr_in));
 	addr.sin_family = AF_INET;
-	if (is_distributed) {
+	if (rdc_distributed) {
 		addr.sin_addr.s_addr = htonl(sockradius->local_ip);
 	} else {
 		addr.sin_addr.s_addr = htonl(nasip);
@@ -456,7 +457,7 @@ sock_radius_start(sock_radius_t *sockradius)
 
 	sock_radius_event(SOCK_RADIUS_READ, sockradius);
 	
-	if (is_distributed) {
+	if (rdc_distributed) {
 		eag_log_debug("eag_radius", "sockradius(%s) fd(%d) start ok", 
 			ip2str(sockradius->local_ip, ipstr, sizeof(ipstr)),
 			sockradius->sockfd);
@@ -476,7 +477,8 @@ sock_radius_stop(sock_radius_t *sockradius)
 	char ipstr[32] = "";
 	eag_radius_t *radius = NULL;
 	uint32_t nasip = 0;
-	int is_distributed = 0;
+	//int is_distributed = 0;
+	int rdc_distributed = 0;
 
 	if (NULL == sockradius) {
 		eag_log_err("sock_radius_stop input error");
@@ -484,14 +486,14 @@ sock_radius_stop(sock_radius_t *sockradius)
 	}
 	radius = sockradius->radius;
 	
-	is_distributed = eag_ins_get_distributed(radius->eagins);
+	rdc_distributed = eag_ins_get_rdc_distributed(radius->eagins);
 	nasip = eag_ins_get_nasip(radius->eagins);
 	if (NULL != sockradius->t_read) {
 		eag_thread_cancel(sockradius->t_read);
 		sockradius->t_read = NULL;
 	}
 
-	if (is_distributed) {
+	if (rdc_distributed) {
 		eag_log_info("sockradius(%s) fd(%d) stop ok",
 			ip2str(sockradius->local_ip, ipstr, sizeof(ipstr)),
 			sockradius->sockfd);
@@ -602,7 +604,8 @@ sock_radius_send_packet(sock_radius_t *sockradius,
 	ssize_t nbyte = 0;
 	char ipstr[32] = "";
 	eag_radius_t *radius = NULL;
-	int is_distributed = 0;
+	//int is_distributed = 0;
+	int rdc_distributed = 0;
 	
 	if (NULL == sockradius || NULL == packet) {
 		eag_log_err("sock_radius_send_packet input error");
@@ -610,7 +613,7 @@ sock_radius_send_packet(sock_radius_t *sockradius,
 	}
 	radius = sockradius->radius;
 	
-	is_distributed = eag_ins_get_distributed(radius->eagins);
+	rdc_distributed = eag_ins_get_rdc_distributed(radius->eagins);
 	length = ntohs(packet->length);
 	
 	memset(&addr, 0, sizeof(struct sockaddr_in));
@@ -628,7 +631,7 @@ sock_radius_send_packet(sock_radius_t *sockradius,
 		radius_port,
 		packet->code);
 	
-	if (is_distributed) {
+	if (rdc_distributed) {
 		nbyte = rdc_sendto(sockradius->sockfd, packet, length, 0,
 					(struct sockaddr *)&addr, sizeof(addr));
 		if (nbyte < 0) {
@@ -1372,7 +1375,8 @@ sockradius_receive(eag_thread_t *thread)
 	struct timeval tv = {0};
 	time_t timenow = 0;
 	eag_radius_t *radius = NULL;
-	int is_distributed = 0;
+	//int is_distributed = 0;
+	int rdc_distributed = 0;
 	struct radius_attr_t *attr = NULL;
 	char username[256] = "";
 	char user_ipstr[32] = "";
@@ -1393,10 +1397,10 @@ sockradius_receive(eag_thread_t *thread)
 	}
 	radius = sockradius->radius;
 		
-	is_distributed = eag_ins_get_distributed(radius->eagins);
+	rdc_distributed = eag_ins_get_rdc_distributed(radius->eagins);
 
 	len = sizeof(addr);
-	if (is_distributed) {
+	if (rdc_distributed) {
 		nbyte = rdc_recvfrom(sockradius->sockfd, &(packet), sizeof(packet), 0,
 						(struct sockaddr *)&addr, &len);
 		if (nbyte < 0) {

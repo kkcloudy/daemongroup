@@ -26,4 +26,7 @@ rdc_recvfrom(int s, void *buf, size_t len, int flags,
 int 
 rdc_set_server_hansi( int slotid, int insid );
 
+int
+rdc_get_server_hansi( int *slotid, int *insid );
+
 #endif

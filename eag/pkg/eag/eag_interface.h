@@ -40,10 +40,15 @@ typedef enum {
 struct eag_base_conf {
 	int status;
 	uint32_t nasip;
-	int is_distributed;
+	//int is_distributed;
+	int rdc_distributed;
 	int pdc_distributed;
-	int rdcpdc_slotid;
-	int rdcpdc_insid;
+	//int rdcpdc_slotid;
+	//int rdcpdc_insid;
+	int rdc_slotid;
+	int rdc_insid;
+	int pdc_slotid;
+	int pdc_insid;
 	uint16_t portal_port;
 	int portal_retry_times;
 	int portal_retry_interval;
@@ -442,20 +447,36 @@ int
 eag_set_nasip(DBusConnection *connection, 
 				int hansitype, int insid,
 				uint32_t nasip);
-
+/*
 int
 eag_set_distributed(DBusConnection *connection, 
 				int hansitype, int insid,
-				int distributed);
+			int distributed);
+*/
+int
+eag_set_rdc_distributed(DBusConnection *connection, 
+				int hansitype, int insid,
+				int rdc_distributed);
 int
 eag_set_pdc_distributed(DBusConnection *connection, 
 				int hansitype, int insid,
 				int pdc_distributed);
-
+/*
 int
 eag_set_rdcpdc_ins(DBusConnection *connection, 
 				int hansitype, int insid,
 				int rdcpdc_slotid, int rdcpdc_insid);
+*/	
+int
+eag_set_rdc_ins(DBusConnection *connection, 
+				int hansitype, int insid,
+				int rdc_slotid, int rdc_insid);
+				
+int
+eag_set_pdc_ins(DBusConnection *connection, 
+				int hansitype, int insid,
+				int pdc_slotid, int pdc_insid);
+
 int
 eag_set_portal_port(DBusConnection *connection, 
 				int hansitype,int insid,

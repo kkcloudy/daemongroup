@@ -78,8 +78,13 @@ eag_ins_is_running(eag_ins_t *eagins);
 uint32_t
 eag_ins_get_nasip(eag_ins_t *eagins);
 
+/* 
 int
-eag_ins_get_distributed(eag_ins_t *eagins);
+eag_ins_get_distributed(eag_ins_t *eagins); 
+*/
+
+int
+eag_ins_get_rdc_distributed(eag_ins_t *eagins);
 
 int
 eag_ins_get_pdc_distributed(eag_ins_t *eagins);

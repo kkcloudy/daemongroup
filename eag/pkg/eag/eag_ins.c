@@ -129,7 +129,8 @@ struct eag_ins {
 	uint8_t slot_id;
 	uint8_t hansi_type;
 	uint8_t hansi_id;
-	int is_distributed;
+	//int is_distributed;
+	int rdc_distributed;
 	int pdc_distributed;
 	
 	struct portal_conf portalconf;
@@ -1685,7 +1686,7 @@ eag_ins_start(eag_ins_t *eagins)
 		return EAG_ERR_EAGINS_NASIP_IS_EMPTY;
 	}
 	
-	if (1 == eagins->is_distributed && 1 == eagins->pdc_distributed) {
+	if (1 == eagins->pdc_distributed) {
 		if (HANSI_LOCAL == eagins->hansi_type) {
 			eag_captive_set_redir_srv(eagins->captive,
 					SLOT_IPV4_BASE + 100 + eagins->hansi_id,
@@ -2197,7 +2198,7 @@ eag_ins_get_nasip(eag_ins_t *eagins)
 {
 	return eagins->nasip;
 }
-
+/*
 int
 eag_ins_set_distributed(eag_ins_t *eagins,
 		int is_distributed)
@@ -2213,9 +2214,28 @@ eag_ins_set_distributed(eag_ins_t *eagins,
 	}
 	
 	eagins->is_distributed = is_distributed;
-	eagins->pdc_distributed = is_distributed;
 
 	eag_log_info("eagins set distributed %d", is_distributed);
+	return EAG_RETURN_OK;
+}
+*/
+int
+eag_ins_set_rdc_distributed(eag_ins_t *eagins,
+		int rdc_distributed)
+{
+	if (NULL == eagins) {
+		eag_log_err("eag_ins_set_rdc_distributed input error");
+		return -1;
+	}
+
+	if (eag_ins_is_running(eagins)) {
+		eag_log_warning("eag_ins_set_rdc_distributed eagins already started");
+		return EAG_ERR_EAGINS_SERVICE_ALREADY_ENABLE;
+	}
+	
+	eagins->rdc_distributed = rdc_distributed;
+
+	eag_log_info("eagins set rdc distributed %d", rdc_distributed);
 	return EAG_RETURN_OK;
 }
 
@@ -2239,10 +2259,18 @@ eag_ins_set_pdc_distributed(eag_ins_t *eagins,
 	return EAG_RETURN_OK;
 }
 
+/*
 int
 eag_ins_get_distributed(eag_ins_t *eagins)
 {
 	return eagins->is_distributed;
+}
+*/
+
+int
+eag_ins_get_rdc_distributed(eag_ins_t *eagins)
+{
+	return eagins->rdc_distributed;
 }
 
 int
@@ -2340,6 +2368,7 @@ replyx:
 	return reply;
 }
 
+/*
 DBusMessage *
 eag_dbus_method_set_distributed(
 				DBusConnection *conn, 
@@ -2384,6 +2413,59 @@ eag_dbus_method_set_distributed(
 	}
 	
 	ret = eag_ins_set_distributed(eagins, distributed);
+
+replyy:
+	dbus_message_iter_init_append(reply, &iter);
+	dbus_message_iter_append_basic(&iter,
+								DBUS_TYPE_INT32, &ret);
+	return reply;
+}
+*/
+
+DBusMessage *
+eag_dbus_method_set_rdc_distributed(
+				DBusConnection *conn, 
+				DBusMessage *msg, 
+				void *user_data )
+{
+	eag_ins_t *eagins = NULL;
+	DBusMessage *reply = NULL;
+	DBusMessageIter iter = {0};
+	DBusError err = {0};
+	int ret = EAG_RETURN_OK;
+	int rdc_distributed = 0;
+	
+	reply = dbus_message_new_method_return(msg);
+	if (NULL == reply) {
+		eag_log_err("eag_dbus_method_set_rdc_distributed "
+					"DBUS new reply message error");
+		return NULL;
+	}
+
+	eagins = (eag_ins_t *)user_data;
+	if (NULL == eagins) {
+		eag_log_err("eag_dbus_method_set_rdc_distributed "
+					"user_data error");
+		ret = EAG_ERR_UNKNOWN;
+		goto replyy;
+	}
+
+	dbus_error_init(&err);
+	if (!(dbus_message_get_args(msg ,&err,
+								DBUS_TYPE_INT32, &rdc_distributed,
+								DBUS_TYPE_INVALID))){
+		eag_log_err("eag_dbus_method_set_rdc_distributed "
+					"unable to get input args");
+		if (dbus_error_is_set(&err)) {
+			eag_log_err("eag_dbus_method_set_rdc_distributed %s raised:%s",
+						err.name, err.message);
+			dbus_error_free(&err);
+		}
+		ret = EAG_ERR_DBUS_FAILED;
+		goto replyy;
+	}
+	
+	ret = eag_ins_set_rdc_distributed(eagins, rdc_distributed);
 
 replyy:
 	dbus_message_iter_init_append(reply, &iter);
@@ -2444,6 +2526,7 @@ replyy:
 	return reply;
 }
 
+/*
 DBusMessage *
 eag_dbus_method_set_rdcpdc_ins(
 				DBusConnection *conn, 
@@ -2491,6 +2574,117 @@ eag_dbus_method_set_rdcpdc_ins(
 	
 	eag_log_info("eag rdcpdc_ins set to %d-%d", slotid, insid);
 	rdc_set_server_hansi(slotid, insid);
+	pdc_set_server_hansi(slotid, insid);
+
+replyy:
+	dbus_message_iter_init_append(reply, &iter);
+	dbus_message_iter_append_basic(&iter,
+								DBUS_TYPE_INT32, &ret);
+	return reply;
+}
+*/
+
+DBusMessage *
+eag_dbus_method_set_rdc_ins(
+				DBusConnection *conn, 
+				DBusMessage *msg, 
+				void *user_data )
+{
+	eag_ins_t *eagins = NULL;
+	DBusMessage *reply = NULL;
+	DBusMessageIter iter = {0};
+	DBusError err = {0};
+	int ret = EAG_RETURN_OK;
+	int slotid = 0;
+	int insid = 0;
+	
+	reply = dbus_message_new_method_return(msg);
+	if (NULL == reply) {
+		eag_log_err("eag_dbus_method_set_rdc_ins "
+					"DBUS new reply message error");
+		return NULL;
+	}
+
+	eagins = (eag_ins_t *)user_data;
+	if (NULL == eagins) {
+		eag_log_err("eag_dbus_method_set_rdc_ins "
+					"user_data error");
+		ret = EAG_ERR_UNKNOWN;
+		goto replyy;
+	}
+
+	dbus_error_init(&err);
+	if (!(dbus_message_get_args(msg, &err,
+								DBUS_TYPE_INT32, &slotid,
+								DBUS_TYPE_INT32, &insid,
+								DBUS_TYPE_INVALID))) {
+		eag_log_err("eag_dbus_method_set_rdc_ins "
+					"unable to get input args");
+		if (dbus_error_is_set(&err)) {
+			eag_log_err("eag_dbus_method_set_rdc_ins %s raised:%s",
+						err.name, err.message);
+			dbus_error_free(&err);
+		}
+		ret = EAG_ERR_DBUS_FAILED;
+		goto replyy;
+	}
+	
+	eag_log_info("eag rdc_ins set to %d-%d", slotid, insid);
+	rdc_set_server_hansi(slotid, insid);
+
+replyy:
+	dbus_message_iter_init_append(reply, &iter);
+	dbus_message_iter_append_basic(&iter,
+								DBUS_TYPE_INT32, &ret);
+	return reply;
+}
+
+DBusMessage *
+eag_dbus_method_set_pdc_ins(
+				DBusConnection *conn, 
+				DBusMessage *msg, 
+				void *user_data )
+{
+	eag_ins_t *eagins = NULL;
+	DBusMessage *reply = NULL;
+	DBusMessageIter iter = {0};
+	DBusError err = {0};
+	int ret = EAG_RETURN_OK;
+	int slotid = 0;
+	int insid = 0;
+	
+	reply = dbus_message_new_method_return(msg);
+	if (NULL == reply) {
+		eag_log_err("eag_dbus_method_set_pdc_ins "
+					"DBUS new reply message error");
+		return NULL;
+	}
+
+	eagins = (eag_ins_t *)user_data;
+	if (NULL == eagins) {
+		eag_log_err("eag_dbus_method_set_pdc_ins "
+					"user_data error");
+		ret = EAG_ERR_UNKNOWN;
+		goto replyy;
+	}
+
+	dbus_error_init(&err);
+	if (!(dbus_message_get_args(msg, &err,
+								DBUS_TYPE_INT32, &slotid,
+								DBUS_TYPE_INT32, &insid,
+								DBUS_TYPE_INVALID))) {
+		eag_log_err("eag_dbus_method_set_pdc_ins "
+					"unable to get input args");
+		if (dbus_error_is_set(&err)) {
+			eag_log_err("eag_dbus_method_set_pdc_ins %s raised:%s",
+						err.name, err.message);
+			dbus_error_free(&err);
+		}
+		ret = EAG_ERR_DBUS_FAILED;
+		goto replyy;
+	}
+	
+	eag_log_info("eag pdc_ins set to %d-%d", slotid, insid);
 	pdc_set_server_hansi(slotid, insid);
 
 replyy:
@@ -3446,9 +3640,12 @@ eag_dbus_method_get_base_conf(
 	DBusMessageIter iter = {0};
 	DBusError err = {0};
 	int ret = -1;
-	int rdcpdc_slotid = 0;
-	int rdcpdc_insid = 0;
-	
+	//int rdcpdc_slotid = 0;
+	//int rdcpdc_insid = 0;
+	int rdc_slotid = 0;
+	int rdc_insid = 0;
+	int pdc_slotid = 0;
+	int pdc_insid = 0;
 	uint16_t portal_port = 0;
 	int portal_retry_times = 0;
 	int portal_retry_interval = 0;
@@ -3510,15 +3707,27 @@ replyx:
 								DBUS_TYPE_INT32, &(eagins->status));
 		dbus_message_iter_append_basic(&iter,
 								DBUS_TYPE_UINT32, &(eagins->nasip));
+		/* dbus_message_iter_append_basic(&iter,
+								DBUS_TYPE_INT32, &(eagins->is_distributed)); */
 		dbus_message_iter_append_basic(&iter,
-								DBUS_TYPE_INT32, &(eagins->is_distributed));
+								DBUS_TYPE_INT32, &(eagins->rdc_distributed));
 		dbus_message_iter_append_basic(&iter,
 								DBUS_TYPE_INT32, &(eagins->pdc_distributed));
-		pdc_get_server_hansi(&rdcpdc_slotid, &rdcpdc_insid);
+        rdc_get_server_hansi(&rdc_slotid, &rdc_insid);
+		dbus_message_iter_append_basic(&iter,
+								DBUS_TYPE_INT32, &rdc_slotid);
+		dbus_message_iter_append_basic(&iter,
+								DBUS_TYPE_INT32, &rdc_insid);
+		pdc_get_server_hansi(&pdc_slotid, &pdc_insid);
+		dbus_message_iter_append_basic(&iter,
+								DBUS_TYPE_INT32, &pdc_slotid);
+		dbus_message_iter_append_basic(&iter,
+								DBUS_TYPE_INT32, &pdc_insid);
+		/* pdc_get_server_hansi(&rdcpdc_slotid, &rdcpdc_insid);
 		dbus_message_iter_append_basic(&iter,
 								DBUS_TYPE_INT32, &rdcpdc_slotid);
 		dbus_message_iter_append_basic(&iter,
-								DBUS_TYPE_INT32, &rdcpdc_insid);
+								DBUS_TYPE_INT32, &rdcpdc_insid); */
 		
 		portal_port = eag_portal_get_portal_port(eagins->portal);
 		dbus_message_iter_append_basic(&iter,
@@ -10404,13 +10613,18 @@ eagins_register_all_dbus_method(eag_ins_t *eagins)
 	/* base conf */
 	eag_dbus_register_method(eagins->eagdbus,
 		EAG_DBUS_INTERFACE, eag_dbus_method_set_nasip, eagins);
+	/* eag_dbus_register_method(eagins->eagdbus,
+		EAG_DBUS_INTERFACE, eag_dbus_method_set_distributed, eagins); */
 	eag_dbus_register_method(eagins->eagdbus,
-		EAG_DBUS_INTERFACE, eag_dbus_method_set_distributed, eagins);
+		EAG_DBUS_INTERFACE, eag_dbus_method_set_rdc_distributed, eagins);
 	eag_dbus_register_method(eagins->eagdbus,
 		EAG_DBUS_INTERFACE, eag_dbus_method_set_pdc_distributed, eagins);
+	/*eag_dbus_register_method(eagins->eagdbus,
+		EAG_DBUS_INTERFACE, eag_dbus_method_set_rdcpdc_ins, eagins); */
 	eag_dbus_register_method(eagins->eagdbus,
-		EAG_DBUS_INTERFACE, eag_dbus_method_set_rdcpdc_ins, eagins);
-
+		EAG_DBUS_INTERFACE, eag_dbus_method_set_rdc_ins, eagins);
+	eag_dbus_register_method(eagins->eagdbus,
+		EAG_DBUS_INTERFACE, eag_dbus_method_set_pdc_ins, eagins);
 	eag_dbus_register_method(eagins->eagdbus,
 		EAG_DBUS_INTERFACE, eag_dbus_method_set_portal_port, eagins->portal);
 	eag_dbus_register_method(eagins->eagdbus,

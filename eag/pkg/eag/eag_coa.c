@@ -411,7 +411,8 @@ eag_coa_start(eag_coa_t *coa)
 	struct sockaddr_in addr = {0};
 	char ipstr[32] = "";
 	uint32_t nasip = 0;
-	int is_distributed = 0;
+	//int is_distributed = 0;
+	int rdc_distributed = 0;
 	
 	if (NULL == coa) {
 		eag_log_err("eag_coa_start input error");
@@ -424,7 +425,7 @@ eag_coa_start(eag_coa_t *coa)
 		return EAG_RETURN_OK;
 	}
 
-	is_distributed = eag_ins_get_distributed(coa->eagins);
+	rdc_distributed = eag_ins_get_rdc_distributed(coa->eagins);
 	nasip = eag_ins_get_nasip(coa->eagins);
 	coa->sockfd = socket(AF_INET, SOCK_DGRAM, 0);
 	if (coa->sockfd  < 0) {
@@ -436,7 +437,7 @@ eag_coa_start(eag_coa_t *coa)
 
 	memset(&addr, 0, sizeof(struct sockaddr_in));
 	addr.sin_family = AF_INET;
-	if (is_distributed) {
+	if (rdc_distributed) {
 		addr.sin_addr.s_addr = htonl(coa->local_ip);
 		addr.sin_port = htons(coa->local_port);
 	} else {
@@ -466,7 +467,7 @@ eag_coa_start(eag_coa_t *coa)
 
 	eag_coa_event(EAG_COA_READ, coa);
 	
-	if (is_distributed) {
+	if (rdc_distributed) {
 		eag_log_info("coa(%s:%u) fd(%d) start ok", 
 			ip2str(coa->local_ip, ipstr, sizeof(ipstr)),
 			coa->local_port,
@@ -486,14 +487,15 @@ eag_coa_stop(eag_coa_t *coa)
 {
 	char ipstr[32] = "";
 	uint32_t nasip = 0;
-	int is_distributed = 0;
+	//int is_distributed = 0;
+	int rdc_distributed = 0;
 
 	if (NULL == coa) {
 		eag_log_err("eag_coa_stop input error");
 		return -1;
 	}
 
-	is_distributed = eag_ins_get_distributed(coa->eagins);
+	rdc_distributed = eag_ins_get_rdc_distributed(coa->eagins);
 	nasip = eag_ins_get_nasip(coa->eagins);
 
 	if (NULL != coa->t_read) {
@@ -506,7 +508,7 @@ eag_coa_stop(eag_coa_t *coa)
 		coa->sockfd = -1;
 	}
 	eag_coaconn_clear(coa);
-	if (is_distributed) {
+	if (rdc_distributed) {
 		eag_log_info("coa(%s:%u) stop ok",
 			ip2str(coa->local_ip, ipstr, sizeof(ipstr)),
 			coa->local_port);
@@ -529,13 +531,14 @@ eag_coa_send_packet(eag_coa_t *coa,
 	struct sockaddr_in addr = {0};
 	ssize_t nbyte = 0;
 	char ipstr[32] = "";
-	int is_distributed = 0;
+	//int is_distributed = 0;
+	int rdc_distributed = 0;
 	
 	if (NULL == coa || NULL == packet) {
 		eag_log_err("eag_coa_send_packet input error");
 		return -1;
 	}
-	is_distributed = eag_ins_get_distributed(coa->eagins);
+	rdc_distributed = eag_ins_get_rdc_distributed(coa->eagins);
 	ip2str(radius_ip, ipstr, sizeof(ipstr));
 	length = ntohs(packet->length);
 	
@@ -551,7 +554,7 @@ eag_coa_send_packet(eag_coa_t *coa,
 		"eag_coa send packet %d bytes, fd %d, radius server %s:%u, code %u",
 		length, coa->sockfd, ipstr, radius_port, packet->code);
 	
-	if (is_distributed) {
+	if (rdc_distributed) {
 		nbyte = rdc_sendto(coa->sockfd, packet, length, 0,
 					(struct sockaddr *)&addr, sizeof(addr));
 		if (nbyte < 0) {
@@ -920,7 +923,8 @@ coa_receive(eag_thread_t *thread)
 	uint32_t radius_ip = 0;
 	uint16_t radius_port = 0;
 	char radius_ipstr[32] = "";
-	int is_distributed = 0;
+	//int is_distributed = 0;
+	int rdc_distributed = 0;
 	
 	if (NULL == thread) {
 		eag_log_err("coa_receive input error");
@@ -932,10 +936,10 @@ coa_receive(eag_thread_t *thread)
 		eag_log_err("coa_receive server null");
 		return EAG_ERR_NULL_POINTER;
 	}
-	is_distributed = eag_ins_get_distributed(coa->eagins);
+	rdc_distributed = eag_ins_get_rdc_distributed(coa->eagins);
 
 	len = sizeof(addr);
-	if (is_distributed) {
+	if (rdc_distributed) {
 		nbyte = rdc_recvfrom(coa->sockfd, &packet, sizeof(packet), 0,
 					(struct sockaddr *)&addr, &len);
 		if (nbyte < 0) {
