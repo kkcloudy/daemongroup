@@ -847,18 +847,6 @@ int WID_DELETE_WLAN(unsigned char WlanID){
 		return WLAN_BE_ENABLE;
 	}	
 
-	/* if the user want to delete this wlan, set this flag to 1, 
-	 * and ignore this wlan's information for all the new created wtps
-	 * Huangleilei add it for AXSSZFI-1622 
-	 */
-	 if (AC_WLAN[WlanID]->want_to_delete == 0)
-	 {
-		AC_WLAN[WlanID]->want_to_delete = 1;
-	 }
-	 else
-	 {
-	 	return WID_WANT_TO_DELETE_WLAN;
-	 }
 	/*fengwenchao add 20120509 for onlinebug-271*/
 	for(i=0;i<WTP_NUM;i++)
 	{
@@ -876,7 +864,20 @@ int WID_DELETE_WLAN(unsigned char WlanID){
 			}
 		}
 	}
-	/*fengwenchao add end*/	
+	/*fengwenchao add end*/
+	
+	/* if the user want to delete this wlan, set this flag to 1, 
+	 * and ignore this wlan's information for all the new created wtps
+	 * Huangleilei add it for AXSSZFI-1622 , move for AXSSZFI-1740
+	 */
+	 if (AC_WLAN[WlanID]->want_to_delete == 0)
+	 {
+		AC_WLAN[WlanID]->want_to_delete = 1;
+	 }
+	 else
+	 {
+	 	return WID_WANT_TO_DELETE_WLAN;
+	 }
 	sleep(1);
 	time_t before_wait;
 	time(&before_wait);
