@@ -111,7 +111,7 @@ int dhcp_snp_netlink_ipneigh_ctrl
 );
 #define NLM_F_EXCL	0x200	/* Do not touch, if it exists	*/
 #define NLM_F_CREATE	0x400	/* Create, if it does not exist	*/
-#define RTM_DELROUTE   9
+#define RTM_DELROUTE   25
 #define RTM_NEWROUTE   24
 #define RTPROT_BOOT	3	/* Route installed during boot		*/
 #define RT_SCOPE_UNIVERSE 0
