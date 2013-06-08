@@ -30912,7 +30912,6 @@ int read_board_ap_max_counter(unsigned int * count)
 		wid_syslog_err("%s we find *count %d >= WTP_NUM\n",__func__,*count);
 		*count = WTP_NUM-1;
 	}
-	*count =2048;
 	return 0;
 }
 /*fengwenchao add end*/

@@ -753,7 +753,6 @@ void CWWIDInit(){
 	unsigned int count =0;
 	if((read_board_ap_max_counter(&count)) != 1)
 	{
-		wid_syslog_info("%s count  =  %d \n",__func__,count);
 		gMaxWTPs = count;
 		gMaxWTPs_from_sem = count;
 	}
