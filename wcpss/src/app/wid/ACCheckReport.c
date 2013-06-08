@@ -265,7 +265,6 @@ int get_ap_stats(unsigned int wtpid)
 		if((AC_WTP[wtpid]->apstatsinfo[j].radioId < TOTAL_AP_IF_NUM+1)
 			&& (AC_WTP[wtpid]->apstatsinfo[j].type == 0))		
 		{
-			wid_syslog_info("__ %s %d __", __func__, __LINE__);
 			radioid = AC_WTP[wtpid]->apstatsinfo[j].radioId;
 			AC_WTP[wtpid]->web_manager_stats.ath_stats[radioid].rx_pkt_unicast += AC_WTP[wtpid]->apstatsinfo[j].rx_pkt_unicast;
 			AC_WTP[wtpid]->web_manager_stats.ath_stats[radioid].tx_pkt_unicast += AC_WTP[wtpid]->apstatsinfo[j].tx_pkt_unicast;
@@ -273,11 +272,9 @@ int get_ap_stats(unsigned int wtpid)
 			AC_WTP[wtpid]->web_manager_stats.ath_stats[radioid].tx_pkt_multicast += AC_WTP[wtpid]->apstatsinfo[j].tx_pkt_multicast + AC_WTP[wtpid]->apstatsinfo[j].tx_pkt_broadcast;
 			AC_WTP[wtpid]->web_manager_stats.ath_stats[radioid].rx_data_pkts +=  AC_WTP[wtpid]->apstatsinfo[j].rx_pkt_data;  //fengwenchao add 20110617
 			AC_WTP[wtpid]->web_manager_stats.ath_stats[radioid].tx_data_pkts +=  AC_WTP[wtpid]->apstatsinfo[j].tx_pkt_data;  //fengwenchao add 20110617
-
-			wid_syslog_info("__ %s %d __", __func__, __LINE__);
+			
 			if(wirelessdata_switch)
 			{
-				wid_syslog_info("__ %s %d __", __func__, __LINE__);
 				AC_WTP[wtpid]->web_manager_stats.ath_stats[radioid].sub_rx_packets += (AC_WTP[wtpid]->apstatsinfo[j].rx_pkt_data > AC_WTP[wtpid]->apstatsinfo[j].rx_pkt_multicast)?
 									(AC_WTP[wtpid]->apstatsinfo[j].rx_pkt_data - AC_WTP[wtpid]->apstatsinfo[j].rx_pkt_multicast):
 									(AC_WTP[wtpid]->apstatsinfo[j].rx_pkt_multicast - AC_WTP[wtpid]->apstatsinfo[j].rx_pkt_data);
@@ -296,7 +293,6 @@ int get_ap_stats(unsigned int wtpid)
 			}
 			else
 			{
-				wid_syslog_info("__ %s %d __", __func__, __LINE__);
 				AC_WTP[wtpid]->web_manager_stats.ath_stats[radioid].sub_rx_packets += AC_WTP[wtpid]->apstatsinfo[j].rx_pkt_data;
 				AC_WTP[wtpid]->web_manager_stats.ath_stats[radioid].sub_tx_packets += AC_WTP[wtpid]->apstatsinfo[j].tx_pkt_data;
 				AC_WTP[wtpid]->web_manager_stats.ath_stats[radioid].sub_rx_bytes += AC_WTP[wtpid]->apstatsinfo[j].rx_bytes;
@@ -304,7 +300,6 @@ int get_ap_stats(unsigned int wtpid)
 				
 			}
 
-			wid_syslog_info("__ %s %d __", __func__, __LINE__);
 			AC_WTP[wtpid]->web_manager_stats.ath_stats[radioid].sub_tx_errors += AC_WTP[wtpid]->apstatsinfo[j].tx_errors;
 			AC_WTP[wtpid]->web_manager_stats.ath_stats[radioid].sub_rx_errors += AC_WTP[wtpid]->apstatsinfo[j].rx_errors; //xiaodawei add, 20110406
 			AC_WTP[wtpid]->web_manager_stats.ath_stats[radioid].sub_tx_drops += AC_WTP[wtpid]->apstatsinfo[j].tx_drop;	//xiaodawei add, 20110406
@@ -333,12 +328,10 @@ int get_ap_stats(unsigned int wtpid)
 			AC_WTP[wtpid]->web_manager_stats.ath_stats[radioid].stats_retry_frames += AC_WTP[wtpid]->apstatsinfo[j].tx_pkt_retry*103/100; 		//retry pkts * 103%
 		}
 
-		wid_syslog_info("__ %s %d __", __func__, __LINE__);
 		/* eth stats */
 		if((AC_WTP[wtpid]->apstatsinfo[j].radioId < TOTAL_AP_IF_NUM+1)
 			&&(AC_WTP[wtpid]->apstatsinfo[j].type == 1))
 		{
-			wid_syslog_info("__ %s %d __", __func__, __LINE__);
 			ethid = AC_WTP[wtpid]->apstatsinfo[j].wlanId;
 			AC_WTP[wtpid]->web_manager_stats.eth_stats[ethid].rx_packets = AC_WTP[wtpid]->apstatsinfo[j].rx_packets;
 			AC_WTP[wtpid]->web_manager_stats.eth_stats[ethid].tx_packets = AC_WTP[wtpid]->apstatsinfo[j].tx_packets;
@@ -360,15 +353,12 @@ int get_ap_stats(unsigned int wtpid)
 			AC_WTP[wtpid]->web_manager_stats.eth_stats[ethid].tx_sum_bytes = AC_WTP[wtpid]->apstatsinfo[j].tx_sum_bytes;
 		}
 
-		wid_syslog_info("__ %s %d __", __func__, __LINE__);
 		/* wifi stats */
 		if((AC_WTP[wtpid]->apstatsinfo[j].radioId < TOTAL_AP_IF_NUM + 1)
 			&&(AC_WTP[wtpid]->apstatsinfo[j].type == 2))
 		{			
-			wid_syslog_info("__ %s %d __", __func__, __LINE__);
 			if(wirelessdata_switch)
 			{
-				wid_syslog_info("__ %s %d __", __func__, __LINE__);
 				AC_WTP[wtpid]->web_manager_stats.wifi_stats.wtp_rx_packets += (AC_WTP[wtpid]->apstatsinfo[j].rx_pkt_data > AC_WTP[wtpid]->apstatsinfo[j].rx_pkt_multicast)?
 									(AC_WTP[wtpid]->apstatsinfo[j].rx_pkt_data - AC_WTP[wtpid]->apstatsinfo[j].rx_pkt_multicast):
 									(AC_WTP[wtpid]->apstatsinfo[j].rx_pkt_multicast - AC_WTP[wtpid]->apstatsinfo[j].rx_pkt_data);
@@ -387,13 +377,11 @@ int get_ap_stats(unsigned int wtpid)
 			}
 			else
 			{
-				wid_syslog_info("__ %s %d __", __func__, __LINE__);
 				AC_WTP[wtpid]->web_manager_stats.wifi_stats.wtp_rx_packets += AC_WTP[wtpid]->apstatsinfo[j].rx_pkt_data;
 				AC_WTP[wtpid]->web_manager_stats.wifi_stats.wtp_tx_packets += AC_WTP[wtpid]->apstatsinfo[j].tx_pkt_data;
 				AC_WTP[wtpid]->web_manager_stats.wifi_stats.wtp_rx_bytes += AC_WTP[wtpid]->apstatsinfo[j].rx_bytes;
 				AC_WTP[wtpid]->web_manager_stats.wifi_stats.wtp_tx_bytes += AC_WTP[wtpid]->apstatsinfo[j].tx_bytes;
 			}
-			wid_syslog_info("__ %s %d __", __func__, __LINE__);
 			AC_WTP[wtpid]->web_manager_stats.wifi_stats.wtp_tx_errors += AC_WTP[wtpid]->apstatsinfo[j].tx_errors;
 			AC_WTP[wtpid]->web_manager_stats.wifi_stats.wtp_ast_rx_crcerr += AC_WTP[wtpid]->apstatsinfo[j].ast_rx_crcerr;
 			AC_WTP[wtpid]->web_manager_stats.wifi_stats.wtp_ast_rx_badcrypt += AC_WTP[wtpid]->apstatsinfo[j].ast_rx_badcrypt;
@@ -957,6 +945,9 @@ void get_ap_stats_v2(unsigned int wtpid)
 	int wired_pkts_interval = 0;
 	long long wired_bytes_interval = 0;
 	long long wired_sum_bytes_interval = 0;
+
+	web_manager_stats_t web_report_tmp;
+	
 	if(WTP_NUM <= wtpid)
 	{
 		return;
@@ -974,6 +965,16 @@ void get_ap_stats_v2(unsigned int wtpid)
 		calc_ap_stats_eth(wtpid, j);		
 		calc_ap_stats_wifi(wtpid, j);
 	}
+
+	memset(&web_report_tmp, 0, sizeof(web_manager_stats_t));
+	if(0 == memcmp(&AC_WTP[wtpid]->pre_web_manager_stats, &web_report_tmp, sizeof(web_manager_stats_t)))
+	{
+		/* ap first report, no check */
+		memcpy(&(AC_WTP[wtpid]->pre_web_manager_stats), &(AC_WTP[wtpid]->web_manager_stats), sizeof(web_manager_stats_t));
+		pthread_mutex_unlock(&(AC_WTP[wtpid]->mutex_web_report));
+		return;
+
+	}
 	/* check ap stats of web_manager_stats */
 	radiocnt = AC_WTP[wtpid]->RadioCount;
 	ethcnt = AC_WTP[wtpid]->apifinfo.eth_num;	
@@ -982,6 +983,15 @@ void get_ap_stats_v2(unsigned int wtpid)
 	report_interval = AC_WTP[wtpid]->apstatisticsinterval;
 	/* ath === sub_rx_packets & sub_rx_bytes === */
 	wireless_pkts_interval = AC_WTP[wtpid]->web_manager_stats.sub_rx_packets_ath - AC_WTP[wtpid]->pre_web_manager_stats.sub_rx_packets_ath;	
+	wireless_bytes_interval = AC_WTP[wtpid]->web_manager_stats.sub_rx_bytes_ath - AC_WTP[wtpid]->pre_web_manager_stats.sub_rx_bytes_ath;
+
+	if(0 > wireless_bytes_interval && 0 > wireless_pkts_interval)
+	{
+		wid_syslog_info("%s %d:WTP[%d] ERR RETURN pre_sub_rx_packets %lu,sub_rx_packets %lu\n",__func__,__LINE__,wtpid,AC_WTP[wtpid]->pre_web_manager_stats.sub_rx_packets_ath,AC_WTP[wtpid]->web_manager_stats.sub_rx_packets_ath);	
+		memcpy(&(AC_WTP[wtpid]->pre_web_manager_stats), &(AC_WTP[wtpid]->web_manager_stats), sizeof(web_manager_stats_t));
+		pthread_mutex_unlock(&(AC_WTP[wtpid]->mutex_web_report));		
+		return;
+	}
 	if(wireless_pkts_max < wireless_pkts_interval)
 	{	
 		wid_syslog_info("%s %d:WTP[%d] ERR pre_sub_rx_packets %lu,sub_rx_packets %lu A\n",__func__,__LINE__,wtpid,AC_WTP[wtpid]->pre_web_manager_stats.sub_rx_packets_ath,AC_WTP[wtpid]->web_manager_stats.sub_rx_packets_ath);	
@@ -1005,10 +1015,18 @@ void get_ap_stats_v2(unsigned int wtpid)
 	*/
 	wireless_pkts_interval = AC_WTP[wtpid]->web_manager_stats.sub_rx_packets_ath - AC_WTP[wtpid]->pre_web_manager_stats.sub_rx_packets_ath;
 	wireless_bytes_interval = AC_WTP[wtpid]->web_manager_stats.sub_rx_bytes_ath - AC_WTP[wtpid]->pre_web_manager_stats.sub_rx_bytes_ath;
+	if(0 > wireless_bytes_interval)
+	{
+		memcpy(&(AC_WTP[wtpid]->pre_web_manager_stats), &(AC_WTP[wtpid]->web_manager_stats), sizeof(web_manager_stats_t));
+		pthread_mutex_unlock(&(AC_WTP[wtpid]->mutex_web_report));
+		wid_syslog_info("%s %d:WTP[%d] ERR RETURN pre_sub_rx_bytes %llu,sub_rx_bytes %llu\n",__func__,__LINE__,wtpid,AC_WTP[wtpid]->pre_web_manager_stats.sub_rx_bytes_ath,AC_WTP[wtpid]->web_manager_stats.sub_rx_bytes_ath);
+		return;		
+	}
 	if(0 == wireless_pkts_interval)
 	{
 		if(0 != wireless_bytes_interval)
 		{
+			wid_syslog_info("%s %d:WTP[%d] ERR pre_sub_rx_packets %lu,sub_rx_packets %lu C\n",__func__,__LINE__,wtpid,AC_WTP[wtpid]->pre_web_manager_stats.sub_rx_packets_ath,AC_WTP[wtpid]->web_manager_stats.sub_rx_packets_ath);
 			wid_syslog_info("%s %d:WTP[%d] ERR pre_sub_rx_bytes %llu,sub_rx_bytes %llu A\n",__func__,__LINE__,wtpid,AC_WTP[wtpid]->pre_web_manager_stats.sub_rx_bytes_ath,AC_WTP[wtpid]->web_manager_stats.sub_rx_bytes_ath);
 			AC_WTP[wtpid]->web_manager_stats.sub_rx_bytes_ath = AC_WTP[wtpid]->pre_web_manager_stats.sub_rx_bytes_ath;
 			for(i = 0; i < radiocnt; i++)
@@ -1020,6 +1038,7 @@ void get_ap_stats_v2(unsigned int wtpid)
 	}
 	else if((wireless_pkts_interval != 0) && (MAX_PACKET_SIZE < wireless_bytes_interval/wireless_pkts_interval))
 	{
+		wid_syslog_info("%s %d:WTP[%d] ERR pre_sub_rx_packets %lu,sub_rx_packets %lu D\n",__func__,__LINE__,wtpid,AC_WTP[wtpid]->pre_web_manager_stats.sub_rx_packets_ath,AC_WTP[wtpid]->web_manager_stats.sub_rx_packets_ath);
 		wid_syslog_info("%s %d:WTP[%d] ERR pre_sub_rx_bytes %llu,sub_rx_bytes %llu B\n",__func__,__LINE__,wtpid,AC_WTP[wtpid]->pre_web_manager_stats.sub_rx_bytes_ath,AC_WTP[wtpid]->web_manager_stats.sub_rx_bytes_ath);
 		revise_byte = RAND(500,1000)*wireless_pkts_interval;	/* packet size 500~1000 */
 		AC_WTP[wtpid]->web_manager_stats.sub_rx_bytes_ath = AC_WTP[wtpid]->pre_web_manager_stats.sub_rx_bytes_ath + revise_byte;
@@ -1030,11 +1049,20 @@ void get_ap_stats_v2(unsigned int wtpid)
 	}
 	
 	/* ath === sub_tx_packets & sub_tx_bytes === */
-	wireless_pkts_interval = AC_WTP[wtpid]->web_manager_stats.sub_tx_packets_ath - AC_WTP[wtpid]->pre_web_manager_stats.sub_tx_packets_ath;	
+	wireless_pkts_interval = AC_WTP[wtpid]->web_manager_stats.sub_tx_packets_ath - AC_WTP[wtpid]->pre_web_manager_stats.sub_tx_packets_ath;		
+	wireless_bytes_interval = AC_WTP[wtpid]->web_manager_stats.sub_tx_bytes_ath - AC_WTP[wtpid]->pre_web_manager_stats.sub_tx_bytes_ath;
+
+	if( 0 > wireless_pkts_interval && 0 > wireless_bytes_interval )
+	{
+		memcpy(&(AC_WTP[wtpid]->pre_web_manager_stats), &(AC_WTP[wtpid]->web_manager_stats), sizeof(web_manager_stats_t));
+		pthread_mutex_unlock(&(AC_WTP[wtpid]->mutex_web_report));
+		wid_syslog_info("%s %d:WTP[%d] ERR RETURN pre_sub_tx_packets %lu,sub_tx_packets %lu\n",__func__,__LINE__,wtpid,AC_WTP[wtpid]->pre_web_manager_stats.sub_tx_packets_ath,AC_WTP[wtpid]->web_manager_stats.sub_tx_packets_ath);
+		return;		
+	}
 	if(wireless_pkts_max < wireless_pkts_interval)
 	{
 		wid_syslog_info("%s %d:WTP[%d] ERR pre_sub_tx_packets %lu,sub_tx_packets %lu A\n",__func__,__LINE__,wtpid,AC_WTP[wtpid]->pre_web_manager_stats.sub_tx_packets_ath,AC_WTP[wtpid]->web_manager_stats.sub_tx_packets_ath);
-		revise = RAND(40,80)*wireless_pkts_max/100;
+		revise = RAND(80,90)*wireless_pkts_max/100;
 		AC_WTP[wtpid]->web_manager_stats.sub_tx_packets_ath = AC_WTP[wtpid]->pre_web_manager_stats.sub_tx_packets_ath + revise;
 		for(i = 0; i < radiocnt; i++)
 		{
@@ -1054,10 +1082,19 @@ void get_ap_stats_v2(unsigned int wtpid)
 	*/
 	wireless_pkts_interval = AC_WTP[wtpid]->web_manager_stats.sub_tx_packets_ath - AC_WTP[wtpid]->pre_web_manager_stats.sub_tx_packets_ath;
 	wireless_bytes_interval = AC_WTP[wtpid]->web_manager_stats.sub_tx_bytes_ath - AC_WTP[wtpid]->pre_web_manager_stats.sub_tx_bytes_ath;
+	if(0 > wireless_bytes_interval)
+	{
+		memcpy(&(AC_WTP[wtpid]->pre_web_manager_stats), &(AC_WTP[wtpid]->web_manager_stats), sizeof(web_manager_stats_t));
+		pthread_mutex_unlock(&(AC_WTP[wtpid]->mutex_web_report));
+		wid_syslog_info("%s %d:WTP[%d] ERR RETURN pre_sub_tx_bytes %llu,sub_tx_bytes %llu\n",__func__,__LINE__,wtpid,AC_WTP[wtpid]->pre_web_manager_stats.sub_tx_bytes_ath,AC_WTP[wtpid]->web_manager_stats.sub_tx_bytes_ath);
+		return;		
+	}
+
 	if(0 == wireless_pkts_interval)
 	{
 		if(0 != wireless_bytes_interval)
 		{
+			wid_syslog_info("%s %d:WTP[%d] ERR pre_sub_tx_packets %lu,sub_tx_packets %lu C\n",__func__,__LINE__,wtpid,AC_WTP[wtpid]->pre_web_manager_stats.sub_rx_packets_ath,AC_WTP[wtpid]->web_manager_stats.sub_rx_packets_ath);
 			wid_syslog_info("%s %d:WTP[%d] ERR pre_sub_tx_bytes %llu,sub_tx_bytes %llu A\n",__func__,__LINE__,wtpid,AC_WTP[wtpid]->pre_web_manager_stats.sub_tx_bytes_ath,AC_WTP[wtpid]->web_manager_stats.sub_tx_bytes_ath);
 			AC_WTP[wtpid]->web_manager_stats.sub_tx_bytes_ath = AC_WTP[wtpid]->pre_web_manager_stats.sub_tx_bytes_ath;
 			for(i = 0; i < radiocnt; i++)
@@ -1069,6 +1106,7 @@ void get_ap_stats_v2(unsigned int wtpid)
 	}
 	else if((wireless_pkts_interval != 0) && (MAX_PACKET_SIZE < wireless_bytes_interval/wireless_pkts_interval))
 	{
+		wid_syslog_info("%s %d:WTP[%d] ERR pre_sub_tx_packets %lu,sub_tx_packets %lu D\n",__func__,__LINE__,wtpid,AC_WTP[wtpid]->pre_web_manager_stats.sub_rx_packets_ath,AC_WTP[wtpid]->web_manager_stats.sub_rx_packets_ath);
 		wid_syslog_info("%s %d:WTP[%d] ERR pre_sub_tx_bytes %llu,sub_tx_bytes %llu B\n",__func__,__LINE__,wtpid,AC_WTP[wtpid]->pre_web_manager_stats.sub_tx_bytes_ath,AC_WTP[wtpid]->web_manager_stats.sub_tx_bytes_ath);
 		revise_byte = RAND(500,1000)*wireless_pkts_interval;	/* packet size 500~1000 */
 		AC_WTP[wtpid]->web_manager_stats.sub_tx_bytes_ath = AC_WTP[wtpid]->pre_web_manager_stats.sub_tx_bytes_ath + revise_byte;
@@ -1080,10 +1118,19 @@ void get_ap_stats_v2(unsigned int wtpid)
 	
 	/* ath === sub_total_rx_pkt & sub_total_rx_bytes === */
 	wireless_pkts_interval = AC_WTP[wtpid]->web_manager_stats.sub_total_rx_pkt_ath - AC_WTP[wtpid]->pre_web_manager_stats.sub_total_rx_pkt_ath;	
+	wireless_bytes_interval = AC_WTP[wtpid]->web_manager_stats.sub_total_rx_bytes_ath - AC_WTP[wtpid]->pre_web_manager_stats.sub_total_rx_bytes_ath;
+	if(0 > wireless_pkts_interval && 0 > wireless_bytes_interval)
+	{
+		memcpy(&(AC_WTP[wtpid]->pre_web_manager_stats), &(AC_WTP[wtpid]->web_manager_stats), sizeof(web_manager_stats_t));
+		pthread_mutex_unlock(&(AC_WTP[wtpid]->mutex_web_report));
+		wid_syslog_info("%s %d:WTP[%d] ERR RETURN pre_sub_total_rx_pkt %lu,sub_total_rx_pkt %lu\n",__func__,__LINE__,wtpid,AC_WTP[wtpid]->pre_web_manager_stats.sub_total_rx_pkt_ath,AC_WTP[wtpid]->web_manager_stats.sub_total_rx_pkt_ath);
+		return;		
+	}
+
 	if(wireless_pkts_max < wireless_pkts_interval)
 	{
 		wid_syslog_info("%s %d:WTP[%d] ERR pre_sub_total_rx_pkt %lu,sub_total_rx_pkt %lu A\n",__func__,__LINE__,wtpid,AC_WTP[wtpid]->pre_web_manager_stats.sub_total_rx_pkt_ath,AC_WTP[wtpid]->web_manager_stats.sub_total_rx_pkt_ath);
-		revise = RAND(40,80)*wireless_pkts_max/100;
+		revise = RAND(90,100)*wireless_pkts_max/100;
 		AC_WTP[wtpid]->web_manager_stats.sub_total_rx_pkt_ath = AC_WTP[wtpid]->pre_web_manager_stats.sub_total_rx_pkt_ath + revise;
 		for(i = 0; i < radiocnt; i++)
 		{
@@ -1101,13 +1148,21 @@ void get_ap_stats_v2(unsigned int wtpid)
 		}		
 	}
 	*/
-	
 	wireless_pkts_interval = AC_WTP[wtpid]->web_manager_stats.sub_total_rx_pkt_ath - AC_WTP[wtpid]->pre_web_manager_stats.sub_total_rx_pkt_ath;
 	wireless_bytes_interval = AC_WTP[wtpid]->web_manager_stats.sub_total_rx_bytes_ath - AC_WTP[wtpid]->pre_web_manager_stats.sub_total_rx_bytes_ath;
+	if(0 > wireless_bytes_interval)
+	{
+		memcpy(&(AC_WTP[wtpid]->pre_web_manager_stats), &(AC_WTP[wtpid]->web_manager_stats), sizeof(web_manager_stats_t));
+		pthread_mutex_unlock(&(AC_WTP[wtpid]->mutex_web_report));
+		wid_syslog_info("%s %d:WTP[%d] ERR RETURN pre_sub_total_rx_bytes %llu,sub_total_rx_bytes %llu\n",__func__,__LINE__,wtpid,AC_WTP[wtpid]->pre_web_manager_stats.sub_total_rx_bytes_ath,AC_WTP[wtpid]->web_manager_stats.sub_total_rx_bytes_ath);
+		return;		
+	}
+
 	if(0 == wireless_pkts_interval)
 	{
 		if(0 != wireless_bytes_interval)
 		{
+			wid_syslog_info("%s %d:WTP[%d] ERR pre_sub_total_rx_pkt %lu,sub_total_rx_pkt %lu C\n",__func__,__LINE__,wtpid,AC_WTP[wtpid]->pre_web_manager_stats.sub_total_rx_pkt_ath,AC_WTP[wtpid]->web_manager_stats.sub_total_rx_pkt_ath);
 			wid_syslog_info("%s %d:WTP[%d] ERR pre_sub_total_rx_bytes %llu,sub_total_rx_bytes %llu A\n",__func__,__LINE__,wtpid,AC_WTP[wtpid]->pre_web_manager_stats.sub_total_rx_bytes_ath,AC_WTP[wtpid]->web_manager_stats.sub_total_rx_bytes_ath);
 			AC_WTP[wtpid]->web_manager_stats.sub_total_rx_bytes_ath = AC_WTP[wtpid]->pre_web_manager_stats.sub_total_rx_bytes_ath;
 			for(i = 0; i < radiocnt; i++)
@@ -1118,8 +1173,9 @@ void get_ap_stats_v2(unsigned int wtpid)
 	}
 	else if((wireless_pkts_interval != 0) && (MAX_PACKET_SIZE < wireless_bytes_interval/wireless_pkts_interval))
 	{
+		wid_syslog_info("%s %d:WTP[%d] ERR pre_sub_total_rx_pkt %lu,sub_total_rx_pkt %lu D\n",__func__,__LINE__,wtpid,AC_WTP[wtpid]->pre_web_manager_stats.sub_total_rx_pkt_ath,AC_WTP[wtpid]->web_manager_stats.sub_total_rx_pkt_ath);
 		wid_syslog_info("%s %d:WTP[%d] ERR pre_sub_total_rx_bytes %llu,sub_total_rx_bytes %llu B\n",__func__,__LINE__,wtpid,AC_WTP[wtpid]->pre_web_manager_stats.sub_total_rx_bytes_ath,AC_WTP[wtpid]->web_manager_stats.sub_total_rx_bytes_ath);
-		revise_byte = RAND(500,1000)*wireless_pkts_interval;
+		revise_byte = RAND(1000,1500)*wireless_pkts_interval;
 		AC_WTP[wtpid]->web_manager_stats.sub_total_rx_bytes_ath = AC_WTP[wtpid]->pre_web_manager_stats.sub_total_rx_bytes_ath + revise_byte;
 		for(i = 0; i < radiocnt; i++)
 		{
@@ -1129,10 +1185,21 @@ void get_ap_stats_v2(unsigned int wtpid)
 	
 	/* ath === sub_total_tx_pkt & sub_total_tx_bytes === */
 	wireless_pkts_interval = AC_WTP[wtpid]->web_manager_stats.sub_total_tx_pkt_ath - AC_WTP[wtpid]->pre_web_manager_stats.sub_total_tx_pkt_ath;	
+	wireless_bytes_interval = AC_WTP[wtpid]->web_manager_stats.sub_total_tx_bytes_ath - AC_WTP[wtpid]->pre_web_manager_stats.sub_total_tx_bytes_ath;
+
+	if(0 > wireless_pkts_interval && 0 > wireless_bytes_interval)
+	{
+		memcpy(&(AC_WTP[wtpid]->pre_web_manager_stats), &(AC_WTP[wtpid]->web_manager_stats), sizeof(web_manager_stats_t));
+		pthread_mutex_unlock(&(AC_WTP[wtpid]->mutex_web_report));
+		wid_syslog_info("%s %d:WTP[%d] ERR RETURN pre_sub_total_tx_pkt %lu,sub_total_tx_pkt %lu\n",__func__,__LINE__,wtpid,AC_WTP[wtpid]->pre_web_manager_stats.sub_total_tx_pkt_ath,AC_WTP[wtpid]->web_manager_stats.sub_total_tx_pkt_ath);
+		return;		
+	}
+
 	if(wireless_pkts_max < wireless_pkts_interval)
 	{
 		wid_syslog_info("%s %d:WTP[%d] ERR pre_sub_total_tx_pkt %lu,sub_total_tx_pkt %lu A\n",__func__,__LINE__,wtpid,AC_WTP[wtpid]->pre_web_manager_stats.sub_total_tx_pkt_ath,AC_WTP[wtpid]->web_manager_stats.sub_total_tx_pkt_ath);
-		revise = RAND(40,80)*wireless_pkts_max/100;
+
+		revise = RAND(90,100)*wireless_pkts_max/100;
 		AC_WTP[wtpid]->web_manager_stats.sub_total_tx_pkt_ath = AC_WTP[wtpid]->pre_web_manager_stats.sub_total_tx_pkt_ath + revise;
 		for(i = 0; i < radiocnt; i++)
 		{
@@ -1152,10 +1219,19 @@ void get_ap_stats_v2(unsigned int wtpid)
 	*/
 	wireless_pkts_interval = AC_WTP[wtpid]->web_manager_stats.sub_total_tx_pkt_ath - AC_WTP[wtpid]->pre_web_manager_stats.sub_total_tx_pkt_ath;
 	wireless_bytes_interval = AC_WTP[wtpid]->web_manager_stats.sub_total_tx_bytes_ath - AC_WTP[wtpid]->pre_web_manager_stats.sub_total_tx_bytes_ath;
+	if(0 > wireless_bytes_interval)
+	{
+		memcpy(&(AC_WTP[wtpid]->pre_web_manager_stats), &(AC_WTP[wtpid]->web_manager_stats), sizeof(web_manager_stats_t));
+		pthread_mutex_unlock(&(AC_WTP[wtpid]->mutex_web_report));
+		wid_syslog_info("%s %d:WTP[%d] ERR RETURN pre_sub_total_tx_bytes %llu,sub_total_tx_bytes %llu\n",__func__,__LINE__,wtpid,AC_WTP[wtpid]->pre_web_manager_stats.sub_total_tx_bytes_ath,AC_WTP[wtpid]->web_manager_stats.sub_total_tx_bytes_ath);
+		return;		
+	}
+
 	if(0 == wireless_pkts_interval)
 	{
 		if(0 != wireless_bytes_interval)
 		{
+			wid_syslog_info("%s %d:WTP[%d] ERR pre_sub_total_tx_pkt %lu,sub_total_tx_pkt %lu C\n",__func__,__LINE__,wtpid,AC_WTP[wtpid]->pre_web_manager_stats.sub_total_tx_pkt_ath,AC_WTP[wtpid]->web_manager_stats.sub_total_tx_pkt_ath);
 			wid_syslog_info("%s %d:WTP[%d] ERR pre_sub_total_tx_bytes %llu,sub_total_tx_bytes %llu A\n",__func__,__LINE__,wtpid,AC_WTP[wtpid]->pre_web_manager_stats.sub_total_tx_bytes_ath,AC_WTP[wtpid]->web_manager_stats.sub_total_tx_bytes_ath);
 			AC_WTP[wtpid]->web_manager_stats.sub_total_tx_bytes_ath = AC_WTP[wtpid]->pre_web_manager_stats.sub_total_tx_bytes_ath;
 			for(i = 0; i < radiocnt; i++)
@@ -1167,8 +1243,9 @@ void get_ap_stats_v2(unsigned int wtpid)
 	}
 	else if((wireless_pkts_interval != 0) && (MAX_PACKET_SIZE < wireless_bytes_interval/wireless_pkts_interval))
 	{
+		wid_syslog_info("%s %d:WTP[%d] ERR pre_sub_total_tx_pkt %lu,sub_total_tx_pkt %lu D\n",__func__,__LINE__,wtpid,AC_WTP[wtpid]->pre_web_manager_stats.sub_total_tx_pkt_ath,AC_WTP[wtpid]->web_manager_stats.sub_total_tx_pkt_ath);
 		wid_syslog_info("%s %d:WTP[%d] ERR pre_sub_total_tx_bytes %llu,sub_total_tx_bytes %llu B\n",__func__,__LINE__,wtpid,AC_WTP[wtpid]->pre_web_manager_stats.sub_total_tx_bytes_ath,AC_WTP[wtpid]->web_manager_stats.sub_total_tx_bytes_ath);
-		revise_byte = RAND(500,1000)*wireless_pkts_interval;
+		revise_byte = RAND(1000,1500)*wireless_pkts_interval;
 		AC_WTP[wtpid]->web_manager_stats.sub_total_tx_bytes_ath = AC_WTP[wtpid]->pre_web_manager_stats.sub_total_tx_bytes_ath + revise_byte;
 		for(i = 0; i < radiocnt; i++)
 		{
@@ -1179,11 +1256,19 @@ void get_ap_stats_v2(unsigned int wtpid)
 	/* eth === rx_packets & rx_bytes === */
 	wireless_bytes_interval = AC_WTP[wtpid]->web_manager_stats.sub_tx_bytes_ath - AC_WTP[wtpid]->pre_web_manager_stats.sub_tx_bytes_ath;
 	wired_bytes_interval = AC_WTP[wtpid]->web_manager_stats.rx_bytes_eth - AC_WTP[wtpid]->pre_web_manager_stats.rx_bytes_eth;
+	if(0 > wired_bytes_interval)
+	{
+		memcpy(&(AC_WTP[wtpid]->pre_web_manager_stats), &(AC_WTP[wtpid]->web_manager_stats), sizeof(web_manager_stats_t));
+		pthread_mutex_unlock(&(AC_WTP[wtpid]->mutex_web_report));
+		wid_syslog_info("%s %d:WTP[%d] ERR RETURN pre_rx_bytes %llu,rx_bytes %llu\n",__func__,__LINE__,wtpid,AC_WTP[wtpid]->pre_web_manager_stats.rx_bytes_eth,AC_WTP[wtpid]->web_manager_stats.rx_bytes_eth);
+		return;		
+	}
 
 	if((wired_bytes_interval >= wireless_bytes_interval)
 		&& ((report_interval != 0) && (FLOW_2M_BIT < 600 * wired_bytes_interval/report_interval))
 		&& ((wired_bytes_interval - wireless_bytes_interval)*4 > wired_bytes_interval))
 	{
+		wid_syslog_info("%s %d:WTP[%d] ERR pre_sub_tx_bytes %llu,sub_tx_bytes %llu C\n",__func__,__LINE__,wtpid,AC_WTP[wtpid]->pre_web_manager_stats.sub_tx_bytes_ath,AC_WTP[wtpid]->web_manager_stats.sub_tx_bytes_ath);
 		wid_syslog_info("%s %d:WTP[%d] ERR pre_rx_bytes %llu,rx_bytes %llu A\n",__func__,__LINE__,wtpid,AC_WTP[wtpid]->pre_web_manager_stats.rx_bytes_eth,AC_WTP[wtpid]->web_manager_stats.rx_bytes_eth);
 		revise_byte = 120 * wireless_bytes_interval/100;
 		AC_WTP[wtpid]->web_manager_stats.rx_bytes_eth = AC_WTP[wtpid]->pre_web_manager_stats.rx_bytes_eth + revise_byte;
@@ -1196,6 +1281,7 @@ void get_ap_stats_v2(unsigned int wtpid)
 			&& ((report_interval != 0) && (FLOW_2M_BIT < 600 * wireless_bytes_interval/report_interval))
 			&& ((wireless_bytes_interval - wired_bytes_interval)*4 > wireless_bytes_interval))
 	{
+		wid_syslog_info("%s %d:WTP[%d] ERR pre_sub_tx_bytes %llu,sub_tx_bytes %llu D\n",__func__,__LINE__,wtpid,AC_WTP[wtpid]->pre_web_manager_stats.sub_tx_bytes_ath,AC_WTP[wtpid]->web_manager_stats.sub_tx_bytes_ath);
 		wid_syslog_info("%s %d:WTP[%d] ERR pre_rx_bytes %llu,rx_bytes %llu B\n",__func__,__LINE__,wtpid,AC_WTP[wtpid]->pre_web_manager_stats.rx_bytes_eth,AC_WTP[wtpid]->web_manager_stats.rx_bytes_eth);
 		revise_byte = 120 * wireless_bytes_interval/100;
 		AC_WTP[wtpid]->web_manager_stats.rx_bytes_eth = AC_WTP[wtpid]->pre_web_manager_stats.rx_bytes_eth + revise_byte;
@@ -1207,9 +1293,18 @@ void get_ap_stats_v2(unsigned int wtpid)
 	/* eth === rx_sum_bytes === */
 	wired_bytes_interval = AC_WTP[wtpid]->web_manager_stats.rx_bytes_eth - AC_WTP[wtpid]->pre_web_manager_stats.rx_bytes_eth;
 	wired_sum_bytes_interval = AC_WTP[wtpid]->web_manager_stats.rx_sum_bytes_eth - AC_WTP[wtpid]->pre_web_manager_stats.rx_sum_bytes_eth;
+	if(0 > wired_sum_bytes_interval)
+	{
+		memcpy(&(AC_WTP[wtpid]->pre_web_manager_stats), &(AC_WTP[wtpid]->web_manager_stats), sizeof(web_manager_stats_t));
+		pthread_mutex_unlock(&(AC_WTP[wtpid]->mutex_web_report));
+		wid_syslog_info("%s %d:WTP[%d] ERR RETURN pre_rx_sum_bytes %llu,rx_sum_bytes %llu\n",__func__,__LINE__,wtpid,AC_WTP[wtpid]->pre_web_manager_stats.rx_sum_bytes_eth,AC_WTP[wtpid]->web_manager_stats.rx_sum_bytes_eth);
+		return;		
+	}
+
 	if(NET_STD_WIRE_MAX_OCT_PER_SEC * report_interval < wired_sum_bytes_interval)
 	{
-		wid_syslog_info("%s %d:WTP[%d] ERR pre_rx_sum_bytes %llu,rx_sum_bytes %llu\n",__func__,__LINE__,wtpid,AC_WTP[wtpid]->pre_web_manager_stats.rx_sum_bytes_eth,AC_WTP[wtpid]->web_manager_stats.rx_sum_bytes_eth);
+		wid_syslog_info("%s %d:WTP[%d] ERR pre_rx_bytes %llu,rx_bytes %llu C\n",__func__,__LINE__,wtpid,AC_WTP[wtpid]->pre_web_manager_stats.rx_bytes_eth,AC_WTP[wtpid]->web_manager_stats.rx_bytes_eth);
+		wid_syslog_info("%s %d:WTP[%d] ERR pre_rx_sum_bytes %llu,rx_sum_bytes %llu A\n",__func__,__LINE__,wtpid,AC_WTP[wtpid]->pre_web_manager_stats.rx_sum_bytes_eth,AC_WTP[wtpid]->web_manager_stats.rx_sum_bytes_eth);
 		revise_byte = RAND(100,120)*wired_bytes_interval/100;
 		AC_WTP[wtpid]->web_manager_stats.rx_sum_bytes_eth = AC_WTP[wtpid]->pre_web_manager_stats.rx_sum_bytes_eth + revise_byte;
 		for(i = 0; i < radiocnt; i++)
@@ -1221,12 +1316,19 @@ void get_ap_stats_v2(unsigned int wtpid)
 	
 	wired_pkts_interval = AC_WTP[wtpid]->web_manager_stats.rx_packets_eth - AC_WTP[wtpid]->pre_web_manager_stats.rx_packets_eth;
 	wired_sum_bytes_interval = AC_WTP[wtpid]->web_manager_stats.rx_sum_bytes_eth - AC_WTP[wtpid]->pre_web_manager_stats.rx_sum_bytes_eth;
-	
+	if(0 > wired_pkts_interval && 0 > wired_sum_bytes_interval)
+	{
+		memcpy(&(AC_WTP[wtpid]->pre_web_manager_stats), &(AC_WTP[wtpid]->web_manager_stats), sizeof(web_manager_stats_t));
+		pthread_mutex_unlock(&(AC_WTP[wtpid]->mutex_web_report));
+		wid_syslog_info("%s %d:WTP[%d] ERR RETURN pre_rx_packets %lu,rx_packets %lu\n",__func__,__LINE__,wtpid,AC_WTP[wtpid]->pre_web_manager_stats.rx_packets_eth,AC_WTP[wtpid]->web_manager_stats.rx_packets_eth);
+		return;		
+	}	
 	if(0 == wired_pkts_interval)
 	{
+		wid_syslog_info("__ %s %d __", __func__, __LINE__);
 		if(0 != wired_sum_bytes_interval)
 		{
-			wid_syslog_info("%s %d:WTP[%d] ERR pre_rx_bytes %llu,rx_bytes %llu ===X\n",__func__,__LINE__,wtpid,AC_WTP[wtpid]->pre_web_manager_stats.rx_bytes_eth,AC_WTP[wtpid]->web_manager_stats.rx_bytes_eth);
+			wid_syslog_info("%s %d:WTP[%d] ERR pre_rx_sum_bytes %llu,rx_sum_bytes %llu B\n",__func__,__LINE__,wtpid,AC_WTP[wtpid]->pre_web_manager_stats.rx_sum_bytes_eth,AC_WTP[wtpid]->web_manager_stats.rx_sum_bytes_eth);
 			wid_syslog_info("%s %d:WTP[%d] ERR pre_rx_packets %lu,rx_packets %lu A\n",__func__,__LINE__,wtpid,AC_WTP[wtpid]->pre_web_manager_stats.rx_packets_eth,AC_WTP[wtpid]->web_manager_stats.rx_packets_eth);
 			revise = wired_sum_bytes_interval/RAND(1200,MAX_PACKET_SIZE);
 			AC_WTP[wtpid]->web_manager_stats.rx_packets_eth = AC_WTP[wtpid]->pre_web_manager_stats.rx_packets_eth + revise;
@@ -1239,7 +1341,7 @@ void get_ap_stats_v2(unsigned int wtpid)
 	}
 	else if((wired_pkts_interval != 0 ) && (MAX_PACKET_SIZE < wired_sum_bytes_interval/wired_pkts_interval))
 	{
-		wid_syslog_info("%s %d:WTP[%d] ERR pre_rx_bytes %llu,rx_bytes %llu === Y\n",__func__,__LINE__,wtpid,AC_WTP[wtpid]->pre_web_manager_stats.rx_bytes_eth,AC_WTP[wtpid]->web_manager_stats.rx_bytes_eth);
+		wid_syslog_info("%s %d:WTP[%d] ERR pre_rx_sum_bytes %llu,rx_sum_bytes %llu C\n",__func__,__LINE__,wtpid,AC_WTP[wtpid]->pre_web_manager_stats.rx_sum_bytes_eth,AC_WTP[wtpid]->web_manager_stats.rx_sum_bytes_eth);
 		wid_syslog_info("%s %d:WTP[%d] ERR pre_rx_packets %lu,rx_packets %lu B\n",__func__,__LINE__,wtpid,AC_WTP[wtpid]->pre_web_manager_stats.rx_packets_eth,AC_WTP[wtpid]->web_manager_stats.rx_packets_eth);
 		revise = wired_sum_bytes_interval/RAND(1200,MAX_PACKET_SIZE);
 		AC_WTP[wtpid]->web_manager_stats.rx_packets_eth = AC_WTP[wtpid]->pre_web_manager_stats.rx_packets_eth + revise;
@@ -1253,11 +1355,19 @@ void get_ap_stats_v2(unsigned int wtpid)
 	/* eth === tx_packets & tx_bytes === */
 	wireless_bytes_interval = AC_WTP[wtpid]->web_manager_stats.sub_rx_bytes_ath - AC_WTP[wtpid]->pre_web_manager_stats.sub_rx_bytes_ath;
 	wired_bytes_interval = AC_WTP[wtpid]->web_manager_stats.tx_bytes_eth - AC_WTP[wtpid]->pre_web_manager_stats.tx_bytes_eth;
+	if(0 > wired_bytes_interval)
+	{
+		memcpy(&(AC_WTP[wtpid]->pre_web_manager_stats), &(AC_WTP[wtpid]->web_manager_stats), sizeof(web_manager_stats_t));
+		pthread_mutex_unlock(&(AC_WTP[wtpid]->mutex_web_report));
+		wid_syslog_info("%s %d:WTP[%d] ERR RETURN pre_tx_bytes %llu,tx_bytes %llu\n",__func__,__LINE__,wtpid,AC_WTP[wtpid]->pre_web_manager_stats.tx_bytes_eth,AC_WTP[wtpid]->web_manager_stats.tx_bytes_eth);
+		return;		
+	}	
 
 	if((wired_bytes_interval >= wireless_bytes_interval)
 		&& ((report_interval != 0) && (FLOW_2M_BIT < 600 * wired_bytes_interval/report_interval))
 		&& ((wired_bytes_interval - wireless_bytes_interval)*4 > wired_bytes_interval))
 	{
+		wid_syslog_info("%s %d:WTP[%d] ERR pre_sub_rx_bytes %llu,sub_rx_bytes %llu C\n",__func__,__LINE__,wtpid,AC_WTP[wtpid]->pre_web_manager_stats.sub_rx_bytes_ath,AC_WTP[wtpid]->web_manager_stats.sub_rx_bytes_ath);
 		wid_syslog_info("%s %d:WTP[%d] ERR pre_tx_bytes %llu,tx_bytes %llu A\n",__func__,__LINE__,wtpid,AC_WTP[wtpid]->pre_web_manager_stats.tx_bytes_eth,AC_WTP[wtpid]->web_manager_stats.tx_bytes_eth);
 		revise_byte = 120 * wireless_bytes_interval/100;
 		AC_WTP[wtpid]->web_manager_stats.tx_bytes_eth = AC_WTP[wtpid]->pre_web_manager_stats.tx_bytes_eth + revise_byte;
@@ -1270,6 +1380,7 @@ void get_ap_stats_v2(unsigned int wtpid)
 			&& ((report_interval != 0) && (FLOW_2M_BIT < 600 * wireless_bytes_interval/report_interval))
 			&& ((wireless_bytes_interval - wired_bytes_interval)*4 > wireless_bytes_interval))
 	{
+		wid_syslog_info("%s %d:WTP[%d] ERR pre_sub_rx_bytes %llu,sub_rx_bytes %llu D\n",__func__,__LINE__,wtpid,AC_WTP[wtpid]->pre_web_manager_stats.sub_rx_bytes_ath,AC_WTP[wtpid]->web_manager_stats.sub_rx_bytes_ath);
 		wid_syslog_info("%s %d:WTP[%d] ERR pre_tx_bytes %llu,tx_bytes %llu B\n",__func__,__LINE__,wtpid,AC_WTP[wtpid]->pre_web_manager_stats.tx_bytes_eth,AC_WTP[wtpid]->web_manager_stats.tx_bytes_eth);
 		revise_byte = 120 * wireless_bytes_interval/100;
 		AC_WTP[wtpid]->web_manager_stats.tx_bytes_eth = AC_WTP[wtpid]->pre_web_manager_stats.tx_bytes_eth + revise_byte;
@@ -1281,9 +1392,18 @@ void get_ap_stats_v2(unsigned int wtpid)
 	/* eth === tx_sum_bytes === */	
 	wired_bytes_interval = AC_WTP[wtpid]->web_manager_stats.tx_bytes_eth - AC_WTP[wtpid]->pre_web_manager_stats.tx_bytes_eth;
 	wired_sum_bytes_interval = AC_WTP[wtpid]->web_manager_stats.tx_sum_bytes_eth - AC_WTP[wtpid]->pre_web_manager_stats.tx_sum_bytes_eth;
+	if(0 > wired_bytes_interval)
+	{
+		memcpy(&(AC_WTP[wtpid]->pre_web_manager_stats), &(AC_WTP[wtpid]->web_manager_stats), sizeof(web_manager_stats_t));
+		pthread_mutex_unlock(&(AC_WTP[wtpid]->mutex_web_report));
+		wid_syslog_info("%s %d:WTP[%d] ERR RETURN pre_tx_sum_bytes %llu,tx_sum_bytes %llu\n",__func__,__LINE__,wtpid,AC_WTP[wtpid]->pre_web_manager_stats.tx_sum_bytes_eth,AC_WTP[wtpid]->web_manager_stats.tx_sum_bytes_eth);
+		return;		
+	}	
+
 	if(NET_STD_WIRE_MAX_OCT_PER_SEC * report_interval < wired_sum_bytes_interval)
 	{
-		wid_syslog_info("%s %d:WTP[%d] ERR pre_tx_sum_bytes %llu,tx_sum_bytes %llu\n",__func__,__LINE__,wtpid,AC_WTP[wtpid]->pre_web_manager_stats.tx_sum_bytes_eth,AC_WTP[wtpid]->web_manager_stats.tx_sum_bytes_eth);
+		wid_syslog_info("%s %d:WTP[%d] ERR pre_tx_bytes %llu,tx_bytes %llu C\n",__func__,__LINE__,wtpid,AC_WTP[wtpid]->pre_web_manager_stats.tx_bytes_eth,AC_WTP[wtpid]->web_manager_stats.tx_bytes_eth);
+		wid_syslog_info("%s %d:WTP[%d] ERR pre_tx_sum_bytes %llu,tx_sum_bytes %llu A\n",__func__,__LINE__,wtpid,AC_WTP[wtpid]->pre_web_manager_stats.tx_sum_bytes_eth,AC_WTP[wtpid]->web_manager_stats.tx_sum_bytes_eth);
 		revise_byte = RAND(100,120)*wired_bytes_interval/100;
 		AC_WTP[wtpid]->web_manager_stats.tx_sum_bytes_eth = AC_WTP[wtpid]->pre_web_manager_stats.tx_sum_bytes_eth + revise_byte;
 		for(i = 0; i < radiocnt; i++)
@@ -1295,12 +1415,18 @@ void get_ap_stats_v2(unsigned int wtpid)
 	
 	wired_pkts_interval = AC_WTP[wtpid]->web_manager_stats.tx_packets_eth - AC_WTP[wtpid]->pre_web_manager_stats.tx_packets_eth;
 	wired_sum_bytes_interval = AC_WTP[wtpid]->web_manager_stats.tx_sum_bytes_eth - AC_WTP[wtpid]->pre_web_manager_stats.tx_sum_bytes_eth;
-	
+	if(0 > wired_pkts_interval && 0 > wired_sum_bytes_interval)
+	{
+		memcpy(&(AC_WTP[wtpid]->pre_web_manager_stats), &(AC_WTP[wtpid]->web_manager_stats), sizeof(web_manager_stats_t));
+		pthread_mutex_unlock(&(AC_WTP[wtpid]->mutex_web_report));
+		wid_syslog_info("%s %d:WTP[%d] ERR RETURN pre_tx_packets %lu,tx_packets %lu\n",__func__,__LINE__,wtpid,AC_WTP[wtpid]->pre_web_manager_stats.tx_packets_eth,AC_WTP[wtpid]->web_manager_stats.tx_packets_eth);
+		return;		
+	}	
 	if(0 == wired_pkts_interval)
 	{
 		if(0 != wired_sum_bytes_interval)
 		{
-			wid_syslog_info("%s %d:WTP[%d] ERR pre_tx_bytes %llu,tx_bytes %llu ===X\n",__func__,__LINE__,wtpid,AC_WTP[wtpid]->pre_web_manager_stats.tx_bytes_eth,AC_WTP[wtpid]->web_manager_stats.tx_bytes_eth);
+			wid_syslog_info("%s %d:WTP[%d] ERR pre_tx_sum_bytes %llu,tx_sum_bytes %llu B\n",__func__,__LINE__,wtpid,AC_WTP[wtpid]->pre_web_manager_stats.tx_sum_bytes_eth,AC_WTP[wtpid]->web_manager_stats.tx_sum_bytes_eth);
 			wid_syslog_info("%s %d:WTP[%d] ERR pre_tx_packets %lu,tx_packets %lu A\n",__func__,__LINE__,wtpid,AC_WTP[wtpid]->pre_web_manager_stats.tx_packets_eth,AC_WTP[wtpid]->web_manager_stats.tx_packets_eth);
 			revise = wired_sum_bytes_interval/RAND(1200,MAX_PACKET_SIZE);
 			AC_WTP[wtpid]->web_manager_stats.tx_packets_eth = AC_WTP[wtpid]->pre_web_manager_stats.tx_packets_eth + revise;
@@ -1313,7 +1439,7 @@ void get_ap_stats_v2(unsigned int wtpid)
 	}
 	else if((wired_pkts_interval != 0) && (MAX_PACKET_SIZE < wired_sum_bytes_interval/wired_pkts_interval))
 	{
-		wid_syslog_info("%s %d:WTP[%d] ERR pre_tx_bytes %llu,tx_bytes %llu === Y\n",__func__,__LINE__,wtpid,AC_WTP[wtpid]->pre_web_manager_stats.tx_bytes_eth,AC_WTP[wtpid]->web_manager_stats.tx_bytes_eth);
+		wid_syslog_info("%s %d:WTP[%d] ERR pre_tx_sum_bytes %llu,tx_sum_bytes %llu C\n",__func__,__LINE__,wtpid,AC_WTP[wtpid]->pre_web_manager_stats.tx_sum_bytes_eth,AC_WTP[wtpid]->web_manager_stats.tx_sum_bytes_eth);
 		wid_syslog_info("%s %d:WTP[%d] ERR pre_tx_packets %lu,tx_packets %lu B\n",__func__,__LINE__,wtpid,AC_WTP[wtpid]->pre_web_manager_stats.tx_packets_eth,AC_WTP[wtpid]->web_manager_stats.tx_packets_eth);
 		revise = wired_sum_bytes_interval/RAND(1200,MAX_PACKET_SIZE);
 		AC_WTP[wtpid]->web_manager_stats.tx_packets_eth = AC_WTP[wtpid]->pre_web_manager_stats.tx_packets_eth + revise;
@@ -1325,6 +1451,25 @@ void get_ap_stats_v2(unsigned int wtpid)
 	}
 
 	/* === end === */
+	wid_syslog_debug_debug(WID_DEFAULT, "%s:WTP[%d]web_manager_stats.sub_rx_packets_ath %lu\n", __func__, wtpid, AC_WTP[wtpid]->web_manager_stats.sub_rx_packets_ath);
+	wid_syslog_debug_debug(WID_DEFAULT, "%s:WTP[%d]web_manager_stats.sub_tx_packets_ath %lu\n", __func__, wtpid, AC_WTP[wtpid]->web_manager_stats.sub_tx_packets_ath);
+	wid_syslog_debug_debug(WID_DEFAULT, "%s:WTP[%d]web_manager_stats.sub_rx_bytes_ath %llu\n", __func__, wtpid, AC_WTP[wtpid]->web_manager_stats.sub_rx_bytes_ath);
+	wid_syslog_debug_debug(WID_DEFAULT, "%s:WTP[%d]web_manager_stats.sub_tx_bytes_ath %llu\n", __func__, wtpid, AC_WTP[wtpid]->web_manager_stats.sub_tx_bytes_ath);
+
+	wid_syslog_debug_debug(WID_DEFAULT, "%s:WTP[%d]web_manager_stats.sub_total_rx_pkt_ath %lu\n", __func__, wtpid, AC_WTP[wtpid]->web_manager_stats.sub_total_rx_pkt_ath);
+	wid_syslog_debug_debug(WID_DEFAULT, "%s:WTP[%d]web_manager_stats.sub_total_tx_pkt_ath %lu\n", __func__, wtpid, AC_WTP[wtpid]->web_manager_stats.sub_total_tx_pkt_ath);
+	wid_syslog_debug_debug(WID_DEFAULT, "%s:WTP[%d]web_manager_stats.sub_total_rx_bytes_ath %llu\n", __func__, wtpid, AC_WTP[wtpid]->web_manager_stats.sub_total_rx_bytes_ath);
+	wid_syslog_debug_debug(WID_DEFAULT, "%s:WTP[%d]web_manager_stats.sub_total_tx_bytes_ath %llu\n", __func__, wtpid, AC_WTP[wtpid]->web_manager_stats.sub_total_tx_bytes_ath);
+
+	wid_syslog_debug_debug(WID_DEFAULT, "%s:WTP[%d]web_manager_stats.rx_bytes_eth %llu\n", __func__, wtpid, AC_WTP[wtpid]->web_manager_stats.rx_bytes_eth);
+	wid_syslog_debug_debug(WID_DEFAULT, "%s:WTP[%d]web_manager_stats.tx_bytes_eth %llu\n", __func__, wtpid, AC_WTP[wtpid]->web_manager_stats.tx_bytes_eth);	
+
+	wid_syslog_debug_debug(WID_DEFAULT, "%s:WTP[%d]web_manager_stats.rx_packets_eth %lu\n", __func__, wtpid, AC_WTP[wtpid]->web_manager_stats.rx_packets_eth);
+	wid_syslog_debug_debug(WID_DEFAULT, "%s:WTP[%d]web_manager_stats.tx_packets_eth %lu\n", __func__, wtpid, AC_WTP[wtpid]->web_manager_stats.tx_packets_eth);
+	wid_syslog_debug_debug(WID_DEFAULT, "%s:WTP[%d]web_manager_stats.rx_sum_bytes_eth %llu\n", __func__, wtpid, AC_WTP[wtpid]->web_manager_stats.rx_sum_bytes_eth);
+	wid_syslog_debug_debug(WID_DEFAULT, "%s:WTP[%d]web_manager_stats.tx_sum_bytes_eth %llu\n", __func__, wtpid, AC_WTP[wtpid]->web_manager_stats.tx_sum_bytes_eth);
+	
+
 	memcpy(&(AC_WTP[wtpid]->pre_web_manager_stats), &(AC_WTP[wtpid]->web_manager_stats), sizeof(web_manager_stats_t));
 	pthread_mutex_unlock(&(AC_WTP[wtpid]->mutex_web_report));
 	return;
