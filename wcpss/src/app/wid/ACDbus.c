@@ -70787,7 +70787,12 @@ DBusMessage * wid_dbus_wtp_show_running_config_start(DBusConnection *conn, DBusM
 			node3=node3->next;
 		}
 		
-		if(gMaxWTPs != 1024)
+		if((gMaxWTPs_from_sem >0)&&(gMaxWTPs != gMaxWTPs_from_sem))  //fengwenchao modify for read gMaxWTPs from /dbm/local_board/board_ap_max_counter
+		{
+			totalLen += sprintf(cursor,"set wireless-control max wtp %d\n",gMaxWTPs);
+			cursor = showStr + totalLen; 
+		}
+		else if((gMaxWTPs_from_sem == 0)&&(gMaxWTPs != 1024))   //fengwenchao modify for read gMaxWTPs from /dbm/local_board/board_ap_max_counter
 		{
 			totalLen += sprintf(cursor,"set wireless-control max wtp %d\n",gMaxWTPs );
 			cursor = showStr + totalLen; 
@@ -71414,8 +71419,12 @@ DBusMessage * wid_dbus_wtp_show_running_config_start(DBusConnection *conn, DBusM
 				cursor = showStr + totalLen; 
 			}			
 			/*fengwenchao add end*/
-			
-			if(gMaxWTPs != 1024)
+			if((gMaxWTPs_from_sem >0)&&(gMaxWTPs != gMaxWTPs_from_sem))  //fengwenchao modify for read gMaxWTPs from /dbm/local_board/board_ap_max_counter
+			{
+				totalLen += sprintf(cursor,"set wireless-control max wtp %d\n",gMaxWTPs);
+				cursor = showStr + totalLen; 
+			}
+			else if((gMaxWTPs_from_sem == 0)&&(gMaxWTPs != 1024))	//fengwenchao modify for read gMaxWTPs from /dbm/local_board/board_ap_max_counter
 			{
 				totalLen += sprintf(cursor,"set wireless-control max wtp %d\n",gMaxWTPs );
 				cursor = showStr + totalLen; 

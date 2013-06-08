@@ -3275,20 +3275,66 @@ DBusMessage * hmd_dbus_interface_config_license_assign(DBusConnection *conn, DBu
 				real_type = type - 1;
 				if(slot_id < MAX_SLOT_NUM){
 					if(HMD_BOARD[slot_id] != NULL){
-						if(islocaled){
-							LicenseNum = HMD_BOARD[slot_id]->L_LicenseNum[inst_id][real_type];
-						}else{
-							LicenseNum = HMD_BOARD[slot_id]->R_LicenseNum[inst_id][real_type];
-						}
-						if(LicenseNum < num){
-							num1 = num - LicenseNum;
-							if(LICENSE_MGMT[real_type].free_num >= num1){
-								LICENSE_MGMT[real_type].free_num = LICENSE_MGMT[real_type].free_num - num1;
+						if(num <= HMD_BOARD[slot_id]->sem_max_ap_num)//fengwenchao add for read gMaxWTPs from  /dbm/local_board/board_ap_max_counter
+						{
+							if(islocaled){
+								LicenseNum = HMD_BOARD[slot_id]->L_LicenseNum[inst_id][real_type];
+							}else{
+								LicenseNum = HMD_BOARD[slot_id]->R_LicenseNum[inst_id][real_type];
+							}
+							if(LicenseNum < num){
+								num1 = num - LicenseNum;
+								if(LICENSE_MGMT[real_type].free_num >= num1){
+									LICENSE_MGMT[real_type].free_num = LICENSE_MGMT[real_type].free_num - num1;
+									if(islocaled){
+										LICENSE_MGMT[real_type].l_assigned_num[slot_id][inst_id] = LICENSE_MGMT[real_type].l_assigned_num[slot_id][inst_id] + num1;
+										HMD_BOARD[slot_id]->L_LicenseNum[inst_id][real_type] = num;
+									}else{
+										LICENSE_MGMT[real_type].r_assigned_num[slot_id][inst_id] = LICENSE_MGMT[real_type].r_assigned_num[slot_id][inst_id] + num1;
+										HMD_BOARD[slot_id]->R_LicenseNum[inst_id][real_type] = num;
+									}
+									if(slot_id == HOST_SLOT_NO){
+										struct HmdMsgQ qmsg;
+										char command[128];
+										memset(command, 0, 128);
+										sprintf(command,"sudo echo %d > /var/run/wcpss/wtplicense%d-%d-%d",num,islocaled, inst_id,type);
+										system(command);
+										memset(&qmsg,0,sizeof(struct HmdMsgQ));
+										qmsg.mqinfo.op = HMD_LICENSE_UPDATE;
+										qmsg.mqinfo.D_SlotID = slot_id;
+										qmsg.mqinfo.S_SlotID = HOST_SLOT_NO;
+										qmsg.mqinfo.InstID = inst_id;
+										qmsg.mqinfo.local = islocaled;
+										qmsg.mqinfo.u.LicenseInfo.licenseType = real_type;
+										qmsg.mqinfo.u.LicenseInfo.licenseNum = num;	
+										if(islocaled == 0){
+											if(HOST_BOARD->Hmd_Inst[inst_id] != NULL){
+												qmsg.mqid = inst_id;
+												if (msgsnd(HMDMsgqID, (struct HmdMsgQ *)&qmsg, sizeof(qmsg.mqinfo), 0) == -1)
+													perror("msgsnd");
+											}
+										}
+										else{
+											if(HOST_BOARD->Hmd_Local_Inst[inst_id] != NULL){
+												qmsg.mqid = MAX_INSTANCE + inst_id;
+												if (msgsnd(HMDMsgqID, (struct HmdMsgQ *)&qmsg, sizeof(qmsg.mqinfo), 0) == -1)
+													perror("msgsnd");
+											}
+										}
+									}else
+										notice_hmd_client_license_change(slot_id, real_type, inst_id, islocaled);
+								}else{
+									ret = HMD_DBUS_LICENSE_NUM_NOT_ENOUGH;
+								}
+							}
+							else if(LicenseNum > num){
+								num1 = LicenseNum - num;							
+								LICENSE_MGMT[real_type].free_num = LICENSE_MGMT[real_type].free_num + num1;
 								if(islocaled){
-									LICENSE_MGMT[real_type].l_assigned_num[slot_id][inst_id] = LICENSE_MGMT[real_type].l_assigned_num[slot_id][inst_id] + num1;
+									LICENSE_MGMT[real_type].l_assigned_num[slot_id][inst_id] = LICENSE_MGMT[real_type].l_assigned_num[slot_id][inst_id] - num1;
 									HMD_BOARD[slot_id]->L_LicenseNum[inst_id][real_type] = num;
 								}else{
-									LICENSE_MGMT[real_type].r_assigned_num[slot_id][inst_id] = LICENSE_MGMT[real_type].r_assigned_num[slot_id][inst_id] + num1;
+									LICENSE_MGMT[real_type].r_assigned_num[slot_id][inst_id] = LICENSE_MGMT[real_type].r_assigned_num[slot_id][inst_id] - num1;
 									HMD_BOARD[slot_id]->R_LicenseNum[inst_id][real_type] = num;
 								}
 								if(slot_id == HOST_SLOT_NO){
@@ -3301,7 +3347,6 @@ DBusMessage * hmd_dbus_interface_config_license_assign(DBusConnection *conn, DBu
 									qmsg.mqinfo.op = HMD_LICENSE_UPDATE;
 									qmsg.mqinfo.D_SlotID = slot_id;
 									qmsg.mqinfo.S_SlotID = HOST_SLOT_NO;
-									qmsg.mqinfo.InstID = inst_id;
 									qmsg.mqinfo.local = islocaled;
 									qmsg.mqinfo.u.LicenseInfo.licenseType = real_type;
 									qmsg.mqinfo.u.LicenseInfo.licenseNum = num;	
@@ -3311,8 +3356,7 @@ DBusMessage * hmd_dbus_interface_config_license_assign(DBusConnection *conn, DBu
 											if (msgsnd(HMDMsgqID, (struct HmdMsgQ *)&qmsg, sizeof(qmsg.mqinfo), 0) == -1)
 												perror("msgsnd");
 										}
-									}
-									else{
+									}else{
 										if(HOST_BOARD->Hmd_Local_Inst[inst_id] != NULL){
 											qmsg.mqid = MAX_INSTANCE + inst_id;
 											if (msgsnd(HMDMsgqID, (struct HmdMsgQ *)&qmsg, sizeof(qmsg.mqinfo), 0) == -1)
@@ -3322,52 +3366,14 @@ DBusMessage * hmd_dbus_interface_config_license_assign(DBusConnection *conn, DBu
 								}else
 									notice_hmd_client_license_change(slot_id, real_type, inst_id, islocaled);
 							}else{
-								ret = HMD_DBUS_LICENSE_NUM_NOT_ENOUGH;
+								ret = HMD_DBUS_SUCCESS;
+							}
+							if((MASTER_BACKUP_SLOT_NO != 0)&&(MASTER_BACKUP_SLOT_NO != slot_id)){
+								syn_hansi_info_to_backup(slot_id, inst_id, MASTER_BACKUP_SLOT_NO,islocaled,HMD_HANSI_INFO_SYN_LICENSE,real_type);
 							}
 						}
-						else if(LicenseNum > num){
-							num1 = LicenseNum - num;							
-							LICENSE_MGMT[real_type].free_num = LICENSE_MGMT[real_type].free_num + num1;
-							if(islocaled){
-								LICENSE_MGMT[real_type].l_assigned_num[slot_id][inst_id] = LICENSE_MGMT[real_type].l_assigned_num[slot_id][inst_id] - num1;
-								HMD_BOARD[slot_id]->L_LicenseNum[inst_id][real_type] = num;
-							}else{
-								LICENSE_MGMT[real_type].r_assigned_num[slot_id][inst_id] = LICENSE_MGMT[real_type].r_assigned_num[slot_id][inst_id] - num1;
-								HMD_BOARD[slot_id]->R_LicenseNum[inst_id][real_type] = num;
-							}
-							if(slot_id == HOST_SLOT_NO){
-								struct HmdMsgQ qmsg;
-								char command[128];
-								memset(command, 0, 128);
-								sprintf(command,"sudo echo %d > /var/run/wcpss/wtplicense%d-%d-%d",num,islocaled, inst_id,type);
-								system(command);
-								memset(&qmsg,0,sizeof(struct HmdMsgQ));
-								qmsg.mqinfo.op = HMD_LICENSE_UPDATE;
-								qmsg.mqinfo.D_SlotID = slot_id;
-								qmsg.mqinfo.S_SlotID = HOST_SLOT_NO;
-								qmsg.mqinfo.local = islocaled;
-								qmsg.mqinfo.u.LicenseInfo.licenseType = real_type;
-								qmsg.mqinfo.u.LicenseInfo.licenseNum = num;	
-								if(islocaled == 0){
-									if(HOST_BOARD->Hmd_Inst[inst_id] != NULL){
-										qmsg.mqid = inst_id;
-										if (msgsnd(HMDMsgqID, (struct HmdMsgQ *)&qmsg, sizeof(qmsg.mqinfo), 0) == -1)
-											perror("msgsnd");
-									}
-								}else{
-									if(HOST_BOARD->Hmd_Local_Inst[inst_id] != NULL){
-										qmsg.mqid = MAX_INSTANCE + inst_id;
-										if (msgsnd(HMDMsgqID, (struct HmdMsgQ *)&qmsg, sizeof(qmsg.mqinfo), 0) == -1)
-											perror("msgsnd");
-									}
-								}
-							}else
-								notice_hmd_client_license_change(slot_id, real_type, inst_id, islocaled);
-						}else{
-							ret = HMD_DBUS_SUCCESS;
-						}
-						if((MASTER_BACKUP_SLOT_NO != 0)&&(MASTER_BACKUP_SLOT_NO != slot_id)){
-							syn_hansi_info_to_backup(slot_id, inst_id, MASTER_BACKUP_SLOT_NO,islocaled,HMD_HANSI_INFO_SYN_LICENSE,real_type);
+						else{
+							ret = HMD_DBUS_SET_NUM_MORE_THAN_SPECEFICATION;
 						}
 					}else{
 						ret = HMD_DBUS_SLOT_ID_NOT_EXIST;

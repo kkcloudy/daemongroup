@@ -103,6 +103,7 @@ CWThreadCondition gACTxpowerWait;
 CWThreadCondition gTxpowerComplete;
 
 int gMaxWTPs = 1024;  				//max WTPs
+int gMaxWTPs_from_sem = 0;  //fengwenchao add for read gMaxWTPs from /dbm/local_board/board_ap_max_counter
 int gRMACField = 0;			//The Radio MAC Field of the discovery response
 int gWirelessField = 0;			//The Wireless Field of the discovery response
 int gDTLSPolicy=DTLS_ENABLED_DATA;	//DTLS Policy for data channel
@@ -748,6 +749,15 @@ void CWWIDInit(){
 	AC_WTP_ACC = malloc(sizeof(WID_ACCESS));
 	memset(AC_WTP_ACC, 0, sizeof(WID_ACCESS));
 	memset(AC_WTP_ACC->wtp_list_hash, 0, 256*sizeof(struct wtp_access_info *));
+	/*fengwenchao add for read gMaxWTPs from /dbm/local_board/board_ap_max_counter begin*/
+	unsigned int count =0;
+	if((read_board_ap_max_counter(&count)) != 1)
+	{
+		wid_syslog_info("%s count  =  %d \n",__func__,count);
+		gMaxWTPs = count;
+		gMaxWTPs_from_sem = count;
+	}
+	/*fengwenchao add end*/
 }
 void LISTEN_IF_INIT(){
 	gListenningIF.count = 0;

@@ -69,6 +69,7 @@ int LicenseCount = 9;
 int HANSI_CHECK_OP = 1;
 int HANSI_TIMER_CONFIG_SAVE = 0; //fengwenchao add 20130412 for hmd timer config save
 int HANSI_TIMER = 1800; //fengwenchao add 20130412 for hmd timer config save
+int WTP_NUM = 4096+1;	//fengwenchao add 20130412 for hmd timer config save
 struct Hmd_Board_Info *HOST_BOARD;
 struct Hmd_Board_Info *HMD_BOARD[MAX_SLOT_NUM];
 struct Hmd_L_Inst_Mgmt_Summary *HMD_L_HANSI[MAX_INSTANCE];
@@ -242,7 +243,40 @@ int read_ac_file(char *FILENAME,char *buff,int blen)
 	close(fd);
 	return 0;
 }
+/*fengwenchao add for read gMaxWTPs from  /dbm/local_board/board_ap_max_counter*/
+void read_master_ap_max_counter(int slot_id,int* ap_num)
+{
+	int fd,len =0;
+	char master_ap_max_counter_path[] = "/dbm/product/slot/slot";
+	char buff[DEFAULT_LEN] ={0};
+	char counter_share[]="/board_ap_counter";
+	sprintf(buff,"%s%d%s",master_ap_max_counter_path,slot_id,counter_share);
 
+	fd = open(master_ap_max_counter_path,O_RDONLY);
+	if(fd <0)
+	{
+		hmd_syslog_err("%s fd <0\n",__func__);
+		*ap_num= 1024;
+		return;
+	}
+	
+	len = read(fd,buff,DEFAULT_LEN);
+	if (len < 0) {
+		close(fd);
+		hmd_syslog_err("%s len <0\n",__func__);
+		*ap_num = 1024;
+		return;
+	}
+	close(fd);
+	parse_int_ID(buff,ap_num);
+	if(*ap_num >= WTP_NUM)
+	{
+		hmd_syslog_err("%s we find *ap_num %d >= WTP_NUM\n",__func__,*ap_num);
+		*ap_num = WTP_NUM-1;	
+	}
+	return;
+}
+/*fengwenchao add end*/
 
 void hmd_license_init(){
 	int licensecount = 0;
@@ -937,6 +971,7 @@ void HmdStateInit(){
 		HOST_BOARD->tipcaddr.addr.name.name.type = SERVER_TYPE;
 		HOST_BOARD->tipcaddr.addr.name.name.instance = SERVER_BASE_INST+MASTER_SLOT_NO;
 		HOST_BOARD->tipcaddr.addr.name.domain = 0;
+		read_master_ap_max_counter(HOST_BOARD->slot_no,&(HOST_BOARD->sem_max_ap_num));  //fengwenchao add for read gMaxWTPs from  /dbm/local_board/board_ap_max_counter
 		if(isMaster == 1){
 			for(i = 0; i < MAX_SLOT_NUM; i++){
 				if(i == HOST_SLOT_NO)
@@ -965,6 +1000,7 @@ void HmdStateInit(){
 									HMD_BOARD[i]->tipcaddr.addr.name.name.instance = SERVER_BASE_INST+i;
 									HMD_BOARD[i]->tipcaddr.addr.name.domain = 0;				
 									HMD_BOARD[i]->tipcfd = socket (AF_TIPC, SOCK_RDM,0);
+									read_master_ap_max_counter(i,&(HMD_BOARD[i]->sem_max_ap_num));   //fengwenchao add for read gMaxWTPs from  /dbm/local_board/board_ap_max_counter
 								}	
 							}
 						}
@@ -1053,6 +1089,7 @@ void HmdStateReInitSlot(int slotid){
 						HMD_BOARD[slotid]->tipcaddr.addr.name.name.instance = SERVER_BASE_INST+slotid;
 						HMD_BOARD[slotid]->tipcaddr.addr.name.domain = 0;				
 						HMD_BOARD[slotid]->tipcfd = socket (AF_TIPC, SOCK_RDM,0);
+						read_master_ap_max_counter(HMD_BOARD[slotid]->slot_no,&(HMD_BOARD[slotid]->sem_max_ap_num));  //fengwenchao add for read gMaxWTPs from  /dbm/local_board/board_ap_max_counter
 						for(j = 0; j < MAX_INSTANCE; j++){
 							HMD_BOARD[slotid]->L_LicenseNum[j] = malloc((LicenseCount + 1)*sizeof(int));
 							memset(HMD_BOARD[slotid]->L_LicenseNum[j], 0, (LicenseCount + 1)*sizeof(int));
@@ -1147,6 +1184,7 @@ void HmdStateReInit(){
 		HOST_BOARD->tipcaddr.addr.name.name.type = SERVER_TYPE;
 		HOST_BOARD->tipcaddr.addr.name.name.instance = SERVER_BASE_INST+MASTER_SLOT_NO;
 		HOST_BOARD->tipcaddr.addr.name.domain = 0;
+		read_master_ap_max_counter(HOST_BOARD->slot_no,&(HOST_BOARD->sem_max_ap_num));   //fengwenchao add for read gMaxWTPs from  /dbm/local_board/board_ap_max_counter
 		hmd_syslog_info("%s,%d.addrtype:%d,name.type:%d,name.instance:%d,name.domain:%d.\n",__func__,__LINE__,HOST_BOARD->tipcaddr.addrtype,HOST_BOARD->tipcaddr.addr.name.name.type,HOST_BOARD->tipcaddr.addr.name.name.instance,HOST_BOARD->tipcaddr.addr.name.domain);
 		if(isMaster == 1){
 			for(i = 0; i < MAX_SLOT_NUM; i++){
@@ -1179,6 +1217,7 @@ void HmdStateReInit(){
 									HMD_BOARD[i]->tipcaddr.addr.name.domain = 0;				
 									hmd_syslog_info("%s,%d.i:%d,addrtype:%d,name.type:%d,name.instance:%d,name.domain:%d.\n",__func__,__LINE__,i,HOST_BOARD->tipcaddr.addrtype,HOST_BOARD->tipcaddr.addr.name.name.type,HOST_BOARD->tipcaddr.addr.name.name.instance,HOST_BOARD->tipcaddr.addr.name.domain);
 									HMD_BOARD[i]->tipcfd = socket (AF_TIPC, SOCK_RDM,0);
+									read_master_ap_max_counter(HMD_BOARD[i]->slot_no,&(HMD_BOARD[i]->sem_max_ap_num));   //fengwenchao add for read gMaxWTPs from  /dbm/local_board/board_ap_max_counter
 									for(j = 0; j < MAX_INSTANCE; j++){
 										HMD_BOARD[i]->L_LicenseNum[j] = malloc((LicenseCount + 1)*sizeof(int));
 										memset(HMD_BOARD[i]->L_LicenseNum[j], 0, (LicenseCount + 1)*sizeof(int));

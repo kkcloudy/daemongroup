@@ -183,6 +183,7 @@ struct Hmd_Board_Info{
 	int NeighborSlotID;
 	int tipcfd;
 	int HMDTimer_ConfigSave; //fengwenchao add 20130412 for hmd timer config save
+	int sem_max_ap_num;  //fengwenchao add for read gMaxWTPs from  /dbm/local_board/board_ap_max_counter
 	int *L_LicenseNum[MAX_INSTANCE];
 	int *R_LicenseNum[MAX_INSTANCE];
 	struct sockaddr_tipc tipcaddr;

@@ -238,10 +238,7 @@ DEFUN(license_assign_cmd_func,
 		vty_out(vty,"<error> unknown num format\n");
 		return CMD_SUCCESS;
 	}	
-	if(num > 1024){
-		vty_out(vty,"<error> num should be less than 1024\n");
-		return CMD_SUCCESS;
-	}
+
 	if (!strcmp(argv[2],"hansi")||(tolower(argv[2][0]) == 'h')){
 		islocaled = 0;
 	}else if (!strcmp(argv[2],"local-hansi")||(tolower(argv[2][0]) == 'l')){
@@ -304,6 +301,9 @@ DEFUN(license_assign_cmd_func,
 			}
 			else if(ret == HMD_DBUS_COMMAND_NOT_SUPPORT){
 				vty_out(vty,"<error> the board is no active master\n");
+			}
+			else if(ret == HMD_DBUS_SET_NUM_MORE_THAN_SPECEFICATION){
+				vty_out(vty,"<error> num should be more than specefication,should be 1024 or 2048\n");
 			}
 			else{				
 				vty_out(vty,"<error> code num %d.\n", ret);

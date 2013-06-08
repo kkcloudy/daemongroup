@@ -500,5 +500,6 @@ void set_wtp_5g_switch(unsigned int wtpid,unsigned char type);
 int wid_set_wlan_hotspotid(unsigned char Wlanid,unsigned int hotspotid);
 
 
+int read_board_ap_max_counter(unsigned int * count);//fengwenchao add for read gMaxWTPs from  /dbm/local_board/board_ap_max_counter
 #endif
 

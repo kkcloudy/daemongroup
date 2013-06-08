@@ -30877,3 +30877,42 @@ int wid_set_wlan_hotspotid(unsigned char Wlanid,unsigned int hotspotid)
 	return WID_DBUS_SUCCESS;
 }
 
+/*fengwenchao add for read gMaxWTPs from  /dbm/local_board/board_ap_max_counter */
+int read_board_ap_max_counter(unsigned int * count)
+{
+	int fd_counter,len = 0;
+	char board_counter_path[DEFAULT_LEN] = {0};
+	char board_counter_buff[PATH_LEN]= {0};
+	sprintf(board_counter_path,"/dbm/local_board/board_ap_counter");
+
+	/*read /dbm/local_board/board_ap_max_counter*/
+	fd_counter = open(board_counter_path,O_RDONLY);	
+	if (fd_counter < 0) {
+		wid_syslog_err("%s fd_counter= %d \n",__func__,fd_counter);
+		return 1;
+	}
+	len = read(fd_counter,board_counter_buff,PATH_LEN);
+	
+	if (len < 0) {
+		wid_syslog_err("%s fd_counter= %d len = %d\n",__func__,fd_counter,len);
+		close(fd_counter);
+		return 1;
+	}
+	if(len != 0)
+	{
+		if(board_counter_buff[len-1] == '\n')
+		{
+			board_counter_buff[len-1] = '\0';
+		}
+	}		
+	parse_int_ID(board_counter_buff,count);
+	close(fd_counter);
+	if(*count >= WTP_NUM)
+	{
+		wid_syslog_err("%s we find *count %d >= WTP_NUM\n",__func__,*count);
+		*count = WTP_NUM-1;
+	}
+	*count =2048;
+	return 0;
+}
+/*fengwenchao add end*/

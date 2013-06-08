@@ -71,6 +71,7 @@
 #define WTP_RSSI_INTERVAL_NUM		17
 extern int WTP_NUM;		
 extern int gMaxWTPs;
+extern int gMaxWTPs_from_sem; // fengwenchao add for read gMaxWTPs from /dbm/local_board/board_ap_max_counter
 extern int WTP_NUM_AUTELAN;		
 extern int WTP_NUM_OEM;		
 extern int G_RADIO_NUM;
