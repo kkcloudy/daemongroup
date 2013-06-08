@@ -52,6 +52,9 @@ extern "C"
 #include "sysdef/returncode.h"
 #include "dcli_dhcp.h"
 #include <sys/socket.h>
+#include <dbus/sem/sem_dbus_def.h>
+
+
 
 /*********************hanhui upgrade***************
 #define SIOCGIFPRIVFLAGS 0x89b0
@@ -2823,6 +2826,112 @@ dcli_set_interface_ip_pool
 	}
 }
 int
+	check_slot_wheather_empty
+(
+int slot_id
+)
+{
+	DBusMessage *query = NULL, *reply = NULL;
+	DBusMessageIter iter;
+	DBusError err;
+
+	int i;
+	int board_code;
+	int is_master, is_active_master;
+	unsigned int function_type;
+	char *name;
+	int slot_count;
+	unsigned int board_on_mask;
+	int board_state;
+	//int slot_sum = 0 ;
+	
+	query = dbus_sem_msg_new_method_call(SEM_DBUS_BUSNAME, SEM_DBUS_OBJPATH,
+										 SEM_DBUS_INTERFACE, SEM_DBUS_SHOW_SLOT_INFO);
+	if (!query)
+	{
+		printf("show slot id query failed\n");
+		return CMD_FAILURE;
+	}
+
+	dbus_error_init(&err);
+
+	reply = dbus_connection_send_with_reply_and_block(dcli_dbus_connection, query, -1, &err);
+	
+	dbus_message_unref(query);
+
+	if (!reply)
+	{
+		printf("<error> failed get reply.\n");
+		if (dbus_error_is_set(&err))
+		{
+			printf("%s raised: %s",err.name,err.message);
+			dbus_error_free_for_dcli(&err);
+		}
+		
+		return CMD_SUCCESS;
+	}
+
+	dbus_message_iter_init(reply,&iter);
+	
+	dbus_message_iter_get_basic(&iter, &slot_count);	
+	dbus_message_iter_next(&iter);
+
+	dbus_message_iter_get_basic(&iter, &board_on_mask); 
+	dbus_message_iter_next(&iter);
+	
+	for (i=0; i<slot_count; i++)
+	{	
+		dbus_message_iter_get_basic(&iter, &board_state);	
+		dbus_message_iter_next(&iter);
+
+		dbus_message_iter_get_basic(&iter, &board_code);
+		dbus_message_iter_next(&iter);
+
+		dbus_message_iter_get_basic(&iter, &function_type);
+		dbus_message_iter_next(&iter);
+		
+		dbus_message_iter_get_basic(&iter, &is_master);
+		dbus_message_iter_next(&iter);
+
+		dbus_message_iter_get_basic(&iter, &is_active_master);
+		dbus_message_iter_next(&iter);
+		
+		dbus_message_iter_get_basic(&iter, &name);
+		if (i < slot_count-1)
+		{
+			dbus_message_iter_next(&iter);
+		}
+		
+		if (board_on_mask & (0x1<<i))
+		{
+			
+			if (board_state <= 1)
+			{
+				//vty_out(vty, "slot %d:not work normal\n", i+1);
+				continue;
+			}
+			if((i+1) == slot_id){
+				return 2;
+			}
+			/*
+			vty_out(vty, "slot %d:\n", i+1);
+			vty_out(vty, "\tBOARD_CODE:\t\t0x%x\n", board_code);
+			vty_out(vty, "\tFUNCTION_TYPE:\t\t0x%x\n", function_type);
+			vty_out(vty, "\tIS_MASTER:\t\t%s\n", is_master ? "YES" : "NO");
+			vty_out(vty, "\tIS_ACTIVE_MASTER:\t%s\n", is_active_master ? "YES" : "NO");
+			vty_out(vty, "\tBOARD_NAME:\t\t%s\n", name);
+			*/
+		}
+		else
+		{
+			//vty_out(vty, "slot %d is empty\n", i+1);
+		}
+	}
+	dbus_message_unref(reply);
+	return CMD_SUCCESS;
+}
+
+int
 	dcli_dhcp_check_ve_interface
 
 (	
@@ -2831,8 +2940,17 @@ int
 {
 	DBusMessage *query = NULL, *reply = NULL;
 	DBusError err;
+	int ret = 0;
 	unsigned int slot_id = HostSlotId;
 	slot_id = get_slot_id_by_ifname(ifname);
+	ret = check_slot_wheather_empty(slot_id);
+	if(slot_id < 1 || slot_id > 17){
+		return CMD_FAILURE;
+	}
+	if(2 != ret){
+		printf("slot id is empty\n");
+		return CMD_FAILURE;
+	}
 	DBusConnection *dcli_dbus_connection = NULL;
 	char *name=NULL;
 	ReInitDbusConnection(&dcli_dbus_connection, slot_id, distributFag);
@@ -2925,6 +3043,7 @@ DEFUN(set_interface_ip_pool_cmd_func,
 	
 	nameSize = strlen(vlan_eth_port_ifname);
 	memcpy(ifname, vlan_eth_port_ifname, nameSize);
+	if(strncmp(ifname, "ve", 2) == 0)
 	dcli_dhcp_check_ve_interface(ifname); 
 
 	/*
@@ -3034,6 +3153,7 @@ DEFUN(del_interface_ip_pool_cmd_func,
 	
 	nameSize = strlen(vlan_eth_port_ifname);
 	memcpy(ifname, vlan_eth_port_ifname, nameSize);
+	if(strncmp(ifname, "ve", 2) == 0)
 	dcli_dhcp_check_ve_interface(ifname); 
 
 	ret = dcli_set_interface_ip_pool(vty, poolName, ifname, CLR_INTERFACE_IP_POOL, INTERFACE_UNBIND_FLAG);
@@ -3361,7 +3481,11 @@ DEFUN(add_dhcp_static_host_cmd_func,
 	    dcli_dhcp_convert_ifname(vty, ifname);
 	
 	if(strncmp(ifname, "ve", 2) == 0)
-	    dcli_dhcp_check_ve_interface(ifname);
+	    ret = dcli_dhcp_check_ve_interface(ifname);
+	if(ret){
+		vty_out(vty, "slot id wrong!\n");
+		return CMD_WARNING;
+	}
 	
 	ret = dcli_add_dhcp_static_host(vty, ipAddr, macAddr, ifname, 1);
 	if(ret){
