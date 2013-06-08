@@ -1813,6 +1813,9 @@ dhcp_dbus_set_option
 			}
 			else {
 				if (del) {
+					if(strcmp(poolnode->owned_option.domainname ,owned_option->domainname)){
+						return DHCP_SERVER_RETURN_CODE_FAIL;
+					}
 					free(poolnode->owned_option.domainname);
 					poolnode->owned_option.domainname = NULL;
 				}
@@ -5997,7 +6000,7 @@ dhcp_dbus_set_server_domain_name
 					log_debug("same subnet set option43\n");
 					continue;
 				}
-				dhcp_dbus_set_option(addsubnet, &owned_option, del);
+				op_ret = dhcp_dbus_set_option(addsubnet, &owned_option, del);
 				pre_subnet = addsubnet;
 				addsubnet = addsubnet->next;
 			}

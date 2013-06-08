@@ -3500,6 +3500,10 @@ dcli_set_server_domain_name
 			vty_out (vty, "Not found the pool\n");
 			dbus_message_unref(reply);
 			return CMD_SUCCESS;
+		}else if(DHCP_SERVER_RETURN_CODE_FAIL == op_ret){
+			vty_out (vty, "domain name wrong!\n");
+			dbus_message_unref(reply);
+			return CMD_SUCCESS;
 		}
 	} 
 	else {
