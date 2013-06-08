@@ -921,21 +921,41 @@ static void handle_data(struct asd_data *wasd, u8 *buf, size_t len,
 		asd_printf(ASD_80211,MSG_DEBUG,"No ethertype in data frame\n");
 		return;
 	}
-
+	//Qc add 
+	unsigned char SID = wasd->SecurityID;
+	unsigned int securitytype = 0;
+	unsigned int extensible_auth = 0;
+	if(ASD_SECURITY[SID]){
+		securitytype = ASD_SECURITY[SID]->securityType;
+		extensible_auth = ASD_SECURITY[SID]->extensible_auth;
+	}
+	//end
 	ethertype = WPA_GET_BE16(pos);
 	pos += 2;
 	left -= 2;
 	switch (ethertype) {
 	case ETH_P_PAE:
+		if(!((securitytype == IEEE8021X)||(securitytype == WPA_E)||(securitytype == WPA2_E)||(securitytype == MD5)||(securitytype == WAPI_AUTH)||(extensible_auth == 1))){
+			syslog(LOG_WARNING|LOG_LOCAL7,"BSS "MACSTR" receive wrong EAP Package! Sta "MACSTR" securitytype %d\n",MAC2STR(wasd->own_addr),MAC2STR(sa),securitytype);
+		}
 		ieee802_1x_receive(wasd, sa, pos, left);
 		break;
 	case ETH_P_PREAUTH:
+		if(!((securitytype == IEEE8021X)||(securitytype == WPA_E)||(securitytype == WPA2_E)||(securitytype == MD5)||(securitytype == WAPI_AUTH)||(extensible_auth == 1))){
+			syslog(LOG_WARNING|LOG_LOCAL7,"BSS "MACSTR" receive wrong EAP Package! Sta "MACSTR" securitytype %d\n",MAC2STR(wasd->own_addr),MAC2STR(sa),securitytype);
+		}
 		asd_printf(ASD_80211,MSG_DEBUG,"\n ETH_P_PREAUTH \n");
 		rsn_preauth_receive_thinap(wasd, hdr->addr2, hdr->addr3, pos, left);
 		break;
-	case ETH_P_WAPI:		
+	case ETH_P_WAPI:	
+		if(securitytype != WAPI_AUTH || securitytype != WAPI_PSK){
+			syslog(LOG_WARNING|LOG_LOCAL7,"BSS "MACSTR" receive wrong EAP Package! Sta "MACSTR" securitytype %d\n",MAC2STR(wasd->own_addr),MAC2STR(sa),securitytype);
+		}
 		asd_printf(ASD_80211,MSG_DEBUG,"\n ETH_P_WAPI \n");
-		wapi_process_from_sta(pos, left, sa, wasd->wapi_wasd->vap_user->wapid);
+		if(wasd->wapi_wasd && wasd->wapi_wasd->vap_user)
+			wapi_process_from_sta(pos, left, sa, wasd->wapi_wasd->vap_user->wapid);
+		else
+			asd_printf(ASD_80211,MSG_DEBUG,"\n ETH_P_WAPI WRONG!\n");
 		break;
 	default:
 		asd_printf(ASD_80211,MSG_DEBUG,"Unknown ethertype 0x%04x in data frame\n", ethertype);
