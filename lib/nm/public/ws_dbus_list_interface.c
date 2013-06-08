@@ -134,6 +134,7 @@ static snmpd_dbus_message *new_dbus_message(dbus_parameter parameter,
     }
     else if (SNMPD_CONNECTION_ERROR == ret) {
         close_slot_dbus_connection(parameter.slot_id);
+		//syslog(LOG_INFO,"####close_slot_dbus_connection slot %d####\n",parameter.slot_id);
     } 
     
     return NULL;

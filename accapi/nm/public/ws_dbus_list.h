@@ -27,6 +27,7 @@ typedef struct netsnmp_dbus_connection_s {
 	unsigned int master_instance_count[VRRP_TYPE_NUM];
 	unsigned int master_instance[VRRP_TYPE_NUM][INSTANCE_NUM + 1];
 	int instance_state[VRRP_TYPE_NUM][INSTANCE_NUM + 1];
+	unsigned int connet_times;
 } netsnmp_dbus_connection;
 
 typedef struct dbus_connection_list_s {

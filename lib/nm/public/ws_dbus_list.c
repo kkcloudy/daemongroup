@@ -9,6 +9,8 @@
 #include "ws_snmpd_manual.h"
 #include "ac_manage_interface.h"
 
+#define TRY_TO_CON_NUM 3	/*³¢ÊÔdbus_get_tipc_connection´ÎÊý*/
+
 int distributed_flag = 0;
 dbus_connection_list snmpd_dbus_connection_list = { 0 };
 unsigned int snmp_collection_mode = 0;
@@ -390,6 +392,8 @@ int snmpd_dbus_connection_list_init(void)
 
             memcpy(&temp_dbus_connection->bInfo, info, sizeof(struct board_info));
 
+			temp_dbus_connection->connet_times = 0;
+
             list_add(list_pos(temp_dbus_connection), &snmpd_dbus_list_head);            
             free(info);
     	}
@@ -641,9 +645,11 @@ void tipc_dbus_connection_maintenance(void)
 	    list_for_each(pos, &snmpd_dbus_list_head)
         {
             netsnmp_dbus_connection *snmpd_dbus_node = dbus_node(pos);
-            if(NULL == snmpd_dbus_node->connection)
+            if((NULL == snmpd_dbus_node->connection)&&(snmpd_dbus_node->connet_times < TRY_TO_CON_NUM))
             {
                 snmpd_dbus_node->connection = dbus_get_tipc_connection(snmpd_dbus_node->slot_id);
+				snmpd_dbus_node->connet_times += 1;				
+				//syslog(LOG_INFO,"####dbus_get_tipc_connection slot=%d connet_times=%d####\n",snmpd_dbus_node->slot_id,snmpd_dbus_node->connet_times);
             }
         }
         #endif
