@@ -338,7 +338,7 @@ void dhcpdiscover (packet, ms_nulltp)
 	/* %Audit% This is log output. %2004.06.17,Safe%
 	 * If we truncate we hope the user can get a hint from the log.
 	 */
-	snprintf (msgbuf, sizeof msgbuf, "DHCPDISCOVER from %s %s%s%svia %s",
+	snprintf (msgbuf, sizeof msgbuf, "DhcpDiscover__UserMac: %s %s%s%s,InterfaceIp: %s",
 		 (packet -> raw -> htype
 		  ? print_hw_addr (packet -> raw -> htype,
 				   packet -> raw -> hlen,
@@ -580,7 +580,7 @@ void dhcprequest (packet, ms_nulltp, ip_lease)
 	 * If we truncate we hope the user can get a hint from the log.
 	 */
 	snprintf (msgbuf, sizeof msgbuf,
-		 "DHCPREQUEST for %s%s from %s %s%s%svia %s",
+		 "DhcpRequest__UserIp: %s%s ,UserMac: %s %s%s%s,InterfaceIp: %s",
 		 piaddr (cip), smbuf,
 		 (packet -> raw -> htype
 		  ? print_hw_addr (packet -> raw -> htype,
@@ -895,7 +895,7 @@ void dhcprelease (packet, ms_nulltp)
 	 * If we truncate we hope the user can get a hint from the log.
 	 */
 	snprintf (msgbuf, sizeof msgbuf,
-		 "DHCPRELEASE of %s from %s %s%s%svia %s (%sfound)",
+		 "DhcpRelease__UserIp: %s ,UserMac: %s %s%s%s,InterfaceIp: %s ,Result: (%sfound)",
 		 cstr,
 		 (packet -> raw -> htype
 		  ? print_hw_addr (packet -> raw -> htype,
@@ -995,7 +995,7 @@ void dhcpdecline (packet, ms_nulltp)
 	 * If we truncate we hope the user can get a hint from the log.
 	 */
 	snprintf (msgbuf, sizeof msgbuf,
-		 "DHCPDECLINE of %s from %s %s%s%svia %s",
+		 "DhcpDecline__UserIp: %s,UserMac:%s %s%s%s,InterfaceIp:%s",
 		 piaddr (cip),
 		 (packet -> raw -> htype
 		  ? print_hw_addr (packet -> raw -> htype,
@@ -1533,7 +1533,7 @@ void nak_lease (packet, cip)
 	raw.op = BOOTREPLY;
 
 	/* Report what we're sending... */
-	log_info ("DHCPNAK on %s to %s via %s",
+	log_info ("DhcpNak__UserIp: %s ,UserMac: %s ,InterfaceIp: %s",
 	      piaddr (*cip),
 	      print_hw_addr (packet -> raw -> htype,
 			     packet -> raw -> hlen,
@@ -2484,9 +2484,10 @@ void ack_lease (packet, lease, offer, when, msg, ms_nulltp, hp)
 
 		/* Don't make lease active until we actually get a
 		   DHCPREQUEST. */
-		if (offer == DHCPACK)
-			lt -> next_binding_state = FTS_ACTIVE;
-		else
+		if (offer == DHCPACK){
+			lt -> next_binding_state = FTS_ACTIVE;	
+			log_debug("Offer Ip lease time %d\n",(int)lease_time);
+		}else
 			lt -> next_binding_state = lease -> binding_state;
 	} else {
 		lt->flags |= BOOTP_LEASE;
@@ -3115,6 +3116,7 @@ void dhcp_reply (lease)
 	struct sockaddr_in to;
 	struct in_addr from;
 	struct hardware hto;
+	struct subnet *subnet;
 	int result;
 	struct lease_state *state = lease -> state;
 	int nulltp, bootpp, unicastp = 1;
@@ -3222,11 +3224,14 @@ void dhcp_reply (lease)
 		log_debug("dhcp server send offer total times %d\n", offer_times);
 	}
 #endif
-
+	subnet = (struct subnet *)0;
+	if (find_subnet (&subnet, lease -> ip_addr, MDL)) {
+		log_debug ("Allocate Ip is %s Subnet Mask is %s\n", piaddr (lease -> ip_addr) ,subnet->shared_network->name);
+	}
 	/* Say what we're doing... */
-	log_debug("%s on %s to %s %s%s%svia %s",
+	log_debug("%s %s ,UserMac: %s %s%s%s,InterfaceIp: %s",
 		  (state -> offer
-		   ? (state -> offer == DHCPACK ? "DHCPACK" : "DHCPOFFER")
+		   ? (state -> offer == DHCPACK ? "DhcpAck__UserIp:" : "DhcpOffer__UserIp:")
 		   : "BOOTREPLY"),
 		  piaddr (lease -> ip_addr),
 		  (lease -> hardware_addr.hlen
@@ -3402,7 +3407,8 @@ int find_lease (struct lease **lp,
 			}
 		}
 	}
-
+	
+	log_debug ("Client Ip Address is %s\n", inet_ntoa(packet -> raw -> ciaddr));
 	if (packet -> raw -> ciaddr.s_addr) {
 		cip.len = 4;
 		memcpy (cip.iabuf, &packet -> raw -> ciaddr, 4);

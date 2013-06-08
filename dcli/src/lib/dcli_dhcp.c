@@ -3596,7 +3596,7 @@ DEFUN(ip_dhcp_server_domain_name_cmd_func,
 
 DEFUN(no_ip_dhcp_server_domain_name_cmd_func,
 	no_ip_dhcp_server_domain_name_cmd,
-	"no ip dhcp server domain",
+	"no ip dhcp server domain NAME",
 	"Delete old Configuration\n"
 	"Ipv4 address of portal\n"
 	"Dynamic Host Configuration Protocol\n"
@@ -3620,7 +3620,6 @@ DEFUN(no_ip_dhcp_server_domain_name_cmd_func,
 		return CMD_WARNING;
 	}
 	memcpy(domainName, argv[0], nameSize);
-
 	/*mode 0 means global mode, 1 means pool mode */
 
 	if((CONFIG_NODE == vty->node) || (HANSI_NODE  == vty->node) || (LOCAL_HANSI_NODE  == vty->node)) {
