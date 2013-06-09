@@ -14105,11 +14105,11 @@ DBusMessage *asd_dbus_show_sta_v2(DBusConnection *conn, DBusMessage *msg, void *
 				dbus_message_iter_append_basic (&iter,
 													DBUS_TYPE_UINT32,
 													 &auth_type);	
+				asd_printf(ASD_DBUS,MSG_DEBUG,"flow_check = %d\n",ASD_WLAN[wlanid]->flow_check);
+				asd_printf(ASD_DBUS,MSG_DEBUG,"no_flow_time = %d\n",ASD_WLAN[wlanid]->no_flow_time);
+				asd_printf(ASD_DBUS,MSG_DEBUG,"limit_flow = %d\n",ASD_WLAN[wlanid]->limit_flow);
 			}
 			
-			asd_printf(ASD_DBUS,MSG_DEBUG,"flow_check = %d\n",ASD_WLAN[wlanid]->flow_check);
-			asd_printf(ASD_DBUS,MSG_DEBUG,"no_flow_time = %d\n",ASD_WLAN[wlanid]->no_flow_time);
-			asd_printf(ASD_DBUS,MSG_DEBUG,"limit_flow = %d\n",ASD_WLAN[wlanid]->limit_flow);
 
 
 		}else{
@@ -16360,7 +16360,7 @@ DBusMessage *asd_dbus_ac_add_mac_list(DBusConnection *conn, DBusMessage *msg, vo
 	mac = (unsigned char*)malloc(WID_MAC_LEN);
 	if(mac==NULL)
 	{
-		if(bss == NULL)
+		if(bss != NULL)
 		{
 			free(bss);
 			bss = NULL;
@@ -17653,6 +17653,10 @@ DBusMessage *asd_dbus_show_bss_bssindex(DBusConnection *conn, DBusMessage *msg, 
 		dbus_message_iter_append_basic (&iter,
 										 DBUS_TYPE_UINT32,
 										 &wasd->send_traffic_limit);
+	}
+	if(br_ifname){
+		free(br_ifname);
+		br_ifname = NULL;
 	}
 	return reply;
 }
@@ -20961,12 +20965,14 @@ DBusMessage *asd_dbus_show_security(DBusConnection *conn, DBusMessage *msg, void
 		if(ASD_SECURITY[SecurityID]->ac_radius_name != NULL){
 			ac_radius_name = os_zalloc(strlen(ASD_SECURITY[SecurityID]->ac_radius_name)+1);
 			if(ac_radius_name == NULL)
-				ac_radius_name = "000";
+				return NULL;
 			memset(ac_radius_name,0,strlen(ASD_SECURITY[SecurityID]->ac_radius_name)+1);
 			memcpy(ac_radius_name,ASD_SECURITY[SecurityID]->ac_radius_name,strlen(ASD_SECURITY[SecurityID]->ac_radius_name));
 		}
-		else
-			ac_radius_name = "000000";
+		else{
+			ac_radius_name = os_zalloc(7);
+			memcpy(ac_radius_name,"000000",6);
+		}
 		//end
 		reply = dbus_message_new_method_return(msg);
 		dbus_message_append_args(reply,
@@ -21034,8 +21040,10 @@ DBusMessage *asd_dbus_show_security(DBusConnection *conn, DBusMessage *msg, void
 									DBUS_TYPE_BYTE,&(ASD_SECURITY[SecurityID]->auth_server_current_use),
 									//end
 								 DBUS_TYPE_INVALID);
-
-				
+		if(ac_radius_name){
+			free(ac_radius_name);
+			ac_radius_name = NULL;
+		}
 	}
 	
 	if(strcmp(ASD_SECURITY[SecurityID]->SecurityKey, " ") == 0){

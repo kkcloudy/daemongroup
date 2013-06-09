@@ -2267,7 +2267,6 @@ void WLAN_OP(TableMsg *msg){
 
 				free_balance_info_all_in_wlan(msg->u.WLAN.WlanID);
 				wlan_free_stas(msg->u.WLAN.WlanID);            //weichao add
-				
 				circle_cancel_timeout(clear_prob_log_timer, ASD_WLAN[msg->u.WLAN.WlanID], NULL);
 				
 				if( ASD_WLAN[msg->u.WLAN.WlanID]->acl_conf != NULL){			//ht add
@@ -3241,7 +3240,7 @@ void BSS_OP(TableMsg *msg, struct wasd_interfaces *interfaces){
 						interfaces->iface[ASD_BSS[msg->u.BSS.BSSIndex]->Radio_G_ID]->num_bss--;
 						os_free(ASD_BSS[msg->u.BSS.BSSIndex]->BSSID);
 						ASD_BSS[msg->u.BSS.BSSIndex]->BSSID = NULL;
-						asd_printf(ASD_DEFAULT,MSG_DEBUG,"free(ASD_BSS[msg->u.BSS.BSSIndex]->BSSID) finish\n");
+						asd_printf(ASD_DEFAULT,MSG_DEBUG,"free(ASD_BSS[%d]->BSSID) finish\n",msg->u.BSS.BSSIndex);
 						ASD_BSS[msg->u.BSS.BSSIndex]->BSSIndex = 0;
 						ASD_BSS[msg->u.BSS.BSSIndex]->Radio_G_ID = 0;
 						ASD_BSS[msg->u.BSS.BSSIndex]->Radio_L_ID = 0;
@@ -3475,6 +3474,12 @@ void STA_OP(TableMsg *msg){
 							asd_syslog_h(LOG_INFO,"WSTA","PORTSEC_DOT1X_LOGOFF:-IfName=GRadio-BSS%d:%d-MACAddr="MACSTR"-VlanId=%d-UserName=%s-ErrCode=%d; Session of the 802.1X user was terminated.\n",bss[i]->Radio_G_ID,bss[i]->BSSIndex%128,MAC2STR(sta->addr),sta->vlan_id,identity,1);
 						}
 					}
+					u8 WTPMAC[6] = {0};
+					if(ASD_WTP_AP[bss[i]->Radio_G_ID/4])
+						memcpy(WTPMAC,ASD_WTP_AP[bss[i]->Radio_G_ID/4]->WTPMAC,6);
+					if(gASDLOGDEBUG & BIT(1))
+						syslog(LOG_INFO|LOG_LOCAL7, "DISASSOC:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d, ErrorCode:%d.\n",
+							MAC2STR(sta->addr),MAC2STR(WTPMAC),bss[i]->BSSIndex,999);//qiuchen 2013.01.14
 					//end
 					if(ASD_NOTICE_STA_INFO_TO_PORTAL)
 						AsdStaInfoToEAG(bss[i],sta,WID_DEL);
@@ -3709,7 +3714,7 @@ void STA_OP(TableMsg *msg){
 								SSID = ASD_WLAN[wasd->WlanID]->ESSID;
 							if(gASDLOGDEBUG & BIT(1) && !(sta->logflag&BIT(1))){
 								if((ASD_SECURITY[SID]) && (ASD_SECURITY[SID]->securityType == OPEN || ASD_SECURITY[SID]->securityType == SHARED) && (sta->flags & WLAN_STA_ASSOC)){
-									syslog(LOG_INFO|LOG_LOCAL3,"STA_ROAM_SUCCESS:UserMAC:"MACSTR" From AC(%lu.%lu.%lu.%lu)-AP%d-BSSID("MACSTR") To AC(%lu.%lu.%lu.%lu)-AP%d-BSSID("MACSTR").\n",
+									syslog(LOG_INFO|LOG_LOCAL7,"STA_ROAM_SUCCESS:UserMAC:"MACSTR" From AC(%lu.%lu.%lu.%lu)-AP%d-BSSID("MACSTR") To AC(%lu.%lu.%lu.%lu)-AP%d-BSSID("MACSTR").\n",
 										MAC2STR(sta->addr),((gASD_AC_MANAGEMENT_IP & 0xff000000) >> 24),((gASD_AC_MANAGEMENT_IP & 0xff0000) >> 16),((gASD_AC_MANAGEMENT_IP & 0xff00) >> 8),(gASD_AC_MANAGEMENT_IP & 0xff),
 										prewasd->Radio_G_ID/4,MAC2STR(prewasd->own_addr),((gASD_AC_MANAGEMENT_IP & 0xff000000) >> 24),((gASD_AC_MANAGEMENT_IP & 0xff0000) >> 16),((gASD_AC_MANAGEMENT_IP & 0xff00) >> 8),(gASD_AC_MANAGEMENT_IP & 0xff),
 										wasd->Radio_G_ID/4,MAC2STR(wasd->own_addr)
@@ -3717,7 +3722,7 @@ void STA_OP(TableMsg *msg){
 									sta->logflag = BIT(1);
 								}
 								else if((sta->flags & WLAN_STA_AUTHORIZED)){
-									syslog(LOG_INFO|LOG_LOCAL3,"STA_ROAM_SUCCESS:UserMAC:"MACSTR" From AC(%lu.%lu.%lu.%lu)-AP%d-BSSID("MACSTR") To AC(%lu.%lu.%lu.%lu)-AP%d-BSSID("MACSTR").\n",
+									syslog(LOG_INFO|LOG_LOCAL7,"STA_ROAM_SUCCESS:UserMAC:"MACSTR" From AC(%lu.%lu.%lu.%lu)-AP%d-BSSID("MACSTR") To AC(%lu.%lu.%lu.%lu)-AP%d-BSSID("MACSTR").\n",
 										MAC2STR(sta->addr),((gASD_AC_MANAGEMENT_IP & 0xff000000) >> 24),((gASD_AC_MANAGEMENT_IP & 0xff0000) >> 16),((gASD_AC_MANAGEMENT_IP & 0xff00) >> 8),(gASD_AC_MANAGEMENT_IP & 0xff),
 										prewasd->Radio_G_ID/4,MAC2STR(prewasd->own_addr),((gASD_AC_MANAGEMENT_IP & 0xff000000) >> 24),((gASD_AC_MANAGEMENT_IP & 0xff0000) >> 16),((gASD_AC_MANAGEMENT_IP & 0xff00) >> 8),(gASD_AC_MANAGEMENT_IP & 0xff),
 										wasd->Radio_G_ID/4,MAC2STR(wasd->own_addr)
@@ -3875,6 +3880,13 @@ void STA_OP(TableMsg *msg){
 					sta->acct_terminate_cause = RADIUS_ACCT_TERMINATE_CAUSE_IDLE_TIMEOUT;
 					SID = (unsigned char)bss[i]->SecurityID;
 					if((ASD_SECURITY[SID])&&((ASD_SECURITY[SID]->securityType == WPA_E)||(ASD_SECURITY[SID]->securityType == WPA2_E)||(ASD_SECURITY[SID]->securityType == WPA_P)||(ASD_SECURITY[SID]->securityType == WPA2_P)||(ASD_SECURITY[SID]->securityType == IEEE8021X)||(ASD_SECURITY[SID]->securityType == MD5)||(ASD_SECURITY[SID]->extensible_auth == 1))){
+						//Qiuchen add it for AXSSZFI-1732
+						if(ASD_SECURITY[SID]->securityType == WPA2_E){
+							pmk_sta = pmk_ap_get_sta(ASD_WLAN[wasd->WlanID],sta->addr);
+							if(pmk_sta)
+								pmk_ap_free_sta(ASD_WLAN[wasd->WlanID],pmk_sta);
+						}
+						//end
 						wpa_auth_sm_event(sta->wpa_sm, WPA_DEAUTH);
 						mlme_deauthenticate_indication(
 						bss[i], sta, 0);
@@ -3882,6 +3894,25 @@ void STA_OP(TableMsg *msg){
 					}
 					if(ASD_NOTICE_STA_INFO_TO_PORTAL)
 						AsdStaInfoToEAG(bss[i],sta,WID_DEL);
+					char *SSID = NULL;
+					u8 *identity = NULL;
+					if(sta->eapol_sm)
+						identity = sta->eapol_sm->identity;
+					if(ASD_WLAN[bss[i]->WlanID])
+						SSID = ASD_WLAN[bss[i]->WlanID]->ESSID;
+					if(gASDLOGDEBUG & BIT(0)){
+						if((ASD_SECURITY[SID])&& (ASD_SECURITY[SID]->securityType == OPEN || ASD_SECURITY[SID]->securityType == SHARED))
+							asd_syslog_h(LOG_INFO,"WSTA","WMAC_CLIENT_GOES_OFFLINE:Client "MAC_ADDRESS" disconnected from WLAN %s. Reason Code is %d.\n",MAC2STR(sta->addr),SSID,9);
+						else if((ASD_SECURITY[SID]->securityType == IEEE8021X)||(ASD_SECURITY[SID]->securityType == WPA_E)||(ASD_SECURITY[SID]->securityType == WPA2_E)||(ASD_SECURITY[SID]->securityType == MD5)||((ASD_SECURITY[SID]->securityType == WAPI_AUTH) && (ASD_SECURITY[SID]->wapi_radius_auth == 1))||(ASD_SECURITY[SID]->extensible_auth == 1)){
+							asd_syslog_h(LOG_INFO,"WSTA","PORTSEC_DOT1X_LOGOFF:-IfName=GRadio-BSS%d:%d-MACAddr="MACSTR"-VlanId=%d-UserName=%s-ErrCode=%d; Session of the 802.1X user was terminated.\n",bss[i]->Radio_G_ID,bss[i]->BSSIndex%128,MAC2STR(sta->addr),sta->vlan_id,identity,1);
+						}
+					}
+					u8 WTPMAC[6] = {0};
+					if(ASD_WTP_AP[bss[i]->Radio_G_ID/4])
+						memcpy(WTPMAC,ASD_WTP_AP[bss[i]->Radio_G_ID/4]->WTPMAC,6);
+					if(gASDLOGDEBUG & BIT(1))
+						syslog(LOG_INFO|LOG_LOCAL7, "DISASSOC:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d, ErrorCode:%d.\n",
+							MAC2STR(sta->addr),MAC2STR(WTPMAC),bss[i]->BSSIndex,999);//qiuchen 2013.01.14
 					if(ASD_WLAN[bss[i]->WlanID]!=NULL&&ASD_WLAN[bss[i]->WlanID]->balance_switch == 1&&ASD_WLAN[bss[i]->WlanID]->balance_method==1){
 						ap_free_sta(bss[i], sta, 1);
 					}
@@ -3902,19 +3933,6 @@ void STA_OP(TableMsg *msg){
 							perror("send(wASDSocket)");
 						}
 						
-					}
-					char *SSID = NULL;
-					u8 *identity = NULL;
-					if(sta->eapol_sm)
-						identity = sta->eapol_sm->identity;
-					if(ASD_WLAN[bss[i]->WlanID])
-						SSID = ASD_WLAN[bss[i]->WlanID]->ESSID;
-					if(gASDLOGDEBUG & BIT(0)){
-						if((ASD_SECURITY[SID])&& (ASD_SECURITY[SID]->securityType == OPEN || ASD_SECURITY[SID]->securityType == SHARED))
-							asd_syslog_h(LOG_INFO,"WSTA","WMAC_CLIENT_GOES_OFFLINE:Client "MAC_ADDRESS" disconnected from WLAN %s. Reason Code is %d.\n",MAC2STR(sta->addr),SSID,9);
-						else if((ASD_SECURITY[SID]->securityType == IEEE8021X)||(ASD_SECURITY[SID]->securityType == WPA_E)||(ASD_SECURITY[SID]->securityType == WPA2_E)||(ASD_SECURITY[SID]->securityType == MD5)||((ASD_SECURITY[SID]->securityType == WAPI_AUTH) && (ASD_SECURITY[SID]->wapi_radius_auth == 1))||(ASD_SECURITY[SID]->extensible_auth == 1)){
-							asd_syslog_h(LOG_INFO,"WSTA","PORTSEC_DOT1X_LOGOFF:-IfName=GRadio-BSS%d:%d-MACAddr="MACSTR"-VlanId=%d-UserName=%s-ErrCode=%d; Session of the 802.1X user was terminated.\n",bss[i]->Radio_G_ID,bss[i]->BSSIndex%128,MAC2STR(sta->addr),sta->vlan_id,identity,1);
-						}
 					}
 				}
 #ifdef ASD_USE_PERBSS_LOCK
@@ -3959,7 +3977,7 @@ void STA_OP(TableMsg *msg){
 							//qiuchen
 							if(gASDLOGDEBUG & BIT(1)){
 								unsigned char *ipold = (unsigned char *)&(sta->ipaddr);
-								syslog(LOG_INFO|LOG_LOCAL3, "STA_IP_UPDATE:UserMAC:" MACSTR "OLD_IP:%d.%d.%d.%d NEW_IP:%d.%d.%d.%d\n",
+								syslog(LOG_INFO|LOG_LOCAL7, "STA_IP_UPDATE:UserMAC:" MACSTR "OLD_IP:%d.%d.%d.%d NEW_IP:%d.%d.%d.%d\n",
 									MAC2STR(sta->addr),ipold[0],ipold[1],ipold[2],ipold[3],ip[0],ip[1],ip[2],ip[3]);//qiuchen 2013.01.14
 							}
 					}
@@ -3967,7 +3985,7 @@ void STA_OP(TableMsg *msg){
 						//qiuchen
 						time_t at = time(NULL);
 						if(gASDLOGDEBUG & BIT(1))
-							syslog(LOG_INFO|LOG_LOCAL3, "STA_GET_ONLINE:UserMAC:" MACSTR "IP:%d.%d.%d.%d TIME:%s\n",
+							syslog(LOG_INFO|LOG_LOCAL7, "STA_GET_ONLINE:UserMAC:" MACSTR "IP:%d.%d.%d.%d TIME:%s\n",
 								MAC2STR(sta->addr),ip[0],ip[1],ip[2],ip[3],ctime(&at));//qiuchen 2013.01.14
 					}
 					sta->ip_addr.s_addr = msg->u.STA.ipv4Address;
@@ -4161,6 +4179,12 @@ void STA_OP(TableMsg *msg){
 									asd_syslog_h(LOG_INFO,"WSTA","PORTSEC_DOT1X_LOGOFF:-IfName=GRadio-BSS%d:%d-MACAddr="MACSTR"-VlanId=%d-UserName=%s-ErrCode=%d; Session of the 802.1X user was terminated.\n",wasd->Radio_G_ID,wasd->BSSIndex%128,MAC2STR(sta->addr),sta->vlan_id,identity,1);
 								}
 							}
+							u8 WTPMAC[6] = {0};
+							if(ASD_WTP_AP[wasd->Radio_G_ID/4])
+								memcpy(WTPMAC,ASD_WTP_AP[wasd->Radio_G_ID/4]->WTPMAC,6);
+							if(gASDLOGDEBUG & BIT(1))
+								syslog(LOG_INFO|LOG_LOCAL7, "DISASSOC:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d, ErrorCode:%d.\n",
+									MAC2STR(sta->addr),MAC2STR(WTPMAC),wasd->BSSIndex,(reason == AP_STA_DEAUTH || reason == AP_STA_DISASSOC)?0:999);//qiuchen 2013.01.14
 							asd_printf(ASD_LEAVE,MSG_DEBUG,"sta:"MACSTR"leave reason is %d\n",MAC2STR(sta->addr),reason);
 							asd_printf(ASD_LEAVE,MSG_DEBUG,"sta:"MACSTR"leave sub_reason is %d\n",MAC2STR(sta->addr),sub_reason);
 							if((reason != AP_STA_DEAUTH)&&(reason != AP_STA_DISASSOC)){//qiuchen 
@@ -4232,6 +4256,12 @@ void STA_OP(TableMsg *msg){
 					sta = ap_get_sta(wasd,msg->u.STAINFO[i].STAMAC);
 					if(sta)
 					{						
+						u8 WTPMAC[6] = {0};
+						if(ASD_WTP_AP[wasd->Radio_G_ID/4])
+							memcpy(WTPMAC,ASD_WTP_AP[wasd->Radio_G_ID/4]->WTPMAC,6);
+						if(gASDLOGDEBUG & BIT(1))
+							syslog(LOG_INFO|LOG_LOCAL7, "DISASSOC:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d, ErrorCode:%d.\n",
+								MAC2STR(sta->addr),MAC2STR(WTPMAC),wasd->BSSIndex,999);//qiuchen 2013.01.14
 						wasd->abnormal_st_down_num ++;			
 						signal_sta_leave_abnormal(sta->addr,wasd->Radio_G_ID,wasd->BSSIndex,wasd->WlanID,sta->rssi);
 						if(1 == check_sta_authorized(wasd,sta))
@@ -5174,6 +5204,12 @@ void CMD_STA_OP(ASDCmdMsg *msg){
 						bss[i], sta, 0);
 						ieee802_1x_notify_port_enabled(sta->eapol_sm, 0);
 					}
+					char *SSID = NULL;
+					if(ASD_WLAN[bss[i]->WlanID])
+						SSID = ASD_WLAN[bss[i]->WlanID]->ESSID;
+					if(gASDLOGDEBUG & BIT(0)){
+						asd_syslog_h(LOG_INFO,"WSTA","WMAC_CLIENT_GOES_OFFLINE:Client "MAC_ADDRESS" disconnected from WLAN %s. Reason Code is %d.\n",MAC2STR(sta->addr),SSID,255);//idletime out
+					}
 					if(ASD_NOTICE_STA_INFO_TO_PORTAL)
 						AsdStaInfoToEAG(bss[i],sta,WID_DEL);
 					if(ASD_WLAN[bss[i]->WlanID]!=NULL&&ASD_WLAN[bss[i]->WlanID]->balance_switch == 1&&ASD_WLAN[bss[i]->WlanID]->balance_method==1){
@@ -5196,12 +5232,6 @@ void CMD_STA_OP(ASDCmdMsg *msg){
 							perror("send(wASDSocket)");
 							asd_printf(ASD_DBUS,MSG_DEBUG,"222222222\n");
 						}
-					}
-					char *SSID = NULL;
-					if(ASD_WLAN[bss[i]->WlanID])
-						SSID = ASD_WLAN[bss[i]->WlanID]->ESSID;
-					if(gASDLOGDEBUG & BIT(0)){
-						asd_syslog_h(LOG_INFO,"WSTA","WMAC_CLIENT_GOES_OFFLINE:Client "MAC_ADDRESS" disconnected from WLAN %s. Reason Code is %d.\n",MAC2STR(sta->addr),SSID,255);//idletime out
 					}
 				}		
 			}

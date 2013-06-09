@@ -2639,8 +2639,10 @@ void  asd_wlan_radius_free(unsigned int wlanid)
 	asd_printf(ASD_DEFAULT,MSG_DEBUG,"in func:%s\n",__func__);
 	if(!ASD_WLAN[wlanid])
 		return;
-	if(ASD_WLAN[wlanid]->radius)
+	if(ASD_WLAN[wlanid]->radius){
 		radius_client_deinit(ASD_WLAN[wlanid]->radius);
+		ASD_WLAN[wlanid]->radius = NULL;
+	}
 	asd_printf(ASD_DEFAULT,MSG_DEBUG,"radius deinit over!\n");
 	
 	if(ASD_WLAN[wlanid]->radius_server)
@@ -3320,6 +3322,7 @@ void ieee802_1x_encapsulate_dm_radius(struct radius_coa_info *coa_info)
 	//has no return because of the msg need to free;
 fail:
 	radius_msg_free(msg);
+	os_free(msg);
 	msg = NULL;
 	return;
 

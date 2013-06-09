@@ -143,8 +143,6 @@ static struct wpabuf * eap_psk_build_3(struct eap_sm *sm,
 	os_memcpy(buf + data->id_s_len, data->rand_p, EAP_PSK_RAND_LEN);
 	if (omac1_aes_128(data->ak, buf, buflen, psk->mac_s))
 		goto fail;
-	os_free(buf);
-
 	if (eap_psk_derive_keys(data->kdk, data->rand_p, data->tek, data->msk,
 				data->emsk))
 		goto fail;
@@ -166,14 +164,18 @@ static struct wpabuf * eap_psk_build_3(struct eap_sm *sm,
 	wpa_hexdump(MSG_DEBUG, "EAP-PSK: PCHANNEL (encrypted)",
 		    pchannel, 4 + 16 + 1);
 
+	os_free(buf);
+	buf = NULL;
 	return req;
 
 fail:
 	wpabuf_free(req);
 	data->state = FAILURE;
 	//qiuchen
-	if(buf)
+	if(buf){
 		os_free(buf);
+		buf = NULL;
+	}
 	return NULL;
 }
 

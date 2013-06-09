@@ -81,7 +81,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "include/raw_socket.h"
 #include "se_agent/se_agent_def.h" // for fastfwd
 #include "ASDEAPAuth.h"
-
+#include "ASDPMKSta.h"
 int ASD_NOTICE_STA_INFO_TO_PORTAL_TIMER=10;
 
 unsigned char	asd_get_sta_info_able = 0;
@@ -544,7 +544,6 @@ void wlan_free_stas(unsigned char wlanid)
 	ASD_WLAN[wlanid]->a_num_sta = 0;
 	return ;
 }
-
 /*ht add for ASD_STATIC_STA_TABLE,100114*/
 struct sta_static_info *asd_get_static_sta(const u8 *sta)
 {
@@ -1303,14 +1302,23 @@ void ap_free_sta(struct asd_data *wasd, struct sta_info *sta, unsigned int state
 void asd_free_stas(struct asd_data *wasd)
 {
 	struct sta_info *sta, *prev;
-
+	struct PMK_STAINFO *pmk_sta = NULL;
+	if(wasd == NULL)
+		return;
 	sta = wasd->sta_list;
-
+	unsigned char SID = wasd->SecurityID;
 	while (sta) {
 		prev = sta;
 		if (sta->flags & WLAN_STA_AUTH) {
 			mlme_deauthenticate_indication(
 				wasd, sta, WLAN_REASON_UNSPECIFIED);
+			//Qiuchen add it for AXSSZFI-1732
+			if(ASD_SECURITY[SID] && ASD_SECURITY[SID]->securityType == WPA2_E){
+				pmk_sta = pmk_ap_get_sta(ASD_WLAN[wasd->WlanID],sta->addr);
+				if(pmk_sta)
+					pmk_ap_free_sta(ASD_WLAN[wasd->WlanID],pmk_sta);
+			}
+			//end
 		}
 		sta = sta->next;
 		asd_printf(ASD_DEFAULT,MSG_DEBUG, "Removing station " MACSTR,
@@ -2096,6 +2104,9 @@ struct sta_info * ap_sta_add(struct asd_data *wasd, const u8 *addr, int both)
 				   wasd->num_sta, wasd->conf->max_num_sta);
 			return NULL;
 		}
+		SID = wasd->SecurityID;
+		if(ASD_SECURITY[SID] == NULL)
+			return NULL;
 
 		sta = os_zalloc(sizeof(struct sta_info));
 		if (sta == NULL) {
@@ -2103,9 +2114,6 @@ struct sta_info * ap_sta_add(struct asd_data *wasd, const u8 *addr, int both)
 			return NULL;
 		}	
 		
-		SID = wasd->SecurityID;
-		if(ASD_SECURITY[SID] == NULL)
-			return NULL;
 		sta->security_type = ASD_SECURITY[SID]->securityType;
 		if(ASD_SECURITY[SID]->hybrid_auth == 1)
 		{	

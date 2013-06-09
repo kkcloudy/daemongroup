@@ -583,6 +583,7 @@ static void radius_client_list_add(struct radius_client_info *client_info,
 	if(send_info == NULL)
 	{
 		asd_printf(ASD_DEFAULT,MSG_CRIT,"send_info malloc error!\n");
+		os_free(entry);
 		return;
 	}
 	memset(send_info,0,sizeof(struct radius_send_info));

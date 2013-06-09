@@ -264,8 +264,15 @@ int do_one_request(struct nlmsghdr *n)
 					
 					if(ASD_WLAN[stainfo->bss->WlanID])
 						SID = (unsigned char)ASD_WLAN[stainfo->bss->WlanID]->SecurityID;
-					if(ASD_SECURITY[SID] == NULL)
+					if(ASD_SECURITY[SID] == NULL){
+						if(stainfo){
+							stainfo->bss = NULL;
+							stainfo->sta = NULL;
+							free(stainfo);
+							stainfo = NULL;
+						}	
 						return 0;
+					}
 					if(stainfo->sta->ipaddr != 0){
 						if((stainfo->sta->security_type == NO_NEED_AUTH)||(HYBRID_AUTH_EAPOL_SUCCESS(stainfo->sta))){
 							if(asd_ipset_switch)

@@ -2592,30 +2592,34 @@ void asd_ip_secret_del(u32 ip)
 {
 	
 	struct asd_ip_secret *s = NULL;
+	struct asd_ip_secret *tmp = NULL;
 	s = ASD_SECRET_HASH[SECRET_IP_HASH(ip)];
 	if (s == NULL) return;
 	if (s->ip == ip) {
 		asd_printf(ASD_DEFAULT,MSG_DEBUG,"ok!ip%d\n",ip);
+		tmp = s;
 		ASD_SECRET_HASH[SECRET_IP_HASH(ip)] = s->next;
 		goto out;	
 	}
 
 	while (s->next != NULL &&s->next->ip == ip)
 		s = s->next;
-	if (s->next != NULL)
+	if (s->next != NULL){
+		tmp = s->next;
 		s->next = s->next->next;
+	}
 	else
 	{
 		asd_printf(ASD_DEFAULT,MSG_ERROR, "asd_ip_secret: could not remove IP %d\n",ip);
 		return;
 	}
 out:
-	if(s)
+	if(tmp)
 	{
-		s->next = NULL;
-		s->shared_secret = NULL;
-		free(s);
-		s = NULL;
+		tmp->next = NULL;
+		tmp->shared_secret = NULL;
+		free(tmp);
+		tmp = NULL;
 	}
 	return;
 }

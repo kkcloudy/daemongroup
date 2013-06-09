@@ -49,8 +49,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 extern char is_secondary;//nl add 091208
 extern char asd_sta_idle_time_switch;
 extern int asd_sta_idle_time;
-
-
+unsigned int ACCT_SESSION_ID_HI = 0;
+unsigned int ACCT_SESSION_ID_LO = 0;
 /* Default interval in seconds for polling TX/RX octets from the driver if
  * STA is not using interim accounting. This detects wrap arounds for
  * input/output octets and updates Acct-{Input,Output}-Gigawords. */
@@ -72,6 +72,8 @@ static struct radius_msg * accounting_msg(struct asd_data *wasd,
 	int i;
 	unsigned int wtpid = 0;
 	unsigned char SID = wasd->SecurityID;	
+	if(sta == NULL)
+		return NULL;
 	struct eapol_state_machine *sm = sta->eapol_sm;
 	if(!sm ||!sm->wasd )
 		return NULL;
@@ -585,11 +587,11 @@ void accounting_sta_stop(struct asd_data *wasd, struct sta_info *sta)
 
 void accounting_get_session_id(struct radius_client_info *client_info, struct sta_info *sta)
 {
-	sta->acct_session_id_lo = client_info->acct_session_id_lo++;
-	if (client_info->acct_session_id_lo == 0) {
-		client_info->acct_session_id_hi++;
+	sta->acct_session_id_lo = ACCT_SESSION_ID_LO++;
+	if (ACCT_SESSION_ID_LO == 0) {
+		ACCT_SESSION_ID_HI++;
 	}
-	sta->acct_session_id_hi = client_info->acct_session_id_hi;
+	sta->acct_session_id_hi = ACCT_SESSION_ID_HI;
 }
 void accounting_sta_get_id(struct asd_data *wasd, struct sta_info *sta)
 {
