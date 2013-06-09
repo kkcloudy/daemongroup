@@ -1234,21 +1234,19 @@ get_master_instance_para(instance_parameter **paraHead)
 
 	int ret = 0;
 	struct Hmd_Board_Info_show *instance_head = NULL;
-	ret = show_broad_instance_info(ac_sample_dbus_get_connection(), &instance_head);
+	ret = show_broad_instance_info(ac_sample_dbus_get_active_connection(), &instance_head);
 	syslog(LOG_DEBUG, "get_master_instance_para: after show_broad_instance_info, ret = %d\n", ret);
 	if (1 == ret && instance_head) {
-
 		struct Hmd_Board_Info_show *instance_node = NULL;
 		for (instance_node = instance_head->hmd_board_list; NULL != instance_node; instance_node = instance_node->next) {
-			if(instance_node->slot_no != local_slotID) {
-				syslog(LOG_DEBUG, "get_master_instance_para: init slot %d connection error\n", instance_node->slot_no);
-				continue;
-			}
-
 			unsigned int instance_state = 0;
 			int manual_ret = AC_MANAGE_SUCCESS;
 
-			manual_ret = ac_manage_show_snmp_manual_instance(ac_sample_dbus_get_connection(), &instance_state);
+			if (local_slotID == instance_node->slot_no) {
+				manual_ret = ac_manage_show_snmp_manual_instance(ac_sample_dbus_get_connection(), &instance_state); 
+			} else {
+				manual_ret = ac_manage_show_snmp_manual_instance(ac_sample_dbus_get_slotconnection(instance_node->slot_no), &instance_state);
+			}
 			syslog(LOG_DEBUG,"get_all_portal_conf: after show slot %d manual set instance state: manual_ret = %d, instance_state = %d\n",
 			       instance_node->slot_no, manual_ret, instance_state);
 
@@ -1378,17 +1376,23 @@ int create_config_data_2 ( multi_sample_t *multi_sample, struct list_head *head,
 	return AS_RTN_OK;
 }
 
-int create_config_data_3( multi_sample_t *multi_sample, struct list_head *head, unsigned int match_word, void *subuser_data)
+
+//add only for portal and radius. filter as ip and save hansi info
+int create_config_data_3( multi_sample_t *multi_sample, struct list_head *head, unsigned int match_word, void *subuser_data, 
+				unsigned int slotid, unsigned int localid, unsigned int insid)
 {
-	if ( NULL==multi_sample || NULL==head ) {
+	if ( NULL==multi_sample || NULL==head || 0 == slotid) {
 		return AS_RTN_NULL_POINTER;
 	}
 
 	subsample_config_t *subsample_conf = NULL;
 	subsample_config_t *tmp = NULL;
+	unsigned int (*hansiinfo)[2][16] = NULL;
 
 	list_for_each_entry(tmp, head, node) {
 		if (match_word == tmp->match_word) {
+			hansiinfo = tmp->subuser_data;
+			hansiinfo[slotid-1][localid][insid-1] = 1;				//save hansi info
 			return -1;
 		} else if (match_word < tmp->match_word) {
 			break;
@@ -1398,11 +1402,12 @@ int create_config_data_3( multi_sample_t *multi_sample, struct list_head *head, 
 	if (NULL==subsample_conf) {
 		return AS_RTN_MALLOC_ERR;
 	}
-	memset ( subsample_conf, 0, sizeof(subsample_config_t));
+	memset (subsample_conf, 0, sizeof(subsample_config_t));
 
 	subsample_conf->match_word=match_word;
 	subsample_conf->subuser_data=subuser_data;
-	
+	hansiinfo = subsample_conf->subuser_data;
+	hansiinfo[slotid-1][localid][insid-1] = 1;	
 	if (list_is_last(&(tmp->node), head)) {
 		list_add(LPNLNODE(subsample_conf), &(tmp->node));
 	} else {

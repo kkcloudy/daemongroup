@@ -98,7 +98,8 @@ get_master_instance_para(instance_parameter **paraHead);
 void
 free_master_instance_para(instance_parameter **paraHead);
 
-int create_config_data_3( multi_sample_t *multi_sample, struct list_head *head, unsigned int match_word, void *subuser_data);
+int create_config_data_3( multi_sample_t *multi_sample, struct list_head *head, unsigned int match_word, void *subuser_data,
+					unsigned int slotid, unsigned int localid, unsigned int insid);
 
 unsigned int get_last_sample_time( ac_sample_t  *me );
 

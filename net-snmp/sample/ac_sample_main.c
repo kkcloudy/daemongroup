@@ -112,6 +112,7 @@ int main()
 	}	
     register_ac_sample( reg_sample );
 	/*dhcp*/
+#if 0
     reg_sample = create_ac_sample_dhcpusage( DEFAULT_SAMPLE_INTERVAL, DEFAULT_STATISTICS_TIME );
 	if( NULL == reg_sample )
 	{
@@ -119,7 +120,7 @@ int main()
 		return 0;
 	}	
     register_ac_sample( reg_sample );
-
+#endif
 
 
 

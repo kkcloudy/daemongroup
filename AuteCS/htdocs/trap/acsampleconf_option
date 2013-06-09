@@ -134,7 +134,7 @@
   <interfaceflow>
     <switch>0</switch>
     <statistic_time>300</statistic_time>
-    <sample_interval>5</sample_interval>
+    <sample_interval>30</sample_interval>
     <resend_interval>0</resend_interval>
     <config_reload_interval>0</config_reload_interval>
     <overthreshold_type>0</overthreshold_type>

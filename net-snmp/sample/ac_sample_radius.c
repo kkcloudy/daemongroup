@@ -54,9 +54,13 @@
 
 typedef struct 
 {
-    unsigned int local_id;
-    unsigned int instance_id;
-    
+	unsigned int hansi_info[16][2][16];		//hansi info: hansi_info[slotid][hansitype][insid]
+
+#if 0
+	unsigned int slotid;		// save as a bit, not a number, like slot 2, 0000 0000 0000 0100
+	unsigned int local_id;
+    	unsigned int instance_id;
+#endif
 	char ip[IP_STR_LEN];
 	short port;
 	
@@ -302,11 +306,13 @@ static load_radius_count_config_by_instance ( multi_sample_t *multi_sample, stru
 			strncpy(radius_count_data->backup_ip, back_count_ip, IP_STR_LEN - 1);
 			radius_count_data->backup_port = instance_config->radiusconf.radius_srv[i].backup_acct_port;
 		}
-
+#if 0
 		radius_count_data->local_id = instance_config->local_id;
 		radius_count_data->instance_id = instance_config->instance_id;
-
-		ret = create_config_data_3(multi_sample, head, instance_config->radiusconf.radius_srv[i].acct_ip, radius_count_data);
+		radius_count_data->slotid = instance_config->slot_id;
+#endif
+		ret = create_config_data_3(multi_sample, head, instance_config->radiusconf.radius_srv[i].acct_ip, radius_count_data,
+			instance_config->slot_id, instance_config->local_id, instance_config->instance_id);
 		syslog(LOG_DEBUG,"load_radius_auth_config: match_word (%u) ip (%s) port (%d) backup ip (%s) port (%d)",
 		                        instance_config->radiusconf.radius_srv[i].acct_ip, radius_count_data->ip, radius_count_data->port, 
 		                        radius_count_data->backup_ip, radius_count_data->backup_port ); //test
@@ -409,11 +415,13 @@ load_radius_auth_config_by_instance ( multi_sample_t *multi_sample, struct list_
 		    strncpy(radius_auth_data->backup_ip, back_auth_ip, IP_STR_LEN - 1);                    
 		    radius_auth_data->backup_port = instance_config->radiusconf.radius_srv[i].backup_auth_port;
 		}
-
+#if 0
 		radius_auth_data->local_id = instance_config->local_id;
 		radius_auth_data->instance_id = instance_config->instance_id;
-
-		ret = create_config_data_3(multi_sample, head, instance_config->radiusconf.radius_srv[i].auth_ip, radius_auth_data);
+		radius_auth_data->slotid = instance_config->slot_id;
+#endif
+		ret = create_config_data_3(multi_sample, head, instance_config->radiusconf.radius_srv[i].auth_ip, radius_auth_data, 
+					instance_config->slot_id, instance_config->local_id, instance_config->instance_id);
 		syslog(LOG_DEBUG,"load_radius_auth_config: match_word (%u) ip (%s) port (%d) backup ip (%s) port (%d)",
 		                        instance_config->radiusconf.radius_srv[i].auth_ip, radius_auth_data->ip, radius_auth_data->port, 
 		                        radius_auth_data->backup_ip, radius_auth_data->backup_port ); //test
@@ -517,7 +525,7 @@ static int do_sample_radius_auth( struct ac_sample_t *me)
 	if (sendto(radius->fd, packet, len, 0,
 				(struct sockaddr *) &ser_radius, sizeof(struct sockaddr_in)) < 0) {
 		syslog(LOG_INFO, "do_sample_radius_auth master radius: sendto failed!");
-		return RADIUS_REACHABLE_VALUE;
+		return RADIUS_UNREACHABLE_VALUE;
 	}
 
 	if ( 0!=radius_auth_data->backup_ip[0] )
@@ -532,7 +540,7 @@ static int do_sample_radius_auth( struct ac_sample_t *me)
 		if (sendto(radius->fd, packet, len, 0,
 					(struct sockaddr *) &backup_radius, sizeof(struct sockaddr_in)) < 0) {
 			syslog(LOG_INFO, "do_sample_radius_auth backup radius: sendto failed!");
-			return RADIUS_REACHABLE_VALUE;
+			return RADIUS_UNREACHABLE_VALUE;
 		}
 	}
 	
@@ -597,16 +605,31 @@ static int ac_sample_radius_auth_send_signal( ac_sample_t *this, int type )
 
 	char *str_ip = pInfo->ip;
 	short port=pInfo->port;
-	syslog(LOG_DEBUG, "ac_sample_radius_auth_send_signal, type=%d, ip=%s, port=%d", 
-			type, str_ip, port);
-	
-	return ac_sample_dbus_send_active_signal(AC_SAMPLE_OVER_THRESHOLD_SIGNAL_RADIUS_AUTH, 
+	int i, j, k;
+	int slotid = 0;
+	unsigned int insid = 0;
+
+	for (i = 0; i < 16; i++) {
+		for (j = 0; j < 2; j++) {
+			for (k = 0; k < 16; k++) {
+				if (1 == pInfo->hansi_info[i][j][k]) {
+					slotid = i + 1;
+					insid = k + 1;
+					syslog(LOG_DEBUG, "ac_sample_radius_auth_send_signal, type=%d, slotid=%d, insid=%d, ip=%s, port=%d", 
+							type, slotid, insid, str_ip, port);
+					ac_sample_dbus_send_slot_signal(AC_SAMPLE_OVER_THRESHOLD_SIGNAL_RADIUS_AUTH, slotid,
     										 DBUS_TYPE_UINT32, &type,
     										 DBUS_TYPE_STRING, &str_ip,
     										 DBUS_TYPE_UINT16, &port,
-                                             DBUS_TYPE_UINT32, &pInfo->local_id,
-                                             DBUS_TYPE_UINT32, &pInfo->instance_id,
+                                             					 DBUS_TYPE_UINT32, &j,
+                                             					 DBUS_TYPE_UINT32, &insid,
     										 DBUS_TYPE_INVALID );
+				}
+			}
+		}
+	}
+	
+	return 0;
 }
 
 ac_sample_t *create_ac_sample_radius_auth(  
@@ -768,16 +791,31 @@ static int ac_sample_radius_acct_send_signal( ac_sample_t *this, int type )
 
 	char *str_ip = pInfo->ip;
 	short port=pInfo->port;
-	syslog(LOG_DEBUG, "ac_sample_radius_acct_send_signal, type=%d, ip=%s, port=%d", 
-			type, str_ip, port);
+	int i, j, k;
+	int slotid = 0;
+	unsigned int insid = 0;
 	
-	return ac_sample_dbus_send_active_signal(AC_SAMPLE_OVER_THRESHOLD_SIGNAL_RADIUS_ACC, 
+	for (i = 0; i < 16; i++) {
+		for (j = 0; j < 2; j++) {
+			for (k = 0; k < 16; k++) {
+				if (1 == pInfo->hansi_info[i][j][k]) {
+					slotid = i + 1;
+					insid = k + 1;
+					syslog(LOG_DEBUG, "ac_sample_radius_acct_send_signal, type=%d, slotid=%d, insid=%d, ip=%s, port=%d", 
+							type, slotid, insid, str_ip, port);
+					ac_sample_dbus_send_slot_signal(AC_SAMPLE_OVER_THRESHOLD_SIGNAL_RADIUS_ACC, slotid,
     										 DBUS_TYPE_UINT32, &type,
     										 DBUS_TYPE_STRING, &str_ip,
     										 DBUS_TYPE_UINT16, &port,
-                                             DBUS_TYPE_UINT32, &pInfo->local_id,
-                                             DBUS_TYPE_UINT32, &pInfo->instance_id,
+                                             					 DBUS_TYPE_UINT32, &j,
+                                             					 DBUS_TYPE_UINT32, &insid,
     										 DBUS_TYPE_INVALID );
+				}
+			}
+		}
+	}
+	
+	return 0;
 }
 
 ac_sample_t *create_ac_sample_radius_count(  

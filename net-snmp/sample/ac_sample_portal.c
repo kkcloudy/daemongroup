@@ -38,8 +38,10 @@
 
 
 typedef struct {
-    unsigned int local_id;
-	unsigned int instance_id;
+	unsigned int hansi_info[16][2][16];		//hansi info: hansi_info[slotid][hansitype][insid]
+//	unsigned int slotid;
+//    	unsigned int local_id;
+//	unsigned int instance_id;
     
 	char str_ip[IP_STR_LEN];
 	short port;
@@ -171,12 +173,15 @@ static int load_portal_config_by_instance(multi_sample_t *multi_sample, struct l
             inet_ntoa_ex(portal_ip, portal_data->str_ip, sizeof(portal_data->str_ip));
         }
         portal_data->port = port ? port : 80;
+	#if 0
         portal_data->local_id = instance_config->local_id;
         portal_data->instance_id = instance_config->instance_id;
-        
+	portal_data->slotid = instance_config->slot_id;
+        #endif
 	syslog(LOG_DEBUG, "load_portal_config_by_instance slotid=%d, insid=%d, ip=%s, port=%u\n", 
 			instance_config->slot_id, instance_config->instance_id, portal_data->str_ip, portal_data->port);
-       temp_ret = create_config_data_3(multi_sample, head, portal_ip, portal_data);
+       temp_ret = create_config_data_3(multi_sample, head, portal_ip, portal_data,
+       				instance_config->slot_id, instance_config->local_id, instance_config->instance_id);
        if(0 != temp_ret) {
             free(portal_data);
             continue;
@@ -376,19 +381,34 @@ int ac_sample_portal_state_send_signal( ac_sample_t *this, int type )
 	syslog( LOG_DEBUG, "ac_sample_portal_state_send_signal  type=%d\n", type);
 
 	PSERVER_STATUS_INFO pInfo = ( PSERVER_STATUS_INFO )get_subsample_user_data(this);
+	int i, j, k;
+	int slotid = 0;
+	unsigned int insid = 0;
 	if ( NULL==pInfo )
 	{
 		return AS_RTN_PARAM_ERR;
 	}
-	syslog( LOG_DEBUG, "ac_sample_portal_state_send_signal  ip=%s, port=%d\n", pInfo->str_ip, pInfo->port);
 	char *str = pInfo->str_ip;
-	return ac_sample_dbus_send_active_signal( AC_SAMPLE_OVER_THRESHOLD_SIGNAL_PORTAL_REACH, 
+	for (i = 0; i < 16; i++) {
+		for (j = 0; j < 2; j++) {
+			for (k = 0; k < 16; k++) {
+				if (1 == pInfo->hansi_info[i][j][k]) {
+					slotid = i + 1;
+					insid = k + 1;
+					syslog( LOG_DEBUG, "ac_sample_portal_state_send_signal slotid=%d insid=%d ip=%s, port=%d\n",
+								slotid, insid, pInfo->str_ip, pInfo->port);
+					ac_sample_dbus_send_slot_signal(AC_SAMPLE_OVER_THRESHOLD_SIGNAL_PORTAL_REACH, slotid,
     										 DBUS_TYPE_UINT32,  &type,
     										 DBUS_TYPE_STRING,  &str,
     										 DBUS_TYPE_UINT16,  &pInfo->port,
-    										 DBUS_TYPE_UINT32,  &pInfo->local_id,
-    										 DBUS_TYPE_UINT32,  &pInfo->instance_id,
+    										 DBUS_TYPE_UINT32,  &j,
+    										 DBUS_TYPE_UINT32,  &insid,
     										 DBUS_TYPE_INVALID );
+				}
+			}
+		}
+	}
+	return 0;
 	
 }
 
@@ -563,7 +583,7 @@ int web_page_len
 				return -7;
 		}		
 	}
-	else if ('/' == *p_url)
+	else if ('/' == *p_url || '\0' == *p_url)
 	{
 		*port = 80;		
 	}
@@ -574,7 +594,12 @@ int web_page_len
 	}
 	
 	/* get web page */
-	if ('/' != *p_url)	
+	
+	if ('\0' == *p_url)
+	{
+		return 0;
+	}
+	else if ('/' != *p_url)	
 	{
 		syslog(LOG_DEBUG,"get_portal_param_by_portal_url: web page err!\n");
 		return -8;

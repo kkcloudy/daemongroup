@@ -248,11 +248,11 @@ int ac_sample_dispach()
     {
         int last_sample_time;
         last_sample_time = get_last_sample_time(LPSAMPLE(pos));
-		syslog(LOG_DEBUG,"ac_sample_dispach last_sample_time=%d time_now=%d\n", last_sample_time, time_now);
+	syslog(LOG_DEBUG, "ac_sample_dispach name =%s \n", get_sample_name(LPSAMPLE(pos))	);
+	syslog(LOG_DEBUG,"ac_sample_dispach last_sample_time=%d time_now=%d, interval=%d\n", last_sample_time, time_now, get_sample_interval(LPSAMPLE(pos)));
         if( (last_sample_time >= 0) &&
             ((time_now-last_sample_time) > get_sample_interval(LPSAMPLE(pos))) )
         {
-        	syslog(LOG_DEBUG, "do sample once name =%s \n", get_sample_name(LPSAMPLE(pos))  );
 	        //debug_contain_list();
             do_sample_once( LPSAMPLE(pos) );
 			//debug_contain_list();

@@ -1547,4 +1547,35 @@ ac_sample_dbus_send_active_signal(const char *signal_name,
 }
 
 
+int
+ac_sample_dbus_send_slot_signal(const char *signal_name, int slotid,
+								                int first_arg_type,...) {
+
+    DBusConnection *conn = ac_sample_dbus_get_slotconnection(slotid);
+    if(NULL == conn) {
+        syslog(LOG_WARNING, "ac_sample_dbus_send_active_signal: get active master connection failed!\n");
+        return AS_RTN_SAMPLE_DBUS_CONNECTION_ERR;
+    }
+    
+    const char *obj_path = AC_SAMPLE_DBUS_OBJPATH;
+    const char *interface_name = TRAP_DBUS_INTERFACE;
+    
+	va_list var_args;
+	int iret = AS_RTN_OK;
+ 
+	
+	va_start ( var_args, first_arg_type );
+	iret = dbus_send_signale_v( conn, 
+								obj_path,
+								interface_name,
+								signal_name,
+								first_arg_type,
+								var_args );
+ 	va_end (var_args);
+
+	syslog(LOG_INFO, "send active signal: %s, ret = %d", signal_name, iret);
+    
+	return iret;
+}
+
 
