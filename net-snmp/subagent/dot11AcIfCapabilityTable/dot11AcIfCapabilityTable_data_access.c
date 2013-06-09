@@ -20,6 +20,8 @@
 #include "ws_init_dbus.h"
 #include "ws_intf.h"
 #include "board/board_define.h"
+#include "ac_sample_err.h"
+#include "ac_sample_interface.h"
 #include "ac_manage_def.h"
 #include "ws_snmpd_engine.h"
 #include "ws_snmpd_manual.h"
@@ -524,8 +526,314 @@ dot11AcIfCapabilityTable_cache_load(netsnmp_container *container)
      * set the index(es) [and data, optionally] and insert into
      * the container.
      */
+	int ret = -1;
+    struct flow_data_list *alldata = NULL;
+    snmp_log(LOG_DEBUG, "enter dbus_get_iface_bandwidth_info\n");
+    ret = dbus_get_iface_bandwidth_info(ccgi_dbus_connection, &alldata);
+    snmp_log(LOG_DEBUG, "exit dbus_get_iface_bandwidth_info, ret = %d\n", ret);
 
+	int mib_ret = AC_MANAGE_SUCCESS;
+    struct mib_acif_stats *acif_array = NULL;
+    unsigned int acif_num = 0;
+    mib_ret = ac_manage_show_mib_acif_stats(ccgi_dbus_connection, &acif_array, &acif_num);
+    snmp_log(LOG_DEBUG, "exit ac_manage_show_mib_acif_stats, mib_ret = %d\n", mib_ret);
+
+	int ret1 = -1;	
+	unsigned int if_num = 0;
+	struct if_stats_list *if_stats_array = NULL;
+	int i = 0;	
 	
+	if (intf_flow_info.sockfd > 0) 
+	{
+		ret1 = sample_rtmd_get_interface_flow(&intf_flow_info, &if_num, &if_stats_array);
+		snmp_log(LOG_DEBUG, "exit sample_rtmd_get_interface_flow, ret = %d\n", ret1);	
+		if (0 == ret1) 
+		{			
+			for (i = 0; i < if_num; i++)
+			{
+				if(0 != get_if_index(if_stats_array[i].ifname, &ifIndex)) {
+	                snmp_log(LOG_WARNING, "get if index error\n");
+	                continue;
+	            }
+	        
+	            unsigned long rxsample = 0;
+	            unsigned long txsample = 0;	        
+	            if(0 == ret && alldata){
+	                struct flow_data_list *tempz = NULL;
+	                for(tempz = alldata; NULL != tempz; tempz = tempz->next) {
+	                    snmp_log(LOG_DEBUG, "(tempz->ltdata.rtdata.index = %d) VS (ifIndex = %d)\n", tempz->ltdata.rtdata.index, ifIndex);
+	                    if(tempz->ltdata.rtdata.index == ifIndex) {
+	                        rxsample = tempz->ltdata.rxsample;
+	                        txsample = tempz->ltdata.txsample;
+	                        break;
+	                    }
+	                }
+	            }
+				
+				rowreq_ctx = dot11AcIfCapabilityTable_allocate_rowreq_ctx();
+				if (NULL == rowreq_ctx) {
+					snmp_log(LOG_ERR, "memory allocation failed\n");
+					if (NULL != if_stats_array) {
+						free(if_stats_array);
+						if_stats_array = NULL;
+					}
+					intflib_memfree(&alldata);
+					return MFD_RESOURCE_UNAVAILABLE;
+				}
+				
+				if(MFD_SUCCESS != dot11AcIfCapabilityTable_indexes_set(rowreq_ctx
+									   , ifIndex
+					   )) {
+					snmp_log(LOG_ERR,"error setting index while loading "
+							 "dot11AcIfCapabilityTable cache.\n");
+					dot11AcIfCapabilityTable_release_rowreq_ctx(rowreq_ctx);
+					continue;
+				}
+				
+					/*
+					 * TODO:352:r: |   |-> populate dot11AcIfCapabilityTable data context.
+					 * Populate data context here. (optionally, delay until row prep)
+					 */
+				/*
+				 * TRANSIENT or semi-TRANSIENT data:
+				 * copy data or save any info needed to do it in row_prep.
+				 */
+				/*
+				 * setup/save data for acIfInUcastPkts
+				 * acIfInUcastPkts(1)/COUNTER64/ASN_COUNTER64/U64(U64)//l/A/w/e/r/d/h
+				 */
+				/*
+				 * TODO:246:r: |-> Define acIfInUcastPkts mapping.
+				 * Map values between raw/native values and MIB values
+				 *
+				 * Integer based value can usually just do a direct copy.
+				 */
+				rowreq_ctx->data.acIfInUcastPkts = if_stats_array[i].stats.rx_packets;	/*单播包*/
+				
+				/*
+				 * setup/save data for acIfInNUcastPkts
+				 * acIfInNUcastPkts(2)/COUNTER64/ASN_COUNTER64/U64(U64)//l/A/w/e/r/d/h
+				 */
+				/*
+				 * TODO:246:r: |-> Define acIfInNUcastPkts mapping.
+				 * Map values between raw/native values and MIB values
+				 *
+				 * Integer based value can usually just do a direct copy.
+				 */
+				rowreq_ctx->data.acIfInNUcastPkts = if_stats_array[i].stats.rx_multicast; /*非单播包*/
+				/*
+				 * setup/save data for acIfInOctets
+				 * acIfInOctets(3)/COUNTER64/ASN_COUNTER64/U64(U64)//l/A/w/e/r/d/h
+				 */
+				/*
+				 * TODO:246:r: |-> Define acIfInOctets mapping.
+				 * Map values between raw/native values and MIB values
+				 *
+				 * Integer based value can usually just do a direct copy.
+				 */
+				rowreq_ctx->data.acIfInOctets = if_stats_array[i].stats.rx_bytes;  /*总字节数*/
+				/*
+				 * setup/save data for acIfInDiscardPkts
+				 * acIfInDiscardPkts(4)/COUNTER/ASN_COUNTER/u_long(u_long)//l/A/w/e/r/d/h
+				 */
+				/*
+				 * TODO:246:r: |-> Define acIfInDiscardPkts mapping.
+				 * Map values between raw/native values and MIB values
+				 *
+				 * Integer based value can usually just do a direct copy.
+				 */
+				rowreq_ctx->data.acIfInDiscardPkts = if_stats_array[i].stats.rx_dropped; /*丢弃包数*/
+				/*
+				 * setup/save data for acIfInErrors
+				 * acIfInErrors(5)/COUNTER/ASN_COUNTER/u_long(u_long)//l/A/w/e/r/d/h
+				 */
+				/*
+				 * TODO:246:r: |-> Define acIfInErrors mapping.
+				 * Map values between raw/native values and MIB values
+				 *
+				 * Integer based value can usually just do a direct copy.
+				 */
+				rowreq_ctx->data.acIfInErrors = if_stats_array[i].stats.rx_errors;	/*错误包数*/
+				/*
+				 * setup/save data for acIfOutUcastPkts
+				 * acIfOutUcastPkts(6)/COUNTER64/ASN_COUNTER64/U64(U64)//l/A/w/e/r/d/h
+				 */
+				/*
+				 * TODO:246:r: |-> Define acIfOutUcastPkts mapping.
+				 * Map values between raw/native values and MIB values
+				 *
+				 * Integer based value can usually just do a direct copy.
+				 */
+				rowreq_ctx->data.acIfOutUcastPkts = if_stats_array[i].stats.tx_packets;/*单播包*/
+				/*
+				 * setup/save data for acIfOutNUcastPkts
+				 * acIfOutNUcastPkts(7)/COUNTER64/ASN_COUNTER64/U64(U64)//l/A/w/e/r/d/h
+				 */
+				/*
+				 * TODO:246:r: |-> Define acIfOutNUcastPkts mapping.
+				 * Map values between raw/native values and MIB values
+				 *
+				 * Integer based value can usually just do a direct copy.
+				 */
+				rowreq_ctx->data.acIfOutNUcastPkts = if_stats_array[i].stats.tx_multicast;	/*非单播包*/
+				
+				/*
+				 * setup/save data for acIfOutOctets
+				 * acIfOutOctets(8)/COUNTER64/ASN_COUNTER64/U64(U64)//l/A/w/e/r/d/h
+				 */
+				/*
+				 * TODO:246:r: |-> Define acIfOutOctets mapping.
+				 * Map values between raw/native values and MIB values
+				 *
+				 * Integer based value can usually just do a direct copy.
+				 */
+				rowreq_ctx->data.acIfOutOctets = if_stats_array[i].stats.tx_bytes;	/*总字节数*/
+				/*
+				 * setup/save data for acIfOutDiscardPkts
+				 * acIfOutDiscardPkts(9)/COUNTER/ASN_COUNTER/u_long(u_long)//l/A/w/e/r/d/h
+				 */
+				/*
+				 * TODO:246:r: |-> Define acIfOutDiscardPkts mapping.
+				 * Map values between raw/native values and MIB values
+				 *
+				 * Integer based value can usually just do a direct copy.
+				 */
+				rowreq_ctx->data.acIfOutDiscardPkts = if_stats_array[i].stats.tx_dropped;  /*丢弃包数*/
+				/*
+				 * setup/save data for acIfOutErrors
+				 * acIfOutErrors(10)/COUNTER/ASN_COUNTER/u_long(u_long)//l/A/w/e/r/d/h
+				 */
+				/*
+				 * TODO:246:r: |-> Define acIfOutErrors mapping.
+				 * Map values between raw/native values and MIB values
+				 *
+				 * Integer based value can usually just do a direct copy.
+				 */
+				rowreq_ctx->data.acIfOutErrors = if_stats_array[i].stats.tx_errors;  /*错误包数*/
+				/*
+				 * setup/save data for acIfUpDwnTimes
+				 * acIfUpDwnTimes(11)/COUNTER/ASN_COUNTER/u_long(u_long)//l/A/w/e/r/d/h
+				 */
+				/*
+				 * TODO:246:r: |-> Define acIfUpDwnTimes mapping.
+				 * Map values between raw/native values and MIB values
+				 *
+				 * Integer based value can usually just do a direct copy.
+				 */
+				rowreq_ctx->data.acIfUpDwnTimes = 0;  /*updown次数*/
+				
+				/*
+				 * setup/save data for acIfInMulticastPkts
+				 * acIfInMulticastPkts(12)/COUNTER/ASN_COUNTER/u_long(u_long)//l/A/w/e/r/d/h
+				 */
+				/*
+				 * TODO:246:r: |-> Define acIfInMulticastPkts mapping.
+				 * Map values between raw/native values and MIB values
+				 *
+				 * Integer based value can usually just do a direct copy.
+				 */
+				rowreq_ctx->data.acIfInMulticastPkts = if_stats_array[i].stats.rx_multicast;  /*接收组播包数*/
+				
+				/*
+				 * setup/save data for acIfOutMulticastPkts
+				 * acIfOutMulticastPkts(13)/COUNTER/ASN_COUNTER/u_long(u_long)//l/A/w/e/r/d/h
+				 */
+				/*
+				 * TODO:246:r: |-> Define acIfOutMulticastPkts mapping.
+				 * Map values between raw/native values and MIB values
+				 *
+				 * Integer based value can usually just do a direct copy.
+				 */
+				rowreq_ctx->data.acIfOutMulticastPkts = if_stats_array[i].stats.tx_multicast;  /*发送组播包数*/
+				/*
+				 * setup/save data for acUplinkRate
+				 * acUplinkRate(14)/COUNTER64/ASN_COUNTER64/U64(U64)//l/A/w/e/r/d/h
+				 */
+				/*
+				 * TODO:246:r: |-> Define acUplinkRate mapping.
+				 * Map values between raw/native values and MIB values
+				 *
+				 * Integer based value can usually just do a direct copy.
+				 */			
+				rowreq_ctx->data.acUplinkRate = rxsample;
+				
+				/*
+				 * setup/save data for acDownlinkRate
+				 * acDownlinkRate(15)/COUNTER64/ASN_COUNTER64/U64(U64)//l/A/w/e/r/d/h
+				 */
+				/*
+				 * TODO:246:r: |-> Define acDownlinkRate mapping.
+				 * Map values between raw/native values and MIB values
+				 *
+				 * Integer based value can usually just do a direct copy.
+				 */
+				 
+				rowreq_ctx->data.acDownlinkRate = txsample;
+				
+				
+				rowreq_ctx->data.acBandwidthUsage = (((rxsample)+(txsample))*8*100)/(1000*1024*1024);
+				
+				unsigned long DropUsage = 0;
+				unsigned long long total_packets = if_stats_array[i].stats.rx_packets + if_stats_array[i].stats.tx_packets 
+											+ if_stats_array[i].stats.rx_dropped + if_stats_array[i].stats.tx_dropped;
+				
+				if(total_packets) {
+					DropUsage = (if_stats_array[i].stats.rx_dropped + if_stats_array[i].stats.tx_dropped) * 100 / total_packets ;
+				}
+				
+				rowreq_ctx->data.acDropUsage = DropUsage;
+				
+				rowreq_ctx->data.acIfOutBroadcastPkts =  if_stats_array[i].stats.tx_multicast;
+				
+				rowreq_ctx->data.acUplinkKbyteRate = rxsample / 1024;
+				
+				rowreq_ctx->data.acDownlinkKbyteRate = txsample / 1024;
+				
+				
+				if(AC_MANAGE_SUCCESS == mib_ret && acif_num) {
+					int index = 0;
+					for(index = 0; index < acif_num; index++) {
+						snmp_log(LOG_DEBUG, "acif_array[%d].ifname %s, name = %s\n", index, acif_array[index].ifname, if_stats_array[i].ifname);
+						if(0 == strcmp(acif_array[index].ifname, if_stats_array[i].ifname)) {
+							MANUAL_SET(rowreq_ctx->data.acIfInNUcastPkts, acif_array[index].acIfInNUcastPkts);
+							MANUAL_SET(rowreq_ctx->data.acIfInDiscardPkts, acif_array[index].acIfInDiscardPkts);
+							MANUAL_SET(rowreq_ctx->data.acIfInErrors, acif_array[index].acIfInErrors);
+							MANUAL_SET(rowreq_ctx->data.acIfInMulticastPkts, acif_array[index].acIfInMulticastPkts);
+							MANUAL_SET(rowreq_ctx->data.acIfOutDiscardPkts, acif_array[index].acIfOutDiscardPkts);
+							MANUAL_SET(rowreq_ctx->data.acIfOutErrors, acif_array[index].acIfOutErrors);
+							MANUAL_SET(rowreq_ctx->data.acIfOutNUcastPkts, acif_array[index].acIfOutNUcastPkts);
+							MANUAL_SET(rowreq_ctx->data.acIfOutMulticastPkts, acif_array[index].acIfOutMulticastPkts);
+				
+							total_packets = 0;	
+							DropUsage = 0;
+							total_packets = rowreq_ctx->data.acIfInDiscardPkts + rowreq_ctx->data.acIfOutDiscardPkts 
+											+ if_stats_array[i].stats.rx_packets + if_stats_array[i].stats.tx_packets;
+							if(total_packets) {
+								DropUsage = (unsigned long long)(rowreq_ctx->data.acIfInDiscardPkts + rowreq_ctx->data.acIfOutDiscardPkts) * 100 / total_packets;
+							}
+							MANUAL_SET(rowreq_ctx->data.acDropUsage, DropUsage);
+							break;
+						}
+					}
+				}
+				
+					/*
+					 * insert into table container
+					 */
+				if(CONTAINER_INSERT(container, rowreq_ctx)) {
+					dot11AcIfCapabilityTable_release_rowreq_ctx(rowreq_ctx);
+				}
+				++count;
+			}				
+		}
+		if (NULL != if_stats_array) {
+			free(if_stats_array);
+			if_stats_array = NULL;
+		}
+	}
+	intflib_memfree(&alldata);
+
+#if 0
 	unsigned int if_num = 0;
 	struct if_stats_list *if_stats_array = NULL;
 
@@ -989,6 +1297,7 @@ dot11AcIfCapabilityTable_cache_load(netsnmp_container *container)
     //SNMP_FREE(if_stats_array);
     //fclose(fp);
     //free_interface_nucastpkts_list(&listHead);
+#endif
 
     DEBUGMSGT(("verbose:dot11AcIfCapabilityTable:dot11AcIfCapabilityTable_cache_load",
                "inserted %d records\n", count));

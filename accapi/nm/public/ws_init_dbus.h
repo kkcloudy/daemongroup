@@ -52,6 +52,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define DISTRIBUTFAG 0
 
 extern DBusConnection *ccgi_dbus_connection;
+extern struct sample_rtmd_info intf_flow_info;
 extern int HAD_ID;
 extern int IS_HAD_SWITCH;
 extern void *ccgi_dl_handle;

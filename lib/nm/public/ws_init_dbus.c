@@ -58,10 +58,11 @@ extern "C"
 #include "ws_dcli_vrrp.h"
 #include "ws_dbus_list_interface.h"
 #include "ws_init_dbus.h"
-
+#include "ac_sample_interface.h"
 
 
 DBusConnection *ccgi_dbus_connection = NULL;
+struct sample_rtmd_info intf_flow_info = {0};
 
 void *ccgi_dl_handle = NULL;
 

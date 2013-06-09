@@ -42,9 +42,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "ws_snmpd_manual.h"
 #include "ac_manage_interface.h"
 #include "netsnmp_dbus.h"
-
+#include "ac_sample_interface.h"
 #include "ws_public.h"
-
 #include "netsnmp_private_interface.h"
 
 int log_contrl = 0;
@@ -123,6 +122,15 @@ void init_subagent_plugin(void)
 	
 	init_autelanWtpGroup();
 	init_autelanAcGroup();
+
+	if(snmp_cllection_mode(ccgi_dbus_connection))	/*开启分板采集*/
+	{
+		sample_rtmd_init_socket(&intf_flow_info, PROCESS_NAME_SNMP, INTERFACE_FLOW_STATISTICS_SAMPLING_DIVIDED_SNMP, 1000);
+	}
+	else	/*关闭分板采集*/
+	{
+		sample_rtmd_init_socket(&intf_flow_info, PROCESS_NAME_SNMP, INTERFACE_FLOW_STATISTICS_SAMPLING_INTEGRATED_SNMP, 1000);
+	}
 }
 
 void deinit_subagent_plugin(void)
