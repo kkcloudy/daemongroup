@@ -334,13 +334,19 @@ int wid_update_bss_to_wifi(unsigned int bssindex,unsigned int WTPIndex,unsigned 
 
 		}
 		wlan_id = AC_BSS[bssindex]->WlanID; 
-		if((AC_WLAN[wlan_id] != NULL)&&(AC_WLAN[wlan_id]->SecurityType == OPEN)&&(AC_WLAN[wlan_id]->EncryptionType == NONE))
+		if((AC_WLAN[wlan_id] != NULL)&& (AC_WLAN[wlan_id]->want_to_delete != 1) && (AC_WLAN[wlan_id]->SecurityType == OPEN)&&(AC_WLAN[wlan_id]->EncryptionType == NONE))
 			ifinfo.protect_type = 0;
 		else
 		{
 			ifinfo.protect_type = 1;
 			if(AC_WLAN[wlan_id] == NULL)
 				wid_syslog_warning("<warning>,%s,%d,wlanid  is  NULL!\n",__func__,__LINE__);
+			else if (AC_WLAN[wlan_id]->want_to_delete == 1)				/* Huangleilei check deleting wlan */
+			{
+				wid_syslog_crit("<critical>, %s %d, you want to delete this wlan!", __func__, __LINE__);
+				close(fd);
+				return -1;
+			}
 		}  //fengwenchao add 20111220
 		if(AC_BSS[bssindex]->vlanid != 0){
 			ifinfo.vlanid = AC_BSS[bssindex]->vlanid;
@@ -367,7 +373,7 @@ int wid_update_bss_to_wifi(unsigned int bssindex,unsigned int WTPIndex,unsigned 
 		memcpy(ifinfo.bssid,  AC_BSS[bssindex]->BSSID, MAC_LEN);
 		memcpy(ifinfo.ifname, AC_WTP[WTPIndex]->BindingIFName,strlen(AC_WTP[WTPIndex]->BindingIFName));
 		memcpy(ifinfo.apname,AC_WTP[WTPIndex]->WTPNAME,strlen(AC_WTP[WTPIndex]->WTPNAME));		
-		if(AC_WLAN[wlan_id] != NULL)  //fengwenchao add 20111220
+		if(AC_WLAN[wlan_id] != NULL && AC_WLAN[wlan_id]->want_to_delete != 1)  //fengwenchao add 20111220
 		{
 			memcpy(ifinfo.essid ,AC_WLAN[wlan_id]->ESSID ,strlen(AC_WLAN[wlan_id]->ESSID));
 			ifinfo.Eap1XServerSwitch = AC_WLAN[wlan_id]->eap_mac_switch;
@@ -730,10 +736,10 @@ void * free_wlan(void * arg)
 	if (WlanID & 0x80000000)
 	{
 		wid_pid_write_v2("free_AC_WLAN", 0, vrrid);
-		wid_syslog_debug_debug(WID_DEFAULT, "%s %d pid: %u", __func__, __LINE__, (unsigned int)getpid());
+		wid_syslog_info("%s %d pid: %u", __func__, __LINE__, (unsigned int)getpid());
 		WlanID &= 0x000000FF;
 	}	
-	wid_syslog_debug_debug(WID_DEFAULT, "%s %d WlanID: %u", __func__, __LINE__, WlanID);
+	wid_syslog_info( "%s %d WlanID: %u", __func__, __LINE__, WlanID);
 	struct timeval tpstart, tpend;
 	struct timeval tpdel;
 	struct timeval time_check_start;
@@ -756,7 +762,7 @@ void * free_wlan(void * arg)
 							usleep(10000);
 						}
 						gettimeofday(&time_check_end, NULL);
-						if (time_check_end.tv_sec - time_check_start.tv_sec > (CW_RETRANSMIT_INTERVAL_DEFAULT * CW_MAX_RETRANSMIT_DEFAULT))
+						if (time_check_end.tv_sec - time_check_start.tv_sec > CW_REACCESS_INTERVAL_DEFAULT/*(CW_RETRANSMIT_INTERVAL_DEFAULT * CW_MAX_RETRANSMIT_DEFAULT)*/)
 						{
 							wid_syslog_debug_debug(WID_DEFAULT, "%s %d too much time to wait: 25 seconds", __func__, __LINE__);
 							goto maybe_get_time_exprired;
@@ -769,6 +775,7 @@ void * free_wlan(void * arg)
 		}
 	}
 	AsdWsm_WLANOp(WlanID, WID_DEL, 0);	
+	sleep(1);
 	for(i=0;i<WTP_NUM;i++)
 		if(AC_WTP[i] != NULL){
 			for(j=0;j<AC_WTP[i]->RadioCount;j++){

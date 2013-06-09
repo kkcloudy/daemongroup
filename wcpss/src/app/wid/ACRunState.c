@@ -659,7 +659,8 @@ CWBool ACEnterRun(int WTPIndex, CWProtocolMessage *msgPtr, CWBool dataFlag)
 						 for(i1=0;i1<L_BSS_NUM;i1++){
 						 	if((AC_WTP[WTPIndex]->WTP_Radio[BSS.Radio_L_ID]->BSS[i1] == NULL))
 								continue;
-							 else if(AC_WTP[WTPIndex]->WTP_Radio[BSS.Radio_L_ID]->BSS[i1]->WlanID == BSS.WlanID){
+							 else if(AC_WTP[WTPIndex]->WTP_Radio[BSS.Radio_L_ID]->BSS[i1]->WlanID == BSS.WlanID
+							 	      && (AC_WLAN[BSS.WlanID] != NULL && AC_WLAN[BSS.WlanID]->want_to_delete != 1 && AC_WLAN[BSS.WlanID]->Status != 1)){		/* Huangleilei add for AXSSZFI-1695 */
 								memcpy(AC_WTP[WTPIndex]->WTP_Radio[BSS.Radio_L_ID]->BSS[i1]->BSSID,BSS.BSSID,6);
 								AC_WTP[WTPIndex]->WTP_Radio[BSS.Radio_L_ID]->BSS[i1]->State = 1;
 								AsdWsm_BSSOp(AC_WTP[WTPIndex]->WTP_Radio[BSS.Radio_L_ID]->BSS[i1]->BSSIndex, WID_ADD, 1);
@@ -847,6 +848,16 @@ CWBool ACEnterRun(int WTPIndex, CWProtocolMessage *msgPtr, CWBool dataFlag)
 				}
 				else if ((zero == 0) /*&& (BSS.Radio_L_ID < L_RADIO_NUM)*/)
 				{
+					
+					wid_syslog_debug_debug(WID_DEFAULT, "%s %d Radio_L_ID: %d", __func__, __LINE__, BSS.Radio_L_ID);
+					wid_syslog_debug_debug(WID_DEFAULT, "%s %d WlanID: %d", __func__, __LINE__, BSS.WlanID);
+					wid_syslog_debug_debug(WID_DEFAULT, "%s %d BSSID: %02X:%02X:%02X:%02X:%02X:%02X", __func__, __LINE__, 
+						BSS.BSSID[0],
+						BSS.BSSID[1],
+						BSS.BSSID[2],
+						BSS.BSSID[3],
+						BSS.BSSID[4],
+						BSS.BSSID[5]);
 					/*
 					 * This branch used to set this BSS's enable_wlan_flag,
 					 * when ac receive the disable-wlan-operation's success response from the special wtp.
@@ -907,7 +918,7 @@ CWBool ACEnterRun(int WTPIndex, CWProtocolMessage *msgPtr, CWBool dataFlag)
 								BSSLIndex = m1;
 								Radio_L_ID = m;
 								AC_WTP[WTPIndex]->WTP_Radio[Radio_L_ID]->BSS[BSSLIndex]->enable_wlan_flag = 0;
-								wid_syslog_debug_debug(WID_DEFAULT, "%s %d set wtp %d bss %d's enable_wlan_flag to '0(disable)'", __func__, __LINE__, WTPIndex, BSSLIndex);
+								wid_syslog_debug_debug(WID_DEFAULT, "%s %d set wtp %d bss %d\'s enable_wlan_flag to \'0(disable)\'", __func__, __LINE__, WTPIndex, BSSLIndex);
 								break;
 							}
 						}
@@ -2749,7 +2760,7 @@ CWBool CWAssembleMsgElemAddWlan(CWProtocolMessage *msgPtr, int WTPIndex, unsigne
 				delete_ipip_tunnel(BSSIndex);
 			}
 		}*/
-		AC_WTP[WTPIndex]->WTP_Radio[RadioID]->BSS[AC_WLAN[i]->S_WTP_BSS_List[WTPIndex][RadioID] % L_BSS_NUM]->enable_wlan_flag = 0;
+		//AC_WTP[WTPIndex]->WTP_Radio[RadioID]->BSS[AC_WLAN[i]->S_WTP_BSS_List[WTPIndex][RadioID] % L_BSS_NUM]->enable_wlan_flag = 0;
 		CW_CREATE_PROTOCOL_MESSAGE(*msgPtr, size, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
 	
 		CWProtocolStore8(msgPtr, RadioID);

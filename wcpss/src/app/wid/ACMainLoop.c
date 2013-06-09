@@ -263,16 +263,16 @@ void STA_OP(TableMsg *msg){
 			unsigned char mac[MAC_LEN] ;
 			memcpy(mac, msg->u.STA.STAMAC, MAC_LEN);	
 			if (AC_BSS[BSSIndex] == NULL 
-				&& AC_WLAN[AC_BSS[BSSIndex]->WlanID] == NULL
-				&& (AC_WLAN[AC_BSS[BSSIndex]->WlanID] != NULL && (AC_WLAN[AC_BSS[BSSIndex]->WlanID]->want_to_delete == 1)))		/* Huangleilei move for AXSSZFI-1718 */
+				|| AC_WLAN[AC_BSS[BSSIndex]->WlanID] == NULL
+				|| (AC_WLAN[AC_BSS[BSSIndex]->WlanID] != NULL && (AC_WLAN[AC_BSS[BSSIndex]->WlanID]->want_to_delete == 1)))		/* Huangleilei move for AXSSZFI-1718 */
 			{
 				wid_syslog_err("%s %d AC_BSS[%d] or AC_WLAN is NULL", __func__, __LINE__, BSSIndex);
 				return ;
 			}
 			wid_radio_set_wlan_traffic_limit_sta_value(WTPIndex,(msg->u.STA.BSSIndex/L_BSS_NUM)%L_RADIO_NUM,AC_BSS[BSSIndex]->WlanID,mac[0],mac[1],mac[2],mac[3],mac[4],mac[5], msg->u.STA.send_traffic_limit,1);
 			if (AC_BSS[BSSIndex] == NULL 
-				&& AC_WLAN[AC_BSS[BSSIndex]->WlanID] == NULL
-				&& (AC_WLAN[AC_BSS[BSSIndex]->WlanID] != NULL && (AC_WLAN[AC_BSS[BSSIndex]->WlanID]->want_to_delete == 1)))		/* Huangleilei move for AXSSZFI-1718 */
+				|| AC_WLAN[AC_BSS[BSSIndex]->WlanID] == NULL
+				|| (AC_WLAN[AC_BSS[BSSIndex]->WlanID] != NULL && (AC_WLAN[AC_BSS[BSSIndex]->WlanID]->want_to_delete == 1)))		/* Huangleilei move for AXSSZFI-1718 */
 			{
 				wid_syslog_err("%s %d AC_BSS[%d] or AC_WLAN is NULL", __func__, __LINE__, BSSIndex);
 				return ;
@@ -282,8 +282,8 @@ void STA_OP(TableMsg *msg){
 		msginfo.mqinfo.u.StaInfo.Radio_L_ID = (msg->u.STA.BSSIndex/L_BSS_NUM)%L_RADIO_NUM;
 		memcpy(msginfo.mqinfo.u.StaInfo.STAMAC, msg->u.STA.STAMAC, MAC_LEN);	
 		if (AC_BSS[BSSIndex] == NULL 
-			&& AC_WLAN[AC_BSS[BSSIndex]->WlanID] == NULL
-			&& (AC_WLAN[AC_BSS[BSSIndex]->WlanID] != NULL && (AC_WLAN[AC_BSS[BSSIndex]->WlanID]->want_to_delete == 1))) 	/* Huangleilei move for AXSSZFI-1718 */
+			|| AC_WLAN[AC_BSS[BSSIndex]->WlanID] == NULL
+			|| (AC_WLAN[AC_BSS[BSSIndex]->WlanID] != NULL && (AC_WLAN[AC_BSS[BSSIndex]->WlanID]->want_to_delete == 1))) 	/* Huangleilei move for AXSSZFI-1718 */
 		{
 			wid_syslog_err("%s %d AC_BSS[%d] or AC_WLAN is NULL", __func__, __LINE__, BSSIndex);
 			return ;
@@ -306,14 +306,14 @@ void STA_OP(TableMsg *msg){
 		//AC_WTP[WTPIndex]->CMD->CMD++;
 				
 		printf("STA op1\n"); 		
-		if((AC_WLAN[WLANID] != NULL)&&(AC_WLAN[WLANID]->Roaming_Policy == 1)){
+		if((AC_WLAN[WLANID] != NULL)&&(AC_WLAN[WLANID]->Roaming_Policy == 1) && (AC_WLAN[WLANID]->want_to_delete != 1)){
 			CWThreadMutexLock(&(gSTARoamingMutex));
 				memset(STA_ROAM.STAMAC,0,MAC_LEN);
 				STA_ROAM.STAOP = msg->Op;
 				memcpy(STA_ROAM.STAMAC, msg->u.STA.STAMAC, MAC_LEN);
 				if (AC_BSS[BSSIndex] == NULL 
-					&& AC_WLAN[AC_BSS[BSSIndex]->WlanID] == NULL
-					&& (AC_WLAN[AC_BSS[BSSIndex]->WlanID] != NULL && (AC_WLAN[AC_BSS[BSSIndex]->WlanID]->want_to_delete == 1))) 	/* Huangleilei move for AXSSZFI-1718 */
+					|| AC_WLAN[AC_BSS[BSSIndex]->WlanID] == NULL
+					|| (AC_WLAN[AC_BSS[BSSIndex]->WlanID] != NULL && (AC_WLAN[AC_BSS[BSSIndex]->WlanID]->want_to_delete == 1))) 	/* Huangleilei move for AXSSZFI-1718 */
 				{
 					wid_syslog_err("%s %d AC_BSS[%d] or AC_WLAN is NULL", __func__, __LINE__, BSSIndex);
 					//CWSignalThreadCondition(&gSTARoamingWait);

@@ -72246,7 +72246,7 @@ DBusMessage * wid_dbus_wtp_show_running_config_end(DBusConnection *conn, DBusMes
 						cursor = showStr + totalLen;
 						for(k=0;k<L_BSS_NUM;k++)
 						{
-							if(WTP[i]->WTP_Radio[j]->BSS[k] != NULL && AC_WLAN[WTP[i]->WTP_Radio[j]->BSS[k]->WlanID]->want_to_delete != 1)	/* Huangleilei check wlan operation */
+							if(WTP[i]->WTP_Radio[j]->BSS[k] != NULL && AC_WLAN[WTP[i]->WTP_Radio[j]->BSS[k]->WlanID] != NULL && AC_WLAN[WTP[i]->WTP_Radio[j]->BSS[k]->WlanID]->want_to_delete != 1)	/* Huangleilei check wlan operation */
 							{
 								
 								if(WTP[i]->WTP_Radio[j]->BSS[k]->WDSStat == WDS_ANY)
@@ -72326,7 +72326,7 @@ DBusMessage * wid_dbus_wtp_show_running_config_end(DBusConnection *conn, DBusMes
 					
 					for(i=0; i<bss_num; i++){
 						conf = AC_BSS[bssid[i]]->acl_conf;
-						if( conf != NULL && AC_WLAN[AC_BSS[bssid[i]]->WlanID]->want_to_delete != 1) {		/* Huangleilei check wlan operation */
+						if( conf != NULL && AC_WLAN[AC_BSS[bssid[i]]->WlanID] != NULL && AC_WLAN[AC_BSS[bssid[i]]->WlanID]->want_to_delete != 1) {		/* Huangleilei check wlan operation */
 							radio = AC_BSS[bssid[i]]->Radio_G_ID;
 							wlanid = AC_BSS[bssid[i]]->WlanID;
 							if( conf->macaddr_acl != 0 ) {
