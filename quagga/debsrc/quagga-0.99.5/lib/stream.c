@@ -88,16 +88,6 @@ struct stream *
 stream_new (size_t size)
 {
   struct stream *s;
-#if 0
-  assert (size > 0);
-#else
-	if(size<0)
-	{
-		zlog_warn ("stream_new(): called with size<0!");
-
-		return	NULL;
-	}
-#endif
   if (size == 0)
     {
       zlog_warn ("stream_new(): called with 0 size!");

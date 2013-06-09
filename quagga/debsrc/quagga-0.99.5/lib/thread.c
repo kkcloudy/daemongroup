@@ -1034,8 +1034,7 @@ int thread_handle_by_errfd(struct thread_list *list,int fd)
 	
 }
 
-struct thread *
-thread_checkfd (struct thread_master *m)
+void thread_checkfd (struct thread_master *m)
 {
 	int i=0;
 	int fd_flags;
@@ -1061,7 +1060,7 @@ thread_checkfd (struct thread_master *m)
 		
 		}
 	}
-
+	return ;
 }
 
 

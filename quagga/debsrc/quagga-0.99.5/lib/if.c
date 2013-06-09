@@ -144,8 +144,11 @@ if_create (const char *name, int namelen)
   if (if_lookup_by_name(ifp->name) == NULL)
     listnode_add_sort (iflist, ifp);
   else
-    zlog_err("if_create(%s): corruption detected -- interface with this "
-	     "name exists already!", ifp->name);
+  {
+	  zlog_err("if_create(%s): corruption detected -- interface with this "
+		   "name exists already!", ifp->name);
+	  return NULL;
+  }
   ifp->connected = list_new ();
   ifp->connected->del = (void (*) (void *)) connected_free;
 

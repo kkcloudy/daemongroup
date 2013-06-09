@@ -545,7 +545,6 @@ open_read_system_file()
 	if(NULL == fd)
 	{
 		zlog_notice("open file /dbm/product/name failed\n");		
-		fclose(fd);
 		return -1;
 	}
 	fscanf(fd,"%s",product_name);

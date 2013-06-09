@@ -315,7 +315,6 @@ work_queue_run (struct thread *thread)
   char yielded = 0;
 
   wq = THREAD_ARG (thread);
-  wq->thread = NULL;
 
   if(!wq || !(wq->pre_items||wq->items))
   {
@@ -326,6 +325,7 @@ work_queue_run (struct thread *thread)
 		return 1;
   }
 
+  wq->thread = NULL;
   /* calculate cycle granularity:
    * list iteration == 1 cycle
    * granularity == # cycles between checks whether we should yield.

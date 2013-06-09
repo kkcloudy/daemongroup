@@ -391,8 +391,11 @@ sockunion_connect (int fd, union sockunion *peersu, unsigned short port,
     {
       if (errno != EINPROGRESS)
 	{
+		char *log_str = sockunion_log (&su);
+		
 	  zlog_info ("can't connect to %s fd %d : %s",
-		     sockunion_log (&su), fd, safe_strerror (errno));
+		     log_str, fd, safe_strerror (errno));
+	  free(log_str);
 	  return connect_error;
 	}
     }
@@ -614,8 +617,9 @@ sockunion_getsockname (int fd)
 
       if (IN6_IS_ADDR_V4MAPPED (&su->sin6.sin6_addr))
 	{
-	  struct sockaddr_in sin;
+	  struct sockaddr_in sin={0};
 
+	  memset(&sin,0,sizeof(sin));
 	  sin.sin_family = AF_INET;
 	  memcpy (&sin.sin_addr, ((char *)&su->sin6.sin6_addr) + 12, 4);
 	  sin.sin_port = su->sin6.sin6_port;
@@ -668,7 +672,7 @@ sockunion_getpeername (int fd)
 
       if (IN6_IS_ADDR_V4MAPPED (&su->sin6.sin6_addr))
 	{
-	  struct sockaddr_in sin;
+	  struct sockaddr_in sin = {0};
 
 	  sin.sin_family = AF_INET;
 	  memcpy (&sin.sin_addr, ((char *)&su->sin6.sin6_addr) + 12, 4);

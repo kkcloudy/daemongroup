@@ -1967,7 +1967,7 @@ tipc_client_route_multipath (int cmd, tipc_server *vice_board, u_short length)
 	// struct in_addr nexthop;
 	  struct in_addr *ipv4_gate;
    	  struct in6_addr *ipv6_gate;
-	  u_char nexthop_num;
+	  u_char nexthop_num = 0;
 	  u_char nexthop_type;
 	  struct stream *s;
 	  unsigned int ifindex;

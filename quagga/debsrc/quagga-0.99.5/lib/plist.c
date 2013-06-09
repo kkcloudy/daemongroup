@@ -665,7 +665,7 @@ vty_prefix_list_install (struct vty *vty, afi_t afi, const char *name,
   struct prefix_list *plist;
   struct prefix_list_entry *pentry;
   struct prefix_list_entry *dup;
-  struct prefix p;
+  struct prefix p={0};
   int any = 0;
   int seqnum = -1;
   int lenum = 0;
@@ -731,7 +731,12 @@ vty_prefix_list_install (struct vty *vty, afi_t afi, const char *name,
 	}
     }
 #endif /* HAVE_IPV6 */
+	else
+	{
+		vty_out (vty, "error afi type\n");
+		return CMD_WARNING;
 
+	}
   /* ge and le check. */
   if (genum && genum <= p.prefixlen)
     return vty_invalid_prefix_range (vty, prefix);
