@@ -21,8 +21,11 @@
 #include "ac_manage_interface.h"
 
 #include "ac_sample_interface_flow.h"
+#include "ac_sample_interface.h"
 
-#define DEF_BAND_WIDTH			(1000000/8*1024)
+#define DEF_BAND_WIDTH			(1000*1024*1024/8)
+
+static struct sample_rtmd_info intf_flow_info = {0};
 
 int create_if_flow_info( struct if_flow_info_s **pifinfo  )
 {
@@ -97,7 +100,7 @@ static int if_flow_info_set_sample_data( ac_sample_t *me, struct if_stats_list *
 			//pos->name
 			pre_rxbytes = pos->rxbytes;
 			pre_txbytes = pos->txtytes;
-			pre_time		= pos->sample_time;
+			pre_time = pos->sample_time;
 
 			pos->sample_time = time(0);
 			pos->rxbytes = if_stats_node->stats.rx_bytes;
@@ -144,7 +147,7 @@ static int if_flow_info_set_sample_data( ac_sample_t *me, struct if_stats_list *
 	pos->rxbytes = if_stats_node->stats.rx_bytes;
 	pos->txtytes = if_stats_node->stats.tx_bytes; 
 	strncpy(pos->name, if_stats_node->ifname, sizeof(pos->name) - 1);
-	syslog(LOG_DEBUG, "list add: pos->name = %s\n!", pos->name);
+	syslog(LOG_DEBUG, "list add: pos->name = %s, ifname=%s\n!", pos->name, if_stats_node->ifname);
 	if(0 != get_if_index(if_stats_node->ifname, &pos->ifindex)) {
 		syslog( LOG_WARNING, "get if %s index error\n", if_stats_node->ifname);
 	}
@@ -408,6 +411,7 @@ int band_width_do_statistics(ac_sample_t *me)
 
 }
 
+#if 0
 static manage_message *
 sample_get_slot_interface_info(unsigned int slot_id) {
 	manage_message *query = NULL, *reply = NULL;
@@ -490,7 +494,6 @@ sample_accumulate_interface_stats(struct if_stats_list *destNode, struct if_stat
     
     return ;
 }
-
 
 static int do_sample_interface_flow( ac_sample_t *me )
 {
@@ -575,6 +578,57 @@ static int do_sample_interface_flow( ac_sample_t *me )
 	
 	return 0;
 }
+#endif
+
+static int do_sample_interface_flow( ac_sample_t *me )
+{
+	int if_num = 0;
+	struct if_stats_list *if_stats_array = NULL;
+	int ret = 0;
+
+	int i, j;
+	unsigned int local_slotid = 0, board_state = 0;
+	unsigned int master_slotid = 0;
+
+	if (VALID_DBM_FLAG == get_dbm_effective_flag()) {
+		local_slotid = sample_get_product_info(PRODUCT_LOCAL_SLOTID);
+		master_slotid = sample_get_product_info(PRODUCT_ACTIVE_MASTER);
+	}
+	
+	if (0 == local_slotid || local_slotid > SLOT_MAX_NUM) {
+		syslog(LOG_WARNING, "do_sample_interface_flow: get local slot id failed!\n");
+		return -1;
+	}
+	
+	syslog(LOG_DEBUG, "do_sample_interface_flow: slotid=%d, cmd is %d!\n", local_slotid, intf_flow_info.cmd);
+
+	if (local_slotid != master_slotid && 
+		INTERFACE_FLOW_STATISTICS_SAMPLING_INTEGRATED_ACSAMPLE == intf_flow_info.cmd) {
+		return 0;
+	}
+
+	ret = sample_rtmd_get_interface_flow(&intf_flow_info, &if_num, &if_stats_array);
+	if (0 != ret) {
+		syslog(LOG_WARNING, "do_sample_interface_flow: sample_rtmd_get_interface_flow failed! ret = %d\n", ret);
+		return ret;
+	}
+
+	for (i = 0; i < if_num; i++) {
+		if_flow_info_set_sample_data(me, &if_stats_array[i]);
+	}
+
+	if (NULL != if_stats_array) {
+		free(if_stats_array);
+		if_stats_array = NULL;
+	}	
+/*
+	对每个接口进行丢包，带宽阀值检查，有必要发送trap消息
+*/
+	drop_rate_do_statistics(me);
+	band_width_do_statistics(me);
+	
+	return 0;
+}
 
 
 ac_sample_t *create_ac_sample_interface_flow(  
@@ -594,7 +648,14 @@ ac_sample_t *create_ac_sample_interface_flow(
 	{
 		syslog(LOG_INFO,"%s acsample_read_conf:error return %d load default config", SAMPLE_NAME_INTERFACE_FLOW, ret );
 	}
+
+	ret = sample_rtmd_init_socket(&intf_flow_info, PROCESS_NAME_ACSAMPLE,
+			INTERFACE_FLOW_STATISTICS_SAMPLING_DIVIDED_ACSAMPLE, 1000);
+	if (0 != ret) {
+		syslog(LOG_INFO,"%s sample_rtmd_init_socket:error return %d init socket", SAMPLE_NAME_INTERFACE_FLOW, ret);
+	}
 	
+	syslog(LOG_INFO,"%s sample_rtmd_init_socket:return %d init socket", SAMPLE_NAME_INTERFACE_FLOW, ret);
     pret = create_ac_sample(SAMPLE_NAME_INTERFACE_FLOW, config.sample_interval, config.statistics_time, config.resend_interval );//, do_sample_memusage, NULL );
 
 	if( NULL != pret )

@@ -7,6 +7,18 @@
 #include <libxml/parser.h>
 #include <libxml/tree.h>
 #include <libxml/xpathInternals.h>
+
+#include <netinet/in.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <arpa/inet.h>
+#include <sys/select.h>
+#include <linux/un.h>
+#include <sys/time.h>
+#include <unistd.h>
+#include <sys/errno.h>
+
 #include "board/board_define.h"
 #include "ac_sample_dbus.h"
 #include "ac_sample_err.h"
@@ -14,6 +26,7 @@
 #include "ws_intf.h"
 #include "ws_public.h"
 #include "ws_dbus_def.h"
+#include "ac_sample_interface.h"
 
 /**********************acsample config file********************/
 
@@ -408,6 +421,273 @@ sample_get_board_state(void) {
 	}
 
 	return board_state;
+}
+
+//rtmd provide ac interface flow
+
+ #define INTERFACE_NAMSIZ		20
+ 
+struct rtmd_if_stats {
+	unsigned long long rx_packets;   /* total packets received       */
+	unsigned long long tx_packets;   /* total packets transmitted    */
+	unsigned long long rx_bytes;     /* total bytes received         */
+	unsigned long long tx_bytes;     /* total bytes transmitted      */
+	unsigned long long rx_errors;    /* bad packets received         */
+	unsigned long long tx_errors;    /* packet transmit problems     */
+	unsigned long long rx_dropped;   /* no space in linux buffers    */
+	unsigned long long tx_dropped;   /* no space available in linux  */
+	unsigned long long rx_multicast; /* multicast packets received   */
+	unsigned long long rx_compressed;
+	unsigned long long tx_compressed;
+	unsigned long long collisions;
+
+	/* detailed rx_errors: */
+	unsigned long long rx_length_errors;
+	unsigned long long rx_over_errors;       /* receiver ring buff overflow  */
+	unsigned long long rx_crc_errors;        /* recved pkt with crc error    */
+	unsigned long long rx_frame_errors;      /* recv'd frame alignment error */
+	unsigned long long rx_fifo_errors;       /* recv'r fifo overrun          */
+	unsigned long long rx_missed_errors;     /* receiver missed packet     */
+	/* detailed tx_errors */
+	unsigned long long tx_aborted_errors;
+	unsigned long long tx_carrier_errors;
+	unsigned long long tx_fifo_errors;
+	unsigned long long tx_heartbeat_errors;
+	unsigned long long tx_window_errors;
+};
+
+struct if_flow_stats {
+	int length;
+	int process_name;
+	int cmd;
+	char name[INTERFACE_NAMSIZ];
+	struct rtmd_if_stats stats;
+};
+
+int 
+set_nonblocking(int fd)
+{
+	int flags = 0;
+
+	if ((flags = fcntl(fd, F_GETFL)) < 0) {
+		syslog(LOG_WARNING, "fcntl(F_GETFL) failed for fd %d: %s",
+			fd, strerror(errno));
+		return -1;
+	}
+	if (fcntl(fd, F_SETFL, (flags | O_NONBLOCK)) < 0) {
+		syslog(LOG_WARNING, "fcntl failed setting fd %d non-blocking: %s",
+			fd, strerror(errno));
+		return -1;
+	}
+	return 0;
+}
+
+
+int sample_rtmd_init_socket(struct sample_rtmd_info *info, int process, int cmd, int timeout)
+{
+	int ret = 0;
+	int sockfd = -1;
+	struct sockaddr_un servaddr;
+
+	if (NULL == info) {
+		return -1;
+	}
+
+	memset(info, 0, sizeof(struct sample_rtmd_info));
+	info->sockfd = -1;
+	
+	servaddr.sun_family = AF_UNIX;
+
+	if (PROCESS_NAME_SNMP == process) {
+		 strncpy(servaddr.sun_path, RTM_TO_SNMP_PATH, sizeof(servaddr.sun_path));
+	} else if (PROCESS_NAME_ACSAMPLE == process) {
+		strncpy(servaddr.sun_path, RTM_TO_ACSAMPLE_PATH, sizeof(servaddr.sun_path));
+	} else {
+		return -1;
+	}
+
+	sockfd = socket(AF_UNIX, SOCK_STREAM, 0);
+	if (sockfd < 0) {
+		sockfd = -1;
+		return AS_RTN_SOCKET_ERR;
+	}
+
+	ret = connect(sockfd, (struct sockaddr *)&servaddr, sizeof(servaddr));
+	if (ret < 0) {
+		close(sockfd);
+		sockfd = -1;
+		return AS_RTN_SOCKET_CONNECT_ERR;
+	}
+
+	ret = set_nonblocking(sockfd);
+	if (ret < 0) {
+		close(sockfd);
+		sockfd = -1;
+		return AS_RTN_SOCKET_CONNECT_ERR;
+	}
+
+	info->sockfd = sockfd;
+	info->process = process;
+	info->cmd = cmd;
+	info->timeout = timeout;
+	
+	
+	return AS_RTN_OK;
+}
+
+ssize_t
+readn(int fd, const void *vptr, size_t n)
+{
+	size_t nleft = 0;
+	ssize_t nread = 0;
+	void *ptr = NULL;
+
+	if (fd < 0 || NULL == vptr || n <= 0) {
+		return -1;
+	}
+
+	ptr = vptr;
+	nleft = n;	
+	while (nleft > 0) {
+		if ((nread = read(fd, ptr, nleft)) < 0) {
+			syslog(LOG_WARNING, "read error nread=%d:%s", nread, strerror(errno));
+			if (errno == EINTR) {
+				nread = 0;
+			} else if (errno == EAGAIN) {
+				break;
+			} else {
+				return -1;
+			}
+		} else if (nread == 0) {
+			break;
+		}
+		nleft -= nread;
+		ptr += nread;
+		syslog(LOG_DEBUG, "readn nread=%d nleft=%d", nread, nleft);
+	} 
+	return (n - nleft);
+}
+
+ssize_t
+writen(int fd, const void *vptr, size_t n)
+{
+	size_t nleft = 0;
+	ssize_t nwritten = 0;
+	const char *ptr = NULL;
+
+	if (fd < 0 || NULL == vptr || n <= 0) {
+		return -1;
+	}
+
+	ptr = vptr;
+	nleft = n;
+	while (nleft > 0) {
+		if ((nwritten = write(fd, ptr, nleft)) <= 0) {
+			syslog(LOG_DEBUG, "nwriten=%d nleft=%d", nwritten, nleft);
+			if (nwritten < 0 && errno == EINTR) {
+				nwritten = 0;
+			} else {
+				return -1;
+			}
+		}
+		nleft -= nwritten;
+		ptr += nwritten;
+	}
+	return n;
+}
+
+int sample_rtmd_get_interface_flow(struct sample_rtmd_info *info, int *ifnum, struct if_stats_list **data)
+{
+	struct if_stats_list *pos = NULL;
+	struct if_flow_stats buf[250] = {{0}};
+	struct timeval timeout = {0};
+	
+	fd_set set;
+	int nbyte = 0;
+	int length = sizeof(struct if_flow_stats);
+	int i = 0;
+	
+	if (NULL == info) {
+		return -1;
+	}
+	buf[0].length = length;
+	buf[0].cmd = info->cmd;
+	buf[0].process_name = info->process;
+	
+	if (NULL == info || NULL == ifnum || NULL == data) {
+		return -1;
+	}
+	nbyte = writen(info->sockfd, buf, buf[0].length);
+	syslog(LOG_WARNING, "sample_rtmd_get_interface_flow writen nbyte=%d, length=%d\n", nbyte, length);
+	if (nbyte != length) {
+		return AS_RTN_SOCKET_WRITE_ERR;
+	}
+
+	timeout.tv_sec = info->timeout/1000;
+	timeout.tv_usec = (info->timeout%1000)*1000;
+
+	FD_ZERO(&set);
+	FD_SET(info->sockfd, &set);
+
+	if (select(info->sockfd+1, &set, NULL, NULL, &timeout) <= 0) {
+		syslog(LOG_WARNING, "sample_rtmd_get_interface_flow timeout\n");
+		return AS_RTN_SOCKET_SET_ERR;
+	}
+	nbyte = readn(info->sockfd, buf, sizeof(buf));
+	syslog(LOG_DEBUG, "sample_rtmd_get_interface_flow readn nbyte=%d, size=%d\n", nbyte, sizeof(buf));
+	if (nbyte < 0) {
+		return AS_RTN_SOCKET_READ_BYTE_ERR;
+	}
+	
+	*ifnum = nbyte/length;
+	if (nbyte%length) {
+		return AS_RTN_SOCKET_READ_BYTE_ERR;
+	}
+	pos = (struct if_stats_list *)calloc(*ifnum, sizeof(struct if_stats_list));
+	if (NULL == pos) {
+		return AS_RTN_MALLOC_ERR;
+	}
+	for (i = 0; i < *ifnum; i++) {		
+		strncpy(pos[i].ifname, buf[i].name, sizeof(pos[i].ifname));
+		pos[i].stats.rx_packets = buf[i].stats.rx_packets;
+		pos[i].stats.tx_packets = buf[i].stats.tx_packets;
+		pos[i].stats.rx_bytes = buf[i].stats.rx_bytes;
+		pos[i].stats.tx_bytes = buf[i].stats.tx_bytes;
+		pos[i].stats.rx_errors = buf[i].stats.rx_errors;
+		pos[i].stats.tx_errors = buf[i].stats.tx_errors;
+		pos[i].stats.rx_dropped = buf[i].stats.rx_dropped;
+		pos[i].stats.tx_dropped = buf[i].stats.tx_dropped;
+		pos[i].stats.rx_multicast = buf[i].stats.rx_multicast;
+		pos[i].stats.rx_compressed = buf[i].stats.rx_compressed;
+		pos[i].stats.tx_compressed = buf[i].stats.tx_compressed;
+		pos[i].stats.collisions = buf[i].stats.collisions;
+		pos[i].stats.rx_length_errors = buf[i].stats.rx_length_errors;
+		pos[i].stats.rx_over_errors = buf[i].stats.rx_over_errors;
+		pos[i].stats.rx_crc_errors = buf[i].stats.rx_crc_errors;
+		pos[i].stats.rx_frame_errors = buf[i].stats.rx_frame_errors;
+		pos[i].stats.rx_fifo_errors = buf[i].stats.rx_fifo_errors;
+		pos[i].stats.rx_missed_errors = buf[i].stats.rx_missed_errors;
+		pos[i].stats.tx_aborted_errors = buf[i].stats.tx_aborted_errors;
+		pos[i].stats.tx_carrier_errors = buf[i].stats.tx_carrier_errors;
+		pos[i].stats.tx_fifo_errors = buf[i].stats.tx_fifo_errors;
+		pos[i].stats.tx_heartbeat_errors = buf[i].stats.tx_heartbeat_errors;
+		pos[i].stats.tx_window_errors = buf[i].stats.tx_window_errors;
+	}
+	*data = pos;
+	return AS_RTN_OK;
+}
+
+int sample_rtmd_close_socket(struct sample_rtmd_info *info)
+{
+	if (NULL == info) {
+		return -1;
+	}
+	if (info->sockfd <= 0) {
+		return -1;
+	}
+	close(info->sockfd);
+	info->sockfd = -1;
+	return AS_RTN_OK;
 }
 
 /**********************************END********************************/
