@@ -47,6 +47,65 @@ extern product_inf *product;
 extern int board_type ;
 
 
+/*gujd : 2013-06-04, am 11:07.Add for Rtm Distribute System for interface uplink set/unset. Only active master done*/
+void
+zebra_interface_uplink_state(struct interface *ifp, int done)
+{
+	if(ifp == NULL)
+	 return;
+	
+  struct listnode *node, *nnode;
+  struct zserv *client;
+
+  tipc_client *master_board;
+/*  tipc_server *vice_board;*/
+#if 0
+  for (ALL_LIST_ELEMENTS (zebrad.client_list, node, nnode, client))
+    zsend_interface_update (ZEBRA_INTERFACE_UP, client, ifp);
+#endif
+ 
+  if (product ==NULL){
+		 return;
+	 }
+ 
+ 
+/*  if (product->board_id == 0)*//**will change: board_type**/
+   if(product->board_type == BOARD_IS_ACTIVE_MASTER)/*activeÖ÷¿Ø*/
+  	{
+    	if(zebrad.vice_board_list == NULL)
+    	{
+      	   zlog_debug("%s, line %d, zebrad.vice_board_list(NULL).", __func__, __LINE__);
+           return;
+    	}
+ 	  
+      /*send message to all of connected vice board*/
+  	   for (ALL_LIST_ELEMENTS (zebrad.vice_board_list, node, nnode, master_board)) 
+	   	{ 
+  			if(done == 1)/*set uplink flag*/
+			{
+				master_send_interface_uplink_flag_update(ZEBRA_INTERFACE_UPLINK_FLAG_SET, master_board, ifp);
+			}
+			else if(done == 0)/*unset uplink flag*/
+			{
+				master_send_interface_uplink_flag_update(ZEBRA_INTERFACE_UPLINK_FLAG_UNSET, master_board, ifp);
+			}
+			else
+			{
+				zlog_warn("interface linkdetection done err !\n");
+				return;
+			}
+  		   
+  	    }
+ 	 
+  } 
+   else
+   	{
+   		zlog_warn("Not active master board can not redistribute interface uplink set/unset command !\n");
+   	}
+   
+		
+}
+
 /*gjd : add for Rtm Distribute System for interface linkdetection. Only active master done*/
 void
 redistribute_interface_linkdetection(struct interface *ifp, int done)

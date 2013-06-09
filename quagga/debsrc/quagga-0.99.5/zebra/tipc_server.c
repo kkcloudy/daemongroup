@@ -2503,7 +2503,7 @@ vice_send_interface_descripton_unset(int command,tipc_server *client, struct int
 
 
 int 
-vice_send_interface_packets_statistics(tipc_server *client, struct interface *ifp)
+vice_send_interface_packets_statistics(tipc_server *client, struct interface *ifp,int if_flow_command)
 {
   struct stream *s;
 
@@ -2516,7 +2516,7 @@ vice_send_interface_packets_statistics(tipc_server *client, struct interface *if
 
   /* Message type. */
   tipc_packet_create_header (s, ZEBRA_INTERFACE_PACKETS_STATISTICS);
-
+  stream_putl(s,if_flow_command);
   /* Interface information. */
   stream_put (s, ifp->name, INTERFACE_NAMSIZ);
   
@@ -2534,6 +2534,7 @@ vice_send_interface_packets_statistics(tipc_server *client, struct interface *if
   stream_putq (s, ifp->stats.rx_over_errors);
   stream_putq (s, ifp->stats.rx_crc_errors);
   stream_putq (s, ifp->stats.rx_frame_errors);
+  stream_putq (s, ifp->stats.rx_compressed );
   stream_putq (s, ifp->stats.rx_fifo_errors);
   stream_putq (s, ifp->stats.rx_missed_errors);
   stream_putq (s, ifp->stats.tx_aborted_errors);
@@ -3684,6 +3685,55 @@ vice_interface_send_to_master(tipc_server *vice_board)
    return ifp;
  }
 
+
+
+struct interface *
+tipc_vice_zebra_interface_uplink_flag_state_read (int command,struct stream *s)
+{
+	struct interface *ifp;
+	char ifname_tmp[INTERFACE_NAMSIZ];
+	int ret = 0;
+	unsigned char uplink_flag;
+
+	
+	if (s == NULL) {
+		if(tipc_server_debug)
+		zlog_debug("zebra_interface_state struct stream is null\n");
+		return NULL;
+	}
+
+  /* Read interface name. */
+  stream_get (ifname_tmp, s, INTERFACE_NAMSIZ);
+  if(tipc_server_debug)
+   zlog_debug("%s : line %d, name = %s\n", __func__,__LINE__,ifname_tmp);
+
+  /* Lookup this by interface name. */
+  ifp = if_lookup_by_name_len (ifname_tmp,
+			       strnlen(ifname_tmp, INTERFACE_NAMSIZ));
+ 
+  /* If such interface does not exist, indicate an error */
+  if (ifp == NULL)
+  {
+  	if(tipc_server_debug)
+	 zlog_debug("%s : line %d, interface do not exist or the interface not match!\n",__func__,__LINE__);
+     return NULL;
+  	}
+  
+  uplink_flag = stream_getc(s);
+  
+  if(command == ZEBRA_INTERFACE_UPLINK_FLAG_SET)/*set*/
+    SET_FLAG(ifp->uplink_flag ,INTERFACE_SET_UPLINK);
+  else if(command ==ZEBRA_INTERFACE_UPLINK_FLAG_UNSET)/*clear*/
+    UNSET_FLAG(ifp->uplink_flag ,INTERFACE_SET_UPLINK);
+  else
+  	zlog_warn("%s: line %d, unkown command[%d].\n",__func__,__LINE__,command);
+  
+  if(tipc_server_debug)
+    zlog_debug("%s: line %d ,uplink_flag(%d),ifp->uplink_flag(%u).\n",__func__,__LINE__,uplink_flag,ifp->uplink_flag);
+
+  return ifp;
+  
+}
 
 struct interface *
 tipc_vice_zebra_interface_state_read (int command,struct stream *s)
@@ -5237,7 +5287,7 @@ tipc_vice_interface_description_unset (int command, tipc_server *vice_board,
   return 0;
 }
 
-
+#if 0
 int
 tipc_vice_interface_packets_statistics_request(int command,tipc_server * vice_board,int length)
 {
@@ -5298,7 +5348,81 @@ tipc_vice_interface_packets_statistics_request(int command,tipc_server * vice_bo
 	
 	
 }
+#endif
+#if 1
+int
+tipc_vice_interface_packets_statistics_request_all(int command,tipc_server * vice_board,int length)
+{
+	/*vice board deal with the request , so go to packet the interface packets info by stream_putXX, then send to master .
+	At present , the interface isn't included the "radio" or "r " interface .*/
+	
+  struct listnode *node, *nnode;
+  struct listnode *ifnode, *ifnnode;
+  struct interface *ifp;
+/*  u_int16_t value = 0;*/
+  int if_flow_command;
+  struct stream *s = vice_board->ibuf;
+  
+  /*In fact, this value unuseful . Only use it for counter(tipc-config -pi) .*/
+ /* value = stream_getw(s);*/
+  if_flow_command = stream_getl(s);
+  /*send request to se_agent by tipc*/
+  rtm_send_request_if_flow_to_se_agent(if_flow_command);
 
+#if 0
+  
+#ifdef HAVE_PROC_NET_DEV
+  /* If system has interface statistics via proc file system, update
+     statistics. */
+  ifstat_update_proc ();
+#endif /* HAVE_PROC_NET_DEV */
+#ifdef HAVE_NET_RT_IFLIST
+  ifstat_update_sysctl ();
+#endif /* HAVE_NET_RT_IFLIST */
+
+//  for (ALL_LIST_ELEMENTS_RO (iflist, node, ifp))
+if(!iflist)
+{
+	zlog_warn("At preset iflist is NULL .\n");
+	return -1;
+}
+  for (ALL_LIST_ELEMENTS (iflist, ifnode, ifnnode, ifp))
+  	{
+		if((memcmp(ifp->name,"radio",5) == 0)			
+			||(memcmp(ifp->name,"r",1) == 0)
+			||(memcmp(ifp->name,"sit0",4) == 0)
+			||(memcmp(ifp->name,"obc0",4) == 0)
+			||(memcmp(ifp->name,"obc1",4) == 0)
+	  		||(memcmp(ifp->name,"pimreg",6) == 0)
+	  		||(memcmp(ifp->name,"ppp",3) == 0)
+		  	||(memcmp(ifp->name,"oct",3) == 0)
+	  		||(memcmp(ifp->name,"lo",2) == 0)
+			||(judge_ve_interface(ifp->name)==VE_INTERFACE)
+			||(judge_eth_debug_interface(ifp->name)==ETH_DEBUG_INTERFACE)
+			||(memcmp(ifp->name,"mng",3) == 0))
+			continue;
+		if(judge_real_local_interface(ifp->name) == LOCAL_BOARD_INTERFACE)
+		{
+			for (ALL_LIST_ELEMENTS (zebrad.master_board_list, node, nnode, vice_board))
+		     {
+		       if(tipc_server_debug)
+		         zlog_debug("%s: line%d, ifp->name = %s", __func__, __LINE__, ifp->name); 
+		       vice_send_interface_packets_statistics(vice_board, ifp);
+			   usleep(fetch_rand_time_interval());/*need , avoid to block master.*/
+		        	
+		      }
+			}
+		else
+			continue;
+		
+  	}
+#endif
+
+ return 0;
+	
+	
+}
+#else
 int
 tipc_vice_interface_packets_statistics_request_all(int command,tipc_server * vice_board,int length)
 {
@@ -5365,6 +5489,7 @@ if(!iflist)
 	
 }
 
+#endif
 
 /* Inteface link up message processing */
 int
@@ -5386,6 +5511,29 @@ tipc_vice_interface_up (int command, tipc_server *vice_board, zebra_size_t lengt
     
   ifp = tipc_vice_zebra_interface_state_read (ZEBRA_INTERFACE_UP,vice_board->ibuf);
 
+  return 0;
+}
+
+/* Inteface uplink flag .*/
+int
+tipc_vice_interface_uplink_flag_update(int command, tipc_server *vice_board, zebra_size_t length)
+{
+
+  struct interface *ifp;
+  int ret;
+  
+  if (vice_board == NULL) {
+  	if(tipc_server_debug)
+  	zlog_debug ("%s, line = %d, zclient is NULL", __func__, __LINE__);
+  	return -1;
+  } 
+  
+
+  /* zebra_interface_state_read () updates interface structure in
+     iflist. */
+    
+  ifp = tipc_vice_zebra_interface_uplink_flag_state_read(command,vice_board->ibuf);
+  
   return 0;
 }
 
@@ -6644,12 +6792,25 @@ vice_board_read (struct thread *thread)
 	   tipc_vice_interface_linkdetection_disable(ZEBRA_INTERFACE_LINKDETECTION_DISABLE, vice_board, length);
 
 		break;
+	  case ZEBRA_INTERFACE_UPLINK_FLAG_SET:
+/*		if (vice_board->interface_up)*/
+/*	  ret = (*vice_board->interface_up) (command, vice_board, length);*/
+		tipc_vice_interface_uplink_flag_update(ZEBRA_INTERFACE_UPLINK_FLAG_SET, vice_board, length);
 
+		break;
+		
+	  case ZEBRA_INTERFACE_UPLINK_FLAG_UNSET:
+/*		if (vice_board->interface_up)*/
+/*	  ret = (*vice_board->interface_up) (command, vice_board, length);*/
+		tipc_vice_interface_uplink_flag_update(ZEBRA_INTERFACE_UPLINK_FLAG_UNSET, vice_board, length);
+
+		break;
+/*
 	 case ZEBRA_INTERFACE_PACKETS_REQUEST:
 	 	tipc_vice_interface_packets_statistics_request(ZEBRA_INTERFACE_PACKETS_REQUEST,vice_board,length);
 
 		break;
-		
+*/		
 
 	case ZEBRA_INTERFACE_INFOMATION_REQUEST:
 		vice_interface_infomation_request(ZEBRA_INTERFACE_INFOMATION_REQUEST,vice_board,length);

@@ -83,6 +83,7 @@ extern product_inf *product ;
 extern int board_type;
 extern unsigned int time_interval ;
 extern int keep_kernel_mode;
+extern struct timeval current_time;
 
 	
 /* add by gjd: Redistribute routes, only when system start up */
@@ -599,6 +600,37 @@ master_interface_send_to_vice(tipc_client  *master_board)
 	  return 0;
 }
 
+
+
+/*Only active master board packet interface linkdetection , and send it to vice board or bakup master board. */
+int
+master_send_interface_uplink_flag_update (int cmd, tipc_client *client, struct interface *ifp)
+{
+  struct stream *s;
+
+  if((judge_ve_interface(ifp->name)== VE_INTERFACE)
+  	||(judge_obc_interface(ifp->name)== OBC_INTERFACE)
+  	||(judge_radio_interface(ifp->name)== DISABLE_RADIO_INTERFACE))
+  	return 0;
+
+  /* Check this client need interface information. */
+  if (! client->ifinfo)
+    return 0;
+
+  s = client->obuf;
+  stream_reset (s);
+
+  tipc_packet_create_header (s, cmd);
+
+  /* Interface information. */
+  stream_put (s, ifp->name, INTERFACE_NAMSIZ);
+  stream_putc (s, ifp->uplink_flag);
+
+  /* Write packet size. */
+  stream_putw_at (s, 0, stream_get_endp (s));
+
+  return master_send_message_to_vice(client);
+}
 
 /*Only active master board packet interface linkdetection , and send it to vice board or bakup master board. */
 
@@ -3214,7 +3246,7 @@ skip:
 }
 
 struct interface *
-interface_packets_statistics_read(struct stream *s)
+interface_packets_statistics_read(struct stream *s, int *if_flow_command)
 {
 	struct interface *ifp;
 	char ifname_tmp[INTERFACE_NAMSIZ];
@@ -3225,7 +3257,7 @@ interface_packets_statistics_read(struct stream *s)
 		zlog_debug("zebra_interface_state struct stream is null\n");
 		return NULL;
 	}
-	
+	*if_flow_command = stream_getl(s);
   	/* Read interface name. */
   	stream_get (ifname_tmp, s, INTERFACE_NAMSIZ);
 
@@ -3256,6 +3288,7 @@ interface_packets_statistics_read(struct stream *s)
   	ifp->stats.rx_over_errors = stream_getq (s);
   	ifp->stats.rx_crc_errors = stream_getq (s);
   	ifp->stats.rx_frame_errors = stream_getq (s);
+	ifp->stats.rx_compressed = stream_getq(s);
   	ifp->stats.rx_fifo_errors = stream_getq (s);
  	ifp->stats.rx_missed_errors = stream_getq (s);
   	ifp->stats.tx_aborted_errors = stream_getq (s);
@@ -3305,19 +3338,27 @@ int
 tipc_master_interface_packets_statistics (int command, tipc_client* master_board, int length)
 {
   struct interface *ifp = NULL;
+  int if_flow_command = 0;
 
   if(master_board->ibuf == NULL) 
   {
 	 zlog_debug("%s: line %d, master_board->ibuf == NULL\n", __func__, __LINE__);
 	 return -1;
   }
-  ifp = interface_packets_statistics_read (master_board->ibuf);
+  ifp = interface_packets_statistics_read (master_board->ibuf,&if_flow_command);/*read data*/
   
   if (ifp == NULL){
   	if(tipc_client_debug)
    		zlog_debug("%s : line %d, the interface maybe not exist....\n", __func__, __LINE__);
     	return -1;
    	}
+  
+  /*use if_flow_command*/
+  if(rtm_debug_if_flow)
+	  zlog_debug("%s: line %d, command[%d](%s).\n",__func__,__LINE__,if_flow_command,
+			  zserv_command_string(if_flow_command));
+  /*send to snmp for integrate sampling.*/
+  rtm_if_flow_stats_update_for_sampling_integrated(ifp,if_flow_command);/*one by one. Or we can use all update finish, then send*/
 
   return 0;
 }
@@ -3468,7 +3509,7 @@ master_board_failed(tipc_client  *master_board)
   return -1;
 }
 int
-master_board_send_request_to_vice(int command, tipc_client *client)
+master_board_send_request_to_vice(int command, tipc_client *client,int if_flow_command)
 {
   struct stream *s;
   u_int16_t value = 1;
@@ -3488,7 +3529,8 @@ master_board_send_request_to_vice(int command, tipc_client *client)
   	stream_put(s, ifp->name, INTERFACE_NAMSIZ);
 */
   /*Put a word(8 byte) in packet in order to make packet >= 6 byte, in fact, this value unuseful . Only use it for counter(tipc-config -pi) .*/
-  stream_putw(s,value);
+//  stream_putw(s,value);
+   stream_putl(s,if_flow_command);
  
   /* Write packet size. */
   stream_putw_at (s, 0, stream_get_endp (s));
@@ -3573,8 +3615,11 @@ master_board_send_interface_infomation_request_to_vice(int command, tipc_client 
 }
 #endif
 
-int
+/*int
 master_board_request_interface_packets_statistics(struct thread *thread)
+*/
+int
+master_board_request_interface_packets_statistics(int if_flow_command)
 {
 	/*  tipc_client  *master_board = THREAD_ARG(thread);*/
 	  tipc_client  *master_board ;
@@ -3603,15 +3648,17 @@ master_board_request_interface_packets_statistics(struct thread *thread)
 /*	  
 		zlog_debug("%s : line %d , Active master send request interface packets statistics to other boards .\n",__func__,__LINE__);
 */
-		usleep(fetch_rand_time_interval());
-		master_board_send_request_to_vice(ZEBRA_INTERFACE_PACKETS_REQUEST_ALL,master_board);
+		//usleep(fetch_rand_time_interval());
+		master_board_send_request_to_vice(ZEBRA_INTERFACE_PACKETS_REQUEST_ALL,master_board,if_flow_command);
 		
 	  	}
 	 /* master_board_event(TIPC_PACKETS_STATISTICS_TIMER, master_board);*/
-	  master_board_event(TIPC_PACKETS_STATISTICS_TIMER, NULL);
+	 /* master_board_event(TIPC_PACKETS_STATISTICS_TIMER, NULL);*/
 	  if(tipc_client_debug)
 		zlog_debug("leave func	%s ...\n",__func__);
+	  
 	  return 0;
+	  
 }
 
 
@@ -4147,17 +4194,20 @@ master_board_event (enum tipc_client_events event,  tipc_client *master_board)
 		   thread_add_read (zebrad.master, master_board_read, master_board, master_board->sock);
 			
 	       break;
-
+#if 0
 		case TIPC_PACKETS_STATISTICS_TIMER:
 			if(tipc_client_debug)
 				zlog_debug("%s : line %d, go to request the interface packets statistics ...\n",__func__,__LINE__);
 		/*	thread_add_timer(zebrad.master,master_board_request_interface_packets_statistics,master_board,time_interval);*/		
 			thread_add_timer(zebrad.master,master_board_request_interface_packets_statistics,NULL,time_interval);
 
-			if(tipc_client_debug)
-		  	 	zlog_debug("leave func %s %d\n",__func__,__LINE__);
+			break;
+#endif
 			
 	    }
+	if(tipc_client_debug)
+	  zlog_debug("leave func %s %d\n",__func__,__LINE__);
+
 }
 
 void master_board_init(product_inf *product)
@@ -4224,7 +4274,7 @@ void master_board_init(product_inf *product)
 		  master_board->redistribute_route_all = tipc_redistribute_all; 
 #endif
 	}
-	master_board_event(TIPC_PACKETS_STATISTICS_TIMER, NULL);
+	/*master_board_event(TIPC_PACKETS_STATISTICS_TIMER, NULL);*/
 	
 				
 }

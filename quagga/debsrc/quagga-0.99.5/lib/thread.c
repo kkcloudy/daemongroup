@@ -213,6 +213,23 @@ quagga_time (time_t *t)
   return tv.tv_sec;
 }
 
+
+void
+quagga_gettimeofday_only(struct timeval *tv )
+{
+	int ret = 0;
+	ret = gettimeofday(tv,NULL);
+	if(ret < 0)
+	{
+		zlog_warn("%s : gettimeofday fail .\n",__func__);
+		return -1;
+	}
+	//return tv;
+	
+	return;	
+}
+
+
 /* Public export of recent_relative_time by value */
 struct timeval
 recent_relative_time (void)

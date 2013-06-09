@@ -24,6 +24,9 @@ void vice_redistribute_interface_delete(struct interface * ifp)
 
 void redistribute_interface_linkdetection(struct interface * ifp,int done)
 {return;}
+void
+zebra_interface_uplink_state(struct interface *ifp, int done)
+{return;}
 #if 0
 void zebra_interface_packets_statistics_request(struct interface *ifp)
 {return;}

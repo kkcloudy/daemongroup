@@ -27,7 +27,7 @@ zebra_SOURCES = \
 	zserv.c main.c interface.c connected.c zebra_rib.c \
 	redistribute.c debug.c rtadv.c zebra_snmp.c zebra_vty.c \
 	irdp_main.c irdp_interface.c irdp_packet.c router-id.c tipc_server.c \
-	tipc_client.c
+	tipc_client.c if_flow_stats.c
 
 testzebra_SOURCES = test_main.c zebra_rib.c interface.c connected.c debug.c \
 	zebra_vty.c \
@@ -35,7 +35,7 @@ testzebra_SOURCES = test_main.c zebra_rib.c interface.c connected.c debug.c \
 
 noinst_HEADERS = \
 	connected.h ioctl.h rib.h rt.h zserv.h redistribute.h debug.h rtadv.h \
-	interface.h ipforward.h irdp.h router-id.h kernel_socket.h
+	interface.h ipforward.h irdp.h router-id.h kernel_socket.h if_flow_stats.h
 
 zebra_LDADD = $(otherobj) $(LIBCAP) $(LIB_IPV6) ../lib/librtm.la
 
@@ -48,7 +48,7 @@ EXTRA_DIST = if_ioctl.c if_ioctl_solaris.c if_netlink.c if_proc.c \
 	ipforward_solaris.c ipforward_sysctl.c rt_ioctl.c rt_netlink.c \
 	rt_socket.c rtread_netlink.c rtread_proc.c rtread_sysctl.c \
 	rtread_getmsg.c kernel_socket.c kernel_netlink.c mtu_kvm.c \
-	ioctl.c ioctl_solaris.c tipc_server.c tipc-client.c\
+	ioctl.c ioctl_solaris.c tipc_server.c tipc-client.c if_flow_stats.c\
 	GNOME-SMI GNOME-PRODUCT-ZEBRA-MIB
 
 #client : client_main.o ../lib/librtm.la

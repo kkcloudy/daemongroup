@@ -436,11 +436,13 @@ struct in_pktinfo
 /*interface description*/
 #define ZEBRA_INTERFACE_DESCRIPTION_SET		   32
 #define ZEBRA_INTERFACE_DESCRIPTION_UNSET	   33
+#define ZEBRA_INTERFACE_UPLINK_FLAG_SET		   34
+#define ZEBRA_INTERFACE_UPLINK_FLAG_UNSET	   35
 
 
 
 
-#define ZEBRA_MESSAGE_MAX                 34
+#define ZEBRA_MESSAGE_MAX                 36
 
 /* Marker value used in new Zserv, in the byte location corresponding
  * the command value in the old zserv header. To allow old and new
@@ -777,5 +779,17 @@ typedef struct product_inf
 
 
 #define RTSUIT_CONF_PATH "/mnt/rtsuit/"
+
+#if 1/*move from if_flow_stats.h*/
+/*cmd*/
+#define INTERFACE_FLOW_STATISTICS_SAMPLING_INTEGRATED_SNMP		1
+#define INTERFACE_FLOW_STATISTICS_SAMPLING_DIVIDED_SNMP			2
+#define INTERFACE_FLOW_STATISTICS_SAMPLING_INTEGRATED_ACSAMPLE	3
+#define INTERFACE_FLOW_STATISTICS_SAMPLING_DIVIDED_ACSAMPLE		4
+#define INTERFACE_FLOW_STATISTICS_SAMPLING_INTEGRATED_RTM		5
+#define INTERFACE_FLOW_STATISTICS_DATA							6
+
+#endif
+
 
 #endif /* _ZEBRA_H */

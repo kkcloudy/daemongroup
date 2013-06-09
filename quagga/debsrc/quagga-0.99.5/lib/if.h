@@ -207,6 +207,8 @@ unsigned char desc_scope;
 //	#define INTERFACE_DESCIPTION_GLOBAL			(1<<1)/*default is gobal, sync, every board is same*/
 unsigned char pass_flag;
 	#define SMUX_CHECK_OVER   (1<<0)/*gujd : 2013-05-09,pm 5:09. Add for smux.*/
+unsigned char uplink_flag;
+	#define INTERFACE_SET_UPLINK	(1<<0)/*gujd: 2013-06-03, am 10:55. Add for uplink interface.*/
 	
 };
 

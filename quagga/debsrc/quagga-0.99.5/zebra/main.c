@@ -38,6 +38,7 @@
 #include "zebra/router-id.h"
 #include "zebra/irdp.h"
 #include "zebra/rtadv.h"
+#include "zebra/if_flow_stats.h"
 
 /* Zebra instance */
 struct zebra_t zebrad =
@@ -47,6 +48,10 @@ struct zebra_t zebrad =
 
 product_inf *product;
 extern int board_type ;
+
+process_info *process_se_agent;
+process_info *process_snmp;
+process_info *process_acsample;
 
 /* process id. */
 pid_t old_pid;
@@ -1004,6 +1009,9 @@ main (int argc, char **argv)
   eth_interface_rpa_init();
   
   vty_read_config (config_file, config_default);/*gujd : 2012-08-14, Move it from above to here, when rtmd restart because waite Distribute System init.*/
+
+  /*gujd: 2013-05-29, pm 2:12. Add for interface flow statistics.*/
+  interface_flow_statistics_init();
 
   /* Print banner. */
   zlog_notice ("Rtmd starting: \n");

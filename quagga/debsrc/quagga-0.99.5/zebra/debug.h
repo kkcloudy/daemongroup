@@ -41,6 +41,9 @@
 #define tipc_client_debug   (rtm_debug_distribute_system & RTM_DEBUG_DISTRIBUTE_SYSTEM)
 #define tipc_server_debug   (rtm_debug_distribute_system & RTM_DEBUG_DISTRIBUTE_SYSTEM)
 
+#define RTM_DEBUG_IF_FLOW_STATS   0x01
+#define rtm_debug_if_flow   (rtm_debug_if_flow_stats & RTM_DEBUG_IF_FLOW_STATS)
+
 /* Debug related macro. */
 #define IS_ZEBRA_DEBUG_EVENT  (zebra_debug_event & ZEBRA_DEBUG_EVENT)
 
@@ -60,6 +63,7 @@ extern unsigned long zebra_debug_kernel;
 extern unsigned long zebra_debug_rib;
 
 extern unsigned long rtm_debug_distribute_system;
+extern unsigned long rtm_debug_if_flow_stats;
 extern void zebra_debug_init (void);
 
 #endif /* _ZEBRA_DEBUG_H */

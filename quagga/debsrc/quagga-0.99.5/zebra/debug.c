@@ -30,6 +30,7 @@ unsigned long zebra_debug_packet;
 unsigned long zebra_debug_kernel;
 unsigned long zebra_debug_rib;
 unsigned long rtm_debug_distribute_system;
+unsigned long rtm_debug_if_flow_stats;
 
 DEFUN (show_debugging_zebra,
        show_debugging_zebra_cmd,
@@ -273,6 +274,30 @@ DEFUN (no_debug_rtm_distribute_system,
   return CMD_SUCCESS;
 }
 
+DEFUN (debug_rtm_if_flow,
+       debug_rtm_if_flow_cmd,
+       "debug rtm if_flow",
+       DEBUG_STR
+       "Rtm configuration\n"
+       "Debug option set for rtm interface flow statistics.\n")
+{
+  rtm_debug_if_flow_stats = RTM_DEBUG_DISTRIBUTE_SYSTEM;
+  return CMD_SUCCESS;
+}
+
+
+DEFUN (no_debug_rtm_if_flow,
+       no_debug_rtm_if_flow_cmd,
+       "no debug rtm if_flow",
+       NO_STR
+       DEBUG_STR
+       "Rtm configuration\n"
+       "Debug option set for rtm interface flow statistics.\n")
+{
+  rtm_debug_if_flow_stats = 0;
+  return CMD_SUCCESS;
+}
+
 
 
 /* Debug node. */
@@ -381,4 +406,10 @@ install_node (&debug_node, NULL, "DEBUG_NODE");
    /*gjd : for Distrbute System*/
   install_element (CONFIG_NODE, &debug_rtm_distribute_system_cmd);
   install_element (CONFIG_NODE, &no_debug_rtm_distribute_system_cmd);
+  /*gujd : 2013-05-30. Add for debug if flow statistics.*/
+  install_element (ENABLE_NODE, &debug_rtm_if_flow_cmd);
+  install_element (ENABLE_NODE, &no_debug_rtm_if_flow_cmd);
+  install_element (CONFIG_NODE, &debug_rtm_if_flow_cmd);
+  install_element (CONFIG_NODE, &no_debug_rtm_if_flow_cmd);
+  
 }

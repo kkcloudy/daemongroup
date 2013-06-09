@@ -45,6 +45,7 @@
 #include "zebra/irdp.h"
 #include "zebra/router-id.h"
 #include "zebra/tipc_client.h"
+#include "zebra/if_flow_stats.h"
 
 #ifndef SEM_SLOT_COUNT_PATH
 #define SEM_SLOT_COUNT_PATH         "/dbm/product/slotcount"
@@ -57,6 +58,8 @@ extern unsigned int radio_interface_show_enable;
 unsigned int time_interval = 300 ;
 extern struct cmd_node wireless_interface_node;
 extern  unsigned int if_nametoindex (const char *name);
+extern struct timeval current_time;
+
 int get_product_info(char *filename)
 {
 	int fd;
@@ -3359,6 +3362,68 @@ struct cmd_node interface_node =
   1
 };
 
+/*2013-06-04 , am 5:00. Add for set uplink interface mark.*/
+
+DEFUN (interface_set_uplink_flag,
+       interface_set_uplink_flag_cmd,
+       "set uplink",
+       "Mark the selected interface as uplink interface.\n")
+{
+  struct interface *ifp;
+  
+#if 0
+	  ifp = (struct interface *) vty->index;
+#else
+	  ifp = if_get_by_vty_index(vty->index);
+	  if(NULL == ifp)
+		{
+		  vty_out (vty, "%% Interface %s does not exist%s", (char*)(vty->index), VTY_NEWLINE);
+		  return CMD_WARNING;
+	  }
+	  
+#endif
+  SET_FLAG(ifp->uplink_flag, INTERFACE_SET_UPLINK);
+
+  /*gjd : add for Distribute System, active master send turn on linkdetect to oter boards (keep sync ifp->status).*/
+  if(product != NULL && product->board_type == BOARD_IS_ACTIVE_MASTER)
+  {
+	zebra_interface_uplink_state(ifp,1);
+  }
+
+  return CMD_SUCCESS;
+}
+
+DEFUN (interface_unset_uplink_flag,
+       interface_unset_uplink_flag_cmd,
+       "unset uplink",
+       "Mark the selected interface as uplink interface.\n")
+{
+  struct interface *ifp;
+  
+#if 0
+	  ifp = (struct interface *) vty->index;
+#else
+	  ifp = if_get_by_vty_index(vty->index);
+	  if(NULL == ifp)
+		{
+		  vty_out (vty, "%% Interface %s does not exist%s", (char*)(vty->index), VTY_NEWLINE);
+		  return CMD_WARNING;
+	  }
+	  
+#endif
+  UNSET_FLAG(ifp->uplink_flag, INTERFACE_SET_UPLINK);
+  ifp->uplink_flag = 0;
+
+  /*gjd : add for Distribute System, active master send turn on linkdetect to oter boards (keep sync ifp->status).*/
+  if(product != NULL && product->board_type == BOARD_IS_ACTIVE_MASTER)
+  {
+	zebra_interface_uplink_state(ifp,0);
+  }
+
+  return CMD_SUCCESS;
+}
+
+
 DEFUN (interface_desc_func, 
        interface_desc_cmd_rtmd,
        "description .LINE",
@@ -3894,6 +3959,10 @@ DEFUN (show_interface, show_interface_cmd,
 #ifdef HAVE_NET_RT_IFLIST
   ifstat_update_sysctl ();
 #endif /* HAVE_NET_RT_IFLIST */
+
+  /*INTERFACE_FLOW_STATISTICS_SAMPLING_INTEGRATED_RTM*/
+  if( product && product->board_type == BOARD_IS_ACTIVE_MASTER)
+   rtm_deal_interface_flow_stats_sampling_integrated(INTERFACE_FLOW_STATISTICS_SAMPLING_INTEGRATED_RTM, NULL, PROCESS_NAME_SNMP);
 
   /* Specified interface print. */
   if (argc != 0)
@@ -5687,6 +5756,9 @@ if_config_write (struct vty *vty)
 #ifdef HAVE_IRDP
       irdp_config_write (vty, ifp);
 #endif /* IRDP */
+	if(CHECK_FLAG(ifp->uplink_flag,INTERFACE_SET_UPLINK))
+		vty_out(vty," set uplink%s",VTY_NEWLINE);
+	
       vty_out (vty, " exit%s", VTY_NEWLINE);
     }
   return 0;
@@ -6049,6 +6121,10 @@ zebra_if_init (void)
   install_element (CONFIG_NODE, &radio_interface_deal_cmd);
   /*show radio interface infomation.*/
   install_element (CONFIG_NODE, &radio_interface_show_cmd);
+
+  /*for set/unset interface uplink flag.*/
+  install_element (INTERFACE_NODE, &interface_set_uplink_flag_cmd);
+  install_element (INTERFACE_NODE, &interface_unset_uplink_flag_cmd);
   
   install_element (INTERFACE_NODE, &interface_local_cmd);
   install_element (INTERFACE_NODE, &interface_global_cmd);

@@ -165,6 +165,7 @@ if_create (const char *name, int namelen)
 	ifp->linkdetection_flags = 0;
 	ifp->if_scope = 0;
 	ifp->desc_scope = 0;
+	ifp->uplink_flag = 0;
 
   return ifp;
 }
