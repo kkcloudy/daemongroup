@@ -4374,7 +4374,7 @@ void BAK_OP(TableMsg *msg){
 				{
 					if(!ASD_WLAN[i])
 						continue;
-					asd_wlan_radius_init(i);
+					asd_wlan_radius_init(i,ASD_WLAN[i]->SecurityID);
 				}
 			//	circle_unregister_read_sock(asd_master_sock);
 			//	close(asd_master_sock);
@@ -5183,7 +5183,7 @@ void CMD_SECURITY_OP(ASDCmdMsg *msg)
 			wlan_id = msg->u.secinfo.wlanid;
 			SID = msg->u.secinfo.SID;
 			
-			ret = asd_wlan_radius_init(wlan_id);
+			ret = asd_wlan_radius_init(wlan_id,SID);
 			if(ASD_WLAN[wlan_id]->SecurityID != 0){
 			
 				ASD_WLAN[wlan_id]->OldSecurityIndex =  ASD_WLAN[wlan_id]->SecurityIndex;	

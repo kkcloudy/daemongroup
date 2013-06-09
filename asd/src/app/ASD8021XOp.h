@@ -106,7 +106,7 @@ void wapi_radius_auth_send(void *ctx, void *sta_ctx);
 //mahz add 2011.3.7
 void sta_ip_addr_check(void *ctx, void *sta_ctx);
 void eapol_keep_alive_timer(struct eapol_state_machine *sm,int *alive_time);
-int asd_wlan_radius_init(unsigned int wlanid);
+int asd_wlan_radius_init(unsigned int wlanid,unsigned char SID);
 int send_dsgd_finish(int identity_id);
 void  asd_wlan_radius_free(unsigned int wlanid);
 //qiuchen

@@ -2677,14 +2677,12 @@ void  asd_wlan_radius_free(unsigned int wlanid)
 		ASD_WLAN[wlanid]->radius_server = NULL;
 	}
 }
-int asd_wlan_radius_init(unsigned int wlanid)
+int asd_wlan_radius_init(unsigned int wlanid,unsigned char SID)
 {
 	asd_printf(ASD_DEFAULT,MSG_DEBUG,"now in func:%s\n",__func__);
-	int SID;
 	int len = 0;
 	if(ASD_WLAN[wlanid] == NULL)
 		return ASD_WLAN_NOT_EXIST;
-	SID = ASD_WLAN[wlanid]->SecurityID;
 	if(SID <= 0 ||SID >= 129)
 	{
 		return ASD_SECURITY_NOT_EXIST;
