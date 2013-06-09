@@ -620,7 +620,7 @@ unsigned int dcli_dhcp_snp_wan_check_global_status
 			printf("%s raised: %s", err.name, err.message);
 			dbus_error_free_for_dcli(&err);
 		}
-		dbus_message_unref(reply);
+		//dbus_message_unref(reply);
 		return DHCP_SNP_RETURN_CODE_ERROR;
 	}
 
@@ -2176,7 +2176,7 @@ unsigned int dcli_dhcp_snp_config_intf
 			printf("%s raised: %s", err.name, err.message);
 			dbus_error_free_for_dcli(&err);
 		}
-		dbus_message_unref(reply);
+		//dbus_message_unref(reply);
 		return DHCP_SNP_RETURN_CODE_ERROR;
 	}
 
@@ -2257,7 +2257,7 @@ unsigned int dcli_dhcp_snp_add_router_config_intf
 			printf("%s raised: %s", err.name, err.message);
 			dbus_error_free_for_dcli(&err);
 		}
-		dbus_message_unref(reply);
+		//dbus_message_unref(reply);
 		return DHCP_SNP_RETURN_CODE_ERROR;
 	}
 
@@ -2339,7 +2339,7 @@ unsigned int dcli_dhcp_snp_arp_config_intf
 			printf("%s raised: %s", err.name, err.message);
 			dbus_error_free_for_dcli(&err);
 		}
-		dbus_message_unref(reply);
+		//dbus_message_unref(reply);
 		return DHCP_SNP_RETURN_CODE_ERROR;
 	}
 

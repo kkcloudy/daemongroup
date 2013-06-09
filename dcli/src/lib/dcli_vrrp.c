@@ -136,7 +136,7 @@ unsigned int dcli_show_dhcp_failover
 			printf("%s raised: %s", err.name, err.message);
 			dbus_error_free(&err);
 		}
-		dbus_message_unref(reply);		
+		//dbus_message_unref(reply);		
 		return DCLI_VRRP_RETURN_CODE_ERR;
 	}
 	dbus_message_iter_init(reply, &iter);
@@ -225,7 +225,7 @@ int dcli_show_hansi_profile_detail
 			printf("%s raised: %s",err.name,err.message);
 			dbus_error_free_for_dcli(&err);
 		}
-		dbus_message_unref(reply);		
+		//dbus_message_unref(reply);		
 		return DCLI_VRRP_RETURN_CODE_ERR;
 	}
 	dbus_message_iter_init(reply,&iter);
@@ -502,7 +502,7 @@ int dcli_show_hansi_profile_detail
 			printf("%s raised: %s",err.name,err.message);
 			dbus_error_free_for_dcli(&err);
 		}
-		dbus_message_unref(reply);		
+		//dbus_message_unref(reply);		
 		return DCLI_VRRP_RETURN_CODE_ERR;
 	}
 	dbus_message_iter_init(reply,&iter);
@@ -780,7 +780,7 @@ int dcli_show_hansi_profile
 			printf("%s raised: %s",err.name,err.message);
 			dbus_error_free_for_dcli(&err);
 		}
-		dbus_message_unref(reply);		
+		//dbus_message_unref(reply);		
 		return DCLI_VRRP_RETURN_CODE_ERR;
 	}
 	dbus_message_iter_init(reply,&iter);
@@ -1015,7 +1015,7 @@ int dcli_show_hansi_profile
 			printf("%s raised: %s",err.name,err.message);
 			dbus_error_free_for_dcli(&err);
 		}
-		dbus_message_unref(reply);		
+		//dbus_message_unref(reply);		
 		return DCLI_VRRP_RETURN_CODE_ERR;
 	}
 	dbus_message_iter_init(reply,&iter);
