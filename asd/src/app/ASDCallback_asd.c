@@ -5171,7 +5171,45 @@ static void free_loop(int sock, void *circle_ctx, void *sock_ctx)
 	}
 }
 #endif
-
+void CMD_SECURITY_OP(ASDCmdMsg *msg)
+{
+	unsigned char wlan_id = 0;
+	unsigned char SID = 0;
+	int ret = 0;
+	asd_printf(ASD_DEFAULT,MSG_DEBUG,"CMD_SECURITY_OP\n");
+	switch(msg->Op){
+		case ASD_CMD_APPLY_SECURITY:
+			asd_printf(ASD_DEFAULT,MSG_DEBUG,"ASD_CMD_APPLY_SECURITY\n");
+			wlan_id = msg->u.secinfo.wlanid;
+			SID = msg->u.secinfo.SID;
+			
+			ret = asd_wlan_radius_init(wlan_id);
+			if(ASD_WLAN[wlan_id]->SecurityID != 0){
+			
+				ASD_WLAN[wlan_id]->OldSecurityIndex =  ASD_WLAN[wlan_id]->SecurityIndex;	
+				ASD_WLAN[wlan_id]->OldSecurityIndex_flag = ASD_WLAN[wlan_id]->NowSecurityIndex_flag;
+			}
+			
+			if(((ASD_SECURITY[SID]->securityType == OPEN)||(ASD_SECURITY[SID]->securityType == SHARED))&&(ASD_SECURITY[SID]->encryptionType == WEP))
+			{
+				ASD_WLAN[wlan_id]->NowSecurityIndex_flag = 1;
+			}
+			else
+			{
+				ASD_WLAN[wlan_id]->NowSecurityIndex_flag = 0;
+			}
+			
+			ASD_WLAN[wlan_id]->SecurityID = SID;
+			ASD_WLAN[wlan_id]->SecurityIndex = ASD_SECURITY[SID]->index;  //fengwenchao add 20110310 for autelan-2200
+			ASD_WLAN[wlan_id]->ap_max_inactivity = ASD_SECURITY[SID]->ap_max_inactivity;//weichao add 
+			asd_printf(ASD_DBUS,MSG_DEBUG,"ASD_WLAN_INF_OP\n");
+			if(!ret && ASD_WLAN_INF_OP(wlan_id, SID, WID_MODIFY))
+				asd_printf(ASD_DBUS,MSG_DEBUG,"update wlan security type\n");
+			break;
+		default:
+			break;
+	}
+}
 
 void CMD_STA_OP(ASDCmdMsg *msg){	
 	switch(msg->Op){
@@ -5517,6 +5555,9 @@ void handle_cmd(int sock, void *circle_ctx, void *sock_ctx)
 			break;
 		case ASD_ARP_LISTEN:
 			CMD_ARP_LISTEN_OP(msg);
+			break;
+		case ASD_SECURITY_TYPE:
+			CMD_SECURITY_OP(msg);
 			break;
 		default:
 			break;

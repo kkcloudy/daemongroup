@@ -22691,7 +22691,7 @@ DBusMessage *asd_dbus_apply_wlan(DBusConnection *conn, DBusMessage *msg, void *u
 	DBusMessageIter	 iter;
 	unsigned char security_id,wlan_id;
 	unsigned int ret = ASD_DBUS_SUCCESS;
-	int i = 0;
+	int i = 0,len = 0;
 	DBusError err;
 	
 	dbus_error_init(&err);
@@ -22715,35 +22715,17 @@ DBusMessage *asd_dbus_apply_wlan(DBusConnection *conn, DBusMessage *msg, void *u
 		for(i=0; i<5; i++) {
 			if(ASD_WLAN[wlan_id] != NULL){
 				if((ASD_WLAN[wlan_id]->Status == 1)){
-
-					//fengwenchao add 20110310 for autelan-2200
-					//asd_printf(ASD_DBUS,MSG_INFO,"ASD_WLAN[%d]->SecurityID =  %d \n",wlan_id,ASD_WLAN[wlan_id]->SecurityID);
-					if(ASD_WLAN[wlan_id]->SecurityID != 0){
-
-						ASD_WLAN[wlan_id]->OldSecurityIndex =  ASD_WLAN[wlan_id]->SecurityIndex;	
-						ASD_WLAN[wlan_id]->OldSecurityIndex_flag = ASD_WLAN[wlan_id]->NowSecurityIndex_flag;
+					ASDCmdMsg cmdmsg;
+					memset(&cmdmsg, 0, sizeof(ASDCmdMsg));	
+					cmdmsg.Op = ASD_CMD_APPLY_SECURITY;
+					cmdmsg.Type = ASD_SECURITY_TYPE;
+					cmdmsg.u.secinfo.SID = security_id;
+					cmdmsg.u.secinfo.wlanid = wlan_id;
+					len = sizeof(cmdmsg);
+					if(sendto(CmdSock_s, &cmdmsg, len, 0, (struct sockaddr *) &toASD_C.addr, toASD_C.addrlen) < 0){
+						perror("send(wASDSocket)");
+						asd_printf(ASD_DBUS,MSG_DEBUG,"sssssssssss\n");
 					}
-				
-					if(((ASD_SECURITY[security_id]->securityType == OPEN)||(ASD_SECURITY[security_id]->securityType == SHARED))&&(ASD_SECURITY[security_id]->encryptionType == WEP))
-					{
-						ASD_WLAN[wlan_id]->NowSecurityIndex_flag = 1;
-					}
-					else
-					{
-						ASD_WLAN[wlan_id]->NowSecurityIndex_flag = 0;
-					}
-					
-					//asd_printf(ASD_DBUS,MSG_INFO,"ASD_WLAN[wlan_id]->SecurityID = %d\n",ASD_WLAN[wlan_id]->SecurityID);
-					//asd_printf(ASD_DBUS,MSG_INFO,"ASD_WLAN[wlan_id]->OldSecurityIndex = %d\n",ASD_WLAN[wlan_id]->OldSecurityIndex);
-					//fengwenchao add end
-					ASD_WLAN[wlan_id]->SecurityID = security_id;
-					ASD_WLAN[wlan_id]->SecurityIndex = ASD_SECURITY[security_id]->index;  //fengwenchao add 20110310 for autelan-2200
-					ASD_WLAN[wlan_id]->ap_max_inactivity	= ASD_SECURITY[security_id]->ap_max_inactivity;//weichao add 
-					//asd_printf(ASD_DBUS,MSG_INFO,"ASD_WLAN[%d]->OldSecurityIndex_flag = %d\n",wlan_id,ASD_WLAN[wlan_id]->OldSecurityIndex_flag);
-					asd_printf(ASD_DBUS,MSG_DEBUG,"ASD_WLAN_INF_OP\n");
-					if(ASD_WLAN_INF_OP(wlan_id, security_id, WID_MODIFY))
-						asd_printf(ASD_DBUS,MSG_DEBUG,"update wlan security type\n");
-					ret = ASD_DBUS_SUCCESS;
 					break;
 				}else
 					ret = ASD_SECURITY_WLAN_SHOULD_BE_DISABLE;
@@ -22752,11 +22734,6 @@ DBusMessage *asd_dbus_apply_wlan(DBusConnection *conn, DBusMessage *msg, void *u
 				sleep(1);
 			}
 		}
-		asd_printf(ASD_DBUS,MSG_DEBUG,"ret = %d\n",ret);		
-		if(ret == ASD_DBUS_SUCCESS){
-			ret = asd_wlan_radius_init(wlan_id);
-			asd_printf(ASD_DBUS,MSG_DEBUG,"ret = %d\n",ret);
-		}	
 		pthread_mutex_unlock(&asd_g_wlan_mutex);
 	}
 	reply = dbus_message_new_method_return(msg);

@@ -998,7 +998,10 @@ struct sta_nas_info{
 	unsigned char nasid_len;
 };
 extern struct sta_nas_info *ASD_HOTSPOT[HOTSPOT_ID+1];
-
+typedef struct{
+	unsigned char wlanid;
+	unsigned char SID;
+}ASDCmdSec;
 typedef struct{
 	char MAC[MAC_LEN];
 }ASDCmdSta;
@@ -1013,7 +1016,8 @@ typedef struct{
 typedef enum{
 	ASD_STA_TYPE = 1,
 	ASD_FD_TYPE = 2,
-	ASD_ARP_LISTEN = 3
+	ASD_ARP_LISTEN = 3,
+	ASD_SECURITY_TYPE
 }CMDType;
 
 typedef enum{
@@ -1021,7 +1025,8 @@ typedef enum{
 	ASD_CMD_DEL = 2,
 	ASD_CMD_UPDATE = 3,
 	ASD_CMD_UNIX_REINIT =4,
-	ASD_CMD_NETLINK_REINIT =5
+	ASD_CMD_NETLINK_REINIT =5,
+	ASD_CMD_APPLY_SECURITY =6
 }CMDOp;
 
 typedef struct {
@@ -1031,6 +1036,7 @@ typedef struct {
 		ASDCmdSta stainfo;
 		ASDCmdArpL arplisten;
 		ASDCmdFD fdinit;
+		ASDCmdSec secinfo;
 	}u;
 }ASDCmdMsg;
 //qiuchen
