@@ -249,10 +249,11 @@ void read_master_ap_max_counter(int slot_id,int* ap_num)
 	int fd,len =0;
 	char master_ap_max_counter_path[] = "/dbm/product/slot/slot";
 	char buff[DEFAULT_LEN] ={0};
+	char buff_paths[DEFAULT_LEN] ={0};
 	char counter_share[]="/board_ap_counter";
-	sprintf(buff,"%s%d%s",master_ap_max_counter_path,slot_id,counter_share);
+	sprintf(buff_paths,"%s%d%s",master_ap_max_counter_path,slot_id,counter_share);
 
-	fd = open(master_ap_max_counter_path,O_RDONLY);
+	fd = open(buff_paths,O_RDONLY);
 	if(fd <0)
 	{
 		hmd_syslog_err("%s fd <0\n",__func__);
