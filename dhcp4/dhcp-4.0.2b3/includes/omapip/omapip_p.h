@@ -284,6 +284,8 @@ int log_error (const char *, ...)
 	__attribute__((__format__(__printf__,1,2)));
 int log_info (const char *, ...)
 	__attribute__((__format__(__printf__,1,2)));
+int log_local7_dhcp(const char *, ...)
+	__attribute__((__format__(__printf__,1,2)));
 int log_debug (const char *, ...)
 	__attribute__((__format__(__printf__,1,2)));
 void do_percentm (char *obuf, const char *ibuf);

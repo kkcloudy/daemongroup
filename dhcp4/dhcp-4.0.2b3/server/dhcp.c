@@ -944,6 +944,7 @@ void dhcprelease (packet, ms_nulltp)
 	if (lease && lease -> ends > cur_time) {
 		release_lease (lease, packet);
 	} 
+	log_local7_dhcp("%s logoff", msgbuf);
 	log_info ("%s logoff", msgbuf);
       out:
 	if (lease)
@@ -1066,9 +1067,10 @@ void dhcpdecline (packet, ms_nulltp)
 	} else
 	    status = "ignored";
 
-	if (!ignorep)
+	if (!ignorep){
+		log_local7_dhcp("%s: %s", msgbuf, status);
 		log_debug ("%s: %s", msgbuf, status);
-		
+	}	
       out:
 	if (options)
 		option_state_dereference (&options, MDL);
@@ -1533,6 +1535,14 @@ void nak_lease (packet, cip)
 	raw.op = BOOTREPLY;
 
 	/* Report what we're sending... */
+	log_local7_dhcp("DhcpNak__UserIp: %s ,UserMac: %s ,InterfaceIp: %s",
+	      piaddr (*cip),
+	      print_hw_addr (packet -> raw -> htype,
+			     packet -> raw -> hlen,
+			     packet -> raw -> chaddr),
+	      packet -> raw -> giaddr.s_addr
+	      ? inet_ntoa (packet -> raw -> giaddr)
+	      : packet -> interface -> name);
 	log_info ("DhcpNak__UserIp: %s ,UserMac: %s ,InterfaceIp: %s",
 	      piaddr (*cip),
 	      print_hw_addr (packet -> raw -> htype,
@@ -1541,7 +1551,6 @@ void nak_lease (packet, cip)
 	      packet -> raw -> giaddr.s_addr
 	      ? inet_ntoa (packet -> raw -> giaddr)
 	      : packet -> interface -> name);
-
 
 
 #ifdef DEBUG_PACKET
@@ -3035,6 +3044,7 @@ void ack_lease (packet, lease, offer, when, msg, ms_nulltp, hp)
 
 	lease -> state = state;
 
+	log_local7_dhcp("%s", msg);
 	log_debug("%s", msg);
 
 	/* Hang the packet off the lease state. */
@@ -3229,6 +3239,21 @@ void dhcp_reply (lease)
 		log_debug ("Allocate Ip is %s Subnet Mask is %s\n", piaddr (lease -> ip_addr) ,subnet->shared_network->name);
 	}
 	/* Say what we're doing... */
+	log_local7_dhcp("%s %s ,UserMac: %s %s%s%s,InterfaceIp: %s",
+		  (state -> offer
+		   ? (state -> offer == DHCPACK ? "DhcpAck__UserIp:" : "DhcpOffer__UserIp:")
+		   : "BOOTREPLY"),
+		  piaddr (lease -> ip_addr),
+		  (lease -> hardware_addr.hlen
+		   ? print_hw_addr (lease -> hardware_addr.hbuf [0],
+				    lease -> hardware_addr.hlen - 1,
+				    &lease -> hardware_addr.hbuf [1])
+		   : print_hex_1(lease->uid_len, lease->uid, 60)),
+		  s ? "(" : "", s ? s : "", s ? ") " : "",
+		  (state -> giaddr.s_addr
+		   ? inet_ntoa (state -> giaddr)
+		   : state -> ip -> name));
+		   
 	log_debug("%s %s ,UserMac: %s %s%s%s,InterfaceIp: %s",
 		  (state -> offer
 		   ? (state -> offer == DHCPACK ? "DhcpAck__UserIp:" : "DhcpOffer__UserIp:")

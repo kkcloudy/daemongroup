@@ -208,6 +208,43 @@ int log_debug (const char *fmt, ...)
   return 0;
 }
 
+/* Log a note... */
+
+int log_local7_dhcp (const char *fmt, ...)
+{
+  va_list list;
+
+  char info_mbuf[CVT_BUF_MAX + 1] = {0};
+  char info_fbuf[CVT_BUF_MAX + 1] = {0};
+
+#ifndef __AX_PLATFORM__
+	if (dhcp_optimize_enable) {
+		return 0;
+	}  
+#endif
+	
+	  do_percentm (info_fbuf, fmt);
+
+	  /* %Audit% This is log output. %2004.06.17,Safe%
+	   * If we truncate we hope the user can get a hint from the log.
+	   */
+	  va_start (list, fmt);
+	  vsnprintf (info_mbuf, sizeof info_mbuf, info_fbuf, list);
+	  va_end (list);
+
+#ifndef DEBUG
+	if(dhcp_log_level & DEBUG_TYPE_INFO){
+	  	syslog (LOG_INFO|LOG_LOCAL7, "%s", info_mbuf);
+	}
+#endif
+
+	  IGNORE_RET (write (STDERR_FILENO, info_mbuf, strlen (info_mbuf)));
+	  IGNORE_RET (write (STDERR_FILENO, "\n", 1));
+
+
+  return 0;
+}
+
 /* Find %m in the input string and substitute an error message string. */
 
 void do_percentm (obuf, ibuf)
