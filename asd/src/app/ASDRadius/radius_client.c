@@ -442,7 +442,7 @@ struct radius_send_info *radius_client_get_sta_info(struct sta_info *sta,const i
 		client_info = ASD_WLAN[wlanid]->radius->acct;		
 	while(client_info)
 	{
-		if(client_info->sta[radius_id])
+		if(client_info->sta[radius_id]&&client_info->sta[radius_id]->sta)
 		{
 			if(!os_memcmp(client_info->sta[radius_id]->sta->addr,sta->addr,MAC_LEN))
 			{
@@ -452,6 +452,29 @@ struct radius_send_info *radius_client_get_sta_info(struct sta_info *sta,const i
 		}
 		client_info = client_info->next;
 	}
+	/*Qiuchen add this incase:
+		when a station is online and it sends the association frame again,an accounting stop package will be send 
+		at the same time radius auth packet will be send too.
+		this is added to make sure at one time only acct or auth packet is sending.
+		if not:!incase ac dosn't get any response from radius and the station is offline,one of the packet retransmit timer will not be canceled.
+	*/
+	if(RADIUS_AUTH == type)
+		client_info = ASD_WLAN[wlanid]->radius->acct;	
+	else
+		client_info = ASD_WLAN[wlanid]->radius->auth;
+	while(client_info)
+	{
+		if(client_info->sta[radius_id]&&client_info->sta[radius_id]->sta)
+		{
+			if(!os_memcmp(client_info->sta[radius_id]->sta->addr,sta->addr,MAC_LEN))
+			{
+				asd_printf(ASD_DEFAULT,MSG_DEBUG,"sta radius id : %d,got the send_info\n",radius_id);
+				return client_info->sta[radius_id];
+			}
+		}
+		client_info = client_info->next;
+	}
+	//end
 	return NULL;
 }
 void radius_client_info_free(struct radius_send_info *send_info)
@@ -957,10 +980,12 @@ int radius_client_send(struct radius_client_info *client_info,
 		{
 			for(client_tmp = radius->acct ; client_tmp != NULL;client_tmp = client_tmp->next)
 			{
-				if((client_tmp != NULL)&&(client_tmp->sta[radius_id]))
+				if((client_tmp != NULL)&&(client_tmp->sta[radius_id])&&(client_tmp->sta[radius_id]->sta))
 				{
-					if(!os_memcmp(client_tmp->sta[radius_id]->sta->addr,sta->addr,MAC_LEN))
+					if(!os_memcmp(client_tmp->sta[radius_id]->sta->addr,sta->addr,MAC_LEN)){
 						radius_client_info_free(client_tmp->sta[radius_id]);
+						client_tmp->sta[radius_id] = NULL;
+					}
 				}
 			}
 		}	
@@ -1356,6 +1381,7 @@ static void radius_client_receive(int sock, void *circle_ctx, void *sock_ctx)
 		case RADIUS_RX_QUEUED:
 //			radius_client_msg_free(req);
 			radius_client_info_free(client_info->sta[radius_id]);
+			client_info->sta[radius_id] = NULL;
 			return;
 		case RADIUS_RX_INVALID_AUTHENTICATOR:
 			invalid_authenticator++;
@@ -1378,6 +1404,7 @@ static void radius_client_receive(int sock, void *circle_ctx, void *sock_ctx)
 		       "");
 	//radius_client_msg_free(req);
 	radius_client_info_free(client_info->sta[radius_id]);
+	client_info->sta[radius_id] = NULL;
 
  fail:
 	radius_msg_free(msg);
@@ -1481,6 +1508,7 @@ int radius_client_get_id(struct radius_client_info *client_info)
 		asd_printf(ASD_DEFAULT,MSG_INFO,"Removing pending RADIUS message, "
 				       "since its id (%d) is reused",radius_id);
 		radius_client_info_free(client_info->sta[radius_id]);
+		client_info->sta[radius_id] = NULL;
 	}
 	
 	return radius_id;

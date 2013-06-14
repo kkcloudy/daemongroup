@@ -1747,7 +1747,7 @@ ieee802_1x_receive_auth(struct radius_msg *msg, struct radius_msg *req,
 	case RADIUS_CODE_ACCESS_ACCEPT:
 		if(gASDLOGDEBUG & BIT(1)){
 			if(sta->rflag && !(sta->logflag&BIT(1)) && sta->flags & WLAN_STA_AUTHORIZED){
-				syslog(LOG_INFO|LOG_LOCAL3,"STA_ROAM_SUCCESS:UserMAC:"MACSTR" From AC(%lu.%lu.%lu.%lu)-AP%d-BSSID("MACSTR") To AC(%lu.%lu.%lu.%lu)-AP%d-BSSID("MACSTR").\n",
+				syslog(LOG_INFO|LOG_LOCAL7,"STA_ROAM_SUCCESS:UserMAC:"MACSTR" From AC(%lu.%lu.%lu.%lu)-AP%d-BSSID("MACSTR") To AC(%lu.%lu.%lu.%lu)-AP%d-BSSID("MACSTR").\n",
 					MAC2STR(sta->addr),((gASD_AC_MANAGEMENT_IP & 0xff000000) >> 24),((gASD_AC_MANAGEMENT_IP & 0xff0000) >> 16),((gASD_AC_MANAGEMENT_IP & 0xff00) >> 8),(gASD_AC_MANAGEMENT_IP & 0xff),
 					sta->preAPID,MAC2STR(sta->PreBSSID),((gASD_AC_MANAGEMENT_IP & 0xff000000) >> 24),((gASD_AC_MANAGEMENT_IP & 0xff0000) >> 16),((gASD_AC_MANAGEMENT_IP & 0xff00) >> 8),(gASD_AC_MANAGEMENT_IP & 0xff),
 					wasd->Radio_G_ID/4,MAC2STR(wasd->own_addr)
@@ -1755,11 +1755,10 @@ ieee802_1x_receive_auth(struct radius_msg *msg, struct radius_msg *req,
 				sta->logflag = BIT(1);
 			}
 			else{
-				time_t at = time(NULL);
 				if(sta->eapol_sm)
 					identity = sta->eapol_sm->identity;
-				syslog(LOG_INFO|LOG_LOCAL3, "STA_8021X_SUCCESS:UserMAC:" MACSTR "BSSID:"MACSTR" AP%d:" MACSTR "(L_R:%d) Wlan%d:%s(%d) Username:%s TIME %s.\n",
-					MAC2STR(sta->addr),MAC2STR(wasd->own_addr),wasd->Radio_G_ID/4,MAC2STR(WTPMAC),wasd->Radio_G_ID%4,wasd->WlanID,SSID,securitytype,identity,ctime(&at));//qiuchen 2013.01.14
+				syslog(LOG_INFO|LOG_LOCAL7, "AUTHSUCCESS:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d,SecurityType:%d,ErrorCode:%d.\n",
+					MAC2STR(sta->addr),MAC2STR(WTPMAC),wasd->BSSIndex,securitytype,RADIUS_SUCCESS);//qiuchen 2013.01.14
 			}
 		}
 		//qiuchen add it for Henan Mobile
@@ -1879,8 +1878,8 @@ ieee802_1x_receive_auth(struct radius_msg *msg, struct radius_msg *req,
 			else{
 				if(sta->eapol_sm)
 					identity = sta->eapol_sm->identity;
-				syslog(LOG_INFO|LOG_LOCAL3, "STA_8021X_FAILED:UserMAC:" MACSTR "BSSID:"MACSTR" AP%d:" MACSTR "(L_R:%d) Wlan%d:%s(%d) Username:%s.\n",
-					MAC2STR(sta->addr),MAC2STR(wasd->own_addr),wasd->Radio_G_ID/4,MAC2STR(WTPMAC),wasd->Radio_G_ID%4,wasd->WlanID,SSID,securitytype,identity);//qiuchen 2013.01.14
+		syslog(LOG_INFO|LOG_LOCAL7, "AUTHFAILED:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d,SecurityType:%d,ErrorCode:%d.\n",
+			MAC2STR(sta->addr),MAC2STR(WTPMAC),wasd->BSSIndex,securitytype,RADIUS_FAILED);//qiuchen 2013.01.14
 			}
 		}
 		if(gASDLOGDEBUG & BIT(0)){
