@@ -186,11 +186,14 @@ DBusMessage * bsd_check_destination_board(DBusConnection *conn, DBusMessage *msg
             g_unEventId = 0;
     g_unEventId++;
     ucEventId = g_unEventId;
-    
+
+    if((iSlotId < 1) || (iSlotId >= MAX_SLOT_NUM)) {
+        iReturnValue = BSD_DBUS_SLOT_ID_NOT_EXIST;
+    }
     /* this is a local file path check, iDesAddr is slotId */
-    if((iReturnValue = BSDMemeryCheck(iSlotId, pSrcPath, pDesPath, ucEventId)) == 0)
+    else if((iReturnValue = BSDMemeryCheck(iSlotId, pSrcPath, pDesPath, ucEventId)) == 0) {
         iReturnValue = BSDDesPathCheck(iSlotId, pDesPath, ucEventId);
-    
+    }
     /* continue to send message */
     if(iReturnValue == BSD_SUCCESS) {
         BSD_BOARD[iSlotId]->state = BSD_FILE_UNKNOWN;
@@ -251,12 +254,16 @@ DBusMessage * bsd_copy_files_between_boards_v2(DBusConnection *conn, DBusMessage
         }
         return NULL;
     }
-    
-    BSD_BOARD[slotid]->state = BSD_FILE_UNKNOWN;
-    ret = BSDCopyFilesToBoards(slotid, src_path, des_path, op, tar_switch);
-    
-    if((ret != 0) && (BSD_BOARD[slotid]->state != BSD_FILE_UNKNOWN)) {
+
+    if((slotid < 1) || (slotid >= MAX_SLOT_NUM)) {
+        ret = BSD_DBUS_SLOT_ID_NOT_EXIST;
+    }
+    else {
         BSD_BOARD[slotid]->state = BSD_FILE_UNKNOWN;
+        ret = BSDCopyFilesToBoards(slotid, src_path, des_path, op, tar_switch);
+        if((ret != 0) && (BSD_BOARD[slotid]->state != BSD_FILE_UNKNOWN)) {
+            BSD_BOARD[slotid]->state = BSD_FILE_UNKNOWN;
+        }
     }
     
     reply = dbus_message_new_method_return(msg);
@@ -319,26 +326,34 @@ DBusMessage * bsd_copy_files_between_boards(DBusConnection *conn, DBusMessage *m
         }
         return NULL;
     }
-    
-    source = opendir(src_path);
-    if(source == NULL) {    // copy single file
-        if(op == BSD_TYPE_NORMAL)
-            op = BSD_TYPE_SINGLE;
-        
-        if(g_unEventId == MAX_EVENT_ID) 
-            g_unEventId = 0;
-        g_unEventId++;
-        curr_event_id = g_unEventId;
-        bsd_syslog_debug_debug(BSD_DEFAULT, "111 op = %d, slotid = %d, src_path = %s, des_path = %s\n",op,slotid,src_path,des_path);
-        ret = BSDHandleFileOp(slotid, src_path, des_path, op, curr_event_id);
-        tarFlag = 0;
-        
-    } else {// copy folder
-        bsd_syslog_debug_debug(BSD_DEFAULT, "copy other files\n");
-        tarFlag = tar_switch;
-        ret = BSDCopyFile(slotid, src_path, des_path, op);
-        tarFlag = 0;
-        closedir(source);
+
+    if((ret != 0) && (BSD_BOARD[slotid]->state != BSD_FILE_UNKNOWN)) {
+        BSD_BOARD[slotid]->state = BSD_FILE_UNKNOWN;
+    }
+    else {
+        source = opendir(src_path);
+        if(source == NULL) {    // copy single file
+            if(op == BSD_TYPE_NORMAL)
+                op = BSD_TYPE_SINGLE;
+            
+            if(g_unEventId == MAX_EVENT_ID) 
+                g_unEventId = 0;
+            g_unEventId++;
+            curr_event_id = g_unEventId;
+            bsd_syslog_debug_debug(BSD_DEFAULT, "111 op = %d, slotid = %d, src_path = %s, des_path = %s\n",op,slotid,src_path,des_path);
+            ret = BSDHandleFileOp(slotid, src_path, des_path, op, curr_event_id);
+            tarFlag = 0;
+            
+        } else {// copy folder
+            bsd_syslog_debug_debug(BSD_DEFAULT, "copy other files\n");
+            tarFlag = tar_switch;
+            ret = BSDCopyFile(slotid, src_path, des_path, op);
+            tarFlag = 0;
+            closedir(source);
+        }
+        if((ret != 0) && (BSD_BOARD[slotid]->state != BSD_FILE_UNKNOWN)) {
+            BSD_BOARD[slotid]->state = BSD_FILE_UNKNOWN;
+        }
     }
     
     /* add for AXSSZFI-1563 */
@@ -354,8 +369,6 @@ DBusMessage * bsd_copy_files_between_boards(DBusConnection *conn, DBusMessage *m
         memset(tmp_md5, 0, 5);
         strcpy(tmp_md5, "none");
     }
-    if((ret != 0) && (BSD_BOARD[slotid]->state != BSD_FILE_UNKNOWN)) 
-        BSD_BOARD[slotid]->state = BSD_FILE_UNKNOWN;
     
     bsd_syslog_debug_debug(BSD_DEFAULT, "ret = %d\n", ret);
     reply = dbus_message_new_method_return(msg);

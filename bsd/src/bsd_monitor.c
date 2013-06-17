@@ -174,7 +174,9 @@ int BSDMemeryCheck(const unsigned int slotid, const char *src_path, const char *
             } else {
                 BsdThreadMutexLock(&fileStateMutex[slotid]);
                 BSD_BOARD[slotid]->state = BSD_FILE_MEMERY_CHECK;
-                BsdWaitThreadConditionTimeout(&fileStateCondition[slotid], &fileStateMutex[slotid], &timeout);
+                if(!BsdWaitThreadConditionTimeout(&fileStateCondition[slotid], &fileStateMutex[slotid], &timeout)) {
+                    ret = BSD_WAIT_THREAD_CONDITION_TIMEOUT;
+                }
             }
         }
         BsdThreadMutexUnlock(&fileStateMutex[slotid]);
@@ -229,7 +231,9 @@ int BSDDesPathCheck(const unsigned int slotid, const char *des_path, unsigned sh
             } else {
                 BsdThreadMutexLock(&fileStateMutex[slotid]);
                 BSD_BOARD[slotid]->state = BSD_FILE_DES_PATH_CHECK;
-                BsdWaitThreadConditionTimeout(&fileStateCondition[slotid], &fileStateMutex[slotid], &timeout);
+                if(!BsdWaitThreadConditionTimeout(&fileStateCondition[slotid], &fileStateMutex[slotid], &timeout)) {
+                    ret = BSD_WAIT_THREAD_CONDITION_TIMEOUT;
+                }
             }
         }
         BsdThreadMutexUnlock(&fileStateMutex[slotid]);

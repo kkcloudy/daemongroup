@@ -67,7 +67,7 @@ char * dcli_bsd_get_return_string(int iReturnValue, char pReturnStr[BSD_COMMAND_
             break;
         case BSD_INIT_SOCKET_ERROR:
         case BSD_ESTABLISH_CONNECTION_FAILED:
-            memcpy(pReturnStr, "Failed to connect with target device.\n", strlen("Failed to connect with target device.\n"));
+            memcpy(pReturnStr, "Failed to connect with peer.\n", strlen("Failed to connect with peer.\n"));
             break;
         case BSD_ILLEGAL_SOURCE_FILE_PATH:
             memcpy(pReturnStr, "Illegal source file path.\n", strlen("Illegal source file path.\n"));
@@ -79,13 +79,13 @@ char * dcli_bsd_get_return_string(int iReturnValue, char pReturnStr[BSD_COMMAND_
             memcpy(pReturnStr, "Failed to get file size.\n", strlen("Failed to get file size.\n"));
             break;
         case BSD_NOT_ENOUGH_MEMERY:
-            memcpy(pReturnStr, "Not enough free memery on target device.\n", strlen("Not enough free memery on target device.\n"));
+            memcpy(pReturnStr, "Not enough free memery on peer.\n", strlen("Not enough free memery on peer.\n"));
             break;
         case BSD_SEND_MESSAGE_ERROR:
-            memcpy(pReturnStr, "Failed to send message to target device.\n", strlen("Failed to send message to target device.\n"));
+            memcpy(pReturnStr, "Failed to send message to peer.\n", strlen("Failed to send message to peer.\n"));
             break;
         case BSD_RECEIVE_MESSAGE_ERROR:
-            memcpy(pReturnStr, "Failed to receive message from target device.\n", strlen("Failed to receive message from target device.\n"));
+            memcpy(pReturnStr, "Failed to receive message from peer.\n", strlen("Failed to receive message from peer.\n"));
             break;
         case BSD_EVENTID_NOT_MATCH:
             memcpy(pReturnStr, "Sending event ID not match.\n", strlen("Sending event ID not match.\n"));
@@ -94,7 +94,7 @@ char * dcli_bsd_get_return_string(int iReturnValue, char pReturnStr[BSD_COMMAND_
             memcpy(pReturnStr, "Failed to save file on target device.\n", strlen("Failed to save file on target device.\n"));
             break;
         case BSD_SERVER_NOT_CATCH:
-            memcpy(pReturnStr, "Can not find target device.\n", strlen("Can not find target device.\n"));
+            memcpy(pReturnStr, "Can not catch peer.\n", strlen("Can not catch peer.\n"));
             break;
         case BSD_MALLOC_MEMERY_ERROR:
             memcpy(pReturnStr, "Malloc memery error.\n", strlen("Malloc memery error.\n"));
@@ -198,10 +198,18 @@ DEFUN(copy_files_between_boards_func,
         vty_out(vty,"<error> unknown slotid format\n");
         return CMD_SUCCESS;
     }
+    else if((src_slotid < 1) || (src_slotid > MAX_SLOT-1)) {
+        vty_out(vty,"<error> slotid must be 1-15");
+        return CMD_SUCCESS;
+    }
     ret = parse_int_ID((char *)argv[2], &des_slotid);
     
     if(ret != 0){
         vty_out(vty,"<error> unknown slotid format\n");
+        return CMD_SUCCESS;
+    }
+    else if((des_slotid < 1) || (des_slotid > MAX_SLOT-1)) {
+        vty_out(vty,"<error> slotid must be 1-15");
         return CMD_SUCCESS;
     }
     
