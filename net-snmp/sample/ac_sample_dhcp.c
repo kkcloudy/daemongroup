@@ -108,7 +108,7 @@ int ac_sample_dhcpusage_send_over_threshold_signal( ac_sample_t *this, int type 
 	syslog( LOG_INFO, "ac_sample_dhcpusage_send_over_threshold_signal  type=%d\n", type);
 
 	average = sw_get_average( get_sample_window(this) );
-	return ac_sample_dbus_send_signal( AC_SAMPLE_OVER_THRESHOLD_SIGNAL_DHCPUSAGE, 
+	return ac_sample_dbus_send_signal( AC_SAMPLE_OVER_THRESHOLD_SIGNAL_IP_POOL, 
 										 DBUS_TYPE_INT32, &type,
 										 DBUS_TYPE_UINT32,&average,
 										 DBUS_TYPE_INVALID );

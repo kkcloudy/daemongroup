@@ -568,13 +568,14 @@ DEFUN(set_acsample_threshold_maxuser_func,
 
 DEFUN(conf_acsample_threshold_func,
 	conf_acsample_threshold_cmd,
-	"set acsample threshold ("SAMPLE_NAME_CPU"|"SAMPLE_NAME_MEMUSAGE"|"SAMPLE_NAME_TMP")  <1-100>",
+	"set acsample threshold ("SAMPLE_NAME_CPU"|"SAMPLE_NAME_MEMUSAGE"|"SAMPLE_NAME_TMP"|"SAMPLE_NAME_DHCPUSE")  <1-100>",
 	DCLI_SAMPLE_SET_STR
 	"set acsample threshold\n"
 	"set acsample threshold\n"
 	"set acsample "SAMPLE_NAME_CPU"threshold\n"
 	"set acsample "SAMPLE_NAME_MEMUSAGE"threshold\n"
 	"set acsample "SAMPLE_NAME_TMP"threshold\n"
+	"set acsample "SAMPLE_NAME_DHCPUSE"threshold\n"
 	"set acsample threshold to value\n"
 )
 {
