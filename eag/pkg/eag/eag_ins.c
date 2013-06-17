@@ -7624,6 +7624,14 @@ eag_dbus_method_get_ap_statistics(
 	struct list_head *ap_head = NULL;
 	uint32_t user_connect_total_time = 0;
 	uint32_t macauth_user_connect_total_time = 0;
+	struct app_conn_t *appconn = NULL;
+	struct list_head *head = NULL;
+	char user_ipstr[32] = "";
+	char user_macstr[32] = "";
+	char ap_macstr[32] = "";
+	int total_appconn_num = 0;
+	int connected_authed_num= 0;
+	int unconnect_authed_num= 0;
 	
 	reply = dbus_message_new_method_return(msg);
 	if (NULL == reply) {
@@ -7652,6 +7660,34 @@ replyx:
 		dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT32, &num);
 	}
 
+    /*for onlinebug933 debug*/
+	if (EAG_RETURN_OK == ret && num > 0) {
+		if( EAG_TRUE == eag_log_is_filter_register("onlinebug933") ) {
+            head = eag_statistics_get_appconn_head(eagstat);
+			list_for_each_entry(appconn, head, node) {
+				mac2str(appconn->session.apmac, ap_macstr, sizeof(ap_macstr), '-');
+				mac2str(appconn->session.usermac, user_macstr, sizeof(user_macstr), '-');
+				ip2str(appconn->session.user_ip, user_ipstr, sizeof (user_ipstr));
+				if (APPCONN_STATUS_AUTHED == appconn->session.state) {
+					total_appconn_num ++;
+					if (SESSION_STA_STATUS_CONNECT == appconn->session.sta_state) {
+						eag_log_debug("onlinebug933","Sta_state=Connected(0),State=Authed(1),apmac=%s,usermac=%s,userip=%s,username=%s", 
+							ap_macstr,user_macstr,user_ipstr,appconn->session.username);
+						connected_authed_num ++;
+					} else if(SESSION_STA_STATUS_UNCONNECT== appconn->session.sta_state) {
+                        eag_log_debug("onlinebug933","Sta_state=Unconnect(1),State=Authed(1),apmac=%s,usermac=%s,userip=%s,username=%s", 
+                            ap_macstr,user_macstr,user_ipstr,appconn->session.username);
+                        unconnect_authed_num ++;
+					}
+				}
+			}
+			if (0 < total_appconn_num) {
+				eag_log_debug("onlinebug933","Total-appconn-num:%d, Connected-Authed-num:%d, Unconnect-Authed-num:%d",
+					total_appconn_num, connected_authed_num, unconnect_authed_num);
+			}
+		}
+	}
+	
 	if (EAG_RETURN_OK == ret && num > 0) {
 		DBusMessageIter iter_array = {0};
 		
@@ -8279,6 +8315,12 @@ eag_dbus_method_show_user_all(
 	const char *username = NULL;
 	uint32_t session_time = 0;
 	struct timeval tv = {0};
+	char user_ipstr[32] = "";
+	char user_macstr[32] = "";
+	char ap_macstr[32] = "";
+	int total_appconn_num = 0;
+	int connected_authed_num = 0;
+	int unconnect_authed_num = 0;
 
 	eag_time_gettimeofday(&tv, NULL);
 	reply = dbus_message_new_method_return(msg);
@@ -8345,6 +8387,23 @@ replyx:
 								&iter_array);
 
 		list_for_each_entry(appconn, head, node) {
+			/*for onlinebug933 debug*/
+			mac2str(appconn->session.apmac, ap_macstr, sizeof(ap_macstr), '-');
+			mac2str(appconn->session.usermac, user_macstr, sizeof(user_macstr), '-');
+			ip2str(appconn->session.user_ip, user_ipstr, sizeof (user_ipstr));
+            if (APPCONN_STATUS_AUTHED == appconn->session.state) {
+				total_appconn_num ++;
+				if (SESSION_STA_STATUS_CONNECT == appconn->session.sta_state) {
+					eag_log_debug("onlinebug933","Sta_state=Connected(0),State=Authed(1),apmac=%s,usermac=%s,userip=%s,username=%s", 
+						ap_macstr,user_macstr,user_ipstr,appconn->session.username);
+					connected_authed_num ++;
+				} else if (SESSION_STA_STATUS_UNCONNECT== appconn->session.sta_state) {
+					eag_log_debug("onlinebug933","Sta_state=Unconnect(1),State=Authed(1),apmac=%s,usermac=%s,userip=%s,username=%s", 
+						ap_macstr,user_macstr,user_ipstr,appconn->session.username);
+					unconnect_authed_num ++;
+				}
+			}
+	
 			if (APPCONN_STATUS_AUTHED == appconn->session.state) {
 				DBusMessageIter iter_struct = {0};
 
@@ -8424,6 +8483,9 @@ replyx:
 			}
 		}
 		dbus_message_iter_close_container (&iter, &iter_array);
+		
+		eag_log_debug("onlinebug933","Total-appconn-num:%d, Connected-Authed-num:%d, Unconnect-Authed-num:%d",
+			total_appconn_num, connected_authed_num, unconnect_authed_num);
 	}
 	
 	return reply;

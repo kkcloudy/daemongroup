@@ -775,6 +775,13 @@ eag_statistics_set_appdb(eag_statistics_t *eagstat,
 }
 
 struct list_head *
+eag_statistics_get_appconn_head(eag_statistics_t *eagstat)
+{
+    return appconn_db_get_head(eagstat->appdb);
+
+}
+
+struct list_head *
 eag_statistics_get_ap_head(eag_statistics_t *eagstat)
 {
 	return &(eagstat->ap_head);

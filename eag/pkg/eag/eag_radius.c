@@ -818,6 +818,15 @@ radius_auth(eag_radius_t *radius,
 				appconn->session.radius_srv.auth_secretlen);
 	}
 
+	len = strlen(appconn->user_agent);
+    len = (len > 253)?253:len;
+	if (0 < len) {
+		radius_addattr(&packet, RADIUS_ATTR_VENDOR_SPECIFIC,
+			RADIUS_VENDOR_AUTELAN, 
+			RADIUS_ATTR_AUTELAN_USER_AGENT,
+			0, (uint8_t *)&(appconn->user_agent), len);
+	}
+
 	admin_log_notice("RadiusAccessRequest___UserName:%s,UserIp:%s,ApMAC:%s,UserMAC:%s,NasID:%s,authtype:%s",
 		appconn->session.username, user_ipstr, ap_macstr, user_macstr, appconn->session.nasid,
 		(EAG_AUTH_TYPE_MAC==appconn->session.server_auth_type)?"MAC":"Portal");

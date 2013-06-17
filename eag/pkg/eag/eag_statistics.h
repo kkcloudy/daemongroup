@@ -454,6 +454,9 @@ eag_statistics_set_appdb(eag_statistics_t *eagstat,
 		appconn_db_t *appdb);
 
 struct list_head *
+eag_statistics_get_appconn_head(eag_statistics_t *eagstat);
+
+struct list_head *
 eag_statistics_get_ap_head(eag_statistics_t *eagstat);
 
 #endif		/* _EAG_STATISTICS_H */

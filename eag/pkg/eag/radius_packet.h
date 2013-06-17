@@ -232,6 +232,10 @@ struct radius_attr_t {
 #define	RADIUS_ATTR_HUAWEI_AVE_BANDWIDTH_MAX_DOWN	2	/* integer */
 #define	RADIUS_ATTR_HUAWEI_AVE_BANDWIDTH_MAX_UP		5	/* integer */
 
+/* vendor  attr - AUTELAN */
+#define RADIUS_VENDOR_AUTELAN						31656
+#define	RADIUS_ATTR_AUTELAN_USER_AGENT				81	/* string */
+
 int
 radius_packet_init(struct radius_packet_t *packet,
 		uint8_t code);
