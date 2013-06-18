@@ -1381,6 +1381,8 @@ struct wlan{
 	unsigned char want_to_delete;		/* now, AC will begin to delete wlan,but it will wait until all the state of wlan of wtp used was disable. Huangleilei add it for AXSSZFI-1622 */
 	struct radius_client_data *radius;
 	struct asd_radius_servers *radius_server;
+	unsigned int sta_roaming_times;
+	unsigned int sta_roaming_suc_times;
 };
 typedef struct wlan WID_WLAN;
 

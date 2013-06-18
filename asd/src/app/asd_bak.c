@@ -295,6 +295,9 @@ int bak_batch_add_sta(struct asd_data **bss, unsigned int num){
 				msg->U_STA[k].ipaddr = sta->ipaddr;
 				msg->U_STA[k].gifindex = sta->gifidx;
 				msg->U_STA[k].total_num = bss[i]->num_sta;
+				msg->U_STA[k].PreBSSIndex= sta->PreBssIndex;
+				memcpy(msg->U_STA[k].PreBSSID,sta->PreBSSID,MAC_LEN);
+				msg->U_STA[k].rflag = sta->rflag;
 				unsigned char SID = 0;
 				if(ASD_WLAN[bss[i]->WlanID])
 					SID = (unsigned char)ASD_WLAN[bss[i]->WlanID]->SecurityID;
@@ -1371,7 +1374,15 @@ void B_BATCH_STA_OP(_B_Msg *msg){
 						}	
 						else if(ASD_SECURITY[SID]->account_after_authorize == 1)
 							accounting_sta_start(wasd,sta);
-						
+					}
+				}
+				if(mast_bak_update == 1){
+					sta->PreBssIndex = msg->U_STA[j].PreBSSIndex;
+					sta->rflag = msg->U_STA[j].rflag;
+					memcpy(sta->PreBSSID,msg->U_STA[j].PreBSSID,MAC_LEN);
+					if(sta->PreBssIndex != wasd->BSSIndex && ASD_WLAN[wasd->WlanID] && ASD_WLAN[wasd->WlanID]->Roaming_Policy){
+						RoamingStaInfoToWSM_1(sta,WID_MODIFY);
+						RoamingStaInfoToWIFI_1(sta,WID_ADD);
 					}
 				}	
 			}
@@ -1897,6 +1908,10 @@ void asd_bak_select_mode(int sock, void *circle_ctx, void *sock_ctx){
 				sta_count = 0;
 				break;
 			case B_BATCH_STA_TYPE:				
+				if(numbytes == sizeof(_B_Msg))
+					mast_bak_update = 1;
+				else
+					mast_bak_update = 0;
 				asd_printf(ASD_DEFAULT,MSG_INFO,"%s B_BATCH_STA_TYPE\n",__func__);
 				B_BATCH_STA_OP(msg1);
 				break;
@@ -2139,7 +2154,7 @@ void asd_update_batch_sta()
 			bak_batch_add_sta(bss, num);
 		//weichao add
 		sleep(2);
-		bak_batch_add_roam_sta();
+		//bak_batch_add_roam_sta();
 		update_end();
 
 		//mahz modified 2010.12.29

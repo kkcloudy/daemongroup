@@ -2489,7 +2489,8 @@ int WID_DISABLE_WLAN(unsigned char WlanID){
 				if(AC_WLAN[WlanID]->S_WTP_BSS_List[m][m1] != 0)
 				{	unsigned int BSSIndex = AC_WLAN[WlanID]->S_WTP_BSS_List[m][m1];
 					if((check_bssid_func(BSSIndex))&&(AC_BSS[BSSIndex] != NULL)&&(AC_WTP[m] != NULL)){
-						AsdWsm_BSSOp(BSSIndex, WID_DEL, 1);
+						Wsm_BSSOp(BSSIndex, WID_DEL, 1);
+					//	AsdWsm_BSSOp(BSSIndex, WID_DEL, 1);//Qiuchen change it. when disable wlan,ASD will delete all bss in WLAN_OP--WID_MODIFY
 						wid_update_bss_to_wifi(BSSIndex,m,0);/*resolve send capwap message,before ath be created*/	
 						memset((char*)&msg, 0, sizeof(msg));
 						wid_syslog_debug_debug(WID_DEFAULT,"*** wtp binding wlan id match success**\n");

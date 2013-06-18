@@ -1450,7 +1450,8 @@ static void handle_auth(struct asd_data *wasd, struct ieee80211_mgmt *mgmt,
 			       asd_LEVEL_INFO, "VLAN ID %d", sta->vlan_id);
 	}
 	if(sta->flags&WLAN_STA_PREAUTH)
-		asd_sta_add("", wasd, sta->addr,0,0,NULL,0, 0);
+		//asd_sta_add("", wasd, sta->addr,0,0,NULL,0, 0);
+		asd_sta_roaming_management(sta);//Qc
 	sta->flags &= ~WLAN_STA_PREAUTH;
 	ieee802_1x_notify_pre_auth(sta->eapol_sm, 0);
 

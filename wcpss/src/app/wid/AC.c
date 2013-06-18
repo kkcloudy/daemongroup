@@ -1288,6 +1288,127 @@ CWBool AsdWsm_WLANOp(unsigned char WlanID, Operate op, int both){
 	close(sock);
 	return CW_TRUE;
 }
+CWBool Wsm_BSSOp(unsigned int BSSIndex, Operate op, int both){
+	TableMsg wASD;
+	int len;
+	if(!check_bssid_func(BSSIndex)){
+		wid_syslog_err("%s\n",__func__);
+		return CW_FALSE;
+	}else{
+	}
+	//int sock = socket(PF_UNIX, SOCK_DGRAM, 0);
+	int i = (BSSIndex/L_BSS_NUM/L_RADIO_NUM)%SOCK_NUM;
+	int sock = sockPerThread[i];
+	int wlan_id = AC_BSS[BSSIndex]->WlanID;
+	int WTPID = BSSIndex/L_BSS_NUM/L_RADIO_NUM;
+	if(!check_wlanid_func(wlan_id)){
+		return CW_FALSE;
+	}else{
+	}
+	if(AC_WLAN[wlan_id] == NULL){		
+		wid_syslog_info("%s wlan %d null\n",__func__,wlan_id);
+		return CW_FALSE;
+	}
+	else if (AC_WLAN[wlan_id]->want_to_delete == 1)			/* Huang leilei add for wlan check */
+	{
+		wid_syslog_info("%s %d operator want to delete this wlan: %d", __func__, __LINE__, wlan_id);
+		return CW_FALSE;
+	}
+	if(!check_wtpid_func(WTPID)){
+		wid_syslog_err("%s\n",__func__);
+		return CW_FALSE;
+	}else{
+	}
+	CWThreadMutexLock(&MasterBak);
+	struct bak_sock *tmp = bak_list;
+	if((is_secondary == 0)&&(bak_list!=NULL)){
+		if(op == WID_ADD){
+			bak_add_del_bss(tmp->sock,B_ADD,BSSIndex);
+		}
+		else if(op == WID_DEL){
+				bak_add_del_bss(tmp->sock,B_DEL,BSSIndex);
+		}			
+	}
+	CWThreadMutexUnlock(&MasterBak);
+	wASD.Op = op;
+	wASD.Type = BSS_TYPE;
+	wASD.u.BSS.BSSIndex = BSSIndex;
+	wASD.u.BSS.Radio_L_ID = AC_BSS[BSSIndex]->Radio_L_ID;
+	wASD.u.BSS.Radio_G_ID = AC_BSS[BSSIndex]->Radio_G_ID;
+	wASD.u.BSS.WlanID = AC_BSS[BSSIndex]->WlanID;
+	wASD.u.BSS.vlanid = AC_BSS[BSSIndex]->vlanid;
+	memcpy(wASD.u.BSS.BSSID,AC_BSS[BSSIndex]->BSSID, MAC_LEN);
+	wASD.u.BSS.hotspot_id= AC_BSS[BSSIndex]->hotspot_id;
+	if(!check_g_radioid_func(wASD.u.BSS.Radio_G_ID)){
+		wid_syslog_err("%s\n",__func__);
+		return CW_FALSE;
+	}else{
+	}
+	if(!check_l_radioid_func(wASD.u.BSS.Radio_L_ID)){
+		wid_syslog_err("%s\n",__func__);
+		return CW_FALSE;
+	}else{
+	}
+
+	if(op == WID_ADD){
+		if(AC_BSS[BSSIndex]->nas_port_id[0] != 0){
+			memset(wASD.u.BSS.nas_port_id,0,sizeof(wASD.u.BSS.nas_port_id));
+			memcpy(wASD.u.BSS.nas_port_id,AC_BSS[BSSIndex]->nas_port_id, strlen(AC_BSS[BSSIndex]->nas_port_id));
+		}
+		else if((AC_BSS[BSSIndex]->nas_port_id[0] == 0) && (AC_WLAN[wlan_id]->nas_port_id[0] != 0)){
+			memset(wASD.u.BSS.nas_port_id,0,sizeof(wASD.u.BSS.nas_port_id));
+			memcpy(wASD.u.BSS.nas_port_id,AC_WLAN[wlan_id]->nas_port_id, strlen(AC_WLAN[wlan_id]->nas_port_id));
+		}		
+		else{
+			memset(wASD.u.BSS.nas_port_id,0,sizeof(wASD.u.BSS.nas_port_id));
+		}
+		wid_syslog_debug_info("wASD.u.BSS.nas_port_id: %s\n",wASD.u.BSS.nas_port_id);	//for test
+	}
+
+	if((AC_WLAN[wlan_id] != NULL)&&(AC_WLAN[wlan_id]->SecurityType == OPEN)&&(AC_WLAN[wlan_id]->EncryptionType == NONE))
+		wASD.u.BSS.protect_type = 0;
+	else
+		wASD.u.BSS.protect_type = 1;
+
+	if((AC_WLAN[wlan_id]->wlan_if_policy == NO_INTERFACE)&&(AC_BSS[BSSIndex]->BSS_IF_POLICY == WLAN_INTERFACE))
+	{
+		return CW_FALSE;
+	}
+	else
+	{
+		wASD.u.BSS.wlan_ifaces_type = BSS_INTERFACE;
+		if(AC_BSS[BSSIndex]->BSS_IF_POLICY == NO_INTERFACE){
+			wASD.u.BSS.bss_ifaces_type = NO_INTERFACE;
+		}else{
+			wASD.u.BSS.bss_ifaces_type = BSS_INTERFACE;
+		}
+	}
+	wid_syslog_debug_debug(WID_DEFAULT,"AC_RADIO[%d]->br_ifname[%d] %s",wASD.u.BSS.Radio_G_ID,wASD.u.BSS.WlanID,AC_RADIO[wASD.u.BSS.Radio_G_ID]->br_ifname[wASD.u.BSS.WlanID]);
+
+	if(AC_RADIO[wASD.u.BSS.Radio_G_ID] != NULL){
+		memcpy(wASD.u.BSS.br_ifname,AC_RADIO[wASD.u.BSS.Radio_G_ID]->br_ifname[wASD.u.BSS.WlanID],IF_NAME_MAX);
+	}
+
+	wid_syslog_debug_debug(WID_DEFAULT,"br_ifname %s.",wASD.u.BSS.br_ifname);
+	wASD.u.BSS.nas_id_len = 0;
+	if((op == WID_ADD)&&(AC_BSS[BSSIndex]->nas_id_len > 0)){
+		wASD.u.BSS.nas_id_len = AC_BSS[BSSIndex]->nas_id_len;
+		memcpy(wASD.u.BSS.nas_id, AC_BSS[BSSIndex]->nas_id, NAS_IDENTIFIER_NAME);
+	}
+	wASD.u.BSS.bss_max_sta_num=AC_BSS[BSSIndex]->bss_max_allowed_sta_num;//xm add 08/12/04
+	wASD.u.BSS.sta_static_arp_policy=AC_BSS[BSSIndex]->sta_static_arp_policy;
+	memcpy(wASD.u.BSS.arp_ifname,AC_BSS[BSSIndex]->arp_ifname,ETH_IF_NAME_LEN);
+	wid_syslog_debug_debug(WID_DEFAULT,"BSSID:%02x:%02x:%02x:%02x:%02x:%02x",wASD.u.BSS.BSSID[0],wASD.u.BSS.BSSID[1],wASD.u.BSS.BSSID[2],wASD.u.BSS.BSSID[3],wASD.u.BSS.BSSID[4],wASD.u.BSS.BSSID[5]);
+	len = sizeof(wASD);
+	if (sendto(sock, &wASD, len, 0, (struct sockaddr *) &toWSM.addr, toWSM.addrlen) < 0){ 	
+		wid_syslog_info("%s sendtoWSM %s",__func__,strerror(errno));
+		perror("send(wWSMSocket)");
+		return CW_FALSE;
+	}
+	if(WID_ADD == op)	
+		AsdWsm_BssMacOp(BSSIndex,MAC_LIST_ADD);
+	return CW_TRUE;
+}
 
 CWBool AsdWsm_BSSOp(unsigned int BSSIndex, Operate op, int both){
 	TableMsg wASD;
