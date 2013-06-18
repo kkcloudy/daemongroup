@@ -1433,7 +1433,7 @@ CWBool AsdWsm_BSSOp(unsigned int BSSIndex, Operate op, int both){
 	}
 	else if (AC_WLAN[wlan_id]->want_to_delete == 1)			/* Huang leilei add for wlan check */
 	{
-		wid_syslog_info("%s %d operator want to delete this wlan: %d", __func__, __LINE__, wlan_id);
+		wid_syslog_info("%s %d operator want to delete this wlan: %d, op: %d(0-WID_ADD, 1-WID_DEL)", __func__, __LINE__, wlan_id, op);
 		return CW_FALSE;
 	}
 	if(!check_wtpid_func(WTPID)){
@@ -1652,7 +1652,7 @@ CWBool AsdWsm_BssMacOp(unsigned int BSSIndex, Operate op){
 	}
 	else if (AC_WLAN[wlan_id]->want_to_delete == 1)			/* Huang leilei add for wlan check */
 	{
-		wid_syslog_info("%s %d operator want to delete this wlan: %d", __func__, __LINE__, wlan_id);
+		wid_syslog_info("%s %d operator want to delete this wlan: %d, op: %d", __func__, __LINE__, wlan_id, op);
 		return CW_FALSE;
 	}
 	if(!check_wtpid_func(WTPID)){

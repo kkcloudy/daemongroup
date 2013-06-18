@@ -1876,7 +1876,7 @@ void dcli_wsm_init(void)
 {
 	install_node(&cwtunnel_node, NULL/*dcli_capwap_tunnel_show_running_config_start*/, "CWTUNNEL_NODE");
 	install_default(CWTUNNEL_NODE);
-
+#if 0		/* hll notes it for AXSSZFI-1752 */
 	install_element(CONFIG_NODE, &config_tunnel_cmd);
 	install_element(CWTUNNEL_NODE,&set_tunnel_flow_based_forwarding_cmd);
 	install_element(CWTUNNEL_NODE,&show_tunnel_flow_based_forwarding_state_cmd);
@@ -1893,10 +1893,11 @@ void dcli_wsm_init(void)
 	install_element(CWTUNNEL_NODE, &set_ipfrag_ignoredf_state_func_cmd);
 	install_element(CWTUNNEL_NODE, &set_tunnel_qos_map_cmd);
 //	install_element(CWTUNNEL_NODE, &set_tunnel_wsm_wifi_rx_cmd);
+#endif
 	/* The function relate to flow-based module just exist in main instance */
 	install_node(&hansi_cwtunnel_node, NULL, "HANSI_CWTUNNEL_NODE");
 	install_default(HANSI_CWTUNNEL_NODE);
-
+#if 0		/* hll notes it for AXSSZFI-1752 */
 	install_element(HANSI_NODE, &config_tunnel_cmd);
 	install_element(HANSI_CWTUNNEL_NODE, &show_tunnel_wtp_list_cmd);
 	install_element(HANSI_CWTUNNEL_NODE, &show_tunnel_log_wsm_state_cmd);
@@ -1907,9 +1908,10 @@ void dcli_wsm_init(void)
 	install_element(HANSI_CWTUNNEL_NODE, &set_tunnel_wsm_watchdog_cmd);
 	install_element(HANSI_CWTUNNEL_NODE, &show_tunnel_wsm_watchdog_state_cmd);
 	install_element(HANSI_CWTUNNEL_NODE, &set_tunnel_wsm_wifi_rx_cmd);
-
+#endif
 	install_node(&local_hansi_cwtunnel_node, NULL, "HANSI_CWTUNNEL_NODE");
 	install_default(LOCAL_HANSI_CWTUNNEL_NODE);
+#if 0		/* hll notes it for AXSSZFI-1752 */
 	install_element(LOCAL_HANSI_NODE, &config_tunnel_cmd);
 	install_element(LOCAL_HANSI_CWTUNNEL_NODE, &show_tunnel_wtp_list_cmd);
 	install_element(LOCAL_HANSI_CWTUNNEL_NODE, &show_tunnel_log_wsm_state_cmd);
@@ -1920,6 +1922,7 @@ void dcli_wsm_init(void)
 	install_element(LOCAL_HANSI_CWTUNNEL_NODE, &set_tunnel_wsm_watchdog_cmd);
 	install_element(LOCAL_HANSI_CWTUNNEL_NODE, &show_tunnel_wsm_watchdog_state_cmd);
 	install_element(LOCAL_HANSI_CWTUNNEL_NODE, &set_tunnel_wsm_wifi_rx_cmd);
+#endif
 
 	//install_element(LOCAL_HANSI_CWTUNNEL_NODE, &set_tunnel_wsm_wifi_rx_cmd);
 

@@ -6405,7 +6405,7 @@ DBusMessage * wid_dbus_interface_show_wtp_wlan_data_pkts_information(DBusConnect
 					wlanid_tail->next=wlanid_node;
 					wlanid_tail=wlanid_tail;
 					}*/
-				if (AC_WLAN[wlanid_node->wlanid]->want_to_delete != 1)		/* Huangleilei add for ASXXZFI-1622 */
+				if (AC_WLAN[wlanid_node->wlanid] != NULL && AC_WLAN[wlanid_node->wlanid]->want_to_delete != 1)		/* Huangleilei add for ASXXZFI-1622 */
 				wlanID[wlan_num] = wlanid_node->wlanid;
 				wlan_num++;
 				wlanid_node=wlanid_node->next;
@@ -7443,7 +7443,7 @@ DBusMessage * wid_dbus_interface_show_wlan_stats_information(DBusConnection *con
     			if(WTP[i]->WTP_Radio[j] != NULL)
     			{
     				wlanidlist = WTP[i]->WTP_Radio[j]->Wlan_Id;
-    				while(wlanidlist != NULL && (AC_WLAN[wlanidlist->wlanid]->want_to_delete != 1))		/* Huangleilei add for ASXXZFI-1622 */
+    				while(wlanidlist != NULL && (AC_WLAN[wlanidlist->wlanid] != NULL && AC_WLAN[wlanidlist->wlanid]->want_to_delete != 1))		/* Huangleilei add for ASXXZFI-1622 */
     				{
     					wlanid = wlanidlist->wlanid;
     					if(wlanlist[wlanid] == 1)
@@ -8775,7 +8775,7 @@ DBusMessage * wid_dbus_interface_show_wlan_ssid_stats_information(DBusConnection
 			if(WTP[i]->WTP_Radio[j] != NULL)
 			{
 				wlanidlist = WTP[i]->WTP_Radio[j]->Wlan_Id;
-				while(wlanidlist != NULL && (AC_WLAN[wlanidlist->wlanid]->want_to_delete != 1))		/* Huangleilei add for ASXXZFI-1622 */
+				while(wlanidlist != NULL && (AC_WLAN[wlanidlist->wlanid] != NULL && AC_WLAN[wlanidlist->wlanid]->want_to_delete != 1))		/* Huangleilei add for ASXXZFI-1622 */
 				{
 					wlanid = wlanidlist->wlanid;
 					if(wlanlist[wlanid] == 1)
@@ -27407,7 +27407,7 @@ DBusMessage * wid_dbus_interface_wlan_apply_ifname (DBusConnection *conn, DBusMe
 	}
 	else if(ret_flag == 0)
 	{
-		if (AC_WLAN[wlanid]->want_to_delete == 1)		/* Huangleilei add for ASXXZFI-1622 */
+		if (AC_WLAN[wlanid] != NULL && AC_WLAN[wlanid]->want_to_delete == 1)		/* Huangleilei add for ASXXZFI-1622 */
 		{
 			ret = WID_WANT_TO_DELETE_WLAN;
 			retv6 = WID_WANT_TO_DELETE_WLAN;
@@ -28431,7 +28431,7 @@ DBusMessage * wid_dbus_interface_wlan_max_sta_new(DBusConnection *conn, DBusMess
 						{
 							for(k2 = 0; k2 < wlan_num; k2++)
 							{
-								if(AC_RADIO[radio_id]->BSS[k1]->WlanID == wlanid[k2] && (AC_WLAN[wlanid[k2]]->want_to_delete != 1))		/* Huangleilei add for ASXXZFI-1622 */
+								if(AC_RADIO[radio_id]->BSS[k1]->WlanID == wlanid[k2] && (AC_WLAN[wlanid[k2]] != NULL && AC_WLAN[wlanid[k2]]->want_to_delete != 1))		/* Huangleilei add for ASXXZFI-1622 */
 								{
 									AC_RADIO[radio_id]->BSS[k1]->bss_max_allowed_sta_num = AC_WLAN[wlanid[k2]]->bss_allow_max_sta_num;
 									AC_BSS[radio_id*L_BSS_NUM+k1]->bss_max_allowed_sta_num = AC_WLAN[wlanid[k2]]->bss_allow_max_sta_num;
@@ -28762,6 +28762,10 @@ DBusMessage * wid_dbus_interface_wlan_l3if_policy2(DBusConnection *conn, DBusMes
 	else if (AC_WLAN[wlanid] == NULL)
 	{
 		ret = WLAN_ID_NOT_EXIST;
+	}
+	else if (AC_WLAN[wlanid]->want_to_delete == 1)		/* hll add for AXSSZFI-1742 */
+	{
+		ret = WID_WANT_TO_DELETE_WLAN;
 	}
 	else if (AC_RADIO[g_radioid] == NULL)
 	{
@@ -65160,6 +65164,15 @@ DBusMessage * wid_dbus_interface_set_ebr_add_del_if(DBusConnection *conn, DBusMe
 		if(ret == WID_DBUS_SUCCESS)
 		{
 			g_radio_id = wtpid*L_RADIO_NUM+radioid;
+			if (AC_WLAN[wlanid] == NULL)
+			{
+				ret = WLAN_ID_NOT_EXIST;
+			}
+			else if (AC_WLAN[wlanid]->want_to_delete == 1)	/* hll add for AXSSZFI-1742 */
+			{
+				ret = WID_WANT_TO_DELETE_WLAN;
+			}
+			else
 			if(isadd)
 			{
 				ret = WID_SET_ETHEREAL_BRIDGE_IF_UPLINK(ebrid,name,is_radio,g_radio_id,wlanid);
@@ -70059,10 +70072,10 @@ DBusMessage * wid_dbus_wlan_show_running_config_start(DBusConnection *conn, DBus
 				}
 				cursor = showStr + totalLen;
 				/*fengwenchao add end*/				
-				if(WLAN[i]->want_to_delete != 1 && WLAN[i]->chinaEssid == 0){		/* Huangleilei check wlan operation */
+				if(WLAN[i] != NULL && WLAN[i]->want_to_delete != 1 && WLAN[i]->chinaEssid == 0){		/* Huangleilei check wlan operation */
 					totalLen += sprintf(cursor,"create wlan %d %s %s\n",WLAN[i]->WlanID,WLAN[i]->WlanName,WLAN[i]->ESSID);
 					cursor = showStr + totalLen;
-				}else if(WLAN[i]->want_to_delete != 1 && WLAN[i]->chinaEssid == 1){	/* Huangleilei check wlan operation */
+				}else if(WLAN[i] != NULL && WLAN[i]->want_to_delete != 1 && WLAN[i]->chinaEssid == 1){	/* Huangleilei check wlan operation */
 					totalLen += sprintf(cursor,"create wlan_ascii %d %s %s\n",WLAN[i]->WlanID,WLAN[i]->WlanName,WLAN[i]->ESSID_CN_STR);
 					cursor = showStr + totalLen;
 				}
@@ -70390,7 +70403,7 @@ DBusMessage * wid_dbus_wlan_show_running_config_end(DBusConnection *conn, DBusMe
 			}
 			for(i=0; i<num; i++){				
 				/*if(((int)WLAN[i]->SecurityID > 0)&&(WLAN[i]->Wlan_Ifi != NULL)&&(WLAN[i]->Status == 0)){*/
-				if(WLAN[i]->want_to_delete != 1 && ((int)WLAN[i]->SecurityID > 0)){	/* Huang Leilei fix for AXSSZFI-1694,  */
+				if(WLAN[i] != NULL && WLAN[i]->want_to_delete != 1 && ((int)WLAN[i]->SecurityID > 0)){	/* Huang Leilei fix for AXSSZFI-1694,  */
 					totalLen += sprintf(cursor,"config wlan %d\n",WLAN[i]->WlanID);
 					cursor = showStr + totalLen;
 					if((WLAN[i]->wlan_if_policy == WLAN_INTERFACE)&&(WLAN[i]->tunnel_wlan_vlan != NULL)){
@@ -71698,7 +71711,7 @@ DBusMessage * wid_dbus_wtp_show_running_config_start(DBusConnection *conn, DBusM
 			{
 				for(bss=0; bss<L_BSS_NUM; bss++)
 				{
-					if(iflist->wlanid[bss] != 0 && AC_WLAN[iflist->wlanid[bss]]->want_to_delete != 1)		/* Huangleilei check wlan operation */
+					if(iflist->wlanid[bss] != 0 && (AC_WLAN[iflist->wlanid[bss]] != NULL && AC_WLAN[iflist->wlanid[bss]]->want_to_delete != 1))		/* Huangleilei check wlan operation */
 					{
 						totalLen += sprintf(cursor,"set auto_ap_login wlan %d base interface %s\n",iflist->wlanid[bss],iflist->ifname);
 						cursor = showStr + totalLen;

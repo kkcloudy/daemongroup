@@ -774,8 +774,7 @@ void * free_wlan(void * arg)
 				;						// do nothing, goto next circle
 		}
 	}
-	AsdWsm_WLANOp(WlanID, WID_DEL, 0);	
-	sleep(1);
+
 	for(i=0;i<WTP_NUM;i++)
 		if(AC_WTP[i] != NULL){
 			for(j=0;j<AC_WTP[i]->RadioCount;j++){
@@ -784,7 +783,7 @@ void * free_wlan(void * arg)
 					radioid = i*L_RADIO_NUM+j;
 					ret = WID_DELETE_WLAN_APPLY_RADIO(radioid,WlanID);
 					if(ret != 0)
-						wid_syslog_err("WID_DELETE_WLAN_APPLY_RADIO radio %d delete wlan %d error\n",radioid,WlanID);
+						wid_syslog_err("WID_DELETE_WLAN_APPLY_RADIO radio %d delete wlan %d error(ret = %d)\n",radioid,WlanID, ret);
 					continue;
 				}
 			}
@@ -841,7 +840,7 @@ void * free_wlan(void * arg)
 	else
 		tpdel.tv_sec = tpend.tv_sec - tpstart.tv_sec;
 	tpdel.tv_usec = (tpend.tv_usec < tpstart.tv_usec) ? (tpstart.tv_usec - tpend.tv_usec) : (tpend.tv_usec - tpstart.tv_usec);
-	wid_syslog_info("%s %d: before delete wlan has waited %d seconds %d usecond", __func__, __LINE__, tpdel.tv_sec, tpdel.tv_usec);
+	wid_syslog_info("%s %d: before delete wlan has waited %d seconds %d usecond [ wlanid: %d ]", __func__, __LINE__, tpdel.tv_sec, tpdel.tv_usec, WlanID);
 
 	 return (void *)0;
 }
@@ -873,6 +872,9 @@ int WID_DELETE_WLAN(unsigned char WlanID){
 	}
 	/*fengwenchao add end*/
 	
+
+	AsdWsm_WLANOp(WlanID, WID_DEL, 0);	
+	sleep(1);
 	/* if the user want to delete this wlan, set this flag to 1, 
 	 * and ignore this wlan's information for all the new created wtps
 	 * Huangleilei add it for AXSSZFI-1622 , move for AXSSZFI-1740
@@ -885,7 +887,6 @@ int WID_DELETE_WLAN(unsigned char WlanID){
 	 {
 	 	return WID_WANT_TO_DELETE_WLAN;
 	 }
-	sleep(1);
 	time_t before_wait;
 	time(&before_wait);
 	struct timeval tpstart, tpend;
@@ -901,7 +902,7 @@ int WID_DELETE_WLAN(unsigned char WlanID){
 				{
 					if ((AC_WLAN[WlanID]->S_WTP_BSS_List[i][j] != 0)
 						&& AC_WTP[i]->WTP_Radio[j]->BSS[AC_WLAN[WlanID]->S_WTP_BSS_List[i][j] % L_BSS_NUM] != NULL)
-				{
+					{
 						while (/*AC_WLAN[WlanID]->S_WTP_BSS_List[i][j] != 0 */
 							AC_WTP[i]->WTP_Radio[j]->BSS[AC_WLAN[WlanID]->S_WTP_BSS_List[i][j] % L_BSS_NUM]->enable_wlan_flag == 1
 							&& AC_WTP[i]->WTPStat == CW_ENTER_RUN)
@@ -940,17 +941,18 @@ create_thread_flag_out:
 	//free_wlan_data.WlanID = WlanID;
 	//free_wlan_data.vty_fd = fd;
 	if (create_thread_flag == 1)
-			{
+	{
 		CWThread free_wlan_thread;	
 		wlanid_temp |= 0x80000000;
 				
-		if(!CWErr(CWCreateThread(&free_wlan_thread, free_wlan, (void *)(wlanid_temp),0))) {
+		if(!CWErr(CWCreateThread(&free_wlan_thread, free_wlan, (void *)(wlanid_temp),0)))
+		{
 			wid_syslog_crit("%s %d Error starting free_wlan Thread", __func__, __LINE__);
 			exit(1);
-				}
+		}
 		wid_syslog_debug_debug(WID_DEFAULT, "%s %d create a new thread to delete wlan %d information", __func__, __LINE__, WlanID);
 		return DELETE_WLAN_SPEN_TOO_MUCH_TIME;
-			}
+	}
 	else
 	{
 		wid_syslog_debug_debug(WID_DEFAULT, "%s %d delete wlan %d information", __func__, __LINE__, WlanID);
