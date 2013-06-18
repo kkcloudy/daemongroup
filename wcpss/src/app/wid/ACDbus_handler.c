@@ -3004,6 +3004,8 @@ int WID_ENABLE_WLAN(unsigned char WlanID){
 
 		}
 	}
+	/*if the ac recive wlan response but wlan state is disable,bss state is not same to the wlan*/
+	AC_WLAN[WlanID]->Status = 0;
 	////////////////////////////////////////////////////////////
 	int m = 0,n=0;
 	wid_syslog_debug_debug(WID_DEFAULT,"ONE wlan need create WLAN %d\n",WlanID);
@@ -3333,7 +3335,7 @@ int WID_ENABLE_WLAN(unsigned char WlanID){
 		}
 	}
 	AC_WLAN[WlanID]->CMD = 0;	
-	AC_WLAN[WlanID]->Status = 0;		
+	//AC_WLAN[WlanID]->Status = 0;		
 	AC_WLAN[WlanID]->want_to_delete = 0;		/* Huangleilei add for ASXXZFI-1622 */
 	AsdWsm_WLANOp(WlanID, WID_MODIFY, 0);
 
