@@ -1813,6 +1813,9 @@ dhcp_dbus_set_option
 			}
 			else {
 				if (del) {
+					if(!(poolnode -> owned_option.domainname) || !(owned_option->domainname)){
+						return DHCP_SERVER_RETURN_CODE_FAIL;
+					}
 					if(strcmp(poolnode->owned_option.domainname ,owned_option->domainname)){
 						return DHCP_SERVER_RETURN_CODE_FAIL;
 					}
