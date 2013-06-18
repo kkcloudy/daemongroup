@@ -2,7 +2,7 @@
 
 TEMPORARY_DIRECTORY="/home/admin/temp_directory"
 STORAGE_SIZE_LIMIT=900
-SOFT_VERSION_COUNT_MAX=15
+SOFT_VERSION_COUNT_MAX=5
 CURRENT_DIRECTORY=`pwd`
 
 for dev_path in $(cat /etc/fstab | awk '{print $1}' | sed '/^#/d') 
@@ -55,7 +55,7 @@ do
 					echo "please rename the exist directory"
 					cd -
 				else
-					#echo "$TEMPORARY_DIRECTORY not exist at `pwd`"
+					echo "$TEMPORARY_DIRECTORY not exist at `pwd`"
 					#make dir for temporary
 					if ! `mkdir $TEMPORARY_DIRECTORY`; then
 						echo "create directory $TEMPORARY_DIRECTORY failed"
@@ -63,23 +63,29 @@ do
 						exit 3
 					fi
 					
-					echo "sorting the storage,please waite for few minutes "
+					echo "copy files from storage to memory,please waite for few minutes "
 					echo "and please keep the power not down"
 					#copy file from the storage to the temporary directory
-                                        if ! `pkill sad.sh`; then
-                                                echo "pkill sad.sh failed"   
-                                                cd $CURRENT_DIRECTORY
-                                                exit 4
-                                        fi 
+                       if ! `pkill sad.sh`; then
+                            echo "pkill sad.sh failed"   
+                            rm -rf $TEMPORARY_DIRECTORY	
+                            echo "delete temp_directory successful"
+                            cd $CURRENT_DIRECTORY
+                            exit 4
+                       else 
+                            echo "pkill sad.sh successful"
+                       fi 
 					
 					if ! `cp -r /blk/*  $TEMPORARY_DIRECTORY/`; then
 						echo "copy files from storarge failed"
 						rm -rf $TEMPORARY_DIRECTORY	
 						cd $CURRENT_DIRECTORY	
 						exit 5
+					else 
+					    echo "copy files from storarge to memory successful"
 					fi
-														
-				fi
+				fi										
+				
 			fi
 		else
 			echo "free mem is not enough to sort the storage"

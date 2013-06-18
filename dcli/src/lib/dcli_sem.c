@@ -2570,7 +2570,7 @@ DEFUN (cf_card_partition_func,
 			vty_out(vty,"Mount /blk failed.\n");			
 			return CMD_WARNING;
 		case 2: 		
-			vty_out(vty,"CF card so many version files,please keep the version file not more than 15.\n");			
+			vty_out(vty,"CF card so many version files,please keep the version file not more than 5.\n");			
 			return CMD_WARNING;
 		case 3: 		
 			vty_out(vty,"Create directory (temp_directory) failed.\n");			
