@@ -158,6 +158,7 @@ rtm_deal_interface_flow_stats_sampling_divided(int command, process_info* proces
 		zlog_warn("Rtm recv unkown process message!\n");
 		return -1;
 	 }
+	return 0;
 }
 
 /*Rtmd send to snmp or acsample.*/
@@ -465,10 +466,18 @@ rtm_send_request_if_flow_to_se_agent(int if_flow_command)
 	int64_t fau_enet_input_bytes_capwap;   
 	int64_t fau_enet_input_bytes_rpa;  */
 
+/*CID 18163 (#1 of 1): Big parameter passed by value (PASS_BY_VALUE)
+pass_by_value: Passing parameter se_data of type se_interative_t (size 624 bytes) by value
+So change the passing parameter from struct 'se_interative_t' to struct 'fau64_part_info_t' .*/
+/*
 if_flow_stats_se_agent *
 rtm_read_if_flow_stats_from_se_agent(struct stream *s,se_interative_t se_data,if_flow_stats_se_agent *if_flow_data)
-{
+*/
+if_flow_stats_se_agent *
+rtm_read_if_flow_stats_from_se_agent(struct stream *s, fau64_part_info_t fau64_part_info,if_flow_stats_se_agent *if_flow_data)
 
+{
+#if 0
 	/*fetch data.*/
 	if_flow_data->output_packets_eth = se_data.fccp_cmd.fccp_data.fau64_part_info.fau_enet_output_packets_eth;
 	if_flow_data->output_packets_capwap= se_data.fccp_cmd.fccp_data.fau64_part_info.fau_enet_output_packets_capwap;
@@ -482,7 +491,22 @@ rtm_read_if_flow_stats_from_se_agent(struct stream *s,se_interative_t se_data,if
 	if_flow_data->input_bytes_eth = se_data.fccp_cmd.fccp_data.fau64_part_info.fau_enet_input_bytes_eth;
 	if_flow_data->input_bytes_capwap = se_data.fccp_cmd.fccp_data.fau64_part_info.fau_enet_input_bytes_capwap;
 	if_flow_data->input_bytes_rpa = se_data.fccp_cmd.fccp_data.fau64_part_info.fau_enet_input_bytes_rpa;
+#else
+	/*fetch data.*/
+	if_flow_data->output_packets_eth = fau64_part_info.fau_enet_output_packets_eth;
+	if_flow_data->output_packets_capwap= fau64_part_info.fau_enet_output_packets_capwap;
+	if_flow_data->output_packets_rpa= fau64_part_info.fau_enet_output_packets_rpa;
+	if_flow_data->input_packets_eth = fau64_part_info.fau_enet_input_packets_eth;
+	if_flow_data->input_packets_capwap= fau64_part_info.fau_enet_input_packets_capwap;
+	if_flow_data->input_packets_rpa = fau64_part_info.fau_enet_input_packets_rpa;
+	if_flow_data->output_bytes_eth = fau64_part_info.fau_enet_output_bytes_eth;
+	if_flow_data->output_bytes_capwap= fau64_part_info.fau_enet_output_bytes_capwap;
+	if_flow_data->output_bytes_rpa = fau64_part_info.fau_enet_output_bytes_rpa;
+	if_flow_data->input_bytes_eth = fau64_part_info.fau_enet_input_bytes_eth;
+	if_flow_data->input_bytes_capwap = fau64_part_info.fau_enet_input_bytes_capwap;
+	if_flow_data->input_bytes_rpa = fau64_part_info.fau_enet_input_bytes_rpa;
 
+#endif
 
 	return if_flow_data;
 	
@@ -671,8 +695,9 @@ rtm_if_flow_stats_data_deal_for_active_master_board(if_flow_stats_se_agent *if_f
 			}
 			else if(command == INTERFACE_FLOW_STATISTICS_SAMPLING_INTEGRATED_RTM)
 			{
-				/*for vtysh show interface.*/
-				zlog_debug("When recv se_agent,show interface, now do nothing.\n");
+				/*for vtysh show interface. do nothing.*/
+				if(rtm_debug_if_flow)
+				 zlog_debug("When recv se_agent,show interface, now do nothing.\n");
 			}
 			else
 			{
@@ -818,6 +843,13 @@ rtm_recv_message_from_se_agent(struct thread *thread)
   
   if (rtm_debug_if_flow)
 	 zlog_debug ("enter %s ......\n", __func__);
+
+  /*Add check fd when recvfrom.*/
+  if (process_se_agent->sock < 0)
+  {
+     zlog_warn("%s: rtmd connect se_agent fd < 0.\n",__func__);
+     return -1;
+  	}
   
   /*master_board= THREAD_ARG (thread);*/
   process_se_agent->t_read = NULL;
@@ -850,14 +882,21 @@ rtm_recv_message_from_se_agent(struct thread *thread)
   command = se_data.fccp_cmd.agent_pid;
 
   /*Read the data from se_agent.*/
-  rtm_read_if_flow_stats_from_se_agent(process_se_agent->ibuf,se_data,&if_flow_data);
+  /*rtm_read_if_flow_stats_from_se_agent(process_se_agent->ibuf,se_data,&if_flow_data);*/
+  rtm_read_if_flow_stats_from_se_agent(process_se_agent->ibuf, se_data.fccp_cmd.fccp_data.fau64_part_info, &if_flow_data);
   
   /*After fetch the data ,go to update flow stats data*/
   rtm_if_flow_stats_update(&if_flow_data,command);
   
+  /*CID 18165 (#1 of 1): Argument cannot be negative (REVERSE_NEGATIVE)
+      check_after_sink: You might be using variable "process_se_agent->sock" before verifying that it is >= 0. 
+     So add check fd when recvfrom above.*/
   if (process_se_agent->sock < 0)
+  {
     /* Connection was closed during packet processing. */
+	zlog_warn("%s: After recvfrom se_agent fd is break.\n",__func__);
     return -1;
+  	}
 
   /* Register read thread. */
   stream_reset(process_se_agent->ibuf);

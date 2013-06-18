@@ -1487,7 +1487,8 @@ master_redistribute_interface_address_delete (struct interface *ifp,
  struct interface *
  master_interface_state_set(struct interface *ifp, uint64_t flags, int rpa_done, int normal_done)
 {
-int ret;
+     int ret;
+	 
 	 if((ifp->if_types == RPA_INTERFACE)&& (rpa_done == 1)&&(normal_done == 0) )/*rpa :  only running use*/
 	 {
 		 if(CHECK_FLAG(flags, IFF_RUNNING))
@@ -1611,6 +1612,9 @@ int ret;
 		 return ifp;
 	 }
 #endif	
+/*CID 11365 (#1 of 1): Missing return statement (MISSING_RETURN)
+11. missing_return: Arriving at the end of a function without returning a value. */
+	return ifp;
 	 
 }
 
@@ -1705,6 +1709,10 @@ tipc_master_interface_description_set (int command, tipc_client *master_board,
   int ret;
 
   ifp = tipc_master_zebra_interface_description_update_read(s,command);
+  if(!ifp)
+  {
+  	zlog_debug("%s: line %d interface doesn't exist !\n",__func__,__LINE__);
+  	}
 
  
   return 0;
@@ -1720,6 +1728,10 @@ tipc_master_interface_description_unset (int command, tipc_client *master_board,
   int ret;
 
   ifp = tipc_master_zebra_interface_description_update_read(s,command);
+  if(!ifp)
+  {
+  	zlog_debug("%s: line %d interface doesn't exist !\n",__func__,__LINE__);
+  	}
 
  
   return 0;
@@ -2392,7 +2404,7 @@ tipc_master_connected_add_by_prefix (struct interface *ifp, struct prefix *p,
   }
   #endif
   if(ifc->address->family == AF_INET)
-	{
+  {
 		if(tipc_client_debug)
 		 zlog_debug("%s : line %d , ipv4 : %d ....\n",__func__,__LINE__,ifc->address->family);
 	    /*add by gjd: for rpa and real interface to add address to kernel*/
@@ -2403,9 +2415,8 @@ tipc_master_connected_add_by_prefix (struct interface *ifp, struct prefix *p,
 	   		return NULL;
 	    }
 	  }
-	else
-		if(ifc->address->family == AF_INET6)
-		{
+	else if(ifc->address->family == AF_INET6)
+	{
 			if(tipc_client_debug)
 			 zlog_debug("%s : line %d , ipv6 : %d ....\n",__func__,__LINE__,ifc->address->family);
 		    /*add by gjd: for rpa and real interface to add address to kernel*/
@@ -2416,12 +2427,15 @@ tipc_master_connected_add_by_prefix (struct interface *ifp, struct prefix *p,
 		    if (ret < 0) 
 			{
 				zlog_err("%s: line %d, kernel set ipv6 address failed :%s....\n", __func__, __LINE__,safe_strerror(errno));
+				/*CID 13539 (#3 of 3): Resource leak (RESOURCE_LEAK)
+                             17. leaked_storage: Variable "ifc" going out of scope leaks the storage it points to.
+                             No problem. Needon't free.*/
 		   		return NULL;
 		    }
 			SET_FLAG(ifc->conf,ZEBRA_IFC_REAL);
 		  }
-		else
-			{
+	else
+	 {
 				
 				zlog_debug("%s : line %d , errXXXX  %d ....\n",__func__,__LINE__,ifc->address->family);
 			}
@@ -2903,6 +2917,8 @@ tipc_master_interface_up (int command, tipc_client *master_board, zebra_size_t l
   } 
       
   ifp = tipc_master_zebra_interface_state_read (ZEBRA_INTERFACE_UP,master_board->ibuf);
+  if(!ifp)
+  	zlog_debug("%s: line %d, the interface doesn't exist!\n",__func__,__LINE__);
 
   return 0;
 }
@@ -2924,6 +2940,8 @@ tipc_master_interface_down (int command, tipc_client *master_board, zebra_size_t
   }
 
   ifp = tipc_master_zebra_interface_state_read(ZEBRA_INTERFACE_DOWN,master_board->ibuf);
+  if(!ifp)
+  	zlog_debug("%s: line %d, the interface doesn't exist!\n",__func__,__LINE__);
 
   return 0;
 }
@@ -3046,6 +3064,10 @@ else  if(judge_ve_sub_interface(ifp->name)== VE_SUB_INTERFACE)
   		}
   	}
 #endif
+/*CID 13540 (#3-4 of 4): Resource leak (RESOURCE_LEAK)
+12. leaked_storage: Variable "ifp" going out of scope leaks the storage it points to.
+No problem. The ifp will release when delete.*/
+
 /*if(ifp->if_types ==VIRTUAL_INTERFACE )*//*gujd: 2012-06-06, am 11:03. Delete for syncing ve  parent or sub interface to other baords .*/
   master_send_vurtual_interface_add_to_vice(ifp);
 

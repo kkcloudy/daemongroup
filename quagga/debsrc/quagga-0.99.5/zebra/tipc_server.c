@@ -109,19 +109,34 @@ tipc_client_kernel_add_ipv4(struct prefix_ipv4 *ipv4, struct rib *rib)
 	/**use prefix_ipv4 and also can use prefix**/  
 	  struct prefix *p ;
 	  char buf1[BUFSIZ] = {0};
-  
+
+	  if(!ipv4 || !rib)
+	  {
+		zlog_warn("%s: ipv4 prefix is %p or rib is %p .\n",__func__,ipv4,rib);
+		return -1;
+		}
 	  p = XCALLOC(MTYPE_PREFIX ,sizeof(struct prefix));
+	  if(!p)
+	  {
+	  	zlog_warn("%s: malloc prefix p failed.\n",__func__);
+		return -1;
+	  }
 	  p->family = AF_INET;
 	  p->prefixlen = ipv4->prefixlen;
-	//	stream_get (&p.prefix, s, PSIZE (p.prefixlen));
-	//  stream_get (&p->u.prefix4, s, PSIZE (p->prefixlen));/**fetch dest ip**/
+	/*	stream_get (&p.prefix, s, PSIZE (p.prefixlen));*/
+	/*  stream_get (&p->u.prefix4, s, PSIZE (p->prefixlen));*//**fetch dest ip**/
 #if 0
 /////////DONGSHU
 	  if(p != NULL && ipv4 != NULL)
 		 strcpy(&p->u.prefix4 ,&ipv4->prefix);
 #else
+	/*CID 13866 (#1 of 1): Dereference before null check (REVERSE_INULL)
+	 check_after_deref: Null-checking "p" suggests that it may be null, but it has already been dereferenced on all paths leading to the check.
+	 CID 13865 (#1 of 1): Dereference before null check (REVERSE_INULL)
+	 check_after_deref: Null-checking "ipv4" suggests that it may be null, but it has already been dereferenced on all paths leading to the check
+	 So move ipv4 check to above. */
 	if(p != NULL && ipv4 != NULL)
-	   memcpy(&p->u.prefix4 ,&ipv4->prefix,sizeof(ipv4->prefix));
+	memcpy(&p->u.prefix4 ,&ipv4->prefix,sizeof(ipv4->prefix));
 
 
 #endif
@@ -148,16 +163,31 @@ tipc_client_kernel_delete_ipv4(struct prefix_ipv4 *ipv4, struct rib *rib)
 	  struct prefix *p ;
 	  char buf1[BUFSIZ] = {0};
   
+	  if(!ipv4 || !rib)
+	  {
+		zlog_warn("%s: ipv4 prefix is %p or rib is %p .\n",__func__,ipv4,rib);
+		return -1;
+		}
 	  p = XCALLOC(MTYPE_PREFIX ,sizeof(struct prefix));
+	  if(!p)
+	  {
+	  	zlog_warn("%s: malloc prefix p failed.\n",__func__);
+		return -1;
+	  }
 	  p->family = AF_INET;
 	  p->prefixlen = ipv4->prefixlen;
-	//	stream_get (&p.prefix, s, PSIZE (p.prefixlen));
-	//  stream_get (&p->u.prefix4, s, PSIZE (p->prefixlen));/**fetch dest ip**/
+	/*	stream_get (&p.prefix, s, PSIZE (p.prefixlen));*/
+	/*  stream_get (&p->u.prefix4, s, PSIZE (p->prefixlen));*//**fetch dest ip**/
 //DONGSHU
 #if 0
 	  if(p != NULL && ipv4 != NULL)
 		 strcpy(&p->u.prefix4 ,&ipv4->prefix);
 #else
+	/*CID 13867 (#1 of 1): Dereference before null check (REVERSE_INULL)
+	check_after_deref: Null-checking "ipv4" suggests that it may be null, but it has already been dereferenced on all paths leading to the check
+       CID 13868 (#1 of 1): Dereference before null check (REVERSE_INULL)
+       check_after_deref: Null-checking "p" suggests that it may be null, but it has already been dereferenced on all paths leading to the check. 
+	So move ipv4 check to above. */
 	if(p != NULL && ipv4 != NULL)
 	   memcpy(&p->u.prefix4 ,&ipv4->prefix,sizeof(ipv4->prefix));
 
@@ -628,12 +658,16 @@ vice_rib_ipv4_detele_static_route(struct prefix *p, struct rib *rib_del)
 	zlog_debug("%s : line %d , Rib route node = NULL !!\n",__func__,__LINE__);
 	  return -1;
 	}
-
+  /*CID 17185: Logically dead code (DEADCODE)
+     dead_error_begin: Execution cannot reach this statement "zlog_warn("struct rib del i...".
+     So delete it.*/
+  /*
    if(!rib_del)
 	{
 		zlog_warn("struct rib del is NULL .\n");
 		return -1;
 	}
+	*/
 
 	if(rib_del->type == ZEBRA_ROUTE_STATIC)
 	 {
@@ -1009,12 +1043,17 @@ vice_rib_ipv6_delete_static_route(struct prefix * p,struct rib * rib_del)
 	  zlog_debug("%s : line %d ,Rib(v6) route node = NULL !!\n",__func__,__LINE__);
 	  return -1;
 	}
-  /*Static ipv6 route*/		
-   if(!rib_del)
+  
+  /*CID 17186: Logically dead code (DEADCODE)
+    dead_error_begin: Execution cannot reach this statement "zlog_warn("struct rib del i...". 
+    So delete it.*/
+ /*  
+       if(!rib_del)
 	  {
 		  zlog_warn("struct rib del is NULL .\n");
 		  return -1;
 	  }
+ */
   
    if(rib_del->type == ZEBRA_ROUTE_STATIC)
    {
@@ -1964,14 +2003,14 @@ tipc_client_route_multipath (int cmd, tipc_server *vice_board, u_short length)
 	/* struct prefix_ipv4 p;*/
 	  struct prefix p;
 	  u_char message;
-	// struct in_addr nexthop;
+	/* struct in_addr nexthop;*/
 	  struct in_addr *ipv4_gate;
    	  struct in6_addr *ipv6_gate;
 	  u_char nexthop_num = 0;
 	  u_char nexthop_type;
 	  struct stream *s;
 	  unsigned int ifindex;
-	//	u_char ifnamelen;
+	/*u_char ifnamelen;*/
 	  u_char nexthop_flags;
 	  char buf1[BUFSIZ] = {0};/*for debug*/
 	  char buf2[BUFSIZ] = {0};
@@ -1980,15 +2019,19 @@ tipc_client_route_multipath (int cmd, tipc_server *vice_board, u_short length)
 	  int set_local_count = 0;
 	
 		
-//	  if(tipc_server_debug)
-//		zlog_debug ("%s: line %d, go to parse the stream from tipc server and zclient %p......\n", __func__,__LINE__,vice_board);
-		
+/*	  if(tipc_server_debug)
+		zlog_debug ("%s: line %d, go to parse the stream from tipc server and zclient %p......\n", __func__,__LINE__,vice_board);
+*/		
 	  /* Get input stream.	*/
 	  s = vice_board->ibuf;
 	
 	  /* Allocate new rib. */
 	  rib = XCALLOC (MTYPE_RIB, sizeof(struct rib));
-	  
+	  if(!rib)
+	   {
+	      zlog_warn("%s: malloc rib failed!\n",__func__);
+		  return -1;
+	  	}
 	  /* Type, flags, message. */
 	  rib->type = stream_getc (s);
 	  if(tipc_server_debug)
@@ -2246,6 +2289,8 @@ tipc_client_route_multipath (int cmd, tipc_server *vice_board, u_short length)
 	  	Second, all nexthop are set local and interfaces belong to other board , so free this rib in this board , not t install.*/
 	  if(cmd == ZEBRA_IPV4_ROUTE_ADD ||cmd == ZEBRA_IPV6_ROUTE_ADD)
 	  {
+	   /*CID 17201 (#1 of 1): Uninitialized scalar variable (UNINIT)
+            16. uninit_use: Using uninitialized value "nexthop_num". */
 	  	 if(set_local_count == 1 || nexthop_num == set_local_count)
 	  	 {
 	  	 	zlog_debug("%s: line %d ,nexthop set local count[%d] cased free this rib info.\n",__func__,__LINE__,set_local_count);
@@ -2323,7 +2368,10 @@ skip:
 	  XFREE (MTYPE_IN_ADD, ipv4_gate);/**add**/
 	else
 	  XFREE (MTYPE_IN6_ADD, ipv6_gate);
-	
+	/*CID 17197: Dereference before null check (REVERSE_INULL)
+        check_after_deref: Null-checking "rib" suggests that it may be null, 
+        but it has already been dereferenced on all paths leading to the check. 
+        So add check it above.*/
 	if(rib)
 	{
 		struct nexthop *nexthop = NULL, *next = NULL;
@@ -4541,9 +4589,12 @@ tipc_vice_connected_add_by_prefix (struct interface *ifp, struct prefix *p,
 		 return NULL;*/
 		}
 		/*move the warn log here.*/
-		if(k == 12000)
+		if(k >= 12000)
 		{
 		 zlog_warn("%s: line %d, get index failed ,overflow 2s. k[%d] \n",__func__,__LINE__,k);
+		 /*CID 13544 (#2 of 2): Resource leak (RESOURCE_LEAK)
+                 25. leaked_storage: Variable "ifc" going out of scope leaks the storage it points to. 
+                 No problem. The ifc will continue use in somewhere. When delete ip address ,it will free.*/
 		 return NULL;
 		}
 	 }
@@ -5267,6 +5318,8 @@ tipc_vice_interface_description_set (int command, tipc_server *vice_board,
   int ret;
 
   ifp = tipc_vice_zebra_interface_description_update_read(s,command);
+  if(!ifp)
+  	zlog_debug("%s: line %d, the interface doesn't exist!\n",__func__,__LINE__);
 
  
   return 0;
@@ -5282,6 +5335,8 @@ tipc_vice_interface_description_unset (int command, tipc_server *vice_board,
   int ret;
 
   ifp = tipc_vice_zebra_interface_description_update_read(s,command);
+  if(!ifp)
+  	zlog_debug("%s: line %d, the interface doesn't exist!\n",__func__,__LINE__);
 
  
   return 0;
@@ -5510,6 +5565,8 @@ tipc_vice_interface_up (int command, tipc_server *vice_board, zebra_size_t lengt
      iflist. */
     
   ifp = tipc_vice_zebra_interface_state_read (ZEBRA_INTERFACE_UP,vice_board->ibuf);
+  if(!ifp)
+  	zlog_debug("%s: line %d, the interface doesn't exist!\n",__func__,__LINE__);
 
   return 0;
 }
@@ -5533,6 +5590,8 @@ tipc_vice_interface_uplink_flag_update(int command, tipc_server *vice_board, zeb
      iflist. */
     
   ifp = tipc_vice_zebra_interface_uplink_flag_state_read(command,vice_board->ibuf);
+  if(!ifp)
+  	zlog_debug("%s: line %d , interface doesn't exist!\n",__func__,__LINE__);
   
   return 0;
 }
@@ -5556,7 +5615,8 @@ tipc_vice_interface_linkdetection_enable(int command, tipc_server *vice_board, z
      iflist. */
     
   ifp = tipc_vice_zebra_interface_state_read (ZEBRA_INTERFACE_LINKDETECTION_ENABLE,vice_board->ibuf);
-  
+  if(!ifp)
+  	zlog_debug("%s: line %d , interface doesn't exist!\n",__func__,__LINE__);
   return 0;
 }
 
@@ -5583,7 +5643,8 @@ tipc_vice_interface_linkdetection_disable(int command, tipc_server *vice_board, 
      iflist. */
     
   ifp = tipc_vice_zebra_interface_state_read (ZEBRA_INTERFACE_LINKDETECTION_DISABLE,vice_board->ibuf);
-  
+  if(!ifp)
+  	zlog_debug("%s: line %d , interface doesn't exist!\n",__func__,__LINE__);
   return 0;
 }
 
@@ -5604,6 +5665,8 @@ tipc_vice_interface_down (int command, tipc_server *vice_board, zebra_size_t len
 
   /* vice_board_interface_state_read() updates interface structure in iflist. */
   ifp = tipc_vice_zebra_interface_state_read(ZEBRA_INTERFACE_DOWN,vice_board->ibuf);
+  if(!ifp)
+  	zlog_debug("%s: line %d , interface doesn't exist!\n",__func__,__LINE__);
 
   return 0;
 }
@@ -5640,6 +5703,9 @@ tipc_vice_interface_add (int command, tipc_server* vice_board, int length)
 	 if(ret < 0)
 	  {
 	 	zlog_debug("%s : line %d, creat %s(cpu) rpa interface failed : %s \n ",__func__,__LINE__,ifp->name,safe_strerror(errno));
+		/*CID 13545 (#1 of 6): Resource leak (RESOURCE_LEAK)
+               8. leaked_storage: Variable "ifp" going out of scope leaks the storage it points to
+		No problem. The ifp will continue used, and will free it when delete it.*/
 		return -1;
 	  }
 	 else
@@ -5692,6 +5758,9 @@ tipc_vice_interface_add (int command, tipc_server* vice_board, int length)
 			(strncmp(product->board_name,AX71_2X12G12S,sizeof(AX71_2X12G12S)) == 0)))/*switch board don't go to creat ve sub real*/
 		{
 			zlog_debug(" The board name is %s , don't go to creat real ve-sub(%s) .\n",product->board_name,ifp->name);
+			/*CID 13545 (#2 of 6): Resource leak (RESOURCE_LEAK)
+                      8. leaked_storage: Variable "ifp" going out of scope leaks the storage it points to.
+			No problem. The ifp will continue used, and will free it when delete it.*/
 			return 0;
 		}
 		
@@ -5724,6 +5793,9 @@ tipc_vice_interface_add (int command, tipc_server* vice_board, int length)
 	  			zlog_debug("%s : line %d , vice or bakup goto creat ve sub (global) .",__func__,__LINE__);
 				vconfig_create_ve_sub_interface(ifp);
 				ifp->if_types = REAL_INTERFACE;
+				/*CID 13545 (#3 of 6): Resource leak (RESOURCE_LEAK)
+                             15. leaked_storage: Variable "ifp" going out of scope leaks the storage it points to
+				No problem. The ifp will continue used, and will free it when delete it.*/
 				return 0;
 				}
   			}
@@ -5762,6 +5834,9 @@ tipc_vice_interface_add (int command, tipc_server* vice_board, int length)
 #endif
 
 /* vice_redistribute_interface_add(ifp);*/
+/*CID 13545 (#4-6 of 6): Resource leak (RESOURCE_LEAK)
+11. leaked_storage: Variable "ifp" going out of scope leaks the storage it points to. 
+No problem. The ifp will continue used, and will free it when delete it.*/
   return 0;
 }
 
@@ -6261,6 +6336,9 @@ vice_accept_master (int sock)
   /*wangchao add*/
   vice_board->ifinfo = 1;
 
+  /*CID 11032 (#1 of 1): Dereference after null check (FORWARD_NULL)
+    6. var_deref_model: Passing null pointer "zebrad.master_board_list" to function "listnode_add(struct list *, void *)", which dereferences it.
+    No problem.*/
   /* Add this client to linked list. */
   listnode_add (zebrad.master_board_list, vice_board);
   if(tipc_server_debug)
