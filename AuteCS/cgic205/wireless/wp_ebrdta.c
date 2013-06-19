@@ -651,6 +651,9 @@ void DownLinkIf(instance_parameter *ins_para,int id,struct list *lpublic,struct 
   int result = cgiFormNotFound;   
   char **responses;  
   int ret = 0,flag = 1;
+  char temp[100] = { 0 };
+  char ebr_id[10] = { 0 };
+  
   result = cgiFormStringMultiple("own_if", &responses);
   if(result == cgiFormNotFound)           
   {
@@ -665,7 +668,9 @@ void DownLinkIf(instance_parameter *ins_para,int id,struct list *lpublic,struct 
 	  ret=set_ebr_add_del_if_cmd(ins_para->parameter,ins_para->connection,id,"delete",responses[i]);/*返回0表示失败，返回1表示成功，返回-1表示input parameter should only be 'add' or 'delete'*/
 																									/*返回-2表示if name too long，返回-3表示ebr id does not exist，返回-4表示ebr should be disable first*/
 																									/*返回-5表示if_name already exist/remove some br,or system cmd process error，返回-6表示input ifname error*/
-																									/*返回-7表示ebr if error，返回-8表示error*/
+																									/*返回-7表示ebr if error，返回-8表示error，返回-9示EBR ID非法*/
+																									/*返回-10表示you want to delete wlan, please do not operate like this*/
+																									/*返回-11表示please check the interface's wlanid, you maybe have delete this wlan*/
 	  switch(ret)
 	  {
 	    case SNMPD_CONNECTION_ERROR:
@@ -697,6 +702,23 @@ void DownLinkIf(instance_parameter *ins_para,int id,struct list *lpublic,struct 
 		case -8:ShowAlert(search(lpublic,"error"));
 			    flag=0;
 			    break;
+		case -9:{
+				   memset(temp,0,sizeof(temp));
+				   strncpy(temp,search(lwlan,"ebr_id_1"),sizeof(temp)-1);
+				   memset(ebr_id,0,sizeof(ebr_id));
+				   snprintf(ebr_id,sizeof(ebr_id)-1,"%d",EBR_NUM-1);
+				   strncat(temp,ebr_id,sizeof(temp)-strlen(temp)-1);
+				   strncat(temp,search(lwlan,"ebr_id_2"),sizeof(temp)-strlen(temp)-1);
+				   ShowAlert(temp);
+				   flag=0;
+				   break;
+				}
+		  case -10:ShowAlert(search(lwlan,"dont_del_wlan"));
+				   flag=0;
+				   break;
+		  case -11:ShowAlert(search(lwlan,"have_del_wlan"));
+				   flag=0;
+				   break;
 	  }
 	  i++;
 	}

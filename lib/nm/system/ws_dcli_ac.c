@@ -7999,6 +7999,7 @@ int set_wirelesscontrol_auto_ap_binding_l3_interface_new_cmd(dbus_parameter para
 	int quitreason = 0;
 	char *name = NULL;
 	unsigned char policy = 2;
+	int boot_flag = 0;
 	int retu;
     
 	
@@ -8048,6 +8049,7 @@ int set_wirelesscontrol_auto_ap_binding_l3_interface_new_cmd(dbus_parameter para
 	dbus_message_append_args(query,
 							 DBUS_TYPE_BYTE,&policy,
 							 DBUS_TYPE_STRING,&name,
+							 DBUS_TYPE_UINT32,&boot_flag,
 							 DBUS_TYPE_INVALID);
 
 	reply = dbus_connection_send_with_reply_and_block (connection,query,-1, &err);

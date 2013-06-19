@@ -94,6 +94,8 @@ extern int set_ebr_add_del_if_cmd(dbus_parameter parameter, DBusConnection *conn
 																								/*返回-2表示if name too long，返回-3表示ebr id does not exist，返回-4表示ebr should be disable first*/
 																								/*返回-5表示if_name already exist/remove some br,or system cmd process error，返回-6表示input ifname error*/
 																								/*返回-7表示ebr if error，返回-8表示error，返回-9示EBR ID非法*/
+																								/*返回-10表示you want to delete wlan, please do not operate like this*/
+																								/*返回-11表示please check the interface's wlanid, you maybe have delete this wlan*/
 																								/*返回SNMPD_CONNECTION_ERROR表示connection error*/
 																								
 extern int ebr_set_bridge_sameportswitch_func(dbus_parameter parameter, DBusConnection *connection,int ebr_id,char *spswitch_state);  
