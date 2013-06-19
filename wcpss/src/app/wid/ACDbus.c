@@ -65191,9 +65191,8 @@ DBusMessage * wid_dbus_interface_set_ebr_add_del_if(DBusConnection *conn, DBusMe
 		else{
 			memcpy(name,vename,strlen(vename));
 		}
-		if(ret == WID_DBUS_SUCCESS)
+		if (is_radio == 1)
 		{
-			g_radio_id = wtpid*L_RADIO_NUM+radioid;
 			if (AC_WLAN[wlanid] == NULL)
 			{
 				ret = WLAN_ID_NOT_EXIST;
@@ -65202,7 +65201,10 @@ DBusMessage * wid_dbus_interface_set_ebr_add_del_if(DBusConnection *conn, DBusMe
 			{
 				ret = WID_WANT_TO_DELETE_WLAN;
 			}
-			else
+		}
+		if(ret == WID_DBUS_SUCCESS)
+		{
+			g_radio_id = wtpid*L_RADIO_NUM+radioid;
 			if(isadd)
 			{
 				ret = WID_SET_ETHEREAL_BRIDGE_IF_UPLINK(ebrid,name,is_radio,g_radio_id,wlanid);
