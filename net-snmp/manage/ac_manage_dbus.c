@@ -198,6 +198,9 @@ ac_manage_dbus_message_handler(DBusConnection *connection, DBusMessage *message,
 		else if(dbus_message_is_method_call(message, AC_MANAGE_SNMP_DBUS_INTERFACE, AC_MANAGE_DBUS_CONFIG_SNMP_SYSOID_BOARDTYPE)) {
 			reply = ac_manage_dbus_config_snmp_sysoid_boardtype(connection, message, user_data);
 		}
+		else if(dbus_message_is_method_call(message, AC_MANAGE_SNMP_DBUS_INTERFACE, AC_MANAGE_DBUS_CONFIG_MEM_STATUE_DOG)) {
+			reply = ac_manage_dbus_config_mem_status_dog(connection, message, user_data);
+		}
 	}
 	else if(0 == strcmp(dbus_message_get_path(message), AC_MANAGE_TCRULE_DBUS_OBJPATH)) {	    
 		if(dbus_message_is_method_call(message, AC_MANAGE_TCRULE_DBUS_INTERFACE, AC_MANAGE_DBUS_CONFIG_FLOW_CONTROL_SERVICE)) {

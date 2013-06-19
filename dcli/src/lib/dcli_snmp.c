@@ -5263,6 +5263,48 @@ DEFUN(show_trap_record_func,
 }
 
 
+DEFUN(config_snmp_para_func,
+	config_snmp_para_cmd,
+	"config snmp maxmem <150-500>",
+	"config \n"
+	"config snmp maxmem\n"
+	"config snmp maxmem <150-500>M\n"
+)
+{
+	unsigned int type = 1;//maxmem
+	unsigned int maxmem = 0;
+	maxmem = atoi(argv[0]);
+	if(maxmem<150 || maxmem>500)
+	{
+		vty_out(vty,"<error> input value should be 150 to 500 M.\n");
+		return CMD_WARNING;
+	}
+	
+	int ret = AC_MANAGE_SUCCESS;
+	if(SNMP_NODE == vty->node) {	    
+        int i = 1;
+        for(i = 1; i < MAX_SLOT; i++) {
+            if(dbus_connection_dcli[i]->dcli_dbus_connection) {
+           		ret = ac_manage_config_mem_status_dog(dbus_connection_dcli[i]->dcli_dbus_connection, type, maxmem);
+                if(AC_MANAGE_SUCCESS == ret) {
+                    //vty_out(vty, "Slot(%d) :config snmp maxmem %s success\n", i, argv[0]);
+                }
+                else if(AC_MANAGE_DBUS_ERROR == ret) {
+                    vty_out(vty, "Slot(%d) :<error> failed get reply.\n", i);
+                }
+                else{
+                    vty_out(vty, "Slot(%d) :config snmp maxmem %s failed!\n", i, argv[0]);
+                }
+            }
+        } 	
+		
+		return CMD_SUCCESS;
+    }
+    else {
+		vty_out (vty, "Terminal mode change must under configure snmp mode!\n");
+		return CMD_WARNING;
+    }
+}
 
 DEFUN(show_snmp_running_config_func,
 	show_snmp_running_config_cmd,
@@ -5377,6 +5419,26 @@ dcli_snmp_show_running_config(struct vty *vty) {
     }
     
     ac_manage_show_snmp_running_config(dcli_dbus_connection, SHOW_RUNNING_TRAP_CONFIG, NULL);
+
+	FILE *fp = NULL;
+	fp = popen("sed -n '/SNMPD_MAXMEM=/p' /usr/bin/mem_status_dog.sh", "r");	
+	if(fp) 
+	{
+		char buf[255] = { 0 };
+		memset(buf, 0, sizeof(buf));
+		fgets(buf, sizeof(buf), fp);
+		pclose(fp);
+		fp = NULL;
+
+		unsigned int mem = 0;
+		sscanf(buf, "SNMPD_MAXMEM=%d", &mem);
+		if(200000 != mem)
+		{
+			memset(buf, 0, sizeof(buf));
+			sprintf(buf, " config snmp maxmem %d",(mem/1000));
+			vtysh_add_show_string(buf);
+		}
+	}	
     
     vtysh_add_show_string(" exit");
 
@@ -5477,6 +5539,7 @@ dcli_snmp_init(void) {
 
 	install_element(SNMP_NODE, &conf_snmp_decentral_slot_cmd);
 	install_element(SNMP_NODE, &config_sysoid_cmd);
+	install_element(SNMP_NODE, &config_snmp_para_cmd);
 	install_element(SNMP_NODE, &show_trap_record_cmd);
 	install_node(&snmp_slot_node, NULL, "SNMP_SLOT_NODE");
 	install_default(SNMP_SLOT_NODE);
