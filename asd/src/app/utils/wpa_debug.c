@@ -49,6 +49,8 @@ int gasdPRINT = 0;
 //qiuchen
 unsigned char gASDLOGDEBUG = 0;
 unsigned long gASD_AC_MANAGEMENT_IP = 0;
+extern int slotid;
+extern int vrrid;
 void asd_syslog_emerg(char *format,...)
 {
     char *ident = "asd_eme";
@@ -276,32 +278,35 @@ void asd_printf(int type,int level, char *fmt, ...)
 //		vprintf(fmt, ap);
 
 	//vsprintf(buf,fmt,ap);
-	vsnprintf(buf, sizeof(buf), fmt, ap);
+	vsnprintf(buf, sizeof(buf), fmt, ap);//Qc change it to add slotid and vrrid
+	char sbuf[64+2048] = {0};
+	sprintf(sbuf,"[%d-%d]",slotid,vrrid);
+	memcpy(sbuf+strlen(sbuf),buf,sizeof(buf));
 	switch(level) {
 		case MSG_EMERG:
-			asd_syslog_emerg(buf);
+			asd_syslog_emerg(sbuf);
 			break;
 		case MSG_ALERT:
-			asd_syslog_alert(buf);
+			asd_syslog_alert(sbuf);
 			break;
 		case MSG_CRIT:
-			asd_syslog_crit(buf);
+			asd_syslog_crit(sbuf);
 			break;
 		case MSG_ERROR:
-			asd_syslog_err(buf);
+			asd_syslog_err(sbuf);
 			break;
 		case MSG_WARNING:
-			asd_syslog_warning(buf);
+			asd_syslog_warning(sbuf);
 			break;
 		case MSG_NOTICE:
-			asd_syslog_notice(buf);
+			asd_syslog_notice(sbuf);
 			break;
 		case MSG_INFO:
-			asd_syslog_info(buf);
+			asd_syslog_info(sbuf);
 			break;
 		case MSG_DEBUG:
 		case MSG_MSGDUMP:
-			asd_syslog_debug(type,buf);
+			asd_syslog_debug(type,sbuf);
 			break;
 		default:
 			break;

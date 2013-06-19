@@ -152,11 +152,13 @@ static void asd_logger_cb(void *ctx, const u8 *addr, unsigned int module,
 	int conf_syslog_level, conf_stdout_level;
 	unsigned int conf_syslog, conf_stdout;
 
-	maxlen = len + 100;
+	maxlen = len + 100+64;
 	format = os_zalloc(maxlen);
 	if (!format)
 		return;
-
+	char *s = format;
+	sprintf(format,"[%d-%d]",slotid,vrrid);
+	format = format + strlen(format);
 	if (wasd && wasd->conf) {
 		conf_syslog_level = wasd->conf->logger_syslog_level;
 		conf_stdout_level = wasd->conf->logger_stdout_level;
@@ -211,24 +213,24 @@ static void asd_logger_cb(void *ctx, const u8 *addr, unsigned int module,
 			    module_str, module_str ? ": " : "", txt);
 
 	if (gasdPRINT)
-		asd_printf(ASD_DEFAULT,MSG_DEBUG,"%s\n",format);
+		asd_printf(ASD_DEFAULT,MSG_DEBUG,"%s\n",s);
 
 		switch (level) {
 		case asd_LEVEL_DEBUG_VERBOSE:
 		case asd_LEVEL_DEBUG:
-		asd_syslog_debug(ASD_ALL,format);
+		asd_syslog_debug(ASD_ALL,s);
 			break;
 		case asd_LEVEL_INFO:
-		asd_syslog_info(format);
+		asd_syslog_info(s);
 			break;
 		case asd_LEVEL_NOTICE:
-		asd_syslog_notice(format);
+		asd_syslog_notice(s);
 			break;
 		case asd_LEVEL_WARNING:
-		asd_syslog_warning(format);
+		asd_syslog_warning(s);
 			break;
 		default:
-		asd_syslog_info(format);
+		asd_syslog_info(s);
 			break;
 		}
 /*
@@ -262,7 +264,7 @@ static void asd_logger_cb(void *ctx, const u8 *addr, unsigned int module,
 	}
 */	
 
-	os_free(format);
+	os_free(s);
 }
 
 
