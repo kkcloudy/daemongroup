@@ -11066,7 +11066,7 @@ DEFUN(set_ap_option60_parameter_func,
 		if (dbus_error_is_set(&err))
 		{
 			cli_syslog_info("%s raised: %s",err.name,err.message);
-			dbus_error_free(&err);
+			dbus_error_free_for_dcli(&err);
 		}
 		
 
@@ -39454,7 +39454,7 @@ DEFUN(wtp_set_web_report_ap_snr_range_cmd_func,
 		if (dbus_error_is_set(&err)) 
 		{
 			vty_out(vty,"%s raised: %s", err.name,err.message);
-			dbus_error_free(&err);
+			dbus_error_free_for_dcli(&err);
 		}
 		return CMD_SUCCESS;
 	}	

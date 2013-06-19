@@ -749,11 +749,8 @@ void* dcli_wqos_wireless_qos_show_config_info(
 	dbus_message_unref(query);
 
 	if (NULL == reply){
-		//printf("<error> failed get reply.\n");
-		if (dbus_error_is_set(&err)) {
-			//printf("%s raised: %s",err.name,err.message);
-			dbus_error_free(&err);
-		}
+		dbus_error_free_for_dcli(&err);
+
 		*ret = -1;
 		return NULL;
 	}
@@ -1164,9 +1161,8 @@ int wid_delete_radio_with_qos_profile(int index,DBusConnection *dcli_dbus_connec
 
 	dbus_message_unref(query);
 	if (NULL == reply) {
-		if (dbus_error_is_set(&err)) {
-			dbus_error_free(&err);
-		}
+		dbus_error_free_for_dcli(&err);
+
 		return NULL;
 	}
 	dbus_message_iter_init(reply,&iter);
