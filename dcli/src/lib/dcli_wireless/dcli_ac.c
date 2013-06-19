@@ -21826,7 +21826,7 @@ DEFUN(set_bak_check_interval_func,
 		if (dbus_error_is_set(&err))
 		{
 			vty_out(vty,"%s raised: %s",err.name,err.message);
-			dbus_error_free_for_dcli(&err);
+			dbus_error_free(&err);
 		}
 		return CMD_SUCCESS;
 	}
@@ -21984,7 +21984,7 @@ DEFUN(set_lic_bak_req_interval_func,
 		if (dbus_error_is_set(&err))
 		{
 			vty_out(vty,"%s raised: %s",err.name,err.message);
-			dbus_error_free_for_dcli(&err);
+			dbus_error_free(&err);
 		}
 		return CMD_SUCCESS;
 	}

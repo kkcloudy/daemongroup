@@ -16081,7 +16081,7 @@ DEFUN(show_wlan_wids_MAC_list_cmd_func,
 		vty_out(vty,"show wlan %d mac list failed get reply.\n",wlan_id);
 		if (dbus_error_is_set(&err)) {
 			cli_syslog_info("%s raised: %s",err.name,err.message);
-			dbus_error_free_for_dcli(&err);
+			dbus_error_free(&err);
 		}
 		return CMD_SUCCESS;
 	}
@@ -19439,7 +19439,7 @@ DEFUN(set_asd_ipset_switch_cmd_func,
 		vty_out(vty,"<error> failed get reply.\n");
 		if (dbus_error_is_set(&err)) {
 			vty_out(vty,"%s raised: %s",err.name,err.message);
-			dbus_error_free_for_dcli(&err);
+			dbus_error_free(&err);
 		}
 		return CMD_SUCCESS;
 	}
@@ -19523,7 +19523,7 @@ DEFUN(set_asd_bak_sta_update_value_func,
 		vty_out(vty,"<error> failed get reply.\n");
 		if (dbus_error_is_set(&err)) {
 			vty_out(vty,"%s raised: %s",err.name,err.message);
-			dbus_error_free_for_dcli(&err);
+			dbus_error_free(&err);
 		}
 		return CMD_SUCCESS;
 	}

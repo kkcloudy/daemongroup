@@ -62,7 +62,7 @@ int dcli_ap_group_add_del_member(int localid,int index,unsigned int groupid,int 
 		printf("<error> failed get reply.\n");
 		if (dbus_error_is_set(&err)) {
 			printf("%s raised: %s",err.name,err.message);
-			dbus_error_free_for_dcli(&err);
+			dbus_error_free(&err);
 		}
 		return -1;
 	}
@@ -124,7 +124,7 @@ int dcli_ap_group_show_member(int localid,int index,unsigned int groupid,unsigne
 		printf("<error> failed get reply.\n");
 		if (dbus_error_is_set(&err)) {
 			printf("%s raised: %s",err.name,err.message);
-			dbus_error_free_for_dcli(&err);
+			dbus_error_free(&err);
 		}
 		return -1;
 	}

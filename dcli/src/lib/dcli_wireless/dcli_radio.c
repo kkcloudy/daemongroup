@@ -13812,7 +13812,7 @@ DEFUN(radio_bss_taffic_limit_cancel_average_value_func,
 		cli_syslog_info("<error> failed get reply.\n");
 		if (dbus_error_is_set(&err)) {
 			cli_syslog_info("%s raised: %s",err.name,err.message);
-			dbus_error_free_for_dcli(&err);
+			dbus_error_free(&err);
 		}
 		return CMD_SUCCESS;
 	}
@@ -13922,7 +13922,7 @@ DEFUN(radio_bss_taffic_limit_cancel_average_send_value_func,
 		cli_syslog_info("<error> failed get reply.\n");
 		if (dbus_error_is_set(&err)) {
 			cli_syslog_info("%s raised: %s",err.name,err.message);
-			dbus_error_free_for_dcli(&err);
+			dbus_error_free(&err);
 		}
 		return CMD_SUCCESS;
 	}
@@ -23813,7 +23813,7 @@ DEFUN( set_wsm_sta_info_reportswitch_cmd_func,
 		vty_out(vty,"<error> failed get reply.\n");
 		if (dbus_error_is_set(&err)) {
 			vty_out(vty,"%s raised: %s",err.name,err.message);
-			dbus_error_free_for_dcli(&err);
+			dbus_error_free(&err);
 		}
 		return CMD_SUCCESS;
 	}
@@ -23921,7 +23921,7 @@ DEFUN( set_wsm_sta_info_reportinterval_cmd_func,
 		vty_out(vty,"<error> failed get reply.\n");
 		if (dbus_error_is_set(&err)) {
 			vty_out(vty,"%s raised: %s",err.name,err.message);
-			dbus_error_free_for_dcli(&err);
+			dbus_error_free(&err);
 		}
 		return CMD_SUCCESS;
 	}

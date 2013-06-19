@@ -443,8 +443,9 @@ struct ConfigWapiInfo* show_ConfigWapiInfo_of_all_wtp(int index,int localid,DBus
 	
 	dbus_message_unref(query);
 	if (NULL == reply) {
-		dbus_error_free_for_dcli(&err);
-
+		if (dbus_error_is_set(&err)) {
+			dbus_error_free(&err);
+		}
 		return NULL;
 	}
 	
@@ -554,8 +555,9 @@ struct WtpWAPIPerformanceStatsInfo* show_WtpWAPIPerformanceStatsInfo_of_all_wlan
 	
 	dbus_message_unref(query);
 	if (NULL == reply) {
-		dbus_error_free_for_dcli(&err);
-
+		if (dbus_error_is_set(&err)) {
+			dbus_error_free(&err);
+		}
 		return NULL;
 	}
 	dbus_message_iter_init(reply,&iter);
@@ -785,8 +787,9 @@ struct WtpWAPIExtendConfigInfo* show_All_WAPIWlan_ExtendConfigInfo(int index,int
 	
 	dbus_message_unref(query);
 	if (NULL == reply) {
-		dbus_error_free_for_dcli(&err);
-
+		if (dbus_error_is_set(&err)) {
+			dbus_error_free(&err);
+		}
 		return NULL;
 	}
 	
@@ -986,8 +989,9 @@ struct UnicastInfo* show_UnicastInfo_of_all_wtp(int index,int localid,DBusConnec
 	
 	dbus_message_unref(query);
 	if (NULL == reply) {
-		dbus_error_free_for_dcli(&err);
-
+		if (dbus_error_is_set(&err)) {
+			dbus_error_free(&err);
+		}
 		return NULL;
 	}
 	
@@ -1105,8 +1109,9 @@ struct BssWAPIPerformanceStatsInfo* show_BssWAPIPerformanceStatsInfo_of_all_wlan
 	
 	dbus_message_unref(query);
 	if (NULL == reply) {
-		dbus_error_free_for_dcli(&err);
-
+		if (dbus_error_is_set(&err)) {
+			dbus_error_free(&err);
+		}
 		return NULL;
 	}
 	
@@ -1484,8 +1489,9 @@ struct SSIDConfigInfo * show_SSIDConfig_info_of_all_wlan(int index,int localid,D
 	reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection,query,-1, &err);	
 	dbus_message_unref(query);
 	if (NULL == reply) {
-		dbus_error_free_for_dcli(&err);
-
+		if (dbus_error_is_set(&err)) {
+			dbus_error_free(&err);
+		}
 		*ret=0 ;
 		printf("%s dbus_error  \n",__func__);
 		return NULL;
@@ -1593,8 +1599,9 @@ struct SSIDConfigInfo * show_SSIDConfig_info_of_all_wlan(int index,int localid,D
 	dbus_message_unref(query);
 	
 	if (NULL == reply) {
-		dbus_error_free_for_dcli(&err);
-
+		if (dbus_error_is_set(&err)) {
+			dbus_error_free(&err);
+		}
 		*ret=0 ;
 		printf("%s dbus_error  \n",__func__);
 		dcli_free_SSIDConfigInfo_head(WlanHead);
@@ -1809,8 +1816,10 @@ struct WLAN_INFO *show_wlan_of_all(DBusConnection *dcli_dbus_connection,int inde
 	
 	if (NULL == reply) {
 		*ret = WID_DBUS_ERROR;
-		dbus_error_free_for_dcli(&err);
+		if (dbus_error_is_set(&err)) {
+			dbus_error_free(&err);
 
+		}
 		return NULL;
 	}
 
@@ -2166,8 +2175,11 @@ void *dcli_wlan_show_api_group(
 	dbus_message_unref(query);
 
 	if (NULL == reply) {
-		dbus_error_free_for_dcli(&err);
-
+		//printf("<error> failed get reply.\n");
+		if (dbus_error_is_set(&err)) {
+			//printf("%s raised: %s",err.name,err.message);
+			dbus_error_free(&err);
+		}
 		*ret = -1;
 		return NULL;
 	}
@@ -2522,8 +2534,11 @@ int dcli_wlan_sta_ip_mac_binding(int index,int localid,int policy,unsigned char 
 
 
 	if (NULL == reply) {
-		dbus_error_free_for_dcli(&err);
-
+		printf("<error> failed get reply.\n");
+		if (dbus_error_is_set(&err)) {
+			printf("%s raised: %s",err.name,err.message);
+			dbus_error_free(&err);
+		}
 		return -1;
 	}
 	dbus_message_iter_init(reply,&iter);
@@ -2578,8 +2593,11 @@ int dcli_wlan_service_control_timer(int index,int localid,int policy,unsigned ch
 
 
 	if (NULL == reply) {
-		dbus_error_free_for_dcli(&err);
-
+		printf("<error> failed get reply.\n");
+		if (dbus_error_is_set(&err)) {
+			printf("%s raised: %s",err.name,err.message);
+			dbus_error_free(&err);
+		}
 		return -1;
 	}
 	dbus_message_iter_init(reply,&iter);
@@ -2624,8 +2642,11 @@ int dcli_wlan_timer_able(int index,int localid,int policy,int timer,unsigned cha
 
 
 	if (NULL == reply) {
-		dbus_error_free_for_dcli(&err);
-
+		printf("<error> failed get reply.\n");
+		if (dbus_error_is_set(&err)) {
+			printf("%s raised: %s",err.name,err.message);
+			dbus_error_free(&err);
+		}
 		return -1;
 	}
 	dbus_message_iter_init(reply,&iter);
@@ -2711,8 +2732,11 @@ void *create_wlan_CN(int index,int localid,int policy,unsigned char wlan_id,unsi
 	dbus_message_unref(query);
 	
 	if (NULL == reply) {
-		dbus_error_free_for_dcli(&err);
-
+		printf("<error> failed get reply.\n");
+		if (dbus_error_is_set(&err)) {
+			printf("%s raised: %s",err.name,err.message);
+			dbus_error_free(&err);
+		}
 		return -1;
 	}
 	dbus_message_iter_init(reply,&iter);
