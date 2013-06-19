@@ -84,7 +84,7 @@ struct eap_sim_db_data {
 	struct eap_sim_db_pending *pending;
 };
 
-
+extern unsigned char FD_CHANGE;
 static struct eap_sim_db_pending *
 eap_sim_db_get_pending(struct eap_sim_db_data *data, const u8 *imsi,
 		       size_t imsi_len, int aka)
@@ -387,6 +387,7 @@ static void eap_sim_db_close_socket(struct eap_sim_db_data *data)
 {
 	if (data->sock >= 0) {
 		circle_unregister_read_sock(data->sock);
+		FD_CHANGE = 1;
 		close(data->sock);
 		data->sock = -1;
 	}

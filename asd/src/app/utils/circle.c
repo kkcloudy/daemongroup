@@ -37,7 +37,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "wcpss/wid/WID.h"
 #include "wcpss/asd/asd.h"
 #include "ASDCallback_asd.h"
-
+unsigned char FD_CHANGE = 0;/*Qiuchen add this incase:
+							in function circle_sock_table_dispatch_test:
+							if one handler close a sock,it will break out the loop in case of the table after 
+							handle the message from the sock which has already been closed!
+							*/
 /*
 
 struct circle_sock {
@@ -199,10 +203,15 @@ static void circle_sock_table_dispatch_test(struct circle_sock_table *table, str
 		return;
 
 	for (i = 0; i < poll_table->count; i++) {
+		FD_CHANGE = 0;
 		if(((poll_table->poll[i].revents&POLLIN) == POLLIN)||((poll_table->poll[i].revents&POLLPRI) == POLLPRI)){
 			poll_table->data[i].handler(poll_table->poll[i].fd,
 										poll_table->data[i].circle_data,
 										poll_table->data[i].user_data);
+			if(FD_CHANGE == 1){
+				asd_printf(ASD_DEFAULT,MSG_NOTICE,"circle_sock_table_dispatch_test FD_CHANGE break!\n");
+				break;
+			}
 		}
 		else if((poll_table->poll[i].revents&POLLERR) == POLLERR)
 		{

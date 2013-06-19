@@ -169,7 +169,7 @@ struct iapp_data {
 	int packet_sock;
 };
 
-
+extern unsigned char FD_CHANGE;
 static void iapp_send_add(struct iapp_data *iapp, u8 *mac_addr, u16 seq_num)
 {
 	char buf[128];
@@ -506,10 +506,12 @@ void iapp_deinit(struct iapp_data *iapp)
 		}
 
 		circle_unregister_read_sock(iapp->udp_sock);
+		FD_CHANGE = 1;
 		close(iapp->udp_sock);
 	}
 	if (iapp->packet_sock >= 0) {
 		circle_unregister_read_sock(iapp->packet_sock);
+		FD_CHANGE = 1;
 		close(iapp->packet_sock);
 	}
 	os_free(iapp);

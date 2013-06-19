@@ -111,7 +111,7 @@ struct radius_msg_info {
 	u8 *shared_secret;
 	size_t shared_secret_len;
 };
-
+extern unsigned char FD_CHANGE;
 #if 0
 struct radius_client_data {
 	void *ctx;
@@ -184,6 +184,7 @@ static void radius_test_client_handle_send_error(struct heart_test_radius_data *
 	asd_printf(ASD_80211,MSG_DEBUG,"Send failed - maybe interface status changed -"
 			       " try to connect again");
 		circle_unregister_read_sock(s);
+		FD_CHANGE = 1;
 		close(s);
 		if (msg_type == RADIUS_ACCT)
 			radius_test_client_init_acct((void*)radius, (void *)0);
@@ -202,6 +203,7 @@ static void radius_client_handle_send_error(struct radius_client_info *client_in
 		asd_printf(ASD_DEFAULT,MSG_INFO,"Send failed - maybe interface status changed -"
 				" try to connect again");
 		circle_unregister_read_sock(s);
+		FD_CHANGE = 1;
 		close(s);
 		if (msg_type == RADIUS_ACCT || msg_type == RADIUS_ACCT_INTERIM)
 		{
@@ -1148,6 +1150,8 @@ fail:
 //qiuchen
 void radius_test_client_receive(int sock, void *circle_ctx, void *sock_ctx){
 	struct heart_test_radius_data *radius = circle_ctx;
+	if(radius == NULL || radius->conf == NULL)
+		return;
 	struct asd_radius_servers *conf = radius->conf;
 	RadiusType msg_type = (RadiusType) sock_ctx;
 	int len;
@@ -2410,6 +2414,7 @@ radius_client_init(void *ctx, struct asd_radius_servers *conf)
 	if(client_info->sock >= 0)
 	{
 		circle_unregister_read_sock(client_info->sock);
+		FD_CHANGE = 1;
 		close(client_info->sock);
 		client_info->sock = -1;
 	}
@@ -2440,11 +2445,13 @@ void radius_test_client_deinit(struct heart_test_radius_data *radius){
 
 	if (radius->auth_serv_sock >= 0){
 		circle_unregister_read_sock(radius->auth_serv_sock);
+		FD_CHANGE = 1;
 		close(radius->auth_serv_sock);
 		radius->auth_serv_sock = -1;
 	}
 	if (radius->acct_serv_sock >= 0){
 		circle_unregister_read_sock(radius->acct_serv_sock);
+		FD_CHANGE = 1;
 		close(radius->acct_serv_sock);
 		radius->acct_serv_sock = -1;
 	}

@@ -90,6 +90,7 @@ int asd_sock = -1;
 int asd_master_sock = -1;
 int bak_error = 0;
 int mast_bak_update = 0;
+extern unsigned char FD_CHANGE;
 #if 0
 int send_info(const char * buf){
 	int i=0;
@@ -2233,6 +2234,7 @@ void asd_bak_select_mode(int sock, void *circle_ctx, void *sock_ctx){
 		return;
 	}
 	circle_unregister_read_sock(new_sock);
+	FD_CHANGE = 1;
 	close(new_sock);
 	new_sock = -1;
 	new_sock = tsock;
@@ -2253,6 +2255,7 @@ void asd_bak_select_mode2(int sock, void *circle_ctx, void *sock_ctx){
 	if(numbytes <= 0){
 		asd_printf(ASD_DEFAULT,MSG_ERROR,"bak recv error\n");		
 		circle_unregister_read_sock(new_sock);
+		FD_CHANGE = 1;
 		close(new_sock);
 		new_sock = -1;
 		return;

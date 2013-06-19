@@ -87,7 +87,7 @@ int gsock = -1;
 unsigned int inter_ac_roaming_count = 0;
 unsigned int inter_ac_roaming_in_count = 0;
 unsigned int inter_ac_roaming_out_count = 0;
-
+extern unsigned char FD_CHANGE;
 int G_Wsm_WTPOp(unsigned char group_id,unsigned char ACID,Operate op){
 	TableMsg wWsm;
 	int len;
@@ -1230,6 +1230,7 @@ void asd_synch_recv_select(int sock, void *circle_ctx, void *sock_ctx)
 	if(numbytes <= 0){
 		asd_printf(ASD_DEFAULT,MSG_DEBUG,"asd_synch_thread recv3\n");
 		circle_unregister_read_sock(sock);
+		FD_CHANGE = 1;
 		close(sock);
 		
 		if ((sock = socket(PF_INET, SOCK_STREAM, IPPROTO_SCTP)) ==-1)
@@ -1262,6 +1263,7 @@ void asd_synch_recv_select(int sock, void *circle_ctx, void *sock_ctx)
 			free(circle_ctx);
 			circle_ctx = NULL;
 			circle_unregister_read_sock(sock);
+			FD_CHANGE = 1;
 			return;
 		}
 		default:
@@ -1458,6 +1460,7 @@ void asd_ac_group_recv_select(int sock, void *circle_ctx, void *sock_ctx)
 		printf("group recv error\n");		
 		asd_printf(ASD_DEFAULT,MSG_DEBUG,"asd_ac_group_recv_select error\n");
 		circle_unregister_read_sock(sock);
+		FD_CHANGE = 1;
 		close(sock);
 		return;
 	}
@@ -1480,6 +1483,7 @@ void asd_ac_group_recv_select(int sock, void *circle_ctx, void *sock_ctx)
 					for(i = 0; i < bss[j]->num_sta; i++){
 						if(ac_group_add_del_sta_info(sock,group_id,sta,bss[j],G_ADD) == 0){
 							circle_unregister_read_sock(sock);
+							FD_CHANGE = 1;
 							close(sock);
 							free(bss);//qiuchen
 							return;	

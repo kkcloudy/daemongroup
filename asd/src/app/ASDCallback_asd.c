@@ -110,7 +110,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 extern int wpa_debug_level;
 extern unsigned char gASDLOGDEBUG;//qiuchen
 extern unsigned long gASD_AC_MANAGEMENT_IP;
-
+extern unsigned char FD_CHANGE;
 unsigned int wids_mac_last_time = 0;
 unsigned char wids_enable = 0;		/*0 for wids close,1 for wids open*/
 extern int nl_sock;
@@ -4545,6 +4545,7 @@ void BAK_OP(TableMsg *msg){
 					circle_unregister_read_sock(new_sock);
 					#endif
 					circle_unregister_read_sock(asd_sock);
+					FD_CHANGE = 1;
 				}
 			//	circle_cancel_timeout(asd_update_select_mode,NULL,NULL);
 				circle_cancel_timeout(bak_update_bss_req,NULL,NULL);
@@ -4582,6 +4583,7 @@ void BAK_OP(TableMsg *msg){
 					#endif
 				
 				circle_unregister_read_sock(asd_sock);
+					FD_CHANGE = 1;
 			//	circle_cancel_timeout(asd_update_select_mode,NULL,NULL);
 				circle_cancel_timeout(bak_update_bss_req,NULL,NULL);
 #endif
@@ -4621,6 +4623,7 @@ void BAK_OP(TableMsg *msg){
 					bak_unreach = 0;
 					circle_unregister_read_sock(new_sock);					
 					circle_unregister_read_sock(asd_sock);
+					FD_CHANGE = 1;
 				//	circle_cancel_timeout(asd_update_select_mode,NULL,NULL);
 					circle_register_timeout(120, 0, bak_update_bss_req, NULL, NULL);//qiuchen change it
 					#ifndef _AC_BAK_UDP_
@@ -4689,6 +4692,7 @@ void BAK_OP(TableMsg *msg){
 				close(new_sock);
 				#endif
 				circle_unregister_read_sock(asd_master_sock);
+				FD_CHANGE = 1;
 				//close(asd_master_sock);	
 				if(local){
 					struct sockaddr_tipc *tipcaddr = (struct sockaddr_tipc *)&B_addr;
@@ -6227,6 +6231,7 @@ void asd_sock_reinit(int fd,void *handler,void *circle_data, void *user_data)
 	{
 		asd_printf(ASD_DEFAULT,MSG_INFO,"handler == handle_netlink!\n");
 		circle_unregister_read_sock(nl_sock);
+		FD_CHANGE = 1;
 		close(nl_sock);
 		ASD_NETLINIK_INIT();
 		asd_printf(ASD_DEFAULT,MSG_INFO,"func:%s,netlink sock  repair!\n",__func__);
@@ -6234,6 +6239,7 @@ void asd_sock_reinit(int fd,void *handler,void *circle_data, void *user_data)
 	else if((handler ==do_asd_sta_arp_listen)&&(1 == asd_sta_arp_listen))
 	{
 		circle_unregister_read_sock(rth1.fd);
+		FD_CHANGE = 1;
 		if(rtnl_wilddump_request(&rth1, AF_INET, RTM_GETNEIGH) < 0)
 		{
 			asd_sta_arp_listen = 0;

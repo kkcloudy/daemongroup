@@ -47,7 +47,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "ASDAccounting.h"
 #include "wcpss/wid/WID.h"
 #include "wcpss/asd/asd.h"
-
+extern unsigned char FD_CHANGE;
 
 struct wpa_ctrl_dst {
 	struct wpa_ctrl_dst *next;
@@ -441,6 +441,7 @@ void asd_ctrl_iface_deinit(struct asd_data *wasd)
 	if (wasd->ctrl_sock > -1) {
 		char *fname;
 		circle_unregister_read_sock(wasd->ctrl_sock);
+		FD_CHANGE = 1;
 		close(wasd->ctrl_sock);
 		wasd->ctrl_sock = -1;
 		fname = asd_ctrl_iface_path(wasd);
