@@ -22517,12 +22517,14 @@ DBusMessage * wid_dbus_interface_set_wid_auto_ap_login_binding_l3_interface(DBus
 	dbus_error_init(&err);
 	WTPQUITREASON quitreason = WTP_INIT;
 	int ret = WID_DBUS_SUCCESS;
+	int nocheck = 0;
 	char* ifname;
 	unsigned char policy = 2;
 
 	if (!(dbus_message_get_args ( msg, &err,
 								DBUS_TYPE_BYTE,&policy,
 								DBUS_TYPE_STRING,&ifname,
+								DBUS_TYPE_UINT32,&nocheck,
 								DBUS_TYPE_INVALID))){
 
 		printf("Unable to get input args\n");
@@ -22552,9 +22554,18 @@ DBusMessage * wid_dbus_interface_set_wid_auto_ap_login_binding_l3_interface(DBus
 	{
 		if(policy == 1)
 		{
+		//add for load auto_ap_login config
+			if(1 == nocheck){
+				isNoCheck = 1;
+				wid_syslog_info("%s,%d,now is config load,not check if binding flag.\n",__func__,__LINE__);
+			}
 			ret = Check_And_Bind_Interface_For_WID(name);
 			if(ret == 0)
 				ret = wid_auto_ap_login_insert_iflist(name);
+			if(0 != isNoCheck){
+				isNoCheck = 0;
+				wid_syslog_info("%s,%d,reset isNoCheck.\n",__func__,__LINE__);
+			}
 		}
 		else if(policy == 0)
 		{
@@ -30394,9 +30405,13 @@ DBusMessage * wid_dbus_interface_wtp_apply_ifname(DBusConnection *conn, DBusMess
 		else
 		{
 			ret = WID_BINDING_IF_APPLY_WTP(wtpid,name);
+			/*ipv4 logic same to ipv6*/
+			/*
 			if(ret == APPLY_IF_FAIL){
-			retv6 = APPLY_IF_FAIL;
-		}
+				retv6 = APPLY_IF_FAIL;
+			}
+			*/
+			retv6 = ret;
 		//delete by weianying for we use ioctl get ipv6 address
 		//retv6 = WID_BINDING_IF_APPLY_WTP_ipv6(wtpid,if_name);
 		//retv6 = WID_BINDING_IF_APPLY_WTP_ipv6_ioctl(wtpid,if_name);
@@ -65137,7 +65152,15 @@ DBusMessage * wid_dbus_interface_set_ebr_add_del_if(DBusConnection *conn, DBusMe
 					sprintf(name,"r%d-%d-%d.%d",vrrid1,wtpid,radioid,wlanid);
 				else
 					sprintf(name,"r%d-%d-%d-%d.%d",slotid,vrrid1,wtpid,radioid,wlanid);
-			}else{
+			}
+			//for add r1-1-1-0.1 in ebr error
+			else if(parse_radio_ifname_v2(vename+7, &wtpid,&radioid,&wlanid,&vrrid1) == 0){
+				if(local)
+					sprintf(name,"r%d-%d-%d.%d",vrrid1,wtpid,radioid,wlanid);
+				else
+					sprintf(name,"r%d-%d-%d-%d.%d",slotid,vrrid1,wtpid,radioid,wlanid);
+			}
+			else{
 				sprintf(name,"r%s",vename+5);				
 			}
 			is_radio = 1;
@@ -65148,6 +65171,13 @@ DBusMessage * wid_dbus_interface_set_ebr_add_del_if(DBusConnection *conn, DBusMe
 				else
 					sprintf(name,"r%d-%d-%d-%d.%d",slotid,vrrid,wtpid,radioid,wlanid);
 			}else if(parse_radio_ifname_v2(vename+1, &wtpid,&radioid,&wlanid,&vrrid1) == 0){
+				if(local)
+					sprintf(name,"r%d-%d-%d.%d",vrrid1,wtpid,radioid,wlanid);
+				else
+					sprintf(name,"r%d-%d-%d-%d.%d",slotid,vrrid1,wtpid,radioid,wlanid);
+			}
+			//for add r1-1-1-0.1 in ebr error
+			else if(parse_radio_ifname_v2(vename+3, &wtpid,&radioid,&wlanid,&vrrid1) == 0){
 				if(local)
 					sprintf(name,"r%d-%d-%d.%d",vrrid1,wtpid,radioid,wlanid);
 				else

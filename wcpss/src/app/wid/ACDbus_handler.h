@@ -496,6 +496,8 @@ int wid_send_to_ap_sta_deauth_report(unsigned int wtpid);
 int wid_send_to_ap_sta_flow_information_report(unsigned int wtpid);
 
 int set_wlan_tunnel_mode(unsigned char WlanID, unsigned char state);
+int delete_radioif_from_wlan_bridge(unsigned char WlanID);
+
 void set_wtp_5g_switch(unsigned int wtpid,unsigned char type);
 int wid_set_wlan_hotspotid(unsigned char Wlanid,unsigned int hotspotid);
 

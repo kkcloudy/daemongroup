@@ -6180,7 +6180,12 @@ int WID_WLAN_L3IF_POLICY_BR(unsigned char WlanID, unsigned char wlanPolicy)
 	else if((AC_WLAN[WlanID]->wlan_if_policy == WLAN_INTERFACE)&&(wlanPolicy == NO_INTERFACE))
 	{
 		wid_syslog_debug_debug(WID_DEFAULT,"from wlan to no");
-		
+		//delete the radio interface first remove them from wlan bridge
+		ret = delete_radioif_from_wlan_bridge(WlanID);
+		if(ret < 0){
+			wid_syslog_debug_debug(WID_DEFAULT,"ret = %d,%s,%d\n",ret,__func__,__LINE__);
+			return WLAN_DELETE_BR_FAIL;
+		}
 		if(AC_WLAN[WlanID]->wlan_if_policy == WLAN_INTERFACE)
 		ret = set_wlan_tunnel_mode(WlanID, 0);
 		if(ret != 0)
@@ -30820,6 +30825,39 @@ int set_wlan_tunnel_mode(unsigned char WlanID, unsigned char state){
 		}
 	}
 	return 0;
+}
+//if radio interface in wlan bridge, We cannot delete it so we should delete it from wlan bridge
+int delete_radioif_from_wlan_bridge(unsigned char WlanID){
+	int ret = -1;
+	int i=0;
+	int j=0;
+	if(AC_WLAN[WlanID] == NULL)
+	{
+		return WLAN_ID_NOT_EXIST;
+	}
+	if(AC_WLAN[WlanID]->Status == 0)
+	{
+		return WLAN_BE_ENABLE;
+	}
+	for(i=0; i<WTP_NUM; i++)
+	{
+		if(AC_WTP[i]!=NULL)
+		{
+			for(j=0; j<AC_WTP[i]->RadioCount; j++)
+			{
+				if(AC_WLAN[WlanID]->S_WTP_BSS_List[i][j] != 0)
+				{
+					int bssindex = AC_WLAN[WlanID]->S_WTP_BSS_List[i][j];
+					if(!check_bssid_func(bssindex)){
+						wid_syslog_err("bssindex %d not exist\n",WlanID);
+					}else{
+						ret = Del_BSS_L3_Interface_BR(bssindex);
+					}
+				}
+			}
+		}
+	}
+	return ret;
 }
 void wtp_get_ifindex_check_nas_id(u_int32_t WTPID){
 	unsigned char WlanID = 0;

@@ -9594,6 +9594,7 @@ DEFUN(set_wirelesscontrol_auto_ap_binding_l3_interface_new_func,
 	dbus_message_append_args(query,
 							 DBUS_TYPE_BYTE,&policy,
 							 DBUS_TYPE_STRING,&name,
+							 DBUS_TYPE_UINT32,&boot_flag,
 							 DBUS_TYPE_INVALID);
 
 	reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection,query,-1, &err);
