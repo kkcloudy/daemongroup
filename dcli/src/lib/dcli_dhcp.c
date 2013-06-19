@@ -1848,7 +1848,9 @@ dcli_create_ip_pool_name
 				    vty_out (vty, "enter ip pool fail \n");
 			}
 			else {
-			    vty_out (vty, "create ip pool fail \n");    
+			    vty_out (vty, "create ip pool fail \n"); 
+				dbus_message_unref(reply);
+				return 1;
 			}
 		}
 	} 
@@ -1920,7 +1922,9 @@ DEFUN(create_ip_pool_name_cmd_func,
 	    free(poolName);
 	    poolName = NULL;
 	}
-	
+	if(ret){
+		return CMD_FAILURE;
+	}
 	return CMD_SUCCESS;
 	
 }
