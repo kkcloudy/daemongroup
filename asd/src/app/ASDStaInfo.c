@@ -3069,8 +3069,10 @@ void asd_sta_roaming_management(struct sta_info *new_sta)
 	struct asd_data *owasd = old_sta->wasd;
 	struct asd_data *nwasd = new_sta->wasd;
 	unsigned char SID = 0;
-	if(owasd->WlanID != nwasd->WlanID)
+	if(owasd->WlanID != nwasd->WlanID){
+		asd_sta_hash_del(old_sta->addr);
 		return;
+	}
 	SID = ASD_WLAN[nwasd->WlanID]->SecurityID;
 	if(owasd->BSSIndex != nwasd->BSSIndex){
 		asd_printf(ASD_DEFAULT,MSG_DEBUG,"func:%s roaming\n",__func__);
