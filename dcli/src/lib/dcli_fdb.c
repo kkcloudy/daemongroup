@@ -53,7 +53,10 @@ extern "C"
 
 extern int is_distributed;
 
-
+#define SFD_ON		1
+#define SFD_OFF		0
+int sfd_debug_flag=SFD_OFF;
+int sfd_flag=SFD_OFF;
 
 
 extern DBusConnection *dcli_dbus_connection;
@@ -7553,6 +7556,43 @@ DEFUN(show_fdb_number_limit_cmd_func,
 	return CMD_SUCCESS;	
 }
 
+#define SEM_SHOWRUN_CFG_SIZE	(3*1024) /* for all 24GE ports configuration */
+int sfd_show_running_config(struct vty* vty) 
+{	
+	char *showStr = NULL,*cursor = NULL;
+	int totalLen = 0;
+	int i = 0;
+	int length = 0;
+
+	showStr = (char*)malloc(SEM_SHOWRUN_CFG_SIZE);
+
+	if(NULL == showStr) {
+		printf("memory malloc error\n");
+		return CMD_FAILURE;
+	}
+	memset(showStr, 0, SEM_SHOWRUN_CFG_SIZE);
+	cursor = showStr;
+	
+    if(sfd_flag){
+	    length += sprintf(cursor,"service sfd on\n");
+	    cursor = showStr+length;
+    }
+	
+    if(sfd_debug_flag){
+	    length += sprintf(cursor,"service sfd debug on\n");
+	    cursor = showStr+length;
+    }
+
+	char _tmpstr[64];
+	memset(_tmpstr,0,64);
+	sprintf(_tmpstr,BUILDING_MOUDLE,"SFD");
+	vtysh_add_show_string(_tmpstr);
+	vtysh_add_show_string(showStr);
+
+	return CMD_SUCCESS;
+}
+
+
 
 int dcli_fdb_show_running_config(struct vty* vty) {	
 	char *showStr = NULL;
@@ -7588,6 +7628,7 @@ int dcli_fdb_show_running_config(struct vty* vty) {
 		sprintf(_tmpstr,BUILDING_MOUDLE,"FDB");
 		vtysh_add_show_string(_tmpstr);
 		vtysh_add_show_string(showStr);
+		sfd_show_running_config(vty);
 	} 
 	else 
 	{
@@ -8680,6 +8721,92 @@ DEFUN(syn_fdb_cmd_func,
 	return CMD_SUCCESS;	
 }
 
+DEFUN(show_sfd_info_func,
+	show_sfd_info_cmd,
+	"show sfd info",
+	"show sfd info"
+	"config node\n"
+	"show sfd info\n"
+	)
+{
+	vty_out(vty, "====================================================\n");
+    vty_out(vty, "Wireless SFD info\n");
+	if(sfd_flag)
+	    vty_out(vty, "SFD :ON\n");
+	else
+		vty_out(vty, "SFD :OFF\n");
+	if(sfd_debug_flag)
+	    vty_out(vty, "SFD DEBUG:ON\n");
+	else
+		vty_out(vty, "SFD DEBUG:OFF\n");
+	vty_out(vty, "====================================================\n");
+	return CMD_SUCCESS;	
+}
+
+DEFUN(service_sfd_debug_func,
+	service_sfd_debug_cmd,
+	"service sfd debug (on|off)",
+	"service sfd debug (on|off)"
+	"config node\n"
+	"config sfd info\n"
+	"debug sfd on\n"
+	"debug sfd off\n"
+	)
+{
+	DBusMessage *query = NULL, *reply = NULL;
+	DBusMessageIter iter;
+	DBusError err;
+    int ret;
+	int flag;
+	
+	if(0 == strncmp("on",argv[0],strlen((char*)argv[0])))
+	{
+		sfd_debug_flag = SFD_ON;
+	}
+	else if(0 == strncmp("off",argv[0],strlen((char*)argv[0])))
+	{
+		sfd_debug_flag = SFD_OFF;
+	}
+	else
+	{
+    	vty_out(vty, "service sfd debug set failed\n");
+		return CMD_WARNING;
+	}
+		
+    vty_out(vty, "service sfd debug set successfully\n");
+	return CMD_SUCCESS;	
+}
+
+DEFUN(service_sfd_func,
+	service_sfd_cmd,
+	"service sfd (on|off)",
+	"service sfd (on|off)"
+	"config node\n"
+	"debug sfd on\n"
+	"debug sfd off\n"
+	)
+{	
+	if(0 == strncmp("on",argv[0],strlen((char*)argv[0])))
+	{
+		sfd_flag = 1;
+	}
+	else if(0 == strncmp("off",argv[0],strlen((char*)argv[0])))
+	{
+		sfd_flag = 0;
+	}
+	else
+	{
+    	vty_out(vty, "service sfd set failed\n");
+		return CMD_WARNING;
+	}
+	
+
+    vty_out(vty, "service sfd set successfully\n");
+
+		
+
+	return CMD_SUCCESS;	
+}
 
 struct cmd_node fdb_node = 
 {
@@ -8736,6 +8863,10 @@ void dcli_fdb_init() {
 	install_element(HIDDENDEBUG_NODE,&config_debug_fdb_static_delete_vlan_cmd);
 	install_element(HIDDENDEBUG_NODE,&config_debug_fdb_mac_vlan_port_cmd);
 	install_element(HIDDENDEBUG_NODE,&syn_fdb_cmd);
+
+    install_element(CONFIG_NODE, &show_sfd_info_cmd);//huangjing
+    install_element(CONFIG_NODE, &service_sfd_debug_cmd);//huangjing
+	install_element(CONFIG_NODE, &service_sfd_cmd);//huangjing
 	#if 0
 	install_element(CONFIG_NODE, &config_fdb_port_number_cmd);
 	install_element(CONFIG_NODE, &config_fdb_vlan_number_cmd);
