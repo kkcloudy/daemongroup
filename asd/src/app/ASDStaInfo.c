@@ -2631,6 +2631,7 @@ void ap_sta_idle_timeout(void *circle_ctx,void *timeout_ctx)
 		asd_printf(ASD_DEFAULT,MSG_ERROR,"wasd or sta is NULL in func:%s\n",__func__);
 		return;
 	}
+	pthread_mutex_lock(&(asd_g_sta_mutex)); 		
 	memset(mac,0,MAC_LEN);
 	BssIndex = wasd->BSSIndex;
 	memcpy(mac,sta->addr,MAC_LEN);
@@ -2664,6 +2665,7 @@ void ap_sta_idle_timeout(void *circle_ctx,void *timeout_ctx)
 	AsdStaInfoToWID(wasd,mac,WID_DEL);
 	if(is_secondary == 1)
 		bak_check_sta_req(asd_sock,BssIndex,mac);
+	pthread_mutex_unlock(&(asd_g_sta_mutex)); 		
 }
 int check_sta_authorized(struct asd_data *wasd,struct sta_info *sta)
 {
