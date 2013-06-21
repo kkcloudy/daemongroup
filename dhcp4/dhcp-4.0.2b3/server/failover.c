@@ -577,7 +577,7 @@ isc_result_t dhcp_failover_link_signal (omapi_object_t *h,
 		/* Get message type. */
 		omapi_connection_copyout (&link -> imsg -> type, c, 1);
 		link -> imsg_count++;
-
+		log_info("link -> imsg -> type is %d\n",link -> imsg -> type);
 		/* Get message payload offset. */
 		omapi_connection_copyout (&link -> imsg_payoff, c, 1);
 		link -> imsg_count++;
@@ -6668,6 +6668,10 @@ static isc_result_t failover_message_dereference (failover_message_t **mp,
 {
 	failover_message_t *m;
 	m = (*mp);
+	if(!m){
+		log_info("wrong!wrong!wrong! fatal wrong!!!  This may be reason of testbed-211\n");
+		return ISC_R_INVALIDARG;
+	}
 	m -> refcnt--;
 	if (m -> refcnt == 0) {
 		if (m -> next)
