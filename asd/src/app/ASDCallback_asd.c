@@ -2151,6 +2151,7 @@ static void asd_wlan_bss_free(unsigned int bssindex,unsigned char WLANID){
 				if(NULL == wasd)
 				{
 					asd_printf(ASD_DEFAULT,MSG_ERROR,"wasd bssindex %d is not exit,del error!\n",bssindex);
+					pthread_mutex_unlock(&asd_g_sta_mutex); 
 					return;
 				}
 				int wtpid=0;
