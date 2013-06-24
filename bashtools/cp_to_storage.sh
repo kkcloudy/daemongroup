@@ -322,8 +322,9 @@ if ! `rm -rf /var/run/sad/*`; then
     echo "rm -rf /var/run/sad/* failed,Please manually delete"
     cd $CURRENT_DIRECTORY  
 else
-    sudo sad.sh &
-    echo "sad.sh is  recover"        
+    #sudo sad.sh &
+     sudo start-stop-daemon -b -m -p /var/run/sad.sh.pid --start --exec /usr/bin/sad.sh
+     echo "sad.sh is  recover"        
 fi	
 
 
