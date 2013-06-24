@@ -342,13 +342,18 @@ _dbus_server_new_for_socket (int              *fds,
   SERVER_UNLOCK (server);
 
   return (DBusServer*) socket_server;
-
+/*
+**CID 15758 (#1 of 1): Structurally dead code (UNREACHABLE)unreachable: This code cannot be reached: "failed_3:
+if (socket_server...". 
+*/
+/*
  failed_3:
   if (socket_server->noncefile)
     {
       _dbus_noncefile_delete (socket_server->noncefile, NULL);
       dbus_free (socket_server->noncefile );
     }
+*/   /*coverity modify for CID 15758*/ 
  failed_2:
   for (i = 0 ; i < n_fds ; i++)
     {
@@ -492,13 +497,16 @@ _dbus_server_new_for_tcp_socket (const char     *host,
   for (i = 0 ; i < nlisten_fds ; i++)
     _dbus_close_socket (listen_fds[i], NULL);
   dbus_free(listen_fds);
+  dbus_free(noncefile);/*coverity modify for CID 15396*/
 
  failed_1:
   _dbus_string_free (&port_str);
 
  failed_0:
   _dbus_string_free (&address);
-
+/**
+**CID 15396 (#1 of 1): Resource leak (RESOURCE_LEAK)24. leaked_storage: Variable "noncefile" going out of scope leaks the storage it points to. 
+*/
   return NULL;
 }
 

@@ -71,7 +71,10 @@ int
 _dbus_pipe_close  (DBusPipe         *pipe,
                    DBusError        *error)
 {
-  if (_dbus_close (pipe->fd_or_handle, error) < 0)
+/*
+*CID 15152 (#1 of 1): Unsigned compared against 0 (NO_EFFECT)unsigned_compare: This less-than-zero comparison of an unsigned value is never true. "_dbus_close(pipe->fd_or_handle, error) < 0U".
+*/
+  if (!_dbus_close (pipe->fd_or_handle, error))/*coverity modify for CID 15152*/
     {
       return -1;
     }

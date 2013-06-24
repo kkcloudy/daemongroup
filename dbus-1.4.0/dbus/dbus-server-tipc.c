@@ -136,7 +136,7 @@ _dbus_server_new_for_tipc_domain_socket (const char     *server_inst,
       return NULL;
     }
 
-  _dbus_string_init_const (&path_str, server_inst);
+  _dbus_string_init_const (&path_str, server_inst);/*coverity modify for CID 15646 in dbus-string.c*/
   if ((server_inst &&
        !_dbus_string_append (&address, "tipc:inst="))||
       !_dbus_address_append_escaped (&address, &path_str))
@@ -168,8 +168,8 @@ _dbus_server_new_for_tipc_domain_socket (const char     *server_inst,
     }
 
   _dbus_server_socket_own_filename(server, path_copy);
-
-  _dbus_string_free (&address);
+/*CID 15398 15397: Resource leak (RESOURCE_LEAK)*/
+  _dbus_string_free (&address);/*coverity :CID 15398 15397 no problem*/
 
   return server;
 

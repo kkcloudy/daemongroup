@@ -137,7 +137,11 @@ _dbus_accept_with_noncefile (int listen_fd, const DBusNonceFile *noncefile)
   DBusString nonce;
 
   _dbus_assert (noncefile != NULL);
-  _dbus_string_init (&nonce);
+  /*
+  *CID 14656 (#1 of 1): Unchecked return value (CHECKED_RETURN)1. check_return: Calling function "_dbus_string_init(DBusString *)" without checking return value (as is done elsewhere 146 out of 151 times). 
+  */
+  if (!_dbus_string_init (&nonce))/*coverity modify for CID 14656*/
+    return -1;
   //PENDING(kdab): set better errors
   if (_dbus_read_nonce (_dbus_noncefile_get_path(noncefile), &nonce, NULL) != TRUE)
     return -1;
@@ -161,7 +165,11 @@ generate_and_write_nonce (const DBusString *filename, DBusError *error)
 
   _DBUS_ASSERT_ERROR_IS_CLEAR (error);
 
-  _dbus_string_init (&nonce);
+  if (!_dbus_string_init (&nonce))/*covrity modify for CID 14657 */
+    {
+      dbus_set_error (error, DBUS_ERROR_NO_MEMORY, NULL);
+      return FALSE;
+    }
 
   if (!_dbus_generate_random_bytes (&nonce, 16))
     {

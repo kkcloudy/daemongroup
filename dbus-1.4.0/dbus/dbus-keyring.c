@@ -142,9 +142,10 @@ _dbus_keyring_new (void)
   keyring->n_keys = 0;
 
   return keyring;
-
-  /*  out_4: */
+/*coverity:CID 15757 (#1 of 1): Structurally dead code (UNREACHABLE)*/
+  /*  out_4: 
   _dbus_string_free (&keyring->filename_lock);
+  */
  out_3:
   _dbus_string_free (&keyring->filename);
  out_2:

@@ -3614,14 +3614,20 @@ dbus_set_error_from_message (DBusError   *error,
   	}
   str = NULL;
  // fprintf(stderr,"now run dbus_message_get_args\n");
-  dbus_message_get_args (message, NULL,
+/*
+ *CID 14655 (#1 of 1): Unchecked return value (CHECKED_RETURN)
+ */
+  if(dbus_message_get_args (message, NULL,
                          DBUS_TYPE_STRING, &str,
-                         DBUS_TYPE_INVALID);
+                         DBUS_TYPE_INVALID))
+  {
 
-  dbus_set_error (error, dbus_message_get_error_name (message),
+	dbus_set_error (error, dbus_message_get_error_name (message),
                   str ? "%s" : NULL, str);
 
-  return TRUE;
+	return TRUE;
+  }/*coverity modify for CID 14655*/
+  return FALSE;
 }
 
 /**
