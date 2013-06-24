@@ -824,7 +824,7 @@ radius_auth(eag_radius_t *radius,
 		radius_addattr(&packet, RADIUS_ATTR_VENDOR_SPECIFIC,
 			RADIUS_VENDOR_AUTELAN, 
 			RADIUS_ATTR_AUTELAN_USER_AGENT,
-			0, (uint8_t *)&(appconn->user_agent), len);
+			0, (uint8_t *)appconn->user_agent, len);
 	}
 
 	admin_log_notice("RadiusAccessRequest___UserName:%s,UserIp:%s,ApMAC:%s,UserMAC:%s,NasID:%s,authtype:%s",

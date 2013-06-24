@@ -114,12 +114,13 @@ static int dcli_web_vhost_add_valid(webHost host, unsigned int slot)
         {
             if(info->portal_flag == 1)
             {
+				#if 0
 				if(info->slotid == slot)
                 {
                     web_list_flush(&infohead);
                     return WEB_PORTAL_ERROR;
                 }
-
+				#endif
                 if(info->server_stat&PORTAL_SERVICE_ENABLE)
                 {
                     web_list_flush(&infohead);
@@ -153,8 +154,10 @@ static int dcli_web_vhost_add_valid(webHost host, unsigned int slot)
                 web_list_flush(&infohead);
                 return WEB_NAME_EXISIT;
             }
-            #if 0
-            if(!strcmp(vh->address,host.address) && vh->port == host.port)
+            #if 1
+            if(0 == strcmp(vh->address,host.address) 
+            	&& vh->port == host.port 
+            	&& info->slotid == slot)
             {
                 web_list_flush(&infohead);
                 return WEB_EXISIT;
@@ -465,7 +468,7 @@ DEFUN(contrl_enable_web_service_func,
 
     if(sum < 1)
     {
-        vty_out(vty, "none configuration. falied\n");
+        vty_out(vty, "webconfig service not config. falied\n");
         return CMD_WARNING;
     }
     
@@ -474,18 +477,24 @@ DEFUN(contrl_enable_web_service_func,
     webIfPtr in;
 
     char buf[32] = {0};
-    int ret, dslot;
+    int flag = 1, ret, dslot;
+    static int webconfig_enable = 0;
     
     LINK_FOREACH(info, &infohead, entries)
     {
         if(info->slotid == master_slot_id)
         {
-
+			flag = 0;
+			
             if(info->server_stat&WEB_SERVICE_ENABLE)
             {
+                #if 0
                 web_list_flush(&infohead);
                 vty_out(vty, "is running. failed\n");
                 return CMD_WARNING;
+                #endif
+                webconfig_enable++;
+                continue;
             }
 
             dslot = info->slotid;
@@ -510,12 +519,23 @@ DEFUN(contrl_enable_web_service_func,
             }
         }
     }
-
-    web_list_flush(&infohead);  
     
-    if(ret == WEB_FAILURE)
-        vty_out(vty, "falied\n");
+    web_list_flush(&infohead);
 
+    if(flag) {
+		vty_out(vty, "webconfig service not config. falied\n");
+        return CMD_SUCCESS;
+	}
+	
+	if (0 < webconfig_enable) {
+        vty_out(vty, "webconfig service is running.\n");
+        return CMD_SUCCESS;
+	}
+    
+    if(ret == WEB_FAILURE) {
+        vty_out(vty, "webconfig service enable failed, ip or port error\n");
+	}
+	
     return CMD_SUCCESS;
 }
 
@@ -535,7 +555,7 @@ DEFUN(contrl_disable_service_func,
 
     if(sum < 1)
     {
-        vty_out(vty, "none configuration. falied\n");
+        vty_out(vty, "webconfig service not config. falied\n");
         return CMD_WARNING;
     }
     
@@ -545,6 +565,7 @@ DEFUN(contrl_disable_service_func,
 
     char buf[32];
     int flag = 1, ret, dslot;
+    static int webconfig_disable = 0;
     
     LINK_FOREACH(info, &infohead, entries)
     {
@@ -554,9 +575,13 @@ DEFUN(contrl_disable_service_func,
 
             if(!(info->server_stat&WEB_SERVICE_ENABLE))
             {
+                #if 0
                 vty_out(vty, "not running. failed");
                 web_list_flush(&infohead);
                 return CMD_WARNING;
+                #endif
+                webconfig_disable++;
+                continue;
             }
 
             dslot = info->slotid;
@@ -581,17 +606,23 @@ DEFUN(contrl_disable_service_func,
             }
         }
     }
+    
+    web_list_flush(&infohead);
+    
+    if(flag) {
+		vty_out(vty, "webconfig service not config. falied\n");
+        return CMD_SUCCESS;
+	}
+	
+	if (0 < webconfig_disable) {
+        vty_out(vty, "webconfig service is not running.\n");
+        return CMD_SUCCESS;
+	}
 
-    web_list_flush(&infohead);  
-
-    if(ret == WEB_FAILURE)
-		vty_out(vty, "falied");
-
-    if(flag)
-        vty_out(vty, "none configuration. falied\n");
-
-    return CMD_SUCCESS;
-
+    if(ret == WEB_FAILURE) {
+		vty_out(vty, "webconfig service disable falied, ip or port error");
+    }
+	
 	return CMD_SUCCESS;
 }
 
@@ -631,13 +662,12 @@ DEFUN(show_webservice_info_func,
 			vty_out(vty,"--------------------------------------------------------------------\n");
 			LINK_FOREACH(vh, &(info->head), entries)
 			{
-				if(vh->type == HTTP_SERVICE)
-				{
+				if(vh->type == HTTP_SERVICE) {
 					vty_out(vty, "%-8s","http");
-				}
-                if(vh->type == HTTPS_SERVICE)
-                {
+				} else if (vh->type == HTTPS_SERVICE) {
                     vty_out(vty, "%-8s", "https");
+                } else {
+					continue;
                 }
 			    vty_out(vty,"%-11s%-16s%-6d",vh->name, vh->address, vh->port); 
                 if(!LINK_EMPTY(&vh->head))
@@ -993,52 +1023,6 @@ DEFUN(delete_portal_config_func,
 	return CMD_SUCCESS;
 }
 
-DEFUN(unset_interval_portal_func,
-      unset_interval_portal_cmd,
-      "unset interval-portal",
-      "unset inteval portal\n"
-      "config inteval portal\n"
-     )
-{
-	char *address;
-	
-	int ret, dslot = 0;
-
-	struct webInfoHead infohead;
-	
-	LINK_INIT(&infohead);
-	dcli_web_vhost_show(&infohead);
-	
-	webInfoPtr info;
-	webHostPtr vh;
-	
-	LINK_FOREACH(info, &infohead, entries)
-	{
-		if(info->portal_flag)
-		{
-			dslot = info->slotid;
-		}
-	}
-
-    if(dslot == 0)
-    {
-		vty_out(vty,"not configure. failed\n");
-        return CMD_WARNING;
-    }
-
-	web_list_flush(&infohead);	
-
-    //iif((ret = ac_manage_web_edit(dbus_connection_dcli[dslot]->dcli_dbus_connection, WEB_TYPE_INVALID, 1, 0)) != WEB_SUCCESS)
-    if(1)
-	{
-		vty_out(vty,"not found. failed\n");
-		return CMD_WARNING;
-	}	
-
-	return CMD_WARNING;
-}
-
-
 DEFUN(enable_interval_portal_service_func,
       enable_interval_portal_service_cmd,
       "service webportal enable ",
@@ -1058,7 +1042,7 @@ DEFUN(enable_interval_portal_service_func,
 
     char buf[32];
     int flag = 1, ret, dslot;
-    static int webportal_en = 0;
+    static int webportal_enable = 0;
     
     LINK_FOREACH(info, &infohead, entries)
     {
@@ -1068,7 +1052,7 @@ DEFUN(enable_interval_portal_service_func,
 
             if(info->server_stat&PORTAL_SERVICE_ENABLE)
             {
-                webportal_en ++;
+                webportal_enable++;
                 continue;
             }
 
@@ -1094,17 +1078,23 @@ DEFUN(enable_interval_portal_service_func,
             }
         }
     }
-    if (0 < webportal_en) {
-    	vty_out(vty, "is running. failed\n");
-    }
-    web_list_flush(&infohead);  
     
-    if(ret == WEB_FAILURE)
-		vty_out(vty, "falied\n");
+    web_list_flush(&infohead);
+    
+    if(flag) {
+		vty_out(vty, "webportal service not config. falied\n");
+        return CMD_SUCCESS;
+	}
+	
+    if (0 < webportal_enable) {
+    	vty_out(vty, "webportal service is running.\n");
+        return CMD_SUCCESS;
+    }
 
-    if(flag)
-		vty_out(vty, " none configuration. falied\n");
-
+    if(ret == WEB_FAILURE) {
+		vty_out(vty, "webportal service enable falied, ip or port error\n");
+    }
+	
     return CMD_SUCCESS;
 }
 
@@ -1127,7 +1117,7 @@ DEFUN(disable_interval_portal_service_func,
 
     char buf[32];
     int flag = 1, ret, dslot;
-    static int webportal_dis = 0;
+    static int webportal_disable = 0;
     
     LINK_FOREACH(info, &infohead, entries)
     {
@@ -1137,7 +1127,7 @@ DEFUN(disable_interval_portal_service_func,
 
             if(!(info->server_stat&PORTAL_SERVICE_ENABLE))
             {
-				webportal_dis ++;
+				webportal_disable++;
 				continue;
             }
 
@@ -1163,17 +1153,22 @@ DEFUN(disable_interval_portal_service_func,
             }
         }
     }
-    if (0 < webportal_dis) {
-    	vty_out(vty, "not running. failed");
+    
+    web_list_flush(&infohead);
+
+    if(flag) {
+        vty_out(vty, "webportal service not config. falied\n");
+        return CMD_SUCCESS;
+	}
+	
+    if (0 < webportal_disable) {
+    	vty_out(vty, "webportal service is not running.");
+        return CMD_SUCCESS;
     }
 
-    web_list_flush(&infohead);  
-
-    if(ret == WEB_FAILURE)
-		vty_out(vty, "falied");
-
-    if(flag)
-        vty_out(vty, "none configuration. falied\n");
+    if(ret == WEB_FAILURE) {
+		vty_out(vty, "webportal service disable falied, ip or port error");
+    }
 
     return CMD_SUCCESS;
 }
@@ -1211,17 +1206,14 @@ DEFUN(show_interval_portalservice_info_func,
             vty_out(vty,"--------------------------------------------------------------------\n");
             LINK_FOREACH(vh, &(info->head), entries)
             {
-                if(vh->type == PORTAL_HTTP_SERVICE)
-                {
+                if(vh->type == PORTAL_HTTP_SERVICE) {
                     vty_out(vty, "%-8s","wispr");
-                }
-                if(vh->type == PORTAL_HTTPS_SERVICE)
-                {
+                } else if (vh->type == PORTAL_HTTPS_SERVICE) {
                     vty_out(vty, "%-8s", "wisprssl");
-                }
-                if(vh->type == PORTAL_SERVICE)
-                {
+                } else if(vh->type == PORTAL_SERVICE) {
                     vty_out(vty, "%-8s", "normal");
+                } else {
+					continue;
                 }
                 vty_out(vty,"%-11s%-16s%-6d",vh->name, vh->address, vh->port); 
 
@@ -1235,7 +1227,6 @@ DEFUN(show_interval_portalservice_info_func,
                 vty_out(vty, "\n");
             }
             vty_out(vty,"--------------------------------------------------------------------\n");
-
 		}
 	}
 	web_list_flush(&infohead);	
@@ -1425,7 +1416,8 @@ int dcli_webservice_show_running_config(struct vty* vty)
     webInfoPtr info;
     webHostPtr vh;
     webIfPtr in;
-    static int webportal_mark = 0;
+    static int webportal_enable_num = 0;
+    static int webconfig_enable_num = 0;
     
     LINK_FOREACH(info, &infohead, entries)
     {
@@ -1464,7 +1456,7 @@ int dcli_webservice_show_running_config(struct vty* vty)
             }
 
             if(info->server_stat & PORTAL_SERVICE_ENABLE)
-				webportal_mark ++;
+				webportal_enable_num++;
         }
 
         #ifdef __WITH_AUTEWARE_WEB
@@ -1498,14 +1490,17 @@ int dcli_webservice_show_running_config(struct vty* vty)
                 }
             }
 
-            if(info->server_stat & WEB_SERVICE_ENABLE)
-                vtysh_add_show_string(" service webconfig enable\n");
-
+            if(info->server_stat & WEB_SERVICE_ENABLE) {
+				webconfig_enable_num++;
+            }
         }
         #endif
     }
-    if (0 < webportal_mark) {
+    if (0 < webportal_enable_num) {
 		vtysh_add_show_string(" service webportal enable\n");
+	}
+	if (0 < webconfig_enable_num) {
+        vtysh_add_show_string(" service webconfig enable\n");
 	}
 	vtysh_add_show_string( " exit\n" );
     web_list_flush(&infohead);  
@@ -1531,20 +1526,22 @@ void dcli_webservice_init(void)
     install_element(HIDDENDEBUG_NODE, &show_webservice_info_cmd);
     install_element(HIDDENDEBUG_NODE, &add_http_https_ip_port_cmd);
     install_element(HIDDENDEBUG_NODE, &delete_http_https_config_cmd);
+
     install_element(HIDDENDEBUG_NODE, &add_web_forword_cmd);
     install_element(HIDDENDEBUG_NODE, &del_web_forword_cmd);
 #endif
     install_element(WEBSERVICE_NODE, &set_interval_portal_cmd);
-	install_element(WEBSERVICE_NODE, &unset_interval_portal_cmd);
     install_element(WEBSERVICE_NODE, &show_interval_portalservice_info_cmd);
     install_element(WEBSERVICE_NODE, &enable_interval_portal_service_cmd);
     install_element(WEBSERVICE_NODE, &disable_interval_portal_service_cmd);
+    install_element(WEBSERVICE_NODE, &delete_portal_config_cmd);
+
     install_element(WEBSERVICE_NODE, &download_internal_portal_cmd);
     install_element(WEBSERVICE_NODE, &show_internal_portal_cmd);
     install_element(WEBSERVICE_NODE, &del_internal_portal_cmd);
+    
     install_element(WEBSERVICE_NODE, &add_web_forword_cmd);
     install_element(WEBSERVICE_NODE, &del_web_forword_cmd);
-    install_element(WEBSERVICE_NODE, &delete_portal_config_cmd);
 }
 
 #ifdef __cplusplus
