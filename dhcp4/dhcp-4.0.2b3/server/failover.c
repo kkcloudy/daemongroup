@@ -578,6 +578,7 @@ isc_result_t dhcp_failover_link_signal (omapi_object_t *h,
 		omapi_connection_copyout (&link -> imsg -> type, c, 1);
 		link -> imsg_count++;
 		log_info("link -> imsg -> type is %d\n",link -> imsg -> type);
+		log_info("link -> imsg address is %p \n",link -> imsg);
 		/* Get message payload offset. */
 		omapi_connection_copyout (&link -> imsg_payoff, c, 1);
 		link -> imsg_count++;
