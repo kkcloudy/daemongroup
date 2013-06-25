@@ -155,7 +155,7 @@ struct wid_driver_data {
 
 struct asd_data *get_wasd_for_handle_frame(struct wasd_interfaces *interfaces, DataMsg *msg);
 static void handle_frame(struct asd_data *wasd, u8 *buf, size_t len);
-
+static void ASD_STA_OPT_STR(int Op,char *msgtype);
 /*ht add,11.3.1*/
 void handle_netlink(int sock, void *circle_ctx, void *sock_ctx)
 {
@@ -3567,7 +3567,9 @@ void STA_OP(TableMsg *msg){
 	struct PMK_STAINFO *pmk_sta;
 	struct ROAMING_STAINFO *r_sta;	
 	unsigned char SID = 0;
-	asd_printf(ASD_DEFAULT,MSG_DEBUG,"STA_OP type %u(DEL--1,MODIFY--2,INFO--3,CONFLICT--16)\n",msg->Op);
+	char msgtype[64] = {0};
+	ASD_STA_OPT_STR(msg->Op,msgtype);
+	asd_printf(ASD_DEFAULT,MSG_DEBUG,"STA_OP type %s\n",msgtype);	
 	switch(msg->Op){
 		case WID_DEL:			
 			ret = AsdCheckWTPID(WTPID);
@@ -3785,8 +3787,7 @@ void STA_OP(TableMsg *msg){
 						sta->MAXofRateset = msg->u.STAINFO[j].MAXofRateset;
 						asd_printf(ASD_DEFAULT,MSG_DEBUG,"sta->MAXofRateset = %d\n", sta->MAXofRateset);
 						
-						asd_printf(ASD_DEFAULT,MSG_DEBUG,"sta "MACSTR"\n",MAC2STR(msg->u.STAINFO[j].STAMAC));
-
+						asd_printf(ASD_DEFAULT,MSG_DEBUG,"STA_OP %s "MACSTR"\n",msgtype,MAC2STR(msg->u.STAINFO[j].STAMAC));
 						if(!bss[i]->bss_iface_type){
 							sta->rxbytes=(unsigned long long)(msg->u.STAINFO[j].rx_bytes);
 							sta->txbytes=(unsigned long long)(msg->u.STAINFO[j].tx_bytes);
@@ -6498,3 +6499,88 @@ const struct wpa_driver_ops wpa_driver_asd_ops = {
 	.sta_clear_stats = NULL,
 	.get_hw_feature_data = asd_get_hw_feature_data_w,
 };
+void ASD_STA_OPT_STR(int Op,char *msgtype)
+{
+	switch(Op){
+        case WID_DEL:
+			strcpy(msgtype,"WID_DEL");
+			break;
+		case WID_MODIFY:
+			strcpy(msgtype,"WID_MODIFY");
+			break;
+		case STA_INFO:
+			strcpy(msgtype,"STA_INFO");
+			break;
+		case WID_CONFLICT :
+            strcpy(msgtype,"WID_CONFLICT");
+			break;
+        case STA_WAPI_INFO:
+			strcpy(msgtype,"STA_WAPI_INFO");
+			break;
+		case  EAG_MAC_AUTH:	
+			strcpy(msgtype,"EAG_MAC_AUTH");
+			break;
+		case EAG_MAC_DEL_AUTH:
+			strcpy(msgtype,"EAG_MAC_DEL_AUTH");
+			break;
+		case STA_FLOW_CHECK:
+			strcpy(msgtype,"STA_FLOW_CHECK");
+			break;
+        case EAG_AUTH:
+	   	    strcpy(msgtype,"EAG_AUTH");
+			break;
+	    case EAG_DEL_AUTH:
+		    strcpy(msgtype,"EAG_DEL_AUTH");
+			break;
+		case  DHCP_IP:	
+		    strcpy(msgtype,"DHCP_IP");
+			break;
+		case STA_LEAVE_REPORT:
+            strcpy(msgtype,"STA_LEAVE_REPORT");
+			break;    
+		case EAG_NTF_ASD_STA_INFO:
+			strcpy(msgtype,"EAG_NTF_ASD_STA_INFO");
+			break;
+		case STA_CHECK_DEL:
+			strcpy(msgtype,"STA_CHECK_DEL");
+			break;
+		case WID_ADD:
+		case RADIO_INFO:
+		case WTP_DENEY_STA:
+		case STA_COME:
+		case STA_LEAVE:
+		case VERIFY_INFO:
+		case VERIFY_FAIL_INFO:
+		case WTP_DE_DENEY_STA:
+		case BSS_INFO:
+		case ASSOC_FAIL_INFO:
+		case JIANQUAN_FAIL_INFO:
+		case CHANNEL_CHANGE_INFO:
+		case WID_UPDATE:
+		case WID_ONE_UPDATE:
+		case TRAFFIC_LIMIT:
+		case WIDS_INFO:
+		case WIDS_SET:
+		case WAPI_INVALID_CERT:
+		case WAPI_CHALLENGE_REPLAY:
+		case WAPI_MIC_JUGGLE:
+		case WAPI_LOW_SAFE_LEVEL:
+		case WAPI_ADDR_REDIRECTION:
+		case OPEN_ROAM:
+		case VRRP_IF:
+		case CANCEL_TRAFFIC_LIMIT:
+		case WTP_STA_CHECK:
+		case WID_WIFI_INFO:
+		case ASD_AUTH:
+		case ASD_DEL_AUTH:
+		case BSS_UPDATE:
+		case ASD_MAC_AUTH:
+		case ASD_MAC_DEL_AUTH:
+		case IDLE_STA_DEL:
+		case MAC_LIST_ADD:
+		case RADIUS_STA_UPDATE:		
+        default:
+			break;
+	}
+}
+
