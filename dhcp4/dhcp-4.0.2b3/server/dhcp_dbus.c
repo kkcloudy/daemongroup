@@ -3024,6 +3024,12 @@ dhcp_dbus_create_pool_by_name
 	struct dcli_pool* head = NULL, *temppool = NULL;
 	unsigned int ret = 0;
 	if (!name || (count_pool >= DHCP_MAX_POOL_NUM)) {
+		if(name){
+			ret = dhcp_dbus_find_pool_by_name(name, &temppool);
+			if(!ret){
+				return 2;
+			}
+		}
 		log_error("create ip pool parameter null, pool count %d\n", count_pool);		
 		return 1;
 	}
