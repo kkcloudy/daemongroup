@@ -2628,9 +2628,10 @@ DEFUN (cf_card_partition_func,
 
 DEFUN(show_6185_reg,
 	show_6185_reg_cmd,
-	"show 6185 DEVADDR REGADDR",
+	"show 6185 PHYADDR DEVADDR REGADDR",
 	"show 88E6185 register val"
 	"show 88E6185 register val\n"
+	"88E6185 PHY address\n"
 	"88E6185 device address\n"
 	"88E6185 register address\n"
 	)
@@ -2640,10 +2641,12 @@ DEFUN(show_6185_reg,
 	DBusError err;
     unsigned int dev_addr;
 	unsigned int reg_addr;
+	unsigned int phy_addr;
 	unsigned int val;
-	
-	dev_addr = strtol(argv[0],NULL,16);
-    reg_addr = strtol(argv[1],NULL,16);
+
+	phy_addr = strtol(argv[0],NULL,16);
+	dev_addr = strtol(argv[1],NULL,16);
+    reg_addr = strtol(argv[2],NULL,16);
 	
 	query = dbus_sem_msg_new_method_call(SEM_DBUS_BUSNAME, SEM_DBUS_OBJPATH,
 										 SEM_DBUS_INTERFACE, SEM_DBUS_SHOW_6185);
@@ -2658,6 +2661,7 @@ DEFUN(show_6185_reg,
 	dbus_message_append_args(query,
 				 		DBUS_TYPE_UINT32, &dev_addr,
 				 		DBUS_TYPE_UINT32, &reg_addr,
+				 		DBUS_TYPE_UINT32, &phy_addr,
 				 		DBUS_TYPE_INVALID);
 
 	reply = dbus_connection_send_with_reply_and_block(dcli_dbus_connection, query, -1, &err);
@@ -2673,7 +2677,7 @@ DEFUN(show_6185_reg,
 			dbus_error_free_for_dcli(&err);
 		}
 		
-		return CMD_FAILURE;
+		return CMD_SUCCESS;
 	}
 	
 	dbus_message_iter_init(reply,&iter);
@@ -2687,9 +2691,10 @@ DEFUN(show_6185_reg,
 
 DEFUN(set_6185_reg,
 	set_6185_reg_cmd,
-	"set 6185 DEVADDR REGADDR VAL",
+	"set 6185 PHYADDR DEVADDR REGADDR VAL",
 	"set 88E6185 register val"
 	"set 88E6185 register val\n"
+	"88E6185 PHY address\n"
 	"88E6185 device address\n"
 	"88E6185 register address\n"
 	"write val\n"
@@ -2700,13 +2705,14 @@ DEFUN(set_6185_reg,
 	DBusError err;
     unsigned int dev_addr;
 	unsigned int reg_addr;
+	unsigned int phy_addr;
 	unsigned short val;
 	int ret;
 	
-	
-	dev_addr = strtol(argv[0],NULL,16);
-    reg_addr = strtol(argv[1],NULL,16);
-	val = strtol(argv[2],NULL,16);
+	phy_addr = strtol(argv[0],NULL,16);
+	dev_addr = strtol(argv[1],NULL,16);
+    reg_addr = strtol(argv[2],NULL,16);
+	val = strtol(argv[3],NULL,16);
 	query = dbus_sem_msg_new_method_call(SEM_DBUS_BUSNAME, SEM_DBUS_OBJPATH,
 										 SEM_DBUS_INTERFACE, SEM_DBUS_SET_6185);
 	if (!query)
@@ -2721,6 +2727,7 @@ DEFUN(set_6185_reg,
 				 		DBUS_TYPE_UINT32, &dev_addr,
 				 		DBUS_TYPE_UINT32, &reg_addr,
 				 		DBUS_TYPE_UINT16, &val,
+				 		DBUS_TYPE_UINT32, &phy_addr,
 				 		DBUS_TYPE_INVALID);
 
 	reply = dbus_connection_send_with_reply_and_block(dcli_dbus_connection, query, -1, &err);
@@ -2736,7 +2743,7 @@ DEFUN(set_6185_reg,
 			dbus_error_free_for_dcli(&err);
 		}
 		
-		return CMD_FAILURE;
+		return CMD_SUCCESS;
 	}
 	
 	dbus_message_iter_init(reply,&iter);
@@ -2812,10 +2819,6 @@ void dcli_sem_init(void)
 	install_element(ENABLE_NODE, &sem_apply_patch_cmd);//huangjing
 	install_element(CONFIG_NODE, &no_debug_sem_info_cmd);
 	install_element(INTERFACE_NODE, &interface_wan_out_cmd);//huangjing
-	
-    install_element(HIDDENDEBUG_NODE, &show_6185_reg_cmd);//huangjing
-    install_element(HIDDENDEBUG_NODE, &set_6185_reg_cmd);//huangjing
-	
 	//install_element(ENABLE_NODE, &sem_flash_erase_cmd);//xufujun
 	install_element(ENABLE_NODE, &flash_write_bootrom_cmd);
     install_element(HIDDENDEBUG_NODE, &config_sem_sendto_trap_cmd);
@@ -2828,6 +2831,8 @@ void dcli_sem_init(void)
     install_element(HIDDENDEBUG_NODE, &system_sync_version_file_to_slot_cmd);
 	install_element(HIDDENDEBUG_NODE, &debug_sem_info_cmd);
 	install_element(HIDDENDEBUG_NODE, &no_debug_sem_info_cmd);
+	install_element(HIDDENDEBUG_NODE, &show_6185_reg_cmd);
+	install_element(HIDDENDEBUG_NODE, &set_6185_reg_cmd);
 }
 
 #endif
