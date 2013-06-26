@@ -4045,6 +4045,7 @@ void STA_OP(TableMsg *msg){
 			if(ret == 0)
 				return;
 			num = ASD_SEARCH_WTP_STA(WTPID, bss);
+			pthread_mutex_lock(&(asd_g_sta_mutex)); 		
 			for(i = 0; i < num; i++){
 				
 #ifdef ASD_USE_PERBSS_LOCK
@@ -4126,6 +4127,7 @@ void STA_OP(TableMsg *msg){
 				pthread_mutex_unlock(&(bss[i]->asd_sta_mutex));
 #endif
 			}
+			pthread_mutex_unlock(&(asd_g_sta_mutex)); 		
 			break;	
 				//weichao add 2011.11.11
 			case  DHCP_IP:

@@ -208,7 +208,7 @@ void ieee802_1x_set_sta_authorized(struct asd_data *wasd,
 		//qiuchen add it for Henan Mobile
 		if(gASDLOGDEBUG & BIT(1)){
 			if(sta->rflag && !(sta->logflag&BIT(1)) && sta->flags & WLAN_STA_AUTHORIZED){
-				syslog(LOG_INFO|LOG_LOCAL3,"[%d-%d]STA_ROAM_SUCCESS:UserMAC:"MACSTR" From AC(%lu.%lu.%lu.%lu)-AP%d-BSSID("MACSTR") To AC(%lu.%lu.%lu.%lu)-AP%d-BSSID("MACSTR").\n",
+				syslog(LOG_INFO|LOG_LOCAL7,"[%d-%d]STA_ROAM_SUCCESS:UserMAC:"MACSTR" From AC(%lu.%lu.%lu.%lu)-AP%d-BSSID("MACSTR") To AC(%lu.%lu.%lu.%lu)-AP%d-BSSID("MACSTR").\n",
 					slotid,vrrid,MAC2STR(sta->addr),((gASD_AC_MANAGEMENT_IP & 0xff000000) >> 24),((gASD_AC_MANAGEMENT_IP & 0xff0000) >> 16),((gASD_AC_MANAGEMENT_IP & 0xff00) >> 8),(gASD_AC_MANAGEMENT_IP & 0xff),
 					sta->preAPID,MAC2STR(sta->PreBSSID),((gASD_AC_MANAGEMENT_IP & 0xff000000) >> 24),((gASD_AC_MANAGEMENT_IP & 0xff0000) >> 16),((gASD_AC_MANAGEMENT_IP & 0xff00) >> 8),(gASD_AC_MANAGEMENT_IP & 0xff),
 					wasd->Radio_G_ID/4,MAC2STR(wasd->own_addr)

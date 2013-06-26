@@ -299,6 +299,7 @@ int bak_batch_add_sta(struct asd_data **bss, unsigned int num){
 				msg->U_STA[k].PreBSSIndex= sta->PreBssIndex;
 				memcpy(msg->U_STA[k].PreBSSID,sta->PreBSSID,MAC_LEN);
 				msg->U_STA[k].rflag = sta->rflag;
+				msg->U_STA[k].PreApID = sta->preAPID;//AXSSZFI-1789
 				unsigned char SID = 0;
 				if(ASD_WLAN[bss[i]->WlanID])
 					SID = (unsigned char)ASD_WLAN[bss[i]->WlanID]->SecurityID;
@@ -529,6 +530,16 @@ int bak_add_sta(struct asd_data *wasd, struct sta_info *sta){
 		msg.Bu.U_STA.sta_online_time = now - sta->add_time_sysruntime+sta->sta_online_time;//qiuchen add it
 		msg.Bu.U_STA.ipaddr = sta->ipaddr;
 		msg.Bu.U_STA.gifindex = sta->gifidx;
+		/*Qiuchen add it to synchronize the sta's roaming infomation
+		because of the master AC will send a msg to the bak to delete the sta info in the old bss when it's roaming
+		so the bak AC will not realize the sta is roaming because of there is no this sta's info in the globle HASH
+		when process the sta_add msg in the function ap_sta_add -> asd_sta_roaming_management
+		*/
+		msg.Bu.U_STA.PreBSSIndex = sta->PreBssIndex;
+		memcpy(msg.Bu.U_STA.PreBSSID,sta->PreBSSID,MAC_LEN);
+		msg.Bu.U_STA.rflag = sta->rflag;
+		msg.Bu.U_STA.PreApID = sta->preAPID;
+		//end
 		if((ASD_SECURITY[SID])&&((ASD_SECURITY[SID]->securityType == WPA_E)||(ASD_SECURITY[SID]->securityType == WPA2_E)||(ASD_SECURITY[SID]->securityType == IEEE8021X)||(ASD_SECURITY[SID]->securityType == MD5)||(ASD_SECURITY[SID]->extensible_auth == 1))){
 			if(sta->eapol_sm == NULL)
 				return -1;
@@ -1113,9 +1124,17 @@ void B_STA_OP(B_Msg *msg){
 			#endif				
 		*/
 			*(sta->add_time) = msg->Bu.U_STA.sta_add;
-			//qiuchen add it 2012.10.31
+			//qiuchen add it 2013.06.25
 			if(mast_bak_update == 1){
 				sta->sta_online_time = msg->Bu.U_STA.sta_online_time;
+				sta->PreBssIndex = msg->Bu.U_STA.PreBSSIndex;
+				sta->rflag = msg->Bu.U_STA.rflag;
+				sta->preAPID = msg->Bu.U_STA.PreApID;
+				memcpy(sta->PreBSSID,msg->Bu.U_STA.PreBSSID,MAC_LEN);
+				if(sta->PreBssIndex != wasd->BSSIndex && ASD_WLAN[wasd->WlanID] && ASD_WLAN[wasd->WlanID]->Roaming_Policy){
+					RoamingStaInfoToWSM_1(sta,WID_MODIFY);
+					RoamingStaInfoToWIFI_1(sta,WID_ADD);
+				}
 			}
 			get_sysruntime(&sta->add_time_sysruntime);
 			sta->flags |= WLAN_STA_AUTH;
@@ -1380,6 +1399,7 @@ void B_BATCH_STA_OP(_B_Msg *msg){
 				if(mast_bak_update == 1){
 					sta->PreBssIndex = msg->U_STA[j].PreBSSIndex;
 					sta->rflag = msg->U_STA[j].rflag;
+					sta->preAPID = msg->U_STA[j].PreApID;
 					memcpy(sta->PreBSSID,msg->U_STA[j].PreBSSID,MAC_LEN);
 					if(sta->PreBssIndex != wasd->BSSIndex && ASD_WLAN[wasd->WlanID] && ASD_WLAN[wasd->WlanID]->Roaming_Policy){
 						RoamingStaInfoToWSM_1(sta,WID_MODIFY);

@@ -912,6 +912,7 @@ void ap_free_sta_without_wsm(struct asd_data *wasd, struct sta_info *sta, unsign
 		//radius_client_flush_auth(wasd->radius, sta->addr);
 		}
 		asd_printf(ASD_DEFAULT,MSG_INFO,"free sta in ap_free_sta_without_wsm\n");
+		UpdateStaInfoToFASTFWD(sta->ipaddr,SE_AGENT_CLEAR_RULE_IP);
 		os_free(sta->last_assoc_req);
 		sta->last_assoc_req=NULL;
 		os_free(sta->in_addr);
@@ -1682,6 +1683,7 @@ void ap_sta_eap_auth_timer(void *circle_ctx,void *timeout_ctx)
 		return;
 	if(sta->flags & WLAN_STA_AUTHORIZED)
 		return;
+	pthread_mutex_lock(&(asd_g_sta_mutex)); 		
 	asd_printf(ASD_DEFAULT,MSG_DEBUG,"func:%s ; sta "MACSTR" is unauthorized too long\n",__func__,MAC2STR(sta->addr));	
 	wpa_auth_sm_event(sta->wpa_sm, WPA_DEAUTH);
 	mlme_deauthenticate_indication(
@@ -1693,6 +1695,7 @@ void ap_sta_eap_auth_timer(void *circle_ctx,void *timeout_ctx)
 		ap_free_sta(wasd, sta,1);
 	else
 		ap_free_sta(wasd, sta,0);
+	pthread_mutex_unlock(&(asd_g_sta_mutex)); 		
 }
 void ap_handle_timer(void *circle_ctx, void *timeout_ctx)
 {
@@ -2646,6 +2649,12 @@ void ap_sta_idle_timeout(void *circle_ctx,void *timeout_ctx)
 	sta->acct_terminate_cause = RADIUS_ACCT_TERMINATE_CAUSE_IDLE_TIMEOUT;
 	SID = wasd->SecurityID;
 	if((ASD_SECURITY[SID])&&((ASD_SECURITY[SID]->securityType == WPA_E)||(ASD_SECURITY[SID]->securityType == WPA2_E)||(ASD_SECURITY[SID]->securityType == WPA_P)||(ASD_SECURITY[SID]->securityType == WPA2_P)||(ASD_SECURITY[SID]->securityType == IEEE8021X)||(ASD_SECURITY[SID]->securityType == MD5)||(ASD_SECURITY[SID]->extensible_auth == 1))){
+		if(ASD_SECURITY[SID]->securityType == WPA2_E){
+			struct PMK_STAINFO *pmk_sta = NULL;
+			pmk_sta = pmk_ap_get_sta(ASD_WLAN[wasd->WlanID],sta->addr);
+			if(pmk_sta)
+				pmk_ap_free_sta(ASD_WLAN[wasd->WlanID],pmk_sta);
+		}
 		wpa_auth_sm_event(sta->wpa_sm, WPA_DEAUTH);
 		mlme_deauthenticate_indication(
 		wasd, sta, 0);
@@ -2762,6 +2771,7 @@ int ap_kick_eap_sta(struct sta_info *sta)
 	if(wasd == NULL)
 		return -1;
 	
+	pthread_mutex_lock(&(asd_g_sta_mutex));
 	sta->acct_terminate_cause = RADIUS_ACCT_TERMINATE_CAUSE_ADMIN_RESET;
 	wpa_auth_sm_event(sta->wpa_sm, WPA_DEAUTH);
 	mlme_deauthenticate_indication(
@@ -2779,6 +2789,7 @@ int ap_kick_eap_sta(struct sta_info *sta)
 	else{				
 		ap_free_sta(wasd, sta, 0);
 	}
+	pthread_mutex_unlock(&(asd_g_sta_mutex));
 	return 0;
 }
 /*
@@ -3093,6 +3104,8 @@ void asd_sta_roaming_management(struct sta_info *new_sta)
 		owasd->normal_st_down_num ++;
 		old_sta->acct_terminate_cause = RADIUS_ACCT_TERMINATE_CAUSE_USER_REQUEST;
 		AsdStaInfoToWID(owasd, old_sta->addr, WID_DEL);
+		if(ASD_NOTICE_STA_INFO_TO_PORTAL)
+			AsdStaInfoToEAG(owasd,old_sta,OPEN_ROAM);		
 		if(ASD_WLAN[nwasd->WlanID]){
 			ASD_WLAN[nwasd->WlanID]->sta_roaming_times++;
 			ASD_WLAN[nwasd->WlanID]->r_num_sta++;

@@ -2242,13 +2242,16 @@ static void handle_assoc(struct asd_data *wasd,
 	if(gASDLOGDEBUG & BIT(1)){
 		if(sta->rflag && !(sta->logflag&BIT(1))){
 			if(securitytype == OPEN || securitytype == SHARED){
-				syslog(LOG_INFO|LOG_LOCAL3,"[%d-%d]STA_ROAM_SUCCESS:UserMAC:"MACSTR" From AC(%lu.%lu.%lu.%lu)-AP%d-BSSID("MACSTR") To AC(%lu.%lu.%lu.%lu)-AP%d-BSSID("MACSTR").\n",
+				syslog(LOG_INFO|LOG_LOCAL7,"[%d-%d]STA_ROAM_SUCCESS:UserMAC:"MACSTR" From AC(%lu.%lu.%lu.%lu)-AP%d-BSSID("MACSTR") To AC(%lu.%lu.%lu.%lu)-AP%d-BSSID("MACSTR").\n",
 					slotid,vrrid,MAC2STR(sta->addr),((gASD_AC_MANAGEMENT_IP & 0xff000000) >> 24),((gASD_AC_MANAGEMENT_IP & 0xff0000) >> 16),((gASD_AC_MANAGEMENT_IP & 0xff00) >> 8),(gASD_AC_MANAGEMENT_IP & 0xff),
 					sta->preAPID,MAC2STR(sta->PreBSSID),((gASD_AC_MANAGEMENT_IP & 0xff000000) >> 24),((gASD_AC_MANAGEMENT_IP & 0xff0000) >> 16),((gASD_AC_MANAGEMENT_IP & 0xff00) >> 8),(gASD_AC_MANAGEMENT_IP & 0xff),
 					wasd->Radio_G_ID/4,MAC2STR(wasd->own_addr)
 				);
 				sta->logflag = BIT(1);
 			}
+			else
+				syslog(LOG_INFO|LOG_LOCAL7, "ASSOCSUCCESS:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d,SecurityType:%d,ErrorCode:%d.\n",
+					MAC2STR(mgmt->sa),MAC2STR(WTPMAC),wasd->BSSIndex,securitytype,OPERATE_SUCCESS);//qiuchen 2013.01.14
 		}
 		else
 	syslog(LOG_INFO|LOG_LOCAL7, "[%d-%d]ASSOCSUCCESS:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d,SecurityType:%d,ErrorCode:%d.\n",
