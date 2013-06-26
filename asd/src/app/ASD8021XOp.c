@@ -208,8 +208,8 @@ void ieee802_1x_set_sta_authorized(struct asd_data *wasd,
 		//qiuchen add it for Henan Mobile
 		if(gASDLOGDEBUG & BIT(1)){
 			if(sta->rflag && !(sta->logflag&BIT(1)) && sta->flags & WLAN_STA_AUTHORIZED){
-				syslog(LOG_INFO|LOG_LOCAL3,"STA_ROAM_SUCCESS:UserMAC:"MACSTR" From AC(%lu.%lu.%lu.%lu)-AP%d-BSSID("MACSTR") To AC(%lu.%lu.%lu.%lu)-AP%d-BSSID("MACSTR").\n",
-					MAC2STR(sta->addr),((gASD_AC_MANAGEMENT_IP & 0xff000000) >> 24),((gASD_AC_MANAGEMENT_IP & 0xff0000) >> 16),((gASD_AC_MANAGEMENT_IP & 0xff00) >> 8),(gASD_AC_MANAGEMENT_IP & 0xff),
+				syslog(LOG_INFO|LOG_LOCAL3,"[%d-%d]STA_ROAM_SUCCESS:UserMAC:"MACSTR" From AC(%lu.%lu.%lu.%lu)-AP%d-BSSID("MACSTR") To AC(%lu.%lu.%lu.%lu)-AP%d-BSSID("MACSTR").\n",
+					slotid,vrrid,MAC2STR(sta->addr),((gASD_AC_MANAGEMENT_IP & 0xff000000) >> 24),((gASD_AC_MANAGEMENT_IP & 0xff0000) >> 16),((gASD_AC_MANAGEMENT_IP & 0xff00) >> 8),(gASD_AC_MANAGEMENT_IP & 0xff),
 					sta->preAPID,MAC2STR(sta->PreBSSID),((gASD_AC_MANAGEMENT_IP & 0xff000000) >> 24),((gASD_AC_MANAGEMENT_IP & 0xff0000) >> 16),((gASD_AC_MANAGEMENT_IP & 0xff00) >> 8),(gASD_AC_MANAGEMENT_IP & 0xff),
 					wasd->Radio_G_ID/4,MAC2STR(wasd->own_addr)
 				);
@@ -1696,8 +1696,8 @@ ieee802_1x_receive_auth(struct radius_msg *msg, struct radius_msg *req,
 			asd_printf(ASD_1X,MSG_DEBUG,"Incoming RADIUS packet did not have correct "
 			       "Message-Authenticator - dropped\n");
 			if(gASDLOGDEBUG & BIT(1))
-				syslog(LOG_INFO|LOG_LOCAL7, "AUTHFAILED:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d,SecurityType:%d,ErrorCode:%d.\n",
-					MAC2STR(sta->addr),MAC2STR(WTPMAC),wasd->BSSIndex,securitytype,RADIUS_FAILED);//qiuchen 2013.01.14
+				syslog(LOG_INFO|LOG_LOCAL7, "[%d-%d]AUTHFAILED:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d,SecurityType:%d,ErrorCode:%d.\n",
+					slotid,vrrid,MAC2STR(sta->addr),MAC2STR(WTPMAC),wasd->BSSIndex,securitytype,RADIUS_FAILED);//qiuchen 2013.01.14
 			return RADIUS_RX_INVALID_AUTHENTICATOR;
 		}
 	}
@@ -1747,8 +1747,8 @@ ieee802_1x_receive_auth(struct radius_msg *msg, struct radius_msg *req,
 	case RADIUS_CODE_ACCESS_ACCEPT:
 		if(gASDLOGDEBUG & BIT(1)){
 			if(sta->rflag && !(sta->logflag&BIT(1)) && sta->flags & WLAN_STA_AUTHORIZED){
-				syslog(LOG_INFO|LOG_LOCAL7,"STA_ROAM_SUCCESS:UserMAC:"MACSTR" From AC(%lu.%lu.%lu.%lu)-AP%d-BSSID("MACSTR") To AC(%lu.%lu.%lu.%lu)-AP%d-BSSID("MACSTR").\n",
-					MAC2STR(sta->addr),((gASD_AC_MANAGEMENT_IP & 0xff000000) >> 24),((gASD_AC_MANAGEMENT_IP & 0xff0000) >> 16),((gASD_AC_MANAGEMENT_IP & 0xff00) >> 8),(gASD_AC_MANAGEMENT_IP & 0xff),
+				syslog(LOG_INFO|LOG_LOCAL7,"[%d-%d]STA_ROAM_SUCCESS:UserMAC:"MACSTR" From AC(%lu.%lu.%lu.%lu)-AP%d-BSSID("MACSTR") To AC(%lu.%lu.%lu.%lu)-AP%d-BSSID("MACSTR").\n",
+					slotid,vrrid,MAC2STR(sta->addr),((gASD_AC_MANAGEMENT_IP & 0xff000000) >> 24),((gASD_AC_MANAGEMENT_IP & 0xff0000) >> 16),((gASD_AC_MANAGEMENT_IP & 0xff00) >> 8),(gASD_AC_MANAGEMENT_IP & 0xff),
 					sta->preAPID,MAC2STR(sta->PreBSSID),((gASD_AC_MANAGEMENT_IP & 0xff000000) >> 24),((gASD_AC_MANAGEMENT_IP & 0xff0000) >> 16),((gASD_AC_MANAGEMENT_IP & 0xff00) >> 8),(gASD_AC_MANAGEMENT_IP & 0xff),
 					wasd->Radio_G_ID/4,MAC2STR(wasd->own_addr)
 				);
@@ -1757,8 +1757,8 @@ ieee802_1x_receive_auth(struct radius_msg *msg, struct radius_msg *req,
 			else{
 				if(sta->eapol_sm)
 					identity = sta->eapol_sm->identity;
-				syslog(LOG_INFO|LOG_LOCAL7, "AUTHSUCCESS:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d,SecurityType:%d,ErrorCode:%d.\n",
-					MAC2STR(sta->addr),MAC2STR(WTPMAC),wasd->BSSIndex,securitytype,RADIUS_SUCCESS);//qiuchen 2013.01.14
+				syslog(LOG_INFO|LOG_LOCAL7, "[%d-%d]AUTHSUCCESS:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d,SecurityType:%d,ErrorCode:%d.\n",
+					slotid,vrrid,MAC2STR(sta->addr),MAC2STR(WTPMAC),wasd->BSSIndex,securitytype,RADIUS_SUCCESS);//qiuchen 2013.01.14
 			}
 		}
 		//qiuchen add it for Henan Mobile
@@ -1868,8 +1868,8 @@ ieee802_1x_receive_auth(struct radius_msg *msg, struct radius_msg *req,
 	case RADIUS_CODE_ACCESS_REJECT:
 		if(gASDLOGDEBUG & BIT(1)){
 			if(sta->rflag && !(sta->logflag&BIT(1)) && sta->flags & WLAN_STA_AUTHORIZED){
-				syslog(LOG_INFO|LOG_LOCAL3,"STA_ROAM_FAILED:UserMAC:"MACSTR" From AC(%lu.%lu.%lu.%lu)-AP%d-BSSID("MACSTR") To AC(%lu.%lu.%lu.%lu)-AP%d-BSSID("MACSTR").\n",
-					MAC2STR(sta->addr),((gASD_AC_MANAGEMENT_IP & 0xff000000) >> 24),((gASD_AC_MANAGEMENT_IP & 0xff0000) >> 16),((gASD_AC_MANAGEMENT_IP & 0xff00) >> 8),(gASD_AC_MANAGEMENT_IP & 0xff),
+				syslog(LOG_INFO|LOG_LOCAL3,"[%d-%d]STA_ROAM_FAILED:UserMAC:"MACSTR" From AC(%lu.%lu.%lu.%lu)-AP%d-BSSID("MACSTR") To AC(%lu.%lu.%lu.%lu)-AP%d-BSSID("MACSTR").\n",
+					slotid,vrrid,MAC2STR(sta->addr),((gASD_AC_MANAGEMENT_IP & 0xff000000) >> 24),((gASD_AC_MANAGEMENT_IP & 0xff0000) >> 16),((gASD_AC_MANAGEMENT_IP & 0xff00) >> 8),(gASD_AC_MANAGEMENT_IP & 0xff),
 					sta->preAPID,MAC2STR(sta->PreBSSID),((gASD_AC_MANAGEMENT_IP & 0xff000000) >> 24),((gASD_AC_MANAGEMENT_IP & 0xff0000) >> 16),((gASD_AC_MANAGEMENT_IP & 0xff00) >> 8),(gASD_AC_MANAGEMENT_IP & 0xff),
 					wasd->Radio_G_ID/4,MAC2STR(wasd->own_addr)
 				);
@@ -1878,8 +1878,8 @@ ieee802_1x_receive_auth(struct radius_msg *msg, struct radius_msg *req,
 			else{
 				if(sta->eapol_sm)
 					identity = sta->eapol_sm->identity;
-		syslog(LOG_INFO|LOG_LOCAL7, "AUTHFAILED:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d,SecurityType:%d,ErrorCode:%d.\n",
-			MAC2STR(sta->addr),MAC2STR(WTPMAC),wasd->BSSIndex,securitytype,RADIUS_FAILED);//qiuchen 2013.01.14
+		syslog(LOG_INFO|LOG_LOCAL7, "[%d-%d]AUTHFAILED:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d,SecurityType:%d,ErrorCode:%d.\n",
+			slotid,vrrid,MAC2STR(sta->addr),MAC2STR(WTPMAC),wasd->BSSIndex,securitytype,RADIUS_FAILED);//qiuchen 2013.01.14
 			}
 		}
 		if(gASDLOGDEBUG & BIT(0)){

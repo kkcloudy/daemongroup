@@ -936,20 +936,20 @@ static void handle_data(struct asd_data *wasd, u8 *buf, size_t len,
 	switch (ethertype) {
 	case ETH_P_PAE:
 		if(!((securitytype == IEEE8021X)||(securitytype == WPA_E)||(securitytype == WPA2_E)||(securitytype == MD5)||(securitytype == WAPI_AUTH)||(extensible_auth == 1))){
-			syslog(LOG_WARNING|LOG_LOCAL7,"BSS "MACSTR" receive wrong EAP Package! Sta "MACSTR" securitytype %d\n",MAC2STR(wasd->own_addr),MAC2STR(sa),securitytype);
+			syslog(LOG_WARNING|LOG_LOCAL7,"[%d-%d]BSS "MACSTR" receive wrong EAP Package! Sta "MACSTR" securitytype %d\n",slotid,vrrid,MAC2STR(wasd->own_addr),MAC2STR(sa),securitytype);
 		}
 		ieee802_1x_receive(wasd, sa, pos, left);
 		break;
 	case ETH_P_PREAUTH:
 		if(!((securitytype == IEEE8021X)||(securitytype == WPA_E)||(securitytype == WPA2_E)||(securitytype == MD5)||(securitytype == WAPI_AUTH)||(extensible_auth == 1))){
-			syslog(LOG_WARNING|LOG_LOCAL7,"BSS "MACSTR" receive wrong EAP Package! Sta "MACSTR" securitytype %d\n",MAC2STR(wasd->own_addr),MAC2STR(sa),securitytype);
+			syslog(LOG_WARNING|LOG_LOCAL7,"[%d-%d]BSS "MACSTR" receive wrong EAP Package! Sta "MACSTR" securitytype %d\n",slotid,vrrid,MAC2STR(wasd->own_addr),MAC2STR(sa),securitytype);
 		}
 		asd_printf(ASD_80211,MSG_DEBUG,"\n ETH_P_PREAUTH \n");
 		rsn_preauth_receive_thinap(wasd, hdr->addr2, hdr->addr3, pos, left);
 		break;
 	case ETH_P_WAPI:	
 		if(securitytype != WAPI_AUTH || securitytype != WAPI_PSK){
-			syslog(LOG_WARNING|LOG_LOCAL7,"BSS "MACSTR" receive wrong EAP Package! Sta "MACSTR" securitytype %d\n",MAC2STR(wasd->own_addr),MAC2STR(sa),securitytype);
+			syslog(LOG_WARNING|LOG_LOCAL7,"[%d-%d]BSS "MACSTR" receive wrong EAP Package! Sta "MACSTR" securitytype %d\n",slotid,vrrid,MAC2STR(wasd->own_addr),MAC2STR(sa),securitytype);
 		}
 		asd_printf(ASD_80211,MSG_DEBUG,"\n ETH_P_WAPI \n");
 		if(wasd->wapi_wasd && wasd->wapi_wasd->vap_user)
@@ -3645,8 +3645,8 @@ void STA_OP(TableMsg *msg){
 						time_t now;
 						time(&now);
 						unsigned char *ip = (unsigned char*)&(WTP->WTPIP);
-						syslog(LOG_INFO|LOG_LOCAL7, "STA :"MACSTR" leave WTP %d,WTP MAC:"MACSTR",WTP IP:%d.%d.%d.%d,Leave Time:%s\n",
-							MAC2STR(msg->u.STA.STAMAC),msg->u.STA.WTPID,MAC2STR(WTP->WTPMAC),ip[0],ip[1],ip[2],ip[3],ctime(&now));
+						syslog(LOG_INFO|LOG_LOCAL7, "[%d-%d]STA :"MACSTR" leave WTP %d,WTP MAC:"MACSTR",WTP IP:%d.%d.%d.%d,Leave Time:%s\n",
+							slotid,vrrid,MAC2STR(msg->u.STA.STAMAC),msg->u.STA.WTPID,MAC2STR(WTP->WTPMAC),ip[0],ip[1],ip[2],ip[3],ctime(&now));
 					}
 					//qiuchen
 					char *SSID = NULL;
@@ -3666,8 +3666,8 @@ void STA_OP(TableMsg *msg){
 					if(ASD_WTP_AP[bss[i]->Radio_G_ID/4])
 						memcpy(WTPMAC,ASD_WTP_AP[bss[i]->Radio_G_ID/4]->WTPMAC,6);
 					if(gASDLOGDEBUG & BIT(1))
-						syslog(LOG_INFO|LOG_LOCAL7, "DISASSOC:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d, ErrorCode:%d.\n",
-							MAC2STR(sta->addr),MAC2STR(WTPMAC),bss[i]->BSSIndex,999);//qiuchen 2013.01.14
+						syslog(LOG_INFO|LOG_LOCAL7, "[%d-%d]DISASSOC:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d, ErrorCode:%d.\n",
+							slotid,vrrid,MAC2STR(sta->addr),MAC2STR(WTPMAC),bss[i]->BSSIndex,999);//qiuchen 2013.01.14
 					//end
 					if(ASD_NOTICE_STA_INFO_TO_PORTAL)
 						AsdStaInfoToEAG(bss[i],sta,WID_DEL);
@@ -3901,16 +3901,16 @@ void STA_OP(TableMsg *msg){
 								SSID = ASD_WLAN[wasd->WlanID]->ESSID;
 							if(gASDLOGDEBUG & BIT(1) && !(sta->logflag&BIT(1))){
 								if((ASD_SECURITY[SID]) && (ASD_SECURITY[SID]->securityType == OPEN || ASD_SECURITY[SID]->securityType == SHARED) && (sta->flags & WLAN_STA_ASSOC)){
-									syslog(LOG_INFO|LOG_LOCAL7,"STA_ROAM_SUCCESS:UserMAC:"MACSTR" From AC(%lu.%lu.%lu.%lu)-AP%d-BSSID("MACSTR") To AC(%lu.%lu.%lu.%lu)-AP%d-BSSID("MACSTR").\n",
-										MAC2STR(sta->addr),((gASD_AC_MANAGEMENT_IP & 0xff000000) >> 24),((gASD_AC_MANAGEMENT_IP & 0xff0000) >> 16),((gASD_AC_MANAGEMENT_IP & 0xff00) >> 8),(gASD_AC_MANAGEMENT_IP & 0xff),
+									syslog(LOG_INFO|LOG_LOCAL7,"[%d-%d]STA_ROAM_SUCCESS:UserMAC:"MACSTR" From AC(%lu.%lu.%lu.%lu)-AP%d-BSSID("MACSTR") To AC(%lu.%lu.%lu.%lu)-AP%d-BSSID("MACSTR").\n",
+										slotid,vrrid,MAC2STR(sta->addr),((gASD_AC_MANAGEMENT_IP & 0xff000000) >> 24),((gASD_AC_MANAGEMENT_IP & 0xff0000) >> 16),((gASD_AC_MANAGEMENT_IP & 0xff00) >> 8),(gASD_AC_MANAGEMENT_IP & 0xff),
 										prewasd->Radio_G_ID/4,MAC2STR(prewasd->own_addr),((gASD_AC_MANAGEMENT_IP & 0xff000000) >> 24),((gASD_AC_MANAGEMENT_IP & 0xff0000) >> 16),((gASD_AC_MANAGEMENT_IP & 0xff00) >> 8),(gASD_AC_MANAGEMENT_IP & 0xff),
 										wasd->Radio_G_ID/4,MAC2STR(wasd->own_addr)
 									);
 									sta->logflag = BIT(1);
 								}
 								else if((sta->flags & WLAN_STA_AUTHORIZED)){
-									syslog(LOG_INFO|LOG_LOCAL7,"STA_ROAM_SUCCESS:UserMAC:"MACSTR" From AC(%lu.%lu.%lu.%lu)-AP%d-BSSID("MACSTR") To AC(%lu.%lu.%lu.%lu)-AP%d-BSSID("MACSTR").\n",
-										MAC2STR(sta->addr),((gASD_AC_MANAGEMENT_IP & 0xff000000) >> 24),((gASD_AC_MANAGEMENT_IP & 0xff0000) >> 16),((gASD_AC_MANAGEMENT_IP & 0xff00) >> 8),(gASD_AC_MANAGEMENT_IP & 0xff),
+									syslog(LOG_INFO|LOG_LOCAL7,"[%d-%d]STA_ROAM_SUCCESS:UserMAC:"MACSTR" From AC(%lu.%lu.%lu.%lu)-AP%d-BSSID("MACSTR") To AC(%lu.%lu.%lu.%lu)-AP%d-BSSID("MACSTR").\n",
+										slotid,vrrid,MAC2STR(sta->addr),((gASD_AC_MANAGEMENT_IP & 0xff000000) >> 24),((gASD_AC_MANAGEMENT_IP & 0xff0000) >> 16),((gASD_AC_MANAGEMENT_IP & 0xff00) >> 8),(gASD_AC_MANAGEMENT_IP & 0xff),
 										prewasd->Radio_G_ID/4,MAC2STR(prewasd->own_addr),((gASD_AC_MANAGEMENT_IP & 0xff000000) >> 24),((gASD_AC_MANAGEMENT_IP & 0xff0000) >> 16),((gASD_AC_MANAGEMENT_IP & 0xff00) >> 8),(gASD_AC_MANAGEMENT_IP & 0xff),
 										wasd->Radio_G_ID/4,MAC2STR(wasd->own_addr)
 									);
@@ -4098,8 +4098,8 @@ void STA_OP(TableMsg *msg){
 					if(ASD_WTP_AP[bss[i]->Radio_G_ID/4])
 						memcpy(WTPMAC,ASD_WTP_AP[bss[i]->Radio_G_ID/4]->WTPMAC,6);
 					if(gASDLOGDEBUG & BIT(1))
-						syslog(LOG_INFO|LOG_LOCAL7, "DISASSOC:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d, ErrorCode:%d.\n",
-							MAC2STR(sta->addr),MAC2STR(WTPMAC),bss[i]->BSSIndex,999);//qiuchen 2013.01.14
+						syslog(LOG_INFO|LOG_LOCAL7, "[%d-%d]DISASSOC:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d, ErrorCode:%d.\n",
+							slotid,vrrid,MAC2STR(sta->addr),MAC2STR(WTPMAC),bss[i]->BSSIndex,999);//qiuchen 2013.01.14
 					if(ASD_WLAN[bss[i]->WlanID]!=NULL&&ASD_WLAN[bss[i]->WlanID]->balance_switch == 1&&ASD_WLAN[bss[i]->WlanID]->balance_method==1){
 						ap_free_sta(bss[i], sta, 1);
 					}
@@ -4164,16 +4164,16 @@ void STA_OP(TableMsg *msg){
 							//qiuchen
 							if(gASDLOGDEBUG & BIT(1)){
 								unsigned char *ipold = (unsigned char *)&(sta->ipaddr);
-								syslog(LOG_INFO|LOG_LOCAL7, "STA_IP_UPDATE:UserMAC:" MACSTR "OLD_IP:%d.%d.%d.%d NEW_IP:%d.%d.%d.%d\n",
-									MAC2STR(sta->addr),ipold[0],ipold[1],ipold[2],ipold[3],ip[0],ip[1],ip[2],ip[3]);//qiuchen 2013.01.14
+								syslog(LOG_INFO|LOG_LOCAL7, "[%d-%d]STA_IP_UPDATE:UserMAC:" MACSTR "OLD_IP:%d.%d.%d.%d NEW_IP:%d.%d.%d.%d\n",
+									slotid,vrrid,MAC2STR(sta->addr),ipold[0],ipold[1],ipold[2],ipold[3],ip[0],ip[1],ip[2],ip[3]);//qiuchen 2013.01.14
 							}
 					}
 					else{
 						//qiuchen
 						time_t at = time(NULL);
 						if(gASDLOGDEBUG & BIT(1))
-							syslog(LOG_INFO|LOG_LOCAL7, "STA_GET_ONLINE:UserMAC:" MACSTR "IP:%d.%d.%d.%d TIME:%s\n",
-								MAC2STR(sta->addr),ip[0],ip[1],ip[2],ip[3],ctime(&at));//qiuchen 2013.01.14
+							syslog(LOG_INFO|LOG_LOCAL7, "[%d-%d]STA_GET_ONLINE:UserMAC:" MACSTR "IP:%d.%d.%d.%d TIME:%s\n",
+								slotid,vrrid,MAC2STR(sta->addr),ip[0],ip[1],ip[2],ip[3],ctime(&at));//qiuchen 2013.01.14
 					}
 					sta->ip_addr.s_addr = msg->u.STA.ipv4Address;
 					sta->ipaddr = msg->u.STA.ipv4Address;
@@ -4370,8 +4370,8 @@ void STA_OP(TableMsg *msg){
 							if(ASD_WTP_AP[wasd->Radio_G_ID/4])
 								memcpy(WTPMAC,ASD_WTP_AP[wasd->Radio_G_ID/4]->WTPMAC,6);
 							if(gASDLOGDEBUG & BIT(1))
-								syslog(LOG_INFO|LOG_LOCAL7, "DISASSOC:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d, ErrorCode:%d.\n",
-									MAC2STR(sta->addr),MAC2STR(WTPMAC),wasd->BSSIndex,(reason == AP_STA_DEAUTH || reason == AP_STA_DISASSOC)?0:999);//qiuchen 2013.01.14
+								syslog(LOG_INFO|LOG_LOCAL7, "[%d-%d]DISASSOC:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d, ErrorCode:%d.\n",
+									slotid,vrrid,MAC2STR(sta->addr),MAC2STR(WTPMAC),wasd->BSSIndex,(reason == AP_STA_DEAUTH || reason == AP_STA_DISASSOC)?0:999);//qiuchen 2013.01.14
 							asd_printf(ASD_LEAVE,MSG_DEBUG,"sta:"MACSTR"leave reason is %d\n",MAC2STR(sta->addr),reason);
 							asd_printf(ASD_LEAVE,MSG_DEBUG,"sta:"MACSTR"leave sub_reason is %d\n",MAC2STR(sta->addr),sub_reason);
 							if((reason != AP_STA_DEAUTH)&&(reason != AP_STA_DISASSOC)){//qiuchen 
@@ -4447,8 +4447,8 @@ void STA_OP(TableMsg *msg){
 						if(ASD_WTP_AP[wasd->Radio_G_ID/4])
 							memcpy(WTPMAC,ASD_WTP_AP[wasd->Radio_G_ID/4]->WTPMAC,6);
 						if(gASDLOGDEBUG & BIT(1))
-							syslog(LOG_INFO|LOG_LOCAL7, "DISASSOC:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d, ErrorCode:%d.\n",
-								MAC2STR(sta->addr),MAC2STR(WTPMAC),wasd->BSSIndex,999);//qiuchen 2013.01.14
+							syslog(LOG_INFO|LOG_LOCAL7, "[%d-%d]DISASSOC:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d, ErrorCode:%d.\n",
+								slotid,vrrid,MAC2STR(sta->addr),MAC2STR(WTPMAC),wasd->BSSIndex,999);//qiuchen 2013.01.14
 						wasd->abnormal_st_down_num ++;			
 						signal_sta_leave_abnormal(sta->addr,wasd->Radio_G_ID,wasd->BSSIndex,wasd->WlanID,sta->rssi);
 						if(1 == check_sta_authorized(wasd,sta))
