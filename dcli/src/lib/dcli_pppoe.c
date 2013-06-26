@@ -1532,7 +1532,11 @@ DEFUN(config_radius_rdc_func,
 		case PPPOEERR_EDBUS:
 			vty_out (vty, "<error> fail get reply!\n");
 			break;
-			
+
+		case PPPOEERR_ESERVICE:
+			vty_out (vty, "<error> device service is enable, please disable it frist\n");
+			break;
+
 		default:
 			vty_out (vty, "<error> unknow fail reason\n");
 			break;
@@ -1580,6 +1584,10 @@ DEFUN(no_radius_rdc_func,
 						
 		case PPPOEERR_EDBUS:
 			vty_out (vty, "<error> fail get reply!\n");
+			break;
+
+		case PPPOEERR_ESERVICE:
+			vty_out (vty, "<error> device service is enable, please disable it frist\n");
 			break;
 			
 		default:

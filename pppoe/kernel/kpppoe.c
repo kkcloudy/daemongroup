@@ -771,9 +771,13 @@ data:
 	channel->stats.rx_packets++;
 	channel->stats.rx_bytes += skb->len;
 	channel_dump(kpppoe_rx_log, channel);
-	
-	return netif_receive_skb(skb);
 
+	/*
+	  * Bugfix AXSSZFI-1551, replace with netif_rx() for spinlock lockup on CPU.
+	  * lixiang@autelan.com 20130625
+	  */
+//	return netif_receive_skb(skb);
+	return netif_rx(skb);
 
 error1:
 	channel->stats.rx_errors++;
