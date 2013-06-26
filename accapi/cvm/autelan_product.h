@@ -69,6 +69,7 @@ typedef enum board_type_s
 	AUTELAN_BOARD_AX81_AC_12X,
 	AUTELAN_BOARD_AX81_AC_4X,
 	AUTELAN_BOARD_AX71_1X12G12S,
+	AUTELAN_BOARD_AX81_SMUE,
 	AUTELAN_UNKNOWN_BOARD
 	/* 
 	 * if you want to add some new autelan product types
