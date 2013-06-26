@@ -230,6 +230,7 @@ int web_host_site_clean(const char *path)
 	if (0 == ret) {
 		return WEB_SUCCESS;
 	} else {
+    	LOG("rm %s failed\n", path);
 		return WEB_FAILURE;
 	}
 }
@@ -381,7 +382,7 @@ web_host_service(int type)
 {
 	web_host_conf(type);
 	
-	char command[128] = {0};
+	char command[256] = {0};
 	int ret;
 
 	LOG("web_ser_stat : %d", web_ser_stat);
@@ -394,13 +395,14 @@ web_host_service(int type)
 			else
 			{
 				if(web_ser_stat&PORTAL_SERVICE_ENABLE)
-					strcat(command, "sudo /etc/init.d/apache2 restart 2>/dev/null;");
+					strcat(command, "sudo pkill -9 apache2 >/var/log/apache_tmp1.log 2>&1; sudo /etc/init.d/apache2 start >/var/log/apache_tmp2.log 2>&1;");
 				else
-					strcat(command, "sudo /etc/init.d/apache2 start 2>/dev/null;");
+					strcat(command, "sudo /etc/init.d/apache2 start >/var/log/apache_tmp.log 2>&1;");
 			}
 
 			if(0 != web_host_command(command))
 			{
+                LOG("web start failed\n");
 				return WEB_FAILURE;	
 			}
 
@@ -412,12 +414,13 @@ web_host_service(int type)
 			else
 			{
 				if(web_ser_stat&PORTAL_SERVICE_ENABLE)
-					strcat(command, "sudo /etc/init.d/apache2 restart 2>/dev/null;");
+					strcat(command, "sudo /etc/init.d/apache2 restart >/var/log/apache_tmp2.log 2>&1");
 				else
-					strcat(command, "sudo /etc/init.d/apache2 stop 2>/dev/null;");	
+					strcat(command, "sudo /etc/init.d/apache2 stop >/var/log/apache_tmp2.log 2>&1");	
 			}
 			if(0 != web_host_command(command))
 			{
+            	LOG("web stop failed\n");
 				return WEB_FAILURE;	
 			}
 
@@ -429,13 +432,14 @@ web_host_service(int type)
 			else
 			{
 				if(web_ser_stat&WEB_SERVICE_ENABLE)
-					strcat(command, "sudo /etc/init.d/apache2 restart 2>/dev/null;");
+					strcat(command, "sudo /etc/init.d/apache2 restart >/var/log/apache_tmp2.log 2>&1");
 				else
-					strcat(command, "sudo /etc/init.d/apache2 start 2>/dev/null;");
+					strcat(command, "sudo /etc/init.d/apache2 start >/var/log/apache_tmp2.log 2>&1");
 			}
 
 			if(0 != web_host_command(command))
 			{
+            	LOG("portal start failed\n");
 				return WEB_FAILURE;	
 			}
 
@@ -447,13 +451,14 @@ web_host_service(int type)
 			else
 			{
 				if(web_ser_stat&WEB_SERVICE_ENABLE)
-					strcat(command, "sudo /etc/init.d/apache2 restart 2>/dev/null;");
+					strcat(command, "sudo /etc/init.d/apache2 restart >/var/log/apache_tmp2.log 2>&1");
 				else
-					strcat(command, "sudo /etc/init.d/apache2 stop 2>/dev/null;");	
+					strcat(command, "sudo /etc/init.d/apache2 stop >/var/log/apache_tmp2.log 2>&1");	
 			}
 
 			if(0 != web_host_command(command))
 			{
+                LOG("portal stop failed\n");
 				return WEB_FAILURE;	
 			}
 

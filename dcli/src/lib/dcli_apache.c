@@ -488,18 +488,19 @@ DEFUN(contrl_enable_web_service_func,
 			
             if(info->server_stat&WEB_SERVICE_ENABLE)
             {
-                #if 0
-                web_list_flush(&infohead);
-                vty_out(vty, "is running. failed\n");
+                #if 1
+                vty_out(vty, "webconfig service is running.\n");
+				web_list_flush(&infohead);
                 return CMD_WARNING;
-                #endif
+                #else
                 webconfig_enable++;
                 continue;
+                #endif
             }
 
-            dslot = info->slotid;
+            //dslot = info->slotid;
 
-            ret = ac_manage_web_conf(dbus_connection_dcli[dslot]->dcli_dbus_connection, WEB_START);
+            //ret = ac_manage_web_conf(dbus_connection_dcli[dslot]->dcli_dbus_connection, WEB_START);
 
             LINK_FOREACH(vh, &(info->head), entries)
             {
@@ -520,6 +521,8 @@ DEFUN(contrl_enable_web_service_func,
         }
     }
     
+    ret = ac_manage_web_conf(dbus_connection_dcli[master_slot_id]->dcli_dbus_connection, WEB_START);
+
     web_list_flush(&infohead);
 
     if(flag) {
@@ -575,18 +578,19 @@ DEFUN(contrl_disable_service_func,
 
             if(!(info->server_stat&WEB_SERVICE_ENABLE))
             {
-                #if 0
-                vty_out(vty, "not running. failed");
+                #if 1
+        		vty_out(vty, "webconfig service is not running.\n");
                 web_list_flush(&infohead);
                 return CMD_WARNING;
-                #endif
+                #else
                 webconfig_disable++;
                 continue;
+                #endif
             }
 
-            dslot = info->slotid;
+            //dslot = info->slotid;
 
-            ret = ac_manage_web_conf(dbus_connection_dcli[dslot]->dcli_dbus_connection, WEB_STOP);
+            //ret = ac_manage_web_conf(dbus_connection_dcli[dslot]->dcli_dbus_connection, WEB_STOP);
 
             LINK_FOREACH(vh, &(info->head), entries)
             {
@@ -607,6 +611,8 @@ DEFUN(contrl_disable_service_func,
         }
     }
     
+    ret = ac_manage_web_conf(dbus_connection_dcli[master_slot_id]->dcli_dbus_connection, WEB_STOP);
+
     web_list_flush(&infohead);
     
     if(flag) {
@@ -1455,16 +1461,23 @@ int dcli_webservice_show_running_config(struct vty* vty)
                 }
             }
 
-            if(info->server_stat & PORTAL_SERVICE_ENABLE)
+            if(info->server_stat & PORTAL_SERVICE_ENABLE) {
 				webportal_enable_num++;
+			}
         }
-
-        #ifdef __WITH_AUTEWARE_WEB
+	}
+	if (0 < webportal_enable_num) {
+		vtysh_add_show_string(" service webportal enable\n");
+	}
+	
+    #ifdef __WITH_AUTEWARE_WEB
+    LINK_FOREACH(info, &infohead, entries)
+    {
         if(info->slotid == master_slot_id)
         {
             LINK_FOREACH(vh, &(info->head), entries)
             {
-                if(vh->type == HTTP_SERVICE || vh->type == HTTP_SERVICE)
+                if(vh->type == HTTP_SERVICE || vh->type == HTTPS_SERVICE)
                 {
                     memset(command, 0 ,sizeof(command));
                     if(vh->type == HTTP_SERVICE)
@@ -1494,11 +1507,8 @@ int dcli_webservice_show_running_config(struct vty* vty)
 				webconfig_enable_num++;
             }
         }
-        #endif
     }
-    if (0 < webportal_enable_num) {
-		vtysh_add_show_string(" service webportal enable\n");
-	}
+    #endif
 	if (0 < webconfig_enable_num) {
         vtysh_add_show_string(" service webconfig enable\n");
 	}
