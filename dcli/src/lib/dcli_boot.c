@@ -3928,13 +3928,23 @@ DEFUN (download_cvm_rate_config_func,
 	unsigned char  oldfilename[FILE_NAME_LEN] = {0};
 	int ret = 0;
 	struct timeval timer_now = {0};
-	
+	char *p = NULL, *q = NULL;
+	int result = 1;
+	char ipaddr[32] = {0};
+	char if_name[32]= {0};
+	int send_slot = 0;
 	if(3 != argc)
 	{
 		vty_out(vty, "Bad parameter number!\n");
 		return CMD_WARNING;
 	}
 	
+	ret = get_ipaddr_and_slot_by_url(argv[0],ipaddr,if_name,&send_slot);/*zhaocg add for pfm*/
+	if(ret != 0)
+	{
+		vty_out(vty,"The URL is wrong,please check it\n");
+		return CMD_WARNING;
+	}
 	filename = strrchr(argv[0],'/');
 	
 	if(!filename)
@@ -3943,8 +3953,13 @@ DEFUN (download_cvm_rate_config_func,
 		return CMD_WARNING;
 	}
 	
-	filename = filename + 1;	
-
+	filename = filename + 1;
+	if(!filename)
+	{
+		vty_out(vty,"The ULR is wrong,please check it\n");
+		return CMD_WARNING;
+	}
+	
 	gettimeofday(&timer_now, 0);
 	memset(cmd,0,CMD_LINE_LEN);
 	sprintf(oldfilename, "%s_%d", CVM_RATE_CONFIG_FILE, timer_now.tv_sec);
@@ -3956,9 +3971,33 @@ DEFUN (download_cvm_rate_config_func,
 			vty_out(vty,"%% Save old config file failed !\n");
 		}
 	}
+	
+#if 1		
+	if(((p = strstr(argv[0],"http:")) != NULL) || (q = strstr(argv[0],"ftp:") != NULL))
+	{
+		result = pfm_download_config(0,send_slot,ipaddr,if_name);
+		if(result != 0)
+		{
+			vty_out(vty,"config_pfm_failed");
+			return CMD_WARNING;
+		}
+	}
+#endif
 	memset(cmd,0,CMD_LINE_LEN);
 	sprintf(cmd,"downimg.sh %s %s %s %s \n",argv[0],argv[1],argv[2],filename);
 	ret = system(cmd);
+	
+#if 1 //added by houxx				
+	if(((p = strstr(argv[0],"http:")) != NULL) || (q = strstr(argv[0],"ftp:") != NULL))
+	{
+		result = pfm_download_config(1,send_slot,ipaddr,if_name);
+		if(result != 0)
+		{
+			vty_out(vty,"config_pfm_failed");
+			return CMD_WARNING;
+		}
+	}
+#endif		
 	if(!WEXITSTATUS(ret)){
 		if(strcmp(filename,CVM_RATE_CONFIG_FILE)){
 			memset(cmd,0,CMD_LINE_LEN);
