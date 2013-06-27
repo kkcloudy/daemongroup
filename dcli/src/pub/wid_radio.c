@@ -605,7 +605,7 @@ void* dcli_radio_show_api_group_one(
 		//printf("<error> failed get reply.\n");
 		if (dbus_error_is_set(&err)) {
 			//printf("%s raised: %s",err.name,err.message);
-			dbus_error_free(&err);
+			dbus_error_free_for_dcli(&err);
 		}
 		*ret = -1;
 		return NULL;
@@ -1224,7 +1224,7 @@ int radio_set_method_function(int localid, int index,int radioid,int wlanid,unsi
 		//vty_out(vty,"<error> failed get reply.\n");
 		if (dbus_error_is_set(&err)) {
 			//vty_out(vty,"%s raised: %s",err.name,err.message);
-			dbus_error_free(&err);
+			dbus_error_free_for_dcli(&err);
 		}
 		ret = -1;
 		return NULL;
@@ -1273,7 +1273,7 @@ int radio_set_method_functiontwo(int localid, int index,int radioid,int wlanid,u
 		//vty_out(vty,"<error> failed get reply.\n");
 		if (dbus_error_is_set(&err)) {
 			//vty_out(vty,"%s raised: %s",err.name,err.message);
-			dbus_error_free(&err);
+			dbus_error_free_for_dcli(&err);
 		}
 		ret = -1;
 		return NULL;
@@ -1374,7 +1374,7 @@ int radio_set_method_chainmask(int localid, int index,unsigned int radioid,unsig
 		//vty_out(vty,"<error> failed get reply.\n");
 		if (dbus_error_is_set(&err)) {
 			//vty_out(vty,"%s raised: %s",err.name,err.message);
-			dbus_error_free(&err);
+			dbus_error_free_for_dcli(&err);
 		}
 		ret = -1;
 		return NULL;
@@ -1417,7 +1417,7 @@ int radio_set_wds_bridge_distance(int localid, int index,int RadioID,int distanc
 		printf("<error> failed get reply.\n");
 		if (dbus_error_is_set(&err)) {
 			printf("%s raised: %s",err.name,err.message);
-			dbus_error_free(&err);
+			dbus_error_free_for_dcli(&err);
 		}
 		return 0;
 	}
@@ -1467,7 +1467,7 @@ int radio_set_wds_remote_brmac(int localid, int index,int RadioID,int is_add, un
 		printf("<error> failed get reply.\n");
 		if (dbus_error_is_set(&err)) {
 			printf("%s raised: %s",err.name,err.message);
-			dbus_error_free(&err);
+			dbus_error_free_for_dcli(&err);
 		}
 		return 0;
 	}
@@ -1510,7 +1510,7 @@ int radio_set_wds_wep_key(int localid, int index,int RadioID,char *key,DBusConne
 		printf("<error> failed get reply.\n");
 		if (dbus_error_is_set(&err)) {
 			printf("%s raised: %s",err.name,err.message);
-			dbus_error_free(&err);
+			dbus_error_free_for_dcli(&err);
 		}
 		return 0;
 	}
@@ -1553,7 +1553,7 @@ int radio_set_wds_encryption_type(int localid, int index,int RadioID,int type,DB
 		printf("<error> failed get reply.\n");
 		if (dbus_error_is_set(&err)) {
 			printf("%s raised: %s",err.name,err.message);
-			dbus_error_free(&err);
+			dbus_error_free_for_dcli(&err);
 		}
 		return 0;
 	}
@@ -1602,7 +1602,7 @@ int radio_set_wds_aes_key(int localid, int index,int RadioID,char *key, unsigned
 		printf("<error> failed get reply.\n");
 		if (dbus_error_is_set(&err)) {
 			printf("%s raised: %s",err.name,err.message);
-			dbus_error_free(&err);
+			dbus_error_free_for_dcli(&err);
 		}
 		return 0;
 	}
@@ -1835,7 +1835,7 @@ void wid_set_sta_info(DBusConnection *dcli_dbus_connection,int index, unsigned c
 	if (NULL == reply) {
 		*ret = ASD_DBUS_ERROR;
 		if (dbus_error_is_set(&err)) {
-			dbus_error_free(&err);
+			dbus_error_free_for_dcli(&err);
 		}
 		return ;
 	}
@@ -1896,7 +1896,7 @@ void asd_set_sta_info(DBusConnection *dcli_dbus_connection,int index, unsigned c
 	if (NULL == reply) {
 		*ret = ASD_DBUS_ERROR;
 		if (dbus_error_is_set(&err)) {
-			dbus_error_free(&err);
+			dbus_error_free_for_dcli(&err);
 		}
 		return ;
 	}
@@ -1941,7 +1941,7 @@ int radio_set_radio_inter_vap_type(int localid, int index,int RadioID,unsigned c
 		//vty_out(vty,"<error> failed get reply.\n");
 		if (dbus_error_is_set(&err)) {
 		//	vty_out(vty,"%s raised: %s",err.name,err.message);
-			dbus_error_free(&err);
+			dbus_error_free_for_dcli(&err);
 		}
 		ret = -1;
 		return NULL;
@@ -2024,7 +2024,7 @@ int dcli_wlan_wtp_list_sta_static_arp(int localid, int index,int policy,unsigned
 		printf("<error> failed get reply.\n");
 		if (dbus_error_is_set(&err)) {
 			printf("%s raised: %s",err.name,err.message);
-			dbus_error_free(&err);
+			dbus_error_free_for_dcli(&err);
 		}
 		return -1;
 	}
@@ -2081,7 +2081,7 @@ int dcli_wlan_wtp_sta_static_arp(int localid, int index,int policy,unsigned char
 		printf("<error> failed get reply.\n");
 		if (dbus_error_is_set(&err)) {
 			printf("%s raised: %s",err.name,err.message);
-			dbus_error_free(&err);
+			dbus_error_free_for_dcli(&err);
 		}
 		return -1;
 	}
@@ -2126,7 +2126,7 @@ int dcli_radio_11n_set_ampdu_able(int localid, int index,unsigned char policy,un
 		printf("<error> failed get reply.\n");
 		if (dbus_error_is_set(&err)) {
 			printf("%s raised: %s",err.name,err.message);
-			dbus_error_free(&err);
+			dbus_error_free_for_dcli(&err);
 		}
 		return -1;
 	}
@@ -2171,7 +2171,7 @@ int dcli_radio_11n_set_ampdu_limit(int localid, int index,unsigned int radioid,u
 		printf("<error> failed get reply.\n");
 		if (dbus_error_is_set(&err)) {
 			printf("%s raised: %s",err.name,err.message);
-			dbus_error_free(&err);
+			dbus_error_free_for_dcli(&err);
 		}
 		return -1;
 	}
@@ -2216,7 +2216,7 @@ int dcli_radio_11n_set_ampdu_subframe(int localid, int index,unsigned int radioi
 		printf("<error> failed get reply.\n");
 		if (dbus_error_is_set(&err)) {
 			printf("%s raised: %s",err.name,err.message);
-			dbus_error_free(&err);
+			dbus_error_free_for_dcli(&err);
 		}
 		return -1;
 	}
@@ -2261,7 +2261,7 @@ int dcli_radio_11n_set_mixed_puren_switch(int localid, int index,unsigned char p
 		printf("<error> failed get reply.\n");
 		if (dbus_error_is_set(&err)) {
 			printf("%s raised: %s",err.name,err.message);
-			dbus_error_free(&err);
+			dbus_error_free_for_dcli(&err);
 		}
 		return -1;
 	}
@@ -2304,7 +2304,7 @@ void dcli_radio_11n_channel_offset(int localid, int index,unsigned int radioid,c
 		printf("<error> failed get reply.\n");
 		if (dbus_error_is_set(&err)) {
 			printf("%s raised: %s",err.name,err.message);
-			dbus_error_free(&err);
+			dbus_error_free_for_dcli(&err);
 		}
 		return -1;
 	}
@@ -2353,7 +2353,7 @@ int radio_set_txpower_step(int localid, int index,unsigned int radio_id,unsigned
 		printf("<error> failed get reply.\n");
 		if (dbus_error_is_set(&err)) {
 			printf("%s raised: %s",err.name,err.message);
-			dbus_error_free(&err);
+			dbus_error_free_for_dcli(&err);
 		}
 		return -1;
 	}
@@ -2391,7 +2391,7 @@ int set_radio_wlan_limit_rssi_access_sta_set(int localid,int index,unsigned int 
 		printf("<error> failed get reply.\n");
 		if (dbus_error_is_set(&err)) {
 			printf("%s raised: %s",err.name,err.message);
-			dbus_error_free(&err);
+			dbus_error_free_for_dcli(&err);
 		}
 		return -1;
 	}
@@ -2449,7 +2449,7 @@ int dcli_radio_service_control_timer(int localid, int index,int policy,unsigned 
 		printf("<error> failed get reply.\n");
 		if (dbus_error_is_set(&err)) {
 			printf("%s raised: %s",err.name,err.message);
-			dbus_error_free(&err);
+			dbus_error_free_for_dcli(&err);
 		}
 		return -1;
 	}
@@ -2498,7 +2498,7 @@ int dcli_radio_timer_able(int localid, int index,int policy,int timer,unsigned i
 		printf("<error> failed get reply.\n");
 		if (dbus_error_is_set(&err)) {
 			printf("%s raised: %s",err.name,err.message);
-			dbus_error_free(&err);
+			dbus_error_free_for_dcli(&err);
 		}
 		return -1;
 	}
@@ -2548,9 +2548,7 @@ struct WtpList * set_radio_channel_cmd_channel(int localid, int index,DBusConnec
 	dbus_message_unref(query);
 	
 	if (NULL == reply) {
-		if (dbus_error_is_set(&err)) {
-			dbus_error_free(&err);
-		}
+		dbus_error_free_for_dcli(&err);
 		return NULL;
 	}
 	
@@ -2661,9 +2659,8 @@ struct WtpList * set_radio_txpower_cmd_txpower(int localid, int index,DBusConnec
 	dbus_message_unref(query);
 	
 	if (NULL == reply) {
-		if (dbus_error_is_set(&err)) {
-			dbus_error_free(&err);
-		}
+		dbus_error_free_for_dcli(&err);
+
 		return NULL;
 	}
 	
@@ -2766,9 +2763,8 @@ struct WtpList * set_radio_txpowerof_cmd_txpoweroffset(int localid, int index,DB
 	dbus_message_unref(query);
 	
 	if (NULL == reply) {
-		if (dbus_error_is_set(&err)) {
-			dbus_error_free(&err);
-		}
+		dbus_error_free_for_dcli(&err);
+
 		return NULL;
 	}
 	
@@ -2892,9 +2888,8 @@ struct WtpList * set_radio_ratelist_cmd_set_support_ratelist(int localid, int in
 	dbus_message_unref(query);
 	
 	if (NULL == reply) {
-		if (dbus_error_is_set(&err)) {
-			dbus_error_free(&err);
-		}
+		dbus_error_free_for_dcli(&err);
+
 		return NULL;
 	}
 	
@@ -3016,9 +3011,8 @@ void* set_radio_max_rate_cmd_set_max_rate_v1(int localid, int index,DBusConnecti
 	dbus_message_unref(query);
 	
 	if (NULL == reply) {
-		if (dbus_error_is_set(&err)) {
-			dbus_error_free(&err);
-		}
+		dbus_error_free_for_dcli(&err);
+
 		return NULL;
 	}
 	
@@ -3106,9 +3100,8 @@ struct WtpList * set_radio_max_rate_cmd_set_max_rate(int localid, int index,DBus
 	dbus_message_unref(query);
 	
 	if (NULL == reply) {
-		if (dbus_error_is_set(&err)) {
-			dbus_error_free(&err);
-		}
+		dbus_error_free_for_dcli(&err);
+
 		return NULL;
 	}
 	
@@ -3239,9 +3232,8 @@ struct WtpList * set_radio_mode_cmd_11a_11b_11g_11bg_11bgn_11an(int localid, int
 	dbus_message_unref(query);
 	
 	if (NULL == reply) {
-		if (dbus_error_is_set(&err)) {
-			dbus_error_free(&err);
-		}
+		dbus_error_free_for_dcli(&err);
+
 		return NULL;
 	}
 	
@@ -3359,9 +3351,8 @@ struct WtpList * set_radio_beaconinterval_cmd_beaconinterval(int localid, int in
 	dbus_message_unref(query);
 	
 	if (NULL == reply) {
-		if (dbus_error_is_set(&err)) {
-			dbus_error_free(&err);
-		}
+		dbus_error_free_for_dcli(&err);
+
 		return NULL;
 	}
 	
@@ -3457,9 +3448,8 @@ struct WtpList * set_radio_fragmentation_cmd_fragmentation(int localid, int inde
 	dbus_message_unref(query);
 	
 	if (NULL == reply) {
-		if (dbus_error_is_set(&err)) {
-			dbus_error_free(&err);
-		}
+		dbus_error_free_for_dcli(&err);
+
 		return NULL;
 	}
 	
@@ -3555,9 +3545,8 @@ struct WtpList * set_radio_dtim_cmd_dtim(int localid, int index,DBusConnection *
 	dbus_message_unref(query);
 	
 	if (NULL == reply) {
-		if (dbus_error_is_set(&err)) {
-			dbus_error_free(&err);
-		}
+		dbus_error_free_for_dcli(&err);
+
 		return NULL;
 	}
 	
@@ -3653,9 +3642,8 @@ struct WtpList * set_radio_rtsthreshold_cmd_rtsthreshold(int localid, int index,
 	dbus_message_unref(query);
 	
 	if (NULL == reply) {
-		if (dbus_error_is_set(&err)) {
-			dbus_error_free(&err);
-		}
+		dbus_error_free_for_dcli(&err);
+
 		return NULL;
 	}
 	
@@ -3751,9 +3739,8 @@ struct WtpList * set_radio_service_cmd_radio_enable_disable(int localid, int ind
 	dbus_message_unref(query);
 	
 	if (NULL == reply) {
-		if (dbus_error_is_set(&err)) {
-			dbus_error_free(&err);
-		}
+		dbus_error_free_for_dcli(&err);
+
 		return NULL;
 	}
 	
@@ -3850,9 +3837,8 @@ struct WtpList * set_wds_service_cmd_wlan_wds(int localid, int index,DBusConnect
 	dbus_message_unref(query);
 	
 	if (NULL == reply) {
-		if (dbus_error_is_set(&err)) {
-			dbus_error_free(&err);
-		}
+		dbus_error_free_for_dcli(&err);
+
 		return NULL;
 	}
 	
@@ -3948,9 +3934,8 @@ struct WtpList * set_radio_preamble_cmd_preamble(int localid, int index,DBusConn
 	dbus_message_unref(query);
 	
 	if (NULL == reply) {
-		if (dbus_error_is_set(&err)) {
-			dbus_error_free(&err);
-		}
+		dbus_error_free_for_dcli(&err);
+
 		return NULL;
 	}
 	
@@ -4046,9 +4031,8 @@ struct WtpList * set_radio_longretry_cmd_longretry(int localid, int index,DBusCo
 	dbus_message_unref(query);
 	
 	if (NULL == reply) {
-		if (dbus_error_is_set(&err)) {
-			dbus_error_free(&err);
-		}
+		dbus_error_free_for_dcli(&err);
+
 		return NULL;
 	}
 	
@@ -4144,9 +4128,8 @@ struct WtpList * set_radio_shortretry_cmd_shortretry(int localid,  int index,DBu
 	dbus_message_unref(query);
 	
 	if (NULL == reply) {
-		if (dbus_error_is_set(&err)) {
-			dbus_error_free(&err);
-		}
+		dbus_error_free_for_dcli(&err);
+
 		return NULL;
 	}
 	
@@ -4236,11 +4219,8 @@ int set_radio_bss_max_num_asd_wid(int localid,  int index,DBusConnection *dbus_c
 	dbus_message_unref(query);
 		
 	if (NULL == reply) {
-		//vty_out(vty,"<error> failed get reply.\n");
-		if (dbus_error_is_set(&err)) {
-		//	vty_out(vty,"%s raised: %s",err.name,err.message);
-			dbus_error_free(&err);
-		}
+		dbus_error_free_for_dcli(&err);
+
 		return NULL;
 	}
 	
@@ -4283,10 +4263,8 @@ int set_radio_bss_max_num_asd_wid(int localid,  int index,DBusConnection *dbus_c
 	
 			if (NULL == reply)
 				{
-					if (dbus_error_is_set(&err))
-						{
-							dbus_error_free(&err);
-						}
+				dbus_error_free_for_dcli(&err);
+
 					return NULL;
 				}
 	
@@ -4336,9 +4314,8 @@ struct WtpList * set_radio_bss_max_num_cmd_set_bss_max_sta_num(int localid,  int
 	dbus_message_unref(query);
 	
 	if (NULL == reply) {
-		if (dbus_error_is_set(&err)) {
-			dbus_error_free(&err);
-		}
+		dbus_error_free_for_dcli(&err);
+
 		return NULL;
 	}
 	
@@ -4428,9 +4405,8 @@ struct WtpList * set_radio_bss_l3_policy_cmd_bss_no_wlan_bss_interface(int local
 	dbus_message_unref(query);
 	
 	if (NULL == reply) {
-		if (dbus_error_is_set(&err)) {
-			dbus_error_free(&err);
-		}
+		dbus_error_free_for_dcli(&err);
+
 		return NULL;
 	}
 	
@@ -4526,9 +4502,8 @@ struct WtpList * set_radio_apply_wlan_cmd_radio_apply_wlan(int localid,  int ind
 	dbus_message_unref(query);
 	
 	if (NULL == reply) {
-		if (dbus_error_is_set(&err)) {
-			dbus_error_free(&err);
-		}
+		dbus_error_free_for_dcli(&err);
+
 		return NULL;
 	}
 	
@@ -4624,9 +4599,8 @@ struct WtpList * set_radio_apply_qos_cmd_radio_apply_qos(int localid,  int index
 	dbus_message_unref(query);
 	
 	if (NULL == reply) {
-		if (dbus_error_is_set(&err)) {
-			dbus_error_free(&err);
-		}
+		dbus_error_free_for_dcli(&err);
+
 		return NULL;
 	}
 	
@@ -4722,9 +4696,8 @@ struct WtpList * set_radio_delete_qos_cmd_radio_delete_qos(int localid,  int ind
 	dbus_message_unref(query);
 	
 	if (NULL == reply) {
-		if (dbus_error_is_set(&err)) {
-			dbus_error_free(&err);
-		}
+		dbus_error_free_for_dcli(&err);
+
 		return NULL;
 	}
 	
@@ -4821,9 +4794,8 @@ struct WtpList * set_radio_bss_max_throughput_cmd_set_bss_max_throughput(int loc
 	dbus_message_unref(query);
 	
 	if (NULL == reply) {
-		if (dbus_error_is_set(&err)) {
-			dbus_error_free(&err);
-		}
+		dbus_error_free_for_dcli(&err);
+
 		return NULL;
 	}
 	
@@ -4919,9 +4891,8 @@ struct WtpList * set_radio_delete_wlan_cmd_radio_delete_wlan(int localid,  int i
 	dbus_message_unref(query);
 	
 	if (NULL == reply) {
-		if (dbus_error_is_set(&err)) {
-			dbus_error_free(&err);
-		}
+		dbus_error_free_for_dcli(&err);
+
 		return NULL;
 	}
 	
@@ -5017,9 +4988,8 @@ struct WtpList * set_radio_enable_wlan_cmd_radio_enable_wlan(int localid,  int i
 	dbus_message_unref(query);
 	
 	if (NULL == reply) {
-		if (dbus_error_is_set(&err)) {
-			dbus_error_free(&err);
-		}
+		dbus_error_free_for_dcli(&err);
+
 		return NULL;
 	}
 	
@@ -5115,9 +5085,8 @@ struct WtpList * set_radio_disable_wlan_cmd_radio_disable_wlan_ID(int localid,  
 	dbus_message_unref(query);
 	
 	if (NULL == reply) {
-		if (dbus_error_is_set(&err)) {
-			dbus_error_free(&err);
-		}
+		dbus_error_free_for_dcli(&err);
+
 		return NULL;
 	}
 	
@@ -5213,9 +5182,8 @@ struct WtpList * set_radio_default_config_cmd_recover_default_config(int localid
 	dbus_message_unref(query);
 	
 	if (NULL == reply) {
-		if (dbus_error_is_set(&err)) {
-			dbus_error_free(&err);
-		}
+		dbus_error_free_for_dcli(&err);
+
 		return NULL;
 	}
 	
@@ -5312,9 +5280,8 @@ struct WtpList * radio_apply_wlan_base_vlan_cmd_radio_apply_wlan_base_vlan(int l
 	dbus_message_unref(query);
 	
 	if (NULL == reply) {
-		if (dbus_error_is_set(&err)) {
-			dbus_error_free(&err);
-		}
+		dbus_error_free_for_dcli(&err);
+
 		return NULL;
 	}
 	
@@ -5410,9 +5377,8 @@ struct WtpList * set_radio_max_throughout_cmd_set_radio_max_throughout(int local
 	dbus_message_unref(query);
 	
 	if (NULL == reply) {
-		if (dbus_error_is_set(&err)) {
-			dbus_error_free(&err);
-		}
+		dbus_error_free_for_dcli(&err);
+
 		return NULL;
 	}
 	
@@ -5509,9 +5475,8 @@ struct WtpList * set_radio_l2_isolation_cmd_set_wlan_ID_l2_isolation(int localid
 	dbus_message_unref(query);
 	
 	if (NULL == reply) {
-		if (dbus_error_is_set(&err)) {
-			dbus_error_free(&err);
-		}
+		dbus_error_free_for_dcli(&err);
+
 		return NULL;
 	}
 	
@@ -5608,9 +5573,8 @@ struct WtpList * set_radio_11n_cwmmode_cmd_set_11n_wlan_ID_cwmmode(int localid, 
 	dbus_message_unref(query);
 	
 	if (NULL == reply) {
-		if (dbus_error_is_set(&err)) {
-			dbus_error_free(&err);
-		}
+		dbus_error_free_for_dcli(&err);
+
 		return NULL;
 	}
 	
@@ -5713,9 +5677,8 @@ struct WtpList * radio_wlan_wds_bssid_cmd_wlan_wds_bssid_MAC(int localid,  int i
 	dbus_message_unref(query);
 	
 	if (NULL == reply) {
-		if (dbus_error_is_set(&err)) {
-			dbus_error_free(&err);
-		}
+		dbus_error_free_for_dcli(&err);
+
 		return NULL;
 	}
 	
@@ -5811,9 +5774,8 @@ struct WtpList * set_ap_radio_auto_channel_cmd_set_radio_auto_channel(int locali
 	dbus_message_unref(query);
 	
 	if (NULL == reply) {
-		if (dbus_error_is_set(&err)) {
-			dbus_error_free(&err);
-		}
+		dbus_error_free_for_dcli(&err);
+
 		return NULL;
 	}
 	
@@ -5909,9 +5871,8 @@ struct WtpList * set_ap_radio_auto_channel_cont_cmd_set_radio_auto(int localid, 
 	dbus_message_unref(query);
 	
 	if (NULL == reply) {
-		if (dbus_error_is_set(&err)) {
-			dbus_error_free(&err);
-		}
+		dbus_error_free_for_dcli(&err);
+
 		return NULL;
 	}
 	
@@ -6007,9 +5968,8 @@ struct WtpList * set_ap_radio_diversity_cmd_set_radio_diversity(int localid,  in
 	dbus_message_unref(query);
 	
 	if (NULL == reply) {
-		if (dbus_error_is_set(&err)) {
-			dbus_error_free(&err);
-		}
+		dbus_error_free_for_dcli(&err);
+
 		return NULL;
 	}
 	
@@ -6105,9 +6065,8 @@ struct WtpList * set_ap_radio_txantenna_cmd_set_radio_txantenna(int localid,  in
 	dbus_message_unref(query);
 	
 	if (NULL == reply) {
-		if (dbus_error_is_set(&err)) {
-			dbus_error_free(&err);
-		}
+		dbus_error_free_for_dcli(&err);
+
 		return NULL;
 	}
 	
@@ -6204,9 +6163,8 @@ struct WtpList * radio_bss_taffic_limit_cmd_wlan_ID_traffic_limit(int localid,  
 	dbus_message_unref(query);
 	
 	if (NULL == reply) {
-		if (dbus_error_is_set(&err)) {
-			dbus_error_free(&err);
-		}
+		dbus_error_free_for_dcli(&err);
+
 		return NULL;
 	}
 	
@@ -6303,9 +6261,8 @@ struct WtpList * radio_bss_taffic_limit_value_cmd_wlan_ID_traffic_limit_value(in
 	dbus_message_unref(query);
 	
 	if (NULL == reply) {
-		if (dbus_error_is_set(&err)) {
-			dbus_error_free(&err);
-		}
+		dbus_error_free_for_dcli(&err);
+
 		return NULL;
 	}
 	
@@ -6402,9 +6359,8 @@ struct WtpList * radio_bss_taffic_limit_average_value_cmd_wlan_ID_traffic_limit_
 	dbus_message_unref(query);
 	
 	if (NULL == reply) {
-		if (dbus_error_is_set(&err)) {
-			dbus_error_free(&err);
-		}
+		dbus_error_free_for_dcli(&err);
+
 		return NULL;
 	}
 	
@@ -6502,9 +6458,8 @@ struct WtpList * radio_bss_taffic_limit_send_value_cmd_wlan_ID_traffic_limit_sen
 	dbus_message_unref(query);
 	
 	if (NULL == reply) {
-		if (dbus_error_is_set(&err)) {
-			dbus_error_free(&err);
-		}
+		dbus_error_free_for_dcli(&err);
+
 		return NULL;
 	}
 	
@@ -6601,9 +6556,8 @@ struct WtpList * radio_bss_taffic_limit_average_send_value_cmd_wlan_configure(in
 	dbus_message_unref(query);
 	
 	if (NULL == reply) {
-		if (dbus_error_is_set(&err)) {
-			dbus_error_free(&err);
-		}
+		dbus_error_free_for_dcli(&err);
+
 		return NULL;
 	}
 	
@@ -6696,11 +6650,8 @@ int radio_asd_sta_traffic_cancel(int localid,  int index,DBusConnection *dbus_co
 		dbus_message_unref(query);
 		
 		if (NULL == reply) {
-			
-			if (dbus_error_is_set(&err)) {
-			
-				dbus_error_free(&err);
-			}
+			dbus_error_free_for_dcli(&err);
+
 			return NULL;
 		}
 		dbus_message_iter_init(reply,&iter);
@@ -6751,9 +6702,8 @@ struct WtpList *radio_bss_taffic_limit_sta_send_value_cmd_wlan_traffic_limit_sta
 	dbus_message_unref(query);
 	
 	if (NULL == reply) {
-		if (dbus_error_is_set(&err)) {
-			dbus_error_free(&err);
-		}
+		dbus_error_free_for_dcli(&err);
+
 		return NULL;
 	}
 	printf("TYPE= %d,id =%d\n",TYPE,id);
@@ -6872,9 +6822,8 @@ struct WtpList * radio_bss_taffic_limit_cancel_sta_send_value_cmd_wlan_configure
 	dbus_message_unref(query);
 	
 	if (NULL == reply) {
-		if (dbus_error_is_set(&err)) {
-			dbus_error_free(&err);
-		}
+		dbus_error_free_for_dcli(&err);
+
 		return NULL;
 	}
 	
@@ -6922,10 +6871,8 @@ struct WtpList * radio_bss_taffic_limit_cancel_sta_send_value_cmd_wlan_configure
 						
 					if (NULL == reply) {
 				
-						if (dbus_error_is_set(&err)) {
-			
-							dbus_error_free(&err);
-						}
+					dbus_error_free_for_dcli(&err);
+
 						return NULL;
 					}
 						dbus_message_iter_init(reply,&iter);
@@ -7023,11 +6970,8 @@ struct WtpList * radio_bss_taffic_limit_cancel_sta_send_value_cmd_wlan_configure
 						
 							if (NULL == reply)
 								{
-									if (dbus_error_is_set(&err))
-										{
-								
-											dbus_error_free(&err);
-										}
+								dbus_error_free_for_dcli(&err);
+
 									if(Radionotaccess){
 										free(Radionotaccess);
 										Radionotaccess = NULL;
@@ -7098,10 +7042,8 @@ int radio_asd_sta_taffic_value(int localid,  int index,DBusConnection *dbus_conn
 		
 		if (NULL == reply) {
 	
-			if (dbus_error_is_set(&err)) {
-		
-				dbus_error_free(&err);
-			}
+		dbus_error_free_for_dcli(&err);
+
 			return NULL;
 		}
 		dbus_message_iter_init(reply,&iter);
@@ -7151,9 +7093,8 @@ struct WtpList * radio_bss_taffic_limit_cancel_sta_value_cmd_wlan_configure(int 
 	dbus_message_unref(query);
 	
 	if (NULL == reply) {
-		if (dbus_error_is_set(&err)) {
-			dbus_error_free(&err);
-		}
+		dbus_error_free_for_dcli(&err);
+
 		return NULL;
 	}
 	
@@ -7200,10 +7141,8 @@ struct WtpList * radio_bss_taffic_limit_cancel_sta_value_cmd_wlan_configure(int 
 						
 					if (NULL == reply) {
 				
-						if (dbus_error_is_set(&err)) {
-			
-							dbus_error_free(&err);
-						}
+					dbus_error_free_for_dcli(&err);
+
 						return NULL;
 					}
 						dbus_message_iter_init(reply,&iter);
@@ -7300,11 +7239,8 @@ struct WtpList * radio_bss_taffic_limit_cancel_sta_value_cmd_wlan_configure(int 
 						
 							if (NULL == reply)
 								{
-									if (dbus_error_is_set(&err))
-										{
-								
-											dbus_error_free(&err);
-										}
+									dbus_error_free_for_dcli(&err);
+
 									dcli_free_RadioList(radio_list_head);	
 									if(Radionotaccess){
 										free(Radionotaccess);
@@ -7377,9 +7313,8 @@ struct WtpList * radio_apply_wlan_clean_vlan_cmd_radio_apply_wlan_ID(int localid
 	dbus_message_unref(query);
 	
 	if (NULL == reply) {
-		if (dbus_error_is_set(&err)) {
-			dbus_error_free(&err);
-		}
+		dbus_error_free_for_dcli(&err);
+
 		return NULL;
 	}
 	
@@ -7476,9 +7411,8 @@ struct WtpList * set_sta_dhcp_before_authorized_cmd_wlan_ID_sta_dhcp(int localid
 	dbus_message_unref(query);
 	
 	if (NULL == reply) {
-		if (dbus_error_is_set(&err)) {
-			dbus_error_free(&err);
-		}
+		dbus_error_free_for_dcli(&err);
+
 		return NULL;
 	}
 	
@@ -7575,9 +7509,8 @@ struct WtpList * set_sta_ip_mac_binding_cmd_wlan_ID_sta_ip_mac_binding(int local
 	dbus_message_unref(query);
 	
 	if (NULL == reply) {
-		if (dbus_error_is_set(&err)) {
-			dbus_error_free(&err);
-		}
+		dbus_error_free_for_dcli(&err);
+
 		return NULL;
 	}
 	
@@ -7673,9 +7606,8 @@ struct WtpList * set_radio_guard_interval_cmd_11n_guard_interval(int localid,  i
 	dbus_message_unref(query);
 	
 	if (NULL == reply) {
-		if (dbus_error_is_set(&err)) {
-			dbus_error_free(&err);
-		}
+		dbus_error_free_for_dcli(&err);
+
 		return NULL;
 	}
 	
@@ -7783,9 +7715,8 @@ struct WtpList * set_radio_mcs_cmd_11n_mcs(int localid,  int index,DBusConnectio
 	dbus_message_unref(query);
 	
 	if (NULL == reply) {
-		if (dbus_error_is_set(&err)) {
-			dbus_error_free(&err);
-		}
+		dbus_error_free_for_dcli(&err);
+
 		return NULL;
 	}
 	
@@ -7881,9 +7812,8 @@ struct WtpList * set_radio_cmmode_cmd_11n_cwmode(int localid,  int index,DBusCon
 	dbus_message_unref(query);
 	
 	if (NULL == reply) {
-		if (dbus_error_is_set(&err)) {
-			dbus_error_free(&err);
-		}
+		dbus_error_free_for_dcli(&err);
+
 		return NULL;
 	}
 	
@@ -8024,10 +7954,8 @@ struct WtpList * set_radio_netgear_set_radio_sector_power_set_radio_sector_list(
 	
 	if (NULL == reply) {
 		//vty_out(vty,"<error> failed get reply.\n");
-		if (dbus_error_is_set(&err)) {
-			//vty_out(vty,"%s raised: %s",err.name,err.message);
-			dbus_error_free(&err);
-		}
+		dbus_error_free_for_dcli(&err);
+
 		ret = -1;
 		return NULL;
 	}
@@ -8124,9 +8052,8 @@ struct WtpList * set_wds_bridge_distance_cmd_set_distance(int localid,  int inde
 	dbus_message_unref(query);
 	
 	if (NULL == reply) {
-		if (dbus_error_is_set(&err)) {
-			dbus_error_free(&err);
-		}
+		dbus_error_free_for_dcli(&err);
+
 		return NULL;
 	}
 	
@@ -8228,9 +8155,8 @@ struct WtpList * wds_remote_brmac_cmd_add_del_MAC(int localid,  int index,DBusCo
 	dbus_message_unref(query);
 	
 	if (NULL == reply) {
-		if (dbus_error_is_set(&err)) {
-			dbus_error_free(&err);
-		}
+		dbus_error_free_for_dcli(&err);
+
 		return NULL;
 	}
 	
@@ -8327,9 +8253,8 @@ struct WtpList * wds_encryption_type_cmd_set_wds_encrption_type(int localid,  in
 	dbus_message_unref(query);
 	
 	if (NULL == reply) {
-		if (dbus_error_is_set(&err)) {
-			dbus_error_free(&err);
-		}
+		dbus_error_free_for_dcli(&err);
+
 		return NULL;
 	}
 	
@@ -8426,9 +8351,8 @@ struct WtpList * set_radio_inter_vap_forwarding_cmd_set_inter_VAP_forwarding(int
 	dbus_message_unref(query);
 	
 	if (NULL == reply) {
-		if (dbus_error_is_set(&err)) {
-			dbus_error_free(&err);
-		}
+		dbus_error_free_for_dcli(&err);
+
 		return NULL;
 	}
 	
@@ -8524,9 +8448,8 @@ struct WtpList * set_radio_intra_vap_forwarding_cmd_set_intra_VAP_forwarding(int
 	dbus_message_unref(query);
 	
 	if (NULL == reply) {
-		if (dbus_error_is_set(&err)) {
-			dbus_error_free(&err);
-		}
+		dbus_error_free_for_dcli(&err);
+
 		return NULL;
 	}
 	
@@ -8623,9 +8546,8 @@ struct WtpList * set_radio_keep_alive_period_cmd_set_radio_keep_alive_period(int
 	dbus_message_unref(query);
 	
 	if (NULL == reply) {
-		if (dbus_error_is_set(&err)) {
-			dbus_error_free(&err);
-		}
+		dbus_error_free_for_dcli(&err);
+
 		return NULL;
 	}
 	
@@ -8722,9 +8644,8 @@ struct WtpList * set_radio_keep_alive_idle_time_cmd_set_radio_keep_alive_idle_ti
 	dbus_message_unref(query);
 	
 	if (NULL == reply) {
-		if (dbus_error_is_set(&err)) {
-			dbus_error_free(&err);
-		}
+		dbus_error_free_for_dcli(&err);
+
 		return NULL;
 	}
 	
@@ -8821,9 +8742,8 @@ struct WtpList * set_radio_congestion_avoidance_cmd_set_radio_congestion_avoidan
 	dbus_message_unref(query);
 	
 	if (NULL == reply) {
-		if (dbus_error_is_set(&err)) {
-			dbus_error_free(&err);
-		}
+		dbus_error_free_for_dcli(&err);
+
 		return NULL;
 	}
 	
@@ -8920,9 +8840,8 @@ struct WtpList * wds_wep_key_cmd_set_wds_wep_key(int localid,  int index,DBusCon
 	dbus_message_unref(query);
 	
 	if (NULL == reply) {
-		if (dbus_error_is_set(&err)) {
-			dbus_error_free(&err);
-		}
+		dbus_error_free_for_dcli(&err);
+
 		return NULL;
 	}
 	
@@ -9024,9 +8943,8 @@ struct WtpList * wds_aes_key_cmd_setwds_brmac(int localid,  int index,DBusConnec
 	dbus_message_unref(query);
 	
 	if (NULL == reply) {
-		if (dbus_error_is_set(&err)) {
-			dbus_error_free(&err);
-		}
+		dbus_error_free_for_dcli(&err);
+
 		return NULL;
 	}
 	
@@ -9124,9 +9042,8 @@ struct WtpList * set_wtp_sta_static_arp_enable_cmd_set_wlan_sta_static_arp(int l
 	dbus_message_unref(query);
 	
 	if (NULL == reply) {
-		if (dbus_error_is_set(&err)) {
-			dbus_error_free(&err);
-		}
+		dbus_error_free_for_dcli(&err);
+
 		return NULL;
 	}
 	
@@ -9224,9 +9141,8 @@ struct WtpList * set_radio_11n_ampdu_able_cmd_11n(int localid,  int index,DBusCo
 	dbus_message_unref(query);
 	
 	if (NULL == reply) {
-		if (dbus_error_is_set(&err)) {
-			dbus_error_free(&err);
-		}
+		dbus_error_free_for_dcli(&err);
+
 		return NULL;
 	}
 	
@@ -9324,9 +9240,8 @@ struct WtpList * set_radio_11n_ampdu_limit_cmd_11n(int localid,  int index,DBusC
 	dbus_message_unref(query);
 	
 	if (NULL == reply) {
-		if (dbus_error_is_set(&err)) {
-			dbus_error_free(&err);
-		}
+		dbus_error_free_for_dcli(&err);
+
 		return NULL;
 	}
 	
@@ -9424,9 +9339,8 @@ struct WtpList * set_radio_11n_ampdu_subframe_cmd_11n(int localid,  int index,DB
 	dbus_message_unref(query);
 	
 	if (NULL == reply) {
-		if (dbus_error_is_set(&err)) {
-			dbus_error_free(&err);
-		}
+		dbus_error_free_for_dcli(&err);
+
 		return NULL;
 	}
 	
@@ -9524,9 +9438,8 @@ struct WtpList * set_radio_11n_puren_mixed_cmd_wlan_VALUE_workmode(int localid, 
 	dbus_message_unref(query);
 	
 	if (NULL == reply) {
-		if (dbus_error_is_set(&err)) {
-			dbus_error_free(&err);
-		}
+		dbus_error_free_for_dcli(&err);
+
 		return NULL;
 	}
 	
@@ -9623,9 +9536,8 @@ struct WtpList * set_tx_chainmask_cmd_set_tx_chainmask_LIST_enable_disable(int l
 	dbus_message_unref(query);
 	
 	if (NULL == reply) {
-		if (dbus_error_is_set(&err)) {
-			dbus_error_free(&err);
-		}
+		dbus_error_free_for_dcli(&err);
+
 		return NULL;
 	}
 	
@@ -9722,9 +9634,8 @@ struct WtpList * set_radio_11n_channel_offset_cmd_channel_offset(int localid,  i
 	dbus_message_unref(query);
 	
 	if (NULL == reply) {
-		if (dbus_error_is_set(&err)) {
-			dbus_error_free(&err);
-		}
+		dbus_error_free_for_dcli(&err);
+
 		return NULL;
 	}
 	
@@ -9822,9 +9733,8 @@ struct WtpList * set_tx_chainmask_v2_cmd_tx_chainmask_rx_chainmask(int localid, 
 	dbus_message_unref(query);
 	
 	if (NULL == reply) {
-		if (dbus_error_is_set(&err)) {
-			dbus_error_free(&err);
-		}
+		dbus_error_free_for_dcli(&err);
+
 		ret = -1;
 		return NULL;
 	}
@@ -9921,9 +9831,8 @@ struct WtpList * set_radio_txpowerstep_cmd_txpowerstep(int localid,  int index,D
 	dbus_message_unref(query);
 	
 	if (NULL == reply) {
-		if (dbus_error_is_set(&err)) {
-			dbus_error_free(&err);
-		}
+		dbus_error_free_for_dcli(&err);
+
 		return NULL;
 	}
 	
@@ -10044,9 +9953,8 @@ int set_11n_rate_paras(int localid,int index,DBusConnection *dbus_connection,int
 	dbus_message_unref(query);
 	
 	if (NULL == reply) {
-		if (dbus_error_is_set(&err)) {
-			dbus_error_free(&err);
-		}
+		dbus_error_free_for_dcli(&err);
+
 		return -1;
 	}
 	

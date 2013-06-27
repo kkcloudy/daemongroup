@@ -214,7 +214,7 @@ void *dcli_ebr_show_api_group(
 		//printf("<error> failed get reply.\n");
 		if (dbus_error_is_set(&err)) {
 			//printf("%s raised: %s",err.name,err.message);
-			dbus_error_free(&err);
+			dbus_error_free_for_dcli(&err);
 		}
 		*ret = -1;
 		return NULL;

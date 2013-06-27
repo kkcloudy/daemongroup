@@ -24,7 +24,7 @@ DBUS_LIBS = -ldbus-1
 PUB_LIB = libdclipub.so
 PUB_LIB0 = libdclipub.so.0 
 PUB_LIB01 = libdclipub.so.0.1
-PUB_OBJS = wid_ac.o wid_wtp.o wid_wqos.o asd_sta.o asd_security.o asd_ac_roaming.o wid_wlan.o wid_radio.o wid_ebr.o wid_ac_ip_list.o wid_ap_group.o hmd_local.o bsd_bsd.o wbmd_wb.o
+PUB_OBJS = dcli_dbus_remote.o wid_ac.o wid_wtp.o wid_wqos.o asd_sta.o asd_security.o asd_ac_roaming.o wid_wlan.o wid_radio.o wid_ebr.o wid_ac_ip_list.o wid_ap_group.o hmd_local.o bsd_bsd.o wbmd_wb.o
  
 
 .PHONY: all
