@@ -1380,6 +1380,11 @@ extern void free_show_ap_wids_set_cmd(DCLI_WTP_API_GROUP_THREE *WTPINFO);
 /*retu==1调用释放函数 free_show_ap_wids_set_cmd(DCLI_WTP_API_GROUP_THREE *WTPINFO)*/																				
 extern int show_ap_wids_set_cmd_func(dbus_parameter parameter, DBusConnection *connection,DCLI_WTP_API_GROUP_THREE **WTPINFO);/*返回0表示失败，返回1表示成功，返回-1表示error*/
 																																	  /*返回SNMPD_CONNECTION_ERROR表示connection error*/
+/*20130617 start*/																																	  
+extern int show_dhcp_flooding_status_cmd_func(dbus_parameter parameter, DBusConnection *connection,DCLI_WTP_API_GROUP_THREE **WTPINFO);
+extern int show_sfd_status_cmd_func(dbus_parameter parameter, DBusConnection *connection,DCLI_WTP_API_GROUP_THREE **WTPINFO);																																	  
+
+/*20130617 end*/
 
 extern int set_ap_wids_set_cmd_func(dbus_parameter parameter, DBusConnection *connection,char *type1,char *type2,char *type3,char *state); /*返回0表示失败，返回1表示成功，返回-1表示input parameter error，返回-2表示error*/
 																																	  			 /*返回SNMPD_CONNECTION_ERROR表示connection error*/

@@ -1034,6 +1034,10 @@ int dcli_wtp_method_parse_three(char *DBUS_METHOD){
 	{
 		sn = 9;
 	}
+	else if (!strcmp(DBUS_METHOD, WID_DBUS_WTP_METHOD_SHOW_DHCP_FLOODING_STATUS_SET))
+	{
+		sn = 16;	
+	}
 	else //if(!strcmp(DBUS_METHOD,WID_DBUS_WTP_METHOD_SHOW_sWTP_IF_INFO))
 	{
 		//sn = 10;
@@ -3658,6 +3662,12 @@ void* dcli_wtp_show_api_group_three(
 								 DBUS_TYPE_UINT32,&WTPID,
 								 DBUS_TYPE_INVALID);
 	}
+	else if(dcli_sn == 16){
+		ReInitDbusPath_V2(localid,index,WID_DBUS_OBJPATH,OBJPATH);
+		ReInitDbusPath_V2(localid,index,WID_DBUS_INTERFACE,INTERFACE);
+		query = dbus_message_new_method_call(BUSNAME,OBJPATH,INTERFACE,DBUS_METHOD);
+		dbus_error_init(&err);
+	}
 /*	else if(dcli_sn == 7){
 		query = dbus_message_new_method_call(BUSNAME,OBJPATH,INTERFACE,WID_DBUS_CONF_METHOD_AP_SHOW_WTP_MAX_POWER);
 		dbus_error_init(&err);
@@ -3801,6 +3811,10 @@ void* dcli_wtp_show_api_group_three(
 
 				dbus_message_iter_next(&iter);	
 				dbus_message_iter_get_basic(&iter,&LIST->lasttime);
+			}
+			else if(dcli_sn == 16) {
+				dbus_message_iter_next(&iter);	
+				dbus_message_iter_get_basic(&iter,&LIST->dhcp_flooding_status);
 			}
 			else if(dcli_sn == 7){	
 			

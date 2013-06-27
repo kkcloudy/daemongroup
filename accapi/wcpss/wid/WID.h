@@ -1586,6 +1586,7 @@ extern unsigned char wireddata_switch;
 extern unsigned char apstatistics;
 extern unsigned int apstatisticsinterval;
 extern wid_wids_set gwids;
+extern unsigned char gdhcp_flooding_status;
 extern unsigned char gwidsinterval;
 extern unsigned char gprobethreshold;
 extern unsigned char gotherthreshold;
@@ -1663,7 +1664,8 @@ enum dcli_sn{
 	TWELFTH,
 	THIRTEENTH,
 	FOURTEENTH,
-	FIFTEENTH
+	FIFTEENTH,
+	SIXTEENTH
 };
 
 /*qos area*/
@@ -2097,6 +2099,7 @@ struct dcli_wtp_api{
 	WID_WLAN **WLAN;
 	
 	wid_wids_set wids;	
+	unsigned char dhcp_flooding_status;
 	unsigned char interval;
 	unsigned char probethreshold;	
 	unsigned char otherthreshold;	

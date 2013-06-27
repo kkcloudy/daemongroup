@@ -53513,6 +53513,71 @@ DBusMessage * wid_dbus_interface_set_wtp_if_info_report_interval(DBusConnection 
 }
 #endif
 
+DBusMessage * wid_dbus_interface_set_dhcp_flooding_status(DBusConnection *conn, DBusMessage *msg, void *user_data){
+
+	DBusMessage* reply;
+	DBusMessageIter  iter;
+	DBusError err;
+	int ret = WID_DBUS_SUCCESS;
+
+	unsigned char status = 0;
+	dbus_error_init(&err);
+	if (!(dbus_message_get_args ( msg, &err,
+								DBUS_TYPE_BYTE,&status,
+								DBUS_TYPE_INVALID))){
+
+		printf("Unable to get input args\n");
+				
+		if (dbus_error_is_set(&err)) {
+			printf("%s raised: %s",err.name,err.message);
+			dbus_error_free(&err);
+		}
+		return NULL;
+	}
+
+	gdhcp_flooding_status = status;
+	
+	reply = dbus_message_new_method_return(msg);
+
+	dbus_message_iter_init_append(reply, &iter);
+	dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT32, &ret);
+	
+	return reply;
+}
+
+
+DBusMessage * wid_dbus_interface_show_dhcp_flooding_status(DBusConnection *conn, DBusMessage *msg, void *user_data){
+
+	DBusMessage* reply;
+	DBusMessageIter  iter;
+	DBusError err;
+	int ret = WID_DBUS_SUCCESS;
+
+	unsigned char status = 0;
+	dbus_error_init(&err);
+
+	reply = dbus_message_new_method_return(msg);
+
+	if(ret != WID_DBUS_SUCCESS)
+	{
+		dbus_message_iter_init_append(reply, &iter);
+		
+		dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT32, &ret);
+
+	}
+	else
+	{
+		status = gdhcp_flooding_status;
+
+		dbus_message_iter_init_append(reply, &iter);
+		
+		dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT32, &ret);
+		
+		dbus_message_iter_append_basic(&iter, DBUS_TYPE_BYTE, &status);
+	}
+	
+	return reply;
+}
 DBusMessage * wid_dbus_interface_show_wtp_wids_item(DBusConnection *conn, DBusMessage *msg, void *user_data){
 
 	DBusMessage* reply;
@@ -71620,7 +71685,11 @@ DBusMessage * wid_dbus_wtp_show_running_config_start(DBusConnection *conn, DBusM
 		totalLen += sprintf(cursor,"set ap wids weakiv enable\n");
 		cursor = showStr + totalLen; 
 	}
-
+		if(gdhcp_flooding_status != 0)
+		{
+			totalLen += sprintf(cursor, "service dhcp-flooding enable\n");
+			cursor = showStr + totalLen;
+		}
 	if(gtrapflag != 1)
 	{
 		totalLen += sprintf(cursor,"set wireless-control trap level %d\n",gtrapflag);
@@ -76220,6 +76289,12 @@ static DBusHandlerResult wid_dbus_message_handler (DBusConnection *connection, D
 		else if (dbus_message_is_method_call(message,WID_DBUS_INTERFACE,WID_DBUS_WTP_METHOD_SHOW_WTP_WIDS_SET)) {
 			reply = wid_dbus_interface_show_wtp_wids_item(connection,message,user_data);
 		}
+			else if (dbus_message_is_method_call(message,WID_DBUS_INTERFACE,WID_DBUS_WTP_METHOD_SHOW_DHCP_FLOODING_STATUS_SET)) {
+				reply = wid_dbus_interface_show_dhcp_flooding_status(connection, message, user_data);
+			}
+			else if (dbus_message_is_method_call(message,WID_DBUS_INTERFACE, WID_DBUS_WTP_METHOD_SET_DHCP_FLOODING_STATUS_SET)) {
+				reply = wid_dbus_interface_set_dhcp_flooding_status(connection, message, user_data);
+			}
 		else if (dbus_message_is_method_call(message,WID_DBUS_INTERFACE,WID_DBUS_CONF_METHOD_SET_NEIGHBORDEAD_INTERVAL)) {
 			reply = wid_dbus_interface_set_neighbordead_interval(connection,message,user_data);
 		}

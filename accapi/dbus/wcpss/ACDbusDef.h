@@ -417,6 +417,10 @@ out arg list:  // in the order as they are appended in the dbus message.
 #define WID_DBUS_WTP_METHOD_SET_WTP_WIDS_SET      "set_ap_wids_set"
 #define WID_DBUS_WTP_METHOD_SHOW_WTP_WIDS_SET      "show_ap_wids_set"
 
+/*20130617 start*/
+#define WID_DBUS_WTP_METHOD_SHOW_DHCP_FLOODING_STATUS_SET		"show_ap_dhcp_flooding_status_set"
+#define WID_DBUS_WTP_METHOD_SET_DHCP_FLOODING_STATUS_SET		"set_ap_dhcp_flooding_status_set"
+/*20130617 end*/
 #define WID_DBUS_WTP_METHOD_SET_WTP_IF_INFO_REPORTINTERVAL      "set_ap_if_infomation_reportinterval"
 #define WID_DBUS_WTP_METHOD_SET_WTP_INTERFACE_UPDOWN      "set_ap_interface_updown"
 #define WID_DBUS_WTP_METHOD_SET_WTP_INTERFACE_ETH_RATE      "set_ap_interface_eth_rate"

@@ -70,6 +70,7 @@ unsigned char apstatistics = 0;
 unsigned int apstatisticsinterval = 1800;
 unsigned char aphotreboot = 0;
 wid_wids_set gwids = {0};
+unsigned char gdhcp_flooding_status = 0;
 
 unsigned char gwidsinterval = 1;
 unsigned char gprobethreshold = 0;
