@@ -200,7 +200,10 @@ int cgiMain()
   	if(strcmp(delete_com,"delete")==0)
   	{
   		sprintf(command,"sudo /usr/bin/del_intf_ip.sh %s %s",sub_intf,del_ip);
-		fp = popen(command,"r");
+		if (NULL == strstr(command,";"))
+		{
+			fp = popen(command,"r");		
+		}
 		if(NULL == fp)
 		{
 			ShowAlert("do command error!");
@@ -351,7 +354,10 @@ int cgiMain()
 				fprintf(cgiOut,"</tr>");
 				//**********************************************************************************
 				sprintf(command,"/usr/bin/if_show_subif.sh %s",port_num);
-				fp = popen(command,"r");
+				if (NULL == strstr(command,";"))
+				{
+					fp = popen(command,"r");		
+				}
 				memset(line,0,sizeof(line));
 				if(fp != NULL)
 				{
@@ -529,7 +535,7 @@ int showPortSelect( char *selected_portno, char *name, char *onchange )
 		cflag=ccgi_intf_show_advanced_routing_list(0, 1, &c_head, &cnum);
 		p=c_head.next;
 		
-		if(NULL == selected_portno || strlen(selected_portno) == 0)
+		if((NULL == selected_portno || strlen(selected_portno) == 0)&&(p!=NULL))
 		{
 			strcpy(selected_portno,p->ethport);
 		}		
@@ -789,7 +795,7 @@ int deleteSubinterface( STUserInputInfo *pstUserInputInfo,char * encry)
 			#endif
 			default:
 			{
-				ShowAlert(search(lcontrol,"oper_fail"));
+				ShowAlert(search(lpublic,"oper_fail"));
 			}
 			break;
 		}
