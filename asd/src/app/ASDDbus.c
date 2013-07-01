@@ -15705,10 +15705,10 @@ DBusMessage *asd_dbus_show_all_wlan_mac_list(DBusConnection *conn, DBusMessage *
 	unsigned char wlanid[WLAN_NUM];
 	int i=0, j=0;
 	
+	pthread_mutex_lock(&asd_g_wlan_mutex);
 	pthread_mutex_lock(&asd_g_sta_mutex);
 	dbus_error_init(&err);
 
-	pthread_mutex_lock(&asd_g_wlan_mutex);
 	while(i<WLAN_NUM){
 		if(ASD_WLAN[i] != NULL)	{
 			wlanid[wlan_num] = ASD_WLAN[i]->WlanID;
@@ -17130,13 +17130,13 @@ DBusMessage *asd_dbus_show_sta_summary(DBusConnection *conn, DBusMessage *msg, v
 		exit(1);
 	}	
 	memset(wtp_count,0,WTP_NUM*sizeof(unsigned int));
+	pthread_mutex_lock(&asd_g_wlan_mutex);
 	pthread_mutex_lock(&asd_g_sta_mutex);
 	total=ASD_STA_SUMMARY(wtp_count,wlan_count);
 	local_roam_count = local_success_roaming_count;
 	total_unconnect_count = total_sta_unconnect_count;
 
 
-	pthread_mutex_lock(&asd_g_wlan_mutex);
 	for(i=0;i<WLAN_NUM;i++){
 		if(wlan_count[i]!=0)
 			wlan_n++;
@@ -17264,8 +17264,8 @@ DBusMessage *asd_dbus_show_sta_summary(DBusConnection *conn, DBusMessage *msg, v
 	
 	free(wtp_count);	
 	wtp_count = NULL;
-	pthread_mutex_unlock(&asd_g_wlan_mutex);
 	pthread_mutex_unlock(&asd_g_sta_mutex);
+	pthread_mutex_unlock(&asd_g_wlan_mutex);
 	return reply;	
 }
 
