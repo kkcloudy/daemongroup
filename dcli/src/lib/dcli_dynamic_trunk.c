@@ -76,7 +76,7 @@ static DBusConnection *dcli_dbus_connection_lacp;
 /* add for distributed dynamic trunk*/
 DEFUN(config_lacp_on_board_cmd_func,
 	  config_lacp_on_board_cmd,
-	  "config dynamic trunk switch-board <1-10>",
+	  "config dynamic trunk switch-board <1-16>",
 	  CONFIG_STR
 	  "Configure lacp of Switch-board\n"
 	  "Configure swtich-board on slot N\n"
@@ -97,7 +97,7 @@ DEFUN(config_lacp_on_board_cmd_func,
 		return CMD_WARNING;
 	}
 
-	if((dist_slot < 1)||(dist_slot > 10))
+	if((dist_slot < 1)||(dist_slot > 16))
 	{
 		vty_out(vty, "%% Slot number out range!\n");
 		return CMD_WARNING;
