@@ -408,13 +408,13 @@ int BSDSendFile(const unsigned int slotid, const char *src_path, const char *des
     system("sudo mount /blk");
     /* 2012-4-12 */
     fileInfo.file_head.event_id = g_unEventId;
-    bsd_syslog_debug_debug(BSD_DEFAULT, "event_id = %d\n",fileInfo.file_head.event_id);
+    bsd_syslog_debug_debug(BSD_DEFAULT, "send event_id = %d\n",fileInfo.file_head.event_id);
 
     if((op == BSD_TYPE_COMPRESS) || (op == BSD_TYPE_WTP_FOLDER)) {
 	    fileInfo.file_head.tar_flag = 1;
 	}
 	fileInfo.slot_no = HOST_SLOT_NO;
-       
+    
 	/* book add, 2011-09-15 */
 	fileInfo.file_head.file_type = op;
 	bsd_syslog_debug_debug(BSD_DEFAULT, "file_type = %d\n", fileInfo.file_head.file_type);
@@ -490,7 +490,7 @@ int BSDSendFile(const unsigned int slotid, const char *src_path, const char *des
                             bsd_syslog_debug_debug(BSD_DEFAULT, "wait in bsdSendFile.\n");
                             BSD_BOARD[slotid]->state = BSD_FILE_FINISH;
                             bsd_syslog_debug_debug(BSD_DEFAULT, "slotid = %d, state2 = %d\n",slotid,BSD_BOARD[slotid]->state);
-                            timeout.tv_sec = time(0)+100;
+                            timeout.tv_sec = time(0)+160;
                             timeout.tv_nsec = 0;
                             bsd_syslog_debug_debug(BSD_DEFAULT, " call wait condition sendCondition\n");
                             BsdThreadMutexLock(&fileStateMutex[slotid]);
