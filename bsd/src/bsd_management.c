@@ -324,35 +324,35 @@ void * bsdTipcManagement()
             }
             err_flag = 0; /* reset err_flag for new event */
             last_event_id = fileInfo->file_head.event_id; /* record current event id */
-            bsd_syslog_debug_debug(BSD_DEFAULT, "event_id = %d\n",fileInfo->file_head.event_id);
+            bsd_syslog_debug_debug(BSD_DEFAULT, "recv event_id = %d\n",fileInfo->file_head.event_id);
         }
         
         /* deal with messages */
         if((fileInfo->file_head.file_state == BSD_FILE_FINISH)&&(BSD_BOARD[slotid]->state == BSD_FILE_FINISH)){
-            //printf("recv msg type is BSD_FILE_FINISH\n");
+            bsd_syslog_debug_debug(BSD_DEFAULT, "recv msg type is BSD_FILE_FINISH\n");
             BsdThreadMutexLock(&fileStateMutex[slotid]);
             memset(g_rePrintMd5, 0, BSD_PATH_LEN);
 		    memcpy(g_rePrintMd5, fileInfo->file_head.md5Result, BSD_PATH_LEN);
             BSD_BOARD[slotid]->state = BSD_FILE_UNKNOWN;
             BsdSignalThreadCondition(&fileStateCondition[slotid]);
             BsdThreadMutexUnlock(&fileStateMutex[slotid]);
-            //printf("singal condition sendCondition\n");
+            bsd_syslog_debug_debug(BSD_DEFAULT, "singal condition sendCondition\n");
             continue;
         } else if(fileInfo->file_head.file_state == BSD_FILE_MEMERY_NOT_ENOUGH) {
-		    bsd_syslog_info("@@@ recv msg type is BSD_FILE_MEMERY_NOT_ENOUGH\n");
+		    bsd_syslog_debug_debug(BSD_DEFAULT, "@@@ recv msg type is BSD_FILE_MEMERY_NOT_ENOUGH\n");
 		    BsdThreadMutexLock(&fileStateMutex[slotid]);
 		    BSD_BOARD[slotid]->state = BSD_FILE_MEMERY_NOT_ENOUGH;
             BsdSignalThreadCondition(&fileStateCondition[slotid]);
             BsdThreadMutexUnlock(&fileStateMutex[slotid]);
-            //printf("singal condition checkCondition\n");
+            bsd_syslog_debug_debug(BSD_DEFAULT, "singal condition checkCondition\n");
 		    continue;
 		} else if(fileInfo->file_head.file_state == BSD_FILE_MEMERY_OK){
-		    //printf("recv msg type is BSD_FILE_MEMERY_OK\n");
+		    bsd_syslog_debug_debug(BSD_DEFAULT, "recv msg type is BSD_FILE_MEMERY_OK\n");
 		    BsdThreadMutexLock(&fileStateMutex[slotid]);
 		    BSD_BOARD[slotid]->state = BSD_FILE_MEMERY_OK;
             BsdSignalThreadCondition(&fileStateCondition[slotid]);
             BsdThreadMutexUnlock(&fileStateMutex[slotid]);
-            //printf("singal condition checkCondition\n");
+            bsd_syslog_debug_debug(BSD_DEFAULT, "singal condition checkCondition\n");
 		    continue;
 		} else if(fileInfo->file_head.file_state == BSD_FILE_DES_PATH_CHECK){
 		    system("sudo mount /blk");

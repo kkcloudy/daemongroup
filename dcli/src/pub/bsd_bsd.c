@@ -115,7 +115,7 @@ int dcli_bsd_copy_file_to_board(DBusConnection *connection, const int slot_id, c
     
     printf("Copying file, please wait ...\n");
     //printf("0000\n");
-	reply = dbus_connection_send_with_reply_and_block (connection,query,120000, &err);
+	reply = dbus_connection_send_with_reply_and_block (connection,query,200000, &err);
 	//printf("0001\n");
 	dbus_message_unref(query);
 	//printf("2222\n");
@@ -254,7 +254,7 @@ int dcli_bsd_get_slot_ids(DBusConnection *connection, int *ID, const int op)
 			printf("%s raised: %s\n",err.name,err.message);
 			dbus_error_free(&err);
 		}
-		return BSD_RECEIVE_MESSAGE_ERROR;
+		return 0;
 	}
 	
 	dbus_message_iter_init(reply,&iter);

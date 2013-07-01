@@ -160,7 +160,7 @@ int BSDMemeryCheck(const unsigned int slotid, const char *src_path, const char *
         bsd_syslog_err("Error: failed to send memery check to slot_%d\n", slotid);
         return ret;
     } else {
-	    timeout.tv_sec = time(0)+3;
+	    timeout.tv_sec = time(0)+10;
         timeout.tv_nsec = 0;
         BsdThreadMutexLock(&fileStateMutex[slotid]);
         BSD_BOARD[slotid]->state = BSD_FILE_MEMERY_CHECK;
@@ -217,7 +217,7 @@ int BSDDesPathCheck(const unsigned int slotid, const char *des_path, unsigned sh
         bsd_syslog_err("Error: failed to send des path check to slot_%d\n", slotid);
         return ret;
     } else {
-	    timeout.tv_sec = time(0)+3;
+	    timeout.tv_sec = time(0)+10;
         timeout.tv_nsec = 0;
         BsdThreadMutexLock(&fileStateMutex[slotid]);
         BSD_BOARD[slotid]->state = BSD_FILE_DES_PATH_CHECK;
