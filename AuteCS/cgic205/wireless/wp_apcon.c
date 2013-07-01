@@ -221,9 +221,9 @@ int ShowAPconPage(char *m,struct list *lpublic,struct list *lwcontrol,struct lis
 				 "</td>"\
 				"</tr>"\
   				"<tr height=30>"\
-    			  "<td width=80>%s:</td>",search(lwcontrol,"echotimer"));
+    			  "<td width=100>%s:</td>",search(lwcontrol,"echotimer"));
 				  fprintf(cgiOut,"<td width=150 align=left><input type=text name=echotimer value=%d maxLength=2 onkeypress=\"return event.keyCode>=48&&event.keyCode<=57\"></td>",ech);
-    			  fprintf(cgiOut,"<td width=120><font color=red>(3--30)</font></td>"\
+    			  fprintf(cgiOut,"<td width=100><font color=red>(3--30)</font></td>"\
   				"</tr>"\
 				"<tr height=30>"\
     			  "<td>%s:</td>",search(lwcontrol,"update_img_timer"));
@@ -239,6 +239,22 @@ int ShowAPconPage(char *m,struct list *lpublic,struct list *lwcontrol,struct lis
 				 	fprintf(cgiOut,"<option value=>"\
   				    "<option value=open>open"\
   				    "<option value=close>close"\
+		          "</select></td>"\
+  				"</tr>"\
+  				"<tr height=30>"\
+    			  "<td>%s:</td>",search(lwcontrol,"ap_access_through_nat"));
+				  fprintf(cgiOut,"<td align=left colspan=2><select name=ap_access_through_nat id=ap_access_through_nat style=width:130px>");
+				 	fprintf(cgiOut,"<option value=>"\
+  				    "<option value=enable>enable"\
+  				    "<option value=disable>disable"\
+		          "</select></td>"\
+  				"</tr>"\
+  				"<tr height=30>"\
+    			  "<td>%s:</td>",search(lwlan,"ap_sta_info_report_switch"));
+				  fprintf(cgiOut,"<td align=left colspan=2><select name=ap_sta_info_report_switch id=ap_sta_info_report_switch style=width:130px>");
+				 	fprintf(cgiOut,"<option value=>"\
+  				    "<option value=enable>enable"\
+  				    "<option value=disable>disable"\
 		          "</select></td>"\
   				"</tr>"\
 			    "<tr>"\
@@ -290,6 +306,8 @@ void AP_Config(instance_parameter *ins_para,struct list *lpublic,struct list *lw
 	int echot = 0;
     char update_img_timer[15] = { 0 };
 	char auto_update_switch[10] = { 0 };
+	char ap_access_through_nat[10] = { 0 };
+	char ap_sta_info_report_switch[10] = { 0 };
 	char alt[100] = { 0 };
 	char max_wtp_num[10] = { 0 };
 
@@ -376,6 +394,82 @@ void AP_Config(instance_parameter *ins_para,struct list *lpublic,struct list *lw
 			case 1:break;
 		}
 	}
+
+	/***********************set ap access through nat cmd*****************************/		
+    memset(ap_access_through_nat,0,sizeof(ap_access_through_nat));
+    cgiFormStringNoNewlines("ap_access_through_nat",ap_access_through_nat,10); 
+	if(strcmp(ap_access_through_nat,"")!=0)	
+	{
+		ret = set_ap_access_through_nat_cmd(ins_para->parameter,ins_para->connection,ap_access_through_nat);
+		switch(ret)
+		{
+			case SNMPD_CONNECTION_ERROR:
+		    case 0:ShowAlert(search(lwcontrol,"set_ap_access_through_nat_fail"));
+				   flag = 0;
+				   break;
+			case 1:break;
+			case -1:ShowAlert(search(lpublic,"input_para_illegal"));
+					flag = 0;
+					break;
+			case -2:ShowAlert(search(lpublic,"error"));
+					flag = 0;
+					break;	
+		}
+	}
+
+	/***********************set ap sta infomation report enable func*****************************/		
+	memset(ap_sta_info_report_switch,0,sizeof(ap_sta_info_report_switch));
+    cgiFormStringNoNewlines("ap_sta_info_report_switch",ap_sta_info_report_switch,10);
+    if(strcmp(ap_sta_info_report_switch,"")!=0)
+    {
+	    ret=set_ap_sta_infomation_report_enable_func(ins_para->parameter,ins_para->connection,0,ap_sta_info_report_switch);   
+																							/*返回0表示失败，返回1表示成功*/
+																							/*返回-1表示input patameter only with 'enable' or 'disable'*/
+																							/*返回-2表示wtp id does not exist，返回-3表示wtp id does not run*/
+																							/*返回-4表示error，返回-5示WTP ID非法*/
+																							/*返回SNMPD_CONNECTION_ERROR表示connection error*/
+		switch(ret)										  
+		{
+		  case SNMPD_CONNECTION_ERROR:
+		  case 0:{
+				      ShowAlert(search(lwlan,"con_ap_sta_info_report_switch_fail"));
+		  		      flag = 0;
+				      break;
+		  		 }
+		  case 1:break;
+		  case -1:{
+			  		  ShowAlert(search(lpublic,"input_para_illegal"));
+			  		  flag = 0;
+					  break;
+		  		  }
+		  case -2:{
+					  ShowAlert(search(lwlan,"wtp_not_exist"));
+					  flag = 0;
+					  break;
+		  		  }
+		  case -3:{
+					  ShowAlert(search(lwlan,"wtp_not_run"));
+					  flag = 0;
+					  break;
+		  		  }	  
+		  case -4:{
+					  ShowAlert(search(lpublic,"error"));
+					  flag = 0;
+					  break;
+		  		  }
+		  case -5:{
+					  memset(alt,0,sizeof(alt));
+					  strncpy(alt,search(lwlan,"wtp_id_illegal1"),sizeof(alt)-1);
+					  memset(max_wtp_num,0,sizeof(max_wtp_num));
+					  snprintf(max_wtp_num,sizeof(max_wtp_num)-1,"%d",WTP_NUM-1);
+					  strncat(alt,max_wtp_num,sizeof(alt)-strlen(alt)-1);
+					  strncat(alt,search(lwlan,"wtp_id_illegal2"),sizeof(alt)-strlen(alt)-1);
+					  ShowAlert(alt);
+					  flag = 0;
+					  break;
+		  		  }
+		}
+  	}
 
     if(flag == 1)
   	{

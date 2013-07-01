@@ -92,6 +92,8 @@ void ShowApSumaryPage(char *m,char* n,struct list *lpublic,struct list *lwcontro
   instance_parameter *pq = NULL;
   char temp[10] = { 0 };
   dbus_parameter ins_para;
+  int ret = 0;
+  DCLI_AC_API_GROUP_FIVE *wirelessconfig = NULL;
   cgiHeaderContentType("text/html");
   fprintf(cgiOut,"<html xmlns=\"http://www.w3.org/1999/xhtml\"><head>");
   fprintf(cgiOut,"<meta http-equiv=Content-Type content=text/html; charset=gb2312>");
@@ -185,6 +187,7 @@ void ShowApSumaryPage(char *m,char* n,struct list *lpublic,struct list *lwcontro
 							result4=show_ap_echotimer(paraHead1->parameter,paraHead1->connection,&WTPINFOZ);
 							result2=show_ap_update_img_timer_cmd(paraHead1->parameter,paraHead1->connection,&up_timer);
 							result3=show_old_ap_img_data_cmd(paraHead1->parameter,paraHead1->connection,&WTPINFO);
+							ret=show_wc_config(paraHead1->parameter,paraHead1->connection,&wirelessconfig);
 						}
 						if((result3 == 1)&&(WTPINFO))
 						{
@@ -250,6 +253,13 @@ void ShowApSumaryPage(char *m,char* n,struct list *lpublic,struct list *lwcontro
 					 else
 					   fprintf(cgiOut,"<td id=td2>close</td>");
 			       fprintf(cgiOut,"</tr>"\
+				   "<tr align=left>"\
+				     "<td id=td1>%s</td>",search(lwcontrol,"ap_access_through_nat"));
+				   	 if((ret==1)&&(wirelessconfig != NULL)&&(wirelessconfig->wireless_control != NULL)&&(wirelessconfig->wireless_control->ap_acc_through_nat == 1))
+				       fprintf(cgiOut,"<td id=td2>enable</td>");
+					 else
+					   fprintf(cgiOut,"<td id=td2>disable</td>");
+			       fprintf(cgiOut,"</tr>"\
 			     "</table>"\
 	           "</td>"\
  			 " </tr>"\
@@ -290,6 +300,10 @@ if(result3 == 1)
 if(result4 ==1)
 { 
  	free_show_ap_echotimer(WTPINFOZ);
+}
+if(ret == 1)
+{
+	Free_wc_config(wirelessconfig);
 }
 free_instance_parameter_list(&paraHead1);
 }

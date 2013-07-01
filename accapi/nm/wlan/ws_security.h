@@ -98,6 +98,23 @@ struct asd_trap_state_info
 	unsigned char type[8];
 };
 
+struct asd_global_variable_info
+{
+	int  asd_notice_sta_info_to_portal;
+	int  asd_notice_sta_info_to_portal_timer;
+	int  wtp_send_response_to_mobile;
+	int  asd_dbus_count_switch;
+	unsigned int  sta_static_fdb_able;
+	unsigned int  asd_switch;
+	unsigned char  asd_station_arp_listen;
+	unsigned char  asd_station_static_arp;
+	unsigned int  asd_sta_idle_time;
+	unsigned char asd_sta_idle_time_switch;
+	unsigned int asd_bak_sta_update_time;
+	unsigned char  asd_ipset_switch;
+	unsigned char asd_getip_from_dhcpsnp;
+};
+
 
 extern int parse_security_char_ID(char* str,unsigned char* ID);
 extern int RemoveListRepId(int list[],int num);
@@ -490,6 +507,33 @@ extern int set_ap_max_detect_interval_cmd(dbus_parameter parameter, DBusConnecti
 																				/*返回-2表示the number is not be multiple of 15，返回-3表示Security ID非法*/
 																				/*返回-4表示security profile does not exist，返回-5表示this security profile is used by some wlans,please disable them first*/
 																				/*返回-6表示error*/
+
+extern int show_asd_global_variable_cmd(dbus_parameter parameter, DBusConnection *connection, struct asd_global_variable_info *info);
+																		/*返回0表示失败，返回1表示成功*/
+																		/*返回-1表示error*/
+																		/*返回SNMPD_CONNECTION_ERROR表示connection error*/
+
+/*value的范围是0-86400*/
+extern int set_wpa_group_rekey_period_cmd(dbus_parameter parameter, DBusConnection *connection,int id,char *value);
+																				 /*返回0表示失败，返回1表示成功*/
+																				 /*返回-1表示input period value should be 0 to 86400*/
+																				 /*返回-2表示Security ID非法*/
+																				 /*返回-3表示security profile does not exist*/
+																				 /*返回-4表示This Security Profile be used by some Wlans,please disable them first*/
+																				 /*返回-5表示Can't set wpa group rekey period under current security type*/
+																				 /*返回-6表示error*/
+																				 /*返回SNMPD_CONNECTION_ERROR表示connection error*/
+
+extern int set_asd_rdc_para_cmd(dbus_parameter parameter, DBusConnection *connection,int id,char *slotID,char *insID);
+																			  /*返回0表示失败，返回1表示成功*/
+																			  /*返回-1表示slotid should be 0 to 16*/
+																			  /*返回-2表示Security ID非法*/
+																			  /*返回-3表示security type should be 802.1X, wpa_e or wpa2_e*/
+																			  /*返回-4表示security profile does not exist*/
+																			  /*返回-5表示this security profile is used by some wlans,please disable them first*/
+																			  /*返回-6表示The radius heart test is on,turn it off first*/
+																			  /*返回-7表示error*/
+																			  /*返回SNMPD_CONNECTION_ERROR表示connection error*/
 
 #endif
 

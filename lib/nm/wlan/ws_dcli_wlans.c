@@ -5860,6 +5860,176 @@ int set_wlan_bss_multi_user_optimize_cmd(dbus_parameter parameter, DBusConnectio
 	return retu;
 }
 
+/*wlan_id为0表示全局配置*/
+/*state的取值是"enable"或"disable"*/
+int set_wlan_not_response_sta_probe_request_cmd(dbus_parameter parameter, DBusConnection *connection,int wlanID,char *state)
+																				/*返回0表示失败，返回1表示成功*/
+																				/*返回-1表示input patameter only with 'enable' or 'disable'*/
+																				/*返回-2表示WLAN ID非法，返回-3表示wlan does not exist*/
+																				/*返回-4表示wlan is enable, please disable it first*/
+																				/*返回-5表示you want to some wlan, and the operation of the wlan was not successful*/
+																				/*返回-6表示error*/
+																			    /*返回SNMPD_CONNECTION_ERROR表示connection error*/
+{
+	if((NULL == connection) || (NULL == state))
+		return 0;
+	
+	DBusMessage *query, *reply;	
+	DBusMessageIter	 iter;
+	DBusError err;
+	unsigned int policy = 0;
+	unsigned char wlanid = 0;
+	int ret;
+	int retu = 0;
+	
+	if (!strcmp(state,"enable"))
+	{
+		policy = 1;	
+	}
+	else if (!strcmp(state,"disable"))
+	{
+		policy = 0;	
+	}
+	else
+	{
+		return -1;
+	}
+
+	char BUSNAME[PATH_LEN];
+	char OBJPATH[PATH_LEN];
+	char INTERFACE[PATH_LEN];
+
+	wlanid = (unsigned char)wlanID;			
+	if(wlanid >= WLAN_NUM || wlanid < 0){
+		syslog(LOG_DEBUG,"wlan id in set_wlan_not_response_sta_probe_request_cmd is %d\n",wlanid);
+		return -2;
+	}
+
+	ccgi_ReInitDbusPath_v2(parameter.local_id, parameter.instance_id,WID_DBUS_BUSNAME,BUSNAME);
+	ccgi_ReInitDbusPath_v2(parameter.local_id, parameter.instance_id,WID_DBUS_WLAN_OBJPATH,OBJPATH);
+	ccgi_ReInitDbusPath_v2(parameter.local_id, parameter.instance_id,WID_DBUS_WLAN_INTERFACE,INTERFACE);
+	query = dbus_message_new_method_call(BUSNAME,OBJPATH,INTERFACE,WID_DBUS_CONF_METHOD_WLAN_NO_RESPONSE_TO_STA_PROBLE_REQUEST);
+																			
+	dbus_error_init(&err);
+
+
+	dbus_message_append_args(query,
+							 DBUS_TYPE_UINT32,&policy,
+							 DBUS_TYPE_BYTE,&wlanid,
+							 DBUS_TYPE_INVALID);
+
+	reply = dbus_connection_send_with_reply_and_block (connection,query,-1, &err);
+	
+	dbus_message_unref(query);
+	
+	if (NULL == reply)
+	{
+		if (dbus_error_is_set(&err))
+		{
+			dbus_error_free(&err);
+		}		
+
+		return SNMPD_CONNECTION_ERROR;
+	}
+	
+	dbus_message_iter_init(reply,&iter);
+	dbus_message_iter_get_basic(&iter,&ret);
+
+	if(ret == 0)
+		retu = 1;
+	else if(ret == WLAN_ID_NOT_EXIST)
+		retu = -3;
+	else if(ret == WLAN_BE_ENABLE)
+		retu = -4;
+	else if (ret == WID_WANT_TO_DELETE_WLAN)
+		retu = -5;
+	else
+		retu = -6;
+		
+	dbus_message_unref(reply);
+	
+	return retu;			
+}
+
+/*Type的取值是"tunnel"或"local"*/
+int set_wlan_tunnel_mode_enable_cmd(dbus_parameter parameter, DBusConnection *connection,int wlanID,char *Type)
+																				/*返回0表示失败，返回1表示成功*/
+																				/*返回-1表示WLAN ID非法*/
+																				/*返回-2表示wlan is enable, please disable it first*/
+																				/*返回-3表示wlanid is not exist*/
+																				/*返回-4表示you want to delete wlan, please do not operate like this*/
+																				/*返回-5表示some radio interface in ebr*/
+																			    /*返回SNMPD_CONNECTION_ERROR表示connection error*/
+{	
+	if((NULL == connection) || (NULL == Type))
+		return 0;
+
+	int ret = 0;
+	unsigned char wlanid = 0;
+	DBusMessage *query, *reply;	
+	DBusMessageIter	 iter;
+	DBusError err;
+	unsigned char state = 0;	
+	int retu = 0;
+	
+	if(strncmp("tunnel",Type,strlen(Type)) == 0){
+		state = 1;
+	}else if(strncmp("local",Type,strlen(Type)) == 0){
+		state = 0;
+	}
+
+	char BUSNAME[PATH_LEN];
+	char OBJPATH[PATH_LEN];
+	char INTERFACE[PATH_LEN];
+
+	wlanid = (unsigned char)wlanID;			
+	if(wlanid >= WLAN_NUM || wlanid < 0){
+		syslog(LOG_DEBUG,"wlan id in set_wlan_tunnel_mode_enable_cmd is %d\n",wlanid);
+		return -1;
+	}
+
+	ccgi_ReInitDbusPath_v2(parameter.local_id, parameter.instance_id,WID_DBUS_BUSNAME,BUSNAME);
+	ccgi_ReInitDbusPath_v2(parameter.local_id, parameter.instance_id,WID_DBUS_WLAN_OBJPATH,OBJPATH);
+	ccgi_ReInitDbusPath_v2(parameter.local_id, parameter.instance_id,WID_DBUS_WLAN_INTERFACE,INTERFACE);
+	query = dbus_message_new_method_call(BUSNAME,OBJPATH,INTERFACE,WID_DBUS_WLAN_METHOD_TUNNEL_NODE_SETTING);
+	
+	dbus_error_init(&err);
+
+	dbus_message_append_args(query,
+							 DBUS_TYPE_BYTE,&state,
+							 DBUS_TYPE_BYTE,&wlanid,
+							 DBUS_TYPE_INVALID);
+
+	reply = dbus_connection_send_with_reply_and_block (connection,query,3000000, &err);
+	
+	dbus_message_unref(query);
+	
+	if (NULL == reply) {
+		if (dbus_error_is_set(&err)) {
+			dbus_error_free(&err);
+		}
+		return SNMPD_CONNECTION_ERROR;
+	}
+	
+	dbus_message_iter_init(reply,&iter);
+	dbus_message_iter_get_basic(&iter,&ret);
+
+	if(ret == WID_DBUS_SUCCESS)
+		retu = 1;
+	else if(ret == WLAN_BE_ENABLE)
+		retu = -2;
+	else if(ret == WLAN_ID_NOT_EXIST)
+		retu = -3;
+	else if (ret == WID_WANT_TO_DELETE_WLAN)
+		retu = -4;
+	else if(ret == RADIO_IN_EBR)
+		retu = -5;
+	else
+		retu = 0;
+	
+	dbus_message_unref(reply);
+	return retu;
+}
 
 
 
@@ -12641,8 +12811,10 @@ int set_ap_extension_infomation_enable_group(dbus_parameter parameter, DBusConne
 #endif
 
 int set_ap_extension_infomation_enable(dbus_parameter parameter, DBusConnection *connection,int wtp_id,char *state)
-																					/*返回0表示失败，返回1表示成功，返回-1表示input patameter only with 'enable' or 'disable'*/
-																					/*返回-2表示wtp id does not exist，返回-3表示wtp id does not run，返回-4表示error，返回-5示WTP ID非法*/
+																					/*返回0表示失败，返回1表示成功*/
+																					/*返回-1表示input patameter only with 'enable' or 'disable'*/
+																					/*返回-2表示wtp id does not exist，返回-3表示wtp id does not run*/
+																					/*返回-4表示error，返回-5示WTP ID非法*/
 																					/*返回SNMPD_CONNECTION_ERROR表示connection error*/
 {
     if(NULL == connection)
@@ -14568,10 +14740,13 @@ int set_ap_sta_infomation_report_enable_func_group(dbus_parameter parameter, DBu
 }
 #endif
 
-/*未使用*/
+/*wtp_id为0表示全局配置*/
+/*state为"enable"或"disable"*/
 int set_ap_sta_infomation_report_enable_func(dbus_parameter parameter, DBusConnection *connection,int wtp_id,char *state) 
-																							/*返回0表示失败，返回1表示成功，返回-1表示input patameter only with 'enable' or 'disable'*/
-																							/*返回-2表示wtp id does not exist，返回-3表示wtp id does not run，返回-4表示error，返回-5示WTP ID非法*/
+																							/*返回0表示失败，返回1表示成功*/
+																							/*返回-1表示input patameter only with 'enable' or 'disable'*/
+																							/*返回-2表示wtp id does not exist，返回-3表示wtp id does not run*/
+																							/*返回-4表示error，返回-5示WTP ID非法*/
 																							/*返回SNMPD_CONNECTION_ERROR表示connection error*/
 {
     if(NULL == connection)
@@ -15911,6 +16086,7 @@ int set_ap_if_rate_cmd_group(dbus_parameter parameter, DBusConnection *connectio
 }
 #endif
 
+/*WtpID为0表示全局配置*/
 /*rate的范围是"10","100"或"1000"*/
 int set_ap_if_rate_cmd(dbus_parameter parameter, DBusConnection *connection,int WtpID,char *if_index,char *if_rate)
 																				  /*返回0表示失败，返回1表示成功，返回-1表示unknown id format*/

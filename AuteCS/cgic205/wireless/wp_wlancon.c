@@ -406,7 +406,7 @@ int ShowWlanconPage(char *m,char *n,char *t,char *pn,char *ins_id,instance_param
 					}
 				  }
 				  
-				  limit=29;
+				  limit=31;
 				  if((inter_num>0)&&(whead)&&(whead->WLAN[0])&&(whead->WLAN[0]->Status==1))  /*已绑定接口，且WLAN状态为disable*/
 				  	limit+=3;
                   for(i=0;i<limit;i++)
@@ -645,6 +645,28 @@ int ShowWlanconPage(char *m,char *n,char *t,char *pn,char *ins_id,instance_param
   				    				"<option value=disable>disable"\
 					           "</select></td>"\
 				"</tr>"\
+				"<tr height=30>"\
+						"<td>%s:</td>",search(lwlan,"response_sta_probe_request"));
+				if((result1 == 1)&&(whead->WLAN[0]->Status!=1))   /*如果WLAN状态为enable，向STA发送探测响应的下拉框不可用*/
+					fprintf(cgiOut,"<td colspan=2><select name=response_sta_probe_request id=response_sta_probe_request style=width:100px disabled>");
+				else
+					fprintf(cgiOut,"<td colspan=2><select name=response_sta_probe_request id=response_sta_probe_request style=width:100px>");
+									fprintf(cgiOut,"<option value=>"\
+					                "<option value=enable>yes"\
+  				    				"<option value=disable>no"\
+					           "</select></td>"\
+				"</tr>"\
+				"<tr height=30>"\
+						"<td>%s:</td>",search(lwlan,"forward_policy"));
+				if((result1 == 1)&&(whead->WLAN[0]->Status!=1))   /*如果WLAN状态为enable，向STA发送探测响应的下拉框不可用*/
+					fprintf(cgiOut,"<td colspan=2><select name=forward_policy id=forward_policy style=width:100px disabled>");
+				else
+					fprintf(cgiOut,"<td colspan=2><select name=forward_policy id=forward_policy style=width:100px>");
+									fprintf(cgiOut,"<option value=>"\
+					                "<option value=tunnel>tunnel"\
+  				    				"<option value=local>local"\
+					           "</select></td>"\
+				"</tr>"\
 				"<tr>"\
                     "<td id=sec1 colspan=3 style=padding-top:15px style=\"border-bottom:2px solid #53868b\">WLAN%s</td>",search(lpublic,"service_timer"));
                 fprintf(cgiOut,"</tr>"\
@@ -795,6 +817,8 @@ void ConWlan(instance_parameter *ins_para,int id,int inter_num,int security_flag
 	char ip4[4] = { 0 };
 	char uplink_state[10] = { 0 };
 	char multi_user_switch[10] = { 0 };
+	char response_sta_probe_request[10] = { 0 };
+	char forward_policy[10] = { 0 };
 	char wlan_id[10] = { 0 };
 	char max_wlan_num[10] = { 0 };
 	char stat[10] = { 0 };
@@ -1650,6 +1674,103 @@ void ConWlan(instance_parameter *ins_para,int id,int inter_num,int security_flag
 			case -5:ShowAlert(search(lpublic,"error"));
 					flag=0;
 					break;
+		}
+	}
+
+	/*******************************************************************/
+	/**          	 设置是否向STA发送探测响应		   		  ***/
+	/*******************************************************************/
+	memset(response_sta_probe_request,0,sizeof(response_sta_probe_request));
+	cgiFormStringNoNewlines("response_sta_probe_request",response_sta_probe_request,10);
+	if(strcmp(response_sta_probe_request,"") != 0)
+	{
+		ret=set_wlan_not_response_sta_probe_request_cmd(ins_para->parameter,ins_para->connection,id,response_sta_probe_request);
+																				/*返回0表示失败，返回1表示成功*/
+																				/*返回-1表示input patameter only with 'enable' or 'disable'*/
+																				/*返回-2表示WLAN ID非法，返回-3表示wlan does not exist*/
+																				/*返回-4表示wlan is enable, please disable it first*/
+																				/*返回-5表示you want to some wlan, and the operation of the wlan was not successful*/
+																				/*返回-6表示error*/
+																			    /*返回SNMPD_CONNECTION_ERROR表示connection error*/
+		switch(ret)
+		{
+			case SNMPD_CONNECTION_ERROR:
+			case -5:
+			case 0:ShowAlert(search(lwlan,"set_response_sta_probe_request_fail"));
+				   flag=0;
+				   break;
+			case 1:break;
+			case -1:ShowAlert(search(lpublic,"input_para_illegal"));
+					flag=0;
+					break; 
+			case -2:{
+				      memset(temp,0,sizeof(temp));
+				      strncpy(temp,search(lwlan,"wlan_id_illegal1"),sizeof(temp)-1);
+				      memset(max_wlan_num,0,sizeof(max_wlan_num));
+				      snprintf(max_wlan_num,sizeof(max_wlan_num)-1,"%d",WLAN_NUM-1);
+				      strncat(temp,max_wlan_num,sizeof(temp)-strlen(temp)-1);
+				      strncat(temp,search(lwlan,"wlan_id_illegal2"),sizeof(temp)-strlen(temp)-1);
+				      ShowAlert(temp);
+					  flag=0;
+				      break;
+				    }
+			case -3:ShowAlert(search(lwlan,"wlan_not_exist"));
+					flag=0;
+					break; 
+			case -4:ShowAlert(search(lwlan,"dis_wlan"));
+					flag=0;
+					break; 
+			case -6:ShowAlert(search(lpublic,"error"));
+					flag=0;
+					break;
+		}
+	}
+
+	/*******************************************************************/
+	/**          	 设置是否向STA发送探测响应		   		  ***/
+	/*******************************************************************/
+	memset(forward_policy,0,sizeof(forward_policy));
+	cgiFormStringNoNewlines("forward_policy",forward_policy,10);
+	if(strcmp(forward_policy,"") != 0)
+	{
+		ret=set_wlan_tunnel_mode_enable_cmd(ins_para->parameter,ins_para->connection,id,forward_policy);
+																				/*返回0表示失败，返回1表示成功*/
+																				/*返回-1表示WLAN ID非法*/
+																				/*返回-2表示wlan is enable, please disable it first*/
+																				/*返回-3表示wlanid is not exist*/
+																				/*返回-4表示you want to delete wlan, please do not operate like this*/
+																				/*返回-5表示some radio interface in ebr*/
+																			    /*返回SNMPD_CONNECTION_ERROR表示connection error*/
+		switch(ret)
+		{
+			case SNMPD_CONNECTION_ERROR:
+			case 0:ShowAlert(search(lwlan,"set_forward_policy_fail"));
+				   flag=0;
+				   break;
+			case 1:break;
+			case -1:{
+				      memset(temp,0,sizeof(temp));
+				      strncpy(temp,search(lwlan,"wlan_id_illegal1"),sizeof(temp)-1);
+				      memset(max_wlan_num,0,sizeof(max_wlan_num));
+				      snprintf(max_wlan_num,sizeof(max_wlan_num)-1,"%d",WLAN_NUM-1);
+				      strncat(temp,max_wlan_num,sizeof(temp)-strlen(temp)-1);
+				      strncat(temp,search(lwlan,"wlan_id_illegal2"),sizeof(temp)-strlen(temp)-1);
+				      ShowAlert(temp);
+					  flag=0;
+				      break;
+				    }
+			case -2:ShowAlert(search(lwlan,"dis_wlan"));
+					flag=0;
+					break; 
+			case -3:ShowAlert(search(lwlan,"wlan_not_exist"));
+					flag=0;
+					break; 
+			case -4:ShowAlert(search(lwlan,"dont_del_wlan"));
+					flag=0;
+					break; 
+			case -5:ShowAlert(search(lwlan,"radio_is_in_ebr"));
+					flag=0;
+					break; 
 		}
 	}
 		
