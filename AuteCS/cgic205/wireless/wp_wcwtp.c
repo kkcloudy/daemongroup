@@ -192,7 +192,7 @@ int ShowACconPage(char *m,struct list *lpublic,struct list *lwcontrol,struct lis
 					fprintf(cgiOut,"<tr height=25>"\
   					  "<td align=left id=tdleft><a href=wp_wcapill.cgi?UN=%s target=mainFrame class=top><font id=%s>%s</font><font id=yingwen_san>AP</font><font id=%s>%s</font></a></td>",m,search(lpublic,"menu_san"),search(lwcontrol,"illegal"),search(lpublic,"menu_san"),search(lwcontrol,"list"));                       
  				    fprintf(cgiOut,"</tr>");
-                  for(i=0;i<11;i++)
+                  for(i=0;i<12;i++)
 	              {
   				    fprintf(cgiOut,"<tr height=25>"\
                       "<td id=tdleft>&nbsp;</td>"\
@@ -399,6 +399,18 @@ int ShowACconPage(char *m,struct list *lpublic,struct list *lwcontrol,struct lis
     			"<option value=disable>disable"\
           "</select></td>"\
 		"</tr>"\
+		"<tr height=30>"\
+		  "<td>%s:</td>",search(lpublic,"country_code"));
+		  fprintf(cgiOut,"<td align=left colspan=2><select name=country_code id=country_code style=width:130px>");
+		 	fprintf(cgiOut,"<option value=>"\
+                "<option value=CN>CN"\
+    			"<option value=EU>EU"\
+    			"<option value=US>US"\
+    			"<option value=JP>JP"\
+    			"<option value=FR>FR"\
+    			"<option value=ES>ES"\
+          "</select></td>"\
+		"</tr>"\
 		  "<tr>"\
 		    "<td><input type=hidden name=encry_conac value=%s></td>",m);
 		    fprintf(cgiOut,"<td colspan=2><input type=hidden name=INSTANCE_ID value=%s></td>",select_insid);
@@ -461,8 +473,11 @@ void ACConfig(instance_parameter *ins_para,struct list *lpublic,struct list *lwc
 	char add_ac_listen_if[50] = { 0 };
 	char del_ac_listen_if[50] = { 0 };
 	char user_set_vlan[10] = { 0 };
+	char country_code[5] = { 0 };
 	char temp[100] = { 0 };
 	char max_wlan_num[10] = { 0 };
+	char max_wtp_num[10] = { 0 };
+	char max_radio_num[10] = { 0 };
 
 	/***********************set wid max mtu*****************************/	
     memset(mtu,0,sizeof(mtu));
@@ -905,6 +920,64 @@ void ACConfig(instance_parameter *ins_para,struct list *lpublic,struct list *lwc
 			case -1:ShowAlert(search(lpublic,"error"));
 					flag=0;
 					break;
+		}
+	}
+
+	/***********************set system country code func*****************************/
+	memset(country_code,0,sizeof(country_code));
+	cgiFormStringNoNewlines("country_code",country_code,5);
+	if(strcmp(country_code,"") != 0)
+	{
+		ret=set_system_country_code_func(ins_para->parameter,ins_para->connection,0,0,country_code);
+																			/*返回0表示失败，返回1表示成功，返回-1表示input country code should be capital letters*/
+																			/*返回-2表示input country code error，返回-3表示system country code is already Country_code, no need to change*/
+																			/*返回-4表示system country code error，返回-5表示WTP ID非法，返回-6表示Radio ID非法*/
+																			/*返回SNMPD_CONNECTION_ERROR表示connection error*/
+		switch(ret)
+		{
+			case SNMPD_CONNECTION_ERROR:
+			case 0:ShowAlert(search(lwcontrol,"con_country_code_fail"));
+				   flag=0;
+				   break;
+			case 1:break;
+			case -1:
+			case -2:ShowAlert(search(lpublic,"input_para_illegal"));
+					flag=0;
+					break;
+			case -3:{
+					  memset(temp,0,sizeof(temp));
+					  strncpy(temp,search(lwcontrol,"country_code_no_need_change1"),sizeof(temp)-1);
+					  strncat(temp,country_code,sizeof(temp)-strlen(temp)-1);
+					  strncat(temp,search(lwcontrol,"country_code_no_need_change2"),sizeof(temp)-strlen(temp)-1);
+					  ShowAlert(temp);
+					  flag=0;
+					  break;
+					}
+			case -4:ShowAlert(search(lpublic,"sys_err"));
+					flag=0;
+					break;
+			case -5:{
+					  memset(temp,0,sizeof(temp));
+					  strncpy(temp,search(lwlan,"wtp_id_illegal1"),sizeof(temp)-1);
+					  memset(max_wtp_num,0,sizeof(max_wtp_num));
+					  snprintf(max_wtp_num,sizeof(max_wtp_num)-1,"%d",WTP_NUM-1);
+					  strncat(temp,max_wtp_num,sizeof(temp)-strlen(temp)-1);
+					  strncat(temp,search(lwlan,"wtp_id_illegal2"),sizeof(temp)-strlen(temp)-1);
+					  ShowAlert(temp);
+					  flag = 0;
+					  break;
+				    }
+			case -6:{					  
+		              memset(temp,0,sizeof(temp));
+					  strncpy(temp,search(lwlan,"radio_id_illegal1"),sizeof(temp)-1);
+					  memset(max_radio_num,0,sizeof(max_radio_num));
+					  snprintf(max_radio_num,sizeof(max_radio_num)-1,"%d",G_RADIO_NUM-1);
+					  strncat(temp,max_radio_num,sizeof(temp)-strlen(temp)-1);
+					  strncat(temp,search(lwlan,"radio_id_illegal2"),sizeof(temp)-strlen(temp)-1);
+				  	  ShowAlert(temp);
+					  flag=0;
+					  break;
+					}
 		}
 	}
 

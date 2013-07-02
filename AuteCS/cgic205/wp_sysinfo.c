@@ -239,6 +239,9 @@ int ShowSystemInformationPage(struct list *lpublic, struct list *lsystem, struct
 						if(retu==0)
 						{
 							fprintf(cgiOut,"<tr height=25>"\
+							"<td align=left id=tdleft><a href=wp_sysconfig.cgi?UN=%s target=mainFrame class=top><font id=%s>%s</font></a></td>",encry,search(lpublic,"menu_san"),search(lsystem,"sys_config"));
+							fprintf(cgiOut,"</tr>"\
+							"<tr height=25>"\
 							"<td align=left id=tdleft><a href=wp_impconf.cgi?UN=%s target=mainFrame class=top><font id=%s>%s</font></a></td>",encry,search(lpublic,"menu_san"),search(lsystem,"import_config"));
 							fprintf(cgiOut,"</tr>"\
 							"<tr height=25>"\

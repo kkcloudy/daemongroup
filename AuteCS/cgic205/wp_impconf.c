@@ -194,6 +194,9 @@ int ShowImportPage(struct list *lpublic, struct list *lsystem)
 					fprintf(cgiOut,"<tr height=25>"\
 					"<td align=left id=tdleft><a href=wp_sysinfo.cgi?UN=%s target=mainFrame class=top><font id=%s>%s</font></a></td>",encry,search(lpublic,"menu_san"),search(lsystem,"sys_infor"));
 					fprintf(cgiOut,"</tr>"\
+					"<tr height=25>"\
+					"<td align=left id=tdleft><a href=wp_sysconfig.cgi?UN=%s target=mainFrame class=top><font id=%s>%s</font></a></td>",encry,search(lpublic,"menu_san"),search(lsystem,"sys_config"));
+					fprintf(cgiOut,"</tr>"\
 					"<tr height=26>"\
 					"<td align=left id=tdleft background=/images/bottom_bg.gif style=\"border-right:0\"><font id=%s>%s</font></td>",search(lpublic,"menu_san"),search(lsystem,"import_config"));  /*突出显示*/
 					fprintf(cgiOut,"</tr>"\
@@ -243,6 +246,9 @@ int ShowImportPage(struct list *lpublic, struct list *lsystem)
 				{
 					fprintf(cgiOut,"<tr height=25>"\
 					"<td align=left id=tdleft><a href=wp_sysinfo.cgi?UN=%s target=mainFrame class=top><font id=%s>%s</font></a></td>",imp_encry,search(lpublic,"menu_san"),search(lsystem,"sys_infor"));
+					fprintf(cgiOut,"</tr>"\
+					"<tr height=25>"\
+					"<td align=left id=tdleft><a href=wp_sysconfig.cgi?UN=%s target=mainFrame class=top><font id=%s>%s</font></a></td>",imp_encry,search(lpublic,"menu_san"),search(lsystem,"sys_config"));
 					fprintf(cgiOut,"</tr>"\
 					"<tr height=26>"\
 					"<td align=left id=tdleft background=/images/bottom_bg.gif style=\"border-right:0\"><font id=%s>%s</font></td>",search(lpublic,"menu_san"),search(lsystem,"import_config"));  /*突出显示*/

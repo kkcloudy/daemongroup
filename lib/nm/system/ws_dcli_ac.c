@@ -2532,7 +2532,6 @@ int dynamic_channel_selection_cmd(dbus_parameter parameter, DBusConnection *conn
 	return retu; 		
 }
 
-/*未使用*/
 /*wtp_id和radio_G_id只需填写一个，分别表示在wtp节点和radio节点下配置*/
 /*wtp_id为0时，表示全局配置*/
 int set_system_country_code_func(dbus_parameter parameter, DBusConnection *connection,int wtp_id,int radio_G_id,char *Country_code) 

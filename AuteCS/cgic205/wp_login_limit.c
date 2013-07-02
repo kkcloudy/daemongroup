@@ -226,6 +226,9 @@ int ShowExportConfPage(struct list *lpublic, struct list *lsystem)
 						  "<td align=left id=tdleft><a href=wp_sysinfo.cgi?UN=%s target=mainFrame class=top><font id=%s>%s</font></a></td>",encry,search(lpublic,"menu_san"),search(lsystem,"sys_infor"));
 						fprintf(cgiOut,"</tr>"\
 						"<tr height=25>"\
+						"<td align=left id=tdleft><a href=wp_sysconfig.cgi?UN=%s target=mainFrame class=top><font id=%s>%s</font></a></td>",encry,search(lpublic,"menu_san"),search(lsystem,"sys_config"));
+						fprintf(cgiOut,"</tr>"\
+						"<tr height=25>"\
 						  "<td align=left id=tdleft><a href=wp_impconf.cgi?UN=%s target=mainFrame class=top><font id=%s>%s</font></a></td>",encry,search(lpublic,"menu_san"),search(lsystem,"import_config"));
 						fprintf(cgiOut,"</tr>");
 						fprintf(cgiOut,"<tr height=25>"\
@@ -274,6 +277,9 @@ int ShowExportConfPage(struct list *lpublic, struct list *lsystem)
 					{
 						fprintf(cgiOut,"<tr height=25>\n"\
 						  "<td align=left id=tdleft><a href=wp_sysinfo.cgi?UN=%s target=mainFrame class=top><font id=%s>%s</font></a></td>",log_encry,search(lpublic,"menu_san"),search(lsystem,"sys_infor"));
+						fprintf(cgiOut,"</tr>\n"\
+						"<tr height=25>\n"\
+						"<td align=left id=tdleft><a href=wp_sysconfig.cgi?UN=%s target=mainFrame class=top><font id=%s>%s</font></a></td>",log_encry,search(lpublic,"menu_san"),search(lsystem,"sys_config"));
 						fprintf(cgiOut,"</tr>\n"\
 						"<tr height=25>\n"\
 						  "<td align=left id=tdleft><a href=wp_impconf.cgi?UN=%s target=mainFrame class=top><font id=%s>%s</font></a></td>",log_encry,search(lpublic,"menu_san"),search(lsystem,"import_config"));

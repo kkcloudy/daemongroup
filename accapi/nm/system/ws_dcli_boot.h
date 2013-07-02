@@ -61,4 +61,17 @@ extern int config_boot_img_func_cmd(char *img_name);/*返回0表示失败，返回1表示成
 														  /*返回-4表示Sysetm internal error (2)，返回-5表示Storage media is busy*/
 														  /*返回-6表示Storage operation time out，返回-7表示No left space on storage media*/
 														  /*返回-8表示Sysetm internal error (3)*/
+/*Port的范围是1-65535，可选*/
+extern int ssh_up_func_cmd(char *Port);/*返回0表示失败，返回1表示成功*/
+											/*返回-1表示only active master can enable ssh*/
+											/*返回-2表示system error，返回-3表示Port number is incorrect*/
+											/*返回-4表示Port is already in use，返回-5表示some thing is Wrong*/
+
+extern int ssh_down_func_cmd();/*返回0表示失败，返回1表示成功*/
+									  /*返回-1表示only active master can disable ssh*/
+									  /*返回-2表示SSH can not be shut down because someone has logged into the system using it. If you want, please use the 'kick user' command to kick the user off first.*/
+									  /*返回-3表示some thing is Wrong*/
+
+/*state=1表示ssh service is running*/
+extern int show_ssh_func_cmd(int *ssh_state);/*返回0表示失败，返回1表示成功，返回-1表示system error*/
 
