@@ -5459,12 +5459,12 @@ DBUS_TYPE_UINT32					// opposite heartbeat ip address
 	char EAG_DBUS_NAME[64];
 	char EAG_DBUS_OBJPATH[64];
 	char EAG_DBUS_INTERFACE[64];
-	snprintf(EAG_DBUS_NAME,sizeof(EAG_DBUS_NAME)-1,
-				EAG_DBUS_NAME_FMT,"r",vrrp->vrid );
+	snprintf(EAG_DBUS_NAME,sizeof(EAG_DBUS_NAME)-1,     /* should be hansi id, not vrip. 2013-06-28 ZD.*/
+				EAG_DBUS_NAME_FMT,"r",vrrp->profile );
 	snprintf(EAG_DBUS_OBJPATH,sizeof(EAG_DBUS_NAME)-1,
-				EAG_DBUS_OBJPATH_FMT,"r",vrrp->vrid );
+				EAG_DBUS_OBJPATH_FMT,"r",vrrp->profile );
 	snprintf(EAG_DBUS_INTERFACE,sizeof(EAG_DBUS_NAME)-1,
-				EAG_DBUS_INTERFACE_FMT,"r",vrrp->vrid );
+				EAG_DBUS_INTERFACE_FMT,"r",vrrp->profile );
 	query = dbus_message_new_method_call(
 				                         EAG_DBUS_NAME,
 				                         EAG_DBUS_OBJPATH,
@@ -5475,11 +5475,11 @@ DBUS_TYPE_UINT32					// opposite heartbeat ip address
 	dbus_message_iter_init_append(query, &iter);
 
 	dbus_message_iter_append_basic(&iter,
-									DBUS_TYPE_UINT32, &(vrrp->vrid));
+									DBUS_TYPE_UINT32, &(vrrp->profile));    /* should be hansi id, not vrip. 2013-06-28 ZD.*/   
 	dbus_message_iter_append_basic(&iter,
 									DBUS_TYPE_UINT32, &state);
-	vrrp_syslog_event("notify to portal,vrid %d,state %d\n",
-						vrrp->vrid, state);
+	vrrp_syslog_event("notify to portal,hansi %d, vrid %d, state %d\n",
+						vrrp->profile, vrrp->vrid, state);
 
 	uplink_cnt = vrrp->uplink_naddr;
 	dbus_message_iter_append_basic(&iter,
@@ -5981,7 +5981,7 @@ DBUS_TYPE_UINT32					// opposite heartbeat ip address
 	char PPPOE_DBUS_NAME[64];
 
 	snprintf(PPPOE_DBUS_NAME,sizeof(PPPOE_DBUS_NAME)-1,
-				PPPOE_DBUS_NAME_FMT, 0,vrrp->vrid );
+				PPPOE_DBUS_NAME_FMT, 0,vrrp->profile);        /* should be hansi id, not vrip. 2013-06-28 ZD.*/
 
 	query = dbus_message_new_method_call(
 				                         PPPOE_DBUS_NAME,
@@ -5993,11 +5993,11 @@ DBUS_TYPE_UINT32					// opposite heartbeat ip address
 	dbus_message_iter_init_append(query, &iter);
 
 	dbus_message_iter_append_basic(&iter,
-									DBUS_TYPE_UINT32, &(vrrp->vrid));
+									DBUS_TYPE_UINT32, &(vrrp->profile));    /* should be hansi id, not vrip. 2013-06-28 ZD.*/
 	dbus_message_iter_append_basic(&iter,
 									DBUS_TYPE_UINT32, &state);
-	vrrp_syslog_event("notify to pppoe,vrid %d,state %d\n",
-						vrrp->vrid, state);
+	vrrp_syslog_event("notify to pppoe,hansi %d, state %d\n",
+						vrrp->profile, state);
 
 	uplink_cnt = vrrp->uplink_naddr;
 	dbus_message_iter_append_basic(&iter,
@@ -6473,11 +6473,11 @@ int had_notify_to_hmd
 	dbus_message_iter_init_append(query, &iter);
 
 	dbus_message_iter_append_basic(&iter,
-									DBUS_TYPE_UINT32, &(vrrp->vrid));
+									DBUS_TYPE_UINT32, &(vrrp->profile));    /* should be hansi id, not vrip. 2013-06-28 ZD.*/
 	dbus_message_iter_append_basic(&iter,
 									DBUS_TYPE_UINT32, &state);
-	vrrp_syslog_event("notify to hmd,vrid %d,state %d\n",
-						vrrp->vrid, state);
+	vrrp_syslog_event("notify to hmd,hansi %d, vrid %d, state %d\n",
+						vrrp->profile, vrrp->vrid, state);
 
 	uplink_cnt = vrrp->uplink_naddr;
 	dbus_message_iter_append_basic(&iter,
@@ -6829,9 +6829,6 @@ DBUS_TYPE_UINT32					// opposite heartbeat ip address
 									DBUS_TYPE_UINT32, &(vrrp->profile));
 	dbus_message_iter_append_basic(&iter,
 								DBUS_TYPE_UINT32, &state);
-
-	vrrp_syslog_event("notify to wid,vrid %d,state %d\n",
-					vrrp->vrid, state);
 	
 	vrrp_syslog_event("notify to wid,profile %d,state %d\n",
 					vrrp->profile, state);
@@ -7177,10 +7174,10 @@ int had_notify_to_dhcp_failover
 	dbus_message_iter_append_basic(&iter,
 									DBUS_TYPE_UINT32, &failover_flag);
 	dbus_message_iter_append_basic(&iter,
-									DBUS_TYPE_UINT32, &(vrrp->vrid));
+									DBUS_TYPE_UINT32, &(vrrp->profile));    /* should be hansi id, not vrip. 2013-06-28 ZD.*/ 
 	dbus_message_iter_append_basic(&iter,
 									DBUS_TYPE_UINT32, &state);
-	vrrp_syslog_event("notify to dhcp,vrid %d,state %d\n", vrrp->vrid, state);
+	vrrp_syslog_event("notify to dhcp, hansi %d, vrid %d,state %d\n",vrrp->profile, vrrp->vrid, state);
 
 	uplink_cnt = vrrp->uplink_naddr;
 	dbus_message_iter_append_basic(&iter,

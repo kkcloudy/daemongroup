@@ -251,6 +251,7 @@ void had_updata
 )
 {
 	int vrid = 0;
+	int hansi = 0;
 	int time = 0;
 	vrrp_rt* vrrp = NULL;
 	int len = 0;
@@ -294,7 +295,10 @@ void had_updata
 		return;
 	}
 	else
-	{	/*check smac if the same as my mac*/
+	{	
+        /* get hansi id for vrrp. 2013-06-27 */
+	    hansi = vrrp->profile;		
+		/*check smac if the same as my mac*/
 		if (0 == had_mac_check(vrrp, eth->ether_shost, hd->updown_flag))
 		{
 			vrrp_syslog_dbg("vrid %d %s packet received with smac same as mine,ignore packet!\n",
@@ -364,40 +368,40 @@ void had_updata
 					(vrrp_get_link_state(vrrp, VRRP_LINK_TYPE_UPLINK)) && 
 					(VRRP_PKT_VIA_UPLINK == hd->updown_flag))
 				{
-					memset(&bufNode[vrid].uplink,0,sizeof(BUF_INFO));
-					memcpy(bufNode[vrid].uplink.buf,buf,len);
-					bufNode[vrid].uplink.set_flag = 1;
-					bufNode[vrid].uplink.buflen = len;
-					bufNode[vrid].uplink.time = had_TIMER_CLK();
+					memset(&bufNode[hansi].uplink,0,sizeof(BUF_INFO));
+					memcpy(bufNode[hansi].uplink.buf,buf,len);
+					bufNode[hansi].uplink.set_flag = 1;
+					bufNode[hansi].uplink.buflen = len;
+					bufNode[hansi].uplink.time = had_TIMER_CLK();
 				}
 				/* packet's updown_flag is downlink */
 				else if ((VRRP_LINK_NO_SETTED != vrrp->downlink_flag) &&
 						 (vrrp_get_link_state(vrrp, VRRP_LINK_TYPE_DOWNLINK)) && 
 						 (VRRP_PKT_VIA_DOWNLINK == hd->updown_flag))
 				{
-					memset(&bufNode[vrid].downlink,0,sizeof(BUF_INFO));
-					memcpy(bufNode[vrid].downlink.buf,buf,len);
-					bufNode[vrid].downlink.set_flag = 1;
-					bufNode[vrid].downlink.buflen = len;
-					bufNode[vrid].downlink.time = had_TIMER_CLK();
+					memset(&bufNode[hansi].downlink,0,sizeof(BUF_INFO));
+					memcpy(bufNode[hansi].downlink.buf,buf,len);
+					bufNode[hansi].downlink.set_flag = 1;
+					bufNode[hansi].downlink.buflen = len;
+					bufNode[hansi].downlink.time = had_TIMER_CLK();
 				}
 				
-				if ((1 == bufNode[vrid].uplink.set_flag) &&
-					(1 == bufNode[vrid].downlink.set_flag))
+				if ((1 == bufNode[hansi].uplink.set_flag) &&
+					(1 == bufNode[hansi].downlink.set_flag))
 				{
-					if ((bufNode[vrid].uplink.time > bufNode[vrid].downlink.time) && \
-						((time = bufNode[vrid].uplink.time - bufNode[vrid].downlink.time) > 2 * (vrrp->adver_int)))
+					if ((bufNode[hansi].uplink.time > bufNode[hansi].downlink.time) && \
+						((time = bufNode[hansi].uplink.time - bufNode[hansi].downlink.time) > 2 * (vrrp->adver_int)))
 					{
 						vrrp_syslog_dbg("time %d wait longer than two advertisement,drop the packets and dont update!\n",
 										time);
-						memset(&bufNode[vrid].downlink, 0, sizeof(BUF_INFO));
+						memset(&bufNode[hansi].downlink, 0, sizeof(BUF_INFO));
 					}
-					else if ((bufNode[vrid].downlink.time > bufNode[vrid].uplink.time)&& \
-							 ((time = bufNode[vrid].downlink.time - bufNode[vrid].uplink.time) > 2 * (vrrp->adver_int)))
+					else if ((bufNode[hansi].downlink.time > bufNode[hansi].uplink.time)&& \
+							 ((time = bufNode[hansi].downlink.time - bufNode[hansi].uplink.time) > 2 * (vrrp->adver_int)))
 					{
 						vrrp_syslog_dbg("time %d wait longer than two advertisement,drop the packets and dont update!\n",
 										time);
-						memset(&bufNode[vrid].uplink, 0, sizeof(BUF_INFO));
+						memset(&bufNode[hansi].uplink, 0, sizeof(BUF_INFO));
 					}
 				  
 					if (time < 2 * (vrrp->adver_int))
@@ -420,7 +424,7 @@ void had_updata
 								global_ht_opposite_ip = hd->heartbeatlinkip;
 							}
 							had_state_from_disable(vrrp,hd);
-							memset(&bufNode[vrid], 0, sizeof(PKT_BUF));
+							memset(&bufNode[hansi], 0, sizeof(PKT_BUF));
 						}
 					}
 			   }

@@ -3378,7 +3378,7 @@ DBusMessage * had_dbus_show_detail(DBusConnection *conn, DBusMessage *msg, void 
 		vrrp_syslog_error("vrrp dbus set error!\n");
 		return reply;
 	}
-	vrrp_syslog_dbg("show hansi %d detail\n");
+	vrrp_syslog_dbg("show hansi %d detail\n",profile);
 	vrrp = had_show_cfg(profile);
 	if(NULL == vrrp){
         ret = VRRP_RETURN_CODE_PROFILE_NOTEXIST;

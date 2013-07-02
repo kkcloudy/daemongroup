@@ -111,7 +111,7 @@ void * hmd_netlink_recv_thread(void)
 	            {
 	    			if(nl_msg)
 	    			{
-	        			hmd_syslog_info("Npd netlink msgType(%d)\n", nl_msg->msgType);	
+	        			hmd_syslog_info("HMD netlink msgType(%d)\n", nl_msg->msgType);	
 	        			switch(nl_msg->msgType)
 	        			{
 	        				case SYSTEM_STATE_NOTIFIER_EVENT:
