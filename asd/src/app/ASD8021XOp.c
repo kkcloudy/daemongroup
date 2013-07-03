@@ -1478,15 +1478,16 @@ static void ieee802_1x_store_radius_class(struct asd_data *wasd,
 {
 	u8 *class;
 	size_t class_len;
-	struct eapol_state_machine *sm = sta->eapol_sm;
+	struct eapol_state_machine *sm = NULL;
 	int count, i;
 	struct radius_attr_data *nclass;
 	size_t nclass_count;
-
-	if (!wasd->conf->radius->acct_server || wasd->radius == NULL ||
-	    sm == NULL)
+	asd_printf(ASD_DEFAULT,MSG_DEBUG,"ieee802_1x_store_radius_class\n");
+	unsigned char wlanid = wasd->WlanID;
+	if (!ASD_WLAN[wlanid] || !ASD_WLAN[wlanid]->radius_server || !ASD_WLAN[wlanid]->radius_server->acct_server || 
+	    !sta || sta->eapol_sm == NULL)//AXSSZFI-1812
 		return;
-
+	sm = sta->eapol_sm;
 	ieee802_1x_free_radius_class(&sm->radius_class);
 	count = radius_msg_count_attr(msg, RADIUS_ATTR_CLASS, 1);
 	if (count <= 0)
@@ -2690,13 +2691,13 @@ int asd_wlan_radius_init(unsigned int wlanid,unsigned char SID)
 	{
 		return ASD_SECURITY_NOT_EXIST;
 	}	
+	asd_wlan_radius_free(wlanid);
+	asd_printf(ASD_DEFAULT,MSG_DEBUG,"wlan free over!\n");
 	if(!((ASD_SECURITY[SID]->securityType == IEEE8021X)||(ASD_SECURITY[SID]->securityType == WPA_E)||(ASD_SECURITY[SID]->securityType == WPA2_E)||(ASD_SECURITY[SID]->securityType == MD5)||((ASD_SECURITY[SID]->securityType == WAPI_AUTH) && (ASD_SECURITY[SID]->wapi_radius_auth == 1))||(ASD_SECURITY[SID]->extensible_auth == 1)))
 	{
 		asd_printf(ASD_DEFAULT,MSG_DEBUG,"security type is no need to create radius server!\n");
 		return ASD_DBUS_SUCCESS;
 	}
-	asd_wlan_radius_free(wlanid);
-	asd_printf(ASD_DEFAULT,MSG_DEBUG,"wlan free over!\n");
 	ASD_WLAN[wlanid]->radius_server = os_zalloc(sizeof(struct asd_radius_servers));
 	if(ASD_WLAN[wlanid]->radius_server == NULL)
 	{
