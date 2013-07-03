@@ -521,7 +521,7 @@ void config_system(struct list *lpublic,struct list *lsystem)
 	cgiFormStringNoNewlines("console_userpwd",console_userpwd,64);
 	if((strcmp(console_username,"")!=0)&&(strcmp(console_userpwd,"")!=0))
 	{
-		ret=set_system_consolepwd_func_cmd1(console_username,console_userpwd);  /*返回0表示失败，返回1表示成功*/
+		ret=set_system_consolepwd_func1(console_username,console_userpwd);  /*返回0表示失败，返回1表示成功*/
 																				/*返回-1表示user name should be 'A'-'Z'  'a'-'z' '1'-'9'or '_'*/
 																			    /*返回-2表示user name length should be >=4 & <=32*/
 																				/*返回-3表示user name first char  should be 'A'-'Z' or 'a'-'z'*/

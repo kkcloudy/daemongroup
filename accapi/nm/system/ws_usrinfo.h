@@ -170,7 +170,7 @@ extern int mod_user_syslog_by_name(char *username,char *log_info,char *oper_info
 extern int get_timeout_threshold();
 /*user_name:4至32个字符，可使用字母、数字、"-"、"."，需以字母开头*/
 /*user_pwd:4至32个字符，必须包含字母、数字、其他字符，不能和user_name相同，不能是回文数*/
-extern int set_system_consolepwd_func_cmd1(char *user_name,char *user_pwd);/*返回0表示失败，返回1表示成功*/
+extern int set_system_consolepwd_func1(char *user_name,char *user_pwd);/*返回0表示失败，返回1表示成功*/
 																					/*返回-1表示user name should be 'A'-'Z'  'a'-'z' '1'-'9'or '_'*/
 																					/*返回-2表示user name length should be >=4 & <=32*/
 																					/*返回-3表示user name first char  should be 'A'-'Z' or 'a'-'z'*/
