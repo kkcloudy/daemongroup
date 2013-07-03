@@ -978,7 +978,7 @@ ospf_abr_should_announce (struct ospf *ospf,
 		zlog(NULL, LOG_CRIT, "line %u, function %s",
 		   __LINE__,(__func__ ? __func__ : "?"));
 		zlog_backtrace(LOG_CRIT);
-		return;
+		return 1;
 	}
 #endif
   if (EXPORT_NAME (area))

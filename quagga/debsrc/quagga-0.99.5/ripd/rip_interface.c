@@ -312,7 +312,7 @@ rip_request_neighbor_all (void)
 			}
 			ripif = ifp->info;
 			/* CID 11024 (#1 of 1): Dereference after null check , no problem*/
-			if((ripif = ifp->info == NULL) || !(ripif->running))	
+			if((ripif  == NULL) || !(ripif->running))	
 			/*CID 11024 end*/
 			{
 				zlog_warn ("The interface of neighbor %s doesnt Running!",
@@ -1683,7 +1683,7 @@ zlog_debug("(syna_test %d),dbus_connection_dcli[send_to]->board_state:%d \n",__L
 int rip_set_pfm(int opt)
 {
 	int temp_ret;	
-	int slot,back_slot;
+	int slot,back_slot=-1;
 	int product_type = rip_get_dbm_int(PRODUCT_TYPE_FILE);	
 	int is_active_master = rip_get_dbm_int(IS_ACTIVE_MASTER_FILE);
 	int board_id = rip_get_dbm_int(SLOT_ID_FILE);;

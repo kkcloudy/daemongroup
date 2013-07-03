@@ -937,7 +937,7 @@ int check_interface_belong_to_local_board_set_local_mode(const char *ifname)
 	/*global interface*/
 	return 0;
 }
-int
+void 
 active_master_packet_route_info_to_send(struct prefix *p, struct rib *rib, int slot, int comand)
 {
   struct listnode *node, *nnode;
@@ -2336,7 +2336,7 @@ rib_add_ipv4_equal (int type, int flags, struct prefix_ipv4 *p,
   /* Nexthop settings. */
   for(i=1;i<=nexthopnum;i++)
 	{
-		nexthop=nexthop_ipv4_add(rib,gate[i]);
+		nexthop_ipv4_add(rib,gate[i]);
 	}
 
 	return rib_add_ipv4_multipath(p,rib);
