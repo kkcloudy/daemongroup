@@ -142,9 +142,17 @@ enum dhcp_debug_type {
 	DEBUG_TYPE_INFO  = 1,
 	DEBUG_TYPE_ERROR = 2,
 	DEBUG_TYPE_DEBUG = 4,
-	DEBUG_TYPE_ALL   = 7,
+	DEBUG_TYPE_DEBUG_FAILOVER_CONNECT = 8,
+	DEBUG_TYPE_DEBUG_FAILOVER_MSG_DEAL = 16,
+	DEBUG_TYPE_DEBUG_FAILOVER_ALL = 24,
+	DEBUG_TYPE_ALL   = 31
+	
 };
-
+enum dhcp_failover_debug_type{
+	DEBUG_TYPE_CONNECT =8,
+	DEBUG_TYPE_MSG_DEAL = 16,
+	DEBUG_TYPE_FAILOVER_ALL = 24
+};
 struct statistics_info {
 	unsigned int host_num;		/* total number of ip address */
 	unsigned int segment_times;	/* ip address assigned */

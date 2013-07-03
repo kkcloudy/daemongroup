@@ -203,6 +203,7 @@ extern unsigned int unicast_flag;
 
 /*debug level*/
 extern unsigned int dhcp_log_level;
+extern unsigned int dhcp_failover_debug_log_level;
 
 pthread_mutex_t DhcpDbusEventMutex = PTHREAD_MUTEX_INITIALIZER;
 
@@ -2712,7 +2713,7 @@ dhcp_dbus_set_sub_failover_add_interface
 	failnode = &(subnode->owned_failover);
 	//ret = parse_failover_peer_no_file(failnode, sub->group, SUBNET_DECL);
 	expire_pool_for_failover(failnode, sub->shared_network);	
-	log_debug("for dhcp_failover_startup_one ret is %d \n", ret);
+	log_debug_failover(DEBUG_TYPE_CONNECT,"for dhcp_failover_startup_one ret is %d \n", ret);
 	if (!ret) {
 		//dhcp_failover_startup_one(failnode);
 	}	
@@ -2753,7 +2754,7 @@ dhcp_dbus_set_sub_failover
 	failnode = &(subnode->owned_failover);
 	ret = parse_failover_peer_no_file(failnode, sub->group, SUBNET_DECL);
 	expire_pool_for_failover(failnode, sub->shared_network);	
-	log_debug("for dhcp_failover_startup_one ret is %d \n", ret);
+	log_debug_failover(DEBUG_TYPE_CONNECT,"for dhcp_failover_startup_one ret is %d \n", ret);
 	if (!ret) {
 		dhcp_failover_startup_one(failnode);
 	}	
@@ -2794,7 +2795,7 @@ dhcp_dbus_change_sub_failover
 	failnode = &(subnode->owned_failover);		
 	ret = dhcp_dbus_change_state(subnode);
 	expire_pool_for_failover(failnode, sub->shared_network);	
-	log_debug("in change_sub_failover change state ret is %d \n", ret);
+	log_debug_failover(DEBUG_TYPE_CONNECT,"in change_sub_failover change state ret is %d \n", ret);
 	if (!ret) {
 		dhcp_failover_startup_one(failnode);
 	}	
@@ -8179,11 +8180,11 @@ int dhcp_dbus_do_failover(vrrp_param_t *params)
 		for (j = 0; j < (params->downlink_cnt + params->vgateway_cnt); j++) {
 			/*new one if_name one subnode*/
 			if (j < params->downlink_cnt) {	
-				log_debug("downlink interface name is %s, vrrpid is %d, \n", params->downlink_interface[j].if_name, params->vrid);
+				log_debug_failover(DEBUG_TYPE_CONNECT,"downlink interface name is %s, vrrpid is %d, \n", params->downlink_interface[j].if_name, params->vrid);
 				ret = dhcp_dbus_find_subnet_by_ifname(params->downlink_interface[j].if_name, &subnode);
 			}
 			else {				
-				log_debug("vgateway interface name is %s, vrrpid is %d\n", params->vgateway_interface[j - params->downlink_cnt].if_name, params->vrid);
+				log_debug_failover(DEBUG_TYPE_CONNECT,"vgateway interface name is %s, vrrpid is %d\n", params->vgateway_interface[j - params->downlink_cnt].if_name, params->vrid);
 				ret = dhcp_dbus_find_subnet_by_ifname(params->vgateway_interface[j - params->downlink_cnt].if_name, &subnode);
 			}
 			if (!ret) {
@@ -8194,14 +8195,14 @@ int dhcp_dbus_do_failover(vrrp_param_t *params)
 					*/
 					ret = find_interface_failover_to_backup_list(subnode);
 					if (ret) {
-						log_debug("not fing interface in backup_list \n");
+						log_debug_failover(DEBUG_TYPE_CONNECT,"not fing interface in backup_list \n");
 						if (j < params->downlink_cnt) {	
 							memcpy(backup->dhcp_interface[if_count].if_name, params->downlink_interface[j].if_name, strlen(params->downlink_interface[j].if_name));
-							log_debug("add backup downlink interface name is %s, vrrpid is %d, count %d\n", params->downlink_interface[j].if_name, params->vrid, if_count);
+							log_debug_failover(DEBUG_TYPE_CONNECT,"add backup downlink interface name is %s, vrrpid is %d, count %d\n", params->downlink_interface[j].if_name, params->vrid, if_count);
 						}
 						else {				
 							memcpy(backup->dhcp_interface[if_count].if_name, params->vgateway_interface[j - params->downlink_cnt].if_name, strlen(params->vgateway_interface[j - params->downlink_cnt].if_name));
-							log_debug("add backup vgateway interface name is %s, vrrpid is %d, count %d\n", params->vgateway_interface[j - params->downlink_cnt].if_name, params->vrid, if_count);
+							log_debug_failover(DEBUG_TYPE_CONNECT,"add backup vgateway interface name is %s, vrrpid is %d, count %d\n", params->vgateway_interface[j - params->downlink_cnt].if_name, params->vrid, if_count);
 						}
 						/*}*/
 						if_count ++;
@@ -8210,7 +8211,7 @@ int dhcp_dbus_do_failover(vrrp_param_t *params)
 				if (!(subnode->owned_failover.enable)) {
 					//sprintf(failname, "peer%d", (params.vrid)*100 + j);
 					sprintf(failname, "peer%d", params->vrid);
-					log_debug("add new failover state name is %s\n", failname);
+					log_debug_failover(DEBUG_TYPE_CONNECT,"add new failover state name is %s\n", failname);
 					memcpy(subnode->owned_failover.name, failname, strlen(failname));
 
 					if(!primary){
@@ -8246,11 +8247,11 @@ int dhcp_dbus_do_failover(vrrp_param_t *params)
 						if (subnode->owned_failover.primary) {*/
 						if (j < params->downlink_cnt) {	
 							memcpy(backup->dhcp_interface[if_count].if_name, params->downlink_interface[j].if_name, strlen(params->downlink_interface[j].if_name));
-							log_debug("add backup downlink interface name is %s, vrrpid is %d, count %d\n", params->downlink_interface[j].if_name, params->vrid, if_count);
+							log_debug_failover(DEBUG_TYPE_CONNECT,"add backup downlink interface name is %s, vrrpid is %d, count %d\n", params->downlink_interface[j].if_name, params->vrid, if_count);
 						}
 						else {				
 							memcpy(backup->dhcp_interface[if_count].if_name, params->vgateway_interface[j - params->downlink_cnt].if_name, strlen(params->vgateway_interface[j - params->downlink_cnt].if_name));
-							log_debug("add backup vgateway interface name is %s, vrrpid is %d, count %d\n", params->vgateway_interface[j - params->downlink_cnt].if_name, params->vrid, if_count);
+							log_debug_failover(DEBUG_TYPE_CONNECT,"add backup vgateway interface name is %s, vrrpid is %d, count %d\n", params->vgateway_interface[j - params->downlink_cnt].if_name, params->vrid, if_count);
 						}
 						/*}*/
 						if_count ++;
@@ -8273,7 +8274,7 @@ int dhcp_dbus_do_failover(vrrp_param_t *params)
 		backup->interface_num = if_count;
 
 		if (backup->interface_num) {
-			log_debug("add %d failover state\n", backup->interface_num);
+			log_debug_failover(DEBUG_TYPE_CONNECT,"add %d failover state\n", backup->interface_num);
 			backup->vrrpid = params->vrid;
 			backup->state = primary;
 			backup->next = failover_backup_list_head.next;
@@ -8288,11 +8289,11 @@ int dhcp_dbus_do_failover(vrrp_param_t *params)
 	else {	/*state change*/
 		for (j = 0; j < (params->downlink_cnt + params->vgateway_cnt); j++) {
 			if (j < params->downlink_cnt) {	
-				log_debug("downlink interface is %s, vrrpid is %d\n", params->downlink_interface[j].if_name, params->vrid);
+				log_debug_failover(DEBUG_TYPE_CONNECT,"downlink interface is %s, vrrpid is %d\n", params->downlink_interface[j].if_name, params->vrid);
 				ret = dhcp_dbus_find_subnet_by_ifname(params->downlink_interface[j].if_name, &subnode);
 			}
 			else {				
-				log_debug("vgateway interface is %s, vrrpid is %d\n", params->vgateway_interface[j - params->downlink_cnt].if_name, params->vrid);
+				log_debug_failover(DEBUG_TYPE_CONNECT,"vgateway interface is %s, vrrpid is %d\n", params->vgateway_interface[j - params->downlink_cnt].if_name, params->vrid);
 				ret = dhcp_dbus_find_subnet_by_ifname(params->vgateway_interface[j - params->downlink_cnt].if_name, &subnode);
 			}
 			
@@ -8301,7 +8302,7 @@ int dhcp_dbus_do_failover(vrrp_param_t *params)
 				if (!(subnode->owned_failover.enable)){
 					//sprintf(failname, "peer%d", (params.vrid)*100 + j);
 					sprintf(failname, "peer%d", params->vrid);
-					log_debug("add new failover state name is %s\n", failname);
+					log_debug_failover(DEBUG_TYPE_CONNECT,"add new failover state name is %s\n", failname);
 					memcpy(subnode->owned_failover.name, failname, strlen(failname));
 
 					if(!primary){
@@ -8337,13 +8338,13 @@ int dhcp_dbus_do_failover(vrrp_param_t *params)
 						if (subnode->owned_failover.primary) {*/
 						if (j < params->downlink_cnt) {	
 							memcpy(backup->dhcp_interface[backup->interface_num].if_name, params->downlink_interface[j].if_name, strlen(params->downlink_interface[j].if_name));
-							log_debug("add backup downlink interface name is %s, vrrpid is %d, count %d\n", params->downlink_interface[j].if_name, params->vrid, backup->interface_num);
+							log_debug_failover(DEBUG_TYPE_CONNECT,"add backup downlink interface name is %s, vrrpid is %d, count %d\n", params->downlink_interface[j].if_name, params->vrid, backup->interface_num);
 						}
 						else {	
 
 							
 							memcpy(backup->dhcp_interface[backup->interface_num].if_name, params->vgateway_interface[j - params->downlink_cnt].if_name, strlen(params->vgateway_interface[j - params->downlink_cnt].if_name));
-							log_debug("add backup vgateway interface name is %s, vrrpid is %d, count %d\n", params->vgateway_interface[j - params->downlink_cnt].if_name, params->vrid, backup->interface_num);
+							log_debug_failover(DEBUG_TYPE_CONNECT,"add backup vgateway interface name is %s, vrrpid is %d, count %d\n", params->vgateway_interface[j - params->downlink_cnt].if_name, params->vrid, backup->interface_num);
 						}
 						/*}*/
 						
@@ -8433,11 +8434,11 @@ dhcp_dbus_failover_recv_vrrp_state
 */
 	memset(&params, 0, sizeof(params));
 	memset(failname, 0, MAX_IF_NAME_LEN);
-	log_debug("--------------- HA instance info ---------------");
+	log_debug_failover(DEBUG_TYPE_CONNECT,"--------------- HA instance info ---------------");
 
 	dbus_message_iter_init(msg,&iter);
 	dbus_message_iter_get_basic(&iter, &failover_flag);	
-	log_debug("hansi notifier dhcp %s config dhcp failover\n", (failover_flag) ? "" : "not");
+	log_debug_failover(DEBUG_TYPE_CONNECT,"hansi notifier dhcp %s config dhcp failover\n", (failover_flag) ? "" : "not");
 	params.failover_flag = failover_flag;
 	
 	dbus_message_iter_next(&iter);
@@ -8446,12 +8447,12 @@ dhcp_dbus_failover_recv_vrrp_state
  	dbus_message_iter_next(&iter);	
 	dbus_message_iter_get_basic(&iter,&(params.state));
 	
-	log_debug("...vrid %d state %s", params.vrid, pha_state2str(params.state));
+	log_debug_failover(DEBUG_TYPE_CONNECT,"...vrid %d state %s", params.vrid, pha_state2str(params.state));
 
 	dbus_message_iter_next(&iter);	
 	dbus_message_iter_get_basic(&iter,&(params.uplink_cnt));
 	
-	log_debug("...uplink num %d", params.uplink_cnt);
+	log_debug_failover(DEBUG_TYPE_CONNECT,"...uplink num %d", params.uplink_cnt);
 
 	dbus_message_iter_next(&iter);	
 	dbus_message_iter_recurse(&iter,&iter_array);
@@ -8477,7 +8478,7 @@ dhcp_dbus_failover_recv_vrrp_state
 		
 		dbus_message_iter_next(&iter_array); 
 		
-		log_debug("...uplink %d: master %s backup %s virtual %s ifname %s",
+		log_debug_failover(DEBUG_TYPE_CONNECT,"...uplink %d: master %s backup %s virtual %s ifname %s",
 					j,
 					inet_int2str(params.uplink_interface[j].master_ip, master_ip_char, sizeof(master_ip_char) ),
 					inet_int2str(params.uplink_interface[j].backp_ip, backup_ip_char, sizeof(backup_ip_char) ),
@@ -8488,7 +8489,7 @@ dhcp_dbus_failover_recv_vrrp_state
 	dbus_message_iter_next(&iter);	
 	dbus_message_iter_get_basic(&iter,&(params.downlink_cnt));
 	
-	log_debug("...downlink num %d", params.downlink_cnt);
+	log_debug_failover(DEBUG_TYPE_CONNECT,"...downlink num %d", params.downlink_cnt);
 
 	dbus_message_iter_next(&iter);	
 	dbus_message_iter_recurse(&iter,&iter_array1);
@@ -8514,7 +8515,7 @@ dhcp_dbus_failover_recv_vrrp_state
 		
 		dbus_message_iter_next(&iter_array1); 
 		
-		log_debug("...downlink %d: master %s backup %s virtual %s ifname %s",
+		log_debug_failover(DEBUG_TYPE_CONNECT,"...downlink %d: master %s backup %s virtual %s ifname %s",
 					j,
 					inet_int2str(params.downlink_interface[j].master_ip,master_ip_char,sizeof(master_ip_char)),
 					inet_int2str(params.downlink_interface[j].backp_ip,backup_ip_char,sizeof(backup_ip_char)),
@@ -8525,7 +8526,7 @@ dhcp_dbus_failover_recv_vrrp_state
 	dbus_message_iter_next(&iter);	
 	dbus_message_iter_get_basic(&iter,&(params.vgateway_cnt));
 	
-	log_debug("...vgateway num %d", params.vgateway_cnt);
+	log_debug_failover(DEBUG_TYPE_CONNECT,"...vgateway num %d", params.vgateway_cnt);
 
 	dbus_message_iter_next(&iter);	
 	dbus_message_iter_recurse(&iter,&iter_array1);
@@ -8545,12 +8546,12 @@ dhcp_dbus_failover_recv_vrrp_state
 		
 		dbus_message_iter_next(&iter_array1); 
 		
-		log_debug("vgateway %s virtual_ip is %x\n",interface_name, params.vgateway_interface[j].virtual_ip);				
+		log_debug_failover(DEBUG_TYPE_CONNECT,"vgateway %s virtual_ip is %x\n",interface_name, params.vgateway_interface[j].virtual_ip);				
 	}
 
 	/*add sunjc@autelan.com for save vgateway virtual ip in interface*/
 	if(failover_flag && (vip_nu = save_vgateway_virtual_ip_in_interface(params))){
-		log_debug("have saved vgeteway virtual ip number is %d\n", vip_nu);
+		log_debug_failover(DEBUG_TYPE_CONNECT,"have saved vgeteway virtual ip number is %d\n", vip_nu);
 	}		
 	
 	dbus_message_iter_next(&iter);	
@@ -8563,7 +8564,7 @@ dhcp_dbus_failover_recv_vrrp_state
 	dbus_message_iter_next(&iter);
 	dbus_message_iter_get_basic(&iter,&(params.heartlink_opposite_ip));
 
-	log_debug("...heartlink: name %s local_ip %s opposite_ip %s",
+	log_debug_failover(DEBUG_TYPE_CONNECT,"...heartlink: name %s local_ip %s opposite_ip %s",
 					params.heartlink_if_name,
 					inet_int2str(params.heartlink_local_ip,master_ip_char,sizeof(master_ip_char)),
 					inet_int2str(params.heartlink_opposite_ip,backup_ip_char,sizeof(backup_ip_char)) );
@@ -8603,7 +8604,7 @@ dhcp_dbus_failover_recv_vrrp_state
 		     /* if dhcp server dynamic arp switch is open, and this is primary, then perform the 
 		         *  set dynamic arp function to binding ip pool downlink interfaces or vGateways.
 		         */
-		    log_debug("dhcp_dynamic_arp_switch is %s\n", dhcp_dynamic_arp_switch?"enable":"disable");
+		    log_debug_failover(DEBUG_TYPE_CONNECT,"dhcp_dynamic_arp_switch is %s\n", dhcp_dynamic_arp_switch?"enable":"disable");
 		    start = time(NULL);
 		    for (j = 0; j < params.downlink_cnt; j++) {   		
     		    dhcp_set_dynamic_arps(params.downlink_interface[j].if_name, params.vrid);
@@ -8612,7 +8613,7 @@ dhcp_dbus_failover_recv_vrrp_state
     		    dhcp_set_dynamic_arps(params.vgateway_interface[j].if_name, params.vrid);
     		}
 		    end = time(NULL);
-		    log_debug("set dynamic arp time is %d\n",(int)(end-start));
+		    log_debug_failover(DEBUG_TYPE_CONNECT,"set dynamic arp time is %d\n",(int)(end-start));
 		        
 		}
 		#if 0
@@ -9147,29 +9148,56 @@ dhcp_dbus_set_debug_state
 		}
 		return NULL;
 	}	
-		
-	if(debug_type == DEBUG_TYPE_ALL){
-		log_debug("dhcp debug_type is %s \n", "all");
-	}
-	else if(debug_type == DEBUG_TYPE_INFO){
-		log_debug("dhcp debug_type is %s \n", "info");
-	}
-	else if(debug_type == DEBUG_TYPE_ERROR){
-		log_debug("dhcp debug_type is %s \n", "error");
-	}
-	else if(debug_type == DEBUG_TYPE_DEBUG){
-		log_debug("dhcp debug_type is %s \n", "debug");
-	}
+	if(debug_type == DEBUG_TYPE_DEBUG_FAILOVER_CONNECT){
+		if(enable){
+			dhcp_failover_debug_log_level |= debug_type;
+		}else{
+			dhcp_failover_debug_log_level &= ~debug_type;
+		}
+		log_debug_failover(DEBUG_TYPE_CONNECT,"dhcp_debug_type is failover_connect\n");
 
-	if(enable){
-		dhcp_log_level |= debug_type;
+	}else if(debug_type == DEBUG_TYPE_DEBUG_FAILOVER_MSG_DEAL){
+		if(enable){
+			dhcp_failover_debug_log_level |= debug_type;
+		}else{
+			dhcp_failover_debug_log_level &= ~debug_type;
+		}
+		log_debug_failover(DEBUG_TYPE_MSG_DEAL,"dhcp_debug_type is failover_msg_deal\n");
+	}else if(debug_type == DEBUG_TYPE_DEBUG_FAILOVER_ALL){
+		if(enable){
+			dhcp_failover_debug_log_level |= debug_type;
+		}else{
+			dhcp_failover_debug_log_level &= ~debug_type;
+		}
+		log_debug_failover(DEBUG_TYPE_FAILOVER_ALL,"dhcp_debug_type is failover_all\n");
 	}else{
-		dhcp_log_level &= ~debug_type;
+		if(debug_type == DEBUG_TYPE_ALL){
+			log_debug("dhcp debug_type is %s \n", "all");
+			if(enable){
+			dhcp_failover_debug_log_level |= debug_type;
+			}else{
+				dhcp_failover_debug_log_level &= ~debug_type;
+			}
+		}
+		else if(debug_type == DEBUG_TYPE_INFO){
+			log_debug("dhcp debug_type is %s \n", "info");
+		}
+		else if(debug_type == DEBUG_TYPE_ERROR){
+			log_debug("dhcp debug_type is %s \n", "error");
+		}
+		else if(debug_type == DEBUG_TYPE_DEBUG){
+			log_debug("dhcp debug_type is %s \n", "debug");
+		}
+
+		if(enable){
+			dhcp_log_level |= debug_type;
+		}else{
+			dhcp_log_level &= ~debug_type;
+		}
+		
+		log_debug("globle dhcp_log_level is %d \n", dhcp_log_level);	
 	}
-	
-	log_debug("globle dhcp_log_level is %d \n", dhcp_log_level);
-	
-	
+		
 	reply = dbus_message_new_method_return(msg);
 
 	dbus_message_iter_init_append (reply, &iter);

@@ -445,7 +445,7 @@ isc_result_t omapi_disconnect (omapi_object_t *h,
 	isc_result_t status;
 
 #ifdef DEBUG_PROTOCOL
-	log_debug ("omapi_disconnect(%s)", force ? "force" : "");
+	log_debug_failover(DEBUG_TYPE_CONNECT,"omapi_disconnect(%s)", force ? "force" : "");
 #endif
 
 	c = (omapi_connection_object_t *)h;
@@ -489,7 +489,7 @@ isc_result_t omapi_disconnect (omapi_object_t *h,
 			}
 		}
 		close (c -> socket);
-		log_debug("&& failover close socket is %d\n",c -> socket);
+		log_debug_failover(DEBUG_TYPE_CONNECT,"&& failover close socket is %d\n",c -> socket);
 #if defined (TRACING)
 	}
 #endif

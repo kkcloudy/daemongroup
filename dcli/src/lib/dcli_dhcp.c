@@ -7802,13 +7802,16 @@ dcli_set_debug_state
 
 DEFUN(dhcp_debug_enable_cmd_func,
 	dhcp_debug_enable_cmd,
-	"debug dhcp (all|info|error|debug)",
+	"debug dhcp (all|info|error|debug|debug_failover_connect|debug_failover_msg_deal|debug_failover_all)",
 	"Add debug dhcp Information\n"
 	"Dhcp server\n"	
 	"Open dhcp debug level all\n"	
 	"Open dhcp debug level info\n"
 	"Open dhcp debug level error\n"
 	"Open dhcp debug level debug\n"
+	"Open dhcp debug level dhcp_failover_connect"
+	"Open dhcp debug level dhcp_failover_msg_deal"
+	"Open dhcp debug level dhcp_failover_all"	
 )
 {
 	unsigned int ret = 0, debug_type = 0, debug_enable = 1;
@@ -7824,6 +7827,15 @@ DEFUN(dhcp_debug_enable_cmd_func,
 	}
 	else if (strncmp("debug",argv[0],strlen(argv[0]))==0) {
 		debug_type = DEBUG_TYPE_DEBUG;
+	}
+	else if(strncmp("debug_failover_connect",argv[0],strlen(argv[0])) == 0){
+		debug_type = DEBUG_TYPE_DEBUG_FAILOVER_CONNECT;
+	}
+	else if(strncmp("debug_failover_msg_deal",argv[0],strlen(argv[0])) == 0){
+		debug_type = DEBUG_TYPE_DEBUG_FAILOVER_MSG_DEAL;
+	}
+	else if(strncmp("debug_failover_all",argv[0],strlen(argv[0])) == 0){
+		debug_type = DEBUG_TYPE_DEBUG_FAILOVER_ALL;
 	}
 	else {
 		vty_out(vty,"bad command parameter %s\n", argv[0]);
@@ -7841,7 +7853,7 @@ DEFUN(dhcp_debug_enable_cmd_func,
 
 DEFUN(dhcp_debug_disable_cmd_func,
 	dhcp_debug_disable_cmd,
-	"no debug dhcp (all|info|error|debug)",
+	"no debug dhcp (all|info|error|debug|debug_failover_connect|debug_failover_msg_deal|debug_failover_all)",
 	"Delete old Configuration\n"
 	"Config dhcp debugging close\n"
 	"Dhcp server\n"
@@ -7849,6 +7861,9 @@ DEFUN(dhcp_debug_disable_cmd_func,
 	"Close dhcp debug level info\n"
 	"Close dhcp debug level error\n"
 	"Close dhcp debug level debug\n"
+	"Close dhcp debug level dhcp_failover_connect"
+	"Close dhcp debug level dhcp_failover_msg_deal"
+	"Close dhcp debug level dhcp_failover_all"
 
 )
 {
@@ -7865,6 +7880,15 @@ DEFUN(dhcp_debug_disable_cmd_func,
 	}
 	else if (strncmp("debug",argv[0],strlen(argv[0]))==0) {
 		debug_type = DEBUG_TYPE_DEBUG;
+	}
+	else if(strncmp("debug_failover_connect",argv[0],strlen(argv[0])) == 0){
+		debug_type = DEBUG_TYPE_DEBUG_FAILOVER_CONNECT;
+	}
+	else if(strncmp("debug_failover_msg_deal",argv[0],strlen(argv[0])) == 0){
+		debug_type = DEBUG_TYPE_DEBUG_FAILOVER_MSG_DEAL;
+	}
+	else if(strncmp("debug_failover_all",argv[0],strlen(argv[0])) == 0){
+		debug_type = DEBUG_TYPE_DEBUG_FAILOVER_ALL;
 	}
 	else {
 		vty_out(vty,"bad command parameter %s\n", argv[0]);
