@@ -74,7 +74,8 @@ enum hmd_dbus_result_no_e {
 	HMD_DBUS_INVALID_SLOT_NUM,
 	HMD_DBUS_TIMER_CONFIG_SAVE_STATE_ENABLE,  //fengwenchao add 20130412 for hmd timer config save 
 	HMD_DBUS_IS_NOT_MASTER, //fengwenchao add 20130412 for hmd timer config save 
-	HMD_DBUS_SET_NUM_MORE_THAN_SPECEFICATION  //fengwenchao add for read gMaxWTPs from  /dbm/local_board/board_ap_max_counter
+	HMD_DBUS_SET_NUM_MORE_THAN_SPECEFICATION,  //fengwenchao add for read gMaxWTPs from  /dbm/local_board/board_ap_max_counter
+	HMD_DBUS_DELETING_HANSI
 };
 #define DCLI_HMD_CHECK_FAILED	(-1)
 #define DCLI_HMD_CREATED		(1)		/* HMD have created.		*/
