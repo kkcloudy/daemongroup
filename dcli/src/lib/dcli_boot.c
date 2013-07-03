@@ -2238,7 +2238,7 @@ DEFUN(config_system_img_func,
 
 DEFUN(show_boot_env_var_func,
 	show_boot_env_var_func_cmd,
-	"show boot_env_var SLOT_ID NAME",
+	"show boot_env_var <1-16> NAME",
 	SHOW_STR
 	"Show bootrom environment variable infomation\n"
 	"the slot id number\n"
@@ -2247,13 +2247,19 @@ DEFUN(show_boot_env_var_func,
 {
 	DBusMessage *query, *reply;
 	DBusError err;
-	int ret;
-	int slot_id;
+	int ret,res;
+	unsigned short slot_id;
 	int slot_count = get_product_info(SEM_SLOT_COUNT_PATH);
 	char env_name[256] ;
 	char *envname = env_name;
 
-    slot_id = strtoul(argv[0], NULL, 10);
+    //slot_id = strtoul(argv[0], NULL, 10);
+    res = parse_single_param_no((char*)argv[0],&slot_id);
+	if(res != 0)
+	{
+	 	vty_out(vty,"%% parse param failed!\n");
+		return CMD_WARNING;        
+	}
 	if(slot_id > slot_count || slot_id <= 0)
 	{
 		vty_out(vty, "error slot number : %s\n", argv[0]);
@@ -2452,7 +2458,7 @@ DEFUN(set_boot_env_bootcmd_func,
 
 DEFUN(set_boot_env_var_func,
 	set_boot_env_var_func_cmd,
-	"set boot_env_var SLOT_ID NAME .LINE",
+	"set boot_env_var <1-16> NAME .LINE",
 	SETT_STR
 	"set bootrom environment variable\n"
 	"the slot id number\n"
@@ -2462,14 +2468,20 @@ DEFUN(set_boot_env_var_func,
 {
 	DBusMessage *query, *reply;
 	DBusError err;
-	int ret;
-	int slot_id;	
+	int ret,res;
+	unsigned short slot_id;	
 	int slot_count = get_product_info(SEM_SLOT_COUNT_PATH);
 	char env_name[256] ;	    
 	char *envname = env_name;		
     char *input_value = NULL; 	 
 	
-	slot_id = strtoul(argv[0], NULL, 10);
+	//slot_id = strtoul(argv[0], NULL, 10);
+	res = parse_single_param_no((char*)argv[0],&slot_id);
+	if(res != 0)
+	{
+	 	vty_out(vty,"%% parse param failed!\n");
+		return CMD_WARNING;        
+	}
 	if(slot_id > slot_count || slot_id <= 0)
 	{
 		vty_out(vty, "error slot number : %s\n", argv[0]);
