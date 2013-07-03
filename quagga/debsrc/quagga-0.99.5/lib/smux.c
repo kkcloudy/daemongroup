@@ -1415,9 +1415,14 @@ smux_connect (struct thread *t)
 
   if (debug_smux)
     zlog_debug ("SMUX connect try %d", (fail + 1));
+  if(smux_sock>0)
+  {
+	smux_stop();
+  }
 
   /* Clear thread poner of myself. */
   smux_connect_thread = NULL;
+
 
   /* Make socket.  Try to connect. */
   smux_sock = smux_socket ();
@@ -1506,7 +1511,7 @@ smux_stop ()
 	smux_connect_thread=NULL;
 
   }
-  if (smux_sock >= 0)
+  if (smux_sock > 0)
     {
       close (smux_sock);
       smux_sock = -1;
