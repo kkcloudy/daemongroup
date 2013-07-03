@@ -137,6 +137,12 @@ if_create (const char *name, int namelen)
 	}
 #endif
   ifp = XCALLOC (MTYPE_IF, sizeof (struct interface));
+  if(!ifp)
+  {
+	  zlog_err("if_create(%s): Can't malloc memory!", name);
+	  return NULL;
+
+  }
   memset(ifp,0,sizeof (struct interface));
   ifp->ifindex = IFINDEX_INTERNAL;
   strncpy (ifp->name, name, namelen);
@@ -147,6 +153,7 @@ if_create (const char *name, int namelen)
   {
 	  zlog_err("if_create(%s): corruption detected -- interface with this "
 		   "name exists already!", ifp->name);
+	  XFREE(MTYPE_IF,ifp);
 	  return NULL;
   }
   ifp->connected = list_new ();

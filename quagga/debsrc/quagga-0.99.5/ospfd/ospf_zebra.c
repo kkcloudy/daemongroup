@@ -653,7 +653,7 @@ void
 ospf_pfm_start()
 {
 	int temp_ret;	
-	int slot,back_slot;
+	int slot,back_slot=2;
 	FILE *fd = NULL;
 	int product_type = -1;	
 	int is_active_master = -1;
@@ -704,9 +704,12 @@ ospf_pfm_start()
 			slot=board_id;
 			if(slot == 1)
 				back_slot = 2;
-			if(slot == 2)
+			else if(slot == 2)
 				back_slot = 1;
-				
+			else
+			{
+				back_slot=-1;
+			}	
 				
 			  for(i = 0;i < MAX_SLOT ; i++)
 				{
