@@ -30829,7 +30829,7 @@ int set_wlan_tunnel_mode(unsigned char WlanID, unsigned char state){
 }
 //if radio interface in wlan bridge, We cannot delete it so we should delete it from wlan bridge
 int delete_radioif_from_wlan_bridge(unsigned char WlanID){
-	int ret = -1;
+	int ret = WID_DBUS_SUCCESS;//for AXSSZFI-1784 
 	int i=0;
 	int j=0;
 	if(AC_WLAN[WlanID] == NULL)
