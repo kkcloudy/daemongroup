@@ -50,7 +50,6 @@ inet_aton (const char *cp, struct in_addr *inaddr)
 	case '.':
 	  if (++dots > 3)
 	    return 0;
-	  break;
 	case '\0':
 	  if (val > 255)
 	    return 0;
