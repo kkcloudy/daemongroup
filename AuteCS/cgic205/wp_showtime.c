@@ -406,6 +406,11 @@ int ShowTime(struct list *lpublic, struct list *lsystem)
         					fprintf(cgiOut,"</tr>");
 						}
 					
+					//新增时间条目
+					fprintf(cgiOut,"<tr height=26>"\
+					"<td align=left id=tdleft><a href=wp_webservice.cgi?UN=%s target=mainFrame class=top><font id=%s>%s</font></a></td>",encry,search(lpublic,"menu_san"),search(lpublic,"web_service"));
+					fprintf(cgiOut,"</tr>");
+					
 					 for(i=0;i<5;i++) 
 	              {
   				    fprintf(cgiOut,"<tr height=25>"\

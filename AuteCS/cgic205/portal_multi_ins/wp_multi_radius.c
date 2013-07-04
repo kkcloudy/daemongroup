@@ -41,6 +41,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "ws_conf_engine.h"
 
 #include "ws_eag_conf.h"  
+#include "eag/eag_errcode.h"
+#include "eag/eag_conf.h"
+#include "eag/eag_interface.h"
+#include "ws_init_dbus.h"
+#include "ws_dcli_vrrp.h"
+#include "ws_dbus_list_interface.h"
+
 
 #ifndef MULTI_RADIUS
 #define MULTI_RADIUS
@@ -48,8 +55,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define SUBMIT_NAME "submit_multi_radius"
 
 #define MULTI_RADIUS_STATUS_FILE_PATH	"/opt/services/status/multiradius_status.status"
-
-#define MULTI_RADIUS_CONF_FILE_PATH	"/opt/services/conf/multiradius_conf.conf"
 
 #endif
 
@@ -64,6 +69,17 @@ typedef struct{
 	
 } STPageInfo;
 
+static dbus_parameter parameter;
+static instance_parameter *paraHead1 = NULL;
+static void *ccgi_connection = NULL;
+static char plotid[10] = {0};
+
+#define MAX_RADIUS_DOMAIN_LEN 64
+
+#define CHARACTER_NUM	8
+char *escape_character[] = {"%", "&", "+", "#", " ", "/", "?", "="};
+char *encoder_character[] = {"%25", "%26", "%2B", "%23", "%20", "%2F", "%3F", "%3D"};
+
 
 /***************************************************************
 申明回调函数
@@ -71,6 +87,9 @@ typedef struct{
 static int s_multiRadius_prefix_of_page( STPageInfo *pstPageInfo );
 static int s_multiRadius_content_of_page( STPageInfo *pstPageInfo );
 
+static char *replace(char *source,char *sub,char *rep);
+
+static void url_encoder(char *source,char *result,char **escape_character,char **encoder_character,int character_num);
 
 
 /***************************************************************
@@ -84,52 +103,60 @@ static int s_multiRadius_content_of_page( STPageInfo *pstPageInfo );
 ****************************************************************/
 int cgiMain()
 {
+	int ret1 = 0;
 	STPageInfo stPageInfo;
-    char *tmp=(char *)malloc(64);
-	int ret;	
-	
-	if(access(MULTI_RADIUS_F,0)!=0)
-	{
-		create_eag_xml(MULTI_RADIUS_F);
-		write_status_file( MULTI_RADIUS_STATUS, "start" );
-	}
-	else
-	{
-	  ret=if_xml_file_z(MULTI_RADIUS_F);
-	  if(ret!=0)
-	  {
-		   memset(tmp,0,64);
-		   sprintf(tmp,"sudo rm  %s > /dev/null",MULTI_RADIUS_F);
-		   system(tmp);
-		   create_eag_xml(MULTI_RADIUS_F);
-		   write_status_file( MULTI_RADIUS_STATUS, "start" );
-	  }
-	}
-    free(tmp);
+	int ret;		
+
+	DcliWInit();
+	ccgi_dbus_init();
 	
 //初始化常用公共变量
 	memset( &stPageInfo, 0,sizeof(STPageInfo) );
+	ret1 = init_portal_container(&(stPageInfo.pstradiusContainer));
+	stPageInfo.lpublic = stPageInfo.pstradiusContainer->lpublic;
+	stPageInfo.lauth=stPageInfo.pstradiusContainer->llocal;//get_chain_head("../htdocs/text/authentication.txt");
 
 	cgiFormStringNoNewlines("UN", stPageInfo.encry, BUF_LEN);
 	
-	stPageInfo.username_encry=dcryption(stPageInfo.encry);
-    if( NULL == stPageInfo.username_encry )
+	//stPageInfo.username_encry=dcryption(stPageInfo.encry);
+    if( WS_ERR_PORTAL_ILLEGAL_USER == ret1 )
     {
 	    ShowErrorPage(search(stPageInfo.lpublic,"ill_user")); 	  /*用户非法*/
+		release_portal_container(&(stPageInfo.pstradiusContainer));
 		return 0;
 	}
-	stPageInfo.iUserGroup = checkuser_group( stPageInfo.username_encry );
+	//stPageInfo.iUserGroup = checkuser_group( stPageInfo.username_encry );
+	stPageInfo.iUserGroup = stPageInfo.pstradiusContainer->iUserGroup;
 
 	//stPageInfo.pstModuleContainer = MC_create_module_container();
-	init_portal_container(&(stPageInfo.pstradiusContainer));
 	if( NULL == stPageInfo.pstradiusContainer )
 	{
+		release_portal_container(&(stPageInfo.pstradiusContainer));
 		return 0;
 	}
-	stPageInfo.lpublic=stPageInfo.pstradiusContainer->lpublic;//get_chain_head("../htdocs/text/public.txt");
-	stPageInfo.lauth=stPageInfo.pstradiusContainer->llocal;//get_chain_head("../htdocs/text/authentication.txt");
 	
 	stPageInfo.fp = cgiOut;
+
+	memset(plotid,0,sizeof(plotid));
+	cgiFormStringNoNewlines("plotid", plotid, sizeof(plotid)); 
+	
+	list_instance_parameter(&paraHead1, INSTANCE_STATE_WEB);
+	if (NULL == paraHead1) {
+		return 0;
+	}
+	if(strcmp(plotid, "") == 0)
+	{
+		parameter.instance_id = paraHead1->parameter.instance_id;
+		parameter.local_id = paraHead1->parameter.local_id;
+		parameter.slot_id = paraHead1->parameter.slot_id;
+		snprintf(plotid,sizeof(plotid)-1,"%d-%d-%d",parameter.slot_id, parameter.local_id, parameter.instance_id);
+	}
+	else
+	{
+		get_slotID_localID_instanceID(plotid, &parameter);
+	}
+	ccgi_ReInitDbusConnection(&ccgi_connection, parameter.slot_id, DISTRIBUTFAG);
+	fprintf(stderr, "----------------------------------------------plotid=%s\n", plotid);
 //初始化完毕
 
 	
@@ -138,7 +165,7 @@ int cgiMain()
 
 	
 
-	MC_setActiveLabel( stPageInfo.pstradiusContainer->pstModuleContainer, 8 );
+	MC_setActiveLabel( stPageInfo.pstradiusContainer->pstModuleContainer, WP_EAG_RADIUS);
 
 	MC_setPrefixOfPageCallBack( stPageInfo.pstradiusContainer->pstModuleContainer, (MC_CALLBACK)s_multiRadius_prefix_of_page, &stPageInfo );
 	MC_setContentOfPageCallBack( stPageInfo.pstradiusContainer->pstModuleContainer, (MC_CALLBACK)s_multiRadius_content_of_page, &stPageInfo );
@@ -161,6 +188,8 @@ int cgiMain()
 
 	
 	MC_writeHtml( stPageInfo.pstradiusContainer->pstModuleContainer );
+
+	free_instance_parameter_list(&paraHead1);
 	
 	release_portal_container(&(stPageInfo.pstradiusContainer));
 	
@@ -172,26 +201,13 @@ int cgiMain()
 static int s_multiRadius_prefix_of_page( STPageInfo *pstPageInfo )
 {
 	char del_rule[10] = "";
-	char index[32] = "";
-	char nodez[32];
-	memset(nodez,0,32);
-	char attz[32];
-	memset(attz,0,32);
+	char nodez[MAX_RADIUS_DOMAIN_LEN] = {0};
+	int ret = 0;
 
 	FILE * fp = pstPageInfo->fp;
 
 	//if file not exist,creat it and write "start" in it
-	FILE * fp1 =NULL ;
 	char buf_start[]="start\n";
-	if( (fp1 = fopen(MULTI_RADIUS_STATUS_FILE_PATH,"w+")) != NULL )
-	{
-
-		fwrite(buf_start,strlen(buf_start),1,fp1);
-		//fprintf( stderr, "write status\n");	
-		fclose(fp1);
-	}
-	
-
 	
 	fprintf(fp, "<style type=text/css>"\
 	 	 		"#div1{ width:58px; height:18px; border:1px solid #666666; background-color:#f9f8f7;}"\
@@ -221,21 +237,17 @@ static int s_multiRadius_prefix_of_page( STPageInfo *pstPageInfo )
 		fprintf( fp, "</script>\n" );
 	}
 	cgiFormStringNoNewlines( "DELRULE", del_rule, 10 );
-	if( !strcmp(del_rule, "delete") )
+	if( !strcmp(del_rule, "delete") && (pstPageInfo->iUserGroup == 0))
 	{
-		cgiFormStringNoNewlines( "PLOTIDZ", index, 32 );
-		cgiFormStringNoNewlines( "NODEZ", nodez, 32 );
-		cgiFormStringNoNewlines( "ATTZ", attz, 32 );
-		if(strcmp(attz,MTD_N)==0)
-		{
-			ShowAlert("默认的不能删除");
-		}
-		else
-		{
-		    delete_eag_onelevel(MULTI_RADIUS_F, nodez, ATT_Z, attz);
-		}
+		cgiFormStringNoNewlines( "NODEZ", nodez, sizeof(nodez) );
+
+		ret = eag_del_radius(ccgi_connection, 
+									parameter.local_id,
+									parameter.instance_id, 
+									nodez );
+
 		fprintf( fp, "<script type='text/javascript'>\n" );
-		fprintf( fp, "window.location.href='wp_multi_radius.cgi?UN=%s&plotid=%s';\n", pstPageInfo->encry ,index);
+		fprintf( fp, "window.location.href='wp_multi_radius.cgi?UN=%s&plotid=%s';\n", pstPageInfo->encry ,plotid);
 		fprintf( fp, "</script>\n" );
 	}
 
@@ -249,76 +261,35 @@ static int s_multiRadius_content_of_page( STPageInfo *pstPageInfo )
 	struct list * radius_auth = pstPageInfo->lauth;
 	int i, j,cl = 0;
 
-    char *urlnode=(char *)malloc(20);
-	memset(urlnode,0,20);
-	cgiFormStringNoNewlines( "plotid", urlnode, 20 );
-
-	char addpid[10];
-	memset(addpid,0,10);
-
-	char plotidz[10];
-	memset(plotidz,0,10);
-	
 	char menu[21]="";
 	char i_char[10]="";
-
-
 	/////////////读取数据/////////////////////////
 
-	FILE * fd = NULL ;
-	
-	
-
-    if(strcmp(urlnode,"")==0)
-		strcpy(addpid,PLOTID_ONE);
-	else
-		strcpy(addpid,urlnode);
-	
-
 	fprintf(fp,	"<table border=0  cellspacing=0 cellpadding=0>"\
-					"<tr>"\
-						"<td><a id=link href=wp_add_multi_radius.cgi?UN=%s&plotid=%s>%s</a></td>", pstPageInfo->encry,addpid,search(radius_auth,"add_multi_radius") );
-    fprintf(fp,"</tr>");
+					"<tr>");
+	if(pstPageInfo->iUserGroup == 0)
+		{
+			fprintf(fp,"<td><a id=link href=wp_add_multi_radius.cgi?UN=%s&plotid=%s>%s</a></td>", pstPageInfo->encry,plotid,search(radius_auth,"add_multi_radius") );
+		}
+	fprintf(fp,"</tr>");
 	fprintf(fp,"<tr height=7><td></td></tr>");
 	fprintf(fp,"<tr>\n");
 	fprintf(fp,"<td>%s</td>",search(radius_auth,"plot_idz"));
 	fprintf(fp,"<td><select name=port_id onchange=plotid_change(this)>");
-	if(strcmp(urlnode,"")==0)
+	instance_parameter *pq = NULL;
+	char temp[10] = { 0 };
+	
+	for (pq=paraHead1;(NULL != pq);pq=pq->next)
 	{
-		fprintf(fp,"<option value='%s'>1</option>",PLOTID_ONE);
-		fprintf(fp,"<option value='%s'>2</option>",PLOTID_TWO);
-		fprintf(fp,"<option value='%s'>3</option>",PLOTID_THREE);
-		fprintf(fp,"<option value='%s'>4</option>",PLOTID_FOUR);
-		fprintf(fp,"<option value='%s'>5</option>",PLOTID_FIVE);
+		memset(temp,0,sizeof(temp));
+		snprintf(temp,sizeof(temp)-1,"%d-%d-%d",pq->parameter.slot_id,pq->parameter.local_id,pq->parameter.instance_id);
+		
+		if (strcmp(plotid, temp) == 0)
+			fprintf(cgiOut,"<option value='%s' selected>%s</option>\n",temp,temp);
+		else	       
+			fprintf(cgiOut,"<option value='%s'>%s</option>\n",temp,temp);
 	}
-	else
-	{
-
-		if(strcmp(urlnode,PLOTID_ONE)==0)
-			fprintf(fp,"<option value='%s' selected>1</option>",PLOTID_ONE);
-		else
-			fprintf(fp,"<option value='%s'>1</option>",PLOTID_ONE);
-
-		if(strcmp(urlnode,PLOTID_TWO)==0)
-			fprintf(fp,"<option value='%s' selected>2</option>",PLOTID_TWO);
-		else
-			fprintf(fp,"<option value='%s'>2</option>",PLOTID_TWO);
-
-		if(strcmp(urlnode,PLOTID_THREE)==0)
-			fprintf(fp,"<option value='%s' selected>3</option>",PLOTID_THREE);
-		else
-			fprintf(fp,"<option value='%s'>3</option>",PLOTID_THREE);
-
-		if(strcmp(urlnode,PLOTID_FOUR)==0)
-			fprintf(fp,"<option value='%s' selected>4</option>",PLOTID_FOUR);
-		else
-			fprintf(fp,"<option value='%s'>4</option>",PLOTID_FOUR);
-
-		if(strcmp(urlnode,PLOTID_FIVE)==0)
-			fprintf(fp,"<option value='%s' selected>5</option>",PLOTID_FIVE);
-		else
-			fprintf(fp,"<option value='%s'>5</option>",PLOTID_FIVE);
-	}
+	
 	fprintf(fp,"</select></td>");
 	fprintf(fp, "</tr>");
 	fprintf(fp,"<tr height=7><td></td></tr>");
@@ -344,89 +315,120 @@ static int s_multiRadius_content_of_page( STPageInfo *pstPageInfo )
 
 	fprintf(fp, "<th width=13>&nbsp;</th>"\
 				"</tr>");
+	int ret = 0;
+	char *domain=NULL;
+	struct radius_conf radiusconf;
+	memset( &radiusconf, 0, sizeof(struct radius_conf) );
+	ret = eag_get_radius_conf(ccgi_connection, 
+									parameter.local_id,
+									parameter.instance_id, 
+									domain,
+									&radiusconf );
 
-   if( NULL == (fd = fopen(MULTI_RADIUS_F, "r")))
+	for( i=0; i<radiusconf.current_num; i++ )
 	{
-		fprintf(fp,	"</table>");
-		return 0;
-	}		
-	int locate = 0;
+			char ipstr[32] = {0};
+			memset(menu,0,21);
+			strcpy(menu,"menulist");
 
-		struct st_radiusz c_head,*cq;
-		int cnum,cflag=-1;
-		char *tempz=(char *)malloc(20);
-		memset(tempz,0,20);
-		if(strcmp(urlnode,"")!=0)
-		{
-			memset(tempz,0,20);
-			sprintf(tempz,"%s%s",MTR_N,urlnode);
-		}
-		else
-		{
-			memset(tempz,0,20);
-			sprintf(tempz,"%s%s",MTR_N,PLOTID_ONE);
-		}
-		
-		cflag=read_radius_xml(MULTI_RADIUS_F, &c_head, &cnum, tempz);
+			char temp[5];
+			memset(&temp,0,5);
+			sprintf(temp,"%d",i);
+			strcat(menu,temp);
 
+			fprintf(fp,	"<tr height=30 align=left bgcolor=%s>", setclour(cl) );
 
-		 if(cflag==0)
-		{
-			cq=c_head.next;
-			while(cq !=NULL)
+			fprintf(fp,	"<td>%s</td>", radiusconf.radius_srv[i].domain );
+			ccgi_ip2str( radiusconf.radius_srv[i].auth_ip, ipstr,sizeof(ipstr));
+			fprintf(fp,	"<td>%s</td>", ipstr);
+			fprintf(fp,	"<td>%u</td>", radiusconf.radius_srv[i].auth_port);
+			ccgi_ip2str( radiusconf.radius_srv[i].acct_ip, ipstr,sizeof(ipstr));			
+			fprintf(fp,	"<td>%s</td>", ipstr);
+			fprintf(fp,	"<td>%u</td>", radiusconf.radius_srv[i].acct_port);
+
+			fprintf(fp, "<td>");
+			if(pstPageInfo->iUserGroup == 0)
 			{
-			    locate ++;
-				memset(menu,0,21);
-				strcpy(menu,"menulist");
-
-				char temp[5];
-				memset(&temp,0,5);
-				sprintf(temp,"%d",locate);
-				strcat(menu,temp);
-
-				memset(plotidz,0,10);
-				if(strcmp(urlnode,"")==0)
-					strcpy(plotidz,PLOTID_ONE);
-				else
-					strcpy(plotidz,urlnode);
-
-
-				fprintf(fp,	"<tr height=30 align=left bgcolor=%s>", setclour(cl) );
-
-				fprintf(fp,	"<td>%s</td>", cq->domain_name );
-				fprintf(fp,	"<td>%s</td>", cq->radius_server_ip);
-				fprintf(fp,	"<td>%s</td>", cq->radius_server_port);
-				fprintf(fp,	"<td>%s</td>", cq->charging_server_ip);
-				fprintf(fp,	"<td>%s</td>", cq->charging_server_port);
-
-				fprintf(fp, "<td>");
-				fprintf(fp, "<div style=\"position:relative; z-index:%d\" onmouseover=\"popMenu('%s');\" onmouseout=\"popMenu('%s');\">",(512-locate),menu,menu);
+				fprintf(fp, "<div style=\"position:relative; z-index:%d\" onmouseover=\"popMenu('%s');\" onmouseout=\"popMenu('%s');\">",(512-i),menu,menu);
 				fprintf(fp, "<img src=/images/detail.gif>"\
 				"<div id=%s style=\"display:none; position:absolute; top:5px; left:0;\">",menu);
 				fprintf(fp, "<div id=div1>");
-				fprintf(fp, "<div id=div2 onmouseover=\"this.style.backgroundColor='#b6bdd2'\" onmouseout=\"this.style.backgroundColor='#f9f8f7'\"><a id=link href=wp_multi_radius.cgi?UN=%s&DELRULE=%s&PLOTIDZ=%s&NODEZ=%s&ATTZ=%s target=mainFrame>%s</a></div>", pstPageInfo->encry , "delete" ,plotidz,tempz,cq->domain_name,search(radius_public,"delete"));
-				fprintf(fp, "<div id=div2 onmouseover=\"this.style.backgroundColor='#b6bdd2'\" onmouseout=\"this.style.backgroundColor='#f9f8f7'\"><a id=link href=wp_edit_multi_radius.cgi?UN=%s&EDITCONF=%s&PLOTIDZ=%s&NODEZ=%s&ATTZ=%s target=mainFrame>%s</a></div>", pstPageInfo->encry , "edit" ,plotidz,tempz,cq->domain_name,search(radius_public,"configure"));
+
+				char encoder_character_result[256] = { 0 };
+				url_encoder(radiusconf.radius_srv[i].domain, encoder_character_result, escape_character, encoder_character, CHARACTER_NUM);
+
+				fprintf(fp, "<div id=div2 onmouseover=\"this.style.backgroundColor='#b6bdd2'\" onmouseout=\"this.style.backgroundColor='#f9f8f7'\"><a id=link href=wp_multi_radius.cgi?UN=%s&DELRULE=%s&plotid=%s&NODEZ=%s target=mainFrame>%s</a></div>", pstPageInfo->encry , "delete" ,plotid,encoder_character_result,search(radius_public,"delete"));
+				fprintf(fp, "<div id=div2 onmouseover=\"this.style.backgroundColor='#b6bdd2'\" onmouseout=\"this.style.backgroundColor='#f9f8f7'\"><a id=link href=wp_edit_multi_radius.cgi?UN=%s&plotid=%s&NODEZ=%s target=mainFrame>%s</a></div>", pstPageInfo->encry , plotid,encoder_character_result,search(radius_public,"configure"));
 				fprintf(fp, "</div>"\
 				"</div>"\
 				"</div>");
-				fprintf(fp,	"</td>");
-				fprintf(fp,	"</tr>");
+			}
+			fprintf(fp,	"</td>");
+			fprintf(fp,	"</tr>");
 
-				cq=cq->next;
-				cl = !cl;
-			}			
+			cl = !cl;
 		}
-				
-		
-		if((cflag==0 )&& (cnum > 0))
-			Free_radius_info(&c_head);	
-		
-		free(tempz);
-		free(urlnode);
-		fclose(fd);	
+	
 		fprintf(fp,	"</table>");
+		fprintf(fp,"<input type=hidden name=UN value=%s>",pstPageInfo->encry);
 		return 0;	
 }
 
+char *replace(char *source,char *sub,char *rep)
+{
+	char *result;
+	char *pc1,*pc2,*pc3;
+	int isource,isub,irep;
+	isub=strlen(sub);
+	irep=strlen(rep);
+	isource=strlen(source);
+	if(NULL == *sub)
+	return strdup(source);
+	result=(char*)malloc(( (irep > isub) ? (float)strlen(source) / isub* irep+ 1:isource ) * sizeof(char));
+	pc1=result;
+	while(*source!=NULL)
+	{
+		pc2=source;
+		pc3=sub;
+		while(*pc2==*pc3&&*pc3!=NULL&&*pc2!=NULL)
+		pc2++,pc3++;
+		if(NULL==*pc3)
+		{
+			pc3=rep;
+			while(*pc3!=NULL)
+			*pc1++=*pc3++;
+			pc2--;
+			source=pc2;
+		}
+		else
+		*pc1++ = *source;
+		source++;
+	}
+	*pc1=NULL;
+	return result;
+}
 
+void url_encoder(char *source,char *result,char **escape_character,char **encoder_character,int character_num)
+{
+	char temp[256] = { 0 };
+	char temp_result[256] = { 0 };
+	int i = 0;
+	strncpy(temp, source, sizeof(temp)-1);
+
+	for(i=0; i<character_num; i++)
+	{
+		memset(temp_result, 0, sizeof(temp_result));
+		if(replace(temp, escape_character[i], encoder_character[i]) != NULL)
+		{
+ 			strncpy(temp_result, replace(temp, escape_character[i], encoder_character[i]), sizeof(temp_result)-1);
+ 		}
+ 		else
+ 		{
+ 			strncpy(temp_result, temp, sizeof(temp_result)-1);
+ 		}
+		memset(temp, 0, sizeof(temp));
+		strncpy(temp, temp_result, sizeof(temp)-1);
+	}
+	strcpy(result, temp_result);
+}
 

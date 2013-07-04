@@ -63,4 +63,55 @@ int show_broad_instance_info(DBusConnection *connection, struct Hmd_Board_Info_s
     }	    
 }
 
+int set_hansi_check_state_cmd(char *hmd_state,int pid,DBusConnection *connection)
+	//-1:hmd states is error;-2:dcli_init_func==NULL;-3:ccgi_dl_handle==NULL;-4:other error
+{	
+	int ret,retu;
+	int state = 0;
+	unsigned int profile = 0;
+	
+	if(!strcmp(hmd_state,"enable")){
+		state = 1;
+	}
+	else if(!strcmp(hmd_state,"disable")){
+		state = 0;
+	}
+	else{
+		ret=-1;
+	}
+	
+	int(*dcli_init_func)(
+					DBusConnection *,
+					int , 
+					int
+					);
+
+	if(NULL != ccgi_dl_handle)
+	{
+		dcli_init_func = dlsym(ccgi_dl_handle,"hmd_wireless_check_setting");
+		if(NULL != dcli_init_func)
+		{
+			ret = (*dcli_init_func)
+				(
+					connection, 
+					pid,
+					state
+				);
+		}
+		else
+		{
+			return -2;
+		}
+	}
+	else
+	{
+		return -3;
+	}
+	if(ret == 0)
+		retu=0;
+	else
+		retu=-4;
+
+	return retu;
+}
 

@@ -41,6 +41,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "ws_conf_engine.h"
 
 #include "ws_eag_conf.h"
+#include "eag/eag_errcode.h"
+#include "eag/eag_conf.h"
+#include "eag/eag_interface.h"
+#include "ws_init_dbus.h"
+#include "ws_dcli_vrrp.h"
+#include <netinet/in.h>
+#include "ws_dbus_list_interface.h"
 
 #define _DEBUG	0
 
@@ -66,8 +73,8 @@ typedef struct{
 	char *username_encry;	         /*存储解密后的当前登陆用户名*/
 	int iUserGroup;	//为0时表示是管理员。
 	FILE *fp;
-		
 	int formProcessError;
+	char plotid[10];
 } STPageInfo;
 
 char *radiusType[] = {
@@ -75,699 +82,32 @@ char *radiusType[] = {
 	"rj_sam",
 };
 
-
-
-
-/***************************************************************
-*USEAGE:	输出一个ip地址的输入控件
-*Param:		base_name -> 控件的基础名称，实际每个输入框在这个的基础上加_ip1,_ip2,_ip3,_ip4
-*Return:	0 -> success
-*			!= 0 -> failure。
-*Auther:shao jun wu
-*Date:2009-1-19 14:25:40
-*Modify:(include modifyer,for what resease,date)
-****************************************************************/
-int output_ip_input( char *base_name, FILE *fp, char *err_msg, char *def_value, int flag )
-{
-	char ip1[5]="";
-	char ip2[5]="";
-	char ip3[5]="";
-	char ip4[5]="";
-	char *p;
-	char *def_value_temp;
-	
-#define clear_all_ip	memset( ip1, 0, sizeof(ip1) );\
-						memset( ip2, 0, sizeof(ip2) );\
-						memset( ip3, 0, sizeof(ip3) );\
-						memset( ip4, 0, sizeof(ip4) );\
-						goto label;
-	
-	def_value_temp = strdup( def_value );
-	
-	p = strtok( def_value_temp, "." );
-	if( NULL == p )
-	{
-		clear_all_ip;
-	}else
-	{
-		strncpy( ip1, p, sizeof(ip1) );
-	}
-	
-	p = strtok( NULL, "." );
-	if( NULL == p )
-	{
-		clear_all_ip;
-	}
-	strncpy( ip2, p, sizeof(ip2) );
-
-	p = strtok( NULL, "." );
-	if( NULL == p )
-	{
-		clear_all_ip;
-	}
-	strncpy( ip3, p, sizeof(ip3) );
-	
-	p = strtok( NULL, "." );
-	if( NULL == p )
-	{
-		clear_all_ip;
-	}
-	strncpy( ip4, p, sizeof(ip4) );	
-	
-	//sscanf( def_value, "%s.%s.%s.%s", ip1, ip2,ip3,ip4 );
-	
-label:		
-	fprintf( fp, "<div style='border-width:1px;border-color:#a5acb2;border-style:solid;width:147px;font-size:9pt'>");
-	fprintf( fp, "<input type=text name='%s_ip1' maxlength=3 class=a3 onKeyUp=\"mask(this,%s)\" onbeforepaste=mask_c() value='%s' %s/>.",base_name,err_msg, ip1, flag?"disabled":"");
-	fprintf( fp, "<input type=text name='%s_ip2' maxlength=3 class=a3 onKeyUp=\"mask(this,%s)\" onbeforepaste=mask_c() value='%s' %s/>.",base_name,err_msg, ip2, flag?"disabled":"");
-	fprintf( fp, "<input type=text name='%s_ip3' maxlength=3 class=a3 onKeyUp=\"mask(this,%s)\" onbeforepaste=mask_c() value='%s' %s/>.",base_name,err_msg, ip3, flag?"disabled":"");
-	fprintf( fp, "<input type=text name='%s_ip4' maxlength=3 class=a3 onKeyUp=\"mask(this,%s)\" onbeforepaste=mask_c() value='%s' %s/>",base_name,err_msg, ip4, flag?"disabled":"");
-	fprintf( fp, "</div>\n" );	
-	
-	free( def_value_temp );
-	return 0;
-}
-
 /*****************************************
 item  call back function  public    output
 *********************************************/
-int  output_html_obj_ip_input( struct st_conf_item *this, void *param )
-{
-	STPageInfo *pstPageInfo;
-	
-	pstPageInfo = param;
-	
-	return output_ip_input( this->conf_name, pstPageInfo->fp, search(pstPageInfo->lpublic,"ip_error"), this->conf_value, pstPageInfo->iUserGroup );
-}
+static dbus_parameter parameter;
+static instance_parameter *paraHead1 = NULL;
+static void *ccgi_connection = NULL;
+static char plotid[10] = {0};
 
-int  output_html_obj_normal_input( struct st_conf_item *this,  void *param )
-{
-	STPageInfo *pstPageInfo;
-	
-	pstPageInfo = param;
-		
-	fprintf( pstPageInfo->fp, "<input type=text name=%s value='%s' maxLength=%d %s />", 
-								this->conf_name, this->conf_value, sizeof(this->conf_value)-1,(pstPageInfo->iUserGroup)?"disabled":"" );	
-	return 0;
-}
-
-int output_html_auth_type( struct st_conf_item *this,  void *param  )
-{
-	STPageInfo *pstPageInfo;
-	pstPageInfo = param;
-	int ispap=0;
-
-	if( strcasecmp("PAP",this->conf_value) == 0 ) ispap = 1;
-
-	fprintf( pstPageInfo->fp,"<input type='radio' name='%s' value='CHAP' %s %s/>CHAP&nbsp&nbsp&nbsp"\
-							"<input type='radio' name='%s' value='PAP' %s %s/>PAP",
-							this->conf_name,
-							ispap?"":"checked", (pstPageInfo->iUserGroup)?"disabled":"",
-							this->conf_name,
-							ispap?"checked":"", (pstPageInfo->iUserGroup)?"disabled":"" );
-
-}
-
-int output_html_radius_type( struct st_conf_item *this,  void *param  )
-{
-	STPageInfo *pstPageInfo;
-	pstPageInfo = param;
-	int ispap=0;
-
-	if( strcasecmp("rj_sam",this->conf_value) == 0 ) ispap = 1;
-	
-	if( !ispap )
-	{
-		fprintf( pstPageInfo->fp,	"<select name=radiusT>" \
-									"<option value=general selected=selected>general"\
-									"<option value=rj_sam>rj_sam"\
-									"</select>");
-	}
-	else
-	{
-		fprintf( pstPageInfo->fp,	"<select name=radiusT>" \
-									"<option value=rj_sam selected=selected>rj_sam"\
-									"<option value=general>general"\
-									"</select>");
-	}
-}
-
-
-#if 0
-int  get_auth_type( char *name, char *value, int value_max_len )
-{
-	cgiFormStringNoNewlines( name, value, value_max_len );
-}
-#endif
-
-
-int  output_html_eag_status_checkbox( struct st_conf_item *this,  void *param )
-{
-	STPageInfo *pstPageInfo;
-	
-	pstPageInfo = param;
-	
-	
-	fprintf( pstPageInfo->fp, "<input type=checkbox name=%s value=%s %s />", 
-								this->conf_name, this->conf_value, (strcmp(this->conf_value,"start")==0)?"checked":"" );	
-	return 0;
-}
-
-
-
-int  output_html_eag_status_select( struct st_conf_item *this,  void *param )
-{
-	STPageInfo *pstPageInfo;
-	
-	pstPageInfo = param;
-	char *urlnode=(char *)malloc(20);
-	memset(urlnode,0,20);
-	cgiFormStringNoNewlines( "plotid", urlnode, 20 );
-	if(strcmp(urlnode,"")!=0)
-		strcpy(this->conf_value,urlnode);
-	else
-		strcpy(this->conf_value,PLOTID_ONE);
-	
-	fprintf( pstPageInfo->fp, "<select name=%s value=%s onchange=plotid_change(this) style=width:60px><option value=%s  %s>%s</option><option value=%s  %s>%s</option>"\
-		"<option value=%s %s>%s</option><option value=%s  %s>%s</option><option value=%s  %s>%s</option></select>", 
-								this->conf_name, this->conf_value,PLOTID_ONE,(strcmp(this->conf_value,PLOTID_ONE)==0)?"selected":"",
-								PLOTID_ONE,PLOTID_TWO,(strcmp(this->conf_value,PLOTID_TWO)==0)?"selected":"",PLOTID_TWO,
-								PLOTID_THREE,(strcmp(this->conf_value,PLOTID_THREE)==0)?"selected":"",PLOTID_THREE,
-								PLOTID_FOUR,(strcmp(this->conf_value,PLOTID_FOUR)==0)?"selected":"",PLOTID_FOUR,
-								PLOTID_FIVE,(strcmp(this->conf_value,PLOTID_FIVE)==0)?"selected":"",PLOTID_FIVE);	
-
-
-   free(urlnode);
-	return 0;
-}
-
-int  output_html_eag_radius_select( struct st_conf_item *this,  void *param)
-{
-	STPageInfo *pstPageInfo;	
-	pstPageInfo = param;
-
-	struct optionz c_head;
-	memset(&c_head,0,sizeof(c_head));
-	
-	int cnum,cflag=-1;
-
-	cflag=read_optionz_xml(MULTI_RADIUS_F, &c_head, &cnum, MTR_N);
-    fprintf(pstPageInfo->fp,"<select name=%s value=%s style=width:60px>",this->conf_name, this->conf_value);
-    if(cflag==0)
-	{   
-        if(strcmp(c_head.content0,"")!=0)
-		fprintf( pstPageInfo->fp,"<option value=%s  %s>%s</option>",PLOTID_ZEAO,(strcmp(this->conf_value,PLOTID_ONE)==0)?"selected":"",MTD_N);
-		if(strcmp(c_head.content1,"")!=0)
-		fprintf( pstPageInfo->fp,"<option value=%s  %s>%s</option>",PLOTID_ONE,(strcmp(this->conf_value,PLOTID_ONE)==0)?"selected":"",PLOTID_ONE);
-        if(strcmp(c_head.content2,"")!=0)
-		fprintf( pstPageInfo->fp,"<option value=%s  %s>%s</option>",PLOTID_TWO,(strcmp(this->conf_value,PLOTID_TWO)==0)?"selected":"",PLOTID_TWO);
-        if(strcmp(c_head.content3,"")!=0)
-		fprintf( pstPageInfo->fp,"<option value=%s  %s>%s</option>",PLOTID_THREE,(strcmp(this->conf_value,PLOTID_THREE)==0)?"selected":"",PLOTID_THREE);
-        if(strcmp(c_head.content4,"")!=0)
-		fprintf( pstPageInfo->fp,"<option value=%s  %s>%s</option>",PLOTID_FOUR,(strcmp(this->conf_value,PLOTID_FOUR)==0)?"selected":"",PLOTID_FOUR);
-        if(strcmp(c_head.content5,"")!=0)
-		fprintf( pstPageInfo->fp,"<option value=%s  %s>%s</option>",PLOTID_FIVE,(strcmp(this->conf_value,PLOTID_FIVE)==0)?"selected":"",PLOTID_FIVE);
-
-	}
-	fprintf(pstPageInfo->fp,"</select>");
-	
-	return 0;
-}
-
-int  output_html_eag_portal_select( struct st_conf_item *this,  void *param)
-{
-	STPageInfo *pstPageInfo;	
-	pstPageInfo = param;
-
-	struct optionz c_head;
-	memset(&c_head,0,sizeof(c_head));
-
-	int cnum,cflag=-1;
-
-	cflag=read_optionz_xml(MULTI_PORTAL_F, &c_head, &cnum, MTP_N);
-    fprintf(pstPageInfo->fp,"<select name=%s value=%s style=width:60px>",this->conf_name, this->conf_value);
-	if(cflag==0)
-	{   
-        if(strcmp(c_head.content0,"")!=0)
-		fprintf( pstPageInfo->fp,"<option value=%s  %s>%s</option>",PLOTID_ZEAO,(strcmp(this->conf_value,PLOTID_ONE)==0)?"selected":"",MTD_N);
-		if(strcmp(c_head.content1,"")!=0)
-		fprintf( pstPageInfo->fp,"<option value=%s  %s>%s</option>",PLOTID_ONE,(strcmp(this->conf_value,PLOTID_ONE)==0)?"selected":"",PLOTID_ONE);
-        if(strcmp(c_head.content2,"")!=0)
-		fprintf( pstPageInfo->fp,"<option value=%s  %s>%s</option>",PLOTID_TWO,(strcmp(this->conf_value,PLOTID_TWO)==0)?"selected":"",PLOTID_TWO);
-        if(strcmp(c_head.content3,"")!=0)
-		fprintf( pstPageInfo->fp,"<option value=%s  %s>%s</option>",PLOTID_THREE,(strcmp(this->conf_value,PLOTID_THREE)==0)?"selected":"",PLOTID_THREE);
-        if(strcmp(c_head.content4,"")!=0)
-		fprintf( pstPageInfo->fp,"<option value=%s  %s>%s</option>",PLOTID_FOUR,(strcmp(this->conf_value,PLOTID_FOUR)==0)?"selected":"",PLOTID_FOUR);
-        if(strcmp(c_head.content5,"")!=0)
-		fprintf( pstPageInfo->fp,"<option value=%s  %s>%s</option>",PLOTID_FIVE,(strcmp(this->conf_value,PLOTID_FIVE)==0)?"selected":"",PLOTID_FIVE);
-
-	}
-	fprintf(pstPageInfo->fp,"</select>");
-	
-	return 0;
-}
-int  output_html_eag_nas_select( struct st_conf_item *this,  void *param)
-{
-	STPageInfo *pstPageInfo;	
-	pstPageInfo = param;
-
-	struct optionz c_head;
-	memset(&c_head,0,sizeof(c_head));
-	
-	int cnum,cflag=-1;
-
-	cflag=read_optionz_xml(MULTI_NAS_F, &c_head, &cnum, MTN_N);
-	fprintf(pstPageInfo->fp,"<select name=%s value=%s style=width:60px>",this->conf_name, this->conf_value);
-	if(cflag==0)
-	{   
-        if(strcmp(c_head.content0,"")!=0)
-		fprintf( pstPageInfo->fp,"<option value=%s  %s>%s</option>",PLOTID_ZEAO,(strcmp(this->conf_value,PLOTID_ONE)==0)?"selected":"",MTD_N);
-		if(strcmp(c_head.content1,"")!=0)
-		fprintf( pstPageInfo->fp,"<option value=%s  %s>%s</option>",PLOTID_ONE,(strcmp(this->conf_value,PLOTID_ONE)==0)?"selected":"",PLOTID_ONE);
-        if(strcmp(c_head.content2,"")!=0)
-		fprintf( pstPageInfo->fp,"<option value=%s  %s>%s</option>",PLOTID_TWO,(strcmp(this->conf_value,PLOTID_TWO)==0)?"selected":"",PLOTID_TWO);
-        if(strcmp(c_head.content3,"")!=0)
-		fprintf( pstPageInfo->fp,"<option value=%s  %s>%s</option>",PLOTID_THREE,(strcmp(this->conf_value,PLOTID_THREE)==0)?"selected":"",PLOTID_THREE);
-        if(strcmp(c_head.content4,"")!=0)
-		fprintf( pstPageInfo->fp,"<option value=%s  %s>%s</option>",PLOTID_FOUR,(strcmp(this->conf_value,PLOTID_FOUR)==0)?"selected":"",PLOTID_FOUR);
-        if(strcmp(c_head.content5,"")!=0)
-		fprintf( pstPageInfo->fp,"<option value=%s  %s>%s</option>",PLOTID_FIVE,(strcmp(this->conf_value,PLOTID_FIVE)==0)?"selected":"",PLOTID_FIVE);
-
-	}
-	fprintf(pstPageInfo->fp,"</select>");
-	return 0;
-}
-
-int  output_html_eag_wwv_select( struct st_conf_item *this,  void *param)
-{
-	STPageInfo *pstPageInfo;	
-	pstPageInfo = param;
-
-	struct optionz c_head;
-	memset(&c_head,0,sizeof(c_head));
-
-	int cnum,cflag=-1;
-
-	cflag=read_optionz_xml(MULTI_WWV_F, &c_head, &cnum, MTW_N);
-    fprintf(pstPageInfo->fp,"<select name=%s value=%s style=width:60px>",this->conf_name, this->conf_value);
-	if(cflag==0)
-	{   
-	    if(strcmp(c_head.content0,"")!=0)
-		fprintf( pstPageInfo->fp,"<option value=%s  %s>%s</option>",PLOTID_ZEAO,(strcmp(this->conf_value,PLOTID_ONE)==0)?"selected":"",MTD_N);
-		if(strcmp(c_head.content1,"")!=0)
-		fprintf( pstPageInfo->fp,"<option value=%s  %s>%s</option>",PLOTID_ONE,(strcmp(this->conf_value,PLOTID_ONE)==0)?"selected":"",PLOTID_ONE);
-        if(strcmp(c_head.content2,"")!=0)
-		fprintf( pstPageInfo->fp,"<option value=%s  %s>%s</option>",PLOTID_TWO,(strcmp(this->conf_value,PLOTID_TWO)==0)?"selected":"",PLOTID_TWO);
-        if(strcmp(c_head.content3,"")!=0)
-		fprintf( pstPageInfo->fp,"<option value=%s  %s>%s</option>",PLOTID_THREE,(strcmp(this->conf_value,PLOTID_THREE)==0)?"selected":"",PLOTID_THREE);
-        if(strcmp(c_head.content4,"")!=0)
-		fprintf( pstPageInfo->fp,"<option value=%s  %s>%s</option>",PLOTID_FOUR,(strcmp(this->conf_value,PLOTID_FOUR)==0)?"selected":"",PLOTID_FOUR);
-        if(strcmp(c_head.content5,"")!=0)
-		fprintf( pstPageInfo->fp,"<option value=%s  %s>%s</option>",PLOTID_FIVE,(strcmp(this->conf_value,PLOTID_FIVE)==0)?"selected":"",PLOTID_FIVE);
-
-	}
-	fprintf(pstPageInfo->fp,"</select>");
-	
-	return 0;
-}
-
-int  output_html_idle_tick_checkbox( struct st_conf_item *this,  void *param )
-{
-	STPageInfo *pstPageInfo;
-	
-	pstPageInfo = param;
-	
-	
-	fprintf( pstPageInfo->fp, "<input type=checkbox name=%s value=%s %s />", 
-								this->conf_name, this->conf_value, (strcmp(this->conf_value,"start")==0)?"checked":"" );	
-	return 0;
-}
-
-
+ 
 /*****************************************
 item  call back function  public    get value
 *********************************************/
 //可以用于普通的input passwd select 等类型的value的获取
-int  get_value_user_input_normal( char *name, char *value, int value_max_len )//得到相应的用户输入，并进行错误检查,返回错误id
-{		
-	memset( value, 0, value_max_len );
-	return cgiFormStringNoNewlines( name, value, value_max_len );
-}
-
-//可以用于ip地址的value的获取
-int  get_value_user_input_ip( char *name, char *value, int value_max_len )
+static int eag_ins_running_state(DBusConnection * conn, int hansitype, int insid)
 {
-	char temp_name[64]="";
-	char ip1[5]="";
-	char ip2[5]="";
-	char ip3[5]="";
-	char ip4[5]="";
+	int ret = 0;
+	struct eag_base_conf baseconf;		
+	memset(&baseconf, 0, sizeof(baseconf));
 	
-	memset( value, 0, value_max_len );
-	
-	snprintf( temp_name, sizeof(temp_name), "%s_ip1", name );
-	cgiFormStringNoNewlines( temp_name, ip1, sizeof(ip1) );
-
-	snprintf( temp_name, sizeof(temp_name), "%s_ip2", name );
-	cgiFormStringNoNewlines( temp_name, ip2, sizeof(ip2) );
-	
-	snprintf( temp_name, sizeof(temp_name), "%s_ip3", name );
-	cgiFormStringNoNewlines( temp_name, ip3, sizeof(ip3) );
-	
-	snprintf( temp_name, sizeof(temp_name), "%s_ip4", name );
-	cgiFormStringNoNewlines( temp_name, ip4, sizeof(ip4) );
-	
-	if( strlen(ip1)==0 || strlen(ip2)==0 || strlen(ip3)==0 || strlen(ip4)==0 )
-	{
-		return -1;
-	}
-	
-	snprintf( value, value_max_len, "%s.%s.%s.%s", ip1, ip2, ip3, ip4 );
-	return 0;
-}
-
-
-/******************************************
-获取各个属性value的函数，同时对输入进行错误校验，基本上是每个参数都有一个对应的处理函数。
-*******************************************/
-//用于获取用户输入的eag状态
-int get_eag_status( t_conf_item *this, void *param )
-{
-	char **status;
-	STPageInfo *pstPageInfo;
-	
-	pstPageInfo = (STPageInfo *)param;
-	
-	if( cgiFormNotFound != cgiFormStringMultiple( this->conf_name, &status) )
-	{
-		strncpy( this->conf_value, "start", sizeof(this->conf_value) );
-	}
+	ret = eag_get_base_conf(conn, hansitype, insid, &baseconf);
+	if ((EAG_RETURN_OK == ret) && (1 == baseconf.status))
+		ret = 1;
 	else
-	{
-		strncpy( this->conf_value, "stop", sizeof(this->conf_value) );
-	}	
-	
-	
-	return 0;
+		ret = 0;
+	return ret;
 }
-
-int get_idle_tick_status(t_conf_item *this, void *param )
-{
-	char **status;
-	STPageInfo *pstPageInfo;
-	
-	pstPageInfo = (STPageInfo *)param;
-	
-	if( cgiFormNotFound != cgiFormStringMultiple( this->conf_name, &status) )
-	{
-		strncpy( this->conf_value, "start", sizeof(this->conf_value) );
-	}
-	else
-	{
-		strncpy( this->conf_value, "stop", sizeof(this->conf_value) );
-	}	
-	
-	
-	return 0;
-
-}
-
-//public normal input get 
-int get_normal_input_conf( t_conf_item *this, void *param )
-{
-	char get_value[MAX_CONF_VALUE_LEN];
-	int iRet;
-	STPageInfo *pstPageInfo;
-	
-	pstPageInfo = (STPageInfo *)param;
-	iRet = get_value_user_input_normal( this->conf_name, get_value, sizeof(get_value) );
-	
-	if( 0 == iRet && strlen(get_value) != 0 )
-	{
-		strncpy( this->conf_value, get_value, sizeof(this->conf_value) );
-	}
-	else
-	{
-		this->error = search( pstPageInfo->lauth, "input_null" );
-	}
-	
-	return iRet;
-}
-
-//public select input get 
-int get_select_input_conf( t_conf_item *this, void *param )
-{
-	char get_value[MAX_CONF_VALUE_LEN];
-	int iRet;
-	STPageInfo *pstPageInfo;
-	
-	pstPageInfo = (STPageInfo *)param;
-	int choice;
-	
-	iRet = cgiFormSelectSingle("radiusT", radiusType, 2, &choice, 0);
-	
-	if( !choice )
-		{
-			strcpy(get_value,radiusType[0]);
-		}
-	else
-		{
-			strcpy(get_value,radiusType[1]);
-		}
-		strncpy( this->conf_value, get_value, sizeof(this->conf_value) );
-	
-	return iRet;
-}
-
-//public select input get 
-int get_select_option_conf( t_conf_item *this, void *param )
-{
-	char get_value[MAX_CONF_VALUE_LEN];
-	int iRet;
-	STPageInfo *pstPageInfo;
-
-	char plotid[20];
-	memset(plotid,0,20);
-	
-	pstPageInfo = (STPageInfo *)param;	
-	
-	iRet = cgiFormStringNoNewlines( this->conf_name, plotid, 20 );
-
-    strcpy(get_value,plotid);
-	
-	strncpy( this->conf_value, get_value, sizeof(this->conf_value) );
-	
-	return iRet;
-}
-
-//public get ip input value
-int get_public_ip_conf( t_conf_item *this, void *param )
-{
-	STPageInfo *pstPageInfo;
-	int iRet;
-	char get_value[MAX_CONF_VALUE_LEN];//现将获得的结果保存到临时变量，当判断输入正确后才保存到实际的变量中。
-	
-	pstPageInfo = (STPageInfo *)param;
-	
-	iRet = get_value_user_input_ip( this->conf_name, get_value, sizeof(get_value) );
-	if( 0 != iRet )
-	{
-		this->error = search( pstPageInfo->lpublic, "ip_not_null" );
-		return iRet;
-	}
-	
-	memcpy( this->conf_value, get_value, sizeof(this->conf_value) );
-	return iRet;	
-}
-
-static int is_legal_digit( char *str )
-{
-	if( NULL == str ) return 0;
-	
-	for(;*str&&*str>='0'&&*str<='9';str++ );
-	
-	return !(*str);
-}
-
-
-//radius 认证端口  计费端口。
-int get_tcpip_port( t_conf_item *this, void *param )
-{
-	STPageInfo *pstPageInfo;
-	int iRet;
-	char get_value[MAX_CONF_VALUE_LEN];//现将获得的结果保存到临时变量，当判断输入正确后才保存到实际的变量中。
-	int port_num;
-	
-	pstPageInfo = (STPageInfo *)param;
-	
-	iRet = get_value_user_input_normal( this->conf_name, get_value, sizeof(get_value) );
-	if( 0 != iRet )
-	{
-		this->error = search( pstPageInfo->lauth, "input_null" );
-		return iRet;
-	}
-	
-	if( ! is_legal_digit( get_value ) )
-	{
-		this->error = search( pstPageInfo->lauth, "whitelist_port_err" );
-		return -1;	
-	}
-	
-	port_num = atoi( get_value );
-	if( 0 > port_num || port_num > 65535 )
-	{
-		this->error = search( pstPageInfo->lauth, "port_outoff_range" );
-		return -1;
-	}
-	
-	strcpy( this->conf_value, get_value );
-	
-	return iRet;
-}
-//max idle time
-int get_max_idle_time( t_conf_item *this, void *param )
-{
-	STPageInfo *pstPageInfo;
-	char get_value[MAX_CONF_VALUE_LEN];
-	int idle_time;
-	int iRet;
-	
-	pstPageInfo = (STPageInfo *)param;
-	
-	iRet = get_value_user_input_normal( this->conf_name, get_value, sizeof(get_value) );
-	if( 0 != iRet )
-	{
-		this->error = search( pstPageInfo->lauth, "input_null" );
-		return -1;
-	}
-
-	if( ! is_legal_digit( get_value ) )
-	{
-		this->error = search( pstPageInfo->lauth, "input_error" );
-		return -1;		
-	}
-		
-	idle_time = atoi( get_value );
-	if( idle_time < 0 || idle_time > 24*60*60)   // 24hour 
-	{
-		this->error = search( pstPageInfo->lauth, "input_error" );
-		return -1;			
-	}
-	
-	strncpy( this->conf_value, get_value, sizeof(this->conf_value) );
-	
-	return 0;
-	
-}
-
-// vrrp id
-int get_vrrp_id( t_conf_item *this, void *param )
-{
-	STPageInfo *pstPageInfo;
-	char get_value[MAX_CONF_VALUE_LEN];
-	int vrrp_id;
-	int iRet;
-	
-	pstPageInfo = (STPageInfo *)param;
-	
-	iRet = get_value_user_input_normal( this->conf_name, get_value, sizeof(get_value) );
-	if( 0 != iRet )
-	{
-		this->error = search( pstPageInfo->lauth, "input_null" );
-		return -1;
-	}
-
-	if( ! is_legal_digit( get_value ) )
-	{
-		this->error = search( pstPageInfo->lauth, "input_error" );
-		return -1;		
-	}
-		
-	vrrp_id = atoi( get_value );
-	if( vrrp_id < 0 || vrrp_id > 16)
-	{
-		this->error = search( pstPageInfo->lauth, "input_error" );
-		return -1;			
-	}
-	
-	strncpy( this->conf_value, get_value, sizeof(this->conf_value) );
-	
-	return 0;
-	
-}
-
-// max_httprsp
-int get_max_httprsp( t_conf_item *this, void *param )
-{
-	STPageInfo *pstPageInfo;
-	char get_value[MAX_CONF_VALUE_LEN];
-	int max_httprsp;
-	int iRet;
-	
-	pstPageInfo = (STPageInfo *)param;
-	
-	iRet = get_value_user_input_normal( this->conf_name, get_value, sizeof(get_value) );
-	if( 0 != iRet )
-	{
-		this->error = search( pstPageInfo->lauth, "input_null" );
-		return -1;
-	}
-
-	if( ! is_legal_digit( get_value ) )
-	{
-		this->error = search( pstPageInfo->lauth, "input_error" );
-		return -1;		
-	}
-		
-	max_httprsp = atoi( get_value );
-	if( max_httprsp < 0 || max_httprsp > 100)
-	{
-		this->error = search( pstPageInfo->lauth, "input_error" );
-		return -1;			
-	}
-	
-	strncpy( this->conf_value, get_value, sizeof(this->conf_value) );
-	
-	return 0;
-	
-} 
-
-/********************************************************
-	全局的结构体item，当需要添加新的配置选项时，直接在这里添加就可以了,
-	可能需要为其添加对应的输出html的函数，获取value的函数，错误检查的函数。
-**********************************************************/
-
-t_conf_item all_conf_item[]={
-	{HS_PLOT_ID,"1",HS_PLOT_ID, 1, NULL,output_html_eag_status_select, get_select_option_conf},
-	{HS_STATUS,"stop",HS_STATUS, 1, NULL,output_html_eag_status_checkbox, get_eag_status},//必须放在第一个。
-	{HS_STATUS_KICK,"stop",HS_STATUS_KICK, 1, NULL,output_html_idle_tick_checkbox, get_idle_tick_status},
-	{HS_DEBUG_LOG, "stop",HS_DEBUG_LOG, 1, NULL, output_html_eag_status_checkbox, get_eag_status},
-	{HS_WANIF, "eth0-1", HS_WANIF, 0, NULL, NULL, NULL },/*set when limit user speed in radius,just kan be select!*/
-	{HS_LANIF, "eth.p.0-4", HS_LANIF, 0, NULL, NULL, NULL },/*the if set in captive portal is LANIF,her is no use*/
-	{HS_NETWORK, "10.1.1.0", HS_NETWORK, 0, NULL, NULL, NULL },
-	{HS_NETMASK, "255.255.255.0", HS_NETMASK, 0, NULL, NULL, NULL },
-	{HS_UAMLISTEN, "10.1.1.254", HS_UAMLISTEN, 1, NULL, output_html_obj_ip_input, get_public_ip_conf },
-	{HS_UAMPORT, "3990", HS_UAMPORT, 1, NULL, output_html_obj_normal_input, get_tcpip_port },
-	{HS_NAS_PT, "1", HS_NAS_PT, 1, NULL, output_html_eag_nas_select, get_select_option_conf },
-	{HS_RADIUS_PT, "1", HS_RADIUS_PT, 1, NULL, output_html_eag_radius_select, get_select_option_conf },
-	{HS_PORTAL_PT,"1",HS_PORTAL_PT,1,NULL,output_html_eag_portal_select,get_select_option_conf},/*if use inner portal server,set value as  HS_UAMLISTEN. other set as china mobile portal server's ip addr*/
-	{HS_WWV_PT, "1", HS_WWV_PT, 1, NULL, output_html_eag_wwv_select, get_select_option_conf },
-	{HS_DEFIDLETIMEOUT,"60",HS_DEFIDLETIMEOUT,1,NULL, output_html_obj_normal_input, get_max_idle_time },
-	{HS_VRRPID,"1",HS_VRRPID,1,NULL, output_html_obj_normal_input, get_vrrp_id },
-	//{HS_PPI_PORT,"1",HS_PPI_PORT,1,NULL, output_html_obj_normal_input, get_max_idle_time },
-	{HS_PPI_PORT,"1",HS_PPI_PORT,1,NULL, output_html_obj_normal_input, get_tcpip_port },
-	{HS_MAX_HTTPRSP,"35",HS_MAX_HTTPRSP,1,NULL, output_html_obj_normal_input, get_max_httprsp },
-
-/*below twe usual no useage */
-#if 0
-	{"HS_ADMUSR","admin","HS_ADMUSR",1,NULL,output_html_obj_normal_input,get_normal_input_conf},
-	{"HS_ADMPWD","admin","HS_ADMPWD",1,NULL,output_html_obj_normal_input,get_normal_input_conf},
-#endif
-
-};
-
-#define MAX_ITEM_NUM	sizeof(all_conf_item)/sizeof(all_conf_item[0])
-
 
 
 #define SUBMIT_NAME		"submit_save_conf"
@@ -795,84 +135,65 @@ static int doRedir( STPageInfo *pstPageInfo ,char *plot_id );
 ****************************************************************/
 int cgiMain()
 {
+	int ret1 = 0;
 	STPageInfo stPageInfo;
 
-	char plot_id[20];
-	memset(plot_id,0,20);
-
-	char *tmp=(char *)malloc(64);
-	int ret;
-	if(access(MULTI_EAG_F,0)!=0)
-	{
-		create_eag_xml(MULTI_EAG_F);
-		write_status_file( MULTI_EAG_STATUS, "start" );
-	}
-	else
-	{
-		ret=if_xml_file_z(MULTI_EAG_F);
-		if(ret!=0)
-		{
-		   memset(tmp,0,64);
-		   sprintf(tmp,"sudo rm  %s > /dev/null",MULTI_EAG_F);
-		   system(tmp);
-		   create_eag_xml(MULTI_EAG_F);
-		   write_status_file( MULTI_EAG_STATUS, "start" );
-		
-		}
-	}
-    free(tmp);
-
+	DcliWInit();
+	ccgi_dbus_init();   
 	
 //初始化常用公共变量
 	memset( &stPageInfo, 0,sizeof(STPageInfo) );
-
-	cgiFormStringNoNewlines("UN", stPageInfo.encry, BUF_LEN);
-	cgiFormStringNoNewlines("plotid", plot_id, 20);
+	ret1 = init_portal_container(&(stPageInfo.pstPortalContainer));
+	stPageInfo.lpublic = stPageInfo.pstPortalContainer->lpublic;
 	
-	stPageInfo.username_encry=dcryption(stPageInfo.encry);
-    if( NULL == stPageInfo.username_encry )
+	cgiFormStringNoNewlines("UN", stPageInfo.encry, BUF_LEN);
+	stPageInfo.lauth=stPageInfo.pstPortalContainer->llocal;//get_chain_head("../htdocs/text/authentication.txt");
+
+	//stPageInfo.username_encry=dcryption(stPageInfo.encry);
+    if( WS_ERR_PORTAL_ILLEGAL_USER == ret1 )
     {
 	    ShowErrorPage(search(stPageInfo.lpublic,"ill_user")); 	  /*用户非法*/
+		release_portal_container(&(stPageInfo.pstPortalContainer));
 		return 0;
 	}
-	stPageInfo.iUserGroup = checkuser_group( stPageInfo.username_encry );
+	//stPageInfo.iUserGroup = checkuser_group( stPageInfo.username_encry );
+	stPageInfo.iUserGroup = stPageInfo.pstPortalContainer->iUserGroup;
 
 	//stPageInfo.pstModuleContainer = MC_create_module_container();
-	init_portal_container(&(stPageInfo.pstPortalContainer));
 	if( NULL == stPageInfo.pstPortalContainer )
 	{
+		release_portal_container(&(stPageInfo.pstPortalContainer));
 		return 0;
 	}
-	stPageInfo.lpublic=stPageInfo.pstPortalContainer->lpublic;//get_chain_head("../htdocs/text/public.txt");
-	stPageInfo.lauth=stPageInfo.pstPortalContainer->llocal;//get_chain_head("../htdocs/text/authentication.txt");
 	
 	stPageInfo.fp = cgiOut;
+
+	memset(plotid,0,sizeof(plotid));
+	cgiFormStringNoNewlines("plotid", plotid, sizeof(plotid)); 
+	list_instance_parameter(&paraHead1, INSTANCE_STATE_WEB);
+	if (NULL == paraHead1) {
+		return 0;
+	}
+	if(strcmp(plotid, "") == 0)
+	{
+		parameter.instance_id = paraHead1->parameter.instance_id;
+		parameter.local_id = paraHead1->parameter.local_id;
+		parameter.slot_id = paraHead1->parameter.slot_id;
+		snprintf(plotid,sizeof(plotid)-1,"%d-%d-%d",parameter.slot_id, parameter.local_id, parameter.instance_id);
+	}
+	else
+	{
+		get_slotID_localID_instanceID(plotid, &parameter);
+	}
+	ccgi_ReInitDbusConnection(&ccgi_connection, parameter.slot_id, DISTRIBUTFAG);
 //初始化完毕
 
 	
 //处理表单
 //	stPageInfo.formProcessError = getUserInput( &(stPageInfo.stUserInput) );
 
-    if(strcmp(plot_id,"")==0)
-			strcpy(plot_id,PLOTID_ONE);
 
-    if( cgiFormSubmitClicked(SUBMIT_NAME) == cgiFormSuccess  )
-    {
-    	if( 0 == stPageInfo.formProcessError )
-    	{
-   			stPageInfo.formProcessError = doUserCommand( &(stPageInfo) );
-			fprintf(stderr,"stPageInfo.formProcessError = %d", stPageInfo.formProcessError );
-   			doRedir( &stPageInfo ,plot_id);
-    	}
-    }
-    else
-    {
-        //modify new functions
-		load_conf_file( CONF_FILE_PATH, all_conf_item, MAX_ITEM_NUM ,plot_id);	
-    }
-	            
-
-	MC_setActiveLabel( stPageInfo.pstPortalContainer->pstModuleContainer, 2 );
+	MC_setActiveLabel( stPageInfo.pstPortalContainer->pstModuleContainer, WP_EAG_CONF);
 
 	MC_setPrefixOfPageCallBack( stPageInfo.pstPortalContainer->pstModuleContainer, (MC_CALLBACK)s_eagconf_prefix_of_page, &stPageInfo );
 	MC_setContentOfPageCallBack( stPageInfo.pstPortalContainer->pstModuleContainer, (MC_CALLBACK)s_eagconf_content_of_page, &stPageInfo );
@@ -896,6 +217,8 @@ int cgiMain()
 	
 	MC_writeHtml( stPageInfo.pstPortalContainer->pstModuleContainer );
 	
+	free_instance_parameter_list(&paraHead1);
+	
 	release_portal_container(&(stPageInfo.pstPortalContainer));
 	
 	
@@ -912,129 +235,526 @@ static int s_eagconf_prefix_of_page( STPageInfo *pstPageInfo )
 		return -1;
 	}
 		
-	for( i=0; i<MAX_ITEM_NUM; i++ )
-	{
-	 	if( NULL != all_conf_item[i].error )
-	 	{
-	 		char err_msg[512];
-	 		
-	 		snprintf( err_msg, sizeof(err_msg), "%s:%s\\n%s", search(pstPageInfo->lauth,all_conf_item[i].conf_name), all_conf_item[i].error,
-	 								search(pstPageInfo->lauth,"conf_save_failed" ) );
-	 	    ShowAlert( err_msg );
-	 	}
-	}
- 	
  	fprintf( cgiOut, "<style type=text/css>.a3{width:30px;border:0px; text-align:center}</style>" );
  	fprintf( cgiOut, "<script language=javascript src=/ip.js></script>\n" );
  	fprintf( cgiOut, "<script language=javascript src=/fw.js></script>\n" );
-
-	fprintf(cgiOut,"<script type=text/javascript>\n");
-   	fprintf(cgiOut,"function plotid_change( obj )\n"\
-   	"{\n"\
-   	"var plotid = obj.options[obj.selectedIndex].value;\n"\
-   	"var url = 'wp_eag_conf.cgi?UN=%s&plotid='+plotid;\n"\
-   	"window.location.href = url;\n"\
-   	"}\n", pstPageInfo->encry);
-    fprintf(cgiOut,"</script>\n" );
+    if( cgiFormSubmitClicked(SUBMIT_NAME) == cgiFormSuccess  )
+    {
+   			doUserCommand( pstPageInfo );   			
+			doRedir( pstPageInfo , plotid);
+    }
 
 	return 0;		
 }
  
 static int s_eagconf_content_of_page( STPageInfo *pstPageInfo )
 {
-	int i;
 	
 	if( NULL == pstPageInfo )
 	{
 		return -1;
 	}
+	FILE *fp = pstPageInfo->fp;
 	
-	fprintf( pstPageInfo->fp, "<table>\n" );
-	for( i=0; i<MAX_ITEM_NUM ; i++ )
+	int i = 0;
+	int ret = 0;
+
+	instance_parameter *pq = NULL;
+	char temp[10] = { 0 };
+	
+	
+	struct eag_base_conf baseconf;
+	memset(&baseconf, 0, sizeof(baseconf));
+	ret = eag_get_base_conf(ccgi_connection, parameter.local_id, parameter.instance_id, &baseconf);
+
+	
+	fprintf( fp, "<table width=500>\n" );
+	////////////////////////////////////////////
+	fprintf(fp,"<tr>");
+	fprintf(fp,"<td width=150>%s</td>",search(pstPageInfo->lauth,HS_PLOT_ID));
+	fprintf(fp,"<td><select name=plotid onchange=plotid_change(this)>");
+	for (pq=paraHead1;(NULL != pq);pq=pq->next)
 	{
-		if( 1 == all_conf_item[i].show_flag )
-		{
-			fprintf( pstPageInfo->fp, "<tr><td>%s</td><td><b>:</b></td><td>", search(pstPageInfo->lauth,all_conf_item[i].show_key) );
-			if( NULL != all_conf_item[i].output_html_obj )
-			{
-				all_conf_item[i].output_html_obj( &all_conf_item[i], (void*)pstPageInfo );
-			}
-			fprintf( pstPageInfo->fp, "</td></tr>\n" );
-		}
+		memset(temp,0,sizeof(temp));
+		snprintf(temp,sizeof(temp)-1,"%d-%d-%d",pq->parameter.slot_id,pq->parameter.local_id,pq->parameter.instance_id);
+		
+		if (strcmp(plotid, temp) == 0)
+			fprintf(cgiOut,"<option value='%s' selected>%s</option>\n",temp,temp);
+		else	       
+			fprintf(cgiOut,"<option value='%s'>%s</option>\n",temp,temp);
 	}
-	fprintf(pstPageInfo->fp,"<tr><td colspan=2><input type=hidden name=plotid value=\"%s\"></td></tr>\n",all_conf_item[0].conf_value);
+
+	fprintf(fp,"</select></td>");
+	fprintf(fp,"</tr>");
+	fprintf(fp,"<script type=text/javascript>\n");
+   	fprintf(fp,"function plotid_change( obj )\n"\
+   	"{\n"\
+   	"var plotid = obj.options[obj.selectedIndex].value;\n"\
+   	"var url = 'wp_eag_conf.cgi?UN=%s&plotid='+plotid;\n"\
+   	"window.location.href = url;\n"\
+   	"}\n", pstPageInfo->encry);
+    fprintf(fp,"</script>\n" );
+	if (EAG_RETURN_OK == ret)
+	{
+
+	//status
+		fprintf(fp,"<tr>");
+		fprintf(fp,"<td width=150>%s</td>",search(pstPageInfo->lauth,HS_STATUS));
+		fprintf(fp,"<td><input type=checkbox name=estatus value=1 %s></td>",(1 == baseconf.status) ? "checked" : "");
+		fprintf(fp,"</tr>");
+
+	//pdc distribute
+		fprintf(fp,"<tr>");
+		fprintf(fp,"<td width=150>%s</td>",search(pstPageInfo->lauth, "pdc_distribute"));
+		fprintf(fp,"<td><input type=checkbox name=pdc_distribute value=1 %s></td>",(1 == baseconf.pdc_distributed) ? "checked" : "");
+		fprintf(fp,"</tr>");
+
+	//rdc distribute
+		fprintf(fp,"<tr>");
+		fprintf(fp,"<td width=150>%s</td>",search(pstPageInfo->lauth, "rdc_distribute"));
+		fprintf(fp,"<td><input type=checkbox name=rdc_distribute value=1 %s></td>",(1 == baseconf.rdc_distributed) ? "checked" : "");
+		fprintf(fp,"</tr>");
+
+	//pdc hansi
+		fprintf(fp,"<tr>");
+		fprintf(fp,"<td width=150>%s</td>",search(pstPageInfo->lauth,"pdc_hansi"));
+		fprintf(fp,"<td><input type=text name=pdc_hansi value=%d-%d maxLength=5><font color=red>(slotid-insid)</font></td>",baseconf.pdc_slotid, baseconf.pdc_insid);
+		fprintf(fp,"</tr>");
+		
+	//rdc hansi
+		fprintf(fp,"<tr>");
+		fprintf(fp,"<td width=150>%s</td>",search(pstPageInfo->lauth,"rdc_hansi"));
+		fprintf(fp,"<td><input type=text name=rdc_hansi value=%d-%d maxLength=5><font color=red>(slotid-insid)</font></td>",baseconf.rdc_slotid, baseconf.rdc_insid);
+		fprintf(fp,"</tr>");
+	//nas ip 
+		char instr[32] = {0};
+		ccgi_ip2str( baseconf.nasip, instr, sizeof(instr) - 1);
+		fprintf(fp,"<tr>");
+		fprintf(fp,"<td width=150>%s</td>","NAS IP");
+		fprintf(fp,"<td><input type=text name=nasip value=%s></td>",instr);
+		fprintf(fp,"</tr>");
+
+	//portal port
+		fprintf(fp,"<tr>");
+		fprintf(fp,"<td width=150>%s</td>",search(pstPageInfo->lauth,HS_PPI_PORT));
+		fprintf(fp,"<td><input type=text name=pport value=%u maxLength=5><font color=red>(1-65535)</font></td>",baseconf.portal_port);
+		fprintf(fp,"</tr>");
+
+	//portal requirement timeout
+		fprintf(fp,"<tr>");
+		fprintf(fp,"<td width=150>%s</td>",search(pstPageInfo->lauth,"portal_timeout"));
+		fprintf(fp,"<td><input type=text name=ptimeout value=%u maxLength=2><font color=red>(1-10)</font></td>",baseconf.portal_retry_interval);
+		fprintf(fp,"</tr>");
+
+	//portal retry times
+		fprintf(fp,"<tr>");
+		fprintf(fp,"<td width=150>%s</td>",search(pstPageInfo->lauth,"portal_retry"));
+		fprintf(fp,"<td><input type=text name=pretry value=%d maxLength=2><font color=red>(0-10)</font></td>",baseconf.portal_retry_times);
+		fprintf(fp,"</tr>");
+
+	//auto-session
+		fprintf(fp,"<tr>");
+		fprintf(fp,"<td width=150>%s</td>",search(pstPageInfo->lauth,HS_AUTO_SESSION));
+		fprintf(fp,"<td><input type=checkbox name=autosession value=1 %s></td>",(1 == baseconf.auto_session) ? "checked" : "");
+		fprintf(fp,"</tr>");
+
+	//account interval
+		fprintf(fp,"<tr>");
+		fprintf(fp,"<td width=150>%s</td>",search(pstPageInfo->lauth,HS_RADACCTINTERVAL));
+		fprintf(fp,"<td><input type=text name=accint value=%d maxLength=4><font color=red>(60-3600)</font></td>",baseconf.radius_acct_interval);
+		fprintf(fp,"</tr>");
+
+	//radius requirement timeout
+		fprintf(fp,"<tr>");
+		fprintf(fp,"<td width=150>%s</td>",search(pstPageInfo->lauth,"radius_timeout"));
+		fprintf(fp,"<td><input type=text name=rtimeout value=%d maxLength=2><font color=red>(1-10)</font></td>",baseconf.radius_retry_interval);
+		fprintf(fp,"</tr>");
+
+	//radius master retry times
+		fprintf(fp,"<tr>");
+		fprintf(fp,"<td width=150>%s</td>",search(pstPageInfo->lauth,"radius_master_retry"));
+		fprintf(fp,"<td><input type=text name=rmretry value=%d maxLength=2><font color=red>(0-10)</font></td>",baseconf.radius_retry_times);
+		fprintf(fp,"</tr>");
+
+	//radius backup retry times
+		fprintf(fp,"<tr>");
+		fprintf(fp,"<td width=150>%s</td>",search(pstPageInfo->lauth,"radius_back_retry"));
+		fprintf(fp,"<td><input type=text name=rbretry value=%d maxLength=2><font color=red>(0-10)</font></td>",baseconf.vice_radius_retry_times);
+		fprintf(fp,"</tr>");
+
+	//max-http-request per 5s
+		fprintf(fp,"<tr>");
+		fprintf(fp,"<td width=150>%s</td>",search(pstPageInfo->lauth,HS_MAX_HTTPRSP));
+		fprintf(fp,"<td><input type=text name=maxhttp value=%u maxLength=3><font color=red>(10-100)</font></td>",baseconf.max_redir_times);
+		fprintf(fp,"</tr>");
+
+	//force-dhcplease
+		fprintf(fp,"<tr>");
+		fprintf(fp,"<td width=150>%s</td>",search(pstPageInfo->lauth,"only_dhcp"));
+		fprintf(fp,"<td><input type=checkbox name=onlydhcp value=1 %s></td>",(1 == baseconf.force_dhcplease) ? "checked" : "");
+		fprintf(fp,"</tr>");
+
+	//idle timeout
+		fprintf(fp,"<tr>");
+		fprintf(fp,"<td width=150>%s</td>",search(pstPageInfo->lauth,HS_DEFIDLETIMEOUT));
+		fprintf(fp,"<td><input type=text name=itimeout value=%d maxLength=5><font color=red>(60-86400)</font></td>",baseconf.idle_timeout);
+		fprintf(fp,"</tr>");
+
+	//idleflow
+		fprintf(fp,"<tr>");
+		fprintf(fp,"<td width=150>%s</td>",search(pstPageInfo->lauth,HS_IDLEFLOW));
+		fprintf(fp,"<td><input type=text name=idleflow value=%llu maxLength=8><font color=red>(0-10485760)</font></td>", baseconf.idle_flow);
+		fprintf(fp,"</tr>");
+
+	//force-wireless
+		fprintf(fp,"<tr>");
+		fprintf(fp,"<td width=150>%s</td>",search(pstPageInfo->lauth,HS_FORCE_WIRELESS));
+		fprintf(fp,"<td><input type=checkbox name=onlywire value=1 %s></td>",(1 == baseconf.force_wireless)?"checked":"");
+		fprintf(fp,"</tr>");
+
+	//flux-from-wireless or other
+		fprintf(fp,"<tr>");
+		fprintf(fp,"<td width=150>%s</td>",search(pstPageInfo->lauth,"eag_flux_mode"));
+		fprintf(fp,"<td><select name=fluxwire>");
+		fprintf(fp,"<option value=%s %s>%s</option>","iptables_L2",(FLUX_FROM_IPTABLES_L2 == baseconf.flux_from)?"selected":"","iptables_L2");
+		fprintf(fp,"<option value=%s %s>%s</option>","wireless",(FLUX_FROM_WIRELESS == baseconf.flux_from)?"selected":"","wireless");
+		fprintf(fp,"<option value=%s %s>%s</option>","fastfwd",(FLUX_FROM_FASTFWD == baseconf.flux_from)?"selected":"","fastfwd");
+		fprintf(fp,"<option value=%s %s>%s</option>","fastfwd_iptables",(FLUX_FROM_FASTFWD_IPTABLES == baseconf.flux_from)?"selected":"","fastfwd_iptables");
+		fprintf(fp,"<option value=%s %s>%s</option>","iptables",(FLUX_FROM_IPTABLES == baseconf.flux_from)?"selected":"","iptables");
+		fprintf(fp,"</select></td>");
+		fprintf(fp,"</tr>");
+
+	//flux-interval
+		fprintf(fp,"<tr>");
+		fprintf(fp,"<td width=150>%s</td>",search(pstPageInfo->lauth,"eag_flux_int"));
+		fprintf(fp,"<td><input type=text name=fluxint value=%d maxLength=4><font color=red>(10-3600)</font></td>",baseconf.flux_interval);
+		fprintf(fp,"</tr>");
+
+	//ipset-auth
+		fprintf(fp,"<tr>");
+		fprintf(fp,"<td width=150>%s</td>",search(pstPageInfo->lauth,"eag_ipset"));
+		fprintf(fp,"<td><input type=checkbox name=ipset value=1 %s></td>",(1 == baseconf.ipset_auth)?"checked":"");
+		fprintf(fp,"</tr>");
+
+	//check-nasportid
+		fprintf(fp,"<tr>");
+		fprintf(fp,"<td width=150>%s</td>",search(pstPageInfo->lauth,"eag_checknas"));
+		fprintf(fp,"<td><input type=checkbox name=checknas value=1 %s></td>",(1 == baseconf.check_nasportid)?"checked":"");
+		fprintf(fp,"</tr>");
+
+    #if 0 
+	//mac-auth server
+		fprintf(fp,"<tr>");
+		fprintf(fp,"<td width=150>%s</td>",search(pstPageInfo->lauth,"eag_mac_auth"));
+		fprintf(fp,"<td><input type=checkbox name=macauth value=1 %s></td>",(1 == baseconf.macauth_switch)?"checked":"");
+		fprintf(fp,"</tr>");
+
+	//mac-auth flux-interval
+		fprintf(fp,"<tr>");
+		fprintf(fp,"<td width=150>%s</td>",search(pstPageInfo->lauth,"eag_mac_flux"));
+		fprintf(fp,"<td><input type=text name=macfluxint value=%d maxLength=4></td>",baseconf.macauth_flux_interval);
+		fprintf(fp,"</tr>");
+		
+	//mac-auth flux-threshold
+		fprintf(fp,"<tr>");
+		fprintf(fp,"<td width=150>%s</td>",search(pstPageInfo->lauth,"eag_mac_fluxth"));
+		fprintf(fp,"<td><input type=text name=macfluxth value=%d maxLength=9></td>",baseconf.macauth_flux_threshold);
+		fprintf(fp,"</tr>");
+		#endif
+
+		
+	}
+	////////////////////////////////////////////
+	fprintf(pstPageInfo->fp,"<tr><td colspan=2><input type=hidden name=plotid value=\"%s\"></td></tr>\n",plotid);
 	fprintf( pstPageInfo->fp, "</table>\n" );
-	
+	fprintf(pstPageInfo->fp,"<input type=hidden name=UN value=\"%s\">",pstPageInfo->encry);
 	return 0;	
 }
 
 
 static int doUserCommand( STPageInfo *pstPageInfo )
 {
-	int iRet=0;
-	int i;
+	char estatus[10] = {0};
+	char pdc_distribute[10] = {0};
+	char rdc_distribute[10] = {0};
+	char pdc_hansi[10] = {0};
+	char rdc_hansi[10] = {0};
+	char nasip[32] = {0};
+	char pport[10] = {0};
+	char ptimeout[10] = {0};
+	char pretry[10] = {0};
+	char autosession[10] = {0};
+	char accint[10] = {0};
+	char rtimeout[10] = {0};	
+	char rmretry[10] = {0};
+	char rbretry[10] = {0};
+	char maxhttp[10] = {0};
+	char onlydhcp[10] = {0};
+	char itimeout[10] = {0};
+	char idleflow[10] = {0};
+	char onlywire[10] = {0};
+	char fluxwire[30] = {0};
+	char fluxint[10] = {0};
+	char ipset[10] = {0};
+	char checknas[10] = {0};
+	char macauth[10] = {0};
+	char macfluxint[10] = {0};
+	char macfluxth[10] = {0};
+	int ret = 0;
+	unsigned long ipaddr;
+	struct in_addr inaddr;
+	int hs_flag = 0;
+	unsigned long port = 0;
+	int isrun = 0;
+	int pdc_slotid = 0;
+	int pdc_insid = 0;
+	int rdc_slotid = 0;
+	int rdc_insid = 0;
 	
-	for( i=0; i<MAX_ITEM_NUM; i++ )
+	cgiFormStringNoNewlines("estatus", estatus, sizeof(estatus));
+	cgiFormStringNoNewlines("pdc_distribute", pdc_distribute, sizeof(pdc_distribute));
+	cgiFormStringNoNewlines("rdc_distribute", rdc_distribute, sizeof(rdc_distribute));
+	cgiFormStringNoNewlines("pdc_hansi", pdc_hansi, sizeof(pdc_hansi));
+	cgiFormStringNoNewlines("rdc_hansi", rdc_hansi, sizeof(rdc_hansi));
+	cgiFormStringNoNewlines("nasip", nasip, sizeof(nasip));
+	cgiFormStringNoNewlines("pport", pport, sizeof(pport));
+	cgiFormStringNoNewlines("ptimeout", ptimeout, sizeof(ptimeout));
+	cgiFormStringNoNewlines("pretry", pretry, sizeof(pretry));
+	cgiFormStringNoNewlines("autosession", autosession, sizeof(autosession));
+	cgiFormStringNoNewlines("accint", accint, sizeof(accint));
+	cgiFormStringNoNewlines("rtimeout", rtimeout, sizeof(rtimeout));
+	cgiFormStringNoNewlines("rmretry", rmretry, sizeof(rmretry));
+	cgiFormStringNoNewlines("rbretry", rbretry, sizeof(rbretry));
+	cgiFormStringNoNewlines("maxhttp", maxhttp, sizeof(maxhttp));
+	cgiFormStringNoNewlines("onlydhcp", onlydhcp, sizeof(onlydhcp));
+	cgiFormStringNoNewlines("itimeout", itimeout, sizeof(itimeout));
+	cgiFormStringNoNewlines("idleflow", idleflow, sizeof(idleflow));
+	cgiFormStringNoNewlines("onlywire", onlywire, sizeof(onlywire));
+	cgiFormStringNoNewlines("fluxwire", fluxwire, sizeof(fluxwire));
+	cgiFormStringNoNewlines("fluxint", fluxint, sizeof(fluxint));
+	cgiFormStringNoNewlines("ipset", ipset, sizeof(ipset));
+	cgiFormStringNoNewlines("checknas", checknas, sizeof(checknas));
+	cgiFormStringNoNewlines("macauth", macauth, sizeof(macauth));
+	cgiFormStringNoNewlines("macfluxint", macfluxint, sizeof(macfluxint));
+	cgiFormStringNoNewlines("macfluxth", macfluxth, sizeof(macfluxth));
+
+	
+	int status = 0;
+	status = atoi(estatus);
+
+	isrun  = eag_ins_running_state(ccgi_connection, parameter.local_id, parameter.instance_id);
+	
+	if (1 == isrun) 
 	{
-		if(  1 == all_conf_item[i].show_flag  &&  NULL != all_conf_item[i].get_value_user_input )
+		if(0 == status)
 		{
-			fprintf(stderr, "%s = %s",all_conf_item[i].conf_name,all_conf_item[i].conf_value);
-			all_conf_item[i].get_value_user_input( &all_conf_item[i], pstPageInfo );
-		}			
-	}
-	
-    //modify new functions
-	iRet = save_conf_file( MULTI_EAG_F, all_conf_item, MAX_ITEM_NUM );
-
-
-{//根据输入的状态，确定是否需要启动服务,关于状态的设置必须在第一个。
-	int status_user_input=0;
-	int status_current=0;
-	
-	if( strcmp( all_conf_item[1].conf_value, "start" ) == 0 )
-	{
-		fprintf(stderr,"instance status start!\n");
-		status_user_input = 1;
+			ret = eag_set_services_status(ccgi_connection, parameter.local_id, parameter.instance_id, status );
+		}
+		else
+		{
+			ShowAlert("eag is running, please stop it first");
+			return 0;
+		}
 	}
 	else
 	{
-		fprintf(stderr,"instance status stop!\n");	
-	}
-	
-	status_current=eag_services_status();
-	fprintf(stderr,"status_current=%d",status_current );
-#if 0	
-	if( 1==status_user_input && 0==status_current )
-	{
-		eag_services_start();
-	}
-	else if( 0==status_user_input && 1==status_current )
-	{
-		/*eag_services_stop();*//*this start is this instance!  if has instance start should determine in */
-		eag_services_restart();
-	}
-	else if( 1==status_user_input && 1==status_current )
-#endif		
-	{
-		eag_services_restart();
+		
+		ret = sscanf(pdc_hansi, "%d-%d", &pdc_slotid, &pdc_insid);
+		if (pdc_slotid > 0 && pdc_slotid <= 10 && pdc_insid > 0 && pdc_insid <= 16) {
+			ret = eag_set_pdc_ins(ccgi_connection, parameter.local_id, parameter.instance_id, 
+						pdc_slotid, pdc_insid);
+		}
+		ret = sscanf(rdc_hansi, "%d-%d", &rdc_slotid, &rdc_insid);
+		if (rdc_slotid > 0 && rdc_slotid <= 10 && rdc_insid > 0 && rdc_insid <= 16) {
+			ret = eag_set_rdc_ins(ccgi_connection, parameter.local_id, parameter.instance_id, 
+						rdc_slotid, rdc_insid);
+		}
+		inet_aton(nasip, &inaddr);
+		ipaddr = ntohl(inaddr.s_addr);
+
+		ret = eag_set_nasip(ccgi_connection, parameter.local_id, parameter.instance_id, ipaddr);
+		
+		port = atol(pport);
+		if (port>=1 && port<=65535)
+		{
+			ret = eag_set_portal_port(ccgi_connection, parameter.local_id, parameter.instance_id, port);
+		}
+		int resend_times = -1;
+		unsigned long resend_interval = -1;
+		resend_interval = atoi(ptimeout);
+		resend_times = atoi(pretry);
+
+		if((resend_interval>=1 && resend_interval<=10)&&(resend_times>=0 && resend_times<=10))
+		{
+			ret = eag_set_portal_retry_params(ccgi_connection, 
+									parameter.local_id,
+									parameter.instance_id,
+									resend_interval,
+									resend_times);
+		}
+
+		int auto_session = 0;
+		auto_session = atoi(autosession);
+		ret = eag_set_auto_session(ccgi_connection, 
+									parameter.local_id,
+									parameter.instance_id, 
+									auto_session);
+
+		int interval = 0;
+		interval = atoi(accint);
+		if(interval>=60 && interval<=3600)
+		{
+			ret = eag_set_acct_interval(ccgi_connection, 
+									parameter.local_id,
+									parameter.instance_id,				
+									interval);
+		}
+
+		int timeout = -1;
+		int master_retry_times = -1;
+		int backup_retry_times = -1;
+		timeout = atoi(rtimeout);
+		master_retry_times = atoi(rmretry);
+		backup_retry_times = atoi(rbretry);
+		if((timeout>=1 && timeout<=10)&&(master_retry_times>=0 && master_retry_times<=10)&&(backup_retry_times>=0 && backup_retry_times<=10))
+		{
+			ret = eag_set_radius_retry_params(ccgi_connection, 
+									parameter.local_id,
+									parameter.instance_id,					
+									timeout,
+									master_retry_times,
+									backup_retry_times);
+		}
+
+		unsigned long request_times = 0;
+		request_times = strtoul(maxhttp, NULL, 10);
+		if(request_times>=10 && request_times<=100)
+		{
+			ret = eag_set_max_redir_times(ccgi_connection, 
+									parameter.local_id,
+									parameter.instance_id,
+									request_times);	
+		}
+
+		int force_dhcplease = 0;
+		force_dhcplease = atoi(onlydhcp);
+		ret = eag_set_force_dhcplease(ccgi_connection, 
+									parameter.local_id,
+									parameter.instance_id,
+									force_dhcplease);
+
+		
+		unsigned long long idle_flow = 0;
+		unsigned long idle_timeout =0 ;
+		
+		idle_timeout = atoi(itimeout);
+		//idle_flow = strtoul(idleflow, NULL, 10);
+		idle_flow = atol(idleflow);
+
+        if((idle_timeout>=60 && idle_timeout<=86400)&&(idle_flow>=0 && idle_flow<=10485760))
+    	{
+			ret = eag_set_idle_params(ccgi_connection, 
+									parameter.local_id,
+									parameter.instance_id, 
+									idle_timeout,
+									idle_flow);
+    	}
+
+		int force_wireless = 0;
+		force_wireless = atoi(onlywire);
+		
+		ret = eag_set_force_wireless(ccgi_connection, 
+									parameter.local_id,
+									parameter.instance_id,
+									force_wireless);
+
+		int flux_from = 0;
+		if (strncmp(fluxwire, "iptables", strlen(fluxwire)) == 0) 
+		{
+			flux_from = FLUX_FROM_IPTABLES;
+		}
+		else if (strncmp(fluxwire, "iptables_L2", strlen(fluxwire)) == 0) 
+		{
+			flux_from = FLUX_FROM_IPTABLES_L2;
+		}
+		else if (strncmp(fluxwire, "wireless", strlen(fluxwire)) == 0) 
+		{
+			flux_from = FLUX_FROM_WIRELESS;
+		}
+		else if (strncmp(fluxwire, "fastfwd", strlen(fluxwire)) == 0) 
+		{
+			flux_from = FLUX_FROM_FASTFWD;
+		}
+		else if (strncmp(fluxwire, "fastfwd_iptables", strlen(fluxwire)) == 0) 
+		{
+			flux_from = FLUX_FROM_FASTFWD_IPTABLES;
+		}
+		ret = eag_set_flux_from(ccgi_connection, 
+									parameter.local_id,
+									parameter.instance_id,
+									flux_from);
+
+		int flux_interval = 0;
+		flux_interval = atoi(fluxint);
+		if(flux_interval>=10 && flux_interval<=3600)
+		{
+			ret = eag_set_flux_interval(ccgi_connection, 
+									parameter.local_id,
+									parameter.instance_id,
+									flux_interval);
+		}
+
+		int ipset_auth = 0;
+		ipset_auth = atoi(ipset);
+
+		ret = eag_set_ipset_auth(ccgi_connection, 
+									parameter.local_id,
+									parameter.instance_id,
+									ipset_auth);	
+
+		int check_nasportid = 0;		
+		check_nasportid=atoi(checknas);
+		ret = eag_set_check_nasportid(ccgi_connection, 
+									parameter.local_id,
+									parameter.instance_id,
+									check_nasportid);	
+
+		#if 0 
+		int macauth_switch = 0;
+		macauth_switch = atoi(macauth);
+		ret = eag_set_macauth_switch(ccgi_dbus_connection, 
+											hs_flag, p_id, 
+											macauth_switch);
+
+		int macflux_interval = 0;
+		macflux_interval = atoi(macfluxint);
+		ret = eag_set_macauth_flux_interval(ccgi_dbus_connection, 
+												hs_flag, p_id, 
+												flux_interval);	
+		int flux_threshold = 0;
+		flux_threshold = atoi(macfluxth);
+		ret = eag_set_macauth_flux_threshold(ccgi_dbus_connection, 
+											hs_flag, p_id, 
+											flux_threshold);	
+		#endif
+		if(1 == status)
+		{
+			ret = eag_set_services_status(ccgi_connection, 
+									parameter.local_id,
+									parameter.instance_id,
+									status);
+		}
 	}
 
-	fprintf(stderr,"after doUserCommand = %d", iRet );
-}	
-	return iRet;
+	return ret;
 }
 
 
 static int doRedir( STPageInfo *pstPageInfo ,char *plot_id )
 {
-	fprintf(stderr, "doRedir before xxxxx\n" );
 
-	cgiHeaderContentType("text/html");
-	
-	fprintf(stderr, "pstPageInfo->encry = %p  %s\n", pstPageInfo->encry, pstPageInfo->encry );
 	fprintf(cgiOut, "<script type=text/javascript>\nwindow.location.href='wp_eag_conf.cgi?UN=%s&plotid=%s';\n</script>", 
 					pstPageInfo->encry,plot_id );
-	fprintf(stderr, "doRedir before ret\n" );
 	exit(0);
 		
 }

@@ -40,7 +40,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "ws_ec.h"
 #include "ws_conf_engine.h"
 
+#include "ws_init_dbus.h"
 #include "ws_eag_conf.h"
+#include "ws_eag_auto_conf.h"
+#include "eag/eag_errcode.h"
+#include "eag/eag_conf.h"
+#include "eag/eag_interface.h"
+#include "ws_init_dbus.h"
+#include "ws_dcli_vrrp.h"
+#include "ws_dbus_list_interface.h"
 
 #ifndef ADD_VLAN_MAPING_MULTI_RADIUS
 #define ADD_VLAN_MAPING_MULTI_RADIUS
@@ -48,6 +56,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define MAX_ID_LEN	10
 #define MAX_PAGE_NUM  10
 #endif
+#define MAX_MAPED_NASPORTID 	99999999
 
 int number_input_is_legal(const char *str);
 
@@ -64,7 +73,12 @@ typedef struct{
 	int all_page_num;
 } STPageInfo;
 
+static dbus_parameter parameter;
+static instance_parameter *paraHead1 = NULL;
+static void *ccgi_connection = NULL;
+static char plotid[10] = {0};
 
+int eag_vlanmap_policy_get_num(int policy_id);
 
 /***************************************************************
 申明回调函数
@@ -82,34 +96,60 @@ static int s_wtpwlanmapvlan_content_of_page( STPageInfo *pstPageInfo );
 ****************************************************************/
 int cgiMain()
 {
+	int ret = 0;
 	STPageInfo stPageInfo;
 	char url[256]="";
+
+	DcliWInit();
+	ccgi_dbus_init();  
 	
 //初始化常用公共变量
 	memset( &stPageInfo, 0,sizeof(STPageInfo) );
-
+	ret = init_portal_container(&(stPageInfo.pstPortalContainer));
 	cgiFormStringNoNewlines("UN", stPageInfo.encry, BUF_LEN);
-	
-	stPageInfo.username_encry=dcryption(stPageInfo.encry);
-    if( NULL == stPageInfo.username_encry )
-    {
-	    ShowErrorPage(search(stPageInfo.lpublic,"ill_user")); 	  /*用户非法*/
-		return 0;
-	}
-	stPageInfo.iUserGroup = checkuser_group( stPageInfo.username_encry );
-
-	//stPageInfo.pstModuleContainer = MC_create_module_container();
-	init_portal_container(&(stPageInfo.pstPortalContainer));
-	if( NULL == stPageInfo.pstPortalContainer )
-	{
-		return 0;
-	}
 	stPageInfo.lpublic=stPageInfo.pstPortalContainer->lpublic;//get_chain_head("../htdocs/text/public.txt");
 	stPageInfo.lauth=stPageInfo.pstPortalContainer->llocal;//get_chain_head("../htdocs/text/authentication.txt");
+	//stPageInfo.username_encry=dcryption(stPageInfo.encry);
+    if( WS_ERR_PORTAL_ILLEGAL_USER == ret )
+    {
+	    ShowErrorPage(search(stPageInfo.lpublic,"ill_user")); 	  /*用户非法*/
+		release_portal_container(&(stPageInfo.pstPortalContainer));
+		return 0;
+	}
+	//stPageInfo.iUserGroup = checkuser_group( stPageInfo.username_encry );
+	stPageInfo.iUserGroup = stPageInfo.pstPortalContainer->iUserGroup;
+
+	//stPageInfo.pstModuleContainer = MC_create_module_container();
+	if( NULL == stPageInfo.pstPortalContainer )
+	{
+		release_portal_container(&(stPageInfo.pstPortalContainer));
+		return 0;
+	}
 	
 	stPageInfo.fp = cgiOut;
 
-	MC_setActiveLabel( stPageInfo.pstPortalContainer->pstModuleContainer, 9 );
+	memset(plotid,0,sizeof(plotid));
+	cgiFormStringNoNewlines("plotid", plotid, sizeof(plotid)); 
+	
+	list_instance_parameter(&paraHead1, INSTANCE_STATE_WEB);
+	if (NULL == paraHead1) {
+		return 0;
+	}
+	if(strcmp(plotid, "") == 0)
+	{
+		parameter.instance_id = paraHead1->parameter.instance_id;
+		parameter.local_id = paraHead1->parameter.local_id;
+		parameter.slot_id = paraHead1->parameter.slot_id;
+		snprintf(plotid,sizeof(plotid)-1,"%d-%d-%d",parameter.slot_id, parameter.local_id, parameter.instance_id);
+	}
+	else
+	{
+		get_slotID_localID_instanceID(plotid, &parameter);
+	}
+	ccgi_ReInitDbusConnection(&ccgi_connection, parameter.slot_id, DISTRIBUTFAG);
+	fprintf(stderr, "----------------------------------------------plotid=%s\n", plotid);
+
+	MC_setActiveLabel( stPageInfo.pstPortalContainer->pstModuleContainer, WP_EAG_NASPORTID);
 
 	MC_setPrefixOfPageCallBack( stPageInfo.pstPortalContainer->pstModuleContainer, (MC_CALLBACK)s_wtpwlanmapvlan_prefix_of_page, &stPageInfo );
 	MC_setContentOfPageCallBack( stPageInfo.pstPortalContainer->pstModuleContainer, (MC_CALLBACK)s_wtpwlanmapvlan_content_of_page, &stPageInfo );
@@ -140,6 +180,8 @@ int cgiMain()
 
 	
 	MC_writeHtml( stPageInfo.pstPortalContainer->pstModuleContainer );
+
+	free_instance_parameter_list(&paraHead1);
 	
 	release_portal_container(&(stPageInfo.pstPortalContainer));
 	
@@ -149,27 +191,25 @@ int cgiMain()
 
 static int s_wtpwlanmapvlan_prefix_of_page( STPageInfo *pstPageInfo )
 {
-	char buf[]="start\n";
-	char del_rule[10] = "";
-	char index[32] = "";
 	FILE * fp = pstPageInfo->fp;
-	char cur_page_num_str[10]="";
 	struct list * portal_public = pstPageInfo->lpublic;
 	struct list * portal_auth = pstPageInfo->lauth;
 
-	int wlanid_begin, wlanid_end, wtpid_begin, wtpid_end, vlanid;
-	char wlanid_begin_str[MAX_ID_LEN],wlanid_end_str[MAX_ID_LEN];
-	char wtpid_begin_str[MAX_ID_LEN], wtpid_end_str[MAX_ID_LEN];
-	char vlanid_str[MAX_ID_LEN];
-	char wwvkey[50];
-	char plot_id[10];
-    memset(wlanid_begin_str,0,sizeof(wlanid_begin_str));
-    memset(wlanid_end_str,0,sizeof(wlanid_end_str));
-    memset(wtpid_begin_str,0,sizeof(wtpid_begin_str));
-    memset(wtpid_end_str,0,sizeof(wtpid_end_str));
-    memset(vlanid_str,0,sizeof(vlanid_str));
-    memset(wwvkey,0,sizeof(wwvkey));
-	memset(plot_id,0,sizeof(plot_id));
+	int wlanid_begin, wlanid_end, wtpid_begin, wtpid_end,vlanid_begin,vlanid_end;
+	char wlanid_begin_str[MAX_ID_LEN] = {0};
+	char wlanid_end_str[MAX_ID_LEN] = {0};
+	char wtpid_begin_str[MAX_ID_LEN] = {0};
+	char wtpid_end_str[MAX_ID_LEN] = {0};
+	char vlanid_begin_str[MAX_ID_LEN] = {0};
+	char vlanid_end_str[MAX_ID_LEN] = {0};
+	char nasp[10] = {0};
+	int ret = 0;
+	char types[10] = {0};
+	struct eag_id_range_t wlanid = {0};
+	struct eag_id_range_t wtpid = {0};
+	struct eag_id_range_t vlanid = {0};
+	unsigned long nasportid = 0;
+	
 
 	if( cgiFormSubmitClicked(SUBMIT_NAME) == cgiFormSuccess )
 	{
@@ -177,52 +217,100 @@ static int s_wtpwlanmapvlan_prefix_of_page( STPageInfo *pstPageInfo )
 		cgiFormStringNoNewlines("wlanid_end",wlanid_end_str, sizeof(wlanid_end_str));
 		cgiFormStringNoNewlines("wtpid_begin",wtpid_begin_str, sizeof(wtpid_begin_str));
 		cgiFormStringNoNewlines("wtpid_end",wtpid_end_str, sizeof(wtpid_end_str));
-		cgiFormStringNoNewlines("vlanid",vlanid_str, sizeof(vlanid_str));
-		cgiFormStringNoNewlines("plot_id",plot_id, sizeof(plot_id));
+		cgiFormStringNoNewlines("vlansid",vlanid_begin_str, sizeof(vlanid_begin_str));
+		cgiFormStringNoNewlines("vlaneid",vlanid_end_str, sizeof(vlanid_end_str));
+		cgiFormStringNoNewlines("nasp",nasp, sizeof(nasp));
+		cgiFormStringNoNewlines("types",types, sizeof(types));
 
-        wlanid_begin=strtoul(wlanid_begin_str,0,10);
-        wlanid_end=strtoul(wlanid_end_str,0,10);
-		wtpid_begin=strtoul(wtpid_begin_str,0,10);
-        wtpid_end=strtoul(wtpid_end_str,0,10);
-        vlanid=strtoul(vlanid_str,0,10);
+		wlanid_begin = strtoul(wlanid_begin_str, NULL, 10);
+		wlanid_end = strtoul(wlanid_end_str, NULL, 10);
+		wtpid_begin = strtoul(wtpid_begin_str, NULL, 10);
+		wtpid_end = strtoul(wtpid_end_str, NULL, 10);	
+		vlanid_begin = strtoul(vlanid_begin_str, NULL, 10);	
+		vlanid_end = strtoul(vlanid_end_str, NULL, 10);	
+		nasportid = strtoul(nasp, NULL, 10);
 
-		if(!number_input_is_legal(wlanid_begin_str) || !number_input_is_legal(wlanid_end_str)
-			|| !number_input_is_legal(wtpid_begin_str) || !number_input_is_legal(wtpid_end_str)
-			|| !number_input_is_legal(vlanid_str))
+
+ 		if( (nasportid <= 0) ||(nasportid > MAX_MAPED_NASPORTID) )
 		{
 			//err input
 			fprintf(fp,"<script type=text/javascript>\n"\
 						"alert('%s');\n"\
 						"</script>\n",search(portal_public,"input_error"));
 		}
-		else if( wlanid_begin <= 0 || wlanid_end < wlanid_begin || 
-			wtpid_begin <=0 || wtpid_end < wtpid_begin ||
-			vlanid <=0 || vlanid >4096 )
+		
+		if(0 == strcmp(types,"wlan"))
 		{
-			//err input
-			fprintf(fp,"<script type=text/javascript>\n"\
-						"alert('%s');\n"\
-						"</script>\n",search(portal_public,"input_error"));
-		}
-		else
-		{
-		    sprintf(wwvkey,"%s.%s.%s.%s",wlanid_begin_str,wlanid_end_str,wtpid_begin_str,wtpid_end_str);
-			char *tmpz=(char *)malloc(20);
-			memset(tmpz,0,20);
-			sprintf(tmpz,"%s%s",MTW_N,plot_id);	
+			if(!number_input_is_legal(wlanid_begin_str) || !number_input_is_legal(wlanid_end_str)
+				|| !number_input_is_legal(wtpid_begin_str) || !number_input_is_legal(wtpid_end_str)
+				|| !number_input_is_legal(nasp))
+			{
+				//err input
+				fprintf(fp,"<script type=text/javascript>\n"\
+							"alert('%s');\n"\
+							"</script>\n",search(portal_public,"input_error"));
+			}
+			else if( (wlanid_begin <= 0) ||(wlanid_begin > MAX_WLANID_INPUT)|| (wlanid_end < wlanid_begin) || 
+				(wlanid_end <= 0) ||(wlanid_end > MAX_WLANID_INPUT)||(wtpid_end <= 0) || (wtpid_end > MAX_WTPID_INPUT)||
+				(wtpid_begin <= 0) || (wtpid_begin > MAX_WTPID_INPUT)||(wtpid_end < wtpid_begin) )
+			{
+				//err input
+				fprintf(fp,"<script type=text/javascript>\n"\
+							"alert('%s');\n"\
+							"</script>\n",search(portal_public,"input_error"));
+			}
+			else
+			{
+				wlanid.begin = wlanid_begin;
+				wlanid.end = wlanid_end;
+				wtpid.begin = wtpid_begin;
+				wtpid.end = wtpid_end;		
+				
+				ret  = eag_add_nasportid(ccgi_connection, parameter.local_id, parameter.instance_id,
+					wlanid, wtpid, vlanid, 
+					NASPORTID_KEYTYPE_WLAN_WTP, nasportid);
 
-			add_eag_node_attr(MULTI_WWV_F, tmpz, ATT_Z, wwvkey);
-			mod_eag_node(MULTI_WWV_F, tmpz, ATT_Z, wwvkey, WLANSIDZ, wlanid_begin_str);
-			mod_eag_node(MULTI_WWV_F, tmpz, ATT_Z, wwvkey, WLANEIDZ, wlanid_end_str);
-			mod_eag_node(MULTI_WWV_F, tmpz, ATT_Z, wwvkey, WTPSIDZ, wtpid_begin_str);
-			mod_eag_node(MULTI_WWV_F, tmpz, ATT_Z, wwvkey, WTPEIDZ, wtpid_end_str);
-			mod_eag_node(MULTI_WWV_F, tmpz, ATT_Z, wwvkey, VLANIDZ, vlanid_str);
-			free(tmpz);
-			fprintf( fp, "<script type=text/javascript>\n"\
-						"alert('%s');\n"\
-		                "window.location.href='wp_wtpwlan_map_vlan.cgi?UN=%s&plotid=%s';\n"\
-						"</script>\n",search(portal_auth,"add_vlan_map_success"), pstPageInfo->encry,plot_id);
+				fprintf( fp, "<script type='text/javascript'>\n" );
+				fprintf( fp, "window.location.href='wp_wtpwlan_map_vlan.cgi?UN=%s&plotid=%s';\n", pstPageInfo->encry,plotid);
+				fprintf( fp, "</script>\n" );		
+				
+			}
 		}
+		else if(0 == strcmp(types,"vlan"))
+		{
+			if(!number_input_is_legal(vlanid_begin_str) || !number_input_is_legal(vlanid_end_str)|| !number_input_is_legal(nasp))
+			{
+				//err input
+				fprintf(fp,"<script type=text/javascript>\n"\
+							"alert('%s');\n"\
+							"</script>\n",search(portal_public,"input_error"));
+			}
+			else if( (vlanid_begin <= 0) ||(vlanid_begin > MAX_VLANID_INPUT)
+				||(vlanid_end <= 0) ||(vlanid_end> MAX_VLANID_INPUT)
+				|| (vlanid_end < vlanid_begin) )
+			{
+				//err input
+				fprintf(fp,"<script type=text/javascript>\n"\
+							"alert('%s');\n"\
+							"</script>\n",search(portal_public,"input_error"));
+			}
+			else
+			{
+				vlanid.begin = vlanid_begin;
+				vlanid.end = vlanid_end;
+				
+				ret  = eag_add_nasportid(ccgi_connection, parameter.local_id, parameter.instance_id, 
+					wlanid, wtpid, vlanid, 
+					NASPORTID_KEYTYPE_VLAN, nasportid);
+
+				fprintf( fp, "<script type='text/javascript'>\n" );
+				fprintf( fp, "window.location.href='wp_wtpwlan_map_vlan.cgi?UN=%s&plotid=%s';\n", pstPageInfo->encry,plotid);
+				fprintf( fp, "</script>\n" );		
+				
+			}
+		}
+		 
+
 	}
 	return 0;
 }
@@ -235,33 +323,102 @@ static int s_wtpwlanmapvlan_content_of_page( STPageInfo *pstPageInfo )
 	int i, cl = 0;
 	char menu[21]="";
 	
-    char *urlnode=(char *)malloc(20);
-	memset(urlnode,0,20);
-	cgiFormStringNoNewlines( "plotid", urlnode, 20 );
+	char types[10] = {0};
+	cgiFormStringNoNewlines( "TYPE", types, sizeof(types) );
+	
 	
 	fprintf(fp,"<table border=0 width=500 cellspacing=0 cellpadding=0>\n");
-	
-	fprintf(fp,"<tr height=30 align=left><td width=250>%s</td>",search(portal_auth,"wlan_id_begin"));
-	fprintf(fp,"<td width=250><input type=text name=wlanid_begin size=15></td>"\
-				"</tr>\n");
-	fprintf(fp,"<tr height=30 align=left><td width=250>%s</td>",search(portal_auth,"wlan_id_end"));
-	fprintf(fp,"<td width=250><input type=text name=wlanid_end size=15></td>"\
-				"</tr>\n");
-	fprintf(fp,"<tr height=30 align=left><td width=250>%s</td>",search(portal_auth,"wtp_id_begin"));
-	fprintf(fp,"<td width=250><input type=text name=wtpid_begin size=15></td>"\
-				"</tr>\n");
-	fprintf(fp,"<tr height=30 align=left><td width=250>%s</td>",search(portal_auth,"wtp_id_end"));
-	fprintf(fp,"<td width=250><input type=text name=wtpid_end size=15></td>"\
-				"</tr>\n");
-	fprintf(fp,"<tr height=30 align=left><td width=250>%s</td>",search(portal_auth,"vlan_id"));
-	fprintf(fp,"<td width=250><input type=text name=vlanid size=15></td>"\
-				"</tr>\n");
 
-	fprintf(fp,"<tr height=30 align=left>");
-	fprintf(fp,"<td colspan=2><input type=hidden name=plot_id value=\"%s\"></td>"\
-				"</tr>\n",urlnode);
+	fprintf(fp,"<tr height=30 align=left>\n");
+	fprintf(fp,"<td width=250>%s</td>",search(portal_auth,"plot_idz"));
+	fprintf(fp,"<td width=250><select name=port_id onchange=plotid_change(this)>");
+	instance_parameter *pq = NULL;
+	char temp[10] = { 0 };
+	
+	for (pq=paraHead1;(NULL != pq);pq=pq->next)
+	{
+		memset(temp,0,sizeof(temp));
+		snprintf(temp,sizeof(temp)-1,"%d-%d-%d",pq->parameter.slot_id,pq->parameter.local_id,pq->parameter.instance_id);
+		
+		if (strcmp(plotid, temp) == 0)
+			fprintf(cgiOut,"<option value='%s' selected>%s</option>\n",temp,temp);
+		else	       
+			fprintf(cgiOut,"<option value='%s'>%s</option>\n",temp,temp);
+	}	
+	fprintf(fp,"</select></td>");
+	fprintf(fp, "</tr>");
+	fprintf(fp,"<script type=text/javascript>\n");
+   	fprintf(fp,"function plotid_change( obj )\n"\
+   	"{\n"\
+   	"var plotid = obj.options[obj.selectedIndex].value;\n"\
+   	"var url = 'wp_add_wtpwlan_map_vlan.cgi?UN=%s&plotid='+plotid;\n"\
+   	"window.location.href = url;\n"\
+   	"}\n", pstPageInfo->encry);
+    fprintf(fp,"</script>\n" );	
+	
+	fprintf(fp,"<tr height=30 align=left>\n");
+	fprintf(fp,"<td width=250>%s</td>","types");
+	fprintf(fp,"<td width=250><select name=types onchange='sel_change(this);'>");
+	if(0 == strcmp(types,"wlan"))
+	{
+		fprintf(fp,"<option value=wlan selected=selected>Wlan/Wtp</option>");
+	}
+	else
+	{
+		fprintf(fp,"<option value=wlan>Wlan/Wtp</option>");
+	}
+	if(0 == strcmp(types,"vlan"))
+	{
+		fprintf(fp,"<option value=vlan selected=selected>Vlan</option>");
+	}
+	else
+	{
+		fprintf(fp,"<option value=vlan>Vlan</option>");
+	}
+	fprintf(fp,"</select></td>");
+	fprintf(fp, "</tr>");
+
+	fprintf(fp,"<script type=text/javascript>\n");
+	fprintf(fp,"function sel_change( obj )\n"\
+	"{\n"\
+	"var selstr = obj.options[obj.selectedIndex].value;\n"\
+	"var url = 'wp_add_wtpwlan_map_vlan.cgi?UN=%s&plotid=%s&TYPE='+selstr;\n"\
+	"window.location.href = url;\n"\
+	"}\n", pstPageInfo->encry,plotid);
+	fprintf(fp,"</script>\n" );
+
+	if(0 == strcmp(types,"vlan")) 
+	{
+		fprintf(fp,"<tr height=30 align=left><td width=250>%s</td>","vlan begin");
+		fprintf(fp,"<td width=250><input type=text name=vlansid size=15 maxLength=4 onkeypress=\"return event.keyCode>=48&&event.keyCode<=57\"><font color=red>(1-%d)</font></td>",MAX_VLANID_INPUT);
+					fprintf(fp,"</tr>\n");
+		fprintf(fp,"<tr height=30 align=left><td width=250>%s</td>","vlan end");
+		fprintf(fp,"<td width=250><input type=text name=vlaneid size=15 maxLength=4 onkeypress=\"return event.keyCode>=48&&event.keyCode<=57\"><font color=red>(1-%d)</font></td>",MAX_VLANID_INPUT);
+					fprintf(fp,"</tr>\n");		
+	}
+	else
+	{
+		fprintf(fp,"<tr height=30 align=left><td width=250>%s</td>",search(portal_auth,"wlan_id_begin"));
+		fprintf(fp,"<td width=250><input type=text name=wlanid_begin size=15 maxLength=3 onkeypress=\"return event.keyCode>=48&&event.keyCode<=57\"><font color=red>(1-%d)</font></td>",MAX_WLANID_INPUT);
+					fprintf(fp,"</tr>\n");
+		fprintf(fp,"<tr height=30 align=left><td width=250>%s</td>",search(portal_auth,"wlan_id_end"));
+		fprintf(fp,"<td width=250><input type=text name=wlanid_end size=15 maxLength=3 onkeypress=\"return event.keyCode>=48&&event.keyCode<=57\"><font color=red>(1-%d)</font></td>",MAX_WLANID_INPUT);
+					fprintf(fp,"</tr>\n");
+		fprintf(fp,"<tr height=30 align=left><td width=250>%s</td>",search(portal_auth,"wtp_id_begin"));
+		fprintf(fp,"<td width=250><input type=text name=wtpid_begin size=15 maxLength=4 onkeypress=\"return event.keyCode>=48&&event.keyCode<=57\"><font color=red>(1-%d)</font></td>",MAX_WTPID_INPUT);
+					fprintf(fp,"</tr>\n");
+		fprintf(fp,"<tr height=30 align=left><td width=250>%s</td>",search(portal_auth,"wtp_id_end"));
+		fprintf(fp,"<td width=250><input type=text name=wtpid_end size=15 maxLength=4 onkeypress=\"return event.keyCode>=48&&event.keyCode<=57\"><font color=red>(1-%d)</font></td>",MAX_WTPID_INPUT);
+					fprintf(fp,"</tr>\n");
+	}
+
+	fprintf(fp,"<tr height=30 align=left><td width=250>%s</td>","Nasportid");
+	fprintf(fp,"<td width=250><input type=text name=nasp size=15 maxLength=8 onkeypress=\"return event.keyCode>=48&&event.keyCode<=57\"><font color=red>(1-%d)</font></td>",MAX_MAPED_NASPORTID);
+				fprintf(fp,"</tr>\n");
+
 	fprintf(fp,	"</table>");
-    free(urlnode);
+	fprintf(fp,"<input type=hidden name=UN value=\"%s\">",pstPageInfo->encry);
+	fprintf(fp,"<input type=hidden name=plotid value=\"%s\">",plotid);
 	return 0;	
 }
 
@@ -280,5 +437,29 @@ int number_input_is_legal(const char *str)
 	if (strlen(str) > MAX_ID_LEN-1)
 		return 0;
 	return 1;
+}
+
+int eag_vlanmap_policy_get_num(int policy_id)
+{
+	char tempz[20] = "";
+	int flag = -1;
+	struct st_wwvz chead = {0};
+	int num = 0;
+	
+	memset(tempz, 0, 20);
+	snprintf(tempz, 20, "%s%d", MTW_N, policy_id);
+	memset(&chead, 0, sizeof(chead));
+
+	if (access(MULTI_WWV_F, 0) != 0)
+	{
+		return num;
+	}
+	flag = read_wwvz_xml(MULTI_WWV_F, &chead, &num, tempz);
+	if(0 == flag && num > 0)
+	{
+		Free_wwvz_info(&chead);
+	}
+
+	return num;
 }
 

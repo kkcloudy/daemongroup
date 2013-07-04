@@ -563,7 +563,6 @@ readn(int fd, const void *vptr, size_t n)
 		}
 		nleft -= nread;
 		ptr += nread;
-		syslog(LOG_DEBUG, "readn nread=%d nleft=%d", nread, nleft);
 	} 
 	return (n - nleft);
 }
@@ -583,7 +582,7 @@ writen(int fd, const void *vptr, size_t n)
 	nleft = n;
 	while (nleft > 0) {
 		if ((nwritten = write(fd, ptr, nleft)) <= 0) {
-			syslog(LOG_DEBUG, "nwriten=%d nleft=%d", nwritten, nleft);
+			syslog(LOG_WARNING, "writen error nwritten=%d:%s", nwritten, strerror(errno));
 			if (nwritten < 0 && errno == EINTR) {
 				nwritten = 0;
 			} else {
@@ -620,6 +619,8 @@ int sample_rtmd_get_interface_flow(struct sample_rtmd_info *info, int *ifnum, st
 	nbyte = writen(info->sockfd, buf, buf[0].length);
 	syslog(LOG_WARNING, "sample_rtmd_get_interface_flow writen nbyte=%d, length=%d\n", nbyte, length);
 	if (nbyte != length) {
+		sample_rtmd_close_socket(info);
+		sample_rtmd_init_socket(info, info->process, info->cmd, info->timeout);
 		return AS_RTN_SOCKET_WRITE_ERR;
 	}
 
@@ -636,6 +637,8 @@ int sample_rtmd_get_interface_flow(struct sample_rtmd_info *info, int *ifnum, st
 	nbyte = readn(info->sockfd, buf, sizeof(buf));
 	syslog(LOG_DEBUG, "sample_rtmd_get_interface_flow readn nbyte=%d, size=%d\n", nbyte, sizeof(buf));
 	if (nbyte < 0) {
+		sample_rtmd_close_socket(info);
+		sample_rtmd_init_socket(info, info->process, info->cmd, info->timeout);
 		return AS_RTN_SOCKET_READ_BYTE_ERR;
 	}
 	

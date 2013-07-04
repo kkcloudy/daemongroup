@@ -40,7 +40,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "ws_ec.h"
 #include "ws_conf_engine.h"
 
+#include <netinet/in.h> 
 #include "ws_eag_conf.h"
+#include "eag/eag_errcode.h"
+#include "eag/eag_conf.h"
+#include "eag/eag_interface.h"
+#include "ws_init_dbus.h"
+#include "ws_dcli_vrrp.h"
+#include "ws_dbus_list_interface.h"
+
 #ifndef EDIT_MULTI_RADIUS
 #define EDIT_MULTI_RADIUS
 
@@ -52,7 +60,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
        
 #endif
 
-#define MAX_RADIUS_DOMAIN_LEN		128
+#define MAX_RADIUS_DOMAIN_LEN		64
 #define MAX_RADIUS_KEY_LEN		128
 
 int ip_input_is_legal(const char *str);
@@ -74,6 +82,10 @@ typedef struct{
 	
 } STPageInfo;
 
+static dbus_parameter parameter;
+static instance_parameter *paraHead1 = NULL;
+static void *ccgi_connection = NULL;
+static char plotid[10] = {0};
 
 
 /***************************************************************
@@ -94,31 +106,59 @@ static int edit_num;
 ****************************************************************/
 int cgiMain()
 {
+	int ret = 0;
 	STPageInfo stPageInfo;
 	char url[256]="";
+
+	DcliWInit();
+	ccgi_dbus_init();  
+	
 //初始化常用公共变量
 	memset( &stPageInfo, 0,sizeof(STPageInfo) );
-
+	ret  = init_portal_container(&(stPageInfo.pstPortalContainer));
 	cgiFormStringNoNewlines("UN", stPageInfo.encry, BUF_LEN);
 	
-	stPageInfo.username_encry=dcryption(stPageInfo.encry);
-    if( NULL == stPageInfo.username_encry )
-    {
-	    ShowErrorPage(search(stPageInfo.lpublic,"ill_user")); 	  /*用户非法*/
-		return 0;
-	}
-	stPageInfo.iUserGroup = checkuser_group( stPageInfo.username_encry );
-
-	//stPageInfo.pstModuleContainer = MC_create_module_container();
-	init_portal_container(&(stPageInfo.pstPortalContainer));
-	if( NULL == stPageInfo.pstPortalContainer )
-	{
-		return 0;
-	}
 	stPageInfo.lpublic=stPageInfo.pstPortalContainer->lpublic;//get_chain_head("../htdocs/text/public.txt");
 	stPageInfo.lauth=stPageInfo.pstPortalContainer->llocal;//get_chain_head("../htdocs/text/authentication.txt");
+	//stPageInfo.username_encry=dcryption(stPageInfo.encry);
+    if( WS_ERR_PORTAL_ILLEGAL_USER == ret )
+    {
+	    ShowErrorPage(search(stPageInfo.lpublic,"ill_user")); 	  /*用户非法*/
+		release_portal_container(&(stPageInfo.pstPortalContainer));
+		return 0;
+	}
+	//stPageInfo.iUserGroup = checkuser_group( stPageInfo.username_encry );
+	stPageInfo.iUserGroup = stPageInfo.pstPortalContainer->iUserGroup;
+	
+	//stPageInfo.pstModuleContainer = MC_create_module_container();
+	if( NULL == stPageInfo.pstPortalContainer )
+	{
+		release_portal_container(&(stPageInfo.pstPortalContainer));
+		return 0;
+	}
 	
 	stPageInfo.fp = cgiOut;
+
+	memset(plotid,0,sizeof(plotid));
+	cgiFormStringNoNewlines("plotid", plotid, sizeof(plotid)); 
+	
+	list_instance_parameter(&paraHead1, INSTANCE_STATE_WEB);
+	if (NULL == paraHead1) {
+		return 0;
+	}
+	if(strcmp(plotid, "") == 0)
+	{
+		parameter.instance_id = paraHead1->parameter.instance_id;
+		parameter.local_id = paraHead1->parameter.local_id;
+		parameter.slot_id = paraHead1->parameter.slot_id;
+		snprintf(plotid,sizeof(plotid)-1,"%d-%d-%d",parameter.slot_id, parameter.local_id, parameter.instance_id);
+	}
+	else
+	{
+		get_slotID_localID_instanceID(plotid, &parameter);
+	}
+	ccgi_ReInitDbusConnection(&ccgi_connection, parameter.slot_id, DISTRIBUTFAG);
+	fprintf(stderr, "----------------------------------------------plotid=%s\n", plotid);
 //初始化完毕
 
 	
@@ -127,7 +167,7 @@ int cgiMain()
 
 	
 
-	MC_setActiveLabel( stPageInfo.pstPortalContainer->pstModuleContainer, 8 );
+	MC_setActiveLabel( stPageInfo.pstPortalContainer->pstModuleContainer, WP_EAG_RADIUS);
 
 	MC_setPrefixOfPageCallBack( stPageInfo.pstPortalContainer->pstModuleContainer, (MC_CALLBACK)s_editMulitRadius_prefix_of_page, &stPageInfo );
 	MC_setContentOfPageCallBack( stPageInfo.pstPortalContainer->pstModuleContainer, (MC_CALLBACK)s_editMulitRadius_content_of_page, &stPageInfo );
@@ -135,9 +175,9 @@ int cgiMain()
 	
 	MC_setOutPutFileHandle( stPageInfo.pstPortalContainer->pstModuleContainer, cgiOut );
 
-	LB_changelabelName_Byindex(stPageInfo.pstPortalContainer->pstModuleContainer,search(stPageInfo.lauth,"add_multi_radius"),9);
+	LB_changelabelName_Byindex(stPageInfo.pstPortalContainer->pstModuleContainer,search(stPageInfo.lauth,"add_multi_radius"),WP_EAG_RADIUS);
 	sprintf(url,"%s?UN=%s","wp_multi_radius.cgi",stPageInfo.encry);
-	LB_changelabelUrl_Byindex(stPageInfo.pstPortalContainer->pstModuleContainer,url,7);
+	LB_changelabelUrl_Byindex(stPageInfo.pstPortalContainer->pstModuleContainer,url,WP_EAG_RADIUS);
 
 	MC_setModuleContainerDomainValue( stPageInfo.pstPortalContainer->pstModuleContainer, FORM_ONSIBMIT, "return true;" );
 	//可以设置为一个javascript函数,这个js函数的实现放在prefix回调函数中就可以了。
@@ -158,6 +198,8 @@ int cgiMain()
 	
 	MC_writeHtml( stPageInfo.pstPortalContainer->pstModuleContainer );
 	
+	free_instance_parameter_list(&paraHead1);
+	
 	release_portal_container(&(stPageInfo.pstPortalContainer));
 	
 	
@@ -168,19 +210,27 @@ int cgiMain()
 static int s_editMulitRadius_prefix_of_page( STPageInfo *pstPageInfo )
 {
 	FILE * fp = pstPageInfo->fp;
-	char edit_rule[10] = "";
-	char index[32] = "";
 	
 	struct list * radius_public = pstPageInfo->lpublic;
 	struct list * radius_auth = pstPageInfo->lauth;
-
+	int ret = 0;
+	unsigned long auth_ip=0;
+	unsigned short auth_port=0;
+	unsigned long acct_ip=0;
+	unsigned short acct_port=0;
 	
-	char plot_id[30],domain_name[256],radius_server_type[256],radius_server_ip[32],radius_server_port[32],radius_server_key[256],radius_server_portal[32],
+	unsigned long backup_auth_ip=0;
+	unsigned short backup_auth_port=0;
+	unsigned long backup_acct_ip=0;
+	unsigned short backup_acct_port=0;
+	struct in_addr inaddr;
+
+	char domain_name[256],radius_server_type[256],radius_server_ip[32],radius_server_port[32],radius_server_key[256],radius_server_portal[32],
 			charging_server_ip[32],charging_server_port[32],charging_server_key[256],
 			backup_radius_server_ip[32],backup_radius_server_port[32],backup_radius_server_key[256],backup_radius_server_portal[32],
-			backup_charging_server_ip[32],backup_charging_server_port[32],backup_charging_server_key[256],swap_octets[256];
-
-	memset(plot_id,0,sizeof(plot_id));
+			backup_charging_server_ip[32],backup_charging_server_port[32],backup_charging_server_key[256],swap_octets[256],strip_domain_name[256];
+	
+	char class_to_bandwidth[10] = {0};
 	memset(domain_name, 0, sizeof(domain_name));	
 	memset(radius_server_type, 0, sizeof(radius_server_type));	
 	memset(radius_server_ip, 0, sizeof(radius_server_ip));
@@ -198,46 +248,36 @@ static int s_editMulitRadius_prefix_of_page( STPageInfo *pstPageInfo )
 	memset(backup_charging_server_port, 0, sizeof(backup_charging_server_port));
 	memset(backup_charging_server_key, 0, sizeof(backup_charging_server_key));
 	memset(swap_octets, 0, sizeof(swap_octets));
+	memset(strip_domain_name, 0, sizeof(strip_domain_name));
+	memset(class_to_bandwidth, 0, sizeof(class_to_bandwidth));
 
 	
 
 	if( cgiFormSubmitClicked(SUBMIT_NAME) == cgiFormSuccess )
 	{
-		cgiFormStringNoNewlines("plot_id",plot_id, sizeof(plot_id));
 		cgiFormStringNoNewlines("domain_name",domain_name, sizeof(domain_name));
-		cgiFormStringNoNewlines("radius_server_type",radius_server_type, sizeof(radius_server_type));
+		//cgiFormStringNoNewlines("radius_server_type",radius_server_type, sizeof(radius_server_type));
 		cgiFormStringNoNewlines("radius_server_ip",radius_server_ip, sizeof(radius_server_ip));
 		cgiFormStringNoNewlines("radius_server_port",radius_server_port, sizeof(radius_server_port));
 		cgiFormStringNoNewlines("radius_server_key",radius_server_key, sizeof(radius_server_key));
-		cgiFormStringNoNewlines("radius_server_portal",radius_server_portal, sizeof(radius_server_portal));
+		//cgiFormStringNoNewlines("radius_server_portal",radius_server_portal, sizeof(radius_server_portal));
 		cgiFormStringNoNewlines("charging_server_ip",charging_server_ip, sizeof(charging_server_ip));
 		cgiFormStringNoNewlines("charging_server_port",charging_server_port, sizeof(charging_server_port));
 		cgiFormStringNoNewlines("charging_server_key",charging_server_key, sizeof(charging_server_key));
 		cgiFormStringNoNewlines("backup_radius_server_ip",backup_radius_server_ip, sizeof(backup_radius_server_ip));
 		cgiFormStringNoNewlines("backup_radius_server_port",backup_radius_server_port, sizeof(backup_radius_server_port));
 		cgiFormStringNoNewlines("backup_radius_server_key",backup_radius_server_key, sizeof(backup_radius_server_key));
-		cgiFormStringNoNewlines("backup_radius_server_portal",backup_radius_server_portal, sizeof(backup_radius_server_portal));
+		//cgiFormStringNoNewlines("backup_radius_server_portal",backup_radius_server_portal, sizeof(backup_radius_server_portal));
 		cgiFormStringNoNewlines("backup_charging_server_ip",backup_charging_server_ip, sizeof(backup_charging_server_ip));
 		cgiFormStringNoNewlines("backup_charging_server_port",backup_charging_server_port, sizeof(backup_charging_server_port));
 		cgiFormStringNoNewlines("backup_charging_server_key",backup_charging_server_key, sizeof(backup_charging_server_key));
-	 	cgiFormStringNoNewlines("swap_octets",swap_octets, sizeof(swap_octets));
+	 	//cgiFormStringNoNewlines("swap_octets",swap_octets, sizeof(swap_octets));
+	 	cgiFormStringNoNewlines("strip_domain_name",strip_domain_name, sizeof(strip_domain_name));
+		cgiFormStringNoNewlines("class_to_bandwidth",class_to_bandwidth, sizeof(class_to_bandwidth));
 	 	
 		/////////////处理数据///////////////////
-		#if 0
-		FILE * pfile = NULL;
-		char content[2048];
-		memset( content, 0, sizeof(content));
-		sprintf( content, "%s;%s;%s;%s;%s;%s;%s;%s;%s;%s;%s;%s;%s;%s;%s;%s\n",plot_id,domain_name,
-								radius_server_ip,radius_server_port,radius_server_key,radius_server_portal,
-								charging_server_ip,charging_server_port,charging_server_key,
-								backup_radius_server_ip,backup_radius_server_port,backup_radius_server_key,backup_radius_server_portal,
-								backup_charging_server_ip,backup_charging_server_port,backup_charging_server_key);
 
-        #endif 
-        if(strcmp(plot_id,"")==0)
-		 cgiFormStringNoNewlines("PLOTIDZ",plot_id, sizeof(plot_id));
-
-		if(!strcmp(domain_name,"") || strlen(domain_name) > MAX_RADIUS_DOMAIN_LEN-1)
+		if(!strcmp(domain_name,"") || strlen(domain_name) > (MAX_RADIUS_DOMAIN_LEN-1))
 		{
 			ShowAlert( search(radius_public, "input_illegal"));
 			return 0;
@@ -290,88 +330,58 @@ static int s_editMulitRadius_prefix_of_page( STPageInfo *pstPageInfo )
 			ShowAlert( search(radius_public, "input_illegal"));
 			return 0;
 		}
-		char *tmpz=(char *)malloc(20);
-		memset(tmpz,0,20);
-		sprintf(tmpz,"%s%s",MTR_N,plot_id);
+		
+		memset(&inaddr,0,sizeof(struct in_addr));
+		inet_aton(radius_server_ip, &inaddr);
+		auth_ip = ntohl(inaddr.s_addr);
+		auth_port = atoi(radius_server_port);
 
-		add_eag_node_attr(MULTI_RADIUS_F, tmpz, ATT_Z, domain_name);		
-        mod_eag_node(MULTI_RADIUS_F, tmpz, ATT_Z, domain_name, RDOMAIN, domain_name);
-        mod_eag_node(MULTI_RADIUS_F, tmpz, ATT_Z, domain_name, RRADST, radius_server_type);
-		mod_eag_node(MULTI_RADIUS_F, tmpz, ATT_Z, domain_name, RRIP, radius_server_ip);		
-        mod_eag_node(MULTI_RADIUS_F, tmpz, ATT_Z, domain_name, RRPORT, radius_server_port);
-        mod_eag_node(MULTI_RADIUS_F, tmpz, ATT_Z, domain_name, RRKEY, radius_server_key);
-        mod_eag_node(MULTI_RADIUS_F, tmpz, ATT_Z, domain_name, RRPORTAL, radius_server_portal);
-        mod_eag_node(MULTI_RADIUS_F, tmpz, ATT_Z, domain_name, RCIP, charging_server_ip);
-        mod_eag_node(MULTI_RADIUS_F, tmpz, ATT_Z, domain_name, RCPORT, charging_server_port);
-        mod_eag_node(MULTI_RADIUS_F, tmpz, ATT_Z, domain_name, RCKEY, charging_server_key);
-        mod_eag_node(MULTI_RADIUS_F, tmpz, ATT_Z, domain_name, RBIP, backup_radius_server_ip);
-        mod_eag_node(MULTI_RADIUS_F, tmpz, ATT_Z, domain_name, RBPORT, backup_radius_server_port);
-        mod_eag_node(MULTI_RADIUS_F, tmpz, ATT_Z, domain_name, RBKEY, backup_radius_server_key);
-        mod_eag_node(MULTI_RADIUS_F, tmpz, ATT_Z, domain_name, RBPORTAL, backup_radius_server_portal);
-        mod_eag_node(MULTI_RADIUS_F, tmpz, ATT_Z, domain_name, RBCIP, backup_charging_server_ip);
-        mod_eag_node(MULTI_RADIUS_F, tmpz, ATT_Z, domain_name, RBCPORT, backup_charging_server_port);
-        mod_eag_node(MULTI_RADIUS_F, tmpz, ATT_Z, domain_name, RBCKEY, backup_charging_server_key);
-        mod_eag_node(MULTI_RADIUS_F, tmpz, ATT_Z, domain_name, R_SWAP_OCTETS, swap_octets);
-		
-		free(tmpz);
-		#if 0
-		char * ptr ;
-		int i_index;
-	    char  s_index[256];
-		cgiFormStringNoNewlines("i_index",s_index,sizeof(s_index));
-		i_index= atoi(s_index);
-		
-		int  i, revnum=0, location=-1;
-		
-		int temp=-1;
-		int del_loc = 0;
-		char * revinfo[512];
-		char buf[2048];
-		
-		if( (pfile = fopen(MULTI_RADIUS_CONF_FILE_PATH,"r+")) != NULL )
-		{
-			//fprintf(stderr,"fp=%x",fp);//输出到出错文档?
-			//读取操作
-			memset( buf, 0, sizeof(buf));
-			while( fgets(buf, sizeof(buf), pfile) )//
-			{
-				del_loc ++;
-				revinfo[revnum] = (char *)malloc(sizeof(buf));
-				memset( revinfo[revnum], 0, sizeof(buf) );
-				strncpy( revinfo[revnum], buf, strlen(buf) );
-				//fprintf( stderr, "buf=%s",buf );
-				//sscanf( revinfo[revnum], "%[^=]=%[^=]=%[^=]=%[^\n]\n",a1,a2,a3,a4);
-				//sscanf( revinfo[revnum], "%[^=]=%[^=]=%[^=]=%[^\n]\n",a1,a2,a3,a4);
-				//fprintf( stderr, "%s--%s",a1,a2);
-				if( del_loc == i_index )
-				{
-					location = revnum;
-				}
-				
-				memset( buf, 0, sizeof(buf) );
-				revnum ++ ;
-			}
-			fclose(pfile);
-			pfile = fopen( MULTI_RADIUS_CONF_FILE_PATH, "w+" );
-			////写回操作
-			for( i=0; i<revnum; i++ )
-			{
-				if( i == location )
-				{
-					fwrite(content, strlen(content), 1, pfile);
-					//fprintf( stderr, "WRITE~~" );	
-					ShowAlert( search(radius_auth, "edit_multi_radius_suc") );		
-					continue;
-				}				
-				fwrite( revinfo[i], strlen(revinfo[i]), 1, pfile);
-				free(revinfo[i]);//add by wk
-			}
-			fclose(pfile);
-		}		
-		#endif
+		memset(&inaddr,0,sizeof(struct in_addr));
+		inet_aton( charging_server_ip,&inaddr);
+		acct_ip = ntohl(inaddr.s_addr);
+		acct_port = atoi(charging_server_port);
+
+		memset(&inaddr,0,sizeof(struct in_addr));
+		inet_aton( backup_radius_server_ip,&inaddr);
+		backup_auth_ip = ntohl(inaddr.s_addr);
+		backup_auth_port = atoi(backup_radius_server_port);
+
+		memset(&inaddr,0,sizeof(struct in_addr));
+		inet_aton( backup_charging_server_ip,&inaddr);
+		backup_acct_ip = ntohl(inaddr.s_addr);
+		backup_acct_port = atoi(backup_charging_server_port);
+		ret = eag_modify_radius(ccgi_connection, 
+									parameter.local_id,
+									parameter.instance_id, 			
+									domain_name,
+									auth_ip,
+									auth_port,
+									radius_server_key,
+									acct_ip,
+									acct_port,
+									charging_server_key,
+									backup_auth_ip,
+									backup_auth_port,
+									backup_radius_server_key,
+									backup_acct_ip,
+									backup_acct_port,
+									backup_charging_server_key );
+		int remove_domain_switch = atoi(strip_domain_name);
+		ret = eag_set_remove_domain_switch(ccgi_connection, 
+									parameter.local_id,
+									parameter.instance_id, 
+									domain_name,
+									remove_domain_switch);
+								
+		int class_bandwidth = atoi(class_to_bandwidth);
+		ret = eag_set_class_to_bandwidth_switch(ccgi_connection, 
+									parameter.local_id,
+									parameter.instance_id, 
+									domain_name,
+									class_bandwidth);
 
 		fprintf( fp, "<script type='text/javascript'>\n" );
-		fprintf( fp, "window.location.href='wp_multi_radius.cgi?UN=%s&plotid=%s';\n", pstPageInfo->encry,plot_id);
+		fprintf( fp, "window.location.href='wp_multi_radius.cgi?UN=%s&plotid=%s';\n", pstPageInfo->encry,plotid);
 		fprintf( fp, "</script>\n" );		
 	}
 	return 0;		
@@ -383,287 +393,135 @@ static int s_editMulitRadius_content_of_page( STPageInfo *pstPageInfo )
 	struct list * radius_public = pstPageInfo->lpublic;
 	struct list * radius_auth = pstPageInfo->lauth;
 
-	struct st_radiusz cq;
-		memset(&cq,0,sizeof(cq));
-
-    #if 0    
-	char plot_id[30],domain_name[256],radius_server_ip[32],radius_server_port[32],radius_server_key[256],radius_server_portal[32],
-			charging_server_ip[32],charging_server_port[32],charging_server_key[256],
-			backup_radius_server_ip[32],backup_radius_server_port[32],backup_radius_server_key[256],backup_radius_server_portal[32],
-			backup_charging_server_ip[32],backup_charging_server_port[32],backup_charging_server_key[256];
-
-    memset(plot_id,0,sizeof(plot_id));
-	memset(domain_name, 0, sizeof(domain_name));		
-	memset(radius_server_ip, 0, sizeof(radius_server_ip));
-	memset(radius_server_port, 0, sizeof(radius_server_port));
-	memset(radius_server_key, 0, sizeof(radius_server_key));
-	memset(radius_server_portal, 0, sizeof(radius_server_portal));
-	memset(charging_server_ip, 0, sizeof(charging_server_ip));
-	memset(charging_server_port, 0, sizeof(charging_server_port));
-	memset(charging_server_key, 0, sizeof(charging_server_key));
-	memset(backup_radius_server_ip, 0, sizeof(backup_radius_server_ip));
-	memset(backup_radius_server_port, 0, sizeof(backup_radius_server_port));
-	memset(backup_radius_server_key, 0, sizeof(backup_radius_server_key));
-	memset(backup_radius_server_portal, 0, sizeof(backup_radius_server_portal));
-	memset(backup_charging_server_ip, 0, sizeof(backup_charging_server_ip));
-	memset(backup_charging_server_port, 0, sizeof(backup_charging_server_port));
-	memset(backup_charging_server_key, 0, sizeof(backup_charging_server_key));
-
-    #endif
-	int i,j;
-	
-	//char a[15][256];
-	/*
-	for(i=0;i<15*256;i++)
-	{
-		**(a+i)=0;
-	}*/
+	int i = 0;	
 	//read the config
-	char edit_rule[10] = "";
-	char index[32] = "";
-	char nodez[32];
-	memset(nodez,0,32);
-	char attz[32];
-	memset(attz,0,32);
-	char plotidz[32];
-	memset(plotidz,0,32);
- 
+	char nodez[MAX_RADIUS_DOMAIN_LEN] = {0};
 	
-	int i_index ;
-#if 0 
-	char *pa[16];
-	char *pbuf;
-	pa[0]=plot_id;
-	pa[1]=domain_name;
-	pa[2]=radius_server_ip;
-	pa[3]=radius_server_port;
-	pa[4]=radius_server_key;
-	pa[5]=radius_server_portal;
-	pa[6]=charging_server_ip;
-	pa[7]=charging_server_port;
-	pa[8]=charging_server_key;
-	pa[9]=backup_radius_server_ip;
-	pa[10]=backup_radius_server_port;
-	pa[11]=backup_radius_server_key;
-	pa[12]=backup_radius_server_portal;
-	pa[13]=backup_charging_server_ip;
-	pa[14]=backup_charging_server_port;
-	pa[15]=backup_charging_server_key;
-	
-
-   #endif
-	
-	cgiFormStringNoNewlines( "EDITCONF", edit_rule, 10 );
-	//fprintf( stderr, "edit_rule=%s",edit_rule );
-	if( !strcmp(edit_rule, "edit") )
-	{
-		cgiFormStringNoNewlines( "INDEX", index, 32 );
-		cgiFormStringNoNewlines( "NODEZ", nodez, 32 );
-		cgiFormStringNoNewlines( "ATTZ", attz, 32 );
-		cgiFormStringNoNewlines( "PLOTIDZ", plotidz, 32 );
-
-
-		char * ptr ;
-		i_index = strtoul( index, &ptr, 0 );
-		//fprintf( stderr, "i_index=%d",i_index );
-		
-		//fprintf( stderr, "edit_num1=%d",edit_num );
-		
-		//fprintf( stderr, "index=%s",index );
-		FILE * pfile= NULL;
-		int   revnum=0, location=-1;
-		
-		int temp=-1;
-		int del_loc = 0;
-		char * revinfo[512];
-		char buf[2048];
-
-
-		get_radius_struct(MULTI_RADIUS_F, nodez, ATT_Z, attz, &cq);
-
-	}
-	
-	char check_chap[]="checked";
-	char check_pap[]="checked";
-	char backup_check_chap[]="checked";
-	char backup_check_pap[]="checked";
-
-	//fprintf(stderr,"chap_or_pap===%s",chap_or_pap);
-
-	if(strcmp(cq.radius_server_portal,"CHAP"))
-	{
-		memset(check_chap,0,sizeof(check_chap));	
-		//fprintf(stderr,"chap 0");
-	}else
-	{
-		memset(check_pap,0,sizeof(check_pap));	
-		//fprintf(stderr,"pap 0");
-	}
-		
-	if(strcmp(cq.backup_radius_server_portal,"CHAP"))
-	{
-		memset(backup_check_chap,0,sizeof(backup_check_chap));	
-		//fprintf(stderr,"chap 0");
-	}else
-	{
-		memset(backup_check_pap,0,sizeof(backup_check_pap));	
-		//fprintf(stderr,"pap 0");
-	}
-
+	cgiFormStringNoNewlines( "NODEZ", nodez, sizeof(nodez) );
+	char portstr[10] = {0};
+	int ret = 0;
+	char *domain=NULL;
+	char ipstr[32] = {0};
+	struct radius_conf radiusconf;
+	memset( &radiusconf, 0, sizeof(struct radius_conf) );
+	ret = eag_get_radius_conf(ccgi_connection, 
+									parameter.local_id,
+									parameter.instance_id, 
+									domain,
+									&radiusconf );
 	fprintf(fp,"<table border=0 width=500 cellspacing=0 cellpadding=0>\n");
 
 	fprintf(fp,"<tr height=30 align=left>");
 	fprintf(fp,"<td width=250>%s</td>",search(radius_auth,"plot_idz"));
 	fprintf(fp,"<td width=250>");
-	fprintf(fp,"<select name=plot_id disabled>\n");
-
-	if(strcmp(plotidz,PLOTID_ZEAO)==0)
-	fprintf(fp,"<option value='%s' selected>%s</option>",PLOTID_ZEAO,MTD_N);
-	else
-	fprintf(fp,"<option value='%s'>%s</option>",PLOTID_ZEAO,MTD_N);
-
-	if(strcmp(plotidz,PLOTID_ONE)==0)
-	fprintf(fp,"<option value='%s' selected>1</option>",PLOTID_ONE);
-	else
-	fprintf(fp,"<option value='%s'>1</option>",PLOTID_ONE);
-
-	if(strcmp(plotidz,PLOTID_TWO)==0)
-	fprintf(fp,"<option value='%s' selected>2</option>",PLOTID_TWO);
-	else
-	fprintf(fp,"<option value='%s'>2</option>",PLOTID_TWO);
-
-	if(strcmp(plotidz,PLOTID_THREE)==0)
-	fprintf(fp,"<option value='%s' selected>3</option>",PLOTID_THREE);
-	else
-	fprintf(fp,"<option value='%s'>3</option>",PLOTID_THREE);
-
-	if(strcmp(plotidz,PLOTID_FOUR)==0)
-	fprintf(fp,"<option value='%s' selected>4</option>",PLOTID_FOUR);
-	else
-	fprintf(fp,"<option value='%s'>4</option>",PLOTID_FOUR);
-
-	if(strcmp(plotidz,PLOTID_FIVE)==0)
-	fprintf(fp,"<option value='%s' selected>5</option>",PLOTID_FIVE);
-	else
-	fprintf(fp,"<option value='%s'>5</option>",PLOTID_FIVE);
+	fprintf(fp,"<select name=plot_id onchange=plotid_change(this)>\n");
+	instance_parameter *pq = NULL;
+	char temp[10] = { 0 };
 	
+	for (pq=paraHead1;(NULL != pq);pq=pq->next)
+	{
+		memset(temp,0,sizeof(temp));
+		snprintf(temp,sizeof(temp)-1,"%d-%d-%d",pq->parameter.slot_id,pq->parameter.local_id,pq->parameter.instance_id);
+		
+		if (strcmp(plotid, temp) == 0)
+			fprintf(cgiOut,"<option value='%s' selected>%s</option>\n",temp,temp);
+		else	       
+			fprintf(cgiOut,"<option value='%s'>%s</option>\n",temp,temp);
+	}
 	fprintf(fp,"</select>");
 	fprintf(fp,"</td>"\
 				"</tr>\n");	
-	fprintf(fp,"<tr height=30 align=left>");	
-	fprintf(fp,"<td width=250>%s</td>",search(radius_auth,"domain_name"));	
-	fprintf(fp,"<td width=250><input type=text name=domain_name value=\"%s\" size=15 readonly></td>",cq.domain_name);
-	fprintf(fp,"</tr>\n");
-	//radius server type
-	fprintf(fp,"<tr height=30 align=left>");	
-	fprintf(fp,"<td width=250>%s</td>",search(radius_auth,"radius_server_type"));
-	fprintf(fp,"<td width=250>");
-	fprintf(fp,"<select name=radius_server_type>\n");
-	if(strcmp(cq.radius_server_type,"default")==0)
-	fprintf(fp,"<option value='%s' selected>%s</option>","default","default");
-	else
-	fprintf(fp,"<option value='%s'>%s</option>","default","default");
-	
-	if(strcmp(cq.radius_server_type,RADIUS_SERVER_TYPE_RJ)==0)
-		fprintf(fp,"<option value='%s' selected>%s</option>",RADIUS_SERVER_TYPE_RJ,RADIUS_SERVER_TYPE_RJ);
-	else
-		fprintf(fp,"<option value='%s'>%s</option>",RADIUS_SERVER_TYPE_RJ,RADIUS_SERVER_TYPE_RJ);
+    fprintf(fp,"<script type=text/javascript>\n");
+   	fprintf(fp,"function plotid_change( obj )\n"\
+   	"{\n"\
+   	"var plotid = obj.options[obj.selectedIndex].value;\n"\
+   	"var url = 'wp_edit_multi_radius.cgi?UN=%s&NODEZ=%s&plotid='+plotid;\n"\
+   	"window.location.href = url;\n"\
+   	"}\n", pstPageInfo->encry,nodez);
+    fprintf(fp,"</script>\n" );
 
-	if(strcmp(cq.radius_server_type,RADIUS_SERVER_TYPE_HW)==0)
-		fprintf(fp,"<option value='%s' selected>%s</option>",RADIUS_SERVER_TYPE_HW,RADIUS_SERVER_TYPE_HW);
-	else
-		fprintf(fp,"<option value='%s'>%s</option>",RADIUS_SERVER_TYPE_HW,RADIUS_SERVER_TYPE_HW);
-	
-	fprintf(fp,"</select>\n");
-	fprintf(fp,"</td>"\
-				"</tr>\n");
-	fprintf(fp,"<tr height=30 align=left>");	
-	fprintf(fp,"<td width=250>%s</td>",search(radius_auth,"radius_server_ip"));
-	fprintf(fp,"<td width=250><input type=text name=radius_server_ip value=\"%s\" size=15></td>",cq.radius_server_ip);
-	fprintf(fp,"</tr>\n"\
-				"<tr height=30 align=left>");	
-	fprintf(fp,"<td width=250>%s</td>",search(radius_auth,"radius_server_port"));
-	fprintf(fp,"<td width=250><input type=text name=radius_server_port value=\"%s\" size=15></td>",cq.radius_server_port);
-	fprintf(fp,"</tr>\n"\
-				"<tr height=30 align=left>");	
-	fprintf(fp,"<td width=250>%s</td>",search(radius_auth,"radius_server_key"));
-	fprintf(fp,"<td width=250><input type=text name=radius_server_key value=\"%s\" size=15></td>",cq.radius_server_key);
-	fprintf(fp,"</tr>\n");	
-	
-	fprintf(fp,"<tr height=30 align=left>");	
-	fprintf(fp, "<td width=250>%s</td>",search(radius_auth,"radius_server_portal"));	
-	fprintf(fp, "<td width=100><input type=\"radio\" name=\"radius_server_portal\" value=\"CHAP\" %s>CHAP</td>\n",check_chap);
-	fprintf(fp, "<td width=100><input type=\"radio\" name=\"radius_server_portal\" value=\"PAP\" %s>PAP</td>\n",check_pap);
-	fprintf(fp,"</tr>\n");
+	for( i=0; i<radiusconf.current_num; i++ )
+	{
 
-	fprintf(fp,"<tr height=30 align=left><td width=250>%s</td>",search(radius_auth,"charging_server_ip"));
-	fprintf(fp,"<td width=250><input type=text name=charging_server_ip value=\"%s\" size=15></td>",cq.charging_server_ip);
-	fprintf(fp,"</tr>\n"\
-				"<tr height=30 align=left>");
-	fprintf(fp,"<td width=250>%s</td>",search(radius_auth,"charging_server_port"));
-	fprintf(fp,"<td width=250><input type=text name=charging_server_port value=\"%s\" size=15></td>",cq.charging_server_port);
-	fprintf(fp,"</tr>\n"\
-				"<tr height=30 align=left>");
-	fprintf(fp,"<td width=250>%s</td>",search(radius_auth,"charging_server_key"));
-	fprintf(fp,"<td width=250><input type=text name=charging_server_key value=\"%s\" size=15></td>",cq.charging_server_key);
-	fprintf(fp,"</tr>\n"\
-				"<tr height=30 align=left>");	
-	fprintf(fp,"<td width=250>%s</td>",search(radius_auth,"backup_radius_server_ip"));
-	fprintf(fp,"<td width=250><input type=text name=backup_radius_server_ip value=\"%s\" size=15></td>",cq.backup_radius_server_ip);
-	fprintf(fp,"</tr>\n"\
-				"<tr height=30 align=left>");	
-	fprintf(fp,"<td width=250>%s</td>",search(radius_auth,"backup_radius_server_port"));
-	fprintf(fp,"<td width=250><input type=text name=backup_radius_server_port value=\"%s\" size=15></td>",cq.backup_radius_server_port);
-	fprintf(fp,"</tr>\n"\
-				"<tr height=30 align=left>");
-	fprintf(fp,"<td width=250>%s</td>",search(radius_auth,"backup_radius_server_key"));
-	fprintf(fp,"<td width=250><input type=text name=backup_radius_server_key value=\"%s\" size=15></td>",cq.backup_radius_server_key);
-	fprintf(fp,"</tr>\n");	
+		if(0 == strcmp(nodez,radiusconf.radius_srv[i].domain))
+		{
+			fprintf(fp,"<tr height=30 align=left>");
+			fprintf(fp,"<td width=250>%s</td>",search(radius_auth,"domain_name"));	
+			fprintf(fp,"<td width=250><input type=text name=domain_name value=\"%s\" size=15 readonly></td>",radiusconf.radius_srv[i].domain);
+			fprintf(fp,"</tr>\n");
+			ccgi_ip2str( radiusconf.radius_srv[i].auth_ip, ipstr,sizeof(ipstr));
+			fprintf(fp,"<tr height=30 align=left>");
+			fprintf(fp,"<td width=250>%s</td>",search(radius_auth,"radius_server_ip"));
+			fprintf(fp,"<td width=250><input type=text name=radius_server_ip value=\"%s\" size=15></td>",ipstr);
+			fprintf(fp,"</tr>\n"\
+						"<tr height=30 align=left>");
+			fprintf(fp,"<td width=250>%s</td>",search(radius_auth,"radius_server_port"));
+			fprintf(fp,"<td width=250><input type=text name=radius_server_port value=\"%u\" size=15></td>",radiusconf.radius_srv[i].auth_port);
+			fprintf(fp,"</tr>\n"\
+						"<tr height=30 align=left>");
+			fprintf(fp,"<td width=250>%s</td>",search(radius_auth,"radius_server_key"));
+			fprintf(fp,"<td width=250><input type=text name=radius_server_key value=\"%s\" size=15></td>",radiusconf.radius_srv[i].auth_secret);
+			fprintf(fp,"</tr>\n");	
+			ccgi_ip2str( radiusconf.radius_srv[i].acct_ip, ipstr,sizeof(ipstr));
+			fprintf(fp,"<tr height=30 align=left><td width=250>%s</td>",search(radius_auth,"charging_server_ip"));
+			fprintf(fp,"<td width=250><input type=text name=charging_server_ip value=\"%s\" size=15></td>",ipstr);
+			fprintf(fp,"</tr>\n"\
+						"<tr height=30 align=left>");
+			fprintf(fp,"<td width=250>%s</td>",search(radius_auth,"charging_server_port"));
+			fprintf(fp,"<td width=250><input type=text name=charging_server_port value=\"%u\" size=15></td>",radiusconf.radius_srv[i].acct_port );
+			fprintf(fp,"</tr>\n"\
+						"<tr height=30 align=left>");
+			fprintf(fp,"<td width=250>%s</td>",search(radius_auth,"charging_server_key"));
+			fprintf(fp,"<td width=250><input type=text name=charging_server_key value=\"%s\" size=15></td>",radiusconf.radius_srv[i].acct_secret);
+			fprintf(fp,"</tr>\n"\
+						"<tr height=30 align=left>");
+			ccgi_ip2str( radiusconf.radius_srv[i].backup_auth_ip, ipstr,sizeof(ipstr));
+			fprintf(fp,"<td width=250>%s</td>",search(radius_auth,"backup_radius_server_ip"));
+			fprintf(fp,"<td width=250><input type=text name=backup_radius_server_ip value=\"%s\" size=15></td>",(radiusconf.radius_srv[i].backup_auth_ip==0)?"":ipstr);
+			fprintf(fp,"</tr>\n"\
+						"<tr height=30 align=left>");
+			memset(portstr,0,sizeof(portstr));
+			sprintf(portstr,"%u",radiusconf.radius_srv[i].backup_auth_port);
+			fprintf(fp,"<td width=250>%s</td>",search(radius_auth,"backup_radius_server_port"));
+			fprintf(fp,"<td width=250><input type=text name=backup_radius_server_port value=\"%s\" size=15></td>",(radiusconf.radius_srv[i].backup_auth_port==0)?"":portstr);
+			fprintf(fp,"</tr>\n"\
+						"<tr height=30 align=left>");
+			fprintf(fp,"<td width=250>%s</td>",search(radius_auth,"backup_radius_server_key"));
+			fprintf(fp,"<td width=250><input type=text name=backup_radius_server_key value=\"%s\" size=15></td>",radiusconf.radius_srv[i].backup_auth_secret);
+			fprintf(fp,"</tr>\n");	
+			ccgi_ip2str( radiusconf.radius_srv[i].backup_acct_ip, ipstr,sizeof(ipstr));
+			fprintf(fp,"<tr height=30 align=left><td width=250>%s</td>",search(radius_auth,"backup_charging_server_ip"));
+			fprintf(fp,"<td width=250><input type=text name=backup_charging_server_ip value=\"%s\" size=15></td>",(radiusconf.radius_srv[i].backup_acct_ip==0)?"":ipstr);
+			fprintf(fp,"</tr>\n"\
+						"<tr height=30 align=left>");
+			memset(portstr,0,sizeof(portstr));
+			sprintf(portstr,"%u",radiusconf.radius_srv[i].backup_acct_port);
+			fprintf(fp,"<td width=250>%s</td>",search(radius_auth,"backup_charging_server_port"));
+			fprintf(fp,"<td width=250><input type=text name=backup_charging_server_port value=\"%s\" size=15></td>",(radiusconf.radius_srv[i].backup_acct_port==0)?"":portstr);
+			fprintf(fp,"</tr>\n"\
+						"<tr height=30 align=left>");
+			fprintf(fp,"<td width=250>%s</td>",search(radius_auth,"backup_charging_server_key"));
+			fprintf(fp,"<td width=250><input type=text name=backup_charging_server_key value=\"%s\" size=15></td>",radiusconf.radius_srv[i].backup_acct_secret);
+			fprintf(fp,"</tr>\n");	
 
-	fprintf(fp,"<tr height=30 align=left>");	
-	fprintf(fp, "<td width=250>%s</td>",search(radius_auth,"backup_radius_server_portal"));	
-	fprintf(fp, "<td width=100><input type=\"radio\" name=\"backup_radius_server_portal\" value=\"CHAP\" %s>CHAP</td>\n",backup_check_chap);
-	fprintf(fp, "<td width=100><input type=\"radio\" name=\"backup_radius_server_portal\" value=\"PAP\" %s>PAP</td>\n",backup_check_pap);
-	fprintf(fp,"</tr>\n");
+			fprintf(fp,"<td width=150>%s</td>",search(radius_auth, "strip_domain_name"));
+			fprintf(fp,"<td><input type=checkbox name=strip_domain_name value=1 %s></td>",(1 == radiusconf.radius_srv[i].remove_domain_name) ? "checked" : "");
+			fprintf(fp,"</tr>");
+			
+			fprintf(fp,"<td width=150>%s</td>",search(radius_auth, "class_to_bandwidth"));
+			fprintf(fp,"<td><input type=checkbox name=class_to_bandwidth value=1 %s></td>",(1 == radiusconf.radius_srv[i].class_to_bandwidth) ? "checked" : "");
+			fprintf(fp,"</tr>");
+			
+			fprintf(fp,"<tr>");
+		}
 
-	fprintf(fp,"<tr height=30 align=left><td width=250>%s</td>",search(radius_auth,"backup_charging_server_ip"));
-	fprintf(fp,"<td width=250><input type=text name=backup_charging_server_ip value=\"%s\" size=15></td>",cq.backup_charging_server_ip);
-	fprintf(fp,"</tr>\n"\
-				"<tr height=30 align=left>");	
-	fprintf(fp,"<td width=250>%s</td>",search(radius_auth,"backup_charging_server_port"));
-	fprintf(fp,"<td width=250><input type=text name=backup_charging_server_port value=\"%s\" size=15></td>",cq.backup_charging_server_port);
-	fprintf(fp,"</tr>\n"\
-				"<tr height=30 align=left>");	
-	fprintf(fp,"<td width=250>%s</td>",search(radius_auth,"backup_charging_server_key"));
-	fprintf(fp,"<td width=250><input type=text name=backup_charging_server_key value=\"%s\" size=15></td>",cq.backup_charging_server_key);
-	fprintf(fp,"</tr>\n");					
+	}
 
-	fprintf(fp,"<tr height=30 align=left><td width=250>%s</td>",search(radius_auth,"swap_octets"));
-	fprintf(fp,"<td width=250><input type=checkbox name=swap_octets value=checked %s size=15></td>"\
-				"</tr>\n",cq.swap_octets);
-
-	/*
-	//"<td>\n"\
-	fprintf( fp, "<tr height=30 align=left>	\n<td width=250>IP end:</td>\n	<td>\n" );
-				
-	fprintf( fp, "<div style='border-width:1px;border-color:#a5acb2;border-style:solid;width:500px;font-size:9pt'>");
-	fprintf( fp, "<input type=text name='begin_ip1' maxlength=3 class=a3 onKeyUp=\"mask(this,%s)\" onbeforepaste=mask_c() />.",search(radius_public,"ip_error"));
-	fprintf( fp, "<input type=text name='begin_ip2' maxlength=3 class=a3 onKeyUp=\"mask(this,%s)\" onbeforepaste=mask_c() />.",search(radius_public,"ip_error"));
-	fprintf( fp, "<input type=text name='begin_ip3' maxlength=3 class=a3 onKeyUp=\"mask(this,%s)\" onbeforepaste=mask_c() />.",search(radius_public,"ip_error"));
-	fprintf( fp, "<input type=text name='begin_ip4' maxlength=3 class=a3 onKeyUp=\"mask(this,%s)\" onbeforepaste=mask_c() />",search(radius_public,"ip_error"));
-	fprintf( fp, "</div>\n" );		
-					
-	fprintf( fp,"</td>\n<td></td>\n</tr>\n");
-				//"</td>\n");
-				*/
 	
 	fprintf(fp,	"</table>");
-
-	fprintf(fp,"<input type=hidden name=i_index value=%d>",i_index);	
 	fprintf(fp,"<input type=hidden name=NODEZ value=%s>",nodez);	
-	fprintf(fp,"<input type=hidden name=ATTZ value=%s>",attz);	
-	fprintf(fp,"<input type=hidden name=PLOTIDZ value=%s>",plotidz);	
-	
+	fprintf(fp,"<input type=hidden name=plotid value=%s>",plotid);	
+	fprintf(fp,"<input type=hidden name=UN value=%s>",pstPageInfo->encry);	
 	return 0;
 }
 

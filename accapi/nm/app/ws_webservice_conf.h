@@ -4,6 +4,12 @@
 #define MAX_VHOST_NUM       8
 #define MAX_INTERFACE_NUM   4
 
+#define PFM_DBUS_BUSNAME				"pfm.daemon"
+#define PFM_DBUS_OBJPATH				"/pfm/daemon"
+#define PFM_DBUS_INTERFACE				"pfm.daemon"
+#define PFM_DBUS_METHOD_PFM_TABLE 	"pfm_maintain_table"
+
+
 #define LOG(format, args...) syslog(LOG_DEBUG,"%s:%d:%s -> " format "\n", __FILE__, __LINE__, __func__, ##args)
 
 /*
@@ -73,6 +79,15 @@ enum{
 #define SITES_ENABEL_PORTAL 		"/etc/apache2/sites-enabled/portal"
 #define SITES_ENABEL_PORTALNORMAL 	"/etc/apache2/sites-enabled/portalnormal"
 #define SITES_ENABEL_PORTALSSL 		"/etc/apache2/sites-enabled/portalssl"
+
+#define SEM_IS_DISTRIBUTED_PATH   "/dbm/product/is_distributed"
+#define SEM_LOCAL_SLOT_ID_PATH    "/dbm/local_board/slot_id"
+#define SEM_SLOT_COUNT_PATH       "/dbm/product/slotcount"
+#define SEM_PRODUCT_TYPE_PATH     "/dbm/product/product_type"
+#define SEM_MASTER_SLOT_COUNT_PATH "/dbm/product/master_slot_count"
+#define SEM_ACTIVE_MASTER_SLOT_ID_PATH "/dbm/product/active_master_slot_id"
+
+
 
 /*
  * List definitions.
@@ -188,5 +203,31 @@ typedef struct w_dir{
 	unsigned int count;
 	LINK_ENTRY(w_dir) entries;
 }*webDirPtr, webDir; 
+
+
+struct web_info{
+	char *name;
+	int type;
+	char *address;
+	int port;
+	char *infname;
+	struct web_info *next;
+};
+
+
+
+
+extern int set_interval_portal_cmd(char *name, char *type, char *ip_addr, char *port, char *hansi);
+extern int enable_interval_portal_service_cmd();
+extern int add_http_https_ip_port_cmd(char *name,char *type,char *ip_addr, char *port);
+extern int add_web_forword_cmd(char *webname, char *infname);
+extern int show_webservice_info_cmd(struct web_info *WtpIfHead,int *num,int *slot);
+extern int show_interval_portalservice_info_cmd(struct web_info *WtpIfHead,int *num,int slot);
+extern int delete_portal_config_cmd(char *name);
+int delete_http_https_config_cmd(char *name);
+extern int contrl_disable_webservice_cmd();
+extern int contrl_enable_webservice_cmd();
+extern void free_show_webservice_info_cmd(struct web_info *WtpIfHead);
+extern void free_show_interval_portalservice_info_cmd(struct web_info *WtpIfHead);
 
 #endif /* WS_WEBSERVICE_CONF_H */

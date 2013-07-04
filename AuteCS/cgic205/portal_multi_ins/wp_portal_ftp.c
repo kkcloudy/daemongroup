@@ -154,30 +154,44 @@ int ShowPortalFtpPage(char *m,struct list *lpublic,struct list *lLicense,struct 
                    "<tr height=25>"\
                     "<td id=tdleft>&nbsp;</td>"\
                   "</tr>");	 
-	  
-				fprintf( cgiOut, "<tr height=25><td align=left id=tdleft><a href='wp_user_portal.cgi?UN=%s&portal_id=0' target=mainFrame class=top><font id=%s>%s</font></td></tr> \n",m,search(lpublic,"menu_san"), search( lLicense, "captive_Portal") );
-	  				//白名单
-				fprintf( cgiOut, "<tr height=25><td align=left id=tdleft><a href='wp_white_list.cgi?UN=%s&portal_id=0' target=mainFrame class=top><font id=%s>%s</font></td></tr> \n",m,search(lpublic,"menu_san"), search( lLicense, "portal_white_list") );
-				//eag
-				fprintf( cgiOut, "<tr height=25><td align=left id=tdleft><a href='wp_eag_conf.cgi?UN=%s' target=mainFrame class=top><font id=%s>%s</font></td></tr> \n",m,search(lpublic,"menu_san"), search( lLicense, "eag_title") );
-				//user manage
-				fprintf( cgiOut, "<tr height=25><td align=left id=tdleft><a href='wp_user_manage.cgi?UN=%s' target=mainFrame class=top><font id=%s>%s</font></td></tr> \n",m,search(lpublic,"menu_san"), search( lLicense, "user_mng") );								
-				//nas
-				fprintf( cgiOut, "<tr height=25><td align=left id=tdleft><a href='wp_nasid_byvlan.cgi?UN=%s' target=mainFrame class=top><font id=%s>%s</font></td></tr> \n",m,search(lpublic,"menu_san"), search( lLicense, "nasid_management") );	
-				//multi portal
-				fprintf( cgiOut, "<tr height=25><td align=left id=tdleft><a href='wp_multi_portal.cgi?UN=%s' target=mainFrame class=top><font id=%s>%s</font></td></tr> \n",m,search(lpublic,"menu_san"), search( lLicense, "multi_portal_management") );	
-				//黑名单
-				fprintf( cgiOut, "<tr height=25><td align=left id=tdleft><a href='wp_black_list.cgi?UN=%s' target=mainFrame class=top><font id=%s>%s</font></td></tr> \n",m,search(lpublic,"menu_san"), search( lLicense, "portal_black_list") );	
-
-  				
-				fprintf(cgiOut,"<tr height=26>"\
-  					  "<td align=left id=tdleft background=/images/bottom_bg.gif style=\"border-right:0\"><font id=%s> %s</font></td>",search(lpublic,"menu_san"),search( lLicense, "portal_ftp"));        /*突出显示*/         
-                fprintf(cgiOut,"</tr>");	
+      				//user manage
+				fprintf( cgiOut, "<tr height=25><td align=left id=tdleft><a href='wp_user_manage.cgi?UN=%s' target=mainFrame class=top><font id=%s>%s</font></td></tr> \n", m,search(lpublic,"menu_san"), search( lLicense, "user_mng") );								
 				
+				//eag
+				fprintf( cgiOut, "<tr height=25><td align=left id=tdleft><a href='wp_eag_conf.cgi?UN=%s' target=mainFrame class=top><font id=%s>%s</font></td></tr> \n",m ,search(lpublic,"menu_san"), search( lLicense, "eag_title") );
+
+				//multi portal
+				fprintf( cgiOut, "<tr height=25><td align=left id=tdleft><a href='wp_multi_portal.cgi?UN=%s' target=mainFrame class=top><font id=%s>%s</font></td></tr> \n", m,search(lpublic,"menu_san"), search( lLicense, "multi_portal_management") );	
+
 				//multi raidus
 				fprintf( cgiOut, "<tr height=25><td align=left id=tdleft><a href='wp_multi_radius.cgi?UN=%s' target=mainFrame class=top><font id=%s>%s</font></td></tr> \n",m, search(lpublic,"menu_san"),search( lLicense, "multi_radius_management") );	
-                //wtp wlan vlan
-				fprintf( cgiOut, "<tr height=25><td align=left id=tdleft><a href='wp_wtpwlan_map_vlan.cgi?UN=%s' target=mainFrame class=top><font id=%s>%s</font></td></tr> \n",m, search(lpublic,"menu_san"),search( lLicense, "vlan_maping") );	
+
+				//captive interface				
+				fprintf( cgiOut, "<tr height=25><td align=left id=tdleft><a href='wp_user_portal.cgi?UN=%s' target=mainFrame class=top><font id=%s>%s</font></td></tr> \n", m, search(lpublic,"menu_san"),search( lLicense, "captive_Portal") );	
+				
+				//white list
+				fprintf( cgiOut, "<tr height=25><td align=left id=tdleft><a href='wp_white_list.cgi?UN=%s&portal_id=0' target=mainFrame class=top><font id=%s>%s</font></td></tr> \n", m,search(lpublic,"menu_san"), search( lLicense, "portal_white_list") );
+				
+				//black list
+				fprintf( cgiOut, "<tr height=25><td align=left id=tdleft><a href='wp_black_list.cgi?UN=%s' target=mainFrame class=top><font id=%s>%s</font></td></tr> \n", m,search(lpublic,"menu_san"), search( lLicense, "portal_black_list") );	
+
+				//nas
+				fprintf( cgiOut, "<tr height=25><td align=left id=tdleft><a href='wp_nasid_byvlan.cgi?UN=%s' target=mainFrame class=top><font id=%s>%s</font></td></tr> \n", m,search(lpublic,"menu_san"), search( lLicense, "nasid_management") );				
+
+				//vlan map
+				fprintf( cgiOut, "<tr height=25><td align=left id=tdleft><a href='wp_wtpwlan_map_vlan.cgi?UN=%s' target=mainFrame class=top><font id=%s>%s</font></td></tr> \n", m, search(lpublic,"menu_san"),search( lLicense, "vlan_maping") );	
+			
+				//pdc
+				fprintf( cgiOut, "<tr height=25><td align=left id=tdleft><a href='wp_pdc_conf.cgi?UN=%s' target=mainFrame class=top><font id=%s>%s</font></td></tr> \n", m,search(lpublic,"menu_san"), search( lLicense, "pdc_conf") );				
+
+				//rdc
+				fprintf( cgiOut, "<tr height=25><td align=left id=tdleft><a href='wp_rdc_conf.cgi?UN=%s' target=mainFrame class=top><font id=%s>%s</font></td></tr> \n", m, search(lpublic,"menu_san"),search( lLicense, "rdc_conf") );	
+
+				// portal ftp
+				fprintf(cgiOut,"<tr height=26>"\
+  					  "<td align=left id=tdleft background=/images/bottom_bg.gif style=\"border-right:0\"><font id=%s> %s</font></td>",search(lpublic,"menu_san"),search( lLicense, "portal_ftp"));        /*突出显示*/         
+                		fprintf(cgiOut,"</tr>");	
+				
 				for(i=0;i<3;i++)
 				{
 					fprintf(cgiOut,"<tr height=25>"\
