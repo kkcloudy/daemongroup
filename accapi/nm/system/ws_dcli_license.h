@@ -61,7 +61,7 @@ typedef enum{
 extern int license_text_cmd_func();/*show multi licence texts */
 extern int license_request_cmd_func();/*获取机器码*/
 
-extern int license_install_cmd_func(char *SN,int *err_code);/*返回0表示失败，返回1表示成功，返回-1表示License fail,please contact vendor*/
+extern int license_install_cmd_func(char *SN);/*返回0表示失败，返回1表示成功，返回-1表示License fail,please contact vendor*/
 extern int license_assign_cmd(char *type_p,char *num_p,char *hansi,int slotid,char *hansi_id,DBusConnection *connection);
 extern int license_assign_show_cmd(DBusConnection *connection,int *license_count,struct LicenseData **LicenseInfo);
 

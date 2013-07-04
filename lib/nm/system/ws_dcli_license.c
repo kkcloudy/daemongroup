@@ -74,8 +74,11 @@ int license_text_cmd_func()
 
 }
 
-int license_install_cmd_func(char *SN,int *err_code)/*返回0表示失败，返回1表示成功，返回-1表示License fail,please contact vendor*/
+int license_install_cmd_func(char *SN)/*返回0表示失败，返回1表示成功，返回-1表示License fail,please contact vendor*/
 {
+	if(NULL == SN)
+		return 0;
+	
 	DBusMessage *query, *reply;	
 	DBusMessage *query2, *reply2;
 	DBusError err;
@@ -84,21 +87,16 @@ int license_install_cmd_func(char *SN,int *err_code)/*返回0表示失败，返回1表示成
 	DBusMessageIter	 iter2;
 	int ret;
 	int ret2;
-	int stat;
-	int reason;
+	int stat = 0;
+	int reason = 0;
 	unsigned char *cmd;	
 	cmd = (unsigned char*)malloc(strlen(SN)+64);
 	memset(cmd,0,strlen(SN)+64);
 	sprintf(cmd,"/etc/lic/lic_inst.sh %s",SN);
 	stat = system(cmd);
-	reason = WEXITSTATUS(stat);
-
-	
+	reason = WEXITSTATUS(stat);	
 	if(reason != 0)
 	{
-
-		*err_code=reason;		
-		
 		if(cmd)
 		{
 			free(cmd);
@@ -106,13 +104,17 @@ int license_install_cmd_func(char *SN,int *err_code)/*返回0表示失败，返回1表示成
 		}
 		return -1;
 	}
+	else
+	{
+		return 1;
+	}
 	if(cmd)
 	{
-
 		free(cmd);
 		cmd = NULL;
 	}
 
+	#if 0
 	int index;
 	char BUSNAME[PATH_LEN];
 	char OBJPATH[PATH_LEN];
@@ -169,6 +171,7 @@ int license_install_cmd_func(char *SN,int *err_code)/*返回0表示失败，返回1表示成
 		}*/
 	}
 	return 1;
+	#endif
 }
 
 int parse_slot_hansi_id(char* ptr,int *firstid,int *secondid)
