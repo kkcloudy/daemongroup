@@ -106,7 +106,7 @@ __inline__ int parse_slotport_tag_no(char *str,unsigned char *slotno,unsigned ch
 	*slotno = 0;
 	*portno = 0;
 	*tag1 = 0;
-	if(NULL == tag2)
+	if(NULL != tag2)
 	{
 		*tag2 = 0;
 	}
@@ -728,16 +728,17 @@ vtysh_pfm_config_write(struct vty* vty)
 	if(-1==fstat(fp,&sb))
 	{	
 		close(fp);
+		free(data_temp);
 		return 0;
 	}
 	data=mmap(NULL,sb.st_size,PROT_READ,MAP_PRIVATE,fp,0);
 	if(MAP_FAILED==data)
-		{
-		
+	{
+	
 		free(data_temp);
 		close(fp);
 		return 0;
-		}
+	}
 	for(i=m=0;i<sb.st_size;i++)
 		{
 		if((*((char*)data+i))=='\n')
