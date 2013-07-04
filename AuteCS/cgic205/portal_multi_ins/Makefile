@@ -12,6 +12,8 @@ LDFLAGS = -shared -Wl,-soname,libcgic.so.0
 
 LDFLAGS_CGI += -Wl,--gc-sections -L ../../../lib/nm -lnm -L ../../../dcli/src/pub -ldclipub
 
+LIBS += -L$(LD_PATH) -leagintf -lwcrypto -ldrpintf
+
 
 INCLUDE += -I $(MIPS_ADDITION_LIB_ROOT_PATH)/usr/include/libxml2
 INCLUDE += -I $(MIPS_ADDITION_LIB_ROOT_PATH)/usr/include

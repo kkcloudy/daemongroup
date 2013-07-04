@@ -39,8 +39,16 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "ws_usrinfo.h"
 #include "ws_ec.h"   
 #include "ws_conf_engine.h"
+#include "ws_init_dbus.h"
 
 #include "ws_eag_conf.h"
+#include "ws_eag_auto_conf.h"
+
+#include "eag/eag_errcode.h"
+#include "eag/eag_conf.h"
+#include "eag/eag_interface.h"
+#include "ws_dcli_vrrp.h"
+#include "ws_dbus_list_interface.h"
 
 #define SUBMIT_NAME "submit_nasid_by_vlan"
 
@@ -50,10 +58,16 @@ typedef struct{
 	struct list *lauth;
 	char encry[BUF_LEN];
 	char *username_encry;	         /*存储解密后的当前登陆用户名*/
-	int iUserGroup;	//为0时表示是管理员。   
+	int iUserGroup;	//为0时表示是管理员。
+	int plot_id;
 	FILE *fp;
 	
 } STPageInfo;
+
+static dbus_parameter parameter;
+static instance_parameter *paraHead1 = NULL;
+static void *ccgi_connection = NULL;
+static char plotid[10] = {0};
 
 
 /***************************************************************
@@ -77,50 +91,59 @@ static int s_nasidbyvlan_content_of_page( STPageInfo *pstPageInfo );
 ****************************************************************/
 int cgiMain()
 {
+	int ret1 = 0;
 	STPageInfo stPageInfo;
 	char *tmp=(char *)malloc(64);
 	int ret;
-	if(access(MULTI_NAS_F,0)!=0)
-	{
-		create_eag_xml(MULTI_NAS_F);
-	}
-	else
-	{
-	  ret=if_xml_file_z(MULTI_NAS_F);
-	  if(ret!=0)
-	  {
-		   memset(tmp,0,64);
-		   sprintf(tmp,"sudo rm  %s > /dev/null",MULTI_NAS_F);
-		   system(tmp);
-		   create_eag_xml(MULTI_NAS_F);
-	  }
-	}
-    free(tmp);
 
+	DcliWInit();
+	ccgi_dbus_init();
 	
 //初始化常用公共变量
-	memset( &stPageInfo, 0,sizeof(STPageInfo) );
+	memset(&stPageInfo, 0,sizeof(STPageInfo) );
+	ret1 = init_portal_container(&(stPageInfo.pstPortalContainer));
+	//strcpy(stPageInfo.encry,stPageInfo.pstPortalContainer->encry);
+	stPageInfo.lpublic = stPageInfo.pstPortalContainer->lpublic;
+	stPageInfo.lauth=stPageInfo.pstPortalContainer->llocal;//get_chain_head("../htdocs/text/authentication.txt");
 
 	cgiFormStringNoNewlines("UN", stPageInfo.encry, BUF_LEN);
 	
-	stPageInfo.username_encry=dcryption(stPageInfo.encry);
-    if( NULL == stPageInfo.username_encry )
+	//stPageInfo.username_encry=dcryption(stPageInfo.encry);
+    if( WS_ERR_PORTAL_ILLEGAL_USER == ret1 )
     {
 	    ShowErrorPage(search(stPageInfo.lpublic,"ill_user")); 	  /*用户非法*/
+		release_portal_container(&(stPageInfo.pstPortalContainer));
 		return 0;
 	}
-	stPageInfo.iUserGroup = checkuser_group( stPageInfo.username_encry );
-
+	//stPageInfo.iUserGroup = checkuser_group( stPageInfo.username_encry );
+	stPageInfo.iUserGroup = stPageInfo.pstPortalContainer->iUserGroup;
 	//stPageInfo.pstModuleContainer = MC_create_module_container();
-	init_portal_container(&(stPageInfo.pstPortalContainer));
 	if( NULL == stPageInfo.pstPortalContainer )
 	{
+		release_portal_container(&(stPageInfo.pstPortalContainer));
 		return 0;
 	}
-	stPageInfo.lpublic=stPageInfo.pstPortalContainer->lpublic;//get_chain_head("../htdocs/text/public.txt");
-	stPageInfo.lauth=stPageInfo.pstPortalContainer->llocal;//get_chain_head("../htdocs/text/authentication.txt");
-	
 	stPageInfo.fp = cgiOut;
+
+	memset(plotid,0,sizeof(plotid));
+	cgiFormStringNoNewlines("plotid", plotid, sizeof(plotid)); 
+	
+	list_instance_parameter(&paraHead1, INSTANCE_STATE_WEB);
+	if (NULL == paraHead1) {
+		return 0;
+	}
+	if(strcmp(plotid, "") == 0)
+	{
+		parameter.instance_id = paraHead1->parameter.instance_id;
+		parameter.local_id = paraHead1->parameter.local_id;
+		parameter.slot_id = paraHead1->parameter.slot_id;
+		snprintf(plotid,sizeof(plotid)-1,"%d-%d-%d",parameter.slot_id, parameter.local_id, parameter.instance_id);
+	}
+	else
+	{
+		get_slotID_localID_instanceID(plotid, &parameter);
+	}
+	ccgi_ReInitDbusConnection(&ccgi_connection, parameter.slot_id, DISTRIBUTFAG);
 //初始化完毕
 
 	
@@ -129,7 +152,7 @@ int cgiMain()
 
 	
 
-	MC_setActiveLabel( stPageInfo.pstPortalContainer->pstModuleContainer, 4 );
+	MC_setActiveLabel( stPageInfo.pstPortalContainer->pstModuleContainer, WP_EAG_NASID);
 
 	MC_setPrefixOfPageCallBack( stPageInfo.pstPortalContainer->pstModuleContainer, (MC_CALLBACK)s_nasidbyvlan_prefix_of_page, &stPageInfo );
 	MC_setContentOfPageCallBack( stPageInfo.pstPortalContainer->pstModuleContainer, (MC_CALLBACK)s_nasidbyvlan_content_of_page, &stPageInfo );
@@ -152,6 +175,8 @@ int cgiMain()
 
 	
 	MC_writeHtml( stPageInfo.pstPortalContainer->pstModuleContainer );
+
+	free_instance_parameter_list(&paraHead1);
 	
 	release_portal_container(&(stPageInfo.pstPortalContainer));
 	
@@ -163,13 +188,22 @@ int cgiMain()
 static int s_nasidbyvlan_prefix_of_page( STPageInfo *pstPageInfo )
 {
 	char del_rule[10] = "";
-	char index[32] = "";
-	char nodez[32];
-	memset(nodez,0,32);
-	char attz[128];//edit by wk
-	memset(attz,0,sizeof(attz));
-
-	int ret;
+	char nodez[32] = {0};
+	int nastype = 0;
+	unsigned long key_type = 0;
+	unsigned long keywd_1 = 0;
+	unsigned long keywd_2 = 0;
+	char *tmp_ip = NULL;
+	char *ip = NULL;
+	char ip_1[24];
+	char ip_2[24];
+	int plot_id = 0;
+	int hs_flag = 0;
+	char attz[128] = {0};//edit by wk
+	struct nasid_map_t nasidmap;
+	char *tmp = NULL;
+	char *tmp_1 = NULL;
+	int ret = 0;
 
 	FILE * fp = pstPageInfo->fp;
 	fprintf(fp, "<style type=text/css>"\
@@ -199,18 +233,107 @@ static int s_nasidbyvlan_prefix_of_page( STPageInfo *pstPageInfo )
 	}
 	
 	cgiFormStringNoNewlines( "DELRULE", del_rule, 10 );
-	if( !strcmp(del_rule, "delete") )
+	if( !strcmp(del_rule, "delete")  && (pstPageInfo->iUserGroup == 0))
 	{
-		cgiFormStringNoNewlines( "PLOTIDZ", index, 32 );
-		cgiFormStringNoNewlines( "NODEZ", nodez, 32 );
+		/*
+		if(check_all_eag_services() == 1)
+			{
+				ShowAlert( search(pstPageInfo->lauth, "diss_all_eag_fir") );
+				return 0;
+			}
+		*/
+		cgiFormStringNoNewlines( "NODEZ", nodez, sizeof(nodez) );
 		cgiFormStringNoNewlines( "ATTZ", attz, sizeof(attz) );
-	
-		ret=delete_eag_onelevel(MULTI_NAS_F, nodez, ATT_Z, attz);
-	    if(ret!=0)
-			ShowAlert("默认的不能删除");
+	    nastype = strtoul(nodez ,NULL, 10);	
+		
+		memset (&nasidmap, 0, sizeof(struct nasid_map_t));
+
+		switch(nastype)
+		{						
+			case NASID_KEYTYPE_WLANID:
+				tmp=(char *)attz;
+				nasidmap.key_type = NASID_KEYTYPE_WLANID;
+				if (NULL != (tmp_1 = strchr(tmp, '-'))) 
+				{
+					keywd_1 = strtoul(tmp,NULL,10);
+					tmp=tmp_1+1;
+					keywd_2 = strtoul(tmp,NULL,10);
+				} 
+				else 
+				{
+					keywd_1 = strtoul(tmp,NULL,10);
+					keywd_2 = keywd_1;
+				}
+				nasidmap.key.wlanidrange.id_begin = keywd_1;
+				nasidmap.key.wlanidrange.id_end = keywd_2;
+				break;
+			case NASID_KEYTYPE_VLANID:
+				tmp=(char *)attz;
+				nasidmap.key_type = NASID_KEYTYPE_VLANID;
+				if (NULL != (tmp_1 = strchr(tmp, '-'))) 
+				{
+					keywd_1 = strtoul(tmp,NULL,10);
+					tmp=tmp_1+1;
+					keywd_2 = strtoul(tmp,NULL,10);
+				} 
+				else 
+				{
+					keywd_1 = strtoul(tmp,NULL,10);
+					keywd_2 = keywd_1;
+				}
+				nasidmap.key.vlanidrange.id_begin = keywd_1;
+				nasidmap.key.vlanidrange.id_end = keywd_2;
+				break;
+			case NASID_KEYTYPE_WTPID:
+				tmp=(char *)attz;
+				nasidmap.key_type = NASID_KEYTYPE_WTPID;
+				if (NULL != (tmp_1 = strchr(tmp, '-'))) 
+				{
+					keywd_1 = strtoul(tmp,NULL,10);
+					tmp=tmp_1+1;
+					keywd_2 = strtoul(tmp,NULL,10);
+				} 
+				else 
+				{
+					keywd_1 = strtoul(tmp,NULL,10);
+					keywd_2 = keywd_1;
+				}
+				nasidmap.key.wtpidrange.id_begin = keywd_1;
+				nasidmap.key.wtpidrange.id_end = keywd_2;
+				break;
+			case NASID_KEYTYPE_IPRANGE:
+			{
+				memset(ip_1, 0, sizeof(ip_1));
+				memset(ip_2, 0, sizeof(ip_2));
+				nasidmap.key_type = NASID_KEYTYPE_IPRANGE;
+				tmp_ip = (char *)attz;
+
+				if (NULL == (ip = strchr(tmp_ip, '-'))) 
+				{
+					strncpy(ip_1, tmp_ip, sizeof(ip_1) - 1);
+					ccgi_inet_atoi(ip_1, &nasidmap.key.iprange.ip_begin);
+					nasidmap.key.iprange.ip_end = nasidmap.key.iprange.ip_begin;
+				}
+				else 
+				{
+					strncpy(ip_1, tmp_ip, ip-tmp_ip);
+					tmp_ip = ip + 1;
+					strncpy(ip_2, tmp_ip, 24-1);
+					ccgi_inet_atoi(ip_1, &nasidmap.key.iprange.ip_begin);
+					ccgi_inet_atoi(ip_2, &nasidmap.key.iprange.ip_end);
+				}	
+			}
+			break;
+			case NASID_KEYTYPE_INTF:
+			nasidmap.key_type = NASID_KEYTYPE_INTF;
+			strncpy(nasidmap.key.intf,attz,MAX_NASID_KEY_BUFF_LEN-1);
+			break;
+		}
+		
+		ret = eag_del_nasid(ccgi_connection, parameter.local_id, parameter.instance_id, &nasidmap);
 
 		fprintf( fp, "<script type='text/javascript'>\n" );
-		fprintf( fp, "window.location.href='wp_nasid_byvlan.cgi?UN=%s&plotid=%s';\n", pstPageInfo->encry ,index);
+		fprintf( fp, "window.location.href='wp_nasid_byvlan.cgi?UN=%s&plotid=%s';\n", pstPageInfo->encry ,plotid);
 		fprintf( fp, "</script>\n" );
 
 		
@@ -225,16 +348,6 @@ static int s_nasidbyvlan_content_of_page( STPageInfo *pstPageInfo )
 	struct list * portal_public = pstPageInfo->lpublic;
 	struct list * portal_auth = pstPageInfo->lauth;
 	int i, cl = 0;
-	
-    char *urlnode=(char *)malloc(20);
-	memset(urlnode,0,20);
-	cgiFormStringNoNewlines( "plotid", urlnode, 20 );
-
-	char addpid[10];
-	memset(addpid,0,10);
-
-	char plotidz[10];
-	memset(plotidz,0,10);
 
 	char menu[21]="";
 	char i_char[10]="";
@@ -242,55 +355,30 @@ static int s_nasidbyvlan_content_of_page( STPageInfo *pstPageInfo )
 	/////////////读取数据/////////////////////////
 	char buf[256];
 	int nas_num = 0;
-	
-    if(strcmp(urlnode,"")==0)
-		strcpy(addpid,PLOTID_ONE);
-	else
-		strcpy(addpid,urlnode);
 
 	fprintf(fp,	"<table border=0 cellspacing=0 cellpadding=0>"\
-				   "<tr>"\
-				   "<td><a id=link href=wp_addnasid.cgi?UN=%s&plotid=%s>%s</a></td>", pstPageInfo->encry,addpid,search(portal_auth,"add_nasid") );
+				   "<tr>");
+	if(pstPageInfo->iUserGroup == 0)
+		{
+			fprintf(fp, "<td><a id=link href=wp_addnasid.cgi?UN=%s&plotid=%s>%s</a></td>", pstPageInfo->encry,plotid,search(portal_auth,"add_nasid") );
+		}
 	fprintf(fp, "</tr>");
 	fprintf(fp,"<tr height=7><td></td></tr>");
 	fprintf(fp,"<tr>\n");
 	fprintf(fp,"<td>%s</td>",search(portal_auth,"plot_idz"));
-	fprintf(fp,"<td><select name=port_id onchange=plotid_change(this)>");
-	if(strcmp(urlnode,"")==0)
+	fprintf(fp,"<td><select name=plotid onchange=plotid_change(this)>");
+	instance_parameter *pq = NULL;
+	char temp[10] = { 0 };
+	
+	for (pq=paraHead1;(NULL != pq);pq=pq->next)
 	{
-		fprintf(fp,"<option value='%s'>1</option>",PLOTID_ONE);
-		fprintf(fp,"<option value='%s'>2</option>",PLOTID_TWO);
-		fprintf(fp,"<option value='%s'>3</option>",PLOTID_THREE);
-		fprintf(fp,"<option value='%s'>4</option>",PLOTID_FOUR);
-		fprintf(fp,"<option value='%s'>5</option>",PLOTID_FIVE);
-	}
-	else
-	{
-
-		if(strcmp(urlnode,PLOTID_ONE)==0)
-			fprintf(fp,"<option value='%s' selected>1</option>",PLOTID_ONE);
-		else
-			fprintf(fp,"<option value='%s'>1</option>",PLOTID_ONE);
-
-		if(strcmp(urlnode,PLOTID_TWO)==0)
-			fprintf(fp,"<option value='%s' selected>2</option>",PLOTID_TWO);
-		else
-			fprintf(fp,"<option value='%s'>2</option>",PLOTID_TWO);
-
-		if(strcmp(urlnode,PLOTID_THREE)==0)
-			fprintf(fp,"<option value='%s' selected>3</option>",PLOTID_THREE);
-		else
-			fprintf(fp,"<option value='%s'>3</option>",PLOTID_THREE);
-
-		if(strcmp(urlnode,PLOTID_FOUR)==0)
-			fprintf(fp,"<option value='%s' selected>4</option>",PLOTID_FOUR);
-		else
-			fprintf(fp,"<option value='%s'>4</option>",PLOTID_FOUR);
-
-		if(strcmp(urlnode,PLOTID_FIVE)==0)
-			fprintf(fp,"<option value='%s' selected>5</option>",PLOTID_FIVE);
-		else
-			fprintf(fp,"<option value='%s'>5</option>",PLOTID_FIVE);
+		memset(temp,0,sizeof(temp));
+		snprintf(temp,sizeof(temp)-1,"%d-%d-%d",pq->parameter.slot_id,pq->parameter.local_id,pq->parameter.instance_id);
+		
+		if (strcmp(plotid, temp) == 0)
+			fprintf(cgiOut,"<option value='%s' selected>%s</option>\n",temp,temp);
+		else	       
+			fprintf(cgiOut,"<option value='%s'>%s</option>\n",temp,temp);
 	}
 	fprintf(fp,"</select></td>");
 	fprintf(fp, "</tr>");
@@ -308,80 +396,115 @@ static int s_nasidbyvlan_content_of_page( STPageInfo *pstPageInfo )
 
 	fprintf(fp,	"<table border=0 width=573 cellspacing=0 cellpadding=0>"\
 				"<tr height=30 align=left bgcolor=#eaeff9>");
-	fprintf(fp, "<th width=80>TYPE</th>"\
-				"<th width=120>%s</th>", search(portal_auth,"start") );
-	fprintf(fp,	"<th width=120>%s</th>", search(portal_auth,"end") );
-	fprintf(fp,	"<th width=80>NAS</th>"\
-				"<th width=80>%s</th>", search(portal_auth,"syntaxis") );
-	fprintf(fp, "<th width=13>&nbsp;</th>"\
+	fprintf(fp, "<th width=120>Type</th>");
+	fprintf(fp,	"<th width=120>%s</th>", "nasid" );
+	fprintf(fp,	"<th width=120>%s</th>", search(portal_auth,"syntaxis") );
+	fprintf(fp, "<th width=50>&nbsp;</th>"\
 				"</tr>");
 	
     int locate = 0;
-	struct st_nasz c_head,*cq;
-	int cnum,cflag=-1;
-	char *tempz=(char *)malloc(20);
-	memset(tempz,0,20);
-	if(strcmp(urlnode,"")!=0)
-	{
-		memset(tempz,0,20);
-		sprintf(tempz,"%s%s",MTN_N,urlnode);
-	}
-	else
-	{
-		memset(tempz,0,20);
-		sprintf(tempz,"%s%s",MTN_N,PLOTID_ONE);
-	}
-	cflag=read_nas_xml(MULTI_NAS_F, &c_head, &cnum, tempz);
-	 if(cflag==0)
-	{
-		cq=c_head.next;
-		while(cq !=NULL)
-		{
-			locate ++;
+	int ret = 0;
+	struct api_nasid_conf nasidconf;
+	memset(&nasidconf, 0, sizeof(nasidconf));
+	char nasvalue[128] = {0};
 
+	ret = eag_get_nasid(ccgi_connection, parameter.local_id, parameter.instance_id, &nasidconf);
+	for (i = 0; i < nasidconf.current_num; i++) 
+	{
+			locate ++;
 			memset(menu,0,21);
 			strcpy(menu,"menulist");
 			sprintf(i_char,"%d",nas_num+1);
 			strcat(menu,i_char);
 
-			memset(plotidz,0,10);
-			if(strcmp(urlnode,"")==0)
-			strcpy(plotidz,PLOTID_ONE);
-			else
-			strcpy(plotidz,urlnode);
-
+			memset(nasvalue,0,sizeof(nasvalue));
 			fprintf(fp,	"<tr height=30 align=left bgcolor=%s>", setclour(cl) );
-			fprintf(fp,	"<td>%s</td>", cq->ntype);
-			fprintf(fp,	"<td>%s</td>", cq->nstart);
-			fprintf(fp,	"<td>%s</td>", cq->nend);
-			fprintf(fp,	"<td>%s</td>", cq->nnasid);
-			fprintf(fp,	"<td>%s</td>", cq->ncover);
+			switch(nasidconf.nasid_map[i].key_type)
+			{						
+				case NASID_KEYTYPE_WLANID:
+					if (nasidconf.nasid_map[i].keywd_1 == nasidconf.nasid_map[i].keywd_2) {
+						fprintf(fp, "<td>%d.wlanid %lu </td>", i + 1, nasidconf.nasid_map[i].keywd_1);
+						snprintf(nasvalue,sizeof(nasvalue)-1,"%lu",nasidconf.nasid_map[i].keywd_1);
+					} else {
+						fprintf(fp, "<td>%d.wlanid %lu-%lu </td>", i + 1, 
+							nasidconf.nasid_map[i].keywd_1, nasidconf.nasid_map[i].keywd_2);
+						snprintf(nasvalue,sizeof(nasvalue)-1,"%lu-%lu",
+							nasidconf.nasid_map[i].keywd_1, nasidconf.nasid_map[i].keywd_2);	
+					}
+					break;
+				case NASID_KEYTYPE_VLANID:
+					if (nasidconf.nasid_map[i].keywd_1 == nasidconf.nasid_map[i].keywd_2) {
+						fprintf(fp, "<td>%d.vlanid %lu </td>", i + 1, nasidconf.nasid_map[i].keywd_1);
+						snprintf(nasvalue,sizeof(nasvalue)-1,"%lu",nasidconf.nasid_map[i].keywd_1);
+					} else {
+						fprintf(fp, "<td>%d.vlanid %lu-%lu </td>", i + 1, 
+							nasidconf.nasid_map[i].keywd_1, nasidconf.nasid_map[i].keywd_2);
+						snprintf(nasvalue,sizeof(nasvalue)-1,"%lu-%lu",
+							nasidconf.nasid_map[i].keywd_1, nasidconf.nasid_map[i].keywd_2);
+					}
+					break;
+				case NASID_KEYTYPE_WTPID:
+					if (nasidconf.nasid_map[i].keywd_1 == nasidconf.nasid_map[i].keywd_2) {
+						fprintf(fp, "<td>%d.wtpid %lu </td>", i + 1, nasidconf.nasid_map[i].keywd_1);
+						snprintf(nasvalue,sizeof(nasvalue)-1,"%lu",nasidconf.nasid_map[i].keywd_1);
+					} else {
+						fprintf(fp, "<td>%d.wtpid %lu-%lu </td>", i + 1, 
+							nasidconf.nasid_map[i].keywd_1, nasidconf.nasid_map[i].keywd_2);
+						snprintf(nasvalue,sizeof(nasvalue)-1,"%lu-%lu",
+							nasidconf.nasid_map[i].keywd_1, nasidconf.nasid_map[i].keywd_2);
+					}
+					break;
+				case NASID_KEYTYPE_IPRANGE:
+				{
+					char ip_1[24] = {0};
+					char ip_2[24] = {0};
+					if (nasidconf.nasid_map[i].keywd_1 == nasidconf.nasid_map[i].keywd_2)
+					{
+						ccgi_ip2str(nasidconf.nasid_map[i].keywd_1, ip_1, sizeof(ip_1));
+						fprintf(fp,"<td>%d.iprange %s </td>",i+1,ip_1);
+						snprintf(nasvalue,sizeof(nasvalue)-1,"%s",ip_1);
+					}
+					else 
+					{
+						ccgi_ip2str(nasidconf.nasid_map[i].keywd_1, ip_1, sizeof(ip_1));
+						ccgi_ip2str(nasidconf.nasid_map[i].keywd_2, ip_2, sizeof(ip_2));
+						fprintf(fp,"<td>%d.iprange %s-%s </td>", i + 1, ip_1, ip_2);
+						snprintf(nasvalue,sizeof(nasvalue)-1,"%s-%s",ip_1, ip_2);
+					}
+				}
+				break;
+				case NASID_KEYTYPE_INTF:
+				fprintf(fp, "<td>%d.interface %s </td>", i + 1, nasidconf.nasid_map[i].keystr);
+				snprintf(nasvalue,sizeof(nasvalue)-1,"%s",nasidconf.nasid_map[i].keystr);
+				break;
+			}
+			fprintf(fp,	"<td>%s</td>", nasidconf.nasid_map[i].nasid);
+			fprintf(fp,	"<td>%lu</td>", nasidconf.nasid_map[i].conid);
 			fprintf(fp, "<td>");
-			fprintf(fp, "<div style=\"position:relative; z-index:%d\" onmouseover=\"popMenu('%s');\" onmouseout=\"popMenu('%s');\">",(NASID_MAX_NUM-nas_num),menu,menu);
-			fprintf(fp, "<img src=/images/detail.gif>"\
-			"<div id=%s style=\"display:none; position:absolute; top:5px; left:0;\">",menu);
-			fprintf(fp, "<div id=div1>");
-			fprintf(fp, "<div id=div2 onmouseover=\"this.style.backgroundColor='#b6bdd2'\" onmouseout=\"this.style.backgroundColor='#f9f8f7'\"><a id=link href=wp_nasid_byvlan.cgi?UN=%s&DELRULE=%s&PLOTIDZ=%s&NODEZ=%s&ATTZ=%s_%s_%s target=mainFrame>%s</a></div>", pstPageInfo->encry , "delete" , plotidz,tempz,cq->ntype,cq->nstart,cq->nend,search(portal_public,"delete"));
-			fprintf(fp, "</div>"\
-			"</div>"\
-			"</div>");
+			if(pstPageInfo->iUserGroup == 0)
+			{
+				fprintf(fp, "<div style=\"position:relative; z-index:%d\" onmouseover=\"popMenu('%s');\" onmouseout=\"popMenu('%s');\">",(NASID_MAX_NUM-nas_num),menu,menu);
+				fprintf(fp, "<img src=/images/detail.gif>"\
+				"<div id=%s style=\"display:none; position:absolute; top:5px; left:0;\">",menu);
+				fprintf(fp, "<div id=div1>");
+				fprintf(fp, "<div id=div2 onmouseover=\"this.style.backgroundColor='#b6bdd2'\" onmouseout=\"this.style.backgroundColor='#f9f8f7'\"><a id=link href=wp_nasid_byvlan.cgi?UN=%s&DELRULE=%s&plotid=%s&NODEZ=%d&ATTZ=%s target=mainFrame>%s</a></div>", pstPageInfo->encry , "delete" , plotid,nasidconf.nasid_map[i].key_type,nasvalue,search(portal_public,"delete"));
+				//fprintf(fp, "<div id=div2 onmouseover=\"this.style.backgroundColor='#b6bdd2'\" onmouseout=\"this.style.backgroundColor='#f9f8f7'\"><a id=link href=wp_edit_nasid.cgi?UN=%s&N_TYPE=%s&N_START=%s&N_END=%s&N_NASID=%s&N_SYNTAXIS=%s&PLOTIDZ=%s&NODEZ=%d&ATTZ=%s target=mainFrame>%s</a></div>",pstPageInfo->encry ,"","","", "","",plot_id,"","",search(portal_public,"configure"));
+				fprintf(fp, "</div>"\
+				"</div>"\
+				"</div>");
+			}
+			
 			fprintf(fp,	"</td>");
 			fprintf(fp,	"</tr>");
 
 		    memset( buf, 0, 256);
 			nas_num++ ;
-			cq=cq->next;
 			cl = !cl;
-		}			
-	}
+		}
 
-	if((cflag==0 )&& (cnum > 0))
-		Free_nas_info(&c_head);	
-
-	
-	free(tempz);
-	free(urlnode);
 	fprintf(fp,	"</table>");
+	fprintf(fp,"<input type=hidden name=plotid value=%s",plotid);
+	fprintf(fp,"<input type=hidden name=UN value=%s",pstPageInfo->encry);
 	return 0;	
 }
 
