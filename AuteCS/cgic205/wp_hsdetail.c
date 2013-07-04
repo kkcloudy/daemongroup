@@ -36,8 +36,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "ws_usrinfo.h"
 #include "ws_err.h"
 #include "ws_ec.h"
-#include "ws_dcli_vrrp.h"
 #include "ws_init_dbus.h"
+
+#include "ws_dbus_list.h"
+#include "ws_dbus_list_interface.h"
+#include "ws_dcli_vrrp.h"
+#include "ws_dcli_license.h"
 
 
 void ShowSecdtaPage(char *m,char *id,struct list *lpublic,struct list *lcontrl);  
@@ -70,138 +74,73 @@ int cgiMain()
 
 void ShowSecdtaPage(char *m,char *id,struct list *lpublic,struct list *lcontrl)
 {  
-    int i;
-	char ulname[10];
-	memset(ulname,0,10);
-	char dlname[10];
-	memset(dlname,0,10);
-	char ulip[30];
-	memset(ulip,0,30);
-	char hbip[30];
-	memset(hbip,0,30);
-	char dlip[30];
-	memset(dlip,0,30);
-	char hip1[4],hip2[4],hip3[4],hip4[4];
-	memset(hip1,0,4);
-	memset(hip2,0,4);
-	memset(hip3,0,4);
-	memset(hip4,0,4);
-	char uip1[4],uip2[4],uip3[4],uip4[4];
-	memset(uip1,0,4);
-	memset(uip2,0,4);
-	memset(uip3,0,4);
-	memset(uip4,0,4);
-	char dip1[4],dip2[4],dip3[4],dip4[4];
-	memset(dip1,0,4);
-	memset(dip2,0,4);
-	memset(dip3,0,4);
-	memset(dip4,0,4);
-	char hsprio[10];
-	memset(hsprio,0,10);
-	char hstime[10];
-	memset(hstime,0,10);
-	char hblink[30];
-	memset(hblink,0,30);
-	char vmac[10];
-	memset(vmac,0,10);
-	char paramalert[128];
-	memset(paramalert,0,128);
+    int i = 0;
 	Z_VRRP zvrrp;
 	memset(&zvrrp,0,sizeof(zvrrp));
 	int hspro_num=0;
-	//kehao add 20110519
-    int numup,numdown ,numvgate;
-	int j = 0;
+	int retu = 0;
+	vrrp_link_ip *uq=NULL;
+	vrrp_link_ip *dq=NULL;
+	vrrp_link_ip *vq=NULL;
+	DBusConnection *connection = NULL;
+	DBusConnection *master_connection = NULL;
+	ccgi_dbus_init();
+	instance_parameter *paraHead2 = NULL;
+	instance_parameter *p_q = NULL;
+	list_instance_parameter(&paraHead2, SNMPD_SLOT_CONNECT);
+	char plotid[10] = {0};
+	int pid = 0,insid;
 	int k = 0;
-	char *upstat[8];
-	char *downstat[8];
-	char *upname[8];
-	char *downname[8];
-	char *vgatename[8];
-	char *vupip[8];
-	char *vdownip[8];
-	char *rupip[8];
-	char *rdownip[8];
-	char *vgip[8];
-
-    for(j = 0; j < 8;j++)
+	cgiFormStringNoNewlines("plotid",plotid,sizeof(plotid));
+	pid = atoi(plotid);
+	insid = strtoul(id,NULL,10);
+	if(0 == pid)
 	{
-		upstat[j] = (char *)malloc(128);
-		memset( upstat[j] ,0, 128 );
-
+		for(p_q=paraHead2;(NULL != p_q);p_q=p_q->next)
+		{
+			pid = p_q->parameter.slot_id;
+			connection = p_q->connection;
+			break;
+		}
 	}
-
-    for(j = 0; j < 8;j++)
+	else
 	{
-		downstat[j] = (char *)malloc(128);
-		memset( downstat[j] ,0, 128 );
-
+		for(p_q=paraHead2;(NULL != p_q);p_q=p_q->next)
+		{
+			if(p_q->parameter.slot_id == pid)
+			{
+				connection = p_q->connection;
+			}
+		}
 	}
-
+	unsigned int active_master=0;
+	FILE *fd = NULL;
+	fd = fopen("/dbm/product/active_master_slot_id", "r");
+	if (fd == NULL)
+	{
+		return -1;
+	}
+	fscanf(fd, "%d", &active_master);
+	fclose(fd);
+	for(p_q=paraHead2;(NULL != p_q);p_q=p_q->next)
+	{
 	
-	for(j = 0; j < 8;j++)
-	{
-		upname[j] = (char *)malloc(128);
-		memset( upname[j] ,0, 128 );
-
+		if(p_q->parameter.slot_id == active_master)
+		{
+			master_connection = p_q->connection;
+		}
 	}
-	
-	for(j = 0; j < 8;j++)
-	{
-		downname[j] = (char *)malloc(128);
-		memset( downname[j] ,0, 128 );
-
-	}
-	for(j = 0;j < 8; j++)
-	{
-		vgatename[j] = (char *)malloc(128);
-		memset( vgatename[j] ,0, 128 );
-
-	}
-
-	for(j = 0; j<8;j++)
-	{
-		vupip[j] = (char *)malloc(128);
-		memset(vupip[j] ,0, 128 );
-		
-	}
-
-	for(j = 0; j<8;j++)
-	{
-		vdownip[j] = (char *)malloc(128);
-		memset(vdownip[j] ,0, 128 );
-		
-	}
-
-	for(j = 0; j<8;j++)
-	{
-		rupip[j] = (char *)malloc(128);
-		memset(rupip[j] ,0, 128 );
-		
-	}
-
-	for(j = 0; j<8;j++)
-	{
-		rdownip[j] = (char *)malloc(128);
-		memset(rdownip[j] ,0, 128 );
-		
-	}
-    
-	for(j = 0; j<8;j++)
-	{
-		vgip[j] = (char *)malloc(128);
-		memset(vgip[j] ,0, 128 );
-		
-	}
-
-
 	cgiHeaderContentType("text/html");
 	fprintf(cgiOut,"<html xmlns=\"http://www.w3.org/1999/xhtml\"><head>");
 	fprintf(cgiOut,"<meta http-equiv=Content-Type content=text/html; charset=gb2312>");
 	fprintf(cgiOut,"<title>VRRP</title>");
 	fprintf(cgiOut,"<link rel=stylesheet href=/style.css type=text/css>");
-	fprintf(cgiOut,"<style>"\
-	"</style>"\
+	fprintf(cgiOut,"<style type=text/css>"\
+  	  "#div1{ width:80px; height:18px; border:1px solid #666666; background-color:#f9f8f7;}"\
+	  "#div2{ width:78px; height:15px; padding-left:5px; padding-top:3px}"\
+	  "#link{ text-decoration:none; font-size: 12px}"\
+	  ".divlis {overflow-x:hidden;	overflow:auto; width: 690; height: 400px; clip: rect( ); padding-top: 0px; padding-right: 0px; padding-bottom: 0px; padding-left: 0px} "\
+	  "</style>"\
 	"</head>"\
 	"<body>"\
 	"<form>"\
@@ -256,14 +195,17 @@ void ShowSecdtaPage(char *m,char *id,struct list *lpublic,struct list *lcontrl)
 
 	ccgi_dbus_init();
 	hspro_num=strtoul(id,0,10);
-    //kehao modify  20110519
-	//ccgi_show_hansi_profile_detail(&zvrrp, hspro_num); 
-
-	//kehao modify  20110519
-	ccgi_show_hansi_profile_detail(&zvrrp, hspro_num,&numup,&numdown,&numvgate,upstat,downstat,upname,downname,vgatename,vupip,vdownip,rupip,rdownip,vgip); 
-	//////////////////////////////////////////////////////
+	retu = ccgi_show_hansi_profile(&zvrrp, hspro_num,pid,connection); 
 	
 
+	struct LicenseData *LicenseInfo = NULL;
+	int license_count=0;
+	int lic_ret=0;
+	lic_ret=license_assign_show_cmd(master_connection,&license_count,&LicenseInfo);
+	fprintf(stderr,"lic_ret=%d\n",lic_ret);
+	fprintf(stderr,"license_count=%d\n",license_count);
+
+	//////////////////////////////////////////////////////	
 
 	fprintf(cgiOut,"<table width=570 border=0 cellspacing=0 cellpadding=0>"\
 	"<tr align=left height=30>");
@@ -271,209 +213,237 @@ void ShowSecdtaPage(char *m,char *id,struct list *lpublic,struct list *lcontrl)
 	fprintf(cgiOut,"</tr>"\
 	"<tr>"\
     "<td align=left style=\"padding-left:20px\">");
-	fprintf(cgiOut,"<table valign=top rules=rows width=570 border=1>");
+	
+	fprintf(cgiOut,"<div class=divlis><table valign=top rules=rows width=570 border=1>");
 	fprintf(cgiOut,"<tr align=left>"\
-				  "<td id=td1>HS ID</td>"\
-				  "<td id=td2>%s</td>",id);
+				  "<td id=td1>ID</td>"\
+				  "<td id=td2>%d-%s</td>",pid,id);
     fprintf(cgiOut,"</tr>");
 	//uplink ifname
-	//kehao add  for circle
-	for(k = 0; k < numup; k++)
+	if(retu == 0)
 	{
-		#if 0
-	    fprintf(cgiOut,"<tr align=left>"\
-				  "<td id=td1>%s</td>"\
-				  "<td id=td2>%s</td>",search(lpublic,"hs_uplink"),zvrrp.uplink_ifname);
-		#endif
-        fprintf(cgiOut,"<tr align=left>"\
-				  "<td id=td1>%s</td>"\
-				  "<td id=td2>%s</td>",search(lpublic,"hs_uplink"),upname[k]);
-		//zvrrp.uplink_list = zvrrp.uplink_list->next;
-	}
-
-	
-	//uplink virtual ip
-	//kehao add for circle
-	for(k=0; k<numup;k++)
-	{ 
-	   //kehao add 20110519
-	   #if 0
-	   fprintf(cgiOut,"<tr align=left>"\
-				  "<td id=td1>%s IP</td>"\
-				  "<td id=td2>%s</td>",search(lpublic,"hs_uplinks"),zvrrp.uplink_ip);
-	   #endif
-       fprintf(cgiOut,"<tr align=left>"\
-				  "<td id=td1>%s IP</td>"\
-				  "<td id=td2>%s</td>",search(lpublic,"hs_uplinks"),vupip[k]);
-	   
-	}
-	#if 0
-	//uplink mask
-	fprintf(cgiOut,"<tr align=left>"\
-				  "<td id=td1>%s mask</td>"\
-				  "<td id=td2>%s</td>",search(lpublic,"hs_uplinks"),zvrrp.uplink_ip);
-	#endif
-	//uplink ifname state
-	//kehao add 20110520
-	for(k = 0; k<numup;k++)
-	{
-	   #if 0
-	   fprintf(cgiOut,"<tr align=left>"\
-				  "<td id=td1>%s</td>"\
-				  "<td id=td2>%s</td>",search(lpublic,"hs_uplinkst"),zvrrp.upstate);
-	   #endif 
-
-	   fprintf(cgiOut,"<tr align=left>"\
-				  "<td id=td1>%s</td>"\
-				  "<td id=td2>%s</td>",search(lpublic,"hs_uplinkst"),upstat[k]);
-	}
-	//uplink real ip
-	//kehao add 20110520
-	for(k = 0; k<numup;k++)
-	{
-	#if 0	
-	fprintf(cgiOut,"<tr align=left>"\
-				  "<td id=td1>%s</td>"\
-				  "<td id=td2>%s</td>",search(lpublic,"hs_uprealip"),zvrrp.realipup);
-	#endif 
-    fprintf(cgiOut,"<tr align=left>"\
-				  "<td id=td1>%s</td>"\
-				  "<td id=td2>%s</td>",search(lpublic,"hs_uprealip"),rupip[k]);
-	
-	}
-	
-	//downlink ifname
-	//kehao add for circle
-	for(k = 0;k<numdown;k++)
-	{
-	   #if 0
-	   fprintf(cgiOut,"<tr align=left>"\
-				  "<td id=td1>%s</td>"\
-				  "<td id=td2>%s</td>",search(lpublic,"hs_dlink"),zvrrp.downlink_ifname);
-	   #endif
-
-	   fprintf(cgiOut,"<tr align=left>"\
-				  "<td id=td1>%s</td>"\
-				  "<td id=td2>%s</td>",search(lpublic,"hs_dlink"),downname[k]);
-
-	}
-	//downlink ip	
-	//kehao add for circle
-	for(k = 0;k<numdown;k++)
-	{
-       //kehao modify 20110519
-	   #if 0
-	   fprintf(cgiOut,"<tr align=left>"\
-				  "<td id=td1>%s IP</td>"\
-				  "<td id=td2>%s</td>",search(lpublic,"hs_downs"),zvrrp.downlink_ip);
-	   #endif
-	   fprintf(cgiOut,"<tr align=left>"\
-				  "<td id=td1>%s IP</td>"\
-				  "<td id=td2>%s</td>",search(lpublic,"hs_downs"),vdownip[k]);
-	   
-	}
-	#if 0
-	//downlink mask
-	fprintf(cgiOut,"<tr align=left>"\
-				  "<td id=td1>%s mask</td>"\
-				  "<td id=td2>%s</td>",search(lpublic,"hs_downs"),zvrrp.downlink_ip);
-	#endif
-	//downlink ifname state
-	//kehao modify 20110520
-	for(k = 0;k<numdown;k++)
-	{
-	   #if 0
-	   fprintf(cgiOut,"<tr align=left>"\
-				  "<td id=td1>%s</td>"\
-				  "<td id=td2>%s</td>",search(lpublic,"hs_dlinks"),zvrrp.downstate);
-	   #endif 
-
-	   fprintf(cgiOut,"<tr align=left>"\
-				  "<td id=td1>%s</td>"\
-				  "<td id=td2>%s</td>",search(lpublic,"hs_dlinks"),downstat[k]);
-	}
-	//downlink real ip
-	//kahao add 20110520
-	for(k = 0;k < numdown;k++)
-	{
-      #if 0
-	  fprintf(cgiOut,"<tr align=left>"\
-				  "<td id=td1>%s</td>"\
-				  "<td id=td2>%s</td>",search(lpublic,"hs_dwrealip"),zvrrp.realipdown);
-	  #endif
-      fprintf(cgiOut,"<tr align=left>"\
-				  "<td id=td1>%s</td>"\
-				  "<td id=td2>%s</td>",search(lpublic,"hs_dwrealip"),rdownip[k]);
-	  
-	}
-	
-	//prio
-	fprintf(cgiOut,"<tr align=left>"\
-				  "<td id=td1>%s</td>"\
-				  "<td id=td2>%d</td>",search(lcontrl,"prior"),zvrrp.priority);
-	//heatbeat ifname
-	fprintf(cgiOut,"<tr align=left>"\
-				  "<td id=td1>%s IFNAME</td>"\
-				  "<td id=td2>%s</td>",search(lpublic,"hs_hblink"),zvrrp.hbinf);
-	//heatbeat ip
-	fprintf(cgiOut,"<tr align=left>"\
-				  "<td id=td1>%s IP</td>"\
-				  "<td id=td2>%s</td>",search(lpublic,"hs_hblink"),zvrrp.hbip);
-	//advertime
-	fprintf(cgiOut,"<tr align=left>"\
-				  "<td id=td1>%s</td>"\
-				  "<td id=td2>%d</td>",search(lpublic,"hs_adtime"),zvrrp.advert);
-	//virtual gateway
-	fprintf(cgiOut,"<tr align=left valign=top>"\
-				  "<td id=td1>%s Gateway</td>",search(lcontrl,"virtual"));
-	if(0==zvrrp.gw_number)
-	 	fprintf(cgiOut,"<td id=td2>%s</td>","not configured");
-	else
+		uq = zvrrp.uplink_list;
+		k = 0;
+		while(NULL!=uq)
 		{
-			int v_num=0;
-			fprintf(cgiOut,"<td><table>");
-			#if 0
-			for(v_num=0;v_num<zvrrp.gw_number;v_num++)
-				{
-					fprintf(cgiOut,"<tr>");
-					fprintf(cgiOut,"<td id=td2>%s</td>",zvrrp.gw[v_num].gwip);
-					fprintf(cgiOut,"</tr>");		
-					//kehao add for debug 
-					fprintf(stderr,"vgate num = %s\n",zvrrp.gw_number);
-					fprintf(stderr,"vgatewayip = %s\n",zvrrp.gw[v_num].gwip);
-
-				}
-			#endif
-			for(k=0;k<numvgate;k++)
-				{
-					fprintf(cgiOut,"<tr>");
-					fprintf(cgiOut,"<td id=td2>%s</td>",vgip[k]);
-					fprintf(cgiOut,"</tr>");		
-					//kehao add for debug 
-					//fprintf(stderr,"vgate num = %s\n",zvrrp.gw_number);
-					//fprintf(stderr,"vgatewayip = %s\n",zvrrp.gw[v_num].gwip);
-
-				}
-			fprintf(cgiOut,"</table></td>");
+			k++;
+			if(k == 1)
+			{
+		        fprintf(cgiOut,"<tr align=left>"\
+						  "<td id=td1>%s/IP</td>"\
+						  "<td id=td2>%s/%s</td>",search(lpublic,"hs_uplink"),uq->ifname,uq->link_ip);
+				fprintf(cgiOut,"</tr>");	
+			}
+			else
+			{
+		        fprintf(cgiOut,"<tr align=left>"\
+						  "<td id=td1>&nbsp;</td>"\
+						  "<td id=td2>%s/%s</td>",uq->ifname,uq->link_ip);
+				fprintf(cgiOut,"</tr>");	
+			}
+			uq = uq->next;
 		}
-	//virtual mac
-	fprintf(cgiOut,"<tr align=left>"\
-				  "<td id=td1>%s MAC</td>"\
-				  "<td id=td2>%s</td>",search(lcontrl,"virtual"),zvrrp.macstate);
-	//if preemt
+		
+		//downlink ifname
+		dq = zvrrp.downlink_list;
+		k = 0;
+		while(NULL!=dq)
+		{
+
+			k++;
+			if(k == 1)
+			{
+			   fprintf(cgiOut,"<tr align=left>"\
+						  "<td id=td1>%s/IP</td>"\
+						  "<td id=td2>%s/%s</td>",search(lpublic,"hs_dlink"),dq->ifname,dq->link_ip);
+			   fprintf(cgiOut,"</tr>");
+			}
+			else
+			{
+			   fprintf(cgiOut,"<tr align=left>"\
+						  "<td id=td1>&nbsp;</td>"\
+						  "<td id=td2>%s/%s</td>",dq->ifname,dq->link_ip);
+			   fprintf(cgiOut,"</tr>");
+			}
+		   dq = dq->next;
+
+		}
+		
+		//prio
+		fprintf(cgiOut,"<tr align=left>"\
+					  "<td id=td1>%s</td>"\
+					  "<td id=td2>%d</td>",search(lcontrl,"prior"),zvrrp.priority);
+		fprintf(cgiOut,"</tr>");
+		//heatbeat ifname
+		fprintf(cgiOut,"<tr align=left>"\
+					  "<td id=td1>%s IFNAME</td>"\
+					  "<td id=td2>%s</td>",search(lpublic,"hs_hblink"),zvrrp.hbinf);
+		fprintf(cgiOut,"</tr>");
+		//heatbeat ip
+		fprintf(cgiOut,"<tr align=left>"\
+					  "<td id=td1>%s IP</td>"\
+					  "<td id=td2>%s</td>",search(lpublic,"hs_hblink"),zvrrp.hbip);
+		fprintf(cgiOut,"</tr>");
+		//advertime
+		fprintf(cgiOut,"<tr align=left>"\
+					  "<td id=td1>%s</td>"\
+					  "<td id=td2>%d</td>",search(lpublic,"hs_adtime"),zvrrp.advert);
+		fprintf(cgiOut,"</tr>");
+		//virtual gateway
+		vq = zvrrp.vgatewaylink_list;
+		k = 0;
+		while(NULL!=vq)
+		{ 
+			k++;
+			if(k == 1)
+			{
+				fprintf(cgiOut,"<tr align=left valign=top>"\
+						  "<td id=td1>%s Gateway/IP</td>",search(lcontrl,"virtual"));
+				fprintf(cgiOut,"<td id=td2>%s/%s</td>",vq->ifname,vq->link_ip);
+			   fprintf(cgiOut,"</tr>");
+			}
+			else
+			{
+				fprintf(cgiOut,"<tr align=left valign=top>"\
+						  "<td id=td1>&nbsp;</td>");
+				fprintf(cgiOut,"<td id=td2>%s/%s</td>",vq->ifname,vq->link_ip);
+			   fprintf(cgiOut,"</tr>");
+			}
+		   
+		   vq = vq->next;
+		}
+			
+		//virtual mac
+		fprintf(cgiOut,"<tr align=left>"\
+					  "<td id=td1>%s MAC</td>"\
+					  "<td id=td2>%s</td>",search(lcontrl,"virtual"),zvrrp.macstate);
+		fprintf(cgiOut,"</tr>");
+		//if preemt
+		fprintf(cgiOut,"<tr align=left>"\
+					  "<td id=td1>%s</td>"\
+					  "<td id=td2>%s</td>",search(lpublic,"hs_preempt"),zvrrp.preempt);
+		fprintf(cgiOut,"</tr>");
+
+	}
+
+	
+	char buf[128] = {0};
+	char *tmp = buf;
+	int len = 0;
+	
+	char buf_num[128] = {0};
+	char *tmp_num = buf_num;
+	int len_num = 0;
+	int j=0;
+	int num=0;
+	if(lic_ret==0)
+	{
+		if(LicenseInfo)
+		{	
+			fprintf(stderr,"license_count=%d\n",license_count);
+			if(license_count!=0)
+			{
+				len += sprintf(tmp,"%14s","LicenseType:");
+				tmp = buf + len;
+				for(i = 1; i <= license_count; i++){
+					len += sprintf(tmp,"%6d",i);
+					tmp = buf + len;
+				}
+				fprintf(stderr,"buf=%s\n",buf);
+
+				for(j = 0; j < license_count; j++)
+				{
+						num += LicenseInfo[j].r_assign_num[pid][insid];
+				}
+				fprintf(stderr,"num=%d\n",num);
+//				if(num != 0)
+//				{				
+					len_num += sprintf(tmp_num,"%8s%2d-%2d:","Hansi",pid,insid);
+					tmp_num = buf_num + len_num;
+					for(j = 0; j < license_count; j++)
+					{
+						len_num += sprintf(tmp_num,"%6d",LicenseInfo[j].r_assign_num[pid][insid]);
+						tmp_num = buf_num + len_num;
+					}
+					fprintf(stderr,"buf_num=%s\n",buf_num);
+//				}
+			}
+		}
+	}
 	fprintf(cgiOut,"<tr align=left>"\
 				  "<td id=td1>%s</td>"\
-				  "<td id=td2>%s</td>",search(lpublic,"hs_preempt"),zvrrp.preempt);
-
-	
-
-	
-	fprintf(cgiOut,"</table></td>"\
-				"</tr>");
-	fprintf(cgiOut,"<tr>");
-	fprintf(cgiOut,"<td><input type=hidden name=UN value=%s></td>",m);
-	fprintf(cgiOut,"<td><input type=hidden name=ID value=%s></td>",id);
+				  "<td id=td2>%s</td>",search(lpublic,"max_ap_num"),buf);
 	fprintf(cgiOut,"</tr>");
+	fprintf(cgiOut,"<tr align=left>"\
+				  "<td id=td1>&nbsp;&nbsp;&nbsp;</td>"\
+				  "<td id=td2>%s</td>",buf_num);
+	fprintf(cgiOut,"</tr>");
+
+	
+	int oth_ret=0;
+	char *info=NULL;
+	char *p = NULL;
+	char *str_strtok;
+	oth_ret=show_vrrp_runconfig_by_hansi(pid,id,connection,&info);
+	if((oth_ret==0)&&(info))
+	{
+
+		fprintf(stderr,"info=%s",info);
+		p=info;
+		str_strtok=strtok(p, "config hansi multi-link-detect on");
+		if(str_strtok)
+		{
+			fprintf(cgiOut,"<tr align=left>"\
+						  "<td id=td1>%s</td>"\
+						  "<td id=td2>%s</td>",search(lpublic,"link_detect_switch"),"on");
+			fprintf(cgiOut,"</tr>");
+		}
+		else
+		{
+			p=info;
+			str_strtok=strtok(p, "config hansi multi-link-detect off");
+			if(str_strtok)
+			{
+				fprintf(cgiOut,"<tr align=left>"\
+							  "<td id=td1>%s</td>"\
+							  "<td id=td2>%s</td>",search(lpublic,"link_detect_switch"),"off");
+				fprintf(cgiOut,"</tr>");
+			}
+			else
+			{
+				fprintf(cgiOut,"<tr align=left>"\
+							  "<td id=td1>%s</td>"\
+							  "<td id=td2>%s</td>",search(lpublic,"link_detect_switch"),"no configure");
+				fprintf(cgiOut,"</tr>");
+			}
+		}	
+		p=info;
+		str_strtok=strtok(p, "config service enable");
+		if(str_strtok)
+		{
+			fprintf(cgiOut,"<tr align=left>"\
+						  "<td id=td1>%s</td>"\
+						  "<td id=td2>%s</td>",search(lpublic,"vrrp_service_state"),"enable");
+			fprintf(cgiOut,"</tr>");
+		}
+		else
+			{
+				fprintf(cgiOut,"<tr align=left>"\
+							  "<td id=td1>%s</td>"\
+							  "<td id=td2>%s</td>",search(lpublic,"vrrp_service_state"),"disable");
+				fprintf(cgiOut,"</tr>");
+			}
+	}
+	
+	
+
+
+	
+	fprintf(cgiOut,"</table></div></td>"\
+				"</tr>");
+	fprintf(cgiOut,"<input type=hidden name=UN value=%s>",m);
+	fprintf(cgiOut,"<input type=hidden name=ID value=%s>",id);
+	fprintf(cgiOut,"<input type=hidden name=plotid value=%d>",pid);
 	fprintf(cgiOut,"</table>");
 	fprintf(cgiOut,"</td>"\
 	" </tr>"\
@@ -500,4 +470,6 @@ void ShowSecdtaPage(char *m,char *id,struct list *lpublic,struct list *lcontrl)
 	"</form>"\
 	"</body>"\
 	"</html>");
+	free_ccgi_show_hansi_profile(&zvrrp);
+	free_instance_parameter_list(&paraHead2);	
 }
