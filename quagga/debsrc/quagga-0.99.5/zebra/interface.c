@@ -271,12 +271,9 @@ __inline__ int parse_slotport_tag_no(char *str,unsigned char *slotno,unsigned ch
 	*slotno = 0;
 	*portno = 0;
 	*tag1 = 0;
-	if(NULL == tag2)
+	if(NULL != tag2)
 	{
-		/*CID 10888 (#1 of 4): Dereference after null check (FORWARD_NULL)
-		7. var_deref_op: Dereferencing null pointer "tag2".
-		Bug, tag2 is NULL , so *tag2 is not exist. So delete it.*/
-		/* *tag2 = 0;*/
+		*tag2=0;
 	}
 	if(!strncmp(str,"eth",3) || !strncmp(str,"mng",3))
 	{

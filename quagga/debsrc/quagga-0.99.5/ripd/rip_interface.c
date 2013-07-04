@@ -1683,7 +1683,7 @@ zlog_debug("(syna_test %d),dbus_connection_dcli[send_to]->board_state:%d \n",__L
 int rip_set_pfm(int opt)
 {
 	int temp_ret;	
-	int slot,back_slot=-1;
+	int slot=-1,back_slot=-1;
 	int product_type = rip_get_dbm_int(PRODUCT_TYPE_FILE);	
 	int is_active_master = rip_get_dbm_int(IS_ACTIVE_MASTER_FILE);
 	int board_id = rip_get_dbm_int(SLOT_ID_FILE);;
@@ -1703,23 +1703,37 @@ int rip_set_pfm(int opt)
 		slot=board_id;
 		if(slot == 1)
 			back_slot = 2;
-		if(slot == 2)
-			back_slot = 1;		
+		else if(slot == 2)
+			back_slot = 1;
+		else
+		{
+			zlog_debug("Get slot NO. error \n");
+			return -1;
+		}
 	}
   /*8600*/
-	if(product_type == 8 && is_active_master == 1)
+	else if(product_type == 8 && is_active_master == 1)
 	{
 		slot=board_id;
 		if(slot == 5)
 			back_slot = 6;
-		if(slot == 6)
+		else if(slot == 6)
 			back_slot = 5;
+		else
+		{
+			zlog_debug("Get slot NO. error \n");
+			return -1;
+		}
 	}
-  
+  	else
+  	{
+		zlog_debug("Get product type error \n");
+		return -1;
+
+	}
 	zlog_debug("(rip_syn %d),%s back_slot(%d) \n",__LINE__,__func__,back_slot);
 	for(i = 0;i < MAX_SLOT ; i++)
 	{
-		/* CID 14333 (#2 of 2): Uninitialized scalar variable , no problem */
 		if(NULL != (dbus_connection_dcli[i]->dcli_dbus_connection)&& i != back_slot && i!=slot)
 		{
 			zlog_debug("(sync_test %d) %s i= %d \n",__LINE__,__func__,i);

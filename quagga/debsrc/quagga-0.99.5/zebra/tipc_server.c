@@ -2057,8 +2057,7 @@ tipc_client_route_multipath (int cmd, tipc_server *vice_board, u_short length)
 			  zlog_debug("%s : line %d, recv packet dest ipv4 %s/%d \n",
 					__func__,__LINE__,inet_ntop(AF_INET,&p.u.prefix4,buf1,BUFSIZ),p.prefixlen);
 	  	}
-	  else
-	  	if(p.family == AF_INET6)
+	  else if(p.family == AF_INET6)
 	  	{
 	  		stream_get (&p.u.prefix6, s, PSIZE (p.prefixlen));
 	  		if(tipc_server_debug)
