@@ -314,7 +314,7 @@ static int ccgi_dcli_web_vhost_add_valid(webHost host, unsigned int slot)
 
 
 
-int set_interval_portal_cmd(char *name, char *type, char *ip_addr, char *port, char *slot)
+int ccgi_set_interval_portal_cmd(char *name, char *type, char *ip_addr, char *port, char *slot)
 											//0:成功;-1:invalid arguments;_2:invalid slot;-3:too much webservice;-4:service is running;
 											//-5:service name is exist;-6:service ip:port exist;-7:portal slot conflict;-8:add failed
 {
@@ -492,7 +492,7 @@ ccgi_dcli_communicate_pfm_by_dbus(int opt,
 }
 
 
-int enable_interval_portal_service_cmd()
+int ccgi_enable_interval_portal_service_cmd()
 	//0:成功;-1:connetion is error;-2:webpotal service not config;-3:webportal service is running;-4:webportal service enablefailed,ip or port error
 {
 	struct webInfoHead infohead;
@@ -639,7 +639,7 @@ int disable_interval_portal_service_cmd()
     return 0;
 }	
 
-int add_http_https_ip_port_cmd(char *name,char *type,char *ip_addr, char *port)
+int ccgi_add_http_https_ip_port_cmd(char *name,char *type,char *ip_addr, char *port)
 												//0:成功;-1:invalid arguments;-2:to much webservice;-3:service is running;
 												//-4:service name  exist;-5:ip:port exist;-6:connection is error;-7:set failed
 {
@@ -892,7 +892,7 @@ static int ccgi_dcli_web_int_add_valid(webIf n, int *slot)
     return WEB_SUCCESS;
 }
 
-int add_web_forword_cmd(char *webname, char *infname)
+int ccgi_add_web_forword_cmd(char *webname, char *infname)
 	//-1:invalid arguments webname;-2:invalid ifname;-3:invalid connection;-8:failed
 	//-4:to much interface;-5:service name not exist;-6:interface exist;-7:is running
 {
@@ -947,7 +947,7 @@ int add_web_forword_cmd(char *webname, char *infname)
 
     return 0;
 }
-void free_show_interval_portalservice_info_cmd(struct web_info *WtpIfHead)
+void ccgi_free_show_interval_portalservice_info_cmd(struct web_info *WtpIfHead)
 {
 	struct web_info *f1 = NULL, *f2 = NULL;
 		
@@ -975,7 +975,7 @@ void free_show_interval_portalservice_info_cmd(struct web_info *WtpIfHead)
 	}
 }
 
-int show_interval_portalservice_info_cmd(struct web_info *WtpIfHead,int *num,int slot)
+int ccgi_show_interval_portalservice_info_cmd(struct web_info *WtpIfHead,int *num,int slot)
 {  
 	struct webInfoHead infohead;
 	
@@ -1053,7 +1053,7 @@ int show_interval_portalservice_info_cmd(struct web_info *WtpIfHead,int *num,int
 	web_list_flush(&infohead);	
     return 0;
 }	
-void free_show_webservice_info_cmd(struct web_info *WtpIfHead)
+void ccgi_free_show_webservice_info_cmd(struct web_info *WtpIfHead)
 {
 	struct web_info *f1 = NULL, *f2 = NULL;
 		
@@ -1081,7 +1081,7 @@ void free_show_webservice_info_cmd(struct web_info *WtpIfHead)
 	}
 }
 
-int show_webservice_info_cmd(struct web_info *WtpIfHead,int *num,int *slot)
+int ccgi_show_webservice_info_cmd(struct web_info *WtpIfHead,int *num,int *slot)
 {
 	struct webInfoHead infohead;
 	char buf[128] = {0};
@@ -1231,7 +1231,7 @@ static int ccgi_dcli_web_vhost_del_valid(const char *name, unsigned int *slot)
     return WEB_SUCCESS;
 }
 
-int delete_portal_config_cmd(char *name)
+int ccgi_delete_portal_config_cmd(char *name)
 	//0:success-1:invalid name;-2:web is running;-3:no found this name
 	//-4connection is error;-5:failed
 {
@@ -1268,7 +1268,7 @@ int delete_portal_config_cmd(char *name)
 	return 0;
 }	
 
-int delete_http_https_config_cmd(char *name)
+int ccgi_delete_http_https_config_cmd(char *name)
 	//0:success-1:invalid name;-2:web is running;-3:no found this name
 	//-4connection is error;-5:failed
 {
@@ -1301,7 +1301,7 @@ int delete_http_https_config_cmd(char *name)
 }	
 
 
-int contrl_enable_webservice_cmd()
+int ccgi_contrl_enable_webservice_cmd()
 //-1:webconfig service not config;-2:webconfig service is running
 //-4:connection is error;-5:webconfig service is running;-6:webconfig service enable failed
 {
@@ -1376,7 +1376,7 @@ int contrl_enable_webservice_cmd()
 	}
 	return 0;
 }
-int contrl_disable_webservice_cmd()
+int ccgi_contrl_disable_webservice_cmd()
 	//-1:webconfig service not config;-2:webconfig service is not running
 	//-4:connection is error;-5:webconfig service is not running;-6:webconfig service enable failed
 {

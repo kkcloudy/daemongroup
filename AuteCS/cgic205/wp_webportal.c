@@ -141,7 +141,7 @@ int ShowWebservicePage(struct list *lpublic, struct list *lsystem)
 			fprintf(stderr,"web_port=%s",web_port);
 			fprintf(stderr,"web_slot=%s",web_slot);
 			fprintf(stderr,"web_ip=%s",web_ip);
-		  ret=set_interval_portal_cmd(web_name,web_type,web_ip,web_port,web_slot);
+		  ret=ccgi_set_interval_portal_cmd(web_name,web_type,web_ip,web_port,web_slot);
 		  if(ret!=0)
 		  {
 			  switch(ret)

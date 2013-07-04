@@ -152,7 +152,7 @@ int ShowWebservicePage(struct list *lpublic, struct list *lsystem)
 		  if((strcmp(web_name,"")!=0)&&(strcmp(web_type,"")!=0)&&(strcmp(web_ip,"")!=0)&&(strcmp(web_port,"")!=0))
 		  {
 		  	ret=0;
-			  ret=add_http_https_ip_port_cmd(web_name,web_type,web_ip,web_port);
+			  ret=ccgi_add_http_https_ip_port_cmd(web_name,web_type,web_ip,web_port);
 			  if(ret!=0)
 			  {
 				  switch(ret)
@@ -183,7 +183,7 @@ int ShowWebservicePage(struct list *lpublic, struct list *lsystem)
 		  {
 			  fprintf(stderr,"fffffffffffffffffffffffffff");
 		  		ret1=0;
-			  ret1=add_web_forword_cmd(web_name,web_inf);
+			  ret1=ccgi_add_web_forword_cmd(web_name,web_inf);
 			  if(ret1!=0)
 			  {
 				  switch(ret)

@@ -155,7 +155,7 @@ int ShowWebservicePage(struct list *lpublic, struct list *lsystem)
 	  if((strcmp(IsDeleete,"true")==0)&&(strcmp(IsSubmit,"")))
 	  {
 		  cgiFormStringNoNewlines("web_del_name", web_del_name, 15);
-		  ret_del=delete_portal_config_cmd(web_del_name);
+		  ret_del=ccgi_delete_portal_config_cmd(web_del_name);
 		  fprintf(stderr,"ret_del=%d",ret_del);
 		  if(ret_del!=0)
 		  {
@@ -184,7 +184,7 @@ int ShowWebservicePage(struct list *lpublic, struct list *lsystem)
 	  int retu=0;
 	  if(cgiFormSubmitClicked("starts") == cgiFormSuccess)
 	  {
-		  retu=enable_interval_portal_service_cmd();
+		  retu=ccgi_enable_interval_portal_service_cmd();
 		  if(retu==0)
 		  {
 			  ShowAlert(search(lpublic,"oper_succ"));
@@ -337,7 +337,7 @@ int ShowWebservicePage(struct list *lpublic, struct list *lsystem)
 				struct web_info *q = NULL;
 				int ret_web=0,num=0,master_slot_id=0;
 				fprintf(stderr,"22222222222222222");
-				ret_web=show_interval_portalservice_info_cmd(&WtpIfHead,&num,pid);
+				ret_web=ccgi_show_interval_portalservice_info_cmd(&WtpIfHead,&num,pid);
 				
 				fprintf(stderr,"uuuuuuuuuuuuuuuu33333333333333333");
 				fprintf(stderr,"num=%d",num);

@@ -217,17 +217,17 @@ struct web_info{
 
 
 
-extern int set_interval_portal_cmd(char *name, char *type, char *ip_addr, char *port, char *hansi);
-extern int enable_interval_portal_service_cmd();
-extern int add_http_https_ip_port_cmd(char *name,char *type,char *ip_addr, char *port);
-extern int add_web_forword_cmd(char *webname, char *infname);
-extern int show_webservice_info_cmd(struct web_info *WtpIfHead,int *num,int *slot);
-extern int show_interval_portalservice_info_cmd(struct web_info *WtpIfHead,int *num,int slot);
-extern int delete_portal_config_cmd(char *name);
-int delete_http_https_config_cmd(char *name);
-extern int contrl_disable_webservice_cmd();
-extern int contrl_enable_webservice_cmd();
-extern void free_show_webservice_info_cmd(struct web_info *WtpIfHead);
-extern void free_show_interval_portalservice_info_cmd(struct web_info *WtpIfHead);
+extern int ccgi_set_interval_portal_cmd(char *name, char *type, char *ip_addr, char *port, char *hansi);
+extern int ccgi_enable_interval_portal_service_cmd();
+extern int ccgi_add_http_https_ip_port_cmd(char *name,char *type,char *ip_addr, char *port);
+extern int ccgi_add_web_forword_cmd(char *webname, char *infname);
+extern int ccgi_show_webservice_info_cmd(struct web_info *WtpIfHead,int *num,int *slot);
+extern int ccgi_show_interval_portalservice_info_cmd(struct web_info *WtpIfHead,int *num,int slot);
+extern int ccgi_delete_portal_config_cmd(char *name);
+int ccgi_delete_http_https_config_cmd(char *name);
+extern int ccgi_contrl_disable_webservice_cmd();
+extern int ccgi_contrl_enable_webservice_cmd();
+extern void ccgi_free_show_webservice_info_cmd(struct web_info *WtpIfHead);
+extern void ccgi_free_show_interval_portalservice_info_cmd(struct web_info *WtpIfHead);
 
 #endif /* WS_WEBSERVICE_CONF_H */
