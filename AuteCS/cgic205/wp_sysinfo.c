@@ -432,11 +432,31 @@ int ShowSystemInformationPage(struct list *lpublic, struct list *lsystem, struct
 								"<td id=td2>%s</td>",sysimg.boot_img);
 					fprintf(cgiOut,"</tr>");
 					#endif
+					FILE *fp = NULL;
+					char acDeviceSn[256] = {0};
+					memset(acDeviceSn,0,256);			
+				
+					fp=fopen("/devinfo/sn","r");
+					if(fp != NULL)
+					{
+						fgets(acDeviceSn,256,fp);
+						if(strcmp(acDeviceSn,"") == 0)
+						{
+							memset(acDeviceSn,0,256);			
+							strncpy(acDeviceSn,"01010106C14009900001",sizeof(acDeviceSn)-1);
+						}
+						fclose(fp);
+					}
+					else
+					{
+						memset(acDeviceSn,0,256);			
+						strncpy(acDeviceSn,"01010106C14009900001",sizeof(acDeviceSn)-1);
+					}	
 					
 					fprintf(cgiOut,"<tr>"\
-								"<td>&nbsp;</td>"\
-								"<td>&nbsp;</td>"\
-							  "</tr>"\
+								"<td id=td1>SN</td>"\
+								"<td id=td2>%s</td>",acDeviceSn);
+							  fprintf(cgiOut,"</tr>"\
 							  "<tr>");
 					if((cgiFormSubmitClicked("save_config") != cgiFormSuccess)&&(cgiFormSubmitClicked("del_config") != cgiFormSuccess)&&(cgiFormSubmitClicked("reboot") != cgiFormSuccess))
 					{
