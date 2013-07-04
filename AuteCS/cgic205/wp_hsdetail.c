@@ -195,7 +195,7 @@ void ShowSecdtaPage(char *m,char *id,struct list *lpublic,struct list *lcontrl)
 
 	ccgi_dbus_init();
 	hspro_num=strtoul(id,0,10);
-	retu = ccgi_show_hansi_profile(&zvrrp, hspro_num,pid,connection); 
+//	retu = ccgi_show_hansi_profile(&zvrrp, hspro_num,pid,connection); 
 	
 
 	struct LicenseData *LicenseInfo = NULL;
@@ -384,7 +384,7 @@ void ShowSecdtaPage(char *m,char *id,struct list *lpublic,struct list *lcontrl)
 	char *info=NULL;
 	char *p = NULL;
 	char *str_strtok;
-	oth_ret=show_vrrp_runconfig_by_hansi(pid,id,connection,&info);
+//	oth_ret=show_vrrp_runconfig_by_hansi(pid,id,connection,&info);
 	if((oth_ret==0)&&(info))
 	{
 

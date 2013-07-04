@@ -160,7 +160,8 @@ int ShowhansilistPage(char *m,char *n,struct list *lpublic,struct list *lcontrol
 	  {
 		  fprintf(stderr,"connection=%p",connection);
 		  fprintf(stderr,"insid=%s",insid);
-		  int rrrr=delete_hansi_profile(insid,connection);
+		  int rrrr=0;
+		  //delete_hansi_profile(insid,connection);
 		  fprintf(stderr,"rrrr=%d",rrrr);
 		  
 		  if(rrrr==0)
@@ -290,7 +291,7 @@ int ShowhansilistPage(char *m,char *n,struct list *lpublic,struct list *lcontrol
                     for(i=1;i<17;i++)
                 	{
 	                    memset(&zvrrp,0,sizeof(zvrrp));
-	                    ret=ccgi_show_hansi_profile(&zvrrp, i,pid,connection);
+//	                    ret=ccgi_show_hansi_profile(&zvrrp, i,pid,connection);
 						if(ret==0)
 	          	        {
 

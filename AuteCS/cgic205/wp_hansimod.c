@@ -74,6 +74,8 @@ int ShowHansiModPage(char *m,char *id,char *choice,struct list *lpublic,struct l
 
 int cgiMain()
 {  
+	return 0;
+	#if 0
 	char *encry=(char *)malloc(BUF_LEN);  
 	char *str;   
 	struct list *lpublic;   /*解析public.txt文件的链表头*/
@@ -156,8 +158,9 @@ int cgiMain()
 	release(lpublic);  
 	release(lcontrol);
 	return 0;
+	#endif
 }
-
+#if 0
 int ShowHansiModPage(char *m,char *id,char * choice,struct list *lpublic,struct list *lcontrol,int slotid,DBusConnection *connection,int pid)  
 {  
 	int i,retu,hspro_num=0,upmaskbit,dwmaskbit;
@@ -1210,4 +1213,5 @@ void ShowHansiClearPage(char *m,char *id,struct list *lpublic,struct list *lcont
 	fprintf( cgiOut, "</html>\n" );
 }
 
+#endif
 #endif

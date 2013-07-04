@@ -159,7 +159,8 @@ int ShowhansilistPage(char *m,char *n,struct list *lpublic,struct list *lcontrol
 	  {
 		  fprintf(stderr,"connection=%p",connection);
 		  fprintf(stderr,"insid=%s",insid);
-		  int rrrr=config_delete_hansi_cmd(pid,insid,connection);
+		  int rrrr=0;
+	//config_delete_hansi_cmd(pid,insid,connection);
 		  fprintf(stderr,"rrrr=%d",rrrr);
 		  
 		  if(rrrr==0)
@@ -281,7 +282,7 @@ int ShowhansilistPage(char *m,char *n,struct list *lpublic,struct list *lcontrol
 					fprintf(stderr,"pid=%d",pid);
                     for(i=1;i<17;i++)
                 	{
-	                    ret=show_vrrp_runconfig_cmd_by_ins(pid,i);
+	    //                ret=show_vrrp_runconfig_cmd_by_ins(pid,i);
 						fprintf(stderr,"ret=%d",ret);
 						if(ret==1)
 	          	        {
