@@ -251,6 +251,10 @@ enum node_type
   LOCAL_HANSI_PPPOE_DEVICE_NODE,		/*add by lixiang , for new pppoe config */
   FAST_FWD_NODE,  /*add by pangyaoyang for fast_forward*/
   SLAVE_FAST_FWD_NODE,/*add for slave_fast_forward   2013-03-19*/
+  HANSI_FAST_FWD_NODE,  
+  HANSI_SLAVE_FAST_FWD_NODE,  /* fast forward distribute config */
+  LOCAL_HANSI_FAST_FWD_NODE,  /* fast forward distribute config */
+  LOCAL_HANSI_SLAVE_FAST_FWD_NODE,
   /*add by shaojunwu  end*/
  /*add by sunjc@autelan.com*/
   SIGTRANUDP_NODE,
