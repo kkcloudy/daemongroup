@@ -317,7 +317,12 @@ typedef enum
 } VLAN_FLITER_ENT;
 
 
-
+struct vlan_ports_collection
+{
+	unsigned int have_port;
+	unsigned int port_min;
+	unsigned int port_max;
+};
 
 extern inline int parse_vlan_no(char* str,unsigned short* vlanId);
 extern inline int vlan_name_legal_check(char* str,unsigned int len);
@@ -336,6 +341,21 @@ extern int show_vlan_list(struct vlan_info_simple vlan_all[], int vlan_port_num[
 extern int create_vlan(DBusConnection *connection,unsigned short vID,char *vName);
 extern int delete_vlan(DBusConnection *connection,unsigned short vID);
 extern int addordelete_port(DBusConnection *connection,char * addordel,char * slot_port_no,char * Tagornot,unsigned short vID,char * lan);
+																			/*返回0表示失败，返回1表示成功*/
+																			/* 返回-1表示operation failed，返回-2表示Unknown portno format*/
+																			/*返回-3表示Bad slot/port number，返回-4表示Bad tag parameter*/
+																			/*返回-5表示Error occurs in Parse eth-port Index or devNO.& logicPortNo*/
+																			/*返回-6表示Port already member of the vlan*/
+																			/*返回-7表示Port is not member of the vlan*/
+																			/*返回-8表示Port already untagged member of other active vlan*/
+																			/*返回-9表示Port Tag-Mode can NOT match*/
+																			/*返回-10表示Occcurs error,port is member of a active trunk*/
+																			/*返回-11表示Occcurs error,port has attribute of static arp*/	
+																			/*返回-12表示Occcurs error,port is member of a pvlan*/
+																			/*返回-13表示There are protocol-vlan config on this vlan and port*/
+																			/*返回-14表示Can't del an advanced-routing interface port from this vlan*/
+																			/*返回-15表示get master_slot_id error，返回-16表示get get_product_info return -1*/
+																			/*返回-17表示Please check npd on MCB slot，返回-18表示vlan_list add/delete port Error*/
 extern int show_vlan_ByID(struct vlan_info *vlan_info_byID, unsigned short vID,int* untagport_num,int* tagport_num);
 extern int setVID(unsigned short vidOld,char * vidnew);
 extern int createIntfForVlan(unsigned int vID);
@@ -368,5 +388,11 @@ char * Tagornot,
 unsigned short vID
 );
 extern int show_current_vlan_port_member(struct vlanlist_info_c *head);
+extern void get_vlan_ports_collection(struct vlan_ports_collection *ports);
+extern int get_vlan_port_member_tagflag(int vlan_id,char *port,int *tag_flag);/*返回0表示失败，返回1表示成功*/
+																					/*返回-1表示Failed to open file，返回-2表示Failed to mmap*/
+																					/*返回-3表示vlan is NOT exists，返回-4表示Failed to munmap*/
+																					/*返回-5表示close shm_vlan failed*/
+
 #endif
 

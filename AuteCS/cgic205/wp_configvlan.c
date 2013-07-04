@@ -105,6 +105,7 @@ int ShowVlanlistPage()
 
 	int retu=0;
 	int flag=0;
+	int retu_checkusr = 0;
 	for(i=0;i<4095;i++)
 	{
 		receive_vlan[i].vlanId=0;
@@ -194,8 +195,8 @@ int ShowVlanlistPage()
 	"</script>"\
 	"<body>");
 	if(cgiFormSubmitClicked("submit_search") != cgiFormSuccess && cgiFormSubmitClicked("submit_ret") != cgiFormSuccess && cgiFormSubmitClicked("submit_egress_filter") != cgiFormSuccess)
-	retu=checkuser_group(str);
-	else retu=checkuser_group(addn);
+	retu_checkusr=checkuser_group(str);
+	else retu_checkusr=checkuser_group(addn);
 
 
 	fprintf(stderr,"SER_TYPE=%s-SER_TEXT=%s",SER_TYPE,SER_TEXT);
@@ -381,7 +382,7 @@ int ShowVlanlistPage()
 	fprintf(cgiOut,"</tr>");
 	if(cgiFormSubmitClicked("submit_search") != cgiFormSuccess && cgiFormSubmitClicked("submit_ret") != cgiFormSuccess)
 	{
-		if(retu==0)  /*管理员*/
+		if(retu_checkusr==0)  /*管理员*/
 		{
 			fprintf(cgiOut,"<tr height=25>"\
 				"<td align=left id=tdleft><a href=wp_addvlan.cgi?UN=%s target=mainFrame class=top><font id=%s>%s</font><font id=yingwen_san> VLAN</font></a></td>",encry,search(lpublic,"menu_san"),search(lcontrol,"add"));			  
@@ -390,7 +391,7 @@ int ShowVlanlistPage()
 		fprintf(cgiOut,"<tr height=25>"\
 			"<td align=left id=tdleft><a href=wp_show_pvlan.cgi?UN=%s target=mainFrame class=top><font id=yingwen_san>PVLAN </font><font id=%s>%s</font></a></td>",encry,search(lpublic,"menu_san"),search(lcontrol,"list"));		  
 		fprintf(cgiOut,"</tr>");
-		if(retu==0)  /*管理员*/
+		if(retu_checkusr==0)  /*管理员*/
 		{
 			fprintf(cgiOut,"<tr height=25>"\
 				"<td align=left id=tdleft><a href=wp_config_pvlan.cgi?UN=%s target=mainFrame class=top><font id=%s>%s</font><font id=yingwen_san> PVLAN</font></a></td>",encry,search(lpublic,"menu_san"),search(lcontrol,"pvlan_add"));			  
@@ -399,7 +400,7 @@ int ShowVlanlistPage()
 	}
 	else		  
 	{
-		if(retu==0)  /*管理员*/
+		if(retu_checkusr==0)  /*管理员*/
 		{
 			fprintf(cgiOut,"<tr height=25>"\
 				"<td align=left id=tdleft><a href=wp_addvlan.cgi?UN=%s target=mainFrame style=color:#000000><font id=%s>%s</font><font id=yingwen_san> VLAN</font></a></td>",configvlan_encry,search(lpublic,"menu_san"),search(lcontrol,"add"));						 
@@ -408,14 +409,14 @@ int ShowVlanlistPage()
 		fprintf(cgiOut,"<tr height=25>"\
 			"<td align=left id=tdleft><a href=wp_show_pvlan.cgi?UN=%s target=mainFrame style=color:#000000><font id=yingwen_san>PVLAN </font><font id=%s>%s</font></a></td>",configvlan_encry,search(lpublic,"menu_san"),search(lcontrol,"list"));						 
 		fprintf(cgiOut,"</tr>");
-		if(retu==0)  /*管理员*/
+		if(retu_checkusr==0)  /*管理员*/
 		{
 			fprintf(cgiOut,"<tr height=25>"\
 				"<td align=left id=tdleft><a href=wp_config_pvlan.cgi?UN=%s target=mainFrame style=color:#000000><font id=%s>%s</font><font id=yingwen_san> PVLAN</font></a></td>",configvlan_encry,search(lpublic,"menu_san"),search(lcontrol,"pvlan_add"));						 
 			fprintf(cgiOut,"</tr>");
 		}
 	}
-	for(i=0;i<13;i++)
+	for(i=0;i<14;i++)
 	{
 		fprintf(cgiOut,"<tr height=25>"\
 			"<td id=tdleft>&nbsp;</td>"\
@@ -606,24 +607,32 @@ int ShowVlanlistPage()
 					fprintf(cgiOut,"<div id=div1>");
 					if(cgiFormSubmitClicked("submit_search") != cgiFormSuccess && cgiFormSubmitClicked("submit_ret") != cgiFormSuccess)
 					{
-						if(retu==0)  /*管理员*/
+						if(retu_checkusr==0)  /*管理员*/
 						{
 							fprintf(cgiOut,"<div id=div2 onmouseover=\"this.style.backgroundColor='#b6bdd2'\" onmouseout=\"this.style.backgroundColor='#f9f8f7'\"><a id=link href=wp_vlandetail.cgi?UN=%s&VID=%s&SetVlan=%s target=mainFrame>%s</a></div>",encry,vIDTemp,"NoSet",search(lpublic,"configure"));
+							if(0 == strcmp(vIDTemp,"1"))
+								fprintf(cgiOut,"<div id=div2 onmouseover=\"this.style.backgroundColor='#b6bdd2'\" onmouseout=\"this.style.backgroundColor='#f9f8f7'\"><a id=link href=wp_portconfig.cgi?UN=%s&VID=%s target=mainFrame>%s</a></div>",encry,vIDTemp,search(lcontrol,"port_show"));
+							else
+								fprintf(cgiOut,"<div id=div2 onmouseover=\"this.style.backgroundColor='#b6bdd2'\" onmouseout=\"this.style.backgroundColor='#f9f8f7'\"><a id=link href=wp_portconfig.cgi?UN=%s&VID=%s target=mainFrame>%s</a></div>",encry,vIDTemp,search(lcontrol,"port_configure"));
 							fprintf(cgiOut,"<div id=div2 onmouseover=\"this.style.backgroundColor='#b6bdd2'\" onmouseout=\"this.style.backgroundColor='#f9f8f7'\"><a id=link href=wp_configvlan.cgi?UN=%s&VLANID=%u&DELRULE=%s&PN=%s target=mainFrame onclick=\"return confirm('%s')\">%s</a></div>",encry,receive_vlan[i].vlanId,"delete",pageNumCA,search(lcontrol,"confirm_delete"),search(lcontrol,"delete"));
 						}
 						fprintf(cgiOut,"<div id=div2 onmouseover=\"this.style.backgroundColor='#b6bdd2'\" onmouseout=\"this.style.backgroundColor='#f9f8f7'\"><a id=link href=wp_vlanInfo.cgi?UN=%s&VID=%s&VNAME=%s target=mainFrame>%s</a></div>",encry,vIDTemp,receive_vlan[i].vlanName,search(lpublic,"details"));
-						if(retu==0)  /*管理员*/
+						if(retu_checkusr==0)  /*管理员*/
 						fprintf(cgiOut,"<div id=div2 onmouseover=\"this.style.backgroundColor='#b6bdd2'\" onmouseout=\"this.style.backgroundColor='#f9f8f7'\"><a id=link href=wp_configvlan.cgi?UN=%s&VLANID=%u&DELRULE=%s&PN=%s target=mainFrame onclick=\"return confirm('%s')\">%s</a></div>",encry,receive_vlan[i].vlanId,"delete_l3",pageNumCA,search(lcontrol,"confirm_delete"),search(lcontrol,"delete_l3"));
 					}
 					else
 					{
-						if(retu==0)  /*管理员*/
+						if(retu_checkusr==0)  /*管理员*/
 						{
 							fprintf(cgiOut,"<div id=div2 onmouseover=\"this.style.backgroundColor='#b6bdd2'\" onmouseout=\"this.style.backgroundColor='#f9f8f7'\"><a id=link href=wp_vlandetail.cgi?UN=%s&VID=%s&SetVlan=%s target=mainFrame>%s</a></div>",configvlan_encry,vIDTemp,"NoSet",search(lpublic,"configure"));
+							if(0 == strcmp(vIDTemp,"1"))
+								fprintf(cgiOut,"<div id=div2 onmouseover=\"this.style.backgroundColor='#b6bdd2'\" onmouseout=\"this.style.backgroundColor='#f9f8f7'\"><a id=link href=wp_portconfig.cgi?UN=%s&VID=%s target=mainFrame>%s</a></div>",configvlan_encry,vIDTemp,search(lcontrol,"port_show"));
+							else
+								fprintf(cgiOut,"<div id=div2 onmouseover=\"this.style.backgroundColor='#b6bdd2'\" onmouseout=\"this.style.backgroundColor='#f9f8f7'\"><a id=link href=wp_portconfig.cgi?UN=%s&VID=%s target=mainFrame>%s</a></div>",configvlan_encry,vIDTemp,search(lcontrol,"port_configure"));
 							fprintf(cgiOut,"<div id=div2 onmouseover=\"this.style.backgroundColor='#b6bdd2'\" onmouseout=\"this.style.backgroundColor='#f9f8f7'\"><a id=link href=wp_configvlan.cgi?UN=%s&VLANID=%u&DELRULE=%s&PN=%s target=mainFrame onclick=\"return confirm('%s')\">%s</a></div>",configvlan_encry,receive_vlan[i].vlanId,"delete",pageNumCA,search(lcontrol,"confirm_delete"),search(lcontrol,"delete"));
 						}
 						fprintf(cgiOut,"<div id=div2 onmouseover=\"this.style.backgroundColor='#b6bdd2'\" onmouseout=\"this.style.backgroundColor='#f9f8f7'\"><a id=link href=wp_vlanInfo.cgi?UN=%s&VID=%s&VNAME=%s target=mainFrame>%s</a></div>",configvlan_encry,vIDTemp,receive_vlan[i].vlanName,search(lpublic,"details"));
-						if(retu==0)  /*管理员*/
+						if(retu_checkusr==0)  /*管理员*/
 						fprintf(cgiOut,"<div id=div2 onmouseover=\"this.style.backgroundColor='#b6bdd2'\" onmouseout=\"this.style.backgroundColor='#f9f8f7'\"><a id=link href=wp_configvlan.cgi?UN=%s&VLANID=%u&DELRULE=%s&PN=%s target=mainFrame onclick=\"return confirm('%s')\">%s</a></div>",encry,receive_vlan[i].vlanId,"delete_l3",pageNumCA,search(lcontrol,"confirm_delete"),search(lcontrol,"delete_l3"));
 					}
 					fprintf(cgiOut,"</div>"\
@@ -680,24 +689,32 @@ int ShowVlanlistPage()
 						fprintf(cgiOut,"<div id=div1>");
 						if(cgiFormSubmitClicked("submit_search") != cgiFormSuccess && cgiFormSubmitClicked("submit_ret") != cgiFormSuccess)
 						{
-							if(retu==0)  /*管理员*/
+							if(retu_checkusr==0)  /*管理员*/
 							{
 								fprintf(cgiOut,"<div id=div2 onmouseover=\"this.style.backgroundColor='#b6bdd2'\" onmouseout=\"this.style.backgroundColor='#f9f8f7'\"><a id=link href=wp_vlandetail.cgi?UN=%s&VID=%s&SetVlan=%s&SER_TYPE=%s&SER_TEXT=%s&FLAG=%s target=mainFrame>%s</a></div>",encry,vIDTemp,"NoSet",sub_text,search_text,"1",search(lpublic,"configure"));
+								if(0 == strcmp(vIDTemp,"1"))
+									fprintf(cgiOut,"<div id=div2 onmouseover=\"this.style.backgroundColor='#b6bdd2'\" onmouseout=\"this.style.backgroundColor='#f9f8f7'\"><a id=link href=wp_portconfig.cgi?UN=%s&VID=%s target=mainFrame>%s</a></div>",encry,vIDTemp,search(lcontrol,"port_show"));
+								else
+									fprintf(cgiOut,"<div id=div2 onmouseover=\"this.style.backgroundColor='#b6bdd2'\" onmouseout=\"this.style.backgroundColor='#f9f8f7'\"><a id=link href=wp_portconfig.cgi?UN=%s&VID=%s target=mainFrame>%s</a></div>",encry,vIDTemp,search(lcontrol,"port_configure"));
 								fprintf(cgiOut,"<div id=div2 onmouseover=\"this.style.backgroundColor='#b6bdd2'\" onmouseout=\"this.style.backgroundColor='#f9f8f7'\"><a id=link href=wp_configvlan.cgi?UN=%s&VLANID=%u&DELRULE=%s&PN=%s target=mainFrame onclick=\"return confirm('%s')\">%s</a></div>",encry,receive_vlan[locat[i]].vlanId,"delete",pageNumCA,search(lcontrol,"confirm_delete"),search(lcontrol,"delete"));
 							}
 							fprintf(cgiOut,"<div id=div2 onmouseover=\"this.style.backgroundColor='#b6bdd2'\" onmouseout=\"this.style.backgroundColor='#f9f8f7'\"><a id=link href=wp_vlanInfo.cgi?UN=%s&VID=%s&VNAME=%s target=mainFrame>%s</a></div>",encry,vIDTemp,receive_vlan[locat[i]].vlanName,search(lpublic,"details"));
-							if(retu==0)  /*管理员*/
+							if(retu_checkusr==0)  /*管理员*/
 							fprintf(cgiOut,"<div id=div2 onmouseover=\"this.style.backgroundColor='#b6bdd2'\" onmouseout=\"this.style.backgroundColor='#f9f8f7'\"><a id=link href=wp_configvlan.cgi?UN=%s&VLANID=%u&DELRULE=%s&PN=%s target=mainFrame onclick=\"return confirm('%s')\">%s</a></div>",encry,receive_vlan[locat[i]].vlanId,"delete_l3",pageNumCA,search(lcontrol,"confirm_delete"),search(lcontrol,"delete_l3"));
 						}
 						else
 						{
-							if(retu==0)  /*管理员*/
+							if(retu_checkusr==0)  /*管理员*/
 							{
 								fprintf(cgiOut,"<div id=div2 onmouseover=\"this.style.backgroundColor='#b6bdd2'\" onmouseout=\"this.style.backgroundColor='#f9f8f7'\"><a id=link href=wp_vlandetail.cgi?UN=%s&VID=%u&SetVlan=%s&SER_TYPE=%s&SER_TEXT=%s&FLAG=%s target=mainFrame>%s</a></div>",configvlan_encry,receive_vlan[locat[i]].vlanId,"NoSet",sub_text,search_text,"1",search(lpublic,"configure"));
+								if(0 == strcmp(vIDTemp,"1"))
+									fprintf(cgiOut,"<div id=div2 onmouseover=\"this.style.backgroundColor='#b6bdd2'\" onmouseout=\"this.style.backgroundColor='#f9f8f7'\"><a id=link href=wp_portconfig.cgi?UN=%s&VID=%s target=mainFrame>%s</a></div>",configvlan_encry,vIDTemp,search(lcontrol,"port_show"));
+								else
+									fprintf(cgiOut,"<div id=div2 onmouseover=\"this.style.backgroundColor='#b6bdd2'\" onmouseout=\"this.style.backgroundColor='#f9f8f7'\"><a id=link href=wp_portconfig.cgi?UN=%s&VID=%s target=mainFrame>%s</a></div>",configvlan_encry,vIDTemp,search(lcontrol,"port_configure"));
 								fprintf(cgiOut,"<div id=div2 onmouseover=\"this.style.backgroundColor='#b6bdd2'\" onmouseout=\"this.style.backgroundColor='#f9f8f7'\"><a id=link href=wp_configvlan.cgi?UN=%s&VLANID=%u&DELRULE=%s&PN=%s target=mainFrame onclick=\"return confirm('%s')\">%s</a></div>",configvlan_encry,receive_vlan[locat[i]].vlanId,"delete",pageNumCA,search(lcontrol,"confirm_delete"),search(lcontrol,"delete"));
 							}
 							fprintf(cgiOut,"<div id=div2 onmouseover=\"this.style.backgroundColor='#b6bdd2'\" onmouseout=\"this.style.backgroundColor='#f9f8f7'\"><a id=link href=wp_vlanInfo.cgi?UN=%s&VID=%u&VNAME=%s target=mainFrame>%s</a></div>",configvlan_encry,receive_vlan[locat[i]].vlanId,receive_vlan[locat[i]].vlanName,search(lpublic,"details"));
-							if(retu==0)  /*管理员*/
+							if(retu_checkusr==0)  /*管理员*/
 								fprintf(cgiOut,"<div id=div2 onmouseover=\"this.style.backgroundColor='#b6bdd2'\" onmouseout=\"this.style.backgroundColor='#f9f8f7'\"><a id=link href=wp_configvlan.cgi?UN=%s&VLANID=%u&DELRULE=%s&PN=%s target=mainFrame onclick=\"return confirm('%s')\">%s</a></div>",configvlan_encry,receive_vlan[locat[i]].vlanId,"delete_l3",pageNumCA,search(lcontrol,"confirm_delete"),search(lcontrol,"delete_l3"));
 						}
 						fprintf(cgiOut,"</div>"\

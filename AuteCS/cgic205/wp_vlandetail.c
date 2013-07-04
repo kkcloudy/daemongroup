@@ -409,7 +409,7 @@ int show_vlan_detail()
                     //modify by qiandawei 2008.08.7
                     if(strcmp(IDnew,"1")==0 || strcmp(IDForSearch,"1")==0 || strcmp(IDForSelfTurn,"1")==0)
         			{
-                        for(i=0;i<20;i++)
+                        for(i=0;i<16;i++)
         				{
                             fprintf(cgiOut,"<tr height=25>"\
                               "<td id=tdleft>&nbsp;</td>"\
@@ -420,7 +420,7 @@ int show_vlan_detail()
             		else
         			{
 
-                        for(i=0;i<18;i++)
+                        for(i=0;i<14;i++)
         				{
                             fprintf(cgiOut,"<tr height=25>"\
                               "<td id=tdleft>&nbsp;</td>"\
@@ -654,136 +654,11 @@ int show_vlan_detail()
                                 fprintf(cgiOut,"</table>"\
                     		    "</td>"\
                     		    "</tr>");
-                             
-            				  
-                                fprintf(cgiOut,"<tr>"\
-                                "<td id=sec1 style=\"border-bottom:2px solid #53868b;font-size:14px;padding-left:0px;padding-top:0px\">%s</td>",search(lcontrol,"port_conf"));
-                                fprintf(cgiOut,"</tr>");
-        						
+                                     						
                                 fprintf(cgiOut,"<tr>"\
                                 "<td align=center valign=top  style=padding-top:8px>"\
                                 "<table align=left width=400 border=0 cellspacing=0 cellpadding=0>");
-                                fprintf(cgiOut,"<tr height=30>"\
-                                      "<td width=130 align=left id=tdprompt>%s: </td>",search(lcontrol,"tag_port_num"));
-                                      fprintf(cgiOut,"<td align=left width=170>%d</td>",tagNum);
-
-            						
-                                      if((cgiFormSubmitClicked("submit_vlandetail") != cgiFormSuccess) && (cgiFormSubmitClicked("delIP") != cgiFormSuccess) && (cgiFormSubmitClicked("addIP") != cgiFormSuccess) && (cgiFormSubmitClicked("modID") != cgiFormSuccess)&&(cgiFormSubmitClicked("submit_igmp") != cgiFormSuccess)&&(cgiFormSubmitClicked("vlan_filter") != cgiFormSuccess)&&(cgiFormSubmitClicked("addTrunk") != cgiFormSuccess) && cgiFormSubmitClicked("delTrunk") != cgiFormSuccess &&(cgiFormSubmitClicked("Map_intf") != cgiFormSuccess))
-            						  {
-                                        if(IDTemp!=1)  //IDTemp为1表示默认vlan,不能配置端口
-                					  	{
-                                    	  memset(menu,0,21);
-                                          strcpy(menu,"menulist");
-                                    	  strcat(menu,"tag");
-                                          fprintf(cgiOut,"<td align=left style=padding-left:10px>");
-                                                  fprintf(cgiOut,"<div style=\"position:relative; z-index:1\" onmouseover=\"popMenu('%s');\" onmouseout=\"popMenu('%s');\">",menu,menu);
-                                                  fprintf(cgiOut,"<img src=/images/detail.gif>"\
-                                                  "<div id=%s style=\"display:none; position:absolute; top:5px; left:0;\">",menu);
-                                                   fprintf(cgiOut,"<div id=div1>"\
-                                                   "<div id=div2 onmouseover=\"this.style.backgroundColor='#b6bdd2'\" onmouseout=\"this.style.backgroundColor='#f9f8f7'\"><a id=link href=wp_portconfig.cgi?UN=%s&Tag=%s&VID=%s target=mainFrame>%s</a></div>",encry,"Tag",IDForSearch,search(lcontrol,"port_configure"));
-                                            	   fprintf(cgiOut,"</div>"\
-                            					   "</div>"\
-                            					   "</div>"\
-                            					   "</td>");
-            							}
-                						else
-                                            fprintf(cgiOut,"<td>&nbsp;</td>");
-                                	fprintf(cgiOut,"</tr>"\
-                            		 "<tr height=30>"\
-                                      "<td align=left width=130>%s: </td>",search(lcontrol,"untag_port_num"));
-                                    		memset(menu,0,21);
-                                            strcpy(menu,"menulist");
-                                        	strcat(menu,"untag");
-                                              fprintf(cgiOut,"<td align=left width=170>%d</td>",untagNum);
-                                		if(IDTemp!=1)
-            							{
-                                                      fprintf(cgiOut,"<td align=left style=padding-left:10px>");
-                                                      fprintf(cgiOut,"<div style=\"position:relative; z-index:0\" onmouseover=\"popMenu('%s');\" onmouseout=\"popMenu('%s');\">",menu,menu);
-                                                      fprintf(cgiOut,"<img src=/images/detail.gif>"\
-                                                      "<div id=%s style=\"display:none; position:absolute; top:5px; left:0;\">",menu);
-                                                       fprintf(cgiOut,"<div id=div1>"\
-                                                       "<div id=div2 onmouseover=\"this.style.backgroundColor='#b6bdd2'\" onmouseout=\"this.style.backgroundColor='#f9f8f7'\"><a id=link href=wp_portconfig.cgi?UN=%s&VID=%s&Tag=%s target=mainFrame>%s</a></div>",encry,IDForSearch,"Untag",search(lcontrol,"port_configure"));
-                                                	   fprintf(cgiOut,"</div>"\
-                                					   "</div>"\
-                                					   "</div>"\
-                                					   "</td>");
-            							}
-                						else
-                                            fprintf(cgiOut,"<td>&nbsp;</td>");
-                                    		fprintf(cgiOut,"</tr>");
-            						  }
-                					  else
-            						  {
-                        			  if(IDTemp!=1)
-            							{
-                                    	  memset(menu,0,21);
-                                          strcpy(menu,"menulist");
-                                          strcat(menu,"tag");				  
-                                          fprintf(cgiOut,"<td align=left style=padding-left:10px>");
-                                                  fprintf(cgiOut,"<div style=\"position:relative; z-index:1\" onmouseover=\"popMenu('%s');\" onmouseout=\"popMenu('%s');\">",menu,menu);
-                                                  fprintf(cgiOut,"<img src=/images/detail.gif>"\
-                                                  "<div id=%s style=\"display:none; position:absolute; top:5px; left:0;\">",menu);
-                                                   fprintf(cgiOut,"<div id=div1>"\
-                                                   "<div id=div2 onmouseover=\"this.style.backgroundColor='#b6bdd2'\" onmouseout=\"this.style.backgroundColor='#f9f8f7'\"><a id=link href=wp_portconfig.cgi?UN=%s&Tag=%s&VID=%s target=mainFrame>%s</a></div>",detail_encry,"Tag",IDnew,search(lcontrol,"port_configure"));
-                                            	   fprintf(cgiOut,"</div>"\
-                            					   "</div>"\
-                            					   "</div>"\
-                            					   "</td>");
-            							}
-                						else
-                                            fprintf(cgiOut,"<td>&nbsp;</td>");
-                                    		fprintf(cgiOut,"</tr>"\
-                            		 "<tr height=30>"\
-                                      "<td align=left id=tdprompt width=130>%s: </td>",search(lcontrol,"untag_port_num"));
-
-                                    		memset(menu,0,21);
-                                            strcpy(menu,"menulist");
-                                        	strcat(menu,"untag");
-                                            fprintf(cgiOut,"<td align=left width=170>%d</td>",untagNum);
-                                        	if(IDTemp!=1)
-                        						{  
-                                                  fprintf(cgiOut,"<td align=left style=padding-left:10px>");
-                                                  fprintf(cgiOut,"<div style=\"position:relative; z-index:0\" onmouseover=\"popMenu('%s');\" onmouseout=\"popMenu('%s');\">",menu,menu);
-                                                  fprintf(cgiOut,"<img src=/images/detail.gif>"\
-                                                  "<div id=%s style=\"display:none; position:absolute; top:5px; left:0;\">",menu);
-                                                   fprintf(cgiOut,"<div id=div1>"\
-                                                   "<div id=div2 onmouseover=\"this.style.backgroundColor='#b6bdd2'\" onmouseout=\"this.style.backgroundColor='#f9f8f7'\"><a id=link href=wp_portconfig.cgi?UN=%s&VID=%s&Tag=%s target=mainFrame>%s</a></div>",detail_encry,IDnew,"Untag",search(lcontrol,"port_configure"));
-                                            	   fprintf(cgiOut,"</div>"\
-                            					   "</div>"\
-                            					   "</div>"\
-                            					   "</td>");
-                    							}
-                        					else 
-                                                fprintf(cgiOut,"<td>&nbsp;</td>");
-                                            	fprintf(cgiOut,"</tr>");
-                			  
-            					}
-
-        					 
-
-        					}
-
-            				#if 0
-                            //Add by qiandawei on 2008.07.24
-                            if(strcmp(IDnew,"1")==0 || strcmp(IDForSearch,"1")==0 || strcmp(IDForSelfTurn,"1")==0)
-        					{
-        					
-        					}
-            				else
-        					{
-                              fprintf(cgiOut,"<tr height=30 style=padding-top:20px>");
-                                fprintf(cgiOut,"<td>%s:</td>","IGMP");
-                                fprintf(cgiOut,"<td width=70><select name=igmp style=width:138px><option value=enable>start<option value=disable>stop</select></td>"\
-                                "<td align=left style=padding-left:16px><input type=submit style= height:22px  border=0 name=submit_igmp style=background-image:url(/images/SubBackGif.gif) value=\"%s\"></td>",search(lcontrol,"start_stop"));		
-                              fprintf(cgiOut,"</tr>");
-        					}
-            				//end
-                            #endif
-        					
-
-        				
-        					
-                              fprintf(cgiOut,"<tr>");
+        					}        					
                               if((cgiFormSubmitClicked("submit_vlandetail") != cgiFormSuccess) && (cgiFormSubmitClicked("delIP") != cgiFormSuccess) && (cgiFormSubmitClicked("addIP") != cgiFormSuccess) && (cgiFormSubmitClicked("modID") != cgiFormSuccess)&&(cgiFormSubmitClicked("submit_igmp") != cgiFormSuccess)&&(cgiFormSubmitClicked("vlan_filter") != cgiFormSuccess)&&(cgiFormSubmitClicked("addTrunk") != cgiFormSuccess) && cgiFormSubmitClicked("delTrunk") != cgiFormSuccess &&(cgiFormSubmitClicked("Map_intf") != cgiFormSuccess))
             				  {
                                 fprintf(cgiOut,"<td colspan=2><input type=hidden name=encry_detail value=%s></td>",encry);

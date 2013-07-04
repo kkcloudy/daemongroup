@@ -50,7 +50,7 @@ extern "C"
 #include "ws_returncode.h"
 #include "ws_init_dbus.h"
 #include "ws_dbus_list.h"
-
+#include "sysdef/returncode.h"
 #include <fcntl.h>
 #include <sys/mman.h>  
 #include <sys/stat.h>
@@ -607,6 +607,7 @@ int show_vlan_list_slot(struct vlan_info_detail *head,int *vlannum)/*返回0表示失
 	
 	int local_slot_id = get_product_info(LOCAL_SLOTID_FILE);
     int slotNum = get_product_info(SLOT_COUNT_FILE);
+	int slot_count = slotNum;
     if((local_slot_id<0)||(slotNum<0))
     {
     	//vty_out(vty,"get_product_info() return -1,Please check dbm file !\n");
@@ -654,7 +655,7 @@ int show_vlan_list_slot(struct vlan_info_detail *head,int *vlannum)/*返回0表示失
 			strcpy(q->vlanName,mem_vlan_list[vlanId-1].vlanName);
 
 			count_tag =0;
-			for(i = 0; i < 16; i++ )
+			for(i = 0; i < slot_count; i++ )
 			{
     			for(j = 0; j < 64; j++ )
     			{
@@ -688,7 +689,7 @@ int show_vlan_list_slot(struct vlan_info_detail *head,int *vlannum)/*返回0表示失
 			}
 			q->untagnum= count_tag;
 			count_untag = 0;
-			for(i = 0; i < 16; i++ )
+			for(i = 0; i < slot_count; i++ )
 			{
     			for(j = 0; j < 64; j++ )
     			{
@@ -736,7 +737,7 @@ int show_vlan_list_slot(struct vlan_info_detail *head,int *vlannum)/*返回0表示失
 			q->tagnum= count_untag;
             /* print slot this vlan bonded to */
 			count_bond = 0;
-			for(k = 0; k < 10; k++ )
+			for(k = 0; k < slot_count; k++ )
 			{   
 				q->bond_slot[k] = mem_vlan_list[vlanId-1].bond_slot[k];
 				if(mem_vlan_list[vlanId-1].bond_slot[k] != 0)
@@ -1343,10 +1344,48 @@ unsigned short vID
 	return 0;	
 }
 
+static int ccgi_master_slot_id_get(int *master_slot_id)
+{
+    FILE *fd;
+	char buff[8][8];
+	int i;
+	fd = fopen("/dbm/product/master_slot_id", "r");
+	if (fd == NULL)
+	{
+		return -1;
+	}
+	
+	for(i = 0; i < 2; i++)
+	{
+		if(!fgets(buff[i], 8, fd))
+			printf("read error no value\n");
+		master_slot_id[i] = strtoul(buff[i], NULL, 10);
+	}
+	
+	fclose(fd);
+    
+	return 0;	
+}
+
 int addordelete_port(DBusConnection *connection,char * addordel,char * slot_port_no,char * Tagornot,unsigned short vID,char * lan)
+																/*返回0表示失败，返回1表示成功*/
+																/* 返回-1表示operation failed，返回-2表示Unknown portno format*/
+																/*返回-3表示Bad slot/port number，返回-4表示Bad tag parameter*/
+																/*返回-5表示Error occurs in Parse eth-port Index or devNO.& logicPortNo*/
+																/*返回-6表示Port already member of the vlan*/
+																/*返回-7表示Port is not member of the vlan*/
+																/*返回-8表示Port already untagged member of other active vlan*/
+																/*返回-9表示Port Tag-Mode can NOT match*/
+																/*返回-10表示Occcurs error,port is member of a active trunk*/
+																/*返回-11表示Occcurs error,port has attribute of static arp*/	
+																/*返回-12表示Occcurs error,port is member of a pvlan*/
+																/*返回-13表示There are protocol-vlan config on this vlan and port*/
+																/*返回-14表示Can't del an advanced-routing interface port from this vlan*/
+																/*返回-15表示get master_slot_id error，返回-16表示get get_product_info return -1*/
+																/*返回-17表示Please check npd on MCB slot，返回-18表示vlan_list add/delete port Error*/
 {
 
-	if(NULL==connection)
+	if((NULL==connection)||(NULL==addordel)||(NULL==slot_port_no)||(NULL==Tagornot))
 		return 0;
 
 
@@ -1420,7 +1459,7 @@ int addordelete_port(DBusConnection *connection,char * addordel,char * slot_port
         NPD_DBUS_VLAN_METHOD_CONFIG_PORT_MEMBER_ADD_DEL);
     
     dbus_error_init(&err);	
-    
+
     dbus_message_append_args(   query,			
         DBUS_TYPE_BYTE,&isAdd,					
         DBUS_TYPE_BYTE,&slot_no,	
@@ -1452,7 +1491,7 @@ int addordelete_port(DBusConnection *connection,char * addordel,char * slot_port
 			{
 				//vty_out(vty,"%% Bad parameter: Bad slot/port number.\n");
 				//ShowAlert(search(lcontrol,"error_slotno_format"));
-				return -3;
+				retu = -3;
 			}/*either slot or local port No err,return NPD_DBUS_ERROR_NO_SUCH_PORT */
 			else if (VLAN_RETURN_CODE_ERR_NONE == op_ret )
 			{
@@ -1461,13 +1500,13 @@ int addordelete_port(DBusConnection *connection,char * addordel,char * slot_port
 				{
 					//sprintf(message,"%s%s%s%s",search(lcontrol,"add"),Tagornot,search(lcontrol,"_port"),slot_port_no);
 					//ShowAlert(message);
-					return 1;
+					//return 1;
 				}
 				else if(isAdd ==0)
 				{
 					//sprintf(message,"%s%s%s%s",search(lcontrol,"del"),Tagornot,search(lcontrol,"_port"),slot_port_no);
 					//ShowAlert(message);
-					return 1;
+					//return 1;
 				}
 				retu = 1;
 
@@ -1476,32 +1515,32 @@ int addordelete_port(DBusConnection *connection,char * addordel,char * slot_port
 			{
 				//vty_out(vty,"%% Error occurs in Parse eth-port Index or devNO.& logicPortNo.\n");
 				//ShowAlert(search(lcontrol,"parse_index_error"));
-				return -5;
+				retu = -5;
 			}
 			else if (VLAN_RETURN_CODE_VLAN_NOT_EXISTS == op_ret)
 			{
 				//vty_out(vty,"%% Error: Checkout-vlan to be configured NOT exists on SW.\n");
 				//return COMMON_FAIL;
 				//ShowAlert(search(lcontrol,"opt_fail"));
-				return -1;
+				retu = -1;
 			}
 			else if (VLAN_RETURN_CODE_PORT_EXISTS == op_ret)
 			{
 				//vty_out(vty,"%% Bad parameter: port Already member of the vlan.\n");
 				//ShowAlert(search(lcontrol,"port_AlreadyExist"));
-				return -6;
+				retu = -6;
 			}
 			else if (VLAN_RETURN_CODE_PORT_NOTEXISTS == op_ret)
 			{
 				//vty_out(vty,"%% Bad parameter: port NOT member of the vlan.\n");
 				//ShowAlert(search(lcontrol,"port_NotExist"));
-				return -7;
+				retu = -7;
 			}
 			else if (VLAN_RETURN_CODE_PORT_MBRSHIP_CONFLICT == op_ret) 
 			{
 				//vty_out(vty,"%% Bad parameter: port Already untagged member of other active vlan.\n");
 				//ShowAlert(search(lcontrol,"tag_only"));		
-				return -8;
+				retu = -8;
 				
 			}			
 			else if (VLAN_RETURN_CODE_PORT_PROMIS_PORT_CANNOT_ADD2_VLAN == op_ret) 
@@ -1509,68 +1548,74 @@ int addordelete_port(DBusConnection *connection,char * addordel,char * slot_port
 				//vty_out(vty,"%% Promiscous port %d/%d can't be added to any vlan!\n",slotno,portno);
 				//return COMMON_FAIL;
 				//ShowAlert(search(lcontrol,"opt_fail"));
-				return -1;
+				retu = -1;
 			}
 			else if (VLAN_RETURN_CODE_PORT_PROMISCUOUS_MODE_ADD2_L3INTF == op_ret)
 			{
 				//vty_out(vty,"%% Bad parameter: promiscuous mode port can't add to l3 interface!\n");
 				//return COMMON_FAIL;
 				//ShowAlert(search(lcontrol,"opt_fail"));
-				return -1;
+				retu = -1;
 			}
 			else if (VLAN_RETURN_CODE_PORT_TAG_CONFLICT == op_ret) 
 			{
 				//vty_out(vty,"%% Bad parameter: port Tag-Mode can NOT match!\n");
 				//ShowAlert(search(lcontrol,"tagmode_not_match"));
-				return -9;
+				retu = -9;
 			}
 			else if (VLAN_RETURN_CODE_PORT_SUBINTF_EXISTS == op_ret)
 			{
 				//vty_out(vty,"%% Can't delete tag port with sub interface!\n");
 				//return COMMON_FAIL;
 				//ShowAlert(search(lcontrol,"opt_fail"));
-				return -1;
+				retu = -1;
 			}
 			else if (VLAN_RETURN_CODE_PORT_DEL_PROMIS_PORT_TO_DFLT_VLAN_INTF == op_ret)
 			{
 				//vty_out(vty,"%% Promiscuous mode port can't delete!\n");
 				//return COMMON_FAIL;
 				//ShowAlert(search(lcontrol,"opt_fail"));
-				return -1;
+				retu = -1;
 			}
 			else if (VLAN_RETURN_CODE_PORT_TRUNK_MBR == op_ret) 
 			{
 				//vty_out(vty,"%% Bad parameter: port is member of a active trunk!\n");
 				//ShowAlert(search(lcontrol,"port_member_trunk"));
-				return -10;
+				retu = -10;
 								
 			}
 			else if (VLAN_RETURN_CODE_ARP_STATIC_CONFLICT == op_ret) 
 			{
 				//vty_out(vty,"%% Bad parameter: port has attribute of static arp!\n");
 				//ShowAlert(search(lcontrol,"port_static_arp"));
-				return -11;
+				retu = -11;
 			}
 			else if(PVLAN_RETURN_CODE_THIS_PORT_HAVE_PVE == op_ret)
 			{
 				//vty_out(vty,"%% Bad parameter: port is pvlan port!please delete pvlan first!\n")
 				//ShowAlert(search(lcontrol,"prot_member_pvlan"));;
-				return -12;
+				retu = -12;
 			}
+            else if(VLAN_RETURN_CODE_HAVE_PROT_VLAN_CONFIG == op_ret)
+			{
+    			//vty_out(vty,"%% There are protocol-vlan config on this vlan and port!\n");
+    			return -13;
+    		}
 			else if (VLAN_RETURN_CODE_L3_INTF == op_ret) 
 			{
 				if(isAdd) 
 				{
 					//vty_out(vty,"%% Port adds to L3 interface vlan %d.\n",vlanid);
 					//ShowAlert(search(lcontrol,"opt_fail"));
-					return -1;
+					//return -1;
 				}
 				else 
 				{
 					//vty_out(vty,"%% L3 interface vlan member can NOT delete here.\n");
 					//ShowAlert(search(lcontrol,"opt_fail"));
-					return -1;
+					//return -1;
 				}
+				retu = -1;
 			}
 			else if (VLAN_RETURN_CODE_PORT_L3_INTF == op_ret) 
 			{
@@ -1579,33 +1624,39 @@ int addordelete_port(DBusConnection *connection,char * addordel,char * slot_port
 					//vty_out(vty,"%% Port can NOT add to vlan as port is L3 interface.\n");
 					//return COMMON_FAIL;
 					//ShowAlert(search(lcontrol,"opt_fail"));
-					return -1;
+					//return -1;
 				}
 				else 
 				{
 					//vty_out(vty,"%% Port can NOT delete from vlan as port is L3 interface.\n");
 					//return COMMON_FAIL;
 					//ShowAlert(search(lcontrol,"opt_fail"));
-					return -1;
+					//return -1;
 				}
+				retu = -1;
 			}
 			else if (VLAN_RETURN_CODE_ERR_HW == op_ret) 
 			{
 				//vty_out(vty,"%% Error occurs in Config on HW.\n");	
 				//ShowAlert(search(lcontrol,"HW_error"));	
-				return -1;
+				retu = -1;
 			}
 			else if (ETHPORT_RETURN_CODE_UNSUPPORT == op_ret)
 			{
 				//vty_out(vty,"%% This operation is unsupported!\n");
 				//return COMMON_FAIL;
 				//ShowAlert(search(lcontrol,"opt_fail"));
-				return -1;
+				retu = -1;
 			}
+    		else if(VLAN_RETURN_CODE_PROMIS_PORT_CANNOT_DEL == op_ret)
+			{
+    			//vty_out(vty,"%% Can't del an advanced-routing interface port from this vlan\n");
+				retu = -14;
+    		}
 			else if (VLAN_RETURN_CODE_ERR_NONE != op_ret)
 			{
 				//vty_out(vty,"%% Unknown Error! return %d \n",op_ret);
-				return -1;
+				retu = -1;
 			}		
 
             //////////////////////
@@ -1617,10 +1668,88 @@ int addordelete_port(DBusConnection *connection,char * addordel,char * slot_port
     	{			
             dbus_error_free(&err);		
     	}	
-		return -1;
+		retu = -1;
 	}
     dbus_message_unref(reply);
-    return retu;
+
+	if( 1 != retu){
+		return retu;
+	}
+
+
+	int i = 0,slot_id =0;	
+   	int master_slot_id[2] = {-1, -1};	
+	void *connection_master = NULL;
+    int master_slot_count = get_product_info("/dbm/product/master_slot_count");
+	int local_slot_id = get_product_info("/dbm/local_board/slot_id");
+
+   	ret = ccgi_master_slot_id_get(master_slot_id);
+	if(ret !=0 )
+	{
+		//vty_out(vty,"get master_slot_id error !\n");
+		return -15;		
+   	}
+	if((local_slot_id<0)||(master_slot_count<0))
+	{
+		//vty_out(vty,"get get_product_info return -1 !\n");
+		return -16;		
+   	}
+
+    for(i=0;i<master_slot_count;i++)
+    {
+
+		slot_id = master_slot_id[i];
+    	query = NULL;
+    	reply = NULL;
+    	query = dbus_message_new_method_call(NPD_DBUS_BUSNAME,	\
+    										NPD_DBUS_VLAN_OBJPATH,	\
+    										NPD_DBUS_VLAN_INTERFACE,	\
+    										NPD_DBUS_VLAN_METHOD_CONFIG_VLANLIST_PORT_MEMBER_ADD_DEL);
+    	
+    	dbus_error_init(&err);
+
+    	dbus_message_append_args(	query,
+    							 	DBUS_TYPE_BYTE,&isAdd,
+    								DBUS_TYPE_BYTE,&slot_no,
+    								DBUS_TYPE_BYTE,&local_port_no,
+    							 	DBUS_TYPE_BYTE,&isTagged,
+    							 	DBUS_TYPE_UINT16,&vlanId,
+    							 	DBUS_TYPE_INVALID);
+
+		if(SNMPD_DBUS_SUCCESS != get_slot_dbus_connection(slot_id, &connection_master, SNMPD_INSTANCE_MASTER_V3))
+		{
+			reply = dbus_connection_send_with_reply_and_block (ccgi_dbus_connection,query,-1, &err);
+		}
+		else
+		{
+			reply = dbus_connection_send_with_reply_and_block (connection_master,query,-1, &err);				
+		}
+			    	
+    	dbus_message_unref(query);
+    	if (NULL == reply) {
+    		//vty_out(vty,"Please check npd on MCB slot %d\n",slot_id);
+    		return -17;
+    	}
+
+    	if (dbus_message_get_args ( reply, &err,
+    		DBUS_TYPE_UINT32,&op_ret,
+    		DBUS_TYPE_INVALID)) {
+    		if (VLAN_RETURN_CODE_ERR_NONE != op_ret){
+    			//vty_out(vty,"%% vlan_list add/delete port Error! return %d \n",op_ret);
+				retu = -18;
+    		}		
+    	} 
+    	else {
+    		//vty_out(vty,"Failed get args,Please check npd on MCB slot %d\n",slot_id);
+			retu = -17;
+    	}
+    	dbus_message_unref(reply);
+    	if(VLAN_RETURN_CODE_ERR_NONE != op_ret)
+    	{
+    		return retu;
+    	}
+    }
+	return 1;	
 }
 
 int setVID(unsigned short vidOld,char * vidnew)   /*设定返回值，0为成功，-1为执行失败*/
@@ -3045,6 +3174,297 @@ int show_vlan_egress_filter()
 }
 
 #endif 
+
+void get_vlan_ports_collection(struct vlan_ports_collection *ports)
+{
+	int ret = 0, vlanNum = 0, i = 0, j = 0;
+	struct vlan_info_detail  vhead,*vq=NULL;
+	int slot_count = get_product_info(SLOT_COUNT_FILE);	
+
+	for(i = 0; i < slot_count; i++ )
+	{
+		ports[i+1].have_port = 0;
+		ports[i+1].port_min = 0;
+		ports[i+1].port_max = 0;
+	}
+	
+	memset(&vhead,0,sizeof(struct vlan_info_detail));
+	ret = show_vlan_list_slot(&vhead, &vlanNum);
+	if(1 == ret)
+	{
+		for(vq = vhead.next; vq; vq = vq->next)
+		{
+			for(i = 0; i < slot_count; i++ )
+			{
+				for(j = 0; j < 64; j++ )
+				{
+					if(j<32)
+					{
+						if((vq->untagPortBmp[i].low_bmp)&(1<<j))
+						{
+							if(0 == ports[i+1].have_port)
+							{
+								ports[i+1].port_min = j+1;
+								ports[i+1].port_max = j+1;
+								ports[i+1].have_port = 1;
+							}
+							else
+							{
+								ports[i+1].port_min = ((ports[i+1].port_min < j+1)?ports[i+1].port_min:j+1);
+								ports[i+1].port_max = ((ports[i+1].port_max > j+1)?ports[i+1].port_max:j+1);
+							}
+						}
+						else
+						{
+							continue;
+						}
+					}
+					else
+					{
+						if((vq->untagPortBmp[i].high_bmp)&(1<<(j-32)))
+						{
+							if(0 == ports[i+1].have_port)
+							{
+								ports[i+1].port_min = j+1;
+								ports[i+1].port_max = j+1;
+								ports[i+1].have_port = 1;
+							}
+							else
+							{
+								ports[i+1].port_min = ((ports[i+1].port_min < j+1)?ports[i+1].port_min:j+1);
+								ports[i+1].port_max = ((ports[i+1].port_max > j+1)?ports[i+1].port_max:j+1);
+							}
+						}
+						else
+						{
+							continue;
+						}								
+					}
+				}				
+			}
+
+			for(i = 0; i < slot_count; i++ )
+			{
+    			for(j = 0; j < 64; j++ )
+    			{    				
+					if(j<32)
+					{
+						if((vq->tagPortBmp[i].low_bmp)&(1<<j))
+                    	{
+    						if(0 == ports[i+1].have_port)
+							{
+								ports[i+1].port_min = j+1;
+								ports[i+1].port_max = j+1;
+								ports[i+1].have_port = 1;
+							}
+							else
+							{
+								ports[i+1].port_min = ((ports[i+1].port_min < j+1)?ports[i+1].port_min:j+1);
+								ports[i+1].port_max = ((ports[i+1].port_max > j+1)?ports[i+1].port_max:j+1);
+							}
+                    	}
+    					else
+    					{
+    						continue;
+    					}													
+					}
+					else
+					{
+                        if((vq->tagPortBmp[i].high_bmp)&(1<<(j-32)))
+                    	{
+    						if(0 == ports[i+1].have_port)
+							{
+								ports[i+1].port_min = j+1;
+								ports[i+1].port_max = j+1;
+								ports[i+1].have_port = 1;
+							}
+							else
+							{
+								ports[i+1].port_min = ((ports[i+1].port_min < j+1)?ports[i+1].port_min:j+1);
+								ports[i+1].port_max = ((ports[i+1].port_max > j+1)?ports[i+1].port_max:j+1);
+							}
+                    	}
+    					else
+    					{
+    						continue;
+    					}									
+					}
+    			}				
+			}
+		}
+	}
+	Free_show_vlan_list_slot(&vhead);
+}
+
+/*tag_flag:1:Untagged 2:Tagged 3:non-members*/
+int get_vlan_port_member_tagflag(int vlan_id,char *port,int *tag_flag)/*返回0表示失败，返回1表示成功*/
+																			/*返回-1表示Failed to open file，返回-2表示Failed to mmap*/
+																			/*返回-3表示vlan is NOT exists，返回-4表示Failed to munmap*/
+																			/*返回-5表示close shm_vlan failed*/
+{
+	if(NULL == port)
+		return 0;
+
+	*tag_flag = 3;
+	
+	unsigned short	vlanId = 0;
+	unsigned int	ret = 0;
+	unsigned int 	i = 0;
+	char temp_port[10] = { 0 };
+	int retu = 0;
+	
+	/*ret = parse_vlan_no((char*)argv[0],&vlanId);
+
+	if (NPD_FAIL == ret) {
+		vty_out(vty,"% Bad parameter :vlan ID illegal!\n");
+		return CMD_SUCCESS;
+	}*/
+	vlanId = vlan_id;
+
+    /* read vlan info from file: shm_vlan ,zhangdi@autelan.com */		
+	int	count_tag =0;
+	int	count_untag =0;		
+    int slot_count = get_product_info(SLOT_COUNT_FILE);
+	
+	int fd = -1, j=0;
+	struct stat sb;
+
+	vlan_list_t * mem_vlan_list =NULL;
+	char* file_path = "/dbm/shm/vlan/shm_vlan";
+	/* only read file */
+    fd = open(file_path, O_RDONLY);
+	if(fd < 0)
+    {
+        return -1;
+    }
+	fstat(fd,&sb);
+	/* map not share */	
+    mem_vlan_list = (vlan_list_t *)mmap(NULL, sb.st_size, PROT_READ, MAP_SHARED, fd, 0 );
+    if(MAP_FAILED == mem_vlan_list)
+    {
+		close(fd);
+        return -2;
+    }	
+
+    if(mem_vlan_list[vlanId-1].vlanStat == 1)
+	{		
+		count_untag =0;
+		for(i = 0; i < slot_count; i++ )
+		{
+			for(j = 0; j < 64; j++ )
+			{
+				if(j<32)
+				{
+                    if((mem_vlan_list[vlanId-1].untagPortBmp[i].low_bmp)&(1<<j))
+                	{
+                		memset(temp_port, 0, sizeof(temp_port));
+						snprintf(temp_port, sizeof(temp_port)-1, "%d/%d", i+1, j+1);
+
+						if(0 == strcmp(temp_port,port))
+						{
+							*tag_flag = 1;
+							retu = 1;
+							goto munmap_close;
+						}
+            			count_untag++;						
+                	}
+					else
+					{
+						continue;
+					}
+				}
+				else
+				{
+                    if((mem_vlan_list[vlanId-1].untagPortBmp[i].high_bmp)&(1<<(j-32)))
+                	{
+						memset(temp_port, 0, sizeof(temp_port));
+						snprintf(temp_port, sizeof(temp_port)-1, "%d/%d", i+1, j+1);
+
+						if(0 == strcmp(temp_port,port))
+						{
+							*tag_flag = 1;
+							retu = 1;
+							goto munmap_close;
+						}
+            			count_untag++;						
+                	}
+					else
+					{
+						continue;
+					}								
+				}
+			}				
+		}
+
+		count_tag = 0;
+		for(i = 0; i < slot_count; i++ )
+		{
+			for(j = 0; j < 64; j++ )
+			{
+				if(j<32)
+				{
+                    if((mem_vlan_list[vlanId-1].tagPortBmp[i].low_bmp)&(1<<j))
+                	{
+						memset(temp_port, 0, sizeof(temp_port));
+						snprintf(temp_port, sizeof(temp_port)-1, "%d/%d", i+1, j+1);
+
+						if(0 == strcmp(temp_port,port))
+						{
+							*tag_flag = 2;
+							retu = 1;
+							goto munmap_close;
+						}
+            			count_tag++;													
+                	}
+					else
+					{
+						continue;
+					}													
+				}
+				else
+				{
+                    if((mem_vlan_list[vlanId-1].tagPortBmp[i].high_bmp)&(1<<(j-32)))
+                	{
+						memset(temp_port, 0, sizeof(temp_port));
+						snprintf(temp_port, sizeof(temp_port)-1, "%d/%d", i+1, j+1);
+
+						if(0 == strcmp(temp_port,port))
+						{
+							*tag_flag = 2;
+							retu = 1;
+							goto munmap_close;
+						}
+            			count_tag++;													
+                	}
+					else
+					{
+						continue;
+					}									
+				}
+			}				
+		}
+	}
+    else
+	{
+        /* do nothing */
+		retu = -3;
+	}
+
+munmap_close:
+	/* munmap and close fd */
+    ret = munmap(mem_vlan_list,sb.st_size);
+    if( ret != 0 )
+    {
+		retu = -4;
+    }	
+	ret = close(fd);
+	if( ret != 0 )
+    {
+		retu = -5;
+    }
+
+    return retu;				
+}	
 
 #ifdef __cplusplus
 }
