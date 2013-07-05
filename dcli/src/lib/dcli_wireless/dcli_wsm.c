@@ -1874,7 +1874,7 @@ DBusMessage *dbus_msg_new_method_call(int local,unsigned char *dbus_name, unsign
 
 void dcli_wsm_init(void)
 {
-	install_node(&cwtunnel_node, NULL/*dcli_capwap_tunnel_show_running_config_start*/, "CWTUNNEL_NODE");
+	install_node(&cwtunnel_node, dcli_capwap_tunnel_show_running_config_start/*NULL/*dcli_capwap_tunnel_show_running_config_start*/, "CWTUNNEL_NODE");
 	install_default(CWTUNNEL_NODE);
 	install_element(CONFIG_NODE, &config_tunnel_cmd);
 	install_element(CWTUNNEL_NODE,&set_tunnel_flow_based_forwarding_cmd);
