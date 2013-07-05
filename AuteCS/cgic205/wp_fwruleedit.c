@@ -29,45 +29,125 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *
 *******************************************************************************/
 
-#include <stdio.h>
-#include "cgic.h"
-#include <string.h>
+#include <dbus/dbus.h>
 #include <stdlib.h>
+#include <sysdef/npd_sysdef.h>
+#include <netinet/in.h>
+#include <string.h>
+#include <stdio.h>
+#include <ctype.h>
+
+
+#include "cgic.h"
 #include "ws_err.h"
-#include "ws_usrinfo.h"
-#include "ws_ec.h"
+#include "ws_public.h"
 #include "ws_firewall.h"
+#include "ws_init_dbus.h"
+#include "ws_dcli_vrrp.h"
+#include "ws_dbus_list_interface.h"
+
+#include "ac_manage_def.h"
+#include "ac_manage_firewall_interface.h"
+
 
 #define HOST_SET_ENGABLE	0
 #define PORT_COLLECTION_ENABLE	0
 #define DEFAULT_NETWORK_ENABLE	0
 
+#define _DEBUG	1
+
+#if _DEBUG
+#define debug_printf(a...) fprintf(a)
+#else
+#define debug_printf(a...)
+#endif
+
+#define BUF_LEN					32
+#define FIREWALL_MAX_RULE_NUM			256
+#define FW_MAX_PKG_STATE_LEN			64
+#define FW_MAX_STR_FILTER_LEN			BUF_LEN
+#define MAX_SLOT				16
+
+
+static int slot_id = 1;
+static instance_parameter *paraHead1 = NULL;
+static void *ccgi_connection = NULL;
+static char plotid[10] = {0};
+
+
 static int showInterfaceSelector( char *selectName, char *onchangestr, char *disable );
+
+static fwRule *
+ccgi_firewall_get_rule_by_index(int index, int rule_type)
+{
+	u_long rule_num = 0;
+	fwRule *rule_array = NULL;
+	int ret = 0;
+	fwRule *rule = NULL;
+
+	ret = ac_manage_show_firewall_rule(ccgi_connection, NULL, NULL, &rule_array, &rule_num);
+
+	if(AC_MANAGE_SUCCESS == ret && rule_array && rule_num) {
+		int j = 0;
+		for (; j < rule_num; j++) {
+			if (rule_array[j].type == rule_type && rule_array[j].id == index) {
+				rule = malloc(sizeof(fwRule));
+				if (rule) {
+					memcpy(rule, &(rule_array[j]), sizeof(fwRule));
+				}
+				break;
+			}
+		}
+		firewall_free_array(&rule_array, rule_num);
+	}
+	return rule;
+}
 
 int cgiMain()
 {
 //#ifdef _MANAGE_FIREWALL_ 
 
-		char ruleType[10]="";
-		char editType[10]="";
-		char ruleNum[10]="";
-		fwRuleList *list=NULL;
-		fwRule *rule=NULL;
-		char *encry=(char *)malloc(BUF_LEN);
-		char *str;
-		struct list *lpublic;
-		struct list *lfirewall;
-		
-		lpublic=get_chain_head("../htdocs/text/public.txt");
-		lfirewall=get_chain_head("../htdocs/text/firewall.txt");
-	 	memset(encry,0,BUF_LEN);
-	  	cgiFormStringNoNewlines("UN", encry, BUF_LEN);
-	  	str=dcryption(encry);
-	  	if(str==NULL)
-	  	{
-			ShowErrorPage(search(lpublic,"ill_user")); 		 /*用户非法*/
-			return 0;
-	  	}
+	char ruleType[10]="";
+	char editType[10]="";
+	char ruleNum[10]="";
+	fwRuleList *list=NULL;
+	fwRule *rule=NULL;
+	char *encry=(char *)malloc(BUF_LEN);
+	char *str;
+	struct list *lpublic;
+	struct list *lfirewall;
+	instance_parameter *p_q = NULL;
+
+	DcliWInit();
+	ccgi_dbus_init();
+	
+	lpublic=get_chain_head("../htdocs/text/public.txt");
+	lfirewall=get_chain_head("../htdocs/text/firewall.txt");
+	memset(encry,0,BUF_LEN);
+	cgiFormStringNoNewlines("UN", encry, BUF_LEN);
+	str=dcryption(encry);
+	if(str==NULL)
+	{
+		ShowErrorPage(search(lpublic,"ill_user")); 		 /*用户非法*/
+		return 0;
+	}
+
+	memset(plotid,0,sizeof(plotid));
+	cgiFormStringNoNewlines("plotid", plotid, sizeof(plotid)); 
+	fprintf(stderr, "----------------------------------------------plotid=%s\n", plotid);
+
+	list_instance_parameter(&paraHead1, SNMPD_SLOT_CONNECT);
+	if (NULL == paraHead1) {
+		return 0;
+	}
+	if(strcmp(plotid, "") == 0) {
+		slot_id = paraHead1->parameter.slot_id;
+	} else {
+		slot_id = atoi(plotid);
+	}
+	ccgi_ReInitDbusConnection(&ccgi_connection, slot_id, DISTRIBUTFAG);
+	fprintf(stderr, "----------------------------------------------plotid=%s\n", plotid);
+	
 
 		
 		cgiHeaderContentType("text/html");
@@ -138,8 +218,6 @@ int cgiMain()
 		fprintf( cgiOut, "</script> \n" );
 		fprintf( cgiOut, "<body> \n" );
 		fprintf( cgiOut, "<form action='wp_fwrulemodify.cgi' method='post' onSubmit='return isAllLegal(this);'> \n" );
-		
-		
 		
 		fprintf( cgiOut, "<input type='hidden' name='ruleType' value='%s'>", ruleType );
 		fprintf( cgiOut, "<input type='hidden' name='UN' value='%s'>", encry );
@@ -241,23 +319,24 @@ int cgiMain()
 		fprintf( cgiOut, "</tr> \n" );
 		fprintf( cgiOut, "<tr height=350px> \n" );
 		fprintf( cgiOut, "<td id='FILL_OBJ' style='height:100px;padding-left:10px;border-right:1px solid #707070;color:#000000;text-align:center'>&nbsp;</td> \n" );
-		fprintf( cgiOut, "</tr> \n" );
+		fprintf( cgiOut, "</tr> \n" );		
 		fprintf( cgiOut, "</table>\n" );
 		fprintf( cgiOut, "</td> \n" );
 		fprintf( cgiOut, "<td align=left style=\"background-color:#ffffff; border-right:1px solid #707070; padding-left:30px\"><div id=\"rules\" align=\"left\" style=\"width:768px;overflow:auto\"> \n" );
 		fprintf( cgiOut, "<div> \n" );
-		fprintf( cgiOut, " \n" );
+		fprintf( cgiOut, " \n" );		
 		fprintf( cgiOut, "<div class=\"col1\"> \n" );
 		fprintf( cgiOut, "<label class=\"col1\">%s</label> \n", search( lfirewall, "ruleedit_pos" ) );
 		fprintf( cgiOut, "<span class=\"col2\" > \n" );
-		fprintf( cgiOut, "<input type='hidden' name='ruleIndexUserSelected' value='' />" );
-		fprintf( cgiOut, "<select name='ruleIndexSelect' onchange='indexSelectChange()'>\n" );
+		//fprintf( cgiOut, "<input type='hidden' name='ruleIndexUserSelected' value='' />" );
+		//fprintf( cgiOut, "<select name='ruleIndexSelect' onchange='indexSelectChange()'>\n" );
 #if 1
 		{
 			int j;
 			int ruleNuma = 0;
 			char ruleIDStr[10]="";
 			int ruleID = 0;
+			int rule_type = 0;
 			
 			cgiFormStringNoNewlines( "ruleNum", ruleNum, sizeof(ruleNum) );
 			sscanf( ruleNum, "%d", (int *)&ruleNuma );
@@ -267,35 +346,20 @@ int cgiMain()
 			
 			if( strcmp(editType,"edit") == 0 )
 			{
-				fprintf( cgiOut, "<option value='%d' ", ruleID);
-				fprintf( cgiOut, " selected='selected'" );
-				fprintf( cgiOut, ">%d</option>\n", ruleID );
-				//得到当前需要编辑的rule的信息
-//				list=(fwRuleList *)malloc(sizeof(fwRuleList));
-//				memset( list, 0, sizeof(fwRuleList) );
-//				fwParseDoc( list );
+				fprintf( cgiOut, "<input name='ruleIndexUserSelected' value=%s />", ruleIDStr);
 				
-				if( strcmp( ruleType, "FW_SNAT" ) == 0 )
-				{
-					rule = list->snat;
+				
+				if (strcmp("FW_DNAT", ruleType) == 0) {
+					rule_type = FW_DNAT;
+				} else if(strcmp("FW_SNAT",ruleType) == 0) {
+					rule_type = FW_SNAT;
+				} else if(strcmp("FW_INPUT",ruleType) == 0) {
+					rule_type = FW_INPUT;
+				} else {
+					rule_type = FW_WALL;
 				}
-				else if( strcmp( ruleType, "FW_DNAT" ) == 0 )
-				{
-					rule = list->dnat;
-				}
-				else if( strcmp( ruleType, "FW_INPUT" ) == 0 )
-				{
-					rule = list->input;
-				}
-				else 
-				{
-					rule = list->wall;
-				}
-				j = ruleID;
-				if( NULL != rule )
-				{
-					for( ; (rule!=NULL)&&(j>1); rule=rule->next, j-- ){;}
-				}
+
+				rule = ccgi_firewall_get_rule_by_index(ruleID, rule_type);
 				
 				if( NULL == rule )
 				{
@@ -306,20 +370,37 @@ int cgiMain()
 			}
 			else
 			{		
-				for( j = 1; j <= ruleNuma+1; j++ ){
-					fprintf( cgiOut, "<option value='%d' ", j);
-					if( j == ruleNuma+1 )
-					{
-						fprintf( cgiOut, " selected='selected'" );
-					}
-					fprintf( cgiOut, ">%d</option>\n", j );
-				}
+				fprintf( cgiOut, "<input name='ruleIndexUserSelected' value='' />");
 			}
 		}
 #endif	
 
-		fprintf( cgiOut, "</select></span> </div> \n" );
+		//fprintf( cgiOut, "</select></span> </div> \n" );
 		
+		fprintf( cgiOut, "<div class=\"col1\">\n" );
+		fprintf( cgiOut, "<label class=\"col1\">%s</label> \n", search( lfirewall, "slot_num") );
+		fprintf( cgiOut, "<span class=\"col2\"><select name=plotid id=plotid style=width:72px onchange=plotid_change(this)></span>\n");
+		for(p_q=paraHead1;(NULL != p_q);p_q=p_q->next)
+		{
+			if(p_q->parameter.slot_id == slot_id)
+			{
+				fprintf(cgiOut,"<option value=\"%d\" selected>%d</option>",p_q->parameter.slot_id,p_q->parameter.slot_id);
+			}
+			else
+			{
+				fprintf(cgiOut,"<option value=\"%d\">%d</option>",p_q->parameter.slot_id,p_q->parameter.slot_id);
+			}		
+		}
+		fprintf(cgiOut, "<script type=text/javascript>\n");
+		fprintf(cgiOut, "function plotid_change( obj )\n"\
+				"{\n"\
+				"var plotid = obj.options[obj.selectedIndex].value;\n"\
+				"var url = 'wp_fwruleview.cgi?UN=%s&ruleType=%s&plotid='+plotid;\n"\
+				"window.location.href = url;\n"\
+				"}\n", encry, ruleType);
+		fprintf(cgiOut,"</script>\n");
+		fprintf( cgiOut, "</div> \n" );
+		#if 0
 		fprintf( cgiOut, "<script type=text/javascript>\n" );
 		fprintf( cgiOut, "function indexSelectChange(){\n"\
 		"	var sel=document.getElementsByName('ruleIndexSelect')[0];\n"\
@@ -328,7 +409,7 @@ int cgiMain()
 		"}" );
 //		fprintf( cgiOut, "indexSelectChange();\n" );
 		fprintf( cgiOut, "</script>\n" );
-		
+		#endif
 		fprintf( cgiOut, "<div class=\"col1\"> \n" );
 		fprintf( cgiOut, "<label class=\"col1\">%s</label> \n", search( lfirewall, "ruleedit_description") );
 		fprintf( cgiOut, "<span class=\"col2\"> \n" );
@@ -1510,10 +1591,17 @@ int cgiMain()
 		fprintf( cgiOut, "</html> \n" );
 		fprintf( cgiOut, " \n" );
 		fprintf( cgiOut, " \n" );
+
+		if (NULL != rule) {
+			free(rule);
+		}
 		
 		free( encry );
 		//fwFreeList(list);		
 		release(lpublic); 
+		release(lfirewall);
+		
+		free_instance_parameter_list(&paraHead1);
 //#endif		
 		return 0;	
 }
