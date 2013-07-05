@@ -1797,6 +1797,7 @@ void *wid_bak_thread()
 	tmp.Type = B_AC_REQUEST;
 	tmp.Op = slotid;
 	check_license(&tmp);
+	int b_ac_request_only_one_flag = 1;  //fengwenchao add for axsszfi-1770
 //	printf("WID_BAK_THREAD\n");
 	while(is_secondary == 1){
 		if(local){
@@ -1824,7 +1825,7 @@ void *wid_bak_thread()
 		
 		int n = 0;
 		int ret = 0;
-		while(n <= 1){
+		while((n <= 1)&&(b_ac_request_only_one_flag == 1)){  //fengwenchao add for axsszfi-1770. we conside B_AC_REQUEST can only send one,even though happened bak recv erro.
 			wid_syslog_info("sendto master ac,n:%d\n",n);
 			while((ret = sendto(wid_bak_sock,(char *)&tmp, sizeof(B_Msg),0,(struct sockaddr *)&M_addr, sizeof(struct sockaddr))) <= 0){
 				wid_syslog_info("sendto master ac error,resend\n");
@@ -1832,7 +1833,8 @@ void *wid_bak_thread()
 				sleep(1);
 				continue;
 			}
-			if( ret > 0){
+			if( ret > 0){		
+				b_ac_request_only_one_flag = 0; //fengwenchao add for axsszfi-1770
 				break;
 			}	
 			sleep(1);
