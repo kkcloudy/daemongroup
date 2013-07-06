@@ -266,9 +266,13 @@ int ShowExportConfPage(struct list *lpublic, struct list *lsystem)
 					  "<td align=left id=tdleft><a href=wp_ntp.cgi?UN=%s target=mainFrame class=top><font id=%s>%s</font></a></td>",encry,search(lpublic,"menu_san"),search(lpublic,"ntp_s"));
 					fprintf(cgiOut,"</tr>\n");
 					//新增pppoe条目
-        					fprintf(cgiOut,"<tr height=25>"\
-        					  "<td align=left id=tdleft><a href=wp_pppoe_server.cgi?UN=%s target=mainFrame class=top><font id=%s>%s</font></a></td>",encry,search(lpublic,"menu_san"),"PPPOE");
-        					fprintf(cgiOut,"</tr>");
+					fprintf(cgiOut,"<tr height=25>"\
+					  "<td align=left id=tdleft><a href=wp_pppoe_server.cgi?UN=%s target=mainFrame class=top><font id=%s>%s</font></a></td>",encry,search(lpublic,"menu_san"),"PPPOE");
+					fprintf(cgiOut,"</tr>");
+					
+					fprintf(cgiOut,"<tr height=25>"\
+					  "<td align=left id=tdleft><a href=wp_pppoe_snp.cgi?UN=%s target=mainFrame class=top><font id=%s>%s</font></a></td>",encry,search(lpublic,"menu_san"),"PPPOE SNP");
+					fprintf(cgiOut,"</tr>");
 					
 					//新增时间条目
 					fprintf(cgiOut,"<tr height=26>"\
@@ -323,10 +327,14 @@ int ShowExportConfPage(struct list *lpublic, struct list *lsystem)
 					fprintf(cgiOut,"</tr>\n");
 
 					//新增pppoe条目
-        					fprintf(cgiOut,"<tr height=25>"\
-        					  "<td align=left id=tdleft><a href=wp_pppoe_server.cgi?UN=%s target=mainFrame class=top><font id=%s>%s</font></a></td>",log_encry,search(lpublic,"menu_san"),"PPPOE");
-        					fprintf(cgiOut,"</tr>");
-							
+					fprintf(cgiOut,"<tr height=25>"\
+					  "<td align=left id=tdleft><a href=wp_pppoe_server.cgi?UN=%s target=mainFrame class=top><font id=%s>%s</font></a></td>",log_encry,search(lpublic,"menu_san"),"PPPOE");
+					fprintf(cgiOut,"</tr>");
+
+					fprintf(cgiOut,"<tr height=25>"\
+					  "<td align=left id=tdleft><a href=wp_pppoe_snp.cgi?UN=%s target=mainFrame class=top><font id=%s>%s</font></a></td>",log_encry,search(lpublic,"menu_san"),"PPPOE SNP");
+					fprintf(cgiOut,"</tr>");
+					
 					//新增时间条目
 					fprintf(cgiOut,"<tr height=26>"\
 					"<td align=left id=tdleft><a href=wp_webservice.cgi?UN=%s target=mainFrame class=top><font id=%s>%s</font></a></td>",encry,search(lpublic,"menu_san"),search(lpublic,"web_service"));

@@ -54,6 +54,8 @@ extern "C"
 #include <fcntl.h>
 #include <sys/mman.h>  
 #include <sys/stat.h>
+#include "nm/app/manage/ac_manage_def.h"
+#include "board/board_define.h"
 
 /*statements*/
 int get_vlan_member_slot_port
@@ -3465,6 +3467,373 @@ munmap_close:
 
     return retu;				
 }	
+
+/*oper为"bond"或"unbond"*/
+/*vlanid的范围是2-4093*/
+/*slotid的范围是1-16*/
+/*cpu的范围是1-2*/
+/*port的范围是1-8*/
+int bond_vlan_to_ms_cpu_port_cmd(char *oper,char *vlanid,char *slotid,char *cpu,char *port)
+																/*返回0表示失败，返回1表示成功*/
+																/*返回-1表示get_product_info() return -1,Please check dbm file*/
+																/*返回-2表示Bad parameter，返回-3表示vlan id illegal*/
+																/*返回-4表示parse param failed ，返回-5表示slot id illegal*/
+																/*返回-6表示cpu no illegal，返回-7表示cpu port illegal*/
+																/*返回-8表示the dist slot is not AC board，返回-9表示ve if is exist,no interface first*/
+																/*返回-10表示vlan is no bond to slot, need not unbond*/
+																/*返回-11表示vlan do not exists on slot*/
+																/*返回-12表示vlan is already bond to slot, can not bond*/
+																/*返回-13表示add port err，返回-14表示delete port err*/
+																/*返回-15表示slot sync vlan info err，返回-16表示slot have not such cpu or port*/
+																/*返回-17表示error*/
+{
+	if((NULL == oper) || (NULL == vlanid) || (NULL == slotid) || (NULL == cpu) || (NULL == port))
+		return 0;
+	
+	DBusMessage *query = NULL, *reply = NULL;
+	DBusError err;
+	int ret = 0;
+	unsigned int op_ret = 0;	
+	boolean isbond = FALSE;
+	unsigned short 	vlanId = 0;
+	unsigned short 	cpu_no = 0, cpu_port_no = 0;
+	unsigned short slot_id =0, slot = 0;
+	int function_type = -1;
+	char file_path[64] = {0};	
+	int local_slot_id = get_product_info(PRODUCT_LOCAL_SLOTID);
+    int slot_count = get_product_info(SLOT_COUNT_FILE);
+	void *connection = NULL;
+	int retu = 0;
+
+    if((local_slot_id<0)||(slot_count<0))
+    {
+		return -1;			
+    }
+	
+    /* bond or unbond */
+	if(0 == strncmp(oper,"bond",strlen(oper))) {
+		isbond = TRUE;
+	}
+	else if (0 == strncmp(oper,"unbond",strlen(oper))) {
+		isbond= FALSE;
+	}
+	else {
+		return -2;
+	}
+
+	/*get vlan ID*/
+	ret = parse_vlan_no((char*)vlanid,&vlanId);
+	if (NPD_FAIL == ret) 
+	{
+		return -3;
+	}
+	if((vlanId < 2) || (vlanId > 4093))
+	{
+		return -3;
+	}	
+    /*get dist slot */
+	ret = parse_single_param_no((char*)slotid,&slot_id);
+	if(NPD_SUCCESS != ret) {
+		return -4;
+	}
+    if(slot_id > slot_count)
+    {
+		return -5;		
+    }
+	if((slot_id < 1) || (slot_id > SLOT_MAX_NUM))
+	{
+		return -5;
+	}
+
+	/* get cpu no */
+	ret = parse_single_param_no((char*)cpu,&cpu_no);
+	if(NPD_SUCCESS != ret) {
+		return -4;
+	}		
+	if((cpu_no < 1) || (cpu_no > 2))
+	{
+		return -6;
+	}
+
+	/* get cpu prot number */
+	ret = parse_single_param_no((char*)port,&cpu_port_no);
+	if(NPD_SUCCESS != ret) {
+		return -4;
+	}
+	if((cpu_port_no < 1) || (cpu_port_no > 8))
+	{
+		return -7;
+	}
+	/* change no to index, for hardware use */
+    cpu_no = cpu_no -1;
+    cpu_port_no = cpu_port_no -1;
+	
+    /* Check if the dist slot is exist */
+   	/*if(slot_id != local_slot_id)
+   	{
+        if(NULL == dbus_connection_dcli[slot_id]->dcli_dbus_connection)
+        {
+		    vty_out(vty,"Can not connect to slot %d, please check! \n",slot_id);	
+		    return CMD_SUCCESS;			
+        }		
+   	}*/
+    
+    /* Check if the dist slot is AC board */
+	sprintf(file_path,"/dbm/product/slot/slot%d/function_type", slot_id);
+	function_type = get_product_info(file_path);	
+	if((function_type&AC_BOARD)!=AC_BOARD)
+	{
+		return -8;		
+	}
+
+   	/* if unbond, send to dist slot before unbond, check interface ve exist or not. */	
+    if(isbond == 0)
+    {
+        query = dbus_message_new_method_call(NPD_DBUS_BUSNAME,	\
+        									NPD_DBUS_VLAN_OBJPATH ,	\
+        									NPD_DBUS_VLAN_INTERFACE ,	\
+        									NPD_DBUS_VLAN_EXIST_INTERFACE_UNDER_VLAN_TO_SLOT_CPU);
+        	
+        dbus_error_init(&err);
+
+        dbus_message_append_args(query,
+        						DBUS_TYPE_UINT16,&vlanId,
+        						DBUS_TYPE_UINT16,&slot_id,
+						        DBUS_TYPE_UINT16,&cpu_no,
+        						DBUS_TYPE_UINT16,&cpu_port_no,
+        						DBUS_TYPE_INVALID);
+
+        reply = dbus_connection_send_with_reply_and_block (ccgi_dbus_connection,query,-1, &err);				
+        		
+        dbus_message_unref(query);
+        	
+        if (NULL == reply) {
+        	return 0;
+        }
+
+        if (dbus_message_get_args ( reply, &err,DBUS_TYPE_UINT32, &op_ret,DBUS_TYPE_INVALID)) 
+        {
+			/* ve sub-intf is exist */
+    		if(VLAN_RETURN_CODE_ERR_NONE == op_ret) 
+            {
+                //vty_out(vty,"ve%02d%c%d.%d is exist,no interface first!\n",slot_id,(cpu_no == 0)?'f':'s',(cpu_port_no+1),vlanId);			
+        		return -9;        	
+			}
+			else if(VLAN_RETURN_CODE_ERR_HW == op_ret)  /* ve sub-intf is not exist */
+			{
+                /*NULL;*/
+			}			
+			else if(VLAN_RETURN_CODE_VLAN_NOT_BONDED == op_ret)
+			{
+        		return -10;				
+			}
+			else
+			{
+			}
+        }
+        else 
+        {
+        	if (dbus_error_is_set(&err)) 
+        	{
+        		dbus_error_free(&err);
+        	}
+			retu = 0;
+        }
+        dbus_message_unref(reply);
+    }
+
+	/* send to dist slot first, bond or unbond */
+	{
+		slot = slot_id;    /* dist slot */
+     	/*once bad param,it'll NOT sed message to NPD*/
+    	query = dbus_message_new_method_call(NPD_DBUS_BUSNAME,	\
+    										NPD_DBUS_VLAN_OBJPATH ,	\
+    										NPD_DBUS_VLAN_INTERFACE ,	\
+    										NPD_DBUS_VLAN_METHOD_BOND_VLAN_TO_SLOT_CPU);
+    	
+    	dbus_error_init(&err);
+
+    	dbus_message_append_args(query,
+     							 DBUS_TYPE_BYTE,&isbond,
+    							 DBUS_TYPE_UINT16,&vlanId,
+    							 DBUS_TYPE_UINT16,&slot_id,
+        						 DBUS_TYPE_UINT16,&cpu_no,
+        						 DBUS_TYPE_UINT16,&cpu_port_no,    							 
+    							 DBUS_TYPE_INVALID);
+
+		connection = NULL;
+		if(SNMPD_DBUS_SUCCESS != get_slot_dbus_connection(slot, &connection, SNMPD_INSTANCE_MASTER_V3))
+    	{
+    		if(slot == local_slot_id)
+    		{
+                reply = dbus_connection_send_with_reply_and_block (ccgi_dbus_connection,query,-1, &err);
+    		}
+    		else 
+			{	
+			   	//vty_out(vty,"Can not connect to slot:%d \n",slot);
+        		return 0;				
+			}	
+        }
+    	else
+    	{
+            reply = dbus_connection_send_with_reply_and_block (connection,query,-1, &err);				
+    	}
+    		
+    	dbus_message_unref(query);
+    	
+    	if (NULL == reply) {
+    		return 0;
+    	}
+
+    	if (dbus_message_get_args ( reply, &err,DBUS_TYPE_UINT32, &op_ret,DBUS_TYPE_INVALID)) 
+    	{
+			if(VLAN_RETURN_CODE_ERR_NONE == op_ret) 
+        	{
+				/*if(isbond == 1)
+				{
+           		    vty_out(vty,"Bond vlan %d to slot %d OK\n",vlanId,slot);
+				}
+				else
+				{
+					vty_out(vty,"Unbond vlan %d to slot %d OK\n",vlanId,slot);
+
+				}*/		
+				retu = 1;
+            	/*return CMD_SUCCESS;		*/
+				/* can not return, for next slot update bondinfo */
+            }
+        	else 
+        	{					
+				if(VLAN_RETURN_CODE_VLAN_NOT_EXISTS == op_ret)
+				{
+					return -11;		
+				}
+				else if(VLAN_RETURN_CODE_VLAN_NOT_BONDED == op_ret)
+				{
+					return -10;								
+				}
+				else if(VLAN_RETURN_CODE_VLAN_ALREADY_BOND == op_ret)
+				{
+					return -12;								
+				}
+				else if(VLAN_RETURN_CODE_VLAN_BOND_ERR == op_ret)
+				{
+					return -13;								
+				}
+				else if(VLAN_RETURN_CODE_VLAN_UNBOND_ERR == op_ret)
+				{
+					return -14;								
+				}
+				else if(VLAN_RETURN_CODE_VLAN_SYNC_ERR == op_ret)
+				{
+					return -15;								
+				}
+				else if(VLAN_RETURN_CODE_ERR_HW == op_ret)
+				{
+					return -16;								
+				}				
+				else
+				{
+					return -17;														
+				}
+        	}
+		}
+    	else 
+    	{
+    		if (dbus_error_is_set(&err)) 
+    		{
+    			dbus_error_free(&err);
+    		}
+    		return 0;					
+    	}
+    	dbus_message_unref(reply);
+	}
+	/* if dist slot is ok, send to every other slot, update the g_vlanlist[] */
+    for(slot=1; slot<=slot_count; slot++)
+    {
+		if(slot == slot_id)     /* jump the dist slot */
+		{
+			continue;
+		}
+     	/*once bad param,it'll NOT sed message to NPD*/
+    	query = dbus_message_new_method_call(NPD_DBUS_BUSNAME,	\
+    										NPD_DBUS_VLAN_OBJPATH ,	\
+    										NPD_DBUS_VLAN_INTERFACE ,	\
+    										NPD_DBUS_VLAN_METHOD_BOND_VLAN_TO_SLOT_CPU);
+    	
+    	dbus_error_init(&err);
+
+    	dbus_message_append_args(query,
+     							 DBUS_TYPE_BYTE,&isbond,
+    							 DBUS_TYPE_UINT16,&vlanId,
+    							 DBUS_TYPE_UINT16,&slot_id,
+        						 DBUS_TYPE_UINT16,&cpu_no,
+        						 DBUS_TYPE_UINT16,&cpu_port_no,    							 
+    							 DBUS_TYPE_INVALID);
+
+		connection = NULL;
+		if(SNMPD_DBUS_SUCCESS != get_slot_dbus_connection(slot, &connection, SNMPD_INSTANCE_MASTER_V3))
+    	{
+    		if(slot == local_slot_id)
+    		{
+                reply = dbus_connection_send_with_reply_and_block (ccgi_dbus_connection,query,-1, &err);
+    		}
+    		else 
+			{	
+			   	//vty_out(vty,"Can not connect to slot:%d \n",slot);	
+				continue;
+			}	
+        }
+    	else
+    	{
+            reply = dbus_connection_send_with_reply_and_block (connection,query,-1, &err);				
+    	}
+    		
+    	dbus_message_unref(query);
+    	
+    	if (NULL == reply) {
+    		return 0;
+    	}
+
+    	if (dbus_message_get_args ( reply, &err,DBUS_TYPE_UINT32, &op_ret,DBUS_TYPE_INVALID)) 
+    	{
+	
+    		/* (VLAN_RETURN_CODE_ERR_NONE == op_ret) */
+    		if(VLAN_RETURN_CODE_ERR_NONE == op_ret) 
+			{
+    			/* update the bond_slot in g_vlanlist[v_index] */
+				retu = 1;
+			}
+    		else
+    		{
+           		//vty_out(vty,"update bondinfo of vlan %d on slot %d error\n",vlanId,slot);
+				if(VLAN_RETURN_CODE_VLAN_NOT_EXISTS == op_ret)
+				{
+					retu = -11;
+				}
+				else if(VLAN_RETURN_CODE_VLAN_SYNC_ERR == op_ret)
+				{
+            		retu = -15;
+				}
+				else
+				{
+            		retu = -17;
+				}
+        	}
+    	} 
+    	else 
+    	{
+    		if (dbus_error_is_set(&err)) 
+    		{
+    			dbus_error_free(&err);
+    		}
+			retu = 0;
+    	}
+    	dbus_message_unref(reply);
+    }
+    return retu;
+}
+
 
 #ifdef __cplusplus
 }

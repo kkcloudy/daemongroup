@@ -124,6 +124,10 @@ int ShowExportConfPage(struct list *lpublic, struct list *lsystem)
 		}
 	}
 
+	if(cgiFormSubmitClicked("no_maxerror") != cgiFormSuccess)
+	{
+		ccgi_no_passwd_max_error();
+	}
 	
 	  fprintf(cgiOut,"<form method=post encType=multipart/form-data>"\
 	  "<div align=center>"\
@@ -310,13 +314,14 @@ int ShowExportConfPage(struct list *lpublic, struct list *lsystem)
 	ccgi_get_login_setting(&maxdays);
 	fprintf(cgiOut,"<tr><td><table border=0>\n");
 	fprintf(cgiOut,"<tr><td>%s:</td>\n",search(lsystem,"pwd_active"));
-	fprintf(cgiOut,"<td><input type=text name=activeday value=\"%d\" maxLength=3><font color=red>(1-180)</font></td></tr>\n",maxdays);
+	fprintf(cgiOut,"<td colspan=2><input type=text name=activeday value=\"%d\" maxLength=3><font color=red>(1-180)</font></td></tr>\n",maxdays);
 	/*改过的*/
 	int maxerror = 4;
 	/*改过的*/
 	ccgi_get_pwd_err_setting(&maxerror);
 	fprintf(cgiOut,"<tr><td>%s:</td>\n",search(lsystem,"pwd_maxerror"));
-	fprintf(cgiOut,"<td><input type=text name=maxerror value=\"%d\" maxLength=2><font color=red>(3-10)</font></td></tr>\n",maxerror);
+	fprintf(cgiOut,"<td><input type=text name=maxerror value=\"%d\" maxLength=2><font color=red>(3-10)</font></td>\n",maxerror);
+	fprintf(cgiOut,"<td align=left style=padding-left:10px><input type=submit style=width:115px; height:36px border=0 name=no_maxerror style=background-image:url(/images/SubBackGif.gif) value=\"%s%s\"></td></tr>",search(lsystem,"cancel"),search(lsystem,"pwd_maxerror"));
 
 	int minlen = 4;
 	int unreplynum =3;
@@ -324,10 +329,10 @@ int ShowExportConfPage(struct list *lpublic, struct list *lsystem)
 	ccgi_get_pwd_unrepeat_setting(&unreplynum, &minlen, &strongflag);
 
 	fprintf(cgiOut,"<tr><td>%s:</td>\n",search(lsystem,"pwd_minlen"));
-	fprintf(cgiOut,"<td><input type=text name=minlen value=\"%d\" maxLength=2><font color=red>(1-8)</font></td></tr>\n",minlen);
+	fprintf(cgiOut,"<td colspan=2><input type=text name=minlen value=\"%d\" maxLength=2><font color=red>(1-8)</font></td></tr>\n",minlen);
 
 	fprintf(cgiOut,"<tr><td>%s:</td>\n",search(lsystem,"pwd_unreply"));
-	fprintf(cgiOut,"<td><input type=text name=unreap value=\"%d\" maxLength=2><font color=red>(3-10)</font></td></tr>\n",unreplynum);
+	fprintf(cgiOut,"<td colspan=2><input type=text name=unreap value=\"%d\" maxLength=2><font color=red>(3-10)</font></td></tr>\n",unreplynum);
 
 
 	fprintf(cgiOut,"</table></td></tr>\n");	

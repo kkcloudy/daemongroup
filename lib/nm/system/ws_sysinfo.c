@@ -49,6 +49,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "bsd/bsdpub.h"
 #include "dbus/bsd/BsdDbusPath.h"
 #include "ws_dbus_def.h"
+#include "ws_dbus_list_interface.h"
+
 
 int show_file_string(char *FILENAME,char *zstr);
 
@@ -1138,6 +1140,154 @@ ret_err:
 	}	
 	return retu;
 }
+
+int delete_ip_dns_func_cmd(char *ip_dns)  /*返回0表示失败，返回1表示成功*/
+												/*返回-1表示malloc*/
+												/*返回-2表示Can't get system dns seting*/
+												/*返回-3表示error*/
+												/*返回SNMPD_CONNECTION_ERROR表示connection error*/
+{
+	if(NULL == ip_dns)
+		return 0;
+	
+	char *dnsstr[3];
+	int ret,i;
+	int retu = 0;
+
+	for(i=0;i<3;i++)
+	{
+		dnsstr[i] = malloc(128);
+		if(!dnsstr[i])
+		{
+			retu = -1;
+			goto ret_err;
+		}
+		memset(dnsstr[i],0,128);
+	}
+	
+	ret = get_dns_str(&dnsstr);
+
+	if(ret<0 || ret > 3)
+	{
+		retu = -2;
+		goto ret_err;
+	}
+	else
+	{
+		int i=0;
+		
+		DBusMessage *query = NULL;		
+		DBusMessage *reply = NULL;	
+		DBusError err = {0};
+		unsigned int result = 0;
+				
+		unsigned int src_slotid = 0;
+		unsigned int des_slotid = 0;
+		unsigned int product_serial = 0;		
+		char file_path_temp[64] = "/etc/resolv.conf";
+		char *src_path_temp = file_path_temp;
+		char *des_path_temp = file_path_temp;
+		int fd;		
+		int tar_switch = 0;
+		int op = BSD_TYPE_NORMAL;
+		int ID[MAX_SLOT_NUM] = {0};
+		int count = 0;
+		void *connection = NULL;
+
+		fd = fopen("/dbm/product/master_slot_id", "r");
+		fscanf(fd, "%d", &src_slotid);
+		fclose(fd);
+
+		count = dcli_bsd_get_slot_ids(ccgi_dbus_connection,ID,1);
+
+		int(*dcli_init_func)(DBusConnection *, int *, const int);
+
+		dcli_init_func = dlsym(ccgi_dl_handle,"dcli_bsd_get_slot_ids");
+		if(NULL != dcli_init_func)
+		{
+			count =(*dcli_init_func)(ccgi_dbus_connection,ID,1);
+		}
+		else
+		{
+			retu = 0;
+			goto ret_err;
+		}
+		
+		for(i=0;i<ret;i++)
+		{
+			if(!strncmp(ip_dns,dnsstr[i],strlen(ip_dns)))
+			{
+				int j ;
+				if(i<ret-1)
+				{	
+					for(j=i;j<ret-1;j++)
+					{
+						sprintf(dnsstr[j],dnsstr[j+1]);
+					}
+				}
+				break;
+			}
+		}
+		if(i >= ret)
+		{
+			retu = -2;
+			goto ret_err;
+
+		}
+		if(set_dns_str(&dnsstr,ret-1))
+		{
+			retu = -3;
+			goto ret_err;
+
+		}
+		
+		if(count != 0)
+		{
+			for(i = 0; i < count; i++)
+			{
+				des_slotid = ID[i];
+
+				connection = NULL;
+				if(SNMPD_DBUS_SUCCESS != get_slot_dbus_connection(src_slotid, &connection, SNMPD_INSTANCE_MASTER_V3))
+				{
+					retu = 0;
+				}
+   
+			    query = dbus_message_new_method_call(BSD_DBUS_BUSNAME,BSD_DBUS_OBJPATH,\
+									BSD_DBUS_INTERFACE,BSD_COPY_FILES_BETEWEEN_BORADS);
+				dbus_error_init(&err);
+				dbus_message_append_args(query,
+										 DBUS_TYPE_UINT32,&des_slotid,
+										 DBUS_TYPE_STRING,&src_path_temp,
+										 DBUS_TYPE_STRING,&des_path_temp,
+										 DBUS_TYPE_UINT32,&tar_switch,
+										 DBUS_TYPE_UINT32,&op,
+										 DBUS_TYPE_INVALID);
+				reply = dbus_connection_send_with_reply_and_block (connection,query,60000, &err);
+				dbus_message_unref(query);
+				if (NULL == reply) {
+					if (dbus_error_is_set(&err)) {
+						dbus_error_free(&err);
+					}
+					return SNMPD_CONNECTION_ERROR;
+				}
+				dbus_message_unref(reply);
+			}
+		}
+		
+	}
+
+	return 1;
+ret_err:
+	
+	for(i=0;i<3;i++)
+	{
+		if(dnsstr[i])
+			free(dnsstr[i]);
+	}	
+	return retu;	
+}
+
 
 #ifdef __cplusplus
 }

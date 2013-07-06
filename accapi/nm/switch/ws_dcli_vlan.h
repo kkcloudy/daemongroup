@@ -394,5 +394,24 @@ extern int get_vlan_port_member_tagflag(int vlan_id,char *port,int *tag_flag);/*
 																					/*返回-3表示vlan is NOT exists，返回-4表示Failed to munmap*/
 																					/*返回-5表示close shm_vlan failed*/
 
+/*oper为"bond"或"unbond"*/
+/*vlanid的范围是2-4093*/
+/*slotid的范围是1-16*/
+/*cpu的范围是1-2*/
+/*port的范围是1-8*/
+extern int bond_vlan_to_ms_cpu_port_cmd(char *oper,char *vlanid,char *slotid,char *cpu,char *port);
+																/*返回0表示失败，返回1表示成功*/
+																/*返回-1表示get_product_info() return -1,Please check dbm file*/
+																/*返回-2表示Bad parameter，返回-3表示vlan id illegal*/
+																/*返回-4表示parse param failed ，返回-5表示slot id illegal*/
+																/*返回-6表示cpu no illegal，返回-7表示cpu port illegal*/
+																/*返回-8表示the dist slot is not AC board，返回-9表示ve if is exist,no interface first*/
+																/*返回-10表示vlan is no bond to slot, need not unbond*/
+																/*返回-11表示vlan do not exists on slot*/
+																/*返回-12表示vlan is already bond to slot, can not bond*/
+																/*返回-13表示add port err，返回-14表示delete port err*/
+																/*返回-15表示slot sync vlan info err，返回-16表示slot have not such cpu or port*/
+																/*返回-17表示error*/
+
 #endif
 

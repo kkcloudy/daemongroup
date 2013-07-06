@@ -214,7 +214,7 @@ void ShowPrtFunCfgPage(char *m,char *n,char *t,char *s,struct list *lpublic,stru
 					fprintf(cgiOut,"<tr height=25>"\
   					    "<td align=left id=tdleft><a href=wp_subintf.cgi?UN=%s target=mainFrame class=top><font id=%s>%s<font></a></td></tr>",m,search(lpublic,"menu_san"),search(lcon,"title_subintf"));  	                    
 										fprintf(cgiOut,"<tr height=25>"\
-						  "<td align=left id=tdleft><a href=wp_interface_bindip.cgi?UN=%s target=mainFrame class=top><font id=%s>%s<font></a></td></tr>",m,search(lpublic,"menu_san"),search(lcon,"bind_ip"));
+						  "<td align=left id=tdleft><a href=wp_interface_bindip.cgi?UN=%s target=mainFrame class=top><font id=%s>%s<font></a></td></tr>",m,search(lpublic,"menu_san"),search(lpublic,"config_interface"));
 					//////INTF ////////
 					fprintf(cgiOut,"<tr height=25>"\
   					    "<td align=left id=tdleft><a href=wp_all_interface.cgi?UN=%s target=mainFrame class=top><font id=%s>%s<font></a></td></tr>",m,search(lpublic,"menu_san"),search(lcon,"interface"));		

@@ -520,6 +520,10 @@ int ShowVersionUpgradePage(struct list *lpublic, struct list *lsystem)
 						fprintf(cgiOut,"<tr height=25>"\
 						"<td align=left id=tdleft><a href=wp_pppoe_server.cgi?UN=%s target=mainFrame class=top><font id=%s>%s</font></a></td>",encry,search(lpublic,"menu_san"),"PPPOE");
 						fprintf(cgiOut,"</tr>");
+
+						fprintf(cgiOut,"<tr height=25>"\
+						"<td align=left id=tdleft><a href=wp_pppoe_snp.cgi?UN=%s target=mainFrame class=top><font id=%s>%s</font></a></td>",encry,search(lpublic,"menu_san"),"PPPOE SNP");
+						fprintf(cgiOut,"</tr>");
 					
 				for(i=0;i<4;i++)
 				{

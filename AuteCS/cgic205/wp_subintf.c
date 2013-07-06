@@ -278,7 +278,7 @@ int cgiMain()
 									if(retu==0)  /*π‹¿Ì‘±*/
 									{
 									fprintf(cgiOut,"<tr height=25>"\
-						  							"<td align=left id=tdleft><a href=wp_interface_bindip.cgi?UN=%s target=mainFrame class=top><font id=%s>%s<font></a></td></tr>",encry,search(lpublic,"menu_san"),search(lcontrol,"bind_ip"));	
+						  							"<td align=left id=tdleft><a href=wp_interface_bindip.cgi?UN=%s target=mainFrame class=top><font id=%s>%s<font></a></td></tr>",encry,search(lpublic,"menu_san"),search(lpublic,"config_interface"));	
 									}
 									fprintf(cgiOut,"<tr height=25>"\
   					    				"<td align=left id=tdleft><a href=wp_all_interface.cgi?UN=%s target=mainFrame class=top><font id=%s>%s<font></a></td></tr>",encry,search(lpublic,"menu_san"),search(lcontrol,"interface"));		

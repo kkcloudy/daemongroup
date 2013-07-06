@@ -396,13 +396,16 @@ int ShowTime(struct list *lpublic, struct list *lsystem)
 
 					if(checkuser_group(addn)==0)/*管理员*/
 						{
-               	//新增NTP条目
-			    fprintf(cgiOut,"<tr height=25>"\
-			       "<td align=left id=tdleft><a href=wp_ntp.cgi?UN=%s target=mainFrame class=top><font id=%s>%s</font></a></td>",encry,search(lpublic,"menu_san"),search(lpublic,"ntp_s"));
-			    fprintf(cgiOut,"</tr>");
-				//新增pppoe条目
+			               	//新增NTP条目
+						    fprintf(cgiOut,"<tr height=25>"\
+						       "<td align=left id=tdleft><a href=wp_ntp.cgi?UN=%s target=mainFrame class=top><font id=%s>%s</font></a></td>",encry,search(lpublic,"menu_san"),search(lpublic,"ntp_s"));
+						    fprintf(cgiOut,"</tr>");
+							//新增pppoe条目
         					fprintf(cgiOut,"<tr height=25>"\
         					  "<td align=left id=tdleft><a href=wp_pppoe_server.cgi?UN=%s target=mainFrame class=top><font id=%s>%s</font></a></td>",encry,search(lpublic,"menu_san"),"PPPOE");
+        					fprintf(cgiOut,"</tr>");
+							fprintf(cgiOut,"<tr height=25>"\
+        					  "<td align=left id=tdleft><a href=wp_pppoe_snp.cgi?UN=%s target=mainFrame class=top><font id=%s>%s</font></a></td>",encry,search(lpublic,"menu_san"),"PPPOE SNP");
         					fprintf(cgiOut,"</tr>");
 						}
 					

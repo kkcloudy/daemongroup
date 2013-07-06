@@ -109,7 +109,57 @@ int ShowSystemconPage(char *m,struct list *lpublic,struct list *lsystem)
   cgiFormStringNoNewlines("SubmitFlag", IsSubmit, 5);
   if((cgiFormSubmitClicked("syscon_apply") == cgiFormSuccess)&&(strcmp(IsSubmit,"")))
   {
-		config_system(lpublic,lsystem);
+	config_system(lpublic,lsystem);
+  }  
+  
+  if((cgiFormSubmitClicked("no_ip_dns") == cgiFormSuccess)&&(strcmp(IsSubmit,"")))
+  {
+  	char dns_ip[20] = { 0 };
+	char ip1[4] = { 0 };
+	char ip2[4] = { 0 };
+	char ip3[4] = { 0 };
+	char ip4[4] = { 0 };
+	memset(dns_ip,0,sizeof(dns_ip));                                 
+    memset(ip1,0,sizeof(ip1));
+    cgiFormStringNoNewlines("dns_ip1",ip1,4);
+    strncat(dns_ip,ip1,sizeof(dns_ip)-strlen(dns_ip)-1);
+    strncat(dns_ip,".",sizeof(dns_ip)-strlen(dns_ip)-1);
+    memset(ip2,0,sizeof(ip2));
+    cgiFormStringNoNewlines("dns_ip2",ip2,4); 
+    strncat(dns_ip,ip2,sizeof(dns_ip)-strlen(dns_ip)-1);	
+    strncat(dns_ip,".",sizeof(dns_ip)-strlen(dns_ip)-1);
+    memset(ip3,0,sizeof(ip3));
+    cgiFormStringNoNewlines("dns_ip3",ip3,4); 
+    strncat(dns_ip,ip3,sizeof(dns_ip)-strlen(dns_ip)-1);	
+    strncat(dns_ip,".",sizeof(dns_ip)-strlen(dns_ip)-1);
+    memset(ip4,0,sizeof(ip4));
+    cgiFormStringNoNewlines("dns_ip4",ip4,4);
+    strncat(dns_ip,ip4,sizeof(dns_ip)-strlen(dns_ip)-1);
+
+	if(strcmp(dns_ip,"...")!=0)
+	{		
+		ret = delete_ip_dns_func_cmd(dns_ip);/*返回0表示失败，返回1表示成功*/
+											/*返回-1表示malloc*/
+											/*返回-2表示Can't get system dns seting*/
+											/*返回-3表示error*/
+											/*返回SNMPD_CONNECTION_ERROR表示connection error*/
+		switch(ret)
+		{
+			case SNMPD_CONNECTION_ERROR:
+			case 0:ShowAlert(search(lsystem,"no_ip_dns_fail"));
+				   break;
+			case 1:ShowAlert(search(lsystem,"no_ip_dns_succ"));
+					break;
+			case -2:
+			case -3:ShowAlert(search(lpublic,"error"));
+				    break;
+		}
+	}
+  }
+  
+  if((cgiFormSubmitClicked("no_console_passwd") == cgiFormSuccess)&&(strcmp(IsSubmit,"")))
+  {
+  	no_system_consolepwd_func();
   }  
   fprintf(cgiOut,"<body>"\
   "<form method=post>"\
@@ -177,6 +227,9 @@ int ShowSystemconPage(char *m,struct list *lpublic,struct list *lsystem)
 				  fprintf(cgiOut,"</tr>"\
 				  "<tr height=25>"\
 				  "<td align=left id=tdleft><a href=wp_pppoe_server.cgi?UN=%s target=mainFrame class=top><font id=%s>%s</font></a></td>",m,search(lpublic,"menu_san"),"PPPOE");
+				  fprintf(cgiOut,"</tr>"\
+				  "<tr height=25>"\
+				  "<td align=left id=tdleft><a href=wp_pppoe_snp.cgi?UN=%s target=mainFrame class=top><font id=%s>%s</font></a></td>",m,search(lpublic,"menu_san"),"PPPOE SNP");
 				  fprintf(cgiOut,"</tr>");
 				  //新增时间条目
 				  fprintf(cgiOut,"<tr height=26>"\
@@ -225,7 +278,7 @@ int ShowSystemconPage(char *m,struct list *lpublic,struct list *lsystem)
 				"</tr>"\
 				"<tr height=30>"\
 					"<td>%s:</td>",search(lsystem,"dns"));
-					fprintf(cgiOut,"<td colspan=2>"\
+					fprintf(cgiOut,"<td>"\
 						 "<div style=\"border-width:1;border-color:#a5acb2;border-style:solid;width:140;font-size:9pt\">"\
 						 "<input type=text name='dns_ip1' maxlength=3 class=a3 onKeyUp=\"mask(this,%s)\" onbeforepaste=mask_c()>.",search(lpublic,"ip_error"));
 						 fprintf(cgiOut,"<input type=text name='dns_ip2' maxlength=3 class=a3 onKeyUp=\"mask(this,%s)\" onbeforepaste=mask_c()>.",search(lpublic,"ip_error"));
@@ -233,7 +286,8 @@ int ShowSystemconPage(char *m,struct list *lpublic,struct list *lsystem)
 						 fprintf(cgiOut,"<input type=text name='dns_ip4' maxlength=3 class=a3 onKeyUp=\"mask(this,%s)\" onbeforepaste=mask_c()>",search(lpublic,"ip_error"));
 						 fprintf(cgiOut,"</div>"\
 					"</td>"\
-				"</tr>"
+					"<td align=left style=padding-left:10px><input type=submit style=width:100px; height:36px border=0 name=no_ip_dns style=background-image:url(/images/SubBackGif.gif) value=\"%sDNS%s\"></td>",search(lsystem,"cancel"),search(lpublic,"l_name"));
+				fprintf(cgiOut,"</tr>"
 				"<tr valign=top style=\"padding-top:10px\">"\
 					"<td colspan=3>"\
 						"<fieldset align=left>"\
@@ -276,6 +330,10 @@ int ShowSystemconPage(char *m,struct list *lpublic,struct list *lsystem)
 					   		  "<td>%s:</td>",search(lsystem,"password"));
 							  fprintf(cgiOut,"<td><input type=password name=console_userpwd size=23 maxLength=32 onkeypress=\"return event.keyCode!=32\"></td>"\
 							  "<td align=left><font color=red>(%s)</font></td>",search(lsystem,"console_userpwd_range"));
+							fprintf(cgiOut,"</tr>"\
+							"<tr height=30>"\
+							  "<td>&nbsp;</td>"\
+							  "<td colspan=2 align=left style=padding-left:10px><input type=submit style=width:115px; height:36px border=0 name=no_console_passwd style=background-image:url(/images/SubBackGif.gif) value=\"%s%s\"></td>",search(lsystem,"cancel"),search(lsystem,"console_user"));
 							fprintf(cgiOut,"</tr>"\
 						  "</table>"\
 						"</fieldset>"

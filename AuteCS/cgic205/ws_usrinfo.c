@@ -1696,6 +1696,26 @@ int ccgi_passwd_max_error(int time)
 	ret = WEXITSTATUS(status);
 	return ret ;
 }
+
+int ccgi_no_passwd_max_error()
+{	
+	int ret = 0;
+	int status = 0;
+	char cmd[128] = {0};
+	char modstr[128] = {0};
+	sprintf(modstr,"'no passwd max error'");
+	sprintf(cmd,"source vtysh_start.sh >/dev/null 2>&1\n"
+						"vtysh -c %s",modstr);
+
+	if(strchr(cmd,';'))
+	{
+		return -1;
+	}
+	status = system(cmd);
+	ret = WEXITSTATUS(status);
+	return ret ;
+}
+
 int ccgi_passwd_min_length(int time)
 {
 	int ret = 0;
@@ -2500,4 +2520,15 @@ int set_system_consolepwd_func1(char *user_name,char *user_pwd)/*·µ»Ø0±íÊ¾Ê§°Ü£¬
 	
 	return 1;
 }
+
+int no_system_consolepwd_func()
+{
+	char cmd[128] = {0};
+	sprintf(cmd,"sudo rm %s >> /dev/null 2> /dev/null","/etc/ttyS0pwd");
+	system(cmd);
+	sprintf(cmd,"sudo rm %s >> /dev/null 2> /dev/null","/etc/ttyS0usr");
+	system(cmd);
+	return 1;
+}
+
 

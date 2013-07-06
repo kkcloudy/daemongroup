@@ -183,5 +183,11 @@ extern int set_ip_dns_func_cmd(char *ip_dns); /*返回0表示失败，返回1表示成功*/
 												   /*返回-3表示The dns server is exist,can't set again*/
 												   /*返回SNMPD_CONNECTION_ERROR表示connection error*/
 
+extern int delete_ip_dns_func_cmd(char *ip_dns);  /*返回0表示失败，返回1表示成功*/
+													   /*返回-1表示malloc*/
+													   /*返回-2表示Can't get system dns seting*/
+													   /*返回-3表示error*/
+													   /*返回SNMPD_CONNECTION_ERROR表示connection error*/
+
 #endif
 

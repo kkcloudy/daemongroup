@@ -88,6 +88,7 @@ static char *sysoper_level[] = {"none","read","delete"};
 #define CONLOGINSETTINGFILE   "/etc/login.defs"
 #define CONLOGINSETTINGFILEBK "/etc/login.defs.bak"
 #define CONPWDERRSETTINGFILE  "/etc/pam.d/common-auth"
+#define CONPWDERRSETTINGFILEBK "/etc/pam.d/common-auth.bak"
 #define CONPWDSYSSETTING "/etc/pam.d/common-password"
 
 #define  x_strdup(s)  ( (s) ? strdup(s):NULL )
@@ -159,6 +160,7 @@ extern int ccgi_get_login_setting(int* maxdays);
 extern int ccgi_set_login_setting(int maxdays);
 extern int ccgi_get_pwd_err_setting(int* times);
 extern int ccgi_passwd_max_error(int time);
+extern int ccgi_no_passwd_max_error();
 extern int ccgi_get_pwd_unrepeat_setting(int *unreplynum,int *minlen,int *strongflag);
 extern int ccgi_passwd_min_length(int time);
 extern int ccgi_passwd_unrepeat(int time);
@@ -179,5 +181,8 @@ extern int set_system_consolepwd_func1(char *user_name,char *user_pwd);/*返回0表
 																					/*返回-6表示user password should be not same as username*/
 																					/*返回-7表示user password too short or too long*/
 																					/*返回-8表示user password length should be >= 4 && <=32*/
+
+extern int no_system_consolepwd_func();
+
 #endif
 
