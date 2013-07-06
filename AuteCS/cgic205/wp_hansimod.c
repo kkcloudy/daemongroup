@@ -74,8 +74,6 @@ int ShowHansiModPage(char *m,char *id,char *choice,struct list *lpublic,struct l
 
 int cgiMain()
 {  
-	return 0;
-	#if 0
 	char *encry=(char *)malloc(BUF_LEN);  
 	char *str;   
 	struct list *lpublic;   /*解析public.txt文件的链表头*/
@@ -158,9 +156,8 @@ int cgiMain()
 	release(lpublic);  
 	release(lcontrol);
 	return 0;
-	#endif
 }
-#if 0
+
 int ShowHansiModPage(char *m,char *id,char * choice,struct list *lpublic,struct list *lcontrol,int slotid,DBusConnection *connection,int pid)  
 {  
 	int i,retu,hspro_num=0,upmaskbit,dwmaskbit;
@@ -241,7 +238,7 @@ int ShowHansiModPage(char *m,char *id,char * choice,struct list *lpublic,struct 
 	char paramalert[128];
 	memset(paramalert,0,128);
 
-	Z_VRRP zvrrp;
+	Z_VRRP_web zvrrp;
 	memset(&zvrrp,0,sizeof(zvrrp));
 
 	char upmask[HANSIIPL];
@@ -267,9 +264,9 @@ int ShowHansiModPage(char *m,char *id,char * choice,struct list *lpublic,struct 
 
 	int retu1 = 0;
 	int k = 0;
-	vrrp_link_ip *uq=NULL;
-	vrrp_link_ip *dq=NULL;
-	vrrp_link_ip *vq=NULL;
+	vrrp_link_ip_web *uq=NULL;
+	vrrp_link_ip_web *dq=NULL;
+	vrrp_link_ip_web *vq=NULL;
 	char optstr[10] = {0};
 	char infstr[64] = {0};
 	char intfip[32] = {0};
@@ -307,17 +304,17 @@ int ShowHansiModPage(char *m,char *id,char * choice,struct list *lpublic,struct 
 	{
 		if(0 == strcmp(optstr,"1"))
 		{
-			ret = config_vrrp_link_add_vip("delete", id, "uplink", infstr, intfip, connection);
+			ret = config_vrrp_link_add_vip_web("delete", id, "uplink", infstr, intfip, connection);
 			fprintf(stderr,"ret 111111=%d\n",ret);
 		}		
 		else if(0 == strcmp(optstr,"2"))
 		{
-			ret = config_vrrp_link_add_vip("delete", id, "downlink", infstr, intfip, connection);
+			ret = config_vrrp_link_add_vip_web("delete", id, "downlink", infstr, intfip, connection);
 			fprintf(stderr,"ret 2222222222=%d\n",ret);
 		}
 		else if(0 == strcmp(optstr,"3"))
 		{
-			ret = config_vrrp_link_add_vip("delete", id, "vgateway", infstr, intfip, connection);
+			ret = config_vrrp_link_add_vip_web("delete", id, "vgateway", infstr, intfip, connection);
 			fprintf(stderr,"ret 3333333333=%d\n",ret);
 		}
 		if(33 != ret)
@@ -436,7 +433,7 @@ int ShowHansiModPage(char *m,char *id,char * choice,struct list *lpublic,struct 
 
 
 
-		op_ret=ccgi_config_hansi_profile(id,slotid,connection);
+		op_ret=ccgi_config_hansi_profile_web(id,slotid,connection);
 		if(op_ret==0)
 		{
 		    //up and down
@@ -455,7 +452,7 @@ int ShowHansiModPage(char *m,char *id,char * choice,struct list *lpublic,struct 
 							ShowAlert(search(lcontrol,"dhcp_mask_err"));
                         else
                     	{
-							op_ret=ccgi_downanduplink_ifname_mask(id,ulname, ulip, dlname, dlip, hsprio,upmaskbit,dwmaskbit,connection);
+							op_ret=ccgi_downanduplink_ifname_mask_web(id,ulname, ulip, dlname, dlip, hsprio,upmaskbit,dwmaskbit,connection);
 							if(op_ret==0)
 							{
 								memset(paramalert,0,128);
@@ -493,7 +490,7 @@ int ShowHansiModPage(char *m,char *id,char * choice,struct list *lpublic,struct 
 							//op_ret=config_vrrp_uplink(id,ulname, ulip, hsprio,upmaskbit,connection);
 							memset(temp,0,sizeof(temp));
 							snprintf(temp,sizeof(temp)-1,"%s/%d",ulip,upmaskbit);
-							op_ret = config_vrrp_link_add_vip("add", id, "uplink", ulname, temp, connection);
+							op_ret = config_vrrp_link_add_vip_web("add", id, "uplink", ulname, temp, connection);
 							if(op_ret==33)
 							{
 								memset(paramalert,0,128);
@@ -530,7 +527,7 @@ int ShowHansiModPage(char *m,char *id,char * choice,struct list *lpublic,struct 
 						{
 							memset(temp,0,sizeof(temp));
 							snprintf(temp,sizeof(temp)-1,"%s/%d",dlip,dwmaskbit);
-							op_ret = config_vrrp_link_add_vip("add", id, "downlink", dlname, temp, connection);
+							op_ret = config_vrrp_link_add_vip_web("add", id, "downlink", dlname, temp, connection);
 							if(op_ret==33)
 							{
 								memset(paramalert,0,128);
@@ -559,7 +556,7 @@ int ShowHansiModPage(char *m,char *id,char * choice,struct list *lpublic,struct 
 				ShowAlert(search(lpublic,"hs_param"));
 			else
 			{
-				op_ret=ccgi_config_hansi_priority(id,hsprio,connection);
+				op_ret=ccgi_config_hansi_priority_web(id,hsprio,connection);
 				if(op_ret==0)
 				{
 					memset(paramalert,0,128);
@@ -585,7 +582,7 @@ int ShowHansiModPage(char *m,char *id,char * choice,struct list *lpublic,struct 
 					ShowAlert(search(lpublic,"hs_param"));
 				else
 				{
-					op_ret=ccgi_config_hansi_advertime(id,hstime,connection);
+					op_ret=ccgi_config_hansi_advertime_web(id,hstime,connection);
 					if(op_ret==0)
 					{
 						memset(paramalert,0,128);
@@ -607,7 +604,7 @@ int ShowHansiModPage(char *m,char *id,char * choice,struct list *lpublic,struct 
 			//deal with hansi heartbeatlink
 			if(strcmp(hblink,"")!=0)
 			{
-				op_ret=config_vrrp_heartbeat_cmd_func(id, hblink, hbip,connection);
+				op_ret=config_vrrp_heartbeat_cmd_func_web(id, hblink, hbip,connection);
 				if(op_ret==0)
 				{
 					memset(paramalert,0,128);
@@ -628,7 +625,6 @@ int ShowHansiModPage(char *m,char *id,char * choice,struct list *lpublic,struct 
 				char mask_tmp[20] = {0};
 				dwmaskbit=mask_bit(vgmk);
 		    	
-		  //  	fprintf(stderr,"vbvb vgatewayname=%s,vgateway=%s,vgmk=%s",vgatewayname,vgateway,vgmk);
 				if( (strcmp(vgatewayname,"") !=0)&&(strcmp(vgateway1,"") !=0)&& (strcmp(vgateway2,"") !=0)&& (strcmp(vgateway3,"") !=0)&& (strcmp(vgateway4,"") !=0)&&(strcmp(vgmk1,"") !=0)&&(strcmp(vgmk2,"") !=0)&&(strcmp(vgmk3,"") !=0)&&(strcmp(vgmk4,"") !=0))
 				{
 						if(dwmaskbit == -1)
@@ -637,8 +633,7 @@ int ShowHansiModPage(char *m,char *id,char * choice,struct list *lpublic,struct 
 						{
 							sprintf(mask_tmp,"%s/%d",vgateway,dwmaskbit);
 							
-							//op_ret=config_vrrp_gateway(id,vgatewayname,mask_tmp);
-							op_ret=config_vrrp_link_add_vip("add",id,"vgateway",vgatewayname,mask_tmp,connection);
+							op_ret=config_vrrp_link_add_vip_web("add",id,"vgateway",vgatewayname,mask_tmp,connection);
 							if(op_ret==33) 
 							{
 								ShowAlert(search(lpublic,"vgateway_conf_succ"));
@@ -674,13 +669,13 @@ int ShowHansiModPage(char *m,char *id,char * choice,struct list *lpublic,struct 
 			if(strcmp(choice,"8")==0) 
 			{
 				if(strcmp(hmd_switch,"none")!=0)
-					flag1=set_hansi_check_state_cmd(hmd_switch,pid,connection);
+					flag1=set_hansi_check_state_cmd_web(hmd_switch,pid,connection);
 				fprintf(stderr,"flag1=%d\n",flag1);
 				if(strcmp(link_switch,"none")!=0)
-					flag2=config_vrrp_multi_link_detect(link_switch,id,connection);
+					flag2=config_vrrp_multi_link_detect_web(link_switch,id,connection);
 				fprintf(stderr,"flag2=%d\n",flag2);
 				if(strcmp(preenpt,"none")!=0)
-					flag3=config_vrrp_preempt(preenpt,id,connection);
+					flag3=config_vrrp_preempt_web(preenpt,id,connection);
 				fprintf(stderr,"flag3=%d\n",flag3);
 				if((strcmp(max_ap_num,"")!=0) && (strcmp(max_ap_type,"")!=0))
 				{
@@ -689,7 +684,7 @@ int ShowHansiModPage(char *m,char *id,char * choice,struct list *lpublic,struct 
 					fprintf(stderr,"id=%s\n",id);
 					fprintf(stderr,"pid=%d\n",pid);
 
-				flag4=license_assign_cmd(max_ap_type,max_ap_num,"hansi",pid,id,connection);
+				flag4=license_assign_cmd_web(max_ap_type,max_ap_num,"hansi",pid,id,connection);
 				}
 				fprintf(stderr,"flag4=%d\n",flag4);
 
@@ -730,7 +725,7 @@ int ShowHansiModPage(char *m,char *id,char * choice,struct list *lpublic,struct 
 
 	if(cgiFormSubmitClicked("starts") == cgiFormSuccess)
 	{
-		retu=config_vrrp_service(id, "enable",connection);
+		retu=config_vrrp_service_web(id, "enable",connection);
 		if(retu==0)
 		{
 			ShowAlert(search(lpublic,"oper_succ"));
@@ -742,7 +737,7 @@ int ShowHansiModPage(char *m,char *id,char * choice,struct list *lpublic,struct 
 	}
 	if(cgiFormSubmitClicked("ends") == cgiFormSuccess)
 	{
-		retu=config_vrrp_service(id, "disable",connection);
+		retu=config_vrrp_service_web(id, "disable",connection);
 		if(retu==0)
 		{
 			ShowAlert(search(lpublic,"oper_succ"));
@@ -790,7 +785,7 @@ int ShowHansiModPage(char *m,char *id,char * choice,struct list *lpublic,struct 
 
 
 	fprintf(cgiOut,"<tr height=26>"\
-	"<td align=left id=tdleft background=/images/bottom_bg.gif style=\"border-right:0\"><font id=%s> %s</font></td>",search(lpublic,"menu_san"),search(lpublic,"hs_conf"));   /*突出显示*/
+	"<td align=left id=tdleft background=/images/bottom_bg.gif style=\"border-right:0\"><font id=%s> %s</font></td>",search(lpublic,"menu_san"),search(lpublic,"vr_conf"));   /*突出显示*/
 	fprintf(cgiOut,"</tr>");
 
 	for(i=0;i<15;i++)
@@ -805,7 +800,7 @@ int ShowHansiModPage(char *m,char *id,char * choice,struct list *lpublic,struct 
 	"<table width=600 border=0 cellspacing=0 cellpadding=0>");
 
 	hspro_num=strtoul(id,0,10);
-	retu1 = ccgi_show_hansi_profile(&zvrrp,hspro_num,slotid,connection);    
+	retu1 = ccgi_show_hansi_profile_web(&zvrrp,hspro_num,slotid,connection);    
 
 	fprintf(cgiOut,"<tr  height=30>\n");
 	fprintf(cgiOut,"<td>\n");
@@ -1154,64 +1149,7 @@ int ShowHansiModPage(char *m,char *id,char * choice,struct list *lpublic,struct 
 	"</form>"\
 	"</body>"\
 	"</html>");
-	free_ccgi_show_hansi_profile(&zvrrp);
+	free_ccgi_show_hansi_profile_web(&zvrrp);
 	return 0;
 }
 
-#if 0
-void ShowHansiClearPage(char *m,char *id,struct list *lpublic,struct list *lcontrol)
-{
-	cgiHeaderContentType("text/html");	
-	fprintf( cgiOut, "<html xmlns=\"http://www.w3.org/1999/xhtml\"> \n" );
-	fprintf( cgiOut, "<head> \n" );
-	fprintf( cgiOut, "<meta http-equiv=Content-Type content=text/html; charset=gb2312> \n" );
-	//下面三句话用于禁止页面缓存
-	fprintf( cgiOut, "<META   HTTP-EQUIV=\"pragma\"   CONTENT=\"no-cache\"> \n");
-	fprintf( cgiOut, "<META   HTTP-EQUIV=\"Cache-Control\"   CONTENT=\"no-cache,   must-revalidate\"> \n" );
-	fprintf( cgiOut, "<META   HTTP-EQUIV=\"expires\"   CONTENT=\"Wed,   26   Feb   1997   08:21:57   GMT\">	\n");
-
-	fprintf( cgiOut, "<title>%s</title> \n", search( lcontrol, "del" ) );
-	fprintf( cgiOut, "<link rel=stylesheet href=/style.css type=text/css> \n" );
-	fprintf( cgiOut, "<style type=text/css> \n" );
-	fprintf( cgiOut, ".usrlis {overflow-x:hidden; overflow:auto; width: 416px; height: 270px; clip: rect( ); padding-top: 0px; padding-right: 0px; padding-bottom: 0px; padding-left: 0px} \n" );
-	fprintf( cgiOut, "</style> \n" );
-	fprintf( cgiOut, "<style type=text/css> \n" );
-	fprintf( cgiOut, "tr.even td { \n" );
-	fprintf( cgiOut, "background-color: #eee; \n" );
-	fprintf( cgiOut, "} \n" );
-	fprintf( cgiOut, "tr.odd td { \n" );
-	fprintf( cgiOut, "background-color: #fff; \n" );
-	fprintf( cgiOut, "} \n" );
-	fprintf( cgiOut, "tr.changed td { \n" );
-	fprintf( cgiOut, "background-color: #ffd; \n" );
-	fprintf( cgiOut, "} \n" );
-	fprintf( cgiOut, " \n" ); 
-	fprintf( cgiOut, "tr.new td { \n" );  
-	fprintf( cgiOut, "background-color: #dfd; \n" );
-	fprintf( cgiOut, "} \n" );
-	fprintf( cgiOut, "</style> \n" );
-	fprintf( cgiOut, "</head> \n" );		
-	fprintf( cgiOut, "<body> \n" );
-
-
-	int ret;
-
-	//ccgi_config_hansi_profile(id);
-	ret=0;//delete_hansi_profile(id);
-	if(ret==0)
-	{
-		ShowAlert(search(lpublic,"oper_succ"));
-	}
-	else
-	{
-		ShowAlert(search(lpublic,"oper_fail"));
-	}
-	fprintf( cgiOut, "<script type='text/javascript'>\n" );
-	fprintf( cgiOut, "window.location.href='wp_hansilist.cgi?UN=%s';\n", m);
-	fprintf( cgiOut, "</script>\n" );	
-	fprintf( cgiOut, "</body>\n" );
-	fprintf( cgiOut, "</html>\n" );
-}
-
-#endif
-#endif

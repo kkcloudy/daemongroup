@@ -230,7 +230,7 @@ int ShowHansiaddPage(char *m,char *n,struct list *lpublic,struct list *lcontrol)
 			fprintf(stderr,"hspro=%s\n",hspro);
 			fprintf(stderr,"pid=%d\n",pid);
 			fprintf(stderr,"connection=%p\n",connection);
-//			op_ret=ccgi_config_hansi_profile(hspro,pid,connection);
+			op_ret=ccgi_config_hansi_profile_web(hspro,pid,connection);
 			//config current node sucessfully!
 			if(op_ret==0)                         
 			{
@@ -306,7 +306,7 @@ int ShowHansiaddPage(char *m,char *n,struct list *lpublic,struct list *lcontrol)
 								ShowAlert(search(lcontrol,"dhcp_mask_err"));
 							else
 							{
-//								op_ret=ccgi_downanduplink_ifname_mask(hspro,ulname, ulip, dlname, dlip, lprio,upmaskbit,dwmaskbit,connection);
+								op_ret=ccgi_downanduplink_ifname_mask_web(hspro,ulname, ulip, dlname, dlip, lprio,upmaskbit,dwmaskbit,connection);
 								fprintf(stderr,"op_ret=%d\n",op_ret);
 								if(op_ret==0)
 								{
@@ -371,7 +371,7 @@ int ShowHansiaddPage(char *m,char *n,struct list *lpublic,struct list *lcontrol)
                             else
                         	{
 								fprintf(stderr,"op_ret=%d\n",op_ret);
-//								op_ret=config_vrrp_uplink(hspro,ulname, ulip, lprio,upmaskbit,connection);
+								op_ret=config_vrrp_uplink_web(hspro,ulname, ulip, lprio,upmaskbit,connection);
 								if(op_ret==0)
 								{
 									memset(paramalert,0,128);
@@ -431,7 +431,7 @@ int ShowHansiaddPage(char *m,char *n,struct list *lpublic,struct list *lcontrol)
 								ShowAlert(search(lcontrol,"dhcp_mask_err"));
 							else
 							{
-//								op_ret=config_vrrp_downlink_mask(hspro,dlname,dlip, lprio,dwmaskbit,connection);
+								op_ret=config_vrrp_downlink_mask_web(hspro,dlname,dlip, lprio,dwmaskbit,connection);
 								fprintf(stderr,"op_ret=%d\n",op_ret);
 								if(op_ret==0)
 								{
@@ -455,7 +455,7 @@ int ShowHansiaddPage(char *m,char *n,struct list *lpublic,struct list *lcontrol)
 				}
 				if((strcmp(hbifname,"")!=0))
 				{
-//					op_ret=config_vrrp_heartbeat_cmd_func(hspro, hbifname, hbip,connection);
+					op_ret=config_vrrp_heartbeat_cmd_func_web(hspro, hbifname, hbip,connection);
 					fprintf(stderr,"op_ret=%d\n",op_ret);
 					if(op_ret==0)
 					{
@@ -562,6 +562,7 @@ int ShowHansiaddPage(char *m,char *n,struct list *lpublic,struct list *lcontrol)
 			"window.location.href = url;\n"\
 			"}\n", m);
 			fprintf( cgiOut,"</script>\n" );
+			
 			fprintf(cgiOut,"<tr height=30>\n");
 			fprintf(cgiOut,"<td width=140>\n");
 			fprintf(cgiOut,"%s:",search(lpublic,"hs_conftype"));

@@ -228,7 +228,7 @@ int parse_slot_hansi_id(char* ptr,int *firstid,int *secondid)
 }
 
 
-int license_assign_cmd(char *type_p,char *num_p,char *hansi,int slotid,char *hansi_id,DBusConnection *connection)
+int license_assign_cmd_web(char *type_p,char *num_p,char *hansi,int slotid,char *hansi_id,DBusConnection *connection)
 	//-2:command not supported;-3:slot is not active master;-4:unknow type format;-5:unknow num format;-6:hansi_id format error
 	//-7:slot_id is out range;-8:instance_id is out range;-9:failed get reply;-10:no enough license left;-11:license type no exist;
 	//-12:slot_id is not exist;-13:the board is not active master;-14:num should be more than specefication,should be 1024 or 2048;-15 or -16 is other error
@@ -336,7 +336,7 @@ int license_assign_cmd(char *type_p,char *num_p,char *hansi,int slotid,char *han
 	return retu;
 }
 
-int license_assign_show_cmd(DBusConnection *connection,int *license_count,struct LicenseData **LicInfo)
+int license_assign_show_cmd_web(DBusConnection *connection,int *license_count,struct LicenseData **LicInfo,int *slot_c)
 {	int ret;
 	DBusMessage *query, *reply;
 	DBusError err;
@@ -392,6 +392,7 @@ int license_assign_show_cmd(DBusConnection *connection,int *license_count,struct
 			dbus_message_iter_next(&iter_struct);
 
 			dbus_message_iter_get_basic(&iter_struct,&SlotCount);
+			*slot_c = SlotCount;
 			
 			dbus_message_iter_next(&iter_struct);	
 			dbus_message_iter_recurse(&iter_struct,&iter_sub_array);

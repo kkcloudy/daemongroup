@@ -63,7 +63,7 @@ int show_broad_instance_info(DBusConnection *connection, struct Hmd_Board_Info_s
     }	    
 }
 
-int set_hansi_check_state_cmd(char *hmd_state,int pid,DBusConnection *connection)
+int set_hansi_check_state_cmd_web(char *hmd_state,int pid,DBusConnection *connection)
 	//-1:hmd states is error;-2:dcli_init_func==NULL;-3:ccgi_dl_handle==NULL;-4:other error
 {	
 	int ret,retu;

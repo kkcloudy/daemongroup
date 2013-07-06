@@ -32,6 +32,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef _WS_DCLI_VRRP_H
 #define _WS_DCLI_VRRP_H
 
+#include <dbus/dbus.h>
+
 #define HANSI_STR "High-Available Network Access Service Instance Configuration\n"
 
 #define MAX_IFNAME_LEN        20
@@ -39,6 +41,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #define HANSIIPL   32
 #define HANSIUNL   64
+#define ADVERTIME  255
+
+#define SHOWRUN_PERLINE_SIZE 81
 
 
 #define DCLI_VRRP_RETURN_CODE_BASE                 (0x150000)
@@ -120,6 +125,15 @@ typedef struct{
  
 }Z_VRRP_VGATE;
 
+typedef struct vrrp_link_ip_dis{
+	char ifname[64];
+	char link_ip[32];
+	char ipstr[32];
+	char state[20];
+	int maskint;
+	struct vrrp_link_ip_dis *next;
+} vrrp_link_ip_web;
+
 typedef struct vrrp_link_ip_s{
 	char ifname[64];
 	char link_ip[32];
@@ -179,11 +193,58 @@ typedef struct {
 
 }Z_VRRP;
 
+typedef struct {
+ char state[20];
+ unsigned int priority;
+ unsigned int advert;
+ char  preempt[10];
+ char uplink_ifname[64];
+ char upstate[10]; 
+ char uplink_ip[64];
+ char uplink_ip_list[255];
+ char downlink_ifname[64];
+ char downstate[10];
+ char downlink_ip[64];
+ char downlink_ip_list[255];
+ vrrp_link_ip_web *uplink_list;
+ vrrp_link_ip_web *downlink_list;
+ vrrp_link_ip_web *vgatewaylink_list;
+ char realipup[64];
+ char realipdown[64];
+ char macstate[10];
+ char widstate[20];
+ char portalstate[20];
+ char hbinf[30];
+ char hbstate[10];
+ char hbip[64]; 
+ Z_VRRP_VGATE gw[24];
+ int gw_number;
+ int ulip1;
+ int dlip1;
+ int ulip2;
+ int dlip2;
+ int ulip3;
+ int dlip3;
+ int ulip4;
+ int dlip4;
+ int urip1;
+ int urip2;
+ int urip3;
+ int urip4;
+ int drip1;
+ int drip2;
+ int drip3;
+ int drip4;
+ int hbip1;
+ int hbip2;
+ int hbip3;
+ int hbip4;
 
+}Z_VRRP_web;
 
 /*functions*/
 extern int ccgi_config_hansi_profile(char *pro_num);
-
+extern int ccgi_config_hansi_profile_web(char *pro_num,int slotid,DBusConnection *connection);
 extern int ccgi_downanduplink_ifname(char *provrrp,char *upifname,char *upip,char *downifname,char *downip,char *prio);
 
 extern int ccgi_nohansi(char *provrrp);
@@ -205,7 +266,9 @@ extern void ccgi_vrrp_notify_to_npd
 extern int ccgi_config_hansi_priority(char *provrrp,char * prio_num);
 
 extern int ccgi_config_hansi_advertime(char *provrrp,char *adtime);
+extern int ccgi_config_hansi_priority_web(char *provrrp,char * prio_num,DBusConnection *connection);
 
+extern int ccgi_config_hansi_advertime_web(char *provrrp,char *adtime,DBusConnection *connection);
 extern int ccgi_config_hansi_virtualmac(char *provrrp,char *macstates);
 
 extern int ccgi_show_hansi(char *hnum,Z_VRRP *zvrrp);
@@ -213,6 +276,8 @@ extern int ccgi_show_hansi(char *hnum,Z_VRRP *zvrrp);
 extern void free_ccgi_show_hansi_profile(Z_VRRP *zvrrp);
 
 extern int ccgi_show_hansi_profile(Z_VRRP *zvrrp, int profile);
+extern void free_ccgi_show_hansi_profile_web(Z_VRRP_web *zvrrp);
+extern int ccgi_show_hansi_profile_web(Z_VRRP_web *zvrrp,int profile,int slotid,DBusConnection *connection);
 
 extern int ccgi_config_downlink(char *profid,char * dlinkname,char *dlinkip,char *dlinkprio);
 
@@ -241,6 +306,7 @@ extern unsigned int ccgi_vrrp_config_service_disable
 	unsigned int profile
 );
 extern int  send_arp(char *profid,char *ifnamez,char *ipz,char *macz);/*∑µªÿ0±Ì æ≥…π¶£¨∑µªÿ-1±Ì æerror£¨∑µªÿ-2±Ì æ¥ÌŒÛmac–Œ Ω*/
+extern int ccgi_vrrp_hansi_is_running_dis(unsigned int slot_id,int islocal,int instID);
 extern int ccgi_vrrp_hansi_is_running(unsigned int profileId);
 extern int ccgi_vrrp_check_service_started
 (
@@ -263,8 +329,10 @@ extern void ccgi_vrrp_splice_dbusname
 extern inline void reset_sigmaskz();
 extern int delete_hansi_profile(char *profileid);/*∑µªÿ0±Ì æ≥…π¶£¨∑µªÿ-1±Ì æprofileid≥¨≥ˆ∑∂Œß£¨∑µªÿ-2±Ì æconfig hansi  service disable faild*/
                                          /*∑µªÿ-3±Ì ædelete hansi  faild£¨∑µªÿ-4±Ì æcreate hansi  faild.∑µªÿ-5±Ì æerror£¨∑µªÿ-6±Ì æhansi no exist*/
+extern int delete_hansi_profile_web(char *profileid,DBusConnection *connection);/*∑µªÿ0±Ì æ≥…π¶£¨∑µªÿ-1±Ì æprofileid≥¨≥ˆ∑∂Œß£¨∑µªÿ-2±Ì æconfig hansi  service disable faild*/
+											 /*∑µªÿ-3±Ì ædelete hansi  faild£¨∑µªÿ-4±Ì æcreate hansi  faild.∑µªÿ-5±Ì æerror£¨∑µªÿ-6±Ì æhansi no exist*/
 
-extern int config_vrrp_heartbeat_cmd_func(char * profid,char *ifnamez,char *ipz);/*∑µªÿ0±Ì æ≥…π¶£¨∑µªÿ-1±Ì æ ß∞‹£¨∑µªÿ-2±Ì æ–ƒÃ¯œﬂipŒ™ø’£¨∑µªÿ-3±Ì æ–ƒÃ¯œﬂΩ”ø⁄√˚Œ™ø’*/
+extern int config_vrrp_heartbeat_cmd_func_web(char * profid,char *ifnamez,char *ipz,DBusConnection *connection);/*∑µªÿ0±Ì æ≥…π¶£¨∑µªÿ-1±Ì æ ß∞‹£¨∑µªÿ-2±Ì æ–ƒÃ¯œﬂipŒ™ø’£¨∑µªÿ-3±Ì æ–ƒÃ¯œﬂΩ”ø⁄√˚Œ™ø’*/
 extern int ccgi_config_realip_downlink(char *profid,char *downifname,char *downip);/*∑µªÿ0±Ì æ≥…π¶£¨∑µªÿ-1±Ì æerror,∑µªÿ-2±Ì æΩ”ø⁄√˚Œ™ø’*/
 extern int  set_hansi_vrid(char *profid,char *vidz);/*∑µªÿ0±Ì æ≥…π¶£¨∑µªÿ-1±Ì æerror£¨∑µªÿ-2±Ì ævidz≥¨≥ˆ∑∂Œß*/
 extern int ccgi_downanduplink_ifname_mask(char *provrrp,char *upifname,char *upip,char *downifname,char *downip,char *prio,int upmask,int downmask);
@@ -273,15 +341,24 @@ extern int config_vrrp_uplink(char *provrrp,char *upifname,char *upip,char *prio
 extern int config_vrrp_downlink_mask(char *proid,char *downifname,char *downip,char *prio,int downmask);/*∑µªÿ0±Ì æ≥…π¶£¨∑µªÿ-1±Ì æerror£¨∑µªÿ-2±Ì æΩ”ø⁄√˚Œ™ø’£¨∑µªÿ-3±Ì æ”≈œ»÷µ≥¨≥ˆ∑∂Œß*/
 											  
 extern int config_vrrp_link_add_vip(char * input_type, char *profid,char *linktype,char *ifnamez,char *ipz);
+extern int ccgi_downanduplink_ifname_mask_web(char *provrrp,char *upifname,char *upip,char *downifname,char *downip,char *prio,int upmask,int downmask,DBusConnection *connection);
+                                                  /*∑µªÿ0±Ì æ≥…π¶£¨∑µªÿ-1±Ì æerror£¨∑µªÿ-2±Ì æifnameŒ™ø’,∑µªÿ-3±Ì æipŒ™ø’,∑µªÿ-4±Ì æ”≈œ»÷µ≥¨≥ˆ∑∂Œß*/
+extern int config_vrrp_uplink_web(char *provrrp,char *upifname,char *upip,char *prio,int upmask,DBusConnection *connection);
+extern int config_vrrp_downlink_mask_web(char *proid,char *downifname,char *downip,char *prio,int downmask,DBusConnection *connection);/*∑µªÿ0±Ì æ≥…π¶£¨∑µªÿ-1±Ì æerror£¨∑µªÿ-2±Ì æΩ”ø⁄√˚Œ™ø’£¨∑µªÿ-3±Ì æ”≈œ»÷µ≥¨≥ˆ∑∂Œß*/
+											  
+extern int config_vrrp_link_add_vip_web(char * input_type, char *profid,char *linktype,char *ifnamez,char *ipz,DBusConnection *connection);
 
 extern int config_vrrp_start_state(char *profid,char *statez);/*∑µªÿ0±Ì æ≥…π¶£¨∑µªÿ-1±Ì æ ß∞‹*/
 extern int config_vrrp_service(char *profid,char *ablez);/*∑µªÿ0±Ì æ≥…π¶£¨∑µªÿ-1±Ì æ ß∞‹*/
+extern int config_vrrp_service_web(char *profid,char *ablez,DBusConnection *connection);/*∑µªÿ0±Ì æ≥…π¶£¨∑µªÿ-1±Ì æ ß∞‹*/
 extern int config_vrrp_gateway(char *profid,char *gwifname,char *gwip);/*∑µªÿ0±Ì æ≥…π¶£¨∑µªÿ-1±Ì æ ß∞‹*/
 extern int cancel_vrrp_gateway(char *profid,char *gwifname,char *gwip);/*∑µªÿ0±Ì æ≥…π¶£¨∑µªÿ-1±Ì æ ß∞‹*/
 extern int config_vrrp_preempt(char *profid,char *statez);/*∑µªÿ0±Ì æ≥…π¶£¨∑µªÿ-1±Ì æ ß∞‹£¨*/
+extern int config_vrrp_preempt_web(char *statez,int profid,DBusConnection *connection);/*∑µªÿ0±Ì æ≥…π¶£¨∑µªÿ-1±Ì æ ß∞‹£¨*/
 extern int cancel_vrrp_transfer(char *profid);/*∑µªÿ0±Ì æ≥…π¶£¨∑µªÿ-1±Ì æerror*/
 extern int config_vrrp_max_down_count(char *maxcount);/*∑µªÿ0 «≥…π¶£¨∑µªÿ-1 « ß∞‹£¨∑µªÿ-2 « ‰»Î≤Œ ˝≥¨≥ˆ∑∂Œß*/
 extern int config_vrrp_multi_link_detect(char *profid,char *statez);/*∑µªÿ0±Ì æ≥…π¶£¨∑µªÿ-1±Ì æ ß∞‹*/
+extern int config_vrrp_multi_link_detect_web(char *statez,char *profid,DBusConnection *connection);/*∑µªÿ0±Ì æ≥…π¶£¨∑µªÿ-1±Ì æ ß∞‹*/
 extern int config_vrrp_set_vgateway_transform(char *profid,char *statez);
 extern int config_vrrp_notify(char *profid,char *typez,char *statez);/*∑µªÿ0±Ì æ≥…π¶£¨∑µªÿ-1±Ì æ ß∞‹£¨∑µªÿ-2Unknown command format*/
 //kehao modify  20110519
@@ -293,7 +370,13 @@ extern int config_vrrp_no_real_ip_uplink(char *upif,char *upip,char *profid);/*∑
 extern int config_vrrp_no_real_ip_downlink(char *downif,char *downip,char *profid);/*∑µªÿ0±Ì æ≥…π¶£¨∑µªÿ-1±Ì æ ß∞‹£¨∑µªÿ-2±Ì æerror*/
 extern int config_vrrp_real_ip_uplink(char *upif,char *upip,char *profid);/*∑µªÿ0±Ì æ≥…π¶£¨∑µªÿ-1±Ì æ ß∞‹£¨∑µªÿ-2±Ì æerror*/
 extern int snmp_get_vrrp_state(int profile,int *hansi_state);/*∑µªÿ0±Ì æ ß∞‹£¨∑µªÿ1±Ì æ≥…π¶£¨∑µªÿ-1±Ì æ µ¿˝≤ª¥Ê‘⁄*/
-int show_vrrp_switch_times(unsigned int vrrp_id, unsigned long *switch_times);
+extern int show_vrrp_switch_times(unsigned int vrrp_id, unsigned long *switch_times);
+extern int show_vrrp_runconfig_by_hansi_web(int slot_id,char *insid, DBusConnection *connection,char **info);
+																	//-1:NULL == showRunningCfg_str;-2:Hansi instance %d not created;-3:Check had instance  whether created was failed!
+																	//-4:NULL == reply;-5:dbus_message_get_args error
+extern int show_vrrp_runconfig_cmd_by_ins(int slot,int ins);
+								//-1:error; 0:INSTANCE_NO_CREATED; 1:INSTANCE_CREATED
+extern int config_delete_hansi_cmd_web(int slot,char *ins,DBusConnection *connection);
 
 #endif
 

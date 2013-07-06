@@ -75,13 +75,13 @@ int cgiMain()
 void ShowSecdtaPage(char *m,char *id,struct list *lpublic,struct list *lcontrl)
 {  
     int i = 0;
-	Z_VRRP zvrrp;
+	Z_VRRP_web zvrrp;
 	memset(&zvrrp,0,sizeof(zvrrp));
 	int hspro_num=0;
 	int retu = 0;
-	vrrp_link_ip *uq=NULL;
-	vrrp_link_ip *dq=NULL;
-	vrrp_link_ip *vq=NULL;
+	vrrp_link_ip_web *uq=NULL;
+	vrrp_link_ip_web *dq=NULL;
+	vrrp_link_ip_web *vq=NULL;
 	DBusConnection *connection = NULL;
 	DBusConnection *master_connection = NULL;
 	ccgi_dbus_init();
@@ -195,15 +195,22 @@ void ShowSecdtaPage(char *m,char *id,struct list *lpublic,struct list *lcontrl)
 
 	ccgi_dbus_init();
 	hspro_num=strtoul(id,0,10);
-//	retu = ccgi_show_hansi_profile(&zvrrp, hspro_num,pid,connection); 
+	retu = ccgi_show_hansi_profile_web(&zvrrp, hspro_num,pid,connection); 
 	
-
+	char buf[128] = {0};
+	char *tmp = buf;
+	int len = 0;
+	
+	char buf_num[128] = {0};
+	char *tmp_num = buf_num;
+	int len_num = 0;
+	int j=0;
+	int num=0;
 	struct LicenseData *LicenseInfo = NULL;
 	int license_count=0;
 	int lic_ret=0;
-	lic_ret=license_assign_show_cmd(master_connection,&license_count,&LicenseInfo);
-	fprintf(stderr,"lic_ret=%d\n",lic_ret);
-	fprintf(stderr,"license_count=%d\n",license_count);
+	int slot_count=0;
+	lic_ret=license_assign_show_cmd_web(master_connection,&license_count,&LicenseInfo,&slot_count);
 
 	//////////////////////////////////////////////////////	
 
@@ -326,16 +333,6 @@ void ShowSecdtaPage(char *m,char *id,struct list *lpublic,struct list *lcontrl)
 
 	}
 
-	
-	char buf[128] = {0};
-	char *tmp = buf;
-	int len = 0;
-	
-	char buf_num[128] = {0};
-	char *tmp_num = buf_num;
-	int len_num = 0;
-	int j=0;
-	int num=0;
 	if(lic_ret==0)
 	{
 		if(LicenseInfo)
@@ -349,24 +346,22 @@ void ShowSecdtaPage(char *m,char *id,struct list *lpublic,struct list *lcontrl)
 					len += sprintf(tmp,"%6d",i);
 					tmp = buf + len;
 				}
-				fprintf(stderr,"buf=%s\n",buf);
 
-				for(j = 0; j < license_count; j++)
+				for(k=0;k<slot_count;k++)
 				{
-						num += LicenseInfo[j].r_assign_num[pid][insid];
-				}
-				fprintf(stderr,"num=%d\n",num);
-//				if(num != 0)
-//				{				
-					len_num += sprintf(tmp_num,"%8s%2d-%2d:","Hansi",pid,insid);
-					tmp_num = buf_num + len_num;
-					for(j = 0; j < license_count; j++)
+					fprintf(stderr,"LicenseInfo[0].slot_id[k]=%d\n",LicenseInfo[0].slot_id[k]);
+					fprintf(stderr,"pid=%d\n",pid);
+					if(LicenseInfo[0].slot_id[k]==pid)
 					{
-						len_num += sprintf(tmp_num,"%6d",LicenseInfo[j].r_assign_num[pid][insid]);
+						len_num += sprintf(tmp_num,"%8s%2d-%2d:","Hansi",pid,insid);
 						tmp_num = buf_num + len_num;
-					}
-					fprintf(stderr,"buf_num=%s\n",buf_num);
-//				}
+						for(j = 0; j < license_count; j++)
+						{
+							len_num += sprintf(tmp_num,"%6d",LicenseInfo[j].r_assign_num[k][insid]);
+							tmp_num = buf_num + len_num;
+						}
+					}					
+				}										
 			}
 		}
 	}
@@ -384,7 +379,7 @@ void ShowSecdtaPage(char *m,char *id,struct list *lpublic,struct list *lcontrl)
 	char *info=NULL;
 	char *p = NULL;
 	char *str_strtok;
-//	oth_ret=show_vrrp_runconfig_by_hansi(pid,id,connection,&info);
+	oth_ret=show_vrrp_runconfig_by_hansi_web(pid,id,connection,&info);
 	if((oth_ret==0)&&(info))
 	{
 
@@ -470,6 +465,8 @@ void ShowSecdtaPage(char *m,char *id,struct list *lpublic,struct list *lcontrl)
 	"</form>"\
 	"</body>"\
 	"</html>");
-	free_ccgi_show_hansi_profile(&zvrrp);
+	if(info)
+		free(info);
+	free_ccgi_show_hansi_profile_web(&zvrrp);
 	free_instance_parameter_list(&paraHead2);	
 }

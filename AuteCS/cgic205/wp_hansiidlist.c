@@ -39,6 +39,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "ws_dbus_list.h"
 #include "ws_dbus_list_interface.h"
 #include "ws_dcli_vrrp.h"
+#include "ws_dcli_license.h"
+
 
 int ShowhansilistPage(char *m,char *n,struct list *lpublic,struct list *lcontrol);    
 
@@ -92,6 +94,7 @@ int ShowhansilistPage(char *m,char *n,struct list *lpublic,struct list *lcontrol
 	char paramalert[128] = {0};
 
 	DBusConnection *connection = NULL;
+	DBusConnection *master_connection = NULL;
 	ccgi_dbus_init();
 	instance_parameter *paraHead2 = NULL;
 	instance_parameter *p_q = NULL;
@@ -117,6 +120,23 @@ int ShowhansilistPage(char *m,char *n,struct list *lpublic,struct list *lcontrol
 			{
 				connection = p_q->connection;
 			}
+		}
+	}
+	unsigned int active_master=0;
+	FILE *fd = NULL;
+	fd = fopen("/dbm/product/active_master_slot_id", "r");
+	if (fd == NULL)
+	{
+		return -1;
+	}
+	fscanf(fd, "%d", &active_master);
+	fclose(fd);
+	for(p_q=paraHead2;(NULL != p_q);p_q=p_q->next)
+	{
+	
+		if(p_q->parameter.slot_id == active_master)
+		{
+			master_connection = p_q->connection;
 		}
 	}
   
@@ -159,11 +179,10 @@ int ShowhansilistPage(char *m,char *n,struct list *lpublic,struct list *lcontrol
 	  {
 		  fprintf(stderr,"connection=%p",connection);
 		  fprintf(stderr,"insid=%s",insid);
-		  int rrrr=0;
-	//config_delete_hansi_cmd(pid,insid,connection);
-		  fprintf(stderr,"rrrr=%d",rrrr);
+		  int retu_del=0;
+		  retu_del=config_delete_hansi_cmd_web(pid,insid,connection);
 		  
-		  if(rrrr==0)
+		  if(retu_del==0)
 		  {
 			  ShowAlert(search(lpublic,"oper_succ"));
 		  }
@@ -245,9 +264,9 @@ int ShowhansilistPage(char *m,char *n,struct list *lpublic,struct list *lcontrol
 
 					fprintf(cgiOut,"<td align=left colspan=2>");     
 
-					fprintf(cgiOut,"<table frame=below valign=top rules=rows width=400 border=1>");
+					fprintf(cgiOut,"<table frame=below valign=top rules=rows width=640 border=1>");
 					fprintf(cgiOut,"<tr align=left>");
-				    fprintf(cgiOut,"<td width=400>SLOT ID:");
+				    fprintf(cgiOut,"<td width=130>SLOT ID:");
 					fprintf( cgiOut, "<select name=insid onchange=slotid_change(this)>");
 					for(p_q=paraHead2;(NULL != p_q);p_q=p_q->next)
 					{
@@ -273,22 +292,111 @@ int ShowhansilistPage(char *m,char *n,struct list *lpublic,struct list *lcontrol
 					fprintf( cgiOut,"</script>\n" );
 
 					
-					fprintf(cgiOut,"<tr height=20></tr>");
-					fprintf(cgiOut,"<tr align=left>");
-				    fprintf(cgiOut,"<th width=400><font id=%s>%s%s</font></th>",search(lpublic,"menu_thead"),search(lpublic,"instance"),"ID");
-					fprintf(cgiOut,"</tr>");
-
                     ccgi_dbus_init();
 					fprintf(stderr,"pid=%d",pid);
+					char buf_num[128] = {0};
+					char *tmp_num = buf_num;
+					int len_num = 0;
+					int j=0,k=0;
+					int num=0;
+					struct LicenseData *LicenseInfo = NULL;
+					int slot_count=0;
+					int license_count=0;
+					int lic_ret=0;
+					lic_ret=license_assign_show_cmd_web(master_connection,&license_count,&LicenseInfo,&slot_count);
+					fprintf(cgiOut,"<tr height=20></tr>");
+					fprintf(cgiOut,"<tr align=left>");
+				    fprintf(cgiOut,"<th width=130>&nbsp;&nbsp;&nbsp;&nbsp;</th>");
+				    fprintf(cgiOut,"<th width=60><font id=%s>Total:</font></th>",search(lpublic,"menu_thead"));
+					if(lic_ret==0)
+					{
+						if(LicenseInfo)
+						{	
+							fprintf(stderr,"license_count=%d\n",license_count);
+							if(license_count!=0)
+							{
+								for(i = 0; i < license_count; i++){
+									fprintf(stderr,"LicenseInfo[i].total_num=%d\n",LicenseInfo[i].total_num);
+									fprintf(cgiOut,"<th width=60 align=center><font id=%s>%d</font></th>",search(lpublic,"menu_thead"),LicenseInfo[i].total_num);
+								}
+							}
+						}
+					}					
+					fprintf(cgiOut,"</tr>");
+						fprintf(cgiOut,"<tr align=left>");
+						fprintf(cgiOut,"<th width=130>&nbsp;&nbsp;&nbsp;&nbsp;</th>");
+						fprintf(cgiOut,"<th width=60><font id=%s>Free:</font></th>",search(lpublic,"menu_thead"));
+						if(lic_ret==0)
+						{
+							if(LicenseInfo)
+							{	
+								fprintf(stderr,"license_count=%d\n",license_count);
+								if(license_count!=0)
+								{
+									for(i = 0; i < license_count; i++){
+										fprintf(stderr,"LicenseInfo[i].free_num=%d\n",LicenseInfo[i].free_num);
+										fprintf(cgiOut,"<th width=60 align=center><font id=%s>%d</font></th>",search(lpublic,"menu_thead"),LicenseInfo[i].free_num);
+									}
+								}
+							}
+						}
+					fprintf(cgiOut,"</tr>");
+					fprintf(cgiOut,"<tr align=left>");
+				    fprintf(cgiOut,"<th width=130><font id=%s>%s%s</font></th>",search(lpublic,"menu_thead"),search(lpublic,"instance"),"ID");
+					fprintf(cgiOut,"<th width=60><font id=%s>LicenseType:</font></th>",search(lpublic,"menu_thead"));
+					if(lic_ret==0)
+					{
+						if(LicenseInfo)
+						{	
+							fprintf(stderr,"license_count=%d\n",license_count);
+							if(license_count!=0)
+							{
+								for(i = 1; i <= license_count; i++)
+								{
+									fprintf(cgiOut,"<th width=60 align=center><font id=%s>%d</font></th>",search(lpublic,"menu_thead"),i);
+								}
+							}
+						}
+					}
+					fprintf(cgiOut,"</tr>");
+
                     for(i=1;i<17;i++)
                 	{
-	    //                ret=show_vrrp_runconfig_cmd_by_ins(pid,i);
+                		memset(buf_num,0,128);
+						tmp_num = buf_num;
+						len_num=0;
+	                    ret=show_vrrp_runconfig_cmd_by_ins(pid,i);
 						fprintf(stderr,"ret=%d",ret);
 						if(ret==1)
 	          	        {
 
 							fprintf(cgiOut,"<tr align=left  bgcolor=%s>",setclour(cl));
-							fprintf(cgiOut,"<td  width=400>%d</td>",i);
+							fprintf(cgiOut,"<td  width=130>%d</td>",i);
+							fprintf(cgiOut,"<td width=60>&nbsp;&nbsp;&nbsp;&nbsp;</td>");
+							if(lic_ret==0)
+							{
+								if(LicenseInfo)
+								{	
+									if(license_count!=0)
+									{
+										for(k=0;k<slot_count;k++)
+										{
+											fprintf(stderr,"LicenseInfo[0].slot_id[k]=%d\n",LicenseInfo[0].slot_id[k]);
+											fprintf(stderr,"pid=%d\n",pid);
+											if(LicenseInfo[0].slot_id[k]==pid)
+											{
+												for(j = 0; j < license_count; j++)
+												{
+													fprintf(stderr,"LicenseInfo[%d].r_assign_num[%d][%d]=%d\n",j,k,i,LicenseInfo[j].r_assign_num[k][i]);
+													fprintf(cgiOut,"<td width=60 align=center>%d</td>",LicenseInfo[j].r_assign_num[k][i]);
+												}
+											}
+										
+										}										
+									}
+								}
+							}
+							
 
 							memset(menu,0,15);
 						    strcat(menu,"menuLists");
@@ -301,6 +409,7 @@ int ShowhansilistPage(char *m,char *n,struct list *lpublic,struct list *lcontrol
 								"<div id=%s style=\"display:none; position:absolute; top:5px; left:0;\">",menu);
 							fprintf(cgiOut,"<div id=div1>");
 							fprintf(cgiOut,"<div id=div2 onmouseover=\"this.style.backgroundColor='#b6bdd2'\" onmouseout=\"this.style.backgroundColor='#f9f8f7'\"><a id=link href=wp_hansiidlist.cgi?UN=%s&ID=%d&plotid=%d&DeletWlan=%s&SubmitFlag=1 target=mainFrame onclick=\"return confirm('%s')\">%s</a></div>",m,i,pid,"true",search(lpublic,"confirm_delete"),search(lpublic,"delete"));                             
+							fprintf(cgiOut,"<div id=div2 onmouseover=\"this.style.backgroundColor='#b6bdd2'\" onmouseout=\"this.style.backgroundColor='#f9f8f7'\"><a id=link href=wp_hansiIdmod.cgi?UN=%s&ID=%d&TYPE=%s&plotid=%d target=mainFrame>%s</a></div>",m,i,"1",pid,search(lpublic,"configure"));
 							fprintf(cgiOut,"</div>"\
 								"</div>"\
 								"</div>"\
