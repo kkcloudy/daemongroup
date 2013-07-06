@@ -492,7 +492,7 @@ int ShowWlanconPage(char *m,char *n,char *t,char *pn,char *ins_id,instance_param
                 "<tr height=30>"\
                  "<td>WLAN %s:</td>",search(lwlan,"service"));
                  fprintf(cgiOut,"<td align=left>");
-				    if((result1 == 1)&&(whead)&&(whead->WLAN[0])&&(whead->WLAN[0]->SecurityID!=0)&&(inter_num>0))  /*已绑定安全策略和接口*/
+				    if((result1 == 1)&&(whead)&&(whead->WLAN[0])&&(whead->WLAN[0]->SecurityID!=0))  /*已绑定安全策略*/
 				 	  fprintf(cgiOut,"<select name=wlan_service id=wlan_service style=width:100px>");
 					else
 					  fprintf(cgiOut,"<select name=wlan_service id=wlan_service style=width:100px disabled>");
@@ -1025,17 +1025,6 @@ void ConWlan(instance_parameter *ins_para,int id,int inter_num,int security_flag
 	   if(bind_result==0) 
 	     flag=0;
 	}
-	else if(inter_num==0)/*WLAN没有绑定接口*/
-	{
-	  memset(stat,0,sizeof(stat));
-	  cgiFormStringNoNewlines("wlan_service",stat,10); 
-	  if(strcmp(stat,""))
-	  {
-		ShowAlert(search(lpublic,"select_interface"));
-		flag=0;
-	  }
-	}
-
 
 	/*********************************************************/
 	/** 				         修改ESSID      					**/
