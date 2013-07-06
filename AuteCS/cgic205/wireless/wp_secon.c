@@ -271,23 +271,32 @@ int ShowSecurityConfigPage(char *m,char *n,char *t,char *r,char *exten,char *pn,
 				  if(strcmp(n,"802.1x")==0)
 				  	limit=29;
 				  else if(strcmp(n,"MD5")==0)
-				  	limit=26;
+				  	limit=24;
 				  else if (strcmp(n,"WPA_E")==0)
-				  	limit=33;
+				  	limit=30;
 				  else if(strcmp(n,"WPA2_E")==0)
-				  	limit=35;
+				  	limit=32;
 				  else if((strcmp(n,"WPA_P")==0)||(strcmp(n,"WPA2_P")==0))
-				  	limit=9;
+				  	limit=6;
 				  else if(strcmp(n,"open")==0)
-				  	limit=8;
+				  {
+					  limit=4;
+					  if(strcmp(r,"WEP")==0)
+				  		limit+=5;
+				  }
+				  else if(strcmp(n,"WAPI_PSK")==0)
+				  	limit=7;
+				  else if(strcmp(n,"WAPI_AUTH")==0)
+				  	limit=16;
 				  else
-				  	limit=8;
+				  	limit=9;
+				  
 				  if(((strcmp(n,"open")==0)||(strcmp(n,"shared")==0))&&(strcmp(exten,"1")==0))
 					limit+=21;	
-				  if(strcmp(n,"WAPI_PSK")==0)
-				  	limit+=1;
-				  if(strcmp(n,"WAPI_AUTH")==0)
-				  	limit+=11;
+				  //if(strcmp(n,"WAPI_PSK")==0)
+				  	//limit+=1;
+				  //if(strcmp(n,"WAPI_AUTH")==0)
+				  	//limit+=11;
                   for(i=0;i<limit;i++)
 	              {
   				    fprintf(cgiOut,"<tr height=25>"\
@@ -376,13 +385,13 @@ int ShowSecurityConfigPage(char *m,char *n,char *t,char *r,char *exten,char *pn,
 					  	       fprintf(cgiOut,"<td width=170 id=sec3>");					  	
          					   if(strcmp(r,"WEP")==0)
 							   { 
-         					     fprintf(cgiOut,"<input type=radio name=encry_type value=none onclick=\"showTR(mytr,mytr2)\">none"\
-         						 "<input type=radio name=encry_type value=WEP checked=checked onclick=\"showTR(mytr,mytr2)\">WEP");
+         					     fprintf(cgiOut,"<input type=radio name=encry_type value=none onclick=\"showTR(mytr,mytr2);javascript:this.form.submit();\">none"\
+         						 "<input type=radio name=encry_type value=WEP checked=checked onclick=\"showTR(mytr,mytr2);javascript:this.form.submit();\">WEP");
          					   }          					   
          					   else	  /*Ä¬ÈÏÊÇnone*/    			      
          					   {
-         					     fprintf(cgiOut,"<input type=radio name=encry_type value=none checked=checked onclick=\"showTR(mytr,mytr2)\">none"\
-         						 "<input type=radio name=encry_type value=WEP onclick=\"showTR(mytr,mytr2)\">WEP");
+         					     fprintf(cgiOut,"<input type=radio name=encry_type value=none checked=checked onclick=\"showTR(mytr,mytr2);javascript:this.form.submit();\">none"\
+         						 "<input type=radio name=encry_type value=WEP onclick=\"showTR(mytr,mytr2);javascript:this.form.submit();\">WEP");
          					   }     			      
                			       fprintf(cgiOut,"</td>"\
 							   "</tr>"\
@@ -559,19 +568,22 @@ int ShowSecurityConfigPage(char *m,char *n,char *t,char *r,char *exten,char *pn,
             "</td>"\
            "</tr>");
 		   /************************************  security index  ******************************/ 
-		   fprintf(cgiOut,"<tr style=padding-top:20px>"\
-                "<td colspan=2><table width=300 border=0 cellspacing=0 cellpadding=0>"\
-              "<tr>"\
-                "<td id=sec1 colspan=3 style=\"border-bottom:2px solid #53868b\">%s</td>","security index");
-                fprintf(cgiOut,"</tr>"\
-              "<tr height=20 style=padding-top:10px>"\
-                "<td width=130 id=sec2>Security Index:</td>"\
-				"<td width=100><input type=text name=security_index size=11 maxLength=1 onkeypress=\"return event.keyCode>=48&&event.keyCode<=57\"></td>");
-				fprintf(cgiOut,"<td width=70 align=left><font color=red>(1--4)</font></td>"\
-              "</tr>"\
-              "</table>"\
-               "</td>"\
-            "</tr>");
+		   if(((0 == sectypeChoice)&&(strcmp(r,"WEP")==0))||(1 == sectypeChoice)||(2 == sectypeChoice))
+		   {
+			    fprintf(cgiOut,"<tr style=padding-top:20px>"\
+					"<td colspan=2><table width=300 border=0 cellspacing=0 cellpadding=0>"\
+				  "<tr>"\
+					"<td id=sec1 colspan=3 style=\"border-bottom:2px solid #53868b\">%s</td>","security index");
+					fprintf(cgiOut,"</tr>"\
+				  "<tr height=20 style=padding-top:10px>"\
+					"<td width=130 id=sec2>Security Index:</td>"\
+					"<td width=100><input type=text name=security_index size=11 maxLength=1 onkeypress=\"return event.keyCode>=48&&event.keyCode<=57\"></td>");
+					fprintf(cgiOut,"<td width=70 align=left><font color=red>(1--4)</font></td>"\
+				  "</tr>"\
+				  "</table>"\
+				   "</td>"\
+				"</tr>");
+		   }
 			if((strcmp(n,"WPA_E")==0)||(strcmp(n,"WPA_P")==0)||(strcmp(n,"WPA2_E")==0)||(strcmp(n,"WPA2_P")==0))
 			{
 				fprintf(cgiOut,"<tr style=padding-top:20px>"\
