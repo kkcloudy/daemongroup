@@ -324,7 +324,32 @@ int cgiMain()
 		fprintf( cgiOut, "</td> \n" );
 		fprintf( cgiOut, "<td align=left style=\"background-color:#ffffff; border-right:1px solid #707070; padding-left:30px\"><div id=\"rules\" align=\"left\" style=\"width:768px;overflow:auto\"> \n" );
 		fprintf( cgiOut, "<div> \n" );
-		fprintf( cgiOut, " \n" );		
+		fprintf( cgiOut, " \n" );	
+		
+		fprintf( cgiOut, "<div class=\"col1\">\n" );
+		fprintf( cgiOut, "<label class=\"col1\">%s</label> \n", search( lfirewall, "slot_num") );
+		fprintf( cgiOut, "<span class=\"col2\"><select name=plotid id=plotid style=width:72px onchange=plotid_change(this)></span>\n");
+		for(p_q=paraHead1;(NULL != p_q);p_q=p_q->next)
+		{
+			if(p_q->parameter.slot_id == slot_id)
+			{
+				fprintf(cgiOut,"<option value=\"%d\" selected>%d</option>",p_q->parameter.slot_id,p_q->parameter.slot_id);
+			}
+			else
+			{
+				fprintf(cgiOut,"<option value=\"%d\">%d</option>",p_q->parameter.slot_id,p_q->parameter.slot_id);
+			}		
+		}
+		fprintf( cgiOut, "</select></span> </div> \n" );
+		fprintf(cgiOut, "<script type=text/javascript>\n");
+		fprintf(cgiOut, "function plotid_change( obj )\n"\
+				"{\n"\
+				"var plotid = obj.options[obj.selectedIndex].value;\n"\
+				"var url = 'wp_fwruleview.cgi?UN=%s&ruleType=%s&plotid='+plotid;\n"\
+				"window.location.href = url;\n"\
+				"}\n", encry, ruleType);
+		fprintf(cgiOut,"</script>\n");
+		
 		fprintf( cgiOut, "<div class=\"col1\"> \n" );
 		fprintf( cgiOut, "<label class=\"col1\">%s</label> \n", search( lfirewall, "ruleedit_pos" ) );
 		fprintf( cgiOut, "<span class=\"col2\" > \n" );
@@ -374,32 +399,9 @@ int cgiMain()
 			}
 		}
 #endif	
-
-		//fprintf( cgiOut, "</select></span> </div> \n" );
+		fprintf( cgiOut, "</span> </div> \n" );
 		
-		fprintf( cgiOut, "<div class=\"col1\">\n" );
-		fprintf( cgiOut, "<label class=\"col1\">%s</label> \n", search( lfirewall, "slot_num") );
-		fprintf( cgiOut, "<span class=\"col2\"><select name=plotid id=plotid style=width:72px onchange=plotid_change(this)></span>\n");
-		for(p_q=paraHead1;(NULL != p_q);p_q=p_q->next)
-		{
-			if(p_q->parameter.slot_id == slot_id)
-			{
-				fprintf(cgiOut,"<option value=\"%d\" selected>%d</option>",p_q->parameter.slot_id,p_q->parameter.slot_id);
-			}
-			else
-			{
-				fprintf(cgiOut,"<option value=\"%d\">%d</option>",p_q->parameter.slot_id,p_q->parameter.slot_id);
-			}		
-		}
-		fprintf(cgiOut, "<script type=text/javascript>\n");
-		fprintf(cgiOut, "function plotid_change( obj )\n"\
-				"{\n"\
-				"var plotid = obj.options[obj.selectedIndex].value;\n"\
-				"var url = 'wp_fwruleview.cgi?UN=%s&ruleType=%s&plotid='+plotid;\n"\
-				"window.location.href = url;\n"\
-				"}\n", encry, ruleType);
-		fprintf(cgiOut,"</script>\n");
-		fprintf( cgiOut, "</div> \n" );
+		//fprintf( cgiOut, "</div> \n" );
 		#if 0
 		fprintf( cgiOut, "<script type=text/javascript>\n" );
 		fprintf( cgiOut, "function indexSelectChange(){\n"\
@@ -409,12 +411,15 @@ int cgiMain()
 		"}" );
 //		fprintf( cgiOut, "indexSelectChange();\n" );
 		fprintf( cgiOut, "</script>\n" );
-		#endif
+
 		fprintf( cgiOut, "<div class=\"col1\"> \n" );
 		fprintf( cgiOut, "<label class=\"col1\">%s</label> \n", search( lfirewall, "ruleedit_description") );
 		fprintf( cgiOut, "<span class=\"col2\"> \n" );
 		fprintf( cgiOut, "<input type=\"text\" id=\"ruleDescription\" name=\"ruleDescription\" size=30 maxLength=30/> \n" );
 		fprintf( cgiOut, "</span> <span><font color=red>(%s)</font></span></div> \n", search( lfirewall, "ruleedit_description_limite" ) );
+#endif
+
+
 #if 0//这两个选项还没有功能，先去掉		
 		fprintf( cgiOut, "<div class=\"col1\"> &nbsp;&nbsp; \n" );
 		fprintf( cgiOut, "<input id=\"loggingEnabledCHECKBOX\" name=\"loggingEnabledCHECKBOX\" type=\"checkbox\" class=\"checkbox\" /> \n" );
