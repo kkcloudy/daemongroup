@@ -35,10 +35,10 @@ BEGIN{
 {
    if($1 !~ "lo:*")
    {
-	if($1~/eth.*/ || $1~/vlan.*/ || $1~/ebr.*/ )
+	if($1~/eth.*/ || $1~/vlan.*/ || $1~/ebr.*/ || $1~/ve.*/)
 	{
      	POS1=index($1,"<")
-     	if(NF>=3 && $3~"inet*")
+#     	if(NF>=3 && $3~"inet*")
      	{
         
 	  sub(/inet /,"",$3)
@@ -48,7 +48,7 @@ BEGIN{
              POS2=index($3,"scope")
           }      
           gsub(/\//," ",$3)
-          if($1~/UP/)
+#          if($1~/UP/)
 		{
                 	print substr($1,0,POS1-3)" "substr($3,0,POS2-2) 
              	}
