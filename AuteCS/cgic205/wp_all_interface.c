@@ -255,9 +255,25 @@ int ShowInterfacePage()
 			  fprintf(cgiOut, "<select name=\"interface_all\" onchange=\"javascript:this.form.submit();\" style='height:auto'>");
 				for(i=0;i<intf_num;i++)
 				{
-					if( strcmp( intfName[i],select_opt ) == 0)
+			 	     if(0 == strncmp(intfName[i],"ve",2))
+				 	 {
+				 	 	char *temp_ve = NULL;
+						char temp_ve1[INTF_NAME_LENTH];
+
+				 	 	temp_ve = strchr(intfName[i],'@');
+						if(temp_ve)
+						{
+							memset(temp_ve1,0,INTF_NAME_LENTH);
+							strncpy(temp_ve1,intfName[i],temp_ve-intfName[i]);
+						
+							memset(intfName[i],0,INTF_NAME_LENTH);
+							strcpy(intfName[i],temp_ve1);
+						}
+				 	 }
+				 
+					 if( strcmp( intfName[i],select_opt ) == 0)
 						fprintf(cgiOut,"<option value=%s selected=selected>%s",intfName[i],intfName[i]);
-					else				
+					 else				
 						fprintf(cgiOut,"<option value=%s>%s",intfName[i],intfName[i]);
 				}
 			  fprintf(cgiOut,"</select></td></tr>");
@@ -423,29 +439,41 @@ int nameToIP(char * intfname,char * ipnetwork[],int * net_num,struct list * lpub
 
 int  interfaceInfo(char * intfname[],int * infoNum,struct list * lpublic)
 {
- FILE * ft;
- char * syscommand=(char *)malloc(300);
- memset(syscommand,0,300);
- int i;
- sprintf(syscommand,"ip addr | grep -v wlan|awk 'BEGIN{FS=\":\";RS=\"(\^|\\n)[0-9]+:[ ]\"}{print $1}' | awk 'NR==2,NR==0{print}' ");
- ft = popen(syscommand,"r"); 
- char  temp[INTF_NAME_LENTH];
- memset(temp,0,INTF_NAME_LENTH);
- i=0;
+	FILE * ft;
+	char * syscommand=(char *)malloc(300);
+	memset(syscommand,0,300);
+	int i = 0, j = 0,is_repeat = 0;
+	sprintf(syscommand,"ip addr | awk 'BEGIN{FS=\":\";RS=\"(\^|\\n)[0-9]+:[ ]\"}{print $1}' | awk 'NR==2,NR==0{print}' ");
+	ft = popen(syscommand,"r"); 
+	char  temp[INTF_NAME_LENTH];
+	memset(temp,0,INTF_NAME_LENTH);
+	i=0;
 
- if(ft != NULL)
- 	{
-	 while((fgets(temp,INTF_NAME_LENTH-2,ft)) != NULL)
-		 {
-			 strncpy(intfname[i],temp,strlen(temp)-1);
-			 i++;
+	if(ft != NULL)
+	{
+		while((fgets(temp,INTF_NAME_LENTH-2,ft)) != NULL)
+		{
+			 is_repeat = 0;
+			 for(j=0;j<i;j++)
+			 {
+			 	if(0 == strncmp(temp,intfname[j],strlen(temp)-1))
+			 	{
+			 		is_repeat = 1;
+			 	}
+			 }
+
+			 if(0 == is_repeat)
+			 {			 	 
+				 strncpy(intfname[i],temp,strlen(temp)-1);
+				 i++;
+			 }
 			 memset(temp,0,INTF_NAME_LENTH);
-		 }
-	 pclose(ft);
- 	}
- *infoNum=i;
- free(syscommand);
- return 1;
+		}
+		pclose(ft);
+	}
+	*infoNum=i;
+	free(syscommand);
+	return 1;
 }
 
 int delete_interface(char * intf_name,char * net,struct list * lcon)
