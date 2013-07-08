@@ -208,15 +208,16 @@ int ShowPortConfPage(char *prtno)
   }
 
   struct eth_port_s pr;
+  struct global_ethport_s PortV;
   struct slot sr;
   ETH_SLOT_LIST  head,*p;
   ETH_PORT_LIST *pp;
   int num,ret;
   unsigned int value = 0;
 
-  pr.attr_bitmap=0;
-  pr.mtu=0;
-  pr.port_type=0;
+  PortV.attr_bitmap=0;
+  PortV.mtu=0;
+  PortV.port_type=0;
   sr.module_status=0; 	
   sr.modname=(char *)malloc(20);	   
   sr.sn=(char *)malloc(20);		   
@@ -421,28 +422,29 @@ int ShowPortConfPage(char *prtno)
 					value = (p->slot_no - 1)* 64 + pp->port_no - 1;
 					type = 1;
 				}
-				if(show_eth_port_atrr(value,type,&pr)==CCGI_SUCCESS)	  //读取端口信息成功
+				if(show_eth_port_atrr(value,type,&PortV)==CCGI_SUCCESS)	  //读取端口信息成功
 				{
 					fprintf(cgiOut,"port_list[%d] = new PortInfo;",un_portseq);
 					fprintf(cgiOut,"port_list[%d].port_name = \"%d-%d\";",un_portseq,p->slot_no,pp->port_no);
-					fprintf(cgiOut,"port_list[%d].port_type = \"%s\";",un_portseq,eth_port_type_str[pr.port_type]);
-					fprintf(cgiOut,"port_list[%d].admin_statue = \"%s\";",un_portseq,strcmp(onoff_status_str[(pr.attr_bitmap & ETH_ATTR_ADMIN_STATUS) >> ETH_ADMIN_STATUS_BIT],"ON")==0?"ON":"OFF");
-					fprintf(cgiOut,"port_list[%d].link_status = \"%s\";",un_portseq,link_status_str[(pr.attr_bitmap & ETH_ATTR_LINK_STATUS) >> ETH_LINK_STATUS_BIT]);
-					fprintf(cgiOut,"port_list[%d].auto_nage = \"%s\";",un_portseq,doneOrnot_status_str[(pr.attr_bitmap & ETH_ATTR_AUTONEG) >> ETH_AUTONEG_BIT]);
-					fprintf(cgiOut,"port_list[%d].auto_speed = \"%s\";",un_portseq,strcmp(onoff_status_str[(pr.attr_bitmap & ETH_ATTR_AUTONEG_SPEED) >> ETH_AUTONEG_SPEED_BIT],"ON")==0?"ON":"OFF");
-					fprintf(cgiOut,"port_list[%d].auto_dup = \"%s\";",un_portseq,strcmp(onoff_status_str[(pr.attr_bitmap & ETH_ATTR_AUTONEG_DUPLEX) >> ETH_AUTONEG_DUPLEX_BIT],"ON")==0?"ON":"OFF");
-					fprintf(cgiOut,"port_list[%d].auto_flowctl = \"%s\";",un_portseq,strcmp(onoff_status_str[(pr.attr_bitmap & ETH_ATTR_AUTONEG_FLOWCTRL) >> ETH_AUTONEG_FLOWCTRL_BIT],"ON")==0?"ON":"OFF");
-					fprintf(cgiOut,"port_list[%d].port_dup = \"%s\";",un_portseq,duplex_status_str[(pr.attr_bitmap & ETH_ATTR_DUPLEX) >> ETH_DUPLEX_BIT]);
-					fprintf(cgiOut,"port_list[%d].flow_ctl = \"%s\";",un_portseq,strcmp(onoff_status_str[(pr.attr_bitmap & ETH_ATTR_FLOWCTRL) >> ETH_FLOWCTRL_BIT],"ON")==0?"ON":"OFF");
-					fprintf(cgiOut,"port_list[%d].back_pre = \"%s\";",un_portseq,strcmp(onoff_status_str[(pr.attr_bitmap & ETH_ATTR_BACKPRESSURE) >> ETH_BACKPRESSURE_BIT],"ON")==0?"ON":"OFF");
-					fprintf(cgiOut,"port_list[%d].port_speed = \"%s\";",un_portseq,eth_speed_str[(pr.attr_bitmap & ETH_ATTR_SPEED_MASK) >> ETH_SPEED_BIT]);
+					fprintf(cgiOut,"port_list[%d].port_type = \"%s\";",un_portseq,eth_port_type_str[PortV.port_type]);
+					fprintf(stderr,"port_name = %d-%d,pr.port_type=%d,port_type =%s\n",p->slot_no,pp->port_no,PortV.port_type,eth_port_type_str[PortV.port_type]);
+					fprintf(cgiOut,"port_list[%d].admin_statue = \"%s\";",un_portseq,strcmp(onoff_status_str[(PortV.attr_bitmap & ETH_ATTR_ADMIN_STATUS) >> ETH_ADMIN_STATUS_BIT],"ON")==0?"ON":"OFF");
+					fprintf(cgiOut,"port_list[%d].link_status = \"%s\";",un_portseq,link_status_str[(PortV.attr_bitmap & ETH_ATTR_LINK_STATUS) >> ETH_LINK_STATUS_BIT]);
+					fprintf(cgiOut,"port_list[%d].auto_nage = \"%s\";",un_portseq,doneOrnot_status_str[(PortV.attr_bitmap & ETH_ATTR_AUTONEG) >> ETH_AUTONEG_BIT]);
+					fprintf(cgiOut,"port_list[%d].auto_speed = \"%s\";",un_portseq,strcmp(onoff_status_str[(PortV.attr_bitmap & ETH_ATTR_AUTONEG_SPEED) >> ETH_AUTONEG_SPEED_BIT],"ON")==0?"ON":"OFF");
+					fprintf(cgiOut,"port_list[%d].auto_dup = \"%s\";",un_portseq,strcmp(onoff_status_str[(PortV.attr_bitmap & ETH_ATTR_AUTONEG_DUPLEX) >> ETH_AUTONEG_DUPLEX_BIT],"ON")==0?"ON":"OFF");
+					fprintf(cgiOut,"port_list[%d].auto_flowctl = \"%s\";",un_portseq,strcmp(onoff_status_str[(PortV.attr_bitmap & ETH_ATTR_AUTONEG_FLOWCTRL) >> ETH_AUTONEG_FLOWCTRL_BIT],"ON")==0?"ON":"OFF");
+					fprintf(cgiOut,"port_list[%d].port_dup = \"%s\";",un_portseq,duplex_status_str[(PortV.attr_bitmap & ETH_ATTR_DUPLEX) >> ETH_DUPLEX_BIT]);
+					fprintf(cgiOut,"port_list[%d].flow_ctl = \"%s\";",un_portseq,strcmp(onoff_status_str[(PortV.attr_bitmap & ETH_ATTR_FLOWCTRL) >> ETH_FLOWCTRL_BIT],"ON")==0?"ON":"OFF");
+					fprintf(cgiOut,"port_list[%d].back_pre = \"%s\";",un_portseq,strcmp(onoff_status_str[(PortV.attr_bitmap & ETH_ATTR_BACKPRESSURE) >> ETH_BACKPRESSURE_BIT],"ON")==0?"ON":"OFF");
+					fprintf(cgiOut,"port_list[%d].port_speed = \"%s\";",un_portseq,eth_speed_str[(PortV.attr_bitmap & ETH_ATTR_SPEED_MASK) >> ETH_SPEED_BIT]);
 				
 					un_media_flag = 0;
-					un_media_flag |= (((pr.attr_bitmap & ETH_ATTR_PREFERRED_COPPER_MEDIA) >> ETH_PREFERRED_COPPER_MEDIA_BIT)<< 1);
-					un_media_flag |= (pr.attr_bitmap & ETH_ATTR_PREFERRED_FIBER_MEDIA) >> ETH_PREFERRED_FIBER_MEDIA_BIT;				 
+					un_media_flag |= (((PortV.attr_bitmap & ETH_ATTR_PREFERRED_COPPER_MEDIA) >> ETH_PREFERRED_COPPER_MEDIA_BIT)<< 1);
+					un_media_flag |= (PortV.attr_bitmap & ETH_ATTR_PREFERRED_FIBER_MEDIA) >> ETH_PREFERRED_FIBER_MEDIA_BIT;				 
 					fprintf(cgiOut,"port_list[%d].port_media = \"%s\";",un_portseq,eth_media_str[un_media_flag]);
 				
-					fprintf(cgiOut,"port_list[%d].port_mtu = %d;",un_portseq++,pr.mtu);
+					fprintf(cgiOut,"port_list[%d].port_mtu = %d;",un_portseq++,PortV.mtu);
 				}			 
 				else
 				{
