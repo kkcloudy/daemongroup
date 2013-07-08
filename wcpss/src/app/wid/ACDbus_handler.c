@@ -6125,9 +6125,10 @@ int WID_WLAN_L3IF_POLICY_BR(unsigned char WlanID, unsigned char wlanPolicy)
 									return BSS_CREATE_L3_INTERFACE_FAIL;
 								}
 								AC_BSS[bssindex]->BSS_IF_POLICY = BSS_INTERFACE;
-								ret = ADD_BSS_L3_Interface_BR(bssindex);
+								ret = ADD_BSS_L3_Interface_BR_V2(bssindex);
 								if(ret < 0)
 								{
+									wid_syslog_warning("bssindex = %d,%s,%d\n",bssindex,__func__,__LINE__);
 									return BSS_L3_INTERFACE_ADD_BR_FAIL;
 								}
 								AC_BSS[bssindex]->BSS_IF_POLICY = WLAN_INTERFACE;
@@ -6136,7 +6137,7 @@ int WID_WLAN_L3IF_POLICY_BR(unsigned char WlanID, unsigned char wlanPolicy)
 							else if(AC_BSS[bssindex]->BSS_IF_POLICY == BSS_INTERFACE)
 							{
 								wid_syslog_debug_debug(WID_DEFAULT,"bssindex %d already bss l3 interface\n",bssindex);
-								ret = ADD_BSS_L3_Interface_BR(bssindex);
+								ret = ADD_BSS_L3_Interface_BR_V2(bssindex);
 								if(ret < 0)
 								{
 									return BSS_L3_INTERFACE_ADD_BR_FAIL;
@@ -12849,6 +12850,99 @@ int ADD_BSS_L3_Interface_BR(unsigned int BSSIndex)
 	}
 	
 }
+/*for interface wlan because radio interface error,maybe lead to cannot goto wlannode*/
+int ADD_BSS_L3_Interface_BR_V2(unsigned int BSSIndex)
+{
+	int ret = 0;
+	WTPQUITREASON quitreason = WTP_INIT;
+	char addifcmd[WID_SYSTEM_CMD_LENTH];
+	memset(addifcmd,0,WID_SYSTEM_CMD_LENTH);
+	
+	int wtpid = 0;
+	int l_radioid = 0;
+	int wlanid = 0;
+	int reason = 0;
+	wtpid = BSSIndex/(L_BSS_NUM*L_RADIO_NUM);
+	l_radioid = AC_BSS[BSSIndex]->Radio_L_ID;
+	wlanid = AC_BSS[BSSIndex]->WlanID;
+	int G_radio_id = 0;
+	char bssifname[ETH_IF_NAME_LEN];
+	char ifcheck[WID_SYSTEM_CMD_LENTH];
+	memset(bssifname,0,ETH_IF_NAME_LEN);
+	memset(ifcheck,0,WID_SYSTEM_CMD_LENTH);
+//	sprintf(bssifname,"radio%d-%d-%d.%d",vrrid,wtpid,l_radioid,wlanid);
+	if(local)
+		sprintf(bssifname,"r%d-%d-%d.%d",vrrid,wtpid,l_radioid,wlanid);
+	else
+		sprintf(bssifname,"r%d-%d-%d-%d.%d",slotid,vrrid,wtpid,l_radioid,wlanid);
+
+	if(local)
+		sprintf(ifcheck,"/sys/class/net/wlanl%d-%d-%d/brif/%s/port_id",slotid,vrrid,wlanid,bssifname);
+	else
+		sprintf(ifcheck,"/sys/class/net/wlan%d-%d-%d/brif/%s/port_id",slotid,vrrid,wlanid,bssifname);
+
+	G_radio_id = wtpid*L_RADIO_NUM+l_radioid;
+//	printf("radio%d-%d.%d\n",wtpid,l_radioid,wlanid);
+	wid_syslog_debug_debug(WID_DEFAULT,"ADD_BSS_L3_Interface_BR ifname:%s\n",bssifname);
+
+	//check bss if validity
+	ret = Check_Interface_Config(bssifname,&quitreason);
+	if(ret != 0)
+	{
+		//return -1;
+		/*radio interface no exist return WID_ADD_RADIO_IF_FAIL not -1*/
+		wid_syslog_warning("<warnning>interface %s no exist or occor some error\n",bssifname);
+		time_t now = 0;
+		time(&now);
+		syslog(LOG_INFO|LOG_LOCAL7, "interface %s happen some error at Time:%s.(create radio interface error,please radio apply wlan %d)\n",bssifname,ctime(&now),wlanid);
+		return WID_ADD_RADIO_IF_FAIL;
+	}
+	ret = file_check(ifcheck); 
+	if(ret == 1){
+		ret = 0;
+	}else{
+		//add if to br
+		if(local)
+			sprintf(addifcmd,"brctl addif wlanl%d-%d-%d %s\n",slotid,vrrid,wlanid,bssifname);
+		else
+			sprintf(addifcmd,"brctl addif wlan%d-%d-%d %s\n",slotid,vrrid,wlanid,bssifname);
+	//	printf("system cmd: %s\n",addifcmd);
+		wid_syslog_debug_debug(WID_DEFAULT,"ADD_BSS_L3_Interface_BR addifcmd:%s\n",addifcmd);
+		
+		ret = system(addifcmd);
+
+		wid_syslog_debug_debug(WID_DEFAULT,"ret:%d(0 success)\n",ret);
+		reason = WEXITSTATUS(ret);
+		if(reason != 0)
+		{
+			wid_syslog_warning("<warnning>system cmd error,error code %d\n",reason);
+			wid_syslog_warning("<warnning>interface %s may have been in other br.\n",bssifname);
+			time_t now = 0;
+			time(&now);
+			syslog(LOG_INFO|LOG_LOCAL7, "br wlan%d add %s fail at Time:%s.(it may have been in other br,if we need add it to br wlan,please add it in manual,when peel it off other br)\n",wlanid,bssifname,ctime(&now));
+
+			return WID_ADD_RADIO_IF_FAIL;
+		}
+	}
+	if(ret != 0)
+	{
+		//return -1;//create failure
+		return WID_ADD_RADIO_IF_FAIL;//wu wl change 2010-12-28
+	}
+	else
+	{	
+		if(AC_RADIO[G_radio_id] != NULL){
+			if(local)
+				sprintf(AC_RADIO[G_radio_id]->br_ifname[wlanid],"wlanl%d-%d-%d",slotid,vrrid,wlanid);
+			else
+				sprintf(AC_RADIO[G_radio_id]->br_ifname[wlanid],"wlan%d-%d-%d",slotid,vrrid,wlanid);
+			wid_syslog_debug_debug(WID_DEFAULT,"interface wlan br_ifname:%s.\n",AC_RADIO[G_radio_id]->br_ifname[wlanid]);
+		}
+		return 0;//create success
+	}
+	
+}
+
 int Del_BSS_L3_Interface_BR(unsigned int BSSIndex)
 {
 	int ret = 0;

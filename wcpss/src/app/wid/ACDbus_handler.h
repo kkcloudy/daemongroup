@@ -244,6 +244,8 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_VLANID(unsigned int RadioID,unsigned char Wlan
 int WID_ADD_WLAN_APPLY_RADIO_BASE_NAS_PORT_ID(unsigned int RadioID,unsigned char WlanID,char* nas_port_id);	//mahz add 2011.5.30
 //wlan l3 interface turn to br area
 int ADD_BSS_L3_Interface_BR(unsigned int BSSIndex);
+//interface wlan
+int ADD_BSS_L3_Interface_BR_V2(unsigned int BSSIndex);
 int Del_BSS_L3_Interface_BR(unsigned int BSSIndex);
 int Create_Wlan_L3_BR_Interface(unsigned char WlanID);
 int Delete_Wlan_L3_BR_Interface(unsigned char WlanID);

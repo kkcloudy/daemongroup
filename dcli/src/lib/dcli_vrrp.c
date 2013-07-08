@@ -1959,7 +1959,12 @@ DEFUN(config_hansi_cmd_func,
 		}else if (hmd_ret == HMD_DBUS_ID_NO_EXIST){
 			vty_out(vty,"<error> remote hansi not exist\n");
 			return CMD_WARNING;
-		}else{
+		}
+		else if(hmd_ret == HMD_DBUS_DELETING_HANSI){
+			vty_out(vty,"<error>deleting hansi not completed,please wait several minutes\n");
+			return CMD_WARNING;
+		}
+		else{
 			vty_out(vty,"<error>  %d\n",hmd_ret);
 			return CMD_WARNING;
 		}
