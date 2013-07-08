@@ -1615,9 +1615,11 @@ int cgiMain()
 //#ifdef _MANAGE_FIREWALL_ 
 static int showInterfaceSelector( char *selectName, char *onchangestr, char *disable )
 {
+#if 0
 	FILE *fp;
 	char *cmd = "ip link | sed \"/.*link\\/.*brd.*/d\" | sed \"s/^[0-9]*:.\\(.*\\):.*$/\\1/g\" | sed \"/lo/d\" |sed \"/pimreg@NONE/d\" |sed \"/link\\/pimreg/d\" | sed \"s/^\\(.*\\)$/<option value='\\1'>\\1<\\/option>/g\"";
 	char buff[256];
+	char dupinf[20] = {0};
 	
 	fp = popen( cmd, "r" );
 	if( NULL == fp )
@@ -1631,12 +1633,69 @@ static int showInterfaceSelector( char *selectName, char *onchangestr, char *dis
 	fgets( buff, sizeof(buff), fp );
 	do//最后一行老是会多读一次，采用do  while方式可以把最后多读的一行去掉～
 	{
+		fprintf(stderr, "--------------------prev=#%s#,intf=#%s#\n", dupinf, buff);
+		if (0 == strcmp(buff, dupinf)) {
+			continue;
+		}
+		strncpy(dupinf, buff, sizeof(dupinf));
 		fprintf( cgiOut, "%s", buff );
 		fgets( buff, sizeof(buff), fp );
 	}while( !feof(fp) );
 	pclose(fp);
 	fprintf( cgiOut, "</select>\n" );
 	
-	return 0;	
+	return 0;
+#endif
+
+	FILE * ft;
+	char * syscommand=(char *)malloc(300);
+	memset(syscommand,0,300);
+	int i = 0, j = 0,is_repeat = 0;
+	sprintf(syscommand,"ip addr | awk 'BEGIN{FS=\":\";RS=\"(\^|\\n)[0-9]+:[ ]\"}{print $1}' | awk 'NR==2,NR==0{print}' ");
+	ft = popen(syscommand,"r"); 
+	char  temp[20];
+	memset(temp,0,20);
+	char intfname[4095][20] = {{0}};
+	i=0;
+
+	fprintf( cgiOut, "<select name=%s onchange='%s' %s>", selectName, onchangestr, disable );
+	//可以选择any
+	fprintf( cgiOut, "<option value=any>any</option>\n");
+
+	if(ft != NULL)
+	{
+		while((fgets(temp,18,ft)) != NULL)
+		{
+			 is_repeat = 0;
+			 for(j=0;j<i;j++)
+			 {
+			 	if(0 == strncmp(temp,intfname[j],strlen(temp)-1))
+			 	{
+			 		is_repeat = 1;
+			 	}
+			 }
+
+			 if(0 == is_repeat)
+			 {			 	 
+				 strncpy(intfname[i],temp,strlen(temp)-1);
+				 i++;
+				 if(0 == strncmp(temp, "ve", 2)) {
+					char *temp_ve = NULL;
+
+				 	temp_ve = strchr(temp,'@');
+					if (temp_ve) {
+						*temp_ve = '\0';
+					}
+				 }
+				 fprintf(cgiOut, "<option value='%s'>%s</option>\n", temp, temp);
+			 }
+			 memset(temp,0,20);
+		}
+		pclose(ft);
+	}
+	
+	fprintf( cgiOut, "</select>\n" );
+	free(syscommand);
+	return 1;
 }
 //#endif
