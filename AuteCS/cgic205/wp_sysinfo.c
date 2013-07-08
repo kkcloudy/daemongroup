@@ -164,7 +164,7 @@ int ShowSystemInformationPage(struct list *lpublic, struct list *lsystem, struct
   if(cgiFormSubmitClicked("reboot") == cgiFormSuccess)
   {
   
-  	status = system("dcli_reboot.sh > /dev/null");		  
+  	status = system("ac_reset_fast_all.sh > /dev/null");		  
 //  	ret = WEXITSTATUS(status);
 
 //  	if(ret==0)
