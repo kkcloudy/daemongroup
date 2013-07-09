@@ -55,6 +55,9 @@ int modifyVlanIp(char *vid,struct list *lcontrol);
 double MaskChange();
 int checkMark(unsigned long mark);
 void addordel_trunk_alert(int retu,struct list *lcontrol);
+void MapVeInterface(char *id,struct list *lpublic,struct list *lcontrol);
+void UnMapVeInterface(char *id,struct list *lpublic,struct list *lcontrol);
+
 
 int cgiMain()
 {
@@ -135,7 +138,8 @@ int show_vlan_detail()
   	&&(cgiFormSubmitClicked("submit_igmp") != cgiFormSuccess)&&(cgiFormSubmitClicked("vlan_filter") != cgiFormSuccess) 
   	&&(cgiFormSubmitClicked("addTrunk") != cgiFormSuccess) && (cgiFormSubmitClicked("delTrunk") != cgiFormSuccess)
   	&&(cgiFormSubmitClicked("Map_intf") != cgiFormSuccess) && (cgiFormSubmitClicked("vlan_bond_slot") != cgiFormSuccess)
-  	&& (cgiFormSubmitClicked("vlan_unbond_slot") != cgiFormSuccess))
+  	&& (cgiFormSubmitClicked("vlan_unbond_slot") != cgiFormSuccess) && (cgiFormSubmitClicked("map_ve_if") != cgiFormSuccess)
+  	&& (cgiFormSubmitClicked("unmap_ve_if") != cgiFormSuccess))
   {
     memset(encry,0,BUF_LEN);
     cgiFormStringNoNewlines("UN", encry, BUF_LEN); 
@@ -481,6 +485,15 @@ int show_vlan_detail()
 		}
 	 }
 
+	 if(cgiFormSubmitClicked("map_ve_if") == cgiFormSuccess)
+	 {
+	 	MapVeInterface(IDnew,lpublic,lcontrol);
+	 }
+
+	 if(cgiFormSubmitClicked("unmap_ve_if") == cgiFormSuccess)
+	 {
+	 	UnMapVeInterface(IDnew,lpublic,lcontrol);
+	 }
     //end
 
   fprintf(cgiOut,"<form method=post>"\
@@ -500,7 +513,8 @@ int show_vlan_detail()
 	 	&&(cgiFormSubmitClicked("submit_igmp") != cgiFormSuccess)&&(cgiFormSubmitClicked("vlan_filter") != cgiFormSuccess)
 	 	&&(cgiFormSubmitClicked("addTrunk") != cgiFormSuccess) && (cgiFormSubmitClicked("delTrunk") != cgiFormSuccess)
 	 	&&(cgiFormSubmitClicked("Map_intf") != cgiFormSuccess) && (cgiFormSubmitClicked("vlan_bond_slot") != cgiFormSuccess)
-  		&& (cgiFormSubmitClicked("vlan_unbond_slot") != cgiFormSuccess))
+  		&& (cgiFormSubmitClicked("vlan_unbond_slot") != cgiFormSuccess)&& (cgiFormSubmitClicked("map_ve_if") != cgiFormSuccess)
+	  	&& (cgiFormSubmitClicked("unmap_ve_if") != cgiFormSuccess))
         fprintf(cgiOut,"<td width=62 align=left><a href=wp_configvlan.cgi?UN=%s&FLAG=%d&SER_TYPE=%s&SER_TEXT=%s target=mainFrame><img src=/images/%s border=0 width=62 height=20/></a></td>",encry,flag_for_vlan_show,SER_TYPE,SER_TEXT,search(lpublic,"img_cancel"));
       else                                         
         fprintf(cgiOut,"<td width=62 align=left><a href=wp_configvlan.cgi?UN=%s&FLAG=%d&SER_TYPE=%s&SER_TEXT=%s target=mainFrame><img src=/images/%s border=0 width=62 height=20/></a></td>",detail_encry,flag_for_vlan_show,SER_TYPE,SER_TEXT,search(lpublic,"img_cancel"));
@@ -566,7 +580,8 @@ int show_vlan_detail()
 								&&(cgiFormSubmitClicked("submit_igmp") != cgiFormSuccess)&&(cgiFormSubmitClicked("vlan_filter") != cgiFormSuccess)
 								&&(cgiFormSubmitClicked("addTrunk") != cgiFormSuccess) && (cgiFormSubmitClicked("delTrunk") != cgiFormSuccess)
 								&&(cgiFormSubmitClicked("Map_intf") != cgiFormSuccess) && (cgiFormSubmitClicked("vlan_bond_slot") != cgiFormSuccess)
-								&&(cgiFormSubmitClicked("vlan_unbond_slot") != cgiFormSuccess))
+								&&(cgiFormSubmitClicked("vlan_unbond_slot") != cgiFormSuccess)&& (cgiFormSubmitClicked("map_ve_if") != cgiFormSuccess)
+							  	&& (cgiFormSubmitClicked("unmap_ve_if") != cgiFormSuccess))
             					{
                                     IDTemp= strtoul(IDForSearch,&endptr,10);
                                     memset(v_InfoByID.vlanName,0,21);
@@ -610,7 +625,8 @@ int show_vlan_detail()
 									&&(cgiFormSubmitClicked("submit_igmp") != cgiFormSuccess)&&(cgiFormSubmitClicked("vlan_filter") != cgiFormSuccess)
 									&&(cgiFormSubmitClicked("addTrunk") != cgiFormSuccess) && (cgiFormSubmitClicked("delTrunk") != cgiFormSuccess)
 									&&(cgiFormSubmitClicked("Map_intf") != cgiFormSuccess) && (cgiFormSubmitClicked("vlan_bond_slot") != cgiFormSuccess)
-  									&&(cgiFormSubmitClicked("vlan_unbond_slot") != cgiFormSuccess))
+  									&&(cgiFormSubmitClicked("vlan_unbond_slot") != cgiFormSuccess)&& (cgiFormSubmitClicked("map_ve_if") != cgiFormSuccess)
+								  	&& (cgiFormSubmitClicked("unmap_ve_if") != cgiFormSuccess))
             						{
                                         fprintf(cgiOut,"<td align=left width=145 colspan=2><input type=text name=V_ID size=12 value=%s disabled=true style=background-color:#CCCCCC ></td>",IDForSearch);
             						}
@@ -630,7 +646,8 @@ int show_vlan_detail()
 									&& (cgiFormSubmitClicked("submit_igmp") != cgiFormSuccess)&&(cgiFormSubmitClicked("vlan_filter") != cgiFormSuccess)
 									&&(cgiFormSubmitClicked("addTrunk") != cgiFormSuccess) && (cgiFormSubmitClicked("delTrunk") != cgiFormSuccess)
 									&&(cgiFormSubmitClicked("Map_intf") != cgiFormSuccess) && (cgiFormSubmitClicked("vlan_bond_slot") != cgiFormSuccess)
-  									&&(cgiFormSubmitClicked("vlan_unbond_slot") != cgiFormSuccess))
+  									&&(cgiFormSubmitClicked("vlan_unbond_slot") != cgiFormSuccess)&& (cgiFormSubmitClicked("map_ve_if") != cgiFormSuccess)
+								  	&& (cgiFormSubmitClicked("unmap_ve_if") != cgiFormSuccess))
             						{
                                         fprintf(cgiOut,"<td align=left  width=145 colspan=2><input type=text name=V_ID size=12 value=%s></td>",IDForSearch);
             						}
@@ -836,7 +853,11 @@ int show_vlan_detail()
 										  }
 			                        	  fprintf(cgiOut,"</select>"\
 		                    		  "</td>"\
-	                     		  "</tr>"\
+		                    		  "<td align=left style=padding-left:10px>"\
+		                    		  	"<input type=submit style=width:80px; height:36px; border=0 name=map_ve_if style=background-image:url(/images/SubBackGif.gif) value=\"%s\">"\
+		                    		  	"<input type=submit style=width:100px; height:36px; border=0 name=unmap_ve_if style=background-image:url(/images/SubBackGif.gif) value=\"%s\">"\
+		                    		  "</td>",search(lcontrol,"map_ve_if"),search(lcontrol,"unmap_ve_if"));
+	                     		  fprintf(cgiOut,"</tr>"\
                                   "</table>"\
                     		    "</td>"\
                     		    "</tr>");
@@ -850,7 +871,8 @@ int show_vlan_detail()
 							  	&&(cgiFormSubmitClicked("submit_igmp") != cgiFormSuccess)&&(cgiFormSubmitClicked("vlan_filter") != cgiFormSuccess)
 							  	&&(cgiFormSubmitClicked("addTrunk") != cgiFormSuccess) && (cgiFormSubmitClicked("delTrunk") != cgiFormSuccess)
 							  	&&(cgiFormSubmitClicked("Map_intf") != cgiFormSuccess) && (cgiFormSubmitClicked("vlan_bond_slot") != cgiFormSuccess)
-								&&(cgiFormSubmitClicked("vlan_unbond_slot") != cgiFormSuccess))
+								&&(cgiFormSubmitClicked("vlan_unbond_slot") != cgiFormSuccess)&& (cgiFormSubmitClicked("map_ve_if") != cgiFormSuccess)
+							  	&& (cgiFormSubmitClicked("unmap_ve_if") != cgiFormSuccess))
             				  {
                                 fprintf(cgiOut,"<td colspan=2><input type=hidden name=encry_detail value=%s></td>",encry);
                                 fprintf(cgiOut,"<td colspan=2><input type=hidden name=encry_IDOld value=%s></td>",IDForSearch);
@@ -1116,3 +1138,77 @@ void addordel_trunk_alert(int retu,struct list *lcontrol)
 		break;
 	}
 }
+
+void MapVeInterface(char *id,struct list *lpublic,struct list *lcontrol)
+{
+	int status = 0,retu = 1;
+	char slotid[5] = { 0 };
+	char *endptr = NULL; 
+	int sid = 0;
+	char cpu[5] = { 0 };
+	char cpu_port[5] = { 0 };
+	char command[100] = { 0 };
+	char alt[100] = { 0 };
+	char max_wlan_num[10] = { 0 };
+	char tmp[10] = { 0 };
+
+	memset(slotid,0,sizeof(slotid));
+	cgiFormStringNoNewlines("slot_id",slotid,5);
+	memset(cpu,0,sizeof(cpu));
+	cgiFormStringNoNewlines("cpu_no",cpu,5);
+	memset(cpu_port,0,sizeof(cpu_port));
+	cgiFormStringNoNewlines("cpu_port",cpu_port,5);
+
+	if((strcmp(slotid,"")!=0) && (strcmp(cpu,"")!=0) && (strcmp(cpu_port,"")!=0))
+	{
+		sid=strtoul(slotid,&endptr,10);
+		
+		memset(command,0,sizeof(command));
+		snprintf(command, sizeof(command)-1,"set_intf_ip.sh ve%02d%s%s.%s >/dev/null 2>&1",sid, (strcmp(cpu,"1")?"s":"f"), cpu_port, id);
+		
+		status = system(command);	 
+		retu = WEXITSTATUS(status);
+		if(0 == retu)    /*command success*/
+			ShowAlert(search(lpublic,"oper_succ")); 
+		else
+	 		ShowAlert(search(lpublic,"oper_fail"));         
+	}
+}
+
+
+void UnMapVeInterface(char *id,struct list *lpublic,struct list *lcontrol)
+{	
+	int status = 0,retu = 1;
+	char slotid[5] = { 0 };
+	char *endptr = NULL; 
+	int sid = 0;
+	char cpu[5] = { 0 };
+	char cpu_port[5] = { 0 };
+	char command[100] = { 0 };
+	char alt[100] = { 0 };
+	char max_wlan_num[10] = { 0 };
+	char tmp[10] = { 0 };
+
+	memset(slotid,0,sizeof(slotid));
+	cgiFormStringNoNewlines("slot_id",slotid,5);
+	memset(cpu,0,sizeof(cpu));
+	cgiFormStringNoNewlines("cpu_no",cpu,5);
+	memset(cpu_port,0,sizeof(cpu_port));
+	cgiFormStringNoNewlines("cpu_port",cpu_port,5);
+
+	if((strcmp(slotid,"")!=0) && (strcmp(cpu,"")!=0) && (strcmp(cpu_port,"")!=0))
+	{
+		sid=strtoul(slotid,&endptr,10);
+
+		memset(command,0,sizeof(command));
+		snprintf(command, sizeof(command)-1,"no_inter.sh ve%02d%s%s.%s >/dev/null 2>&1",sid, (strcmp(cpu,"1")?"s":"f"), cpu_port, id);
+		
+		status = system(command);	 
+		retu = WEXITSTATUS(status);
+		if(0 == retu)    /*command success*/
+			ShowAlert(search(lpublic,"oper_succ")); 
+		else
+	 		ShowAlert(search(lpublic,"oper_fail")); 
+	}
+}
+

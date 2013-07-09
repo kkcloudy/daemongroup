@@ -1190,9 +1190,12 @@ int delete_vlan(DBusConnection *connection,unsigned short vID)
 					}
 					else if (VLAN_RETURN_CODE_SUBINTF_EXISTS == op_ret)
 					{
-						//vty_out(vty,"%% Bad Parameter:Can NOT delete Sub Interface vlan.\n");						
-						//ShowAlert(search(lcontrol,"opt_fail"));
-						return -1;
+						#if 0  /* Advanced-routing not use in distributed system */
+	                    vty_out(vty,"%% Bad Parameter:Can NOT delete Advanced-routing Interface vlan.\n");
+						#endif
+						/* vlan is bonded, can not delete */
+	                    //vty_out(vty,"slot%d: vlan%d has been bonded, Please unbond it first !\n",slot_id,vlanId);
+						return -9;
 
 					}
 					else if (VLAN_RETURN_CODE_PORT_SUBINTF_EXISTS == op_ret)
@@ -3064,15 +3067,17 @@ int Product_Adapter_for_page(PRODUCT_PAGE_INFO * pstProductInfo,char * product_n
 	return 0;
 }
 
-
-int config_vlan_egress_filter(char *isenable)/*0--enable, 1--disable*/
+/*isenable的范围是"enable"或"disable"*/
+int config_vlan_egress_filter(char *isenable)/*返回0表示失败，返回1表示成功*/
+												/*返回-1表示bad command parameter!*/
+												/*返回-2表示Product not support this function*/
+												/*返回-3表示Config vlan mtu failed*/
 {
 	DBusMessage *query, *reply;
 	DBusError err;
-
 	unsigned int isable = 0;
-	int ret = 0;
 	unsigned int op_ret = 0;
+	int retu = 0;
 	
 	if(strncmp("enable",isenable,strlen(isenable))==0)
 	{
@@ -3107,20 +3112,21 @@ int config_vlan_egress_filter(char *isenable)/*0--enable, 1--disable*/
 		if (dbus_error_is_set(&err)) {
 			dbus_error_free(&err);
 		}
-		return CMD_SUCCESS;
+		return 0;
 	}
 
 	if (dbus_message_get_args ( reply, &err,
 					DBUS_TYPE_UINT32, &op_ret,
 					DBUS_TYPE_INVALID)) 
 	{
-		if (NPD_DBUS_ERROR == op_ret) {
-			//vty_out(vty,"% Config vlan mtu failed.\n");
-			return 0;
+		if (COMMON_PRODUCT_NOT_SUPPORT_FUCTION == op_ret){
+			retu = -2;
+		}
+		else if (NPD_DBUS_ERROR == op_ret) {
+			retu = -3;
 		}
 		else if(NPD_DBUS_SUCCESS == op_ret) {
-			/*vty_out(vty,"Delete vlan OK.\n");*/
-			return 1;
+			retu = 1;
 		}
 	} 
 	else 
@@ -3129,17 +3135,21 @@ int config_vlan_egress_filter(char *isenable)/*0--enable, 1--disable*/
 		{
 			dbus_error_free(&err);
 		}
+		retu = 0;
 	}
 	dbus_message_unref(reply);
-	return CMD_SUCCESS;
+	return retu;
 }
 
-
-int show_vlan_egress_filter()
+int show_vlan_egress_filter()/*返回1表示Vlan egress filter is enabled*/
+								/*返回2表示Vlan egress filter is disabled*/
+								/*返回0表示失败，返回-1表示Product not support this function!*/
 {	
 	DBusMessage *query = NULL, *reply = NULL;
 	DBusError err = { 0 };
-	unsigned int Isable = NPD_TRUE;
+	unsigned int Isable = NPD_TRUE, ret = 0;
+	int retu = 0;
+	
 	query = dbus_message_new_method_call(
 					NPD_DBUS_BUSNAME,  \
 					NPD_DBUS_VLAN_OBJPATH ,  \
@@ -3152,27 +3162,32 @@ int show_vlan_egress_filter()
 		if (dbus_error_is_set(&err)) {
 			dbus_error_free(&err);
 		}
-		return CMD_SUCCESS;
+		return 0;
 	}
 	if (dbus_message_get_args ( reply, &err,
 		DBUS_TYPE_UINT32,&Isable,
+		DBUS_TYPE_UINT32,&ret,
 		DBUS_TYPE_INVALID)) {						
-		if(NPD_TRUE == Isable) {
-			//vty_out(vty,"Vlan egress filter is enabled!\n");
-			return 1;
+		if (COMMON_PRODUCT_NOT_SUPPORT_FUCTION == ret){
+			retu = -1;
 		}
-		if(NPD_FALSE == Isable) {
-			//vty_out(vty,"Vlan egress filter is disabled!\n");
-			return 2;
+		else{
+			if(NPD_TRUE == Isable) {
+				retu = 1;
+			}
+			if(NPD_FALSE == Isable) {
+				retu = 2;
+			}
 		}
 	} 
 	else {
 		if (dbus_error_is_set(&err)) {
 			dbus_error_free(&err);
 		}
+		retu = 0;
 	}
 	dbus_message_unref(reply);
-	return CMD_SUCCESS;
+	return retu;
 }
 
 #endif 

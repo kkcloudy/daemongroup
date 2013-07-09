@@ -368,6 +368,17 @@ extern int addordel_trunk(char * addordel,unsigned short VID,char * trunk_id,cha
 extern int show_trunklis_by_vlanId(char * vlanID,struct Trunklist * trunkdta,int * num);
 extern void Free_vlan_trunk(struct Trunklist * head);
 extern int Product_Adapter_for_page(PRODUCT_PAGE_INFO * pstProductInfo,char * product_name);
+
+/*isenable的范围是"enable"或"disable"*/
+extern int config_vlan_egress_filter(char *isenable);/*返回0表示失败，返回1表示成功*/
+														/*返回-1表示bad command parameter!*/
+														/*返回-2表示Product not support this function*/
+														/*返回-3表示Config vlan mtu failed*/
+
+extern int show_vlan_egress_filter();/*返回1表示Vlan egress filter is enabled*/
+										/*返回2表示Vlan egress filter is disabled*/
+										/*返回0表示失败，返回-1表示Product not support this function!*/
+
 extern int show_vlan_member_slot_port(unsigned int product_id_param,PORT_MEMBER_BMP untagBmp_param,PORT_MEMBER_BMP tagBmp_param,unsigned int * promisPortBmp_param);
 extern int show_vlanid_portlist(char *vid,struct Vlanid_info *head);
 extern void Free_vlanid_info(struct Vlanid_info * head);
