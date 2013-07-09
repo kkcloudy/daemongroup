@@ -16671,7 +16671,7 @@ int wid_set_ap_timestamp(int timestamp)
 int wid_radio_set_extension_command(int wtpid, char * command)
 {
 	msgq msg;
-//	struct msgqlist *elem;
+	struct msgqlist *elem;
 	
 //	int WTPIndex = wtpid;
 	free(AC_WTP[wtpid]->WTP_Radio[0]->excommand);
@@ -16717,10 +16717,10 @@ int wid_radio_set_extension_command(int wtpid, char * command)
 		}		
 		CWThreadMutexUnlock(&(gWTPs[WTPIndex].WTPThreadMutex));
 	}//delete unuseful cod
-	/*else if((AC_WTP[wtpid] != NULL)){
+	else if((AC_WTP[wtpid] != NULL) && AC_WTP[wtpid]->WTPStat != CW_QUIT){
 		memset((char*)&msg, 0, sizeof(msg));
-		msg.mqid = WTPIndex%THREAD_NUM+1;
-		msg.mqinfo.WTPID = WTPIndex;
+		msg.mqid = wtpid%THREAD_NUM+1;
+		msg.mqinfo.WTPID = wtpid;
 		msg.mqinfo.type = CONTROL_TYPE;
 		msg.mqinfo.subtype = WTP_S_TYPE;
 		msg.mqinfo.u.WtpInfo.Wtp_Op = WTP_EXTEND_CMD;
@@ -16736,13 +16736,13 @@ int wid_radio_set_extension_command(int wtpid, char * command)
 		elem->next = NULL;
 		memcpy((char*)&(elem->mqinfo),(char*)&(msg.mqinfo),sizeof(msg.mqinfo));
 		WID_INSERT_CONTROL_LIST(wtpid, elem);
-	}*/	
+	}	
 	return 0;	
 }
 int wid_radio_set_option60_parameter(int wtpid, char * parameter)
 {
 	msgq msg;
-//	struct msgqlist *elem;
+	struct msgqlist *elem;
 	
 	int WTPIndex = wtpid;
 	if(AC_WTP[WTPIndex]->option60_param != NULL){
@@ -16772,7 +16772,7 @@ int wid_radio_set_option60_parameter(int wtpid, char * parameter)
 		}		
 		CWThreadMutexUnlock(&(gWTPs[WTPIndex].WTPThreadMutex));
 	}//delete unuseful cod
-	/*else if((AC_WTP[wtpid] != NULL)){
+	else if((AC_WTP[WTPIndex] != NULL) && AC_WTP[WTPIndex]->WTPStat != CW_QUIT){
 		memset((char*)&msg, 0, sizeof(msg));
 		msg.mqid = WTPIndex%THREAD_NUM+1;
 		msg.mqinfo.WTPID = WTPIndex;
@@ -16791,7 +16791,7 @@ int wid_radio_set_option60_parameter(int wtpid, char * parameter)
 		elem->next = NULL;
 		memcpy((char*)&(elem->mqinfo),(char*)&(msg.mqinfo),sizeof(msg.mqinfo));
 		WID_INSERT_CONTROL_LIST(wtpid, elem);
-	}*/	
+	}	
 	return 0;	
 }
 
@@ -25017,7 +25017,7 @@ int wid_count_countermeasure_rogue_ap(Neighbor_AP_INFOS *paplist,int wtpid)
 int wid_radio_set_acktimeout_distance(unsigned int RadioID)
 {
 	msgq msg;
-//	struct msgqlist *elem;
+	struct msgqlist *elem;
 
 	int WTPIndex = RadioID/L_RADIO_NUM;
 	if((AC_WTP[WTPIndex] != NULL)&&(AC_WTP[AC_RADIO[RadioID]->WTPID]->WTPStat == 5))
@@ -25045,7 +25045,7 @@ int wid_radio_set_acktimeout_distance(unsigned int RadioID)
 		}
 		CWThreadMutexUnlock(&(gWTPs[WTPIndex].WTPThreadMutex));
 	}//delete unuseful cod
-	/*else if((AC_WTP[WTPIndex] != NULL)){
+	else if((AC_WTP[WTPIndex] != NULL) && AC_WTP[WTPIndex]->WTPStat != CW_QUIT){
 		memset((char*)&msg, 0, sizeof(msg));
 		msg.mqid = WTPIndex%THREAD_NUM+1;
 		msg.mqinfo.WTPID = WTPIndex;
@@ -25066,7 +25066,7 @@ int wid_radio_set_acktimeout_distance(unsigned int RadioID)
 		memcpy((char*)&(elem->mqinfo),(char*)&(msg.mqinfo),sizeof(msg.mqinfo));
 		WID_INSERT_CONTROL_LIST(WTPIndex, elem);
 		elem = NULL;
-	}*/
+	}
 	
 	return 0;
 
@@ -25108,7 +25108,7 @@ int wid_radio_set_guard_interval(unsigned int RadioID)
 		}
 		CWThreadMutexUnlock(&(gWTPs[WTPIndex].WTPThreadMutex));
 	}//delete unuseful cod
-	/*else if((AC_WTP[WTPIndex] != NULL)){
+	else if((AC_WTP[WTPIndex] != NULL) && AC_WTP[WTPIndex]->WTPStat != CW_QUIT){
 		memset((char*)&msg, 0, sizeof(msg));
 		msg.mqid = WTPIndex%THREAD_NUM+1;
 		msg.mqinfo.WTPID = WTPIndex;
@@ -25129,7 +25129,7 @@ int wid_radio_set_guard_interval(unsigned int RadioID)
 		memcpy((char*)&(elem->mqinfo),(char*)&(msg.mqinfo),sizeof(msg.mqinfo));
 		WID_INSERT_CONTROL_LIST(WTPIndex, elem);
 		elem = NULL;
-	}*/
+	}
 
 	return 0;
 
@@ -25139,7 +25139,7 @@ int wid_radio_set_guard_interval(unsigned int RadioID)
 int wid_radio_set_ampdu_able(unsigned int RadioID, unsigned char type)
 {
 	msgq msg;
-//	struct msgqlist *elem;
+	struct msgqlist *elem;
 	//if((gWTPs[AC_RADIO[RadioID]->WTPID].currentState == CW_ENTER_RUN)&&(AC_RADIO[RadioID]->AdStat == 2))
 	{
 		//return RADIO_IS_DISABLE;
@@ -25179,7 +25179,7 @@ int wid_radio_set_ampdu_able(unsigned int RadioID, unsigned char type)
 		}
 		CWThreadMutexUnlock(&(gWTPs[WTPIndex].WTPThreadMutex));
 	}//delete unuseful cod
-	/*else if((AC_WTP[WTPIndex] != NULL)){
+	else if((AC_WTP[WTPIndex] != NULL) && AC_WTP[WTPIndex]->WTPStat != CW_QUIT){
 		memset((char*)&msg, 0, sizeof(msg));
 		msg.mqid = WTPIndex%THREAD_NUM+1;
 		msg.mqinfo.WTPID = WTPIndex;
@@ -25207,7 +25207,7 @@ int wid_radio_set_ampdu_able(unsigned int RadioID, unsigned char type)
 		memcpy((char*)&(elem->mqinfo),(char*)&(msg.mqinfo),sizeof(msg.mqinfo));
 		WID_INSERT_CONTROL_LIST(WTPIndex, elem);
 		elem = NULL;
-	}*/
+	}
 	
 	return 0;
 
@@ -25216,7 +25216,7 @@ int wid_radio_set_ampdu_able(unsigned int RadioID, unsigned char type)
 int wid_radio_set_ampdu_limit(unsigned int RadioID, unsigned char type)
 {
 	msgq msg;
-//	struct msgqlist *elem;
+	struct msgqlist *elem;
 	
 	int WTPIndex = RadioID/L_RADIO_NUM;
 	if(AC_WTP[AC_RADIO[RadioID]->WTPID]->WTPStat == 5)
@@ -25252,7 +25252,7 @@ int wid_radio_set_ampdu_limit(unsigned int RadioID, unsigned char type)
 		}
 		CWThreadMutexUnlock(&(gWTPs[WTPIndex].WTPThreadMutex));
 	}//delete unuseful cod
-	/*else if((AC_WTP[WTPIndex] != NULL)){
+	else if((AC_WTP[WTPIndex] != NULL) && AC_WTP[WTPIndex]->WTPStat != CW_QUIT){
 		memset((char*)&msg, 0, sizeof(msg));
 		msg.mqid = WTPIndex%THREAD_NUM+1;
 		msg.mqinfo.WTPID = WTPIndex;
@@ -25280,7 +25280,7 @@ int wid_radio_set_ampdu_limit(unsigned int RadioID, unsigned char type)
 		memcpy((char*)&(elem->mqinfo),(char*)&(msg.mqinfo),sizeof(msg.mqinfo));
 		WID_INSERT_CONTROL_LIST(WTPIndex, elem);
 		elem = NULL;
-	}*/
+	}
 	return 0;
 
 }
@@ -27380,7 +27380,7 @@ int WID_RADIO_CHANGE_SUPPORT_RATE_BYGI_MCS_CWMODE(unsigned int RadioID)
 int wid_radio_set_ampdu_subframe(unsigned int RadioID, unsigned char type)
 {
 	msgq msg;
-//	struct msgqlist *elem;
+	struct msgqlist *elem;
 	//if((gWTPs[AC_RADIO[RadioID]->WTPID].currentState == CW_ENTER_RUN)&&(AC_RADIO[RadioID]->AdStat == 2))
 	{
 	//	return RADIO_IS_DISABLE;
@@ -27421,7 +27421,7 @@ int wid_radio_set_ampdu_subframe(unsigned int RadioID, unsigned char type)
 			}
 			CWThreadMutexUnlock(&(gWTPs[WTPIndex].WTPThreadMutex));
 			}//delete unuseful cod
-			/*else if((AC_WTP[WTPIndex] != NULL)){
+			else if((AC_WTP[WTPIndex] != NULL) && AC_WTP[WTPIndex]->WTPStat != CW_QUIT){
 			memset((char*)&msg, 0, sizeof(msg));
 			msg.mqid = WTPIndex%THREAD_NUM+1;
 			msg.mqinfo.WTPID = WTPIndex;
@@ -27449,7 +27449,7 @@ int wid_radio_set_ampdu_subframe(unsigned int RadioID, unsigned char type)
 			memcpy((char*)&(elem->mqinfo),(char*)&(msg.mqinfo),sizeof(msg.mqinfo));
 			WID_INSERT_CONTROL_LIST(WTPIndex, elem);
 			elem = NULL;
-		}*/
+		}
 
 	return 0;
 
@@ -27460,7 +27460,7 @@ int wid_radio_set_ampdu_subframe(unsigned int RadioID, unsigned char type)
 int wid_radio_set_mixed_puren_switch(unsigned int RadioID)
 {
 	msgq msg;
-//	struct msgqlist *elem;
+	struct msgqlist *elem;
 	//if((gWTPs[AC_RADIO[RadioID]->WTPID].currentState == CW_ENTER_RUN)&&(AC_RADIO[RadioID]->AdStat == 2))
 	{
 		//return RADIO_IS_DISABLE;
@@ -27493,7 +27493,7 @@ int wid_radio_set_mixed_puren_switch(unsigned int RadioID)
 		}
 		CWThreadMutexUnlock(&(gWTPs[WTPIndex].WTPThreadMutex));
 	}//delete unuseful cod
-	/*else if((AC_WTP[WTPIndex] != NULL)){
+	else if((AC_WTP[WTPIndex] != NULL) && AC_WTP[WTPIndex]->WTPStat != CW_QUIT){
 			memset((char*)&msg, 0, sizeof(msg));
 			msg.mqid = WTPIndex%THREAD_NUM+1;
 			msg.mqinfo.WTPID = WTPIndex;
@@ -27514,7 +27514,7 @@ int wid_radio_set_mixed_puren_switch(unsigned int RadioID)
 			memcpy((char*)&(elem->mqinfo),(char*)&(msg.mqinfo),sizeof(msg.mqinfo));
 			WID_INSERT_CONTROL_LIST(WTPIndex, elem);
 			elem = NULL;
-		}*/
+		}
 	wid_syslog_debug_debug(WID_DEFAULT,"set radio id is:%d, Mixed_Greenfield is %s",RadioID,(AC_RADIO[RadioID]->MixedGreenfield.Mixed_Greenfield == 1)?"puren":"mixed");
 	return 0;
 
@@ -27648,7 +27648,7 @@ int wid_set_ap_statistics_v1(int WTPID,int apstatics)
 int wid_radio_set_channel_Extoffset(unsigned int RadioID)
 {
 	msgq msg;
-//	struct msgqlist *elem;
+	struct msgqlist *elem;
 	//if((gWTPs[AC_RADIO[RadioID]->WTPID].currentState == CW_ENTER_RUN)&&(AC_RADIO[RadioID]->AdStat == 2))
 	{
 		//return RADIO_IS_DISABLE;
@@ -27681,7 +27681,7 @@ int wid_radio_set_channel_Extoffset(unsigned int RadioID)
 		}
 		CWThreadMutexUnlock(&(gWTPs[WTPIndex].WTPThreadMutex));
 	}//delete unuseful cod
-	/*else if((AC_WTP[WTPIndex] != NULL)){
+	else if((AC_WTP[WTPIndex] != NULL) && AC_WTP[WTPIndex]->WTPStat != CW_QUIT){
 				memset((char*)&msg, 0, sizeof(msg));
 				msg.mqid = WTPIndex%THREAD_NUM+1;
 				msg.mqinfo.WTPID = WTPIndex;
@@ -27702,7 +27702,7 @@ int wid_radio_set_channel_Extoffset(unsigned int RadioID)
 				memcpy((char*)&(elem->mqinfo),(char*)&(msg.mqinfo),sizeof(msg.mqinfo));
 				WID_INSERT_CONTROL_LIST(WTPIndex, elem);
 				elem = NULL;
-			}*/
+			}
 	wid_syslog_debug_debug(WID_DEFAULT,"set radio id is:%d, channel_offset is %d",RadioID,AC_RADIO[RadioID]->channel_offset);
 	return 0;
 
@@ -27780,7 +27780,7 @@ int wid_radio_set_chainmask(unsigned int RadioID, unsigned char type)
 {
 	wid_syslog_debug_debug(WID_DEFAULT,"@@@@@@ in fuc wid_radio_set_chainmask @@@@@\n");
 	msgq msg;
-//	struct msgqlist *elem;
+	struct msgqlist *elem;
 	
 	wid_syslog_debug_debug(WID_DEFAULT,"set radio id is : %d\n",RadioID);
 	wid_syslog_debug_debug(WID_DEFAULT,"chainmask type is : %d\n",type);
@@ -27820,7 +27820,7 @@ int wid_radio_set_chainmask(unsigned int RadioID, unsigned char type)
 		}
 		CWThreadMutexUnlock(&(gWTPs[WTPIndex].WTPThreadMutex));
 	}//delete unuseful cod
-	/*else if((AC_WTP[WTPIndex] != NULL))
+	else if((AC_WTP[WTPIndex] != NULL) && AC_WTP[WTPIndex]->WTPStat != CW_QUIT)
 	{
 		memset((char*)&msg, 0, sizeof(msg));
 		msg.mqid = WTPIndex%THREAD_NUM+1;
@@ -27849,7 +27849,7 @@ int wid_radio_set_chainmask(unsigned int RadioID, unsigned char type)
 		memcpy((char*)&(elem->mqinfo),(char*)&(msg.mqinfo),sizeof(msg.mqinfo));
 		WID_INSERT_CONTROL_LIST(WTPIndex, elem);
 		elem = NULL;
-	}*/
+	}
 
 	return 0;
 
@@ -28006,7 +28006,7 @@ int wid_radio_set_mcs_list(unsigned int RadioID)
 		}
 		CWThreadMutexUnlock(&(gWTPs[WTPIndex].WTPThreadMutex));
 	}//delete unuseful cod
-	/*else if((AC_WTP[WTPIndex] != NULL)){
+	else if((AC_WTP[WTPIndex] != NULL) && AC_WTP[WTPIndex]->WTPStat != CW_QUIT){
 				memset((char*)&msg, 0, sizeof(msg));
 				msg.mqid = WTPIndex%THREAD_NUM+1;
 				msg.mqinfo.WTPID = WTPIndex;
@@ -28027,7 +28027,7 @@ int wid_radio_set_mcs_list(unsigned int RadioID)
 				memcpy((char*)&(elem->mqinfo),(char*)&(msg.mqinfo),sizeof(msg.mqinfo));
 				WID_INSERT_CONTROL_LIST(WTPIndex, elem);
 				elem = NULL;
-			}*/
+			}
 
 	return 0;
 
@@ -28069,7 +28069,7 @@ int wid_radio_set_cmmode(unsigned int RadioID)
 		}
 		CWThreadMutexUnlock(&(gWTPs[WTPIndex].WTPThreadMutex));
 	}//delete unuseful cod
-	/*else if((AC_WTP[WTPIndex] != NULL)){
+	else if((AC_WTP[WTPIndex] != NULL) && AC_WTP[WTPIndex]->WTPStat != CW_QUIT){
 			memset((char*)&msg, 0, sizeof(msg));
 			msg.mqid = WTPIndex%THREAD_NUM+1;
 			msg.mqinfo.WTPID = WTPIndex;
@@ -28090,7 +28090,7 @@ int wid_radio_set_cmmode(unsigned int RadioID)
 			memcpy((char*)&(elem->mqinfo),(char*)&(msg.mqinfo),sizeof(msg.mqinfo));
 			WID_INSERT_CONTROL_LIST(WTPIndex, elem);
 			elem = NULL;
-		}*/
+		}
 
 	return 0;
 
