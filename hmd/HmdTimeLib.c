@@ -173,6 +173,7 @@ static void *cronometer(void *arg) {
 	timerPid = getpid();
 	sigemptyset(&mask);
 	sigaddset(&mask, SIG_TO_WAIT);
+	pthread_sigmask(SIG_SETMASK, &mask, NULL);
 
 	/* 
 	 * Set this thread to be cancelled only in the cancellation
