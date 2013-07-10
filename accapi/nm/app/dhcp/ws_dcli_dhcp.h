@@ -43,6 +43,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "util/npd_list.h"
 #include "npd/nam/npd_amapi.h"
 #include "ws_init_dbus.h"
+#include "ws_dbus_def.h"
+#include "dbus/sem/sem_dbus_def.h"
+#include "ac_manage_def.h"
 
 #define ALIAS_NAME_SIZE 		0x15
 #define MAC_ADDRESS_LEN			6
@@ -233,7 +236,14 @@ extern int create_ip_pool_name(char *poolnamez,unsigned int *pindex,int slot_id)
 extern int delete_ip_pool_name(char *poolnamez,unsigned int* indexz,int slot_id);/*返回1表示成功，返回0表示失败*/
 extern unsigned int ccgi_config_ip_pool_name(char *poolName,unsigned int *pindex,int slot_id);/*返回1表示成功，返回0表示失败，返回-1表示error*/
 extern int config_ip_pool_name(char *poolnamez,unsigned int *pindex,int slot_id);/*返回1表示成功，返回0表示失败，返回-1表示config ip pool fail*/
-extern unsigned int ccgi_set_interface_ip_pool(char* poolName,char* ifname,unsigned int add_info,unsigned int unbindflag,int slot_id);/*返回1表示成功，表示0表示失败，返回-1表示失败*/
+/*add_info 1:ip pool POOLNAME*/
+/*add_info 0:no ip pool POOLNAME*/
+extern unsigned int ccgi_set_interface_ip_pool(char* poolName,char* ifname,unsigned int add_info,unsigned int unbindflag,int slot_id);
+																								/*表示0表示失败，返回1表示成功*/
+																								/*返回-1表示pool name is too long*/
+																								/*返回-2表示pool has already binded to interface*/
+																								/*返回-3表示pool has no subnet*/
+																								/*返回-4表示not found pool，返回-5表示error*/
 extern int set_interface_ip_pool(char *poolnamez,int slot_id);/*返回1表示成功，返回0表示失败，返回-1表示interface bind pool fail*/
 extern int del_interface_ip_pool(char *poolnamez,int slot_id);/*返回1表示成功，返回0表示失败，返回-1表示interface unbind pool fail*/
 extern int ccgi_add_dhcp_pool_ip_range(	unsigned int add,	unsigned int ipaddrl, 	unsigned int ipaddrh,	unsigned int ipmask,	unsigned int index,int slot_id);/*返回1表示成功，返回0表示失败，返回-1表示errror*/
