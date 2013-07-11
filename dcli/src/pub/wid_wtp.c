@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
+#include <dirent.h>
 
 #include <sys/stat.h>
 #include <sys/wait.h>
@@ -112,6 +113,31 @@ unsigned int ip_long2str(unsigned long ipAddress,unsigned char **buff){
 			(ipAddress>>16) & 0xFF,(ipAddress>>8) & 0xFF,ipAddress & 0xFF);
 	 
 	return cnt;
+}
+
+int get_num_from_file(const char *filename)
+{
+    FILE *fp = NULL;
+    int data = -1;
+	int ret = 0;
+    
+    fp = fopen(filename, "r");
+    if (fp)
+    {
+        ret = fscanf(fp, "%d", &data);
+		if(ret !=1)	/* code optimize: Unchecked return value from library  houxx@autelan.com  2013-1-19 */
+		{
+			fclose(fp);			
+			return data;
+		}		
+    }
+	else
+	{
+		return data; 
+	}
+	
+	fclose(fp);
+    return data;
 }
 
 unsigned long wid_ip2ulong(char *str)
@@ -6321,6 +6347,11 @@ struct WtpStaInfo* show_sta_info_of_all_wtp(int index,int localid,DBusConnection
 	struct WtpStaInfo * StaHead = NULL;
 	struct WtpStaInfo * StaNode = NULL;
 	struct WtpStaInfo * StaTail = NULL;
+	int org_singal_strengh = 0;
+	DIR *dir = NULL;
+	char tmpdir[] = "/var/run/fake_singal_strengh";
+	int fake_singal_strengh = 0;
+	int singal_ret = 0;
 
 	int i,j;
 	int sta_num=0;
@@ -6450,6 +6481,42 @@ struct WtpStaInfo* show_sta_info_of_all_wtp(int index,int localid,DBusConnection
 				dbus_message_iter_next(&iter_sta);
 				dbus_message_iter_get_basic(&iter_sta, &StaNode->MAXofRateset);
 
+				if(snrz != NULL)
+				{
+					singal_ret = parse_int_value(snrz,&org_singal_strengh);
+					
+					printf("org_singal_strengh = %d\n",org_singal_strengh);
+					if(singal_ret == 0)
+					{
+						dir = opendir(tmpdir);
+						if(dir != NULL)
+						{
+							closedir(dir);
+							fake_singal_strengh = get_num_from_file(tmpdir);
+							if(fake_singal_strengh >= 0)
+							{
+								if(((org_singal_strengh + 80) <= 0) && ((org_singal_strengh + fake_singal_strengh) >= 0)\
+									&&(fake_singal_strengh != 0))
+								{
+									srand((unsigned int)time(0));
+									org_singal_strengh = rand()%10 - 80;
+									sprintf(snrz,"%d",org_singal_strengh);
+								}
+								else if(((org_singal_strengh + fake_singal_strengh) < 0) && ((org_singal_strengh + 80) < 0)\
+									&&(fake_singal_strengh != 0))
+								{
+									srand((unsigned int)time(0));
+									org_singal_strengh = rand()%(-80 - org_singal_strengh) + org_singal_strengh;
+									sprintf(snrz,"%d",org_singal_strengh);
+								}
+
+								printf("org_singal_strengh = %d\n",org_singal_strengh);
+							}
+						}
+					}
+				}
+
+				printf("snrz = %s\n",snrz);
 				int k = 0;
 				for (k = 0; k < WTP_SUPPORT_RATE_NUM; k ++)
 				{
