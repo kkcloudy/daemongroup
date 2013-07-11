@@ -46,7 +46,7 @@ struct zebra_t zebrad =
   .rtm_table_default = 0,
 };
 
-product_inf *product;
+product_inf *product = NULL;
 extern int board_type ;
 
 process_info *process_se_agent;

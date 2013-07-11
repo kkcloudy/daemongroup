@@ -5187,6 +5187,12 @@ ipv6_address_install (struct vty *vty, struct interface *ifp,
 				count ++;
 		}
     }
+	else
+	{
+		vty_out (vty, "%% ifp->connected is NULL %s", VTY_NEWLINE);
+		return CMD_WARNING;
+
+	}
 	
 	if(IFC_MAX <= count)
 	{
