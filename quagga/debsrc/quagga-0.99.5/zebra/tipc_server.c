@@ -3252,12 +3252,7 @@ vice_interface_send_to_master(tipc_server *vice_board)
     
     if(zebrad.master_board_list == NULL)
 	{
-	    if(tipc_server_debug)
 	     zlog_debug("%s, line = %d :tipc_client_list is NULL....", __func__, __LINE__);
-		
-		/*CID 11368 (#2 of 2): Missing return statement (MISSING_RETURN)
-		5. missing_return: Arriving at the end of a function without returning a value.
-		Add return value.*/
 	    return -1;
 	  }
 	
@@ -6320,6 +6315,13 @@ vice_accept_master (int sock)
 				}
 	 	 }
    	}
+   else
+   {
+	   zlog_warn(" zebrad.master_board_list err .\n");
+	   vice_board_close(vice_board);/*add.*/
+	   return ;
+
+   }
   }
   else
   {
