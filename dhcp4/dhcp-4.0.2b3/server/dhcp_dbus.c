@@ -8020,7 +8020,7 @@ dhcp_dbus_del_dhcp_failover_peer
 	}
 		
 	ret = dhcp_dbus_find_pool_by_index(index, &poolnode);
-	if (!ret && poolnode->headsubnet) {
+	if (!ret && poolnode->headsubnet && (0 == strncmp(poolnode->headsubnet->owned_failover.name,failname,strlen(failname)))) {
 		/*only one subnet one failover*/
 		subnode = poolnode->headsubnet;
 
@@ -8037,7 +8037,10 @@ dhcp_dbus_del_dhcp_failover_peer
 		}
 	}
 	else {
-		op_ret = DHCP_NOT_FOUND_POOL;
+		if(ret)
+			op_ret = DHCP_NOT_FOUND_POOL;
+		else
+			op_ret = DHCP_FAILOVER_NAME_WRONG;
 	}
 
 	reply = dbus_message_new_method_return(msg);

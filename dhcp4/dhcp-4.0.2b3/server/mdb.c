@@ -921,6 +921,7 @@ get_lease_ip_info_by_ip
 	ip_Nums = ip_nums;
 	ip_Addr = ip_addr;
 	cip.len = 4;
+	if(ip_Nums>1)
 	ip_Nums++;
 	while (ip_Nums) {
 		cip.iabuf[0] = ip_Addr>>24 & 0xff;

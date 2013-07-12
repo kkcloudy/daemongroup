@@ -51,6 +51,7 @@ extern "C"
 #include "if.h"
 #include "sysdef/returncode.h"
 #include "dcli_dhcp.h"
+#include "dcli_vrrp.h"
 #include <sys/socket.h>
 #include <dbus/sem/sem_dbus_def.h>
 
@@ -6078,16 +6079,47 @@ dcli_delete_failover_pool
 {
 	DBusMessage 	*query = NULL, *reply = NULL;
 	DBusError 		err;
-	unsigned int op_ret = 0;
+	unsigned int op_ret = 0, ret = 0;
 	char *failname = NULL;
+	int profile = 0,profile_sub = 0;
+	char *endptr = NULL,*tmp = NULL;
 
 	failname = malloc(strlen(failover_conf->name) + 1);
 	memset(failname, 0, (strlen(failover_conf->name) + 1));
 	memcpy(failname, failover_conf->name, strlen(failover_conf->name));
-
+	if(strncmp(failname,"peer",4)){
+		vty_out (vty, "FAILOVERNAME wrong!example: peer5\n");
+		return CMD_FAILURE;
+	}
+	profile = strtoul(failname+4,&endptr,10);
+	//printf("profile %d\n",profile);
+	if(profile < 1 || profile > 16){
+		vty_out (vty, "profile id wrong!\n");
+		return CMD_FAILURE;
+	}
+	struct dhcp_failover_state failover_state;
+	memset(&failover_state, 0, sizeof(failover_state));
+	
 	int localid = 1, slot_id = HostSlotId, indextmp = 0;
 	get_slotid_index(vty, &indextmp, &slot_id, &localid);
-
+	ret = dcli_show_dhcp_failover(vty, profile, &failover_state, slot_id);
+	if (DCLI_VRRP_RETURN_CODE_OK != ret){
+		vty_out(vty, "cannot get failobver state\n");
+	}
+	if(!strncmp(endptr,".",1)){
+	tmp = endptr+1;
+	profile_sub = strtoul(tmp,&endptr,10);
+	//printf("profile_sub %d,failname(1) %s\n",profile_sub,failname);
+	memset(failname, 0, (strlen(failover_conf->name) + 1));
+	sprintf(failname,"peer%d",profile);
+	//printf("failname(2) %s\n",failname);
+	}
+	if(((failover_state.peer != 0) || (failover_state.local != 6)) && (DCLI_VRRP_RETURN_CODE_OK == ret)){
+		vty_out(vty, "Only local [recover] peer [unknown] for this CMD");
+		if(profile_sub != 120)
+		return CMD_FAILURE;
+	}
+	
 	DBusConnection *dcli_dbus_connection = NULL;
 	ReInitDbusConnection(&dcli_dbus_connection, slot_id, distributFag);	
 	query = dbus_message_new_method_call(DHCP_DBUS_BUSNAME, 
@@ -6122,7 +6154,10 @@ dcli_delete_failover_pool
 			vty_out (vty, "failover state change error not enable\n");
 		}else if(DHCP_NOT_FOUND_POOL  == op_ret) {
 			vty_out (vty, "Not found the pool\n");			
-		}else {
+		}else if(DHCP_FAILOVER_NAME_WRONG == op_ret){
+			vty_out (vty, "FAILOVERNAME wrong!");
+		}
+		else {
 			vty_out (vty, "delete operation fail\n");
 		}			
 	} 
