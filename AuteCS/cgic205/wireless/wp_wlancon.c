@@ -474,6 +474,21 @@ int ShowWlanconPage(char *m,char *n,char *t,char *pn,char *ins_id,instance_param
 					   retu=fgets(BindInter,20,fp);
 					   while(retu!=NULL)
 					   {
+					   	 if(0 == strncmp(retu,"ve",2))
+						 {
+							char *temp_ve = NULL;
+							char temp_ve1[20];
+
+							temp_ve = strchr(retu,'@');
+							if(temp_ve)
+							{
+								memset(temp_ve1,0,sizeof(temp_ve1));
+								strncpy(temp_ve1,retu,temp_ve-retu);
+
+								memset(retu,0,20);
+								strcpy(retu,temp_ve1);
+							}
+						 }
 						 fprintf(cgiOut,"<option value=%s>%s",retu,retu);
 						 memset(BindInter,0,sizeof(BindInter));
 						 retu=fgets(BindInter,20,fp);

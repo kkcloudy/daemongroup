@@ -293,10 +293,6 @@ int ShowSecurityConfigPage(char *m,char *n,char *t,char *r,char *exten,char *pn,
 				  
 				  if(((strcmp(n,"open")==0)||(strcmp(n,"shared")==0))&&(strcmp(exten,"1")==0))
 					limit+=21;	
-				  //if(strcmp(n,"WAPI_PSK")==0)
-				  	//limit+=1;
-				  //if(strcmp(n,"WAPI_AUTH")==0)
-				  	//limit+=11;
                   for(i=0;i<limit;i++)
 	              {
   				    fprintf(cgiOut,"<tr height=25>"\

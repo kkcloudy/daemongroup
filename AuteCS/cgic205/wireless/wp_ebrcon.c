@@ -43,6 +43,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "ws_ec.h"
 #include "wcpss/wid/WID.h"
 #include "ws_dcli_ebr.h"
+#include "ws_dcli_wlans.h"
 #include "ws_dbus_list_interface.h"
 
 
@@ -227,9 +228,24 @@ int ShowEbrconPage(char *m,char *n,char * instance_id,char *pn,instance_paramete
 					   retu=fgets(BindInter,20,fp);
 					   while(retu!=NULL)
 					   {
-						 fprintf(cgiOut,"<option value=%s>%s",retu,retu);
-						 memset(BindInter,0,sizeof(BindInter));
-						 retu=fgets(BindInter,20,fp);
+							if(0 == strncmp(retu,"ve",2))
+							{
+								char *temp_ve = NULL;
+								char temp_ve1[20];
+
+								temp_ve = strchr(retu,'@');
+								if(temp_ve)
+								{
+									memset(temp_ve1,0,sizeof(temp_ve1));
+									strncpy(temp_ve1,retu,temp_ve-retu);
+
+									memset(retu,0,20);
+									strcpy(retu,temp_ve1);
+								}
+							}
+							fprintf(cgiOut,"<option value=%s>%s",retu,retu);
+							memset(BindInter,0,sizeof(BindInter));
+							retu=fgets(BindInter,20,fp);
 					   }				   
 					   fclose(fp);	
 				   }
