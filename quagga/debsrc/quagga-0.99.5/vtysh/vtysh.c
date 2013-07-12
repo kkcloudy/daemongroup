@@ -4901,7 +4901,6 @@ get_product_slot_count()
 	if(NULL == fd)
 	{
 		syslog(LOG_NOTICE,"fopen /dbm/product/name failed.\n");
-		fclose(fd);
 		return -1;
 	}
 	fscanf(fd,"%s",product_name);

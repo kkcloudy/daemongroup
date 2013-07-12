@@ -72,16 +72,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 extern struct zebra_t zebrad;
 extern product_inf *product ;
-extern process_info *process_se_agent;
-extern process_info *process_snmp;
-extern process_info *process_acsample;
+
+process_info *process_se_agent = NULL;
+process_info *process_snmp = NULL;
+process_info *process_acsample = NULL;
 
 struct timeval current_time;
 //struct timeval last_time;
 
 
-void rtm_creat_unix_server(const char *path, process_info *process_information);
-void rtm_if_flow_event(enum if_flow_events event,int sock,process_info * process_information);
 
 
 void
@@ -146,8 +145,7 @@ rtm_deal_interface_flow_stats_sampling_divided(int command, process_info* proces
 {
 	/* First send to se_agent. When recv se_agent , fetch the linux system data, then ADD*/
 	/*Here do send se_agent.*/
-	if(process_name == PROCESS_NAME_SNMP
-		||process_name == PROCESS_NAME_ACSAMPLE)
+	if(process_name == PROCESS_NAME_SNMP||process_name == PROCESS_NAME_ACSAMPLE)
 	{
 		/* Direct send to se_agent, by snmp command[ INTERFACE_FLOW_STATISTICS_SAMPLING_INTEGRATED_SNMP].
 		 by acsample command[ INTERFACE_FLOW_STATISTICS_SAMPLING_INTEGRATED_ACSAMPLE].*/
@@ -191,8 +189,8 @@ rtm_if_flow_stats_data_packet(process_info *process_information, struct interfac
   stream_putq (s, ifp->stats.rx_dropped);
   stream_putq (s, ifp->stats.tx_dropped);
   stream_putq (s, ifp->stats.rx_multicast);
-  stream_putq (s, ifp->stats.rx_compressed);//
-  stream_putq (s, ifp->stats.tx_compressed);//
+  stream_putq (s, ifp->stats.rx_compressed);
+  stream_putq (s, ifp->stats.tx_compressed);
   stream_putq (s, ifp->stats.collisions);
   stream_putq (s, ifp->stats.rx_length_errors);
   stream_putq (s, ifp->stats.rx_over_errors);
@@ -246,57 +244,37 @@ rtm_if_flow_stats_data_packet(process_info *process_information, struct interfac
 
 /* Close client fd. */
 int
-rtm_if_flow_client_unix_close (process_info *process_information)
+rtm_if_flow_client_unix_close (process_info **_process_information)
 {
+	process_info *process_information = *_process_information;
+
 
   zlog_warn("%s: socket[%d] reading cased failed ,to close unix server.\n",__func__,process_information->sock);
 
-  /* Close file descriptor. */
-  #if 0
-  if (process_information->sock)
-    {
-      close (process_information->sock);
-      process_information->sock = -1;
-    }
-  #endif
+	/* Release threads. */
+	if (process_information->t_read)
+		thread_cancel (process_information->t_read);
+	if (process_information->t_write)
+		thread_cancel (process_information->t_write);
+	if (process_information->t_suicide)
+		thread_cancel (process_information->t_suicide);
+
+	if(process_information->ibuf)
+		stream_free(process_information->ibuf);
 	
-/* 
-  if (process_information->ibuf)
-    stream_free (vice_board->ibuf);
-  if (vice_board->obuf)
-    stream_free (vice_board->obuf);
-  if (vice_board->wb)
-    buffer_free(vice_board->wb);
-  */
+	if(process_information->obuf)
+		stream_free(process_information->obuf);
+	
+	if(process_information->wb)
+		buffer_free(process_information->wb);
+	if(rtm_debug_if_flow)
+		zlog_debug("To close cuurt ACSAMPLE break fd[%d], then to creat a new fd.\n",process_information->sock);
+	/* Close file descriptor. */	
+	close(process_information->sock);
 
-  /* Release threads. */
-  if (process_information->t_read)
-    thread_cancel (process_information->t_read);
-  if (process_information->t_write)
-    thread_cancel (process_information->t_write);
-  if (process_information->t_suicide)
-    thread_cancel (process_information->t_suicide);
-
-  stream_reset (process_information->ibuf);
-  stream_reset (process_information->obuf);
-  /*vice_board_event (TIPC_READ, process_information->sock, process_information);*/
-  if(process_information->name_type == PROCESS_NAME_SNMP)
-  {
-    zlog_info("To close cuurt SNMP break fd[%d], then to creat a new fd.\n",process_snmp->sock);
-	close(process_snmp->sock);
-    rtm_creat_unix_server(RTM_TO_SNMP_PATH,process_information);
-  	}
-  else if(process_information->name_type == PROCESS_NAME_ACSAMPLE)
-  {
-	  zlog_info("To close cuurt ACSAMPLE break fd[%d], then to creat a new fd.\n",process_acsample->sock);
-	  close(process_acsample->sock);
-    rtm_creat_unix_server(RTM_TO_ACSAMPLE_PATH,process_information);
-  	}
-  else
-  	zlog_warn("Unkown process type[%d].\n",process_information->name_type);
-
-  return 0;
-  
+	XFREE(MTYPE_PROCESS_INFO,process_information);
+	*_process_information = NULL;
+	return 0;
 }
 
 static int
@@ -310,7 +288,7 @@ rtm_if_flow_client_unix_flush_data(struct thread *thread)
       zlog_warn("vice board suicide !\n");
 	  
 	  zlog_warn("%s: There have mismatch packet!\n",__func__);
-      rtm_if_flow_client_unix_close(process_information);
+      rtm_if_flow_client_unix_close(&process_information);
       return -1;
     }
   switch (buffer_flush_available(process_information->wb, process_information->sock))
@@ -320,7 +298,7 @@ rtm_if_flow_client_unix_flush_data(struct thread *thread)
       		"closing", __func__, process_information->sock);
 	  
 	  zlog_warn("%s: There have mismatch packet!\n",__func__);
-      rtm_if_flow_client_unix_close(process_information);
+      rtm_if_flow_client_unix_close(&process_information);
       break;
     case BUFFER_PENDING:
       process_information->t_write = thread_add_write(zebrad.master, rtm_if_flow_client_unix_flush_data,
@@ -339,7 +317,7 @@ rtm_if_flow_client_unix_delayed_close(struct thread *thread)
   process_info *process_information = THREAD_ARG(thread);
 
   process_information->t_suicide = NULL;
-  rtm_if_flow_client_unix_close(process_information);
+  rtm_if_flow_client_unix_close(&process_information);
   return 0;
 }
 
@@ -594,27 +572,7 @@ rtm_if_flow_stats_update_for_sampling_integrated(struct interface *ifp,int if_fl
 	return;
 	  
 }
-/*
-if_flow_data->output_packets_eth 
-if_flow_data->output_packets_capwap
-if_flow_data->output_packets_rpa
-if_flow_data->input_packets_eth 
-if_flow_data->input_packets_capwap
-if_flow_data->input_packets_rpa 
-if_flow_data->output_bytes_eth 
-if_flow_data->output_bytes_capwap
-if_flow_data->output_bytes_rpa 
-if_flow_data->input_bytes_eth 
-if_flow_data->input_bytes_capwap 
-if_flow_data->input_bytes_rpa 
 
-out_put---tx; input--rx.
-
-ifp->stats.rx_bytes,
-ifp->stats.rx_packets,
-ifp->stats.tx_bytes,
-ifp->stats.tx_packets,
-*/
 void
 rtm_if_flow_stats_data_add(struct interface *ifp,if_flow_stats_se_agent *if_flow_data )
 {
@@ -632,11 +590,7 @@ rtm_if_flow_stats_data_add(struct interface *ifp,if_flow_stats_se_agent *if_flow
 		zlog_debug("%s:Finish name(%s),rx_bytes[%llu],rx_packets[%llu],tx_bytes[%llu],tx_packets[%llu].\n",
 		 __func__,ifp->name,ifp->stats.rx_bytes,ifp->stats.rx_packets,ifp->stats.tx_bytes,ifp->stats.tx_packets);
 }
-/*( strncmp(ifp->name,"radio",5)!=0 
-				&& strncmp(ifp->name,"r",1)!=0 
-				&& strncmp(ifp->name,"pimreg",6)!=0
-				&& strncmp(ifp->name,"sit0",4)!=0 
-				&& strncmp(ifp->name,"ppp",3)!=0)*/
+
 
 /*read the flow stats from linux system proc*/
 void
@@ -833,80 +787,87 @@ int
 rtm_recv_message_from_se_agent(struct thread *thread)
 {
 
-  int ret;
-  struct sockaddr_tipc addr = {0};
-  socklen_t len = 0;
-  ssize_t nbyte = 0;  
-  if_flow_stats_se_agent if_flow_data ;
-  se_interative_t se_data;
-  int command = 0;
-  
-  if (rtm_debug_if_flow)
-	 zlog_debug ("enter %s ......\n", __func__);
+	int ret;
+	struct sockaddr_tipc addr = {0};
+	socklen_t len = 0;
+	ssize_t nbyte = 0;  
+	if_flow_stats_se_agent if_flow_data ;
+	se_interative_t se_data;
+	int command = 0,sock=-1;
+	process_info *process_information = NULL;
 
-  /*Add check fd when recvfrom.*/
-  if (process_se_agent->sock < 0)
-  {
-     zlog_warn("%s: rtmd connect se_agent fd < 0.\n",__func__);
-     return -1;
-  	}
-  
-  /*master_board= THREAD_ARG (thread);*/
-  process_se_agent->t_read = NULL;
 
-  memset(&se_data, 0, sizeof(se_interative_t));
-  memset(&addr, 0, sizeof(struct sockaddr_tipc));
-  len = sizeof(addr);
-  if(rtm_debug_if_flow)
-  {
-    quagga_gettimeofday_only(&current_time);
-    zlog_debug("%s:line %d, Time[%u:%u].\n",__func__,__LINE__,current_time.tv_sec,current_time.tv_usec);
-  	}
-  nbyte = recvfrom(process_se_agent->sock, &se_data, sizeof(se_interative_t), 0,
+	if (rtm_debug_if_flow)
+	 	zlog_debug ("enter %s ......\n", __func__);
+
+	sock = THREAD_FD (thread);
+	process_information = THREAD_ARG(thread);
+	if(NULL == process_information)
+		return -1;
+	/*Add check fd when recvfrom.*/
+	if (sock < 0)
+	{
+	 	zlog_warn("%s: rtmd connect se_agent fd < 0.\n",__func__);
+	 	return -1;
+	}
+
+	/*master_board= THREAD_ARG (thread);*/
+	process_information->t_read = NULL;
+
+	memset(&se_data, 0, sizeof(se_interative_t));
+	memset(&addr, 0, sizeof(struct sockaddr_tipc));
+	len = sizeof(addr);
+	if(rtm_debug_if_flow)
+	{
+		quagga_gettimeofday_only(&current_time);
+		zlog_debug("%s:line %d, Time[%u:%u].\n",__func__,__LINE__,current_time.tv_sec,current_time.tv_usec);
+	}
+	nbyte = recvfrom(sock, &se_data, sizeof(se_interative_t), 0,
 				  (struct sockaddr *)&addr, &len);
 
-  if(nbyte < 0)
-  {
-  	zlog_warn("%s: line %d, recvfrom se_agent err(%s)!\n",
-		__func__,__LINE__,safe_strerror(errno));
-	return -1;
-  	}
-  
-  if(rtm_debug_if_flow)
-  {
-	 quagga_gettimeofday_only(&current_time);
-	 zlog_debug("%s:line %d, Time[%u:%u].\n",__func__,__LINE__,current_time.tv_sec,current_time.tv_usec);
-  }
-  memset(&if_flow_data,0,sizeof(if_flow_stats_se_agent));/*to fetch data from se_agent.*/
+	if(nbyte < 0)
+	{
+		zlog_warn("%s: line %d, recvfrom se_agent err(%s)!\n",
+					__func__,__LINE__,safe_strerror(errno));
+		return -1;
+	}
 
-  command = se_data.fccp_cmd.agent_pid;
+	if(rtm_debug_if_flow)
+	{
+		quagga_gettimeofday_only(&current_time);
+	 	zlog_debug("%s:line %d, Time[%u:%u].\n",__func__,__LINE__,current_time.tv_sec,current_time.tv_usec);
+	}
+	memset(&if_flow_data,0,sizeof(if_flow_stats_se_agent));/*to fetch data from se_agent.*/
 
-  /*Read the data from se_agent.*/
-  /*rtm_read_if_flow_stats_from_se_agent(process_se_agent->ibuf,se_data,&if_flow_data);*/
-  rtm_read_if_flow_stats_from_se_agent(process_se_agent->ibuf, se_data.fccp_cmd.fccp_data.fau64_part_info, &if_flow_data);
-  
-  /*After fetch the data ,go to update flow stats data*/
-  rtm_if_flow_stats_update(&if_flow_data,command);
-  
-  /*CID 18165 (#1 of 1): Argument cannot be negative (REVERSE_NEGATIVE)
-      check_after_sink: You might be using variable "process_se_agent->sock" before verifying that it is >= 0. 
-     So add check fd when recvfrom above.*/
-  if (process_se_agent->sock < 0)
-  {
-    /* Connection was closed during packet processing. */
-	zlog_warn("%s: After recvfrom se_agent fd is break.\n",__func__);
-    return -1;
-  	}
+	command = se_data.fccp_cmd.agent_pid;
 
-  /* Register read thread. */
-  stream_reset(process_se_agent->ibuf);
-  rtm_if_flow_event(IF_FLOW_TIPC_CLIENT_READ,process_se_agent->sock,process_se_agent);
+	/*Read the data from se_agent.*/
+	/*rtm_read_if_flow_stats_from_se_agent(process_se_agent->ibuf,se_data,&if_flow_data);*/
+	rtm_read_if_flow_stats_from_se_agent(process_information->ibuf, se_data.fccp_cmd.fccp_data.fau64_part_info, &if_flow_data);
 
-  if(rtm_debug_if_flow)
-  	zlog_debug("leave func %s...\n",__func__);
+	/*After fetch the data ,go to update flow stats data*/
+	rtm_if_flow_stats_update(&if_flow_data,command);
 
-  return 0;
-  
+	/*CID 18165 (#1 of 1): Argument cannot be negative (REVERSE_NEGATIVE)
+	  check_after_sink: You might be using variable "process_se_agent->sock" before verifying that it is >= 0. 
+	 So add check fd when recvfrom above.*/
+	if (sock < 0)
+	{
+		/* Connection was closed during packet processing. */
+		zlog_warn("%s: After recvfrom se_agent fd is break.\n",__func__);
+		return -1;
+	}
+#if 1
+	/* Register read thread. */
+	stream_reset(process_information->ibuf);
+	rtm_if_flow_event(IF_FLOW_TIPC_CLIENT_READ,process_information->sock,process_information);
+#endif
+
+	if(rtm_debug_if_flow)
+		zlog_debug("leave func %s...\n",__func__);
+
+	return 0;
+
 }
 
 
@@ -914,103 +875,86 @@ rtm_recv_message_from_se_agent(struct thread *thread)
 int
 rtm_recv_message_from_snmp(struct thread * thread)
 {
-  int sock;
-  process_info *process_information;
-  size_t already;
-  int length, process_name;
-  int command;
+	int sock = -1;
+	process_info *process_information = NULL;
+	size_t already;
+	int length, process_name;
+	int command;
 
-  /* Get thread data.  Reset reading thread because I'm running. */
-  sock = THREAD_FD (thread);
-  process_information = THREAD_ARG (thread);
-  process_information->t_read = NULL;
+	/* Get thread data.  Reset reading thread because I'm running. */
+	sock = THREAD_FD (thread);
+	process_information = THREAD_ARG (thread);
+	if(NULL == process_information)
+		return -1;
+	process_information->t_read = NULL;
 
-#if 0
-  if (process_information->t_suicide)
-	{
-	  zebra_client_close(process_information);
-	  return -1;
-	}
-#endif
 
-  /* Read length and command (if we don't have it already). */
-  if ((already = stream_get_endp(process_information->ibuf)) < IF_FLOW_STATS_HEADER_SIZE)
+	/* Read length and command (if we don't have it already). */
+	if ((already = stream_get_endp(process_information->ibuf)) < IF_FLOW_STATS_HEADER_SIZE)
 	{
-	  /*If it is normal , the already is 0.*/
-	  ssize_t nbyte;
-	  /*to fetch header*/
-	  if (((nbyte = stream_read_try (process_information->ibuf, sock,
-					 IF_FLOW_STATS_HEADER_SIZE-already)) == 0) ||
-	  (nbyte == -1))
-	{
-	  if (rtm_debug_if_flow)
-		zlog_debug ("connection closed socket [%d]", sock);
-	 rtm_if_flow_client_unix_close(process_snmp);
-	  return -1;
-	}
-	  if (nbyte != (ssize_t)(IF_FLOW_STATS_HEADER_SIZE-already))
-	{
-	  /* Try again later. */
-	  rtm_if_flow_event(IF_FLOW_UNIX_SERVER_READ_SNMP, process_snmp->sock, process_snmp);
-	  return 0;
-	}
-	  already = IF_FLOW_STATS_HEADER_SIZE;
+		/*If it is normal , the already is 0.*/
+		ssize_t nbyte;
+		/*to fetch header*/
+		if (((nbyte = stream_read_try (process_information->ibuf, sock,
+					 IF_FLOW_STATS_HEADER_SIZE-already)) == 0) ||(nbyte == -1))
+		{
+			if (rtm_debug_if_flow)
+				zlog_debug ("connection closed socket [%d]", sock);
+			rtm_if_flow_client_unix_close(&process_information);
+			return -1;
+		}
+		if (nbyte != (ssize_t)(IF_FLOW_STATS_HEADER_SIZE-already))
+		{
+			/* Try again later. */
+			rtm_if_flow_event(IF_FLOW_UNIX_SERVER_READ_SNMP, sock, process_information);
+			return 0;
+		}
+		already = IF_FLOW_STATS_HEADER_SIZE;
 	}
 
-  /* Reset to read from the beginning of the incoming packet. */
-  stream_set_getp(process_information->ibuf, 0);
+	/* Reset to read from the beginning of the incoming packet. */
+	stream_set_getp(process_information->ibuf, 0);
 
-  /* Fetch header values */
-  length = stream_getl (process_information->ibuf);
-  process_name = stream_getl (process_information->ibuf);
-  command = stream_getl (process_information->ibuf);
-  if(rtm_debug_if_flow)
-   zlog_warn("%s: line %d, length[%d],name[%d],command[%d]..\n",__func__,__LINE__,length,process_name,command);
+	/* Fetch header values */
+	length = stream_getl (process_information->ibuf);
+	process_name = stream_getl (process_information->ibuf);
+	command = stream_getl (process_information->ibuf);
+	if(rtm_debug_if_flow)
+		zlog_warn("%s: line %d, length[%d],name[%d],command[%d]..\n",__func__,__LINE__,length,process_name,command);
 
-  if (process_name!= PROCESS_NAME_SNMP && process_name!= PROCESS_NAME_ACSAMPLE)
+	if (process_name!= PROCESS_NAME_SNMP && process_name!= PROCESS_NAME_ACSAMPLE)
 	{
-	  zlog_warn("%s: socket %d version mismatch, process_type %d .",
-			   __func__, sock, process_name);
-	 rtm_if_flow_client_unix_close(process_snmp);
-	  return -1;
+		zlog_warn("%s: socket %d version mismatch, process_type %d .", __func__, sock, process_name);
+		rtm_if_flow_client_unix_close(&process_information);
+	 	return -1;
 	}
-  #if 0
-  if (command != INTERFACE_FLOW_STATISTICS_SAMPLING_INTEGRATED_SNMP
-  	  ||command != INTERFACE_FLOW_STATISTICS_SAMPLING_DIVIDED_SNMP
-  	  ||command != INTERFACE_FLOW_STATISTICS_SAMPLING_DIVIDED_ACSAMPLE
-  	  ||command != INTERFACE_FLOW_STATISTICS_SAMPLING_INTEGRATED_ACSAMPLE
-  	  ||command != INTERFACE_FLOW_STATISTICS_SAMPLING_INTEGRATED_RTM) 
-	{
-	  zlog_warn("%s: socket %d message command[%d] unkown.\n",
-			__func__, sock, command);
-	 // zebra_client_close (process_information);
-	  return -1;
-	}
- #endif
-  if (length > STREAM_SIZE(process_information->ibuf))
+	
+	process_information->name_type = process_name ;
+	
+	if (length > STREAM_SIZE(process_information->ibuf))
 	{
 	  zlog_warn("%s: socket %d message length %u exceeds buffer size %lu",
 			__func__, sock, length, (u_long)STREAM_SIZE(process_information->ibuf));
-	 rtm_if_flow_client_unix_close(process_snmp);
+	 rtm_if_flow_client_unix_close(&process_information);
 	  return -1;
 	}
 
-  /* Read rest of data. */
-  if (already < length)
-  {
-	  ssize_t nbyte;
-	  if (((nbyte = stream_read_try (process_information->ibuf, sock,
+	/* Read rest of data. */
+	if (already < length)
+	{
+		ssize_t nbyte;
+		if (((nbyte = stream_read_try (process_information->ibuf, sock,
 					 length-already)) == 0) ||(nbyte == -1))
 		{
-		  if (rtm_debug_if_flow)
-			zlog_debug ("connection closed [%d] when reading rtm data", sock);
-		  rtm_if_flow_client_unix_close(process_snmp);
-		  return -1;
+			if (rtm_debug_if_flow)
+				zlog_debug ("connection closed [%d] when reading rtm data", sock);
+		  	rtm_if_flow_client_unix_close(&process_information);
+		  	return -1;
 		}
 	  if (nbyte != (ssize_t)(length-already))
 		{
 		  /* Try again later. */
-		  rtm_if_flow_event(IF_FLOW_UNIX_SERVER_READ_SNMP, process_snmp->sock, process_snmp);
+		  	rtm_if_flow_event(IF_FLOW_UNIX_SERVER_READ_SNMP, process_information->sock, process_information);
 		  return 0;
 		}
 	}
@@ -1021,184 +965,49 @@ rtm_recv_message_from_snmp(struct thread * thread)
   if (rtm_debug_if_flow)
 	zlog_debug ("Rtm message comes from socket [%d]", sock);
 
-  if (IS_ZEBRA_DEBUG_PACKET && IS_ZEBRA_DEBUG_RECV)
-	zlog_debug ("Rtm message received [%s] %d", 
-		   zserv_command_string (command), length);
+	if (IS_ZEBRA_DEBUG_PACKET && IS_ZEBRA_DEBUG_RECV)
+		zlog_debug ("Rtm message received [%s] %d", zserv_command_string (command), length);
 
-  switch (command) 
-  {
-	case INTERFACE_FLOW_STATISTICS_SAMPLING_INTEGRATED_SNMP:
-	case INTERFACE_FLOW_STATISTICS_SAMPLING_INTEGRATED_ACSAMPLE:
-//	case INTERFACE_FLOW_STATISTICS_SAMPLING_INTEGRATED_RTM:
-	  rtm_deal_interface_flow_stats_sampling_integrated(command, process_information,process_name);
-	  break;
-	case INTERFACE_FLOW_STATISTICS_SAMPLING_DIVIDED_ACSAMPLE:
-	case INTERFACE_FLOW_STATISTICS_SAMPLING_DIVIDED_SNMP:
-		rtm_deal_interface_flow_stats_sampling_divided(command, process_information,process_name);
-	  break;
-	
-	default:
-	  zlog_info ("Rtm received unknown command %d", command);
-	  break;
+	//rtm_get_if_flow_stats_from_linx_system();
+
+	switch (command) 
+	{
+		case INTERFACE_FLOW_STATISTICS_SAMPLING_INTEGRATED_SNMP:
+			process_snmp = process_information;
+			rtm_deal_interface_flow_stats_sampling_integrated(command, process_information,process_name);
+			break;			
+				
+		case INTERFACE_FLOW_STATISTICS_SAMPLING_INTEGRATED_ACSAMPLE:
+			process_acsample = process_information;
+			rtm_deal_interface_flow_stats_sampling_integrated(command, process_information,process_name);
+			break;
+			
+		case INTERFACE_FLOW_STATISTICS_SAMPLING_DIVIDED_ACSAMPLE:
+			process_acsample = process_information;
+			rtm_deal_interface_flow_stats_sampling_divided(command, process_information,process_name);
+			break;
+		case INTERFACE_FLOW_STATISTICS_SAMPLING_DIVIDED_SNMP:
+			process_snmp = process_information;
+			rtm_deal_interface_flow_stats_sampling_divided(command, process_information,process_name);
+		  	break;
+
+		default:
+		  zlog_info ("Rtm received unknown command %d", command);
+		  break;
 	}
 
-  if (process_information->t_suicide)
+	if (process_information->t_suicide)
 	{
 	  /* No need to wait for thread callback, just kill immediately. */
-	  zlog_debug("%s: suicide.\n",__func__);
-	  rtm_if_flow_client_unix_close(process_snmp);
-	  return -1;
+	  	zlog_debug("%s: suicide.\n",__func__);
+	  	rtm_if_flow_client_unix_close(&process_information);
+	  	return -1;
 	}
-
-  stream_reset (process_information->ibuf);
-  rtm_if_flow_event(IF_FLOW_UNIX_SERVER_READ_SNMP, process_snmp->sock, process_snmp);
-  return 0;
-}
-
-int
-rtm_recv_message_from_acsample(struct thread * thread)
-{
-  int sock;
-  process_info *process_information;
-  size_t already;
-  int length, process_name;
-  int command;
-
-  /* Get thread data.  Reset reading thread because I'm running. */
-  sock = THREAD_FD (thread);
-  process_information = THREAD_ARG (thread);
-  process_information->t_read = NULL;
-
-#if 0
-  if (process_information->t_suicide)
-	{
-	  zebra_client_close(process_information);
-	  return -1;
-	}
-#endif
-
-  /* Read length and command (if we don't have it already). */
-  if ((already = stream_get_endp(process_information->ibuf)) < IF_FLOW_STATS_HEADER_SIZE)
-	{
-	  /*If it is normal , the already is 0.*/
-	  ssize_t nbyte;
-	  /*to fetch header*/
-	  if (((nbyte = stream_read_try (process_information->ibuf, sock,
-					 IF_FLOW_STATS_HEADER_SIZE-already)) == 0) ||
-	  (nbyte == -1))
-	{
-	  if (rtm_debug_if_flow)
-		zlog_debug ("connection closed socket [%d]", sock);
-	 rtm_if_flow_client_unix_close(process_acsample);
-	  return -1;
-	}
-	  if (nbyte != (ssize_t)(IF_FLOW_STATS_HEADER_SIZE-already))
-	{
-	  /* Try again later. */
-	  rtm_if_flow_event(IF_FLOW_UNIX_SERVER_READ_ACSAMPLE, process_acsample->sock, process_acsample);
-	  return 0;
-	}
-	  already = IF_FLOW_STATS_HEADER_SIZE;
-	}
-
-  /* Reset to read from the beginning of the incoming packet. */
-  stream_set_getp(process_information->ibuf, 0);
-
-  /* Fetch header values */
-  length = stream_getl (process_information->ibuf);
-  process_name = stream_getl (process_information->ibuf);
-  command = stream_getl (process_information->ibuf);
-  if(rtm_debug_if_flow)
-   zlog_warn("%s: line %d, length[%d],name[%d],command[%d]..\n",__func__,__LINE__,length,process_name,command);
-
-  if (process_name!= PROCESS_NAME_SNMP && process_name!= PROCESS_NAME_ACSAMPLE)
-	{
-	  zlog_warn("%s: socket %d version mismatch, process_type %d .",
-			   __func__, sock, process_name);
-	 rtm_if_flow_client_unix_close(process_acsample);
-	  return -1;
-	}
-  #if 0
-  if (command != INTERFACE_FLOW_STATISTICS_SAMPLING_INTEGRATED_SNMP
-  	  ||command != INTERFACE_FLOW_STATISTICS_SAMPLING_DIVIDED_SNMP
-  	  ||command != INTERFACE_FLOW_STATISTICS_SAMPLING_DIVIDED_ACSAMPLE
-  	  ||command != INTERFACE_FLOW_STATISTICS_SAMPLING_INTEGRATED_ACSAMPLE
-  	  ||command != INTERFACE_FLOW_STATISTICS_SAMPLING_INTEGRATED_RTM) 
-	{
-	  zlog_warn("%s: socket %d message command[%d] unkown.\n",
-			__func__, sock, command);
-	 // zebra_client_close (process_information);
-	  return -1;
-	}
- #endif
-  if (length > STREAM_SIZE(process_information->ibuf))
-	{
-	  zlog_warn("%s: socket %d message length %u exceeds buffer size %lu",
-			__func__, sock, length, (u_long)STREAM_SIZE(process_information->ibuf));
-	 rtm_if_flow_client_unix_close(process_acsample);
-	  return -1;
-	}
-
-  /* Read rest of data. */
-  if (already < length)
-  {
-	  ssize_t nbyte;
-	  if (((nbyte = stream_read_try (process_information->ibuf, sock,
-					 length-already)) == 0) ||(nbyte == -1))
-		{
-		  if (rtm_debug_if_flow)
-			zlog_debug ("connection closed [%d] when reading rtm data", sock);
-		 rtm_if_flow_client_unix_close(process_acsample);
-		  return -1;
-		}
-	  if (nbyte != (ssize_t)(length-already))
-		{
-		  /* Try again later. */
-		  rtm_if_flow_event(IF_FLOW_UNIX_SERVER_READ_ACSAMPLE, process_acsample->sock, process_acsample);
-		  return 0;
-		}
-	}
-
-  length -= IF_FLOW_STATS_HEADER_SIZE;
-
-  /* Debug packet information. */
-  if (rtm_debug_if_flow)
-	zlog_debug ("Rtm message comes from socket [%d]", sock);
-
-  if (IS_ZEBRA_DEBUG_PACKET && IS_ZEBRA_DEBUG_RECV)
-	zlog_debug ("Rtm message received [%s] %d", 
-		   zserv_command_string (command), length);
-
-  switch (command) 
-  {
-	case INTERFACE_FLOW_STATISTICS_SAMPLING_INTEGRATED_SNMP:
-	case INTERFACE_FLOW_STATISTICS_SAMPLING_INTEGRATED_ACSAMPLE:
-//	case INTERFACE_FLOW_STATISTICS_SAMPLING_INTEGRATED_RTM:
-	  rtm_deal_interface_flow_stats_sampling_integrated(command, process_information,process_name);
-	  break;
-	case INTERFACE_FLOW_STATISTICS_SAMPLING_DIVIDED_ACSAMPLE:
-	case INTERFACE_FLOW_STATISTICS_SAMPLING_DIVIDED_SNMP:
-		rtm_deal_interface_flow_stats_sampling_divided(command, process_information,process_name);
-	  break;
 	
-	default:
-	  zlog_info ("Rtm received unknown command %d", command);
-	  break;
-	}
-
-  if (process_information->t_suicide)
-	{
-	  /* No need to wait for thread callback, just kill immediately. */
-	 zlog_debug("%s: suicide.\n",__func__);
-	  rtm_if_flow_client_unix_close(process_acsample);
-	  return -1;
-	}
-
-  stream_reset (process_information->ibuf);
-  rtm_if_flow_event(IF_FLOW_UNIX_SERVER_READ_ACSAMPLE, sock, process_information);
+	stream_reset (process_information->ibuf);
+	rtm_if_flow_event(IF_FLOW_UNIX_SERVER_READ_SNMP, process_information->sock, process_information);
   return 0;
 }
-
 
 int
 rtm_unix_server_accept(struct thread *thread)
@@ -1207,35 +1016,14 @@ rtm_unix_server_accept(struct thread *thread)
   int client_sock;
   struct sockaddr_in client;
   socklen_t len;
-  process_info *process_information;
+	process_info *process_information = NULL;
 
-  accept_sock = THREAD_FD (thread);
-  process_information = THREAD_ARG(thread);
-  if(accept_sock <= 0)
-  {
-	  zlog_warn ("In func %s get THREAD_FD error\n",__func__);
-	  return 0;
-  }
-
-  /* Reregister myself. */
-  /*rtm_if_flow_event(IF_FLOW_UNIX_SERVER_ACCEPT,accept_sock,NULL);*/
- /* rtm_if_flow_event(IF_FLOW_UNIX_SERVER_ACCEPT,accept_sock,process_information);*/
- 
-  if(process_information->name_type == PROCESS_NAME_SNMP)
-  	{
-	  zlog_info("%s: to set accept snmp again.\n",__func__);
-	/*  rtm_if_flow_event(IF_FLOW_UNIX_SERVER_ACCEPT_SNMP,process_information->sock,process_information);*/
-  	}
-  else if(process_information->name_type == PROCESS_NAME_ACSAMPLE) 	
-  	{
-	  zlog_info("%s: to set accept acsample again.\n",__func__);
-	/*  rtm_if_flow_event(IF_FLOW_UNIX_SERVER_ACCEPT_ACSAMPLE,process_information->sock,process_information);*/
-  	}
-  else
-  	{
-  		zlog_warn("%s:Unkown process type[%d].\n",__func__,process_information->name_type);
-		return -1;
-  	}
+	accept_sock = THREAD_FD (thread);
+	if(accept_sock <= 0)
+	{
+	  zlog_err ("In func %s get THREAD_FD error\n",__func__);
+	  return -1;
+	}
 
   len = sizeof (struct sockaddr_in);
   client_sock = accept (accept_sock, (struct sockaddr *) &client, &len);
@@ -1243,59 +1031,62 @@ rtm_unix_server_accept(struct thread *thread)
   if (client_sock < 0)
 	{
 	  zlog_warn ("Can't accept rtm socket: %s", safe_strerror (errno));
+	  rtm_if_flow_event(IF_FLOW_UNIX_SERVER_ACCEPT_SNMP, accept_sock, NULL);
 	  return -1;
 	}
 
-  /* Make client socket non-blocking.  */
-  set_nonblocking(client_sock);
-  process_information->sock = client_sock;
-  
-/*  rtm_if_flow_event(IF_FLOW_UNIX_SERVER_READ,process_information->sock,process_information);*/
+	/* Make client socket non-blocking.  */
+	set_nonblocking(client_sock);
 
-  if(process_information->name_type == PROCESS_NAME_SNMP)
-  	{
-	  zlog_info("%s: to set read from snmp .\n",__func__);
-	  rtm_if_flow_event(IF_FLOW_UNIX_SERVER_READ_SNMP,process_information->sock,process_information);
-  	}
-  else if(process_information->name_type == PROCESS_NAME_ACSAMPLE) 	
-  	{
-	  zlog_info("%s: to set read from acsample .\n",__func__);
-	  rtm_if_flow_event(IF_FLOW_UNIX_SERVER_READ_ACSAMPLE,process_information->sock,process_information);
-	}
-  else
-  	zlog_warn("%s:Unkown process type[%d].\n",__func__,process_information->name_type);
+	process_information = XMALLOC(MTYPE_PROCESS_INFO,sizeof(process_info));
+	memset (process_information, 0, sizeof (process_info));
+	 
+	process_information->name_type = -1;
+
+	process_information->ibuf = stream_new(ZEBRA_MAX_PACKET_SIZ);
+	process_information->obuf = stream_new(ZEBRA_MAX_PACKET_SIZ);
+	process_information->wb = buffer_new(0);
+
+	process_information->fail = 0;
+	process_information->t_read = NULL;
+	process_information->t_suicide = NULL;
+	process_information->t_write = NULL;
+
+	process_information->sock = client_sock;
+
+	rtm_if_flow_event(IF_FLOW_UNIX_SERVER_READ_SNMP,process_information->sock,process_information);
+	rtm_if_flow_event(IF_FLOW_UNIX_SERVER_ACCEPT_SNMP, accept_sock, NULL);
 
   return 0;
 }
 
-void
-rtm_creat_unix_server(const char *path, process_info *process_information)
+int rtm_creat_unix_stream_server(const char *path)
 {
-  int ret;
-  int sock, len;
-  struct sockaddr_un serv;
-  mode_t old_mask;
+	int ret = -1;
+	int sock = 0, len = 0;
+	struct sockaddr_un serv = {0};
+	mode_t old_mask;
 
-  /* First of all, unlink existing socket */
-  unlink (path);
+	/* First of all, unlink existing socket */
+	unlink (path);
 
-  /* Set umask */
-  old_mask = umask (0077);
+	/* Set umask */
+	old_mask = umask (0077);
 
-  /* Make UNIX domain socket. */
-  sock = socket (AF_UNIX, SOCK_STREAM, 0);
-  if (sock < 0)
+	/* Make UNIX domain socket. */
+	sock = socket (AF_UNIX, SOCK_STREAM, 0);
+	if (sock < 0)
 	{
-	  zlog_warn ("Can't create zserv unix socket: %s", 
-				 safe_strerror (errno));
-	  zlog_warn ("Rtm can't provide full functionality due to above error");
-	  return;
+		zlog_warn ("Can't create zserv unix socket: %s", 
+			 						safe_strerror (errno));
+		return -1;
 	}
 
-  /* Make server socket. */
-  memset (&serv, 0, sizeof (struct sockaddr_un));
-  serv.sun_family = AF_UNIX;
-  strncpy (serv.sun_path, path, strlen (path));
+	/* Make server socket. */
+	memset (&serv, 0, sizeof (struct sockaddr_un));
+	serv.sun_family = AF_UNIX;
+	strncpy (serv.sun_path, path, strlen (path));
+	
 #ifdef HAVE_SUN_LEN
   len = serv.sun_len = SUN_LEN(&serv);
 #else
@@ -1305,78 +1096,69 @@ rtm_creat_unix_server(const char *path, process_info *process_information)
   ret = bind (sock, (struct sockaddr *) &serv, len);
   if (ret < 0)
 	{
-	  zlog_warn ("Can't bind to unix socket %s: %s", 
-				 path, safe_strerror (errno));
-	  zlog_warn ("Rtm can't provide full functionality due to above error");
-	  close (sock);
-	  return;
+		zlog_warn ("Can't bind to unix socket %s: %s", 
+							 path, safe_strerror (errno));
+		close (sock);
+		return ret;
 	}
 
-  ret = listen (sock, 5);
-  if (ret < 0)
+	ret = listen (sock, 32);
+	if (ret < 0)
 	{
-	  zlog_warn ("Can't listen to unix socket %s: %s", 
-				 path, safe_strerror (errno));
-	  zlog_warn ("Rtm can't provide full functionality due to above error");
-	  close (sock);
-	  return;
+		zlog_warn ("Can't listen to unix socket %s: %s", 
+			 					path, safe_strerror (errno));
+		close (sock);
+		return ret;
 	}
 
-  umask (old_mask);
-  process_information->sock = sock;
-  
-  if(process_information->name_type == PROCESS_NAME_SNMP)
-  {
-  	zlog_info("%s: To accept snmp.\n",__func__);
-    rtm_if_flow_event(IF_FLOW_UNIX_SERVER_ACCEPT_SNMP, process_information->sock, process_information);
-  	}
-  else if(process_information->name_type == PROCESS_NAME_ACSAMPLE)
-  {
-	zlog_info("%s: To accept acsample.\n",__func__);
-    rtm_if_flow_event(IF_FLOW_UNIX_SERVER_ACCEPT_ACSAMPLE, process_information->sock, process_information);
-  	}
-  else
-  	zlog_warn("%s:line %d ,unknow type[%d].\n",__func__,__LINE__,process_information->name_type);
+	umask (old_mask);
 
-	return;
+	rtm_if_flow_event(IF_FLOW_UNIX_SERVER_ACCEPT_SNMP, sock, NULL);
+
+	return 0;
 
 }
 
 
 int
-rtm_creat_tipc_client_for_se_agent(void)
+rtm_creat_tipc_client_for_se_agent(struct thread *thread)
 {
-	/*creat socket*/
-	
-	process_se_agent->sock = socket (AF_TIPC, SOCK_DGRAM,0);/*tipc udp*/
-	
-	if (process_se_agent->sock < 0)
+	process_info *process_information = NULL;
+
+	process_information = THREAD_ARG (thread);
+	if(	!process_information )
 	{
-	  zlog_debug ("creat tipc socket for seagent failed : %s. \n",safe_strerror(errno));
-	  process_se_agent->fail++;
-	  if(process_se_agent->fail > TIPC_CONNECT_TIMES)/*from 12 times to 120 times*/
-		return -2;
-	  rtm_if_flow_event(IF_FLOW_TIPC_CLIENT_SCHEDULE,0,NULL);
-	   return -1;
+		zlog_err("creat tipc socket for seagent failed : %s. \n",safe_strerror(errno));
+		return -1;
 	}
-	
-   /*Set tipc socket nonblock.*/	
-  if (set_nonblocking(process_se_agent->sock) < 0)
-   {
-	  zlog_warn("%s: set_nonblocking(%d) failed[%s]", 
-		  __func__, process_se_agent->sock,safe_strerror(errno));
-	  return -3;
-     }
+	process_information->sock = socket (AF_TIPC, SOCK_DGRAM,0);/*tipc udp*/
 
-  /* Clear fail count. */
-  process_se_agent->fail = 0;
-  if (rtm_debug_if_flow)
-	zlog_debug (" Rtm creat tipc client socket[%d] for Se_agent sucess .\n", 
-				process_se_agent->sock);
-	
- rtm_if_flow_event(IF_FLOW_TIPC_CLIENT_READ,process_se_agent->sock,process_se_agent);
+	if (process_information->sock < 0)
+	{
+	  	zlog_debug ("creat tipc socket for seagent failed : %s. \n",safe_strerror(errno));
+	  	process_information->fail++;
+	  	if(process_information->fail > TIPC_CONNECT_TIMES)/*from 12 times to 120 times*/
+			return -2;
+	  	rtm_if_flow_event(IF_FLOW_TIPC_CLIENT_SCHEDULE,0,process_information);
+	   	return -1;
+	}
 
-  return 0;
+	/*Set tipc socket nonblock.*/	
+		if (set_nonblocking(process_information->sock) < 0)
+		{
+	  	zlog_warn("%s: set_nonblocking(%d) failed[%s]", 
+			  __func__, process_information->sock,safe_strerror(errno));
+	 	return -3;
+	}
+
+	/* Clear fail count. */
+	process_information->fail = 0;
+	if (rtm_debug_if_flow)
+		zlog_debug (" Rtm creat tipc client socket[%d] for Se_agent sucess .\n", 
+					process_information->sock);
+	rtm_if_flow_event(IF_FLOW_TIPC_CLIENT_READ,process_information->sock,process_information);
+
+	return 0;
 
 }
 	
@@ -1384,55 +1166,69 @@ void
 rtm_if_flow_event (enum if_flow_events event, int sock, process_info *process_information)
 {
 	if(rtm_debug_if_flow)
-	 zlog_debug("enter func %s ....\n",__func__);
+	 	zlog_debug("enter func %s ....\n",__func__);
 	
     switch (event)
-	 {
-	    case IF_FLOW_TIPC_CLIENT_SCHEDULE:
-		  if(rtm_debug_if_flow)
-			zlog_debug("%s: line %d, to IF_FLOW_TIPC_CLIENT_SCHEDULE. \n",__func__,__LINE__);
-		  	thread_add_event (zebrad.master, rtm_creat_tipc_client_for_se_agent, NULL, 0);
+	{
 
-	     	break;
-			
-	    case IF_FLOW_TIPC_CLIENT_READ:
-		  if(rtm_debug_if_flow)
-		  	zlog_debug ("%s: line %d, set rtmd go to read from se_agent.....\n", __func__,__LINE__);
-		   process_se_agent->t_read = 
-		 /*  thread_add_read (zebrad.master, if_flow_read_udp, NULL, process_se_agent->sock);*/
-		   thread_add_read (zebrad.master, rtm_recv_message_from_se_agent, NULL, process_se_agent->sock);
-	       break;
+		/*******************/
+		case IF_FLOW_TIPC_CLIENT_SCHEDULE:
+		  	if(rtm_debug_if_flow)
+				zlog_debug("%s: line %d, to IF_FLOW_TIPC_CLIENT_SCHEDULE. \n",__func__,__LINE__);
+			if(sock > 0)
+			{
+				if (process_information->t_read)
+				  	thread_cancel (process_information->t_read);
+				if (process_information->t_write)
+				  	thread_cancel (process_information->t_write);
+				if (process_information->t_suicide)
+				  	thread_cancel (process_information->t_suicide);
+				close(sock);
+				process_information->sock = -1;
+				
+				process_information->name_type = PROCESS_NAME_SE_AGENT;
+				if(process_information->ibuf)
+					stream_reset (process_information->ibuf);
+				if(process_information->ibuf)
+					stream_reset (process_information->obuf);
+				if(process_information->wb)
+					buffer_reset(process_information->wb);
+				
+				process_information->fail = 0;
 
+			}
+			thread_add_event (zebrad.master, rtm_creat_tipc_client_for_se_agent, process_information, sock);
+
+		 	break;
+		/*******************/
+		case IF_FLOW_TIPC_CLIENT_READ:
+		  	if(rtm_debug_if_flow)
+		  		zlog_debug ("%s: line %d, set rtmd go to read from se_agent.....\n", __func__,__LINE__);
+		   	process_information->t_read = 
+		   	thread_add_read (zebrad.master, rtm_recv_message_from_se_agent, process_information, process_information->sock);
+		  	break;
+		/*******************/
 		case IF_FLOW_UNIX_SERVER_ACCEPT_SNMP:
-			/*unix server for snmp  .*/
-			thread_add_read (zebrad.master, rtm_unix_server_accept, process_snmp, process_snmp->sock);/*accept the client*/
+
+			/*unix server for sampling.*/
+			thread_add_read (zebrad.master, rtm_unix_server_accept, NULL, sock);/*accept the client*/
 
 			break;
-			
-		case IF_FLOW_UNIX_SERVER_ACCEPT_ACSAMPLE:
-			/*unix server for acsample.*/
-			thread_add_read (zebrad.master, rtm_unix_server_accept, process_acsample, process_acsample->sock);/*accept the client*/
-		
-			break;
+		/*******************/
 
 		case IF_FLOW_UNIX_SERVER_READ_SNMP:
 			/*unix server read*/
 			  process_information->t_read = 
-			thread_add_read (zebrad.master, rtm_recv_message_from_snmp, process_snmp, process_snmp->sock);/*server read info from client*/
+			thread_add_read (zebrad.master, rtm_recv_message_from_snmp, process_information, sock);/*server read info from client*/
 			break;
 			
-		case IF_FLOW_UNIX_SERVER_READ_ACSAMPLE:
-			/*unix server read*/
-			  process_information->t_read = 
-			thread_add_read (zebrad.master, rtm_recv_message_from_acsample, process_acsample, process_acsample->sock);/*server read info from client*/
-			break;
 
 		default:
 			zlog_debug("%s: line %d, unkown type .\n",__func__,__LINE__);
 			break;
 
 			
-	    }
+	}
 	
 	if(rtm_debug_if_flow)
 			zlog_debug("leave func %s %d\n",__func__,__LINE__);
@@ -1459,85 +1255,8 @@ rtm_communication_to_se_agent(void)
 	process_se_agent->t_suicide = NULL;
 	process_se_agent->t_write = NULL;
 
-#if 0
-	tipc_client_socket_udp();
-	if(process_se_agent->sock < 0)
-	{
-		zlog_warn("tipc client create socket [%d] times failed.\n",process_se_agent->fail);
-	 loop:
-	 	if(process_se_agent->fail >= 60)
-	 	 {
-	 	 	zlog_warn("tipc client create socket 60 times failed.\n");
-			return -1;
-	 	 }
-		process_se_agent->fail++;
-		thread_add_timer(zebrad.master,tipc_client_socket_udp,NULL,1);
- 		if(process_se_agent->sock < 0)
-			goto loop;
-		else
-			process_se_agent->fail = 0;/*clear*/
-	 }
-#endif
 	/*event to set read.*/
 	rtm_if_flow_event(IF_FLOW_TIPC_CLIENT_SCHEDULE,process_se_agent->sock,process_se_agent);
-	
-	
-}
-
-/*create the unix socket and communicate with each other.Rtmd-server, Snmp-client*/
-void
-rtm_communication_to_snmp(void)
-{
-	/*Init process se_agent info*/
-	process_snmp = XMALLOC(MTYPE_PROCESS_INFO,sizeof(process_info));
-	memset (process_snmp, 0, sizeof (process_info));
-		
-	process_snmp->sock = -1;
-	
-	process_snmp->name_type = PROCESS_NAME_SNMP;
-	
-	process_snmp->ibuf = stream_new(ZEBRA_MAX_PACKET_SIZ);
-	process_snmp->obuf = stream_new(ZEBRA_MAX_PACKET_SIZ);
-	process_snmp->wb = buffer_new(0);
-
-	process_snmp->fail = 0;
-	process_snmp->t_read = NULL;
-	process_snmp->t_suicide = NULL;
-	process_snmp->t_write = NULL;
-
-	/*event to set read.*/
-/*	rtm_if_flow_event(IF_FLOW_UNIX_SERVER_ACCEPT_SNMP);*/
-	rtm_creat_unix_server(RTM_TO_SNMP_PATH,process_snmp);
-	
-	
-}
-
-
-/*create the unix socket and communicate with each other.Rtmd-server, Acsample-client*/
-void
-rtm_communication_to_acsample(void)
-{
-	/*Init process se_agent info*/
-	process_acsample = XMALLOC(MTYPE_PROCESS_INFO,sizeof(process_info));
-	memset (process_acsample, 0, sizeof (process_info));
-		
-	process_acsample->sock = -1;
-	
-	process_acsample->name_type = PROCESS_NAME_ACSAMPLE;
-	
-	process_acsample->ibuf = stream_new(ZEBRA_MAX_PACKET_SIZ);
-	process_acsample->obuf = stream_new(ZEBRA_MAX_PACKET_SIZ);
-	process_acsample->wb = buffer_new(0);
-
-	process_acsample->fail = 0;
-	process_acsample->t_read = NULL;
-	process_acsample->t_suicide = NULL;
-	process_acsample->t_write = NULL;
-
-	/*event to set read.*/
-/*	rtm_if_flow_event(IF_FLOW_UNIX_SERVER_ACCEPT_ACSAMPLE);*/
-	rtm_creat_unix_server(RTM_TO_ACSAMPLE_PATH, process_acsample);
-	
 	
 }
 
@@ -1549,11 +1268,6 @@ interface_flow_statistics_init(void)
 	/*rtmd and se_agent use TIPC socket.*/
 	rtm_communication_to_se_agent();
 	
-	/*rtmd and snmp use unix socket.*/
-	rtm_communication_to_snmp();
-	
-	/*rtmd and acsample use unix socket.*/
-	rtm_communication_to_acsample();
-	
+	rtm_creat_unix_stream_server(RTM_TO_SNMP_PATH);	
 }
 

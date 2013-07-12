@@ -20,7 +20,7 @@
 #define INTERFACE_FLOW_STATISTICS_DATA					6
 
 #define RTM_TO_SNMP_PATH 		"/var/run/rtm_snmp_path"
-#define RTM_TO_ACSAMPLE_PATH 		"/var/run/rtm_acsample_path"
+#define RTM_TO_ACSAMPLE_PATH 		"/var/run/rtm_snmp_path"
 
 struct sample_rtmd_info {
 	int sockfd;

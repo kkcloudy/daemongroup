@@ -65,6 +65,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "tipc_client.h"
 #include "tipc_server.h"
 #include "zebra/debug.h"
+#include "zebra/if_flow_stats.h"
 
 
 /**some func api add by gjd : 2011-01--2011-02**/

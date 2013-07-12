@@ -68,7 +68,7 @@ listnode_add (struct list *list, void *val)
 #if 0  
   assert (val != NULL);
 #else
-  if(!val)
+  if(!list || !val)
   {
 	  zlog(NULL, LOG_CRIT, "line %u, function %s",
 		   __LINE__,(__func__ ? __func__ : "?"));
