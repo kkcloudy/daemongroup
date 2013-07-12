@@ -35,10 +35,10 @@ enum if_flow_events
 	IF_FLOW_TIPC_CLIENT_SCHEDULE,  /*for se_agent*/
 	IF_FLOW_TIPC_CLIENT_READ,      /*for se_agent*/
 	IF_FLOW_UNIX_SERVER_ACCEPT_SNMP,    /*for snmp or acsample*/
-	IF_FLOW_UNIX_SERVER_ACCEPT_ACSAMPLE,	/*for snmp or acsample*/
+/*	IF_FLOW_UNIX_SERVER_ACCEPT_ACSAMPLE,*/	/*for snmp or acsample*/
 /*	IF_FLOW_UNIX_SERVER_ACCEPT,*/
 	IF_FLOW_UNIX_SERVER_READ_SNMP,       /*for snmp or acsample*/
-	IF_FLOW_UNIX_SERVER_READ_ACSAMPLE	   /*for snmp or acsample*/
+/*	IF_FLOW_UNIX_SERVER_READ_ACSAMPLE*/	   /*for snmp or acsample*/
 };
 
 /*gujd: 2013-05-29, pm 2:12. Add for interface flow statistics . Rtmd to Se_agent use TIPC.*/
@@ -49,7 +49,7 @@ enum if_flow_events
 
 /*gujd: 2013-05-30, pm 5:45. Add for interface flow statistics . Rtmd to snmp or acsample use UNIX socket.*/
 #define RTM_TO_SNMP_PATH 			"/var/run/rtm_snmp_path"
-#define RTM_TO_ACSAMPLE_PATH 		"/var/run/rtm_acsample_path"
+/*#define RTM_TO_ACSAMPLE_PATH 		"/var/run/rtm_acsample_path"*/
 
 typedef struct if_flow_stats
 {

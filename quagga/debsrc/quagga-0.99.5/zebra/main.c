@@ -49,9 +49,6 @@ struct zebra_t zebrad =
 product_inf *product = NULL;
 extern int board_type ;
 
-process_info *process_se_agent;
-process_info *process_snmp;
-process_info *process_acsample;
 
 /* process id. */
 pid_t old_pid;
