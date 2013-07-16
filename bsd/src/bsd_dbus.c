@@ -363,6 +363,7 @@ DBusMessage * bsd_copy_files_between_boards(DBusConnection *conn, DBusMessage *m
         tmp_md5 = (char*)malloc(len+1);
         memset(tmp_md5, 0, len+1);
         memcpy(tmp_md5, g_rePrintMd5, len);
+		memset(g_rePrintMd5, 0, BSD_PATH_LEN);
     }
     else {
         tmp_md5 = (char*)malloc(5);
