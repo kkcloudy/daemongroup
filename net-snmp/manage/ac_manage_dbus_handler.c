@@ -6855,3 +6855,40 @@ ac_manage_dbus_set_bkacinfo_value(DBusConnection *connection, DBusMessage *messa
 	
 }
 
+DBusMessage *
+ac_manage_dbus_del_ac_version_file_value(DBusConnection *connection, DBusMessage *message, void *user_data) {
+	DBusMessage *reply = NULL;	
+	DBusError err;
+	DBusMessageIter	 iter;	
+
+	char *version_file = NULL;
+	char cmd[128] = { 0 };
+	int ret = AC_MANAGE_SUCCESS;
+	
+	dbus_error_init(&err);	
+	if (!(dbus_message_get_args(message, &err,
+								DBUS_TYPE_STRING, &version_file,
+								DBUS_TYPE_INVALID))){
+
+        manage_log(LOG_WARNING, "Unable to get input args\n");
+		if (dbus_error_is_set(&err)) {		
+            manage_log(LOG_WARNING, "%s raised: %s\n", err.name, err.message);
+			dbus_error_free(&err);
+		}
+		return NULL;
+	}
+	
+	memset(cmd,0,128);
+	sprintf(cmd,"sudo sor.sh rm %s %d > /dev/null",version_file,120);
+	system(cmd);
+
+	reply = dbus_message_new_method_return(message);
+	
+    dbus_message_iter_init_append (reply, &iter);   
+    dbus_message_iter_append_basic (&iter,DBUS_TYPE_UINT32,&ret); 
+
+    return reply;        	
+	
+}
+
+

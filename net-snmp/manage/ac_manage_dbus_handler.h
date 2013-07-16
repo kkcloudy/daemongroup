@@ -170,5 +170,6 @@ DBusMessage *
 ac_manage_dbus_config_syslogrule(DBusConnection *connection, DBusMessage *message, void *user_data);
 DBusMessage *ac_manage_dbus_set_acinfo_value(DBusConnection *connection, DBusMessage *message, void *user_data);
 DBusMessage *ac_manage_dbus_set_bkacinfo_value(DBusConnection *connection, DBusMessage *message, void *user_data);
+DBusMessage *ac_manage_dbus_set_bkacinfo_value(DBusConnection *connection, DBusMessage *message, void *user_data);
 
 #endif

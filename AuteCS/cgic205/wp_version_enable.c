@@ -120,7 +120,7 @@ int cgiMain()
 	{
 		
 		//sprintf(cmd,"/mnt/shell/boot.sh  %s >/dev/null 2>$1",file_name);
-		sprintf(cmd,"boot.sh  %s >/dev/null",file_name);		
+		sprintf(cmd,"sudo boot.sh %s >/dev/null 2>&1",file_name);		
 		int ret=system(cmd);
 		
 		if(ret==0){

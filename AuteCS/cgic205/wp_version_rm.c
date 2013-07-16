@@ -36,7 +36,56 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "ws_err.h"
 #include "ws_usrinfo.h"
 #include "ws_ec.h"
+#include "ws_init_dbus.h"
 #include <sys/wait.h>
+#include "bsd/bsdpub.h"
+#include "dbus/bsd/BsdDbusPath.h"
+#include "ws_dbus_def.h"
+#include "ws_dbus_list_interface.h"
+#include "ac_manage_acinfo.h"
+
+static int ccgi_dcli_bsd_get_slot_ids(DBusConnection *connection, int *ID, const int op)
+{
+    int ret = 0;
+    DBusMessageIter  iter;
+    DBusMessage *query = NULL;
+    DBusMessage *reply = NULL;
+    DBusError err = {0};
+	int i = 0;
+	int slot_id = 0;
+   
+
+    query = dbus_message_new_method_call(BSD_DBUS_BUSNAME, BSD_DBUS_OBJPATH, \
+        BSD_DBUS_INTERFACE, BSD_GET_ALIVE_SLOT_IDS);
+
+    dbus_message_append_args(query,
+    					DBUS_TYPE_UINT32,&op,
+    					DBUS_TYPE_INVALID);
+
+    reply = dbus_connection_send_with_reply_and_block (connection,query,-1, &err);
+
+    dbus_message_unref(query);
+
+    if (NULL == reply) {
+		if (dbus_error_is_set(&err)) {
+			dbus_error_free(&err);
+		}
+		return -1;
+	}
+	
+	dbus_message_iter_init(reply,&iter);
+	dbus_message_iter_get_basic(&iter,&ret);
+
+	if(ret != 0){
+		for(i = 0; i < ret; i++)
+		{
+		    dbus_message_iter_next(&iter);
+	        dbus_message_iter_get_basic(&iter,&(ID[i]));
+		}
+	}
+
+    return ret;
+}
 
 int cgiMain()
 {
@@ -59,6 +108,7 @@ int cgiMain()
 	lpublic=get_chain_head("../htdocs/text/public.txt");
 	lcontrol=get_chain_head("../htdocs/text/control.txt");	
 	
+	ccgi_dbus_init();
  	memset(encry,0,BUF_LEN);
 	memset(cmd,0,128);
   	cgiFormStringNoNewlines("UN", encry, BUF_LEN);	
@@ -133,9 +183,20 @@ int cgiMain()
 			
 			else
 			{
-				memset(cmd,0,128);
-				sprintf(cmd,"rm /mnt/%s > /dev/null",file_name);
-				system(cmd);
+				int i = 0;
+				int ID[MAX_SLOT_NUM] = {0};
+				int board_count = -1;
+				void *connection = NULL;
+			 	board_count =ccgi_dcli_bsd_get_slot_ids(ccgi_dbus_connection,ID,BSD_TYPE_BOOT_IMG);
+				for(i = 0; i < board_count; i++)
+				{
+					connection = NULL;
+					if(SNMPD_DBUS_SUCCESS != get_slot_dbus_connection(ID[i], &connection, SNMPD_INSTANCE_MASTER_V3))
+					{
+						continue;
+					}
+					ac_manage_delete_system_version_file(connection, file_name);					
+				}
 
 				memset(cmd,0,128);
 				sprintf(cmd,"sudo sor.sh rm %s %d > /dev/null",file_name,SHORT_SORT);
@@ -221,7 +282,7 @@ int cgiMain()
 	free(encry);
 	free(file_name);
 	release(lpublic); 
-	
+	destroy_ccgi_dbus();
 	return 0;	
 }
 

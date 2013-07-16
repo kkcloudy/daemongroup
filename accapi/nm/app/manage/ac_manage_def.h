@@ -211,6 +211,7 @@ enum {
 
 #define AC_MANAGE_DBUS_SET_ACINFO_VALUE				"manage_dbus_set_acinfo_value"
 #define AC_MANAGE_DBUS_SET_BKACINFO_VALUE			"manage_dbus_set_bkacinfo_value"
+#define AC_MANAGE_DBUS_DEL_AC_VERSION_FILE_VALUE	"manage_dbus_del_ac_version_file_value"
 
 
 #endif

@@ -54,8 +54,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 int ShowdownPage(char *m,struct list *lpublic,struct list *lwlan,struct list *lsystem);    
 void down_wtp_ver(struct list * lpublic,struct list *lwlan,struct list *lsystem);
-int getFileNamewtp(char *fpath);    
-int upfilewtp(char *fpath,struct list *lpublic, struct list *lsystem);          
+//int getFileNamewtp(char *fpath);    
+int upfilewtp();          
 int locupwtp(struct list *lpublic, struct list *lsystem) ;
 
 
@@ -335,7 +335,7 @@ void down_wtp_ver(struct list * lpublic,struct list *lwlan,struct list *lsystem)
 	}
 }
 
-
+#if 0
 int getFileNamewtp(char *fpath)        /*·µ»Ø0±íÊ¾Ê§°Ü£¬·µ»Ø1±íÊ¾³É¹¦*/
 {
   cgiFilePtr file;
@@ -366,16 +366,29 @@ int getFileNamewtp(char *fpath)        /*·µ»Ø0±íÊ¾Ê§°Ü£¬·µ»Ø1±íÊ¾³É¹¦*/
 
   return 1;
 }
+#endif
 
-int upfilewtp(char *fpath,struct list *lpublic, struct list *lsystem)        /*³É¹¦ ·µ»Ø1£¬·ñÔò·µ»Ø0£¬·µ»Ø-1±íÊ¾Ã»ÓÐÎÄ¼þÉÏ´«*/
+int upfilewtp()        /*³É¹¦ ·µ»Ø1£¬·ñÔò·µ»Ø0£¬·µ»Ø-1±íÊ¾Ã»ÓÐÎÄ¼þÉÏ´«£¬·µ»Ø-3±íÊ¾ÎÄ¼þÀàÐÍ²»·ûºÏÒªÇó*/
 {
+	char name[1024] = { 0 };    /*´æ·Å±¾µØÂ·¾¶Ãû*/ 	
+	cgiFilePtr file;
+	
+	if (cgiFormFileName("myFile", name, sizeof(name)) != cgiFormSuccess) 
+		return -1; 
+
+	if (cgiFormFileOpen("myFile", &file) != cgiFormSuccess) 
+	{
+		fprintf(stderr, "Could not open the file.<p>\n");
+		return 0;
+	}  
+	
 	char *version_name[9]={".bin",".tar",".img",".BIN",".TAR",".IMG",".gni",".GNI",".tar.bz2"};
 	char *tmpz = NULL;
 	int i=0,flag=-1;
 
 	for(i=0;i<9;i++)
 	{ 
-	  tmpz = strstr(fpath,version_name[i]);
+	  tmpz = strstr(name,version_name[i]);
 	  if(tmpz)
 	  {
 	    flag = 0;
@@ -391,29 +404,19 @@ int upfilewtp(char *fpath,struct list *lpublic, struct list *lsystem)        /*³
 	memset(path_conf,0,sizeof(path_conf));
 	char tempf[128] = { 0 };
 	
-    snprintf(path_conf,sizeof(path_conf)-1,"/mnt/wtp/%s",fpath);	
+    snprintf(path_conf,sizeof(path_conf)-1,"/mnt/wtp/%s",name);	
 
 	int status=0,tt_ret=-1;
-	cgiFilePtr file;
-	char name[1024] = { 0 };    /*´æ·Å±¾µØÂ·¾¶Ãû*/ 
 	int targetFile = 0; 
 	mode_t mode;
 	char buffer[1024] = { 0 }; 
 	int got = 0; 
-	if (cgiFormFileName("myFile", name, sizeof(name)) != cgiFormSuccess) 
-	return -1; 
-
-	if (cgiFormFileOpen("myFile", &file) != cgiFormSuccess) 
-	{
-		fprintf(stderr, "Could not open the file.<p>\n");
-		return 0;
-	}  
 	mode=S_IRWXU|S_IRGRP|S_IROTH; 
 	//ÔÚµ±Ç°Ä¿Â¼ÏÂ½¨Á¢ÐÂµÄÎÄ¼þ£¬µÚÒ»¸ö²ÎÊýÊµ¼ÊÉÏÊÇÂ·¾¶Ãû£¬´Ë´¦µÄº¬ÒåÊÇÔÚcgi³ÌÐòËùÔÚµÄÄ¿Â¼£¨µ±Ç°Ä¿Â¼£©£©½¨Á¢ÐÂÎÄ¼þ 
 	targetFile=open(path_conf,O_RDWR|O_CREAT|O_TRUNC|O_APPEND,mode); 
 	if(targetFile == -1)
 	{ 
-		fprintf(stderr,"could not create the new file,%s\n",fpath); 
+		fprintf(stderr,"could not create the new file,%s\n",name); 
 		return 0; 
 	} 
 	//´ÓÏµÍ³ÁÙÊ±ÎÄ¼þÖÐ¶Á³öÎÄ¼þÄÚÈÝ£¬²¢·Åµ½¸Õ´´½¨µÄÄ¿±êÎÄ¼þÖÐ 
@@ -427,7 +430,7 @@ int upfilewtp(char *fpath,struct list *lpublic, struct list *lsystem)        /*³
 	close(targetFile);  
 
     memset(tempf,0,sizeof(tempf));
-	snprintf(tempf,sizeof(tempf)-1,"sudo sor.sh cp wtp/%s %d > /dev/null",fpath,LONG_SORT);
+	snprintf(tempf,sizeof(tempf)-1,"sudo sor.sh cp wtp/%s %d > /dev/null",name,LONG_SORT);
 	status = system(tempf);
     tt_ret = WEXITSTATUS(status);
 
@@ -438,7 +441,7 @@ int upfilewtp(char *fpath,struct list *lpublic, struct list *lsystem)        /*³
 	else
 	{
 		memset(tempf,0,sizeof(tempf));
-		snprintf(tempf,sizeof(tempf)-1,"sudo rm /mnt/wtp/%s > /dev/null",fpath);
+		snprintf(tempf,sizeof(tempf)-1,"sudo rm /mnt/wtp/%s > /dev/null",name);
 		system(tempf);
 		return -1;
 	}
@@ -447,16 +450,15 @@ int upfilewtp(char *fpath,struct list *lpublic, struct list *lsystem)        /*³
 //±¾µØÉÏ´«º¯Êý
 int locupwtp(struct list *lpublic, struct list *lsystem) 
 {
-	char fpath[PATH_LENG] = { 0 };
+	/*char fpath[PATH_LENG] = { 0 };
 	int ret_fpath = 0;
 	memset(fpath,0,sizeof(fpath));
 	ret_fpath=getFileNamewtp(fpath);
 	if(ret_fpath==1)
-	{
+	{*/
 		int ret_upfileboot = 0;
 
-		ret_upfileboot=upfilewtp(fpath,lpublic,lsystem);	
-
+		ret_upfileboot=upfilewtp();	
 		if(ret_upfileboot==1)
 		{
 			ShowAlert(search(lpublic,"lupload_succ"));
@@ -469,11 +471,11 @@ int locupwtp(struct list *lpublic, struct list *lsystem)
 		{
 		    ShowAlert(search(lpublic,"lupload_fail"));
 		}
-	}
+	/*}
 	else
 	{
 		ShowAlert(search(lpublic,"no_upload"));
-	}
+	}*/
 
 	return 0;
 }

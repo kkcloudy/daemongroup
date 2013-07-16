@@ -29,5 +29,13 @@
 #############################################################################
 
 source vtysh_start.sh
-vtysh -c "set boot_img $1"
-
+if [ $# -eq 1 ] ; then
+	cmdstr="
+	configure terminal
+	set system_img $1
+	"	
+	
+	vtysh -c "$cmdstr"
+	exit 0
+fi
+    exit 1

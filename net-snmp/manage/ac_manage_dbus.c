@@ -315,7 +315,9 @@ ac_manage_dbus_message_handler(DBusConnection *connection, DBusMessage *message,
 		else  if(dbus_message_is_method_call(message, AC_MANAGE_ACINFO_DBUS_INTERFACE, AC_MANAGE_DBUS_SET_BKACINFO_VALUE)) {
 			reply = ac_manage_dbus_set_bkacinfo_value(connection, message, user_data);
 		}
-
+		else  if(dbus_message_is_method_call(message, AC_MANAGE_ACINFO_DBUS_INTERFACE, AC_MANAGE_DBUS_DEL_AC_VERSION_FILE_VALUE)) {
+			reply = ac_manage_dbus_del_ac_version_file_value(connection, message, user_data);
+		}
 	}
 	if (reply) {
 		syslog(LOG_DEBUG, "reply destination %s\n", dbus_message_get_destination(reply));

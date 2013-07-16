@@ -52,17 +52,18 @@ sources=$(CGIOBJS_WP) $(CGIOBJS_WS)
 
 $(shell [ rm -f ./portal_multi_ins/user_manage.h ] || ln -s ../../../eag/pkg/src_multi_ins/user_manage.h ./portal_multi_ins/user_manage.h)
 
-all: libdbusapi.a $(ALL_CGIFILES) $(EXT_TAGET) up.cgi
+#all: libdbusapi.a $(ALL_CGIFILES) $(EXT_TAGET) up.cgi
+all: libdbusapi.a $(ALL_CGIFILES) $(EXT_TAGET)
 
 #CGIOBJS_WS += ./portal_multi_ins/ws_user_manage.o
 
 %.cgi:%.o libdbusapi.a libcgic.so 
 	$(CC) $<  -o $@_temp $(LDFLAGS_CGI) $(DBUS_INCLUDE) $(INCLUDE) $(LIBS) $(XML_LIB) $(LOCAL_LIB) $(DBUS_LIBS) -ldbusapi 
 	$(OBJCOPY) -S --strip-all $@_temp $@;rm -f $@_temp
-up.cgi: 
+#up.cgi: 
 #	$(CC) up.c -o up.cgi
 #	$(CC) $(CFLAGS) -I$(MIPS_ADDITION_LIB_ROOT_PATH)/usr/include $(DBUS_INCLUDE) $(INCLUDE) up.c $(DBUS_LIBS) -o $@
-	$(CC) up.c -o $@ $(LDFLAGS_CGI) $(DBUS_INCLUDE) $(INCLUDE) $(XML_LIB) $(LOCAL_LIB) $(DBUS_LIBS) 
+#	$(CC) up.c -o $@ $(LDFLAGS_CGI) $(DBUS_INCLUDE) $(INCLUDE) $(XML_LIB) $(LOCAL_LIB) $(DBUS_LIBS) 
 
 install: libcgic.a
 	cp libcgic.a /usr/local/lib
