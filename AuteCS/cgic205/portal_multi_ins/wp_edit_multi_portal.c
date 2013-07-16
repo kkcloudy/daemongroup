@@ -272,9 +272,14 @@ static int s_editMulitPortal_prefix_of_page( STPageInfo *pstPageInfo )
 		port_int = atoi(portstr);
 		if(port_int < 1 || port_int > 65535)
 		{
-			ShowAlert( search(portal_public, "hs_param") );
+			ShowAlert( search(portal_public, "hs_param_must") );
 			return 0;
 		}
+		if ((strlen(urlstrl)< 1)) {
+						ShowAlert( search(portal_public, "hs_param_must") );
+						return 0;
+		}
+		
 		
 		key_type = strtol(secstr,NULL,10);
 
@@ -284,7 +289,7 @@ static int s_editMulitPortal_prefix_of_page( STPageInfo *pstPageInfo )
 			if (keyid == 0 || keyid > 128)
 			{
 				//vty_out(vty, "%% wlan id is out of range 1~128\n");
-				ShowAlert( search(portal_public, "hs_param") );
+				ShowAlert( search(portal_public, "wlan_range") );
 				return 0;
 			}
 		}
@@ -294,7 +299,7 @@ static int s_editMulitPortal_prefix_of_page( STPageInfo *pstPageInfo )
 			if(keyid == 0 || keyid > 4096)
 			{
 				//vty_out(vty, "%% vlan id is out of range 1~4096\n");
-				ShowAlert( search(portal_public, "hs_param") );
+				ShowAlert( search(portal_public, "vlanid_range") );
 				
 				return 0;
 			}		
@@ -305,7 +310,7 @@ static int s_editMulitPortal_prefix_of_page( STPageInfo *pstPageInfo )
 			if(keyid == 0 || keyid > 2048)
 			{
 				//vty_out(vty, "%% wtp id is out of range 1~2048\n");
-				ShowAlert( search(portal_public, "hs_param") );
+				ShowAlert( search(portal_public, "wtpid_range") );
 				
 				return 0;
 			}	
@@ -313,7 +318,7 @@ static int s_editMulitPortal_prefix_of_page( STPageInfo *pstPageInfo )
 		else if (PORTAL_KEYTYPE_INTF == key_type) 
 		{
 		if ((strlen(key_word) > 63)||(strlen(key_word) < 1)) {
-				ShowAlert( search(portal_public, "hs_param") );
+				ShowAlert( search(portal_public, "interface_range") );
 				return 0;
 			}
 			keystr = (char *)key_word;
@@ -321,7 +326,7 @@ static int s_editMulitPortal_prefix_of_page( STPageInfo *pstPageInfo )
 		else if (PORTAL_KEYTYPE_ESSID == key_type) 
 		{
 			if ((strlen(key_word) > 31)||(strlen(key_word) < 1)) {
-							ShowAlert( search(portal_public, "hs_param") );
+							ShowAlert( search(portal_public, "essid_range") );
 							return 0;
 						}
 			strncpy(essidtmp,key_word,31);
@@ -330,7 +335,7 @@ static int s_editMulitPortal_prefix_of_page( STPageInfo *pstPageInfo )
 		else 
 		{
 			//vty_out(vty, "%% unknown index type %s\n", secstr);
-			ShowAlert( search(portal_public, "hs_param") );
+			ShowAlert( search(portal_public, "hs_param_must") );
 			return 0;
 		}
 
@@ -500,13 +505,13 @@ static int s_editMulitPortal_prefix_of_page( STPageInfo *pstPageInfo )
 		}
 
 		if (0 != strcmp(deskey, "") && 0 != strcmp(wlanparameter, "checked")){
-			ShowAlert(search(portal_auth, "multi_portal_wlandeskey_not_need"));
+			ShowAlert(search(portal_auth, "multi_portal_deskey_not_need"));
 			goto jump;
 		} else if (0 == strcmp(deskey, "") && 0 == strcmp(wlanparameter, "checked")) {
-			ShowAlert(search(portal_auth, "multi_portal_wlandeskey_no_config"));
+			ShowAlert(search(portal_auth, "multi_portal_deskey_no_config"));
 			goto jump;
 		} else if (!deskey_input_is_legal(deskey)) {
-			ShowAlert(search(portal_auth, "multi_portal_wlandeskey_error"));
+			ShowAlert(search(portal_auth, "multi_portal_deskey_error"));
 			goto jump;
 		}
 		if ( 0 == strcmp(wlanparameter, "checked")) {
@@ -814,7 +819,7 @@ static int s_editMulitPortal_content_of_page( STPageInfo *pstPageInfo )
 	fprintf(fp,"</tr>\n");
 
 	fprintf(fp,"<tr height=30 align=left>");
-    fprintf(fp,"<td width=115>%s</td>",search(portal_auth,"wlanparameter"));
+    fprintf(fp,"<td width=115>%s</td>",search(portal_auth,"add_wlanparameter_to_url"));
 	fprintf(fp, "<td><input type=checkbox name=wlanparameter size=15 value=checked %s></td>\n",retstr[portalconf.portal_srv[pose_flag].wlanparameter]);
 	fprintf(fp,"</tr>\n");
 

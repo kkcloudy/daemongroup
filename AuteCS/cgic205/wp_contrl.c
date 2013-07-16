@@ -624,6 +624,35 @@ int tool_contrl_fill( STPubInfoForItem *p_pubinfo, STSndrItem *p_item )  //12 ,¹
 }
 //SNDR_VLAN_ITEM
 
+int fast_forward_contrl_fill( STPubInfoForItem *p_pubinfo, STSndrItem *p_item )
+{
+	
+	p_item->fp=cgiOut;
+	
+	if( NULL == p_item )
+	{
+		return -1;	
+	}
+	char temp_url[128];
+	memset(temp_url,0,128);
+	
+	SI_set_label_name( p_item, search(p_pubinfo->public,"fast_for_set")); 
+	SI_set_label_img( p_item,"/images/LiuKong.jpg");
+	sprintf(temp_url,"wp_fast_set.cgi?UN=%s",p_pubinfo->encry);
+	SI_set_label_url(p_item,temp_url);
+	SI_set_label_font(p_item, search(p_pubinfo->public,"menu_er"));  
+
+	/////////// 
+	SI_set_summary_font(p_item,search(p_pubinfo->public,"menu_summary"));	 
+	SI_set_summary_title( p_item,search(p_pubinfo->public,"fast_for_set")); 	
+	SI_set_summary_keyinfo( p_item,search(p_pubinfo->public,"fast_for_set"));	
+	
+	SI_set_summary_key( p_item,"Set | Show");
+
+  
+	return 0;
+}
+
 
 //#define HELPER_ITEM_NUM  sizeof(pstControlSCCreateHelper)/sizeof(pstControlSCCreateHelper[0])
 
@@ -706,6 +735,11 @@ int  init_pstControlSCCreateHelper()
 	if (HELPER_ITEM_NUM < PST_MAX_NUM)
 	{
 		pstControlSCCreateHelper[HELPER_ITEM_NUM].fill_data_api = tool_contrl_fill;
+		HELPER_ITEM_NUM++;
+	}
+	if (HELPER_ITEM_NUM < PST_MAX_NUM)
+	{
+		pstControlSCCreateHelper[HELPER_ITEM_NUM].fill_data_api = fast_forward_contrl_fill;
 		HELPER_ITEM_NUM++;
 	}
 	return HELPER_ITEM_NUM;

@@ -241,7 +241,6 @@ static int s_multiPortal_prefix_of_page( STPageInfo *pstPageInfo )
 	cgiFormStringNoNewlines( "DELRULE", del_rule, 10 );
 	if( !strcmp(del_rule, "delete") && (pstPageInfo->iUserGroup == 0))
 	{
-		cgiFormStringNoNewlines( "PLOTIDZ", index, sizeof(index) );	
 		cgiFormStringNoNewlines( "NODEZ", nodez, sizeof(nodez) );
 		cgiFormStringNoNewlines( "ATTZ", attz, sizeof(attz));
 		key_type = strtol(nodez,NULL,10);
@@ -274,7 +273,6 @@ static int s_multiPortal_prefix_of_page( STPageInfo *pstPageInfo )
 		{
 			keystr = (char *)attz;
 		}
-		ccgi_dbus_init();
 
 
 		

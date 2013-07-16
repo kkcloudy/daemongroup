@@ -569,6 +569,13 @@ static int doUserCommand( STPageInfo *pstPageInfo )
 			ret = eag_set_rdc_ins(ccgi_connection, parameter.local_id, parameter.instance_id, 
 						rdc_slotid, rdc_insid);
 		}
+
+		ret = eag_set_pdc_distributed(ccgi_connection, parameter.local_id, parameter.instance_id, 
+						atoi(pdc_distribute));
+
+		ret = eag_set_rdc_distributed(ccgi_connection, parameter.local_id, parameter.instance_id, 
+						atoi(rdc_distribute));
+		
 		inet_aton(nasip, &inaddr);
 		ipaddr = ntohl(inaddr.s_addr);
 
