@@ -424,6 +424,7 @@ CW_THREAD_RETURN_TYPE CWThreadWD(void * arg);
 CWBool AsdWsm_RadioOp(unsigned int WTPID, Operate op);
 CWBool AsdWsm_WLANOp(unsigned char WlanID, Operate op, int both);
 CWBool AsdWsm_BSSOp(unsigned int BSSIndex, Operate op, int both);
+CWBool Wsm_BSSOp(unsigned int BSSIndex, Operate op, int both);
 CWBool AsdWsm_DataChannelOp(unsigned int WTPID, Operate op);
 CWBool wid_to_wsm_bss_pkt_info_get(unsigned int wtpindex);
 CWBool AsdWsm_StationOp(unsigned int WTPID, CWStationInfoValues *valuesPtr,Operate op);//added by weiay 20080702

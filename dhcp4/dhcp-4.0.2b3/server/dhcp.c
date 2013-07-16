@@ -338,7 +338,7 @@ void dhcpdiscover (packet, ms_nulltp)
 	/* %Audit% This is log output. %2004.06.17,Safe%
 	 * If we truncate we hope the user can get a hint from the log.
 	 */
-	snprintf (msgbuf, sizeof msgbuf, "DhcpDiscover__UserMac: %s %s%s%s,InterfaceIp: %s",
+	snprintf (msgbuf, sizeof msgbuf, "DhcpDiscover__UserMac:%s %s%s%s,InterfaceIp:%s",
 		 (packet -> raw -> htype
 		  ? print_hw_addr (packet -> raw -> htype,
 				   packet -> raw -> hlen,
@@ -580,7 +580,7 @@ void dhcprequest (packet, ms_nulltp, ip_lease)
 	 * If we truncate we hope the user can get a hint from the log.
 	 */
 	snprintf (msgbuf, sizeof msgbuf,
-		 "DhcpRequest__UserIp: %s%s ,UserMac: %s %s%s%s,InterfaceIp: %s",
+		 "DhcpRequest__UserIp:%s%s,UserMac:%s %s%s%s,InterfaceIp:%s",
 		 piaddr (cip), smbuf,
 		 (packet -> raw -> htype
 		  ? print_hw_addr (packet -> raw -> htype,
@@ -646,6 +646,7 @@ void dhcprequest (packet, ms_nulltp, ip_lease)
 		if (lease -> binding_state == FTS_RESET &&
 		    !lease_mine_to_reallocate (lease)) {
 			log_debug ("%s: lease reset by administrator", msgbuf);
+			log_local7_dhcp("%s,ErrReason:lease reset by administrator", msgbuf);
 			nak_lease (packet, &cip);
 			goto out;
 		}
@@ -730,6 +731,7 @@ void dhcprequest (packet, ms_nulltp, ip_lease)
 		if (!packet -> shared_network) {
 			if (subnet && subnet -> group -> authoritative) {
 				log_error("%s: wrong network.", msgbuf);
+				log_local7_dhcp("%s,ErrReason:wrong network.", msgbuf);
 				nak_lease (packet, &cip);
 				goto out;
 			}
@@ -750,12 +752,14 @@ void dhcprequest (packet, ms_nulltp, ip_lease)
 			if (packet->shared_network && packet->shared_network -> group && packet->shared_network -> group -> authoritative)
 			{
 				log_info("%s: wrong network.", msgbuf);
+				log_local7_dhcp("%s,ErrReason:wrong network.", msgbuf);
 				nak_lease (packet, &cip);
 				goto out;
 			} else {
 				/* nak lease, if client come from others interface */
 				if(dhcp_nak_rsp){
-				log_info("%s: (requested address not available).", msgbuf);			
+				log_info("%s: (requested address not available).", msgbuf);	
+				log_local7_dhcp("%s,ErrReason:(requested address not available).", msgbuf);
 				nak_lease (packet, &cip);
 				goto out;
 				}	
@@ -771,6 +775,7 @@ void dhcprequest (packet, ms_nulltp, ip_lease)
 	//if (!lease && ours) {
 	if(!lease) {
 		log_info ("%s: lease %s unavailable.", msgbuf, piaddr (cip));
+		log_local7_dhcp("%s,ErrReason:(lease %s unavailable).", msgbuf, piaddr (cip));
 		nak_lease (packet, &cip);
 		goto out;
 	}
@@ -895,7 +900,7 @@ void dhcprelease (packet, ms_nulltp)
 	 * If we truncate we hope the user can get a hint from the log.
 	 */
 	snprintf (msgbuf, sizeof msgbuf,
-		 "DhcpRelease__UserIp: %s ,UserMac: %s %s%s%s,InterfaceIp: %s ,Result: (%sfound)",
+		 "DhcpRelease__UserIp:%s,UserMac:%s %s%s%s,InterfaceIp:%s,Result:(%sfound)",
 		 cstr,
 		 (packet -> raw -> htype
 		  ? print_hw_addr (packet -> raw -> htype,
@@ -996,7 +1001,7 @@ void dhcpdecline (packet, ms_nulltp)
 	 * If we truncate we hope the user can get a hint from the log.
 	 */
 	snprintf (msgbuf, sizeof msgbuf,
-		 "DhcpDecline__UserIp: %s,UserMac:%s %s%s%s,InterfaceIp:%s",
+		 "DhcpDecline__UserIp:%s,UserMac:%s %s%s%s,InterfaceIp:%s",
 		 piaddr (cip),
 		 (packet -> raw -> htype
 		  ? print_hw_addr (packet -> raw -> htype,
@@ -1535,7 +1540,7 @@ void nak_lease (packet, cip)
 	raw.op = BOOTREPLY;
 
 	/* Report what we're sending... */
-	log_local7_dhcp("DhcpNak__UserIp: %s ,UserMac: %s ,InterfaceIp: %s",
+	log_local7_dhcp("DhcpNak__UserIp:%s,UserMac:%s,InterfaceIp:%s",
 	      piaddr (*cip),
 	      print_hw_addr (packet -> raw -> htype,
 			     packet -> raw -> hlen,
@@ -3239,7 +3244,7 @@ void dhcp_reply (lease)
 		log_debug ("Allocate Ip is %s Subnet Mask is %s\n", piaddr (lease -> ip_addr) ,subnet->shared_network->name);
 	}
 	/* Say what we're doing... */
-	log_local7_dhcp("%s %s ,UserMac: %s %s%s%s,InterfaceIp: %s",
+	log_local7_dhcp("%s%s,UserMac:%s %s%s%s,InterfaceIp:%s",
 		  (state -> offer
 		   ? (state -> offer == DHCPACK ? "DhcpAck__UserIp:" : "DhcpOffer__UserIp:")
 		   : "BOOTREPLY"),

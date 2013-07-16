@@ -41,13 +41,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "ws_portal_container.h"
 #include "ws_public.h"
 
-int getRecordById( int id, char *record, int len );
-int del_portal( int id );
-int ShowportalPage(struct list *lsecu,struct list *lpublic);
-void portal_conf(struct list *lsecu,struct list *lpublic, int id);
-int getInterfaceNum();
+#include "eag/eag_errcode.h"
+#include "eag/eag_conf.h"
+#include "eag/eag_interface.h"
+#include "ws_init_dbus.h"
+#include "ws_dcli_vrrp.h"
+#include "ws_eag_conf.h"
+#include "ws_dbus_list_interface.h"
 
-#define PROFILE_PATH "/opt/services/conf/portal_conf.conf"
+int ShowportalPage(struct list *lLicense,struct list *lsystem,struct list *lpublic);
 
 
 typedef struct{
@@ -93,6 +95,10 @@ int cgiMain()
 {
 	struct list *lLicense;
 	struct list *lsystem;
+	struct list *lpublic;
+
+	DcliWInit();
+	ccgi_dbus_init();   
 	
 	pstPageInfo = &stPageInfo;
 	
@@ -101,7 +107,7 @@ int cgiMain()
 	lsystem= get_chain_head("../htdocs/text/system.txt");
 	lLicense =get_chain_head("../htdocs/text/authentication.txt");
 	lpublic=get_chain_head("../htdocs/text/public.txt");
-	ShowportalPage(lLicense,lsystem);
+	ShowportalPage(lLicense,lsystem,lpublic);
 	release(lLicense);
 	release(lsystem); 
 	release(lpublic); 
@@ -109,49 +115,60 @@ int cgiMain()
 }
 
 
-int ShowportalPage(struct list *lLicense,struct list *lsystem)
+int ShowportalPage(struct list *lLicense,struct list *lsystem,struct list *lpublic)
 {
-
-  int i;
-  char buf_if_line[256];
-
-  char *tmp;
-
-  char id_str[10]="";
-  int interfaceNum = 0;
-
+	int i = 0;
+	int interfaceNum = 0;
+	int ret = 0;
+	int cl = 0;
+	char menu[21]="";
+	char i_char[10]="";
+	eag_captive_intfs captive_intfs;
+	dbus_parameter parameter;
+	instance_parameter *paraHead1 = NULL;
+	instance_parameter *pq = NULL;
+	void *ccgi_connection = NULL;
+	char temp[10] = { 0 };
+	memset( &captive_intfs, 0, sizeof(captive_intfs) );	
+	int hs_flag = 0;
+	char plotid[10] = {0};	
+	char delstr[64] = {0};
+	char infstr[64] = {0};
 
 	memset(pstPageInfo->encry,0,BUF_LEN);
-    cgiFormStringNoNewlines("UN", pstPageInfo->encry, BUF_LEN); 
-    pstPageInfo->username_encry=dcryption(pstPageInfo->encry); 
-    
-    if(pstPageInfo->username_encry==NULL)
-    {
-      ShowErrorPage(search(lpublic,"ill_user")); 	       /*用户非法*/
-      return 0;
+	cgiFormStringNoNewlines("UN", pstPageInfo->encry, BUF_LEN); 
+	pstPageInfo->username_encry=dcryption(pstPageInfo->encry); 
+
+	if(pstPageInfo->username_encry==NULL)
+	{
+		ShowErrorPage(search(lpublic,"ill_user")); 	       /*用户非法*/
+		return 0;
 	}
 	pstPageInfo->iUserGroup = checkuser_group(pstPageInfo->username_encry);
-  cgiHeaderContentType("text/html");
- 
-  {
-  
-  	cgiFormStringNoNewlines( "record_id", id_str, sizeof(id_str) );
-  	sscanf( id_str, "%d", &(pstPageInfo->stUserInput.cur_id) );
-  	if( pstPageInfo->stUserInput.cur_id < 0 || pstPageInfo->stUserInput.cur_id > 7 )
-  		pstPageInfo->stUserInput.cur_id = 0;
-  	
-  	memset( id_str, 0, sizeof(id_str) );
-  	cgiFormStringNoNewlines( "reset_curid", id_str, sizeof(id_str) );
-  	if( strcmp( id_str,"yes" ) == 0 )
-  	{
-  		pstPageInfo->stUserInput.reset_cur_id = 1;//表明要reset 当前 id
-  	}
+	cgiHeaderContentType("text/html");
+
+	
+	memset(plotid,0,sizeof(plotid));
+	cgiFormStringNoNewlines("plotid", plotid, sizeof(plotid)); 
+
+	list_instance_parameter(&paraHead1, INSTANCE_STATE_WEB);
+	if (NULL == paraHead1) {
+		return 0;
+	}
+	if(strcmp(plotid, "") == 0)
+	{
+		parameter.instance_id = paraHead1->parameter.instance_id;
+		parameter.local_id = paraHead1->parameter.local_id;
+		parameter.slot_id = paraHead1->parameter.slot_id;
+		snprintf(plotid,sizeof(plotid)-1,"%d-%d-%d",parameter.slot_id, parameter.local_id, parameter.instance_id);
+	}
 	else
 	{
-		pstPageInfo->stUserInput.reset_cur_id = 0;
+		get_slotID_localID_instanceID(plotid, &parameter);
 	}
-  }
-  
+	ccgi_ReInitDbusConnection(&ccgi_connection, parameter.slot_id, DISTRIBUTFAG);
+	
+ 
   fprintf(cgiOut,"<html xmlns=\"http://www.w3.org/1999/xhtml\"><head>\n");
   fprintf(cgiOut,"<meta http-equiv=Content-Type content=text/html; charset=gb2312>\n");
 	//下面三句话用于禁止页面缓存
@@ -162,10 +179,12 @@ int ShowportalPage(struct list *lLicense,struct list *lsystem)
  	  
   fprintf(cgiOut,"<title>%s</title>","Captive Protal");  
   fprintf(cgiOut,"<link rel=stylesheet href=/style.css type=text/css>\n"\
-  	"<style type=text/css>\n"\
-  	".a3{width:30;border:0; text-align:center}\n"\
-  	".dhcplis {overflow-x:hidden; overflow:auto; width: 400px; height: 150px; clip: rect( ); padding-top: 0px; padding-right: 0px; padding-bottom: 0px; padding-left: 0px}"\
-  	"</style>\n"\
+	"<style type=text/css>"\
+	"#div1{ width:58px; height:18px; border:1px solid #666666; background-color:#f9f8f7;}"\
+	"#div2{ width:56px; height:15px; padding-left:3px; padding-top:3px}"\
+	"#link{ text-decoration:none; font-size: 12px}"\
+    ".usrlis {overflow-x:hidden;	overflow:auto; width: 690; height: 220px; clip: rect( ); padding-top: 0px; padding-right: 0px; padding-bottom: 0px; padding-left: 0px} "\
+	"</style>"\
   "<script language=javascript src=/ip.js>\n"\
   	"</script>\n"\
   	"<script type=\"text/javascript\">\n"\
@@ -181,311 +200,59 @@ int ShowportalPage(struct list *lLicense,struct list *lsystem)
 				 "obj.style.display = 'none';\n"\
 			   "}\n"\
 		   "}");
-  fprintf(cgiOut,"function mysubmit(){\n"\
-  			"var username=document.all.a_name.value;\n"\
- 			"var pass1=document.all.a_pass1.value;\n"\
- 			"var pass2=document.all.a_pass2.value;\n"\
- 			"if(username==\"\")\n"\
- 				"{\n"\
-					"alert(\"user name is empty!\");\n"\
-					"window.event.returnValue = false;\n"\
-					"return false;\n"\
-  					"}\n"\
-  			"if(pass1==\"\")"\
- 			"{\n"\
-					"alert(\"password is empty!\");\n"\
-					"window.event.returnValue = false;\n"\
-					"return false;\n"\
-  			"}\n"\
- 			"if(pass1!=pass2)"\
-  			"{\n"\
-  				"alert(\"%s\");\n"\
-  				"window.event.returnValue = false;\n"\
-  				"return false;\n"\
-  				"}\n"\
-  		  "var value1 = document.all.ip1.value;\n"\
-		  "var value2 = document.all.ip2.value;\n"\
-		  "var value3 = document.all.ip3.value;\n"\
-		  "var value4 = document.all.ip4.value;\n"\
-		  "if(value1==\"\" ||value2==\"\" ||value3==\"\" ||value4==\"\"){\n"\
-		  "alert(\"%s\");\n"\
-		  "window.event.returnValue = false;\n"\
-		  "return false;\n"\
-		  "}\n"\
-		  "if( (document.all.portal_port.value-0).toString() == 'NaN' || document.all.portal_port.value-0 > 65535 || document.all.portal_port.value-0 < 0 )\n"\
-		  "{\n"\
-		  "		alert(\"Port num is error!\");\n"\
-	 			 "window.event.returnValue = false;\n"\
-			"		return false;\n"\
-			"}\n"\
-		  "}",search(lsystem,"pass_incon"),search(lLicense,"ip_error"));
-
   fprintf(cgiOut,"</script>\n"\
   	"</head>\n"\
   	"<body>");
+  	fprintf(stderr, "--------------------------------------plotid=%s", plotid);
+	char *cgiRequestMethod = NULL;
+	cgiGetenv_func(&cgiRequestMethod, "REQUEST_METHOD");
+	if((cgiFormSubmitClicked("inf_add") == cgiFormSuccess) && (0 == strcmp(cgiRequestMethod,"POST")))
+	{
+	#if 0
+			memset(plotid,0,sizeof(plotid));
+			p_id = 0;
+			memset(infstr,0,sizeof(infstr));
+			cgiFormStringNoNewlines("port_id",plotid, sizeof(plotid)); 
+			p_id = atoi(plotid);
+			if(0 == p_id)
+			{
+				hs_flag = HANSI_LOCAL;
+			}
+			else
+			{
+				hs_flag = HANSI_REMOTE;
+			}
+	#endif
+		cgiFormStringNoNewlines("inf_str",infstr, sizeof(infstr)); 
+		fprintf(stderr, "inf_add, %s", infstr);	
+		ret = eag_add_captive_intf(ccgi_connection, parameter.local_id,
+					parameter.instance_id, infstr);
+	}
+	cgiFormStringNoNewlines("DELRULE",delstr, sizeof(delstr)); 
+	if(0 == strcmp(delstr,"delete"))
+	{
+	#if 0
+		memset(plotid,0,sizeof(plotid));
+		p_id = 0;
+		cgiFormStringNoNewlines("plotid",plotid, sizeof(plotid)); 
 
-  
-    if(cgiFormSubmitClicked("submit_adduser") == cgiFormSuccess)
-	  {
-		  portal_conf(lLicense,lsystem, pstPageInfo->stUserInput.cur_id );
-	  }
-	  pstPageInfo->stUserInput.cur_id_state = getRecordById( pstPageInfo->stUserInput.cur_id, 
-					  pstPageInfo->stUserInput.cur_id_record, sizeof(pstPageInfo->stUserInput.cur_id_record) );
+		p_id = atoi(plotid);
+		if(0 == p_id)
+		{
+			hs_flag = HANSI_LOCAL;
+		}
+		else
+		{
+			hs_flag = HANSI_REMOTE;
+		}
+	#endif
+		cgiFormStringNoNewlines("INF",infstr, sizeof(infstr)); 
+		ret = eag_del_captive_intf(ccgi_connection, parameter.local_id,
+						parameter.instance_id, infstr);
 
-	  
-  
-	fprintf( cgiOut, "<script type=text/javascript>\n" );
-			//fprintf( cgiOut, "alert('111111');\n" );
-			fprintf( cgiOut, " var reset_cur_id=false;\n" );
-			if( 1 == pstPageInfo->stUserInput.reset_cur_id )
-				fprintf( cgiOut, " reset_cur_id=true;\n" );
-			fprintf( cgiOut, " var cur_id=%d;\n", pstPageInfo->stUserInput.cur_id );
-			fprintf( cgiOut,"		function IfInfo( info )\n"\
-				"		{\n"\
-				"			re = /^(.*)#(.*)#(.*)#(.*)#(.*)$/;\n"\
-				"			this.legal = false;\n"\
-				"			if(re.test(info))\n"\
-				"			{\n"\
-				"				this.legal = true;\n"\
-				"				this.interface = RegExp.$1;\n"\
-				"				this.remark = '';\n"\
-				"				this.id = RegExp.$4;\n"\
-				"				if( RegExp.$2 == 'true' )\n"\
-				"					this.useable = true;\n"\
-				"				else\n"\
-				"					this.useable = false;\n"\
-				"				if( RegExp.$3 == 'has no ip' )\n"\
-				"				{\n"\
-				"					this.ip = '';\n" );
-fprintf( cgiOut,"					this.remark = '%s'\n", search(lLicense,"portal_err_noIP") );
-fprintf( cgiOut,"				}\n"\
-				"				else\n"\
-				"					this.ip = RegExp.$3\n" );
-fprintf( cgiOut,"				if( RegExp.$4 != 'x' && this.remark == '' ){\n" );
-fprintf( cgiOut,"					this.remark = '%s' + RegExp.$4;\n", search(lLicense,"portal_err_usedbyid") );
-fprintf( cgiOut,"				 }\n "\
-				"				if( RegExp.$5 == 'MASK_ERR' && this.remark == '' )\n" );
-fprintf( cgiOut,"					this.remark = '%s';\n", search(lLicense,"portal_err_mask") );
-fprintf( cgiOut,"			}\n"\
-				"			return this;\n"\
-				"		}\n" );
-			//fprintf( cgiOut, "alert('222222');\n" );
-			fprintf( cgiOut, "function AllIfInfo( _name, func )\n"\
-				"		{\n"\
-				"			this.allIf = new Array();\n"\
-				"			this._name = _name;\n"\
-				"			this.func = func;\n"\
-				"			this.addIf = function( IfInfo )\n"\
-				"				{\n"\
-				"					if( IfInfo.legal == true )\n"\
-				"						this.allIf[this.allIf.length] = IfInfo;\n"\
-				"				}\n"\
-				"			this.showAllIfInfo = function ()\n"\
-				"				{\n"\
-				"					document.write( '<input type=hidden name=input' + this._name + ' value=\\'\\' />' );\n"\
-				"					document.write( '<table style=\\'text-align:left\\'>' );\n"\
-				"					document.write( '<tr><th width=100px></th><th width=120px></th></tr>' );\n"\
-				"					for( var i = 0; i < this.allIf.length; i++ )\n"\
-				"					{\n"\
-				"						//if( this.allIf[i].useable == true )\n"\
-				"						//{\n"\
-				"							document.write( '<tr><td>' );\n" );
+	}
 
-fprintf( cgiOut, "						if( this.allIf[i].useable == true || ( reset_cur_id == true && this.allIf[i].id == cur_id ))\n" );
-fprintf( cgiOut, "							document.write( '<input type=checkbox id=' + _name + this.allIf[i].interface + ' onclick=' + this.func + '(this,\\'' + _name + '\\') value=' + this.allIf[i].interface + ' name=interfacecheckbox />' );\n"\
-				"						else\n"\
-				"							document.write( '<input type=checkbox id=' + _name + this.allIf[i].interface + ' onclick=' + this.func + '(this,\\'' + _name + '\\') value=' + this.allIf[i].interface + ' disabled=disabled name=interfacecheckbox />' );\n"\
-			 	"							document.write( '<label for=' + _name + this.allIf[i].interface + '>' );\n"\
-			 	"							document.write( this.allIf[i].interface );\n"\
-			 	"							document.write( '</label></td>' );\n"\
-			 	"							document.write( '<td><label for=' + _name + this.allIf[i].interface +'>' + this.allIf[i].ip + '</label></td>' );\n"\
-			 	"							document.write( '<td>' + this.allIf[i].remark + '</td></tr>' );\n"\
-				"						//}\n"\
-				"					}\n"\
-				"					document.write( '</table>' )\n"\
-				"				}\n"\
-				"		}\n" );
-				//fprintf( cgiOut, "alert('333333');\n" );
-				fprintf( cgiOut, "function checkbox_onclick( obj, _name )\n"\
-				"		{\n"\
-				"			var input_if_select = document.getElementsByName( 'input'+_name )[0];\n"\
-				"			if( obj.checked == true )\n"\
-				"			{\n"\
-				"				input_if_select.value = input_if_select.value + obj.value + ',';\n"\
-				"			}\n"\
-				"			else\n"\
-				"			{\n"\
-				"				var re = new RegExp( obj.value+',' );\n"\
-				"				input_if_select.value = input_if_select.value.replace( re, '' );\n"\
-				"			}\n"\
-				"			//alert(input_if_select.value);\n"\
-				"		}\n" );
-				//fprintf( cgiOut, "alert('444444');\n" );
-				fprintf( cgiOut, "var ifinfo = new AllIfInfo( 'interface', 'checkbox_onclick' );\n" );
-
-				#if 0
-				FILE* ifInfo = popen( "cp_if_info.sh", "r" );
-
-				memset( buf_if_line, 0, sizeof(buf_if_line) );
-			 	while( fgets(buf_if_line,sizeof(buf_if_line),ifInfo) )
-				{
-					if( strlen( buf_if_line ) > 0 )
-					{
-						//去掉换行符
-						char *temp;
-						interfaceNum++;
-						for( temp = buf_if_line; *temp != 0 && *temp != 0x0d && *temp != 0x0a; temp++ );
-						*temp = 0;
-						fprintf(cgiOut,"ifinfo.addIf( new IfInfo( \"%s\") );\n",buf_if_line);
-					}
-					memset( buf_if_line, 0, sizeof(buf_if_line) );
-				}
-				
-				pclose(ifInfo);
-				#else
-
-				infi  interf;
-				interface_list_ioctl (0,&interf);
-				infi * q ;
-				q = interf.next;
-				//use infi.if_stat to record which cp_id used
-				while(q)
-				{
-					strcpy(q->if_stat,"x");
-					q=q->next;
-				}
-				
-				char buf_file [65536];
-				char buf_if_file[65536];
-				char used_cp_id[32];
-				memset(buf_file,0,sizeof(buf_file));
-				memset(buf_if_file,0,sizeof(buf_if_file));
-				memset(used_cp_id,0,sizeof(used_cp_id));
-
-				//read conf form conf_file
-				FILE * pf_portal_conf;
-				char * portal_conf_file_path = "/opt/services/conf/portal_conf.conf";
-				pf_portal_conf = fopen( portal_conf_file_path, "r" );
-				q = interf.next;
-				if( q && pf_portal_conf )
-				{
-					memset( buf_file, 0, sizeof(buf_file));
-					while( fgets(buf_file, sizeof(buf_file), pf_portal_conf) )
-					{
-						memset(buf_if_file,0,sizeof(buf_if_file));
-						memset(used_cp_id,0,sizeof(used_cp_id));
-						sscanf(buf_file,"%s %*s %*s %*s %*s %s",used_cp_id,buf_if_file);
-						
-						//fprintf( stderr, "q->if_name==buf_if_file==%s\n",buf_if_file);
-						char * p_if = NULL;
-						for(p_if = strtok(buf_if_file,","); p_if; p_if = strtok(NULL,","))
-						{
-							//fprintf( stderr, "p_if==%s,q->if_name==%s\n",p_if,q->if_name);
-							q = interf.next;
-							while(q)
-							{
-								if(!strcmp(p_if,q->if_name))
-								{
-									//use infi.if_stat to record which cp_id used
-									strcpy(q->if_stat,used_cp_id);									
-									break;
-								}
-								q=q->next;
-							}
-						}
-					}
-					
-				}
-				if(pf_portal_conf)fclose(pf_portal_conf);
-				
-				char buf_if [65536];
-				memset(buf_if,0,sizeof(buf_if));
-				int is_if_used = 0;
-				int is_has_ip = 0;
-				q = interf.next;
-				while(q)
-				{
-					/* 去掉if_name 重复的interface */
-					infi * p = NULL;
-					for (p = interf.next; p && p != q && strcmp(p->if_name, q->if_name) != 0; p = p->next);
-					if (p != q)
-					{
-						q = q->next;
-						continue;
-					}
-					
-					if( !strcmp(q->if_name,"lo") )
-					{
-						q = q->next;
-						continue;
-					}
-					
-					if (   1 == pstPageInfo->stUserInput.reset_cur_id 
-						&& pstPageInfo->stUserInput.cur_id  == atoi(q->if_stat))
-					{
-						/* if reset the id stat is not x*/
-						strcpy(q->if_stat, "x");
-					}
-
-					memset(buf_if,0,sizeof(buf_if));
-					strcat(buf_if,q->if_name);
-					
-					strcat(buf_if,"#");
-					
-					if(strcmp(q->if_addr,"") && !strcmp(q->if_stat,"x"))
-					{
-						strcat(buf_if,"true#");
-					}else
-					{
-						strcat(buf_if,"false#");					
-					}
-
-					int i_if_mask = inet_addr(q->if_mask);
-					i_if_mask = ((i_if_mask&0xAAAAAAAA)>>1) + (i_if_mask&0x55555555) ;
-					i_if_mask = ((i_if_mask&0xCCCCCCCC)>>2) + (i_if_mask&0x33333333) ;
-					i_if_mask = ((i_if_mask&0xF0F0F0F0)>>4) + (i_if_mask&0x0F0F0F0F) ;
-					i_if_mask = ((i_if_mask&0xFF00FF00)>>8) + (i_if_mask&0x00FF00FF) ;					
-					i_if_mask = ((i_if_mask&0xFFFF0000)>>16) + (i_if_mask&0x0000FFFF) ;
-					
-					if( strcmp(q->if_addr,"") )
-					{
-						//strcat(buf_if,q->if_addr);
-						sprintf(buf_if,"%s%s/%d",buf_if,q->if_addr,i_if_mask);
-					}else
-					{
-						strcat(buf_if,"has no ip");
-					}
-					
-					//strcat(buf_if,"");
-					sprintf(buf_if,"%s#%s#",buf_if,q->if_stat);
-					
-					if(i_if_mask >= 16)
-					{
-						strcat(buf_if,"MASK_OK");
-					}else
-					{
-						strcat(buf_if,"MASK_ERR");
-					}
-					
-					fprintf(cgiOut,"ifinfo.addIf( new IfInfo( \"%s\") );\n",buf_if);
-					fprintf(stderr,"buf_if====%s\n",buf_if);
-					q = q->next;
-				}
-			    free_inf(&interf);
-				#endif	
-				//fprintf( cgiOut, "alert( 'before  show if' );\n" );	
-	fprintf( cgiOut, "</script>\n" );
-/*
-  if(cgiFormSubmitClicked("submit_adduser") == cgiFormSuccess)
-  {
-    portal_conf(lLicense,lsystem, pstPageInfo->stUserInput.cur_id );
-  }
-  pstPageInfo->stUserInput.cur_id_state = getRecordById( pstPageInfo->stUserInput.cur_id, 
-  								pstPageInfo->stUserInput.cur_id_record, sizeof(pstPageInfo->stUserInput.cur_id_record) );
-  */
-//  fprintf(cgiOut,"<form action=wp_user_portal.cgi method=post encType=multipart/form-data onsubmit=mysubmit() >\n" );
-  fprintf(cgiOut,"<form action=wp_user_portal.cgi method=post onsubmit=mysubmit() >\n" );
-  fprintf( cgiOut, "<input type=hidden name=record_id value=%d />", pstPageInfo->stUserInput.cur_id );
+  fprintf(cgiOut,"<form method=post>\n" );
   fprintf( cgiOut, "<div align=center>\n"\
   "<table width=976 border=0 cellpadding=0 cellspacing=0>\n"\
 "<tr>\n"\
@@ -496,12 +263,8 @@ fprintf( cgiOut, "							document.write( '<input type=checkbox id=' + _name + th
 	  {   
 		  fprintf(cgiOut,"<table width=130 border=0 cellspacing=0 cellpadding=0>\n"\
 		"<tr>\n" );
-		if( (pstPageInfo->stUserInput.cur_id_state == 0 || 1 == pstPageInfo->stUserInput.reset_cur_id) && pstPageInfo->iUserGroup == 0)//如果当前id有内容，就不能提交
-			fprintf( cgiOut, "<td width=62 align=center><input id=but type=submit name=submit_adduser style=background-image:url(/images/%s) value=""></td>",search(lpublic,"img_ok"));
-		else
-			fprintf(cgiOut,"<td width=62 align=left><a href=wp_authentication.cgi?UN=%s target=mainFrame><img src=/images/%s border=0 width=62 height=20/></a></td>",pstPageInfo->encry,search(lpublic,"img_ok"));
-			
-		  fprintf(cgiOut,"<td width=62 align=left><a href=wp_authentication.cgi?UN=%s target=mainFrame><img src=/images/%s border=0 width=62 height=20/></a></td>",pstPageInfo->encry,search(lpublic,"img_cancel"));
+		fprintf(cgiOut,"<td width=62 align=center><input id=but type=submit name=inf_add style=background-image:url(/images/%s) value=""></td>",search(lpublic,"img_ok"));
+		fprintf(cgiOut,"<td width=62 align=left><a href=wp_authentication.cgi?UN=%s target=mainFrame><img src=/images/%s border=0 width=62 height=20/></a></td>",pstPageInfo->encry,search(lpublic,"img_cancel"));
 
 		fprintf(cgiOut,"</tr>\n"\
 		"</table>");
@@ -524,33 +287,44 @@ fprintf( cgiOut, "							document.write( '<input type=checkbox id=' + _name + th
 				  "<td id=tdleft>&nbsp;</td>\n"\
 				"</tr>");				
 		 
+				
+				//user manage
+				fprintf( cgiOut, "<tr height=25><td align=left id=tdleft><a href='wp_user_manage.cgi?UN=%s' target=mainFrame class=top><font id=%s>%s</font></td></tr> \n",pstPageInfo->encry,search(lpublic,"menu_san"), search( lLicense, "user_mng") );								
+				
+				//eag
+				fprintf( cgiOut, "<tr height=25><td align=left id=tdleft><a href='wp_eag_conf.cgi?UN=%s' target=mainFrame class=top><font id=%s>%s</font></td></tr> \n",pstPageInfo->encry,search(lpublic,"menu_san"), search( lLicense, "eag_title") );
+
+				//multi portal
+				fprintf( cgiOut, "<tr height=25><td align=left id=tdleft><a href='wp_multi_portal.cgi?UN=%s' target=mainFrame class=top><font id=%s>%s</font></td></tr> \n",pstPageInfo->encry,search(lpublic,"menu_san"), search( lLicense, "multi_portal_management") );	
+
+				//multi raidus
+				fprintf( cgiOut, "<tr height=25><td align=left id=tdleft><a href='wp_multi_radius.cgi?UN=%s' target=mainFrame class=top><font id=%s>%s</font></td></tr> \n",pstPageInfo->encry, search(lpublic,"menu_san"),search( lLicense, "multi_radius_management") );	
+
+				//captive interface
 				fprintf(cgiOut,"<tr height=26>\n"\
 					"<td align=left id=tdleft background=/images/bottom_bg.gif style=\"border-right:0\" ><font id=%s>%s<font></td>",search(lpublic,"menu_san"),search(lLicense,"captive_Portal"));	/*突出显示*/
 				fprintf(cgiOut,"</tr>");
 				
-				
-				
-				//白名单
+				//white list
 				fprintf( cgiOut, "<tr height=25><td align=left id=tdleft><a href='wp_white_list.cgi?UN=%s&portal_id=0' target=mainFrame class=top><font id=%s>%s</font></td></tr> \n",pstPageInfo->encry,search(lpublic,"menu_san"), search( lLicense, "portal_white_list") );
-				//eag
-				fprintf( cgiOut, "<tr height=25><td align=left id=tdleft><a href='wp_eag_conf.cgi?UN=%s' target=mainFrame class=top><font id=%s>%s</font></td></tr> \n",pstPageInfo->encry,search(lpublic,"menu_san"), search( lLicense, "eag_title") );
-				//user manage
-				fprintf( cgiOut, "<tr height=25><td align=left id=tdleft><a href='wp_user_manage.cgi?UN=%s' target=mainFrame class=top><font id=%s>%s</font></td></tr> \n",pstPageInfo->encry,search(lpublic,"menu_san"), search( lLicense, "user_mng") );								
-				//nas
-				fprintf( cgiOut, "<tr height=25><td align=left id=tdleft><a href='wp_nasid_byvlan.cgi?UN=%s' target=mainFrame class=top><font id=%s>%s</font></td></tr> \n",pstPageInfo->encry,search(lpublic,"menu_san"), search( lLicense, "nasid_management") );	
-				//multi portal
-				fprintf( cgiOut, "<tr height=25><td align=left id=tdleft><a href='wp_multi_portal.cgi?UN=%s' target=mainFrame class=top><font id=%s>%s</font></td></tr> \n",pstPageInfo->encry,search(lpublic,"menu_san"), search( lLicense, "multi_portal_management") );	
-				//黑名单
+				
+				//black list
 				fprintf( cgiOut, "<tr height=25><td align=left id=tdleft><a href='wp_black_list.cgi?UN=%s' target=mainFrame class=top><font id=%s>%s</font></td></tr> \n",pstPageInfo->encry,search(lpublic,"menu_san"), search( lLicense, "portal_black_list") );	
 
-				//ftp server
-				fprintf( cgiOut, "<tr height=25><td align=left id=tdleft><a href='wp_portal_ftp.cgi?UN=%s' target=mainFrame class=top><font id=%s>%s</font></td></tr> \n",pstPageInfo->encry,search(lpublic,"menu_san"), search( lLicense, "portal_ftp") );	
-				
-				//multi raidus
-				fprintf( cgiOut, "<tr height=25><td align=left id=tdleft><a href='wp_multi_radius.cgi?UN=%s' target=mainFrame class=top><font id=%s>%s</font></td></tr> \n",pstPageInfo->encry, search(lpublic,"menu_san"),search( lLicense, "multi_radius_management") );	
+				//nas
+				fprintf( cgiOut, "<tr height=25><td align=left id=tdleft><a href='wp_nasid_byvlan.cgi?UN=%s' target=mainFrame class=top><font id=%s>%s</font></td></tr> \n",pstPageInfo->encry,search(lpublic,"menu_san"), search( lLicense, "nasid_management") );				
 
 				//vlan map
 				fprintf( cgiOut, "<tr height=25><td align=left id=tdleft><a href='wp_wtpwlan_map_vlan.cgi?UN=%s' target=mainFrame class=top><font id=%s>%s</font></td></tr> \n",pstPageInfo->encry, search(lpublic,"menu_san"),search( lLicense, "vlan_maping") );	
+			
+				//pdc
+				fprintf( cgiOut, "<tr height=25><td align=left id=tdleft><a href='wp_pdc_conf.cgi?UN=%s' target=mainFrame class=top><font id=%s>%s</font></td></tr> \n",pstPageInfo->encry,search(lpublic,"menu_san"), search( lLicense, "pdc_conf") );				
+
+				//rdc
+				fprintf( cgiOut, "<tr height=25><td align=left id=tdleft><a href='wp_rdc_conf.cgi?UN=%s' target=mainFrame class=top><font id=%s>%s</font></td></tr> \n",pstPageInfo->encry, search(lpublic,"menu_san"),search( lLicense, "rdc_conf") );	
+
+				// portal ftp
+				fprintf( cgiOut, "<tr height=25><td align=left id=tdleft><a href='wp_portal_ftp.cgi?UN=%s' target=mainFrame class=top><font id=%s>%s</font></td></tr> \n",pstPageInfo->encry, search(lpublic,"menu_san"),search( lLicense, "portal_ftp") );	
 				
 				for(i=0;i<4+interfaceNum;i++)
 				{
@@ -561,216 +335,119 @@ fprintf( cgiOut, "							document.write( '<input type=checkbox id=' + _name + th
 			  fprintf(cgiOut,"</table>\n"\
 			"</td>\n"\
 			"<td align=left style=\"background-color:#ffffff; border-right:1px solid #707070; padding-left:30px\">\n"\
-			  "<table border=0 cellspacing=0 cellpadding=0>");
-		   		// fprintf(cgiOut,"cur_id_state = %d<br />",pstPageInfo->stUserInput.cur_id_state);
-				if( 1 == pstPageInfo->stUserInput.cur_id_state )
-				{
-		   			i = 0;
-		   			while( pstPageInfo->stUserInput.cur_id_record[i] && pstPageInfo->stUserInput.cur_id_record[i] != 0x0d && pstPageInfo->stUserInput.cur_id_record[i] != 0x0a )
-		   			{
-		   				i++;
-		   			}
-		   			pstPageInfo->stUserInput.cur_id_record[i] = 0;
-		   			i=0;
-					tmp = strtok(pstPageInfo->stUserInput.cur_id_record,"\t");
-					while(tmp != NULL)
-						{
-							i++;
-							if(i==2)
-								strcpy(pstPageInfo->stUserInput.ip_addr,tmp);
-							if( i==3 )
-								strcpy( pstPageInfo->stUserInput.port, tmp );
-							if(i==4)
-							{
-								strcpy( pstPageInfo->stUserInput.username, tmp );
-							}
-							if(i==6)
-								strcpy( pstPageInfo->stUserInput.if_info, tmp );
-						tmp = strtok(NULL,"\t");
-					}
-					i = 0;
-					//memset(tmp,0,30);
-					tmp = strtok(pstPageInfo->stUserInput.ip_addr,".");
-					while(tmp != NULL)
-					{
-						i++;
-						if(i == 1)
-						{		strcpy(pstPageInfo->stUserInput.ip1,tmp);
-							}
-						else if(i == 2)
-							{	strcpy(pstPageInfo->stUserInput.ip2,tmp);
-							}
-						else if(i == 3)
-							{	strcpy(pstPageInfo->stUserInput.ip3,tmp);
-							}
-						else if(i ==4)
-							{	strcpy(pstPageInfo->stUserInput.ip4,tmp);
-							}
-						tmp= strtok(NULL,".");
-					}
-				}
-			  	
+			  "<table border=0 cellspacing=0 cellpadding=0 width=650 valign=top>");
 
-				 fprintf( cgiOut, "<tr height=30>\n"\
-				 	"<td>ID</td>\n" );
-				 fprintf( cgiOut, "<td width=680px><select name=portal_id onchange='on_id_change(this);'><option value=0>0</option>\n"\
-				 		"<option value=1>1</option>\n"\
-				 		"<option value=2>2</option>\n"\
-				 		"<option value=3>3</option>\n"\
-				 		"<option value=4>4</option>\n"\
-				 		"<option value=5>5</option>\n"\
-				 		"<option value=6>6</option>\n"\
-				 		"<option value=7>7</option></select>\n" );
-				 fprintf( cgiOut, "<script type='text/javascript'>\n" );
-				 fprintf( cgiOut, "document.getElementsByName( 'portal_id' )[0].value = '%d';\n", pstPageInfo->stUserInput.cur_id );
-				 fprintf( cgiOut, "function on_id_change( obj ){\n" );
-				 fprintf( cgiOut, "	window.location.href='wp_user_portal.cgi?UN=%s&record_id='+obj.value;\n", pstPageInfo->encry );
-				 fprintf( cgiOut, "}\n" );
-				 fprintf( cgiOut, "</script>" );
-				 if( 1 == pstPageInfo->stUserInput.cur_id_state && pstPageInfo->stUserInput.reset_cur_id != 1 && 0 == pstPageInfo->iUserGroup )
-				 {
-				 	fprintf( cgiOut, "<a href=wp_user_portal.cgi?UN=%s&record_id=%d&reset_curid=yes&anything=>%s</a>", pstPageInfo->encry, pstPageInfo->stUserInput.cur_id,search(lLicense,"portal_reset_id")  );
-				}
-				 fprintf( cgiOut, "</td></tr>\n" );
-
-			 		  	fprintf(cgiOut,	"<tr height=30>\n"\
-			        			"<td width=105 id=tdprompt>%s:</td>",search(lsystem,"user_na"));
-			 			if( 0 == pstPageInfo->stUserInput.cur_id_state && 0 == pstPageInfo->iUserGroup )//为0表示这个还没有被设置
-        				{
-        					fprintf(cgiOut,"<td><input type=text name=a_name size=20></td>");
-			 			}
-			  			else
-			  			{
-			  				if( pstPageInfo->stUserInput.reset_cur_id == 1 && 0 == pstPageInfo->iUserGroup )
-			  					fprintf(cgiOut,"<td><input type=text name=a_name value=\"%s\" size=20></td>", pstPageInfo->stUserInput.username);
-			  				else
-								fprintf(cgiOut,"<td><input type=text name=a_name value=\"%s\" disabled size=20></td>", pstPageInfo->stUserInput.username);
-			  			}
-						fprintf(cgiOut,"</tr>\n"\
-        		  					"<tr height=30>\n"\
-        							"<td id=tdprompt>%s:</td>",search(lsystem,"password"));
-		  				if(  0 == pstPageInfo->stUserInput.cur_id_state && 0 == pstPageInfo->iUserGroup)
-        				{
-        					fprintf(cgiOut,"<td><input type=password name=a_pass1 size=21></td>\n");
-        		
-				  		}
-						else		   		
-		   				{
-		   					if( 1 == pstPageInfo->stUserInput.reset_cur_id && 0 == pstPageInfo->iUserGroup )
-		   						fprintf(cgiOut,"<td><input type=password name=a_pass1 size=21 /></td>\n");
-		   					else
-		   						fprintf(cgiOut,"<td><input type=password name=a_pass1 disabled size=21 /></td>\n");
-					 	}
-		 fprintf(cgiOut,"</tr>\n"\
-        		  "<tr height=30>\n"\
-        			"<td id=tdprompt>%s:</td>",search(lsystem,"con_pass"));
-		 if(  0 == pstPageInfo->stUserInput.cur_id_state && 0 == pstPageInfo->iUserGroup )
-        {
-        fprintf(cgiOut,"<td width=140><input type=password name=a_pass2  size=21></td>\n");
-		 	}
-		 else
-		 	{
-		 		if( 1 == pstPageInfo->stUserInput.reset_cur_id && 0 == pstPageInfo->iUserGroup )
-		 			fprintf(cgiOut,"<td width=140><input type=password name=a_pass2 size=21 /></td>\n");
-		 		else
-		 			fprintf(cgiOut,"<td width=140><input type=password disabled name=a_pass2 size=21 /></td>\n");
-		 	}
-		fprintf(cgiOut,"</tr>\n"\
-        		  "<tr height=30>\n"\
-        			"<td id=tdprompt>%s:</td>\n",search(lLicense,"host_ip"));
-      	fprintf(cgiOut,"<td width=160>\n"\
-	  			        "<div style=\"border-width:1;border-color:#a5acb2;border-style:solid;width:160;font-size:9pt\">\n");
-		if(  0 == pstPageInfo->stUserInput.cur_id_state && 0 == pstPageInfo->iUserGroup )
-		{
-	  		fprintf(cgiOut,"<input type=text   name=ip1 value=\"\"  maxlength=3 class=a3 onKeyUp=\"mask(this,'%s');\" onbeforepaste=mask_c() />.\n",search(lLicense,"ip_error")); 
-	  	    fprintf(cgiOut,"<input type=text  name=ip2 value=\"\" maxlength=3 class=a3 onKeyUp=\"mask(this,'%s');\" onbeforepaste=mask_c() />.\n" ,search(lLicense,"ip_error"));
- 		    fprintf(cgiOut,"<input type=text  name=ip3 value=\"\" maxlength=3 class=a3 onKeyUp=\"mask(this,'%s');\" onbeforepaste=mask_c() />.\n",search(lLicense,"ip_error"));
-		    fprintf(cgiOut,"<input type=text  name=ip4 value=\"\" maxlength=3 class=a3 onKeyUp=\"mask(this,'%s');\" onbeforepaste=mask_c() />\n",search(lLicense,"ip_error"));
-		}
-		else
-		{
-			if( 1 == pstPageInfo->stUserInput.reset_cur_id && 0 == pstPageInfo->iUserGroup )
-			{
-				fprintf(cgiOut,"<input type=text name=ip1 value=\"%s\"  maxlength=3 class=a3 onKeyUp=\"mask(this,'%s');\" onbeforepaste=mask_c() />.\n",pstPageInfo->stUserInput.ip1,search(lLicense,"ip_error")); 
-		  	    fprintf(cgiOut,"<input type=text name=ip2 value=\"%s\" maxlength=3 class=a3 onKeyUp=\"mask(this,'%s');\" onbeforepaste=mask_c() />.\n" ,pstPageInfo->stUserInput.ip2,search(lLicense,"ip_error"));
-	 		    fprintf(cgiOut,"<input type=text name=ip3 value=\"%s\" maxlength=3 class=a3 onKeyUp=\"mask(this,'%s');\" onbeforepaste=mask_c() />.\n",pstPageInfo->stUserInput.ip3,search(lLicense,"ip_error"));
-			    fprintf(cgiOut,"<input type=text name=ip4 value=\"%s\" maxlength=3 class=a3 onKeyUp=\"mask(this,'%s');\" onbeforepaste=mask_c() />\n",pstPageInfo->stUserInput.ip4,search(lLicense,"ip_error"));
-			}
-			else
-			{
-				fprintf(cgiOut,"<input type=text disabled name=ip1 value=\"%s\"  maxlength=3 class=a3 onKeyUp=\"mask(this,'%s');\" onbeforepaste=mask_c() />.\n",pstPageInfo->stUserInput.ip1,search(lLicense,"ip_error")); 
-		  	    fprintf(cgiOut,"<input type=text disabled name=ip2 value=\"%s\" maxlength=3 class=a3 onKeyUp=\"mask(this,'%s');\" onbeforepaste=mask_c() />.\n" ,pstPageInfo->stUserInput.ip2,search(lLicense,"ip_error"));
-	 		    fprintf(cgiOut,"<input type=text disabled name=ip3 value=\"%s\" maxlength=3 class=a3 onKeyUp=\"mask(this,'%s');\" onbeforepaste=mask_c() />.\n",pstPageInfo->stUserInput.ip3,search(lLicense,"ip_error"));
-			    fprintf(cgiOut,"<input type=text disabled name=ip4 value=\"%s\" maxlength=3 class=a3 onKeyUp=\"mask(this,'%s');\" onbeforepaste=mask_c() />\n",pstPageInfo->stUserInput.ip4,search(lLicense,"ip_error"));
-			}
-			
-		}
-			fprintf(cgiOut,"</div>\n"\
-						"</td>\n"\
-        		  "</tr>\n" );
-        	if( strcmp(pstPageInfo->stUserInput.port,"default") == 0 )
-        	{
-        		strcpy( pstPageInfo->stUserInput.port, "" );	
-        	}
-			fprintf( cgiOut, "<tr><td>%s</td><td><input type=text name=portal_port maxlength=5 value='%s' %s><font color=red>(%s)</font></td></tr>",search(lLicense,"server_port"),pstPageInfo->stUserInput.port, 
-						((!(0 == pstPageInfo->stUserInput.cur_id_state && 0 == pstPageInfo->iUserGroup))&&(!(1 == pstPageInfo->stUserInput.reset_cur_id && 0 == pstPageInfo->iUserGroup)))?"disabled":"", search(lLicense,"enmpty_default_port"));
-			fprintf(cgiOut,"<tr>");
-
+	
 /****************************************************************************************************
 		add by shaojunwu     2008-9-4 17:50:01
 		for get  interface information
 *********************************************************************************************************/	
+    fprintf(cgiOut,"<tr height=30 valign=top>");
+	fprintf(cgiOut,"<td width=200 valign>%s</td>",search(lLicense,"plot_idz"));
+	fprintf(cgiOut,"<td width=450><select name=plotid onchange=plotid_change(this)>");
+	for (pq=paraHead1;(NULL != pq);pq=pq->next)
+	{
+		memset(temp,0,sizeof(temp));
+		snprintf(temp,sizeof(temp)-1,"%d-%d-%d",pq->parameter.slot_id,pq->parameter.local_id,pq->parameter.instance_id);
+		fprintf(stderr, "-----------------------------------------------------temp=%s\n", temp);
+		if (strcmp(plotid, temp) == 0)
+			fprintf(cgiOut,"<option value='%s' selected>%s</option>\n",temp,temp);
+		else	       
+			fprintf(cgiOut,"<option value='%s'>%s</option>\n",temp,temp);
+	}
+	fprintf(cgiOut,"</select></td>");
+	fprintf(cgiOut,"</tr>\n" );
+	fprintf(cgiOut,"<script type=text/javascript>\n");
+   	fprintf(cgiOut,"function plotid_change( obj )\n"\
+   	"{\n"\
+   	"var plotid = obj.options[obj.selectedIndex].value;\n"\
+   	"var url = 'wp_user_portal.cgi?UN=%s&plotid='+plotid;\n"\
+   	"window.location.href = url;\n"\
+   	"}\n", pstPageInfo->encry);
+    fprintf(cgiOut,"</script>\n" );
+	
+	fprintf(cgiOut,"<tr>");
+	fprintf(cgiOut,"<td width=200>%s</td>\n", search(lLicense,"interface") );
+	fprintf(cgiOut,"<td width=450><select name=inf_str>");
+	infi  interf;
+	interface_list_ioctl (0,&interf);
+	char dupinf[20] = {0};
+	infi * q ;
+	q = interf.next;
+	while(q)
+	{
+	    memset(dupinf,0,sizeof(dupinf));
+		if(NULL != q->next)
+		{
+			strcpy(dupinf,q->next->if_name);
+		}
+		if( !strcmp(q->if_name,"lo") )
+		{
+			q = q->next;
+			continue;
+		}
+		if( !strcmp(q->if_name,dupinf) )
+		{
+			q = q->next;
+			continue;
+		}
+        fprintf(cgiOut,"<option value=%s>%s</option>",q->if_name,q->if_name);		
+		q = q->next;
+	}
+    free_inf(&interf);
+	fprintf(cgiOut,"</select></td>");
+	fprintf(cgiOut,"</tr>\n" );
 
+	fprintf(cgiOut,"<tr><td colspan=2><div class=usrlis><table>");
+	
+	fprintf(cgiOut,"<tr height=30 align=left bgcolor=#eaeff9>");
+	fprintf(cgiOut,"<th width=100>Index</th>");
+	fprintf(cgiOut,"<th width=150>%s</th>",search(lLicense,"interface"));
+	fprintf(cgiOut,"<th width=100>&nbsp;</th>");
+	fprintf(cgiOut,"</tr>");
 
-			fprintf( cgiOut, "<td>%s</td><td>\n", search(lLicense,"interface") );
-			fprintf( cgiOut,"<div class=dhcplis>");
-			fprintf( cgiOut, "\n<script type='text/javascript'>\n" );
-				fprintf( cgiOut, "ifinfo.showAllIfInfo();\n" );
-				//fprintf( cgiOut, "alert( 'after show if' );\n" );
-//根据文件 设置选中的interface
+	ret = eag_get_captive_intfs(ccgi_connection, parameter.local_id,
+						parameter.instance_id, &captive_intfs);
 
-				if( 1 == pstPageInfo->stUserInput.cur_id_state && strlen( pstPageInfo->stUserInput.if_info ) > 0 )
-				{
-					char *iface;
-					
-					fprintf( cgiOut, "document.getElementsByName( 'inputinterface' )[0].value = '%s'+',';\n", pstPageInfo->stUserInput.if_info );
-					//fprintf( cgiOut, "alert( document.getElementsByName( 'inputinterface' )[0].value );\n" );
-					iface = strtok( pstPageInfo->stUserInput.if_info, "," );
-					while( iface )
-					{
-						fprintf( cgiOut, "document.getElementById( 'interface%s' ).checked = 'checked';\n", iface );
-						iface = strtok( NULL, "," );
-					}
-					
-					//所有的checkbox都不能选择
-					if( 1 != pstPageInfo->stUserInput.reset_cur_id  || pstPageInfo->iUserGroup != 0 )
-					{
-						fprintf( cgiOut, "var ifCheckBoxs = document.getElementsByName( 'interfacecheckbox' );\n"\
-							"	for( var j=0;j < ifCheckBoxs.length; j++ ){\n"\
-							"	ifCheckBoxs[j].disabled = true;\n"\
-							"}\n" );
-					}
-#if 0					
-					else
-					{
-						fprintf( cgiOut, "var ifCheckBoxs = document.getElementsByName( 'interfacecheckbox' );\n"\
-							"	for( var j=0;j < ifCheckBoxs.length; j++ ){\n"\
-							"	ifCheckBoxs[j].disabled = false;\n"\
-							"}\n" );
-					}
-#endif					
-				}
-				fprintf( cgiOut, "</script>\n");
-					
-				fprintf( cgiOut, "</div></td></tr><tr>\n" );
+	if( EAG_RETURN_OK == ret )
+	{
+		if( captive_intfs.curr_ifnum > 0 )
+		{
+			for( i=0; i < captive_intfs.curr_ifnum; i++ )
+			{						
+				memset(menu,0,21);
+				strcpy(menu,"menulist");
+				sprintf(i_char,"%d",i+1);
+				strcat(menu,i_char);
+
+				fprintf(cgiOut,"<tr align=left bgcolor=%s>", setclour(cl));
+				fprintf(cgiOut,"<td>%d</td>",i+1);
+				fprintf(cgiOut,"<td>%s</td>",captive_intfs.cpif[i]);
+				fprintf(cgiOut,"<td>");
+				fprintf(cgiOut, "<div style=\"position:relative; z-index:%d\" onmouseover=\"popMenu('%s');\" onmouseout=\"popMenu('%s');\">",(10240-i),menu,menu);
+				fprintf(cgiOut, "<img src=/images/detail.gif>"\
+				"<div id=%s style=\"display:none; position:absolute; top:5px; left:0;\">",menu);
+				fprintf(cgiOut, "<div id=div1>");
+				fprintf(cgiOut, "<div id=div2 onmouseover=\"this.style.backgroundColor='#b6bdd2'\" onmouseout=\"this.style.backgroundColor='#f9f8f7'\"><a id=link href=wp_user_portal.cgi?UN=%s&DELRULE=delete&INF=%s target=mainFrame>%s</a></div>", pstPageInfo->encry, captive_intfs.cpif[i],search(lpublic,"delete"));
+				fprintf(cgiOut, "</div>"\
+				"</div>"\
+				"</div>");
+				fprintf(cgiOut,"</td>");
+				fprintf(cgiOut,"</tr>");
+				cl = !cl;
+			}
+		}
+	}
+
+	fprintf(cgiOut,"</table></div></td></tr>");
 /*********************************************************************************************
 		end of add by shaojunwu
 
 *********************************************************************************************/
 
-        		fprintf(cgiOut,"<td colspan=3><input type=hidden name=UN value=%s></td>",pstPageInfo->encry);
-
-        		  fprintf(cgiOut,"</tr></tr></table>");
+	fprintf(cgiOut,"<input type=hidden name=UN value=%s>",pstPageInfo->encry);
+	fprintf(cgiOut,"<input type=hidden name=plotid value=%s>",plotid);
+	fprintf(cgiOut,"</tr></table>");
 
 	fprintf(cgiOut,"</td>\n"\
 		  "</tr>\n"\
@@ -796,176 +473,8 @@ fprintf( cgiOut, "							document.write( '<input type=checkbox id=' + _name + th
 
 fprintf( cgiOut, "</html>");
 
-if( 1 == pstPageInfo->stUserInput.reset_cur_id )
-{
-	del_portal( pstPageInfo->stUserInput.cur_id );
-}
+free_instance_parameter_list(&paraHead1);
 
 
 return 0;
 }
-
-int getInterfaceNum()
-{
-	int iRet = 0;
-	char buf_if_line[256];
-	
-	FILE* ifInfo = popen( "cp_if_info.sh", "r" );
-#if 1
-	memset( buf_if_line, 0, sizeof(buf_if_line) );
- 	while( fgets(buf_if_line,sizeof(buf_if_line),ifInfo) )
-	{
-		if( strlen( buf_if_line ) > 0 )
-		{
-			iRet++;
-		}
-		memset( buf_if_line, 0, sizeof(buf_if_line) );
-	}
-#endif					
-	pclose(ifInfo);
-	
-	return iRet;
-}
-
-void portal_conf(struct list *lLicense,struct list *lsystem, int cur_id )
-{
-  char name[N],pass1[N],pass2[N];    
-  char ip1[4],ip2[4],ip3[4],ip4[4];
-  char ip[16];
-  char port[16]="";
-    int rec;
-    int ret;
-    
-  memset(name,0,N);					 /*清空临时变量*/
-  memset(pass1,0,N);
-  memset(pass2,0,N);
-  char interfaces[65536];
-  char *command1 = (char*)malloc(PATH_LENG);
-  char *command2 = (char*)malloc(PATH_LENG);
-  memset(command1,0,PATH_LENG);
-  memset(command2,0,PATH_LENG);
-  cgiFormStringNoNewlines("a_name",name,N);
-  cgiFormStringNoNewlines("a_pass1",pass1,N);
-  cgiFormStringNoNewlines("a_pass2",pass2,N);
-  cgiFormStringNoNewlines("ip1",ip1,N);
-  cgiFormStringNoNewlines("ip2",ip2,N);
-  cgiFormStringNoNewlines("ip3",ip3,N);
-  cgiFormStringNoNewlines("ip4",ip4,N);
-  cgiFormStringNoNewlines("portal_port",port,sizeof(port));  
-  cgiFormStringNoNewlines("inputinterface",interfaces,sizeof(interfaces));
-  //去掉interface最后的‘,’
-  if( interfaces[strlen(interfaces)-1] == ',' )
- 	interfaces[strlen(interfaces)-1] = '\0';
-  
-  strcpy(ip,ip1);
-  strcat(ip,".");
-  strcat(ip,ip2);
-  strcat(ip,".");
-  strcat(ip,ip3);
-  strcat(ip,".");
-  strcat(ip,ip4);
-  //fprintf(cgiOut,"%s,%s,%s,%s",name,pass1,pass2,ip);
-//  sprintf(command1,"cp_create_profile.sh %d ", cur_id );
-//  strcat(command1,ip);
-//  strcat(command1," ");
-//  strcat(command1,name);
-//  strcat(command1," ");
-//  strcat(command1,pass1);
-	sprintf( command1,"sudo cp_create_profile.sh %d %s %s %s %s >/dev/null 2>&1", 
-							cur_id, ip, (port[0])?port:"default",name, pass1 );
-  //当设置一个大于65535的端口时，将使用默认端口。
-  //当port大于65535时不使用端口，针对eag修改的脚本。
-
-	
-  rec = system(command1);
- 	ret = WEXITSTATUS(rec);
-
-	switch( ret )
-	{
-		case 0:
-			break;
-		case 3:
-			ShowAlert( search(lLicense,"portal_err_used_id") );
-			break;
-		case 4:
-			ShowAlert( search(lLicense,"portal_err_ip") );
-			break;
-		case 5:
-			ShowAlert( search(lLicense,"portal_err_used_user") );
-			break;
-		case 1:
-		case 2:
-		default:
-			ShowAlert( search(lLicense,"portal_err_undefine") );
-			break;
-	}
-	if( 0 != rec )
-		return;
-
- sprintf(command2,"sudo cp_apply_if.sh %d %s >/dev/null 2>&1", cur_id, interfaces );
- 
-// strcat(command2,interfaces);	
-
- 
-  rec = system(command2);
-  ret = WEXITSTATUS(rec);
-  if(rec == 0)
-  {
-	ShowAlert(search(lLicense,"log_suc"));
-  }
-  else
-  {
-  	ShowAlert(search(lLicense,interfaces));
-	 ShowAlert(search(lLicense,"log_err"));
-  }
-
-
-}
-
-int del_portal( int id )
-{
-	char command[256];
-	
-	sprintf( command, "sudo cp_del_portal_id.sh %d", id );
-	
-	int status = system(command); 	 
-	int ret = WEXITSTATUS(status);	
-	
-	return ret;
-}
-
-
-int getRecordById( int id, char *record, int len )
-{
-	FILE *db;
-	
-	db= fopen( PROFILE_PATH,"r");
-	
-	if( NULL == record )
-		return 0;
-	
-	if( id < 0 || id > 7 )
-	{
-		return 0;
-	}
-	
-	if( NULL == db )
-	{
-		*record = 0;
-		return 0;	
-	}
-	
-	while( fgets( record, len, db ) )
-	{
-		if( id == record[0]-'0' )
-		{
-			fclose( db );
-			return 1;
-		}
-	}
-	
-	*record = 0;
-	fclose( db );
-	return 0;
-}
-

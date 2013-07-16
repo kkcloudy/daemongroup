@@ -1442,7 +1442,7 @@ parse_failover_peer_no_file
 		log_fatal ("no memory for peer name %s", name);
 	strcpy (name, val);
 
-	log_debug("parse_failover_peer_no_file name is %s \n", name);
+	log_debug_failover(DEBUG_TYPE_CONNECT,"parse_failover_peer_no_file name is %s \n", name);
 	/* See if there's a peer declaration by this name. */
 	peer = (dhcp_failover_state_t *)0;
 	find_failover_peer (&peer, name, MDL);
@@ -1487,7 +1487,7 @@ parse_failover_peer_no_file
 	do {
 		/*case PRIMARY:*/
 		peer->i_am = conf->primary;
-		log_debug("%s failover %s state is %s\n", __func__, peer->name , peer->i_am ? "secondary" : "primary");
+		log_debug_failover(DEBUG_TYPE_CONNECT,"%s failover %s state is %s\n", __func__, peer->name , peer->i_am ? "secondary" : "primary");
 
 	     /* case ADDRESS:*/
 		expr = (struct expression *)0;
@@ -1534,7 +1534,7 @@ parse_failover_peer_no_file
 			if (split > 255) {
 				log_error("split must be < 256 \n");
 			} else {
-			log_debug("failoverrrrr split is %d \n", split);
+			log_debug_failover(DEBUG_TYPE_CONNECT,"failoverrrrr split is %d \n", split);
 				
 				for (i = 0; i < split; i++) {
 					if (i < split)

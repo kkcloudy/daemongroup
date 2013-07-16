@@ -170,8 +170,13 @@ static void
 manage_init_log(void) {
 	openlog("acmanage", LOG_PID, LOG_DAEMON);
 	manage_log(LOG_INFO, "acmanage log on!\n" );
-	setlogmask(LOG_ON_INFO);
+#if 1
+	setlogmask(LOG_ON_DEBUG);
 	manage_debug_config(MANAGE_LOG_DEBUG_ON);
+#else
+	setlogmask(LOG_ON_INFO);
+	manage_debug_config(MANAGE_LOG_DEBUG_OFF);
+#endif
 }
 
 static void

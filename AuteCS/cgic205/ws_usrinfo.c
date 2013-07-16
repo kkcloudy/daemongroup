@@ -1696,6 +1696,26 @@ int ccgi_passwd_max_error(int time)
 	ret = WEXITSTATUS(status);
 	return ret ;
 }
+
+int ccgi_no_passwd_max_error()
+{	
+	int ret = 0;
+	int status = 0;
+	char cmd[128] = {0};
+	char modstr[128] = {0};
+	sprintf(modstr,"'no passwd max error'");
+	sprintf(cmd,"source vtysh_start.sh >/dev/null 2>&1\n"
+						"vtysh -c %s",modstr);
+
+	if(strchr(cmd,';'))
+	{
+		return -1;
+	}
+	status = system(cmd);
+	ret = WEXITSTATUS(status);
+	return ret ;
+}
+
 int ccgi_passwd_min_length(int time)
 {
 	int ret = 0;
@@ -2106,3 +2126,409 @@ int get_timeout_threshold()
 	}
 	return timeout;
 }
+
+static int passwdlen = 4;
+static int passwdmaxlen = 32;
+static int strongpasswd = 0;
+static int passwdalivetime = 90;
+static int passwmaxerrtimes = 3;
+static int passwdunreplytimes = 3;
+
+static int ccgi_user_name_check(char* name)
+{
+	int i = 0;
+	int len ;
+	char tmp;
+	if(!name)
+		return 1;
+	len = strlen(name);
+	if(len < 4 || len > 32)
+		return 2;
+	tmp = *name;
+	if(!(tmp>='a' && tmp<='z')&&!(tmp>='A' &&tmp<='Z'))
+		return 3;
+	for(i = 0;i<len ;i++)
+	{
+		tmp = *(name+i);
+		if(tmp == '_' || (tmp>='0' && tmp<='9')||(tmp>='a' &&tmp<='z')||(tmp>='A' &&tmp<='Z'))
+		{
+			continue;
+		}
+		else
+		{
+			return 1;
+		}
+	}
+	return 0;	
+}
+
+static void set_file_attr(char* filename)
+{
+	char cmd[64];
+	sprintf(cmd,"sudo chmod 777 %s  >/dev/NULL",filename);
+ 
+}
+
+static int get_pwd_unrepeat_setting()
+{
+	FILE* fp = NULL;
+	char buf[512]={0};
+	char t_buf[512];
+	char *t_str=NULL;
+	int minlen=0,difok=0,dcredit=0,ucredit=0,lcrecit=0;
+	
+
+	set_file_attr(CONPWDSYSSETTING);
+	fp = fopen(CONPWDSYSSETTING, "r");
+	strongpasswd =0;
+	
+	if(NULL == fp) {
+		
+		return 0;
+	}
+	else 
+	{
+	/* password   required   pam_unix.so nullok md5 remember=2  obscure min=6*/
+		while(fgets(buf,512,fp))
+		{
+		
+			if(buf[0] == '#')
+				continue;
+			else if(2==sscanf(buf,"password required pam_unix.so nullok md5 remember=%d min=%d debug",&passwdunreplytimes,&passwdlen))
+			{
+				continue;
+			}
+			else if(2==sscanf(buf,"password required pam_unix.so use_authtok nullok md5 remember=%d min=%d debug",&passwdunreplytimes,&passwdlen))
+			{
+				continue;
+			}
+			else if(5==sscanf(buf,"password required pam_cracklib.so minlen=%d difok=%d dcredit=%d ucredit=%d lcredit=%d debug",&minlen,&difok,&dcredit,&ucredit,&lcrecit))
+			{
+				strongpasswd =1;				
+				passwdlen = 6;
+			}
+			
+		}
+		
+		
+	}
+	fclose(fp);
+	return 1;
+	
+}
+
+static int get_pwd_err_setting(int* times)
+{
+	FILE* fp = NULL;
+	char buf[512]={0};
+	int getsetting = 0;
+
+	set_file_attr(CONPWDERRSETTINGFILE);
+
+	fp = fopen(CONPWDERRSETTINGFILE, "r");
+	if(NULL == fp) {
+		
+		return 1;
+	}
+	else 
+	{
+		while(fgets(buf,512,fp))
+		{
+			if(buf[0] == '#')
+				continue;
+			else if(1==sscanf(buf,"auth    required        pam_tally.so per_user deny=%d",times))
+			{
+				getsetting=1;
+				break;
+			}
+		}
+		fclose(fp);
+	}
+	if(getsetting)
+		return 0;
+	else
+		return 1;
+	
+}
+
+static int get_login_setting(int* maxdays)
+{
+	FILE* fp = NULL;
+	char buf[512]={0};
+	int getsetting = 0;
+	
+	set_file_attr(CONLOGINSETTINGFILE);
+
+	fp = fopen(CONLOGINSETTINGFILE, "r");
+	if(NULL == fp) {
+		return 1;
+	}
+	else 
+	{
+		while(fgets(buf,512,fp))
+		{
+			if(buf[0] == '#')
+				continue;
+			else if(1==sscanf(buf,"PASS_MAX_DAYS   %d",maxdays))
+			{
+				getsetting=1;
+				break;
+			}
+		}
+		fclose(fp);
+	}
+	if(getsetting)
+		return 0;
+	else
+		return 1;
+	
+}
+
+static int get_global_variable_status(void)
+{
+	
+	get_pwd_unrepeat_setting();
+	get_pwd_err_setting(&passwmaxerrtimes);
+	get_login_setting(&passwdalivetime);	
+
+	return 0;
+	
+}
+
+static char * str_lower(char *string)
+{
+	char *cp;
+
+	for (cp = string; *cp; cp++)
+		*cp = tolower(*cp);
+	return string;
+}
+
+static int simple(struct cracklib_options *opt,const char *new)
+{
+	int digits = 0;
+	int uppers = 0;
+	int lowers = 0;
+	int others = 0;
+	int size;
+	int i;
+
+	for (i = 0;new[i];i++) {
+	if (isdigit (new[i]))
+		digits++;
+	else if (isupper (new[i]))
+		uppers++;
+	else if (islower (new[i]))
+		lowers++;
+	else
+		others++;
+	}
+
+	if ((opt->dig_credit >= 0) && (digits > opt->dig_credit))
+	digits = opt->dig_credit;
+
+	if ((opt->up_credit >= 0) && (uppers > opt->up_credit))
+	uppers = opt->up_credit;
+
+	if ((opt->low_credit >= 0) && (lowers > opt->low_credit))
+	lowers = opt->low_credit;
+
+	if ((opt->oth_credit >= 0) && (others > opt->oth_credit))
+	others = opt->oth_credit;
+
+	size = opt->min_length;
+
+	if (opt->dig_credit >= 0)
+	size -= digits;
+	else if (digits < opt->dig_credit * -1)
+	return 1;
+
+	if (opt->up_credit >= 0)
+	size -= uppers;
+	else if (uppers < opt->up_credit * -1)
+	return 1;
+
+	if (opt->low_credit >= 0)
+	size -= lowers;
+	else if (lowers < opt->low_credit * -1)
+	return 1;
+
+	if (opt->oth_credit >= 0)
+	size -= others;
+	else if (others < opt->oth_credit * -1)
+	return 1;
+
+	if (size <= i)
+	return 0;
+
+	return 1;
+}
+
+static int palindrome(const char *new)
+{
+	int i, j;
+
+	i = strlen (new);
+
+	for (j = 0;j < i;j++)
+		if (new[i - j - 1] != new[j])
+			return 0;
+
+	return 1;
+}
+
+static int ccgi_user_passwd_check(char* username,char* passwd)
+{	
+	int ret = 0;	
+	int len ;
+	struct cracklib_options opt;
+	char *newmono = NULL;
+
+	if(!passwd)
+		return 6;
+	
+	get_global_variable_status();
+/*	newmono = (char *)malloc(LENGTH_PASS);*/
+	newmono = str_lower(x_strdup(passwd));
+	opt.min_length = passwdlen;	
+
+	len = strlen(passwd);
+	if(len < passwdlen || len > passwdmaxlen)
+	{
+		free(newmono);
+		return 4;
+	}
+	if(strongpasswd)
+	{
+		opt.up_credit = -1;
+		opt.low_credit = -1;
+		opt.dig_credit = -1;
+		if(username && (strcmp(username,passwd) == 0))
+		{
+			free(newmono);
+			return 3;
+		}		
+		if (simple(&opt, passwd))
+		{
+			free(newmono);
+			return 2;
+		}	
+
+		if (palindrome(newmono))
+		{	
+			free(newmono);
+			return 1;
+		}
+	}
+
+
+#if 0	
+	if(strongpasswd && !boot_flag)
+	{
+		if(pwd_reply_check(username,passwd)>0)
+		{
+			free(newmono);
+			return 5;		
+		}
+	}
+#endif	
+	free(newmono);
+	return 0;
+
+	
+	
+}
+
+
+/*user_name:4至32个字符，可使用字母、数字、"-"、"."，需以字母开头*/
+/*user_pwd:4至32个字符，必须包含字母、数字、其他字符，不能和user_name相同，不能是回文数*/
+int set_system_consolepwd_func1(char *user_name,char *user_pwd)/*返回0表示失败，返回1表示成功*/
+																			/*返回-1表示user name should be 'A'-'Z'  'a'-'z' '1'-'9'or '_'*/
+																		    /*返回-2表示user name length should be >=4 & <=32*/
+																			/*返回-3表示user name first char  should be 'A'-'Z' or 'a'-'z'*/
+																			/*返回-4表示user password is a palindrome*/	
+																			/*返回-5表示user password is too simple*/
+																			/*返回-6表示user password should be not same as username*/
+																			/*返回-7表示user password too short or too long*/
+																			/*返回-8表示user password length should be >= 4 && <=32*/
+{
+	if((NULL == user_name) || (NULL == user_pwd))
+		return 0;
+	
+	int ret;
+	char passwd[10];
+	char cmd[128];
+	char *p_pwd=NULL,*username=NULL;
+	int boot_flag = 0;
+
+	username=user_name;
+	p_pwd=user_pwd;
+	
+	if(username)
+	{
+		ret = ccgi_user_name_check(username);
+		if(ret == 1)
+		{
+			return -1;
+		}
+		else if(ret == 2)
+		{
+			return -2;
+		}
+		else if(ret == 3)
+		{
+			return -3;
+		}
+	}
+	if(username)
+		sprintf(cmd,"sudo set_console_pwd.sh %s",username);
+	else
+		sprintf(cmd,"sudo set_console_pwd.sh ");
+
+	if(!boot_flag)
+	{
+		sprintf(passwd,"normal");
+		ret = ccgi_user_passwd_check(username,p_pwd);
+		if(ret == 1)
+		{
+			return -4;
+		}	
+		else if(ret == 2)
+		{
+			return -5;
+		}
+ 		else if(ret == 3)
+		{
+			return -6;
+		}
+		else if(ret == 4)
+		{
+			return -7;
+		}
+		else if(ret == 5)
+		{
+			return -8;
+		}
+	}
+	else
+	{
+		sprintf(passwd,"security");
+	}
+	
+	sprintf(cmd,"%s \'%s\' %s",cmd,p_pwd,passwd);
+	system(cmd);
+	
+	return 1;
+}
+
+int no_system_consolepwd_func()
+{
+	char cmd[128] = {0};
+	sprintf(cmd,"sudo rm %s >> /dev/null 2> /dev/null","/etc/ttyS0pwd");
+	system(cmd);
+	sprintf(cmd,"sudo rm %s >> /dev/null 2> /dev/null","/etc/ttyS0usr");
+	system(cmd);
+	return 1;
+}
+
+

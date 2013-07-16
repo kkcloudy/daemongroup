@@ -2467,6 +2467,12 @@ enum npd_dbus_result_no_e {
 #define NPD_DBUS_TRUNK_METHOD_DELETE_DYNAMIC_TRUNK				"delete_dynamic_trunk"
 
 
+
+#define NPD_DBUS_TRUNK_METHOD_DYNAMIC_TRUNK_MAP_TABLE_UPDATE			"dynamic_trunk_map_table_update"
+
+
+#define NPD_DBUS_TRUNK_METHOD_DYNAMIC_TRUNK_DEL_MAP_TABLE			"dynamic_trunk_del_trunk_map_table"
+
 /*********************************************************************
  * npd_dbus_dynamic_trunk_add_delete_port_member
  * DESCRIPTION:
@@ -2824,6 +2830,7 @@ enum npd_dbus_result_no_e {
  *
  *********************************************************************/
 #define NPD_DBUS_DYNAMIC_TRUNK_METHOD_SHOW_TRUNK_MEMBER_LIST			  "show_dynamic_trunk_member_list"
+#define NPD_DBUS_DYNAMIC_TRUNK_METHOD_SHOW_TRUNK_VLAN_MEMBER_LIST			  "show_dynamic_trunk_vlan_member_list"
 /*****************************************************************************
  *npd_dbus_dynamic_trunk_show_dynamic_trunk_hardware_information
  *
@@ -6961,6 +6968,8 @@ enum npd_dbus_result_no_e {
  *		unit16	regvalue  -value
 *****************************************************************/
 #define NPD_DBUS_SYSTEM_DIAGNOSIS_XAUI_PHY_HW_RW_REG	"Diagnosis_xaui_phy_hw_rw_reg"
+
+#define NPD_DBUS_SYSTEM_DIAGNOSIS_SET_AP_FAKE_SINGAL_STRENGTH	"Diagnosis_set_ap_fake_singal_strength"
 
 
 /*****************************************************************

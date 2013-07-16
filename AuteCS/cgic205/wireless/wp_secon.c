@@ -268,22 +268,31 @@ int ShowSecurityConfigPage(char *m,char *n,char *t,char *r,char *exten,char *pn,
 					  "<td align=left id=tdleft><a href=wp_cer_dload.cgi?UN=%s target=mainFrame class=top><font id=%s>%s</font></a></td>",m,search(lpublic,"menu_san"),search(lpublic,"cer_up"));                       
                     fprintf(cgiOut,"</tr>");
 					
-				  if((strcmp(n,"802.1x")==0)||(strcmp(n,"WPA_E")==0)||(strcmp(n,"MD5")==0))
-				  	limit=26;
-				  else if(strcmp(n,"WPA2_E")==0)
+				  if(strcmp(n,"802.1x")==0)
 				  	limit=29;
+				  else if(strcmp(n,"MD5")==0)
+				  	limit=24;
+				  else if (strcmp(n,"WPA_E")==0)
+				  	limit=30;
+				  else if(strcmp(n,"WPA2_E")==0)
+				  	limit=32;
 				  else if((strcmp(n,"WPA_P")==0)||(strcmp(n,"WPA2_P")==0))
-				  	limit=5;
+				  	limit=6;
 				  else if(strcmp(n,"open")==0)
-				  	limit=8;
+				  {
+					  limit=4;
+					  if(strcmp(r,"WEP")==0)
+				  		limit+=5;
+				  }
+				  else if(strcmp(n,"WAPI_PSK")==0)
+				  	limit=7;
+				  else if(strcmp(n,"WAPI_AUTH")==0)
+				  	limit=16;
 				  else
-				  	limit=8;
+				  	limit=9;
+				  
 				  if(((strcmp(n,"open")==0)||(strcmp(n,"shared")==0))&&(strcmp(exten,"1")==0))
 					limit+=21;	
-				  if(strcmp(n,"WAPI_PSK")==0)
-				  	limit+=1;
-				  if(strcmp(n,"WAPI_AUTH")==0)
-				  	limit+=11;
                   for(i=0;i<limit;i++)
 	              {
   				    fprintf(cgiOut,"<tr height=25>"\
@@ -372,13 +381,13 @@ int ShowSecurityConfigPage(char *m,char *n,char *t,char *r,char *exten,char *pn,
 					  	       fprintf(cgiOut,"<td width=170 id=sec3>");					  	
          					   if(strcmp(r,"WEP")==0)
 							   { 
-         					     fprintf(cgiOut,"<input type=radio name=encry_type value=none onclick=\"showTR(mytr,mytr2)\">none"\
-         						 "<input type=radio name=encry_type value=WEP checked=checked onclick=\"showTR(mytr,mytr2)\">WEP");
+         					     fprintf(cgiOut,"<input type=radio name=encry_type value=none onclick=\"showTR(mytr,mytr2);javascript:this.form.submit();\">none"\
+         						 "<input type=radio name=encry_type value=WEP checked=checked onclick=\"showTR(mytr,mytr2);javascript:this.form.submit();\">WEP");
          					   }          					   
          					   else	  /*默认是none*/    			      
          					   {
-         					     fprintf(cgiOut,"<input type=radio name=encry_type value=none checked=checked onclick=\"showTR(mytr,mytr2)\">none"\
-         						 "<input type=radio name=encry_type value=WEP onclick=\"showTR(mytr,mytr2)\">WEP");
+         					     fprintf(cgiOut,"<input type=radio name=encry_type value=none checked=checked onclick=\"showTR(mytr,mytr2);javascript:this.form.submit();\">none"\
+         						 "<input type=radio name=encry_type value=WEP onclick=\"showTR(mytr,mytr2);javascript:this.form.submit();\">WEP");
          					   }     			      
                			       fprintf(cgiOut,"</td>"\
 							   "</tr>"\
@@ -555,19 +564,38 @@ int ShowSecurityConfigPage(char *m,char *n,char *t,char *r,char *exten,char *pn,
             "</td>"\
            "</tr>");
 		   /************************************  security index  ******************************/ 
-		   fprintf(cgiOut,"<tr style=padding-top:20px>"\
-                "<td colspan=2><table width=300 border=0 cellspacing=0 cellpadding=0>"\
-              "<tr>"\
-                "<td id=sec1 colspan=3 style=\"border-bottom:2px solid #53868b\">%s</td>","security index");
-                fprintf(cgiOut,"</tr>"\
-              "<tr height=20 style=padding-top:10px>"\
-                "<td width=130 id=sec2>Security Index:</td>"\
-				"<td width=100><input type=text name=security_index size=11 maxLength=1 onkeypress=\"return event.keyCode>=48&&event.keyCode<=57\"></td>");
-				fprintf(cgiOut,"<td width=70 align=left><font color=red>(1--4)</font></td>"\
-              "</tr>"\
-              "</table>"\
-               "</td>"\
-            "</tr>");
+		   if(((0 == sectypeChoice)&&(strcmp(r,"WEP")==0))||(1 == sectypeChoice)||(2 == sectypeChoice))
+		   {
+			    fprintf(cgiOut,"<tr style=padding-top:20px>"\
+					"<td colspan=2><table width=300 border=0 cellspacing=0 cellpadding=0>"\
+				  "<tr>"\
+					"<td id=sec1 colspan=3 style=\"border-bottom:2px solid #53868b\">%s</td>","security index");
+					fprintf(cgiOut,"</tr>"\
+				  "<tr height=20 style=padding-top:10px>"\
+					"<td width=130 id=sec2>Security Index:</td>"\
+					"<td width=100><input type=text name=security_index size=11 maxLength=1 onkeypress=\"return event.keyCode>=48&&event.keyCode<=57\"></td>");
+					fprintf(cgiOut,"<td width=70 align=left><font color=red>(1--4)</font></td>"\
+				  "</tr>"\
+				  "</table>"\
+				   "</td>"\
+				"</tr>");
+		   }
+			if((strcmp(n,"WPA_E")==0)||(strcmp(n,"WPA_P")==0)||(strcmp(n,"WPA2_E")==0)||(strcmp(n,"WPA2_P")==0))
+			{
+				fprintf(cgiOut,"<tr style=padding-top:20px>"\
+	                "<td colspan=2><table width=300 border=0 cellspacing=0 cellpadding=0>"\
+	              "<tr>"\
+	                "<td id=sec1 colspan=3 style=\"border-bottom:2px solid #53868b\">%s</td>",search(lsecu,"wpa_group_rekey_period"));
+	                fprintf(cgiOut,"</tr>"\
+	              "<tr height=20 style=padding-top:10px>"\
+	                "<td width=130 id=sec2>%s:</td>",search(lsecu,"wpa_group_rekey_period"));
+					fprintf(cgiOut,"<td width=100><input type=text name=wpa_group_rekey_period size=11 maxLength=5 onkeypress=\"return event.keyCode>=48&&event.keyCode<=57\"></td>"\
+					"<td width=70 align=left><font color=red>(0--86400)</font></td>"\
+	              "</tr>"\
+	              "</table>"\
+	               "</td>"\
+	            "</tr>");
+			}
 		   /********************************  extensible authentication  *************************/ 
 			  if((strcmp(n,"open")==0)||(strcmp(n,"shared")==0))
 			  {
@@ -855,6 +883,36 @@ int ShowSecurityConfigPage(char *m,char *n,char *t,char *r,char *exten,char *pn,
                "</tr>");
 			  if((strcmp(n,"open")==0)||(strcmp(n,"shared")==0))
 			   fprintf(cgiOut,"</table></td></tr>");
+			 }
+			 /*****************************  set asd rdc  ****************************/ 
+			 if((strcmp(n,"802.1x")==0)||(strcmp(n,"WPA_E")==0)||(strcmp(n,"WPA2_E")==0))
+			 {
+				fprintf(cgiOut,"<tr style=padding-top:20px>"\
+                "<td colspan=2>"\
+                "<table width=300 border=0 cellspacing=0 cellpadding=0>"\
+				"<tr>"\
+				  "<td id=sec1 colspan=2 style=\"border-bottom:2px solid #53868b\">%s</td>",search(lsecu,"asd_rdc"));
+				  fprintf(cgiOut,"</tr>"\
+				"<tr height=20 style=padding-top:10px>"\
+				  "<td width=130 id=sec2>%s:</td>",search(lsecu,"asd_rdc"));
+				  fprintf(cgiOut,"<td width=170><select name=asd_rdc_slot id=asd_rdc_slot style=width:40px>"\
+				  		  "<option value=>");
+					  for(i=1; i<SLOT_MAX_NUM+1; i++)
+					  {
+						  fprintf(cgiOut,"<option value=%d>%d",i,i);
+					  }
+				  fprintf(cgiOut,"</select>-"\
+				  "<select name=asd_rdc_ins id=asd_rdc_ins style=width:40px>"\
+				  		  "<option value=>");
+					  for(i=1; i<INSTANCE_NUM+1; i++)
+					  {
+						  fprintf(cgiOut,"<option value=%d>%d",i,i);
+					  }
+				  fprintf(cgiOut,"</select></td>"\
+				"</tr>"\
+				"</table>"\
+            	  "</td>"\
+                "</tr>");
 			 }
 			 /*****************************  config wapi as ****************************/ 
 			 if(strcmp(n,"WAPI_AUTH")==0)
@@ -1289,6 +1347,7 @@ void Config_Security(instance_parameter *ins_para,char *id,char *secu_type,struc
 	char secu_key[70] = { 0 };           /*security key*/
 	char exten_type[5] = { 0 };          /*extensible authentication type*/
 	char security_index[5] = { 0 };				 /*security index*/
+	char wpa_group_rekey_period[10] = { 0 };
 	char alt[100] = { 0 };
     char max_sec_num[10] = { 0 };
 	char radius_type[5] = { 0 };         /*radius server type*/
@@ -1296,6 +1355,8 @@ void Config_Security(instance_parameter *ins_para,char *id,char *secu_type,struc
 	char acct_interim[10] = { 0 };       /*acct interim interval*/
 	char eap[20] = { 0 };               /*eap reauth period*/
 	char quiet_period[10] = { 0 };      /*quiet period*/
+	char asd_rdc_slot[5] = { 0 };
+	char asd_rdc_ins[5] = { 0 };
 	int acct_Time = 0;
 	long int eap_time = 0;
 	char as_ip[20] = { 0 };
@@ -1594,6 +1655,73 @@ void Config_Security(instance_parameter *ins_para,char *id,char *secu_type,struc
 			    }
 		case -8:{
 				  ShowAlert(search(lpublic,"input_exceed_max_value"));
+				  flag=0;
+	       	      break;
+			    }
+	}
+  }
+
+
+  /***************************wpa group rekey period*****************************/
+  memset(wpa_group_rekey_period,0,sizeof(wpa_group_rekey_period));
+  cgiFormStringNoNewlines("wpa_group_rekey_period",wpa_group_rekey_period,10);	
+  if(strcmp(wpa_group_rekey_period,"") != 0)
+  {
+  	ret=set_wpa_group_rekey_period_cmd(ins_para->parameter,ins_para->connection,sid,wpa_group_rekey_period); 
+																				 /*返回0表示失败，返回1表示成功*/
+																				 /*返回-1表示input period value should be 0 to 86400*/
+																				 /*返回-2表示Security ID非法*/
+																				 /*返回-3表示security profile does not exist*/
+																				 /*返回-4表示This Security Profile be used by some Wlans,please disable them first*/
+																				 /*返回-5表示Can't set wpa group rekey period under current security type*/
+																				 /*返回-6表示error*/
+																				 /*返回SNMPD_CONNECTION_ERROR表示connection error*/
+	switch(ret)
+	{
+		case SNMPD_CONNECTION_ERROR:
+		case 0:{
+				 ShowAlert(search(lsecu,"config_wpa_group_rekey_period_fail"));
+				 flag=0;
+	       	     break;
+			   }
+		case 1:break;
+		case -1:{
+				  memset(alt,0,sizeof(alt));
+                  strncpy(alt,search(lpublic,"input_para_0to"),sizeof(alt)-1);
+                  strncat(alt,"86400",sizeof(alt)-strlen(alt)-1);
+                  strncat(alt,search(lsecu,"secur_id_2"),sizeof(alt)-strlen(alt)-1);
+                  ShowAlert(alt);
+				  flag=0;
+	       	      break;
+			    }
+		case -2:{
+				  memset(alt,0,sizeof(alt));
+				  strncpy(alt,search(lpublic,"secur_id_illegal1"),sizeof(alt)-1);
+				  memset(max_sec_num,0,sizeof(max_sec_num));
+				  snprintf(max_sec_num,sizeof(max_sec_num)-1,"%d",WLAN_NUM-1);
+				  strncat(alt,max_sec_num,sizeof(alt)-strlen(alt)-1);
+				  strncat(alt,search(lpublic,"secur_id_illegal2"),sizeof(alt)-strlen(alt)-1);
+				  ShowAlert(alt);
+				  flag=0;
+				  break;
+			    }
+		case -3:{
+				  ShowAlert(search(lsecu,"secur_not_exist"));
+				  flag=0;
+	       	      break;
+			    }
+		case -4:{
+				  ShowAlert(search(lsecu,"secur_be_used"));
+				  flag=0;
+	       	      break;
+			    }
+		case -5:{
+				  ShowAlert(search(lsecu,"can_not_set_wpa_group_rekey_period_under"));
+				  flag=0;
+	       	      break;
+			    }
+		case -6:{
+				  ShowAlert(search(lpublic,"error"));
 				  flag=0;
 	       	      break;
 			    }
@@ -2139,6 +2267,76 @@ if(flag==1)
 				 }
 	  }   
 	}
+
+  /*****************************  set asd rdc para cmd  ****************************/ 
+  memset(asd_rdc_slot,0,sizeof(asd_rdc_slot));
+  cgiFormStringNoNewlines("asd_rdc_slot",asd_rdc_slot,5);
+  memset(asd_rdc_ins,0,sizeof(asd_rdc_ins));
+  cgiFormStringNoNewlines("asd_rdc_ins",asd_rdc_ins,5);  
+  if((strcmp(asd_rdc_slot,"")!=0)&&(strcmp(asd_rdc_ins,"")!=0))
+  {
+    ret=set_asd_rdc_para_cmd(ins_para->parameter,ins_para->connection,sid,asd_rdc_slot,asd_rdc_ins);
+																		 /*返回0表示失败，返回1表示成功*/
+																		 /*返回-1表示slotid should be 0 to 16*/
+																		 /*返回-2表示Security ID非法*/
+																		 /*返回-3表示security type should be 802.1X, wpa_e or wpa2_e*/
+																		 /*返回-4表示security profile does not exist*/
+																		 /*返回-5表示this security profile is used by some wlans,please disable them first*/
+																		 /*返回-6表示The radius heart test is on,turn it off first*/
+																		 /*返回-7表示error*/
+																		 /*返回SNMPD_CONNECTION_ERROR表示connection error*/
+    switch(ret)
+    {
+      case SNMPD_CONNECTION_ERROR:
+      case 0:{
+		       ShowAlert(search(lsecu,"config_asd_rdc_fail"));
+  	           flag=0;
+		       break;
+        	 } 
+      case 1:break;                                                     
+	  case -1:{
+		        ShowAlert(search(lpublic,"input_para_illegal"));
+  	            flag=0;
+		        break;
+        	  }  
+      case -2:{
+			    memset(alt,0,sizeof(alt));
+				strncpy(alt,search(lpublic,"secur_id_illegal1"),sizeof(alt)-1);
+				memset(max_sec_num,0,sizeof(max_sec_num));
+				snprintf(max_sec_num,sizeof(max_sec_num)-1,"%d",WLAN_NUM-1);
+				strncat(alt,max_sec_num,sizeof(alt)-strlen(alt)-1);
+				strncat(alt,search(lpublic,"secur_id_illegal2"),sizeof(alt)-strlen(alt)-1);
+				ShowAlert(alt);
+				flag=0;
+				break;
+			  }                                                          
+      case -3:{
+		       ShowAlert(search(lsecu,"secur_type_1x_wape"));       
+  	           flag=0;
+		       break;
+        	 }
+  	  case -4:{
+		        ShowAlert(search(lsecu,"secur_not_exist"));
+  	            flag=0;
+			    break; 
+  	    	  }
+	  case -5:{
+		        ShowAlert(search(lsecu,"secur_be_used"));
+  	            flag=0;
+			    break; 
+  	    	  }
+	  case -6:{
+		        ShowAlert(search(lsecu,"radius_heart_is_on"));
+  	            flag=0;
+			    break; 
+  	    	  }
+	  case -7:{
+		        ShowAlert(search(lpublic,"error"));                      
+	            flag=0;
+			    break;
+	  	      }
+    }   
+  }
 
   /*****************************  config wapi AS && AE ****************************/ 
   if((strcmp(secu_type,"WAPI_AUTH")==0)&&(flag==1))

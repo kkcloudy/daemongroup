@@ -237,12 +237,17 @@ ve_sub_inteface_name_check(const char *name, char *name_return)
 		{
 			return 1;
 		}
+		else
+		{
+			zlog_warn("%s: err parments!\n",__func__);
+			return -1;
+		}
+			
 	}
 	else
 		{
 			return -1;
 		}
-	
 	
 }
 
@@ -478,14 +483,14 @@ int get_slot_num(char *ifname)
 		 {
 		 	/*ve01f1.100, ve05s1.200*/
 			sscanf(ifname,"ve%d%c%d.%d",&slotnum,&cpu_num,&num1,&num2);
-			zlog_info("name[%s],slot(%d),cpu(%c),cpu_n(%d),vlan_id(%d).\n",ifname,slotnum,cpu_num,num1,num2);
+			/*zlog_info("name[%s],slot(%d),cpu(%c),cpu_n(%d),vlan_id(%d).\n",ifname,slotnum,cpu_num,num1,num2);*/
 			return slotnum;
 		 }
 		else if(judge_ve_interface(ifname)== VE_INTERFACE)
 		 {
 		 	/*ve01f1, ve05s1*/
 			sscanf(ifname,"ve%d%c%d",&slotnum,&cpu_num,&num1);
-			zlog_info("name[%s],slot(%d),cpu(%c),cpu_n(%d).\n",ifname,slotnum,cpu_num,num1);
+			/*zlog_info("name[%s],slot(%d),cpu(%c),cpu_n(%d).\n",ifname,slotnum,cpu_num,num1);*/
 			return slotnum;
 		 }
 		else
@@ -512,6 +517,11 @@ int get_slot_num(char *ifname)
 		  	sscanf(ifname,"r%d-%d-%d-%d.%d",&slotnum,&num1,&num2,&num3,&num4);
 		  	return slotnum;
 		  	}
+		else
+		  {
+			zlog_warn("get slot num err[%s],count[%d] !\n",ifname,count);
+			return 0;/*err*/
+		  }
 		}
 	else if(strncmp(ifname,"wlan",4) == 0)/*wlan*/
 	 {
@@ -537,6 +547,11 @@ int get_slot_num(char *ifname)
 		  	  sscanf(ifname,"wlan%d-%d-%d",&slotnum,&num1,&num2);/*remove hansi wlanx-x-x*/
 		  	  return slotnum;
 			}
+		  }
+		else
+		 {
+			zlog_warn("get slot num err[%s],count[%d] !\n",ifname,count);
+			return 0;/*err*/
 		  }
 	 	}
 	else if(strncmp(ifname,"ebr",3) == 0 )/*ebr*/
@@ -564,6 +579,12 @@ int get_slot_num(char *ifname)
 		  	  return slotnum;
 			}
 		  }
+		else
+		 {
+			zlog_warn("get slot num err[%s],count[%d] !\n",ifname,count);
+			return 0;/*err*/
+		  }
+		
 	 	}
 	else if(strncmp(ifname,"obc0",4) == 0)
 	{
@@ -594,7 +615,7 @@ int get_slot_num(char *ifname)
 	}
 	
 
-//	return slotnum;
+/*	return slotnum;*/
 
 }
 

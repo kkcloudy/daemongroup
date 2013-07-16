@@ -23,9 +23,11 @@ if [ $variable -lt $BOUNDARY ]; then
          echo "please operate the left operation manually"
          cd $CURRENT_DIRECTORY
          exit 7
+     else 
+         echo "The content of the CF card less than 500 M ,copy all to the first partition"
      fi
 else
-     #put the current version to the first partion       
+         echo "The content of the CF card is more than 500M,copy the current version to the first partion "        
          cur_img=`/opt/bin/vtysh -c "show system boot_img" | awk '{print $6}'`         
          CUR_IMG=$(echo $cur_img | tr '[a-z]' '[A-Z]')           
            items=`ls -l $TEMPORARY_DIRECTORY/ | grep -i img | awk '{print $9}'`
@@ -34,7 +36,7 @@ else
            ITEM=$(echo $item | tr '[a-z]' '[A-Z]')             
            if [ "$ITEM" = "$CUR_IMG" ]; then                
               cp $TEMPORARY_DIRECTORY/$item  /blk/
-              echo "copy the current version to the storage card"
+              echo "copy the current version to the first partion successful"
               flag=1              
               break
            else 
@@ -42,7 +44,7 @@ else
            fi
            done     
          
-     #put the other two the latest version in /blk/    
+     echo "put the other two the latest version in /blk/"
      if [ $flag  -eq  1 ]; then       
           if [ `ls -l $TEMPORARY_DIRECTORY/  | grep -i img | wc -l` -gt  $VERSION_NUM_IN_CARD ]; then
             versions=`ls -lrt $TEMPORARY_DIRECTORY/ | grep -i img | tail -n  2 | awk '{print $9}'`
@@ -99,7 +101,7 @@ else
      fi
 fi 
 
-#Copy configuration files in the first partition
+echo "Copy configuration files in the first partition"
 if [ -f $MYFILE ]; then
      if ! `cp  $MYFILE  /blk`; then
        echo "copy conf_xml.conf failed"
@@ -206,7 +208,7 @@ else
          cd $CURRENT_DIRECTORY	
 	     exit  9
      fi
-     #get Get the current version of the system and deposited in the second  partition     
+     #get Get the current version of the system and copy to the second  partition     
          cur_img=`/opt/bin/vtysh -c "show system boot_img" | awk '{print $6}'`      
          CUR_IMG=$(echo $cur_img | tr '[a-z]' '[A-Z]')                 
             items=`ls -l $TEMPORARY_DIRECTORY/ | grep -i img | awk '{print $9}'`
@@ -215,14 +217,14 @@ else
             ITEM=$(echo $item | tr '[a-z]' '[A-Z]')               
             if [ "$ITEM" = "$CUR_IMG" ]; then 
                 cp $TEMPORARY_DIRECTORY/$item  $PARTION_MOUNT
-                echo "copy the current version to the storage card"  
+                echo "copy the current version to the  second partion successful"  
                 flag=1                
                 break
              else
                 flag=0
             fi
             done        
-#put the  other two the latest version in /tmp_dir     
+echo "put the  other two the latest version in /tmp_dir "
       if [ $flag -eq 1 ]; then
            if [ `ls -l $TEMPORARY_DIRECTORY/ | grep -i img | wc -l` -gt  $VERSION_NUM_IN_CARD ]; then
               versions=`ls -lrt $TEMPORARY_DIRECTORY/ | grep -i img | tail -n  2 | awk '{print $9}'`
@@ -310,6 +312,7 @@ if ! `rm -rf $TEMPORARY_DIRECTORY`; then
     echo "Please manually delete"
     cd $CURRENT_DIRECTORY			
 else 
+    echo ""delete /home/admin/temp_directory successful
     echo "sort succeed"
     cd $CURRENT_DIRECTORY	
 fi
@@ -319,8 +322,9 @@ if ! `rm -rf /var/run/sad/*`; then
     echo "rm -rf /var/run/sad/* failed,Please manually delete"
     cd $CURRENT_DIRECTORY  
 else
-    sudo sad.sh &
-    echo "sad.sh is  recover"        
+    #sudo sad.sh &
+     sudo start-stop-daemon -b -m -p /var/run/sad.sh.pid --start --exec /usr/bin/sad.sh
+     echo "sad.sh is  recover"        
 fi	
 
 

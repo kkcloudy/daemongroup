@@ -6,7 +6,7 @@ struct dba_result {
 	unsigned int module_type;
 	int result;
 	unsigned int len;	/* length of data */
-	void *data;	
+	char data[256];	
 };
 
 typedef struct dba_result dba_result_t;

@@ -5844,6 +5844,49 @@ ac_manage_dbus_config_snmp_sysoid_boardtype(DBusConnection *connection, DBusMess
 }
 
 DBusMessage *
+ac_manage_dbus_config_mem_status_dog(DBusConnection *connection, DBusMessage *message, void *user_data) {
+    
+	DBusMessage *reply = NULL;	
+	DBusError err;
+	DBusMessageIter	 iter;		
+
+	unsigned int type = 0;
+	unsigned int maxmem = 0;
+	int ret = AC_MANAGE_SUCCESS;
+	
+	dbus_error_init(&err);
+	
+	if (!(dbus_message_get_args(message, &err,
+								DBUS_TYPE_UINT32,&type,
+                           		DBUS_TYPE_UINT32, &maxmem,
+								DBUS_TYPE_INVALID))){
+
+        manage_log(LOG_WARNING, "Unable to get input args\n");
+	    
+		if (dbus_error_is_set(&err)) {
+		
+            manage_log(LOG_WARNING, "%s raised: %s\n", err.name, err.message);
+			dbus_error_free(&err);
+		}
+		return NULL;
+	}
+
+	char command[255] = { 0 };	
+	memset(command, 0, sizeof(command));
+	sprintf(command, "sudo sed -i 's/SNMPD_MAXMEM=[0-9]*/SNMPD_MAXMEM=%d/g' /usr/bin/mem_status_dog.sh", (maxmem*1000));
+	system(command);	
+	
+	system("sudo pkill mem_status_dog");
+	
+	system("sudo /usr/bin/mem_status_dog.sh > /dev/null 2>&1 &");	
+
+    reply = dbus_message_new_method_return(message);
+					
+	return reply;
+}
+
+
+DBusMessage *
 ac_manage_dbus_config_strict_access_level(DBusConnection *connection, DBusMessage *message, void *user_data) 
 {
     

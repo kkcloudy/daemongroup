@@ -110,7 +110,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 extern int wpa_debug_level;
 extern unsigned char gASDLOGDEBUG;//qiuchen
 extern unsigned long gASD_AC_MANAGEMENT_IP;
-
+extern unsigned char FD_CHANGE;
 unsigned int wids_mac_last_time = 0;
 unsigned char wids_enable = 0;		/*0 for wids close,1 for wids open*/
 extern int nl_sock;
@@ -155,7 +155,7 @@ struct wid_driver_data {
 
 struct asd_data *get_wasd_for_handle_frame(struct wasd_interfaces *interfaces, DataMsg *msg);
 static void handle_frame(struct asd_data *wasd, u8 *buf, size_t len);
-
+static void ASD_STA_OPT_STR(int Op,char *msgtype);
 /*ht add,11.3.1*/
 void handle_netlink(int sock, void *circle_ctx, void *sock_ctx)
 {
@@ -936,20 +936,20 @@ static void handle_data(struct asd_data *wasd, u8 *buf, size_t len,
 	switch (ethertype) {
 	case ETH_P_PAE:
 		if(!((securitytype == IEEE8021X)||(securitytype == WPA_E)||(securitytype == WPA2_E)||(securitytype == MD5)||(securitytype == WAPI_AUTH)||(extensible_auth == 1))){
-			syslog(LOG_WARNING|LOG_LOCAL7,"BSS "MACSTR" receive wrong EAP Package! Sta "MACSTR" securitytype %d\n",MAC2STR(wasd->own_addr),MAC2STR(sa),securitytype);
+			syslog(LOG_WARNING|LOG_LOCAL7,"[%d-%d]BSS "MACSTR" receive wrong EAP Package! Sta "MACSTR" securitytype %d\n",slotid,vrrid,MAC2STR(wasd->own_addr),MAC2STR(sa),securitytype);
 		}
 		ieee802_1x_receive(wasd, sa, pos, left);
 		break;
 	case ETH_P_PREAUTH:
 		if(!((securitytype == IEEE8021X)||(securitytype == WPA_E)||(securitytype == WPA2_E)||(securitytype == MD5)||(securitytype == WAPI_AUTH)||(extensible_auth == 1))){
-			syslog(LOG_WARNING|LOG_LOCAL7,"BSS "MACSTR" receive wrong EAP Package! Sta "MACSTR" securitytype %d\n",MAC2STR(wasd->own_addr),MAC2STR(sa),securitytype);
+			syslog(LOG_WARNING|LOG_LOCAL7,"[%d-%d]BSS "MACSTR" receive wrong EAP Package! Sta "MACSTR" securitytype %d\n",slotid,vrrid,MAC2STR(wasd->own_addr),MAC2STR(sa),securitytype);
 		}
 		asd_printf(ASD_80211,MSG_DEBUG,"\n ETH_P_PREAUTH \n");
 		rsn_preauth_receive_thinap(wasd, hdr->addr2, hdr->addr3, pos, left);
 		break;
 	case ETH_P_WAPI:	
 		if(securitytype != WAPI_AUTH || securitytype != WAPI_PSK){
-			syslog(LOG_WARNING|LOG_LOCAL7,"BSS "MACSTR" receive wrong EAP Package! Sta "MACSTR" securitytype %d\n",MAC2STR(wasd->own_addr),MAC2STR(sa),securitytype);
+			syslog(LOG_WARNING|LOG_LOCAL7,"[%d-%d]BSS "MACSTR" receive wrong EAP Package! Sta "MACSTR" securitytype %d\n",slotid,vrrid,MAC2STR(wasd->own_addr),MAC2STR(sa),securitytype);
 		}
 		asd_printf(ASD_80211,MSG_DEBUG,"\n ETH_P_WAPI \n");
 		if(wasd->wapi_wasd && wasd->wapi_wasd->vap_user)
@@ -2137,6 +2137,173 @@ int ASD_BSS_SECURITY_INIT(struct asd_data * wasd){
 	}*/
 	return 0;
 }
+static void asd_wlan_bss_free(unsigned int bssindex,unsigned char WLANID){
+	struct asd_data *wasd = NULL;
+	int i = 0;
+	struct wasd_interfaces *interfaces = (struct wasd_interfaces*) circle.user_data;
+	struct PreAuth_BSSINFO *preauth_bss = NULL;
+	if(ASD_BSS[bssindex] != NULL){		
+		pthread_mutex_lock(&asd_g_sta_mutex); 
+		i = ASD_BSS[bssindex]->BSSIndex % L_BSS_NUM;
+		if(interfaces->iface[ASD_BSS[bssindex]->Radio_G_ID] != NULL){
+			if(interfaces->iface[ASD_BSS[bssindex]->Radio_G_ID]->bss[i] != NULL){
+				wasd = interfaces->iface[ASD_BSS[bssindex]->Radio_G_ID]->bss[i];
+				if(NULL == wasd)
+				{
+					asd_printf(ASD_DEFAULT,MSG_ERROR,"wasd bssindex %d is not exit,del error!\n",bssindex);
+					pthread_mutex_unlock(&asd_g_sta_mutex); 
+					return;
+				}
+				int wtpid=0;
+				wtpid=wasd->Radio_G_ID/L_RADIO_NUM;
+				if(ASD_WTP_AP_HISTORY[wtpid] != NULL){
+					ASD_WTP_AP_HISTORY[wtpid]->usr_auth_tms += wasd->usr_auth_tms;
+					ASD_WTP_AP_HISTORY[wtpid]->ac_rspauth_tms += wasd->ac_rspauth_tms;
+					ASD_WTP_AP_HISTORY[wtpid]->auth_fail += wasd->auth_fail;
+					ASD_WTP_AP_HISTORY[wtpid]->auth_success += wasd->auth_success;
+					ASD_WTP_AP_HISTORY[wtpid]->num_assoc += wasd->num_assoc;
+					ASD_WTP_AP_HISTORY[wtpid]->num_reassoc += wasd->num_reassoc;
+					ASD_WTP_AP_HISTORY[wtpid]->num_assoc_failure += wasd->num_assoc_failure;
+					ASD_WTP_AP_HISTORY[wtpid]->num_reassoc_failure += wasd->num_reassoc_failure;
+					ASD_WTP_AP_HISTORY[wtpid]->assoc_success += wasd->assoc_success;
+					ASD_WTP_AP_HISTORY[wtpid]->reassoc_success += wasd->reassoc_success;
+					ASD_WTP_AP_HISTORY[wtpid]->assoc_req += wasd->assoc_req;
+					ASD_WTP_AP_HISTORY[wtpid]->assoc_resp += wasd->assoc_resp;
+					ASD_WTP_AP_HISTORY[wtpid]->total_ap_flow_record += ASD_WTP_AP_HISTORY[wtpid]->total_ap_flow;
+					asd_printf(ASD_DEFAULT,MSG_DEBUG,"total_assoc_num = %d\n",ASD_WTP_AP_HISTORY[wtpid]->assoc_req);
+					asd_printf(ASD_DEFAULT,MSG_DEBUG,"total_ap_flow_record = %llu(KB)\n",ASD_WTP_AP_HISTORY[wtpid]->total_ap_flow_record);
+				}
+				//
+				if((ASD_WLAN[WLANID]!=NULL)&&(ASD_WLAN[WLANID]->AC_Roaming_Policy == 1)){
+					unsigned char group_id;
+					unsigned int j;
+					group_id = ASD_WLAN[WLANID]->group_id;
+					if(AC_GROUP[group_id] != NULL)
+					for(j = 0; j < G_AC_NUM; j++){
+						int sock;
+						if((AC_GROUP[group_id]->Mobility_AC[j] == NULL)||(AC_GROUP[group_id]->Mobility_AC[j]->is_conn == 0))
+							continue;
+						sock = AC_GROUP[group_id]->Mobility_AC[j]->sock;
+						ac_group_add_del_bss_info(sock,group_id,wasd,G_DEL);
+						//close(sock);
+					}
+					
+				}
+#ifdef ASD_USE_PERBSS_LOCK
+				pthread_mutex_lock(&(wasd->asd_sta_mutex)); 
+#endif
+			//	circle_cancel_timeout(assoc_update_timer, wasd, NULL);
+				asd_free_stas(wasd);
+				asd_printf(ASD_DEFAULT,MSG_DEBUG,"asd_free_stas finish\n"); 					
+				circle_cancel_timeout((void *)radius_client_init_auth, wasd->radius, (void*)1);
+				circle_cancel_timeout((void *)radius_client_init_acct, wasd->radius, (void*)1);
+				asd_cleanup(wasd);
+				asd_printf(ASD_DEFAULT,MSG_DEBUG,"asd_cleanup finish\n");
+				
+				unsigned char SID = 0;
+				if(ASD_WLAN[wasd->WlanID])
+					SID = ASD_WLAN[wasd->WlanID]->SecurityID;
+				if((ASD_SECURITY[SID] != NULL) && ((ASD_SECURITY[SID]->securityType == IEEE8021X)||(ASD_SECURITY[SID]->securityType == WPA_E)||(ASD_SECURITY[SID]->securityType == WPA2_E)||(ASD_SECURITY[SID]->securityType == MD5)||((ASD_SECURITY[SID]->extensible_auth == 1)))){
+					if(ASD_SECURITY[SID]->pre_auth){
+						preauth_bss = PreAuth_wlan_get_bss(ASD_WLAN[wasd->WlanID],wasd->own_addr);
+						if(preauth_bss != NULL){
+							PreAuth_wlan_free_bss(ASD_WLAN[wasd->WlanID],preauth_bss);
+						}
+					}
+				}
+				
+				asd_free_bss_conf(wasd->conf);
+				if((ASD_SECURITY[SID] != NULL) && ((ASD_SECURITY[SID]->securityType == WAPI_AUTH)||(ASD_SECURITY[SID]->securityType == WAPI_PSK))){
+					if((wasd->wapi_wasd != NULL)&&(wasd->wapi_wasd->vap_user!=NULL))
+						free_one_interface(wasd->wapi_wasd->vap_user);
+					if((wasd->wapi_wasd != NULL)){
+						free_one_wapi(wasd->wapi_wasd);
+					}
+				}
+				if(wasd->info != NULL) {
+					os_free(wasd->info);
+					wasd->info = NULL;
+				}
+				if(wasd->iconf != NULL){
+					os_free(wasd->iconf);
+					wasd->iconf = NULL;
+				}
+#ifdef ASD_USE_PERBSS_LOCK
+			
+				pthread_mutex_unlock(&(wasd->asd_sta_mutex)); 
+				CWDestroyThreadMutex(&(wasd->asd_sta_mutex));
+#endif
+				asd_printf(ASD_DEFAULT,MSG_DEBUG,"free(wasd->iconf) finish\n");
+				wasd->driver = NULL;
+				wasd->drv_priv = NULL;
+				os_free(wasd);
+				wasd = NULL;
+				asd_printf(ASD_DEFAULT,MSG_DEBUG,"free(wasd) finish\n");
+				interfaces->iface[ASD_BSS[bssindex]->Radio_G_ID]->bss[i] = NULL;
+				interfaces->iface[ASD_BSS[bssindex]->Radio_G_ID]->num_bss--;
+				os_free(ASD_BSS[bssindex]->BSSID);
+				ASD_BSS[bssindex]->BSSID = NULL;
+				asd_printf(ASD_DEFAULT,MSG_DEBUG,"free(ASD_BSS[%d]->BSSID) finish\n",bssindex);
+				ASD_BSS[bssindex]->BSSIndex = 0;
+				ASD_BSS[bssindex]->Radio_G_ID = 0;
+				ASD_BSS[bssindex]->Radio_L_ID = 0;
+				ASD_BSS[bssindex]->WlanID = 0;
+				ASD_BSS[bssindex]->State = 0;
+				ASD_BSS[bssindex]->bss_accessed_sta_num= 0;
+				ASD_BSS[bssindex]->bss_max_allowed_sta_num= 0;
+				
+				if( ASD_BSS[bssindex]->acl_conf != NULL){	//ht add
+					if( ASD_BSS[bssindex]->acl_conf->accept_mac != NULL) {
+						free_maclist(ASD_BSS[bssindex]->acl_conf,ASD_BSS[bssindex]->acl_conf->accept_mac);
+						ASD_BSS[bssindex]->acl_conf->accept_mac = NULL;
+						}
+					if( ASD_BSS[bssindex]->acl_conf->deny_mac != NULL) {
+						free_maclist(ASD_BSS[bssindex]->acl_conf,ASD_BSS[bssindex]->acl_conf->deny_mac);
+						ASD_BSS[bssindex]->acl_conf->deny_mac = NULL;
+						}
+					os_free(ASD_BSS[bssindex]->acl_conf);
+					ASD_BSS[bssindex]->acl_conf = NULL;
+				}
+				os_free(ASD_BSS[bssindex]);
+				ASD_BSS[bssindex] = NULL;
+				asd_printf(ASD_DEFAULT,MSG_DEBUG,"free(ASD_BSS[msg->u.BSS.BSSIndex]) finish\n");
+				pthread_mutex_unlock(&asd_g_sta_mutex);
+				return;
+
+
+			}
+		}
+		pthread_mutex_unlock(&asd_g_sta_mutex); 
+		return;
+	}else
+		return;
+}
+static void asd_wlan_all_bss_free(unsigned char wlanid)
+{
+	asd_printf(ASD_DEFAULT,MSG_INFO,"*******asd_wlan_all_bss_free**********\n");
+	int i=0,j=0;
+	unsigned int bssindex = 0;
+	struct wasd_interfaces *interfaces = (struct wasd_interfaces*) circle.user_data;
+	if(interfaces == NULL)
+		return;
+	
+	for(i = 0; i < G_RADIO_NUM; ){
+		if((interfaces->iface[i] != NULL)&&(interfaces->iface[i]->bss != NULL)){
+			for(j = 0; j < L_BSS_NUM; j++){
+				if(interfaces->iface[i]->bss[j] == NULL)
+					continue;
+				else if(interfaces->iface[i]->bss[j] != NULL){
+					if(interfaces->iface[i]->bss[j]->WlanID == wlanid){
+						bssindex = interfaces->iface[i]->bss[j]->BSSIndex;
+						asd_wlan_bss_free(bssindex,wlanid);
+					}
+				}
+			}
+			i++;
+		} else 
+			i += 4 - i%L_RADIO_NUM;
+	}
+}
 
 void WLAN_OP(TableMsg *msg){
 	unsigned char SecurityID;
@@ -2294,6 +2461,23 @@ void WLAN_OP(TableMsg *msg){
 		}
 		case WID_MODIFY :{
 			if(ASD_WLAN[msg->u.WLAN.WlanID] != NULL){
+				//Qc
+				int ret = 0;
+				if(ASD_WLAN[msg->u.WLAN.WlanID]->Status == 0 && msg->u.WLAN.WlanState == 1){
+					asd_printf(ASD_DEFAULT,MSG_DEBUG,"*******1111WID_MODIFY**********\n");
+					asd_wlan_all_bss_free(msg->u.WLAN.WlanID);
+					asd_wlan_radius_free(msg->u.WLAN.WlanID);
+				}
+				else if((ASD_WLAN[msg->u.WLAN.WlanID]->Status == 1 && msg->u.WLAN.WlanState == 0)){
+					asd_printf(ASD_DEFAULT,MSG_DEBUG,"*******2222WID_MODIFY**********\n");
+					SecurityID = ASD_WLAN[msg->u.WLAN.WlanID]->SecurityID;
+					ret = asd_wlan_radius_init(msg->u.WLAN.WlanID,SecurityID);
+					if(ret){
+						asd_printf(ASD_DEFAULT,MSG_CRIT,"asd_wlan_radius_init failed! ret %d\n",ret);
+						return;
+					}
+				}
+				//end
 				ASD_WLAN[msg->u.WLAN.WlanID]->Status = msg->u.WLAN.WlanState;
 				ASD_WLAN[msg->u.WLAN.WlanID]->wlan_max_allowed_sta_num=msg->u.WLAN.wlan_max_sta_num;				
 				if(msg->u.WLAN.balance_switch == 0){
@@ -2679,7 +2863,9 @@ void BSS_OP(TableMsg *msg, struct wasd_interfaces *interfaces){
 		asd_printf(ASD_DEFAULT,MSG_INFO,"BSS_OP type %u(ADD--0,DEL--1,MODIFY--2),BSSIndex %u\n",msg->Op,msg->u.BSS.BSSIndex);
 	switch(msg->Op){
 		case WID_ADD :{
-			
+			if(ASD_WLAN[WLANID] && ASD_WLAN[WLANID]->Status == 1){
+				return;
+			}
 			if(ASD_BSS[msg->u.BSS.BSSIndex] == NULL){
 				asd_printf(ASD_DEFAULT,MSG_DEBUG,"ASD_BSS[%u] = NULL.\n",msg->u.BSS.BSSIndex);
 				
@@ -3381,7 +3567,9 @@ void STA_OP(TableMsg *msg){
 	struct PMK_STAINFO *pmk_sta;
 	struct ROAMING_STAINFO *r_sta;	
 	unsigned char SID = 0;
-	asd_printf(ASD_DEFAULT,MSG_DEBUG,"STA_OP type %u(DEL--1,MODIFY--2,INFO--3,CONFLICT--16)\n",msg->Op);
+	char msgtype[64] = {0};
+	ASD_STA_OPT_STR(msg->Op,msgtype);
+	asd_printf(ASD_DEFAULT,MSG_DEBUG,"STA_OP type %s\n",msgtype);	
 	switch(msg->Op){
 		case WID_DEL:			
 			ret = AsdCheckWTPID(WTPID);
@@ -3457,8 +3645,8 @@ void STA_OP(TableMsg *msg){
 						time_t now;
 						time(&now);
 						unsigned char *ip = (unsigned char*)&(WTP->WTPIP);
-						syslog(LOG_INFO|LOG_LOCAL7, "STA :"MACSTR" leave WTP %d,WTP MAC:"MACSTR",WTP IP:%d.%d.%d.%d,Leave Time:%s\n",
-							MAC2STR(msg->u.STA.STAMAC),msg->u.STA.WTPID,MAC2STR(WTP->WTPMAC),ip[0],ip[1],ip[2],ip[3],ctime(&now));
+						syslog(LOG_INFO|LOG_LOCAL7, "[%d-%d]STA :"MACSTR" leave WTP %d,WTP MAC:"MACSTR",WTP IP:%d.%d.%d.%d,Leave Time:%s\n",
+							slotid,vrrid,MAC2STR(msg->u.STA.STAMAC),msg->u.STA.WTPID,MAC2STR(WTP->WTPMAC),ip[0],ip[1],ip[2],ip[3],ctime(&now));
 					}
 					//qiuchen
 					char *SSID = NULL;
@@ -3478,8 +3666,8 @@ void STA_OP(TableMsg *msg){
 					if(ASD_WTP_AP[bss[i]->Radio_G_ID/4])
 						memcpy(WTPMAC,ASD_WTP_AP[bss[i]->Radio_G_ID/4]->WTPMAC,6);
 					if(gASDLOGDEBUG & BIT(1))
-						syslog(LOG_INFO|LOG_LOCAL7, "DISASSOC:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d, ErrorCode:%d.\n",
-							MAC2STR(sta->addr),MAC2STR(WTPMAC),bss[i]->BSSIndex,999);//qiuchen 2013.01.14
+						syslog(LOG_INFO|LOG_LOCAL7, "[%d-%d]DISASSOC:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d, ErrorCode:%d.\n",
+							slotid,vrrid,MAC2STR(sta->addr),MAC2STR(WTPMAC),bss[i]->BSSIndex,999);//qiuchen 2013.01.14
 					//end
 					if(ASD_NOTICE_STA_INFO_TO_PORTAL)
 						AsdStaInfoToEAG(bss[i],sta,WID_DEL);
@@ -3599,8 +3787,7 @@ void STA_OP(TableMsg *msg){
 						sta->MAXofRateset = msg->u.STAINFO[j].MAXofRateset;
 						asd_printf(ASD_DEFAULT,MSG_DEBUG,"sta->MAXofRateset = %d\n", sta->MAXofRateset);
 						
-						asd_printf(ASD_DEFAULT,MSG_DEBUG,"sta "MACSTR"\n",MAC2STR(msg->u.STAINFO[j].STAMAC));
-
+						asd_printf(ASD_DEFAULT,MSG_DEBUG,"STA_OP %s "MACSTR"\n",msgtype,MAC2STR(msg->u.STAINFO[j].STAMAC));
 						if(!bss[i]->bss_iface_type){
 							sta->rxbytes=(unsigned long long)(msg->u.STAINFO[j].rx_bytes);
 							sta->txbytes=(unsigned long long)(msg->u.STAINFO[j].tx_bytes);
@@ -3714,16 +3901,16 @@ void STA_OP(TableMsg *msg){
 								SSID = ASD_WLAN[wasd->WlanID]->ESSID;
 							if(gASDLOGDEBUG & BIT(1) && !(sta->logflag&BIT(1))){
 								if((ASD_SECURITY[SID]) && (ASD_SECURITY[SID]->securityType == OPEN || ASD_SECURITY[SID]->securityType == SHARED) && (sta->flags & WLAN_STA_ASSOC)){
-									syslog(LOG_INFO|LOG_LOCAL7,"STA_ROAM_SUCCESS:UserMAC:"MACSTR" From AC(%lu.%lu.%lu.%lu)-AP%d-BSSID("MACSTR") To AC(%lu.%lu.%lu.%lu)-AP%d-BSSID("MACSTR").\n",
-										MAC2STR(sta->addr),((gASD_AC_MANAGEMENT_IP & 0xff000000) >> 24),((gASD_AC_MANAGEMENT_IP & 0xff0000) >> 16),((gASD_AC_MANAGEMENT_IP & 0xff00) >> 8),(gASD_AC_MANAGEMENT_IP & 0xff),
+									syslog(LOG_INFO|LOG_LOCAL7,"[%d-%d]STA_ROAM_SUCCESS:UserMAC:"MACSTR" From AC(%lu.%lu.%lu.%lu)-AP%d-BSSID("MACSTR") To AC(%lu.%lu.%lu.%lu)-AP%d-BSSID("MACSTR").\n",
+										slotid,vrrid,MAC2STR(sta->addr),((gASD_AC_MANAGEMENT_IP & 0xff000000) >> 24),((gASD_AC_MANAGEMENT_IP & 0xff0000) >> 16),((gASD_AC_MANAGEMENT_IP & 0xff00) >> 8),(gASD_AC_MANAGEMENT_IP & 0xff),
 										prewasd->Radio_G_ID/4,MAC2STR(prewasd->own_addr),((gASD_AC_MANAGEMENT_IP & 0xff000000) >> 24),((gASD_AC_MANAGEMENT_IP & 0xff0000) >> 16),((gASD_AC_MANAGEMENT_IP & 0xff00) >> 8),(gASD_AC_MANAGEMENT_IP & 0xff),
 										wasd->Radio_G_ID/4,MAC2STR(wasd->own_addr)
 									);
 									sta->logflag = BIT(1);
 								}
 								else if((sta->flags & WLAN_STA_AUTHORIZED)){
-									syslog(LOG_INFO|LOG_LOCAL7,"STA_ROAM_SUCCESS:UserMAC:"MACSTR" From AC(%lu.%lu.%lu.%lu)-AP%d-BSSID("MACSTR") To AC(%lu.%lu.%lu.%lu)-AP%d-BSSID("MACSTR").\n",
-										MAC2STR(sta->addr),((gASD_AC_MANAGEMENT_IP & 0xff000000) >> 24),((gASD_AC_MANAGEMENT_IP & 0xff0000) >> 16),((gASD_AC_MANAGEMENT_IP & 0xff00) >> 8),(gASD_AC_MANAGEMENT_IP & 0xff),
+									syslog(LOG_INFO|LOG_LOCAL7,"[%d-%d]STA_ROAM_SUCCESS:UserMAC:"MACSTR" From AC(%lu.%lu.%lu.%lu)-AP%d-BSSID("MACSTR") To AC(%lu.%lu.%lu.%lu)-AP%d-BSSID("MACSTR").\n",
+										slotid,vrrid,MAC2STR(sta->addr),((gASD_AC_MANAGEMENT_IP & 0xff000000) >> 24),((gASD_AC_MANAGEMENT_IP & 0xff0000) >> 16),((gASD_AC_MANAGEMENT_IP & 0xff00) >> 8),(gASD_AC_MANAGEMENT_IP & 0xff),
 										prewasd->Radio_G_ID/4,MAC2STR(prewasd->own_addr),((gASD_AC_MANAGEMENT_IP & 0xff000000) >> 24),((gASD_AC_MANAGEMENT_IP & 0xff0000) >> 16),((gASD_AC_MANAGEMENT_IP & 0xff00) >> 8),(gASD_AC_MANAGEMENT_IP & 0xff),
 										wasd->Radio_G_ID/4,MAC2STR(wasd->own_addr)
 									);
@@ -3858,6 +4045,7 @@ void STA_OP(TableMsg *msg){
 			if(ret == 0)
 				return;
 			num = ASD_SEARCH_WTP_STA(WTPID, bss);
+			pthread_mutex_lock(&(asd_g_sta_mutex)); 		
 			for(i = 0; i < num; i++){
 				
 #ifdef ASD_USE_PERBSS_LOCK
@@ -3911,8 +4099,8 @@ void STA_OP(TableMsg *msg){
 					if(ASD_WTP_AP[bss[i]->Radio_G_ID/4])
 						memcpy(WTPMAC,ASD_WTP_AP[bss[i]->Radio_G_ID/4]->WTPMAC,6);
 					if(gASDLOGDEBUG & BIT(1))
-						syslog(LOG_INFO|LOG_LOCAL7, "DISASSOC:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d, ErrorCode:%d.\n",
-							MAC2STR(sta->addr),MAC2STR(WTPMAC),bss[i]->BSSIndex,999);//qiuchen 2013.01.14
+						syslog(LOG_INFO|LOG_LOCAL7, "[%d-%d]DISASSOC:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d, ErrorCode:%d.\n",
+							slotid,vrrid,MAC2STR(sta->addr),MAC2STR(WTPMAC),bss[i]->BSSIndex,999);//qiuchen 2013.01.14
 					if(ASD_WLAN[bss[i]->WlanID]!=NULL&&ASD_WLAN[bss[i]->WlanID]->balance_switch == 1&&ASD_WLAN[bss[i]->WlanID]->balance_method==1){
 						ap_free_sta(bss[i], sta, 1);
 					}
@@ -3939,6 +4127,7 @@ void STA_OP(TableMsg *msg){
 				pthread_mutex_unlock(&(bss[i]->asd_sta_mutex));
 #endif
 			}
+			pthread_mutex_unlock(&(asd_g_sta_mutex)); 		
 			break;	
 				//weichao add 2011.11.11
 			case  DHCP_IP:
@@ -3977,16 +4166,16 @@ void STA_OP(TableMsg *msg){
 							//qiuchen
 							if(gASDLOGDEBUG & BIT(1)){
 								unsigned char *ipold = (unsigned char *)&(sta->ipaddr);
-								syslog(LOG_INFO|LOG_LOCAL7, "STA_IP_UPDATE:UserMAC:" MACSTR "OLD_IP:%d.%d.%d.%d NEW_IP:%d.%d.%d.%d\n",
-									MAC2STR(sta->addr),ipold[0],ipold[1],ipold[2],ipold[3],ip[0],ip[1],ip[2],ip[3]);//qiuchen 2013.01.14
+								syslog(LOG_INFO|LOG_LOCAL7, "[%d-%d]STA_IP_UPDATE:UserMAC:" MACSTR "OLD_IP:%d.%d.%d.%d NEW_IP:%d.%d.%d.%d\n",
+									slotid,vrrid,MAC2STR(sta->addr),ipold[0],ipold[1],ipold[2],ipold[3],ip[0],ip[1],ip[2],ip[3]);//qiuchen 2013.01.14
 							}
 					}
 					else{
 						//qiuchen
 						time_t at = time(NULL);
 						if(gASDLOGDEBUG & BIT(1))
-							syslog(LOG_INFO|LOG_LOCAL7, "STA_GET_ONLINE:UserMAC:" MACSTR "IP:%d.%d.%d.%d TIME:%s\n",
-								MAC2STR(sta->addr),ip[0],ip[1],ip[2],ip[3],ctime(&at));//qiuchen 2013.01.14
+							syslog(LOG_INFO|LOG_LOCAL7, "[%d-%d]STA_GET_ONLINE:UserMAC:" MACSTR "IP:%d.%d.%d.%d TIME:%s\n",
+								slotid,vrrid,MAC2STR(sta->addr),ip[0],ip[1],ip[2],ip[3],ctime(&at));//qiuchen 2013.01.14
 					}
 					sta->ip_addr.s_addr = msg->u.STA.ipv4Address;
 					sta->ipaddr = msg->u.STA.ipv4Address;
@@ -4183,8 +4372,8 @@ void STA_OP(TableMsg *msg){
 							if(ASD_WTP_AP[wasd->Radio_G_ID/4])
 								memcpy(WTPMAC,ASD_WTP_AP[wasd->Radio_G_ID/4]->WTPMAC,6);
 							if(gASDLOGDEBUG & BIT(1))
-								syslog(LOG_INFO|LOG_LOCAL7, "DISASSOC:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d, ErrorCode:%d.\n",
-									MAC2STR(sta->addr),MAC2STR(WTPMAC),wasd->BSSIndex,(reason == AP_STA_DEAUTH || reason == AP_STA_DISASSOC)?0:999);//qiuchen 2013.01.14
+								syslog(LOG_INFO|LOG_LOCAL7, "[%d-%d]DISASSOC:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d, ErrorCode:%d.\n",
+									slotid,vrrid,MAC2STR(sta->addr),MAC2STR(WTPMAC),wasd->BSSIndex,(reason == AP_STA_DEAUTH || reason == AP_STA_DISASSOC)?0:999);//qiuchen 2013.01.14
 							asd_printf(ASD_LEAVE,MSG_DEBUG,"sta:"MACSTR"leave reason is %d\n",MAC2STR(sta->addr),reason);
 							asd_printf(ASD_LEAVE,MSG_DEBUG,"sta:"MACSTR"leave sub_reason is %d\n",MAC2STR(sta->addr),sub_reason);
 							if((reason != AP_STA_DEAUTH)&&(reason != AP_STA_DISASSOC)){//qiuchen 
@@ -4260,8 +4449,8 @@ void STA_OP(TableMsg *msg){
 						if(ASD_WTP_AP[wasd->Radio_G_ID/4])
 							memcpy(WTPMAC,ASD_WTP_AP[wasd->Radio_G_ID/4]->WTPMAC,6);
 						if(gASDLOGDEBUG & BIT(1))
-							syslog(LOG_INFO|LOG_LOCAL7, "DISASSOC:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d, ErrorCode:%d.\n",
-								MAC2STR(sta->addr),MAC2STR(WTPMAC),wasd->BSSIndex,999);//qiuchen 2013.01.14
+							syslog(LOG_INFO|LOG_LOCAL7, "[%d-%d]DISASSOC:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d, ErrorCode:%d.\n",
+								slotid,vrrid,MAC2STR(sta->addr),MAC2STR(WTPMAC),wasd->BSSIndex,999);//qiuchen 2013.01.14
 						wasd->abnormal_st_down_num ++;			
 						signal_sta_leave_abnormal(sta->addr,wasd->Radio_G_ID,wasd->BSSIndex,wasd->WlanID,sta->rssi);
 						if(1 == check_sta_authorized(wasd,sta))
@@ -4360,6 +4549,7 @@ void BAK_OP(TableMsg *msg){
 					circle_unregister_read_sock(new_sock);
 					#endif
 					circle_unregister_read_sock(asd_sock);
+					FD_CHANGE = 1;
 				}
 			//	circle_cancel_timeout(asd_update_select_mode,NULL,NULL);
 				circle_cancel_timeout(bak_update_bss_req,NULL,NULL);
@@ -4397,6 +4587,7 @@ void BAK_OP(TableMsg *msg){
 					#endif
 				
 				circle_unregister_read_sock(asd_sock);
+					FD_CHANGE = 1;
 			//	circle_cancel_timeout(asd_update_select_mode,NULL,NULL);
 				circle_cancel_timeout(bak_update_bss_req,NULL,NULL);
 #endif
@@ -4436,6 +4627,7 @@ void BAK_OP(TableMsg *msg){
 					bak_unreach = 0;
 					circle_unregister_read_sock(new_sock);					
 					circle_unregister_read_sock(asd_sock);
+					FD_CHANGE = 1;
 				//	circle_cancel_timeout(asd_update_select_mode,NULL,NULL);
 					circle_register_timeout(120, 0, bak_update_bss_req, NULL, NULL);//qiuchen change it
 					#ifndef _AC_BAK_UDP_
@@ -4504,6 +4696,7 @@ void BAK_OP(TableMsg *msg){
 				close(new_sock);
 				#endif
 				circle_unregister_read_sock(asd_master_sock);
+				FD_CHANGE = 1;
 				//close(asd_master_sock);	
 				if(local){
 					struct sockaddr_tipc *tipcaddr = (struct sockaddr_tipc *)&B_addr;
@@ -5182,7 +5375,7 @@ void CMD_SECURITY_OP(ASDCmdMsg *msg)
 			asd_printf(ASD_DEFAULT,MSG_DEBUG,"ASD_CMD_APPLY_SECURITY\n");
 			wlan_id = msg->u.secinfo.wlanid;
 			SID = msg->u.secinfo.SID;
-			
+			pthread_mutex_lock(&asd_g_wlan_mutex);
 			ret = asd_wlan_radius_init(wlan_id,SID);
 			if(ASD_WLAN[wlan_id]->SecurityID != 0){
 			
@@ -5205,6 +5398,7 @@ void CMD_SECURITY_OP(ASDCmdMsg *msg)
 			asd_printf(ASD_DBUS,MSG_DEBUG,"ASD_WLAN_INF_OP\n");
 			if(!ret && ASD_WLAN_INF_OP(wlan_id, SID, WID_MODIFY))
 				asd_printf(ASD_DBUS,MSG_DEBUG,"update wlan security type\n");
+			pthread_mutex_unlock(&asd_g_wlan_mutex);
 			break;
 		default:
 			break;
@@ -6041,6 +6235,7 @@ void asd_sock_reinit(int fd,void *handler,void *circle_data, void *user_data)
 	{
 		asd_printf(ASD_DEFAULT,MSG_INFO,"handler == handle_netlink!\n");
 		circle_unregister_read_sock(nl_sock);
+		FD_CHANGE = 1;
 		close(nl_sock);
 		ASD_NETLINIK_INIT();
 		asd_printf(ASD_DEFAULT,MSG_INFO,"func:%s,netlink sock  repair!\n",__func__);
@@ -6048,6 +6243,7 @@ void asd_sock_reinit(int fd,void *handler,void *circle_data, void *user_data)
 	else if((handler ==do_asd_sta_arp_listen)&&(1 == asd_sta_arp_listen))
 	{
 		circle_unregister_read_sock(rth1.fd);
+		FD_CHANGE = 1;
 		if(rtnl_wilddump_request(&rth1, AF_INET, RTM_GETNEIGH) < 0)
 		{
 			asd_sta_arp_listen = 0;
@@ -6305,3 +6501,88 @@ const struct wpa_driver_ops wpa_driver_asd_ops = {
 	.sta_clear_stats = NULL,
 	.get_hw_feature_data = asd_get_hw_feature_data_w,
 };
+void ASD_STA_OPT_STR(int Op,char *msgtype)
+{
+	switch(Op){
+        case WID_DEL:
+			strcpy(msgtype,"WID_DEL");
+			break;
+		case WID_MODIFY:
+			strcpy(msgtype,"WID_MODIFY");
+			break;
+		case STA_INFO:
+			strcpy(msgtype,"STA_INFO");
+			break;
+		case WID_CONFLICT :
+            strcpy(msgtype,"WID_CONFLICT");
+			break;
+        case STA_WAPI_INFO:
+			strcpy(msgtype,"STA_WAPI_INFO");
+			break;
+		case  EAG_MAC_AUTH:	
+			strcpy(msgtype,"EAG_MAC_AUTH");
+			break;
+		case EAG_MAC_DEL_AUTH:
+			strcpy(msgtype,"EAG_MAC_DEL_AUTH");
+			break;
+		case STA_FLOW_CHECK:
+			strcpy(msgtype,"STA_FLOW_CHECK");
+			break;
+        case EAG_AUTH:
+	   	    strcpy(msgtype,"EAG_AUTH");
+			break;
+	    case EAG_DEL_AUTH:
+		    strcpy(msgtype,"EAG_DEL_AUTH");
+			break;
+		case  DHCP_IP:	
+		    strcpy(msgtype,"DHCP_IP");
+			break;
+		case STA_LEAVE_REPORT:
+            strcpy(msgtype,"STA_LEAVE_REPORT");
+			break;    
+		case EAG_NTF_ASD_STA_INFO:
+			strcpy(msgtype,"EAG_NTF_ASD_STA_INFO");
+			break;
+		case STA_CHECK_DEL:
+			strcpy(msgtype,"STA_CHECK_DEL");
+			break;
+		case WID_ADD:
+		case RADIO_INFO:
+		case WTP_DENEY_STA:
+		case STA_COME:
+		case STA_LEAVE:
+		case VERIFY_INFO:
+		case VERIFY_FAIL_INFO:
+		case WTP_DE_DENEY_STA:
+		case BSS_INFO:
+		case ASSOC_FAIL_INFO:
+		case JIANQUAN_FAIL_INFO:
+		case CHANNEL_CHANGE_INFO:
+		case WID_UPDATE:
+		case WID_ONE_UPDATE:
+		case TRAFFIC_LIMIT:
+		case WIDS_INFO:
+		case WIDS_SET:
+		case WAPI_INVALID_CERT:
+		case WAPI_CHALLENGE_REPLAY:
+		case WAPI_MIC_JUGGLE:
+		case WAPI_LOW_SAFE_LEVEL:
+		case WAPI_ADDR_REDIRECTION:
+		case OPEN_ROAM:
+		case VRRP_IF:
+		case CANCEL_TRAFFIC_LIMIT:
+		case WTP_STA_CHECK:
+		case WID_WIFI_INFO:
+		case ASD_AUTH:
+		case ASD_DEL_AUTH:
+		case BSS_UPDATE:
+		case ASD_MAC_AUTH:
+		case ASD_MAC_DEL_AUTH:
+		case IDLE_STA_DEL:
+		case MAC_LIST_ADD:
+		case RADIUS_STA_UPDATE:		
+        default:
+			break;
+	}
+}
+

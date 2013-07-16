@@ -164,7 +164,7 @@ int ShowSystemInformationPage(struct list *lpublic, struct list *lsystem, struct
   if(cgiFormSubmitClicked("reboot") == cgiFormSuccess)
   {
   
-  	status = system("dcli_reboot.sh > /dev/null");		  
+  	status = system("ac_reset_fast_all.sh > /dev/null");		  
 //  	ret = WEXITSTATUS(status);
 
 //  	if(ret==0)
@@ -239,6 +239,9 @@ int ShowSystemInformationPage(struct list *lpublic, struct list *lsystem, struct
 						if(retu==0)
 						{
 							fprintf(cgiOut,"<tr height=25>"\
+							"<td align=left id=tdleft><a href=wp_sysconfig.cgi?UN=%s target=mainFrame class=top><font id=%s>%s</font></a></td>",encry,search(lpublic,"menu_san"),search(lsystem,"sys_config"));
+							fprintf(cgiOut,"</tr>"\
+							"<tr height=25>"\
 							"<td align=left id=tdleft><a href=wp_impconf.cgi?UN=%s target=mainFrame class=top><font id=%s>%s</font></a></td>",encry,search(lpublic,"menu_san"),search(lsystem,"import_config"));
 							fprintf(cgiOut,"</tr>"\
 							"<tr height=25>"\
@@ -282,7 +285,15 @@ int ShowSystemInformationPage(struct list *lpublic, struct list *lsystem, struct
 							fprintf(cgiOut,"<tr height=25>"\
 							"<td align=left id=tdleft><a href=wp_pppoe_server.cgi?UN=%s target=mainFrame class=top><font id=%s>%s</font></a></td>",encry,search(lpublic,"menu_san"),"PPPOE");
 							fprintf(cgiOut,"</tr>");
+
+							fprintf(cgiOut,"<tr height=25>"\
+							"<td align=left id=tdleft><a href=wp_pppoe_snp.cgi?UN=%s target=mainFrame class=top><font id=%s>%s</font></a></td>",encry,search(lpublic,"menu_san"),"PPPOE SNP");
+							fprintf(cgiOut,"</tr>");
 						}
+						//新增时间条目
+						fprintf(cgiOut,"<tr height=26>"\
+						"<td align=left id=tdleft><a href=wp_webservice.cgi?UN=%s target=mainFrame class=top><font id=%s>%s</font></a></td>",encry,search(lpublic,"menu_san"),search(lpublic,"web_service"));
+						fprintf(cgiOut,"</tr>");
 
 				  }
 				  else			  
@@ -337,7 +348,16 @@ int ShowSystemInformationPage(struct list *lpublic, struct list *lsystem, struct
 						fprintf(cgiOut,"<tr height=25>"\
 						"<td align=left id=tdleft><a href=wp_pppoe_server.cgi?UN=%s target=mainFrame class=top><font id=%s>%s</font></a></td>",save_encry,search(lpublic,"menu_san"),"PPPOE");
 						fprintf(cgiOut,"</tr>");
+
+						fprintf(cgiOut,"<tr height=25>"\
+						"<td align=left id=tdleft><a href=wp_pppoe_snp.cgi?UN=%s target=mainFrame class=top><font id=%s>%s</font></a></td>",save_encry,search(lpublic,"menu_san"),"PPPOE SNP");
+						fprintf(cgiOut,"</tr>");
 					}
+					
+					//新增时间条目
+					fprintf(cgiOut,"<tr height=26>"\
+					"<td align=left id=tdleft><a href=wp_webservice.cgi?UN=%s target=mainFrame class=top><font id=%s>%s</font></a></td>",encry,search(lpublic,"menu_san"),search(lpublic,"web_service"));
+					fprintf(cgiOut,"</tr>");
 
 				 }
 				  for(i=0;i<8;i++)
@@ -420,11 +440,31 @@ int ShowSystemInformationPage(struct list *lpublic, struct list *lsystem, struct
 								"<td id=td2>%s</td>",sysimg.boot_img);
 					fprintf(cgiOut,"</tr>");
 					#endif
+					FILE *fp = NULL;
+					char acDeviceSn[256] = {0};
+					memset(acDeviceSn,0,256);			
+				
+					fp=fopen("/devinfo/sn","r");
+					if(fp != NULL)
+					{
+						fgets(acDeviceSn,256,fp);
+						if(strcmp(acDeviceSn,"") == 0)
+						{
+							memset(acDeviceSn,0,256);			
+							strncpy(acDeviceSn,"01010106C14009900001",sizeof(acDeviceSn)-1);
+						}
+						fclose(fp);
+					}
+					else
+					{
+						memset(acDeviceSn,0,256);			
+						strncpy(acDeviceSn,"01010106C14009900001",sizeof(acDeviceSn)-1);
+					}	
 					
 					fprintf(cgiOut,"<tr>"\
-								"<td>&nbsp;</td>"\
-								"<td>&nbsp;</td>"\
-							  "</tr>"\
+								"<td id=td1>SN</td>"\
+								"<td id=td2>%s</td>",acDeviceSn);
+							  fprintf(cgiOut,"</tr>"\
 							  "<tr>");
 					if((cgiFormSubmitClicked("save_config") != cgiFormSuccess)&&(cgiFormSubmitClicked("del_config") != cgiFormSuccess)&&(cgiFormSubmitClicked("reboot") != cgiFormSuccess))
 					{

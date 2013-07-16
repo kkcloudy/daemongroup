@@ -244,3 +244,5 @@ tc_mode_notify=The command might use a long time, when you select mode non-share
 tc_mode_notify=选择独立带宽时，命令的执行时间可能较长。;
 tc_mode_mask_spec=The sub-net mask must lager than 255.255.255.0, when you select non-share mode;
 tc_mode_mask_spec=当你选择独立带宽时，子网掩码必须大于255.255.255.0;
+slot_num=Slot ID:;
+slot_num=槽号:;

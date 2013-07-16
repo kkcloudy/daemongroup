@@ -45,6 +45,10 @@ typedef struct {
 	unsigned int gifindex;
 	unsigned int total_num;
 	time_t sta_online_time;//qiuchen add it
+	unsigned int PreBSSIndex;
+	unsigned char PreBSSID[MAC_LEN];
+	unsigned char rflag;
+	unsigned int PreApID;
 }B_UPDATE_STA;
 
 typedef struct {

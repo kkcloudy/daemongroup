@@ -2160,6 +2160,14 @@ DEFUN(set_ebr_add_del_if_cmd_func,
 		vty_out(vty,"<error> input ifname error\n");
 	else if(ret == WID_EBR_ERROR)
 		vty_out(vty,"<error> ebr if error\n");
+	else if (ret == WID_WANT_TO_DELETE_WLAN)	/* hll add for AXSSZFI-1742 */
+	{
+		vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+	}
+	else if (ret == WLAN_ID_NOT_EXIST)
+	{
+		vty_out(vty, "<error> please check the interface's wlanid, you maybe have delete this wlan\n");
+	}
 	else
 		vty_out(vty,"<error>  %d\n",ret);
 	

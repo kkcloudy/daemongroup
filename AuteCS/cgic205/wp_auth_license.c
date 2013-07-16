@@ -142,11 +142,9 @@ int ShowLicensePage(struct list *lpublic, struct list *lsystem)
   "</head>"\
   "<body>");
            
-   if(cgiFormSubmitClicked("install") == cgiFormSuccess)
+  if(cgiFormSubmitClicked("install") == cgiFormSuccess)
   {
-
    int err_flag=-1;
-   int errtype=0;
    memset(serialtext,0,128);
    cgiFormStringNoNewlines("authtext", serialtext, 128); 
    
@@ -156,7 +154,7 @@ int ShowLicensePage(struct list *lpublic, struct list *lsystem)
    	ShowAlert(search(lsystem,"auth_serial_null"));
    else
    {
-        err_flag=license_install_cmd_func(serialtext, &errtype);  //嗲用ws_dcli_license.c的函数
+        err_flag=license_install_cmd_func(serialtext);  //嗲用ws_dcli_license.c的函数
 		
     	if(err_flag==1)
     	  ShowAlert(search(lpublic,"oper_succ"));   //弹出框提示 操作成功

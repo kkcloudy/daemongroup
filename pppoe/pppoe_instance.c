@@ -890,7 +890,7 @@ instance_device_config_radius_rdc(instance_struct_t *instance, uint32 dev_id,
 
 	dev = device_find(instance, dev_id);
 	if (!dev) {
-		pppoe_log(LOG_WARNING, "ddev(ID:%d) is not exist\n", dev_id);
+		pppoe_log(LOG_WARNING, "dev(ID:%d) is not exist\n", dev_id);
 		ret = PPPOEERR_ENOEXIST;
 		goto error;
 	}

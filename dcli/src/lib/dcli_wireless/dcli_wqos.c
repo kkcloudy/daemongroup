@@ -345,6 +345,10 @@ int wid_interface_ifname_radio(char *ptr,struct vty *vty,char *line)
 			vty_out(vty, "layer3-interface error\n");
 		else if (ret == UNKNOWN_ERROR)
 			vty_out(vty, "unknown error occur\n");
+		else if (ret == WID_WANT_TO_DELETE_WLAN)		/* hll add for ASXXZFI-1742 */
+		{
+			vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+		}
 		else
 		{
 			vty_out(vty,"other error %d\n",ret);

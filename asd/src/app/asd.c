@@ -152,11 +152,13 @@ static void asd_logger_cb(void *ctx, const u8 *addr, unsigned int module,
 	int conf_syslog_level, conf_stdout_level;
 	unsigned int conf_syslog, conf_stdout;
 
-	maxlen = len + 100;
+	maxlen = len + 100+64;
 	format = os_zalloc(maxlen);
 	if (!format)
 		return;
-
+	char *s = format;
+	sprintf(format,"[%d-%d]",slotid,vrrid);
+	format = format + strlen(format);
 	if (wasd && wasd->conf) {
 		conf_syslog_level = wasd->conf->logger_syslog_level;
 		conf_stdout_level = wasd->conf->logger_stdout_level;
@@ -211,24 +213,24 @@ static void asd_logger_cb(void *ctx, const u8 *addr, unsigned int module,
 			    module_str, module_str ? ": " : "", txt);
 
 	if (gasdPRINT)
-		asd_printf(ASD_DEFAULT,MSG_DEBUG,"%s\n",format);
+		asd_printf(ASD_DEFAULT,MSG_DEBUG,"%s\n",s);
 
 		switch (level) {
 		case asd_LEVEL_DEBUG_VERBOSE:
 		case asd_LEVEL_DEBUG:
-		asd_syslog_debug(ASD_ALL,format);
+		asd_syslog_debug(ASD_ALL,s);
 			break;
 		case asd_LEVEL_INFO:
-		asd_syslog_info(format);
+		asd_syslog_info(s);
 			break;
 		case asd_LEVEL_NOTICE:
-		asd_syslog_notice(format);
+		asd_syslog_notice(s);
 			break;
 		case asd_LEVEL_WARNING:
-		asd_syslog_warning(format);
+		asd_syslog_warning(s);
 			break;
 		default:
-		asd_syslog_info(format);
+		asd_syslog_info(s);
 			break;
 		}
 /*
@@ -262,7 +264,7 @@ static void asd_logger_cb(void *ctx, const u8 *addr, unsigned int module,
 	}
 */	
 
-	os_free(format);
+	os_free(s);
 }
 
 
@@ -839,7 +841,7 @@ static void asd_wpa_auth_disconnect(void *ctx, const u8 *addr,
 	if (sta == NULL)
 		return;
 	if(gASDLOGDEBUG & BIT(1))
-		syslog(LOG_INFO|LOG_LOCAL7,"AUTHFAILED:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d,SecurityType:%d,ErrorCode:%d.\n",
+		syslog(LOG_INFO|LOG_LOCAL7,"[%d-%d]AUTHFAILED:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d,SecurityType:%d,ErrorCode:%d.\n",slotid,vrrid,
 			MAC2STR(addr),MAC2STR(WTPMAC),wasd->BSSIndex,securitytype,PSK_FAILED);//qiuchen 2013.01.14
 	if(1 == check_sta_authorized(wasd,sta))
 		wasd->authorized_sta_num--;
@@ -2169,17 +2171,19 @@ int AsdStaInfoToWID(struct asd_data *wasd, const u8 *addr, Operate op){
 		ASD_WTP_ST *WTP = ASD_WTP_AP[STA.u.STA.WTPID];
 		if(WTP){
 			unsigned char *ip = (unsigned char*)&(WTP->WTPIP);
-			syslog(LOG_INFO|LOG_LOCAL7, "STA :"MACSTR" access WTP %d,WTP MAC:"MACSTR",WTP IP:%d.%d.%d.%d,Access Time:%s\n",
+			syslog(LOG_INFO|LOG_LOCAL7, "[%d-%d]STA :"MACSTR" access WTP %d,WTP MAC:"MACSTR",WTP IP:%d.%d.%d.%d,Access Time:%s\n",slotid,vrrid,
 				MAC2STR(STA.u.STA.STAMAC),STA.u.STA.WTPID,MAC2STR(WTP->WTPMAC),ip[0],ip[1],ip[2],ip[3],ctime(&now));
-		}
+		}        
+
 		asd_printf(ASD_80211,MSG_INFO,"STA :"MACSTR" access WTP %d\n",MAC2STR(addr),STA.u.STA.WTPID);
 		STA.u.STA.sta_num = wasd->authorized_sta_num;
-		asd_printf(ASD_DEFAULT,MSG_DEBUG,"sta num %d\n",STA.u.STA.sta_num);
+		asd_printf(ASD_DEFAULT,MSG_DEBUG,"sta num %d\n",STA.u.STA.sta_num);	
+		
 	}else if(STA.Op==WID_DEL){
 		ASD_WTP_ST *WTP = ASD_WTP_AP[STA.u.STA.WTPID];
 		if(WTP){
 			unsigned char *ip = (unsigned char*)&(WTP->WTPIP);
-			syslog(LOG_INFO|LOG_LOCAL7, "STA :"MACSTR" leave WTP %d,WTP MAC:"MACSTR",WTP IP:%d.%d.%d.%d,Leave Time:%s\n",
+			syslog(LOG_INFO|LOG_LOCAL7, "[%d-%d]STA :"MACSTR" leave WTP %d,WTP MAC:"MACSTR",WTP IP:%d.%d.%d.%d,Leave Time:%s\n",slotid,vrrid,
 				MAC2STR(STA.u.STA.STAMAC),STA.u.STA.WTPID,MAC2STR(WTP->WTPMAC),ip[0],ip[1],ip[2],ip[3],ctime(&now));
 		}
 		asd_printf(ASD_80211,MSG_INFO,"STA :"MACSTR" leave WTP %d\n",MAC2STR(addr),STA.u.STA.WTPID);

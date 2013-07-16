@@ -51,6 +51,7 @@ extern "C"
 #include "if.h"
 #include "sysdef/returncode.h"
 #include "dcli_dhcp.h"
+#include "dcli_vrrp.h"
 #include <sys/socket.h>
 #include <dbus/sem/sem_dbus_def.h>
 
@@ -1848,7 +1849,9 @@ dcli_create_ip_pool_name
 				    vty_out (vty, "enter ip pool fail \n");
 			}
 			else {
-			    vty_out (vty, "create ip pool fail \n");    
+			    vty_out (vty, "create ip pool fail \n"); 
+				dbus_message_unref(reply);
+				return 1;
 			}
 		}
 	} 
@@ -1920,7 +1923,9 @@ DEFUN(create_ip_pool_name_cmd_func,
 	    free(poolName);
 	    poolName = NULL;
 	}
-	
+	if(ret){
+		return CMD_FAILURE;
+	}
 	return CMD_SUCCESS;
 	
 }
@@ -6074,16 +6079,47 @@ dcli_delete_failover_pool
 {
 	DBusMessage 	*query = NULL, *reply = NULL;
 	DBusError 		err;
-	unsigned int op_ret = 0;
+	unsigned int op_ret = 0, ret = 0;
 	char *failname = NULL;
+	int profile = 0,profile_sub = 0;
+	char *endptr = NULL,*tmp = NULL;
 
 	failname = malloc(strlen(failover_conf->name) + 1);
 	memset(failname, 0, (strlen(failover_conf->name) + 1));
 	memcpy(failname, failover_conf->name, strlen(failover_conf->name));
-
+	if(strncmp(failname,"peer",4)){
+		vty_out (vty, "FAILOVERNAME wrong!example: peer5\n");
+		return CMD_FAILURE;
+	}
+	profile = strtoul(failname+4,&endptr,10);
+	//printf("profile %d\n",profile);
+	if(profile < 1 || profile > 16){
+		vty_out (vty, "profile id wrong!\n");
+		return CMD_FAILURE;
+	}
+	struct dhcp_failover_state failover_state;
+	memset(&failover_state, 0, sizeof(failover_state));
+	
 	int localid = 1, slot_id = HostSlotId, indextmp = 0;
 	get_slotid_index(vty, &indextmp, &slot_id, &localid);
-
+	ret = dcli_show_dhcp_failover(vty, profile, &failover_state, slot_id);
+	if (DCLI_VRRP_RETURN_CODE_OK != ret){
+		vty_out(vty, "cannot get failobver state\n");
+	}
+	if(!strncmp(endptr,".",1)){
+	tmp = endptr+1;
+	profile_sub = strtoul(tmp,&endptr,10);
+	//printf("profile_sub %d,failname(1) %s\n",profile_sub,failname);
+	memset(failname, 0, (strlen(failover_conf->name) + 1));
+	sprintf(failname,"peer%d",profile);
+	//printf("failname(2) %s\n",failname);
+	}
+	if(((failover_state.peer != 0) || (failover_state.local != 6)) && (DCLI_VRRP_RETURN_CODE_OK == ret)){
+		vty_out(vty, "Only local [recover] peer [unknown] for this CMD");
+		if(profile_sub != 120)
+		return CMD_FAILURE;
+	}
+	
 	DBusConnection *dcli_dbus_connection = NULL;
 	ReInitDbusConnection(&dcli_dbus_connection, slot_id, distributFag);	
 	query = dbus_message_new_method_call(DHCP_DBUS_BUSNAME, 
@@ -6118,7 +6154,10 @@ dcli_delete_failover_pool
 			vty_out (vty, "failover state change error not enable\n");
 		}else if(DHCP_NOT_FOUND_POOL  == op_ret) {
 			vty_out (vty, "Not found the pool\n");			
-		}else {
+		}else if(DHCP_FAILOVER_NAME_WRONG == op_ret){
+			vty_out (vty, "FAILOVERNAME wrong!");
+		}
+		else {
 			vty_out (vty, "delete operation fail\n");
 		}			
 	} 
@@ -7798,13 +7837,16 @@ dcli_set_debug_state
 
 DEFUN(dhcp_debug_enable_cmd_func,
 	dhcp_debug_enable_cmd,
-	"debug dhcp (all|info|error|debug)",
+	"debug dhcp (all|info|error|debug|debug_failover_connect|debug_failover_msg_deal|debug_failover_all)",
 	"Add debug dhcp Information\n"
 	"Dhcp server\n"	
 	"Open dhcp debug level all\n"	
 	"Open dhcp debug level info\n"
 	"Open dhcp debug level error\n"
 	"Open dhcp debug level debug\n"
+	"Open dhcp debug level dhcp_failover_connect"
+	"Open dhcp debug level dhcp_failover_msg_deal"
+	"Open dhcp debug level dhcp_failover_all"	
 )
 {
 	unsigned int ret = 0, debug_type = 0, debug_enable = 1;
@@ -7820,6 +7862,15 @@ DEFUN(dhcp_debug_enable_cmd_func,
 	}
 	else if (strncmp("debug",argv[0],strlen(argv[0]))==0) {
 		debug_type = DEBUG_TYPE_DEBUG;
+	}
+	else if(strncmp("debug_failover_connect",argv[0],strlen(argv[0])) == 0){
+		debug_type = DEBUG_TYPE_DEBUG_FAILOVER_CONNECT;
+	}
+	else if(strncmp("debug_failover_msg_deal",argv[0],strlen(argv[0])) == 0){
+		debug_type = DEBUG_TYPE_DEBUG_FAILOVER_MSG_DEAL;
+	}
+	else if(strncmp("debug_failover_all",argv[0],strlen(argv[0])) == 0){
+		debug_type = DEBUG_TYPE_DEBUG_FAILOVER_ALL;
 	}
 	else {
 		vty_out(vty,"bad command parameter %s\n", argv[0]);
@@ -7837,7 +7888,7 @@ DEFUN(dhcp_debug_enable_cmd_func,
 
 DEFUN(dhcp_debug_disable_cmd_func,
 	dhcp_debug_disable_cmd,
-	"no debug dhcp (all|info|error|debug)",
+	"no debug dhcp (all|info|error|debug|debug_failover_connect|debug_failover_msg_deal|debug_failover_all)",
 	"Delete old Configuration\n"
 	"Config dhcp debugging close\n"
 	"Dhcp server\n"
@@ -7845,6 +7896,9 @@ DEFUN(dhcp_debug_disable_cmd_func,
 	"Close dhcp debug level info\n"
 	"Close dhcp debug level error\n"
 	"Close dhcp debug level debug\n"
+	"Close dhcp debug level dhcp_failover_connect"
+	"Close dhcp debug level dhcp_failover_msg_deal"
+	"Close dhcp debug level dhcp_failover_all"
 
 )
 {
@@ -7861,6 +7915,15 @@ DEFUN(dhcp_debug_disable_cmd_func,
 	}
 	else if (strncmp("debug",argv[0],strlen(argv[0]))==0) {
 		debug_type = DEBUG_TYPE_DEBUG;
+	}
+	else if(strncmp("debug_failover_connect",argv[0],strlen(argv[0])) == 0){
+		debug_type = DEBUG_TYPE_DEBUG_FAILOVER_CONNECT;
+	}
+	else if(strncmp("debug_failover_msg_deal",argv[0],strlen(argv[0])) == 0){
+		debug_type = DEBUG_TYPE_DEBUG_FAILOVER_MSG_DEAL;
+	}
+	else if(strncmp("debug_failover_all",argv[0],strlen(argv[0])) == 0){
+		debug_type = DEBUG_TYPE_DEBUG_FAILOVER_ALL;
 	}
 	else {
 		vty_out(vty,"bad command parameter %s\n", argv[0]);

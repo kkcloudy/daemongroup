@@ -596,8 +596,8 @@ void ieee802_11_send_deauth(struct asd_data *wasd, u8 *addr, u16 reason)
 		       asd_LEVEL_NOTICE,
 		       "deauthenticate - reason %d", reason);
 	if(gASDLOGDEBUG & BIT(1))
-		syslog(LOG_INFO|LOG_LOCAL7, "DEAUTH:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d, ErrorCode:%d.\n",
-			MAC2STR(addr),MAC2STR(WTPMAC),wasd->BSSIndex,reason);//qiuchen 2013.01.14
+		syslog(LOG_INFO|LOG_LOCAL7, "[%d-%d]DEAUTH:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d, ErrorCode:%d.\n",
+		slotid,vrrid,MAC2STR(addr),MAC2STR(WTPMAC),wasd->BSSIndex,reason);//qiuchen 2013.01.14
 	//asd_syslog_h("BAC-M WMAC/6/WMAC_CLIENT_DEAUTH_WLAN","Client" MACSTR "successfully joins WLAN %s,on APID %d with BSSID" MACSTR".\n",MAC2STR(addr),SSID,wtpid,wasd->own_addr);
 	//if(gASDLOGDEBUG & BIT(0))
 		//asd_syslog_h("BAC-M WMAC/6/WMAC_CLIENT_DEAUTH_WLAN","Client "MAC_ADDRESS" successfully deauth WLAN %s,on APID %d with BSSID "MAC_ADDRESS".\n",MAC2STR(addr),SSID,wtpid,MAC2STR(wasd->own_addr));
@@ -1239,8 +1239,8 @@ static void handle_auth(struct asd_data *wasd, struct ieee80211_mgmt *mgmt,
 	char reas[256] = {0};
 	time_t at = time(NULL);
 	if(gASDLOGDEBUG & BIT(1))
-		syslog(LOG_INFO|LOG_LOCAL7, "STA_ACCESS_START:UserMAC:" MACSTR "TIME:%s.\n",
-			MAC2STR(mgmt->sa),ctime(&at));//qiuchen 2013.03.01
+		syslog(LOG_INFO|LOG_LOCAL7, "[%d-%d]STA_ACCESS_START:UserMAC:" MACSTR "TIME:%s.\n",
+			slotid,vrrid,MAC2STR(mgmt->sa),ctime(&at));//qiuchen 2013.03.01
 
 	auth_alg = le_to_host16(mgmt->u.auth.auth_alg);
 	auth_transaction = le_to_host16(mgmt->u.auth.auth_transaction);
@@ -1283,8 +1283,8 @@ static void handle_auth(struct asd_data *wasd, struct ieee80211_mgmt *mgmt,
 				asd_printf(ASD_80211,MSG_DEBUG, "BALANCE:STA=" MACSTR " BSSIndex %d  denied du to flow balance.\n",
 					MAC2STR(mgmt->sa), wasd->BSSIndex);
 				if(gASDLOGDEBUG & BIT(1))
-				syslog(LOG_INFO|LOG_LOCAL7, "AUTHFAILED:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d,SecurityType:%d,ErrorCode:%d.\n",
-					MAC2STR(mgmt->sa),MAC2STR(WTPMAC),wasd->BSSIndex,securitytype,FLOW_BANLANCE);//qiuchen 2013.01.14
+				syslog(LOG_INFO|LOG_LOCAL7, "[%d-%d]AUTHFAILED:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d,SecurityType:%d,ErrorCode:%d.\n",
+					slotid,vrrid,MAC2STR(mgmt->sa),MAC2STR(WTPMAC),wasd->BSSIndex,securitytype,FLOW_BANLANCE);//qiuchen 2013.01.14
 				if(gASDLOGDEBUG & BIT(0)){
 					log_parse_reason(FLOW_BANLANCE,reas);
 					asd_syslog_h(LOG_WARNING,"WSTA","Station Authentication Fail:StaMac:"MACSTR" Radio id %d SSIDName:%s Cause %d Desc:%s APID:%d\n",MAC2STR(mgmt->sa),wasd->Radio_L_ID,SSID,FLOW_BANLANCE,reas,wtpid);
@@ -1302,8 +1302,8 @@ static void handle_auth(struct asd_data *wasd, struct ieee80211_mgmt *mgmt,
 				asd_printf(ASD_80211,MSG_DEBUG, "BALANCE:STA=" MACSTR " BSSIndex %d  denied du to number balance.\n",
 					MAC2STR(mgmt->sa), wasd->BSSIndex);
 				if(gASDLOGDEBUG & BIT(1))
-				syslog(LOG_INFO|LOG_LOCAL7, "AUTHFAILED:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d,SecurityType:%d,ErrorCode:%d.\n",
-					MAC2STR(mgmt->sa),MAC2STR(WTPMAC),wasd->BSSIndex,securitytype,NUMBER_BANLANCE);//qiuchen 2013.01.14
+				syslog(LOG_INFO|LOG_LOCAL7, "[%d-%d]AUTHFAILED:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d,SecurityType:%d,ErrorCode:%d.\n",
+					slotid,vrrid,MAC2STR(mgmt->sa),MAC2STR(WTPMAC),wasd->BSSIndex,securitytype,NUMBER_BANLANCE);//qiuchen 2013.01.14
 				if(gASDLOGDEBUG & BIT(0)){
 					log_parse_reason(NUMBER_BANLANCE,reas);
 					asd_syslog_h(LOG_WARNING,"WSTA","Station Authentication Fail:StaMac:"MACSTR" Radio id %d SSIDName:%s Cause %d Desc:%s APID:%d\n",MAC2STR(mgmt->sa),wasd->Radio_L_ID,SSID,FLOW_BANLANCE,reas,wtpid);
@@ -1355,8 +1355,8 @@ static void handle_auth(struct asd_data *wasd, struct ieee80211_mgmt *mgmt,
 		asd_printf(ASD_80211,MSG_DEBUG,"Unsupported authentication algorithm (%d)\n",
 		       auth_alg);
 		if(gASDLOGDEBUG & BIT(1))
-		syslog(LOG_INFO|LOG_LOCAL7, "AUTHFAILED:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d,SecurityType:%d,ErrorCode:%d.\n",
-			MAC2STR(mgmt->sa),MAC2STR(WTPMAC),wasd->BSSIndex,securitytype,AUTH_ALG_FAIL);//qiuchen 2013.01.14
+		syslog(LOG_INFO|LOG_LOCAL7, "[%d-%d]AUTHFAILED:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d,SecurityType:%d,ErrorCode:%d.\n",
+			slotid,vrrid,MAC2STR(mgmt->sa),MAC2STR(WTPMAC),wasd->BSSIndex,securitytype,AUTH_ALG_FAIL);//qiuchen 2013.01.14
 		if(gASDLOGDEBUG & BIT(0)){
 			log_parse_reason(AUTH_ALG_FAIL,reas);
 			asd_syslog_h(LOG_WARNING,"WSTA","Station Authentication Fail:StaMac:"MACSTR" Radio id %d SSIDName:%s Cause %d Desc:%s APID:%d\n",MAC2STR(mgmt->sa),wasd->Radio_L_ID,SSID,FLOW_BANLANCE,reas,wtpid);
@@ -1370,8 +1370,8 @@ static void handle_auth(struct asd_data *wasd, struct ieee80211_mgmt *mgmt,
 		asd_printf(ASD_80211,MSG_DEBUG,"Unknown authentication transaction number (%d)\n",
 		       auth_transaction);
 		if(gASDLOGDEBUG & BIT(1))
-		syslog(LOG_INFO|LOG_LOCAL7, "AUTHFAILED:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d,SecurityType:%d,ErrorCode:%d.\n",
-			MAC2STR(mgmt->sa),MAC2STR(WTPMAC),wasd->BSSIndex,securitytype,AUTH_TRANSNUM_WRONG);//qiuchen 2013.01.14
+		syslog(LOG_INFO|LOG_LOCAL7, "[%d-%d]AUTHFAILED:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d,SecurityType:%d,ErrorCode:%d.\n",
+			slotid,vrrid,MAC2STR(mgmt->sa),MAC2STR(WTPMAC),wasd->BSSIndex,securitytype,AUTH_TRANSNUM_WRONG);//qiuchen 2013.01.14
 		if(gASDLOGDEBUG & BIT(0)){
 			log_parse_reason(AUTH_TRANSNUM_WRONG,reas);
 			asd_syslog_h(LOG_WARNING,"WSTA","Station Authentication Fail:StaMac:"MACSTR" Radio id %d SSIDName:%s Cause %d Desc:%s APID:%d\n",MAC2STR(mgmt->sa),wasd->Radio_L_ID,SSID,FLOW_BANLANCE,reas,wtpid);
@@ -1384,8 +1384,8 @@ static void handle_auth(struct asd_data *wasd, struct ieee80211_mgmt *mgmt,
 		asd_printf(ASD_80211,MSG_DEBUG,"Station " MACSTR " not allowed to authenticate.\n",
 		       MAC2STR(mgmt->sa));
 		if(gASDLOGDEBUG & BIT(1))
-		syslog(LOG_INFO|LOG_LOCAL7, "AUTHFAILED:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d,SecurityType:%d,ErrorCode:%d.\n",
-			MAC2STR(mgmt->sa),MAC2STR(WTPMAC),wasd->BSSIndex,securitytype,STAMAC_BSSID);//qiuchen 2013.01.14
+		syslog(LOG_INFO|LOG_LOCAL7, "[%d-%d]AUTHFAILED:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d,SecurityType:%d,ErrorCode:%d.\n",
+			slotid,vrrid,MAC2STR(mgmt->sa),MAC2STR(WTPMAC),wasd->BSSIndex,securitytype,STAMAC_BSSID);//qiuchen 2013.01.14
 		if(gASDLOGDEBUG & BIT(0)){
 			log_parse_reason(STAMAC_BSSID,reas);
 			asd_syslog_h(LOG_WARNING,"WSTA","Station Authentication Fail:StaMac:"MACSTR" Radio id %d SSIDName:%s Cause %d Desc:%s APID:%d\n",MAC2STR(mgmt->sa),wasd->Radio_L_ID,SSID,FLOW_BANLANCE,reas,wtpid);
@@ -1402,8 +1402,8 @@ static void handle_auth(struct asd_data *wasd, struct ieee80211_mgmt *mgmt,
 		       MAC2STR(mgmt->sa));
 		asd_printf(ASD_80211,MSG_DEBUG,"The mac is rejected\n");
 		if(gASDLOGDEBUG & BIT(1))
-		syslog(LOG_INFO|LOG_LOCAL7,"AUTHFAILED:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d,SecurityType:%d,ErrorCode:%d.\n",
-			MAC2STR(mgmt->sa),MAC2STR(WTPMAC),wasd->BSSIndex,securitytype,MAC_REJECTED);//qiuchen 2013.01.14
+		syslog(LOG_INFO|LOG_LOCAL7,"[%d-%d]AUTHFAILED:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d,SecurityType:%d,ErrorCode:%d.\n",
+			slotid,vrrid,MAC2STR(mgmt->sa),MAC2STR(WTPMAC),wasd->BSSIndex,securitytype,MAC_REJECTED);//qiuchen 2013.01.14
 		if(gASDLOGDEBUG & BIT(0)){
 			log_parse_reason(MAC_REJECTED,reas);
 			asd_syslog_h(LOG_INFO,"WSTA","Station Authentication Fail:StaMac:"MACSTR" Radio id %d SSIDName:%s Cause %d Desc:%s APID:%d\n",MAC2STR(mgmt->sa),wasd->Radio_L_ID,SSID,FLOW_BANLANCE,reas,wtpid);
@@ -1436,8 +1436,8 @@ static void handle_auth(struct asd_data *wasd, struct ieee80211_mgmt *mgmt,
 				       "%d received from RADIUS server",
 				       vlan_id);
 			if(gASDLOGDEBUG & BIT(1))
-			syslog(LOG_INFO|LOG_LOCAL7, "AUTHFAILED:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d,SecurityType:%d,ErrorCode:%d.\n",
-				MAC2STR(mgmt->sa),MAC2STR(WTPMAC),wasd->BSSIndex,securitytype,VLANID_INVALID);//qiuchen 2013.01.14
+			syslog(LOG_INFO|LOG_LOCAL7, "[%d-%d]AUTHFAILED:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d,SecurityType:%d,ErrorCode:%d.\n",
+				slotid,vrrid,MAC2STR(mgmt->sa),MAC2STR(WTPMAC),wasd->BSSIndex,securitytype,VLANID_INVALID);//qiuchen 2013.01.14
 			if(gASDLOGDEBUG & BIT(0)){
 				log_parse_reason(VLANID_INVALID,reas);
 				asd_syslog_h(LOG_INFO,"WSTA","Station Authentication Fail:StaMac:"MACSTR" Radio id %d SSIDName:%s Cause %d Desc:%s APID:%d\n",MAC2STR(mgmt->sa),wasd->Radio_L_ID,SSID,FLOW_BANLANCE,reas,wtpid);
@@ -1450,7 +1450,8 @@ static void handle_auth(struct asd_data *wasd, struct ieee80211_mgmt *mgmt,
 			       asd_LEVEL_INFO, "VLAN ID %d", sta->vlan_id);
 	}
 	if(sta->flags&WLAN_STA_PREAUTH)
-		asd_sta_add("", wasd, sta->addr,0,0,NULL,0, 0);
+		//asd_sta_add("", wasd, sta->addr,0,0,NULL,0, 0);
+		asd_sta_roaming_management(sta);//Qc
 	sta->flags &= ~WLAN_STA_PREAUTH;
 	ieee802_1x_notify_pre_auth(sta->eapol_sm, 0);
 
@@ -1504,8 +1505,8 @@ static void handle_auth(struct asd_data *wasd, struct ieee80211_mgmt *mgmt,
 			asd_printf(ASD_80211,MSG_DEBUG, "FT: Failed to initialize WPA "
 				   "state machine");
 			if(gASDLOGDEBUG & BIT(1))
-			syslog(LOG_INFO|LOG_LOCAL7, "AUTHFAILED:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d,SecurityType:%d,ErrorCode:%d.\n",
-				MAC2STR(mgmt->sa),MAC2STR(WTPMAC),wasd->BSSIndex,securitytype,WPA_SM_FAILED);//qiuchen 2013.01.14
+			syslog(LOG_INFO|LOG_LOCAL7, "[%d-%d]AUTHFAILED:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d,SecurityType:%d,ErrorCode:%d.\n",
+				slotid,vrrid,MAC2STR(mgmt->sa),MAC2STR(WTPMAC),wasd->BSSIndex,securitytype,WPA_SM_FAILED);//qiuchen 2013.01.14
 			if(gASDLOGDEBUG & BIT(0)){
 				log_parse_reason(WPA_SM_FAILED,reas);
 				asd_syslog_h(LOG_INFO,"WSTA","Station Authentication Fail:StaMac:"MACSTR" Radio id %d SSIDName:%s Cause %d Desc:%s APID:%d\n",MAC2STR(mgmt->sa),wasd->Radio_L_ID,SSID,FLOW_BANLANCE,reas,wtpid);
@@ -1529,8 +1530,8 @@ static void handle_auth(struct asd_data *wasd, struct ieee80211_mgmt *mgmt,
 	if (resp == WLAN_STATUS_SUCCESS){
 		wasd->auth_success++;
 		if(gASDLOGDEBUG & BIT(1))
-			syslog(LOG_INFO|LOG_LOCAL7, "AUTHSUCCESS:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d,SecurityType:%d,ErrorCode:%d.\n",
-				MAC2STR(mgmt->sa),MAC2STR(WTPMAC),wasd->BSSIndex,securitytype,OPERATE_SUCCESS);//qiuchen 2013.01.14
+			syslog(LOG_INFO|LOG_LOCAL7, "[%d-%d]AUTHSUCCESS:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d,SecurityType:%d,ErrorCode:%d.\n",
+				slotid,vrrid,MAC2STR(mgmt->sa),MAC2STR(WTPMAC),wasd->BSSIndex,securitytype,OPERATE_SUCCESS);//qiuchen 2013.01.14
 		if((ASD_SECURITY[SID])&&(ASD_SECURITY[SID]->securityType == SHARED))
 			wasd->assoc_auth_succ_num++;
 	}
@@ -1671,8 +1672,8 @@ static void handle_assoc(struct asd_data *wasd,
 				asd_printf(ASD_80211,MSG_DEBUG, "BALANCE:STA=" MACSTR " BSSIndex %d  denied du to flow balance.(assoc)\n",
 					MAC2STR(mgmt->sa), wasd->BSSIndex);
 				if(gASDLOGDEBUG & BIT(1))
-				syslog(LOG_INFO|LOG_LOCAL7, "ASSOCFAILED:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d,SecurityType:%d,ErrorCode:%d.\n",
-					MAC2STR(mgmt->sa),MAC2STR(WTPMAC),wasd->BSSIndex,securitytype,FLOW_BANLANCE);//qiuchen 2013.01.14
+				syslog(LOG_INFO|LOG_LOCAL7, "[%d-%d]ASSOCFAILED:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d,SecurityType:%d,ErrorCode:%d.\n",
+					slotid,vrrid,MAC2STR(mgmt->sa),MAC2STR(WTPMAC),wasd->BSSIndex,securitytype,FLOW_BANLANCE);//qiuchen 2013.01.14
 				if(gASDLOGDEBUG & BIT(0)){
 					log_parse_reason(FLOW_BANLANCE,reas);
 					asd_syslog_h(LOG_WARNING,"WSTA","Station Association Fail:StaMac:"MACSTR" Radio id %d SSIDName:%s Cause %d Desc:%s APID:%d\n",MAC2STR(mgmt->sa),wasd->Radio_L_ID,SSID,FLOW_BANLANCE,reas,wtpid);
@@ -1689,8 +1690,8 @@ static void handle_assoc(struct asd_data *wasd,
 				asd_printf(ASD_80211,MSG_DEBUG, "BALANCE:STA=" MACSTR " BSSIndex %d  denied du to number balance.(assoc)\n",
 					MAC2STR(mgmt->sa), wasd->BSSIndex);
 				if(gASDLOGDEBUG & BIT(1))
-				syslog(LOG_INFO|LOG_LOCAL7, "ASSOCFAILED:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d,SecurityType:%d,ErrorCode:%d.\n",
-					MAC2STR(mgmt->sa),MAC2STR(WTPMAC),wasd->BSSIndex,securitytype,NUMBER_BANLANCE);//qiuchen 2013.01.14
+				syslog(LOG_INFO|LOG_LOCAL7, "[%d-%d]ASSOCFAILED:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d,SecurityType:%d,ErrorCode:%d.\n",
+					slotid,vrrid,MAC2STR(mgmt->sa),MAC2STR(WTPMAC),wasd->BSSIndex,securitytype,NUMBER_BANLANCE);//qiuchen 2013.01.14
 				if(gASDLOGDEBUG & BIT(0)){
 					log_parse_reason(NUMBER_BANLANCE,reas);
 					asd_syslog_h(LOG_WARNING,"WSTA","Station Association Fail:StaMac:"MACSTR" Radio id %d SSIDName:%s Cause %d Desc:%s APID:%d\n",MAC2STR(mgmt->sa),wasd->Radio_L_ID,SSID,FLOW_BANLANCE,reas,wtpid);
@@ -1752,8 +1753,8 @@ static void handle_assoc(struct asd_data *wasd,
 	){
 		asd_printf(ASD_DEFAULT,MSG_DEBUG,"STA " MACSTR " is rejected because of no resource.\n", MAC2STR(mgmt->sa));
 		if(gASDLOGDEBUG & BIT(1))
-		syslog(LOG_INFO|LOG_LOCAL7,"ASSOCFAILED:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d,SecurityType:%d,ErrorCode:%d.\n",
-			MAC2STR(mgmt->sa),MAC2STR(WTPMAC),wasd->BSSIndex,securitytype,NO_RESOURCE);//qiuchen 2013.01.14
+		syslog(LOG_INFO|LOG_LOCAL7,"[%d-%d]ASSOCFAILED:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d,SecurityType:%d,ErrorCode:%d.\n",
+			slotid,vrrid,MAC2STR(mgmt->sa),MAC2STR(WTPMAC),wasd->BSSIndex,securitytype,NO_RESOURCE);//qiuchen 2013.01.14
 		if(gASDLOGDEBUG & BIT(0)){
 			log_parse_reason(NO_RESOURCE,reas);
 			asd_syslog_h(LOG_WARNING,"WSTA","Station Association Fail:StaMac:"MACSTR" Radio id %d SSIDName:%s Cause %d Desc:%s APID:%d\n",MAC2STR(mgmt->sa),wasd->Radio_L_ID,SSID,FLOW_BANLANCE,reas,wtpid);
@@ -1769,8 +1770,8 @@ static void handle_assoc(struct asd_data *wasd,
 		asd_printf(ASD_80211,MSG_DEBUG,"STA " MACSTR " trying to associate before "
 		       "authentication\n", MAC2STR(mgmt->sa));
 		if(gASDLOGDEBUG & BIT(1))
-		syslog(LOG_INFO|LOG_LOCAL7, "ASSOCFAILED:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d,SecurityType:%d,ErrorCode:%d.\n",
-			MAC2STR(mgmt->sa),MAC2STR(WTPMAC),wasd->BSSIndex,securitytype,ASSO_BEFORE_AUTH);//qiuchen 2013.01.14
+		syslog(LOG_INFO|LOG_LOCAL7, "[%d-%d]ASSOCFAILED:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d,SecurityType:%d,ErrorCode:%d.\n",
+			slotid,vrrid,MAC2STR(mgmt->sa),MAC2STR(WTPMAC),wasd->BSSIndex,securitytype,ASSO_BEFORE_AUTH);//qiuchen 2013.01.14
 		if(gASDLOGDEBUG & BIT(0)){
 			log_parse_reason(ASSO_BEFORE_AUTH,reas);
 			asd_syslog_h(LOG_WARNING,"WSTA","Station Association Fail:StaMac:"MACSTR" Radio id %d SSIDName:%s Cause %d Desc:%s APID:%d\n",MAC2STR(mgmt->sa),wasd->Radio_L_ID,SSID,FLOW_BANLANCE,reas,wtpid);
@@ -1806,8 +1807,8 @@ static void handle_assoc(struct asd_data *wasd,
 		asd_printf(ASD_80211,MSG_DEBUG,"STA " MACSTR " sent invalid association request\n",
 		       MAC2STR(sta->addr));
 		if(gASDLOGDEBUG & BIT(1))
-		syslog(LOG_INFO|LOG_LOCAL7, "ASSOCFAILED:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d,SecurityType:%d,ErrorCode:%d.\n",
-			MAC2STR(mgmt->sa),MAC2STR(WTPMAC),wasd->BSSIndex,securitytype,ASSO_PACKAGE_WRONG);//qiuchen 2013.01.14
+		syslog(LOG_INFO|LOG_LOCAL7, "[%d-%d]ASSOCFAILED:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d,SecurityType:%d,ErrorCode:%d.\n",
+			slotid,vrrid,MAC2STR(mgmt->sa),MAC2STR(WTPMAC),wasd->BSSIndex,securitytype,ASSO_PACKAGE_WRONG);//qiuchen 2013.01.14
 		if(gASDLOGDEBUG & BIT(0)){
 			log_parse_reason(ASSO_PACKAGE_WRONG,reas);
 			asd_syslog_h(LOG_WARNING,"WSTA","Station Association Fail:StaMac:"MACSTR" Radio id %d SSIDName:%s Cause %d Desc:%s APID:%d\n",MAC2STR(mgmt->sa),wasd->Radio_L_ID,SSID,FLOW_BANLANCE,reas,wtpid);
@@ -1825,8 +1826,8 @@ static void handle_assoc(struct asd_data *wasd,
 		asd_printf(ASD_80211,MSG_DEBUG,"Station " MACSTR " tried to associate with "
 		       "unknown SSID '%s'\n", MAC2STR(sta->addr), ssid_txt);
 		if(gASDLOGDEBUG & BIT(1))
-		syslog(LOG_INFO|LOG_LOCAL7, "ASSOCFAILED:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d,SecurityType:%d,ErrorCode:%d.\n",
-			MAC2STR(mgmt->sa),MAC2STR(WTPMAC),wasd->BSSIndex,securitytype,UNKNOWN_SSID);//qiuchen 2013.01.14
+		syslog(LOG_INFO|LOG_LOCAL7, "[%d-%d]ASSOCFAILED:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d,SecurityType:%d,ErrorCode:%d.\n",
+			slotid,vrrid,MAC2STR(mgmt->sa),MAC2STR(WTPMAC),wasd->BSSIndex,securitytype,UNKNOWN_SSID);//qiuchen 2013.01.14
 		if(gASDLOGDEBUG & BIT(0)){
 			log_parse_reason(UNKNOWN_SSID,reas);
 			asd_syslog_h(LOG_WARNING,"WSTA","Station Association Fail:StaMac:"MACSTR" Radio id %d SSIDName:%s Cause %d Desc:%s APID:%d\n",MAC2STR(mgmt->sa),wasd->Radio_L_ID,SSID,FLOW_BANLANCE,reas,wtpid);
@@ -1846,8 +1847,8 @@ static void handle_assoc(struct asd_data *wasd,
 				       "request");
 	
 			if(gASDLOGDEBUG & BIT(1))
-		syslog(LOG_INFO|LOG_LOCAL7,"ASSOCFAILED:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d,SecurityType:%d,ErrorCode:%d.\n",
-			MAC2STR(mgmt->sa),MAC2STR(WTPMAC),wasd->BSSIndex,securitytype,WME_ELEM_INVALID);//qiuchen 2013.01.14
+		syslog(LOG_INFO|LOG_LOCAL7,"[%d-%d]ASSOCFAILED:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d,SecurityType:%d,ErrorCode:%d.\n",
+			slotid,vrrid,MAC2STR(mgmt->sa),MAC2STR(WTPMAC),wasd->BSSIndex,securitytype,WME_ELEM_INVALID);//qiuchen 2013.01.14
 			if(gASDLOGDEBUG & BIT(0)){
 				log_parse_reason(WME_ELEM_INVALID,reas);
 				asd_syslog_h(LOG_WARNING,"WSTA","Station Association Fail:StaMac:"MACSTR" Radio id %d SSIDName:%s Cause %d Desc:%s APID:%d\n",MAC2STR(mgmt->sa),wasd->Radio_L_ID,SSID,FLOW_BANLANCE,reas,wtpid);
@@ -1863,8 +1864,8 @@ static void handle_assoc(struct asd_data *wasd,
 			       asd_LEVEL_DEBUG,
 			       "No supported rates element in AssocReq");
 		if(gASDLOGDEBUG & BIT(1))
-		syslog(LOG_INFO|LOG_LOCAL7, "ASSOCFAILED:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d,SecurityType:%d,ErrorCode:%d.\n",
-			MAC2STR(mgmt->sa),MAC2STR(WTPMAC),wasd->BSSIndex,securitytype,RATES_NOT_SUPPORT);//qiuchen 2013.01.14
+		syslog(LOG_INFO|LOG_LOCAL7, "[%d-%d]ASSOCFAILED:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d,SecurityType:%d,ErrorCode:%d.\n",
+			slotid,vrrid,MAC2STR(mgmt->sa),MAC2STR(WTPMAC),wasd->BSSIndex,securitytype,RATES_NOT_SUPPORT);//qiuchen 2013.01.14
 		if(gASDLOGDEBUG & BIT(0)){
 			log_parse_reason(RATES_NOT_SUPPORT,reas);
 			asd_syslog_h(LOG_WARNING,"WSTA","Station Association Fail:StaMac:"MACSTR" Radio id %d SSIDName:%s Cause %d Desc:%s APID:%d\n",MAC2STR(mgmt->sa),wasd->Radio_L_ID,SSID,FLOW_BANLANCE,reas,wtpid);
@@ -1880,8 +1881,8 @@ static void handle_assoc(struct asd_data *wasd,
 			       "Invalid supported rates element length %d",
 			       elems.supp_rates_len);
 		if(gASDLOGDEBUG & BIT(1))
-		syslog(LOG_INFO|LOG_LOCAL7, "ASSOCFAILED:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d,SecurityType:%d,ErrorCode:%d.\n",
-			MAC2STR(mgmt->sa),MAC2STR(WTPMAC),wasd->BSSIndex,securitytype,RATES_LEN_INVALID);//qiuchen 2013.01.14
+		syslog(LOG_INFO|LOG_LOCAL7, "[%d-%d]ASSOCFAILED:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d,SecurityType:%d,ErrorCode:%d.\n",
+			slotid,vrrid,MAC2STR(mgmt->sa),MAC2STR(WTPMAC),wasd->BSSIndex,securitytype,RATES_LEN_INVALID);//qiuchen 2013.01.14
 		if(gASDLOGDEBUG & BIT(0)){
 			log_parse_reason(RATES_LEN_INVALID,reas);
 			asd_syslog_h(LOG_WARNING,"WSTA","Station Association Fail:StaMac:"MACSTR" Radio id %d SSIDName:%s Cause %d Desc:%s APID:%d\n",MAC2STR(mgmt->sa),wasd->Radio_L_ID,SSID,FLOW_BANLANCE,reas,wtpid);
@@ -1907,8 +1908,8 @@ static void handle_assoc(struct asd_data *wasd,
 				       " %d+%d", elems.supp_rates_len,
 				       elems.ext_supp_rates_len);
 			if(gASDLOGDEBUG & BIT(1))
-			syslog(LOG_INFO|LOG_LOCAL7, "ASSOCFAILED:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d,SecurityType:%d,ErrorCode:%d.\n",
-				MAC2STR(mgmt->sa),MAC2STR(WTPMAC),wasd->BSSIndex,securitytype,RATES_LEN_INVALID);//qiuchen 2013.01.14
+			syslog(LOG_INFO|LOG_LOCAL7, "[%d-%d]ASSOCFAILED:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d,SecurityType:%d,ErrorCode:%d.\n",
+				slotid,vrrid,MAC2STR(mgmt->sa),MAC2STR(WTPMAC),wasd->BSSIndex,securitytype,RATES_LEN_INVALID);//qiuchen 2013.01.14
 			if(gASDLOGDEBUG & BIT(0)){
 				log_parse_reason(RATES_LEN_INVALID,reas);
 				asd_syslog_h(LOG_WARNING,"WSTA","Station Association Fail:StaMac:"MACSTR" Radio id %d SSIDName:%s Cause %d Desc:%s APID:%d\n",MAC2STR(mgmt->sa),wasd->Radio_L_ID,SSID,FLOW_BANLANCE,reas,wtpid);
@@ -1963,8 +1964,8 @@ static void handle_assoc(struct asd_data *wasd,
 		asd_printf(ASD_80211,MSG_DEBUG,"STA " MACSTR ": No WPA/RSN IE in association "
 		       "request\n", MAC2STR(sta->addr));
 		if(gASDLOGDEBUG & BIT(1))
-		syslog(LOG_INFO|LOG_LOCAL7, "ASSOCFAILED:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d,SecurityType:%d,ErrorCode:%d.\n",
-			MAC2STR(mgmt->sa),MAC2STR(WTPMAC),wasd->BSSIndex,securitytype,NO_WPARASN_IE);//qiuchen 2013.01.14
+		syslog(LOG_INFO|LOG_LOCAL7, "[%d-%d]ASSOCFAILED:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d,SecurityType:%d,ErrorCode:%d.\n",
+			slotid,vrrid,MAC2STR(mgmt->sa),MAC2STR(WTPMAC),wasd->BSSIndex,securitytype,NO_WPARASN_IE);//qiuchen 2013.01.14
 		if(gASDLOGDEBUG & BIT(0)){
 			log_parse_reason(NO_WPARASN_IE,reas);
 			asd_syslog_h(LOG_WARNING,"WSTA","Station Association Fail:StaMac:"MACSTR" Radio id %d SSIDName:%s Cause %d Desc:%s APID:%d\n",MAC2STR(mgmt->sa),wasd->Radio_L_ID,SSID,FLOW_BANLANCE,reas,wtpid);
@@ -1984,8 +1985,8 @@ static void handle_assoc(struct asd_data *wasd,
 		if (sta->wpa_sm == NULL) {
 			asd_printf(ASD_80211,MSG_DEBUG,"Failed to initialize WPA state machine\n");
 			if(gASDLOGDEBUG & BIT(1))
-			syslog(LOG_INFO|LOG_LOCAL7, "ASSOCFAILED:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d,SecurityType:%d,ErrorCode:%d.\n",
-				MAC2STR(mgmt->sa),MAC2STR(WTPMAC),wasd->BSSIndex,securitytype,WPA_SM_FAILED);//qiuchen 2013.01.14
+			syslog(LOG_INFO|LOG_LOCAL7, "[%d-%d]ASSOCFAILED:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d,SecurityType:%d,ErrorCode:%d.\n",
+				slotid,vrrid,MAC2STR(mgmt->sa),MAC2STR(WTPMAC),wasd->BSSIndex,securitytype,WPA_SM_FAILED);//qiuchen 2013.01.14
 			if(gASDLOGDEBUG & BIT(0)){
 				log_parse_reason(WPA_SM_FAILED,reas);
 				asd_syslog_h(LOG_WARNING,"WSTA","Station Association Fail:StaMac:"MACSTR" Radio id %d SSIDName:%s Cause %d Desc:%s APID:%d\n",MAC2STR(mgmt->sa),wasd->Radio_L_ID,SSID,FLOW_BANLANCE,reas,wtpid);
@@ -2026,8 +2027,8 @@ static void handle_assoc(struct asd_data *wasd,
 					   "re-association) with FT auth_alg",
 					   MAC2STR(sta->addr));
 				if(gASDLOGDEBUG & BIT(1))
-				syslog(LOG_INFO|LOG_LOCAL7, "ASSOCFAILED:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d,SecurityType:%d,ErrorCode:%d.\n",
-					MAC2STR(mgmt->sa),MAC2STR(WTPMAC),wasd->BSSIndex,securitytype,AUTH_ALG_FAIL);//qiuchen 2013.01.14
+				syslog(LOG_INFO|LOG_LOCAL7, "[%d-%d]ASSOCFAILED:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d,SecurityType:%d,ErrorCode:%d.\n",
+					slotid,vrrid,MAC2STR(mgmt->sa),MAC2STR(WTPMAC),wasd->BSSIndex,securitytype,AUTH_ALG_FAIL);//qiuchen 2013.01.14
 				if(gASDLOGDEBUG & BIT(0)){
 					log_parse_reason(AUTH_ALG_FAIL,reas);
 					asd_syslog_h(LOG_WARNING,"WSTA","Station Association Fail:StaMac:"MACSTR" Radio id %d SSIDName:%s Cause %d Desc:%s APID:%d\n",MAC2STR(mgmt->sa),wasd->Radio_L_ID,SSID,FLOW_BANLANCE,reas,wtpid);
@@ -2050,8 +2051,8 @@ static void handle_assoc(struct asd_data *wasd,
 					   "use TKIP with HT association",
 					   MAC2STR(sta->addr));
 				if(gASDLOGDEBUG & BIT(1))
-				syslog(LOG_INFO|LOG_LOCAL7, "ASSOCFAILED:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d,SecurityType:%d,ErrorCode:%d.\n",
-					MAC2STR(mgmt->sa),MAC2STR(WTPMAC),wasd->BSSIndex,securitytype,CIPHER_NOT_MATCH);//qiuchen 2013.01.14
+				syslog(LOG_INFO|LOG_LOCAL7, "[%d-%d]ASSOCFAILED:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d,SecurityType:%d,ErrorCode:%d.\n",
+					slotid,vrrid,MAC2STR(mgmt->sa),MAC2STR(WTPMAC),wasd->BSSIndex,securitytype,CIPHER_NOT_MATCH);//qiuchen 2013.01.14
 				if(gASDLOGDEBUG & BIT(0)){
 					log_parse_reason(CIPHER_NOT_MATCH,reas);
 					asd_syslog_h(LOG_WARNING,"WSTA","Station Association Fail:StaMac:"MACSTR" Radio id %d SSIDName:%s Cause %d Desc:%s APID:%d\n",MAC2STR(mgmt->sa),wasd->Radio_L_ID,SSID,FLOW_BANLANCE,reas,wtpid);
@@ -2070,8 +2071,8 @@ static void handle_assoc(struct asd_data *wasd,
 		asd_printf(ASD_80211,MSG_DEBUG,"STA " MACSTR ": No WAPI IE in association "
 		       "request\n", MAC2STR(sta->addr));
 		if(gASDLOGDEBUG & BIT(1))
-		syslog(LOG_INFO|LOG_LOCAL7, "ASSOCFAILED:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d,SecurityType:%d,ErrorCode:%d.\n",
-			MAC2STR(mgmt->sa),MAC2STR(WTPMAC),wasd->BSSIndex,securitytype,NO_WAPI_IE);//qiuchen 2013.01.14
+		syslog(LOG_INFO|LOG_LOCAL7, "[%d-%d]ASSOCFAILED:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d,SecurityType:%d,ErrorCode:%d.\n",
+			slotid,vrrid,MAC2STR(mgmt->sa),MAC2STR(WTPMAC),wasd->BSSIndex,securitytype,NO_WAPI_IE);//qiuchen 2013.01.14
 		if(gASDLOGDEBUG & BIT(0)){
 			log_parse_reason(NO_WAPI_IE,reas);
 			asd_syslog_h(LOG_WARNING,"WSTA","Station Association Fail:StaMac:"MACSTR" Radio id %d SSIDName:%s Cause %d Desc:%s APID:%d\n",MAC2STR(mgmt->sa),wasd->Radio_L_ID,SSID,FLOW_BANLANCE,reas,wtpid);
@@ -2110,8 +2111,8 @@ static void handle_assoc(struct asd_data *wasd,
 				       "Power capabilities of the station not "
 				       "acceptable");
 			if(gASDLOGDEBUG & BIT(1))
-			syslog(LOG_INFO|LOG_LOCAL7, "ASSOCFAILED:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d,SecurityType:%d,ErrorCode:%d.\n",
-				MAC2STR(mgmt->sa),MAC2STR(WTPMAC),wasd->BSSIndex,securitytype,STA_POWER_NOT_ACCEPTED);//qiuchen 2013.01.14
+			syslog(LOG_INFO|LOG_LOCAL7, "[%d-%d]ASSOCFAILED:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d,SecurityType:%d,ErrorCode:%d.\n",
+				slotid,vrrid,MAC2STR(mgmt->sa),MAC2STR(WTPMAC),wasd->BSSIndex,securitytype,STA_POWER_NOT_ACCEPTED);//qiuchen 2013.01.14
 			if(gASDLOGDEBUG & BIT(0)){
 				log_parse_reason(STA_POWER_NOT_ACCEPTED,reas);
 				asd_syslog_h(LOG_WARNING,"WSTA","Station Association Fail:StaMac:"MACSTR" Radio id %d SSIDName:%s Cause %d Desc:%s APID:%d\n",MAC2STR(mgmt->sa),wasd->Radio_L_ID,SSID,FLOW_BANLANCE,reas,wtpid);
@@ -2221,8 +2222,8 @@ static void handle_assoc(struct asd_data *wasd,
 			resp = WLAN_STATUS_AP_UNABLE_TO_HANDLE_NEW_STA;
 			asd_printf(ASD_80211,MSG_ERROR, "  no room for more AIDs");
 			if(gASDLOGDEBUG & BIT(1))
-			syslog(LOG_INFO|LOG_LOCAL7, "ASSOCFAILED:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d,SecurityType:%d,ErrorCode:%d.\n",
-				MAC2STR(mgmt->sa),MAC2STR(WTPMAC),wasd->BSSIndex,securitytype,NO_MORE_AID);//qiuchen 2013.01.14
+			syslog(LOG_INFO|LOG_LOCAL7, "[%d-%d]ASSOCFAILED:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d,SecurityType:%d,ErrorCode:%d.\n",
+				slotid,vrrid,MAC2STR(mgmt->sa),MAC2STR(WTPMAC),wasd->BSSIndex,securitytype,NO_MORE_AID);//qiuchen 2013.01.14
 			if(gASDLOGDEBUG & BIT(0)){
 				log_parse_reason(NO_MORE_AID,reas);
 				asd_syslog_h(LOG_WARNING,"WSTA","Station Association Fail:StaMac:"MACSTR" Radio id %d SSIDName:%s Cause %d Desc:%s APID:%d\n",MAC2STR(mgmt->sa),wasd->Radio_L_ID,SSID,FLOW_BANLANCE,reas,wtpid);
@@ -2241,17 +2242,20 @@ static void handle_assoc(struct asd_data *wasd,
 	if(gASDLOGDEBUG & BIT(1)){
 		if(sta->rflag && !(sta->logflag&BIT(1))){
 			if(securitytype == OPEN || securitytype == SHARED){
-				syslog(LOG_INFO|LOG_LOCAL3,"STA_ROAM_SUCCESS:UserMAC:"MACSTR" From AC(%lu.%lu.%lu.%lu)-AP%d-BSSID("MACSTR") To AC(%lu.%lu.%lu.%lu)-AP%d-BSSID("MACSTR").\n",
-					MAC2STR(sta->addr),((gASD_AC_MANAGEMENT_IP & 0xff000000) >> 24),((gASD_AC_MANAGEMENT_IP & 0xff0000) >> 16),((gASD_AC_MANAGEMENT_IP & 0xff00) >> 8),(gASD_AC_MANAGEMENT_IP & 0xff),
+				syslog(LOG_INFO|LOG_LOCAL7,"[%d-%d]STA_ROAM_SUCCESS:UserMAC:"MACSTR" From AC(%lu.%lu.%lu.%lu)-AP%d-BSSID("MACSTR") To AC(%lu.%lu.%lu.%lu)-AP%d-BSSID("MACSTR").\n",
+					slotid,vrrid,MAC2STR(sta->addr),((gASD_AC_MANAGEMENT_IP & 0xff000000) >> 24),((gASD_AC_MANAGEMENT_IP & 0xff0000) >> 16),((gASD_AC_MANAGEMENT_IP & 0xff00) >> 8),(gASD_AC_MANAGEMENT_IP & 0xff),
 					sta->preAPID,MAC2STR(sta->PreBSSID),((gASD_AC_MANAGEMENT_IP & 0xff000000) >> 24),((gASD_AC_MANAGEMENT_IP & 0xff0000) >> 16),((gASD_AC_MANAGEMENT_IP & 0xff00) >> 8),(gASD_AC_MANAGEMENT_IP & 0xff),
 					wasd->Radio_G_ID/4,MAC2STR(wasd->own_addr)
 				);
 				sta->logflag = BIT(1);
 			}
+			else
+				syslog(LOG_INFO|LOG_LOCAL7, "ASSOCSUCCESS:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d,SecurityType:%d,ErrorCode:%d.\n",
+					MAC2STR(mgmt->sa),MAC2STR(WTPMAC),wasd->BSSIndex,securitytype,OPERATE_SUCCESS);//qiuchen 2013.01.14
 		}
 		else
-	syslog(LOG_INFO|LOG_LOCAL7, "ASSOCSUCCESS:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d,SecurityType:%d,ErrorCode:%d.\n",
-		MAC2STR(mgmt->sa),MAC2STR(WTPMAC),wasd->BSSIndex,securitytype,OPERATE_SUCCESS);//qiuchen 2013.01.14
+	syslog(LOG_INFO|LOG_LOCAL7, "[%d-%d]ASSOCSUCCESS:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d,SecurityType:%d,ErrorCode:%d.\n",
+     		slotid,vrrid,MAC2STR(mgmt->sa),MAC2STR(WTPMAC),wasd->BSSIndex,securitytype,OPERATE_SUCCESS);//qiuchen 2013.01.14
 	}
 	if(gASDLOGDEBUG & BIT(0)){
 		if(sta->rflag && !(sta->logflag&BIT(0))){
@@ -2675,8 +2679,8 @@ static void handle_disassoc(struct asd_data *wasd,
 	asd_logger(wasd, sta->addr, asd_MODULE_IEEE80211,
 		       asd_LEVEL_INFO, "disassociated");
 	if(gASDLOGDEBUG & BIT(1))
-		syslog(LOG_INFO|LOG_LOCAL7, "DISASSOC:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d, ErrorCode:%d.\n",
-			MAC2STR(mgmt->sa),MAC2STR(WTPMAC),wasd->BSSIndex,reason_code);//qiuchen 2013.01.14
+		syslog(LOG_INFO|LOG_LOCAL7, "[%d-%d]DISASSOC:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d, ErrorCode:%d.\n",
+      			slotid,vrrid,MAC2STR(mgmt->sa),MAC2STR(WTPMAC),wasd->BSSIndex,reason_code);//qiuchen 2013.01.14
 	//qiuchen
 	char reas[256] = {0};
 	char *SSID = NULL;
@@ -2814,8 +2818,8 @@ static void handle_deauth(struct asd_data *wasd,
 	asd_logger(wasd, sta->addr, asd_MODULE_IEEE80211,
 		       asd_LEVEL_DEBUG, "deauthenticated");
 	if(gASDLOGDEBUG & BIT(1))
-		syslog(LOG_INFO|LOG_LOCAL7, "DEAUTH:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d, ErrorCode:%d.\n",
-			MAC2STR(mgmt->sa),MAC2STR(WTPMAC),wasd->BSSIndex,reason_code);//qiuchen 2013.01.14
+		syslog(LOG_INFO|LOG_LOCAL7, "[%d-%d]DEAUTH:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d, ErrorCode:%d.\n",
+			slotid,vrrid,MAC2STR(mgmt->sa),MAC2STR(WTPMAC),wasd->BSSIndex,reason_code);//qiuchen 2013.01.14
 	//qiuchen
 	char *SSID = ASD_WLAN[wasd->WlanID]->ESSID;
 	if(gASDLOGDEBUG & BIT(0)){

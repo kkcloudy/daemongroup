@@ -237,7 +237,8 @@ _dbus_string_init_const_len (DBusString *str,
   _dbus_assert (len == 0 || value != NULL);
   _dbus_assert (len <= _DBUS_STRING_MAX_MAX_LENGTH);
   _dbus_assert (len >= 0);
-  
+  if(str == NULL)/*coverity modify for CID 15646 */
+  	return;
   real = (DBusRealString*) str;
   
   real->str = (unsigned char*) value;
@@ -288,7 +289,10 @@ compact (DBusRealString *real,
   new_allocated = real->len + _DBUS_STRING_ALLOCATION_PADDING;
 
   new_str = dbus_realloc (real->str - real->align_offset, new_allocated);
-  if (_DBUS_UNLIKELY (new_str == NULL))
+  /*
+  **CID 15399 (#1 of 1): Resource leak (RESOURCE_LEAK)6. leaked_storage: Variable "new_str" going out of scope leaks the storage it points to.
+  */
+  if (_DBUS_UNLIKELY (new_str == NULL))/*coverity info for CID 15399*/
     return FALSE;
 
   real->str = new_str + real->align_offset;
@@ -363,7 +367,7 @@ reallocate_for_length (DBusRealString *real,
 
   _dbus_assert (new_allocated >= real->allocated); /* code relies on this */
   new_str = dbus_realloc (real->str - real->align_offset, new_allocated);
-  if (_DBUS_UNLIKELY (new_str == NULL))
+  if (_DBUS_UNLIKELY (new_str == NULL))/*coverity info for CID 15400 */
     return FALSE;
 
   real->str = new_str + real->align_offset;
@@ -864,6 +868,8 @@ dbus_bool_t
 _dbus_string_lengthen (DBusString *str,
                        int         additional_length)
 {
+  if(str==NULL)/*coverity modify for CID 14936*/
+  	return FALSE;
   DBUS_STRING_PREAMBLE (str);  
   _dbus_assert (additional_length >= 0);
 
@@ -2404,7 +2410,8 @@ _dbus_string_equal_substring (const DBusString  *a,
   _dbus_assert (a_len <= real_a->len - a_start);
   _dbus_assert (b_start >= 0);
   _dbus_assert (b_start <= real_b->len);
-  
+  if(real_a==NULL||real_b==NULL)/*coverity modify for CID 14934 14935 14933*/
+  	return FALSE;
   if (a_len > real_b->len - b_start)
     return FALSE;
 

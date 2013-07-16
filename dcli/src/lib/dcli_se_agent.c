@@ -79,6 +79,33 @@ struct cmd_node slave_fwd_node = {
 	"%s(config-slave-fastfwd)# ",
 	1
 };
+struct cmd_node hansi_fwd_node =
+{
+	HANSI_FAST_FWD_NODE,
+	"%s(hansi-fastfwd)# ",
+	1
+};
+
+struct cmd_node local_hansi_fwd_node =
+{
+	LOCAL_HANSI_FAST_FWD_NODE,
+	"%s(local-hansi-fastfwd)# ",
+	1
+};
+
+struct cmd_node hansi_slave_fwd_node =
+{
+	HANSI_SLAVE_FAST_FWD_NODE,
+	"%s(hansi-slave-fastfwd)# ",
+	1
+};
+
+struct cmd_node local_hansi_slave_fwd_node =
+{
+	LOCAL_HANSI_SLAVE_FAST_FWD_NODE,
+	"%s(local-hansi-slave-fastfwd)# ",
+	1
+};
 
 #define DISPLAY_CAPWAP_CNT     5
 #define DISPLAY_ACL_CNT        5
@@ -99,10 +126,18 @@ void fill_cpu_tag(se_interative_t *cmd_data, struct vty *vty)
 {
     if(NULL == vty)
         return;
-    if(vty->node == SLAVE_FAST_FWD_NODE)
-	    cmd_data->cpu_tag = 1;
-	else 
-	    cmd_data->cpu_tag = 0;
+    if((SLAVE_FAST_FWD_NODE == vty->node) || (HANSI_SLAVE_FAST_FWD_NODE == vty->node) || (LOCAL_HANSI_SLAVE_FAST_FWD_NODE == vty->node))
+	{	
+	    cmd_data->cpu_tag = CPU_TAG_SLAVE;
+    }
+	else if((FAST_FWD_NODE == vty->node) || (HANSI_FAST_FWD_NODE == vty->node) || (LOCAL_HANSI_FAST_FWD_NODE == vty->node))
+	{
+		cmd_data->cpu_tag = CPU_TAG_MASTER;
+	}
+	else
+	{
+		cmd_data->cpu_tag = CPU_TAG_ALL;
+	}
 }
 
 /*Analysis of the string is  a number*/
@@ -328,7 +363,7 @@ int se_agent_get_slotid(struct vty *vty)
 		#endif	
 		return slotid;
 	}
-	else if((HANSI_NODE == vty->node) || LOCAL_HANSI_NODE == vty->node)
+	else if((HANSI_FAST_FWD_NODE == vty->node) || (LOCAL_HANSI_FAST_FWD_NODE == vty->node) || (HANSI_SLAVE_FAST_FWD_NODE == vty->node) || (LOCAL_HANSI_SLAVE_FAST_FWD_NODE == vty->node))
 	{
 		slotid = vty->slotindex;
 		if(slotid <1 || slotid > MAX_SLOT_NUM)
@@ -342,7 +377,20 @@ int se_agent_get_slotid(struct vty *vty)
 	}
 	else
 	{
-		return INVALID_SLOTID;
+		slotid = vty->slotindex;
+
+		/* This slot hansi is self,dont need save */
+		if (slotid == atoi(str_slotid))
+		{
+			return INVALID_SLOTID;
+		}
+		
+		if(slotid <1 || slotid > MAX_SLOT_NUM)
+		{
+			return INVALID_SLOTID;
+		}
+
+		return slotid;
 	}
 }
 
@@ -629,7 +677,7 @@ DEFUN(debug_ipfwd_learn_func,
 	memset(&cmd_data,0,sizeof(cmd_data));
 	sprintf(tmpstr,BUILDING_MOUDLE,"FAST_FORWARD");
 	vtysh_add_show_string(tmpstr);
-	
+	fill_cpu_tag(&cmd_data, vty);
 	strncpy(cmd_data.hand_cmd,SE_AGENT_SHOW_RUNNING_CFG,strlen(SE_AGENT_SHOW_RUNNING_CFG));
 	ret=sendto_agent(dcli_sockfd,(char*)&cmd_data,sizeof(cmd_data),vty);
 	if(ret<=0)
@@ -649,6 +697,60 @@ FUN_END:
 	vtysh_add_show_string(showStr);
 	return CMD_SUCCESS;
 }
+
+ /* fast forward distribute config */
+ char* se_agent_show_running_cfg_2(int localid, int slot_id, int index)
+{	
+	char showStr[SE_AGENT_RUNNING_CFG_MEM]={0};
+	int ret = CMD_FAILURE;
+	se_interative_t  cmd_data;
+	struct timeval overtime;
+	char *tmp = NULL;
+	struct vty vty_tmp;
+	memset(&overtime,0,sizeof(overtime));
+	memset(&cmd_data,0,sizeof(cmd_data));
+	memset(&vty_tmp,0,sizeof(vty_tmp));
+
+	fill_cpu_tag(&cmd_data, &vty_tmp);
+	vty_tmp.slotindex = slot_id;
+
+	strncpy(cmd_data.hand_cmd,SE_AGENT_SHOW_RUNNING_CFG,strlen(SE_AGENT_SHOW_RUNNING_CFG));
+	ret=sendto_agent(dcli_sockfd,(char*)&cmd_data,sizeof(cmd_data),&vty_tmp);
+	if(ret<=0)
+	{
+		goto FUN_END;
+	}
+
+	
+	overtime.tv_sec = DCLI_WAIT_TIME;
+	overtime.tv_usec = 0;
+	ret=read_within_time(dcli_sockfd,showStr,SE_AGENT_RUNNING_CFG_MEM,&overtime);
+	if(ret==READ_ERROR)
+	{
+		goto FUN_END;
+	}
+	
+FUN_END:
+	tmp = (char *)malloc(strlen(showStr)+1);
+	if (NULL == tmp){
+		return NULL;
+	}
+	memset(tmp, 0, strlen(showStr)+1);
+	memcpy(tmp,showStr,strlen(showStr));
+	
+	return tmp;
+}
+ 
+
+
+int
+se_agent_show_running_return(struct vty* vty)
+{
+	/* just return */
+	return CMD_SUCCESS;
+}
+
+
 DEFUN(config_fastfwd_func,
 		config_fastfwd_cmd,
 		"config fast-forward",
@@ -656,10 +758,24 @@ DEFUN(config_fastfwd_func,
 		"config fast_forward\n"
 )
 {
-	if(vty->node == CONFIG_NODE)
+	if(CONFIG_NODE == vty->node)
 	{
 		vty->node = FAST_FWD_NODE;
 	}
+	else if(HANSI_NODE == vty->node )
+	{
+		vty->node = HANSI_FAST_FWD_NODE;
+	}
+	else if(LOCAL_HANSI_NODE == vty->node )
+	{
+		vty->node = LOCAL_HANSI_FAST_FWD_NODE;
+	}
+	else
+	{
+		vty_out (vty, "Terminal mode change must under configure mode!\n");
+		return CMD_WARNING;
+	}
+	
 	return CMD_SUCCESS;
 }
 
@@ -670,10 +786,24 @@ DEFUN(config_slave_fastfwd_func,
 		"config slave_fast_forward\n"
 )
 {
-	if(vty->node == CONFIG_NODE)
+	if(CONFIG_NODE == vty->node)
 	{
 		vty->node = SLAVE_FAST_FWD_NODE;
 	}
+	else if(HANSI_NODE == vty->node )
+	{
+		vty->node = HANSI_SLAVE_FAST_FWD_NODE;
+	}
+	else if(LOCAL_HANSI_NODE == vty->node )
+	{
+		vty->node = LOCAL_HANSI_SLAVE_FAST_FWD_NODE;
+	}
+	else
+	{
+		vty_out (vty, "Terminal mode change must under configure mode!\n");
+		return CMD_WARNING;
+	}
+	
 	return CMD_SUCCESS;
 }
 
@@ -1116,6 +1246,7 @@ DEFUN(show_fast_forward_running_config,
 	struct timeval overtime;
 	memset(&overtime,0,sizeof(overtime));
 	memset(&cmd_data,0,sizeof(cmd_data));
+	fill_cpu_tag(&cmd_data, vty);
 	strncpy(cmd_data.hand_cmd,SE_AGENT_SHOW_RUNNING_CFG,strlen(SE_AGENT_SHOW_RUNNING_CFG));
 	ret=sendto_agent(dcli_sockfd,(char*)&cmd_data,sizeof(cmd_data),vty);
 	if(ret<=0)
@@ -4037,12 +4168,26 @@ void dcli_se_agent_init(void)
 	}	
 	install_node(&fwd_node,se_agent_show_running_cfg,"FAST_FWD_NODE");
 	install_default(FAST_FWD_NODE);
-	install_node(&slave_fwd_node,se_agent_show_running_cfg,"SLAVE_FAST_FWD_NODE");
+
+	install_node(&slave_fwd_node,se_agent_show_running_return,"SLAVE_FAST_FWD_NODE");
 	install_default(SLAVE_FAST_FWD_NODE);
+
+	install_node(&hansi_fwd_node,se_agent_show_running_return,"HANSI_FAST_FWD_NODE");
+	install_default(HANSI_FAST_FWD_NODE);
+	install_node(&hansi_slave_fwd_node,se_agent_show_running_return,"HANSI_SLAVE_FAST_FWD_NODE");
+	install_default(HANSI_SLAVE_FAST_FWD_NODE);
+
+	install_node(&local_hansi_fwd_node,se_agent_show_running_return,"LOCAL_HANSI_FAST_FWD_NODE");
+	install_default(LOCAL_HANSI_FAST_FWD_NODE);
+	install_node(&local_hansi_slave_fwd_node,se_agent_show_running_return,"LOCAL_HANSI_SLAVE_FAST_FWD_NODE");
+	install_default(LOCAL_HANSI_SLAVE_FAST_FWD_NODE);
+	
 	install_element(ENABLE_NODE,&show_fast_forward_running_cfg_cmd);
 	install_element(CONFIG_NODE,&debug_se_agent_cmd);
-	install_element(CONFIG_NODE,&config_fastfwd_cmd);
 	install_element(CONFIG_NODE,&no_debug_se_agent_cmd);
+	install_element(CONFIG_NODE,&config_fastfwd_cmd);
+	install_element(HANSI_NODE, &config_fastfwd_cmd);
+	install_element(LOCAL_HANSI_NODE, &config_fastfwd_cmd);
 	install_element(FAST_FWD_NODE,&config_fast_forward_aging_time_cmd);
 	install_element(FAST_FWD_NODE,&switch_uart_to_se_cmd);
 	install_element(FAST_FWD_NODE,&show_fpa_buff_counter_cmd);
@@ -4094,96 +4239,96 @@ void dcli_se_agent_init(void)
 	install_element(FAST_FWD_NODE,&show_user_rule_all_cmd);
 	
 	/*HANSI_NODE*/
-	install_element(HANSI_NODE,&config_fast_forward_aging_time_cmd);
-	install_element(HANSI_NODE,&show_fast_forward_aging_time_cmd);
-	install_element(HANSI_NODE,&show_packet_statistic_cmd);
-	install_element(HANSI_NODE,&show_part_packet_statistic_cmd);
-	install_element(HANSI_NODE,&clear_packet_statistic_cmd);
+	install_element(HANSI_FAST_FWD_NODE,&config_fast_forward_aging_time_cmd);
+	install_element(HANSI_FAST_FWD_NODE,&show_fast_forward_aging_time_cmd);
+	install_element(HANSI_FAST_FWD_NODE,&show_packet_statistic_cmd);
+	install_element(HANSI_FAST_FWD_NODE,&show_part_packet_statistic_cmd);
+	install_element(HANSI_FAST_FWD_NODE,&clear_packet_statistic_cmd);
 	//install_element(HANSI_NODE,&clear_part_packet_statistic_cmd);
-	install_element(HANSI_NODE,&fastfwd_learned_icmp_enable_cmd);
-	install_element(HANSI_NODE,&fastfwd_pure_ip_enable_cmd);
-	install_element(HANSI_NODE,&show_fwd_pure_ip_enable_cmd);
-	install_element(HANSI_NODE,&show_fpa_buff_counter_cmd);
-	install_element(HANSI_NODE,&config_fast_forward_tag_type_cmd);
-	install_element(HANSI_NODE,&show_fast_forward_running_config_cmd);
-	install_element(HANSI_NODE,&show_fast_forward_tag_type_cmd);
-	install_element(HANSI_NODE,&show_rule_stats_cmd);
-	install_element(HANSI_NODE,&clear_rule_all_cmd);
-	install_element(HANSI_NODE,&clear_aging_rule_cmd);
-	install_element(HANSI_NODE,&show_capwap_tbl_cmd);
-	install_element(HANSI_NODE,&config_fast_forward_enable_cmd);
-	install_element(HANSI_NODE,&show_rule_five_tuple_cmd);
-	install_element(HANSI_NODE,&show_aging_rule_cnt_cmd);
-	install_element(HANSI_NODE,&show_user_acl_stats_cmd);
-	install_element(HANSI_NODE,&show_acl_learned_cmd);
-	install_element(HANSI_NODE,&show_acl_learning_cmd);
-	install_element(HANSI_NODE,&show_tolinux_flow_cmd);
-	install_element(HANSI_NODE,&set_fastfwd_bucket_entry_cmd);
-	install_element(HANSI_NODE,&show_fastfwd_bucket_entry_cmd);
-	install_element(HANSI_NODE,&config_traffic_monitor_cmd);
-	install_element(HANSI_NODE,&clear_traffic_monitor_cmd);
-	install_element(HANSI_NODE,&show_traffic_monitor_cmd);
-	install_element(HANSI_NODE,&config_pure_payload_acct_cmd);
-	install_element(HANSI_NODE,&show_user_flow_cmd);
-	install_element(HANSI_NODE,&clear_rule_ip_cmd); //wangjian
-	install_element(HANSI_NODE,&show_fast_forward_info_cmd);     /*wangjian 2012.07.09 add fwd info */
-	install_element(HANSI_NODE,&show_rule_by_ip_cmd);         /*wangjian 2012.07.09 add ip */	
-	//install_element(HANSI_NODE,&config_fwd_debug_log_enable_cmd);
-	//install_element(HANSI_NODE,&show_fwd_debug_log_enable_cmd); 
-	//install_element(HANSI_NODE,&config_fwd_debug_log_level_cmd);
-	//install_element(HANSI_NODE,&show_fwd_debug_log_level_cmd);
-	install_element(HANSI_NODE,&show_user_statistic_cmd);
-	install_element(HANSI_NODE,&config_clear_aged_rule_time_cmd);
-	install_element(HANSI_NODE,&show_clear_aged_rule_time_cmd);
-	install_element(HANSI_NODE,&show_user_rule_ip_cmd);
-	install_element(HANSI_NODE,&show_user_rule_all_cmd);
+	install_element(HANSI_FAST_FWD_NODE,&fastfwd_learned_icmp_enable_cmd);
+	install_element(HANSI_FAST_FWD_NODE,&fastfwd_pure_ip_enable_cmd);
+	install_element(HANSI_FAST_FWD_NODE,&show_fwd_pure_ip_enable_cmd);
+	install_element(HANSI_FAST_FWD_NODE,&show_fpa_buff_counter_cmd);
+	install_element(HANSI_FAST_FWD_NODE,&config_fast_forward_tag_type_cmd);
+	install_element(HANSI_FAST_FWD_NODE,&show_fast_forward_running_config_cmd);
+	install_element(HANSI_FAST_FWD_NODE,&show_fast_forward_tag_type_cmd);
+	install_element(HANSI_FAST_FWD_NODE,&show_rule_stats_cmd);
+	install_element(HANSI_FAST_FWD_NODE,&clear_rule_all_cmd);
+	install_element(HANSI_FAST_FWD_NODE,&clear_aging_rule_cmd);
+	install_element(HANSI_FAST_FWD_NODE,&show_capwap_tbl_cmd);
+	install_element(HANSI_FAST_FWD_NODE,&config_fast_forward_enable_cmd);
+	install_element(HANSI_FAST_FWD_NODE,&show_rule_five_tuple_cmd);
+	install_element(HANSI_FAST_FWD_NODE,&show_aging_rule_cnt_cmd);
+	install_element(HANSI_FAST_FWD_NODE,&show_user_acl_stats_cmd);
+	install_element(HANSI_FAST_FWD_NODE,&show_acl_learned_cmd);
+	install_element(HANSI_FAST_FWD_NODE,&show_acl_learning_cmd);
+	install_element(HANSI_FAST_FWD_NODE,&show_tolinux_flow_cmd);
+	install_element(HANSI_FAST_FWD_NODE,&set_fastfwd_bucket_entry_cmd);
+	install_element(HANSI_FAST_FWD_NODE,&show_fastfwd_bucket_entry_cmd);
+	install_element(HANSI_FAST_FWD_NODE,&config_traffic_monitor_cmd);
+	install_element(HANSI_FAST_FWD_NODE,&clear_traffic_monitor_cmd);
+	install_element(HANSI_FAST_FWD_NODE,&show_traffic_monitor_cmd);
+	install_element(HANSI_FAST_FWD_NODE,&config_pure_payload_acct_cmd);
+	install_element(HANSI_FAST_FWD_NODE,&show_user_flow_cmd);
+	install_element(HANSI_FAST_FWD_NODE,&clear_rule_ip_cmd); //wangjian
+	install_element(HANSI_FAST_FWD_NODE,&show_fast_forward_info_cmd);     /*wangjian 2012.07.09 add fwd info */
+	install_element(HANSI_FAST_FWD_NODE,&show_rule_by_ip_cmd);         /*wangjian 2012.07.09 add ip */	
+	//install_element(HANSI_FAST_FWD_NODE,&config_fwd_debug_log_enable_cmd);
+	//install_element(HANSI_FAST_FWD_NODE,&show_fwd_debug_log_enable_cmd); 
+	//install_element(HANSI_FAST_FWD_NODE,&config_fwd_debug_log_level_cmd);
+	//install_element(HANSI_FAST_FWD_NODE,&show_fwd_debug_log_level_cmd);
+	install_element(HANSI_FAST_FWD_NODE,&show_user_statistic_cmd);
+	install_element(HANSI_FAST_FWD_NODE,&config_clear_aged_rule_time_cmd);
+	install_element(HANSI_FAST_FWD_NODE,&show_clear_aged_rule_time_cmd);
+	install_element(HANSI_FAST_FWD_NODE,&show_user_rule_ip_cmd);
+	install_element(HANSI_FAST_FWD_NODE,&show_user_rule_all_cmd);
 
 	
 	
 	/*HANSI_NODE*/
-	install_element(LOCAL_HANSI_NODE,&config_fast_forward_aging_time_cmd);
-	install_element(LOCAL_HANSI_NODE,&show_fast_forward_aging_time_cmd);
-	install_element(LOCAL_HANSI_NODE,&show_packet_statistic_cmd);
-	install_element(LOCAL_HANSI_NODE,&show_part_packet_statistic_cmd);
-	install_element(LOCAL_HANSI_NODE,&clear_packet_statistic_cmd);
-	//install_element(LOCAL_HANSI_NODE,&clear_part_packet_statistic_cmd);
-	install_element(LOCAL_HANSI_NODE,&fastfwd_learned_icmp_enable_cmd);
-	install_element(LOCAL_HANSI_NODE,&fastfwd_pure_ip_enable_cmd);
-	install_element(LOCAL_HANSI_NODE,&show_fwd_pure_ip_enable_cmd);
-	install_element(LOCAL_HANSI_NODE,&show_fpa_buff_counter_cmd);
-	install_element(LOCAL_HANSI_NODE,&config_fast_forward_tag_type_cmd);
-	install_element(LOCAL_HANSI_NODE,&show_fast_forward_running_config_cmd);
-	install_element(LOCAL_HANSI_NODE,&show_fast_forward_tag_type_cmd);
-	install_element(LOCAL_HANSI_NODE,&show_rule_stats_cmd);
-	install_element(LOCAL_HANSI_NODE,&clear_rule_all_cmd);
-	install_element(LOCAL_HANSI_NODE,&clear_aging_rule_cmd);
-	install_element(LOCAL_HANSI_NODE,&show_capwap_tbl_cmd);
-	install_element(LOCAL_HANSI_NODE,&config_fast_forward_enable_cmd);
-	install_element(LOCAL_HANSI_NODE,&show_rule_five_tuple_cmd);
-	install_element(LOCAL_HANSI_NODE,&show_aging_rule_cnt_cmd);
-	install_element(LOCAL_HANSI_NODE,&show_user_acl_stats_cmd);
-	install_element(LOCAL_HANSI_NODE,&show_acl_learned_cmd);
-	install_element(LOCAL_HANSI_NODE,&show_acl_learning_cmd);
-	install_element(LOCAL_HANSI_NODE,&show_tolinux_flow_cmd);
-	install_element(LOCAL_HANSI_NODE,&set_fastfwd_bucket_entry_cmd);
-	install_element(LOCAL_HANSI_NODE,&show_fastfwd_bucket_entry_cmd);
-	install_element(LOCAL_HANSI_NODE,&config_traffic_monitor_cmd);
-	install_element(LOCAL_HANSI_NODE,&clear_traffic_monitor_cmd);
-	install_element(LOCAL_HANSI_NODE,&show_traffic_monitor_cmd);
-	install_element(LOCAL_HANSI_NODE,&config_pure_payload_acct_cmd);
-	install_element(LOCAL_HANSI_NODE,&show_user_flow_cmd);
-	install_element(LOCAL_HANSI_NODE,&clear_rule_ip_cmd); //wangjian
-	install_element(LOCAL_HANSI_NODE,&show_fast_forward_info_cmd);     /*wangjian 2012.07.09 add fwd info */
-	install_element(LOCAL_HANSI_NODE,&show_rule_by_ip_cmd);         /*wangjian 2012.07.09 add ip */	
-	//install_element(LOCAL_HANSI_NODE,&config_fwd_debug_log_enable_cmd);
-	//install_element(LOCAL_HANSI_NODE,&show_fwd_debug_log_enable_cmd); 
-	//install_element(LOCAL_HANSI_NODE,&config_fwd_debug_log_level_cmd);
-	//install_element(LOCAL_HANSI_NODE,&show_fwd_debug_log_level_cmd);
-	install_element(LOCAL_HANSI_NODE,&show_user_statistic_cmd);
-	install_element(LOCAL_HANSI_NODE,&config_clear_aged_rule_time_cmd);
-	install_element(LOCAL_HANSI_NODE,&show_clear_aged_rule_time_cmd);
-	install_element(LOCAL_HANSI_NODE,&show_user_rule_ip_cmd);
-	install_element(LOCAL_HANSI_NODE,&show_user_rule_all_cmd);
+	install_element(LOCAL_HANSI_FAST_FWD_NODE,&config_fast_forward_aging_time_cmd);
+	install_element(LOCAL_HANSI_FAST_FWD_NODE,&show_fast_forward_aging_time_cmd);
+	install_element(LOCAL_HANSI_FAST_FWD_NODE,&show_packet_statistic_cmd);
+	install_element(LOCAL_HANSI_FAST_FWD_NODE,&show_part_packet_statistic_cmd);
+	install_element(LOCAL_HANSI_FAST_FWD_NODE,&clear_packet_statistic_cmd);
+	//install_element(LOCAL_HANSI_FAST_FWD_NODE,&clear_part_packet_statistic_cmd);
+	install_element(LOCAL_HANSI_FAST_FWD_NODE,&fastfwd_learned_icmp_enable_cmd);
+	install_element(LOCAL_HANSI_FAST_FWD_NODE,&fastfwd_pure_ip_enable_cmd);
+	install_element(LOCAL_HANSI_FAST_FWD_NODE,&show_fwd_pure_ip_enable_cmd);
+	install_element(LOCAL_HANSI_FAST_FWD_NODE,&show_fpa_buff_counter_cmd);
+	install_element(LOCAL_HANSI_FAST_FWD_NODE,&config_fast_forward_tag_type_cmd);
+	install_element(LOCAL_HANSI_FAST_FWD_NODE,&show_fast_forward_running_config_cmd);
+	install_element(LOCAL_HANSI_FAST_FWD_NODE,&show_fast_forward_tag_type_cmd);
+	install_element(LOCAL_HANSI_FAST_FWD_NODE,&show_rule_stats_cmd);
+	install_element(LOCAL_HANSI_FAST_FWD_NODE,&clear_rule_all_cmd);
+	install_element(LOCAL_HANSI_FAST_FWD_NODE,&clear_aging_rule_cmd);
+	install_element(LOCAL_HANSI_FAST_FWD_NODE,&show_capwap_tbl_cmd);
+	install_element(LOCAL_HANSI_FAST_FWD_NODE,&config_fast_forward_enable_cmd);
+	install_element(LOCAL_HANSI_FAST_FWD_NODE,&show_rule_five_tuple_cmd);
+	install_element(LOCAL_HANSI_FAST_FWD_NODE,&show_aging_rule_cnt_cmd);
+	install_element(LOCAL_HANSI_FAST_FWD_NODE,&show_user_acl_stats_cmd);
+	install_element(LOCAL_HANSI_FAST_FWD_NODE,&show_acl_learned_cmd);
+	install_element(LOCAL_HANSI_FAST_FWD_NODE,&show_acl_learning_cmd);
+	install_element(LOCAL_HANSI_FAST_FWD_NODE,&show_tolinux_flow_cmd);
+	install_element(LOCAL_HANSI_FAST_FWD_NODE,&set_fastfwd_bucket_entry_cmd);
+	install_element(LOCAL_HANSI_FAST_FWD_NODE,&show_fastfwd_bucket_entry_cmd);
+	install_element(LOCAL_HANSI_FAST_FWD_NODE,&config_traffic_monitor_cmd);
+	install_element(LOCAL_HANSI_FAST_FWD_NODE,&clear_traffic_monitor_cmd);
+	install_element(LOCAL_HANSI_FAST_FWD_NODE,&show_traffic_monitor_cmd);
+	install_element(LOCAL_HANSI_FAST_FWD_NODE,&config_pure_payload_acct_cmd);
+	install_element(LOCAL_HANSI_FAST_FWD_NODE,&show_user_flow_cmd);
+	install_element(LOCAL_HANSI_FAST_FWD_NODE,&clear_rule_ip_cmd); //wangjian
+	install_element(LOCAL_HANSI_FAST_FWD_NODE,&show_fast_forward_info_cmd);     /*wangjian 2012.07.09 add fwd info */
+	install_element(LOCAL_HANSI_FAST_FWD_NODE,&show_rule_by_ip_cmd);         /*wangjian 2012.07.09 add ip */	
+	//install_element(LOCAL_HANSI_FAST_FWD_NODE,&config_fwd_debug_log_enable_cmd);
+	//install_element(LOCAL_HANSI_FAST_FWD_NODE,&show_fwd_debug_log_enable_cmd); 
+	//install_element(LOCAL_HANSI_FAST_FWD_NODE,&config_fwd_debug_log_level_cmd);
+	//install_element(LOCAL_HANSI_FAST_FWD_NODE,&show_fwd_debug_log_level_cmd);
+	install_element(LOCAL_HANSI_FAST_FWD_NODE,&show_user_statistic_cmd);
+	install_element(LOCAL_HANSI_FAST_FWD_NODE,&config_clear_aged_rule_time_cmd);
+	install_element(LOCAL_HANSI_FAST_FWD_NODE,&show_clear_aged_rule_time_cmd);
+	install_element(LOCAL_HANSI_FAST_FWD_NODE,&show_user_rule_ip_cmd);
+	install_element(LOCAL_HANSI_FAST_FWD_NODE,&show_user_rule_all_cmd);
 
 		
 //#ifdef DCLI_SE_AGENT_DEBUG
@@ -4200,6 +4345,9 @@ void dcli_se_agent_init(void)
 	
     /*SLAVE_FAST_FWD_NODE*/
     install_element(CONFIG_NODE,&config_slave_fastfwd_cmd);
+	install_element(HANSI_NODE, &config_slave_fastfwd_cmd);
+	install_element(LOCAL_HANSI_NODE, &config_slave_fastfwd_cmd);
+	install_element(SLAVE_FAST_FWD_NODE,&show_fast_forward_running_config_cmd);
 	install_element(SLAVE_FAST_FWD_NODE,&config_fast_forward_aging_time_cmd);
 	install_element(SLAVE_FAST_FWD_NODE,&show_fpa_buff_counter_cmd);
 	install_element(SLAVE_FAST_FWD_NODE,&config_fast_forward_tag_type_cmd);
@@ -4211,5 +4359,31 @@ void dcli_se_agent_init(void)
 	//install_element(SLAVE_FAST_FWD_NODE,&clear_part_packet_statistic_cmd);
 	install_element(SLAVE_FAST_FWD_NODE,&show_rule_stats_cmd);
 	install_element(SLAVE_FAST_FWD_NODE,&clear_rule_all_cmd);
+
+	install_element(HANSI_SLAVE_FAST_FWD_NODE,&show_fast_forward_running_config_cmd);
+	install_element(HANSI_SLAVE_FAST_FWD_NODE,&config_fast_forward_aging_time_cmd);
+	install_element(HANSI_SLAVE_FAST_FWD_NODE,&show_fpa_buff_counter_cmd);
+	install_element(HANSI_SLAVE_FAST_FWD_NODE,&config_fast_forward_tag_type_cmd);
+	install_element(HANSI_SLAVE_FAST_FWD_NODE,&show_fast_forward_tag_type_cmd);
+	install_element(HANSI_SLAVE_FAST_FWD_NODE,&show_fast_forward_aging_time_cmd);
+	install_element(HANSI_SLAVE_FAST_FWD_NODE,&show_packet_statistic_cmd);
+	install_element(HANSI_SLAVE_FAST_FWD_NODE,&show_part_packet_statistic_cmd);
+	install_element(HANSI_SLAVE_FAST_FWD_NODE,&clear_packet_statistic_cmd);
+	//install_element(HANSI_SLAVE_FAST_FWD_NODE,&clear_part_packet_statistic_cmd);
+	install_element(HANSI_SLAVE_FAST_FWD_NODE,&show_rule_stats_cmd);
+	install_element(HANSI_SLAVE_FAST_FWD_NODE,&clear_rule_all_cmd);
+
+	install_element(LOCAL_HANSI_SLAVE_FAST_FWD_NODE,&show_fast_forward_running_config_cmd);
+	install_element(LOCAL_HANSI_SLAVE_FAST_FWD_NODE,&config_fast_forward_aging_time_cmd);
+	install_element(LOCAL_HANSI_SLAVE_FAST_FWD_NODE,&show_fpa_buff_counter_cmd);
+	install_element(LOCAL_HANSI_SLAVE_FAST_FWD_NODE,&config_fast_forward_tag_type_cmd);
+	install_element(LOCAL_HANSI_SLAVE_FAST_FWD_NODE,&show_fast_forward_tag_type_cmd);
+	install_element(LOCAL_HANSI_SLAVE_FAST_FWD_NODE,&show_fast_forward_aging_time_cmd);
+	install_element(LOCAL_HANSI_SLAVE_FAST_FWD_NODE,&show_packet_statistic_cmd);
+	install_element(LOCAL_HANSI_SLAVE_FAST_FWD_NODE,&show_part_packet_statistic_cmd);
+	install_element(LOCAL_HANSI_SLAVE_FAST_FWD_NODE,&clear_packet_statistic_cmd);
+	//install_element(LOCAL_HANSI_SLAVE_FAST_FWD_NODE,&clear_part_packet_statistic_cmd);
+	install_element(LOCAL_HANSI_SLAVE_FAST_FWD_NODE,&show_rule_stats_cmd);
+	install_element(LOCAL_HANSI_SLAVE_FAST_FWD_NODE,&clear_rule_all_cmd);
 }
 	

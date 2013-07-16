@@ -611,7 +611,26 @@ extern int set_wlan_bss_multi_user_optimize_cmd(dbus_parameter parameter, DBusCo
 																			   /*返回-3表示operation fail，返回-4表示wlan is not binded radio*/
 																			   /*返回-5表示error*/
 
+/*wlan_id为0表示全局配置*/
+/*state的取值是"enable"或"disable"*/
+extern int set_wlan_not_response_sta_probe_request_cmd(dbus_parameter parameter, DBusConnection *connection,int wlanID,char *state);
+																			   /*返回0表示失败，返回1表示成功*/
+																			   /*返回-1表示input patameter only with 'enable' or 'disable'*/
+																			   /*返回-2表示WLAN ID非法，返回-3表示wlan does not exist*/
+																			   /*返回-4表示wlan is enable, please disable it first*/
+																			   /*返回-5表示you want to some wlan, and the operation of the wlan was not successful*/
+																			   /*返回-6表示error*/
+																			   /*返回SNMPD_CONNECTION_ERROR表示connection error*/
 
+/*Type的取值是"tunnel"或"local"*/
+extern int set_wlan_tunnel_mode_enable_cmd(dbus_parameter parameter, DBusConnection *connection,int wlanID,char *Type);
+																			   /*返回0表示失败，返回1表示成功*/
+																			   /*返回-1表示WLAN ID非法*/
+																			   /*返回-2表示wlan is enable, please disable it first*/
+																			   /*返回-3表示wlanid is not exist*/
+																			   /*返回-4表示you want to delete wlan, please do not operate like this*/
+																			   /*返回-5表示some radio interface in ebr*/
+																			   /*返回SNMPD_CONNECTION_ERROR表示connection error*/
 
 
 
@@ -1043,9 +1062,11 @@ extern int set_ap_extension_infomation_enable_group(dbus_parameter parameter, DB
 #endif
 
 extern int set_ap_extension_infomation_enable(dbus_parameter parameter, DBusConnection *connection,int wtp_id,char *state);
-																							/*返回0表示失败，返回1表示成功，返回-1表示input patameter only with 'enable' or 'disable'*/
-																							/*返回-2表示wtp id does not exist，返回-3表示wtp id does not run，返回-4表示error，返回-5示WTP ID非法*/
-																							/*返回SNMPD_CONNECTION_ERROR表示connection error*/
+																					/*返回0表示失败，返回1表示成功*/
+																					/*返回-1表示input patameter only with 'enable' or 'disable'*/
+																					/*返回-2表示wtp id does not exist，返回-3表示wtp id does not run*/
+																					/*返回-4表示error，返回-5示WTP ID非法*/
+																					/*返回SNMPD_CONNECTION_ERROR表示connection error*/
 
 #if _GROUP_POLICY
 extern void Free_set_ap_extension_infomation_reportinterval_group(struct WtpList *WtpList_Head);
@@ -1170,10 +1191,13 @@ extern int set_ap_sta_infomation_report_enable_func_group(dbus_parameter paramet
 									/*返回-8表示group id does not exist*/
 #endif
 
+/*wtp_id为0表示全局配置*/
 extern int set_ap_sta_infomation_report_enable_func(dbus_parameter parameter, DBusConnection *connection,int wtp_id,char *state); 
-																									/*返回0表示失败，返回1表示成功，返回-1表示input patameter only with 'enable' or 'disable'*/
-																									/*返回-2表示wtp id does not exist，返回-3表示wtp id does not run，返回-4表示error，返回-5示WTP ID非法*/
-																									/*返回SNMPD_CONNECTION_ERROR表示connection error*/
+																							/*返回0表示失败，返回1表示成功*/
+																							/*返回-1表示input patameter only with 'enable' or 'disable'*/
+																							/*返回-2表示wtp id does not exist，返回-3表示wtp id does not run*/
+																							/*返回-4表示error，返回-5示WTP ID非法*/
+																							/*返回SNMPD_CONNECTION_ERROR表示connection error*/
 
 #if _GROUP_POLICY
 extern void Free_set_ap_sta_infomation_reportinterval_cmd_func_group(struct WtpList *WtpList_Head);
@@ -1276,6 +1300,7 @@ extern int set_ap_if_rate_cmd_group(dbus_parameter parameter, DBusConnection *co
 											/*返回-9表示partial failure，返回-10表示group id does not exist*/
 #endif
 
+/*WtpID为0表示全局配置*/
 /*rate的范围是"10","100"或"1000"*/
 extern int set_ap_if_rate_cmd(dbus_parameter parameter, DBusConnection *connection,int WtpID,char *if_index,char *if_rate);
 																						  /*返回0表示失败，返回1表示成功，返回-1表示unknown id format*/
@@ -1380,6 +1405,11 @@ extern void free_show_ap_wids_set_cmd(DCLI_WTP_API_GROUP_THREE *WTPINFO);
 /*retu==1调用释放函数 free_show_ap_wids_set_cmd(DCLI_WTP_API_GROUP_THREE *WTPINFO)*/																				
 extern int show_ap_wids_set_cmd_func(dbus_parameter parameter, DBusConnection *connection,DCLI_WTP_API_GROUP_THREE **WTPINFO);/*返回0表示失败，返回1表示成功，返回-1表示error*/
 																																	  /*返回SNMPD_CONNECTION_ERROR表示connection error*/
+/*20130617 start*/																																	  
+extern int show_dhcp_flooding_status_cmd_func(dbus_parameter parameter, DBusConnection *connection,DCLI_WTP_API_GROUP_THREE **WTPINFO);
+extern int show_sfd_status_cmd_func(dbus_parameter parameter, DBusConnection *connection,DCLI_WTP_API_GROUP_THREE **WTPINFO);																																	  
+
+/*20130617 end*/
 
 extern int set_ap_wids_set_cmd_func(dbus_parameter parameter, DBusConnection *connection,char *type1,char *type2,char *type3,char *state); /*返回0表示失败，返回1表示成功，返回-1表示input parameter error，返回-2表示error*/
 																																	  			 /*返回SNMPD_CONNECTION_ERROR表示connection error*/

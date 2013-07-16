@@ -1252,7 +1252,7 @@ void* dcli_ac_show_api_group_one(
 		//printf("<error> failed get reply.\n");
 		if (dbus_error_is_set(&err)) {
 			//printf("%s raised: %s",err.name,err.message);
-			dbus_error_free(&err);
+			dbus_error_free_for_dcli(&err);
 		}
 		*ret = -1;
 		return NULL;
@@ -1679,7 +1679,7 @@ void* show_neighbor_ap_list_cmd_allap(int localid,int index,DBusConnection *dbus
 
 	if (NULL == reply) {
 		if (dbus_error_is_set(&err)) {
-			dbus_error_free(&err);
+			dbus_error_free_for_dcli(&err);
 		}
 		*ret = -1;
 		return NULL;
@@ -2130,7 +2130,7 @@ DCLI_AC_API_GROUP_TWO * show_wids_device_of_all_device(int localid,DBusConnectio
 
 	if (NULL == reply) {
 		if (dbus_error_is_set(&err)) {
-			dbus_error_free(&err);
+			dbus_error_free_for_dcli(&err);
 		}
 		*ret = -1;
 		return NULL;
@@ -2307,7 +2307,7 @@ void* dcli_ac_show_api_group_two(
 		//printf("<error> failed get reply.\n");
 		if (dbus_error_is_set(&err)) {
 			//printf("%s raised: %s",err.name,err.message);
-			dbus_error_free(&err);
+			dbus_error_free_for_dcli(&err);
 		}
 		*ret = -1;
 		return NULL;
@@ -3051,7 +3051,7 @@ void* dcli_ac_show_api_group_three(
 		//printf("<error> failed get reply.\n");
 		if (dbus_error_is_set(&err)) {
 			//printf("%s raised: %s",err.name,err.message);
-			dbus_error_free(&err);
+			dbus_error_free_for_dcli(&err);
 		}
 		*ret = -1;
 		return NULL;
@@ -3498,7 +3498,7 @@ void* dcli_ac_show_api_group_four(
 		//printf("<error> failed get reply.\n");
 		if (dbus_error_is_set(&err)) {
 			//printf("%s raised: %s",err.name,err.message);
-			dbus_error_free(&err);
+			dbus_error_free_for_dcli(&err);
 		}
 		*ret = -1;
 		return NULL;
@@ -4025,7 +4025,7 @@ void* dcli_ac_show_api_group_five(
 		//printf("<error> failed get reply.\n");
 		if (dbus_error_is_set(&err)) {
 			//printf("%s raised: %s",err.name,err.message);
-			dbus_error_free(&err);
+			dbus_error_free_for_dcli(&err);
 		}
 		*ret = -1;
 		return NULL;
@@ -4543,7 +4543,7 @@ void* dcli_ac_show_wtp_trap_switch(
 		printf("<error> failed get reply.\n");
 		if (dbus_error_is_set(&err)) {
 			printf("%s raised: %s",err.name,err.message);
-			dbus_error_free(&err);
+			dbus_error_free_for_dcli(&err);
 		}
 		return NULL;
 	}
@@ -4633,7 +4633,7 @@ int dcli_ac_set_dynamic_channel_selection_range(
 		if (dbus_error_is_set(&err))
 		{
 			printf("%s raised: %s",err.name,err.message);
-			dbus_error_free(&err);
+			dbus_error_free_for_dcli(&err);
 		}
 		
 
@@ -5327,7 +5327,7 @@ dcli_ac_show_bak_check_interval(int localid, int index, int *ret, DBusConnection
 		if (dbus_error_is_set(&err))
 		{
 			printf("%s raised: %s\n", err.name, err.message);
-			dbus_error_free(&err);
+			dbus_error_free_for_dcli(&err);
 		}
 		*ret = -1;
 		return -1;
@@ -5390,7 +5390,7 @@ dcli_ac_show_lic_bak_req_interval(int localid, int index, int *ret, DBusConnecti
 		if (dbus_error_is_set(&err))
 		{
 			printf("%s raised: %s\n", err.name, err.message);
-			dbus_error_free(&err);
+			dbus_error_free_for_dcli(&err);
 		}
 		*ret = -1;
 		return -1;
@@ -5443,7 +5443,7 @@ void* dcli_ac_show_wid_listen_if(
 		  if (dbus_error_is_set(&err))
 		  {
 			  printf("%s raised: %s",err.name,err.message);
-			  dbus_error_free(&err);
+			 dbus_error_free_for_dcli(&err);
 		  }
 		  *ret = -1;
 		  return NULL;
@@ -5559,7 +5559,7 @@ int set_wids_judge_policy(int index,int localid,int mode,int policy,DBusConnecti
 	{
 		if (dbus_error_is_set(&err))
 		{
-			dbus_error_free(&err);
+			dbus_error_free_for_dcli(&err);
 		}
 		
 		return -1;
@@ -5603,7 +5603,7 @@ int show_wids_judge_policy(int index,int localid,int *mode,DBusConnection *dcli_
 	{
 		if (dbus_error_is_set(&err))
 		{
-			dbus_error_free(&err);
+			dbus_error_free_for_dcli(&err);
 		}
 		return -1;
 	}
@@ -5650,7 +5650,7 @@ int set_wids_scanning_mode(int index,int localid,unsigned int wtpid,int mode,DBu
 		if (dbus_error_is_set(&err))
 		{
 			//printf("%s raised: %s",err.name,err.message);
-			dbus_error_free(&err);
+			dbus_error_free_for_dcli(&err);
 		}
 		
 
@@ -5694,7 +5694,7 @@ int set_wids_monitor_mode(int index,int localid,unsigned int wtpid,int mode,DBus
 		if (dbus_error_is_set(&err))
 		{
 			//printf("%s raised: %s",err.name,err.message);
-			dbus_error_free(&err);
+			dbus_error_free_for_dcli(&err);
 		}
 		
 
@@ -5743,7 +5743,7 @@ void *show_wids_scanning_mode_channel(int index,int localid,unsigned int wtpid,i
 		if (dbus_error_is_set(&err))
 		{
 			//printf("%s raised: %s",err.name,err.message);
-			dbus_error_free(&err);
+			dbus_error_free_for_dcli(&err);
 		}
 		return NULL;
 	}
@@ -5897,7 +5897,7 @@ int set_wids_scanning_channel(int index,int localid,unsigned int wtpid,unsigned 
 		//vty_out(vty,"<error> failed get reply.\n");
 		if (dbus_error_is_set(&err)) {
 			//vty_out(vty,"%s raised: %s",err.name,err.message);
-			dbus_error_free(&err);
+			dbus_error_free_for_dcli(&err);
 		}
 		return -1;
 	}

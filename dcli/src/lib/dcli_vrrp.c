@@ -1959,7 +1959,12 @@ DEFUN(config_hansi_cmd_func,
 		}else if (hmd_ret == HMD_DBUS_ID_NO_EXIST){
 			vty_out(vty,"<error> remote hansi not exist\n");
 			return CMD_WARNING;
-		}else{
+		}
+		else if(hmd_ret == HMD_DBUS_DELETING_HANSI){
+			vty_out(vty,"<error>deleting hansi not completed,please wait several minutes\n");
+			return CMD_WARNING;
+		}
+		else{
 			vty_out(vty,"<error>  %d\n",hmd_ret);
 			return CMD_WARNING;
 		}
@@ -6503,6 +6508,7 @@ int dcli_vrrp_show_running_cfg(struct vty *vty)
 	unsigned int service_index = 0;
 	int localid = 0;
 	int slot_id = 0;
+	int old_slot_id = -1;
 	int dhcp_flag = 0;
 	int create_cfg_flag = 0;
 	if (NULL == showRunningCfg_str) {
@@ -6896,6 +6902,36 @@ int dcli_vrrp_show_running_cfg(struct vty *vty)
 					cursor = showRunningCfg_str + totalLen;
 			//vtysh_add_show_string(showRunningCfg_str);
 			/*end*/
+
+			/* fast forward distribute config */
+			if (slot_id != old_slot_id  && 0 != slot_id)
+			{
+				old_slot_id = slot_id;
+				tmp = se_agent_show_running_cfg_2(localid, slot_id,profile);
+				if(tmp != NULL){
+					if (0 != strlen(tmp)) {
+						totalLen += sprintf(cursor, "%s\n",tmp);
+						cursor = showRunningCfg_str + totalLen;
+					}
+					free(tmp);
+					tmp = NULL;
+				}else{
+					free(showRunningCfg_str);
+					return 1;
+				}
+				totalLen += sprintf(cursor, " exit\n", profile);
+						cursor = showRunningCfg_str + totalLen;
+				dcli_config_write(showRunningCfg_str,localid,slot_id,profile,0,0);		
+				dcli_config_writev2(showRunningCfg_str,slot_id,profile,"hansi-fastfwd",0);		
+				vtysh_add_show_string(showRunningCfg_str);		
+				memset(showRunningCfg_str, 0, DCLI_VRRP_SHOW_RUNNING_CFG_LEN);
+				cursor = showRunningCfg_str;
+				totalLen = 0;
+				totalLen += sprintf(cursor, "config hansi-profile %d-%d\n", slot_id,profile);
+						cursor = showRunningCfg_str + totalLen;
+			}
+			/*end*/
+			
 			/* pdc */
 			tmp = dcli_pdc_show_running_config_2(localid, slot_id,profile);
 			if(tmp != NULL){

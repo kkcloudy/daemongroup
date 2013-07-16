@@ -84,7 +84,7 @@ int portal_fill_summary( STPubInfoForItem *p_pubinfo, STSndrItem *p_item )
 	vrrp_id_input=strtoul(plotid,0,10);                                                /*the vrrp_id which user input*/
 	if(vrrp_id_input>0)
 	{      
-		instRun = ccgi_vrrp_hansi_is_running(vrrp_id_input);
+		instRun = 0;//ccgi_vrrp_hansi_is_running(vrrp_id_input);
 		if(instRun != DCLI_VRRP_INSTANCE_CREATED)
 		{		  
 		  vrrp_id_input = 0;
@@ -189,7 +189,7 @@ int cgiMain()
 	ccgi_dbus_init();   
 	if(p_id>0)
 	{
-            	  instRun = ccgi_vrrp_hansi_is_running(p_id);
+            	  instRun = 0;//ccgi_vrrp_hansi_is_running(p_id);
             	  if(instRun != DCLI_VRRP_INSTANCE_CREATED)
             	  {
             	  	p_id = 0;
@@ -274,7 +274,7 @@ static int ShowContRlPage(struct secondary_module_container *p )
 	
 	if(p_id>0)
 	{
-		instRun = ccgi_vrrp_hansi_is_running(p_id);
+		instRun =0;// ccgi_vrrp_hansi_is_running(p_id);
 		if(instRun != DCLI_VRRP_INSTANCE_CREATED)
 		{
 		  ShowAlert(search(lpublic,"instance_not_exist"));

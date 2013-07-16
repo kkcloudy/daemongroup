@@ -653,9 +653,23 @@ void wid_syslog_debug(char *format,...)
 	}
 }
 
+char *wid_get_current_time(void)
+{
+	
+	time_t now;
+	struct tm *timenow;
+	
+	time(&now);
+	timenow = localtime(&now);
+	
+	return asctime(timenow);
+}
+
+
 void wid_pid_write(unsigned int vrrid)
 {
 	char pidBuf[128] = {0}, pidPath[128] = {0};
+	char *time_ptr = NULL, *temp_ptr=NULL;
 	pid_t myPid = 0;
 	int fd;
 #ifndef _DISTRIBUTION_
@@ -667,12 +681,21 @@ void wid_pid_write(unsigned int vrrid)
 #endif
 		
 	fd = open(pidPath, O_RDWR|O_CREAT);
+
+	time_ptr = wid_get_current_time();
+	strcpy(pidBuf, time_ptr);
+	temp_ptr = (char *)(pidBuf + strlen(time_ptr) -1);
+	*temp_ptr = ' ';
+	temp_ptr++;
+
 	myPid = getpid();	
-	sprintf(pidBuf,"%d\n", myPid);
+	sprintf(temp_ptr,"%d\n", myPid);
 	write(fd, pidBuf, strlen(pidBuf));
 	close(fd);
 	return;
 }
+
+
 
 
 void wid_pid_write_v2(char *name,int id,unsigned int vrrid)
@@ -680,6 +703,7 @@ void wid_pid_write_v2(char *name,int id,unsigned int vrrid)
 	//printf("%s start\n",__func__);
 	char pidBuf[128] = {0}, pidPath[128] = {0};
 	char idbuf[128] = {0};
+	char *time_ptr = NULL, *temp_ptr = NULL;
 	pid_t myPid = 0;
 	static int fd;
 	static unsigned char opened = 0;
@@ -706,9 +730,16 @@ void wid_pid_write_v2(char *name,int id,unsigned int vrrid)
 	}else{
 		sprintf(idbuf,"HANSI[%d]%s",vrrid,name);
 	}
+
+	time_ptr = wid_get_current_time();
+	strcpy(pidBuf, time_ptr);
+	temp_ptr = (char *)(pidBuf + strlen(time_ptr) -1);
+	*temp_ptr = ' ';
+	temp_ptr++;
+	
 	//fd = open(pidPath, O_RDWR|O_CREAT);
 	myPid = getpid();	
-	sprintf(pidBuf,"%s-%d\n",idbuf,myPid);
+	sprintf(temp_ptr,"%s-%d\n",idbuf,myPid);
 	//printf("11pidBuf:%s\n",pidBuf);
 	write(fd, pidBuf, strlen(pidBuf));
 	//printf("22pidBuf:%s\n",pidBuf);

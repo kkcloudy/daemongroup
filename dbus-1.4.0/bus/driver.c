@@ -1960,6 +1960,9 @@ bus_driver_handle_message (DBusConnection *connection,
   _dbus_assert (dbus_message_get_member (message) != NULL);
 
   name = dbus_message_get_member (message);
+  /*
+  **CID 15779 (#1 of 1): Unused pointer value (UNUSED_VALUE)returned_pointer: Pointer "sender" returned by "dbus_message_get_sender(message)" is never used. 
+  */
   sender = dbus_message_get_sender (message);
 
   if (strcmp (interface,
@@ -1974,7 +1977,7 @@ bus_driver_handle_message (DBusConnection *connection,
 		 dbus_message_get_member (message));
 
   /* security checks should have kept this from getting here */
-  _dbus_assert (sender != NULL || strcmp (name, "Hello") == 0);
+  _dbus_assert (sender != NULL || strcmp (name, "Hello") == 0);/*coverity info for CID 15779 */
 
   i = 0;
   while (i < _DBUS_N_ELEMENTS (message_handlers))

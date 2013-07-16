@@ -14777,6 +14777,8 @@ DBusMessage *asd_dbus_wlan_use_mac_list(DBusConnection *conn, DBusMessage *msg, 
 	}else if((wids_enable == 1) && (list_type != 1)){ 
 		ret = ASD_WIDS_OPEN;
 	}else {
+	    pthread_mutex_lock(&asd_g_wtp_mutex);
+		pthread_mutex_lock(&asd_g_sta_mutex);
 		conf = ASD_WLAN[wlanid]->acl_conf;
 		if(change_maclist_security(conf,list_type) != 0)
 			asd_printf(ASD_DBUS,MSG_DEBUG,"change mac list failed\n");
@@ -14812,6 +14814,8 @@ DBusMessage *asd_dbus_wlan_use_mac_list(DBusConnection *conn, DBusMessage *msg, 
 				}
 			}
 		}
+	    pthread_mutex_unlock(&asd_g_sta_mutex);
+	    pthread_mutex_unlock(&asd_g_wtp_mutex);
 	}
 
 	reply = dbus_message_new_method_return(msg);
@@ -15705,10 +15709,10 @@ DBusMessage *asd_dbus_show_all_wlan_mac_list(DBusConnection *conn, DBusMessage *
 	unsigned char wlanid[WLAN_NUM];
 	int i=0, j=0;
 	
+	pthread_mutex_lock(&asd_g_wlan_mutex);
 	pthread_mutex_lock(&asd_g_sta_mutex);
 	dbus_error_init(&err);
 
-	pthread_mutex_lock(&asd_g_wlan_mutex);
 	while(i<WLAN_NUM){
 		if(ASD_WLAN[i] != NULL)	{
 			wlanid[wlan_num] = ASD_WLAN[i]->WlanID;
@@ -17130,13 +17134,13 @@ DBusMessage *asd_dbus_show_sta_summary(DBusConnection *conn, DBusMessage *msg, v
 		exit(1);
 	}	
 	memset(wtp_count,0,WTP_NUM*sizeof(unsigned int));
+	pthread_mutex_lock(&asd_g_wlan_mutex);
 	pthread_mutex_lock(&asd_g_sta_mutex);
 	total=ASD_STA_SUMMARY(wtp_count,wlan_count);
 	local_roam_count = local_success_roaming_count;
 	total_unconnect_count = total_sta_unconnect_count;
 
 
-	pthread_mutex_lock(&asd_g_wlan_mutex);
 	for(i=0;i<WLAN_NUM;i++){
 		if(wlan_count[i]!=0)
 			wlan_n++;
@@ -17264,8 +17268,8 @@ DBusMessage *asd_dbus_show_sta_summary(DBusConnection *conn, DBusMessage *msg, v
 	
 	free(wtp_count);	
 	wtp_count = NULL;
-	pthread_mutex_unlock(&asd_g_wlan_mutex);
 	pthread_mutex_unlock(&asd_g_sta_mutex);
+	pthread_mutex_unlock(&asd_g_wlan_mutex);
 	return reply;	
 }
 
@@ -22691,7 +22695,8 @@ DBusMessage *asd_dbus_apply_wlan(DBusConnection *conn, DBusMessage *msg, void *u
 	DBusMessageIter	 iter;
 	unsigned char security_id,wlan_id;
 	unsigned int ret = ASD_DBUS_SUCCESS;
-	int i = 0,len = 0;
+	int i = 0;
+	//int len = 0;
 	DBusError err;
 	
 	dbus_error_init(&err);
@@ -22715,7 +22720,30 @@ DBusMessage *asd_dbus_apply_wlan(DBusConnection *conn, DBusMessage *msg, void *u
 		for(i=0; i<5; i++) {
 			if(ASD_WLAN[wlan_id] != NULL){
 				if((ASD_WLAN[wlan_id]->Status == 1)){
-					ASDCmdMsg cmdmsg;
+					if(ASD_WLAN[wlan_id]->SecurityID != 0){
+
+						ASD_WLAN[wlan_id]->OldSecurityIndex =  ASD_WLAN[wlan_id]->SecurityIndex;	
+						ASD_WLAN[wlan_id]->OldSecurityIndex_flag = ASD_WLAN[wlan_id]->NowSecurityIndex_flag;
+					}
+				
+					if(((ASD_SECURITY[security_id]->securityType == OPEN)||(ASD_SECURITY[security_id]->securityType == SHARED))&&(ASD_SECURITY[security_id]->encryptionType == WEP))
+					{
+						ASD_WLAN[wlan_id]->NowSecurityIndex_flag = 1;
+					}
+					else
+					{
+						ASD_WLAN[wlan_id]->NowSecurityIndex_flag = 0;
+					}
+					
+					ASD_WLAN[wlan_id]->SecurityID = security_id;
+					ASD_WLAN[wlan_id]->SecurityIndex = ASD_SECURITY[security_id]->index;  //fengwenchao add 20110310 for autelan-2200
+					ASD_WLAN[wlan_id]->ap_max_inactivity = ASD_SECURITY[security_id]->ap_max_inactivity;//weichao add 
+					asd_printf(ASD_DBUS,MSG_DEBUG,"ASD_WLAN_INF_OP\n");
+					if(ASD_WLAN_INF_OP(wlan_id, security_id, WID_MODIFY))
+						asd_printf(ASD_DBUS,MSG_DEBUG,"update wlan security type\n");
+					ret = ASD_DBUS_SUCCESS;
+					break;
+					/*ASDCmdMsg cmdmsg;
 					memset(&cmdmsg, 0, sizeof(ASDCmdMsg));	
 					cmdmsg.Op = ASD_CMD_APPLY_SECURITY;
 					cmdmsg.Type = ASD_SECURITY_TYPE;
@@ -22726,7 +22754,7 @@ DBusMessage *asd_dbus_apply_wlan(DBusConnection *conn, DBusMessage *msg, void *u
 						perror("send(wASDSocket)");
 						asd_printf(ASD_DBUS,MSG_DEBUG,"sssssssssss\n");
 					}
-					break;
+					break;*/
 				}else
 					ret = ASD_SECURITY_WLAN_SHOULD_BE_DISABLE;
 			}else {

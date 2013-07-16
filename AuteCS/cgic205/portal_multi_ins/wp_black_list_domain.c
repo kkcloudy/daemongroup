@@ -23,7 +23,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 * CREATOR:
 * autelan.software.Network Dep. team
 *
-* DESCRIPTION:
+* DESCRIPTION:  
 *
 *
 *
@@ -32,6 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/wait.h>
+#include <ctype.h>
 #include "ws_module_container.h"
 #include "ws_portal_container.h"
 #include "cgic.h"
@@ -39,6 +40,17 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "ws_usrinfo.h"
 #include "ws_ec.h"
 #include "ws_conf_engine.h"
+
+#include "ws_init_dbus.h"
+
+#include "eag/eag_errcode.h"
+#include "eag/eag_conf.h"
+#include "eag/eag_interface.h"
+#include "ws_dcli_vrrp.h"
+#include "ws_eag_conf.h"
+#include "drp/drp_def.h"
+#include "drp/drp_interface.h"
+#include "ws_dbus_list_interface.h"
 
 #ifndef  BLACK_LIST_DOMAIN
 #define  BLACK_LIST_DOMAIN
@@ -57,7 +69,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #define CP_BLACK_LIST_FLAG_DOMAIN 4
 
-#define MAX_ID_NUM_DOMAIN		8
+#define MAX_ID_NUM_DOMAIN		17
 
 #define MAX_BLACK_LIST_NUM_DOMAIN	512
 
@@ -74,9 +86,35 @@ typedef struct {
 	char *username_encry;			  /*存储解密后的当前登陆用户名*/
 	int iUserGroup; //为0时表示是管理员。
 	FILE *fp;
-	int portal_id;
+	int plotid;
 	
 } STPageInfo;
+
+static dbus_parameter parameter;
+static instance_parameter *paraHead1 = NULL;
+static void *ccgi_connection = NULL;
+static char plotid[10] = {0};
+
+#if 0
+int Check_domain_Name(char * domain);
+#endif
+
+static int
+is_domain(const char *str)
+{
+	int i = 0;
+	for (i = 0; str[i] != 0; i++) {
+		if (0 == isalnum(str[i])
+		&& '.' != str[i]
+		&& '-' != str[i]) {
+			return 0;
+		}
+	}
+	if (str[0] == '-' || str[i-1] == '-') {
+		return 0;
+	}
+	return 1;
+}
 
 
 /***************************************************************
@@ -86,7 +124,7 @@ static int s_black_list_domain_prefix_of_page( STPageInfo *pstPageInfo );
 static int s_black_list_domain_content_of_page( STPageInfo *pstPageInfo );
 
 
-static int black_list_domain_run_script(const char *domain, int portal_id, char add_or_del);
+static int black_list_domain_run_script(const char *domain, int plotid, char add_or_del);
 /***************************************************************
 *USEAGE:	 主函数
 *Param:
@@ -98,47 +136,96 @@ static int black_list_domain_run_script(const char *domain, int portal_id, char 
 ****************************************************************/
 int cgiMain()
 {
-
+	int ret = 0;
 	STPageInfo stPageInfo;
+
+	DcliWInit();
+	ccgi_dbus_init();  
+	
 	
 //初始化常用公共变量
-	memset( &stPageInfo, 0, sizeof(STPageInfo) );
-	
+	memset( &stPageInfo, 0, sizeof(stPageInfo ) );
+	ret = init_portal_container(&(stPageInfo.pstradiusContainer));
+	stPageInfo.lpublic = stPageInfo.pstradiusContainer->lpublic;
+	stPageInfo.lauth = stPageInfo.pstradiusContainer->llocal;//get_chain_head("../htdocs/text/authentication.txt");
 	cgiFormStringNoNewlines("UN", stPageInfo.encry, BUF_LEN);
 	
-	char portal_id_buf[BUF_LEN];
-	
-	
-	memset( portal_id_buf, 0, sizeof(portal_id_buf) );
-	
-	
-	if (cgiFormStringNoNewlines("portal_id", portal_id_buf, sizeof(portal_id_buf)) == cgiFormNotFound)
-	{
-		stPageInfo.portal_id = 0;
-	} else
-	{
-		sscanf(portal_id_buf, "%d", &(stPageInfo.portal_id));
-	}
-	
-	stPageInfo.username_encry = dcryption(stPageInfo.encry);
-	if ( NULL == stPageInfo.username_encry )
+	//stPageInfo.username_encry = dcryption(stPageInfo.encry);
+	if ( WS_ERR_PORTAL_ILLEGAL_USER == ret )
 	{
 		ShowErrorPage(search(stPageInfo.lpublic, "ill_user"));	  /*用户非法*/
+		release_portal_container(&(stPageInfo.pstradiusContainer));
 		return 0;
 	}
-	stPageInfo.iUserGroup = checkuser_group( stPageInfo.username_encry );
-	
+	//stPageInfo.iUserGroup = checkuser_group( stPageInfo.username_encry );
+	stPageInfo.iUserGroup = stPageInfo.pstradiusContainer->iUserGroup;
 //stPageInfo.pstModuleContainer = MC_create_module_container();
-	init_portal_container(&(stPageInfo.pstradiusContainer));
 	if ( NULL == stPageInfo.pstradiusContainer )
 	{
+		release_portal_container(&(stPageInfo.pstradiusContainer));
 		return 0;
 	}
-	stPageInfo.lpublic = stPageInfo.pstradiusContainer->lpublic;//get_chain_head("../htdocs/text/public.txt");
-	stPageInfo.lauth = stPageInfo.pstradiusContainer->llocal;//get_chain_head("../htdocs/text/authentication.txt");
 	
 	stPageInfo.fp = cgiOut;
+
+	memset(plotid,0,sizeof(plotid));
+	cgiFormStringNoNewlines("plotid", plotid, sizeof(plotid)); 
+	
+	list_instance_parameter(&paraHead1, INSTANCE_STATE_WEB);
+	if (NULL == paraHead1) {
+		return 0;
+	}
+	if(strcmp(plotid, "") == 0)
+	{
+		parameter.instance_id = paraHead1->parameter.instance_id;
+		parameter.local_id = paraHead1->parameter.local_id;
+		parameter.slot_id = paraHead1->parameter.slot_id;
+		snprintf(plotid,sizeof(plotid)-1,"%d-%d-%d",parameter.slot_id, parameter.local_id, parameter.instance_id);
+	}
+	else
+	{
+		get_slotID_localID_instanceID(plotid, &parameter);
+	}
+	ccgi_ReInitDbusConnection(&ccgi_connection, parameter.slot_id, DISTRIBUTFAG);
+	fprintf(stderr, "----------------------------------------------plotid=%s\n", plotid);
+	
 //初始化完毕
+
+
+
+
+		char del_opt[10]={0};
+		cgiFormStringNoNewlines("del_opt",del_opt,sizeof(del_opt));
+		if(!strcmp(del_opt,"delete"))
+		{
+			int ret = 0;
+			char domain [128]={0};
+			
+			
+			cgiFormStringNoNewlines("domain",domain,sizeof(domain));
+			
+			//fprintf(stderr,"insid=%d$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n",insid);
+			//fprintf(stderr,"domain=%s$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n",domain);
+			
+						
+			RULE_TYPE type = RULE_DOMAIN;
+			
+			//fprintf(stderr,"delete is ok-------------------------------------\n");
+			ret = eag_conf_captive_list(ccgi_connection, 
+									parameter.local_id,
+									parameter.instance_id, 
+									type,
+									"",
+									"",
+									domain,
+									"",
+									CP_DEL_LIST,
+									CP_BLACK_LIST);
+			fprintf(stderr,"ret=%d$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n",ret);
+			
+	
+		}
+
 
 
 //处理表单
@@ -146,7 +233,7 @@ int cgiMain()
 
 
 
-	MC_setActiveLabel( stPageInfo.pstradiusContainer->pstModuleContainer, 6 );
+	MC_setActiveLabel( stPageInfo.pstradiusContainer->pstModuleContainer, WP_EAG_BLACKLIST);
 	
 	MC_setPrefixOfPageCallBack( stPageInfo.pstradiusContainer->pstModuleContainer, (MC_CALLBACK)s_black_list_domain_prefix_of_page, &stPageInfo );
 	MC_setContentOfPageCallBack( stPageInfo.pstradiusContainer->pstModuleContainer, (MC_CALLBACK)s_black_list_domain_content_of_page, &stPageInfo );
@@ -169,6 +256,8 @@ int cgiMain()
 	
 	
 	MC_writeHtml( stPageInfo.pstradiusContainer->pstModuleContainer );
+
+	free_instance_parameter_list(&paraHead1);
 	
 	release_portal_container(&(stPageInfo.pstradiusContainer));
 	
@@ -179,10 +268,19 @@ int cgiMain()
 
 static int s_black_list_domain_prefix_of_page( STPageInfo *pstPageInfo )
 {
-	char del_rule[10] = "";
-	char index[32] = "";
-	FILE * fp = pstPageInfo->fp;
+	//char del_rule[10] = "";
+	//char index[32] = "";
+	char domain[256] = {0};
+	char tmp_domain[256] = {0};
+	int ret = -1;
+	RULE_TYPE type = RULE_DOMAIN;
+	FILE *fp = pstPageInfo->fp;
+	int i = 0;
+	domain_pt domain_conf;
+	domain_ct domain_ctr;
 	
+	fprintf( cgiOut, "<script language=javascript src=/fw.js></script>\n" );
+	#if 0
 	fprintf(fp, "<script type=\"text/javascript\">"\
 									"function popMenu(objId)"\
 									"{"\
@@ -197,48 +295,74 @@ static int s_black_list_domain_prefix_of_page( STPageInfo *pstPageInfo )
 									"}"\
 									"}"\
 									"</script>");
-									
-	FILE * p_file = NULL;
-	char portal_id_buf[64];
-	char domain_name[512];
+	#endif
 	
-	memset(domain_name, 0, sizeof(domain_name));
-	memset(portal_id_buf, 0, sizeof(portal_id_buf));
+	memset(tmp_domain,0,sizeof(tmp_domain));
+			
 	if ( cgiFormSubmitClicked(SUBMIT_NAME) == cgiFormSuccess )
 	{
 		//fprintf(stderr,"submit\n");
-		cgiFormStringNoNewlines("domain_input", domain_name, sizeof(domain_name));
-		cgiFormStringNoNewlines("portal_id_hide", portal_id_buf, sizeof(portal_id_buf));
+		cgiFormStringNoNewlines("domain_input", tmp_domain, sizeof(tmp_domain));
 		
-		pstPageInfo->portal_id = atoi(portal_id_buf);
-		
-		if (!strcmp(domain_name, ""))
+		if (is_domain(tmp_domain) == 0)
 		{
 			ShowAlert( search(pstPageInfo->lpublic, "input_illegal"));
 			return 0;
 		}
-		/////////////处理数据///////////////////
-		
-		//char content[2048];
-		//memset( content, 0, sizeof(content));
-		//sprintf( content, "%d;%s\n", pstPageInfo->portal_id, domain_name);
-		if ( black_list_domain_run_script(domain_name, pstPageInfo->portal_id, 'a') != 0)
+
+		memset(&domain_conf,0,sizeof(domain_conf));
+		strncpy((domain_conf.domain_name),tmp_domain,sizeof(domain_conf.domain_name)-1);
+		memset(&domain_ctr,0,sizeof(domain_ctr));
+		ccgi_dbus_init(); 
+		ret = conf_drp_get_domain_ip(ccgi_dbus_connection,	&domain_conf, &domain_ctr);
+		if (0 == domain_ctr.num)
 		{
-			ShowAlert( search( pstPageInfo->lauth, "blacklist_add_err" ) );			
+			ShowAlert( search( pstPageInfo->lauth, "blacklist_add_err" ) );
+			fprintf( fp, "<script type='text/javascript'>\n" );
+			fprintf( fp, "window.location.href='wp_black_list_domain.cgi?UN=%s&plotid=%s';\n", pstPageInfo->encry, plotid);
+			fprintf( fp, "</script>\n" );
+			return 0;
 		}
+
+		if (0 == ret) {
+			int nbyte = 0;
+			for (i = 0; i < domain_ctr.num; i++){
+				nbyte = snprintf(domain, sizeof(domain) -1, "%s", (char *)tmp_domain);
+				for (i = 0; i<domain_ctr.num; i++){
+					nbyte += snprintf(domain+nbyte,sizeof(domain)-nbyte -1,";%lu",domain_ctr.domain_ip[i].ipaddr);
+				}
+			}
+		}
+		fprintf(stderr,"#cgic# ------------------------------------- \n");
+		fprintf(stderr,"#cgic# ------------------ ret is: %d\n",ret);
+		fprintf(stderr,"#cgic# ------------------ domain_ctr.num is: %d\n",domain_ctr.num);
+		
+
+		ret = eag_conf_captive_list(ccgi_connection, 
+									parameter.local_id,
+									parameter.instance_id,
+									type,
+									"",
+									"",
+									domain,
+									"",
+									CP_ADD_LIST,
+									CP_BLACK_LIST);
 		
 
 	}
+	#if 0
 	cgiFormStringNoNewlines( "DELRULE", del_rule, 10 );
 	if ( !strcmp(del_rule, "delete") )
 	{
 		//fprintf(stderr,"delete\n");
 		cgiFormStringNoNewlines( "domain_name", domain_name, sizeof(domain_name) );
-		if (black_list_domain_run_script(domain_name, pstPageInfo->portal_id, 'd') != 0)
+		if (black_list_domain_run_script(domain_name, pstPageInfo->plotid, 'd') != 0)
 		{
 			ShowAlert( search( pstPageInfo->lauth, "blacklist_add_err" ) );
 		}		
 	}
+	#endif
 	return 0;
 }
 
@@ -259,23 +383,25 @@ static int s_black_list_domain_content_of_page( STPageInfo *pstPageInfo )
 									"					 <tr>\n"\
 									"						 <td>ID:</td>\n"\
 									"						 <td>\n"\
-									"						 <select name='portal_id' style='width:100%%;height:auto' onchange='on_id_change(this);'>\n");
-	for (i = 0;i < MAX_ID_NUM_DOMAIN;i++)
+									"						 <select name='plotid' style='width:100%%;height:auto' onchange='on_id_change(this);'>\n");
+	instance_parameter *pq = NULL;
+	char temp[10] = { 0 };
+	
+	for (pq=paraHead1;(NULL != pq);pq=pq->next)
 	{
-		if ( pstPageInfo->portal_id == i )
-		{
-			fprintf(cgiOut, "						<option value='%d' selected>%d</option>", i, i);
-		}
-		else
-		{
-			fprintf(cgiOut, "						<option value='%d'>%d</option>", i, i);
-		}
+		memset(temp,0,sizeof(temp));
+		snprintf(temp,sizeof(temp)-1,"%d-%d-%d",pq->parameter.slot_id,pq->parameter.local_id,pq->parameter.instance_id);
+		
+		if (strcmp(plotid, temp) == 0)
+			fprintf(cgiOut,"<option value='%s' selected>%s</option>\n",temp,temp);
+		else	       
+			fprintf(cgiOut,"<option value='%s'>%s</option>\n",temp,temp);
 	}
 	fprintf(cgiOut, "						 </select>\n" );
 	fprintf( cgiOut, "			 			<script type=text/javascript>\n"\
 										"							 function on_id_change(obj)\n"
 										"								 {\n"\
-										"									 window.location.href='wp_black_list_domain.cgi?UN=%s&portal_id='+obj.value;\n"\
+										"									 window.location.href='wp_black_list_domain.cgi?UN=%s&plotid='+obj.value;\n"\
 										"								 }\n", pstPageInfo->encry );
 	fprintf( cgiOut, " 					 </script>\n" );
 	fprintf(cgiOut, "						 </td>\n"\
@@ -284,14 +410,14 @@ static int s_black_list_domain_content_of_page( STPageInfo *pstPageInfo )
 	fprintf( cgiOut, "					<tr>\n"\
 										"						<td>Mode:</td>\n"\
 										"						<td>\n"\
-										"						<select name='portal_id' style='width:100%%;height:auto' onchange='on_mode_change(this);'>\n"\
+										"						<select name='mode' style='width:100%%;height:auto' onchange='on_mode_change(this);'>\n"\
 										"							<option value=0 >Ip</option>"\
 										"							<option value=1 selected>Domain</option>"\
 										"						</select>\n");
 	fprintf( cgiOut, "						<script type=text/javascript>\n"\
 										"							function on_mode_change(obj)\n"
 										"							{\n"\
-										"								window.location.href='wp_black_list.cgi?UN=%s&portal_id='+%d;\n", pstPageInfo->encry, pstPageInfo->portal_id);
+										"								window.location.href='wp_black_list.cgi?UN=%s&plotid='+%d;\n", pstPageInfo->encry, pstPageInfo->plotid);
 	fprintf( cgiOut, "							}\n");
 	fprintf( cgiOut, "					</script>\n"
 										"					</td>\n"\
@@ -325,9 +451,74 @@ static int s_black_list_domain_content_of_page( STPageInfo *pstPageInfo )
 	
 	
 #endif
+
+
+    int ret =-1;
+
+	RULE_TYPE type;
+	struct bw_rules black;
+	memset(&black,0,sizeof(black));
 	
+	//fprintf(stderr,"show insid=%d...............................+++++++++++\n",insid);
+	//fprintf(stderr,"hansitype=%d........................++++++++++++++\n",hansitype);
+	ret = eag_show_black_list(ccgi_connection, 
+									parameter.local_id,
+									parameter.instance_id, 
+									&black); 
+	//fprintf(stderr,"ret=%d...............................+++++++++++\n",ret);
+	if(ret == 0)
+	{
+		int num; 
+		num = black.curr_num;
+		
+		//fprintf(stderr,"num=%d\n+++++++++++++++++",num);
+ 
+		if(num >0 )
+		{
+			//char ipbegin[32];
+			//char ipend[32];
+			//char ports[CP_MAX_PORTS_BUFF_LEN]={0};
+			//char intf[MAX_IF_NAME_LEN]={0};
+
+			char domain[CP_MAX_BW_DOMAIN_NAME_LEN];
+			
+
+			for(i = 0 ; i < num ; i++)
+			{   
+			    type = black.rule[i].type;
+				if(type == RULE_DOMAIN)
+				{
+	  				//ip2str(white.rule[i].key.ip.ipbegin,ipbegin,sizeof(ipbegin));
+	  				//ip2str(white.rule[i].key.ip.ipend,ipend,sizeof(ipend));
+	  				//strcpy(ports,white.rule[i].key.ip.ports);
+	  				//strcpy(intf,white.rule[i].intf);
+	  				//fprintf(stderr,"intf=%s+++++++++++++++++++++&&&&&&&&&&&&&&&&&&&&&&&&&&&&&",intf);
+	  				strcpy(domain,black.rule[i].key.domain.name);
+	  				fprintf(cgiOut,"					<tr height=25>\n");
+	  				fprintf(cgiOut,"						<td style=font-size:12px align=left>%s</td>\n",domain);
+	  				fprintf(cgiOut,"						<td>\n" );
+	  				fprintf(cgiOut, "						<script type=text/javascript>\n" );
+	  				fprintf(cgiOut , "							var popMenu%d = new popMenu('popMenu%d','%d');\n", i, i,num-i);
+	  				fprintf(cgiOut, "							popMenu%d.addItem( new popMenuItem( '%s', 'wp_black_list_domain.cgi?del_opt=%s&UN=%s&plotid=%s&domain=%s' ) );\n",
+	  									i,"delete","delete", pstPageInfo->encry, plotid ,domain ); 
+	  				fprintf(cgiOut, "							popMenu%d.show();\n", i );
+	  				fprintf(cgiOut, "						</script>\n" );
+	  				fprintf(cgiOut, "						</td>\n");
+	  				fprintf(cgiOut,"					</tr>\n");
+				}
+
+
+			}
+				
+		}
+	}	
+
+
+
+
 	
-//---------------------
+#if 0
+ 
 
 	char menu[21] = "";
 	char i_char[10] = "";
@@ -336,7 +527,7 @@ static int s_black_list_domain_content_of_page( STPageInfo *pstPageInfo )
 	char buf[1024];
 	memset(buf, 0, sizeof(buf));
 	
-//char portal_id[32];
+//char plotid[32];
 	char domain_name[512];
 	
 	int i_portal_id;
@@ -368,7 +559,7 @@ static int s_black_list_domain_content_of_page( STPageInfo *pstPageInfo )
 				continue;//空行跳过 	
 			}
 			
-			//memset(portal_id, 0, sizeof(portal_id));
+			//memset(plotid, 0, sizeof(plotid));
 			memset(domain_name, 0, sizeof(domain_name));
 			
 			// fprintf(stderr,"sccanf:::::::::::::::\n");
@@ -379,7 +570,7 @@ static int s_black_list_domain_content_of_page( STPageInfo *pstPageInfo )
 			{
 				continue;
 			}
-			if (i_portal_id != pstPageInfo->portal_id)
+			if (i_portal_id != pstPageInfo->plotid)
 			{
 				continue;
 			}
@@ -407,7 +598,7 @@ static int s_black_list_domain_content_of_page( STPageInfo *pstPageInfo )
 											"<div id=%s style=\"display:none; position:absolute; top:5px; left:0;\">", menu);
 			fprintf(cgiOut, "<div id=div1>");
 			fprintf(cgiOut, "<div id=div2 onmouseover=\"this.style.backgroundColor='#b6bdd2'\" onmouseout=\"this.style.backgroundColor='#f9f8f7'\">"\
-											"<a id=link href=wp_black_list_domain.cgi?UN=%s&portal_id=%d&DELRULE=%s&domain_name=%s target=mainFrame>%s</a></div>", pstPageInfo->encry , pstPageInfo->portal_id, "delete" , domain_name , search(pstPageInfo->lpublic, "delete"));
+											"<a id=link href=wp_black_list_domain.cgi?UN=%s&plotid=%d&DELRULE=%s&domain_name=%s target=mainFrame>%s</a></div>", pstPageInfo->encry , pstPageInfo->plotid, "delete" , domain_name , search(pstPageInfo->lpublic, "delete"));
 			fprintf(cgiOut, "</div>"\
 											"</div>"\
 											"</div>");
@@ -422,6 +613,7 @@ static int s_black_list_domain_content_of_page( STPageInfo *pstPageInfo )
 		}
 		fclose(fd);
 	}
+	#endif
 	fprintf(cgiOut,	"				</table>"\
 									"			</td>");
 	fprintf(cgiOut,	"			<td width='50'>&nbsp;</td>\n");
@@ -430,11 +622,11 @@ static int s_black_list_domain_content_of_page( STPageInfo *pstPageInfo )
 	
 	fprintf(cgiOut,	"		</tr>\n"\
 									"	</table>\n");
-	fprintf(cgiOut, "<input type=hidden name=portal_id_hide value=%d>", pstPageInfo->portal_id);
-	
+	fprintf(cgiOut, "<input type=hidden name=plotid value=%s>", plotid);
+	fprintf(cgiOut, "<input type=hidden name=UN value=%s>", pstPageInfo->encry);
 	return 0;
 }
-static int black_list_domain_run_script(const char *domain, int portal_id, char add_or_del)
+static int black_list_domain_run_script(const char *domain, int plotid, char add_or_del)
 {
 
 	if (NULL == domain)
@@ -452,10 +644,14 @@ static int black_list_domain_run_script(const char *domain, int portal_id, char 
 	
 	if (add_or_del == 'a')
 	{
-		snprintf( cmd, sizeof(cmd) - 1, ADD_BLACK_LIST_DOMAIN_SH , portal_id, domain);
+		snprintf( cmd, sizeof(cmd) - 1, ADD_BLACK_LIST_DOMAIN_SH , plotid, domain);
 	} else if (add_or_del == 'd')
 	{
-		snprintf( cmd, sizeof(cmd) - 1, DEL_BLACK_LIST_DOMAIN_SH , portal_id, domain);
+		snprintf( cmd, sizeof(cmd) - 1, DEL_BLACK_LIST_DOMAIN_SH , plotid, domain);
+	}
+	if (strstr(cmd,";"))
+	{
+		return -1;
 	}
 	status = system(cmd);
 	ret = WEXITSTATUS(status);
@@ -466,3 +662,40 @@ static int black_list_domain_run_script(const char *domain, int portal_id, char 
 	}
 	return ret;//脚本中应该返回0表示这个ip添加成功，否则添加失败。*/
 }
+
+#if 0
+int Check_domain_Name(char * domain)
+{
+	if( NULL == domain )
+	{
+		return -1;
+	}
+	if( strcmp(domain, "") == 0)
+	{
+		return -1;
+	}
+	int i = 0;
+	char * src = domain ;
+
+	while( src[i] != '\0')
+	{
+		if( (src[i] >= '0' && src[i] <= '9') 	|| 
+			(src[i] >= 'a' && src[i] <= 'z') 	||
+			(src[i] >= 'A' && src[i] <= 'Z') 	||
+			 src[i] == '.' 	|| src[i] == '_' || src[i] == '-' 
+		  )
+		{
+			i++;
+			continue;
+		}
+		else
+		{
+			return -1;
+		}
+	
+	}
+
+	return 0;
+}
+#endif
+

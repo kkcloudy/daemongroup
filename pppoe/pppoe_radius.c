@@ -590,7 +590,6 @@ _radius_sess_check(session_struct_t *sess) {
 static inline void
 _radius_sess_setup(struct radius_id *radid, struct radius_packet *pack, session_struct_t *sess) {
 	sess->priv_data = radid;
-	pack->id = radid->id;
 	radid->status = RADIUS_ID_USED;
 	radid->sess = sess;
 	memcpy(&radid->req_pack, pack, sizeof(struct radius_packet));
@@ -606,11 +605,39 @@ _radius_sess_clean(session_struct_t *sess) {
 }
 
 static inline int
+_radius_sess_req(struct radius_id *radid, 
+					session_struct_t *sess,
+					struct pppoe_buf *pbuf) {
+	struct radius_packet *pack = (struct radius_packet *)pbuf->data;
+	struct radius_srv *srv = &radid->sock->config->srv;	
+	struct radius_server *server;
+
+	pack->id = radid->id;
+	if (RADIUS_CODE_ACCESS_REQUEST == pack->code) {
+		if (srv->backup_auth.ip &&
+			sess->retryTimes >= ((sess->retryMaxTimes >> 1) + 1)) {
+			server = &srv->backup_auth;
+		} else {
+			server = &srv->auth;
+		}
+	} else {
+		if (srv->backup_acct.ip &&
+			sess->retryTimes >= ((sess->retryMaxTimes >> 1) + 1)) {
+			server = &srv->backup_acct;		
+		} else {
+			server = &srv->acct;
+		}
+		radius_acctreq_authenticator(pack, server->secret, server->secretlen);
+	}
+
+	_radius_sess_setup(radid, pack, sess);
+	return sock_send_packet(radid->sock, server->ip, server->port, pbuf);
+}
+
+static inline int
 _radius_sess_retransport(struct radius_id *radid, session_struct_t *sess) {
 	struct pppoe_buf *pbuf = pbuf_init(sess->pbuf);
 	radius_config_t *config = radid->sock->config;
-	uint32 radius_ip;
-	uint16 radius_port;
 
 	pbuf_reserve(pbuf, sizeof(struct rdc_packet_t));
 	memcpy(pbuf_put(pbuf, sizeof(struct radius_packet)), 
@@ -618,15 +645,6 @@ _radius_sess_retransport(struct radius_id *radid, session_struct_t *sess) {
 
 	if (SESSION_AUTHPOST == sess->state) {
 		packet_auth_req(config, sess, pbuf);
-
-		if (config->srv.backup_auth.ip &&
-			sess->retryTimes >= ((sess->retryMaxTimes >> 1) + 1)) {
-			radius_ip = config->srv.backup_auth.ip;
-			radius_port = config->srv.backup_auth.port;
-		} else {
-			radius_ip = config->srv.auth.ip;
-			radius_port = config->srv.auth.port;
-		}
 	} else {
 		if (SESSION_ONLINE == sess->state){
 			packet_acct_update_req(config, sess, pbuf);
@@ -635,18 +653,9 @@ _radius_sess_retransport(struct radius_id *radid, session_struct_t *sess) {
 		} else {
 			packet_acct_stop_req(config, sess, pbuf);
 		}
-
-		if (config->srv.backup_acct.ip &&
-			sess->retryTimes >= ((sess->retryMaxTimes >> 1) + 1)) {
-			radius_ip = config->srv.backup_acct.ip;
-			radius_port = config->srv.backup_acct.port;
-		} else {
-			radius_ip = config->srv.acct.ip;
-			radius_port = config->srv.acct.port;
-		}
 	}
 
-	return sock_send_packet(radid->sock, radius_ip, radius_port, pbuf);
+	return _radius_sess_req(radid, sess, pbuf);
 }
 
 static inline void
@@ -733,21 +742,15 @@ radius_sess_retransport_setup(session_struct_t *sess) {
 		ret = session_timer_update(sess, SESSION_RETRANS_TIMER, DEFAULT_SESSRESTRANS_TIMEOUT);
 		if (unlikely(ret)) {
 			pppoe_log(LOG_WARNING, "session %u radius retransport timer update failed\n", sess->sid);	
-			goto out;
 		}
 	} else {
 		ret = session_timer_init(sess, SESSION_RETRANS_TIMER,
 						radius_sess_retransport_func, DEFAULT_SESSRESTRANS_TIMEOUT);
 		if (unlikely(ret)) {
 			pppoe_log(LOG_WARNING, "session %u radius retransport timer init failed\n", sess->sid);	
-			goto out;
 		}
 	}
 
-	sess->retryTimes = 0;
-	sess->retryMaxTimes = 3;
-	
-out:
 	return ret;
 }
 
@@ -804,6 +807,7 @@ radius_sock_process(thread_struct_t *thread) {
 	struct radius_sock *sock = thread_get_arg(thread);
 	struct pppoe_buf *pbuf = pbuf_init(sock->pbuf);
 	struct radius_srv *srv = &sock->config->srv;
+	struct radius_server *server;
 	session_struct_t *sess;
 	struct radius_packet *pack;
 	struct radius_id *radid;
@@ -869,30 +873,26 @@ radius_sock_process(thread_struct_t *thread) {
 				goto out;
 			}
 
-			if (radius_ip != srv->auth.ip && 
-				radius_ip != srv->backup_auth.ip) {
-				pppoe_log(LOG_WARNING, "radius sock process: fd %d id %d, radius ip %u.%u.%u.%u is neither "
-										"auth ip %u.%u.%u.%u nor backup_auth ip %u.%u.%u.%u\n", sock->sk, pack->id,
-										HIPQUAD(radius_ip), HIPQUAD(srv->auth.ip), HIPQUAD(srv->backup_auth.ip));
-				ret = PPPOEERR_EADDR;
-				goto out;
-			}
-			
-			if (radius_port != srv->auth.port && 
-				radius_port != srv->backup_auth.port) {
-				pppoe_log(LOG_WARNING, "radius sock process: fd %d id %d, radius port %u is neither "
-										"auth port %u nor backup_auth port %u\n", 
-										sock->sk, pack->id, radius_port,
-										srv->auth.port, srv->backup_auth.port);
+			if (radius_ip == srv->auth.ip && radius_port == srv->auth.port) {
+				server = &srv->auth;
+			} else if (radius_ip == srv->backup_auth.ip && 
+						radius_port == srv->backup_auth.port) {
+				server = &srv->backup_auth;
+			} else {
+				pppoe_log(LOG_WARNING, "radius sock process: fd %d id %d, radius ip %u.%u.%u.%u:%u "
+							"is neither auth ip %u.%u.%u.%u:%u nor backup_auth ip %u.%u.%u.%u:%u\n", 
+							sock->sk, pack->id, HIPQUAD(radius_ip), radius_port, 
+							HIPQUAD(srv->auth.ip), srv->auth.port, 
+							HIPQUAD(srv->backup_auth.ip), srv->backup_auth.port);
 				ret = PPPOEERR_EADDR;
 				goto out;
 			}
 
 			if (radius_reply_check(pack, &radid->req_pack,
-							srv->auth.secret, srv->auth.secretlen)) {
-				pppoe_log(LOG_WARNING, "radius sock process: fd %d id %d, auth authenticator not match "
-										"secret [%s], secretlen %u\n", sock->sk, pack->id, 
-										srv->auth.secret, srv->auth.secretlen);
+							server->secret, server->secretlen)) {
+				pppoe_log(LOG_WARNING, "radius sock process: fd %d id %d, "
+							"auth authenticator not match secret [%s], secretlen %u\n", 
+							sock->sk, pack->id, server->secret, server->secretlen);
 				ret = PPPOEERR_EINVAL;
 				goto out;
 			}
@@ -924,31 +924,27 @@ radius_sock_process(thread_struct_t *thread) {
 				ret = PPPOEERR_EINVAL;
 				goto out;
 			}
-			
-			if (radius_ip != srv->acct.ip &&
-				radius_ip != srv->backup_acct.ip) { 	
-				pppoe_log(LOG_WARNING, "radius sock process: fd %d id %d, radius ip %u.%u.%u.%u is neither "
-										"acct ip %u.%u.%u.%u nor backup_acct ip %u.%u.%u.%u\n", sock->sk, pack->id, 
-										HIPQUAD(radius_ip), HIPQUAD(srv->acct.ip), HIPQUAD(srv->backup_acct.ip));			
-				ret = PPPOEERR_EADDR;
-				goto out;
-			}
 
-			if (radius_port != srv->acct.port && 
-				radius_port != srv->backup_acct.port) {
-				pppoe_log(LOG_WARNING, "radius sock process: fd %d id %d, radius port %u is neither "
-										"acct port %u nor backup_acct port %u\n", 
-										sock->sk, pack->id, radius_port,
-										srv->acct.port, srv->backup_acct.port);
+			if (radius_ip == srv->acct.ip && radius_port == srv->acct.port) {
+				server = &srv->acct;
+			} else if (radius_ip == srv->backup_acct.ip && 
+						radius_port == srv->backup_acct.port) {
+				server = &srv->backup_acct;
+			} else {
+				pppoe_log(LOG_WARNING, "radius sock process: fd %d id %d, radius ip %u.%u.%u.%u:%u "
+							"is neither acct ip %u.%u.%u.%u:%u nor backup_acct ip %u.%u.%u.%u:%u\n", 
+							sock->sk, pack->id, HIPQUAD(radius_ip), radius_port, 
+							HIPQUAD(srv->acct.ip), srv->acct.port, 
+							HIPQUAD(srv->backup_acct.ip), srv->backup_acct.port);
 				ret = PPPOEERR_EADDR;
-				goto out;
+				goto out;				
 			}
 
 			if (radius_reply_check(pack, &radid->req_pack,
-							srv->acct.secret, srv->acct.secretlen)) {
-				pppoe_log(LOG_WARNING, "radius sock process: fd %d id %d, acct authenticator not match "
-										"secret [%s], secretlen %u\n", sock->sk, pack->id, 
-										srv->acct.secret, srv->acct.secretlen);
+							server->secret, server->secretlen)) {
+				pppoe_log(LOG_WARNING, "radius sock process: fd %d id %d, "
+							"acct authenticator not match secret [%s], secretlen %u\n", 
+							sock->sk, pack->id, server->secret, server->secretlen);
 				ret = PPPOEERR_EINVAL;
 				goto out;
 			}
@@ -1107,27 +1103,13 @@ error:
 
 static inline int
 radius_req(radius_struct_t *radius, session_struct_t *sess, struct pppoe_buf *pbuf) {
-	struct radius_packet *pack = (struct radius_packet *)sess->pbuf->data;
 	struct radius_id *radid = radius_get_free_id(radius);
-	struct radius_srv *srv = &radius->config->srv;
-	uint32 radius_ip;
-	uint16 radius_port;
-
 	if (!radid) {
 		pppoe_log(LOG_ERR, "radius req: session %u, radius get free id fail\n", sess->sid);
 		return PPPOEERR_ENOMEM;
 	}
-	
-	if (RADIUS_CODE_ACCESS_REQUEST == pack->code) {
-		radius_ip = srv->auth.ip;
-		radius_port = srv->auth.port;
-	} else {
-		radius_ip = srv->acct.ip;
-		radius_port = srv->acct.port;
-	}
 
-	_radius_sess_setup(radid, pack, sess);	
-	return sock_send_packet(radid->sock, radius_ip, radius_port, pbuf);
+	return _radius_sess_req(radid, sess, pbuf);
 }
 
 static int
@@ -1135,6 +1117,9 @@ radius_auth_req(session_struct_t *sess, void *arg) {
 	radius_struct_t *radius = (radius_struct_t *)arg;
 	struct pppoe_buf *pbuf = pbuf_init(sess->pbuf);
 	int ret;
+
+	sess->retryTimes = 0;
+	sess->retryMaxTimes = 3;
 
 	pbuf_reserve(pbuf, sizeof(struct rdc_packet_t));
 	radius_packet_init(pbuf, &sess->seed, RADIUS_CODE_ACCESS_REQUEST);
@@ -1162,8 +1147,11 @@ radius_acct_start(session_struct_t *sess, void *arg) {
 	struct pppoe_buf *pbuf = pbuf_init(sess->pbuf);	
 	int ret;
 
-	sess->onlineTime = time_sysup();	
+	sess->retryTimes = 0;
+	sess->retryMaxTimes = 3;
+	sess->onlineTime = time_sysup();
 	_radius_acctSessID_init(sess);
+
 	pbuf_reserve(pbuf, sizeof(struct rdc_packet_t));
 	radius_packet_init(pbuf, &sess->seed, RADIUS_CODE_ACCOUNTING_REQUEST);
 	packet_acct_start_req(radius->config, sess, pbuf);
@@ -1189,8 +1177,11 @@ radius_acct_stop(session_struct_t *sess, void *arg) {
 	radius_struct_t *radius = (radius_struct_t *)arg;
 	struct pppoe_buf *pbuf = pbuf_init(sess->pbuf);	
 	int ret;
-	
+
+	sess->retryTimes = 0;
+	sess->retryMaxTimes = 3;
 	sess->offlineTime = time_sysup();
+	
 	pbuf_reserve(pbuf, sizeof(struct rdc_packet_t));
 	radius_packet_init(pbuf, &sess->seed, RADIUS_CODE_ACCOUNTING_REQUEST);
 	packet_acct_stop_req(radius->config, sess, pbuf);
@@ -1216,7 +1207,10 @@ radius_acct_stop_without_retransport(session_struct_t *sess, void *arg) {
 	radius_struct_t *radius = (radius_struct_t *)arg;
 	struct pppoe_buf *pbuf = pbuf_init(sess->pbuf);
 
+	sess->retryTimes = 0;
+	sess->retryMaxTimes = 3;
 	sess->offlineTime = time_sysup();
+
 	pbuf_reserve(pbuf, sizeof(struct rdc_packet_t));
 	radius_packet_init(pbuf, &sess->seed, RADIUS_CODE_ACCOUNTING_REQUEST);
 	packet_acct_stop_req(radius->config, sess, pbuf);
@@ -1228,6 +1222,9 @@ radius_acct_update(session_struct_t *sess, void *arg) {
 	radius_struct_t *radius = (radius_struct_t *)arg;
 	struct pppoe_buf *pbuf = pbuf_init(sess->pbuf);
 	int ret;
+
+	sess->retryTimes = 0;
+	sess->retryMaxTimes = 3;
 
 	pbuf_reserve(pbuf, sizeof(struct rdc_packet_t));	
 	radius_packet_init(pbuf, &sess->seed, RADIUS_CODE_ACCOUNTING_REQUEST);

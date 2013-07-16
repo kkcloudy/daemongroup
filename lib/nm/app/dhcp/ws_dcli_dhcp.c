@@ -1122,24 +1122,289 @@ int config_ip_pool_name(char *poolnamez,unsigned int *pindex,int slot_id)/*∑µªÿ1
 	return retu;
 }
 
-/*0 del 1 add*/
-unsigned int ccgi_set_interface_ip_pool
-(
-	char* poolName,
-	char* ifname,
-	unsigned int add_info,
-	unsigned int unbindflag,
-	int slot_id
-)/*∑µªÿ1±Ì æ≥…π¶£¨±Ì æ0±Ì æ ß∞‹£¨∑µªÿ-1±Ì æ ß∞‹*/
+unsigned int ccgi_get_slot_id_by_ifname(const char *ifname)
 {
+	unsigned int slotnum = 0;
+	int i = 0;
+	int count = 0;
+	char tmp[32];
+
+	memset(tmp, 0, sizeof(tmp));
+	memcpy(tmp, ifname, strlen(ifname));
+
+	/* eth : cpu */
+	if (0 == strncmp(ifname, "eth", 3)) {
+		sscanf(ifname, "eth%d-%*d", &slotnum);
+	}
+
+	/* ve */
+	else if (0 == strncmp(ifname, "ve", 2)) {
+		sscanf(ifname, "ve%d.%*d", &slotnum);
+	} 
+
+	/* vlan */
+	else if (0 == strncmp(ifname, "vlan", 4)) {
+		slotnum = 0xffff;	/* invalid slot number */
+	} 
+
+	/* radio */
+	else if (0 == strncmp(ifname, "r", 1)) {
+		for (i = 0; i < strlen(ifname); i++) {
+			/*use '-' to make sure this radio is local board or remote board */
+			if (tmp[i] == '-') {
+				count++;
+			}			
+		}
+		
+		if (2 == count) {	/*local board*/
+			slotnum = get_product_info(PRODUCT_LOCAL_SLOTID);
+		} else if(3 == count) {	/*remote board*/
+			sscanf(ifname, "r%d-%*d-%*d-%d.%*d", &slotnum);
+		}
+	}
+
+	#if 1
+	/* wlan */
+	else if(0 == strncmp(ifname, "wlanl", 5)) {
+		sscanf(ifname, "wlanl%d-%*d-%*d", &slotnum);
+	}
+	else if ((0 == strncmp(ifname, "wlan", 4)) && (strncmp(ifname, "wlanl", 5))) {
+		sscanf(ifname, "wlan%d-%*d-%*d", &slotnum);
+	}
+	#else
+	else if (0 == strncmp(ifname, "wlan", 4)) {
+		for (i = 0; i < strlen(ifname); i++) {
+			if(tmp[i] == '-') {
+				count++;
+			}
+		}
+		
+		if (1 == count) {	/*local board*/
+			slotnum = dcli_dhcp_get_board_slot_id();
+		} else if (2 == count) {	/*remote board*/
+			sscanf(ifname, "wlan%d-%*d-%*d", &slotnum);
+		}
+	}
+	#endif
+
+	/* ebr */
+	#if 1
+	/* ebrl */
+	else if (0 == strncmp(ifname, "ebrl", 4)) {
+		sscanf(ifname, "ebrl%d-%*d-%*d", &slotnum);
+	}
+
+	/* ebr */
+	else if ((0 == strncmp(ifname, "ebr", 3)) && (strncmp(ifname, "ebrl", 4))) {
+		sscanf(ifname, "ebr%d-%*d-%*d", &slotnum);
+	}
+	else if (0 == strncmp(ifname, "mng", 3)) {
+		sscanf(ifname, "mng%d-%*d", &slotnum);
+	}
+	#else
+	else if (0 == strncmp(ifname, "ebr", 3)) {
+		for (i = 0; i < strlen(ifname); i++) {
+			if (tmp[i] == '-') {
+				count++;
+			}
+		}
+		if (1 == count) {	/*local board*/
+			slotnum = dcli_dhcp_get_board_slot_id();
+		} else if (2 == count) {	/*remote board*/
+			sscanf(ifname, "ebr%d-%*d-%*d", &slotnum);
+		}
+	}
+	#endif
+	return slotnum;
+}
+
+int	ccgi_check_slot_wheather_empty(int slot_id)
+{
+	DBusMessage *query = NULL, *reply = NULL;
+	DBusMessageIter iter;
+	DBusError err;
+
+	int i;
+	int board_code;
+	int is_master, is_active_master;
+	unsigned int function_type;
+	char *name;
+	int slot_count;
+	unsigned int board_on_mask;
+	int board_state;
+	//int slot_sum = 0 ;
+	
+	query = dbus_message_new_method_call(SEM_DBUS_BUSNAME, SEM_DBUS_OBJPATH,
+										 SEM_DBUS_INTERFACE, SEM_DBUS_SHOW_SLOT_INFO);
+	if (!query)
+	{
+		//printf("show slot id query failed\n");
+		return -1;
+	}
+
+	dbus_error_init(&err);
+
+	reply = dbus_connection_send_with_reply_and_block(ccgi_dbus_connection, query, -1, &err);
+	
+	dbus_message_unref(query);
+
+	if (!reply)
+	{
+		//printf("<error> failed get reply.\n");
+		if (dbus_error_is_set(&err))
+		{
+			//printf("%s raised: %s",err.name,err.message);
+			dbus_error_free(&err);
+		}
+		
+		return 0;
+	}
+
+	dbus_message_iter_init(reply,&iter);
+	
+	dbus_message_iter_get_basic(&iter, &slot_count);	
+	dbus_message_iter_next(&iter);
+
+	dbus_message_iter_get_basic(&iter, &board_on_mask); 
+	dbus_message_iter_next(&iter);
+	
+	for (i=0; i<slot_count; i++)
+	{	
+		dbus_message_iter_get_basic(&iter, &board_state);	
+		dbus_message_iter_next(&iter);
+
+		dbus_message_iter_get_basic(&iter, &board_code);
+		dbus_message_iter_next(&iter);
+
+		dbus_message_iter_get_basic(&iter, &function_type);
+		dbus_message_iter_next(&iter);
+		
+		dbus_message_iter_get_basic(&iter, &is_master);
+		dbus_message_iter_next(&iter);
+
+		dbus_message_iter_get_basic(&iter, &is_active_master);
+		dbus_message_iter_next(&iter);
+		
+		dbus_message_iter_get_basic(&iter, &name);
+		if (i < slot_count-1)
+		{
+			dbus_message_iter_next(&iter);
+		}
+		
+		if (board_on_mask & (0x1<<i))
+		{
+			
+			if (board_state <= 1)
+			{
+				//vty_out(vty, "slot %d:not work normal\n", i+1);
+				continue;
+			}
+			if((i+1) == slot_id){
+				return 2;
+			}
+			/*
+			vty_out(vty, "slot %d:\n", i+1);
+			vty_out(vty, "\tBOARD_CODE:\t\t0x%x\n", board_code);
+			vty_out(vty, "\tFUNCTION_TYPE:\t\t0x%x\n", function_type);
+			vty_out(vty, "\tIS_MASTER:\t\t%s\n", is_master ? "YES" : "NO");
+			vty_out(vty, "\tIS_ACTIVE_MASTER:\t%s\n", is_active_master ? "YES" : "NO");
+			vty_out(vty, "\tBOARD_NAME:\t\t%s\n", name);
+			*/
+		}
+		else
+		{
+			//vty_out(vty, "slot %d is empty\n", i+1);
+		}
+	}
+	dbus_message_unref(reply);
+	return 0;
+}
+
+int	ccgi_dhcp_check_ve_interface(char *ifname)
+{
+	DBusMessage *query = NULL, *reply = NULL;
+	DBusError err;
+	int ret = 0;
+	unsigned int slot_id = 0;
+	slot_id = ccgi_get_slot_id_by_ifname(ifname);
+	ret = ccgi_check_slot_wheather_empty(slot_id);
+	if(slot_id < 1 || slot_id > 17){
+		return -1;
+	}
+	if(2 != ret){
+		//printf("slot id is empty\n");
+		return -1;
+	}
+	void *connection = NULL;
+	char *name=NULL;
+	if(SNMPD_DBUS_SUCCESS != get_slot_dbus_connection(slot_id, &connection, SNMPD_INSTANCE_MASTER_V3))
+	{
+		return -1;
+	}
+
+	query = dbus_message_new_method_call(DHCP_DBUS_BUSNAME, 
+									DHCP_DBUS_OBJPATH, 
+									DHCP_DBUS_INTERFACE, 
+									DHCP_DBUS_METHOD_CHECK_INTERFACE_VE);
+	dbus_error_init(&err);
+	dbus_message_append_args(query,
+							DBUS_TYPE_STRING, &ifname,					 
+							DBUS_TYPE_INVALID);
+	
+	reply = dbus_connection_send_with_reply_and_block(connection,query,-1, &err);
+	dbus_message_unref(query);
+	if (NULL == reply) {
+		if (dbus_error_is_set(&err)) {
+			dbus_error_free(&err);
+		}
+		return 0;
+	}
+	if (dbus_message_get_args(reply, &err,
+		DBUS_TYPE_STRING, &name,
+		DBUS_TYPE_INVALID)) {
+	} 
+	else {		
+		if (dbus_error_is_set(&err)) {
+			dbus_error_free(&err);
+		}
+	}
+	dbus_message_unref(reply);
+	memset(ifname, 0, ALIAS_NAME_SIZE);
+	memcpy(ifname, name, strlen(name));
+	return 0;
+}
+
+
+/*add_info 1:ip pool POOLNAME*/
+/*add_info 0:no ip pool POOLNAME*/
+unsigned int ccgi_set_interface_ip_pool(char* poolName,char* ifname,unsigned int add_info,unsigned int unbindflag,int slot_id)
+															/*±Ì æ0±Ì æ ß∞‹£¨∑µªÿ1±Ì æ≥…π¶*/
+															/*∑µªÿ-1±Ì æpool name is too long*/
+															/*∑µªÿ-2±Ì æpool has already binded to interface*/
+															/*∑µªÿ-3±Ì æpool has no subnet*/
+															/*∑µªÿ-4±Ì ænot found pool£¨∑µªÿ-5±Ì æerror*/
+{
+	if((NULL == poolName) || (NULL == ifname))
+		return 0;
+	
 	DBusMessage *query = NULL, *reply = NULL;
 	DBusError err;
 	unsigned int op_ret = 0, ret = 0;
 	int retu = 0;
 
+	if (strlen(poolName) >= ALIAS_NAME_SIZE)
+	{
+		return -1;
+	}		
+
+	if(strncmp(ifname, "ve", 2) == 0)
+	{
+		ccgi_dhcp_check_ve_interface(ifname); 
+	}
 
 	ret = ccgi_dhcp_check_relay_interface_iSbusy(ifname,slot_id);
-	if( ret != 1) {
+	if(1 == ret)
+	{
 		return 0;
 	}
 	void *ccgi_connection = NULL;
@@ -1174,9 +1439,29 @@ unsigned int ccgi_set_interface_ip_pool
 		
 		//return op_ret; 
 		if( op_ret == 0 )
+		{
 			retu = 1;
+		}
 		else
-			retu = -2;
+		{
+			if(DHCP_HAVE_BIND_INTERFACE == op_ret)
+			{
+				retu = -2;
+			}
+			else if(DHCP_POOL_SUBNET_NULL == op_ret)
+			{
+				retu = -3;
+			}
+			else if (DHCP_NOT_FOUND_POOL == op_ret)
+			{
+				retu = -4;
+			}
+			else
+			{
+				retu = 0;
+			}
+			return retu;
+		}
 	} 
 	else {
 		if (dbus_error_is_set(&err)) {
@@ -1184,7 +1469,7 @@ unsigned int ccgi_set_interface_ip_pool
 		}
 		dbus_message_unref(reply);
 	
-		retu = -1;
+		retu = -5;
 	}
 	return retu ;
 }
@@ -3013,7 +3298,7 @@ unsigned int ccgi_set_server_static_arp_enable(unsigned int enable,int slot_id)/
 	return retu;
 }
 
-int ccgi_dhcp_check_relay_interface_iSbusy(char *ifname,int slot_id)/*∑µªÿ0±Ì æ ß∞‹£¨∑µªÿ1±Ì æ≥…π¶*/
+int ccgi_dhcp_check_relay_interface_iSbusy(char *ifname,int slot_id)
 {
 	DBusMessage *query = NULL, *reply = NULL;
 	DBusError err;
@@ -3046,10 +3331,6 @@ int ccgi_dhcp_check_relay_interface_iSbusy(char *ifname,int slot_id)/*∑µªÿ0±Ì æ 
 		DBUS_TYPE_INVALID)) {
         if(op_ret){
             /*vty_out(vty,"saved dhcp lease success\n");*/
-			if(op_ret==0)
-				retu = 1;
-			else
-				retu = -2;
 		}
 	} 
 	else {		
@@ -3059,7 +3340,7 @@ int ccgi_dhcp_check_relay_interface_iSbusy(char *ifname,int slot_id)/*∑µªÿ0±Ì æ 
 	}
 	dbus_message_unref(reply);
 	
-	return retu;
+	return op_ret;
 
 }
 

@@ -3351,6 +3351,8 @@ int ccgi_port_default(char *str_port_name)
 	unsigned int port_index = 0;
 	unsigned int defval = 0;
 	unsigned int type = DEFAULT;
+	unsigned int slot_no;
+	instance_parameter *para = NULL;
 	
     if( (ret = ccgi_get_port_index(str_port_name, &port_index)) != WS_SUCCESS){
     	return ret;
@@ -3369,7 +3371,15 @@ int ccgi_port_default(char *str_port_name)
 							 DBUS_TYPE_UINT32,&port_index,
 							 DBUS_TYPE_UINT32,&defval,
 							 DBUS_TYPE_INVALID);
-	reply = dbus_connection_send_with_reply_and_block (ccgi_dbus_connection,query,-1, &err);
+	
+	SLOT_PORT_ANALYSIS_SLOT(port_index, slot_no);
+	fprintf(stderr,"slot_no=%d\n",slot_no);
+	if(SNMPD_DBUS_ERROR == get_slot_dbus_connection(slot_no, &para, SNMPD_SLOT_CONNECT))
+	{
+		return -1;
+	}
+	
+	reply = dbus_connection_send_with_reply_and_block (para->connection,query,-1, &err);
 	
 	dbus_message_unref(query);
 	

@@ -891,6 +891,18 @@ eag_get_radius_conf(DBusConnection *connection,
 				struct radius_conf *radiusconf );
 
 int
+eag_set_remove_domain_switch(DBusConnection *connection, 
+				int hansitype, int insid, 
+				char *domain,
+				int remove_domain_switch);
+
+int
+eag_set_class_to_bandwidth_switch(DBusConnection *connection, 
+				int hansitype, int insid,
+				char *domain,
+				int class_to_bandwidth);
+
+int
 eag_get_bss_statistics (DBusConnection *connection, 
 				int hansitype, int insid, 
 				struct list_head *bss_stat );

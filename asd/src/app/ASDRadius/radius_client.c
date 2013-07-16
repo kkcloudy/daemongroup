@@ -111,7 +111,7 @@ struct radius_msg_info {
 	u8 *shared_secret;
 	size_t shared_secret_len;
 };
-
+extern unsigned char FD_CHANGE;
 #if 0
 struct radius_client_data {
 	void *ctx;
@@ -184,6 +184,7 @@ static void radius_test_client_handle_send_error(struct heart_test_radius_data *
 	asd_printf(ASD_80211,MSG_DEBUG,"Send failed - maybe interface status changed -"
 			       " try to connect again");
 		circle_unregister_read_sock(s);
+		FD_CHANGE = 1;
 		close(s);
 		if (msg_type == RADIUS_ACCT)
 			radius_test_client_init_acct((void*)radius, (void *)0);
@@ -202,6 +203,7 @@ static void radius_client_handle_send_error(struct radius_client_info *client_in
 		asd_printf(ASD_DEFAULT,MSG_INFO,"Send failed - maybe interface status changed -"
 				" try to connect again");
 		circle_unregister_read_sock(s);
+		FD_CHANGE = 1;
 		close(s);
 		if (msg_type == RADIUS_ACCT || msg_type == RADIUS_ACCT_INTERIM)
 		{
@@ -468,7 +470,7 @@ struct radius_send_info *radius_client_get_sta_info(struct sta_info *sta,const i
 		{
 			if(!os_memcmp(client_info->sta[radius_id]->sta->addr,sta->addr,MAC_LEN))
 			{
-				asd_printf(ASD_DEFAULT,MSG_DEBUG,"sta radius id : %d,got the send_info\n",radius_id);
+				asd_printf(ASD_DEFAULT,MSG_DEBUG,"sta radius id : %d,got the send_info in the other type\n",radius_id);
 				return client_info->sta[radius_id];
 			}
 		}
@@ -519,8 +521,10 @@ void radius_client_info_free(struct radius_send_info *send_info)
 		client_info->num--;
 	}
 	asd_printf(ASD_DEFAULT,MSG_DEBUG,"client_info sock :%d\n",client_info->sock);
-	if(radius_id == -1)
+	if(radius_id == -1){
 		asd_printf(ASD_DEFAULT,MSG_DEBUG,"got or free radiusid error!\n");
+		return;
+	}
 	if(client_info->sta[radius_id])
 		asd_printf(ASD_DEFAULT,MSG_DEBUG,"client_info %d is not NULL!\n",radius_id);
 	else
@@ -1146,6 +1150,8 @@ fail:
 //qiuchen
 void radius_test_client_receive(int sock, void *circle_ctx, void *sock_ctx){
 	struct heart_test_radius_data *radius = circle_ctx;
+	if(radius == NULL || radius->conf == NULL)
+		return;
 	struct asd_radius_servers *conf = radius->conf;
 	RadiusType msg_type = (RadiusType) sock_ctx;
 	int len;
@@ -1214,6 +1220,8 @@ void radius_test_client_receive(int sock, void *circle_ctx, void *sock_ctx){
 static void radius_client_receive(int sock, void *circle_ctx, void *sock_ctx)
 {
 	struct radius_client_info *client_info = circle_ctx;
+	if(client_info == NULL || client_info->ctx == NULL || client_info->ctx->conf == NULL)
+		return;
 	struct radius_client_data *radius = client_info->ctx;
 	struct asd_radius_servers *conf = radius->conf;
 	RadiusType msg_type = (RadiusType) sock_ctx;
@@ -1236,6 +1244,8 @@ static void radius_client_receive(int sock, void *circle_ctx, void *sock_ctx)
 		rconf = conf->auth_server;
 	else
 		rconf = conf->acct_server;
+	if(rconf == NULL)
+		return;
 	if(conf->distribute_off)
 		len = recv(sock, buf, sizeof(buf), MSG_DONTWAIT);
 	else
@@ -2404,6 +2414,7 @@ radius_client_init(void *ctx, struct asd_radius_servers *conf)
 	if(client_info->sock >= 0)
 	{
 		circle_unregister_read_sock(client_info->sock);
+		FD_CHANGE = 1;
 		close(client_info->sock);
 		client_info->sock = -1;
 	}
@@ -2421,6 +2432,7 @@ radius_client_init(void *ctx, struct asd_radius_servers *conf)
 	os_free(client_info->client_handlers);
 	client_info->client_handlers = NULL;
 	client_info->next = NULL;
+	client_info->ctx = NULL;
 	os_free(client_info);
 	client_info  = NULL;
 
@@ -2433,11 +2445,13 @@ void radius_test_client_deinit(struct heart_test_radius_data *radius){
 
 	if (radius->auth_serv_sock >= 0){
 		circle_unregister_read_sock(radius->auth_serv_sock);
+		FD_CHANGE = 1;
 		close(radius->auth_serv_sock);
 		radius->auth_serv_sock = -1;
 	}
 	if (radius->acct_serv_sock >= 0){
 		circle_unregister_read_sock(radius->acct_serv_sock);
+		FD_CHANGE = 1;
 		close(radius->acct_serv_sock);
 		radius->acct_serv_sock = -1;
 	}
@@ -2457,14 +2471,16 @@ void radius_client_deinit(struct radius_client_data *radius)
 		radius_client_info_deinit(client_info);
 		client_info  = client_next;
 	}
+	radius->auth = NULL;
 	client_info = radius->acct;
 	while(client_info)
 	{
+		asd_printf(ASD_DEFAULT,MSG_DEBUG,"client_info->sock:%d\n",client_info->sock);
 		client_next = client_info->next;
 		radius_client_info_deinit(client_info);
 		client_info  = client_next;
 	}
-
+	radius->acct = NULL;
 	//circle_cancel_timeout(radius_retry_primary_timer, radius, NULL);
 	
 	radius->conf = NULL;

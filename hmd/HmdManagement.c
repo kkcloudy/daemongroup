@@ -1309,6 +1309,53 @@ void * HMDManagementS(){
 					}
 				}
 				break;
+			case HMD_SERVER_DELETE_HANSI:
+				SlotID = tmsg->S_SlotID;
+				InstID = tmsg->InstID;
+				if(tmsg->type == HMD_LOCAL_HANSI){
+					if(HMD_BOARD[SlotID] != NULL){
+						if(HMD_BOARD[SlotID]->Hmd_Local_Inst[InstID] != NULL){
+							if(SlotID == HMD_BOARD[SlotID]->Hmd_Local_Inst[InstID]->slot_no){
+								free(HMD_BOARD[SlotID]->Hmd_Local_Inst[InstID]);
+								HMD_BOARD[SlotID]->Hmd_Local_Inst[InstID] = NULL;	
+							}
+							else if(SlotID == HMD_BOARD[SlotID]->Hmd_Local_Inst[InstID]->slot_no1){
+								free(HMD_BOARD[SlotID]->Hmd_Local_Inst[InstID]);
+								HMD_BOARD[SlotID]->Hmd_Local_Inst[InstID] = NULL;								}
+							}
+					}					
+				}else if(tmsg->type == HMD_HANSI){
+					if(HMD_BOARD[SlotID] != NULL){
+						if(HMD_BOARD[SlotID]->Hmd_Inst[InstID] != NULL){
+							free(HMD_BOARD[SlotID]->Hmd_Inst[InstID]);
+							HMD_BOARD[SlotID]->Hmd_Inst[InstID] = NULL;
+							hmd_syslog_info("%s,%d\n",__func__,__LINE__);
+						}
+					}
+				}
+				break;	
+			case HMD_IS_DELETE_HANSI:
+				SlotID = tmsg->S_SlotID;
+				InstID = tmsg->InstID;
+				if(tmsg->type == HMD_LOCAL_HANSI){
+					if(HMD_BOARD[SlotID] != NULL){
+						if(HMD_BOARD[SlotID]->Hmd_Local_Inst[InstID] != NULL){
+							if(SlotID == HMD_BOARD[SlotID]->Hmd_Local_Inst[InstID]->slot_no){
+								HMD_BOARD[SlotID]->Hmd_Local_Inst[InstID]->delete_flag = 1;
+							}
+							else if(SlotID == HMD_BOARD[SlotID]->Hmd_Local_Inst[InstID]->slot_no1){
+								HMD_BOARD[SlotID]->Hmd_Local_Inst[InstID]->delete_flag = 1;
+							}
+						}
+					}					
+				}else if(tmsg->type == HMD_HANSI){
+					if(HMD_BOARD[SlotID] != NULL){
+						if(HMD_BOARD[SlotID]->Hmd_Inst[InstID] != NULL){
+							HMD_BOARD[SlotID]->Hmd_Inst[InstID]->delete_flag = 1;
+						}
+					}
+				}
+				break;
 			default :
 				break;
 		}

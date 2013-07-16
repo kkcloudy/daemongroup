@@ -2436,8 +2436,6 @@ DEFUN (config_exit,
 		vty->node = CONFIG_NODE;
       	break;
 	case VLAN_NODE:
-	case FAST_FWD_NODE:  //add by pangyaoyang for fast_forward
-	case SLAVE_FAST_FWD_NODE:
 	case POOL_NODE:
   	case SIGTRANUDP_NODE:
   	case IU_NODE:
@@ -2504,6 +2502,8 @@ DEFUN (config_exit,
 	case STRICT_ACCESS_NODE:
 	case SPACIAL_CONFIG_NODE:
 	case DNS_SER_NODE:
+	case FAST_FWD_NODE:  //add by pangyaoyang for fast_forward
+	case SLAVE_FAST_FWD_NODE:
       vty->node = CONFIG_NODE;
 	  vty->slotindex = 0;	  
       break;
@@ -2561,6 +2561,8 @@ DEFUN (config_exit,
 	case	HANSI_IUH_NODE:
 	case	HANSI_AC_GROUP_NODE:		/*wireless ac_group_node*/
 	case 	HANSI_PPPOE_DEVICE_NODE:			/*add by lixiang , for new pppoe config */
+	case 	HANSI_FAST_FWD_NODE:  		/*add by wangjian for fast_forward*/
+	case 	HANSI_SLAVE_FAST_FWD_NODE:
 		vty->node = HANSI_NODE;
 		break;
 	case	LOCAL_HANSI_SECURITY_NODE:
@@ -2582,6 +2584,8 @@ DEFUN (config_exit,
 	case	LOCAL_HANSI_IUH_NODE:
 	case	LOCAL_HANSI_AC_GROUP_NODE:			/*wireless ac_group_node*/
 	case 	LOCAL_HANSI_PPPOE_DEVICE_NODE:				/*add by lixiang , for new pppoe config */	
+	case 	LOCAL_HANSI_FAST_FWD_NODE:  		/*add by wangjian for fast_forward*/
+	case 	LOCAL_HANSI_SLAVE_FAST_FWD_NODE:
 		vty->node = LOCAL_HANSI_NODE;
 		break;	
 	case	HANSI_CBAT_NODE:/*wuwl add*/
@@ -2701,6 +2705,10 @@ DEFUN (config_end,
 	case VLAN_NODE:
 	case FAST_FWD_NODE: //add by pangyaoyang for fast_forward 
 	case SLAVE_FAST_FWD_NODE:
+	case HANSI_FAST_FWD_NODE: 
+	case HANSI_SLAVE_FAST_FWD_NODE:
+	case LOCAL_HANSI_FAST_FWD_NODE:  
+	case LOCAL_HANSI_SLAVE_FAST_FWD_NODE:
 	case POOL_NODE:			
   	case SIGTRANUDP_NODE:
   	case IU_NODE:
@@ -3909,6 +3917,10 @@ install_default (enum node_type node)
 	||node == STP_NODE
 	||node == FAST_FWD_NODE  //add by pangyaoyang for fast_forward
 	||node == SLAVE_FAST_FWD_NODE
+	||node == HANSI_FAST_FWD_NODE  
+	||node == HANSI_SLAVE_FAST_FWD_NODE
+	||node == LOCAL_HANSI_FAST_FWD_NODE  
+	||node == LOCAL_HANSI_SLAVE_FAST_FWD_NODE
 	||node == VLAN_NODE
 	||node == DNS_SER_NODE
 #if (defined _D_WCPSS_ || defined _D_CC_)	

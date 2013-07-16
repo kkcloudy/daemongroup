@@ -120,6 +120,7 @@ enum {
 #define AC_MANAGE_DBUS_CONFIG_SNMP_ADD_V3USER           "manage_config_snmp_add_v3user"
 #define AC_MANAGE_DBUS_CONFIG_SNMP_DEL_V3USER           "manage_config_snmp_del_v3user"
 #define AC_MANAGE_DBUS_CONFIG_SNMP_SYSOID_BOARDTYPE     "manage_config_snmp_sysoid_boardtype"
+#define AC_MANAGE_DBUS_CONFIG_MEM_STATUE_DOG			"manage_config_mem_status_dog"
 
 #define AC_MANAGE_DBUS_SHOW_SNMP_MANUAL_INSTANCE        "manage_show_snmp_manual_instance"
 #define AC_MANAGE_DBUS_SHOW_SNMP_STATE                  "manage_show_snmp_state"

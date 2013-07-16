@@ -826,6 +826,8 @@ DBusMessage * hmd_dbus_interface_config_remote_hansi(DBusConnection *conn, DBusM
 				HMD_BOARD[slot_id]->Hmd_Inst[ID]->slot_no = slot_id;
 				HMD_BOARD[slot_id]->Hmd_Inst[ID]->InstState = 0;
 				HMD_BOARD[slot_id]->Hmd_Inst[ID]->Inst_ID = ID;
+				/*flag 1 hansi is deleting,0 other*/
+				HMD_BOARD[slot_id]->Hmd_Inst[ID]->delete_flag = 0;
 				hmd_pid_write_v3(slot_id,ID,0);
 				if(slot_id != HOST_SLOT_NO){
 					HmdNoticeToClient(slot_id,ID,local_id,HMD_CREATE);
@@ -866,6 +868,11 @@ DBusMessage * hmd_dbus_interface_config_remote_hansi(DBusConnection *conn, DBusM
 			}			
 			if((MASTER_BACKUP_SLOT_NO != 0)&&(MASTER_BACKUP_SLOT_NO != slot_id)){
 				syn_hansi_info_to_backup(slot_id, ID, MASTER_BACKUP_SLOT_NO,0,HMD_HANSI_INFO_SYN_ADD,0);
+			}
+		}
+		else{
+			if((HMD_BOARD[slot_id]->Hmd_Inst[ID] != NULL)&&(HMD_BOARD[slot_id]->Hmd_Inst[ID]->delete_flag== 1)){
+				ret = HMD_DBUS_DELETING_HANSI;
 			}
 		}
 	}
@@ -2629,8 +2636,10 @@ DBusMessage * hmd_dbus_interface_delete_remote_hansi(DBusConnection *conn, DBusM
 			system(command);
             if(slot_id != HOST_SLOT_NO){
                 HmdNoticeToClient(slot_id,ID,local_id,HMD_DELETE);				
-				free(HMD_BOARD[slot_id]->Hmd_Inst[ID]);
-				HMD_BOARD[slot_id]->Hmd_Inst[ID] = NULL;
+				//free(HMD_BOARD[slot_id]->Hmd_Inst[ID]);
+				//HMD_BOARD[slot_id]->Hmd_Inst[ID] = NULL;
+				/*only if service board delete hansi ,master control board delete hansi*/
+
             }else{
                 HmdSetAssambleHansiMsg(slot_id,ID,local_id,HMD_DELETE);
             }

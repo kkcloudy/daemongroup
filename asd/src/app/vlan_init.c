@@ -53,7 +53,7 @@ typedef __uint8_t __u8;
 #include "priv_netlink.h"
 #include "circle.h"
 
-
+extern unsigned char FD_CHANGE;
 struct full_dynamic_vlan {
 	int s; /* socket on which to listen for new/removed interfaces. */
 };
@@ -665,6 +665,7 @@ static void full_dynamic_vlan_deinit(struct full_dynamic_vlan *priv)
 	if (priv == NULL)
 		return;
 	circle_unregister_read_sock(priv->s);
+	FD_CHANGE = 1;
 	close(priv->s);
 	os_free(priv);
 }

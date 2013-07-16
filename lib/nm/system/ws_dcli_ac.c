@@ -32,6 +32,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *
 *
 *******************************************************************************/
+
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
+
 #include <syslog.h>
 #include "ws_dcli_ac.h"
 
@@ -2525,7 +2532,6 @@ int dynamic_channel_selection_cmd(dbus_parameter parameter, DBusConnection *conn
 	return retu; 		
 }
 
-/*未使用*/
 /*wtp_id和radio_G_id只需填写一个，分别表示在wtp节点和radio节点下配置*/
 /*wtp_id为0时，表示全局配置*/
 int set_system_country_code_func(dbus_parameter parameter, DBusConnection *connection,int wtp_id,int radio_G_id,char *Country_code) 
@@ -7672,9 +7678,9 @@ int set_wtp_wids_lasttime_cmd_func(dbus_parameter parameter, DBusConnection *con
 	return retu;			
 }
 
-/*未使用*/
 /*level的范围是0-25*/
 int set_wid_trap_open_func(dbus_parameter parameter, DBusConnection *connection,char *level)/*返回1表示成功，返回0表示失败，返回-1表示error*/
+																								 /*返回-2表示trap level should be 0-25*/
 																								 /*返回SNMPD_CONNECTION_ERROR表示connection error*/
 {
 	if(NULL == connection)
@@ -7684,16 +7690,16 @@ int set_wid_trap_open_func(dbus_parameter parameter, DBusConnection *connection,
 		return 0;
 	
 	int ret,ret2,retu;
-
 	DBusMessage *query, *reply, *query2,*reply2;	
 	DBusMessageIter	 iter,iter2;
 	DBusError err,err2;
-	
-
     unsigned char trapflag = 0;
 
-	
 	trapflag = (unsigned char)atoi(level);
+	if((trapflag < 0) || (trapflag > 25))
+	{
+		return -2;
+	}
 	/*if (!strcmp(state,"open"))
 	{
 		trapflag = 1;	
@@ -7999,6 +8005,7 @@ int set_wirelesscontrol_auto_ap_binding_l3_interface_new_cmd(dbus_parameter para
 	int quitreason = 0;
 	char *name = NULL;
 	unsigned char policy = 2;
+	int boot_flag = 0;
 	int retu;
     
 	
@@ -8048,6 +8055,7 @@ int set_wirelesscontrol_auto_ap_binding_l3_interface_new_cmd(dbus_parameter para
 	dbus_message_append_args(query,
 							 DBUS_TYPE_BYTE,&policy,
 							 DBUS_TYPE_STRING,&name,
+							 DBUS_TYPE_UINT32,&boot_flag,
 							 DBUS_TYPE_INVALID);
 
 	reply = dbus_connection_send_with_reply_and_block (connection,query,-1, &err);
@@ -8936,8 +8944,6 @@ int set_ap_hotreboot_cmd(dbus_parameter parameter, DBusConnection *connection,ch
 	return retu;			
 }
 
-
-/*未使用*/
 /*state为"enable"或"disable"*/
 int set_ap_access_through_nat_cmd(dbus_parameter parameter, DBusConnection *connection,char *state)/*返回0表示失败，返回1表示成功，返回-1表示input patameter only with 'enable' or 'disable'，返回-2表示error*/
 																										   /*返回SNMPD_CONNECTION_ERROR表示connection error*/
@@ -11082,4 +11088,479 @@ int set_wids_monitor_mode_cmd(dbus_parameter parameter, DBusConnection *connecti
 		return -3;
 	}
 }
+
+/*level为"dump","debug","info","notice","warning","error","crit","alert","emerg"*/
+int set_asd_daemonlog_level_cmd(dbus_parameter parameter, DBusConnection *connection,char *level)
+																			/*返回0表示失败，返回1表示成功*/
+																			/*返回-1表示input patameter should only be dump|debug|info|notice|warning|error|crit|alert|emerg*/
+																			/*返回-2表示error*/
+																			/*返回SNMPD_CONNECTION_ERROR表示connection error*/
+{
+	if(NULL == connection)
+		return 0;
+	
+	if(NULL == level)
+		return 0;
+	
+	int ret;
+	DBusMessage *query, *reply;	
+	DBusMessageIter	 iter;
+	DBusError err;
+    unsigned int daemonloglevel = 5;
+	int retu = 0;
+	
+	if (!strcmp(level,"dump"))
+	{
+		daemonloglevel = 1;	
+	}
+	else if (!strcmp(level,"debug"))
+	{
+		daemonloglevel = 2;	
+	}
+	else if (!strcmp(level,"info"))
+	{
+		daemonloglevel = 3;	
+	}
+	else if (!strcmp(level,"notice"))
+	{
+		daemonloglevel = 4;	
+	}
+	else if (!strcmp(level,"warning"))
+	{
+		daemonloglevel = 5;	
+	}
+	else if (!strcmp(level,"error"))
+	{
+		daemonloglevel = 6;	
+	}
+	else if (!strcmp(level,"crit"))
+	{
+		daemonloglevel = 7;	
+	}
+	else if (!strcmp(level,"alert"))
+	{
+		daemonloglevel = 8;	
+	}
+	else if (!strcmp(level,"emerg"))
+	{
+		daemonloglevel = 9;	
+	}
+	else
+	{
+		return -1;
+	}
+	
+	char BUSNAME[PATH_LEN];
+	char OBJPATH[PATH_LEN];
+	char INTERFACE[PATH_LEN];
+
+	ccgi_ReInitDbusPath_v2(parameter.local_id, parameter.instance_id,ASD_DBUS_BUSNAME,BUSNAME);
+	ccgi_ReInitDbusPath_v2(parameter.local_id, parameter.instance_id,ASD_DBUS_SECURITY_OBJPATH,OBJPATH);
+	ccgi_ReInitDbusPath_v2(parameter.local_id, parameter.instance_id,ASD_DBUS_SECURITY_INTERFACE,INTERFACE);
+	query = dbus_message_new_method_call(BUSNAME,OBJPATH,INTERFACE,ASD_DBUS_SECURITY_METHOD_SET_ASD_DAEMONLOG_LEVEL);
+	
+	dbus_error_init(&err);
+
+
+	dbus_message_append_args(query,
+							 DBUS_TYPE_UINT32,&daemonloglevel,
+							 DBUS_TYPE_INVALID);
+
+	reply = dbus_connection_send_with_reply_and_block (connection,query,-1, &err);
+	
+	dbus_message_unref(query);
+	
+	if (NULL == reply)
+	{
+		if (dbus_error_is_set(&err))
+		{
+			dbus_error_free(&err);
+		}
+		return SNMPD_CONNECTION_ERROR;
+	}
+	
+	dbus_message_iter_init(reply,&iter);
+	dbus_message_iter_get_basic(&iter,&ret);
+
+	if(ret == 0)
+	{
+		retu = 1;
+	}				
+	else
+	{
+		retu = -2;
+	}
+		
+	dbus_message_unref(reply);
+	return retu;			
+}
+
+/*Type为"master","bakup","disable"*/
+int set_ac_master_ipaddr_cmd(dbus_parameter parameter, DBusConnection *connection,char *Type,char *ipaddr)
+																			/*返回0表示失败，返回1表示成功*/
+																			/*返回-1表示invalid input,input should be master or bakup*/
+																			/*返回-2表示unknown ip format，返回-3表示more if have this ip*/
+																			/*返回-4表示no if has this ip，返回-5表示please disable it first*/
+																			/*返回-6表示no interface binding this ip*/
+																			/*返回-7表示this ip has not been added or has already been deleted*/
+																			/*返回-8表示error*/
+																			/*返回SNMPD_CONNECTION_ERROR表示connection error*/
+{
+	if(NULL == connection)
+		return 0;
+	
+	if((NULL == Type) || (NULL == ipaddr))
+		return 0;
+
+	int ret = 0;
+	DBusMessage *query = NULL, *reply = NULL;	
+	DBusMessageIter	 iter;
+	DBusError err;
+	int index = 0; 	
+	int interval = 0;
+	char type = 0;
+	unsigned int ip = 0;
+	int retu = 0;
+	
+	if(!strcmp("master",(char*)Type)){
+		type = 1;
+	}else if(!strcmp("bakup",(char*)Type)){
+		type = 2;
+	}else if(!strcmp("disable",(char*)Type)){
+		type = 3;
+	}else{
+		return -1;
+	}
+
+	ret = WID_Check_IP_Format((char*)ipaddr);
+	if(ret != WID_DBUS_SUCCESS){
+		return -2;
+	}
+	ip = dcli_ip2ulong((char*)ipaddr);
+
+	char BUSNAME[PATH_LEN];
+	char OBJPATH[PATH_LEN];
+	char INTERFACE[PATH_LEN];
+
+	ccgi_ReInitDbusPath_v2(parameter.local_id, parameter.instance_id,WID_DBUS_BUSNAME,BUSNAME);
+	ccgi_ReInitDbusPath_v2(parameter.local_id, parameter.instance_id,WID_DBUS_OBJPATH,OBJPATH);
+	ccgi_ReInitDbusPath_v2(parameter.local_id, parameter.instance_id,WID_DBUS_INTERFACE,INTERFACE);	
+	query = dbus_message_new_method_call(BUSNAME,OBJPATH,INTERFACE,WID_DBUS_WTP_METHOD_SET_AC_ACTIVE_BAK_STATE);
+
+	dbus_error_init(&err);
+
+	dbus_message_append_args(query,
+							 DBUS_TYPE_BYTE,&type,
+							 DBUS_TYPE_UINT32,&ip,
+							 DBUS_TYPE_INVALID);
+
+	reply = dbus_connection_send_with_reply_and_block (connection,query,-1, &err);
+	
+	dbus_message_unref(query);
+
+	if (NULL == reply)
+	{
+		if (dbus_error_is_set(&err))
+		{
+			dbus_error_free(&err);
+		}
+		return SNMPD_CONNECTION_ERROR;
+	}
+	
+	dbus_message_iter_init(reply,&iter);
+	dbus_message_iter_get_basic(&iter,&ret);		
+
+	if(ret == 0)
+		retu = 1;
+	else if(ret == MORE_THAN_ONE_IF)
+		retu = -3;
+	else if(ret == NO_IF_HAS_THIS_IP)
+		retu = -4;
+	else if(ret == INVALID_TYPE)
+		retu = -5;
+	else if (ret == INTERFACE_NOT_EXIST)
+		retu = -6;
+	else if (ret == AC_STATE_IP_NOT_EXIST)
+		retu = -7;
+	else if (ret == AC_STATE_FIRST_DISABLE)
+		retu = -5;
+	else
+		retu = -8;
+	
+#ifdef __nouseif__
+	if(ifname){
+		free(ifname);
+		ifname = NULL;
+	}
+#endif
+
+	return retu;		
+}
+
+void Free_show_wireless_listen_if_cmd(Listen_IF *ListenIF)
+{
+	int (*dcli_init_free_func)(Listen_IF *);
+	if(NULL != ccgi_dl_handle)
+	{
+		dcli_init_free_func = dlsym(ccgi_dl_handle,"dcli_ac_free_listen_if_node");
+		if(NULL != dcli_init_free_func)
+		{
+			dcli_init_free_func(ListenIF);
+		}
+	}
+}
+
+
+/*只要调用函数，就调用Free_show_wireless_listen_if_cmd()释放空间*/
+int show_wireless_listen_if_cmd(dbus_parameter parameter, DBusConnection *connection, Listen_IF **Listen_IF)/*返回0表示失败，返回1表示成功，返回-1表示wid listenning interface:NULL*/
+{
+	if(NULL == connection || NULL == Listen_IF)
+        return 0;
+	
+	int ret = 0;
+	int retu = 0;
+	
+	void*(*dcli_init_func)(
+						int ,
+						int ,
+						int* ,
+						DBusConnection *
+						);
+
+    *Listen_IF = NULL;
+	if(NULL != ccgi_dl_handle)
+	{
+		dcli_init_func = dlsym(ccgi_dl_handle,"dcli_ac_show_wid_listen_if");
+		if(NULL != dcli_init_func)
+		{
+			*Listen_IF =(*dcli_init_func)
+				  (
+				  	parameter.local_id,
+					parameter.instance_id,
+					&ret,
+					connection
+				  );
+		}
+		else
+		{
+			return 0;
+		}
+	}
+	else
+	{
+		return 0;
+	}
+	
+	if(ret == -1)
+	{
+		return SNMPD_CONNECTION_ERROR;
+	}
+	if((*Listen_IF)->count == 0)
+	{
+		retu = -1;
+	}
+
+	if((*Listen_IF)->interface != NULL)
+	{
+		retu = 1;
+	}
+
+	return retu;
+}
+
+
+/*Oper为"add"或"del"*/
+int set_wirelesscontrol_listen_l3_interface_cmd(dbus_parameter parameter, DBusConnection *connection,char *Oper,char *ifname)
+																			/*返回0表示失败，返回1表示成功*/
+																			/*返回-1表示interface name is too long,should be no more than 15*/
+																			/*返回-2表示input patameter only with 'add'or 'del'*/
+																			/*返回-3表示 auto ap login switch is enable,you should disable it first*/
+																			/*返回-4表示interface error, no index or interface down*/
+																			/*返回-5表示this interface has not been added or has already been deleted*/
+																			/*返回-6表示interface is down，返回-7表示interface is no flags*/
+																			/*返回-8表示tinterface is no index，返回-9表示interface is no local interface, permission denial*/
+																			/*返回-10表示interface is other hansi listen*/
+																			/*返回SNMPD_CONNECTION_ERROR表示connection error*/
+{
+	if(NULL == connection)
+		return 0;
+	
+	if((NULL == Oper) || (NULL == ifname))
+		return 0;
+
+	DBusMessage *query, *reply;	
+	DBusMessageIter	 iter;
+	DBusError err;
+	int ret = 0;
+	int len = 0;
+	int quitreason = 0;
+	char *name;
+	unsigned char policy = 2;
+	int boot_flag = 0;
+    int retu = 0;
+	
+	len = strlen(ifname);
+	
+	if(len > 15)
+	{		
+		return -1;
+	}
+	
+	if (!strcmp(Oper,"add"))
+	{
+		policy = 1;	
+	}
+	else if (!strcmp(Oper,"del"))
+	{
+		policy = 0;	
+	}
+	else
+	{
+		return -2;
+	}	
+	
+	name = (char*)malloc(strlen(ifname)+1);
+	memset(name, 0, strlen(ifname)+1);
+	memcpy(name, ifname, strlen(ifname)); 
+	
+	char BUSNAME[PATH_LEN];
+	char OBJPATH[PATH_LEN];
+	char INTERFACE[PATH_LEN];
+
+	ccgi_ReInitDbusPath_v2(parameter.local_id, parameter.instance_id,WID_DBUS_BUSNAME,BUSNAME);
+	ccgi_ReInitDbusPath_v2(parameter.local_id, parameter.instance_id,WID_DBUS_OBJPATH,OBJPATH);
+	ccgi_ReInitDbusPath_v2(parameter.local_id, parameter.instance_id,WID_DBUS_INTERFACE,INTERFACE);
+	query = dbus_message_new_method_call(BUSNAME,OBJPATH,INTERFACE,WID_DBUS_CONF_METHOD_SET_WID_LISTEN_L3_INTERFACE);
+	
+	
+	dbus_error_init(&err);
+
+
+	dbus_message_append_args(query,
+							 DBUS_TYPE_BYTE,&policy,
+							 DBUS_TYPE_STRING,&name,
+							 DBUS_TYPE_UINT32,&boot_flag,
+							 DBUS_TYPE_INVALID);
+
+	reply = dbus_connection_send_with_reply_and_block (connection,query,-1, &err);
+	
+	dbus_message_unref(query);
+	
+	if (NULL == reply)
+	{
+		if (dbus_error_is_set(&err))
+		{
+			dbus_error_free(&err);
+		}
+		free(name);
+		name = NULL;
+		return SNMPD_CONNECTION_ERROR;
+	}
+	
+	dbus_message_iter_init(reply,&iter);
+	dbus_message_iter_get_basic(&iter,&ret);
+	dbus_message_iter_get_basic(&iter,&quitreason);
+
+	if((ret == 0)||(ret == IF_HAS_BEEN_LISTENNING))
+		retu = 1;
+	else if(ret == SWITCH_IS_DISABLE)
+		retu = -3;
+	else if(ret == APPLY_IF_FAIL)
+		retu = -4;
+	else if (ret == INTERFACE_NOT_EXIST)
+		retu = -5;
+	else
+	{
+		if(quitreason == IF_DOWN)
+			retu = -6;
+		else if(quitreason == IF_NOFLAGS)
+			retu = -7;
+		else if(quitreason == IF_NOINDEX)
+			retu = -8;
+		else if (ret == WID_INTERFACE_NOT_BE_LOCAL_BOARD)
+			retu = -9;
+		else if(ret == IF_BINDING_FLAG)
+			retu = -10;
+		else
+			retu = -5;
+	}
+		
+	dbus_message_unref(reply);
+	free(name);
+	name = NULL;
+	return retu;			
+}
+
+/*state为"enable"或"disable"*/
+int set_vlan_switch_cmd(dbus_parameter parameter, DBusConnection *connection,char *state)
+																			/*返回0表示失败，返回1表示成功*/
+																			/*返回-1表示error*/
+																			/*返回SNMPD_CONNECTION_ERROR表示connection error*/
+{
+	if(NULL == connection)
+		return 0;
+	
+	if(NULL == state)
+		return 0;
+
+	int ret;
+	unsigned char type=0;
+	DBusMessage *query, *reply; 
+	DBusMessageIter  iter;
+	DBusError err;
+	int index = 0;
+	int retu = 0;
+
+	dbus_error_init(&err);
+	
+
+	if (!strncmp(state,"enable",strlen(state))){
+		type = 1;
+	}
+	else if (!strncmp(state,"disable",strlen(state))){
+		type = 0;
+	} 
+	
+	char BUSNAME[PATH_LEN];
+	char OBJPATH[PATH_LEN];
+	char INTERFACE[PATH_LEN];
+
+	ccgi_ReInitDbusPath_v2(parameter.local_id, parameter.instance_id,WID_DBUS_BUSNAME,BUSNAME);
+	ccgi_ReInitDbusPath_v2(parameter.local_id, parameter.instance_id,WID_DBUS_OBJPATH,OBJPATH);
+	ccgi_ReInitDbusPath_v2(parameter.local_id, parameter.instance_id,WID_DBUS_INTERFACE,INTERFACE);
+	query = dbus_message_new_method_call(BUSNAME,OBJPATH,INTERFACE, WID_DBUS_CONF_METHOD_SET_VLAN_SWITCH);
+
+	dbus_message_append_args(query,
+							 DBUS_TYPE_BYTE,&type,
+							 DBUS_TYPE_INVALID);
+
+	reply = dbus_connection_send_with_reply_and_block (connection,query,-1, &err);
+	
+	dbus_message_unref(query);
+	
+	if (NULL == reply)
+	{
+		if (dbus_error_is_set(&err))
+		{
+			dbus_error_free(&err);
+		}
+		return SNMPD_CONNECTION_ERROR;
+	}
+	
+	dbus_message_iter_init(reply,&iter);
+	dbus_message_iter_get_basic(&iter,&ret);
+
+	if(ret == 0)
+		retu = 1;
+	else
+		retu = -1;
+	
+	dbus_message_unref(reply);
+	return retu;
+}
+
+
+#ifdef __cplusplus
+}
+#endif
 

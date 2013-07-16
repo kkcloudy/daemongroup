@@ -842,6 +842,10 @@ load_and_validate_field (DBusHeader     *header,
     case DBUS_HEADER_FIELD_INTERFACE:
       string_validation_func = _dbus_validate_interface;
       bad_string_code = DBUS_INVALID_BAD_INTERFACE;
+/*
+**CID 14933 (#1 of 3): Explicit null dereferenced (FORWARD_NULL)9. var_deref_model: Passing null pointer "value_str" to function "_dbus_string_equal_substring(DBusString const *, int, int, DBusString const *, int)", which dereferences it.
+*/
+/*coverity modify for CID 14933 in dbus-string.c*/
 
       if (_dbus_string_equal_substring (&_dbus_local_interface_str,
                                         0,
@@ -871,7 +875,7 @@ load_and_validate_field (DBusHeader     *header,
     case DBUS_HEADER_FIELD_PATH:
       /* OBJECT_PATH was validated generically due to its type */
       string_validation_func = NULL;
-
+ /*coverity modify for CID 14933 in dbus-string.c*/
       if (_dbus_string_equal_substring (&_dbus_local_path_str,
                                         0,
                                         _dbus_string_get_length (&_dbus_local_path_str),
@@ -909,7 +913,9 @@ load_and_validate_field (DBusHeader     *header,
       dbus_uint32_t len;
 
       _dbus_assert (bad_string_code != DBUS_VALID);
-
+	/*coverity modify for CID 14933*/
+	  if(value_str==NULL)
+			return DBUS_VALID;
       len = _dbus_marshal_read_uint32 (value_str, value_pos,
                                        header->byte_order, NULL);
 

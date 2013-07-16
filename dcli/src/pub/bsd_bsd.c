@@ -47,12 +47,12 @@ int dcli_bsd_copy_files_to_boards(DBusConnection *connection,const char *src_pat
     dbus_message_unref(query);
 
     if (NULL == reply) {
-    	//printf("<error> failed get reply.\n");
-    	if (dbus_error_is_set(&err)) {
-    		//printf("%s raised: %s",err.name,err.message);
-    		dbus_error_free(&err);
-    	}
-    	return CMD_SUCCESS;
+    	printf("<error> failed get reply.\n");
+		if (dbus_error_is_set(&err)){
+			printf("%s raised: %s\n",err.name,err.message);
+			dbus_error_free(&err);
+		}
+		return BSD_RECEIVE_MESSAGE_ERROR;
     }
 
     if (dbus_message_get_args ( reply, &err,
@@ -115,17 +115,17 @@ int dcli_bsd_copy_file_to_board(DBusConnection *connection, const int slot_id, c
     
     printf("Copying file, please wait ...\n");
     //printf("0000\n");
-	reply = dbus_connection_send_with_reply_and_block (connection,query,120000, &err);
+	reply = dbus_connection_send_with_reply_and_block (connection,query,200000, &err);
 	//printf("0001\n");
 	dbus_message_unref(query);
 	//printf("2222\n");
 	if (NULL == reply) {
 		printf("<error> failed get reply.\n");
-		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+		if (dbus_error_is_set(&err)){
+			printf("%s raised: %s\n",err.name,err.message);
 			dbus_error_free(&err);
 		}
-		return CMD_SUCCESS;
+		return BSD_RECEIVE_MESSAGE_ERROR;
 	}
 	//printf("3333\n");
 	if (dbus_message_get_args ( reply, &err,
@@ -191,11 +191,11 @@ int dcli_bsd_copy_file_to_board_v2(DBusConnection *connection, const int slot_id
 	//printf("2222\n");
 	if (NULL == reply) {
 		printf("<error> failed get reply.\n");
-		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+		if (dbus_error_is_set(&err)){
+			printf("%s raised: %s\n",err.name,err.message);
 			dbus_error_free(&err);
 		}
-		return CMD_SUCCESS;
+		return BSD_RECEIVE_MESSAGE_ERROR;
 	}
 	//printf("3333\n");
 	if (dbus_message_get_args ( reply, &err,
@@ -249,10 +249,12 @@ int dcli_bsd_get_slot_ids(DBusConnection *connection, int *ID, const int op)
     dbus_message_unref(query);
 
     if (NULL == reply) {
-		if (dbus_error_is_set(&err)) {
+		printf("<error> failed get reply.\n");
+		if (dbus_error_is_set(&err)){
+			printf("%s raised: %s\n",err.name,err.message);
 			dbus_error_free(&err);
 		}
-		return -1;
+		return 0;
 	}
 	
 	dbus_message_iter_init(reply,&iter);
@@ -309,10 +311,10 @@ int dcli_set_bsd_daemonlog(int index, unsigned int daemonlogtype, unsigned int d
 	if (NULL == reply){
 		printf("<error> failed get reply.\n");
 		if (dbus_error_is_set(&err)){
-			printf("%s raised: %s",err.name,err.message);
+			printf("%s raised: %s\n",err.name,err.message);
 			dbus_error_free(&err);
 		}
-		return -1;
+		return BSD_RECEIVE_MESSAGE_ERROR;
 	}
 	
 	dbus_message_iter_init(reply,&iter);
@@ -370,11 +372,11 @@ int dcli_bsd_copy_file_to_device(DBusConnection *connection, const int iSocketId
 	
 	if (NULL == reply) {
 		printf("<error> failed get reply.\n");
-		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+		if (dbus_error_is_set(&err)){
+			printf("%s raised: %s\n",err.name,err.message);
 			dbus_error_free(&err);
 		}
-		return CMD_SUCCESS;
+		return BSD_RECEIVE_MESSAGE_ERROR;
 	}
 	if (dbus_message_get_args ( reply, &err,
 					DBUS_TYPE_UINT32,&ret,
@@ -434,11 +436,11 @@ int dcli_bsd_check_destination_device_information(DBusConnection *connection, co
 	
 	if (NULL == reply) {
 		printf("<error> failed get reply.\n");
-		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+		if (dbus_error_is_set(&err)){
+			printf("%s raised: %s\n",err.name,err.message);
 			dbus_error_free(&err);
 		}
-		return CMD_SUCCESS;
+		return BSD_RECEIVE_MESSAGE_ERROR;
 	}
 	
 	if (dbus_message_get_args ( reply, &err,
@@ -497,11 +499,11 @@ int dcli_bsd_check_destination_board_information(DBusConnection *connection, con
 	
 	if (NULL == reply) {
 		printf("<error> failed get reply.\n");
-		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+		if (dbus_error_is_set(&err)){
+			printf("%s raised: %s\n",err.name,err.message);
 			dbus_error_free(&err);
 		}
-		return CMD_SUCCESS;
+		return BSD_RECEIVE_MESSAGE_ERROR;
 	}
 	
 	if (dbus_message_get_args ( reply, &err,
@@ -549,10 +551,10 @@ int dcli_bsd_close_tcp_socket(DBusConnection *connection, const int iSocketId)
 	if (NULL == reply){
 		printf("<error> failed get reply.\n");
 		if (dbus_error_is_set(&err)){
-			printf("%s raised: %s",err.name,err.message);
+			printf("%s raised: %s\n",err.name,err.message);
 			dbus_error_free(&err);
 		}
-		return -1;
+		return BSD_RECEIVE_MESSAGE_ERROR;
 	}
 	
 	dbus_message_iter_init(reply,&iter);

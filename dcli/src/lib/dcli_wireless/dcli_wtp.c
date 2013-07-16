@@ -11066,7 +11066,7 @@ DEFUN(set_ap_option60_parameter_func,
 		if (dbus_error_is_set(&err))
 		{
 			cli_syslog_info("%s raised: %s",err.name,err.message);
-			dbus_error_free(&err);
+			dbus_error_free_for_dcli(&err);
 		}
 		
 
@@ -17395,6 +17395,157 @@ DEFUN(set_ap_if_info_reportinterval_cmd_func,
 	return CMD_SUCCESS;			
 }
 #endif
+
+DEFUN(show_dhcp_flooding_status_cmd_func,
+		show_dhcp_flooding_status_cmd,
+		"show dhcp-flooding status",
+		"show dhcp flooding status"
+)
+{
+	DCLI_WTP_API_GROUP_THREE *WTPINFO = NULL;
+	int ret = WID_DBUS_SUCCESS;
+	int localid = 1;
+	int slot_id = HostSlotId;
+	int index = 0;
+	if(vty->node == CONFIG_NODE) {
+		index = 0;
+	} else if(vty->node == HANSI_NODE) {
+		index = vty->index;
+		localid = vty->local;
+		slot_id = vty->slotindex;
+	} else if(vty->node == LOCAL_HANSI_NODE) {
+		index = vty->index;
+		localid = vty->local;
+		slot_id = vty->slotindex;
+	} else {
+		return CMD_SUCCESS;
+	}
+	DBusConnection *dcli_dbus_connection = NULL;
+	ReInitDbusConnection(&dcli_dbus_connection,slot_id,distributFag);
+	WTPINFO = dcli_wtp_show_api_group_three(
+	index,
+	SIXTEENTH,/*"show dhcp-flooding status"*/
+	0,
+	0,
+	0,
+	&ret,
+	0,
+	0,
+	0,
+	0,
+	&localid,
+	dcli_dbus_connection,
+	WID_DBUS_WTP_METHOD_SHOW_DHCP_FLOODING_STATUS_SET
+	);
+
+	if(ret == -1){
+		cli_syslog_info("<error> failed get reply.\n");
+	}
+	else if(ret == 0){		
+		vty_out(vty,"==============================================================================\n");
+
+		if (WTPINFO->dhcp_flooding_status) {
+			vty_out(vty, "The anti-dhcp-flooding function is running now!\n");			
+		}
+		
+		vty_out(vty, "Service\t\t\tStatus\n");
+		vty_out(vty, "dhcp-flooding\t\t %s\n", WTPINFO->dhcp_flooding_status ? "enable" : "disable");
+
+		vty_out(vty,"==============================================================================\n");
+		dcli_wtp_free_fun_three(WID_DBUS_WTP_METHOD_SHOW_DHCP_FLOODING_STATUS_SET,WTPINFO);
+	}
+	else
+		vty_out(vty,"<error>  %d\n",ret);
+//	CW_FREE_OBJECT(WTPINFO);
+	return CMD_SUCCESS;
+}
+
+DEFUN(set_dhcp_flooding_status_cmd_func,
+	  set_dhcp_flooding_status_cmd,
+	  "service dhcp-flooding (enable|disable)",
+	  "set dhcp flooding enable or disable\n"
+	 )
+{
+	int ret = 0;
+
+	DBusMessage *query, *reply;	
+	DBusMessageIter	 iter;
+	DBusError err;
+
+	unsigned char service_status;
+	str2lower(&argv[0]);
+	if (!strcmp(argv[0],"enable")||(tolower(argv[0][0]) == 'e')){
+		service_status = 1;
+	} else {
+		service_status = 0;
+	}
+
+	int localid = 1;
+	int slot_id = HostSlotId;
+	int index = 0;
+	char BUSNAME[PATH_LEN];
+	char OBJPATH[PATH_LEN];
+	char INTERFACE[PATH_LEN];
+	if(vty->node == CONFIG_NODE){
+		index = 0;
+	}else if(vty->node == HANSI_NODE){
+		index = vty->index;
+		localid = vty->local;
+		slot_id = vty->slotindex;
+	}else if(vty->node == LOCAL_HANSI_NODE){
+		index = vty->index;
+		localid = vty->local;
+		slot_id = vty->slotindex;
+	}
+	DBusConnection *dcli_dbus_connection = NULL;
+	ReInitDbusConnection(&dcli_dbus_connection,slot_id,distributFag);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_BUSNAME,BUSNAME);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_OBJPATH,OBJPATH);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_INTERFACE,INTERFACE);
+	query = dbus_message_new_method_call(BUSNAME,OBJPATH,INTERFACE,WID_DBUS_WTP_METHOD_SET_DHCP_FLOODING_STATUS_SET);
+
+	
+	dbus_error_init(&err);
+
+
+	dbus_message_append_args(query,
+							 DBUS_TYPE_BYTE,&service_status,
+							 DBUS_TYPE_INVALID);
+
+	reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection,query,-1, &err);
+	
+	dbus_message_unref(query);
+	
+	if (NULL == reply)
+	{
+		cli_syslog_info("<error> failed get reply.\n");
+		if (dbus_error_is_set(&err))
+		{
+			cli_syslog_info("%s raised: %s",err.name,err.message);
+			dbus_error_free_for_dcli(&err);
+		}
+		
+
+		return CMD_SUCCESS;
+	}
+	
+	dbus_message_iter_init(reply,&iter);
+	dbus_message_iter_get_basic(&iter,&ret);
+
+	if(ret == 0)
+	{
+		vty_out(vty,"enable service dhcp-flooding successfully\n");
+	}
+	else
+	{
+		vty_out(vty,"<error>  %d\n",ret);
+	}
+		
+	dbus_message_unref(reply);
+
+	
+	return CMD_SUCCESS;			
+}
 DEFUN(show_ap_wids_set_cmd_func,
 	  show_ap_wids_set_cmd,
 	  "show ap wids",
@@ -39454,7 +39605,7 @@ DEFUN(wtp_set_web_report_ap_snr_range_cmd_func,
 		if (dbus_error_is_set(&err)) 
 		{
 			vty_out(vty,"%s raised: %s", err.name,err.message);
-			dbus_error_free(&err);
+			dbus_error_free_for_dcli(&err);
 		}
 		return CMD_SUCCESS;
 	}	
@@ -40299,6 +40450,8 @@ void dcli_wtp_init(void) {
 			
 			install_element(HANSI_NODE,&show_ap_echotimer_cmd);
 			install_element(HANSI_NODE,&show_ap_wids_set_cmd);
+			install_element(HANSI_NODE,&show_dhcp_flooding_status_cmd);
+			install_element(HANSI_NODE,&set_dhcp_flooding_status_cmd);
 			install_element(HANSI_NODE,&show_ac_access_wtp_info_cmd);
 			install_element(HANSI_NODE,&show_ap_trap_rogue_ap_ter_cpu_mem_threshold_cmd);
 			install_element(HANSI_NODE,&wtp_show_ap_update_config);

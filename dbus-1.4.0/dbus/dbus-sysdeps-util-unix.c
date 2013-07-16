@@ -418,12 +418,13 @@ _dbus_system_logv (DBusSystemLogSeverity severity, const char *msg, va_list args
         break;
       case DBUS_SYSTEM_LOG_FATAL:
         flags = LOG_DAEMON|LOG_CRIT;
+        break;/*coverity modify for CID 14746*/
       default:
         return;
     }
 
   vsyslog (flags, msg, args);
-
+/*CID 14746 (#1 of 1): Logically dead code (DEADCODE)*/
   if (severity == DBUS_SYSTEM_LOG_FATAL)
     exit (1);
 }

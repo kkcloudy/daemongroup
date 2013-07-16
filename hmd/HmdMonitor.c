@@ -1149,6 +1149,40 @@ int notice_hmd_server_state_change(int InstID, int islocaled, HmdOP op, InstStat
 	}
 	return 0;
 }
+int notice_hmd_server_delete_hansi(int InstID, int islocaled, HmdOP op){
+	struct HmdMsg tmsg;
+	int fd;
+	tmsg.S_SlotID = HOST_SLOT_NO;
+	tmsg.InstID = InstID;
+	if(islocaled){
+		if(HOST_BOARD->Hmd_Local_Inst[InstID]){
+			fd = HOST_BOARD->Hmd_Local_Inst[InstID]->tipcfd;
+		}
+	}else{
+		if(HOST_BOARD->Hmd_Inst[InstID]){
+			fd = HOST_BOARD->Hmd_Inst[InstID]->tipcfd;
+		}
+	}
+	tmsg.op = op;
+	if(islocaled)
+		tmsg.type = HMD_LOCAL_HANSI;
+	else
+		tmsg.type = HMD_HANSI;
+	if (0 > sendto(fd, &tmsg, sizeof(tmsg), 0,(struct sockaddr*)&(HOST_BOARD->tipcaddr), sizeof(HOST_BOARD->tipcaddr))) 
+	{		
+		perror("Client: failed to send");		
+	}
+	if(islocaled){
+		if(HOST_BOARD->Hmd_Local_Inst[InstID])
+			if(HOST_BOARD->Hmd_Local_Inst[InstID]->slot_no1 != -1){
+				if (0 > sendto(fd, &tmsg, sizeof(tmsg), 0,(struct sockaddr*)&(HOST_BOARD->Hmd_Local_Inst[InstID]->tipcaddr), sizeof(HOST_BOARD->tipcaddr))) 
+				{		
+					perror("Client: failed to send");		
+				}			
+			}
+	}
+	return 0;
+}
 
 int hansi_state_check(int InstID, int islocaled){
 	char buf[128] = {0};
@@ -1323,8 +1357,25 @@ void HANSI_DELETE(int InstID, int islocaled){
 	}else{
 		if(HOST_BOARD->Hmd_Inst[InstID] != NULL){			
 			HmdTimerCancel(&(HOST_BOARD->Hmd_Inst[InstID]->HmdTimerID),1);
+			/*notice server the hansi is deleting,config hansi is not permitted*/
+			if(HOST_SLOT_NO != MASTER_SLOT_NO){
+				notice_hmd_server_delete_hansi(InstID, islocaled, HMD_IS_DELETE_HANSI);
+			}
+			else{
+				HOST_BOARD->Hmd_Inst[InstID]->delete_flag = 1;
+			}
+			/*end*/
 			notice_vrrp_config_service_change_state(InstID, 0);
 			hansi_wireless_notice_quit(InstID,islocaled);
+			/*notice server free hansi*/
+			if(HOST_SLOT_NO != MASTER_SLOT_NO){
+				notice_hmd_server_delete_hansi(InstID, islocaled, HMD_SERVER_DELETE_HANSI);
+			}
+			else{
+				/*this place no useful only for up*/
+				HOST_BOARD->Hmd_Inst[InstID]->delete_flag = 1;
+			}
+			/*end*/
 			if(HOST_BOARD->Hmd_Inst[InstID]->connection){
 			    dbus_connection_close(HOST_BOARD->Hmd_Inst[InstID]->connection);
 				HOST_BOARD->Hmd_Inst[InstID]->connection = NULL;

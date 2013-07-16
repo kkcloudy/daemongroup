@@ -46,12 +46,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "dbus/wcpss/dcli_wid_wlan.h"
 #include "ws_dcli_wlans.h"
 #include "ws_dcli_ac.h"
+#include "ws_security.h"
 #include "ws_dcli_vrrp.h"
 #include "ws_init_dbus.h"
 #include "ws_dbus_list_interface.h"
 
 
-void ShowStationPage(char *m,char* n,struct list *lpublic,struct list *lwcontrol);    
+void ShowStationPage(char *m,char* n,struct list *lpublic,struct list *lwcontrol,struct list *lwlan);    
 
 
 int cgiMain()
@@ -59,9 +60,11 @@ int cgiMain()
   char encry[BUF_LEN] = { 0 }; 
   char *str = NULL;        
   struct list *lpublic = NULL;   /*解析public.txt文件的链表头*/
-  struct list *lwcontrol = NULL;     /*解析wlan.txt文件的链表头*/  
+  struct list *lwcontrol = NULL;     /*解析wcontrol.txt文件的链表头*/  
+  struct list *lwlan = NULL;     /*解析wlan.txt文件的链表头*/
   lpublic=get_chain_head("../htdocs/text/public.txt");
   lwcontrol=get_chain_head("../htdocs/text/wcontrol.txt");
+  lwlan=get_chain_head("../htdocs/text/wlan.txt");
   
   DcliWInit();
   ccgi_dbus_init();
@@ -71,17 +74,17 @@ int cgiMain()
   if(str==NULL)
     ShowErrorPage(search(lpublic,"ill_user"));		 /*用户非法*/
   else
-  {
-   
-      ShowStationPage(encry,str,lpublic,lwcontrol);
+  {   
+      ShowStationPage(encry,str,lpublic,lwcontrol,lwlan);
   }
   release(lpublic);  
   release(lwcontrol);
+  release(lwlan);
   destroy_ccgi_dbus();
   return 0;
 }
 
-void ShowStationPage(char *m,char* n,struct list *lpublic,struct list *lwcontrol)
+void ShowStationPage(char *m,char* n,struct list *lpublic,struct list *lwcontrol,struct list *lwlan)
 {   
   int i = 0,retu = 1,limit = 0;
   DCLI_AC_API_GROUP_FIVE *interval = NULL;
@@ -96,6 +99,10 @@ void ShowStationPage(char *m,char* n,struct list *lpublic,struct list *lwcontrol
   instance_parameter *pq = NULL;
   char temp[10] = { 0 };
   dbus_parameter ins_para;
+  int ret1 = 0,ret2 = 0;
+  struct asd_global_variable_info asd_info;
+  Listen_IF *Listen_IF = NULL;
+  struct Listenning_IF *tmp = NULL;
   cgiHeaderContentType("text/html");
   fprintf(cgiOut,"<html xmlns=\"http://www.w3.org/1999/xhtml\"><head>");
   fprintf(cgiOut,"<meta http-equiv=Content-Type content=text/html; charset=gb2312>");
@@ -202,9 +209,16 @@ void ShowStationPage(char *m,char* n,struct list *lpublic,struct list *lwcontrol
 						{
 							result1=show_wc_config(paraHead1->parameter,paraHead1->connection,&wirelessconfig);
 							result2=show_neighbordead_interval_cmd_func(paraHead1->parameter,paraHead1->connection,&interval);
+							memset(&asd_info, 0, sizeof(struct asd_global_variable_info));
+					 		ret1 = show_asd_global_variable_cmd(paraHead1->parameter,paraHead1->connection, &asd_info);
+							ret2 = show_wireless_listen_if_cmd(paraHead1->parameter,paraHead1->connection, &Listen_IF);
 						}
 						
-					  	limit=3;
+					  	limit=5;
+						if((1 == ret2)&&(Listen_IF))
+						{
+					      limit+=Listen_IF->count;
+						}
 						if(retu==1)     /*普通用户*/
 						  limit+=3;
 						
@@ -320,7 +334,35 @@ void ShowStationPage(char *m,char* n,struct list *lpublic,struct list *lwcontrol
 							 else
 							   fprintf(cgiOut,"<td id=td2>0%s</td>",search(lpublic,"second"));
 						 fprintf(cgiOut,"</tr>"\
-						  "</table></td>"\
+						 	"<tr align=left>"\
+							 "<td id=td1>%s</td>",search(lwcontrol,"asd_arp_listen_switch"));
+						 	 if((ret1 == 1)&&(asd_info.asd_station_arp_listen == 1))
+							   fprintf(cgiOut,"<td id=td2>enable</td>");
+							 else
+							   fprintf(cgiOut,"<td id=td2>disable</td>");
+						 fprintf(cgiOut,"</tr>"\
+						 "<tr align=left>"\
+							 "<td id=td1>%s</td>",search(lwlan,"trap_level"));
+							 fprintf(cgiOut,"<td id=td2>%d</td>",head->trapflag);
+						 fprintf(cgiOut,"</tr>");
+						 	 if((1 == ret2)&&(Listen_IF))
+						 	 {
+						 	 	for(i=0,tmp = Listen_IF->interface; ((i<Listen_IF->count)&&(tmp)); i++,tmp=tmp->if_next)
+						 	 	{				
+						 	 		fprintf(cgiOut,"<tr align=left>");
+						 	 		if(0 == i)
+						 	 		{
+										fprintf(cgiOut,"<td id=td1>%s</td>",search(lwcontrol,"ac_listen_if"));
+						 	 		}
+									else
+									{
+										fprintf(cgiOut,"<td>&nbsp;</td>");
+						 	 		}
+									fprintf(cgiOut,"<td id=td2>%s ip:%d.%d.%d.%d</td>",tmp->ifname,(tmp->ipaddr >> 24)&0xFF,(tmp->ipaddr >> 16)&0xFF,(tmp->ipaddr >> 8)&0xFF,(tmp->ipaddr)&0xFF);
+									fprintf(cgiOut,"</tr>");
+						 	 	}
+						 	 }			 
+						  fprintf(cgiOut,"</table></td>"\
 						"</tr>"\
 					  "</td>"\
 				 " </tr>"\
@@ -364,6 +406,7 @@ if(result2 == 1)
 {
 	Free_neighbordead_interval(interval);
 }
+Free_show_wireless_listen_if_cmd(Listen_IF);
 free_instance_parameter_list(&paraHead1);
 }
 

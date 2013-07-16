@@ -3475,3 +3475,41 @@ ac_manage_config_ssylogupload_pfm_requestpkts(DBusConnection *connection,
     return ret;
     
 }
+
+int 
+ac_manage_config_mem_status_dog(DBusConnection *connection, unsigned int type, unsigned int maxmem) {
+
+    if(NULL == connection)
+        return AC_MANAGE_INPUT_TYPE_ERROR;
+    
+	DBusMessage *query, *reply;
+	DBusError err;
+
+	query = dbus_message_new_method_call(AC_MANAGE_DBUS_DBUSNAME, 
+										AC_MANAGE_SNMP_DBUS_OBJPATH,
+										AC_MANAGE_SNMP_DBUS_INTERFACE,
+										AC_MANAGE_DBUS_CONFIG_MEM_STATUE_DOG);
+
+    dbus_error_init(&err);
+
+    dbus_message_append_args(query,
+							DBUS_TYPE_UINT32,&type,
+                            DBUS_TYPE_UINT32, &maxmem,
+                            DBUS_TYPE_INVALID);
+
+    reply = dbus_connection_send_with_reply_and_block(connection, query, -1, &err);
+
+    dbus_message_unref(query);
+
+    if(NULL == reply) {
+        if(dbus_error_is_set(&err)) {
+            dbus_error_free(&err);
+        }
+        return AC_MANAGE_DBUS_ERROR;
+    }
+    
+    dbus_message_unref(reply);
+
+    return AC_MANAGE_SUCCESS;
+}
+

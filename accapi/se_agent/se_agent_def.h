@@ -131,6 +131,10 @@
 #define RULE_IS_NEW                 6
 #define RULE_IS_INVALID				0xff
 
+#define CPU_TAG_MASTER              0
+#define CPU_TAG_SLAVE				1
+#define CPU_TAG_ALL                 2
+
 
 /* ethernet headers*/
 typedef struct eth_hdr_s 

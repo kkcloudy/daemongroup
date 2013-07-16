@@ -45,7 +45,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "ws_dbus_list_interface.h"
 
 int ShowDhcpconPage(struct list *lcontrol,struct list *lpublic);
-void ShowIPaddr(struct list *lpublic,char *opt,char *vname);
+void ShowIPaddr(struct list *lpublic,struct list *lcontrol,char *opt,char *vname);
 
 
 int cgiMain()
@@ -117,7 +117,7 @@ int ShowDhcpconPage(struct list *lcontrol,struct list *lpublic)
 
 	if(cgiFormSubmitClicked("dhcp_conf") == cgiFormSuccess)
 	{
-		ShowIPaddr(lpublic,opt,vname);
+		ShowIPaddr(lpublic,lcontrol,opt,vname);
 	}  
    
   fprintf(cgiOut,"<form method=post >"\
@@ -271,7 +271,7 @@ free(vname);
 return 0;
 }
 						 
-void  ShowIPaddr(struct list *lpublic,char *opt,char *vname)
+void  ShowIPaddr(struct list *lpublic,struct list *lcontrol,char *opt,char *vname)
 {
 	char pname[20] = {0};
  	cgiFormStringNoNewlines("poolname", pname, 20); 
@@ -283,20 +283,29 @@ void  ShowIPaddr(struct list *lpublic,char *opt,char *vname)
 	allslot_id = atoi(allslotid);
 	if(strcmp(opt,"1")==0)
 	{
-		ret=ccgi_set_interface_ip_pool(pname,vname, 1,BIND_POOL_ON_INTERFACE,allslotid);
+		ret=ccgi_set_interface_ip_pool(pname,vname, 1,BIND_POOL_ON_INTERFACE,allslot_id);
 	}
 	else if(strcmp(opt,"2")==0)
 	{
-		ret=ccgi_set_interface_ip_pool(pname, vname, 0,BIND_POOL_ON_INTERFACE,allslotid);
+		ret=ccgi_set_interface_ip_pool(pname, vname, 0,BIND_POOL_ON_INTERFACE,allslot_id);
 	}
 
-	if( ret == 1 )
+	switch(ret)
 	{
-		ShowAlert(search(lpublic,"oper_succ"));
-	}
-	else
-	{
-		ShowAlert(search(lpublic,"oper_fail"));
+		case 0:ShowAlert(search(lpublic,"oper_fail"));
+			   break;
+		case 1:ShowAlert(search(lpublic,"oper_succ"));
+			   break;
+		case -1:ShowAlert(search(lcontrol,"pool_name_too_long"));
+			    break;
+		case -2:ShowAlert(search(lcontrol,"pool_bind_if"));
+			    break;
+		case -3:ShowAlert(search(lcontrol,"pool_has_no_subnet"));
+			    break;
+		case -4:ShowAlert(search(lcontrol,"pool_not_exist"));
+			    break;
+		case -5:ShowAlert(search(lpublic,"error"));
+			    break;
 	}
 }
 

@@ -583,11 +583,17 @@ cache_peer_loginfo_string (BusConnectionData *d,
       if (!_dbus_string_append_byte (&loginfo_buf, '"'))
         goto oom;
     }
-
+/*
+**CID 15394 (#1 of 1): Resource leak (RESOURCE_LEAK)14. leaked_storage: Variable "windows_sid" going out of scope leaks the storage it points to.
+*/
   if (dbus_connection_get_windows_user (connection, &windows_sid))
     {
       if (!_dbus_string_append_printf (&loginfo_buf, "sid=\"%s\" ", windows_sid))
-        goto oom;
+      {
+      	dbus_free (windows_sid);/*Coverity modify for CID 15394*/
+      	goto oom;
+      }
+        
       dbus_free (windows_sid);
     }
 

@@ -29,341 +29,228 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *
 *******************************************************************************/
 
-#include <stdio.h>
-#include "cgic.h"
-#include <string.h>
+#include <dbus/dbus.h>
 #include <stdlib.h>
+#include <sysdef/npd_sysdef.h>
+#include <netinet/in.h>
+#include <string.h>
+#include <stdio.h>
+#include <ctype.h>
+
+
+#include "cgic.h"
 #include "ws_err.h"
-#include "ws_usrinfo.h"
-#include "ws_ec.h"
+#include "ws_public.h"
 #include "ws_firewall.h"
+#include "ws_init_dbus.h"
+#include "ws_dcli_vrrp.h"
+#include "ws_dbus_list_interface.h"
+
+#include "ac_manage_def.h"
+#include "ac_manage_firewall_interface.h"
 
 
-//#ifdef _MANAGE_FIREWALL_ 
+#define _DEBUG	1
 
-int getRuleUserEdit(struct list *lfirewall, fwRuleList *list, int type );
-int saveRule( fwRuleList **list );
-int doAllRules( fwRuleList *list );
-int delRule( fwRuleList *list, int type, int index );
-int changRuleIndex( fwRuleList *list, int oldIndex, int newIndex, int ruleType );
+#if _DEBUG
+#define debug_printf(a...) fprintf(a)
+#else
+#define debug_printf(a...)
+#endif
 
-int cgi_firewall_desc_is_legal_input(const char *str)
-{
-	const char *p;
+#define BUF_LEN					32
+#define FIREWALL_MAX_RULE_NUM			256
+#define FW_MAX_PKG_STATE_LEN			64
+#define FW_MAX_STR_FILTER_LEN			BUF_LEN
+#define MAX_SLOT				16
 
-	if (NULL == str || '\0' == str[0])
-		return 0;
-	
-	for (p = str; *p; p++)
-		if (!isalnum(*p) && *p != '_' && *p != '.')
-			return 0;
+static int slot_id = 1;
+static instance_parameter *paraHead1 = NULL;
+static void *ccgi_connection = NULL;
+static char plotid[10] = {0};
 
-	return 1;
-}
-//#endif
 
-int cgiMain()
-{
-//#ifdef _MANAGE_FIREWALL_ 
-	fwRuleList *list;
 
-	struct list *lpublic;
-	struct list *lfirewall;
+static int
+firewall_index_is_legal_input(const char *str_index, u_long *slot_id, u_long *index) {
 
-	int ruleType = 0;
-		//得到rule的类型， fileter dnat  snat input
+	if(!str_index || !slot_id || !index )
+		return -1;
 
-	char ruleTypeStr[10];//FILTER   SNAT   DNAT	INPUT
-	char delRuleIndex[10];
-	char doFireWall[10];
-	char *encry=(char *)malloc(BUF_LEN);
-	char *str;
-	char changeIndexOldRuleIndex[10];
-	char changeIndexNewRuleIndex[10];
-
-	lpublic=get_chain_head("../htdocs/text/public.txt");
-	lfirewall=get_chain_head("../htdocs/text/firewall.txt");
-
- 	memset(encry,0,BUF_LEN);
-  	cgiFormStringNoNewlines("UN", encry, BUF_LEN);
-  	
-  	str=dcryption(encry);
-
-  	if(str==NULL)
-  	{
-		ShowErrorPage(search(lpublic,"ill_user")); 		 /*用户非法*/
-		return 0;
-  	}
-	
-
-	cgiHeaderContentType("text/html");
-	
-	list=(fwRuleList *)malloc(sizeof(fwRuleList));
-	memset( list, 0, sizeof(fwRuleList) );
-	//fwParseDoc( list );
-
-	cgiFormStringNoNewlines( "ruleType", ruleTypeStr, sizeof(ruleTypeStr) );
-	if( strcmp("FW_DNAT", ruleTypeStr) == 0 )
-	{
-		ruleType = FW_DNAT;
-	}
-	else if( strcmp("FW_SNAT",ruleTypeStr) == 0)
-	{
-		ruleType = FW_SNAT;
-	}
-	else if( strcmp("FW_INPUT",ruleTypeStr) == 0)
-	{
-		ruleType = FW_INPUT;
-	}
-	else
-	{
-		ruleType = FW_WALL;
-	}	
-
-	if(cgiFormSubmitClicked("submit_addrule") == cgiFormSuccess)
-	{
-		//getRuleUserEdit( lfirewall,list, ruleType );
-		//saveRule( &list );
-	}
-	else if(cgiFormSubmitClicked("submit_doallrules") == cgiFormSuccess)
-	{
-		//firewall_chmod_conf_file();
-		//fprintf( cgiOut, "do all rules!!!!" );
-		//doAllRules( list );
-		//saveRule( &list );
-		//fprintf( cgiOut, "do all ok" );
-		//调用上主界面
-	}
-	else if( cgiFormStringNoNewlines( "delRuleIndex", delRuleIndex, sizeof(delRuleIndex) ) == cgiFormSuccess )
-	{
-		int index;
-		
-		sscanf( delRuleIndex, "%d", (int *)&index );
-		//delRule( list, ruleType, index-1 );
-		//saveRule( &list );
-	}
-	else if( cgiFormStringNoNewlines( "doFireWall", doFireWall, sizeof(doFireWall) ) == cgiFormSuccess )
-	{
-		
-		//firewall_chmod_conf_file();
-		if( strcmp( doFireWall, "stop" ) == 0 )	
-		{
-		//stop fire wall
-			if( 0 !=  fwServiceStop() )
-			{
-				fprintf( cgiOut, "<script type='text/javascript'>\n" );	
-				fprintf( cgiOut, "alert('stop failed!');\n" );
-				fprintf( cgiOut, "</script>\n" );
-			}
-
-		}
-		else
-		{
-		//start fire wall
-			//如果iptables没有start  先start   iptables
-			system( "[ -e /opt/services/status/iptables_status.status ] || /opt/services/init/iptables_init start >/dev/null 2>&1" );
-			//必须先将状态改为 start，因为doAllRules中会去检查状态，如果状态为stop就不能将规则加载。
-			system( "echo \"start\" > /opt/services/status/firewall_status.status" );
-			if( 0 != doAllRules( list ) )
-			{
-				system( "echo \"stop\" > /opt/services/status/firewall_status.status" );
-				fprintf( cgiOut, "<script type='text/javascript'>\n" );
-				fprintf( cgiOut, "alert('start failed!')\n" );
-				fprintf( cgiOut, "</script>\n" );
-			}
+	if (strchr(str_index, '-')) {
+		if(2 != sscanf(str_index, "%d-%d", slot_id, index)) {
+			return -1;
 		}
 	}
-	else if( cgiFormStringNoNewlines( "oldIndex", changeIndexOldRuleIndex, sizeof(changeIndexOldRuleIndex) ) == cgiFormSuccess &&
-		cgiFormStringNoNewlines( "newIndex", changeIndexNewRuleIndex, sizeof(changeIndexNewRuleIndex) ) == cgiFormSuccess )
-	{
-		//执行规则顺序调整的动作。
-		int oldIndex;
-		int newIndex;
-		
-		sscanf( changeIndexOldRuleIndex, "%d", (int *)&oldIndex );
-		sscanf( changeIndexNewRuleIndex, "%d", (int *)&newIndex );
-		
-		//changRuleIndex( list, oldIndex-1, newIndex-1, ruleType );
-		
-		//saveRule( &list );
+
+	if (!*slot_id || *slot_id > MAX_SLOT) {
+		return -1;
 	}
 
-//	else if(  )
-	fprintf( cgiOut, "<html xmlns=\"http://www.w3.org/1999/xhtml\"> \n" );
-	fprintf( cgiOut, "<head> \n" );
-	fprintf( cgiOut, "<meta http-equiv=Content-Type content=text/html; charset=gb2312> \n" );
-	//下面三句话用于禁止页面缓存
-  	fprintf( cgiOut, "<META   HTTP-EQUIV=\"pragma\"   CONTENT=\"no-cache\"> \n");
-  	fprintf( cgiOut, "<META   HTTP-EQUIV=\"Cache-Control\"   CONTENT=\"no-cache,   must-revalidate\"> \n" );
-  	fprintf( cgiOut, "<META   HTTP-EQUIV=\"expires\"   CONTENT=\"Wed,   26   Feb   1997   08:21:57   GMT\">	\n");
-  	
-	fprintf( cgiOut, "<title>%s</title> \n", search( lfirewall, "title_fw" ) );
-	fprintf( cgiOut, "<link rel=stylesheet href=/style.css type=text/css> \n" );
-	fprintf( cgiOut, "<style type=text/css> \n" );
-	fprintf( cgiOut, ".usrlis {overflow-x:hidden; overflow:auto; width: 416px; height: 270px; clip: rect( ); padding-top: 0px; padding-right: 0px; padding-bottom: 0px; padding-left: 0px} \n" );
-	fprintf( cgiOut, "</style> \n" );
-	fprintf( cgiOut, "<style type=text/css> \n" );
-	fprintf( cgiOut, "tr.even td { \n" );
-	fprintf( cgiOut, "background-color: #eee; \n" );
-	fprintf( cgiOut, "} \n" );
-	fprintf( cgiOut, "tr.odd td { \n" );
-	fprintf( cgiOut, "background-color: #fff; \n" );
-	fprintf( cgiOut, "} \n" );
-	fprintf( cgiOut, "tr.changed td { \n" );
-	fprintf( cgiOut, "background-color: #ffd; \n" );
-	fprintf( cgiOut, "} \n" );
-	fprintf( cgiOut, " \n" ); 
-	fprintf( cgiOut, "tr.new td { \n" );  
-	fprintf( cgiOut, "background-color: #dfd; \n" );
-	fprintf( cgiOut, "} \n" );
-	fprintf( cgiOut, "</style> \n" );
-	fprintf( cgiOut, "</head> \n" );
-	fprintf( cgiOut, "<script src=\"/fw.js\"></script> \n" );
-		
-	fprintf( cgiOut, "<body> \n" );
-	
-{
-	//将当前页面转到ruleview!
-	/*
-	char changeURL[20]="abc";
-	
-	cgiFormStringNoNewlines( "changeURL", changeURL, sizeof(changeURL) );
-
-	if( strcmp(changeURL,"no") != 0 )
-	*/
-	{
-#if 1
-		fprintf( cgiOut, "<script type='text/javascript'>\n" );
-		fprintf( cgiOut, "window.location.href='wp_fwruleview.cgi?UN=%s&ruleType=%s';\n", encry, ruleTypeStr );
-		fprintf( cgiOut, "</script>\n" );
-#endif		
-		fprintf( cgiOut, "</body>\n" );
-		fprintf( cgiOut, "</html>\n" );
+	if (!*index || *index > FIREWALL_MAX_RULE_NUM) {
+		return -1;
 	}
-
-}
-
-	//fwFreeList(list);
-	free(encry);
-	release(lpublic); 
-//#endif
-	
-	return 0;	
-}
-
-//#ifdef _MANAGE_FIREWALL_ 
-
-int procesID( fwRulePtr head )
-{
-	fwRulePtr temp = head;	
-	int i = 1;
-	
-	while( NULL != temp ) 
-	{
-		temp->id = i;
-		//printf( "temp->name=%s<br />", temp->name );
-		//printf( "temp->ineth=%s<br />", temp->ineth );
-		i++;
-		temp = temp->next;
-	}
-	return 0;
-}
-
-int saveRule( fwRuleList **list )
-{
-	procesID( (*list)->wall );
-	procesID( (*list)->snat );
-	procesID( (*list)->dnat );
-	procesID( (*list)->input);
-	
-	//fwSaveDoc(*list);
-	//fwFreeList(*list);
-
-
-	*list = malloc(sizeof(fwRuleList));
-	memset(*list,0,sizeof(fwRuleList));
-	//fwParseDoc(*list);
-//	procesID( (*list)->wall );
-//	procesID( (*list)->snat );
-//	procesID( (*list)->dnat );
 	
 	return 0;
 }
 
-//处理从ruleedit页面save后的流程：
-int getRuleUserEdit (struct list *lfirewall, fwRuleList *list, int type )
+static int
+ccgi_firewall_config_status(int status)
 {
-	fwRulePtr rule,ruleLast;
-	fwRulePtr ruletemp;
-//	char *ruleIndex[] = {"1","2","3","4"};
-//	char *ethIndex[] = {"any","eth0","eth1","eth2","eth3"};
+	int i = 0;
+	int ret = 0;
+	char err_message[64] = {0};
+	for(i = 1; i < MAX_SLOT; i++) {
+		ccgi_ReInitDbusConnection(&ccgi_connection, i, DISTRIBUTFAG);
+		if(NULL == ccgi_connection) 
+			continue;
+				
+		ret = ac_manage_config_firewall_service(ccgi_connection, status);
+		if (0 != ret) {
+			snprintf(err_message, sizeof(err_message), 
+				"slot %d firewall %s failed", i, status?"start":"stop");
+			ShowAlert(err_message);
+		}
+	}
+	return 0;
+}
+
+static int
+ccgi_firwall_change_index(int rule_type, const char *oldstr, const char *newstr)
+{
+	unsigned long old_slot_id = 0;
+	unsigned long old_index = 0;
+	unsigned long new_slot_id = 0;
+	unsigned long new_index = 0;
+	int ret = 0;
+
+	if (firewall_index_is_legal_input(oldstr, &old_slot_id, &old_index)) {
+		return -1;
+	}
+	if (firewall_index_is_legal_input(newstr, &new_slot_id, &new_index)) {
+		return -1;
+	}
+
+	if (new_slot_id != old_slot_id) {
+		return -1;
+	}
+	ccgi_ReInitDbusConnection(&ccgi_connection, new_slot_id, DISTRIBUTFAG);
+	
+	ac_manage_change_firewall_index(ccgi_connection, new_index, rule_type, old_index);
+}
+
+static int
+ccgi_firewall_delete_rule(int rule_type, const char *str_index)
+{
+	int index;
+	int ret = 0;
+
+	if (NULL == str_index) {
+		return -1;
+	}
+	
+	debug_printf(stderr, "-------------------index=%s\n", str_index);
+	index = atoi(str_index);
+	#if 0
+	if (firewall_index_is_legal_input(str_index, &slot_id, &index)) {
+		debug_printf(stderr, "firewall_index_is_legal_input slotid=%u, index=%u\n", 
+				slot_id, index);
+		return -1;
+	}
+	ccgi_ReInitDbusConnection(&ccgi_connection, slot_id, DISTRIBUTFAG);
+	#endif
+
+	ret = ac_manage_del_firewall_rule(ccgi_connection, rule_type, index);
+
+	return ret;
+
+}
+
+
+static int
+ccgi_firewall_get_input(fwRule *rule, u_long *config_type, int rule_type)
+{
+
+	if (NULL == rule || NULL == config_type) {
+		return -1;
+	}
+	char inif[32] 		= "";
+	char outif[32] 		= "";
+
 	char *ipAddrTypeIndex[] = {"0","1","2","3","4","5"};
 	char *ipProtocl[] = {"0","1","2","3","4"};
 	char *portType[] = {"0","1","2","3"};
-	char *filterAction[] = {"allow","deny","reject","tcpmss"};//
-	int resoult,i;
-	char editType[10];
-	char **ruleEnableed;  
+	char *filterAction[] = {"allow","deny","reject","tcpmss"};
+	int resoult = 0;
 	
-	//rule = fwNewRule(type,1);
-		
-	
-	rule->type = type;
+	debug_printf(stderr, "-------------------------\n");
+
+/*config type*/
 {
-	char ruleIndex_str[32];
-	cgiFormStringNoNewlines( "ruleIndexUserSelected", ruleIndex_str, sizeof(ruleIndex_str) );
-	sscanf( ruleIndex_str, "%d", &(rule->id) );
+	char str_config[32] = "";
+	cgiFormStringNoNewlines("editType", str_config, sizeof(str_config));
+	if(0 == strncmp(str_config, "edit", 1)) {
+		*config_type = 1;
+	} else if(strncmp(str_config, "add", 1)) {
+		return -1;
+	}
 }
-	cgiFormStringNoNewlines( "editType", editType, sizeof(editType) );
-	
-	
-	rule->ordernum = 65;//no use current
-	
-	//得到规则的名字
-	rule->name = (char *)malloc(BUF_LEN);
-	//strcpy(rule->name,"test new");、
-	cgiFormStringNoNewlines( "ruleDescription", rule->name, BUF_LEN );
 
-	if (!cgi_firewall_desc_is_legal_input(rule->name)){
-		//vty_out(vty, "error desc format : %s\n", strDesc);
-		ShowAlert(search( lfirewall, "ruleedit_err_rulename" ));
-		return 0;
-	}
-	
-	if( cgiFormNotFound != cgiFormStringMultiple("ruleEnabledCHECKBOX", &ruleEnableed) )
-	{
-		rule->enable = 1;	
-	}
-	else
-	{
-		rule->enable = 0;	
-	}
-	
-	
-	rule->comment = (char *)malloc(BUF_LEN); 
-	strcpy(rule->comment,"FW_WALL_FWR:1:001");
-	//cgiFormStringNoNewlines( "ruleDescription", rule->comment, BUF_LEN );
-	
-	rule->ineth = (char *)malloc(BUF_LEN);
-	//strcpy(rule->ineth,"eth0");
-	memset( rule->ineth, 0, BUF_LEN );
-//	cgiFormSelectSingle( "inEth", ethIndex, 5, &resoult, 0);
-//	strncpy( rule->ineth, ethIndex[resoult], BUF_LEN-1 );
-	cgiFormStringNoNewlines( "inEthValue", rule->ineth, BUF_LEN );
-//	printf( "inEthValue = %s<br />\n", rule->ineth );
+	debug_printf(stderr, "111111111111111111111111111111111\n");
 
-	if (rule->type != FW_INPUT)
-	{
-		rule->outeth = (char *)malloc(BUF_LEN);
-		//	strcpy(rule->outeth,"eth0");
-		memset( rule->outeth, 0, BUF_LEN );
-		//	cgiFormSelectSingle( "outEth", ethIndex, 5, &resoult, 0);
-		//	strncpy( rule->outeth, ethIndex[resoult], BUF_LEN-1 );
-		cgiFormStringNoNewlines( "outEthValue", rule->outeth, BUF_LEN );	
-		//	printf( "outEthValue = %s<br />\n", rule->outeth );
+/* rule type*/
+{
+	rule->type = rule_type;
+}
+/*rule index*/
+{
+	char str_index[32] = "";
+	int index;
+	cgiFormStringNoNewlines("ruleIndexUserSelected", str_index, sizeof(str_index));
+	debug_printf(stderr, "-------------------index=%s\n", str_index);
+	sscanf(str_index, "%d", &(index));
+	#if 0
+	if(firewall_index_is_legal_input(str_index, &slot_id, &index)) {
+		debug_printf(stderr, "firewall_index_is_legal_input slotid=%u, index=%u\n", 
+				slot_id, index);
+		return -1;
 	}
-	//得到包匹配的原地址类型
-	cgiFormRadio( "Package.SourceAddress", ipAddrTypeIndex, 6, &resoult, 0 ) ;
+	ccgi_ReInitDbusConnection(&ccgi_connection, slot_id, DISTRIBUTFAG);
+	#endif
+	rule->id = index;
+}
+	debug_printf(stderr, "22222222222222222222222222222222\n");
+
+/*intf*/
+{
+	char in_interface[32]	= "";
+	char out_interface[32]	= "";
+	cgiFormStringNoNewlines("inEthValue", in_interface, sizeof(in_interface));
+	cgiFormStringNoNewlines("outEthValue", out_interface, sizeof(out_interface));
+	debug_printf(stderr, "-------------------in_interface=%s, out_interface=%s\n", in_interface, out_interface);
+	if (!strncmp(in_interface, "ve", 2)) {
+		if (ve_interface_parse(in_interface, inif, sizeof(inif))) {
+			return -1;
+		}
+	} else {
+		strncpy(inif, in_interface, sizeof(inif) - 1);
+	}
+
+    	if (!strncmp(out_interface, "ve", 2)) {
+		if (ve_interface_parse(out_interface, outif, sizeof(outif))) {
+			return -1;
+		}
+	} else {
+		strncpy(outif, out_interface, sizeof(outif) - 1);
+	}
+	rule->ineth = inif;
+	rule->outeth = outif;
+}
+	debug_printf(stderr, "33333333333333333333333333333333333333\n");
+
+/*source ip*/
+{
+	cgiFormRadio("Package.SourceAddress", ipAddrTypeIndex, 6, &resoult, 0) ;
 	rule->srctype = ipAddrTypeIndex[resoult][0]-'0';
 	
 	//根据ip地址类型得到ip地址
@@ -372,17 +259,16 @@ int getRuleUserEdit (struct list *lfirewall, fwRuleList *list, int type )
 	switch(rule->srctype)
 	{
 		case FW_IPSINGLE:
-			cgiFormStringNoNewlines( "Package.SourceAddress.Single.IP", rule->srcadd, BUF_LEN );
+			cgiFormStringNoNewlines("Package.SourceAddress.Single.IP", rule->srcadd, BUF_LEN);
 			break;
 		case FW_IPHOST:
-			cgiFormStringNoNewlines( "Package.SourceAddress.DefinedHost.Select", rule->srcadd, BUF_LEN );
+			cgiFormStringNoNewlines("Package.SourceAddress.DefinedHost.Select", rule->srcadd, BUF_LEN);
 			break;
 		case FW_IPMASK:
-			cgiFormStringNoNewlines( "Package.SourceAddress.AddrMask.Addr", rule->srcadd, BUF_LEN );
-			if( BUF_LEN - strlen( rule->srcadd ) > 2 )
-			{
-				strcat( rule->srcadd, "/" );
-				cgiFormStringNoNewlines( "Package.SourceAddress.AddrMask.Mask", rule->srcadd+strlen(rule->srcadd), BUF_LEN-strlen(rule->srcadd) );
+			cgiFormStringNoNewlines("Package.SourceAddress.AddrMask.Addr", rule->srcadd, BUF_LEN);
+			if (BUF_LEN - strlen( rule->srcadd ) > 2) {
+				strcat(rule->srcadd, "/" );
+				cgiFormStringNoNewlines("Package.SourceAddress.AddrMask.Mask", rule->srcadd+strlen(rule->srcadd), BUF_LEN-strlen(rule->srcadd));
 			}			
 			break;
 		case FW_IPNET:
@@ -390,8 +276,7 @@ int getRuleUserEdit (struct list *lfirewall, fwRuleList *list, int type )
 			break;
 		case FW_IPRANG:
 			cgiFormStringNoNewlines( "Package.SourceAddress.AddressRange.Begin", rule->srcadd, BUF_LEN );
-			if( BUF_LEN - strlen( rule->srcadd ) > 2 )
-			{
+			if( BUF_LEN - strlen( rule->srcadd ) > 2 ) {
 				strcat( rule->srcadd, "-" );
 				cgiFormStringNoNewlines( "Package.SourceAddress.AddressRange.End", rule->srcadd+strlen(rule->srcadd), BUF_LEN-strlen(rule->srcadd) );
 			}
@@ -401,9 +286,13 @@ int getRuleUserEdit (struct list *lfirewall, fwRuleList *list, int type )
 			strcpy( rule->srcadd, "any" );
 			break;	
 	}
-	
+}
+	debug_printf(stderr, "4444444444444444444444444444444444444444444444\n");
+
+/*dst ip*/
+{
 	//得到包匹配的目的地址类型
-	cgiFormRadio( "Package.DestinationAddress", ipAddrTypeIndex, 6, &resoult, 0 ) ;
+	cgiFormRadio("Package.DestinationAddress", ipAddrTypeIndex, 6, &resoult, 0) ;
 	rule->dsttype = ipAddrTypeIndex[resoult][0]-'0';
 	
 	//根据ip地址类型得到ip地址
@@ -441,8 +330,11 @@ int getRuleUserEdit (struct list *lfirewall, fwRuleList *list, int type )
 			strcpy( rule->dstadd, "any" );
 			break;	
 	}
+}
+	debug_printf(stderr, "5555555555555555555555555555555555555555\n");
 
-	
+/*proto and port*/
+{
 	cgiFormSelectSingle( "Protocol", ipProtocl, 5, &resoult, 0 );
 	rule->protocl = resoult;//FW_PTCP;
 	if( 1 == rule->protocl || 2 == rule->protocl || 3 == rule->protocl )
@@ -494,548 +386,291 @@ int getRuleUserEdit (struct list *lfirewall, fwRuleList *list, int type )
 				break;
 		}
 	}
-	//state
-	{
-		char *states[]={"NEW","ESTABLISHED","RELATED","INVALID"};
-		int invalid[]={0,0,0,0};
-		int result[4];
-		int i;
-		
-		cgiFormCheckboxMultiple( "state", states, 4, result, invalid );
-		if( result[0] != 0 || result[1] != 0 || result[2] != 0 || result[3] != 0  )
-		{
-			if( rule->pkg_state == NULL )
-			{
-				rule->pkg_state = (char *)malloc( 64 );
-				if( NULL == rule->pkg_state )
-				{
-					return -1;	
-				}
-				memset( rule->pkg_state, 0, 64 );
-				for( i=0;i<4;i++ )
-				{
-					if( 1 == result[i] )
-					{
-						if( 0 == strlen(rule->pkg_state) )
-						{
-							strcat( rule->pkg_state, states[i] );	
-						}
-						else
-						{
-							strcat( rule->pkg_state, "," );
-							strcat( rule->pkg_state, states[i] );
-						}
-					}		
-				}
-			}
-		}
-	//	fprintf( cgiOut,"<script type=text/javascript>\n" );
-	//	fprintf( cgiOut,"alert( '%s' );\n", rule->pkg_state );
-	//	fprintf( cgiOut,"</script>\n" );
-	}
-	//end state
+}
+	debug_printf(stderr, "6666666666666666666666666666666666666666666666\n");
+
+//state
+{
+	char *states[]={"NEW","ESTABLISHED","RELATED","INVALID"};
+	int invalid[]={0,0,0,0};
+	int result[4];
+	int i;
 	
-	//string_filter
-	{
-		if( NULL == rule->string_filter )
-		{
-			rule->string_filter	= (char*)malloc(BUF_LEN);
-			if( NULL == rule->string_filter )
-			{
+	cgiFormCheckboxMultiple( "state", states, 4, result, invalid );
+	if (result[0] != 0 || result[1] != 0 || result[2] != 0 || result[3] != 0) {
+		if (rule->pkg_state == NULL) {
+			rule->pkg_state = (char *)malloc( 64 );
+			if (NULL == rule->pkg_state) {
 				return -1;	
 			}
-		}
-		memset( rule->string_filter, 0, BUF_LEN );
-		cgiFormStringNoNewlines( "string_filter", rule->string_filter, BUF_LEN );
-	}
-	//end string_filter
-	
-	switch( type )
-	{
-		
-		case FW_SNAT://SNAT
-		case FW_DNAT://DNAT
-			
-			cgiFormRadio( "NatTranslation.IP", ipAddrTypeIndex, 6, &resoult, 0 ) ;
-			rule->natiptype = resoult;
-			rule->natipadd = (char *)malloc(BUF_LEN);
-			memset( rule->natipadd, 0, BUF_LEN );
-			switch(rule->natiptype)
-			{
-				case FW_IPSINGLE:
-					cgiFormStringNoNewlines( "NatSingleIpAddress", rule->natipadd, BUF_LEN );
-					break;
-				case FW_IPHOST:
-					//cgiFormStringNoNewlines( "Package.DestinationAddress.DefinedHost.Select", rule->natipadd, BUF_LEN );
-					break;
-				case FW_IPMASK:
-					cgiFormStringNoNewlines( "NatAddressNetmaskAddr", rule->natipadd, BUF_LEN );
-					if( BUF_LEN - strlen( rule->natipadd ) > 2 )
-					{
-						strcat( rule->natipadd, "/" );
-						cgiFormStringNoNewlines( "NatAddressNetmaskMask", rule->natipadd+strlen(rule->natipadd), BUF_LEN-strlen(rule->natipadd) );
-					}			
-					break;
-				case FW_IPNET:
-					//cgiFormStringNoNewlines( "Package.DestinationAddress.DefinedNetwork", rule->natipadd, BUF_LEN );
-					break;
-				case FW_IPRANG:
-					cgiFormStringNoNewlines( "NatAddrRangeBegin", rule->natipadd, BUF_LEN );
-					if( BUF_LEN - strlen( rule->natipadd ) > 2 )
-					{
-						strcat( rule->natipadd, "-" );
-						cgiFormStringNoNewlines( "NatAddrRangeEnd", rule->natipadd+strlen(rule->natipadd), BUF_LEN-strlen(rule->natipadd) );
+			memset(rule->pkg_state, 0, 64);
+			for (i=0; i<4; i++) {
+				if(1 == result[i]) {
+					if (0 == strlen(rule->pkg_state)) {
+						strcat( rule->pkg_state, states[i] );	
+					} else {
+						strcat( rule->pkg_state, "," );
+						strcat( rule->pkg_state, states[i] );
 					}
+				}		
+			}
+		}
+	}
+}
+	debug_printf(stderr, "777777777777777777777777777777777777777777777777777\n");
+
+//string_filter
+{
+	if( NULL == rule->string_filter ) {
+		rule->string_filter	= (char*)malloc(BUF_LEN);
+		if (NULL == rule->string_filter) {
+			return -1;	
+		}
+	}
+	memset( rule->string_filter, 0, BUF_LEN );
+	cgiFormStringNoNewlines( "string_filter", rule->string_filter, BUF_LEN );
+}
+	debug_printf(stderr, "8888888888888888888888888888888888888888888\n");
+
+/*action*/
+{
+	switch(rule->type) {
+	case FW_SNAT://SNAT
+	case FW_DNAT://DNAT	
+		cgiFormRadio( "NatTranslation.IP", ipAddrTypeIndex, 6, &resoult, 0 ) ;
+		rule->natiptype = resoult;
+		rule->natipadd = (char *)malloc(BUF_LEN);
+		memset( rule->natipadd, 0, BUF_LEN );
+		switch(rule->natiptype) {
+		case FW_IPSINGLE:
+			cgiFormStringNoNewlines( "NatSingleIpAddress", rule->natipadd, BUF_LEN );
+			break;
+		case FW_IPHOST:
+			break;
+		case FW_IPMASK:
+			cgiFormStringNoNewlines( "NatAddressNetmaskAddr", rule->natipadd, BUF_LEN );
+			if( BUF_LEN - strlen( rule->natipadd ) > 2 )
+			{
+				strcat( rule->natipadd, "/" );
+				cgiFormStringNoNewlines( "NatAddressNetmaskMask", rule->natipadd+strlen(rule->natipadd), BUF_LEN-strlen(rule->natipadd) );
+			}			
+			break;
+		case FW_IPNET:
+			break;
+		case FW_IPRANG:
+			cgiFormStringNoNewlines( "NatAddrRangeBegin", rule->natipadd, BUF_LEN );
+			if( BUF_LEN - strlen( rule->natipadd ) > 2 )
+			{
+				strcat( rule->natipadd, "-" );
+				cgiFormStringNoNewlines( "NatAddrRangeEnd", rule->natipadd+strlen(rule->natipadd), BUF_LEN-strlen(rule->natipadd) );
+			}
+			break;
+		case 0:
+		default:
+			strcpy( rule->natipadd, "any" );
+			break;	
+		}
+					
+		if( 1 == rule->protocl || 2 == rule->protocl || 3 == rule->protocl )//如果设置了协议  有端口设置
+		{
+			cgiFormRadio( "NatTranslation.Port", ipAddrTypeIndex, 6, &resoult, 0 ) ;
+			rule->natpttype = resoult;
+			
+			rule->natport = (char *)malloc(BUF_LEN);
+			memset( rule->natport, 0, BUF_LEN );
+			switch( resoult )
+			{
+				case 1:
+					cgiFormStringNoNewlines( "NatSinglePort", rule->natport, BUF_LEN );
+					break;
+				case 2:
+					cgiFormStringNoNewlines( "NatPortRangBegin", rule->natport, BUF_LEN );
+					if( BUF_LEN - strlen( rule->natport ) > 2 )
+					{
+						strcat( rule->natport, "-" );
+						cgiFormStringNoNewlines( "NatPortRangEnd", rule->natport+strlen(rule->natport), BUF_LEN-strlen(rule->natport) );
+					}						
 					break;
 				case 0:
 				default:
-					strcpy( rule->natipadd, "any" );
-					break;	
+					strcat( rule->natport, "any" );
+					break;
 			}
-						
-			if( 1 == rule->protocl || 2 == rule->protocl || 3 == rule->protocl )//如果设置了协议  有端口设置
-			{
-				//rule->natpttype = FW_PTSINGLE;
-				cgiFormRadio( "NatTranslation.Port", ipAddrTypeIndex, 6, &resoult, 0 ) ;
-				rule->natpttype = resoult;
-				
-				rule->natport = (char *)malloc(BUF_LEN);
-				memset( rule->natport, 0, BUF_LEN );
-				switch( resoult )
-				{
-					case 1:
-						cgiFormStringNoNewlines( "NatSinglePort", rule->natport, BUF_LEN );
-						break;
-					case 2:
-						cgiFormStringNoNewlines( "NatPortRangBegin", rule->natport, BUF_LEN );
-						if( BUF_LEN - strlen( rule->natport ) > 2 )
-						{
-							strcat( rule->natport, "-" );
-							cgiFormStringNoNewlines( "NatPortRangEnd", rule->natport+strlen(rule->natport), BUF_LEN-strlen(rule->natport) );
-						}						
-						break;
-					case 0:
-					default:
-						strcat( rule->natport, "any" );
-						break;
-				}
-			}
-			break;
-		case FW_WALL:// fire wall
-		case FW_INPUT:
-		default:
-			cgiFormSelectSingle( "filterAction", filterAction, 4, &resoult, 0);
-			rule->act = resoult;
-			//tcpmss
-			if( 3 == rule->act && rule->type != FW_INPUT)
-			{
-				rule->tcpmss_var = (char*)malloc(BUF_LEN);
-				memset( rule->tcpmss_var, 0, BUF_LEN );
-				cgiFormStringNoNewlines( "tcpmss_val", rule->tcpmss_var, BUF_LEN );
-			}
-			break;
+		}
+		break;
+	case FW_WALL:// fire wall
+	case FW_INPUT:
+	default:
+		cgiFormSelectSingle( "filterAction", filterAction, 4, &resoult, 0);
+		rule->act = resoult;
+		//tcpmss
+		if( 3 == rule->act && rule->type != FW_INPUT)
+		{
+			rule->tcpmss_var = (char*)malloc(BUF_LEN);
+			memset( rule->tcpmss_var, 0, BUF_LEN );
+			cgiFormStringNoNewlines( "tcpmss_val", rule->tcpmss_var, BUF_LEN );
+		}
+		break;
 	}
 
-	i = rule->id;
-	switch( type )
+}
+	debug_printf(stderr, "99999999999999999999999999999999999999999999999\n");
+
+/*rule status*/
+{
+	char **ruleEnableed; 
+	if (cgiFormNotFound != cgiFormStringMultiple("ruleEnabledCHECKBOX", &ruleEnableed)) {
+		rule->enable = 1;	
+	} else {
+		rule->enable = 0;	
+	}
+}
+
+	return 0;
+}
+
+
+
+int cgiMain()
+{
+	fwRule rule;
+	u_long config_type= 0;
+	int rule_type = 0;
+	
+	char encry[BUF_LEN] = {0};
+	char *str = NULL;
+	char ruleTypeStr[16] = "";
+	char changeIndexOldRuleIndex[16] = {0};
+	char changeIndexNewRuleIndex[16] = {0};
+	char delRuleIndex[16] = {0};
+	char doFireWall[16] = {0};
+	int ret = 0;
+
+	struct list *lpublic;
+	struct list *lfirewall;
+
+	lpublic=get_chain_head("../htdocs/text/public.txt");
+	lfirewall=get_chain_head("../htdocs/text/firewall.txt");
+	DcliWInit();
+	ccgi_dbus_init();
+
+	memset(plotid,0,sizeof(plotid));
+	cgiFormStringNoNewlines("plotid", plotid, sizeof(plotid)); 
+	
+	list_instance_parameter(&paraHead1, SNMPD_SLOT_CONNECT);
+	if (NULL == paraHead1) {
+		return 0;
+	}
+	if(strcmp(plotid, "") == 0) {
+		slot_id = paraHead1->parameter.slot_id;
+	} else {
+		slot_id = atoi(plotid);
+	}
+	ccgi_ReInitDbusConnection(&ccgi_connection, slot_id, DISTRIBUTFAG);
+	fprintf(stderr, "----------------------------------------------plotid=%s\n", plotid);
+
+	memset(&rule, 0, sizeof(rule));
+//	memset(rule, 0, sizeof(rule));
+  	cgiFormStringNoNewlines("UN", encry, BUF_LEN);
+  	
+  	str = dcryption(encry);
+
+  	if(str == NULL)
+  	{
+		ShowErrorPage(search(lpublic,"ill_user")); 		 /*用户非法*/
+		return 0;
+  	}
+
+	cgiFormStringNoNewlines("ruleType", ruleTypeStr, sizeof(ruleTypeStr));
+	if (strcmp("FW_DNAT", ruleTypeStr) == 0) {
+		rule_type = FW_DNAT;
+	} else if(strcmp("FW_SNAT",ruleTypeStr) == 0) {
+		rule_type = FW_SNAT;
+	} else if(strcmp("FW_INPUT",ruleTypeStr) == 0) {
+		rule_type = FW_INPUT;
+	} else {
+		rule_type = FW_WALL;
+	}
+
+	cgiHeaderContentType("text/html");	
+
+	if(cgiFormSubmitClicked("submit_addrule") == cgiFormSuccess)
+	{
+		ret = ccgi_firewall_get_input(&rule, &config_type, rule_type);
+		if (0 == ret) {
+			ret = ac_manage_config_firewall_rule(ccgi_connection, &rule, config_type);
+			debug_printf(stderr, "----------------------------------ret=%d\n", ret);
+		}
+	}
+	else if( cgiFormStringNoNewlines( "delRuleIndex", delRuleIndex, sizeof(delRuleIndex) ) == cgiFormSuccess )
+	{
+		debug_printf(stderr, "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n");
+		ccgi_firewall_delete_rule(rule_type, delRuleIndex);
+	}
+	else if( cgiFormStringNoNewlines( "doFireWall", doFireWall, sizeof(doFireWall) ) == cgiFormSuccess )
 	{		
-		case FW_DNAT:
-			
-			ruleLast = list->dnat;
-			if( NULL == ruleLast )
-			{
-				rule->status = FW_NEW;
-				list->dnat = rule;
-			}
-			else if( (1 == i) && (strcmp(editType,"add") == 0 ) )
-			{
-				rule->status = FW_NEW;
-				rule->next = list->dnat;
-				list->dnat = rule;
-			}
-			else if( (1==i) && (strcmp(editType,"edit") == 0 ) )
-			{
-				rule->status = FW_CHANGED;
-				rule->next = list->dnat->next;
-				list->dnat = rule;
-			}	
-			else
-			{
-				for( ; (ruleLast->next != 0) && (i>2); ruleLast=ruleLast->next, i-- ){;}
-				
-				if( strcmp(editType,"add") == 0 )
-				{
-					rule->status = FW_NEW;
-					ruletemp = ruleLast->next;	
-					ruleLast->next = rule;
-					rule->next = ruletemp;					
-				}
-				else
-				{
-					rule->status = FW_CHANGED;
-					ruletemp = ruleLast->next->next;
-					free( ruleLast->next );
-					ruleLast->next = rule;
-					rule->next = ruletemp;
-				}
-			}
-			break;
-		case FW_SNAT:
-			
-			ruleLast = list->snat;
-			if( NULL == ruleLast )
-			{
-				rule->status = FW_NEW;
-				list->snat = rule;
-			}
-			else if( (1 == i) && (strcmp(editType,"add") == 0 ) )
-			{
-				rule->status = FW_NEW;
-				rule->next = list->snat;
-				list->snat = rule;
-			}
-			else if( (1==i) && (strcmp(editType,"edit") == 0 ) )
-			{
-				rule->status = FW_CHANGED;
-				rule->next = list->snat->next;
-				list->snat = rule;
-			}		
-			else
-			{
-				for( ; (ruleLast->next != 0) && (i>2); ruleLast=ruleLast->next, i-- ){;}
-				
-				if( strcmp(editType,"add") == 0 )
-				{
-					rule->status = FW_NEW;
-					ruletemp = ruleLast->next;	
-					ruleLast->next = rule;
-					rule->next = ruletemp;					
-				}
-				else
-				{
-					rule->status = FW_CHANGED;
-					ruletemp = ruleLast->next->next;
-					free( ruleLast->next );
-					ruleLast->next = rule;
-					rule->next = ruletemp;
-				}
-			}
-			break;
-		case FW_INPUT:
-			
-			ruleLast = list->input;
-			if( NULL == ruleLast )
-			{
-				rule->status = FW_NEW;
-				list->input = rule;
-			}
-			else if( (1 == i) && (strcmp(editType,"add") == 0 ) )
-			{
-				rule->status = FW_NEW;
-				rule->next = list->input;
-				list->input = rule;
-			}
-			else if( (1==i) && (strcmp(editType,"edit") == 0 ) )
-			{
-				rule->status = FW_CHANGED;
-				rule->next = list->input->next;
-				list->input = rule;
-			}		
-			else
-			{
-				for( ; (ruleLast->next != 0) && (i>2); ruleLast=ruleLast->next, i-- ){;}
-				
-				if( strcmp(editType,"add") == 0 )
-				{
-					rule->status = FW_NEW;
-					ruletemp = ruleLast->next;	
-					ruleLast->next = rule;
-					rule->next = ruletemp;					
-				}
-				else
-				{
-					rule->status = FW_CHANGED;
-					ruletemp = ruleLast->next->next;
-					free( ruleLast->next );
-					ruleLast->next = rule;
-					rule->next = ruletemp;
-				}
-			}
-			break;
-		case FW_WALL:
-		default:			
-			
-			ruleLast = list->wall;
-			if( NULL == ruleLast )
-			{
-				rule->status = FW_NEW;
-				list->wall = rule;
-			}
-			else if( (1 == i) && (strcmp(editType,"add") == 0 ) )
-			{
-				rule->status = FW_NEW;
-				rule->next = list->wall;
-				list->wall = rule;
-			}
-			else if( (1==i) && (strcmp(editType,"edit") == 0 ) )
-			{
-				rule->status = FW_CHANGED;
-				rule->next = list->wall->next;
-				list->wall = rule;
-			}
-			else
-			{
-				for( ; (ruleLast->next != 0) && (i>2); ruleLast=ruleLast->next, i-- ){;}
-				
-				if( strcmp(editType,"add") == 0 )
-				{
-					rule->status = FW_NEW;
-					ruletemp = ruleLast->next;	
-					ruleLast->next = rule;
-					rule->next = ruletemp;					
-				}
-				else
-				{
-					rule->status = FW_CHANGED;
-					ruletemp = ruleLast->next->next;
-					free( ruleLast->next );
-					ruleLast->next = rule;
-					rule->next = ruletemp;
-				}
-			}
-			break;
+		debug_printf(stderr, "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\n");
+		if (strcmp( doFireWall, "stop" ) == 0) {
+			ccgi_firewall_config_status(0);
+		} else {
+			ccgi_firewall_config_status(1);
+		}
 	}
-
-//	fwReplaceIptablesRule(list);
-	return 0;
-}
-
-
-
-//处理从当前页面点击save后的流程：
-int doAllRules( fwRuleList *list )
-{
-	int err;
-	fwRulePtr rule;
-	//err = fwReplaceIptablesRule(list);
-
-	if( 0 != err )
-		fprintf( cgiOut, "<script type='text/javascript'>\n" );
-	switch( err )
+	else if(cgiFormStringNoNewlines( "oldIndex", changeIndexOldRuleIndex, sizeof(changeIndexOldRuleIndex) ) == cgiFormSuccess &&
+		cgiFormStringNoNewlines( "newIndex", changeIndexNewRuleIndex, sizeof(changeIndexNewRuleIndex) ) == cgiFormSuccess )
 	{
-		#if 0
-		case 0:
-			break;
-		case FWE_START_FAILE:
-			fprintf( cgiOut, "alert('启动服务失败!');\n" );
-			break;
-		case FWE_FLUSH_FAILE:
-			fprintf( cgiOut, "alert('清空规则失败!');\n" );
-			break;
-		case FWE_RULE_FAILE:
-			fprintf( cgiOut, "alert('规则执行出错!');\n" );
-			break;
-		case FWE_SAVE_FAILE:
-			fprintf( cgiOut, "alert('保存配置失败!');\n" );
-			break;
-		case FWE_STOP_FAILE:
-			fprintf( cgiOut, "alert('关闭服务失败!');\n" );
-			break;
-		default:
-			fprintf( cgiOut, "alert('未知错误!');\n" );
-			break;
-	#endif
-	}
-	if( 0 != err )
-		fprintf( cgiOut, "</script>\n" );
-
-
-	if( 0 == err )//所有规则执行成功
-	{
-		rule = list->wall;
-		while( NULL != rule )
-		{
-			rule->status = FW_DONE;	
-			rule = rule->next;
-		}
-		rule = list->snat;
-		while( NULL != rule )
-		{
-			rule->status = FW_DONE;	
-			rule = rule->next;
-		}
-		rule = list->dnat;
-		while( NULL != rule )
-		{
-			rule->status = FW_DONE;	
-			rule = rule->next;
-		}
-		rule = list->input;
-		while( NULL != rule )
-		{
-			rule->status = FW_DONE;	
-			rule = rule->next;
-		}
+		debug_printf(stderr, "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\n");
+		//ccgi_firwall_change_index(rule_type, changeIndexOldRuleIndex, changeIndexNewRuleIndex);
 	}
 	
-	return err;
-}
+	debug_printf(stderr, "dddddddddddddddddddddddddddddddddddddddddddddddddddd\n");
+	fprintf( cgiOut, "<html xmlns=\"http://www.w3.org/1999/xhtml\"> \n" );
+	fprintf( cgiOut, "<head> \n" );
+	fprintf( cgiOut, "<meta http-equiv=Content-Type content=text/html; charset=gb2312> \n" );
+	//下面三句话用于禁止页面缓存
+  	fprintf( cgiOut, "<META   HTTP-EQUIV=\"pragma\"   CONTENT=\"no-cache\"> \n");
+  	fprintf( cgiOut, "<META   HTTP-EQUIV=\"Cache-Control\"   CONTENT=\"no-cache,   must-revalidate\"> \n" );
+  	fprintf( cgiOut, "<META   HTTP-EQUIV=\"expires\"   CONTENT=\"Wed,   26   Feb   1997   08:21:57   GMT\">	\n");
 
-
-int delRule( fwRuleList *list, int type, int index )
-{
-	fwRulePtr ruleDel,ruleDelPrev;
-	if( NULL == list )
-	{
-		return -1;
-	}
-	
-	switch( type )
-	{
-		case FW_WALL:
-			ruleDel = list->wall;
-			break;
-		case FW_SNAT:
-			ruleDel = list->snat;
-			break;
-		case FW_DNAT:
-			ruleDel = list->dnat;
-			break;
-		case FW_INPUT:
-			ruleDel = list->input;
-			break;
-		default:
-			return -1;
-			break;		
-	}
-	ruleDelPrev = NULL;
-	
-	if( 0 == index && NULL != ruleDel )
-	{
-		switch( type )
-		{
-			case FW_WALL:
-				list->wall = ruleDel->next;
-				break;	
-			case FW_SNAT:
-				list->snat = ruleDel->next;
-				break;
-			case FW_DNAT:
-				list->dnat = ruleDel->next;
-				break;
-			case FW_INPUT:
-				list->input = ruleDel->next;
-				break;
-			default:
-				return -1;
-				break;
-		}
-	}
-	else
-	{
+	debug_printf(stderr, "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\n");
+  	
+	fprintf( cgiOut, "<title>%s</title> \n", search( lfirewall, "title_fw" ) );
+	fprintf( cgiOut, "<link rel=stylesheet href=/style.css type=text/css> \n" );
+	fprintf( cgiOut, "<style type=text/css> \n" );
+	fprintf( cgiOut, ".usrlis {overflow-x:hidden; overflow:auto; width: 416px; height: 270px; clip: rect( ); padding-top: 0px; padding-right: 0px; padding-bottom: 0px; padding-left: 0px} \n" );
+	fprintf( cgiOut, "</style> \n" );
+	fprintf( cgiOut, "<style type=text/css> \n" );
+	fprintf( cgiOut, "tr.even td { \n" );
+	fprintf( cgiOut, "background-color: #eee; \n" );
+	fprintf( cgiOut, "} \n" );
+	fprintf( cgiOut, "tr.odd td { \n" );
+	fprintf( cgiOut, "background-color: #fff; \n" );
+	fprintf( cgiOut, "} \n" );
+	fprintf( cgiOut, "tr.changed td { \n" );
+	fprintf( cgiOut, "background-color: #ffd; \n" );
+	fprintf( cgiOut, "} \n" );
+	fprintf( cgiOut, " \n" ); 
+	fprintf( cgiOut, "tr.new td { \n" );  
+	fprintf( cgiOut, "background-color: #dfd; \n" );
+	fprintf( cgiOut, "} \n" );
+	fprintf( cgiOut, "</style> \n" );
+	fprintf( cgiOut, "</head> \n" );
+	fprintf( cgiOut, "<script src=\"/fw.js\"></script> \n" );
 		
-		for( ; ((index > 0)&(ruleDel != NULL)); index-- )
-		{
-			ruleDelPrev = ruleDel;
-			ruleDel = ruleDel->next;
-		}
-		if( 0 == index && NULL != ruleDel )
-		{
-			ruleDelPrev->next = ruleDel->next;
-		}
-	}
+	fprintf( cgiOut, "<body> \n" );
 	
-	
-	//fwFreeRule(ruleDel);
-	//fwSaveDoc(list);
-	return 0;
-}
-
-
-
-fwRulePtr getRuleByIndex( fwRulePtr head, int index )
-{
-	fwRulePtr ret;
-	
-	ret = head;
-	if( index <= 0 )
-		return ret;
-
-	for( ;(index>0)&&(ret->next!=NULL); index-- )
-	{
-		ret = ret->next;
-	}
-	
-	return ret;
-}
-
-
-int changRuleIndex( fwRuleList *list, int oldIndex, int newIndex, int ruleType )
-{
-	fwRulePtr curRule,*root;
-	fwRulePtr insertPos;
-	
-	if( oldIndex < 0 || newIndex < 0 || oldIndex == newIndex )
-		return -1;
-	
-	if( FW_WALL == ruleType )
-	{
-		root = &(list->wall);
-	}
-	else if( FW_SNAT == ruleType )
-	{
-		root = &(list->snat);
-	}
-	else if( FW_DNAT == ruleType )
-	{
-		root = &(list->dnat);
-	}
-	else if( FW_INPUT == ruleType )
-	{
-		root = &(list->input);
-	}
-	
-	if( 0 == oldIndex )
-	{
-		//先将curRule断开
-		curRule = *root;
-		*root = curRule->next;
-		curRule->next = NULL;
+	debug_printf(stderr, "fffffffffffffffffffffffffffffffffffffffffffffffffffffff\n");
+	//将当前页面转到ruleview!
+	fprintf( cgiOut, "<script type='text/javascript'>\n" );
+	fprintf( cgiOut, "window.location.href='wp_fwruleview.cgi?UN=%s&ruleType=%s';\n", encry, ruleTypeStr );
+	fprintf( cgiOut, "</script>\n" );
 		
-		//将curRule插入到需要的位置
-		insertPos = getRuleByIndex( *root, newIndex-1 );
-		curRule->next = insertPos->next;
-		insertPos->next = curRule;
-	}
-	else if( 0 == newIndex )
-	{
-		//先将curRule断开
-		insertPos = getRuleByIndex( *root, oldIndex-1 );
-		curRule = insertPos->next;
-		insertPos->next = curRule->next;
-		//将curRule插入到开头
-		curRule->next = *root;
-		*root = curRule;
-	}
-	else
-	{
-		//先将curRule断开
-		insertPos = getRuleByIndex( *root, oldIndex-1 );
-		curRule = insertPos->next;
-		insertPos->next = curRule->next;
+	fprintf( cgiOut, "</body>\n" );
+	fprintf( cgiOut, "</html>\n" );
 
-		//找到要插入的位置
-		insertPos = getRuleByIndex( *root, newIndex-1 );
-		curRule->next = insertPos->next ;
-		insertPos->next = curRule;
-
-	}
+	release(lpublic); 
+	release(lfirewall); 
 	
-	//fwSaveDoc(list);
-	return 0;
+	return 0;	
 }
-
-//#endif
-
-
 

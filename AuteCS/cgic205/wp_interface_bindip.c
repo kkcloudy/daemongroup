@@ -69,6 +69,7 @@ int InterfaceBindIp(struct list *lpublic, struct list *lcontrol)
 	char addn[N];
 	char * turn_intf=(char *)malloc(20);
 	memset(turn_intf ,0, 20);
+	char IsSubmit[5] = { 0 };
 	
 //	FILE *fp;
 	memset(encry,0,BUF_LEN);
@@ -88,7 +89,7 @@ int InterfaceBindIp(struct list *lpublic, struct list *lcontrol)
 	fprintf(cgiOut,"<html xmlns=\"http://www.w3.org/1999/xhtml\">\n"\
 				"<head>\n");
 		fprintf(cgiOut,"<meta http-equiv=Content-Type content=text/html; charset=gb2312>\n");
-		fprintf(cgiOut,"<title>%s</title>\n",search(lcontrol,"bind_ip"));
+		fprintf(cgiOut,"<title>%s</title>\n",search(lpublic,"config_interface"));
 		fprintf(cgiOut,"<link rel=stylesheet href=/style.css type=text/css>\n"\
 					"<style type=text/css>\n"\
 	  					".a3{width:30;border:0; text-align:center}\n"\
@@ -153,7 +154,10 @@ fprintf(cgiOut,"<script language=javascript src=/ip.js>"\
 
 	cgiFormStringNoNewlines("MODE",mode,PATH_LENG);
 //*****************************do action while choose different mode*********************************
-	if(cgiFormSubmitClicked("bind_ip")==cgiFormSuccess)
+
+	memset(IsSubmit,0,sizeof(IsSubmit));  
+	cgiFormStringNoNewlines("SubmitFlag", IsSubmit, 5);
+	if((cgiFormSubmitClicked("config_interface")==cgiFormSuccess)&&(strcmp(IsSubmit,"")))
 	{
 		cgiFormStringNoNewlines("port_ip1",ip1,ADD_MOUNT);
 		cgiFormStringNoNewlines("port_ip2",ip2,ADD_MOUNT);
@@ -169,7 +173,7 @@ fprintf(cgiOut,"<script language=javascript src=/ip.js>"\
 
 		if((strlen(ip1)==0)||(strlen(ip2)==0)||(strlen(ip3)==0)||(strlen(ip4)==0))
 		{
-			ShowAlert(search(lpublic,"ip_not_null"));
+			//ShowAlert(search(lpublic,"ip_not_null"));
 			flag1=0;
 		}
 		else
@@ -180,7 +184,7 @@ fprintf(cgiOut,"<script language=javascript src=/ip.js>"\
 		
 		if((strlen(mask1)==0)||(strlen(mask2)==0)||(strlen(mask3)==0)||(strlen(mask4)==0))
 		{
-			ShowAlert( search(lpublic,"mask_not_null"));
+			//ShowAlert( search(lpublic,"mask_not_null"));
 			flag2=0;
 		}
 		else
@@ -207,7 +211,7 @@ fprintf(cgiOut,"<script language=javascript src=/ip.js>"\
 				int ret_alert = system(command);
 				if(ret_alert==0)
 				{
-					ShowAlert(search(lpublic,"oper_succ"));
+					//ShowAlert(search(lpublic,"oper_succ"));
 				}
 				/*
 				else if(ret_alert==256)
@@ -219,12 +223,14 @@ fprintf(cgiOut,"<script language=javascript src=/ip.js>"\
 				*/
 				else if(ret_alert!=0)
 				{
+					flag=0;
 					ShowAlert(search(lcontrol,"con_ip_fail"));
 				}
 			}
 		}
 		else if( get_port[0]=='0' && strcmp(mode,"promiscuous")!=0 )//主接口只能是promiscuous，不能配置
 		{
+			flag=0;
 			ShowAlert(search(lcontrol,"port_mode_main_suport_p"));
 		}
 		else if(strcmp(mode,"")!=0)   
@@ -290,20 +296,79 @@ fprintf(cgiOut,"<script language=javascript src=/ip.js>"\
 						}
 						
 	  				}
-				if(flag)
-			  	{
-		    		if(strcmp(mode,"switch")==0)
-		    		{
-			  		ShowAlert(search(lcontrol,"con_port_mode_succ"));
-		    		}
-					else
-					{
-			  	  		ShowAlert(search(lpublic,"oper_succ"));
-					}
-			  	}
 			}
 		}
+
+		/*********************set_interface_mode***************************/
+		char in_port[20] = { 0 };
+		char interface_mode[10] = { 0 };
+
+		memset(in_port,0,sizeof(in_port));
+  	    cgiFormStringNoNewlines("in_port",in_port,20);
+		memset(interface_mode,0,sizeof(interface_mode));
+  	    cgiFormStringNoNewlines("interface_mode",interface_mode,10);
+  	    if((strcmp(in_port,"")!=0) && (strcmp(interface_mode,"")!=0))
+  	    {
+  	    	status = 1;
+  	    	memset(command,0,PATH_LENG);
+		    snprintf(command, PATH_LENG-1, "set_interface_mode.sh %s %s", in_port, interface_mode);
+
+		    status = system(command); 	 
+		    if(0 != status)    /*command fail*/
+		    {
+		    	flag=0;
+				ShowAlert(search(lcontrol,"set_interface_mode_fail"));
+		    }
+  	    }
+
+		/*********************add_if_description_fail***************************/
+		char if_description[255] = { 0 };
+
+		memset(if_description,0,sizeof(if_description));
+  	    cgiFormStringNoNewlines("if_description",if_description,255);	
+  	    if((strcmp(in_port,"")!=0) && (strcmp(if_description,"")!=0))
+  	    {
+  	    	status = 1;
+  	    	memset(command,0,PATH_LENG);
+		    snprintf(command, PATH_LENG-1, "interface_desc.sh %s %s", in_port, if_description);
+
+		    status = system(command); 	 
+		    if(0 != status)    /*command fail*/
+		    {
+		    	flag=0;
+				ShowAlert(search(lcontrol,"add_if_description_fail"));
+		    }
+  	    }
+		
+		if(flag)
+		{
+			ShowAlert(search(lpublic,"oper_succ"));
+		}
 	}
+
+	if((cgiFormSubmitClicked("no_if_description")==cgiFormSuccess)&&(strcmp(IsSubmit,"")))
+	{
+		char in_port[20] = { 0 };
+		
+		memset(in_port,0,sizeof(in_port));
+  	    cgiFormStringNoNewlines("in_port",in_port,20);
+		if(strcmp(in_port,"")!=0)
+  	    {
+  	    	status = 1;
+  	    	memset(command,0,PATH_LENG);
+		    snprintf(command, PATH_LENG-1, "no_interface_desc.sh %s", in_port);
+
+		    status = system(command); 	 
+		    if(0 == status)    /*command succ*/
+			{
+				ShowAlert(search(lcontrol,"del_if_description_succ"));
+		    }	
+			else
+		    {
+				ShowAlert(search(lcontrol,"del_if_description_fail"));
+		    }
+  	    }
+	}	
 	//*************************************************************************************************************
 	fprintf(cgiOut,"<body>\n"\
 				"<form id=Form1>\n"\
@@ -312,11 +377,11 @@ fprintf(cgiOut,"<script language=javascript src=/ip.js>"\
 	  					"<tr>\n"\
 	    						"<td width=8 align=left valign=top background=/images/di22.jpg><img src=/images/youce4.jpg width=8 height=30/></td>\n"\
 	    						"<td width=51 align=left valign=bottom background=/images/di22.jpg><img src=/images/youce33.jpg width=37 height=24/></td>\n"\
-	    						"<td width=153 align=left valign=bottom id=%s background=/images/di22.jpg>%s</td>\n",search(lpublic,"title_style"),search(lcontrol,"bind_ip"));
+	    						"<td width=153 align=left valign=bottom id=%s background=/images/di22.jpg>%s</td>\n",search(lpublic,"title_style"),search(lpublic,"config_interface"));
 	    			fprintf(cgiOut,"<td width=690 align=right valign=bottom background=/images/di22.jpg>\n");
 					fprintf(cgiOut,"<table width=155 border=0 cellspacing=0 cellpadding=0>\n"\
 	          							"<tr>\n"\
-	          								"<td width=62 align=center><input id=but type=submit name=bind_ip style=background-image:url(/images/%s) value=""></td>\n",search(lpublic,"img_ok"));	
+	          								"<td width=62 align=center><input id=but type=submit name=config_interface style=background-image:url(/images/%s) value=""></td>\n",search(lpublic,"img_ok"));	
 	          					fprintf(cgiOut,"<td width=62 align=center><a href=wp_contrl.cgi?UN=%s target=mainFrame><img src=/images/%s border=0 width=62 height=20/></a></td>\n",encry,search(lpublic,"img_cancel"));
 			  			fprintf(cgiOut,"</tr>\n"\
 	          						"</table>\n");
@@ -360,7 +425,7 @@ fprintf(cgiOut,"<script language=javascript src=/ip.js>"\
 									fprintf(cgiOut,"<tr height=25>"\
   					    								"<td align=left id=tdleft><a href=wp_subintf.cgi?UN=%s target=mainFrame class=top><font id=%s>%s<font></a></td></tr>",encry,search(lpublic,"menu_san"),search(lcontrol,"title_subintf"));  	                    
 									fprintf(cgiOut,"<tr height=26>\n"\
-						  							"<td align=left id=tdleft background=/images/bottom_bg.gif style=\"border-right:0\"><font id=%s>%s</font></td>\n",search(lpublic,"menu_san"),search(lcontrol,"bind_ip"));
+						  							"<td align=left id=tdleft background=/images/bottom_bg.gif style=\"border-right:0\"><font id=%s>%s</font></td>\n",search(lpublic,"menu_san"),search(lpublic,"config_interface"));
 									fprintf(cgiOut,"<tr height=25>"\
   					    							"<td align=left id=tdleft><a href=wp_all_interface.cgi?UN=%s target=mainFrame class=top><font id=%s>%s<font></a></td></tr>",encry,search(lpublic,"menu_san"),search(lcontrol,"interface")); 
 						//set page length
@@ -379,6 +444,7 @@ fprintf(cgiOut,"<script language=javascript src=/ip.js>"\
 											fprintf(cgiOut,"<input type='hidden' name=UN value=%s>",encry);//right
 											fprintf(cgiOut,"<input type='hidden' name=MODE value=%s>",mode);
 											fprintf(cgiOut,"<input type='hidden' name=PORT value=%s>",port_num);
+											fprintf(cgiOut,"<input type='hidden' name=SubmitFlag value=%d>",1);
 
 		 //MY CODE********************************************************************************************************	
 			 								fprintf(cgiOut,"<table align='left'>\n");
@@ -438,6 +504,28 @@ fprintf(cgiOut,"<script language=javascript src=/ip.js>"\
 														fprintf(cgiOut,"</div>"\
 																"</td>");
 												fprintf(cgiOut,"</tr>\n");
+
+												fprintf(cgiOut,"<tr><td height='25'>&nbsp;</td></tr>\n");
+												
+												fprintf(cgiOut,"<tr>\n");
+													fprintf(cgiOut,"<td height='25'>%s:</td>\n",search(lcontrol,"interface_mode"));
+													fprintf(cgiOut,"<td height='25'>"\
+														"<select name=interface_mode id=interface_mode style=width:150px>"\
+															"<option value=></option>"\
+															"<option value=global>global</option>"\
+															"<option value=local>local</option>"\
+														"</select>"\
+													"</td>\n"\
+												"</tr>\n");
+
+												fprintf(cgiOut,"<tr><td height='25'>&nbsp;</td></tr>\n");
+												
+												fprintf(cgiOut,"<tr>\n");
+					 								fprintf(cgiOut,"<td height='25'>%s:</td>\n",search(lcontrol,"add_if_description"));
+													fprintf(cgiOut,"<td height='25'><input type='text' name='if_description' style='width:100%%;height:auto'></td>\n"\
+													"<td align=left style=padding-left:10px><input type=submit style=width:80px; height:36px  border=0 name=no_if_description style=background-image:url(/images/SubBackGif.gif) value=\"%s\"></td>",search(lcontrol,"del_if_description"));
+				 												fprintf(cgiOut,"</tr>\n");
+												
 			 								fprintf(cgiOut,"</table>\n");
 	//*********************************************************END
 										fprintf(cgiOut,"</td>\n"\

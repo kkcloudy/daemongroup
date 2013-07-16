@@ -117,6 +117,7 @@ struct Hmd_Inst_Mgmt{
 	int wid_check;
 	int asd_check;
 	int wsm_check;
+	int delete_flag;//init 0,is deleting 1
 	unsigned int iuh_service_switch;
 	unsigned int iu_service_switch;
 	int wid_check_timeout;
@@ -166,6 +167,7 @@ struct Hmd_L_Inst_Mgmt{
 	int wid_check;
 	int asd_check;
 	int wsm_check;
+	int delete_flag;/*1 is deleting,0 other*/
 	unsigned int iuh_service_switch;
 	unsigned int iu_service_switch;
 	int wid_check_timeout;
@@ -229,8 +231,9 @@ typedef enum{
 	HMD_HANSI_INFO_SYN_LICENSE = 16	,
 	HMD_DELETE_SLOTID_AP_UPDATA_IMG ,    /*fengwenchao add 20120228 for AXSSZFI-680*/
 	HMD_CLEAR_APPLY_IFNAME_FLAG,   /*fengwenchao copy from 1318 for AXSSZFI-839*/
-	HMD_BAKUP_FOREVER_CONFIG
-
+	HMD_BAKUP_FOREVER_CONFIG,
+	HMD_IS_DELETE_HANSI,/*hmd is deleting hansi set inst_state,config hansi is not permitted*/
+	HMD_SERVER_DELETE_HANSI/*delete hansi compeleted,notice server to free hansi*/
 }HmdOP;
 
 typedef enum{

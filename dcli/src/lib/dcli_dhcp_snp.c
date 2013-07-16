@@ -4637,7 +4637,7 @@ DEFUN(config_dhcp_snp_wan_set_intf_cmd_func,
 
 	return CMD_SUCCESS;
 }
-
+/*
 ALIAS(config_dhcp_snp_wan_set_intf_cmd_func,
 	config_dhcp_snp_wan_enable_intf_cmd,
 	"config dhcp-snooping (enable|disable)",
@@ -4646,7 +4646,7 @@ ALIAS(config_dhcp_snp_wan_set_intf_cmd_func,
 	"Config dhcp snooping enable\n"
 	"Config dhcp snooping disable\n"
 );
-
+*/
 /*********************************************************
  *	command: config dhcp-snooping IFNAME add router to host(enable|disable)
  *
@@ -4834,7 +4834,7 @@ DEFUN(config_dhcp_snp_wan_set_arp_intf_cmd_func,
 
 	return CMD_SUCCESS;
 }
-
+/*
 ALIAS(config_dhcp_snp_wan_set_arp_intf_cmd_func,
 	config_dhcp_snp_wan_arp_enable_intf_cmd,
 	"config dhcp-snooping anti-arp-spoof (enable|disable)",
@@ -4844,7 +4844,7 @@ ALIAS(config_dhcp_snp_wan_set_arp_intf_cmd_func,
 	"Config dhcp snooping anti arp spoof enable\n"
 	"Config dhcp snooping anti arp spoof disable\n"
 );
-
+*/
 /*********************************************************
  *	command: config IFNAME anti-arp-spoof (enable|disable)
  *
@@ -4922,7 +4922,7 @@ DEFUN(config_anti_arp_spoof_func,
 
 	return CMD_SUCCESS;
 }
-
+/*
 ALIAS(config_anti_arp_spoof_func,
 		config_intf_anti_arp_spoof_cmd,
 		"config anti-arp-spoof (enable|disable)",
@@ -4931,7 +4931,7 @@ ALIAS(config_anti_arp_spoof_func,
 		"Config interface anti arp spoofing enable\n"
 		"Config interface anti arp spoofing disable\n"
 );
-
+*/
 int dcli_dhcp_snp_config_debug
 (
 	struct vty *vty,
@@ -5729,12 +5729,12 @@ void dcli_dhcp_snp_element_init
 
 	install_element(CONFIG_NODE, &config_dhcp_snp_wan_enable_cmd);
 	install_element(CONFIG_NODE, &config_dhcp_snp_wan_set_intf_cmd);
-	install_element(INTERFACE_NODE, &config_dhcp_snp_wan_enable_intf_cmd);
+//	install_element(INTERFACE_NODE, &config_dhcp_snp_wan_enable_intf_cmd);
 	install_element(CONFIG_NODE, &config_dhcp_snp_wan_set_arp_intf_cmd);
 	install_element(CONFIG_NODE, &config_dhcp_snp_add_router_intf_cmd);
-	install_element(INTERFACE_NODE, &config_dhcp_snp_wan_arp_enable_intf_cmd);
+//	install_element(INTERFACE_NODE, &config_dhcp_snp_wan_arp_enable_intf_cmd);
 	install_element(CONFIG_NODE, &config_anti_arp_spoof_cmd);
-	install_element(INTERFACE_NODE, &config_intf_anti_arp_spoof_cmd);
+//	install_element(INTERFACE_NODE, &config_intf_anti_arp_spoof_cmd);
 	install_element(CONFIG_NODE,&debug_dhcp_snp_info_cmd);
 	install_element(CONFIG_NODE,&no_debug_dhcp_snp_info_cmd);
 	install_element(HIDDENDEBUG_NODE,&debug_dhcp_snp_info_cmd);

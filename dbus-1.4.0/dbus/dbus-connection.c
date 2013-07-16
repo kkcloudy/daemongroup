@@ -619,10 +619,15 @@ _dbus_connection_message_sent (DBusConnection *connection,
    */
   
   link = _dbus_list_get_last_link (&connection->outgoing_messages);
-  _dbus_assert (link != NULL);
+  _dbus_assert (link != NULL);/*coverity info for CID 15290*/
   _dbus_assert (link->data == message);
 
   /* Save this link in the link cache */
+  /*
+  **CID 15290: Dereference null return value (NULL_RETURNS)3. dereference: Dereferencing a pointer that might be null "link" when calling "_dbus_list_unlink(DBusList **, DBusList *)".
+  */
+  if(link == NULL)
+  	return;/*coverity modify for CID 15290*/
   _dbus_list_unlink (&connection->outgoing_messages,
                      link);
   _dbus_list_prepend_link (&connection->link_cache, link);
@@ -1554,7 +1559,10 @@ shared_connections_shutdown (void *data)
       DBusHashIter iter;
       
       _dbus_hash_iter_init (shared_connections, &iter);
-      _dbus_hash_iter_next (&iter);
+      /*
+      **CID 14654: Unchecked return value (CHECKED_RETURN)2. check_return: Calling function "_dbus_hash_iter_next(DBusHashIter *)" without checking return value (as is done elsewhere 13 out of 15 times). 
+      */
+      _dbus_hash_iter_next (&iter);/*coverity info for CID 14654*/
        
       connection = _dbus_hash_iter_get_value (&iter);
 
@@ -1986,7 +1994,7 @@ _dbus_connection_send_preallocated_unlocked_no_update (DBusConnection       *con
                                                        dbus_uint32_t        *client_serial)
 {
   dbus_uint32_t serial;
-  const char *sig;
+  const char *sig;/*coverity info for CID 15780*/
 
   preallocated->queue_link->data = message;
   _dbus_list_prepend_link (&connection->outgoing_messages,
@@ -2001,8 +2009,11 @@ _dbus_connection_send_preallocated_unlocked_no_update (DBusConnection       *con
   dbus_message_ref (message);
   
   connection->n_outgoing += 1;
-
-  sig = dbus_message_get_signature (message);
+/*
+**CID 15780: Unused pointer value (UNUSED_VALUE)returned_pointer: Pointer "sig" returned by "dbus_message_get_signature(message)" is never used.
+*/
+/*coverity info for CID 15780*/
+ sig = dbus_message_get_signature (message);
   
 /*  fprintf (stderr,"Message %p (%s %s %s %s '%s') for %s added to outgoing queue %p, %d pending to send PID is %d\n",
                  message,
@@ -2285,7 +2296,10 @@ connection_timeout_and_complete_all_pending_calls_unlocked (DBusConnection *conn
       DBusHashIter iter;
       
       _dbus_hash_iter_init (connection->pending_replies, &iter);
-      _dbus_hash_iter_next (&iter);
+      /*
+      **CID 14653 (#1 of 1): Unchecked return value (CHECKED_RETURN)2. check_return: Calling function "_dbus_hash_iter_next(DBusHashIter *)" without checking return value (as is done elsewhere 13 out of 15 times). 
+      */
+      _dbus_hash_iter_next (&iter);/*coverity info for CID 14653*/
        
       pending = _dbus_hash_iter_get_value (&iter);
       _dbus_pending_call_ref_unlocked (pending);
@@ -2365,8 +2379,10 @@ check_for_reply_and_update_dispatch_unlocked (DBusConnection  *connection,
 void
 _dbus_connection_block_pending_call (DBusPendingCall *pending)
 {
-  long start_tv_sec, start_tv_usec;
-  long tv_sec, tv_usec;
+  long start_tv_sec = 0;/*coverity modify for CID 15688 15689*/
+  long start_tv_usec = 0;
+  long tv_sec = 0;
+  long tv_usec = 0;
   DBusDispatchStatus status;
   DBusConnection *connection;
   dbus_uint32_t client_serial;
@@ -3934,9 +3950,11 @@ dbus_connection_steal_borrowed_message (DBusConnection *connection,
   CONNECTION_LOCK (connection);
  
   _dbus_assert (message == connection->message_borrowed);
-
+/*
+**CID 15781: Unused pointer value (UNUSED_VALUE)returned_pointer: Pointer "pop_message" returned by "_dbus_list_pop_first(&connection->incoming_messages)" is never used.
+*/
   pop_message = _dbus_list_pop_first (&connection->incoming_messages);
-  _dbus_assert (message == pop_message);
+  _dbus_assert (message == pop_message);/*coverity :assert used "pop_message"*/
   
   connection->n_incoming -= 1;
  
@@ -4625,10 +4643,14 @@ dbus_connection_dispatch (DBusConnection *connection)
       /* unlocks and calls user code */
       _dbus_connection_update_dispatch_status_and_unlock (connection,
                                                           DBUS_DISPATCH_NEED_MEMORY);
+/*
+**CID 14745: Logically dead code (DEADCODE)dead_error_line: Execution cannot reach this statement "dbus_pending_call_unref(pen...". 
+*/
+/*coverity modify for CID 14745*/
+//      if (pending)
+//        dbus_pending_call_unref (pending);
 
-      if (pending)
-        dbus_pending_call_unref (pending);
-      dbus_connection_unref (connection);
+      dbus_connection_unref (connection);/*coverity:CID 15839 no problem*/
       
       return DBUS_DISPATCH_NEED_MEMORY;
     }

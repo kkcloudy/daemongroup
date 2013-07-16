@@ -40,7 +40,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define CGICDEBUGSTART \
 	{ \
 		FILE *dout; \
-		dout = fopen("/home/boutell/public_html/debug", "a"); \
+		dout = fopen("/opt/www/debug", "a"); \
 	
 #define CGICDEBUGEND \
 		fclose(dout); \
@@ -1030,6 +1030,20 @@ static cgiParseResultType cgiParseFormInputAppend(char *data, int length) {/*add
 			free(attr);
 			return cgiParseMemory;
 		}	
+
+		//do not cp 'UN' from cgiQueryString,because some cgis judge the refresh by it.
+		//modify by liutao on 6/28/2013
+		#ifdef CGICDEBUG
+					CGICDEBUGSTART
+					fprintf(dout, "attr:%s\n",attr);
+					CGICDEBUGEND	
+		#endif /* CGICDEBUG */
+
+		if( 0 == strcmp(attr,"UN") ){
+			free(attr);
+			free(value);
+			break;
+		}		
 		/* OK, we have a new pair, add it to the list. */
 		n = (cgiFormEntry *) malloc(sizeof(cgiFormEntry));	
 		if (!n) {

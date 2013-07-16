@@ -405,8 +405,14 @@ main (int argc, char **argv)
           const char *desc;
 
           check_two_pid_descriptors (&pid_fd, "print-pid");
-
+/*
+**CID 15289 (#4 of 4): Dereference null return value (NULL_RETURNS)102. dereference: Incrementing a pointer which might be null: "desc". 
+*/
           desc = strchr (arg, '=');
+          if(desc==NULL)/*coverity modify for CID 15289*/
+          {
+          	exit (1);
+          }
           ++desc;
 
           if (!_dbus_string_append (&pid_fd, desc))

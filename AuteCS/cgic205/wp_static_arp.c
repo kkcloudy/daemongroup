@@ -199,7 +199,7 @@ int cgiMain()
 	pstLabel = LB_create_label();
 	if( NULL != pstLabel )
 	{
-		LB_setLabelName( pstLabel, search(stPageInfo.lcon,"bind_ip") );
+		LB_setLabelName( pstLabel, search(stPageInfo.lpublic,"config_interface") );
 		
 		snprintf( url, sizeof(url),"wp_interface_bindip.cgi?UN=%s", stPageInfo.encry );
 		LB_setLabelUrl( pstLabel, url ); 

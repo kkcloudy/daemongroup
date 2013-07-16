@@ -88,8 +88,10 @@ static char *sysoper_level[] = {"none","read","delete"};
 #define CONLOGINSETTINGFILE   "/etc/login.defs"
 #define CONLOGINSETTINGFILEBK "/etc/login.defs.bak"
 #define CONPWDERRSETTINGFILE  "/etc/pam.d/common-auth"
+#define CONPWDERRSETTINGFILEBK "/etc/pam.d/common-auth.bak"
 #define CONPWDSYSSETTING "/etc/pam.d/common-password"
 
+#define  x_strdup(s)  ( (s) ? strdup(s):NULL )
 
 typedef struct st_deluser{
 	char name[32];
@@ -104,6 +106,14 @@ typedef struct  {
 	   int access_time;           /*用户登录时间*/
 	   int last_access_time;      /*用户最后访问时间*/
 }SESSION_PROFILE;
+
+struct cracklib_options {
+	int min_length;
+	int dig_credit;
+	int up_credit;
+	int low_credit;
+	int oth_credit;
+};
 
 
 //char* dcryption(char *str);
@@ -150,6 +160,7 @@ extern int ccgi_get_login_setting(int* maxdays);
 extern int ccgi_set_login_setting(int maxdays);
 extern int ccgi_get_pwd_err_setting(int* times);
 extern int ccgi_passwd_max_error(int time);
+extern int ccgi_no_passwd_max_error();
 extern int ccgi_get_pwd_unrepeat_setting(int *unreplynum,int *minlen,int *strongflag);
 extern int ccgi_passwd_min_length(int time);
 extern int ccgi_passwd_unrepeat(int time);
@@ -159,6 +170,19 @@ extern void add_user_syslog_by_name(char *username);
 extern void del_user_syslog_by_name(char *username);
 extern int mod_user_syslog_by_name(char *username,char *log_info,char *oper_info);
 extern int get_timeout_threshold();
+/*user_name:4至32个字符，可使用字母、数字、"-"、"."，需以字母开头*/
+/*user_pwd:4至32个字符，必须包含字母、数字、其他字符，不能和user_name相同，不能是回文数*/
+extern int set_system_consolepwd_func1(char *user_name,char *user_pwd);/*返回0表示失败，返回1表示成功*/
+																					/*返回-1表示user name should be 'A'-'Z'  'a'-'z' '1'-'9'or '_'*/
+																					/*返回-2表示user name length should be >=4 & <=32*/
+																					/*返回-3表示user name first char  should be 'A'-'Z' or 'a'-'z'*/
+																					/*返回-4表示user password is a palindrome*/ 
+																					/*返回-5表示user password is too simple*/
+																					/*返回-6表示user password should be not same as username*/
+																					/*返回-7表示user password too short or too long*/
+																					/*返回-8表示user password length should be >= 4 && <=32*/
+
+extern int no_system_consolepwd_func();
 
 #endif
 

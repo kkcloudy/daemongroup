@@ -1845,7 +1845,7 @@ writer_recurse_array (DBusTypeWriter   *writer,
       /* sub is a toplevel/outermost array so we need to write the type data */
 
       /* alloc space for array typecode, element signature */
-      if (!_dbus_string_alloc_space (writer->type_str, 1 + contained_type_len))
+      if (!_dbus_string_alloc_space (writer->type_str, 1 + contained_type_len))/*coverity modify for CID 14936  in dbus-string.c*/
         return FALSE;
 
       if (!_dbus_string_insert_byte (writer->type_str,
@@ -2103,7 +2103,9 @@ _dbus_type_writer_recurse (DBusTypeWriter   *writer,
     contained_type_len = find_len_of_complete_type (contained_type, contained_type_start);
   else
     contained_type_len = 0;
-
+  	/*
+	**coverity modify for CID 14935 in dbus-string.c
+	*/ 
   return _dbus_type_writer_recurse_contained_len (writer, container_type,
                                                   contained_type,
                                                   contained_type_start,
@@ -2136,7 +2138,9 @@ _dbus_type_writer_append_array (DBusTypeWriter   *writer,
     contained_type_len = find_len_of_complete_type (contained_type, contained_type_start);
   else
     contained_type_len = 0;
-
+  /*
+  **coverity modify for CID 14934 in dbus-string.c
+  */ 
   return _dbus_type_writer_recurse_contained_len (writer, DBUS_TYPE_ARRAY,
                                                   contained_type,
                                                   contained_type_start,

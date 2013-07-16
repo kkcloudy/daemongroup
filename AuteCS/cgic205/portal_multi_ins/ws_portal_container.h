@@ -80,6 +80,22 @@ typedef struct{
 	int  user_group_mask;//为1表示只有管理员才能看到该label
 }STLabelHelper;
 
+typedef enum {
+	WP_EAG_USERLIST = 0,
+	WP_EAG_CONF,
+	WP_EAG_PORTAL,
+	WP_EAG_RADIUS,
+	WP_EAG_CAPTIVE,
+	WP_EAG_WHITELIST,
+	WP_EAG_BLACKLIST,
+	WP_EAG_NASID,
+	WP_EAG_NASPORTID,
+	WP_EAG_PDC,
+	WP_EAG_RDC,
+	WP_EAG_FTP,
+} ST_LEFT_ORDER;
+
+
 
 int init_portal_container( STPortalContainer **pp_stSnmpdContainer );
 int release_portal_container( STPortalContainer **pp_stSnmpdContainer );

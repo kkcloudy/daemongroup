@@ -39,8 +39,17 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "ws_usrinfo.h"
 #include "ws_ec.h"
 #include "ws_conf_engine.h"
+#include "ws_init_dbus.h"
 
 #include "ws_eag_conf.h"
+#include "ws_eag_auto_conf.h"
+#include "eag/eag_errcode.h"
+#include "eag/eag_conf.h"
+#include "eag/eag_interface.h"
+#include "ws_init_dbus.h"
+#include "ws_dcli_vrrp.h"
+#include "ws_dbus_list_interface.h"
+
 
 #ifndef VLAN_MAPING
 #define VLAN_MAPING
@@ -65,6 +74,10 @@ typedef struct{
 	int all_page_num;
 } STPageInfo;
 
+static dbus_parameter parameter;
+static instance_parameter *paraHead1 = NULL;
+static void *ccgi_connection = NULL;
+static char plotid[10] = {0};
 
 
 /***************************************************************
@@ -84,55 +97,62 @@ static int s_wtpwlanmapvlan_content_of_page( STPageInfo *pstPageInfo );
 ****************************************************************/
 int cgiMain()
 {
+	int ret1 = 0;
 	STPageInfo stPageInfo;
-	char *tmp=(char *)malloc(64);
-	int ret;	
-	
-	if(access(MULTI_WWV_F,0)!=0)
-	{
-		create_eag_xml(MULTI_WWV_F);
-		write_status_file( MULTI_WWV_STATUS, "start" );
-	}
-	else
-	{
-	  ret=if_xml_file(MULTI_WWV_F);
-	  if(ret!=0)
-	  {
-		   memset(tmp,0,64);
-		   sprintf(tmp,"sudo rm  %s > /dev/null",MULTI_WWV_F);
-		   system(tmp);
-		   create_eag_xml(MULTI_WWV_F);
-		   write_status_file( MULTI_WWV_STATUS, "start" );
-	  }
-	}
-    free(tmp);
+	int ret;		
 
+	DcliWInit();
+	ccgi_dbus_init();
 	
 //初始化常用公共变量
 	memset( &stPageInfo, 0,sizeof(STPageInfo) );
+	ret1 = init_portal_container(&(stPageInfo.pstPortalContainer));
+	stPageInfo.lpublic = stPageInfo.pstPortalContainer->lpublic;
+	stPageInfo.lauth=stPageInfo.pstPortalContainer->llocal;//get_chain_head("../htdocs/text/authentication.txt");
 
 	cgiFormStringNoNewlines("UN", stPageInfo.encry, BUF_LEN);
 	
-	stPageInfo.username_encry=dcryption(stPageInfo.encry);
-    if( NULL == stPageInfo.username_encry )
+	//stPageInfo.username_encry=dcryption(stPageInfo.encry);
+    if( WS_ERR_PORTAL_ILLEGAL_USER == ret1 )
     {
 	    ShowErrorPage(search(stPageInfo.lpublic,"ill_user")); 	  /*用户非法*/
+		release_portal_container(&(stPageInfo.pstPortalContainer));
 		return 0;
 	}
-	stPageInfo.iUserGroup = checkuser_group( stPageInfo.username_encry );
+	//stPageInfo.iUserGroup = checkuser_group( stPageInfo.username_encry );
+	stPageInfo.iUserGroup = stPageInfo.pstPortalContainer->iUserGroup;
 
 	//stPageInfo.pstModuleContainer = MC_create_module_container();
-	init_portal_container(&(stPageInfo.pstPortalContainer));
 	if( NULL == stPageInfo.pstPortalContainer )
 	{
+		release_portal_container(&(stPageInfo.pstPortalContainer));
 		return 0;
 	}
-	stPageInfo.lpublic=stPageInfo.pstPortalContainer->lpublic;//get_chain_head("../htdocs/text/public.txt");
-	stPageInfo.lauth=stPageInfo.pstPortalContainer->llocal;//get_chain_head("../htdocs/text/authentication.txt");
 	
 	stPageInfo.fp = cgiOut;
 
-	MC_setActiveLabel( stPageInfo.pstPortalContainer->pstModuleContainer, 9 );
+	memset(plotid,0,sizeof(plotid));
+	cgiFormStringNoNewlines("plotid", plotid, sizeof(plotid)); 
+	
+	list_instance_parameter(&paraHead1, INSTANCE_STATE_WEB);
+	if (NULL == paraHead1) {
+		return 0;
+	}
+	if(strcmp(plotid, "") == 0)
+	{
+		parameter.instance_id = paraHead1->parameter.instance_id;
+		parameter.local_id = paraHead1->parameter.local_id;
+		parameter.slot_id = paraHead1->parameter.slot_id;
+		snprintf(plotid,sizeof(plotid)-1,"%d-%d-%d",parameter.slot_id, parameter.local_id, parameter.instance_id);
+	}
+	else
+	{
+		get_slotID_localID_instanceID(plotid, &parameter);
+	}
+	ccgi_ReInitDbusConnection(&ccgi_connection, parameter.slot_id, DISTRIBUTFAG);
+	fprintf(stderr, "----------------------------------------------plotid=%s\n", plotid);
+
+	MC_setActiveLabel( stPageInfo.pstPortalContainer->pstModuleContainer, WP_EAG_NASPORTID);
 
 	MC_setPrefixOfPageCallBack( stPageInfo.pstPortalContainer->pstModuleContainer, (MC_CALLBACK)s_wtpwlanmapvlan_prefix_of_page, &stPageInfo );
 	MC_setContentOfPageCallBack( stPageInfo.pstPortalContainer->pstModuleContainer, (MC_CALLBACK)s_wtpwlanmapvlan_content_of_page, &stPageInfo );
@@ -156,6 +176,8 @@ int cgiMain()
 	
 	MC_writeHtml( stPageInfo.pstPortalContainer->pstModuleContainer );
 	
+	free_instance_parameter_list(&paraHead1);
+	
 	release_portal_container(&(stPageInfo.pstPortalContainer));
 	
 	
@@ -165,15 +187,30 @@ int cgiMain()
 
 static int s_wtpwlanmapvlan_prefix_of_page( STPageInfo *pstPageInfo )
 {
+	struct list * portal_auth = pstPageInfo->lauth;
 	char del_rule[10] = "";
-	char index[32] = "";
-	char nodez[32];
-	memset(nodez,0,32);
-	char attz[50];
-	memset(attz,0,50);
+	int ret = -1;
+	char wlansid[10] = {0};
+	char wlaneid[10] = {0};
+	char wtpsid[10] = {0};
+	char wtpeid[10] = {0};
+	char vlansid[10] = {0};
+	char vlaneid[10] = {0};
+	unsigned long wlanid_begin = 0;
+	unsigned long wlanid_end = 0;
+	unsigned long wtpid_begin = 0;
+	unsigned long wtpid_end = 0;
+	unsigned long vlanid_begin = 0;
+	unsigned long vlanid_end = 0;
+	char types[10] = {0};
+
+	struct eag_id_range_t wlanid = {0};
+	struct eag_id_range_t wtpid = {0};
+	struct eag_id_range_t vlanid = {0};
+	unsigned long nasportid = 0;
+	char nasp[10] = {0};
 
 	FILE * fp = pstPageInfo->fp;
-	char cur_page_num_str[10]="";
 	
 	fprintf(fp, "<style type=text/css>"\
 	 	 		"#div1{ width:58px; height:18px; border:1px solid #666666; background-color:#f9f8f7;}"\
@@ -195,8 +232,7 @@ static int s_wtpwlanmapvlan_prefix_of_page( STPageInfo *pstPageInfo )
 		   		"}\n"\
 		   		"</script>\n");
 	
-	cgiFormStringNoNewlines( "DELRULE", del_rule, 10 );
-	fprintf( stderr, "del rule = %s", del_rule );
+	cgiFormStringNoNewlines( "DELRULE", del_rule, sizeof(del_rule) );
 
 	if( cgiFormSubmitClicked(SUBMIT_NAME) == cgiFormSuccess )
 	{
@@ -207,19 +243,43 @@ static int s_wtpwlanmapvlan_prefix_of_page( STPageInfo *pstPageInfo )
 
 	if( !strcmp(del_rule, "delete") )
 	{
-		cgiFormStringNoNewlines( "PLOTIDZ", index, 32 );
-		cgiFormStringNoNewlines( "NODEZ", nodez, 32 );
-		cgiFormStringNoNewlines( "ATTZ", attz, 50 );
-		delete_eag_onelevel(MULTI_WWV_F, nodez, ATT_Z, attz);		
+		cgiFormStringNoNewlines( "TYPE", types, sizeof(types) );
+		cgiFormStringNoNewlines( "WLANSID", wlansid, sizeof(wlansid) );
+		cgiFormStringNoNewlines( "WLANEID", wlaneid, sizeof(wlaneid) );
+		cgiFormStringNoNewlines( "WTPSID", wtpsid, sizeof(wtpsid) );
+		cgiFormStringNoNewlines( "WTPEID", wtpeid, sizeof(wtpeid) );
+		cgiFormStringNoNewlines( "VLANSID", vlansid, sizeof(vlansid) );
+		cgiFormStringNoNewlines( "VLANEID", vlaneid, sizeof(vlaneid) );
+		cgiFormStringNoNewlines( "NASP", nasp, sizeof(nasp) );
 		
+		wlanid_begin = strtoul(wlansid, NULL, 10);
+		wlanid_end = strtoul(wlaneid, NULL, 10);
+		wtpid_begin = strtoul(wtpsid, NULL, 10);
+		wtpid_end = strtoul(wtpeid, NULL, 10);
+		vlanid_begin = strtoul(vlansid, NULL, 10);
+		vlanid_end = strtoul(vlaneid, NULL, 10);
+		nasportid = strtoul(nasp, NULL, 10);
+		
+		if(0 == strcmp(types,"1"))
+		{
+			wlanid.begin = wlanid_begin;
+			wlanid.end = wlanid_end;
+			wtpid.begin = wtpid_begin;
+			wtpid.end= wtpid_end;
+			ret = eag_del_nasportid(ccgi_connection, parameter.local_id, parameter.instance_id, wlanid, wtpid, vlanid, NASPORTID_KEYTYPE_WLAN_WTP, nasportid);
+		}
+		else if(0 == strcmp(types,"2"))
+		{
+			vlanid.begin = vlanid_begin;
+			vlanid.end = vlanid_end;
+			ret = eag_del_nasportid(ccgi_connection, parameter.local_id, parameter.instance_id, wlanid, wtpid, vlanid, NASPORTID_KEYTYPE_VLAN, nasportid);
+		}
 		fprintf( fp, "<script type='text/javascript'>\n" );
-		fprintf( fp, "window.location.href='wp_wtpwlan_map_vlan.cgi?UN=%s&plotid=%s';\n", pstPageInfo->encry ,index);
+		fprintf( fp, "window.location.href='wp_wtpwlan_map_vlan.cgi?UN=%s&plotid=%s';\n", pstPageInfo->encry ,plotid);
 		fprintf( fp, "</script>\n" );
 	
 	}
 
-	cgiFormStringNoNewlines( "cur_page_num", cur_page_num_str, sizeof(cur_page_num_str) );
-	
 	return 0;
 }
 
@@ -229,68 +289,31 @@ static int s_wtpwlanmapvlan_content_of_page( STPageInfo *pstPageInfo )
 	struct list * portal_public = pstPageInfo->lpublic;
 	struct list * portal_auth = pstPageInfo->lauth;
 	int i, cl = 0;
+	int ret = 0;
 	char menu[21]="";
 	
-    char *urlnode=(char *)malloc(20);
-	memset(urlnode,0,20);
-	cgiFormStringNoNewlines( "plotid", urlnode, 20 );
-
-	char addpid[10];
-	memset(addpid,0,10);
-
-	char plotidz[10];
-	memset(plotidz,0,10);
-
-    if(strcmp(urlnode,"")==0)
-		strcpy(addpid,PLOTID_ONE);
-	else
-		strcpy(addpid,urlnode);
-
-	int locate = 0;
-
 	fprintf(fp,	"<table border=0 cellspacing=0 cellpadding=0>"\
-					"<tr>"\
-					"<td><a id=link href=wp_add_wtpwlan_map_vlan.cgi?UN=%s&plotid=%s>%s</a></td>", pstPageInfo->encry,addpid,search(portal_auth,"add_vlan_maping") );
+					"<tr>");
+	if(pstPageInfo->iUserGroup == 0)
+		fprintf(fp,	"<td><a id=link href=wp_add_wtpwlan_map_vlan.cgi?UN=%s&plotid=%s>%s</a></td>", pstPageInfo->encry,plotid,search(portal_auth,"add_vlan_maping") );
 	fprintf(fp, "</tr>");
 	fprintf(fp,"<tr height=7><td></td></tr>");
 	fprintf(fp,"<tr>\n");
 	fprintf(fp,"<td>%s</td>",search(portal_auth,"plot_idz"));
-	fprintf(fp,"<td><select name=port_id onchange=plotid_change(this)>");
-	if(strcmp(urlnode,"")==0)
+	fprintf(fp,"<td><select name=plotid onchange=plotid_change(this)>");
+	instance_parameter *pq = NULL;
+	char temp[10] = { 0 };
+	
+	for (pq=paraHead1;(NULL != pq);pq=pq->next)
 	{
-		fprintf(fp,"<option value='%s'>1</option>",PLOTID_ONE);
-		fprintf(fp,"<option value='%s'>2</option>",PLOTID_TWO);
-		fprintf(fp,"<option value='%s'>3</option>",PLOTID_THREE);
-		fprintf(fp,"<option value='%s'>4</option>",PLOTID_FOUR);
-		fprintf(fp,"<option value='%s'>5</option>",PLOTID_FIVE);
-	}
-	else
-	{
-		if(strcmp(urlnode,PLOTID_ONE)==0)
-			fprintf(fp,"<option value='%s' selected>1</option>",PLOTID_ONE);
-		else
-			fprintf(fp,"<option value='%s'>1</option>",PLOTID_ONE);
-
-		if(strcmp(urlnode,PLOTID_TWO)==0)
-			fprintf(fp,"<option value='%s' selected>2</option>",PLOTID_TWO);
-		else
-			fprintf(fp,"<option value='%s'>2</option>",PLOTID_TWO);
-
-		if(strcmp(urlnode,PLOTID_THREE)==0)
-			fprintf(fp,"<option value='%s' selected>3</option>",PLOTID_THREE);
-		else
-			fprintf(fp,"<option value='%s'>3</option>",PLOTID_THREE);
-
-		if(strcmp(urlnode,PLOTID_FOUR)==0)
-			fprintf(fp,"<option value='%s' selected>4</option>",PLOTID_FOUR);
-		else
-			fprintf(fp,"<option value='%s'>4</option>",PLOTID_FOUR);
-
-		if(strcmp(urlnode,PLOTID_FIVE)==0)
-			fprintf(fp,"<option value='%s' selected>5</option>",PLOTID_FIVE);
-		else
-			fprintf(fp,"<option value='%s'>5</option>",PLOTID_FIVE);
-	}
+		memset(temp,0,sizeof(temp));
+		snprintf(temp,sizeof(temp)-1,"%d-%d-%d",pq->parameter.slot_id,pq->parameter.local_id,pq->parameter.instance_id);
+		
+		if (strcmp(plotid, temp) == 0)
+			fprintf(cgiOut,"<option value='%s' selected>%s</option>\n",temp,temp);
+		else	       
+			fprintf(cgiOut,"<option value='%s'>%s</option>\n",temp,temp);
+	}	
 	fprintf(fp,"</select></td>");
 	fprintf(fp, "</tr>");
 	fprintf(fp,"<tr height=7><td></td></tr>");
@@ -305,90 +328,105 @@ static int s_wtpwlanmapvlan_content_of_page( STPageInfo *pstPageInfo )
 	
 
 	fprintf(fp,"</table>");	
-	fprintf(fp,	"<table border=0 width=700 cellspacing=0 cellpadding=0>"\
-				"<tr height=30 align=left bgcolor=#eaeff9>");
-	fprintf(fp, "<th width=400>%s</th>", search(portal_auth,"wlan_id_begin") );	
-	fprintf(fp, "<th width=400>%s</th>", search(portal_auth,"wlan_id_end") );	
-	fprintf(fp, "<th width=400>%s</th>", search(portal_auth,"wtp_id_begin") );	
-	fprintf(fp, "<th width=400>%s</th>", search(portal_auth,"wtp_id_end") );
-	fprintf(fp, "<th width=200>%s</th>", search(portal_auth,"vlan_id") );
-	fprintf(fp, "<th width=13>&nbsp;</th>"\
+	fprintf(fp,	"<table border=0 width=700 cellspacing=0 cellpadding=0>");
+	
+	struct nasportid_conf nasportid;
+	memset(&nasportid, 0, sizeof(nasportid));
+	ret = eag_get_nasportid(ccgi_connection, parameter.local_id, parameter.instance_id, &nasportid);
+
+	
+	fprintf(fp, "<tr height=30 align=left bgcolor=#eaeff9>");
+	fprintf(fp, "<th width=100>%s</th>", "Index" );
+	fprintf(fp, "<th width=100>%s</th>", search(portal_auth,"wlan_id_begin") );	
+	fprintf(fp, "<th width=100>%s</th>", search(portal_auth,"wlan_id_end") );	
+	fprintf(fp, "<th width=100>%s</th>", search(portal_auth,"wtp_id_begin") );	
+	fprintf(fp, "<th width=100>%s</th>", search(portal_auth,"wtp_id_end") );
+	fprintf(fp, "<th width=100>%s</th>", "nasportid" );
+	fprintf(fp, "<th width=100>&nbsp;</th>"\
 				"</tr>");
-
-
-	struct st_wwvz c_head,*cq;
-	int cnum,cflag=-1;
-	char *tempz=(char *)malloc(20);
-	memset(tempz,0,20);
-
-	char *wwzkey=(char *)malloc(50);
-	memset(wwzkey,0,50);
-	if(strcmp(urlnode,"")!=0)
+	for (i = 0; i < nasportid.current_num; i++)
 	{
-		memset(tempz,0,20);
-		sprintf(tempz,"%s%s",MTW_N,urlnode);
-	}
-	else
-	{
-		memset(tempz,0,20);
-		sprintf(tempz,"%s%s",MTW_N,PLOTID_ONE);
-	}
-	
-	cflag=read_wwvz_xml(MULTI_WWV_F, &c_head, &cnum, tempz);
-	
-    if(cflag==0)
-	{
-		cq=c_head.next;
-		while(cq !=NULL)
-		{
-		    locate ++;
 			memset(menu,0,21);
 			strcpy(menu,"menulist");
 
 			char temp[5];
 			memset(&temp,0,5);
-			sprintf(temp,"%d",locate);
+			sprintf(temp,"%d",i);
 			strcat(menu,temp);
 
-			memset(plotidz,0,10);
-			if(strcmp(urlnode,"")==0)
-				strcpy(plotidz,PLOTID_ONE);
-			else
-				strcpy(plotidz,urlnode);
-
-	        memset(wwzkey,0,50);
-            sprintf(wwzkey,"%s.%s.%s.%s",cq->wlansidz,cq->wlaneidz,cq->wtpsidz,cq->wtpeidz);
-			fprintf(fp,	"<tr height=30 align=left bgcolor=%s>", setclour(cl) );
-
-			fprintf(fp,	"<td>%s</td>", cq->wlansidz);
-			fprintf(fp,	"<td>%s</td>", cq->wlaneidz);
-			fprintf(fp,	"<td>%s</td>", cq->wtpsidz);
-			fprintf(fp,	"<td>%s</td>", cq->wtpeidz);
-			fprintf(fp,	"<td>%s</td>", cq->vlanidz);
-			fprintf(fp, "<td>");
-			fprintf(fp, "<div style=\"position:relative; z-index:%d\" onmouseover=\"popMenu('%s');\" onmouseout=\"popMenu('%s');\">",(512-locate),menu,menu);
-			fprintf(fp, "<img src=/images/detail.gif>"\
-			"<div id=%s style=\"display:none; position:absolute; top:5px; left:0;\">",menu);
-			fprintf(fp, "<div id=div1>");
-			fprintf(fp, "<div id=div2 onmouseover=\"this.style.backgroundColor='#b6bdd2'\" onmouseout=\"this.style.backgroundColor='#f9f8f7'\"><a id=link href=wp_wtpwlan_map_vlan.cgi?UN=%s&DELRULE=%s&PLOTIDZ=%s&NODEZ=%s&ATTZ=%s target=mainFrame>%s</a></div>", pstPageInfo->encry , "delete" ,plotidz,tempz,wwzkey,search(portal_public,"delete"));
-			fprintf(fp, "</div>"\
-			"</div>"\
-			"</div>");
-			fprintf(fp,	"</td>");
-			fprintf(fp,	"</tr>");
-
-			cq=cq->next;
-			cl = !cl;
-		}			
+			if(NASPORTID_KEYTYPE_WLAN_WTP == nasportid.nasportid_map[i].key_type)
+			{
+				fprintf(fp,	"<tr height=30 align=left bgcolor=%s>", setclour(cl) );
+				fprintf(fp, "<td>%d.wlanid</td>",i+1);
+				fprintf(fp,	"<td>%u</td>", nasportid.nasportid_map[i].key.wlan_wtp.wlanid_begin);
+				fprintf(fp,	"<td>%u</td>", nasportid.nasportid_map[i].key.wlan_wtp.wlanid_end);
+				fprintf(fp,	"<td>%u</td>", nasportid.nasportid_map[i].key.wlan_wtp.wtpid_begin);
+				fprintf(fp,	"<td>%u</td>", nasportid.nasportid_map[i].key.wlan_wtp.wtpid_end);
+				fprintf(fp,	"<td>%u</td>", nasportid.nasportid_map[i].nasportid);
+				fprintf(fp, "<td>");
+				if(pstPageInfo->iUserGroup == 0)
+					{
+						fprintf(fp, "<div style=\"position:relative; z-index:%d\" onmouseover=\"popMenu('%s');\" onmouseout=\"popMenu('%s');\">",(MAX_WWV_OPTION_NUM-i),menu,menu);
+						fprintf(fp, "<img src=/images/detail.gif>"\
+						"<div id=%s style=\"display:none; position:absolute; top:5px; left:0;\">",menu);
+						fprintf(fp, "<div id=div1>");
+						fprintf(fp, "<div id=div2 onmouseover=\"this.style.backgroundColor='#b6bdd2'\" onmouseout=\"this.style.backgroundColor='#f9f8f7'\"><a id=link href=wp_wtpwlan_map_vlan.cgi?UN=%s&DELRULE=%s&plotid=%s&WLANSID=%u&WLANEID=%u&WTPSID=%u&WTPEID=%u&TYPE=1&NASP=%u target=mainFrame>%s</a></div>", pstPageInfo->encry , "delete" ,plotid,nasportid.nasportid_map[i].key.wlan_wtp.wlanid_begin,nasportid.nasportid_map[i].key.wlan_wtp.wlanid_end,nasportid.nasportid_map[i].key.wlan_wtp.wtpid_begin,nasportid.nasportid_map[i].key.wlan_wtp.wtpid_end,nasportid.nasportid_map[i].nasportid,search(portal_public,"delete"));
+						/*fprintf(fp, "<div id=div2 onmouseover=\"this.style.backgroundColor='#b6bdd2'\" onmouseout=\"this.style.backgroundColor='#f9f8f7'\"><a id=link href=wp_edit_wtpwlan_map_vlan.cgi?UN=%s&PLOTIDZ=%s&NODEZ=%s&WLANSID=%s&WLANEID=%s&WTPSID=%s&WTPEID=%s&VLANID=%s&ATTZ=%s target=mainFrame>%s</a></div>", \
+								pstPageInfo->encry ,plotid,tempz,cq->wlansidz,cq->wlaneidz,cq->wtpsidz,cq->wtpeidz,cq->vlanidz,wwzkey,search(portal_public,"config"));*/
+						fprintf(fp, "</div>"\
+						"</div>"\
+						"</div>");
+					}
+				fprintf(fp,	"</td>");
+				fprintf(fp,	"</tr>");
+				cl = !cl;
+			}
 	}
-	
-	if((cflag==0 )&& (cnum > 0))
-		Free_wwvz_info(&c_head);	
-	
-	free(tempz);
-	free(urlnode);
-	free(wwzkey);
+	fprintf(fp, "<tr height=30 align=left bgcolor=#eaeff9>");
+	fprintf(fp, "<th width=100>%s</th>", "Index" );
+	fprintf(fp, "<th width=200 colspan=2>%s</th>", "vlan begin" );	
+	fprintf(fp, "<th width=200 colspan=2>%s</th>", "vlan end" );
+	fprintf(fp, "<th width=100>%s</th>", "nasportid" );
+	fprintf(fp, "<th width=100>&nbsp;</th>"\
+				"</tr>");
+	for (i = 0; i < nasportid.current_num; i++)
+	{
+			memset(menu,0,21);
+			strcpy(menu,"menulist");
+
+			char temp[5];
+			memset(&temp,0,5);
+			sprintf(temp,"%d",i);
+			strcat(menu,temp);
+
+			if(NASPORTID_KEYTYPE_VLAN == nasportid.nasportid_map[i].key_type)
+			{
+				fprintf(fp,	"<tr height=30 align=left bgcolor=%s>", setclour(cl) );
+				fprintf(fp, "<td>%d.vlanid</td>",i+1);
+				fprintf(fp,	"<td colspan=2>%u</td>", nasportid.nasportid_map[i].key.vlan.vlanid_begin);
+				fprintf(fp,	"<td colspan=2>%u</td>", nasportid.nasportid_map[i].key.vlan.vlanid_end);
+				fprintf(fp,	"<td>%u</td>", nasportid.nasportid_map[i].nasportid);
+				fprintf(fp, "<td>");
+				if(pstPageInfo->iUserGroup == 0)
+					{
+						fprintf(fp, "<div style=\"position:relative; z-index:%d\" onmouseover=\"popMenu('%s');\" onmouseout=\"popMenu('%s');\">",(MAX_WWV_OPTION_NUM-i),menu,menu);
+						fprintf(fp, "<img src=/images/detail.gif>"\
+						"<div id=%s style=\"display:none; position:absolute; top:5px; left:0;\">",menu);
+						fprintf(fp, "<div id=div1>");
+						fprintf(fp, "<div id=div2 onmouseover=\"this.style.backgroundColor='#b6bdd2'\" onmouseout=\"this.style.backgroundColor='#f9f8f7'\"><a id=link href=wp_wtpwlan_map_vlan.cgi?UN=%s&DELRULE=%s&plotid=%s&VLANSID=%u&VLANEID=%u&TYPE=2&NASP=%u target=mainFrame>%s</a></div>", pstPageInfo->encry , "delete" ,plotid,nasportid.nasportid_map[i].key.vlan.vlanid_begin,nasportid.nasportid_map[i].key.vlan.vlanid_end,nasportid.nasportid_map[i].nasportid,search(portal_public,"delete"));
+						/*fprintf(fp, "<div id=div2 onmouseover=\"this.style.backgroundColor='#b6bdd2'\" onmouseout=\"this.style.backgroundColor='#f9f8f7'\"><a id=link href=wp_edit_wtpwlan_map_vlan.cgi?UN=%s&PLOTIDZ=%s&NODEZ=%s&WLANSID=%s&WLANEID=%s&WTPSID=%s&WTPEID=%s&VLANID=%s&ATTZ=%s target=mainFrame>%s</a></div>", \
+								pstPageInfo->encry ,plotid,tempz,cq->wlansidz,cq->wlaneidz,cq->wtpsidz,cq->wtpeidz,cq->vlanidz,wwzkey,search(portal_public,"config"));*/
+						fprintf(fp, "</div>"\
+						"</div>"\
+						"</div>");
+					}
+				fprintf(fp,	"</td>");
+				fprintf(fp,	"</tr>");
+				cl = !cl;
+			}
+	}
 	fprintf(fp,	"</table>");
-	
+	fprintf(fp,"<input type=hidden name=plotid value=%s>",plotid);
+	fprintf(fp,"<input type=hidden name=UN value=%s>",pstPageInfo->encry);
 	return 0;	
 }

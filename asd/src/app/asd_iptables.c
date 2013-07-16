@@ -70,7 +70,7 @@ int asd_connect_up(const unsigned int user_ip)
 	
 	if (0 == user_ip>>24)
 	{
-		syslog(LOG_ERR,"asd_connect_up error.ip range error! ip_addr == %s",ip_str);	
+		syslog(LOG_ERR,"[%d-%d]asd_connect_up error.ip range error! ip_addr == %s",slotid,vrrid,ip_str);	
 		return ASD_IPTABLES_RETURN_CODE_ERROR;
 	}
 	
@@ -88,14 +88,14 @@ int asd_connect_up(const unsigned int user_ip)
 	if (ASD_IPTABLES_RETURN_CODE_OK != asd_check_is_chain("filter",chain_name)  
 		|| ASD_IPTABLES_RETURN_CODE_OK != asd_check_is_chain("nat",chain_name_nat))
 	{
-		syslog(LOG_ERR,"asd connect_up error,one or more chain is not exist,chain:%s,%s",chain_name,chain_name_nat);
+		syslog(LOG_ERR,"[%d-%d]asd connect_up error,one or more chain is not exist,chain:%s,%s",slotid,vrrid,chain_name,chain_name_nat);
 		return ASD_IPTABLES_RETURN_CODE_ERROR;
 	}
 
 	/* serch if the entry is exist */
 	if (ASD_IPTABLES_RETURN_CODE_NOT_FOUND != asd_get_num_of_entry("filter",chain_name,user_ip,ASD_IPTABLES_SOURCE,&entry_num))
 	{
-		syslog(LOG_ERR,"asd connect_up error,entry is exist in the chain of table \"filter\":user_ip==%s,chain_name==%s",ip_str,chain_name);
+		syslog(LOG_ERR,"[%d-%d]asd connect_up error,entry is exist in the chain of table \"filter\":user_ip==%s,chain_name==%s",slotid,vrrid,ip_str,chain_name);
 		return ASD_IPTABLES_RETURN_CODE_ERROR;
 	}
 	
@@ -104,7 +104,7 @@ int asd_connect_up(const unsigned int user_ip)
 		|| ASD_IPTABLES_RETURN_CODE_OK !=  asd_add_and_del_entry("filter",chain_name,0,user_ip,target_name,ASD_IPTABLES_ADD)
 		|| ASD_IPTABLES_RETURN_CODE_OK !=  asd_add_and_del_entry("nat",chain_name_nat,user_ip,0,target_name_nat,ASD_IPTABLES_ADD))
 	{
-		syslog(LOG_ERR,"asd connect_up error, add entry error");
+		syslog(LOG_ERR,"[%d-%d]asd connect_up error, add entry error",slotid,vrrid);
 		return ASD_IPTABLES_RETURN_CODE_ERROR;
 	}
 
@@ -143,7 +143,7 @@ int asd_connect_down(const unsigned int user_ip)
 	/* check input */
 	if (0 == user_ip>>24)
 	{
-		syslog(LOG_ERR,"asd connect_down error. ip range error! ip_addr == %s",ip_str);	
+		syslog(LOG_ERR,"[%d-%d]asd connect_down error. ip range error! ip_addr == %s",slotid,vrrid,ip_str);	
 		return ASD_IPTABLES_RETURN_CODE_ERROR;
 	}
 	
@@ -161,7 +161,7 @@ int asd_connect_down(const unsigned int user_ip)
 	if (ASD_IPTABLES_RETURN_CODE_OK != asd_check_is_chain("filter",chain_name) 
 		|| ASD_IPTABLES_RETURN_CODE_OK != asd_check_is_chain("nat",chain_name_nat))
 	{
-		syslog(LOG_ERR,"asd connect_down error,one or more chain is not exist,chain:%s,%s",chain_name,chain_name_nat);
+		syslog(LOG_ERR,"[%d-%d]asd connect_down error,one or more chain is not exist,chain:%s,%s",slotid,vrrid,chain_name,chain_name_nat);
 		return ASD_IPTABLES_RETURN_CODE_ERROR;
 	}
 	
@@ -170,7 +170,7 @@ int asd_connect_down(const unsigned int user_ip)
 		|| ASD_IPTABLES_RETURN_CODE_OK !=  asd_add_and_del_entry("filter",chain_name,0,user_ip,target_name,ASD_IPTABLES_DELETE)
 		|| ASD_IPTABLES_RETURN_CODE_OK !=  asd_add_and_del_entry("nat",chain_name_nat,user_ip,0,target_name_nat,ASD_IPTABLES_DELETE) )
 	{
-		syslog(LOG_ERR,"asd connect_down error,delete entry error");
+		syslog(LOG_ERR,"[%d-%d]asd connect_down error,delete entry error",slotid,vrrid);
 		return ASD_IPTABLES_RETURN_CODE_ERROR;
 	}
 
@@ -201,20 +201,20 @@ int  asd_check_is_chain(const char * table_name,const char * chain_name)
 	iptc_handle_t handle = NULL;
 	if (NULL == table_name || NULL == chain_name)
 	{
-		syslog(LOG_ERR,"function asd check_is_chain  error,input error");
+		syslog(LOG_ERR,"[%d-%d]function asd check_is_chain  error,input error",slotid,vrrid);
 		goto return_error;
 	}
 	handle = iptc_init(table_name);
 	if (NULL == handle)
 	{
-		syslog(LOG_ERR,"function asd check_is_chain  error,can't init iptc handle,table name:%s",table_name);
+		syslog(LOG_ERR,"[%d-%d]function asd check_is_chain  error,can't init iptc handle,table name:%s",slotid,vrrid,table_name);
 		goto return_error;
 	}
 	
 	/*check chain exist*/
 	if (0 == iptc_is_chain(chain_name, handle))
 	{
-		syslog(LOG_ERR,"chain is not exist in the table,chain name:%s,table name:%s",chain_name,table_name);
+		syslog(LOG_ERR,"[%d-%d]chain is not exist in the table,chain name:%s,table name:%s",slotid,vrrid,chain_name,table_name);
 		goto return_error;
 	}
 /*	
@@ -271,17 +271,17 @@ int asd_get_num_of_entry(	const char * table_name,const char * chain_name,
 	/* check input */
 	if (ASD_IPTABLES_SOURCE != type && ASD_IPTABLES_DESTINATION != type)
 	{
-		syslog(LOG_ERR,"input error,input:%d",type);
+		syslog(LOG_ERR,"[%d-%d]input error,input:%d",slotid,vrrid,type);
 		goto return_error;
 	}
 	if (0 == ip_addr>>24)
 	{
-		syslog(LOG_ERR,"ip range error! ip_addr == %s",ip_str);	
+		syslog(LOG_ERR,"[%d-%d]ip range error! ip_addr == %s",slotid,vrrid,ip_str);	
 		goto return_error;
 	}
 	if (NULL == table_name || NULL == chain_name)
 	{
-		syslog(LOG_ERR,"input counter_info is NULL");
+		syslog(LOG_ERR,"[%d-%d]input counter_info is NULL",slotid,vrrid);
 		goto return_error;
 	}
 	
@@ -289,7 +289,7 @@ int asd_get_num_of_entry(	const char * table_name,const char * chain_name,
 	handle = iptc_init(table_name);
 	if (NULL == handle)
 	{
-		syslog(LOG_ERR,"can't init iptc handle,table name:%s",table_name);
+		syslog(LOG_ERR,"[%d-%d]can't init iptc handle,table name:%s",slotid,vrrid,table_name);
 		goto return_error;
 	}
 
@@ -329,7 +329,7 @@ int asd_get_num_of_entry(	const char * table_name,const char * chain_name,
 	}
 	else
 	{
-		syslog(LOG_ERR,"type error");
+		syslog(LOG_ERR,"[%d-%d]type error",slotid,vrrid);
 		goto return_error;
 	}
 /*	
@@ -404,17 +404,17 @@ int  asd_add_and_del_entry	(const char *table_name,const char *chain_name,
 	/* check input */
 	if (ASD_IPTABLES_ADD != type && ASD_IPTABLES_DELETE != type)
 	{
-		syslog(LOG_ERR,"input error,input:%d",type);
+		syslog(LOG_ERR,"[%d-%d]input error,input:%d",slotid,vrrid,type);
 		goto return_error;
 	}
 	if ((0 == dest_ip>>24) && (0 == source_ip>>24))
 	{
-		syslog(LOG_ERR,"ip range error! dest_ip == %s,source_ip == %s",dest_ip_str,source_ip_str);	
+		syslog(LOG_ERR,"[%d-%d]ip range error! dest_ip == %s,source_ip == %s",slotid,vrrid,dest_ip_str,source_ip_str);	
 		goto return_error;
 	}
 	if (NULL == table_name || NULL == chain_name || NULL == target_name)
 	{
-		syslog(LOG_ERR,"input counter_info is NULL");
+		syslog(LOG_ERR,"[%d-%d]input counter_info is NULL",slotid,vrrid);
 		goto return_error;
 	}
 	
@@ -435,7 +435,7 @@ int  asd_add_and_del_entry	(const char *table_name,const char *chain_name,
 	handle = iptc_init(table_name);
 	if ( NULL == handle)
 	{
-		syslog(LOG_DEBUG,"can't init iptc handle,table name:%s",table_name);
+		syslog(LOG_DEBUG,"[%d-%d]can't init iptc handle,table name:%s",slotid,vrrid,table_name);
 		goto return_error;
 	}
 
@@ -558,8 +558,8 @@ int  asd_add_and_del_entry	(const char *table_name,const char *chain_name,
 		//iptc_append_entry(chain_name,e,&h);//---append is insert in to the last
 		if (!iptc_insert_entry(chain_name,p_entry,0,&handle))
 		{
-			syslog(LOG_ERR,"add iptables error: %d,%s. table==%s,chain==%s,s_ip==%s,d_ip==%s,target==%s,handle=%p",
-						errno, iptc_strerror(errno), table_name, chain_name,
+			syslog(LOG_ERR,"[%d-%d]add iptables error: %d,%s. table==%s,chain==%s,s_ip==%s,d_ip==%s,target==%s,handle=%p",
+						slotid,vrrid,errno, iptc_strerror(errno), table_name, chain_name,
 						source_ip_str, dest_ip_str, target_name, handle);
 			goto return_error;
 		}
@@ -568,21 +568,21 @@ int  asd_add_and_del_entry	(const char *table_name,const char *chain_name,
 	{
 		if (!iptc_delete_entry(chain_name,p_entry,NULL,&handle))
 		{
-			syslog(LOG_ERR,"del iptables error: %d,%s table==%s,chain==%s,s_ip==%s,d_ip==%s,target==%s,handle=%p",
-						errno, iptc_strerror(errno), table_name, chain_name,
+			syslog(LOG_ERR,"[%d-%d]del iptables error: %d,%s table==%s,chain==%s,s_ip==%s,d_ip==%s,target==%s,handle=%p",
+						slotid,vrrid,errno, iptc_strerror(errno), table_name, chain_name,
 						source_ip_str, dest_ip_str, target_name, handle);
 			goto return_error;
 		}
 	}
 	else
 	{
-		syslog(LOG_ERR,"type error!");
+		syslog(LOG_ERR,"[%d-%d]type error!",slotid,vrrid);
 	}
 
 	if (!iptc_commit(&handle))
 	{
-		syslog(LOG_ERR,"commit iptables error: %d,%s.\n table==%s,chain==%s,s_ip==%s,d_ip==%s,target==%s,handle=%p",
-						errno, iptc_strerror(errno), table_name, chain_name,
+		syslog(LOG_ERR,"[%d-%d]commit iptables error: %d,%s.\n table==%s,chain==%s,s_ip==%s,d_ip==%s,target==%s,handle=%p",
+						slotid,vrrid,errno, iptc_strerror(errno), table_name, chain_name,
 						source_ip_str, dest_ip_str, target_name, handle);
 		goto return_error;
 	}

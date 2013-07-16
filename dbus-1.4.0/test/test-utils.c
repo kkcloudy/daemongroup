@@ -318,9 +318,9 @@ test_server_setup (DBusLoop      *loop,
   return TRUE;
 
  nomem:
-  if (sd)
+/*  if (sd)
     serverdata_free (sd);
-  
+ */ 
   test_server_shutdown (loop, server);
   
   return FALSE;

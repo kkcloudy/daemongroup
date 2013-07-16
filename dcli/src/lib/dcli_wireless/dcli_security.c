@@ -10254,7 +10254,7 @@ DEFUN(config_eap_sm_run_activated_cmd_func,
 		vty_out(vty,"<error> failed get reply.\n");
 		if (dbus_error_is_set(&err)) {
 			vty_out(vty,"%s raised: %s",err.name,err.message);
-			dbus_error_free(&err);
+			dbus_error_free_for_dcli(&err);
 		}
 		return CMD_SUCCESS;
 	}

@@ -356,7 +356,10 @@ int ShowTime(struct list *lpublic, struct list *lsystem)
 					fprintf(cgiOut,"</tr>");
 					if(checkuser_group(addn)==0)/*管理员*/
 					{
-					fprintf(cgiOut,"<tr height=26>"\
+					fprintf(cgiOut,"<tr height=25>"\
+					  "<td align=left id=tdleft><a href=wp_sysconfig.cgi?UN=%s target=mainFrame class=top><font id=%s>%s</font></a></td>",encry,search(lpublic,"menu_san"),search(lsystem,"sys_config"));
+					fprintf(cgiOut,"</tr>"\
+					"<tr height=26>"\
 					  "<td align=left id=tdleft><a href=wp_impconf.cgi?UN=%s target=mainFrame class=top><font id=%s>%s</font></a></td>",encry,search(lpublic,"menu_san"),search(lsystem,"import_config"));  /*突出显示*/
 					fprintf(cgiOut,"</tr>");
 					fprintf(cgiOut,"<tr height=25>"\
@@ -393,15 +396,23 @@ int ShowTime(struct list *lpublic, struct list *lsystem)
 
 					if(checkuser_group(addn)==0)/*管理员*/
 						{
-               	//新增NTP条目
-			    fprintf(cgiOut,"<tr height=25>"\
-			       "<td align=left id=tdleft><a href=wp_ntp.cgi?UN=%s target=mainFrame class=top><font id=%s>%s</font></a></td>",encry,search(lpublic,"menu_san"),search(lpublic,"ntp_s"));
-			    fprintf(cgiOut,"</tr>");
-				//新增pppoe条目
+			               	//新增NTP条目
+						    fprintf(cgiOut,"<tr height=25>"\
+						       "<td align=left id=tdleft><a href=wp_ntp.cgi?UN=%s target=mainFrame class=top><font id=%s>%s</font></a></td>",encry,search(lpublic,"menu_san"),search(lpublic,"ntp_s"));
+						    fprintf(cgiOut,"</tr>");
+							//新增pppoe条目
         					fprintf(cgiOut,"<tr height=25>"\
         					  "<td align=left id=tdleft><a href=wp_pppoe_server.cgi?UN=%s target=mainFrame class=top><font id=%s>%s</font></a></td>",encry,search(lpublic,"menu_san"),"PPPOE");
         					fprintf(cgiOut,"</tr>");
+							fprintf(cgiOut,"<tr height=25>"\
+        					  "<td align=left id=tdleft><a href=wp_pppoe_snp.cgi?UN=%s target=mainFrame class=top><font id=%s>%s</font></a></td>",encry,search(lpublic,"menu_san"),"PPPOE SNP");
+        					fprintf(cgiOut,"</tr>");
 						}
+					
+					//新增时间条目
+					fprintf(cgiOut,"<tr height=26>"\
+					"<td align=left id=tdleft><a href=wp_webservice.cgi?UN=%s target=mainFrame class=top><font id=%s>%s</font></a></td>",encry,search(lpublic,"menu_san"),search(lpublic,"web_service"));
+					fprintf(cgiOut,"</tr>");
 					
 					 for(i=0;i<5;i++) 
 	              {

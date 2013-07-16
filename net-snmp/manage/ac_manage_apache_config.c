@@ -179,38 +179,20 @@ int web_host_show(struct webHostHead *fhead, unsigned int *n1, unsigned int *n2)
 	return web_vhost_sum;
 }
 
-void web_host_buf(char *command, webHostPtr vh)
+void web_host_buf(char *command, webHostPtr vh, int type)
 {
+	char buf[128] = "";
+	char conf[256] = "";
     char tmp[8] = {0};
-    strcat(command," ");
-    strcat(command,vh->address);
-    strcat(command,":"); 
+    strcat(buf," ");
+    strcat(buf,vh->address);
+    strcat(buf,":"); 
     sprintf(tmp,"%d",vh->port);
-    strcat(command,tmp);
-}
-
-int web_host_site(const char *path, const char *buf , int type)
-{
-	if(!strcmp(buf,""))
-	{
-		if(access(path, F_OK) == 0)
-		{
-			if(unlink(path) != -1)
-			LOG("unlink %s success", path);
-		}
-		return WEB_SUCCESS;
-	}
-	 
+    strcat(buf,tmp);
+    
 	char *available = NULL;
-	FILE *fp;
 
-	if((fp = fopen(path, "w")) == NULL)
-	{
-		LOG("open %s failed", path);
-		return WEB_FAILURE;
-	}
-
-	switch(type)
+    switch(type)
 	{
 		case HTTP_SERVICE:
 			available = SITES_AVALIB_DEFAULT;
@@ -231,10 +213,49 @@ int web_host_site(const char *path, const char *buf , int type)
 			break;	
 	}
 	
-	fprintf(fp,"Listen %s\n",buf);		
-	fprintf(fp,"<VirtualHost%s>\n",buf);	
-	fprintf(fp,"Include \"%s\"\n",available);	
-	fprintf(fp,"</VirtualHost>");
+	snprintf(conf, sizeof(conf), "Listen %s\n <VirtualHost%s>\n Include \"%s\"\n </VirtualHost>\n", 
+		buf, buf, available);
+	strncat(command, conf, sizeof(conf));
+}
+
+int web_host_site_clean(const char *path)
+{
+	char command[128] = "";
+	int ret = 0;
+	
+	memset(command, 0, sizeof(command));
+	snprintf(command, sizeof(command), "sudo rm -rf %s 2>/dev/null", path);
+
+    ret = WEXITSTATUS(system(command));
+	if (0 == ret) {
+		return WEB_SUCCESS;
+	} else {
+    	LOG("rm %s failed\n", path);
+		return WEB_FAILURE;
+	}
+}
+
+int web_host_site(const char *path, const char *buf)
+{
+	if(!strcmp(buf,""))
+	{
+		if(access(path, F_OK) == 0)
+		{
+			if(unlink(path) != -1)
+			LOG("unlink %s success", path);
+		}
+		return WEB_SUCCESS;
+	}
+	 
+	FILE *fp;
+
+	if((fp = fopen(path, "w")) == NULL)
+	{
+		LOG("open %s failed", path);
+		return WEB_FAILURE;
+	}
+
+	fprintf(fp, buf);   
 
 	fclose(fp);
 	
@@ -242,55 +263,111 @@ int web_host_site(const char *path, const char *buf , int type)
 	return WEB_SUCCESS;
 }
 
-int web_host_conf(void)
+int web_host_conf(int service_type)
 {
     LOG("-----Begin-----");
-	char buf_http[128] = {0};
-	char buf_https[128] = {0};
-    char buf_portal[128] = {0};
-	char buf_portal_normal[128] = {0};
-	char buf_portal_ssl[128] = {0};
+	char buf_http[1024] = {0};
+	char buf_https[1024] = {0};
+    char buf_portal[1024] = {0};
+	char buf_portal_normal[1024] = {0};
+	char buf_portal_ssl[1024] = {0};
 
+    memset(buf_http, 0, sizeof(buf_http));
+    memset(buf_https, 0, sizeof(buf_https));
+    memset(buf_portal, 0, sizeof(buf_portal));
+    memset(buf_portal_normal, 0, sizeof(buf_portal_normal));
+    memset(buf_portal_ssl, 0, sizeof(buf_portal_ssl));
+    
+	int ret = 0;
 	webHostPtr vh;
 	
 	LINK_FOREACH(vh, &head, entries)
 	{
-	
 		switch(vh->type)
 		{
 			case HTTP_SERVICE:
-				web_host_buf(buf_http, vh);
+				web_host_buf(buf_http, vh, vh->type);
 				break;
 			case HTTPS_SERVICE:
-				web_host_buf(buf_https, vh);
+				web_host_buf(buf_https, vh, vh->type);
 				break;
             case PORTAL_SERVICE:
-                web_host_buf(buf_portal, vh);
+                web_host_buf(buf_portal, vh, vh->type);
                 break;
 			case PORTAL_HTTP_SERVICE:
-				web_host_buf(buf_portal_normal, vh);
+				web_host_buf(buf_portal_normal, vh, vh->type);
 				break;
 			case PORTAL_HTTPS_SERVICE:
-				web_host_buf(buf_portal_ssl, vh);
+				web_host_buf(buf_portal_ssl, vh, vh->type);
 				break;
 			default:
 				break;	
 		}
 	}
+
+	switch(service_type)
+	{
+		case WEB_START:
+			if (web_ser_stat&PORTAL_SERVICE_ENABLE) {
+	            ret = web_host_site(SITES_ENABEL_PORTAL, buf_portal);
+	            ret = web_host_site(SITES_ENABEL_PORTALNORMAL, buf_portal_normal);
+	            ret = web_host_site(SITES_ENABEL_PORTALSSL, buf_portal_ssl);
+            } else {
+                ret = web_host_site_clean(SITES_ENABEL_PORTAL);
+                ret = web_host_site_clean(SITES_ENABEL_PORTALNORMAL);
+                ret = web_host_site_clean(SITES_ENABEL_PORTALSSL);
+            }
+			ret = web_host_site(SITES_ENABEL_DEFAULT, buf_http);
+			ret = web_host_site(SITES_ENABEL_SSLDEF, buf_https);
+		break;
+		case WEB_STOP:
+			if (web_ser_stat&PORTAL_SERVICE_ENABLE) {
+	            ret = web_host_site(SITES_ENABEL_PORTAL, buf_portal);
+	            ret = web_host_site(SITES_ENABEL_PORTALNORMAL, buf_portal_normal);
+	            ret = web_host_site(SITES_ENABEL_PORTALSSL, buf_portal_ssl);
+            } else {
+                ret = web_host_site_clean(SITES_ENABEL_PORTAL);
+                ret = web_host_site_clean(SITES_ENABEL_PORTALNORMAL);
+                ret = web_host_site_clean(SITES_ENABEL_PORTALSSL);
+            }
+            ret = web_host_site_clean(SITES_ENABEL_DEFAULT);
+			ret = web_host_site_clean(SITES_ENABEL_SSLDEF);
+		break;
+		case PORTAL_START:
+			if (web_ser_stat&WEB_SERVICE_ENABLE) {
+				ret = web_host_site(SITES_ENABEL_DEFAULT, buf_http);
+				ret = web_host_site(SITES_ENABEL_SSLDEF, buf_https);
+			} else {
+				ret = web_host_site_clean(SITES_ENABEL_DEFAULT);
+				ret = web_host_site_clean(SITES_ENABEL_SSLDEF);
+			}
+			ret = web_host_site(SITES_ENABEL_PORTAL, buf_portal);
+			ret = web_host_site(SITES_ENABEL_PORTALNORMAL, buf_portal_normal);
+			ret = web_host_site(SITES_ENABEL_PORTALSSL, buf_portal_ssl);
+		break;
+		case PORTAL_STOP:
+			if (web_ser_stat&WEB_SERVICE_ENABLE) {
+				ret = web_host_site(SITES_ENABEL_DEFAULT, buf_http);
+				ret = web_host_site(SITES_ENABEL_SSLDEF, buf_https);
+			} else {
+				ret = web_host_site_clean(SITES_ENABEL_DEFAULT);
+				ret = web_host_site_clean(SITES_ENABEL_SSLDEF);
+			}
+			ret = web_host_site_clean(SITES_ENABEL_PORTAL);
+            ret = web_host_site_clean(SITES_ENABEL_PORTALNORMAL);
+            ret = web_host_site_clean(SITES_ENABEL_PORTALSSL);
+		break;
+		default:
+            _exit(0);
+		break;
+	}
 	
-	if(WEB_FAILURE == web_host_site(SITES_ENABEL_DEFAULT, buf_http, HTTP_SERVICE) ||
-		WEB_FAILURE == web_host_site(SITES_ENABEL_SSLDEF, buf_https, HTTPS_SERVICE) ||
-		WEB_FAILURE == web_host_site(SITES_ENABEL_PORTAL, buf_portal, PORTAL_SERVICE) || 
-		WEB_FAILURE == web_host_site(SITES_ENABEL_PORTALNORMAL, buf_portal_normal, PORTAL_HTTP_SERVICE) ||
-		WEB_FAILURE == web_host_site(SITES_ENABEL_PORTALSSL, buf_portal_ssl, PORTAL_HTTPS_SERVICE ))
-    {
+	if (WEB_FAILURE == ret) {
         LOG("-----End FAILUE-----");
-		return WEB_FAILURE;
-    }
-	else
-    {
+        return WEB_FAILURE;
+    } else {
         LOG("-----End SUCCESS-----");
-		return WEB_SUCCESS;
+        return WEB_SUCCESS;
     }
 }
 
@@ -303,9 +380,9 @@ int web_host_command(const char *command)
 int 
 web_host_service(int type)
 {
-	web_host_conf();
+	web_host_conf(type);
 	
-	char command[128] = {0};
+	char command[256] = {0};
 	int ret;
 
 	LOG("web_ser_stat : %d", web_ser_stat);
@@ -318,13 +395,14 @@ web_host_service(int type)
 			else
 			{
 				if(web_ser_stat&PORTAL_SERVICE_ENABLE)
-					strcat(command, "sudo /etc/init.d/apache2 restart 2>/dev/null;");
+					strcat(command, "sudo pkill -9 apache2 >/var/log/apache_tmp1.log 2>&1; sudo /etc/init.d/apache2 start >/var/log/apache_tmp2.log 2>&1;");
 				else
-					strcat(command, "sudo /etc/init.d/apache2 start 2>/dev/null;");
+					strcat(command, "sudo /etc/init.d/apache2 start >/var/log/apache_tmp.log 2>&1;");
 			}
 
 			if(0 != web_host_command(command))
 			{
+                LOG("web start failed\n");
 				return WEB_FAILURE;	
 			}
 
@@ -336,12 +414,13 @@ web_host_service(int type)
 			else
 			{
 				if(web_ser_stat&PORTAL_SERVICE_ENABLE)
-					strcat(command, "sudo /etc/init.d/apache2 restart 2>/dev/null;");
+					strcat(command, "sudo /etc/init.d/apache2 restart >/var/log/apache_tmp2.log 2>&1");
 				else
-					strcat(command, "sudo /etc/init.d/apache2 stop 2>/dev/null;");	
+					strcat(command, "sudo /etc/init.d/apache2 stop >/var/log/apache_tmp2.log 2>&1");	
 			}
 			if(0 != web_host_command(command))
 			{
+            	LOG("web stop failed\n");
 				return WEB_FAILURE;	
 			}
 
@@ -353,13 +432,14 @@ web_host_service(int type)
 			else
 			{
 				if(web_ser_stat&WEB_SERVICE_ENABLE)
-					strcat(command, "sudo /etc/init.d/apache2 restart 2>/dev/null;");
+					strcat(command, "sudo /etc/init.d/apache2 restart >/var/log/apache_tmp2.log 2>&1");
 				else
-					strcat(command, "sudo /etc/init.d/apache2 start 2>/dev/null;");
+					strcat(command, "sudo /etc/init.d/apache2 start >/var/log/apache_tmp2.log 2>&1");
 			}
 
 			if(0 != web_host_command(command))
 			{
+            	LOG("portal start failed\n");
 				return WEB_FAILURE;	
 			}
 
@@ -371,13 +451,14 @@ web_host_service(int type)
 			else
 			{
 				if(web_ser_stat&WEB_SERVICE_ENABLE)
-					strcat(command, "sudo /etc/init.d/apache2 restart 2>/dev/null;");
+					strcat(command, "sudo /etc/init.d/apache2 restart >/var/log/apache_tmp2.log 2>&1");
 				else
-					strcat(command, "sudo /etc/init.d/apache2 stop 2>/dev/null;");	
+					strcat(command, "sudo /etc/init.d/apache2 stop >/var/log/apache_tmp2.log 2>&1");	
 			}
 
 			if(0 != web_host_command(command))
 			{
+                LOG("portal stop failed\n");
 				return WEB_FAILURE;	
 			}
 

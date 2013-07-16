@@ -41,16 +41,17 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "ws_conf_engine.h"
 
 #include "ws_eag_conf.h"
-
+#include "eag/eag_errcode.h"
+#include "eag/eag_conf.h"
+#include "eag/eag_interface.h"
+#include "ws_init_dbus.h"
+#include "ws_dcli_vrrp.h"
+#include "ws_dbus_list_interface.h"
 
 #ifndef MULTI_PORTAL  
 #define MULTI_PORTAL
 
 #define SUBMIT_NAME "submit_multi_portal"
-#define MULTI_PORTAL_CONF_PATH "/opt/services/conf/multiportal_conf.conf"
-#define MULTI_PORTAL_STATUS_PATH "/opt/services/status/multiportal_status.status"
-
-
 
 //#define MAX_INDEX_LEN 32
 
@@ -59,7 +60,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 //#define SUBMIT_NAME "submit_nasid_by_vlan"
 
-
+#define MAX_POR_LINE 70
+#define MAX_DOM_LINE 32
 typedef struct{
 	STPortalContainer *pstPortalContainer;
 	struct list *lpublic;/*解析public.txt文件的链表头*/
@@ -67,16 +69,30 @@ typedef struct{
 	char encry[BUF_LEN];
 	char *username_encry;	         /*存储解密后的当前登陆用户名*/
 	int iUserGroup;	//为0时表示是管理员。
+	int plot_id;
 	FILE *fp;
 	
 } STPageInfo;
 
+static dbus_parameter parameter;
+static instance_parameter *paraHead1 = NULL;
+static void *ccgi_connection = NULL;
+static char plotid[10] = {0};
+
+
+#define CHARACTER_NUM	8
+char *escape_character[] = {"%", "&", "+", "#", " ", "/", "?", "="};
+char *encoder_character[] = {"%25", "%26", "%2B", "%23", "%20", "%2F", "%3F", "%3D"};
 
 /***************************************************************
 申明回调函数
 ****************************************************************/
 static int s_multiPortal_prefix_of_page( STPageInfo *pstPageInfo );
 static int s_multiPortal_content_of_page( STPageInfo *pstPageInfo );
+
+static char *replace(char *source,char *sub,char *rep);
+
+static void url_encoder(char *source,char *result,char **escape_character,char **encoder_character,int character_num);
 
 
 
@@ -91,54 +107,59 @@ static int s_multiPortal_content_of_page( STPageInfo *pstPageInfo );
 ****************************************************************/
 int cgiMain()
 {
+	int ret1 = 0;
 	STPageInfo stPageInfo;
 
-	char *tmp=(char *)malloc(64);
-	int ret;
-	if(access(MULTI_PORTAL_F,0)!=0)
-	{
-		create_eag_xml(MULTI_PORTAL_F);
-		write_status_file( MULTI_PORTAL_STATUS, "start" );
-	}
-	else
-	{
-	  ret=if_xml_file_z(MULTI_PORTAL_F);
-	  if(ret!=0)
-	  {
-		   memset(tmp,0,64);
-		   sprintf(tmp,"sudo rm  %s > /dev/null",MULTI_PORTAL_F);
-		   system(tmp);
-		   create_eag_xml(MULTI_PORTAL_F);
-		   write_status_file( MULTI_PORTAL_STATUS, "start" );
-
-	  }
-	}
-    free(tmp);
-
+	DcliWInit();
+	ccgi_dbus_init();  
 	
 //初始化常用公共变量
 	memset( &stPageInfo, 0,sizeof(STPageInfo) );
+	ret1 = init_portal_container(&(stPageInfo.pstPortalContainer));
+	stPageInfo.lpublic = stPageInfo.pstPortalContainer->lpublic;
+	stPageInfo.lauth=stPageInfo.pstPortalContainer->llocal;//get_chain_head("../htdocs/text/authentication.txt");
 
 	cgiFormStringNoNewlines("UN", stPageInfo.encry, BUF_LEN);
 	
-	stPageInfo.username_encry=dcryption(stPageInfo.encry);
-    if( NULL == stPageInfo.username_encry )
+	//stPageInfo.username_encry=dcryption(stPageInfo.encry);
+    if( WS_ERR_PORTAL_ILLEGAL_USER == ret1 )
     {
 	    ShowErrorPage(search(stPageInfo.lpublic,"ill_user")); 	  /*用户非法*/
+		release_portal_container(&(stPageInfo.pstPortalContainer));
 		return 0;
 	}
-	stPageInfo.iUserGroup = checkuser_group( stPageInfo.username_encry );
+	//stPageInfo.iUserGroup = checkuser_group( stPageInfo.username_encry );
+	stPageInfo.iUserGroup = stPageInfo.pstPortalContainer->iUserGroup;
 
 	//stPageInfo.pstModuleContainer = MC_create_module_container();
-	init_portal_container(&(stPageInfo.pstPortalContainer));
 	if( NULL == stPageInfo.pstPortalContainer )
 	{
+		release_portal_container(&(stPageInfo.pstPortalContainer));
 		return 0;
 	}
-	stPageInfo.lpublic=stPageInfo.pstPortalContainer->lpublic;//get_chain_head("../htdocs/text/public.txt");
-	stPageInfo.lauth=stPageInfo.pstPortalContainer->llocal;//get_chain_head("../htdocs/text/authentication.txt");
 	
 	stPageInfo.fp = cgiOut;
+
+	memset(plotid,0,sizeof(plotid));
+	cgiFormStringNoNewlines("plotid", plotid, sizeof(plotid)); 
+	
+	list_instance_parameter(&paraHead1, INSTANCE_STATE_WEB);
+	if (NULL == paraHead1) {
+		return 0;
+	}
+	if(strcmp(plotid, "") == 0)
+	{
+		parameter.instance_id = paraHead1->parameter.instance_id;
+		parameter.local_id = paraHead1->parameter.local_id;
+		parameter.slot_id = paraHead1->parameter.slot_id;
+		snprintf(plotid,sizeof(plotid)-1,"%d-%d-%d",parameter.slot_id, parameter.local_id, parameter.instance_id);
+	}
+	else
+	{
+		get_slotID_localID_instanceID(plotid, &parameter);
+	}
+	ccgi_ReInitDbusConnection(&ccgi_connection, parameter.slot_id, DISTRIBUTFAG);
+	fprintf(stderr, "----------------------------------------------plotid=%s\n", plotid);
 //初始化完毕
 
 	
@@ -147,7 +168,7 @@ int cgiMain()
 
 	
 
-	MC_setActiveLabel( stPageInfo.pstPortalContainer->pstModuleContainer, 5 );
+	MC_setActiveLabel( stPageInfo.pstPortalContainer->pstModuleContainer, WP_EAG_PORTAL);
 
 	MC_setPrefixOfPageCallBack( stPageInfo.pstPortalContainer->pstModuleContainer, (MC_CALLBACK)s_multiPortal_prefix_of_page, &stPageInfo );
 	MC_setContentOfPageCallBack( stPageInfo.pstPortalContainer->pstModuleContainer, (MC_CALLBACK)s_multiPortal_content_of_page, &stPageInfo );
@@ -171,6 +192,8 @@ int cgiMain()
 	
 	MC_writeHtml( stPageInfo.pstPortalContainer->pstModuleContainer );
 	
+	free_instance_parameter_list(&paraHead1);
+	
 	release_portal_container(&(stPageInfo.pstPortalContainer));
 	
 	
@@ -180,28 +203,21 @@ int cgiMain()
 
 static int s_multiPortal_prefix_of_page( STPageInfo *pstPageInfo )
 {
-	char buf[]="start\n";
 	char del_rule[10] = "";
-	char index[32] = "";
 	char nodez[32];
 	memset(nodez,0,32);
-	char attz[32];
-	memset(attz,0,32);
-	struct st_portalz c_head,*cq;
-	int cnum,cflag=-1;
+	char attz[64];
+	memset(attz,0,sizeof(attz));
+	int ret = 0;
+	PORTAL_KEY_TYPE key_type;
+	unsigned long keyid = 0;
+	char *keystr = "";
 	
 	FILE * fp = pstPageInfo->fp;
 	fprintf(fp, "<style type=text/css>"\
 	 	 		"#div1{ width:58px; height:18px; border:1px solid #666666; background-color:#f9f8f7;}"\
 	  			"#div2{ width:56px; height:15px; padding-left:3px; padding-top:3px}"\
 	  			"#link{ text-decoration:none; font-size: 12px}</style>" );
-	FILE * fp1 =NULL ;
-	if( (fp1 = fopen(MULTI_PORTAL_STATUS_PATH,"w+")) != NULL )
-	{
-
-		fwrite(buf,strlen(buf),1,fp1);
-		fclose(fp1);
-	}
 	fprintf(fp,	"<script type=\"text/javascript\">"\
 				"function popMenu(objId)"\
 				"{"\
@@ -223,25 +239,53 @@ static int s_multiPortal_prefix_of_page( STPageInfo *pstPageInfo )
 		fprintf( fp, "</script>\n" );
 	}
 	cgiFormStringNoNewlines( "DELRULE", del_rule, 10 );
-	if( !strcmp(del_rule, "delete") )
+	if( !strcmp(del_rule, "delete") && (pstPageInfo->iUserGroup == 0))
 	{
-		cgiFormStringNoNewlines( "PLOTIDZ", index, 32 );
-		cgiFormStringNoNewlines( "NODEZ", nodez, 32 );
-		cgiFormStringNoNewlines( "ATTZ", attz, 32 );
-		cnum = -1;
+		cgiFormStringNoNewlines( "NODEZ", nodez, sizeof(nodez) );
+		cgiFormStringNoNewlines( "ATTZ", attz, sizeof(attz));
+		key_type = strtol(nodez,NULL,10);
 		
-		read_portal_xml(MULTI_PORTAL_F, &c_head, &cnum, nodez);
-					
-		if( /* 1 == cnum ||*/strcmp(attz,MTD_N)!=0)/*add this to allow delet default when it is last*/
+		if (key_type == PORTAL_KEYTYPE_WLANID) 
 		{
-			delete_eag_onelevel(MULTI_PORTAL_F, nodez, ATT_Z, attz);
+			keyid = atoi(attz);
+			if (keyid == 0 || keyid > 128)
+			{
+				return 0;
+			}
 		}
-		else
-		{		    
-			ShowAlert("默认的不能删除");
+		else if (key_type == PORTAL_KEYTYPE_VLANID) 
+		{
+			keyid = atoi(attz);
+			if(keyid == 0 || keyid > 4096)
+			{
+				return 0;
+			}		
 		}
+		else if (key_type == PORTAL_KEYTYPE_WTPID)
+		{
+			keyid = atoi(attz);
+		}
+		else if (key_type == PORTAL_KEYTYPE_INTF)
+		{
+			keystr = (char *)attz;
+		}
+		else if (key_type == PORTAL_KEYTYPE_ESSID)
+		{
+			keystr = (char *)attz;
+		}
+
+
+		
+		ret = eag_del_portal_server(ccgi_connection, 
+									parameter.local_id,
+									parameter.instance_id, 	
+									key_type,
+									keyid,
+									keystr);
+		
+							
 		fprintf( fp, "<script type='text/javascript'>\n" );
-		fprintf( fp, "window.location.href='wp_multi_portal.cgi?UN=%s&plotid=%s';\n", pstPageInfo->encry ,index);
+		fprintf( fp, "window.location.href='wp_multi_portal.cgi?UN=%s&plotid=%s';\n", pstPageInfo->encry ,plotid);
 		fprintf( fp, "</script>\n" );
 
 	}   
@@ -256,74 +300,43 @@ static int s_multiPortal_content_of_page( STPageInfo *pstPageInfo )
 	struct list * portal_auth = pstPageInfo->lauth;
 	int i, cl = 0;
 
-	char *urlnode=(char *)malloc(20);
-	memset(urlnode,0,20);
-	cgiFormStringNoNewlines( "plotid", urlnode, 20 );
-
-	char addpid[10];
-	memset(addpid,0,10);
-	char plotidz[10];
-    memset(plotidz,0,10);
-
 	char menu[21]="";
 	char i_char[10]="";
 
 	/////////////读取数据/////////////////////////
-	char buf[1024];
-	int por_num = 0;
-	char a1[256],a2[256],a3[256],a4[256],a5[256];//add domain value --by wk
+	int ret = 0;
+	struct portal_conf portalconf;
+	char keyvalue[128] = {0};
+	memset( &portalconf, 0, sizeof(struct portal_conf) );
 	
-	FILE * fd = NULL ;
-	
+	ret = eag_get_portal_conf(ccgi_connection, 
+									parameter.local_id,
+									parameter.instance_id, 
+									&portalconf );
 
-    if(strcmp(urlnode,"")==0)
-		strcpy(addpid,PLOTID_ONE);
-	else
-		strcpy(addpid,urlnode);
-	
 	fprintf(fp,	"<table border=0 cellspacing=0 cellpadding=0>"\
-					"<tr>"\
-						"<td><a id=link href=wp_add_multi_portal.cgi?UN=%s&plotid=%s>%s</a></td>", pstPageInfo->encry,addpid,search(portal_auth,"add_multi_portal") );
+					"<tr>");
+	if(pstPageInfo->iUserGroup == 0)
+		{
+			fprintf(fp,"<td><a id=link href=wp_add_multi_portal.cgi?UN=%s&plotid=%s>%s</a></td>", pstPageInfo->encry,plotid,search(portal_auth,"add_multi_portal") );
+		}
 	fprintf(fp, "</tr>");
 	fprintf(fp,"<tr height=7><td></td></tr>");
 	fprintf(fp,"<tr>\n");
 	fprintf(fp,"<td>%s</td>",search(portal_auth,"plot_idz"));
-	fprintf(fp,"<td><select name=port_id onchange=plotid_change(this)>");
-	if(strcmp(urlnode,"")==0)
+	fprintf(fp,"<td><select name=plotid onchange=plotid_change(this)>");
+	instance_parameter *pq = NULL;
+	char temp[10] = { 0 };
+	
+	for (pq=paraHead1;(NULL != pq);pq=pq->next)
 	{
-		fprintf(fp,"<option value='%s'>1</option>",PLOTID_ONE);
-		fprintf(fp,"<option value='%s'>2</option>",PLOTID_TWO);
-		fprintf(fp,"<option value='%s'>3</option>",PLOTID_THREE);
-		fprintf(fp,"<option value='%s'>4</option>",PLOTID_FOUR);
-		fprintf(fp,"<option value='%s'>5</option>",PLOTID_FIVE);
-	}
-	else
-	{
-
-		if(strcmp(urlnode,PLOTID_ONE)==0)
-			fprintf(fp,"<option value='%s' selected>1</option>",PLOTID_ONE);
-		else
-			fprintf(fp,"<option value='%s'>1</option>",PLOTID_ONE);
-
-		if(strcmp(urlnode,PLOTID_TWO)==0)
-			fprintf(fp,"<option value='%s' selected>2</option>",PLOTID_TWO);
-		else
-			fprintf(fp,"<option value='%s'>2</option>",PLOTID_TWO);
-
-		if(strcmp(urlnode,PLOTID_THREE)==0)
-			fprintf(fp,"<option value='%s' selected>3</option>",PLOTID_THREE);
-		else
-			fprintf(fp,"<option value='%s'>3</option>",PLOTID_THREE);
-
-		if(strcmp(urlnode,PLOTID_FOUR)==0)
-			fprintf(fp,"<option value='%s' selected>4</option>",PLOTID_FOUR);
-		else
-			fprintf(fp,"<option value='%s'>4</option>",PLOTID_FOUR);
-
-		if(strcmp(urlnode,PLOTID_FIVE)==0)
-			fprintf(fp,"<option value='%s' selected>5</option>",PLOTID_FIVE);
-		else
-			fprintf(fp,"<option value='%s'>5</option>",PLOTID_FIVE);
+		memset(temp,0,sizeof(temp));
+		snprintf(temp,sizeof(temp)-1,"%d-%d-%d",pq->parameter.slot_id,pq->parameter.local_id,pq->parameter.instance_id);
+		
+		if (strcmp(plotid, temp) == 0)
+			fprintf(cgiOut,"<option value='%s' selected>%s</option>\n",temp,temp);
+		else	       
+			fprintf(cgiOut,"<option value='%s'>%s</option>\n",temp,temp);
 	}
 	fprintf(fp,"</select></td>");
 	fprintf(fp, "</tr>");
@@ -339,118 +352,160 @@ static int s_multiPortal_content_of_page( STPageInfo *pstPageInfo )
    	"}\n", pstPageInfo->encry);
     fprintf(fp,"</script>\n" );
 
-	fprintf(fp,	"<table border=0 width=493 cellspacing=0 cellpadding=0>");
-
-
-    struct st_portalz c_head,*cq,*c1q;
-	int cnum,cflag=-1;
-	char *tempz=(char *)malloc(20);
-	memset(tempz,0,20);
-	if(strcmp(urlnode,"")!=0)
-	{
-		memset(tempz,0,20);
-		sprintf(tempz,"%s%s",MTP_N,urlnode);
-	}
-	else
-	{
-		memset(tempz,0,20);
-		sprintf(tempz,"%s%s",MTP_N,PLOTID_ONE);
-	}
-	cflag=read_portal_xml(MULTI_PORTAL_F, &c_head, &cnum, tempz);
-	
-	int locate = 0;
-    memset(buf, 0, sizeof(buf));
-
-	fprintf(fp,	"<tr height=30 align=left bgcolor=#eaeff9>");
-		
-	if(cflag==0)
-	{
-		c1q=c_head.next;
-		while(c1q !=NULL)
-		{
-			if (0 == strcmp(c1q->p_keyword,MTD_N))
-			{
-				if ('\0' != c1q->p_type[0])
-				{
-					fprintf(fp,	"<th width=100>%s</th>",c1q->p_type);
-				}
-				else
-				{
-					fprintf(fp,	"<th width=100>KeyWord</th>");
-				}					
-				break;
-			}
-			c1q=c1q->next;
-		}		
-	}
-	
-	if (0 != cflag || NULL == c1q)
-	{
-		fprintf(fp,	"<th width=100>KeyWord</th>");
-	}
-	
-	fprintf(fp,	"<th width=350>URL</th>"\
-			"<th width=150>Domain</th>"\
+	fprintf(fp,	"<table border=0 width=650 cellspacing=0 cellpadding=0>");
+	fprintf(fp, "<tr height=30 align=left bgcolor=#eaeff9>");
+	fprintf(fp,	"<th width=100>KeyWord</th>");
+	fprintf(fp, "<th width=50>Value</th>");
+	fprintf(fp,	"<th width=300>URL</th>"\
+			"<th width=50>Domain</th>"\
+			"<th width=100>%s</th>"\
 			"<th width=13>&nbsp;</th>"\
-			"</tr>");
-
-	
-    if(cflag==0)
-	{
-		cq=c_head.next;
-		while(cq !=NULL)
-		{
-            locate ++;
-
+			"</tr>",search(portal_auth,"HS_ACID"));
+	for( i=0; i<portalconf.current_num; i++ )
+	{		
 			memset(menu,0,21);
 			strcpy(menu,"menulist");
+			sprintf(i_char,"%d",i+1);
+			strcat(menu,i_char);
 
-			char temp[5];
-			memset(&temp,0,5);
-			sprintf(temp,"%d",locate);
-			strcat(menu,temp);
-
-
-			memset(plotidz,0,10);
-			if(strcmp(urlnode,"")==0)
-			strcpy(plotidz,PLOTID_ONE);
-			else
-			strcpy(plotidz,urlnode);
-
-			fprintf(stderr,"zym keyword is : %s\n",cq->p_keyword);
-
+			memset(keyvalue,0,sizeof(keyvalue));
+			
 			fprintf(fp,	"<tr height=30 align=left bgcolor=%s>", setclour(cl) );
-			fprintf(fp,	"<td>%s</td>", cq->p_keyword);
-			fprintf(fp,	"<td>%s</td>", cq->pip);
-			fprintf(fp,	"<td>%s</td>", cq->pdomain);
-			//fprintf(fp,	"<td>%s</td>", );
-			fprintf(fp, "<td>");
-			fprintf(fp, "<div style=\"position:relative; z-index:%d\" onmouseover=\"popMenu('%s');\" onmouseout=\"popMenu('%s');\">",(512-locate),menu,menu);
+			switch(portalconf.portal_srv[i].key_type) 
+			{
+				case PORTAL_KEYTYPE_ESSID:
+					fprintf(fp, "<td align=left>Essid</td>");
+					fprintf(fp, "<td>%s</td>", portalconf.portal_srv[i].key.essid);
+					
+					//replace_url
+					if(replace(portalconf.portal_srv[i].key.essid," ","%20") != NULL)
+					{
+						strncpy(keyvalue,replace(portalconf.portal_srv[i].key.essid," ","%20"),sizeof(keyvalue)-1);
+					}
+					else
+					{
+						strncpy(keyvalue,portalconf.portal_srv[i].key.essid,sizeof(keyvalue)-1);
+					}					
+					break;
+				case PORTAL_KEYTYPE_WLANID:
+					fprintf(fp, "<td align=left>Wlanid</td>");
+					fprintf(fp, "<td>%u</td>", portalconf.portal_srv[i].key.wlanid);
+					snprintf(keyvalue,sizeof(keyvalue)-1,"%u",portalconf.portal_srv[i].key.wlanid);
+					break;
+				case PORTAL_KEYTYPE_VLANID:
+					fprintf(fp, "<td align=left>Vlanid</td>");
+					fprintf(fp, "<td>%u</td>", portalconf.portal_srv[i].key.vlanid);
+					snprintf(keyvalue,sizeof(keyvalue)-1,"%u",portalconf.portal_srv[i].key.vlanid);
+					break;
+				case PORTAL_KEYTYPE_WTPID:
+					fprintf(fp, "<td align=left>Wtpid</td>");
+					fprintf(fp, "<td>%u</td>", portalconf.portal_srv[i].key.wtpid);
+					snprintf(keyvalue,sizeof(keyvalue)-1,"%u",portalconf.portal_srv[i].key.wtpid);
+					break;
+				case PORTAL_KEYTYPE_INTF:
+					fprintf(fp, "<td align=left>Intf</td>");
+					fprintf(fp, "<td>%s</td>", portalconf.portal_srv[i].key.intf);
+					strncpy(keyvalue,portalconf.portal_srv[i].key.intf,sizeof(keyvalue)-1);
+					break;					
+				default:
+					fprintf(fp, "<td align=left colspan=2></td>");
+					break;
+			}				
+			fprintf(fp, "<td>%s</td>", portalconf.portal_srv[i].portal_url);				
+			//fprintf(fp, "portal ntfport			:%u\n", portalconf.portal_srv[i].ntf_port);
+			if(0 != strcmp(portalconf.portal_srv[i].domain, ""))
+			{
+				fprintf(fp, "<td>%s</td>", portalconf.portal_srv[i].domain);
+			}
+			else
+			{
+				fprintf(fp, "<td>&nbsp;</td>");
+			}
+			if(0 != strcmp(portalconf.portal_srv[i].acname, ""))
+			{
+				fprintf(fp, "<td>%s</td>", portalconf.portal_srv[i].acname);
+			}
+			else
+			{
+				fprintf(fp, "<td>&nbsp;</td>");
+			}
+			fprintf(fp,"<td>");
+			fprintf(fp, "<div style=\"position:relative; z-index:%d\" onmouseover=\"popMenu('%s');\" onmouseout=\"popMenu('%s');\">",(512-i),menu,menu);
 			fprintf(fp, "<img src=/images/detail.gif>"\
 			"<div id=%s style=\"display:none; position:absolute; top:5px; left:0;\">",menu);
 			fprintf(fp, "<div id=div1>");
-			fprintf(fp, "<div id=div2 onmouseover=\"this.style.backgroundColor='#b6bdd2'\" onmouseout=\"this.style.backgroundColor='#f9f8f7'\"><a id=link href=wp_multi_portal.cgi?UN=%s&DELRULE=%s&PLOTIDZ=%s&NODEZ=%s&ATTZ=%s target=mainFrame>%s</a></div>", pstPageInfo->encry , "delete" , plotidz,tempz,cq->p_keyword,search(portal_public,"delete"));
-			fprintf(fp, "<div id=div2 onmouseover=\"this.style.backgroundColor='#b6bdd2'\" onmouseout=\"this.style.backgroundColor='#f9f8f7'\"><a id=link href=wp_edit_multi_portal.cgi?UN=%s&EDITCONF=%s&PLOTIDZ=%s&NODEZ=%s&ATTZ=%s target=mainFrame>%s</a></div>", pstPageInfo->encry , "edit" ,plotidz,tempz,cq->p_keyword,search(portal_public,"configure"));
+			
+			char encoder_character_result[256] = { 0 };
+			url_encoder(keyvalue, encoder_character_result, escape_character, encoder_character, CHARACTER_NUM);
+
+			fprintf(fp, "<div id=div2 onmouseover=\"this.style.backgroundColor='#b6bdd2'\" onmouseout=\"this.style.backgroundColor='#f9f8f7'\"><a id=link href=wp_multi_portal.cgi?UN=%s&DELRULE=%s&plotid=%s&NODEZ=%d&ATTZ=%s target=mainFrame>%s</a></div>", pstPageInfo->encry , "delete" , plotid,portalconf.portal_srv[i].key_type,encoder_character_result,search(portal_public,"delete"));
+			fprintf(fp, "<div id=div2 onmouseover=\"this.style.backgroundColor='#b6bdd2'\" onmouseout=\"this.style.backgroundColor='#f9f8f7'\"><a id=link href=wp_edit_multi_portal.cgi?UN=%s&EDITCONF=%s&plotid=%s&NODEZ=%d&ATTZ=%s target=mainFrame>%s</a></div>", pstPageInfo->encry , "edit" ,plotid,portalconf.portal_srv[i].key_type,encoder_character_result,search(portal_public,"configure"));
 			fprintf(fp, "</div>"\
 			"</div>"\
 			"</div>");
-			fprintf(fp,	"</td>");
-			fprintf(fp,	"</tr>");
-
-			cq=cq->next;
+			fprintf(fp,"</td>");
+			fprintf(fp,"</tr>");
 			cl = !cl;
-			por_num++ ;
-
-		}			
-	}
-
-	if((cflag==0 )&& (cnum > 0))
-		Free_portal_info(&c_head);	
-	
-	free(tempz);
-	free(urlnode);
+		}
 	fprintf(fp,	"</table>");
+	fprintf(fp,"<input type=hidden name=UN value=%s>",pstPageInfo->encry);
 	return 0;	
 }
 
+char *replace(char *source,char *sub,char *rep)
+{
+	char *result;
+	char *pc1,*pc2,*pc3;
+	int isource,isub,irep;
+	isub=strlen(sub);
+	irep=strlen(rep);
+	isource=strlen(source);
+	if(NULL == *sub)
+	return strdup(source);
+	result=(char*)malloc(( (irep > isub) ? (float)strlen(source) / isub* irep+ 1:isource ) * sizeof(char));
+	pc1=result;
+	while(*source!=NULL)
+	{
+		pc2=source;
+		pc3=sub;
+		while(*pc2==*pc3&&*pc3!=NULL&&*pc2!=NULL)
+		pc2++,pc3++;
+		if(NULL==*pc3)
+		{
+			pc3=rep;
+			while(*pc3!=NULL)
+			*pc1++=*pc3++;
+			pc2--;
+			source=pc2;
+		}
+		else
+		*pc1++ = *source;
+		source++;
+	}
+	*pc1=NULL;
+	return result;
+}
 
+void url_encoder(char *source,char *result,char **escape_character,char **encoder_character,int character_num)
+{
+	char temp[256] = { 0 };
+	char temp_result[256] = { 0 };
+	int i = 0;
+	strncpy(temp, source, sizeof(temp)-1);
+
+	for(i=0; i<character_num; i++)
+	{
+		memset(temp_result, 0, sizeof(temp_result));
+		if(replace(temp, escape_character[i], encoder_character[i]) != NULL)
+		{
+ 			strncpy(temp_result, replace(temp, escape_character[i], encoder_character[i]), sizeof(temp_result)-1);
+ 		}
+ 		else
+ 		{
+ 			strncpy(temp_result, temp, sizeof(temp_result)-1);
+ 		}
+		memset(temp, 0, sizeof(temp));
+		strncpy(temp, temp_result, sizeof(temp)-1);
+	}
+	strcpy(result, temp_result);
+}

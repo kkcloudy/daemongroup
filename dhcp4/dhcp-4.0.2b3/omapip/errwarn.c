@@ -48,6 +48,7 @@ void (*log_cleanup) (void);
 #ifndef __AX_PLATFORM__
 unsigned int dhcp_optimize_enable;
 unsigned int dhcp_log_level;
+unsigned int dhcp_failover_debug_log_level;  //supf  add
 #endif
 
 #define CVT_BUF_MAX 1023
@@ -194,6 +195,40 @@ int log_debug (const char *fmt, ...)
    */
 #ifndef DEBUG
 	if(dhcp_log_level & DEBUG_TYPE_DEBUG){
+		va_start (list, fmt);
+		vsnprintf (dbg_mbuf, sizeof dbg_mbuf, dbg_fbuf, list);
+		va_end (list);
+
+		syslog (log_priority | LOG_DEBUG, "%s", dbg_mbuf);
+
+		IGNORE_RET (write (STDERR_FILENO, dbg_mbuf, strlen (dbg_mbuf)));
+		IGNORE_RET (write (STDERR_FILENO, "\n", 1));
+	}
+#endif
+
+  return 0;
+}
+/* Log a debug_failover message... */
+
+int log_debug_failover (int msg_type,const char *fmt, ...)
+{
+  va_list list;
+  char dbg_mbuf[CVT_BUF_MAX + 1] = {0};
+  char dbg_fbuf[CVT_BUF_MAX + 1] = {0}; 
+
+#ifndef __AX_PLATFORM__
+	if (dhcp_optimize_enable) {
+		return 0;
+	}  
+#endif
+  
+  do_percentm (dbg_fbuf, fmt);
+
+  /* %Audit% This is log output. %2004.06.17,Safe%
+   * If we truncate we hope the user can get a hint from the log.
+   */
+#ifndef DEBUG
+	if(dhcp_failover_debug_log_level & msg_type){
 		va_start (list, fmt);
 		vsnprintf (dbg_mbuf, sizeof dbg_mbuf, dbg_fbuf, list);
 		va_end (list);

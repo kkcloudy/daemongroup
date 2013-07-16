@@ -37,10 +37,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "ws_usrinfo.h"
 #include "ws_ec.h"
 #include "ws_firewall.h"
+#include "ws_init_dbus.h"
+
+#include "ws_dbus_list_interface.h"
+
 
 //#define _MANAGE_FIREWALL_ 1
 
 //#ifdef _MANAGE_FIREWALL_ 
+#define MAX_SLOT 10
 
 int fwServiceStatus();
 
@@ -114,7 +119,11 @@ int cgiMain()
 	char *encry=(char *)malloc(BUF_LEN);
 	char *str;
 	int manager=-1;
-		
+	void *fwrule_dbus_connection = NULL;
+	int iWallTotalNum = 0;
+	int iSNATTotalNum = 0;
+	int iDNATTotalNum = 0;
+	int iInputTotalNum = 0;
 	lpublic=get_chain_head("../htdocs/text/public.txt");
 	lfirewall=get_chain_head("../htdocs/text/firewall.txt");
  	memset(encry,0,BUF_LEN);
@@ -130,10 +139,45 @@ int cgiMain()
   	manager = checkuser_group(str);
 	cgiHeaderContentType("text/html");
 	  	
-	list=(fwRuleList *)malloc(sizeof(fwRuleList));
-	memset( list, 0, sizeof(fwRuleList) );
+	//list=(fwRuleList *)malloc(sizeof(fwRuleList));
+	//memset( list, 0, sizeof(fwRuleList) );
 	//ParseDoc( list );
-
+	//do init data
+	int ret = -1;
+	u_long rule_num;
+	fwRule *rule_array;
+	DcliWInit();
+	ccgi_dbus_init();  
+	char plotid[10] = { 0 };
+	int p_id = 1;
+//	int instRun = DCLI_VRRP_INSTANCE_NO_CREATED;
+	cgiFormStringNoNewlines("plotid", plotid, 10); 
+	int slot[MAX_SLOT]= { 0 };
+	
+	static instance_parameter *paraHead1 = NULL;
+	
+	list_instance_parameter(&paraHead1, SNMPD_SLOT_CONNECT);
+	if (NULL == paraHead1) {
+		return 0;
+	}
+	if(strcmp(plotid, "") == 0) {
+		p_id = paraHead1->parameter.slot_id;
+	} else {
+		p_id = atoi(plotid);
+	}
+	ccgi_ReInitDbusConnection(&fwrule_dbus_connection, p_id, DISTRIBUTFAG);
+	
+	ret = ac_manage_show_firewall_rule(fwrule_dbus_connection,NULL, NULL, &rule_array, &rule_num);	
+	fprintf(stderr,"ret:%d\n",ret);
+			//ShowAlert(search(lpublic,"instance_not_exist"));
+		
+	//}
+	fprintf(stderr,"rule_num:%d\n",rule_num);
+	fprintf(stderr,"rule_num:%p\n",rule_array);
+	
+	if(0 == ret && rule_array && rule_num){
+		rule = rule_array;
+	}
 	cgiFormStringNoNewlines( "ruleType", ruleTypeStr, sizeof(ruleTypeStr) );
 	if( strcmp("FW_DNAT", ruleTypeStr) == 0 )
 	{
@@ -185,96 +229,108 @@ int cgiMain()
 		case FW_DNAT:
 		case FW_SNAT:
 //添加snat
-			rule = list->snat;
+			//rule = list->snat;
+			
 			fprintf(  cgiOut, "var fwrulesFW_SNAT = new Array(); \n" );
 			if( rule != NULL )
 			{
-				while( (void*)0 != rule )
+			//	while( (void*)0 != rule )
+				for(i = 0;i<rule_num;i++)
 				{	
 	// type  id   ordernum	 *name	 enable 	status	*comment   *ineth	*outeth
 	// srctype	*srcadd    dsttype	 *dstadd	protocl    sptype	*sport	 dptype   *dport
 	// act	  natiptype 	*natipadd	  natpttype    *natport
-					fprintf( cgiOut, "fwrulesFW_SNAT[%d] = new fwrule( \"%d\", \"%d\",\"%d\",", i, rule->type, rule->id, rule->ordernum );
-					fprintf( cgiOut, "\"%s\", \"%d\", \"%d\", \"%s\", \"%s\", \"%s\", ", rule->name, rule->enable, rule->status, rule->comment, rule->ineth, rule->outeth );
-					fprintf( cgiOut, "\"%d\", \"%s\", \"%d\", \"%s\", \"%d\", \"%d\",\"%s\", \"%d\", \"%s\", ", rule->srctype, rule->srcadd, rule->dsttype, rule->dstadd, rule->protocl, rule->sptype, rule->sport, rule->dptype, rule->dport );
-					fprintf( cgiOut, "\"%d\", \"%d\",\"%s\",\"%d\",\"%s\", '%s', '%s' );\n", rule->act, rule->natiptype, rule->natipadd, rule->natpttype, rule->natport, rule->pkg_state, rule->string_filter );			
-					
+					if( rule[i].type == FW_SNAT ){
+						fprintf( cgiOut, "fwrulesFW_SNAT[%d] = new fwrule( \"%d\", \"%d\",\"%d\",", i, rule[i].type, rule[i].id, rule[i].ordernum );
+						fprintf( cgiOut, "\"%s\", \"%d\", \"%d\", \"%s\", \"%s\", \"%s\", ", rule[i].name, rule[i].enable, rule[i].status, rule[i].comment, rule[i].ineth, rule[i].outeth );
+						fprintf( cgiOut, "\"%d\", \"%s\", \"%d\", \"%s\", \"%d\", \"%d\",\"%s\", \"%d\", \"%s\", ", rule[i].srctype, rule[i].srcadd, rule[i].dsttype, rule[i].dstadd, rule[i].protocl, rule[i].sptype, rule[i].sport, rule[i].dptype, rule[i].dport );
+						fprintf( cgiOut, "\"%d\", \"%d\",\"%s\",\"%d\",\"%s\", '%s', '%s' );\n", rule[i].act, rule[i].natiptype, rule[i].natipadd, rule[i].natpttype, rule[i].natport, rule[i].pkg_state, rule[i].string_filter );			
+						iSNATTotalNum++;
+					}
 					//fprintf( cgiOut, "alert(fwrulesFW_SNAT[%d]->type);\n", i );
-					rule = rule->next;
-					i++;
+					//rule = rule->next;
+					//i++;
+					
 				}
 			}
 
-			rule = list->dnat;
+			//rule = list->dnat;
+			//rule = rule_array;
 			i = 0;
 			fprintf(  cgiOut, "var fwrulesFW_DNAT = new Array(); \n" );
 			if( rule != NULL )
 			{
-				while( (void*)0 != rule ){
+			//	while( (void*)0 != rule )
+				for(i = 0;i<rule_num;i++)
+				{	
 	//		ddd sdd sss  dsd  sdd sds dds ds
 	
 	// type  id   ordernum   *name   enable     status  *comment   *ineth   *outeth
 	// srctype  *srcadd    dsttype   *dstadd    protocl    sptype   *sport   dptype   *dport
 	// act    natiptype     *natipadd     natpttype    *natport
-					fprintf( cgiOut, "fwrulesFW_DNAT[%d] = new fwrule( \"%d\", \"%d\",\"%d\",", i, rule->type, rule->id, rule->ordernum );
-					fprintf( cgiOut, "\"%s\", \"%d\", \"%d\", \"%s\", \"%s\", \"%s\", ", rule->name, rule->enable, rule->status, rule->comment, rule->ineth, rule->outeth );
-					fprintf( cgiOut, "\"%d\", \"%s\", \"%d\", \"%s\", \"%d\", \"%d\",\"%s\", \"%d\", \"%s\", ", rule->srctype, rule->srcadd, rule->dsttype, rule->dstadd, rule->protocl, rule->sptype, rule->sport, rule->dptype, rule->dport );
-					fprintf( cgiOut, "\"%d\", \"%d\",\"%s\",\"%d\",\"%s\", '%s', '%s' );\n", rule->act, rule->natiptype, rule->natipadd, rule->natpttype, rule->natport, rule->pkg_state, rule->string_filter );			
-					
+					if(FW_DNAT == rule[i].type){
+						fprintf( cgiOut, "fwrulesFW_DNAT[%d] = new fwrule( \"%d\", \"%d\",\"%d\",", i, rule[i].type, rule[i].id, rule[i].ordernum );
+						fprintf( cgiOut, "\"%s\", \"%d\", \"%d\", \"%s\", \"%s\", \"%s\", ", rule[i].name, rule[i].enable, rule[i].status, rule[i].comment, rule[i].ineth, rule[i].outeth );
+						fprintf( cgiOut, "\"%d\", \"%s\", \"%d\", \"%s\", \"%d\", \"%d\",\"%s\", \"%d\", \"%s\", ", rule[i].srctype, rule[i].srcadd, rule[i].dsttype, rule[i].dstadd, rule[i].protocl, rule[i].sptype, rule[i].sport, rule[i].dptype, rule[i].dport );
+						fprintf( cgiOut, "\"%d\", \"%d\",\"%s\",\"%d\",\"%s\", '%s', '%s' );\n", rule[i].act, rule[i].natiptype, rule[i].natipadd, rule[i].natpttype, rule[i].natport, rule[i].pkg_state, rule[i].string_filter );			
+						iDNATTotalNum ++;
+					}
 					//fprintf( cgiOut, "alert(fwrulesFW_DNAT[%d]->type);\n", i );
-					rule = rule->next;
-					i++;
+				
 				}
 			}
 			break;
 		// add by chensheng, on 2010-04-15, for input chain 
 		case FW_INPUT:
-			rule = list->input;
+		//	rule = rule_array;
 			fprintf(  cgiOut, "var fwrulesFW_INPUT = new Array(); \n" );
 			if( rule != NULL )
 			{
-				while( (void*)0 != rule )
+				for(i = 0;i<rule_num;i++)
 				{	
 	// type  id   ordernum   *name   enable     status  *comment   *ineth   *outeth
 	// srctype  *srcadd    dsttype   *dstadd    protocl    sptype   *sport   dptype   *dport
 	// act    natiptype     *natipadd     natpttype    *natport
-					fprintf( cgiOut, "fwrulesFW_INPUT[%d] = new fwrule( \"%d\", \"%d\",\"%d\",", i, rule->type, rule->id, rule->ordernum );
-					fprintf( cgiOut, "\"%s\", \"%d\", \"%d\", \"%s\", \"%s\", \"%s\", ", rule->name, rule->enable, rule->status, rule->comment, rule->ineth, rule->outeth );
-					fprintf( cgiOut, "\"%d\", \"%s\", \"%d\", \"%s\", \"%d\", \"%d\",\"%s\", \"%d\", \"%s\", ", rule->srctype, rule->srcadd, rule->dsttype, rule->dstadd, rule->protocl, rule->sptype, rule->sport, rule->dptype, rule->dport );
-					fprintf( cgiOut, "\"%d\", \"%d\",\"%s\",\"%d\",\"%s\", '%s', '%s' );\n", rule->act, rule->natiptype, rule->natipadd, rule->natpttype, rule->natport, rule->pkg_state, rule->string_filter );			
-					
+					if(FW_INPUT == rule[i].type){
+						fprintf( cgiOut, "fwrulesFW_INPUT[%d] = new fwrule( \"%d\", \"%d\",\"%d\",", i, rule[i].type, rule[i].id, rule[i].ordernum );
+						fprintf( cgiOut, "\"%s\", \"%d\", \"%d\", \"%s\", \"%s\", \"%s\", ", rule[i].name, rule[i].enable, rule[i].status, rule[i].comment, rule[i].ineth, rule[i].outeth );
+						fprintf( cgiOut, "\"%d\", \"%s\", \"%d\", \"%s\", \"%d\", \"%d\",\"%s\", \"%d\", \"%s\", ", rule[i].srctype, rule[i].srcadd, rule[i].dsttype, rule[i].dstadd, rule[i].protocl, rule[i].sptype, rule[i].sport, rule[i].dptype, rule[i].dport );
+						fprintf( cgiOut, "\"%d\", \"%d\",\"%s\",\"%d\",\"%s\", '%s', '%s' );\n", rule[i].act, rule[i].natiptype, rule[i].natipadd, rule[i].natpttype, rule[i].natport, rule[i].pkg_state, rule[i].string_filter );			
+						iInputTotalNum++;
+					}
 					//fprintf( cgiOut, "alert('%s');\n", rule->string_filter );
-					rule = rule->next;
-					i++;
+				
 				}
 			}
 			break;
 		case FW_WALL:
 		default:
-			rule = list->wall;
+			//rule = rule_array;
 			fprintf(  cgiOut, "var fwrulesFW_WALL = new Array(); \n" );
 			if( rule != NULL )
 			{
-				while( (void*)0 != rule )
+				for(i = 0;i<rule_num;i++)
 				{	
 	// type  id   ordernum   *name   enable     status  *comment   *ineth   *outeth
 	// srctype  *srcadd    dsttype   *dstadd    protocl    sptype   *sport   dptype   *dport
 	// act    natiptype     *natipadd     natpttype    *natport
-					fprintf( cgiOut, "fwrulesFW_WALL[%d] = new fwrule( \"%d\", \"%d\",\"%d\",", i, rule->type, rule->id, rule->ordernum );
-					fprintf( cgiOut, "\"%s\", \"%d\", \"%d\", \"%s\", \"%s\", \"%s\", ", rule->name, rule->enable, rule->status, rule->comment, rule->ineth, rule->outeth );
-					fprintf( cgiOut, "\"%d\", \"%s\", \"%d\", \"%s\", \"%d\", \"%d\",\"%s\", \"%d\", \"%s\", ", rule->srctype, rule->srcadd, rule->dsttype, rule->dstadd, rule->protocl, rule->sptype, rule->sport, rule->dptype, rule->dport );
-					fprintf( cgiOut, "\"%d\", \"%d\",\"%s\",\"%d\",\"%s\", '%s', '%s' );\n", rule->act, rule->natiptype, rule->natipadd, rule->natpttype, rule->natport, rule->pkg_state, rule->string_filter );			
-					
+					if(FW_WALL==rule[i].type){
+						fprintf( cgiOut, "fwrulesFW_WALL[%d] = new fwrule( \"%d\", \"%d\",\"%d\",", i, rule[i].type, rule[i].id, rule[i].ordernum );
+						fprintf( cgiOut, "\"%s\", \"%d\", \"%d\", \"%s\", \"%s\", \"%s\", ", rule[i].name, rule[i].enable, rule[i].status, rule[i].comment, rule[i].ineth, rule[i].outeth );
+						fprintf( cgiOut, "\"%d\", \"%s\", \"%d\", \"%s\", \"%d\", \"%d\",\"%s\", \"%d\", \"%s\", ", rule[i].srctype, rule[i].srcadd, rule[i].dsttype, rule[i].dstadd, rule[i].protocl, rule[i].sptype, rule[i].sport, rule[i].dptype, rule[i].dport );
+						fprintf( cgiOut, "\"%d\", \"%d\",\"%s\",\"%d\",\"%s\", '%s', '%s' );\n", rule[i].act, rule[i].natiptype, rule[i].natipadd, rule[i].natpttype, rule[i].natport, rule[i].pkg_state, rule[i].string_filter );			
+						iWallTotalNum++;
+					}
 					//fprintf( cgiOut, "alert('%s');\n", rule->string_filter );
-					rule = rule->next;
-					i++;
+
 				}
 			}
 			break;
 		}
-	fprintf( cgiOut, "</script>\n" );
-	
-	fprintf( cgiOut, "<body> \n" );
+	fprintf( cgiOut, "</script>"\
+	  "<script src=/instanceid_onchange.js>"\
+	  "</script>"\
+	  "<body> \n" );
 
 	fprintf( cgiOut, "<form action='wp_fwrulemodify.cgi' method='post'> \n" );
 	fprintf( cgiOut, "<input type='hidden' name='UN' value='%s'>", encry );
@@ -344,10 +400,10 @@ int cgiMain()
 	//添加各种规则的入口
 	if( 0 == manager )
 	{
-		fprintf( cgiOut, "<tr height=25><td align=left id=tdleft><a href='wp_fwruleedit.cgi?UN=%s&ruleID=%d&ruleNum=%d&ruleType=FW_WALL&editType=add' target=mainFrame class=top><font id=%s>%s</font><font id=%s>%s</font><font id=%s>%s</font></a></td></tr> \n",encry,list->iWallTotalNum+1, list->iWallTotalNum, search(lpublic,"menu_san"), search( lfirewall, "add_new"),search(lpublic,"menu_san"), search( lfirewall, "title_fw"),search(lpublic,"menu_san"), search( lfirewall, "add_rule") );
-		fprintf( cgiOut, "<tr height=25><td align=left id=tdleft><a href='wp_fwruleedit.cgi?UN=%s&ruleID=%d&ruleNum=%d&ruleType=FW_SNAT&editType=add' target=mainFrame class=top><font id=%s>%s</font><font id=%s>%s</font><font id=%s>%s</font></a></td></tr> \n",encry,list->iSNATTotalNum+1, list->iSNATTotalNum, search(lpublic,"menu_san"), search( lfirewall, "add_new"),search(lpublic,"menu_san"), "SNAT ",search(lpublic,"menu_san"), search( lfirewall, "add_rule") );
-		fprintf( cgiOut, "<tr height=25><td align=left id=tdleft><a href='wp_fwruleedit.cgi?UN=%s&ruleID=%d&ruleNum=%d&ruleType=FW_DNAT&editType=add' target=mainFrame class=top><font id=%s>%s</font><font id=%s>%s</font><font id=%s>%s</font></a></td></tr> \n",encry,list->iDNATTotalNum+1, list->iDNATTotalNum, search(lpublic,"menu_san"), search( lfirewall, "add_new"),search(lpublic,"menu_san"), "DNAT ",search(lpublic,"menu_san"), search( lfirewall, "add_rule") );
-		fprintf( cgiOut, "<tr height=25><td align=left id=tdleft><a href='wp_fwruleedit.cgi?UN=%s&ruleID=%d&ruleNum=%d&ruleType=FW_INPUT&editType=add' target=mainFrame class=top><font id=%s>%s</font><font id=%s>%s</font><font id=%s>%s</font></a></td></tr> \n",encry,list->iInputTotalNum+1, list->iInputTotalNum, search(lpublic,"menu_san"), search( lfirewall, "add_new"),search(lpublic,"menu_san"), "INPUT ",search(lpublic,"menu_san"), search( lfirewall, "add_rule") );
+		fprintf( cgiOut, "<tr height=25><td align=left id=tdleft><a href='wp_fwruleedit.cgi?UN=%s&ruleID=%d&ruleNum=%d&ruleType=FW_WALL&editType=add' target=mainFrame class=top><font id=%s>%s</font><font id=%s>%s</font><font id=%s>%s</font></a></td></tr> \n",encry,iWallTotalNum+1, iWallTotalNum, search(lpublic,"menu_san"), search( lfirewall, "add_new"),search(lpublic,"menu_san"), search( lfirewall, "title_fw"),search(lpublic,"menu_san"), search( lfirewall, "add_rule") );
+		fprintf( cgiOut, "<tr height=25><td align=left id=tdleft><a href='wp_fwruleedit.cgi?UN=%s&ruleID=%d&ruleNum=%d&ruleType=FW_SNAT&editType=add' target=mainFrame class=top><font id=%s>%s</font><font id=%s>%s</font><font id=%s>%s</font></a></td></tr> \n",encry,iSNATTotalNum+1, iSNATTotalNum, search(lpublic,"menu_san"), search( lfirewall, "add_new"),search(lpublic,"menu_san"), "SNAT ",search(lpublic,"menu_san"), search( lfirewall, "add_rule") );
+		fprintf( cgiOut, "<tr height=25><td align=left id=tdleft><a href='wp_fwruleedit.cgi?UN=%s&ruleID=%d&ruleNum=%d&ruleType=FW_DNAT&editType=add' target=mainFrame class=top><font id=%s>%s</font><font id=%s>%s</font><font id=%s>%s</font></a></td></tr> \n",encry,iDNATTotalNum+1, iDNATTotalNum, search(lpublic,"menu_san"), search( lfirewall, "add_new"),search(lpublic,"menu_san"), "DNAT ",search(lpublic,"menu_san"), search( lfirewall, "add_rule") );
+		fprintf( cgiOut, "<tr height=25><td align=left id=tdleft><a href='wp_fwruleedit.cgi?UN=%s&ruleID=%d&ruleNum=%d&ruleType=FW_INPUT&editType=add' target=mainFrame class=top><font id=%s>%s</font><font id=%s>%s</font><font id=%s>%s</font></a></td></tr> \n",encry,iInputTotalNum+1,iInputTotalNum, search(lpublic,"menu_san"), search( lfirewall, "add_new"),search(lpublic,"menu_san"), "INPUT ",search(lpublic,"menu_san"), search( lfirewall, "add_rule") );
 	}
 	else
 	{
@@ -372,6 +428,35 @@ int cgiMain()
 	char popMenuName[32];
 	char str_url_del[128];
 	char str_url_edit[128];
+	instance_parameter *p_q = NULL;
+	
+
+	
+	fprintf( cgiOut, "<span>%s<select name=plotid id=plotid style=width:72px onchange=plotid_change(this)></span><hr color=#163871 />\n",search(lfirewall,"slot_num"));
+	for(p_q=paraHead1;(NULL != p_q);p_q=p_q->next)
+	{
+		if(p_q->parameter.slot_id == p_id)
+		{
+			fprintf(cgiOut,"<option value=\"%d\" selected>%d</option>",p_q->parameter.slot_id,p_q->parameter.slot_id);
+		}
+		else
+		{
+			fprintf(cgiOut,"<option value=\"%d\">%d</option>",p_q->parameter.slot_id,p_q->parameter.slot_id);
+		}		
+	}
+	fprintf(cgiOut,	"<script type=text/javascript>\n");
+   	fprintf(cgiOut,	"function plotid_change( obj )\n"\
+   			"{\n"\
+	   		"var plotid = obj.options[obj.selectedIndex].value;\n"\
+	   		"var url = 'wp_fwruleview.cgi?UN=%s&ruleType=%s&plotid='+plotid;\n"\
+	   		"window.location.href = url;\n"\
+	   		"}\n", encry, ruleTypeStr);
+	fprintf(cgiOut,"</script>\n");
+
+
+
+
+		
 
 	if( FW_WALL == ruleType )
 	{
@@ -389,66 +474,68 @@ int cgiMain()
 		}
 		//firewall
 		//表头
+
 		fprintf( cgiOut, TABLE_HEAD, 
 					search(lpublic,"menu_thead"), search( lfirewall, "rule_position" ),
 					search(lpublic,"menu_thead"), search( lfirewall, "rule_name_detail" ),
 					search(lpublic,"menu_thead"), search( lfirewall, "rule_action" ),
 					search(lpublic,"menu_thead"), search( lfirewall, "rule_state" ) );
 		//内容
-		if( 0 == list->iWallTotalNum || NULL == list->wall )
+		if( 0 == iWallTotalNum )
 		{
 			if(0 == manager)
 				fprintf( cgiOut, "<tr><td colspan=6><div>%s <a href='wp_fwruleedit.cgi?UN=%s&ruleID=0&ruleNum=0&ruleType=FW_WALL&editType=add' target=mainFrame class=top><i>%s</i></a> %s </td></tr>\n", search(lfirewall,"rule_no_pre"), encry, search(lfirewall,"rule_no_here"), search(lfirewall,"rule_no_post") );
 		}
 		else
 		{
-			rule = list->wall;
-			for( i=0; (i < list->iWallTotalNum) && (rule != NULL); i++ )
+		//	rule = rule_array;
+			int i  =0;
+			for(i = 0;i<rule_num;i++)
 			{
 
-				
-				sprintf( str_RULEPOSTION_SELECTOR, RULEPOSTION_SELECTOR,
-								list->iWallTotalNum, i+1, ruleTypeStr, encry );
+				if(rule[i].type==FW_WALL){
+						sprintf( str_RULEPOSTION_SELECTOR, RULEPOSTION_SELECTOR,
+										iWallTotalNum, i+1, ruleTypeStr, encry );
 
-				sprintf( popMenuName,"popMenuName%s%d",ruleTypeStr,i);
-				sprintf( str_url_edit, "wp_fwruleedit.cgi?UN=%s&ruleID=%d&ruleNum=%d&ruleType=%s&editType=edit",
-								encry,i+1,list->iWallTotalNum,ruleTypeStr );
-				sprintf( str_url_del, "wp_fwrulemodify.cgi?UN=%s&delRuleIndex=%d&ruleNum=%d&ruleType=%s",
-								encry,i+1,list->iWallTotalNum,ruleTypeStr );				
-				sprintf( str_POP_MENU, POP_MENU, popMenuName,popMenuName,list->iWallTotalNum-i,
-								popMenuName,search( lfirewall, "rule_edit" ),str_url_edit ,
-								popMenuName,search( lfirewall, "rule_delete" ),str_url_del,
-								popMenuName );
-							
-				char *action=NULL;
-				switch( rule->act )
-				{
-					case FW_ACCEPT:
-						action = search(lfirewall,"rule_action_allow");
-						break;
-					case FW_DROP:
-						action = search(lfirewall,"rule_action_deny");
-						break;
-					case FW_REJECT:
-						action = search(lfirewall,"rule_action_reject");
-						break;
-					case FW_TCPMSS:
-						action = "TCPMSS";
-						break;
-					default:
-						break;
-				}
-				
-				fprintf( cgiOut, TABLE_LINE, setclour((i+1)%2)/*class*/,
-								ruleTypeStr/*ruletype*/,i,ruleTypeStr/*ruletype*/,i,
-								(0 == manager)?str_RULEPOSTION_SELECTOR:int2str(i+1),/*pos*/
-								rule->name,
-								action,
-								(rule->enable)?search(lfirewall,"rule_enabled"):search(lfirewall,"rule_disabled"),
-								(0 == manager)?str_POP_MENU:"",
-								ruleTypeStr,i);
-
-				rule = rule->next;
+						sprintf( popMenuName,"popMenuName%s%d",ruleTypeStr,i);
+						sprintf( str_url_edit, "wp_fwruleedit.cgi?UN=%s&plotid=%d&ruleID=%d&ruleNum=%d&ruleType=%s&editType=edit",
+										encry, p_id, rule[i].id,iWallTotalNum,ruleTypeStr );
+						sprintf( str_url_del, "wp_fwrulemodify.cgi?UN=%s&plotid=%d&delRuleIndex=%d&ruleNum=%d&ruleType=%s",
+										encry, p_id, rule[i].id,iWallTotalNum,ruleTypeStr );				
+						sprintf( str_POP_MENU, POP_MENU, popMenuName,popMenuName,iWallTotalNum-i,
+										popMenuName,search( lfirewall, "rule_edit" ),str_url_edit ,
+										popMenuName,search( lfirewall, "rule_delete" ),str_url_del,
+										popMenuName );
+									
+						char *action=NULL;
+						switch( rule[i].act )
+						{
+							case FW_ACCEPT:
+								action = search(lfirewall,"rule_action_allow");
+								break;
+							case FW_DROP:
+								action = search(lfirewall,"rule_action_deny");
+								break;
+							case FW_REJECT:
+								action = search(lfirewall,"rule_action_reject");
+								break;
+							case FW_TCPMSS:
+								action = "TCPMSS";
+								break;
+							default:
+								break;
+						}
+						
+						fprintf( cgiOut, TABLE_LINE, setclour((rule[i].id)%2)/*class*/,
+										ruleTypeStr/*ruletype*/,i,ruleTypeStr/*ruletype*/,i,
+										int2str(rule[i].id),/*pos*/
+										"......",
+										action,
+										(rule[i].enable)?search(lfirewall,"rule_enabled"):search(lfirewall,"rule_disabled"),
+										(0 == manager)?str_POP_MENU:"",
+										ruleTypeStr,i);
+						
+					}
 											
 			}
 			//加入一个空行，解决popmenu显示不下的问题。
@@ -474,37 +561,41 @@ int cgiMain()
 					search(lpublic,"menu_thead"), "",
 					search(lpublic,"menu_thead"), search( lfirewall, "rule_state" ) );
 		//内容
-		if( 0 == list->iSNATTotalNum || NULL == list->snat )
+		if( 0 == iSNATTotalNum )
 		{
 			if(0 == manager)
 				fprintf( cgiOut, "<tr><td colspan=6><div>%s <a href='wp_fwruleedit.cgi?UN=%s&ruleID=0&ruleNum=0&ruleType=FW_SNAT&editType=add' target=mainFrame class=top><i>%s</i></a> %s </td></tr>\n", search(lfirewall,"rule_no_pre"), encry, search(lfirewall,"rule_no_here"), search(lfirewall,"rule_no_post") );
 		}
 		else
 		{
-			rule = list->snat;
-			for( i=0; ((i < list->iSNATTotalNum)&&(rule!=NULL)); i++ )
+			//rule = rule_array;
+			i = 0;
+			for(i = 0;i<rule_num;i++)
 			{
-				sprintf( str_RULEPOSTION_SELECTOR, RULEPOSTION_SELECTOR,
-								list->iSNATTotalNum, i+1, ruleTypeStr, encry );
+				if(rule[i].type==FW_SNAT){
+					sprintf( str_RULEPOSTION_SELECTOR, RULEPOSTION_SELECTOR,
+									iSNATTotalNum, i+1, ruleTypeStr, encry );
 
-				sprintf( popMenuName,"popMenuName%s%d",ruleTypeStr,i);
-				sprintf( str_url_edit, "wp_fwruleedit.cgi?UN=%s&ruleID=%d&ruleNum=%d&ruleType=%s&editType=edit",
-								encry,i+1,list->iSNATTotalNum,ruleTypeStr );
-				sprintf( str_url_del, "wp_fwrulemodify.cgi?UN=%s&delRuleIndex=%d&ruleNum=%d&ruleType=%s",
-								encry,i+1,list->iSNATTotalNum,ruleTypeStr );				
-				sprintf( str_POP_MENU, POP_MENU, popMenuName,popMenuName,list->iSNATTotalNum-i,
-								popMenuName,search( lfirewall, "rule_edit" ),str_url_edit ,
-								popMenuName,search( lfirewall, "rule_delete" ),str_url_del,
-								popMenuName );
-				fprintf( cgiOut, TABLE_LINE, setclour((i+1)%2)/*class*/,
-								ruleTypeStr/*ruletype*/,i,ruleTypeStr/*ruletype*/,i,
-								(0 == manager)?str_RULEPOSTION_SELECTOR:int2str(i+1),/*pos*/
-								rule->name,
-								"",
-								(rule->enable)?search(lfirewall,"rule_enabled"):search(lfirewall,"rule_disabled"),
-								(0 == manager)?str_POP_MENU:"",
-								ruleTypeStr,i);
-				rule = rule->next;
+					sprintf( popMenuName,"popMenuName%s%d",ruleTypeStr,i);
+					sprintf( str_url_edit, "wp_fwruleedit.cgi?UN=%s&plotid=%d&ruleID=%d&ruleNum=%d&ruleType=%s&editType=edit",
+									encry, p_id, rule[i].id,iWallTotalNum,ruleTypeStr );
+					sprintf( str_url_del, "wp_fwrulemodify.cgi?UN=%s&plotid=%d&delRuleIndex=%d&ruleNum=%d&ruleType=%s",
+									encry, p_id, rule[i].id,iWallTotalNum,ruleTypeStr );
+					sprintf( str_POP_MENU, POP_MENU, popMenuName,popMenuName,iSNATTotalNum-i,
+									popMenuName,search( lfirewall, "rule_edit" ),str_url_edit ,
+									popMenuName,search( lfirewall, "rule_delete" ),str_url_del,
+									popMenuName );
+					fprintf( cgiOut, TABLE_LINE, setclour((rule[i].id)%2)/*class*/,
+									ruleTypeStr/*ruletype*/,i,ruleTypeStr/*ruletype*/,i,
+									int2str(rule[i].id),/*pos*/
+									"......",
+									"",
+									(rule[i].enable)?search(lfirewall,"rule_enabled"):search(lfirewall,"rule_disabled"),
+									(0 == manager)?str_POP_MENU:"",
+									ruleTypeStr,i);
+			
+					}
+		
 			}
 			
 		}
@@ -523,38 +614,41 @@ int cgiMain()
 					search(lpublic,"menu_thead"), "",
 					search(lpublic,"menu_thead"), search( lfirewall, "rule_state" ) );
 		//内容
-		if( 0 == list->iDNATTotalNum || NULL == list->dnat )
+		if( 0 == iDNATTotalNum )
 		{
 			if(0 == manager)
 				fprintf( cgiOut, "<tr><td colspan=6><div>%s <a href='wp_fwruleedit.cgi?UN=%s&ruleID=0&ruleNum=0&ruleType=FW_DNAT&editType=add' target=mainFrame class=top><i>%s</i></a> %s </td></tr>\n", search(lfirewall,"rule_no_pre"), encry, search(lfirewall,"rule_no_here"), search(lfirewall,"rule_no_post") );
 		}
 		else
 		{
-			rule = list->dnat;
-			for( i=0; (i < list->iDNATTotalNum)&&(rule!=NULL); i++ )
+		//	rule = rule_array;
+			i = 0;
+			for(i = 0;i<rule_num;i++)
 			{
-			
-				sprintf( str_RULEPOSTION_SELECTOR, RULEPOSTION_SELECTOR,
-								list->iDNATTotalNum, i+1, ruleTypeStr, encry );
+				if(rule[i].type == FW_DNAT){
+					sprintf( str_RULEPOSTION_SELECTOR, RULEPOSTION_SELECTOR,
+									iDNATTotalNum, i+1, ruleTypeStr, encry );
 
-				sprintf( popMenuName,"popMenuName%s%d",ruleTypeStr,i);
-				sprintf( str_url_edit, "wp_fwruleedit.cgi?UN=%s&ruleID=%d&ruleNum=%d&ruleType=%s&editType=edit",
-								encry,i+1,list->iDNATTotalNum,ruleTypeStr );
-				sprintf( str_url_del, "wp_fwrulemodify.cgi?UN=%s&delRuleIndex=%d&ruleNum=%d&ruleType=%s",
-								encry,i+1,list->iDNATTotalNum,ruleTypeStr );				
-				sprintf( str_POP_MENU, POP_MENU, popMenuName,popMenuName,list->iDNATTotalNum-i,
-								popMenuName,search( lfirewall, "rule_edit" ),str_url_edit ,
-								popMenuName,search( lfirewall, "rule_delete" ),str_url_del,
-								popMenuName );
-				fprintf( cgiOut, TABLE_LINE, setclour((i+1)%2)/*class*/,
-								ruleTypeStr/*ruletype*/,i,ruleTypeStr/*ruletype*/,i,
-								(0 == manager)?str_RULEPOSTION_SELECTOR:int2str(i+1),/*pos*/
-								rule->name,
-								"",
-								(rule->enable)?search(lfirewall,"rule_enabled"):search(lfirewall,"rule_disabled"),
-								(0 == manager)?str_POP_MENU:"",
-								ruleTypeStr,i);
-				rule = rule->next;
+					sprintf( popMenuName,"popMenuName%s%d",ruleTypeStr,i);
+					sprintf( str_url_edit, "wp_fwruleedit.cgi?UN=%s&ruleID=%d&ruleNum=%d&ruleType=%s&editType=edit",
+									encry,i+1,iDNATTotalNum,ruleTypeStr );
+					sprintf( str_url_del, "wp_fwrulemodify.cgi?UN=%s&delRuleIndex=%d&ruleNum=%d&ruleType=%s",
+									encry,i+1,iDNATTotalNum,ruleTypeStr );				
+					sprintf( str_POP_MENU, POP_MENU, popMenuName,popMenuName,iDNATTotalNum-i,
+									popMenuName,search( lfirewall, "rule_edit" ),str_url_edit ,
+									popMenuName,search( lfirewall, "rule_delete" ),str_url_del,
+									popMenuName );
+					fprintf( cgiOut, TABLE_LINE, setclour((rule[i].id)%2)/*class*/,
+									ruleTypeStr/*ruletype*/,i,ruleTypeStr/*ruletype*/,i,
+									int2str(rule[i].id),/*pos*/
+									"......",
+									"",
+									(rule[i].enable)?search(lfirewall,"rule_enabled"):search(lfirewall,"rule_disabled"),
+									(0 == manager)?str_POP_MENU:"",
+									ruleTypeStr,i);
+
+					}
+
 			}
 
 		}
@@ -588,60 +682,62 @@ int cgiMain()
 					search(lpublic,"menu_thead"), search( lfirewall, "rule_action" ),
 					search(lpublic,"menu_thead"), search( lfirewall, "rule_state" ) );
 		//内容
-		if( 0 == list->iInputTotalNum || NULL == list->input)
+		if( 0 == iInputTotalNum)
 		{
 			if(0 == manager)
 				fprintf( cgiOut, "<tr><td colspan=6><div>%s <a href='wp_fwruleedit.cgi?UN=%s&ruleID=0&ruleNum=0&ruleType=FW_INPUT&editType=add' target=mainFrame class=top><i>%s</i></a> %s </td></tr>\n", search(lfirewall,"rule_no_pre"), encry, search(lfirewall,"rule_no_here"), search(lfirewall,"rule_no_post") );
 		}
 		else
 		{
-			rule = list->input;
-			for( i=0; (i < list->iInputTotalNum) && (rule != NULL); i++ )
+			//rule = rule_array;
+			i = 0;
+			for(i = 0;i<rule_num;i++)
 			{
+				if(rule[i].type == FW_INPUT){
+					
+					sprintf( str_RULEPOSTION_SELECTOR, RULEPOSTION_SELECTOR,
+									iInputTotalNum, i+1, ruleTypeStr, encry );
 
-				
-				sprintf( str_RULEPOSTION_SELECTOR, RULEPOSTION_SELECTOR,
-								list->iInputTotalNum, i+1, ruleTypeStr, encry );
+					sprintf( popMenuName,"popMenuName%s%d",ruleTypeStr,i);
+					sprintf( str_url_edit, "wp_fwruleedit.cgi?UN=%s&plotid=%d&ruleID=%d&ruleNum=%d&ruleType=%s&editType=edit",
+									encry, p_id, rule[i].id,iWallTotalNum,ruleTypeStr );
+					sprintf( str_url_del, "wp_fwrulemodify.cgi?UN=%s&plotid=%d&delRuleIndex=%d&ruleNum=%d&ruleType=%s",
+									encry, p_id, rule[i].id,iWallTotalNum,ruleTypeStr );
+					sprintf( str_POP_MENU, POP_MENU, popMenuName,popMenuName,iInputTotalNum-i,
+									popMenuName,search( lfirewall, "rule_edit" ),str_url_edit ,
+									popMenuName,search( lfirewall, "rule_delete" ),str_url_del,
+									popMenuName );
+								
+					char *action=NULL;
+					switch( rule[i].act )
+					{
+						case FW_ACCEPT:
+							action = search(lfirewall,"rule_action_allow");
+							break;
+						case FW_DROP:
+							action = search(lfirewall,"rule_action_deny");
+							break;
+						case FW_REJECT:
+							action = search(lfirewall,"rule_action_reject");
+							break;
+						//case FW_TCPMSS:
+						//	action = "TCPMSS";
+						//	break;
+						default:
+							break;
+					}
+					
+					fprintf( cgiOut, TABLE_LINE, setclour((rule[i].id)%2)/*class*/,
+									ruleTypeStr/*ruletype*/,i,ruleTypeStr/*ruletype*/,i,
+									int2str(rule[i].id),/*pos*/
+									"......",
+									action,
+									(rule[i].enable)?search(lfirewall,"rule_enabled"):search(lfirewall,"rule_disabled"),
+									(0 == manager)?str_POP_MENU:"",
+									ruleTypeStr,i);
 
-				sprintf( popMenuName,"popMenuName%s%d",ruleTypeStr,i);
-				sprintf( str_url_edit, "wp_fwruleedit.cgi?UN=%s&ruleID=%d&ruleNum=%d&ruleType=%s&editType=edit",
-								encry,i+1,list->iInputTotalNum,ruleTypeStr );
-				sprintf( str_url_del, "wp_fwrulemodify.cgi?UN=%s&delRuleIndex=%d&ruleNum=%d&ruleType=%s",
-								encry,i+1,list->iInputTotalNum,ruleTypeStr );				
-				sprintf( str_POP_MENU, POP_MENU, popMenuName,popMenuName,list->iInputTotalNum-i,
-								popMenuName,search( lfirewall, "rule_edit" ),str_url_edit ,
-								popMenuName,search( lfirewall, "rule_delete" ),str_url_del,
-								popMenuName );
-							
-				char *action=NULL;
-				switch( rule->act )
-				{
-					case FW_ACCEPT:
-						action = search(lfirewall,"rule_action_allow");
-						break;
-					case FW_DROP:
-						action = search(lfirewall,"rule_action_deny");
-						break;
-					case FW_REJECT:
-						action = search(lfirewall,"rule_action_reject");
-						break;
-					//case FW_TCPMSS:
-					//	action = "TCPMSS";
-					//	break;
-					default:
-						break;
 				}
-				
-				fprintf( cgiOut, TABLE_LINE, setclour((i+1)%2)/*class*/,
-								ruleTypeStr/*ruletype*/,i,ruleTypeStr/*ruletype*/,i,
-								(0 == manager)?str_RULEPOSTION_SELECTOR:int2str(i+1),/*pos*/
-								rule->name,
-								action,
-								(rule->enable)?search(lfirewall,"rule_enabled"):search(lfirewall,"rule_disabled"),
-								(0 == manager)?str_POP_MENU:"",
-								ruleTypeStr,i);
 
-				rule = rule->next;
 											
 			}
 			//加入一个空行，解决popmenu显示不下的问题。
@@ -698,6 +794,8 @@ int cgiMain()
 	free(encry);
 	release(lpublic); 
 	release(lfirewall);
+
+	free_instance_parameter_list(&paraHead1);
 //endif
 	
 	return 0;

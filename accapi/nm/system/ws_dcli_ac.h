@@ -522,6 +522,7 @@ extern int set_wtp_wids_lasttime_cmd_func(dbus_parameter parameter, DBusConnecti
 
 /*level的范围是0-25*/
 extern int set_wid_trap_open_func(dbus_parameter parameter, DBusConnection *connection,char *level);/*返回1表示成功，返回0表示失败，返回-1表示error*/
+																			 							 /*返回-2表示trap level should be 0-25*/
 																			 							 /*返回SNMPD_CONNECTION_ERROR表示connection error*/
 
 extern void Free_rogue_ap_trap_threshold(DCLI_AC_API_GROUP_FIVE *rogue_trap);
@@ -735,6 +736,47 @@ extern int set_wids_monitor_mode_cmd(dbus_parameter parameter, DBusConnection *c
 																																/*返回0表示失败，返回1表示成功，返回-1表示invalid input*/
 																			                                                    /*返回-2表示invalid wtp id，返回-3表示error*/
 
+
+/*level为"dump","debug","info","notice","warning","error","crit","alert","emerg"*/
+extern int set_asd_daemonlog_level_cmd(dbus_parameter parameter, DBusConnection *connection,char *level);
+																			/*返回0表示失败，返回1表示成功*/
+																			/*返回-1表示input patameter should only be dump|debug|info|notice|warning|error|crit|alert|emerg*/
+																			/*返回-2表示error*/
+																			/*返回SNMPD_CONNECTION_ERROR表示connection error*/
+
+/*Type为"master","bakup","disable"*/
+extern int set_ac_master_ipaddr_cmd(dbus_parameter parameter, DBusConnection *connection,char *Type,char *ipaddr);
+																			/*返回0表示失败，返回1表示成功*/
+																			/*返回-1表示invalid input,input should be master or bakup*/
+																			/*返回-2表示unknown ip format，返回-3表示more if have this ip*/
+																			/*返回-4表示no if has this ip，返回-5表示please disable it first*/
+																			/*返回-6表示no interface binding this ip*/
+																			/*返回-7表示this ip has not been added or has already been deleted*/
+																			/*返回-8表示error*/
+																			/*返回SNMPD_CONNECTION_ERROR表示connection error*/
+
+extern void Free_show_wireless_listen_if_cmd(Listen_IF *Listen_IF);
+/*只要调用函数，就调用Free_show_wireless_listen_if_cmd()释放空间*/
+extern int show_wireless_listen_if_cmd(dbus_parameter parameter, DBusConnection *connection, Listen_IF **Listen_IF);/*返回0表示失败，返回1表示成功，返回-1表示wid listenning interface:NULL*/
+
+/*Oper为"add"或"del"*/
+extern int set_wirelesscontrol_listen_l3_interface_cmd(dbus_parameter parameter, DBusConnection *connection,char *Oper,char *ifname);
+																			/*返回0表示失败，返回1表示成功*/
+																			/*返回-1表示interface name is too long,should be no more than 15*/
+																			/*返回-2表示input patameter only with 'add'or 'del'*/
+																			/*返回-3表示 auto ap login switch is enable,you should disable it first*/
+																			/*返回-4表示interface error, no index or interface down*/
+																			/*返回-5表示this interface has not been added or has already been deleted*/
+																			/*返回-6表示interface is down，返回-7表示interface is no flags*/
+																			/*返回-8表示tinterface is no index，返回-9表示interface is no local interface, permission denial*/
+																			/*返回-10表示interface is other hansi listen*/
+																			/*返回SNMPD_CONNECTION_ERROR表示connection error*/
+
+/*state为"enable"或"disable"*/
+extern int set_vlan_switch_cmd(dbus_parameter parameter, DBusConnection *connection,char *state);
+																			/*返回0表示失败，返回1表示成功*/
+																			/*返回-1表示error*/
+																			/*返回SNMPD_CONNECTION_ERROR表示connection error*/
 
 #endif
 

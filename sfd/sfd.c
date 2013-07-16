@@ -48,6 +48,8 @@ macstr2mac(char *macstr, unsigned char *mac)
 	strcpy(macstr_tmp, macstr);
 	
 	tmp = strtok(macstr_tmp, ":");
+	if(tmp == NULL)/*coverity modify for CID 18038 */
+		return -1;
 	if(strlen(tmp) != 2)
 		return -1;
 	mac[n++] = (unsigned char)strtol(tmp, NULL, 16);

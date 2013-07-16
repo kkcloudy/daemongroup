@@ -43,20 +43,24 @@ extern "C"
 ////////////////////////////
 
 #include <ctype.h>
-#include "ws_dcli_vrrp.h"
 /*#include "ws_ec.h"*/
 #include "ws_init_dbus.h"
-
+#include "ws_dbus_list_interface.h"
 #include <dbus/dbus.h>
 #include <sysdef/npd_sysdef.h>
 #include <dbus/npd/npd_dbus_def.h>
+#include "dbus/hmd/HmdDbusDef.h"
+#include "dbus/wcpss/ACDbusDef1.h"
+#include "dbus/asd/ASDDbusDef1.h"
 #include <util/npd_list.h>
 #include <unistd.h>
 #include "npd/nbm/npd_bmapi.h"
 #include <netdb.h>  
 #include "ws_returncode.h"
+#include "wcpss/wid/WID.h"
 #include <fcntl.h> 
 #include <signal.h>
+#include "ws_dcli_vrrp.h"
 
 /**************
 
@@ -327,7 +331,84 @@ int ccgi_config_hansi_profile(char *pro_num)/*∑µªÿ0±Ì æ≥…π¶£¨∑µªÿ-1±Ì æerror£¨∑µ
 	dbus_message_unref(reply);
 	return retu;
 }
+int ccgi_config_hansi_profile_web(char *pro_num,int slotid,DBusConnection *connection)
+/*∑µªÿ0±Ì æ≥…π¶£¨∑µªÿ-1±Ì æerror£¨∑µªÿ-2±Ì æThe Slot is not active master board, permission denial£¨∑µªÿ-3±Ì æThe Slot is not EXIST*/
+                                            /*∑µªÿ-4±Ì æremote hansi not exist*/
+{
+	DBusMessage *query = NULL, *reply = NULL;
+	DBusError err = {0};
+	unsigned int hmd_ret = 0;
+	unsigned int profile = 0;
+	 int slot_id = slotid;
+	DBusMessage *query2 = NULL, *reply2 = NULL;
+	DBusError err2 = {0};
+	unsigned int op_ret = 0;
+	int instRun = 0;
+	char cmd[DCLI_VRRP_DBUSNAME_LEN] = {0}; /*wcl add*/
+	unsigned char insID = 0;
+	int flag = 0;
+	char vrrp_obj_path[DCLI_VRRP_OBJPATH_LEN] = {0};
+	char vrrp_dbus_name[DCLI_VRRP_DBUSNAME_LEN] = {0};
+	
+	fprintf(stderr,"pro_num=%s\n",pro_num);
+	fprintf(stderr,"slotid=%d\n",slotid);
+	fprintf(stderr,"connection=%p\n",connection);
+	profile = strtoul((char *)pro_num,NULL,0);
+	if((profile < 1)||profile > 16)
+	{
+		return -1;
+	}
 
+	query = dbus_message_new_method_call(HMD_DBUS_BUSNAME,HMD_DBUS_OBJPATH,HMD_DBUS_INTERFACE,HMD_DBUS_CONF_METHOD_REMOTE_HANSI);
+
+	dbus_error_init(&err);
+	dbus_message_append_args(query,
+							 DBUS_TYPE_UINT32,&profile,
+							 DBUS_TYPE_UINT32,&slot_id,
+							 DBUS_TYPE_INVALID);
+	reply = dbus_connection_send_with_reply_and_block (connection,query,150000, &err);
+
+	dbus_message_unref(query);
+	if (NULL == reply) {
+		if (dbus_error_is_set(&err)) {
+			dbus_error_free(&err);
+		}
+		return -1;
+	}
+
+	if (dbus_message_get_args ( reply, &err,
+				DBUS_TYPE_UINT32,&hmd_ret,
+				DBUS_TYPE_INVALID))
+	{	
+		if(hmd_ret == 0){
+			return 0;
+		}
+		else if(hmd_ret == HMD_DBUS_PERMISSION_DENIAL){
+			return -2;
+		}else if(hmd_ret == HMD_DBUS_SLOT_ID_NOT_EXIST){
+			return -3;
+		}else if (hmd_ret == HMD_DBUS_ID_NO_EXIST){
+			return -4;
+		}else{
+			return -1;
+		}
+
+	} 
+	else 
+	{	
+		if (dbus_error_is_set(&err)) 
+		{
+			printf("%s raised: %s",err.name,err.message);
+			dbus_error_free(&err);
+		}		
+		return -1;
+	}
+	
+	dbus_message_unref(reply);
+	reply = NULL;
+	
+	return 0;
+}
 
 int delete_hansi_profile(char *profileid)/*∑µªÿ0±Ì æ≥…π¶£¨∑µªÿ-1±Ì æprofileid≥¨≥ˆ∑∂Œß£¨∑µªÿ-2±Ì æconfig hansi  service disable faild*/
                                          /*∑µªÿ-3±Ì ædelete hansi  faild£¨∑µªÿ-4±Ì æcreate hansi  faild.∑µªÿ-5±Ì æerror£¨∑µªÿ-6±Ì æhansi no exist*/
@@ -409,6 +490,57 @@ int delete_hansi_profile(char *profileid)/*∑µªÿ0±Ì æ≥…π¶£¨∑µªÿ-1±Ì æprofileid≥¨≥
 	}
 
 	//return 0;
+	return 0;
+}
+int delete_hansi_profile_web(char *profileid,DBusConnection *connection)/*∑µªÿ0±Ì æ≥…π¶£¨∑µªÿ-1±Ì æprofileid≥¨≥ˆ∑∂Œß£¨∑µªÿ-2±Ì æconfig hansi  service disable faild*/
+                                         /*∑µªÿ-3±Ì ædelete hansi  faild£¨∑µªÿ-4±Ì æcreate hansi  faild.∑µªÿ-5±Ì æerror£¨∑µªÿ-6±Ì æhansi no exist*/
+{
+	DBusMessage *query = NULL, *reply = NULL;
+	DBusError err = {0};
+	unsigned int op_ret = 0;
+	unsigned int profile = 0;
+
+	profile = atoi(profileid);
+	char vrrp_obj_path[DCLI_VRRP_OBJPATH_LEN] = {0};
+	char vrrp_dbus_name[DCLI_VRRP_DBUSNAME_LEN] = {0};	
+
+	ccgi_vrrp_splice_objpath_string(VRRP_DBUS_OBJPATH, profile, vrrp_obj_path);
+	ccgi_vrrp_splice_dbusname(VRRP_DBUS_BUSNAME, profile, vrrp_dbus_name);
+
+	query = dbus_message_new_method_call(vrrp_dbus_name,
+										 vrrp_obj_path,
+										 VRRP_DBUS_INTERFACE,
+										 VRRP_DBUS_METHOD_END_VRRP);
+	dbus_error_init(&err);
+
+	dbus_message_append_args(query,
+		                     DBUS_TYPE_UINT32,&profile,							 
+							 DBUS_TYPE_INVALID);
+	
+	reply = dbus_connection_send_with_reply_and_block (connection,query,-1, &err);
+	dbus_message_unref(query);
+	if (NULL == reply) {
+		if (dbus_error_is_set(&err)) {
+			dbus_error_free(&err);
+		}
+		return -5;
+	}
+	if (dbus_message_get_args ( reply, &err,
+		DBUS_TYPE_UINT32,&op_ret,
+		DBUS_TYPE_INVALID)){	
+        if( DCLI_VRRP_RETURN_CODE_OK != op_ret){
+            //vty_out(vty,dcli_vrrp_err_msg[op_ret - DCLI_VRRP_RETURN_CODE_OK]);
+            return -5;
+		}
+	}
+	else 
+	{		
+		if (dbus_error_is_set(&err)) 
+		{
+			dbus_error_free(&err);
+		}
+	}
+	dbus_message_unref(reply);
 	return 0;
 }
 int config_vrrp_heartbeat_cmd_func(char * profid,char *ifnamez,char *ipz)/*∑µªÿ0±Ì æ≥…π¶£¨∑µªÿ-1±Ì æ ß∞‹£¨∑µªÿ-2±Ì æ–ƒÃ¯œﬂipŒ™ø’£¨∑µªÿ-3±Ì æ–ƒÃ¯œﬂΩ”ø⁄√˚Œ™ø’*/
@@ -495,6 +627,76 @@ int config_vrrp_heartbeat_cmd_func(char * profid,char *ifnamez,char *ipz)/*∑µªÿ0
 	return 0;
 }
 
+int config_vrrp_heartbeat_cmd_func_web(char * profid,char *ifnamez,char *ipz,DBusConnection *connection)/*∑µªÿ0±Ì æ≥…π¶£¨∑µªÿ-1±Ì æ ß∞‹£¨∑µªÿ-2±Ì æ–ƒÃ¯œﬂipŒ™ø’£¨∑µªÿ-3±Ì æ–ƒÃ¯œﬂΩ”ø⁄√˚Œ™ø’*/
+{
+	
+	DBusMessage *query = NULL, *reply = NULL;
+	DBusError err = {0};
+	unsigned int op_ret = 0;
+	unsigned int profile = 0;
+	char* heartbeat_ifname = NULL;
+    char* heartbeat_ip = NULL;
+	char vrrp_obj_path[DCLI_VRRP_OBJPATH_LEN] = {0};
+	char vrrp_dbus_name[DCLI_VRRP_DBUSNAME_LEN] = {0};	
+	
+	heartbeat_ifname = (char *)malloc(MAX_IFNAME_LEN);
+    if(NULL == heartbeat_ifname){
+       return -3;
+	}	
+	memset(heartbeat_ifname,0,MAX_IFNAME_LEN);
+	memcpy(heartbeat_ifname,ifnamez,strlen(ifnamez));
+
+	
+	heartbeat_ip = (char *)malloc(MAX_IPADDR_LEN);
+    if(NULL == heartbeat_ip){
+       return -2;
+	}	
+	memset(heartbeat_ip,0,MAX_IPADDR_LEN);
+	memcpy(heartbeat_ip,ipz,strlen(ipz));
+
+	profile=(unsigned int)strtoul(profid,0,10);
+
+	ccgi_vrrp_splice_objpath_string(VRRP_DBUS_OBJPATH, profile, vrrp_obj_path);
+	ccgi_vrrp_splice_dbusname(VRRP_DBUS_BUSNAME, profile, vrrp_dbus_name);
+
+	query = dbus_message_new_method_call(vrrp_dbus_name,
+										 vrrp_obj_path,
+										 VRRP_DBUS_INTERFACE,
+										 VRRP_DBUS_METHOD_VRRP_HEARTBEAT_LINK);
+	dbus_error_init(&err);
+
+	dbus_message_append_args(query,
+		                     DBUS_TYPE_UINT32,&profile,
+		                     DBUS_TYPE_STRING,&heartbeat_ifname,
+							 DBUS_TYPE_STRING,&heartbeat_ip,						 
+							 DBUS_TYPE_INVALID);
+	
+	reply = dbus_connection_send_with_reply_and_block (connection,query,-1, &err);
+	dbus_message_unref(query);
+	if (NULL == reply) {
+		if (dbus_error_is_set(&err)) {
+			dbus_error_free(&err);
+		}
+	}
+	else if (dbus_message_get_args ( reply, &err,
+		DBUS_TYPE_UINT32,&op_ret,
+		DBUS_TYPE_INVALID)){	
+        if( DCLI_VRRP_RETURN_CODE_OK != op_ret){
+			return op_ret - DCLI_VRRP_RETURN_CODE_OK;
+		}
+	} 
+	else 
+	{		
+		if (dbus_error_is_set(&err)) 
+		{
+			dbus_error_free(&err);
+		}
+	}
+	free(heartbeat_ip);
+	free(heartbeat_ifname);
+	dbus_message_unref(reply);
+	return 0;
+}
 
 
 int ccgi_config_realip_downlink(char *profid,char *downifname,char *downip)/*∑µªÿ0±Ì æ≥…π¶£¨∑µªÿ-1±Ì æerror,∑µªÿ-2±Ì æΩ”ø⁄√˚Œ™ø’*/
@@ -898,7 +1100,131 @@ int ccgi_downanduplink_ifname_mask(char *provrrp,char *upifname,char *upip,char 
 	dbus_message_unref(reply);
 	return retu;
 }
+int ccgi_downanduplink_ifname_mask_web(char *provrrp,char *upifname,char *upip,char *downifname,char *downip,char *prio,int upmask,int downmask,DBusConnection *connection)
+                                                  /*∑µªÿ0±Ì æ≥…π¶£¨∑µªÿ-1±Ì æerror£¨∑µªÿ-2±Ì æifnameŒ™ø’,∑µªÿ-3±Ì æipŒ™ø’,∑µªÿ-4±Ì æ”≈œ»÷µ≥¨≥ˆ∑∂Œß*/
+{
+	DBusMessage *query = NULL, *reply = NULL;
+	DBusError err = {0};
+	unsigned int op_ret = 0;
+	int retu=0;
+	unsigned int profile = 0,priority = 0;
+	int split = 0;
+	char* uplink_ifname = NULL,*downlink_ifname = NULL;
+	unsigned long uplink_ip = 0,downlink_ip = 0;
+	unsigned int  uplink_mask = 0,downlink_mask = 0;
+	
+	uplink_mask=(unsigned int)upmask;
+	downlink_mask=(unsigned int)downmask;
 
+	uplink_ifname = (char *)malloc(MAX_IFNAME_LEN);
+    if(NULL == uplink_ifname){
+	   return -2;
+	}	
+	memset(uplink_ifname,0,MAX_IFNAME_LEN);
+	memcpy(uplink_ifname,upifname,strlen(upifname));
+
+	downlink_ifname = (char *)malloc(MAX_IFNAME_LEN);	
+	if(NULL == downlink_ifname){
+       return -2;
+	}
+	memset(downlink_ifname,0,MAX_IFNAME_LEN);
+	memcpy(downlink_ifname,downifname,strlen(downifname));
+    op_ret = ccgi_vrrp_check_ip_format((char*)upip,&split);
+    if(0 == op_ret){
+	   if(0 == split){
+		   uplink_ip = (unsigned long)inet_addr((char*)upip);
+		   uplink_mask = 32;
+	   }
+	   else if(1 == split){
+		   op_ret = ip_address_format2ulong((char**)&upip,&uplink_ip,&uplink_mask); 
+		   if(op_ret==-1){
+			   free(uplink_ifname);
+			   free(downlink_ifname);
+			   return -3;
+		   }
+	   }
+	}
+	else{
+	   free(uplink_ifname);
+	   free(downlink_ifname);
+	   return -1;
+	}
+    op_ret = ccgi_vrrp_check_ip_format((char*)downip,&split);
+    if(0 == op_ret){
+	   if(0 == split){
+		   downlink_ip = (unsigned long)inet_addr((char*)downip);
+		   downlink_mask = 32;
+	   }
+	   else if(1 == split){
+		   op_ret = ip_address_format2ulong((char**)&downip,&downlink_ip,&downlink_mask); 
+		   if(op_ret==-1){
+			   free(uplink_ifname);
+			   free(downlink_ifname);
+			   //return -1;
+			   return -1;
+		   }
+	   }
+	}
+	else{
+	   free(uplink_ifname);
+	   free(downlink_ifname);
+	   return -1;		
+	}
+	priority = strtoul((char *)prio,NULL,10);
+	if((priority < 1)||priority > 255){
+		return -4;
+	}
+	profile=(unsigned int)strtoul(provrrp,0,10);
+
+	char vrrp_obj_path[DCLI_VRRP_OBJPATH_LEN] = {0};
+	char vrrp_dbus_name[DCLI_VRRP_DBUSNAME_LEN] = {0};	
+
+	ccgi_vrrp_splice_objpath_string(VRRP_DBUS_OBJPATH, profile, vrrp_obj_path);
+	ccgi_vrrp_splice_dbusname(VRRP_DBUS_BUSNAME, profile, vrrp_dbus_name);
+	
+	query = dbus_message_new_method_call(vrrp_dbus_name,
+										 vrrp_obj_path,
+										 VRRP_DBUS_INTERFACE,
+										 VRRP_DBUS_METHOD_START_VRRP);
+	dbus_error_init(&err);
+
+	dbus_message_append_args(query,
+		                     DBUS_TYPE_UINT32,&profile,
+							 DBUS_TYPE_UINT32,&priority,
+							 DBUS_TYPE_STRING,&uplink_ifname,
+							 DBUS_TYPE_UINT32,&uplink_ip,
+							 DBUS_TYPE_UINT32,&uplink_mask,
+							 DBUS_TYPE_STRING,&downlink_ifname,
+							 DBUS_TYPE_UINT32,&downlink_ip,
+							 DBUS_TYPE_UINT32,&downlink_mask,						 
+							 DBUS_TYPE_INVALID);
+	
+	reply = dbus_connection_send_with_reply_and_block (connection,query,-1, &err);
+	dbus_message_unref(query);
+	if (NULL == reply) {
+		if (dbus_error_is_set(&err)) {
+			dbus_error_free(&err);
+		}
+	}
+	else if (dbus_message_get_args ( reply, &err,
+		DBUS_TYPE_UINT32,&op_ret,
+		DBUS_TYPE_INVALID)){	
+        if( DCLI_VRRP_RETURN_CODE_OK != op_ret){
+			retu =op_ret - DCLI_VRRP_RETURN_CODE_OK;
+		}
+	} 
+	else 
+	{		
+		if (dbus_error_is_set(&err)) 
+		{
+			dbus_error_free(&err);
+		}
+	}
+	free(uplink_ifname);
+	free(downlink_ifname);
+	dbus_message_unref(reply);
+	return retu;
+}
 int config_vrrp_uplink(char *provrrp,char *upifname,char *upip,char *prio,int upmask)
 {
 	DBusMessage *query = NULL, *reply = NULL;
@@ -1004,6 +1330,103 @@ int config_vrrp_uplink(char *provrrp,char *upifname,char *upip,char *prio,int up
 		if (dbus_error_is_set(&err)) 
 		{
 			//printf("%s raised: %s",err.name,err.message);
+			dbus_error_free(&err);
+		}
+	}
+	/*release malloc mem*/
+	free(uplink_ifname);
+	dbus_message_unref(reply);
+	return retu;
+}
+int config_vrrp_uplink_web(char *provrrp,char *upifname,char *upip,char *prio,int upmask,DBusConnection *connection)
+{
+	DBusMessage *query = NULL, *reply = NULL;
+	DBusError err = {0};
+
+	unsigned int op_ret = 0;
+	unsigned int profile = 0;
+	unsigned int priority = 0;
+	int retu=0;
+	int split = 0;
+	char *uplink_ifname = NULL;
+	unsigned long uplink_ip = 0;
+	
+	unsigned int uplink_mask = 0;	
+	uplink_mask = (unsigned int)upmask;
+	
+	char vrrp_obj_path[DCLI_VRRP_OBJPATH_LEN] = {0};
+	char vrrp_dbus_name[DCLI_VRRP_DBUSNAME_LEN] = {0};	
+
+	uplink_ifname = (char *)malloc(MAX_IFNAME_LEN);	
+	if (NULL == uplink_ifname) {
+		return -2;
+	}
+	memset(uplink_ifname, 0, MAX_IFNAME_LEN);
+	memcpy(uplink_ifname, upifname, strlen(upifname));
+	
+	op_ret = ccgi_vrrp_check_ip_format((char*)upip, &split);
+	if (0 == op_ret) {
+		if (0 == split) {
+			/* mask default is 32 */
+			uplink_ip = (unsigned long)inet_addr((char*)upip);
+			uplink_mask = 32;
+		}
+		else if (1 == split) {
+			op_ret = ip_address_format2ulong((char**)&upip, &uplink_ip, &uplink_mask); 
+			if (0 != op_ret) {
+				free(uplink_ifname);
+				return -3;
+			}
+		}
+	}
+	else {
+		free(uplink_ifname);
+		return -4;
+	}
+
+	priority = strtoul((char *)prio,NULL,10);
+	if (priority < 1 ||
+		priority > 255) {
+		return -5;
+	}
+
+	profile = (unsigned int)strtoul(provrrp,0,10);
+
+	ccgi_vrrp_splice_objpath_string(VRRP_DBUS_OBJPATH, profile, vrrp_obj_path);
+	ccgi_vrrp_splice_dbusname(VRRP_DBUS_BUSNAME, profile, vrrp_dbus_name);
+
+	query = dbus_message_new_method_call(vrrp_dbus_name,
+										 vrrp_obj_path,
+										 VRRP_DBUS_INTERFACE,
+										 VRRP_DBUS_METHOD_START_VRRP_UPLINK);
+	dbus_error_init(&err);
+
+	dbus_message_append_args(query,
+		                     DBUS_TYPE_UINT32, &profile,
+							 DBUS_TYPE_UINT32, &priority,
+							 DBUS_TYPE_STRING, &uplink_ifname,
+							 DBUS_TYPE_UINT32, &uplink_ip,
+							 DBUS_TYPE_UINT32, &uplink_mask,
+							 DBUS_TYPE_INVALID);
+	
+	reply = dbus_connection_send_with_reply_and_block(connection, query, -1, &err);
+	dbus_message_unref(query);
+	if (NULL == reply) {
+		if (dbus_error_is_set(&err)) {
+			dbus_error_free(&err);
+		}
+	}
+	else if (dbus_message_get_args(reply, &err,
+									DBUS_TYPE_UINT32, &op_ret,
+									DBUS_TYPE_INVALID))
+	{	
+        if (DCLI_VRRP_RETURN_CODE_OK != op_ret) {
+            retu=op_ret - DCLI_VRRP_RETURN_CODE_OK;
+		}
+	} 
+	else {		
+		if (dbus_error_is_set(&err)) 
+		{
 			dbus_error_free(&err);
 		}
 	}
@@ -1218,7 +1641,101 @@ int config_vrrp_downlink_mask(char *proid,char *downifname,char *downip,char *pr
 	//return 0;
 	return retu;
 }
+int config_vrrp_downlink_mask_web(char *proid,char *downifname,char *downip,char *prio,int downmask,DBusConnection *connection)/*∑µªÿ0±Ì æ≥…π¶£¨∑µªÿ-1±Ì æerror£¨∑µªÿ-2±Ì æΩ”ø⁄√˚Œ™ø’£¨∑µªÿ-3±Ì æ”≈œ»÷µ≥¨≥ˆ∑∂Œß*/
+{
+	DBusMessage *query = NULL, *reply = NULL;
+	DBusError err = {0};
+	unsigned int op_ret = 0;
+	int retu=0;
+	unsigned int profile = 0,priority = 0;
+	int split = 0;
+	char* downlink_ifname = NULL;
+    unsigned  long downlink_ip = 0;
+	
+	unsigned int downlink_mask = 0;	
+    downlink_mask = (unsigned int)downmask;
+	
+	downlink_ifname = (char *)malloc(MAX_IFNAME_LEN);	
+	if(NULL == downlink_ifname){
+       return -2;
+	}
+	memset(downlink_ifname,0,MAX_IFNAME_LEN);
+	memcpy(downlink_ifname,downifname,strlen(downifname));
+	
+    op_ret = ccgi_vrrp_check_ip_format((char*)downip,&split);
+    if(0 == op_ret){
+	   if(0 == split){
+		   downlink_ip = (unsigned long)inet_addr((char*)downip);
+		   downlink_mask = 32;
+	   }
+	   else if(1 == split){
+		   op_ret = ip_address_format2ulong((char**)&downip,&downlink_ip,&downlink_mask); 
+		   if(op_ret==-1){
+			   free(downlink_ifname);
+			   return -1;
+		   }
+	   }
+	}
+	else{
+	   free(downlink_ifname);
+	   return -1;
+	}
 
+
+	priority = strtoul((char *)prio,NULL,10);
+	if((priority < 1)||priority > 255){
+		return -3;
+	}
+
+
+	profile = (unsigned int)strtoul(proid,0,10);
+
+	char vrrp_obj_path[DCLI_VRRP_OBJPATH_LEN] = {0};
+	char vrrp_dbus_name[DCLI_VRRP_DBUSNAME_LEN] = {0};	
+
+	ccgi_vrrp_splice_objpath_string(VRRP_DBUS_OBJPATH, profile, vrrp_obj_path);
+	ccgi_vrrp_splice_dbusname(VRRP_DBUS_BUSNAME, profile, vrrp_dbus_name);
+
+	query = dbus_message_new_method_call(vrrp_dbus_name,
+										 vrrp_obj_path,
+										 VRRP_DBUS_INTERFACE,
+										 VRRP_DBUS_METHOD_START_VRRP_DOWNLINK);
+	dbus_error_init(&err);
+
+	dbus_message_append_args(query,
+		                     DBUS_TYPE_UINT32,&profile,
+							 DBUS_TYPE_UINT32,&priority,
+							 DBUS_TYPE_STRING,&downlink_ifname,
+							 DBUS_TYPE_UINT32,&downlink_ip,
+							 DBUS_TYPE_UINT32,&downlink_mask,
+							 DBUS_TYPE_INVALID);
+	
+	reply = dbus_connection_send_with_reply_and_block (connection,query,-1, &err);
+	dbus_message_unref(query);
+	if (NULL == reply) {
+		if (dbus_error_is_set(&err)) {
+			dbus_error_free(&err);
+		}
+	}
+	else if (dbus_message_get_args ( reply, &err,
+		DBUS_TYPE_UINT32,&op_ret,
+		DBUS_TYPE_INVALID)){	
+        if( DCLI_VRRP_RETURN_CODE_OK != op_ret){
+          retu =op_ret - DCLI_VRRP_RETURN_CODE_OK;
+		}
+	} 
+	else 
+	{		
+		if (dbus_error_is_set(&err)) 
+		{
+			dbus_error_free(&err);
+		}
+	}
+	/*release malloc mem*/
+	free(downlink_ifname);
+	dbus_message_unref(reply);
+	return retu;
+}
 int config_vrrp_link_add_vip(char * input_type, char *profid,char *linktype,char *ifnamez,char *ipz)
 {
 	DBusMessage *query = NULL;
@@ -1351,6 +1868,112 @@ int config_vrrp_link_add_vip(char * input_type, char *profid,char *linktype,char
 	dbus_message_unref(reply);
 	return retu;
 }
+int config_vrrp_link_add_vip_web(char * input_type, char *profid,char *linktype,char *ifname,char *ipz,DBusConnection *connection)
+{
+	DBusMessage *query = NULL;
+	DBusMessage *reply = NULL;
+	DBusError err = {0};
+
+    int retu=0;
+	unsigned int op_ret = 0;
+	unsigned int profile = 0;
+	//int add = 1;
+	int split = 0;
+	unsigned opt_type = DCLI_VRRP_VIP_OPT_TYPE_INVALID;
+	unsigned link_type = DCLI_VRRP_LINK_TYPE_INVALID;
+	unsigned long virtual_ip = 0;
+	unsigned int mask = 0;
+	char vrrp_obj_path[DCLI_VRRP_OBJPATH_LEN] = {0};
+	char vrrp_dbus_name[DCLI_VRRP_DBUSNAME_LEN] = {0};	
+
+	if (!strncmp(input_type, "add", strlen(input_type))) {
+		opt_type = DCLI_VRRP_VIP_OPT_TYPE_ADD;
+	}else if (!strncmp(input_type, "delete", strlen(input_type))) {
+		opt_type = DCLI_VRRP_VIP_OPT_TYPE_DEL;
+	}else {
+		return -1;
+	}
+
+	if (!strncmp(linktype, "uplink", strlen(linktype))) {
+		link_type = DCLI_VRRP_LINK_TYPE_UPLINK;
+	}else if (!strncmp(linktype, "downlink", strlen(linktype))) {
+		link_type = DCLI_VRRP_LINK_TYPE_DOWNLINK;
+	}
+	else if(!strncmp(linktype, "vgateway", strlen(linktype))) {
+		link_type = DCLI_VRRP_LINK_TYPE_VGATEWAY;
+	}else {
+		return -3;
+	}
+
+	op_ret = ccgi_vrrp_check_ip_format((char*)ipz, &split);
+	if (0 == op_ret)
+	{
+		if (0 == split)
+		{
+			/* mask default is 32 */
+			virtual_ip = (unsigned long)inet_addr((char*)ipz);
+			mask = 32;
+		}
+		else if (1 == split)
+		{
+			op_ret = ip_address_format2ulong((char**)&ipz, &virtual_ip, &mask); 
+			if (0 != op_ret) {
+				return -4;
+			}
+		}
+	}
+	else {
+		return -5;
+	}
+
+	profile = (unsigned int)strtoul(profid,0,10);
+
+	ccgi_vrrp_splice_objpath_string(VRRP_DBUS_OBJPATH, profile, vrrp_obj_path);
+	ccgi_vrrp_splice_dbusname(VRRP_DBUS_BUSNAME, profile, vrrp_dbus_name);
+
+	query = dbus_message_new_method_call(vrrp_dbus_name,
+										 vrrp_obj_path,
+										 VRRP_DBUS_INTERFACE,
+										 VRRP_DBUS_METHOD_VRRP_LINK_ADD_DEL_VIP);
+	dbus_error_init(&err);
+
+	dbus_message_append_args(query,
+		                     DBUS_TYPE_UINT32, &profile,
+							 DBUS_TYPE_UINT32, &opt_type,		                     
+							 DBUS_TYPE_UINT32, &link_type,
+							 DBUS_TYPE_STRING, &ifname,
+							 DBUS_TYPE_UINT32, &virtual_ip,
+							 DBUS_TYPE_UINT32, &mask,
+							 DBUS_TYPE_INVALID);
+	
+	reply = dbus_connection_send_with_reply_and_block(connection, query, -1, &err);
+	dbus_message_unref(query);
+	if (NULL == reply) {
+		if (dbus_error_is_set(&err)) {
+			dbus_error_free(&err);
+		}
+	}
+	else if (dbus_message_get_args(reply, &err,
+									DBUS_TYPE_UINT32, &op_ret,
+									DBUS_TYPE_INVALID))
+	{
+        if (DCLI_VRRP_RETURN_CODE_OK != op_ret) {
+		   retu =  (op_ret - DCLI_VRRP_RETURN_CODE_OK);
+		   return retu;
+		}
+	}
+	else
+	{
+		if (dbus_error_is_set(&err))
+		{
+			dbus_error_free(&err);
+		}
+	}
+	
+	/*release malloc mem*/
+	dbus_message_unref(reply);
+	return 33;
+}
 
 
 int config_vrrp_start_state(char *profid,char *statez)/*∑µªÿ0±Ì æ≥…π¶£¨∑µªÿ-1±Ì æ ß∞‹*/
@@ -1461,6 +2084,76 @@ int config_vrrp_service(char *profid,char *ablez)/*∑µªÿ0±Ì æ≥…π¶£¨∑µªÿ-1±Ì æ ß∞‹
 							 DBUS_TYPE_INVALID);
 	
 	reply = dbus_connection_send_with_reply_and_block (ccgi_dbus_connection,query,-1, &err);
+	dbus_message_unref(query);
+	if (NULL == reply) {
+		//vty_out(vty,"failed get reply.\n");
+		if (dbus_error_is_set(&err)) {
+			//printf("%s raised: %s",err.name,err.message);
+			dbus_error_free(&err);
+		}
+		retu = -1;
+	}
+	else if (dbus_message_get_args ( reply, &err,
+		DBUS_TYPE_UINT32,&op_ret,
+		DBUS_TYPE_INVALID)){	
+        if( DCLI_VRRP_RETURN_CODE_OK != op_ret){
+            //vty_out(vty,dcli_vrrp_err_msg[op_ret - DCLI_VRRP_RETURN_CODE_OK]);
+            retu = op_ret - DCLI_VRRP_RETURN_CODE_OK;
+		}
+		
+	} 
+	else 
+	{		
+		if (dbus_error_is_set(&err)) 
+		{
+			//printf("%s raised: %s",err.name,err.message);
+			dbus_error_free(&err);
+		}
+		retu = -1;
+	}
+	dbus_message_unref(reply);
+	return retu;
+}
+int config_vrrp_service_web(char *profid,char *ablez,DBusConnection *connection)/*∑µªÿ0±Ì æ≥…π¶£¨∑µªÿ-1±Ì æ ß∞‹*/
+{
+	DBusMessage *query = NULL, *reply = NULL;
+	DBusError err = {0};
+	unsigned int op_ret = 0;
+	int retu = 0;
+	unsigned int profile = 0;
+	//unsigned int priority = 0,vrid = 0;
+	int enable = -1;
+
+	if(!strcmp("enable",(char *)ablez)){
+        enable = 1;
+	}
+	else if(!strcmp("disable",(char *)ablez)){
+        enable = 0;
+	}
+
+	/*if(HANSI_NODE==vty->node){
+		profile = (unsigned int)(vty->index);
+	}*/
+	profile = (unsigned int)strtoul(profid,0,10);
+	
+	char vrrp_obj_path[DCLI_VRRP_OBJPATH_LEN] = {0};
+	char vrrp_dbus_name[DCLI_VRRP_DBUSNAME_LEN] = {0};	
+
+	ccgi_vrrp_splice_objpath_string(VRRP_DBUS_OBJPATH, profile, vrrp_obj_path);
+	ccgi_vrrp_splice_dbusname(VRRP_DBUS_BUSNAME, profile, vrrp_dbus_name);
+
+	query = dbus_message_new_method_call(vrrp_dbus_name,
+										 vrrp_obj_path,
+										 VRRP_DBUS_INTERFACE,
+										 VRRP_DBUS_METHOD_VRRP_SERVICE_ENABLE);
+	dbus_error_init(&err);
+
+	dbus_message_append_args(query,
+		                     DBUS_TYPE_UINT32,&profile,
+							 DBUS_TYPE_UINT32,&enable,							 
+							 DBUS_TYPE_INVALID);
+	
+	reply = dbus_connection_send_with_reply_and_block (connection,query,-1, &err);
 	dbus_message_unref(query);
 	if (NULL == reply) {
 		//vty_out(vty,"failed get reply.\n");
@@ -1723,7 +2416,66 @@ int config_vrrp_preempt(char *profid,char *statez)/*∑µªÿ0±Ì æ≥…π¶£¨∑µªÿ-1±Ì æ ß∞
 	dbus_message_unref(reply);
 	return retu;
 }
+int config_vrrp_preempt_web(char *statez,int profid,DBusConnection *connection)/*∑µªÿ0±Ì æ≥…π¶£¨∑µªÿ-1±Ì æ ß∞‹£¨*/
+{
+	DBusMessage *query = NULL, *reply = NULL;
+	DBusError err = {0};
+	unsigned int op_ret = 0;
+	unsigned int profile = 0,preempt = 0;
+	//unsigned int vrid = 0,state = 0;
+	int retu=0;
 
+	if(!strcmp("yes",(char *)statez)){
+        preempt = 1;
+	}
+	else if(!strcmp("no",(char *)statez)){
+        preempt = 0;
+	}
+
+	profile = (unsigned int)strtoul(profid,0,10);
+
+	char vrrp_obj_path[DCLI_VRRP_OBJPATH_LEN] = {0};
+	char vrrp_dbus_name[DCLI_VRRP_DBUSNAME_LEN] = {0};	
+
+	ccgi_vrrp_splice_objpath_string(VRRP_DBUS_OBJPATH, profile, vrrp_obj_path);
+	ccgi_vrrp_splice_dbusname(VRRP_DBUS_BUSNAME, profile, vrrp_dbus_name);
+
+	query = dbus_message_new_method_call(vrrp_dbus_name,
+										 vrrp_obj_path,
+										 VRRP_DBUS_INTERFACE,
+										 VRRP_DBUS_METHOD_PREEMPT_VALUE);
+	dbus_error_init(&err);
+
+	dbus_message_append_args(query,
+		                     DBUS_TYPE_UINT32,&profile,	
+							 DBUS_TYPE_UINT32,&preempt,
+							 DBUS_TYPE_INVALID);
+	
+	reply = dbus_connection_send_with_reply_and_block (connection,query,-1, &err);
+	dbus_message_unref(query);
+	if (NULL == reply) {
+		if (dbus_error_is_set(&err)) {
+			dbus_error_free(&err);
+		}
+		return 0;
+	}
+	if (dbus_message_get_args ( reply, &err,
+		DBUS_TYPE_UINT32,&op_ret,
+		DBUS_TYPE_INVALID)){
+        if( DCLI_VRRP_RETURN_CODE_OK != op_ret){
+            retu =op_ret - DCLI_VRRP_RETURN_CODE_OK;
+		}
+	} 
+	else 
+	{		
+		if (dbus_error_is_set(&err)) 
+		{
+			dbus_error_free(&err);
+		}
+	}
+	dbus_message_unref(reply);
+	return retu;
+}
 int cancel_vrrp_transfer(char *profid)/*∑µªÿ0±Ì æ≥…π¶£¨∑µªÿ-1±Ì æerror*/
 {
 	DBusMessage *query = NULL, *reply = NULL;
@@ -1913,6 +2665,67 @@ int config_vrrp_multi_link_detect(char *profid,char *statez)/*∑µªÿ0±Ì æ≥…π¶£¨∑µª
 	}
 	dbus_message_unref(reply);
 	//return 0;
+	return retu;
+}
+int config_vrrp_multi_link_detect_web(char *statez,char *profid,DBusConnection *connection)/*∑µªÿ0±Ì æ≥…π¶£¨∑µªÿ-1±Ì æ ß∞‹*/
+{
+	DBusMessage *query = NULL, *reply = NULL;
+	DBusError err = {0};
+	unsigned int op_ret = 0;
+	unsigned int profile = 0;
+	int detect = 0;
+	int retu =0;
+	if(!strcmp("on",(char *)statez)){
+        detect = 1;
+	}
+	else if(!strcmp("off",(char *)statez)){
+        detect = 0;
+	}
+	profile = (unsigned int)strtoul(profid,0,10);
+
+	char vrrp_obj_path[DCLI_VRRP_OBJPATH_LEN] = {0};
+	char vrrp_dbus_name[DCLI_VRRP_DBUSNAME_LEN] = {0};	
+
+	ccgi_vrrp_splice_objpath_string(VRRP_DBUS_OBJPATH, profile, vrrp_obj_path);
+	ccgi_vrrp_splice_dbusname(VRRP_DBUS_BUSNAME, profile, vrrp_dbus_name);
+
+	query = dbus_message_new_method_call(vrrp_dbus_name,
+										 vrrp_obj_path,
+										 VRRP_DBUS_INTERFACE,
+										 VRRP_DBUS_METHOD_MULTI_LINK_DETECT);
+	dbus_error_init(&err);
+
+	dbus_message_append_args(query,
+							 DBUS_TYPE_UINT32,&profile,	
+							 DBUS_TYPE_UINT32,&detect,					 
+							 DBUS_TYPE_INVALID);
+	
+	reply = dbus_connection_send_with_reply_and_block (connection,query,-1, &err);
+	dbus_message_unref(query);
+	if (NULL == reply) {
+		if (dbus_error_is_set(&err)) {
+			dbus_error_free(&err);
+		}
+		retu = -1;
+	}
+	if (dbus_message_get_args ( reply, &err,
+		DBUS_TYPE_UINT32,&op_ret,
+		DBUS_TYPE_INVALID)){
+        if( DCLI_VRRP_RETURN_CODE_OK != op_ret){
+			retu =op_ret - DCLI_VRRP_RETURN_CODE_OK;
+		}
+		else 
+			retu=0;
+	} 
+	else 
+	{		
+		if (dbus_error_is_set(&err)) 
+		{
+			dbus_error_free(&err);
+		}
+		retu = -1;
+	}
+	dbus_message_unref(reply);
 	return retu;
 }
 
@@ -2348,6 +3161,83 @@ int ccgi_config_hansi_priority(char *provrrp,char * prio_num)/*∑µªÿ0±Ì æ≥…π¶£¨∑µ
 	dbus_message_unref(reply);
 	return retu;
 }
+int ccgi_config_hansi_priority_web(char *provrrp,char * prio_num,DBusConnection *connection)/*∑µªÿ0±Ì æ≥…π¶£¨∑µªÿ-1±Ì æ ß∞‹,∑µªÿ-3±Ì æ”≈œ»÷µ≥¨≥ˆ∑∂Œß*/
+{
+	DBusMessage *query = NULL, *reply = NULL;
+	DBusError err = {0};
+	unsigned int op_ret = 0;
+	unsigned int vrid = 0,priority = 0;
+	//unsigned int preempt = 0;
+	int retu = 0;
+	unsigned int profile = 0;
+
+	priority = strtoul((char *)prio_num,NULL,10);
+	if((priority < 1)||priority > 255){
+        //vty_out(vty,"%% Bad parameter : %s !",argv[0]);        
+		return -3;
+	}
+
+	//hansi_node 
+	/*
+	if(HANSI_NODE==vty->node){
+		profile = (unsigned int)(vty->index);
+		vrid = profile;
+	}
+	*/
+	
+	int tempvrrp;
+	tempvrrp=strtoul(provrrp,0,10);
+	vrid = (unsigned int)tempvrrp;
+	profile = vrid;
+	
+	char vrrp_obj_path[DCLI_VRRP_OBJPATH_LEN] = {0};
+	char vrrp_dbus_name[DCLI_VRRP_DBUSNAME_LEN] = {0};	
+
+	ccgi_vrrp_splice_objpath_string(VRRP_DBUS_OBJPATH, profile, vrrp_obj_path);
+	ccgi_vrrp_splice_dbusname(VRRP_DBUS_BUSNAME, profile, vrrp_dbus_name);
+	
+	query = dbus_message_new_method_call(vrrp_dbus_name,
+										 vrrp_obj_path,
+										 VRRP_DBUS_INTERFACE,
+										 VRRP_DBUS_METHOD_PROFILE_VALUE);
+	dbus_error_init(&err);
+
+	dbus_message_append_args(query,
+		                     DBUS_TYPE_UINT32,&vrid,
+							 DBUS_TYPE_UINT32,&priority,					 
+							 DBUS_TYPE_INVALID);
+	
+	reply = dbus_connection_send_with_reply_and_block (connection,query,-1, &err);
+	dbus_message_unref(query);
+	if (NULL == reply) {
+		//vty_out(vty,"failed get reply.\n");
+		if (dbus_error_is_set(&err)) {
+			//printf("%s raised: %s",err.name,err.message);
+			dbus_error_free(&err);
+		}
+		retu = -1;
+	}
+	if (dbus_message_get_args ( reply, &err,
+		DBUS_TYPE_UINT32,&op_ret,
+		DBUS_TYPE_INVALID)){
+        if( DCLI_VRRP_RETURN_CODE_OK != op_ret){
+           // vty_out(vty,dcli_vrrp_err_msg[op_ret - DCLI_VRRP_RETURN_CODE_OK]);
+           //return (op_ret - DCLI_VRRP_RETURN_CODE_OK);
+           retu =op_ret - DCLI_VRRP_RETURN_CODE_OK;
+		}
+	} 
+	else 
+	{		
+		if (dbus_error_is_set(&err)) 
+		{
+			//printf("%s raised: %s",err.name,err.message);
+			dbus_error_free(&err);
+		}
+		retu = -1;
+	}
+	dbus_message_unref(reply);
+	return retu;
+}
 
 //"config hansi advertime TIME"
 int ccgi_config_hansi_advertime(char *provrrp,char *adtime)/*∑µªÿ0±Ì æ≥…π¶£¨∑µªÿ-1±Ì æ ß∞‹£¨∑µªÿ-2±Ì æ≤Œ ˝≥¨≥ˆ∑∂Œß*/
@@ -2418,6 +3308,70 @@ int ccgi_config_hansi_advertime(char *provrrp,char *adtime)/*∑µªÿ0±Ì æ≥…π¶£¨∑µªÿ
 		if (dbus_error_is_set(&err)) 
 		{
 			//printf("%s raised: %s",err.name,err.message);
+			dbus_error_free(&err);
+		}
+	}
+	dbus_message_unref(reply);
+	return retu ;
+}
+int ccgi_config_hansi_advertime_web(char *provrrp,char *adtime,DBusConnection *connection)/*∑µªÿ0±Ì æ≥…π¶£¨∑µªÿ-1±Ì æ ß∞‹£¨∑µªÿ-2±Ì æ≤Œ ˝≥¨≥ˆ∑∂Œß*/
+{
+	DBusMessage *query = NULL, *reply = NULL;
+	DBusError err = {0};
+	unsigned int op_ret = 0;
+	unsigned int  vrid = 0,advert = 0;
+	int retu = 0;
+	unsigned int profile=0;
+	
+	advert = strtoul((char *)adtime,NULL,10);
+	if((advert < 1)||advert > ADVERTIME){
+		return -2;
+	}
+
+	int tempvrrp;
+	tempvrrp=strtoul(provrrp,0,10);
+	vrid = (unsigned int)tempvrrp;
+	profile = vrid;
+	char vrrp_obj_path[DCLI_VRRP_OBJPATH_LEN] = {0};
+	char vrrp_dbus_name[DCLI_VRRP_DBUSNAME_LEN] = {0};	
+
+	ccgi_vrrp_splice_objpath_string(VRRP_DBUS_OBJPATH, profile, vrrp_obj_path);
+	ccgi_vrrp_splice_dbusname(VRRP_DBUS_BUSNAME, profile, vrrp_dbus_name);
+
+	query = dbus_message_new_method_call(vrrp_dbus_name,
+										 vrrp_obj_path,
+										 VRRP_DBUS_INTERFACE,
+										 VRRP_DBUS_METHOD_ADVERT_VALUE);
+	dbus_error_init(&err);
+
+	dbus_message_append_args(query,
+		                     DBUS_TYPE_UINT32,&vrid,
+							 DBUS_TYPE_UINT32,&advert,					 
+							 DBUS_TYPE_INVALID);
+	
+	reply = dbus_connection_send_with_reply_and_block (connection,query,-1, &err);
+	dbus_message_unref(query);
+	if (NULL == reply) {
+		if (dbus_error_is_set(&err)) {
+			dbus_error_free(&err);
+		}
+		return -1;
+	}
+	if (dbus_message_get_args ( reply, &err,
+		DBUS_TYPE_UINT32,&op_ret,
+		DBUS_TYPE_INVALID)){
+        if( DCLI_VRRP_RETURN_CODE_OK != op_ret){
+			retu =op_ret - DCLI_VRRP_RETURN_CODE_OK;
+		}
+		else
+		{
+			retu = 0;
+		}
+	} 
+	else 
+	{		
+		if (dbus_error_is_set(&err)) 
+		{
 			dbus_error_free(&err);
 		}
 	}
@@ -3512,6 +4466,300 @@ int ccgi_show_hansi_profile(Z_VRRP *zvrrp,int profile)
 	return DCLI_VRRP_RETURN_CODE_OK;
 }
 
+void free_ccgi_show_hansi_profile_web(Z_VRRP_web *zvrrp)
+{
+    vrrp_link_ip_web *f1 = NULL;
+
+	while(zvrrp->uplink_list)
+	{
+		f1 =zvrrp->uplink_list->next;
+		free(zvrrp->uplink_list);
+		zvrrp->uplink_list = f1;
+	}
+	while(zvrrp->downlink_list)
+	{
+		f1 =zvrrp->downlink_list->next;
+		free(zvrrp->downlink_list);
+		zvrrp->downlink_list = f1;
+	}
+	while(zvrrp->vgatewaylink_list)
+	{
+		f1 =zvrrp->vgatewaylink_list->next;
+		free(zvrrp->vgatewaylink_list);
+		zvrrp->vgatewaylink_list = f1;
+	}
+	zvrrp->uplink_list = NULL;
+	zvrrp->downlink_list = NULL;
+	zvrrp->vgatewaylink_list = NULL;
+	return;
+}
+
+
+/*  ÷ª“™µ˜”√  ,  æÕ”√  free_ccgi_show_hansi_profile   Õ∑≈ø’º‰      */
+int ccgi_show_hansi_profile_web(Z_VRRP_web *zvrrp,int profile,int slotid,DBusConnection *connection)
+{
+   	DBusMessage *query = NULL, *reply = NULL;
+	DBusError err = {0};
+	DBusMessageIter	 iter;
+
+	char link_ip[64] = {0};
+
+    ///////////////////////////
+	unsigned int op_ret = 0;
+	unsigned int advert = 0,preempt = 0,priority = 0,state = 0;
+	char *uplink_ifname = NULL,*downlink_ifname =NULL,*heartbeatlink_ifname = NULL,*vgateway_ifname = NULL;
+	int uplink_ip = 0,downlink_ip = 0,heartbeatlink_ip = 0;
+	int wid_transfer = 0,portal_enable = 0,portal_transfer = 0;
+    int if_vgateway = 0,vgateway_ip = 0,vgateway_mask = 0;
+	char vrrp_obj_path[DCLI_VRRP_OBJPATH_LEN] = {0};
+	char vrrp_dbus_name[DCLI_VRRP_DBUSNAME_LEN] = {0};	
+	int instRun = 0;
+	int i=0;
+	unsigned int failover_peer = 0, failover_local = 0;
+	/* 0: not setted, 1: setted */
+	unsigned int uplink_set_flg = 0;
+	unsigned int downlink_set_flg = 0;
+	unsigned int heartbeat_set_flg = 0;
+	unsigned int vgateway_set_flg = 0;
+	unsigned int l2_uplink_set_flg = 0;
+	char * l2_uplink_ifname = NULL;
+	vrrp_link_ip_web *uplink_tail,*uq=NULL;
+	vrrp_link_ip_web *downlink_tail,*dq=NULL;
+	vrrp_link_ip_web *vgwlink_tail,*vq=NULL;
+	
+	instRun = ccgi_vrrp_hansi_is_running_dis(slotid,0,profile);
+	if (INSTANCE_NO_CREATED == instRun) {
+		return -2;
+	}	
+	ccgi_vrrp_splice_objpath_string(VRRP_DBUS_OBJPATH, profile, vrrp_obj_path);
+	ccgi_vrrp_splice_dbusname(VRRP_DBUS_BUSNAME, profile, vrrp_dbus_name);
+
+	///////////////////////////
+	query = dbus_message_new_method_call(vrrp_dbus_name,
+										 vrrp_obj_path,
+										 VRRP_DBUS_INTERFACE,
+										 VRRP_DBUS_METHOD_SHOW);
+	dbus_error_init(&err);
+
+	dbus_message_append_args(query,
+		                     DBUS_TYPE_UINT32,&profile,				 
+							 DBUS_TYPE_INVALID);
+	
+	reply = dbus_connection_send_with_reply_and_block (connection,query,-1, &err);
+	dbus_message_unref(query);
+	if (NULL == reply) {
+		if (dbus_error_is_set(&err)) {
+			dbus_error_free(&err);
+		}
+		dbus_message_unref(reply);		
+		return -1;
+	}
+	dbus_message_iter_init(reply,&iter);
+	dbus_message_iter_get_basic(&iter,&op_ret);
+	if((DCLI_VRRP_RETURN_CODE_PROFILE_NOTEXIST == op_ret)||(DCLI_VRRP_RETURN_CODE_NO_CONFIG == op_ret)){
+		dbus_message_unref(reply);	
+	   return -1;
+	}
+	
+	dbus_message_iter_next(&iter);
+	dbus_message_iter_get_basic(&iter,&state);
+
+	strcpy(zvrrp->state,(state==3)?"MASTER":(state == 2)?"BACK" : (state == 99)?"DISABLE" : (state == 4)?"LEARNING" :(state == 6)? "TRANSFER" :"INIT");
+	dbus_message_iter_next(&iter);
+	dbus_message_iter_get_basic(&iter,&priority);
+	
+	zvrrp->priority=priority;
+	
+	dbus_message_iter_next(&iter);
+	dbus_message_iter_get_basic(&iter,&advert);
+	
+	zvrrp->advert=advert;
+	
+	dbus_message_iter_next(&iter);
+	dbus_message_iter_get_basic(&iter,&preempt);
+	
+	strcpy(zvrrp->preempt,(preempt ? "Y" : "N"));
+
+	dbus_message_iter_next(&iter);	
+	dbus_message_iter_get_basic(&iter,&uplink_set_flg);
+	if (uplink_set_flg) {	
+		for(i = 0; i < uplink_set_flg; i++)
+		{
+		
+			uq = (vrrp_link_ip *)malloc(sizeof(vrrp_link_ip)+1);
+			if(NULL== uq)
+			{
+				return -1;
+			}
+			memset(uq,0,sizeof(vrrp_link_ip)+1);
+			dbus_message_iter_next(&iter);
+			dbus_message_iter_get_basic(&iter,&uplink_ifname);
+			
+			if(NULL == uplink_ifname)
+			{
+			  strcpy(uq->ifname,"");
+			}
+			else
+			{
+			  strcpy(uq->ifname,uplink_ifname);
+			}	
+			dbus_message_iter_next(&iter);
+			dbus_message_iter_get_basic(&iter,&uplink_ip);
+			
+			
+			memset(link_ip,0,64);
+			if(0 == uplink_ip)
+			{
+				strcpy(uq->link_ip,"--");
+			}
+			else 
+			{
+			
+				sprintf(link_ip,"%d.%d.%d.%d ",((uplink_ip & 0xff000000) >> 24),((uplink_ip & 0xff0000) >> 16), \
+							((uplink_ip& 0xff00) >> 8),(uplink_ip & 0xff));
+				strcpy(uq->link_ip,link_ip);
+			}
+
+			uq->next = zvrrp->uplink_list;
+			zvrrp->uplink_list = uq;
+			
+
+		}
+		
+	}
+	else{
+		}
+
+	dbus_message_iter_next(&iter);
+	dbus_message_iter_get_basic(&iter,&l2_uplink_set_flg);
+	if (l2_uplink_set_flg) {	
+		for(i = 0; i < l2_uplink_set_flg; i++) {
+			dbus_message_iter_next(&iter);
+			dbus_message_iter_get_basic(&iter,&l2_uplink_ifname);
+		}
+	} 
+	else {
+	}
+	
+	dbus_message_iter_next(&iter);
+	dbus_message_iter_get_basic(&iter,&downlink_set_flg);
+	if (downlink_set_flg) {
+		for(i = 0; i < downlink_set_flg; i++)
+		{   
+			dq = (vrrp_link_ip *)malloc(sizeof(vrrp_link_ip)+1);
+			if(NULL== dq)
+			{
+				return -1;
+			}
+			memset(dq,0,sizeof(vrrp_link_ip)+1);
+			
+			dbus_message_iter_next(&iter);
+			dbus_message_iter_get_basic(&iter,&downlink_ifname);
+
+			strcpy(dq->ifname,downlink_ifname);
+
+			dbus_message_iter_next(&iter);
+			dbus_message_iter_get_basic(&iter,&downlink_ip);		
+
+			memset(link_ip,0,64);	
+			sprintf(link_ip,"%d.%d.%d.%d ",((downlink_ip & 0xff000000) >> 24),((downlink_ip & 0xff0000) >> 16),	\
+							((downlink_ip& 0xff00) >> 8),(downlink_ip & 0xff));
+			strcpy(dq->link_ip,link_ip);
+			
+			dq->next = zvrrp->downlink_list;
+			zvrrp->downlink_list= dq;
+		}
+	}
+	else {
+	}
+
+  	dbus_message_iter_next(&iter);
+	dbus_message_iter_get_basic(&iter,&wid_transfer);
+	dbus_message_iter_next(&iter);
+	dbus_message_iter_get_basic(&iter,&portal_enable);	
+	dbus_message_iter_next(&iter);
+	dbus_message_iter_get_basic(&iter,&portal_transfer);
+	dbus_message_iter_next(&iter);
+
+    if(state == 6){
+	   if(portal_enable){
+	   }
+	   else{
+	   }
+	}		
+	dbus_message_iter_get_basic(&iter,&heartbeat_set_flg);
+	if (1 == heartbeat_set_flg) {
+	dbus_message_iter_next(&iter);
+	dbus_message_iter_get_basic(&iter,&heartbeatlink_ip);
+	dbus_message_iter_next(&iter);
+	dbus_message_iter_get_basic(&iter,&heartbeatlink_ifname);
+	
+	if(0 != heartbeatlink_ip){
+       strcpy(zvrrp->hbinf,heartbeatlink_ifname);
+	   //heartbeatlink ip
+   		memset(link_ip,0,64);	
+		sprintf(link_ip,"%d.%d.%d.%d ",((heartbeatlink_ip & 0xff000000) >> 24),((heartbeatlink_ip & 0xff0000) >> 16),	\
+					((heartbeatlink_ip& 0xff00) >> 8),(heartbeatlink_ip & 0xff));
+		strcpy(zvrrp->hbip,link_ip);
+		}
+	}
+	dbus_message_iter_next(&iter);
+	dbus_message_iter_get_basic(&iter,&if_vgateway);
+	
+	if(0 != if_vgateway){
+		
+		for(i = 0; i < if_vgateway; i++) {
+		
+		vq = (vrrp_link_ip *)malloc(sizeof(vrrp_link_ip)+1);
+		if(NULL== vq)
+		{
+			return -1;
+		}
+		memset(vq,0,sizeof(vrrp_link_ip)+1);
+		
+		dbus_message_iter_next(&iter);
+		dbus_message_iter_get_basic(&iter,&vgateway_ifname);
+		dbus_message_iter_next(&iter);
+		dbus_message_iter_get_basic(&iter,&vgateway_ip);
+		dbus_message_iter_next(&iter);
+		dbus_message_iter_get_basic(&iter,&vgateway_mask);
+
+		strcpy(vq->ifname,vgateway_ifname);
+		vq->maskint = vgateway_mask;
+
+		memset(link_ip,0,64);	
+		sprintf(link_ip,"%d.%d.%d.%d ",((vgateway_ip & 0xff000000) >> 24),((vgateway_ip & 0xff0000) >> 16),	\
+					((vgateway_ip& 0xff00) >> 8),(vgateway_ip & 0xff));
+		strcpy(vq->link_ip,link_ip);
+		vq->next = zvrrp->vgatewaylink_list;
+		zvrrp->vgatewaylink_list= vq;
+		}
+	}
+	else {
+		
+	}
+
+	dbus_message_iter_next(&iter);
+	dbus_message_iter_get_basic(&iter,&failover_peer);
+	dbus_message_iter_next(&iter);
+	dbus_message_iter_get_basic(&iter,&failover_local);
+	if(~0UI != failover_peer) {
+		//vty_out(vty, "%-7speer %d.%d.%d.%d", "", (failover_peer >> 24) & 0xFF, \
+			//(failover_peer >> 16) & 0xFF, (failover_peer >> 8) & 0xFF, failover_peer & 0xFF);
+		if(~0UI != failover_local) {
+			//vty_out(vty, " local %d.%d.%d.%d", (failover_local >> 24) & 0xFF, \
+				//(failover_local >> 16) & 0xFF, (failover_local >> 8) & 0xFF, failover_local & 0xFF);
+		}
+		//vty_out(vty, "\n");
+	}
+	else {
+		//vty_out(vty, "%-7snot configured\n", "");
+	}
+
+	dbus_message_unref(reply);
+	return 0;
+}
+
 unsigned long ccgi_ip2ulong_vrrp(char *str)
 {
 	char *sep=".";
@@ -3865,6 +5113,22 @@ int ccgi_vrrp_hansi_is_running
 	fclose(fp);
 	
 	return DCLI_VRRP_INSTANCE_CREATED;
+}
+int ccgi_vrrp_hansi_is_running_dis
+(
+	unsigned int slot_id,
+	int islocal,
+	int instID
+
+)
+{
+	char commandBuf[DCLI_VRRP_SYS_COMMAND_LEN] = {0};
+	sprintf(commandBuf, "/var/run/hmd/hmd%d-%d-%d.pid", islocal,slot_id,instID);
+	if(access(commandBuf,0)!=0)
+	{
+		return INSTANCE_NO_CREATED;
+	}
+	return INSTANCE_CREATED;
 }
 int config_vrrp_real_ip_uplink(char *upif,char *upip,char *profid)/*∑µªÿ0±Ì æ≥…π¶£¨∑µªÿ-1±Ì æ ß∞‹£¨∑µªÿ-2±Ì æerror*/
 {
@@ -4266,6 +5530,146 @@ show_vrrp_switch_times(unsigned int vrrp_id, unsigned long *switch_times) {
 	
 	return 0;
 }
+
+int show_vrrp_runconfig_by_hansi_web(int slotid,char *insid, DBusConnection *connection,char **info)
+//-1:instance_id<0ªÚinstance_id>16;-2:Hansi instance  not created;-3:NULL == reply;-4:dbus_message_get_args error
+{
+	unsigned int op_ret = 0;
+	int profile = 0;
+	unsigned int slot_id = slotid;
+	profile = (unsigned int)strtoul(insid,0,10);
+    
+		
+	if((profile < 0)||(profile > 16))
+	{
+		return -1;
+	}
+	/* in config node or hansi node, show special instance */	
+		DBusMessage *query = NULL;
+		DBusMessage *reply = NULL;
+		DBusError err;
+	
+		char *showStr = NULL;
+		char tmpBuf[SHOWRUN_PERLINE_SIZE] = {0};
+	
+		int instRun = 0;
+		char vrrp_obj_path[DCLI_VRRP_OBJPATH_LEN] = {0};
+		char vrrp_dbus_name[DCLI_VRRP_DBUSNAME_LEN] = {0};	
+
+		/* [1] check if had process has started before or not */
+		instRun = ccgi_vrrp_hansi_is_running_dis(slot_id,0,profile);
+		if (INSTANCE_NO_CREATED == instRun) {
+			return -2;
+		}
+
+		memset(vrrp_obj_path, 0, DCLI_VRRP_OBJPATH_LEN);
+		memset(vrrp_dbus_name, 0, DCLI_VRRP_DBUSNAME_LEN);
+		memset(tmpBuf, 0, SHOWRUN_PERLINE_SIZE);
+	
+		ccgi_vrrp_splice_objpath_string(VRRP_DBUS_OBJPATH, profile, vrrp_obj_path);
+		ccgi_vrrp_splice_dbusname(VRRP_DBUS_BUSNAME, profile, vrrp_dbus_name);
+	
+		query = dbus_message_new_method_call(vrrp_dbus_name,
+											 vrrp_obj_path,
+											 VRRP_DBUS_INTERFACE,
+											 VRRP_DBUS_METHOD_SHOW_RUNNING);
+		dbus_error_init(&err);
+	
+		reply = dbus_connection_send_with_reply_and_block (connection, query, -1, &err);
+	
+		dbus_message_unref(query);
+		if (NULL == reply) {
+			if(dbus_error_is_set(&err)) {
+				dbus_error_free(&err);
+			}
+			return -3;
+		}
+	
+		if (dbus_message_get_args ( reply, &err,
+						DBUS_TYPE_STRING, &showStr,
+						DBUS_TYPE_INVALID)) 
+		{
+			fprintf(stderr,"showStr=%s\n",showStr);
+			*info=showStr;
+		}
+		else {
+			if (dbus_error_is_set(&err)) 
+			{
+				dbus_error_free(&err);
+			}
+			return -4;
+		}
+	
+		dbus_message_unref(reply);
+		return 0;	
+}
+
+int config_delete_hansi_cmd_web(int slot,char *ins,DBusConnection *connection)
+//0:success;	-1:NULL == reply; -2:hansi not exist;-3:failed;-4:dbus_message_get_args error
+{
+	DBusMessage *query = NULL, *reply = NULL;
+	DBusError err = {0};
+	unsigned int hmd_ret = 0;
+	unsigned int profile =0;
+	unsigned int slot_id = slot;
+	int retu=0;
+	profile=(unsigned int)strtoul(ins,0,10);
+
+        query = dbus_message_new_method_call(HMD_DBUS_BUSNAME,HMD_DBUS_OBJPATH,HMD_DBUS_INTERFACE,HMD_DBUS_METHOD_DELETE_REMOTE_HANSI);
+
+    	dbus_error_init(&err);
+    	dbus_message_append_args(query,
+    							 DBUS_TYPE_UINT32,&profile,
+    							 DBUS_TYPE_UINT32,&slot_id,
+    							 DBUS_TYPE_INVALID);
+    	reply = dbus_connection_send_with_reply_and_block (connection,query,-1, &err);
+    	dbus_message_unref(query);
+    	if (NULL == reply) {
+    		if (dbus_error_is_set(&err)) {
+    			dbus_error_free(&err);
+    		}
+    		return -1;
+    	}
+    	if (dbus_message_get_args ( reply, &err,
+    				DBUS_TYPE_UINT32,&hmd_ret,
+    				DBUS_TYPE_INVALID))
+    	{	
+            if(hmd_ret == 0)
+				retu=0;
+			else if(hmd_ret == 2)
+            	retu=-2;
+            else
+                retu=-3;
+    	} 
+    	else 
+    	{	
+    		if (dbus_error_is_set(&err)) 
+    		{
+    			dbus_error_free(&err);
+                retu=-4;
+    		}
+    	}
+    	dbus_message_unref(reply);	
+	return retu;
+}	
+
+int show_vrrp_runconfig_cmd_by_ins(int slot,int ins)
+	//-1:error; 0:INSTANCE_NO_CREATED; 1:INSTANCE_CREATED
+{
+	unsigned int op_ret = 0;
+	int profile = ins;
+	unsigned int slot_id = slot;
+			
+	if((profile < 1)||(profile > 16))
+	{
+		return -1;
+	}
+	
+	op_ret = ccgi_vrrp_hansi_is_running_dis(slot,0,ins);
+
+	return op_ret;
+}
+
 #ifdef __cplusplus
 }
 #endif

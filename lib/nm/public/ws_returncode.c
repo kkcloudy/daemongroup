@@ -34,6 +34,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "cgic.h"
 #include <string.h>
 #include <stdlib.h>
+#include "npd/nbm/npd_bmapi.h"
 
 unsigned int parse_param_ifName
 (
@@ -621,8 +622,25 @@ int parse_slotno_localport(char* str,unsigned int *slotno,unsigned int *portno)
 	char *endptr = NULL;
 	char c = 0;
 	if (NULL == str) return -1;
+	/* add for AX7605i-alpha cscd port by qinhs@autelan.com 2009-11-18 */
+	if(!strncmp(tolower(str), "cscd", 4)) {
+		*slotno = AX7i_XG_CONNECT_SLOT_NUM;
+		if(strlen(str) > strlen("cscd*")) {
+			return NPD_FAIL ;
+		}
+		else if('0' == str[4]) {
+			*portno = 1;
+		}		
+		else if('1' == str[4]) {
+			*portno = 2;
+		}
+		else {
+			return NPD_FAIL;
+		}
+		return NPD_SUCCESS;
+	}
 	c = str[0];
-	if (c>'0' && c<='9'){
+	if (c>='0' && c<='9'){
 		*slotno= strtoul(str,&endptr,10);
 		if(SLOT_PORT_SPLIT_SLASH != endptr[0] &&
             SLOT_PORT_SPLIT_DASH != endptr[0]){
@@ -636,7 +654,7 @@ int parse_slotno_localport(char* str,unsigned int *slotno,unsigned int *portno)
 		return 0;	
 	}
 	else {
-		return -1; //not Vlan ID. for Example ,enter '.',and so on ,some special char.
+		return -1; /*not Vlan ID. for Example ,enter '.',and so on ,some special char.*/
 	}
 }
 unsigned long ccgi_ip2ulong(char *str)

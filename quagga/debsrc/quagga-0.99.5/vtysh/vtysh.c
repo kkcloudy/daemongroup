@@ -1101,7 +1101,7 @@ vtysh_execute_func_4ret (const char *line)
 	 if(flags_fd == -1)
 	 {
 		 vty_out(vty,"Another user is setting system,please wait for a few minutes and try again!\n");
-		 return;
+		 return CMD_FAILURE;
 	   }
    }
 
@@ -3475,6 +3475,16 @@ DEFUN (vtysh_write_terminal,
 				if ((*node->func) (vty))
 				{
 					vty_out(vty,"Module %s[%d] error \n",node->node_name,node->node);
+					if (!vty->fp && vtysh_pager_name && fp)
+					{
+					  fflush (fp);
+					  if (pclose (fp) == -1)
+						{
+						  perror ("pclose");
+						}
+					  fp = NULL;
+					}
+
 					return CMD_WARNING;
 				}
 			}
@@ -3566,7 +3576,7 @@ DEFUN (vtysh_write_terminal1,
 			 "Route policy module\n")
 
 {
-	u_int i,cmdnode;
+	u_int i=0,cmdnode=0;
 	int ret,need_client=0,clent_node=0;
 	char line[] = "write terminal\n";
 	char cmd_clente_line[512];
@@ -3688,6 +3698,15 @@ DEFUN (vtysh_write_terminal1,
 		else
 		{
 			vty_out(vty,"The module %s is error\n",argv[0]);
+			
+			if (!vty->fp && vtysh_pager_name && fp)
+			{
+				fflush (fp);
+				if (pclose (fp) == -1)
+				{
+					perror ("pclose");
+				}
+			}
 			return CMD_WARNING;
 		}
 		
@@ -3707,6 +3726,14 @@ DEFUN (vtysh_write_terminal1,
 			}
 		}
 		vtysh_config_dump (fp);
+		if (!vty->fp && vtysh_pager_name && fp)
+		{
+			fflush (fp);
+			if (pclose (fp) == -1)
+			{
+				perror ("pclose");
+			}
+		}
 		return CMD_SUCCESS;
 	}
 	else
@@ -3751,10 +3778,9 @@ DEFUN (vtysh_write_terminal1,
 			{
 				fflush (fp);
 				if (pclose (fp) == -1)
-			{
-				perror ("pclose");
-				exit (1);
-			}
+				{
+					perror ("pclose");
+				}
 				fp = NULL;
 			}
 			return CMD_SUCCESS;
@@ -3861,6 +3887,13 @@ write_config_integrated(void)
 
   integrate_sav = malloc (strlen (integrate_default) +
 			  strlen (CONF_BACKUP_EXT) + 1);
+
+  if(!integrate_sav)
+  {
+	  fprintf (stdout,"System memory error!\n");
+	  return CMD_WARNING;
+  }	
+
   strcpy (integrate_sav, integrate_default);
   strcat (integrate_sav, CONF_BACKUP_EXT);
 
@@ -3873,11 +3906,13 @@ write_config_integrated(void)
     	if(errno == EEXIST)
     	{
 			fprintf (stdout,"%% Another user is saving configuration.\n Please wait a few minutes and save again.\n");
+			free (integrate_sav);
 			return CMD_WARNING;
 
 		}
-      fprintf (stdout,"%% Can't open configuration file %s.\n",
+		fprintf (stdout,"%% Can't open configuration file %s.\n",
 	       integrate_default);
+		free (integrate_sav);
       return CMD_WARNING;
     }
 #if 0	
@@ -3905,6 +3940,7 @@ for (i = 0; i < HIDDENDEBUG_NODE; i++)
 				vty_out(vty,"Module %s[%d] error \n",node->node_name,node->node);
 				fclose (fp);
 				unlink(integrate_sav);
+				free (integrate_sav);
 				return CMD_WARNING;
 				
 			}
@@ -3922,6 +3958,7 @@ for (i = 0; i < VTYSH_INDEX_MAX; i++)
 		vty_out(vty,"Module rtmd error \n");
 		fclose (fp);
 		unlink(integrate_sav);
+		free (integrate_sav);
 		return CMD_WARNING;
 
 	}
@@ -3937,6 +3974,7 @@ for (i = HIDDENDEBUG_NODE; i < EBR_NODE1; i++)
 			vty_out(vty,"Module %s[%d] error \n",node->node_name,node->node);
 			fclose (fp);
 			unlink(integrate_sav);
+			free (integrate_sav);
 			return CMD_WARNING;
 		}
 	
@@ -3951,6 +3989,7 @@ for (i = HIDDENDEBUG_NODE; i < EBR_NODE1; i++)
 				vty_out(vty,"Module %s[%d] error \n",node->node_name,node->node);
 				fclose (fp);
 				unlink(integrate_sav);
+				free (integrate_sav);
 				return CMD_WARNING;
 			}
 		
@@ -3963,6 +4002,8 @@ for (i = HIDDENDEBUG_NODE; i < EBR_NODE1; i++)
 	if(ret != CMD_SUCCESS)
 	{
 		fclose (fp);
+		unlink(integrate_sav);
+		free (integrate_sav);
 		return CMD_WARNING;
 
 	}
@@ -3976,6 +4017,7 @@ for (i = HIDDENDEBUG_NODE; i < EBR_NODE1; i++)
 			  vty_out(vty,"Module %s[%d] error \n",node->node_name,node->node);
 			  fclose (fp);
 			  unlink(integrate_sav);
+			  free (integrate_sav);
 			  return CMD_WARNING;
 		  }
 	  
@@ -4859,7 +4901,6 @@ get_product_slot_count()
 	if(NULL == fd)
 	{
 		syslog(LOG_NOTICE,"fopen /dbm/product/name failed.\n");
-		fclose(fd);
 		return -1;
 	}
 	fscanf(fd,"%s",product_name);
@@ -4870,7 +4911,6 @@ get_product_slot_count()
 	if (fd == NULL)
 	{		
 		syslog(LOG_NOTICE,"fopen /dbm/product/active_master_slot_id failed.\n");
-		fclose(fd);
 		return -1;
 	}
 	fscanf(fd, "%d", &active_master_slot_id);
@@ -5254,6 +5294,7 @@ DEFUN (vtysh_config_indepent_hostname,
 	
    }
   
+  return CMD_SUCCESS;
 }
 
 
@@ -5353,6 +5394,7 @@ DEFUN (vtysh_no_config_indepent_hostname,
 	
    }
   
+  return CMD_SUCCESS;
 }
 #endif
 /****************************Add hostname independent end.********************************************/

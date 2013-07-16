@@ -36,8 +36,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "ws_usrinfo.h"
 #include "ws_err.h"
 #include "ws_ec.h"
-#include "ws_dcli_vrrp.h"
 #include "ws_init_dbus.h"
+#include "ws_dbus_list.h"
+#include "ws_dbus_list_interface.h"
+#include "ws_dcli_vrrp.h"
 
 int ShowhansilistPage(char *m,char *n,struct list *lpublic,struct list *lcontrol);    
 
@@ -77,19 +79,47 @@ int ShowhansilistPage(char *m,char *n,struct list *lpublic,struct list *lcontrol
 {  
   int i = 0,cl=1; 
   int ret=-1;
+  char IsDeleete[10] = { 0 };
+  char IsSubmit[5] = { 0 };
+  char insid[5]={0};
 
-  Z_VRRP zvrrp;
+  Z_VRRP_web zvrrp;
   memset(&zvrrp,0,sizeof(zvrrp));
 
-  char hspro[10];
-  memset(hspro,0,10);
+	char hspro[10] = {0};
+	int retu = 0;
+	char menu_id[10] = {0};
+	char menu[15] = {0};
+	char paramalert[128] = {0};
 
-  int retu;
-
-  char *menu_id=(char *)malloc(10);
-  char *menu=(char *)malloc(15);
-  char paramalert[128];
-  memset(paramalert,0,128);
+	DBusConnection *connection = NULL;
+	ccgi_dbus_init();
+	instance_parameter *paraHead2 = NULL;
+	instance_parameter *p_q = NULL;
+	list_instance_parameter(&paraHead2, SNMPD_SLOT_CONNECT);
+	char plotid[10] = {0};
+	int pid = 0;
+	cgiFormStringNoNewlines("plotid",plotid,sizeof(plotid));
+	pid = atoi(plotid);
+	if(0 == pid)
+	{
+		for(p_q=paraHead2;(NULL != p_q);p_q=p_q->next)
+		{
+			pid = p_q->parameter.slot_id;
+			connection = p_q->connection;
+			break;
+		}
+	}
+	else
+	{
+		for(p_q=paraHead2;(NULL != p_q);p_q=p_q->next)
+		{
+			if(p_q->parameter.slot_id == pid)
+			{
+				connection = p_q->connection;
+			}
+		}
+	}
   
   cgiHeaderContentType("text/html");
   fprintf(cgiOut,"<html xmlns=\"http://www.w3.org/1999/xhtml\"><head>");
@@ -117,6 +147,32 @@ int ShowhansilistPage(char *m,char *n,struct list *lpublic,struct list *lcontrol
 	"}"\
 	"</script>"\
     "<body>");
+
+	memset(IsDeleete,0,sizeof(IsDeleete));
+	cgiFormStringNoNewlines("DeletWlan", IsDeleete, 10);
+	memset(IsSubmit,0,sizeof(IsSubmit));  
+	cgiFormStringNoNewlines("SubmitFlag", IsSubmit, 5);
+	if((strcmp(IsDeleete,"true")==0)&&(strcmp(IsSubmit,"")))
+	{
+		memset(insid,0,sizeof(insid));
+	  cgiFormStringNoNewlines("ID", insid, 5);
+	  if(connection)
+	  {
+		  fprintf(stderr,"connection=%p",connection);
+		  fprintf(stderr,"insid=%s",insid);
+		  int ret_del=0;
+			ret_del=delete_hansi_profile_web(insid,connection);
+		  
+		  if(ret_del==0)
+		  {
+			  ShowAlert(search(lpublic,"oper_succ"));
+		  }
+		  else
+		  {
+			  ShowAlert(search(lpublic,"oper_fail"));
+		  }
+	  } 
+	}
 
 
 	fprintf(cgiOut,"<form>"\
@@ -153,13 +209,18 @@ int ShowhansilistPage(char *m,char *n,struct list *lpublic,struct list *lcontrol
                   "</tr>");	          
 
 					fprintf(cgiOut,"<tr height=26>"\
-					"<td align=left id=tdleft background=/images/bottom_bg.gif style=\"border-right:0\"><font id=yingwen_er></font><font id=%s> %s</font></td>",search(lpublic,"menu_san"),search(lpublic,"hs_list"));   /*突出显示*/
+					"<td align=left id=tdleft background=/images/bottom_bg.gif style=\"border-right:0\"><font id=yingwen_er></font><font id=%s> %s</font></td>",search(lpublic,"menu_san"),search(lpublic,"vr_list"));   /*突出显示*/
 					fprintf(cgiOut,"</tr>");
+					
+					fprintf(cgiOut,"<tr height=25>"\
+					"<td align=left id=tdleft><a href=wp_hansiidlist.cgi?UN=%s target=mainFrame class=top><font id=%s>%s<font></a></td>",m,search(lpublic,"menu_san"),search(lpublic,"hs_list"));
+					fprintf(cgiOut,"</tr>"); 
 
 
 					fprintf(cgiOut,"<tr height=25>"\
 					"<td align=left id=tdleft><a href=wp_hansiadd.cgi?UN=%s target=mainFrame class=top><font id=%s>%s<font></a></td>",m,search(lpublic,"menu_san"),search(lpublic,"hs_create"));
-					fprintf(cgiOut,"</tr>"); 
+					fprintf(cgiOut,"</tr>");
+					
 						
                   for(i=0;i<15;i++)
 	              {
@@ -177,15 +238,42 @@ int ShowhansilistPage(char *m,char *n,struct list *lpublic,struct list *lcontrol
 				fprintf(cgiOut,"<tr>"\
 			    "<td align=center valign=top style=\"padding-top:5px; padding-bottom:10px\">");
 				fprintf(cgiOut,"<table width=720 valign=top border=0 cellspacing=0 cellpadding=0>");
-					fprintf(cgiOut,"<tr>"\
-					"<td colspan=2 id=sec style=\"border-bottom:2px solid #53868b\">&nbsp;</td>"\
-					"</tr>"\
+//					fprintf(cgiOut,"<tr>"\
+//					"<td colspan=2 id=sec style=\"border-bottom:2px solid #53868b\">&nbsp;</td>"\
+//					"</tr>"\
 					"<tr>");
 
 					fprintf(cgiOut,"<td align=left colspan=2>");     
 
-					fprintf(cgiOut,"<table frame=below valign=top rules=rows width=720 border=1>"\
-					"<tr align=left>");
+					fprintf(cgiOut,"<table frame=below valign=top rules=rows width=720 border=1>");
+					fprintf(cgiOut,"<tr align=left>");
+				    fprintf(cgiOut,"<td colspan=10>SLOT ID:");
+					fprintf( cgiOut, "<select name=insid onchange=slotid_change(this)>");
+					for(p_q=paraHead2;(NULL != p_q);p_q=p_q->next)
+					{
+						if(p_q->parameter.slot_id == pid)
+						{
+							fprintf(cgiOut,"<option value=\"%d\" selected>%d</option>",p_q->parameter.slot_id,p_q->parameter.slot_id);
+						}
+						else
+						{
+							fprintf(cgiOut,"<option value=\"%d\">%d</option>",p_q->parameter.slot_id,p_q->parameter.slot_id);
+						}		
+					}
+					fprintf( cgiOut, "</select>\n");	
+					fprintf(cgiOut,"</td>");
+					fprintf(cgiOut,"</tr>");
+					fprintf( cgiOut,"<script type=text/javascript>\n");
+					fprintf( cgiOut,"function slotid_change( obj )\n"\
+					"{\n"\
+					"var slotid = obj.options[obj.selectedIndex].value;\n"\
+					"var url = 'wp_hansilist.cgi?UN=%s&plotid='+slotid;\n"\
+					"window.location.href = url;\n"\
+					"}\n", m);
+					fprintf( cgiOut,"</script>\n" );
+					
+					fprintf(cgiOut,"<tr height=20></tr>");
+					fprintf(cgiOut,"<tr align=left>");
 				    fprintf(cgiOut,"<th width=80><font id=%s>%s</font></th>",search(lpublic,"menu_thead"),"ID");
 					fprintf(cgiOut,"<th width=80><font id=%s>%s</font></th>",search(lpublic,"menu_thead"),search(lpublic,"hs_state"));
 					fprintf(cgiOut,"<th width=80><font id=%s>%s</font></th>",search(lpublic,"menu_thead"),search(lpublic,"hs_uplink"));
@@ -202,18 +290,17 @@ int ShowhansilistPage(char *m,char *n,struct list *lpublic,struct list *lcontrol
                     for(i=1;i<17;i++)
                 	{
 	                    memset(&zvrrp,0,sizeof(zvrrp));
-	                    ret=ccgi_show_hansi_profile(&zvrrp, i);
-						
-						if(ret==DCLI_VRRP_RETURN_CODE_OK)
+	                    ret=ccgi_show_hansi_profile_web(&zvrrp, i,pid,connection);
+						if(ret==0)
 	          	        {
 
 							fprintf(cgiOut,"<tr align=left bgcolor=%s>",setclour(cl));
 							fprintf(cgiOut,"<td>%d</td>",i);
 							fprintf(cgiOut,"<td>%s</td>",zvrrp.state);
-							fprintf(cgiOut,"<td>%s</td>",zvrrp.uplink_ifname);
-							fprintf(cgiOut,"<td>%s</td>",zvrrp.uplink_ip);
-							fprintf(cgiOut,"<td>%s</td>",zvrrp.downlink_ifname);
-							fprintf(cgiOut,"<td>%s</td>",zvrrp.downlink_ip);
+							fprintf(cgiOut,"<td>%s</td>",(zvrrp.uplink_list)?zvrrp.uplink_list->ifname:"");
+							fprintf(cgiOut,"<td>%s</td>",(zvrrp.uplink_list)?zvrrp.uplink_list->link_ip:"");
+							fprintf(cgiOut,"<td>%s</td>",(zvrrp.downlink_list)?zvrrp.downlink_list->ifname:"");
+							fprintf(cgiOut,"<td>%s</td>",(zvrrp.downlink_list)?zvrrp.downlink_list->link_ip:"");
 						    fprintf(cgiOut,"<td>%s</td>",zvrrp.hbinf);
 							fprintf(cgiOut,"<td>%s</td>",zvrrp.hbip);
 							fprintf(cgiOut,"<td>%d</td>",zvrrp.priority);
@@ -233,19 +320,26 @@ int ShowhansilistPage(char *m,char *n,struct list *lpublic,struct list *lcontrol
 									fprintf(cgiOut,"<img src=/images/detail.gif>"\
 									"<div id=%s style=\"display:none; position:absolute; top:5px; left:0;\">",menu);
 									fprintf(cgiOut,"<div id=div1>");
-									fprintf(cgiOut,"<div id=div2 onmouseover=\"this.style.backgroundColor='#b6bdd2'\" onmouseout=\"this.style.backgroundColor='#f9f8f7'\"><a id=link href=wp_hansimod.cgi?UN=%s&ID=%d&TYPE=%s target=mainFrame onclick=\"return confirm('%s')\">%s</a></div>",m,i,"2",search(lpublic,"confirm_delete"),search(lpublic,"delete"));                             
-									fprintf(cgiOut,"<div id=div2 onmouseover=\"this.style.backgroundColor='#b6bdd2'\" onmouseout=\"this.style.backgroundColor='#f9f8f7'\"><a id=link href=wp_hansimod.cgi?UN=%s&ID=%d&TYPE=%s target=mainFrame>%s</a></div>",m,i,"1",search(lpublic,"configure"));
-									fprintf(cgiOut,"<div id=div2 onmouseover=\"this.style.backgroundColor='#b6bdd2'\" onmouseout=\"this.style.backgroundColor='#f9f8f7'\"><a id=link href=wp_hsdetail.cgi?UN=%s&ID=%d&TYPE=%s target=mainFrame>%s</a></div>",m,i,"1",search(lpublic,"details"));
+									fprintf(cgiOut,"<div id=div2 onmouseover=\"this.style.backgroundColor='#b6bdd2'\" onmouseout=\"this.style.backgroundColor='#f9f8f7'\"><a id=link href=wp_hansilist.cgi?UN=%s&ID=%d&TYPE=%s&plotid=%d&DeletWlan=%s&SubmitFlag=1 target=mainFrame onclick=\"return confirm('%s')\">%s</a></div>",m,i,"2",pid,"true",search(lpublic,"confirm_delete"),search(lpublic,"delete"));                             
+									fprintf(cgiOut,"<div id=div2 onmouseover=\"this.style.backgroundColor='#b6bdd2'\" onmouseout=\"this.style.backgroundColor='#f9f8f7'\"><a id=link href=wp_hansimod.cgi?UN=%s&ID=%d&TYPE=%s&plotid=%d target=mainFrame>%s</a></div>",m,i,"1",pid,search(lpublic,"configure"));
+									fprintf(cgiOut,"<div id=div2 onmouseover=\"this.style.backgroundColor='#b6bdd2'\" onmouseout=\"this.style.backgroundColor='#f9f8f7'\"><a id=link href=wp_hsdetail.cgi?UN=%s&ID=%d&TYPE=%s&plotid=%d target=mainFrame>%s</a></div>",m,i,"1",pid,search(lpublic,"details"));
 									fprintf(cgiOut,"</div>"\
 									"</div>"\
 									"</div>"\
 									"</td>");
 							}
 							
-							
 							fprintf(cgiOut,"</tr>");
 							cl =!cl;
 		               }
+					   else if(ret == -3)
+					   {
+							fprintf(cgiOut,"<tr align=left bgcolor=%s>",setclour(cl));
+							fprintf(cgiOut,"<td colspan=10>%d</td>",i);
+							fprintf(cgiOut,"</tr>");
+							cl =!cl;
+		               }
+					   free_ccgi_show_hansi_profile_web(&zvrrp);
             	    }
 				    
 					fprintf(cgiOut,"</table>");
@@ -279,10 +373,7 @@ int ShowhansilistPage(char *m,char *n,struct list *lpublic,struct list *lcontrol
 "</form>"\
 "</body>"\
 "</html>");
- 
-free(menu_id);
-free(menu);
- 
+	free_instance_parameter_list(&paraHead2);	
 return 0;
 }
 

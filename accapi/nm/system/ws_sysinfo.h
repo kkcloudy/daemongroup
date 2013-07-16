@@ -171,6 +171,23 @@ extern int get_cpu_temperature( P_SYS_INFO pst_sys_info );
 extern int get_logo(char * logo);
 
 extern int write_to_boorom(char *path);
+extern int get_hostname(char *hostname);/*返回0表示失败，返回1表示成功*/
+extern int set_hostname(char *hostname);/*返回0表示失败，返回1表示成功*/
+								   /*返回-1表示hostname is too long,should be 1 to 64*/
+								   /*返回-2表示hostname should be start with a letter*/
+								   /*返回-3表示hostname should be use letters,numbers,"-","."*/
+
+extern int set_ip_dns_func_cmd(char *ip_dns); /*返回0表示失败，返回1表示成功*/
+												   /*返回-1表示Can't get system dns seting*/
+												   /*返回-2表示The system has 3 dns,can't set again*/
+												   /*返回-3表示The dns server is exist,can't set again*/
+												   /*返回SNMPD_CONNECTION_ERROR表示connection error*/
+
+extern int delete_ip_dns_func_cmd(char *ip_dns);  /*返回0表示失败，返回1表示成功*/
+													   /*返回-1表示malloc*/
+													   /*返回-2表示Can't get system dns seting*/
+													   /*返回-3表示error*/
+													   /*返回SNMPD_CONNECTION_ERROR表示connection error*/
 
 #endif
 

@@ -43,22 +43,27 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include "cgic.h"
+#include "ws_list_container.h"
+#include "ws_secondary_container.h"
 #include "ws_portal_container.h"
 
 
 
 STLabelHelper st_label_helper[] = {
+	{"wp_user_manage.cgi","user_mng",0},
+	{"wp_eag_conf.cgi","eag_title",0},
+	{"wp_multi_portal.cgi","multi_portal_management",0},
+	{"wp_multi_radius.cgi","multi_radius_management",0},
 	{"wp_user_portal.cgi","captive_Portal",0},
 	{"wp_white_list.cgi","portal_white_list",0},
-	{"wp_eag_conf.cgi","eag_title",0},
-	{"wp_user_manage.cgi","user_mng",0},
-	{"wp_nasid_byvlan.cgi","nasid_management",0},
-	{"wp_multi_portal.cgi","multi_portal_management",0},	
 	{"wp_black_list.cgi","portal_black_list",0},
+	{"wp_nasid_byvlan.cgi","nasid_management",0},
+	{"wp_wtpwlan_map_vlan.cgi","vlan_maping",0},
+	{"wp_pdc_conf.cgi","pdc_conf",0},
+	{"wp_rdc_conf.cgi","rdc_conf",0},	
 	{"wp_portal_ftp.cgi","portal_ftp",0},
-	{"wp_multi_radius.cgi","multi_radius_management",0},
-	{"wp_wtpwlan_map_vlan.cgi","vlan_maping",0}
 };
+
 #define 	LABEL_ALL_NUM 	sizeof(st_label_helper)/sizeof(st_label_helper[0])
 
 
@@ -152,6 +157,7 @@ int init_portal_container( STPortalContainer **pp_stPortalContainer )
 	
 error3:
 error2:
+#if 0	
 	release( pstPortalContainer->lpublic );
 	pstPortalContainer->lpublic = NULL;
 	
@@ -160,10 +166,10 @@ error2:
 	
 	free( pstPortalContainer );
 	pstPortalContainer = NULL;	
-	
+#endif	
 error1:
-	*pp_stPortalContainer = NULL;
-	
+//	*pp_stPortalContainer = NULL;
+	*pp_stPortalContainer = pstPortalContainer;
 	return iRet;
 }
 

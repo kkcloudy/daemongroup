@@ -221,7 +221,10 @@ void wait_for_server(struct tipc_name* name,int wait)
 		wait,TIPC_SUB_SERVICE,{}};
 	struct tipc_event event;
 	int sd = socket (AF_TIPC, SOCK_SEQPACKET,0);
-
+	if(sd == -1)/*coverity modify for CID 15134 */
+	{
+		exit(1);
+	}
 	memset(&topsrv,0,sizeof(topsrv));
 	topsrv.family = AF_TIPC;
 	topsrv.addrtype = TIPC_ADDR_NAME;

@@ -74,7 +74,7 @@ struct dba_result_w {
 	int result;
 	unsigned int len;	/* length of data */
 	//void *data;	
-	char *data[256];
+	char data[256];
 };
 
 typedef struct dba_result_w dba_result_t_w;

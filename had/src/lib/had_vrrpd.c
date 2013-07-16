@@ -5459,12 +5459,12 @@ DBUS_TYPE_UINT32					// opposite heartbeat ip address
 	char EAG_DBUS_NAME[64];
 	char EAG_DBUS_OBJPATH[64];
 	char EAG_DBUS_INTERFACE[64];
-	snprintf(EAG_DBUS_NAME,sizeof(EAG_DBUS_NAME)-1,
-				EAG_DBUS_NAME_FMT,"r",vrrp->vrid );
+	snprintf(EAG_DBUS_NAME,sizeof(EAG_DBUS_NAME)-1,     /* should be hansi id, not vrip. 2013-06-28 ZD.*/
+				EAG_DBUS_NAME_FMT,"r",vrrp->profile );
 	snprintf(EAG_DBUS_OBJPATH,sizeof(EAG_DBUS_NAME)-1,
-				EAG_DBUS_OBJPATH_FMT,"r",vrrp->vrid );
+				EAG_DBUS_OBJPATH_FMT,"r",vrrp->profile );
 	snprintf(EAG_DBUS_INTERFACE,sizeof(EAG_DBUS_NAME)-1,
-				EAG_DBUS_INTERFACE_FMT,"r",vrrp->vrid );
+				EAG_DBUS_INTERFACE_FMT,"r",vrrp->profile );
 	query = dbus_message_new_method_call(
 				                         EAG_DBUS_NAME,
 				                         EAG_DBUS_OBJPATH,
@@ -5475,11 +5475,11 @@ DBUS_TYPE_UINT32					// opposite heartbeat ip address
 	dbus_message_iter_init_append(query, &iter);
 
 	dbus_message_iter_append_basic(&iter,
-									DBUS_TYPE_UINT32, &(vrrp->vrid));
+									DBUS_TYPE_UINT32, &(vrrp->profile));    /* should be hansi id, not vrip. 2013-06-28 ZD.*/   
 	dbus_message_iter_append_basic(&iter,
 									DBUS_TYPE_UINT32, &state);
-	vrrp_syslog_event("notify to portal,vrid %d,state %d\n",
-						vrrp->vrid, state);
+	vrrp_syslog_event("notify to portal,hansi %d, vrid %d, state %d\n",
+						vrrp->profile, vrrp->vrid, state);
 
 	uplink_cnt = vrrp->uplink_naddr;
 	dbus_message_iter_append_basic(&iter,
@@ -5981,7 +5981,7 @@ DBUS_TYPE_UINT32					// opposite heartbeat ip address
 	char PPPOE_DBUS_NAME[64];
 
 	snprintf(PPPOE_DBUS_NAME,sizeof(PPPOE_DBUS_NAME)-1,
-				PPPOE_DBUS_NAME_FMT, 0,vrrp->vrid );
+				PPPOE_DBUS_NAME_FMT, 0,vrrp->profile);        /* should be hansi id, not vrip. 2013-06-28 ZD.*/
 
 	query = dbus_message_new_method_call(
 				                         PPPOE_DBUS_NAME,
@@ -5993,11 +5993,11 @@ DBUS_TYPE_UINT32					// opposite heartbeat ip address
 	dbus_message_iter_init_append(query, &iter);
 
 	dbus_message_iter_append_basic(&iter,
-									DBUS_TYPE_UINT32, &(vrrp->vrid));
+									DBUS_TYPE_UINT32, &(vrrp->profile));    /* should be hansi id, not vrip. 2013-06-28 ZD.*/
 	dbus_message_iter_append_basic(&iter,
 									DBUS_TYPE_UINT32, &state);
-	vrrp_syslog_event("notify to pppoe,vrid %d,state %d\n",
-						vrrp->vrid, state);
+	vrrp_syslog_event("notify to pppoe,hansi %d, state %d\n",
+						vrrp->profile, state);
 
 	uplink_cnt = vrrp->uplink_naddr;
 	dbus_message_iter_append_basic(&iter,
@@ -6473,11 +6473,11 @@ int had_notify_to_hmd
 	dbus_message_iter_init_append(query, &iter);
 
 	dbus_message_iter_append_basic(&iter,
-									DBUS_TYPE_UINT32, &(vrrp->vrid));
+									DBUS_TYPE_UINT32, &(vrrp->profile));    /* should be hansi id, not vrip. 2013-06-28 ZD.*/
 	dbus_message_iter_append_basic(&iter,
 									DBUS_TYPE_UINT32, &state);
-	vrrp_syslog_event("notify to hmd,vrid %d,state %d\n",
-						vrrp->vrid, state);
+	vrrp_syslog_event("notify to hmd,hansi %d, vrid %d, state %d\n",
+						vrrp->profile, vrrp->vrid, state);
 
 	uplink_cnt = vrrp->uplink_naddr;
 	dbus_message_iter_append_basic(&iter,
@@ -6829,9 +6829,6 @@ DBUS_TYPE_UINT32					// opposite heartbeat ip address
 									DBUS_TYPE_UINT32, &(vrrp->profile));
 	dbus_message_iter_append_basic(&iter,
 								DBUS_TYPE_UINT32, &state);
-
-	vrrp_syslog_event("notify to wid,vrid %d,state %d\n",
-					vrrp->vrid, state);
 	
 	vrrp_syslog_event("notify to wid,profile %d,state %d\n",
 					vrrp->profile, state);
@@ -7177,10 +7174,10 @@ int had_notify_to_dhcp_failover
 	dbus_message_iter_append_basic(&iter,
 									DBUS_TYPE_UINT32, &failover_flag);
 	dbus_message_iter_append_basic(&iter,
-									DBUS_TYPE_UINT32, &(vrrp->vrid));
+									DBUS_TYPE_UINT32, &(vrrp->profile));    /* should be hansi id, not vrip. 2013-06-28 ZD.*/ 
 	dbus_message_iter_append_basic(&iter,
 									DBUS_TYPE_UINT32, &state);
-	vrrp_syslog_event("notify to dhcp,vrid %d,state %d\n", vrrp->vrid, state);
+	vrrp_syslog_event("notify to dhcp, hansi %d, vrid %d,state %d\n",vrrp->profile, vrrp->vrid, state);
 
 	uplink_cnt = vrrp->uplink_naddr;
 	dbus_message_iter_append_basic(&iter,
@@ -10551,14 +10548,47 @@ int had_start
    int vrid = 0;
    unsigned int real_ip = 0;
    int realip_index = -1;
-
+   	unsigned int	addr[1024] = {0};
+	int naddr = 0;
+	int i = 0;
 	vrid = profile;
 	if (VRRP_IS_BAD_VID(vrid))
 	{
 		vrrp_syslog_dbg("bad vrid %d, valid range is [1~255]!\n", vrid);
 		return VRRP_RETURN_CODE_BAD_PARAM;
 	}
-   
+	/*check interface valid or error*/
+	if(NULL != uplink_if){
+		real_ip = 0;
+		vrrp_syslog_info("%s,%d\n",__func__,__LINE__);
+		ret = had_ifname_to_ip(uplink_if, &real_ip);// no ip
+		if (VRRP_RETURN_CODE_OK != ret) {
+			vrrp_syslog_error("ifname %s no interface found!\n",uplink_if);
+			return VRRP_RETURN_CODE_BAD_PARAM;
+		}
+		naddr = had_ipaddr_list( had_ifname_to_idx(uplink_if),addr,sizeof(addr)/sizeof(addr[0]));
+		for( i = 0; i < naddr; i++ ){
+			if(uplink_ip == addr[i]){// real ip == vir ip
+				return VRRP_RETURN_CODE_BAD_PARAM;
+			}
+		}
+	}
+	if(NULL != downlink_if){
+		real_ip = 0;
+		vrrp_syslog_info("%s,%d\n",__func__,__LINE__);
+		ret = had_ifname_to_ip(downlink_if, &real_ip);//no ip
+		if (VRRP_RETURN_CODE_OK != ret) {
+			vrrp_syslog_dbg("ifname %s no interface found!\n",downlink_if);
+			return VRRP_RETURN_CODE_BAD_PARAM;
+		}
+		naddr = had_ipaddr_list( had_ifname_to_idx(downlink_if),addr,sizeof(addr)/sizeof(addr[0]) );
+		for( i = 0; i < naddr; i++ ){
+			if(downlink_ip == addr[i]){//real ip == vir ip
+				return VRRP_RETURN_CODE_BAD_PARAM;
+			}
+		}
+	}
+	/*end*/
    if(NULL != hansiNode){
    	   vrrp_syslog_dbg("hansi instance %d exist,remove exist vrrp first!\n", profile);
 	   /*check the vrrp instance if exist already(0 means exist),if not,malloc */
@@ -10751,7 +10781,10 @@ int had_v_gateway
    struct in_addr in;
    unsigned int addr[1024] = {0};
    int index = 0;
-   
+   //add check vip realip conflict
+	int naddr = 0;
+   	unsigned int real_ip =0;
+
    hansi = had_get_profile_node(profile);
    if(NULL == hansi){
       return VRRP_RETURN_CODE_PROFILE_NOTEXIST;
@@ -10761,6 +10794,22 @@ int had_v_gateway
 	 ret = VRRP_RETURN_CODE_PROFILE_NOTEXIST;	
 	 return ret;
    }
+   /*check virtual ip conflict real ip*/
+	if(NULL != vgateway_if){
+		real_ip = 0;
+		vrrp_syslog_info("%s,%d\n",__func__,__LINE__);
+		ret = had_ifname_to_ip(vgateway_if, &real_ip);// no ip
+		if (VRRP_RETURN_CODE_OK != ret) {
+			vrrp_syslog_error("ifname %s no interface found!\n",vgateway_if);
+			return VRRP_RETURN_CODE_BAD_PARAM;
+		}
+		naddr = had_ipaddr_list( had_ifname_to_idx(vgateway_if),addr,sizeof(addr)/sizeof(addr[0]));
+		for( i = 0; i < naddr; i++ ){
+			if(vgateway_ip == addr[i]){// real ip == vir ip
+				return VRRP_RETURN_CODE_BAD_PARAM;
+			}
+		}
+	}
    #if 0
    /* delete by jinpc@autelan.com
 	* for not in use
@@ -10787,8 +10836,10 @@ int had_v_gateway
    vrrp->vgateway_flag = 1;
    vrrp->vgateway_vif[index].ipaddr = vgateway_ip;
    #endif
-   had_add_vip(profile,vgateway_if, vgateway_ip, mask, VRRP_LINK_TYPE_VGATEWAY);
-   
+   	ret = had_add_vip(profile,vgateway_if, vgateway_ip, mask, VRRP_LINK_TYPE_VGATEWAY);
+	if(ret != VRRP_RETURN_CODE_OK){
+		return ret;
+	}
    /*check if ip already exist in the interface*/
 	ret = had_ipaddr_list( had_ifname_to_idx(vgateway_if),addr,sizeof(addr)/sizeof(addr[0]) );
 	for( i = 0; i < ret; i++ ){

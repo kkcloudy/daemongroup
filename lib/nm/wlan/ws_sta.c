@@ -5307,6 +5307,91 @@ int show_all_sta_base_info_cmd(dbus_parameter parameter, DBusConnection *connect
 }
 
 
+/*Type为"listen"或"listen_and_set"*/
+/*state为"enable"或"disable"*/
+int set_asd_sta_arp_listen_cmd(dbus_parameter parameter, DBusConnection *connection,char *Type,char *state)
+														 /*返回0表示失败，返回1表示成功*/
+													     /*返回-1表示input para error*/
+														 /*返回SNMPD_CONNECTION_ERROR表示connection error*/
+{
+	if(NULL == connection)
+        return 0;
+        
+	if((NULL == Type) || (NULL == state))
+		return 0;
+
+	DBusMessage *query, *reply;	
+	DBusMessageIter	 iter;
+	DBusError err;
+	unsigned int ret;
+	unsigned char op = 0;
+	unsigned char type=0;   /*1--open*/
+							/* 0--close*/	
+	int retu = 0;
+	
+	str2lower(&Type);
+	
+	if (!strcmp(Type,"listen")){
+		op=1; 	
+	}else if (!strcmp(Type,"listen_and_set")){
+		op=2; 	
+	}else{
+		return -1;
+	}
+	
+	str2lower(&state);
+	
+	if (!strcmp(state,"enable")){
+		type=1;		
+	}else if (!strcmp(state,"disable")){
+		type=0;		
+	}else{
+		return -1;
+	}
+	
+	char BUSNAME[PATH_LEN];
+	char OBJPATH[PATH_LEN];
+	char INTERFACE[PATH_LEN];
+	
+	ccgi_ReInitDbusPath_v2(parameter.local_id, parameter.instance_id,ASD_DBUS_BUSNAME,BUSNAME);
+	ccgi_ReInitDbusPath_v2(parameter.local_id, parameter.instance_id,ASD_DBUS_STA_OBJPATH,OBJPATH);
+	ccgi_ReInitDbusPath_v2(parameter.local_id, parameter.instance_id,ASD_DBUS_STA_INTERFACE,INTERFACE);
+	query = dbus_message_new_method_call(BUSNAME,OBJPATH,INTERFACE,ASD_DBUS_STA_METHOD_SET_ASD_STA_ARP_LISTEN);
+/*	query = dbus_message_new_method_call(ASD_DBUS_BUSNAME,ASD_DBUS_STA_OBJPATH,\
+						ASD_DBUS_STA_INTERFACE,ASD_DBUS_STA_METHOD_SET_ASD_STA_ARP_LISTEN);*/
+	
+	dbus_error_init(&err);
+
+	dbus_message_append_args(query,
+							DBUS_TYPE_BYTE,&op,
+							DBUS_TYPE_BYTE,&type,
+							DBUS_TYPE_INVALID);
+
+	
+	reply = dbus_connection_send_with_reply_and_block (connection,query,-1, &err);
+	
+	dbus_message_unref(query);
+	
+	if (NULL == reply) {
+		if (dbus_error_is_set(&err)) {
+			dbus_error_free(&err);
+		}
+		return SNMPD_CONNECTION_ERROR;
+	}
+	dbus_message_iter_init(reply,&iter);
+	dbus_message_iter_get_basic(&iter,&ret);
+	
+	if(ret==0)
+	{
+		retu = 1;
+	}
+
+	dbus_message_unref(reply);
+
+	return retu; 
+}
+
+
 #ifdef __cplusplus
 }
 #endif

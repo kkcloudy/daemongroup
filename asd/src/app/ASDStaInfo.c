@@ -82,6 +82,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "se_agent/se_agent_def.h" // for fastfwd
 #include "ASDEAPAuth.h"
 #include "ASDPMKSta.h"
+#include "roaming_sta.h"
 int ASD_NOTICE_STA_INFO_TO_PORTAL_TIMER=10;
 
 unsigned char	asd_get_sta_info_able = 0;
@@ -911,6 +912,7 @@ void ap_free_sta_without_wsm(struct asd_data *wasd, struct sta_info *sta, unsign
 		//radius_client_flush_auth(wasd->radius, sta->addr);
 		}
 		asd_printf(ASD_DEFAULT,MSG_INFO,"free sta in ap_free_sta_without_wsm\n");
+		UpdateStaInfoToFASTFWD(sta->ipaddr,SE_AGENT_CLEAR_RULE_IP);
 		os_free(sta->last_assoc_req);
 		sta->last_assoc_req=NULL;
 		os_free(sta->in_addr);
@@ -1083,7 +1085,9 @@ void ap_free_sta(struct asd_data *wasd, struct sta_info *sta, unsigned int state
 		mac[i]=sta->addr[i];
 
 	rssi = sta->rssi;	//xiaodawei add rssi for telecom, 20110228
-	
+	if(sta->rflag && ASD_WLAN[wasd->WlanID]){
+		ASD_WLAN[wasd->WlanID]->r_num_sta--;
+	}//Qc
 	if(ASD_BSS[wasd->BSSIndex])
 		ASD_BSS[wasd->BSSIndex]->bss_accessed_sta_num--;
 	if(ASD_WLAN[wasd->WlanID])
@@ -1679,6 +1683,7 @@ void ap_sta_eap_auth_timer(void *circle_ctx,void *timeout_ctx)
 		return;
 	if(sta->flags & WLAN_STA_AUTHORIZED)
 		return;
+	pthread_mutex_lock(&(asd_g_sta_mutex)); 		
 	asd_printf(ASD_DEFAULT,MSG_DEBUG,"func:%s ; sta "MACSTR" is unauthorized too long\n",__func__,MAC2STR(sta->addr));	
 	wpa_auth_sm_event(sta->wpa_sm, WPA_DEAUTH);
 	mlme_deauthenticate_indication(
@@ -1690,6 +1695,7 @@ void ap_sta_eap_auth_timer(void *circle_ctx,void *timeout_ctx)
 		ap_free_sta(wasd, sta,1);
 	else
 		ap_free_sta(wasd, sta,0);
+	pthread_mutex_unlock(&(asd_g_sta_mutex)); 		
 }
 void ap_handle_timer(void *circle_ctx, void *timeout_ctx)
 {
@@ -2162,6 +2168,14 @@ struct sta_info * ap_sta_add(struct asd_data *wasd, const u8 *addr, int both)
 		wasd->sta_list = sta;
 		wasd->num_sta++;
 		sta->wasd = wasd;//qiuchen add it to find bss from sta
+		//Qc
+		sta->BssIndex = wasd->BSSIndex;
+		sta->PreBssIndex = wasd->BSSIndex;
+		sta->preAPID = wasd->Radio_G_ID/4;
+		memcpy(sta->PreBSSID,wasd->own_addr,MAC_LEN);
+		memcpy(sta->BSSID,wasd->own_addr,MAC_LEN);
+		asd_sta_roaming_management(sta);
+		//End
 		ap_sta_hash_add(wasd, sta);
 		asd_sta_hash_add(sta);
 		sta->ssid = &wasd->conf->ssid;
@@ -2173,8 +2187,8 @@ struct sta_info * ap_sta_add(struct asd_data *wasd, const u8 *addr, int both)
 		sta->sta_send_traffic_limit=wasd->sta_average_send_traffic_limit;
 		sta->nRate = 110;   //fengwenchao add 20110301
 		//UpdateStaInfoToWSM(wasd, addr, WID_ADD);
-		if(both)
-			asd_sta_add("", wasd, sta->addr,0,0,NULL,0, 0);
+		//if(both)
+			//asd_sta_add("", wasd, sta->addr,0,0,NULL,0, 0);
 		memset(&sta->wapi_sta_info, 0, sizeof(sta->wapi_sta_info));
 		if(asd_sta_arp_listen)
 			asd_get_ip_v2(sta);
@@ -2620,6 +2634,7 @@ void ap_sta_idle_timeout(void *circle_ctx,void *timeout_ctx)
 		asd_printf(ASD_DEFAULT,MSG_ERROR,"wasd or sta is NULL in func:%s\n",__func__);
 		return;
 	}
+	pthread_mutex_lock(&(asd_g_sta_mutex)); 		
 	memset(mac,0,MAC_LEN);
 	BssIndex = wasd->BSSIndex;
 	memcpy(mac,sta->addr,MAC_LEN);
@@ -2634,6 +2649,12 @@ void ap_sta_idle_timeout(void *circle_ctx,void *timeout_ctx)
 	sta->acct_terminate_cause = RADIUS_ACCT_TERMINATE_CAUSE_IDLE_TIMEOUT;
 	SID = wasd->SecurityID;
 	if((ASD_SECURITY[SID])&&((ASD_SECURITY[SID]->securityType == WPA_E)||(ASD_SECURITY[SID]->securityType == WPA2_E)||(ASD_SECURITY[SID]->securityType == WPA_P)||(ASD_SECURITY[SID]->securityType == WPA2_P)||(ASD_SECURITY[SID]->securityType == IEEE8021X)||(ASD_SECURITY[SID]->securityType == MD5)||(ASD_SECURITY[SID]->extensible_auth == 1))){
+		if(ASD_SECURITY[SID]->securityType == WPA2_E){
+			struct PMK_STAINFO *pmk_sta = NULL;
+			pmk_sta = pmk_ap_get_sta(ASD_WLAN[wasd->WlanID],sta->addr);
+			if(pmk_sta)
+				pmk_ap_free_sta(ASD_WLAN[wasd->WlanID],pmk_sta);
+		}
 		wpa_auth_sm_event(sta->wpa_sm, WPA_DEAUTH);
 		mlme_deauthenticate_indication(
 		wasd, sta, 0);
@@ -2653,6 +2674,7 @@ void ap_sta_idle_timeout(void *circle_ctx,void *timeout_ctx)
 	AsdStaInfoToWID(wasd,mac,WID_DEL);
 	if(is_secondary == 1)
 		bak_check_sta_req(asd_sock,BssIndex,mac);
+	pthread_mutex_unlock(&(asd_g_sta_mutex)); 		
 }
 int check_sta_authorized(struct asd_data *wasd,struct sta_info *sta)
 {
@@ -2749,6 +2771,7 @@ int ap_kick_eap_sta(struct sta_info *sta)
 	if(wasd == NULL)
 		return -1;
 	
+	pthread_mutex_lock(&(asd_g_sta_mutex));
 	sta->acct_terminate_cause = RADIUS_ACCT_TERMINATE_CAUSE_ADMIN_RESET;
 	wpa_auth_sm_event(sta->wpa_sm, WPA_DEAUTH);
 	mlme_deauthenticate_indication(
@@ -2766,6 +2789,7 @@ int ap_kick_eap_sta(struct sta_info *sta)
 	else{				
 		ap_free_sta(wasd, sta, 0);
 	}
+	pthread_mutex_unlock(&(asd_g_sta_mutex));
 	return 0;
 }
 /*
@@ -2885,7 +2909,7 @@ struct sta_info * asd_sta_hash_get(const u8 *sta)
 
 void asd_sta_hash_add(struct sta_info *sta)
 {
- 	asd_sta_hash_del(sta);
+ 	//asd_sta_hash_del(sta);
  	sta->g_hnext = ASD_STA_HASH[STA_GLOBAL_HASH(sta->addr)];
 	ASD_STA_HASH[STA_GLOBAL_HASH(sta->addr)] = sta;
  }
@@ -3049,3 +3073,58 @@ int AsdStaInfoToEAG(struct asd_data *wasd, struct sta_info *sta, Operate op){
 	asd_printf(ASD_DEFAULT,MSG_DEBUG,"essid : %s\n",msg.STA.essid);
 	return 0;
 }
+void asd_sta_roaming_management(struct sta_info *new_sta)
+{
+	struct sta_info *old_sta = NULL;
+	old_sta = asd_sta_hash_get(new_sta->addr);
+	if(new_sta == NULL || new_sta->wasd == NULL || old_sta == NULL || old_sta->wasd == NULL)
+		return;
+	struct asd_data *owasd = old_sta->wasd;
+	struct asd_data *nwasd = new_sta->wasd;
+	unsigned char SID = 0;
+	if(owasd->WlanID != nwasd->WlanID){
+		asd_sta_hash_del(old_sta);
+		return;
+	}
+	SID = ASD_WLAN[nwasd->WlanID]->SecurityID;
+	if(owasd->BSSIndex != nwasd->BSSIndex){
+		asd_printf(ASD_DEFAULT,MSG_DEBUG,"func:%s roaming\n",__func__);
+		if(old_sta->ipaddr != 0 && new_sta->ipaddr == 0){
+			new_sta->ipaddr = old_sta->ipaddr;
+			new_sta->ip_addr.s_addr = old_sta->ip_addr.s_addr;
+			memset(new_sta->in_addr,0,16);
+			memcpy(new_sta->in_addr,old_sta->in_addr,strlen(old_sta->in_addr));
+			memset(new_sta->arpifname,0,sizeof(new_sta->arpifname));
+			memcpy(new_sta->arpifname,old_sta->arpifname,sizeof(old_sta->arpifname));
+		}
+		new_sta->rflag = ASD_ROAM_2;//qiuchen
+		new_sta->PreBssIndex = old_sta->PreBssIndex;
+		new_sta->preAPID = old_sta->preAPID;
+		memcpy(new_sta->PreBSSID,old_sta->PreBSSID,MAC_LEN);
+		owasd->normal_st_down_num ++;
+		old_sta->acct_terminate_cause = RADIUS_ACCT_TERMINATE_CAUSE_USER_REQUEST;
+		AsdStaInfoToWID(owasd, old_sta->addr, WID_DEL);
+		if(ASD_NOTICE_STA_INFO_TO_PORTAL)
+			AsdStaInfoToEAG(owasd,old_sta,OPEN_ROAM);		
+		if(ASD_WLAN[nwasd->WlanID]){
+			ASD_WLAN[nwasd->WlanID]->sta_roaming_times++;
+			ASD_WLAN[nwasd->WlanID]->r_num_sta++;
+		}
+		if(ASD_WLAN[nwasd->WlanID] && ASD_WLAN[nwasd->WlanID]->Roaming_Policy){
+			RoamingStaInfoToWSM_1(old_sta,WID_MODIFY);
+			RoamingStaInfoToWIFI_1(old_sta,WID_ADD);
+			ACGroupRoamingCheck(nwasd->WlanID,nwasd,new_sta->addr);
+		}else{
+			UpdateStaInfoToWSM(nwasd, new_sta->addr, WID_ADD);	
+		}
+		if((ASD_SECURITY[SID])&&((ASD_SECURITY[SID]->securityType == WPA_E)||(ASD_SECURITY[SID]->securityType == WPA2_E)||(ASD_SECURITY[SID]->securityType == WPA_P)||(ASD_SECURITY[SID]->securityType == WPA2_P)||(ASD_SECURITY[SID]->securityType == IEEE8021X)||(ASD_SECURITY[SID]->securityType == MD5)||(ASD_SECURITY[SID]->extensible_auth == 1))){
+			wpa_auth_sm_event(old_sta->wpa_sm, WPA_DEAUTH);
+			mlme_deauthenticate_indication(
+				owasd, old_sta, 0);
+			ieee802_1x_notify_port_enabled(old_sta->eapol_sm, 0);
+		}
+		ap_free_sta(owasd,old_sta,0);
+	}
+}
+
+

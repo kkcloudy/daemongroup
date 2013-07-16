@@ -386,16 +386,18 @@ static int ShowPage(struct secondary_module_container *p )
 		{
 			panel_86();
 		}		
-		if((p_getid == 7)||(devicetype == 6))
+		else if((p_getid == 7)||(devicetype == 6))
 		{
 			panel_7605i();
 		}
 		else
 		{
 		/*********************************7605 panel***********************************************/
-		if(nm_show_hw_config(0,&sl)==CCGI_SUCCESS)     /*如果读取信息成功*/
-        Mid=sl.module_id;
-	    select_panel_id(Pid,value,sl,ptrsysver,pt,prt_no,retu,p->encry,lcon,m,Mid);
+			if(nm_show_hw_config(0,&sl)==CCGI_SUCCESS)     /*如果读取信息成功*/
+			{
+        		Mid=sl.module_id;
+	    		select_panel_id(Pid,value,sl,ptrsysver,pt,prt_no,retu,p->encry,lcon,m,Mid);
+			}
        /***************************************end 7605 panel**************************************/
 		}
 
@@ -6853,6 +6855,698 @@ void  select_86_slotinfo(int slotid)
 		if(0 == strcmp(board_name,"AX81_SMU"))
 		{
 			fprintf(cgiOut,"<img src=\"/images/8610/8610_mcontrol.gif\" width=63 height=708 >");
+		}
+		if(0 == strcmp(board_name,"AX81_1X12G12S"))
+		{
+			//fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports.gif\" width=63 height=708 >");
+			fprintf(cgiOut,"<table id=Table_01 width=63 height=708 border=0 cellpadding=0 cellspacing=0>"\
+			"<tr>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_01.gif\" width=63 height=35 ></td>"\
+			"</tr>"\
+			"<tr>"\
+				"<td>");
+			//ports
+			//fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_02.gif\" width=63 height=168 >");
+			fprintf(cgiOut,"<table id=Table_01 width=63 height=168 border=0 cellpadding=0 cellspacing=0>"\
+			"<tr>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_02_01.gif\" width=17 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_13_6.gif\" width=13 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_2_6.gif\" width=2 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_13_6.gif\" width=13 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_02_05.gif\" width=18 height=6 ></td>"\
+			"</tr>"\
+			"<tr>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_02_06.gif\" width=17 height=21 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_2_21.gif\" width=2 height=21 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_02_10.gif\" width=18 height=21 ></td>"\
+			"</tr>"\
+			"<tr>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_02_11.gif\" width=17 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_13_6.gif\" width=13 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_2_6.gif\" width=2 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_13_6.gif\" width=13 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_02_15.gif\" width=18 height=6 ></td>"\
+			"</tr>"\
+			"<tr>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_02_16.gif\" width=17 height=21 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_2_21.gif\" width=2 height=21 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_02_20.gif\" width=18 height=21 ></td>"\
+			"</tr>"\
+			"<tr>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_02_21.gif\" width=17 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_13_6.gif\" width=13 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_2_6.gif\" width=2 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_13_6.gif\" width=13 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_02_25.gif\" width=18 height=6 ></td>"\
+			"</tr>"\
+			"<tr>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_02_26.gif\" width=17 height=21 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_2_21.gif\" width=2 height=21 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_02_30.gif\" width=18 height=21 ></td>"\
+			"</tr>"\
+			"<tr>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_02_31.gif\" width=17 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_13_6.gif\" width=13 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_2_6.gif\" width=2 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_13_6.gif\" width=13 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_02_35.gif\" width=18 height=6 ></td>"\
+			"</tr>"\
+			"<tr>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_02_36.gif\" width=17 height=21 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_2_21.gif\" width=2 height=21 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_02_40.gif\" width=18 height=21 ></td>"\
+			"</tr>"\
+			"<tr>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_02_41.gif\" width=17 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_13_6.gif\" width=13 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_2_6.gif\" width=2 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_13_6.gif\" width=13 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_02_45.gif\" width=18 height=6 ></td>"\
+			"</tr>"\
+			"<tr>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_02_46.gif\" width=17 height=21 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_2_21.gif\" width=2 height=21 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_02_50.gif\" width=18 height=21 ></td>"\
+			"</tr>"\
+			"<tr>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_02_51.gif\" width=17 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_13_6.gif\" width=13 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_2_6.gif\" width=2 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_13_6.gif\" width=13 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_02_55.gif\" width=18 height=6 ></td>"\
+			"</tr>"\
+			"<tr>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_02_56.gif\" width=17 height=21 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_2_21.gif\" width=2 height=21 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_02_60.gif\" width=18 height=21 ></td>"\
+			"</tr>"\
+			"<tr>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_02_61.gif\" width=17 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_13_6.gif\" width=13 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_2_6.gif\" width=2 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_13_6.gif\" width=13 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_02_65.gif\" width=18 height=6 ></td>"\
+			"</tr>"\
+		"</table>");
+			fprintf(cgiOut,"</td>"\
+			"</tr>"\
+			"<tr>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_03.gif\" width=63 height=30 ></td>"\
+			"</tr>"\
+			"<tr>"\
+				"<td>");
+			//ports
+			//fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_04.gif\" width=63 height=168 >");
+			fprintf(cgiOut,"<table id=Table_01 width=63 height=168 border=0 cellpadding=0 cellspacing=0>"\
+			"<tr>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_04_01.gif\" width=11 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_19_6.gif\" width=19 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_2_6.gif\" width=2 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_19_6.gif\" width=19 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_04_05.gif\" width=12 height=6 ></td>"\
+			"</tr>"\
+			"<tr>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_04_06.gif\" width=11 height=21 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_lblack.gif\" width=19 height=21 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_2_21.gif\" width=2 height=21 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_rblack.gif\" width=19 height=21 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_04_10.gif\" width=12 height=21 ></td>"\
+			"</tr>"\
+			"<tr>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_04_11.gif\" width=11 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_19_6.gif\" width=19 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_2_6.gif\" width=2 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_19_6.gif\" width=19 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_04_15.gif\" width=12 height=6 ></td>"\
+			"</tr>"\
+			"<tr>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_04_16.gif\" width=11 height=21 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_lblack.gif\" width=19 height=21 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_2_21.gif\" width=2 height=21 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_rblack.gif\" width=19 height=21 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_04_20.gif\" width=12 height=21 ></td>"\
+			"</tr>"\
+			"<tr>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_04_21.gif\" width=11 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_19_6.gif\" width=19 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_2_6.gif\" width=2 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_19_6.gif\" width=19 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_04_25.gif\" width=12 height=6 ></td>"\
+			"</tr>"\
+			"<tr>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_04_26.gif\" width=11 height=21 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_lblack.gif\" width=19 height=21 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_2_21.gif\" width=2 height=21 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_rblack.gif\" width=19 height=21 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_04_30.gif\" width=12 height=21 ></td>"\
+			"</tr>"\
+			"<tr>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_04_31.gif\" width=11 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_19_6.gif\" width=19 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_2_6.gif\" width=2 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_19_6.gif\" width=19 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_04_35.gif\" width=12 height=6 ></td>"\
+			"</tr>"\
+			"<tr>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_04_36.gif\" width=11 height=21 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_lblack.gif\" width=19 height=21 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_2_21.gif\" width=2 height=21 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_rblack.gif\" width=19 height=21 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_04_40.gif\" width=12 height=21 ></td>"\
+			"</tr>"\
+			"<tr>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_04_41.gif\" width=11 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_19_6.gif\" width=19 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_2_6.gif\" width=2 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_19_6.gif\" width=19 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_04_45.gif\" width=12 height=6 ></td>"\
+			"</tr>"\
+			"<tr>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_04_46.gif\" width=11 height=21 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_lblack.gif\" width=19 height=21 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_2_21.gif\" width=2 height=21 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_rblack.gif\" width=19 height=21 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_04_50.gif\" width=12 height=21 ></td>"\
+			"</tr>"\
+			"<tr>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_04_51.gif\" width=11 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_19_6.gif\" width=19 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_2_6.gif\" width=2 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_19_6.gif\" width=19 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_04_55.gif\" width=12 height=6 ></td>"\
+			"</tr>"\
+			"<tr>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_04_56.gif\" width=11 height=21 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_lblack.gif\" width=19 height=21 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_2_21.gif\" width=2 height=21 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_rblack.gif\" width=19 height=21 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_04_60.gif\" width=12 height=21 ></td>"\
+			"</tr>"\
+			"<tr>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_04_61.gif\" width=11 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_19_6.gif\" width=19 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_2_6.gif\" width=2 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_19_6.gif\" width=19 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_04_65.gif\" width=12 height=6 ></td>"\
+			"</tr>"\
+		"</table>");
+			fprintf(cgiOut,"</td>"\
+			"</tr>"\
+			"<tr>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_05_02.gif\" width=63 height=307 ></td>"\
+			"</tr>"\
+		"</table>");
+		}
+		if(0 == strcmp(board_name,"AX81_AC12C"))
+		{
+			//fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports.gif\" width=63 height=708 >");
+			fprintf(cgiOut,"<table id=Table_01 width=63 height=708 border=0 cellpadding=0 cellspacing=0>"\
+			"<tr>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_01.gif\" width=63 height=35 ></td>"\
+			"</tr>"\
+			"<tr>"\
+				"<td>");
+			//ports
+			//fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_02.gif\" width=63 height=168 >");
+			fprintf(cgiOut,"<table id=Table_01 width=63 height=168 border=0 cellpadding=0 cellspacing=0>"\
+			"<tr>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_02_01.gif\" width=17 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_13_6.gif\" width=13 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_2_6.gif\" width=2 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_13_6.gif\" width=13 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_02_05.gif\" width=18 height=6 ></td>"\
+			"</tr>"\
+			"<tr>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_02_06.gif\" width=17 height=21 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_2_21.gif\" width=2 height=21 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_02_10.gif\" width=18 height=21 ></td>"\
+			"</tr>"\
+			"<tr>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_02_11.gif\" width=17 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_13_6.gif\" width=13 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_2_6.gif\" width=2 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_13_6.gif\" width=13 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_02_15.gif\" width=18 height=6 ></td>"\
+			"</tr>"\
+			"<tr>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_02_16.gif\" width=17 height=21 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_2_21.gif\" width=2 height=21 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_02_20.gif\" width=18 height=21 ></td>"\
+			"</tr>"\
+			"<tr>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_02_21.gif\" width=17 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_13_6.gif\" width=13 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_2_6.gif\" width=2 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_13_6.gif\" width=13 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_02_25.gif\" width=18 height=6 ></td>"\
+			"</tr>"\
+			"<tr>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_02_26.gif\" width=17 height=21 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_2_21.gif\" width=2 height=21 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_02_30.gif\" width=18 height=21 ></td>"\
+			"</tr>"\
+			"<tr>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_02_31.gif\" width=17 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_13_6.gif\" width=13 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_2_6.gif\" width=2 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_13_6.gif\" width=13 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_02_35.gif\" width=18 height=6 ></td>"\
+			"</tr>"\
+			"<tr>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_02_36.gif\" width=17 height=21 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_2_21.gif\" width=2 height=21 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_02_40.gif\" width=18 height=21 ></td>"\
+			"</tr>"\
+			"<tr>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_02_41.gif\" width=17 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_13_6.gif\" width=13 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_2_6.gif\" width=2 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_13_6.gif\" width=13 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_02_45.gif\" width=18 height=6 ></td>"\
+			"</tr>"\
+			"<tr>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_02_46.gif\" width=17 height=21 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_2_21.gif\" width=2 height=21 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_02_50.gif\" width=18 height=21 ></td>"\
+			"</tr>"\
+			"<tr>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_02_51.gif\" width=17 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_13_6.gif\" width=13 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_2_6.gif\" width=2 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_13_6.gif\" width=13 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_02_55.gif\" width=18 height=6 ></td>"\
+			"</tr>"\
+			"<tr>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_02_56.gif\" width=17 height=21 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_2_21.gif\" width=2 height=21 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_02_60.gif\" width=18 height=21 ></td>"\
+			"</tr>"\
+			"<tr>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_02_61.gif\" width=17 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_13_6.gif\" width=13 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_2_6.gif\" width=2 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_13_6.gif\" width=13 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_02_65.gif\" width=18 height=6 ></td>"\
+			"</tr>"\
+		"</table>");
+			fprintf(cgiOut,"</td>"\
+			"</tr>"\
+			"<tr>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_03.gif\" width=63 height=30 ></td>"\
+			"</tr>"\
+			"<tr>"\
+				"<td>");
+			//ports
+			//fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_04.gif\" width=63 height=168 >");
+			fprintf(cgiOut,"<table id=Table_01 width=63 height=168 border=0 cellpadding=0 cellspacing=0>"\
+			"<tr>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_04_01.gif\" width=11 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_19_6.gif\" width=19 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_2_6.gif\" width=2 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_19_6.gif\" width=19 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_04_05.gif\" width=12 height=6 ></td>"\
+			"</tr>"\
+			"<tr>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_04_06.gif\" width=11 height=21 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_lblack.gif\" width=19 height=21 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_2_21.gif\" width=2 height=21 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_rblack.gif\" width=19 height=21 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_04_10.gif\" width=12 height=21 ></td>"\
+			"</tr>"\
+			"<tr>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_04_11.gif\" width=11 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_19_6.gif\" width=19 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_2_6.gif\" width=2 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_19_6.gif\" width=19 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_04_15.gif\" width=12 height=6 ></td>"\
+			"</tr>"\
+			"<tr>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_04_16.gif\" width=11 height=21 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_lblack.gif\" width=19 height=21 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_2_21.gif\" width=2 height=21 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_rblack.gif\" width=19 height=21 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_04_20.gif\" width=12 height=21 ></td>"\
+			"</tr>"\
+			"<tr>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_04_21.gif\" width=11 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_19_6.gif\" width=19 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_2_6.gif\" width=2 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_19_6.gif\" width=19 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_04_25.gif\" width=12 height=6 ></td>"\
+			"</tr>"\
+			"<tr>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_04_26.gif\" width=11 height=21 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_lblack.gif\" width=19 height=21 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_2_21.gif\" width=2 height=21 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_rblack.gif\" width=19 height=21 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_04_30.gif\" width=12 height=21 ></td>"\
+			"</tr>"\
+			"<tr>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_04_31.gif\" width=11 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_19_6.gif\" width=19 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_2_6.gif\" width=2 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_19_6.gif\" width=19 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_04_35.gif\" width=12 height=6 ></td>"\
+			"</tr>"\
+			"<tr>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_04_36.gif\" width=11 height=21 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_lblack.gif\" width=19 height=21 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_2_21.gif\" width=2 height=21 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_rblack.gif\" width=19 height=21 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_04_40.gif\" width=12 height=21 ></td>"\
+			"</tr>"\
+			"<tr>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_04_41.gif\" width=11 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_19_6.gif\" width=19 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_2_6.gif\" width=2 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_19_6.gif\" width=19 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_04_45.gif\" width=12 height=6 ></td>"\
+			"</tr>"\
+			"<tr>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_04_46.gif\" width=11 height=21 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_lblack.gif\" width=19 height=21 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_2_21.gif\" width=2 height=21 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_rblack.gif\" width=19 height=21 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_04_50.gif\" width=12 height=21 ></td>"\
+			"</tr>"\
+			"<tr>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_04_51.gif\" width=11 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_19_6.gif\" width=19 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_2_6.gif\" width=2 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_19_6.gif\" width=19 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_04_55.gif\" width=12 height=6 ></td>"\
+			"</tr>"\
+			"<tr>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_04_56.gif\" width=11 height=21 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_lblack.gif\" width=19 height=21 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_2_21.gif\" width=2 height=21 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_rblack.gif\" width=19 height=21 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_04_60.gif\" width=12 height=21 ></td>"\
+			"</tr>"\
+			"<tr>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_04_61.gif\" width=11 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_19_6.gif\" width=19 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_2_6.gif\" width=2 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_19_6.gif\" width=19 height=6 ></td>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_04_65.gif\" width=12 height=6 ></td>"\
+			"</tr>"\
+		"</table>");
+			fprintf(cgiOut,"</td>"\
+			"</tr>"\
+			"<tr>"\
+				"<td>"\
+					"<img src=\"/images/8610/8610_12ports_05_03.gif\" width=63 height=307 ></td>"\
+			"</tr>"\
+		"</table>");
 		}
 	}
 }

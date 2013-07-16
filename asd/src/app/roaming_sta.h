@@ -8,4 +8,6 @@ void roaming_del_all_sta(unsigned char WLANID);
 struct ROAMING_STAINFO * AsdRoamingStaInfoAdd(struct asd_data *wasd, const u8 *addr);
 int RoamingStaInfoToWSM(struct ROAMING_STAINFO *sta, Operate op);
 int RoamingStaInfoToWIFI(struct ROAMING_STAINFO *sta, Operate op);
+int RoamingStaInfoToWSM_1(struct sta_info *sta, Operate op);
+int RoamingStaInfoToWIFI_1(struct sta_info *sta, Operate op);
 #endif

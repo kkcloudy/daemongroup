@@ -655,6 +655,8 @@
 #define DHCP_ALREADY_ADD_OPTION                         (DHCP_SERVER_RETURN_CODE_BASE + 0x20)
 #define DHCP_SUBNET_EXIST                        		(DHCP_SERVER_RETURN_CODE_BASE + 0x21)
 #define DHCP_INTERFACE_WITHOUT_IPADDR              		(DHCP_SERVER_RETURN_CODE_BASE + 0x22)
+#define DHCP_FAILOVER_NAME_WRONG						(DHCP_SERVER_RETURN_CODE_BASE + 0X23)
+
 
 /* MLD SNOOPING branch */
 #define	MLD_RETURN_CODE_BASE	              	(0x180000)		       /* return code base  */  

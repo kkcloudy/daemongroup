@@ -288,6 +288,8 @@ int log_local7_dhcp(const char *, ...)
 	__attribute__((__format__(__printf__,1,2)));
 int log_debug (const char *, ...)
 	__attribute__((__format__(__printf__,1,2)));
+int log_debug_failover (int msg_type,const char *, ...);
+
 void do_percentm (char *obuf, const char *ibuf);
 
 isc_result_t uerr2isc (int);

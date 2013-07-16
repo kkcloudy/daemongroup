@@ -76,7 +76,7 @@ static DBusConnection *dcli_dbus_connection_lacp;
 /* add for distributed dynamic trunk*/
 DEFUN(config_lacp_on_board_cmd_func,
 	  config_lacp_on_board_cmd,
-	  "config dynamic trunk switch-board <1-10>",
+	  "config dynamic trunk switch-board <1-16>",
 	  CONFIG_STR
 	  "Configure lacp of Switch-board\n"
 	  "Configure swtich-board on slot N\n"
@@ -97,7 +97,7 @@ DEFUN(config_lacp_on_board_cmd_func,
 		return CMD_WARNING;
 	}
 
-	if((dist_slot < 1)||(dist_slot > 10))
+	if((dist_slot < 1)||(dist_slot > 16))
 	{
 		vty_out(vty, "%% Slot number out range!\n");
 		return CMD_WARNING;
@@ -157,10 +157,10 @@ DEFUN(config_lacp_on_board_cmd_func,
 ****************************************/
 DEFUN(create_dynamic_trunk_cmd_fun, 
 	create_dynamic_trunk_cmd, 
-	"create dynamic-trunk <1-8>",
+	"create dynamic-trunk <1-1>",
 	"Create configuration\n"
 	"Create dynamic-trunk on system\n"
-	"Dynamic trunk ID range <1-8>\n"
+	"Dynamic trunk ID range <1-1>\n"
 	"Dynamic trunk name begins with alphabet or '_',no more than 20 alphabets\n")
 {
 	DBusMessage *query = NULL, *reply = NULL;
@@ -195,7 +195,7 @@ DEFUN(create_dynamic_trunk_cmd_fun,
 		vty_out(vty,"failed get reply.\n");
 		if (dbus_error_is_set(&err)) {
 			vty_out(vty,"%s raised: %s",err.name,err.message);
-			dbus_error_free_for_dcli(&err);
+			dbus_error_free(&err);
 		}
 		return CMD_WARNING;
 	}
@@ -224,15 +224,117 @@ DEFUN(create_dynamic_trunk_cmd_fun,
 	dbus_message_unref(reply);
 	return CMD_WARNING;
 }
+int dcli_dynamic_trunk_del_trunk_map_table(
+	struct vty *vty,
+	unsigned short trunkId,
+	unsigned char actdevNum,
+	unsigned char slot_no
+)
+{
+	DBusMessage *query = NULL, *reply = NULL;
+	DBusError err;
+
+	int ret = 0;
+	unsigned int op_ret = 0;
+	int i;
+	int local_slot_id = 0;
+    int slotNum = 0;
+	
+
+
+	local_slot_id = get_product_info(SEM_LOCAL_SLOT_ID_PATH);
+	slotNum = get_product_info(SEM_SLOT_COUNT_PATH);
+	if((local_slot_id < 0) || (slotNum <0))
+	{
+		vty_out(vty,"read file error ! \n");
+		return CMD_WARNING;
+	}
+
+	for(i=1; i <= slotNum; i++)
+	{
+		
+		query = dbus_message_new_method_call(NPD_DBUS_BUSNAME,	\
+											NPD_DBUS_TRUNK_OBJPATH ,	\
+											NPD_DBUS_TRUNK_INTERFACE ,	\
+											NPD_DBUS_TRUNK_METHOD_DYNAMIC_TRUNK_DEL_MAP_TABLE );
+
+		dbus_error_init(&err);
+		dbus_message_append_args(query,
+						 		DBUS_TYPE_UINT16,&trunkId,
+						 		DBUS_TYPE_BYTE,&actdevNum,
+								DBUS_TYPE_INVALID);
+
+		if(i == slot_no)
+		{
+			continue;
+		}
+		if(NULL == dbus_connection_dcli[i]->dcli_dbus_connection) 				
+		{
+			if(i == local_slot_id)
+			{
+           		reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection,query,-1, &err);
+			}
+			else 
+			{	
+		   		vty_out(vty,"Can not connect to slot:%d \n",i);	
+				continue;
+			}
+    	}
+		else
+		{
+        	reply = dbus_connection_send_with_reply_and_block (dbus_connection_dcli[i]->dcli_dbus_connection,query,-1, &err);				
+		}
+		dbus_message_unref(query);
+
+		if (NULL == reply) {
+			vty_out(vty,"Dbus reply==NULL, Please check npd on slot: %d\n",i);
+			if (dbus_error_is_set(&err)) {
+				vty_out(vty,"%s raised: %s",err.name,err.message);
+				dbus_error_free_for_dcli(&err);
+			}
+			return CMD_SUCCESS;
+		}
+
+		if (dbus_message_get_args ( reply, &err,
+						DBUS_TYPE_UINT32, &op_ret,
+						DBUS_TYPE_INVALID)) 
+		{
+			if(TRUNK_RETURN_CODE_TRUNK_EXISTS == op_ret) {  
+				vty_out(vty,"%% Trunk %d already exists.\n",trunkId);
+			}
+			else if(TRUNK_RETURN_CODE_ERR_HW == op_ret) {
+				vty_out(vty,"%% Create trunk %d hardware fail.\n",trunkId);
+			}
+			else if(TRUNK_RETURN_CODE_ERR_GENERAL == op_ret) {
+				vty_out(vty,"%% Create trunk %d general failure.\n",trunkId);
+			}
+			else if (COMMON_PRODUCT_NOT_SUPPORT_FUCTION == op_ret){
+				vty_out(vty,"%% Product not support this function!\n");
+			}
+		} 
+		else 
+		{
+			vty_out(vty,"failed get args.\n");
+			if (dbus_error_is_set(&err)) 
+			{
+				vty_out(vty,"%s raised: %s",err.name,err.message);
+				dbus_error_free_for_dcli(&err);
+			}
+		}
+		dbus_message_unref(reply);
+	}
+
+	return CMD_SUCCESS;
+}
 
 
 /**/ 
 DEFUN(delete_dynamic_trunk_cmd_fun, 
 	delete_dynamic_trunk_cmd, 
-	"delete dynamic-trunk <1-8>",
+	"delete dynamic-trunk <1-1>",
 	"Delete operation\n"
 	"Delete dynamic trunk on system\n"
-	"Dynamic trunk ID range <1-8>\n")
+	"Dynamic trunk ID range <1-1>\n")
 {
 	DBusMessage *query = NULL, *reply = NULL;
 	DBusError err;
@@ -240,13 +342,16 @@ DEFUN(delete_dynamic_trunk_cmd_fun,
 	unsigned short 	trunkId =0;
 	int ret = 0;
 	unsigned int op_ret = 0;
+	unsigned char actdevNum = 0,slot_no = 0;
 
 	ret = parse_trunk_no((char*)argv[0], &trunkId);
-	if(NPD_FAIL == ret){
+	if(NPD_FAIL == ret)
+	{
 		vty_out(vty,"% Bad parameter,illegal dynamic trunk ID %s !\n", (char *)argv[0]);
 		return CMD_WARNING;
 	}
-	else {
+	else 
+	{
 		query = dbus_message_new_method_call(NPD_DBUS_BUSNAME,	\
 											NPD_DBUS_TRUNK_OBJPATH ,	\
 											NPD_DBUS_TRUNK_INTERFACE ,	\
@@ -262,9 +367,11 @@ DEFUN(delete_dynamic_trunk_cmd_fun,
 	}
 	dbus_message_unref(query);
 	
-	if (NULL == reply) {
+	if (NULL == reply) 
+	{
 		vty_out(vty,"failed get reply.\n");
-		if (dbus_error_is_set(&err)) {
+		if (dbus_error_is_set(&err)) 
+		{
 			vty_out(vty,"%s raised: %s",err.name,err.message);
 			dbus_error_free_for_dcli(&err);
 		}
@@ -272,11 +379,21 @@ DEFUN(delete_dynamic_trunk_cmd_fun,
 	}
 
 	if (dbus_message_get_args ( reply, &err,
+					DBUS_TYPE_BYTE,&actdevNum,
+					DBUS_TYPE_BYTE,&slot_no,
 					DBUS_TYPE_UINT32, &op_ret,
 					DBUS_TYPE_INVALID)) 
 	{
-		if(TRUNK_RETURN_CODE_ERR_NONE != op_ret) {			
+		if(TRUNK_RETURN_CODE_ERR_NONE != op_ret) 
+		{			
 			vty_out(vty, dcli_dynamic_trunk_error_info(op_ret));
+			#if 0
+			vty_out(vty,"op_ret = 0x%x\n",op_ret);
+			#endif
+		}
+		else
+		{
+			dcli_dynamic_trunk_del_trunk_map_table(vty,trunkId,actdevNum,slot_no);
 		}
 	} 
 	else 
@@ -292,6 +409,119 @@ DEFUN(delete_dynamic_trunk_cmd_fun,
 	
 	return CMD_SUCCESS;
 }
+
+int dcli_dynamic_trunk_update(
+	struct vty *vty,
+	unsigned char isAdd,
+	unsigned short trunkId,
+	unsigned char actdevNum,
+	unsigned char portNum,
+	unsigned char endis,
+	unsigned char slot_no,
+	unsigned char port_no
+)
+{
+	DBusMessage *query = NULL, *reply = NULL;
+	DBusError err;
+
+	int ret = 0;
+	unsigned int op_ret = 0;
+	int i;
+	int local_slot_id = 0;
+    int slotNum = 0;
+	
+
+
+	local_slot_id = get_product_info(SEM_LOCAL_SLOT_ID_PATH);
+	slotNum = get_product_info(SEM_SLOT_COUNT_PATH);
+	if((local_slot_id < 0) || (slotNum <0))
+	{
+		vty_out(vty,"read file error ! \n");
+		return CMD_WARNING;
+	}
+
+	for(i=1; i <= slotNum; i++)
+	{
+		
+		query = dbus_message_new_method_call(NPD_DBUS_BUSNAME,	\
+											NPD_DBUS_TRUNK_OBJPATH ,	\
+											NPD_DBUS_TRUNK_INTERFACE ,	\
+											NPD_DBUS_TRUNK_METHOD_DYNAMIC_TRUNK_MAP_TABLE_UPDATE );
+
+		dbus_error_init(&err);
+		dbus_message_append_args(query,
+								DBUS_TYPE_BYTE,&isAdd,
+						 		DBUS_TYPE_UINT16,&trunkId,
+						 		DBUS_TYPE_BYTE,&actdevNum,
+						 		DBUS_TYPE_BYTE,&portNum,
+						 		DBUS_TYPE_BYTE,&endis,
+						 		DBUS_TYPE_BYTE,&slot_no,
+						 		DBUS_TYPE_BYTE,&port_no,
+								DBUS_TYPE_INVALID);
+
+		if(i == slot_no)
+		{
+			continue;
+		}
+		if(NULL == dbus_connection_dcli[i]->dcli_dbus_connection) 				
+		{
+			if(i == local_slot_id)
+			{
+           		reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection,query,-1, &err);
+			}
+			else 
+			{	
+		   		vty_out(vty,"Can not connect to slot:%d \n",i);	
+				continue;
+			}
+    	}
+		else
+		{
+        	reply = dbus_connection_send_with_reply_and_block (dbus_connection_dcli[i]->dcli_dbus_connection,query,-1, &err);				
+		}
+		dbus_message_unref(query);
+
+		if (NULL == reply) {
+			vty_out(vty,"Dbus reply==NULL, Please check npd on slot: %d\n",i);
+			if (dbus_error_is_set(&err)) {
+				vty_out(vty,"%s raised: %s",err.name,err.message);
+				dbus_error_free_for_dcli(&err);
+			}
+			return CMD_SUCCESS;
+		}
+
+		if (dbus_message_get_args ( reply, &err,
+						DBUS_TYPE_UINT32, &op_ret,
+						DBUS_TYPE_INVALID)) 
+		{
+			if(TRUNK_RETURN_CODE_TRUNK_EXISTS == op_ret) {  
+				vty_out(vty,"%% Trunk %d already exists.\n",trunkId);
+			}
+			else if(TRUNK_RETURN_CODE_ERR_HW == op_ret) {
+				vty_out(vty,"%% Create trunk %d hardware fail.\n",trunkId);
+			}
+			else if(TRUNK_RETURN_CODE_ERR_GENERAL == op_ret) {
+				vty_out(vty,"%% Create trunk %d general failure.\n",trunkId);
+			}
+			else if (COMMON_PRODUCT_NOT_SUPPORT_FUCTION == op_ret){
+				vty_out(vty,"%% Product not support this function!\n");
+			}
+		} 
+		else 
+		{
+			vty_out(vty,"failed get args.\n");
+			if (dbus_error_is_set(&err)) 
+			{
+				vty_out(vty,"%s raised: %s",err.name,err.message);
+				dbus_error_free_for_dcli(&err);
+			}
+		}
+		dbus_message_unref(reply);
+	}
+
+	return CMD_SUCCESS;
+}
+
 
 
 DEFUN(add_delete_dynamic_trunk_member_cmd_fun, 
@@ -310,28 +540,34 @@ DEFUN(add_delete_dynamic_trunk_member_cmd_fun,
 	unsigned short	trunkId = 0;
 	unsigned int 	op_ret = 0, nodesave = 0;
 	int slotNum = 0;
-
-	if(2 != argc){
+	unsigned char actdevNum = 0,virportNum = 0,endis = 0;
+	if(2 != argc)
+	{
 		vty_out(vty, "%% Bad parameter number: %d\n", argc);
 	}
 	/*fetch the 1st param : add ? delete*/
-	if(strncmp(argv[0],"add",strlen(argv[0]))==0) {
+	if(strncmp(argv[0],"add",strlen(argv[0]))==0) 
+	{
 		isAdd = TRUE;
 	}
-	else if (strncmp(argv[0],"delete",strlen(argv[0]))==0) {
+	else if (strncmp(argv[0],"delete",strlen(argv[0]))==0) 
+	{
 		isAdd = FALSE;
 	}
-	else {
+	else 
+	{
 		vty_out(vty,"% Bad parameter.\n");
 		return CMD_WARNING;
 	}
 	/*fetch the 2nd param : slotNo/portNo*/
 	op_ret = parse_slotno_localport((char *)argv[1],&t_slotno,&t_portno);
-   	if (NPD_FAIL == op_ret) {
+   	if (NPD_FAIL == op_ret) 
+	{
     	vty_out(vty,"% Bad parameter,unknow portno format.\n");
 		return CMD_WARNING;
 	}
-	else if (1 == op_ret){
+	else if (1 == op_ret)
+	{
 		vty_out(vty,"% Bad parameter,bad slot/port number.\n");
 		return CMD_WARNING;
 	}
@@ -369,9 +605,11 @@ DEFUN(add_delete_dynamic_trunk_member_cmd_fun,
 	reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection_lacp,query,-1, &err);
 	
 	dbus_message_unref(query);
-	if (NULL == reply) {
+	if (NULL == reply) 
+	{
 		vty_out(vty,"failed get reply.\n");
-		if (dbus_error_is_set(&err)) {
+		if (dbus_error_is_set(&err)) 
+		{
 			printf("%s raised: %s",err.name,err.message);
 			dbus_error_free_for_dcli(&err);
 		}
@@ -379,15 +617,30 @@ DEFUN(add_delete_dynamic_trunk_member_cmd_fun,
 	}
 
 	if (dbus_message_get_args ( reply, &err,
+		DBUS_TYPE_BYTE, &actdevNum,
+		DBUS_TYPE_BYTE,&virportNum,
+		DBUS_TYPE_BYTE,&endis,
 		DBUS_TYPE_UINT32,&op_ret,
-		DBUS_TYPE_INVALID)) {
-			if(TRUNK_RETURN_CODE_ERR_NONE != op_ret){
+		DBUS_TYPE_INVALID)) 
+	{
+			if(TRUNK_RETURN_CODE_ERR_NONE != op_ret)
+			{
 				vty_out(vty, dcli_dynamic_trunk_error_info(op_ret));
 			}
+			else
+			{
+				op_ret = dcli_dynamic_trunk_update(vty,isAdd,trunkId,actdevNum,virportNum,endis,slot_no,local_port_no);
+				if(CMD_SUCCESS != op_ret)
+				{
+					vty_out(vty,"Update dynamic trunk map table failed !\n");
+				}
+			}
 	}
-	else {
+	else 
+	{
 		vty_out(vty,"Failed get args.\n");
-		if (dbus_error_is_set(&err)) {
+		if (dbus_error_is_set(&err)) 
+		{
 			vty_out(vty,"%s raised: %s",err.name,err.message);
 			dbus_error_free_for_dcli(&err);
 		}
@@ -406,7 +659,7 @@ DEFUN(add_delete_dynamic_trunk_member_cmd_fun,
 
 DEFUN(config_dynamic_trunk_func,
 	config_dynamic_trunk_cmd,
-	"config dynamic-trunk <1-8>",
+	"config dynamic-trunk <1-1>",
 	CONFIG_STR
 	"Config dynamic trunk entity\n"
 	"Specify trunk ID for trunk entity\n"
@@ -718,9 +971,94 @@ DEFUN(show_dynamic_trunk_member_list_func,
 	return CMD_SUCCESS;
 }
 
+DEFUN(show_dynamic_trunk_vlan_member_list_func,
+	show_dynamic_trunk_vlan_member_list_cmd,
+	"show dynamic-trunk vlan member list",
+	SHOW_STR
+	"Show dynamic trunk vlan entity\n"
+	"Show dynamic trunk vlan entity list\n"
+)
+{
+	DBusMessage *query = NULL, *reply = NULL;
+	DBusError err;	
+	DBusMessageIter	 iter;
+	unsigned int haveMore = FALSE;
+	unsigned char slot = 0, port = 0;
+	unsigned short vlanid = 0;
+	unsigned int untag_vlan_count = 0,tag_vlan_count = 0;
+	unsigned int tmpPortCount = 0;
+	unsigned int tableOut = FALSE;
+	unsigned int ret = TRUNK_RETURN_CODE_ERR_NONE;
+	unsigned int dynamic_trunk_id = 1;
+	int i = 0,j=0;
+	query = dbus_message_new_method_call(
+							NPD_DBUS_BUSNAME,	\
+							NPD_DBUS_TRUNK_OBJPATH ,	\
+							NPD_DBUS_TRUNK_INTERFACE ,	\
+							NPD_DBUS_DYNAMIC_TRUNK_METHOD_SHOW_TRUNK_VLAN_MEMBER_LIST);
+
+	dbus_error_init(&err);
+	reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection,query,-1, &err);
+
+	dbus_message_unref(query);
+	if (NULL == reply) 
+	{
+		printf("show dynamic trunk vlan port member list failed get reply.\n");
+		if (dbus_error_is_set(&err)) 
+		{
+			printf("%s raised: %s",err.name,err.message);
+			dbus_error_free_for_dcli(&err);
+		}
+		return CMD_WARNING;
+	}
+
+	dbus_message_iter_init(reply,&iter);
+	dbus_message_iter_get_basic(&iter,&untag_vlan_count);	
+	dbus_message_iter_next(&iter);
+	dbus_message_iter_get_basic(&iter,&tag_vlan_count);	
+	dbus_message_iter_next(&iter);
+	vty_out(vty, "=====================================\n");
+	
+	vty_out(vty, "%-10s%-27s\n", "NAME", "  TRUNK IN VLAN LIST");
+	vty_out(vty, "-------------------------------------\n");
+	vty_out(vty, "dytrunk%-3d  ", dynamic_trunk_id);
+	if((untag_vlan_count) || (tag_vlan_count))
+	{
+		for(i = 0;i<untag_vlan_count;i++)
+		{
+			dbus_message_iter_get_basic(&iter,&vlanid);	
+			dbus_message_iter_next(&iter);
+			if(i && ((i%3)==0))
+			{
+				vty_out(vty,"\n%-12s"," ");
+			}
+			vty_out(vty,"%s%d(u)",(i%3)?",":"",vlanid+1);
+		}
+		j=i;
+		for(i = 0;i<tag_vlan_count;i++)
+		{
+			dbus_message_iter_get_basic(&iter,&vlanid);	
+			dbus_message_iter_next(&iter);
+			if((i+j) && (((i+j)%3)==0))
+			{
+				vty_out(vty,"\n%-12s"," ");
+			}
+			vty_out(vty,"%s%d(t)",((i+j)%3)?",":"",vlanid+1);
+		}
+	}
+	else 
+	{
+		vty_out(vty,"Not in any vlan");
+	}
+	vty_out(vty, "\n");
+	vty_out(vty, "=====================================\n");
+	dbus_message_unref(reply);
+	return CMD_SUCCESS;	
+}
+
 DEFUN(show_dynamic_trunk_member_func,
 	show_dynamic_trunk_member_cmd,
-	"show dynamic-trunk <1-8>",
+	"show dynamic-trunk <1-1>",
 	SHOW_STR
 	"Show dynamic trunk entity\n"
 	"Specify dynamic trunk ID for trunk entity\n"
@@ -897,7 +1235,7 @@ int dcli_show_dynamic_trunk_hw_info_list
 }
 DEFUN(show_dynamic_trunk_hardware_func,
 	show_dynamic_trunk_hardware_cmd,
-	"show dynamic-trunk hardware-information <1-8>",
+	"show dynamic-trunk hardware-information <1-1>",
 	SHOW_STR
 	"Show dynamic trunk entity\n"
 	"Show hardware information"
@@ -999,6 +1337,108 @@ char * dcli_dynamic_trunk_error_info(unsigned int op_ret){
 		return "%% Unknown error !\n";
 	}
 }
+
+int dcli_trunk_allow_refuse_vlanlist_update_for_master
+(
+	struct vty* vty,
+	unsigned char isAllow,
+	unsigned char isTag,
+	unsigned int  count, 
+	unsigned short  vid,
+	unsigned short trunkId
+)
+{
+	DBusError err;
+	unsigned int 	op_ret = 0;
+	DBusMessage *query = NULL, *reply = NULL;
+
+	int i = 0,slot_id =0,ret=0;	
+   	int master_slot_id[2] = {-1, -1};	
+	char *master_slot_cnt_file = "/dbm/product/master_slot_count";		
+    int master_slot_count = get_product_info(master_slot_cnt_file);
+	int local_slot_id = get_product_info(SEM_LOCAL_SLOT_ID_PATH);
+
+   	ret = dcli_master_slot_id_get(master_slot_id);
+	if(ret !=0 )
+	{
+		vty_out(vty,"get master_slot_id error !\n");
+		return CMD_SUCCESS;		
+   	}
+	if((local_slot_id<0)||(master_slot_count<0))
+	{
+		vty_out(vty,"get get_product_info return -1 !\n");
+		return CMD_SUCCESS;		
+   	}
+    for(i=0;i<master_slot_count;i++)
+    {
+
+		slot_id = master_slot_id[i];
+    	query = NULL;
+    	reply = NULL;
+    	query = dbus_message_new_method_call(NPD_DBUS_BUSNAME,	\
+											NPD_DBUS_TRUNK_OBJPATH,	\
+											NPD_DBUS_TRUNK_INTERFACE,	\
+    										NPD_DBUS_TRUNK_METHOD_ALLOW_REFUSE_VLAN_LIST);
+    	
+    	dbus_error_init(&err);
+
+    	dbus_message_append_args(	query,
+    							 	DBUS_TYPE_BYTE,&isAllow,
+							 		DBUS_TYPE_BYTE,&isTag,
+							 		DBUS_TYPE_UINT32,&count,
+									DBUS_TYPE_UINT16,&vid,
+							 		DBUS_TYPE_UINT16,&trunkId,
+    							 	DBUS_TYPE_INVALID);
+    	
+        if(NULL == dbus_connection_dcli[slot_id]->dcli_dbus_connection) 				
+    	{
+			if(slot_id == local_slot_id)
+			{
+                reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection,query,-1, &err);
+			}
+			else 
+			{	
+			    /* here do not print "Can not connect to MCB slot:5 " */	
+				#if 0  
+			   	vty_out(vty,"Can not connect to MCB slot:%d \n",slot_id);	
+                #endif    
+				continue;   /* for next MCB */
+			}
+        }
+    	else
+    	{
+            reply = dbus_connection_send_with_reply_and_block (dbus_connection_dcli[slot_id]->dcli_dbus_connection,query,-1, &err);				
+    	}
+    	
+    	dbus_message_unref(query);
+    	if (NULL == reply) 
+		{
+    		vty_out(vty,"Please check npd on MCB slot %d\n",slot_id);
+    		return CMD_SUCCESS;
+    	}
+
+    	if (dbus_message_get_args ( reply, &err,
+    		DBUS_TYPE_UINT32,&op_ret,
+    		DBUS_TYPE_INVALID)) 
+    	{
+    		if (TRUNK_RETURN_CODE_ERR_NONE != op_ret)
+			{
+    			vty_out(vty,"%% update trunk allow/refuse vlan list failed return %d \n",op_ret);
+    		}		
+    	} 
+    	else 
+		{
+    		vty_out(vty,"Failed get args,Please check npd on MCB slot %d\n",slot_id);
+    	}
+    	dbus_message_unref(reply);
+    	if(VLAN_RETURN_CODE_ERR_NONE != op_ret)
+    	{
+    		return CMD_WARNING;
+    	}
+    }
+	return CMD_SUCCESS;	
+}
+
 DEFUN(dynamic_trunk_allow_refuse_vlan_cmd_fun, 
 	dynamic_trunk_allow_refuse_vlan_cmd, 
 	"(allow|refuse) vlan <2-4094> (tag|untag)",/*(VLAN_LIST|all)",*/
@@ -1024,28 +1464,35 @@ DEFUN(dynamic_trunk_allow_refuse_vlan_cmd_fun,
 	
 
 	/*fetch the 1st param : add ? delete*/
-	if(strncmp(argv[0],"allow",strlen((char*)argv[0]))==0) {
+	if(strncmp(argv[0],"allow",strlen((char*)argv[0]))==0) 
+	{
 		isAllow = TRUE;
 	}
-	else if (strncmp(argv[0],"refuse",strlen((char*)argv[0]))==0) {
+	else if (strncmp(argv[0],"refuse",strlen((char*)argv[0]))==0) 
+	{
 		isAllow = FALSE;
 	}
-	else {
+	else 
+	{
 		vty_out(vty,"% Bad command parameter0!\n");
 		return CMD_WARNING;
 	}		
 	ret = parse_vlan_no((char*)argv[1],&vid);
-	if(0 != ret ){
+	if(0 != ret )
+	{
 		vty_out(vty,"% Bad vlan parameter.\n");
 		return CMD_WARNING;
 	}
-	if(strncmp(argv[2],"tag",strlen((char*)argv[2]))==0) {
+	if(strncmp(argv[2],"tag",strlen((char*)argv[2]))==0) 
+	{
 		isTag = TRUE;
 	}
-	else if (strncmp(argv[2],"untag",strlen((char*)argv[2]))==0) {
+	else if (strncmp(argv[2],"untag",strlen((char*)argv[2]))==0) 
+	{
 		isTag = FALSE;
 	}
-	else {
+	else 
+	{
 		vty_out(vty,"% Bad command parameter.\n");
 		return CMD_WARNING;
 	}		
@@ -1072,9 +1519,11 @@ DEFUN(dynamic_trunk_allow_refuse_vlan_cmd_fun,
 	reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection_lacp,query,-1, &err);
 
 	dbus_message_unref(query);
-	if (NULL == reply) {
+	if (NULL == reply) 
+	{
 		vty_out(vty,"failed get reply.\n");
-		if (dbus_error_is_set(&err)) {
+		if (dbus_error_is_set(&err)) 
+		{
 			printf("%s raised: %s",err.name,err.message);
 			dbus_error_free_for_dcli(&err);
 		}
@@ -1083,54 +1532,72 @@ DEFUN(dynamic_trunk_allow_refuse_vlan_cmd_fun,
 
 	if (dbus_message_get_args ( reply, &err,
 		DBUS_TYPE_UINT32,&op_ret,
-		DBUS_TYPE_INVALID)) {
-			if (TRUNK_RETURN_CODE_ERR_NONE == op_ret ) {
+		DBUS_TYPE_INVALID)) 
+	{
+			if (TRUNK_RETURN_CODE_ERR_NONE == op_ret ) 
+			{
+				dcli_trunk_allow_refuse_vlanlist_update_for_master(vty,isAllow,isTag,count,vid,trunkId);
 				/*vty_out(vty,"trunk %d %s vlan %d success.\n",trunkId,isAllow?"Allow":"Refuse",vid);*/
 			}
-			else if (VLAN_RETURN_CODE_VLAN_NOT_EXISTS == op_ret ) {
+			else if (VLAN_RETURN_CODE_VLAN_NOT_EXISTS == op_ret ) 
+			{
 				vty_out(vty,"%% Bad Parameter,vlan not exist.\n");
 			}
-			else if (VLAN_RETURN_CODE_L3_INTF == op_ret ) {
+			else if (VLAN_RETURN_CODE_L3_INTF == op_ret ) 
+			{
 				vty_out(vty,"%% Bad Parameter,vlan is L3 interface .\n");
 			}
-			else if (TRUNK_RETURN_CODE_BADPARAM == op_ret) {
+			else if (TRUNK_RETURN_CODE_BADPARAM == op_ret) 
+			{
 				vty_out(vty,"%% Error occurs in parse portNo or deviceNO.\n");
 			}
-			else if (VLAN_RETURN_CODE_TRUNK_EXISTS== op_ret) {
+			else if (VLAN_RETURN_CODE_TRUNK_EXISTS== op_ret) 
+			{
 				vty_out(vty,"%% Bad Parameter,vlan Already allow in trunk %d.\n",trunkId);
 			}
-			else if (VLAN_RETURN_CODE_TRUNK_CONFLICT == op_ret) {
+			else if (VLAN_RETURN_CODE_TRUNK_CONFLICT == op_ret) 
+			{
 				vty_out(vty,"%% Bad Parameter,trunk %d already untagged member of other active vlan.\n",trunkId);
 			}
-			else if (TRUNK_RETURN_CODE_ALLOW_ERR == op_ret) {
+			else if (TRUNK_RETURN_CODE_ALLOW_ERR == op_ret) 
+			{
 				vty_out(vty,"%% Error occurs in trunk port add to allowed vlans.\n");
 			}
-			else if (TRUNK_RETURN_CODE_REFUSE_ERR == op_ret) {
+			else if (TRUNK_RETURN_CODE_REFUSE_ERR == op_ret) 
+			{
 				vty_out(vty,"%% Error occurs in trunk port delete from refused vlans.\n");
 			}			
-			else if (VLAN_RETURN_CODE_PORT_L3_INTF == op_ret) {
+			else if (VLAN_RETURN_CODE_PORT_L3_INTF == op_ret) 
+			{
 				/*never happen*/
 				vty_out(vty,"%% Bad Parameter,there exists L3 interface port.\n");
 			}
-			else if (TRUNK_RETURN_CODE_ERR_HW == op_ret) {
+			else if (TRUNK_RETURN_CODE_ERR_HW == op_ret) 
+			{
 				vty_out(vty,"%% Error occurs in config on HW.\n");	
 			}
-			else if (TRUNK_RETURN_CODE_ERR_GENERAL == op_ret) {
+			else if (TRUNK_RETURN_CODE_ERR_GENERAL == op_ret) 
+			{
 				vty_out(vty,"%% Error occurs in config on SW.\n"); /*such as add port to trunkNode struct.*/
 			}
-			else if (TRUNK_RETURN_CODE_MEMBERSHIP_CONFICT == op_ret) {
+			else if (TRUNK_RETURN_CODE_MEMBERSHIP_CONFICT == op_ret) 
+			{
 				vty_out(vty,"%% Error,this port is a member of other trunk.\n"); /*such as add port to trunkNode struct.*/
 			}
-			else if (TRUNK_RETURN_CODE_NO_MEMBER == op_ret) {
+			else if (TRUNK_RETURN_CODE_NO_MEMBER == op_ret) 
+			{
 				vty_out(vty,"%% Bad parameter,there exists no member in trunk %d.\n",trunkId); /*such as add port to trunkNode struct.*/
 			}
-			else if (TRUNK_RETURN_CODE_ALLOW_VLAN == op_ret) {
+			else if (TRUNK_RETURN_CODE_ALLOW_VLAN == op_ret) 
+			{
 				vty_out(vty,"%% Bad parameter,vlan already allow in trunk %d.\n",trunkId); /*such as add port to trunkNode struct.*/
 			}
-			else if (TRUNK_RETURN_CODE_NOTALLOW_VLAN == op_ret) {
+			else if (TRUNK_RETURN_CODE_NOTALLOW_VLAN == op_ret) 
+			{
 				vty_out(vty,"%% Bad parameter,vlan not allow in trunk %d.\n",trunkId); /*such as add port to trunkNode struct.*/
 			}
-			else if (TRUNK_RETURN_CODE_VLAN_TAGMODE_ERR == op_ret) {
+			else if (TRUNK_RETURN_CODE_VLAN_TAGMODE_ERR == op_ret) 
+			{
 				vty_out(vty,"%% Bad parameter,trunk %d tagMode error in vlan.\n",trunkId); 
 			}
 	} 				
@@ -1312,7 +1779,8 @@ void dcli_dynamic_trunk_init() {
 	install_element(DYNAMIC_TRUNK_NODE,&show_dynamic_trunk_member_cmd);
 	install_element(DYNAMIC_TRUNK_NODE,&show_dynamic_trunk_hardware_current_cmd);
     install_element(DYNAMIC_TRUNK_NODE,&show_dynamic_trunk_hardware_cmd);
-	
+	install_element(CONFIG_NODE,&show_dynamic_trunk_vlan_member_list_cmd);
+	install_element(DISTRIBUTED_DYNAMIC_TRUNK_NODE,&show_dynamic_trunk_vlan_member_list_cmd);
 	#if 0
 	install_node (&dynamic_trunk_node, dcli_dynamic_trunk_show_running_config);
 	install_default(DYNAMIC_TRUNK_NODE);

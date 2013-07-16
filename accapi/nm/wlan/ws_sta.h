@@ -540,5 +540,12 @@ extern int show_all_sta_base_info_cmd(dbus_parameter parameter, DBusConnection *
 																			/*返回-1表示there is no station，返回-2表示error*/
 																			/*返回SNMPD_CONNECTION_ERROR表示connection error*/
 
+/*Type为"listen"或"listen_and_set"*/
+/*state为"enable"或"disable"*/
+extern int set_asd_sta_arp_listen_cmd(dbus_parameter parameter, DBusConnection *connection,char *Type,char *state);
+														 /*返回0表示失败，返回1表示成功*/
+														 /*返回-1表示input para error*/
+														 /*返回SNMPD_CONNECTION_ERROR表示connection error*/
+
 #endif
 

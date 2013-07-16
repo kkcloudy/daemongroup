@@ -151,6 +151,9 @@
 /* added by zhengbo for upload snapshot */
 #define SEM_DBUS_UPLOAD_SNAPSHOT	"sem_dbus_upload_snapshot"
 
+#define SEM_DBUS_SHOW_6185		"sem_dbus_show_6185"
+#define SEM_DBUS_SET_6185		"sem_dbus_set_6185"
+
 /********************************************
 xufujun
 

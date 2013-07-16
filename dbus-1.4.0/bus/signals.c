@@ -1102,6 +1102,10 @@ bus_matchmaker_new (void)
       else
         _dbus_hash_table_unref (p->rules_by_iface);
     }
+    /*
+    **CID 15395 (#1-2 of 2): Resource leak (RESOURCE_LEAK)20. leaked_storage: Variable "matchmaker" going out of scope leaks the storage it points to. 
+    */
+  dbus_free (matchmaker);/*coverity modify for CID 15395*/
 
   return NULL;
 }

@@ -96,4 +96,5 @@ void sta_acct_info_del(u8 *acct_id);
 struct sta_info * asd_sta_hash_get(const u8 *sta);
 void asd_sta_hash_add(struct sta_info *sta);
 int AsdStaInfoToEAG(struct asd_data *wasd, struct sta_info *sta, Operate op);
+void asd_sta_roaming_management(struct sta_info *new_sta);
 #endif /* STA_INFO_H */

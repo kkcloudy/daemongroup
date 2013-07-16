@@ -234,7 +234,7 @@ int cavim_do_intf_by_ioctl(unsigned int cmd, void* param)
 
     ifr.ifr_hwaddr.sa_family = ARPHRD_ETHER;/*1*/
     strncpy(ifr.ifr_name, (const char *)ifName, IFNAMSIZ - 1);
-    memcpy((unsigned char *)ifr.ifr_hwaddr.sa_data, ifHwaddr, 13);
+    memcpy((unsigned char *)ifr.ifr_hwaddr.sa_data, ifHwaddr, 6);
 	
 	if (if_ioctl (SIOCSIFHWADDR, (caddr_t) & ifr) < 0) 
 	{

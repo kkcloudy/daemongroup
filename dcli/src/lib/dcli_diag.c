@@ -5108,6 +5108,127 @@ DEFUN(diagnosis_board_test_cmd_fun,
 	return CMD_SUCCESS;
 }
 
+
+DEFUN(Diagnosis_set_ap_fake_singal_strength_cmd_func,
+		Diagnosis_set_ap_fake_singal_strength_cmd,
+		"diagnosis-hardware set ap fake singal strength <80-120>",
+		DIAGNOSIS_STR
+		"Diagnosis set fake singal strength for AP\n"
+		"the value between -VALUE~-80 will be up to -70~-80 and -120~-VALUE will be -120~-80,0 is default\n"
+) 
+{
+	DBusMessage *query = NULL, *reply = NULL;
+	DBusError err = {0};
+	unsigned int ret = 0;
+	unsigned int fake_singal_strengh = 0;
+
+
+	if(argc < 1)
+	{
+	    vty_out(vty,"Command incompleted!\n");
+	    return CMD_WARNING;
+	}
+	if(argc == 1)
+	{
+		fake_singal_strengh = strtoul((char*)argv[0], NULL, 0);
+	}
+
+	vty_out(vty,"fake_singal_strengh  = %d\n",fake_singal_strengh);	
+	query = dbus_message_new_method_call(
+							   NPD_DBUS_BUSNAME,	   \
+							   NPD_DBUS_OBJPATH,		   \
+							   NPD_DBUS_INTERFACE,		   \
+							   NPD_DBUS_SYSTEM_DIAGNOSIS_SET_AP_FAKE_SINGAL_STRENGTH);
+	dbus_error_init(&err);
+
+	dbus_message_append_args(query,
+							DBUS_TYPE_UINT32, &fake_singal_strengh,
+							DBUS_TYPE_INVALID);
+
+	reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection,query,-1, &err);
+
+	dbus_message_unref(query);
+	if (NULL == reply) 
+	{
+		vty_out(vty, "failed get reply.\n");
+		if (dbus_error_is_set(&err)) 
+		{
+			vty_out(vty, "%s raised: %s", err.name, err.message);
+			dbus_error_free(&err);
+		}
+		return CMD_WARNING ;
+	}
+
+	if ((!(dbus_message_get_args ( reply, &err,
+									DBUS_TYPE_UINT32, &ret,
+									DBUS_TYPE_INVALID)))
+		|| (0 != ret)) 
+	{
+		if (dbus_error_is_set(&err)) 
+		{
+			vty_out(vty, "%s raised: %s\n", err.name, err.message);
+			dbus_error_free(&err);
+		}
+	}
+	dbus_message_unref(reply);
+	return CMD_SUCCESS;  
+}
+
+DEFUN(Diagnosis_set_ap_fake_singal_strength_default_cmd_func,
+		Diagnosis_set_ap_fake_singal_strength_default_cmd,
+		"diagnosis-hardware set ap fake singal strength default",
+		DIAGNOSIS_STR
+		"Diagnosis set fake singal strength for AP\n"
+		"set it to default\n"
+) 
+{
+	DBusMessage *query = NULL, *reply = NULL;
+	DBusError err = {0};
+	unsigned int ret = 0;
+	unsigned int fake_singal_strengh = 0;
+
+	vty_out(vty,"fake_singal_strengh  = %d\n",fake_singal_strengh);	
+	query = dbus_message_new_method_call(
+							   NPD_DBUS_BUSNAME,	   \
+							   NPD_DBUS_OBJPATH,		   \
+							   NPD_DBUS_INTERFACE,		   \
+							   NPD_DBUS_SYSTEM_DIAGNOSIS_SET_AP_FAKE_SINGAL_STRENGTH);
+	dbus_error_init(&err);
+
+	dbus_message_append_args(query,
+							DBUS_TYPE_UINT32, &fake_singal_strengh,
+							DBUS_TYPE_INVALID);
+
+	reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection,query,-1, &err);
+
+	dbus_message_unref(query);
+	if (NULL == reply) 
+	{
+		vty_out(vty, "failed get reply.\n");
+		if (dbus_error_is_set(&err)) 
+		{
+			vty_out(vty, "%s raised: %s", err.name, err.message);
+			dbus_error_free(&err);
+		}
+		return CMD_WARNING ;
+	}
+
+	if ((!(dbus_message_get_args ( reply, &err,
+									DBUS_TYPE_UINT32, &ret,
+									DBUS_TYPE_INVALID)))
+		|| (0 != ret)) 
+	{
+		if (dbus_error_is_set(&err)) 
+		{
+			vty_out(vty, "%s raised: %s\n", err.name, err.message);
+			dbus_error_free(&err);
+		}
+	}
+	dbus_message_unref(reply);
+	return CMD_SUCCESS;  
+}
+
+
 void dcli_diag_init(void) {
 	install_element(HIDDENDEBUG_NODE,&Diagnosis_hw_phy_read_reg_cmd);
 	install_element(HIDDENDEBUG_NODE,&Diagnosis_hw_phy_write_reg_cmd);
@@ -5164,6 +5285,8 @@ void dcli_diag_init(void) {
 	install_element(HIDDENDEBUG_NODE, &diagnosis_vlan_fdb_delete_cmd);
 	install_element(HIDDENDEBUG_NODE, &diagnosis_show_cscd_port_status_cmd);
 	install_element(HIDDENDEBUG_NODE, &diagnosis_board_test_cmd);
+	install_element(HIDDENDEBUG_NODE, &Diagnosis_set_ap_fake_singal_strength_cmd);
+	install_element(HIDDENDEBUG_NODE, &Diagnosis_set_ap_fake_singal_strength_default_cmd);
 	
 }
 

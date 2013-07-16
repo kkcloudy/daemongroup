@@ -29,11 +29,17 @@
 #############################################################################
 
 MAND_PATH=/opt/awk/ip_addrw.awk
+FILE_TEMP_PATH=/var/run/apache2/bind_inter.tmp1
 FILE_PATH=/var/run/apache2/bind_inter.tmp
+if [ ! -f $FILE_TEMP_PATH ]
+	then
+		touch $FILE_TEMP_PATH
+		chmod 666 $FILE_TEMP_PATH
+fi
+ip addr|awk -f $MAND_PATH | awk  'BEGIN{ FS=" ";RS="\n" }{ print $1 ;}' > $FILE_TEMP_PATH
 if [ ! -f $FILE_PATH ]
 	then
 		touch $FILE_PATH
 		chmod 666 $FILE_PATH
 fi
-ip addr|awk -f $MAND_PATH | awk  'BEGIN{ FS=" ";RS="\n" }{ print $1 ;}' > $FILE_PATH
-
+awk '!a[$0]++' $FILE_TEMP_PATH > $FILE_PATH

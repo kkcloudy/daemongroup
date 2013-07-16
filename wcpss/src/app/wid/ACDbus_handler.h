@@ -244,6 +244,8 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_VLANID(unsigned int RadioID,unsigned char Wlan
 int WID_ADD_WLAN_APPLY_RADIO_BASE_NAS_PORT_ID(unsigned int RadioID,unsigned char WlanID,char* nas_port_id);	//mahz add 2011.5.30
 //wlan l3 interface turn to br area
 int ADD_BSS_L3_Interface_BR(unsigned int BSSIndex);
+//interface wlan
+int ADD_BSS_L3_Interface_BR_V2(unsigned int BSSIndex);
 int Del_BSS_L3_Interface_BR(unsigned int BSSIndex);
 int Create_Wlan_L3_BR_Interface(unsigned char WlanID);
 int Delete_Wlan_L3_BR_Interface(unsigned char WlanID);
@@ -496,6 +498,8 @@ int wid_send_to_ap_sta_deauth_report(unsigned int wtpid);
 int wid_send_to_ap_sta_flow_information_report(unsigned int wtpid);
 
 int set_wlan_tunnel_mode(unsigned char WlanID, unsigned char state);
+int delete_radioif_from_wlan_bridge(unsigned char WlanID);
+
 void set_wtp_5g_switch(unsigned int wtpid,unsigned char type);
 int wid_set_wlan_hotspotid(unsigned char Wlanid,unsigned int hotspotid);
 

@@ -1162,7 +1162,9 @@ _dbus_connect_tcp_socket_with_nonce (const char     *host,
   struct addrinfo *ai, *tmp;
 
   _DBUS_ASSERT_ERROR_IS_CLEAR (error);
-
+/*
+**CID 15401 (#1 of 2): Resource leak (RESOURCE_LEAK)
+*/
   if (!_dbus_open_tcp_socket (&fd, error))
     {
       _DBUS_ASSERT_ERROR_IS_SET(error);
@@ -1184,6 +1186,7 @@ _dbus_connect_tcp_socket_with_nonce (const char     *host,
       dbus_set_error (error,
                       DBUS_ERROR_BAD_ADDRESS,
                       "Unknown address family %s", family);
+      _dbus_close (fd, NULL); /*coverity modify for CID 15401*/               
       return -1;
     }
   hints.ai_protocol = IPPROTO_TCP;
@@ -1207,6 +1210,7 @@ _dbus_connect_tcp_socket_with_nonce (const char     *host,
         {
           freeaddrinfo(ai);
           _DBUS_ASSERT_ERROR_IS_SET(error);
+          _dbus_close (fd, NULL); /*coverity modify for CID 15401*/
           return -1;
         }
       _DBUS_ASSERT_ERROR_IS_CLEAR(error);
@@ -1393,7 +1397,8 @@ _dbus_listen_tcp_socket (const char     *host,
               char portbuf[50];
 
               addrlen = sizeof(addr);
-              getsockname(fd, (struct sockaddr*) &addr, &addrlen);
+              if(-1 == getsockname(fd, (struct sockaddr*) &addr, &addrlen))
+		          goto failed;/*coverity modify for CID 14661*/
 
               if ((res = getnameinfo((struct sockaddr*)&addr, addrlen, NULL, 0,
                                      portbuf, sizeof(portbuf),
@@ -1436,7 +1441,12 @@ _dbus_listen_tcp_socket (const char     *host,
       dbus_set_error (error, _dbus_error_from_errno (errno),
                       "Failed to bind socket \"%s:%s\": %s",
                       host ? host : "*", port, _dbus_strerror (errno));
-      return -1;
+  /*
+  **CID 15402 (#1 of 2): Resource leak (RESOURCE_LEAK)
+  22. leaked_storage: Variable "listen_fd" going out of scope leaks the storage it points to.
+  */                    
+     // return -1;
+      goto failed;/*coverity modify*/
     }
 
   for (i = 0 ; i < nlisten_fd ; i++)
@@ -1963,13 +1973,17 @@ fill_user_info (DBusUserInfo       *info,
           }
 
         p = NULL;
+        /*
+        **CID 14937 (#1 of 1): Explicit null dereferenced (FORWARD_NULL)
+        7. var_deref_model: Passing null pointer "username_c" to function "getpwnam_r(char const * restrict, struct passwd * restrict, char * restrict, size_t, struct passwd ** restrict)", which dereferences it. 
+        */
 #ifdef HAVE_POSIX_GETPWNAM_R
         if (uid != DBUS_UID_UNSET)
           result = getpwuid_r (uid, &p_str, buf, buflen,
                                &p);
         else
           result = getpwnam_r (username_c, &p_str, buf, buflen,
-                               &p);
+                               &p);/*coverity info*/
 #else
         if (uid != DBUS_UID_UNSET)
           p = getpwuid_r (uid, &p_str, buf, buflen);
@@ -3180,7 +3194,11 @@ _read_subprocess_line_argv (const char *progpath,
     {
       /* The process ended with error */
       DBusString error_message;
-      _dbus_string_init (&error_message);
+      if (!_dbus_string_init (&error_message))/*coverity modify for CID 14662*/
+	  {
+	      goto out;
+	  }
+
       ret = 0;
       do
         {

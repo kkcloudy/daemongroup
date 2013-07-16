@@ -317,7 +317,12 @@ typedef enum
 } VLAN_FLITER_ENT;
 
 
-
+struct vlan_ports_collection
+{
+	unsigned int have_port;
+	unsigned int port_min;
+	unsigned int port_max;
+};
 
 extern inline int parse_vlan_no(char* str,unsigned short* vlanId);
 extern inline int vlan_name_legal_check(char* str,unsigned int len);
@@ -336,6 +341,21 @@ extern int show_vlan_list(struct vlan_info_simple vlan_all[], int vlan_port_num[
 extern int create_vlan(DBusConnection *connection,unsigned short vID,char *vName);
 extern int delete_vlan(DBusConnection *connection,unsigned short vID);
 extern int addordelete_port(DBusConnection *connection,char * addordel,char * slot_port_no,char * Tagornot,unsigned short vID,char * lan);
+																			/*返回0表示失败，返回1表示成功*/
+																			/* 返回-1表示operation failed，返回-2表示Unknown portno format*/
+																			/*返回-3表示Bad slot/port number，返回-4表示Bad tag parameter*/
+																			/*返回-5表示Error occurs in Parse eth-port Index or devNO.& logicPortNo*/
+																			/*返回-6表示Port already member of the vlan*/
+																			/*返回-7表示Port is not member of the vlan*/
+																			/*返回-8表示Port already untagged member of other active vlan*/
+																			/*返回-9表示Port Tag-Mode can NOT match*/
+																			/*返回-10表示Occcurs error,port is member of a active trunk*/
+																			/*返回-11表示Occcurs error,port has attribute of static arp*/	
+																			/*返回-12表示Occcurs error,port is member of a pvlan*/
+																			/*返回-13表示There are protocol-vlan config on this vlan and port*/
+																			/*返回-14表示Can't del an advanced-routing interface port from this vlan*/
+																			/*返回-15表示get master_slot_id error，返回-16表示get get_product_info return -1*/
+																			/*返回-17表示Please check npd on MCB slot，返回-18表示vlan_list add/delete port Error*/
 extern int show_vlan_ByID(struct vlan_info *vlan_info_byID, unsigned short vID,int* untagport_num,int* tagport_num);
 extern int setVID(unsigned short vidOld,char * vidnew);
 extern int createIntfForVlan(unsigned int vID);
@@ -348,6 +368,17 @@ extern int addordel_trunk(char * addordel,unsigned short VID,char * trunk_id,cha
 extern int show_trunklis_by_vlanId(char * vlanID,struct Trunklist * trunkdta,int * num);
 extern void Free_vlan_trunk(struct Trunklist * head);
 extern int Product_Adapter_for_page(PRODUCT_PAGE_INFO * pstProductInfo,char * product_name);
+
+/*isenable的范围是"enable"或"disable"*/
+extern int config_vlan_egress_filter(char *isenable);/*返回0表示失败，返回1表示成功*/
+														/*返回-1表示bad command parameter!*/
+														/*返回-2表示Product not support this function*/
+														/*返回-3表示Config vlan mtu failed*/
+
+extern int show_vlan_egress_filter();/*返回1表示Vlan egress filter is enabled*/
+										/*返回2表示Vlan egress filter is disabled*/
+										/*返回0表示失败，返回-1表示Product not support this function!*/
+
 extern int show_vlan_member_slot_port(unsigned int product_id_param,PORT_MEMBER_BMP untagBmp_param,PORT_MEMBER_BMP tagBmp_param,unsigned int * promisPortBmp_param);
 extern int show_vlanid_portlist(char *vid,struct Vlanid_info *head);
 extern void Free_vlanid_info(struct Vlanid_info * head);
@@ -368,5 +399,30 @@ char * Tagornot,
 unsigned short vID
 );
 extern int show_current_vlan_port_member(struct vlanlist_info_c *head);
+extern void get_vlan_ports_collection(struct vlan_ports_collection *ports);
+extern int get_vlan_port_member_tagflag(int vlan_id,char *port,int *tag_flag);/*返回0表示失败，返回1表示成功*/
+																					/*返回-1表示Failed to open file，返回-2表示Failed to mmap*/
+																					/*返回-3表示vlan is NOT exists，返回-4表示Failed to munmap*/
+																					/*返回-5表示close shm_vlan failed*/
+
+/*oper为"bond"或"unbond"*/
+/*vlanid的范围是2-4093*/
+/*slotid的范围是1-16*/
+/*cpu的范围是1-2*/
+/*port的范围是1-8*/
+extern int bond_vlan_to_ms_cpu_port_cmd(char *oper,char *vlanid,char *slotid,char *cpu,char *port);
+																/*返回0表示失败，返回1表示成功*/
+																/*返回-1表示get_product_info() return -1,Please check dbm file*/
+																/*返回-2表示Bad parameter，返回-3表示vlan id illegal*/
+																/*返回-4表示parse param failed ，返回-5表示slot id illegal*/
+																/*返回-6表示cpu no illegal，返回-7表示cpu port illegal*/
+																/*返回-8表示the dist slot is not AC board，返回-9表示ve if is exist,no interface first*/
+																/*返回-10表示vlan is no bond to slot, need not unbond*/
+																/*返回-11表示vlan do not exists on slot*/
+																/*返回-12表示vlan is already bond to slot, can not bond*/
+																/*返回-13表示add port err，返回-14表示delete port err*/
+																/*返回-15表示slot sync vlan info err，返回-16表示slot have not such cpu or port*/
+																/*返回-17表示error*/
+
 #endif
 

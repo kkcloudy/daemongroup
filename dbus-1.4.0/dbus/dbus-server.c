@@ -81,7 +81,7 @@ copy_address_with_guid_appended (const DBusString *address,
     }
 
   retval = NULL;
-  _dbus_string_steal_data (&with_guid, &retval);
+  _dbus_string_steal_data (&with_guid, &retval);/*coverity info:CID 14658 */
 
   _dbus_string_free (&with_guid);
       
@@ -835,7 +835,7 @@ dbus_server_get_id (DBusServer *server)
 
   SERVER_LOCK (server);
   retval = NULL;
-  _dbus_string_copy_data (&server->guid_hex, &retval);
+  _dbus_string_copy_data (&server->guid_hex, &retval);/*coverity info :CID 14659  */
   SERVER_UNLOCK (server);
 
   return retval;

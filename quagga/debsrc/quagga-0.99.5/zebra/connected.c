@@ -121,10 +121,12 @@ connected_check (struct interface *ifp, struct prefix *p)
 {
   struct connected *ifc;
   struct listnode *node;
-
-  for (ALL_LIST_ELEMENTS_RO (ifp->connected, node, ifc))
-    if (prefix_same (ifc->address, p))
-      return ifc;
+  if(ifp && ifp->connected)
+  {
+	  for (ALL_LIST_ELEMENTS_RO (ifp->connected, node, ifc))
+		if (prefix_same (ifc->address, p))
+		  return ifc;
+  }
 
   return NULL;
 }

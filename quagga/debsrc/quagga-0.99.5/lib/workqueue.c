@@ -346,144 +346,153 @@ work_queue_run (struct thread *thread)
    if (wq->cycles.granularity == 0)
      wq->cycles.granularity = WORK_QUEUE_MIN_GRANULARITY;
 
-   for (ALL_LIST_ELEMENTS (wq->pre_items, node, nnode, item))
+   if(NULL != wq->pre_items)
    {
-	   assert (item && item->data);
+	   for (ALL_LIST_ELEMENTS (wq->pre_items, node, nnode, item))
+	   {
+		   assert (item && item->data);
+		   
+		   /* dont run items which are past their allowed retries */
+		   if (item->ran > wq->spec.max_retries)
+			 {
+				 //  zlog_debug("rn %p discard this time.",item->data);
+				   /* run error handler, if any */
+			   if (wq->spec.errorfunc)
+				 wq->spec.errorfunc (wq, item->data);
+			   work_queue_pre_item_remove (wq, node);
+			   continue;				   
+			 }
 	   
-	   /* dont run items which are past their allowed retries */
-	   if (item->ran > wq->spec.max_retries)
-		 {
-			 //  zlog_debug("rn %p discard this time.",item->data);
-			   /* run error handler, if any */
-		   if (wq->spec.errorfunc)
-			 wq->spec.errorfunc (wq, item->data);
-		   work_queue_pre_item_remove (wq, node);
-		   continue;                   
-		 }
-   
-	   /* run and take care of items that want to be retried immediately */
-	   do
-		 {
-		   ret = wq->spec.workfunc (wq, item->data);
-		   item->ran++;
-		 }
-	   while ((ret == WQ_RETRY_NOW) 
-			  && (item->ran < wq->spec.max_retries));
-   
-	   switch (ret)
-		 {
-		 case WQ_QUEUE_BLOCKED:
+		   /* run and take care of items that want to be retried immediately */
+		   do
+			 {
+			   ret = wq->spec.workfunc (wq, item->data);
+			   item->ran++;
+			 }
+		   while ((ret == WQ_RETRY_NOW) 
+				  && (item->ran < wq->spec.max_retries));
+	   
+		   switch (ret)
+			 {
+			 case WQ_QUEUE_BLOCKED:
+			   {
+				 /* decrement item->ran again, cause this isn't an item
+				  * specific error, and fall through to WQ_RETRY_LATER
+				  */
+				 item->ran--;
+			   }
+			 case WQ_RETRY_LATER:
 		   {
-			 /* decrement item->ran again, cause this isn't an item
-			  * specific error, and fall through to WQ_RETRY_LATER
-			  */
-			 item->ran--;
+			 goto stats;
 		   }
-		 case WQ_RETRY_LATER:
-	   {
-		 goto stats;
-	   }
-		 case WQ_REQUEUE:
-	   {
-		 work_queue_pre_item_requeue (wq, node);
-		 break;
-	   }
-		 case WQ_RETRY_NOW:
-		   /* a RETRY_NOW that gets here has exceeded max_tries, same as ERROR */
-		 case WQ_ERROR:
-	   {
-		 if (wq->spec.errorfunc)
-		   wq->spec.errorfunc (wq, item);
-	   }
-	   /* fall through here is deliberate */
-		 case WQ_SUCCESS:
-		 default:
-	   {
-		 work_queue_pre_item_remove (wq, node);
-		 break;
-	   }
+			 case WQ_REQUEUE:
+		   {
+			 work_queue_pre_item_requeue (wq, node);
+			 break;
+		   }
+			 case WQ_RETRY_NOW:
+			   /* a RETRY_NOW that gets here has exceeded max_tries, same as ERROR */
+			 case WQ_ERROR:
+		   {
+			 if (wq->spec.errorfunc)
+			   wq->spec.errorfunc (wq, item);
+		   }
+		   /* fall through here is deliberate */
+			 case WQ_SUCCESS:
+			 default:
+		   {
+			 work_queue_pre_item_remove (wq, node);
+			 break;
+		   }
+			 }
+	   
+		   /* completed cycle */
+		   cycles++;
+	   
+		   /* test if we should yield */
+		   if ( !(cycles % wq->cycles.granularity) 
+			   && thread_should_yield (thread))
+			 {
+			   yielded = 1;
+			   goto stats;
+			 }
 		 }
-   
-	   /* completed cycle */
-	   cycles++;
-   
-	   /* test if we should yield */
-	   if ( !(cycles % wq->cycles.granularity) 
-		   && thread_should_yield (thread))
-		 {
-		   yielded = 1;
-		   goto stats;
-		 }
-	 }
 
-  for (ALL_LIST_ELEMENTS (wq->items, node, nnode, item))
+   }
+
+  if(NULL != wq->items)
   {
-    assert (item && item->data);
-    
-    /* dont run items which are past their allowed retries */
-    if (item->ran > wq->spec.max_retries)
-      {
-      //  zlog_debug("rn %p discard this time.",item->data);
-        /* run error handler, if any */
-	if (wq->spec.errorfunc)
-	  wq->spec.errorfunc (wq, item->data);
-	work_queue_item_remove (wq, node);
-	continue;
-      }
+	  for (ALL_LIST_ELEMENTS (wq->items, node, nnode, item))
+	  {
+		assert (item && item->data);
+		
+		/* dont run items which are past their allowed retries */
+		if (item->ran > wq->spec.max_retries)
+		  {
+		  //  zlog_debug("rn %p discard this time.",item->data);
+			/* run error handler, if any */
+		if (wq->spec.errorfunc)
+		  wq->spec.errorfunc (wq, item->data);
+		work_queue_item_remove (wq, node);
+		continue;
+		  }
+	  
+		/* run and take care of items that want to be retried immediately */
+		do
+		  {
+			ret = wq->spec.workfunc (wq, item->data);
+			item->ran++;
+		  }
+		while ((ret == WQ_RETRY_NOW) 
+			   && (item->ran < wq->spec.max_retries));
+	  
+		switch (ret)
+		  {
+		  case WQ_QUEUE_BLOCKED:
+			{
+			  /* decrement item->ran again, cause this isn't an item
+			   * specific error, and fall through to WQ_RETRY_LATER
+			   */
+			  item->ran--;
+			}
+		  case WQ_RETRY_LATER:
+		{
+		  goto stats;
+		}
+		  case WQ_REQUEUE:
+		{
+		  work_queue_item_requeue (wq, node);
+		  break;
+		}
+		  case WQ_RETRY_NOW:
+			/* a RETRY_NOW that gets here has exceeded max_tries, same as ERROR */
+		  case WQ_ERROR:
+		{
+		  if (wq->spec.errorfunc)
+			wq->spec.errorfunc (wq, item);
+		}
+		/* fall through here is deliberate */
+		  case WQ_SUCCESS:
+		  default:
+		{
+		  work_queue_item_remove (wq, node);
+		  break;
+		}
+		  }
+	  
+		/* completed cycle */
+		cycles++;
+	  
+		/* test if we should yield */
+		if ( !(cycles % wq->cycles.granularity) 
+			&& thread_should_yield (thread))
+		  {
+			yielded = 1;
+			goto stats;
+		  }
+	  }
 
-    /* run and take care of items that want to be retried immediately */
-    do
-      {
-        ret = wq->spec.workfunc (wq, item->data);
-        item->ran++;
-      }
-    while ((ret == WQ_RETRY_NOW) 
-           && (item->ran < wq->spec.max_retries));
 
-    switch (ret)
-      {
-      case WQ_QUEUE_BLOCKED:
-        {
-          /* decrement item->ran again, cause this isn't an item
-           * specific error, and fall through to WQ_RETRY_LATER
-           */
-          item->ran--;
-        }
-      case WQ_RETRY_LATER:
-	{
-	  goto stats;
-	}
-      case WQ_REQUEUE:
-	{
-	  work_queue_item_requeue (wq, node);
-	  break;
-	}
-      case WQ_RETRY_NOW:
-        /* a RETRY_NOW that gets here has exceeded max_tries, same as ERROR */
-      case WQ_ERROR:
-	{
-	  if (wq->spec.errorfunc)
-	    wq->spec.errorfunc (wq, item);
-	}
-	/* fall through here is deliberate */
-      case WQ_SUCCESS:
-      default:
-	{
-	  work_queue_item_remove (wq, node);
-	  break;
-	}
-      }
-
-    /* completed cycle */
-    cycles++;
-
-    /* test if we should yield */
-    if ( !(cycles % wq->cycles.granularity) 
-        && thread_should_yield (thread))
-      {
-        yielded = 1;
-        goto stats;
-      }
   }
 
 stats:
@@ -518,12 +527,12 @@ stats:
             __func__, cycles, wq->cycles.best, wq->cycles.granularity);
 #endif
   
-  /* Is the queue done yet? If it is, call the completion callback. */
-  if (listcount (wq->items) > 0 || listcount (wq->pre_items))
-    work_queue_schedule (wq, 0);
-  else if (wq->spec.completion_func)
-    wq->spec.completion_func (wq);
-  
+if((wq->items && listcount (wq->items) > 0 ) || (wq->pre_items && listcount (wq->pre_items)>0))
+{
+	  work_queue_schedule (wq, 0);
+}
+else if (wq->spec.completion_func)
+	wq->spec.completion_func (wq);
   return 0;
 }
 int

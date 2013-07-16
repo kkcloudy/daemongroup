@@ -6080,6 +6080,316 @@ int set_ap_max_detect_interval_cmd(dbus_parameter parameter, DBusConnection *con
 }
 
 
+int show_asd_global_variable_cmd(dbus_parameter parameter, DBusConnection *connection, struct asd_global_variable_info *info)
+																		/*返回0表示失败，返回1表示成功*/
+																		/*返回-1表示error*/
+																		/*返回SNMPD_CONNECTION_ERROR表示connection error*/
+{	
+	if(NULL == connection)
+		return 0;
+
+	int ret = ASD_DBUS_SUCCESS;
+	DBusMessage *query, *reply; 
+	DBusMessageIter  iter;
+	DBusError err;
+
+	int  asd_notice_sta_info_to_portal;
+	int  asd_notice_sta_info_to_portal_timer;
+	int  wtp_send_response_to_mobile;
+	int  asd_dbus_count_switch;
+	unsigned int  sta_static_fdb_able;
+	unsigned int  asd_switch;
+	unsigned char  asd_station_arp_listen;
+	unsigned char  asd_station_static_arp;
+	unsigned int  asd_sta_idle_time = 0;
+	unsigned char asd_sta_idle_time_switch = 0;
+	unsigned int asd_bak_sta_update_time =0;
+	unsigned char  asd_ipset_switch = 0;
+	unsigned char asd_getip_from_dhcpsnp = 0;
+	char BUSNAME[PATH_LEN];
+	char OBJPATH[PATH_LEN];
+	char INTERFACE[PATH_LEN];
+	int retu = 0;
+		
+	ccgi_ReInitDbusPath_v2(parameter.local_id, parameter.instance_id,ASD_DBUS_BUSNAME,BUSNAME);
+	ccgi_ReInitDbusPath_v2(parameter.local_id, parameter.instance_id,ASD_DBUS_SECURITY_OBJPATH,OBJPATH);
+	ccgi_ReInitDbusPath_v2(parameter.local_id, parameter.instance_id,ASD_DBUS_SECURITY_INTERFACE,INTERFACE);
+
+	query = dbus_message_new_method_call(BUSNAME,OBJPATH,INTERFACE,ASD_DBUS_SECURITY_METHOD_SHOW_ASD_GLOBAL_VARIABLE);
+
+	dbus_error_init(&err);
+
+	reply = dbus_connection_send_with_reply_and_block (connection,query,-1, &err);
+	
+	dbus_message_unref(query);
+	
+	if (NULL == reply) {
+		if (dbus_error_is_set(&err)) {
+			dbus_error_free(&err);
+		}
+		return SNMPD_CONNECTION_ERROR;
+	}
+
+	dbus_message_iter_init(reply,&iter);
+	dbus_message_iter_get_basic(&iter,&ret);
+
+	if(ret == 0){
+		dbus_message_iter_next(&iter);	
+		dbus_message_iter_get_basic(&iter,&asd_notice_sta_info_to_portal);
+
+		dbus_message_iter_next(&iter);	
+		dbus_message_iter_get_basic(&iter,&asd_notice_sta_info_to_portal_timer);
+
+		dbus_message_iter_next(&iter);	
+		dbus_message_iter_get_basic(&iter,&wtp_send_response_to_mobile);
+
+		dbus_message_iter_next(&iter);	
+		dbus_message_iter_get_basic(&iter,&asd_dbus_count_switch);
+
+		dbus_message_iter_next(&iter);	
+		dbus_message_iter_get_basic(&iter,&sta_static_fdb_able);
+
+		dbus_message_iter_next(&iter);	
+		dbus_message_iter_get_basic(&iter,&asd_switch);
+
+		dbus_message_iter_next(&iter);	
+		dbus_message_iter_get_basic(&iter,&asd_station_arp_listen);
+
+		dbus_message_iter_next(&iter);	
+		dbus_message_iter_get_basic(&iter,&asd_station_static_arp);
+		
+		dbus_message_iter_next(&iter);	
+		dbus_message_iter_get_basic(&iter,&asd_sta_idle_time_switch);
+
+		dbus_message_iter_next(&iter);	
+		dbus_message_iter_get_basic(&iter,&asd_sta_idle_time);
+
+		dbus_message_iter_next(&iter);	
+		dbus_message_iter_get_basic(&iter,&asd_bak_sta_update_time);
+
+		dbus_message_iter_next(&iter);	
+		dbus_message_iter_get_basic(&iter,&asd_ipset_switch);
+
+		dbus_message_iter_next(&iter);	
+		dbus_message_iter_get_basic(&iter,&asd_getip_from_dhcpsnp);
+
+		/*vty_out(vty,"================================================================================\n");
+		vty_out(vty,"ASD global variable list summary\n");
+		vty_out(vty,"======================================================\n");
+				vty_out(vty,"asd notice sta info to portal timer:	  %ds\n",asd_notice_sta_info_to_portal_timer);
+				vty_out(vty,"asd notice sta info to portal:           %s\n",(asd_notice_sta_info_to_portal == 1)?"enable":"disable");
+				vty_out(vty,"wtp send response to mobile:             %s\n",(wtp_send_response_to_mobile == 1)?"enable":"disable");
+				vty_out(vty,"sta static fdb:                          %s\n",(sta_static_fdb_able == 1)?"enable":"disable");
+				vty_out(vty,"asd switch:                              %s\n",(asd_switch == 1)?"enable":"disable");
+				vty_out(vty,"dbus count switch:                       %s\n",(asd_dbus_count_switch == 1)?"enable":"disable");
+				vty_out(vty,"asd sta static arp:                      %s\n",(asd_station_static_arp == 1)?"enable":"disable");
+				if(asd_station_arp_listen == 0)
+				    vty_out(vty,"asd sta arp listen:                      %s\n","disable");
+				else if(asd_station_arp_listen == 1)
+				    vty_out(vty,"asd sta arp listen:                      %s\n","enable");
+				else if(asd_station_arp_listen == 2)
+				    vty_out(vty,"asd sta arp listen and set:              %s\n","enable");
+				vty_out(vty,"asd sta idle time switch:                %s\n",(asd_sta_idle_time_switch == 1)?"enable":"disable");
+				vty_out(vty,"asd sta idle time:                        %dh\n",asd_sta_idle_time);
+				vty_out(vty,"asd bak sta update time:                 %dmin\n",asd_bak_sta_update_time);
+				vty_out(vty,"asd ipset switch:                        %s\n",(asd_ipset_switch == 1)?"enable":"disable");
+				vty_out(vty,"asd get ip from dhcp-snooping:           %s\n",(asd_getip_from_dhcpsnp == 1)?"enable":"disable");
+		vty_out(vty,"================================================================================\n");*/
+		info->asd_notice_sta_info_to_portal_timer = asd_notice_sta_info_to_portal_timer;
+		info->asd_notice_sta_info_to_portal = asd_notice_sta_info_to_portal;
+		info->wtp_send_response_to_mobile = wtp_send_response_to_mobile;
+		info->sta_static_fdb_able = sta_static_fdb_able;
+		info->asd_switch = asd_switch;
+		info->asd_dbus_count_switch = asd_dbus_count_switch;
+		info->asd_station_static_arp = asd_station_static_arp;
+		info->asd_station_arp_listen = asd_station_arp_listen;
+		info->asd_sta_idle_time_switch = asd_sta_idle_time_switch;
+		info->asd_sta_idle_time = asd_sta_idle_time;
+		info->asd_bak_sta_update_time = asd_bak_sta_update_time;
+		info->asd_ipset_switch = asd_ipset_switch;
+		info->asd_getip_from_dhcpsnp = asd_getip_from_dhcpsnp;
+		retu = 1;
+	}	
+	else
+	{
+		retu = -1;
+	}
+	
+	dbus_message_unref(reply);
+	return retu;
+	
+}
+
+/*value的范围是0-86400*/
+int set_wpa_group_rekey_period_cmd(dbus_parameter parameter, DBusConnection *connection,int id,char *value)
+																				 /*返回0表示失败，返回1表示成功*/
+																				 /*返回-1表示input period value should be 0 to 86400*/
+																				 /*返回-2表示Security ID非法*/
+																				 /*返回-3表示security profile does not exist*/
+																				 /*返回-4表示This Security Profile be used by some Wlans,please disable them first*/
+																				 /*返回-5表示Can't set wpa group rekey period under current security type*/
+																				 /*返回-6表示error*/
+																				 /*返回SNMPD_CONNECTION_ERROR表示connection error*/
+{	
+	if(NULL == connection)
+		return 0;
+	
+	if(NULL == value)
+		return 0;
+
+	int ret;
+	unsigned char security_id;
+	DBusMessage *query, *reply; 
+	DBusMessageIter  iter;
+	DBusError err;	
+	int period=3600;
+	char BUSNAME[PATH_LEN];
+	char OBJPATH[PATH_LEN];
+	char INTERFACE[PATH_LEN];
+	int retu = 0;
+
+	period= atoi(value);
+	if(period<0||period>86400)
+	{
+		return -1;
+	}
+
+	security_id = id;
+	if(security_id >= WLAN_NUM || security_id == 0){
+		syslog(LOG_DEBUG,"security id in set_wpa_group_rekey_period_cmd is %d\n",security_id);
+		return -2;
+	}
+
+	ccgi_ReInitDbusPath_v2(parameter.local_id, parameter.instance_id,ASD_DBUS_BUSNAME,BUSNAME);
+	ccgi_ReInitDbusPath_v2(parameter.local_id, parameter.instance_id,ASD_DBUS_SECURITY_OBJPATH,OBJPATH);
+	ccgi_ReInitDbusPath_v2(parameter.local_id, parameter.instance_id,ASD_DBUS_SECURITY_INTERFACE,INTERFACE);
+	query = dbus_message_new_method_call(BUSNAME,OBJPATH,INTERFACE,ASD_DBUS_SECURITY_METHOD_WPA_GROUP_REKEY_PERIOD);
+
+	dbus_error_init(&err);
+
+	dbus_message_append_args(query,
+						 DBUS_TYPE_BYTE,&security_id,
+						 DBUS_TYPE_UINT32,&period,
+						 DBUS_TYPE_INVALID);
+
+	reply = dbus_connection_send_with_reply_and_block (connection,query,-1, &err);
+
+	dbus_message_unref(query);
+
+	if (NULL == reply)
+	{
+		if (dbus_error_is_set(&err)) 
+		{
+			dbus_error_free(&err);
+		}
+		return SNMPD_CONNECTION_ERROR;
+	}
+
+	dbus_message_iter_init(reply,&iter);
+	dbus_message_iter_get_basic(&iter,&ret);
+
+	if(ret == ASD_DBUS_SUCCESS)
+		retu = 1;
+	else if(ret == ASD_SECURITY_NOT_EXIST)			
+		retu = -3;
+	else if(ret == ASD_SECURITY_WLAN_SHOULD_BE_DISABLE) 		
+		retu = -4;
+	else if(ret == ASD_SECURITY_TYPE_NOT_MATCH_ENCRYPTION_TYPE) 
+		retu = -5;
+	else
+		retu = -6;
+	
+	dbus_message_unref(reply);
+	
+	return retu;
+}
+
+int set_asd_rdc_para_cmd(dbus_parameter parameter, DBusConnection *connection,int id,char *slotID,char *insID)
+																				 /*返回0表示失败，返回1表示成功*/
+																				 /*返回-1表示slotid should be 0 to 16*/
+																				 /*返回-2表示Security ID非法*/
+																				 /*返回-3表示security type should be 802.1X, wpa_e or wpa2_e*/
+																				 /*返回-4表示security profile does not exist*/
+																				 /*返回-5表示this security profile is used by some wlans,please disable them first*/
+																				 /*返回-6表示The radius heart test is on,turn it off first*/
+																				 /*返回-7表示error*/
+																				 /*返回SNMPD_CONNECTION_ERROR表示connection error*/
+{	
+	if(NULL == connection)
+		return 0;
+	
+	if((NULL == slotID) || (NULL == insID))
+		return 0;
+
+	int ret = ASD_DBUS_SUCCESS;
+	unsigned char security_id;
+	unsigned int slot_value;
+	unsigned int inst_value;
+	DBusMessage *query, *reply; 
+	DBusMessageIter  iter;
+	DBusError err;
+	int retu = 0;
+	
+	slot_value = atoi(slotID);
+	inst_value = atoi(insID);
+	if(slot_value < 0 || slot_value > 16){
+		return -1;
+	}
+	
+	char BUSNAME[PATH_LEN];
+	char OBJPATH[PATH_LEN];
+	char INTERFACE[PATH_LEN];
+
+	security_id = id;
+	if(security_id >= WLAN_NUM || security_id == 0){
+		syslog(LOG_DEBUG,"security id in set_asd_rdc_para_cmd is %d\n",security_id);
+		return -2;
+	}
+
+	ccgi_ReInitDbusPath_v2(parameter.local_id, parameter.instance_id,ASD_DBUS_BUSNAME,BUSNAME);
+	ccgi_ReInitDbusPath_v2(parameter.local_id, parameter.instance_id,ASD_DBUS_SECURITY_OBJPATH,OBJPATH);
+	ccgi_ReInitDbusPath_v2(parameter.local_id, parameter.instance_id,ASD_DBUS_SECURITY_INTERFACE,INTERFACE);
+	query = dbus_message_new_method_call(BUSNAME,OBJPATH,INTERFACE,ASD_DBUS_SECURITY_METHOD_SET_RDC_PARA);
+	dbus_error_init(&err);
+
+	dbus_message_append_args(query,
+							 DBUS_TYPE_BYTE,&security_id,
+							 DBUS_TYPE_UINT32,&slot_value,
+							 DBUS_TYPE_UINT32,&inst_value,
+							 DBUS_TYPE_INVALID);
+
+	reply = dbus_connection_send_with_reply_and_block (connection,query,-1, &err);
+	
+	dbus_message_unref(query);
+	
+	if (NULL == reply) {
+		if (dbus_error_is_set(&err)) {
+			dbus_error_free(&err);
+		}
+		return SNMPD_CONNECTION_ERROR;
+	}
+	
+	dbus_message_iter_init(reply,&iter);
+	dbus_message_iter_get_basic(&iter,&ret);
+
+	if(ret == ASD_DBUS_SUCCESS)
+		retu = 1;
+	else if (ret == ASD_SECURITY_TYPE_WITHOUT_8021X)
+		retu = -3;
+	else if (ret == ASD_SECURITY_NOT_EXIST) 		
+		retu = -4;
+	else if(ret == ASD_SECURITY_WLAN_SHOULD_BE_DISABLE) 		
+		retu = -5;
+	else if(ret == ASD_SECURITY_HEART_TEST_ON)
+		retu = -6;
+	else
+		retu = -7;
+
+	dbus_message_unref(reply);
+	return retu;
+}
+
+
 #ifdef __cplusplus
 }
 #endif

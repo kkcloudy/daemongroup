@@ -2570,7 +2570,7 @@ DEFUN (cf_card_partition_func,
 			vty_out(vty,"Mount /blk failed.\n");			
 			return CMD_WARNING;
 		case 2: 		
-			vty_out(vty,"CF card so many version files,please keep the version file not more than 15.\n");			
+			vty_out(vty,"CF card so many version files,please keep the version file not more than 5.\n");			
 			return CMD_WARNING;
 		case 3: 		
 			vty_out(vty,"Create directory (temp_directory) failed.\n");			
@@ -2623,6 +2623,135 @@ DEFUN (cf_card_partition_func,
 	}	
 
 	return CMD_SUCCESS;
+}
+
+DEFUN(show_6185_reg,
+	show_6185_reg_cmd,
+	"show 6185 PHYADDR DEVADDR REGADDR",
+	"show 88E6185 register val"
+	"show 88E6185 register val\n"
+	"88E6185 PHY address\n"
+	"88E6185 device address\n"
+	"88E6185 register address\n"
+	)
+{
+	DBusMessage *query = NULL, *reply = NULL;
+	DBusMessageIter iter;
+	DBusError err;
+    unsigned int dev_addr;
+	unsigned int reg_addr;
+	unsigned int phy_addr;
+	unsigned int val;
+
+	phy_addr = strtol(argv[0],NULL,16);
+	dev_addr = strtol(argv[1],NULL,16);
+    reg_addr = strtol(argv[2],NULL,16);
+	
+	query = dbus_sem_msg_new_method_call(SEM_DBUS_BUSNAME, SEM_DBUS_OBJPATH,
+										 SEM_DBUS_INTERFACE, SEM_DBUS_SHOW_6185);
+	if (!query)
+	{
+		vty_out(vty, "show slot id query failed\n");
+		return CMD_FAILURE;
+	}
+
+	dbus_error_init(&err);
+
+	dbus_message_append_args(query,
+				 		DBUS_TYPE_UINT32, &dev_addr,
+				 		DBUS_TYPE_UINT32, &reg_addr,
+				 		DBUS_TYPE_UINT32, &phy_addr,
+				 		DBUS_TYPE_INVALID);
+
+	reply = dbus_connection_send_with_reply_and_block(dcli_dbus_connection, query, -1, &err);
+	
+	dbus_message_unref(query);
+
+	if (!reply)
+	{
+		vty_out(vty, "<error> failed get reply.\n");
+		if (dbus_error_is_set(&err))
+		{
+			vty_out(vty,"%s raised: %s",err.name,err.message);
+			dbus_error_free_for_dcli(&err);
+		}
+		
+		return CMD_SUCCESS;
+	}
+	
+	dbus_message_iter_init(reply,&iter);
+	dbus_message_iter_get_basic(&iter,&val);
+	vty_out(vty, "dev_addr = 0x%x,reg_addr = 0x%x\n", dev_addr,reg_addr);
+	vty_out(vty, "read val = 0x%x\n", val);
+	
+	dbus_message_unref(reply);
+	return CMD_SUCCESS;	
+}
+
+DEFUN(set_6185_reg,
+	set_6185_reg_cmd,
+	"set 6185 PHYADDR DEVADDR REGADDR VAL",
+	"set 88E6185 register val"
+	"set 88E6185 register val\n"
+	"88E6185 PHY address\n"
+	"88E6185 device address\n"
+	"88E6185 register address\n"
+	"write val\n"
+	)
+{
+	DBusMessage *query = NULL, *reply = NULL;
+	DBusMessageIter iter;
+	DBusError err;
+    unsigned int dev_addr;
+	unsigned int reg_addr;
+	unsigned int phy_addr;
+	unsigned short val;
+	int ret;
+	
+	phy_addr = strtol(argv[0],NULL,16);
+	dev_addr = strtol(argv[1],NULL,16);
+    reg_addr = strtol(argv[2],NULL,16);
+	val = strtol(argv[3],NULL,16);
+	query = dbus_sem_msg_new_method_call(SEM_DBUS_BUSNAME, SEM_DBUS_OBJPATH,
+										 SEM_DBUS_INTERFACE, SEM_DBUS_SET_6185);
+	if (!query)
+	{
+		vty_out(vty, "show slot id query failed\n");
+		return CMD_FAILURE;
+	}
+
+	dbus_error_init(&err);
+
+	dbus_message_append_args(query,
+				 		DBUS_TYPE_UINT32, &dev_addr,
+				 		DBUS_TYPE_UINT32, &reg_addr,
+				 		DBUS_TYPE_UINT16, &val,
+				 		DBUS_TYPE_UINT32, &phy_addr,
+				 		DBUS_TYPE_INVALID);
+
+	reply = dbus_connection_send_with_reply_and_block(dcli_dbus_connection, query, -1, &err);
+	
+	dbus_message_unref(query);
+
+	if (!reply)
+	{
+		vty_out(vty, "<error> failed get reply.\n");
+		if (dbus_error_is_set(&err))
+		{
+			vty_out(vty,"%s raised: %s",err.name,err.message);
+			dbus_error_free_for_dcli(&err);
+		}
+		
+		return CMD_SUCCESS;
+	}
+	
+	dbus_message_iter_init(reply,&iter);
+	dbus_message_iter_get_basic(&iter,&ret);
+	if(!ret){
+	    vty_out(vty, "dev_addr = 0x%x,reg_addr = 0x%x,val = 0x%x,write done!\n", dev_addr,reg_addr,val);
+	}
+	dbus_message_unref(reply);
+	return CMD_SUCCESS;	
 }
 
 DEFUN(show_6185_reg,

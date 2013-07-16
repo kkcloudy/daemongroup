@@ -313,4 +313,61 @@ int RoamingStaInfoToWIFI(struct ROAMING_STAINFO *sta, Operate op){
 	close(fd);
 	return 1;
 }
+int RoamingStaInfoToWSM_1(struct sta_info *sta, Operate op){
+	TableMsg STA;
+	int len;
+	STA.Op = op;
+	STA.Type = STA_TYPE;
+	os_memset(&STA.u.STA,0,sizeof(aWSM_STA));
+	if((sta == NULL)) {
+		return 0;
+	}else {
+		STA.u.STA.RoamingTag = 2;
+		STA.u.STA.BSSIndex = sta->PreBssIndex;
+		STA.u.STA.WTPID = ((sta->PreBssIndex)/L_BSS_NUM)/L_RADIO_NUM;
+		memcpy(STA.u.STA.STAMAC, sta->addr, ETH_ALEN);		
+		memcpy(STA.u.STA.RBSSID, sta->PreBSSID, ETH_ALEN);
+	}
+		
+	len = sizeof(STA);
+	
+	if(sendto(TableSend, &STA, len, 0, (struct sockaddr *) &toWSM.addr, toWSM.addrlen) < 0){
+		perror("send(wASDSocket)");
+		return 0;
+	}
+	return 0;
+}
+
+//weichao add
+int RoamingStaInfoToWIFI_1(struct sta_info *sta, Operate op){
+	asd_printf(ASD_DEFAULT,MSG_DEBUG,"now in fun:%s\n",__func__);
+	struct asd_to_wifi_sta tmp;
+	int ret = 0;	
+	int fd = open("/dev/wifi0", O_RDWR);
+	if(fd < 0)
+	{
+		return 0;
+	}
+	if(sta == NULL)
+	{
+		close(fd);//qiuchen
+		return 0;
+	}
+	memset(&tmp, 0, sizeof(struct asd_to_wifi_sta));
+	memcpy(tmp.STAMAC,sta->addr,MAC_LEN);
+	memcpy(tmp.BSSID_Before,sta->PreBSSID,MAC_LEN);
+	memcpy(tmp.BSSID,sta->BSSID,MAC_LEN);
+	tmp.roaming_flag = 2;
+	if(op == WID_ADD){
+		ret = ioctl(fd,WIFI_IOC_ADD_STA,&tmp);
+	}	
+	if(op == WID_DEL){
+		ret = ioctl(fd,WIFI_IOC_DEL_STA,&tmp);
+	}
+	if(ret < 0)
+		asd_printf(ASD_DEFAULT,MSG_DEBUG,"func:%s ioctl error %s\n",__func__,strerror(errno));
+	close(fd);
+	return 1;
+}
+
 

@@ -374,12 +374,24 @@ process_config_first_time_only (BusContext       *context,
       credentials = _dbus_credentials_new_from_current_process ();
       if (!credentials)
         goto oom;
+/*
+*CID 15393 (#3 of 3): Resource leak (RESOURCE_LEAK)20. leaked_storage: Variable "credentials" going out of scope leaks the storage it points to
+*/
       if (!_dbus_string_append (&log_prefix, "[session "))
-        goto oom;
+        {
+          _dbus_credentials_unref (credentials);/*coverity modify for CID 15393*/
+          goto oom;
+        }
       if (!_dbus_credentials_to_string_append (credentials, &log_prefix))
-        goto oom;
+        {
+          _dbus_credentials_unref (credentials);/*coverity modify for CID 15393*/
+          goto oom;
+        }
       if (!_dbus_string_append (&log_prefix, "] "))
-        goto oom;
+        {
+          _dbus_credentials_unref (credentials);/*coverity modify for CID 15393*/
+          goto oom;
+        }
       _dbus_credentials_unref (credentials);
     }
   if (!_dbus_string_steal_data (&log_prefix, &context->log_prefix))
@@ -407,6 +419,7 @@ process_config_first_time_only (BusContext       *context,
           if (auth_mechanisms[i] == NULL)
             goto oom;
           link = _dbus_list_get_next_link (auth_mechanisms_list, link);
+          i += 1;/*coverity info*/
         }
     }
   else
@@ -620,8 +633,9 @@ list_concat_new (DBusList **a,
   DBusList *link;
 
   *result = NULL;
-
-  link = _dbus_list_get_first_link (a);
+/*CID 15776 (#1 of 1): Unused pointer value (UNUSED_VALUE)returned_pointer: Pointer "link" returned by "_dbus_list_get_first_link(a)" is never used*/
+/*coverity modify for CID 15776*/
+ // link = _dbus_list_get_first_link (a);
   for (link = _dbus_list_get_first_link (a); link; link = _dbus_list_get_next_link (a, link))
     {
       if (!_dbus_list_append (result, link->data))

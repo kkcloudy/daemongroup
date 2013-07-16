@@ -1080,6 +1080,7 @@ void radius_server_deinit(struct radius_server_data *data)
 
 	if (data->auth_sock >= 0) {
 		circle_unregister_read_sock(data->auth_sock);
+		FD_CHANGE = 1;
 		close(data->auth_sock);
 	}
 

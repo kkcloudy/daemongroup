@@ -698,6 +698,8 @@ int set_ebr_add_del_if_cmd(dbus_parameter parameter, DBusConnection *connection,
 																						/*返回-2表示if name too long，返回-3表示ebr id does not exist，返回-4表示ebr should be disable first*/
 																						/*返回-5表示if_name already exist/remove some br,or system cmd process error，返回-6表示input ifname error*/
 																						/*返回-7表示ebr if error，返回-8表示error，返回-9示EBR ID非法*/
+																						/*返回-10表示you want to delete wlan, please do not operate like this*/
+																						/*返回-11表示please check the interface's wlanid, you maybe have delete this wlan*/
 																						/*返回SNMPD_CONNECTION_ERROR表示connection error*/
 {
     if(NULL == connection)
@@ -800,6 +802,10 @@ int set_ebr_add_del_if_cmd(dbus_parameter parameter, DBusConnection *connection,
 		retu=-6;
 	else if(ret == WID_EBR_ERROR)
 		retu=-7;
+	else if (ret == WID_WANT_TO_DELETE_WLAN)
+		retu=-10;
+	else if (ret == WLAN_ID_NOT_EXIST)
+		retu=-11;
 	else
 		retu=-8;
 

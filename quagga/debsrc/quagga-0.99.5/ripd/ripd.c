@@ -100,6 +100,11 @@ sockopt_broadcast (int sock)
   int ret;
   int on = 1;
 
+  if(sock<0)
+  	{
+      zlog_warn ("socket error sock=%d\n", sock);
+      return -1;
+    }
   ret = setsockopt (sock, SOL_SOCKET, SO_BROADCAST, (char *) &on, sizeof on);
   if (ret < 0)
     {
@@ -803,11 +808,13 @@ rip_packet_dump (struct rip_packet *packet, int size, const char *sndrcv)
 
 		  zlog_debug ("  family 0x%X type %d (MD5 data)",
 			     ntohs (rte->family), ntohs (rte->tag));
+/*
 		  zlog_debug ("    MD5: %02X%02X%02X%02X%02X%02X%02X%02X"
 			     "%02X%02X%02X%02X%02X%02X%02X",
                              p[0], p[1], p[2], p[3], p[4], p[5], p[6],
                              p[7], p[9], p[10], p[11], p[12], p[13],
                              p[14], p[15]);
+*/
 		}
 	      else
 		{
@@ -1456,7 +1463,7 @@ rip_init_create_socket (struct sockaddr_in *from)
   if (sock < 0) 
     {
       zlog_err("Cannot create UDP socket: %s", safe_strerror(errno));
-//      exit (1);
+		return sock;
     }
 
   sockopt_broadcast (sock);
@@ -1480,7 +1487,10 @@ rip_init_create_socket (struct sockaddr_in *from)
   
   if(IS_RIP_DEBUG_ZEBRA)
   	zlog_debug("mult_rip_socket_buf =  %d\nrip_max_entry = %d\n",mult_rip_socket_buf,rip_max_entry);
-  setsockopt_so_recvbuf (sock, mult_rip_socket_buf);
+  ret = setsockopt_so_recvbuf (sock, mult_rip_socket_buf);
+  if(ret < 0)
+  	zlog_err ("rip_create_socket: could not set socket recv buf");
+
   if ( (ret = bind (sock, (struct sockaddr *) & addr, sizeof (addr))) < 0)
   
     {
@@ -1530,9 +1540,9 @@ rip_create_socket (struct sockaddr_in *from)
   sock = socket (AF_INET, SOCK_DGRAM, 0);
   if (sock < 0) 
     {
-      zlog_err("Cannot create UDP socket: %s", safe_strerror(errno));
-//      exit (1);
-    }
+      	zlog_err("Cannot create UDP socket: %s", safe_strerror(errno));
+		return -1;
+}
 
   sockopt_broadcast (sock);
   sockopt_reuseaddr (sock);
@@ -1543,7 +1553,10 @@ rip_create_socket (struct sockaddr_in *from)
 
   if (ripd_privs.change (ZPRIVS_RAISE))
       zlog_err ("rip_create_socket: could not raise privs");
-  setsockopt_so_recvbuf (sock, RIP_UDP_RCV_BUF);
+  ret = setsockopt_so_recvbuf (sock, RIP_UDP_RCV_BUF);
+  if(ret < 0)
+  	zlog_err ("rip_create_socket: could not set socket recv buf");
+  
   if ( (ret = bind (sock, (struct sockaddr *) & addr, sizeof (addr))) < 0)
   
     {
@@ -1817,6 +1830,7 @@ rip_request_process (struct rip_packet *packet, int size,
   struct route_node *rp;
   struct rip_info *rinfo;
   struct rip_interface *ri;
+  int ret=0;
 
   /* Does not reponse to the requests on the loopback interfaces */
   if (if_is_loopback (ifc->ifp))
@@ -1893,7 +1907,9 @@ rip_request_process (struct rip_packet *packet, int size,
 	}
       packet->command = RIP_RESPONSE;
 
-      rip_send_packet ((u_char *)packet, size, from, ifc);
+      ret = rip_send_packet ((u_char *)packet, size, from, ifc);\
+	  if(ret<0)
+	  	 zlog_warn ("rip_send_packet failure");
     }
   rip_global_queries++;
 }
@@ -2680,7 +2696,7 @@ rip_update_process (int route_type)
 
 	  if (IS_RIP_DEBUG_EVENT) 
 	    zlog_debug("SEND UPDATE to %s ifindex %d",
-		       (ifp->name ? ifp->name : "_unknown_"), ifp->ifindex);
+		       ifp->name, ifp->ifindex);
 
           /* send update on each connected network */
 	  for (ALL_LIST_ELEMENTS (ifp->connected, ifnode, ifnnode, connected))
@@ -3972,6 +3988,7 @@ DEFUN (show_ip_rip_interface,
 				(ri->passive ? "ON" : "OFF"),VTY_NEWLINE,VTY_NEWLINE);
 	    }
     }
+	return CMD_SUCCESS;
 }
 /*2009-4-7 14:39:24*/
 

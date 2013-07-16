@@ -921,6 +921,7 @@ get_lease_ip_info_by_ip
 	ip_Nums = ip_nums;
 	ip_Addr = ip_addr;
 	cip.len = 4;
+	if(ip_Nums>1)
 	ip_Nums++;
 	while (ip_Nums) {
 		cip.iabuf[0] = ip_Addr>>24 & 0xff;
@@ -4510,7 +4511,7 @@ void expire_pool_for_failover
 	s = share;
 	/*need for p is the only pool of the shared_network*/
     for (p = s->pools; p; p = p->next) {
-		log_debug("expire_pool_for_failover shared network run 1.0 %s \n", s->name);
+		log_debug_failover(DEBUG_TYPE_CONNECT,"expire_pool_for_failover shared network run 1.0 %s \n", s->name);
 		/* Inherit the failover peer from the shared network. */
 		if (p->shared_network->failover_peer) {
 		    dhcp_failover_state_reference(&p->failover_peer, 
@@ -4527,9 +4528,9 @@ void expire_pool_for_failover
 		}
 		else {
 			p->failover_peer->pool_count++;
-			log_debug("  set failover %s pool reference count %d\n", failover_peer->name, p->failover_peer->pool_count);
+			log_debug_failover(DEBUG_TYPE_CONNECT,"  set failover %s pool reference count %d\n", failover_peer->name, p->failover_peer->pool_count);
 		}
-	log_debug("expire_pool_for_failover shared network run 1.2 %s \n", s->name);
+	log_debug_failover(DEBUG_TYPE_CONNECT,"expire_pool_for_failover shared network run 1.2 %s \n", s->name);
     }	
 }
 #endif

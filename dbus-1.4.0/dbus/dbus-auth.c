@@ -1134,6 +1134,10 @@ handle_server_data_external_mech (DBusAuth         *auth,
     }
   #endif
   send_ok (auth);
+  /*
+  **CID 15118 (#1 of 1): Missing return statement (MISSING_RETURN)1. missing_return: Arriving at the end of a function without returning a value.
+  */
+  return TRUE;
 }
 
 static void
@@ -1211,7 +1215,13 @@ handle_server_data_anonymous_mech (DBusAuth         *auth,
             DBusString plaintext;
             DBusString encoded;
             _dbus_string_init_const (&plaintext, "D-Bus " DBUS_VERSION_STRING);
-            _dbus_string_init (&encoded);
+            /*
+            **
+			CID 14652 (#1 of 1): Unchecked return value (CHECKED_RETURN)3. check_return: Calling function "_dbus_string_init(DBusString *)" without checking return value (as is done elsewhere 146 out of 151 times).    
+			4. unchecked_value: No check of the return value of "_dbus_string_init(&encoded)". 
+            **/
+            if(!_dbus_string_init (&encoded))
+            	return FALSE;/*coverity modify for CID 14652*/
             _dbus_string_hex_encode (&plaintext, 0,
                                      &encoded,
                                      0);
