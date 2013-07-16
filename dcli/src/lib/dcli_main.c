@@ -77,7 +77,7 @@ extern "C"
 #include "dcli_wireless/dcli_license.h"
 #include "dcli_iu.h"
 #include "dcli_hnb.h"
-#include "dcli_sem.h"
+//#include "dcli_sem.h"
 #include "dcli_wireless/dcli_bsd.h"
 #include "dcli_strict_access.h"
 #include "dcli_pppoe.h"
@@ -121,6 +121,81 @@ struct global_ethport_s *start_fp[MAX_SLOT_COUNT];
 struct global_ethport_s **global_ethport = NULL;
 
 
+/*wangchao: moved from dcli_sem to here*/
+void
+dbus_error_free_for_dcli(DBusError *error)
+{
+	if (dbus_error_is_set(error)) {
+		syslog(LOG_NOTICE,"dbus connection of dcli error ,reinit it\n");
+		syslog(LOG_NOTICE,"dbus connection of dcli error ,reinit it\n");
+
+		syslog(LOG_NOTICE,"%s raised: %s\n",error->name,error->message);
+		dcli_dbus_init_remote();
+		
+	}
+	dbus_error_free(error);
+	
+
+
+	
+	}
+
+/*wangchao: moved from dcli_sem to here*/
+
+/*
+* Description:
+*  Re-encapsulation function dbus_message_new_method_call for Hansi.
+*
+* Parameter:
+*  idx: VRID
+*  Other same to function dbus_message_new_method_call
+*
+* Return:
+*  Same to function dbus_message_new_method_call.
+*
+*/
+DBusMessage *dbus_sem_msg_new_method_call(unsigned char *dbus_name, unsigned char *obj_name,
+			unsigned char *if_name, unsigned char *cmd_name)
+{
+	unsigned char dbus_path[PATH_MAX_LEN] = {0};
+	unsigned char obj_path[PATH_MAX_LEN] = {0};
+	unsigned char if_path[PATH_MAX_LEN] = {0};
+	unsigned char cmd_path[PATH_MAX_LEN] = {0};
+
+	if (dbus_name == NULL || obj_name == NULL || if_name == NULL || cmd_name == NULL)
+		return NULL;
+
+	sprintf(dbus_path, "%s", dbus_name);
+	sprintf(obj_path, "%s", obj_name);
+	sprintf(if_path, "%s", if_name);
+	sprintf(cmd_path, "%s", cmd_name);
+
+	return dbus_message_new_method_call(dbus_path, obj_path, if_path, cmd_path);
+} 
+
+/*wangchao: moved from dcli_sem to here*/
+int dcli_master_slot_id_get(int *master_slot_id)
+{
+    FILE *fd;
+	char buff[8][8];
+	int i;
+	fd = fopen("/dbm/product/master_slot_id", "r");
+	if (fd == NULL)
+	{
+		return -1;
+	}
+	
+	for(i = 0; i < 2; i++)
+	{
+		if(!fgets(buff[i], 8, fd))
+			printf("read error no value\n");
+		master_slot_id[i] = strtoul(buff[i], NULL, 10);
+	}
+	
+	fclose(fd);
+    
+	return 0;	
+}
 
 
 
@@ -654,10 +729,10 @@ void dcli_init(void)
 	dcli_radius_init();
 
 	dcli_webservice_init();
-	dcli_sem_init();
+	//dcli_sem_init();
 	dcli_rpa_init();
 	/*add niehy */
-	dcli_fpga_init();
+	//dcli_fpga_init();
 	dcli_pppoe_snp_init();
 	dcli_se_agent_init();
 	dcli_cvm_ratelimit_element_init();

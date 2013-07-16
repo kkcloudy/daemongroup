@@ -209,6 +209,8 @@ vtysh_rl_gets ()
   return (line_read);
 }
 void *dcli_dl_handle;
+void *dcli_dl_handle_sem;
+void *dcli_dl_handle_fpga;
 
 void (*dcli_send_dbus_signal_func)(const char* name,const char* str);
 void (*dcli_sync_file)(const char* file, int syn_to_blk) = NULL;
@@ -217,23 +219,57 @@ int (*dcli_get_rpa_broadcast_mask)(struct vty *vty, int slot_id, unsigned int *m
 int dl_dcli_init(boot_flag)
 {
   void (*dcli_init_func)(int);
+  void (*dcli_sem_init_func)(void);
+  void (*dcli_fpga_init_func)(void);
+
   char *error;
   int temp=boot_flag;
 
+/*****dcli_main*************/
   dcli_dl_handle = dlopen("libdcli.so.0",RTLD_NOW);
   if (!dcli_dl_handle) {
       fputs (dlerror(),stderr);
-      printf("Run without /opt/lib/libdcli.so.0\n");
+      printf(" Run without /opt/lib/libdcli.so.0\n");
       EXIT(1);
       
   }
   dcli_init_func = dlsym(dcli_dl_handle,"dcli_init");
   if ((error = dlerror()) != NULL) {
-      printf("Run without dcli_init be called.\n");
+      printf(" Run without dcli_init be called.\n");
       fputs(error,stderr);
       EXIT(1);
   }
   (*dcli_init_func)(temp);
+
+
+/*******dcli_sem: wangchao add************/
+  dcli_dl_handle_sem = dlopen("libdcli_sem.so",RTLD_NOW);
+  if (!dcli_dl_handle_sem) {
+      fputs (dlerror(),stderr);
+      printf(" Run without /opt/lib/libdcli_sem.so\n");
+      EXIT(1);
+      
+  }
+  
+  dcli_sem_init_func = dlsym(dcli_dl_handle_sem,"dcli_sem_init");
+  if ((error = dlerror()) != NULL) {
+      printf(" Run without dcli_sem_init be called.\n");
+      fputs(error,stderr);
+      EXIT(1);
+  }
+
+  (*dcli_sem_init_func)(); 
+
+  dcli_fpga_init_func = dlsym(dcli_dl_handle_sem,"dcli_fpga_init");
+  if ((error = dlerror()) != NULL) {
+      printf(" Run without dcli_fpga_init be called.\n");
+      fputs(error,stderr);
+      EXIT(1);
+  }
+  (*dcli_fpga_init_func)(); 
+
+
+
   vtysh_send_dbus_signal_init();
   
   vtysh_sync_file_init();
@@ -769,6 +805,7 @@ syslog(LOG_NOTICE,"Vtysh vtysh_pager_init\n");
 
 /* Close dcli lib handle before exit,*/ 
   dlclose(dcli_dl_handle);
+  dlclose(dcli_dl_handle_sem);
 
   /* Rest in peace. */
   exit (0);
