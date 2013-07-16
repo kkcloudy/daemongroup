@@ -94,7 +94,6 @@ int ShowWebservicePage(struct list *lpublic, struct list *lsystem)
 
 	  
 	  ccgi_dbus_init();
-	  fprintf(stderr,"1111111111111111111\n");
 	  /***********************2008.5.26*********************/
 	  cgiHeaderContentType("text/html");
 	  fprintf(cgiOut,"<html xmlns=\"http://www.w3.org/1999/xhtml\"><head>");
@@ -140,7 +139,6 @@ int ShowWebservicePage(struct list *lpublic, struct list *lsystem)
 	  {
 		  cgiFormStringNoNewlines("web_del_name", web_del_name, 15);
 		  ret_del=ccgi_delete_http_https_config_cmd(web_del_name);
-		  fprintf(stderr,"ret_del=%d",ret_del);
 		  if(ret_del!=0)
 		  {
 			  switch(ret_del)
@@ -279,19 +277,14 @@ int ShowWebservicePage(struct list *lpublic, struct list *lsystem)
 				fprintf(cgiOut,"<th width=100><font id=%s>%s</font></th>",search(lpublic,"menu_thead"),search(lpublic,"inter"));
 				fprintf(cgiOut,"</tr>");
 
-
-				fprintf(stderr,"111111111111111111111");
 				
 				struct web_info WtpIfHead;
 				char menu[15]={0};
 				char menu_id[10] = {0};
 				struct web_info *q = NULL;
 				int ret_web=0,num=0,master_slot_id=0;
-				fprintf(stderr,"22222222222222222");
 				ret_web=ccgi_show_webservice_info_cmd(&WtpIfHead,&num,&master_slot_id);
 				
-				fprintf(stderr,"uuuuuuuuuuuuuuuu33333333333333333");
-				fprintf(stderr,"num=%d",num);
 				for(q = WtpIfHead.next; q!=NULL; q = q->next)
 				{
 					i=i+1;
@@ -301,7 +294,14 @@ int ShowWebservicePage(struct list *lpublic, struct list *lsystem)
 					strcat(menu,menu_id);
 					fprintf(cgiOut,"<tr align=left>"\
 						"<td width=100>%s</td>",q->name!=NULL?q->name:"");
-					fprintf(cgiOut,"<td width=100>%s</td>",q->type==HTTP_SERVICE?"http":"https");
+					if(q->type == HTTP_SERVICE)
+					{
+						fprintf(cgiOut,"<td width=100>http</td>");
+					} 
+					else
+					{
+						fprintf(cgiOut,"<td width=100>https</td>");
+	                } 
 					fprintf(cgiOut,"<td width=100>%s</td>",q->address!=NULL?q->address:"");
 					fprintf(cgiOut,"<td width=100>%d</td>",q->port);
 					fprintf(cgiOut,"<td width=100>%s</td>",q->infname!=NULL?q->infname:"");
@@ -317,7 +317,6 @@ int ShowWebservicePage(struct list *lpublic, struct list *lsystem)
 					"</td>");
 					fprintf(cgiOut,"</tr>");
 				}
-				fprintf(stderr,"4444444444444444");
 
 
             fprintf(cgiOut,"<tr height=15><td></td></tr>");

@@ -94,15 +94,11 @@ int ShowWebservicePage(struct list *lpublic, struct list *lsystem)
   	
 	  cgiFormStringNoNewlines("UN", encry, BUF_LEN); 
 	  ccgi_dbus_init();
-	  fprintf(stderr,"1111111111111111111\n");
 	  instance_parameter *paraHead2 = NULL;
 	  instance_parameter *p_q = NULL;
-	  fprintf(stderr,"tttttttttttttt\n");
 	  list_instance_parameter(&paraHead2, SNMPD_SLOT_CONNECT);
-	  fprintf(stderr,"22222222222222222222\n");
 	  cgiFormStringNoNewlines("plotid",plotid,sizeof(plotid));
 	  pid = atoi(plotid);
-	  fprintf(stderr,"pid=%d\n",pid);
 	  if(0 == pid)
 	  {
 		  for(p_q=paraHead2;(NULL != p_q);p_q=p_q->next)
@@ -156,7 +152,6 @@ int ShowWebservicePage(struct list *lpublic, struct list *lsystem)
 	  {
 		  cgiFormStringNoNewlines("web_del_name", web_del_name, 15);
 		  ret_del=ccgi_delete_portal_config_cmd(web_del_name);
-		  fprintf(stderr,"ret_del=%d",ret_del);
 		  if(ret_del!=0)
 		  {
 			  switch(ret_del)
@@ -329,18 +324,14 @@ int ShowWebservicePage(struct list *lpublic, struct list *lsystem)
 				fprintf(cgiOut,"</tr>");
 
 
-				fprintf(stderr,"111111111111111111111");
 				
 				struct web_info WtpIfHead;
 				char menu[15]={0};
 				char menu_id[10] = {0};
 				struct web_info *q = NULL;
 				int ret_web=0,num=0,master_slot_id=0;
-				fprintf(stderr,"22222222222222222");
 				ret_web=ccgi_show_interval_portalservice_info_cmd(&WtpIfHead,&num,pid);
 				
-				fprintf(stderr,"uuuuuuuuuuuuuuuu33333333333333333");
-				fprintf(stderr,"num=%d",num);
 				for(q = WtpIfHead.next; q!=NULL; q = q->next)
 				{
 					i=i+1;
@@ -350,7 +341,19 @@ int ShowWebservicePage(struct list *lpublic, struct list *lsystem)
 					strcat(menu,menu_id);
 					fprintf(cgiOut,"<tr align=left>"\
 						"<td width=100>%s</td>",q->name!=NULL?q->name:"");
-					fprintf(cgiOut,"<td width=100>%s</td>",q->type==HTTP_SERVICE?"http":"https");
+					
+					if(q->type == PORTAL_HTTP_SERVICE) 
+					{
+						fprintf(cgiOut,"<td width=100>wispr</td>");
+					} 
+					else if (q->type == PORTAL_HTTPS_SERVICE) 
+					{
+						fprintf(cgiOut,"<td width=100>wisprssl</td>");
+					} 
+					else
+					{
+						fprintf(cgiOut,"<td width=100>normal</td>");
+					} 
 					fprintf(cgiOut,"<td width=100>%s</td>",q->address!=NULL?q->address:"");
 					fprintf(cgiOut,"<td width=100>%d</td>",q->port);
 					fprintf(cgiOut,"<td width=100>%s</td>",q->infname!=NULL?q->infname:"");
@@ -366,7 +369,6 @@ int ShowWebservicePage(struct list *lpublic, struct list *lsystem)
 					"</td>");
 					fprintf(cgiOut,"</tr>");
 				}
-				fprintf(stderr,"4444444444444444");
 
 
             fprintf(cgiOut,"<tr height=15><td></td></tr>");

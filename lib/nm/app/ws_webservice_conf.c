@@ -201,15 +201,11 @@ static int ccgi_dcli_web_vhost_show(struct webInfoHead *infohead)
     unsigned int sum = 0;
 	int i=0 , ret;
 	
-	fprintf(stderr,"############################\n");
     instance_parameter *paraHead2 = NULL;
     instance_parameter *pq = NULL;
-	fprintf(stderr,"11111111111111111111\n");
     list_instance_parameter(&paraHead2, SNMPD_SLOT_CONNECT);
-	fprintf(stderr,"22222222222222222222\n");
 	for(pq=paraHead2;(NULL != pq);pq=pq->next)
 	{
-		fprintf(stderr,"33333333333333333333\n");
 		if(pq->connection)
 		{
             LINK_INIT(&vhead);
@@ -336,7 +332,6 @@ int ccgi_set_interval_portal_cmd(char *name, char *type, char *ip_addr, char *po
 		return -2;
 	}
 	
-	fprintf(stderr,"22222222221para->connection=%p",para->connection);
     switch(ccgi_dcli_web_vhost_add_valid(vh, dslot))
     {
         case WEB_OVERMAX:
@@ -655,15 +650,12 @@ int ccgi_add_http_https_ip_port_cmd(char *name,char *type,char *ip_addr, char *p
 	{
 		return -1;
 	}
-	fprintf(stderr,"*****************1master_slot_id=%d",master_slot_id);
-int rett=ccgi_dcli_web_vhost_add_valid(vh, master_slot_id);
-	fprintf(stderr,"*****************rett=%d",rett);
+	int rett=ccgi_dcli_web_vhost_add_valid(vh, master_slot_id);
 
     switch(rett)
     {
         case WEB_OVERMAX:
             return -2;
-
         case WEB_NAME_EXISIT:
             return -4;
 
@@ -677,7 +669,6 @@ int rett=ccgi_dcli_web_vhost_add_valid(vh, master_slot_id);
 	{
 		return -6;
 	}
-	fprintf(stderr,"22222222221para->connection=%p",para->connection);
 
     if((ret = ac_manage_web_edit(para->connection, (void *)&vh, HOST_ADD)) != WEB_SUCCESS)
 	{
@@ -933,9 +924,6 @@ int ccgi_add_web_forword_cmd(char *webname, char *infname)
         case WEB_EXISIT:
             return -6;
 
-        case WEB_RUNNING:
-            return -7;
-
         default:
             break;
     }
@@ -1013,7 +1001,6 @@ int ccgi_show_interval_portalservice_info_cmd(struct web_info *WtpIfHead,int *nu
 						q = (struct web_info*)malloc(sizeof(struct web_info));
 						if(q)
 						{
-							fprintf(stderr,"$$$$$$$$$$$$$ 4444444444444");
 							q->name = (unsigned char*)malloc(strlen(vh->name)+1);
 							if(q->name)
 							{
@@ -1021,7 +1008,6 @@ int ccgi_show_interval_portalservice_info_cmd(struct web_info *WtpIfHead,int *nu
 								strncpy(q->name, vh->name, strlen(vh->name));
 							}
 							q->type=vh->type;
-							fprintf(stderr,"$$$$$$$$$$$$$ 222222222222222222");
 							q->address = (unsigned char*)malloc(strlen(vh->address)+1);
 							if(q->address)
 							{
@@ -1030,7 +1016,6 @@ int ccgi_show_interval_portalservice_info_cmd(struct web_info *WtpIfHead,int *nu
 							}
 							q->port=vh->port;
 							
-							fprintf(stderr,"$$$$$$$$$$$$$ 333333333");
 							q->infname = (unsigned char*)malloc(strlen(buf)+1);
 							if(q->infname)
 							{
@@ -1040,7 +1025,6 @@ int ccgi_show_interval_portalservice_info_cmd(struct web_info *WtpIfHead,int *nu
 						}
 						if((q)&&(tail))
 						{
-							fprintf(stderr,"$$$$$$$$$$$$$ 555555555555");
 							q->next = NULL;
 							tail->next = q;
 							tail = q;
@@ -1088,7 +1072,6 @@ int ccgi_show_webservice_info_cmd(struct web_info *WtpIfHead,int *num,int *slot)
 	
 	LINK_INIT(&infohead);
 	int sum = ccgi_dcli_web_vhost_show(&infohead);
-	fprintf(stderr,"$$$$$$$$$$$$$$$$$$$$sum=%d",sum);
 
 	*num=sum;
 	
@@ -1107,24 +1090,20 @@ int ccgi_show_webservice_info_cmd(struct web_info *WtpIfHead,int *num,int *slot)
 		{
 			LINK_FOREACH(vh, &(info->head), entries)
 			{
-				if((vh->type == HTTP_SERVICE) || (vh->type == HTTP_SERVICE))
+				if((vh->type == HTTP_SERVICE) || (vh->type == HTTPS_SERVICE))
 				{
 					memset(buf,0,128);
 					if(!LINK_EMPTY(&vh->head))
 					{
 						LINK_FOREACH(in, &(vh->head), entries)
 						{
-							fprintf(stderr,"$$$$$$$$$$$$$$$$$$$$$$$$$$");
 							if(in->ifname)
 								strcat(buf,in->ifname);
 						}
 					}
-					fprintf(stderr,"buf=%s",buf);
-					fprintf(stderr,"$$$$$$$$$$$$$ 111111111111");
 					q = (struct web_info*)malloc(sizeof(struct web_info));
 					if(q)
 					{
-						fprintf(stderr,"$$$$$$$$$$$$$ 4444444444444");
 						q->name = (unsigned char*)malloc(strlen(vh->name)+1);
 						if(q->name)
 						{
@@ -1132,7 +1111,6 @@ int ccgi_show_webservice_info_cmd(struct web_info *WtpIfHead,int *num,int *slot)
 							strncpy(q->name, vh->name, strlen(vh->name));
 						}
 						q->type=vh->type;
-						fprintf(stderr,"$$$$$$$$$$$$$ 222222222222222222");
 						q->address = (unsigned char*)malloc(strlen(vh->address)+1);
 						if(q->address)
 						{
@@ -1141,7 +1119,6 @@ int ccgi_show_webservice_info_cmd(struct web_info *WtpIfHead,int *num,int *slot)
 						}
 						q->port=vh->port;
 						
-						fprintf(stderr,"$$$$$$$$$$$$$ 333333333");
 						q->infname = (unsigned char*)malloc(strlen(buf)+1);
 						if(q->infname)
 						{
@@ -1151,7 +1128,6 @@ int ccgi_show_webservice_info_cmd(struct web_info *WtpIfHead,int *num,int *slot)
 					}
 					if((q)&&(tail))
 					{
-						fprintf(stderr,"$$$$$$$$$$$$$ 555555555555");
 						q->next = NULL;
 						tail->next = q;
 						tail = q;
@@ -1270,11 +1246,13 @@ int ccgi_delete_portal_config_cmd(char *name)
 
 int ccgi_delete_http_https_config_cmd(char *name)
 	//0:success-1:invalid name;-2:web is running;-3:no found this name
-	//-4connection is error;-5:failed
+	//-4connection is error;-5:failed;
 {
     unsigned int dslot = 0;
     int ret;
 	instance_parameter *para;
+	
+    ccgi_dcli_web_slot_init();
     if(web_name_valid(name, strlen(name)) == WEB_FAILURE)
     {
         return -1;
@@ -1287,7 +1265,7 @@ int ccgi_delete_http_https_config_cmd(char *name)
         default:
             break;
     }
-	if(SNMPD_DBUS_ERROR == get_slot_dbus_connection(dslot, &para, SNMPD_SLOT_CONNECT))
+	if(SNMPD_DBUS_ERROR == get_slot_dbus_connection(master_slot_id, &para, SNMPD_SLOT_CONNECT))
 	{
 		return -4;
 	}

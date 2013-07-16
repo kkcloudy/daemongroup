@@ -95,17 +95,14 @@ int ShowWebservicePage(struct list *lpublic, struct list *lsystem)
 
 	  
 	  ccgi_dbus_init();
-	  fprintf(stderr,"1111111111111111111\n");
 	  instance_parameter *paraHead2 = NULL;
 	  instance_parameter *p_q = NULL;
-	  fprintf(stderr,"tttttttttttttt\n");
 	  list_instance_parameter(&paraHead2, SNMPD_SLOT_CONNECT);
 	  for(p_q=paraHead2;NULL!=p_q;p_q=p_q->next)
 	  	{
 
 	  }
 	  
-	  fprintf(stderr,"22222222222222222222\n");
 	  /***********************2008.5.26*********************/
 	  cgiHeaderContentType("text/html");
 	  fprintf(cgiOut,"<html xmlns=\"http://www.w3.org/1999/xhtml\"><head>");
@@ -131,10 +128,6 @@ int ShowWebservicePage(struct list *lpublic, struct list *lsystem)
 		   memset(web_port,0,10);
 		   memset(web_ip,0,32);
 			memset(web_inf,0,15);
-		   for(p_q=paraHead2;NULL!=p_q;p_q=p_q->next)
-			{
-		  		fprintf(stderr,"111111111p_q->connection=%p",p_q->connection);
-		   }
 		   cgiFormStringNoNewlines("web_name",web_name,15);
 		  cgiFormStringNoNewlines("web_type",web_type,10);
 		  cgiFormStringNoNewlines("web_ip1",web_ip1,4);
@@ -144,11 +137,6 @@ int ShowWebservicePage(struct list *lpublic, struct list *lsystem)
 		  cgiFormStringNoNewlines("web_port",web_port,4);
 		  cgiFormStringNoNewlines("web_inf",web_inf,15);
 		  sprintf(web_ip,"%ld.%ld.%ld.%ld",strtoul(web_ip1,0,10),strtoul(web_ip2,0,10),strtoul(web_ip3,0,10),strtoul(web_ip4,0,10));
-		  fprintf(stderr,"web_name=%s",web_name);
-		  fprintf(stderr,"web_type=%s",web_type);
-		  fprintf(stderr,"web_port=%s",web_port);
-		  fprintf(stderr,"web_ip=%s",web_ip);
-		  fprintf(stderr,"&&&&&&&&&&&&web_inf=%s",web_inf);
 		  if((strcmp(web_name,"")!=0)&&(strcmp(web_type,"")!=0)&&(strcmp(web_ip,"")!=0)&&(strcmp(web_port,"")!=0))
 		  {
 		  	ret=0;
@@ -181,7 +169,6 @@ int ShowWebservicePage(struct list *lpublic, struct list *lsystem)
 		  }
 		  if((ret==0)&&(strcmp(web_inf,"")!=0))
 		  {
-			  fprintf(stderr,"fffffffffffffffffffffffffff");
 		  		ret1=0;
 			  ret1=ccgi_add_web_forword_cmd(web_name,web_inf);
 			  if(ret1!=0)
@@ -216,8 +203,6 @@ int ShowWebservicePage(struct list *lpublic, struct list *lsystem)
 		  {
 			  ShowAlert(search(lpublic,"oper_succ"));
 		  }
-		fprintf(stderr,"ret=%d",ret);
-		fprintf(stderr,"ret1=%d",ret1);
 	  }
 	 
 	  fprintf(cgiOut,"<form method=post encType=multipart/form-data>"\
