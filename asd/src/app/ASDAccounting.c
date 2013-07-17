@@ -172,7 +172,7 @@ static struct radius_msg * accounting_msg(struct asd_data *wasd,
 #endif /* ASD_IPV6 */
 
 	//mahz add 2010.11.30
-	if (sta && wasd->conf->wapi_radius_auth_enable && !radius_msg_add_attr(msg, RADIUS_ATTR_FRAME_IP_ADDRESS,		
+	if (sta && !radius_msg_add_attr(msg, RADIUS_ATTR_FRAME_IP_ADDRESS,		
 				 (u8 *) &sta->ip_addr, 4)) {
 		asd_printf(ASD_1X,MSG_DEBUG,"Could not add FRAME-IP-Address in %s\n",__func__);
 		goto fail;
