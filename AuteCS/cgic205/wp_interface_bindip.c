@@ -311,7 +311,7 @@ fprintf(cgiOut,"<script language=javascript src=/ip.js>"\
   	    {
   	    	status = 1;
   	    	memset(command,0,PATH_LENG);
-		    snprintf(command, PATH_LENG-1, "set_interface_mode.sh %s %s", in_port, interface_mode);
+		    snprintf(command, PATH_LENG-1, "set_interface_mode.sh %s %s > /dev/null 2>&1", in_port, interface_mode);
 
 		    status = system(command); 	 
 		    if(0 != status)    /*command fail*/
