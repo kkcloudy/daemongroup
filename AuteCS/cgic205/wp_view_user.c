@@ -124,7 +124,7 @@ int ShowExportConfPage(struct list *lpublic, struct list *lsystem)
 		}
 	}
 
-	if(cgiFormSubmitClicked("no_maxerror") != cgiFormSuccess)
+	if(cgiFormSubmitClicked("no_maxerror") == cgiFormSuccess)
 	{
 		ccgi_no_passwd_max_error();
 	}
@@ -316,11 +316,15 @@ int ShowExportConfPage(struct list *lpublic, struct list *lsystem)
 	fprintf(cgiOut,"<tr><td>%s:</td>\n",search(lsystem,"pwd_active"));
 	fprintf(cgiOut,"<td colspan=2><input type=text name=activeday value=\"%d\" maxLength=3><font color=red>(1-180)</font></td></tr>\n",maxdays);
 	/*改过的*/
+	int ret = 1;
 	int maxerror = 4;
 	/*改过的*/
-	ccgi_get_pwd_err_setting(&maxerror);
+	ret = ccgi_get_pwd_err_setting(&maxerror);
 	fprintf(cgiOut,"<tr><td>%s:</td>\n",search(lsystem,"pwd_maxerror"));
-	fprintf(cgiOut,"<td><input type=text name=maxerror value=\"%d\" maxLength=2><font color=red>(3-10)</font></td>\n",maxerror);
+	if(0 == ret)
+		fprintf(cgiOut,"<td><input type=text name=maxerror value=\"%d\" maxLength=2><font color=red>(3-10)</font></td>\n",maxerror);
+	else
+		fprintf(cgiOut,"<td><input type=text name=maxerror maxLength=2><font color=red>(3-10)</font></td>\n");
 	fprintf(cgiOut,"<td align=left style=padding-left:10px><input type=submit style=width:115px; height:36px border=0 name=no_maxerror style=background-image:url(/images/SubBackGif.gif) value=\"%s%s\"></td></tr>",search(lsystem,"cancel"),search(lsystem,"pwd_maxerror"));
 
 	int minlen = 4;
