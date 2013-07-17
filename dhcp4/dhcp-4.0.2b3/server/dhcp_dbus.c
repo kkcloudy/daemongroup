@@ -1181,7 +1181,7 @@ dhcp_dbus_profile_config_interface_save
 		memcpy(ifname, ifhead->interface_name,strlen(ifhead->interface_name));
 
 		if (strncmp(ifname, "wlan", 4) && strncmp(ifname, "ebr", 3) && strncmp(ifname, "r", 1)) {
-			if (1 == check_interfaces_ip_address(ifhead->interface_name)) {
+			/*if (1 == check_interfaces_ip_address(ifhead->interface_name)) */{
 				*ifLen += sprintf(*ifcursor, "interface %s\n", ifname);
 				*ifcursor = *showif + *ifLen;
 				*ifLen += sprintf(*ifcursor, " ip pool %s\n", pool_node->poolname);
