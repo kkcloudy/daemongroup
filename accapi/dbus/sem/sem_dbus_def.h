@@ -45,6 +45,8 @@
 #define SEM_DBUS_CONF_TIPC			"sem_conf_tipc"
 #define SEM_DBUS_CONF_48GE			"sem_conf_48GE"
 #define SEM_DBUS_SHOW_SLOT_ID		"sem_dbus_show_slot_id"
+#define SEM_DBUS_SHOW_6185		"sem_dbus_show_6185"
+#define SEM_DBUS_SET_6185		"sem_dbus_set_6185"
 #define SME_DBUS_SHOW_SLOT_N_INFO	"sem_dbus_show_slot_n_info"
 #define SEM_DBUS_SHOW_BOARD_INFO	"sem_dbus_show_board_info"
 #define SEM_DBUS_SHOW_PRODUCT_INFO	"sem_dbus_show_product_info"
@@ -150,9 +152,6 @@
 #define SEM_DBUS_DELETE_PATCH		"sem_dbus_delete_patch"
 /* added by zhengbo for upload snapshot */
 #define SEM_DBUS_UPLOAD_SNAPSHOT	"sem_dbus_upload_snapshot"
-
-#define SEM_DBUS_SHOW_6185		"sem_dbus_show_6185"
-#define SEM_DBUS_SET_6185		"sem_dbus_set_6185"
 
 /********************************************
 xufujun
