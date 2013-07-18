@@ -6082,7 +6082,7 @@ void* dcli_show_wtp_trap_threshod(int index,int localid,unsigned int wtpid,int *
 			DCLI_INFIO = NULL;
 		}
 		*ret = -1;
-		return -1;
+		return NULL;
 	}
 
 	dbus_message_iter_init(reply,&iter);
