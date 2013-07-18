@@ -452,6 +452,7 @@ int cgiMain()
 	   		"window.location.href = url;\n"\
 	   		"}\n", encry, ruleTypeStr);
 	fprintf(cgiOut,"</script>\n");
+	fprintf(cgiOut,"</select>\n");
 
 
 
