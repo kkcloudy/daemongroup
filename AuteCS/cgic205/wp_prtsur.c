@@ -71,24 +71,8 @@ void ShowPrtmagPage(char *m,char *n,struct list *lpublic,struct list *lcon)
   char *menu_id=(char *)malloc(10);
   char *menu=(char *)malloc(15);
   char *prt_no=(char *)malloc(10);  
-  struct eth_port_s pr;
-  struct slot sr,sl;
-  ETH_SLOT_LIST  head,*p;
-  ETH_PORT_LIST *pp;
-  pr.attr_bitmap=0;
-  pr.mtu=0;
-  pr.port_type=0;
-  sr.module_status=0;     
-  sr.modname=(char *)malloc(20);     //为结构体成员申请空间，假设该字段的最大长度为20
-  sr.sn=(char *)malloc(20);          //为结构体成员申请空间，假设该字段的最大长度为20
-  sr.hw_ver=0;
-  sr.ext_slot_num=0;  
-  sl.module_status=0;     
-  sl.modname=(char *)malloc(20);     //为结构体成员申请空间，假设该字段的最大长度为20
-  sl.sn=(char *)malloc(20);          //为结构体成员申请空间，假设该字段的最大长度为20
-  sl.hw_ver=0;
-  sl.ext_slot_num=0;
-  unsigned int value = 0;
+  ETH_SLOT_LIST  head,*p = NULL;
+  ETH_PORT_LIST *pp = NULL;
   cgiHeaderContentType("text/html");
   fprintf(cgiOut,"<html xmlns=\"http://www.w3.org/1999/xhtml\"><head>");
   fprintf(cgiOut,"<meta http-equiv=Content-Type content=text/html; charset=gb2312>");
@@ -223,85 +207,74 @@ void ShowPrtmagPage(char *m,char *n,struct list *lpublic,struct list *lcon)
 					pp=p->port.next;
 					while(pp!=NULL)
 					{
-						unsigned char type = 0;
-						if ( 1 != distributed_flag) {
-							value = p->slot_no;				  
-							value =  (value << 8) |pp->port_no;	
-							type = 0;
-						}
-						else {
-							value = (p->slot_no - 1)* 64 + pp->port_no - 1; 
-							type = 1;
-						}
-						if(show_eth_port_atrr(value,type,&pr)==CCGI_SUCCESS) 	//读取端口信息成功
-	                    {
-	                      fprintf(cgiOut,"<tr align=center height=25 bgcolor=%s style=font-size:12px>",setclour(cl));
-	                      fprintf(cgiOut,"<td>%d-%d</td>",p->slot_no,pp->port_no);
-	                      fprintf(cgiOut,"<td>%s</td>",eth_port_type_str[pr.port_type]);
-					      fprintf(cgiOut,"<td>%s</td>",onoff_status_str[(pr.attr_bitmap & ETH_ATTR_ADMIN_STATUS) >> ETH_ADMIN_STATUS_BIT]);
-					      fprintf(cgiOut,"<td>%s</td>",link_status_str[(pr.attr_bitmap & ETH_ATTR_LINK_STATUS) >> ETH_LINK_STATUS_BIT]);
-					      //fprintf(cgiOut,"<td>%s</td>",doneOrnot_status_str[(pr.attr_bitmap & ETH_ATTR_AUTONEG) >> ETH_AUTONEG_BIT]);
-					      fprintf(cgiOut,"<td>%s</td>",onoff_status_str[(pr.attr_bitmap & ETH_ATTR_AUTONEG_SPEED) >> ETH_AUTONEG_SPEED_BIT]);
-					      fprintf(cgiOut,"<td>%s</td>",onoff_status_str[(pr.attr_bitmap & ETH_ATTR_AUTONEG_DUPLEX) >> ETH_AUTONEG_DUPLEX_BIT]);
-						  fprintf(cgiOut,"<td>%s</td>",onoff_status_str[(pr.attr_bitmap & ETH_ATTR_AUTONEG_FLOWCTRL) >> ETH_AUTONEG_FLOWCTRL_BIT]);
-					      fprintf(cgiOut,"<td>%s</td>",duplex_status_str[(pr.attr_bitmap & ETH_ATTR_DUPLEX) >> ETH_DUPLEX_BIT]);
-					      fprintf(cgiOut,"<td>%s</td>",onoff_status_str[(pr.attr_bitmap & ETH_ATTR_FLOWCTRL) >> ETH_FLOWCTRL_BIT]);
-					      fprintf(cgiOut,"<td>%s</td>",onoff_status_str[(pr.attr_bitmap & ETH_ATTR_BACKPRESSURE) >> ETH_BACKPRESSURE_BIT]);
-					      fprintf(cgiOut,"<td>%s</td>",eth_speed_str[(pr.attr_bitmap & ETH_ATTR_SPEED_MASK) >> ETH_SPEED_BIT]);               
-						  if(((pr.attr_bitmap & ETH_ATTR_PREFERRED_COPPER_MEDIA) >> ETH_PREFERRED_COPPER_MEDIA_BIT))
-							fprintf(cgiOut,"<td>COPPER</td>");	 
-						  else if(((pr.attr_bitmap & ETH_ATTR_PREFERRED_FIBER_MEDIA) >> ETH_PREFERRED_FIBER_MEDIA_BIT))
-							fprintf(cgiOut,"<td>FIBER</td>"); 
-						  else
-							fprintf(cgiOut,"<td>NONE</td>");				  
-	                      
-						  fprintf(cgiOut,"<td>%d</td>",pr.mtu);
-						  memset(menu,0,15);
-					      strcat(menu,"menuLists");
-			              sprintf(menu_id,"%d",k); 
-			              strcat(menu,menu_id);
-					      memset(prt_no,0,10);
-					      sprintf(prt_no,"%d-%d",p->slot_no,pp->port_no);     /*int转成char*/
-					      fprintf(cgiOut,"<td align=left>"\
-					 	              "<div style=\"position:relative; z-index:%d\" onmouseover=\"popMenu('%s');\" onmouseout=\"popMenu('%s');\">",(Max_Port_Num-k),menu,menu);
-	                                   fprintf(cgiOut,"<img src=/images/detail.gif>"\
-	                                   "<div id=%s style=\"display:none; position:absolute; top:5px; left:0;\">",menu);
-	                                   fprintf(cgiOut,"<div id=%s>",search(lpublic,"div1"));
-									   fprintf(cgiOut,"<div id=%s onmouseover=\"this.style.backgroundColor='#b6bdd2'\" onmouseout=\"this.style.backgroundColor='#f9f8f7'\"><a id=link href=wp_prtarp.cgi?UN=%s&ID=%s target=mainFrame>ARP %s</a></div>",search(lpublic,"div2"),m,prt_no,search(lpublic,"survey"));
-									   if(retu==0)	/*管理员*/
-									   {
-									     fprintf(cgiOut,"<div id=%s onmouseover=\"this.style.backgroundColor='#b6bdd2'\" onmouseout=\"this.style.backgroundColor='#f9f8f7'\"><a id=link href=wp_prtcfg.cgi?UN=%s&ID=%s target=mainFrame>%s</a></div>",search(lpublic,"div2"),m,prt_no,search(lcon,"prt_cfg"));
-									     fprintf(cgiOut,"<div id=%s onmouseover=\"this.style.backgroundColor='#b6bdd2'\" onmouseout=\"this.style.backgroundColor='#f9f8f7'\"><a id=link href=wp_prtfuncfg.cgi?UN=%s&ID=%s target=mainFrame>%s</a></div>",search(lpublic,"div2"),m,prt_no,search(lcon,"func_cfg"));
-									   }
-	                                   fprintf(cgiOut,"</div>"\
-	                                   "</div>"\
-	                                   "</div>"\
-					 	   "</td>");
-					      fprintf(cgiOut,"</tr>");
-	                      cl=!cl;
-						  k++;
-				        }
-		                else   //读取端口信息失败
-		                {
-		                  fprintf(cgiOut,"<tr align=center height=25 bgcolor=%s style=font-size:12px>",setclour(cl));
-		                    fprintf(cgiOut,"<td>%d-%d</td>",p->slot_no,pp->port_no);
-		                    fprintf(cgiOut,"<td>%s</td>","null");
-					        fprintf(cgiOut,"<td>%s</td>","null");
-					        fprintf(cgiOut,"<td>%s</td>","null");
-					       // fprintf(cgiOut,"<td>%s</td>","null");
-					        fprintf(cgiOut,"<td>%s</td>","null");
-					        fprintf(cgiOut,"<td>%s</td>","null");
-					        fprintf(cgiOut,"<td>%s</td>","null");
-					        fprintf(cgiOut,"<td>%s</td>","null");
-					        fprintf(cgiOut,"<td>%s</td>","null");
-					        fprintf(cgiOut,"<td>%s</td>","null");
-					        fprintf(cgiOut,"<td>%s</td>","null");
-							fprintf(cgiOut,"<td>%s</td>","null");
-					        fprintf(cgiOut,"<td>%d</td>",0);
-		                  fprintf(cgiOut,"</tr>");
-		                  cl=!cl;
-				        }			  	
-						pp=pp->next;
+                      fprintf(cgiOut,"<tr align=center height=25 bgcolor=%s style=font-size:12px>",setclour(cl));
+                      fprintf(cgiOut,"<td>%d-%d</td>",p->slot_no,pp->port_no);
+                      fprintf(cgiOut,"<td>%s</td>",eth_port_type_str[pp->porttype]);
+				      fprintf(cgiOut,"<td>%s</td>",onoff_status_str[(pp->attr_map & ETH_ATTR_ADMIN_STATUS) >> ETH_ADMIN_STATUS_BIT]);
+				      fprintf(cgiOut,"<td>%s</td>",link_status_str[(pp->attr_map& ETH_ATTR_LINK_STATUS) >> ETH_LINK_STATUS_BIT]);
+				      //fprintf(cgiOut,"<td>%s</td>",doneOrnot_status_str[(pp->attr_map & ETH_ATTR_AUTONEG) >> ETH_AUTONEG_BIT]);
+				      fprintf(cgiOut,"<td>%s</td>",onoff_status_str[(pp->attr_map & ETH_ATTR_AUTONEG_SPEED) >> ETH_AUTONEG_SPEED_BIT]);
+				      fprintf(cgiOut,"<td>%s</td>",onoff_status_str[(pp->attr_map & ETH_ATTR_AUTONEG_DUPLEX) >> ETH_AUTONEG_DUPLEX_BIT]);
+					  fprintf(cgiOut,"<td>%s</td>",onoff_status_str[(pp->attr_map & ETH_ATTR_AUTONEG_FLOWCTRL) >> ETH_AUTONEG_FLOWCTRL_BIT]);
+					  if(ETH_ATTR_LINKUP == ((pp->attr_map & ETH_ATTR_LINK_STATUS)>>ETH_LINK_STATUS_BIT))
+					  {
+						  fprintf(cgiOut,"<td>%s</td>",duplex_status_str[(pp->attr_map & ETH_ATTR_DUPLEX) >> ETH_DUPLEX_BIT]);
+						  fprintf(cgiOut,"<td>%s</td>",onoff_status_str[(pp->attr_map & ETH_ATTR_FLOWCTRL) >> ETH_FLOWCTRL_BIT]);
+					  }
+					  else
+					  {
+						  fprintf(cgiOut,"<td>-</td>");
+						  fprintf(cgiOut,"<td>-</td>");
+					  }
+				      fprintf(cgiOut,"<td>%s</td>",onoff_status_str[(pp->attr_map & ETH_ATTR_BACKPRESSURE) >> ETH_BACKPRESSURE_BIT]);
+					  if(ETH_ATTR_LINKUP == ((pp->attr_map & ETH_ATTR_LINK_STATUS)>>ETH_LINK_STATUS_BIT))
+					  {
+						  fprintf(cgiOut,"<td>%s</td>",eth_speed_str[(pp->attr_map & ETH_ATTR_SPEED_MASK) >> ETH_SPEED_BIT]);				
+					  }
+					  else
+					  {
+						  fprintf(cgiOut,"<td>-</td>");
+					  }
+					  if(((pp->attr_map & ETH_ATTR_PREFERRED_COPPER_MEDIA) >> ETH_PREFERRED_COPPER_MEDIA_BIT))
+						fprintf(cgiOut,"<td>COPPER</td>");	 
+					  else if(((pp->attr_map & ETH_ATTR_PREFERRED_FIBER_MEDIA) >> ETH_PREFERRED_FIBER_MEDIA_BIT))
+						fprintf(cgiOut,"<td>FIBER</td>"); 
+					  else
+						fprintf(cgiOut,"<td>-</td>");				  
+
+					  if(ETH_ATTR_LINKUP == ((pp->attr_map & ETH_ATTR_LINK_STATUS)>>ETH_LINK_STATUS_BIT))
+					  {
+						  fprintf(cgiOut,"<td>%d</td>",pp->mtu);
+					  }
+					  else
+					  {
+						  fprintf(cgiOut,"<td>-</td>");
+					  }
+					  memset(menu,0,15);
+				      strcat(menu,"menuLists");
+		              sprintf(menu_id,"%d",k); 
+		              strcat(menu,menu_id);
+				      memset(prt_no,0,10);
+				      sprintf(prt_no,"%d-%d",p->slot_no,pp->port_no);     /*int转成char*/
+				      fprintf(cgiOut,"<td align=left>"\
+				 	              "<div style=\"position:relative; z-index:%d\" onmouseover=\"popMenu('%s');\" onmouseout=\"popMenu('%s');\">",(Max_Port_Num-k),menu,menu);
+                                   fprintf(cgiOut,"<img src=/images/detail.gif>"\
+                                   "<div id=%s style=\"display:none; position:absolute; top:5px; left:0;\">",menu);
+                                   fprintf(cgiOut,"<div id=%s>",search(lpublic,"div1"));
+								   fprintf(cgiOut,"<div id=%s onmouseover=\"this.style.backgroundColor='#b6bdd2'\" onmouseout=\"this.style.backgroundColor='#f9f8f7'\"><a id=link href=wp_prtarp.cgi?UN=%s&ID=%s target=mainFrame>ARP %s</a></div>",search(lpublic,"div2"),m,prt_no,search(lpublic,"survey"));
+								   if(retu==0)	/*管理员*/
+								   {
+								     fprintf(cgiOut,"<div id=%s onmouseover=\"this.style.backgroundColor='#b6bdd2'\" onmouseout=\"this.style.backgroundColor='#f9f8f7'\"><a id=link href=wp_prtcfg.cgi?UN=%s&ID=%s target=mainFrame>%s</a></div>",search(lpublic,"div2"),m,prt_no,search(lcon,"prt_cfg"));
+								     fprintf(cgiOut,"<div id=%s onmouseover=\"this.style.backgroundColor='#b6bdd2'\" onmouseout=\"this.style.backgroundColor='#f9f8f7'\"><a id=link href=wp_prtfuncfg.cgi?UN=%s&ID=%s target=mainFrame>%s</a></div>",search(lpublic,"div2"),m,prt_no,search(lcon,"func_cfg"));
+								   }
+                                   fprintf(cgiOut,"</div>"\
+                                   "</div>"\
+                                   "</div>"\
+				 	   "</td>");
+				      fprintf(cgiOut,"</tr>");
+                      cl=!cl;
+					  k++;
+					  pp=pp->next;
 					}
 					p=p->next;
 				}
@@ -332,10 +305,6 @@ void ShowPrtmagPage(char *m,char *n,struct list *lpublic,struct list *lcon)
 free(menu_id);
 free(menu);	
 free(prt_no);
-free(sr.modname);
-free(sr.sn); 
-free(sl.modname);
-free(sl.sn); 
 if((ret==0)&&(num>0))
 {
 	Free_ethslot_head(&head);
