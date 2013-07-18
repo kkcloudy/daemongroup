@@ -1670,7 +1670,7 @@ isc_result_t dhcp_failover_state_signal (omapi_object_t *o,
 		    }
 		    omapi_disconnect (link -> outer, 1);
 			log_debug_failover(DEBUG_TYPE_CONNECT,"(6)link->imsg address %p\n",link->imsg);
-			log_debug_failover(DEBUG_TYPE_CONNECT,"(6)link->imsg->refcnt %d\n",link->imsg->refcnt);
+			log_debug_failover(DEBUG_TYPE_CONNECT,"(6)link->imsg->refcnt\n");
 		} else if (link -> imsg -> type == FTM_BNDUPD) {
 			dhcp_failover_process_bind_update (state,
 							   link -> imsg);
