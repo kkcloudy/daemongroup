@@ -354,8 +354,8 @@ int license_assign_show_cmd_web(DBusConnection *connection,int *license_count,st
 	int j = 0;
 	int k = 0;
 	int num = 0;
-	char buf[128] = {0};
-	char *tmp = buf;
+	//char buf[128] = {0};
+	//char *tmp = buf;
 	int len = 0;
 	
 	query = dbus_message_new_method_call(HMD_DBUS_BUSNAME,HMD_DBUS_OBJPATH,HMD_DBUS_INTERFACE,HMD_DBUS_CONF_METHOD_LICENSE_ASSIGN_SHOW);
@@ -377,6 +377,9 @@ int license_assign_show_cmd_web(DBusConnection *connection,int *license_count,st
 		dbus_message_iter_get_basic(&iter,&LicenseCount);
 		*license_count=LicenseCount;
 		LicenseInfo = malloc(LicenseCount*(sizeof(struct LicenseData)));
+		if(NULL == LicenseInfo){
+			return -2;
+		}
 		memset(LicenseInfo, 0, LicenseCount*(sizeof(struct LicenseData)));
 		dbus_message_iter_next(&iter);	
 		dbus_message_iter_recurse(&iter,&iter_array);

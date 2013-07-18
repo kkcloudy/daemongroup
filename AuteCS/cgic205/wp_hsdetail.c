@@ -79,6 +79,18 @@ void ShowSecdtaPage(char *m,char *id,struct list *lpublic,struct list *lcontrl)
 	memset(&zvrrp,0,sizeof(zvrrp));
 	int hspro_num=0;
 	int retu = 0;
+	char buf[128] = {0};
+	char *tmp = buf;
+	int len = 0;
+	
+	char buf_num[128] = {0};
+	char *tmp_num = buf_num;
+	int len_num = 0;
+	int j=0;
+	struct LicenseData *LicenseInfo = NULL;
+	int license_count=0;
+	int lic_ret=0;
+	int slot_count=0;
 	vrrp_link_ip_web *uq=NULL;
 	vrrp_link_ip_web *dq=NULL;
 	vrrp_link_ip_web *vq=NULL;
@@ -193,23 +205,10 @@ void ShowSecdtaPage(char *m,char *id,struct list *lpublic,struct list *lcontrl)
 	"<tr valign=middle>"\
 	"<td>");
 
-	ccgi_dbus_init();
 	hspro_num=strtoul(id,0,10);
 	retu = ccgi_show_hansi_profile_web(&zvrrp, hspro_num,pid,connection); 
 	
-	char buf[128] = {0};
-	char *tmp = buf;
-	int len = 0;
 	
-	char buf_num[128] = {0};
-	char *tmp_num = buf_num;
-	int len_num = 0;
-	int j=0;
-	int num=0;
-	struct LicenseData *LicenseInfo = NULL;
-	int license_count=0;
-	int lic_ret=0;
-	int slot_count=0;
 	lic_ret=license_assign_show_cmd_web(master_connection,&license_count,&LicenseInfo,&slot_count);
 
 	//////////////////////////////////////////////////////	
@@ -321,10 +320,11 @@ void ShowSecdtaPage(char *m,char *id,struct list *lpublic,struct list *lcontrl)
 		}
 			
 		//virtual mac
+/*		fprintf(stderr,"44444444444 aaaaaaaaaaaaaaaa\n");
 		fprintf(cgiOut,"<tr align=left>"\
 					  "<td id=td1>%s MAC</td>"\
 					  "<td id=td2>%s</td>",search(lcontrl,"virtual"),zvrrp.macstate);
-		fprintf(cgiOut,"</tr>");
+		fprintf(cgiOut,"</tr>");*/
 		//if preemt
 		fprintf(cgiOut,"<tr align=left>"\
 					  "<td id=td1>%s</td>"\

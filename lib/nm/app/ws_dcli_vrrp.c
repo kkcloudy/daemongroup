@@ -4502,7 +4502,7 @@ int ccgi_show_hansi_profile_web(Z_VRRP_web *zvrrp,int profile,int slotid,DBusCon
 	DBusError err = {0};
 	DBusMessageIter	 iter;
 
-	char link_ip[64] = {0};
+	char link_ip[32] = {0};
 
     ///////////////////////////
 	unsigned int op_ret = 0;
@@ -4558,7 +4558,7 @@ int ccgi_show_hansi_profile_web(Z_VRRP_web *zvrrp,int profile,int slotid,DBusCon
 	dbus_message_iter_get_basic(&iter,&op_ret);
 	if((DCLI_VRRP_RETURN_CODE_PROFILE_NOTEXIST == op_ret)||(DCLI_VRRP_RETURN_CODE_NO_CONFIG == op_ret)){
 		dbus_message_unref(reply);	
-	   return -1;
+	   return -3;
 	}
 	
 	dbus_message_iter_next(&iter);
@@ -4586,12 +4586,12 @@ int ccgi_show_hansi_profile_web(Z_VRRP_web *zvrrp,int profile,int slotid,DBusCon
 		for(i = 0; i < uplink_set_flg; i++)
 		{
 		
-			uq = (vrrp_link_ip *)malloc(sizeof(vrrp_link_ip)+1);
+			uq = (vrrp_link_ip_web *)malloc(sizeof(vrrp_link_ip_web)+1);
 			if(NULL== uq)
 			{
-				return -1;
+				return -4;
 			}
-			memset(uq,0,sizeof(vrrp_link_ip)+1);
+			memset(uq,0,sizeof(vrrp_link_ip_web)+1);
 			dbus_message_iter_next(&iter);
 			dbus_message_iter_get_basic(&iter,&uplink_ifname);
 			
@@ -4607,7 +4607,7 @@ int ccgi_show_hansi_profile_web(Z_VRRP_web *zvrrp,int profile,int slotid,DBusCon
 			dbus_message_iter_get_basic(&iter,&uplink_ip);
 			
 			
-			memset(link_ip,0,64);
+			memset(link_ip,0,32);
 			if(0 == uplink_ip)
 			{
 				strcpy(uq->link_ip,"--");
@@ -4619,13 +4619,10 @@ int ccgi_show_hansi_profile_web(Z_VRRP_web *zvrrp,int profile,int slotid,DBusCon
 							((uplink_ip& 0xff00) >> 8),(uplink_ip & 0xff));
 				strcpy(uq->link_ip,link_ip);
 			}
-
+			
 			uq->next = zvrrp->uplink_list;
 			zvrrp->uplink_list = uq;
-			
-
 		}
-		
 	}
 	else{
 		}
@@ -4646,12 +4643,12 @@ int ccgi_show_hansi_profile_web(Z_VRRP_web *zvrrp,int profile,int slotid,DBusCon
 	if (downlink_set_flg) {
 		for(i = 0; i < downlink_set_flg; i++)
 		{   
-			dq = (vrrp_link_ip *)malloc(sizeof(vrrp_link_ip)+1);
+			dq = (vrrp_link_ip_web *)malloc(sizeof(vrrp_link_ip_web)+1);
 			if(NULL== dq)
 			{
-				return -1;
+				return -5;
 			}
-			memset(dq,0,sizeof(vrrp_link_ip)+1);
+			memset(dq,0,sizeof(vrrp_link_ip_web)+1);
 			
 			dbus_message_iter_next(&iter);
 			dbus_message_iter_get_basic(&iter,&downlink_ifname);
@@ -4661,7 +4658,7 @@ int ccgi_show_hansi_profile_web(Z_VRRP_web *zvrrp,int profile,int slotid,DBusCon
 			dbus_message_iter_next(&iter);
 			dbus_message_iter_get_basic(&iter,&downlink_ip);		
 
-			memset(link_ip,0,64);	
+			memset(link_ip,0,32);	
 			sprintf(link_ip,"%d.%d.%d.%d ",((downlink_ip & 0xff000000) >> 24),((downlink_ip & 0xff0000) >> 16),	\
 							((downlink_ip& 0xff00) >> 8),(downlink_ip & 0xff));
 			strcpy(dq->link_ip,link_ip);
@@ -4710,12 +4707,12 @@ int ccgi_show_hansi_profile_web(Z_VRRP_web *zvrrp,int profile,int slotid,DBusCon
 		
 		for(i = 0; i < if_vgateway; i++) {
 		
-		vq = (vrrp_link_ip *)malloc(sizeof(vrrp_link_ip)+1);
+		vq = (vrrp_link_ip_web *)malloc(sizeof(vrrp_link_ip_web)+1);
 		if(NULL== vq)
 		{
-			return -1;
+			return -6;
 		}
-		memset(vq,0,sizeof(vrrp_link_ip)+1);
+		memset(vq,0,sizeof(vrrp_link_ip_web)+1);
 		
 		dbus_message_iter_next(&iter);
 		dbus_message_iter_get_basic(&iter,&vgateway_ifname);
@@ -4727,7 +4724,7 @@ int ccgi_show_hansi_profile_web(Z_VRRP_web *zvrrp,int profile,int slotid,DBusCon
 		strcpy(vq->ifname,vgateway_ifname);
 		vq->maskint = vgateway_mask;
 
-		memset(link_ip,0,64);	
+		memset(link_ip,0,32);	
 		sprintf(link_ip,"%d.%d.%d.%d ",((vgateway_ip & 0xff000000) >> 24),((vgateway_ip & 0xff0000) >> 16),	\
 					((vgateway_ip& 0xff00) >> 8),(vgateway_ip & 0xff));
 		strcpy(vq->link_ip,link_ip);
@@ -4743,18 +4740,6 @@ int ccgi_show_hansi_profile_web(Z_VRRP_web *zvrrp,int profile,int slotid,DBusCon
 	dbus_message_iter_get_basic(&iter,&failover_peer);
 	dbus_message_iter_next(&iter);
 	dbus_message_iter_get_basic(&iter,&failover_local);
-	if(~0UI != failover_peer) {
-		//vty_out(vty, "%-7speer %d.%d.%d.%d", "", (failover_peer >> 24) & 0xFF, \
-			//(failover_peer >> 16) & 0xFF, (failover_peer >> 8) & 0xFF, failover_peer & 0xFF);
-		if(~0UI != failover_local) {
-			//vty_out(vty, " local %d.%d.%d.%d", (failover_local >> 24) & 0xFF, \
-				//(failover_local >> 16) & 0xFF, (failover_local >> 8) & 0xFF, failover_local & 0xFF);
-		}
-		//vty_out(vty, "\n");
-	}
-	else {
-		//vty_out(vty, "%-7snot configured\n", "");
-	}
 
 	dbus_message_unref(reply);
 	return 0;

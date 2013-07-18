@@ -1072,3 +1072,5 @@ interface_range=The keyword range of interface is 1-63;
 interface_range=interface 的 keyword 范围是1-63;
 essid_range=The keyword range of wlanid is 1-31;
 essid_range=wlanid 的 keyword 范围是1-31;
+vrrp_delete=Delete the vrrp configuration;
+vrrp_delete=清除VRRP配置;

@@ -126,10 +126,10 @@ typedef struct{
 }Z_VRRP_VGATE;
 
 typedef struct vrrp_link_ip_dis{
-	char ifname[64];
+	char ifname[20];
 	char link_ip[32];
 	char ipstr[32];
-	char state[20];
+	char state[10];
 	int maskint;
 	struct vrrp_link_ip_dis *next;
 } vrrp_link_ip_web;
@@ -194,52 +194,17 @@ typedef struct {
 }Z_VRRP;
 
 typedef struct {
- char state[20];
+ char state[15];
  unsigned int priority;
  unsigned int advert;
- char  preempt[10];
- char uplink_ifname[64];
- char upstate[10]; 
- char uplink_ip[64];
- char uplink_ip_list[255];
- char downlink_ifname[64];
- char downstate[10];
- char downlink_ip[64];
- char downlink_ip_list[255];
+ char  preempt[5];
  vrrp_link_ip_web *uplink_list;
  vrrp_link_ip_web *downlink_list;
  vrrp_link_ip_web *vgatewaylink_list;
- char realipup[64];
- char realipdown[64];
  char macstate[10];
- char widstate[20];
- char portalstate[20];
- char hbinf[30];
+ char hbinf[20];
  char hbstate[10];
- char hbip[64]; 
- Z_VRRP_VGATE gw[24];
- int gw_number;
- int ulip1;
- int dlip1;
- int ulip2;
- int dlip2;
- int ulip3;
- int dlip3;
- int ulip4;
- int dlip4;
- int urip1;
- int urip2;
- int urip3;
- int urip4;
- int drip1;
- int drip2;
- int drip3;
- int drip4;
- int hbip1;
- int hbip2;
- int hbip3;
- int hbip4;
-
+ char hbip[32]; 
 }Z_VRRP_web;
 
 /*functions*/

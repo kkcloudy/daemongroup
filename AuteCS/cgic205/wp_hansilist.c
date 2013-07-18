@@ -158,8 +158,6 @@ int ShowhansilistPage(char *m,char *n,struct list *lpublic,struct list *lcontrol
 	  cgiFormStringNoNewlines("ID", insid, 5);
 	  if(connection)
 	  {
-		  fprintf(stderr,"connection=%p",connection);
-		  fprintf(stderr,"insid=%s",insid);
 		  int ret_del=0;
 			ret_del=delete_hansi_profile_web(insid,connection);
 		  
@@ -286,7 +284,6 @@ int ShowhansilistPage(char *m,char *n,struct list *lpublic,struct list *lcontrol
 					fprintf(cgiOut,"<th width=80></th>");
 					fprintf(cgiOut,"</tr>");
 
-                    ccgi_dbus_init();
                     for(i=1;i<17;i++)
                 	{
 	                    memset(&zvrrp,0,sizeof(zvrrp));
@@ -320,7 +317,7 @@ int ShowhansilistPage(char *m,char *n,struct list *lpublic,struct list *lcontrol
 									fprintf(cgiOut,"<img src=/images/detail.gif>"\
 									"<div id=%s style=\"display:none; position:absolute; top:5px; left:0;\">",menu);
 									fprintf(cgiOut,"<div id=div1>");
-									fprintf(cgiOut,"<div id=div2 onmouseover=\"this.style.backgroundColor='#b6bdd2'\" onmouseout=\"this.style.backgroundColor='#f9f8f7'\"><a id=link href=wp_hansilist.cgi?UN=%s&ID=%d&TYPE=%s&plotid=%d&DeletWlan=%s&SubmitFlag=1 target=mainFrame onclick=\"return confirm('%s')\">%s</a></div>",m,i,"2",pid,"true",search(lpublic,"confirm_delete"),search(lpublic,"delete"));                             
+									fprintf(cgiOut,"<div id=div2 onmouseover=\"this.style.backgroundColor='#b6bdd2'\" onmouseout=\"this.style.backgroundColor='#f9f8f7'\"><a id=link href=wp_hansilist.cgi?UN=%s&ID=%d&TYPE=%s&plotid=%d&DeletWlan=%s&SubmitFlag=1 target=mainFrame onclick=\"return confirm('%s')\">%s</a></div>",m,i,"2",pid,"true",search(lpublic,"confirm_delete"),search(lpublic,"vrrp_delete"));                             
 									fprintf(cgiOut,"<div id=div2 onmouseover=\"this.style.backgroundColor='#b6bdd2'\" onmouseout=\"this.style.backgroundColor='#f9f8f7'\"><a id=link href=wp_hansimod.cgi?UN=%s&ID=%d&TYPE=%s&plotid=%d target=mainFrame>%s</a></div>",m,i,"1",pid,search(lpublic,"configure"));
 									fprintf(cgiOut,"<div id=div2 onmouseover=\"this.style.backgroundColor='#b6bdd2'\" onmouseout=\"this.style.backgroundColor='#f9f8f7'\"><a id=link href=wp_hsdetail.cgi?UN=%s&ID=%d&TYPE=%s&plotid=%d target=mainFrame>%s</a></div>",m,i,"1",pid,search(lpublic,"details"));
 									fprintf(cgiOut,"</div>"\
@@ -329,13 +326,6 @@ int ShowhansilistPage(char *m,char *n,struct list *lpublic,struct list *lcontrol
 									"</td>");
 							}
 							
-							fprintf(cgiOut,"</tr>");
-							cl =!cl;
-		               }
-					   else if(ret == -3)
-					   {
-							fprintf(cgiOut,"<tr align=left bgcolor=%s>",setclour(cl));
-							fprintf(cgiOut,"<td colspan=10>%d</td>",i);
 							fprintf(cgiOut,"</tr>");
 							cl =!cl;
 		               }

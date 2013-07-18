@@ -877,7 +877,7 @@ int ShowHansiModPage(char *m,char *id,char * choice,struct list *lpublic,struct 
 		//up   link ifname
 		fprintf(cgiOut,"<tr  height=30>"\
 		"<td width=140>%s/IP/Mask :</td>",search(lpublic,"hs_uplink"));
-		fprintf(cgiOut,"<td><input type=text name=upname style=\"width:80px\" value=\"%s\"></td>",zvrrp.uplink_ifname);
+		fprintf(cgiOut,"<td><input type=text name=upname style=\"width:80px\"></td>");
 		fprintf(cgiOut,"<td>"\
 		"<div style=\"border-width:1;border-color:#a5acb2;border-style:solid;width:140;font-size:9pt\">");
 		fprintf(cgiOut,"<input type=text  name=upip1  maxlength=3 class=a3 onKeyUp=\"mask(this,%s)\" onbeforepaste=mask_c() value=\"\">.",search(lpublic,"ip_error")); 
@@ -899,7 +899,7 @@ int ShowHansiModPage(char *m,char *id,char * choice,struct list *lpublic,struct 
 		//  down link ifname
 		fprintf(cgiOut,"<tr  height=30>"\
 		"<td width=140>%s/IP/Mask :</td>",search(lpublic,"hs_dlink"));
-		fprintf(cgiOut,"<td><input type=text name=downname style=\"width:80px\" value=\"%s\"></td>",zvrrp.downlink_ifname);
+		fprintf(cgiOut,"<td><input type=text name=downname style=\"width:80px\"></td>");//zvrrp.downlink_ifname
 		fprintf(cgiOut,"<td>"\
 		"<div style=\"border-width:1;border-color:#a5acb2;border-style:solid;width:140;font-size:9pt\">");
 		fprintf(cgiOut,"<input type=text  name=downip1 maxlength=3 class=a3 onKeyUp=\"mask(this,%s)\" onbeforepaste=mask_c() value=\"\">.",search(lpublic,"ip_error")); 
