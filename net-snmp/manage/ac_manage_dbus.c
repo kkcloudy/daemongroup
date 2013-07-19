@@ -42,6 +42,9 @@ ac_manage_dbus_message_handler(DBusConnection *connection, DBusMessage *message,
 		else if(dbus_message_is_method_call(message, AC_MANAGE_DBUS_INTERFACE, AC_MANAGE_DBUS_SHOW_RADIUS_CONFIG)) {
 			reply = ac_manage_dbus_show_radius_config(connection, message, user_data);
 		}
+		else if(dbus_message_is_method_call(message, AC_MANAGE_DBUS_INTERFACE, AC_MANAGE_DBUS_WEB_IP_PORT_CHECK)) {
+			reply = ac_manage_dbus_web_ip_port_check(connection, message, user_data);
+		}
 		else if(dbus_message_is_method_call(message, AC_MANAGE_DBUS_INTERFACE, AC_MANAGE_DBUS_WEB_EDIT)) {
 			reply = ac_manage_dbus_web_edit(connection, message, user_data);
 		}

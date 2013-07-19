@@ -54,7 +54,20 @@ static void dcli_web_slot_init()
     master_slot_id = get_product_info(SEM_ACTIVE_MASTER_SLOT_ID_PATH);
     local_slot_id = get_product_info(SEM_LOCAL_SLOT_ID_PATH);
 }
-    
+
+static int dcli_web_ip_port_check(const char *address_d, const unsigned int port_d, int slot_d)
+{
+	int ret = 0;
+	
+    ret = ac_manage_web_ip_port_check(dbus_connection_dcli[slot_d]->dcli_dbus_connection, address_d, port_d);
+	if (WEB_SUCCESS != ret)
+	{
+		return WEB_FAILURE;
+	}
+
+	return WEB_SUCCESS;
+}
+
 static int dcli_web_vhost_show(struct webInfoHead *infohead)
 {
     dcli_web_slot_init();
@@ -97,7 +110,7 @@ static int dcli_web_vhost_add_valid(webHost host, unsigned int slot)
 	LINK_INIT(&infohead);
 
 	int sum = dcli_web_vhost_show(&infohead);
-
+	int ret = 0;
     if(sum >= MAX_VHOST_NUM)
     {
         web_list_flush(&infohead);
@@ -166,6 +179,13 @@ static int dcli_web_vhost_add_valid(webHost host, unsigned int slot)
         }
 	}
 	web_list_flush(&infohead);
+
+	/* check ip or port is or not using */
+	ret = dcli_web_ip_port_check(host.address, host.port, slot);
+	if (WEB_SUCCESS != ret) {
+		return WEB_IP_PORT_ERROR;
+	}
+	
     return WEB_SUCCESS; 
 }
 
@@ -873,6 +893,10 @@ DEFUN(add_http_https_ip_port_func,
         case WEB_EXISIT:
 		    vty_out(vty,"service ip:port exist. failed\n");
             return CMD_WARNING;
+            
+		case WEB_IP_PORT_ERROR:
+			vty_out(vty, "service ip:port error, can not be used. failed\n");
+            return CMD_WARNING;
         default:
             break;
     }
@@ -981,6 +1005,10 @@ DEFUN(set_interval_portal_func,
 
         case WEB_PORTAL_ERROR:
             vty_out(vty, "portal slot conflict. failed\n");
+            return CMD_WARNING;
+            
+        case WEB_IP_PORT_ERROR:
+			vty_out(vty, "service ip:port error, can not be used. failed\n");
             return CMD_WARNING;
         default:
             break;

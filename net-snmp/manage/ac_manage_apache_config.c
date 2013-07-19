@@ -13,6 +13,7 @@
 #include <ctype.h>
 #include <dirent.h>
 #include <sys/stat.h>
+#include <errno.h>
 #include "ws_dbus_def.h"
 #include "ac_manage_def.h"
 #include "ws_webservice_conf.h"
@@ -25,6 +26,41 @@ static unsigned int web_ser_stat;
 static unsigned int web_vhost_sum;
 
 static struct webHostHead head;
+
+int web_host_ip_port_check(const char *address, int port)
+{
+	int fd = 0;
+	int ret = 0;
+	struct sockaddr_in addr;
+	
+	fd = socket(AF_INET, SOCK_STREAM, 0);
+	if (fd < 0) {
+		LOG("Can't create web server stream socket: %s", strerror(errno));
+		return WEB_FAILURE;
+	}
+
+	memset(&addr, 0, sizeof(struct sockaddr_in));
+	addr.sin_family = AF_INET;
+    ret = inet_aton(address, &addr.sin_addr);
+    if (!ret) {
+        LOG("Can't create web server invalid ip address: %s:%d", address, port);
+        close(fd);
+        return WEB_FAILURE;
+    }
+	addr.sin_port = htons(port);
+
+	ret = bind(fd, (struct sockaddr *) &addr, sizeof(struct sockaddr_in));
+	if (ret < 0) {
+		LOG("Can't bind ip address:%s:%d to web server stream socket: %s", address, port ,strerror(errno));
+		close(fd);
+		return WEB_FAILURE;
+	}
+    LOG("Bind ip address: %s:%d to web server stream socket for testing success, then close fd", address, port);
+
+	close(fd);
+	
+	return WEB_SUCCESS;
+}
 
 int web_host_add(const char *name, const char *address, int port, int type)
 { 

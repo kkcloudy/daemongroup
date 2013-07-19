@@ -158,6 +158,7 @@ enum {
 #define AC_MANAGE_DBUS_SHOW_PORTAL_CONFIG               "manage_show_portal_config"
 
 #define AC_MANAGE_DBUS_WEB_INIT         				"manage_web_init"
+#define AC_MANAGE_DBUS_WEB_IP_PORT_CHECK				"manage_web_ip_port_check"
 #define AC_MANAGE_DBUS_WEB_EDIT             		 	"manage_web_edit"
 #define AC_MANAGE_DBUS_WEB_SHOW        				 	"manage_web_show"
 #define AC_MANAGE_DBUS_WEB_CONF							"manage_web_conf"  

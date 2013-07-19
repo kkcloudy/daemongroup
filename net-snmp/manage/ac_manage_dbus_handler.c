@@ -3936,6 +3936,34 @@ ac_manage_dbus_show_portal_config(DBusConnection *connection, DBusMessage *messa
 }
 
 DBusMessage *
+ac_manage_dbus_web_ip_port_check(DBusConnection *connection, DBusMessage *message, void *user_data)
+{
+	DBusMessage *reply = NULL;	
+	DBusError err;
+	DBusMessageIter	 iter;		
+
+	char *address_d = NULL;
+	unsigned int port_d = 0;
+	int ret = AC_MANAGE_SUCCESS;
+	
+	dbus_error_init(&err);
+    dbus_message_iter_init(message, &iter);
+    dbus_message_iter_get_basic(&iter, &address_d);
+    dbus_message_iter_next(&iter);
+    dbus_message_iter_get_basic(&iter, &port_d);
+    LOG("get %s %d", address_d, port_d);
+
+	ret = web_host_ip_port_check(address_d, port_d);
+
+	reply = dbus_message_new_method_return(message);
+					
+	dbus_message_iter_init_append (reply, &iter);	
+	dbus_message_iter_append_basic (&iter,DBUS_TYPE_UINT32,&ret); 
+
+	return reply;
+}
+
+DBusMessage *
 ac_manage_dbus_web_edit(DBusConnection *connection, DBusMessage *message, void *user_data) {
 
 	DBusMessage *reply = NULL;	

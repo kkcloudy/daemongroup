@@ -2982,9 +2982,51 @@ ac_manage_show_mib_acif_stats(DBusConnection *connection,
     return ret;    
 }
 
-int ac_manage_web_edit(DBusConnection *connection, void *data, int edit) {
+int ac_manage_web_ip_port_check(DBusConnection *connection, char *address_d, int port_d)
+{
+    if(NULL == connection)
+            return AC_MANAGE_INPUT_TYPE_ERROR;
+            
+    DBusMessage *query, *reply;
+    DBusError err;
+    DBusMessageIter  iter;
+    int ret = AC_MANAGE_SUCCESS;
 
-								
+    query = dbus_message_new_method_call(AC_MANAGE_DBUS_DBUSNAME, 
+                                        AC_MANAGE_DBUS_OBJPATH,
+                                        AC_MANAGE_DBUS_INTERFACE,
+                                        AC_MANAGE_DBUS_WEB_IP_PORT_CHECK);
+
+    dbus_error_init(&err);
+
+    LOG("send %s %d", address_d, port_d);
+    dbus_message_append_args(query,
+                            DBUS_TYPE_STRING, &address_d,
+                            DBUS_TYPE_UINT32, &port_d, 
+                            DBUS_TYPE_INVALID);
+	
+    reply = dbus_connection_send_with_reply_and_block(connection, query, -1, &err);
+    
+    dbus_message_unref(query);
+
+    if (NULL == reply) {
+        if (dbus_error_is_set(&err)) {
+            dbus_error_free(&err);
+        }
+        return AC_MANAGE_DBUS_ERROR;
+    }
+    
+    dbus_message_iter_init(reply, &iter);
+    dbus_message_iter_get_basic(&iter, &ret);
+
+    dbus_message_unref(reply);
+
+    return ret;
+
+}
+
+int ac_manage_web_edit(DBusConnection *connection, void *data, int edit)
+{					
     if(NULL == connection)
         return AC_MANAGE_INPUT_TYPE_ERROR;
         

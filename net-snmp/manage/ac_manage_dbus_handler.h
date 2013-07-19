@@ -113,6 +113,8 @@ DBusMessage *ac_manage_dbus_show_radius_config(DBusConnection *connection, DBusM
 
 DBusMessage *ac_manage_dbus_show_portal_config(DBusConnection *connection, DBusMessage *message, void *user_data);
 
+DBusMessage *ac_manage_dbus_web_ip_port_check(DBusConnection *connection, DBusMessage *message, void *user_data);
+
 DBusMessage *ac_manage_dbus_web_edit(DBusConnection *connection, DBusMessage *message, void *user_data);
 
 DBusMessage *ac_manage_dbus_web_show(DBusConnection *connection, DBusMessage *message, void *user_data);
