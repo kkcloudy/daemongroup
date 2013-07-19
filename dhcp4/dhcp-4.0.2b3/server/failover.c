@@ -1443,8 +1443,11 @@ isc_result_t dhcp_failover_state_signal (omapi_object_t *o,
 					 FTR_DUP_CONNECTION,
 					 "already connected");
 				omapi_disconnect (link -> outer, 1);
-				log_debug_failover(DEBUG_TYPE_CONNECT,"(1)link->imsg address %p\n",link->imsg);
-				log_debug_failover(DEBUG_TYPE_CONNECT,"(1)link->imsg->refcnt %d\n",link->imsg->refcnt);
+				if (link -> imsg)
+				{
+					log_debug_failover(DEBUG_TYPE_CONNECT,"(1)link->imsg address %p\n",link->imsg);
+					log_debug_failover(DEBUG_TYPE_CONNECT,"(1)link->imsg->refcnt %d\n",link->imsg->refcnt);
+				}
 				return ISC_R_SUCCESS;
 			}
 			if (!(link -> imsg -> options_present & FTB_MCLT)) {
@@ -1453,8 +1456,10 @@ isc_result_t dhcp_failover_state_signal (omapi_object_t *o,
 					 FTR_INVALID_MCLT,
 					 "no MCLT provided");
 				omapi_disconnect (link -> outer, 1);
+				if (link -> imsg){
 				log_debug_failover(DEBUG_TYPE_CONNECT,"(2)link->imsg address %p\n",link->imsg);
 				log_debug_failover(DEBUG_TYPE_CONNECT,"(2)link->imsg->refcnt %d\n",link->imsg->refcnt);
+				}
 				return ISC_R_SUCCESS;
 			}				
 
@@ -1498,8 +1503,10 @@ isc_result_t dhcp_failover_state_signal (omapi_object_t *o,
 				log_info ("dhcp_failover_send_connectack: %s",
 					  isc_result_totext (status));
 				omapi_disconnect (link -> outer, 1);
+				if (link -> imsg){
 				log_debug_failover(DEBUG_TYPE_CONNECT,"(3)link->imsg address %p\n",link->imsg);
 				log_debug_failover(DEBUG_TYPE_CONNECT,"(3)link->imsg->refcnt %d\n",link->imsg->refcnt);
+				}
 				return ISC_R_SUCCESS;
 			}
 			if (link -> imsg -> options_present & FTB_MAX_UNACKED)
@@ -1509,13 +1516,17 @@ isc_result_t dhcp_failover_state_signal (omapi_object_t *o,
 				state -> partner.max_response_delay =
 					link -> imsg -> receive_timer;
 			state -> mclt = link -> imsg -> mclt;
+			if (link -> imsg){
 			log_debug_failover(DEBUG_TYPE_CONNECT,"(3.4)link->imsg address %p\n",link->imsg);
 			log_debug_failover(DEBUG_TYPE_CONNECT,"(3.4)link->imsg->refcnt %d\n",link->imsg->refcnt);
+			}
 			dhcp_failover_send_state (state);
 			cancel_timeout (dhcp_failover_link_startup_timeout,
 					link);
+			if (link -> imsg){
 			log_debug_failover(DEBUG_TYPE_CONNECT,"(3.5)link->imsg address %p\n",link->imsg);
 			log_debug_failover(DEBUG_TYPE_CONNECT,"(3.5)link->imsg->refcnt %d\n",link->imsg->refcnt);
+			}
 		} else if (link -> imsg -> type == FTM_CONNECTACK) {
 		    const char *errmsg;
 		    char errbuf[1024];
@@ -1543,8 +1554,10 @@ isc_result_t dhcp_failover_state_signal (omapi_object_t *o,
 
 			/* XXX print message from peer if peer sent message. */
 			omapi_disconnect (link -> outer, 1);
+			if (link -> imsg){
 			log_debug_failover(DEBUG_TYPE_CONNECT,"(4)link->imsg address %p\n",link->imsg);
 			log_debug_failover(DEBUG_TYPE_CONNECT,"(4)link->imsg->refcnt %d\n",link->imsg->refcnt);
+			}
 			return ISC_R_SUCCESS;
 		    }
 
@@ -1563,8 +1576,10 @@ isc_result_t dhcp_failover_state_signal (omapi_object_t *o,
 			dhcp_failover_send_disconnect ((omapi_object_t *)link,
 						       reason, errmsg);
 			omapi_disconnect (link -> outer, 0);
+			if (link -> imsg){
 			log_debug_failover(DEBUG_TYPE_CONNECT,"(5)link->imsg address %p\n",link->imsg);
 			log_debug_failover(DEBUG_TYPE_CONNECT,"(5)link->imsg->refcnt %d\n",link->imsg->refcnt);
+			}
 			return ISC_R_SUCCESS;
 		    }
 
@@ -1637,8 +1652,10 @@ isc_result_t dhcp_failover_state_signal (omapi_object_t *o,
 		    if (link -> imsg -> options_present & FTB_RECEIVE_TIMER)
 			    state -> partner.max_response_delay =
 				    link -> imsg -> receive_timer;
+			if (link -> imsg){
 			log_debug_failover(DEBUG_TYPE_CONNECT,"(5.5)link->imsg address %p\n",link->imsg);
 			log_debug_failover(DEBUG_TYPE_CONNECT,"(5.5)link->imsg->refcnt %d\n",link->imsg->refcnt);
+			}
 #if defined (DEBUG_FAILOVER_CONTACT_TIMING)
 		    log_info ("add_timeout +%d %s",
 			      (int)state -> partner.max_response_delay / 3,
@@ -1669,8 +1686,10 @@ isc_result_t dhcp_failover_state_signal (omapi_object_t *o,
 				    (link -> imsg -> reject_reason)));
 		    }
 		    omapi_disconnect (link -> outer, 1);
+			if (link -> imsg){
 			log_debug_failover(DEBUG_TYPE_CONNECT,"(6)link->imsg address %p\n",link->imsg);
 			log_debug_failover(DEBUG_TYPE_CONNECT,"(6)link->imsg->refcnt\n");
+			}
 		} else if (link -> imsg -> type == FTM_BNDUPD) {
 			dhcp_failover_process_bind_update (state,
 							   link -> imsg);
@@ -2205,8 +2224,10 @@ isc_result_t dhcp_failover_peer_state_changed (dhcp_failover_state_t *state,
 
 	new_state = msg -> server_state;
 	startupp = (msg -> server_flags & FTF_SERVER_STARTUP) ? 1 : 0;
+	if(msg){
 	log_debug_failover(DEBUG_TYPE_MSG_DEAL,"(13)link->imsg address %p\n",msg);
 	log_debug_failover(DEBUG_TYPE_MSG_DEAL,"(13)link->msg->refcnt %d\n",msg->refcnt);
+	}
 
 	if (state -> partner.state == new_state && state -> me.state) {
 		switch (state -> me.state) {
@@ -5665,13 +5686,18 @@ isc_result_t dhcp_failover_process_bind_update (dhcp_failover_state_t *state,
 		message = "database update failed";
 	      bad:
 		dhcp_failover_send_bind_ack (state, msg, reason, message);
+		if(msg){
 		log_debug_failover(DEBUG_TYPE_MSG_DEAL,"(7)link->imsg address %p\n",msg);
 		log_debug_failover(DEBUG_TYPE_MSG_DEAL,"(7)link->imsg->refcnt %d\n",msg->refcnt);
+		}
 		goto out;
 	} else {
 		dhcp_failover_queue_ack (state, msg);
-		log_debug_failover(DEBUG_TYPE_MSG_DEAL,"(8)link->imsg address %p\n",msg);
-		log_debug_failover(DEBUG_TYPE_MSG_DEAL,"(8)link->imsg->refcnt %d\n",msg->refcnt);
+		if(msg)
+		{
+			log_debug_failover(DEBUG_TYPE_MSG_DEAL,"(8)link->imsg address %p\n",msg);
+			log_debug_failover(DEBUG_TYPE_MSG_DEAL,"(8)link->imsg->refcnt %d\n",msg->refcnt);
+		}
 	}
 
 	/* If it is probably wise, assign lease to backup state if the peer
@@ -5779,9 +5805,10 @@ isc_result_t dhcp_failover_process_bind_ack (dhcp_failover_state_t *state,
 		pot_expire = msg->potential_expiry;
 	else
 		pot_expire = lease->tstp;
+	if(msg){
 	log_debug_failover(DEBUG_TYPE_MSG_DEAL,"(9)link->imsg address %p\n",msg);
 	log_debug_failover(DEBUG_TYPE_MSG_DEAL,"(9)link->imsg->refcnt %d\n", msg->refcnt);
-
+	}
 	/* If the lease was desired to enter a binding state, we set
 	 * such a value upon transmitting a bndupd.  We do not clear it
 	 * if we receive a bndupd in the meantime (or change the state
@@ -6020,9 +6047,10 @@ dhcp_failover_process_update_request (dhcp_failover_state_t *state,
 	dhcp_failover_generate_update_queue (state, 0);
 
 	state->updxid = msg->xid;
+	if(msg){
 	log_debug_failover(DEBUG_TYPE_MSG_DEAL,"(11)link->imsg address %p\n",msg);
 	log_debug_failover(DEBUG_TYPE_MSG_DEAL,"(11) link->imsg->refcnt %d\n",msg->refcnt);
-
+	}
 	/* If there's anything on the update queue (there shouldn't be
 	   anything on the ack queue), trigger an update done message
 	   when we get an ack for that lease. */
@@ -6057,8 +6085,10 @@ dhcp_failover_process_update_request_all (dhcp_failover_state_t *state,
 	dhcp_failover_generate_update_queue (state, 1);
 
 	state->updxid = msg->xid;
+	if(msg){
 	log_debug_failover(DEBUG_TYPE_MSG_DEAL,"(12)link->imsg address %p\n",msg);
 	log_debug_failover(DEBUG_TYPE_MSG_DEAL,"(12)link->imsg->refcnt %d",msg->refcnt);
+	}
 	if (state -> update_queue_tail) {
 		lease_reference (&state -> send_update_done,
 				 state -> update_queue_tail, MDL);
