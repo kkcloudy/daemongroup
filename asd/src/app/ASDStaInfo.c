@@ -814,6 +814,7 @@ void ap_free_sta_without_wsm(struct asd_data *wasd, struct sta_info *sta, unsign
 		unsigned char channel=0;
 		unsigned char rssi = 0;	//xiaodawei add rssi for telecom, 20110228
 		int i=0;
+		asd_printf(ASD_DEFAULT,MSG_INFO,"free sta in ap_free_sta_without_wsm\n");
 		
 		if((wasd == NULL) || (sta == NULL)){
 			asd_printf(ASD_DEFAULT,MSG_INFO,"wasd or sta is NULL in %s\n",__func__);
@@ -870,8 +871,9 @@ void ap_free_sta_without_wsm(struct asd_data *wasd, struct sta_info *sta, unsign
 		}
 		
 		ap_sta_hash_del(wasd, sta);
-	//	asd_sta_hash_del(sta);
 		ap_sta_list_del(wasd, sta);
+        /* add to avoid not delete ASD_STA_HASH*/
+		asd_sta_hash_del(sta);
 	
 		if (sta->aid > 0)
 			wasd->sta_aid[sta->aid - 1] = NULL;
@@ -911,7 +913,6 @@ void ap_free_sta_without_wsm(struct asd_data *wasd, struct sta_info *sta, unsign
 		rsn_preauth_free_station(wasd, sta);
 		//radius_client_flush_auth(wasd->radius, sta->addr);
 		}
-		asd_printf(ASD_DEFAULT,MSG_INFO,"free sta in ap_free_sta_without_wsm\n");
 		UpdateStaInfoToFASTFWD(sta->ipaddr,SE_AGENT_CLEAR_RULE_IP);
 		os_free(sta->last_assoc_req);
 		sta->last_assoc_req=NULL;
@@ -1112,13 +1113,17 @@ void ap_free_sta(struct asd_data *wasd, struct sta_info *sta, unsigned int state
 #endif
 		add_and_del_static_br_fdb(wasd->br_ifname,ifname, sta->addr,0) ;
 	}
-	
+
+    /* update sta info to WSM */
 	if (!ap_sta_in_other_bss(wasd, sta, WLAN_STA_ASSOC) &&
 	    !(sta->flags & WLAN_STA_PREAUTH))
 		asd_sta_remove(wasd, sta->addr);
-	
+
+    /* delete sta in wasd */	
 	ap_sta_hash_del(wasd, sta);
+	/* delete sta in asd hash ASD_STA_HASH */	
 	asd_sta_hash_del(sta);
+	/* delete sta in wasd->sta_list */
 	ap_sta_list_del(wasd, sta);
 
 	if (sta->aid > 0)
@@ -1259,6 +1264,7 @@ void ap_free_sta(struct asd_data *wasd, struct sta_info *sta, unsigned int state
 	
 	//os_free(sta);
 
+	asd_printf(ASD_DEFAULT,MSG_DEBUG,"before signal_sta_leave, func:%s \n",__func__);
 //add warnning when sta leave
 	signal_sta_leave(mac,wasd->Radio_G_ID,wasd->BSSIndex,wasd->WlanID,rssi);	//xiaodawei add rssi for telecom, 20110228
 
@@ -1298,6 +1304,8 @@ void ap_free_sta(struct asd_data *wasd, struct sta_info *sta, unsigned int state
 		ASD_WTP_AP[wasd->Radio_G_ID/L_RADIO_NUM]->ap_accessed_sta_num--;		//mahz add 2011.4.8
 
 	os_free(sta);
+
+	asd_printf(ASD_DEFAULT,MSG_DEBUG,"os_free(sta), func:%s \n",__func__);
 	
 	sta=NULL;
 }
@@ -2164,20 +2172,28 @@ struct sta_info * ap_sta_add(struct asd_data *wasd, const u8 *addr, int both)
 		//		       ap_handle_timer, wasd, sta);
 		circle_register_timeout(10, 0, sta_auth_timer, wasd, sta);		//ht add 090219
 		os_memcpy(sta->addr, addr, ETH_ALEN);
+
+		/* add to wasd->sta_list */
 		sta->next = wasd->sta_list;
 		wasd->sta_list = sta;
 		wasd->num_sta++;
 		sta->wasd = wasd;//qiuchen add it to find bss from sta
+		
 		//Qc
 		sta->BssIndex = wasd->BSSIndex;
 		sta->PreBssIndex = wasd->BSSIndex;
 		sta->preAPID = wasd->Radio_G_ID/4;
 		memcpy(sta->PreBSSID,wasd->own_addr,MAC_LEN);
 		memcpy(sta->BSSID,wasd->own_addr,MAC_LEN);
+        /* check if the sta is roaming */
 		asd_sta_roaming_management(sta);
 		//End
+
+		/* add to wasd->sta_hash */	
 		ap_sta_hash_add(wasd, sta);
+    	/* add sta in asd hash ASD_STA_HASH */			
 		asd_sta_hash_add(sta);
+		
 		sta->ssid = &wasd->conf->ssid;
 		//wlan_add_sta(wasd->WlanID,sta->addr);
 		asd_printf(ASD_DEFAULT,MSG_DEBUG,"ADD STA in ap_sta_add\n");
@@ -3082,13 +3098,16 @@ void asd_sta_roaming_management(struct sta_info *new_sta)
 	struct asd_data *owasd = old_sta->wasd;
 	struct asd_data *nwasd = new_sta->wasd;
 	unsigned char SID = 0;
+	asd_printf(ASD_DEFAULT,MSG_DEBUG,"func:%s \n",__func__);			
 	if(owasd->WlanID != nwasd->WlanID){
-		asd_sta_hash_del(old_sta);
+		asd_printf(ASD_DEFAULT,MSG_INFO,"func:%s (owasd->WlanID != nwasd->WlanID),old_sta->addr: %s\n",__func__,old_sta->addr);		
+	    ap_free_sta(owasd,old_sta,0);
+        //asd_sta_hash_del(old_sta);
 		return;
 	}
 	SID = ASD_WLAN[nwasd->WlanID]->SecurityID;
 	if(owasd->BSSIndex != nwasd->BSSIndex){
-		asd_printf(ASD_DEFAULT,MSG_DEBUG,"func:%s roaming\n",__func__);
+		asd_printf(ASD_DEFAULT,MSG_DEBUG,"func:%s owasd->BSSIndex != nwasd->BSSIndex\n",__func__);
 		if(old_sta->ipaddr != 0 && new_sta->ipaddr == 0){
 			new_sta->ipaddr = old_sta->ipaddr;
 			new_sta->ip_addr.s_addr = old_sta->ip_addr.s_addr;
@@ -3110,20 +3129,29 @@ void asd_sta_roaming_management(struct sta_info *new_sta)
 			ASD_WLAN[nwasd->WlanID]->sta_roaming_times++;
 			ASD_WLAN[nwasd->WlanID]->r_num_sta++;
 		}
-		if(ASD_WLAN[nwasd->WlanID] && ASD_WLAN[nwasd->WlanID]->Roaming_Policy){
-			RoamingStaInfoToWSM_1(old_sta,WID_MODIFY);
-			RoamingStaInfoToWIFI_1(old_sta,WID_ADD);
+		/* end EAP of old sta */
+		if((ASD_SECURITY[SID])&&((ASD_SECURITY[SID]->securityType == WPA_E)||(ASD_SECURITY[SID]->securityType == WPA2_E)||(ASD_SECURITY[SID]->securityType == WPA_P)||(ASD_SECURITY[SID]->securityType == WPA2_P)||(ASD_SECURITY[SID]->securityType == IEEE8021X)||(ASD_SECURITY[SID]->securityType == MD5)||(ASD_SECURITY[SID]->extensible_auth == 1))){
+    		wpa_auth_sm_event(old_sta->wpa_sm, WPA_DEAUTH);
+    		mlme_deauthenticate_indication(owasd, old_sta, 0);
+    		ieee802_1x_notify_port_enabled(old_sta->eapol_sm, 0);
+	    }
+		/* delete old sta frist */
+	    asd_printf(ASD_DEFAULT,MSG_DEBUG,"func:%s delete the old_sta frist\n",__func__);				
+		ap_free_sta(owasd,old_sta,0);
+		
+	    if(ASD_WLAN[nwasd->WlanID] && ASD_WLAN[nwasd->WlanID]->Roaming_Policy){
+			RoamingStaInfoToWSM_1(new_sta,WID_MODIFY);
+			RoamingStaInfoToWIFI_1(new_sta,WID_ADD);
 			ACGroupRoamingCheck(nwasd->WlanID,nwasd,new_sta->addr);
 		}else{
 			UpdateStaInfoToWSM(nwasd, new_sta->addr, WID_ADD);	
 		}
-		if((ASD_SECURITY[SID])&&((ASD_SECURITY[SID]->securityType == WPA_E)||(ASD_SECURITY[SID]->securityType == WPA2_E)||(ASD_SECURITY[SID]->securityType == WPA_P)||(ASD_SECURITY[SID]->securityType == WPA2_P)||(ASD_SECURITY[SID]->securityType == IEEE8021X)||(ASD_SECURITY[SID]->securityType == MD5)||(ASD_SECURITY[SID]->extensible_auth == 1))){
-			wpa_auth_sm_event(old_sta->wpa_sm, WPA_DEAUTH);
-			mlme_deauthenticate_indication(
-				owasd, old_sta, 0);
-			ieee802_1x_notify_port_enabled(old_sta->eapol_sm, 0);
-		}
-		ap_free_sta(owasd,old_sta,0);
+	}
+	else
+	{
+		/* if the same sta add in the same bss, delete old_sta.*/
+		asd_printf(ASD_DEFAULT,MSG_INFO,"%s (owasd->BSSIndex != nwasd->BSSIndex): %d\n",__func__,nwasd->BSSIndex);		
+	    ap_free_sta(owasd,old_sta,0);		
 	}
 }
 
