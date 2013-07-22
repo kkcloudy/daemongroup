@@ -675,6 +675,11 @@ int sample_rtmd_get_interface_flow(struct sample_rtmd_info *info, int *ifnum, st
 		pos[i].stats.tx_fifo_errors = buf[i].stats.tx_fifo_errors;
 		pos[i].stats.tx_heartbeat_errors = buf[i].stats.tx_heartbeat_errors;
 		pos[i].stats.tx_window_errors = buf[i].stats.tx_window_errors;
+
+		syslog(LOG_DEBUG, "sample_rtmd_get_interface_flow %d:ifname=%s tx_packets=%llu"	\
+					" rx_packets=%llu tx_bytes=%llu rx_bytes=%llu\n",	\
+					i, buf[i].name, buf[i].stats.tx_packets, buf[i].stats.rx_packets,
+					buf[i].stats.tx_bytes, buf[i].stats.rx_bytes);
 	}
 	*data = pos;
 	return AS_RTN_OK;
