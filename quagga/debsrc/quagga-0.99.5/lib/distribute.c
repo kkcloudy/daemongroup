@@ -395,7 +395,6 @@ DEFUN (distribute_list,
        "Interface name\n")
 {
   enum distribute_type type;
-  struct distribute *dist;
 
   /* Check of distribute list type. */
   if (strncmp (argv[1], "i", 1) == 0)
@@ -409,7 +408,7 @@ DEFUN (distribute_list,
     }
 
   /* Get interface name corresponding distribute list. */
-  dist = distribute_list_set (argv[2], type, argv[0]);
+  distribute_list_set (argv[2], type, argv[0]);
 
   return CMD_SUCCESS;
 }       

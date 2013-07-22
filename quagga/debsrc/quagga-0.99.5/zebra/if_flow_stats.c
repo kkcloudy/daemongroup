@@ -805,7 +805,7 @@ rtm_recv_message_from_se_agent(struct thread *thread)
 	if(NULL == process_information)
 		return -1;
 	/*Add check fd when recvfrom.*/
-	if (sock < 0)
+	if (sock <= 0)
 	{
 	 	zlog_warn("%s: rtmd connect se_agent fd < 0.\n",__func__);
 	 	return -1;
@@ -851,7 +851,7 @@ rtm_recv_message_from_se_agent(struct thread *thread)
 	/*CID 18165 (#1 of 1): Argument cannot be negative (REVERSE_NEGATIVE)
 	  check_after_sink: You might be using variable "process_se_agent->sock" before verifying that it is >= 0. 
 	 So add check fd when recvfrom above.*/
-	if (sock < 0)
+	if (sock <= 0)
 	{
 		/* Connection was closed during packet processing. */
 		zlog_warn("%s: After recvfrom se_agent fd is break.\n",__func__);
@@ -1189,7 +1189,7 @@ rtm_if_flow_event (enum if_flow_events event, int sock, process_info *process_in
 				process_information->name_type = PROCESS_NAME_SE_AGENT;
 				if(process_information->ibuf)
 					stream_reset (process_information->ibuf);
-				if(process_information->ibuf)
+				if(process_information->obuf)
 					stream_reset (process_information->obuf);
 				if(process_information->wb)
 					buffer_reset(process_information->wb);
