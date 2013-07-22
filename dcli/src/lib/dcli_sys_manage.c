@@ -1919,7 +1919,7 @@ DEFUN(config_pfm_cmd_func2,
 	)
 
 {
-	int ifindex ;
+	int ifindex = 0;
 	unsigned int src_port , dest_port;
 	unsigned short protocol;/**tcp : 6, udp :17**/
 	int slot ;
@@ -1958,12 +1958,13 @@ DEFUN(config_pfm_cmd_func2,
      }
 	
 	command_send_to = get_slot_num_dcli(argv[3]);
-
+/*
 	    if(ifindex == 0)
 	     {
 	   vty_out(vty,"Get interface %s ifindex failed.\n",argv[3]);
 		   return CMD_WARNING;
 	     }
+*/
     #if 0
  	if(CMD_SUCCESS != ip_address_format2ulong((char **)&argv[4],&src_ipaddr,&src_ipmask))/**check the ip address is correct **/
 	{
@@ -5685,7 +5686,7 @@ DEFUN (show_all_slot_sys_info_func,
 			"make service enable\n "
 			"make service disable\n ")
 {
-	DBusMessage *query, *reply;
+	DBusMessage *query=NULL, *reply=NULL;
 	DBusError err;
 	int i;
 	char *ret;
@@ -5725,8 +5726,9 @@ DEFUN (show_all_slot_sys_info_func,
 			}
 		}
 	}
+	if(query)
 	dbus_message_unref(query);
-	
+	if(reply)
 	dbus_message_unref(reply);
 
 	return CMD_SUCCESS;

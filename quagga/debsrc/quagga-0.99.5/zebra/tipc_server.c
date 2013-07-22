@@ -6222,7 +6222,7 @@ vice_send_request_message_to_master (tipc_server *vice_board, int command)
   stream_reset (s);
 
   /* Send very simple command only Zebra message. */
-  tipc_packet_create_header (s, command);
+  tipc_packet_create_header (s, (uint16_t)command);
   
   stream_putw_at (s, 0, stream_get_endp (s));
   
