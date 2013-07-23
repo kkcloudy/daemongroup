@@ -689,6 +689,23 @@ typedef struct vlan_list_distributed{
 }vlan_list_t;
 extern vlan_list_t* g_vlanlist;
 extern vlan_list_t* g_vlanback;
+typedef struct asic_cscd_bport_s{
+    char cscd_port;
+	char master;
+	char asic_id;
+	char bport;
+	char trunk_id;
+}asic_cscd_bport_t;
+
+typedef struct asic_board_cscd_bport_s {
+    char board_type;
+	char slot_id;
+	char slot_num;
+	char asic_cscd_port_cnt;
+	char asic_to_cpu_ports;
+	asic_cscd_bport_t asic_cscd_bports[16];
+}asic_board_cscd_bport_t;
+extern asic_board_cscd_bport_t* g_bportlist;
 /* Add end */
 
 #define MAX_CPU_PORT_NUM 16     /* max cpu port num on per board,8 * cpu_num */

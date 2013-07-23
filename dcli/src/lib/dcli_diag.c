@@ -48,7 +48,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "util/npd_list.h"
 #include "npd/nam/npd_amapi.h"
-
+#include <sys/mman.h> 
 #include "dcli_system.h"
 #include "dcli_diag.h"
 #include "dcli_main.h"   /* for dbus_connection_dcli[] */
@@ -56,6 +56,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "sysdef/returncode.h"
 
 extern DBusConnection *dcli_dbus_connection;
+extern int is_distributed;
 
 unsigned char *dcli_mac_regtype[] = {	\
 /*   0 */	"command_config",
@@ -5154,7 +5155,7 @@ DEFUN(Diagnosis_set_ap_fake_singal_strength_cmd_func,
 		if (dbus_error_is_set(&err)) 
 		{
 			vty_out(vty, "%s raised: %s", err.name, err.message);
-			dbus_error_free(&err);
+			dbus_error_free_for_dcli(&err);
 		}
 		return CMD_WARNING ;
 	}
@@ -5167,7 +5168,7 @@ DEFUN(Diagnosis_set_ap_fake_singal_strength_cmd_func,
 		if (dbus_error_is_set(&err)) 
 		{
 			vty_out(vty, "%s raised: %s\n", err.name, err.message);
-			dbus_error_free(&err);
+			dbus_error_free_for_dcli(&err);
 		}
 	}
 	dbus_message_unref(reply);
@@ -5208,7 +5209,7 @@ DEFUN(Diagnosis_set_ap_fake_singal_strength_default_cmd_func,
 		if (dbus_error_is_set(&err)) 
 		{
 			vty_out(vty, "%s raised: %s", err.name, err.message);
-			dbus_error_free(&err);
+			dbus_error_free_for_dcli(&err);
 		}
 		return CMD_WARNING ;
 	}
@@ -5221,13 +5222,441 @@ DEFUN(Diagnosis_set_ap_fake_singal_strength_default_cmd_func,
 		if (dbus_error_is_set(&err)) 
 		{
 			vty_out(vty, "%s raised: %s\n", err.name, err.message);
-			dbus_error_free(&err);
+			dbus_error_free_for_dcli(&err);
 		}
 	}
 	dbus_message_unref(reply);
 	return CMD_SUCCESS;  
 }
 
+DEFUN(diagnosis_get_conntable_func,
+		diagnosis_get_conntable_cmd,
+		"show connect_table list",
+		SHOW_STR
+		"Show connect_table list\n"
+		"Show connect_table list\n"
+) 
+{
+
+    int slot_id,i,ret=-1;
+	if(is_distributed == DISTRIBUTED_SYSTEM)	
+    {
+
+        int slot_count = get_product_info(SEM_SLOT_COUNT_PATH);
+		
+		int fd = -1;
+		struct stat sb;
+		asic_board_cscd_bport_t * mem_gbports_list = NULL;
+    	char* file_path = "/dbm/shm/connect_table/shm_conntable";
+		
+    	int local_slot_id = get_product_info(SEM_LOCAL_SLOT_ID_PATH);
+        int slotNum = get_product_info(SEM_SLOT_COUNT_PATH);
+        if((local_slot_id<0)||(slotNum<0))
+        {
+        	vty_out(vty,"get_product_info() return -1,Please check dbm file !\n");
+    		return CMD_WARNING;			
+        }
+        if(slotNum<6)
+        {
+        	vty_out(vty,"can`t run in 3 slot product !\n");
+    		return CMD_WARNING;			
+        }		
+		
+		/* only read file */
+	    fd = open(file_path, O_RDONLY);
+    	if(fd < 0)
+        {
+            vty_out(vty,"Failed to open! %s\n", strerror(errno));
+            return NULL;
+        }
+		fstat(fd,&sb);
+		/* map not share */	
+        mem_gbports_list = (asic_board_cscd_bport_t *)mmap(NULL, sb.st_size, PROT_READ, MAP_PRIVATE, fd, 0 );
+        if(MAP_FAILED == mem_gbports_list)
+        {
+            vty_out(vty,"Failed to mmap for mem_gbports_list[]! %s\n", strerror(errno));
+			close(fd);
+            return NULL;
+        }	    
+    	vty_out(vty,"%-12s  %-25s  %-40s\n","CSCD_PORT","SUME_PORT","TRUNK_ID");
+    	vty_out(vty,"============      ======================  ========\n");			
+        for(slot_id=0;slot_id<slotNum;slot_id++)
+        {
+            if(mem_gbports_list[slot_id].board_type == -1)
+				continue;
+			for(i=0;i<(mem_gbports_list[slot_id].asic_cscd_port_cnt+mem_gbports_list[slot_id].asic_to_cpu_ports);i++)
+			{
+                if(mem_gbports_list[slot_id].asic_cscd_bports[i].master<3)
+    			{
+                	vty_out(vty, "slot%d-port%-3d===> ve%02d%s%d--------\n",\
+                				            mem_gbports_list[slot_id].slot_id,\
+                				            mem_gbports_list[slot_id].asic_cscd_bports[i].cscd_port,\
+                				            mem_gbports_list[slot_id].slot_id,\
+                				            (mem_gbports_list[slot_id].asic_cscd_bports[i].master==1)?"f":"s",\
+                				            mem_gbports_list[slot_id].asic_cscd_bports[i].bport); 
+				}
+				else
+				{
+        			vty_out(vty,"slot%d-port%-3d===> SUM_slot%d-lion%d_port%d    trunk%d\n",\
+        				            mem_gbports_list[slot_id].slot_id,\
+        				            mem_gbports_list[slot_id].asic_cscd_bports[i].cscd_port,\
+        				            mem_gbports_list[slot_id].asic_cscd_bports[i].master,\
+        				            mem_gbports_list[slot_id].asic_cscd_bports[i].asic_id,\
+        				            mem_gbports_list[slot_id].asic_cscd_bports[i].bport,\
+        				            mem_gbports_list[slot_id].asic_cscd_bports[i].trunk_id);				           
+				}
+			}
+		}
+		vty_out(vty,"======================================================\n");
+
+        ret = munmap(mem_gbports_list,sb.st_size);
+        if( ret != 0 )
+        {
+            vty_out(vty,"Failed to munmap for mem_gbports_list[]! %s\n", strerror(errno));			
+        }	
+		ret = close(fd);
+		if( ret != 0 )
+        {
+            vty_out(vty,"close shm_conntable failed \n" );   
+        }
+        /*free(vlanName);*/
+        return CMD_SUCCESS;		
+    }
+}
+
+
+
+
+
+int get_asic_mib(struct vty *vty,int slot_id,unsigned char opDevice,unsigned char portNum, unsigned int *portStat)
+{
+	DBusMessage *query = NULL, *reply = NULL;
+	DBusError err = {0};
+	DBusMessageIter	 iter;
+	
+	unsigned int ret = 0, j=0;
+
+    /* get devnum */
+	if((0!=opDevice)&&(1!=opDevice)) 
+	{
+		vty_out(vty,"%% Bad devnum %s!\n", opDevice);
+		return CMD_WARNING;
+	}
+
+	/* get port num*/
+	if((portNum < 0)||(portNum > 64))
+	{
+		vty_out(vty,"%% Bad port %s!\n", portNum);
+		return CMD_WARNING;	
+	}
+	int local_slot_id = get_product_info("/dbm/local_board/slot_id");
+	query = dbus_message_new_method_call(
+							   NPD_DBUS_BUSNAME,
+							   NPD_DBUS_OBJPATH,
+							   NPD_DBUS_INTERFACE,
+							   NPD_DBUS_SYSTEM_DIAG_READ_ASIC_MIB);
+	dbus_error_init(&err);
+
+
+	/* opType is no use */
+	dbus_message_append_args(	query,
+								DBUS_TYPE_BYTE,&opDevice,
+								DBUS_TYPE_BYTE,&portNum,								
+							 	DBUS_TYPE_INVALID);
+
+    if(NULL == dbus_connection_dcli[slot_id]->dcli_dbus_connection) 				
+	{
+		if(slot_id == local_slot_id)
+		{
+            reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection,query,-1, &err);
+		}
+		else 
+		{	
+		    /* here do not print "Can not connect to slot:5 " */	
+		   	vty_out(vty,"Can not connect to slot:%d \n",slot_id);	
+    		return CMD_WARNING;
+		}
+    }
+	else
+	{
+        reply = dbus_connection_send_with_reply_and_block (dbus_connection_dcli[slot_id]->dcli_dbus_connection,query,-1, &err);				
+	}
+
+
+	dbus_message_unref(query);
+	if (NULL == reply) {		
+		vty_out(vty,"failed get reply.\n"); 
+		if (dbus_error_is_set(&err)) {
+			vty_out(vty,"%s raised: %s",err.name,err.message);
+			dbus_error_free(&err);
+		}
+		return CMD_WARNING;
+	}
+	
+	dbus_message_iter_init(reply,&iter);	
+		
+	for(j = 0; j < 70; j++) {
+		dbus_message_iter_get_basic(&iter,&(portStat[j]));
+		dbus_message_iter_next(&iter);	
+	}
+/*	
+	vty_out(vty, "Asic detailed info as follow:\n", opDevice,portNum);
+	vty_out(vty, "------------------------------------------\n");	
+	vty_out(vty, "%-20s %-10s %-10s\n","DESCRIPTION","32BitH","32BitL");	
+	vty_out(vty, "%-20s %-10s %-10s\n","--------------------","----------","----------");
+	vty_out(vty, "-------------------- RX ------------------\n");	
+	
+	vty_out(vty, "%-20s %-10u %-10u\n","goodOctetsRcv", portStat[1],portStat[0]);
+	vty_out(vty, "%-20s %-10u %-10u\n","badOctetsRcv", portStat[3],portStat[2]);
+	vty_out(vty, "%-20s %-10u %-10u\n","goodPktsRcv", portStat[7],portStat[6]);
+	vty_out(vty, "%-20s %-10u %-10u\n","badPktsRcv", portStat[9],portStat[8]);
+	vty_out(vty, "%-20s %-10u %-10u\n","ucPktsRcv", portStat[63],portStat[62]);
+	vty_out(vty, "%-20s %-10u %-10u\n","brdcPktsRcv", portStat[11],portStat[10]);	
+	vty_out(vty, "%-20s %-10u %-10u\n","mcPktsRcv", portStat[13],portStat[12]);
+	vty_out(vty, "%-20s %-10u %-10u\n","unrecogMacCntrRcv", portStat[37],portStat[36]);
+	vty_out(vty, "%-20s %-10u %-10u\n","goodFcRcv", portStat[41],portStat[40]);
+	vty_out(vty, "%-20s %-10u %-10u\n","badFcRcv", portStat[61],portStat[60]);
+	vty_out(vty, "%-20s %-10u %-10u\n","dropEvents", portStat[43],portStat[42]);
+	vty_out(vty, "%-20s %-10u %-10u\n","undersizePkts", portStat[45],portStat[44]);
+	vty_out(vty, "%-20s %-10u %-10u\n","fragmentsPkts", portStat[47],portStat[46]);
+	vty_out(vty, "%-20s %-10u %-10u\n","oversizePkts", portStat[49],portStat[48]);
+	vty_out(vty, "%-20s %-10u %-10u\n","jabberPkts", portStat[51],portStat[50]);
+	vty_out(vty, "%-20s %-10u %-10u\n","badCrc", portStat[55],portStat[54]);
+	vty_out(vty, "%-20s %-10u %-10u\n","macRcvError", portStat[53],portStat[52]);
+
+	vty_out(vty, "-------------------- TX ------------------\n");	
+	vty_out(vty, "%-20s %-10u %-10u\n","goodOctetsSent", portStat[27],portStat[26]);
+	vty_out(vty, "%-20s %-10u %-10u\n","goodPktsSent", portStat[29],portStat[28]);
+	vty_out(vty, "%-20s %-10u %-10u\n","ucPktsSent", portStat[65],portStat[64]);
+	vty_out(vty, "%-20s %-10u %-10u\n","brdcPktsSent", portStat[35],portStat[34]);
+	vty_out(vty, "%-20s %-10u %-10u\n","mcPktsSent", portStat[33],portStat[32]);
+	vty_out(vty, "%-20s %-10u %-10u\n","fcSent", portStat[39],portStat[38]);
+	vty_out(vty, "%-20s %-10u %-10u\n","multiplePktsSent", portStat[67],portStat[66]);
+	vty_out(vty, "%-20s %-10u %-10u\n","deferredPktsSent", portStat[69],portStat[68]);
+	vty_out(vty, "%-20s %-10u %-10u\n","macTransmitErr", portStat[5],portStat[4]);
+
+	vty_out(vty, "-------------------- Both ----------------\n");	
+	vty_out(vty, "%-20s %-10u %-10u\n","pkts64Octets", portStat[15],portStat[14]);
+	vty_out(vty, "%-20s %-10u %-10u\n","pkts65to127Octets", portStat[17],portStat[16]);
+	vty_out(vty, "%-20s %-10u %-10u\n","pkts128to255Octets", portStat[19],portStat[18]);
+	vty_out(vty, "%-20s %-10u %-10u\n","pkts256to511Octets", portStat[21],portStat[20]);
+	vty_out(vty, "%-20s %-10u %-10u\n","pkts512to1023Octets", portStat[23],portStat[22]);
+	vty_out(vty, "%-20s %-10u %-10u\n","pkts1024tomaxOoctets", portStat[25],portStat[24]);
+
+	vty_out(vty, "%-20s %-10u %-10u\n","collisions", portStat[57],portStat[56]);
+	vty_out(vty, "%-20s %-10u %-10u\n","lateCollisions", portStat[59],portStat[58]);
+	vty_out(vty, "%-20s %-10u %-10u\n","excessiveCollisions", portStat[31],portStat[30]);
+	vty_out(vty, "------------------------------------------\n");
+*/	
+    #if 0	
+	vty_out(vty, "%-15s %-10u %-10u\n","RxGoodPkts", portStat[1],portStat[0]);
+	vty_out(vty, "%-15s %-10u %-10u\n","RxBadPkts", portStat[3],portStat[2]);
+	vty_out(vty, "%-15s %-10u %-10u\n","RxGoodBytes", portStat[5],portStat[4]);
+	vty_out(vty, "%-15s %-10u %-10u\n","RxBadBytes", portStat[7],portStat[6]);
+	vty_out(vty, "%-15s %-10u %-10u\n","RxInternalDrop", portStat[9],portStat[8]);
+
+	vty_out(vty, "%-15s %-10u %-10u\n","Rx_BC_pkts", portStat[11],portStat[10]);
+	vty_out(vty, "%-15s %-10u %-10u\n","Rx_UC_pkts", portStat[13],portStat[12]);
+
+
+	
+	vty_out(vty, "%-15s %-10u %-10u\n","TxGoodPkts", portStat[15],portStat[14]);
+	vty_out(vty, "%-15s %-10u %-10u\n","TxGoodBytes", portStat[17],portStat[16]);
+	vty_out(vty, "%-15s %-10u %-10u\n","TxMacError", portStat[19],portStat[18]);
+
+	vty_out(vty, "%-15s %-10u %-10u\n","Tx_BC_pkts", portStat[21],portStat[20]);
+	vty_out(vty, "%-15s %-10u %-10u\n","Tx_UC_pkts", portStat[23],portStat[22]);
+	
+	vty_out(vty, "----------------------------------------\n");
+	#endif
+				
+	dbus_message_unref(reply);
+	/* end */
+	return CMD_SUCCESS;  
+}
+
+
+
+
+
+
+DEFUN(diagnosis_get_conntable_mib_func,
+		diagnosis_get_conntable_mib_cmd,
+		"show connect_table mib",
+		SHOW_STR
+		"Show connect_table mib\n"
+		"Show connect_table mib\n"
+) 
+{
+
+    int slot_id,i,ret=-1;
+	unsigned int local_portStat[70]={0},sum_portStat[70]={0};
+	if(is_distributed == DISTRIBUTED_SYSTEM)	
+    {
+
+        int slot_count = get_product_info(SEM_SLOT_COUNT_PATH);
+		
+		int fd = -1;
+		struct stat sb;
+		asic_board_cscd_bport_t * mem_gbports_list = NULL;
+    	char* file_path = "/dbm/shm/connect_table/shm_conntable";
+		
+    	int local_slot_id = get_product_info(SEM_LOCAL_SLOT_ID_PATH);
+        int slotNum = get_product_info(SEM_SLOT_COUNT_PATH);
+        if((local_slot_id<0)||(slotNum<0))
+        {
+        	vty_out(vty,"get_product_info() return -1,Please check dbm file !\n");
+    		return CMD_WARNING;			
+        }
+        if(slotNum<6)
+        {
+        	vty_out(vty,"can`t run in 3 slot product !\n");
+    		return CMD_WARNING;			
+        }		
+		
+		/* only read file */
+	    fd = open(file_path, O_RDONLY);
+    	if(fd < 0)
+        {
+            vty_out(vty,"Failed to open! %s\n", strerror(errno));
+            return NULL;
+        }
+		fstat(fd,&sb);
+		/* map not share */	
+        mem_gbports_list = (asic_board_cscd_bport_t *)mmap(NULL, sb.st_size, PROT_READ, MAP_PRIVATE, fd, 0 );
+        if(MAP_FAILED == mem_gbports_list)
+        {
+            vty_out(vty,"Failed to mmap for mem_gbports_list[]! %s\n", strerror(errno));
+			close(fd);
+            return NULL;
+        }	  
+		
+        for(slot_id=0;slot_id<slotNum;slot_id++)
+        {
+			if(mem_gbports_list[slot_id].board_type == -1)
+				continue;
+			for(i=0;i<(mem_gbports_list[slot_id].asic_cscd_port_cnt+mem_gbports_list[slot_id].asic_to_cpu_ports);i++)
+			{   
+				if(mem_gbports_list[slot_id].asic_cscd_bports[i].master<3)
+    			{
+                	vty_out(vty, "-----------------------slot%d-port%d <===> ve%02d%s%d--------\n",\
+                				            mem_gbports_list[slot_id].slot_id,\
+                				            mem_gbports_list[slot_id].asic_cscd_bports[i].cscd_port,\
+                				            mem_gbports_list[slot_id].slot_id,\
+                				            (mem_gbports_list[slot_id].asic_cscd_bports[i].master==1)?"f":"s",\
+                				            mem_gbports_list[slot_id].asic_cscd_bports[i].bport); 
+                	vty_out(vty, "-----------------------the asic-mib will return in next ver--------\n");
+				}
+			    else
+                {   
+                    ret=get_asic_mib(vty, mem_gbports_list[slot_id].asic_cscd_bports[i].master, \
+    					                mem_gbports_list[slot_id].asic_cscd_bports[i].asic_id, \
+                            mem_gbports_list[slot_id].asic_cscd_bports[i].bport, sum_portStat);
+            		if( ret != 0 )
+                    {
+                        vty_out(vty,"get_asic_mib from SUM_slot%d-lion%d_port%d failed \n",
+							                mem_gbports_list[slot_id].asic_cscd_bports[i].master,\
+                				            mem_gbports_list[slot_id].asic_cscd_bports[i].asic_id,\
+                				            mem_gbports_list[slot_id].asic_cscd_bports[i].bport);
+						continue;
+                    }
+    				ret=get_asic_mib(vty, mem_gbports_list[slot_id].slot_id, 0, \
+                            mem_gbports_list[slot_id].asic_cscd_bports[i].cscd_port, local_portStat);
+            		if( ret != 0 )
+                    {
+                        vty_out(vty,"get_asic_mib local_portStat failed \n" );   
+                    }
+
+                	vty_out(vty, "------------------------------------------\n");	
+                	vty_out(vty, "%-20s %-10s %-10s ===>    %-10s %-10s\n","DESCRIPTION","32BitH","32BitL","32BitH","32BitL");	
+                	vty_out(vty, "%-20s %-10s %-10s ===>    %-10s %-10s\n","--------------------","----------","----------","----------","----------");
+                	vty_out(vty, "                    slot%d-port%d           ===>=>   SUM_slot%d-lion%d_port%d\n",\
+                				            mem_gbports_list[slot_id].slot_id,\
+                				            mem_gbports_list[slot_id].asic_cscd_bports[i].cscd_port,\
+                				            mem_gbports_list[slot_id].asic_cscd_bports[i].master,\
+                				            mem_gbports_list[slot_id].asic_cscd_bports[i].asic_id,\
+                				            mem_gbports_list[slot_id].asic_cscd_bports[i].bport);	
+    	
+                	vty_out(vty, "%-20s %-10u %-10u ===>    %-10u %-10u\n","goodOctetsRcv", local_portStat[27],local_portStat[26], sum_portStat[1],sum_portStat[0]);
+                	vty_out(vty, "%-20s %-10s %-10s ===>    %-10u %-10u\n","badOctetsRcv", "-","-", sum_portStat[3],sum_portStat[2]);
+                	vty_out(vty, "%-20s %-10u %-10u ===>    %-10u %-10u\n","goodPktsRcv", local_portStat[29],local_portStat[28], sum_portStat[7],sum_portStat[6]);
+                	vty_out(vty, "%-20s %-10s %-10s ===>    %-10u %-10u\n","badPktsRcv", "-","-", sum_portStat[9],sum_portStat[8]);
+                	vty_out(vty, "%-20s %-10u %-10u ===>    %-10u %-10u\n","ucPktsRcv", local_portStat[65],local_portStat[64], sum_portStat[63],sum_portStat[62]);
+                	vty_out(vty, "%-20s %-10u %-10u ===>    %-10u %-10u\n","brdcPktsRcv", local_portStat[35],local_portStat[34], sum_portStat[11],sum_portStat[10]);	
+                	vty_out(vty, "%-20s %-10u %-10u ===>    %-10u %-10u\n","mcPktsRcv", local_portStat[33],local_portStat[32], sum_portStat[13],sum_portStat[12]);
+                	vty_out(vty, "%-20s %-10s %-10s ===>    %-10u %-10u\n","unrecogMacCntrRcv", "-","-", sum_portStat[37],sum_portStat[36]);
+                	vty_out(vty, "%-20s %-10u %-10u ===>    %-10u %-10u\n","goodFcRcv", local_portStat[39],local_portStat[38], sum_portStat[41],sum_portStat[40]);
+                	vty_out(vty, "%-20s %-10s %-10s ===>    %-10u %-10u\n","badFcRcv", "-","-", sum_portStat[61],sum_portStat[60]);
+                	vty_out(vty, "%-20s %-10s %-10s ===>    %-10u %-10u\n","dropEvents", "-","-", sum_portStat[43],sum_portStat[42]);
+                	vty_out(vty, "%-20s %-10s %-10s ===>    %-10u %-10u\n","undersizePkts", "-","-", sum_portStat[45],sum_portStat[44]);
+                	vty_out(vty, "%-20s %-10s %-10s ===>    %-10u %-10u\n","fragmentsPkts", "-","-", sum_portStat[47],sum_portStat[46]);
+                	vty_out(vty, "%-20s %-10s %-10s ===>    %-10u %-10u\n","oversizePkts", "-","-", sum_portStat[49],sum_portStat[48]);
+                	vty_out(vty, "%-20s %-10s %-10s ===>    %-10u %-10u\n","jabberPkts", "-","-", sum_portStat[51],sum_portStat[50]);
+                	vty_out(vty, "%-20s %-10s %-10s ===>    %-10u %-10u\n","badCrc", "-","-", sum_portStat[55],sum_portStat[54]);
+                	vty_out(vty, "%-20s %-10s %-10s ===>    %-10u %-10u\n","macRcvError", "-","-", sum_portStat[53],sum_portStat[52]);
+
+                	vty_out(vty, "                    slot%d-port%d           <=<==   SUM_slot%d-lion%d_port%d \n",\
+                				            mem_gbports_list[slot_id].slot_id,\
+                				            mem_gbports_list[slot_id].asic_cscd_bports[i].cscd_port,\
+                				            mem_gbports_list[slot_id].asic_cscd_bports[i].master,\
+                				            mem_gbports_list[slot_id].asic_cscd_bports[i].asic_id,\
+                				            mem_gbports_list[slot_id].asic_cscd_bports[i].bport);	
+                	
+                	vty_out(vty, "%-20s %-10u %-10u <===    %-10u %-10u\n","goodOctetsRcv", local_portStat[1],local_portStat[0], sum_portStat[27],sum_portStat[26]);
+                	vty_out(vty, "%-20s %-10u %-10u <===    %-10s %-10s\n","badOctetsRcv", local_portStat[3],local_portStat[2], "-","-");
+                	vty_out(vty, "%-20s %-10u %-10u <===    %-10u %-10u\n","goodPktsRcv", local_portStat[7],local_portStat[6], sum_portStat[29],sum_portStat[28]);
+                	vty_out(vty, "%-20s %-10u %-10u <===    %-10s %-10s\n","badPktsRcv", local_portStat[9],local_portStat[8], "-","-");
+                	vty_out(vty, "%-20s %-10u %-10u <===    %-10u %-10u\n","ucPktsRcv", local_portStat[63],local_portStat[62], sum_portStat[65],sum_portStat[64]);
+                	vty_out(vty, "%-20s %-10u %-10u <===    %-10u %-10u\n","brdcPktsRcv", local_portStat[11],local_portStat[10], sum_portStat[35],sum_portStat[34]);	
+                	vty_out(vty, "%-20s %-10u %-10u <===    %-10u %-10u\n","mcPktsRcv", local_portStat[13],local_portStat[12], sum_portStat[33],sum_portStat[32]);
+                	vty_out(vty, "%-20s %-10u %-10u <===    %-10s %-10s\n","unrecogMacCntrRcv", local_portStat[37],local_portStat[36], "-","-");
+                	vty_out(vty, "%-20s %-10u %-10u <===    %-10u %-10u\n","goodFcRcv", local_portStat[41],local_portStat[40], sum_portStat[39],sum_portStat[38]);
+                	vty_out(vty, "%-20s %-10u %-10u <===    %-10s %-10s\n","badFcRcv", local_portStat[61],local_portStat[60], "-","-");
+                	vty_out(vty, "%-20s %-10u %-10u <===    %-10s %-10s\n","dropEvents", local_portStat[43],local_portStat[42], "-","-");
+                	vty_out(vty, "%-20s %-10u %-10u <===    %-10s %-10s\n","undersizePkts", local_portStat[45],local_portStat[44], "-","-");
+                	vty_out(vty, "%-20s %-10u %-10u <===    %-10s %-10s\n","fragmentsPkts", local_portStat[47],local_portStat[46], "-","-");
+                	vty_out(vty, "%-20s %-10u %-10u <===    %-10s %-10s\n","oversizePkts", local_portStat[49],local_portStat[48], "-","-");
+                	vty_out(vty, "%-20s %-10u %-10u <===    %-10s %-10s\n","jabberPkts", local_portStat[51],local_portStat[50], "-","-");
+                	vty_out(vty, "%-20s %-10u %-10u <===    %-10s %-10s\n","badCrc", local_portStat[55],local_portStat[54], "-","-");
+                	vty_out(vty, "%-20s %-10u %-10u <===    %-10s %-10s\n","macRcvError", local_portStat[53],local_portStat[52], "-","-");
+
+
+
+
+
+                	vty_out(vty, "-------------------- Both ----------------\n");	
+                	vty_out(vty, "%-20s %-10u %-10u <==>    %-10u %-10u\n","pkts64Octets", local_portStat[15],local_portStat[14], sum_portStat[15],sum_portStat[14]);
+                	vty_out(vty, "%-20s %-10u %-10u <==>    %-10u %-10u\n","pkts65to127Octets", local_portStat[17],local_portStat[16], sum_portStat[17],sum_portStat[16]);
+                	vty_out(vty, "%-20s %-10u %-10u <==>    %-10u %-10u\n","pkts128to255Octets", local_portStat[19],local_portStat[18], sum_portStat[19],sum_portStat[18]);
+                	vty_out(vty, "%-20s %-10u %-10u <==>    %-10u %-10u\n","pkts256to511Octets", local_portStat[21],local_portStat[20], sum_portStat[21],sum_portStat[20]);
+                	vty_out(vty, "%-20s %-10u %-10u <==>    %-10u %-10u\n","pkts512to1023Octets", local_portStat[23],local_portStat[22], sum_portStat[23],sum_portStat[22]);
+                	vty_out(vty, "%-20s %-10u %-10u <==>    %-10u %-10u\n","pkts1024tomaxOoctets", local_portStat[25],local_portStat[24], sum_portStat[25],sum_portStat[24]);
+
+                	vty_out(vty, "%-20s %-10u %-10u <==>    %-10u %-10u\n","collisions", local_portStat[57],local_portStat[56], sum_portStat[57],sum_portStat[56]);
+                	vty_out(vty, "%-20s %-10u %-10u <==>    %-10u %-10u\n","lateCollisions", local_portStat[59],local_portStat[58], sum_portStat[59],sum_portStat[58]);
+                	vty_out(vty, "%-20s %-10u %-10u <==>    %-10u %-10u\n","excessiveCollisions", local_portStat[31],local_portStat[30], sum_portStat[31],sum_portStat[30]);
+                	vty_out(vty, "--------------------------------------------------------------------------------\n");
+    			
+    			}
+			}
+	           
+        }
+		vty_out(vty,"\n=====================================================================\n");
+
+        ret = munmap(mem_gbports_list,sb.st_size);
+        if( ret != 0 )
+        {
+            vty_out(vty,"Failed to munmap for mem_gbports_list[]! %s\n", strerror(errno));			
+        }	
+		ret = close(fd);
+		if( ret != 0 )
+        {
+            vty_out(vty,"close shm_conntable failed \n" );   
+        }
+        /*free(vlanName);*/
+        return CMD_SUCCESS;		
+}
+}
 
 void dcli_diag_init(void) {
 	install_element(HIDDENDEBUG_NODE,&Diagnosis_hw_phy_read_reg_cmd);
@@ -5287,6 +5716,10 @@ void dcli_diag_init(void) {
 	install_element(HIDDENDEBUG_NODE, &diagnosis_board_test_cmd);
 	install_element(HIDDENDEBUG_NODE, &Diagnosis_set_ap_fake_singal_strength_cmd);
 	install_element(HIDDENDEBUG_NODE, &Diagnosis_set_ap_fake_singal_strength_default_cmd);
+	
+	install_element(HIDDENDEBUG_NODE, &diagnosis_get_conntable_cmd);
+	install_element(HIDDENDEBUG_NODE, &diagnosis_get_conntable_mib_cmd);
+	
 	
 }
 
