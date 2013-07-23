@@ -2501,6 +2501,16 @@ DEFUN (config_exit,
 	case TC_NODE:
 	case STRICT_ACCESS_NODE:
 	case SPACIAL_CONFIG_NODE:
+#ifdef _D_NANOCELL_
+	/* added by zhengbo for dsgd */
+	case DSGD_SELECTOR_NODE:
+	case DSGD_SA_NODE:
+	case DSGD_IPSEC_NODE:
+	case DSGD_POLICY_NODE:
+	case DSGD_REMOTE_NODE:
+	case DSGD_RESOLVER_NODE:
+	case DSGD_ADDRPOOL_NODE:
+#endif
 	case DNS_SER_NODE:
 	case FAST_FWD_NODE:  //add by pangyaoyang for fast_forward
 	case SLAVE_FAST_FWD_NODE:
@@ -2846,6 +2856,16 @@ DEFUN (config_end,
 	case STRICT_ACCESS_NODE:
 	case SPACIAL_CONFIG_NODE:
 	case RADIUS_NODE:
+#ifdef _D_NANOCELL_
+	/* added by zhengbo for dsgd */
+	case DSGD_SELECTOR_NODE:
+	case DSGD_SA_NODE:
+	case DSGD_IPSEC_NODE:
+	case DSGD_POLICY_NODE:
+	case DSGD_REMOTE_NODE:
+	case DSGD_RESOLVER_NODE:
+	case DSGD_ADDRPOOL_NODE:
+#endif
       vty_config_unlock (vty);
       vty->node = ENABLE_NODE;
 	  vty->slotindex = 0;
@@ -4028,6 +4048,16 @@ install_default (enum node_type node)
 	||node == HIDDEN_WLAN_NODE
 	||node == HIDDEN_SECURITY_NODE
 	||node == HIDDEN_CBAT_RADIO_NODE
+#endif
+#ifdef _D_NANOCELL_
+	/* added by zhengbo for dsgd */
+	||node == DSGD_SA_NODE
+	||node == DSGD_IPSEC_NODE
+	||node == DSGD_ADDRPOOL_NODE
+	||node == DSGD_REMOTE_NODE
+	||node == DSGD_POLICY_NODE
+	||node == DSGD_SELECTOR_NODE
+	||node == DSGD_RESOLVER_NODE
 #endif
   )
   {  
