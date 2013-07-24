@@ -243,32 +243,37 @@ int dl_dcli_init(boot_flag)
 
 
 /*******dcli_sem: wangchao add************/
-  dcli_dl_handle_sem = dlopen("libdcli_sem.so",RTLD_NOW);
-  if (!dcli_dl_handle_sem) {
+
+   if (dcli_dl_handle_sem = dlopen("libdcli_sem.so",RTLD_NOW)){
+
+		dcli_sem_init_func = dlsym(dcli_dl_handle_sem,"dcli_sem_init");
+        if ((error = dlerror()) != NULL) {
+             printf(" Run without dcli_sem_init be called.\n");
+             fputs(error,stderr);
+            //EXIT(1);
+        } 
+		else 
+        {
+             (*dcli_sem_init_func)(); 
+		}
+
+        dcli_fpga_init_func = dlsym(dcli_dl_handle_sem,"dcli_fpga_init");
+        if ((error = dlerror()) != NULL) {
+            printf(" Run without dcli_fpga_init be called.\n");
+            fputs(error,stderr);
+            //EXIT(1);
+        } 
+        else 
+        {
+            (*dcli_fpga_init_func)(); 
+        }
+		
+  }
+  else 
+  {
       fputs (dlerror(),stderr);
       printf(" Run without /opt/lib/libdcli_sem.so\n");
-      EXIT(1);
-      
   }
-  
-  dcli_sem_init_func = dlsym(dcli_dl_handle_sem,"dcli_sem_init");
-  if ((error = dlerror()) != NULL) {
-      printf(" Run without dcli_sem_init be called.\n");
-      fputs(error,stderr);
-      EXIT(1);
-  }
-
-  (*dcli_sem_init_func)(); 
-
-  dcli_fpga_init_func = dlsym(dcli_dl_handle_sem,"dcli_fpga_init");
-  if ((error = dlerror()) != NULL) {
-      printf(" Run without dcli_fpga_init be called.\n");
-      fputs(error,stderr);
-      EXIT(1);
-  }
-  (*dcli_fpga_init_func)(); 
-
-
 
   vtysh_send_dbus_signal_init();
   
