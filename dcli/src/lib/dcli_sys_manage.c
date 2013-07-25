@@ -139,8 +139,8 @@ int sync_file(char* temp,int syn_to_blk)
 		cli_syslog_info("failed get args.\n");
 		if (dbus_error_is_set(&err)) {
 			cli_syslog_info("%s raised: %s\n",err.name,err.message);
-			return CMD_WARNING;
 			dbus_error_free_for_dcli(&err);
+			return CMD_WARNING;
 		}
 		dbus_message_unref(reply);
 		return CMD_WARNING;
@@ -308,13 +308,17 @@ DEFUN (system_time,
 		if(fgets(buffer,100,fp))
 		{
 			tmpbuf = strchr(buffer,'.');
-			*tmpbuf = '\0';
-			timesec = atoi(buffer)+get_offset_time();
-			days = timesec/(24*60*60);
-			tmp = timesec %(24*60*60);
-			hours = tmp/(60*60);
-			tmp = tmp % (60*60);
-			minutes = tmp/60;
+			if(tmpbuf)
+			{
+				*tmpbuf = '\0';
+				timesec = atoi(buffer)+get_offset_time();
+				days = timesec/(24*60*60);
+				tmp = timesec %(24*60*60);
+				hours = tmp/(60*60);
+				tmp = tmp % (60*60);
+				minutes = tmp/60;
+
+			}
 		}
 		fclose(fp);
 
@@ -537,12 +541,16 @@ DEFUN (debug_time_slot_func,
 		if (b == buf) 
 			{
 				char *tmpbuf = strchr(buf,'.');
-				*tmpbuf = '\0';
-				uptime = atol(buf);	
-				if(uptime < 0)
+				if(tmpbuf)
 				{
-					fclose (fp);	 
-					return CMD_WARNING;
+					*tmpbuf = '\0';
+					uptime = atol(buf); 
+					if(uptime < 0)
+					{
+						fclose (fp);	 
+						return CMD_WARNING;
+					}
+
 				}
 			}
 		fclose (fp);	 
@@ -659,10 +667,15 @@ DEFUN (set_system_location_func,
        "System location\n"
        "System location description\n")
 {
-	char* location;
+	char* location = NULL;
 	int ret;
 	
 	location = argv_concat(argv, argc, 0);
+	if(!location)
+	{
+		vty_out(vty,"Can't get sys-location ,please checket");
+		return CMD_WARNING;
+	}
 	ret = set_sys_location(location);
 	XFREE(MTYPE_TMP,location);
 	return ret;
@@ -743,6 +756,12 @@ DEFUN (net_element_func,
 	int ret;
 	
 	net_element = argv_concat(argv, argc, 0);
+	
+	if(!net_element)
+	{
+		vty_out(vty,"Can't get net-element ,please checket");
+		return CMD_WARNING;
+	}
 	ret = set_net_element(net_element);
 	XFREE(MTYPE_TMP,net_element);
 	return ret;
@@ -1062,8 +1081,8 @@ DEFUN(show_dbus_session_cmd_func,
 		fprintf(stderr,"failed get args.\n");
 		if (dbus_error_is_set(&err)) {
 			fprintf(stderr,"%s raised: %s\n",err.name,err.message);
-			return CMD_WARNING;
 			dbus_error_free_for_dcli(&err);
+			return CMD_WARNING;
 		}
 		dbus_message_unref(reply);
 		return CMD_WARNING;
@@ -1565,27 +1584,25 @@ DEFUN(config_pfm_cmd_func,
 
 {
 	
-	if((is_distributed == 1) && (is_active_master == 0))
-	{
-		vty_out(vty,"only active master can enable/disable ssh/telnet\n");
-		return CMD_WARNING;
-	}
 	
-/*	if(argc == 4)
-	{
-		return CMD_WARNING;
-	}*/
 	int ifindex ;
 	unsigned int src_port = 0, dest_port;
 	unsigned short protocol;/**tcp : 6, udp :17**/
 	int slot ;
 	char* ipaddr ;
-	int opt ;
+	int opt = 1 ;
 	/*int forward_opt ;*/
 	int send_to_slot = 0;
 	int send_to_port = 0;
 	int ret;
 	char *cmd_str = NULL;
+
+	if((is_distributed == 1) && (is_active_master == 0))
+	{
+		vty_out(vty,"only active master can enable/disable ssh/telnet\n");
+		return CMD_WARNING;
+	}
+
 	
 	cmd_str = argv_concat(argv, 3,0);/**unit the cmd (only argv ,not include head "service") to a string ,used for save show running config**/
 										/**3 = argc -1, enable or disable not include**/
@@ -1868,6 +1885,7 @@ DEFUN(config_pfm_cmd_func,
 	if(ret != 0)
 	{
 		vty_out(vty,"The configuration has been.\n");
+		XFREE(MTYPE_TMP,cmd_str);
 		return CMD_WARNING;
 	}
 //enable pfm
@@ -1876,6 +1894,7 @@ DEFUN(config_pfm_cmd_func,
 	if(ret != 0)
 	{
 		vty_out(vty,"dbus send message error_enable\n");
+		XFREE(MTYPE_TMP,cmd_str);
 		return CMD_WARNING;
 	}
 	
@@ -1883,15 +1902,18 @@ DEFUN(config_pfm_cmd_func,
 	if(ret != 0)
 	{
 		vty_out(vty,"dbus send message error_table\n");
+		XFREE(MTYPE_TMP,cmd_str);
 		return CMD_WARNING;
 	}
 	
 	ret = pfm_setup_show_running_config(cmd_str, opt);/**when pfm set success , write the setup to a file  that used for show running.**/
 	if(ret != 0)
+	{
+		XFREE(MTYPE_TMP,cmd_str);
 		return CMD_WARNING;
+	}
 
-//	vtysh_pfm_config_write(vty);
-
+	XFREE(MTYPE_TMP,cmd_str);
 	return CMD_SUCCESS;
 	
 }
@@ -1931,9 +1953,6 @@ DEFUN(config_pfm_cmd_func2,
 	int send_to_port;
 	
 	int ret;
-	char *cmd_str = NULL;
-	
-	cmd_str = argv_concat(argv, 4,0);/**unit the cmd (only argv ,not include head "service") to a string ,used for save show running config**/
 									/**3 = argc -1, enable or disable not include**/	
 
 
@@ -2056,7 +2075,7 @@ DEFUN (service_pfm_log_func,
 //	ret = pfm_setup_show_running_config(cmd_str, !(opt_para));
 //	if(ret != 0)
 //		return CMD_WARNING;
-//		return CMD_SUCCESS;
+		return CMD_SUCCESS;
 
 }
 
@@ -5015,11 +5034,15 @@ pfm_dns_show_running_config(char *tmp_str, int opt)
 		fp = fopen(PFM_DNS_FILE,"w");
 		if(fp==NULL)
 		{
+			if(fpbk)
+				fclose(fpbk);
 			return 1;
 		}
 		fputs(setup_str,fp);
 		fclose(fp);
-		fclose(fpbk);
+		
+		if(fpbk)
+			fclose(fpbk);
 		unlink(PFM_DNS_FILE_BK);
 	}
 	else if(NULL == fpbk) 
@@ -5101,11 +5124,15 @@ pfm_radius_show_running_config(char *port,char *ip,char *ifname, int opt)
 		fp = fopen(PFM_RADIUS_FILE,"w");
 		if(fp==NULL)
 		{
+			if(fpbk)
+				fclose(fpbk);
 			return 1;
 		}
 		fputs(setup_str,fp);
 		fclose(fp);
-		fclose(fpbk);
+		
+		if(fpbk)
+			fclose(fpbk);
 		unlink(PFM_RADIUS_FILE_BK);
 	}
 	else if(NULL == fpbk) 
@@ -5785,6 +5812,8 @@ DEFUN (service_ip_dns_func,
 	ret = pfm_dns_show_running_config(temp_str, opt);
 	if(ret != 0)
 		return CMD_WARNING;
+
+	return CMD_SUCCESS;
 }
 
 DEFUN (service_radius_func,
@@ -5797,59 +5826,61 @@ DEFUN (service_radius_func,
 			"ifname\n"
 			"make service enable\n "
 			"make service disable\n ")
+{
+	
+	int ret;
+	int i;
+	int opt;
+	int fd;
+	int src_port;
+	unsigned int master_slotid = 0;
+	int command_send_to;
+	char *cmd_str = NULL;
+	char temp_str[128];
+	memset(temp_str,0,128);
+	src_port = atoi(argv[0]);
+	if(src_port < 0 || src_port > 65535)
+	 {
+	   vty_out(vty,"Input src_port err.<0--65535> !\n");
+	   return CMD_WARNING;
+	 }
+	command_send_to = get_slot_num_dcli(argv[2]);
+
+	if(strncmp("enable",argv[3],strlen(argv[3]))== 0)
+		opt = 0;
+	else
+		opt = 1;
+
+	if(0 == opt)
 	{
-		
-		int ret;
-		int i;
-		int opt;
-		int fd;
-		int src_port;
-		unsigned int master_slotid = 0;
-		int command_send_to;
-		char *cmd_str = NULL;
-		char temp_str[128];
-		memset(temp_str,0,128);
-		src_port = atoi(argv[0]);
-		if(src_port < 0 || src_port > 65535)
-		 {
-		   vty_out(vty,"Input src_port err.<0--65535> !\n");
-		   return CMD_WARNING;
-		 }
-		command_send_to = get_slot_num_dcli(argv[2]);
-	
-		if(strncmp("enable",argv[3],strlen(argv[3]))== 0)
-			opt = 0;
-		else
-			opt = 1;
-	
-		if(0 == opt)
-		{
-			ret = dcli_communicate_pfm_by_dbus(4, 0, 0, "all", 0, 0, 0, "all", "all",-1);/**use dbus send message to pfm**/
-			if(ret != 0)
-			{
-				vty_out(vty,"dbus send message error_enable\n");
-				return CMD_WARNING;
-			}
-		}
-		
-		fd = fopen("/dbm/product/master_slot_id", "r");
-		fscanf(fd, "%d", &master_slotid);
-		fclose(fd);
-	
-		
-		ret = dcli_communicate_pfm_by_dbus(opt, 0, 17, (char*)argv[2],src_port,0, master_slotid,
-											(char *)argv[1], "all",command_send_to);/*use dbus send message to pfm*/
+		ret = dcli_communicate_pfm_by_dbus(4, 0, 0, "all", 0, 0, 0, "all", "all",-1);/**use dbus send message to pfm**/
 		if(ret != 0)
 		{
-			vty_out(vty,"warning:pfm send error\n");
+			vty_out(vty,"dbus send message error_enable\n");
 			return CMD_WARNING;
 		}
-	
-	
-		ret = pfm_radius_show_running_config(argv[0],argv[1],argv[2], opt);
-		if(ret != 0)
-			return CMD_WARNING;
 	}
+	
+	fd = fopen("/dbm/product/master_slot_id", "r");
+	fscanf(fd, "%d", &master_slotid);
+	fclose(fd);
+
+	
+	ret = dcli_communicate_pfm_by_dbus(opt, 0, 17, (char*)argv[2],src_port,0, master_slotid,
+										(char *)argv[1], "all",command_send_to);/*use dbus send message to pfm*/
+	if(ret != 0)
+	{
+		vty_out(vty,"warning:pfm send error\n");
+		return CMD_WARNING;
+	}
+
+
+	ret = pfm_radius_show_running_config(argv[0],argv[1],argv[2], opt);
+	if(ret != 0)
+		return CMD_WARNING;
+
+	return CMD_SUCCESS;
+}
 
 
 /*add by zhaocg 2012-10-11 pm 15:30*/
@@ -6211,6 +6242,12 @@ close_return:
 	if(file_du)
 	{
 		pclose(file_du);
+	}
+	if(head)
+	{
+		free_ps_list(head);
+		head=NULL;
+
 	}
 	return ret;
 }

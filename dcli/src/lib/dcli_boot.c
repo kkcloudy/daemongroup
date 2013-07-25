@@ -952,6 +952,7 @@ DEFUN(show_fast_forward_slot_func,
 		vty_out(vty,"% Bad parameter!\n");
 		return CMD_WARNING;
 	}
+	return CMD_SUCCESS;
 
 
 }
@@ -1324,12 +1325,14 @@ int get_ipaddr_and_slot_by_url(char *url,char *ipaddr,char *if_name,int *slot)
 	p_str = strstr(buf,"dev");
 	if(NULL==p_str)
 	{
+		pclose(fp);
 		return -1;
 	}
 	p_str +=4;
 	inf_str = strtok(p_str," ");
 	if(NULL==inf_str)
 	{
+		pclose(fp);
 		return -1;
 	}
 
@@ -1827,6 +1830,7 @@ DEFUN(del_boot_img_self_func,
 		return CMD_WARNING; 
 	}	
 
+	return CMD_SUCCESS;
 		
 
 }
@@ -2497,18 +2501,20 @@ DEFUN(set_boot_env_var_func,
 	char sel[64] = {0};
 	
     input_value = argv_concat(&argv[2], argc - 2, 0);
-	if(strlen(input_value) > BOOT_ENV_VALUE_LEN)
-  	{
-  		vty_out(vty,"Environment variable vlaue was too long!(must be less than %d)\n",BOOT_ENV_VALUE_LEN);
-		return CMD_WARNING;
-				
-  	}
-
     if( !input_value )
 	{
         vty_out(vty,"get new value is NULL\n");
         return CMD_WARNING;
     }
+	
+	if(strlen(input_value) > BOOT_ENV_VALUE_LEN)
+  	{
+  		vty_out(vty,"Environment variable vlaue was too long!(must be less than %d)\n",BOOT_ENV_VALUE_LEN);
+		XFREE(MTYPE_TMP,input_value);
+		return CMD_WARNING;
+				
+  	}
+
 
    if(strcmp(envname,"sefile") == 0)
    {
@@ -2528,7 +2534,9 @@ DEFUN(set_boot_env_var_func,
     				}
     				else if(!strncasecmp("no", sel, strlen(sel)))
     				{
-                       return CMD_WARNING;
+    				
+						XFREE(MTYPE_TMP,input_value);
+                       	return CMD_WARNING;
                     }
     				else
     				{
@@ -2563,6 +2571,8 @@ DBUS:
     			vty_out(vty,"%s raised: %s",err.name,err.message);
     			dbus_error_free_for_dcli(&err);
     		}
+			
+			XFREE(MTYPE_TMP,input_value);
     		return CMD_WARNING;
 		}
     	if(dbus_message_get_args (reply, &err,
@@ -2575,6 +2585,8 @@ DBUS:
        		{
     			vty_out(vty, "set environment variable %s success!\n",env_name);
        			dbus_message_unref(reply);
+				
+				XFREE(MTYPE_TMP,input_value);
                 return CMD_SUCCESS;
        		}
 			else if(ret == -1)
@@ -2582,6 +2594,8 @@ DBUS:
 
                 vty_out(vty,"this  board  type  doesn't support fastfwd\n");
 				dbus_message_unref(reply);
+				
+				XFREE(MTYPE_TMP,input_value);
 				return CMD_WARNING;
 
 			}			
@@ -2589,6 +2603,8 @@ DBUS:
 			{
                  vty_out(vty,"The fastfwd file %s doesn't exist.\n",argv[2]); 
 				 dbus_message_unref(reply);
+				 
+				 XFREE(MTYPE_TMP,input_value);
 				 return CMD_WARNING;
 			}
        		else  
@@ -2596,6 +2612,8 @@ DBUS:
 				vty_out(vty, "set environment variable %s fail!\n",env_name);
     			vty_out(vty,"ret = %d\n",ret);
         		dbus_message_unref(reply);
+				
+				XFREE(MTYPE_TMP,input_value);
                 return CMD_WARNING;
         	}
 		}
@@ -2608,16 +2626,19 @@ DBUS:
                 dbus_error_free_for_dcli(&err);
             }
     		dbus_message_unref(reply);
+			
+			XFREE(MTYPE_TMP,input_value);
             return CMD_WARNING;
         }
 	}
     else
     {
        	vty_out(vty, "no connection to slot %d\n", slot_id);
+		
+		XFREE(MTYPE_TMP,input_value);
        	return CMD_WARNING;
     }
  
-      XFREE (MTYPE_TMP, input_value);
 
 }
 
@@ -2863,13 +2884,6 @@ DEFUN (download_fastforward_func,
 			vty_out(vty,"System fastforward file has been download.\n");
 			free(upfilename);
 		}
-		
-	}
-	else
-	{
-		vty_out(vty,"The url is wrong\n");
-		
-		return CMD_WARNING;
 		
 	}
 	
@@ -3262,15 +3276,6 @@ DEFUN (download_system_func,
 			return CMD_WARNING;
 		}
 	}
-	else
-	{
-		vty_out(vty,"The url is wrong\n");
-		
-		sprintf(dbus_str,"%s: The url is wrong\n",dbus_str_pre);
-		dcli_send_dbus_signal("download_boot_img_failed",dbus_str);
-		return CMD_WARNING;
-		
-	}
 	
 	sprintf(dbus_str,"%s: download img success\n",dbus_str_pre);
 	dcli_send_dbus_signal("download_boot_img_success",dbus_str);
@@ -3371,7 +3376,9 @@ DEFUN (download_system_config_func,
 			return CMD_WARNING;
 		}
 	}
+/*	
 	if(filename)
+*/
 	{
 		int i=0;
 		int result = 1;
@@ -3454,13 +3461,7 @@ DEFUN (download_system_config_func,
 
 			}
 	}
-	else
-	{
-		vty_out(vty,"The url is wrong\n");
-		dcli_send_dbus_signal("download_config_failure","The url is wrong");
-		return CMD_WARNING;
-		
-		}
+
 	if(4==argc&&(0==access("/mnt/backup_config.conf",F_OK)))
 	{
 		memset(cmd,0,256);
@@ -3889,9 +3890,11 @@ DEFUN (download_dev_info_func,
 		}
 #endif		
 		
-		if(!WEXITSTATUS(ret)){
+		if(!WEXITSTATUS(ret))
+		{
 			
-			if(strcmp(filename,"devinfo")){
+			if(strcmp(filename,"devinfo"))
+			{
 				sprintf(cmd,"mv /mnt/%s /mnt/devinfo > ~/down.log 2>&1\n",filename);
 				system(cmd);
 			}
@@ -3899,7 +3902,7 @@ DEFUN (download_dev_info_func,
 #if 0
 			if(system("sor.sh cp devinfo 10"))
 #else
-		if(sor_exec(vty,"cp","devinfo",60)!=CMD_SUCCESS)
+			if(sor_exec(vty,"cp","devinfo",60)!=CMD_SUCCESS)
 
 #endif
 			{
@@ -3907,19 +3910,13 @@ DEFUN (download_dev_info_func,
 				return CMD_WARNING;
 			}
 			vty_out(vty,"System has writen devinfo file successly,please reboot system\n");
-			}
-			else
-			{
-				vty_out(vty,"Can't download devinfo file successly\n");
-				return CMD_WARNING;
-			
-			}
-	}
-	else
-	{
-		vty_out(vty,"The URL is wrong,pls check it\n");
-		return CMD_WARNING;
+		}
+		else
+		{
+			vty_out(vty,"Can't download devinfo file successly\n");
+			return CMD_WARNING;
 		
+		}
 	}
 	
 	return CMD_SUCCESS;
@@ -3969,11 +3966,6 @@ DEFUN (download_cvm_rate_config_func,
 	}
 	
 	filename = filename + 1;
-	if(!filename)
-	{
-		vty_out(vty,"The ULR is wrong,please check it\n");
-		return CMD_WARNING;
-	}
 	
 	gettimeofday(&timer_now, 0);
 	memset(cmd,0,CMD_LINE_LEN);
@@ -4123,13 +4115,6 @@ DEFUN (download_web_logo_func,
 		
 		}
 	}
-	else
-	{
-		vty_out(vty,"The URL is wrong,pls check it\n");
-		return CMD_WARNING;
-		
-	}
-	
 	return CMD_SUCCESS;
 }
 
@@ -4218,12 +4203,6 @@ DEFUN (download_wtpcompatible_func,
 		
 		}
 	}
-	else
-	{
-		vty_out(vty,"The URL is wrong,pls check it\n");
-		return CMD_WARNING;
-		
-	}
 	
 	return CMD_SUCCESS;
 }
@@ -4274,12 +4253,11 @@ DEFUN (download_bootrom_func,
 	{
 		int i=0;
 		int result = 1;
-		char *p = NULL, *q = NULL;
 		
 		memset(cmd,0,256);
 		
 #if 1 //added by houxx				
-		if(((p = strstr(argv[0],"http:")) != NULL) || (q = strstr(argv[0],"ftp:") != NULL))
+		if((( strstr(argv[0],"http:")) != NULL) || (strstr(argv[0],"ftp:") != NULL))
 		{
 			result = pfm_download_config(0,send_slot,ipaddr,if_name);
 			if(result != 0)
@@ -4293,7 +4271,7 @@ DEFUN (download_bootrom_func,
 		sprintf(cmd,"sudo downimg.sh %s %s %s %s \n",argv[0],argv[1],argv[2],filename);
 		ret = system(cmd);
 #if 1 //added by houxx				
-		if(((p = strstr(argv[0],"http:")) != NULL) || (q = strstr(argv[0],"ftp:") != NULL))
+		if((( strstr(argv[0],"http:")) != NULL) || ( strstr(argv[0],"ftp:") != NULL))
 		{
 			result = pfm_download_config(1,send_slot,ipaddr,if_name);
 			if(result != 0)
@@ -4487,9 +4465,9 @@ DEFUN(md5_img_slot_func,
 	
 	long i= atoi( argv[0]);
 
-	if(i<1|| i>16)
+	if(i<1|| i>15)
 	{
-		vty_out(vty,"slot number <1 - 16> : invalid number\n");
+		vty_out(vty,"slot number <1 - 15> : invalid number\n");
 		
 		return CMD_WARNING;
 	}
@@ -4581,9 +4559,9 @@ DEFUN (md5_patch_slot_func,
 
 	long i= atoi( argv[0]);
 
-	if(i<1|| i>16)
+	if(i<1|| i>15)
 	{
-		vty_out(vty,"slot number <1 - 16> : invalid number\n");
+		vty_out(vty,"slot number <1 - 15> : invalid number\n");
 		return CMD_WARNING;
 	}
 	
@@ -4686,10 +4664,16 @@ DEFUN (tcpdump_moniter_func,
 	char* location = NULL;
 	location = argv_concat(argv, argc, 0);
 	memset(cmd,0,256);
-	
+
+	if(!location)
+	{
+		vty_out(vty,"Can't get the options please check input!%s",VTY_NEWLINE);
+		return CMD_WARNING;
+	}	
 	if(strlen(location)>239)
 	{
 		vty_out(vty,"The options is to long!%s",VTY_NEWLINE);
+		XFREE(MTYPE_TMP,location);
 		return CMD_WARNING;
 	}
 	
@@ -4700,6 +4684,8 @@ DEFUN (tcpdump_moniter_func,
 	{
 		vty_out(vty,SYS_ERROR);
 	}
+	
+	XFREE(MTYPE_TMP,location);
 	return CMD_SUCCESS;
 
 }
@@ -4797,6 +4783,8 @@ DEFUN (tcpdump_save_func,
 	if(location != NULL&&strlen(location)>232)
 	{
 		vty_out(vty,"The optons is too long!%s",VTY_NEWLINE);
+		
+		XFREE(MTYPE_TMP,location);
 		return CMD_WARNING;
 	}
 
@@ -4820,6 +4808,8 @@ DEFUN (tcpdump_save_func,
 	{
 		vty_out(vty,SYS_ERROR);
 	}
+	if(location)
+		XFREE(MTYPE_TMP,location);
 	return CMD_SUCCESS;
 
 }
@@ -5187,6 +5177,7 @@ DEFUN(ssh_up_func,
 			if((*(argv[0]+i))>'9' || (*(argv[0]+i))<'0')
 			{
 				vty_out(vty,"Please press right port number%s",VTY_NEWLINE);
+				close(fp);
 				return CMD_WARNING;
 			}
 		}
@@ -5369,7 +5360,9 @@ DEFUN(ssh_up_func,
 		if(WEXITSTATUS(ret)== 0)
 		{
 			return CMD_SUCCESS;
-		}else{
+		}
+		else
+		{
 			vty_out(vty,"SSH,same thing is Wrong%s",VTY_NEWLINE);
 			return CMD_WARNING;
 		}
@@ -5425,7 +5418,7 @@ DEFUN(show_ssh_func,
 	struct stat sb;
 	char *temp_data;
 	char *data;
-	unsigned int port;
+	unsigned int port = 0;
 	fp=open(SSHD_CONFIG_PATCH,O_RDWR);	
 	if(NULL==fp)
 	{
@@ -5653,12 +5646,6 @@ DEFUN (download_patch_func,
 			
 #endif
 	}
-	else
-	{
-		vty_out(vty,"The url is wrong\n");
-		return CMD_WARNING;
-		
-	}
 	
 	return CMD_SUCCESS;
 }
@@ -5799,11 +5786,9 @@ DEFUN(apply_patch_func,
 			}
 				
 		
-	}
+		}
 		
-	vty_out(vty,"patch name error\n");
-	return CMD_SUCCESS;
-}
+	}
 }
 #endif
 
@@ -6083,7 +6068,7 @@ DEFUN(show_telnet_func,
 	struct stat sb;
 	char *temp_data;
 	char *data;
-	unsigned int port;
+	unsigned int port=0;
 	fp=open(SERVICES_PATH,O_RDWR);	
 	if(NULL==fp)
 	{
