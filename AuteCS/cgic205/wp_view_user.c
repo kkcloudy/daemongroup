@@ -393,15 +393,18 @@ int config_passwd(struct list * lpublic, struct list * lsystem)
 		ShowAlert("active day beyond");
 	}
 	
-	cgiFormStringNoNewlines("maxerror", maxerror, 10); 	
-	maxerror_num = strtoul(maxerror,0,10);
-	if ((maxerror_num <= 10) && (maxerror_num > 2))
+	cgiFormStringNoNewlines("maxerror", maxerror, 10); 
+	if(strcmp(maxerror,""))
 	{
-		ccgi_passwd_max_error(maxerror_num);
-	}
-	else
-	{
-		ShowAlert("maxerror_num error  beyond");
+		maxerror_num = strtoul(maxerror,0,10);
+		if ((maxerror_num <= 10) && (maxerror_num > 2))
+		{
+			ccgi_passwd_max_error(maxerror_num);
+		}
+		else
+		{
+			ShowAlert("maxerror_num error  beyond");
+		}
 	}
 
 	cgiFormStringNoNewlines("minlen", minlen, 10); 	

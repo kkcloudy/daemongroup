@@ -1659,7 +1659,18 @@ dcli_show_ip_pool
 		vty_out(vty, "===============================================\n");
 	}
 
-	
+	for (i = 0; i < pool_count; i++){
+		//vty_out(vty,"123\n");
+		if(pool[i].sub_show){
+			free(pool[i].sub_show);
+			pool[i].sub_show = NULL;
+		}
+	}
+	if(pool){
+		//vty_out(vty,"456\n");
+		free(pool);
+		pool = NULL;
+	}
 	dbus_message_unref(reply);
 	 return CMD_SUCCESS;		 
 }

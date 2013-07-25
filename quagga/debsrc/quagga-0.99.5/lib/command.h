@@ -272,6 +272,17 @@ enum node_type
  /* distributed QOS, wangchong@autelan.com 2012-05-10*/
   QOS_NODE_DISTRIBUTED,
   STP_NODE_DISTRIBUTED,
+#ifdef _D_NANOCELL_
+  /* added by dsgd */
+  DSGD_SA_NODE,
+  DSGD_IPSEC_NODE,
+  DSGD_ADDRPOOL_NODE,
+  DSGD_REMOTE_NODE,
+  DSGD_POLICY_NODE,
+  DSGD_SELECTOR_NODE,
+  DSGD_RESOLVER_NODE,
+  DSGD_INTERFACE_NODE,
+#endif
   TRAFFIC_POLICER_NODE,
   
 /* distributed IGMP & MLD, houxx@autelan.com 2012-11-27 */  
@@ -536,8 +547,22 @@ struct desc
 
 #define PIM_STR 								       "PIM information\n"
 #define DISTRIBUT
-
-
+#ifdef _D_NANOCELL_
+/* start - for dsgd */
+#define IPSEC_STR "ipsec information\n"
+#define IPSEC_NODEID_STR "ID, valid range <1-1000>\n"
+#define IPSEC_SELECTOR_STR "ipsec selector information\n"
+#define IPSEC_POLICY_STR "ipsec policy information\n"
+#define IPSEC_REMOTE_STR "ipsec remote information\n"
+#define IPSEC_IPSEC_STR "ipsec ipsec information\n"
+#define IPSEC_SA_STR "ipsec sa information\n"
+#define IPSEC_ADDRPOOL_STR "ipsec address pool information\n"
+#define IPSEC_RESOLVER_STR "ipsec resolver information\n"
+#define IPSEC_ESP_STR "ESP information\n"
+#define IPSEC_AH_STR "AH information\n"
+#define PFS_STR "PFS information\n"
+/* end - for dsgd */
+#endif
 /*end added*/
 /* Prototypes. */
 extern void install_node (struct cmd_node *, int (*) (struct vty *),const char*);

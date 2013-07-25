@@ -477,7 +477,7 @@ DEFUN(show_sys_environment_cmd_func,
 	       int master_inter_temp = 0;
 	       int slave_remote_temp = 0;
 	       int slave_inter_temp = 0;
-		   unsigned int is_active_master, cpu_num;
+		   unsigned int is_active_master, cpu_num, board_id;
 			
 	       query = dbus_message_new_method_call(
 	            		SEM_DBUS_BUSNAME,
@@ -508,6 +508,7 @@ DEFUN(show_sys_environment_cmd_func,
                   	if (dbus_message_get_args ( reply, &err,
               			                 DBUS_TYPE_UINT32,&is_active_master,
               			                 DBUS_TYPE_UINT32,&cpu_num,
+              			                 DBUS_TYPE_UINT32,&board_id,
               							 DBUS_TYPE_UINT32,&fan_state,
               							 DBUS_TYPE_UINT32,&fan_rpm,
               							 DBUS_TYPE_UINT32,&power_state,
@@ -568,6 +569,7 @@ DEFUN(show_sys_environment_cmd_func,
                   	if (dbus_message_get_args ( reply, &err,
               			                 DBUS_TYPE_UINT32,&is_active_master,
               			                 DBUS_TYPE_UINT32,&cpu_num,
+              			                 DBUS_TYPE_UINT32,&board_id,
               							 DBUS_TYPE_UINT32,&fan_state,
               							 DBUS_TYPE_UINT32,&fan_rpm,
               							 DBUS_TYPE_UINT32,&power_state,
@@ -604,11 +606,20 @@ DEFUN(show_sys_environment_cmd_func,
               		}
 				#endif	
                   	vty_out(vty,"+---------------+-----------------------------------+\n");
-                  	vty_out(vty,"|     SLOT%d     |      %-6s     |      %-5s      |\n",i,"MASTER","SLAVE" );		
-                  	vty_out(vty,"|     %-4s      |-----------------+-----------------|\n"," ");
-                  	vty_out(vty,"|  %-11s  |  %-4s  | %-7s|  %-4s  | %-7s|\n","TEMPERATURE", "CORE", "SURFACE", "CORE", "SURFACE");
-                  	vty_out(vty,"|     %-4s      |--------+--------+--------+--------|\n"," ");
-              		if(cpu_num == DUAL_CPU) {
+				
+    				if (board_id == BOARD_SOFT_ID_AX81_SMUE) {
+                      	vty_out(vty,"|     SLOT%d     |      %-6s     |   %-11s   |\n",i,"CPU","ENVIRONMENT" );		
+                      	vty_out(vty,"|     %-4s      |-----------------+-----------------|\n"," ");
+                      	vty_out(vty,"|  %-11s  |  %-4s  | %-7s|  %-4s | %-7s|\n","TEMPERATURE", "CORE", "SURFACE", "LOCAL", "REMOTE");
+                      	vty_out(vty,"|     %-4s      |--------+--------+--------+--------|\n"," ");
+                            
+	    			} else {				
+                    	vty_out(vty,"|     SLOT%d     |      %-6s     |      %-5s      |\n",i,"MASTER","SLAVE" );		
+                    	vty_out(vty,"|     %-4s      |-----------------+-----------------|\n"," ");
+                  	    vty_out(vty,"|  %-11s  |  %-4s  | %-7s|  %-4s  | %-7s|\n","TEMPERATURE", "CORE", "SURFACE", "CORE", "SURFACE");
+                  	    vty_out(vty,"|     %-4s      |--------+--------+--------+--------|\n"," ");
+	    			}
+              		if(cpu_num == DUAL_CPU || board_id == BOARD_SOFT_ID_AX81_SMUE) {
                   	    vty_out(vty,"|     %-4s      |   %-4d |   %-4d |   %-4d |   %-4d |\n"," ",master_inter_temp,master_remote_temp,
               			                                                                     slave_inter_temp, slave_remote_temp);
               		}else {
