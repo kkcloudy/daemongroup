@@ -2006,7 +2006,7 @@ eag_portal_papauth_proc(eag_portal_t *portal,
 		}
 
 		attr = portal_packet_get_attr(reqpkt, ATTR_PASSWORD);
-		if (NULL == attr || attr->len < 2) {
+		if (NULL == attr || attr->len < 3) {
 			eag_log_err("eag_portal_papauth_proc userip %s "
 				"not get password attr in pap req_auth", user_ipstr);
 			eag_bss_message_count(portal->eagstat, appconn, BSS_REQ_AUTH_PASSWORD_MISSING_COUNT, 1);
