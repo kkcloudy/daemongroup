@@ -127,10 +127,11 @@ __inline__ int parse_slot_tag_no(char *str,unsigned char *slotno, unsigned int *
          return CMD_FAILURE;
 	}
 
-	*slotno = (char)strtoul(tmpstr,&endptr,10);
+	*slotno = (unsigned char)strtoul(tmpstr,&endptr,10);
 	
 	slotNum = get_product_info(SEM_SLOT_COUNT_PATH);        
-    if((*slotno < 0) || (*slotno > slotNum))
+/*    if((*slotno < 0) || (*slotno > slotNum)) */
+	if(slotNum>0 && (*slotno > slotNum))
         return CMD_FAILURE;
 
 	if (endptr) 
@@ -200,10 +201,10 @@ int parse_ve_slot_cpu_tag_no
          return CMD_FAILURE;
 	}
 
-	*slotno = (char)strtoul(tmpstr,&endp,10);
+	*slotno = (unsigned char)strtoul(tmpstr,&endp,10);
 	
 	slotNum = get_product_info(SEM_SLOT_COUNT_PATH);        
-    if((*slotno < 0) || (*slotno > slotNum))
+	if(slotNum>0 && (*slotno > slotNum))
         return CMD_FAILURE;
 
 	if (endp) 
@@ -285,7 +286,7 @@ __inline__ int parse_slotport_tag_no(char *str,unsigned char *slotno,unsigned ch
 	{
          return CMD_FAILURE;
 	}
-	*portno = (char)strtoul(tmpstr,&endptr,10);
+	*portno = (unsigned char)strtoul(tmpstr,&endptr,10);
 	if (endptr) 
 	{
 		if (('-' == endptr[0])&& \

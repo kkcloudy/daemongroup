@@ -1741,8 +1741,8 @@ int rip_set_pfm(int opt)
 			if(temp_ret != 0)
 				zlog_debug("(sync_test %d) from slot(%d)to slot(%d) dbus send message error_table\n",__LINE__,slot,i);
 			else{
-				return -1;
 				zlog_debug("(sync_test %d) from slot(%d)to slot(%d) dbus send message success! \n",__LINE__,slot,i);
+				return -1;
 			}
 		}
 	}

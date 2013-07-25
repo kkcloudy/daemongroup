@@ -848,15 +848,6 @@ rtm_recv_message_from_se_agent(struct thread *thread)
 	/*After fetch the data ,go to update flow stats data*/
 	rtm_if_flow_stats_update(&if_flow_data,command);
 
-	/*CID 18165 (#1 of 1): Argument cannot be negative (REVERSE_NEGATIVE)
-	  check_after_sink: You might be using variable "process_se_agent->sock" before verifying that it is >= 0. 
-	 So add check fd when recvfrom above.*/
-	if (sock <= 0)
-	{
-		/* Connection was closed during packet processing. */
-		zlog_warn("%s: After recvfrom se_agent fd is break.\n",__func__);
-		return -1;
-	}
 #if 1
 	/* Register read thread. */
 	stream_reset(process_information->ibuf);

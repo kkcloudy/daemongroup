@@ -1394,12 +1394,15 @@ int get_ipaddr_and_slot_by_server(char *server_addr,char *ipaddr,char *if_name,i
 	p_str = strstr(buf,"dev");
 	if(NULL==p_str)
 	{
+		pclose(fp);
 		return -1;
 	}
 	p_str +=4;
 	inf_str = strtok(p_str," ");
 	if(NULL==inf_str)
 	{
+	
+		pclose(fp);
 		return -1;
 	}
 
