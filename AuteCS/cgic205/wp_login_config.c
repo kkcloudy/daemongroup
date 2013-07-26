@@ -260,8 +260,15 @@ int ShowExportConfPage(struct list *lpublic, struct list *lsystem)
 					 /*state*/
 					 fprintf(cgiOut,"<td>");
 					 fprintf(cgiOut,"<select  style=width:120px  name=state>\n");
-					 fprintf(cgiOut,"<option value=off>%s</option>","off");
-					 fprintf(cgiOut,"<option value=on>%s</option>","on");
+					 if(strcmp(limitkeyl.state,"on") == 0){
+						fprintf(cgiOut,"<option value=off>%s</option>","off");
+					 	fprintf(cgiOut,"<option selected value=on>%s</option>","on"); 	
+
+					 }else{
+						fprintf(cgiOut,"<option selected value=off>%s</option>","off");
+					 	fprintf(cgiOut,"<option value=on>%s</option>","on");
+					 
+					 }
 					 fprintf(cgiOut,"</select>\n");	
 					 fprintf(cgiOut,"</td><td>\n");
 					 fprintf(cgiOut,"<font color=red size=2>(%s)</font>",search(lpublic,"l_state_des"));
@@ -291,9 +298,20 @@ int ShowExportConfPage(struct list *lpublic, struct list *lsystem)
 					 fprintf(cgiOut,"</td>");
 					 fprintf(cgiOut,"<td>");
 					 fprintf(cgiOut,"<select  style=width:120px  name=ruler>\n");
-					 fprintf(cgiOut,"<option value=soft>%s</option>","soft");
-					 fprintf(cgiOut,"<option value=hard>%s</option>","hard");
-					 fprintf(cgiOut,"<option value=all>%s</option>","all");
+					 if(strcmp("soft",limitkeyl.ruler) == 0){
+						fprintf(cgiOut,"<option selected value=soft>%s</option>","soft");
+						fprintf(cgiOut,"<option value=hard>%s</option>","hard");
+						fprintf(cgiOut,"<option value=all>%s</option>","all");
+					 }else if(strcmp("hard",limitkeyl.ruler) == 0){
+						fprintf(cgiOut,"<option value=soft>%s</option>","soft");
+						fprintf(cgiOut,"<option selected value=hard>%s</option>","hard");
+						fprintf(cgiOut,"<option value=all>%s</option>","all");
+					 }else{
+						fprintf(cgiOut,"<option value=soft>%s</option>","soft");
+						fprintf(cgiOut,"<option value=hard>%s</option>","hard");
+						fprintf(cgiOut,"<option selected value=all>%s</option>","all");
+					 }
+					 
 					 fprintf(cgiOut,"</select>\n");
 					 fprintf(cgiOut,"</td><td>");
 					 fprintf(cgiOut,"<font color=red size=2>(%s)</font>",search(lpublic,"l_type_des"));
@@ -308,11 +326,38 @@ int ShowExportConfPage(struct list *lpublic, struct list *lsystem)
 					 fprintf(cgiOut,"</td>");
 					 fprintf(cgiOut,"<td>");
 					 fprintf(cgiOut,"<select  style=width:120px  name=device>\n");
-					 fprintf(cgiOut,"<option value=maxlogins>%s</option>","maxlogins");
-					 fprintf(cgiOut,"<option value=maxsyslogins>%s</option>","maxsyslogins");
-					 fprintf(cgiOut,"<option value=nproc>%s</option>","nproc");
-					 fprintf(cgiOut,"<option value=rss>%s</option>","rss");
-					 fprintf(cgiOut,"<option value=core>%s</option>","core");
+					 if(strcmp("maxlogins",limitkeyl.device) == 0){
+						 fprintf(cgiOut,"<option selected value=maxlogins>%s</option>","maxlogins");
+						 fprintf(cgiOut,"<option value=maxsyslogins>%s</option>","maxsyslogins");
+						 fprintf(cgiOut,"<option value=nproc>%s</option>","nproc");
+						 fprintf(cgiOut,"<option value=rss>%s</option>","rss");
+						 fprintf(cgiOut,"<option value=core>%s</option>","core");
+					 }else if(strcmp("maxsyslogins",limitkeyl.device) == 0){
+						 fprintf(cgiOut,"<option value=maxlogins>%s</option>","maxlogins");
+						 fprintf(cgiOut,"<option selected value=maxsyslogins>%s</option>","maxsyslogins");
+						 fprintf(cgiOut,"<option value=nproc>%s</option>","nproc");
+						 fprintf(cgiOut,"<option value=rss>%s</option>","rss");
+						 fprintf(cgiOut,"<option value=core>%s</option>","core");
+					 }else if(strcmp("nproc",limitkeyl.device) == 0){
+						 fprintf(cgiOut,"<option value=maxlogins>%s</option>","maxlogins");
+						 fprintf(cgiOut,"<option value=maxsyslogins>%s</option>","maxsyslogins");
+						 fprintf(cgiOut,"<option selected value=nproc>%s</option>","nproc");
+						 fprintf(cgiOut,"<option value=rss>%s</option>","rss");
+						 fprintf(cgiOut,"<option value=core>%s</option>","core");
+					 }else if(strcmp("rss",limitkeyl.device) == 0){
+						 fprintf(cgiOut,"<option value=maxlogins>%s</option>","maxlogins");
+						 fprintf(cgiOut,"<option value=maxsyslogins>%s</option>","maxsyslogins");
+						 fprintf(cgiOut,"<option value=nproc>%s</option>","nproc");
+						 fprintf(cgiOut,"<option selected value=rss>%s</option>","rss");
+						 fprintf(cgiOut,"<option value=core>%s</option>","core");
+					 }else{
+						 fprintf(cgiOut,"<option value=maxlogins>%s</option>","maxlogins");
+						 fprintf(cgiOut,"<option value=maxsyslogins>%s</option>","maxsyslogins");
+						 fprintf(cgiOut,"<option value=nproc>%s</option>","nproc");
+						 fprintf(cgiOut,"<option value=rss>%s</option>","rss");
+						 fprintf(cgiOut,"<option selected value=core>%s</option>","core");
+					 }
+
 					 fprintf(cgiOut,"</select>\n");
 					 fprintf(cgiOut,"</td><td>");
 					 fprintf(cgiOut,"<font color=red size=2>(%s)</font>",search(lpublic,"l_item_des"));
