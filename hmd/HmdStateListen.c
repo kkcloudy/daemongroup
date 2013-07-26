@@ -20,6 +20,8 @@
 #include "HmdThread.h"
 #include "HmdDbus.h"
 #include "HmdMonitor.h"
+#include <sys/wait.h>
+
 int sock_n_fd = 0;
 struct msghdr n_msg;
 struct nlmsghdr *n_nlh = NULL;
@@ -34,6 +36,29 @@ struct iovec ks_iov;
 
 #define nl_perror(str) perror(str)
 
+int save_config_after_running(void)
+{
+	
+	char cmd[DEFAULT_LEN] = {0};  
+	int ret = 0; 
+	int reason = 0;
+	
+	hmd_config_save_timer_init(1);
+	
+	sprintf(cmd,"sudo /opt/bin/vtysh -c  \"show running\n\"");
+	ret = system(cmd);
+	hmd_syslog_info("%s ret:%d(0 success)\n",__func__,ret);
+	reason = WEXITSTATUS(ret);	
+	if(reason != 0)
+	{
+		hmd_syslog_err("%s HMD_TIMER_CONFIG_SAVE fail reason =%d\n",__func__,reason);
+	}
+	sleep(5);
+	
+	hmd_config_save_timer_init(0);	
+
+	return 0;
+}
 
 void * hmd_netlink_recv_thread(void)
 {
@@ -119,9 +144,14 @@ void * hmd_netlink_recv_thread(void)
 	        					if(nl_msg->msgData.productInfo.action_type == SYSTEM_READY)
 	        					{
 									HmdStateReInit();
-									hmd_syslog_info("Product has been ready.\n"); 	
-	        					}
-	        					break;
+									hmd_syslog_info("Product has been ready.\n"); 										
+	        					}	      
+	        					else if(nl_msg->msgData.productInfo.action_type == SYSTEM_RUNNING)
+	        					{
+									save_config_after_running();
+									hmd_syslog_info("Product has been running.\n");									
+	        					}	        					
+								break;
 	        				case BOARD_STATE_NOTIFIER_EVENT:
 
 	    						if(nl_msg->msgData.boardInfo.action_type == BOARD_INSERTED)
