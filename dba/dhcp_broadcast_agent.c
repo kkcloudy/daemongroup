@@ -90,7 +90,7 @@ int dhcp_option82_handle(struct sk_buff *skb, struct dhcp_packet *dhcp, dba_resu
 		}
 
 		/* enlarge skb, pointer dhcp may change, so must recalculate */
-		if (dba_enlarge_skb(skb, DBA_ALIGN4(res->len))) {
+		if (dba_enlarge_skb(skb, DBA_ALIGN4(res->len + 4))) {
 			log_error("dhcp option82 expand skb failed!\n");
 			res->result |= DBA_ERROR;
 			return -1;
