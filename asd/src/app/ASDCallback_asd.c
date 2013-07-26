@@ -3550,6 +3550,11 @@ void BSS_OP(TableMsg *msg, struct wasd_interfaces *interfaces){
 }
 
 void STA_OP(TableMsg *msg){	
+	if(msg == NULL)
+	{
+        asd_printf(ASD_DEFAULT,MSG_DEBUG,"TableMsg *msg is NULL !!!\n");
+		return;
+	}
 	struct asd_data *bss[L_RADIO_NUM*L_BSS_NUM];
 	struct asd_data *wasd = NULL;
 	struct asd_data *prewasd = NULL;			
@@ -4045,7 +4050,14 @@ void STA_OP(TableMsg *msg){
 			if(ret == 0)
 				return;
 			num = ASD_SEARCH_WTP_STA(WTPID, bss);
-			pthread_mutex_lock(&(asd_g_sta_mutex)); 		
+			pthread_mutex_lock(&(asd_g_sta_mutex));
+			wasd = AsdCheckBSSIndex(BSSIndex);
+			if(wasd == NULL)
+			{
+				asd_printf(ASD_DEFAULT,MSG_DEBUG," wasd = AsdCheckBSSIndex(BSSIndex) is NULL!! \n");
+    			pthread_mutex_unlock(&(asd_g_sta_mutex));				
+                return ;
+			}			
 			for(i = 0; i < num; i++){
 				
 #ifdef ASD_USE_PERBSS_LOCK
