@@ -63,6 +63,9 @@
 #define FCCP_CMD_SHOW_CAPWAP_FAU64 			46
 #define FCCP_CMD_SHOW_RPA_FAU64 			47
 #define FCCP_CMD_CLEAR_PART_FAU64 			48
+#define FCCP_CMD_ENABLE_PPPOE             	49
+#define FCCP_CMD_GET_PPPOE_STATE          	50
+
 
 
 
@@ -670,6 +673,7 @@ typedef struct se_interative_s
 #define SE_AGENT_SHOW_FAU64                             "show_fau64"
 #define SE_AGENT_CLEAR_FAU64							"clear_fau64"
 #define SE_AGENT_ICMP_ENABLE                            "config_icmp_enable"
+#define SE_AGENT_PPPOE_ENABLE                           "config_pppoe_enable"
 #define SE_AGENT_PURE_IP_ENABLE                         "config_pure_ip_enable"
 #define SE_AGENT_SHOW_PURE_IP_ENABLE				    "show_pure_ip_enable"
 #define SE_AGENT_FASTFWD_ENABLE							"config_fastfwd_enable"
