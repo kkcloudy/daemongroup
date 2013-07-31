@@ -41,6 +41,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "dba/dba.h"	/* accapi/dba/dba.h */
 
+int dba_option82_debug = 0;
+module_param(dba_option82_debug, int, 0644);
+
 
 /* net/core/dev.c */
 extern int (*br_dhcp_broadcast_hook) (struct sk_buff **pskb, struct dba_result *res);

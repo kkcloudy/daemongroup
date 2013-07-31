@@ -50,6 +50,29 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 static int dba_enlarge_skb(struct sk_buff *skb, unsigned int extra);
 static void *dhcp_get_option(struct dhcp_packet *dhcp, __u8 op_code, unsigned char *tail);
 
+extern int dba_option82_debug;
+
+void printPacketBuffer(unsigned char *buffer,unsigned long buffLen)
+{
+	unsigned int i;
+
+	if(!buffer)
+		return;
+	printk(":::::::::::::::::::::::::::::::::::::::::::::::\n");
+
+	for(i = 0;i < buffLen ; i++)
+	{
+		printk("%02x ",buffer[i]);
+		if(0==(i+1)%16) {
+			printk("\n");
+		}
+	}
+	if((buffLen%16)!=0)
+	{
+		printk("\n");
+	}
+	printk(":::::::::::::::::::::::::::::::::::::::::::::::\n");
+}
 
 int dhcp_broadcast_agent(struct sk_buff *skb, struct dhcp_packet *dhcp, dba_result_t *res)
 {
@@ -82,6 +105,14 @@ int dhcp_option82_handle(struct sk_buff *skb, struct dhcp_packet *dhcp, dba_resu
 	if ((DHCP_CLIENT_REQUEST == dhcp->op)
 		&& (res->module_type & DHCP_OPTION82_KMOD)) {
 
+		if (dba_option82_debug) {
+			printk(KERN_DEBUG "skb->dev->name : %s\n", skb->dev->name);
+			printPacketBuffer(skb->data, skb->len);
+			printk(KERN_DEBUG "res->len : %d\n", res->len);
+			printk(KERN_DEBUG "res->data : \n");
+			printPacketBuffer((unsigned char *)res->data, res->len);
+		}
+
 		/* 253 = 2^8 - 2(option code len) */
 		if (unlikely((res->len) > 255)) {
 			log_error("dhcp option82 length %d: too large!\n", res->len);
@@ -90,7 +121,7 @@ int dhcp_option82_handle(struct sk_buff *skb, struct dhcp_packet *dhcp, dba_resu
 		}
 
 		/* enlarge skb, pointer dhcp may change, so must recalculate */
-		if (dba_enlarge_skb(skb, DBA_ALIGN4(res->len + 4))) {
+		if (dba_enlarge_skb(skb, DBA_ALIGN4(res->len + 2))) {
 			log_error("dhcp option82 expand skb failed!\n");
 			res->result |= DBA_ERROR;
 			return -1;
@@ -100,7 +131,7 @@ int dhcp_option82_handle(struct sk_buff *skb, struct dhcp_packet *dhcp, dba_resu
 		ethhdr = eth_hdr(skb);
 		iph = (struct iphdr *)(ethhdr + 1);
 		udph = (struct udphdr *)IPv4_NXT_HDR(iph);
-		dhcp = udph + 1;
+		dhcp = (struct dhcp_packet *)(udph + 1);
 
 
 		#if 0
@@ -134,8 +165,9 @@ int dhcp_option82_handle(struct sk_buff *skb, struct dhcp_packet *dhcp, dba_resu
 			/* append option82 */
 			*(tail) = 82;	/* option 82 code */
 			*(tail+1) = res->len;	/* option 82 length */
-			
-			memcpy(skb_put(skb, res->len+2)+2, res->data, res->len);
+
+			skb_put(skb, res->len + 2);
+			memcpy(tail + 2, res->data, res->len);
 			tail = skb_tail_pointer(skb);			
 			*(tail-1) = 0xff; /* dhcp end option */
 		} else {
