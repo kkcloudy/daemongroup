@@ -162,14 +162,18 @@ int dhcp_option82_handle(struct sk_buff *skb, struct dhcp_packet *dhcp, dba_resu
 		tail = skb_tail_pointer(skb);
 		/* get dhcp end option(0xff) */
 		if (tail = dhcp_get_option(dhcp, 0xff, tail)) {
+			skb_put(skb, res->len + 2);
 			/* append option82 */
 			*(tail) = 82;	/* option 82 code */
-			*(tail+1) = res->len;	/* option 82 length */
-
-			skb_put(skb, res->len + 2);
+			*(tail + 1) = res->len;	/* option 82 length */
 			memcpy(tail + 2, res->data, res->len);
+
+			#if 0
 			tail = skb_tail_pointer(skb);			
 			*(tail-1) = 0xff; /* dhcp end option */
+			#endif
+
+			*(tail + 2 + res->len) = 0xff;/* dhcp end option added just behind option82 */
 		} else {
 			res->result |= DBA_ERROR;
 			log_error("dhcp option82 cannot find option 255!\n");			
