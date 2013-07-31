@@ -3,9 +3,7 @@ ifndef CC
 #CC = mips-linux-gnu-gcc
 endif
 CC = mips-linux-gnu-gcc
-ifndef CFLAGS
 CFLAGS = -MMD -O2 -Wall -g -lrt
-endif
 #LDFLAGS = -L../pub  -lpthread -ldl -D_REENTRANT -L$(MIPS_ADDITION_LIB_ROOT_PATH)/usr/lib
 # define HOSTAPD_DUMP_STATE to include SIGUSR1 handler for dumping state to
 # a file (undefine it, if you want to save in binary size)
