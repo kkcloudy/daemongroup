@@ -807,6 +807,7 @@ DEFUN(show_ntp_config_func,
 	int upclinum = 0;
 	int servnum  =  0;
 	int count  =  0;
+	int i=1 ,rret=-1;
 	
 	int ntpstatus =0;
 	ntpstatus = if_ntp_enable();
@@ -825,27 +826,12 @@ DEFUN(show_ntp_config_func,
 	}
 
 	vty_out(vty,"---------------------------------------\n");
-	
-	read_ntp_client(NTP_XML_FPATH, &clitst, &clinum);
-	read_upper_ntp(NTP_XML_FPATH, &upclitst, &upclinum);
-	cq=clitst.next;
-	uq=upclitst.next;
-	
-	count=0;
-	vty_out(vty,"Server  \n");
-	vty_out(vty,"id\tip\t\tpriority\tupper\n");
-	while(uq!=NULL)
-	{
-	   count++;   
-       vty_out(vty,"%d\t%-20s\t",count,uq->clitipz);
-	   vty_out(vty,"%-10s",uq->ifper); 
-	   
-	   vty_out(vty,"%-10s\n","yes");
-	   
-       
-       uq = uq->next;
 
-	}
+	count=0;
+	read_ntp_client(NTP_XML_FPATH, &clitst, &clinum);
+	cq=clitst.next;
+	vty_out(vty,"Server  \n");
+	vty_out(vty,"id\tip\t\tpriority\tupper\tslotid\n");
 	while(cq!=NULL)
 	{
 	   if(0 != strncmp(cq->timeflag,"def",3))
@@ -859,21 +845,66 @@ DEFUN(show_ntp_config_func,
        cq = cq->next;
 
 	}
-
-	vty_out(vty,"---------------------------------------\n");
-	
 	if(clinum>0)
     {   
 		Free_read_ntp_client(&clitst);
         
     }
-	if(upclinum>0)
-    {   
-		Free_read_upper_ntp(&upclitst);
-        
-    }
+	for(i = 1; i < MAX_SLOT; i++)
+	{
+		if(dbus_connection_dcli[i]->dcli_dbus_connection) 
+		{
+			memset(&upclitst,0,sizeof(upclitst));
+			upclinum = 0;
+			rret=ac_manage_show_ntpupserver_rule(dbus_connection_dcli[i]->dcli_dbus_connection,&upclitst,&upclinum);
+			uq=upclitst.next;
+			while(uq!=NULL)
+			{
+			   count++;   
+			   vty_out(vty,"%d\t%-20s\t",count,uq->clitipz);
+			   vty_out(vty,"%-10s",uq->ifper); 
+			   vty_out(vty,"%-10s","yes");			   
+			   vty_out(vty,"%-10d\n",i);			   
+			   uq = uq->next;
+			}
+			if(upclinum > 0)
+				Free_read_upper_ntp(&upclitst);
+		}
+	}		
+	vty_out(vty,"---------------------------------------\n");
+	vty_out(vty,"Client\n");
 
-	count = 0;
+	vty_out(vty,"id\tip\t\tmask\t\tslotid\n");
+
+	for(i = 1; i < MAX_SLOT; i++)
+	{
+		if(dbus_connection_dcli[i]->dcli_dbus_connection) 
+		{
+			memset(&servst,0,sizeof(servst));
+			servnum = 0;
+			rret=ac_manage_show_ntpclient_rule(dbus_connection_dcli[i]->dcli_dbus_connection,&servst,&servnum);
+			sq = servst.next;					 
+			while(sq!=NULL)
+			 {
+				if(0 != strncmp(sq->timeflag,"def",3))
+				{
+					count++;	   
+					vty_out(vty,"%d\t",count);
+					vty_out(vty , "%s\t",sq->servipz);
+					vty_out(vty , "%s\t",sq->maskz);	
+					vty_out(vty , "%d\n",i);	
+				}
+				sq = sq->next;
+			 }	
+			if(servnum > 0)
+				Free_read_ntp_server(&servst);
+		}
+	}		
+
+
+	
+
+	/*count = 0;
 	
 	read_ntp_server(  NTP_XML_FPATH,   &servst,   &servnum  );
 
@@ -898,11 +929,11 @@ DEFUN(show_ntp_config_func,
                                         
      }  
 	
-    vty_out(vty,"---------------------------------------\n");        
       if(servnum>0)
       {                  
          Free_read_ntp_server(&servst);                                            
-      }      
+      }      */
+	  vty_out(vty,"---------------------------------------\n"); 	   
 	  
     char gets_ntptype[10] = {0};   
 
