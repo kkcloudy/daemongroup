@@ -188,6 +188,8 @@ enum {
 #define AC_MANAGE_DBUS_SHOW_NTP_RULE				"manage_dbus_show_ntp_rule"
 #define AC_MANAGE_DBUS_ADD_NTPSERVER				"manage_dbus_add_ntpserver"
 #define AC_MANAGE_DBUS_ADD_NTPCLIENT				"manage_dbus_add_ntpclient"
+#define AC_MANAGE_DBUS_SHOW_NTPCLIENT				"manage_dbus_show_ntpclient"
+#define AC_MANAGE_DBUS_SHOW_NTPUPSERVER				"manage_dbus_show_ntpupserver"
 #define AC_MANAGE_DBUS_INSIDE_NTP					"manage_dbus_inside_ntp"
 #define AC_MANAGE_DBUS_SET_NTP_STATUS				"manage_dbus_set_ntp_status"
 #define AC_MANAGE_DBUS_CLENA_NTP					"manage_dbus_clean_ntp"

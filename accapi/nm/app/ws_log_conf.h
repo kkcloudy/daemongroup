@@ -55,6 +55,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define NTP_STATUS_FPATH    "/opt/services/status/ntp_status.status"
 #define NTP_CONF_BK         "/opt/services/conf/ntp_conf.conf"
 #define XML_NTP_D           "/opt/www/htdocs/ntp.xml"
+#define SEM_ACTIVE_MASTER_SLOT_ID_PATH "/dbm/product/active_master_slot_id"
 
 #define CONF_ENABLE  "1"
 #define CONF_DISABLE "0"

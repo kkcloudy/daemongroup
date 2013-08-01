@@ -8,6 +8,8 @@ int ac_manage_set_ntpstatus_rule(DBusConnection *connection,char *status) ;
 int ac_manage_clean_ntp_rule(DBusConnection *connection) ;
 int ac_manage_set_timezone(DBusConnection *connection,char *area,char *city);
 int ac_manage_add_ntpclient_rule(DBusConnection *connection, struct serverz_st *rule,int opt_type);
+int ac_manage_show_ntpclient_rule(DBusConnection *connection,struct serverz_st *head,int *servnum);
+int ac_manage_show_ntpupserver_rule(DBusConnection *connection,struct clientz_st *head,int *servnum) ;
 int ac_manage_show_time(DBusConnection *connection, struct timez_st *rule_array);
 int ac_manage_set_time(DBusConnection *connection,char *timestr);
 int ac_manage_add_syslog_rule(DBusConnection *connection, struct syslogrule_st *rule,int opt_type);

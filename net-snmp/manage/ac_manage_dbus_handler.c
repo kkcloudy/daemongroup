@@ -6040,7 +6040,149 @@ ac_manage_dbus_add_ntpclient(DBusConnection *connection, DBusMessage *message, v
 }
 
 /*********************************************************/
+DBusMessage *
+ac_manage_dbus_show_ntpclient(DBusConnection *connection, DBusMessage *message, void *user_data) {
 
+	int servnum=0;
+	unsigned int count=0;
+	char *ip=NULL;
+	char *mask=NULL;
+	char *tflag=NULL;
+	char *slot_id=NULL;
+	struct serverz_st servst ,*sq;
+	DBusMessage *reply = NULL;	
+	DBusError err;
+	DBusMessageIter	iter;	
+	DBusMessageIter	iter_array;	
+	DBusMessageIter	iter_struct;
+
+	int ret = AC_MANAGE_SUCCESS;
+
+	dbus_error_init(&err);
+	ret = read_ntp_server(  NTP_XML_FPATH,   &servst,   &servnum);
+	
+	reply = dbus_message_new_method_return(message);
+	                
+	dbus_message_iter_init_append(reply, &iter);  
+	dbus_message_iter_append_basic(&iter, DBUS_TYPE_INT32, &ret);
+	dbus_message_iter_append_basic(&iter, DBUS_TYPE_INT32, &servnum);
+	dbus_message_iter_open_container(&iter,
+									DBUS_TYPE_ARRAY,
+									DBUS_STRUCT_BEGIN_CHAR_AS_STRING
+										DBUS_TYPE_STRING_AS_STRING
+										DBUS_TYPE_STRING_AS_STRING
+										DBUS_TYPE_STRING_AS_STRING
+										DBUS_TYPE_STRING_AS_STRING
+									DBUS_STRUCT_END_CHAR_AS_STRING,
+									&iter_array);
+    sq = servst.next;                    
+    while(sq!=NULL)
+    {
+		count++; 
+		ip=sq->servipz;
+		mask=sq->maskz;
+		tflag=sq->timeflag;
+		slot_id=sq->slotid;
+		dbus_message_iter_open_container(&iter_array,
+											DBUS_TYPE_STRUCT,
+											NULL,
+											&iter_struct);			  
+		dbus_message_iter_append_basic(&iter_struct,
+													 DBUS_TYPE_STRING,
+													 &ip);
+		dbus_message_iter_append_basic(&iter_struct,
+													 DBUS_TYPE_STRING,
+													 &mask);
+		dbus_message_iter_append_basic(&iter_struct,
+													 DBUS_TYPE_STRING,
+													 &tflag);
+		dbus_message_iter_append_basic(&iter_struct,
+													 DBUS_TYPE_STRING,
+													 &slot_id);
+		dbus_message_iter_close_container(&iter_array, &iter_struct);
+        sq = sq->next;
+    }  
+	dbus_message_iter_close_container(&iter, &iter_array);
+	if(servnum>0)
+	{				   
+	   Free_read_ntp_server(&servst);											 
+	}	   
+	return reply;        	
+}
+
+/*********************************************************/
+DBusMessage *
+ac_manage_dbus_show_ntpupserver(DBusConnection *connection, DBusMessage *message, void *user_data) {
+
+	int upclinum=0;
+	unsigned int count=0;
+	char *ip=NULL;
+	char *ifper=NULL;
+	char *tflag=NULL;
+	char *slot_id=NULL;
+	struct clientz_st upclitst ,*uq;
+	DBusMessage *reply = NULL;	
+	DBusError err;
+	DBusMessageIter	iter;	
+	DBusMessageIter	iter_array;	
+	DBusMessageIter	iter_struct;
+
+	int ret = AC_MANAGE_SUCCESS;
+
+	dbus_error_init(&err);
+	ret = read_upper_ntp(  NTP_XML_FPATH,   &upclitst,   &upclinum);
+	
+	reply = dbus_message_new_method_return(message);
+	                
+	dbus_message_iter_init_append(reply, &iter);  
+	dbus_message_iter_append_basic(&iter, DBUS_TYPE_INT32, &ret);
+	dbus_message_iter_append_basic(&iter, DBUS_TYPE_INT32, &upclinum);
+	dbus_message_iter_open_container(&iter,
+									DBUS_TYPE_ARRAY,
+									DBUS_STRUCT_BEGIN_CHAR_AS_STRING
+										DBUS_TYPE_STRING_AS_STRING
+										DBUS_TYPE_STRING_AS_STRING
+										DBUS_TYPE_STRING_AS_STRING
+										DBUS_TYPE_STRING_AS_STRING
+									DBUS_STRUCT_END_CHAR_AS_STRING,
+									&iter_array);
+    uq = upclitst.next;                    
+    while(uq!=NULL)
+    {
+		count++; 
+		ip=uq->clitipz;
+		ifper=uq->ifper;
+		tflag=uq->timeflag;
+		slot_id=uq->slotid;
+		dbus_message_iter_open_container(&iter_array,
+											DBUS_TYPE_STRUCT,
+											NULL,
+											&iter_struct);			  
+		dbus_message_iter_append_basic(&iter_struct,
+													 DBUS_TYPE_STRING,
+													 &ip);
+		dbus_message_iter_append_basic(&iter_struct,
+													 DBUS_TYPE_STRING,
+													 &tflag);
+		dbus_message_iter_append_basic(&iter_struct,
+													 DBUS_TYPE_STRING,
+													 &ifper);
+		dbus_message_iter_append_basic(&iter_struct,
+													 DBUS_TYPE_STRING,
+													 &slot_id);
+		dbus_message_iter_close_container(&iter_array, &iter_struct);
+        uq = uq->next;
+    }  
+	dbus_message_iter_close_container(&iter, &iter_array);
+	if(upclinum>0)
+	{				   
+	   Free_read_upper_ntp(&upclitst);											 
+	}	   
+	return reply;        	
+}
+
+
+/********************************************************/
 DBusMessage *
 ac_manage_dbus_show_time(DBusConnection *connection, DBusMessage *message, void *user_data) {
     

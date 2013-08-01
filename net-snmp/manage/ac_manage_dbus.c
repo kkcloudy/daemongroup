@@ -282,6 +282,12 @@ ac_manage_dbus_message_handler(DBusConnection *connection, DBusMessage *message,
 		else if(dbus_message_is_method_call(message, AC_MANAGE_NTP_DBUS_INTERFACE, AC_MANAGE_DBUS_ADD_NTPCLIENT)) {
 			reply = ac_manage_dbus_add_ntpclient(connection, message, user_data);
 		}
+		else if(dbus_message_is_method_call(message, AC_MANAGE_NTP_DBUS_INTERFACE, AC_MANAGE_DBUS_SHOW_NTPCLIENT)) {
+			reply = ac_manage_dbus_show_ntpclient(connection, message, user_data);
+		}
+		else if(dbus_message_is_method_call(message, AC_MANAGE_NTP_DBUS_INTERFACE, AC_MANAGE_DBUS_SHOW_NTPUPSERVER)) {
+			reply = ac_manage_dbus_show_ntpupserver(connection, message, user_data);
+		}
 		if(dbus_message_is_method_call(message, AC_MANAGE_NTP_DBUS_INTERFACE, AC_MANAGE_DBUS_SHOW_TIME)) {
 			reply = ac_manage_dbus_show_time(connection, message, user_data);
 		}

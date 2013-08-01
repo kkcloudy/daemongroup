@@ -3414,6 +3414,7 @@ void if_ntp_exist()
 		}
 		fclose(fp);
 	}
+	system("sudo chmod 666 "NTP_XML_FPATH"\n");
 }
 
 int if_syslog_enable()
@@ -3454,7 +3455,7 @@ int if_ntp_enable()
 	int sflag=-1;
     
 	FILE *pp;
-	pp=popen("ps -ef|grep ntp |grep -v grep|wc -l","r");
+	pp=popen("ps -ef|grep ntpd |grep -v grep|wc -l","r");
 
     
 	if(pp==NULL)

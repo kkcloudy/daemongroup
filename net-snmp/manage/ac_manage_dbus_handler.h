@@ -169,6 +169,10 @@ ac_manage_dbus_show_strict_access(DBusConnection *connection, DBusMessage *messa
 DBusMessage *
 ac_manage_dbus_add_ntpclient(DBusConnection *connection, DBusMessage *message, void *user_data);
 DBusMessage *
+ac_manage_dbus_show_ntpclient(DBusConnection *connection, DBusMessage *message, void *user_data);
+DBusMessage *
+ac_manage_dbus_show_ntpupserver(DBusConnection *connection, DBusMessage *message, void *user_data);
+DBusMessage *
 ac_manage_dbus_config_syslogrule(DBusConnection *connection, DBusMessage *message, void *user_data);
 DBusMessage *ac_manage_dbus_set_acinfo_value(DBusConnection *connection, DBusMessage *message, void *user_data);
 DBusMessage *ac_manage_dbus_set_bkacinfo_value(DBusConnection *connection, DBusMessage *message, void *user_data);

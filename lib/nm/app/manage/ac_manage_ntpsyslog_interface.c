@@ -4,6 +4,7 @@
 #include <sys/types.h>
 #include <dbus/dbus.h>
 
+#include "ws_init_dbus.h"
 #include "ws_log_conf.h"
 #include "ac_manage_def.h"
 #include "ac_manage_ntpsyslog_interface.h"
@@ -433,6 +434,207 @@ ac_manage_add_ntpclient_rule(DBusConnection *connection, struct serverz_st *rule
 
 	return ret;
 }
+
+int
+ac_manage_show_ntpclient_rule(DBusConnection *connection,struct serverz_st *head,int *servnum) {
+
+	if(NULL == connection) {
+		return  AC_MANAGE_INPUT_TYPE_ERROR;
+	}
+	
+	int ret = AC_MANAGE_DBUS_ERROR;
+	int i=0,count=0;
+
+	DBusMessage *query, *reply;
+	DBusError err;
+	DBusMessageIter	 iter;
+	DBusMessageIter	 iter_array;
+	DBusMessageIter	 iter_struct;
+
+	dbus_error_init(&err);	
+	query = dbus_message_new_method_call(AC_MANAGE_DBUS_DBUSNAME, 
+											AC_MANAGE_NTP_DBUS_OBJPATH,
+											AC_MANAGE_NTP_DBUS_INTERFACE,
+											AC_MANAGE_DBUS_SHOW_NTPCLIENT);
+	reply = dbus_connection_send_with_reply_and_block(connection, query, -1, &err);
+	dbus_message_unref(query);
+
+	if(NULL == reply) {
+		if(dbus_error_is_set(&err)) {
+			dbus_error_free(&err);
+		}
+		return AC_MANAGE_DBUS_ERROR;
+	}
+
+	dbus_message_iter_init(reply, &iter);
+	dbus_message_iter_get_basic(&iter, &ret);
+	dbus_message_iter_next(&iter);	
+	dbus_message_iter_get_basic(&iter, servnum);
+	count = *servnum;
+	dbus_message_iter_next(&iter);	
+	dbus_message_iter_recurse(&iter,&iter_array);
+
+	char *ip=NULL;
+	char *mask=NULL;
+	char *flag_time=NULL;
+	char *slot_c=NULL;
+	if(ret ==0)
+	{
+		struct serverz_st *tail = NULL,*q = NULL;
+		head->next = NULL;
+		tail = head;
+		for(i=0;i<count;i++)
+		{
+			q=(struct serverz_st *)malloc(sizeof(struct serverz_st)+1);
+			memset(q,0,sizeof(struct serverz_st)+1);
+			if(NULL == q)
+			{
+				return	-1;
+			}		
+			memset(q->servipz,0,IPMASK_LEN);
+			dbus_message_iter_recurse(&iter_array,&iter_struct);
+			dbus_message_iter_get_basic(&iter_struct,&ip);
+			
+			memset(q->maskz,0,IPMASK_LEN);
+			dbus_message_iter_next(&iter_struct);	
+			dbus_message_iter_get_basic(&iter_struct,&mask);
+			
+			memset(q->timeflag,0,TIMESTR_LEN);
+			dbus_message_iter_next(&iter_struct);	
+			dbus_message_iter_get_basic(&iter_struct,&flag_time);
+			
+			memset(q->slotid,0,SID_LEN);
+			dbus_message_iter_next(&iter_struct);	
+			dbus_message_iter_get_basic(&iter_struct,&slot_c);
+			
+			memcpy(q->servipz,ip,strlen(ip));
+			memcpy(q->maskz,mask,strlen(mask));
+			memcpy(q->timeflag,flag_time,strlen(flag_time));
+			memcpy(q->slotid,slot_c,strlen(slot_c));
+			dbus_message_iter_next(&iter_array);
+			
+			if((q)&&(tail))
+			{
+				q->next = NULL;
+				tail->next = q;
+				tail = q;
+			}
+		}
+	}
+	else
+	{
+		if (dbus_error_is_set(&err)) {
+			dbus_error_free(&err);
+		}
+		dbus_message_unref(reply);
+		return -2;
+	}
+
+	dbus_message_unref(reply);
+	return 0;
+}
+
+int
+ac_manage_show_ntpupserver_rule(DBusConnection *connection,struct clientz_st *head,int *servnum) {
+
+	if(NULL == connection) {
+		return  AC_MANAGE_INPUT_TYPE_ERROR;
+	}
+	
+	int ret = AC_MANAGE_DBUS_ERROR;
+	int i=0,count=0;
+
+	DBusMessage *query, *reply;
+	DBusError err;
+	DBusMessageIter	 iter;
+	DBusMessageIter	 iter_array;
+	DBusMessageIter	 iter_struct;
+
+	dbus_error_init(&err);	
+	query = dbus_message_new_method_call(AC_MANAGE_DBUS_DBUSNAME, 
+											AC_MANAGE_NTP_DBUS_OBJPATH,
+											AC_MANAGE_NTP_DBUS_INTERFACE,
+											AC_MANAGE_DBUS_SHOW_NTPUPSERVER);
+	reply = dbus_connection_send_with_reply_and_block(connection, query, -1, &err);
+	dbus_message_unref(query);
+
+	if(NULL == reply) {
+		if(dbus_error_is_set(&err)) {
+			dbus_error_free(&err);
+		}
+		return AC_MANAGE_DBUS_ERROR;
+	}
+
+	dbus_message_iter_init(reply, &iter);
+	dbus_message_iter_get_basic(&iter, &ret);
+	dbus_message_iter_next(&iter);	
+	dbus_message_iter_get_basic(&iter, servnum);
+	count = *servnum;
+	dbus_message_iter_next(&iter);	
+	dbus_message_iter_recurse(&iter,&iter_array);
+
+	char *ip=NULL;
+	char *ifper=NULL;
+	char *flag_time=NULL;
+	char *slot_c=NULL;
+	if(ret ==0)
+	{
+		struct clientz_st *tail = NULL,*q = NULL;
+		head->next = NULL;
+		tail = head;
+		for(i=0;i<count;i++)
+		{
+			q=(struct clientz_st *)malloc(sizeof(struct clientz_st)+1);
+			memset(q,0,sizeof(struct clientz_st)+1);
+			if(NULL == q)
+			{
+				return	-1;
+			}		
+			dbus_message_iter_recurse(&iter_array,&iter_struct);
+			dbus_message_iter_get_basic(&iter_struct,&ip);
+			
+			dbus_message_iter_next(&iter_struct);	
+			dbus_message_iter_get_basic(&iter_struct,&flag_time);
+			
+			dbus_message_iter_next(&iter_struct);	
+			dbus_message_iter_get_basic(&iter_struct,&ifper);
+			
+			dbus_message_iter_next(&iter_struct);	
+			dbus_message_iter_get_basic(&iter_struct,&slot_c);
+			
+			memset(q->clitipz,0,IPMASK_LEN);
+			memset(q->ifper,0,IPMASK_LEN);
+			memset(q->timeflag,0,TIMESTR_LEN);
+			memset(q->slotid,0,SID_LEN);
+			
+			memcpy(q->clitipz,ip,strlen(ip));
+			memcpy(q->ifper,ifper,strlen(ifper));
+			memcpy(q->timeflag,flag_time,strlen(flag_time));
+			memcpy(q->slotid,slot_c,strlen(slot_c));
+			dbus_message_iter_next(&iter_array);
+			
+			if((q)&&(tail))
+			{
+				q->next = NULL;
+				tail->next = q;
+				tail = q;
+			}
+		}
+	}
+	else
+	{
+		if (dbus_error_is_set(&err)) {
+			dbus_error_free(&err);
+		}
+		dbus_message_unref(reply);
+		return -2;
+	}
+
+	dbus_message_unref(reply);
+	return 0;
+}
+
+
 
 int 
 ac_manage_show_time(DBusConnection *connection, struct timez_st *rule_array) {
