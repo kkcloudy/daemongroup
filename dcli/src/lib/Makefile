@@ -45,6 +45,8 @@ INCLUDES += -I $(ACCAPIPATH)/nm/wlan/
 INCLUDES += -I../../../net-snmp/engine/include
 INCLUDES += -I../../../AuteCS/cgic205/
 INCLUDES += -I $(BUILD_DIR)/src/sem/src/dcli/  #wangchao add
+INCLUDES += -I $(BUILD_DIR)/src/npdsuit_mv/npd/src/dcli/#wangchao add
+
 
 LD_PATH = -L${ROOTFS_DIR}/files/lib -L$(BUILDROOTDIR)/usr/lib -L../pub -L$(IBUS_PATH)/cli -L$(IBUS_PATH)/mapi -L../../../lib/nm 
 
@@ -112,11 +114,10 @@ DCLI_OBJS = dcli_main.o dcli_user.o dcli_sys_manage.o dcli_boot.o dcli_vrrp.o dc
 #						dcli_eag.o dcli_pdc.o dcli_rdc.o dcli_domain.o dcli_rpa.o dcli_snmp.o dcli_acsample.o dcli_tc.o dcli_firewall.o dcli_strict_access.o dcli_apache.o dcli_md5.o dcli_cavium_ratelimit.o						
 
 # npdsuit needed
-DCLI_OBJS += dcli_eth_port.o  dcli_acl.o dcli_qos.o dcli_stp.o dcli_vlan.o dcli_trunk.o dcli_dynamic_trunk.o \
-			 dcli_fdb.o  dcli_system.o  dcli_intf.o dcli_common_stp.o dcli_routesyn.o \
-			 dcli_pvlan.o dcli_mirror.o dcli_diag.o dcli_tunnel.o dcli_common_dldp.o dcli_prot_vlan.o \
-			 dcli_mld_snp.o dcli_common_mld_snp.o  dcli_igmp_snp.o dcli_common_igmp_snp.o dcli_debug.o \
+DCLI_OBJS += dcli_intf.o dcli_eth_port.o dcli_npd_main.o dcli_system.o dcli_common_dldp.o dcli_debug.o \
 			 dcli_dhcp_snp.o dcli_dhcp6.o dcli_ntp.o dcli_timezone.o dcli_syslog.o dcli_pppoe_snp.o dcli_pppoe.o dcli_radius.o dcli_acinfo.o
+#dcli_mirror.o dcli_common_mld_snp.o  dcli_common_igmp_snp.o dcli_mld_snp.o dcli_igmp_snp.o dcli_prot_vlan.o dcli_pvlan.o dcli_tunnel.o dcli_routesyn.o dcli_fdb.o dcli_diag.o   dcli_common_stp.o dcli_vlan.o dcli_trunk.o dcli_dynamic_trunk.o dcli_qos.o dcli_acl.o dcli_stp.o
+			 
 #error: dcli_dhcp_snp.o undefined symbol: ReInitDbusConnection
 			 
 DCLI_OBJS += $(DCLI_WIRELESS_OBJS)

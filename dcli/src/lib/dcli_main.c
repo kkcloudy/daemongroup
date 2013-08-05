@@ -61,6 +61,12 @@ extern "C"
 #include "dcli_pdc.h"
 #include "dcli_rdc.h"
 #include "dcli_domain.h"
+
+/*wangchao add*/
+#include "npd/nbm/npd_bmapi.h"
+#include "dcli_vlan.h"
+/*******************/
+
 #ifdef _D_WCPSS_
 #include "wcpss/waw.h"
 #include "wcpss/wid/WID.h"
@@ -576,36 +582,35 @@ void dcli_init(void)
 #endif
 
     /* npdsuit start */
+    dcli_npd_init(); /*wangchao add*/
     dcli_global_ethports_init();
 	dcli_system_init();
-	dcli_diag_init();
 	dcli_eth_port_init();
-	dcli_vlan_init();
-
-	dcli_trunk_init();
-	dcli_dynamic_trunk_init();
-	dcli_fdb_init();
-	dcli_qos_init();
-	dcli_acl_init();
-	
 	dcli_interface_element_init();
-	dcli_stp_element_init();
-	dcli_drv_routesyn_init();
+    dcli_qinq_type_init();	
+	//dcli_vlan_init();
+	//dcli_diag_init();
+	//dcli_trunk_init();
+	//dcli_dynamic_trunk_init();
+	//dcli_fdb_init();
+	//dcli_qos_init();
+	//dcli_acl_init();
+	//dcli_stp_element_init();
+	//dcli_drv_routesyn_init();
     /* can be use as experiment */
-	dcli_tunnel_init();
-	dcli_pvlan_init();
-    dcli_prot_vlan_element_init();	
+	//dcli_tunnel_init();
+	//dcli_pvlan_init();
+    //dcli_prot_vlan_element_init();	
+	//dcli_igmp_snp_element_init();
+	//dcli_mld_snp_element_init();	
+	
+
+	//dcli_mirror_init();
 #if 0
 	dcli_dldp_element_init();
 
 #endif
 
-	dcli_igmp_snp_element_init();
-	dcli_mld_snp_element_init();	
-	
-
-	dcli_mirror_init();
-    dcli_qinq_type_init();
     /* npdsuit end */
 		
     dcli_system_debug_init();	

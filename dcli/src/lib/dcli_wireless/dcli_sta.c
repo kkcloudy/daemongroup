@@ -7,7 +7,7 @@
 
 #include "command.h"
 #include "dcli_ac.h"
-#include "../dcli_acl.h"
+#include "dcli_acl.h"
 #include "../dcli_main.h"
 #include "dcli_wlan.h"
 #include "dcli_sta.h"
