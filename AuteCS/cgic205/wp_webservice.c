@@ -160,6 +160,9 @@ int ShowWebservicePage(struct list *lpublic, struct list *lsystem)
 					  case -5:
 						  ShowAlert(search(lpublic,"web_ex"));
 						  break;
+					  case -8:
+						  ShowAlert(search(lpublic,"port_error"));
+						  break;
 					  default:
 					 	 ShowAlert(search(lpublic,"oper_fail"));
 						  break;

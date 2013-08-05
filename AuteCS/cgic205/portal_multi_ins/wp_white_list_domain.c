@@ -171,6 +171,7 @@ int cgiMain()
 	
 	memset(plotid,0,sizeof(plotid));
 	cgiFormStringNoNewlines("plotid", plotid, sizeof(plotid)); 
+	fprintf(stderr,"-------domain-----------plotid=%s",plotid);
 	list_instance_parameter(&paraHead1, INSTANCE_STATE_WEB);
 	if (NULL == paraHead1) {
 		return 0;
@@ -452,7 +453,7 @@ static int s_white_list_domain_content_of_page( STPageInfo *pstPageInfo )
 	fprintf( cgiOut, "						<script type=text/javascript>\n"\
 										"							function on_mode_change(obj)\n"
 										"							{\n"\
-										"								window.location.href='wp_white_list.cgi?UN=%s&plotid='+%d;\n", pstPageInfo->encry, pstPageInfo->plotid);
+										"								window.location.href='wp_white_list.cgi?UN=%s&plotid=%s';\n", pstPageInfo->encry,plotid);
 	fprintf( cgiOut, "							}\n");
 	fprintf( cgiOut, "					</script>\n"
 										"					</td>\n"\

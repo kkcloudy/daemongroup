@@ -165,6 +165,7 @@ int ShowWebservicePage(struct list *lpublic, struct list *lsystem)
 	  if(cgiFormSubmitClicked("starts") == cgiFormSuccess)
 	  {
 	  	
+		system("sudo chmod 666 /var/log/apache_tmp2.log\n");
 		strcat(command, "sudo /etc/init.d/apache2 restart >/var/log/apache_tmp2.log 2>&1;");
 		retu1=WEXITSTATUS(system(command));	
 		if(retu1==0)

@@ -392,7 +392,7 @@ static int s_addnasid_prefix_of_page( STPageInfo *pstPageInfo )
 		check_ret4 = Input_Nas_ID_Check(nasid);
 		check_ret5 = check_input_digit_valid(syntaxis_point, 0, 99);
 		if((check_ret4 !=0) || (check_ret5 != 0)){
-			ShowAlert(search(portal_auth, "add_failed"));
+			ShowAlert(search(portal_public, "input_illegal"));
 			return 0;
 			}			
 		ret = eag_add_nasid(ccgi_connection, parameter.local_id, parameter.instance_id, &nasidmap);
@@ -407,12 +407,12 @@ static int s_addnasid_prefix_of_page( STPageInfo *pstPageInfo )
 				case EAG_ERR_CONFIG_ITEM_PARAM_CONFLICT:
 					    ShowAlert(search(portal_auth, "error_conflict"));
                         break;
-				default:ShowAlert(search(portal_auth, "error_other"));
+				default:ShowAlert(search(portal_auth, "whitelist_add_err"));
 				        break;
 			   }
 		}
 		else if((EAG_RETURN_OK == ret)){
-		ShowAlert(search(portal_auth, "add_success"));			
+		ShowAlert(search(portal_auth, "add_nasid_suc"));			
 		}
 		fprintf( pp, "<script type='text/javascript'>\n" );
 		fprintf( pp, "window.location.href='wp_nasid_byvlan.cgi?UN=%s&plotid=%s';\n", pstPageInfo->encry,plotid);

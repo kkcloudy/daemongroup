@@ -24,6 +24,25 @@
 static unsigned int master_slot_id;
 static unsigned int local_slot_id;
 
+static int ccgi_web_ip_port_check(const char *address_d, const unsigned int port_d, int slot_d)
+{
+	int ret = 0;
+	instance_parameter *para;
+	if(SNMPD_DBUS_ERROR == get_slot_dbus_connection(slot_d, &para, SNMPD_SLOT_CONNECT))
+	{
+		return WEB_FAILURE;
+	}
+	
+    ret = ac_manage_web_ip_port_check(para->connection, address_d, port_d);
+	if (WEB_SUCCESS != ret)
+	{
+		return WEB_FAILURE;
+	}
+
+	return WEB_SUCCESS;
+}
+
+
 
 int web_name_valid(char* str, unsigned int len)
 {
@@ -234,6 +253,7 @@ static int ccgi_dcli_web_vhost_add_valid(webHost host, unsigned int slot)
 	struct webInfoHead infohead;
 	
 	LINK_INIT(&infohead);
+	int ret=0;
 
 	int sum = ccgi_dcli_web_vhost_show(&infohead);
 
@@ -305,6 +325,13 @@ static int ccgi_dcli_web_vhost_add_valid(webHost host, unsigned int slot)
         }
 	}
 	web_list_flush(&infohead);
+
+	
+	/* check ip or port is or not using */
+	ret = ccgi_web_ip_port_check(host.address, host.port, slot);
+	if (WEB_SUCCESS != ret) {
+		return WEB_IP_PORT_ERROR;
+	}
     return WEB_SUCCESS; 
 }
 
@@ -312,7 +339,7 @@ static int ccgi_dcli_web_vhost_add_valid(webHost host, unsigned int slot)
 
 int ccgi_set_interval_portal_cmd(char *name, char *type, char *ip_addr, char *port, char *slot)
 											//0:成功;-1:invalid arguments;_2:invalid slot;-3:too much webservice;-4:service is running;
-											//-5:service name is exist;-6:service ip:port exist;-7:portal slot conflict;-8:add failed
+											//-5:service name is exist;-6:service ip:port exist;-7:portal slot conflict;-8:add failed;-8:port error, can not be used
 {
     webHost vh;
 	instance_parameter *para;
@@ -343,7 +370,9 @@ int ccgi_set_interval_portal_cmd(char *name, char *type, char *ip_addr, char *po
         case WEB_EXISIT:
 			return -6;
         case WEB_PORTAL_ERROR:
-			return -7;
+			return -7;		
+		case WEB_IP_PORT_ERROR:
+	        return -8;
         default:
             break;
     }
@@ -636,7 +665,7 @@ int disable_interval_portal_service_cmd()
 
 int ccgi_add_http_https_ip_port_cmd(char *name,char *type,char *ip_addr, char *port)
 												//0:成功;-1:invalid arguments;-2:to much webservice;-3:service is running;
-												//-4:service name  exist;-5:ip:port exist;-6:connection is error;-7:set failed
+												//-4:service name  exist;-5:ip:port exist;-6:connection is error;-7:set failed;-8:port error, can not be used
 {
     ccgi_dcli_web_slot_init();
 	
@@ -661,6 +690,8 @@ int ccgi_add_http_https_ip_port_cmd(char *name,char *type,char *ip_addr, char *p
 
         case WEB_EXISIT:
             return -5;
+		case WEB_IP_PORT_ERROR:
+			return -8;
         default:
             break;
     }
