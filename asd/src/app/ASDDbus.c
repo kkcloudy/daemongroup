@@ -14777,8 +14777,7 @@ DBusMessage *asd_dbus_wlan_use_mac_list(DBusConnection *conn, DBusMessage *msg, 
 	}else if((wids_enable == 1) && (list_type != 1)){ 
 		ret = ASD_WIDS_OPEN;
 	}else {
-	    pthread_mutex_lock(&asd_g_wtp_mutex);
-		pthread_mutex_lock(&asd_g_sta_mutex);
+	    pthread_mutex_lock(&asd_g_wtp_mutex);		
 		conf = ASD_WLAN[wlanid]->acl_conf;
 		if(change_maclist_security(conf,list_type) != 0)
 			asd_printf(ASD_DBUS,MSG_DEBUG,"change mac list failed\n");
@@ -14814,7 +14813,6 @@ DBusMessage *asd_dbus_wlan_use_mac_list(DBusConnection *conn, DBusMessage *msg, 
 				}
 			}
 		}
-	    pthread_mutex_unlock(&asd_g_sta_mutex);
 	    pthread_mutex_unlock(&asd_g_wtp_mutex);
 	}
 
