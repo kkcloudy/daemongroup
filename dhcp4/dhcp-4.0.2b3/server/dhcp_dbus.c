@@ -876,7 +876,7 @@ static int compare_subnet(struct iaddr subnet1, struct iaddr net_mask1, struct i
 	
 	for (i = 0; i < subnet1.len; i++) {
 		
-		log_debug("check_sub->ipaddr.iabuf[i] %d, head_sub->ipaddr.iabuf[i] %d\n", subnet1.iabuf[i],  subnet2.iabuf[i]);
+		//log_debug("check_sub->ipaddr.iabuf[i] %d, head_sub->ipaddr.iabuf[i] %d\n", subnet1.iabuf[i],  subnet2.iabuf[i]);
 
 		if (((subnet1.iabuf[i]) & ((net_mask1.iabuf[i])&(net_mask2.iabuf[i]))) != 
 			((subnet2.iabuf[i]) & ((net_mask2.iabuf[i])&( net_mask1.iabuf[i])))) {			
