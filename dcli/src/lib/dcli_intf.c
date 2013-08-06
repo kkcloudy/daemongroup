@@ -7286,8 +7286,12 @@ int ve_ifname_transfer_conversion(char *new_ifname, const char *original_ifname)
 		}
 	}
 	else {
+		/*
 		vty_out(vty, "[%s] is not a ve-interface name.\n", original_ifname);
-		return -1;
+		*/
+		memcpy(new_ifname, original_ifname, strlen(original_ifname));
+		
+		return 0;
 	}
 
 	return 0;
