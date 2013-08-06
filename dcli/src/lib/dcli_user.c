@@ -59,6 +59,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <shadow.h>
 #include <unistd.h>
+#include <dbus/sem/sem_dbus_def.h>
+#include "dcli_main.h"
+#include "linklist.h"
+#include "memory.h"
 
 #if 1 //added by houxx
 #include "dcli_md5.h"
@@ -2049,6 +2053,1393 @@ DEFUN (passwd_modify,
 		return CMD_WARNING;
 	}
 }
+#if 1
+
+/**zhaocg add for suporting board slot**/
+DEFUN (user_add_slot,
+	   user_add_slot_cmd,
+	   "user add slot <1-15> USERNAME PASSWD (view|enable)",
+	   "User command\n"
+	   "Add user\n"
+	   "Board slot\n"
+	   "Slot id\n"
+	   "The new user name;user name length should be >=4 & <=32\n"
+	   "The user password;user password length should be >=4 & <=32,and in passwd strong state,it should be >=6 & <=32\n"
+	   "The user of view\n"
+	   "The user of admin\n")
+{
+	DBusMessage *query = NULL; 
+	DBusMessage *reply = NULL;
+	DBusMessageIter  iter;
+	DBusError err; 
+	
+	char cmd[128] = {0};
+	char *cmdstr = cmd;
+	char *username = argv[1];
+	char userrole[32] = {0};
+	int ret;
+	int opt;
+	int slot_id = 0;
+	slot_id = atoi(argv[0]);
+	if(slot_id == HostSlotId)
+	{
+		vty_out(vty,"Can't config the active master board,please config other board\n");
+		return CMD_WARNING;
+	}
+	ret = dcli_user_name_check((char*)argv[1]);
+	if(ret == 1)
+	{
+		vty_out(vty,"the user name should be 'A'-'Z'  'a'-'z' '1'-'9'or '_'\n");
+		return CMD_WARNING;
+	}
+	else if(ret == 2)
+	{
+		vty_out(vty,"the user name length should be >=4 & <=32\n");
+		return CMD_WARNING;
+	}
+	else if(ret == 3)
+	{
+		vty_out(vty,"the user name first char  should be 'A'-'Z' or 'a'-'z'\n");
+		return CMD_WARNING;
+	}
+	
+	
+	if(!boot_flag)
+	{
+		ret = dcli_user_passwd_check(argv[1],argv[2]);
+		if(ret == 1)
+		{
+			 vty_out(vty,"the user password is a palindrome \n");
+			return CMD_WARNING;
+		}	
+		else if(ret == 2)
+		{
+			 vty_out(vty,"the user password is too simple \n");
+			return CMD_WARNING;
+		}
+		else if(ret == 3)
+		{
+			 vty_out(vty,"the user password should be not same as username\n");
+			 return CMD_WARNING;
+		 }		 
+		 else if(ret == 4)
+		 {
+			 vty_out(vty,"the user password too short or too long\n");
+			 return CMD_WARNING;
+		 }		 
+		 else if(ret == 5)
+		 {
+			 vty_out(vty,"the user password length should be >= %d && <=32\n",passwdlen);
+			 return CMD_WARNING;
+		 }
+	 }
+	
+	if(!strncmp("enable",argv[3],strlen(argv[3])))
+	{
+		sprintf(userrole,"enable");
+	}	
+	else
+	{
+		sprintf(userrole,"view");
+	}
+
+	sprintf(cmd,"user add %s %s %s",argv[1],argv[2],userrole);
+	
+	if(NULL != (dbus_connection_dcli[slot_id] -> dcli_dbus_connection))
+	{
+
+		query = dbus_sem_msg_new_method_call(SEM_DBUS_BUSNAME, SEM_DBUS_OBJPATH,
+					 SEM_DBUS_INTERFACE,SEM_DBUS_USER_IS_EXSIT_SLOT);
+
+		dbus_error_init(&err);
+
+		dbus_message_append_args(query,DBUS_TYPE_STRING, &username,DBUS_TYPE_INVALID);
+		reply = dbus_connection_send_with_reply_and_block(dbus_connection_dcli[slot_id] -> dcli_dbus_connection, query, 60000, &err);
+		
+		dbus_message_unref(query);
+
+		if (NULL == reply)
+		{
+			vty_out(vty,"<error> failed get reply.\n");
+			
+			if (dbus_error_is_set(&err)) 
+			{
+				vty_out(vty,"%s raised: %s",err.name,err.message);
+				dbus_error_free_for_dcli(&err);
+			}
+			
+			return CMD_WARNING;
+		}
+
+		dbus_message_iter_init(reply,&iter);
+		dbus_message_iter_get_basic(&iter,&ret);
+		dbus_message_unref(reply);
+		if (ret)  
+	    {  
+			vty_out(vty,"the user %s have existed\n",argv[1]);
+			return CMD_WARNING;
+	    }  
+		 	
+	
+		query = dbus_sem_msg_new_method_call(SEM_DBUS_BUSNAME, 
+											SEM_DBUS_OBJPATH,
+											SEM_DBUS_INTERFACE,
+											SEM_DBUS_USER_ADD_SLOT);
+
+		dbus_error_init(&err);
+
+		dbus_message_append_args(query,
+								DBUS_TYPE_UINT32,&boot_flag,
+								DBUS_TYPE_STRING,&cmdstr,
+								DBUS_TYPE_INVALID);
+				
+		reply = dbus_connection_send_with_reply_and_block(dbus_connection_dcli[slot_id] -> dcli_dbus_connection, query, -1, &err);
+		
+		dbus_message_unref(query);
+
+		if (NULL == reply)
+		{
+			vty_out(vty,"<error> failed get reply.\n");
+			
+			if (dbus_error_is_set(&err)) 
+			{
+				vty_out(vty,"%s raised: %s",err.name,err.message);
+				dbus_error_free_for_dcli(&err);
+			}
+			
+			return CMD_WARNING;
+		}
+
+		dbus_message_iter_init(reply,&iter);
+		dbus_message_iter_get_basic(&iter,&ret);	
+		if (-1 == ret)  
+	    {  
+	 	   vty_out(vty,"system error!");  
+	    }  
+		else  
+	    {  
+	  
+	 	   if (WIFEXITED(ret))  
+	 	   {  
+			   switch (WEXITSTATUS(ret))
+			   { 	
+					case 0: 		 
+						   break;	
+					default:			
+						vty_out(vty,"Add user %s error\n",argv[1]);			
+						break;		
+				}	
+		   }  
+	 	   else  
+	 	   {  
+	 		   vty_out(vty,"exit status = [%d]\n", WEXITSTATUS(ret));  
+		   }  
+	   }  
+	   
+		dbus_message_unref(reply);
+	}
+	else
+	{
+		vty_out(vty,"The slot doesn't exist");
+	}
+	
+	return CMD_SUCCESS;
+}
+
+DEFUN (user_add_slot_all,
+	   user_add_slot_all_cmd,
+	   "user add slot all USERNAME PASSWD (view|enable)",
+	   "User command\n"
+	   "Add user\n"
+	   "Board slot\n"
+	   "ALL board slot\n"
+	   "The new user name;user name length should be >=4 & <=32\n"
+	   "The user password;user password length should be >=4 & <=32,and in passwd strong state,it should be >=6 & <=32\n"
+	   "The user of view\n"
+	   "The user of admin\n")
+{
+	DBusMessage *query = NULL; 
+	DBusMessage *reply = NULL;
+	DBusMessageIter  iter;
+	DBusError err; 
+	
+	char cmd[128] = {0};
+	char *cmdstr = cmd;
+	char *username = argv[0];
+	char userrole[32] = {0};
+	int ret;
+	int slot_id = 0;
+	
+	ret = dcli_user_name_check((char*)argv[0]);
+	if(ret == 1)
+	{
+		vty_out(vty,"the user name should be 'A'-'Z'  'a'-'z' '1'-'9'or '_'\n");
+		return CMD_WARNING;
+	}
+	else if(ret == 2)
+	{
+		vty_out(vty,"the user name length should be >=4 & <=32\n");
+		return CMD_WARNING;
+	}
+	else if(ret == 3)
+	{
+		vty_out(vty,"the user name first char  should be 'A'-'Z' or 'a'-'z'\n");
+		return CMD_WARNING;
+	}
+	
+	if(!boot_flag)
+	{
+		ret = dcli_user_passwd_check(argv[0],argv[1]);
+		if(ret == 1)
+		{
+			 vty_out(vty,"the user password is a palindrome \n");
+			return CMD_WARNING;
+		}	
+		else if(ret == 2)
+		{
+			 vty_out(vty,"the user password is too simple \n");
+			return CMD_WARNING;
+		}
+		else if(ret == 3)
+		{
+			 vty_out(vty,"the user password should be not same as username\n");
+			 return CMD_WARNING;
+		 }		 
+		 else if(ret == 4)
+		 {
+			 vty_out(vty,"the user password too short or too long\n");
+			 return CMD_WARNING;
+		 }		 
+		 else if(ret == 5)
+		 {
+			 vty_out(vty,"the user password length should be >= %d && <=32\n",passwdlen);
+			 return CMD_WARNING;
+		 }
+	 }
+	
+	if(!strncmp("enable",argv[2],strlen(argv[2])))
+	{
+		sprintf(userrole,"enable");
+	}	
+	else
+	{
+		sprintf(userrole,"view");
+	}
+
+	sprintf(cmd,"user add %s %s %s",argv[0],argv[1],userrole);
+	for(slot_id=0;slot_id<16;slot_id++)
+	{	
+		if(slot_id != HostSlotId)
+		{
+			if(NULL != (dbus_connection_dcli[slot_id] -> dcli_dbus_connection))
+			{
+				
+				query = dbus_sem_msg_new_method_call(SEM_DBUS_BUSNAME, SEM_DBUS_OBJPATH,
+							 SEM_DBUS_INTERFACE,SEM_DBUS_USER_IS_EXSIT_SLOT);
+
+				dbus_error_init(&err);
+
+				dbus_message_append_args(query,DBUS_TYPE_STRING, &username,DBUS_TYPE_INVALID);
+				reply = dbus_connection_send_with_reply_and_block(dbus_connection_dcli[slot_id] -> dcli_dbus_connection, query, 60000, &err);
+				
+				dbus_message_unref(query);
+
+				if (NULL == reply)
+				{
+					vty_out(vty,"Slot %d,<error> failed get reply.\n",slot_id);
+					
+					if (dbus_error_is_set(&err)) 
+					{
+						vty_out(vty,"%s raised: %s",err.name,err.message);
+						dbus_error_free_for_dcli(&err);
+					}
+					
+					return CMD_WARNING;
+				}
+
+				dbus_message_iter_init(reply,&iter);
+				dbus_message_iter_get_basic(&iter,&ret);
+				dbus_message_unref(reply);
+				if (ret)  
+			    {  
+					vty_out(vty,"Slot %d,the user %s have existed\n",slot_id,argv[0]);
+					return CMD_WARNING;
+			    }  
+				 	
+			
+				query = dbus_sem_msg_new_method_call(SEM_DBUS_BUSNAME, 
+													SEM_DBUS_OBJPATH,
+													SEM_DBUS_INTERFACE,
+													SEM_DBUS_USER_ADD_SLOT);
+
+				dbus_error_init(&err);
+
+				dbus_message_append_args(query,
+										DBUS_TYPE_UINT32,&boot_flag,
+										DBUS_TYPE_STRING,&cmdstr,
+										DBUS_TYPE_INVALID);
+						
+				reply = dbus_connection_send_with_reply_and_block(dbus_connection_dcli[slot_id] -> dcli_dbus_connection, query, -1, &err);
+				
+				dbus_message_unref(query);
+
+				if (NULL == reply)
+				{
+					vty_out(vty,"Slot %d,<error> failed get reply.\n",slot_id);
+					
+					if (dbus_error_is_set(&err)) 
+					{
+						vty_out(vty,"%s raised: %s",err.name,err.message);
+						dbus_error_free_for_dcli(&err);
+					}
+					
+					return CMD_WARNING;
+				}
+
+				dbus_message_iter_init(reply,&iter);
+				dbus_message_iter_get_basic(&iter,&ret);	
+				if (-1 == ret)  
+			    {  
+			 	   vty_out(vty,"Slot %d,system error!",slot_id);  
+			    }  
+				else  
+			    {  
+			  
+			 	   if (WIFEXITED(ret))  
+			 	   {  
+					   switch (WEXITSTATUS(ret))
+					   { 	
+							case 0: 		 
+								   break;	
+							default:			
+								vty_out(vty,"Slot %d,Add user %s error\n",slot_id,argv[0]);			
+								break;		
+						}	
+				   }  
+			 	   else  
+			 	   {  
+			 		   vty_out(vty,"Slot %d,exit status = [%d]\n",slot_id, WEXITSTATUS(ret));  
+				   }  
+			   }  
+			   
+				dbus_message_unref(reply);
+			}
+		}
+	}
+	return CMD_SUCCESS;
+}
+
+DEFUN (user_del_slot,
+	   user_del_slot_cmd,
+	   "user delete slot <1-15> USERNAME",
+	   "User command\n"
+	   "Delete user\n"
+	   "board slot\n"
+	   "slot id\n"
+	   "The deleted user name\n")
+{
+	DBusMessage *query=NULL; 
+	DBusMessage *reply=NULL;
+	DBusMessageIter  iter;
+	DBusError err;
+	char cmd[128] = {0};
+	char *cmdstr = cmd;
+	char* username = NULL;
+	int ret;
+	int opt;
+	int slot_id = 0;
+	username = argv[1];
+	slot_id = atoi(argv[0]);
+	if(slot_id == HostSlotId)
+	{
+		vty_out(vty,"Can't config the active master board,please config other board\n");
+		return CMD_WARNING;
+	}
+
+	sprintf(cmd,"user delete %s",argv[1]);
+	if(NULL != (dbus_connection_dcli[slot_id] -> dcli_dbus_connection))
+	{
+
+		query = dbus_sem_msg_new_method_call(SEM_DBUS_BUSNAME, SEM_DBUS_OBJPATH,
+					 SEM_DBUS_INTERFACE,SEM_DBUS_USER_IS_EXSIT_SLOT);
+
+		dbus_error_init(&err);
+
+		dbus_message_append_args(query,DBUS_TYPE_STRING, &username,DBUS_TYPE_INVALID);
+		reply = dbus_connection_send_with_reply_and_block(dbus_connection_dcli[slot_id] -> dcli_dbus_connection, query, 60000, &err);
+		
+		dbus_message_unref(query);
+
+		if (NULL == reply)
+		{
+			vty_out(vty,"<error> failed get reply.\n");
+			
+			if (dbus_error_is_set(&err)) 
+			{
+				vty_out(vty,"%s raised: %s",err.name,err.message);
+				dbus_error_free_for_dcli(&err);
+			}
+			
+			return CMD_WARNING;
+		}
+
+		dbus_message_iter_init(reply,&iter);
+		dbus_message_iter_get_basic(&iter,&ret);
+		dbus_message_iter_next(&iter);	
+		dbus_message_iter_get_basic(&iter,&opt);
+		dbus_message_unref(reply);
+		if (!ret)  
+	    {  
+			vty_out(vty,"the user %s is not exist\n",argv[1]);
+			return CMD_WARNING;
+	    }  
+		if(opt)
+		{
+			vty_out(vty,"Can't del user %s which belong admin group\n",argv[1]);
+			return CMD_WARNING;
+		}
+	
+		query = dbus_sem_msg_new_method_call(SEM_DBUS_BUSNAME, SEM_DBUS_OBJPATH,
+					 SEM_DBUS_INTERFACE,SEM_DBUS_USER_DEL_SLOT);
+
+		dbus_error_init(&err);
+
+		dbus_message_append_args(query,DBUS_TYPE_STRING, &cmdstr,DBUS_TYPE_INVALID);
+		reply = dbus_connection_send_with_reply_and_block(dbus_connection_dcli[slot_id] -> dcli_dbus_connection, query, 60000, &err);
+		
+		dbus_message_unref(query);
+
+		if (NULL == reply)
+		{
+			vty_out(vty,"<error> failed get reply.\n");
+			
+			if (dbus_error_is_set(&err)) 
+			{
+				vty_out(vty,"%s raised: %s",err.name,err.message);
+				dbus_error_free_for_dcli(&err);
+			}
+			
+			return CMD_WARNING;
+		}
+
+		dbus_message_iter_init(reply,&iter);
+		dbus_message_iter_get_basic(&iter,&ret);
+		
+		if (-1 == ret)  
+	    {  
+	 	   vty_out(vty,"system error!");  
+	    }  
+		else  
+	    {  
+			
+	  
+	 	   if (WIFEXITED(ret))  
+	 	   {  
+			   switch (WEXITSTATUS(ret))
+			   { 	
+					case 0: 		 						   
+						   break;
+					default:		
+						vty_out(vty,"Delete user %s error\n",argv[1]);			
+						break;		
+					
+				}	
+		   }  
+	 	   else  
+	 	   {  
+	 		   vty_out(vty,"exit status = [%d]\n", WEXITSTATUS(ret));  
+		   }  
+	   }  
+		dbus_message_unref(reply);
+		
+	}
+	else
+	{
+		vty_out(vty,"The slot doesn't exist");
+	}
+	
+	return CMD_SUCCESS;
+}
+DEFUN (user_del_slot_all,
+	   user_del_slot_all_cmd,
+	   "user delete slot all USERNAME",
+	   "User command\n"
+	   "Delete user\n"
+	   "board slot\n"
+	   "slot id\n"
+	   "The deleted user name\n")
+{
+	DBusMessage *query=NULL; 
+	DBusMessage *reply=NULL;
+	DBusMessageIter  iter;
+	DBusError err;
+	char cmd[128] = {0};
+	char *cmdstr = cmd;
+	char *username = NULL;
+	int ret;
+	int opt;
+	int slot_id = 0;
+	username = argv[0];
+	sprintf(cmd,"user delete %s",argv[0]);
+	for(slot_id=0;slot_id<16;slot_id++)
+	{	
+		if(slot_id != HostSlotId)
+		{
+			if(NULL != (dbus_connection_dcli[slot_id] -> dcli_dbus_connection))
+			{
+				
+				query = dbus_sem_msg_new_method_call(SEM_DBUS_BUSNAME, SEM_DBUS_OBJPATH,
+							 SEM_DBUS_INTERFACE,SEM_DBUS_USER_IS_EXSIT_SLOT);
+
+				dbus_error_init(&err);
+
+				dbus_message_append_args(query,DBUS_TYPE_STRING, &username,DBUS_TYPE_INVALID);
+				reply = dbus_connection_send_with_reply_and_block(dbus_connection_dcli[slot_id] -> dcli_dbus_connection, query, 60000, &err);
+				
+				dbus_message_unref(query);
+
+				if (NULL == reply)
+				{
+					vty_out(vty,"Slot %d,<error> failed get reply.\n",slot_id);
+					
+					if (dbus_error_is_set(&err)) 
+					{
+						vty_out(vty,"%s raised: %s",err.name,err.message);
+						dbus_error_free_for_dcli(&err);
+					}
+					
+					return CMD_WARNING;
+				}
+
+				dbus_message_iter_init(reply,&iter);
+				dbus_message_iter_get_basic(&iter,&ret);
+				dbus_message_iter_next(&iter);	
+				dbus_message_iter_get_basic(&iter,&opt);
+				dbus_message_unref(reply);
+				if (!ret)  
+			    {  
+					vty_out(vty,"Slot %d,the user %s is not exist\n",slot_id,argv[0]);
+					return CMD_WARNING;
+			    }  
+				if(opt)
+				{
+					vty_out(vty,"Slot %d,Can't del user %s which belong admin group\n",slot_id,argv[0]);
+					return CMD_WARNING;
+				}	
+			
+				query = dbus_sem_msg_new_method_call(SEM_DBUS_BUSNAME, SEM_DBUS_OBJPATH,
+							 SEM_DBUS_INTERFACE,SEM_DBUS_USER_DEL_SLOT);
+
+				dbus_error_init(&err);
+
+				dbus_message_append_args(query,DBUS_TYPE_STRING, &cmdstr,DBUS_TYPE_INVALID);
+				reply = dbus_connection_send_with_reply_and_block(dbus_connection_dcli[slot_id] -> dcli_dbus_connection, query, 60000, &err);
+				
+				dbus_message_unref(query);
+
+				if (NULL == reply)
+				{
+					vty_out(vty,"Slot %d,<error> failed get reply.\n",slot_id);
+					
+					if (dbus_error_is_set(&err)) 
+					{
+						vty_out(vty,"%s raised: %s",err.name,err.message);
+						dbus_error_free_for_dcli(&err);
+					}
+					
+					return CMD_WARNING;
+				}
+
+				dbus_message_iter_init(reply,&iter);
+				dbus_message_iter_get_basic(&iter,&ret);
+				
+				if (-1 == ret)  
+			    {  
+			 	   vty_out(vty,"Slot %d,system error!",slot_id);  
+			    }  
+				else  
+			    {  	
+			  
+			 	   if (WIFEXITED(ret))  
+			 	   {  
+					   switch (WEXITSTATUS(ret))
+					   { 	
+							case 0: 		 							   
+								   break;
+							default:			
+								vty_out(vty,"Slot %d,Delete user %s error\n",slot_id,argv[0]);			
+								break;		
+						}	
+				   }  
+			 	   else  
+			 	   {  
+			 		   vty_out(vty,"Slot %d,exit status = [%d]\n",slot_id, WEXITSTATUS(ret));  
+				   }  
+			   }  
+				dbus_message_unref(reply);
+				
+			}
+		}
+	}
+	return CMD_SUCCESS;
+}
+
+DEFUN (user_role_change_slot,
+	   user_role_change_slot_cmd,
+	   "user role slot <1-15> USERNAME (view|enable)",
+	   "User command\n"
+	   "User role\n"
+	   "board slot\n"
+	   "slot id\n"
+	   "User name\n"
+	   "View user\n"
+	   "Admin user\n")
+{
+	DBusMessage *query=NULL; 
+	DBusMessage *reply=NULL;
+	DBusMessageIter  iter;
+	DBusError err;
+	char cmd[128] = {0};
+	char *cmdstr = cmd;
+	char *username = NULL;
+	int ret;
+	char userrole[32]={0};
+	int slot_id = 0;
+	username = argv[1];
+	slot_id = atoi(argv[0]);
+	if(slot_id == HostSlotId)
+	{
+		vty_out(vty,"Can't config the active master board,please config other board\n");
+		return CMD_WARNING;
+	}
+
+	/*Prevent array subscript beyond the bounds --added by zhaocg*/
+	int len = strlen(argv[1]);
+	if(len<4||len>32)
+	{
+		vty_out(vty,"the user name length should be >=4 & <=32\n");
+		return CMD_WARNING;
+	}
+	if(!strcmp(argv[1],"admin"))
+	{
+		vty_out(vty,"can't change user 'ADMIN' role \n");
+		return CMD_WARNING;
+	}
+	
+	if(!strncmp("enable",argv[2],strlen(argv[2])))
+	{
+		sprintf(userrole,"enable");
+		
+	}	
+	else
+	{
+		sprintf(userrole,"view");
+		
+	}
+	
+	sprintf(cmd,"user role %s %s",argv[1],userrole);
+	if(NULL != (dbus_connection_dcli[slot_id] -> dcli_dbus_connection))
+	{
+
+		query = dbus_sem_msg_new_method_call(SEM_DBUS_BUSNAME, SEM_DBUS_OBJPATH,
+					 SEM_DBUS_INTERFACE,SEM_DBUS_USER_IS_EXSIT_SLOT);
+
+		dbus_error_init(&err);
+
+		dbus_message_append_args(query,DBUS_TYPE_STRING, &username,DBUS_TYPE_INVALID);
+		reply = dbus_connection_send_with_reply_and_block(dbus_connection_dcli[slot_id] -> dcli_dbus_connection, query, 60000, &err);
+		
+		dbus_message_unref(query);
+
+		if (NULL == reply)
+		{
+			vty_out(vty,"<error> failed get reply.\n");
+			
+			if (dbus_error_is_set(&err)) 
+			{
+				vty_out(vty,"%s raised: %s",err.name,err.message);
+				dbus_error_free_for_dcli(&err);
+			}
+			
+			return CMD_WARNING;
+		}
+
+		dbus_message_iter_init(reply,&iter);
+		dbus_message_iter_get_basic(&iter,&ret);
+		dbus_message_unref(reply);
+		if (!ret)  
+	    {  
+			vty_out(vty,"the user %s is not exist\n",argv[1]);
+			return CMD_WARNING;
+	    }  
+		 	
+	
+		query = dbus_sem_msg_new_method_call(SEM_DBUS_BUSNAME, SEM_DBUS_OBJPATH,
+					 SEM_DBUS_INTERFACE,SEM_DBUS_USER_ROLE_SLOT);
+
+		dbus_error_init(&err);
+
+		dbus_message_append_args(query,DBUS_TYPE_STRING, &cmdstr,DBUS_TYPE_INVALID);
+		reply = dbus_connection_send_with_reply_and_block(dbus_connection_dcli[slot_id] -> dcli_dbus_connection, query, 60000, &err);
+		
+		dbus_message_unref(query);
+
+		if (NULL == reply)
+		{
+			vty_out(vty,"<error> failed get reply.\n");
+			
+			if (dbus_error_is_set(&err)) 
+			{
+				vty_out(vty,"%s raised: %s",err.name,err.message);
+				dbus_error_free_for_dcli(&err);
+			}
+			
+			return CMD_WARNING;
+		}
+
+		dbus_message_iter_init(reply,&iter);
+		dbus_message_iter_get_basic(&iter,&ret);
+		
+		if (-1 == ret)  
+	    {  
+	 	   vty_out(vty,"system error!");  
+	    }  
+		else  
+	    {  
+	 	   if (WIFEXITED(ret))  
+	 	   {  
+			   switch (WEXITSTATUS(ret))
+			   { 	
+					case 0: 		 						   
+						   break;			
+					default:			
+						vty_out(vty,"Change user %s role error\n",argv[1]);			
+						break;		
+				}	
+		   }  
+	 	   else  
+	 	   {  
+	 		   vty_out(vty,"exit status = [%d]\n", WEXITSTATUS(ret));  
+		   }  
+	   }  
+		dbus_message_unref(reply);
+	}
+	else
+	{
+		vty_out(vty,"The slot doesn't exist");
+	}
+	
+	return CMD_SUCCESS;
+
+}
+
+DEFUN (user_role_change_slot_all,
+	   user_role_change_slot_all_cmd,
+	   "user role slot all USERNAME (view|enable)",
+	   "User command\n"
+	   "User role\n"
+	   "Board slot\n"
+	   "All board slot\n"
+	   "User name\n"
+	   "View user\n"
+	   "Admin user\n")
+{
+	DBusMessage *query=NULL; 
+	DBusMessage *reply=NULL;
+	DBusMessageIter  iter;
+	DBusError err;
+	char cmd[128] = {0};
+	char *cmdstr = cmd;
+	char *username = NULL;
+	int ret;
+	char userrole[32]={0};
+	int slot_id = 0;
+	username = argv[0];
+	/*Prevent array subscript beyond the bounds --added by zhaocg*/
+	int len = strlen(argv[0]);
+	if(len<4||len>32)
+	{
+		vty_out(vty,"the user name length should be >=4 & <=32\n");
+		return CMD_WARNING;
+	}
+	if(!strcmp(argv[0],"admin"))
+	{
+		vty_out(vty,"can't change user 'ADMIN' role \n");
+		return CMD_WARNING;
+	}
+	
+	if(!strncmp("enable",argv[1],strlen(argv[1])))
+	{
+		sprintf(userrole,"enable");
+		
+	}	
+	else
+	{
+		sprintf(userrole,"view");
+		
+	}
+	
+	sprintf(cmd,"user role %s %s",argv[0],userrole);
+	for(slot_id=0;slot_id<16;slot_id++)
+	{	
+		if(slot_id != HostSlotId)
+		{
+			if(NULL != (dbus_connection_dcli[slot_id] -> dcli_dbus_connection))
+			{
+				
+				query = dbus_sem_msg_new_method_call(SEM_DBUS_BUSNAME, SEM_DBUS_OBJPATH,
+							 SEM_DBUS_INTERFACE,SEM_DBUS_USER_IS_EXSIT_SLOT);
+
+				dbus_error_init(&err);
+
+				dbus_message_append_args(query,DBUS_TYPE_STRING, &username,DBUS_TYPE_INVALID);
+				reply = dbus_connection_send_with_reply_and_block(dbus_connection_dcli[slot_id] -> dcli_dbus_connection, query, 60000, &err);
+				
+				dbus_message_unref(query);
+
+				if (NULL == reply)
+				{
+					vty_out(vty,"Slot %d,<error> failed get reply.\n",slot_id);
+					
+					if (dbus_error_is_set(&err)) 
+					{
+						vty_out(vty,"%s raised: %s",err.name,err.message);
+						dbus_error_free_for_dcli(&err);
+					}
+					
+					return CMD_WARNING;
+				}
+
+				dbus_message_iter_init(reply,&iter);
+				dbus_message_iter_get_basic(&iter,&ret);
+				dbus_message_unref(reply);
+				if (!ret)  
+			    {  
+					vty_out(vty,"Slot %d,the user %s is not exist\n",slot_id,argv[0]);
+					return CMD_WARNING;
+			    }  
+				 	
+			
+				query = dbus_sem_msg_new_method_call(SEM_DBUS_BUSNAME, SEM_DBUS_OBJPATH,
+							 SEM_DBUS_INTERFACE,SEM_DBUS_USER_ROLE_SLOT);
+
+				dbus_error_init(&err);
+
+				dbus_message_append_args(query,DBUS_TYPE_STRING, &cmdstr,DBUS_TYPE_INVALID);
+				reply = dbus_connection_send_with_reply_and_block(dbus_connection_dcli[slot_id] -> dcli_dbus_connection, query, 60000, &err);
+				
+				dbus_message_unref(query);
+
+				if (NULL == reply)
+				{
+					vty_out(vty,"Slot %d,<error> failed get reply.\n",slot_id);
+					
+					if (dbus_error_is_set(&err)) 
+					{
+						vty_out(vty,"%s raised: %s",err.name,err.message);
+						dbus_error_free_for_dcli(&err);
+					}
+					
+					return CMD_WARNING;
+				}
+
+				dbus_message_iter_init(reply,&iter);
+				dbus_message_iter_get_basic(&iter,&ret);
+				
+				if (-1 == ret)  
+			    {  
+			 	   vty_out(vty,"Slot %d,system error!");  
+			    }  
+				else  
+			    {  
+					//vty_out(vty,"exit status value = [0x%x]\n", ret);	
+			  
+			 	   if (WIFEXITED(ret))  
+			 	   {  
+					   switch (WEXITSTATUS(ret))
+					   { 	
+							case 0: 		 							   
+								   break;
+							default:			
+								vty_out(vty,"Slot %d,Change user %s role error\n",slot_id,argv[0]);			
+								break;			
+											
+						}	
+				   }  
+			 	   else  
+			 	   {  
+			 		   vty_out(vty,"Slot %d,exit status = [%d]\n",slot_id, WEXITSTATUS(ret));  
+				   }  
+			   }  
+				dbus_message_unref(reply);
+			}
+	 	}
+	}
+	
+	return CMD_SUCCESS;
+
+}
+
+DEFUN (show_user_slot,
+	   show_user_slot_cmd,
+	   "show user slot <1-15>",
+	   "Show system infomation\n"
+	   "System usr\n"
+	   "board slot\n"
+	   "slot id\n"
+	   )	
+{
+	DBusMessage *query=NULL; 
+	DBusMessage *reply=NULL;
+	DBusMessageIter  iter;
+	DBusError err;
+	
+	int ret;
+	int i;
+	int admin_num = 0;
+	int view_num = 0;
+	int slot_id = 0;
+	char  *ptr = NULL;
+	slot_id = atoi(argv[0]);
+
+	if(NULL != (dbus_connection_dcli[slot_id] -> dcli_dbus_connection))
+	{
+		query = dbus_sem_msg_new_method_call(SEM_DBUS_BUSNAME, SEM_DBUS_OBJPATH,
+					 SEM_DBUS_INTERFACE,SEM_DBUS_USER_SHOW_SLOT);
+
+		dbus_error_init(&err);
+
+
+		reply = dbus_connection_send_with_reply_and_block(dbus_connection_dcli[slot_id] -> dcli_dbus_connection, query, 60000, &err);
+		
+		dbus_message_unref(query);
+
+		if (NULL == reply)
+		{
+			vty_out(vty,"<error> failed get reply.\n");
+			
+			if (dbus_error_is_set(&err)) 
+			{
+				vty_out(vty,"%s raised: %s",err.name,err.message);
+				dbus_error_free_for_dcli(&err);
+			}
+			
+			return CMD_WARNING;
+		}
+
+		dbus_message_iter_init(reply,&iter);
+		dbus_message_iter_get_basic(&iter,&admin_num);
+
+		vty_out(vty,"The admin user:\n");
+	
+		for(i=0;i<admin_num;i++)
+		{
+			dbus_message_iter_next(&iter);	
+			dbus_message_iter_get_basic(&iter,&ptr);
+			vty_out(vty,"%s\n",ptr);
+		}
+		dbus_message_iter_next(&iter);	
+		dbus_message_iter_get_basic(&iter,&view_num);
+	
+		vty_out(vty,"The view user:\n");
+		
+		for(i=0;i<view_num;i++)
+		{
+			dbus_message_iter_next(&iter);	
+			dbus_message_iter_get_basic(&iter,&ptr);
+			vty_out(vty,"%s\n",ptr);
+		}
+		dbus_message_unref(reply);
+		
+	}
+	else
+	{
+		vty_out(vty,"The slot doesn't exist");
+	}
+	
+	return CMD_SUCCESS;
+}
+DEFUN (show_user_slot_all,
+	   show_user_slot_all_cmd,
+	   "show user slot all",
+	   "Show system infomation\n"
+	   "System usr\n"
+	   "board slot\n"
+	   "slot id\n"
+	   )	
+{
+	DBusMessage *query=NULL; 
+	DBusMessage *reply=NULL;
+	DBusMessageIter  iter;
+	DBusError err;
+	
+	int ret;
+	int i;
+	int admin_num = 0;
+	int view_num = 0;
+	int slot_id = 0;
+	char  *ptr = NULL;
+	
+	for(slot_id=0;slot_id<16;slot_id++)
+	{
+		if(NULL != (dbus_connection_dcli[slot_id] -> dcli_dbus_connection))
+		{
+			query = dbus_sem_msg_new_method_call(SEM_DBUS_BUSNAME, SEM_DBUS_OBJPATH,
+						 SEM_DBUS_INTERFACE,SEM_DBUS_USER_SHOW_SLOT);
+
+			dbus_error_init(&err);
+
+
+			reply = dbus_connection_send_with_reply_and_block(dbus_connection_dcli[slot_id] -> dcli_dbus_connection, query, 60000, &err);
+			
+			dbus_message_unref(query);
+
+			if (NULL == reply)
+			{
+				vty_out(vty,"Slot %d,<error> failed get reply.\n",slot_id);
+				
+				if (dbus_error_is_set(&err)) 
+				{
+					vty_out(vty,"%s raised: %s",err.name,err.message);
+					dbus_error_free_for_dcli(&err);
+				}
+				
+				return CMD_WARNING;
+			}
+
+			dbus_message_iter_init(reply,&iter);
+			dbus_message_iter_get_basic(&iter,&admin_num);
+			vty_out(vty,"The slot %d:\n",slot_id);
+
+			vty_out(vty," The admin user:\n");
+		
+			for(i=0;i<admin_num;i++)
+			{
+				dbus_message_iter_next(&iter);	
+				dbus_message_iter_get_basic(&iter,&ptr);
+				vty_out(vty," %s\n",ptr);
+			}
+			dbus_message_iter_next(&iter);	
+			dbus_message_iter_get_basic(&iter,&view_num);
+		
+			vty_out(vty," The view user:\n");
+			
+			for(i=0;i<view_num;i++)
+			{
+				dbus_message_iter_next(&iter);	
+				dbus_message_iter_get_basic(&iter,&ptr);
+				vty_out(vty," %s\n",ptr);
+			}
+			dbus_message_unref(reply);
+			
+		}
+
+	}
+	return CMD_SUCCESS;
+}
+
+DEFUN (passwd_modify_slot,
+	   passwd_modify_slot_cmd,
+	   "passwd slot <1-15> USERNAME PASSWORD",
+	   "User password\n"
+	   "board slot\n"
+	   "slot id\n"
+	   "User name\n"
+	   "The new password\n")
+{
+	if(!boot_flag)
+	{
+		DBusMessage *query=NULL; 
+		DBusMessage *reply=NULL;
+		DBusMessageIter  iter;
+		DBusError err;
+		char cmd[128] = {0};
+		char *cmdstr = cmd;
+	
+		char * username = NULL;
+		char* loginname=NULL;
+		int ret;
+		int slot_id = 0;
+		char line1[INPUTSIZE] = {0};
+		char line2[INPUTSIZE] = {0};
+		int input;
+		int i = 0;
+		
+		username = argv[1];
+		
+		char passwd[] = "normal";
+		loginname = getenv("USER");
+		get_global_variable_status();
+		
+		slot_id = atoi(argv[0]);
+		if(slot_id == HostSlotId)
+		{
+			vty_out(vty,"Can't config the active master board\n");
+			return CMD_WARNING;
+		}
+
+	
+		if(!strcmp(loginname,"admin") || !strcmp(loginname,argv[1]))
+		{
+			if(NULL != (dbus_connection_dcli[slot_id] -> dcli_dbus_connection))
+			{
+				query = dbus_sem_msg_new_method_call(SEM_DBUS_BUSNAME, SEM_DBUS_OBJPATH,
+							 SEM_DBUS_INTERFACE,SEM_DBUS_USER_IS_EXSIT_SLOT);
+
+				dbus_error_init(&err);
+
+				dbus_message_append_args(query,DBUS_TYPE_STRING, &username,DBUS_TYPE_INVALID);
+				reply = dbus_connection_send_with_reply_and_block(dbus_connection_dcli[slot_id] -> dcli_dbus_connection, query, 60000, &err);
+				
+				dbus_message_unref(query);
+
+				if (NULL == reply)
+				{
+					vty_out(vty,"<error> failed get reply.\n");
+					
+					if (dbus_error_is_set(&err)) 
+					{
+						vty_out(vty,"%s raised: %s",err.name,err.message);
+						dbus_error_free_for_dcli(&err);
+					}
+					
+					return CMD_WARNING;
+				}
+
+				dbus_message_iter_init(reply,&iter);
+				dbus_message_iter_get_basic(&iter,&ret);
+				dbus_message_unref(reply);
+				if (!ret)  
+			    {  
+					vty_out(vty,"the user %s is not exist\n",argv[1]);
+					return CMD_WARNING;
+			    }  
+				 	
+			}	
+#if 0		
+			fprintf(stdout, "New system password:");
+			while((input = getchar()) != '\n' && i <= 32)
+			{
+				line1[i++] = (char)input;			
+			}
+			line1[i] = '\0';
+
+			if(i < 4)
+			{
+				vty_out(vty,"the user password too short\n");
+				return CMD_WARNING;
+			}
+
+			i = 0;
+			
+			fprintf(stdout, "\nRetype new system password:");
+			while((input = getchar()) != '\n' && i <= 32)
+			{
+				line2[i++] = (char)input;			
+			}
+			line2[i] = '\0';						
+
+			
+			if(!strcmp(line1,line2))
+			{
+				strcpy(input_passwd,line1);
+			}
+			else
+			{
+				vty_out(vty,"\nSorry, passwords do not match\n");
+				return CMD_WARNING;
+			}
+			fprintf(stdout, "\n");
+#endif			
+			
+		
+			if(get_user_role((char *)loginname) == 0)
+			{
+				vty_out(vty,"user %s is view role ,can't change other user password\n",argv[0]);
+				return CMD_WARNING;
+			}
+			ret = dcli_user_passwd_check(argv[1],argv[2]);
+			if(ret == 1)
+			{
+				vty_out(vty,"the user password is a palindrome \n");
+				return CMD_WARNING;
+			}	
+			else if(ret == 2)
+			{
+				vty_out(vty,"the user password is too simple \n");
+				return CMD_WARNING;
+			}
+				else if(ret == 3)
+			{
+				vty_out(vty,"the user password should be not same as username\n");
+				return CMD_WARNING;
+			}
+			else if(ret == 4)
+			{
+				vty_out(vty,"the user password too short or too long\n");
+				return CMD_WARNING;
+			}	
+			else if(ret == 5)
+			{
+				vty_out(vty,"the user password length should be >= %d && <=32\n",passwdlen);
+				return CMD_WARNING;
+			}
+						
+		
+				
+			sprintf(cmd,"chpass.sh %s \'%s\' %s",argv[1],argv[2],passwd);
+			if(NULL != (dbus_connection_dcli[slot_id] -> dcli_dbus_connection))
+			{
+				query = dbus_sem_msg_new_method_call(SEM_DBUS_BUSNAME, SEM_DBUS_OBJPATH,
+							 SEM_DBUS_INTERFACE,SEM_DBUS_USER_PASSWD_SLOT);
+
+				dbus_error_init(&err);
+
+				dbus_message_append_args(query,DBUS_TYPE_STRING, &cmdstr,DBUS_TYPE_INVALID);
+				reply = dbus_connection_send_with_reply_and_block(dbus_connection_dcli[slot_id] -> dcli_dbus_connection, query, 60000, &err);
+				
+				dbus_message_unref(query);
+
+				if (NULL == reply)
+				{
+					vty_out(vty,"<error> failed get reply.\n");
+					
+					if (dbus_error_is_set(&err)) 
+					{
+						vty_out(vty,"%s raised: %s",err.name,err.message);
+						dbus_error_free_for_dcli(&err);
+					}
+					
+					return CMD_WARNING;
+				}
+
+				dbus_message_iter_init(reply,&iter);
+				dbus_message_iter_get_basic(&iter,&ret);
+				
+				if (-1 == ret)  
+			    {  
+			 	   vty_out(vty,"system error!");  
+			    }  
+				else  
+			    {  
+			  
+			 	   if (WIFEXITED(ret))  
+			 	   {  
+					   switch (WEXITSTATUS(ret))
+					   { 	
+							case 0: 		
+								   break;
+							default:			
+								vty_out(vty,"Change user %s password error\n",argv[1]);				
+								break;		
+						}	
+				   }  
+			 	   else  
+			 	   {  
+			 		   vty_out(vty,"exit status = [%d]\n", WEXITSTATUS(ret));  
+				   }  
+			   }  
+				dbus_message_unref(reply);
+				
+			}
+			else
+			{
+				vty_out(vty,"The slot doesn't exist");
+			}
+			
+			return CMD_SUCCESS;
+		
+		}
+		else
+		{
+			vty_out(vty,"You aren't the user admin,Cann't changed other user's password\n");
+				
+			return CMD_SUCCESS;
+
+		}
+	}
+	else
+	{		
+		vty_out(vty,"In boot state,You should use passwd USERNAME PASSWORD\n");
+		return CMD_WARNING;
+	}
+}
+
+void user_show_running(void)
+{
+	DBusMessage *query=NULL; 
+	DBusMessage *reply=NULL;
+	DBusMessageIter  iter;
+	DBusError err;
+	
+	int ret;
+	int i;
+	int admin_num = 0;
+	int view_num = 0;
+	int slot_id = 0;
+	char  *ptr = NULL;
+
+	for(slot_id=1;slot_id<16;slot_id++)
+	{	
+		if(slot_id != HostSlotId)
+		{
+			if(NULL != (dbus_connection_dcli[slot_id] -> dcli_dbus_connection))
+			{
+				query = dbus_sem_msg_new_method_call(SEM_DBUS_BUSNAME, SEM_DBUS_OBJPATH,
+							 SEM_DBUS_INTERFACE,SEM_DBUS_USER_SHOW_RUNNING);
+
+				dbus_error_init(&err);
+
+				dbus_message_append_args(query,DBUS_TYPE_UINT32, &slot_id,DBUS_TYPE_INVALID);
+
+				reply = dbus_connection_send_with_reply_and_block(dbus_connection_dcli[slot_id] -> dcli_dbus_connection, query, 60000, &err);
+				
+				dbus_message_unref(query);
+
+				if (NULL == reply)
+				{
+					fprintf(stderr,"<error> failed get reply.\n");
+					
+					if (dbus_error_is_set(&err)) 
+					{
+						fprintf(stderr,"%s raised: %s",err.name,err.message);
+						dbus_error_free_for_dcli(&err);
+					}
+					
+					return CMD_WARNING;
+				}
+
+				dbus_message_iter_init(reply,&iter);
+				dbus_message_iter_get_basic(&iter,&admin_num);
+				
+				for(i=0;i<admin_num;i++)
+				{
+					dbus_message_iter_next(&iter);	
+					dbus_message_iter_get_basic(&iter,&ptr);
+					vtysh_add_entry(ptr);
+				}
+				dbus_message_iter_next(&iter);	
+				dbus_message_iter_get_basic(&iter,&view_num);
+				
+				for(i=0;i<view_num;i++)
+				{
+					dbus_message_iter_next(&iter);	
+					dbus_message_iter_get_basic(&iter,&ptr);
+					vtysh_add_entry(ptr);
+				}
+				
+				dbus_message_unref(reply);	
+			}
+		}
+	}
+	
+	return CMD_SUCCESS;
+}
+
+/**zhaocg end for suporting board slot**/
+
+#endif
+
 DEFUN (who_func,
 	   who_func_cmd,
 	   "who",
@@ -3890,6 +5281,7 @@ int dcli_user_manage_write (struct vty *vty)
 	get_admin_user_pw();
 	get_group_user(VIEWGROUP);
 	get_group_user(ADMINGROUP);
+	user_show_running();
 	get_console_pwd();
 
 	
@@ -3941,6 +5333,26 @@ void dcli_user_init()
 /*
 	set_pwd_unrepeat_setting();
 */
+	install_element(ENABLE_NODE,&user_add_slot_cmd);
+	install_element(ENABLE_NODE,&user_add_slot_all_cmd);
+	install_element(ENABLE_NODE,&user_del_slot_cmd);
+	install_element(ENABLE_NODE,&user_del_slot_all_cmd);
+	install_element(ENABLE_NODE,&user_role_change_slot_cmd);
+	install_element(ENABLE_NODE,&user_role_change_slot_all_cmd);
+	install_element(ENABLE_NODE,&show_user_slot_cmd);
+	install_element(ENABLE_NODE,&show_user_slot_all_cmd);
+	install_element(ENABLE_NODE,&passwd_modify_slot_cmd);
+	
+	install_element(CONFIG_NODE,&user_add_slot_cmd);
+	install_element(CONFIG_NODE,&user_add_slot_all_cmd);
+	install_element(CONFIG_NODE,&user_del_slot_cmd);
+	install_element(CONFIG_NODE,&user_del_slot_all_cmd);
+	install_element(CONFIG_NODE,&user_role_change_slot_cmd);
+	install_element(CONFIG_NODE,&user_role_change_slot_all_cmd);
+	install_element(CONFIG_NODE,&show_user_slot_cmd);
+	install_element(CONFIG_NODE,&show_user_slot_all_cmd);
+	install_element(CONFIG_NODE,&passwd_modify_slot_cmd);
+
 	install_element(CONFIG_NODE,&user_add_cmd);
 	install_element(CONFIG_NODE,&user_del_cmd);
 	install_element(CONFIG_NODE,&user_role_change_cmd);	

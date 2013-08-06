@@ -5718,9 +5718,7 @@ DEFUN (ip_ospf_priority,
 
   priority = strtol (argv[0], NULL, 10);
   
-  /* Router Priority range is <0-255>. */
-	/* CID 11835 (#1 of 1): Unsigned compared against 0 , no problem*/
-  if (priority < 0 || priority > 255)
+  if ( priority > 255)
     {
       vty_out (vty, "Router Priority is invalid%s", VTY_NEWLINE);
       return CMD_WARNING;

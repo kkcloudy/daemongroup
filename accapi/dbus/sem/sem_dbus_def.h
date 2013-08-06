@@ -84,7 +84,13 @@
 /*added by zhaocg for fastfwd command*/
 #define SEM_DBUS_IMG_OR_FASTFWD_SLOT                 "sem_dbus_img_or_fastfwd_slot"
 #define SEM_DBUS_DEL_IMG_OR_FASTFWD_SLOT             "sem_dbus_delete_img_or_fastfwd_slot"
-
+#define SEM_DBUS_USER_ADD_SLOT                 "sem_dbus_user_add_slot"
+#define SEM_DBUS_USER_DEL_SLOT                 "sem_dbus_user_del_slot"
+#define SEM_DBUS_USER_ROLE_SLOT                 "sem_dbus_user_role_slot"
+#define SEM_DBUS_USER_SHOW_SLOT                 "sem_dbus_user_show_slot"
+#define SEM_DBUS_USER_SHOW_RUNNING                 "sem_dbus_user_show_running"
+#define SEM_DBUS_USER_PASSWD_SLOT				"sem_dbus_user_passwd_slot"
+#define SEM_DBUS_USER_IS_EXSIT_SLOT				"sem_dbus_user_is_exsit_slot"
 
 #define SEM_DBUS_ETHPORTS_INTERFACE_METHOD_CONFIG_ETHPORT_INTERFACE   "sem_config_eth_mode_interface"
 #define SEM_DBUS_ETHPORTS_INTERFACE_METHOD_CONFIG_ETHPORT_MODE   "sem_config_eth_mode"
