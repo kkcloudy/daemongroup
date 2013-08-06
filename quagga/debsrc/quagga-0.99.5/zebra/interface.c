@@ -5929,7 +5929,9 @@ wlan_if_config_write (struct vty *vty, int islocaled, int slotid ,int index, int
 		     if_data->multicast == IF_ZEBRA_MULTICAST_ON ? "" : "no ",
 		     VTY_NEWLINE);
 	}
-
+	  
+    if_pfm_config_write(vty, ifp->name);
+	
 #ifdef RTADV
       rtadv_config_write (vty, ifp);
 #endif /* RTADV */
