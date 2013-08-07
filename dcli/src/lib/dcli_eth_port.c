@@ -6443,8 +6443,15 @@ DEFUN(config_ethport_mtu_cmd_func,
 		return CMD_WARNING;
 	}
 
-	if((param < 64) && (param > 8192)) {
+	if((param < 85) || (param > 8192)) {
 		vty_out(vty,"%% bad param.\n");
+		return CMD_WARNING;
+	}
+	
+	if((param%2) != 0)
+	{
+        vty_out(vty,"%% Only spport an even number between 85~8192\n"); 
+		return CMD_WARNING;
 	}
 	
 	mtu = param;
