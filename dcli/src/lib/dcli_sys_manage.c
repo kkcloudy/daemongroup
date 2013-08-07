@@ -142,7 +142,6 @@ int sync_file(char* temp,int syn_to_blk)
 			dbus_error_free_for_dcli(&err);
 			return CMD_WARNING;
 		}
-		dbus_message_unref(reply);
 		return CMD_WARNING;
 	}
 	if (dbus_message_get_args ( reply, &err,
@@ -1084,7 +1083,6 @@ DEFUN(show_dbus_session_cmd_func,
 			dbus_error_free_for_dcli(&err);
 			return CMD_WARNING;
 		}
-		dbus_message_unref(reply);
 		return CMD_WARNING;
 	}
 	if (dbus_message_get_args ( reply, &err,
@@ -1589,23 +1587,25 @@ DEFUN(config_pfm_cmd_func,
 	unsigned int src_port = 0, dest_port;
 	unsigned short protocol;/**tcp : 6, udp :17**/
 	int slot ;
-	char* ipaddr ;
+	char* ipaddr = NULL;
 	int opt = 1 ;
 	/*int forward_opt ;*/
 	int send_to_slot = 0;
 	int send_to_port = 0;
 	int ret;
-	char *cmd_str = NULL;
-
+	char *if_name = NULL;
+	char serv_name[32] = {0};
+	char cmd_str[128] = {0};
 	if((is_distributed == 1) && (is_active_master == 0))
 	{
 		vty_out(vty,"only active master can enable/disable ssh/telnet\n");
 		return CMD_WARNING;
 	}
 
-	
+#if 0
 	cmd_str = argv_concat(argv, 3,0);/**unit the cmd (only argv ,not include head "service") to a string ,used for save show running config**/
 										/**3 = argc -1, enable or disable not include**/
+#endif
 	if(argc == 4)
 	{
 	  if(strncmp(argv[0],"ssh",strlen(argv[0])) == 0)	
@@ -1613,7 +1613,7 @@ DEFUN(config_pfm_cmd_func,
 		protocol = 6;
 		dest_port = 22;
 		
-		if(strncmp(argv[3],"enable",6) == 0) /*enable ssh*/
+			if(strncmp(argv[3],"enable",strlen(argv[3])) == 0) /*enable ssh*/
 		{
 			char cmd[128];
 			int ret;
@@ -1638,9 +1638,10 @@ DEFUN(config_pfm_cmd_func,
 			int ret;
 			protocol = 6;
 			dest_port = 23;
-			if(strncmp(argv[3],"enable",6) == 0) /*enable telnet*/
+			sprintf(serv_name,"telnet");
+			if(strncmp(argv[3],"enable",strlen(argv[3])) == 0) /*enable telnet*/
 			{
-				FILE *fp;
+				int fp;
 				struct stat sb;
 				char *temp_data;
 				char *data;
@@ -1675,7 +1676,7 @@ DEFUN(config_pfm_cmd_func,
 				//check out port NO.in the /etc/ssh/sshd_config
 				
 				fp=open(SSHD_CONFIG_PATCH,O_RDWR);
-				if(NULL==fp)
+				if(-1 == fp)
 				{
 					vty_out(vty,SYS_ERROR);
 					return CMD_WARNING;
@@ -1701,7 +1702,7 @@ DEFUN(config_pfm_cmd_func,
 				close(fp);
 				
 				fp=open(SERVICES_PATH,O_RDWR);	
-				if(NULL==fp)
+				if(-1==fp)
 				{
 					vty_out(vty,SYS_ERROR);
 					return CMD_WARNING;
@@ -1792,7 +1793,7 @@ DEFUN(config_pfm_cmd_func,
 					//find inetd.conf file for telnet
 					fp=open(INETD_PATH,O_RDWR);
 			
-					if(NULL==fp)
+					if(-1==fp)
 						{
 						vty_out(vty,SYS_ERROR);
 						return CMD_WARNING;
@@ -1845,9 +1846,9 @@ DEFUN(config_pfm_cmd_func,
 			vty_out(vty,"local slot ,Has enabled\n");
 			return CMD_WARNING;
 		}
-		
+		if_name = argv[1];
 //		fprintf(stderr,"get slot num is %d\n",send_to_slot);
-		if(strncmp(argv[2],"all",3) == 0)/**for all ip forward**/
+		if(strncmp(argv[2],"all",strlen(argv[2])) == 0)/**for all ip forward**/
 		 {
 //		 	forward_opt = -2;
 			ipaddr = "all";
@@ -1872,20 +1873,24 @@ DEFUN(config_pfm_cmd_func,
 		}
 		
 #endif			
-		if(strcmp(argv[3],"enable") == 0)
+		if(strncmp(argv[3],"enable",strlen(argv[3])) == 0)
+		{
 			opt = 0;
+		}
 		else
+		{
 			opt = 1;
+		}
 		
 	}	
 
 	slot = HostSlotId;
+	sprintf(cmd_str,"%s %s %s",serv_name,if_name,ipaddr);
 	ret = check_pfm_setup_exist(cmd_str, opt);/**check pfm exist setup**/
 
 	if(ret != 0)
 	{
 		vty_out(vty,"The configuration has been.\n");
-		XFREE(MTYPE_TMP,cmd_str);
 		return CMD_WARNING;
 	}
 //enable pfm
@@ -1894,7 +1899,6 @@ DEFUN(config_pfm_cmd_func,
 	if(ret != 0)
 	{
 		vty_out(vty,"dbus send message error_enable\n");
-		XFREE(MTYPE_TMP,cmd_str);
 		return CMD_WARNING;
 	}
 	
@@ -1902,18 +1906,15 @@ DEFUN(config_pfm_cmd_func,
 	if(ret != 0)
 	{
 		vty_out(vty,"dbus send message error_table\n");
-		XFREE(MTYPE_TMP,cmd_str);
 		return CMD_WARNING;
 	}
 	
 	ret = pfm_setup_show_running_config(cmd_str, opt);/**when pfm set success , write the setup to a file  that used for show running.**/
 	if(ret != 0)
 	{
-		XFREE(MTYPE_TMP,cmd_str);
 		return CMD_WARNING;
 	}
 
-	XFREE(MTYPE_TMP,cmd_str);
 	return CMD_SUCCESS;
 	
 }
@@ -4480,7 +4481,6 @@ DEFUN (dcli_sfd_show_var,
 			if(NULL == reply)
 			{
 				vty_out(vty, "dbus failed get reply.\n");
-				dbus_message_unref(query);
 
 				if(dbus_error_is_set(&err)) 
 				{
