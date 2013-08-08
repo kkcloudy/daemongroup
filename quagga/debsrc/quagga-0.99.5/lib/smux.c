@@ -1737,6 +1737,29 @@ ALIAS (no_smux_peer,
        "SMUX peering object ID\n"
        "SMUX peering password\n")
 
+DEFUN (debug_smux_func,
+       debug_smux_cmd,
+       "debug snmp smux",
+		DEBUG_STR
+       "SNMP MUX protocol settings\n"
+       "SNMP MUX peer settings\n")
+{
+	debug_smux = 1;
+	return CMD_SUCCESS;
+}
+
+DEFUN (no_debug_smux_func,
+       no_debug_smux_cmd,
+       "no debug snmp smux",
+		NO_STR
+		DEBUG_STR
+       "SNMP MUX protocol settings\n"
+       "SNMP MUX peer settings\n")
+{
+	debug_smux = 0;
+	return CMD_SUCCESS;
+}
+
 int
 config_write_smux (struct vty *vty)
 {
@@ -1808,6 +1831,8 @@ smux_init (struct thread_master *tm)
   install_element (CONFIG_NODE, &no_smux_peer_cmd);
   install_element (CONFIG_NODE, &no_smux_peer_oid_cmd);
   install_element (CONFIG_NODE, &no_smux_peer_oid_password_cmd);
+  install_element (CONFIG_NODE, &debug_smux_cmd);
+  install_element (CONFIG_NODE, &no_debug_smux_cmd);
 }
 
 void

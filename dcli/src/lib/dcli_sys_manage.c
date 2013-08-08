@@ -876,6 +876,88 @@ DEFUN(no_smux_start_func,
 
 
 
+
+
+
+
+
+DEFUN(set_smux_debug_func,
+	set_smux_debug_cmd,
+	"debug snmp smux (rip|ospf|ip)",
+	 NO_STR
+	 DEBUG_STR
+	"SNMP MUX protocol settings\n"
+	"SNMP MUX peer settings\n"	
+	"Rip protocol\n"
+	"Ospf protocol\n"
+	"Ip protocol\n")
+{
+	int i=0;
+	char* proto=NULL;
+	char cmdstr[256]={0};
+
+	if(strncmp(argv[0],"ip",strlen(argv[0]))==0)
+	{
+		proto = "rtmd";
+	}
+	else
+	{
+		proto = argv[0];
+	}
+	
+	for(i=0;i<7;i++)
+	{
+		if(strncmp(vtysh_client[i].name,proto,strlen(proto))==0)
+		{
+			sprintf(cmdstr,"debug snmp smux");
+			vtysh_client_execute(&vtysh_client[i],cmdstr,stdout);
+			return CMD_SUCCESS;
+		}
+	}
+	return CMD_WARNING;
+
+	
+}
+
+DEFUN(no_set_smux_debug_func,
+	no_set_smux_debug_cmd,
+	"no debug snmp smux (rip|ospf|ip)",
+	 NO_STR
+	 DEBUG_STR
+	"SNMP MUX protocol settings\n"
+	"SNMP MUX peer settings\n"
+	"Rip protocol\n"
+	"Ospf protocol\n"
+	"Ip protocol\n")
+{
+	int i=0;
+	char* proto=NULL;
+	char cmdstr[256]={0};
+
+	if(strncmp(argv[0],"ip",strlen(argv[0]))==0)
+	{
+		proto = "rtmd";
+	}
+	else
+	{
+		proto = argv[0];
+	}
+	
+	for(i=0;i<7;i++)
+	{
+		if(strncmp(vtysh_client[i].name,proto,strlen(proto))==0)
+		{
+			sprintf(cmdstr,"no debug snmp smux");
+			vtysh_client_execute(&vtysh_client[i],cmdstr,stdout);
+			return CMD_SUCCESS;
+		}
+	}
+	return CMD_WARNING;
+
+	
+}
+
+
 int dcli_sys_manage_write (struct vty *vty)
 {
 	int ret;
@@ -6515,6 +6597,8 @@ void dcli_sys_manage_init()
  install_element (CONFIG_NODE, &config_dns_server_cmd);
  install_element (DNS_SER_NODE, &service_dns_cmd);
 
+install_element (CONFIG_NODE, &no_set_smux_debug_cmd);
+install_element (CONFIG_NODE, &set_smux_debug_cmd);
 }
 
 
