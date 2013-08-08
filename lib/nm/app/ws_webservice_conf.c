@@ -919,8 +919,9 @@ int ccgi_add_web_forword_cmd(char *webname, char *infname)
 	//-4:to much interface;-5:service name not exist;-6:interface exist;-7:is running
 {
     int sslot = 0, dslot = 0;
-    int ret = 0; 
+    int ret = 0,cgi_ret=0; 
 	instance_parameter *para;
+	instance_parameter *para1;
 
     if(web_name_valid(webname, strlen(webname)) == WEB_FAILURE)
     {
@@ -944,7 +945,8 @@ int ccgi_add_web_forword_cmd(char *webname, char *infname)
     in.ifname = infname;
     in.slot = sslot;
 
-    switch(ccgi_dcli_web_int_add_valid(in, &dslot))
+	cgi_ret =ccgi_dcli_web_int_add_valid(in, &dslot);
+    switch(cgi_ret)
     {
         case WEB_OVERMAX:
             return -4;
@@ -959,7 +961,7 @@ int ccgi_add_web_forword_cmd(char *webname, char *infname)
             break;
     }
 
-    if((ret = ac_manage_web_edit(para->connection, (void *)&in, IFNAME_ADD)) != WEB_SUCCESS)
+    if((ret = ac_manage_web_edit(ccgi_dbus_connection, (void *)&in, IFNAME_ADD)) != WEB_SUCCESS)
     {
 		return -8;
     }

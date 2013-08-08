@@ -177,8 +177,6 @@ int ShowhansilistPage(char *m,char *n,struct list *lpublic,struct list *lcontrol
 	  cgiFormStringNoNewlines("ID", insid, 5);
 	  if(connection)
 	  {
-		  fprintf(stderr,"connection=%p",connection);
-		  fprintf(stderr,"insid=%s",insid);
 		  int retu_del=0;
 		  retu_del=config_delete_hansi_cmd_web(pid,insid,connection);
 		  

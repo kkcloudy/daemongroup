@@ -589,7 +589,9 @@ int cgiMain()
 	} else if(strcmp("FW_INPUT",ruleTypeStr) == 0) {
 		rule_type = FW_INPUT;
 	} else {
+		memset(ruleTypeStr, 0 ,sizeof(ruleTypeStr));
 		rule_type = FW_WALL;
+		strcpy( ruleTypeStr, "FW_WALL" );
 	}
 
 	cgiHeaderContentType("text/html");	
@@ -662,7 +664,7 @@ int cgiMain()
 	debug_printf(stderr, "fffffffffffffffffffffffffffffffffffffffffffffffffffffff\n");
 	//将当前页面转到ruleview!
 	fprintf( cgiOut, "<script type='text/javascript'>\n" );
-	fprintf( cgiOut, "window.location.href='wp_fwruleview.cgi?UN=%s&ruleType=%s';\n", encry, ruleTypeStr );
+	fprintf( cgiOut, "window.location.href='wp_fwruleview.cgi?UN=%s&ruleType=%s&tm=' + new Date().toString();\n", encry, ruleTypeStr );
 	fprintf( cgiOut, "</script>\n" );
 		
 	fprintf( cgiOut, "</body>\n" );

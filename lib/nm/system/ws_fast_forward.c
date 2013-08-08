@@ -76,6 +76,7 @@ int ccgi_parse_ipport_check(char * str)
 	char *tail_ptr=NULL;
 	unsigned long ip_long[4] = {0}; 
 	int i = 0;
+	int port_num=0;
 	int pointCount=0,colonCount=0;
 	char param[DCLI_IPPORT_STRING_MAXLEN+1]={0};
 	char ipAddr[DCLI_IPPORT_STRING_MAXLEN+1]={0};
@@ -128,8 +129,11 @@ int ccgi_parse_ipport_check(char * str)
 	{
 		return COMMON_ERROR;
 	}
-	if(0>strtoul(token,NULL,10)|| MAX_PORT < strtoul(token,NULL,10))
+	port_num = strtoul(token,NULL,10);
+	if((0>port_num)||( MAX_FAST_PORT < port_num))
+	{
 		return COMMON_ERROR;
+	}
 	
 	token=strtok_r(ipAddr,sep,&tail_ptr);
 	if((NULL == token)||("" == token)||(strlen(token) < 1)||\
@@ -1359,7 +1363,7 @@ int ccgi_show_fast_forward_running_config_cmd(int slot_id,int *state)
 	int ret = -1;
 	se_interative_t  cmd_data;
 	struct timeval overtime;
-	char *str_tok;
+	char *str_tok=NULL;
 	memset(&overtime,0,sizeof(overtime));
 	memset(&cmd_data,0,sizeof(cmd_data));
 	
@@ -1387,11 +1391,13 @@ int ccgi_show_fast_forward_running_config_cmd(int slot_id,int *state)
 	}
 	if (showStr)
 	{
-		str_tok=strtok(showStr, "config fast-icmp enable");
-		if(str_tok)
+		str_tok=strstr(showStr,"fast-icmp");
+		if (str_tok) {
 			*state=1;
-		else
+		} 
+		else {
 			*state=0;
+		}
 	}
 	close(ccgi_sockfd);
 	ccgi_sockfd=-1;

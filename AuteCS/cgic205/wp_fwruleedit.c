@@ -371,7 +371,7 @@ int cgiMain()
 			
 			if( strcmp(editType,"edit") == 0 )
 			{
-				fprintf( cgiOut, "<input name='ruleIndexUserSelected' value=%s />", ruleIDStr);
+				fprintf( cgiOut, "<input name='ruleIndexUserSelected' value=%s   onkeypress=\"return event.keyCode>=48&&event.keyCode<=57\" /><font color=red>(1-256)</font>", ruleIDStr);
 				
 				
 				if (strcmp("FW_DNAT", ruleType) == 0) {
@@ -394,8 +394,8 @@ int cgiMain()
 				}
 			}
 			else
-			{		
-				fprintf( cgiOut, "<input name='ruleIndexUserSelected' value='' />");
+			{	
+				fprintf( cgiOut, "<input type=text name='ruleIndexUserSelected' maxLength=3 value=''  onkeypress=\"return event.keyCode>=48&&event.keyCode<=57\"  /><font color=red>(1-256)</font>");
 			}
 		}
 #endif	

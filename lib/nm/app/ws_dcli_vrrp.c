@@ -366,7 +366,7 @@ int ccgi_config_hansi_profile_web(char *pro_num,int slotid,DBusConnection *conne
 							 DBUS_TYPE_UINT32,&profile,
 							 DBUS_TYPE_UINT32,&slot_id,
 							 DBUS_TYPE_INVALID);
-	reply = dbus_connection_send_with_reply_and_block (connection,query,150000, &err);
+	reply = dbus_connection_send_with_reply_and_block (ccgi_dbus_connection,query,150000, &err);
 
 	dbus_message_unref(query);
 	if (NULL == reply) {
@@ -5607,7 +5607,7 @@ int config_delete_hansi_cmd_web(int slot,char *ins,DBusConnection *connection)
     							 DBUS_TYPE_UINT32,&profile,
     							 DBUS_TYPE_UINT32,&slot_id,
     							 DBUS_TYPE_INVALID);
-    	reply = dbus_connection_send_with_reply_and_block (connection,query,-1, &err);
+    	reply = dbus_connection_send_with_reply_and_block (ccgi_dbus_connection,query,-1, &err);
     	dbus_message_unref(query);
     	if (NULL == reply) {
     		if (dbus_error_is_set(&err)) {

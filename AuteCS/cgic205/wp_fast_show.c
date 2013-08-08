@@ -199,9 +199,30 @@ int ShowWebservicePage(struct list *lpublic, struct list *lcontrol)
 				&&(strcmp(d_port,"")!=0)&&(strcmp(s_port,"")!=0))
 			{
 				op_ret=ccgi_show_rule_five_tuple_cmd(pro_type,sorce_ip,des_ip,pid,&cmd_data);
+				fprintf(stderr,"--------------------op_ret=%d",op_ret);
 				if(op_ret!=0)
 				{
-					ShowAlert(search(lpublic,"oper_fail"));
+					switch(op_ret)
+					{
+						case -3:
+							ShowAlert(search(lpublic,"s_ip_port"));
+							break;
+						case -4:
+							ShowAlert(search(lpublic,"d_ip_port"));
+							break;
+						case -5:
+							ShowAlert(search(lpublic,"fail_com"));
+							break;
+						case -6:
+							ShowAlert(search(lpublic,"agent_reply"));
+							break;
+						case -7:
+							ShowAlert("No this rule");
+							break;
+						default:
+							ShowAlert(search(lpublic,"oper_fail"));
+							break;
+					}
 				}
 			}
 		  }

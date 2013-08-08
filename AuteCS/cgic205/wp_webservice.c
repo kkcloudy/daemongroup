@@ -78,7 +78,7 @@ int ShowWebservicePage(struct list *lpublic, struct list *lsystem)
 	  char	 web_ip4[4]={0};
 	  char	 web_port[10]={0};
 	   char web_ip[32]={0};
-	   char web_inf[15]={0};
+	   char web_inf[16]={0};
 	  int ret = 0,ret1=0,i=0;
 	  	  	 
 		  memset(encry,0,BUF_LEN);
@@ -127,15 +127,15 @@ int ShowWebservicePage(struct list *lpublic, struct list *lsystem)
 		   memset(web_ip4,0,4);
 		   memset(web_port,0,10);
 		   memset(web_ip,0,32);
-			memset(web_inf,0,15);
+			memset(web_inf,0,16);
 		   cgiFormStringNoNewlines("web_name",web_name,15);
 		  cgiFormStringNoNewlines("web_type",web_type,10);
 		  cgiFormStringNoNewlines("web_ip1",web_ip1,4);
 		  cgiFormStringNoNewlines("web_ip2",web_ip2,4);
 		  cgiFormStringNoNewlines("web_ip3",web_ip3,4);
 		  cgiFormStringNoNewlines("web_ip4",web_ip4,4);
-		  cgiFormStringNoNewlines("web_port",web_port,4);
-		  cgiFormStringNoNewlines("web_inf",web_inf,15);
+		  cgiFormStringNoNewlines("web_port",web_port,10);
+		  cgiFormStringNoNewlines("web_inf",web_inf,16);
 		  sprintf(web_ip,"%ld.%ld.%ld.%ld",strtoul(web_ip1,0,10),strtoul(web_ip2,0,10),strtoul(web_ip3,0,10),strtoul(web_ip4,0,10));
 		  if((strcmp(web_name,"")!=0)&&(strcmp(web_type,"")!=0)&&(strcmp(web_ip,"")!=0)&&(strcmp(web_port,"")!=0))
 		  {
@@ -318,7 +318,7 @@ int ShowWebservicePage(struct list *lpublic, struct list *lsystem)
 		 
 		 fprintf(cgiOut,"<tr height=30>"\
 		   "<td>%s:</td>",search(lpublic,"s_inf_name"));
-		   fprintf(cgiOut,"<td align=left><input type=text name=web_inf size=22 maxLength=14></td>");
+		   fprintf(cgiOut,"<td align=left><input type=text name=web_inf size=22 maxLength=15></td>");
 ////////////////		  					
    fprintf(cgiOut,"</table>"); 
 			  fprintf(cgiOut,"</td>"\

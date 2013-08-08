@@ -220,17 +220,15 @@ int ShowHansiaddPage(char *m,char *n,struct list *lpublic,struct list *lcontrol)
 		convert_num=strtoul(hspro,0,10);
 		if(convert_num < 1 || convert_num > 16)	
 		{
-		    if(strcmp(n,"4")!=0)
-	    	{
+//		    if(strcmp(n,"4")!=0)
+//	    	{
 				ShowAlert(search(lpublic,"hs_param"));
-	    	}
+//	    	}
 		}
 		else
 		{
-			fprintf(stderr,"hspro=%s\n",hspro);
-			fprintf(stderr,"pid=%d\n",pid);
-			fprintf(stderr,"connection=%p\n",connection);
 			op_ret=ccgi_config_hansi_profile_web(hspro,pid,connection);
+			fprintf(stderr,"op_ret=%d\n",op_ret);
 			//config current node sucessfully!
 			if(op_ret==0)                         
 			{
@@ -286,10 +284,6 @@ int ShowHansiaddPage(char *m,char *n,struct list *lpublic,struct list *lcontrol)
 					cgiFormStringNoNewlines("dwmk3",dwmk3,4);
 					cgiFormStringNoNewlines("dwmk4",dwmk4,4);
 					sprintf(downmask,"%ld.%ld.%ld.%ld",strtoul(dwmk1,0,10),strtoul(dwmk2,0,10),strtoul(dwmk3,0,10),strtoul(dwmk4,0,10));
-					fprintf(stderr,"ulip=%s\n",ulip);
-					fprintf(stderr,"dlip=%s\n",dlip);
-					fprintf(stderr,"upmask=%s\n",upmask);
-					fprintf(stderr,"downmask=%s\n",downmask);
 
 					if((strcmp(ulname,"")!=0) && (strcmp(dlname,"") !=0)&& (strcmp(lprio,"") !=0)&& (strcmp(uip1,"") !=0)&& (strcmp(uip2,"") !=0)&& (strcmp(uip3,"") !=0)&& (strcmp(uip4,"") !=0)&& (strcmp(dip1,"") !=0)&& (strcmp(dip2,"") !=0)&& (strcmp(dip3,"") !=0)&& (strcmp(dip4,"") !=0)&&(strcmp(upmk1,"") !=0)&&(strcmp(upmk2,"") !=0)&&(strcmp(upmk3,"") !=0)&&(strcmp(upmk4,"") !=0)&&(strcmp(dwmk1,"") !=0)&&(strcmp(dwmk2,"") !=0)&&(strcmp(dwmk3,"") !=0)&&(strcmp(dwmk4,"") !=0))
 					{
@@ -353,8 +347,6 @@ int ShowHansiaddPage(char *m,char *n,struct list *lpublic,struct list *lcontrol)
 					cgiFormStringNoNewlines("upmk3",upmk3,4);
 					cgiFormStringNoNewlines("upmk4",upmk4,4);
 					sprintf(upmask,"%ld.%ld.%ld.%ld",strtoul(upmk1,0,10),strtoul(upmk2,0,10),strtoul(upmk3,0,10),strtoul(upmk4,0,10));
-					fprintf(stderr,"ulip=%s\n",ulip);
-					fprintf(stderr,"upmask=%s\n",upmask);
 
 					if((strcmp(ulname,"")!=0) && (strcmp(lprio,"") !=0)&& (strcmp(uip1,"") !=0)&& (strcmp(uip2,"") !=0)&& (strcmp(uip3,"") !=0)&& (strcmp(uip4,"") !=0)&&(strcmp(upmk1,"") !=0)&&(strcmp(upmk2,"") !=0)&&(strcmp(upmk3,"") !=0)&&(strcmp(upmk4,"") !=0))
 					{
@@ -416,8 +408,6 @@ int ShowHansiaddPage(char *m,char *n,struct list *lpublic,struct list *lcontrol)
 					cgiFormStringNoNewlines("dwmk3",dwmk3,4);
 					cgiFormStringNoNewlines("dwmk4",dwmk4,4);
 					sprintf(downmask,"%ld.%ld.%ld.%ld",strtoul(dwmk1,0,10),strtoul(dwmk2,0,10),strtoul(dwmk3,0,10),strtoul(dwmk4,0,10));
-					fprintf(stderr,"dlip=%s\n",dlip);
-					fprintf(stderr,"downmask=%s\n",downmask);
 
 					if((strcmp(dlname,"") !=0)&& (strcmp(lprio,"") !=0)&& (strcmp(dip1,"") !=0)&& (strcmp(dip2,"") !=0)&& (strcmp(dip3,"") !=0)&& (strcmp(dip4,"") !=0)&&(strcmp(dwmk1,"") !=0)&&(strcmp(dwmk2,"") !=0)&&(strcmp(dwmk3,"") !=0)&&(strcmp(dwmk4,"") !=0))
 					{

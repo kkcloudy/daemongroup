@@ -294,7 +294,7 @@ int license_assign_cmd_web(char *type_p,char *num_p,char *hansi,int slotid,char 
 							 DBUS_TYPE_UINT32,&inst_id,
 							 DBUS_TYPE_INVALID);
 
-	reply = dbus_connection_send_with_reply_and_block (connection,query,-1, &err);
+	reply = dbus_connection_send_with_reply_and_block (ccgi_dbus_connection,query,-1, &err);
 	
 	dbus_message_unref(query);
 	

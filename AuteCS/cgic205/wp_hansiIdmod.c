@@ -69,7 +69,7 @@ unsigned char *ccgi_vrrp_err_msg[] = {	\
 /*	 12 */	"Vrrp_Virtual_Mac_Should_Be_Enable",
 };
 
-int ShowHansiModPage(char *m,char *id,char *choice,struct list *lpublic,struct list *lcontrol);    
+int ShowHansiModPage(char *m,char *id,char *choice,struct list *lpublic,struct list *lcontrol,int pid);    
 
 int cgiMain()
 {  
@@ -89,6 +89,11 @@ int cgiMain()
 	if(strcmp(macChoice,"")==0)
 	 strcpy(macChoice,"1");
 	ccgi_dbus_init();/*³õÊ¼»¯dbus*/
+	char plotid[10] = {0};
+	int pid = 0;
+	cgiFormStringNoNewlines("plotid",plotid,sizeof(plotid));
+	pid = atoi(plotid);
+	fprintf(stderr,"---####################pid=%d-----------------",pid);
 	cgiFormStringNoNewlines("ID",hsid,10);
 	cgiFormStringNoNewlines("TYPE",hstype,10);
 
@@ -101,7 +106,7 @@ int cgiMain()
 		else 
 		{
 			if(strcmp(hstype,"1")==0)
-				ShowHansiModPage(encry,hsid,macChoice,lpublic,lcontrol);
+				ShowHansiModPage(encry,hsid,macChoice,lpublic,lcontrol,pid);
 		}
 
 	}
@@ -114,7 +119,7 @@ int cgiMain()
 		else 
 		{
 			if(strcmp(hstype,"1")==0)
-				ShowHansiModPage(encry,hsid,macChoice,lpublic,lcontrol);
+				ShowHansiModPage(encry,hsid,macChoice,lpublic,lcontrol,pid);
 		}
 
 	} 
@@ -124,7 +129,7 @@ int cgiMain()
 	return 0;
 }
 
-int ShowHansiModPage(char *m,char *id,char * choice,struct list *lpublic,struct list *lcontrol)  
+int ShowHansiModPage(char *m,char *id,char * choice,struct list *lpublic,struct list *lcontrol,int pid)  
 {  
 	  int i,upmaskbit,dwmaskbit;  
 	/*define types for params*/
@@ -190,15 +195,12 @@ int ShowHansiModPage(char *m,char *id,char * choice,struct list *lpublic,struct 
 	
 	  char paramalert[128];
 	  memset(paramalert,0,128);	
-		char plotid[10] = {0};
-		int pid = 0;
-		cgiFormStringNoNewlines("plotid",plotid,sizeof(plotid));
-		pid = atoi(plotid);
 	  ccgi_dbus_init();
 	  DBusConnection *connection = NULL;
 	  instance_parameter *paraHead2 = NULL;
 	  instance_parameter *p_q = NULL;
 	  list_instance_parameter(&paraHead2, SNMPD_SLOT_CONNECT);
+	  fprintf(stderr,"-------------------------pid=%d-----------------",pid);
 	  if(0 == pid)
 	  {
 		  for(p_q=paraHead2;(NULL != p_q);p_q=p_q->next)
@@ -254,6 +256,8 @@ int ShowHansiModPage(char *m,char *id,char * choice,struct list *lpublic,struct 
 
 //	ccgi_dbus_init();
 			op_ret=ccgi_config_hansi_profile_web(id,pid,connection);
+			fprintf(stderr,"---config hansi-----------op_ret=%d",op_ret);
+
 			//config current node sucessfully!
 			if(op_ret==0)                         
 			{
@@ -320,7 +324,7 @@ int ShowHansiModPage(char *m,char *id,char * choice,struct list *lpublic,struct 
 							else
 							{
 								op_ret=ccgi_downanduplink_ifname_mask_web(id,ulname, ulip, dlname, dlip, lprio,upmaskbit,dwmaskbit,connection);
-								fprintf(stderr,"op_ret=%d\n",op_ret);
+								fprintf(stderr,"-----------------up and down op_ret=%d\n",op_ret);
 								if(op_ret==0)
 								{
 									memset(paramalert,0,128);
@@ -381,8 +385,8 @@ int ShowHansiModPage(char *m,char *id,char * choice,struct list *lpublic,struct 
 								ShowAlert(search(lcontrol,"dhcp_mask_err"));
                             else
                         	{
-								fprintf(stderr,"op_ret   connection=%p\n",connection);
 								op_ret=config_vrrp_uplink_web(id,ulname, ulip, lprio,upmaskbit,connection);
+								fprintf(stderr,"-----------------up op_ret=%d\n",op_ret);
 								if(op_ret==0)
 								{
 									memset(paramalert,0,128);
@@ -441,6 +445,7 @@ int ShowHansiModPage(char *m,char *id,char * choice,struct list *lpublic,struct 
 							else
 							{
 								op_ret=config_vrrp_downlink_mask_web(id,dlname,dlip, lprio,dwmaskbit,connection);
+								fprintf(stderr,"-----------------down op_ret =%d\n",op_ret);
 								if(op_ret==0)
 								{
 									memset(paramalert,0,128);
@@ -463,6 +468,10 @@ int ShowHansiModPage(char *m,char *id,char * choice,struct list *lpublic,struct 
 				}
 				if(strcmp(choice,"5")==0) 
 				{
+					flag1=0;
+					flag2=0;
+					flag3=0;
+					flag4=0;
 					memset(hmd_switch,0,10);
 					cgiFormStringNoNewlines("Hmd_switch",hmd_switch,10);
 					
@@ -476,7 +485,6 @@ int ShowHansiModPage(char *m,char *id,char * choice,struct list *lpublic,struct 
 					cgiFormStringNoNewlines("max_ap_type",max_ap_type,10);
 					memset(max_ap_num,0,10);
 					cgiFormStringNoNewlines("max_ap_num",max_ap_num,10);
-
 				
 					if(strcmp(hmd_switch,"none")!=0)
 						flag1=set_hansi_check_state_cmd_web(hmd_switch,pid,connection);
@@ -490,6 +498,7 @@ int ShowHansiModPage(char *m,char *id,char * choice,struct list *lpublic,struct 
 					if((strcmp(max_ap_num,"")!=0) && (strcmp(max_ap_type,"")!=0))
 					{
 						flag4=license_assign_cmd_web(max_ap_type,max_ap_num,"hansi",pid,id,connection);
+						fprintf(stderr,"flag4=%d\n",flag4);
 					}
 
 					
@@ -504,15 +513,15 @@ int ShowHansiModPage(char *m,char *id,char * choice,struct list *lpublic,struct 
 					if(flag4!=0)
 					{
 						if(flag4==-10)
-							ShowAlert("HMD dbus license number not enough");
+							ShowAlert("No enough license left");
 						else if(flag4==-11)
-							ShowAlert("HMD dbus license type not exist");					
+							ShowAlert("license type not exist");					
 						else if(flag4==-12)
-							ShowAlert("HMD dbus slot id not exist");
+							ShowAlert("Slot id not exist");
 						else if(flag4==-13)
-							ShowAlert("HMD dbus command not support");
+							ShowAlert("Command not support");
 						else if(flag4==-14)
-							ShowAlert("HMD dbus set num more than specefication");
+							ShowAlert("Num should be more than specefication,should be 1024 or 2048");
 						else
 							ShowAlert(search(lpublic,"max_ap_num_fail"));
 					}
@@ -520,7 +529,7 @@ int ShowHansiModPage(char *m,char *id,char * choice,struct list *lpublic,struct 
 				if((strcmp(hbifname,"")!=0))
 				{
 					op_ret=config_vrrp_heartbeat_cmd_func_web(id, hbifname, hbip,connection);
-					fprintf(stderr,"op_ret=%d\n",op_ret);
+					fprintf(stderr,"heart op_ret=%d\n",op_ret);
 					if(op_ret==0)
 					{
 						memset(paramalert,0,128);
@@ -761,6 +770,7 @@ int ShowHansiModPage(char *m,char *id,char * choice,struct list *lpublic,struct 
 
 	fprintf(cgiOut,"<input type=hidden name=encry_newvrrp value=%s>",m);
 	fprintf(cgiOut,"<input type=hidden name=ID value=%s>",id);
+	fprintf(cgiOut,"<input type=hidden name=plotid value=%d>",pid);
 	fprintf(cgiOut,"<input type=hidden name=TYPE value=%s>","1");
 	fprintf(cgiOut,"<tr><td colspan=3><input type=hidden name=SZ value=%s></td>",choice);
 	fprintf(cgiOut,"</table>"\

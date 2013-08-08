@@ -249,6 +249,7 @@ int ShowWebservicePage(struct list *lpublic, struct list *lcontrol)
 		fprintf(cgiOut,"<td width=690 align=right valign=bottom background=/images/di22.jpg>");
 	  
 	    fprintf(cgiOut,"<input type=hidden name=UN value=%s />",encry);
+	    fprintf(cgiOut,"<input type=hidden name=plotid value=%d />",pid);
 	 
 			  fprintf(cgiOut,"<table width=130 border=0 cellspacing=0 cellpadding=0>");  
 		fprintf(cgiOut,"<tr>"\
