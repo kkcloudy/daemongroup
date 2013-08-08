@@ -106,7 +106,7 @@ defaultMonitors yes
 export MIBDIRS=/usr/share/snmp/mibs
 SNMPDRUN=yes
 SNMPDOPTS='-LS 0-2 d -C -c /opt/services/conf/snmpd_conf.conf -p /var/run/snmpd.pid -f'
-#SNMPDOPTS+='-Lf /var/log/snmpd.log'
+SNMPDOPTS+='-Lf /var/log/snmpd.log -Dsmux,snmpd/main'
 TRAPDRUN=no
 TRAPSWITCH="/var/run/apache2/trapswitch"
 TRAPDOPTS='-Lsd -p /var/run/snmptrapd.pid'

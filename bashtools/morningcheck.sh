@@ -55,8 +55,9 @@ if [ -f $SNMPDSTATEF ] ; then
 	logger -t $LOGTAG "Snmpd status [$snmpds]."
 	if [ x$snmpds = x"start" ] ; then
 		logger -t $LOGTAG -p cron.info "Trying to restart snmpd."
-#		/opt/services/init/snmpd_init stop
-		/opt/services/init/snmpd_init restart
+		/opt/services/init/snmpd_init stop
+		sleep 10
+		/opt/services/init/snmpd_init start
 		logger -t $LOGTAG -p cron.info "Restarted snmpd."
 	else
 		logger -t $LOGTAG -p cron.info "Snmpd not started."
