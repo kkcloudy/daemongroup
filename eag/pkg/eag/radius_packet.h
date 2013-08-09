@@ -234,7 +234,11 @@ struct radius_attr_t {
 
 /* vendor  attr - AUTELAN */
 #define RADIUS_VENDOR_AUTELAN						31656
+#define	RADIUS_ATTR_AUTELAN_SESSION_FLOWOUT			51	/* integer */
 #define	RADIUS_ATTR_AUTELAN_USER_AGENT				81	/* string */
+#define	RADIUS_ATTR_AUTELAN_BANDWIDTH_MAX_UP		245	/* integer */
+#define	RADIUS_ATTR_AUTELAN_BANDWIDTH_MAX_DOWN		246	/* integer */
+
 
 int
 radius_packet_init(struct radius_packet_t *packet,

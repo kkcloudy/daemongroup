@@ -1178,6 +1178,7 @@ config_radius_session(struct app_conn_t *appconn,
 			RADIUS_VENDOR_HUAWEI,
 			RADIUS_ATTR_HUAWEI_AVE_BANDWIDTH_MAX_UP, 0))
 	{
+		/*  v.i bytes / 1024 = ? KB for speed limit on AP */
 		appconn->session.bandwidthmaxup = ntohl(attr->v.i) / 1024;
 		eag_log_debug("eag_radius", "HUAWEI:bandwidthmaxup =%u",
 			appconn->session.bandwidthmaxup);
@@ -1187,10 +1188,42 @@ config_radius_session(struct app_conn_t *appconn,
 			RADIUS_VENDOR_HUAWEI, 
 			RADIUS_ATTR_HUAWEI_AVE_BANDWIDTH_MAX_DOWN, 0))
 	{
+		/*  v.i bytes / 1024 = ? KB for speed limit on AP */
 		appconn->session.bandwidthmaxdown = ntohl(attr->v.i) / 1024;
 		eag_log_debug("eag_radius", "HUAWEI:bandwidthmaxdown =%u",
 			appconn->session.bandwidthmaxdown);
 	}
+
+	if (!radius_getattr(pack, &attr, RADIUS_ATTR_VENDOR_SPECIFIC,
+			RADIUS_VENDOR_AUTELAN, 
+			RADIUS_ATTR_AUTELAN_BANDWIDTH_MAX_UP, 0))
+	{
+		/*  v.i KB for speed limit on AP */
+		appconn->session.bandwidthmaxup = ntohl(attr->v.i);
+		eag_log_debug("eag_radius", "AUTELAN:bandwidthmaxup =%u",
+			appconn->session.bandwidthmaxup);
+	}
+
+	if (!radius_getattr(pack, &attr, RADIUS_ATTR_VENDOR_SPECIFIC,
+			RADIUS_VENDOR_AUTELAN, 
+			RADIUS_ATTR_AUTELAN_BANDWIDTH_MAX_DOWN, 0))
+    {
+        /*  v.i KB for speed limit on AP */
+        appconn->session.bandwidthmaxdown = ntohl(attr->v.i);
+        eag_log_debug("eag_radius", "AUTELAN:bandwidthmaxdown =%u",
+            appconn->session.bandwidthmaxdown);
+    }
+
+	if (!radius_getattr(pack, &attr, RADIUS_ATTR_VENDOR_SPECIFIC,
+			RADIUS_VENDOR_AUTELAN, 
+			RADIUS_ATTR_AUTELAN_SESSION_FLOWOUT, 0))
+	{
+		/*  v.i = ? MB, maxtotaloctets = ? bps  */
+		appconn->session.maxtotaloctets = ntohl(attr->v.i) * 1024 * 1024;
+		eag_log_debug("eag_radius", "AUTELAN:maxtotaloctets=%llu",
+			appconn->session.maxtotaloctets);
+	}
+	
 /*
 	if (!radius_getattr(pack, &attr, RADIUS_ATTR_REPLY_MESSAGE, 0, 0, 0)) {
 		memset(appconn->session.replymsg, 0, sizeof(appconn->session.replymsg));
