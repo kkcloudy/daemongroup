@@ -234,7 +234,10 @@ struct radius_attr_t {
 
 /* vendor  attr - AUTELAN */
 #define RADIUS_VENDOR_AUTELAN						31656
-#define	RADIUS_ATTR_AUTELAN_SESSION_FLOWOUT			51	/* integer */
+#define	RADIUS_ATTR_AUTELAN_SESSION_FLOWOUT_MB		51	/* integer */
+#define	RADIUS_ATTR_AUTELAN_SESSION_FLOWOUT_KB		52	/* integer */
+#define	RADIUS_ATTR_AUTELAN_INPUT_AVERAGE_RATE		62	/* integer */
+#define	RADIUS_ATTR_AUTELAN_OUTPUT_AVERAGE_RATE		65	/* integer */
 #define	RADIUS_ATTR_AUTELAN_USER_AGENT				81	/* string */
 #define	RADIUS_ATTR_AUTELAN_BANDWIDTH_MAX_UP		245	/* integer */
 #define	RADIUS_ATTR_AUTELAN_BANDWIDTH_MAX_DOWN		246	/* integer */
