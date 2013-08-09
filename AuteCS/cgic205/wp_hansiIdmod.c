@@ -760,11 +760,8 @@ int ShowHansiModPage(char *m,char *id,char * choice,struct list *lpublic,struct 
 		 "style=\"ime-mode:disabled\" onkeyup=\"if(/(^0+)/.test(value))value=value.replace(/^0*/,'')\" type=text size=8/></td>"\
 		 ,search(lpublic,"type"));
 
-		 fprintf(cgiOut,"<td align=left>%s<input name=max_ap_num maxLength=4 onkeypress=\"return event.keyCode>=48&&event.keyCode<=57\""\
-		 "onpaste=\"var s=clipboardData.getData('text'); if(!/\\D/.test(s)) value=s.replace(/^0*/,'');	 return   false;\""\
-		 "ondragenter=\"return	false;\" "\
-		 "style=\"ime-mode:disabled\" onkeyup=\"if(/(^0+)/.test(value))value=value.replace(/^0*/,'')\" type=text size=8/></td>"\
-		 "</tr>",search(lpublic,"num"));
+		 fprintf(cgiOut,"<td align=left>%s<input name=max_ap_num maxLength=4 onkeypress=\"return event.keyCode>=48&&event.keyCode<=57\"  size=8"\
+		 "</td></tr>",search(lpublic,"num"));
 	 }
 	
 

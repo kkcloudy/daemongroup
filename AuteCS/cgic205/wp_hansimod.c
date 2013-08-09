@@ -1027,11 +1027,8 @@ int ShowHansiModPage(char *m,char *id,char * choice,struct list *lpublic,struct 
 		 "style=\"ime-mode:disabled\" onkeyup=\"if(/(^0+)/.test(value))value=value.replace(/^0*/,'')\" type=text size=8 value=\"%s\"/></td>"\
 		 ,search(lpublic,"type"),max_type);
 
-		 fprintf(cgiOut,"<td align=left>%s<input name=max_ap_num maxLength=4 onkeypress=\"return event.keyCode>=48&&event.keyCode<=57\""\
-		 "onpaste=\"var s=clipboardData.getData('text'); if(!/\\D/.test(s)) value=s.replace(/^0*/,'');	 return   false;\""\
-		 "ondragenter=\"return	false;\" "\
-		 "style=\"ime-mode:disabled\" onkeyup=\"if(/(^0+)/.test(value))value=value.replace(/^0*/,'')\" type=text size=8 value=\"%s\"/></td>"\
-		 "</tr>",search(lpublic,"num"),max_num);
+		 fprintf(cgiOut,"<td align=left>%s<input name=max_ap_num maxLength=4 onkeypress=\"return event.keyCode>=48&&event.keyCode<=57\" size=8"\
+		 "</td></tr>",search(lpublic,"num"),max_num);
 	 }
 
 
@@ -1124,6 +1121,7 @@ int ShowHansiModPage(char *m,char *id,char * choice,struct list *lpublic,struct 
 
 	fprintf(cgiOut,"<input type=hidden name=encry_newvrrp value=%s>",m);
 	fprintf(cgiOut,"<input type=hidden name=ID value=%s>",id);
+	fprintf(cgiOut,"<input type=hidden name=plotid value=%d>",pid);
 	fprintf(cgiOut,"<input type=hidden name=TYPE value=%s>","1");
 	fprintf(cgiOut,"<tr><td colspan=3><input type=hidden name=SZ value=%s></td>",choice);
 	fprintf(cgiOut,"</table>"\
