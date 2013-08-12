@@ -4098,7 +4098,15 @@ dhcp_dbus_profile_config_save
 		totalLen += sprintf(cursor, "ip dhcp server enable\n");
 		cursor = showStr + totalLen;
 	}
+	if(local7){
+		totalLen += sprintf(cursor, "dhcp log for local7 enable\n");
+		cursor = showStr + totalLen;
 
+	}
+	if(ASN){
+		totalLen += sprintf(cursor, "ip dhcp server asn enable\n");
+		cursor = showStr + totalLen;
+	}
 	/* dba */
 	if (dba_server_enable_flag) {
 		totalLen += sprintf(cursor, " config direct-broadcast enable\n");
@@ -6967,6 +6975,48 @@ dhcp_dbus_set_nak_rsp_enable
 }
 
 DBusMessage * 
+dhcp_dbus_set_dhcplog_for_local7_enable
+(	
+	DBusConnection *conn, 
+	DBusMessage *msg, 
+	void *user_data
+)
+{
+	DBusMessage* reply;
+	DBusMessageIter  iter;
+	unsigned int enable = 0;
+	unsigned int op_ret = 0;
+	DBusError err;
+
+	dbus_error_init(&err);
+	
+	if (!(dbus_message_get_args ( msg, &err,
+		DBUS_TYPE_UINT32, &enable,
+		DBUS_TYPE_INVALID))) {
+		 log_error("Unable to get input args ");
+		if (dbus_error_is_set(&err)) {
+			 log_error("%s raised: %s",err.name,err.message);
+			dbus_error_free(&err);
+		}
+		return NULL;
+	}
+
+	local7=enable;
+	log_info(" dhcp server local7 is %s \n", (local7)?"enalbe":"disable");
+
+	reply = dbus_message_new_method_return(msg);
+	
+	dbus_message_iter_init_append (reply, &iter);
+	
+	dbus_message_iter_append_basic (&iter,
+									 DBUS_TYPE_UINT32, 
+									 &op_ret);
+
+	
+	return reply;	
+}
+
+DBusMessage * 
 dhcp_dbus_set_ASN_enable
 (	
 	DBusConnection *conn, 
@@ -9727,6 +9777,9 @@ dhcp_dbus_message_handler
 	}
 	if (dbus_message_is_method_call(message, DHCP_DBUS_INTERFACE, DHCP_DBUS_METHOD_SET_ASN_ENABLE)) {
 		reply = dhcp_dbus_set_ASN_enable(connection, message, user_data);
+	}
+	if (dbus_message_is_method_call(message, DHCP_DBUS_INTERFACE, DHCP_DBUS_METHOD_SET_DHCP_FOR_LOCAL7_ENABLE)) {
+		reply = dhcp_dbus_set_dhcplog_for_local7_enable(connection, message, user_data);
 	}
 	if (dbus_message_is_method_call(message, DHCP_DBUS_INTERFACE, DHCP_DBUS_METHOD_SET_SERVER_OPTION60_ENABLE)) {
 		reply = dhcp_dbus_set_server_option60_enable(connection, message, user_data);

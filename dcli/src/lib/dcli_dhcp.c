@@ -5373,6 +5373,63 @@ DEFUN(no_ip_dhcp_server_lease_max_cmd_func,
 }
 
 unsigned int
+dcli_set_dhcp_for_local7_enable
+(
+	struct vty *vty,
+	unsigned int enable
+)
+{
+	DBusMessage *query = NULL, *reply = NULL;
+	DBusError err;
+	unsigned int op_ret = 0;
+
+	int localid = 1, slot_id = HostSlotId, indextmp = 0;
+	get_slotid_index(vty, &indextmp, &slot_id, &localid);
+
+	DBusConnection *dcli_dbus_connection = NULL;
+	ReInitDbusConnection(&dcli_dbus_connection, slot_id, distributFag);
+
+	query = dbus_message_new_method_call(DHCP_DBUS_BUSNAME, 
+									DHCP_DBUS_OBJPATH, 
+									DHCP_DBUS_INTERFACE, 
+									DHCP_DBUS_METHOD_SET_DHCP_FOR_LOCAL7_ENABLE);
+	
+	dbus_error_init(&err);
+	dbus_message_append_args(query,
+							 DBUS_TYPE_UINT32, &enable, 
+							 DBUS_TYPE_INVALID);
+
+	reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection,query,-1, &err);
+				
+	dbus_message_unref(query);
+	
+	if (NULL == reply) {
+		if (dbus_error_is_set(&err)) {
+			dbus_error_free_for_dcli(&err);
+		}
+		return CMD_SUCCESS;
+	}
+
+	if (dbus_message_get_args ( reply, &err,
+					DBUS_TYPE_UINT32, &op_ret,
+					DBUS_TYPE_INVALID)) {
+		if(!op_ret) {
+	
+			dbus_message_unref(reply);
+			return CMD_SUCCESS;
+		}
+	} 
+	else {
+		if (dbus_error_is_set(&err)) {
+			dbus_error_free_for_dcli(&err);
+		}
+		dbus_message_unref(reply);
+	
+		return CMD_WARNING;
+	}
+}
+
+unsigned int
 dcli_set_server_ASN_enable
 (
 	struct vty *vty,
@@ -5695,6 +5752,38 @@ DEFUN(ip_dhcp_server_ASN_cmd_func,
 	}
 
 	ret = dcli_set_server_ASN_enable(vty, isEnable);
+	if (!ret) {
+		
+		return CMD_SUCCESS;
+	}
+	else {
+		return CMD_WARNING;
+	}
+}
+DEFUN(dhcp_log_for_local_cmd_func,
+	dhcp_log_for_local_cmd,
+	"dhcp log for local7 (enable|disable)",
+	"dhcp log for local7\n"
+	"dhcp log open\n"
+	"Dhcp server\n"
+	"dhcp log for local7 enable\n"
+	"dhcp log for local7 disable\n"
+)
+{
+	unsigned int ret = 0, op_ret = 0, isEnable = 0;
+
+	if(strncmp("enable",argv[0],strlen(argv[0]))==0) {
+		isEnable = 1;
+	}
+	else if (strncmp("disable",argv[0],strlen(argv[0]))==0) {
+		isEnable = 0;
+	}
+	else {
+		vty_out(vty,"bad command parameter!\n");
+		return CMD_WARNING;
+	}
+
+	ret = dcli_set_dhcp_for_local7_enable(vty, isEnable);
 	if (!ret) {
 		
 		return CMD_SUCCESS;
@@ -8983,6 +9072,7 @@ dcli_dhcp_init
 	install_element(CONFIG_NODE, &delete_dhcp_static_host_cmd);	
 	install_element(CONFIG_NODE, &ip_dhcp_server_enable_cmd);
 	install_element(CONFIG_NODE, &ip_dhcp_dynamic_arp_enable_cmd);
+	install_element(CONFIG_NODE, &dhcp_log_for_local_cmd);
 	install_element(CONFIG_NODE, &ip_dhcp_server_nak_rsp_cmd);
 	install_element(CONFIG_NODE, &ip_dhcp_server_asn_cmd);
 	install_element(CONFIG_NODE, &ip_dhcp_server_static_arp_enable_cmd);
@@ -9078,6 +9168,7 @@ dcli_dhcp_init
 	install_element(HANSI_NODE, &ip_dhcp_server_enable_cmd);
 	install_element(HANSI_NODE, &ip_dhcp_dynamic_arp_enable_cmd);
 	install_element(HANSI_NODE, &ip_dhcp_server_nak_rsp_cmd);
+	install_element(HANSI_NODE, &dhcp_log_for_local_cmd);
 	install_element(HANSI_NODE, &ip_dhcp_server_asn_cmd);
 
 	install_element(HANSI_NODE, &ip_dhcp_server_routers_ip_cmd);		/* global router */
@@ -9188,6 +9279,7 @@ dcli_dhcp_init
 	install_element(LOCAL_HANSI_NODE, &ip_dhcp_server_enable_cmd);
 	install_element(LOCAL_HANSI_NODE, &ip_dhcp_dynamic_arp_enable_cmd);
 	install_element(LOCAL_HANSI_NODE, &ip_dhcp_server_nak_rsp_cmd);
+	install_element(LOCAL_HANSI_NODE, &dhcp_log_for_local_cmd);
 	install_element(LOCAL_HANSI_NODE, &ip_dhcp_server_asn_cmd);
 
 	install_element(LOCAL_HANSI_NODE, &ip_dhcp_server_routers_ip_cmd);		/* global router */

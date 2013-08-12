@@ -129,6 +129,8 @@ unsigned int dhcp_debug_enable;
 unsigned int dhcp_debug_type;
 unsigned int dhcp_nak_rsp;
 unsigned int ASN;
+unsigned int local7;
+
 
 
 struct failover_backup_list failover_backup_list_head;

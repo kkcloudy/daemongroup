@@ -315,6 +315,13 @@ void dhcpdiscover (packet, ms_nulltp)
 	TIME when;
 	const char *s;
 	int peer_has_leases = 0;
+	struct option_cache *oc;
+	struct data_string d1;
+	struct iaddr cip;
+	struct iaddr sip;
+	char smbuf [19];
+	//struct in_addr *a = (struct in_addr*)0;
+	struct data_string data;
 #if defined (FAILOVER_PROTOCOL)
 	dhcp_failover_state_t *peer;
 #endif
@@ -351,10 +358,63 @@ void dhcpdiscover (packet, ms_nulltp)
 		  ? inet_ntoa (packet -> raw -> giaddr)
 		  : packet -> interface -> name);
 
+	if(local7){
+		memset(msgbuf,0,1024);
+		oc = lookup_option (&dhcp_universe, packet -> options,
+				    DHO_DHCP_REQUESTED_ADDRESS);
+		memset (&d1, 0, sizeof d1);
+		memset(cip.iabuf,0,16);
+		cip.len = 0;
+		if (oc &&
+			    evaluate_option_cache (&d1, packet, (struct lease *)0,
+						   (struct client_state *)0,
+						   packet -> options,
+						   (struct option_state *)0,
+						   &global_scope, oc, MDL)) {
+				//packet -> got_requested_address = 1;
+				cip.len = 4;
+				memcpy (cip.iabuf, d1.data, cip.len);
+				data_string_forget (&d1, MDL);
+			}
+		oc = lookup_option (&dhcp_universe, packet -> options,
+			    DHO_DHCP_SERVER_IDENTIFIER);
+			memset (&data, 0, sizeof data);
+			if (oc &&
+			    evaluate_option_cache (&data, packet, (struct lease *)0,
+						   (struct client_state *)0,
+						   packet -> options, (struct option_state *)0,
+						   &global_scope, oc, MDL)) {
+				sip.len = 4;
+				memcpy (sip.iabuf, data.data, 4);
+				data_string_forget (&data, MDL);
+				/* piaddr() should not return more than a 15 byte string.
+				 * safe.
+				 */
+				sprintf (smbuf, " (%s)", piaddr (sip));
+				//have_server_identifier = 1;
+			} else
+				smbuf [0] = 0;
+		char clientip[16] = {0};
+		snprintf(clientip,16,"%s",inet_ntoa(packet -> raw -> ciaddr));
+		snprintf (msgbuf, sizeof msgbuf,"DhcpDiscover__RequestIp:%s,ServerIp:%s,ClientIP:%s,ClientMac:%s %s%s%s,Interface:%s",
+		 cip.len?piaddr(cip):"0.0.0.0",strlen(smbuf)?smbuf:"0.0.0.0",clientip,(packet -> raw -> htype
+		  ? print_hw_addr (packet -> raw -> htype,
+				   packet -> raw -> hlen,
+				   packet -> raw -> chaddr)
+		  : (lease
+		     ? print_hex_1(lease->uid_len, lease->uid, 60)
+		     : "<no identifier>")),
+		  s ? "(" : "", s ? s : "", s ? ") " : "",
+		  packet -> raw -> giaddr.s_addr
+		  ? inet_ntoa (packet -> raw -> giaddr)
+		  : packet -> interface -> name);
+	}
 	/* Sourceless packets don't make sense here. */
 	if (!packet -> shared_network) {
 		log_debug("Packet from unknown subnet: %s",
 		      inet_ntoa (packet -> raw -> giaddr));
+		if(local7)
+		log_local7_dhcp("Dhcp_Offer DownReason:Packet from unknown subnet:%s",inet_ntoa (packet -> raw -> giaddr));
 		goto out;
 	}
 
@@ -411,6 +471,8 @@ void dhcpdiscover (packet, ms_nulltp)
 		    peer -> service_state == service_startup) {
 			log_info ("%s: not responding%s",
 				  msgbuf, peer -> nrr);
+			if(local7)
+			log_local7_dhcp("Dhcp_Offer DownReason:%s:not responding%s",msgbuf,peer->nrr);
 			goto out;
 		}
 	} else
@@ -530,6 +592,8 @@ void dhcprequest (packet, ms_nulltp, ip_lease)
 		}
 		else {		
 			log_info("dhcprequest wrong  interface name %s\n", packet->interface->name);
+			if(local7)
+				log_local7_dhcp("DhcpRequest DownReason:dhcprequest wrong  interface name %s\n",packet->interface->name);
 			nak_lease (packet, &cip);
 			return;
 		}
@@ -539,10 +603,12 @@ void dhcprequest (packet, ms_nulltp, ip_lease)
 	   client. */
 
 	subnet = (struct subnet *)0;
+	char submask[30] = {0};
 	lease = (struct lease *)0;	
 	if (find_subnet (&subnet, cip, MDL)) {
 		subnet->requested_times++;
 		log_debug ("client ip is %s subnet name is %s\n", piaddr(cip), subnet->shared_network->name);
+		memcpy(submask,subnet->shared_network->name,strlen(subnet->shared_network->name));
 		find_lease (&lease, packet,
 			    subnet -> shared_network, &ours, 0, ip_lease, MDL);
 	}
@@ -571,7 +637,7 @@ void dhcprequest (packet, ms_nulltp, ip_lease)
 		/* piaddr() should not return more than a 15 byte string.
 		 * safe.
 		 */
-		sprintf (smbuf, " (%s)", piaddr (sip));
+		sprintf (smbuf, "%s", piaddr (sip));
 		have_server_identifier = 1;
 	} else
 		smbuf [0] = 0;
@@ -593,6 +659,26 @@ void dhcprequest (packet, ms_nulltp, ip_lease)
 		  packet -> raw -> giaddr.s_addr
 		  ? inet_ntoa (packet -> raw -> giaddr)
 		  : packet -> interface -> name);
+	if(local7){
+		char clientip[16] = {0};
+		snprintf(clientip,16,"%s",inet_ntoa(packet -> raw -> ciaddr));
+		memset(msgbuf,0,1024);
+		snprintf (msgbuf, sizeof msgbuf,
+		"DhcpRequest__RequestIp:%s,SubnetMask:%s,ServerIp:%s,ClientIp:%s,ClientMac:%s %s%s%s,Interface:%s",
+		 piaddr (cip), strlen(submask)?submask:"255.255.255.0",strlen(smbuf)?smbuf:"0.0.0.0",clientip,
+		 (packet -> raw -> htype
+		  ? print_hw_addr (packet -> raw -> htype,
+				   packet -> raw -> hlen,
+				   packet -> raw -> chaddr)
+		  : (lease
+		     ? print_hex_1(lease->uid_len, lease->uid, 60)
+		     : "<no identifier>")),
+		 s ? "(" : "", s ? s : "", s ? ") " : "",
+		  packet -> raw -> giaddr.s_addr
+		  ? inet_ntoa (packet -> raw -> giaddr)
+		  : packet -> interface -> name);
+
+	}
 
 #if defined (FAILOVER_PROTOCOL)
 	if (lease && lease -> pool && lease -> pool -> failover_peer) {
@@ -601,6 +687,8 @@ void dhcprequest (packet, ms_nulltp, ip_lease)
 		    peer -> service_state == service_startup) {
 			log_info ("%s: not responding%s",
 				  msgbuf, peer -> nrr);
+			if(local7)
+				log_local7_dhcp("DhcpRequest DownReason:%s: not responding%s\n",msgbuf, peer -> nrr);
 			goto out;
 		}
 
@@ -646,6 +734,7 @@ void dhcprequest (packet, ms_nulltp, ip_lease)
 		if (lease -> binding_state == FTS_RESET &&
 		    !lease_mine_to_reallocate (lease)) {
 			log_debug ("%s: lease reset by administrator", msgbuf);
+			if(local7)
 			log_local7_dhcp("%s,ErrReason:lease reset by administrator", msgbuf);
 			nak_lease (packet, &cip);
 			goto out;
@@ -731,6 +820,7 @@ void dhcprequest (packet, ms_nulltp, ip_lease)
 		if (!packet -> shared_network) {
 			if (subnet && subnet -> group -> authoritative) {
 				log_error("%s: wrong network.", msgbuf);
+				if(local7)
 				log_local7_dhcp("%s,ErrReason:wrong network.", msgbuf);
 				nak_lease (packet, &cip);
 				goto out;
@@ -752,13 +842,15 @@ void dhcprequest (packet, ms_nulltp, ip_lease)
 			if (packet->shared_network && packet->shared_network -> group && packet->shared_network -> group -> authoritative)
 			{
 				log_info("%s: wrong network.", msgbuf);
+				if(local7)
 				log_local7_dhcp("%s,ErrReason:wrong network.", msgbuf);
 				nak_lease (packet, &cip);
 				goto out;
 			} else {
 				/* nak lease, if client come from others interface */
 				if(dhcp_nak_rsp){
-				log_info("%s: (requested address not available).", msgbuf);	
+				log_info("%s: (requested address not available).", msgbuf);
+				if(local7)
 				log_local7_dhcp("%s,ErrReason:(requested address not available).", msgbuf);
 				nak_lease (packet, &cip);
 				goto out;
@@ -775,6 +867,7 @@ void dhcprequest (packet, ms_nulltp, ip_lease)
 	//if (!lease && ours) {
 	if(!lease) {
 		log_info ("%s: lease %s unavailable.", msgbuf, piaddr (cip));
+		if(local7)
 		log_local7_dhcp("%s,ErrReason:(lease %s unavailable).", msgbuf, piaddr (cip));
 		nak_lease (packet, &cip);
 		goto out;
@@ -949,6 +1042,7 @@ void dhcprelease (packet, ms_nulltp)
 	if (lease && lease -> ends > cur_time) {
 		release_lease (lease, packet);
 	} 
+	if(local7)
 	log_local7_dhcp("%s logoff", msgbuf);
 	log_info ("%s logoff", msgbuf);
       out:
@@ -1451,6 +1545,10 @@ void nak_lease (packet, cip)
 	unsigned i;
 	struct option_state *options = (struct option_state *)0;
 	struct option_cache *oc = (struct option_cache *)0;
+	struct option_cache *OC = (struct option_cache *)0;
+	struct data_string data;
+	struct iaddr sip;
+	char smbuf [19];
 
 	option_state_allocate (&options, MDL);
 	memset (&outgoing, 0, sizeof outgoing);
@@ -1540,14 +1638,37 @@ void nak_lease (packet, cip)
 	raw.op = BOOTREPLY;
 
 	/* Report what we're sending... */
-	log_local7_dhcp("DhcpNak__UserIp:%s,UserMac:%s,InterfaceIp:%s",
-	      piaddr (*cip),
-	      print_hw_addr (packet -> raw -> htype,
-			     packet -> raw -> hlen,
-			     packet -> raw -> chaddr),
-	      packet -> raw -> giaddr.s_addr
-	      ? inet_ntoa (packet -> raw -> giaddr)
-	      : packet -> interface -> name);
+	if(local7){
+			OC = lookup_option (&dhcp_universe, packet -> options,
+			    DHO_DHCP_SERVER_IDENTIFIER);
+			memset (&data, 0, sizeof data);
+			if (OC &&
+			    evaluate_option_cache (&data, packet, (struct lease *)0,
+						   (struct client_state *)0,
+						   packet -> options, (struct option_state *)0,
+						   &global_scope, OC, MDL)) {
+				sip.len = 4;
+				memcpy (sip.iabuf, data.data, 4);
+				data_string_forget (&data, MDL);
+				/* piaddr() should not return more than a 15 byte string.
+				 * safe.
+				 */
+				sprintf (smbuf, " (%s)", piaddr (sip));
+				//have_server_identifier = 1;
+			} else
+				smbuf [0] = 0;
+		char clientip[16] = {0};
+		snprintf(clientip,16,"%s",inet_ntoa(packet -> raw -> ciaddr));
+		log_local7_dhcp("DhcpNak__NakIp:%s,ClientMac:%s,ClientIP:%s,ServerIp:%s,Interface:%s",
+		      piaddr (*cip),
+		      print_hw_addr (packet -> raw -> htype,
+				     packet -> raw -> hlen,
+				     packet -> raw -> chaddr),
+				     clientip,strlen(smbuf)?smbuf:"0.0.0.0",
+		      packet -> raw -> giaddr.s_addr
+		      ? inet_ntoa (packet -> raw -> giaddr)
+		      : packet -> interface -> name);
+	}
 	log_info ("DhcpNak__UserIp: %s ,UserMac: %s ,InterfaceIp: %s",
 	      piaddr (*cip),
 	      print_hw_addr (packet -> raw -> htype,
@@ -2500,7 +2621,7 @@ void ack_lease (packet, lease, offer, when, msg, ms_nulltp, hp)
 		   DHCPREQUEST. */
 		if (offer == DHCPACK){
 			lt -> next_binding_state = FTS_ACTIVE;	
-			log_debug("Offer Ip lease time %d\n",(int)lease_time);
+			//log_debug("Offer Ip lease time %d\n",(int)lease_time);
 		}else
 			lt -> next_binding_state = lease -> binding_state;
 	} else {
@@ -2705,6 +2826,8 @@ void ack_lease (packet, lease, offer, when, msg, ms_nulltp, hp)
 		if (!supersede_lease (lease, lt, !offer || offer == DHCPACK,
 				      offer == DHCPACK, offer == DHCPACK)) {
 			log_error ("%s: database update failed", msg);
+			if(local7)
+				log_local7_dhcp("DownReason:%s: database update failed", msg);
 			free_lease_state (state, MDL);
 			lease_dereference (&lt, MDL);
 			return;
@@ -3014,6 +3137,8 @@ void ack_lease (packet, lease, offer, when, msg, ms_nulltp, hp)
 					   (const char *)d1.data, d1.len,
 					   MDL)) {
 			log_error ("unknown option space %s.", d1.data);
+			if(local7)
+				log_local7_dhcp("DownReason:unknown option space %s.\n",d1.data);
 			return;
 		}
 
@@ -3048,8 +3173,8 @@ void ack_lease (packet, lease, offer, when, msg, ms_nulltp, hp)
 #endif
 
 	lease -> state = state;
-
-	log_local7_dhcp("%s", msg);
+	if(local7)
+		log_local7_dhcp("%s", msg);
 	log_debug("%s", msg);
 
 	/* Hang the packet off the lease state. */
@@ -3137,9 +3262,12 @@ void dhcp_reply (lease)
 	int nulltp, bootpp, unicastp = 1;
 	struct data_string d1;
 	const char *s;
+	struct in_addr *a = (struct in_addr*)0;
 
 	if (!state) {
 		log_error("dhcp_reply was supplied lease with no state!");
+		if(local7)
+			log_local7_dhcp("DownReason:dhcp_reply was supplied lease with no state!\n");
 		return;
 	}
 
@@ -3240,25 +3368,43 @@ void dhcp_reply (lease)
 	}
 #endif
 	subnet = (struct subnet *)0;
+	char submask[20] = {0};
 	if (find_subnet (&subnet, lease -> ip_addr, MDL)) {
-		log_debug ("Allocate Ip is %s Subnet Mask is %s\n", piaddr (lease -> ip_addr) ,subnet->shared_network->name);
+		memcpy(submask,subnet->shared_network->name,strlen(subnet->shared_network->name));
+		//log_debug ("Allocate Ip is %s Subnet Mask is %s\n", piaddr (lease -> ip_addr) ,subnet->shared_network->name);
 	}
 	/* Say what we're doing... */
-	log_local7_dhcp("%s%s,UserMac:%s %s%s%s,InterfaceIp:%s",
-		  (state -> offer
-		   ? (state -> offer == DHCPACK ? "DhcpAck__UserIp:" : "DhcpOffer__UserIp:")
-		   : "BOOTREPLY"),
-		  piaddr (lease -> ip_addr),
-		  (lease -> hardware_addr.hlen
-		   ? print_hw_addr (lease -> hardware_addr.hbuf [0],
-				    lease -> hardware_addr.hlen - 1,
-				    &lease -> hardware_addr.hbuf [1])
-		   : print_hex_1(lease->uid_len, lease->uid, 60)),
-		  s ? "(" : "", s ? s : "", s ? ") " : "",
-		  (state -> giaddr.s_addr
-		   ? inet_ntoa (state -> giaddr)
-		   : state -> ip -> name));
-		   
+	if(local7){
+		if (state -> packet->interface->address_count > 0){
+			a = &state -> packet->interface->addresses[0];
+			
+#if defined (FAILOVER_PROTOCOL)			
+			if(state -> packet->interface->vgateway_flag){				
+				a = &state -> packet->interface->virtual_ip;
+			}else{				
+				a = &state -> packet->interface->addresses[0];
+			}			
+#endif 
+		}
+		char clientip[20] = {0};
+		snprintf(clientip,20,"%s",inet_ntoa(state->ciaddr));
+		char serverip[16] = {0};
+		snprintf(serverip,20,"%s",inet_ntoa(*a));
+		log_local7_dhcp("%s%s,SubnetMask:%s,ClientMac:%s,ClientIp:%s,ServerIp:%s,LeaseTime:%d, %s%s%s,Interface:%s",
+			  (state -> offer
+			   ? (state -> offer == DHCPACK ? "DhcpAck__AckIp:" : "DhcpOffer__OfferIp:")
+			   : "BOOTREPLY"),
+			  piaddr (lease -> ip_addr),strlen(submask)?submask:"255.255.255.0",
+			  (lease -> hardware_addr.hlen
+			   ? print_hw_addr (lease -> hardware_addr.hbuf [0],
+					    lease -> hardware_addr.hlen - 1,
+					    &lease -> hardware_addr.hbuf [1])
+			   : print_hex_1(lease->uid_len, lease->uid, 60)),clientip,serverip,(int)((state -> offered_expiry)-cur_time),
+			  s ? "(" : "", s ? s : "", s ? ") " : "",
+			  (state -> giaddr.s_addr
+			   ? inet_ntoa (state -> giaddr)
+			   : state -> ip -> name));
+	}   
 	log_debug("%s %s ,UserMac: %s %s%s%s,InterfaceIp: %s",
 		  (state -> offer
 		   ? (state -> offer == DHCPACK ? "DhcpAck__UserIp:" : "DhcpOffer__UserIp:")
@@ -3438,7 +3584,7 @@ int find_lease (struct lease **lp,
 		}
 	}
 	
-	log_debug ("Client Ip Address is %s\n", inet_ntoa(packet -> raw -> ciaddr));
+	//log_debug ("Client Ip Address is %s\n", inet_ntoa(packet -> raw -> ciaddr));
 	if (packet -> raw -> ciaddr.s_addr) {
 		cip.len = 4;
 		memcpy (cip.iabuf, &packet -> raw -> ciaddr, 4);
@@ -3799,6 +3945,15 @@ if(packet->interface->vgateway_flag){
 					   " leases",
 					   (ip_lease -> subnet ->
 					    shared_network -> name));
+				if(local7)
+					log_local7_dhcp("DownReson:client %s has duplicate%s on %s",
+					   (print_hw_addr
+					    (packet -> raw -> htype,
+					     packet -> raw -> hlen,
+					     packet -> raw -> chaddr)),
+					   " leases",
+					   (ip_lease -> subnet ->
+					    shared_network -> name));
 
 				/* If the client is REQUESTing the lease,
 				   it shouldn't still be using the old
@@ -4054,6 +4209,8 @@ if(packet->interface->vgateway_flag){
 	    packet -> packet_type == DHCPREQUEST) {
 		log_error ("Reclaiming REQUESTed abandoned IP address %s.",
 		      piaddr (lease -> ip_addr));
+		if(local7)
+			log_local7_dhcp("DownReson:Reclaiming REQUESTed abandoned IP address %s.",piaddr (lease -> ip_addr));
 	} else if (lease && (lease -> binding_state == FTS_ABANDONED)) {
 	/* Otherwise, if it's not the one the client requested, we do not
 	   return it - instead, we claim it's ours, causing a DHCPNAK to be

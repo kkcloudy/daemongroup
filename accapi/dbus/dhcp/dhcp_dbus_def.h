@@ -42,6 +42,7 @@
 #define DHCP_DBUS_METHOD_SET_SERVER_ENABLE				"dhcp_set_server_enable"
 #define DHCP_DBUS_METHOD_SET_NAK_RSP_ENABLE				"dhcp_set_nak_rsp_enable"
 #define DHCP_DBUS_METHOD_SET_ASN_ENABLE				    "dhcp_set_ASN_enable"
+#define DHCP_DBUS_METHOD_SET_DHCP_FOR_LOCAL7_ENABLE				    "dhcp_log_for_local7"
 #define DHCP_DBUS_METHOD_SET_DYNAMIC_ARP_ENABLE         "dhcp_set_dynamic_arp_enable"
 
 
