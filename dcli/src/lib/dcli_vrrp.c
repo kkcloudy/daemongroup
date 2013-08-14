@@ -6528,7 +6528,21 @@ int dcli_vrrp_show_running_cfg(struct vty *vty)
 	/* loop to get configures on the had instance */
 	for (slot_id = 0; slot_id <= MAX_SLOT_NUM; slot_id++) {
 		if(active_master_slot == slot_id)
-			dhcp_flag = 1;
+		{dhcp_flag = 1;
+			tmp = dcli_dhcp_show_running_cfg2(slot_id);
+			if(tmp != NULL){
+				if (0 != strlen(tmp)){
+					dcli_config_writev2(tmp,slot_id,0,"dhcp_poll",0); 
+					if(tmp){
+						free(tmp);
+						tmp = NULL;
+					}
+				}else{
+					free(showRunningCfg_str);
+					return 1;
+				}
+			}
+		}
 		else
 			dhcp_flag = 0;
 	for (profile = 0; profile <= DCLI_VRRP_INSTANCE_CNT; profile++) {

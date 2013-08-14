@@ -42,6 +42,7 @@
 #define DHCP_DBUS_METHOD_SET_SERVER_ENABLE				"dhcp_set_server_enable"
 #define DHCP_DBUS_METHOD_SET_NAK_RSP_ENABLE				"dhcp_set_nak_rsp_enable"
 #define DHCP_DBUS_METHOD_SET_ASN_ENABLE				    "dhcp_set_ASN_enable"
+#define DHCP_DBUS_METHOD_AUTO_RESTART_ENABLE				    "dhcp_auto_restart_enable"
 #define DHCP_DBUS_METHOD_SET_DHCP_FOR_LOCAL7_ENABLE				    "dhcp_log_for_local7"
 #define DHCP_DBUS_METHOD_SET_DYNAMIC_ARP_ENABLE         "dhcp_set_dynamic_arp_enable"
 
@@ -68,6 +69,8 @@
 #define DHCP_DBUS_METHOD_SET_UNICAST_REPLY_MODE			"dhcp_set_unicast_mode"
 #define DHCP_DBUS_METHOD_CONFIG_DHCP_LEASE_ENABLE		"dhcp_client_leasetime_enable"
 #define DHCP_DBUS_METHOD_SHOW_HASNIS_RUNNING_CFG		"dhcp_show_hansi_running_cfg"
+#define DHCP_DBUS_METHOD_HMD_RUNNING_CHECK		        "hmd_running_check_for_dhcp"
+
 #define DHCP_DBUS_METHOD_GET_POOL_INFO				    "get_pool_info"
 #define DHCP_DBUS_METHOD_PING_CHECK_ENABLE				"dhcp_pingcheck_enable"
 #define DHCP_DBUS_METHOD_LEASE_EXPIRY_TIME				"dhcp_lease_expiry_time"

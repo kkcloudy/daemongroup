@@ -130,6 +130,7 @@ unsigned int dhcp_debug_type;
 unsigned int dhcp_nak_rsp;
 unsigned int ASN;
 unsigned int local7;
+unsigned int DHCP_AUTO_RESTART_ENABLE;
 
 
 

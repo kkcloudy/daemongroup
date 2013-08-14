@@ -675,6 +675,25 @@ void * HMDManagementC(){
 						Set_hmd_bakup_foreve_config(tmsg);
 					}
 				break;
+				case HMD_CREATE_FOR_DHCP:
+					DHCP_RESTART_FLAG = DHCP_RESTART_ENABLE;
+					DHCP_MONITOR = (struct Hmd_For_Dhcp_restart*)malloc(sizeof(struct Hmd_For_Dhcp_restart));
+					arg = (HMDThreadArg *)malloc(sizeof(HMDThreadArg));
+					arg->QID = tmsg->InstID;
+					arg->islocaled = 0;
+					arg->InstID = tmsg->InstID;
+					ret = HmdCreateThread(&(DHCP_MONITOR->dhcp_monitor), HMDHansiMonitor, arg, 0);	
+					if(ret != 1){
+						return NULL;
+					}
+					HMDTimerRequest(HMD_CHECKING_TIMER,&(DHCP_MONITOR->HmdTimerID), HMD_CHECK_FOR_DHCP, -1, 0);
+				break;
+				case HMD_CREATE_FOR_DHCP_DISABLE:
+					DHCP_RESTART_FLAG = DHCP_RESTART_DISABLE;
+				break;
+				case HMD_CREATE_FOR_DHCP_ENABLE:
+					DHCP_RESTART_FLAG = DHCP_RESTART_ENABLE;
+				break;
 				case HMD_STATE_SWITCH:
 				break;
 				case HMD_HANSI_INFO_NOTICE:
@@ -732,6 +751,8 @@ void * HMDManagementS(){
 	int slot_no1 = 0;
 	char mac[MAC_LEN];
 	char defaultPath[] = "/var/run/config/Instconfig";
+	char defaultSlotPath[] = "/var/run/config/slot";
+	//char newSlotPath[128] = {0};
 	fd = HMDTipcInit(HOST_SLOT_NO);
 	if(fd <= 0){
 		hmd_syslog_err("%s,%d,fd=%d.\n",__func__,__LINE__,fd);
@@ -1355,6 +1376,37 @@ void * HMDManagementS(){
 						}
 					}
 				}
+				break;
+			case HMD_DHCP_TO_START:
+				//hmd_syslog_info("HMD_DHCP_TO_START~~~~\n");
+				SlotID = tmsg->S_SlotID;
+				memset(buf, 0, 128);	
+				sprintf(buf,"sudo /opt/bin/vtysh -f %s%d/%s -b &", defaultSlotPath,SlotID,"dhcp_poll");
+				system(buf);
+				for(InstID = 0;InstID <=16;InstID++){
+				memset(buf, 0, 128);
+				sprintf(buf,"sudo /opt/bin/vtysh -f %s%d/%s%d -b &", defaultSlotPath,SlotID,"hansi_dhcp",InstID);
+				system(buf);
+				}
+				break;
+			case HMD_CREATE_FOR_DHCP:
+					DHCP_RESTART_FLAG = DHCP_RESTART_ENABLE;
+					DHCP_MONITOR = (struct Hmd_For_Dhcp_restart*)malloc(sizeof(struct Hmd_For_Dhcp_restart));
+					arg = (HMDThreadArg *)malloc(sizeof(HMDThreadArg));
+					arg->QID = tmsg->InstID;
+					arg->islocaled = 0;
+					arg->InstID = tmsg->InstID;
+					ret = HmdCreateThread(&(DHCP_MONITOR->dhcp_monitor), HMDHansiMonitor, arg, 0);	
+					if(ret != 1){
+						return NULL;
+					}
+					HMDTimerRequest(HMD_CHECKING_TIMER,&(DHCP_MONITOR->HmdTimerID), HMD_CHECK_FOR_DHCP, -1, 0);
+				break;
+			case HMD_CREATE_FOR_DHCP_DISABLE:
+					DHCP_RESTART_FLAG = DHCP_RESTART_DISABLE;
+				break;
+			case HMD_CREATE_FOR_DHCP_ENABLE:
+					DHCP_RESTART_FLAG = DHCP_RESTART_ENABLE;
 				break;
 			default :
 				break;

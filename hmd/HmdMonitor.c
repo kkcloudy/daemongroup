@@ -29,8 +29,13 @@
 #include "dbus/asd/ASDDbusDef1.h"
 #include "dbus/wcpss/wsm_dbus_def.h"
 #include <dbus/npd/npd_dbus_def.h>
+#include "dbus/dhcp/dhcp_dbus_def.h"
 
 #define VRRP_RETURN_CODE_OK (0x150001)
+extern  struct Hmd_For_Dhcp_restart *DHCP_MONITOR;
+
+
+
 
 int vrrp_send_pkt_arp( char* ifname, char *buffer, int buflen )
 {
@@ -240,6 +245,11 @@ DBusConnection * hmd_dbus_connection_init(int InstID, int islocaled)
 			    dbus_error.message);
 		return NULL;
 	}
+	if(-1 == InstID){
+		//hmd_syslog_info("connection_init ~~~\n");
+		DHCP_MONITOR->connection = dbus_connection;
+		return dbus_connection;
+	}
 	if(islocaled){
 		if(HOST_BOARD->Hmd_Local_Inst[InstID]){
 			HOST_BOARD->Hmd_Local_Inst[InstID]->connection = dbus_connection;
@@ -261,6 +271,10 @@ int hmd_tipc_fd_init(int InstID, int islocaled){
 	if(fd < 0){
 		return -1;
 	}
+	if(-1 == InstID){
+		DHCP_MONITOR->tipcfd = fd;
+		return fd;
+	}
 	if(islocaled){
 		if(HOST_BOARD->Hmd_Local_Inst[InstID])
 			HOST_BOARD->Hmd_Local_Inst[InstID]->tipcfd = fd;
@@ -270,6 +284,57 @@ int hmd_tipc_fd_init(int InstID, int islocaled){
 	}
 
 	return fd;
+}
+int dhcp_running_checking(){
+	//char BUSNAME[PATH_LEN];
+	//char OBJPATH[PATH_LEN];
+	//char INTERFACE[PATH_LEN];
+//	char CMDPATH[PATH_LEN];
+	DBusMessage *query, *reply;
+	DBusError err;
+	DBusConnection * connection = NULL;
+	int ret = 0;
+	int InstID = -1,islocaled = 0;
+	int *dhcp_check = NULL;
+	int *dhcp_check_timeout = NULL;
+
+	dhcp_check = &(DHCP_MONITOR->dhcp_check);
+	dhcp_check_timeout = &(DHCP_MONITOR->dhcp_check_timeout);
+	connection = DHCP_MONITOR->connection;
+	if(connection == NULL){
+		hmd_syslog_info("%s InstID %d islocaled %d connection == NULL",__func__,InstID,islocaled);
+		hmd_dbus_connection_init(InstID,islocaled);
+	}
+	query = dbus_message_new_method_call(DHCP_DBUS_BUSNAME,DHCP_DBUS_OBJPATH,DHCP_DBUS_INTERFACE,DHCP_DBUS_METHOD_HMD_RUNNING_CHECK);	
+	dbus_error_init(&err);
+	reply = dbus_connection_send_with_reply_and_block (connection,query,60000, &err);	
+	dbus_message_unref(query);
+	if (NULL == reply)
+	{
+		if (dbus_error_is_set(&err))
+		{
+			if(!memcmp(err.name,DBUS_ERROR_NO_REPLY,strlen(DBUS_ERROR_NO_REPLY))&&!memcmp(err.message,"Did not receive a reply.",strlen("Did not receive a reply.")))
+				*dhcp_check_timeout += 1;
+			else
+				*dhcp_check += 1;
+			dbus_error_free(&err);
+		}
+		else
+		*dhcp_check+=1;
+		if(*dhcp_check>= 5 || *dhcp_check_timeout >= 10){
+			*dhcp_check = 0;
+			*dhcp_check_timeout = 0;
+			hmd_syslog_crit("%s  InstID %d islocaled %d DHCP maybe wrong",__func__,InstID,islocaled);
+			return HMD_FALSE;
+		}
+		hmd_syslog_info("%s  InstID %d islocaled %d  DHCP_check %d",__func__,InstID,islocaled,*dhcp_check);
+	}else if (dbus_message_get_args ( reply, &err,
+					DBUS_TYPE_UINT32,&ret,
+					DBUS_TYPE_INVALID)){
+		dbus_message_unref(reply);
+	}
+
+	return HMD_TRUE;
 }
 
 HMDBool hansi_wireless_checking(int InstID, int islocaled){	
@@ -1120,6 +1185,10 @@ int notice_hmd_server_state_change(int InstID, int islocaled, HmdOP op, InstStat
 			state = HOST_BOARD->Hmd_Inst[InstID]->InstState;
 			fd = HOST_BOARD->Hmd_Inst[InstID]->tipcfd;
 		}
+		if(HMD_DHCP_TO_START == op){
+		fd = DHCP_MONITOR->tipcfd;
+	//	hmd_syslog_info("~~~~~~fd id %d\n",fd);
+		}
 	}
 	if(fd <= 0){
 		hmd_syslog_err("%s,%d,invaid fd:%d.\n",__func__,__LINE__,fd);
@@ -1183,7 +1252,34 @@ int notice_hmd_server_delete_hansi(int InstID, int islocaled, HmdOP op){
 	}
 	return 0;
 }
+int dhcp_to_start(){
+	char buf[128] = {0};
+	int ret = 0;
+	char defaultSlotPath[] = "/var/run/config/slot";
+	int SlotID =0 ,InstID = -1,islocaled =0;
+	
+	sprintf(buf,"sudo /usr/bin/dhcp_restart.sh");
+	ret = system(buf);
+	if(WEXITSTATUS(ret) == 2) {
+			hmd_syslog_err("dhcp restart falsed.\n");
+	}
+	if(HOST_SLOT_NO != MASTER_SLOT_NO)
+	notice_hmd_server_state_change(InstID, islocaled, HMD_DHCP_TO_START, 0);
+	DHCP_MONITOR->RestartTimes+=1;
+	if((HOST_SLOT_NO == MASTER_SLOT_NO)){
+		SlotID = HOST_SLOT_NO;
+		memset(buf, 0, 128);	
+		sprintf(buf,"sudo /opt/bin/vtysh -f %s%d/%s -b &", defaultSlotPath,SlotID,"dhcp_poll");
+		system(buf);
+		for(InstID = 0;InstID <=16;InstID++){
+		memset(buf, 0, 128);
+		sprintf(buf,"sudo /opt/bin/vtysh -f %s%d/%s%d -b &", defaultSlotPath,SlotID,"hansi_dhcp",InstID);
+		system(buf);
+		}
+	}
 
+	return 0;
+}
 int hansi_state_check(int InstID, int islocaled){
 	char buf[128] = {0};
 	char defaultPath[] = "/var/run/config/Instconfig";
@@ -1255,6 +1351,19 @@ int hansi_state_check(int InstID, int islocaled){
 		}
 	}
 	return 0;
+}
+void DHCP_CHECK(){
+//	hmd_syslog_info("DHCP_CHECK Doing\n");
+	int ret;
+	if(DHCP_RESTART_FLAG){
+		ret = dhcp_running_checking();
+		if(ret == HMD_FALSE){
+			hmd_syslog_warning("check dhcp false,need restart dhcp.\n");
+			ret = dhcp_to_start();
+		}
+	}
+	HMDTimerRequest(HMD_CHECKING_TIMER,&(DHCP_MONITOR->HmdTimerID), HMD_CHECK_FOR_DHCP, 0, 0);
+	
 }
 
 
@@ -1439,6 +1548,10 @@ void * HMDHansiMonitor(void *arg) {
 				break;
 			case HMD_LICENSE_UPDATE:
 				hansi_wireless_license_update(InstID,islocaled,HMsgq.mqinfo.u.LicenseInfo.licenseType);
+				break;
+			case HMD_DHCP_CHECKING:
+		//	hmd_syslog_info("HMD_DHCP_CHECKING~~~~\n");
+				DHCP_CHECK();
 				break;
 			default:
 				break;

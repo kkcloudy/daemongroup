@@ -192,6 +192,16 @@ struct Hmd_Board_Info{
 	struct Hmd_Inst_Mgmt * Hmd_Inst[MAX_INSTANCE];	
 	struct Hmd_L_Inst_Mgmt * Hmd_Local_Inst[MAX_INSTANCE];
 };
+struct Hmd_For_Dhcp_restart{
+	DBusConnection * connection;
+	int tipcfd;
+	//pthread_t	dhcp_monitor[MAX_SLOT_NUM];
+	pthread_t	dhcp_monitor;
+	int	HmdTimerID;
+	int dhcp_check;
+	int RestartTimes;
+	int dhcp_check_timeout;
+};
 /*fengwenchao add 20110616*/
 struct Hmd_Board_Info_show
 {
@@ -233,7 +243,12 @@ typedef enum{
 	HMD_CLEAR_APPLY_IFNAME_FLAG,   /*fengwenchao copy from 1318 for AXSSZFI-839*/
 	HMD_BAKUP_FOREVER_CONFIG,
 	HMD_IS_DELETE_HANSI,/*hmd is deleting hansi set inst_state,config hansi is not permitted*/
-	HMD_SERVER_DELETE_HANSI/*delete hansi compeleted,notice server to free hansi*/
+	HMD_SERVER_DELETE_HANSI,/*delete hansi compeleted,notice server to free hansi*/
+	HMD_CREATE_FOR_DHCP,
+	HMD_CREATE_FOR_DHCP_DISABLE,
+	HMD_CREATE_FOR_DHCP_ENABLE,
+	HMD_DHCP_TO_START,
+	HMD_DHCP_CHECKING
 }HmdOP;
 
 typedef enum{

@@ -660,6 +660,16 @@ void HmdHandleTimer(void* arg) {
 		hmd_config_save_timer_init(0);	
 		if((isMaster)&&(isActive)&&(HANSI_TIMER_CONFIG_SAVE == 1))
 			HMDTimerRequest(HANSI_TIMER,&(HOST_BOARD->HMDTimer_ConfigSave), HMD_TIMER_CONFIG_SAVE, 0, 0);		
+	}else if(HMD_CHECK_FOR_DHCP == TimerType){
+		memset((char*)&msg, 0, sizeof(msg));
+		msg.mqid = 1;
+		msg.mqinfo.op = HMD_DHCP_CHECKING;
+		msg.mqinfo.type = islocaled;
+		msg.mqinfo.InstID = InstID;
+		//hmd_syslog_info("HMD HANDLE Timer------senmsg\n");
+		if (msgsnd(MsgqID, (struct HmdMsgQ *)&msg, sizeof(msg.mqinfo), 0) == -1){
+			perror("msgsnd");
+		}
 	}
 	HMD_FREE_OBJECT(a);
 

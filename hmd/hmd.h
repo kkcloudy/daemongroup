@@ -40,6 +40,8 @@ extern int isMaster;
 extern int MASTER_SLOT_NO;
 extern int HMDMsgqID;
 extern int	isDistributed;
+extern int DHCP_RESTART_FLAG;
+extern int DHCP_RESTART_OPEN;
 extern int LicenseCount;
 extern int isActive;
 extern int HANSI_CHECK_OP;
@@ -53,6 +55,9 @@ extern unsigned int service_ftp_state;//service ftp  (0--disable;1--enable)
 #define		HMD_FREE_OBJECT(obj_name)				{if(obj_name){free((obj_name)); (obj_name) = NULL;}}
 #define		HMD_FREE_OBJECTS_ARRAY(ar_name, ar_size)			{int _i = 0; for(_i = ((ar_size)-1); _i >= 0; _i--) {if(((ar_name)[_i]) != NULL){ free((ar_name)[_i]);}} free(ar_name); (ar_name) = NULL; }
 #define		HMD_BUF_LEN		2048
+#define     DHCP_RESTART_ENABLE  1
+#define     DHCP_RESTART_DISABLE  0
+#define     DHCP_RESTART_DO_OPEN   1
 // custom error
 #define		HMD_CREATE_OBJECT_ERR(obj_name, obj_type, on_err)	{obj_name = (obj_type*) (malloc(sizeof(obj_type))); if(!(obj_name)) {on_err}}
 #define		HMD_CREATE_OBJECT_SIZE_ERR(obj_name, obj_size,on_err)	{obj_name = (malloc(obj_size)); if(!(obj_name)) {on_err}}
@@ -63,6 +68,8 @@ extern unsigned int service_ftp_state;//service ftp  (0--disable;1--enable)
 #define THREAD_NUM	16
 void HmdStateReInit();
 int read_ac_file(char *FILENAME,char *buff,int blen);
+int read_file_info(char *FILENAME,char *buff);
+int parse_int_ID(char* str, int* ID);
 HMDBool HmdGetMsgQueue(int *msgqid);
 void hmd_pid_write_v3(int slot_num,int instID,int islocal);
 int HmdNoticeToClient(int slotid,int InstID,int localid,int op);

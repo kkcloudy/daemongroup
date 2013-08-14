@@ -25,10 +25,13 @@
 #include <dirent.h>  /*fengwenchao add 20120228 for AXSSZFI-680*/
 #include "HmdStateListen.h"
 #include "HmdDbusHandler.h"
+#include "board/board_define.h"
+
 static DBusConnection * hmd_dbus_connection = NULL;
 static DBusConnection * hmd_dbus_connection2 = NULL;
 //static DBusConnection * hmd_dbus_connection_t[THREAD_NUM];
 int HmdDBUS_MSGQ;
+extern  struct Hmd_For_Dhcp_restart *DHCP_MONITOR;
 
 void hmd_realease(struct Hmd_Board_Info **HMD_BOARD,int ID){
 	if((HMD_BOARD == NULL)||(HMD_BOARD[ID] == NULL)){
@@ -778,6 +781,108 @@ DBusMessage * hmd_dbus_interface_config_local_hansi(DBusConnection *conn, DBusMe
 							 DBUS_TYPE_INT32,&slot_no,
 							 DBUS_TYPE_INT32,&slot_no1,
 							 DBUS_TYPE_INVALID);
+	return reply;
+	
+}
+
+DBusMessage * hmd_dbus_interface_auto_dhcp_restart(DBusConnection *conn, DBusMessage *msg, void *user_data){
+
+	DBusMessage* reply;
+	unsigned int isEnable = 0;
+	unsigned int slot_id = 0,Slot_id = 0;
+	DBusError err;
+	int ret = HMD_DBUS_SUCCESS;
+	int local_id = 0;	
+	HMDThreadArg *arg = NULL;
+	char tmpbuf[DEFAULT_LEN] = {0};	
+	char tmpbuf2[128] = {0};
+	int board_state = 0;
+	char Base_Slot_Path[] = "/dbm/product/slot/slot";
+	//char command[128] = {0};
+	dbus_error_init(&err);
+	if (!(dbus_message_get_args ( msg, &err,
+							 DBUS_TYPE_UINT32,&isEnable,
+							 DBUS_TYPE_UINT32,&Slot_id,
+							 DBUS_TYPE_INVALID))) 
+	{
+	    hmd_syslog_err("set dhcp auto restart:Unable to get input args ");
+		if (dbus_error_is_set(&err)) {
+			hmd_syslog_err("set dhcp auto restart %s raised: %s",err.name,err.message);
+			dbus_error_free(&err);
+		}
+		return NULL;
+	}
+	if(isDistributed){
+		if(isMaster&&isActive){
+			ret = HMD_DBUS_SUCCESS; 
+		}else{
+			ret = HMD_DBUS_PERMISSION_DENIAL;
+		}
+	}
+	
+	if(isEnable){
+		if(DHCP_RESTART_FLAG){
+		ret = HMD_DBUS_DHCP_RESTART_ALREADY_ENABLE;
+		}
+		DHCP_RESTART_FLAG = DHCP_RESTART_ENABLE;
+	}else{
+		if(!DHCP_RESTART_FLAG){
+		ret = HMD_DBUS_DHCP_RESTART_ALREADY_DISABLE;
+		}
+		DHCP_RESTART_FLAG = DHCP_RESTART_DISABLE;
+	}
+	if((ret == HMD_DBUS_SUCCESS)&&(slot_id < MAX_SLOT_NUM)){
+		
+		for(slot_id = 1; slot_id < MAX_SLOT_NUM;slot_id++){
+			//hmd_syslog_info("hmdDbus ~~~~~~~~slot_id is %d  FOR LOOP\n",slot_id);
+			memset(tmpbuf,0,DEFAULT_LEN);
+			memset(tmpbuf2,0,128);
+			sprintf(tmpbuf2,"%s%d/board_state",Base_Slot_Path,slot_id);
+			if(read_file_info(tmpbuf2,tmpbuf) == 0){
+				if(parse_int_ID(tmpbuf,&board_state) == 0){
+					if(board_state >= BOARD_READY){
+						//hmd_syslog_info("hmdDbus ~~~~~~~~slot_id is %d  board_state >= BOARD_READY\n",slot_id);
+						if((Slot_id == slot_id) && isEnable && (!DHCP_RESTART_OPEN)){
+						//	hmd_syslog_info("hmdDbus ~~~~~~~~slot_id == Slot_id\n");
+							DHCP_MONITOR = (struct Hmd_For_Dhcp_restart *)malloc(sizeof(struct Hmd_For_Dhcp_restart));
+							arg = (HMDThreadArg *)malloc(sizeof(HMDThreadArg));
+							arg->QID = -1;
+							arg->islocaled = 0;
+							arg->InstID = -1;
+							HmdCreateThread(&(DHCP_MONITOR->dhcp_monitor), HMDHansiMonitor, arg, 0);					
+							HMDTimerRequest(HMD_CHECKING_TIMER,&(DHCP_MONITOR->HmdTimerID), HMD_CHECK_FOR_DHCP, -1, 0);
+							sleep(5);
+							//continue;
+						}else{
+							if(!isEnable)
+								HmdNoticeToClient(slot_id,-1,local_id,HMD_CREATE_FOR_DHCP_DISABLE);
+							else if(DHCP_RESTART_OPEN){
+								HmdNoticeToClient(slot_id,-1,local_id,HMD_CREATE_FOR_DHCP_ENABLE);
+							}else
+								HmdNoticeToClient(slot_id,-1,local_id,HMD_CREATE_FOR_DHCP);	
+						//	hmd_syslog_info("hmdDbus !!!!!!!!!!!!!111\n");
+							sleep(5);
+							}
+					}else{
+						hmd_syslog_info("no connection to slot %d\n",slot_id);
+					}
+				}
+			}
+		}
+	}
+	if(!DHCP_RESTART_OPEN){
+		DHCP_RESTART_OPEN = DHCP_RESTART_DO_OPEN;
+	}
+	reply = dbus_message_new_method_return(msg);
+	if(NULL == reply){		
+		hmd_syslog_err("dhcp set dhcp auto restart dbus reply null!\n");
+		return reply;
+	}
+		
+	dbus_message_append_args(reply,
+							 DBUS_TYPE_UINT32,&ret,
+							 DBUS_TYPE_INVALID);
+	
 	return reply;
 	
 }
@@ -4491,6 +4596,8 @@ static DBusHandlerResult hmd_dbus_message_handler (DBusConnection *connection, D
 			reply = hmd_dbus_interface_config_local_hansi(connection,message,user_data);
 		}else if(dbus_message_is_method_call(message,HMD_DBUS_INTERFACE,HMD_DBUS_CONF_METHOD_REMOTE_HANSI)){
 			reply = hmd_dbus_interface_config_remote_hansi(connection,message,user_data);
+		}else if(dbus_message_is_method_call(message,HMD_DBUS_INTERFACE,HMD_DBUS_CONF_METHOD_DHCP_AUTO_RESTART)){
+			reply = hmd_dbus_interface_auto_dhcp_restart(connection,message,user_data);
 		}else if(dbus_message_is_method_call(message,HMD_DBUS_INTERFACE,HMD_DBUS_METHOD_SET_LOCAL_HANSI_STATE)){
 			reply = hmd_dbus_interface_set_hansi_state(connection,message,user_data);
 		}else if(dbus_message_is_method_call(message,HMD_DBUS_INTERFACE,HMD_DBUS_METHOD_SET_LOCAL_HANSI_UPLINK_IF)){

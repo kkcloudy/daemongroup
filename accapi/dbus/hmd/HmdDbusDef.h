@@ -9,6 +9,7 @@ extern char HMD_DBUS_BUSNAME[PATH_LEN];
 extern char HMD_DBUS_OBJPATH[PATH_LEN];
 extern char HMD_DBUS_INTERFACE[PATH_LEN];
 extern char HMD_DBUS_CONF_METHOD_LOCAL_HANSI[PATH_LEN];
+extern char HMD_DBUS_CONF_METHOD_DHCP_AUTO_RESTART[PATH_LEN];
 
 extern char HMD_DBUS_CONF_METHOD_REMOTE_HANSI[PATH_LEN];
 extern char HMD_DBUS_METHOD_SET_LOCAL_HANSI_STATE[PATH_LEN];
@@ -75,7 +76,9 @@ enum hmd_dbus_result_no_e {
 	HMD_DBUS_TIMER_CONFIG_SAVE_STATE_ENABLE,  //fengwenchao add 20130412 for hmd timer config save 
 	HMD_DBUS_IS_NOT_MASTER, //fengwenchao add 20130412 for hmd timer config save 
 	HMD_DBUS_SET_NUM_MORE_THAN_SPECEFICATION,  //fengwenchao add for read gMaxWTPs from  /dbm/local_board/board_ap_max_counter
-	HMD_DBUS_DELETING_HANSI
+	HMD_DBUS_DELETING_HANSI,
+	HMD_DBUS_DHCP_RESTART_ALREADY_ENABLE, //DHCP RESTART already open supf add 20130730
+	HMD_DBUS_DHCP_RESTART_ALREADY_DISABLE
 };
 #define DCLI_HMD_CHECK_FAILED	(-1)
 #define DCLI_HMD_CREATED		(1)		/* HMD have created.		*/

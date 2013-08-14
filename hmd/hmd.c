@@ -70,7 +70,10 @@ int HANSI_CHECK_OP = 1;
 int HANSI_TIMER_CONFIG_SAVE = 0; //fengwenchao add 20130412 for hmd timer config save
 int HANSI_TIMER = 1800; //fengwenchao add 20130412 for hmd timer config save
 int WTP_NUM = 4096+1;	//fengwenchao add 20130412 for hmd timer config save
+int DHCP_RESTART_FLAG = 0; //DHCP AUTO 	restart flag  supf add 20130729
+int DHCP_RESTART_OPEN = 0; //DHCP AUTO 	restart OPEN  supf add 20130729
 struct Hmd_Board_Info *HOST_BOARD;
+struct Hmd_For_Dhcp_restart *DHCP_MONITOR;
 struct Hmd_Board_Info *HMD_BOARD[MAX_SLOT_NUM];
 struct Hmd_L_Inst_Mgmt_Summary *HMD_L_HANSI[MAX_INSTANCE];
 struct LicenseMgmt	*LICENSE_MGMT;

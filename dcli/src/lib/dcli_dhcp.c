@@ -54,7 +54,8 @@ extern "C"
 #include "dcli_vrrp.h"
 #include <sys/socket.h>
 #include <dbus/sem/sem_dbus_def.h>
-
+#include "dbus/hmd/HmdDbusDef.h"
+#include "hmd/hmdpub.h"
 
 
 /*********************hanhui upgrade***************
@@ -5430,6 +5431,63 @@ dcli_set_dhcp_for_local7_enable
 }
 
 unsigned int
+dcli_set_server_auto_restart_enable
+(
+	struct vty *vty,
+	unsigned int enable
+)
+{
+	DBusMessage *query = NULL, *reply = NULL;
+	DBusError err;
+	unsigned int op_ret = 0;
+
+	int localid = 1, slot_id = HostSlotId, indextmp = 0;
+	get_slotid_index(vty, &indextmp, &slot_id, &localid);
+
+	DBusConnection *dcli_dbus_connection = NULL;
+	ReInitDbusConnection(&dcli_dbus_connection, slot_id, distributFag);
+
+	query = dbus_message_new_method_call(DHCP_DBUS_BUSNAME, 
+									DHCP_DBUS_OBJPATH, 
+									DHCP_DBUS_INTERFACE, 
+									DHCP_DBUS_METHOD_AUTO_RESTART_ENABLE);
+	
+	dbus_error_init(&err);
+	dbus_message_append_args(query,
+							 DBUS_TYPE_UINT32, &enable, 
+							 DBUS_TYPE_INVALID);
+
+	reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection,query,-1, &err);
+				
+	dbus_message_unref(query);
+	
+	if (NULL == reply) {
+		if (dbus_error_is_set(&err)) {
+			dbus_error_free_for_dcli(&err);
+		}
+		return CMD_SUCCESS;
+	}
+
+	if (dbus_message_get_args ( reply, &err,
+					DBUS_TYPE_UINT32, &op_ret,
+					DBUS_TYPE_INVALID)) {
+		if(!op_ret) {
+	
+			dbus_message_unref(reply);
+			return CMD_SUCCESS;
+		}
+	} 
+	else {
+		if (dbus_error_is_set(&err)) {
+			dbus_error_free_for_dcli(&err);
+		}
+		dbus_message_unref(reply);
+	
+		return CMD_WARNING;
+	}
+}
+
+unsigned int
 dcli_set_server_ASN_enable
 (
 	struct vty *vty,
@@ -8095,6 +8153,118 @@ char *dcli_dhcp_restart_load_hansi_cfg(struct vty *vty)
 }
 
 
+DEFUN(dhcp_auto_restart_cmd_func,
+	dhcp_auto_restart_cmd,
+	"ip dhcp server auto restart (enable|disable)",
+	"auto restart dhcp service\n"
+)
+{
+	DBusMessage *query, *reply;
+	DBusError err;
+	unsigned int ret=0;
+	unsigned int hmd_ret = 0,isEnable = 0;
+	int localid = 1, slot_id = HostSlotId, indextmp = 0;
+	get_slotid_index(vty, &indextmp, &slot_id, &localid);
+	if(distributFag == 0){
+		vty_out(vty,"<error> ac is not distributed!\n");
+		return CMD_WARNING;	
+	}
+	if(strncmp("enable",argv[0],strlen(argv[0]))==0) {
+		isEnable = 1;
+	}
+	else if (strncmp("disable",argv[0],strlen(argv[0]))==0) {
+		isEnable = 0;
+	}
+	else {
+		vty_out(vty,"bad command parameter!\n");
+		return CMD_WARNING;
+	}
+	query = dbus_message_new_method_call(HMD_DBUS_BUSNAME,
+										HMD_DBUS_OBJPATH, 
+										HMD_DBUS_INTERFACE, 
+										HMD_DBUS_CONF_METHOD_DHCP_AUTO_RESTART);
+
+	dbus_error_init(&err);
+	dbus_message_append_args(query,
+								 DBUS_TYPE_UINT32,&isEnable,
+								 DBUS_TYPE_UINT32,&slot_id,
+								 DBUS_TYPE_INVALID);
+
+	reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection,query,150000, &err);
+
+	dbus_message_unref(query);
+	if (NULL == reply) {
+		vty_out(vty, "restarting dhcpd failed get reply.\n");
+		if (dbus_error_is_set(&err)) {
+			vty_out(vty, "%s raised: %s",err.name,err.message);
+			dbus_error_free_for_dcli(&err);
+		}
+		return CMD_WARNING;
+	}
+
+	if (dbus_message_get_args ( reply, &err,
+				DBUS_TYPE_UINT32,&hmd_ret,
+				//DBUS_TYPE_UINT32,&profile,
+				//DBUS_TYPE_UINT32,&slot_no,
+				DBUS_TYPE_INVALID)) {	
+	
+	//vty_out(vty,"14\n");
+		if(hmd_ret == 0){
+			/*if(vty->node == CONFIG_NODE){
+				vty->node = HANSI_NODE;
+				vty->index = (void *)0;
+				vty->slotindex = slot_id;
+				//vty->slotindex1 = slot_no1;
+				vty->local = 0;
+			}*/
+		}
+		else if(hmd_ret == HMD_DBUS_PERMISSION_DENIAL){
+			vty_out(vty,"<error> The Slot is not active master board, permission denial\n");			
+			return CMD_WARNING;
+		}else if(hmd_ret == HMD_DBUS_SLOT_ID_NOT_EXIST){
+			vty_out(vty,"<error> The Slot is not EXIST\n");
+			return CMD_WARNING;
+		}else if (hmd_ret == HMD_DBUS_ID_NO_EXIST){
+			vty_out(vty,"<error> remote hansi not exist\n");
+			return CMD_WARNING;
+		}else if (hmd_ret == HMD_DBUS_DHCP_RESTART_ALREADY_ENABLE){
+			ret = dcli_set_server_auto_restart_enable(vty, isEnable);
+			vty_out(vty,"DHCP auto restart already open!\n");
+			return CMD_WARNING;
+		}else if (hmd_ret == HMD_DBUS_DHCP_RESTART_ALREADY_DISABLE){
+			ret = dcli_set_server_auto_restart_enable(vty, isEnable);
+			vty_out(vty,"DHCP auto restart already disable!\n");
+			return CMD_WARNING;
+		}else{
+			vty_out(vty,"<error>  %d\n",hmd_ret);
+			return CMD_WARNING;
+		}
+
+	} 
+	else {	
+	
+	//vty_out(vty,"15\n");
+		if (dbus_error_is_set(&err)) 
+		{
+			printf("%s raised: %s",err.name,err.message);
+			dbus_error_free_for_dcli(&err);
+		}		
+		return CMD_WARNING;
+	}
+
+	
+	dbus_message_unref(reply);
+	reply = NULL;
+	ret = dcli_set_server_auto_restart_enable(vty, isEnable);
+	if (!ret) {		
+		return CMD_SUCCESS;
+	}
+	else {
+		return CMD_WARNING;
+	}
+}
+
+
 DEFUN(dhcp_restart_cmd_func,
 	dhcp_restart_cmd,
 	"ip dhcp server restart",
@@ -9063,6 +9233,7 @@ dcli_dhcp_init
 	install_default(POOL_NODE);
 
 	/*show dhcp lease state*/
+	install_element(CONFIG_NODE, &dhcp_auto_restart_cmd);
 	install_element(CONFIG_NODE, &show_dhcp_lease_state);
 	install_element(CONFIG_NODE, &show_dhcp_pool_statistics);	
 	install_element(CONFIG_NODE, &create_ip_pool_name_cmd);	

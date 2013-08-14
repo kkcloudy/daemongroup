@@ -490,8 +490,8 @@ void dcli_config_writev2(char * str,int slotID, int hansiID,char * filename,int 
 	DIR *slot_dir = NULL;
 	char filepath[128] = {0};
 	char cmd[256] = {0};
-	char defaultDir[] = "/mnt/config";
-	char defaultSlotPath[] = "/mnt/config/slot";
+	char defaultDir[] = "/var/run/config";
+	char defaultSlotPath[] = "/var/run/config/slot";
 	char newSlotPath[128] = {0};	
 	unsigned int save_flag =0;
 	/*fengwenchao add for show running,hmd timer config save */

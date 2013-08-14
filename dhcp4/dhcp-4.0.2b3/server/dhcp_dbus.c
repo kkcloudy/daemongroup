@@ -3549,6 +3549,25 @@ int dhcp_dbus_get_slotid_by_vrrpid(int vrrp_id)
 }
 
 
+DBusMessage* 
+dhcp_dbus_hmd_running_check(
+	DBusConnection *conn, 
+	DBusMessage *msg, 
+	void *user_data
+)
+{
+	DBusMessage* reply;	
+	DBusMessageIter	 iter;
+	DBusError err;
+	dbus_error_init(&err);
+	int ret = 0;
+	reply = dbus_message_new_method_return(msg);
+	dbus_message_iter_init_append(reply, &iter);
+	dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT32, &ret);
+		
+	return reply;
+}
+
 
 
 DBusMessage* 
@@ -4105,6 +4124,10 @@ dhcp_dbus_profile_config_save
 	}
 	if(ASN){
 		totalLen += sprintf(cursor, "ip dhcp server asn enable\n");
+		cursor = showStr + totalLen;
+	}
+	if(DHCP_AUTO_RESTART_ENABLE){
+		totalLen += sprintf(cursor, "ip dhcp server auto restart enable\n");
 		cursor = showStr + totalLen;
 	}
 	/* dba */
@@ -7017,6 +7040,48 @@ dhcp_dbus_set_dhcplog_for_local7_enable
 }
 
 DBusMessage * 
+dhcp_dbus_auto_restart_enable
+(	
+	DBusConnection *conn, 
+	DBusMessage *msg, 
+	void *user_data
+)
+{
+	DBusMessage* reply;
+	DBusMessageIter  iter;
+	unsigned int enable = 0;
+	unsigned int op_ret = 0;
+	DBusError err;
+
+	dbus_error_init(&err);
+	
+	if (!(dbus_message_get_args ( msg, &err,
+		DBUS_TYPE_UINT32, &enable,
+		DBUS_TYPE_INVALID))) {
+		 log_error("Unable to get input args ");
+		if (dbus_error_is_set(&err)) {
+			 log_error("%s raised: %s",err.name,err.message);
+			dbus_error_free(&err);
+		}
+		return NULL;
+	}
+
+	DHCP_AUTO_RESTART_ENABLE=enable;
+	log_info(" dhcp server DHCP_AUTO_RESTART_ENABLE is %s \n", (DHCP_AUTO_RESTART_ENABLE)?"enalbe":"disable");
+
+	reply = dbus_message_new_method_return(msg);
+	
+	dbus_message_iter_init_append (reply, &iter);
+	
+	dbus_message_iter_append_basic (&iter,
+									 DBUS_TYPE_UINT32, 
+									 &op_ret);
+
+	
+	return reply;	
+}
+
+DBusMessage * 
 dhcp_dbus_set_ASN_enable
 (	
 	DBusConnection *conn, 
@@ -9778,6 +9843,9 @@ dhcp_dbus_message_handler
 	if (dbus_message_is_method_call(message, DHCP_DBUS_INTERFACE, DHCP_DBUS_METHOD_SET_ASN_ENABLE)) {
 		reply = dhcp_dbus_set_ASN_enable(connection, message, user_data);
 	}
+	if (dbus_message_is_method_call(message, DHCP_DBUS_INTERFACE, DHCP_DBUS_METHOD_AUTO_RESTART_ENABLE)) {
+		reply = dhcp_dbus_auto_restart_enable(connection, message, user_data);
+	}
 	if (dbus_message_is_method_call(message, DHCP_DBUS_INTERFACE, DHCP_DBUS_METHOD_SET_DHCP_FOR_LOCAL7_ENABLE)) {
 		reply = dhcp_dbus_set_dhcplog_for_local7_enable(connection, message, user_data);
 	}
@@ -9830,6 +9898,9 @@ dhcp_dbus_message_handler
 	}
 	if (dbus_message_is_method_call(message, DHCP_DBUS_INTERFACE, DHCP_DBUS_METHOD_SHOW_HASNIS_RUNNING_CFG)) {
 		reply = dhcp_dbus_restart_load_hansi_cfg(connection, message, user_data);
+	}
+	if (dbus_message_is_method_call(message, DHCP_DBUS_INTERFACE, DHCP_DBUS_METHOD_HMD_RUNNING_CHECK)) {
+		reply = dhcp_dbus_hmd_running_check(connection, message, user_data);
 	}	
 	if (dbus_message_is_method_call(message, DHCP_DBUS_INTERFACE, DHCP_DBUS_METHOD_SHOW_RUNNING_HANSI_CFG)) {
 		reply = dhcp_dbus_show_running_hansi_cfg(connection, message, user_data);
