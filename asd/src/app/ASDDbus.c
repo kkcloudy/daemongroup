@@ -14514,6 +14514,8 @@ DBusMessage *asd_dbus_wlan_del_mac_list(DBusConnection *conn, DBusMessage *msg, 
 	//=======================================================================
 
 	pthread_mutex_lock(&asd_g_wlan_mutex);
+	pthread_mutex_lock(&asd_g_wtp_mutex);
+    pthread_mutex_lock(&asd_g_bss_mutex);	
 	if(ASD_WLAN[wlanid] == NULL)
 		ret = ASD_WLAN_NOT_EXIST;
 	else {
@@ -14523,7 +14525,8 @@ DBusMessage *asd_dbus_wlan_del_mac_list(DBusConnection *conn, DBusMessage *msg, 
 		}else{
 			bss_num=ASD_SEARCH_WLAN_STA(wlanid,bss);
 			for(i=0;i<bss_num;i++){
-				if(2==list_type && (ASD_BSS[bss[i]->BSSIndex]->acl_conf != NULL)&&(ASD_BSS[bss[i]->BSSIndex]->acl_conf->macaddr_acl == 0) &&
+				if(2==list_type && (ASD_BSS[bss[i]->BSSIndex] != NULL)&&(ASD_WTP_AP[bss[i]->BSSIndex] != NULL) &&
+					(ASD_BSS[bss[i]->BSSIndex]->acl_conf != NULL)&&(ASD_BSS[bss[i]->BSSIndex]->acl_conf->macaddr_acl == 0) &&
 					(ASD_WTP_AP[bss[i]->Radio_G_ID/L_RADIO_NUM]->acl_conf!= NULL) && (ASD_WTP_AP[bss[i]->Radio_G_ID/L_RADIO_NUM]->acl_conf->macaddr_acl == 0) &&
 					(ASD_WLAN[bss[i]->WlanID]->acl_conf != NULL) && (ASD_WLAN[bss[i]->WlanID]->acl_conf->macaddr_acl == 2)){
 					sta = ap_get_sta(bss[i], mac);
@@ -14536,6 +14539,8 @@ DBusMessage *asd_dbus_wlan_del_mac_list(DBusConnection *conn, DBusMessage *msg, 
 		}
 	}
 
+	pthread_mutex_unlock(&asd_g_bss_mutex);
+	pthread_mutex_unlock(&asd_g_wtp_mutex);
 	pthread_mutex_unlock(&asd_g_wlan_mutex);
 	reply = dbus_message_new_method_return(msg);
 			
@@ -14777,7 +14782,8 @@ DBusMessage *asd_dbus_wlan_use_mac_list(DBusConnection *conn, DBusMessage *msg, 
 	}else if((wids_enable == 1) && (list_type != 1)){ 
 		ret = ASD_WIDS_OPEN;
 	}else {
-	    pthread_mutex_lock(&asd_g_wtp_mutex);		
+	    pthread_mutex_lock(&asd_g_wtp_mutex);
+	    pthread_mutex_lock(&asd_g_bss_mutex);		
 		conf = ASD_WLAN[wlanid]->acl_conf;
 		if(change_maclist_security(conf,list_type) != 0)
 			asd_printf(ASD_DBUS,MSG_DEBUG,"change mac list failed\n");
@@ -14813,7 +14819,8 @@ DBusMessage *asd_dbus_wlan_use_mac_list(DBusConnection *conn, DBusMessage *msg, 
 				}
 			}
 		}
-	    pthread_mutex_unlock(&asd_g_wtp_mutex);
+	    pthread_mutex_lock(&asd_g_bss_mutex);				
+	    pthread_mutex_unlock(&asd_g_wtp_mutex);		
 	}
 
 	reply = dbus_message_new_method_return(msg);

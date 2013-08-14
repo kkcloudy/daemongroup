@@ -2543,7 +2543,6 @@ void WTP_OP(TableMsg *msg){
 			if(ASD_WTP_AP[msg->u.WTP.WtpID] == NULL){
 				if((msg->u.WTP.WtpID)>WTP_NUM )		//mahz add 2011.4.7
 					return;
-				pthread_mutex_lock(&asd_g_wtp_mutex);		//mahz add 2011.3.24
 				asd_printf(ASD_DEFAULT,MSG_DEBUG,"WTP[%d] setup and init\n",msg->u.WTP.WtpID);
 				ASD_WTP_AP[msg->u.WTP.WtpID]=(ASD_WTP_ST *)os_zalloc(sizeof(ASD_WTP_ST ));
 				if(ASD_WTP_AP[msg->u.WTP.WtpID] == NULL){
@@ -2619,8 +2618,6 @@ void WTP_OP(TableMsg *msg){
 					ASD_WTP_AP[msg->u.WTP.WtpID]->radio_flow_info[i].old_tx_bytes=0;
 					ASD_WTP_AP[msg->u.WTP.WtpID]->radio_flow_info[i].trans_rates=0;
 				}
-				pthread_mutex_unlock(&asd_g_wtp_mutex);		//mahz add 2011.3.24
-
 				return;
 			}else
 				return;
@@ -2628,7 +2625,6 @@ void WTP_OP(TableMsg *msg){
 		}
 		case WID_DEL :{
 			if(ASD_WTP_AP[msg->u.WTP.WtpID] != NULL){
-				pthread_mutex_lock(&asd_g_wtp_mutex);		//mahz add 2011.3.24
 				if( ASD_WTP_AP[msg->u.WTP.WtpID]->acl_conf != NULL){	//ht add
 					if( ASD_WTP_AP[msg->u.WTP.WtpID]->acl_conf->accept_mac != NULL) {
 						free_maclist(ASD_WTP_AP[msg->u.WTP.WtpID]->acl_conf,ASD_WTP_AP[msg->u.WTP.WtpID]->acl_conf->accept_mac);
@@ -2649,7 +2645,6 @@ void WTP_OP(TableMsg *msg){
 					os_free(ASD_WTP_AP_HISTORY[msg->u.WTP.WtpID]);
 					ASD_WTP_AP_HISTORY[msg->u.WTP.WtpID] = NULL;
 				}//				
-				pthread_mutex_unlock(&asd_g_wtp_mutex);		//mahz add 2011.3.24
 				return;
 			}else
 				return;
@@ -2657,7 +2652,6 @@ void WTP_OP(TableMsg *msg){
 
 		}
 		case WID_MODIFY :{
-			pthread_mutex_lock(&asd_g_wtp_mutex);		//mahz add 2011.3.24
 			if(ASD_WTP_AP[msg->u.WTP.WtpID] != NULL){
 				ASD_WTP_AP[msg->u.WTP.WtpID]->ap_max_allowed_sta_num=msg->u.WTP.wtp_max_sta_num;
 				ASD_WTP_AP[msg->u.WTP.WtpID]->wtp_triger_num=msg->u.WTP.wtp_triger_num;
@@ -2686,12 +2680,10 @@ void WTP_OP(TableMsg *msg){
 				asd_printf(ASD_DEFAULT,MSG_DEBUG,"%s:wtp ip: %d\n",__func__,ASD_WTP_AP[msg->u.WTP.WtpID]->WTPIP);
 				asd_printf(ASD_DEFAULT,MSG_DEBUG,"%s:wtp sn: %s\n",__func__,ASD_WTP_AP[msg->u.WTP.WtpID]->WTPSN);
 				asd_printf(ASD_DEFAULT,MSG_DEBUG,"%s:wtp name: %s\n",__func__,ASD_WTP_AP[msg->u.WTP.WtpID]->WTPNAME);
-				pthread_mutex_unlock(&asd_g_wtp_mutex);		//mahz add 2011.3.24
 				return;
 			}
 			else if(ASD_WTP_AP[msg->u.WTP.WtpID] == NULL){
 				if((msg->u.WTP.WtpID)>WTP_NUM || (msg->u.WTP.WtpID)<0){		//mahz add 2011.4.7
-					pthread_mutex_unlock(&asd_g_wtp_mutex);
 					return;
 				}
 				asd_printf(ASD_DEFAULT,MSG_DEBUG,"WTP[%d] setup and init\n",msg->u.WTP.WtpID);
@@ -2758,11 +2750,9 @@ void WTP_OP(TableMsg *msg){
 				asd_printf(ASD_DEFAULT,MSG_DEBUG,"%s:wtp sn: %s\n",__func__,ASD_WTP_AP[msg->u.WTP.WtpID]->WTPSN);
 				asd_printf(ASD_DEFAULT,MSG_DEBUG,"%s:wtp name: %s\n",__func__,ASD_WTP_AP[msg->u.WTP.WtpID]->WTPNAME);
 
-				pthread_mutex_unlock(&asd_g_wtp_mutex);		//mahz add 2011.3.24
 				return;
 			}
 			else{
-				pthread_mutex_unlock(&asd_g_wtp_mutex);		//mahz add 2011.3.24
 				return;
 			}
 			break;
@@ -3580,7 +3570,6 @@ void STA_OP(TableMsg *msg){
 			ret = AsdCheckWTPID(WTPID);
 			if(ret == 0)
 				return;
-			pthread_mutex_lock(&(asd_g_sta_mutex));			//mahz add  2011.4.20
 			num = ASD_SEARCH_WTP_STA(WTPID, bss);
 			for(i = 0; i < num; i++){
 				ASD_WTP_ST *WTP = ASD_WTP_AP[WTPID];
@@ -3688,10 +3677,8 @@ void STA_OP(TableMsg *msg){
 				pthread_mutex_unlock(&(bss[i]->asd_sta_mutex));
 #endif
 			}
-			pthread_mutex_unlock(&(asd_g_sta_mutex));			//mahz add 2011.4.20
 			break;
 		case WID_MODIFY:
-			pthread_mutex_lock(&(asd_g_sta_mutex));			//mahz add  2011.4.20
 			wasd = AsdCheckBSSIndex(BSSIndex);
 			prewasd = AsdCheckBSSIndex(preBSSIndex);			
 			if(wasd != NULL){
@@ -3706,7 +3693,6 @@ void STA_OP(TableMsg *msg){
 						sta->flags |= WLAN_STA_ASSOC;
 						sta->flags |= WLAN_STA_ROAMING;
 					}else{
-						pthread_mutex_unlock(&(asd_g_sta_mutex));			//mahz add 2011.4.20
 						break;
 					}
 				}				
@@ -3754,7 +3740,6 @@ void STA_OP(TableMsg *msg){
 				pthread_mutex_unlock(&(prewasd->asd_sta_mutex));   
 #endif
 			}
-			pthread_mutex_unlock(&(asd_g_sta_mutex));			//mahz add 2011.4.20
 			break;
 			//================================================
 		case STA_INFO:
@@ -3866,8 +3851,6 @@ void STA_OP(TableMsg *msg){
 			break;
 			//===================================================
 		case WID_CONFLICT :
-			
-			pthread_mutex_lock(&(asd_g_sta_mutex));
 			prewasd = AsdCheckBSSIndex(preBSSIndex);
 			if(prewasd != NULL){
 				
@@ -3962,8 +3945,6 @@ void STA_OP(TableMsg *msg){
 				pthread_mutex_unlock(&(prewasd->asd_sta_mutex));	
 #endif
 			}
-			
-			pthread_mutex_unlock(&(asd_g_sta_mutex));
 			break;
 			
 		case STA_WAPI_INFO:
@@ -4050,12 +4031,10 @@ void STA_OP(TableMsg *msg){
 			if(ret == 0)
 				return;
 			num = ASD_SEARCH_WTP_STA(WTPID, bss);
-			pthread_mutex_lock(&(asd_g_sta_mutex));
 			wasd = AsdCheckBSSIndex(BSSIndex);
 			if(wasd == NULL)
 			{
 				asd_printf(ASD_DEFAULT,MSG_DEBUG," wasd = AsdCheckBSSIndex(BSSIndex) is NULL!! \n");
-    			pthread_mutex_unlock(&(asd_g_sta_mutex));				
                 return ;
 			}			
 			for(i = 0; i < num; i++){
@@ -4139,7 +4118,6 @@ void STA_OP(TableMsg *msg){
 				pthread_mutex_unlock(&(bss[i]->asd_sta_mutex));
 #endif
 			}
-			pthread_mutex_unlock(&(asd_g_sta_mutex)); 		
 			break;	
 				//weichao add 2011.11.11
 			case  DHCP_IP:
@@ -4148,7 +4126,6 @@ void STA_OP(TableMsg *msg){
 				asd_printf(ASD_DEFAULT,MSG_DEBUG,"BSSIndex = %d\n",BSSIndex);
 				asd_printf(ASD_DBUS,MSG_DEBUG,"MAC:"MACSTR"\n",MAC2STR(msg->u.STA.STAMAC));
 				unsigned char *ip = (unsigned char *)&msg->u.STA.ipv4Address;
-				pthread_mutex_lock(&(asd_g_sta_mutex)); 		
 				wasd = AsdCheckBSSIndex(BSSIndex);
 				if(wasd != NULL){
 					sta = ap_get_sta(wasd, msg->u.STA.STAMAC);
@@ -4158,12 +4135,10 @@ void STA_OP(TableMsg *msg){
 						asd_printf(ASD_DBUS,MSG_DEBUG,"the sta is exist!\n\n");
 					if(msg->u.STA.ipv4Address == 0){						
 						asd_printf(ASD_DEFAULT,MSG_DEBUG,"msg ip is null!\n");
-						pthread_mutex_unlock(&(asd_g_sta_mutex));					
 						break;
 					}	
 					else if(sta->ip_addr.s_addr == msg->u.STA.ipv4Address){						
 						asd_printf(ASD_DEFAULT,MSG_DEBUG,"sta has got IP from listen arp!\n");
-						pthread_mutex_unlock(&(asd_g_sta_mutex));					
 						break;
 					}	
 					else if((sta->ip_addr.s_addr != 0)&&(sta->ip_addr.s_addr != msg->u.STA.ipv4Address))
@@ -4197,7 +4172,6 @@ void STA_OP(TableMsg *msg){
 					asd_printf(ASD_DEFAULT,MSG_DEBUG,"sta->arpifname:%s\n",sta->arpifname);
 					asd_printf(ASD_DEFAULT,MSG_DEBUG,"sta->in_addr "MACSTR"\n",MAC2STR(sta->in_addr));
 					if(ASD_WLAN[wasd->WlanID] == NULL){
-						pthread_mutex_unlock(&(asd_g_sta_mutex));					
 						break ;
 					}	
 					SID = (unsigned char)ASD_WLAN[wasd->WlanID]->SecurityID;
@@ -4230,7 +4204,6 @@ void STA_OP(TableMsg *msg){
 				{
 					asd_printf(ASD_DEFAULT,MSG_DEBUG,"In case DHCP_IP,the wasd is not exit!!!!\n");
 				}
-				pthread_mutex_unlock(&(asd_g_sta_mutex));					
 			break;
 
 			case STA_LEAVE_REPORT:
@@ -4246,7 +4219,6 @@ void STA_OP(TableMsg *msg){
 				unsigned int radio_g_id = 0;
 				radio_g_id = WTPID*4+RadioID;
 				num = ASD_SEARCH_RADIO_STA(radio_g_id,bss);
-				pthread_mutex_lock(&(asd_g_sta_mutex)); 		
 				for( i= 0 ; i < num ; i++){
 					if(bss[i]->WlanID == WlanID)
 					{
@@ -4257,7 +4229,6 @@ void STA_OP(TableMsg *msg){
 				if(wasd == NULL){
 
 					asd_printf(ASD_DEFAULT,MSG_INFO,"in case sta_leave_report ,wasd is not found!\n");
-					pthread_mutex_unlock(&(asd_g_sta_mutex)); 		
 					break ;
 				}
 				count = msg->u.STAINFO[0].count;
@@ -4265,7 +4236,6 @@ void STA_OP(TableMsg *msg){
 				if(count == 255){
 					asd_printf(ASD_LEAVE,MSG_DEBUG,"del all sta of wlan %d ,wtp %d ,radio %d.\n",WlanID,WTPID,RadioID);
 					asd_free_stas(wasd);
-					pthread_mutex_unlock(&(asd_g_sta_mutex)); 		
 					break;					
 				}
 				STA_LEAVE_REASON  reason = 0;
@@ -4436,14 +4406,12 @@ void STA_OP(TableMsg *msg){
 							asd_printf(ASD_LEAVE,MSG_DEBUG,"sta:"MACSTR"is not found in wlan %d bssindex %d g_radio %d\n",MAC2STR(msg->u.STAINFO[i].STAMAC),wasd->WlanID,wasd->BSSIndex,wasd->Radio_G_ID);
 							}	
 				}
-				pthread_mutex_unlock(&(asd_g_sta_mutex));					
 			break;
 		case STA_CHECK_DEL:
 			asd_printf(ASD_LEAVE,MSG_DEBUG,"now in case STA_CHECK_DEL\n");
 			BSSIndex  = msg->u.STAINFO[0].BSSIndex;
 			count = msg->u.STAINFO[0].count;
 			authorize_num = msg->u.STAINFO[0].sta_num;
-			pthread_mutex_lock(&(asd_g_sta_mutex));			
 			wasd = AsdCheckBSSIndex(BSSIndex);
 			if(wasd != NULL)
 			{
@@ -4497,7 +4465,6 @@ void STA_OP(TableMsg *msg){
 			}
 			else
 				asd_printf(ASD_LEAVE,MSG_DEBUG,"case STA_CHECK_DEL wasd is NULL(bssindex :%d)!\n",BSSIndex);
-			pthread_mutex_unlock(&(asd_g_sta_mutex));
 			break;				
 		case WID_ADD:
 		case RADIO_INFO:
@@ -5233,8 +5200,9 @@ static void handle_buf(struct wasd_interfaces *interfaces, u8 *buf, size_t len)
 			break;
 		}
 		case WTP_TYPE :{
-			
+			pthread_mutex_lock(&asd_g_wtp_mutex);
 			WTP_OP(msg);
+			pthread_mutex_unlock(&asd_g_wtp_mutex);
 			break;
 		}/*
 		case RADIO_TYPE :{
@@ -5243,12 +5211,15 @@ static void handle_buf(struct wasd_interfaces *interfaces, u8 *buf, size_t len)
 			break;
 		}*/
 		case STA_TYPE :{
+			pthread_mutex_lock(&(asd_g_sta_mutex));			
 			STA_OP(msg);
+			pthread_mutex_unlock(&(asd_g_sta_mutex));	
 			break;
 		}
 		case BSS_TYPE :{
-			
+			pthread_mutex_lock(&asd_g_bss_mutex);		
 			BSS_OP(msg, interfaces);
+			pthread_mutex_unlock(&asd_g_bss_mutex);		
 			break;
 		}
 		case STA_PKT_TYPE:{

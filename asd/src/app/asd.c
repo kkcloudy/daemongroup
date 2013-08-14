@@ -116,6 +116,7 @@ pthread_mutex_t asd_g_wtp_mutex;
 pthread_mutex_t asd_flash_disconn_mutex;
 pthread_mutex_t asd_g_hotspot_mutex;//qiuchen add it 2012.10.26
 pthread_mutex_t asd_g_wlan_mutex;
+pthread_mutex_t asd_g_bss_mutex;
 int vrrid = 0;
 int local = 1;
 int slotid = 0;
@@ -2603,6 +2604,7 @@ int main(int argc, char *argv[])
 	CWCreateThreadMutex(&asd_flash_disconn_mutex); 	
 	CWCreateThreadMutex(&asd_g_hotspot_mutex);//qiuchen add it
 	CWCreateThreadMutex(&asd_g_wlan_mutex);
+	CWCreateThreadMutex(&asd_g_bss_mutex);
 	asd_sock = init_asd_bak_socket();	
 	gsock = init_asd_sctp_socket(10086);
 	asd_update_select_mode(NULL,NULL);

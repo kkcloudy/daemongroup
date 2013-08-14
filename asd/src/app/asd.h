@@ -468,6 +468,7 @@ extern pthread_mutex_t asd_g_wtp_mutex;
 extern pthread_mutex_t asd_flash_disconn_mutex;
 extern pthread_mutex_t asd_g_hotspot_mutex;//qiuchen add it 2012.10.26
 extern pthread_mutex_t asd_g_wlan_mutex;
+extern pthread_mutex_t asd_g_bss_mutex;
 extern asd_sta_flash_disconn *ASD_FDStas;
 
 extern int vrrid;

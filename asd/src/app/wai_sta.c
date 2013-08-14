@@ -326,8 +326,7 @@ void reset_table_item(struct auth_sta_info_t *wapi_sta_info)
 
 	asd_printf(ASD_DEFAULT,MSG_DEBUG,"in %s : wapi_sta_info->buf0.data=%p,wapi_sta_info->buf1.data=%p\n",__func__,wapi_sta_info->buf0.data,wapi_sta_info->buf1.data);
 	if(wapi_sta_info->buf0.data)
-	{		
-		wapi_sta_info->buf0.data = NULL;
+	{
 		free(wapi_sta_info->buf0.data);
 		wapi_sta_info->buf0.data = NULL;
 	}
