@@ -5164,6 +5164,285 @@ int ap_neighbor_channel_interfere_func(DBusMessage *message)
 	
 	return TRAP_SIGNAL_HANDLE_SEND_TRAP_OK;
 }
+int wtp_configuration_error_trap(DBusMessage *message)
+{
+	cmd_test_out(wtpConfigurationErrorTrap);
+	
+	DBusError error;
+	unsigned int wtpindex;
+	unsigned char  err_code;
+	char *wtpsn;
+	unsigned char wtpmac[MAC_LEN];
+	char *netid = "";
+	unsigned int local_id = 0;
+	unsigned int instance_id = 0;
+	char str_reason[50];
+	memset(str_reason,0, sizeof(str_reason));
+	dbus_error_init(&error);
+	if (!(dbus_message_get_args(message, &error,
+								DBUS_TYPE_UINT32,&wtpindex,
+								DBUS_TYPE_STRING,&wtpsn,
+								DBUS_TYPE_BYTE,&wtpmac[0],
+								DBUS_TYPE_BYTE,&wtpmac[1],
+								DBUS_TYPE_BYTE,&wtpmac[2],
+								DBUS_TYPE_BYTE,&wtpmac[3],
+								DBUS_TYPE_BYTE,&wtpmac[4],
+								DBUS_TYPE_BYTE,&wtpmac[5],
+								DBUS_TYPE_STRING,&netid,
+								DBUS_TYPE_UINT32,&instance_id,
+								DBUS_TYPE_UINT32,&local_id,
+								DBUS_TYPE_BYTE,&err_code,// file_missing(1),file_eror(2)
+								DBUS_TYPE_INVALID)))
+	{
+		trap_syslog(LOG_WARNING, "Get args failed, %s, %s\n", dbus_message_get_member(message), error.message);
+		dbus_error_free(&error);
+		return TRAP_SIGNAL_HANDLE_GET_ARGS_ERROR;
+	}
+	trap_syslog(LOG_INFO, "Handling signal %s, wtpindex=%d, wtpsn=%s,netid=%s, local_id = %d, instance_id=%d, "
+				"wtpmac=%02X-%02X-%02X-%02X-%02X-%02X, error_code=%d\n",
+				dbus_message_get_member(message), wtpindex, wtpsn, netid, local_id, instance_id,
+				wtpmac[0], wtpmac[1], wtpmac[2], wtpmac[3], wtpmac[4], wtpmac[5], err_code);
+	
+	if( !trap_is_ap_trap_enabled(&gInsVrrpState, local_id, instance_id) ) //add 2010-10-20
+		return TRAP_SIGNAL_HANDLE_HANSI_BACKUP;
+
+	switch(err_code)
+	{
+		case 1:
+			strcpy(str_reason,"configuration_file_is_missing.");
+			break;
+		case 2:
+			strcpy(str_reason,"configuration_file_is_error.");
+			break;
+		default:
+			strcpy(str_reason,"Unspecified_type.");	
+			break;	
+	}
+
+	
+	TrapDescr *tDescr = NULL;
+	TrapData *tData = NULL;
+	tDescr = trap_descr_list_get_item(global.gDescrList_hash, wtpConfigurationErrorTrap);		
+	if ( NULL == tDescr || 0 == tDescr->switch_status)
+		return TRAP_SIGNAL_HANDLE_DESCR_SWITCH_OFF;
+
+	INCREASE_TIMES(tDescr);
+
+	TRAP_SIGNAL_AP_RESEND_UPPER_MACRO(wtpindex, tDescr, local_id, instance_id);
+	
+	tData = trap_data_new_from_descr(tDescr);
+	
+	char mac_str[MAC_STR_LEN];
+	get_ap_mac_str(mac_str, sizeof(mac_str), wtpmac);
+	
+	char mac_oid[MAX_MAC_OID];
+	get_ap_mac_oid(mac_oid, sizeof(mac_oid), mac_str);
+	
+//	char netid[NETID_NAME_MAX_LENTH];	
+//	get_ap_netid(netid, sizeof(netid), wtpindex);
+	
+	trap_data_append_param_str(tData, "%s s %s",	EI_MAC_TRAP_DES,			mac_str);
+	trap_data_append_param_str(tData, "%s%s s %s",	EI_SN_TRAP_DES, 			mac_oid, wtpsn);
+	trap_data_append_param_str(tData, "%s%s s %s",	WTP_NET_ELEMENT_CODE_OID,	mac_oid, netid);
+	trap_data_append_param_str(tData, "%s%s s %s", TRAP_AC_OID, TRAP_TITLE_OID, str_reason);
+	
+	trap_data_append_common_param(tData, tDescr);
+	
+	trap_send(gInsVrrpState.instance[local_id][instance_id].receivelist, &gV3UserList, tData);
+
+	TRAP_SIGNAL_AP_RESEND_LOWER_MACRO(wtpindex , tDescr, tData, local_id, instance_id);
+	
+	//trap_data_destroy(tData);
+	
+	return TRAP_SIGNAL_HANDLE_SEND_TRAP_OK;
+}
+
+int wtp_user_traffic_overload_func(DBusMessage *message)
+{
+	cmd_test_out(wtpUserTrafficOverloadTrap);
+	
+	DBusError error;
+	unsigned int wtpindex;
+	char *wtpsn=NULL;
+	unsigned char wtpmac[MAC_LEN];
+	char *netid = "";
+	unsigned int local_id = 0;
+	unsigned int instance_id = 0;
+	unsigned char mac[MAC_LEN];
+	unsigned char is_rx_tx;
+	unsigned long long sta_flow = 0;
+	char str_reason[30];
+	memset(str_reason,0, sizeof(str_reason));
+	dbus_error_init(&error);
+	if (!(dbus_message_get_args(message, &error,
+								DBUS_TYPE_UINT32,&wtpindex,
+								DBUS_TYPE_STRING,&wtpsn,
+								DBUS_TYPE_BYTE,&wtpmac[0],
+								DBUS_TYPE_BYTE,&wtpmac[1],
+								DBUS_TYPE_BYTE,&wtpmac[2],
+								DBUS_TYPE_BYTE,&wtpmac[3],
+								DBUS_TYPE_BYTE,&wtpmac[4],
+								DBUS_TYPE_BYTE,&wtpmac[5],
+								DBUS_TYPE_STRING,&netid,
+								DBUS_TYPE_UINT32,&instance_id,
+								DBUS_TYPE_UINT32,&local_id,
+								DBUS_TYPE_BYTE,&mac[0],//sta mac
+								DBUS_TYPE_BYTE,&mac[1],
+								DBUS_TYPE_BYTE,&mac[2],
+								DBUS_TYPE_BYTE,&mac[3],
+								DBUS_TYPE_BYTE,&mac[4],
+								DBUS_TYPE_BYTE,&mac[5],
+								DBUS_TYPE_BYTE,&is_rx_tx,//rx(1),tx(0)
+								DBUS_TYPE_UINT64,&sta_flow,
+								DBUS_TYPE_INVALID)))
+	{
+		trap_syslog(LOG_WARNING, "Get args failed, %s, %s\n", dbus_message_get_member(message), error.message);
+		dbus_error_free(&error);
+		return TRAP_SIGNAL_HANDLE_GET_ARGS_ERROR;
+	}
+	trap_syslog(LOG_INFO, "Handling signal %s, wtpindex=%d, wtpsn=%s, netid=%s, local_id = %d, instance_id=%d, "
+				"wtpmac=%02X-%02X-%02X-%02X-%02X-%02X, mac=%02X-%02X-%02X-%02X-%02X-%02X, flag_rx_tx=%d, sta_flow=%llu\n",
+				dbus_message_get_member(message), wtpindex, wtpsn,netid, local_id, instance_id,
+				wtpmac[0], wtpmac[1], wtpmac[2], wtpmac[3], wtpmac[4], wtpmac[5],
+				mac[0], mac[1], mac[2], mac[3], mac[4], mac[5],is_rx_tx,sta_flow);
+	
+	if( !trap_is_ap_trap_enabled(&gInsVrrpState, local_id, instance_id) ) //add 2010-10-20
+		return TRAP_SIGNAL_HANDLE_HANSI_BACKUP;
+	
+	TrapDescr *tDescr = NULL;
+	TrapData *tData = NULL;
+	tDescr = trap_descr_list_get_item(global.gDescrList_hash, wtpUserTrafficOverloadTrap);		
+	if ( NULL == tDescr || 0 == tDescr->switch_status)
+		return TRAP_SIGNAL_HANDLE_DESCR_SWITCH_OFF;
+
+	switch(is_rx_tx)
+	{
+		case 1:
+			strcpy(str_reason,"receiving_traffic.");
+			break;
+		case 0:
+			strcpy(str_reason,"sending_traffic.");
+			break;
+		default:
+			strcpy(str_reason,"Unspecified_type.");	
+			break;	
+	}
+
+
+	INCREASE_TIMES(tDescr);
+
+	TRAP_SIGNAL_AP_RESEND_UPPER_MACRO(wtpindex, tDescr, local_id, instance_id);
+	
+	tData = trap_data_new_from_descr(tDescr);
+	
+	char mac_str[MAC_STR_LEN];
+	get_ap_mac_str(mac_str, sizeof(mac_str), wtpmac);
+	
+	char mac_oid[MAX_MAC_OID];
+	get_ap_mac_oid(mac_oid, sizeof(mac_oid), mac_str);
+
+	char inter_mac_str[MAC_STR_LEN];
+	get_ap_mac_str( inter_mac_str, sizeof(inter_mac_str), mac);
+	
+//	char netid[NETID_NAME_MAX_LENTH];	
+//	get_ap_netid(netid, sizeof(netid), wtpindex);
+	
+	trap_data_append_param_str(tData, "%s s %s",	EI_MAC_TRAP_DES,			mac_str);
+	trap_data_append_param_str(tData, "%s%s s %s",	EI_SN_TRAP_DES, 			mac_oid, wtpsn);
+	trap_data_append_param_str(tData, "%s%s s %s",	WTP_NET_ELEMENT_CODE_OID,	mac_oid, netid);
+	trap_data_append_param_str(tData, "%s s %s",	EI_STA_MAC_TRAP_DES, 		inter_mac_str);
+	trap_data_append_param_str(tData, "%s%s s %s", TRAP_AC_OID, TRAP_TITLE_OID, str_reason);
+	trap_data_append_param_str(tData, "%s s %llu",	EI_STA_USER_TAFFIC,	sta_flow);
+	
+	trap_data_append_common_param(tData, tDescr);
+	
+	trap_send(gInsVrrpState.instance[local_id][instance_id].receivelist, &gV3UserList, tData);
+
+	TRAP_SIGNAL_AP_RESEND_LOWER_MACRO(wtpindex , tDescr, tData, local_id, instance_id);
+	
+	//trap_data_destroy(tData);
+	
+	return TRAP_SIGNAL_HANDLE_SEND_TRAP_OK;
+}
+
+int wtp_unauthorized_Station_func(DBusMessage *message)
+{
+	cmd_test_out(wtpUnauthorizedStaMacTrap);
+	
+	DBusError error;
+	unsigned int wtpindex;
+	unsigned char chchannel;
+	unsigned char flag;
+	char *wtpsn;
+	unsigned char wtpmac[MAC_LEN];
+	char *netid = "";
+	unsigned int local_id = 0;
+	unsigned int instance_id = 0;
+	unsigned char *stamac_str=NULL;
+	dbus_error_init(&error);
+	if (!(dbus_message_get_args(message, &error,
+								DBUS_TYPE_UINT32,&wtpindex,
+								DBUS_TYPE_STRING,&wtpsn,
+								DBUS_TYPE_BYTE,&wtpmac[0],
+								DBUS_TYPE_BYTE,&wtpmac[1],
+								DBUS_TYPE_BYTE,&wtpmac[2],
+								DBUS_TYPE_BYTE,&wtpmac[3],
+								DBUS_TYPE_BYTE,&wtpmac[4],
+								DBUS_TYPE_BYTE,&wtpmac[5],
+								DBUS_TYPE_STRING,&netid,
+								DBUS_TYPE_UINT32,&instance_id,
+								DBUS_TYPE_UINT32,&local_id,
+								DBUS_TYPE_STRING,&stamac_str,
+								DBUS_TYPE_INVALID)))
+	{
+		trap_syslog(LOG_WARNING, "Get args failed, %s, %s\n", dbus_message_get_member(message), error.message);
+		dbus_error_free(&error);
+		return TRAP_SIGNAL_HANDLE_GET_ARGS_ERROR;
+	}
+	trap_syslog(LOG_INFO, "Handling signal %s, wtpindex=%d, wtpsn=%s, netid=%s, local_id = %d, instance_id=%d, "
+				"wtpmac=%02X-%02X-%02X-%02X-%02X-%02X, mac=%s\n",
+				dbus_message_get_member(message), wtpindex, wtpsn, netid, local_id, instance_id,
+				wtpmac[0], wtpmac[1], wtpmac[2], wtpmac[3], wtpmac[4], wtpmac[5],stamac_str);
+	
+	if( !trap_is_ap_trap_enabled(&gInsVrrpState, local_id, instance_id) ) //add 2010-10-20
+		return TRAP_SIGNAL_HANDLE_HANSI_BACKUP;
+	
+	TrapDescr *tDescr = NULL;
+	TrapData *tData = NULL;
+	tDescr = trap_descr_list_get_item(global.gDescrList_hash, wtpUnauthorizedStaMacTrap);		
+	if ( NULL == tDescr || 0 == tDescr->switch_status)
+		return TRAP_SIGNAL_HANDLE_DESCR_SWITCH_OFF;
+
+	INCREASE_TIMES(tDescr);
+
+	TRAP_SIGNAL_AP_RESEND_UPPER_MACRO(wtpindex, tDescr, local_id, instance_id);
+	
+	tData = trap_data_new_from_descr(tDescr);
+	
+	char mac_str[MAC_STR_LEN];
+	get_ap_mac_str(mac_str, sizeof(mac_str), wtpmac);
+	
+	char mac_oid[MAX_MAC_OID];
+	get_ap_mac_oid(mac_oid, sizeof(mac_oid), mac_str);
+	
+//	char netid[NETID_NAME_MAX_LENTH];	
+//	get_ap_netid(netid, sizeof(netid), wtpindex);
+	
+	trap_data_append_param_str(tData, "%s s %s",	EI_MAC_TRAP_DES,			mac_str);
+	trap_data_append_param_str(tData, "%s%s s %s",	EI_SN_TRAP_DES, 			mac_oid, wtpsn);
+	trap_data_append_param_str(tData, "%s%s s %s",	WTP_NET_ELEMENT_CODE_OID,	mac_oid, netid);
+	trap_data_append_param_str(tData, "%s%s s %s",	TRAP_AC_OID, TRAP_CONTENT_OID,	stamac_str);
+	
+	trap_data_append_common_param(tData, tDescr);
+	
+	trap_send(gInsVrrpState.instance[local_id][instance_id].receivelist, &gV3UserList, tData);
+
+	TRAP_SIGNAL_AP_RESEND_LOWER_MACRO(wtpindex , tDescr, tData, local_id, instance_id);
+	
+	//trap_data_destroy(tData);
+	
+	return TRAP_SIGNAL_HANDLE_SEND_TRAP_OK;
+}
 
 #if 0
 ac func
@@ -6593,6 +6872,15 @@ void trap_signal_register_all(TrapList *list, hashtable *ht)
 	tSignal_tmp=trap_signal_list_register(list, WID_DBUS_TRAP_WID_WTP_NEIGHBOR_CHANNEL_AP_INTERFERENCE, ap_neighbor_channel_interfere_func);
 	INIT_SIGNAL_HASH_LIST(tSignal_tmp,ht);
 	
+	tSignal_tmp=trap_signal_list_register(list, "wid_dbus_trap_wtp_configure_error", wtp_configuration_error_trap);
+	INIT_SIGNAL_HASH_LIST(tSignal_tmp,ht);
+	
+	tSignal_tmp=trap_signal_list_register(list, "wid_dbus_trap_sta_flow_rx_tx_overflow", wtp_user_traffic_overload_func);
+	INIT_SIGNAL_HASH_LIST(tSignal_tmp,ht);
+	
+	tSignal_tmp=trap_signal_list_register(list, "wid_dbus_trap_wtp_sta_unauthroized_mac", wtp_unauthorized_Station_func);
+	INIT_SIGNAL_HASH_LIST(tSignal_tmp,ht);
+	
 	//ac
 	//tSignal_tmp=trap_signal_list_register(list, "reboot", 										ac_reboot_func);
 	tSignal_tmp=trap_signal_list_register(list, WID_DBUS_TRAP_WID_WTP_AC_DISCOVERY_DANGER_AP, 	ac_discovery_danger_ap_func);
@@ -6830,6 +7118,10 @@ void trap_descr_register_all(TrapList *list, hashtable *ht)
 	descr_tmp=trap_descr_list_register(list, WTPFLASHWRITEFAILORWTPUPDATE, wtpSoftWareUpdateFailed, TRAP_SRC_AP, ".0.29", TRAP_TYPE_ENVIRO, 
 									TRAP_LEVEL_MAJOR, "ap_software_update_failed", "ap_software_update_failed");
 	INIT_DESCR_HASH_LIST( descr_tmp , ht );
+
+	descr_tmp=trap_descr_list_register(list, WTPCONFIGERROR, wtpConfigurationErrorTrap, TRAP_SRC_AP, ".0.30", TRAP_TYPE_ENVIRO, 
+									TRAP_LEVEL_MAJOR, "wtp_configuration_error", "wtp_configuration_error");
+	INIT_DESCR_HASH_LIST( descr_tmp , ht );
 	
 //ap app
 //1.1
@@ -6966,6 +7258,14 @@ void trap_descr_register_all(TrapList *list, hashtable *ht)
 	
 	descr_tmp=trap_descr_list_register(list, WTPNEIGHBORCHANNELINTER, ApNeighborChannelInterfTrapClear,  TRAP_SRC_AP, ".1.42", TRAP_TYPE_ENVIRO, 
 									TRAP_LEVEL_SECONDARY, "ap_neighbor_channel_interfere_clear", "ap_neighbor_channel_interfere_clear");
+	INIT_DESCR_HASH_LIST( descr_tmp , ht );
+	
+	descr_tmp=trap_descr_list_register(list, WTPUSERTAFFICOVERLOAD, wtpUserTrafficOverloadTrap,  TRAP_SRC_AP, ".1.51", TRAP_TYPE_ENVIRO, 
+									TRAP_LEVEL_SECONDARY, "wtp_userTraffic_overload", "wtp_userTraffic_overload");
+	INIT_DESCR_HASH_LIST( descr_tmp , ht );
+
+	descr_tmp=trap_descr_list_register(list, WTPUNAUTHORIZEDSTAMACTRAP, wtpUnauthorizedStaMacTrap,  TRAP_SRC_AP, ".1.52", TRAP_TYPE_ENVIRO, 
+									TRAP_LEVEL_SECONDARY, "wtp_Unauthorized_Station", "wtp_unauthorized_station");
 	INIT_DESCR_HASH_LIST( descr_tmp , ht );
 	
 //ac inner

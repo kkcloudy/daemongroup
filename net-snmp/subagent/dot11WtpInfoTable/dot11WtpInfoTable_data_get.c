@@ -2060,6 +2060,398 @@ wtpColdReboot_get( dot11WtpInfoTable_rowreq_ctx *rowreq_ctx, u_long * wtpColdReb
     return MFD_SUCCESS;
 } /* wtpColdReboot_get */
 
+/*---------------------------------------------------------------------
+ * DOT11-WTP-MIB::dot11WtpInfoEntry.wtplongitude
+ * wtplongitude is subid 23 of dot11WtpInfoEntry.
+ * Its status is Current, and its access level is ReadWrite.
+ * OID: .1.3.6.1.4.1.31656.6.1.1.1.1.1.23
+ * Description:
+The location of AP longitude.
+ *
+ * Attributes:
+ *   accessible 1     isscalar 0     enums  0      hasdefval 0
+ *   readable   1     iscolumn 1     ranges 1      hashint   1
+ *   settable   1
+ *   hint: 255a
+ *
+ * Ranges:  0 - 255;
+ *
+ * Its syntax is DisplayString (based on perltype OCTETSTR)
+ * The net-snmp type is ASN_OCTET_STR. The C type decl is char (char)
+ * This data type requires a length.  (Max 255)
+ */
+/**
+ * Extract the current value of the wtplongitude data.
+ *
+ * Set a value using the data context for the row.
+ *
+ * @param rowreq_ctx
+ *        Pointer to the row request context.
+ * @param wtplongitude_val_ptr_ptr
+ *        Pointer to storage for a char variable
+ * @param wtplongitude_val_ptr_len_ptr
+ *        Pointer to a size_t. On entry, it will contain the size (in bytes)
+ *        pointed to by wtplongitude.
+ *        On exit, this value should contain the data size (in bytes).
+ *
+ * @retval MFD_SUCCESS         : success
+ * @retval MFD_SKIP            : skip this node (no value for now)
+ * @retval MFD_ERROR           : Any other error
+*
+ * @note If you need more than (*wtplongitude_val_ptr_len_ptr) bytes of memory,
+ *       allocate it using malloc() and update wtplongitude_val_ptr_ptr.
+ *       <b>DO NOT</b> free the previous pointer.
+ *       The MFD helper will release the memory you allocate.
+ *
+ * @remark If you call this function yourself, you are responsible
+ *         for checking if the pointer changed, and freeing any
+ *         previously allocated memory. (Not necessary if you pass
+ *         in a pointer to static memory, obviously.)
+ */
+int
+wtplongitude_get( dot11WtpInfoTable_rowreq_ctx *rowreq_ctx, char **wtplongitude_val_ptr_ptr, size_t *wtplongitude_val_ptr_len_ptr )
+{
+   /** we should have a non-NULL pointer and enough storage */
+   netsnmp_assert( (NULL != wtplongitude_val_ptr_ptr) && (NULL != *wtplongitude_val_ptr_ptr));
+   netsnmp_assert( NULL != wtplongitude_val_ptr_len_ptr );
+
+
+    DEBUGMSGTL(("verbose:dot11WtpInfoTable:wtplongitude_get","called\n"));
+
+    netsnmp_assert(NULL != rowreq_ctx);
+
+/*
+ * TODO:231:o: |-> Extract the current value of the wtplongitude data.
+ * copy (* wtplongitude_val_ptr_ptr ) data and (* wtplongitude_val_ptr_len_ptr ) from rowreq_ctx->data
+ */
+    /*
+     * make sure there is enough space for wtplongitude data
+     */
+    if ((NULL == (* wtplongitude_val_ptr_ptr )) ||
+        ((* wtplongitude_val_ptr_len_ptr ) <
+         (rowreq_ctx->data.wtplongitude_len* sizeof(rowreq_ctx->data.wtplongitude[0])))) {
+        /*
+         * allocate space for wtplongitude data
+         */
+        (* wtplongitude_val_ptr_ptr ) = malloc(rowreq_ctx->data.wtplongitude_len* sizeof(rowreq_ctx->data.wtplongitude[0]));
+        if(NULL == (* wtplongitude_val_ptr_ptr )) {
+            snmp_log(LOG_ERR,"could not allocate memory\n");
+            return MFD_ERROR;
+        }
+    }
+    (* wtplongitude_val_ptr_len_ptr ) = rowreq_ctx->data.wtplongitude_len* sizeof(rowreq_ctx->data.wtplongitude[0]);
+    memcpy( (* wtplongitude_val_ptr_ptr ), rowreq_ctx->data.wtplongitude, rowreq_ctx->data.wtplongitude_len* sizeof(rowreq_ctx->data.wtplongitude[0]) );
+
+    return MFD_SUCCESS;
+} /* wtplongitude_get */
+
+/*---------------------------------------------------------------------
+ * DOT11-WTP-MIB::dot11WtpInfoEntry.wtplatitude
+ * wtplatitude is subid 24 of dot11WtpInfoEntry.
+ * Its status is Current, and its access level is ReadWrite.
+ * OID: .1.3.6.1.4.1.31656.6.1.1.1.1.1.24
+ * Description:
+The location of AP latitude.
+ *
+ * Attributes:
+ *   accessible 1     isscalar 0     enums  0      hasdefval 0
+ *   readable   1     iscolumn 1     ranges 1      hashint   1
+ *   settable   1
+ *   hint: 255a
+ *
+ * Ranges:  0 - 255;
+ *
+ * Its syntax is DisplayString (based on perltype OCTETSTR)
+ * The net-snmp type is ASN_OCTET_STR. The C type decl is char (char)
+ * This data type requires a length.  (Max 255)
+ */
+/**
+ * Extract the current value of the wtplatitude data.
+ *
+ * Set a value using the data context for the row.
+ *
+ * @param rowreq_ctx
+ *        Pointer to the row request context.
+ * @param wtplatitude_val_ptr_ptr
+ *        Pointer to storage for a char variable
+ * @param wtplatitude_val_ptr_len_ptr
+ *        Pointer to a size_t. On entry, it will contain the size (in bytes)
+ *        pointed to by wtplatitude.
+ *        On exit, this value should contain the data size (in bytes).
+ *
+ * @retval MFD_SUCCESS         : success
+ * @retval MFD_SKIP            : skip this node (no value for now)
+ * @retval MFD_ERROR           : Any other error
+*
+ * @note If you need more than (*wtplatitude_val_ptr_len_ptr) bytes of memory,
+ *       allocate it using malloc() and update wtplatitude_val_ptr_ptr.
+ *       <b>DO NOT</b> free the previous pointer.
+ *       The MFD helper will release the memory you allocate.
+ *
+ * @remark If you call this function yourself, you are responsible
+ *         for checking if the pointer changed, and freeing any
+ *         previously allocated memory. (Not necessary if you pass
+ *         in a pointer to static memory, obviously.)
+ */
+int
+wtplatitude_get( dot11WtpInfoTable_rowreq_ctx *rowreq_ctx, char **wtplatitude_val_ptr_ptr, size_t *wtplatitude_val_ptr_len_ptr )
+{
+   /** we should have a non-NULL pointer and enough storage */
+   netsnmp_assert( (NULL != wtplatitude_val_ptr_ptr) && (NULL != *wtplatitude_val_ptr_ptr));
+   netsnmp_assert( NULL != wtplatitude_val_ptr_len_ptr );
+
+
+    DEBUGMSGTL(("verbose:dot11WtpInfoTable:wtplatitude_get","called\n"));
+
+    netsnmp_assert(NULL != rowreq_ctx);
+
+/*
+ * TODO:231:o: |-> Extract the current value of the wtplatitude data.
+ * copy (* wtplatitude_val_ptr_ptr ) data and (* wtplatitude_val_ptr_len_ptr ) from rowreq_ctx->data
+ */
+    /*
+     * make sure there is enough space for wtplatitude data
+     */
+    if ((NULL == (* wtplatitude_val_ptr_ptr )) ||
+        ((* wtplatitude_val_ptr_len_ptr ) <
+         (rowreq_ctx->data.wtplatitude_len* sizeof(rowreq_ctx->data.wtplatitude[0])))) {
+        /*
+         * allocate space for wtplatitude data
+         */
+        (* wtplatitude_val_ptr_ptr ) = malloc(rowreq_ctx->data.wtplatitude_len* sizeof(rowreq_ctx->data.wtplatitude[0]));
+        if(NULL == (* wtplatitude_val_ptr_ptr )) {
+            snmp_log(LOG_ERR,"could not allocate memory\n");
+            return MFD_ERROR;
+        }
+    }
+    (* wtplatitude_val_ptr_len_ptr ) = rowreq_ctx->data.wtplatitude_len* sizeof(rowreq_ctx->data.wtplatitude[0]);
+    memcpy( (* wtplatitude_val_ptr_ptr ), rowreq_ctx->data.wtplatitude, rowreq_ctx->data.wtplatitude_len* sizeof(rowreq_ctx->data.wtplatitude[0]) );
+
+    return MFD_SUCCESS;
+} /* wtplatitude_get */
+
+/*---------------------------------------------------------------------
+ * DOT11-WTP-MIB::dot11WtpInfoEntry.wtpPowerType
+ * wtpPowerType is subid 25 of dot11WtpInfoEntry.
+ * Its status is Current, and its access level is ReadOnly.
+ * OID: .1.3.6.1.4.1.31656.6.1.1.1.1.1.25
+ * Description:
+The power type of AP device.
+ *
+ * Attributes:
+ *   accessible 1     isscalar 0     enums  0      hasdefval 0
+ *   readable   1     iscolumn 1     ranges 1      hashint   1
+ *   settable   0
+ *   hint: 255a
+ *
+ * Ranges:  0 - 255;
+ *
+ * Its syntax is DisplayString (based on perltype OCTETSTR)
+ * The net-snmp type is ASN_OCTET_STR. The C type decl is char (char)
+ * This data type requires a length.  (Max 255)
+ */
+/**
+ * Extract the current value of the wtpPowerType data.
+ *
+ * Set a value using the data context for the row.
+ *
+ * @param rowreq_ctx
+ *        Pointer to the row request context.
+ * @param wtpPowerType_val_ptr_ptr
+ *        Pointer to storage for a char variable
+ * @param wtpPowerType_val_ptr_len_ptr
+ *        Pointer to a size_t. On entry, it will contain the size (in bytes)
+ *        pointed to by wtpPowerType.
+ *        On exit, this value should contain the data size (in bytes).
+ *
+ * @retval MFD_SUCCESS         : success
+ * @retval MFD_SKIP            : skip this node (no value for now)
+ * @retval MFD_ERROR           : Any other error
+*
+ * @note If you need more than (*wtpPowerType_val_ptr_len_ptr) bytes of memory,
+ *       allocate it using malloc() and update wtpPowerType_val_ptr_ptr.
+ *       <b>DO NOT</b> free the previous pointer.
+ *       The MFD helper will release the memory you allocate.
+ *
+ * @remark If you call this function yourself, you are responsible
+ *         for checking if the pointer changed, and freeing any
+ *         previously allocated memory. (Not necessary if you pass
+ *         in a pointer to static memory, obviously.)
+ */
+int
+wtpPowerType_get( dot11WtpInfoTable_rowreq_ctx *rowreq_ctx, char **wtpPowerType_val_ptr_ptr, size_t *wtpPowerType_val_ptr_len_ptr )
+{
+   /** we should have a non-NULL pointer and enough storage */
+   netsnmp_assert( (NULL != wtpPowerType_val_ptr_ptr) && (NULL != *wtpPowerType_val_ptr_ptr));
+   netsnmp_assert( NULL != wtpPowerType_val_ptr_len_ptr );
+
+
+    DEBUGMSGTL(("verbose:dot11WtpInfoTable:wtpPowerType_get","called\n"));
+
+    netsnmp_assert(NULL != rowreq_ctx);
+
+/*
+ * TODO:231:o: |-> Extract the current value of the wtpPowerType data.
+ * copy (* wtpPowerType_val_ptr_ptr ) data and (* wtpPowerType_val_ptr_len_ptr ) from rowreq_ctx->data
+ */
+    /*
+     * make sure there is enough space for wtpPowerType data
+     */
+    if ((NULL == (* wtpPowerType_val_ptr_ptr )) ||
+        ((* wtpPowerType_val_ptr_len_ptr ) <
+         (rowreq_ctx->data.wtpPowerType_len* sizeof(rowreq_ctx->data.wtpPowerType[0])))) {
+        /*
+         * allocate space for wtpPowerType data
+         */
+        (* wtpPowerType_val_ptr_ptr ) = malloc(rowreq_ctx->data.wtpPowerType_len* sizeof(rowreq_ctx->data.wtpPowerType[0]));
+        if(NULL == (* wtpPowerType_val_ptr_ptr )) {
+            snmp_log(LOG_ERR,"could not allocate memory\n");
+            return MFD_ERROR;
+        }
+    }
+    (* wtpPowerType_val_ptr_len_ptr ) = rowreq_ctx->data.wtpPowerType_len* sizeof(rowreq_ctx->data.wtpPowerType[0]);
+    memcpy( (* wtpPowerType_val_ptr_ptr ), rowreq_ctx->data.wtpPowerType, rowreq_ctx->data.wtpPowerType_len* sizeof(rowreq_ctx->data.wtpPowerType[0]) );
+
+    return MFD_SUCCESS;
+} /* wtpPowerType_get */
+
+/*---------------------------------------------------------------------
+ * DOT11-WTP-MIB::dot11WtpInfoEntry.wtpManufactureDate
+ * wtpManufactureDate is subid 26 of dot11WtpInfoEntry.
+ * Its status is Current, and its access level is ReadOnly.
+ * OID: .1.3.6.1.4.1.31656.6.1.1.1.1.1.26
+ * Description:
+The manufacture date of AP device.
+ *
+ * Attributes:
+ *   accessible 1     isscalar 0     enums  0      hasdefval 0
+ *   readable   1     iscolumn 1     ranges 1      hashint   1
+ *   settable   0
+ *   hint: 255a
+ *
+ * Ranges:  0 - 255;
+ *
+ * Its syntax is DisplayString (based on perltype OCTETSTR)
+ * The net-snmp type is ASN_OCTET_STR. The C type decl is char (char)
+ * This data type requires a length.  (Max 255)
+ */
+/**
+ * Extract the current value of the wtpManufactureDate data.
+ *
+ * Set a value using the data context for the row.
+ *
+ * @param rowreq_ctx
+ *        Pointer to the row request context.
+ * @param wtpManufactureDate_val_ptr_ptr
+ *        Pointer to storage for a char variable
+ * @param wtpManufactureDate_val_ptr_len_ptr
+ *        Pointer to a size_t. On entry, it will contain the size (in bytes)
+ *        pointed to by wtpManufactureDate.
+ *        On exit, this value should contain the data size (in bytes).
+ *
+ * @retval MFD_SUCCESS         : success
+ * @retval MFD_SKIP            : skip this node (no value for now)
+ * @retval MFD_ERROR           : Any other error
+*
+ * @note If you need more than (*wtpManufactureDate_val_ptr_len_ptr) bytes of memory,
+ *       allocate it using malloc() and update wtpManufactureDate_val_ptr_ptr.
+ *       <b>DO NOT</b> free the previous pointer.
+ *       The MFD helper will release the memory you allocate.
+ *
+ * @remark If you call this function yourself, you are responsible
+ *         for checking if the pointer changed, and freeing any
+ *         previously allocated memory. (Not necessary if you pass
+ *         in a pointer to static memory, obviously.)
+ */
+int
+wtpManufactureDate_get( dot11WtpInfoTable_rowreq_ctx *rowreq_ctx, char **wtpManufactureDate_val_ptr_ptr, size_t *wtpManufactureDate_val_ptr_len_ptr )
+{
+   /** we should have a non-NULL pointer and enough storage */
+   netsnmp_assert( (NULL != wtpManufactureDate_val_ptr_ptr) && (NULL != *wtpManufactureDate_val_ptr_ptr));
+   netsnmp_assert( NULL != wtpManufactureDate_val_ptr_len_ptr );
+
+
+    DEBUGMSGTL(("verbose:dot11WtpInfoTable:wtpManufactureDate_get","called\n"));
+
+    netsnmp_assert(NULL != rowreq_ctx);
+
+/*
+ * TODO:231:o: |-> Extract the current value of the wtpManufactureDate data.
+ * copy (* wtpManufactureDate_val_ptr_ptr ) data and (* wtpManufactureDate_val_ptr_len_ptr ) from rowreq_ctx->data
+ */
+    /*
+     * make sure there is enough space for wtpManufactureDate data
+     */
+    if ((NULL == (* wtpManufactureDate_val_ptr_ptr )) ||
+        ((* wtpManufactureDate_val_ptr_len_ptr ) <
+         (rowreq_ctx->data.wtpManufactureDate_len* sizeof(rowreq_ctx->data.wtpManufactureDate[0])))) {
+        /*
+         * allocate space for wtpManufactureDate data
+         */
+        (* wtpManufactureDate_val_ptr_ptr ) = malloc(rowreq_ctx->data.wtpManufactureDate_len* sizeof(rowreq_ctx->data.wtpManufactureDate[0]));
+        if(NULL == (* wtpManufactureDate_val_ptr_ptr )) {
+            snmp_log(LOG_ERR,"could not allocate memory\n");
+            return MFD_ERROR;
+        }
+    }
+    (* wtpManufactureDate_val_ptr_len_ptr ) = rowreq_ctx->data.wtpManufactureDate_len* sizeof(rowreq_ctx->data.wtpManufactureDate[0]);
+    memcpy( (* wtpManufactureDate_val_ptr_ptr ), rowreq_ctx->data.wtpManufactureDate, rowreq_ctx->data.wtpManufactureDate_len* sizeof(rowreq_ctx->data.wtpManufactureDate[0]) );
+
+    return MFD_SUCCESS;
+} /* wtpManufactureDate_get */
+
+/*---------------------------------------------------------------------
+ * DOT11-WTP-MIB::dot11WtpInfoEntry.wtpForwardMode
+ * wtpForwardMode is subid 27 of dot11WtpInfoEntry.
+ * Its status is Current, and its access level is ReadOnly.
+ * OID: .1.3.6.1.4.1.31656.6.1.1.1.1.1.27
+ * Description:
+The forward mode of AP device.
+ *
+ * Attributes:
+ *   accessible 1     isscalar 0     enums  1      hasdefval 0
+ *   readable   1     iscolumn 1     ranges 0      hashint   0
+ *   settable   0
+ *
+ * Enum range: 2/8. Values:  Fat(0), Thin(1)
+ *
+ * Its syntax is INTEGER (based on perltype INTEGER)
+ * The net-snmp type is ASN_INTEGER. The C type decl is long (u_long)
+ */
+/**
+ * Extract the current value of the wtpForwardMode data.
+ *
+ * Set a value using the data context for the row.
+ *
+ * @param rowreq_ctx
+ *        Pointer to the row request context.
+ * @param wtpForwardMode_val_ptr
+ *        Pointer to storage for a long variable
+ *
+ * @retval MFD_SUCCESS         : success
+ * @retval MFD_SKIP            : skip this node (no value for now)
+ * @retval MFD_ERROR           : Any other error
+ */
+int
+wtpForwardMode_get( dot11WtpInfoTable_rowreq_ctx *rowreq_ctx, u_long * wtpForwardMode_val_ptr )
+{
+   /** we should have a non-NULL pointer */
+   netsnmp_assert( NULL != wtpForwardMode_val_ptr );
+
+
+    DEBUGMSGTL(("verbose:dot11WtpInfoTable:wtpForwardMode_get","called\n"));
+
+    netsnmp_assert(NULL != rowreq_ctx);
+
+/*
+ * TODO:231:o: |-> Extract the current value of the wtpForwardMode data.
+ * copy (* wtpForwardMode_val_ptr ) from rowreq_ctx->data
+ */
+    (* wtpForwardMode_val_ptr ) = rowreq_ctx->data.wtpForwardMode;
+
+    return MFD_SUCCESS;
+} /* wtpForwardMode_get */
+
 
 
 /** @} */

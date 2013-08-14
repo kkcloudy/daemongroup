@@ -299,6 +299,47 @@ dot11WtpInfoTable_commit( dot11WtpInfoTable_rowreq_ctx *rowreq_ctx)
        }
     }
 
+    if (save_flags & COLUMN_WTPLONGITUDE_FLAG) {
+       save_flags &= ~COLUMN_WTPLONGITUDE_FLAG; /* clear wtplongitude */
+       /*
+        * TODO:482:o: |-> commit column wtplongitude.
+        */
+ //      rc = -1;
+       if(-1 == rc) {
+           snmp_log(LOG_ERR,"dot11WtpInfoTable column wtplongitude commit failed\n");
+       }
+       else {
+            /*
+             * set flag, in case we need to undo wtplongitude
+             */
+            rowreq_ctx->column_set_flags |= COLUMN_WTPLONGITUDE_FLAG;
+       }
+    }
+
+    if (save_flags & COLUMN_WTPLATITUDE_FLAG) {
+       save_flags &= ~COLUMN_WTPLATITUDE_FLAG; /* clear wtplatitude */
+       /*
+        * TODO:482:o: |-> commit column wtplatitude.
+        */
+//       rc = -1;
+       if(-1 == rc) {
+           snmp_log(LOG_ERR,"dot11WtpInfoTable column wtplatitude commit failed\n");
+       }
+       else {
+            /*
+             * set flag, in case we need to undo wtplatitude
+             */
+            rowreq_ctx->column_set_flags |= COLUMN_WTPLATITUDE_FLAG;
+       }
+    }
+
+    /*
+     * if we successfully commited this row, set the dirty flag.
+     */
+    if (MFD_SUCCESS == rc) {
+        rowreq_ctx->rowreq_flags |= MFD_ROW_DIRTY;
+    }
+
     if (save_flags) {
        snmp_log(LOG_ERR, "unhandled columns (0x%x) in commit\n", save_flags);
        return MFD_ERROR;
@@ -1400,6 +1441,424 @@ wtpColdReboot_undo( dot11WtpInfoTable_rowreq_ctx *rowreq_ctx)
     
     return MFD_SUCCESS;
 } /* wtpColdReboot_undo */
+
+/*---------------------------------------------------------------------
+ * DOT11-WTP-MIB::dot11WtpInfoEntry.wtplongitude
+ * wtplongitude is subid 23 of dot11WtpInfoEntry.
+ * Its status is Current, and its access level is ReadWrite.
+ * OID: .1.3.6.1.4.1.31656.6.1.1.1.1.1.23
+ * Description:
+The location of AP longitude.
+ *
+ * Attributes:
+ *   accessible 1     isscalar 0     enums  0      hasdefval 0
+ *   readable   1     iscolumn 1     ranges 1      hashint   1
+ *   settable   1
+ *   hint: 255a
+ *
+ * Ranges:  0 - 255;
+ *
+ * Its syntax is DisplayString (based on perltype OCTETSTR)
+ * The net-snmp type is ASN_OCTET_STR. The C type decl is char (char)
+ * This data type requires a length.  (Max 255)
+ */
+/**
+ * Check that the proposed new value is potentially valid.
+ *
+ * @param rowreq_ctx
+ *        Pointer to the row request context.
+ * @param wtplongitude_val_ptr
+ *        A char containing the new value.
+ * @param wtplongitude_val_ptr_len
+ *        The size (in bytes) of the data pointed to by wtplongitude_val_ptr
+ *
+ * @retval MFD_SUCCESS        : incoming value is legal
+ * @retval MFD_NOT_VALID_NOW  : incoming value is not valid now
+ * @retval MFD_NOT_VALID_EVER : incoming value is never valid
+ *
+ * This is the place to check for requirements that are not
+ * expressed in the mib syntax (for example, a requirement that
+ * is detailed in the description for an object).
+ *
+ * You should check that the requested change between the undo value and the
+ * new value is legal (ie, the transistion from one value to another
+ * is legal).
+ *      
+ *@note
+ * This check is only to determine if the new value
+ * is \b potentially valid. This is the first check of many, and
+ * is one of the simplest ones.
+ * 
+ *@note
+ * this is not the place to do any checks for values
+ * which depend on some other value in the mib. Those
+ * types of checks should be done in the
+ * dot11WtpInfoTable_check_dependencies() function.
+ *
+ * The following checks have already been done for you:
+ *    The syntax is ASN_OCTET_STR
+ *    The length is < sizeof(rowreq_ctx->data.wtplongitude).
+ *    The length is in (one of) the range set(s):  0 - 255
+ *
+ * If there a no other checks you need to do, simply return MFD_SUCCESS.
+ *
+ */
+int
+wtplongitude_check_value( dot11WtpInfoTable_rowreq_ctx *rowreq_ctx, char *wtplongitude_val_ptr,  size_t wtplongitude_val_ptr_len)
+{
+    DEBUGMSGTL(("verbose:dot11WtpInfoTable:wtplongitude_check_value","called\n"));
+
+    /** should never get a NULL pointer */
+    netsnmp_assert(NULL != rowreq_ctx);
+    netsnmp_assert(NULL != wtplongitude_val_ptr);
+
+    /*
+     * TODO:441:o: |-> Check for valid wtplongitude value.
+     */
+
+    return MFD_SUCCESS; /* wtplongitude value not illegal */
+} /* wtplongitude_check_value */
+
+/**
+ * Save old value information
+ *
+ * @param rowreq_ctx
+ *        Pointer to the table context (dot11WtpInfoTable_rowreq_ctx)
+ *
+ * @retval MFD_SUCCESS : success
+ * @retval MFD_ERROR   : error. set will fail.
+ *
+ * This function will be called after the table level undo setup function
+ * dot11WtpInfoTable_undo_setup has been called.
+ *
+ *@note
+ * this function will only be called if a new value is set for this column.
+ *
+ * If there is any setup specific to a particular column (e.g. allocating
+ * memory for a string), you should do that setup in this function, so it
+ * won't be done unless it is necessary.
+ */
+int
+wtplongitude_undo_setup( dot11WtpInfoTable_rowreq_ctx *rowreq_ctx)
+{
+    DEBUGMSGTL(("verbose:dot11WtpInfoTable:wtplongitude_undo_setup","called\n"));
+
+    /** should never get a NULL pointer */
+    netsnmp_assert(NULL != rowreq_ctx);
+
+    /*
+     * TODO:455:o: |-> Setup wtplongitude undo.
+     */
+    /*
+     * copy wtplongitude and wtplongitude_len data
+     * set rowreq_ctx->undo->wtplongitude from rowreq_ctx->data.wtplongitude
+     */
+    memcpy( rowreq_ctx->undo->wtplongitude, rowreq_ctx->data.wtplongitude,
+            (rowreq_ctx->data.wtplongitude_len * sizeof(rowreq_ctx->undo->wtplongitude[0])));
+    rowreq_ctx->undo->wtplongitude_len = rowreq_ctx->data.wtplongitude_len;
+
+
+    return MFD_SUCCESS;
+} /* wtplongitude_undo_setup */
+
+/**
+ * Set the new value.
+ *
+ * @param rowreq_ctx
+ *        Pointer to the users context. You should know how to
+ *        manipulate the value from this object.
+ * @param wtplongitude_val_ptr
+ *        A char containing the new value.
+ * @param wtplongitude_val_ptr_len
+ *        The size (in bytes) of the data pointed to by wtplongitude_val_ptr
+ */
+int
+wtplongitude_set( dot11WtpInfoTable_rowreq_ctx *rowreq_ctx, char *wtplongitude_val_ptr,  size_t wtplongitude_val_ptr_len )
+{
+
+    DEBUGMSGTL(("verbose:dot11WtpInfoTable:wtplongitude_set","called\n"));
+
+    /** should never get a NULL pointer */
+    netsnmp_assert(NULL != rowreq_ctx);
+    netsnmp_assert(NULL != wtplongitude_val_ptr);
+
+    /*
+     * TODO:461:M: |-> Set wtplongitude value.
+     * set wtplongitude value in rowreq_ctx->data
+     */
+	int rc = MFD_ERROR;
+	int ret = 0;
+	void *connection = NULL;
+	int len =0;
+	if(SNMPD_DBUS_ERROR == get_slot_dbus_connection(rowreq_ctx->data.parameter.slot_id, &connection, SNMPD_INSTANCE_MASTER_V3))
+	{
+		return MFD_ERROR;
+	}
+	printf("rowreq_ctx->data.parameter:%d-%d-%d\n",rowreq_ctx->data.parameter.slot_id,rowreq_ctx->data.parameter.local_id,rowreq_ctx->data.parameter.instance_id);
+	
+	printf("rowreq_ctx->data.wtplatitude=%s\n",rowreq_ctx->data.wtplatitude);
+	printf("wtplongitude_val_ptr=%s\n",wtplongitude_val_ptr);
+	printf("rowreq_ctx->data.wtpCurrID=%d\n",rowreq_ctx->data.wtpCurrID);
+
+	ret = ccgi_set_ap_longitude_latitude_cmd(rowreq_ctx->data.parameter,connection, rowreq_ctx->data.wtpCurrID, wtplongitude_val_ptr, rowreq_ctx->data.wtplatitude);
+	printf("ret=%d\n",ret);
+	if(ret == 0)
+	{
+		len = MIN(strlen(wtplongitude_val_ptr), 15);			
+	    memcpy( rowreq_ctx->data.wtplongitude, wtplongitude_val_ptr, len );
+	    rowreq_ctx->data.wtplongitude_len = len;
+		rc = MFD_SUCCESS;
+	}
+	else
+	{	
+	    if(SNMPD_CONNECTION_ERROR == ret) {
+            close_slot_dbus_connection(rowreq_ctx->data.parameter.slot_id);
+	    }
+		rc = MFD_ERROR;
+	}   
+	printf("rc=%d\n",rc);
+
+    return rc;
+
+} /* wtplongitude_set */
+
+/**
+ * undo the previous set.
+ *
+ * @param rowreq_ctx
+ *        Pointer to the users context.
+ */
+int
+wtplongitude_undo( dot11WtpInfoTable_rowreq_ctx *rowreq_ctx)
+{
+
+    DEBUGMSGTL(("verbose:dot11WtpInfoTable:wtplongitude_undo","called\n"));
+
+    netsnmp_assert(NULL != rowreq_ctx);
+
+    /*
+     * TODO:456:o: |-> Clean up wtplongitude undo.
+     */
+    /*
+     * copy wtplongitude and wtplongitude_len data
+     * set rowreq_ctx->data.wtplongitude from rowreq_ctx->undo->wtplongitude
+     */
+    memcpy( rowreq_ctx->data.wtplongitude, rowreq_ctx->undo->wtplongitude,
+            (rowreq_ctx->undo->wtplongitude_len * sizeof(rowreq_ctx->data.wtplongitude[0])));
+    rowreq_ctx->data.wtplongitude_len = rowreq_ctx->undo->wtplongitude_len;
+
+    
+    return MFD_SUCCESS;
+} /* wtplongitude_undo */
+
+/*---------------------------------------------------------------------
+ * DOT11-WTP-MIB::dot11WtpInfoEntry.wtplatitude
+ * wtplatitude is subid 24 of dot11WtpInfoEntry.
+ * Its status is Current, and its access level is ReadWrite.
+ * OID: .1.3.6.1.4.1.31656.6.1.1.1.1.1.24
+ * Description:
+The location of AP latitude.
+ *
+ * Attributes:
+ *   accessible 1     isscalar 0     enums  0      hasdefval 0
+ *   readable   1     iscolumn 1     ranges 1      hashint   1
+ *   settable   1
+ *   hint: 255a
+ *
+ * Ranges:  0 - 255;
+ *
+ * Its syntax is DisplayString (based on perltype OCTETSTR)
+ * The net-snmp type is ASN_OCTET_STR. The C type decl is char (char)
+ * This data type requires a length.  (Max 255)
+ */
+/**
+ * Check that the proposed new value is potentially valid.
+ *
+ * @param rowreq_ctx
+ *        Pointer to the row request context.
+ * @param wtplatitude_val_ptr
+ *        A char containing the new value.
+ * @param wtplatitude_val_ptr_len
+ *        The size (in bytes) of the data pointed to by wtplatitude_val_ptr
+ *
+ * @retval MFD_SUCCESS        : incoming value is legal
+ * @retval MFD_NOT_VALID_NOW  : incoming value is not valid now
+ * @retval MFD_NOT_VALID_EVER : incoming value is never valid
+ *
+ * This is the place to check for requirements that are not
+ * expressed in the mib syntax (for example, a requirement that
+ * is detailed in the description for an object).
+ *
+ * You should check that the requested change between the undo value and the
+ * new value is legal (ie, the transistion from one value to another
+ * is legal).
+ *      
+ *@note
+ * This check is only to determine if the new value
+ * is \b potentially valid. This is the first check of many, and
+ * is one of the simplest ones.
+ * 
+ *@note
+ * this is not the place to do any checks for values
+ * which depend on some other value in the mib. Those
+ * types of checks should be done in the
+ * dot11WtpInfoTable_check_dependencies() function.
+ *
+ * The following checks have already been done for you:
+ *    The syntax is ASN_OCTET_STR
+ *    The length is < sizeof(rowreq_ctx->data.wtplatitude).
+ *    The length is in (one of) the range set(s):  0 - 255
+ *
+ * If there a no other checks you need to do, simply return MFD_SUCCESS.
+ *
+ */
+int
+wtplatitude_check_value( dot11WtpInfoTable_rowreq_ctx *rowreq_ctx, char *wtplatitude_val_ptr,  size_t wtplatitude_val_ptr_len)
+{
+    DEBUGMSGTL(("verbose:dot11WtpInfoTable:wtplatitude_check_value","called\n"));
+
+    /** should never get a NULL pointer */
+    netsnmp_assert(NULL != rowreq_ctx);
+    netsnmp_assert(NULL != wtplatitude_val_ptr);
+
+    /*
+     * TODO:441:o: |-> Check for valid wtplatitude value.
+     */
+
+    return MFD_SUCCESS; /* wtplatitude value not illegal */
+} /* wtplatitude_check_value */
+
+/**
+ * Save old value information
+ *
+ * @param rowreq_ctx
+ *        Pointer to the table context (dot11WtpInfoTable_rowreq_ctx)
+ *
+ * @retval MFD_SUCCESS : success
+ * @retval MFD_ERROR   : error. set will fail.
+ *
+ * This function will be called after the table level undo setup function
+ * dot11WtpInfoTable_undo_setup has been called.
+ *
+ *@note
+ * this function will only be called if a new value is set for this column.
+ *
+ * If there is any setup specific to a particular column (e.g. allocating
+ * memory for a string), you should do that setup in this function, so it
+ * won't be done unless it is necessary.
+ */
+int
+wtplatitude_undo_setup( dot11WtpInfoTable_rowreq_ctx *rowreq_ctx)
+{
+    DEBUGMSGTL(("verbose:dot11WtpInfoTable:wtplatitude_undo_setup","called\n"));
+
+    /** should never get a NULL pointer */
+    netsnmp_assert(NULL != rowreq_ctx);
+
+    /*
+     * TODO:455:o: |-> Setup wtplatitude undo.
+     */
+    /*
+     * copy wtplatitude and wtplatitude_len data
+     * set rowreq_ctx->undo->wtplatitude from rowreq_ctx->data.wtplatitude
+     */
+    memcpy( rowreq_ctx->undo->wtplatitude, rowreq_ctx->data.wtplatitude,
+            (rowreq_ctx->data.wtplatitude_len * sizeof(rowreq_ctx->undo->wtplatitude[0])));
+    rowreq_ctx->undo->wtplatitude_len = rowreq_ctx->data.wtplatitude_len;
+
+
+    return MFD_SUCCESS;
+} /* wtplatitude_undo_setup */
+
+/**
+ * Set the new value.
+ *
+ * @param rowreq_ctx
+ *        Pointer to the users context. You should know how to
+ *        manipulate the value from this object.
+ * @param wtplatitude_val_ptr
+ *        A char containing the new value.
+ * @param wtplatitude_val_ptr_len
+ *        The size (in bytes) of the data pointed to by wtplatitude_val_ptr
+ */
+int
+wtplatitude_set( dot11WtpInfoTable_rowreq_ctx *rowreq_ctx, char *wtplatitude_val_ptr,  size_t wtplatitude_val_ptr_len )
+{
+	printf("has enter wtplatitude_set!!\n");
+
+    DEBUGMSGTL(("verbose:dot11WtpInfoTable:wtplatitude_set","called\n"));
+
+    /** should never get a NULL pointer */
+    netsnmp_assert(NULL != rowreq_ctx);
+    netsnmp_assert(NULL != wtplatitude_val_ptr);
+
+    /*
+     * TODO:461:M: |-> Set wtplatitude value.
+     * set wtplatitude value in rowreq_ctx->data
+     */
+	int rc = MFD_ERROR;
+	int ret = 0;
+	void *connection = NULL;
+	int len =0;
+	if(SNMPD_DBUS_ERROR == get_slot_dbus_connection(rowreq_ctx->data.parameter.slot_id, &connection, SNMPD_INSTANCE_MASTER_V3))
+	{
+		return MFD_ERROR;
+	}
+	
+	printf("rowreq_ctx->data.parameter:%d-%d-%d\n",rowreq_ctx->data.parameter.slot_id,rowreq_ctx->data.parameter.local_id,rowreq_ctx->data.parameter.instance_id);
+	
+	printf("rowreq_ctx->data.wtplongitude=%s\n",rowreq_ctx->data.wtplongitude);
+	printf("wtplatitude_val_ptr=%s\n",wtplatitude_val_ptr);
+	ret = ccgi_set_ap_longitude_latitude_cmd(rowreq_ctx->data.parameter,connection, rowreq_ctx->data.wtpCurrID, rowreq_ctx->data.wtplongitude, wtplatitude_val_ptr);
+	printf("ret=%d\n",ret);
+	if(ret == 0)
+	{
+		len = MIN(strlen(wtplatitude_val_ptr), 15);			
+		memcpy( rowreq_ctx->data.wtplongitude, wtplatitude_val_ptr, len );
+		rowreq_ctx->data.wtplongitude_len = len;
+		rc = MFD_SUCCESS;
+	}
+	else
+	{	
+		if(SNMPD_CONNECTION_ERROR == ret) {
+			close_slot_dbus_connection(rowreq_ctx->data.parameter.slot_id);
+		}
+		rc = MFD_ERROR;
+	}	
+	
+	printf("rc=%d\n",rc);
+	return rc;
+
+} /* wtplatitude_set */
+
+/**
+ * undo the previous set.
+ *
+ * @param rowreq_ctx
+ *        Pointer to the users context.
+ */
+int
+wtplatitude_undo( dot11WtpInfoTable_rowreq_ctx *rowreq_ctx)
+{
+
+    DEBUGMSGTL(("verbose:dot11WtpInfoTable:wtplatitude_undo","called\n"));
+
+    netsnmp_assert(NULL != rowreq_ctx);
+
+    /*
+     * TODO:456:o: |-> Clean up wtplatitude undo.
+     */
+    /*
+     * copy wtplatitude and wtplatitude_len data
+     * set rowreq_ctx->data.wtplatitude from rowreq_ctx->undo->wtplatitude
+     */
+    memcpy( rowreq_ctx->data.wtplatitude, rowreq_ctx->undo->wtplatitude,
+            (rowreq_ctx->undo->wtplatitude_len * sizeof(rowreq_ctx->data.wtplatitude[0])));
+    rowreq_ctx->data.wtplatitude_len = rowreq_ctx->undo->wtplatitude_len;
+
+    
+    return MFD_SUCCESS;
+} /* wtplatitude_undo */
 
 /**
  * check dependencies

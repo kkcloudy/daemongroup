@@ -851,7 +851,50 @@ dot11ConfigRadioTable_cache_load(netsnmp_container *container)
         return MFD_ERROR;
     }
 
-
+    /*
+     * setup/save data for radioRole
+     * radioRole(28)/INTEGER/ASN_INTEGER/long(u_long)//l/A/w/E/r/d/h
+     */
+    /** no mapping */
+	
+	if (sub_radio->radio_work_role == 1) {
+		rowreq_ctx->data.radioRole = 1;
+	} else if (sub_radio->radio_work_role == 6) {
+		rowreq_ctx->data.radioRole = 6;
+	} else if (sub_radio->radio_work_role == 9) {
+		rowreq_ctx->data.radioRole = 9;
+	} else {
+		rowreq_ctx->data.radioRole = 2;
+	}
+    
+    /*
+     * setup/save data for radioChanelUsage
+     * radioChanelUsage(29)/INTEGER/ASN_INTEGER/long(long)//l/A/w/e/r/d/h
+     */
+    /** no mapping */
+    rowreq_ctx->data.radioChanelUsage = sub_radio->radio_channel_use_rate;
+    
+    /*
+     * setup/save data for radioChanelChangeNum
+     * radioChanelChangeNum(30)/INTEGER/ASN_INTEGER/long(long)//l/A/w/e/r/d/h
+     */
+    /** no mapping */
+    rowreq_ctx->data.radioChanelChangeNum = sub_radio->radio_channel_change_counter;
+    
+    /*
+     * setup/save data for radioChannelWidth
+     * radioChannelWidth(31)/INTEGER/ASN_INTEGER/long(long)//l/A/w/e/r/d/h
+     */
+    /** no mapping */
+    rowreq_ctx->data.radioChannelWidth = sub_radio->radio_channel_width;
+    
+    /*
+     * setup/save data for radioNoiseFloor
+     * radioNoiseFloor(32)/INTEGER/ASN_INTEGER/long(long)//l/A/w/e/r/d/h
+     */
+    /** no mapping */
+    rowreq_ctx->data.radioNoiseFloor = sub_radio->radio_noise;
+    
         
         /*
          * insert into table container

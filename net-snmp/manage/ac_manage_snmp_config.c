@@ -162,7 +162,10 @@ TRAP_DETAIL_CONFIG ALL_TRAP[] = {
 //    {acConfigfileErrorTrap,                     "AC 配置文件错误通告",          "AC Config File Error",              0},
 	{acMaxUsrNumOverThresholdTrapClear,			"AC最大在线用户数过高告警清除",	"AC Max Online user is too high clear", 	0},
 	{wtpStationOffLineAbnormalTrap, 			"station 异常断开通告", 		"station leave abnormal",					0},
-	{wtpUserLogoffAbnormalTrap,             	"用户异常下线通告",         	"user logoff abnormal",           			0}
+	{wtpUserLogoffAbnormalTrap,             	"用户异常下线通告",         	"user logoff abnormal",           			0},
+	{wtpConfigurationErrorTrap, 				"ap 配置文件错误告警", 			"ap configuration error", 					0},
+	{wtpUserTrafficOverloadTrap,             	"用户收发流量超限告警",         "users to send and receive traffic overload",           			0},
+	{wtpUnauthorizedStaMacTrap,             	"未授权station mac告警",        "Unauthorized Station Mac",           			0}
 };
 
 

@@ -114,6 +114,15 @@ int wtpColdReboot_undo_setup( dot11WtpInfoTable_rowreq_ctx *rowreq_ctx );
 int wtpColdReboot_set( dot11WtpInfoTable_rowreq_ctx *rowreq_ctx, u_long wtpColdReboot_val );
 int wtpColdReboot_undo( dot11WtpInfoTable_rowreq_ctx *rowreq_ctx );
 
+int wtplongitude_check_value( dot11WtpInfoTable_rowreq_ctx *rowreq_ctx, char *wtplongitude_val_ptr,  size_t wtplongitude_val_ptr_len);
+int wtplongitude_undo_setup( dot11WtpInfoTable_rowreq_ctx *rowreq_ctx );
+int wtplongitude_set( dot11WtpInfoTable_rowreq_ctx *rowreq_ctx, char *wtplongitude_val_ptr,  size_t wtplongitude_val_ptr_len );
+int wtplongitude_undo( dot11WtpInfoTable_rowreq_ctx *rowreq_ctx );
+
+int wtplatitude_check_value( dot11WtpInfoTable_rowreq_ctx *rowreq_ctx, char *wtplatitude_val_ptr,  size_t wtplatitude_val_ptr_len);
+int wtplatitude_undo_setup( dot11WtpInfoTable_rowreq_ctx *rowreq_ctx );
+int wtplatitude_set( dot11WtpInfoTable_rowreq_ctx *rowreq_ctx, char *wtplatitude_val_ptr,  size_t wtplatitude_val_ptr_len );
+int wtplatitude_undo( dot11WtpInfoTable_rowreq_ctx *rowreq_ctx );
 
 int dot11WtpInfoTable_check_dependencies(dot11WtpInfoTable_rowreq_ctx *ctx);
 

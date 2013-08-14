@@ -2817,6 +2817,262 @@ OnlyAllow11nStaAccess_get( dot11ConfigRadioTable_rowreq_ctx *rowreq_ctx, u_long 
     return MFD_SUCCESS;
 } /* OnlyAllow11nStaAccess_get */
 
+/*---------------------------------------------------------------------
+ * DOT11-WTP-MIB::dot11ConfigRadioEntry.radioRole
+ * radioRole is subid 28 of dot11ConfigRadioEntry.
+ * Its status is Current, and its access level is ReadOnly.
+ * OID: .1.3.6.1.4.1.31656.6.1.1.4.3.1.28
+ * Description:
+The work role of radio.
+ *
+ * Attributes:
+ *   accessible 1     isscalar 0     enums  1      hasdefval 0
+ *   readable   1     iscolumn 1     ranges 0      hashint   0
+ *   settable   0
+ *
+ * Enum range: 4/8. Values:  Clint(1), Other(2), AP(6), Mesh(9)
+ *
+ * Its syntax is INTEGER (based on perltype INTEGER)
+ * The net-snmp type is ASN_INTEGER. The C type decl is long (u_long)
+ */
+/**
+ * Extract the current value of the radioRole data.
+ *
+ * Set a value using the data context for the row.
+ *
+ * @param rowreq_ctx
+ *        Pointer to the row request context.
+ * @param radioRole_val_ptr
+ *        Pointer to storage for a long variable
+ *
+ * @retval MFD_SUCCESS         : success
+ * @retval MFD_SKIP            : skip this node (no value for now)
+ * @retval MFD_ERROR           : Any other error
+ */
+int
+radioRole_get( dot11ConfigRadioTable_rowreq_ctx *rowreq_ctx, u_long * radioRole_val_ptr )
+{
+   /** we should have a non-NULL pointer */
+   netsnmp_assert( NULL != radioRole_val_ptr );
+
+
+    DEBUGMSGTL(("verbose:dot11ConfigRadioTable:radioRole_get","called\n"));
+
+    netsnmp_assert(NULL != rowreq_ctx);
+
+/*
+ * TODO:231:o: |-> Extract the current value of the radioRole data.
+ * copy (* radioRole_val_ptr ) from rowreq_ctx->data
+ */
+    (* radioRole_val_ptr ) = rowreq_ctx->data.radioRole;
+
+    return MFD_SUCCESS;
+} /* radioRole_get */
+
+/*---------------------------------------------------------------------
+ * DOT11-WTP-MIB::dot11ConfigRadioEntry.radioChanelUsage
+ * radioChanelUsage is subid 29 of dot11ConfigRadioEntry.
+ * Its status is Current, and its access level is ReadOnly.
+ * OID: .1.3.6.1.4.1.31656.6.1.1.4.3.1.29
+ * Description:
+The usage percentage of radio channel.
+ *
+ * Attributes:
+ *   accessible 1     isscalar 0     enums  0      hasdefval 0
+ *   readable   1     iscolumn 1     ranges 0      hashint   0
+ *   settable   0
+ *
+ *
+ * Its syntax is INTEGER (based on perltype INTEGER)
+ * The net-snmp type is ASN_INTEGER. The C type decl is long (long)
+ */
+/**
+ * Extract the current value of the radioChanelUsage data.
+ *
+ * Set a value using the data context for the row.
+ *
+ * @param rowreq_ctx
+ *        Pointer to the row request context.
+ * @param radioChanelUsage_val_ptr
+ *        Pointer to storage for a long variable
+ *
+ * @retval MFD_SUCCESS         : success
+ * @retval MFD_SKIP            : skip this node (no value for now)
+ * @retval MFD_ERROR           : Any other error
+ */
+int
+radioChanelUsage_get( dot11ConfigRadioTable_rowreq_ctx *rowreq_ctx, long * radioChanelUsage_val_ptr )
+{
+   /** we should have a non-NULL pointer */
+   netsnmp_assert( NULL != radioChanelUsage_val_ptr );
+
+
+    DEBUGMSGTL(("verbose:dot11ConfigRadioTable:radioChanelUsage_get","called\n"));
+
+    netsnmp_assert(NULL != rowreq_ctx);
+
+/*
+ * TODO:231:o: |-> Extract the current value of the radioChanelUsage data.
+ * copy (* radioChanelUsage_val_ptr ) from rowreq_ctx->data
+ */
+    (* radioChanelUsage_val_ptr ) = rowreq_ctx->data.radioChanelUsage;
+
+    return MFD_SUCCESS;
+} /* radioChanelUsage_get */
+
+/*---------------------------------------------------------------------
+ * DOT11-WTP-MIB::dot11ConfigRadioEntry.radioChanelChangeNum
+ * radioChanelChangeNum is subid 30 of dot11ConfigRadioEntry.
+ * Its status is Current, and its access level is ReadOnly.
+ * OID: .1.3.6.1.4.1.31656.6.1.1.4.3.1.30
+ * Description:
+Channel change times.
+ *
+ * Attributes:
+ *   accessible 1     isscalar 0     enums  0      hasdefval 0
+ *   readable   1     iscolumn 1     ranges 0      hashint   0
+ *   settable   0
+ *
+ *
+ * Its syntax is INTEGER (based on perltype INTEGER)
+ * The net-snmp type is ASN_INTEGER. The C type decl is long (long)
+ */
+/**
+ * Extract the current value of the radioChanelChangeNum data.
+ *
+ * Set a value using the data context for the row.
+ *
+ * @param rowreq_ctx
+ *        Pointer to the row request context.
+ * @param radioChanelChangeNum_val_ptr
+ *        Pointer to storage for a long variable
+ *
+ * @retval MFD_SUCCESS         : success
+ * @retval MFD_SKIP            : skip this node (no value for now)
+ * @retval MFD_ERROR           : Any other error
+ */
+int
+radioChanelChangeNum_get( dot11ConfigRadioTable_rowreq_ctx *rowreq_ctx, long * radioChanelChangeNum_val_ptr )
+{
+   /** we should have a non-NULL pointer */
+   netsnmp_assert( NULL != radioChanelChangeNum_val_ptr );
+
+
+    DEBUGMSGTL(("verbose:dot11ConfigRadioTable:radioChanelChangeNum_get","called\n"));
+
+    netsnmp_assert(NULL != rowreq_ctx);
+
+/*
+ * TODO:231:o: |-> Extract the current value of the radioChanelChangeNum data.
+ * copy (* radioChanelChangeNum_val_ptr ) from rowreq_ctx->data
+ */
+    (* radioChanelChangeNum_val_ptr ) = rowreq_ctx->data.radioChanelChangeNum;
+
+    return MFD_SUCCESS;
+} /* radioChanelChangeNum_get */
+
+/*---------------------------------------------------------------------
+ * DOT11-WTP-MIB::dot11ConfigRadioEntry.radioChannelWidth
+ * radioChannelWidth is subid 31 of dot11ConfigRadioEntry.
+ * Its status is Current, and its access level is ReadOnly.
+ * OID: .1.3.6.1.4.1.31656.6.1.1.4.3.1.31
+ * Description:
+Channel width of radio.
+ *
+ * Attributes:
+ *   accessible 1     isscalar 0     enums  0      hasdefval 0
+ *   readable   1     iscolumn 1     ranges 0      hashint   0
+ *   settable   0
+ *
+ *
+ * Its syntax is INTEGER (based on perltype INTEGER)
+ * The net-snmp type is ASN_INTEGER. The C type decl is long (long)
+ */
+/**
+ * Extract the current value of the radioChannelWidth data.
+ *
+ * Set a value using the data context for the row.
+ *
+ * @param rowreq_ctx
+ *        Pointer to the row request context.
+ * @param radioChannelWidth_val_ptr
+ *        Pointer to storage for a long variable
+ *
+ * @retval MFD_SUCCESS         : success
+ * @retval MFD_SKIP            : skip this node (no value for now)
+ * @retval MFD_ERROR           : Any other error
+ */
+int
+radioChannelWidth_get( dot11ConfigRadioTable_rowreq_ctx *rowreq_ctx, long * radioChannelWidth_val_ptr )
+{
+   /** we should have a non-NULL pointer */
+   netsnmp_assert( NULL != radioChannelWidth_val_ptr );
+
+
+    DEBUGMSGTL(("verbose:dot11ConfigRadioTable:radioChannelWidth_get","called\n"));
+
+    netsnmp_assert(NULL != rowreq_ctx);
+
+/*
+ * TODO:231:o: |-> Extract the current value of the radioChannelWidth data.
+ * copy (* radioChannelWidth_val_ptr ) from rowreq_ctx->data
+ */
+    (* radioChannelWidth_val_ptr ) = rowreq_ctx->data.radioChannelWidth;
+
+    return MFD_SUCCESS;
+} /* radioChannelWidth_get */
+
+/*---------------------------------------------------------------------
+ * DOT11-WTP-MIB::dot11ConfigRadioEntry.radioNoiseFloor
+ * radioNoiseFloor is subid 32 of dot11ConfigRadioEntry.
+ * Its status is Current, and its access level is ReadOnly.
+ * OID: .1.3.6.1.4.1.31656.6.1.1.4.3.1.32
+ * Description:
+Noise floor of radio.
+ *
+ * Attributes:
+ *   accessible 1     isscalar 0     enums  0      hasdefval 0
+ *   readable   1     iscolumn 1     ranges 0      hashint   0
+ *   settable   0
+ *
+ *
+ * Its syntax is INTEGER (based on perltype INTEGER)
+ * The net-snmp type is ASN_INTEGER. The C type decl is long (long)
+ */
+/**
+ * Extract the current value of the radioNoiseFloor data.
+ *
+ * Set a value using the data context for the row.
+ *
+ * @param rowreq_ctx
+ *        Pointer to the row request context.
+ * @param radioNoiseFloor_val_ptr
+ *        Pointer to storage for a long variable
+ *
+ * @retval MFD_SUCCESS         : success
+ * @retval MFD_SKIP            : skip this node (no value for now)
+ * @retval MFD_ERROR           : Any other error
+ */
+int
+radioNoiseFloor_get( dot11ConfigRadioTable_rowreq_ctx *rowreq_ctx, long * radioNoiseFloor_val_ptr )
+{
+   /** we should have a non-NULL pointer */
+   netsnmp_assert( NULL != radioNoiseFloor_val_ptr );
+
+
+    DEBUGMSGTL(("verbose:dot11ConfigRadioTable:radioNoiseFloor_get","called\n"));
+
+    netsnmp_assert(NULL != rowreq_ctx);
+
+/*
+ * TODO:231:o: |-> Extract the current value of the radioNoiseFloor data.
+ * copy (* radioNoiseFloor_val_ptr ) from rowreq_ctx->data
+ */
+    (* radioNoiseFloor_val_ptr ) = rowreq_ctx->data.radioNoiseFloor;
+
+    return MFD_SUCCESS;
+} /* radioNoiseFloor_get */
+
 
 
 /** @} */

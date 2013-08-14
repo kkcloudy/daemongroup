@@ -121,6 +121,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define wtpCoverHoleClearTrap				"wtpCoverHoleClearTrap"				//0.24
 #define wtpSoftWareUpdateSucceed			"wtpSoftWareUpdateSucceed"		//0.25
 #define wtpSoftWareUpdateFailed				"wtpSoftWareUpdateFailed"				//0.29
+#define wtpConfigurationErrorTrap			"wtpConfigurationErrorTrap"				//0.30
+
 
 //ap app
 #define wtpChannelObstructionTrap			"wtpChannelObstructionTrap"				//1.1
@@ -170,6 +172,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define ApNeighborChannelInterfTrapClear	"ApNeighborChannelInterfTrapClear"		//1.42
 #define wtpStationOffLineAbnormalTrap	    "wtpStationOffLineAbnormalTrap"			//1.44
 #define wtpUserLogoffAbnormalTrap	    	"wtpUserLogoffAbnormalTrap"				//1.45
+#define wtpUserTrafficOverloadTrap	    	"wtpUserTrafficOverloadTrap"				//1.51
+#define wtpUnauthorizedStaMacTrap	    	"wtpUnauthorizedStaMacTrap"				//1.52
+
+
 
 //ac inner
 #define acSystemRebootTrap					"acSystemRebootTrap"					//0.1
@@ -337,7 +343,10 @@ enum {
 	WTPNEIGHBORCHANNELINTER,			/*36*/
 	WTPSTATIONOFFLINEABNORMAL = 44, 	/*44*/
 	WTPUSERLOGOOFFABNORMAL = 45,		/*45*/
-	MAXAPTRAPNUM
+	WTPCONFIGERROR=51,				/*51*/
+	WTPUSERTAFFICOVERLOAD,				/*52*/
+	WTPUNAUTHORIZEDSTAMACTRAP,				/*53*/
+	MAXAPTRAPNUM,
 };
 
 enum {

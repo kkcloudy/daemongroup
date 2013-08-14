@@ -253,7 +253,15 @@ extern "C" {
 #define INTERNAL_ONLYALLOW11NSTAACCESS_TRUE  1 
 #define INTERNAL_ONLYALLOW11NSTAACCESS_FALSE  2 
 
+#ifndef RADIOROLE_ENUMS
+#define RADIOROLE_ENUMS
 
+#define RADIOROLE_CLINT  1 
+#define RADIOROLE_OTHER  2 
+#define RADIOROLE_AP  6 
+#define RADIOROLE_MESH  9 
+
+#endif /* RADIOROLE_ENUMS */
 
 #ifdef __cplusplus
 }

@@ -771,6 +771,40 @@ rc = radio11nSwitch_get(rowreq_ctx, (u_long *)var->val.string );
 rc = OnlyAllow11nStaAccess_get(rowreq_ctx, (u_long *)var->val.string );
         break;
 
+    /* radioRole(28)/INTEGER/ASN_INTEGER/long(u_long)//l/A/w/E/r/d/h */
+    case COLUMN_RADIOROLE:
+    var->val_len = sizeof(u_long);
+    var->type = ASN_INTEGER;
+rc = radioRole_get(rowreq_ctx, (u_long *)var->val.string );
+        break;
+
+    /* radioChanelUsage(29)/INTEGER/ASN_INTEGER/long(long)//l/A/w/e/r/d/h */
+    case COLUMN_RADIOCHANELUSAGE:
+    var->val_len = sizeof(long);
+    var->type = ASN_INTEGER;
+rc = radioChanelUsage_get(rowreq_ctx, (long *)var->val.string );
+        break;
+
+    /* radioChanelChangeNum(30)/INTEGER/ASN_INTEGER/long(long)//l/A/w/e/r/d/h */
+    case COLUMN_RADIOCHANELCHANGENUM:
+    var->val_len = sizeof(long);
+    var->type = ASN_INTEGER;
+rc = radioChanelChangeNum_get(rowreq_ctx, (long *)var->val.string );
+        break;
+
+    /* radioChannelWidth(31)/INTEGER/ASN_INTEGER/long(long)//l/A/w/e/r/d/h */
+    case COLUMN_RADIOCHANNELWIDTH:
+    var->val_len = sizeof(long);
+    var->type = ASN_INTEGER;
+rc = radioChannelWidth_get(rowreq_ctx, (long *)var->val.string );
+        break;
+
+    /* radioNoiseFloor(32)/INTEGER/ASN_INTEGER/long(long)//l/A/w/e/r/d/h */
+    case COLUMN_RADIONOISEFLOOR:
+    var->val_len = sizeof(long);
+    var->type = ASN_INTEGER;
+rc = radioNoiseFloor_get(rowreq_ctx, (long *)var->val.string );
+        break;
      default:
          snmp_log(LOG_ERR,"unknown column %d in _dot11ConfigRadioTable_get_column\n", column);
          break;
@@ -1485,6 +1519,31 @@ _dot11ConfigRadioTable_check_column( dot11ConfigRadioTable_rowreq_ctx *rowreq_ct
             rc = SNMP_ERR_GENERR;
         }
     }
+        break;
+
+    /* radioRole(28)/INTEGER/ASN_INTEGER/long(u_long)//l/A/w/E/r/d/h */
+    case COLUMN_RADIOROLE:
+        rc = SNMP_ERR_NOTWRITABLE;
+        break;
+
+    /* radioChanelUsage(29)/INTEGER/ASN_INTEGER/long(long)//l/A/w/e/r/d/h */
+    case COLUMN_RADIOCHANELUSAGE:
+        rc = SNMP_ERR_NOTWRITABLE;
+        break;
+
+    /* radioChanelChangeNum(30)/INTEGER/ASN_INTEGER/long(long)//l/A/w/e/r/d/h */
+    case COLUMN_RADIOCHANELCHANGENUM:
+        rc = SNMP_ERR_NOTWRITABLE;
+        break;
+
+    /* radioChannelWidth(31)/INTEGER/ASN_INTEGER/long(long)//l/A/w/e/r/d/h */
+    case COLUMN_RADIOCHANNELWIDTH:
+        rc = SNMP_ERR_NOTWRITABLE;
+        break;
+
+    /* radioNoiseFloor(32)/INTEGER/ASN_INTEGER/long(long)//l/A/w/e/r/d/h */
+    case COLUMN_RADIONOISEFLOOR:
+        rc = SNMP_ERR_NOTWRITABLE;
         break;
 
         default: /** We shouldn't get here */

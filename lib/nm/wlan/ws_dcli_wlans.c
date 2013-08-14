@@ -25031,6 +25031,89 @@ int show_all_wtp_basic_information_cmd(dbus_parameter parameter, DBusConnection 
 	return retu;	
 }
 
+static int parse_longitude_latitude(char *str, unsigned char **temp) {
+	*temp = malloc(LONGITUDE_LATITUDE_MAX_LEN);
+	if (!(*temp))
+		return 1;
+	memset(*temp, '\0', LONGITUDE_LATITUDE_MAX_LEN);
+	strncpy(*temp, str, (strlen(str) >= LONGITUDE_LATITUDE_MAX_LEN) ? LONGITUDE_LATITUDE_MAX_LEN-1 : strlen(str)+1);
+	return 0;
+	
+}
+
+int ccgi_set_ap_longitude_latitude_cmd(dbus_parameter parameter, DBusConnection *connection, unsigned int id, char *lon, char *lat)
+																							//-1
+{
+	if((lat == NULL)||(lon == NULL))
+	{
+		return -1;
+	}
+
+	int ret,retu;
+	DBusMessage *query, *reply; 
+	DBusMessageIter  iter;
+	DBusError err;
+
+	unsigned char *longitude=NULL, *latitude=NULL;
+	unsigned int wtp_id = 0;
+	wtp_id = id;
+
+	ret = parse_longitude_latitude(lon, &longitude);
+	if(ret) {
+		return -2;
+	}
+
+	ret = parse_longitude_latitude(lat, &latitude);
+	if (ret) {
+		free(longitude);
+		return -2;
+	}
+
+	char BUSNAME[PATH_LEN];
+	char OBJPATH[PATH_LEN];
+	char INTERFACE[PATH_LEN];
+
+	ccgi_ReInitDbusPath_v2(parameter.local_id, parameter.instance_id,WID_DBUS_BUSNAME,BUSNAME);
+	ccgi_ReInitDbusPath_v2(parameter.local_id, parameter.instance_id,WID_DBUS_WTP_OBJPATH,OBJPATH);
+	ccgi_ReInitDbusPath_v2(parameter.local_id, parameter.instance_id,WID_DBUS_WTP_INTERFACE,INTERFACE);
+	query = dbus_message_new_method_call(BUSNAME,OBJPATH,INTERFACE,WID_DBUS_CONF_METHOD_SET_WID_AP_LONGITUDE_LATITUDE_COMMAND);
+	dbus_error_init(&err);
+	dbus_message_append_args(query,
+							 DBUS_TYPE_UINT32,&wtp_id,
+							 DBUS_TYPE_STRING, &longitude,
+							 DBUS_TYPE_STRING, &latitude,
+							 DBUS_TYPE_INVALID);
+	reply = dbus_connection_send_with_reply_and_block (connection,query,-1, &err);
+	dbus_message_unref(query);
+
+	free(longitude);
+	free(latitude);
+	if (NULL == reply)
+	{
+		if (dbus_error_is_set(&err))
+		{
+			dbus_error_free_for_dcli(&err);
+		}
+		return -3;
+	}
+	dbus_message_iter_init(reply,&iter);
+	dbus_message_iter_get_basic(&iter,&ret);
+	if(ret == 0)
+	{
+		retu =0;
+	}
+	else if(ret == WTP_ID_NOT_EXIST)
+	{
+		retu =-4;
+	}
+	else
+	{
+		retu =-5;
+	}
+	dbus_message_unref(reply);
+	return retu; 		
+}
+
 void Free_show_all_wtp_new_wtp_wireless_ifinfo_information_cmd(struct NewWtpWirelessIfInfo *RadioHead)
 {
 	void (*dcli_init_free_func)(struct NewWtpWirelessIfInfo *);

@@ -73,6 +73,11 @@ extern "C" {
     int wtpSysReset_get( dot11WtpInfoTable_rowreq_ctx *rowreq_ctx, u_long * wtpSysReset_val_ptr );
     int wtpColdReboot_map(u_long *mib_wtpColdReboot_val_ptr, u_long raw_wtpColdReboot_val);
     int wtpColdReboot_get( dot11WtpInfoTable_rowreq_ctx *rowreq_ctx, u_long * wtpColdReboot_val_ptr );
+    int wtplongitude_get( dot11WtpInfoTable_rowreq_ctx *rowreq_ctx, char **wtplongitude_val_ptr_ptr, size_t *wtplongitude_val_ptr_len_ptr );
+    int wtplatitude_get( dot11WtpInfoTable_rowreq_ctx *rowreq_ctx, char **wtplatitude_val_ptr_ptr, size_t *wtplatitude_val_ptr_len_ptr );
+    int wtpPowerType_get( dot11WtpInfoTable_rowreq_ctx *rowreq_ctx, char **wtpPowerType_val_ptr_ptr, size_t *wtpPowerType_val_ptr_len_ptr );
+    int wtpManufactureDate_get( dot11WtpInfoTable_rowreq_ctx *rowreq_ctx, char **wtpManufactureDate_val_ptr_ptr, size_t *wtpManufactureDate_val_ptr_len_ptr );
+    int wtpForwardMode_get( dot11WtpInfoTable_rowreq_ctx *rowreq_ctx, u_long * wtpForwardMode_val_ptr );
 
 
 int dot11WtpInfoTable_indexes_set_tbl_idx(dot11WtpInfoTable_mib_index *tbl_idx, char *wtpMacAddr_val_ptr,  size_t wtpMacAddr_val_ptr_len);

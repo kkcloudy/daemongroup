@@ -164,6 +164,35 @@ size_t      wtpDomain_len; /* # of char elements, not bytes */
          */
    u_long   wtpColdReboot;
     
+        /*
+         * wtplongitude(23)/DisplayString/ASN_OCTET_STR/char(char)//L/A/W/e/R/d/H
+         */
+   char   wtplongitude[255];
+size_t      wtplongitude_len; /* # of char elements, not bytes */
+    
+        /*
+         * wtplatitude(24)/DisplayString/ASN_OCTET_STR/char(char)//L/A/W/e/R/d/H
+         */
+   char   wtplatitude[255];
+size_t      wtplatitude_len; /* # of char elements, not bytes */
+    
+        /*
+         * wtpPowerType(25)/DisplayString/ASN_OCTET_STR/char(char)//L/A/w/e/R/d/H
+         */
+   char   wtpPowerType[255];
+size_t      wtpPowerType_len; /* # of char elements, not bytes */
+    
+        /*
+         * wtpManufactureDate(26)/DisplayString/ASN_OCTET_STR/char(char)//L/A/w/e/R/d/H
+         */
+   char   wtpManufactureDate[255];
+size_t      wtpManufactureDate_len; /* # of char elements, not bytes */
+    
+        /*
+         * wtpForwardMode(27)/INTEGER/ASN_INTEGER/long(u_long)//l/A/w/E/r/d/h
+         */
+   u_long   wtpForwardMode;
+    
 } dot11WtpInfoTable_data;
 
 

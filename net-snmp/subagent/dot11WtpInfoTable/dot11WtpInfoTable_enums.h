@@ -97,8 +97,21 @@ extern "C" {
      * (used for value mapping; see notes at top of file)
      */
 #define INTERNAL_WTPCOLDREBOOT_REBOOT  1 
+/*************************************************************
+ * constants for enums for the MIB node
+ * wtpForwardMode (INTEGER / ASN_INTEGER)
+ *
+ * since a Textual Convention may be referenced more than once in a
+ * MIB, protect againt redefinitions of the enum values.
+ */
+#ifndef WTPFORWARDMODE_ENUMS
+#define WTPFORWARDMODE_ENUMS
 
+#define WTPFORWARDMODE_FAT  0 
+#define WTPFORWARDMODE_THIN  1 
+#define WTPFORWARDMODE_UNKNOWN  2 
 
+#endif /* WTPFORWARDMODE_ENUMS */
 
 #ifdef __cplusplus
 }

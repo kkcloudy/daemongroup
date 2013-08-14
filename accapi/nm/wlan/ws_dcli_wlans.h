@@ -1949,6 +1949,8 @@ extern int show_all_wtp_basic_information_cmd(dbus_parameter parameter, DBusConn
 																									 /*返回-2表示error*/
 																									 /*返回SNMPD_CONNECTION_ERROR表示connection error*/
 
+extern int ccgi_set_ap_longitude_latitude_cmd(dbus_parameter parameter, DBusConnection *connection, unsigned int id, char *lon, char *lat);
+
 extern void Free_show_all_wtp_new_wtp_wireless_ifinfo_information_cmd(struct NewWtpWirelessIfInfo *RadioHead);
 /*只要调用，就通过Free_show_all_wtp_new_wtp_wireless_ifinfo_information_cmd()释放空间*/
 extern int show_all_wtp_new_wtp_wireless_ifinfo_information_cmd(dbus_parameter parameter, DBusConnection *connection,struct NewWtpWirelessIfInfo **RadioHead);

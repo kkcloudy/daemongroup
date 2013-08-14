@@ -82,6 +82,7 @@ extern "C" {
 #define EI_WTP_RSSI					".1.13.5.1.10"
 #define EI_STA_USER_IPADDR			".1.17.2.1.1"
 #define EI_STA_USER_NAME			".1.17.2.1.2"
+#define EI_STA_USER_TAFFIC			".1.8.1.1.5"
 
 
 #define EI_AC_CPU_USAGE_TRAP_DES			".2.1.2.13"

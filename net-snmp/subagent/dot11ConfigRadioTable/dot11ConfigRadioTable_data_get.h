@@ -94,6 +94,11 @@ extern "C" {
     int radio11nSwitch_get( dot11ConfigRadioTable_rowreq_ctx *rowreq_ctx, u_long * radio11nSwitch_val_ptr );
     int OnlyAllow11nStaAccess_map(u_long *mib_OnlyAllow11nStaAccess_val_ptr, u_long raw_OnlyAllow11nStaAccess_val);
     int OnlyAllow11nStaAccess_get( dot11ConfigRadioTable_rowreq_ctx *rowreq_ctx, u_long * OnlyAllow11nStaAccess_val_ptr );
+    int radioRole_get( dot11ConfigRadioTable_rowreq_ctx *rowreq_ctx, u_long * radioRole_val_ptr );
+    int radioChanelUsage_get( dot11ConfigRadioTable_rowreq_ctx *rowreq_ctx, long * radioChanelUsage_val_ptr );
+    int radioChanelChangeNum_get( dot11ConfigRadioTable_rowreq_ctx *rowreq_ctx, long * radioChanelChangeNum_val_ptr );
+    int radioChannelWidth_get( dot11ConfigRadioTable_rowreq_ctx *rowreq_ctx, long * radioChannelWidth_val_ptr );
+    int radioNoiseFloor_get( dot11ConfigRadioTable_rowreq_ctx *rowreq_ctx, long * radioNoiseFloor_val_ptr );
 
 
 int dot11ConfigRadioTable_indexes_set_tbl_idx(dot11ConfigRadioTable_mib_index *tbl_idx, char *wtpMacAddr_val_ptr,  size_t wtpMacAddr_val_ptr_len, long wtpWirelessIfIndex_val);

@@ -712,7 +712,101 @@ dot11WtpInfoTable_cache_load(netsnmp_container *container)
     }*/
     
      rowreq_ctx->data.wtpColdReboot = 1;
-	
+    
+    /*
+     * setup/save data for wtplongitude
+     * wtplongitude(23)/DisplayString/ASN_OCTET_STR/char(char)//L/A/W/e/R/d/H
+     */
+    /** no mapping */
+    /*
+     * make sure there is enough space for wtplongitude data
+     */
+	unsigned int wtplongitude_len=0;
+	if(q->longitude)
+	{
+		wtplongitude_len= MIN(strlen(q->longitude),sizeof(rowreq_ctx->data.wtplongitude)-1);
+		rowreq_ctx->data.wtplongitude_len=wtplongitude_len * sizeof(rowreq_ctx->data.wtplongitude[0]);
+		memcpy(rowreq_ctx->data.wtplongitude, q->longitude, rowreq_ctx->data.wtplongitude_len);
+	}
+
+    
+    /*
+     * setup/save data for wtplatitude
+     * wtplatitude(24)/DisplayString/ASN_OCTET_STR/char(char)//L/A/W/e/R/d/H
+     */
+    /** no mapping */
+    /*
+     * make sure there is enough space for wtplatitude data
+     */
+		unsigned int wtplatitude_len=0;
+		if(q->latitude)
+		{
+			wtplatitude_len= MIN(strlen(q->latitude),sizeof(rowreq_ctx->data.wtplatitude)-1);
+			rowreq_ctx->data.wtplatitude_len=wtplatitude_len * sizeof(rowreq_ctx->data.wtplatitude[0]);
+			memcpy(rowreq_ctx->data.wtplatitude, q->latitude, rowreq_ctx->data.wtplatitude_len);
+		}
+    
+    /*
+     * setup/save data for wtpPowerType
+     * wtpPowerType(25)/DisplayString/ASN_OCTET_STR/char(char)//L/A/w/e/R/d/H
+     */
+    /** no mapping */
+    /*
+     * make sure there is enough space for wtpPowerType data
+     */
+		unsigned int wtpPowerType_len=0;
+		char test_p[10]={0};
+		if(q->power_mode == 0)
+		{
+			strcpy(test_p,"unknown");
+		}
+		else if(q->power_mode == 1)
+		{
+			strcpy(test_p,"AC");
+		}
+		else
+		{
+			strcpy(test_p,"DC");
+		}
+		wtpPowerType_len= MIN(strlen(test_p),sizeof(rowreq_ctx->data.wtpPowerType)-1);
+		rowreq_ctx->data.wtpPowerType_len=wtpPowerType_len * sizeof(rowreq_ctx->data.wtpPowerType[0]);
+		memcpy(rowreq_ctx->data.wtpPowerType, test_p, rowreq_ctx->data.wtpPowerType_len);
+
+    /*
+     * setup/save data for wtpManufactureDate
+     * wtpManufactureDate(26)/DisplayString/ASN_OCTET_STR/char(char)//L/A/w/e/R/d/H
+     */
+    /** no mapping */
+    /*
+     * make sure there is enough space for wtpManufactureDate data
+     */
+		unsigned int wtpManufactureDate_len=0;
+		if(q->manufacture_date)
+		{
+			wtpManufactureDate_len= MIN(strlen(q->manufacture_date),sizeof(rowreq_ctx->data.wtpManufactureDate)-1);
+			rowreq_ctx->data.wtpManufactureDate_len=wtpManufactureDate_len * sizeof(rowreq_ctx->data.wtpManufactureDate[0]);
+			memcpy(rowreq_ctx->data.wtpManufactureDate, q->manufacture_date, rowreq_ctx->data.wtpManufactureDate_len);
+		}
+    
+    /*
+     * setup/save data for wtpForwardMode
+     * wtpForwardMode(27)/INTEGER/ASN_INTEGER/long(u_long)//l/A/w/E/r/d/h
+     */
+    /** no mapping */
+
+		if(q->forward_mode == 0)
+		{
+			rowreq_ctx->data.wtpForwardMode = 2;
+		}
+		else if(q->forward_mode == 1)
+		{
+			rowreq_ctx->data.wtpForwardMode = 1;
+		}
+		else
+		{
+			rowreq_ctx->data.wtpForwardMode = 0;
+		}
+        
         /*
          * insert into table container
          */

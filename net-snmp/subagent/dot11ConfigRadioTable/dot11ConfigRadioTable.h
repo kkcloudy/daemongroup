@@ -209,6 +209,31 @@ size_t      radioMCS_len; /* # of char elements, not bytes */
          */
    u_long   OnlyAllow11nStaAccess;
     
+        /*
+         * radioRole(28)/INTEGER/ASN_INTEGER/long(u_long)//l/A/w/E/r/d/h
+         */
+   u_long   radioRole;
+    
+        /*
+         * radioChanelUsage(29)/INTEGER/ASN_INTEGER/long(long)//l/A/w/e/r/d/h
+         */
+   long   radioChanelUsage;
+    
+        /*
+         * radioChanelChangeNum(30)/INTEGER/ASN_INTEGER/long(long)//l/A/w/e/r/d/h
+         */
+   long   radioChanelChangeNum;
+    
+        /*
+         * radioChannelWidth(31)/INTEGER/ASN_INTEGER/long(long)//l/A/w/e/r/d/h
+         */
+   long   radioChannelWidth;
+    
+        /*
+         * radioNoiseFloor(32)/INTEGER/ASN_INTEGER/long(long)//l/A/w/e/r/d/h
+         */
+   long   radioNoiseFloor;
+    
 } dot11ConfigRadioTable_data;
 
 
