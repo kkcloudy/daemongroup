@@ -263,6 +263,28 @@ extern int gCOUNTRYCODE;
 /****************globle variable*****************/
 extern int gINFOREPORTSWITCH;  
 extern unsigned short gWIFIEXTENSIONREPORTINTERVAL; 
+
+extern unsigned short g_unauthorized_mac_interval;
+extern unsigned char  g_unauthorized_mac_switch;
+
+extern unsigned short g_configure_error_interval;
+extern unsigned char  g_configure_error_switch;
+
+extern unsigned char  g_online_sta_full_switch;
+extern unsigned short g_online_sta_full_interval;
+
+extern unsigned char  g_sta_flow_rx_overflow_switch;
+extern unsigned short g_sta_flow_rx_overflow_interval;
+extern unsigned int g_sta_flow_rx_overflow_threshold;
+
+extern unsigned char g_sta_flow_rx_overflow_trap_switch;
+extern unsigned char g_sta_flow_tx_overflow_trap_switch;
+
+extern unsigned char  g_sta_flow_tx_overflow_switch;
+extern unsigned short g_sta_flow_tx_overflow_interval;
+extern unsigned int g_sta_flow_tx_overflow_threshold;
+
+
 extern unsigned short gINFOREPORTINTERVAL;  
 extern int gSTAINFOREPORT;
 extern int gSTAREPORTSWITCH;

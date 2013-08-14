@@ -1374,6 +1374,7 @@ CWBool CWParseWTPEventRequestMessage(CWProtocolMessage *msgPtr, int len, CWProto
 	valuesPtr->ap_sta_info = NULL;
 	valuesPtr->wids_device_infos = NULL;
 	valuesPtr->ApReportStaInfo = NULL;
+	valuesPtr->wtp_extend_info = NULL;
 	// parse message elements
 	while((msgPtr->offset - offsetTillMessages) < len) {
 		unsigned short int elemType=0;
@@ -1455,7 +1456,7 @@ CWBool CWParseWTPEventRequestMessage(CWProtocolMessage *msgPtr, int len, CWProto
 			 	}
 				 else if(vendorvalue == 3)
 			 	{
-			 		if (!(CWParseMsgElemAPExtensionInfo(msgPtr, (elemLen-1), &valuesPtr->ap_wifi_info)))
+			 		if (!(CWParseMsgElemAPExtensionInfo(msgPtr, (elemLen-1), &valuesPtr->ap_wifi_info, wtpindex)))
 					{
 							wid_syslog_err("** error CWParseMsgElemAPExtensionInfo error\n");
 							//printf("*** 000000111111111111111111 ***\n");return CW_FALSE;
@@ -1585,6 +1586,45 @@ CWBool CWParseWTPEventRequestMessage(CWProtocolMessage *msgPtr, int len, CWProto
 						
 					}	
 					CW_FREE_OBJECT(valuesPtr->ap_sta_info)			
+				}
+				else if (vendorvalue == 16)
+				{
+					wid_syslog_debug_debug(WID_DEFAULT, "vendorvalue==16\n");
+				 	CW_CREATE_OBJECT_ERR(valuesPtr->wtp_extend_info, CWWtpExtendinfo, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, "malloc for CWExtendInfo failed\n"););
+					memset(valuesPtr->wtp_extend_info, '\0', sizeof(CWWtpExtendinfo));
+					if (!CWParseWTPEtendinfo(msgPtr, (elemLen-1), valuesPtr->wtp_extend_info, wtpindex))
+					{
+						wid_syslog_notice_local7("parse CWExtendInfo for wtp %d failed\n", wtpindex);	
+					} else {
+						strncpy((char *)AC_WTP[wtpindex]->longitude, (char *)valuesPtr->wtp_extend_info->longitude, LONGITUDE_LATITUDE_MAX_LEN);
+						wid_syslog_debug_debug(WID_DEFAULT, "wtp %d longitude=%s\n",wtpindex, valuesPtr->wtp_extend_info->longitude);
+						strncpy((char *)AC_WTP[wtpindex]->latitude, (char *)valuesPtr->wtp_extend_info->latitude, LONGITUDE_LATITUDE_MAX_LEN);
+						wid_syslog_debug_debug(WID_DEFAULT, "wtp %d laitude=%s\n",wtpindex, valuesPtr->wtp_extend_info->latitude);
+						AC_WTP[wtpindex]->power_mode = valuesPtr->wtp_extend_info->power_mode;
+						wid_syslog_debug_debug(WID_DEFAULT, "wtp %d power_mode=%u\n",wtpindex, valuesPtr->wtp_extend_info->power_mode);
+						strncpy((char *)AC_WTP[wtpindex]->manufacture_date, (char *)valuesPtr->wtp_extend_info->manufacture_date, MANUFACTURE_DATA_MAX_LEN);
+						wid_syslog_debug_debug(WID_DEFAULT, "wtp %d manufacture_date=%s\n",wtpindex, valuesPtr->wtp_extend_info->manufacture_date);
+						AC_WTP[wtpindex]->forward_mode = valuesPtr->wtp_extend_info->forward_mode;
+						wid_syslog_debug_debug(WID_DEFAULT, "wtp %d forward_mode=%u\n",wtpindex, valuesPtr->wtp_extend_info->forward_mode);
+						unsigned char i;
+						for (i=0; i<valuesPtr->wtp_extend_info->radio_count; i++) {
+							AC_RADIO[wtpindex*L_RADIO_NUM+i]->radio_work_role = valuesPtr->wtp_extend_info->radio_work_role[i];
+							wid_syslog_debug_debug(WID_DEFAULT, "wtp %d radio %u radio_work_role=%u\n",
+								wtpindex, i, valuesPtr->wtp_extend_info->radio_work_role[i]);
+						}
+						wid_syslog_debug_debug(WID_DEFAULT, "test %d\n", __LINE__);
+					}
+					CW_FREE_OBJECT(valuesPtr->wtp_extend_info);
+					valuesPtr->wtp_extend_info = NULL;
+				}
+				else if (vendorvalue == 17) {
+					wid_syslog_debug_debug(WID_DEFAULT, "vendorvalue==17\n");
+					if (!CWParseWTPTrapInfo(msgPtr, (elemLen-1), wtpindex))
+					{
+						wid_syslog_notice_local7("parse CWExtendInfo for wtp %d failed\n", wtpindex);	
+					} else {
+						wid_syslog_debug_debug(WID_DEFAULT, "trap message parse for wtp %d success\n", wtpindex);
+					}
 				}
 				else if (0 == vendorvalue || 0x80 == vendorvalue  /*|f|*/)
 				{
@@ -2315,6 +2355,76 @@ CWBool CWAssembleConfigurationUpdateRequest_WTP(CWProtocolMessage **messagesPtr,
 				return CW_FALSE; // error will be handled by the caller
 			}
 			break;
+		case WTP_LONGITUDE_LATITUDE_SET:
+			MsgElemCount = 1;
+			CW_CREATE_PROTOCOL_MSG_ARRAY_ERR(msgElems,MsgElemCount,return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY,"set wtp longitude and latitude failed"););
+			if (!(CWAssembleMsgElemAPLongitudeLatitude(&(msgElems[++k]),(unsigned char *)elem->mqinfo.u.WtpInfo.username, (unsigned char *)elem->mqinfo.u.WtpInfo.passwd))) 
+			{													
+				int i;
+				for(i = 0; i <= k; i++) { CW_FREE_PROTOCOL_MESSAGE(msgElems[i]);}
+				CW_FREE_OBJECT(msgElems);
+				return CW_FALSE; 
+			}
+			strncpy((char *)AC_WTP[WTPIndex]->longitude, elem->mqinfo.u.WtpInfo.username, strlen(elem->mqinfo.u.WtpInfo.username));
+			strncpy((char *)AC_WTP[WTPIndex]->latitude, elem->mqinfo.u.WtpInfo.passwd, strlen(elem->mqinfo.u.WtpInfo.passwd));
+			break;
+		case WTP_UNAUTHORIZED_MAC_REPORT:
+			MsgElemCount = 1;
+			CW_CREATE_PROTOCOL_MSG_ARRAY_ERR(msgElems,MsgElemCount,return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY,"set wtp longitude and latitude failed"););			
+			if (!(capwap_comm_switch_interval_assemble(&(msgElems[++k]),WTPIndex, WTP_UNAUTHORIZED_MAC_REPORT))) 
+			{													
+				int i;
+				for(i = 0; i <= k; i++) { CW_FREE_PROTOCOL_MESSAGE(msgElems[i]);}
+				CW_FREE_OBJECT(msgElems);
+				return CW_FALSE; 
+			}
+			break;
+		case WTP_CONFIGURE_ERROR_REPROT:
+			MsgElemCount = 1;
+			CW_CREATE_PROTOCOL_MSG_ARRAY_ERR(msgElems,MsgElemCount,return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY,"set wtp longitude and latitude failed"););			
+			if (!(capwap_comm_switch_interval_assemble(&(msgElems[++k]),WTPIndex, WTP_CONFIGURE_ERROR_REPROT))) 
+			{													
+				int i;
+				for(i = 0; i <= k; i++) { CW_FREE_PROTOCOL_MESSAGE(msgElems[i]);}
+				CW_FREE_OBJECT(msgElems);
+				return CW_FALSE; 
+			}
+			break;
+		#if 0
+		case WTP_STA_FLOW_OVERFLOW_RX_REPORT:
+			MsgElemCount = 1;
+			CW_CREATE_PROTOCOL_MSG_ARRAY_ERR(msgElems,MsgElemCount,return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY,"set wtp longitude and latitude failed"););			
+			if (!(capwap_comm_switch_interval_assemble(&(msgElems[++k]),WTPIndex, WTP_STA_FLOW_OVERFLOW_RX_REPORT))) 
+			{													
+				int i;
+				for(i = 0; i <= k; i++) { CW_FREE_PROTOCOL_MESSAGE(msgElems[i]);}
+				CW_FREE_OBJECT(msgElems);
+				return CW_FALSE; 
+			}
+			break;
+		case WTP_STA_FLOW_OVERFLOW_TX_REPROT:
+			MsgElemCount = 1;
+			CW_CREATE_PROTOCOL_MSG_ARRAY_ERR(msgElems,MsgElemCount,return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY,"set wtp longitude and latitude failed"););			
+			if (!(capwap_comm_switch_interval_assemble(&(msgElems[++k]),WTPIndex, WTP_STA_FLOW_OVERFLOW_TX_REPROT))) 
+			{													
+				int i;
+				for(i = 0; i <= k; i++) { CW_FREE_PROTOCOL_MESSAGE(msgElems[i]);}
+				CW_FREE_OBJECT(msgElems);
+				return CW_FALSE; 
+			}
+			break;
+		case WTP_STA_ONLINE_FULL_REPROT:
+			MsgElemCount = 1;
+			CW_CREATE_PROTOCOL_MSG_ARRAY_ERR(msgElems,MsgElemCount,return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY,"set wtp longitude and latitude failed"););			
+			if (!(capwap_comm_switch_interval_assemble(&(msgElems[++k]),WTPIndex, WTP_STA_ONLINE_FULL_REPROT))) 
+			{													
+				int i;
+				for(i = 0; i <= k; i++) { CW_FREE_PROTOCOL_MESSAGE(msgElems[i]);}
+				CW_FREE_OBJECT(msgElems);
+				return CW_FALSE; 
+			}
+			break;
+		#endif
 		default:
 			return CW_FALSE;
 	}

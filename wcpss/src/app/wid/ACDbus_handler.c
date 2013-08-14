@@ -61,6 +61,20 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <math.h>
 
 APScanningSetting gapscanset = {0};
+
+ap_trap_type_s g_new_trap = 
+{
+.unknown_mac_trap_switch = UNKNOWN_MAC_TRAP_SWITCH_DISABLE, 
+.unknown_mac_trap_interval = UNKNOWN_MAC_TRAP_INTERVAL_DEFAULT,
+.ap_config_file_err_trap_switch = AP_CONFIG_FILE_ERR_TRAP_SWITCH_DISABLE,
+.ap_config_file_err_trap_interval = AP_CONFIG_FILE_ERR_TRAP_SWITCH_INTERVAL_DEFAULT,
+//.sta_flow_overflow_trap_switch = STA_FLOW_OVERFLOW_TRAP_SWITCH_DISABLE,
+.sta_flow_overflow_rx_threshold = STA_FLOW_OVERFLOW_RX_THRESHOLD,
+.sta_flow_overflow_tx_threshold = STA_FLOW_OVERFLOW_TX_THRESHOLD,
+.online_sta_full_trap_switch = ONLINE_STA_FULL_TRAP_SWITCH_DISABLE,
+.online_sta_threshold	= ONLINE_STA_THREASHOLD
+};
+
 int wids_judge_policy = 7;
 white_mac_list *pwhite_mac_list = NULL;
 white_mac_list *pblack_mac_list = NULL;
@@ -17320,6 +17334,219 @@ int wid_send_to_ap_extension_infomation(unsigned int wtpid)
 	
 }
 
+int wid_send_to_ap_unauthorized_mac_reportinterval(unsigned int wtpid)
+{
+	msgq msg;
+	struct msgqlist *elem;
+
+	if(AC_WTP[wtpid]->WTPStat == 5)
+	{
+		wid_syslog_debug_debug(WID_DEFAULT, "wtp %d is running\n", wtpid);
+		AC_WTP[wtpid]->WTP_Radio[0]->CMD |= 0x4000;
+		AC_WTP[wtpid]->CMD->radioid[0] += 1;
+		AC_WTP[wtpid]->CMD->setCMD = 1;	
+		
+		CWThreadMutexLock(&(gWTPs[wtpid].WTPThreadMutex));
+		if(gWTPs[wtpid].isNotFree && (gWTPs[wtpid].currentState == CW_ENTER_RUN))
+		{
+			memset((char*)&msg, 0, sizeof(msg));
+			msg.mqid = wtpid%THREAD_NUM+1;
+			msg.mqinfo.WTPID = wtpid;
+			msg.mqinfo.type = CONTROL_TYPE;
+			msg.mqinfo.subtype = WTP_S_TYPE;
+			msg.mqinfo.u.WtpInfo.Wtp_Op = WTP_UNAUTHORIZED_MAC_REPORT;
+			
+			if (msgsnd(ACDBUS_MSGQ, (msgq *)&msg, sizeof(msg.mqinfo), 0) == -1){
+				wid_syslog_crit("%s msgsend %s",__func__,strerror(errno));
+				perror("msgsnd");
+			}
+		}
+		CWThreadMutexUnlock(&(gWTPs[wtpid].WTPThreadMutex));
+	} else if((AC_WTP[wtpid] != NULL)){
+		wid_syslog_debug_debug(WID_DEFAULT, "set wtp %d later\n", wtpid);
+		memset((char*)&msg, 0, sizeof(msg));
+		msg.mqid = wtpid%THREAD_NUM+1;
+		msg.mqinfo.WTPID = wtpid;
+		msg.mqinfo.type = CONTROL_TYPE;
+		msg.mqinfo.subtype = WTP_S_TYPE;
+		msg.mqinfo.u.WtpInfo.Wtp_Op = WTP_UNAUTHORIZED_MAC_REPORT;
+		
+		elem = (struct msgqlist*)malloc(sizeof(struct msgqlist));
+		if(elem == NULL){
+			wid_syslog_info("%s malloc %s",__func__,strerror(errno));
+			perror("malloc");
+			return 0;
+		}
+		memset((char*)&(elem->mqinfo), 0, sizeof(msgqdetail));
+		elem->next = NULL;
+		memcpy((char*)&(elem->mqinfo),(char*)&(msg.mqinfo),sizeof(msg.mqinfo));
+		WID_INSERT_CONTROL_LIST(wtpid, elem);
+	}
+
+	return 0;
+	
+}
+
+int wid_send_to_ap_configure_error_reportinterval(unsigned int wtpid)
+{
+	msgq msg;
+	struct msgqlist *elem;
+
+	if(AC_WTP[wtpid]->WTPStat == 5)
+	{
+		AC_WTP[wtpid]->WTP_Radio[0]->CMD |= 0x4000;
+		AC_WTP[wtpid]->CMD->radioid[0] += 1;
+		AC_WTP[wtpid]->CMD->setCMD = 1;	
+		
+		CWThreadMutexLock(&(gWTPs[wtpid].WTPThreadMutex));
+		if(gWTPs[wtpid].isNotFree && (gWTPs[wtpid].currentState == CW_ENTER_RUN))
+		{
+			memset((char*)&msg, 0, sizeof(msg));
+			msg.mqid = wtpid%THREAD_NUM+1;
+			msg.mqinfo.WTPID = wtpid;
+			msg.mqinfo.type = CONTROL_TYPE;
+			msg.mqinfo.subtype = WTP_S_TYPE;
+			msg.mqinfo.u.WtpInfo.Wtp_Op = WTP_CONFIGURE_ERROR_REPROT;
+			
+			if (msgsnd(ACDBUS_MSGQ, (msgq *)&msg, sizeof(msg.mqinfo), 0) == -1){
+				wid_syslog_crit("%s msgsend %s",__func__,strerror(errno));
+				perror("msgsnd");
+			}
+		}
+		CWThreadMutexUnlock(&(gWTPs[wtpid].WTPThreadMutex));
+	} else if((AC_WTP[wtpid] != NULL)){
+			memset((char*)&msg, 0, sizeof(msg));
+			msg.mqid = wtpid%THREAD_NUM+1;
+			msg.mqinfo.WTPID = wtpid;
+			msg.mqinfo.type = CONTROL_TYPE;
+			msg.mqinfo.subtype = WTP_S_TYPE;
+			msg.mqinfo.u.WtpInfo.Wtp_Op = WTP_CONFIGURE_ERROR_REPROT;
+			
+			elem = (struct msgqlist*)malloc(sizeof(struct msgqlist));
+			if(elem == NULL){
+				wid_syslog_info("%s malloc %s",__func__,strerror(errno));
+				perror("malloc");
+				return 0;
+			}
+			memset((char*)&(elem->mqinfo), 0, sizeof(msgqdetail));
+			elem->next = NULL;
+			memcpy((char*)&(elem->mqinfo),(char*)&(msg.mqinfo),sizeof(msg.mqinfo));
+			WID_INSERT_CONTROL_LIST(wtpid, elem);
+		}
+
+	return 0;
+	
+}
+
+int wid_send_to_ap_sta_online_full_reportinterval(unsigned int wtpid)
+{
+#if 1
+	//only set parameter for wid ,don't send to wtp
+#else
+	msgq msg;
+	struct msgqlist *elem;
+
+	if(AC_WTP[wtpid]->WTPStat == 5)
+	{
+		AC_WTP[wtpid]->WTP_Radio[0]->CMD |= 0x4000;
+		AC_WTP[wtpid]->CMD->radioid[0] += 1;
+		AC_WTP[wtpid]->CMD->setCMD = 1;	
+		
+		CWThreadMutexLock(&(gWTPs[wtpid].WTPThreadMutex));
+		if(gWTPs[wtpid].isNotFree && (gWTPs[wtpid].currentState == CW_ENTER_RUN))
+		{
+			memset((char*)&msg, 0, sizeof(msg));
+			msg.mqid = wtpid%THREAD_NUM+1;
+			msg.mqinfo.WTPID = wtpid;
+			msg.mqinfo.type = CONTROL_TYPE;
+			msg.mqinfo.subtype = WTP_S_TYPE;
+			msg.mqinfo.u.WtpInfo.Wtp_Op = WTP_STA_ONLINE_FULL_REPROT;
+			
+			if (msgsnd(ACDBUS_MSGQ, (msgq *)&msg, sizeof(msg.mqinfo), 0) == -1){
+				wid_syslog_crit("%s msgsend %s",__func__,strerror(errno));
+				perror("msgsnd");
+			}
+		}
+		CWThreadMutexUnlock(&(gWTPs[wtpid].WTPThreadMutex));
+	} else if((AC_WTP[wtpid] != NULL)){
+		memset((char*)&msg, 0, sizeof(msg));
+		msg.mqid = wtpid%THREAD_NUM+1;
+		msg.mqinfo.WTPID = wtpid;
+		msg.mqinfo.type = CONTROL_TYPE;
+		msg.mqinfo.subtype = WTP_S_TYPE;
+		msg.mqinfo.u.WtpInfo.Wtp_Op = WTP_STA_ONLINE_FULL_REPROT;
+		
+		elem = (struct msgqlist*)malloc(sizeof(struct msgqlist));
+		if(elem == NULL){
+			wid_syslog_info("%s malloc %s",__func__,strerror(errno));
+			perror("malloc");
+			return 0;
+		}
+		memset((char*)&(elem->mqinfo), 0, sizeof(msgqdetail));
+		elem->next = NULL;
+		memcpy((char*)&(elem->mqinfo),(char*)&(msg.mqinfo),sizeof(msg.mqinfo));
+		WID_INSERT_CONTROL_LIST(wtpid, elem);
+
+	}
+#endif
+	return 0;
+	
+}
+
+int wid_send_to_ap_sta_flow_rx_tx_overflow_reportinterval(unsigned int wtpid, unsigned int is_rx_tx)
+{
+#if 1
+	//only set parameter for wid ,don't send to wtp
+#else
+	msgq msg;
+	struct msgqlist *elem;
+
+	if(AC_WTP[wtpid]->WTPStat == 5)
+	{
+		AC_WTP[wtpid]->WTP_Radio[0]->CMD |= 0x4000;
+		AC_WTP[wtpid]->CMD->radioid[0] += 1;
+		AC_WTP[wtpid]->CMD->setCMD = 1;	
+		
+		CWThreadMutexLock(&(gWTPs[wtpid].WTPThreadMutex));
+		if(gWTPs[wtpid].isNotFree && (gWTPs[wtpid].currentState == CW_ENTER_RUN))
+		{
+			memset((char*)&msg, 0, sizeof(msg));
+			msg.mqid = wtpid%THREAD_NUM+1;
+			msg.mqinfo.WTPID = wtpid;
+			msg.mqinfo.type = CONTROL_TYPE;
+			msg.mqinfo.subtype = WTP_S_TYPE;
+			msg.mqinfo.u.WtpInfo.Wtp_Op = WTP_STA_FLOW_OVERFLOW_RX_REPORT;
+			
+			if (msgsnd(ACDBUS_MSGQ, (msgq *)&msg, sizeof(msg.mqinfo), 0) == -1){
+				wid_syslog_crit("%s msgsend %s",__func__,strerror(errno));
+				perror("msgsnd");
+			}
+		}
+		CWThreadMutexUnlock(&(gWTPs[wtpid].WTPThreadMutex));
+	} else if((AC_WTP[wtpid] != NULL)){
+		memset((char*)&msg, 0, sizeof(msg));
+		msg.mqid = wtpid%THREAD_NUM+1;
+		msg.mqinfo.WTPID = wtpid;
+		msg.mqinfo.type = CONTROL_TYPE;
+		msg.mqinfo.subtype = WTP_S_TYPE;
+		msg.mqinfo.u.WtpInfo.Wtp_Op = WTP_STA_FLOW_OVERFLOW_RX_REPORT;
+		
+		elem = (struct msgqlist*)malloc(sizeof(struct msgqlist));
+		if(elem == NULL){
+			wid_syslog_info("%s malloc %s",__func__,strerror(errno));
+			perror("malloc");
+			return 0;
+		}
+		memset((char*)&(elem->mqinfo), 0, sizeof(msgqdetail));
+		elem->next = NULL;
+		memcpy((char*)&(elem->mqinfo),(char*)&(msg.mqinfo),sizeof(msg.mqinfo));
+		WID_INSERT_CONTROL_LIST(wtpid, elem);
+
+	}
+#endif
+	return 0;
+	
+}
 int wid_radio_wsm_sta_info_report(unsigned int wtpid,unsigned int l_radioid,unsigned int radioid,unsigned int bssindex)
 {	
 	msgq msg;
@@ -24790,6 +25017,10 @@ CWBool CWSaveWTPExtensionInfo2(wid_wifi_info ap_wifi_info, unsigned int WTPIndex
 	{
 		AC_WTP[WTPIndex]->wifi_extension_info.wifi_snr_new[i] = ap_wifi_info.wifi_snr_new[i];
 		AC_WTP[WTPIndex]->wifi_extension_info.wifi_noise_new[i] = ap_wifi_info.wifi_noise_new[i];
+		AC_WTP[WTPIndex]->wifi_extension_info.radio_channel_use_rate[i] = ap_wifi_info.radio_channel_use_rate[i];
+		AC_WTP[WTPIndex]->wifi_extension_info.radio_channel_change_counter[i] = ap_wifi_info.radio_channel_change_counter[i];
+		AC_RADIO[WTPIndex*L_RADIO_NUM+i]->radio_channel_use_rate = ap_wifi_info.radio_channel_use_rate[i];
+		AC_RADIO[WTPIndex*L_RADIO_NUM+i]->radio_channel_change_counter = ap_wifi_info.radio_channel_change_counter[i];
 	}
 	/*fengwenchao add end*/
 	return CW_TRUE;
@@ -30336,6 +30567,116 @@ void free_maclist(struct acl_config *conf, struct maclist *list)
 		tmp = NULL;
 	}
 }
+
+int wid_set_ap_longitude_latitude(unsigned int wtpid, unsigned char *longitude, unsigned char *latitude)
+{
+	struct msgqlist *elem = NULL;
+	wid_syslog_err("33333333333333\n");
+	wid_syslog_debug_debug(WID_DEFAULT,"the wtpid is %s\n",__func__);
+	msgq msg;
+
+	int i =0;
+	if(wtpid == 0){
+		wid_syslog_err("4444444444444\n");
+		for(i = 0 ; i < WTP_NUM;i++)
+		{
+			if(AC_WTP[i] != NULL) 
+			{
+				wtpid = i;
+				wid_syslog_debug_debug(WID_DEFAULT,"the wtpid is %d\n",wtpid);
+				if(AC_WTP[wtpid]->WTPStat == 5)
+				{
+					CWThreadMutexLock(&(gWTPs[wtpid].WTPThreadMutex));
+					if(gWTPs[wtpid].isNotFree && (gWTPs[wtpid].currentState == CW_ENTER_RUN))
+					{
+						memset((char*)&msg, 0, sizeof(msg));
+						msg.mqid = wtpid%THREAD_NUM+1;
+						msg.mqinfo.WTPID = wtpid;
+						msg.mqinfo.type = CONTROL_TYPE;
+						msg.mqinfo.subtype = WTP_S_TYPE;
+						msg.mqinfo.u.WtpInfo.Wtp_Op = WTP_LONGITUDE_LATITUDE_SET;
+						memcpy(msg.mqinfo.u.WtpInfo.username, (char *)longitude, strlen((char *)longitude));
+						memcpy(msg.mqinfo.u.WtpInfo.passwd, (char *)latitude, strlen((char *)latitude));
+						
+						if (msgsnd(ACDBUS_MSGQ, (msgq *)&msg, sizeof(msg.mqinfo), 0) == -1){
+							wid_syslog_crit("%s msgsend %s",__func__,strerror(errno));
+							perror("msgsnd");
+						}
+					}
+					CWThreadMutexUnlock(&(gWTPs[wtpid].WTPThreadMutex));
+				} else if((AC_WTP[wtpid] != NULL)){
+					memset((char*)&msg, 0, sizeof(msg));
+					msg.mqid = wtpid%THREAD_NUM+1;
+					msg.mqinfo.WTPID = wtpid;
+					msg.mqinfo.type = CONTROL_TYPE;
+					msg.mqinfo.subtype = WTP_S_TYPE;
+					msg.mqinfo.u.WtpInfo.Wtp_Op = WTP_LONGITUDE_LATITUDE_SET;
+					memcpy(msg.mqinfo.u.WtpInfo.username,(char *)longitude, strlen((char *)longitude));
+					memcpy(msg.mqinfo.u.WtpInfo.passwd, (char *)latitude, strlen((char *)latitude));
+					elem = (struct msgqlist*)malloc(sizeof(struct msgqlist));
+					if(elem == NULL){
+						wid_syslog_info("%s malloc %s",__func__,strerror(errno));
+						perror("malloc");
+						return 0;
+					}
+					memset((char*)&(elem->mqinfo), 0, sizeof(msgqdetail));
+					elem->next = NULL;
+					memcpy((char*)&(elem->mqinfo),(char*)&(msg.mqinfo),sizeof(msg.mqinfo));
+					WID_INSERT_CONTROL_LIST(wtpid, elem);
+				}
+			}
+		}
+	} else if(AC_WTP[wtpid] != NULL){
+		if(AC_WTP[wtpid]->WTPStat == 5)
+		{
+			wid_syslog_err("5555555555555555\n");
+			CWThreadMutexLock(&(gWTPs[wtpid].WTPThreadMutex));
+			if(gWTPs[wtpid].isNotFree && (gWTPs[wtpid].currentState == CW_ENTER_RUN))
+			{
+				memset((char*)&msg, 0, sizeof(msg));
+				msg.mqid = wtpid%THREAD_NUM+1;
+				msg.mqinfo.WTPID = wtpid;
+				msg.mqinfo.type = CONTROL_TYPE;
+				msg.mqinfo.subtype = WTP_S_TYPE;
+				msg.mqinfo.u.WtpInfo.Wtp_Op = WTP_LONGITUDE_LATITUDE_SET;
+				memcpy(msg.mqinfo.u.WtpInfo.username, (char *)longitude, strlen((char *)longitude));
+				memcpy(msg.mqinfo.u.WtpInfo.passwd, (char *)latitude, strlen((char *)latitude));
+				
+				if (msgsnd(ACDBUS_MSGQ, (msgq *)&msg, sizeof(msg.mqinfo), 0) == -1){
+					wid_syslog_crit("%s msgsend %s",__func__,strerror(errno));
+					perror("msgsnd");
+				}
+			}
+			CWThreadMutexUnlock(&(gWTPs[wtpid].WTPThreadMutex));
+		} else if((AC_WTP[wtpid] != NULL)){
+			wid_syslog_err("66666666666666\n");
+			memset((char*)&msg, 0, sizeof(msg));
+			msg.mqid = wtpid%THREAD_NUM+1;
+			msg.mqinfo.WTPID = wtpid;
+			msg.mqinfo.type = CONTROL_TYPE;
+			msg.mqinfo.subtype = WTP_S_TYPE;
+			msg.mqinfo.u.WtpInfo.Wtp_Op = WTP_LONGITUDE_LATITUDE_SET;
+			memcpy(msg.mqinfo.u.WtpInfo.username, (char *)longitude, strlen((char *)longitude));
+			memcpy(msg.mqinfo.u.WtpInfo.passwd, (char *)latitude, strlen((char *)latitude));
+			elem = (struct msgqlist*)malloc(sizeof(struct msgqlist));
+			wid_syslog_err("777777777777\n");
+			if(elem == NULL){
+				wid_syslog_info("%s malloc %s",__func__,strerror(errno));
+				perror("malloc");
+				return 0;
+			}
+			memset((char*)&(elem->mqinfo), 0, sizeof(msgqdetail));
+			elem->next = NULL;
+			memcpy((char*)&(elem->mqinfo),(char*)&(msg.mqinfo),sizeof(msg.mqinfo));
+			wid_syslog_err("888888888888\n");
+			WID_INSERT_CONTROL_LIST(wtpid, elem);
+			wid_syslog_err("999999999999999\n");
+		}
+	}
+	return 0;
+	
+}
+
 //weichao add
 int wid_set_ap_username_password(unsigned int wtpid,char *username,char *passwd)
 {

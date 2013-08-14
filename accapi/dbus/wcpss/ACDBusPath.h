@@ -216,6 +216,26 @@ char WID_DBUS_METHOD_SET_AP_HEART_STATISTICS_SWITCH[PATH_LEN]= "set_ap_heart_sta
 char WID_DBUS_METHOD_SET_AP_HEART_STATISTICS_COLLECT_TIME[PATH_LEN]= "set_ap_heart_statistics_collect_time"; //fengwenchao add for GM-3,20111130
 char WID_DBUS_WTP_METHOD_SET_WTP_EXTENSION_INFOMATION_SWITCH[PATH_LEN]=      "set_extension_infomation_switch";
 char WID_DBUS_WTP_METHOD_SET_WTP_EXTENSION_INFOMATION_REPORTINTERVAL[PATH_LEN]=      "set_extension_infomation_reportinterval";
+
+char WID_DBUS_WTP_METHOD_SET_WTP_UNAUTHORIZED_MAC_REPORTINTERVAL[PATH_LEN] =		"set_unauthorized_mac_reportinterval";
+char WID_DBUS_WTP_METHOD_SET_WTP_UNAUTHORIZED_MAC_REPORT_SWITCH[PATH_LEN] =		"set_unauthorized_mac_report_switch";
+
+char WID_DBUS_WTP_METHOD_SET_WTP_CONFIGURE_ERR_REPORTINTERVAL[PATH_LEN] =			"set_configure_error_reportinterval";
+char WID_DBUS_WTP_METHOD_SET_WTP_CONFIGURE_ERR_REPORTSWITCH[PATH_LEN] =				"set_configure_error_reportswitch";
+
+char WID_DBUS_WTP_METHOD_SET_WTP_ONLINE_STA_FULL_REPORTEINTERVAL[PATH_LEN] =			"set_online_sta_full_reportinterval";
+char WID_DBUS_WTP_METHOD_SET_WTP_ONLINE_STA_FULL_REPORTE_SWITCH[PATH_LEN] =			"set_online_sta_full_reportswitch";
+
+char WID_DBUS_WTP_METHOD_SET_WTP_STA_FLOW_RX_TX_OVERLFOW_REPORTINTERVAL[PATH_LEN] =		"set_sta_flow_rx_tx_overflow_reportinterval";
+char WID_DBUS_WTP_METHOD_SET_WTP_STA_FLOW_RX_TX_OVERLFOW_THRESHOLD[PATH_LEN] =		"set_sta_flow_rx_tx_overflow_threshold";
+char WID_DBUS_WTP_METHOD_SET_WTP_STA_FLOW_RX_TX_OVERLFOW_REPORT_SWITCH[PATH_LEN] =		"set_sta_flow_rx_tx_overflow_reportswitch";
+char WID_DBUS_WTP_METHOD_SET_WTP_STA_FLOW_RX_TX_OVERLFOW_TRAP_SWITCH[PATH_LEN] = 		"set_sta_flow_rx_tx_overflow_trapswitch";
+
+
+char WID_DBUS_WTP_METHOD_SET_WTP_STA_FLOW_TX_OVERLFOW_REPORTINTERVAL[PATH_LEN] =		"set_sta_flow_tx_overflow_reportinterval";
+char WID_DBUS_WTP_METHOD_SET_WTP_STA_FLOW_TX_OVERLFOW_REPORT_SWITCH[PATH_LEN] =		"set_sta_flow_tx_overflow_reportswitch";
+
+
 char WID_DBUS_WTP_METHOD_SET_WTP_USERNAME_PASSWORD[PATH_LEN] = "set_ap_username_password";
 char WID_DBUS_WTP_METHOD_SET_WTP_STA_DEAUTH_MESSAGE_REPORT_SWITCH[PATH_LEN]=      "set_sta_deauth_message_report_switch";
 char  WID_DBUS_WTP_METHOD_SET_WTP_STA_ALL_FLOW_INFORMATION_REPORT_SWITCH[PATH_LEN]=	"set_sta_all_flow_information_report_switch";
@@ -567,6 +587,7 @@ char WID_DBUS_CONF_METHOD_SET_WID_AC_EXTENTION_INFOR_ENABLE[PATH_LEN] = "set_ac_
 char WID_DBUS_CONF_METHOD_SET_WID_AP_MAX_THROUGHOUT[PATH_LEN]=	"set_ap_max_thoughout";
 
 char WID_DBUS_CONF_METHOD_SET_WID_AP_EXTENSION_COMMAND[PATH_LEN]=	"set_ap_extension_command";
+char WID_DBUS_CONF_METHOD_SET_WID_AP_LONGITUDE_LATITUDE_COMMAND[PATH_LEN] =	"set_ap_longitude_latitude_command";
 char WID_DBUS_CONF_METHOD_SET_WID_AP_OPTION60_PARAMETER[PATH_LEN] =  "set_ap_special_command";
 char WID_DBUS_CONF_METHOD_SET_WID_AP_IP_GATEWAY[PATH_LEN]= "set_ap_ipaddr_command_cmdset_ap_ipaddr_command_cmd";
 char WID_DBUS_CONF_METHOD_TCPDUMP_AP_EXTENSION_COMMAND[PATH_LEN]="tcpdump";
@@ -586,6 +607,11 @@ char WID_DBUS_TRAP_WID_WTP_UPDATE_FAIL[PATH_LEN]=    "wid_wtp_update_fail";  /*f
 char WID_DBUS_TRAP_WID_WTP_CODE_START[PATH_LEN]=		"wid_dbus_trap_wtp_code_start";
 char WID_DBUS_TRAP_WID_WTP_ELECTRIFY_REGISTER_CIRCLE[PATH_LEN]=		"wid_dbus_trap_wtp_electrify_register_circle";
 char WID_DBUS_TRAP_WID_WTP_AP_DOWN[PATH_LEN]=		"wid_dbus_trap_wtp_ap_power_off";
+char WID_DBUS_TRAP_WID_WTP_STA_UNAUTHORIZED_MAC[PATH_LEN]=	"wid_dbus_trap_wtp_sta_unauthroized_mac";
+char WID_DBUS_TRAP_WID_WTP_CONFIGURE_ERROR[PATH_LEN]=		"wid_dbus_trap_wtp_configure_error";
+char WID_DBUS_TRAP_WID_WTP_STA_FLOW_RX_TX_OVERFLOW[PATH_LEN]=	"wid_dbus_trap_sta_flow_rx_tx_overflow";
+char WID_DBUS_TRAP_WID_WTP_STA_ONLINE_FULL[PATH_LEN]=		"wid_dbus_trap_wtp_sta_online_full";
+
 char WID_DBUS_TRAP_WID_WTP_AP_REBOOT[PATH_LEN]=		"wid_dbus_trap_wtp_ap_reboot";
 char WID_DBUS_TRAP_WID_WTP_IP_CHANGE_ALARM[PATH_LEN]=		"wid_dbus_trap_wtp_ip_change_alarm";
 char WID_DBUS_TRAP_WID_WTP_ACTIMESYNCHROFAILURE[PATH_LEN]=		"wid_dbus_trap_wtp_ap_ACTimeSynchroFailure";

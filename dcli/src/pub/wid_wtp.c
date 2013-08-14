@@ -4640,6 +4640,9 @@ void dcli_free_WtpBasicInfo(struct WtpBasicInfo *WtpNode)
 		DCLI_FORMIB_FREE_OBJECT(tmp->wtpDevName);
 		DCLI_FORMIB_FREE_OBJECT(tmp->wtpModel);
 		DCLI_FORMIB_FREE_OBJECT(tmp->wtpSysSoftProductor);
+		DCLI_FORMIB_FREE_OBJECT(tmp->longitude);
+		DCLI_FORMIB_FREE_OBJECT(tmp->latitude);
+		DCLI_FORMIB_FREE_OBJECT(tmp->manufacture_date);
 		tmp->next = NULL;
 		free(tmp);
 		tmp = NULL;
@@ -7042,6 +7045,9 @@ struct WtpBasicInfo* show_basic_info_of_all_wtp(int index,int localid,DBusConnec
 	char *wtpDevName = NULL;
 	char * wtpModel = NULL;
 	char *wtpSysSoftProductor = NULL;
+	char *longitude = NULL;
+	char *latitude = NULL;
+	char *manufacture_date = NULL;
 	
 	char BUSNAME[PATH_LEN];
 	char OBJPATH[PATH_LEN];
@@ -7057,8 +7063,14 @@ struct WtpBasicInfo* show_basic_info_of_all_wtp(int index,int localid,DBusConnec
 	dbus_message_unref(query);
 	
 	if (NULL == reply) {
+		printf("<error> failed get reply.\n");
+			
+		if (dbus_error_is_set(&err)) 
+		{
+			printf("%s raised: %s",err.name,err.message);
+			dbus_error_free_for_dcli(&err);
+		}
 		*ret = WID_DBUS_ERROR;
-		dbus_error_free_for_dcli(&err);
 
 		return NULL;
 	}
@@ -7165,6 +7177,24 @@ struct WtpBasicInfo* show_basic_info_of_all_wtp(int index,int localid,DBusConnec
 				dbus_message_iter_next(&iter_struct);	
 				dbus_message_iter_get_basic(&iter_struct,&(WtpNode->wtpMacAddr[5]));
 
+				dbus_message_iter_next(&iter_struct);
+				dbus_message_iter_get_basic(&iter_struct, &(longitude));
+				//fprintf(stderr, "bbbbbbb  longitude=%s\n", longitude);
+				
+				dbus_message_iter_next(&iter_struct);
+				dbus_message_iter_get_basic(&iter_struct, &(latitude));
+				//fprintf(stderr, "bbbbbbb  latitude=%s\n", latitude);
+				
+				dbus_message_iter_next(&iter_struct);
+				dbus_message_iter_get_basic(&iter_struct, &(WtpNode->power_mode));
+
+				dbus_message_iter_next(&iter_struct);
+				dbus_message_iter_get_basic(&iter_struct, &(manufacture_date));
+				//fprintf(stderr,"bbbbbbb  manufacture_date=%s\n", manufacture_date);
+				
+				dbus_message_iter_next(&iter_struct);
+				dbus_message_iter_get_basic(&iter_struct, &(WtpNode->forward_mode));
+
 				if(WtpNode->wtpOnlineTime == 0)
 					WtpNode->wtpUpTime =0;
 				else 
@@ -7228,6 +7258,19 @@ struct WtpBasicInfo* show_basic_info_of_all_wtp(int index,int localid,DBusConnec
 				memset(WtpNode->wtpDevTypeNum, 0, strlen(WtpNode->wtpModel)+1);
 				memcpy(WtpNode->wtpDevTypeNum, WtpNode->wtpModel, strlen(WtpNode->wtpModel));		
 
+				WtpNode->longitude = (char *)malloc(strlen(longitude)+1);
+				memset(WtpNode->longitude, '\0', strlen(longitude)+1);
+				memcpy(WtpNode->longitude, longitude, strlen(longitude));
+
+				WtpNode->latitude = (char *)malloc(strlen(latitude)+1);
+				memset(WtpNode->latitude, '\0', strlen(latitude)+1);
+				memcpy(WtpNode->latitude, latitude, strlen(latitude));
+
+				WtpNode->manufacture_date = (char *)malloc(strlen(manufacture_date)+1);
+				memset(WtpNode->manufacture_date, 0, strlen(manufacture_date)+1);
+				memcpy(WtpNode->manufacture_date, manufacture_date, strlen(manufacture_date));
+
+								
 				dbus_message_iter_next(&iter_array);
 	
 			}
@@ -11480,6 +11523,20 @@ struct WtpConfigRadioInfo * show_WtpConfigRadioInfo_of_all_wtp(int index,int loc
 					dbus_message_iter_next(&iter_sub_sub_sub_array);
 				}
 
+				dbus_message_iter_next(&iter_sub_struct);
+				dbus_message_iter_get_basic(&iter_sub_struct, &(sub_radio_node->radio_work_role));
+
+				dbus_message_iter_next(&iter_sub_struct);
+				dbus_message_iter_get_basic(&iter_sub_struct, &(sub_radio_node->radio_channel_use_rate));
+
+				dbus_message_iter_next(&iter_sub_struct);
+				dbus_message_iter_get_basic(&iter_sub_struct, &(sub_radio_node->radio_channel_change_counter));
+
+				dbus_message_iter_next(&iter_sub_struct);
+				dbus_message_iter_get_basic(&iter_sub_struct, &(sub_radio_node->radio_channel_width));
+
+				dbus_message_iter_next(&iter_sub_struct);
+				dbus_message_iter_get_basic(&iter_sub_struct, &(sub_radio_node->radio_noise));
 				
 				dbus_message_iter_next(&iter_sub_array);
 			}

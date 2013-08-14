@@ -616,6 +616,22 @@ CWBool CWAssembleMsgElemAP_NTP_Set(CWProtocolMessage *msgPtr,unsigned wtpid)
 
 }
 
+
+CWBool CWAssembleMsgElemAPConfigureErrorSet(CWProtocolMessage *msgPtr,int wtpid)
+{
+	wid_syslog_debug_debug(WID_WTPINFO,"#### CWAssembleMsgElemAPConfigureErrorSet ####\n");
+	
+	return capwap_comm_switch_interval_assemble(msgPtr, wtpid, WTP_CONFIGURE_ERROR_REPROT);
+}
+
+
+CWBool CWAssembleMsgElemAPUnauthorizedMacSet(CWProtocolMessage *msgPtr,int wtpid)
+{
+	wid_syslog_debug_debug(WID_WTPINFO,"#### CWAssembleMsgElemAPUnauthorizedMacSet ####\n");
+	
+	return capwap_comm_switch_interval_assemble(msgPtr, wtpid, WTP_UNAUTHORIZED_MAC_REPORT);
+}
+
 /*zhaoruijia,20100904,transplant ACTIMESYNCHROFAILURE from 1.2omc to 1.3,end*/
 
 CWBool CWAssembleMsgElemAPThroughoutSet(CWProtocolMessage *msgPtr,int wtpid)
@@ -724,6 +740,41 @@ CWBool CWAssembleMsgElemAPFlowCheck(CWProtocolMessage *msgPtr,unsigned char radi
 	return CWAssembleMsgElem(msgPtr, CW_MSG_ELEMENT_VENDOR_SPEC_PAYLOAD_CW_TYPE);
 
 }
+
+
+CWBool CWAssembleMsgElemAPLongitudeLatitude(CWProtocolMessage *msgPtr, unsigned char *longitude, unsigned char*latitude)
+{
+	
+	char  value=18; 
+	char  length = 0;
+	char longitude_len = 0;
+	char latitude_len = 0;
+	longitude_len = strlen((char *)longitude);
+	latitude_len =  strlen((char *)latitude);
+	length = 4+longitude_len+latitude_len;
+	if(msgPtr == NULL) return CWErrorRaise(CW_ERROR_WRONG_ARG, NULL);
+
+	CW_CREATE_PROTOCOL_MESSAGE(*msgPtr, length, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
+	
+	CWProtocolStore8(msgPtr, value); 
+	CWProtocolStore8(msgPtr, (length-4));
+	CWProtocolStore8(msgPtr, longitude_len); 
+	CWProtocolStoreStr(msgPtr,(char *)longitude);
+	CWProtocolStore8(msgPtr, latitude_len); 
+	CWProtocolStoreStr(msgPtr,(char *)latitude);
+	
+	wid_syslog_debug_debug(WID_DEFAULT,"value = %d\n",value);
+	wid_syslog_debug_debug(WID_DEFAULT,"length = %d\n",(length-4));
+	wid_syslog_debug_debug(WID_DEFAULT,"name_length = %d\n",longitude_len);
+	wid_syslog_debug_debug(WID_DEFAULT,"username = %s\n",longitude);
+	wid_syslog_debug_debug(WID_DEFAULT,"passwd_length = %d\n",latitude_len);
+	wid_syslog_debug_debug(WID_DEFAULT,"password = %s\n",latitude);
+		
+	return CWAssembleMsgElem(msgPtr, CW_MSG_ELEMENT_VENDOR_SPEC_PAYLOAD_CW_TYPE);
+
+}
+
+
 CWBool CWAssembleMsgElemAPPasswd(CWProtocolMessage *msgPtr,char *username,char*password)
 {
 	
@@ -955,6 +1006,60 @@ CWBool  CWAssemblewtpextensioninfomation(CWProtocolMessage *msgPtr,int wtpid)
 	return CWAssembleMsgElem(msgPtr, CW_MSG_ELEMENT_VENDOR_SPEC_PAYLOAD_CW_TYPE);
 
 }
+
+CWBool  capwap_comm_switch_interval_assemble(CWProtocolMessage *msgPtr,int wtpid, unsigned char type)
+{
+	wid_syslog_debug_debug(WID_WTPINFO,"#### CWAssemblewtpextensioninfomation ####\n");
+	
+	unsigned char valuelen = 4; //
+	unsigned char value = 19;
+	unsigned char flag = 0;
+	unsigned short interval = 0;
+	unsigned char sub_type = 0;
+	if(msgPtr == NULL) return CWErrorRaise(CW_ERROR_WRONG_ARG, NULL);
+	
+	switch(type) {
+		case WTP_UNAUTHORIZED_MAC_REPORT:
+			flag = AC_WTP[wtpid]->unauthorized_mac_reportswitch;
+			interval = AC_WTP[wtpid]->unauthorized_mac_reportinterval;
+			sub_type = 0;
+			break;
+		case WTP_CONFIGURE_ERROR_REPROT:
+			flag = AC_WTP[wtpid]->wtp_configure_error_reportswitch;
+			interval = AC_WTP[wtpid]->wtp_configure_error_reportinterval;
+			sub_type = 1;
+			break;
+		case WTP_STA_FLOW_OVERFLOW_RX_REPORT:
+			flag = AC_WTP[wtpid]->sta_flow_overflow_rx_reportswitch;
+			interval = AC_WTP[wtpid]->sta_flow_overflow_rx_reportinterval;
+			sub_type = 2;
+			break;
+		case WTP_STA_FLOW_OVERFLOW_TX_REPROT:
+			flag = AC_WTP[wtpid]->sta_flow_overflow_tx_reportswitch;
+			interval = AC_WTP[wtpid]->sta_flow_overflow_tx_reportinterval;
+			sub_type = 3;
+			break;
+		case WTP_STA_ONLINE_FULL_REPROT:
+			flag = AC_WTP[wtpid]->sta_online_full_reportswitch;
+			interval = AC_WTP[wtpid]->sta_online_full_reportinterval;
+			sub_type = 4;
+			break;
+		default  :
+			
+			break;
+	}
+
+	// create message
+	CW_CREATE_PROTOCOL_MESSAGE(*msgPtr, valuelen, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
+	
+	CWProtocolStore8(msgPtr, value);
+	CWProtocolStore8(msgPtr, sub_type);
+	CWProtocolStore8(msgPtr, flag);
+	CWProtocolStore16(msgPtr, interval);
+	return CWAssembleMsgElem(msgPtr, CW_MSG_ELEMENT_VENDOR_SPEC_PAYLOAD_CW_TYPE);
+
+}
+
 CWBool  CWAssemblewtpstainfomationreport(CWProtocolMessage *msgPtr,int wtpid)
 {
 	wid_syslog_debug_debug(WID_WTPINFO,"#### CWAssemblewtpstainfomationreport ####\n");
@@ -1547,6 +1652,7 @@ CWBool CWParseMsgElemAPInterfaceInfo(CWProtocolMessage *msgPtr, int len, wid_sam
 	CWParseMessageElementEnd(); 
 
 }
+extern int wid_dbus_trap_sta_overflow(int wtpindex, unsigned char *sta_mac, unsigned char is_rx_tx, unsigned long sta_flow);
 CWBool CWParseMsgElemAPStaInfoReport(CWProtocolMessage *msgPtr, int len, WIDStationInfo *valPtr,int wtpindex)
 {
 	wid_syslog_debug_debug(WID_WTPINFO,"*** CWParseMsgElemAPStaInfoReport ***\n");
@@ -1611,10 +1717,17 @@ CWBool CWParseMsgElemAPStaInfoReport(CWProtocolMessage *msgPtr, int len, WIDStat
         if((len-1)/count > 23){
             CWProtocolRetrieve64(msgPtr, &valPtr1[i].rx_data_bytes);
             //wid_syslog_debug_debug(WID_DEFAULT,"rx_data_bytes %llu\n",valPtr->rx_data_bytes);
-
+            // TODO:.............................(int wtpindex, unsigned char *sta_mac, unsigned char is_rx_tx, unsigned long sta_flow)
+            if (g_sta_flow_rx_overflow_trap_switch) {
+				wid_syslog_debug_debug(WID_WTPINFO, "rx trap\n");
+				wid_dbus_trap_sta_overflow(wtpindex, valPtr1[i].mac, 1, valPtr1[i].rx_data_bytes);
+            }
 			CWProtocolRetrieve64(msgPtr, &valPtr1[i].tx_data_bytes);
 			//wid_syslog_debug_debug(WID_DEFAULT,"tx_data_bytes %llu\n",valPtr->tx_data_bytes);
-
+			if (g_sta_flow_tx_overflow_trap_switch) {
+				wid_syslog_debug_debug(WID_WTPINFO, "tx trap\n");
+				wid_dbus_trap_sta_overflow(wtpindex, valPtr1[i].mac, 0, valPtr1[i].tx_data_bytes);
+			}
 			valPtr1[i].rx_data_frames = CWProtocolRetrieve32(msgPtr);
 			//wid_syslog_debug_debug(WID_DEFAULT,"rx_data_frames %d\n",valPtr->rx_data_frames);
 
@@ -1744,7 +1857,7 @@ CWBool CWParseMsgElemAPIfInfoReport(CWProtocolMessage *msgPtr, int len, wid_ap_i
 	CWParseMessageElementEnd(); 
 }	
 
-CWBool CWParseMsgElemAPExtensionInfo(CWProtocolMessage *msgPtr, int len, wid_wifi_info *valPtr)
+CWBool CWParseMsgElemAPExtensionInfo(CWProtocolMessage *msgPtr, int len, wid_wifi_info *valPtr, int wtpindex)
 {
 	wid_syslog_debug_debug(WID_WTPINFO,"*** CWParseMsgElemAPExtensionInfo ***\n");
 	wid_syslog_debug_debug(WID_WTPINFO,"*** len:%d ***\n",len);
@@ -1853,6 +1966,7 @@ CWBool CWParseMsgElemAPExtensionInfo(CWProtocolMessage *msgPtr, int len, wid_wif
 		valPtr->wifi_state[num] = CWProtocolRetrieve8(msgPtr);
 		wid_syslog_debug_debug(WID_WTPINFO,"num %d valPtr->wifi_state %d\n",num,valPtr->wifi_state[num]);
 	}
+#if 0
 	/*fengwenchao add 20120314 for onlinebug-162*///qiuchen copy from v1.3
 	if((msgPtr->offset - start)<len)
 	{
@@ -1883,6 +1997,29 @@ CWBool CWParseMsgElemAPExtensionInfo(CWProtocolMessage *msgPtr, int len, wid_wif
 			wid_syslog_debug_debug(WID_WTPINFO,"CWParseMsgElemAPExtensionInfo not receiv %d wifi_noise_new	%d\n",i,valPtr->wifi_noise_new[i]);
 		}
 	}
+#endif
+	if((msgPtr->offset - start)<len) {
+		
+		for (i=0; i<valPtr->wifi_count; i++) {
+			valPtr->radio_channel_use_rate[i] = CWProtocolRetrieve8(msgPtr);
+			wid_syslog_debug_debug(WID_WTPINFO, "radio %d RCUP=%u\n",
+				i, valPtr->radio_channel_use_rate[i]);
+		}
+		
+		for (i=0; i<valPtr->wifi_count; i++) {
+			valPtr->radio_channel_change_counter[i] = CWProtocolRetrieve32(msgPtr);
+			wid_syslog_debug_debug(WID_WTPINFO, "radio %d RCCC=%u\n",
+				i, valPtr->radio_channel_change_counter[i]);
+		}
+	} else {
+		wid_syslog_debug_debug(WID_WTPINFO, "CWParseMsgElemAPExtensionInfo no RCUR and RCCC included from wtp %d\n",
+			wtpindex);
+		for (i=0; i<valPtr->wifi_count; i++) {
+			valPtr->radio_channel_use_rate[i] = 0;
+			valPtr->radio_channel_change_counter[i] = 0;
+		}
+	}
+	
 	/*fengwenchao add end*/
 	/*
 	printf("cpu %d\n",valPtr->cpu);
@@ -3479,6 +3616,129 @@ CWBool CWPareseWtp_Sta_leave_Report(CWProtocolMessage *msgPtr, int len, WIDStati
 	}	
 	WidAsd_StationLeaveReport(wtpindex,sta_count,valPtr1);
 	CWParseMessageElementEnd(); 
+}
+
+extern int wid_dbus_trap_sta_unauthorized_mac(int wtpindex, int mac_count, unsigned char *mac_str);
+extern int wid_dbus_trap_configure_error(int wtpindex, unsigned char err_code);
+
+CWBool CWParseWTPTrapInfo(CWProtocolMessage *msgPtr, int len, int wtpindex) {
+	unsigned char temp_var, i;
+	int oldOffset;
+	oldOffset = msgPtr->offset;
+	//get subtype
+	temp_var = CWProtocolRetrieve8(msgPtr);
+	wid_syslog_debug_debug(WID_DEFAULT, "hxf sub type is %u\n", temp_var);
+	switch (temp_var) {
+		case 1:
+			//get sta count
+			temp_var = CWProtocolRetrieve8(msgPtr);
+			wid_syslog_debug_debug(WID_DEFAULT, "sta mac count is %u from wtp %d\n", temp_var, wtpindex);
+			if (temp_var == 0) {
+				wid_syslog_notice("report unauthorized mac count is zero,return\n");
+				break;
+			}
+			unsigned char *sta_mac;
+			
+			wid_syslog_debug_debug(WID_DEFAULT,"111111111\n");
+			sta_mac = (unsigned char *)CWProtocolRetrieveStr(msgPtr, temp_var*6);
+			wid_syslog_debug_debug(WID_DEFAULT,"22222222222\n");
+
+			///wid_syslog_debug_debug(WID_DEFAULT, "hxf sta macs:%s\n", sta_mac);
+			
+			for (i=0; i<temp_var; i++) {
+				wid_syslog_debug_debug(WID_DEFAULT, "sta %d mac: %02X:%02X:%02X:%02X:%02X:%02X\n", i+1, 
+					sta_mac[i*6+0],sta_mac[i*6+1],sta_mac[i*6+2],sta_mac[i*6+3],sta_mac[i*6+4],sta_mac[i*6+5]);
+			}
+			//trap to snmp
+			//if (gtrapflag >= 1) {
+				if (AC_WTP[wtpindex]->unauthorized_mac_reportswitch == 1) {
+					if (wid_dbus_trap_sta_unauthorized_mac(wtpindex, temp_var, sta_mac)) {
+						wid_syslog_err("trap for wtp %d unauthorized mac report failed\n", wtpindex);
+					}
+				}
+			//}
+			free(sta_mac);
+			break;
+		case 2:
+			temp_var = CWProtocolRetrieve8(msgPtr);
+			wid_syslog_debug_debug(WID_DEFAULT, "wtp %d configure file error, error code is %u\n",wtpindex, temp_var);
+			if (gtrapflag >= 1) {
+				if (AC_WTP[wtpindex]->wtp_configure_error_reportswitch == 1) {
+					if (wid_dbus_trap_configure_error(wtpindex, temp_var)) {
+						wid_syslog_err("trap for wtp %d configure file error report failed\n", wtpindex);
+					}
+				}
+			}
+			break;
+		default:
+			break;
+	}
+	CWParseMessageElementEnd();
+}
+
+CWBool CWParseWTPEtendinfo(CWProtocolMessage *msgPtr, int len, CWWtpExtendinfo *valPtr, int wtpindex)
+{
+	unsigned char temp_var, i;
+	CWParseMessageElementStart();
+	
+	if (wtpindex >= WTP_NUM) {
+		wid_syslog_notice_local7("parsewtpextendinfo for wtp %d faild\n");
+		return CW_FALSE;
+	}
+	
+	//get longitude len
+	temp_var = CWProtocolRetrieve8(msgPtr);
+	wid_syslog_debug_debug(WID_DEFAULT, "temp_var = %u  %d\n", temp_var, __LINE__);
+	//get longitude value
+	if (temp_var > LONGITUDE_LATITUDE_MAX_LEN) {
+		wid_syslog_notice_local7("wtp %d longitude len=%u is longer than %u\n", wtpindex, temp_var, LONGITUDE_LATITUDE_MAX_LEN);
+		strncpy((char *)valPtr->longitude, CWProtocolRetrieveStr(msgPtr, temp_var), LONGITUDE_LATITUDE_MAX_LEN);
+	} else {
+		strncpy((char *)valPtr->longitude, CWProtocolRetrieveStr(msgPtr, temp_var), temp_var);
+		wid_syslog_debug_debug(WID_DEFAULT, "valPtr->longitude = %s  %d\n", valPtr->longitude, __LINE__);
+	}
+
+	//get latitude len
+	temp_var = CWProtocolRetrieve8(msgPtr);
+	wid_syslog_debug_debug(WID_DEFAULT, "temp_var = %u  %d\n", temp_var, __LINE__);
+	//get latitude value
+	if (temp_var > LONGITUDE_LATITUDE_MAX_LEN) {
+		wid_syslog_notice_local7("wtp %d laitude len=%u is longer than %u\n", wtpindex, temp_var, LONGITUDE_LATITUDE_MAX_LEN);
+		strncpy((char *)valPtr->latitude, CWProtocolRetrieveStr(msgPtr, temp_var), LONGITUDE_LATITUDE_MAX_LEN);
+	} else {
+		strncpy((char *)valPtr->latitude, CWProtocolRetrieveStr(msgPtr, temp_var), temp_var);
+		wid_syslog_debug_debug(WID_DEFAULT, "valPtr->longitude = %s  %d\n", valPtr->longitude, __LINE__);
+	}
+
+	//get power type
+	valPtr->power_mode = CWProtocolRetrieve8(msgPtr) + 1;
+
+	//get manufacture date len
+	temp_var = CWProtocolRetrieve8(msgPtr);
+	//get manufacture date value
+	if (temp_var > MANUFACTURE_DATA_MAX_LEN) {
+		wid_syslog_notice_local7("wtp %d manufacture len=%u is longer than %u\n", wtpindex, temp_var, MANUFACTURE_DATA_MAX_LEN);
+		strncpy((char *)valPtr->manufacture_date, CWProtocolRetrieveStr(msgPtr, temp_var), MANUFACTURE_DATA_MAX_LEN);
+	} else {
+		strncpy((char *)valPtr->manufacture_date, CWProtocolRetrieveStr(msgPtr, temp_var), temp_var);
+	}
+
+	//get forward mode type
+	valPtr->forward_mode = CWProtocolRetrieve8(msgPtr) + 1;
+
+	//get radio count
+	temp_var = CWProtocolRetrieve8(msgPtr);
+	if (temp_var > L_RADIO_NUM) {
+		wid_syslog_notice_local7("wtp %d radio count =%u is more than %u\n", wtpindex, temp_var, L_RADIO_NUM);
+	}
+
+	valPtr->radio_count = (temp_var > AC_WTP[wtpindex]->RadioCount ? AC_WTP[wtpindex]->RadioCount : temp_var);
+	
+	//get every radio work role
+	for (i=0; i<(temp_var > L_RADIO_NUM ? L_RADIO_NUM : temp_var); i++) {
+		valPtr->radio_work_role[i] = CWProtocolRetrieve8(msgPtr);
+	}
+	CWParseMessageElementEnd();
 }
 
 CWBool CWParaseWTPTerminalStatistics(

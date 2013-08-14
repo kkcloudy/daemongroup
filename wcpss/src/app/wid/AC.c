@@ -149,6 +149,29 @@ int gCOUNTRYCODE = COUNTRY_CHINA_CN;//wuwl change default country code to CN
 
 int gINFOREPORTSWITCH = 0;/*wcl add for globle variable*/
 unsigned short gWIFIEXTENSIONREPORTINTERVAL = 1800;/*wcl add for globle variable*/
+
+unsigned short g_unauthorized_mac_interval = 1800;
+unsigned char  g_unauthorized_mac_switch = 0;
+
+unsigned short g_configure_error_interval = 1800;
+unsigned char  g_configure_error_switch = 0;
+
+unsigned char  g_online_sta_full_switch = 0;
+unsigned short g_online_sta_full_interval = 1800;
+
+unsigned char  g_sta_flow_rx_overflow_switch = 0;
+unsigned short g_sta_flow_rx_overflow_interval = 1800;
+unsigned int g_sta_flow_rx_overflow_threshold = (1024*1024);
+
+unsigned char g_sta_flow_rx_overflow_trap_switch = 0;
+unsigned char g_sta_flow_tx_overflow_trap_switch = 0;
+
+
+unsigned char  g_sta_flow_tx_overflow_switch = 0;
+unsigned short g_sta_flow_tx_overflow_interval = 1800;
+unsigned int g_sta_flow_tx_overflow_threshold = (1024*1024);
+
+
 unsigned short gINFOREPORTINTERVAL = 1800;/*wcl add for globle variable*/
 int gSTAINFOREPORT = 0; /*wcl add for globle variable*/
 int gSTAREPORTSWITCH = 0; /*wcl add for globle variable*/

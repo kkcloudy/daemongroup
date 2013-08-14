@@ -31,6 +31,11 @@ struct WtpBasicInfo{
     struct WtpBasicInfo *next;
     struct WtpBasicInfo *WtpBasicInfo_list;
     struct WtpBasicInfo *WtpBasicInfo_last;
+	unsigned char *longitude;
+	unsigned char *latitude;
+	unsigned char power_mode;
+	unsigned char *manufacture_date;
+	unsigned char forward_mode;
 };
 /*for mib showting wtp collect infromation*/
 struct WtpCollectInfo{
@@ -712,8 +717,12 @@ struct Sub_WtpConfigRadioInfo{
 	struct Sub_WtpConfigRadioInfo *next;
 	struct Sub_WtpConfigRadioInfo * Sub_WtpConfigRadioInfo_list;
 	struct Sub_WtpConfigRadioInfo * Sub_WtpConfigRadioInfo_last;
-
-
+	u_int8_t	radio_work_role;
+	unsigned char radio_channel_use_rate;
+	unsigned int radio_channel_change_counter;
+	
+	unsigned int radio_channel_width;
+	int radio_noise;
 };
 /*16*/
 struct WtpConfigRadioInfo {

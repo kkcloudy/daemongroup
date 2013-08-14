@@ -44,6 +44,8 @@
 #define GROUP_NUM	4
 #define STA_HASH_SIZE 256
 #define WTP_GROUP_NUM		16
+#define LONGITUDE_LATITUDE_MAX_LEN	16
+#define MANUFACTURE_DATA_MAX_LEN	32
 
 #define AP_ETH_IF_NUM		2
 #define AP_WIFI_IF_NUM		2
@@ -235,6 +237,8 @@ struct wifi_info{
   unsigned short wifi_noise_new[L_RADIO_NUM];
   /*fengwenchao add end*/
   //qiuchen copy end
+  unsigned char radio_channel_use_rate[L_RADIO_NUM];
+  unsigned int radio_channel_change_counter[L_RADIO_NUM];
 } ;
 typedef struct wifi_info wid_wifi_info;
 

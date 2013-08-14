@@ -541,6 +541,41 @@ typedef struct
 	
 } APScanningSetting;
 
+
+#define 	UNKNOWN_MAC_TRAP_SWITCH_DISABLE		0
+#define 	UNKNOWN_MAC_TRAP_SWITCH_ENABLE		1
+#define 	UNKNOWN_MAC_TRAP_INTERVAL_DEFAULT	1800
+
+#define 	AP_CONFIG_FILE_ERR_TRAP_SWITCH_DISABLE	0
+#define 	AP_CONFIG_FILE_ERR_TRAP_SWITCH_ENABLE	1
+#define 	AP_CONFIG_FILE_ERR_TRAP_SWITCH_INTERVAL_DEFAULT	1800
+
+#define		STA_FLOW_OVERFLOW_TRAP_RX_SWITCH_DISABLE	0
+#define		STA_FLOW_OVERFLOW_TRAP_RX_SWITCH_ENABLE	1
+#define		STA_FLOW_OVERFLOW_RX_THRESHOLD			(2*1024*1024)
+
+#define		STA_FLOW_OVERFLOW_TRAP_TX_SWITCH_DISABLE	0
+#define		STA_FLOW_OVERFLOW_TRAP_TX_SWITCH_ENABLE	1
+#define		STA_FLOW_OVERFLOW_TX_THRESHOLD			(1*1024*1024)
+
+
+#define		ONLINE_STA_FULL_TRAP_SWITCH_DISABLE		0
+#define		ONLINE_STA_FULL_TRAP_SWITCH_ENABLE		1
+#define		ONLINE_STA_THREASHOLD					128
+
+typedef struct {
+	unsigned char unknown_mac_trap_switch;			//0 disable ; 1 enable
+	unsigned int unknown_mac_trap_interval;			//ap report to ac interval
+	unsigned char ap_config_file_err_trap_switch;	//0 disable; 1 enable
+	unsigned int ap_config_file_err_trap_interval;	//ap report to ac interval
+	unsigned char sta_flow_overflow_trap_switch;	//0 disable; 1 enable
+	unsigned long sta_flow_overflow_rx_threshold;	//0 not limit; other value means limit value
+	unsigned long sta_flow_overflow_tx_threshold;	//0 not limit; other value means limit value
+	unsigned char online_sta_full_trap_switch;		//0 disable; 1 enable
+	unsigned short online_sta_threshold;			//max allow count
+}ap_trap_type_s;
+
+
 struct  wlan_stats_info_profile{
 	unsigned char type;  /*0-ath, 1-eth, 2-wifi*/  
 	unsigned char ifname[16];
@@ -698,7 +733,8 @@ typedef struct web_manager_stats_s{
 /* Huangleilei add end */
 
 /*added end*/
-typedef struct{     
+typedef struct{
+	unsigned int sta_count;
 	unsigned char radioId;
 	unsigned char wlanId;
 	unsigned char mac[6];
@@ -730,6 +766,17 @@ typedef struct{
 	unsigned int MAXofRateset;	/* 终端与AP刚关联时根据双方能力而协商的无线速率集中的最高速率 */
 	struct WID_WTP_STA_INFO wtp_sta_statistics_info;
 } WIDStationInfo;
+
+typedef struct {
+	unsigned char longitude[LONGITUDE_LATITUDE_MAX_LEN];
+	unsigned char latitude[LONGITUDE_LATITUDE_MAX_LEN];
+	unsigned char power_mode;
+	unsigned char manufacture_date[MANUFACTURE_DATA_MAX_LEN];
+	unsigned char forward_mode;
+	unsigned char radio_work_role[L_RADIO_NUM];
+	unsigned char radio_count;
+}CWWtpExtendinfo;
+
 
 typedef struct {
 	u_int32_t CMD;
@@ -977,6 +1024,11 @@ struct radio{
 	unsigned char radio_disable_flag;  /*fengwenchao add 20110920 for radio disable config save flag*/
 	char mcs_list[L_BSS_NUM];/*fengwenchao add 20120314 for requirements-407*/
 	int mcs_count;/*fengwenchao add 20120314 for requirements-407*/
+	u_int8_t	radio_work_role;
+	unsigned char radio_channel_use_rate;
+	unsigned int radio_channel_change_counter;
+	unsigned int radio_channel_width;
+	int radio_noise;
 };
 typedef struct radio WID_WTP_RADIO;
 struct wtp_extend {
@@ -1184,6 +1236,30 @@ struct wtp{
 	struct heart_time heart_time;   /*fengwenchao add 20111117 for GM-3*/
 	unsigned int radio_5g_sw;
 	char master_to_disable;//qiuchen add it
+
+	unsigned char longitude[LONGITUDE_LATITUDE_MAX_LEN];
+	unsigned char latitude[LONGITUDE_LATITUDE_MAX_LEN];
+	unsigned char power_mode;
+	unsigned char manufacture_date[MANUFACTURE_DATA_MAX_LEN];
+	unsigned char forward_mode;
+	unsigned char radio_work_role;
+		
+	unsigned char unauthorized_mac_reportswitch;
+	unsigned short unauthorized_mac_reportinterval;
+
+	unsigned char wtp_configure_error_reportswitch;
+	unsigned short wtp_configure_error_reportinterval;
+
+	unsigned char sta_flow_overflow_rx_reportswitch;
+	unsigned short sta_flow_overflow_rx_reportinterval;
+	unsigned int sta_flow_overflow_rx_threshold;
+	
+	unsigned char sta_flow_overflow_tx_reportswitch;
+	unsigned short sta_flow_overflow_tx_reportinterval;
+	unsigned int sta_flow_overflow_tx_threshold;
+
+	unsigned char sta_online_full_reportswitch;
+	unsigned short sta_online_full_reportinterval;
 };
 typedef struct wtp WID_WTP;
 

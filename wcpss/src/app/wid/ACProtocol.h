@@ -160,6 +160,7 @@ typedef struct{
 	wid_wids_device *wids_device_infos;
 	CWStationReportInfo *ApReportStaInfo;
 	WIDStaWapiInfoList *wid_sta_wapi_infos;
+	CWWtpExtendinfo *wtp_extend_info;
 } CWProtocolWTPEventRequestValues;
 
 
@@ -184,6 +185,10 @@ CWBool CWAssembleMsgElemAPThroughoutSet(CWProtocolMessage *msgPtr,int wtpid);
 
 CWBool CWAssembleMsgElemAPExtensinCommandSet(CWProtocolMessage *msgPtr, int wtpid,char *command);
 CWBool CWAssembleMsgElemAPOption60ParameterSet(CWProtocolMessage *msgPtr, int wtpid,char *command);
+CWBool CWAssembleMsgElemAPLongitudeLatitude(CWProtocolMessage *msgPtr, unsigned char *longitude, unsigned char*latitude);
+CWBool CWAssembleMsgElemAPConfigureErrorSet(CWProtocolMessage *msgPtr,int wtpid);
+CWBool CWAssembleMsgElemAPUnauthorizedMacSet(CWProtocolMessage *msgPtr,int wtpid);
+
 
 CWBool  CWAssembleStaticAPIP(CWProtocolMessage *msgPtr,int wtpid);
 CWBool CWAssembleMsgElemAPInterfaceInfo(CWProtocolMessage *msgPtr);
@@ -219,7 +224,7 @@ CWBool CWParseMsgElemDuplicateIPv6Address(CWProtocolMessage *msgPtr, int len, WT
 CWBool CWParseMsgElemCWStationInfoValue(CWProtocolMessage *msgPtr, int len, CWStationInfoValues *valPtr);
 CWBool CWParseMsgElemAPNeighborAPInfos(CWProtocolMessage *msgPtr, int len, Neighbor_AP_INFOS *valPtr);
 CWBool CWParseMsgElemAPWidsInfos(CWProtocolMessage *msgPtr, int len, wid_wids_device *valPtr,int wtpindex);
-CWBool CWParseMsgElemAPExtensionInfo(CWProtocolMessage *msgPtr, int len, wid_wifi_info *valPtr);
+CWBool CWParseMsgElemAPExtensionInfo(CWProtocolMessage *msgPtr, int len, wid_wifi_info *valPtr, int wtpindex);
 CWBool CWParseMsgElemAPStaInfoReport(CWProtocolMessage * msgPtr,int len,WIDStationInfo * valPtr,int wtpindex);
 CWBool CWParseMsgElemAPIfInfoReport(CWProtocolMessage * msgPtr,int len,wid_ap_if_state_time *valPtr,int wtpindex);
 //CWBool CWParseWTPRadioInfo(CWProtocolMessage *msgPtr, int len, CWRadiosInformation *valPtr, int radioIndex);	
@@ -253,6 +258,7 @@ void CWDestroyDiscoveryRequestValues(CWDiscoveryRequestValues *valPtr);
 CWBool CWParseAPStatisInfo(CWProtocolMessage *msgPtr, int len, int WTPIndex);
 CWBool CWAssembleMsgElemAPStatisticsSet(CWProtocolMessage *msgPtr,int apstatics);  //fengwenchao modify 20110422
 CWBool  CWAssemblewtpextensioninfomation(CWProtocolMessage *msgPtr,int wtpid);
+CWBool  capwap_comm_switch_interval_assemble(CWProtocolMessage *msgPtr,int wtpid, unsigned char type);
 CWBool  CWAssembleTimestamp(CWProtocolMessage *msgPtr,int wtpid);
 CWBool CWParseWTPextensioninfomation(CWProtocolMessage * msgPtr,int len,int wtpindex);
 CWBool CWParseMsgElemAPInterfaceInfo(CWProtocolMessage * msgPtr,int len,wid_sample_rate_info * valPtr);
@@ -288,6 +294,9 @@ CWBool CWAssembleMsgElemAPUniMutiBroCastRateSet(CWProtocolMessage *msgPtr,MQ_Rad
 CWBool CWAssembleMsgElemAPPasswd(CWProtocolMessage *msgPtr,char *username,char*password);
 CWBool CWAssembleMsgElemAPMultiUserOptimize(CWProtocolMessage *msgPtr,unsigned char wlanid,unsigned char radioid,unsigned char value);
 CWBool CWPareseWtp_Sta_leave_Report(CWProtocolMessage *msgPtr, int len, WIDStationInfo *valPtr,int wtpindex);
+CWBool CWParseWTPEtendinfo(CWProtocolMessage *msgPtr, int len, CWWtpExtendinfo *valPtr, int wtpindex);
+CWBool CWParseWTPTrapInfo(CWProtocolMessage *msgPtr, int len, int wtpindex);
+
 CWBool  CWAssembleWtpStaDeauthreport(CWProtocolMessage *msgPtr,int wtpid);
 CWBool  CWAssembleWtpStaFlowInformationreport(CWProtocolMessage *msgPtr,int wtpid);
 CWBool CWParaseWTPTerminalStatistics(

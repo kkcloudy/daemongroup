@@ -391,6 +391,27 @@ out arg list:  // in the order as they are appended in the dbus message.
 
 #define WID_DBUS_WTP_METHOD_SET_WTP_EXTENSION_INFOMATION_SWITCH      "set_extension_infomation_switch"
 #define WID_DBUS_WTP_METHOD_SET_WTP_EXTENSION_INFOMATION_REPORTINTERVAL      "set_extension_infomation_reportinterval"
+
+#define WID_DBUS_WTP_METHOD_SET_WTP_UNAUTHORIZED_MAC_REPORTINTERVAL			"set_unauthorized_mac_reportinterval"
+#define WID_DBUS_WTP_METHOD_SET_WTP_UNAUTHORIZED_MAC_REPORT_SWITCH			"set_unauthorized_mac_report_switch"
+
+#define WID_DBUS_WTP_METHOD_SET_WTP_CONFIGURE_ERR_REPORTINTERVAL			"set_configure_error_reportinterval"
+#define WID_DBUS_WTP_METHOD_SET_WTP_CONFIGURE_ERR_REPORTSWITCH				"set_configure_error_reportswitch"
+
+#define WID_DBUS_WTP_METHOD_SET_WTP_ONLINE_STA_FULL_REPORTEINTERVAL			"set_online_sta_full_reportinterval"
+#define WID_DBUS_WTP_METHOD_SET_WTP_ONLINE_STA_FULL_REPORTE_SWITCH			"set_online_sta_full_reportswitch"
+
+#define WID_DBUS_WTP_METHOD_SET_WTP_STA_FLOW_RX_TX_OVERLFOW_REPORTINTERVAL		"set_sta_flow_rx_tx_overflow_reportinterval"
+#define WID_DBUS_WTP_METHOD_SET_WTP_STA_FLOW_RX_TX_OVERLFOW_THRESHOLD			"set_sta_flow_rx_tx_overflow_threshold"
+#define WID_DBUS_WTP_METHOD_SET_WTP_STA_FLOW_RX_TX_OVERLFOW_REPORT_SWITCH		"set_sta_flow_rx_tx_overflow_reportswitch"
+#define WID_DBUS_WTP_METHOD_SET_WTP_STA_FLOW_RX_TX_OVERLFOW_TRAP_SWITCH 		"set_sta_flow_rx_tx_overflow_trapswitch"
+
+//#define WID_DBUS_WTP_METHOD_SET_WTP_STA_FLOW_TX_OVERLFOW_REPORTINTERVAL		"set_sta_flow_tx_overflow_reportinterval"
+//#define WID_DBUS_WTP_METHOD_SET_WTP_STA_FLOW_TX_OVERLFOW_REPORT_SWITCH		"set_sta_flow_tx_overflow_reportswitch"
+
+
+
+
 #define WID_DBUS_WTP_METHOD_SET_WTP_STA_DEAUTH_MESSAGE_REPORT_SWITCH      "set_sta_deauth_message_report_switch"
 #define WID_DBUS_WTP_METHOD_SET_WTP_STA_ALL_FLOW_INFORMATION_REPORT_SWITCH	"set_sta_all_flow_information_report_switch"
 /*for sample  begin*/
@@ -748,6 +769,7 @@ Wid config infomation
 #define WID_DBUS_CONF_METHOD_SET_WID_AP_MAX_THROUGHOUT	"set_ap_max_thoughout"
 
 #define WID_DBUS_CONF_METHOD_SET_WID_AP_EXTENSION_COMMAND	"set_ap_extension_command"
+#define WID_DBUS_CONF_METHOD_SET_WID_AP_LONGITUDE_LATITUDE_COMMAND	"set_ap_longitude_latitude_command"
 #define WID_DBUS_CONF_METHOD_SET_WID_AP_OPTION60_PARAMETER "set_ap_special_command"
 #define WID_DBUS_CONF_METHOD_SET_WID_AP_IP_GATEWAY "set_ap_ipaddr_command_cmdset_ap_ipaddr_command_cmd"
 #define WID_DBUS_CONF_METHOD_TCPDUMP_AP_EXTENSION_COMMAND "tcpdump"
@@ -767,6 +789,10 @@ Wid config infomation
 #define WID_DBUS_TRAP_WID_WTP_CODE_START		"wid_dbus_trap_wtp_code_start"
 #define WID_DBUS_TRAP_WID_WTP_ELECTRIFY_REGISTER_CIRCLE		"wid_dbus_trap_wtp_electrify_register_circle"
 #define WID_DBUS_TRAP_WID_WTP_AP_DOWN		"wid_dbus_trap_wtp_ap_power_off"
+#define WID_DBUS_TRAP_WID_WTP_STA_UNAUTHORIZED_MAC	"wid_dbus_trap_wtp_sta_unauthroized_mac"
+#define WID_DBUS_TRAP_WID_WTP_CONFIGURE_ERROR		"wid_dbus_trap_wtp_configure_error"
+#define WID_DBUS_TRAP_WID_WTP_STA_FLOW_RX_TX_OVERFLOW	"wid_dbus_trap_sta_flow_rx_tx_overflow"
+#define WID_DBUS_TRAP_WID_WTP_STA_ONLINE_FULL		"wid_dbus_trap_wtp_sta_online_full"
 #define WID_DBUS_TRAP_WID_WTP_AP_REBOOT		"wid_dbus_trap_wtp_ap_reboot"
 #define WID_DBUS_TRAP_WID_WTP_IP_CHANGE_ALARM		"wid_dbus_trap_wtp_ip_change_alarm"
 #define WID_DBUS_TRAP_WID_WTP_ACTIMESYNCHROFAILURE		"wid_dbus_trap_wtp_ap_ACTimeSynchroFailure"

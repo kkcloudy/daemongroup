@@ -172,6 +172,16 @@ int wid_trap_channel_disturb_enable(unsigned int wtpid);
 int wid_trap_channel_disturb_disable(unsigned int wtpid);
 void channel_interference_detected(int wtpid);
 int wid_send_to_ap_extension_infomation(unsigned int wtpid);
+
+int wid_send_to_ap_unauthorized_mac_reportinterval(unsigned int wtpid);
+
+int wid_send_to_ap_configure_error_reportinterval(unsigned int wtpid);
+
+int wid_send_to_ap_sta_online_full_reportinterval(unsigned int wtpid);
+
+int wid_send_to_ap_sta_flow_rx_tx_overflow_reportinterval(unsigned int wtpid, unsigned int is_rx_tx);
+
+
 int set_wid_sample_enable();
 int wid_radio_bss_set_max_throughput(unsigned int wtp_id,unsigned int l_radio_id,unsigned int l_bss_id,unsigned int throughput);
 int wid_set_wlan_vlanid(unsigned char wlanid,unsigned int vlanid);
@@ -486,6 +496,8 @@ int setWtpUniMutiBroCastIsolation(unsigned int wtpid,unsigned char radioid,unsig
 int setWtpUniMutiBroCastRate(unsigned int wtpid,unsigned char radioid,unsigned char wlanid,unsigned int rate);
 int uni_muti_bro_cast_rate_check(unsigned int wtpindex,unsigned int radioid,unsigned int rate);
 int wid_set_ap_username_password(unsigned int wtpid,char *username,char *passwd);
+int wid_set_ap_longitude_latitude(unsigned int wtpid, unsigned char *longitude, unsigned char *latitude);
+
 void muti_user_optimize_switch(unsigned char wlanid, unsigned int radio_g_id,unsigned char type);
 int set_active_ac_listenning();
 int set_bakup_ac_update_license();

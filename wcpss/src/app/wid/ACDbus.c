@@ -3427,7 +3427,7 @@ DBusMessage * wid_dbus_interface_show_wtplist(DBusConnection *conn, DBusMessage 
 /*nl add for showing wtp basic information table 1*/
 DBusMessage * wid_dbus_interface_show_wtp_basic_information(DBusConnection *conn, DBusMessage *msg, void *user_data){
 	
-	DBusMessage* reply;	
+	DBusMessage* reply = NULL;	
 	DBusMessageIter	 iter;
 	DBusMessageIter	 iter_array;
 	DBusMessageIter iter_struct;
@@ -3446,11 +3446,56 @@ DBusMessage * wid_dbus_interface_show_wtp_basic_information(DBusConnection *conn
 	
 	WID_WTP **WTP = NULL;
 	wid_code_infomation *model_info = NULL;
+
+	char *sn = NULL;
+
+	wid_syslog_debug_debug(WID_DBUS,"call %s\n", __FUNCTION__);
+	
+	sn = (char *)malloc(NAS_IDENTIFIER_NAME);
+	if (!sn) {
+		wid_syslog_err("malloc for sn failed\n");
+		return NULL;
+	}
+	char *longitude=NULL;
+	char *latitude=NULL;
+	char *manufacture_date=NULL;
+	
+	longitude = malloc(LONGITUDE_LATITUDE_MAX_LEN);
+	if (!longitude) {
+		wid_syslog_err("malloc for longitude failed\n");
+		goto free_sn;
+	}
+	
+	latitude = malloc(LONGITUDE_LATITUDE_MAX_LEN);
+	if (!latitude) {
+		wid_syslog_err("malloc for latitude failed\n");
+		goto free_longitude;
+	}
+	
+	manufacture_date = malloc(MANUFACTURE_DATA_MAX_LEN);
+	if (!manufacture_date) {
+		wid_syslog_err("malloc for manufacture_date failed\n");
+		goto free_latitude;
+	}
 	
 	WTP = malloc(WTP_NUM*(sizeof(WID_WTP *)));
+	if (!WTP) {
+		wid_syslog_err("malloc for WTP failed\n");
+		goto free_manufacture_date;
+	}
+	
 	memset(WTP,0,WTP_NUM*(sizeof(WID_WTP *)));
 	location = (char *)malloc(7+1);
+	if (!location) {
+		wid_syslog_err("malloc for location failed\n");
+		goto free_WTP;
+	}
+	
 	mac = (unsigned char *)malloc(MAC_LEN+1);
+	if (!mac) {
+		wid_syslog_err("malloc for mac failed\n");
+		goto free_location;
+	}
 	
 	num = Wid_Find_Wtp(WTP);
 	
@@ -3458,6 +3503,10 @@ DBusMessage * wid_dbus_interface_show_wtp_basic_information(DBusConnection *conn
 		ret = WTP_ID_NOT_EXIST;
 	
 	model_info = (wid_code_infomation *)malloc(sizeof(wid_code_infomation));
+	if (!model_info) {
+		wid_syslog_err("malloc for model_info failed\n");
+		goto free_mac;
+	}
 	memset(model_info,0,sizeof(wid_code_infomation));
 	/*for store HW supplier and SW supplier of AP*/
 	char Enterprise_name[] = "/devinfo/enterprise_name";
@@ -3469,18 +3518,25 @@ DBusMessage * wid_dbus_interface_show_wtp_basic_information(DBusConnection *conn
 	}
 
 	model_info->sw_supplier = (char *)malloc(strlen(name)+1);
+	if (!model_info->sw_supplier) {
+		wid_syslog_err("malloc for model_info->sw_supplier failed\n");
+		goto free_model_info;
+	}
 	memset(model_info->sw_supplier,0,strlen(name)+1);	
 	memcpy(model_info->sw_supplier,name,strlen(name));
 
 	model_info->supplier = (char *)malloc(strlen(name)+1);
+	if (!model_info->supplier) {
+		wid_syslog_err("malloc for model_info->supplier failed\n");
+		goto free_sw_supplier;
+	}
 	memset(model_info->supplier,0,strlen(name)+1);	
 	memcpy(model_info->supplier,name,strlen(name));
 
 	//model_info->hw_version = (char *)malloc(8);
 	
 	/*store sn&mac of ap*/
-	char *sn = NULL;
-	sn = (char *)malloc(NAS_IDENTIFIER_NAME);		
+	
 	
 	reply = dbus_message_new_method_return(msg);
 		
@@ -3518,6 +3574,11 @@ DBusMessage * wid_dbus_interface_show_wtp_basic_information(DBusConnection *conn
     											DBUS_TYPE_BYTE_AS_STRING
     											DBUS_TYPE_BYTE_AS_STRING
     											DBUS_TYPE_BYTE_AS_STRING
+    											DBUS_TYPE_STRING_AS_STRING
+    											DBUS_TYPE_STRING_AS_STRING
+    											DBUS_TYPE_BYTE_AS_STRING
+    											DBUS_TYPE_STRING_AS_STRING
+    											DBUS_TYPE_BYTE_AS_STRING
     											
     									DBUS_STRUCT_END_CHAR_AS_STRING,
     									&iter_array);
@@ -3529,8 +3590,45 @@ DBusMessage * wid_dbus_interface_show_wtp_basic_information(DBusConnection *conn
     			memcpy(sn,WTP[i]->WTPSN,strlen(WTP[i]->WTPSN));
     		else
     			memcpy(sn,WTP[i]->WTPSN,NAS_IDENTIFIER_NAME-1);
-    		
-    		memset(mac,0,MAC_LEN+1);
+
+			wid_syslog_debug_debug(WID_DBUS,"1111111111111111111\n");
+			
+			memset(longitude,0,LONGITUDE_LATITUDE_MAX_LEN);
+			if(strlen((char *)(WTP[i]->longitude)) < LONGITUDE_LATITUDE_MAX_LEN) {
+				if (strlen((char *)(WTP[i]->longitude)) == 0) {
+					memcpy(longitude, "unknown", strlen("nknown"));
+				} else {
+					memcpy(longitude, (char *)WTP[i]->longitude, strlen((char *)WTP[i]->longitude));
+				}
+			} else {
+				memcpy(longitude, (char *)WTP[i]->longitude, LONGITUDE_LATITUDE_MAX_LEN-1);
+			}
+
+			memset(latitude,0,LONGITUDE_LATITUDE_MAX_LEN);
+			if(strlen((char *)(WTP[i]->latitude)) < LONGITUDE_LATITUDE_MAX_LEN) {
+				if (strlen((char *)(WTP[i]->latitude)) == 0) {
+					memcpy(latitude, "unknown", strlen("nknown"));
+				} else {
+					memcpy(latitude, (char *)WTP[i]->latitude, strlen((char *)WTP[i]->latitude));
+				}
+			} else {
+				memcpy(latitude, (char *)WTP[i]->latitude, LONGITUDE_LATITUDE_MAX_LEN-1);
+			}
+
+			wid_syslog_debug_debug(WID_DBUS,"222222222222\n");
+			memset(manufacture_date,0,MANUFACTURE_DATA_MAX_LEN);
+			if(strlen((char *)(WTP[i]->manufacture_date)) < MANUFACTURE_DATA_MAX_LEN) {
+				if (strlen((char *)(WTP[i]->manufacture_date)) == 0) {
+					memcpy(manufacture_date, "unknown", strlen("nknown"));
+				} else {
+					memcpy(manufacture_date, (char *)WTP[i]->manufacture_date, strlen((char *)WTP[i]->manufacture_date));
+				}
+			} else {
+				memcpy(manufacture_date, (char *)WTP[i]->manufacture_date, MANUFACTURE_DATA_MAX_LEN-1);
+			}
+
+			
+			memset(mac,0,MAC_LEN+1);
     		if(WTP[i]->WTPMAC != NULL)
     			memcpy(mac,WTP[i]->WTPMAC,MAC_LEN);
     		
@@ -3674,10 +3772,7 @@ DBusMessage * wid_dbus_interface_show_wtp_basic_information(DBusConnection *conn
     			model_info->sw_name = (char *)malloc(8);
     			memset(model_info->sw_name,0,8);		
     			memcpy(model_info->sw_name,"NULL",4);	
-    		}
-    		
-    		else
-    		{
+    		} else {
     			CWCodeInfo *code_node = pnode->code_info;
 				while(code_node != NULL)
 				{
@@ -3729,7 +3824,24 @@ DBusMessage * wid_dbus_interface_show_wtp_basic_information(DBusConnection *conn
     		dbus_message_iter_append_basic(&iter_struct,DBUS_TYPE_BYTE,&(mac[3]));
     		dbus_message_iter_append_basic(&iter_struct,DBUS_TYPE_BYTE,&(mac[4]));
     		dbus_message_iter_append_basic(&iter_struct,DBUS_TYPE_BYTE,&(mac[5]));
-    		
+
+			//wid_syslog_debug_debug(WID_DBUS,"longitude =%s\n", WTP[i]->longitude);
+			wid_syslog_debug_debug(WID_DBUS,"longitudesssssssssss =%s\n", longitude);
+    		dbus_message_iter_append_basic(&iter_struct, DBUS_TYPE_STRING, &longitude);
+			
+			wid_syslog_debug_debug(WID_DBUS,"latitude =%s\n",  latitude);
+			dbus_message_iter_append_basic(&iter_struct, DBUS_TYPE_STRING, &latitude);
+
+			wid_syslog_debug_debug(WID_DBUS,"power_mode =%d\n", WTP[i]->power_mode);
+			dbus_message_iter_append_basic(&iter_struct, DBUS_TYPE_BYTE, &WTP[i]->power_mode);
+
+			wid_syslog_debug_debug(WID_DBUS,"manufacture_date =%s\n", manufacture_date);
+			dbus_message_iter_append_basic(&iter_struct, DBUS_TYPE_STRING, &manufacture_date);
+
+			wid_syslog_debug_debug(WID_DBUS,"forward_mode =%d\n", WTP[i]->forward_mode);
+			dbus_message_iter_append_basic(&iter_struct, DBUS_TYPE_BYTE, &WTP[i]->forward_mode);
+			
+			
     		dbus_message_iter_close_container (&iter_array, &iter_struct);
 		
     		CW_FREE_OBJECT(model_info->sw_name);
@@ -3739,15 +3851,26 @@ DBusMessage * wid_dbus_interface_show_wtp_basic_information(DBusConnection *conn
     				
     	dbus_message_iter_close_container (&iter, &iter_array);
 	}
-	CW_FREE_OBJECT(WTP);
-	CW_FREE_OBJECT(model_info->sw_supplier);
+
 	CW_FREE_OBJECT(model_info->supplier);
-	//CW_FREE_OBJECT(model_info->hw_version);
-	CW_FREE_OBJECT(model_info);	
-	CW_FREE_OBJECT(sn);
+free_sw_supplier:
+	CW_FREE_OBJECT(model_info->sw_supplier);
+free_model_info:
+	CW_FREE_OBJECT(model_info);
+free_mac:
 	CW_FREE_OBJECT(mac);
+free_location:
 	CW_FREE_OBJECT(location);
-	
+free_WTP:
+	CW_FREE_OBJECT(WTP);
+free_manufacture_date:
+	CW_FREE_OBJECT(manufacture_date);
+free_latitude:
+	CW_FREE_OBJECT(latitude);
+free_longitude:
+	CW_FREE_OBJECT(longitude);
+free_sn:
+	CW_FREE_OBJECT(sn);
 	return reply;	
 }
 /*for showing wtp collect information table 3*/
@@ -10046,6 +10169,11 @@ DBusMessage * wid_dbus_interface_show_wtp_radio_config_information(DBusConnectio
 																DBUS_STRUCT_BEGIN_CHAR_AS_STRING
 																	DBUS_TYPE_BYTE_AS_STRING		/* mcs_list */
 																DBUS_STRUCT_END_CHAR_AS_STRING
+														DBUS_TYPE_BYTE_AS_STRING
+														DBUS_TYPE_BYTE_AS_STRING
+														DBUS_TYPE_UINT32_AS_STRING
+														DBUS_TYPE_UINT32_AS_STRING
+														DBUS_TYPE_UINT32_AS_STRING
 												DBUS_STRUCT_END_CHAR_AS_STRING
 									DBUS_STRUCT_END_CHAR_AS_STRING,
 									&iter_array);
@@ -10128,6 +10256,11 @@ DBusMessage * wid_dbus_interface_show_wtp_radio_config_information(DBusConnectio
 																DBUS_STRUCT_BEGIN_CHAR_AS_STRING
 																	DBUS_TYPE_BYTE_AS_STRING		/* mcs_list */
 																DBUS_STRUCT_END_CHAR_AS_STRING
+														DBUS_TYPE_BYTE_AS_STRING
+														DBUS_TYPE_BYTE_AS_STRING
+														DBUS_TYPE_UINT32_AS_STRING
+														DBUS_TYPE_UINT32_AS_STRING
+														DBUS_TYPE_UINT32_AS_STRING
 												DBUS_STRUCT_END_CHAR_AS_STRING,
 											   &iter_sub_array);
 
@@ -10270,6 +10403,15 @@ DBusMessage * wid_dbus_interface_show_wtp_radio_config_information(DBusConnectio
 				dbus_message_iter_close_container (&iter_sub_sub_sub_array, &iter_sub_sub_sub_struct);
 			}
 			dbus_message_iter_close_container (&iter_sub_struct, &iter_sub_sub_sub_array);	
+
+			wid_syslog_debug_debug(WID_DEFAULT,"55555555555555555:%d %d %d\n", (AC_RADIO_FOR_SEARCH[k]->radio_work_role), 
+				(AC_RADIO_FOR_SEARCH[k]->radio_channel_use_rate), (AC_RADIO_FOR_SEARCH[k]->radio_channel_change_counter));
+
+			dbus_message_iter_append_basic (&iter_sub_struct, DBUS_TYPE_BYTE, &(AC_RADIO_FOR_SEARCH[k]->radio_work_role));
+			dbus_message_iter_append_basic (&iter_sub_struct, DBUS_TYPE_BYTE, &(AC_RADIO_FOR_SEARCH[k]->radio_channel_use_rate));
+			dbus_message_iter_append_basic (&iter_sub_struct, DBUS_TYPE_UINT32, &(AC_RADIO_FOR_SEARCH[k]->radio_channel_change_counter));
+			dbus_message_iter_append_basic (&iter_sub_struct, DBUS_TYPE_UINT32, &(AC_RADIO_FOR_SEARCH[k]->radio_channel_width));
+			dbus_message_iter_append_basic (&iter_sub_struct, DBUS_TYPE_UINT32, &(AC_RADIO_FOR_SEARCH[k]->radio_noise));
 			
 			dbus_message_iter_close_container (&iter_sub_array, &iter_sub_struct);
 		}
@@ -46710,6 +46852,54 @@ DBusMessage * wid_dbus_interface_set_ap_extension_command(DBusConnection *conn, 
 }
 
 #else
+
+DBusMessage * wid_dbus_interface_set_ap_longitude_latitude_command(DBusConnection *conn, DBusMessage *msg, void *user_data){
+
+	DBusMessage* reply;
+	DBusMessageIter  iter;
+	unsigned char *longitude, *latitude;
+	unsigned int wtpid;
+	DBusError err;
+	int ret = WID_DBUS_SUCCESS;
+	wid_syslog_err("yyyyyyyyyyyyyyyyyyyyyyyyyy");
+	
+	dbus_error_init(&err);
+	if (!(dbus_message_get_args ( msg, &err,
+								DBUS_TYPE_UINT32, &wtpid,
+								DBUS_TYPE_STRING, &longitude,
+								DBUS_TYPE_STRING, &latitude,
+								DBUS_TYPE_INVALID))){
+		wid_syslog_err("Unable to get input args\n");
+				
+		if (dbus_error_is_set(&err)) {
+			wid_syslog_err("%s raised: %s",err.name,err.message);
+			dbus_error_free(&err);
+		}
+		wid_syslog_err("wid huuuuuuuuuuuuuuuuuuuuuuuuuuuuuu\n");
+		return NULL;
+	}
+	
+	wid_syslog_err("wid_dbus_interface_set_ap_longitude_latitude_command for wtp %d\n", wtpid);
+	if(wtpid == 0 || AC_WTP[wtpid] != NULL)
+	{
+		wid_syslog_err("11111111111\n");
+		wid_set_ap_longitude_latitude(wtpid, longitude, latitude); 
+	}
+	else
+	{
+		wid_syslog_err("11111111111222222222\n");
+		ret = WTP_ID_NOT_EXIST;
+	}
+	
+	reply = dbus_message_new_method_return(msg);
+	dbus_message_iter_init_append(reply, &iter);
+		
+	dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT32, &ret);
+	return reply;
+	
+}
+
+
 DBusMessage * wid_dbus_interface_set_ap_extension_command(DBusConnection *conn, DBusMessage *msg, void *user_data){
 
 	DBusMessage* reply;
@@ -51990,6 +52180,891 @@ DBusMessage * wid_dbus_interface_set_wtp_extension_infomation_interval(DBusConne
 }
 
 #else
+
+DBusMessage * wid_dbus_interface_set_wtp_unauthorized_mac_switch(DBusConnection *conn, DBusMessage *msg, void *user_data){
+
+	DBusMessage* reply;
+	DBusMessageIter	 iter;
+	DBusError err;
+	unsigned int wtpid = 0;
+	unsigned int policy = 0;
+	int i=0; 
+	int ret = WID_DBUS_SUCCESS;
+	dbus_error_init(&err);
+	if (!(dbus_message_get_args ( msg, &err,
+								DBUS_TYPE_UINT32,&wtpid,
+								DBUS_TYPE_UINT32,&policy,
+								DBUS_TYPE_INVALID))){
+		wid_syslog_err("get input args for wtp unathorized mac switch failed\n");	
+		if (dbus_error_is_set(&err)) {
+			wid_syslog_err("%s raised: %s",err.name,err.message);
+			dbus_error_free(&err);
+		}
+		return NULL;
+	}
+	if(wtpid == 0){
+		wid_syslog_debug_debug(WID_DEFAULT, "set unauthorized mac switch %s for all wtp\n", policy ? "enable" : "disable");
+		g_unauthorized_mac_switch = (unsigned char)policy;
+		
+		for(i=0;i<WTP_NUM;i++){				
+			if(AC_WTP[i] != NULL){
+				if(AC_WTP[i]->unauthorized_mac_reportswitch == (unsigned char)policy) {
+					continue;
+				} else {
+					AC_WTP[i]->unauthorized_mac_reportswitch = (unsigned char)policy;
+					ret = wid_send_to_ap_unauthorized_mac_reportinterval(i);
+				}
+			}
+		}
+	}
+	else if(AC_WTP[wtpid] == NULL)
+	{
+		ret = WTP_ID_NOT_EXIST;
+	}
+	else if(AC_WTP[wtpid]->unauthorized_mac_reportswitch == (unsigned char)policy)
+	{
+		wid_syslog_debug_debug(WID_DEFAULT, "wtp %d unauthorized mac reportswitch is already %s\n", wtpid, policy ? "enable" : "disable");
+		ret = WID_DBUS_SUCCESS;
+	}
+	else
+	{
+		wid_syslog_debug_debug(WID_DEFAULT, "set unauthorized mac switch %s for wtp %d\n", policy ? "enable" : "disable", wtpid);
+		AC_WTP[wtpid]->unauthorized_mac_reportswitch = (unsigned char)policy;
+		ret = wid_send_to_ap_unauthorized_mac_reportinterval(wtpid);
+	}
+	
+		
+	reply = dbus_message_new_method_return(msg);
+
+	
+	dbus_message_iter_init_append(reply, &iter);
+	
+	dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT32, &ret);
+	
+	return reply;
+	
+}
+
+DBusMessage * wid_dbus_interface_set_wtp_unauthorized_mac_interval(DBusConnection *conn, DBusMessage *msg, void *user_data){
+
+	DBusMessage* reply;
+	DBusMessageIter	 iter;
+	DBusError err;
+	unsigned int wtpid = 0;
+	unsigned int interval = 0;
+	int i=0; /*wcl add for globle variable*/
+	int ret = WID_DBUS_SUCCESS;
+	dbus_error_init(&err);
+	if (!(dbus_message_get_args ( msg, &err,
+								DBUS_TYPE_UINT32,&wtpid,
+								DBUS_TYPE_UINT32,&interval,
+								DBUS_TYPE_INVALID))){
+
+		wid_syslog_err("Unable to get input args for set wtp unauthorized mac interval\n");
+				
+		if (dbus_error_is_set(&err)) {
+			wid_syslog_err("%s raised: %s",err.name,err.message);
+			dbus_error_free(&err);
+		}
+		return NULL;
+	}
+	if(wtpid == 0){
+		wid_syslog_debug_debug(WID_DEFAULT, "set unauthorized mac interval %u for all wtp\n", interval);
+		g_unauthorized_mac_interval = (unsigned short)interval;
+		for(i=0;i<WTP_NUM;i++){				
+			if(AC_WTP[i] != NULL){
+				if(AC_WTP[i]->unauthorized_mac_reportinterval == (unsigned short)interval){
+					ret = WID_DBUS_SUCCESS;
+				}else {
+					AC_WTP[i]->unauthorized_mac_reportinterval = (unsigned short)interval;
+					ret = wid_send_to_ap_unauthorized_mac_reportinterval(i);
+				}
+			}
+		}
+	}
+	else if(AC_WTP[wtpid] == NULL)
+	{
+		ret = WTP_ID_NOT_EXIST;
+	}
+	else if(AC_WTP[wtpid]->unauthorized_mac_reportinterval == (unsigned short)interval)
+	{
+		wid_syslog_debug_debug(WID_DEFAULT, "wtp %d unauthorized mac report interval is already %u\n",wtpid, interval);
+		ret = WID_DBUS_SUCCESS;
+	}
+	else
+	{
+		wid_syslog_debug_debug(WID_DEFAULT, "set unauthorized mac interval %u for wtp %d\n", interval, wtpid);
+		AC_WTP[wtpid]->unauthorized_mac_reportinterval = (unsigned short)interval;
+		ret = wid_send_to_ap_unauthorized_mac_reportinterval(wtpid);
+	}
+	
+		
+	reply = dbus_message_new_method_return(msg);
+
+	
+	dbus_message_iter_init_append(reply, &iter);
+	
+	dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT32, &ret);
+	
+	return reply;
+	
+}
+
+
+DBusMessage * wid_dbus_interface_set_wtp_configure_error_switch(DBusConnection *conn, DBusMessage *msg, void *user_data){
+
+	DBusMessage* reply;
+	DBusMessageIter	 iter;
+	DBusError err;
+	unsigned int wtpid = 0;
+	unsigned int policy = 0;
+	int i=0; 
+	int ret = WID_DBUS_SUCCESS;
+	dbus_error_init(&err);
+	if (!(dbus_message_get_args ( msg, &err,
+								DBUS_TYPE_UINT32,&wtpid,
+								DBUS_TYPE_UINT32,&policy,
+								DBUS_TYPE_INVALID))){
+
+		wid_syslog_err("Unable to get input args for set wtp configure error switch\n");
+		if (dbus_error_is_set(&err)) {
+			wid_syslog_err("%s raised: %s",err.name,err.message);
+			dbus_error_free(&err);
+		}
+		return NULL;
+	}
+	
+	if(wtpid == 0){
+		wid_syslog_debug_debug(WID_DEFAULT, "set configure error switch %s for all wtp\n", policy ? "enable" : "disable");
+		g_configure_error_switch = (unsigned char)policy;
+		
+		for(i=0;i<WTP_NUM;i++){				
+			if(AC_WTP[i] != NULL){
+				if(AC_WTP[i]->wtp_configure_error_reportswitch == (unsigned char)policy){
+					continue;
+				}else {
+					AC_WTP[i]->wtp_configure_error_reportswitch = (unsigned char)policy;
+					ret = wid_send_to_ap_configure_error_reportinterval(i);
+				}
+			}
+		}
+	}
+	else if(AC_WTP[wtpid] == NULL)
+	{
+		ret = WTP_ID_NOT_EXIST;
+	}
+	else if(AC_WTP[wtpid]->wtp_configure_error_reportswitch == (unsigned char)policy)
+	{
+		wid_syslog_debug_debug(WID_DEFAULT, "wtp %d unauthorized mac report switch is already %s\n", wtpid, policy ? "enabl" : "disable");
+		ret = WID_DBUS_SUCCESS;
+	}
+	else
+	{
+		wid_syslog_debug_debug(WID_DEFAULT, "set unauthorized mac switch %s for wtp %d\n", policy ? "enable" : "disable", wtpid);
+		AC_WTP[wtpid]->wtp_configure_error_reportswitch = (unsigned char)policy;
+		ret = wid_send_to_ap_configure_error_reportinterval(wtpid);
+	}
+	
+	reply = dbus_message_new_method_return(msg);
+
+	
+	dbus_message_iter_init_append(reply, &iter);
+	
+	dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT32, &ret);
+	
+	return reply;
+	
+}
+
+
+DBusMessage * wid_dbus_interface_set_wtp_configure_error_interval(DBusConnection *conn, DBusMessage *msg, void *user_data){
+
+	DBusMessage* reply;
+	DBusMessageIter	 iter;
+	DBusError err;
+	unsigned int wtpid = 0;
+	unsigned int interval = 0;
+	int i=0; /*wcl add for globle variable*/
+	int ret = WID_DBUS_SUCCESS;
+	dbus_error_init(&err);
+	if (!(dbus_message_get_args ( msg, &err,
+								DBUS_TYPE_UINT32,&wtpid,
+								DBUS_TYPE_UINT32,&interval,
+								DBUS_TYPE_INVALID))){
+
+		wid_syslog_err("Unable to get input args\n");
+
+		if (dbus_error_is_set(&err)) {
+			wid_syslog_err("%s raised: %s",err.name,err.message);
+			dbus_error_free(&err);
+		}
+		return NULL;
+	}
+	if(wtpid == 0){
+		wid_syslog_debug_debug(WID_DEFAULT, "set configure error interval %u for all wtp\n", interval);
+		g_unauthorized_mac_interval = (unsigned short)interval;
+		
+		for(i=0;i<WTP_NUM;i++){				
+			if(AC_WTP[i] != NULL){
+				if(AC_WTP[i]->wtp_configure_error_reportinterval == (unsigned short)interval){
+					ret = WID_DBUS_SUCCESS;
+				}else {
+					AC_WTP[i]->wtp_configure_error_reportinterval = (unsigned short)interval;
+					ret = wid_send_to_ap_configure_error_reportinterval(i);
+				}
+			}
+		}
+	}	/*wcl add for globle variable*/
+	else if(AC_WTP[wtpid] == NULL)
+	{
+		ret = WTP_ID_NOT_EXIST;
+	}
+	else if(AC_WTP[wtpid]->wtp_configure_error_reportinterval == (unsigned short)interval)
+	{
+		wid_syslog_debug_debug(WID_DEFAULT, "wtp %d configure error report interval is already %u\n",wtpid, interval);
+		ret = WID_DBUS_SUCCESS;
+	}
+	else
+	{
+		wid_syslog_debug_debug(WID_DEFAULT, "set configure error interval %u for wtp %d\n", interval, wtpid);
+		AC_WTP[wtpid]->wtp_configure_error_reportinterval = (unsigned short)interval;
+		ret = wid_send_to_ap_unauthorized_mac_reportinterval(wtpid);
+	}
+	
+		
+	reply = dbus_message_new_method_return(msg);
+
+	
+	dbus_message_iter_init_append(reply, &iter);
+	
+	dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT32, &ret);
+	
+	return reply;
+	
+}
+
+
+
+DBusMessage * wid_dbus_interface_set_wtp_online_sta_full_switch(DBusConnection *conn, DBusMessage *msg, void *user_data){
+
+	DBusMessage* reply;
+	DBusMessageIter	 iter;
+	DBusError err;
+	unsigned int wtpid = 0;
+	unsigned int policy = 0;
+	int i=0; 
+	int ret = WID_DBUS_SUCCESS;
+	dbus_error_init(&err);
+	if (!(dbus_message_get_args ( msg, &err,
+								DBUS_TYPE_UINT32,&wtpid,
+								DBUS_TYPE_UINT32,&policy,
+								DBUS_TYPE_INVALID))){
+
+		wid_syslog_err("Unable to get input args\n");
+				
+		if (dbus_error_is_set(&err)) {
+			wid_syslog_err("%s raised: %s",err.name,err.message);
+			dbus_error_free(&err);
+		}
+		return NULL;
+	}
+	if(wtpid == 0){
+		wid_syslog_debug_debug(WID_DEFAULT, "set wtp online sta full switch %s for all wtp\n", policy ? "enable" : "disable");
+		g_online_sta_full_switch = (unsigned char)policy;
+		
+		for(i=0;i<WTP_NUM;i++){				
+			if(AC_WTP[i] != NULL){
+				if(AC_WTP[i]->sta_online_full_reportswitch == (unsigned char)policy){
+					continue;
+				}else {
+					AC_WTP[i]->sta_online_full_reportswitch = (unsigned char)policy;
+					ret = wid_send_to_ap_sta_online_full_reportinterval(i);
+				}
+			}
+		}
+	}
+	else if(AC_WTP[wtpid] == NULL)
+	{
+		ret = WTP_ID_NOT_EXIST;
+	}
+	else if(AC_WTP[wtpid]->sta_online_full_reportswitch == (unsigned char)policy)
+	{
+		wid_syslog_debug_debug(WID_DEFAULT, "wtp %d online sta full switch is already %s\n", wtpid, policy ? "enable" : "disable");
+		ret = WID_DBUS_SUCCESS;
+	}
+	else
+	{
+		wid_syslog_debug_debug(WID_DEFAULT, "set online sta full switch %s for wtp %d\n", policy ? "enable" : "disable", wtpid);
+		AC_WTP[wtpid]->sta_online_full_reportswitch = (unsigned char)policy;
+		ret = wid_send_to_ap_sta_online_full_reportinterval(wtpid);
+	}
+	
+		
+	reply = dbus_message_new_method_return(msg);
+
+	
+	dbus_message_iter_init_append(reply, &iter);
+	
+	dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT32, &ret);
+	
+	return reply;
+	
+}
+
+
+DBusMessage * wid_dbus_interface_set_wtp_online_sta_full_interval(DBusConnection *conn, DBusMessage *msg, void *user_data){
+
+	DBusMessage* reply;
+	DBusMessageIter	 iter;
+	DBusError err;
+	unsigned int wtpid = 0;
+	unsigned int interval = 0;
+	int i=0; /*wcl add for globle variable*/
+	int ret = WID_DBUS_SUCCESS;
+	dbus_error_init(&err);
+	if (!(dbus_message_get_args ( msg, &err,
+								DBUS_TYPE_UINT32,&wtpid,
+								DBUS_TYPE_UINT32,&interval,
+								DBUS_TYPE_INVALID))){
+
+		wid_syslog_err("Unable to get input args\n");
+				
+		if (dbus_error_is_set(&err)) {
+			wid_syslog_err("%s raised: %s",err.name,err.message);
+			dbus_error_free(&err);
+		}
+		return NULL;
+	}
+	if(wtpid == 0){
+		wid_syslog_debug_debug(WID_DEFAULT, "set online sta full interval %u for all wtp\n", interval);
+		g_online_sta_full_interval = (unsigned short)interval;
+		
+		for(i=0;i<WTP_NUM;i++){				
+			if(AC_WTP[i] != NULL){
+				if(AC_WTP[i]->sta_online_full_reportinterval == (unsigned short)interval){
+					ret = WID_DBUS_SUCCESS;
+				}else {
+					AC_WTP[i]->sta_online_full_reportinterval = (unsigned short)interval;
+					ret = wid_send_to_ap_sta_online_full_reportinterval(i);
+				}
+			}
+		}
+	}	/*wcl add for globle variable*/
+	else if(AC_WTP[wtpid] == NULL)
+	{
+		ret = WTP_ID_NOT_EXIST;
+	}
+	else if(AC_WTP[wtpid]->sta_online_full_reportinterval == (unsigned short)interval)
+	{
+		wid_syslog_debug_debug(WID_DEFAULT, "wtp %d online sta full report interval already is %u\n",wtpid, interval);
+		ret = WID_DBUS_SUCCESS;
+	}
+	else
+	{
+		wid_syslog_debug_debug(WID_DEFAULT, "set online sta full interval %u for wtp %d\n", interval, wtpid);
+		AC_WTP[wtpid]->sta_online_full_reportinterval = (unsigned short)interval;
+		ret = wid_send_to_ap_sta_online_full_reportinterval(wtpid);
+	}
+	
+		
+	reply = dbus_message_new_method_return(msg);
+
+	
+	dbus_message_iter_init_append(reply, &iter);
+	
+	dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT32, &ret);
+	
+	return reply;
+	
+}
+
+
+DBusMessage * wid_dbus_interface_set_wtp_sta_flow_rx_tx_trap_switch(DBusConnection *conn, DBusMessage *msg, void *user_data){
+
+	DBusMessage* reply;
+	DBusMessageIter	 iter;
+	DBusError err;
+	unsigned int wtpid = 0;
+	unsigned int policy = 0;
+
+	unsigned int is_rx_tx = 0;
+	int ret = WID_DBUS_SUCCESS;
+	dbus_error_init(&err);
+	if (!(dbus_message_get_args ( msg, &err,
+								DBUS_TYPE_UINT32,&wtpid,
+								DBUS_TYPE_UINT32,&is_rx_tx,
+								DBUS_TYPE_UINT32,&policy,
+								DBUS_TYPE_INVALID))){
+
+		wid_syslog_err("Unable to get input args for sta flow rx/tx trap switch\n");
+				
+		if (dbus_error_is_set(&err)) {
+			wid_syslog_err("%s raised: %s",err.name,err.message);
+			dbus_error_free(&err);
+		}
+		return NULL;
+	}
+
+	if(AC_WTP[wtpid] == NULL)
+	{
+		ret = WTP_ID_NOT_EXIST;
+	} else {
+		if (is_rx_tx) {
+			wid_syslog_debug_debug(WID_DEFAULT, "set sta flow overflow trap switch %s for all wtp %s\n", 
+				policy ? "enable" : "disable", is_rx_tx ? "rx" : "tx");
+			g_sta_flow_rx_overflow_trap_switch = (unsigned char)policy;
+		} else {
+			wid_syslog_debug_debug(WID_DEFAULT, "set unauthorized mac switch %s for all wtp %s\n", 
+				policy ? "enable" : "disable", is_rx_tx ? "rx" : "tx");
+			g_sta_flow_tx_overflow_trap_switch = (unsigned char)policy;
+			
+		}
+		
+	}
+
+	reply = dbus_message_new_method_return(msg);
+
+	
+	dbus_message_iter_init_append(reply, &iter);
+	
+	dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT32, &ret);
+
+	wid_syslog_debug_debug(WID_DEFAULT, "ssssssssssssssss\n");
+	return reply;
+	
+}
+
+
+DBusMessage * wid_dbus_interface_set_wtp_sta_flow_rx_tx_overflow_switch(DBusConnection *conn, DBusMessage *msg, void *user_data){
+
+	DBusMessage* reply;
+	DBusMessageIter	 iter;
+	DBusError err;
+	unsigned int wtpid = 0;
+	unsigned int policy = 0;
+	int i=0; 
+	unsigned int is_rx_tx = 0;
+	int ret = WID_DBUS_SUCCESS;
+	dbus_error_init(&err);
+	if (!(dbus_message_get_args ( msg, &err,
+								DBUS_TYPE_UINT32,&wtpid,
+								DBUS_TYPE_UINT32,&is_rx_tx,
+								DBUS_TYPE_UINT32,&policy,
+								DBUS_TYPE_INVALID))){
+
+		wid_syslog_err("Unable to get input args for sta flow rx/tx overflow switch\n");
+				
+		if (dbus_error_is_set(&err)) {
+			wid_syslog_err("%s raised: %s",err.name,err.message);
+			dbus_error_free(&err);
+		}
+		return NULL;
+	}
+	
+	if(wtpid == 0){
+		if (is_rx_tx) {
+			wid_syslog_debug_debug(WID_DEFAULT, "set sta flow overflow switch %s for all wtp %s\n", 
+				policy ? "enable" : "disable", is_rx_tx ? "rx" : "tx");
+			g_sta_flow_rx_overflow_switch = (unsigned char)policy;
+		
+			for(i=0;i<WTP_NUM;i++){				
+				if(AC_WTP[i] != NULL){
+					if(AC_WTP[i]->sta_flow_overflow_rx_reportswitch == (unsigned char)policy){
+						continue;
+					}else {
+						AC_WTP[i]->sta_flow_overflow_rx_reportswitch = (unsigned char)policy;
+						if (AC_WTP[i]->sta_flow_overflow_rx_threshold == 0) {
+							AC_WTP[i]->sta_flow_overflow_rx_threshold = STA_FLOW_OVERFLOW_RX_THRESHOLD;
+						}
+						ret = wid_send_to_ap_sta_flow_rx_tx_overflow_reportinterval(i, is_rx_tx);
+					}
+				}
+			}
+		} else {
+			wid_syslog_debug_debug(WID_DEFAULT, "set sta flow overflow switch %s for all wtp %s\n", 
+				policy ? "enable" : "disable", is_rx_tx ? "rx" : "tx");
+			g_sta_flow_tx_overflow_switch = (unsigned char)policy;
+		
+			for(i=0;i<WTP_NUM;i++){				
+				if(AC_WTP[i] != NULL){
+					if(AC_WTP[i]->sta_flow_overflow_tx_reportswitch == (unsigned char)policy){
+						continue;
+					}else {
+						AC_WTP[i]->sta_flow_overflow_tx_reportswitch = (unsigned char)policy;
+						if (AC_WTP[i]->sta_flow_overflow_tx_threshold == 0) {
+							AC_WTP[i]->sta_flow_overflow_tx_threshold = STA_FLOW_OVERFLOW_TX_THRESHOLD;
+						}
+						ret = wid_send_to_ap_sta_flow_rx_tx_overflow_reportinterval(i, is_rx_tx);
+					}
+				}
+			}
+		}
+		
+	}
+	else if(AC_WTP[wtpid] == NULL)
+	{
+		ret = WTP_ID_NOT_EXIST;
+	}
+	else
+	{
+		if (is_rx_tx) {
+			if (AC_WTP[wtpid]->sta_flow_overflow_rx_reportswitch == (unsigned char)policy) {
+				wid_syslog_debug_debug(WID_DEFAULT, "wtp %d sta flow rx reportswitch already %s\n", wtpid, policy ? "enable" : "disable");
+				ret = WID_DBUS_SUCCESS;
+			} else {
+				wid_syslog_debug_debug(WID_DEFAULT, "set sta flow rx switch %s for wtp %d\n", policy ? "enable" : "disable", wtpid);
+				AC_WTP[wtpid]->sta_flow_overflow_rx_reportswitch = (unsigned char)policy;
+
+				if (AC_WTP[wtpid]->sta_flow_overflow_rx_threshold == 0) {
+					AC_WTP[wtpid]->sta_flow_overflow_rx_threshold = STA_FLOW_OVERFLOW_RX_THRESHOLD;
+				}
+				ret = wid_send_to_ap_sta_flow_rx_tx_overflow_reportinterval(wtpid, is_rx_tx);
+			}
+		} else {
+			if (AC_WTP[wtpid]->sta_flow_overflow_tx_reportswitch == (unsigned char)policy) {
+				wid_syslog_debug_debug(WID_DEFAULT, "wtp %d sta flow tx reportswitch already %s\n", wtpid, policy ? "enable" : "disable");
+				ret = WID_DBUS_SUCCESS;
+			} else {
+				wid_syslog_debug_debug(WID_DEFAULT, "set sta flow tx switch %s for wtp %d\n", policy ? "enable" : "disable", wtpid);
+				AC_WTP[wtpid]->sta_flow_overflow_tx_reportswitch = (unsigned char)policy;
+				if (AC_WTP[wtpid]->sta_flow_overflow_tx_threshold == 0) {
+					AC_WTP[wtpid]->sta_flow_overflow_tx_threshold = STA_FLOW_OVERFLOW_TX_THRESHOLD;
+				}
+				ret = wid_send_to_ap_sta_flow_rx_tx_overflow_reportinterval(wtpid, is_rx_tx);
+			}
+		}
+	}
+
+	reply = dbus_message_new_method_return(msg);
+
+	
+	dbus_message_iter_init_append(reply, &iter);
+	
+	dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT32, &ret);
+
+	wid_syslog_debug_debug(WID_DEFAULT, "ssssssssssssssss\n");
+	return reply;
+	
+}
+
+
+DBusMessage * wid_dbus_interface_set_wtp_sta_flow_rx_tx_overflow_threshold(DBusConnection *conn, DBusMessage *msg, void *user_data){
+
+	DBusMessage* reply;
+	DBusMessageIter  iter;
+	DBusError err;
+	unsigned int wtpid = 0;
+	unsigned int threshold = 0;
+	unsigned int is_rx_tx = 0;
+	int i=0; /*wcl add for globle variable*/
+	int ret = WID_DBUS_SUCCESS;
+	dbus_error_init(&err);
+	if (!(dbus_message_get_args ( msg, &err,
+								DBUS_TYPE_UINT32,&wtpid,
+								DBUS_TYPE_UINT32,&is_rx_tx,
+								DBUS_TYPE_UINT32,&threshold,
+								DBUS_TYPE_INVALID))){
+
+		wid_syslog_err("Unable to get input args for set wtp sta flow rx/tx overflow interval\n");
+				
+		if (dbus_error_is_set(&err)) {
+			wid_syslog_err("%s raised: %s",err.name,err.message);
+			dbus_error_free(&err);
+		}
+		return NULL;
+	}
+	if(wtpid == 0){
+		if (is_rx_tx) {
+			wid_syslog_debug_debug(WID_DEFAULT, "set sta flow rx overflow threshold %u for all wtp\n", threshold);
+			g_sta_flow_rx_overflow_threshold = threshold;
+			for(i=0;i<WTP_NUM;i++){ 			
+				if(AC_WTP[i] != NULL){
+					if(AC_WTP[i]->sta_flow_overflow_rx_threshold == threshold){
+						wid_syslog_debug_debug(WID_DEFAULT, "wtp %d sta flow rx overflow threshold already is %u\n",wtpid, threshold);
+						ret = WID_DBUS_SUCCESS;
+					}else {
+						wid_syslog_debug_debug(WID_DEFAULT, "set sta flow rx overflow threshold %u for wtp %d\n", threshold, wtpid);
+						AC_WTP[i]->sta_flow_overflow_rx_threshold = threshold;
+						ret = wid_send_to_ap_sta_flow_rx_tx_overflow_reportinterval(i, is_rx_tx);
+					}
+				}
+			}
+		} else {
+			wid_syslog_debug_debug(WID_DEFAULT, "set sta flow tx overflow threshold %u for all wtp\n", threshold);
+			g_sta_flow_tx_overflow_threshold = threshold;
+			for(i=0;i<WTP_NUM;i++){ 			
+				if(AC_WTP[i] != NULL){
+					if(AC_WTP[i]->sta_flow_overflow_tx_threshold == threshold){
+						wid_syslog_debug_debug(WID_DEFAULT, "wtp %d sta flow tx overflow report threshold already is %u\n",wtpid, threshold);
+						ret = WID_DBUS_SUCCESS;
+					}else {
+						wid_syslog_debug_debug(WID_DEFAULT, "set sta flow tx overflow threshold %u for wtp %d\n", threshold, wtpid);
+						AC_WTP[i]->sta_flow_overflow_tx_threshold = threshold;
+						ret = wid_send_to_ap_sta_flow_rx_tx_overflow_reportinterval(i, is_rx_tx);
+					}
+				}
+			}
+		}
+	}	/*wcl add for globle variable*/
+	else if(AC_WTP[wtpid] == NULL)
+	{
+		ret = WTP_ID_NOT_EXIST;
+	}
+	else
+	{
+		if (is_rx_tx) {
+			if (AC_WTP[wtpid]->sta_flow_overflow_rx_threshold == threshold) {
+				ret = WID_DBUS_SUCCESS; 
+			} else {
+				AC_WTP[wtpid]->sta_flow_overflow_rx_threshold = threshold;
+				ret = wid_send_to_ap_sta_flow_rx_tx_overflow_reportinterval(wtpid, is_rx_tx);
+			}
+		} else {
+			if (AC_WTP[wtpid]->sta_flow_overflow_tx_threshold == threshold) {
+				ret = WID_DBUS_SUCCESS;
+			} else {
+				AC_WTP[wtpid]->sta_flow_overflow_tx_threshold = threshold;
+				ret = wid_send_to_ap_sta_flow_rx_tx_overflow_reportinterval(wtpid, is_rx_tx);
+			}
+		}
+		
+	}
+	
+	reply = dbus_message_new_method_return(msg);
+
+	
+	dbus_message_iter_init_append(reply, &iter);
+	
+	dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT32, &ret);
+	
+	return reply;
+	
+}
+
+DBusMessage * wid_dbus_interface_set_wtp_sta_flow_rx_tx_overflow_interval(DBusConnection *conn, DBusMessage *msg, void *user_data){
+
+	DBusMessage* reply;
+	DBusMessageIter	 iter;
+	DBusError err;
+	unsigned int wtpid = 0;
+	unsigned int interval = 0;
+	unsigned int is_rx_tx = 0;
+	int i=0; /*wcl add for globle variable*/
+	int ret = WID_DBUS_SUCCESS;
+	dbus_error_init(&err);
+	if (!(dbus_message_get_args ( msg, &err,
+								DBUS_TYPE_UINT32,&wtpid,
+								DBUS_TYPE_UINT32,&is_rx_tx,
+								DBUS_TYPE_UINT32,&interval,
+								DBUS_TYPE_INVALID))){
+
+		wid_syslog_err("Unable to get input args for set wtp sta flow rx/tx overflow interval\n");
+				
+		if (dbus_error_is_set(&err)) {
+			wid_syslog_err("%s raised: %s",err.name,err.message);
+			dbus_error_free(&err);
+		}
+		return NULL;
+	}
+	if(wtpid == 0){
+		if (is_rx_tx) {
+			wid_syslog_debug_debug(WID_DEFAULT, "set sta flow rx overflow interval %u for all wtp\n", interval);
+			g_sta_flow_rx_overflow_interval = (unsigned short)interval;
+			for(i=0;i<WTP_NUM;i++){				
+				if(AC_WTP[i] != NULL){
+					if(AC_WTP[i]->sta_flow_overflow_rx_reportinterval == (unsigned short)interval){
+						wid_syslog_debug_debug(WID_DEFAULT, "wtp %d sta flow rx overflow report interval already is %u\n",wtpid, interval);
+						ret = WID_DBUS_SUCCESS;
+					}else {
+						wid_syslog_debug_debug(WID_DEFAULT, "set sta flow rx overflow interval %u for wtp %d\n", interval, wtpid);
+						AC_WTP[i]->sta_flow_overflow_rx_reportinterval = (unsigned short)interval;
+						ret = wid_send_to_ap_sta_flow_rx_tx_overflow_reportinterval(i, is_rx_tx);
+					}
+				}
+			}
+		} else {
+			wid_syslog_debug_debug(WID_DEFAULT, "set sta flow tx overflow interval %u for all wtp\n", interval);
+			g_sta_flow_tx_overflow_interval = (unsigned short)interval;
+			for(i=0;i<WTP_NUM;i++){				
+				if(AC_WTP[i] != NULL){
+					if(AC_WTP[i]->sta_flow_overflow_tx_reportinterval == (unsigned short)interval){
+						wid_syslog_debug_debug(WID_DEFAULT, "wtp %d sta flow tx overflow report interval already is %u\n",wtpid, interval);
+						ret = WID_DBUS_SUCCESS;
+					}else {
+						wid_syslog_debug_debug(WID_DEFAULT, "set sta flow tx overflow interval %u for wtp %d\n", interval, wtpid);
+						AC_WTP[i]->sta_flow_overflow_tx_reportinterval = (unsigned short)interval;
+						ret = wid_send_to_ap_sta_flow_rx_tx_overflow_reportinterval(i, is_rx_tx);
+					}
+				}
+			}
+		}
+	}	/*wcl add for globle variable*/
+	else if(AC_WTP[wtpid] == NULL)
+	{
+		ret = WTP_ID_NOT_EXIST;
+	}
+	else
+	{
+		if (is_rx_tx) {
+			if (AC_WTP[wtpid]->sta_flow_overflow_rx_reportinterval == (unsigned short)interval) {
+				ret = WID_DBUS_SUCCESS;	
+			} else {
+				AC_WTP[wtpid]->sta_flow_overflow_rx_reportinterval = (unsigned short)interval;
+				ret = wid_send_to_ap_sta_flow_rx_tx_overflow_reportinterval(wtpid, is_rx_tx);
+			}
+		} else {
+			if (AC_WTP[wtpid]->sta_flow_overflow_tx_reportinterval == (unsigned short)interval) {
+				ret = WID_DBUS_SUCCESS;
+			} else {
+				AC_WTP[wtpid]->sta_flow_overflow_tx_reportinterval = (unsigned short)interval;
+				ret = wid_send_to_ap_sta_flow_rx_tx_overflow_reportinterval(wtpid, is_rx_tx);
+			}
+		}
+		
+	}
+	
+	reply = dbus_message_new_method_return(msg);
+
+	
+	dbus_message_iter_init_append(reply, &iter);
+	
+	dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT32, &ret);
+	
+	return reply;
+	
+}
+
+#if 0
+DBusMessage * wid_dbus_interface_set_wtp_sta_flow_tx_overflow_switch(DBusConnection *conn, DBusMessage *msg, void *user_data){
+
+	DBusMessage* reply;
+	DBusMessageIter	 iter;
+	DBusError err;
+	unsigned int wtpid = 0;
+	unsigned int policy = 0;
+	int i=0; 
+	int ret = WID_DBUS_SUCCESS;
+	dbus_error_init(&err);
+	if (!(dbus_message_get_args ( msg, &err,
+								DBUS_TYPE_UINT32,&wtpid,
+								DBUS_TYPE_UINT32,&policy,
+								DBUS_TYPE_INVALID))){
+
+		printf("Unable to get input args\n");
+				
+		if (dbus_error_is_set(&err)) {
+			printf("%s raised: %s",err.name,err.message);
+			dbus_error_free(&err);
+		}
+		return NULL;
+	}
+	if(wtpid == 0){
+		g_sta_flow_tx_overflow_switch = (unsigned char)policy;
+		
+		for(i=0;i<WTP_NUM;i++){				
+			if(AC_WTP[i] != NULL){
+				if(AC_WTP[i]->sta_flow_overflow_tx_reportswitch == (unsigned char)policy){
+					continue;
+				}else {
+					AC_WTP[i]->sta_flow_overflow_tx_reportswitch = (unsigned char)policy;
+					ret = wid_send_to_ap_sta_flow_tx_overflow_reportinterval(i);
+				}
+			}
+		}
+	}
+	else if(AC_WTP[wtpid] == NULL)
+	{
+		ret = WTP_ID_NOT_EXIST;
+	}
+	else if(AC_WTP[wtpid]->sta_flow_overflow_tx_reportswitch == (unsigned char)policy)
+	{
+		ret = WID_DBUS_SUCCESS;
+	}
+	else
+	{
+		AC_WTP[wtpid]->sta_flow_overflow_tx_reportswitch = (unsigned char)policy;
+
+		ret = wid_send_to_ap_sta_flow_tx_overflow_reportinterval(wtpid);
+	}
+	
+		
+	reply = dbus_message_new_method_return(msg);
+
+	
+	dbus_message_iter_init_append(reply, &iter);
+	
+	dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT32, &ret);
+	
+	return reply;
+	
+}
+
+
+DBusMessage * wid_dbus_interface_set_wtp_sta_flow_tx_overflow_interval(DBusConnection *conn, DBusMessage *msg, void *user_data){
+
+	DBusMessage* reply;
+	DBusMessageIter	 iter;
+	DBusError err;
+	unsigned int wtpid = 0;
+	unsigned int interval = 0;
+	int i=0; /*wcl add for globle variable*/
+	int ret = WID_DBUS_SUCCESS;
+	dbus_error_init(&err);
+	if (!(dbus_message_get_args ( msg, &err,
+								DBUS_TYPE_UINT32,&wtpid,
+								DBUS_TYPE_UINT32,&interval,
+								DBUS_TYPE_INVALID))){
+
+		printf("Unable to get input args\n");
+				
+		if (dbus_error_is_set(&err)) {
+			printf("%s raised: %s",err.name,err.message);
+			dbus_error_free(&err);
+		}
+		return NULL;
+	}
+	if(wtpid == 0){
+		
+		g_sta_flow_tx_overflow_interval = (unsigned short)interval;
+		
+		for(i=0;i<WTP_NUM;i++){				
+			if(AC_WTP[i] != NULL){
+				if(AC_WTP[i]->sta_flow_overflow_tx_reportinterval == (unsigned short)interval){
+					ret = WID_DBUS_SUCCESS;
+				}else {
+					AC_WTP[i]->sta_flow_overflow_tx_reportinterval = (unsigned short)interval;
+					ret = wid_send_to_ap_sta_flow_tx_overflow_reportinterval(i);
+				}
+			}
+		}
+	}	/*wcl add for globle variable*/
+	else if(AC_WTP[wtpid] == NULL)
+	{
+		ret = WTP_ID_NOT_EXIST;
+	}
+	else if(AC_WTP[wtpid]->sta_flow_overflow_tx_reportinterval == (unsigned short)interval)
+	{
+		ret = WID_DBUS_SUCCESS;
+	}
+	else
+	{
+		AC_WTP[wtpid]->sta_flow_overflow_tx_reportinterval = (unsigned short)interval;
+		ret = wid_send_to_ap_sta_flow_tx_overflow_reportinterval(wtpid);
+	}
+	
+		
+	reply = dbus_message_new_method_return(msg);
+
+	
+	dbus_message_iter_init_append(reply, &iter);
+	
+	dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT32, &ret);
+	
+	return reply;
+	
+}
+#endif
+
 /* ---zhangshu add for Terminal Disturb Info Report END---,2010-10-08 */
 
 
@@ -74314,6 +75389,76 @@ int show_running_config_wtp(WID_WTP **WTP,int i,char *cursor,char **showStr2,cha
 							cursor = showStr + totalLen;
 						}
 					}
+					//set wtp longitude and latitude
+					if (strlen((char *)(WTP[i]->longitude)) != 0 || strlen((char *)(WTP[i]->latitude)) != 0) {
+						if (vrrid != 0) {
+							totalLen += sprintf(cursor, " ");
+							cursor = showStr + totalLen;
+						}
+						totalLen += sprintf(cursor, "set ap longitude %s latitude %s\n", WTP[i]->longitude, WTP[i]->latitude);
+						cursor = showStr + totalLen;
+					}
+
+					//set unauthorized mac report switch
+					if (WTP[i]->unauthorized_mac_reportswitch == UNKNOWN_MAC_TRAP_SWITCH_ENABLE) {
+						if (vrrid != 0) {
+							totalLen += sprintf(cursor, " ");
+							cursor = showStr + totalLen;
+						}
+						totalLen += sprintf(cursor, "set ap unauthorized mac switch enable\n");
+						cursor = showStr + totalLen;
+					}
+
+					//set configure error report switch
+					if (WTP[i]->wtp_configure_error_reportswitch == AP_CONFIG_FILE_ERR_TRAP_SWITCH_ENABLE) {
+						if (vrrid != 0) {
+							totalLen += sprintf(cursor, " ");
+							cursor = showStr + totalLen;
+						}
+						totalLen += sprintf(cursor, "set ap configure file error switch enable\n");
+						cursor = showStr + totalLen;
+					}
+
+					//set sta flow overlfow rx report switch
+					if (WTP[i]->sta_flow_overflow_rx_reportswitch == STA_FLOW_OVERFLOW_TRAP_RX_SWITCH_ENABLE) {
+						if (vrrid != 0) {
+							totalLen += sprintf(cursor, " ");
+							cursor = showStr + totalLen;
+						}
+						totalLen += sprintf(cursor, "set ap sta flow rx overflow report switch enable\n");
+						cursor = showStr + totalLen;
+					}
+
+					//set sta flow overlfow tx report switch
+					if (WTP[i]->sta_flow_overflow_tx_reportswitch == STA_FLOW_OVERFLOW_TRAP_RX_SWITCH_ENABLE) {
+						if (vrrid != 0) {
+							totalLen += sprintf(cursor, " ");
+							cursor = showStr + totalLen;
+						}
+						totalLen += sprintf(cursor, "set ap sta flow tx overflow report switch enable\n");
+						cursor = showStr + totalLen;
+					}
+
+					//set sta flow overlfow rx report threshold
+					if (WTP[i]->sta_flow_overflow_rx_threshold != STA_FLOW_OVERFLOW_RX_THRESHOLD && WTP[i]->sta_flow_overflow_rx_threshold != 0) {
+						if (vrrid != 0) {
+							totalLen += sprintf(cursor, " ");
+							cursor = showStr + totalLen;
+						}
+						totalLen += sprintf(cursor, "set ap sta flow rx overflow threshold %u\n", WTP[i]->sta_flow_overflow_rx_threshold);
+						cursor = showStr + totalLen;
+					}
+
+					//set sta flow overlfow tx report threshold
+					if (WTP[i]->sta_flow_overflow_tx_threshold != STA_FLOW_OVERFLOW_TX_THRESHOLD && WTP[i]->sta_flow_overflow_tx_threshold != 0) {
+						if (vrrid != 0) {
+							totalLen += sprintf(cursor, " ");
+							cursor = showStr + totalLen;
+						}
+						totalLen += sprintf(cursor, "set ap sta flow tx overflow threshold %u\n", WTP[i]->sta_flow_overflow_tx_threshold);
+						cursor = showStr + totalLen;
+					}
+					
 					if(WTP[i]->apifinfo.report_interval != gINFOREPORTINTERVAL) /*wcl modify for globle variable*/
 					{
 						if(vrrid != 0){
@@ -76928,6 +78073,9 @@ static DBusHandlerResult wid_dbus_message_handler (DBusConnection *connection, D
 		else if (dbus_message_is_method_call(message,WID_DBUS_WTP_INTERFACE,WID_DBUS_CONF_METHOD_SET_WID_AP_EXTENSION_COMMAND)) {
 			reply = wid_dbus_interface_set_ap_extension_command(connection,message,user_data);
 		}
+		else if (dbus_message_is_method_call(message,WID_DBUS_WTP_INTERFACE,WID_DBUS_CONF_METHOD_SET_WID_AP_LONGITUDE_LATITUDE_COMMAND)) {
+			reply = wid_dbus_interface_set_ap_longitude_latitude_command(connection, message, user_data);
+		}
 		else if (dbus_message_is_method_call(message,WID_DBUS_WTP_INTERFACE,WID_DBUS_CONF_METHOD_SET_WID_AP_OPTION60_PARAMETER)) {
 			reply = wid_dbus_interface_set_ap_option60_parameter(connection,message,user_data);
 		}		
@@ -77011,6 +78159,44 @@ static DBusHandlerResult wid_dbus_message_handler (DBusConnection *connection, D
 		else if (dbus_message_is_method_call(message,WID_DBUS_WTP_INTERFACE,WID_DBUS_WTP_METHOD_SET_WTP_EXTENSION_INFOMATION_REPORTINTERVAL)) {
 			reply = wid_dbus_interface_set_wtp_extension_infomation_interval(connection,message,user_data);
 		}
+		else if (dbus_message_is_method_call(message,WID_DBUS_WTP_INTERFACE,WID_DBUS_WTP_METHOD_SET_WTP_UNAUTHORIZED_MAC_REPORTINTERVAL)) {
+			reply = wid_dbus_interface_set_wtp_unauthorized_mac_interval(connection,message,user_data);
+		}
+		else if (dbus_message_is_method_call(message,WID_DBUS_WTP_INTERFACE,WID_DBUS_WTP_METHOD_SET_WTP_UNAUTHORIZED_MAC_REPORT_SWITCH)) {
+			reply = wid_dbus_interface_set_wtp_unauthorized_mac_switch(connection, message, user_data);
+		}
+		else if (dbus_message_is_method_call(message,WID_DBUS_WTP_INTERFACE,WID_DBUS_WTP_METHOD_SET_WTP_CONFIGURE_ERR_REPORTINTERVAL)) {
+			reply = wid_dbus_interface_set_wtp_configure_error_interval(connection,message,user_data);
+		}
+		else if (dbus_message_is_method_call(message,WID_DBUS_WTP_INTERFACE,WID_DBUS_WTP_METHOD_SET_WTP_CONFIGURE_ERR_REPORTSWITCH)) {
+			reply = wid_dbus_interface_set_wtp_configure_error_switch(connection,message,user_data);
+		}
+		else if (dbus_message_is_method_call(message,WID_DBUS_WTP_INTERFACE,WID_DBUS_WTP_METHOD_SET_WTP_ONLINE_STA_FULL_REPORTEINTERVAL)) {
+			reply = wid_dbus_interface_set_wtp_online_sta_full_interval(connection,message,user_data);
+		}
+		else if (dbus_message_is_method_call(message,WID_DBUS_WTP_INTERFACE,WID_DBUS_WTP_METHOD_SET_WTP_ONLINE_STA_FULL_REPORTE_SWITCH)) {
+			reply = wid_dbus_interface_set_wtp_online_sta_full_switch(connection,message,user_data);
+		}
+		else if (dbus_message_is_method_call(message,WID_DBUS_WTP_INTERFACE,WID_DBUS_WTP_METHOD_SET_WTP_STA_FLOW_RX_TX_OVERLFOW_THRESHOLD)) {
+			reply = wid_dbus_interface_set_wtp_sta_flow_rx_tx_overflow_threshold(connection,message,user_data);
+		}
+		else if (dbus_message_is_method_call(message,WID_DBUS_WTP_INTERFACE,WID_DBUS_WTP_METHOD_SET_WTP_STA_FLOW_RX_TX_OVERLFOW_REPORTINTERVAL)) {
+			reply = wid_dbus_interface_set_wtp_sta_flow_rx_tx_overflow_interval(connection,message,user_data);
+		}
+		else if (dbus_message_is_method_call(message,WID_DBUS_WTP_INTERFACE,WID_DBUS_WTP_METHOD_SET_WTP_STA_FLOW_RX_TX_OVERLFOW_REPORT_SWITCH)) {
+			reply = wid_dbus_interface_set_wtp_sta_flow_rx_tx_overflow_switch(connection,message,user_data);
+		}
+		else if (dbus_message_is_method_call(message,WID_DBUS_WTP_INTERFACE,WID_DBUS_WTP_METHOD_SET_WTP_STA_FLOW_RX_TX_OVERLFOW_TRAP_SWITCH)) {
+			reply = wid_dbus_interface_set_wtp_sta_flow_rx_tx_trap_switch(connection,message,user_data);
+		}
+		#if 0
+		else if (dbus_message_is_method_call(message,WID_DBUS_WTP_INTERFACE,WID_DBUS_WTP_METHOD_SET_WTP_STA_FLOW_TX_OVERLFOW_REPORTINTERVAL)) {
+			reply = wid_dbus_interface_set_wtp_sta_flow_tx_overflow_interval(connection,message,user_data);
+		}
+		else if (dbus_message_is_method_call(message,WID_DBUS_WTP_INTERFACE,WID_DBUS_WTP_METHOD_SET_WTP_STA_FLOW_TX_OVERLFOW_REPORT_SWITCH)) {
+			reply = wid_dbus_interface_set_wtp_sta_flow_tx_overflow_switch(connection,message,user_data);
+		}
+		#endif
 		else if (dbus_message_is_method_call(message,WID_DBUS_WTP_INTERFACE,WID_DBUS_WTP_METHOD_SET_WTP_STA_INFOMATION_SWITCH)) {
 			reply = wid_dbus_interface_set_wtp_sta_infomation_enable(connection,message,user_data);
 		}
@@ -78711,6 +79897,431 @@ int wid_dbus_trap_wtp_electrify_register_circle(int wtpindex, int registertimer)
 	return 0;
 
 }
+
+int wid_dbus_trap_sta_online_full(int wtpindex, unsigned int sta_max_support_by_ap) {
+	DBusMessage *query;	
+	DBusError err;
+	unsigned int TID = wtpindex%THREAD_NUM;
+	wid_syslog_debug_debug(WID_DBUS,"wid_dbus_trap_configure_error tid %d\n",TID);
+
+	/*store sn&mac of ap*/
+	unsigned char *mac = NULL;
+	mac = (unsigned char *)malloc(MAC_LEN+1);
+	if (!mac) {
+		wid_syslog_err("malloc for wtp mac failed\n");
+		return 1;
+	}
+	memset(mac,0,MAC_LEN+1);
+
+	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->WTPMAC != NULL))
+	{
+		memcpy(mac,AC_WTP[wtpindex]->WTPMAC,MAC_LEN);
+	}
+
+
+	char *sn = NULL;
+	sn = (char *)malloc(NAS_IDENTIFIER_NAME);
+	if (!sn) {
+		wid_syslog_err("malloc for wtp sn failed\n");
+		free(mac);
+		return 1;
+	}
+	memset(sn,0,NAS_IDENTIFIER_NAME);
+	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->WTPSN != NULL))
+	{
+		memcpy(sn,AC_WTP[wtpindex]->WTPSN,strlen(AC_WTP[wtpindex]->WTPSN));
+	}
+
+    char *netid = NULL;
+    
+	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->netid != NULL))
+	{
+	    netid = (char *)malloc(strlen(AC_WTP[wtpindex]->netid)+1);
+		if (!netid) {
+			wid_syslog_err("malloc for wtp netid failed1\n");
+			free(mac);
+			free(sn);
+			return 1;
+		}
+	    memset(netid,0,(strlen(AC_WTP[wtpindex]->netid)+1));
+		memcpy(netid,AC_WTP[wtpindex]->netid,strlen(AC_WTP[wtpindex]->netid));
+	}
+	else
+	{
+	    netid = (char *)malloc(sizeof(char)*12);
+		if (!netid) {
+			wid_syslog_err("malloc for wtp netid failed2\n");
+			free(mac);
+			free(sn);
+			return 1;
+		}
+	    memset(netid,0,12);
+		memcpy(netid,"defaultcode",11);
+	}
+	
+	unsigned int local_id = local;
+	unsigned int vrrp_id = vrrid;
+
+	query = dbus_message_new_signal(WID_TRAP_OBJPATH,\
+				WID_TRAP_INTERFACE,WID_DBUS_TRAP_WID_WTP_STA_ONLINE_FULL);
+	
+	dbus_error_init(&err);
+
+	dbus_message_append_args(query,
+						DBUS_TYPE_UINT32,&wtpindex,
+						DBUS_TYPE_STRING,&sn,
+						DBUS_TYPE_BYTE,&mac[0],
+						DBUS_TYPE_BYTE,&mac[1],
+						DBUS_TYPE_BYTE,&mac[2],
+						DBUS_TYPE_BYTE,&mac[3],
+						DBUS_TYPE_BYTE,&mac[4],
+						DBUS_TYPE_BYTE,&mac[5],
+						DBUS_TYPE_STRING,&netid,
+						DBUS_TYPE_UINT32,&vrrp_id,
+						DBUS_TYPE_UINT32,&local_id,
+						DBUS_TYPE_UINT32,&sta_max_support_by_ap,
+						DBUS_TYPE_INVALID);
+
+	dbus_connection_send(wid_dbus_connection_t[TID],query,NULL);
+	
+	dbus_message_unref(query);
+	CW_FREE_OBJECT(sn);
+	CW_FREE_OBJECT(mac);
+	CW_FREE_OBJECT(netid);
+	return 0;	
+}
+
+/*
+ *is_rx_tx:1 rx trap ; 0 tx trap
+ *
+ */
+int wid_dbus_trap_sta_overflow(int wtpindex, unsigned char *sta_mac, unsigned char is_rx_tx, unsigned long sta_flow) {
+	DBusMessage *query;	
+	DBusError err;
+	unsigned int TID = wtpindex%THREAD_NUM;
+	wid_syslog_debug_debug(WID_DBUS,"wid_dbus_trap_configure_error tid %d\n",TID);
+
+	if (!sta_mac) {
+		wid_syslog_err("sta_mac is null\n");
+		return 1;
+	}
+	/*store sn&mac of ap*/
+	unsigned char *mac = NULL;
+	mac = (unsigned char *)malloc(MAC_LEN+1);
+	if (!mac) {
+		wid_syslog_err("malloc for wtp mac failed\n");
+		return 1;
+	}
+	memset(mac,0,MAC_LEN+1);
+
+	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->WTPMAC != NULL))
+	{
+		memcpy(mac,AC_WTP[wtpindex]->WTPMAC,MAC_LEN);
+	}
+
+
+	char *sn = NULL;
+	sn = (char *)malloc(NAS_IDENTIFIER_NAME);
+	if (!sn) {
+		wid_syslog_err("malloc for wtp sn failed\n");
+		free(mac);
+		return 1;
+	}
+	memset(sn,0,NAS_IDENTIFIER_NAME);
+	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->WTPSN != NULL))
+	{
+		memcpy(sn,AC_WTP[wtpindex]->WTPSN,strlen(AC_WTP[wtpindex]->WTPSN));
+	}
+
+    char *netid = NULL;
+    
+	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->netid != NULL))
+	{
+	    netid = (char *)malloc(strlen(AC_WTP[wtpindex]->netid)+1);
+		if (!netid) {
+			wid_syslog_err("malloc for wtp netid failed1\n");
+			free(mac);
+			free(sn);
+			return 1;
+		}
+	    memset(netid,0,(strlen(AC_WTP[wtpindex]->netid)+1));
+		memcpy(netid,AC_WTP[wtpindex]->netid,strlen(AC_WTP[wtpindex]->netid));
+	}
+	else
+	{
+	    netid = (char *)malloc(sizeof(char)*12);
+		if (!netid) {
+			wid_syslog_err("malloc for wtp netid failed2\n");
+			free(mac);
+			free(sn);
+			return 1;
+		}
+	    memset(netid,0,12);
+		memcpy(netid,"defaultcode",11);
+	}
+	
+	unsigned int local_id = local;
+	unsigned int vrrp_id = vrrid;
+
+	query = dbus_message_new_signal(WID_TRAP_OBJPATH,\
+				WID_TRAP_INTERFACE,WID_DBUS_TRAP_WID_WTP_STA_FLOW_RX_TX_OVERFLOW);
+
+	dbus_error_init(&err);
+
+	dbus_message_append_args(query,
+						DBUS_TYPE_UINT32,&wtpindex,
+						DBUS_TYPE_STRING,&sn,
+						DBUS_TYPE_BYTE,&mac[0],
+						DBUS_TYPE_BYTE,&mac[1],
+						DBUS_TYPE_BYTE,&mac[2],
+						DBUS_TYPE_BYTE,&mac[3],
+						DBUS_TYPE_BYTE,&mac[4],
+						DBUS_TYPE_BYTE,&mac[5],
+						DBUS_TYPE_STRING,&netid,
+						DBUS_TYPE_UINT32,&vrrp_id,
+						DBUS_TYPE_UINT32,&local_id,
+						DBUS_TYPE_BYTE,&sta_mac[0],
+						DBUS_TYPE_BYTE,&sta_mac[1],
+						DBUS_TYPE_BYTE,&sta_mac[2],
+						DBUS_TYPE_BYTE,&sta_mac[3],
+						DBUS_TYPE_BYTE,&sta_mac[4],
+						DBUS_TYPE_BYTE,&sta_mac[5],
+						DBUS_TYPE_BYTE,&is_rx_tx,
+						DBUS_TYPE_UINT64,&sta_flow,
+						DBUS_TYPE_INVALID);
+
+	dbus_connection_send(wid_dbus_connection_t[TID],query,NULL);
+	
+	dbus_message_unref(query);
+	CW_FREE_OBJECT(sn);
+	CW_FREE_OBJECT(mac);
+	CW_FREE_OBJECT(netid);
+	return 0;	
+}
+
+int wid_dbus_trap_configure_error(int wtpindex, unsigned char err_code) {
+	DBusMessage *query;	
+	DBusError err;
+	unsigned int TID = wtpindex%THREAD_NUM;
+	wid_syslog_debug_debug(WID_DBUS,"wid_dbus_trap_configure_error tid %d\n",TID);
+
+	/*store sn&mac of ap*/
+	unsigned char *mac = NULL;
+	mac = (unsigned char *)malloc(MAC_LEN+1);
+	if (!mac) {
+		wid_syslog_err("malloc for wtp mac failed\n");
+		return 1;
+	}
+	memset(mac,0,MAC_LEN+1);
+
+	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->WTPMAC != NULL))
+	{
+		memcpy(mac,AC_WTP[wtpindex]->WTPMAC,MAC_LEN);
+	}
+
+
+	char *sn = NULL;
+	sn = (char *)malloc(NAS_IDENTIFIER_NAME);
+	if (!sn) {
+		wid_syslog_err("malloc for wtp sn failed\n");
+		free(mac);
+		return 1;
+	}
+	memset(sn,0,NAS_IDENTIFIER_NAME);
+	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->WTPSN != NULL))
+	{
+		memcpy(sn,AC_WTP[wtpindex]->WTPSN,strlen(AC_WTP[wtpindex]->WTPSN));
+	}
+
+    char *netid = NULL;
+    
+	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->netid != NULL))
+	{
+	    netid = (char *)malloc(strlen(AC_WTP[wtpindex]->netid)+1);
+		if (!netid) {
+			wid_syslog_err("malloc for wtp netid failed1\n");
+			free(mac);
+			free(sn);
+			return 1;
+		}
+	    memset(netid,0,(strlen(AC_WTP[wtpindex]->netid)+1));
+		memcpy(netid,AC_WTP[wtpindex]->netid,strlen(AC_WTP[wtpindex]->netid));
+	}
+	else
+	{
+	    netid = (char *)malloc(sizeof(char)*12);
+		if (!netid) {
+			wid_syslog_err("malloc for wtp netid failed2\n");
+			free(mac);
+			free(sn);
+			return 1;
+		}
+	    memset(netid,0,12);
+		memcpy(netid,"defaultcode",11);
+	}
+	
+	unsigned int local_id = local;
+	unsigned int vrrp_id = vrrid;
+
+	query = dbus_message_new_signal(WID_TRAP_OBJPATH,\
+				WID_TRAP_INTERFACE,WID_DBUS_TRAP_WID_WTP_CONFIGURE_ERROR);
+	
+	dbus_error_init(&err);
+
+	dbus_message_append_args(query,
+						DBUS_TYPE_UINT32,&wtpindex,
+						DBUS_TYPE_STRING,&sn,
+						DBUS_TYPE_BYTE,&mac[0],
+						DBUS_TYPE_BYTE,&mac[1],
+						DBUS_TYPE_BYTE,&mac[2],
+						DBUS_TYPE_BYTE,&mac[3],
+						DBUS_TYPE_BYTE,&mac[4],
+						DBUS_TYPE_BYTE,&mac[5],
+						DBUS_TYPE_STRING,&netid,
+						DBUS_TYPE_UINT32,&vrrp_id,
+						DBUS_TYPE_UINT32,&local_id,
+						DBUS_TYPE_BYTE,&err_code,
+						DBUS_TYPE_INVALID);
+
+	dbus_connection_send(wid_dbus_connection_t[TID],query,NULL);
+	
+	dbus_message_unref(query);
+	CW_FREE_OBJECT(sn);
+	CW_FREE_OBJECT(mac);
+	CW_FREE_OBJECT(netid);
+	return 0;
+
+}
+
+int wid_dbus_trap_sta_unauthorized_mac(int wtpindex, int mac_count, unsigned char *mac_str)
+{
+	DBusMessage *query;	
+	DBusError err;
+	unsigned int TID = wtpindex%THREAD_NUM;
+	wid_syslog_debug_debug(WID_DBUS,"wid_dbus_trap_sta_unauthorized_mac tid %d\n",TID);
+
+	unsigned char *temp_macs;
+	//unsigned char *temp_offset;
+	int i, j;
+
+	if (mac_count <= 0) {
+		wid_syslog_err("mac count is 0, no need send trap for wtp %d\n", wtpindex);
+	}
+	/*store sn&mac of ap*/
+	unsigned char *mac = NULL;
+	mac = (unsigned char *)malloc(MAC_LEN+1);
+	if (!mac) {
+		wid_syslog_err("malloc for wtp mac failed\n");
+		return 1;
+	}
+	memset(mac,0,MAC_LEN+1);
+
+	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->WTPMAC != NULL))
+	{
+		memcpy(mac,AC_WTP[wtpindex]->WTPMAC,MAC_LEN);
+	}
+	
+	temp_macs = malloc(mac_count*18);//for mac and ,and :
+	if (!temp_macs) {
+		wid_syslog_err("malloc for sta macs failed\n");
+		free(mac);
+		return 1;
+	}
+	memset(temp_macs, '\0', mac_count*18);
+
+	for (i=0; i<mac_count; i++) {
+		for (j=0; j<6; j++) {
+			if (j<5) {
+				sprintf((char *)temp_macs+(i*3*6+j*3), "%02X:", (unsigned char)(*(mac_str+i*6+j)));
+			} else {
+				sprintf((char *)temp_macs+(i*3*6+j*3), "%02X", (unsigned char)(*(mac_str+i*6+j)));
+			}
+		}
+		
+		if (i<(mac_count-1)) {
+			sprintf((char *)temp_macs+(i*3*6+j*3-1), "%c", ',');
+		}
+	}
+	
+	wid_syslog_debug_debug(WID_DBUS,"mac str is :%s\n", temp_macs);
+
+	char *sn = NULL;
+	sn = (char *)malloc(NAS_IDENTIFIER_NAME);
+	if (!sn) {
+		wid_syslog_err("malloc for wtp sn failed\n");
+		free(mac);
+		free(temp_macs);
+		return 1;
+	}
+	memset(sn,0,NAS_IDENTIFIER_NAME);
+	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->WTPSN != NULL))
+	{
+		memcpy(sn,AC_WTP[wtpindex]->WTPSN,strlen(AC_WTP[wtpindex]->WTPSN));
+	}
+
+    char *netid = NULL;
+    
+	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->netid != NULL))
+	{
+	    netid = (char *)malloc(strlen(AC_WTP[wtpindex]->netid)+1);
+		if (!netid) {
+			wid_syslog_err("malloc for wtp netid failed1\n");
+			free(mac);
+			free(temp_macs);
+			free(sn);
+			return 1;
+		}
+	    memset(netid,0,(strlen(AC_WTP[wtpindex]->netid)+1));
+		memcpy(netid,AC_WTP[wtpindex]->netid,strlen(AC_WTP[wtpindex]->netid));
+	}
+	else
+	{
+	    netid = (char *)malloc(sizeof(char)*12);
+		if (!netid) {
+			wid_syslog_err("malloc for wtp netid failed2\n");
+			free(mac);
+			free(temp_macs);
+			free(sn);
+			return 1;
+		}
+	    memset(netid,0,12);
+		memcpy(netid,"defaultcode",11);
+	}
+	
+	unsigned int local_id = local;
+	unsigned int vrrp_id = vrrid;
+
+	query = dbus_message_new_signal(WID_TRAP_OBJPATH,\
+				WID_TRAP_INTERFACE,WID_DBUS_TRAP_WID_WTP_STA_UNAUTHORIZED_MAC);
+	
+	dbus_error_init(&err);
+
+	dbus_message_append_args(query,
+						DBUS_TYPE_UINT32,&wtpindex,
+						DBUS_TYPE_STRING,&sn,
+						DBUS_TYPE_BYTE,&mac[0],
+						DBUS_TYPE_BYTE,&mac[1],
+						DBUS_TYPE_BYTE,&mac[2],
+						DBUS_TYPE_BYTE,&mac[3],
+						DBUS_TYPE_BYTE,&mac[4],
+						DBUS_TYPE_BYTE,&mac[5],
+						DBUS_TYPE_STRING,&netid,
+						DBUS_TYPE_UINT32,&vrrp_id,
+						DBUS_TYPE_UINT32,&local_id,
+						DBUS_TYPE_STRING,&temp_macs,
+						DBUS_TYPE_INVALID);
+
+	dbus_connection_send(wid_dbus_connection_t[TID],query,NULL);
+	
+	dbus_message_unref(query);
+	CW_FREE_OBJECT(sn);
+	CW_FREE_OBJECT(mac);
+	CW_FREE_OBJECT(netid);
+	CW_FREE_OBJECT(temp_macs);
+	return 0;
+
+}
+
 
 int wid_dbus_trap_wtp_ap_power_off(int wtpindex)
 {

@@ -205,7 +205,7 @@ CWBool CWParseConfigureRequestMessage(char *msg, int len, int *seqNumPtr, CWProt
 CWBool CWAssembleConfigureResponse(CWProtocolMessage **messagesPtr, int *fragmentsNumPtr, int PMTU, int seqNum, int WTPIndex) 
 {
 	CWProtocolMessage *msgElems = NULL;
-	const int MsgElemCount=9+(AC_WTP[WTPIndex]->RadioCount)*6; //nine fix message  six unfix message ralated with radio
+	const int MsgElemCount=11+(AC_WTP[WTPIndex]->RadioCount)*6; //nine fix message  six unfix message ralated with radio
 	CWProtocolMessage *msgElemsBinding = NULL;
 	int k = -1;
 	int j = 0;
@@ -256,7 +256,9 @@ CWBool CWAssembleConfigureResponse(CWProtocolMessage **messagesPtr, int *fragmen
 	    (!(CWAssembleMsgElemWTPFallback(&(msgElems[++k])))) ||
 		(!(CWAssembleMsgElemAPScanningSet(&(msgElems[++k]))))||
 		(!(CWAssembleMsgElemAPStatisticsSet(&(msgElems[++k]),-1)))||     //fengwenchao modify 20110422
-		(!(CWAssembleMsgElemAPThroughoutSet(&(msgElems[++k]),WTPIndex)))
+		(!(CWAssembleMsgElemAPThroughoutSet(&(msgElems[++k]),WTPIndex))) ||
+		(!(CWAssembleMsgElemAPConfigureErrorSet(&(msgElems[++k]), WTPIndex))) ||
+		(!(CWAssembleMsgElemAPUnauthorizedMacSet(&(msgElems[++k]), WTPIndex)))
 	){
 		int i;
 		for(i = 0; i <= k; i++) { CW_FREE_PROTOCOL_MESSAGE(msgElems[i]);}

@@ -477,6 +477,11 @@ void WID_CONFIG_SAVE(unsigned int WTPIndex){
 				wid_syslog_warning("%s,%d,WTP[%d] need set 5g enable,but it is single radio,will not send.\n",__func__,__LINE__,WTPIndex);
 			}
 		}
+		
+		if (strcmp((char *)AC_WTP[WTPIndex]->longitude, "") != 0 || strcmp((char *)AC_WTP[WTPIndex]->latitude, "") != 0 ) {
+			wid_set_ap_longitude_latitude(WTPIndex, AC_WTP[WTPIndex]->longitude, AC_WTP[WTPIndex]->latitude);
+		}
+		
 		/*11n parameter set,zhangshu modify 2010-11-25*/
 		if((AC_WTP[WTPIndex]->WTP_Radio[i]->Radio_Type & IEEE80211_11N) == IEEE80211_11N){
             unsigned int Radio_ID = WTPIndex * L_RADIO_NUM + i;
