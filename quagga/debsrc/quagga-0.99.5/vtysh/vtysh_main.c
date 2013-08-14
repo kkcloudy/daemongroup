@@ -294,7 +294,7 @@ int dl_dcli_init(boot_flag)
       fputs (dlerror(),stderr);
       printf(" Run without /opt/lib/libdcli_sem.so\n");
   }
-
+#ifndef _D_NANOCELL_
 /*******************dcli_npd****************************/
    if (dcli_dl_handle_npd = dlopen("libdcli_npd.so",RTLD_NOW)){
 
@@ -460,7 +460,7 @@ int dl_dcli_init(boot_flag)
       fputs (dlerror(),stderr);
       printf(" Run without /opt/lib/libdcli_npd.so\n");
   }
-
+#endif
 
 
   vtysh_send_dbus_signal_init();
