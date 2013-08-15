@@ -7741,7 +7741,7 @@ DEFUN(show_all_wlan_wapi_basic_information_func,
 		slot_id = vty->slotindex;
 	}
 	
-	ReInitDbusConnection(&dbus_connection,slot_id);
+	ReInitDbusConnection(&dbus_connection,slot_id,distributFag);
 	/*fengwenchao add end*/
 
 	WlanHead = show_ConfigWapiInfo_of_all_wtp(index,localid,dbus_connection, &num, &ret);
@@ -7819,7 +7819,7 @@ DEFUN(show_all_wlan_wapi_performance_stats_information_func,
 		localid = vty->local;
 		slot_id = vty->slotindex;
 	}
-	ReInitDbusConnection(&dbus_connection,slot_id);
+	ReInitDbusConnection(&dbus_connection,slot_id,distributFag);
 	/*fengwenchao add end*/
 	WlanHead = show_WtpWAPIPerformanceStatsInfo_of_all_wlan(index,localid,dbus_connection, &num, &ret);
 	
