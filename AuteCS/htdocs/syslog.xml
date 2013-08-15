@@ -11,43 +11,43 @@
   </des>
 <des attribute="sys">
   <value>df_system</value> 
-  <content>file( "/var/log/system.log" template(":$MONTH_STR $DAY $HOUR:$MIN:$SEC:$USEC $YEAR $HOST_NAME $PROGRAM/$LEVEL_NUM/ $MSGONLY\n") );</content> 
+  <content>file( "/var/log/system.log" template(":$MONTH_STR $DAY $HOUR:$MIN:$SEC:$USEC $YEAR $HOST_NAME $PROGRAM/$LEVEL_NUM/ $MSGONLY\n")  template_escape(no));</content> 
   </des>
 <des>
   <value>df_service</value> 
-  <content>file( "/var/log/syslogservice.log" template(":$MONTH_STR $DAY $HOUR:$MIN:$SEC:$USEC $YEAR $HOST_NAME $PROGRAM/$LEVEL_NUM/ $MSGONLY\n") );</content> 
+  <content>file( "/var/log/syslogservice.log" template(":$MONTH_STR $DAY $HOUR:$MIN:$SEC:$USEC $YEAR $HOST_NAME $PROGRAM/$LEVEL_NUM/ $MSGONLY\n")  template_escape(no));</content> 
   </des>
   <des>
   <value>df_at_least_info</value> 
-  <content>file( "/var/log/systemlog/$R_YEAR$R_MONTH$R_DAY/inform.log" template(":$MONTH_STR $DAY $HOUR:$MIN:$SEC:$USEC $YEAR $HOST_NAME $PROGRAM/$LEVEL_NUM/ $MSGONLY\n") );</content> 
+  <content>file( "/var/log/systemlog/$R_YEAR$R_MONTH$R_DAY/inform.log" template(":$MONTH_STR $DAY $HOUR:$MIN:$SEC:$USEC $YEAR $HOST_NAME $PROGRAM/$LEVEL_NUM/ $MSGONLY\n")  template_escape(no));</content> 
   </des>
   <des>
   <value>df_at_least_notice</value> 
-  <content>file( "/var/log/systemlog/$R_YEAR$R_MONTH$R_DAY/notice.log" template(":$MONTH_STR $DAY $HOUR:$MIN:$SEC:$USEC $YEAR $HOST_NAME $PROGRAM/$LEVEL_NUM/ $MSGONLY\n") );</content> 
+  <content>file( "/var/log/systemlog/$R_YEAR$R_MONTH$R_DAY/notice.log" template(":$MONTH_STR $DAY $HOUR:$MIN:$SEC:$USEC $YEAR $HOST_NAME $PROGRAM/$LEVEL_NUM/ $MSGONLY\n")  template_escape(no));</content> 
   </des>
   <des>
   <value>df_at_least_warn</value> 
-  <content>file( "/var/log/systemlog/$R_YEAR$R_MONTH$R_DAY/warning.log" template(":$MONTH_STR $DAY $HOUR:$MIN:$SEC:$USEC $YEAR $HOST_NAME $PROGRAM/$LEVEL_NUM/ $MSGONLY\n") );</content> 
+  <content>file( "/var/log/systemlog/$R_YEAR$R_MONTH$R_DAY/warning.log" template(":$MONTH_STR $DAY $HOUR:$MIN:$SEC:$USEC $YEAR $HOST_NAME $PROGRAM/$LEVEL_NUM/ $MSGONLY\n")  template_escape(no));</content> 
   </des>
   <des>
   <value>df_at_least_crit</value> 
-  <content>file( "/var/log/systemlog/$R_YEAR$R_MONTH$R_DAY/crit.log" template(":$MONTH_STR $DAY $HOUR:$MIN:$SEC:$USEC $YEAR $HOST_NAME $PROGRAM/$LEVEL_NUM/ $MSGONLY\n") );</content> 
+  <content>file( "/var/log/systemlog/$R_YEAR$R_MONTH$R_DAY/crit.log" template(":$MONTH_STR $DAY $HOUR:$MIN:$SEC:$USEC $YEAR $HOST_NAME $PROGRAM/$LEVEL_NUM/ $MSGONLY\n")  template_escape(no));</content> 
   </des>
   <des>
   <value>df_at_least_err</value> 
-  <content>file( "/var/log/systemlog/$R_YEAR$R_MONTH$R_DAY/err.log" template(":$MONTH_STR $DAY $HOUR:$MIN:$SEC:$USEC $YEAR $HOST_NAME $PROGRAM/$LEVEL_NUM/ $MSGONLY\n") );</content> 
+  <content>file( "/var/log/systemlog/$R_YEAR$R_MONTH$R_DAY/err.log" template(":$MONTH_STR $DAY $HOUR:$MIN:$SEC:$USEC $YEAR $HOST_NAME $PROGRAM/$LEVEL_NUM/ $MSGONLY\n")  template_escape(no));</content> 
   </des>
    <des>
   <value>df_debug</value> 
-  <content>file( "/var/log/systemlog/$R_YEAR$R_MONTH$R_DAY/debug.log" template(":$MONTH_STR $DAY $HOUR:$MIN:$SEC:$USEC $YEAR $HOST_NAME $PROGRAM/$LEVEL_NUM/ $MSGONLY\n") );</content> 
+  <content>file( "/var/log/systemlog/$R_YEAR$R_MONTH$R_DAY/debug.log" template(":$MONTH_STR $DAY $HOUR:$MIN:$SEC:$USEC $YEAR $HOST_NAME $PROGRAM/$LEVEL_NUM/ $MSGONLY\n")  template_escape(no));</content> 
   </des>
   <des>
   <value>df_cli</value> 
-  <content>file( "/var/log/cli.log" template(":$MONTH_STR $DAY $HOUR:$MIN:$SEC:$USEC $YEAR $HOST_NAME $PROGRAM/$LEVEL_NUM/ $MSGONLY\n") );</content> 
+  <content>file( "/var/log/cli.log" template(":$MONTH_STR $DAY $HOUR:$MIN:$SEC:$USEC $YEAR $HOST_NAME $PROGRAM/$LEVEL_NUM/ $MSGONLY\n")  template_escape(no));</content> 
   </des> 
   <des>
   <value>df_trap</value> 
-  <content>file( "/var/log/trap.log" template("$DATE $PRIORITY $MSG\n") );</content> 
+  <content>file( "/var/log/trap.log" template("$DATE $PRIORITY $MSG\n") template_escape(no));</content> 
   </des> 
 <filter attribute="auth">
   <value>f_auth</value> 
