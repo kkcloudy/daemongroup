@@ -30571,19 +30571,17 @@ void free_maclist(struct acl_config *conf, struct maclist *list)
 int wid_set_ap_longitude_latitude(unsigned int wtpid, unsigned char *longitude, unsigned char *latitude)
 {
 	struct msgqlist *elem = NULL;
-	wid_syslog_err("33333333333333\n");
-	wid_syslog_debug_debug(WID_DEFAULT,"the wtpid is %s\n",__func__);
+
 	msgq msg;
 
 	int i =0;
+	
 	if(wtpid == 0){
-		wid_syslog_err("4444444444444\n");
 		for(i = 0 ; i < WTP_NUM;i++)
 		{
 			if(AC_WTP[i] != NULL) 
 			{
 				wtpid = i;
-				wid_syslog_debug_debug(WID_DEFAULT,"the wtpid is %d\n",wtpid);
 				if(AC_WTP[wtpid]->WTPStat == 5)
 				{
 					CWThreadMutexLock(&(gWTPs[wtpid].WTPThreadMutex));
@@ -30595,7 +30593,11 @@ int wid_set_ap_longitude_latitude(unsigned int wtpid, unsigned char *longitude, 
 						msg.mqinfo.type = CONTROL_TYPE;
 						msg.mqinfo.subtype = WTP_S_TYPE;
 						msg.mqinfo.u.WtpInfo.Wtp_Op = WTP_LONGITUDE_LATITUDE_SET;
+
+						memset(msg.mqinfo.u.WtpInfo.username, '\0', sizeof(msg.mqinfo.u.WtpInfo.username));
 						memcpy(msg.mqinfo.u.WtpInfo.username, (char *)longitude, strlen((char *)longitude));
+						
+						memset(msg.mqinfo.u.WtpInfo.passwd, '\0', sizeof(msg.mqinfo.u.WtpInfo.passwd));
 						memcpy(msg.mqinfo.u.WtpInfo.passwd, (char *)latitude, strlen((char *)latitude));
 						
 						if (msgsnd(ACDBUS_MSGQ, (msgq *)&msg, sizeof(msg.mqinfo), 0) == -1){
@@ -30604,15 +30606,20 @@ int wid_set_ap_longitude_latitude(unsigned int wtpid, unsigned char *longitude, 
 						}
 					}
 					CWThreadMutexUnlock(&(gWTPs[wtpid].WTPThreadMutex));
-				} else if((AC_WTP[wtpid] != NULL)){
+				} else {
 					memset((char*)&msg, 0, sizeof(msg));
 					msg.mqid = wtpid%THREAD_NUM+1;
 					msg.mqinfo.WTPID = wtpid;
 					msg.mqinfo.type = CONTROL_TYPE;
 					msg.mqinfo.subtype = WTP_S_TYPE;
 					msg.mqinfo.u.WtpInfo.Wtp_Op = WTP_LONGITUDE_LATITUDE_SET;
+
+					memset(msg.mqinfo.u.WtpInfo.username, '\0', sizeof(msg.mqinfo.u.WtpInfo.username));
 					memcpy(msg.mqinfo.u.WtpInfo.username,(char *)longitude, strlen((char *)longitude));
+
+					memset(msg.mqinfo.u.WtpInfo.passwd, '\0', sizeof(msg.mqinfo.u.WtpInfo.passwd));
 					memcpy(msg.mqinfo.u.WtpInfo.passwd, (char *)latitude, strlen((char *)latitude));
+					
 					elem = (struct msgqlist*)malloc(sizeof(struct msgqlist));
 					if(elem == NULL){
 						wid_syslog_info("%s malloc %s",__func__,strerror(errno));
@@ -30629,7 +30636,6 @@ int wid_set_ap_longitude_latitude(unsigned int wtpid, unsigned char *longitude, 
 	} else if(AC_WTP[wtpid] != NULL){
 		if(AC_WTP[wtpid]->WTPStat == 5)
 		{
-			wid_syslog_err("5555555555555555\n");
 			CWThreadMutexLock(&(gWTPs[wtpid].WTPThreadMutex));
 			if(gWTPs[wtpid].isNotFree && (gWTPs[wtpid].currentState == CW_ENTER_RUN))
 			{
@@ -30639,7 +30645,11 @@ int wid_set_ap_longitude_latitude(unsigned int wtpid, unsigned char *longitude, 
 				msg.mqinfo.type = CONTROL_TYPE;
 				msg.mqinfo.subtype = WTP_S_TYPE;
 				msg.mqinfo.u.WtpInfo.Wtp_Op = WTP_LONGITUDE_LATITUDE_SET;
+
+				memset(msg.mqinfo.u.WtpInfo.username, '\0', sizeof(msg.mqinfo.u.WtpInfo.username));
 				memcpy(msg.mqinfo.u.WtpInfo.username, (char *)longitude, strlen((char *)longitude));
+
+				memset(msg.mqinfo.u.WtpInfo.passwd, '\0', sizeof(msg.mqinfo.u.WtpInfo.passwd));
 				memcpy(msg.mqinfo.u.WtpInfo.passwd, (char *)latitude, strlen((char *)latitude));
 				
 				if (msgsnd(ACDBUS_MSGQ, (msgq *)&msg, sizeof(msg.mqinfo), 0) == -1){
@@ -30649,17 +30659,21 @@ int wid_set_ap_longitude_latitude(unsigned int wtpid, unsigned char *longitude, 
 			}
 			CWThreadMutexUnlock(&(gWTPs[wtpid].WTPThreadMutex));
 		} else if((AC_WTP[wtpid] != NULL)){
-			wid_syslog_err("66666666666666\n");
 			memset((char*)&msg, 0, sizeof(msg));
 			msg.mqid = wtpid%THREAD_NUM+1;
 			msg.mqinfo.WTPID = wtpid;
 			msg.mqinfo.type = CONTROL_TYPE;
 			msg.mqinfo.subtype = WTP_S_TYPE;
 			msg.mqinfo.u.WtpInfo.Wtp_Op = WTP_LONGITUDE_LATITUDE_SET;
+
+			memset(msg.mqinfo.u.WtpInfo.username, '\0', sizeof(msg.mqinfo.u.WtpInfo.username));
 			memcpy(msg.mqinfo.u.WtpInfo.username, (char *)longitude, strlen((char *)longitude));
+
+			memset(msg.mqinfo.u.WtpInfo.passwd, '\0', sizeof(msg.mqinfo.u.WtpInfo.passwd));
 			memcpy(msg.mqinfo.u.WtpInfo.passwd, (char *)latitude, strlen((char *)latitude));
+				
 			elem = (struct msgqlist*)malloc(sizeof(struct msgqlist));
-			wid_syslog_err("777777777777\n");
+
 			if(elem == NULL){
 				wid_syslog_info("%s malloc %s",__func__,strerror(errno));
 				perror("malloc");
@@ -30668,9 +30682,9 @@ int wid_set_ap_longitude_latitude(unsigned int wtpid, unsigned char *longitude, 
 			memset((char*)&(elem->mqinfo), 0, sizeof(msgqdetail));
 			elem->next = NULL;
 			memcpy((char*)&(elem->mqinfo),(char*)&(msg.mqinfo),sizeof(msg.mqinfo));
-			wid_syslog_err("888888888888\n");
+
 			WID_INSERT_CONTROL_LIST(wtpid, elem);
-			wid_syslog_err("999999999999999\n");
+
 		}
 	}
 	return 0;

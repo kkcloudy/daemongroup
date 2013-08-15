@@ -1252,11 +1252,11 @@ struct wtp{
 
 	unsigned char sta_flow_overflow_rx_reportswitch;
 	unsigned short sta_flow_overflow_rx_reportinterval;
-	unsigned int sta_flow_overflow_rx_threshold;
+	unsigned int sta_flow_overflow_rx_threshold;	//kB
 	
 	unsigned char sta_flow_overflow_tx_reportswitch;
 	unsigned short sta_flow_overflow_tx_reportinterval;
-	unsigned int sta_flow_overflow_tx_threshold;
+	unsigned int sta_flow_overflow_tx_threshold;	//kB
 
 	unsigned char sta_online_full_reportswitch;
 	unsigned short sta_online_full_reportinterval;

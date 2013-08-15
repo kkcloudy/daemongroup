@@ -2365,7 +2365,9 @@ CWBool CWAssembleConfigurationUpdateRequest_WTP(CWProtocolMessage **messagesPtr,
 				CW_FREE_OBJECT(msgElems);
 				return CW_FALSE; 
 			}
+			memset((char *)AC_WTP[WTPIndex]->longitude, '\0', LONGITUDE_LATITUDE_MAX_LEN);
 			strncpy((char *)AC_WTP[WTPIndex]->longitude, elem->mqinfo.u.WtpInfo.username, strlen(elem->mqinfo.u.WtpInfo.username));
+			memset((char *)AC_WTP[WTPIndex]->latitude, '\0', LONGITUDE_LATITUDE_MAX_LEN);
 			strncpy((char *)AC_WTP[WTPIndex]->latitude, elem->mqinfo.u.WtpInfo.passwd, strlen(elem->mqinfo.u.WtpInfo.passwd));
 			break;
 		case WTP_UNAUTHORIZED_MAC_REPORT:

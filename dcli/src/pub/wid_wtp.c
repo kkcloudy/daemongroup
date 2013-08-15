@@ -7179,18 +7179,15 @@ struct WtpBasicInfo* show_basic_info_of_all_wtp(int index,int localid,DBusConnec
 
 				dbus_message_iter_next(&iter_struct);
 				dbus_message_iter_get_basic(&iter_struct, &(longitude));
-				//fprintf(stderr, "bbbbbbb  longitude=%s\n", longitude);
 				
 				dbus_message_iter_next(&iter_struct);
 				dbus_message_iter_get_basic(&iter_struct, &(latitude));
-				//fprintf(stderr, "bbbbbbb  latitude=%s\n", latitude);
 				
 				dbus_message_iter_next(&iter_struct);
 				dbus_message_iter_get_basic(&iter_struct, &(WtpNode->power_mode));
 
 				dbus_message_iter_next(&iter_struct);
 				dbus_message_iter_get_basic(&iter_struct, &(manufacture_date));
-				//fprintf(stderr,"bbbbbbb  manufacture_date=%s\n", manufacture_date);
 				
 				dbus_message_iter_next(&iter_struct);
 				dbus_message_iter_get_basic(&iter_struct, &(WtpNode->forward_mode));

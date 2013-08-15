@@ -10978,6 +10978,7 @@ DEFUN(set_ap_extension_command_func,
 #define LONGITUDE_LATITUDE_MAX_LEN 16
 
 /*
+ * check longitude and latitude is illegal or not
  *ret:0 for success;1 for incorrect format; 2 for out of range
  *
  *
@@ -11015,9 +11016,8 @@ DEFUN(set_ap_longitude_latitude_func,
  		vty_out(vty, "parameter not enough\n");
 		return CMD_FAILURE;
 	}
-	// TODO: some where need to  be changed
-
-	vty_out(vty, "argv[0]=%s len=%d\n", argv[0], strlen(argv[0]));
+	
+	// TODO:  How to check longitude and latitude is illegal or not
 	ret = parse_longitude_latitude(argv[0], &longitude);
 	if(ret == 1) {
 		vty_out(vty,"parse parameter longitude format failed.format as:\n");
@@ -11028,7 +11028,6 @@ DEFUN(set_ap_longitude_latitude_func,
 		
 	}
 
-	vty_out(vty, "argv[1]=%s len=%d\n", argv[1], strlen(argv[1]));
 	ret = parse_longitude_latitude(argv[1], &latitude);
 	if (ret) {
 		free(longitude);
@@ -11043,59 +11042,50 @@ DEFUN(set_ap_longitude_latitude_func,
 	char OBJPATH[PATH_LEN];
 	char INTERFACE[PATH_LEN];
 	if(vty->node == WTP_NODE){
-		vty_out(vty, "wtp node\n");
 		index = 0;			
 		wtp_id = (int)vty->index;
 	} else if(vty->node == HANSI_NODE){
-		vty_out(vty, "hansi node\n");
 		index = vty->index;
 		wtp_id = 0;
 		localid = vty->local;
 		slot_id = vty->slotindex;
 	} else if(vty->node == HANSI_WTP_NODE){
-		vty_out(vty, "hansi wtp node\n");
 		index = vty->index; 		
 		wtp_id = (int)vty->index_sub;
 		localid = vty->local;
 		slot_id = vty->slotindex;
 	}else if(vty->node == LOCAL_HANSI_WTP_NODE){
-		vty_out(vty, "local hansi wtp node\n");
 		index = vty->index; 		
 		wtp_id = (int)vty->index_sub;
 		localid = vty->local;
 		slot_id = vty->slotindex;
 	} else {
-		vty_out(vty, "command not support at this node\n");
 		return CMD_FAILURE;
 	}
-	vty_out(vty, "22222222222\n");
-	vty_out(vty, "argv[0]=%s argv[1]=%s\n", argv[0], argv[1]);
+
 	DBusConnection *dcli_dbus_connection = NULL;
 	ReInitDbusConnection(&dcli_dbus_connection,slot_id,distributFag);
 	ReInitDbusPath_V2(localid,index,WID_DBUS_BUSNAME,BUSNAME);
 	ReInitDbusPath_V2(localid,index,WID_DBUS_WTP_OBJPATH,OBJPATH);
 	ReInitDbusPath_V2(localid,index,WID_DBUS_WTP_INTERFACE,INTERFACE);
-	vty_out(vty, "BUSNAME %s\n", BUSNAME);
-	vty_out(vty, "OBJPATH %s\n", OBJPATH);
-	vty_out(vty, "INTERFACE %s\n", INTERFACE);
+
 	query = dbus_message_new_method_call(BUSNAME,OBJPATH,INTERFACE,WID_DBUS_CONF_METHOD_SET_WID_AP_LONGITUDE_LATITUDE_COMMAND);
-	vty_out(vty, "333333333333\n");
+
 	dbus_error_init(&err);
-	vty_out(vty, "444444444\n");
-	vty_out(vty, "wtp_id=%d longitude=%s latitude=%s\n", wtp_id, longitude, latitude);
+
 	dbus_message_append_args(query,
 							 DBUS_TYPE_UINT32,&wtp_id,
 							 DBUS_TYPE_STRING, &longitude,
 							 DBUS_TYPE_STRING, &latitude,
 							 DBUS_TYPE_INVALID);
-	vty_out(vty, "77777777777\n");
+
 	reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection,query,-1, &err);
-	vty_out(vty, "555555555\n");
+
 	dbus_message_unref(query);
 
 	free(longitude);
 	free(latitude);
-	vty_out(vty, "66666666666\n");
+
 	if (NULL == reply)
 	{
 		vty_out(vty, "<error> failed get reply.\n");
@@ -11108,25 +11098,23 @@ DEFUN(set_ap_longitude_latitude_func,
 
 		return CMD_SUCCESS;
 	}
-	vty_out(vty, "8888888888\n");
+
 	dbus_message_iter_init(reply,&iter);
-	vty_out(vty, "99999999\n");
+
 	dbus_message_iter_get_basic(&iter,&ret);
-	vty_out(vty, "0000000000000000\n");
+
 	if(ret == 0)
 	{
-		//vty_out(vty,"set ap longitude %s and latitude %s successfully\n",argv[0], argv[1]);
-		vty_out(vty,"set ap longitude  and latitude  successfully\n");
+		vty_out(vty,"set ap longitude %s and latitude %s successfully\n",argv[0], argv[1]);
 	}
 	else if(ret == WTP_ID_NOT_EXIST)
-		vty_out(vty,"<error> wtp id does not exist\n");
+		vty_out(vty,"<error> wtp %d does not exist\n", wtp_id);
 	else
 	{
-		vty_out(vty,"<error>  %d\n",ret);
+		vty_out(vty,"<error> set longitude and latitude for wtp %d ret is  %d\n", wtp_id, ret);
 	}
-	vty_out(vty, "qqqqqqqqqqqqqqq\n");	
-	dbus_message_unref(reply);
 
+	dbus_message_unref(reply);
 	
 	return CMD_SUCCESS;			
 }
@@ -41913,6 +41901,7 @@ void dcli_wtp_init(void) {
 			install_element(HANSI_NODE,&set_ap_username_password_cmd);
 			install_element(HANSI_NODE,&set_wtp_5g_able_cmd);
 			install_element(HANSI_NODE, &wtp_set_web_report_ap_snr_range_cmd);		/* Huangleilei copy from 1.3.18, 20130610 */
+
 			install_element(HANSI_NODE,&set_ap_longitude_latitude_cmd);
 			
 			install_element(HANSI_NODE,&set_ap_unauthorized_mac_switch_cmd);
@@ -41921,7 +41910,7 @@ void dcli_wtp_init(void) {
 			install_element(HANSI_NODE,&set_ap_configure_error_switch_cmd);
 			//install_element(HANSI_NODE,&set_ap_confiugre_error_reportinterval_cmd);
 
-			install_element(HANSI_NODE,&set_ap_online_sta_full_switch_cmd);
+			//install_element(HANSI_NODE,&set_ap_online_sta_full_switch_cmd);
 			//install_element(HANSI_NODE,&set_ap_online_sta_full_reportinterval_cmd);
 
 			install_element(HANSI_NODE,&set_ap_sta_flow_rx_tx_overflow_switch_cmd);
@@ -42018,23 +42007,22 @@ void dcli_wtp_init(void) {
 			install_element(HANSI_WTP_NODE,&set_wtp_5g_able_cmd);
 			
 			install_element(HANSI_WTP_NODE,&set_ap_longitude_latitude_cmd);
-
-			install_element(HANSI_WTP_NODE,&trap_rx_tx_flow_overflow_cmd);
-			//install_element(HANSI_WTP_NODE,&trap_temperature_cmd);
-			
 			
 			install_element(HANSI_WTP_NODE, &set_ap_unauthorized_mac_switch_cmd);
 			//install_element(HANSI_WTP_NODE,&set_ap_unauthorized_mac_reportinterval_cmd);
 
 			install_element(HANSI_WTP_NODE, &set_ap_configure_error_switch_cmd);
 			//install_element(HANSI_WTP_NODE, &set_ap_confiugre_error_reportinterval_cmd);
-			install_element(HANSI_WTP_NODE, &set_ap_sta_flow_rx_tx_overflow_threshold_cmd);
 			
-			install_element(HANSI_WTP_NODE, &set_ap_online_sta_full_switch_cmd);
+			
+			
+			//install_element(HANSI_WTP_NODE, &set_ap_online_sta_full_switch_cmd);
 			//install_element(HANSI_WTP_NODE, &set_ap_online_sta_full_reportinterval_cmd);
 
 			install_element(HANSI_WTP_NODE, &set_ap_sta_flow_rx_tx_overflow_switch_cmd);
 			//install_element(HANSI_WTP_NODE, &set_ap_sta_flow_rx_tx_overflow_reportinterval_cmd);
+			install_element(HANSI_WTP_NODE, &set_ap_sta_flow_rx_tx_overflow_threshold_cmd);
+			//install_element(HANSI_WTP_NODE,&trap_rx_tx_flow_overflow_cmd);
 			
 			/********************************************MIB optimize BEGIN********************************************/
 			/*for mib information showting by nl 20100702*/

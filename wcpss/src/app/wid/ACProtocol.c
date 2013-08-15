@@ -1717,17 +1717,21 @@ CWBool CWParseMsgElemAPStaInfoReport(CWProtocolMessage *msgPtr, int len, WIDStat
         if((len-1)/count > 23){
             CWProtocolRetrieve64(msgPtr, &valPtr1[i].rx_data_bytes);
             //wid_syslog_debug_debug(WID_DEFAULT,"rx_data_bytes %llu\n",valPtr->rx_data_bytes);
-            // TODO:.............................(int wtpindex, unsigned char *sta_mac, unsigned char is_rx_tx, unsigned long sta_flow)
-            if (g_sta_flow_rx_overflow_trap_switch) {
+
+            if (gtrapflag>=4 && AC_WTP[wtpindex]->sta_flow_overflow_rx_reportswitch && 
+				AC_WTP[wtpindex]->sta_flow_overflow_rx_threshold < (valPtr1[i].rx_data_bytes/1024)) {
 				wid_syslog_debug_debug(WID_WTPINFO, "rx trap\n");
 				wid_dbus_trap_sta_overflow(wtpindex, valPtr1[i].mac, 1, valPtr1[i].rx_data_bytes);
             }
+			
 			CWProtocolRetrieve64(msgPtr, &valPtr1[i].tx_data_bytes);
 			//wid_syslog_debug_debug(WID_DEFAULT,"tx_data_bytes %llu\n",valPtr->tx_data_bytes);
-			if (g_sta_flow_tx_overflow_trap_switch) {
+			if (gtrapflag>=4 && AC_WTP[wtpindex]->sta_flow_overflow_tx_reportswitch && 
+				AC_WTP[wtpindex]->sta_flow_overflow_tx_threshold < (valPtr1[i].tx_data_bytes/1024)) {
 				wid_syslog_debug_debug(WID_WTPINFO, "tx trap\n");
 				wid_dbus_trap_sta_overflow(wtpindex, valPtr1[i].mac, 0, valPtr1[i].tx_data_bytes);
 			}
+			
 			valPtr1[i].rx_data_frames = CWProtocolRetrieve32(msgPtr);
 			//wid_syslog_debug_debug(WID_DEFAULT,"rx_data_frames %d\n",valPtr->rx_data_frames);
 
@@ -3650,23 +3654,20 @@ CWBool CWParseWTPTrapInfo(CWProtocolMessage *msgPtr, int len, int wtpindex) {
 					sta_mac[i*6+0],sta_mac[i*6+1],sta_mac[i*6+2],sta_mac[i*6+3],sta_mac[i*6+4],sta_mac[i*6+5]);
 			}
 			//trap to snmp
-			//if (gtrapflag >= 1) {
-				if (AC_WTP[wtpindex]->unauthorized_mac_reportswitch == 1) {
-					if (wid_dbus_trap_sta_unauthorized_mac(wtpindex, temp_var, sta_mac)) {
-						wid_syslog_err("trap for wtp %d unauthorized mac report failed\n", wtpindex);
-					}
+			if (gtrapflag >= 4 && AC_WTP[wtpindex]->unauthorized_mac_reportswitch == 1) {
+				if (wid_dbus_trap_sta_unauthorized_mac(wtpindex, temp_var, sta_mac)) {
+					wid_syslog_err("trap for wtp %d unauthorized mac report failed\n", wtpindex);
 				}
-			//}
+			}
 			free(sta_mac);
 			break;
 		case 2:
 			temp_var = CWProtocolRetrieve8(msgPtr);
 			wid_syslog_debug_debug(WID_DEFAULT, "wtp %d configure file error, error code is %u\n",wtpindex, temp_var);
-			if (gtrapflag >= 1) {
-				if (AC_WTP[wtpindex]->wtp_configure_error_reportswitch == 1) {
-					if (wid_dbus_trap_configure_error(wtpindex, temp_var)) {
-						wid_syslog_err("trap for wtp %d configure file error report failed\n", wtpindex);
-					}
+
+			if (gtrapflag >= 4 && AC_WTP[wtpindex]->wtp_configure_error_reportswitch == 1) {
+				if (wid_dbus_trap_configure_error(wtpindex, temp_var)) {
+					wid_syslog_err("trap for wtp %d configure file error report failed\n", wtpindex);
 				}
 			}
 			break;

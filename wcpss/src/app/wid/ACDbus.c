@@ -3593,7 +3593,7 @@ DBusMessage * wid_dbus_interface_show_wtp_basic_information(DBusConnection *conn
 
 			wid_syslog_debug_debug(WID_DBUS,"1111111111111111111\n");
 			
-			memset(longitude,0,LONGITUDE_LATITUDE_MAX_LEN);
+			memset(longitude, '\0', LONGITUDE_LATITUDE_MAX_LEN);
 			if(strlen((char *)(WTP[i]->longitude)) < LONGITUDE_LATITUDE_MAX_LEN) {
 				if (strlen((char *)(WTP[i]->longitude)) == 0) {
 					memcpy(longitude, "unknown", strlen("nknown"));
@@ -3604,7 +3604,7 @@ DBusMessage * wid_dbus_interface_show_wtp_basic_information(DBusConnection *conn
 				memcpy(longitude, (char *)WTP[i]->longitude, LONGITUDE_LATITUDE_MAX_LEN-1);
 			}
 
-			memset(latitude,0,LONGITUDE_LATITUDE_MAX_LEN);
+			memset(latitude, '\0', LONGITUDE_LATITUDE_MAX_LEN);
 			if(strlen((char *)(WTP[i]->latitude)) < LONGITUDE_LATITUDE_MAX_LEN) {
 				if (strlen((char *)(WTP[i]->latitude)) == 0) {
 					memcpy(latitude, "unknown", strlen("nknown"));
@@ -3615,8 +3615,7 @@ DBusMessage * wid_dbus_interface_show_wtp_basic_information(DBusConnection *conn
 				memcpy(latitude, (char *)WTP[i]->latitude, LONGITUDE_LATITUDE_MAX_LEN-1);
 			}
 
-			wid_syslog_debug_debug(WID_DBUS,"222222222222\n");
-			memset(manufacture_date,0,MANUFACTURE_DATA_MAX_LEN);
+			memset(manufacture_date, '\0', MANUFACTURE_DATA_MAX_LEN);
 			if(strlen((char *)(WTP[i]->manufacture_date)) < MANUFACTURE_DATA_MAX_LEN) {
 				if (strlen((char *)(WTP[i]->manufacture_date)) == 0) {
 					memcpy(manufacture_date, "unknown", strlen("nknown"));
@@ -46861,7 +46860,6 @@ DBusMessage * wid_dbus_interface_set_ap_longitude_latitude_command(DBusConnectio
 	unsigned int wtpid;
 	DBusError err;
 	int ret = WID_DBUS_SUCCESS;
-	wid_syslog_err("yyyyyyyyyyyyyyyyyyyyyyyyyy");
 	
 	dbus_error_init(&err);
 	if (!(dbus_message_get_args ( msg, &err,
@@ -46869,25 +46867,22 @@ DBusMessage * wid_dbus_interface_set_ap_longitude_latitude_command(DBusConnectio
 								DBUS_TYPE_STRING, &longitude,
 								DBUS_TYPE_STRING, &latitude,
 								DBUS_TYPE_INVALID))){
+								
 		wid_syslog_err("Unable to get input args\n");
-				
+		
 		if (dbus_error_is_set(&err)) {
 			wid_syslog_err("%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
-		wid_syslog_err("wid huuuuuuuuuuuuuuuuuuuuuuuuuuuuuu\n");
 		return NULL;
 	}
 	
-	wid_syslog_err("wid_dbus_interface_set_ap_longitude_latitude_command for wtp %d\n", wtpid);
+	wid_syslog_debug_debug(WID_DEFAULT, "set longitude and latitude for wtp %d\n", wtpid);
+	
 	if(wtpid == 0 || AC_WTP[wtpid] != NULL)
 	{
-		wid_syslog_err("11111111111\n");
 		wid_set_ap_longitude_latitude(wtpid, longitude, latitude); 
-	}
-	else
-	{
-		wid_syslog_err("11111111111222222222\n");
+	} else {
 		ret = WTP_ID_NOT_EXIST;
 	}
 	
