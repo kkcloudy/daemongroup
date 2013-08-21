@@ -2581,7 +2581,7 @@ int main(int argc, char *argv[])
 		asd_printf(ASD_DEFAULT,MSG_INFO, "%s,argc=%d",__func__,argc);
 	AsdStateInit();
 	asd_pid_write();
-	asd_pid_write_v2("main");
+	asd_pid_write_v2("asd_main");
 	asd_logger_register_cb(asd_logger_cb);
 	WAPI_OPENSSL_INIT();
     apps_startup();

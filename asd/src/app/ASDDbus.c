@@ -29476,6 +29476,7 @@ void *asd_dbus_thread()
 	Only signal/event could be asynchronous, it could be sent in other thread.
 	*/
 	asd_printf(ASD_DBUS,MSG_DEBUG,"begin\n");
+	asd_pid_write_v2("asd_dbus_thread");
 	de_wtp_deny_sta = (unsigned char*)os_zalloc(WTP_NUM*sizeof(unsigned char));
 	if(de_wtp_deny_sta==NULL){
 		asd_printf(ASD_DBUS,MSG_CRIT,"de_wtp_deny_sta.\n");

@@ -59,7 +59,7 @@ int asd_init_send_socket()
 void *asd_sta_manage()
 {	
 	asd_printf(ASD_DBUS,MSG_DEBUG,"asd_sta_manage begin!\n");
-	asd_pid_write_v2("sta_manage");
+	asd_pid_write_v2("asd_sta_manage");
 	unsigned int count = 0;
 	int len = 0;
 	fd_set set;
