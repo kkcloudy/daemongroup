@@ -414,7 +414,7 @@ void dhcpdiscover (packet, ms_nulltp)
 		log_debug("Packet from unknown subnet: %s",
 		      inet_ntoa (packet -> raw -> giaddr));
 		if(local7)
-		log_local7_dhcp("Dhcp_Offer DownReason:Packet from unknown subnet:%s",inet_ntoa (packet -> raw -> giaddr));
+		log_local7_dhcp("Dhcp_Offer DownReason[DH999]:Packet from unknown subnet:%s",inet_ntoa (packet -> raw -> giaddr));
 		goto out;
 	}
 
@@ -448,13 +448,18 @@ void dhcpdiscover (packet, ms_nulltp)
 		if (!allocate_lease (&lease, packet,
 				     packet -> shared_network -> pools, 
 				     &peer_has_leases)) {
-			if (peer_has_leases)
+			if (peer_has_leases){
 				log_error ("%s: peer holds all free leases",
 					   msgbuf);
-			else
+				if(local7)
+					log_local7_dhcp("Dhcp_Offer DownReason[DH7]:%s: peer holds all free leases\n",msgbuf);
+			}else{
 				log_error ("%s: network %s: no free leases",
 					   msgbuf,
 					   packet -> shared_network -> name);
+				if(local7)
+					log_local7_dhcp("Dhcp_Offer DownReason[DH1]:%s: network %s: no free leases\n",msgbuf,packet -> shared_network -> name);
+			}
 			return;
 		}
 
@@ -472,7 +477,7 @@ void dhcpdiscover (packet, ms_nulltp)
 			log_info ("%s: not responding%s",
 				  msgbuf, peer -> nrr);
 			if(local7)
-			log_local7_dhcp("Dhcp_Offer DownReason:%s:not responding%s",msgbuf,peer->nrr);
+			log_local7_dhcp("Dhcp_Offer DownReason[DH8]:%s:not responding%s",msgbuf,peer->nrr);
 			goto out;
 		}
 	} else
@@ -592,8 +597,6 @@ void dhcprequest (packet, ms_nulltp, ip_lease)
 		}
 		else {		
 			log_info("dhcprequest wrong  interface name %s\n", packet->interface->name);
-			if(local7)
-				log_local7_dhcp("DhcpRequest DownReason:dhcprequest wrong  interface name %s\n",packet->interface->name);
 			nak_lease (packet, &cip);
 			return;
 		}
@@ -688,7 +691,7 @@ void dhcprequest (packet, ms_nulltp, ip_lease)
 			log_info ("%s: not responding%s",
 				  msgbuf, peer -> nrr);
 			if(local7)
-				log_local7_dhcp("DhcpRequest DownReason:%s: not responding%s\n",msgbuf, peer -> nrr);
+				log_local7_dhcp("DownReason[DH8]:%s: not responding%s\n",msgbuf, peer -> nrr);
 			goto out;
 		}
 
@@ -735,7 +738,7 @@ void dhcprequest (packet, ms_nulltp, ip_lease)
 		    !lease_mine_to_reallocate (lease)) {
 			log_debug ("%s: lease reset by administrator", msgbuf);
 			if(local7)
-			log_local7_dhcp("%s,ErrReason:lease reset by administrator", msgbuf);
+			log_local7_dhcp("%s,ErrReason[DH4]:lease reset by administrator", msgbuf);
 			nak_lease (packet, &cip);
 			goto out;
 		}
@@ -820,8 +823,6 @@ void dhcprequest (packet, ms_nulltp, ip_lease)
 		if (!packet -> shared_network) {
 			if (subnet && subnet -> group -> authoritative) {
 				log_error("%s: wrong network.", msgbuf);
-				if(local7)
-				log_local7_dhcp("%s,ErrReason:wrong network.", msgbuf);
 				nak_lease (packet, &cip);
 				goto out;
 			}
@@ -842,8 +843,6 @@ void dhcprequest (packet, ms_nulltp, ip_lease)
 			if (packet->shared_network && packet->shared_network -> group && packet->shared_network -> group -> authoritative)
 			{
 				log_info("%s: wrong network.", msgbuf);
-				if(local7)
-				log_local7_dhcp("%s,ErrReason:wrong network.", msgbuf);
 				nak_lease (packet, &cip);
 				goto out;
 			} else {
@@ -851,7 +850,7 @@ void dhcprequest (packet, ms_nulltp, ip_lease)
 				if(dhcp_nak_rsp){
 				log_info("%s: (requested address not available).", msgbuf);
 				if(local7)
-				log_local7_dhcp("%s,ErrReason:(requested address not available).", msgbuf);
+				log_local7_dhcp("%s,ErrReason[DH3]:(requested address not available).", msgbuf);
 				nak_lease (packet, &cip);
 				goto out;
 				}	
@@ -868,7 +867,7 @@ void dhcprequest (packet, ms_nulltp, ip_lease)
 	if(!lease) {
 		log_info ("%s: lease %s unavailable.", msgbuf, piaddr (cip));
 		if(local7)
-		log_local7_dhcp("%s,ErrReason:(lease %s unavailable).", msgbuf, piaddr (cip));
+		log_local7_dhcp("%s,ErrReason[DH2]:(lease %s unavailable).", msgbuf, piaddr (cip));
 		nak_lease (packet, &cip);
 		goto out;
 	}
@@ -2827,7 +2826,7 @@ void ack_lease (packet, lease, offer, when, msg, ms_nulltp, hp)
 				      offer == DHCPACK, offer == DHCPACK)) {
 			log_error ("%s: database update failed", msg);
 			if(local7)
-				log_local7_dhcp("DownReason:%s: database update failed", msg);
+				log_local7_dhcp("DownReason[DH9]:%s: database update failed", msg);
 			free_lease_state (state, MDL);
 			lease_dereference (&lt, MDL);
 			return;
@@ -3138,7 +3137,7 @@ void ack_lease (packet, lease, offer, when, msg, ms_nulltp, hp)
 					   MDL)) {
 			log_error ("unknown option space %s.", d1.data);
 			if(local7)
-				log_local7_dhcp("DownReason:unknown option space %s.\n",d1.data);
+				log_local7_dhcp("DownReason[DH6]:unknown option space %s.\n",d1.data);
 			return;
 		}
 
@@ -3266,8 +3265,6 @@ void dhcp_reply (lease)
 
 	if (!state) {
 		log_error("dhcp_reply was supplied lease with no state!");
-		if(local7)
-			log_local7_dhcp("DownReason:dhcp_reply was supplied lease with no state!\n");
 		return;
 	}
 
@@ -3945,15 +3942,6 @@ if(packet->interface->vgateway_flag){
 					   " leases",
 					   (ip_lease -> subnet ->
 					    shared_network -> name));
-				if(local7)
-					log_local7_dhcp("DownReson:client %s has duplicate%s on %s",
-					   (print_hw_addr
-					    (packet -> raw -> htype,
-					     packet -> raw -> hlen,
-					     packet -> raw -> chaddr)),
-					   " leases",
-					   (ip_lease -> subnet ->
-					    shared_network -> name));
 
 				/* If the client is REQUESTing the lease,
 				   it shouldn't still be using the old
@@ -4209,8 +4197,6 @@ if(packet->interface->vgateway_flag){
 	    packet -> packet_type == DHCPREQUEST) {
 		log_error ("Reclaiming REQUESTed abandoned IP address %s.",
 		      piaddr (lease -> ip_addr));
-		if(local7)
-			log_local7_dhcp("DownReson:Reclaiming REQUESTed abandoned IP address %s.",piaddr (lease -> ip_addr));
 	} else if (lease && (lease -> binding_state == FTS_ABANDONED)) {
 	/* Otherwise, if it's not the one the client requested, we do not
 	   return it - instead, we claim it's ours, causing a DHCPNAK to be

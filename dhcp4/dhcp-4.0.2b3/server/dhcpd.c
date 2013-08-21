@@ -1239,6 +1239,8 @@ void lease_ping_timeout (vlp)
 #ifndef __AX_PLATFORM__
 	if (lp->ping_state) {
 		lp->ping_state = 0;
+		if(local7)
+			log_local7_dhcp("DownReason[DH10]:lease %s ping timeout, ping state %d\n", piaddr(lp->ip_addr), lp->ping_state);
 		if (lp->state) {
 			free_lease_state (lp->state, MDL);
 			lp->state = (struct lease_state *)0;
