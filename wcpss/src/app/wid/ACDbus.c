@@ -52176,6 +52176,40 @@ DBusMessage * wid_dbus_interface_set_wtp_extension_infomation_interval(DBusConne
 
 #else
 
+DBusMessage * wid_dbus_interface_set_wtp_wbs_cpe_switch(DBusConnection *conn, DBusMessage *msg, void *user_data){
+
+	DBusMessage* reply;
+	DBusMessageIter  iter;
+	DBusError err;
+	unsigned int policy = 0;
+	int ret = WID_DBUS_SUCCESS;
+	dbus_error_init(&err);
+	if (!(dbus_message_get_args ( msg, &err,
+								DBUS_TYPE_UINT32,&policy,
+								DBUS_TYPE_INVALID))){
+		wid_syslog_err("get input args for wtp unathorized mac switch failed\n");	
+		if (dbus_error_is_set(&err)) {
+			wid_syslog_err("%s raised: %s",err.name,err.message);
+			dbus_error_free(&err);
+		}
+		return NULL;
+	}
+
+	g_wbs_cpe_switch = policy;
+	
+	wid_syslog_debug_debug(WID_DEFAULT, "set wbs-cpe switch %s successfully\n", policy ? "enable" : "disable");
+	
+	reply = dbus_message_new_method_return(msg);
+
+	
+	dbus_message_iter_init_append(reply, &iter);
+	
+	dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT32, &ret);
+	
+	return reply;
+	
+}
+
 DBusMessage * wid_dbus_interface_set_wtp_unauthorized_mac_switch(DBusConnection *conn, DBusMessage *msg, void *user_data){
 
 	DBusMessage* reply;
@@ -72444,6 +72478,12 @@ DBusMessage * wid_dbus_wtp_show_running_config_start(DBusConnection *conn, DBusM
 					totalLen += sprintf(cursor,"set ap extension infomation reportinterval %d\n",gWIFIEXTENSIONREPORTINTERVAL);
 					cursor = showStr + totalLen;
 				}
+
+				if (g_wbs_cpe_switch != 0) {
+					totalLen += sprintf(cursor,"set ap wbs-cpe switch enable\n");
+					cursor = showStr + totalLen;
+				}
+				
 				if(g_AC_ALL_EXTENTION_INFORMATION_SWITCH != 0)
 				{
 					totalLen += sprintf(cursor,"set ac extension infomation switch enable\n");
@@ -78159,6 +78199,9 @@ static DBusHandlerResult wid_dbus_message_handler (DBusConnection *connection, D
 		}
 		else if (dbus_message_is_method_call(message,WID_DBUS_WTP_INTERFACE,WID_DBUS_WTP_METHOD_SET_WTP_UNAUTHORIZED_MAC_REPORT_SWITCH)) {
 			reply = wid_dbus_interface_set_wtp_unauthorized_mac_switch(connection, message, user_data);
+		}
+		else if (dbus_message_is_method_call(message,WID_DBUS_WTP_INTERFACE,WID_DBUS_WTP_METHOD_SET_WBS_CPE_SWITCH)) {
+			reply = wid_dbus_interface_set_wtp_wbs_cpe_switch(connection, message, user_data);
 		}
 		else if (dbus_message_is_method_call(message,WID_DBUS_WTP_INTERFACE,WID_DBUS_WTP_METHOD_SET_WTP_CONFIGURE_ERR_REPORTINTERVAL)) {
 			reply = wid_dbus_interface_set_wtp_configure_error_interval(connection,message,user_data);

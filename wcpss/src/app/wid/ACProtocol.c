@@ -621,15 +621,23 @@ CWBool CWAssembleMsgElemAPConfigureErrorSet(CWProtocolMessage *msgPtr,int wtpid)
 {
 	wid_syslog_debug_debug(WID_WTPINFO,"#### CWAssembleMsgElemAPConfigureErrorSet ####\n");
 	
-	return capwap_comm_switch_interval_assemble(msgPtr, wtpid, WTP_CONFIGURE_ERROR_REPROT);
+	if (g_wbs_cpe_switch) {
+		return capwap_comm_switch_interval_assemble(msgPtr, wtpid, WTP_CONFIGURE_ERROR_REPROT);
+	} else {
+		return 1;
+	}
 }
 
 
 CWBool CWAssembleMsgElemAPUnauthorizedMacSet(CWProtocolMessage *msgPtr,int wtpid)
 {
 	wid_syslog_debug_debug(WID_WTPINFO,"#### CWAssembleMsgElemAPUnauthorizedMacSet ####\n");
-	
-	return capwap_comm_switch_interval_assemble(msgPtr, wtpid, WTP_UNAUTHORIZED_MAC_REPORT);
+
+	if (g_wbs_cpe_switch) {
+		return capwap_comm_switch_interval_assemble(msgPtr, wtpid, WTP_UNAUTHORIZED_MAC_REPORT);
+	} else {
+		return 1;
+	}
 }
 
 /*zhaoruijia,20100904,transplant ACTIMESYNCHROFAILURE from 1.2omc to 1.3,end*/

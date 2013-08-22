@@ -395,6 +395,8 @@ out arg list:  // in the order as they are appended in the dbus message.
 #define WID_DBUS_WTP_METHOD_SET_WTP_UNAUTHORIZED_MAC_REPORTINTERVAL			"set_unauthorized_mac_reportinterval"
 #define WID_DBUS_WTP_METHOD_SET_WTP_UNAUTHORIZED_MAC_REPORT_SWITCH			"set_unauthorized_mac_report_switch"
 
+#define WID_DBUS_WTP_METHOD_SET_WBS_CPE_SWITCH								"set_wbs_cpe_switch"
+
 #define WID_DBUS_WTP_METHOD_SET_WTP_CONFIGURE_ERR_REPORTINTERVAL			"set_configure_error_reportinterval"
 #define WID_DBUS_WTP_METHOD_SET_WTP_CONFIGURE_ERR_REPORTSWITCH				"set_configure_error_reportswitch"
 

@@ -264,6 +264,8 @@ extern int gCOUNTRYCODE;
 extern int gINFOREPORTSWITCH;  
 extern unsigned short gWIFIEXTENSIONREPORTINTERVAL; 
 
+extern unsigned char g_wbs_cpe_switch;
+
 extern unsigned short g_unauthorized_mac_interval;
 extern unsigned char  g_unauthorized_mac_switch;
 

@@ -14133,6 +14133,112 @@ if(type==1)
 
 #else
 
+DEFUN(set_wbs_cpe_switch_cmd_func,
+	  set_wbs_cpe_switch_cmd,
+	  "set ap wbs-cpe switch (enable|disable)",
+	  "wireless-control config\n"
+	  "ap ap wbs-cpe switch\n"
+	  "ap ap wbs-cpe switch\n"
+	  "ap ap wbs-cpe switch\n"
+	  "ap ap wbs-cpe switch switch\n"
+	  "ap ap wbs-cpe switch switch (enable|disable) \n"
+	 )
+{
+	int ret,ret1;
+
+	DBusMessage *query, *reply; 
+	DBusMessageIter  iter;
+	DBusError err;
+
+	unsigned int interval = 0;
+	unsigned int wtp_id = 0;
+	unsigned int policy = 0;
+	
+	if (!strcmp(argv[0],"enable")){
+		policy = 1; 
+	} else if (!strcmp(argv[0],"disable")) {
+		policy = 0; 
+	} else {
+		vty_out(vty,"<error> input patameter only with 'enable' or 'disable'\n");
+		return CMD_SUCCESS;
+	}
+	
+	int localid = 1;
+	int slot_id = HostSlotId;
+	int index = 0;
+	char BUSNAME[PATH_LEN];
+	char OBJPATH[PATH_LEN];
+	char INTERFACE[PATH_LEN];
+	if(vty->node == HANSI_NODE){  /*wcl modify for globle variable*/
+		index = vty->index;
+		localid = vty->local;
+		slot_id = vty->slotindex;
+	}else if(vty->node == LOCAL_HANSI_NODE){ /*wcl modify for globle variable*/
+		index = vty->index;
+		localid = vty->local;
+		slot_id = vty->slotindex;
+	}else if(vty->node == WTP_NODE){
+		index = 0;			
+		wtp_id = (int)vty->index;
+	}else if(vty->node == HANSI_WTP_NODE){
+		index = vty->index; 		
+		wtp_id = (int)vty->index_sub;
+		localid = vty->local;
+		slot_id = vty->slotindex;
+	}else if(vty->node == LOCAL_HANSI_WTP_NODE){
+		index = vty->index; 		
+		wtp_id = (int)vty->index_sub;
+		localid = vty->local;
+		slot_id = vty->slotindex;
+	}
+	DBusConnection *dcli_dbus_connection = NULL;
+	ReInitDbusConnection(&dcli_dbus_connection,slot_id,distributFag);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_BUSNAME,BUSNAME);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_WTP_OBJPATH,OBJPATH);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_WTP_INTERFACE,INTERFACE);
+	query = dbus_message_new_method_call(BUSNAME,OBJPATH,INTERFACE,WID_DBUS_WTP_METHOD_SET_WBS_CPE_SWITCH);
+	
+	dbus_error_init(&err);
+
+
+	dbus_message_append_args(query,
+							 DBUS_TYPE_UINT32,&policy,
+							 DBUS_TYPE_INVALID);
+
+	reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection,query,-1, &err);
+	
+	dbus_message_unref(query);
+	
+	if (NULL == reply)
+	{
+		vty_out(vty, "<error> failed get reply.\n");
+		if (dbus_error_is_set(&err))
+		{
+			cli_syslog_info("%s raised: %s",err.name,err.message);
+			dbus_error_free_for_dcli(&err);
+		}
+		return CMD_SUCCESS;
+	}
+	
+	dbus_message_iter_init(reply,&iter);
+	dbus_message_iter_get_basic(&iter,&ret);
+
+	if(ret == 0)
+	{
+		vty_out(vty,"set ap wbs-cpe switch %s successfully\n", argv[0]);
+	} else if (ret == WTP_NOT_IN_RUN_STATE) {
+		vty_out(vty,"<error> wtp is not in run state\n");
+	} else if(ret == WTP_ID_NOT_EXIST) {
+		vty_out(vty,"<error> wtp id does not exist\n");
+	} else {
+		vty_out(vty,"<error>  %d\n",ret);
+	}
+		
+	dbus_message_unref(reply);
+
+	return CMD_SUCCESS; 		
+}
+
 DEFUN(set_ap_unauthorized_mac_switch_cmd_func,
 	  set_ap_unauthorized_mac_switch_cmd,
 	  "set ap unauthorized mac switch (enable|disable)",
@@ -41902,17 +42008,14 @@ void dcli_wtp_init(void) {
 			install_element(HANSI_NODE,&set_wtp_5g_able_cmd);
 			install_element(HANSI_NODE, &wtp_set_web_report_ap_snr_range_cmd);		/* Huangleilei copy from 1.3.18, 20130610 */
 
+			install_element(HANSI_NODE, &set_wbs_cpe_switch_cmd);
 			install_element(HANSI_NODE,&set_ap_longitude_latitude_cmd);
-			
 			install_element(HANSI_NODE,&set_ap_unauthorized_mac_switch_cmd);
 			//install_element(HANSI_NODE,&set_ap_unauthorized_mac_reportinterval_cmd);
-
 			install_element(HANSI_NODE,&set_ap_configure_error_switch_cmd);
 			//install_element(HANSI_NODE,&set_ap_confiugre_error_reportinterval_cmd);
-
 			//install_element(HANSI_NODE,&set_ap_online_sta_full_switch_cmd);
 			//install_element(HANSI_NODE,&set_ap_online_sta_full_reportinterval_cmd);
-
 			install_element(HANSI_NODE,&set_ap_sta_flow_rx_tx_overflow_switch_cmd);
 			//install_element(HANSI_NODE,&set_ap_sta_flow_rx_tx_overflow_reportinterval_cmd);
 			install_element(HANSI_NODE,&set_ap_sta_flow_rx_tx_overflow_threshold_cmd);
@@ -42007,18 +42110,12 @@ void dcli_wtp_init(void) {
 			install_element(HANSI_WTP_NODE,&set_wtp_5g_able_cmd);
 			
 			install_element(HANSI_WTP_NODE,&set_ap_longitude_latitude_cmd);
-			
 			install_element(HANSI_WTP_NODE, &set_ap_unauthorized_mac_switch_cmd);
 			//install_element(HANSI_WTP_NODE,&set_ap_unauthorized_mac_reportinterval_cmd);
-
 			install_element(HANSI_WTP_NODE, &set_ap_configure_error_switch_cmd);
 			//install_element(HANSI_WTP_NODE, &set_ap_confiugre_error_reportinterval_cmd);
-			
-			
-			
 			//install_element(HANSI_WTP_NODE, &set_ap_online_sta_full_switch_cmd);
 			//install_element(HANSI_WTP_NODE, &set_ap_online_sta_full_reportinterval_cmd);
-
 			install_element(HANSI_WTP_NODE, &set_ap_sta_flow_rx_tx_overflow_switch_cmd);
 			//install_element(HANSI_WTP_NODE, &set_ap_sta_flow_rx_tx_overflow_reportinterval_cmd);
 			install_element(HANSI_WTP_NODE, &set_ap_sta_flow_rx_tx_overflow_threshold_cmd);

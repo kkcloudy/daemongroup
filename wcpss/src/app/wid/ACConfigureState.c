@@ -205,7 +205,13 @@ CWBool CWParseConfigureRequestMessage(char *msg, int len, int *seqNumPtr, CWProt
 CWBool CWAssembleConfigureResponse(CWProtocolMessage **messagesPtr, int *fragmentsNumPtr, int PMTU, int seqNum, int WTPIndex) 
 {
 	CWProtocolMessage *msgElems = NULL;
-	const int MsgElemCount=11+(AC_WTP[WTPIndex]->RadioCount)*6; //nine fix message  six unfix message ralated with radio
+	int temp;
+	if (g_wbs_cpe_switch) {
+		temp = 11;
+	} else {
+		temp = 9;
+	}
+	const int MsgElemCount = temp +(AC_WTP[WTPIndex]->RadioCount)*6; //nine fix message  six unfix message ralated with radio
 	CWProtocolMessage *msgElemsBinding = NULL;
 	int k = -1;
 	int j = 0;
@@ -257,8 +263,8 @@ CWBool CWAssembleConfigureResponse(CWProtocolMessage **messagesPtr, int *fragmen
 		(!(CWAssembleMsgElemAPScanningSet(&(msgElems[++k]))))||
 		(!(CWAssembleMsgElemAPStatisticsSet(&(msgElems[++k]),-1)))||     //fengwenchao modify 20110422
 		(!(CWAssembleMsgElemAPThroughoutSet(&(msgElems[++k]),WTPIndex))) ||
-		(!(CWAssembleMsgElemAPConfigureErrorSet(&(msgElems[++k]), WTPIndex))) ||
-		(!(CWAssembleMsgElemAPUnauthorizedMacSet(&(msgElems[++k]), WTPIndex)))
+		(g_wbs_cpe_switch ? (!(CWAssembleMsgElemAPConfigureErrorSet(&(msgElems[++k]), WTPIndex))) : 0) ||
+		(g_wbs_cpe_switch ? (!(CWAssembleMsgElemAPUnauthorizedMacSet(&(msgElems[++k]), WTPIndex))) : 0)
 	){
 		int i;
 		for(i = 0; i <= k; i++) { CW_FREE_PROTOCOL_MESSAGE(msgElems[i]);}
