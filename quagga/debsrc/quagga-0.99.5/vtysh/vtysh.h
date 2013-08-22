@@ -67,7 +67,7 @@ extern char * vtysh_client_config_wireless_interface(struct vtysh_client *vclien
 #define DEFAULT_ADMIN_USER_MARK "DEFAULT ADMIN USER:"
 #define RIPD_SOCKET_BUF_FILE "/var/run/Ripd_socket_buf.conf"
 #define RIPD_MAX_SOCKET_BUF "RIPD MAX SOCKET BUF:"
-#define OSSTARTERRFILE "/etc/motd"
+#define OSSTARTERRFILE "/etc/motd1"
 #define VERSION_STR_LONG_ERROR "The string of version was too long\n"
 #define SET_VER_ERROR "Set version error!"
 #define DEL_VER_ERROR "Delete version error!"
