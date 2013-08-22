@@ -2579,7 +2579,7 @@ int main(int argc, char *argv[])
 	openlog("asd", 0, LOG_DAEMON);
 	asd_printf(ASD_DEFAULT,MSG_INFO,"syslog has opened!\n");
 	AsdStateInit();
-	asd_printf(ASD_DEFAULT,MSG_NOTICE,"asd main islocal=%d, hansi%d-%d",local,,slotid,vrrid);	
+	asd_printf(ASD_DEFAULT,MSG_NOTICE,"asd main islocal=%d, hansi%d-%d",local,slotid,vrrid);	
 	asd_pid_write();
 	asd_pid_write_v2("asd_main");	
 	asd_logger_register_cb(asd_logger_cb);
