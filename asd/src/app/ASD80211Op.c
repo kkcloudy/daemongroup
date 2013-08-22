@@ -2848,7 +2848,7 @@ static void handle_deauth(struct asd_data *wasd,
 	}
 }
 
-
+#if 0
 static void handle_beacon(struct asd_data *wasd,
 			  struct ieee80211_mgmt *mgmt, size_t len,
 			  struct asd_frame_info *fi)
@@ -2880,7 +2880,7 @@ static void handle_beacon(struct asd_data *wasd,
 
 	ap_list_process_beacon(wasd->iface, mgmt, &elems, fi);
 }
-
+#endif
 
 static void handle_action(struct asd_data *wasd,
 			  struct ieee80211_mgmt *mgmt, size_t len)
