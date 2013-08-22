@@ -58,7 +58,7 @@ int asd_init_send_socket()
 
 void *asd_sta_manage()
 {	
-	asd_printf(ASD_DBUS,MSG_DEBUG,"asd_sta_manage begin!\n");
+	asd_printf(ASD_DBUS,MSG_NOTICE,"asd_sta_manage begin.\n");
 	asd_pid_write_v2("asd_sta_manage");
 	unsigned int count = 0;
 	int len = 0;
@@ -87,6 +87,8 @@ void *asd_sta_manage()
 	FD_ZERO(&set);
 	asd_init_socket_server(ASD_STA_SERVER_PATH);
 	asd_init_send_socket();
+	asd_printf(ASD_DBUS,MSG_NOTICE,"asd_sta_manage into main loop OK.\n");
+	
 	if(socket_rcv > maxfd)
 		maxfd = socket_rcv;
 	FD_SET(socket_rcv,&set);

@@ -2576,12 +2576,12 @@ int main(int argc, char *argv[])
 	else
 		vrrid = 0;
 #endif
-		openlog("asd", 0, LOG_DAEMON);
-		asd_printf(ASD_DEFAULT,MSG_INFO,"syslog has opened!\n");
-		asd_printf(ASD_DEFAULT,MSG_INFO, "%s,argc=%d",__func__,argc);
+	openlog("asd", 0, LOG_DAEMON);
+	asd_printf(ASD_DEFAULT,MSG_INFO,"syslog has opened!\n");
 	AsdStateInit();
+	asd_printf(ASD_DEFAULT,MSG_NOTICE,"asd main islocal=%d, hansi%d-%d",local,,slotid,vrrid);	
 	asd_pid_write();
-	asd_pid_write_v2("asd_main");
+	asd_pid_write_v2("asd_main");	
 	asd_logger_register_cb(asd_logger_cb);
 	WAPI_OPENSSL_INIT();
     apps_startup();
@@ -2591,24 +2591,36 @@ int main(int argc, char *argv[])
 	}
 	none_init();	
 	X509_init();
-	ASDInit();
+	ASDInit();	/* init global struct */
 	CWASDDbusPathInit();	
 	if (rtnl_open(&rth, 0) < 0)
+	{
+    	asd_printf(ASD_DEFAULT,MSG_CRIT,"rtnl_open(&rth, 0) failed,asd exit(1)!\n");	
 		exit(1);
+	}
+	asd_printf(ASD_DEFAULT,MSG_NOTICE,"asd netlink socket for arp modify ok!\n");
+
 	
-	printf("%s rth.fd %d\n",__func__,rth.fd);
 	if (rtnl_open(&rth1, RTMGRP_NEIGH) < 0)
+	{
+    	asd_printf(ASD_DEFAULT,MSG_CRIT,"rtnl_open(&rth1, RTMGRP_NEIGH) failed,asd exit(1)!\n");	
 		exit(1);
+	}
+	asd_printf(ASD_DEFAULT,MSG_NOTICE,"asd netlink socket for arp listen ok!\n");
+
+	/* init global mutex */
 	CWCreateThreadMutex(&asd_g_sta_mutex);
 	CWCreateThreadMutex(&asd_g_wtp_mutex); 
 	CWCreateThreadMutex(&asd_flash_disconn_mutex); 	
 	CWCreateThreadMutex(&asd_g_hotspot_mutex);//qiuchen add it
 	CWCreateThreadMutex(&asd_g_wlan_mutex);
 	CWCreateThreadMutex(&asd_g_bss_mutex);
+
+	/* init global socket */
 	asd_sock = init_asd_bak_socket();	
 	gsock = init_asd_sctp_socket(10086);
 	asd_update_select_mode(NULL,NULL);
-	asd_printf(ASD_DEFAULT,MSG_DEBUG,"asd_sock %d\n",asd_sock);
+	asd_printf(ASD_DEFAULT,MSG_NOTICE,"init asd_sock %d, for sta sync.\n",asd_sock);
 	interfaces.count = G_RADIO_NUM;
 
 	interfaces.iface = os_zalloc(interfaces.count *
@@ -2668,7 +2680,7 @@ int main(int argc, char *argv[])
 		goto out;
 	}
 
-
+    /* main thread run circle */
 	circle_run();
 
 	/* Disconnect associated stations from all interfaces and BSSes */

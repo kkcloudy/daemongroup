@@ -520,7 +520,7 @@ void circle_run(void)
 		asd_printf(ASD_DBUS,MSG_CRIT,"%s :malloc fail.\n",__func__);
 		exit(1);
 	}*/
-	asd_printf(ASD_DEFAULT,MSG_INFO,"start circle\n");
+	asd_printf(ASD_DEFAULT,MSG_NOTICE,"asd_main start circle...\n");
 	while (!circle.terminate &&
 	       (circle.timeout || circle.readers.count > 0 ||
 		circle.writers.count > 0 || circle.exceptions.count > 0)) {
@@ -597,7 +597,7 @@ void circle_run(void)
 		circle.poll_table.data = NULL;
 	
 	}
-	asd_printf(ASD_DEFAULT,MSG_INFO,"end circle\n");
+	asd_printf(ASD_DEFAULT,MSG_NOTICE,"asd end circle\n");
 /*
 out:
 	os_free(rfds);

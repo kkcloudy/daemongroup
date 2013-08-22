@@ -40,7 +40,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifdef ASD_DEBUG_FILE
 static FILE *out_file = NULL;
 #endif /* ASD_DEBUG_FILE */
-int wpa_debug_level = MSG_WARNING;
+int wpa_debug_level = MSG_NOTICE;
 int wpa_debug_show_keys = 1;//zhanglei change 0 to 1
 int wpa_debug_timestamp = 0;
 

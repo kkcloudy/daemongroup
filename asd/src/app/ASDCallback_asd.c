@@ -255,7 +255,7 @@ void ASD_NETLINIK_INIT()
 	memset(&src_addr, 0, sizeof(src_addr));
 	memset(&dest_addr, 0, sizeof(dest_addr));
 	memset(&iov,0,sizeof(iov));
-	asd_printf(ASD_DEFAULT,MSG_DEBUG,"now in ASD_NETLINIK_INT");
+	asd_printf(ASD_DEFAULT,MSG_NOTICE,"now in ASD_NETLINIK_INT");
 	asd_printf(ASD_DEFAULT,MSG_INFO,"sizeof(struct msghdr)=%d,sizeof(struct iovec)=%d,sizeof(struct sockaddr_nl)=%d,sizeof(struct nlmsghdr)=%d,NETLINK_WITH_ASD=%d.",sizeof(struct msghdr),sizeof(struct iovec),sizeof(struct sockaddr_nl),sizeof(struct nlmsghdr),NETLINK_WITH_ASD);
 	if ((nl_sock = socket(PF_NETLINK, SOCK_RAW, NETLINK_WITH_ASD)) < 0) {
 		perror("nl_sock socket");
@@ -341,6 +341,7 @@ void ASD_NETLINIK_INIT()
 		free(nlh);
 		nlh = NULL;
 	}
+	asd_printf(ASD_DEFAULT,MSG_NOTICE,"ASD_NETLINIK_INT init netlink socket with wifi OK.");	
 	return ;
 }
 

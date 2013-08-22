@@ -430,6 +430,7 @@ int rtnl_open_byproto(struct rtnl_handle *rth, unsigned subscriptions,
 		return -1;
 	}
 	rth->seq = time(NULL);
+	asd_printf(ASD_DEFAULT,MSG_NOTICE,"asd netlink socket for NETLINK_ROUTE!\n");	
 	return 0;
 }
 
