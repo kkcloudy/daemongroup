@@ -2967,7 +2967,10 @@ void ieee802_11_mgmt(struct asd_data *wasd, u8 *buf, size_t len, u16 stype,
 	//int broadcast;
 
 	if (stype == WLAN_FC_STYPE_BEACON) {
+		/* for ONLINEBUG-880 and asd core in INA */
+		/*
 		handle_beacon(wasd, mgmt, len, fi);
+		*/
 		return;
 	}
 
