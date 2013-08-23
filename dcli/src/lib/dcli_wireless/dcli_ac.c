@@ -8306,7 +8306,7 @@ DEFUN(set_hostapd_logger_printflag_open_func,
 
 DEFUN(set_asd_daemonlog_level_cmd_func,
 	  set_asd_daemonlog_level_cmd,
-	  "set asd daemonlog level (dump|debug|info|notice|warning|error|crit|alert|emerg)",
+	  "set asd daemonlog level (dump|debug|info|notice|warning|error|crit|alert|emerg|default)",
 	  "asd config\n"
 	  "asd daemonlog config\n"
 	  "asd daemonlog config\n"
@@ -8342,7 +8342,7 @@ DEFUN(set_asd_daemonlog_level_cmd_func,
 	{
 		daemonloglevel = 3;	
 	}
-	else if (!strcmp(argv[0],"notice"))
+	else if ((!strcmp(argv[0],"notice"))||(!strcmp(argv[0],"default")))
 	{
 		daemonloglevel = 4;	
 	}

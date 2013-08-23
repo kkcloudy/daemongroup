@@ -14819,7 +14819,7 @@ DBusMessage *asd_dbus_wlan_use_mac_list(DBusConnection *conn, DBusMessage *msg, 
 				}
 			}
 		}
-	    pthread_mutex_lock(&asd_g_bss_mutex);				
+	    pthread_mutex_unlock(&asd_g_bss_mutex);				
 	    pthread_mutex_unlock(&asd_g_wtp_mutex);		
 	}
 
@@ -27948,8 +27948,11 @@ DBusMessage *asd_dbus_security_show_running_config(DBusConnection *conn, DBusMes
 				cursor = showStr + totalLen;
 			}
 			else if(wpa_debug_level == MSG_NOTICE){
+                /* the default log level */
+				/*
 				totalLen += sprintf(cursor,"set asd daemonlog level notice\n");
 				cursor = showStr + totalLen;
+				*/
 			}
 			else if(wpa_debug_level == MSG_WARNING){
 				totalLen += sprintf(cursor,"set asd daemonlog level warning\n");
@@ -28096,8 +28099,11 @@ DBusMessage *asd_dbus_security_show_running_config(DBusConnection *conn, DBusMes
 				cursor = showStr + totalLen;
 			}
 			else if(wpa_debug_level == MSG_NOTICE){
+                /* the default log level */
+				/*
 				totalLen += sprintf(cursor,"set asd daemonlog level notice\n");
 				cursor = showStr + totalLen;
+				*/
 			}
 			else if(wpa_debug_level == MSG_WARNING){
 				totalLen += sprintf(cursor,"set asd daemonlog level warning\n");
