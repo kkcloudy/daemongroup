@@ -205,6 +205,11 @@ void dcli_free_sta(struct dcli_sta_info *sta)
 		free(sta->ip);
 		sta->ip = NULL;
 	}
+	/* bugfix AXSSZFI-1867,zhagndi@autelan.com 2013-08-23 */
+	if(sta->identify != NULL) {
+		free(sta->identify);
+		sta->identify = NULL;
+	}
 	free(sta);
 	sta = NULL;
 	return;
