@@ -751,9 +751,15 @@ int dcli_eth_port_mode_config
 	DBusError err;
 	unsigned int op_ret = INTERFACE_RETURN_CODE_SUCCESS;
 	int master_slot_id[2] = {-1, -1};
+	int ret =0;
    	int local_slot_id = get_product_info(SEM_LOCAL_SLOT_ID_PATH);
 
-	dcli_master_slot_id_get(master_slot_id);
+	ret = dcli_master_slot_id_get(master_slot_id);
+	if(ret !=0 )
+	{
+		vty_out(vty,"get master_slot_id error !\n");
+		return CMD_WARNING;		
+   	}
 	
 	/*vty_out(vty,"FDB agingtime %d. \n",agingtime);
 	//printf("mode %d\n",mode);*/
@@ -1153,9 +1159,14 @@ int dcli_eth_port_interface_mode_config
 	unsigned int tmpIfIndex = ~0UI;
 	int master_slot_id[2] = {-1, -1};
    	int local_slot_id = get_product_info(SEM_LOCAL_SLOT_ID_PATH);
+	int ret =0;
 
-	dcli_master_slot_id_get(master_slot_id);
-	
+	ret = dcli_master_slot_id_get(master_slot_id);
+	if(ret !=0 )
+	{
+		vty_out(vty,"get master_slot_id error !\n");
+		return CMD_WARNING;		
+   	}
 	/* *ifIndex = ~0UI;
 	//vty_out(vty,"FDB agingtime %d. \n",agingtime);
 	//printf("mode %d\n",mode);*/

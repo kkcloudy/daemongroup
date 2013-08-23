@@ -1041,7 +1041,12 @@ int dcli_no_interface_ifname_bond(struct vty * vty,char * ptr)
 			
         	int local_slot_id = get_product_info(SEM_LOCAL_SLOT_ID_PATH);
             int master_slot_count = get_product_info(master_slot_cnt_file);
-        	dcli_master_slot_id_get(master_slot_id);
+        	ret = dcli_master_slot_id_get(master_slot_id);
+        	if(ret !=0 )
+        	{
+        		vty_out(vty,"get master_slot_id error !\n");
+        		return CMD_WARNING;		
+           	}
 			/* Check is master board or not */
 			if( (local_slot_id !=master_slot_id[0])&&(local_slot_id !=master_slot_id[1]) )
 			{
@@ -1291,6 +1296,7 @@ int dcli_no_interface_ifname_bond(struct vty * vty,char * ptr)
             DBusError err;
             struct interface *ifp = NULL;
             unsigned int op_ret = 0,ifIndex = 0;
+			int ret=0;
             char name[16] = {'\0'};
 
             if (vId > 4093)
@@ -1304,7 +1310,12 @@ int dcli_no_interface_ifname_bond(struct vty * vty,char * ptr)
 			char *master_slot_cnt_file = "/dbm/product/master_slot_count";
         	int local_slot_id = get_product_info(SEM_LOCAL_SLOT_ID_PATH);
             int master_slot_count = get_product_info(master_slot_cnt_file);
-        	dcli_master_slot_id_get(master_slot_id);
+        	ret = dcli_master_slot_id_get(master_slot_id);
+        	if(ret !=0 )
+        	{
+        		vty_out(vty,"get master_slot_id error !\n");
+        		return CMD_WARNING;		
+           	}
 			/* Check is master board or not */
 			if( (local_slot_id !=master_slot_id[0])&&(local_slot_id !=master_slot_id[1]) )
 			{
