@@ -285,10 +285,10 @@ void ShowWtpListPage(char *m,int n,char *t,struct list *lpublic,struct list *lwl
                 fprintf(cgiOut,"</table>"\
               "</td>"\
               "<td align=left valign=top style=\"background-color:#ffffff; border-right:1px solid #707070; padding-left:30px; padding-top:10px\">"\
-   "<table width=743 border=0 bgcolor=#ffffff cellspacing=0 cellpadding=0>"\
+   "<table width=773 border=0 bgcolor=#ffffff cellspacing=0 cellpadding=0>"\
 	"<tr style=\"padding-bottom:15px\">"\
 	   "<td width=70>%s ID:</td>",search(lpublic,"instance"));
-	   fprintf(cgiOut,"<td width=673>"\
+	   fprintf(cgiOut,"<td width=703>"\
 		   "<select name=instance_id id=instance_id style=width:72px onchange=instanceid_change(this,\"wp_wtplis.cgi\",\"%s\")>",m);
 		   list_instance_parameter(&paraHead2, INSTANCE_STATE_WEB);	  
 		   for(pq=paraHead2;(NULL != pq);pq=pq->next)
@@ -309,20 +309,21 @@ void ShowWtpListPage(char *m,int n,char *t,struct list *lpublic,struct list *lwl
     "<td colspan=2 align=center valign=top style=\"padding-top:5px; padding-bottom:10px\">");
 			if(result == 1)
 	        { 
-	          fprintf(cgiOut,"<table width=743 border=0 cellspacing=0 cellpadding=0>"\
+	          fprintf(cgiOut,"<table width=773 border=0 cellspacing=0 cellpadding=0>"\
               "<tr>"\
               "<td align=left colspan=3>");
 	          if(wnum>0)       /*Èç¹ûWTP´æÔÚ*/
 	          {			          
-				fprintf(cgiOut,"<table frame=below rules=rows width=743 border=1>"\
+				fprintf(cgiOut,"<table frame=below rules=rows width=773 border=1>"\
 				"<tr align=left>"\
 				"<th width=150><font id=%s>%s</font></th>",search(lpublic,"menu_thead"),search(lpublic,"name"));
-                fprintf(cgiOut,"<th width=40><font id=yingwen_thead>ID</font></th>"\
-                "<th width=130><font id=yingwen_thead>MAC</font></th>"\
-                "<th width=150><font id=yingwen_thead>IP</font></th>"\
-                "<th width=110><font id=%s>%s</font></th>",search(lpublic,"menu_thead"),search(lwlan,"model"));					
-				fprintf(cgiOut,"<th width=90><font id=%s>%s</font><font id=%s>%s</font></th>",search(lpublic,"menu_thead"),search(lwlan,"run"),search(lpublic,"menu_thead"),search(lwlan,"state"));
-				fprintf(cgiOut,"<th width=60><font id=%s>%s</font></th>",search(lpublic,"menu_thead"),search(lwlan,"state"));
+                fprintf(cgiOut,"<th width=30><font id=yingwen_thead>ID</font></th>"\
+                "<th width=110><font id=yingwen_thead>MAC</font></th>"\
+                "<th width=130><font id=yingwen_thead>IP</font></th>"\
+                "<th width=80><font id=%s>%s</font></th>",search(lpublic,"menu_thead"),search(lwlan,"model"));					
+				fprintf(cgiOut,"<th width=70><font id=%s>%s</font><font id=%s>%s</font></th>",search(lpublic,"menu_thead"),search(lwlan,"run"),search(lpublic,"menu_thead"),search(lwlan,"state"));
+				fprintf(cgiOut,"<th width=50><font id=%s>%s</font></th>",search(lpublic,"menu_thead"),search(lwlan,"state"));
+				fprintf(cgiOut,"<th width=140><font id=%s>%s</font></th>",search(lpublic,"menu_thead"),search(lwlan,"location"));
 	            fprintf(cgiOut,"<th width=13>&nbsp;</th>"\
                 "</tr>");
 				q=head->WTP_INFO->WTP_LIST;
@@ -374,7 +375,8 @@ void ShowWtpListPage(char *m,int n,char *t,struct list *lpublic,struct list *lwl
 				  if((q)&&(q->isused==1))
 				    fprintf(cgiOut,"<td>used</td>");
 				  else
-				  	fprintf(cgiOut,"<td>unused</td>");				  
+				  	fprintf(cgiOut,"<td>unused</td>");
+				  fprintf(cgiOut,"<td style=\"word-break:break-all\">%s</td>",q->location);
 				  memset(wtp_id,0,sizeof(wtp_id));
 				  if(q)
 				  {
