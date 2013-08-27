@@ -2045,6 +2045,7 @@ DEFUN(show_wtp_cmd_func,
 			vty_out(vty,"WTP total receive flow byte: %lld\n",WTPINFO->WTP[0]->rx_bytes);
 			vty_out(vty,"WTP total traffic flow byte: %lld\n",WTPINFO->WTP[0]->tx_bytes);
 			vty_out(vty,"ap apstatistics interval: %u\n",WTPINFO->WTP[0]->apstatisticsinterval);
+			vty_out(vty,"WTP location: %s\n",WTPINFO->WTP[0]->location);
 			/*added by weiay 20080711*/
 			vty_out(vty,"WTP apply wlan id: ");
 			for (i = 0; i < WTPINFO->WTP[0]->apply_wlan_num; i++)
@@ -5516,6 +5517,10 @@ DEFUN(diag_wtp_list_cmd_func,
 		
 			dbus_message_iter_get_basic(&iter_struct,&(WTP[i]->WTPNAME));
 
+			dbus_message_iter_next(&iter_struct);
+			dbus_message_iter_get_basic(&iter_struct,&(wtpNode->location));  
+
+
 			dbus_message_iter_next(&iter_array);
 			if('\0' == wtpNode->WTPIP[0]) {
 
@@ -6116,6 +6121,11 @@ DEFUN(btrace_wtp_list_cmd_func,
 		
 			//dbus_message_iter_get_basic(&iter_struct,&(WTP[i]->WTPNAME));
 			dbus_message_iter_get_basic(&iter_struct,&(wtpNode->WTPNAME));  //fengwenchao modify for AXSSZFI-742,20120203
+
+			dbus_message_iter_next(&iter_struct);
+		
+			//dbus_message_iter_get_basic(&iter_struct,&(WTP[i]->WTPNAME));
+			dbus_message_iter_get_basic(&iter_struct,&(wtpNode->location));  //fengwenchao modify for AXSSZFI-742,20120203
 
 			dbus_message_iter_next(&iter_array);
 			if('\0' == wtpNode->WTPIP[0]) {
@@ -11678,7 +11688,7 @@ DEFUN(set_wtp_location_cmd_func,
 	  CONFIG_STR
 	  "wtp information\n"
 	  "wtp location\n"
-	  "wtp location name length <1-15>\n"
+	  "wtp location name length <1-256>\n"
 	 )
 {	
 	
@@ -11693,8 +11703,9 @@ DEFUN(set_wtp_location_cmd_func,
 	//WTPID = (unsigned int)vty->index;
 
 	len = strlen(argv[0]);
-	if(len > 15){		
-		vty_out(vty,"<error> wtp location is too long,should be 1 to 15\n");
+	if((len <= 0) || (len > 256))
+	{		
+		vty_out(vty,"<error> wtp location is too long,should be 1 to 256\n");
 		return CMD_SUCCESS;
 	}
 	

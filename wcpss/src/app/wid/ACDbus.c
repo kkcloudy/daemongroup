@@ -2819,6 +2819,7 @@ DBusMessage * wid_dbus_interface_show_wtplist_new(DBusConnection *conn, DBusMess
 	dbus_error_init(&err);
 	int i=0;
 	WID_WTP **WTP;
+	char *wtp_location = NULL;
 	WTP = malloc(WTP_NUM*(sizeof(WID_WTP *)));
 	while(i<WTP_NUM){
 		CWThreadMutexLock(&(gWTPs[i].WTPThreadMutex));//fengwenchao add 20121123 for AXSSZFI-1050
@@ -2835,7 +2836,10 @@ DBusMessage * wid_dbus_interface_show_wtplist_new(DBusConnection *conn, DBusMess
 
 	/*store sn&mac of ap*/
 	unsigned char *mac = NULL;
-	mac = (unsigned char *)malloc(MAC_LEN+1);		
+	mac = (unsigned char *)malloc(MAC_LEN+1);
+	wtp_location = (char *)malloc(strlen("Location not setted")+1);
+	memset(wtp_location,0,strlen("Location not setted")+1);
+	memcpy(wtp_location,"Location not setted",strlen("Location not setted"));
 	
 	reply = dbus_message_new_method_return(msg);
 		
@@ -2859,6 +2863,7 @@ DBusMessage * wid_dbus_interface_show_wtplist_new(DBusConnection *conn, DBusMess
 											DBUS_TYPE_STRING_AS_STRING
 											DBUS_TYPE_BYTE_AS_STRING
 											DBUS_TYPE_BYTE_AS_STRING
+											DBUS_TYPE_STRING_AS_STRING
 											DBUS_TYPE_STRING_AS_STRING
 											DBUS_TYPE_STRING_AS_STRING //wtpsn   fengwenchao add 20110530 
 									DBUS_STRUCT_END_CHAR_AS_STRING,
@@ -2897,7 +2902,16 @@ DBusMessage * wid_dbus_interface_show_wtplist_new(DBusConnection *conn, DBusMess
 		dbus_message_iter_append_basic(&iter_struct,DBUS_TYPE_STRING,&(WTP[i]->WTPNAME));
 
 		dbus_message_iter_append_basic(&iter_struct,DBUS_TYPE_STRING,&(WTP[i]->WTPSN));   //fengwenchao add 20110530
-
+		
+		if(WTP[i]->location == NULL)
+		{
+			dbus_message_iter_append_basic(&iter_struct,DBUS_TYPE_STRING,&wtp_location); 
+		}
+		else
+		{
+			dbus_message_iter_append_basic(&iter_struct,DBUS_TYPE_STRING,&(WTP[i]->location));
+		}/*zhangcl addef for wtp location*/
+		
 		dbus_message_iter_close_container (&iter_array, &iter_struct);
 
 
@@ -2908,6 +2922,7 @@ DBusMessage * wid_dbus_interface_show_wtplist_new(DBusConnection *conn, DBusMess
 	free(WTP);
 	WTP = NULL;
 	CW_FREE_OBJECT(mac);
+	CW_FREE_OBJECT(wtp_location);
 	return reply;	
 }
 /*xiaodawei transplant from 2.0 for telecom test, 20110301*/
@@ -15770,6 +15785,7 @@ DBusMessage * wid_dbus_interface_show_wtpconf(DBusConnection *conn, DBusMessage 
 	int ret=WID_DBUS_SUCCESS;
 	dbus_error_init(&err);
 	int j = 0;
+	char *wtp_location=NULL;
 	unsigned char wlanid = 0;
 	unsigned char wlanlist[WLAN_NUM];//wlanlist has 16 elements,0 means not bind this wlan,1 means bind this wlan
 	struct wlanid *wlanidlist;
@@ -16101,7 +16117,27 @@ DBusMessage * wid_dbus_interface_show_wtpconf(DBusConnection *conn, DBusMessage 
 		dbus_message_iter_append_basic (&iter,
 										 DBUS_TYPE_UINT32,
 										 &(AC_WTP[WTPID]->apstatisticsinterval));
-	}			
+
+
+		wtp_location = (char *)malloc(strlen("Location not setted")+1);
+		memset(wtp_location,0,strlen("Location not setted")+1);
+		memcpy(wtp_location,"Location not setted",strlen("Location not setted"));
+		if(AC_WTP[WTPID]->location == NULL)
+		{
+			dbus_message_iter_append_basic (&iter,
+										 DBUS_TYPE_STRING,
+										 &wtp_location); 
+		}
+		else
+		{
+			dbus_message_iter_append_basic (&iter,
+										 DBUS_TYPE_STRING,
+										 &(AC_WTP[WTPID]->location));
+		}/*zhangcl addef for wtp location*/
+
+		CW_FREE_OBJECT(wtp_location);
+		
+	}	
 	return reply;	
 }
 

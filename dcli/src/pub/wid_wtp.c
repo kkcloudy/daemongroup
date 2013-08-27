@@ -1457,6 +1457,7 @@ void* dcli_wtp_show_api_group_one(
 		char* updatepath = NULL;
 		char* updateversion = NULL;
 		char* apply_interface_name = NULL;
+		char* wtp_location = NULL;
 		
 		CW_CREATE_OBJECT_ERR(LIST, DCLI_WTP_API_GROUP_ONE, return NULL;);	
 		LIST->WTP = NULL;	
@@ -1672,7 +1673,14 @@ void* dcli_wtp_show_api_group_one(
 		dbus_message_iter_next(&iter);	
 		dbus_message_iter_get_basic(&iter,&(LIST->WTP[0]->tx_bytes));	
 		dbus_message_iter_next(&iter);	
-		dbus_message_iter_get_basic(&iter,&(LIST->WTP[0]->apstatisticsinterval)); 
+		dbus_message_iter_get_basic(&iter,&(LIST->WTP[0]->apstatisticsinterval));
+		
+		dbus_message_iter_next(&iter);	
+		dbus_message_iter_get_basic(&iter,&wtp_location);
+
+		LIST->WTP[0]->location=(char*)malloc(strlen(wtp_location)+1);
+		memset(LIST->WTP[0]->location,0,strlen(wtp_location)+1);
+		memcpy(LIST->WTP[0]->location,wtp_location,strlen(wtp_location));
 //printf("eeeeeeeeeeeeeeeeeeeeeeeeeeeeee \n");
 	//	memcpy(LIST->WTP->WTPMAC,WTPMAC,6);
 //printf("eeeeeeeeeeessssssssssssssssssssssssssss \n");
@@ -1763,6 +1771,13 @@ void* dcli_wtp_show_api_group_one(
 			memset(WTP[i]->WTPSN,0,strlen(wtpsn)+1);
 			memcpy(WTP[i]->WTPSN,wtpsn,strlen(wtpsn));
 			/*fengwenchao modify end*/
+			/*zhangcl added for wtp location*/
+			dbus_message_iter_next(&iter_struct);
+			dbus_message_iter_get_basic(&iter_struct,&wtp_location);
+
+			WTP[i]->location=(char*)malloc(strlen(wtp_location)+1);
+			memset(WTP[i]->location,0,strlen(wtp_location)+1);
+			memcpy(WTP[i]->location,wtp_location,strlen(wtp_location));
 			dbus_message_iter_next(&iter_array);
 			if(WTP[i]->WTPStat == 5)
 			{
@@ -3935,6 +3950,10 @@ void dcli_wtp_free_fun(char *DBUS_METHOD,DCLI_WTP_API_GROUP_ONE*WTPINFO)
 					for (i = 0; i < WTPINFO->WTP[0]->radio_num; i++) {
 						CW_FREE_OBJECT(WTPINFO->WTP[0]->WTP_Radio[i]);
 					}
+					if(WTPINFO->WTP[0]->location != NULL)
+					{
+						CW_FREE_OBJECT(WTPINFO->WTP[0]->location);
+					}
 					CW_FREE_OBJECT(WTPINFO->WTP[0]);
 				}
 				if(WTPINFO){
@@ -3958,6 +3977,10 @@ void dcli_wtp_free_fun(char *DBUS_METHOD,DCLI_WTP_API_GROUP_ONE*WTPINFO)
 									CW_FREE_OBJECT(phead->WTPModel);
 									CW_FREE_OBJECT(phead->WTPNAME);
 									CW_FREE_OBJECT(phead->WTPSN);   //fengwenchao add 20110530
+									if(phead->location != NULL)
+									{
+										CW_FREE_OBJECT(phead->location);/*zhangcl added for wtp location*/
+									}
 									CW_FREE_OBJECT(phead);
 									phead = pnext;		
 							}
