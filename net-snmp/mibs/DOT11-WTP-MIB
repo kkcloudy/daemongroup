@@ -22,7 +22,7 @@ IMPORTS
 	enterprises
        			FROM SNMPv2-SMI;
 dot11WtpGroup MODULE-IDENTITY
-    LAST-UPDATED "201305020000Z"        -- May 2rd, 2013
+    LAST-UPDATED "201308270000Z"        -- Aug 27rd, 2013
     ORGANIZATION " AuteLan Network Management Working Group
                   http://www.autelan.com"
     CONTACT-INFO
@@ -51,7 +51,7 @@ dot11WtpGroup MODULE-IDENTITY
 
          This MIB module contains managed object definitions for
          the AuteLan Protocol."
-    REVISION    "201305020000Z"
+    REVISION    "201308270000Z"
     DESCRIPTION
         "Initial version published as RFC xxx,
 	wtp means ACCESS POINT(AP)."
@@ -123,7 +123,12 @@ Dot11WtpInfoEntry ::=SEQUENCE{
 	wtpDomain				DisplayString,
 	wtpSysRestart				INTEGER,
 	wtpSysReset				INTEGER,
-	wtpColdReboot				INTEGER
+	wtpColdReboot				INTEGER,
+	wtplongitude				DisplayString,
+	wtplatitude				DisplayString,
+	wtpPowerType				DisplayString,
+	wtpManufactureDate			DisplayString,
+	wtpForwardMode				INTEGER
 }
 
 wtpMacAddr 				OBJECT-TYPE
@@ -262,6 +267,51 @@ wtpColdReboot				OBJECT-TYPE
 					DESCRIPTION
 						"AP cold reboot"
 					::={  dot11WtpInfoEntry 17 }
+
+wtplongitude	 			OBJECT-TYPE
+					SYNTAX     	DisplayString
+					MAX-ACCESS 	read-write
+					STATUS     	current
+					DESCRIPTION
+				        	"AP device's longitude."
+					::= { dot11WtpInfoEntry 23 }
+
+wtplatitude	 			OBJECT-TYPE
+					SYNTAX     	DisplayString
+					MAX-ACCESS 	read-write
+					STATUS     	current
+					DESCRIPTION
+				        	"AP device's latitude."
+					::= { dot11WtpInfoEntry 24 }
+
+wtpPowerType	 			OBJECT-TYPE
+					SYNTAX     	DisplayString
+					MAX-ACCESS 	read-only
+					STATUS     	current
+					DESCRIPTION
+				        	"AP device's PowerType."
+					::= { dot11WtpInfoEntry 25 }
+
+wtpManufactureDate	 			OBJECT-TYPE
+					SYNTAX     	DisplayString
+					MAX-ACCESS 	read-only
+					STATUS     	current
+					DESCRIPTION
+				        	"AP device's ManufactureDate."
+					::= { dot11WtpInfoEntry 26 }
+
+wtpForwardMode	 			OBJECT-TYPE
+					SYNTAX     	INTEGER{
+								Fat(0),
+                                                        	Thin(1),
+                                                        	Unknown(2)
+								} 
+					MAX-ACCESS 	read-only
+					STATUS     	current
+					DESCRIPTION
+				        	"AP device's ForwardMode."
+					::= { dot11WtpInfoEntry 27 }
+
 
 dot11WtpSignalTable OBJECT-TYPE
     SYNTAX      SEQUENCE OF Dot11WtpSignalEntry
@@ -2900,7 +2950,12 @@ Dot11ConfigRadioEntry ::=SEQUENCE{
         radioAmsduSwitch			INTEGER,
         radioMCS				DisplayString,
         radio11nSwitch				INTEGER,
-        OnlyAllow11nStaAccess                   TruthValue
+        OnlyAllow11nStaAccess                   TruthValue,
+	radioRole				INTEGER,
+	radioChanelUsage			INTEGER,
+	radioChanelChangeNum			INTEGER,
+	radioChannelWidth			INTEGER,
+	radioNoiseFloor				INTEGER
 }
 radioChannel				OBJECT-TYPE
 					SYNTAX     INTEGER 
@@ -3133,6 +3188,50 @@ OnlyAllow11nStaAccess			OBJECT-TYPE
 				        	"Whether only allows 11N terminal access."
 					::= { dot11ConfigRadioEntry 25 }  	
 
+radioRole				OBJECT-TYPE
+					SYNTAX     INTEGER{
+							Clint(1),
+							Other(2),
+							AP(6),
+							Mesh(9)							
+							   }
+					MAX-ACCESS read-only
+					STATUS     current
+					DESCRIPTION
+				        	"Radio Role."
+					::= { dot11ConfigRadioEntry 28 }	
+
+radioChanelUsage			OBJECT-TYPE
+					SYNTAX     INTEGER
+					MAX-ACCESS read-only
+					STATUS     current
+					DESCRIPTION
+				        	"Radio chanel usage."
+					::= { dot11ConfigRadioEntry 29 }
+
+radioChanelChangeNum			OBJECT-TYPE
+					SYNTAX     INTEGER
+					MAX-ACCESS read-only
+					STATUS     current
+					DESCRIPTION
+				        	"Radio chanel change number."
+					::= { dot11ConfigRadioEntry 30 }
+
+radioChannelWidth			OBJECT-TYPE
+					SYNTAX     INTEGER
+					MAX-ACCESS read-only
+					STATUS     current
+					DESCRIPTION
+				        	"Radio channel width."
+					::= { dot11ConfigRadioEntry 31 }
+
+radioNoiseFloor				OBJECT-TYPE
+					SYNTAX     INTEGER
+					MAX-ACCESS read-only
+					STATUS     current
+					DESCRIPTION
+				        	"Radio noise floor."
+					::= { dot11ConfigRadioEntry 32 }
         								
 --**********************************************************************************************************
 dot11RadioStatisticsTable OBJECT-TYPE
@@ -9933,6 +10032,15 @@ VerifyModeTrapDescription	 			OBJECT-TYPE
 		DESCRIPTION
 			"An wtpSoftWareUpdateFailed Trap signifies that there has been an signal of AP-SOFTWARE-UPDATE-FAILED "
 	::= { wtpInnerTrap 29 }
+
+	wtpConfigurationErrorTrap NOTIFICATION-TYPE
+		OBJECTS {
+				wtpMacAddr
+			}
+		STATUS		current
+		DESCRIPTION
+			"An wtpConfigurationErrorTrap Trap signifies that there has been an signal of AP-Configuration-Error "
+	::= { wtpInnerTrap 30 }
 	
 	APAddUserFailClearTrap NOTIFICATION-TYPE
 		OBJECTS {
@@ -10005,4 +10113,22 @@ VerifyModeTrapDescription	 			OBJECT-TYPE
 		DESCRIPTION
 			"An wtpUserLogoffAbnormalTrap Trap signifies that there has been an signal of user_logoff_abnormal "
 	::= { wtpAplicationTrap 45 }
+
+	wtpUserTrafficOverloadTrap NOTIFICATION-TYPE
+		OBJECTS {
+				wtpMacAddr
+			}
+		STATUS		current
+		DESCRIPTION
+			"An wtpUserTrafficOverloadTrap Trap signifies that there has been an signal of traffic overload "
+	::= { wtpAplicationTrap 51 }
+
+	wtpUnauthorizedStaMacTrap NOTIFICATION-TYPE
+		OBJECTS {
+				wtpMacAddr
+			}
+		STATUS		current
+		DESCRIPTION
+			"An wtpUnauthorizedStaMacTrap Trap signifies that there has been an signal of unauthorized station "
+	::= { wtpAplicationTrap 52 }
 END
