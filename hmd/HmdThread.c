@@ -587,6 +587,40 @@ HMDBool HmdTimerCancel(HmdTimerID *idPtr, int isFree) {
 	return HMD_TRUE;
 }
 
+extern int take_snapshot_timer_id;
+extern int g_loable_takesnapshot;
+
+int takesnapshotfun()
+{
+	char HmdDir[] = "/var/run/hmd";
+	char command[128]= {0};	
+	int save_fd = 0;
+	char log_save_hmd_flag;
+	hmd_syslog_info("###%s line%d ###\n",__func__,__LINE__);
+	sprintf(command,"%s/log_save_hmd_flag",HmdDir);
+
+		hmd_syslog_info("###%s line%d ###\n",__func__,__LINE__);
+		save_fd = open(command,O_RDWR|O_CREAT);
+		if(save_fd <= 0)
+		{
+			hmd_syslog_err("%s,%d,invalid fd:%d.\n",__func__,__LINE__,save_fd);
+			return 1;
+		}
+		read(save_fd, &log_save_hmd_flag, 1);
+		close(save_fd);
+		if(log_save_hmd_flag == '1')
+		{
+			hmd_syslog_info("###%s line%d ###\n",__func__,__LINE__);
+			system("pkill takesnapshot.sh");
+		}
+		g_loable_takesnapshot = 0;
+
+		hmd_syslog_info("###%s line%d ###\n",__func__,__LINE__);
+		HmdTimerCancel(&take_snapshot_timer_id,1);
+		return 0;
+}
+
+
 
 void HmdHandleTimer(void* arg) {
 	struct HmdMsgQ msg;	
@@ -670,6 +704,11 @@ void HmdHandleTimer(void* arg) {
 		if (msgsnd(MsgqID, (struct HmdMsgQ *)&msg, sizeof(msg.mqinfo), 0) == -1){
 			perror("msgsnd");
 		}
+	}
+	else if(HMD_TIMER_TAKESNAPSHOT == TimerType)
+	{
+		ret = takesnapshotfun();
+		hmd_syslog_info("%s ret:%d(0 success)\n",__func__,ret);
 	}
 	HMD_FREE_OBJECT(a);
 

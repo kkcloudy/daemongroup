@@ -271,6 +271,7 @@ getlog()
 {
 guardlog "Get /var/log"
 tar -cjPf $SNAPSHOTDIR/varlog.tar.bz2 /var/log/* >/dev/null 2>&1
+echo 0 > /var/run/hmd/log_save_hmd_flag
 syncnow
 guardlog "Done getlog."
 }

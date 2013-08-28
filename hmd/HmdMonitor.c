@@ -34,7 +34,7 @@
 #define VRRP_RETURN_CODE_OK (0x150001)
 extern  struct Hmd_For_Dhcp_restart *DHCP_MONITOR;
 
-
+int g_loable_takesnapshot = 0;
 
 
 int vrrp_send_pkt_arp( char* ifname, char *buffer, int buflen )
@@ -1280,9 +1280,14 @@ int dhcp_to_start(){
 
 	return 0;
 }
+int take_snapshot_timer_id;
 int hansi_state_check(int InstID, int islocaled){
 	char buf[128] = {0};
 	char defaultPath[] = "/var/run/config/Instconfig";
+	char HmdDir[] = "/var/run/hmd";
+	char command[128]= {0};	
+	int save_fd = 0;
+	sprintf(command,"%s/log_save_hmd_flag",HmdDir);
 	if(islocaled){
 		if(HOST_BOARD->Hmd_Local_Inst[InstID] != NULL){
 			sprintf(buf,"sudo /etc/init.d/wcpss stop %d %d",islocaled, InstID);
@@ -1291,7 +1296,21 @@ int hansi_state_check(int InstID, int islocaled){
 			sprintf(buf,"sudo /etc/init.d/wcpss start %d %d",islocaled, InstID);
 			system(buf);
 			hmd_syslog_info("###%s hmd begin load takesnapshot.sh ###\n",__func__);
-			system("takesnapshot.sh 1 3");
+			if(g_loable_takesnapshot == 0)
+			{
+				save_fd = open(command,O_RDWR|O_CREAT);
+				if(save_fd <= 0)
+				{
+					hmd_syslog_err("%s,%d,invalid fd:%d.\n",__func__,__LINE__,save_fd);
+					return 1;
+				}
+				write(save_fd, "1", 1);
+				close(save_fd);
+				g_loable_takesnapshot = 1;
+				hmd_syslog_info("takesnapshotfun ###%s %d ###\n",__func__,__LINE__);
+				HMDTimerRequest(480,&take_snapshot_timer_id, HMD_TIMER_TAKESNAPSHOT, 0, 0);
+				system("takesnapshot.sh 1 3 &");
+			}
 			if(HOST_SLOT_NO != MASTER_SLOT_NO)
 				notice_hmd_server_state_change(InstID, islocaled, HMD_RESTART, 0);
 			if(HOST_BOARD->Hmd_Local_Inst[InstID]->slot_no == HOST_SLOT_NO)
@@ -1327,7 +1346,21 @@ int hansi_state_check(int InstID, int islocaled){
 			sprintf(buf,"sudo /etc/init.d/had start %d", InstID);
 			system(buf);
 			hmd_syslog_info("###%s hmd begin load takesnapshot.sh ###\n",__func__);
-			system("takesnapshot.sh 1 3");
+			if(g_loable_takesnapshot == 0)
+			{
+				save_fd = open(command,O_RDWR|O_CREAT);
+				if(save_fd <= 0)
+				{
+					hmd_syslog_err("%s,%d,invalid fd:%d.\n",__func__,__LINE__,save_fd);
+					return 1;
+				}
+				write(save_fd, "1", 1);
+				close(save_fd);
+				g_loable_takesnapshot = 1;
+				hmd_syslog_info("###takesnapshotfun %s %d ###\n",__func__,__LINE__);
+				HMDTimerRequest(480,&take_snapshot_timer_id, HMD_TIMER_TAKESNAPSHOT, 0, 0);
+				system("takesnapshot.sh 1 3 &");
+			}
 			if(HOST_SLOT_NO != MASTER_SLOT_NO)
 				notice_hmd_server_state_change(InstID, islocaled, HMD_RESTART, 0);
 			
