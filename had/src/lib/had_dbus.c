@@ -48,6 +48,7 @@ extern "C"
 #include "had_log.h"
 #include "had_vrrpd.h"
 #include "had_ipaddr.h"
+#include "hmd/hmdpub.h"
 
 /*
   *	VRRP DBUS connection 
@@ -2537,6 +2538,121 @@ DBusMessage * had_dbus_service_enable(DBusConnection *conn, DBusMessage *msg, vo
 
 	return reply;	
 }
+
+DBusMessage * had_dbus_state_change(DBusConnection *conn, DBusMessage *msg, void *user_data)
+{
+
+	DBusMessage* reply;
+	DBusMessageIter iter = {0};
+	DBusError		err;
+    unsigned int profile = 0;
+	int op = -1;
+	unsigned int	ret = VRRP_RETURN_CODE_OK;
+	unsigned int	sendAdv = 0;
+    vrrp_rt* vrrp = NULL;
+	hansi_s* hansi = NULL;
+	dbus_error_init( &err );
+
+	if( !(dbus_message_get_args( msg ,&err, \
+					DBUS_TYPE_UINT32,&profile, \
+					DBUS_TYPE_UINT32,&op,  \
+					DBUS_TYPE_INVALID)))
+	{
+		vrrp_syslog_dbg("vrrp unable to get input args\n");
+		if(dbus_error_is_set( &err ))
+		{
+			vrrp_syslog_error("vrrp service %s raised:%s\n",err.name ,err.message);
+			dbus_error_free( &err );
+		}
+		return NULL;
+	}
+	pthread_mutex_lock(&StateMutex);
+    hansi = had_get_profile_node(profile);
+    if(NULL != hansi)
+	{
+		vrrp = hansi->vlist;	
+		if(NULL == vrrp)
+		{
+        	ret = VRRP_RETURN_CODE_PROFILE_NOTEXIST;
+	  	}
+	   	else
+	   	{
+		   	if(HMD_NOTICE_VRRP_STATE_CHANGE_MASTER == op)
+		   	{
+		   		if(vrrp->state == VRRP_STATE_MAST)
+		   		{
+					ret = VRRP_RETURN_CODE_OK;
+					vrrp_syslog_info("global switch -->vrrp %d state %d already MASTER\n",vrrp->vrid, vrrp->state);
+		   		}
+				else
+				{
+					vrrp_syslog_info("global switch -->vrrp %d change state to MASTER\n",vrrp->vrid);
+					if(VRRP_LINK_SETTED ==  vrrp->uplink_flag)
+					{
+					    VRRP_TIMER_SET(vrrp->uplink_ms_down_timer,vrrp->adver_int);
+					}
+					if(VRRP_LINK_SETTED == vrrp->downlink_flag)
+					{
+						VRRP_TIMER_SET(vrrp->downlink_ms_down_timer,vrrp->adver_int);
+					}
+					vrrp_syslog_dbg("set auth type to fail!\n");
+					if(VRRP_LINK_SETTED == vrrp->uplink_flag) 
+					{
+						had_set_link_auth_type(vrrp, VRRP_LINK_TYPE_UPLINK, VRRP_AUTH_FAIL);
+					}
+					if(VRRP_LINK_SETTED == vrrp->downlink_flag) 
+					{
+						had_set_link_auth_type(vrrp, VRRP_LINK_TYPE_DOWNLINK, VRRP_AUTH_FAIL);
+					}
+					 /*log trace*/
+					vrrp_state_trace(vrrp->profile,VRRP_STATE_BACK,
+					 				"BACK CHANG","send fail-to-receive packet to notify old master,then goto master");
+					 
+					had_vrrp_vif_rcv_pck_ON(vrrp);
+					 /*first notify to old master to force to fail!*/
+					vrrp_send_adv( vrrp, vrrp->priority );	
+					 /*recover the type value*/
+					if(VRRP_LINK_SETTED == vrrp->uplink_flag) 
+					{
+						had_set_link_auth_type(vrrp, VRRP_LINK_TYPE_UPLINK, VRRP_AUTH_PASS);;
+					}
+					if(VRRP_LINK_SETTED == vrrp->downlink_flag) 
+					{
+						had_set_link_auth_type(vrrp, VRRP_LINK_TYPE_DOWNLINK, VRRP_AUTH_PASS);
+					}
+
+					had_state_goto_master( vrrp,VRRP_STATE_NONE);
+				}
+		   	}
+		   	else
+			{
+				vrrp_syslog_info("global switch -->vrrp %d change state to BACK\n",vrrp->vrid);
+		   		if((vrrp->state == VRRP_STATE_BACK) || (vrrp->state == VRRP_STATE_DISABLE))
+	   			{
+					ret = VRRP_RETURN_CODE_OK;
+					vrrp_syslog_info("vrrp %d state %d already BACK or DISABLE\n",vrrp->vrid, vrrp->state);
+	   			}
+				else
+				{
+					had_state_leave_master(vrrp,1,NULL,NULL);
+				}
+
+			}
+		}
+    }
+	pthread_mutex_unlock(&StateMutex);
+	reply = dbus_message_new_method_return(msg);
+	if(NULL==reply)
+	{
+		vrrp_syslog_error("vrrp service dbus reply null!\n");
+		return reply;
+	}
+	dbus_message_iter_init_append (reply, &iter);
+	dbus_message_iter_append_basic (&iter,DBUS_TYPE_UINT32,&ret);
+
+	return reply;	
+}
+
 
 /*********************************************
  * DESCRIPTION:
@@ -5404,6 +5520,10 @@ static DBusHandlerResult had_dbus_message_handler
 			else if(dbus_message_is_method_call(message,VRRP_DBUS_INTERFACE,VRRP_DBUS_METHOD_VRRP_SERVICE_ENABLE))
 			{
 				reply = had_dbus_service_enable(connection,message,user_data);
+			}
+			else if(dbus_message_is_method_call(message,VRRP_DBUS_INTERFACE,VRRP_DBUS_METHOD_VRRP_STATE_CHANGE))
+			{
+				reply = had_dbus_state_change(connection,message,user_data);
 			}
 			else if(dbus_message_is_method_call(message,VRRP_DBUS_INTERFACE,VRRP_DBUS_METHOD_VRRP_WANT_STATE))
 			{

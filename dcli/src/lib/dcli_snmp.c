@@ -5028,6 +5028,52 @@ DEFUN(debug_vrrp_preempt_switch_func,
 	return CMD_SUCCESS;
 }
 
+DEFUN(vrrp_global_switch_func,
+	vrrp_global_switch_cmd,
+	"config vrrp global switch (enable|disable)",
+	"config \n"
+	"config vrrp glocal switch\n"
+	"config vrrp global switch\n"
+	"config vrrp global switch\n"
+	"enable vrrp global switch\n"
+	"disable vrrp golbal switch\n"
+)
+{
+	int vrrp_switch= 0;
+	int i = 1;
+	char vrrp_switch_path[128] = "/var/run/vrrp_global_switch";
+	
+	if (!strcmp(argv[0], "enable"))
+	{
+		vrrp_switch = 1;
+	}
+	else if (!strcmp(argv[0], "disable")) 
+	{
+		vrrp_switch = 0;
+	}
+	else 
+	{
+        vty_out(vty, "input value should be enable or disable!\n");
+        return CMD_WARNING;
+	}	
+
+	if(CONFIG_NODE == vty->node) 
+	{
+        
+        for(i = 1; i < MAX_SLOT; i++) 
+		{
+            if(dbus_connection_dcli[i]->dcli_dbus_connection) 
+			{
+				ac_trap_set_flag(vrrp_switch_path,vrrp_switch);
+				dcli_bsd_copy_file_to_board_v2(dcli_dbus_connection,i,vrrp_switch_path,vrrp_switch_path,1,BSD_TYPE_NORMAL);
+            }
+        }
+    }
+
+	return CMD_SUCCESS;
+}
+
+
 DEFUN(config_stype_func,
 	config_stype_cmd,
 	"config stype <0-1>",
@@ -5384,6 +5430,48 @@ dcli_snmp_show_running_config(struct vty *vty) {
 		vtysh_add_show_string(temp);
 	}
 
+	if (1 == ac_trap_get_flag("/var/run/vrrp_global_switch"))
+	{
+		char vrrp_temp[128] = { 0 };
+		memset(vrrp_temp, 0, sizeof(vrrp_temp));		
+		snprintf(vrrp_temp, sizeof(vrrp_temp)-1, "config vrrp global switch enable ");
+		vtysh_add_show_string(vrrp_temp);		
+	}
+
+	if(access("/var/run/vrrp_global_switch_hansi",F_OK) == 0)
+	{
+		FILE *fp;
+		char vrrp_global_hansi_temp[128]={0};
+		int vrrp_global_hansi[16] = {0};
+		int i = 0,slot_id = 0,profile = 0;
+
+		fp=fopen("/var/run/vrrp_global_switch_hansi","r");
+
+		if(fp != NULL)
+		{
+			for(slot_id = 0;slot_id<16;slot_id++)
+			{
+				fscanf(fp,"%x",&vrrp_global_hansi[slot_id]);
+			}
+
+			fclose(fp);
+		}
+
+		for(slot_id=0;slot_id<16;slot_id++)
+		{
+			for(profile=0;profile<16;profile++)
+			{
+				if(vrrp_global_hansi[slot_id]&(1<<profile))
+				{
+					memset(vrrp_global_hansi_temp, 0, sizeof(vrrp_global_hansi_temp));		
+					snprintf(vrrp_global_hansi_temp, sizeof(vrrp_global_hansi_temp)-1, "config vrrp global switch add hansi-profile %d-%d",slot_id+1,profile+1);
+					vtysh_add_show_string(vrrp_global_hansi_temp);
+				}
+			}
+		}
+		
+	}
+	
 	if (1 == ac_trap_get_flag("/var/run/ac_sn_type"))
 	{
 		vtysh_add_show_string("config stype 1");
@@ -5608,6 +5696,8 @@ dcli_snmp_init(void) {
 	install_element(CONFIG_NODE, &debug_em_switch_cmd);
 	install_element(CONFIG_NODE, &debug_vrrp_preempt_switch_cmd);
 	install_element(CONFIG_NODE, &config_stype_cmd);
+	install_element(CONFIG_NODE, &vrrp_global_switch_cmd);
+	
 }
 
 

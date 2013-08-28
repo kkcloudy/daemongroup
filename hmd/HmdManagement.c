@@ -716,6 +716,15 @@ void * HMDManagementC(){
 				break;
 				case HMD_HANSI_INFO_SYN_LICENSE:
 				break;
+				case HMD_NOTICE_VRRP_STATE_CHANGE_MASTER:
+				case HMD_NOTICE_VRRP_STATE_CHANGE_BAK:
+					if(tmsg->type != HMD_LOCAL_HANSI)
+					{
+						notice_had_to_change_vrrp_state(tmsg->InstID,tmsg->op);
+						hmd_syslog_info("global switch -->set hansi %d-%d vrrp state  to %s\n",HOST_SLOT_NO,tmsg->InstID,\
+								(tmsg->op==HMD_NOTICE_VRRP_STATE_CHANGE_MASTER)?"MASTER":"BACK");
+					}
+				break;
 				default :
 				break;
 					
@@ -753,6 +762,10 @@ void * HMDManagementS(){
 	char defaultPath[] = "/var/run/config/Instconfig";
 	char defaultSlotPath[] = "/var/run/config/slot";
 	//char newSlotPath[128] = {0};
+	unsigned int old_change_state = 0;
+	unsigned int new_change_state = 0;
+	int slot_no = 0,inst_id = 0;
+	
 	fd = HMDTipcInit(HOST_SLOT_NO);
 	if(fd <= 0){
 		hmd_syslog_err("%s,%d,fd=%d.\n",__func__,__LINE__,fd);
@@ -1407,6 +1420,70 @@ void * HMDManagementS(){
 				break;
 			case HMD_CREATE_FOR_DHCP_ENABLE:
 					DHCP_RESTART_FLAG = DHCP_RESTART_ENABLE;
+				break;
+			case HMD_NOTICE_VRRP_STATE_CHANGE_MASTER:
+			case HMD_NOTICE_VRRP_STATE_CHANGE_BAK:
+				InstID = tmsg->InstID;
+			
+				if((HOST_SLOT_NO != MASTER_SLOT_NO) && (isMaster) && (isActive==0))
+				{
+					/*for 7605I*/
+					hmd_syslog_info("global switch --> Back up master board\n");
+					notice_had_to_change_vrrp_state(InstID,tmsg->op);
+					hmd_syslog_info("global switch -->set hansi %d-%d vrrp state  to %s\n",HOST_SLOT_NO,InstID,\
+					(tmsg->op==HMD_NOTICE_VRRP_STATE_CHANGE_MASTER)?"MASTER":"BACK");
+					break;
+				}
+				new_change_state = tmsg->op;
+				if(old_change_state != new_change_state)
+				{
+					old_change_state = new_change_state;
+					hmd_syslog_info("global switch --> Master board begin to deal with vrrp change information\n");
+					hmd_syslog_info("global switch -->reveive message hansi %d-%d vrrp state change to %s\n",tmsg->S_SlotID,tmsg->InstID,\
+						(tmsg->op==HMD_NOTICE_VRRP_STATE_CHANGE_MASTER)?"MASTER":"BACK");
+					for(slot_no=1;slot_no<=16;slot_no++)
+					{
+						for(inst_id=1;inst_id<=16;inst_id++)
+						{
+							/*get global switch hansi id*/
+							if(vrrp_global_switch_hansi[slot_no-1]&(1<<(inst_id-1)))
+							{
+								/*active master slot no*/
+								if((tmsg->S_SlotID == HOST_SLOT_NO) && (slot_no == HOST_SLOT_NO) && (inst_id != tmsg->InstID))
+								{
+									notice_had_to_change_vrrp_state(inst_id,tmsg->op);
+									hmd_syslog_info("global switch -->set hansi %d-%d vrrp state to %s\n",slot_no,inst_id,\
+									(tmsg->op==HMD_NOTICE_VRRP_STATE_CHANGE_MASTER)?"MASTER":"BACK");
+								}/*if is sender do not send to it again*/
+								else if((tmsg->S_SlotID == HOST_SLOT_NO) && (slot_no == HOST_SLOT_NO) && (inst_id == tmsg->InstID)) 
+								{
+									
+								}
+								else
+								{
+									if((slot_no == tmsg->S_SlotID) && (inst_id == tmsg->InstID))
+									{
+										/*if is sender do not send to it again*/
+										continue;
+									}
+									else if((tmsg->S_SlotID != HOST_SLOT_NO) && (slot_no == HOST_SLOT_NO))
+									{
+										notice_had_to_change_vrrp_state(inst_id,tmsg->op);
+										hmd_syslog_info("global switch -->set hansi %d-%d vrrp state to %s\n",slot_no,inst_id,\
+											(tmsg->op==HMD_NOTICE_VRRP_STATE_CHANGE_MASTER)?"MASTER":"BACK");
+									}
+									else
+									{
+										notice_hmd_client_vrrp_switch_occured(slot_no,inst_id,0,tmsg->op);
+										hmd_syslog_info("global switch -->notice client hmd to set hansi %d-%d vrrp state to %s\n",slot_no,inst_id,\
+											(tmsg->op==HMD_NOTICE_VRRP_STATE_CHANGE_MASTER)?"MASTER":"BACK");
+									}
+								}												
+							}
+						}
+					}
+					hmd_syslog_info("global switch --> Master board end dealing with vrrp change information\n");
+				}
 				break;
 			default :
 				break;

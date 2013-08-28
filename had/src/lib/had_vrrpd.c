@@ -7666,7 +7666,7 @@ static void had_state_goto_transfer
     return;
 }
 
-static void had_state_goto_master
+void had_state_goto_master
 (
 	vrrp_rt *vsrv,
 	int opposite_state

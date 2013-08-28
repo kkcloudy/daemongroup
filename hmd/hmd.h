@@ -50,6 +50,8 @@ extern int  HANSI_TIMER;//fengwenchao add 20130412 for hmd timer config save
 extern int MASTER_BACKUP_SLOT_NO;
 extern unsigned int service_tftp_state;//service tftp (0--disable;1--enable)
 extern unsigned int service_ftp_state;//service ftp  (0--disable;1--enable)
+extern int vrrp_global_switch_hansi[16];
+extern int vrrp_global_switch_endis;
 
 #define 	MAX_SLOTNO 16
 #define		HMD_FREE_OBJECT(obj_name)				{if(obj_name){free((obj_name)); (obj_name) = NULL;}}

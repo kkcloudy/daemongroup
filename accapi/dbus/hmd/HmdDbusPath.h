@@ -11,6 +11,8 @@ char HMD_DBUS_METHOD_DELETE_LOCAL_HANSI[PATH_LEN]= "delete_local_hansi";
 char HMD_DBUS_CONF_METHOD_REMOTE_HANSI_STATE_CHANGE[PATH_LEN]= "remote_hansi_state_change";
 char HMD_DBUS_CONF_METHOD_DHCP_AUTO_RESTART[PATH_LEN]= "auto_dhcp_restart";
 
+char HMD_DBUS_CONF_METHOD_VRRP_GLOBAL_SWITCH_ADD_DEL_HANSI[PATH_LEN] = "config_vrrp_global_switch_add_del_hansi";
+
 char HMD_DBUS_CONF_METHOD_REMOTE_HANSI[PATH_LEN]= "config_remote_hansi";
 char HMD_DBUS_METHOD_SET_LOCAL_HANSI_STATE[PATH_LEN]= "set_local_hansi_state";
 char HMD_DBUS_METHOD_SET_LOCAL_HANSI_UPLINK_IF[PATH_LEN]= "set_local_hansi_uplink_if";

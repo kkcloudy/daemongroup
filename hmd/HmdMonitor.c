@@ -1169,6 +1169,63 @@ unsigned int notice_vrrp_config_service_change_state(unsigned int InstID, unsign
 	return HMD_TRUE;
 }
 
+
+unsigned int notice_had_to_change_vrrp_state(unsigned int InstID, int op)
+{
+	DBusMessage *query = NULL;
+	DBusMessage *reply = NULL;
+	DBusError err = {0};
+	char OBJPATH[PATH_LEN] = {0};
+	char BUSNAME[PATH_LEN] = {0};
+	int ret = 0;	
+	DBusConnection * connection = HOST_BOARD->Hmd_Inst[InstID]->connection;
+	HMDReInitHadDbusPath(InstID,VRRP_DBUS_BUSNAME,BUSNAME,0);//book modify
+	HMDReInitHadDbusPath(InstID,VRRP_DBUS_OBJPATH,OBJPATH,0);//book modify
+	query = dbus_message_new_method_call(BUSNAME,
+										OBJPATH,
+										VRRP_DBUS_INTERFACE,
+										VRRP_DBUS_METHOD_VRRP_STATE_CHANGE);
+	dbus_error_init(&err);
+
+	dbus_message_append_args(query,
+							DBUS_TYPE_UINT32, &InstID,
+							DBUS_TYPE_UINT32, &op,
+							DBUS_TYPE_INVALID);
+
+	reply = dbus_connection_send_with_reply_and_block(connection, query, 150000, &err);
+	dbus_message_unref(query);
+	if (NULL == reply) 
+	{
+		if (dbus_error_is_set(&err)) 
+		{
+			printf("%s raised: %s", err.name, err.message);
+			dbus_error_free(&err);
+		}
+		hmd_syslog_err("delete hansi %d faild1.\n",InstID);
+		return HMD_FALSE;
+	}
+	/* book modify */
+	else if (!(dbus_message_get_args (reply, &err, DBUS_TYPE_UINT32,&ret, DBUS_TYPE_INVALID)))
+	{		
+	    //hmd_syslog_info("333333\n");
+		if (dbus_error_is_set(&err)) 
+		{
+		    //hmd_syslog_info("444444\n");
+			dbus_error_free(&err);
+		}
+	}
+	
+	dbus_message_unref(reply);
+	if (VRRP_RETURN_CODE_OK != ret) 
+	{//book modify
+		hmd_syslog_err("change instrance %d state to %d faild.\n", InstID,op);
+	}
+	/* [2] kill the special had instance process which instance no is profile. */
+	/* book add for stop had */
+	return HMD_TRUE;
+}
+
+
 int notice_hmd_server_state_change(int InstID, int islocaled, HmdOP op, InstState prestate){
 	struct HmdMsg tmsg;
 	int state = 0;

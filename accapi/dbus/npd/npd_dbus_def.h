@@ -7537,6 +7537,8 @@ enum npd_dbus_result_no_e {
 #define VRRP_DBUS_METHOD_VRRP_SERVICE_ENABLE   "vrrp_service_enable"
 
 
+#define VRRP_DBUS_METHOD_VRRP_STATE_CHANGE  "vrrp_state_change"
+
 /*****************************************************************
  * DESCRIPTION:
  * 	set vrrp want state to master 

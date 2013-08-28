@@ -2040,6 +2040,220 @@ DEFUN(config_hansi_cmd_func,
 #endif
 
 
+
+DEFUN(config_vrrp_global_switch_add_del_hansi_cmd_func,
+	  config_vrrp_golbal_swtich_add_del_hansi_cmd,
+	  "config vrrp global switch (add|delete) hansi-profile PARAMETER",
+	  "config \n"
+	  "config vrrp\n"
+	  "config vrrp global\n"
+	  "config vrrp global switch\n"
+	  "add hansi profile\n "
+	  "delete hansi profile\n"
+	  "hansi-profile\n"
+	  "Profile ID for configuration\n"
+)
+{
+	//vty_out(vty,"1\n");
+	DBusMessage *query = NULL, *reply = NULL;
+	DBusError err = {0};
+	unsigned int hmd_ret = 0;
+	unsigned int profile = 0;
+	unsigned int slot_id = HostSlotId;
+	int instRun = 0;
+	int is_added = 0;
+	int ret = 0;
+	//vty_out(vty,"2\n");
+
+	if (!strcmp(argv[0], "add"))
+	{
+		is_added = 1;
+	}
+	else if (!strcmp(argv[0], "delete")) 
+	{
+		is_added = 0;
+	}
+	else 
+	{
+        vty_out(vty, "input value should be add or delete!\n");
+        return CMD_WARNING;
+	}	
+	ret = parse_slot_hansi_id((char*)argv[1],&slot_id,&profile);
+	if(ret != WID_DBUS_SUCCESS)
+	{
+		return CMD_WARNING;		
+	}
+
+	if((profile < 1)||(profile > 16) || (slot_id < 1) || (slot_id > 16))
+	{
+		vty_out(vty,"%% Bad parameter : %s !",argv[1]);
+		return CMD_WARNING;
+	}
+	instRun = dcli_hmd_hansi_is_running(vty,slot_id,0,profile);
+	if(INSTANCE_NO_CREATED == instRun) 
+	{
+		/* user verification */
+		vty_out(vty,"%%hansi%d-%d not exists\n",slot_id,profile);
+		return CMD_WARNING;
+	}	
+	query = dbus_message_new_method_call(HMD_DBUS_BUSNAME,    \
+										HMD_DBUS_OBJPATH,	  \
+										HMD_DBUS_INTERFACE,	  \
+										HMD_DBUS_CONF_METHOD_VRRP_GLOBAL_SWITCH_ADD_DEL_HANSI);
+
+
+	dbus_error_init(&err);
+	//vty_out(vty,"10\n");
+	dbus_message_append_args(query,
+							 DBUS_TYPE_UINT32,&is_added,
+							 DBUS_TYPE_UINT32,&profile,
+							 DBUS_TYPE_UINT32,&slot_id,
+							 DBUS_TYPE_INVALID);
+	//vty_out(vty,"11\n");
+	reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection,query,-1, &err);
+
+	//vty_out(vty,"12\n");
+	dbus_message_unref(query);
+	if (NULL == reply) 
+	{
+		vty_out(vty,"hmd failed get reply.\n");
+		if (dbus_error_is_set(&err)) 
+		{
+			vty_out(vty,"%s raised: %s",err.name,err.message);
+			dbus_error_free_for_dcli(&err);
+		}
+		return CMD_WARNING;
+	}
+	//vty_out(vty,"13\n");
+
+	if (dbus_message_get_args ( reply, &err,
+				DBUS_TYPE_UINT32,&hmd_ret,
+				DBUS_TYPE_INVALID))
+	{	
+
+		if(hmd_ret == HMD_DBUS_SUCCESS)
+		{
+			return CMD_SUCCESS;
+		}
+		if(hmd_ret == HMD_DBUS_PERMISSION_DENIAL)
+		{
+			vty_out(vty,"<error> The Slot is not active master board, permission denial\n");			
+			return CMD_WARNING;
+		}
+		else if(hmd_ret == HMD_DBUS_SLOT_ID_NOT_EXIST)
+		{
+			vty_out(vty,"<error> The Slot is not EXIST\n");
+			return CMD_WARNING;
+		}
+		else if (hmd_ret == HMD_DBUS_ID_NO_EXIST)
+		{
+			vty_out(vty,"<error> remote hansi not exist\n");
+			return CMD_WARNING;
+		}
+		else if (hmd_ret == HMD_DBUS_HANSI_ID_EXIST)
+		{
+			vty_out(vty,"hansi %d-%d is already added\n",slot_id,profile);
+			return CMD_WARNING;
+		}
+		else if (hmd_ret == HMD_DBUS_HANSI_ID_NOT_EXIST)
+		{
+			vty_out(vty,"hansi %d-%d is already deleted\n",slot_id,profile);
+			return CMD_WARNING;
+		}
+		else if(hmd_ret == HMD_DBUS_WARNNING)
+		{
+			vty_out(vty,"Please enable vrrp global switch first !\n");
+			return CMD_WARNING;
+		}
+		else
+		{
+			vty_out(vty,"<error>  %d\n",hmd_ret);
+			return CMD_WARNING;
+		}
+
+	} 
+	else 
+	{	
+	
+		if (dbus_error_is_set(&err)) 
+		{
+			printf("%s raised: %s",err.name,err.message);
+			dbus_error_free_for_dcli(&err);
+		}		
+		return CMD_WARNING;
+	}
+	
+	dbus_message_unref(reply);
+	
+	return CMD_SUCCESS;
+}
+
+
+DEFUN(show_vrrp_global_switch_hansi_list_cmd_func,
+	  show_vrrp_golbal_swtich_hansi_list_cmd,
+	  "show vrrp global switch hansi-profile list",
+	  "show \n"
+	  "show vrrp\n"
+	  "show vrrp global\n"
+	  "show vrrp global switch\n"
+	  "show vrrp global switch hansi-profile\n "
+	  "show vrrp global switch hansi-profile list\n"
+)
+{
+	//vty_out(vty,"1\n");
+	unsigned int profile = 0;
+	unsigned int slot_id = HostSlotId;
+	int ret = 0;
+	FILE *fp;
+	int vrrp_global_hansi[16] = {0};
+	int i = 0;
+
+	fp=fopen("/var/run/vrrp_global_switch_hansi","r");
+
+	if(fp != NULL)
+	{
+		for(i = 0;i<16;i++)
+		{
+			fscanf(fp,"%x",&vrrp_global_hansi[i]);
+		}
+
+		fclose(fp);
+	}
+	i = 0;
+	vty_out(vty,"========================================================================\n");
+	vty_out(vty,"                           hansi-profile list                           \n");
+	vty_out(vty,"========================================================================\n");
+
+	for(slot_id=0;slot_id<16;slot_id++)
+	{
+		for(profile=0;profile<16;profile++)
+		{
+			if(vrrp_global_hansi[slot_id]&(1<<profile))
+			{
+				if(i && (0 == i%15))
+				{
+					vty_out(vty,"\n%");
+				}
+				vty_out(vty,"%s%d-%d",(i%15)?",":"",slot_id+1,profile+1);
+				i++;
+
+				
+			}
+		}
+		
+	}
+	vty_out(vty,"\n");
+	if(i == 0)
+	{
+		vty_out(vty,"No hansi-profile\n");
+	}
+
+	vty_out(vty,"========================================================================\n");
+	
+	
+	return CMD_SUCCESS;
+}
+
 #ifndef DISTRIBUT
 /*******************************************************************************
  *config_delete_hansi_cmd
@@ -7915,6 +8129,7 @@ void dcli_vrrp_element_init(void)
 	install_default(HANSI_NODE);
 
     install_element(CONFIG_NODE,&config_hansi_cmd);
+	install_element(CONFIG_NODE,&config_vrrp_golbal_swtich_add_del_hansi_cmd);
 	install_element(CONFIG_NODE, &config_delete_hansi_cmd);
 	install_element(CONFIG_NODE, &show_vrrp_runconfig_cmd);
 	/*install_element(HANSI_NODE,&config_vrrp_cmd);*/
@@ -7970,6 +8185,7 @@ void dcli_vrrp_element_init(void)
 	install_element(HANSI_NODE,&vrrp_l2_uplink_ifname_add_delete_cmd);	
 	install_element(HANSI_NODE,&config_vrrp_set_vip_back_down_cmd);	
 	install_element(HANSI_NODE,&show_hansi_backup_switch_times_cmd);
+	install_element(CONFIG_NODE,&show_vrrp_golbal_swtich_hansi_list_cmd);
 }
 #ifdef __cplusplus
 }

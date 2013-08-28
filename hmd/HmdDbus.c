@@ -32,6 +32,30 @@ static DBusConnection * hmd_dbus_connection2 = NULL;
 //static DBusConnection * hmd_dbus_connection_t[THREAD_NUM];
 int HmdDBUS_MSGQ;
 extern  struct Hmd_For_Dhcp_restart *DHCP_MONITOR;
+int get_num_from_file(const char *filename)
+{
+    FILE *fp = NULL;
+    int data = -1;
+	int ret = 0;
+    
+    fp = fopen(filename, "r");
+    if (fp)
+    {
+        ret = fscanf(fp, "%d", &data);
+		if(ret !=1)	
+		{
+			fclose(fp);			
+			return data;
+		}		
+    }
+	else
+	{
+		return data; 
+	}
+	
+	fclose(fp);
+    return data;
+}
 
 void hmd_realease(struct Hmd_Board_Info **HMD_BOARD,int ID){
 	if((HMD_BOARD == NULL)||(HMD_BOARD[ID] == NULL)){
@@ -882,6 +906,102 @@ DBusMessage * hmd_dbus_interface_auto_dhcp_restart(DBusConnection *conn, DBusMes
 	dbus_message_append_args(reply,
 							 DBUS_TYPE_UINT32,&ret,
 							 DBUS_TYPE_INVALID);
+	
+	return reply;
+	
+}
+DBusMessage * hmd_dbus_interface_config_vrrp_global_switch_add_del_hansi(DBusConnection *conn, DBusMessage *msg, void *user_data){
+
+	DBusMessage* reply;
+	DBusMessageIter  iter;
+	unsigned int ID = 0;
+	unsigned int slot_id = 0;
+	DBusError err;
+	int ret = HMD_DBUS_SUCCESS;
+	int is_added = 0;
+	FILE *fp;
+	int i = 0;
+	
+	
+	dbus_error_init(&err);
+	if (!(dbus_message_get_args ( msg, &err,
+							 DBUS_TYPE_UINT32,&is_added,
+							 DBUS_TYPE_UINT32,&ID,
+							 DBUS_TYPE_UINT32,&slot_id,
+							 DBUS_TYPE_INVALID))) 
+	{
+	    hmd_syslog_err("set hansi profile:Unable to get input args ");
+		if (dbus_error_is_set(&err)) 
+		{
+			hmd_syslog_err("set hansi profile %s raised: %s",err.name,err.message);
+			dbus_error_free(&err);
+		}
+		return NULL;
+	}
+	
+	if(isDistributed)
+	{
+		if(isMaster&&isActive)
+		{
+			ret = HMD_DBUS_SUCCESS;	
+		}
+		else
+		{
+			ret = HMD_DBUS_PERMISSION_DENIAL;
+		}
+	}
+
+	#if 0
+	vrrp_global_switch_endis=get_num_from_file("/var/run/vrrp_global_switch");
+	if(1 != vrrp_global_switch_endis)
+	{
+		ret = HMD_DBUS_WARNNING;
+	}
+	#endif
+	if((is_added) && ((vrrp_global_switch_hansi[slot_id-1])&(1<<(ID-1))))
+	{
+		ret = HMD_DBUS_HANSI_ID_EXIST;
+	}
+	else if((!is_added) && (!((vrrp_global_switch_hansi[slot_id-1])&(1<<(ID-1)))))
+	{
+		ret = HMD_DBUS_HANSI_ID_NOT_EXIST;
+	}
+	if((ret == HMD_DBUS_SUCCESS)&&(slot_id < MAX_SLOT_NUM)&&(HMD_BOARD[slot_id]->Hmd_Inst[ID] != NULL))
+	{
+		if((is_added) && (!((vrrp_global_switch_hansi[slot_id-1])&(1<<(ID-1)))))
+		{
+			vrrp_global_switch_hansi[slot_id-1] |= 1<<(ID-1);
+		}
+		else if((vrrp_global_switch_hansi[slot_id-1])&(1<<(ID-1)))
+		{
+			vrrp_global_switch_hansi[slot_id-1] &= ~(1<<(ID-1));
+		}
+
+		fp=fopen("/var/run/vrrp_global_switch_hansi","w");
+		if(fp != NULL)
+		{
+			for(i=0;i<MAX_SLOT_NUM;i++)
+			{
+				fprintf(fp,"%x\n",vrrp_global_switch_hansi[i]);
+			}
+			fclose(fp);
+		}
+		else
+		{
+			hmd_syslog_err("save vrrp global hansi array failed !\n");
+		}
+	}
+	reply = dbus_message_new_method_return(msg);
+	if(NULL == reply)
+	{		
+		hmd_syslog_err("vrrp set hansi profile dbus reply null!\n");
+		return reply;
+	}
+
+	dbus_message_iter_init_append (reply, &iter);
+    dbus_message_iter_append_basic (&iter,\
+									DBUS_TYPE_UINT32,\
+									&ret);
 	
 	return reply;
 	
@@ -3027,6 +3147,47 @@ DBusMessage * hmd_dbus_get_asd_update_state(DBusConnection *conn, DBusMessage *m
 
 }
 
+void notice_hmd_server_vrrp_switch_occured(int InstID, int islocaled,int op)
+{
+	struct HmdMsg tmsg;
+	int state = 0;
+	int fd;
+	tmsg.S_SlotID = HOST_SLOT_NO;
+	tmsg.D_SlotID = MASTER_SLOT_NO;
+	tmsg.InstID = InstID;
+	if(islocaled){
+		if(HOST_BOARD->Hmd_Local_Inst[InstID]){
+			state = HOST_BOARD->Hmd_Local_Inst[InstID]->InstState;
+			fd = HOST_BOARD->Hmd_Local_Inst[InstID]->tipcfd;
+		}
+	}else{
+		if(HOST_BOARD->Hmd_Inst[InstID]){
+			state = HOST_BOARD->Hmd_Inst[InstID]->InstState;
+			fd = HOST_BOARD->Hmd_Inst[InstID]->tipcfd;
+		}
+	}
+	tmsg.op = op;
+	if(islocaled)
+		tmsg.type = HMD_LOCAL_HANSI;
+	else
+		tmsg.type = HMD_HANSI;
+	if (0 > sendto(fd, &tmsg, sizeof(tmsg), 0,(struct sockaddr*)&(HOST_BOARD->tipcaddr), sizeof(HOST_BOARD->tipcaddr))) 
+	{		
+		perror("Client: failed to send");		
+	}
+	if(islocaled)
+	{
+		if(HOST_BOARD->Hmd_Local_Inst[InstID])
+			if(HOST_BOARD->Hmd_Local_Inst[InstID]->slot_no1 != -1)
+			{
+				if (0 > sendto(fd, &tmsg, sizeof(tmsg), 0,(struct sockaddr*)&(HOST_BOARD->Hmd_Local_Inst[InstID]->tipcaddr), sizeof(HOST_BOARD->tipcaddr))) 
+				{		
+					perror("Client: failed to send");		
+				}			
+			}
+	}
+}
+
 
 /*book add */
 static DBusMessage *hmd_ha_set_state( DBusConnection *conn, DBusMessage *msg, void *user_data)
@@ -3037,6 +3198,7 @@ static DBusMessage *hmd_ha_set_state( DBusConnection *conn, DBusMessage *msg, vo
 	DBusMessageIter	 iter_array, iter_array1, iter_array2;	
 	DBusError		err;
 	unsigned int ID = 0;
+	int op = 0;
 	struct Hmd_Inst_Mgmt *hmd_rmt_hansi = NULL;
 	if(HOST_BOARD == NULL){
 	    hmd_syslog_err("HOST_BOARD = NULL\n");
@@ -3247,8 +3409,26 @@ static DBusMessage *hmd_ha_set_state( DBusConnection *conn, DBusMessage *msg, vo
 
 	dbus_message_iter_init_append (reply, &iter);
 	dbus_message_iter_append_basic (&iter,DBUS_TYPE_UINT32,&(hmd_rmt_hansi->vrrid));
+
+	if(hmd_rmt_hansi->InstState == 3)
+	{
+		op = HMD_NOTICE_VRRP_STATE_CHANGE_MASTER;
+	}
+	else
+	{
+		op = HMD_NOTICE_VRRP_STATE_CHANGE_BAK;
+	}
 	if(HOST_SLOT_NO != MASTER_SLOT_NO)
+	{
 		notice_hmd_server_hansi_info_update(ID,hmd_rmt_hansi);
+		
+	}
+	vrrp_global_switch_endis = get_num_from_file("/var/run/vrrp_global_switch");
+	if(vrrp_global_switch_endis)
+	{
+		hmd_syslog_info("global switch -->notice hmd server hansi %d-%d state change !\n",HOST_SLOT_NO,ID);
+		notice_hmd_server_vrrp_switch_occured(ID,0,op);
+	}
 	return reply;
 } 
 
@@ -3351,6 +3531,37 @@ int notice_hmd_client_license_change(int slotid,int licensetype, int inst_id, in
 	}
 	return 0;
 }
+
+void notice_hmd_client_vrrp_switch_occured(int dst_slotid, int inst_id, int islocaled,int op){
+	struct sockaddr_tipc * addr = &(HMD_BOARD[dst_slotid]->tipcaddr);
+	int fd = HMD_BOARD[dst_slotid]->tipcfd;
+	struct HmdMsg msg;
+	memset(&msg,0,sizeof(struct HmdMsg));
+	
+	msg.op = op;
+	msg.D_SlotID = dst_slotid;
+	msg.S_SlotID = HOST_SLOT_NO;
+	msg.InstID = inst_id;
+	msg.local = islocaled;	
+		
+	char buf[4096];
+	memset(buf,0,4096);
+	int len = sizeof(msg);
+	memcpy(buf,(char*)&msg,len);
+	
+	if (0 > sendto(fd,buf,sizeof(msg)+1,0,
+				   (struct sockaddr*)addr,
+				   sizeof(struct sockaddr)))
+	{
+		perror("Server: Failed to send");
+		hmd_syslog_info("Server: %s,Failed to send.\n",__func__);
+			//exit(1);
+	}else
+	{
+		hmd_syslog_info("Server: %s,success to send.\n",__func__);
+	}
+}
+
 
 
 DBusMessage * hmd_dbus_interface_config_license_assign(DBusConnection *conn, DBusMessage *msg, void *user_data){
@@ -4598,6 +4809,8 @@ static DBusHandlerResult hmd_dbus_message_handler (DBusConnection *connection, D
 			reply = hmd_dbus_interface_config_remote_hansi(connection,message,user_data);
 		}else if(dbus_message_is_method_call(message,HMD_DBUS_INTERFACE,HMD_DBUS_CONF_METHOD_DHCP_AUTO_RESTART)){
 			reply = hmd_dbus_interface_auto_dhcp_restart(connection,message,user_data);
+		}else if(dbus_message_is_method_call(message,HMD_DBUS_INTERFACE,HMD_DBUS_CONF_METHOD_VRRP_GLOBAL_SWITCH_ADD_DEL_HANSI)){
+			reply = hmd_dbus_interface_config_vrrp_global_switch_add_del_hansi(connection,message,user_data);
 		}else if(dbus_message_is_method_call(message,HMD_DBUS_INTERFACE,HMD_DBUS_METHOD_SET_LOCAL_HANSI_STATE)){
 			reply = hmd_dbus_interface_set_hansi_state(connection,message,user_data);
 		}else if(dbus_message_is_method_call(message,HMD_DBUS_INTERFACE,HMD_DBUS_METHOD_SET_LOCAL_HANSI_UPLINK_IF)){
