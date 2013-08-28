@@ -1365,7 +1365,7 @@ int hansi_state_check(int InstID, int islocaled){
 				close(save_fd);
 				g_loable_takesnapshot = 1;
 				hmd_syslog_info("takesnapshotfun ###%s %d ###\n",__func__,__LINE__);
-				HMDTimerRequest(480,&take_snapshot_timer_id, HMD_TIMER_TAKESNAPSHOT, 0, 0);
+				HMDTimerRequest(600,&take_snapshot_timer_id, HMD_TIMER_TAKESNAPSHOT, 0, 0);
 				system("takesnapshot.sh 1 3 &");
 			}
 			if(HOST_SLOT_NO != MASTER_SLOT_NO)
@@ -1415,7 +1415,7 @@ int hansi_state_check(int InstID, int islocaled){
 				close(save_fd);
 				g_loable_takesnapshot = 1;
 				hmd_syslog_info("###takesnapshotfun %s %d ###\n",__func__,__LINE__);
-				HMDTimerRequest(480,&take_snapshot_timer_id, HMD_TIMER_TAKESNAPSHOT, 0, 0);
+				HMDTimerRequest(600,&take_snapshot_timer_id, HMD_TIMER_TAKESNAPSHOT, 0, 0);
 				system("takesnapshot.sh 1 3 &");
 			}
 			if(HOST_SLOT_NO != MASTER_SLOT_NO)
