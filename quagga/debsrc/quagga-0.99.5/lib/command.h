@@ -210,6 +210,7 @@ enum node_type
 #endif
   STATIC_ARP_NODE,
   POOL_NODE,			/*dhcp pool node*/
+  POOLV6_NODE,			/*dhcp v6 pool node*/
   HANSI_NODE,  /*HANSI node*/
   LOCAL_HANSI_NODE,  /*LOCAL HANSI node*/
   HBIP_NODE, /* HotBackupInterfacePire */
@@ -235,8 +236,7 @@ enum node_type
   HANSI_RDC_NODE,
   LOCAL_HANSI_RDC_NODE,
   SUBNET6_CONF_NODE,
-  DHCRELAY_NODE,
-  POOLV6_NODE,			/*dhcp v6 pool node*/  
+  DHCRELAY_NODE,  
   ACSAMPLE_NODE,/*add by shaojunwu for acsample! whitch  supply  snmp and trap with ac info!*/
   SNMP_NODE,
   SNMP_VIEW_NODE,
