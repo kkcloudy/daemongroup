@@ -6834,6 +6834,32 @@ int dcli_vrrp_show_running_cfg(struct vty *vty)
 				totalLen = 0;
 				totalLen += sprintf(cursor, "config hansi-profile %d-%d\n", slot_id,profile);
 						cursor = showRunningCfg_str + totalLen;
+				/*dhcp ipv6 section*/
+				tmp = dcli_dhcp_ipv6_show_running_cfg2(slot_id); 		
+				if(tmp != NULL){
+					if (0 != strlen(tmp)) { 				
+						totalLen += sprintf(cursor, " \n");
+						cursor = showRunningCfg_str + totalLen;
+		
+						totalLen += sprintf(cursor, "%s\n",tmp);
+						cursor = showRunningCfg_str + totalLen;
+					}
+					free(tmp);
+					tmp = NULL;
+				}else{
+					free(showRunningCfg_str);
+					return 1;
+				}
+				totalLen += sprintf(cursor, " exit\n", profile);
+						cursor = showRunningCfg_str + totalLen;
+				dcli_config_write(showRunningCfg_str,localid,slot_id,profile,0,0);		
+				dcli_config_writev2(showRunningCfg_str,slot_id,0,"dhcp_ipv6",0);
+				vtysh_add_show_string(showRunningCfg_str);	
+				memset(showRunningCfg_str, 0, DCLI_VRRP_SHOW_RUNNING_CFG_LEN);
+				cursor = showRunningCfg_str;
+				totalLen = 0;
+				totalLen += sprintf(cursor, "config hansi-profile %d-%d\n", slot_id,profile);
+						cursor = showRunningCfg_str + totalLen;
 				tmp = dcli_dhcrelay_show_running_cfg2(vty,slot_id); 		
 				if(tmp != NULL){
 					if (0 != strlen(tmp)) { 				
@@ -7253,7 +7279,25 @@ int dcli_vrrp_show_running_cfg(struct vty *vty)
 		memset(showRunningCfg_str, 0, DCLI_VRRP_SHOW_RUNNING_CFG_LEN);
 		cursor = showRunningCfg_str;
 		totalLen = 0;
-
+		/*dhcp ipv6 section*/
+		tmp = dcli_dhcp6_show_running_hansi_cfg(slot_id,profile,localid);
+		if(tmp != NULL){
+			if (0 != strlen(tmp)) {
+				totalLen += sprintf(cursor, "%s\n",tmp);
+				cursor = showRunningCfg_str + totalLen;
+			}
+			free(tmp);
+			tmp = NULL;
+		}else{
+			free(showRunningCfg_str);
+			return 1;
+		}
+		dcli_config_write(showRunningCfg_str,localid,slot_id,profile,create_cfg_flag,0);
+		dcli_config_writev2(showRunningCfg_str,slot_id,profile,"hansi_dhcp_ipv6",0);
+		vtysh_add_show_string(showRunningCfg_str);
+		memset(showRunningCfg_str, 0, DCLI_VRRP_SHOW_RUNNING_CFG_LEN);
+		cursor = showRunningCfg_str;
+		totalLen = 0;
 		tmp = dcli_dhcrelay_show_running_hansi_cfg(slot_id,profile,localid);
 		if(tmp != NULL){
 			if (0 != strlen(tmp)) {

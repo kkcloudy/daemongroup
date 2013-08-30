@@ -679,7 +679,7 @@ void * HMDManagementC(){
 					DHCP_RESTART_FLAG = DHCP_RESTART_ENABLE;
 					DHCP_MONITOR = (struct Hmd_For_Dhcp_restart*)malloc(sizeof(struct Hmd_For_Dhcp_restart));
 					arg = (HMDThreadArg *)malloc(sizeof(HMDThreadArg));
-					arg->QID = tmsg->InstID;
+					arg->QID = DHCP_QID;
 					arg->islocaled = 0;
 					arg->InstID = tmsg->InstID;
 					ret = HmdCreateThread(&(DHCP_MONITOR->dhcp_monitor), HMDHansiMonitor, arg, 0);	
@@ -777,6 +777,7 @@ void * HMDManagementS(){
 			perror("Server: unexpected message");
 		}
 		tmsg = (struct HmdMsg *)buf;
+		hmd_syslog_info("tmsg->op %d\n",tmsg->op);
 		switch(tmsg->op){
 			case HMD_STATE_SWITCH:
 				SlotID = tmsg->D_SlotID;
@@ -1406,7 +1407,7 @@ void * HMDManagementS(){
 					DHCP_RESTART_FLAG = DHCP_RESTART_ENABLE;
 					DHCP_MONITOR = (struct Hmd_For_Dhcp_restart*)malloc(sizeof(struct Hmd_For_Dhcp_restart));
 					arg = (HMDThreadArg *)malloc(sizeof(HMDThreadArg));
-					arg->QID = tmsg->InstID;
+					arg->QID = DHCP_QID;
 					arg->islocaled = 0;
 					arg->InstID = tmsg->InstID;
 					ret = HmdCreateThread(&(DHCP_MONITOR->dhcp_monitor), HMDHansiMonitor, arg, 0);	

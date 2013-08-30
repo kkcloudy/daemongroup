@@ -16,6 +16,8 @@
 #define INSTANCE_CREATED		(1)		/* instance have created.		*/
 #define INSTANCE_NO_CREATED	(0)		/* instance have not created.	*/
 #define SYS_COMMAND_LEN	(64*2)		/* shell command length */
+#define DHCP_QID   255
+
 
 #define SERVER_TYPE 10086
 #define SERVER_BASE_INST 128

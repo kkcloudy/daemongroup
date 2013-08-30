@@ -1107,7 +1107,7 @@ DEFUN(show_ipv6_pool_cmd_func,
 	}
 	else if((POOLV6_NODE == vty->node) || (HANSI_POOLV6_NODE == vty->node) || (LOCAL_HANSI_POOLV6_NODE  == vty->node)){
 		mode = 1;		
-		index = (unsigned int *)(vty->index);
+		index = (unsigned int *)(vty->index_sub);
 	}
 	
 	ret = dcli_show_ipv6_pool(vty, mode, index, &poolshow, &count);
@@ -1212,14 +1212,14 @@ dcli_create_ipv6_pool_name
 			else {
 				if(CONFIG_NODE == vty->node) {
 					vty->node = POOLV6_NODE;
-					vty->index = (void *)index;
+					vty->index_sub= (void *)index;
 					/*vty_out(vty, "create pool index is %d \n", vty->index);*/
 				}else if (HANSI_NODE == vty->node){
 					vty->node = HANSI_POOLV6_NODE;
-					vty->index = (void *)index;
+					vty->index_sub= (void *)index;
 				} else if (LOCAL_HANSI_NODE == vty->node){
 					vty->node = LOCAL_HANSI_POOLV6_NODE;
-					vty->index = (void *)index;					
+					vty->index_sub= (void *)index;					
 				} else {
 					vty_out (vty, "Terminal mode change must under configure mode!\n", VTY_NEWLINE);
 					return CMD_WARNING;
@@ -1227,15 +1227,21 @@ dcli_create_ipv6_pool_name
 			}
 			dbus_message_unref(reply);
 			return CMD_SUCCESS;
-		}
-		else {
-			if (del) {			
-				vty_out (vty, "delete ip pool fail \n");
+		}else {
+				if (del) {			
+					vty_out (vty, "delete ip pool fail \n");
+				}else if(2 == op_ret){
+					op_ret = dcli_config_ipv6_pool_name(poolName, vty);
+					if(op_ret)
+				    vty_out (vty, "enter ip pool fail \n");
+				}
+				else {
+					vty_out (vty, "create ip pool fail \n");
+				}
+
+				dbus_message_unref(reply);
+				return CMD_SUCCESS;
 			}
-			else {
-				vty_out (vty, "create ip pool fail \n");
-			}
-		}
 	} 
 	else {
 		vty_out(vty,"Failed get args.\n");
@@ -1418,13 +1424,13 @@ dcli_config_ipv6_pool_name
 		if(!op_ret) {
 			if(CONFIG_NODE == vty->node) {
 				vty->node = POOLV6_NODE;
-				vty->index = (void*)index;
+				vty->index_sub= (void*)index;
 			}else if (HANSI_NODE == vty->node){
 					vty->node = HANSI_POOLV6_NODE;
-					vty->index = (void *)index;
+					vty->index_sub= (void *)index;
 				} else if (LOCAL_HANSI_NODE == vty->node){
 					vty->node = LOCAL_HANSI_POOLV6_NODE;
-					vty->index = (void *)index;					
+					vty->index_sub= (void *)index;					
 				}else {
 				vty_out (vty, "Terminal mode change must under configure mode!\n", VTY_NEWLINE);
 				return CMD_WARNING;
@@ -1482,6 +1488,209 @@ DEFUN(config_ipv6_pool_name_cmd_func,
 		poolName = NULL;
 		return CMD_WARNING;
 	}
+}
+
+/*supf add for distribute hansi show running*/
+char * 
+dcli_dhcp6_show_running_hansi_cfg
+(
+	unsigned int slot_id,unsigned int InstID, unsigned int islocaled 
+)
+{	
+	char *showStr = NULL;
+	char * tmp = NULL;
+	DBusMessageIter	 iter;
+	DBusMessage *query, *reply;
+	DBusError err;
+    int ret = 1;
+	DBusConnection *dcli_dbus_connection = NULL;
+	ReInitDbusConnection(&dcli_dbus_connection, slot_id, distributFag);	
+	
+	query = dbus_message_new_method_call(DHCP6_DBUS_BUSNAME, 
+									DHCP6_DBUS_OBJPATH, 
+									DHCP6_DBUS_INTERFACE, 
+									DHCP6_DBUS_METHOD_SHOW_RUNNING_HANSI_CFG);
+
+	dbus_error_init(&err);
+
+	dbus_message_append_args(query,
+							 DBUS_TYPE_UINT32,&slot_id,
+							 DBUS_TYPE_UINT32,&InstID,
+							 DBUS_TYPE_UINT32,&islocaled,
+							 DBUS_TYPE_INVALID);
+
+
+	reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection,query,-1, &err);
+
+	dbus_message_unref(query);
+	if (NULL == reply) {
+		printf("DHCP show running failed get reply.\n");
+		if (dbus_error_is_set(&err)) {
+			printf("%s raised: %s",err.name,err.message);
+			dbus_error_free_for_dcli(&err);
+		}
+		return NULL;
+	}
+	if (dbus_message_get_args ( reply, &err,
+					DBUS_TYPE_STRING, &showStr,
+					DBUS_TYPE_INVALID)) {
+	
+		tmp = (char *)malloc(strlen(showStr)+1);
+		memset(tmp, 0, strlen(showStr)+1);
+		memcpy(tmp,showStr,strlen(showStr));			
+//		dcli_config_write(showStr,islocaled,slot_id,InstID,1,0);
+		dbus_message_unref(reply);
+		return tmp; 
+	} 
+	else {
+		printf("Failed get args.\n");
+		if (dbus_error_is_set(&err)) {
+			printf("%s raised: %s",err.name,err.message);
+			dbus_error_free_for_dcli(&err);
+		}
+	}
+
+	dbus_message_unref(reply);
+	return NULL;	
+}
+
+char * 
+dcli_dhcp_ipv6_show_running_cfg2
+(
+	int slot_id
+)
+{
+	DBusMessage *query = NULL, *reply = NULL;
+	DBusError err;
+	char *showStr = NULL;
+	char *tmp = NULL;
+	unsigned int len = 0;
+	int ret = 1;
+
+	DBusConnection *dcli_dbus_connection = NULL;
+	ReInitDbusConnection(&dcli_dbus_connection, slot_id, distributFag);
+
+	query = dbus_message_new_method_call(DHCP6_DBUS_BUSNAME, 
+									DHCP6_DBUS_OBJPATH, 
+									DHCP6_DBUS_INTERFACE, 
+									DHCP6_DBUS_METHOD_SHOW_RUNNING_CFG);
+
+	dbus_error_init(&err);
+
+	reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection,query,-1, &err);
+
+	dbus_message_unref(query);
+	if (NULL == reply) {
+		printf("failed get reply.\n");
+		if (dbus_error_is_set(&err)) {
+			printf("%s raised: %s",err.name,err.message);
+			dbus_error_free_for_dcli(&err);
+		}
+		return NULL;
+	}
+
+	if (dbus_message_get_args ( reply, &err,
+					DBUS_TYPE_STRING, &showStr,
+					DBUS_TYPE_INVALID)) {
+		len = strlen(showStr);
+		if (!(tmp = malloc(len + 1))) {
+			dbus_message_unref(reply);
+			return NULL;
+
+		}
+		memset(tmp, 0, len + 1);
+		memcpy(tmp, showStr, len);
+		dbus_message_unref(reply);
+		return tmp;
+	} 
+	else {
+		printf("Failed get args.\n");
+		if (dbus_error_is_set(&err)) {
+			printf("%s raised: %s",err.name,err.message);
+			dbus_error_free_for_dcli(&err);
+		}
+	}
+
+	dbus_message_unref(reply);
+	
+	return NULL;	
+}
+
+DEFUN(show_dhcpv6_running_config_cmd,
+	show_dhcpv6_running_config,
+	"show dhcpv6 running config",	
+	"Config dhcpv6 debugging close\n"
+	"Dynamic Host Configuration Protocol\n"
+	"running config\n"	
+	"dhcpv6 Configuration\n"
+)
+{
+	DBusMessage *query = NULL, *reply = NULL;
+	DBusError err;
+	char *showStr = NULL;
+	char *tmp = NULL;
+	unsigned int len = 0;
+	int ret = 1;
+
+	int localid = 1, slot_id = HostSlotId, index = 0;
+	get_slotid_index(vty, &index, &slot_id, &localid);
+
+	DBusConnection *dcli_dbus_connection = NULL;
+	ReInitDbusConnection(&dcli_dbus_connection, slot_id, distributFag);
+
+	query = dbus_message_new_method_call(DHCP6_DBUS_BUSNAME, 
+									DHCP6_DBUS_OBJPATH, 
+									DHCP6_DBUS_INTERFACE, 
+									DHCP6_DBUS_METHOD_SHOW_RUNNING_CFG);
+
+	dbus_error_init(&err);
+
+	reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection,query,-1, &err);
+
+	dbus_message_unref(query);
+	if (NULL == reply) {
+		printf("failed get reply.\n");
+		if (dbus_error_is_set(&err)) {
+			printf("%s raised: %s",err.name,err.message);
+			dbus_error_free_for_dcli(&err);
+		}
+		return ret;
+	}
+
+	if (dbus_message_get_args ( reply, &err,
+					DBUS_TYPE_STRING, &showStr,
+					DBUS_TYPE_INVALID)) {
+		len = strlen(showStr);
+		if (!(tmp = malloc(len + 1))) {
+			return ret;
+
+		}
+		memset(tmp, 0, len + 1);
+		memcpy(tmp, showStr, len);
+		ret = 0;
+	} 
+	else {
+		printf("Failed get args.\n");
+		if (dbus_error_is_set(&err)) {
+			printf("%s raised: %s",err.name,err.message);
+			dbus_error_free_for_dcli(&err);
+		}
+	}
+
+	vty_out(vty, "===============================================================\n");
+	if (tmp){
+		vty_out(vty, "%s\n", tmp);
+	}
+	vty_out(vty, "===============================================================\n");
+
+
+	if (tmp) {
+		free(tmp);
+	}
+	
+	dbus_message_unref(reply);
+	
+	return ret;	
 }
 
 /**********************************************************************************
@@ -2111,6 +2320,7 @@ DEFUN(set_interface_ipv6_pool_cmd_func,
 	unsigned int nameSize = 0, nodeSave = 0;
 	int ret = 0, index = 0;
 	unsigned int op_ret = 0;
+	int dest_slotid = 0;
 
 	poolName = (char*)malloc(ALIAS_NAME_SIZE);
 	ifname = (char*)malloc(ALIAS_NAME_SIZE);
@@ -2128,6 +2338,25 @@ DEFUN(set_interface_ipv6_pool_cmd_func,
 	memcpy(poolName, argv[0], nameSize);
 	nameSize = strlen(vlan_eth_port_ifname);
 	memcpy(ifname, vlan_eth_port_ifname, nameSize);
+	if(strncmp(ifname, "ve", 2) == 0)
+	dcli_dhcp_check_ve_interface(ifname);
+	dest_slotid = get_slot_id_by_ifname(ifname);
+
+	/* interface node: vty->slotindex = 0
+	   hansi node -> interface node ->slotindex != 0 */
+	if ((0 != vty->slotindex)
+		&& (dest_slotid != vty->slotindex)) {
+		vty_out(vty, "bind ip pool failed, Because not support.\n");
+		if(poolName){
+			free(poolName);
+			poolName=NULL;
+		}
+		if(ifname){
+			free(ifname);
+			ifname=NULL;
+		}
+		return CMD_WARNING;			
+	}
 
 	ret = dcli_set_interface_ipv6_pool(poolName, ifname, 1,vty);
 	
@@ -2312,7 +2541,7 @@ DEFUN(add_dhcp_pool_ipv6_range_cmd_func,
 
 	memset(&ipAddrh, 0 ,sizeof(struct iaddr));
 	memset(&ipAddrl, 0 ,sizeof(struct iaddr));
-	index = (unsigned int *)(vty->index);
+	index = (unsigned int *)(vty->index_sub);
 
 	/*add 0 means add, add 1 means delete*/
 	if(strncmp("add", argv[0], strlen(argv[0]))==0) {
@@ -2432,7 +2661,7 @@ DEFUN(ipv6_dhcp_server_lease_default_cmd_func,
 	}
 	else if((POOLV6_NODE == vty->node) || (HANSI_POOLV6_NODE == vty->node) || (LOCAL_HANSI_POOLV6_NODE  == vty->node)) {
 		mode = 1;		
-		index = (unsigned int *)(vty->index);
+		index = (unsigned int *)(vty->index_sub);
 		/*vty_out(vty,"ip pool server domain name sub index is %d\n", index);*/
 	}else {		
 		vty_out (vty, "Terminal mode change must under configure mode!\n", VTY_NEWLINE);
@@ -2465,7 +2694,7 @@ DEFUN(no_ipv6_dhcp_server_lease_default_cmd_func,
 	}
 	else if((POOLV6_NODE == vty->node) || (HANSI_POOLV6_NODE == vty->node) || (LOCAL_HANSI_POOLV6_NODE  == vty->node)) {
 		mode = 1;		
-		index = (unsigned int *)(vty->index);
+		index = (unsigned int *)(vty->index_sub);
 		/*vty_out(vty,"ip pool server domain name sub index is %d\n", index);*/
 	}else {		
 		vty_out (vty, "Terminal mode change must under configure mode!\n", VTY_NEWLINE);
@@ -2642,7 +2871,7 @@ DEFUN(ipv6_dhcp_server_option52_cmd_func,
 	}
 	else if((POOLV6_NODE == vty->node) || (HANSI_POOLV6_NODE == vty->node) || (LOCAL_HANSI_POOLV6_NODE  == vty->node)) {
 		mode = 1;		
-		index = (unsigned int *)(vty->index);
+		index = (unsigned int *)(vty->index_sub);
 	}
 	else {		
 		vty_out (vty, "Terminal mode change must under configure mode!\n", VTY_NEWLINE);
@@ -2717,7 +2946,7 @@ DEFUN(no_ipv6_dhcp_server_option52_cmd_func,
 	}
 	else if((POOLV6_NODE == vty->node) || (HANSI_POOLV6_NODE == vty->node) || (LOCAL_HANSI_POOLV6_NODE  == vty->node)){
 		mode = 1;		
-		index = (unsigned int *)(vty->index);
+		index = (unsigned int *)(vty->index_sub);
 	}
 	else {		
 		vty_out (vty, "Terminal mode change must under configure mode!\n", VTY_NEWLINE);	
@@ -2844,7 +3073,7 @@ DEFUN(ipv6_dhcp_server_domain_search_cmd_func,
 	}
 	else if((POOLV6_NODE == vty->node) || (HANSI_POOLV6_NODE == vty->node) || (LOCAL_HANSI_POOLV6_NODE  == vty->node)){
 		mode = 1;		
-		index = (unsigned int *)(vty->index);
+		index = (unsigned int *)(vty->index_sub);
 	}
 	else {		
 		vty_out (vty, "Terminal mode change must under configure mode!\n", VTY_NEWLINE);
@@ -2896,7 +3125,7 @@ DEFUN(no_ipv6_dhcp_server_domain_search_cmd_func,
 	}
 	else if((POOLV6_NODE == vty->node) || (HANSI_POOLV6_NODE == vty->node) || (LOCAL_HANSI_POOLV6_NODE  == vty->node)){
 		mode = 1;		
-		index = (unsigned int *)(vty->index);
+		index = (unsigned int *)(vty->index_sub);
 	}
 	else {		
 		vty_out (vty, "Terminal mode change must under configure mode!\n", VTY_NEWLINE);
@@ -3054,7 +3283,7 @@ DEFUN(ipv6_dhcp_server_name_servers_cmd_func,
 	}
 	else if((POOLV6_NODE == vty->node) || (HANSI_POOLV6_NODE == vty->node) || (LOCAL_HANSI_POOLV6_NODE  == vty->node)) {
 		mode = 1;		
-		index = (unsigned int *)(vty->index);
+		index = (unsigned int *)(vty->index_sub);
 	}
 	else {		
 		vty_out (vty, "Terminal mode change must under configure mode!\n", VTY_NEWLINE);
@@ -3086,7 +3315,7 @@ DEFUN(no_ipv6_dhcp_server_name_servers_cmd_func,
 	}
 	else if((POOLV6_NODE == vty->node) || (HANSI_POOLV6_NODE == vty->node) || (LOCAL_HANSI_POOLV6_NODE  == vty->node)) {
 		mode = 1;		
-		index = (unsigned int *)(vty->index);
+		index = (unsigned int *)(vty->index_sub);
 	}
 	else {		
 		vty_out (vty, "Terminal mode change must under configure mode!\n", VTY_NEWLINE);
@@ -3510,7 +3739,8 @@ dcli_dhcp_ipv6_init
 	install_default(POOLV6_NODE);	
 	install_element(CONFIG_NODE, &create_ipv6_pool_name_cmd);	
 	install_element(CONFIG_NODE, &delete_ipv6_pool_name_cmd);
-	install_element(CONFIG_NODE, &config_ipv6_pool_name_cmd);	
+	install_element(CONFIG_NODE, &config_ipv6_pool_name_cmd);
+	install_element(CONFIG_NODE, &show_dhcpv6_running_config);
 //	install_element(CONFIG_NODE, &add_dhcp_static_host_cmd);	
 //	install_element(CONFIG_NODE, &delete_dhcp_static_host_cmd);	
 	install_element(CONFIG_NODE, &ipv6_dhcp_server_enable_cmd);	
@@ -3551,15 +3781,16 @@ dcli_dhcp_ipv6_init
 	install_element(INTERFACE_NODE, &set_interface_ipv6_pool_cmd);
 	install_element(INTERFACE_NODE, &del_interface_ipv6_pool_cmd);
 
-
-	install_node(&hansi_poolv6_node,NULL,"HANSI_POOLV6_NODE");
-	install_default(HANSI_POOLV6_NODE);
 	install_element(HANSI_NODE, &create_ipv6_pool_name_cmd);				/* pool node */		
 	install_element(HANSI_NODE, &delete_ipv6_pool_name_cmd);
-	install_element(HANSI_NODE, &config_ipv6_pool_name_cmd);	
+	install_element(HANSI_NODE, &config_ipv6_pool_name_cmd);
+	install_element(HANSI_NODE, &show_dhcpv6_running_config);
 //	install_element(CONFIG_NODE, &add_dhcp_static_host_cmd);	
 //	install_element(CONFIG_NODE, &delete_dhcp_static_host_cmd);	
-	install_element(HANSI_NODE, &ipv6_dhcp_server_enable_cmd);	
+	install_element(HANSI_NODE, &ipv6_dhcp_server_enable_cmd);
+
+	install_node(&hansi_poolv6_node,NULL,"HANSI_POOLV6_NODE");	
+	install_default(HANSI_POOLV6_NODE);
 	install_element(HANSI_POOLV6_NODE, &add_dhcp_pool_ipv6_range_cmd);
 	/*
 	install_element(POOLV6_NODE, &ipv6_dhcp_server_option43_cmd);
@@ -3598,7 +3829,8 @@ dcli_dhcp_ipv6_init
 	install_default(LOCAL_HANSI_POOLV6_NODE);
 	install_element(LOCAL_HANSI_NODE, &create_ipv6_pool_name_cmd);				/* pool node */	
 	install_element(LOCAL_HANSI_NODE, &delete_ipv6_pool_name_cmd);
-	install_element(LOCAL_HANSI_NODE, &config_ipv6_pool_name_cmd);	
+	install_element(LOCAL_HANSI_NODE, &config_ipv6_pool_name_cmd);
+	install_element(LOCAL_HANSI_NODE, &show_dhcpv6_running_config);
 //	install_element(CONFIG_NODE, &add_dhcp_static_host_cmd);	
 //	install_element(CONFIG_NODE, &delete_dhcp_static_host_cmd);	
 	install_element(LOCAL_HANSI_NODE, &ipv6_dhcp_server_enable_cmd);	

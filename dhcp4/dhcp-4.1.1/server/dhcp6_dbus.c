@@ -52,6 +52,7 @@ extern "C"
 #include <sys/types.h>
 #include <linux/rtnetlink.h>
 #include <bits/sockaddr.h>
+#include <sys/ioctl.h>
 
 #include "sysdef/returncode.h"
 #include "dhcpd.h"
@@ -410,9 +411,9 @@ dhcp6_dbus_profile_config_interface_save
 {
 	char ifname[25] = {0};
 	char tmpif[25] = {0};
-	int slotid = 0, vrrpid = 0, ifid = 0;
-	int vrrp_flag = 0;
-	int ret = 0;
+	//int slotid = 0, vrrpid = 0, ifid = 0;
+	//int vrrp_flag = 0;
+	//int ret = 0;
 
 	log_debug("%s:\n", __func__);
 
@@ -425,66 +426,18 @@ dhcp6_dbus_profile_config_interface_save
 	memset(ifname, 0, sizeof(ifname));
 	strncpy(ifname, ifhead->interface_name, sizeof(ifname)-1);
 	
-	if (!strncmp(ifname, "wlan", 4) || !strncmp(ifname, "ebr", 3)) {
-
-		if ((!strncmp(ifname, "ebr", 3)) && (strncmp(ifname, "ebrl", 4))) {
-			ret = sscanf(ifname, "ebr%d-%d-%d", &slotid, &vrrpid, &ifid);
-			if ((3 == ret) && vrrpid) {
-				*ifLen += sprintf(*ifcursor, "config hansi-profile %d-%d\n", slotid, vrrpid);
-				*ifcursor = *showif + *ifLen;
-				vrrp_flag = 1;
-				sprintf(tmpif, "ebr%d", ifid);
- 			}
+	
+	if (strncmp(ifname, "wlan", 4) && strncmp(ifname, "ebr", 3) && strncmp(ifname, "r", 1)) {
+		/*if (1 == check_interfaces_ip_address(ifhead->interface_name)) */{
+			*ifLen += sprintf(*ifcursor, "interface %s\n", ifname);
+			*ifcursor = *showif + *ifLen;
+			*ifLen += sprintf(*ifcursor, " ipv6 pool %s\n", pool_node->poolname);
+			*ifcursor = *showif + *ifLen;	
+			*ifLen += sprintf(*ifcursor, " exit\n");
+			*ifcursor = *showif + *ifLen;
 		}
-		else if ((!strncmp(ifname, "wlan", 4)) && (strncmp(ifname, "wlanl", 5))) {
-			ret = sscanf(ifname, "wlan%d-%d-%d", &slotid, &vrrpid, &ifid);
-			if ((3 == ret) && vrrpid) {
-				*ifLen += sprintf(*ifcursor, "config hansi-profile %d-%d\n", slotid, vrrpid);
-				*ifcursor = *showif + *ifLen;
-				vrrp_flag = 1;
-				sprintf(tmpif, "wlan%d", ifid);
- 			}
-		} 
-		
-		/* local hansi  ebr */
-		else if (!strncmp(ifname, "ebrl", 4)) {
-			ret = sscanf(ifname, "ebrl%d-%d-%d", &slotid, &vrrpid, &ifid);
-			if ((3 == ret) && vrrpid) {
-				*ifLen += sprintf(*ifcursor, "config local-hansi %d-%d\n", slotid, vrrpid);
-				*ifcursor = *showif + *ifLen;
-				vrrp_flag = 1;
-				sprintf(tmpif, "ebr%d", ifid);
-			}
-		}
-		/* local hansi  wlan */
-		else if (!strncmp(ifname, "wlanl", 5)) {
-			ret = sscanf(ifname, "wlanl%d-%d-%d", &slotid, &vrrpid, &ifid);
-			if ((3 == ret) && vrrpid) {
-				*ifLen += sprintf(*ifcursor, "config local-hansi %d-%d\n", slotid, vrrpid);
-				*ifcursor = *showif + *ifLen;
-				vrrp_flag = 1;
-				sprintf(tmpif, "wlan%d", ifid);
-			} 
-		}
-	} else {
-		vrrp_flag = 0;
-		sprintf(tmpif, "%s", ifname);
 	}	
 
-	*ifLen += sprintf(*ifcursor, " interface %s\n", tmpif);
-	*ifcursor = *showif + *ifLen;
-	*ifLen += sprintf(*ifcursor, " ipv6 pool %s\n", pool_node->poolname);
-	*ifcursor = *showif + *ifLen;		
-	
-	*ifLen += sprintf(*ifcursor, " exit\n");
-	*ifcursor = *showif + *ifLen;
-
-
-	/* exit */
-	if (vrrp_flag) {
-		*ifLen += sprintf(*ifcursor, " exit\n");
-		*ifcursor = *showif + *ifLen;
-	}
 	return;
 }
 #else
@@ -1445,6 +1398,389 @@ dhcp6_dbus_find_pool_by_name
 	}
 
 	return 1;
+}
+
+
+/**********************************************************************************
+ *  check_interfaces_ip_address
+ *
+ *	DESCRIPTION:
+ * 		Check The interface whether Settings IP address
+ *
+ *	INPUT:
+ *		name -> the interface name 
+ *	
+ *	OUTPUT:
+ *		NULL
+ *
+ * 	RETURN:
+ *		
+ *		1 -> the interface have set ip address
+ *		0 -> the interface without setting the IP address  
+ **********************************************************************************/
+int check_interfaces_ip_address(char *name) 
+{
+	static int sock = -1;
+	struct ifreq tmp;
+	struct sockaddr_in *addr = NULL;
+
+	if (NULL == name) {
+		return 0;
+	}
+	if (sock < 0) {
+		sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+		if (sock < 0) {
+			return 0;
+		}
+	}
+
+	strcpy(tmp.ifr_name, name);
+	if (ioctl(sock, SIOCGIFADDR, &tmp) < 0) {
+		log_error("dhcp ioctl check interface %s address failed: %m\n", name);
+		close(sock);
+		sock = -1;
+		
+		return 0;
+	}
+
+	addr = (struct sockaddr_in*)&tmp.ifr_addr;
+	if (0 != addr->sin_addr.s_addr) {
+		return 1;
+	}
+
+	return 0;
+}
+
+void dhcp6_dbus_profile_config_hansi_save(char *showStr, int slot, int vrrp, int local_flag)
+{
+	char ifname[32];
+	int value1 = 0, value2 = 0, value3 = 0, value4 = 0, value5 = 0;
+	int totalLen = 0;
+	int ret = 0;
+	struct dcli_pool* pool_node = NULL;
+	struct dcli_ifname* ifhead = NULL;
+	char *cursor = NULL;
+
+	if (!showStr) {
+		return;
+	}
+
+	cursor = showStr;
+	log_debug("show hansi running: slot %d vrrp %d local flag %d\n", slot, vrrp, local_flag);
+	
+	/*ip pool conifgure*/
+	pool_node = head_pool.next;
+	for (; pool_node; pool_node = pool_node->next) {	
+		if (pool_node->headsubnet) {
+			if (pool_node->headsubnet->ifhead) {
+				ifhead = pool_node->headsubnet->ifhead;
+
+				//if (1 != check_interfaces_ip_address(ifhead->interface_name)) {
+				//	continue;
+				//}
+				
+				memset(ifname, 0, sizeof(ifname));
+				memcpy(ifname, ifhead->interface_name, strlen(ifhead->interface_name));
+				log_debug("show running hansi cfg: interface %s\n", ifname);
+			//	log_info("show dhcp ipv6666666666666666666  running hansi cfg: interface %s\n", ifname);
+				
+				if (0 == strncmp(ifname, "wlanl", 5)) {
+					ret = sscanf(ifname, "wlanl%d-%d-%d", &value1, &value2, &value3);
+					if ((3 == ret) && (slot == value1) && (vrrp == value2) && local_flag) { /* local hansi */
+						log_debug("2 slot %d, vrrp %d\n", slot, vrrp);
+						if (vrrp) {
+							totalLen += sprintf(cursor, "config local-hansi %d-%d\n", slot, vrrp);
+							cursor = showStr + totalLen;
+						}
+
+						totalLen += sprintf(cursor, " interface wlan%d\n", value3);
+						cursor = showStr + totalLen;
+
+						totalLen += sprintf(cursor, " ipv6 pool %s\n", pool_node->poolname);
+						cursor = showStr + totalLen;
+
+						totalLen += sprintf(cursor, " exit\n");
+						cursor = showStr + totalLen;
+
+						if (vrrp) {
+							totalLen += sprintf(cursor, " exit\n");
+							cursor = showStr + totalLen;
+						}
+					} 
+				} 
+
+				else if ((0 == strncmp(ifname, "wlan", 4)) && (strncmp(ifname, "wlanl", 5))) {
+					ret = sscanf(ifname, "wlan%d-%d-%d", &value1, &value2, &value3);
+					if ((3 == ret) && (slot == value1) && (vrrp == value2) && (!local_flag)) {
+						log_debug("3 slot %d, vrrp %d\n", slot, vrrp);
+						if (vrrp) {
+							totalLen += sprintf(cursor, "config hansi-profile %d-%d\n", slot, vrrp);
+							cursor = showStr + totalLen;
+						}
+
+						totalLen += sprintf(cursor, " interface wlan%d\n", value3);
+						cursor = showStr + totalLen;
+
+						totalLen += sprintf(cursor, " ipv6 pool %s\n", pool_node->poolname);
+						cursor = showStr + totalLen;
+
+						totalLen += sprintf(cursor, " exit\n");
+						cursor = showStr + totalLen;
+
+						if (vrrp) {
+							totalLen += sprintf(cursor, " exit\n");
+							cursor = showStr + totalLen;
+						}
+					}
+				} 
+
+				#if 0
+				if (0 == strncmp(ifname, "wlan", 4)) {
+					ret = sscanf(ifname, "wlan%d-%d-%d", &value1, &value2, &value3);
+					if ((2 == ret) && (vrrp == value1) && local_flag) { /* local hansi */
+						log_debug("2 slot %d, vrrp %d\n", slot, vrrp);
+						if (vrrp) {
+							totalLen += sprintf(cursor, "config local-hansi %d-%d\n", slot, vrrp);
+							cursor = showStr + totalLen;
+						}
+
+						totalLen += sprintf(cursor, " interface wlan%d\n", value2);
+						cursor = showStr + totalLen;
+
+						totalLen += sprintf(cursor, " ip pool %s\n", pool_node->poolname);
+						cursor = showStr + totalLen;
+
+						totalLen += sprintf(cursor, " exit\n");
+						cursor = showStr + totalLen;
+
+						if (vrrp) {
+							totalLen += sprintf(cursor, " exit\n");
+							cursor = showStr + totalLen;
+						}
+					} 
+					else if ((3 == ret) && (slot == value1) && (vrrp == value2)) {
+						log_debug("3 slot %d, vrrp %d\n", slot, vrrp);
+						if (vrrp) {
+							totalLen += sprintf(cursor, "config hansi-profile %d-%d\n", slot, vrrp);
+							cursor = showStr + totalLen;
+						}
+
+						totalLen += sprintf(cursor, " interface wlan%d\n", value3);
+						cursor = showStr + totalLen;
+
+						totalLen += sprintf(cursor, " ip pool %s\n", pool_node->poolname);
+						cursor = showStr + totalLen;
+
+						totalLen += sprintf(cursor, " exit\n");
+						cursor = showStr + totalLen;
+
+						if (vrrp) {
+							totalLen += sprintf(cursor, " exit\n");
+							cursor = showStr + totalLen;
+						}
+					}
+				} 
+				#endif
+
+				#if 1
+				else if (0 == strncmp(ifname, "ebrl", 4)) {
+					ret = sscanf(ifname, "ebrl%d-%d-%d", &value1, &value2, &value3);
+					if ((3 == ret) && (slot == value1) && (vrrp == value2) && local_flag) {
+						if (vrrp) {
+							totalLen += sprintf(cursor, "config local-hansi %d-%d\n", slot, vrrp);
+							cursor = showStr + totalLen;
+						}
+
+						totalLen += sprintf(cursor, " interface ebr%d\n", value2);
+						cursor = showStr + totalLen;
+
+						totalLen += sprintf(cursor, " ipv6 pool %s\n", pool_node->poolname);
+						cursor = showStr + totalLen;
+
+						totalLen += sprintf(cursor, " exit\n");
+						cursor = showStr + totalLen;
+
+						if (vrrp) {
+							totalLen += sprintf(cursor, " exit\n");
+							cursor = showStr + totalLen;
+						}
+					}
+				}
+
+				else if ((0 == strncmp(ifname, "ebr", 3)) && (strncmp(ifname, "ebrl", 4))) {
+					ret = sscanf(ifname, "ebr%d-%d-%d", &value1, &value2, &value3);
+					if ((3 == ret) && (slot == value1) && (vrrp == value2) && (!local_flag)) {
+						if (vrrp) {
+							totalLen += sprintf(cursor, "config hansi-profile %d-%d\n", slot, vrrp);
+							cursor = showStr + totalLen;
+						}
+
+						totalLen += sprintf(cursor, " interface ebr%d\n", value3);
+						cursor = showStr + totalLen;
+
+						totalLen += sprintf(cursor, " ipv6 pool %s\n", pool_node->poolname);
+						cursor = showStr + totalLen;
+
+						totalLen += sprintf(cursor, " exit\n");
+						cursor = showStr + totalLen;
+
+						if (vrrp) {
+							totalLen += sprintf(cursor, " exit\n");
+							cursor = showStr + totalLen;
+						}
+					}
+				}
+
+				
+				#else
+				else if (0 == strncmp(ifname, "ebr", 3)) {
+					ret = sscanf(ifname, "ebr%d-%d-%d", &value1, &value2, &value3);
+					if ((2 == ret) && (vrrp == value1) && local_flag) {
+						if (vrrp) {
+							totalLen += sprintf(cursor, "config local-hansi %d-%d\n", slot, vrrp);
+							cursor = showStr + totalLen;
+						}
+
+						totalLen += sprintf(cursor, " interface ebr%d\n", value2);
+						cursor = showStr + totalLen;
+
+						totalLen += sprintf(cursor, " ip pool %s\n", pool_node->poolname);
+						cursor = showStr + totalLen;
+
+						totalLen += sprintf(cursor, " exit\n");
+						cursor = showStr + totalLen;
+
+						if (vrrp) {
+							totalLen += sprintf(cursor, " exit\n");
+							cursor = showStr + totalLen;
+						}
+					}
+					else if ((3 == ret) && (slot == value1) && (vrrp == value2)) {
+						if (vrrp) {
+							totalLen += sprintf(cursor, "config hansi-profile %d-%d\n", slot, vrrp);
+							cursor = showStr + totalLen;
+						}
+
+						totalLen += sprintf(cursor, " interface ebr%d\n", value3);
+						cursor = showStr + totalLen;
+
+						totalLen += sprintf(cursor, " ip pool %s\n", pool_node->poolname);
+						cursor = showStr + totalLen;
+
+						totalLen += sprintf(cursor, " exit\n");
+						cursor = showStr + totalLen;
+
+						if (vrrp) {
+							totalLen += sprintf(cursor, " exit\n");
+							cursor = showStr + totalLen;
+						}
+					}
+				}
+				#endif
+
+				else if (0 == strncmp(ifname, "r", 1)) { /* r1-1-1-0.1 */
+					ret = sscanf(ifname, "r%d-%d-%d-%d.%d", &value1, &value2, &value3, &value4, &value5);
+					if ((4 == ret) && (vrrp == value1) && local_flag) {
+						if (vrrp) {
+							totalLen += sprintf(cursor, "config local-hansi %d-%d\n", slot, vrrp);
+							cursor = showStr + totalLen;
+						}
+
+						totalLen += sprintf(cursor, " interface r%d-%d.%d\n", value2, value3, value4);
+						cursor = showStr + totalLen;
+
+						totalLen += sprintf(cursor, " ipv6 pool %s\n", pool_node->poolname);
+						cursor = showStr + totalLen;
+
+						totalLen += sprintf(cursor, " exit\n");
+						cursor = showStr + totalLen;
+
+						if (vrrp) {
+							totalLen += sprintf(cursor, " exit\n");
+							cursor = showStr + totalLen;
+						}
+					} 
+					else if ((5 == ret) && (slot == value1) && (vrrp == value2)) {
+						if (vrrp) {
+							totalLen += sprintf(cursor, "config hansi-profile %d-%d\n", slot, vrrp);
+							cursor = showStr + totalLen;
+						}
+						
+						totalLen += sprintf(cursor, " interface r%d-%d.%d\n", value3, value4, value5);
+						cursor = showStr + totalLen;
+
+						totalLen += sprintf(cursor, " ipv6 pool %s\n", pool_node->poolname);
+						cursor = showStr + totalLen;
+
+						totalLen += sprintf(cursor, " exit\n");
+						cursor = showStr + totalLen;
+
+						if (vrrp) {
+							totalLen += sprintf(cursor, " exit\n");
+							cursor = showStr + totalLen;
+						}
+					}
+				}
+			}
+		}
+	}
+
+	return ;
+}
+
+
+DBusMessage* 
+dhcp6_dbus_show_running_hansi_cfg
+(
+	DBusConnection *conn, 
+	DBusMessage *msg, 
+	void *user_data
+)
+{
+	DBusMessage *reply = NULL;	  
+	DBusMessageIter iter;
+	DBusError err;   		
+	char *strShow = NULL;
+	unsigned int slot_id = 0;
+	unsigned int vrrp_id = 0;
+	unsigned int local_flag = 0;
+
+	dbus_error_init(&err);
+
+	if( !(dbus_message_get_args( msg ,&err,
+					DBUS_TYPE_UINT32, &slot_id,
+					DBUS_TYPE_UINT32, &vrrp_id,	
+					DBUS_TYPE_UINT32, &local_flag,					
+					DBUS_TYPE_INVALID))) {
+		if(dbus_error_is_set(&err)) {
+			dbus_error_free(&err);
+		}
+		return NULL;
+	}
+
+	strShow = (char*)malloc(DHCP_SAVE_CFG_MEM);	
+	if(!strShow) {
+		log_debug("%s:%d malloc memory failed\n", MDL);
+		return NULL;
+	}
+	memset(strShow, 0, DHCP_SAVE_CFG_MEM);
+
+	dbus_error_init(&err);
+	dhcp6_dbus_profile_config_hansi_save(strShow, slot_id, vrrp_id, local_flag);
+
+	log_debug("%s\n", __func__);
+	log_debug("%s\n", strShow);	
+
+	reply = dbus_message_new_method_return(msg);
+	dbus_message_iter_init_append (reply, &iter);	
+	dbus_message_iter_append_basic (&iter,
+								   DBUS_TYPE_STRING,
+								   &strShow);
+
+	free(strShow);
+	strShow = NULL;
+	
+	return reply;
 }
 
 unsigned int
@@ -3558,7 +3894,7 @@ dhcp6_dbus_create_pool_node
 		}
 		else {
 	log_debug("dhcp_dbus_create_pool_by_name ret is %d \n", ret);
-			op_ret = 1;      
+			op_ret = ret;      
 		}
 	}
 	reply = dbus_message_new_method_return(msg);
@@ -5062,6 +5398,9 @@ dhcp6_dbus_message_handler
 	}
 	if (dbus_message_is_method_call(message, DHCP6_DBUS_INTERFACE, DHCP6_DBUS_METHOD_CREATE_POOL_NODE )) {
 		reply = dhcp6_dbus_create_pool_node(connection, message, user_data);
+	}
+	if (dbus_message_is_method_call(message, DHCP6_DBUS_INTERFACE, DHCP6_DBUS_METHOD_SHOW_RUNNING_HANSI_CFG)) {
+		reply = dhcp6_dbus_show_running_hansi_cfg(connection, message, user_data);
 	}
 	if (dbus_message_is_method_call(message, DHCP6_DBUS_INTERFACE, DHCP6_DBUS_METHOD_SET_SERVER_DOMAIN_SEARCH)) {
 		reply = dhcp6_dbus_set_server_domain_search(connection, message, user_data);

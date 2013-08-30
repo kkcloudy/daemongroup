@@ -870,7 +870,7 @@ DBusMessage * hmd_dbus_interface_auto_dhcp_restart(DBusConnection *conn, DBusMes
 						//	hmd_syslog_info("hmdDbus ~~~~~~~~slot_id == Slot_id\n");
 							DHCP_MONITOR = (struct Hmd_For_Dhcp_restart *)malloc(sizeof(struct Hmd_For_Dhcp_restart));
 							arg = (HMDThreadArg *)malloc(sizeof(HMDThreadArg));
-							arg->QID = -1;
+							arg->QID = DHCP_QID;
 							arg->islocaled = 0;
 							arg->InstID = -1;
 							HmdCreateThread(&(DHCP_MONITOR->dhcp_monitor), HMDHansiMonitor, arg, 0);					

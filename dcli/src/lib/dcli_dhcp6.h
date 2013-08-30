@@ -77,6 +77,11 @@ unsigned int dhcp_dcli_set_server_max_lease_time
 	unsigned int maxtime,
 	char* poolname
 );
+unsigned int dcli_config_ipv6_pool_name
+(
+	char *poolName,	
+	struct vty *vty
+);
 
 unsigned int dhcp_dcli_set_server_default_lease_time
 (

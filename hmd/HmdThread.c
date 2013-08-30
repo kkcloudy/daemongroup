@@ -696,7 +696,7 @@ void HmdHandleTimer(void* arg) {
 			HMDTimerRequest(HANSI_TIMER,&(HOST_BOARD->HMDTimer_ConfigSave), HMD_TIMER_CONFIG_SAVE, 0, 0);		
 	}else if(HMD_CHECK_FOR_DHCP == TimerType){
 		memset((char*)&msg, 0, sizeof(msg));
-		msg.mqid = 1;
+		msg.mqid = DHCP_QID;
 		msg.mqinfo.op = HMD_DHCP_CHECKING;
 		msg.mqinfo.type = islocaled;
 		msg.mqinfo.InstID = InstID;
