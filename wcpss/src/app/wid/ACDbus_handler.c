@@ -30595,10 +30595,30 @@ int wid_set_ap_longitude_latitude(unsigned int wtpid, unsigned char *longitude, 
 						msg.mqinfo.u.WtpInfo.Wtp_Op = WTP_LONGITUDE_LATITUDE_SET;
 
 						memset(msg.mqinfo.u.WtpInfo.username, '\0', sizeof(msg.mqinfo.u.WtpInfo.username));
-						memcpy(msg.mqinfo.u.WtpInfo.username, (char *)longitude, strlen((char *)longitude));
+						if ( strcmp((char *)longitude, "default") == 0 ) {
+							if (strlen((char *)AC_WTP[wtpid]->longitude) == 0) {
+								memcpy(msg.mqinfo.u.WtpInfo.username, "unknown", strlen("unknown"));
+							} else {
+								memcpy(msg.mqinfo.u.WtpInfo.username, (char *)AC_WTP[wtpid]->longitude, strlen((char *)AC_WTP[wtpid]->longitude));
+							}
+						} else {
+							memcpy(msg.mqinfo.u.WtpInfo.username, (char *)longitude, strlen((char *)longitude));
+							memcpy((char *)AC_WTP[wtpid]->longitude, (char *)longitude, strlen((char*)longitude));
+						}
+						
 						
 						memset(msg.mqinfo.u.WtpInfo.passwd, '\0', sizeof(msg.mqinfo.u.WtpInfo.passwd));
-						memcpy(msg.mqinfo.u.WtpInfo.passwd, (char *)latitude, strlen((char *)latitude));
+						if ( strcmp((char *)latitude, "default") == 0 ) {
+							if (strlen((char *)AC_WTP[wtpid]->latitude) == 0) {
+								memcpy(msg.mqinfo.u.WtpInfo.passwd, "unknown", strlen("unknown"));
+							} else {
+								memcpy(msg.mqinfo.u.WtpInfo.passwd, (char *)AC_WTP[wtpid]->latitude, strlen((char *)AC_WTP[wtpid]->latitude));
+							}
+						} else {
+							memcpy(msg.mqinfo.u.WtpInfo.passwd, (char *)latitude, strlen((char *)latitude));
+							memcpy((char *)AC_WTP[wtpid]->latitude, (char *)latitude, strlen((char*)latitude));
+						}
+						
 						
 						if (msgsnd(ACDBUS_MSGQ, (msgq *)&msg, sizeof(msg.mqinfo), 0) == -1){
 							wid_syslog_crit("%s msgsend %s",__func__,strerror(errno));
@@ -30615,10 +30635,29 @@ int wid_set_ap_longitude_latitude(unsigned int wtpid, unsigned char *longitude, 
 					msg.mqinfo.u.WtpInfo.Wtp_Op = WTP_LONGITUDE_LATITUDE_SET;
 
 					memset(msg.mqinfo.u.WtpInfo.username, '\0', sizeof(msg.mqinfo.u.WtpInfo.username));
-					memcpy(msg.mqinfo.u.WtpInfo.username,(char *)longitude, strlen((char *)longitude));
-
+					if ( strcmp((char *)longitude, "default") == 0 ) {
+						if (strlen((char *)AC_WTP[wtpid]->longitude) == 0) {
+							memcpy(msg.mqinfo.u.WtpInfo.username, "unknown", strlen("unknown"));
+						} else {
+							memcpy(msg.mqinfo.u.WtpInfo.username, (char *)longitude, strlen((char *)longitude));
+						}
+					} else {
+						memcpy(msg.mqinfo.u.WtpInfo.username, (char *)longitude, strlen((char *)longitude));
+						memcpy((char *)AC_WTP[wtpid]->longitude, (char *)longitude, strlen((char*)longitude));
+					}
+					
+					
 					memset(msg.mqinfo.u.WtpInfo.passwd, '\0', sizeof(msg.mqinfo.u.WtpInfo.passwd));
-					memcpy(msg.mqinfo.u.WtpInfo.passwd, (char *)latitude, strlen((char *)latitude));
+					if ( strcmp((char *)latitude, "default") == 0 ) {
+						if (strlen((char *)AC_WTP[wtpid]->latitude) == 0) {
+							memcpy(msg.mqinfo.u.WtpInfo.passwd, "unknown", strlen("unknown"));
+						} else {
+							memcpy(msg.mqinfo.u.WtpInfo.passwd, (char *)latitude, strlen((char *)latitude));
+						}
+					} else {
+						memcpy(msg.mqinfo.u.WtpInfo.passwd, (char *)latitude, strlen((char *)latitude));
+						memcpy((char *)AC_WTP[wtpid]->latitude, (char *)latitude, strlen((char*)latitude));
+					}
 					
 					elem = (struct msgqlist*)malloc(sizeof(struct msgqlist));
 					if(elem == NULL){
@@ -30647,10 +30686,29 @@ int wid_set_ap_longitude_latitude(unsigned int wtpid, unsigned char *longitude, 
 				msg.mqinfo.u.WtpInfo.Wtp_Op = WTP_LONGITUDE_LATITUDE_SET;
 
 				memset(msg.mqinfo.u.WtpInfo.username, '\0', sizeof(msg.mqinfo.u.WtpInfo.username));
-				memcpy(msg.mqinfo.u.WtpInfo.username, (char *)longitude, strlen((char *)longitude));
-
+				if ( strcmp((char *)longitude, "default") == 0 ) {
+					if (strlen((char *)AC_WTP[wtpid]->longitude) == 0) {
+						memcpy(msg.mqinfo.u.WtpInfo.username, "unknown", strlen("unknown"));
+					} else {
+						memcpy(msg.mqinfo.u.WtpInfo.username, (char *)AC_WTP[wtpid]->longitude, strlen((char *)AC_WTP[wtpid]->longitude));
+					}
+				} else {
+					memcpy(msg.mqinfo.u.WtpInfo.username, (char *)longitude, strlen((char *)longitude));
+					memcpy((char *)AC_WTP[wtpid]->longitude, (char *)longitude, strlen((char*)longitude));
+				}
+				
+				
 				memset(msg.mqinfo.u.WtpInfo.passwd, '\0', sizeof(msg.mqinfo.u.WtpInfo.passwd));
-				memcpy(msg.mqinfo.u.WtpInfo.passwd, (char *)latitude, strlen((char *)latitude));
+				if ( strcmp((char *)latitude, "default") == 0 ) {
+					if (strlen((char *)AC_WTP[wtpid]->latitude) == 0) {
+						memcpy(msg.mqinfo.u.WtpInfo.passwd, "unknown", strlen("unknown"));
+					} else {
+						memcpy(msg.mqinfo.u.WtpInfo.passwd, (char *)AC_WTP[wtpid]->latitude, strlen((char *)AC_WTP[wtpid]->latitude));
+					}
+				} else {
+					memcpy(msg.mqinfo.u.WtpInfo.passwd, (char *)latitude, strlen((char *)latitude));
+					memcpy((char *)AC_WTP[wtpid]->latitude, (char *)latitude, strlen((char*)latitude));
+				}
 				
 				if (msgsnd(ACDBUS_MSGQ, (msgq *)&msg, sizeof(msg.mqinfo), 0) == -1){
 					wid_syslog_crit("%s msgsend %s",__func__,strerror(errno));
@@ -30667,10 +30725,29 @@ int wid_set_ap_longitude_latitude(unsigned int wtpid, unsigned char *longitude, 
 			msg.mqinfo.u.WtpInfo.Wtp_Op = WTP_LONGITUDE_LATITUDE_SET;
 
 			memset(msg.mqinfo.u.WtpInfo.username, '\0', sizeof(msg.mqinfo.u.WtpInfo.username));
-			memcpy(msg.mqinfo.u.WtpInfo.username, (char *)longitude, strlen((char *)longitude));
-
+			if ( strcmp((char *)longitude, "default") == 0 ) {
+				if (strlen((char *)AC_WTP[wtpid]->longitude) == 0) {
+					memcpy(msg.mqinfo.u.WtpInfo.username, "unknown", strlen("unknown"));
+				} else {
+					memcpy(msg.mqinfo.u.WtpInfo.username, (char *)longitude, strlen((char *)longitude));
+				}
+			} else {
+				memcpy(msg.mqinfo.u.WtpInfo.username, (char *)longitude, strlen((char *)longitude));
+				memcpy((char *)AC_WTP[wtpid]->longitude, (char *)longitude, strlen((char*)longitude));
+			}
+			
+			
 			memset(msg.mqinfo.u.WtpInfo.passwd, '\0', sizeof(msg.mqinfo.u.WtpInfo.passwd));
-			memcpy(msg.mqinfo.u.WtpInfo.passwd, (char *)latitude, strlen((char *)latitude));
+			if ( strcmp((char *)latitude, "default") == 0 ) {
+				if (strlen((char *)AC_WTP[wtpid]->latitude) == 0) {
+					memcpy(msg.mqinfo.u.WtpInfo.passwd, "unknown", strlen("unknown"));
+				} else {
+					memcpy(msg.mqinfo.u.WtpInfo.passwd, (char *)latitude, strlen((char *)latitude));
+				}
+			} else {
+				memcpy(msg.mqinfo.u.WtpInfo.passwd, (char *)latitude, strlen((char *)latitude));
+				memcpy((char *)AC_WTP[wtpid]->latitude, (char *)latitude, strlen((char*)latitude));
+			}
 				
 			elem = (struct msgqlist*)malloc(sizeof(struct msgqlist));
 

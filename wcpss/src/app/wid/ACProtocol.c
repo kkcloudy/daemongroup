@@ -3720,7 +3720,7 @@ CWBool CWParseWTPEtendinfo(CWProtocolMessage *msgPtr, int len, CWWtpExtendinfo *
 	}
 
 	//get power type
-	valPtr->power_mode = CWProtocolRetrieve8(msgPtr) + 1;
+	valPtr->power_mode = CWProtocolRetrieve8(msgPtr);
 
 	//get manufacture date len
 	temp_var = CWProtocolRetrieve8(msgPtr);
@@ -3733,7 +3733,7 @@ CWBool CWParseWTPEtendinfo(CWProtocolMessage *msgPtr, int len, CWWtpExtendinfo *
 	}
 
 	//get forward mode type
-	valPtr->forward_mode = CWProtocolRetrieve8(msgPtr) + 1;
+	valPtr->forward_mode = CWProtocolRetrieve8(msgPtr);
 
 	//get radio count
 	temp_var = CWProtocolRetrieve8(msgPtr);

@@ -10987,18 +10987,109 @@ DEFUN(set_ap_extension_command_func,
 
 #define LONGITUDE_LATITUDE_MAX_LEN 16
 
+int longitude_latitude_judge(char *str, unsigned char longitude_or_latitude) {
+
+	int i, temp_len;
+	char *temp, *temp1;
+	
+	if (str[0] == '-') {
+		temp = str + 1;
+	} else {
+		temp = str;
+	}
+
+	temp_len = strlen(temp);
+	
+	if (longitude_or_latitude) {
+		if (str[temp_len-1] == 'e') {
+			str[temp_len-1] = 'E';
+		} else if (str[temp_len-1] == 'w') {
+			str[temp_len-1] = 'W';
+		}
+	} else {
+		if (str[temp_len-1] == 's') {
+			str[temp_len-1] = 'S';
+		} else if (str[temp_len-1] == 'n') {
+			str[temp_len-1] = 'N';
+		}
+	}
+
+	
+	for (i = 0; i < temp_len; i++) {
+		if (temp[i] == 'd')
+			temp[i] = 'D';
+		else if (temp[i] == 'm')
+			temp[i] = 'M';
+		else if (temp[i] == 's')
+			temp[i] = 'S';
+		else {
+			if (temp[i] >= '0' && temp[i] <= '9') {
+				continue;
+			} else {
+				if (temp[i] == '.') {
+					continue;
+				} else {
+					return 4;
+				}
+			}
+
+		}
+	}
+
+	temp1 = strtok(temp, ".");
+	
+	if (temp1) {
+		
+	} else {
+		temp1 = strtok(temp, "D");
+		if (!temp1) {
+			
+		} else {
+			
+		}
+	}
+	return 0;
+}
+
 /*
  * check longitude and latitude is illegal or not
- *ret:0 for success;1 for incorrect format; 2 for out of range
- *
+ * @longitud_or_latitude:true longitude ; false latitude
+ *ret:0 for success;
+ *	 1 for malloc failed
+ * 	 2 parame is longer than LONGITUDE_LATITUDE_MAX_LEN
+ *	 3 out of logic range
+ *	 4 format error
  *
  */
-int parse_longitude_latitude(char *str, unsigned char **temp) {
-	*temp = malloc(LONGITUDE_LATITUDE_MAX_LEN);
+int parse_longitude_latitude(char *str, unsigned char **temp, unsigned char longitude_or_latitude) {
+
+	int ret = 0;
+
+	*temp = malloc(LONGITUDE_LATITUDE_MAX_LEN+1);
+	
 	if (!(*temp))
 		return 1;
-	memset(*temp, '\0', LONGITUDE_LATITUDE_MAX_LEN);
-	strncpy(*temp, str, (strlen(str) >= LONGITUDE_LATITUDE_MAX_LEN) ? LONGITUDE_LATITUDE_MAX_LEN-1 : strlen(str)+1);
+
+	memset(*temp, '\0', LONGITUDE_LATITUDE_MAX_LEN+1);
+	
+	if (strlen(str) > LONGITUDE_LATITUDE_MAX_LEN)
+		return 2;
+
+	if (strcmp(str, "default") == 0) {
+		strncpy(*temp, str, strlen(str));
+		return 0;
+	}
+	
+	#if 0
+	if (ret = longitude_latitude_judge(str, longitude_or_latitude)) {
+		return ret;
+	}
+	#endif
+
+	strncpy(*temp, str, strlen(str));
+
+	*(*temp+strlen(str)) = '\0';
+
 	return 0;
 	
 }
@@ -11028,20 +11119,25 @@ DEFUN(set_ap_longitude_latitude_func,
 	}
 	
 	// TODO:  How to check longitude and latitude is illegal or not
-	ret = parse_longitude_latitude(argv[0], &longitude);
+	ret = parse_longitude_latitude(argv[0], &longitude, 1);
 	if(ret == 1) {
-		vty_out(vty,"parse parameter longitude format failed.format as:\n");
+		vty_out(vty, "malloc for longitude failed\n");
 		return CMD_FAILURE;
 	} else if (ret == 2) {
-
-	} else {
-		
+		vty_out(vty, "longitude is too long to set\n");
+		free(longitude);
+		return CMD_FAILURE;
 	}
 
-	ret = parse_longitude_latitude(argv[1], &latitude);
+	ret = parse_longitude_latitude(argv[1], &latitude, 0);
 	if (ret) {
 		free(longitude);
-		vty_out(vty, "parse parameter latitude failed\n");
+		vty_out(vty, "malloc for longitude failed\n");
+		return CMD_FAILURE;
+	} else if (ret == 2) {
+		vty_out(vty, "latitude is too long to set\n");
+		free(longitude);
+		free(latitude);
 		return CMD_FAILURE;
 	}
 
@@ -29798,8 +29894,21 @@ DEFUN(show_all_wtp_basic_information_func,
 				vty_out(vty,"acNeighbordeadTimes : %-5u  \n",WtpShowNode->acNeighbordeadTimes);
 				vty_out(vty,"WTP longitude :%-16s	\t\t", WtpShowNode->longitude);
 				vty_out(vty,"WTP latitude :%-16s\n", WtpShowNode->latitude);
-				vty_out(vty,"WTP power mode :%-10s\t\t\t", WtpShowNode->power_mode == 0 ? "unknown" : (WtpShowNode->power_mode == 1 ? "AC" : "DC"));
-				vty_out(vty,"WTP forward mode :%-10s\n", WtpShowNode->forward_mode == 0 ? "unknown" : (WtpShowNode->forward_mode == 1 ?"thin mode" : "fat mode"));
+				if (WtpShowNode->power_mode == 0) {
+					vty_out(vty,"WTP power mode :%-10s\t\t\t", "DC");
+				} else if (WtpShowNode->power_mode == 1) {
+					vty_out(vty,"WTP power mode :%-10s\t\t\t", "AC");
+				} else {
+					vty_out(vty,"WTP power mode :%-10s\t\t\t", "unknown");
+				}
+
+				if (WtpShowNode->forward_mode == 0) {
+					vty_out(vty,"WTP forward mode :%-10s\n", "fat mode");
+				} else if (WtpShowNode->forward_mode == 1) {
+					vty_out(vty,"WTP forward mode :%-10s\n", "thin mode");
+				} else {
+					vty_out(vty,"WTP forward mode :%-10s\n", "unknown mode");
+				}
 				vty_out(vty,"WTP manufacture date :%-20s\n", WtpShowNode->manufacture_date);
 				vty_out(vty,"-------------------------------------------------------------------------\n");
 				
@@ -35552,8 +35661,8 @@ DEFUN(show_all_wtp_radio_config_information_func,
 							break;
 					}
 					vty_out(vty,"mcs: ");//qiuchen change
-					for(i = 0; i < sub_radio->mcs_count; i ++){
-						vty_out(vty," %d, ", sub_radio->mcs_list[i]);
+					for(k = 0; k < sub_radio->mcs_count; k ++){
+						vty_out(vty," %d, ", sub_radio->mcs_list[k]);
 					}
 					vty_out(vty,"\n");
 
@@ -35611,8 +35720,17 @@ DEFUN(show_all_wtp_radio_config_information_func,
 					}
 					vty_out(vty, "radio channel use rate:		%d\n", sub_radio->radio_channel_use_rate);
 					vty_out(vty, "radio channel change counter:	%d\n", sub_radio->radio_channel_change_counter);
-					vty_out(vty, "radio channel width:		%d\n", sub_radio->radio_channel_width);
-					vty_out(vty, "radio noise:			%d\n", sub_radio->radio_noise);
+					if (sub_radio->radio_channel_width == 0) {
+						vty_out(vty, "radio channel width:		20MHZ\n");
+					} else if (sub_radio->radio_channel_width == 1) {
+						vty_out(vty, "radio channel width:		20~40MHZ\n");
+					} else if (sub_radio->radio_channel_width == 2) {
+						vty_out(vty, "radio channel width:		40MHZ\n");
+					} else {
+						vty_out(vty, "radio channel width:		unknown\n");
+					}
+					
+					vty_out(vty, "radio noise:			%dDB\n", sub_radio->radio_noise);
 				}
 			}
 			vty_out(vty,"========================================================================== \n");
