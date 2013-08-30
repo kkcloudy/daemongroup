@@ -35723,7 +35723,7 @@ DEFUN(show_all_wtp_radio_config_information_func,
 					if (sub_radio->radio_channel_width == 0) {
 						vty_out(vty, "radio channel width:		20MHZ\n");
 					} else if (sub_radio->radio_channel_width == 1) {
-						vty_out(vty, "radio channel width:		20~40MHZ\n");
+						vty_out(vty, "radio channel width:		20MHZ\n");
 					} else if (sub_radio->radio_channel_width == 2) {
 						vty_out(vty, "radio channel width:		40MHZ\n");
 					} else {

@@ -758,7 +758,7 @@ dot11WtpInfoTable_cache_load(netsnmp_container *container)
 		char test_p[10]={0};
 		if(q->power_mode == 0)
 		{
-			strcpy(test_p,"unknown");
+			strcpy(test_p,"DC");
 		}
 		else if(q->power_mode == 1)
 		{
@@ -766,7 +766,7 @@ dot11WtpInfoTable_cache_load(netsnmp_container *container)
 		}
 		else
 		{
-			strcpy(test_p,"DC");
+			strcpy(test_p,"unknown");
 		}
 		wtpPowerType_len= MIN(strlen(test_p),sizeof(rowreq_ctx->data.wtpPowerType)-1);
 		rowreq_ctx->data.wtpPowerType_len=wtpPowerType_len * sizeof(rowreq_ctx->data.wtpPowerType[0]);
@@ -796,7 +796,7 @@ dot11WtpInfoTable_cache_load(netsnmp_container *container)
 
 		if(q->forward_mode == 0)
 		{
-			rowreq_ctx->data.wtpForwardMode = 2;
+			rowreq_ctx->data.wtpForwardMode = 0;
 		}
 		else if(q->forward_mode == 1)
 		{
@@ -804,7 +804,7 @@ dot11WtpInfoTable_cache_load(netsnmp_container *container)
 		}
 		else
 		{
-			rowreq_ctx->data.wtpForwardMode = 0;
+			rowreq_ctx->data.wtpForwardMode = 2;
 		}
         
         /*

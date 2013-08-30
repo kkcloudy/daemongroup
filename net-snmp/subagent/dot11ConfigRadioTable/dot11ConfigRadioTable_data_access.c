@@ -886,8 +886,12 @@ dot11ConfigRadioTable_cache_load(netsnmp_container *container)
      * radioChannelWidth(31)/INTEGER/ASN_INTEGER/long(long)//l/A/w/e/r/d/h
      */
     /** no mapping */
-    rowreq_ctx->data.radioChannelWidth = sub_radio->radio_channel_width;
-    
+	if((sub_radio->radio_channel_width ==0)||(sub_radio->radio_channel_width ==1))
+    	rowreq_ctx->data.radioChannelWidth = 20;
+	else if(sub_radio->radio_channel_width ==2)
+		rowreq_ctx->data.radioChannelWidth = 40;
+	else
+		rowreq_ctx->data.radioChannelWidth = 0;
     /*
      * setup/save data for radioNoiseFloor
      * radioNoiseFloor(32)/INTEGER/ASN_INTEGER/long(long)//l/A/w/e/r/d/h
