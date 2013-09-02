@@ -3555,7 +3555,8 @@ DEFUN(delete_dhcp_static_host_cmd_func,
 	}	
 
 	memcpy(ifname, argv[2], nameSize);
-	dcli_dhcp_convert_ifname(vty, ifname);
+	if(NULL == strchr(ifname,'-'))
+		dcli_dhcp_convert_ifname(vty, ifname);
 	if(strncmp(ifname, "ve", 2) == 0)
 	    dcli_dhcp_check_ve_interface(ifname); 
 
