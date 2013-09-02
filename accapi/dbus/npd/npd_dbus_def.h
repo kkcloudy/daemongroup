@@ -8559,7 +8559,10 @@ enum npd_dbus_result_no_e {
 #define NPD_DBUS_SYSTEM_DIAG_BOARD_TEST				    "diagnosis_board_test"
 
 
-
+/* add for sfd command;In file dcli_fdb.c*/
+#define NPD_DBUS_SFD_SHOW_INFO				"show_sfd_info"
+#define NPD_DBUS_SFD_SERVICE_DEBUG				"service_sfd_debug"
+#define NPD_DBUS_SFD_SERVICE				"service_sfd"
 
 
 /* Add for update the g_vlan_list[] on SMU */
