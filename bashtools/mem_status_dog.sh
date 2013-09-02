@@ -62,7 +62,15 @@ do
 		sleep 50
 		
 		portSLoad=`sudo netstat -nap | grep "snmpd" | grep ":161" | awk '{print $2}'`
-		if [ $portSLoad -gt $SNMPD_PORTMAX ];then
+	
+		if [ x$portSLoad == x"" ];then
+                        Spid=`ps -C snmpd -o pid= | sed '2,200d'`
+                        logger -p daemon.warning -t $LOGTAG "161 port of snmpd is not existing, try to restart snmpd."
+                        sudo kill -9 $Spid
+                        sudo /opt/services/init/snmpd_init start >/dev/null 2>&1 &
+                        snmpdrestarttimes=$(($snmpdrestarttimes+1))
+                        echo "The process of snmpd is starting,but the port does not be listened:"$snmpdrestarttimes--"time is:"`date` >>/var/log/snmp_restart_times.log
+		elif [ $portSLoad -gt $SNMPD_PORTMAX ];then
 			Spid=`ps -C snmpd -o pid= | sed '2,200d'`
 			logger -p daemon.warning -t $LOGTAG "161 port of snmpd is blocking, more than $SNMPD_PORTMAX pkt, try to restart snmpd."
 			sudo kill -9 $Spid
