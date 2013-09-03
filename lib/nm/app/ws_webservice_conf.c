@@ -74,7 +74,7 @@ static int web_addr_valid(const char *ipaddress)
 {
 	int ret;
 
-	if(NULL == ipaddress || !strcmp(ipaddress,"0.0.0.0"))
+	if(NULL == ipaddress /*|| !strcmp(ipaddress,"0.0.0.0")*/)
 	{
 		return WEB_FAILURE;
 	}

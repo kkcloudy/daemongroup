@@ -175,6 +175,20 @@ static int dcli_web_vhost_add_valid(webHost host, unsigned int slot)
                 web_list_flush(&infohead);
                 return WEB_EXISIT;
             }
+            if(0 == strcmp(host.address,"0.0.0.0") 
+            	&& vh->port == host.port 
+            	&& info->slotid == slot) 
+            {
+				web_list_flush(&infohead);
+                return WEB_EXISIT;
+            }
+            if(0 == strcmp(vh->address,"0.0.0.0") 
+            	&& vh->port == host.port 
+            	&& info->slotid == slot) 
+            {
+				web_list_flush(&infohead);
+                return WEB_EXISIT;
+            }
             #endif
         }
 	}

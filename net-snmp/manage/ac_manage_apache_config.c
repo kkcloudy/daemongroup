@@ -221,7 +221,11 @@ void web_host_buf(char *command, webHostPtr vh, int type)
 	char conf[256] = "";
     char tmp[8] = {0};
     strcat(buf," ");
-    strcat(buf,vh->address);
+    if (0 == strcmp(vh->address, "0.0.0.0")) {
+    	strcat(buf,"*");
+    } else {
+    	strcat(buf,vh->address);
+    }
     strcat(buf,":"); 
     sprintf(tmp,"%d",vh->port);
     strcat(buf,tmp);
