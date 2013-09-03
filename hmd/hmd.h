@@ -85,4 +85,5 @@ int HmdNoticeToClient_ForClearIfname(int slotid,char *ifname,int op);//fengwench
 int HmdNoticeToClient_ForBakForeverConfig(struct HmdMsg *hmdmsg,int op);
 int Set_hmd_bakup_foreve_config(struct HmdMsg *hmdmsg);
 int hmd_config_save_timer_init(int method_flag);//fengwenchao add for hmd timer config save
+extern int g_loable_takesnapshot_flag;
 #endif

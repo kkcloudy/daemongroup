@@ -271,7 +271,6 @@ getlog()
 {
 guardlog "Get /var/log"
 tar -cjPf $SNAPSHOTDIR/varlog.tar.bz2 /var/log/* >/dev/null 2>&1
-echo 0 > /var/run/hmd/log_save_hmd_flag
 syncnow
 guardlog "Done getlog."
 }
@@ -390,7 +389,7 @@ take_snapshot()
 SYNCNOW=$1
 SNAPBIG=$2
 guardlog "Start take snapshow with SYNCNOW[$SYNCNOW] SNAPBIG[$SNAPBIG]."
-
+echo 1 > /var/run/hmd/log_save_hmd_flag
 checksnapshotdir_log_count
 
 if [ $SYNCNOW -eq 1 ] ; then
@@ -448,6 +447,7 @@ cd
 umount /blk
 mount /blk
 cd -
+echo 0 > /var/run/hmd/log_save_hmd_flag
 }
 
 

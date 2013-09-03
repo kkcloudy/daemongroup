@@ -1241,6 +1241,27 @@ void HmdStateReInit(){
 	}
 }
 
+int g_loable_takesnapshot_flag = 0;
+
+
+int HmdCreateLogSaveFlag()
+{
+	char HmdDir[] = "/var/run/hmd/log_save_hmd_flag";
+	int takesnapshot_fd;
+
+//	takesnapshot_fd = open(HmdDir,O_RDONLY);O_RDWR|O_CREAT
+	takesnapshot_fd = open(HmdDir,O_RDWR|O_CREAT);
+
+	if(takesnapshot_fd <= 0)
+	{
+		hmd_syslog_err("%s,%d,invalid fd:%d.\n",__func__,__LINE__,takesnapshot_fd);
+		return -1;
+	}
+	write(takesnapshot_fd, "0", 1);
+	close(takesnapshot_fd);
+	return 0;
+}
+
 
 void HmdInit(){
 	int ret = 0;
@@ -1336,8 +1357,32 @@ void HmdInit(){
 	return;
 }
 void HmdRun(){
+
+	char buf;
+	int g_loable_takesnapshot_fd = 0;
+
+	
+	g_loable_takesnapshot_fd = HmdCreateLogSaveFlag();
+	hmd_syslog_info("###%s line%d ret is %d  ###\n",__func__,__LINE__,g_loable_takesnapshot_fd);
+	
 	while(1){
-		sleep(100000000);
+		g_loable_takesnapshot_fd = open("/var/run/hmd/log_save_hmd_flag",O_RDONLY);
+
+		if(g_loable_takesnapshot_fd < 0)
+		{
+			hmd_syslog_err("%s,%d,invalid fd:%d.\n",__func__,__LINE__,g_loable_takesnapshot_fd);
+		}
+		else 
+		{
+		    read(g_loable_takesnapshot_fd,&buf,1);
+			hmd_syslog_info("###%s line%d ret is %c###\n",__func__,__LINE__,buf);
+			if(buf == '0' && g_loable_takesnapshot_flag == 1)
+			{
+				g_loable_takesnapshot_flag = 0;
+			}
+			close(g_loable_takesnapshot_fd);
+		}
+		sleep(2);
 		printf("%s,2...\n",__func__);
 	}
 	return;
