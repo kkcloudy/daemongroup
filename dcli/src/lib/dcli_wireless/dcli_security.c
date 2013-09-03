@@ -11536,7 +11536,7 @@ void dcli_security_init(void) {
 	install_element(HANSI_SECURITY_NODE,&set_sta_account_cmd);	//weichao add20111201
 	install_element(HANSI_SECURITY_NODE,&set_dhcp_account_cmd);	//weichao add20111201
 	install_element(HANSI_SECURITY_NODE,&set_ap_max_detect_interval_cmd);	//weichao add
-	install_element(HANSI_SECURITY_NODE,&set_traffic_limit_radius_cmd);	
+	//install_element(HANSI_SECURITY_NODE,&set_traffic_limit_radius_cmd);	
 	install_element(HANSI_SECURITY_NODE,&config_eap_sm_run_activated_cmd);//Qc
 	//qiuchen add it for master_bak radius server 2012.12.11
 	install_element(HANSI_SECURITY_NODE,&config_ac_radius_name_cmd);
@@ -11634,7 +11634,7 @@ void dcli_security_init(void) {
 	install_element(LOCAL_HANSI_SECURITY_NODE,&set_sta_account_cmd); 		//weichao add
 	install_element(LOCAL_HANSI_SECURITY_NODE,&set_dhcp_account_cmd); 		//weichao add
 	install_element(LOCAL_HANSI_SECURITY_NODE,&set_ap_max_detect_interval_cmd); 		//weichao add
-	install_element(LOCAL_HANSI_SECURITY_NODE,&set_traffic_limit_radius_cmd);		//weichao add
+	//install_element(LOCAL_HANSI_SECURITY_NODE,&set_traffic_limit_radius_cmd);		//weichao add
 	install_element(LOCAL_HANSI_SECURITY_NODE,&config_eap_sm_run_activated_cmd);//Qc
 	//qiuchen add it for master_bak radius server 2012.12.11
 	install_element(LOCAL_HANSI_SECURITY_NODE,&config_ac_radius_name_cmd);

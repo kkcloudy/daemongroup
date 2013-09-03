@@ -28221,14 +28221,7 @@ DBusMessage *asd_dbus_security_show_running_config(DBusConnection *conn, DBusMes
 						cursor = showStr + totalLen;
 					}
 					//weichao add
-					if(SECURITY[i]->account_after_authorize== 0){
-						
-						if(SECURITY[i]->account_after_dhcp== 1){
-							totalLen += sprintf(cursor," set  account start after dhcp enable\n");
-							cursor = showStr + totalLen;
-						}
-					}
-					else
+					if(SECURITY[i]->account_after_authorize== 0)				
 					{
 						totalLen += sprintf(cursor," set account start after authorized enable \n");
 						cursor = showStr + totalLen;
