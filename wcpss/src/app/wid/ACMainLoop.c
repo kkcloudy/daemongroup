@@ -3069,6 +3069,14 @@ void CWDownWTP(unsigned int WTPIndex){
 	//release memory
 	/*initialization for apstatsinfo when wtp quit*/
 	wid_apstatsinfo_init(WTPIndex);		//xiaodawei add, 20110107
+	
+	memset(AC_WTP[WTPIndex]->longitude, '\0', LONGITUDE_LATITUDE_MAX_LEN);
+	memset(AC_WTP[WTPIndex]->latitude, '\0', LONGITUDE_LATITUDE_MAX_LEN);
+	memset(AC_WTP[WTPIndex]->manufacture_date, '\0', MANUFACTURE_DATA_MAX_LEN);
+	AC_WTP[WTPIndex]->power_mode = UNKNOWN_POWER_MODE;
+	AC_WTP[WTPIndex]->forward_mode = UNKNOWN_FORWARD_MODE;
+	AC_WTP[WTPIndex]->radio_work_role = RADIO_WORK_ROLE_UNKNOWN;
+	
 	}
 	CWThreadMutexLock(&(gWTPs[WTPIndex].RRMThreadMutex));
 	if((AC_WTP[WTPIndex])&&((AC_WTP[WTPIndex]->NeighborAPInfos) != NULL))

@@ -29894,17 +29894,17 @@ DEFUN(show_all_wtp_basic_information_func,
 				vty_out(vty,"acNeighbordeadTimes : %-5u  \n",WtpShowNode->acNeighbordeadTimes);
 				vty_out(vty,"WTP longitude :%-16s	\t\t", WtpShowNode->longitude);
 				vty_out(vty,"WTP latitude :%-16s\n", WtpShowNode->latitude);
-				if (WtpShowNode->power_mode == 0) {
+				if (WtpShowNode->power_mode == DC_MODE) {
 					vty_out(vty,"WTP power mode :%-10s\t\t\t", "DC");
-				} else if (WtpShowNode->power_mode == 1) {
+				} else if (WtpShowNode->power_mode == AC_MODE) {
 					vty_out(vty,"WTP power mode :%-10s\t\t\t", "AC");
 				} else {
 					vty_out(vty,"WTP power mode :%-10s\t\t\t", "unknown");
 				}
 
-				if (WtpShowNode->forward_mode == 0) {
+				if (WtpShowNode->forward_mode == FAT_MODE) {
 					vty_out(vty,"WTP forward mode :%-10s\n", "fat mode");
-				} else if (WtpShowNode->forward_mode == 1) {
+				} else if (WtpShowNode->forward_mode == THIN_MODE) {
 					vty_out(vty,"WTP forward mode :%-10s\n", "thin mode");
 				} else {
 					vty_out(vty,"WTP forward mode :%-10s\n", "unknown mode");
@@ -35707,24 +35707,24 @@ DEFUN(show_all_wtp_radio_config_information_func,
 					}
 					
 					vty_out(vty,"radio work role:		");
-					if (sub_radio->radio_work_role == 1) {
+					if (sub_radio->radio_work_role == RADIO_WORK_ROLE_CLIENT) {
 						vty_out(vty, "clint\n");
-					} else if (sub_radio->radio_work_role == 2) {
+					} else if (sub_radio->radio_work_role == RADIO_WORK_ROLE_OTHER) {
 						vty_out(vty, "other\n");
-					} else if (sub_radio->radio_work_role == 6) {
+					} else if (sub_radio->radio_work_role == RADIO_WORK_ROLE_AP) {
 						vty_out(vty, "AP\n");
-					} else if (sub_radio->radio_work_role == 9) {
+					} else if (sub_radio->radio_work_role == RADIO_WORK_ROLE_MESH) {
 						vty_out(vty, "MESH\n");
 					} else {
 						vty_out(vty, "unknown\n");
 					}
 					vty_out(vty, "radio channel use rate:		%d\n", sub_radio->radio_channel_use_rate);
 					vty_out(vty, "radio channel change counter:	%d\n", sub_radio->radio_channel_change_counter);
-					if (sub_radio->radio_channel_width == 0) {
+					if (sub_radio->radio_channel_width == RADIO_CHANNEL_WIDTH_HT20) {
 						vty_out(vty, "radio channel width:		20MHZ\n");
-					} else if (sub_radio->radio_channel_width == 1) {
+					} else if (sub_radio->radio_channel_width == RADIO_CHANNEL_WIDTH_HT20OR40) {
 						vty_out(vty, "radio channel width:		20MHZ\n");
-					} else if (sub_radio->radio_channel_width == 2) {
+					} else if (sub_radio->radio_channel_width == RADIO_CHANNEL_WIDTH_HT40) {
 						vty_out(vty, "radio channel width:		40MHZ\n");
 					} else {
 						vty_out(vty, "radio channel width:		unknown\n");

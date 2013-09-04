@@ -790,4 +790,33 @@ struct lic_ip_info{
 	unsigned int lic_active_ac_ip;
 	unsigned int isActive;
 };
+
+typedef enum {
+	DC_MODE,
+	AC_MODE,
+	UNKNOWN_POWER_MODE
+} wtp_power_mode;
+
+typedef enum {
+	FAT_MODE,
+	THIN_MODE,
+	UNKNOWN_FORWARD_MODE
+} wtp_forward_mode;
+
+typedef enum {
+	RADIO_WORK_ROLE_UNKNOWN,
+	RADIO_WORK_ROLE_CLIENT,
+	RADIO_WORK_ROLE_OTHER,
+	RADIO_WORK_ROLE_AP=6,
+	RADIO_WORK_ROLE_MESH=9
+}radio_work_role;
+
+typedef enum {
+	RADIO_CHANNEL_WIDTH_HT20,
+	RADIO_CHANNEL_WIDTH_HT20OR40,
+	RADIO_CHANNEL_WIDTH_HT40,
+	RADIO_CHANNEL_WIDTH_UNKNOWN
+}radio_channel_width;
+
+#define RADIO_NOISE_DEFAULT -95
 #endif

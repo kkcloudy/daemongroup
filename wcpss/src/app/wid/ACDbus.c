@@ -10426,7 +10426,7 @@ DBusMessage * wid_dbus_interface_show_wtp_radio_config_information(DBusConnectio
 			dbus_message_iter_append_basic (&iter_sub_struct, DBUS_TYPE_UINT32, &(AC_RADIO_FOR_SEARCH[k]->radio_channel_change_counter));
 			AC_RADIO_FOR_SEARCH[k]->radio_channel_width = AC_RADIO_FOR_SEARCH[k]->cwmode;
 			dbus_message_iter_append_basic (&iter_sub_struct, DBUS_TYPE_UINT32, &(AC_RADIO_FOR_SEARCH[k]->radio_channel_width));
-			AC_RADIO_FOR_SEARCH[k]->radio_noise = -95;
+			AC_RADIO_FOR_SEARCH[k]->radio_noise = RADIO_NOISE_DEFAULT;
 			dbus_message_iter_append_basic (&iter_sub_struct, DBUS_TYPE_UINT32, &(AC_RADIO_FOR_SEARCH[k]->radio_noise));
 			
 			dbus_message_iter_close_container (&iter_sub_array, &iter_sub_struct);

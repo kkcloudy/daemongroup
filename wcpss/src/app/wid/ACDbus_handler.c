@@ -1650,6 +1650,22 @@ int WID_CREATE_NEW_WTP(char *WTPNAME, unsigned int WTPID, unsigned char* WTPSN, 
 	memcpy(AC_WTP[WTPID]->memType,"flash",5);
 	memset(AC_WTP[WTPID]->flashType,0,WTP_TYPE_DEFAULT_LEN);
 	memcpy(AC_WTP[WTPID]->flashType,"flash",5);/*wuwl add.when wtp didn't into run ,display this*/
+
+	memset(AC_WTP[WTPID]->longitude, '\0', LONGITUDE_LATITUDE_MAX_LEN);
+	memset(AC_WTP[WTPID]->latitude, '\0', LONGITUDE_LATITUDE_MAX_LEN);
+	memset(AC_WTP[WTPID]->manufacture_date, '\0', MANUFACTURE_DATA_MAX_LEN);
+	AC_WTP[WTPID]->power_mode = UNKNOWN_POWER_MODE;
+	AC_WTP[WTPID]->forward_mode = UNKNOWN_FORWARD_MODE;
+	AC_WTP[WTPID]->radio_work_role = RADIO_WORK_ROLE_UNKNOWN;
+	AC_WTP[WTPID]->unauthorized_mac_reportswitch = UNKNOWN_MAC_TRAP_SWITCH_DISABLE;
+	AC_WTP[WTPID]->unauthorized_mac_reportinterval = UNKNOWN_MAC_TRAP_INTERVAL_DEFAULT;
+	AC_WTP[WTPID]->wtp_configure_error_reportswitch = AP_CONFIG_FILE_ERR_TRAP_SWITCH_DISABLE;
+	AC_WTP[WTPID]->wtp_configure_error_reportinterval = AP_CONFIG_FILE_ERR_TRAP_SWITCH_INTERVAL_DEFAULT;
+	AC_WTP[WTPID]->sta_flow_overflow_rx_reportswitch = STA_FLOW_OVERFLOW_TRAP_RX_SWITCH_DISABLE;
+	AC_WTP[WTPID]->sta_flow_overflow_rx_threshold = STA_FLOW_OVERFLOW_RX_THRESHOLD;	//kB
+	AC_WTP[WTPID]->sta_flow_overflow_tx_reportswitch = STA_FLOW_OVERFLOW_TRAP_TX_SWITCH_DISABLE;
+	AC_WTP[WTPID]->sta_flow_overflow_tx_threshold = STA_FLOW_OVERFLOW_TX_THRESHOLD;	//kB
+	
 	for(j = 0;j < L_RADIO_NUM; j++)
 	{
 		AC_WTP[WTPID]->CMD->radioid[j] = 0;
@@ -2066,7 +2082,11 @@ int WID_CREATE_NEW_WTP(char *WTPNAME, unsigned int WTPID, unsigned char* WTPSN, 
 		AC_RADIO[gwtpid]->StopService.times = -1;
 
 
-
+		AC_RADIO[gwtpid]->radio_work_role = RADIO_WORK_ROLE_UNKNOWN;
+		AC_RADIO[gwtpid]->radio_channel_use_rate = 0;
+		AC_RADIO[gwtpid]->radio_channel_change_counter = 0;
+		AC_RADIO[gwtpid]->radio_channel_width = RADIO_CHANNEL_WIDTH_UNKNOWN;
+		AC_RADIO[gwtpid]->radio_noise = 0;
 
 
 		gwtpid++;
@@ -2242,6 +2262,13 @@ int WID_DELETE_WTP(unsigned int WTPID){
 				AC_RADIO[RID]->BSS[k]->Radio_L_ID = 0;
 				AC_RADIO[RID]->BSS[k]->State = 0;
 				AC_RADIO[RID]->BSS[k]->BSSIndex = 0;
+				
+				AC_RADIO[RID]->radio_work_role = RADIO_WORK_ROLE_UNKNOWN;
+				AC_RADIO[RID]->radio_channel_use_rate = 0;
+				AC_RADIO[RID]->radio_channel_change_counter = 0;
+				AC_RADIO[RID]->radio_channel_width = RADIO_CHANNEL_WIDTH_UNKNOWN;
+				AC_RADIO[RID]->radio_noise = 0;
+		
 				memset(AC_RADIO[RID]->BSS[k]->BSSID, 0, 6);
 				free(AC_RADIO[RID]->BSS[k]->BSSID);
 				AC_RADIO[RID]->BSS[k]->BSSID = NULL;
@@ -2294,6 +2321,21 @@ int WID_DELETE_WTP(unsigned int WTPID){
 		
 		RID++;
 	}
+	memset(AC_WTP[WTPID]->longitude, '\0', LONGITUDE_LATITUDE_MAX_LEN);
+	memset(AC_WTP[WTPID]->latitude, '\0', LONGITUDE_LATITUDE_MAX_LEN);
+	memset(AC_WTP[WTPID]->manufacture_date, '\0', MANUFACTURE_DATA_MAX_LEN);
+	AC_WTP[WTPID]->power_mode = UNKNOWN_POWER_MODE;
+	AC_WTP[WTPID]->forward_mode = UNKNOWN_FORWARD_MODE;
+	AC_WTP[WTPID]->radio_work_role = RADIO_WORK_ROLE_UNKNOWN;
+	AC_WTP[WTPID]->unauthorized_mac_reportswitch = UNKNOWN_MAC_TRAP_SWITCH_DISABLE;
+	AC_WTP[WTPID]->unauthorized_mac_reportinterval = UNKNOWN_MAC_TRAP_INTERVAL_DEFAULT;
+	AC_WTP[WTPID]->wtp_configure_error_reportswitch = AP_CONFIG_FILE_ERR_TRAP_SWITCH_DISABLE;
+	AC_WTP[WTPID]->wtp_configure_error_reportinterval = AP_CONFIG_FILE_ERR_TRAP_SWITCH_INTERVAL_DEFAULT;
+	AC_WTP[WTPID]->sta_flow_overflow_rx_reportswitch = STA_FLOW_OVERFLOW_TRAP_RX_SWITCH_DISABLE;
+	AC_WTP[WTPID]->sta_flow_overflow_rx_threshold = STA_FLOW_OVERFLOW_RX_THRESHOLD;	//kB
+	AC_WTP[WTPID]->sta_flow_overflow_tx_reportswitch = STA_FLOW_OVERFLOW_TRAP_TX_SWITCH_DISABLE;
+	AC_WTP[WTPID]->sta_flow_overflow_tx_threshold = STA_FLOW_OVERFLOW_TX_THRESHOLD;	//kB
+	
 	free(AC_WTP[WTPID]->WTPIP);
 	AC_WTP[WTPID]->WTPIP = NULL;
 	free(AC_WTP[WTPID]->WTPMAC);
