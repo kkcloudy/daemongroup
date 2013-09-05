@@ -289,6 +289,7 @@ static int ccgi_dcli_web_vhost_add_valid(webHost host, unsigned int slot)
         }
 
         /* service */
+	#if 0
         if(host.type == HTTP_SERVICE || host.type == HTTPS_SERVICE)
         {
             if(info->slotid == master_slot_id)
@@ -300,6 +301,7 @@ static int ccgi_dcli_web_vhost_add_valid(webHost host, unsigned int slot)
                 }
             }
         }
+	#endif
 
     }
     
@@ -319,6 +321,20 @@ static int ccgi_dcli_web_vhost_add_valid(webHost host, unsigned int slot)
             	&& info->slotid == slot)
             {
                 web_list_flush(&infohead);
+                return WEB_EXISIT;
+            }
+	    if(0 == strcmp(host.address,"0.0.0.0") 
+            	&& vh->port == host.port 
+            	&& info->slotid == slot) 
+            {
+		web_list_flush(&infohead);
+                return WEB_EXISIT;
+            }
+            if(0 == strcmp(vh->address,"0.0.0.0") 
+            	&& vh->port == host.port 
+            	&& info->slotid == slot) 
+            {
+		web_list_flush(&infohead);
                 return WEB_EXISIT;
             }
             #endif
