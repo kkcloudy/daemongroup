@@ -283,7 +283,13 @@ int wifi_kernel_rx(struct sk_buff *skb){
 					return 2; /*dtrop*/
 				}
 				if(wifi_eth_debug >= WIFI_DEBUG)
+				{
 					printk("%s,%d,*isEAP=0x%X.udp_len=%d.\n",__func__,__LINE__,*isEAP,udp_len);
+                    if(*isEAP == 0x86DD)
+                    {
+                		skb_dump("ipv6:",skb);								
+                    }
+				}
 				/*if(((udp_len < MIN_NET_DATA_LEN)&&(*isEAP != 0x888E))||(*isEAP == 0x88C7) || (*isEAP == 0x88b4)){
 					if(asdswitch != 1){
 						if(qos_flag)

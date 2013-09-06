@@ -76,7 +76,7 @@ unsigned int wifi_rx_switch = 0;//0--disable;1--enable
 module_param(wifi_rx_switch,int,0644);
 unsigned short wifi_8021q_type = 0x8100;//default 0x8100
 module_param(wifi_8021q_type,short,0644);
-unsigned int wifi_ipv6_dr_sw = 1;//0--disable;1--enable
+unsigned int wifi_ipv6_dr_sw = 0;//0--disable;1--enable
 module_param(wifi_ipv6_dr_sw,int,0644);
 
 #define DRIVER_NAME "wifi"
