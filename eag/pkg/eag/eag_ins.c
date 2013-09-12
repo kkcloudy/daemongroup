@@ -704,6 +704,9 @@ terminate_appconn(struct app_conn_t *appconn,
 {
 	char user_ipstr[32] = "";
 	char user_macstr[32] = "";
+	char ap_macstr[32]= "";
+	char nas_ipstr[32]= "";
+	char portal_ipstr[32]= "";
 	const char *terminate_cause_str = "";
 	int authed_user_num = 0;
 	
@@ -714,6 +717,9 @@ terminate_appconn(struct app_conn_t *appconn,
 
 	ip2str(appconn->session.user_ip, user_ipstr, sizeof(user_ipstr));
 	mac2str(appconn->session.usermac, user_macstr, sizeof(user_macstr)-1, '-');
+	mac2str(appconn->session.apmac, ap_macstr, sizeof(ap_macstr)-1, '-');
+	ip2str(appconn->session.nasip, nas_ipstr, sizeof(nas_ipstr));
+	ip2str(appconn->session.portal_srv.ip, portal_ipstr, sizeof(portal_ipstr));
 	terminate_cause_str = radius_terminate_cause_to_str(terminate_cause);
 	
 	if (RADIUS_TERMINATE_CAUSE_USER_REQUEST == terminate_cause
@@ -748,13 +754,15 @@ terminate_appconn(struct app_conn_t *appconn,
 	}
 	
 	eag_captive_deauthorize(eagins->captive, &(appconn->session));
-	admin_log_notice("PortalUserOffline___UserName:%s,UserIP:%s,UserMAC:%s,NasID:%s,OfflineReason:%s(%d),Onlinetime:%lu",
-		appconn->session.username, user_ipstr, user_macstr, appconn->session.nasid,
-		terminate_cause_str, terminate_cause,
+	admin_log_notice("PortalUserOffline___UserName:%s,UserIP:%s,UserMAC:%s,ApMAC:%s,SSID:%s,NasIP:%s,PortalIP:%s,Interface:%s,NasID:%s,OfflineReason:%s(%d),Onlinetime:%lu",
+		appconn->session.username, user_ipstr, user_macstr, ap_macstr, 
+		appconn->session.essid, nas_ipstr, portal_ipstr, appconn->session.intf, 
+		appconn->session.nasid, terminate_cause_str, terminate_cause,
 		appconn->session.session_stop_time-appconn->session.session_start_time);
-	log_app_filter(appconn,"PortalUserOffline___Username:%s,UserIP:%s,UserMAC:%s,NasID:%s,OfflineReason:%s(%d),Onlinetime:%lu",
-		appconn->session.username, user_ipstr, user_macstr, appconn->session.nasid,
-		terminate_cause_str, terminate_cause,
+	log_app_filter(appconn,"PortalUserOffline___Username:%s,UserIP:%s,UserMAC:%s,ApMAC:%s,SSID:%s,NasIP:%s,PortalIP:%s,Interface:%s,NasID:%s,OfflineReason:%s(%d),Onlinetime:%lu",
+		appconn->session.username, user_ipstr, user_macstr, ap_macstr, 
+		appconn->session.essid, nas_ipstr, portal_ipstr, appconn->session.intf, 
+		appconn->session.nasid, terminate_cause_str, terminate_cause,
 		appconn->session.session_stop_time-appconn->session.session_start_time);
 	eag_henan_log_notice("PORTAL_USER_LOGOFF:-UserName=%s-IPAddr=%s-IfName=%s-VlanID=%u-MACAddr=%s-Reason=%s"
 		"-InputOctets=%u-OutputOctets=%u-InputGigawords=%u-OutputGigawords=%u; User logged off.",
@@ -820,6 +828,9 @@ terminate_appconn_nowait(struct app_conn_t *appconn,
 	struct timeval tv = {0};
 	char user_ipstr[32] = "";
 	char user_macstr[32] = "";
+	char ap_macstr[32]= "";
+	char nas_ipstr[32]= "";
+	char portal_ipstr[32]= "";
 	const char *terminate_cause_str = "";
 	int authed_user_num = 0;
 
@@ -830,6 +841,9 @@ terminate_appconn_nowait(struct app_conn_t *appconn,
 
 	ip2str(appconn->session.user_ip, user_ipstr, sizeof(user_ipstr));
 	mac2str(appconn->session.usermac, user_macstr, sizeof(user_macstr)-1, '-');
+	mac2str(appconn->session.apmac, ap_macstr, sizeof(ap_macstr)-1, '-');
+	ip2str(appconn->session.nasip, nas_ipstr, sizeof(nas_ipstr));
+	ip2str(appconn->session.portal_srv.ip, portal_ipstr, sizeof(portal_ipstr));
 	terminate_cause_str = radius_terminate_cause_to_str(terminate_cause);
 	
 	eag_time_gettimeofday(&tv, NULL);
@@ -869,13 +883,15 @@ terminate_appconn_nowait(struct app_conn_t *appconn,
 	}
 	
 	eag_captive_deauthorize(eagins->captive, &(appconn->session));
-	admin_log_notice("PortalUserOffline___UserName:%s,UserIP:%s,UserMAC:%s,NasID:%s,OfflineReason:%s(%d),Onlinetime:%lu",
-		appconn->session.username, user_ipstr, user_macstr, appconn->session.nasid,
-		terminate_cause_str, terminate_cause,
+	admin_log_notice("PortalUserOffline___UserName:%s,UserIP:%s,UserMAC:%s,ApMAC:%s,SSID:%s,NasIP:%s,PortalIP:%s,Interface:%s,NasID:%s,OfflineReason:%s(%d),Onlinetime:%lu",
+		appconn->session.username, user_ipstr, user_macstr, ap_macstr, 
+		appconn->session.essid, nas_ipstr, portal_ipstr, appconn->session.intf, 
+		appconn->session.nasid, terminate_cause_str, terminate_cause,
 		appconn->session.session_stop_time-appconn->session.session_start_time);
-	log_app_filter(appconn,"PortalUserOffline___Username:%s,UserIP:%s,UserMAC:%s,NasID:%s,OfflineReason:%s(%d),Onlinetime:%lu",
-		appconn->session.username, user_ipstr, user_macstr, appconn->session.nasid,
-		terminate_cause_str, terminate_cause,
+	log_app_filter(appconn,"PortalUserOffline___Username:%s,UserIP:%s,UserMAC:%s,ApMAC:%s,SSID:%s,NasIP:%s,PortalIP:%s,Interface:%s,NasID:%s,OfflineReason:%s(%d),Onlinetime:%lu",
+		appconn->session.username, user_ipstr, user_macstr, ap_macstr, 
+		appconn->session.essid, nas_ipstr, portal_ipstr, appconn->session.intf, 
+		appconn->session.nasid, terminate_cause_str, terminate_cause,
 		appconn->session.session_stop_time-appconn->session.session_start_time);
 	eag_henan_log_notice("PORTAL_USER_LOGOFF:-UserName=%s-IPAddr=%s-IfName=%s-VlanID=%u-MACAddr=%s-Reason=%s"
 		"-InputOctets=%u-OutputOctets=%u-InputGigawords=%u-OutputGigawords=%u; User logged off.",
@@ -969,6 +985,9 @@ terminate_appconn_without_backup(struct app_conn_t *appconn,
 	struct timeval tv = {0};
 	char user_ipstr[32] = "";
 	char user_macstr[32] = "";
+	char ap_macstr[32]= "";
+	char nas_ipstr[32]= "";
+	char portal_ipstr[32]= "";
 	const char *terminate_cause_str = "";
 	int authed_user_num = 0;
 
@@ -979,6 +998,9 @@ terminate_appconn_without_backup(struct app_conn_t *appconn,
 
 	ip2str(appconn->session.user_ip, user_ipstr, sizeof(user_ipstr));
 	mac2str(appconn->session.usermac, user_macstr, sizeof(user_macstr)-1, '-');
+	mac2str(appconn->session.apmac, ap_macstr, sizeof(ap_macstr)-1, '-');
+	ip2str(appconn->session.nasip, nas_ipstr, sizeof(nas_ipstr));
+	ip2str(appconn->session.portal_srv.ip, portal_ipstr, sizeof(portal_ipstr));
 	terminate_cause_str = radius_terminate_cause_to_str(terminate_cause);
 	
 	eag_time_gettimeofday(&tv, NULL);
@@ -1018,13 +1040,15 @@ terminate_appconn_without_backup(struct app_conn_t *appconn,
 	}
 	
 	eag_captive_deauthorize(eagins->captive, &(appconn->session));
-	admin_log_notice("PortalUserOffline___UserName:%s,UserIP:%s,UserMAC:%s,NasID:%s,OfflineReason:%s(%d),Onlinetime:%lu",
-		appconn->session.username, user_ipstr, user_macstr, appconn->session.nasid,
-		terminate_cause_str, terminate_cause,
+	admin_log_notice("PortalUserOffline___UserName:%s,UserIP:%s,UserMAC:%s,ApMAC:%s,SSID:%s,NasIP:%s,PortalIP:%s,Interface:%s,NasID:%s,OfflineReason:%s(%d),Onlinetime:%lu",
+		appconn->session.username, user_ipstr, user_macstr, ap_macstr, 
+		appconn->session.essid, nas_ipstr, portal_ipstr, appconn->session.intf, 
+		appconn->session.nasid, terminate_cause_str, terminate_cause,
 		appconn->session.session_stop_time-appconn->session.session_start_time);
-	log_app_filter(appconn,"PortalUserOffline___Username:%s,UserIP:%s,UserMAC:%s,NasID:%s,OfflineReason:%s(%d),Onlinetime:%lu",
-		appconn->session.username, user_ipstr, user_macstr, appconn->session.nasid,
-		terminate_cause_str, terminate_cause,
+	log_app_filter(appconn,"PortalUserOffline___Username:%s,UserIP:%s,UserMAC:%s,ApMAC:%s,SSID:%s,NasIP:%s,PortalIP:%s,Interface:%s,NasID:%s,OfflineReason:%s(%d),Onlinetime:%lu",
+		appconn->session.username, user_ipstr, user_macstr, ap_macstr, 
+		appconn->session.essid, nas_ipstr, portal_ipstr, appconn->session.intf, 
+		appconn->session.nasid, terminate_cause_str, terminate_cause,
 		appconn->session.session_stop_time-appconn->session.session_start_time);
 	eag_henan_log_notice("PORTAL_USER_LOGOFF:-UserName=%s-IPAddr=%s-IfName=%s-VlanID=%u-MACAddr=%s-Reason=%s"
 		"-InputOctets=%u-OutputOctets=%u-InputGigawords=%u-OutputGigawords=%u; User logged off.",

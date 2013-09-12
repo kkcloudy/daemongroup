@@ -240,7 +240,7 @@ eag_arp_stop(eag_arplisten_t *arp)
 		close(arp->sockfd);
 		arp->sockfd = -1;
 	}
-	eag_log_info("arp) fd(%d) stop ok", arp->sockfd);
+	eag_log_info("arp fd(%d) stop ok", arp->sockfd);
 
 	return EAG_RETURN_OK;
 }
