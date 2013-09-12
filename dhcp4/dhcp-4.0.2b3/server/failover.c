@@ -414,6 +414,7 @@ isc_result_t dhcp_failover_link_signal (omapi_object_t *h,
 	dhcp_failover_link_t *link;
 	omapi_object_t *c;
 	dhcp_failover_state_t *s, *state = (dhcp_failover_state_t *)0;
+	failover_message_t *imsg_ep = (failover_message_t *)0;
 	char *sname;
 	int slen;
 
@@ -531,6 +532,7 @@ isc_result_t dhcp_failover_link_signal (omapi_object_t *h,
 	      next_message:
 		link -> state = dhcp_flink_message_wait;
 		link -> imsg = dmalloc (sizeof (failover_message_t), MDL);
+		imsg_ep = link -> imsg;
 		if (!link -> imsg) {
 			status = ISC_R_NOMEMORY;
 		      dhcp_flink_fail:
@@ -733,8 +735,13 @@ isc_result_t dhcp_failover_link_signal (omapi_object_t *h,
 			      "message", link);
 //		log_debug("dhcp_failover_link_signal call omapi_signal for message \n");					
 		link -> state = dhcp_flink_message_length_wait;
-		if (link -> imsg)
-			failover_message_dereference (&link -> imsg, MDL);
+		if(imsg_ep != link->imsg){
+			log_error("imsg_ep != link->imsg\n");
+			log_error("~~~~~~~imsg_ep %p\n",imsg_ep);
+			log_error("~~~~~~~link->imsg %p\n",link->imsg);
+		}
+		if (link -> imsg && (imsg_ep == link -> imsg))
+			failover_message_dereference (&link -> imsg, MDL);		
 		/* XXX This is dangerous because we could get into a tight
 		   XXX loop reading input without servicing any other stuff.
 		   XXX There needs to be a way to relinquish control but
@@ -6730,10 +6737,8 @@ static isc_result_t failover_message_dereference (failover_message_t **mp,
 {
 	failover_message_t *m;
 	m = (*mp);
-	if(!m){
-		log_info("wrong!wrong!wrong! fatal wrong!!!  This may be reason of testbed-211\n");
+	if(!m)
 		return ISC_R_INVALIDARG;
-	}
 	m -> refcnt--;
 	if (m -> refcnt == 0) {
 		if (m -> next)
