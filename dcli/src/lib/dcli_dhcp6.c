@@ -2554,14 +2554,15 @@ DEFUN(add_dhcp_pool_ipv6_range_cmd_func,
 		vty_out(vty,"bad command parameter!\n");
 		return CMD_WARNING;
 	}
-	
 	ret = str2_ipv6_addr((char*)argv[1], &ipAddrl);
 	if (!ret) {
+		vty_out(vty,"bad command patameter!\n");
 		return CMD_WARNING;
 	}
 	
 	ret = str2_ipv6_addr((char*)argv[2], &ipAddrh);
 	if (!ret) {
+		vty_out(vty,"bad command patameter!\n");
 		return CMD_WARNING;
 	}
 	/* need do it
@@ -3276,7 +3277,11 @@ DEFUN(ipv6_dhcp_server_name_servers_cmd_func,
 	memset(ipAddr, 0, 3*sizeof(struct iaddr));
 	ipnum = argc;
 	for(;i < ipnum; i++) {
-		str2_ipv6_addr((char*)argv[i], &ipAddr[i]);
+		ret = str2_ipv6_addr((char*)argv[i], &ipAddr[i]);
+		if (!ret) {
+		vty_out(vty,"bad command patameter!\n");
+		return CMD_WARNING;
+		}
 	}
 	if((CONFIG_NODE == vty->node) || (HANSI_NODE  == vty->node) || (LOCAL_HANSI_NODE  == vty->node)) {
 		mode = 0;
