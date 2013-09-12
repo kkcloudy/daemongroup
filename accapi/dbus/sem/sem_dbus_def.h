@@ -92,6 +92,8 @@
 #define SEM_DBUS_USER_PASSWD_SLOT				"sem_dbus_user_passwd_slot"
 #define SEM_DBUS_USER_IS_EXSIT_SLOT				"sem_dbus_user_is_exsit_slot"
 
+#define SEM_DBUS_DOWNLOAD_IMG_SLOT				"sem_dbus_download_img_slot"
+#define SEM_DBUS_DOWNLOAD_CPY_CONFIG_SLOT				"sem_dbus_download_cpy_config_slot"
 #define SEM_DBUS_ETHPORTS_INTERFACE_METHOD_CONFIG_ETHPORT_INTERFACE   "sem_config_eth_mode_interface"
 #define SEM_DBUS_ETHPORTS_INTERFACE_METHOD_CONFIG_ETHPORT_MODE   "sem_config_eth_mode"
 #define SEM_DBUS_SUB_INTERFACE_CREATE                            "sem_create_sub_inf"

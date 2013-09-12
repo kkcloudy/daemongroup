@@ -26,6 +26,8 @@
 
 #include "sysdef/npd_sysdef.h"
 #include <dirent.h>
+#include <dbus/sem/sem_dbus_def.h>
+
 
 //#define DCLI_GROUP 1
 
@@ -8987,6 +8989,272 @@ DEFUN (download_ap_image_func,
 	
 	return CMD_SUCCESS;
 }
+DEFUN (download_ap_image_slot_func,
+	   download_ap_image_slot_cmd,
+	   "download ap slot <1-15> URL USERNAME PASSWORD",
+	   "Download ap IMG\n"
+	   "Download ap IMG\n"
+	   "Board slot for interface local mode\n"	  
+	   "Slot id\n"
+	   "The ap img file location&name\n"
+	   "User name\n"
+	   "Password\n")
+{
+	DBusMessage *query = NULL; 
+	DBusMessage *reply = NULL;
+	DBusMessageIter  iter;
+	DBusError err; 
+	char *urlstr = argv[1];
+	char *username = argv[2];
+	char *password = argv[3];
+	char *err_str = NULL;
+	int slot_id = 0;
+	int ret = 0;
+	int opt = 0;
+	int quitreason = 0;
+	char cmd[512] = {0};
+	char *cmd_str = cmd;
+	char cpycmd[WTP_COMMAND_LEN];
+	
+	slot_id = atoi(argv[0]);
+	if(slot_id == HostSlotId)
+	{
+		vty_out(vty,"Can't config the active master board,please config other board\n");
+		return CMD_WARNING;
+	}
+	char* filename=strrchr(argv[1],'/');
+
+	if((filename == NULL) || ((strcasestr(filename,".img") == NULL)&&(strcasestr(filename,".bin") == NULL)&&(strcasestr(filename,".tar.bz2") == NULL)))
+	{
+		vty_out(vty, "error download file name, file must be ap img file\n");
+		return CMD_SUCCESS;
+	}
+		
+	if(strlen(filename) > VTYSH_MAX_FILE_LEN||(strlen(argv[1])+strlen(argv[2])+strlen(argv[3])+strlen(filename))>448)
+	{
+		vty_out(vty,"arguments is too long\n");
+		return CMD_WARNING;
+	}
+	if(NULL != (dbus_connection_dcli[slot_id] -> dcli_dbus_connection))
+	{
+	
+		memset(cmd,0,sizeof(cmd));
+		
+		sprintf(cmd,"down_ap_img.sh %s %s %s %s \n",urlstr,username,password,filename+1);
+		query = dbus_sem_msg_new_method_call(SEM_DBUS_BUSNAME, SEM_DBUS_OBJPATH,
+					 SEM_DBUS_INTERFACE,SEM_DBUS_DOWNLOAD_IMG_SLOT);
+
+		dbus_error_init(&err);
+
+		dbus_message_append_args(query,
+								DBUS_TYPE_STRING, &cmd_str,
+								DBUS_TYPE_INVALID);
+		reply = dbus_connection_send_with_reply_and_block(dbus_connection_dcli[slot_id] -> dcli_dbus_connection, query, 200000, &err);
+		
+		dbus_message_unref(query);
+
+		if (NULL == reply)
+		{
+			vty_out(vty,"<error> failed get reply.\n");
+			
+			if (dbus_error_is_set(&err)) 
+			{
+				vty_out(vty,"%s raised: %s",err.name,err.message);
+				dbus_error_free_for_dcli(&err);
+			}
+			
+			return CMD_WARNING;
+		}
+
+		dbus_message_iter_init(reply,&iter);
+		dbus_message_iter_get_basic(&iter,&ret);
+		
+		dbus_message_unref(reply);
+		if (-1 == ret)	
+		{  
+		   vty_out(vty,"system error!"); 
+		   return CMD_WARNING;
+		}  
+		else  
+		{  
+	  
+		   if (WIFEXITED(ret))	
+		   {  
+			   switch (WEXITSTATUS(ret))
+			   {	
+					case 0: 		 
+						   break;
+					default:			
+						vty_out(vty,"download error\n");
+						return CMD_WARNING; 	
+			   }	
+		   }  
+		   else  
+		   {  
+			   vty_out(vty,"exit status = [%d]\n", WEXITSTATUS(ret)); 
+			   return CMD_WARNING;
+		   }  
+		} 
+		
+		memset(cmd,0,sizeof(cmd));
+		sprintf(cmd,"/mnt/wtp%s",filename);
+
+		query = dbus_sem_msg_new_method_call(SEM_DBUS_BUSNAME, SEM_DBUS_OBJPATH,
+					 SEM_DBUS_INTERFACE,SEM_DBUS_DOWNLOAD_CPY_CONFIG_SLOT);
+
+		dbus_error_init(&err);
+
+		dbus_message_append_args(query,
+								DBUS_TYPE_UINT32, &slot_id,
+								DBUS_TYPE_UINT32, &HostSlotId,					
+								DBUS_TYPE_STRING, &cmd_str,
+								DBUS_TYPE_INVALID);
+		reply = dbus_connection_send_with_reply_and_block(dbus_connection_dcli[slot_id] -> dcli_dbus_connection, query, 200000, &err);
+		
+		dbus_message_unref(query);
+
+		if (NULL == reply)
+		{
+			vty_out(vty,"<error> failed get reply.\n");
+			
+			if (dbus_error_is_set(&err)) 
+			{
+				vty_out(vty,"%s raised: %s",err.name,err.message);
+				dbus_error_free_for_dcli(&err);
+			}
+			
+			return CMD_WARNING;
+		}
+
+		dbus_message_iter_init(reply,&iter);
+		dbus_message_iter_get_basic(&iter,&ret);
+		if(ret==1)
+		{
+			dbus_message_iter_next(&iter);	
+			dbus_message_iter_get_basic(&iter,&err_str);
+			vty_out(vty,"%s",err_str);
+			dbus_message_unref(reply);
+			return CMD_WARNING;
+		}
+		else
+		{
+			dbus_message_iter_next(&iter);	
+			dbus_message_iter_get_basic(&iter,&opt);
+			dbus_message_iter_next(&iter);	
+			dbus_message_unref(reply);
+		
+		
+			if (-1 == opt)	
+			{  
+			   vty_out(vty,"system error!"); 
+			   return CMD_WARNING;
+			}  
+			else  
+			{  
+		  
+			   if (WIFEXITED(opt))	
+			   {  
+				   switch (WEXITSTATUS(opt))
+				   {	
+						case 0: 		 
+							   
+							   break;
+						default:			
+							vty_out(vty,"download error\n");		
+							return CMD_WARNING;
+					}	
+			   }  
+			   else  
+			   {  
+				   vty_out(vty,"exit status = [%d]\n", WEXITSTATUS(opt));
+				   return CMD_WARNING;
+			   }  
+			} 
+		}
+	   
+	}
+	else
+	{
+		vty_out(vty,"The slot doesn't exist");
+		
+		return CMD_WARNING;
+	}
+
+	vty_out(vty,"finish download to memory, now is copying to storage card\n");
+	vty_out(vty,"please don't power off, if you power off download file may be damage\n");
+	vty_out(vty,"copying .................\n");
+	
+	// copy file to storage card
+	memset(cpycmd,0,WTP_COMMAND_LEN);
+	sprintf(cpycmd,"sor.sh cp /wtp/%s 180\n",filename+1);
+	ret = system(cpycmd);
+	quitreason = WEXITSTATUS(ret);
+		
+	if(quitreason == 0)
+	{	
+		vty_out(vty,"write to storage card success\n");
+	}
+	else if(quitreason == 1)
+	{	
+		vty_out(vty,"wrong parameter,Usage: sor.sh OPCMD OPFILENAME TIMEOUT\n");
+	}
+	else if(quitreason == 2)
+	{	
+		vty_out(vty,"SAD proccess no start,please start /usr/bin/sad.sh\n");
+	}
+	else if(quitreason == 3)
+	{	
+		vty_out(vty,"SAD proccess is busy,please try later\n");
+	}
+	else if(quitreason == 4)
+	{	
+		vty_out(vty,"storage operation request timeout,please try later\n");
+	}
+	else if(quitreason == 5)
+	{	
+		vty_out(vty,"storage card space is not enough\n");
+	}
+	else
+	{
+		vty_out(vty,"error %d unkown reason\n",quitreason);
+	}
+
+    /* zhangshu add, 2012-8-6 */
+	if(quitreason == 0) 
+	{
+        /* sync to other boards */
+    	int board_count = 0;
+    	int ID[MAX_SLOT_NUM] = {0};
+    	int i = 0;
+    	char src_path[PATH_LEN] = {0};
+        char des_path[PATH_LEN] = {0};
+        char res_md5[PATH_LEN] = {0};
+        sprintf(src_path, "/mnt/wtp%s", filename);
+        sprintf(des_path, "/mnt/wtp%s", filename);
+    	/* print md5 */
+        sor_md5img(vty, src_path);
+    	vty_out(vty,"Start synchronizing, please wait...\n");
+        board_count = dcli_bsd_get_slot_ids(dcli_dbus_connection,ID,BSD_TYPE_WTP);
+        //printf("count = %d\n",board_count);
+        for(i = 0; i < board_count; i++) {
+            memset(res_md5, 0, PATH_LEN);
+            vty_out(vty,"Synchronize to slot_%d...\n",ID[i]);
+            ret = dcli_bsd_copy_file_to_board(dcli_dbus_connection,ID[i],src_path,des_path,0,BSD_TYPE_WTP, res_md5);
+            vty_out(vty,"File md5 value on dest board is %s\n", (char*)res_md5);
+            if(ret == 0)
+                vty_out(vty,"successful.\n");
+            else if(ret == -2)
+                vty_out(vty,"over time.\n");
+            else if(ret == 1)
+                vty_out(vty,"not enough memery on slot_%d",ID[i]);
+            else
+                vty_out(vty,"failed.\n");
+        }	
+	}
+	/* book add end */
+	
+	return CMD_SUCCESS;
+}
 
 DEFUN (download_certificate_image_func,
 	   download_certificate_image_cmd,
@@ -9097,6 +9365,273 @@ DEFUN (download_certificate_image_func,
 
     /* zhangshu add, 2012-8-6 */
 	if(quitreason == 0) {
+	    /* print md5 */
+	    char src_path[PATH_LEN] = {0};
+        char des_path[PATH_LEN] = {0};
+        char res_md5[PATH_LEN] = {0};
+        sprintf(src_path, "/mnt/wtp%s", filename);
+        sprintf(des_path, "/mnt/wtp%s", filename);
+        sor_md5img(vty, src_path);
+        /* sync to other boards */
+    	int board_count = 0;
+    	int ID[MAX_SLOT_NUM] = {0};
+    	int i = 0;
+    	vty_out(vty,"Start synchronizing, please wait...\n");
+        board_count = dcli_bsd_get_slot_ids(dcli_dbus_connection,ID,BSD_TYPE_WTP);
+        //printf("count = %d\n",board_count);
+        for(i = 0; i < board_count; i++) {
+            memset(res_md5, 0, PATH_LEN);
+            vty_out(vty,"Synchronize to slot_%d...\n",ID[i]);
+            ret = dcli_bsd_copy_file_to_board(dcli_dbus_connection,ID[i],src_path,des_path,0,BSD_TYPE_WTP, res_md5);
+            vty_out(vty,"File md5 value on dest board is %s\n", (char*)res_md5);
+            if(ret == 0)
+                vty_out(vty,"successful.\n");
+            else if(ret == -2)
+                vty_out(vty,"over time.\n");
+            else if(ret == 1)
+                vty_out(vty,"not enough memery on slot_%d",ID[i]);
+            else
+                vty_out(vty,"failed.\n");
+        }	
+	}
+	/* book add end */
+	
+	return CMD_SUCCESS;
+}
+DEFUN (download_certificate_image_slot_func,
+	   download_certificate_image_slot_cmd,
+	   "download certificate slot <1-15> URL USERNAME PASSWORD",
+	   "Download wipi certificate\n"
+	   "Download wipi certificate\n"
+	   "Board slot for interface local mode\n"	  
+	   "Slot id\n"
+	   "The wipi certificate file location&name\n"
+	   "User name\n"
+	   "Password\n")
+{
+	DBusMessage *query = NULL; 
+	DBusMessage *reply = NULL;
+	DBusMessageIter  iter;
+	DBusError err; 
+	char *urlstr = argv[1];
+	char *username = argv[2];
+	char *password = argv[3];
+	char *err_str = NULL;
+	int slot_id = 0;
+	int ret = 0;
+	int opt = 0;
+	
+	int quitreason = 0;
+	char cmd[512] = {0};
+	char *cmd_str = cmd;
+	char cpycmd[WTP_COMMAND_LEN];
+	slot_id = atoi(argv[0]);
+	if(slot_id == HostSlotId)
+	{
+		vty_out(vty,"Can't config the active master board,please config other board\n");
+		return CMD_WARNING;
+	}
+	char* filename=strrchr(argv[1],'/');
+	if((filename == NULL) || (strcasestr(filename,".cer") == NULL))
+	{
+		vty_out(vty, "error download file name, file must be wipi certificate file\n");
+		return CMD_SUCCESS;
+	}
+	if(strlen(filename)>VTYSH_MAX_FILE_LEN)
+	{
+			vty_out(vty,"The file name you saved was too long!(must be less than %d)\n",VTYSH_MAX_FILE_LEN);
+			return CMD_WARNING;
+		
+	}
+	if((strlen(argv[1])+strlen(argv[2])+strlen(argv[3])+strlen(filename))>448)
+	{
+		vty_out(vty,"arguments is too long\n");
+		return CMD_WARNING;
+	}
+	vty_out(vty,"downloading .................\n");
+	if(NULL != (dbus_connection_dcli[slot_id] -> dcli_dbus_connection))
+	{
+	
+		memset(cmd,0,sizeof(cmd));		
+		sprintf(cmd,"down_ap_img.sh %s %s %s %s \n",urlstr,username,password,filename+1);
+		query = dbus_sem_msg_new_method_call(SEM_DBUS_BUSNAME, SEM_DBUS_OBJPATH,
+					 SEM_DBUS_INTERFACE,SEM_DBUS_DOWNLOAD_IMG_SLOT);
+
+		dbus_error_init(&err);
+
+		dbus_message_append_args(query,
+								DBUS_TYPE_STRING, &cmd_str,
+								DBUS_TYPE_INVALID);
+		reply = dbus_connection_send_with_reply_and_block(dbus_connection_dcli[slot_id] -> dcli_dbus_connection, query, 200000, &err);
+		
+		dbus_message_unref(query);
+
+		if (NULL == reply)
+		{
+			vty_out(vty,"<error> failed get reply.\n");
+			
+			if (dbus_error_is_set(&err)) 
+			{
+				vty_out(vty,"%s raised: %s",err.name,err.message);
+				dbus_error_free_for_dcli(&err);
+			}
+			
+			return CMD_WARNING;
+		}
+
+		dbus_message_iter_init(reply,&iter);
+		dbus_message_iter_get_basic(&iter,&ret);
+		
+		dbus_message_unref(reply);
+		if (-1 == ret)	
+		{  
+		   vty_out(vty,"system error!");
+		   return CMD_WARNING;
+		}  
+		else  
+		{  
+	  
+		   if (WIFEXITED(ret))	
+		   {  
+			   switch (WEXITSTATUS(ret))
+			   {	
+					case 0: 		 
+						   break;
+					default:			
+						vty_out(vty,"download error\n");
+						return CMD_WARNING; 	
+			   }	
+		   }  
+		   else  
+		   {  
+			   vty_out(vty,"exit status = [%d]\n", WEXITSTATUS(ret)); 
+			   return CMD_WARNING;
+		   }  
+		} 
+		
+		memset(cmd,0,sizeof(cmd));
+		sprintf(cmd,"/mnt/wtp%s",filename);
+
+		query = dbus_sem_msg_new_method_call(SEM_DBUS_BUSNAME, SEM_DBUS_OBJPATH,
+					 SEM_DBUS_INTERFACE,SEM_DBUS_DOWNLOAD_CPY_CONFIG_SLOT);
+
+		dbus_error_init(&err);
+
+		dbus_message_append_args(query,
+								DBUS_TYPE_UINT32, &slot_id,
+								DBUS_TYPE_UINT32, &HostSlotId,					
+								DBUS_TYPE_STRING, &cmd_str,
+								DBUS_TYPE_INVALID);
+		reply = dbus_connection_send_with_reply_and_block(dbus_connection_dcli[slot_id] -> dcli_dbus_connection, query, 200000, &err);
+		
+		dbus_message_unref(query);
+		if (NULL == reply)
+		{
+			vty_out(vty,"<error> failed get reply.\n");
+			
+			if (dbus_error_is_set(&err)) 
+			{
+				vty_out(vty,"%s raised: %s",err.name,err.message);
+				dbus_error_free_for_dcli(&err);
+			}
+			
+			return CMD_WARNING;
+		}
+
+		dbus_message_iter_init(reply,&iter);
+		dbus_message_iter_get_basic(&iter,&ret);
+		if(ret==1)
+		{
+			dbus_message_iter_next(&iter);	
+			dbus_message_iter_get_basic(&iter,&err_str);
+			vty_out(vty,"%s",err_str);
+			dbus_message_unref(reply);
+			return CMD_WARNING;
+		}
+		else
+		{
+			dbus_message_iter_next(&iter);	
+			dbus_message_iter_get_basic(&iter,&opt);
+			dbus_message_iter_next(&iter);	
+			dbus_message_unref(reply);
+		
+			if (-1 == opt)	
+			{  
+			   vty_out(vty,"system error!"); 
+			   return CMD_WARNING;
+			}  
+			else  
+			{  
+			   if (WIFEXITED(opt))	
+			   {  
+				   switch (WEXITSTATUS(opt))
+				   {	
+						case 0: 		    
+							   break;
+						default:			
+							vty_out(vty,"download error\n");		
+							return CMD_WARNING;
+					}	
+			   }  
+			   else  
+			   {  
+				   vty_out(vty,"exit status = [%d]\n", WEXITSTATUS(opt));
+				   return CMD_WARNING;
+			   }  
+			} 
+		}
+	   
+	}
+	else
+	{
+		vty_out(vty,"The slot doesn't exist");
+		
+		return CMD_WARNING;
+	}
+	
+	vty_out(vty,"finish download to memory, now is copying to storage card\n");
+	vty_out(vty,"please don't power off, if you power off download file may be damage\n");
+	vty_out(vty,"copying .................\n");
+	
+	// copy file to storage card
+	memset(cpycmd,0,WTP_COMMAND_LEN);
+	sprintf(cpycmd,"sor.sh cp /wtp/%s 180\n",filename+1);
+	ret = system(cpycmd);	
+	quitreason = WEXITSTATUS(ret);
+		
+	if(quitreason == 0)
+	{	
+		vty_out(vty,"write to storage card success\n");
+	}
+	else if(quitreason == 1)
+	{	
+		vty_out(vty,"wrong parameter,Usage: sor.sh OPCMD OPFILENAME TIMEOUT\n");
+	}
+	else if(quitreason == 2)
+	{	
+		vty_out(vty,"SAD proccess no start,please start /usr/bin/sad.sh\n");
+	}
+	else if(quitreason == 3)
+	{	
+		vty_out(vty,"SAD proccess is busy,please try later\n");
+	}
+	else if(quitreason == 4)
+	{	
+		vty_out(vty,"storage operation request timeout,please try later\n");
+	}
+	else if(quitreason == 5)
+	{	
+		vty_out(vty,"storage card space is not enough\n");
+	}
+	else
+	{
+		vty_out(vty,"error %d unkown reason\n",quitreason);
+	}
+
+
+    /* zhangshu add, 2012-8-6 */
+	if(quitreason == 0) 
+	{
 	    /* print md5 */
 	    char src_path[PATH_LEN] = {0};
         char des_path[PATH_LEN] = {0};
@@ -41653,7 +42188,9 @@ void dcli_wtp_init(void) {
 	install_element(LOCAL_HANSI_AP_GROUP_WTP_NODE,&wtp_max_sta_cmd);
 
 	install_element(CONFIG_NODE,&download_ap_image_cmd);/*added by weiay 20081021*/
+	install_element(CONFIG_NODE,&download_ap_image_slot_cmd);
 	install_element(CONFIG_NODE,&download_certificate_image_cmd);
+	install_element(CONFIG_NODE,&download_certificate_image_slot_cmd);
 	/************************************************LOCAL_HANSI_AP_GROUP_WTP_NODE_END**************************************************/
 
 	/************************************************VIEW_NODE**************************************************/
