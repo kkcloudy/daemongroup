@@ -350,6 +350,7 @@ struct asd_data {
 		unsigned int auth_suc_cnt; 
 		unsigned int auth_fail_cnt;
 	} statistics;
+	u32 num_assoc_failure_sl;
 };
 
 
@@ -496,6 +497,11 @@ void asd_cleanup(struct asd_data *wasd);
 void asd_notice_to_dhcp(struct asd_data *wasd, const u8 *addr,int op);
 void get_sysruntime(time_t *sysruntime);//qiuchen add it 2012.10.31
 void asd_pid_write_v2(char *name);
+void asd_log_ap_statistics();
+void asd_log_roam_statistics();
+void asd_syslog_auteview(int level,int type,struct ieee80211_mgmt *mgmt,struct asd_data *wasd,struct sta_info *sta,int Rcode,char *error_str);
+void asd_syslog_auteview_acct_stop(struct asd_data *wasd,struct sta_info *sta,struct asd_sta_driver_data *data,int sessiontime);
+void asd_parse_log_rcode(int *Rcode,char *str);
 /* WEP/PSK associate auth  (SHARE:WEP) */
 #define ASD_AUTH_TYPE_WEP_PSK(security_id)	\
 		(NULL != ASD_SECURITY[(security_id)]		\
@@ -569,4 +575,16 @@ struct asd_bss_summary_info{
 	struct bss_summary_info *bss_list;
 };
 //end
+struct ap_statistic{
+	u8 ap_mac[MAC_LEN];
+	unsigned int total_assoc_num;
+	unsigned int total_assoc_fail_num;
+	unsigned int total_assoc_fail_sl_num;
+	unsigned int total_reassoc_num;
+	unsigned int total_reassoc_fail_num;
+	unsigned int online_sta_num;
+	unsigned int sta_drop_abnormal_num;
+};
+typedef struct ap_statistic ap_statistics;
+
 #endif /* asd_H */

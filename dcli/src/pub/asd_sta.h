@@ -10,7 +10,28 @@
 #define MACSTR "%02X:%02X:%02X:%02X:%02X:%02X"
 #define MAC_ADDRESS "%02X%02X-%02X%02X-%02X%02X"//qiuchen add it for Henan Mobile 2013.02.20
 #define DCLI_NEW 1
-
+/* For new format of syslog 2013-07-29 */
+#define AUTELANID "@31656"
+#define DS_STRUCTURE_ALL "[DS@31656 slot=\"%d\" inst=\"%d\"]"
+#define DS_STRUCTURE "[DS@31656 slot=\"%d\"]"
+#define LOG_MAC "mac=\"%02X:%02X:%02X:%02X:%02X:%02X\""
+#define LOG_IP_V4 "ip=\"%lu.%lu.%lu.%lu\""
+#define LOG_IP_STR "ip=\"%s\""
+#define LOG_BSSID "bssid=\"%02X:%02X:%02X:%02X:%02X:%02X\""
+#define LOG_IF "if=\"%s\""
+#define LOG_NAME "name=\"%s\""
+#define LOG_SSID "ssid=\"%s\""
+#define LOG_SEC "security=\"%d\""
+#define LOG_RADIO "radio=\"%d\""
+#define LOG_RADIOS "radios=\"%d\""
+#define LOG_CODE "reason code=\"%s%d\""
+#define LOG_DESC "desc=\"%s\""
+#define LOG_ROAM "ip=\"%lu.%lu.%lu.%lu\" bssid=\"%02X:%02X:%02X:%02X:%02X:%02X\" ap_mac=\"%02X:%02X:%02X:%02X:%02X:%02X\""
+#define LOG_RDS "nas_id=\"%s\" nas_port_id=\"%s\""
+#define LOG_ACT "tx=\"%lu\" rx=\"%lu\" tx_pkt=\"%lu\" rx_pkt=\"%lu\" online=\"%d\""
+#define LOG_TYPE "type=\"%d\""
+#define LOG_VLAN "vlan=\"%d\""
+#define IPSTRINT(a) ((a & 0xff000000) >> 24),((a & 0xff0000) >> 16),((a & 0xff00) >> 8),(a & 0xff)
 
 int parse2_char_ID(char* str,unsigned char* ID);
 

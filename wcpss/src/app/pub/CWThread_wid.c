@@ -40,6 +40,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "wcpss/waw.h"
 #include "wcpss/wid/WID.h" 
 #include "CWAC.h"
+
+/* For new format of syslog 2013-07-29 */
+#include "syslog.h"
 // timers
 typedef struct {
  	CWThread *requestedThreadPtr;
@@ -87,6 +90,8 @@ void CWHandleTimer(CWTimerArg arg) {
 			syslog_wtp_log(WTPID, 0, "Critical Timer Expired", 0);
 			if(gWIDLOGHN & 0x01)
 				syslog_wtp_log_hn(WTPID,0,1966081);
+			if(gWIDLOGHN & 0x02)
+				wid_syslog_auteview(LOG_WARNING,AP_DOWN,AC_WTP[WTPID],6);
 			memset((char*)&msg, 0, sizeof(msg));
 			msg.mqid = WTPID%THREAD_NUM+1;
 			msg.mqinfo.WTPID = WTPID;
@@ -434,6 +439,8 @@ void CWHandleTimer(CWTimerArg arg) {
 						syslog_wtp_log(i, 0, "Critical Timer Expired", 0);
 						if(gWIDLOGHN & 0x01)
 							syslog_wtp_log_hn(i,0,0);
+						if(gWIDLOGHN & 0x02)
+							wid_syslog_auteview(LOG_WARNING,AP_DOWN,AC_WTP[i],0);
 						memset((char*)&qmsg, 0, sizeof(qmsg));
 						qmsg.mqid = i%THREAD_NUM+1;
 						qmsg.mqinfo.WTPID = i;

@@ -531,6 +531,7 @@ char WID_DBUS_CONF_METHOD_HNLOG_SWITCH_ACTIVATED[PATH_LEN]= "set_wid_log_hn_enab
 char WID_DBUS_CONF_METHOD_SET_AC_MANAGEMENT_IP[PATH_LEN]= "set_wid_ac_management_ip";
 char WID_DBUS_CONF_METHOD_AP_SCANNING[PATH_LEN]=          "set_ap_scanning";
 char WID_DBUS_CONF_METHOD_AP_SCANNING_REPORT_INTERVAL[PATH_LEN]=          "set_ap_scanning_report_interval";
+char WID_DBUS_CONFIG_METHOD_SET_LOG_STATISTICS_INTERVAL[PATH_LEN]=	"set_wid_log_statistic_interval";
 
 char WID_DBUS_CONF_METHOD_UPDATE_AP_SCANNING_INFO[PATH_LEN]=          "update_ap_scanning_info";
 char WID_DBUS_CONF_METHOD_WHITELIST[PATH_LEN]=          "set_mac_whitelist";

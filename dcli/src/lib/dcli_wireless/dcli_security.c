@@ -6611,6 +6611,7 @@ DEFUN(show_asd_global_variable_cmd_func,
 	unsigned int asd_bak_sta_update_time =0;
 	unsigned char  asd_ipset_switch = 0;
 	unsigned char asd_getip_from_dhcpsnp = 0;
+	unsigned char asd_syslog_debug = 0;
 	int  index = 0;
 	int  localid = 1;
 	int  slot_id = HostSlotId;
@@ -6696,6 +6697,9 @@ DEFUN(show_asd_global_variable_cmd_func,
 		dbus_message_iter_next(&iter);	
 		dbus_message_iter_get_basic(&iter,&asd_getip_from_dhcpsnp);
 
+		dbus_message_iter_next(&iter);	
+		dbus_message_iter_get_basic(&iter,&asd_syslog_debug);
+
 		vty_out(vty,"================================================================================\n");
 		vty_out(vty,"ASD global variable list summary\n");
 		vty_out(vty,"======================================================\n");
@@ -6717,6 +6721,7 @@ DEFUN(show_asd_global_variable_cmd_func,
 				vty_out(vty,"asd bak sta update time:                 %dmin\n",asd_bak_sta_update_time);
 				vty_out(vty,"asd ipset switch:                        %s\n",(asd_ipset_switch == 1)?"enable":"disable");
 				vty_out(vty,"asd get ip from dhcp-snooping:           %s\n",(asd_getip_from_dhcpsnp == 1)?"enable":"disable");
+				vty_out(vty,"asd syslog debug:                        %d\n",asd_syslog_debug);
 		vty_out(vty,"================================================================================\n");
 	}
 	

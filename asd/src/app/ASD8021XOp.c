@@ -196,7 +196,6 @@ void ieee802_1x_set_sta_authorized(struct asd_data *wasd,
 		wasd->assoc_auth_sta_num++; 	//mahz add 2011.11.9 for GuangZhou Mobile
 		wasd->assoc_auth_succ_num++;
 		sta->sta_assoc_auth_flag = 1;
-		//qiuchen
 		if (ASD_AUTH_TYPE_EAP(wasd->SecurityID)) /* EAP auth */
 		{
 			if (ASD_EAP_TYPE_SIM_PEAP(sta->eapol_sm))	/* SIM/PEAP auth sta */
@@ -204,18 +203,21 @@ void ieee802_1x_set_sta_authorized(struct asd_data *wasd,
 				wasd->u.eap_auth.autoauth.online_sta_num++;
 			}
 		}
-		//end
-		//qiuchen add it for Henan Mobile
+		/* qiuchen add it for china mobile log system */
 		if(gASDLOGDEBUG & BIT(1)){
-			if(sta->rflag && !(sta->logflag&BIT(1)) && sta->flags & WLAN_STA_AUTHORIZED){
-				syslog(LOG_INFO|LOG_LOCAL7,"[%d-%d]STA_ROAM_SUCCESS:UserMAC:"MACSTR" From AC(%lu.%lu.%lu.%lu)-AP%d-BSSID("MACSTR") To AC(%lu.%lu.%lu.%lu)-AP%d-BSSID("MACSTR").\n",
-					slotid,vrrid,MAC2STR(sta->addr),((gASD_AC_MANAGEMENT_IP & 0xff000000) >> 24),((gASD_AC_MANAGEMENT_IP & 0xff0000) >> 16),((gASD_AC_MANAGEMENT_IP & 0xff00) >> 8),(gASD_AC_MANAGEMENT_IP & 0xff),
-					sta->preAPID,MAC2STR(sta->PreBSSID),((gASD_AC_MANAGEMENT_IP & 0xff000000) >> 24),((gASD_AC_MANAGEMENT_IP & 0xff0000) >> 16),((gASD_AC_MANAGEMENT_IP & 0xff00) >> 8),(gASD_AC_MANAGEMENT_IP & 0xff),
-					wasd->Radio_G_ID/4,MAC2STR(wasd->own_addr)
-				);
-				sta->logflag = BIT(1);
+			if(sta->reauthflag){
+				asd_syslog_auteview(LOG_INFO,DOT1X_USER_REONLINE,NULL,wasd,sta,0,NULL);
+			}
+			else if(sta->rflag){
+				asd_syslog_auteview(LOG_INFO,STA_ROAM_SUCCESS,NULL,wasd,sta,0,NULL);
+				if(ASD_WLAN[wasd->WlanID])
+					ASD_WLAN[wasd->WlanID]->sta_roaming_suc_times++;
+			}
+			else{
+				asd_syslog_auteview(LOG_INFO,DOT1X_USER_ONLINE,NULL,wasd,sta,0,NULL);
 			}
 		}
+        /* add end */
 		if(gASDLOGDEBUG & BIT(0)){
 			if(sta->rflag && !(sta->logflag&BIT(0)) && sta->flags & WLAN_STA_AUTHORIZED){
 				asd_syslog_h(LOG_INFO,"WSTA","WROAM_ROAM_HAPPEN:Client "MAC_ADDRESS" roamed from BSSID "MAC_ADDRESS" of AC %lu.%lu.%lu.%lu to BSSID "MAC_ADDRESS" of AC %lu.%lu.%lu.%lu.\n",MAC2STR(sta->addr),MAC2STR(sta->PreBSSID),((gASD_AC_MANAGEMENT_IP & 0xff000000) >> 24),((gASD_AC_MANAGEMENT_IP & 0xff0000) >> 16),	\
@@ -226,7 +228,8 @@ void ieee802_1x_set_sta_authorized(struct asd_data *wasd,
 			//else
 				//asd_syslog_h("A BAC-M PORTSEC/6/PORTSEC_DOT1X_LOGIN_SUCC","-IfName=%s-MACAddr="MACSTR"-VlanId=%d-UserName=%s; The user passed 802.1X authentication and got online successfully\n",NULL,MAC2STR(sta->addr),sta->vlan_id,sta->eapol_sm->identity);
 		}
-		//end
+		if(ASD_SECURITY[SID]->eap_sm_run_activated)
+			sta->reauthflag = 1;
 		signal_sta_come(mac,wasd->Radio_G_ID,wasd->BSSIndex,wasd->WlanID,rssi);
 		if(STA_STATIC_FDB_ABLE && wasd->bss_iface_type && wasd->br_ifname){
 			char ifname[IF_NAME_MAX]={0};
@@ -1671,7 +1674,7 @@ ieee802_1x_receive_auth(struct radius_msg *msg, struct radius_msg *req,
 	if(ASD_WTP_AP[wasd->Radio_G_ID/4])
 		memcpy(WTPMAC,ASD_WTP_AP[wasd->Radio_G_ID/4]->WTPMAC,MAC_LEN);
 	//qiuchen
-	u8 *identity = NULL;
+	//u8 *identity = NULL;
 	unsigned char SID = wasd->SecurityID;
 	unsigned int securitytype = 0;
 	if(ASD_SECURITY[SID])
@@ -1746,22 +1749,6 @@ ieee802_1x_receive_auth(struct radius_msg *msg, struct radius_msg *req,
 
 	switch (msg->hdr->code) {
 	case RADIUS_CODE_ACCESS_ACCEPT:
-		if(gASDLOGDEBUG & BIT(1)){
-			if(sta->rflag && !(sta->logflag&BIT(1)) && sta->flags & WLAN_STA_AUTHORIZED){
-				syslog(LOG_INFO|LOG_LOCAL7,"[%d-%d]STA_ROAM_SUCCESS:UserMAC:"MACSTR" From AC(%lu.%lu.%lu.%lu)-AP%d-BSSID("MACSTR") To AC(%lu.%lu.%lu.%lu)-AP%d-BSSID("MACSTR").\n",
-					slotid,vrrid,MAC2STR(sta->addr),((gASD_AC_MANAGEMENT_IP & 0xff000000) >> 24),((gASD_AC_MANAGEMENT_IP & 0xff0000) >> 16),((gASD_AC_MANAGEMENT_IP & 0xff00) >> 8),(gASD_AC_MANAGEMENT_IP & 0xff),
-					sta->preAPID,MAC2STR(sta->PreBSSID),((gASD_AC_MANAGEMENT_IP & 0xff000000) >> 24),((gASD_AC_MANAGEMENT_IP & 0xff0000) >> 16),((gASD_AC_MANAGEMENT_IP & 0xff00) >> 8),(gASD_AC_MANAGEMENT_IP & 0xff),
-					wasd->Radio_G_ID/4,MAC2STR(wasd->own_addr)
-				);
-				sta->logflag = BIT(1);
-			}
-			else{
-				if(sta->eapol_sm)
-					identity = sta->eapol_sm->identity;
-				syslog(LOG_INFO|LOG_LOCAL7, "[%d-%d]AUTHSUCCESS:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d,SecurityType:%d,ErrorCode:%d.\n",
-					slotid,vrrid,MAC2STR(sta->addr),MAC2STR(WTPMAC),wasd->BSSIndex,securitytype,RADIUS_SUCCESS);//qiuchen 2013.01.14
-			}
-		}
 		//qiuchen add it for Henan Mobile
 		if(gASDLOGDEBUG & BIT(0)){
 			if(sta->rflag && !(sta->logflag&BIT(0))){
@@ -1868,20 +1855,13 @@ ieee802_1x_receive_auth(struct radius_msg *msg, struct radius_msg *req,
 		break;
 	case RADIUS_CODE_ACCESS_REJECT:
 		if(gASDLOGDEBUG & BIT(1)){
-			if(sta->rflag && !(sta->logflag&BIT(1)) && sta->flags & WLAN_STA_AUTHORIZED){
-				syslog(LOG_INFO|LOG_LOCAL3,"[%d-%d]STA_ROAM_FAILED:UserMAC:"MACSTR" From AC(%lu.%lu.%lu.%lu)-AP%d-BSSID("MACSTR") To AC(%lu.%lu.%lu.%lu)-AP%d-BSSID("MACSTR").\n",
-					slotid,vrrid,MAC2STR(sta->addr),((gASD_AC_MANAGEMENT_IP & 0xff000000) >> 24),((gASD_AC_MANAGEMENT_IP & 0xff0000) >> 16),((gASD_AC_MANAGEMENT_IP & 0xff00) >> 8),(gASD_AC_MANAGEMENT_IP & 0xff),
-					sta->preAPID,MAC2STR(sta->PreBSSID),((gASD_AC_MANAGEMENT_IP & 0xff000000) >> 24),((gASD_AC_MANAGEMENT_IP & 0xff0000) >> 16),((gASD_AC_MANAGEMENT_IP & 0xff00) >> 8),(gASD_AC_MANAGEMENT_IP & 0xff),
-					wasd->Radio_G_ID/4,MAC2STR(wasd->own_addr)
-				);
-				sta->logflag = BIT(1);
-			}
-			else{
-				if(sta->eapol_sm)
-					identity = sta->eapol_sm->identity;
-		syslog(LOG_INFO|LOG_LOCAL7, "[%d-%d]AUTHFAILED:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d,SecurityType:%d,ErrorCode:%d.\n",
-			slotid,vrrid,MAC2STR(sta->addr),MAC2STR(WTPMAC),wasd->BSSIndex,securitytype,RADIUS_FAILED);//qiuchen 2013.01.14
-			}
+			char error_str[6] = {0};
+			if(sta->reauthflag)
+				asd_syslog_auteview(LOG_WARNING,RADIUS_REREJECT,NULL,wasd,sta,0,error_str);
+			else if(sta->rflag)
+				asd_syslog_auteview(LOG_WARNING,STA_ROAM_FAIL,NULL,wasd,sta,0,error_str);
+			else
+				asd_syslog_auteview(LOG_WARNING,RADIUS_REJECT,NULL,wasd,sta,0,error_str);
 		}
 		if(gASDLOGDEBUG & BIT(0)){
 			if(sta->rflag)

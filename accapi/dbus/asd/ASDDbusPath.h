@@ -201,6 +201,7 @@ char ASD_DBUS_SECURITY_METHOD_SET_ASD_DAEMONLOG_LEVEL[PATH_LEN]="set_asd_daemonl
 char ASD_DBUS_SECURITY_METHOD_SET_ASD_LOG_GROUP_ACTIVATED[PATH_LEN]="set_asd_log_group_activated";//qiuchen add it for hn_mobile 
 char ASD_DBUS_SECURITY_METHOD_SET_AC_MANAGEMENT_IP[PATH_LEN]="set_ac_management_ip";//qiuchen add it for hn_mobile 
 char ASD_DBUS_SECURITY_METHOD_SHOW_AC_MANAGEMENT_IP[PATH_LEN]="show_ac_management_ip";//qiuchen add it for hn_mobile 
+char ASD_DBUS_CONFIG_METHOD_SET_LOG_STATISTICS_INTERVAL[PATH_LEN]="set_log_statistcs_interval";
 
 char ASD_DBUS_SECURITY_METHOD_PRE_AUTHENTICATION[PATH_LEN]=		"pre_authentication";
 char ASD_DBUS_MOBILE_OPEN[PATH_LEN]=	"mobile_open";

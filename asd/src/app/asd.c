@@ -143,6 +143,10 @@ extern int wpa_debug_show_keys;
 extern int wpa_debug_timestamp;
 
 extern unsigned char gASDLOGDEBUG;
+/* For new format of syslog 2013-07-29 */
+extern unsigned long gASD_AC_MANAGEMENT_IP;
+unsigned int AP_STATISTICS_LOG_INTERVAL = 28800;
+unsigned int ROAM_STATISTICS_LOG_INTERVAL = 28800+30;
 
 static void asd_logger_cb(void *ctx, const u8 *addr, unsigned int module,
 			      int level, const char *txt, size_t len)
@@ -2776,3 +2780,420 @@ void get_sysruntime(time_t *sysruntime){
 	free(sysrunt);
 	sysrunt = NULL;
 }
+/* add for new format log for china mobile */
+static char *asd_sprintf_desc(char *buf,char *fmt,char *desc)
+{
+	sprintf(buf,fmt,desc);
+	return buf;
+}
+static void asd_get_ap_statistics(ap_statistics *ap_stat)
+{
+	int i = 0,j = 0;
+	struct wasd_interfaces *interfaces = (struct wasd_interfaces*) circle.user_data;
+	for(i=0;i<G_RADIO_NUM;){
+		if((interfaces->iface[i] != NULL)&&(interfaces->iface[i]->bss != NULL)){
+			for(j = 0; j < L_BSS_NUM; j++){
+				if(interfaces->iface[i]->bss[j] == NULL)
+					continue;
+				else if(interfaces->iface[i]->bss[j] != NULL){
+						ap_stat[i/4].total_assoc_num += interfaces->iface[i]->bss[j]->num_assoc;
+						ap_stat[i/4].total_assoc_fail_num+= interfaces->iface[i]->bss[j]->num_assoc_failure;
+						ap_stat[i/4].total_assoc_fail_sl_num+= interfaces->iface[i]->bss[j]->num_assoc_failure_sl;
+						ap_stat[i/4].total_reassoc_num+= interfaces->iface[i]->bss[j]->num_reassoc;
+						ap_stat[i/4].total_reassoc_fail_num+= interfaces->iface[i]->bss[j]->num_reassoc_failure;
+						ap_stat[i/4].online_sta_num+= interfaces->iface[i]->bss[j]->num_sta;
+						ap_stat[i/4].sta_drop_abnormal_num+= interfaces->iface[i]->bss[j]->abnormal_st_down_num;
+					continue;
+				}
+			}
+			i++;
+		} else 
+			i += 4 - i%L_RADIO_NUM;
+	}
+}
+static void asd_get_roam_statistics_wlan(unsigned int total_online_sta_num,unsigned int r_times,unsigned int r_suc_times,unsigned int r_sta_num)
+{
+	int i=0;
+	for(i=0;i<WLAN_NUM;i++){
+		if(ASD_WLAN[i]){
+			total_online_sta_num += ASD_WLAN[i]->wlan_accessed_sta_num;
+			r_times += ASD_WLAN[i]->sta_roaming_times;
+			r_suc_times += ASD_WLAN[i]->sta_roaming_suc_times;
+			r_sta_num += ASD_WLAN[i]->r_num_sta;
+		}
+	}
+}
+void asd_log_ap_statistics()
+{
+	asd_syslog_auteview(LOG_INFO,AP_STAT,NULL,NULL,NULL,0,NULL);
+	circle_register_timeout(AP_STATISTICS_LOG_INTERVAL,0,asd_log_ap_statistics,NULL,NULL);
+}
+void asd_log_roam_statistics()
+{
+	asd_syslog_auteview(LOG_INFO,RADIO_STAT,NULL,NULL,NULL,0,NULL);
+	circle_register_timeout(ROAM_STATISTICS_LOG_INTERVAL,0,asd_log_roam_statistics,NULL,NULL);
+}
+void asd_syslog_auteview_acct_stop(struct asd_data *wasd,struct sta_info *sta,struct asd_sta_driver_data *data,int sessiontime)
+{
+	char *nas_id = NULL;
+	char *nas_port_id = NULL;
+	u8 *identity = NULL;
+	if(data == NULL)
+		return;
+	if(sta == NULL || sta->eapol_sm == NULL)
+		return;
+	identity = sta->eapol_sm->identity;
+	if(wasd){
+		if(ASD_HOTSPOT[wasd->hotspot_id]){
+			nas_id = ASD_HOTSPOT[wasd->hotspot_id]->nas_identifier;
+			nas_port_id = ASD_HOTSPOT[wasd->hotspot_id]->nas_port_id;
+		}
+		else{
+			if(wasd->conf&&wasd->conf->nas_identifier)
+				nas_id = wasd->conf->nas_identifier;
+			if(wasd->nas_port_id)
+				nas_port_id = wasd->nas_port_id;
+		}
+	}
+	syslog(LOG_INFO|LOG_LOCAL7,"RADIUS_ACCOUNT_STOP "DS_STRUCTURE_ALL"[USER"AUTELANID" "LOG_NAME" ip=\"%s\" "LOG_MAC" vlan=\"%d\"][RDS"AUTELANID" "LOG_RDS" "LOG_TYPE"][ACT"AUTELANID" "LOG_ACT"]",
+		slotid,vrrid,identity,sta->in_addr,MAC2STR(sta->addr),sta->vlan_id,nas_id,nas_port_id,1,data->tx_bytes,data->rx_bytes,data->tx_packets,data->rx_packets,sessiontime);
+}
+
+#if 1
+void asd_parse_log_rcode(int *Rcode,char *str)
+{
+
+	switch(*Rcode){
+		case OPERATE_SUCCESS:
+			//*Rcode = mobile_code;     /* for mobile code, we need make a exchange. zhangdi@autelan.com */
+			strcpy(str,"OPERATE SUCCESS");
+			break;
+		case FLOW_BANLANCE:
+			strcpy(str,"Because of Flow Banlance");
+			break;
+		case NUMBER_BANLANCE:
+			strcpy(str,"Because of Number Banlance");
+			break;
+		case AUTH_ALG_FAIL:
+			strcpy(str,"Authentication Algorithm Failed");
+			break;
+		case AUTH_TRANSNUM_WRONG:
+			strcpy(str,"Authentication Transition Number Wrong");
+			break;
+		case STAMAC_BSSID:
+			strcpy(str,"");
+			break;
+		case MAC_REJECTED:
+			strcpy(str,"Mac Address Rejected");
+			break;
+		case VLANID_INVALID:
+			strcpy(str,"Invalid Vlan ID");
+			break;
+		case WPA_SM_FAILED:
+			strcpy(str,"");
+			break;
+		case NO_RESOURCE:
+			strcpy(str,"No More Resources to Use");
+			break;
+		case ASSO_BEFORE_AUTH:
+			strcpy(str,"Association before Authentication");
+			break;
+		case ASSO_PACKAGE_WRONG:
+			strcpy(str,"Package Wrong");
+			break;
+		case UNKNOWN_SSID:
+			strcpy(str,"Unknown SSID");
+			break;
+		case WME_ELEM_INVALID:
+			strcpy(str,"");
+			break;
+		case RATES_NOT_SUPPORT:
+			strcpy(str,"Not Supported Rates");
+			break;
+		case RATES_LEN_INVALID:
+			strcpy(str,"");
+			break;
+		case NO_WPARASN_IE:
+			strcpy(str,"NO WPA/RASN IE");
+			break;
+		case CIPHER_NOT_MATCH:
+			strcpy(str,"Cipher Wrong");
+			break;
+		case NO_WAPI_IE:
+			strcpy(str,"No Wapi IE");
+			break;
+		case STA_POWER_NOT_ACCEPTED:
+			strcpy(str,"Sta Power not Accespted");
+			break;
+		case NO_MORE_AID:
+			strcpy(str,"No more Association ID");
+			break;
+		case RADIUS_FAILED:
+			strcpy(str,"Radius Authentication Failed");
+			break;
+		case RADIUS_SUCCESS:
+			strcpy(str,"Radius Authentication Success");
+			break;
+		case PSK_SUCCESS:
+			strcpy(str,"Psk Exchange Success");
+			break;
+		case PSK_FAILED:
+			strcpy(str,"Psk Exchange Failed");
+			break;
+		default:
+			strcpy(str,"Psk Exchange Failed");			
+			break;
+	}
+}
+
+#else 
+void asd_parse_log_rcode(int *Rcode,char *str)
+{
+	switch(*Rcode){
+		case FLOW_BANLANCE:
+			*Rcode = 999;
+			strcpy(str,"Load balance");
+			break;
+		case NUMBER_BANLANCE:
+			*Rcode = 999;
+			strcpy(str,"Load balance");
+			break;
+		case STAMAC_BSSID:
+			*Rcode = 999;
+			strcpy(str,"Sta MAC conflict with BSSID");
+			break;
+		case MAC_REJECTED:
+			*Rcode = 999;
+			strcpy(str,"Deny MAC");
+			break;
+		case VLANID_INVALID:
+			*Rcode = 999;
+			strcpy(str,"Invalid vlan ID");
+			break;
+		case ASSO_BEFORE_AUTH:
+			*Rcode = 999;
+			strcpy(str,"Assoc before Auth");
+			break;
+		case ASSO_PACKAGE_WRONG:
+			*Rcode = 999;
+			strcpy(str,"Wrong package");
+			break;
+		case UNKNOWN_SSID:
+			*Rcode = 999;
+			strcpy(str,"Unknown SSID");
+			break;
+		case WME_ELEM_INVALID:
+			*Rcode = 999;
+			strcpy(str,"Wrong package");
+			break;
+				/*
+			WPA_SM_FAILED,
+			NO_RESOURCE,
+			RATES_NOT_SUPPORT,
+			RATES_LEN_INVALID,
+			NO_WPARASN_IE,
+			CIPHER_NOT_MATCH,
+			NO_WAPI_IE,
+			STA_POWER_NOT_ACCEPTED,
+			NO_MORE_AID,
+			RADIUS_FAILED,
+			RADIUS_SUCCESS,
+			PSK_SUCCESS,
+			PSK_FAILED*/
+		default:
+			break;
+	}
+}
+#endif
+void asd_syslog_auteview(int level,int type,struct ieee80211_mgmt *mgmt,struct asd_data *wasd,struct sta_info *sta,int Rcode,char *error_str)
+{
+	//FILE* fp;
+	u8 sta_mac[MAC_LEN] = {0};
+	u8 ap_mac[MAC_LEN] = {0};
+	u8 preap_mac[MAC_LEN] = {0};
+	unsigned int LRID = 0;/*Local radio id*/
+	unsigned char bssid[ETH_ALEN] = {0};
+	unsigned char wlanid = 0;
+	unsigned char SID = 0;
+	unsigned char wtpindex = 0;
+	unsigned int securitytype = 0;
+	unsigned int extensible_auth = 0;
+	unsigned int encryptiontype = 0;
+	char *ssid = NULL;
+	char buf[2048] = {0};
+	ap_statistics	ap_stat[WTP_NUM+1];
+	int i = 0;
+	memset(ap_stat,0,(WTP_NUM+1)*sizeof(ap_statistics));
+	unsigned char *username = NULL;
+	int vlanid = 0;
+	char nas_port_id[NAS_PORT_ID_LEN+1] = {0};
+	char nas_iden[NAS_IDENTIFIER_NAME+1] = {0};
+
+	asd_printf(ASD_DEFAULT,MSG_DEBUG,"\nfunc:%s level %d type %d\n",__func__,level,type);
+	
+	if(wasd && ASD_HOTSPOT[wasd->hotspot_id]){
+		memcpy(nas_iden,ASD_HOTSPOT[wasd->hotspot_id]->nas_identifier,NAS_IDENTIFIER_NAME+1);
+		memcpy(nas_port_id,ASD_HOTSPOT[wasd->hotspot_id]->nas_port_id,NAS_PORT_ID_LEN+1);
+	}
+	if(mgmt)
+		memcpy(sta_mac,mgmt->sa,MAC_LEN);
+	else if(sta)
+		memcpy(sta_mac,sta->addr,MAC_LEN);
+	if(wasd){
+		wlanid = wasd->WlanID;
+		LRID = wasd->Radio_G_ID%4;
+		wtpindex = wasd->Radio_G_ID/4;
+		SID = wasd->SecurityID;
+		memcpy(bssid,wasd->own_addr,ETH_ALEN);
+	}
+	if(ASD_WTP_AP[wtpindex]){
+		memcpy(ap_mac,ASD_WTP_AP[wtpindex]->WTPMAC,MAC_LEN);
+	}
+	if(ASD_SECURITY[SID]){
+		securitytype = ASD_SECURITY[SID]->securityType;
+		extensible_auth = ASD_SECURITY[SID]->extensible_auth;
+		encryptiontype = ASD_SECURITY[SID]->encryptionType;
+	}
+	if(ASD_WLAN[wlanid]){
+		ssid = ASD_WLAN[wlanid]->ESSID;
+	}
+	if(sta){
+		if(sta->eapol_sm)
+			username =  sta->eapol_sm->identity;
+		vlanid = sta->vlan_id;
+	}
+	switch(type){
+		case STA_ASSOC_START: 
+			/*fp = fopen("/var/log/qc.log","a+");
+			if(fp == NULL){
+				syslog(LOG_INFO|LOG_LOCAL7,"failed to open qc.log");
+			}
+			else{
+				fprintf(fp,"1STA_ASSOC_START "DS_STRUCTURE_ALL"[STA"AUTELANID" "LOG_MAC"][AP"AUTELANID" "LOG_MAC" "LOG_RADIO"][WLAN"AUTELANID" "LOG_BSSID" "LOG_SSID" "LOG_SEC"]\n",
+				slotid,vrrid,MAC2STR(sta_mac),MAC2STR(ap_mac),LRID,MAC2STR(bssid),ssid,securitytype);
+				fclose(fp);
+			}*/
+			syslog(level|LOG_LOCAL7,"STA_ASSOC_START "DS_STRUCTURE_ALL"[STA"AUTELANID" "LOG_MAC"][AP"AUTELANID" "LOG_MAC" "LOG_RADIO"][WLAN"AUTELANID" "LOG_BSSID" "LOG_SSID" "LOG_SEC"]",
+				slotid,vrrid,MAC2STR(sta_mac),MAC2STR(ap_mac),LRID,MAC2STR(bssid),ssid,securitytype);
+			break;
+		case STA_ASSOC_SUCCESS: 
+			syslog(level|LOG_LOCAL7,"STA_ASSOC_SUCCESS "DS_STRUCTURE_ALL"[STA"AUTELANID" "LOG_MAC"][AP"AUTELANID" "LOG_MAC" "LOG_RADIO"][WLAN"AUTELANID" "LOG_BSSID" "LOG_SSID" "LOG_SEC"]",
+				slotid,vrrid,MAC2STR(sta_mac),MAC2STR(ap_mac),LRID,MAC2STR(bssid),ssid,securitytype);
+			break;
+		case STA_ASSOC_FAIL: 
+			syslog(level|LOG_LOCAL7,"STA_ASSOC_FAIL "DS_STRUCTURE_ALL"[STA"AUTELANID" "LOG_MAC"][AP"AUTELANID" "LOG_MAC" "LOG_RADIO"][WLAN"AUTELANID" "LOG_BSSID" "LOG_SSID" "LOG_SEC"][REASON"AUTELANID" "LOG_CODE"%s",
+				slotid,vrrid,MAC2STR(sta_mac),MAC2STR(ap_mac),LRID,MAC2STR(bssid),ssid,securitytype,/*"ASF"*/" ",Rcode,asd_sprintf_desc(buf," "LOG_DESC"]",error_str));
+			break;
+		case STA_AUTH_START: 
+			syslog(level|LOG_LOCAL7,"STA_AUTH_START "DS_STRUCTURE_ALL"[STA"AUTELANID" "LOG_MAC"][AP"AUTELANID" "LOG_MAC" "LOG_RADIO"][WLAN"AUTELANID" "LOG_BSSID" "LOG_SSID" "LOG_SEC"]",
+				slotid,vrrid,MAC2STR(sta_mac),MAC2STR(ap_mac),LRID,MAC2STR(bssid),ssid,securitytype);
+			break;			
+		case STA_AUTH_SUCCESS: 
+			syslog(level|LOG_LOCAL7,"STA_AUTH_SUCCESS "DS_STRUCTURE_ALL"[STA"AUTELANID" "LOG_MAC"][AP"AUTELANID" "LOG_MAC" "LOG_RADIO"][WLAN"AUTELANID" "LOG_BSSID" "LOG_SSID" "LOG_SEC"]",
+				slotid,vrrid,MAC2STR(sta_mac),MAC2STR(ap_mac),LRID,MAC2STR(bssid),ssid,securitytype);
+			break;
+		case STA_AUTH_FAIL:/*Reason Code need to fix!!!!!*//*有问题需处理*/
+			/*if(((securitytype == IEEE8021X)&&(encryptiontype == WEP))||(((securitytype == WPA_E)||(securitytype == WPA2_E)))||(securitytype == MD5)||(extensible_auth == 1))
+				syslog(level|LOG_LOCAL7,"STA_AUTH_FAIL "DS_STRUCTURE_ALL"[STA"AUTELANID" "LOG_MAC"][AP"AUTELANID" "LOG_MAC" "LOG_RADIO"][WLAN"AUTELANID" "LOG_BSSID" "LOG_SSID" "LOG_SEC"][REASON"AUTELANID" code=\"%s\"]",
+					slotid,vrrid,MAC2STR(sta_mac),MAC2STR(ap_mac),LRID,MAC2STR(bssid),ssid,securitytype,error_str);
+			else{*/
+			syslog(level|LOG_LOCAL7,"STA_AUTH_FAIL "DS_STRUCTURE_ALL"[STA"AUTELANID" "LOG_MAC"][AP"AUTELANID" "LOG_MAC" "LOG_RADIO"][WLAN"AUTELANID" "LOG_BSSID" "LOG_SSID" "LOG_SEC"][REASON"AUTELANID" "LOG_CODE"%s",
+				slotid,vrrid,MAC2STR(sta_mac),MAC2STR(ap_mac),LRID,MAC2STR(bssid),ssid,securitytype,/*"WL"*/" ",Rcode,asd_sprintf_desc(buf," "LOG_DESC"]",error_str));
+			//}
+			break;
+		case STA_REAUTH_SUCCESS: 
+			syslog(level|LOG_LOCAL7,"STA_REAUTH_SUCCESS "DS_STRUCTURE_ALL"[STA"AUTELANID" "LOG_MAC"][AP"AUTELANID" "LOG_MAC" "LOG_RADIO"][WLAN"AUTELANID" "LOG_BSSID" "LOG_SSID" "LOG_SEC"]",
+				slotid,vrrid,MAC2STR(sta_mac),MAC2STR(ap_mac),LRID,MAC2STR(bssid),ssid,securitytype);
+			break;
+		case STA_REAUTH_FAIL: 
+			break;
+		case DOT1X_USER_ONLINE:
+			syslog(level|LOG_LOCAL7,"DOT1X_USER_ONLINE "DS_STRUCTURE_ALL"[USER"AUTELANID" "LOG_NAME" "LOG_VLAN" "LOG_MAC"][RDS"AUTELANID" "LOG_RDS" "LOG_TYPE"]",
+				slotid,vrrid,username,vlanid,MAC2STR(sta_mac),nas_iden,nas_port_id,0);
+			break;
+		case DOT1X_USER_ONLINE_FAIL:
+			syslog(level|LOG_LOCAL7,"DOT1X_USER_ONLINE_FAIL "DS_STRUCTURE_ALL"[USER"AUTELANID" "LOG_NAME" "LOG_VLAN" "LOG_MAC"][RDS"AUTELANID" "LOG_RDS" "LOG_TYPE"][REASON"AUTELANID" "LOG_CODE"%s",
+				slotid,vrrid,username,vlanid,MAC2STR(sta_mac),nas_iden,nas_port_id,0,"WL",Rcode,(Rcode != 999)?"]":asd_sprintf_desc(buf," "LOG_DESC"]",error_str));
+			break;
+		case DOT1X_USER_OFFLINE:
+			syslog(level|LOG_LOCAL7,"DOT1X_USER_OFFLINE "DS_STRUCTURE_ALL"[USER"AUTELANID" "LOG_NAME" "LOG_VLAN" "LOG_MAC"][RDS"AUTELANID" "LOG_RDS"][REASON"AUTELANID" "LOG_CODE"%s",
+				slotid,vrrid,username,vlanid,MAC2STR(sta_mac),nas_iden,nas_port_id,"WL",Rcode,(Rcode != 999)?"]":asd_sprintf_desc(buf," "LOG_DESC"]",error_str));
+			break;
+		case DOT1X_USER_REONLINE:
+			syslog(level|LOG_LOCAL7,"DOT1X_USER_ONLINE "DS_STRUCTURE_ALL"[USER"AUTELANID" "LOG_NAME" "LOG_VLAN" "LOG_MAC"][RDS"AUTELANID" "LOG_RDS" "LOG_TYPE"]",
+				slotid,vrrid,username,vlanid,MAC2STR(sta_mac),nas_iden,nas_port_id,1);
+			break;
+		case DOT1X_USER_REONLINE_FAIL:
+			syslog(level|LOG_LOCAL7,"DOT1X_USER_ONLINE_FAIL "DS_STRUCTURE_ALL"[USER"AUTELANID" "LOG_NAME" "LOG_VLAN" "LOG_MAC"][RDS"AUTELANID" "LOG_RDS" "LOG_TYPE"][REASON"AUTELANID" code=\"%s\"]",
+				slotid,vrrid,username,vlanid,MAC2STR(sta_mac),nas_iden,nas_port_id,1,error_str);
+			break;
+		case RADIUS_REREJECT:
+			syslog(level|LOG_LOCAL7,"DOT1X_USER_ONLINE_FAIL "DS_STRUCTURE_ALL"[USER"AUTELANID" "LOG_NAME" "LOG_VLAN" "LOG_MAC"][RDS"AUTELANID" "LOG_RDS" "LOG_TYPE"][REASON"AUTELANID" code=\"%s\"]",
+				slotid,vrrid,username,vlanid,MAC2STR(sta_mac),nas_iden,nas_port_id,1,error_str);
+			break;
+		case RADIUS_REJECT:
+			syslog(level|LOG_LOCAL7,"DOT1X_USER_ONLINE_FAIL "DS_STRUCTURE_ALL"[USER"AUTELANID" "LOG_NAME" "LOG_VLAN" "LOG_MAC"][RDS"AUTELANID" "LOG_RDS" "LOG_TYPE"][REASON"AUTELANID" code=\"%s\"]",
+				slotid,vrrid,username,vlanid,MAC2STR(sta_mac),nas_iden,nas_port_id,0,error_str);
+			break;
+		case STA_LEAVING: 
+			syslog(level|LOG_LOCAL7,"STA_LEAVE "DS_STRUCTURE_ALL"[STA"AUTELANID" "LOG_MAC"][AP"AUTELANID" "LOG_MAC" "LOG_RADIO"][WLAN"AUTELANID" "LOG_BSSID" "LOG_SSID" "LOG_SEC"][REASON"AUTELANID" "LOG_CODE"%s",
+				slotid,vrrid,MAC2STR(sta_mac),MAC2STR(ap_mac),LRID,MAC2STR(bssid),ssid,securitytype,"WL",Rcode,(Rcode != 999)?"]":asd_sprintf_desc(buf," "LOG_DESC"]",error_str));
+			break;			
+		case STA_ROAM_START:					
+			if(sta == NULL)
+				break;
+			if(ASD_WTP_AP[sta->preAPID])
+				memcpy(preap_mac,ASD_WTP_AP[sta->preAPID]->WTPMAC,MAC_LEN);
+			syslog(level|LOG_LOCAL7,"STA_ROAM_START "DS_STRUCTURE_ALL"[STA"AUTELANID" "LOG_MAC"][FROM"AUTELANID" "LOG_ROAM"][TO"AUTELANID" "LOG_ROAM"]",
+				slotid,vrrid,MAC2STR(sta_mac),IPSTRINT(gASD_AC_MANAGEMENT_IP),MAC2STR(sta->PreBSSID),MAC2STR(preap_mac),IPSTRINT(gASD_AC_MANAGEMENT_IP),MAC2STR(bssid),MAC2STR(ap_mac));
+			break;			
+		case STA_ROAM_SUCCESS: 
+			if(sta == NULL)
+				break;
+			if(ASD_WTP_AP[sta->preAPID])
+				memcpy(preap_mac,ASD_WTP_AP[sta->preAPID]->WTPMAC,MAC_LEN);
+			syslog(level|LOG_LOCAL7,"STA_ROAM_SUCCESS "DS_STRUCTURE_ALL"[STA"AUTELANID" "LOG_MAC"][FROM"AUTELANID" "LOG_ROAM"][TO"AUTELANID" "LOG_ROAM"]",
+				slotid,vrrid,MAC2STR(sta_mac),IPSTRINT(gASD_AC_MANAGEMENT_IP),MAC2STR(sta->PreBSSID),MAC2STR(preap_mac),IPSTRINT(gASD_AC_MANAGEMENT_IP),MAC2STR(bssid),MAC2STR(ap_mac));
+			break;
+		case STA_ROAM_FAIL: 
+			syslog(level|LOG_LOCAL7,"STA_ROAM_FAIL [STA"AUTELANID" "LOG_MAC"][FROM"AUTELANID" "LOG_ROAM"][TO"AUTELANID" "LOG_ROAM"][REASON"AUTELANID" "LOG_CODE"%s",
+				MAC2STR(sta_mac),IPSTRINT(gASD_AC_MANAGEMENT_IP),MAC2STR(sta->PreBSSID),MAC2STR(preap_mac),IPSTRINT(gASD_AC_MANAGEMENT_IP),MAC2STR(bssid),MAC2STR(ap_mac),/*"WL"*/" ",Rcode,asd_sprintf_desc(buf," "LOG_DESC"]",error_str));
+			break;
+		case AP_STAT: 
+			if(is_secondary == 1)
+				break;
+			asd_get_ap_statistics(ap_stat);
+			for(i=0;i<WTP_NUM+1;i++){
+				if(ASD_WTP_AP[i])
+					syslog(level|LOG_LOCAL7,"AP_STAT "DS_STRUCTURE_ALL"[AP"AUTELANID" "LOG_MAC"][STAT"AUTELANID" assoc_num=\"%d\" assoc_fail=\"%d\" assoc_fail_sl=\"%d\" reassoc_num=\"%d\" reassoc_fail=\"%d\" sta_num=\"%d\" sta_drop_num=\"%d\"]",
+						slotid,vrrid,MAC2STR(ASD_WTP_AP[i]->WTPMAC),ap_stat[i].total_assoc_num,ap_stat[i].total_assoc_fail_num,ap_stat[i].total_assoc_fail_sl_num,ap_stat[i].total_reassoc_num,ap_stat[i].total_reassoc_fail_num,ap_stat[i].online_sta_num,ap_stat[i].sta_drop_abnormal_num);
+			}
+			break;
+		case ROAM_STAT: 
+			if(is_secondary == 1)
+				break;
+			unsigned int total_online_sta_num = 0;
+			unsigned int r_suc_times = 0;
+			unsigned int r_times = 0;
+			unsigned int r_sta_num = 0;
+			asd_get_roam_statistics_wlan(total_online_sta_num,r_times,r_suc_times,r_sta_num);
+			syslog(level|LOG_LOCAL7,"ROAM_STAT "DS_STRUCTURE_ALL"[STAT"AUTELANID" online_sta=\"%d\" roam_sta=\"%d\" roam_num=\"%d\" roam_fail=\"%d\"]",
+				slotid,vrrid,total_online_sta_num,r_sta_num,r_times,(r_times - r_suc_times));
+			break;
+	/*	case TUNNEL_STAT://? 
+			syslog(level|LOG_LOCAL7,"",
+				);
+			break;
+		case RADIO_STAT: //?
+			syslog(level|LOG_LOCAL7,"",
+				);
+			break;*/
+		case RADIUS_ACCOUNT_STOP: 
+			/*	asd_syslog_auteview_acct_stop	*/
+			break;
+		default: 
+			break;
+	}
+}
+/* add end */
+

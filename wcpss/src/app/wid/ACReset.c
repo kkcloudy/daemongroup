@@ -34,7 +34,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "wcpss/wid/WID.h"
 #include "ACDbus.h"
-
+#include "syslog.h"
 #ifdef DMALLOC
 #include "../dmalloc-5.5.0/dmalloc.h"
 #endif
@@ -97,6 +97,8 @@ CWBool ACEnterReset(int WTPIndex, CWProtocolMessage *msgPtr)
 			syslog_wtp_log(WTPIndex, 0, "for update", 0);
 			if(gWIDLOGHN & 0x01)
 				syslog_wtp_log_hn(WTPIndex,0,0);
+			if(gWIDLOGHN & 0x02)
+				wid_syslog_auteview(LOG_WARNING,AP_DOWN,AC_WTP[WTPIndex],0);
 			gWTPs[WTPIndex].isRequestClose = CW_TRUE;
 			_CWCloseThread(WTPIndex);
 			break;			
@@ -108,6 +110,8 @@ CWBool ACEnterReset(int WTPIndex, CWProtocolMessage *msgPtr)
 			syslog_wtp_log(WTPIndex, 0, "something wrong in update", 0);
 			if(gWIDLOGHN & 0x01)
 				syslog_wtp_log_hn(WTPIndex,0,0);
+			if(gWIDLOGHN & 0x02)
+				wid_syslog_auteview(LOG_WARNING,AP_DOWN,AC_WTP[WTPIndex],0);
 			_CWCloseThread(WTPIndex);
 			break;
 	}

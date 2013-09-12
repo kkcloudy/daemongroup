@@ -22436,7 +22436,201 @@ DEFUN(show_ac_management_ip_addr_cmd_func,
 		dbus_message_unref(reply);
 		return CMD_SUCCESS;
 	}
+	
+/* For new format of mobile syslog 2013-07-29 */	
+DEFUN(set_log_statistics_interval_cmd_func,
+		set_log_statistics_interval_cmd,
+		"set log statistics interval (ap_stat|tunnel_stat|radio_stat|roam_stat|all) INTERVAL",
+		"log statistics interval configuration\n"
+		"log statistics interval\n"
+		"interval\n"
+		"interval\n"
+)
+{
+	int ret;
 
+	DBusMessage *query, *reply;
+	DBusMessage *query2, *reply2;
+	DBusMessageIter  iter;
+	DBusError err;
+
+	unsigned char type;
+	unsigned int interval;
+	
+
+	if (!strcmp(argv[0],"ap_stat"))
+	{
+		type = AP_STATISTICS;	
+	}
+	else if (!strcmp(argv[0],"tunnel_stat"))
+	{
+		type = TUNNEL_STATISTICS;	
+	}
+	else if (!strcmp(argv[0],"radio_stat"))
+	{
+		type = RADIO_STATISTICS;	
+	}
+	else if (!strcmp(argv[0],"roam_stat"))
+	{
+		type = ROAM_STATISTICS;	
+	}
+	else if (!strcmp(argv[0],"all"))
+	{
+		type = ALL_STATISTICS;	
+	}
+	else
+	{
+		vty_out(vty,"<error> input patameter should only be hn_mobile|mobile\n");
+		return CMD_SUCCESS;
+	}
+	
+	ret = parse_int_ID(argv[1],&interval);
+	if(ret != WID_DBUS_SUCCESS){
+        if(ret == WID_ILLEGAL_INPUT){
+         	vty_out(vty,"<error> illegal input:Input exceeds the maximum value of the parameter type \n");
+        }
+		else{
+			vty_out(vty,"<error> unknown id format\n");
+		}
+		return CMD_SUCCESS;
+	}
+	ret = check_logX_interval(3600,interval,2);/*检查interval是不是900s的2的整数次幂倍*/
+	if(ret != WID_DBUS_SUCCESS){
+		vty_out(vty,"<error> illegal input:the interval should be 900*2^N(s)(N=0,1,2,...) \n");
+	}
+
+	int localid = 1;
+	int slot_id = HostSlotId;
+	int index = 0;
+	char BUSNAME[PATH_LEN];
+	char OBJPATH[PATH_LEN];
+	char INTERFACE[PATH_LEN];
+	if((vty->node == CONFIG_NODE)||(vty->node == ENABLE_NODE)){
+		index = 0;
+	}else if(vty->node == HANSI_NODE){
+		index = (int)vty->index;
+		localid = vty->local;
+		slot_id = vty->slotindex;
+	}
+	else if(vty->node == LOCAL_HANSI_NODE){
+		index = (int)vty->index;
+		localid = vty->local;
+		slot_id = vty->slotindex;
+	}
+	
+	/*Set Ap_STAT or Roam_STAT or both of the parameter in asd*/
+	if(type == AP_STATISTICS || type == RADIO_STATISTICS || type == ALL_STATISTICS){
+		DBusConnection *dcli_dbus_connection = NULL;
+		ReInitDbusConnection(&dcli_dbus_connection,slot_id,distributFag);
+		
+		ReInitDbusPath_V2(localid,index,ASD_DBUS_BUSNAME,BUSNAME);
+		ReInitDbusPath_V2(localid,index,ASD_DBUS_SECURITY_OBJPATH,OBJPATH);
+		ReInitDbusPath_V2(localid,index,ASD_DBUS_SECURITY_INTERFACE,INTERFACE);
+		query = dbus_message_new_method_call(BUSNAME,OBJPATH,INTERFACE,ASD_DBUS_CONFIG_METHOD_SET_LOG_STATISTICS_INTERVAL);
+		
+		dbus_error_init(&err);
+
+
+		dbus_message_append_args(query,
+								 DBUS_TYPE_BYTE,&type,
+								 DBUS_TYPE_UINT32,&interval,
+								 DBUS_TYPE_INVALID);
+
+		reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection,query,-1, &err);
+		
+		dbus_message_unref(query);
+		
+		if (NULL == reply)
+		{
+			cli_syslog_info("<error> failed get reply.\n");
+			if (dbus_error_is_set(&err))
+			{
+				cli_syslog_info("%s raised: %s",err.name,err.message);
+				dbus_error_free(&err);
+			}
+			
+
+			return CMD_SUCCESS;
+		}
+		
+		dbus_message_iter_init(reply,&iter);
+		dbus_message_iter_get_basic(&iter,&ret);
+
+		if(ret == 0)
+		{
+			vty_out(vty,"set log statistics interval %s %s successfully\n",argv[0],argv[1]);
+		}				
+		else
+		{
+			vty_out(vty,"<error>  %d\n",ret);
+		}
+			
+		dbus_message_unref(reply);
+	}
+
+	/*Set Tunnle_STAT or Radio_STAT or both of the parameter in wid*/
+	else if(type == TUNNEL_STATISTICS || type == RADIO_STATISTICS || type == ALL_STATISTICS){
+		ReInitDbusPath_V2(localid,index,WID_DBUS_BUSNAME,BUSNAME);
+		ReInitDbusPath_V2(localid,index,WID_DBUS_OBJPATH,OBJPATH);
+		ReInitDbusPath_V2(localid,index,WID_DBUS_INTERFACE,INTERFACE);
+
+		query2 = dbus_message_new_method_call(BUSNAME,OBJPATH,INTERFACE,WID_DBUS_CONFIG_METHOD_SET_LOG_STATISTICS_INTERVAL);
+		dbus_error_init(&err);
+
+
+		dbus_message_append_args(query2,
+	  							 DBUS_TYPE_BYTE,&type,
+	  							 DBUS_TYPE_UINT32,&interval,
+								 DBUS_TYPE_INVALID);
+
+		reply2 = dbus_connection_send_with_reply_and_block (dcli_dbus_connection,query2,-1, &err);
+		
+		dbus_message_unref(query2);
+		
+		if (NULL == reply2)
+		{
+			cli_syslog_info("<error> failed get reply.\n");
+			if (dbus_error_is_set(&err))
+			{
+				cli_syslog_info("%s raised: %s",err.name,err.message);
+				dbus_error_free(&err);
+			}
+			
+
+			return CMD_SUCCESS;
+		}
+		
+		dbus_message_iter_init(reply2,&iter);
+		dbus_message_iter_get_basic(&iter,&ret);
+
+		if(ret == 0)
+		{
+			vty_out(vty,"set log statistics interval %s %s successfully\n",argv[0],argv[1]);
+		}				
+		else
+		{
+			vty_out(vty,"<error>  %d\n",ret);
+		}
+			
+		dbus_message_unref(reply2);
+	}
+	return CMD_SUCCESS; 		
+}
+int check_logX_interval(unsigned int base,unsigned int interval,int ebase)
+{
+	/*Fuction:check if interval == base*ebase^N (N=0,1,2,...)*/
+	int ret = 0;
+	double a = 0,x = 0,x1 = 0;
+	if(interval < base)
+		ret = 1;
+	a = (double)interval/base;
+	x = log(a)/log(ebase);
+	x1 = x;
+	if(x1-(int)x)
+		ret = 1;
+	printf("a = %f,x = %f,x1-(int)x = %f\n",a,x,x1-(int)x);
+	return ret;
+}
 
 void dcli_ac_init(void)
 {
@@ -22938,6 +23132,7 @@ void dcli_ac_init(void)
 	install_element(HANSI_NODE, &set_asd_new_log_group_cmd);//Qiuchen
 	install_element(HANSI_NODE, &set_ac_management_ipaddr_cmd);
 	install_element(HANSI_NODE, &show_ac_management_ip_addr_cmd);
+	install_element(HANSI_NODE, &set_log_statistics_interval_cmd);
 /************wcl add for OSDEVTDPB-31*******************/
  	install_element(HANSI_WTP_NODE,&set_system_country_code_cmd);
 	install_element(LOCAL_HANSI_WTP_NODE,&set_system_country_code_cmd);
@@ -23130,6 +23325,7 @@ void dcli_ac_init(void)
 	install_element(LOCAL_HANSI_NODE, &set_asd_new_log_group_cmd);//Qiuchen
 	install_element(LOCAL_HANSI_NODE, &set_ac_management_ipaddr_cmd);
 	install_element(LOCAL_HANSI_NODE, &show_ac_management_ip_addr_cmd);
+	install_element(LOCAL_HANSI_NODE, &set_log_statistics_interval_cmd);
 
 	install_element(LOCAL_HANSI_NODE,&set_ac_master_ipaddr_cmd); 
 	install_element(HANSI_NODE,&set_ac_master_ipaddr_cmd); 
