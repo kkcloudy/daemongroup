@@ -418,12 +418,14 @@ int wifi_kernel_rx(struct sk_buff *skb){
 					return 2; /*to drop*/
 				}
 				dev = wifi_device[vrid][dev_index];
+				#if 0
 				if(hansiInfo[vrid].dhcpoption82 == 1){
 					priv = (wifi_dev_private_t *)dev->priv;
 					if(priv->res.len > 17){
 						sprintf(priv->res.data + priv->res.len - 17,"%02X:%02X:%02X:%02X:%02X:%02X",SMAC[0],SMAC[1],SMAC[2],SMAC[3],SMAC[4],SMAC[5]);
 					}
 				}
+				#endif
 
 				//add by zdx 2010-08-23
 				if(0)

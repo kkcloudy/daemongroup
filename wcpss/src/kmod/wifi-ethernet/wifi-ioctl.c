@@ -449,7 +449,7 @@ int dynamic_update_if(struct interface_INFO *if_info)
 	struct net_device *dev = NULL;
 	struct wifi_bss_tbl *bss = NULL;
 	int len = 0;
-	char *data = NULL;
+	unsigned char *data = NULL;
 	if(NULL == if_info)
 	{
 		return -1;
@@ -475,12 +475,11 @@ int dynamic_update_if(struct interface_INFO *if_info)
 		memcpy(priv->apmac,if_info->apmac, MAC_LEN);
 		memcpy(priv->bssid,if_info->bssid, MAC_LEN);
 		memcpy(priv->ifname,if_info->ifname,strlen(if_info->ifname));
-			data = (char *)priv->res.data;
-			memset(data, 0, 256);
-		data = (char *)priv->res.data;
+		data = (unsigned char *)priv->res.data;
 		memset(data, 0, 256);
 		priv->res.module_type = DHCP_OPTION82_KMOD;
 		priv->res.len = 0;
+		#if 0
 		data[0] = 0x01;
 		len = strlen(if_info->apname) + 1 + strlen(if_info->essid) + 1 + 1;
 		data[1] = len;
@@ -490,6 +489,19 @@ int dynamic_update_if(struct interface_INFO *if_info)
 		data[len+2] = 0x02;
 		data[len+3] = 17;
 		priv->res.len = 2+len+2+17;
+		#else
+		len = 2 + strlen(if_info->apname) + 1 + strlen(if_info->essid);
+		*data = 0x2;
+		*(data + 1) = len - 2;
+		printk("DHCP Option82 debug : if_info->apname %s , if_info->essid %s .\n", if_info->apname, if_info->essid);
+		sprintf(data + 2, "%s:%s", if_info->apname, if_info->essid);
+		/*
+		*(data + len) = 0x2;
+		*(data + len + 1) = len - 2;
+		sprintf(data + len + 2, "%s:%s", if_info->apname, if_info->essid);
+		*/
+		priv->res.len = len;
+		#endif
 		priv->acip = if_info->acip;
 		priv->apip = if_info->apip;
 		memcpy(priv->acipv6,if_info->acipv6,IPv6_LEN);
