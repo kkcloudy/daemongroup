@@ -1957,6 +1957,8 @@ CW_THREAD_RETURN_TYPE CWManageWTP(void *arg) {
 					syslog_wtp_log(i, 1, "NONE", 1);
 					if(gWIDLOGHN & 0x01)
 						syslog_wtp_log_hn(i,1,0);
+					if(gWIDLOGHN & 0x02)
+						wid_syslog_auteview(LOG_INFO,AP_UP,AC_WTP[i],0);
 					wid_syslog_debug_debug(WID_DEFAULT,"wtp %d enter join state",i);
 					if(!ACEnterJoin(i, &msg)) 
 					{
@@ -2703,6 +2705,8 @@ void CWCriticalTimerExpiredHandler(int arg) {
 	syslog_wtp_log(*iPtr, 0, "Critical Timer Expired", 0);
 	if(gWIDLOGHN & 0x01)
 		syslog_wtp_log_hn(*iPtr,0,1);
+	if(gWIDLOGHN & 0x02)
+		wid_syslog_auteview(LOG_WARNING,AP_DOWN,AC_WTP[*iPtr],1);
 	memset((char*)&msg, 0, sizeof(msg));
 	msg.mqid = (*iPtr)%THREAD_NUM+1;
 	msg.mqinfo.WTPID = *iPtr;
@@ -2756,6 +2760,8 @@ void CWSoftTimerExpiredHandler(int arg) {
 		syslog_wtp_log(*iPtr, 0, "Soft Timer Expired", 0);
 		if(gWIDLOGHN & 0x01)
 			syslog_wtp_log_hn(*iPtr,0,2162689);
+		if(gWIDLOGHN & 0x02)
+			wid_syslog_auteview(LOG_WARNING,AP_DOWN,AC_WTP[*iPtr],5);
 		memset((char*)&msg, 0, sizeof(msg));
 		msg.mqid = (*iPtr)%THREAD_NUM+1;
 		msg.mqinfo.WTPID = *iPtr;

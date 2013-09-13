@@ -51,6 +51,8 @@ extern char asd_sta_idle_time_switch;
 extern int asd_sta_idle_time;
 unsigned int ACCT_SESSION_ID_HI = 0;
 unsigned int ACCT_SESSION_ID_LO = 0;
+
+extern unsigned char gASDLOGDEBUG;
 /* Default interval in seconds for polling TX/RX octets from the driver if
  * STA is not using interim accounting. This detects wrap arounds for
  * input/output octets and updates Acct-{Input,Output}-Gigawords. */
@@ -551,9 +553,11 @@ void accounting_sta_report(struct asd_data *wasd, struct sta_info *sta,
 		goto fail;
 	}
 	//if(is_secondary != 1)
-		radius_client_send(client_info, msg,
-				   stop ? RADIUS_ACCT : RADIUS_ACCT_INTERIM,
-				   sta);
+	radius_client_send(client_info, msg,
+			   stop ? RADIUS_ACCT : RADIUS_ACCT_INTERIM,
+			   sta);
+	if(stop && gASDLOGDEBUG & BIT(1))
+		asd_syslog_auteview_acct_stop(wasd,sta,&data,session_time);
 	return;
 
  fail:

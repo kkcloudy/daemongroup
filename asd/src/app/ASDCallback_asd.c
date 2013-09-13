@@ -3565,7 +3565,10 @@ void STA_OP(TableMsg *msg){
 	unsigned char SID = 0;
 	char msgtype[64] = {0};
 	ASD_STA_OPT_STR(msg->Op,msgtype);
-	asd_printf(ASD_DEFAULT,MSG_DEBUG,"STA_OP type %s\n",msgtype);	
+	
+	/* For new format of syslog 2013-07-29 */
+	unsigned int Rcode = 999;
+	asd_printf(ASD_DEFAULT,MSG_DEBUG,"STA_OP type %u(DEL--1,MODIFY--2,INFO--3,CONFLICT--16)\n",msg->Op);
 	switch(msg->Op){
 		case WID_DEL:			
 			ret = AsdCheckWTPID(WTPID);
@@ -3660,10 +3663,14 @@ void STA_OP(TableMsg *msg){
 					u8 WTPMAC[6] = {0};
 					if(ASD_WTP_AP[bss[i]->Radio_G_ID/4])
 						memcpy(WTPMAC,ASD_WTP_AP[bss[i]->Radio_G_ID/4]->WTPMAC,6);
-					if(gASDLOGDEBUG & BIT(1))
-						syslog(LOG_INFO|LOG_LOCAL7, "[%d-%d]DISASSOC:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d, ErrorCode:%d.\n",
-							slotid,vrrid,MAC2STR(sta->addr),MAC2STR(WTPMAC),bss[i]->BSSIndex,999);//qiuchen 2013.01.14
 					//end
+					if(gASDLOGDEBUG & BIT(1)){
+						if(ASD_SECURITY[SID]&&((ASD_SECURITY[SID]->securityType == OPEN) || (ASD_SECURITY[SID]->securityType == SHARED)))
+							asd_syslog_auteview(LOG_INFO,STA_LEAVING,NULL,wasd,sta,999,"Unknown");
+						else
+							asd_syslog_auteview(LOG_INFO,DOT1X_USER_OFFLINE,NULL,wasd,sta,999,"Unknown");
+					}
+					
 					if(ASD_NOTICE_STA_INFO_TO_PORTAL)
 						AsdStaInfoToEAG(bss[i],sta,WID_DEL);
 					if(ASD_WLAN[bss[i]->WlanID]!=NULL&&ASD_WLAN[bss[i]->WlanID]->balance_switch == 1&&ASD_WLAN[bss[i]->WlanID]->balance_method==1){
@@ -4074,6 +4081,7 @@ void STA_OP(TableMsg *msg){
 					}
 					if(ASD_NOTICE_STA_INFO_TO_PORTAL)
 						AsdStaInfoToEAG(bss[i],sta,WID_DEL);
+					/*	
 					char *SSID = NULL;
 					u8 *identity = NULL;
 					if(sta->eapol_sm)
@@ -4093,6 +4101,7 @@ void STA_OP(TableMsg *msg){
 					if(gASDLOGDEBUG & BIT(1))
 						syslog(LOG_INFO|LOG_LOCAL7, "[%d-%d]DISASSOC:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d, ErrorCode:%d.\n",
 							slotid,vrrid,MAC2STR(sta->addr),MAC2STR(WTPMAC),bss[i]->BSSIndex,999);//qiuchen 2013.01.14
+					*/
 					if(ASD_WLAN[bss[i]->WlanID]!=NULL&&ASD_WLAN[bss[i]->WlanID]->balance_switch == 1&&ASD_WLAN[bss[i]->WlanID]->balance_method==1){
 						ap_free_sta(bss[i], sta, 1);
 					}
@@ -4113,6 +4122,31 @@ void STA_OP(TableMsg *msg){
 							perror("send(wASDSocket)");
 						}
 						
+					}
+					
+					char *SSID = NULL;
+					u8 *identity = NULL;
+					if(sta->eapol_sm)
+						identity = sta->eapol_sm->identity;
+					if(ASD_WLAN[bss[i]->WlanID])
+						SSID = ASD_WLAN[bss[i]->WlanID]->ESSID;
+					if(gASDLOGDEBUG & BIT(0)){
+						if((ASD_SECURITY[SID])&& (ASD_SECURITY[SID]->securityType == OPEN || ASD_SECURITY[SID]->securityType == SHARED))
+							asd_syslog_h(LOG_INFO,"WSTA","WMAC_CLIENT_GOES_OFFLINE:Client "MAC_ADDRESS" disconnected from WLAN %s. Reason Code is %d.\n",MAC2STR(sta->addr),SSID,9);
+						else if((ASD_SECURITY[SID]->securityType == IEEE8021X)||(ASD_SECURITY[SID]->securityType == WPA_E)||(ASD_SECURITY[SID]->securityType == WPA2_E)||(ASD_SECURITY[SID]->securityType == MD5)||((ASD_SECURITY[SID]->securityType == WAPI_AUTH) && (ASD_SECURITY[SID]->wapi_radius_auth == 1))||(ASD_SECURITY[SID]->extensible_auth == 1)){
+							asd_syslog_h(LOG_INFO,"WSTA","PORTSEC_DOT1X_LOGOFF:-IfName=GRadio-BSS%d:%d-MACAddr="MACSTR"-VlanId=%d-UserName=%s-ErrCode=%d; Session of the 802.1X user was terminated.\n",bss[i]->Radio_G_ID,bss[i]->BSSIndex%128,MAC2STR(sta->addr),sta->vlan_id,identity,1);
+						}
+					}
+					
+					u8 WTPMAC[6] = {0};
+					if(ASD_WTP_AP[bss[i]->Radio_G_ID/4])
+						memcpy(WTPMAC,ASD_WTP_AP[bss[i]->Radio_G_ID/4]->WTPMAC,6);
+
+					if(gASDLOGDEBUG & BIT(1)){
+						if(ASD_SECURITY[SID]&&((ASD_SECURITY[SID]->securityType == OPEN) || (ASD_SECURITY[SID]->securityType == SHARED)))
+							asd_syslog_auteview(LOG_INFO,STA_LEAVING,NULL,wasd,sta,999,"Flow check");
+						else
+							asd_syslog_auteview(LOG_INFO,DOT1X_USER_OFFLINE,NULL,wasd,sta,999,"Flow check");
 					}
 				}
 #ifdef ASD_USE_PERBSS_LOCK
@@ -4313,10 +4347,12 @@ void STA_OP(TableMsg *msg){
 										sta->acct_terminate_cause = RADIUS_ACCT_TERMINATE_CAUSE_IDLE_TIMEOUT;
 									break;
 								case AP_STA_DEAUTH:
+									Rcode = WLAN_REASON_DEAUTH_LEAVING;
 									asd_printf(ASD_LEAVE,MSG_DEBUG,"sta:"MACSTR" leave because of sta request(deauth frame) !\n",MAC2STR(sta->addr));
 									sta->acct_terminate_cause = RADIUS_ACCT_TERMINATE_CAUSE_USER_REQUEST;
 									break;
 								case AP_STA_DISASSOC:
+									Rcode = WLAN_REASON_DISASSOC_STA_HAS_LEFT;
 									asd_printf(ASD_LEAVE,MSG_DEBUG,"sta:"MACSTR" leave because of sta request(disassoc frame) !\n",MAC2STR(sta->addr));
 									sta->acct_terminate_cause = RADIUS_ACCT_TERMINATE_CAUSE_USER_REQUEST;
 									break;
@@ -4354,9 +4390,12 @@ void STA_OP(TableMsg *msg){
 							u8 WTPMAC[6] = {0};
 							if(ASD_WTP_AP[wasd->Radio_G_ID/4])
 								memcpy(WTPMAC,ASD_WTP_AP[wasd->Radio_G_ID/4]->WTPMAC,6);
-							if(gASDLOGDEBUG & BIT(1))
-								syslog(LOG_INFO|LOG_LOCAL7, "[%d-%d]DISASSOC:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d, ErrorCode:%d.\n",
-									slotid,vrrid,MAC2STR(sta->addr),MAC2STR(WTPMAC),wasd->BSSIndex,(reason == AP_STA_DEAUTH || reason == AP_STA_DISASSOC)?0:999);//qiuchen 2013.01.14
+							if(gASDLOGDEBUG & BIT(1)){
+								if(ASD_SECURITY[SID]&&((ASD_SECURITY[SID]->securityType == OPEN) || (ASD_SECURITY[SID]->securityType == SHARED)))
+									asd_syslog_auteview(LOG_INFO,STA_LEAVING,NULL,wasd,sta,Rcode,"Poor link");
+								else
+									asd_syslog_auteview(LOG_INFO,DOT1X_USER_OFFLINE,NULL,wasd,sta,Rcode,"Poor link");
+							}
 							asd_printf(ASD_LEAVE,MSG_DEBUG,"sta:"MACSTR"leave reason is %d\n",MAC2STR(sta->addr),reason);
 							asd_printf(ASD_LEAVE,MSG_DEBUG,"sta:"MACSTR"leave sub_reason is %d\n",MAC2STR(sta->addr),sub_reason);
 							if((reason != AP_STA_DEAUTH)&&(reason != AP_STA_DISASSOC)){//qiuchen 
@@ -4429,9 +4468,12 @@ void STA_OP(TableMsg *msg){
 						u8 WTPMAC[6] = {0};
 						if(ASD_WTP_AP[wasd->Radio_G_ID/4])
 							memcpy(WTPMAC,ASD_WTP_AP[wasd->Radio_G_ID/4]->WTPMAC,6);
-						if(gASDLOGDEBUG & BIT(1))
-							syslog(LOG_INFO|LOG_LOCAL7, "[%d-%d]DISASSOC:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d, ErrorCode:%d.\n",
-								slotid,vrrid,MAC2STR(sta->addr),MAC2STR(WTPMAC),wasd->BSSIndex,999);//qiuchen 2013.01.14
+						if(gASDLOGDEBUG & BIT(1)){
+							if(ASD_SECURITY[SID]&&((ASD_SECURITY[SID]->securityType == OPEN) || (ASD_SECURITY[SID]->securityType == SHARED)))
+								asd_syslog_auteview(LOG_INFO,STA_LEAVING,NULL,wasd,sta,Rcode,"Sta already gone");
+							else
+								asd_syslog_auteview(LOG_INFO,DOT1X_USER_OFFLINE,NULL,wasd,sta,Rcode,"Sta already gone");
+						}
 						wasd->abnormal_st_down_num ++;			
 						signal_sta_leave_abnormal(sta->addr,wasd->Radio_G_ID,wasd->BSSIndex,wasd->WlanID,sta->rssi);
 						if(1 == check_sta_authorized(wasd,sta))

@@ -83,6 +83,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "ASDEAPAuth.h"
 #include "ASDPMKSta.h"
 #include "roaming_sta.h"
+#include "syslog.h"
 int ASD_NOTICE_STA_INFO_TO_PORTAL_TIMER=10;
 
 unsigned char	asd_get_sta_info_able = 0;
@@ -3136,6 +3137,10 @@ void asd_sta_roaming_management(struct sta_info *new_sta)
     		ieee802_1x_notify_port_enabled(old_sta->eapol_sm, 0);
 	    }
 		/* delete old sta frist */
+		if(gASDLOGDEBUG & BIT(1)){
+			asd_syslog_auteview(LOG_INFO,STA_ROAM_START,NULL,nwasd,new_sta,0,NULL);			
+			asd_syslog_auteview(LOG_INFO,STA_LEAVING,NULL,owasd,old_sta,999,"Roaming");
+		}		
 	    asd_printf(ASD_DEFAULT,MSG_DEBUG,"func:%s delete the old_sta frist\n",__func__);				
 		ap_free_sta(owasd,old_sta,0);
 		

@@ -765,3 +765,24 @@ void wid_syslog_hn(int level,char *iden,char *fmt,...)
     closelog();
 }
 
+/* For new format of syslog 2013-07-29 */
+void wid_syslog_auteview(int level,int type,void *parameter,int Rcode)
+{
+
+	WID_WTP *AP = (WID_WTP*)parameter;
+	if(AP == NULL)
+		return;
+	switch(type){
+		case AP_UP:
+			syslog(level|LOG_LOCAL7,"AP_UP "DS_STRUCTURE_ALL"[AP"AUTELANID" "LOG_MAC" "LOG_NAME" wtpid=\"%d\" seid=\"%s\" model=\"%s\" "LOG_IP_STR" "LOG_RADIOS"][AC"AUTELANID" "LOG_IP_V4" "LOG_IF"]",
+				slotid,vrrid,MAC2STR(AP->WTPMAC),AP->WTPNAME,AP->WTPID,AP->WTPSN,AP->WTPModel,AP->WTPIP,AP->RadioCount,IPSTRINT(gWID_AC_MANAGEMENT_IP),AP->BindingIFName);
+			break;
+		case AP_DOWN:
+			syslog(level|LOG_LOCAL7,"AP_DOWN "DS_STRUCTURE_ALL"[AP"AUTELANID" "LOG_MAC" wtpid=\"%d\"][REASON"AUTELANID" "LOG_CODE"]",
+				slotid,vrrid,MAC2STR(AP->WTPMAC),AP->WTPID,"APD",Rcode);
+			break;
+		default:
+			break;
+	}
+}
+

@@ -137,7 +137,8 @@ int ASD_NOTICE_STA_INFO_TO_PORTAL=0;
 
 extern unsigned char gASDLOGDEBUG;//qiuchen
 extern unsigned long gASD_AC_MANAGEMENT_IP;
-
+extern unsigned int AP_STATISTICS_LOG_INTERVAL;
+extern unsigned int ROAM_STATISTICS_LOG_INTERVAL;
 static struct{
 	char rname[20];
 	int	count;
@@ -1711,6 +1712,26 @@ int signal_sta_verify_failed(const unsigned char mac[MAC_LEN],unsigned int bss_i
 		return 0;
 	}
 	*/
+	struct sta_info *sta = NULL;
+	sta = asd_sta_hash_get(mac);
+	char str[128]={0};
+	strcpy(str,"Key negotiation wrong");
+	if(gASDLOGDEBUG & BIT(1) && sta && sta->wasd){
+		if(sta->reauthflag)
+			asd_syslog_auteview(LOG_WARNING,DOT1X_USER_REONLINE_FAIL,NULL,sta->wasd,sta,999,str);
+		else if(sta->rflag)
+			asd_syslog_auteview(LOG_WARNING,STA_ROAM_FAIL,NULL,sta->wasd,sta,999,str);
+		else
+			asd_syslog_auteview(LOG_WARNING,DOT1X_USER_ONLINE_FAIL,NULL,sta->wasd,sta,999,str);
+	}
+	if(gASDLOGDEBUG & BIT(1) && sta && sta->wasd){
+		if(sta->reauthflag)
+			asd_syslog_auteview(LOG_WARNING,DOT1X_USER_REONLINE_FAIL,NULL,sta->wasd,sta,999,str);
+		else if(sta->rflag)
+			asd_syslog_auteview(LOG_WARNING,STA_ROAM_FAIL,NULL,sta->wasd,sta,999,str);
+		else
+			asd_syslog_auteview(LOG_WARNING,DOT1X_USER_ONLINE_FAIL,NULL,sta->wasd,sta,999,str);
+	}
 	unsigned char traplevel=4;
 	unsigned int local_id = local;
 	
@@ -1979,7 +2000,30 @@ int signal_jianquan_failed(unsigned char mac[MAC_LEN],unsigned short reason_code
 	}
 	
 	*/
-
+	/* qiuchen add it for china mobile log system */
+	syslog(LOG_INFO|LOG_LOCAL3,"signal_jianquan_failed");
+	struct sta_info *sta = NULL;
+	sta = asd_sta_hash_get(mac);
+	char str[128]={0};
+	if(reason_code==1) strcpy(str,"Time out");
+	else if(reason_code==2)	strcpy(str,"Max reAuth times");
+	else if(reason_code==3) strcpy(str,"Port Invalid");
+	else if(reason_code==4) strcpy(str,"Abort");
+	else if(reason_code==5) strcpy(str,"Key negotiation wrong");
+	
+	if(gASDLOGDEBUG & BIT(1) && sta && sta->wasd){
+		if(sta->reauthflag)
+			asd_syslog_auteview(LOG_WARNING,DOT1X_USER_REONLINE_FAIL,NULL,sta->wasd,sta,999,str);
+		else if(sta->rflag)
+			asd_syslog_auteview(LOG_WARNING,STA_ROAM_FAIL,NULL,sta->wasd,sta,999,str);
+		else{
+			if(sta->eapol_sm->keyDone && !sta->eapol_sm->portValid){
+			}
+			else
+				asd_syslog_auteview(LOG_WARNING,DOT1X_USER_ONLINE_FAIL,NULL,sta->wasd,sta,999,str);
+		}
+	}
+	/* end */
 	unsigned char traplevel=4;
 	
 	if(gasdtrapflag<traplevel){
@@ -4384,6 +4428,49 @@ DBusMessage *asd_dbus_set_asd_logger_printflag(DBusConnection *conn, DBusMessage
 	return reply;	
 
 }
+/* qiuchen add it for log system */
+DBusMessage *asd_dbus_set_log_statistics_interval(DBusConnection *conn, DBusMessage *msg, void *user_data)
+{
+	DBusMessage* reply; 
+	DBusMessageIter  iter;
+	DBusError err;
+	dbus_error_init(&err);
+	int ret = ASD_DBUS_SUCCESS;
+	unsigned char type = 0;
+	unsigned int interval = 0;
+	
+	if (!(dbus_message_get_args ( msg, &err,
+								DBUS_TYPE_BYTE,&type,
+								DBUS_TYPE_UINT32,&interval,
+								DBUS_TYPE_INVALID))){
+	
+		asd_printf(ASD_DBUS,MSG_DEBUG,"Unable to get input args\n");
+					
+		if (dbus_error_is_set(&err)) {
+			asd_printf(ASD_DBUS,MSG_DEBUG,"%s raised: %s",err.name,err.message);
+			dbus_error_free(&err);
+		}
+		return NULL;
+	}
+	if(type == AP_STATISTICS)
+		AP_STATISTICS_LOG_INTERVAL = interval;
+	else if(type  == ROAM_STATISTICS)
+		ROAM_STATISTICS_LOG_INTERVAL = interval;
+	else if(type == ALL_STATISTICS){
+		AP_STATISTICS_LOG_INTERVAL = interval;
+		ROAM_STATISTICS_LOG_INTERVAL = interval;
+	}
+	reply = dbus_message_new_method_return(msg);
+			
+	dbus_message_iter_init_append(reply, &iter);
+			
+	dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT32, &ret);
+	
+	asd_printf(ASD_DBUS,MSG_DEBUG,"set log statistics interval type = %d,ap_interval = %d\n",type,AP_STATISTICS_LOG_INTERVAL);
+	asd_printf(ASD_DBUS,MSG_DEBUG,"set log statistics interval type = %d,roam_interval = %d\n",type,ROAM_STATISTICS_LOG_INTERVAL);
+	return reply;	
+}
+
 //qiuchen add it for Henan Mobile
 DBusMessage *set_asd_log_group_activated(DBusConnection *conn, DBusMessage *msg, void *user_data)
 {
@@ -4408,10 +4495,26 @@ DBusMessage *set_asd_log_group_activated(DBusConnection *conn, DBusMessage *msg,
 		}
 		return NULL;
 	}
-	if(switchi == 1)
+	if(switchi == 1){
 		gASDLOGDEBUG |= group;
-	else if(switchi == 0)
+		#if 0    /* now we need not this, zhangdi@autelan.com  2013-09-12 */
+		if(group == 0x02){
+			circle_cancel_timeout(asd_log_ap_statistics,NULL,NULL);
+			circle_cancel_timeout(asd_log_roam_statistics,NULL,NULL);
+			circle_register_timeout(AP_STATISTICS_LOG_INTERVAL,0,asd_log_ap_statistics,NULL,NULL);
+			circle_register_timeout(ROAM_STATISTICS_LOG_INTERVAL,0,asd_log_roam_statistics,NULL,NULL);
+		}
+		#endif
+	}
+	else if(switchi == 0){
 		gASDLOGDEBUG &= (~group);
+		#if 0
+		if(group == 0x02){
+			circle_cancel_timeout(asd_log_ap_statistics,NULL,NULL);
+			circle_cancel_timeout(asd_log_roam_statistics,NULL,NULL);
+		}
+		#endif
+	}
 	reply = dbus_message_new_method_return(msg);
 		
 	dbus_message_iter_init_append(reply, &iter);
@@ -24211,6 +24314,7 @@ DBusMessage *asd_dbus_show_asd_global_variable(DBusConnection *conn, DBusMessage
 	dbus_message_iter_append_basic (&iter, DBUS_TYPE_UINT32, &asd_bak_sta_update_time);
 	dbus_message_iter_append_basic (&iter, DBUS_TYPE_BYTE, &asd_ipset_switch);
 	dbus_message_iter_append_basic (&iter, DBUS_TYPE_BYTE, &asd_sta_getip_from_dhcpsnoop);
+	dbus_message_iter_append_basic (&iter, DBUS_TYPE_BYTE, &gASDLOGDEBUG);
 	
 
 	return reply;
@@ -29190,6 +29294,9 @@ static DBusHandlerResult asd_dbus_message_handler (DBusConnection *connection, D
 		}
 		else if (dbus_message_is_method_call(message,ASD_DBUS_SECURITY_INTERFACE,ASD_DBUS_SECURITY_METHOD_SET_ASD_LOG_GROUP_ACTIVATED)){
 				reply = set_asd_log_group_activated(connection,message,user_data);//qiuchen add it for hn_mobile 
+		}
+		else if(dbus_message_is_method_call(message,ASD_DBUS_SECURITY_INTERFACE,ASD_DBUS_CONFIG_METHOD_SET_LOG_STATISTICS_INTERVAL)){
+				reply = asd_dbus_set_log_statistics_interval(connection,message,user_data);
 		}
 		else if(dbus_message_is_method_call(message,ASD_DBUS_SECURITY_INTERFACE,ASD_DBUS_SECURITY_METHOD_SET_AC_MANAGEMENT_IP)){
 			reply = set_ac_management_ip(connection,message,user_data);//qiuchen add it for hn_mobile 

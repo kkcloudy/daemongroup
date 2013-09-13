@@ -62,6 +62,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "AC.h"
 #include "dbus/hmd/HmdDbusPath.h"
 #include "ACCheckReport.h"
+#include "syslog.h"
 
 static DBusConnection * wid_dbus_connection = NULL;
 static DBusConnection * wid_dbus_connection2 = NULL;
@@ -85,6 +86,8 @@ int cpu_mem_collect_time = 300;/*lixiang change 3500 to 300*/
 /*************for mib sample end *********************/
 extern unsigned char gWIDLOGHN;
 extern unsigned long gWID_AC_MANAGEMENT_IP;
+extern unsigned int TUNNEL_STATISTICS_LOG_INTERVAL;
+extern unsigned int RADIO_STATISTICS_LOG_INTERVAL;
 static struct{
 	char rname[20];
 	int	count;
@@ -16980,6 +16983,50 @@ DBusMessage * wid_dbus_interface_set_wid_daemonlog_level(DBusConnection *conn, D
 	return reply;	
 
 }
+/* qiuchen add it for china mobile log system */
+DBusMessage *wid_dbus_interface_set_log_statistics_interval(DBusConnection *conn, DBusMessage *msg, void *user_data)
+	{
+			DBusMessage* reply; 
+			DBusMessageIter  iter;
+			DBusError err;
+			dbus_error_init(&err);
+			int ret = WID_DBUS_SUCCESS;
+			unsigned char type = 0;
+			unsigned int interval = 0;
+		
+			if (!(dbus_message_get_args ( msg, &err,
+										DBUS_TYPE_BYTE,&type,
+										DBUS_TYPE_UINT32,&interval,
+										DBUS_TYPE_INVALID))){
+		
+				wid_syslog_debug_debug(WID_DBUS,"Unable to get input args\n");
+						
+				if (dbus_error_is_set(&err)) {
+					wid_syslog_debug_debug(WID_DBUS,"%s raised: %s",err.name,err.message);
+					dbus_error_free(&err);
+				}
+				return NULL;
+			}
+			if(type == TUNNEL_STATISTICS)
+				TUNNEL_STATISTICS_LOG_INTERVAL = interval;
+			else if(type == RADIO_STATISTICS)
+				RADIO_STATISTICS_LOG_INTERVAL = interval;
+			else if(type == ALL_STATISTICS){
+				TUNNEL_STATISTICS_LOG_INTERVAL = interval;
+				RADIO_STATISTICS_LOG_INTERVAL = interval;
+			}
+			reply = dbus_message_new_method_return(msg);
+				
+			dbus_message_iter_init_append(reply, &iter);
+				
+			dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT32, &ret);
+		
+			wid_syslog_debug_debug(WID_DBUS,"set log statistics interval type = %d interval = %d\n",TUNNEL_STATISTICS_LOG_INTERVAL);
+			wid_syslog_debug_debug(WID_DBUS,"set log statistics interval type = %d interval = %d\n",RADIO_STATISTICS_LOG_INTERVAL);
+			return reply;	
+		
+	}
+
 //qiuchen add it for Henan Mobile 2013.02.21
 DBusMessage *wid_dbus_interface_set_wid_log_hn_enable(DBusConnection *conn, DBusMessage *msg, void *user_data)
 {
@@ -67273,6 +67320,8 @@ DBusMessage *wid_dbus_set_ac_as_secondary(DBusConnection *conn, DBusMessage *msg
 					syslog_wtp_log(WTPID, 0, "Critical Timer Expired", 0);
 					if(gWIDLOGHN & 0x01)
 						syslog_wtp_log_hn(WTPID,0,6);
+					if(gWIDLOGHN & 0x02)
+						wid_syslog_auteview(LOG_WARNING,AP_DOWN,AC_WTP[WTPID],4);
 					memset((char*)&qmsg, 0, sizeof(qmsg));
 					qmsg.mqid = WTPID%THREAD_NUM+1;
 					qmsg.mqinfo.WTPID = WTPID;
@@ -67330,6 +67379,8 @@ DBusMessage *wid_dbus_set_ac_as_secondary(DBusConnection *conn, DBusMessage *msg
 						syslog_wtp_log(WTPID, 0, "Critical Timer Expired", 0);
 						if(gWIDLOGHN & 0x01)
 							syslog_wtp_log_hn(WTPID,0,6);
+						if(gWIDLOGHN & 0x02)
+							wid_syslog_auteview(LOG_WARNING,AP_DOWN,AC_WTP[WTPID],4);
 						memset((char*)&qmsg, 0, sizeof(qmsg));
 						qmsg.mqid = WTPID%THREAD_NUM+1;
 						qmsg.mqinfo.WTPID = WTPID;
@@ -67619,6 +67670,8 @@ DBusMessage *wid_dbus_set_local_hansi_state(DBusConnection *conn, DBusMessage *m
 					syslog_wtp_log(WTPID, 0, "Critical Timer Expired", 0);
 					if(gWIDLOGHN & 0x01)
 						syslog_wtp_log_hn(WTPID,0,6);
+					if(gWIDLOGHN & 0x02)
+						wid_syslog_auteview(LOG_WARNING,AP_DOWN,AC_WTP[WTPID],4);
 					memset((char*)&qmsg, 0, sizeof(qmsg));
 					qmsg.mqid = WTPID%THREAD_NUM+1;
 					qmsg.mqinfo.WTPID = WTPID;
@@ -67669,6 +67722,8 @@ DBusMessage *wid_dbus_set_local_hansi_state(DBusConnection *conn, DBusMessage *m
 						syslog_wtp_log(WTPID, 0, "Critical Timer Expired", 0);
 						if(gWIDLOGHN & 0x01)
 							syslog_wtp_log_hn(WTPID,0,6);
+						if(gWIDLOGHN & 0x02)
+							wid_syslog_auteview(LOG_WARNING,AP_DOWN,AC_WTP[WTPID],4);
 						memset((char*)&qmsg, 0, sizeof(qmsg));
 						qmsg.mqid = WTPID%THREAD_NUM+1;
 						qmsg.mqinfo.WTPID = WTPID;
@@ -77165,6 +77220,9 @@ static DBusHandlerResult wid_dbus_message_handler (DBusConnection *connection, D
 		}
 		else if(dbus_message_is_method_call(message,WID_DBUS_INTERFACE,WID_DBUS_CONF_METHOD_HNLOG_SWITCH_ACTIVATED)){
 			reply = wid_dbus_interface_set_wid_log_hn_enable(connection,message,user_data);//qiuchen add it for Henan mobile 2013.02.21
+		}
+		else if(dbus_message_is_method_call(message,WID_DBUS_INTERFACE,WID_DBUS_CONFIG_METHOD_SET_LOG_STATISTICS_INTERVAL)){
+			reply = wid_dbus_interface_set_log_statistics_interval(connection,message,user_data);
 		}
 		else if(dbus_message_is_method_call(message,WID_DBUS_INTERFACE,WID_DBUS_CONF_METHOD_SET_AC_MANAGEMENT_IP)){
 			reply = wid_dbus_interface_set_ac_management_ip(connection,message,user_data);

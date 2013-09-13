@@ -2491,6 +2491,8 @@ int WID_SUSPEND_WTP(unsigned int WTPID)
 		syslog_wtp_log(WTPID, 0, "WTP UNUSED", 0);
 		if(gWIDLOGHN & 0x01)
 			syslog_wtp_log_hn(WTPID,0,3);
+		if(gWIDLOGHN & 0x02)
+			wid_syslog_auteview(LOG_WARNING,AP_DOWN,AC_WTP[WTPID],2);
 		memset((char*)&msg, 0, sizeof(msg));
 		msg.mqid = WTPID%THREAD_NUM + 1;
 		msg.mqinfo.WTPID = WTPID;

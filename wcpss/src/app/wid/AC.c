@@ -305,6 +305,9 @@ unsigned int g_ap_auto_update_service_tftp = 0;//service tftp (0--disable;1--ena
 unsigned int g_service_ftp_state = 0;//service ftp  (0--disable;1--enable)
 unsigned int g_wid_wsm_error_handle_state = WID_WSM_ERROR_HANDLE_STATE_DEFAULT;//wid wsm error handle state(0--disable;1--enable)
 int rrm_rid = 0;
+/* For new format of syslog 2013-07-29 */
+unsigned int TUNNEL_STATISTICS_LOG_INTERVAL = 28800;
+unsigned int RADIO_STATISTICS_LOG_INTERVAL = 28800;
 /*_________________________________________________________*/
 /*  *******************___FUNCTIONS___*******************  */
 

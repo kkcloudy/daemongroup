@@ -771,6 +771,9 @@ radius_auth(eag_radius_t *radius,
 	char ap_macstr[32] = "";
 	char user_macstr[32] = "";
 	char user_ipstr[32] = "";
+	char nas_ipstr[32]= "";
+	char portal_ipstr[32]= "";
+	char radius_auth_ipstr[32]= "";
 	
 	if (NULL == radius || NULL == appconn) {
 		eag_log_err("radius_auth input error");
@@ -780,6 +783,10 @@ radius_auth(eag_radius_t *radius,
 	ip2str(appconn->session.user_ip, user_ipstr, sizeof(user_ipstr));
 	mac2str(appconn->session.apmac, ap_macstr, sizeof(ap_macstr), '-');
 	mac2str(appconn->session.usermac, user_macstr, sizeof(user_macstr), '-');
+	ip2str(appconn->session.nasip, nas_ipstr, sizeof(nas_ipstr));
+	ip2str(appconn->session.portal_srv.ip, portal_ipstr, sizeof(portal_ipstr));
+	ip2str(appconn->session.radius_srv.auth_ip, radius_auth_ipstr, sizeof(radius_auth_ipstr));
+	
 	radius_packet_init(&packet, RADIUS_CODE_ACCESS_REQUEST);
 
 	len = strlen(appconn->session.username);
@@ -827,11 +834,13 @@ radius_auth(eag_radius_t *radius,
 			0, (uint8_t *)appconn->user_agent, len);
 	}
 
-	admin_log_notice("RadiusAccessRequest___UserName:%s,UserIp:%s,ApMAC:%s,UserMAC:%s,NasID:%s,authtype:%s",
-		appconn->session.username, user_ipstr, ap_macstr, user_macstr, appconn->session.nasid,
+	admin_log_notice("RadiusAccessRequest___UserName:%s,UserIp:%s,UserMAC:%s,ApMAC:%s,SSID:%s,NasIP:%s,PortalIP:%s,RadiusAuthIP:%s,Interface:%s,NasID:%s,Authtype:%s",
+		appconn->session.username, user_ipstr, user_macstr, ap_macstr, appconn->session.essid, 
+		nas_ipstr, portal_ipstr, radius_auth_ipstr, appconn->session.intf, appconn->session.nasid,
 		(EAG_AUTH_TYPE_MAC==appconn->session.server_auth_type)?"MAC":"Portal");
-	log_app_filter(appconn,"RadiusAccessRequest___UserName:%s,UserIp:%s,ApMAC:%s,UserMAC:%s,NasID:%s,authtype:%s",
-		appconn->session.username, user_ipstr, ap_macstr, user_macstr, appconn->session.nasid,
+	log_app_filter(appconn,"RadiusAccessRequest___UserName:%s,UserIp:%s,UserMAC:%s,ApMAC:%s,SSID:%s,NasIP:%s,PortalIP:%s,RadiusAuthIP:%s,Interface:%s,NasID:%s,Authtype:%s",
+		appconn->session.username, user_ipstr, user_macstr, ap_macstr, appconn->session.essid, 
+		nas_ipstr, portal_ipstr, radius_auth_ipstr, appconn->session.intf, appconn->session.nasid,
 		(EAG_AUTH_TYPE_MAC==appconn->session.server_auth_type)?"MAC":"Portal");
 
 	eag_bss_message_count(radius->eagstat, appconn, BSS_ACCESS_REQUEST_COUNT, 1);
@@ -859,6 +868,9 @@ radius_acct_req(eag_radius_t *radius,
 	char user_ipstr[32] = "";
 	char ap_macstr[32] = "";
 	char user_macstr[32] = "";
+	char nas_ipstr[32]= "";
+	char radius_acct_ipstr[32]= "";
+	struct radius_srv_t *acct_srv_t = NULL;
 	const char *terminate_cause_str = "";
 	
 	if (NULL == radius || NULL == appconn) {
@@ -869,6 +881,9 @@ radius_acct_req(eag_radius_t *radius,
 	ip2str(appconn->session.user_ip, user_ipstr, sizeof(user_ipstr));
 	mac2str(appconn->session.apmac, ap_macstr, sizeof(ap_macstr), '-');
 	mac2str(appconn->session.usermac, user_macstr, sizeof(user_macstr), '-');
+	ip2str(appconn->session.nasip, nas_ipstr, sizeof(nas_ipstr));
+    acct_srv_t = &(appconn->session.radius_srv);
+	ip2str(acct_srv_t->acct_ip, radius_acct_ipstr, sizeof(radius_acct_ipstr));
 	
 	if (RADIUS_STATUS_TYPE_START != status_type
 		&& RADIUS_STATUS_TYPE_INTERIM_UPDATE != status_type
@@ -917,15 +932,16 @@ radius_acct_req(eag_radius_t *radius,
 		eag_bss_message_count(radius->eagstat, appconn, BSS_ACCT_REQUEST_START_COUNT, 1);
 		radius_addattr(&packet, RADIUS_ATTR_SESSION_TIMEOUT, 0, 0,
 				appconn->session.sessiontimeout, NULL, 0);
-		admin_log_notice("RadiusAcctRequestStart___UserName:%s,UserIP:%s,SSID:%s,"\
-			"authtype:%s,ApMAC:%s,UserMAC:%s,NasID:%s",
-			appconn->session.username, user_ipstr, appconn->session.essid,
+		admin_log_notice("RadiusAcctRequestStart___UserName:%s,UserIP:%s,UserMAC:%s,SSID:%s,"\
+			"Authtype:%s,ApMAC:%s,NasIP:%s,RadiusAcctIP:%s,Interface:%s,NasID:%s",
+			appconn->session.username, user_ipstr, user_macstr, appconn->session.essid,
 			(EAG_AUTH_TYPE_MAC==appconn->session.server_auth_type)?"MAC":"Portal",
-			ap_macstr, user_macstr, appconn->session.nasid);
-		log_app_filter(appconn,"RadiusAcctRequestStart___UserName:%s,UserIP:%s,SSID:%s,"\
-			"authtype:%s,APMAC:%s,UserMAC:%s,NasID:%s",appconn->session.username, user_ipstr, 
-			appconn->session.essid,(EAG_AUTH_TYPE_MAC==appconn->session.server_auth_type)?"MAC":"Portal",
-			ap_macstr,user_macstr, appconn->session.nasid);
+			ap_macstr, nas_ipstr, radius_acct_ipstr, appconn->session.intf, appconn->session.nasid);
+		log_app_filter(appconn,"RadiusAcctRequestStart___UserName:%s,UserIP:%s,UserMAC:%s,SSID:%s,"\
+			"Authtype:%s,APMAC:%s,NasIP:%s,RadiusAcctIP:%s,Interface:%s,NasID:%s",
+			appconn->session.username, user_ipstr, user_macstr, appconn->session.essid,
+			(EAG_AUTH_TYPE_MAC==appconn->session.server_auth_type)?"MAC":"Portal",
+			ap_macstr,nas_ipstr, radius_acct_ipstr, appconn->session.intf, appconn->session.nasid);
 		break;
 	case RADIUS_STATUS_TYPE_STOP:
 		radius_addattr(&packet, RADIUS_ATTR_ACCT_TERMINATE_CAUSE, 0, 0,
@@ -980,38 +996,41 @@ radius_acct_req(eag_radius_t *radius,
 		if (RADIUS_STATUS_TYPE_INTERIM_UPDATE == status_type) {
 			timediff = timenow - appconn->session.session_start_time;
 			eag_bss_message_count(radius->eagstat, appconn, BSS_ACCT_REQUEST_UPDATE_COUNT, 1);
-			admin_log_notice("RadiusAcctRequestUpdate___UserName:%s,UserIP:%s,"
-				"Sessiontime:%lu,SSID:%s,authtype:%s,ApMAC:%s,UserMAC:%s,NasID:%s,"
+			admin_log_notice("RadiusAcctRequestUpdate___UserName:%s,UserIP:%s,UserMAC:%s,"
+				"Sessiontime:%lu,SSID:%s,Authtype:%s,ApMAC:%s,NasIP:%s,RadiusAcctIP:%s,Interface:%s,NasID:%s,"
 				"InputOctets:%llu,InputPackets:%u,OutputOctets:%llu,OutputPackets:%u",
-				appconn->session.username, user_ipstr, timediff, appconn->session.essid,
+				appconn->session.username, user_ipstr, user_macstr, timediff, appconn->session.essid,
 				(EAG_AUTH_TYPE_MAC==appconn->session.server_auth_type)?"MAC":"Portal",
-				ap_macstr, user_macstr, appconn->session.nasid, appconn->session.output_octets,
+				ap_macstr, nas_ipstr, radius_acct_ipstr, appconn->session.intf, 
+				appconn->session.nasid, appconn->session.output_octets,
 				appconn->session.output_packets, appconn->session.input_octets, appconn->session.input_packets);
-			log_app_filter(appconn,"RadiusAcctRequestUpdate___UserName:%s,UserIP:%s,"
-				"Sessiontime:%lu,SSID:%s,authtype:%s,ApMAC:%s,UserMAC:%s,NasID:%s,"
+			log_app_filter(appconn,"RadiusAcctRequestUpdate___UserName:%s,UserIP:%s,UserMAC:%s,"
+				"Sessiontime:%lu,SSID:%s,Authtype:%s,ApMAC:%s,NasIP:%s,RadiusAcctIP:%s,Interface:%s,NasID:%s,"
 				"InputOctets:%llu,InputPackets:%u,OutputOctets:%llu,OutputPackets:%u",
-				appconn->session.username, user_ipstr, timediff, appconn->session.essid,
+				appconn->session.username, user_ipstr, user_macstr, timediff, appconn->session.essid,
 				(EAG_AUTH_TYPE_MAC==appconn->session.server_auth_type)?"MAC":"Portal",
-				ap_macstr,user_macstr, appconn->session.nasid, appconn->session.output_octets,
+				ap_macstr, nas_ipstr, radius_acct_ipstr, appconn->session.intf, appconn->session.nasid, appconn->session.output_octets,
 				appconn->session.output_packets, appconn->session.input_octets, appconn->session.input_packets);
 		} else {
 			timediff = appconn->session.session_stop_time - appconn->session.session_start_time;
 			eag_bss_message_count(radius->eagstat, appconn, BSS_ACCT_REQUEST_STOP_COUNT, 1);
 			terminate_cause_str = radius_terminate_cause_to_str(appconn->session.terminate_cause);
-			admin_log_notice("RadiusAcctRequestStop___UserName:%s,UserIP:%s,"
-				"Sessiontime:%lu,SSID:%s,authtype:%s,ApMAC:%s,UserMAC:%s,NasID:%s,"
+			admin_log_notice("RadiusAcctRequestStop___UserName:%s,UserIP:%s,UserMAC:%s,"
+				"Sessiontime:%lu,SSID:%s,Authtype:%s,ApMAC:%s,NasIP:%s,RadiusAcctIP:%s,Interface:%s,NasID:%s,"
 				"InputOctets:%llu,InputPackets:%u,OutputOctets:%llu,OutputPackets:%u,OfflineReason:%s(%d)",
-				appconn->session.username, user_ipstr, timediff, appconn->session.essid,
+				appconn->session.username, user_ipstr, user_macstr, timediff, appconn->session.essid,
 				(EAG_AUTH_TYPE_MAC==appconn->session.server_auth_type)?"MAC":"Portal",
-				ap_macstr,user_macstr, appconn->session.nasid, appconn->session.output_octets,
+				ap_macstr, nas_ipstr, radius_acct_ipstr, appconn->session.intf, 
+				appconn->session.nasid, appconn->session.output_octets,
 				appconn->session.output_packets, appconn->session.input_octets, appconn->session.input_packets,
 				terminate_cause_str, appconn->session.terminate_cause);
-			log_app_filter(appconn,"RadiusAcctRequestStop___UserName:%s,UserIP:%s,"
-				"Sessiontime:%lu,SSID:%s,authtype:%s,ApMAC:%s,UserMAC:%s,NasID:%s,"
+			log_app_filter(appconn,"RadiusAcctRequestStop___UserName:%s,UserIP:%s,UserMAC:%s,"
+				"Sessiontime:%lu,SSID:%s,Authtype:%s,ApMAC:%s,NasIP:%s,RadiusAcctIP:%s,Interface:%s,NasID:%s,"
 				"InputOctets:%llu,InputPackets:%u,OutputOctets:%llu,OutputPackets:%u,OfflineReason:%s(%d)",
-				appconn->session.username, user_ipstr, timediff, appconn->session.essid,
+				appconn->session.username, user_ipstr, user_macstr, timediff, appconn->session.essid,
 				(EAG_AUTH_TYPE_MAC==appconn->session.server_auth_type)?"MAC":"Portal",
-				ap_macstr,user_macstr, appconn->session.nasid, appconn->session.output_octets,
+				ap_macstr, nas_ipstr, radius_acct_ipstr, appconn->session.intf, 
+				appconn->session.nasid, appconn->session.output_octets,
 				appconn->session.output_packets, appconn->session.input_octets, appconn->session.input_packets,
 				terminate_cause_str, appconn->session.terminate_cause);
 		}
@@ -1374,15 +1393,21 @@ acct_response_proc(eag_radius_t *radius,
 	char user_ipstr[32] = "";
 	char username[256] = "";
 	char user_macstr[32] = "";
+	char radius_ipstr[32] = "";
 	char nasid[RADIUS_MAX_NASID_LEN] = "";
 	char session_filter_prefix[512] = ""; /* add for debug-filter */
+	uint32_t nasip = 0;
+	char nas_ipstr[32]= "";
 
 	if (NULL == radius || NULL == radid  || NULL == packet) {
 		eag_log_err("acct_response_proc input error");
 		return -1;
 	}
-	
+
+	nasip = eag_ins_get_nasip(radius->eagins);
+	ip2str(nasip, nas_ipstr, sizeof(nas_ipstr));
 	ip2str(radid->userip, user_ipstr, sizeof(user_ipstr));
+	ip2str(radid->radius_srv.acct_ip, radius_ipstr, sizeof(radius_ipstr));
 	if (!radius_getattr(&(radid->req_packet), &attr, RADIUS_ATTR_USER_NAME, 0, 0, 0)) {
 		memcpy(username, attr->v.t, attr->l-2);
 	}
@@ -1405,24 +1430,24 @@ acct_response_proc(eag_radius_t *radius,
 		switch (attr->v.i) {
 		case RADIUS_STATUS_TYPE_START:
 			eag_bss_message_count(radius->eagstat, appconn, BSS_ACCT_RESPONSE_START_COUNT, 1);
-			admin_log_notice("RadiusAcctResponseStart___UserName:%s,UserIP:%s,UserMAC:%s,NasID:%s",
-				username, user_ipstr, user_macstr, nasid);
-			eag_log_filter(session_filter_prefix,"RadiusAcctResponseStart___UserName:%s,UserIP:%s,UserMAC:%s,NasID:%s",
-				username, user_ipstr, user_macstr, nasid);
+			admin_log_notice("RadiusAcctResponseStart___UserName:%s,UserIP:%s,UserMAC:%s,NasIP:%s,RadiusAcctIP:%s,NasID:%s",
+				username, user_ipstr, user_macstr, nas_ipstr, radius_ipstr, nasid);
+			eag_log_filter(session_filter_prefix,"RadiusAcctResponseStart___UserName:%s,UserIP:%s,UserMAC:%s,NasIP:%s,RadiusAcctIP:%s,NasID:%s",
+				username, user_ipstr, user_macstr, nas_ipstr, radius_ipstr, nasid);
 			break;
 		case RADIUS_STATUS_TYPE_STOP:
 			eag_bss_message_count(radius->eagstat, appconn, BSS_ACCT_RESPONSE_STOP_COUNT, 1);
-			admin_log_notice("RadiusAcctResponseStop___UserName:%s,UserIP:%s,UserMAC:%s,NasID:%s",
-				username, user_ipstr, user_macstr, nasid);
-			eag_log_filter(session_filter_prefix,"RadiusAcctResponseStop___UserName:%s,UserIP:%s,UserMAC:%s,NasID:%s",
-				username, user_ipstr, user_macstr, nasid);
+			admin_log_notice("RadiusAcctResponseStop___UserName:%s,UserIP:%s,UserMAC:%s,NasIP:%s,RadiusAcctIP:%s,NasID:%s",
+				username, user_ipstr, user_macstr, nas_ipstr, radius_ipstr, nasid);
+			eag_log_filter(session_filter_prefix,"RadiusAcctResponseStop___UserName:%s,UserIP:%s,UserMAC:%s,NasIP:%s,RadiusAcctIP:%s,NasID:%s",
+				username, user_ipstr, user_macstr, nas_ipstr, radius_ipstr, nasid);
 			break;
 		case RADIUS_STATUS_TYPE_INTERIM_UPDATE:
 			eag_bss_message_count(radius->eagstat, appconn, BSS_ACCT_RESPONSE_UPDATE_COUNT, 1);
-			admin_log_notice("RadiusAcctResponseUpdate___UserName:%s,UserIP:%s,UserMAC:%s,NasID:%s",
-				username, user_ipstr, user_macstr, nasid);
-			eag_log_filter(session_filter_prefix,"RadiusAcctResponseUpdate___UserName:%s,UserIP:%s,UserMAC:%s,NasID:%s",
-				username, user_ipstr, user_macstr, nasid);
+			admin_log_notice("RadiusAcctResponseUpdate___UserName:%s,UserIP:%s,UserMAC:%s,NasIP:%s,RadiusAcctIP:%s,NasID:%s",
+				username, user_ipstr, user_macstr, nas_ipstr, radius_ipstr, nasid);
+			eag_log_filter(session_filter_prefix,"RadiusAcctResponseUpdate___UserName:%s,UserIP:%s,UserMAC:%s,NasIP:%s,RadiusAcctIP:%s,NasID:%s",
+				username, user_ipstr, user_macstr, nas_ipstr, radius_ipstr, nasid);
 			break;
 		default:
 			break;
@@ -1456,6 +1481,8 @@ sockradius_receive(eag_thread_t *thread)
 	char nasid[RADIUS_MAX_NASID_LEN] = "";
 	char session_filter_prefix[512] = ""; /* add for debug-filter */
 	char replymsg[256] = "";
+	uint32_t nasip = 0;
+	char nas_ipstr[32]= "";
 
 	if (NULL == thread) {
 		eag_log_err("sockradius_receive input error");
@@ -1470,7 +1497,8 @@ sockradius_receive(eag_thread_t *thread)
 	radius = sockradius->radius;
 		
 	rdc_distributed = eag_ins_get_rdc_distributed(radius->eagins);
-
+	nasip = eag_ins_get_nasip(radius->eagins);
+	
 	len = sizeof(addr);
 	if (rdc_distributed) {
 		nbyte = rdc_recvfrom(sockradius->sockfd, &(packet), sizeof(packet), 0,
@@ -1493,6 +1521,7 @@ sockradius_receive(eag_thread_t *thread)
 	radius_ip = ntohl(addr.sin_addr.s_addr);
 	radius_port = ntohs(addr.sin_port);
 	ip2str(radius_ip, radius_ipstr, sizeof(radius_ipstr));
+	ip2str(nasip, nas_ipstr, sizeof(nas_ipstr));
 	
 	eag_log_debug("eag_radius", "sockradius fd(%d) receive %d bytes from %s:%u",
 				sockradius->sockfd, nbyte, radius_ipstr, radius_port);
@@ -1612,19 +1641,19 @@ sockradius_receive(eag_thread_t *thread)
 								user_macstr, username, sockradius->radius->hansi_type,
 								sockradius->radius->hansi_id);
 	if (RADIUS_CODE_ACCESS_ACCEPT == packet.code) {
-		admin_log_notice("RadiusAccessAccept___UserName:%s,UserIP:%s,UserMAC:%s,NasID:%s",
-			username, user_ipstr, user_macstr, nasid);
-		eag_log_filter(session_filter_prefix,"RadiusAccessAccept___UserName:%s,UserIP:%s,UserMAC:%s,NasID:%s",
-			username, user_ipstr, user_macstr, nasid);
+		admin_log_notice("RadiusAccessAccept___UserName:%s,UserIP:%s,UserMAC:%s,NasIP:%s,RadiusAuthIP:%s,NasID:%s",
+			username, user_ipstr, user_macstr, nas_ipstr, radius_ipstr, nasid);
+		eag_log_filter(session_filter_prefix,"RadiusAccessAccept___UserName:%s,UserIP:%s,UserMAC:%s,NasIP:%s,RadiusAuthIP:%s,NasID:%s",
+			username, user_ipstr, user_macstr, nas_ipstr, radius_ipstr, nasid);
 		access_accept_proc(sockradius->radius, radid->userip, &packet);
 	} else if (RADIUS_CODE_ACCESS_REJECT == packet.code) {
 		if (!radius_getattr(&packet, &attr, RADIUS_ATTR_REPLY_MESSAGE, 0, 0, 0)) {
 			memcpy(replymsg, attr->v.t, attr->l - 2);
 		}
-		admin_log_notice("RadiusAccessReject___UserName:%s,UserIP:%s,UserMAC:%s,NasID:%s,ReplyMessage:%s",
-			username, user_ipstr, user_macstr, nasid, replymsg);
-		eag_log_filter(session_filter_prefix,"RadiusAccessReject___UserName:%s,UserIP:%s,UserMAC:%s,NasID:%s,ReplyMessage:%s",
-			username, user_ipstr, user_macstr, nasid, replymsg);
+		admin_log_notice("RadiusAccessReject___UserName:%s,UserIP:%s,UserMAC:%s,NasIP:%s,RadiusAuthIP:%s,NasID:%s,ReplyMessage:%s",
+			username, user_ipstr, user_macstr, nas_ipstr, radius_ipstr, nasid, replymsg);
+		eag_log_filter(session_filter_prefix,"RadiusAccessReject___UserName:%s,UserIP:%s,UserMAC:%s,NasIP:%s,RadiusAuthIP:%s,NasID:%s,ReplyMessage:%s",
+			username, user_ipstr, user_macstr, nas_ipstr, radius_ipstr, nasid, replymsg);
 		access_reject_proc(sockradius->radius, radid->userip, &packet);
 	} else {
 		acct_response_proc(sockradius->radius, radid, &packet);

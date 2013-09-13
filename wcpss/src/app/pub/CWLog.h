@@ -78,7 +78,7 @@ void wid_pid_write(unsigned int vrrid);
 void wid_syslog_notice_local7(char *format,...);
 void wid_pid_write_v2(char *name,int id,unsigned int vrrid);
 void wid_syslog_hn(int level,char *iden,char *fmt,...);
-
+void wid_syslog_auteview(int level,int type,void *parameter,int Rcode);
 
 
 
