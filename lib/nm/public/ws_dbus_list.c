@@ -241,15 +241,18 @@ void snmpd_close_dbus_connection(DBusConnection **connection)
 		return;
 
     if(*connection == ccgi_dbus_connection) {
-	     dbus_connection_close(*connection);	    
+	     dbus_connection_close(*connection);
+         *connection = NULL;
          ccgi_dbus_connection = NULL; 
 
          /*
-                * lixiang edit at 2012-01-16
+                * liutao edit at 2013-08-30
                 * some interface not check (ccgi_dbus_connection != NULL), so need reinit dbus connection 
                 */
-         snmpd_dbus_connection_init();
+        /* 
+        snmpd_dbus_connection_init();
          *connection = ccgi_dbus_connection;
+         */
     }
     else {
 	    dbus_connection_close(*connection);	    
@@ -647,9 +650,18 @@ void tipc_dbus_connection_maintenance(void)
             netsnmp_dbus_connection *snmpd_dbus_node = dbus_node(pos);
             if((NULL == snmpd_dbus_node->connection)&&(snmpd_dbus_node->connet_times < TRY_TO_CON_NUM))
             {
-                snmpd_dbus_node->connection = dbus_get_tipc_connection(snmpd_dbus_node->slot_id);
-				snmpd_dbus_node->connet_times += 1;				
-				//syslog(LOG_INFO,"####dbus_get_tipc_connection slot=%d connet_times=%d####\n",snmpd_dbus_node->slot_id,snmpd_dbus_node->connet_times);
+            	/*
+				syslog(LOG_INFO, "The snmpd_dbus_node->slot_id is %d!\n",snmpd_dbus_node->slot_id);
+				*/
+            	if(snmpd_dbus_connection_list.local_slot_num == snmpd_dbus_node->slot_id){
+					 if(snmpd_dbus_connection_init()==0)
+							snmpd_dbus_node->connection = ccgi_dbus_connection;
+					 snmpd_dbus_node->connet_times += 1;
+            	}else{
+                	snmpd_dbus_node->connection = dbus_get_tipc_connection(snmpd_dbus_node->slot_id);
+					snmpd_dbus_node->connet_times += 1;				
+					//syslog(LOG_INFO,"####dbus_get_tipc_connection slot=%d connet_times=%d####\n",snmpd_dbus_node->slot_id,snmpd_dbus_node->connet_times);
+            	}
             }
         }
         #endif

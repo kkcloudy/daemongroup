@@ -22,6 +22,7 @@
  */
 
 #include <config.h>
+#include <syslog.h>
 #include "dbus-internals.h"
 #include "dbus-list.h"
 #include "dbus-mempool.h"
@@ -435,6 +436,11 @@ _dbus_list_remove (DBusList **list,
         }
       
       link = _dbus_list_get_next_link (list, link);
+      if(link->next == link)
+      {
+	  	syslog(LOG_INFO,"Func %s link->next == link\n",__func__);
+		return FALSE;
+      }
     }
 
   return FALSE;
