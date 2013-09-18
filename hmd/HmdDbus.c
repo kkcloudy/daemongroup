@@ -16,7 +16,9 @@
 #include "hmd/hmdpub.h"
 #include "dbus/hmd/HmdDbusDef.h"
 #include "dbus/npd/npd_dbus_def.h"
+#include "dbus/asd/ASDDbusDef1.h"
 #include "dbus/wcpss/ACDbusDef1.h"
+#include "dbus/wcpss/wsm_dbus_def.h"
 #include "hmd/hmdpub.h"
 #include "HmdManagement.h"
 #include "HmdTimeLib.h"
@@ -4791,6 +4793,59 @@ DBusMessage * hmd_dbus_femto_service_state_check(DBusConnection *conn, DBusMessa
 	return reply;	
 }
 
+DBusMessage *hmd_dbus_conf_sync_to_vrrp_backup(DBusConnection *conn, DBusMessage *msg, void *user_data)
+{
+	DBusMessage *reply = NULL;
+	DBusMessageIter	iter;
+	DBusError err;
+	unsigned int ret = HMD_DBUS_SUCCESS;
+	char cmdstr[512]= {0};
+	char buf2[1024] = {0};	
+	char *ipAddr  = NULL;
+	int status;
+
+	dbus_error_init(&err);
+	hmd_syslog_err("hmd_dbus_conf_sync_to_vrrp_backup 1111 %s\n",ipAddr);
+	if (!(dbus_message_get_args(msg, &err,
+	                            DBUS_TYPE_STRING, &ipAddr,
+                                DBUS_TYPE_INVALID)))
+	{
+		hmd_syslog_err("%s:%d Unable to get input args\n", __func__, __LINE__);
+
+		if (dbus_error_is_set(&err))
+		{
+			hmd_syslog_err("%s raised: %s", err.name, err.message);
+			dbus_error_free(&err);
+		}
+		return NULL;
+	}
+
+	hmd_syslog_err("hmd_dbus_conf_sync_to_vrrp_backup 2222 ipAddr is %s\n",ipAddr);
+	sprintf(cmdstr,"copy /var/run/config_bak to %s:/var/run/config_bak unpack",ipAddr);
+	sprintf(buf2,"/opt/bin/vtysh -c \"configure terminal\n %s\"\n",cmdstr);
+	hmd_syslog_err("hmd_dbus_conf_sync_to_vrrp_backup buf2 is %s\n",buf2);
+	status = system(buf2);
+	ret = WEXITSTATUS(status);
+	hmd_syslog_err("hmd_dbus_conf_sync_to_vrrp_backup 3333 ret is %d\n",ret);
+	if (0 != ret)
+    {
+    	hmd_syslog_err("34 cp file failed.\n");
+       	return NULL;
+    }
+	
+	status = system("rm -rf /var/run/config_bak > /dev/null");
+	ret = WEXITSTATUS(status);
+	hmd_syslog_err("hmd_dbus_conf_sync_to_vrrp_backup ret is %d\n",ret);
+	
+	hmd_syslog_err("hmd_dbus_conf_sync_to_vrrp_backup 4444\n");
+	reply = dbus_message_new_method_return(msg);
+	dbus_message_iter_init_append(reply, &iter);
+	dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT32, &ret);
+	hmd_syslog_err("hmd_dbus_conf_sync_to_vrrp_backup 5555\n");
+
+	return reply;
+}
+
 static DBusHandlerResult hmd_dbus_message_handler (DBusConnection *connection, DBusMessage *message, void *user_data){
 
 	DBusMessage		*reply = NULL;
@@ -4887,6 +4942,9 @@ static DBusHandlerResult hmd_dbus_message_handler (DBusConnection *connection, D
 		reply = hmd_dbus_set_hmd_timer_config_save_state(connection,message,user_data);
 		}else if (dbus_message_is_method_call(message,HMD_DBUS_INTERFACE,HMD_DBUS_METHOD_SET_HMD_TIMER_CONFIG_SAVE_TIMER)){/*fengwenchao add 20130412 for hmd timer config save*/
 		reply = hmd_dbus_set_hmd_timer_config_save_timer(connection,message,user_data);
+		}
+		else if (dbus_message_is_method_call(message,HMD_DBUS_INTERFACE,HMD_DBUS_CONF_SYNC_TO_VRRP_BAKUP)){
+		reply = hmd_dbus_conf_sync_to_vrrp_backup(connection, message, user_data);
 		}
 	}
 	if (reply) {

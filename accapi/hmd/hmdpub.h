@@ -26,6 +26,16 @@ extern char MSGQ_PATH[PATH_LEN];
 #define SHOW_RUNNING_LEN	(1024 * 1024)
 #define DEFAULT_LICENSE_NUM		2
 
+#define DEFAULT_CONFIG_DIR	 	"/var/run/config"
+#define DEFAULT_CONFIG_PATH 	"/var/run/config/Instconfig"
+
+#define HMD_HOT_RESTART_FLAG_PATH 	"/var/run/waw.hotrestart"
+#define HMD_HOT_RESTART_FLAG		'1'
+#define HMD_SET_FLAG				(1)
+#define HMD_CLR_FLAG				(0)
+
+
+
 #define RETURN_CODE_BASE                 (0x150000)
 #define RETURN_CODE_OK		              (RETURN_CODE_BASE + 1)
 #define RETURN_CODE_ERR		          (RETURN_CODE_BASE + 2)

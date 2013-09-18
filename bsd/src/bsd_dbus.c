@@ -14,6 +14,7 @@
 #include <dirent.h>
 #include <time.h>
 #include "bsd/bsdpub.h"
+#include "sysdef/returncode.h"
 #include "dbus/bsd/BsdDbusDef.h"
 #include "bsd.h"
 #include "bsd_dbus.h"
@@ -25,6 +26,7 @@
 
 static DBusConnection * bsd_dbus_connection = NULL;
 static DBusConnection * bsd_dbus_connection2 = NULL;
+DBusConnection *bsd_dbus_notify_connection = NULL;
 
 extern unsigned short g_unEventId;
 

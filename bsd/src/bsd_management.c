@@ -290,6 +290,7 @@ void * bsdTipcManagement()
     bsd_syslog_debug_debug(BSD_DEFAULT, "%s  %d: %s\n",__FILE__, __LINE__, __func__);
 	bsd_pid_write_v2("BSDTipcManagement",HOST_SLOT_NO);
 	int fd = -1;
+	FILE *fp = NULL;
 	struct sockaddr_tipc addr;
 	socklen_t alen = sizeof(addr);
 	unsigned short last_event_id = 0; /* current & last loop event id */
@@ -307,6 +308,12 @@ void * bsdTipcManagement()
 	int slotid = 0;
 	int err_flag = 0; /* used to mark receiving error during one event */
 	char md5Value[BSD_COMMAND_BUF_LEN] = {0};
+	int bak_config_flag = 0;
+	int active_master_slot_id = 0;
+	int slot_id = 0;
+	char temp_buf[100] = {0};
+	char temp_buf2[100] = {0};	
+	int product_type = 0;
 	while(1) {
 		if (0 >= recvfrom(fd, buf, sizeof(buf), 0, (struct sockaddr *)&addr, &alen)){
 			perror("Server: unexpected message");
@@ -413,7 +420,79 @@ void * bsdTipcManagement()
     		    continue;
             }
 		}
+		if(!strncmp((char *)fileInfo->file_head.uchFileName,"/var/run/config_bak",strlen("/var/run/config_bak")))
+			bak_config_flag = 1;
 		
+		memset(temp_buf2,0,sizeof(temp_buf2));		//get active_master_slot_id by houxx 2013819
+		strcpy(temp_buf,"/dbm/local_board/is_active_master");
+		fp = fopen(temp_buf, "r");
+		if (fp == NULL){
+			bsd_syslog_err("###    Failed to open file\n");
+			free(fileData);
+			fileData = NULL;
+			cursor = NULL;
+			system("sudo umount /blk");
+			BSDSendNotify(slotid, BSD_FILE_FAILURE, last_event_id, md5Value);
+			continue;
+		}
+		if(EOF == fscanf(fp, "%d", &active_master_slot_id)) {
+			bsd_syslog_err("###    Failed to get file\n");
+			free(fileData);
+			fileData = NULL;
+			cursor = NULL;
+			system("sudo umount /blk");
+			BSDSendNotify(slotid, BSD_FILE_FAILURE, last_event_id, md5Value);
+			continue;
+		}
+		fclose(fp);
+		
+		memset(temp_buf2,0,sizeof(temp_buf2));	//get slot_id by houxx 2013819
+		strcpy(temp_buf2,"/dbm/local_board/slot_id");
+		fp = fopen(temp_buf2, "r");
+		if (fp == NULL){
+			bsd_syslog_err("###    Failed to open file\n");
+			free(fileData);
+			fileData = NULL;
+			cursor = NULL;
+			system("sudo umount /blk");
+			BSDSendNotify(slotid, BSD_FILE_FAILURE, last_event_id, md5Value);
+			continue;
+		}
+		if(EOF == fscanf(fp, "%d", &slot_id)) {
+			bsd_syslog_err("###    Failed to get file\n");
+			free(fileData);
+			fileData = NULL;
+			cursor = NULL;
+			system("sudo umount /blk");
+			BSDSendNotify(slotid, BSD_FILE_FAILURE, last_event_id, md5Value);
+			continue;
+		}
+		fclose(fp);
+
+		memset(temp_buf2,0,sizeof(temp_buf2));	//get product_type by houxx 2013819
+		strcpy(temp_buf2,"/dbm/product/product_type");
+		fp = fopen(temp_buf2, "r");
+		if (fp == NULL){
+			bsd_syslog_err("###    Failed to open file\n");
+			free(fileData);
+			fileData = NULL;
+			cursor = NULL;
+			system("sudo umount /blk");
+			BSDSendNotify(slotid, BSD_FILE_FAILURE, last_event_id, md5Value);
+			continue;
+		}
+		if(EOF == fscanf(fp, "%d", &product_type)) {
+			bsd_syslog_err("###    Failed to get product_type\n");
+			free(fileData);
+			fileData = NULL;
+			cursor = NULL;
+			system("sudo umount /blk");
+			BSDSendNotify(slotid, BSD_FILE_FAILURE, last_event_id, md5Value);
+			continue;
+		}
+		fclose(fp);
+		
+		bsd_syslog_err("###    in func %s,line %d,slot_id is %d,active_master_slot_id is %d back is %d\n",__func__,__LINE__,slot_id,active_master_slot_id,bak_config_flag);
 		if(fileInfo->file_head.file_state == BSD_FILE_LAST) {
 		    blk_flag = 0;
 		    memset(tmpFilePath, 0, BSD_PATH_LEN);
@@ -503,6 +582,14 @@ void * bsdTipcManagement()
 				bsdHandleFileState(fileInfo->file_head.file_type, (const char *)fileInfo->file_head.uchFileName);
 				BSDSendNotify(slotid, BSD_FILE_FINISH, last_event_id, md5Value);
 				system("sudo umount /blk");
+				if(product_type == 4 || product_type == 5 || product_type == 7 || product_type == 6)
+				{
+					if(bak_config_flag == 1 && active_master_slot_id == 1)
+					{
+						bsd_syslog_err("###    in func %s,line %d\n",__func__,__LINE__);
+						bsd_get_hansiprofile_notity_hmd(fileInfo);
+					}
+				}
             }
             else {
                 //printf("Failed to open file\n");

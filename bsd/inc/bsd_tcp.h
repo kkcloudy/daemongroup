@@ -62,5 +62,17 @@ int bsdTcpCopyFile(const int iDesIpAddr, const char *pSrcPath, const char *pDesP
 
 int bsdCloseTcpSocket(int iSocketId);
 
+int bsd_notify_to_hmd_restart
+(
+	DBusConnection *connection,
+	int slotid,
+	int hansi_profile,
+	int islocal
+);
+int bsd_get_hansiprofile_notity_hmd
+(
+	bsd_file_info_t *recv_file_info
+);
+
 #endif
 

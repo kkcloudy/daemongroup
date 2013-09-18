@@ -20,6 +20,11 @@
 
 extern int BSDMsgqID;
 
+#define BSD_DBUS_NOTIFY_BUSNAME  "aw.bsdnoti"
+
+#define BSD_DEFAULT_CONFIG_PATH 	"/var/run/config/Instconfig"
+
+
 
 enum bsdDbusReturnValue {
     BSD_SUCCESS = 0,

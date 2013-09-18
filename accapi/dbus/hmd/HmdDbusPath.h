@@ -51,6 +51,8 @@ char HMD_DBUS_CONF_METHOD_FEMTO_SERVICE_SWITCH[PATH_LEN] = "femto_service_switch
 char HMD_DBUS_CONF_METHOD_FEMTO_SERVICE_CHECK[PATH_LEN] = "femto_service_state_check";
 char HMD_DBUS_METHOD_SET_HMD_TIMER_CONFIG_SAVE_STATE[PATH_LEN] = "set_hmd_timer_config_save_state";/*fengwenchao add 20130412 for hmd timer config save*/
 char HMD_DBUS_METHOD_SET_HMD_TIMER_CONFIG_SAVE_TIMER[PATH_LEN] = "set_hmd_timer_config_save_timer";/*fengwenchao add 20130412 for hmd timer config save*/
+char HMD_DBUS_METHOD_SYNC_WCPSS_CFG[PATH_LEN] = "hmd_sync_wcpss_cfg";
+char HMD_DBUS_CONF_SYNC_TO_VRRP_BAKUP[PATH_LEN] = "hmd_conf_sync_to_vrrp_backup";
 
 #endif
 

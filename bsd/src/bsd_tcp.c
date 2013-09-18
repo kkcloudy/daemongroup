@@ -16,12 +16,15 @@
 #include "bsd.h"
 #include "bsd_log.h"
 #include "bsd_tcp.h"
+#include "sysdef/returncode.h"
+#include <sys/wait.h>
 
 #define BSD_TCP_SERVER_PORT 44443
 #define BSD_TCP_CLIENT_PORT 44444
 
 int g_iLocalTcpSocketId = 0; //global local tcp server socket id
 extern unsigned short g_unEventId;
+extern DBusConnection *bsd_dbus_notify_connection;
 
 
 /** 
@@ -163,7 +166,7 @@ int bsdInitiateTcpServer(void)
     		    iReturnValue = BSD_INIT_SOCKET_ERROR;
             }  
     	}
-    	close(iListenSocketFd);
+    /*	close(iListenSocketFd);*/
     }
     
     return iReturnValue;
@@ -407,6 +410,32 @@ static int bsdHandleMemeryQuery(unsigned int uFileSize, char * pFilePath)
 }
 
 
+int bsd_get_hansiprofile_notity_hmd
+(
+	bsd_file_info_t *recv_file_info
+)
+{
+	int ret = 0;
+	bsd_syslog_debug_debug(BSD_DEFAULT,"recv file name %s\n", 
+						recv_file_info->file_head.uchFileName);
+	
+	ret = system("reloadconfig.sh");
+	
+	ret = WEXITSTATUS(ret);
+	bsd_syslog_debug_debug(BSD_DEFAULT,"reload ret is %d\n",ret);
+
+	ret = system("rm -rf /var/run/config_bak > /dev/null");
+	ret = WEXITSTATUS(ret);
+	bsd_syslog_debug_debug(BSD_DEFAULT,"rm ret is %d\n",ret);
+
+	ret = system("sudo /opt/bin/vtysh -c  \"write\n\"");	
+	ret = WEXITSTATUS(ret);
+	bsd_syslog_debug_debug(BSD_DEFAULT,"write ret is %d\n",ret);
+	return 0;
+
+}
+
+
 
 /** 
   * @brief  
@@ -422,6 +451,15 @@ static int bsdParseTcpMessage(struct STcpSocketNode *clientNode, bsd_file_info_t
     int iReturnValue = BSD_SUCCESS;
     int iFileState = pRecvFileInfo->file_head.file_state;
     bsd_file_info_t sendFileInfo;
+	char temp_buf[100] = {0};
+	char temp_buf2[100] = {0};	
+	char cmdstr[512]= {0};
+	int active_master_slot_id = 0;
+	int slot_id = 0;
+	char buf2[512] = {0};
+	FILE *fp = NULL;
+	int ret = 0 ,status = 0 ;
+	
     memset(&sendFileInfo, 0, sizeof(bsd_file_info_t));
     bsd_syslog_debug_debug(BSD_DEFAULT, "file state = %d\n", iFileState);
     switch(iFileState) {
@@ -468,7 +506,52 @@ static int bsdParseTcpMessage(struct STcpSocketNode *clientNode, bsd_file_info_t
             }
             iReturnValue = bsdHandleFileData(clientNode, pRecvFileInfo);
             if(iReturnValue == BSD_SUCCESS)
+            {
                 sendFileInfo.file_head.file_state = BSD_FILE_FINISH;
+				bsd_syslog_debug_debug(BSD_DEFAULT,"bsdParseTcpMessage line %d file name is %s\n",__LINE__,(char *)pRecvFileInfo->file_head.uchFileName);
+				bsd_syslog_debug_debug(BSD_DEFAULT,"bsdParseTcpMessage line %d ret is %d\n",__LINE__,strncmp((char *)pRecvFileInfo->file_head.uchFileName,"/var/run/config_bak",strlen("/var/run/config_bak")));
+				if(!strncmp((char *)pRecvFileInfo->file_head.uchFileName, 
+				   "/var/run/config_bak",
+				   strlen("/var/run/config_bak")))
+				{
+					memset(temp_buf2,0,sizeof(temp_buf2));		//get active_master_slot_id by houxx 2013819
+					strcpy(temp_buf,"/dbm/product/active_master_slot_id");
+					fp = fopen(temp_buf, "r");
+					if (fp == NULL){
+	                    bsd_syslog_err("open file error!!!\n");
+	                    iReturnValue = BSD_MALLOC_MEMERY_ERROR;
+					}
+					if(EOF == fscanf(fp, "%d", &active_master_slot_id)) {
+	                    bsd_syslog_err("get file error!!!\n");
+	                    iReturnValue = BSD_MALLOC_MEMERY_ERROR;
+					}
+					fclose(fp);
+					
+					memset(temp_buf2,0,sizeof(temp_buf2));	//get slot_id by houxx 2013819
+					strcpy(temp_buf2,"/dbm/local_board/slot_id");
+					fp = fopen(temp_buf2, "r");
+					if (fp == NULL){
+	                    bsd_syslog_err("open file error!!!\n");
+	                    iReturnValue = BSD_MALLOC_MEMERY_ERROR;
+					}
+					if(EOF == fscanf(fp, "%d", &slot_id)) {
+	                    bsd_syslog_err("get file error!!!\n");
+	                    iReturnValue = BSD_MALLOC_MEMERY_ERROR;
+					}
+					fclose(fp);	
+					bsd_syslog_debug_debug(BSD_DEFAULT,"bsdParseTcpMessage line %d\n",__LINE__);
+					sprintf(cmdstr,"copy %d /var/run/config_bak to %d /var/run/config_bak",slot_id,active_master_slot_id);
+					sprintf(buf2,"/opt/bin/vtysh -c \"configure terminal\n %s\"\n",cmdstr);
+					status = system(buf2);
+					ret = WEXITSTATUS(status);
+					bsd_syslog_debug_debug(BSD_DEFAULT,"bsdParseTcpMessage line %d ret is %d\n",__LINE__,ret);
+					
+					status = system("rm -rf /var/run/config_bak > /dev/null");
+					ret = WEXITSTATUS(status);
+					bsd_syslog_debug_debug(BSD_DEFAULT,"hmd_dbus_conf_sync_to_vrrp_backup ret is %d\n",ret);
+	            }
+				/*bsd_get_hansiprofile_notity_hmd(pRecvFileInfo);*/
+            }
             else
                 sendFileInfo.file_head.file_state = iReturnValue;
             iReturnValue = bsdTcpSendMessage(clientNode->iSocketId, &sendFileInfo);
