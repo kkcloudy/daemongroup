@@ -910,7 +910,7 @@ _dot11WtpWirelessIfTable_check_column( dot11WtpWirelessIfTable_rowreq_ctx *rowre
         ; /* rc set in condition */
     }
 	#endif	
-	if ((*var->val.integer < 1) || (*var->val.integer > 11)) {
+	if ((*var->val.integer < 1) || (*var->val.integer > 196)) {
         rc = SNMP_ERR_WRONGVALUE;
     }
    }

@@ -22,7 +22,7 @@ IMPORTS
 	enterprises
        			FROM SNMPv2-SMI;
 dot11WtpGroup MODULE-IDENTITY
-    LAST-UPDATED "201308270000Z"        -- Aug 27rd, 2013
+    LAST-UPDATED "201309170000Z"        -- Sep 17rd, 2013
     ORGANIZATION " AuteLan Network Management Working Group
                   http://www.autelan.com"
     CONTACT-INFO
@@ -5225,7 +5225,7 @@ wtpWirelessIfRadioChannelAutoSelectEnable	OBJECT-TYPE
 						::= { dot11WtpWirelessIfEntry 10 }
 
 wtpWirelessIfRadioChannelConfig			OBJECT-TYPE
-						SYNTAX     INTEGER(1..11)
+						SYNTAX     INTEGER(1..196)
 						MAX-ACCESS read-write
 						STATUS     current
 						DESCRIPTION
