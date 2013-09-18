@@ -17,6 +17,7 @@
 #include "../dcli_pppoe.h"
 #include "memory.h"
 #include "dcli_local_hansi.h"
+#include <sys/wait.h>
 struct cmd_node local_hansi_node =
 {
 	LOCAL_HANSI_NODE,
@@ -2865,6 +2866,85 @@ DEFUN(show_hmd_bak_forever_cmd_func,
 	}
 	return CMD_SUCCESS;
 	}
+DEFUN(vrrp_sync_config_func,
+	  vrrp_sync_config_cmd,
+	  "sync config form SLOT to A.B.C.D",
+	  "Sync config info\n"
+	  "Config Information\n"
+	  "Form slot to another\n"
+	  "Slot num\n"
+	  "To another slot\n"
+	  "Remote heartbeat ip\n"
+)
+{
+	int status = -1,ret = 0;
+	unsigned int des_slotid = 0;
+	char cmdstr[512]= {0};
+	char buf2[1024] = {0};
+	char *ipAddr = argv[1];
+	DBusMessage *query = NULL;
+	DBusMessage  *reply = NULL;	
+	DBusMessageIter	 iter;
+	DBusError err;
+	
+	ret = parse_int_ID((char *)argv[0], &des_slotid);
+	if (CMD_WARNING == ret)
+	{
+		vty_out(vty, "%% Bad parameter %s\n", argv[0]);
+		return CMD_WARNING;
+	}
+
+	status = system("del_ip.sh");
+	ret = WEXITSTATUS(status);	
+	if (0 != ret)
+    {
+    	vty_out(vty, "12 exec script failed.\n");
+       	return CMD_WARNING;
+    }
+	
+	sprintf(cmdstr,"copy %d /var/run/config_bak to %d /var/run/",active_master_slot,des_slotid);
+	sprintf(buf2,"/opt/bin/vtysh -c \"configure terminal\n %s\"\n",cmdstr);
+	status = system(buf2);
+	ret = WEXITSTATUS(status);
+	if (0 != ret)
+    {
+    	vty_out(vty, "12 cp file failed.\n");
+       	return CMD_WARNING;
+    }
+	
+	query = dbus_message_new_method_call(HMD_DBUS_BUSNAME,	\
+										HMD_DBUS_OBJPATH , \
+										HMD_DBUS_INTERFACE ,	\
+										HMD_DBUS_CONF_SYNC_TO_VRRP_BAKUP);
+	
+	dbus_error_init(&err);
+	dbus_message_append_args(query,
+							 DBUS_TYPE_STRING,&ipAddr,
+							 DBUS_TYPE_INVALID);
+	
+    if(NULL == dbus_connection_dcli[des_slotid]->dcli_dbus_connection) 				
+	{
+	   	vty_out(vty,"Can not connect to slot:%d \n",des_slotid);
+		return CMD_WARNING;
+    }
+	else
+	{
+        reply = dbus_connection_send_with_reply_and_block (dbus_connection_dcli[des_slotid]->dcli_dbus_connection,query,-1, &err);				
+	}
+	dbus_message_unref(query);
+	
+	if (NULL == reply)
+	{
+	    vty_out(vty,"failed get reply.\n");
+	    if (dbus_error_is_set(&err))
+	    {
+	        vty_out(vty,"%s raised: %s",err.name,err.message);
+	        dbus_error_free_for_dcli(&err);
+	    }
+	    return CMD_WARNING;
+	}
+	return CMD_SUCCESS;
+}
 
 
 void dcli_local_hansi_init(void) {	
@@ -2906,6 +2986,7 @@ void dcli_local_hansi_init(void) {
 	install_element(LOCAL_HANSI_NODE,&set_set_hansi_bak_forever_cmd);
 	install_element(LOCAL_HANSI_NODE,&set_hmd_timer_config_save_time_cmd);  //fengwenchao add 20130415 for hmd timer config save
 	install_element(LOCAL_HANSI_NODE,&set_hmd_timer_config_save_cmd);//fengwenchao add 20130415 for hmd timer config save	
+	install_element(CONFIG_NODE,&vrrp_sync_config_cmd);
 	return;
 }
 
