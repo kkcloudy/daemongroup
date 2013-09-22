@@ -9049,7 +9049,7 @@ DEFUN (download_ap_image_slot_func,
 		dbus_message_append_args(query,
 								DBUS_TYPE_STRING, &cmd_str,
 								DBUS_TYPE_INVALID);
-		reply = dbus_connection_send_with_reply_and_block(dbus_connection_dcli[slot_id] -> dcli_dbus_connection, query, 200000, &err);
+		reply = dbus_connection_send_with_reply_and_block(dbus_connection_dcli[slot_id] -> dcli_dbus_connection, query, 100000, &err);
 		
 		dbus_message_unref(query);
 
@@ -9462,7 +9462,7 @@ DEFUN (download_certificate_image_slot_func,
 		dbus_message_append_args(query,
 								DBUS_TYPE_STRING, &cmd_str,
 								DBUS_TYPE_INVALID);
-		reply = dbus_connection_send_with_reply_and_block(dbus_connection_dcli[slot_id] -> dcli_dbus_connection, query, 200000, &err);
+		reply = dbus_connection_send_with_reply_and_block(dbus_connection_dcli[slot_id] -> dcli_dbus_connection, query, 100000, &err);
 		
 		dbus_message_unref(query);
 
@@ -42602,6 +42602,8 @@ void dcli_wtp_init(void) {
 			install_element(HANSI_NODE,&set_ap_cpu_collect_time_cmd);
 			install_element(HANSI_NODE,&download_ap_image_cmd);/*added by weiay 20081021*/
 			install_element(HANSI_NODE,&download_certificate_image_cmd);
+			install_element(HANSI_NODE,&download_ap_image_slot_cmd);
+			install_element(HANSI_NODE,&download_certificate_image_slot_cmd);
 			install_element(HANSI_NODE,&uplink_detect_cmd);
 			install_element(HANSI_NODE,&check_download_ap_image_cmd);
 			install_element(HANSI_NODE,&check_download_wapi_cert_cmd);
@@ -42883,7 +42885,10 @@ void dcli_wtp_init(void) {
 			install_element(LOCAL_HANSI_NODE,&set_ap_echotimer_cmd);
 			install_element(LOCAL_HANSI_NODE,&set_ap_cpu_collect_time_cmd);
 			install_element(LOCAL_HANSI_NODE,&download_ap_image_cmd);/*added by weiay 20081021*/
+			install_element(LOCAL_HANSI_NODE,&download_ap_image_slot_cmd);
+
 			install_element(LOCAL_HANSI_NODE,&download_certificate_image_cmd);
+			install_element(LOCAL_HANSI_NODE,&download_certificate_image_slot_cmd);
 			install_element(LOCAL_HANSI_NODE,&uplink_detect_cmd);
 			install_element(LOCAL_HANSI_NODE,&check_download_ap_image_cmd);
 			install_element(LOCAL_HANSI_NODE,&check_download_wapi_cert_cmd);

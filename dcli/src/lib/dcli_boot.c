@@ -772,6 +772,7 @@ DEFUN(show_fast_forward_slot_func,
 /*ended by zhaocg for show fastfwd command 2012-11-20*/
 
 /*added by zhaocg for delet fast_forward command 2012-11-19*/
+#if 0
 	DEFUN(del_fast_fwd_func,
 	del_fast_fwd_func_cmd,
 	"delete fastfwd (all|self) WORD",
@@ -956,6 +957,180 @@ DEFUN(show_fast_forward_slot_func,
 
 
 }
+#else
+DEFUN(del_fast_fwd_func,
+	del_fast_fwd_func_cmd,
+	"delete fastfwd self WORD",
+	"Delete configuration"
+	"Delete fast-forward\n"
+	"Delete fast-forward on local board\n"
+	"The name of .fastfwd.bin file"
+	)
+{
+	char cmdstr[SOR_COMMAND_SIZE] = {0};
+	int ret = 0;
+	int ret2 = 0;
+	char fastfwd_name[SOR_OPFILENAME_SIZE] = {0};
+	FILE *fp =	NULL;	
+	if(strlen(argv[0])>SOR_OPFILENAME_SIZE-1)
+	{
+		vty_out(vty,"file name too long\n");
+		return CMD_WARNING;
+	}	
+	if(strncasecmp((argv[0]+strlen(argv[0])-12),".fastfwd.bin",12))
+	{
+		vty_out(vty,"The fast forward file should be fastfwd.bin file\n");
+		return CMD_WARNING;
+	}
+
+	get_fast_forward_name(fastfwd_name);
+
+	if(!(strncasecmp(fastfwd_name,argv[0],strlen(argv[0]))))	
+	{
+		vty_out(vty,"Delete error!Delete the file is in use! \n");
+		return CMD_WARNING;
+	}
+
+	memset(fastfwd_name,0,SOR_OPFILENAME_SIZE);
+	sprintf(cmdstr,"sor.sh ls %s 120",argv[0]);
+	fp = popen( cmdstr, "r" );
+	if(fp)
+	{	
+		fgets(fastfwd_name, sizeof(fastfwd_name), fp );
+		ret2 = pclose(fp);	
+		switch (WEXITSTATUS(ret2))
+		{			
+			case 0: 
+				if(fastfwd_name[0]!= NULL)	
+				{							
+				 	ret=sor_exec(vty,"rm",argv[0],100);
+				  	if(ret==CMD_SUCCESS)
+					vty_out(vty,"Delete successfully! \n");
+				}
+				else
+				{
+					vty_out(vty,"Delete error! Can't get fastfwd file\n");
+				}
+				break;					
+			default :
+				vty_out(vty,"Delete error!\n");
+				return CMD_WARNING;								
+		}	
+	}	
+	else	
+	{
+		vty_out(vty,"Delete error!\n");		
+		return CMD_WARNING; 
+	}	
+	
+	return CMD_SUCCESS;
+}
+DEFUN(del_fast_fwd_all_func,
+	del_fast_fwd_all_func_cmd,
+	"delete fastfwd all WORD",
+	"Delete configuration"
+	"Delete fast-forward\n"
+	"Delete fast-forward on all board\n"
+	"The name of .fastfwd.bin file"
+	)
+{
+	int ret;
+	int ret2;
+	DBusMessage *query = NULL;
+	DBusMessage *reply = NULL;
+	DBusError err;
+	DBusMessageIter  iter;
+	char fastfwd_name[SOR_OPFILENAME_SIZE] = {0};
+	int slot_id = 0;
+	FILE *fd = NULL;
+	int is_active_master = 0;
+	char *cmd = argv[0];
+	int slot_count = get_product_info(SEM_SLOT_COUNT_PATH);
+
+	if(strlen(argv[0])>SOR_OPFILENAME_SIZE-1)
+	{
+		vty_out(vty,"file name too long\n");
+		return CMD_WARNING;
+	}
+	if(strncasecmp((argv[0]+strlen(argv[0])-12),".fastfwd.bin",12))
+	{
+		vty_out(vty,"The fast forward file should be .bin file\n");
+		return CMD_WARNING;
+	}
+	get_fast_forward_name(fastfwd_name);
+
+	if(!(strncasecmp(fastfwd_name,argv[0],strlen(argv[0]))))	
+	{
+		vty_out(vty,"Delete error!Delete the file is in use! \n");
+		return CMD_WARNING;
+	}
+	fd = fopen("/dbm/local_board/is_active_master", "r");
+						
+	if (fd == NULL)
+	{
+
+		vty_out(vty,"Get production information [1] error\n");
+		return -1;
+	}
+
+	fscanf(fd, "%d", &is_active_master);
+	fclose(fd);
+	if (is_active_master != 1)
+	{
+		vty_out(vty, "This command is only surpported by distributed system and only on active master board\n");
+		return CMD_SUCCESS;
+	}
+	for(slot_id = 1;slot_id <=slot_count;slot_id++)
+	{
+		if(NULL != (dbus_connection_dcli[slot_id] -> dcli_dbus_connection))
+		{	
+			query = dbus_sem_msg_new_method_call(SEM_DBUS_BUSNAME, SEM_DBUS_OBJPATH,
+											 SEM_DBUS_INTERFACE, SEM_DBUS_DEL_IMG_OR_FASTFWD_SLOT);
+			dbus_error_init(&err);
+			dbus_message_append_args(query,
+									DBUS_TYPE_STRING, &cmd,
+									DBUS_TYPE_INVALID);
+			reply = dbus_connection_send_with_reply_and_block(dbus_connection_dcli[slot_id] -> dcli_dbus_connection, query, 60000, &err);
+			dbus_message_unref(query);
+			
+			if (NULL == reply)
+			{
+				vty_out(vty,"<error> failed get reply.\n");
+				if (dbus_error_is_set(&err))
+				{
+					vty_out(vty,"%s raised: %s",err.name,err.message);
+					dbus_error_free(&err);
+				}
+				return CMD_WARNING;
+			}
+	
+			dbus_message_iter_init(reply,&iter);
+			dbus_message_iter_get_basic(&iter,&ret);
+			if(ret == 0)
+			{
+				vty_out(vty,"Slot %2d : Delete successfully! \n",slot_id);
+			}
+			else if (ret == 1)
+			{
+				vty_out(vty,"Slot %2d : Delete error! Cant't get IMG file\n",slot_id);
+			}
+			else
+			{
+				vty_out(vty,"Slot %2d : Delete failed\n",slot_id);
+			}
+	
+			dbus_message_unref(reply);
+		}
+		else	
+		{		
+			vty_out(vty,"Slot %2d : Slot don't exist.\n",slot_id);
+		}
+	}
+	
+	return CMD_SUCCESS;
+}
+
+#endif
 DEFUN(del_fast_fwd_slot_func,
 	del_fast_fwd_slot_func_cmd,
 	"delete fastfwd <1-16> WORD",
@@ -1577,7 +1752,7 @@ DEFUN(show_boot_img_slot_func,
 	return CMD_SUCCESS;
 
 }
-
+#if 0
 DEFUN(del_boot_img_func,
 	del_boot_img_func_cmd,
 	"delete boot_img all WORD",
@@ -1759,6 +1934,112 @@ DEFUN(del_boot_img_func,
 #endif
 
 }
+#else
+DEFUN(del_boot_img_func,
+	del_boot_img_func_cmd,
+	"delete boot_img all WORD",
+	"Delete configuration\n"
+	"Delete boot_img file\n"
+	"Delete all board boot_img file\n"
+	"The name of .img file\n"
+	)
+{
+	DBusMessage *query = NULL;
+	DBusMessage *reply = NULL;
+	DBusError err;
+	DBusMessageIter  iter;
+	int slot_id = 0;	
+	int ret = 0;
+	FILE *fd = NULL;
+	int is_active_master = 0;
+	char imgname[SOR_OPFILENAME_SIZE] = {0};
+	char *cmd = argv[0];
+	int slot_count = get_product_info(SEM_SLOT_COUNT_PATH);	
+	if(strlen(argv[0])>SOR_OPFILENAME_SIZE-1)
+	{
+		vty_out(vty,"file name too long\n");
+		return CMD_WARNING;
+	}
+	if(strncasecmp((argv[0]+strlen(argv[0])-4),".IMG",4))
+	{
+		vty_out(vty,"The img file should be .img file\n");
+		return CMD_WARNING;
+	}
+	
+	get_boot_img_name(imgname);
+
+	if(!(strncasecmp(imgname,argv[0],strlen(argv[0])))) 
+	{
+		vty_out(vty,"Delete error!Delete the file is in use! \n");
+		return CMD_WARNING;
+	}
+	fd = fopen("/dbm/local_board/is_active_master", "r");
+							
+	if (fd == NULL)
+	{
+
+		vty_out(vty,"Get production information [1] error\n");
+		return -1;
+	}
+
+	fscanf(fd, "%d", &is_active_master);
+	fclose(fd);
+	if (is_active_master != 1)
+	{
+		vty_out(vty, "This command is only surpported by distributed system and only on active master board\n");
+		return CMD_SUCCESS;
+	}
+
+	for(slot_id = 1;slot_id <= slot_count;slot_id++)
+	{
+		if(NULL != (dbus_connection_dcli[slot_id] -> dcli_dbus_connection))
+		{
+			query = dbus_sem_msg_new_method_call(SEM_DBUS_BUSNAME, SEM_DBUS_OBJPATH,
+											 SEM_DBUS_INTERFACE, SEM_DBUS_DEL_IMG_OR_FASTFWD_SLOT);
+			dbus_error_init(&err);
+			dbus_message_append_args(query,
+								DBUS_TYPE_STRING, &cmd,
+								DBUS_TYPE_INVALID);
+			reply = dbus_connection_send_with_reply_and_block(dbus_connection_dcli[slot_id] -> dcli_dbus_connection, query, 60000, &err);
+			dbus_message_unref(query);
+	
+			if (NULL == reply)
+			{
+				vty_out(vty,"<error> failed get reply.\n");
+				if (dbus_error_is_set(&err))
+				{
+					vty_out(vty,"%s raised: %s",err.name,err.message);
+					dbus_error_free_for_dcli(&err);
+				}
+				return CMD_WARNING;
+			}
+	
+			dbus_message_iter_init(reply,&iter);
+			dbus_message_iter_get_basic(&iter,&ret);
+			if(ret == 0)
+			{
+				vty_out(vty,"Slot %2d : Delete successfully! \n",slot_id);
+			}
+			else if (ret == 1)
+			{
+				vty_out(vty,"Slot %2d : Delete error! Cant't get IMG file\n",slot_id);
+			}
+			else
+			{
+				vty_out(vty,"Slot %2d : Delete failed\n",slot_id);
+			}
+	
+			dbus_message_unref(reply);
+		}
+		else	
+		{		
+			vty_out(vty,"Slot %2d : Slot don't exist.\n",slot_id);
+		}	
+	}
+	return CMD_SUCCESS;
+}
+
+#endif
 /*added by zhaocg for delet boot img command 2012-11-19*/
 DEFUN(del_boot_img_self_func,
 	del_boot_img_self_func_cmd,
@@ -9855,6 +10136,7 @@ void dcli_boot_init() {
 	install_element(ENABLE_NODE, &del_boot_img_func_cmd);
 	/*added by zhaocg for fast_fwd command*/
 	install_element(ENABLE_NODE, &del_fast_fwd_func_cmd);
+	install_element(ENABLE_NODE, &del_fast_fwd_all_func_cmd);
 	install_element(ENABLE_NODE, &del_fast_fwd_slot_func_cmd);
 	install_element(ENABLE_NODE, &show_boot_img_slot_func_cmd);
 	install_element(ENABLE_NODE, &del_boot_img_self_func_cmd);
