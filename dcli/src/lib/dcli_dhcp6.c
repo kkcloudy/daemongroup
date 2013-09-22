@@ -2903,7 +2903,7 @@ DEFUN(no_ipv6_dhcp_server_option52_cmd_func,
 	no_ipv6_dhcp_server_option52_cmd,
 	"no ipv6 dhcp server option52",
 	CONFIG_STR
-	"Ip dhcp server option52 entity\n"
+	"Ipv6 dhcp server option52 entity\n"
 	"Specify pool name begins with char, and name length no more than 20 characters\n"
 )
 {
@@ -3046,7 +3046,7 @@ DEFUN(ipv6_dhcp_server_domain_search_cmd_func,
 	ipv6_dhcp_server_domain_search_cmd,
 	"ipv6 dhcp server domain-search NAME",
 	CONFIG_STR
-	"Ip dhcp server domain entity\n"
+	"Ipv6 dhcp server domain-search entity\n"
 	"Specify pool name begins with char, and name length no more than 20 characters\n"
 )
 {
@@ -3103,7 +3103,7 @@ DEFUN(no_ipv6_dhcp_server_domain_search_cmd_func,
 	no_ipv6_dhcp_server_domain_search_cmd,
 	"no ipv6 dhcp server domain-search",
 	CONFIG_STR
-	"Ip dhcp server domain entity\n"
+	"Ipv6 dhcp server domain entity\n"
 	"Specify pool name begins with char, and name length no more than 20 characters\n"
 )
 {
@@ -3267,7 +3267,7 @@ DEFUN(ipv6_dhcp_server_name_servers_cmd_func,
 	ipv6_dhcp_server_name_servers_cmd,
 	"ipv6 dhcp server name-servers IPV6 [IPV6] [IPV6]",
 	CONFIG_STR
-	"Ip dhcp server dns entity\n"
+	"Ipv6 dhcp server dns entity\n"
 	"Specify pool name begins with char, and name length no more than 20 characters\n"
 )
 {
@@ -3308,7 +3308,7 @@ DEFUN(no_ipv6_dhcp_server_name_servers_cmd_func,
 	no_ipv6_dhcp_server_name_servers_cmd,
 	"no ipv6 dhcp server name-servers",
 	CONFIG_STR
-	"No ip dhcp server dns entity\n"
+	"No ipv6 dhcp server dns entity\n"
 	"Specify pool name begins with char, and name length no more than 20 characters\n"
 )
 {

@@ -2429,7 +2429,7 @@ dhcp6_dbus_profile_config_save
 		
 		option_node = &(pool_node->owned_option);
 		if (option_node->domainsearch) {			
-			totalLen += sprintf(cursor, " ipv6 dhcp server domain %s\n", option_node->domainsearch);
+			totalLen += sprintf(cursor, " ipv6 dhcp server domain-search %s\n", option_node->domainsearch);
 			cursor = showStr + totalLen;
 		}
 	#if 0
@@ -2446,7 +2446,7 @@ dhcp6_dbus_profile_config_save
 	 #endif 
 
 	 	if(option_node->option52[0].len){
-			totalLen += sprintf(cursor, "ipv6 dhcp server option52");
+			totalLen += sprintf(cursor, " ipv6 dhcp server option52");
 			cursor = showStr + totalLen;
 			for(i = 0; i < 8; i++){
 				if(option_node->option52[i].len){
@@ -2463,7 +2463,7 @@ dhcp6_dbus_profile_config_save
 
 	 	log_debug("dnsnum is ==============>%d\n",option_node->dnsnum);
 		if (option_node->dnsnum) {	
-			totalLen += sprintf(cursor, "ipv6 dhcp server dns");
+			totalLen += sprintf(cursor, " ipv6 dhcp server name-servers");
 			cursor = showStr + totalLen;
 			for (i = 0; i < option_node->dnsnum; i++) {
 				memset(dns_address, 0, ipv6_buf_len);			
