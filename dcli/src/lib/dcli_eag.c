@@ -5721,7 +5721,7 @@ eag_base_config_show_running(struct vty* vty)
 			vtysh_add_show_string(showStr);		
 		}
 		if (0 == baseconf.macauth_notice_bindserver) {
-			snprintf(showStr, sizeof(showStr), " set mac-auth notice-bindserver disable");
+			snprintf(showStr, sizeof(showStr), " set mac-auth notice-to-bindserver disable");
 			vtysh_add_show_string(showStr);		
 		}
 		if (0 == baseconf.autelan_log) {
@@ -5892,7 +5892,7 @@ eag_base_config_show_running_2(int localid, int slot_id,int index)
 				baseconf.macauth_flux_threshold, baseconf.macauth_check_interval);
 		}
 		if (0 == baseconf.macauth_notice_bindserver) {
-			totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1, " set mac-auth notice-bindserver disable\n");
+			totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1, " set mac-auth notice-to-bindserver disable\n");
 		}
 		if (0 == baseconf.autelan_log) {
 			totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1, " set log-format autelan off\n");
@@ -7847,7 +7847,7 @@ DEFUN(show_eag_base_conf_func,
 		vty_out(vty, "mac-auth flux-interval    :%d\n", baseconf.macauth_flux_interval);
 		vty_out(vty, "mac-auth flux-threshold   :%d\n", baseconf.macauth_flux_threshold);
 		vty_out(vty, "mac-auth check-interval   :%d\n", baseconf.macauth_check_interval);
-		vty_out(vty, "mac-auth notice-bindserver:%s\n", (1 == baseconf.macauth_notice_bindserver)?"enable":"disable");
+		vty_out(vty, "mac-auth notice-to-bindserver:%s\n", (1 == baseconf.macauth_notice_bindserver)?"enable":"disable");
 		vty_out(vty, "log-format autelan        :%s\n", (1 == baseconf.autelan_log)?"on":"off");
 		vty_out(vty, "log-format henan          :%s\n", (1 == baseconf.henan_log)?"on":"off");
 		vty_out(vty, "l2super-vlan              :%s\n", (1 == baseconf.l2super_vlan)?"enable":"disable");
