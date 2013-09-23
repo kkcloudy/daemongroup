@@ -2764,8 +2764,14 @@ find_client_address(struct reply_state *reply) {
 		status = pick_v6_address(&reply->lease, reply->shared,
 					 &reply->client_id);
 	} else if (best_lease != NULL) {
+		if (best_lease -> ipv6_pool -> shared_network != reply->shared){
+			release_lease6(best_lease->ipv6_pool, best_lease);
+			status = pick_v6_address(&reply->lease, reply->shared,
+						 &reply->client_id);
+		}else{
 		iasubopt_reference(&reply->lease, best_lease, MDL);
 		status = ISC_R_SUCCESS;
+		}
 	}
 
 	/* Pick the abandoned lease as a last resort. */
