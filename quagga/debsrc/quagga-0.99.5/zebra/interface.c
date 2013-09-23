@@ -4584,7 +4584,8 @@ static int ip_address_install(struct vty *vty, struct interface *ifp,
 		||(strncmp(ifp->name,"mng",3)== 0))
    	{
    		/*when ve sub interface set local ,in active master is virtual ,so not goto install kernel ,only send to his board .*/
-   		if((judge_ve_sub_interface(ifp->name)==VE_SUB_INTERFACE)&&(CHECK_FLAG(ifp->if_scope, INTERFACE_LOCAL)))
+   /*	if((judge_ve_sub_interface(ifp->name)==VE_SUB_INTERFACE)&&(CHECK_FLAG(ifp->if_scope, INTERFACE_LOCAL)))*/
+		if(CHECK_FLAG(ifp->if_scope, INTERFACE_LOCAL))
 		{
 			if(ip_have_set == 1)
 			{

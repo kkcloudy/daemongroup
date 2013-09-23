@@ -738,8 +738,10 @@ nexthop_active_ipv4_check (struct rib *rib, struct nexthop *nexthop, int set,
 	return 0;
   if (IS_ZEBRA_DEBUG_RIB)
   	zlog_debug ("%s: lookup prefix %s/%d", __func__, inet_ntoa (p.prefix),p.prefixlen);
-
-  for (rn = route_top (table); rn; rn = route_next (rn))
+  
+  /*  for (rn = route_top (table); rn; rn = route_next (rn))*/
+  rn = route_node_match (table, (struct prefix *) &p);/*gujd: 2013-09-13. Change for the longest route mask match*/
+  if(rn)
   {
     /*skip yourself*/
   	/*if(rn == top)
@@ -761,7 +763,9 @@ nexthop_active_ipv4_check (struct rib *rib, struct nexthop *nexthop, int set,
 		inet_ntop (AF_INET, &p.prefix, buf2, BUFSIZ);
 		 zlog_debug("%s: line %d , p ..IP is [%s]..\n",__func__,__LINE__,buf2);
 	  }	
-	if(prefix_match(&rn->p, (struct prefix *)&p))/*bingo the rn */
+/*	if(prefix_match(&rn->p, (struct prefix *)&p))*//*bingo the rn */
+
+	if (rn->p.prefixlen <= p.prefixlen && prefix_match (&rn->p, (struct prefix *)&p))
 	{
 		ret = nexthop_active_ipv4_update(rib,nexthop,set,rn);
 		if(ret == 1)
@@ -774,7 +778,7 @@ nexthop_active_ipv4_check (struct rib *rib, struct nexthop *nexthop, int set,
 	{
 		if (IS_ZEBRA_DEBUG_RIB)
 		zlog_debug("%s : line %d , oterh rn[%p].\n",__func__,__LINE__,rn);
-		continue;
+	/*	continue;*/
 	 }
   }
   if (IS_ZEBRA_DEBUG_RIB)

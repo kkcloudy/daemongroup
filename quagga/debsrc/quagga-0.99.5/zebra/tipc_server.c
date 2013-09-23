@@ -2290,7 +2290,8 @@ tipc_client_route_multipath (int cmd, tipc_server *vice_board, u_short length)
 	  {
 	   /*CID 17201 (#1 of 1): Uninitialized scalar variable (UNINIT)
             16. uninit_use: Using uninitialized value "nexthop_num". */
-	  	 if(set_local_count == 1 || nexthop_num == set_local_count)
+	  	 if((set_local_count == 1 && nexthop_num == set_local_count )
+		 	|| nexthop_num == set_local_count)/*(1)Only one nexthop and set local;(2)More nexthop and all are set local.*/
 	  	 {
 	  	 	zlog_debug("%s: line %d ,nexthop set local count[%d] cased free this rib info.\n",__func__,__LINE__,set_local_count);
 			goto skip;
