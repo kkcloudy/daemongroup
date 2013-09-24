@@ -1910,7 +1910,7 @@ unsigned int is_local_board_interface_v6(const char *ifname)
 	}
 	close(sock);
 
-	printf("%s\n", (IFF_RPA == tmp.ifr_flags) ? "rpa interface" : " ");
+	//printf("%s\n", (IFF_RPA == tmp.ifr_flags) ? "rpa interface" : " ");
 	
 	return ((tmp.ifr_flags & IFF_RPA) != IFF_RPA);
 	
@@ -2361,11 +2361,13 @@ DEFUN(set_interface_ipv6_pool_cmd_func,
 	ret = dcli_set_interface_ipv6_pool(poolName, ifname, 1,vty);
 	
 	if (!ret) {
+		if (dest_slotid != vty->slotindex) {
 		dcli_dhcpv6_distributed_process(vty, INTERFACE_BIND_POOL, ifname);
-		
+		}
 		free(poolName);
 		free(ifname);
 		poolName = NULL;
+		vty_out(vty,"Successfully binding!\n");
 		return CMD_SUCCESS;
 	}
 	else {	
@@ -2387,7 +2389,7 @@ DEFUN(del_interface_ipv6_pool_cmd_func,
 {
 
 	char* poolName = NULL, *ifname = NULL;;
-	unsigned int nameSize = 0, nodeSave = 0;
+	unsigned int nameSize = 0, nodeSave = 0 ,dest_slotid = 0;
 	int ret = 0, index = 0;
 	unsigned int op_ret = 0;
 
@@ -2408,10 +2410,29 @@ DEFUN(del_interface_ipv6_pool_cmd_func,
 	
 	nameSize = strlen(vlan_eth_port_ifname);
 	memcpy(ifname, vlan_eth_port_ifname, nameSize);
+	if(strncmp(ifname, "ve", 2) == 0)
+	dcli_dhcp_check_ve_interface(ifname);
+	dest_slotid = get_slot_id_by_ifname(ifname);
 
+	/* interface node: vty->slotindex = 0
+	   hansi node -> interface node ->slotindex != 0 */
+	if ((0 != vty->slotindex)
+		&& (dest_slotid != vty->slotindex)) {
+		vty_out(vty, "bind ip pool failed, Because not support.\n");
+		if(poolName){
+			free(poolName);
+			poolName=NULL;
+		}
+		if(ifname){
+			free(ifname);
+			ifname=NULL;
+		}
+		return CMD_WARNING;			
+	}
 	ret = dcli_set_interface_ipv6_pool(poolName, ifname, 0,vty);
 	
 	if (!ret) {
+		if (dest_slotid != vty->slotindex)
 		dcli_dhcpv6_distributed_process(vty, INTERFACE_UNBIND_POOL, ifname);
 		
 		free(poolName);
