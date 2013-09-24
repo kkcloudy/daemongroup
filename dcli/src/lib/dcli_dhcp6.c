@@ -1084,9 +1084,43 @@ dcli_show_ipv6_pool
 
 		}/*for*/
 	}  /*if*/
+	//*num = pool_count;
+	//*poolshow = pool;
+	for (i = 0; i < pool_count; i ++) {		
+			vty_out(vty, "===============================================================\n");
+			vty_out(vty, "               dhcp server ip pool configure\n");
+			vty_out(vty, "ipv6 pool name %s\n", pool[i].poolname);
+			if (pool[i].domain_name) {
+				vty_out(vty, "dhcp server domain name is : %s\n", pool[i].domain_name); 	
+			}
 	
-	*num = pool_count;
-	*poolshow = pool;
+			vty_out(vty, "dhcp server option52 is : \n");
+	
+			for(j = 0; j < pool[i].option_adr_num; j++){
+				vty_out(vty, "%s\n", pool[i].option52[j]);
+			}		
+	
+			vty_out(vty, "dhcp server dns ip is :");
+			for (j = 0; j < pool[i].dnsnum; j++) {				
+					vty_out(vty, " %s ",  pool[i].dnsip[j]);
+			}
+			vty_out(vty, "\n");
+			vty_out(vty, "dhcp server global lease time is : %u seconds\n", pool[i].defaulttime ? pool[i].defaulttime : 86400);
+	
+			if(pool[i].interfacename != NULL && pool[i].interfacename[0] != '\0'){
+				vty_out(vty, "binded by interface name : %s\n", pool[i].interfacename);
+			}
+			for (j = 0; j < pool[i].sub_count; j++) {
+			
+				vty_out(vty, "ipv6 range low %s\n", pool[i].ipv6_subnet[j].range_low_ip);
+					
+				vty_out(vty, "ipv6 range high %s\n", pool[i].ipv6_subnet[j].range_high_ip);
+				
+				vty_out(vty, "ipv6 range prefix length %d\n", pool[i].ipv6_subnet->prefix_length);
+			}
+			vty_out(vty, "===============================================================\n");
+		}
+
 	dbus_message_unref(reply);
 	 return CMD_SUCCESS;		 
 }
@@ -1111,7 +1145,7 @@ DEFUN(show_ipv6_pool_cmd_func,
 	}
 	
 	ret = dcli_show_ipv6_pool(vty, mode, index, &poolshow, &count);
-
+#if 0
 	for (i = 0; i < count; i ++) {		
 		vty_out(vty, "===============================================================\n");
 		vty_out(vty, "              dhcp server ip pool configure\n");
@@ -1146,7 +1180,7 @@ DEFUN(show_ipv6_pool_cmd_func,
 		}
 		vty_out(vty, "===============================================================\n");
 	}
-
+#endif
 	if (!ret) {
 		return CMD_SUCCESS;
 	}

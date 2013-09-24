@@ -68,7 +68,9 @@ extern "C"
 #define DHCP6_PID_PATH_LEN		DHCP6_PID_BUFFER_LEN
 #define DHCP6_INVALID_FD		(-1)
 #define DHCP6_FD_INIT		DHCP6_INVALID_FD
-#define DHCP_SAVE_CFG_MEM	10*1024
+#define DHCP_SAVE_CFG_MEM	10*1024*1024
+#define DHCP6_MAX_POOL_NUM	1024
+
 
 #define DHCP6_PID_FILE_PATH "/var/run/"
 #define DHCP6_PID_FILE_PREFIX "dhcp6"
@@ -1885,10 +1887,16 @@ dhcp6_dbus_create_pool_by_name
 {
 	struct dcli_pool* head = NULL, *temppool = NULL;
 	unsigned int ret = 0;
-	if (!name) {
+	if (!name || (count_pool >= DHCP6_MAX_POOL_NUM)) {
+		if(name){
+			ret = dhcp6_dbus_find_pool_by_name(name, &temppool);
+			if(!ret){
+				return 2;
+			}
+		}
+		log_error("create ip pool parameter null, pool count %d\n", count_pool);		
 		return 1;
 	}
-
 	ret = dhcp6_dbus_find_pool_by_name(name, &temppool);
 	if (ret) {
 		head = malloc(sizeof(struct dcli_pool));
@@ -2213,7 +2221,7 @@ dhcp6_dbus_profile_config_save
 	
 	int ipv6_buf_len = (sizeof("ffff:ffff:ffff:ffff:ffff:ffff:255.255.255.255") + 1);
 	
-	showif = (char*)malloc(2*1024);
+	showif = (char*)malloc(512*1024);
 	if(NULL == showif){
 		return;
 	}
