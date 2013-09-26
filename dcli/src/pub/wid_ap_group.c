@@ -97,7 +97,7 @@ int dcli_ap_group_show_member(int localid,int index,unsigned int groupid,unsigne
 	unsigned int wtpid = 0;
 	dbus_error_init(&err);
 
-	printf("11111111111111111111111111\n");
+	//printf("11111111111111111111111111\n");
 
     char BUSNAME[PATH_LEN];
 	char OBJPATH[PATH_LEN];
@@ -106,10 +106,10 @@ int dcli_ap_group_show_member(int localid,int index,unsigned int groupid,unsigne
 	ReInitDbusPath_V2(localid,index,WID_DBUS_AP_GROUP_OBJPATH,OBJPATH);
 	ReInitDbusPath_V2(localid,index,WID_DBUS_AP_GROUP_INTERFACE,INTERFACE);
 
-	printf("2222222222222222222222\n");
+	//printf("2222222222222222222222\n");
 	query = dbus_message_new_method_call(BUSNAME,OBJPATH,INTERFACE,WID_DBUS_AP_GROUP_METHOD_SHOW_MEMBER);
 
-    printf("3333333333333333333333333\n");
+    //printf("3333333333333333333333333\n");
     dbus_message_iter_init_append (query, &iter);
 			
 	dbus_message_iter_append_basic (&iter,
@@ -128,14 +128,14 @@ int dcli_ap_group_show_member(int localid,int index,unsigned int groupid,unsigne
 		}
 		return -1;
 	}
-    printf("44444444444444444444444\n");
+    //printf("44444444444444444444444\n");
     dbus_message_iter_init(reply,&iter);
 	dbus_message_iter_get_basic(&iter,&ret);
 
 	dbus_message_iter_next(&iter);	
 	dbus_message_iter_get_basic(&iter,&count);
-	printf("5555555555555555555555555\n");
-	printf("count = %d\n",count);
+	//printf("5555555555555555555555555\n");
+	//printf("count = %d\n",count);
 	*apcount = count;
 	if(count != 0){
 		(*wtp_list) = (unsigned int *)malloc(count*(sizeof(unsigned int)));
@@ -144,9 +144,9 @@ int dcli_ap_group_show_member(int localid,int index,unsigned int groupid,unsigne
 		dbus_message_iter_next(&iter);	
 		dbus_message_iter_get_basic(&iter,&wtpid);
 		(*wtp_list)[i] = wtpid;
-		printf("wtpid[%d] = %d\n",i,wtpid);
+		//printf("wtpid[%d] = %d\n",i,wtpid);
 	}
-	printf("66666666666666666666666666\n");
+	//printf("66666666666666666666666666\n");
 	dbus_message_unref(reply);
     
     return ret;
