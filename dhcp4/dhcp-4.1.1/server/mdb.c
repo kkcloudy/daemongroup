@@ -796,6 +796,46 @@ del_interface_test
 	}
 
 }
+/*
+ * This function joins the interface to DHCPv6 multicast groups so we will
+ * receive multicast messages.
+ */
+static void
+if_deregister_multicast(struct interface_info *info) {
+	int sock = info->rfdesc;
+	struct ipv6_mreq mreq;
+
+	if (inet_pton(AF_INET6, All_DHCP_Relay_Agents_and_Servers,
+		      &mreq.ipv6mr_multiaddr) <= 0) {
+		log_fatal("inet_pton: unable to convert '%s'", 
+			  All_DHCP_Relay_Agents_and_Servers);
+	}
+	mreq.ipv6mr_interface = if_nametoindex(info->name);
+	if (setsockopt(sock, IPPROTO_IPV6, IPV6_LEAVE_GROUP, 
+		       &mreq, sizeof(mreq)) < 0) {
+		log_fatal("setsockopt: IPV6_JOIN_GROUP: %m");
+	}
+
+	/*
+	 * The relay agent code sets the streams so you know which way
+	 * is up and down.  But a relay agent shouldn't join to the
+	 * Server address, or else you get fun loops.  So up or down
+	 * doesn't matter, we're just using that config to sense this is
+	 * a relay agent.
+	 */
+	if ((info->flags & INTERFACE_STREAMS) == 0) {
+		if (inet_pton(AF_INET6, All_DHCP_Servers,
+			      &mreq.ipv6mr_multiaddr) <= 0) {
+			log_fatal("inet_pton: unable to convert '%s'", 
+				  All_DHCP_Servers);
+		}
+		mreq.ipv6mr_interface = if_nametoindex(info->name);
+		if (setsockopt(sock, IPPROTO_IPV6, IPV6_LEAVE_GROUP, 
+			       &mreq, sizeof(mreq)) < 0) {
+			log_fatal("setsockopt: IPV6_JOIN_GROUP: %m");
+		}
+	}
+}
 
 void 
 test_for_del_subnet_interface
@@ -808,6 +848,7 @@ test_for_del_subnet_interface
 	for (tmpinterface = interfaces; tmpinterface; tmpinterface = tmpinterface->next) {
 		if (!strcmp(tmpinterface->name, interface_name)) {
 			log_debug("delete interface for subnet interface name is %s \n", interface_name);
+			if_deregister_multicast(tmpinterface);
 			if_deregister6(tmpinterface);
 			omapi_unregister_io_object((omapi_object_t *)tmpinterface);
 			dhcp_interface_destroy((omapi_object_t *)tmpinterface, MDL);

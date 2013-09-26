@@ -1990,8 +1990,8 @@ isc_result_t dhcp_interface_destroy (omapi_object_t *h,
 		dfree (interface -> ifp, file, line);
 		interface -> ifp = 0;
 	}
-	if (interface -> next)
-		interface_dereference (&interface -> next, file, line);
+	//if (interface -> next)
+		//interface_dereference (&interface -> next, file, line);
 	if (interface -> rbuf) {
 		dfree (interface -> rbuf, file, line);
 		interface -> rbuf = (unsigned char *)0;
