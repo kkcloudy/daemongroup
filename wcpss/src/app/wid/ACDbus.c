@@ -29675,7 +29675,7 @@ DBusMessage * wid_dbus_interface_wtp_flow_triger(DBusConnection *conn, DBusMessa
 	unsigned int ID = 0;
 	unsigned int num = 0;
 	unsigned int type = 0;
-	unsigned char wlanid = 0;
+
 	int ret = WID_DBUS_SUCCESS;
 	int ret2 = WID_DBUS_SUCCESS;
 	int ret_check = WID_DBUS_SUCCESS;
@@ -29876,7 +29876,7 @@ DBusMessage * wid_dbus_interface_wtp_triger(DBusConnection *conn, DBusMessage *m
 	unsigned int ID = 0;
 	unsigned int num = 0;
 	unsigned int type = 0;
-	unsigned char wlanid = 0;
+
 	int ret = WID_DBUS_SUCCESS;
 	int ret2 = WID_DBUS_SUCCESS;
 	int ret_check = WID_DBUS_SUCCESS;
@@ -30221,7 +30221,7 @@ DBusMessage * wid_dbus_interface_wtp_max_sta(DBusConnection *conn, DBusMessage *
 	int ret = WID_DBUS_SUCCESS;
 	int i =0;
 	unsigned int ID = 0;
-	unsigned int num = 0;
+
 	unsigned int wtp_max_sta = 0;
 	//unsigned int type = 0;
 	//int ret_check = WID_DBUS_SUCCESS;
@@ -30787,7 +30787,7 @@ DBusMessage * wid_dbus_interface_wtp_disable_wlanid(DBusConnection *conn, DBusMe
 	int ret2 = WID_DBUS_SUCCESS;
 	int ret_check = WID_DBUS_SUCCESS;
 	
-	char *if_name = NULL;
+
 	struct Wtp_List * wtp_head =NULL;
 	struct WTP_GROUP_MEMBER *tmp = NULL;
 
@@ -30941,7 +30941,7 @@ DBusMessage * wid_dbus_interface_wtp_enable_wlanid(DBusConnection *conn, DBusMes
 	int ret2 = WID_DBUS_SUCCESS;
 	int ret_check = WID_DBUS_SUCCESS;
 	
-	char *if_name = NULL;
+
 	struct Wtp_List * wtp_head =NULL;
 	struct WTP_GROUP_MEMBER *tmp = NULL;
 
@@ -33298,14 +33298,14 @@ DBusMessage * wid_dbus_interface_wtp_set_ap_collect_time(DBusConnection *conn, D
 
 #if _GROUP_POLICY
 DBusMessage * wid_dbus_interface_radio_set_txp(DBusConnection *conn, DBusMessage *msg, void *user_data){
-	DBusMessage * reply;	
+	DBusMessage * reply = NULL;	
 	DBusMessageIter	 iter;
 	DBusError err;	
 	
 	int i = 0;
 	int num =0 ;
 	int radionum = 0;
-	int country_error_num = 0;
+
 	unsigned int ID = 0;
 	unsigned int type = 0;
 	unsigned short RadioTxp = 0;
@@ -33447,7 +33447,8 @@ DBusMessage * wid_dbus_interface_radio_set_txp(DBusConnection *conn, DBusMessage
 											}
 										else if((ret2 == WID_DBUS_SUCCESS)&&(ret1 == COUNTRY_CODE_ERROR))
 											{
-												ret1 == RADIO_SET_TXPOF_COUNTRY_CODE_ERROR; 
+												//huxf
+												ret1 = RADIO_SET_TXPOF_COUNTRY_CODE_ERROR; 
 												radio_head[num].RadioId= AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID;
 												radio_head[num].FailReason=ret1;
 												num++;
@@ -33498,7 +33499,9 @@ DBusMessage * wid_dbus_interface_radio_set_txp(DBusConnection *conn, DBusMessage
 			}
 			return reply;
 
-		}
+	} else {
+		return reply;
+	}
 }
 
 #else
@@ -33574,14 +33577,14 @@ DBusMessage * wid_dbus_interface_radio_set_txp(DBusConnection *conn, DBusMessage
 #endif
 #if _GROUP_POLICY
 DBusMessage * wid_dbus_interface_radio_set_txpof(DBusConnection *conn, DBusMessage *msg, void *user_data){
-	DBusMessage * reply;	
+	DBusMessage * reply = NULL;	
 	DBusMessageIter	 iter;
 	DBusError err;
 
 	int i = 0;
 	int num =0 ;
 	int radionum = 0;
-	int country_error_num = 0;
+
 	unsigned int ID = 0;
 	unsigned int type = 0;
 	unsigned short RadioTxpof = 0;
@@ -33647,7 +33650,8 @@ DBusMessage * wid_dbus_interface_radio_set_txpof(DBusConnection *conn, DBusMessa
 					//append to country code ,decide txpower
 					printf("RadioTxpof = %d \n",RadioTxpof);
 				//	if((gCOUNTRYCODE == COUNTRY_FRANCE_FR)||(gCOUNTRYCODE == COUNTRY_SPAIN_ES))
-					if((AC_RADIO[ID]->Radio_country_code == COUNTRY_FRANCE_FR)||(AC_RADIO[ID]->Radio_country_codeAC_RADIO[ID]->Radio_country_code == COUNTRY_SPAIN_ES))/*wcl modify for OSDEVTDPB-31*/
+				// huxf
+					if((AC_RADIO[ID]->Radio_country_code == COUNTRY_FRANCE_FR)||(AC_RADIO[ID]->Radio_country_code == COUNTRY_SPAIN_ES))/*wcl modify for OSDEVTDPB-31*/
 						{
 							if(RadioTxpof > 14)
 								{
@@ -33773,7 +33777,8 @@ DBusMessage * wid_dbus_interface_radio_set_txpof(DBusConnection *conn, DBusMessa
 											}
 										else if((ret2 == WID_DBUS_SUCCESS)&&(ret1 == COUNTRY_CODE_ERROR))
 											{
-												ret1 == RADIO_SET_TXPOF_COUNTRY_CODE_ERROR; 
+											//huxf
+												ret1 = RADIO_SET_TXPOF_COUNTRY_CODE_ERROR; //huxf
 												radio_head[num].RadioId= AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID;
 												radio_head[num].FailReason=ret1;
 												num++;
@@ -33825,6 +33830,8 @@ DBusMessage * wid_dbus_interface_radio_set_txpof(DBusConnection *conn, DBusMessa
 			}
 			return reply;
 
+		} else {
+			return reply;
 		}
 	//return reply;
 }
@@ -34207,7 +34214,7 @@ DBusMessage *wid_dbus_interface_radio_set_radio_wlan_limit_rssi_access_sta(DBusC
 
 #if _GROUP_POLICY
 DBusMessage * wid_dbus_interface_radio_set_chan(DBusConnection *conn, DBusMessage *msg, void *user_data){
-	DBusMessage * reply;	
+	DBusMessage * reply = NULL;	
 	DBusMessageIter	 iter;
 	DBusError err;
 		
@@ -34583,12 +34590,12 @@ DBusMessage * wid_dbus_interface_radio_set_chan(DBusConnection *conn, DBusMessag
 														}
 													else
 														{
-															ret1 == CHECK_COUNTRY_CODE_FAIL;
+															ret1 = CHECK_COUNTRY_CODE_FAIL; // huxf
 														}
 												}
 											else
 												{
-													ret2 ==	CHECK_CHANNEL_CWMODE_FAIL;
+													ret2 =	CHECK_CHANNEL_CWMODE_FAIL;  // huxf
 												}
 											}
 										/*if(ret2 != CHANNEL_CWMODE_SUCCESS)
@@ -34662,7 +34669,10 @@ DBusMessage * wid_dbus_interface_radio_set_chan(DBusConnection *conn, DBusMessag
 					}
 			}
 		
-	return reply;	}
+		return reply;	
+	} else {
+		return reply;
+	}
 }
 
 #else
@@ -34915,7 +34925,6 @@ DBusMessage * wid_dbus_interface_radio_apply_wlan(DBusConnection *conn, DBusMess
 		}
 	else if(type == 1)
 		{
-			int k1 = 0;
 			printf("******** type == 1 *****\n");
 			if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL))
 				{
@@ -37011,7 +37020,7 @@ DBusMessage * wid_dbus_interface_radio_recover_default_config(DBusConnection *co
 ////
 #if _GROUP_POLICY
 DBusMessage * wid_dbus_interface_radio_set_support_ratelist(DBusConnection *conn, DBusMessage *msg, void *user_data){
-	DBusMessage * reply;	
+	DBusMessage * reply = NULL;	
 	DBusMessageIter	 iter;
 	DBusError err;	
 	
@@ -37246,6 +37255,8 @@ DBusMessage * wid_dbus_interface_radio_set_support_ratelist(DBusConnection *conn
 					}
 			}
 			return reply;
+		} else {
+			return reply;
 		}
 }
 
@@ -37434,7 +37445,7 @@ DBusMessage * wid_dbus_interface_radio_set_11n_rate_paras(DBusConnection *conn, 
 
 #if _GROUP_POLICY
 DBusMessage * wid_dbus_interface_radio_set_max_rate(DBusConnection *conn, DBusMessage *msg, void *user_data){
-	DBusMessage * reply;	
+	DBusMessage * reply = NULL;	
 	DBusMessageIter	 iter;
 	DBusError err;	
 	
@@ -37602,6 +37613,8 @@ DBusMessage * wid_dbus_interface_radio_set_max_rate(DBusConnection *conn, DBusMe
 						radio_head = NULL;	
 					}
 			}
+			return reply;
+		} else {
 			return reply;
 		}
 }
@@ -38735,13 +38748,13 @@ DBusMessage * wid_dbus_interface_radio_show_channel_change_info(DBusConnection *
 ////
 #if _GROUP_POLICY
 DBusMessage * wid_dbus_interface_radio_set_mode(DBusConnection *conn, DBusMessage *msg, void *user_data){
-	DBusMessage * reply;	
+	DBusMessage * reply = NULL;	
 	DBusMessageIter	 iter;
 	DBusError err;	
 	
 	int i = 0;
 	int num =0 ;
-	int successfulnum = 0;
+
 	int Ratenum =0;
     int radionum = 0;
 	unsigned int ID = 0;
@@ -38753,7 +38766,7 @@ DBusMessage * wid_dbus_interface_radio_set_mode(DBusConnection *conn, DBusMessag
 	int ret_check = WID_DBUS_SUCCESS;
 	
 	struct Radio_List  *radio_head = NULL;
-	struct Radio_List  *radio_num = NULL;
+
 	struct WTP_GROUP_MEMBER *tmp = NULL;
 	struct WTP_GROUP_MEMBER *radiotmp = NULL;
 	struct Support_Rate_List *ptr = NULL;
@@ -38895,7 +38908,9 @@ DBusMessage * wid_dbus_interface_radio_set_mode(DBusConnection *conn, DBusMessag
 			}
 		printf("****************\n");
 		return reply;
-		}	
+		} else {
+			return reply;
+		}
 }
 
 #else
@@ -39942,7 +39957,7 @@ DBusMessage * wid_dbus_interface_radio_set_ampdu_able(DBusConnection *conn, DBus
     int radionum = 0;
 	unsigned int ID = 0;
 	unsigned int TYPE = 0;
-	unsigned int ampdulimit = 0;
+	
 	unsigned char type = 0;
 	unsigned char able = 0;
 	int ret = WID_DBUS_SUCCESS;
@@ -41256,7 +41271,7 @@ DBusMessage * wid_dbus_interface_radio_set_channel_offset(DBusConnection *conn, 
 	int num =0 ;
     int radionum = 0;
 	unsigned int ID = 0;
-	unsigned char policy = 0;
+	char policy = 0;	// huxf
 	unsigned int type = 0;
 	unsigned int max_channel = 0;  //fengwenchao add 20110421   
 	unsigned int min_channel = 0;  //fengwenchao add 20110421
@@ -42675,7 +42690,7 @@ DBusMessage * wid_dbus_interface_radio_set_wds_wep_key(DBusConnection *conn, DBu
 	int ret = WID_DBUS_SUCCESS;
 	int ret2 = WID_DBUS_SUCCESS;
 	int ret_check = WID_DBUS_SUCCESS;
-	int ret_set_key = WID_DBUS_SUCCESS;
+	
 	char command[80];
 	struct Radio_List  *radio_head = NULL;
 	struct WTP_GROUP_MEMBER *tmp = NULL;
@@ -46662,7 +46677,7 @@ DBusMessage * wid_dbus_interface_set_ap_max_throughout(DBusConnection *conn, DBu
 	
 	int ret = WID_DBUS_SUCCESS;
 	int ret2 = WID_DBUS_SUCCESS;
-	int retv6 = WID_DBUS_SUCCESS;
+	
 	int ret_check = WID_DBUS_SUCCESS;
 	
 	struct Wtp_List * wtp_head =NULL;
@@ -46852,7 +46867,7 @@ DBusMessage * wid_dbus_interface_set_ap_extension_command(DBusConnection *conn, 
 			if(AC_WTP[ID] != NULL)
 			{
 				CWThreadMutexLock(&(gSTARoamingMutex)); 		
-				ret = wid_radio_set_extension_command(ID, command);
+				ret = wid_radio_set_extension_command(ID, (char *)command);
 				CWThreadMutexUnlock(&(gSTARoamingMutex)); 
 			}
 			else
@@ -46874,7 +46889,7 @@ DBusMessage * wid_dbus_interface_set_ap_extension_command(DBusConnection *conn, 
 					if(AC_WTP[tmp->WTPID] != NULL)
 					{
 						CWThreadMutexLock(&(gSTARoamingMutex)); 		
-						ret2 = wid_radio_set_extension_command(tmp->WTPID, command);
+						ret2 = wid_radio_set_extension_command(tmp->WTPID, (char *)command);
 						CWThreadMutexUnlock(&(gSTARoamingMutex)); 
 						wid_syslog_debug_debug(WID_DEFAULT,"WTP%d set extension command successful\n",tmp->WTPID);
 					}
@@ -47088,7 +47103,7 @@ DBusMessage * wid_dbus_tcpdump_command(DBusConnection *conn, DBusMessage *msg, v
 	unsigned int ID = 0;
 	unsigned int num = 0;
 	unsigned int type = 0;
-	int len = 0;
+	
 	int ret = WID_DBUS_SUCCESS;
 	int ret2 = WID_DBUS_SUCCESS;
 	int ret_check = WID_DBUS_SUCCESS;
@@ -50574,7 +50589,7 @@ else if(type==1)
 								}
 								else
 								{
-									AC_WTP[tmp->WTPID]->ter_dis_info.reportpkt == pkt;
+									AC_WTP[tmp->WTPID]->ter_dis_info.reportpkt = pkt; //huxf
 									wid_syslog_debug_debug(WID_DEFAULT,"WTP%d set num successful\n",tmp->WTPID);
 						
 									if(AC_WTP[tmp->WTPID]->ter_dis_info.reportswitch == 1)
@@ -52121,7 +52136,7 @@ DBusMessage * wid_dbus_interface_set_wtp_extension_infomation_interval(DBusConne
 	DBusError err;
 	int i = 0;
 	int num =0 ;
-	int policy = 0;
+
 	unsigned int ID = 0;
 	unsigned int type = 0;
 	unsigned int interval = 0;
@@ -52259,7 +52274,7 @@ DBusMessage * wid_dbus_interface_set_wtp_extension_infomation_interval(DBusConne
 	
 }
 
-#else
+
 
 DBusMessage * wid_dbus_interface_set_wtp_wbs_cpe_switch(DBusConnection *conn, DBusMessage *msg, void *user_data){
 
@@ -52355,6 +52370,48 @@ DBusMessage * wid_dbus_interface_set_wtp_unauthorized_mac_switch(DBusConnection 
 	
 	dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT32, &ret);
 	
+	return reply;
+	
+}
+
+DBusMessage * wid_dbus_interface_set_ap_longitude_latitude_command(DBusConnection *conn, DBusMessage *msg, void *user_data){
+
+	DBusMessage* reply;
+	DBusMessageIter  iter;
+	unsigned char *longitude, *latitude;
+	unsigned int wtpid;
+	DBusError err;
+	int ret = WID_DBUS_SUCCESS;
+	
+	dbus_error_init(&err);
+	if (!(dbus_message_get_args ( msg, &err,
+								DBUS_TYPE_UINT32, &wtpid,
+								DBUS_TYPE_STRING, &longitude,
+								DBUS_TYPE_STRING, &latitude,
+								DBUS_TYPE_INVALID))){
+								
+		wid_syslog_err("Unable to get input args\n");
+		
+		if (dbus_error_is_set(&err)) {
+			wid_syslog_err("%s raised: %s",err.name,err.message);
+			dbus_error_free(&err);
+		}
+		return NULL;
+	}
+	
+	wid_syslog_debug_debug(WID_DEFAULT, "set longitude and latitude for wtp %d\n", wtpid);
+	
+	if(wtpid == 0 || AC_WTP[wtpid] != NULL)
+	{
+		wid_set_ap_longitude_latitude(wtpid, longitude, latitude); 
+	} else {
+		ret = WTP_ID_NOT_EXIST;
+	}
+	
+	reply = dbus_message_new_method_return(msg);
+	dbus_message_iter_init_append(reply, &iter);
+		
+	dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT32, &ret);
 	return reply;
 	
 }
@@ -53179,6 +53236,8 @@ DBusMessage * wid_dbus_interface_set_wtp_sta_flow_tx_overflow_interval(DBusConne
 }
 #endif
 
+#else
+
 /* ---zhangshu add for Terminal Disturb Info Report END---,2010-10-08 */
 
 
@@ -53755,7 +53814,7 @@ DBusMessage * wid_dbus_interface_set_wtp_sta_infomation_interval(DBusConnection 
 				gSTAREPORTINTERVAL = (u_int16_t)interval;
 				for(i=0;i<WTP_NUM;i++){
 					if(AC_WTP[i] != NULL){
-						AC_WTP[i]->ap_sta_report_interval == (u_int16_t)interval;
+						AC_WTP[i]->ap_sta_report_interval = (u_int16_t)interval; //huxf
 						ret = wid_set_ap_sta_infomation_report(i);
 					}
 				}
@@ -54126,7 +54185,7 @@ DBusMessage * wid_dbus_interface_set_wtp_sta_wapi_info_interval(DBusConnection *
 	DBusError err;
 	int i = 0;
 	int num =0 ;
-	int policy = 0;
+
 	unsigned int ID = 0;
 	unsigned int type = 0;
 	unsigned char interval = 0;
@@ -54343,7 +54402,7 @@ DBusMessage * wid_dbus_interface_set_wtp_if_info_report_enable(DBusConnection *c
 	int policy = 0;
 	unsigned int ID = 0;
 	unsigned int type = 0;
-	unsigned int DisWtp = 0;
+
 	int ret = WID_DBUS_SUCCESS;
 	int ret2 = WID_DBUS_SUCCESS;
 	int ret_check = WID_DBUS_SUCCESS;
@@ -54528,7 +54587,7 @@ DBusMessage * wid_dbus_interface_set_wtp_if_info_report_interval(DBusConnection 
 	
 	int i = 0;
 	int num =0 ;
-	int policy = 0;
+
 	unsigned int ID = 0;
 	unsigned int type = 0;
 	unsigned int interval = 0;
@@ -54558,7 +54617,7 @@ DBusMessage * wid_dbus_interface_set_wtp_if_info_report_interval(DBusConnection 
 	if(type == 0){
 		if(ID == 0){
 			gINFOREPORTINTERVAL = interval;
-			for(i=0;i,WTP_NUM;i++){
+			for(i=0;i<WTP_NUM;i++){		//not sure huxf
 				if(AC_WTP[i] != NULL){
 					AC_WTP[i]->apifinfo.report_interval = interval;
 					ret = wid_set_ap_if_info_report(i);
@@ -58803,8 +58862,8 @@ DBusMessage * wid_dbus_interface_set_radio_l2_siolation(DBusConnection *conn, DB
     int radionum = 0;
 	unsigned int ID = 0;
 	unsigned int type = 0;
-	unsigned int l_radioid = 0;
-	unsigned int wtpid = 0;
+
+
 	unsigned int able = 0;
 	unsigned char wlanid = 0;
 
@@ -64308,7 +64367,7 @@ DBusMessage * wid_dbus_interface_set_radio_chainmask_value(DBusConnection *conn,
 	DBusError err;
 
 	int i = 0;
-	int j = 0;
+
 	int num =0 ;
     int radionum = 0;
 	unsigned int ID = 0;
@@ -64341,9 +64400,7 @@ DBusMessage * wid_dbus_interface_set_radio_chainmask_value(DBusConnection *conn,
 	}
 	if(TYPE==0)
 		{
-			int wtpid = ID/L_RADIO_NUM;
-			int l_radioid = ID%L_RADIO_NUM;
-			
+			int wtpid = ID/L_RADIO_NUM;			
 			
 			if(AC_WTP[wtpid] == NULL) {
 				ret = WTP_ID_NOT_EXIST;
@@ -69944,11 +70001,11 @@ DBusMessage * wid_dbus_interface_wlan_wtp_sta_static_arp(DBusConnection *conn, D
 	DBusMessageIter  iter;
 	DBusError err;	
 
-	unsigned int wtpid = 0;
+
 	unsigned int policy = 0;
 	unsigned char wlanid;
 	char *ifname;
-	int WTPIndex;
+
 	unsigned int BSSIndex;
 	int i = 0;
 	int num =0 ;
@@ -70475,14 +70532,15 @@ DBusMessage *wid_dbus_add_ap_group(DBusConnection *conn, DBusMessage *msg, void 
 								DBUS_TYPE_STRING,&Name,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_err("Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_err("%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
 	}
+	
 	if(WTP_GROUP[ID] == NULL){
 		ret = create_ap_group(ID,Name);
 	}else{
@@ -70512,10 +70570,10 @@ DBusMessage *wid_dbus_del_ap_group(DBusConnection *conn, DBusMessage *msg, void 
 								DBUS_TYPE_UINT32,&ID,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_err("Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_err("%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -70535,6 +70593,105 @@ DBusMessage *wid_dbus_del_ap_group(DBusConnection *conn, DBusMessage *msg, void 
 									 &ret);
 	return reply;
 	
+}
+
+DBusMessage *wid_dbus_show_ap_group_all(DBusConnection *conn, DBusMessage *msg, void *user_data){
+	DBusMessage * reply;
+	DBusMessageIter  iter;
+	DBusMessageIter  iter1;
+	DBusError err;	
+	int ret = WID_DBUS_SUCCESS;
+	unsigned int count = 0;
+	int i; 
+	
+	dbus_error_init(&err);
+	
+	dbus_message_iter_init(msg,&iter);	
+
+	for (i=0; i<WTP_GROUP_NUM; i++) {
+		if (WTP_GROUP[i] != NULL) {
+			count++;
+		}
+	}
+    
+	reply = dbus_message_new_method_return(msg);
+		
+	dbus_message_iter_init_append(reply, &iter1);
+		
+	dbus_message_iter_append_basic(&iter1, DBUS_TYPE_UINT32, &ret);
+
+	dbus_message_iter_append_basic (&iter1,	DBUS_TYPE_UINT32, &count);
+
+	for (i=0; i<WTP_GROUP_NUM; i++) {
+		if (WTP_GROUP[i] != NULL) {
+			dbus_message_iter_append_basic(&iter1,
+											DBUS_TYPE_UINT32,
+											&WTP_GROUP[i]->GID
+											);
+			dbus_message_iter_append_basic(&iter1,
+											DBUS_TYPE_STRING,
+											&WTP_GROUP[i]->GNAME
+											);
+		}
+	}
+
+	return reply;	
+}
+
+DBusMessage *wid_dbus_show_ap_group_members_all(DBusConnection *conn, DBusMessage *msg, void *user_data){
+	DBusMessage * reply;
+	DBusMessageIter  iter;
+	DBusMessageIter  iter1;
+	DBusError err;	
+	int ret = WID_DBUS_SUCCESS;
+	unsigned int count = 0;
+	int i; 
+	struct WTP_GROUP_MEMBER *temp;
+	
+	dbus_error_init(&err);
+	
+	dbus_message_iter_init(msg,&iter);	
+
+	for (i=0; i<WTP_GROUP_NUM; i++) {
+		if (WTP_GROUP[i] != NULL) {
+			count++;
+		}
+	}
+	
+	reply = dbus_message_new_method_return(msg);
+		
+	dbus_message_iter_init_append(reply, &iter1);
+		
+	dbus_message_iter_append_basic(&iter1, DBUS_TYPE_UINT32, &ret);
+
+	dbus_message_iter_append_basic (&iter1, DBUS_TYPE_UINT32, &count);
+
+	for (i=0; i<WTP_GROUP_NUM; i++) {
+		if (WTP_GROUP[i] != NULL) {
+			dbus_message_iter_append_basic(&iter1,
+											DBUS_TYPE_UINT32,
+											&WTP_GROUP[i]->GID
+											);
+			dbus_message_iter_append_basic(&iter1,
+											DBUS_TYPE_STRING,
+											&WTP_GROUP[i]->GNAME
+											);
+			dbus_message_iter_append_basic(&iter1,
+											DBUS_TYPE_UINT32,
+											&WTP_GROUP[i]->WTP_COUNT
+											);
+			temp = WTP_GROUP[i]->WTP_M;
+			while (temp) {
+				dbus_message_iter_append_basic(&iter1,
+											DBUS_TYPE_UINT32,
+											&temp->WTPID
+											);
+				temp = temp->next;
+			}
+		}
+	}
+
+	return reply;	
 }
 
 /* add by zhangshu  2010-09-16 */
@@ -70559,24 +70716,11 @@ DBusMessage *wid_dbus_show_ap_group_member(DBusConnection *conn, DBusMessage *ms
 	//wtp_list = malloc(num*sizeof(unsigned int));
 	//memset(wtp_list, 0, num*sizeof(unsigned int));
 
-    if(WTP_GROUP[groupid] == NULL)
-    {
+    if(WTP_GROUP[groupid] == NULL) {
 		ret = GROUP_ID_NOT_EXIST;
-		printf("group is null.........\n");
-    }
-    else
-    {
+    } else {
         count = WTP_GROUP[groupid]->WTP_COUNT;
-        printf("1111111111111111wtp count = %d\n",count);
-        printf("1111111111111111WTP_GROUP.WTP_COUNT = %d\n",WTP_GROUP[groupid]->WTP_COUNT);
     }
-    
-    //temp = WTP_GROUP[groupid]->WTP_M->hnext;
-    //while(temp != NULL)
-    //{
-    //    temp = temp->next;
-    //    count++;
-    //}
     
 	reply = dbus_message_new_method_return(msg);
 		
@@ -70584,16 +70728,13 @@ DBusMessage *wid_dbus_show_ap_group_member(DBusConnection *conn, DBusMessage *ms
 		
 	dbus_message_iter_append_basic(&iter1, DBUS_TYPE_UINT32, &ret);
 
-	
-	dbus_message_iter_append_basic (&iter1,
-										 DBUS_TYPE_UINT32,
-										 &count);
+	dbus_message_iter_append_basic (&iter1,	DBUS_TYPE_UINT32, &count);
 
-	if(ret == 0)
+	if(ret == WID_DBUS_SUCCESS)
 	{
-    	printf("222222222222222222count %d\n",count);
     	if(count != 0)
     	{
+    		#if 0
     	    if(WTP_GROUP[groupid]->WTP_M != NULL)
     	    {
     	        printf("WTP_GROUP[groupid]->WTP_M->WTPID = %d\n",WTP_GROUP[groupid]->WTP_M->WTPID);
@@ -70602,16 +70743,16 @@ DBusMessage *wid_dbus_show_ap_group_member(DBusConnection *conn, DBusMessage *ms
     	        if(WTP_GROUP[groupid]->WTP_M->next != NULL)
     	            printf("WTP_GROUP[groupid]->WTP_M->next->WTPID = %d\n",WTP_GROUP[groupid]->WTP_M->next->WTPID);   
     	    }
+			#endif
     	    
         	temp = WTP_GROUP[groupid]->WTP_M;
         	while(temp != NULL)
         	{
                 wtpid = temp->WTPID;
         		dbus_message_iter_append_basic (&iter1,
-        											 DBUS_TYPE_UINT32,
-        											 &wtpid);
+        										DBUS_TYPE_UINT32,
+        										&wtpid);
         		temp = temp->next;
-        		printf("$$$$$$$$$$$$$wtpid %d\n",wtpid);
         	}	
     	}
 	}
@@ -70621,7 +70762,7 @@ DBusMessage *wid_dbus_show_ap_group_member(DBusConnection *conn, DBusMessage *ms
 
 DBusMessage *wid_dbus_add_del_ap_group_member(DBusConnection *conn, DBusMessage *msg, void *user_data)
 {
-	DBusMessage * reply;
+	DBusMessage * reply=NULL;
 	DBusMessageIter  iter;
 	DBusMessageIter  iter1;
 	DBusError err;	
@@ -70638,59 +70779,111 @@ DBusMessage *wid_dbus_add_del_ap_group_member(DBusConnection *conn, DBusMessage 
 	
 	dbus_message_iter_init(msg,&iter);
 	dbus_message_iter_get_basic(&iter,&isadd);
-	printf("isadd %d\n",isadd);
+
 	dbus_message_iter_next(&iter);	
 	dbus_message_iter_get_basic(&iter,&groupid);
-	printf("groupid %d\n",groupid);
+
 	dbus_message_iter_next(&iter);	
 	dbus_message_iter_get_basic(&iter,&num);
-	printf("num %d\n",num);
-	wtp_list = malloc(num*sizeof(unsigned int));
-	memset(wtp_list, 0, num*sizeof(unsigned int));
-	for(i = 0; i < num; i++){
-		dbus_message_iter_next(&iter);	
-		dbus_message_iter_get_basic(&iter,&wtpid);	
-		printf("wtpid %d\n",wtpid);
-
-		if((isadd)&&(AC_WTP[wtpid]!=NULL)&&(AC_WTP[wtpid]->APGroupID == 0)){
-			ret1 = add_ap_group_member(groupid,wtpid);
-			printf("ret1 %d\n",ret1);
-			if(ret1 != 0){
-				wtp_list[count] = wtpid;
-				count++;
-			}
-		}else if((AC_WTP[wtpid]!=NULL)&&(AC_WTP[wtpid]->APGroupID == groupid)){
-			ret1 = del_ap_group_member(groupid,wtpid);
-			printf("ret1111 %d\n",ret1);
-			if(ret1 != 0){
-				wtp_list[count] = wtpid;
-				count++;
-			}
-		}else{
-			wtp_list[count] = wtpid;
-			count++;
+	if (num > 0) {
+		wtp_list = malloc(num*sizeof(unsigned int));
+		if (!wtp_list) {
+			ret = WID_DBUS_ERROR;
+			wid_syslog_err("%s for ap-group %d malloc failed\n", isadd ? "add" : "delete", groupid);
+			return reply;
 		}
-	}
-	if(num == 0){
+		memset(wtp_list, 0, num*sizeof(unsigned int));
+		for(i = 0; i < num; i++){
+			dbus_message_iter_next(&iter);	
+			dbus_message_iter_get_basic(&iter,&wtpid);	
+			wid_syslog_debug_debug(WID_DEFAULT, "wtpid %d\n",wtpid);
+
+			if((isadd)&&(AC_WTP[wtpid]!=NULL)&&(AC_WTP[wtpid]->APGroupID == 0)){
+				ret1 = add_ap_group_member(groupid,wtpid);
+				wid_syslog_debug_debug(WID_DEFAULT, "ret1 %d for adding wtp %d to ap-group %d\n", ret1, wtpid, groupid);
+				if(ret1 != 0){
+					wtp_list[count] = wtpid;
+					count++;
+				}
+			}else if((AC_WTP[wtpid]!=NULL)&&(AC_WTP[wtpid]->APGroupID == groupid)){
+				ret1 = del_ap_group_member(groupid,wtpid);
+				wid_syslog_debug_debug(WID_DEFAULT, "ret1111 %d for deleting wtp %d from ap-group %d\n", ret1, wtpid, groupid);
+				if(ret1 != 0){
+					wtp_list[count] = wtpid;
+					count++;
+				}
+			}else{
+				wtp_list[count] = wtpid;
+				count++;
+			}
+		}
+	} else {
+		wtp_list = malloc(WTP_NUM*sizeof(unsigned int));
+		if (!wtp_list) {
+			ret = WID_DBUS_ERROR;
+			wid_syslog_err("%s for ap-group %d malloc failed\n", isadd ? "add" : "delete", groupid);
+			return reply;
+		} else {
+			wid_syslog_err("malloc for wtp_list success\n");
+		}
+		count = 0;
+		if (isadd) {
+			for (i=1; i<WTP_NUM; i++) {
+				if (AC_WTP[i] != NULL && AC_WTP[i]->APGroupID == 0) {
+					ret1 = add_ap_group_member(groupid, i);
+					if (ret1 != 0) {
+						wtp_list[count] = i;
+						count++;
+					}
+				}
+			}
+		} else {
+			for (i=1; i<WTP_NUM; i++) {
+				#if 0
+				del_ap_group_member(groupid, i);
+				#else
+				ret1 = del_ap_group_member(groupid, i);
+				if (ret1 != 0) {
+					wtp_list[count] = i;
+					count++;
+					wid_syslog_debug_debug(WID_DEFAULT, "delete wtp %d failed\n", i);
+				}
+				#endif
+			}
+		}
+		#if 0
 		for(i = 1; i < WTP_NUM; i++){
+			#if 1
+				if () {
+
+				}
+			#endif
 			if((isadd)&&(AC_WTP[i]!=NULL)&&(AC_WTP[i]->APGroupID == 0)){
 				ret1 = add_ap_group_member(groupid,i);				
 				if(ret1 != 0){
+					wid_syslog_err("add for wtp %d failed\n", i);
 					wtp_list[count] = i;
 					count++;
+				} else {
+					wid_syslog_err("add for wtp %d success\n", i);
 				}
 			}else if((AC_WTP[i]!=NULL)&&(AC_WTP[i]->APGroupID == groupid)){
 				ret1 = del_ap_group_member(groupid,i);				
 				if(ret1 != 0){
+					wid_syslog_err("delete for wtp %d failed\n", i);
 					wtp_list[count] = i;
 					count++;
+				} else {
+					wid_syslog_err("delete for wtp %d success\n", i);
 				}
 			}else{
 				wtp_list[count] = i;
 				count++;
 			}
 		}
+		#endif
 	}
+		
 	reply = dbus_message_new_method_return(msg);
 		
 	dbus_message_iter_init_append(reply, &iter1);
@@ -70700,13 +70893,13 @@ DBusMessage *wid_dbus_add_del_ap_group_member(DBusConnection *conn, DBusMessage 
 	dbus_message_iter_append_basic (&iter1,
 										 DBUS_TYPE_UINT32,
 										 &count);
-	printf("count %d\n",count);
+	wid_syslog_debug_debug(WID_DEFAULT, "count %d\n",count);
 	for(i = 0; i < count; i++){
 		
 		dbus_message_iter_append_basic (&iter1,
 											 DBUS_TYPE_UINT32,
 											 &(wtp_list[i]));
-		printf("wtp_list[i] %d\n",wtp_list[i]);
+		wid_syslog_debug_debug(WID_DEFAULT, "wtp_list[i] %d\n",wtp_list[i]);
 	}	
 	free(wtp_list);
 	wtp_list = NULL;
@@ -70727,15 +70920,15 @@ DBusMessage *wid_dbus_ap_group_config(DBusConnection *conn, DBusMessage *msg, vo
 								DBUS_TYPE_UINT32,&ID,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_err("Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_err("%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
 	}
-	printf("%s ID %d\n",__func__,ID);
+
 	if(WTP_GROUP[ID] == NULL)
 		ret = WLAN_ID_NOT_EXIST;
 	reply = dbus_message_new_method_return(msg);
@@ -72753,6 +72946,53 @@ DBusMessage * wid_dbus_wtp_show_running_config_start(DBusConnection *conn, DBusM
 		}
 	}
 
+	//add ap group configuration
+	unsigned char j=0, group_len = 0;
+	unsigned char temp_ap_group_id[1024], *t_buf;
+	struct WTP_GROUP_MEMBER *wtp_next;
+	for (j=0; j<WTP_GROUP_NUM; j++) {
+		if (WTP_GROUP[j] && WTP_GROUP[j]->GID != 0) {
+			wid_syslog_err("for ap-group %d\n", j);
+			if(totalLen + 1024 > str_len) {
+				str_len *= 2;
+				showStr_new = (char*)realloc(showStr,str_len);
+				if(showStr_new == NULL){
+					wid_syslog_info("show running realloc failed\n");
+					goto fail;
+				}else {
+					showStr = showStr_new;
+					memset(showStr+str_len/2,0,str_len/2);
+					showStr_new = NULL;
+				}
+				wid_syslog_debug_debug(WID_DBUS,"show running totalLen %d realloc strlen %d\n",totalLen,str_len);
+			}
+			cursor = showStr + totalLen;
+			totalLen += sprintf(cursor," create ap-group %d %s\n", WTP_GROUP[j]->GID, WTP_GROUP[j]->GNAME);
+			cursor = showStr + totalLen;
+			if (WTP_GROUP[j]->WTP_COUNT != 0) {
+				totalLen += sprintf(cursor," config ap-group %d\n", WTP_GROUP[j]->GID);
+				cursor = showStr + totalLen;
+				
+				t_buf = temp_ap_group_id;
+				memset(t_buf, 0, 1024);
+				wtp_next = WTP_GROUP[j]->WTP_M;
+				while(wtp_next) {
+					group_len += sprintf((char *)t_buf, "%u", wtp_next->WTPID);
+					t_buf = temp_ap_group_id+group_len;
+					wtp_next = wtp_next->next;
+					if(wtp_next) {
+						group_len += sprintf((char *)t_buf, ",");
+						t_buf = temp_ap_group_id+group_len;
+					}
+				}
+				totalLen += sprintf(cursor," add ap-group member %s\n", temp_ap_group_id);
+				cursor = showStr + totalLen;
+				totalLen += sprintf(cursor," exit\n");
+				cursor = showStr + totalLen;
+			}
+		}
+	}
+	
 	if(totalLen + 1024 > str_len) {
 		str_len *= 2;
 		showStr_new = (char*)realloc(showStr,str_len);
@@ -75186,541 +75426,758 @@ int show_running_config_wtp(WID_WTP **WTP,int i,char *cursor,char **showStr2,cha
 	int str_len = *str_len_T;
 	char *showStr = *showStr2;
 	
-				if(totalLen + 1024 > str_len) {
-					str_len *= 2;
-					showStr_new = (char*)realloc(showStr,str_len);
-					if(showStr_new == NULL){
-						wid_syslog_info("show running realloc failed\n");
-						return -1;
-					}else {
-						showStr = showStr_new;
-						*showStr2 = showStr;
-						memset(showStr+str_len/2,0,str_len/2);
-						showStr_new = NULL;
-					}
-					wid_syslog_debug_debug(WID_DBUS,"show running totalLen %d realloc strlen %d\n",totalLen,str_len);
-				}
+	if(totalLen + 1024 > str_len) {
+		str_len *= 2;
+		showStr_new = (char*)realloc(showStr,str_len);
+		if(showStr_new == NULL){
+			wid_syslog_info("show running realloc failed\n");
+			return -1;
+		}else {
+			showStr = showStr_new;
+			*showStr2 = showStr;
+			memset(showStr+str_len/2,0,str_len/2);
+			showStr_new = NULL;
+		}
+		wid_syslog_debug_debug(WID_DBUS,"show running totalLen %d realloc strlen %d\n",totalLen,str_len);
+	}
+	cursor = showStr + totalLen;
+				
+	if((WTP[i]->wtp_login_mode == 1)&&(g_auto_ap_login.save_switch == 0))
+	{
+		wid_syslog_info("wtp %d is auto ap,but wid do not allow save auto ap config\n",WTP[i]->WTPID);
+		return 0;	
+	}
+	else
+	{
+		//mac first				
+		if((WTP[i]->WTPMAC[0] == 0)&&(WTP[i]->WTPMAC[1] == 0)&&(WTP[i]->WTPMAC[2] == 0)
+			&&(WTP[i]->WTPMAC[3] == 0)&&(WTP[i]->WTPMAC[3] == 0)&&(WTP[i]->WTPMAC[5] == 0))
+		{
+			if(vrrid != 0){
+				totalLen += sprintf(cursor," ");
 				cursor = showStr + totalLen;
-				
-				if((WTP[i]->wtp_login_mode == 1)&&(g_auto_ap_login.save_switch == 0))
-				{
-					wid_syslog_info("wtp %d is auto ap,but wid do not allow save auto ap config\n",WTP[i]->WTPID);
-					return 0;	
-				}
-				else
-				{
-				//mac first				
-				if((WTP[i]->WTPMAC[0] == 0)&&(WTP[i]->WTPMAC[1] == 0)&&(WTP[i]->WTPMAC[2] == 0)
-					&&(WTP[i]->WTPMAC[3] == 0)&&(WTP[i]->WTPMAC[3] == 0)&&(WTP[i]->WTPMAC[5] == 0))
-				{
-					if(vrrid != 0){
-						totalLen += sprintf(cursor," ");
-						cursor = showStr + totalLen;
-					}
-					/* book modify */
-					//if(WTP[i]->apcodeflag == 0)
-					totalLen += sprintf(cursor,"create wtp %d %s model&sn %s sn %s\n",WTP[i]->WTPID,WTP[i]->WTPNAME,WTP[i]->WTPModel,WTP[i]->WTPSN);
-					//else
-					//	totalLen += sprintf(cursor,"create wtp %d %s model&sn %s sn %s flag %d\n",WTP[i]->WTPID,WTP[i]->WTPNAME,WTP[i]->WTPModel,WTP[i]->WTPSN,WTP[i]->apcodeflag);
-					cursor = showStr + totalLen;	
-				}
-				else
-				{
-					if(vrrid != 0){
-						totalLen += sprintf(cursor," ");
-						cursor = showStr + totalLen;
-					}
-					//if(WTP[i]->apcodeflag == 0)
-					totalLen += sprintf(cursor,"create wtp %d %s model&mac %s mac %02X:%02X:%02X:%02X:%02X:%02X\n",WTP[i]->WTPID,WTP[i]->WTPNAME,WTP[i]->WTPModel,\
-					    WTP[i]->WTPMAC[0],WTP[i]->WTPMAC[1],WTP[i]->WTPMAC[2],WTP[i]->WTPMAC[3],WTP[i]->WTPMAC[4],WTP[i]->WTPMAC[5]);
-					/*//else
-					//	totalLen += sprintf(cursor,"create wtp %d %s model&mac %s mac %02X:%02X:%02X:%02X:%02X:%02X flag %d\n",WTP[i]->WTPID,WTP[i]->WTPNAME,WTP[i]->WTPModel,\
-					//	WTP[i]->WTPMAC[0],WTP[i]->WTPMAC[1],WTP[i]->WTPMAC[2],WTP[i]->WTPMAC[3],WTP[i]->WTPMAC[4],WTP[i]->WTPMAC[5],WTP[i]->apcodeflag);*/
-					cursor = showStr + totalLen;
-				}
-				
-				int rnum = WTP[i]->RadioCount;
-				int j = 0;
+			}
+			/* book modify */
+			//if(WTP[i]->apcodeflag == 0)
+			totalLen += sprintf(cursor,"create wtp %d %s model&sn %s sn %s\n",WTP[i]->WTPID,WTP[i]->WTPNAME,WTP[i]->WTPModel,WTP[i]->WTPSN);
+			//else
+			//	totalLen += sprintf(cursor,"create wtp %d %s model&sn %s sn %s flag %d\n",WTP[i]->WTPID,WTP[i]->WTPNAME,WTP[i]->WTPModel,WTP[i]->WTPSN,WTP[i]->apcodeflag);
+			cursor = showStr + totalLen;	
+		}
+		else
+		{
+			if(vrrid != 0){
+				totalLen += sprintf(cursor," ");
+				cursor = showStr + totalLen;
+			}
+			//if(WTP[i]->apcodeflag == 0)
+			totalLen += sprintf(cursor,"create wtp %d %s model&mac %s mac %02X:%02X:%02X:%02X:%02X:%02X\n",WTP[i]->WTPID,WTP[i]->WTPNAME,WTP[i]->WTPModel,\
+			    WTP[i]->WTPMAC[0],WTP[i]->WTPMAC[1],WTP[i]->WTPMAC[2],WTP[i]->WTPMAC[3],WTP[i]->WTPMAC[4],WTP[i]->WTPMAC[5]);
+			/*//else
+			//	totalLen += sprintf(cursor,"create wtp %d %s model&mac %s mac %02X:%02X:%02X:%02X:%02X:%02X flag %d\n",WTP[i]->WTPID,WTP[i]->WTPNAME,WTP[i]->WTPModel,\
+			//	WTP[i]->WTPMAC[0],WTP[i]->WTPMAC[1],WTP[i]->WTPMAC[2],WTP[i]->WTPMAC[3],WTP[i]->WTPMAC[4],WTP[i]->WTPMAC[5],WTP[i]->apcodeflag);*/
+			cursor = showStr + totalLen;
+		}
+		
+		int rnum = WTP[i]->RadioCount;
+		int j = 0;
 #ifdef _CheckBindingIf_
-				if(WTP[i]->BindingSystemIndex != -1)
-				{
+		if(WTP[i]->BindingSystemIndex != -1)
+		{
 #else
-				{	
+		{	
 #endif
+			if(vrrid != 0){
+				totalLen += sprintf(cursor," ");
+				cursor = showStr + totalLen;
+			}
+			totalLen += sprintf(cursor,"config wtp %d\n",WTP[i]->WTPID);
+			cursor = showStr + totalLen;
+			/*if(WTP[i]->isipv6addr == 1)
+			{
+				totalLen += sprintf(cursor,"wtp apply ipv6interface %s\n",WTP[i]->BindingIFName);
+				cursor = showStr + totalLen;
+			}
+			else
+			*/
+			/*{  //fengwenchao comment 20111123
+				if(vrrid != 0){
+					totalLen += sprintf(cursor," ");
+					cursor = showStr + totalLen;
+				}
+				totalLen += sprintf(cursor," wtp apply interface %s\n",WTP[i]->BindingIFName);
+				cursor = showStr + totalLen;
+			}*/
+			/*wcl modify*/
+			/*if(memcmp(WTP[i]->WTPSN, gdefaultsn,strlen(WTP[i]->WTPSN)) != 0)
+			{
+				if(vrrid != 0){
+					totalLen += sprintf(cursor," ");
+					cursor = showStr + totalLen;
+				}
+				totalLen += sprintf(cursor," set wtp sn %s\n",WTP[i]->WTPSN);
+				cursor = showStr + totalLen;
+			}*/
+			/*end*/
+			if(WTP[i]->location!=NULL){
+				if(vrrid != 0){
+					totalLen += sprintf(cursor," ");
+					cursor = showStr + totalLen;
+				}
+				totalLen += sprintf(cursor," set wtp location %s\n",WTP[i]->location);
+				cursor = showStr + totalLen;
+			} /*wuwl  add*/ 
+			/*to ap option60*/
+			if(WTP[i]->option60_param !=NULL){
+				if(vrrid != 0){
+					totalLen += sprintf(cursor," ");
+					cursor = showStr + totalLen;
+				}
+				totalLen += sprintf(cursor,"set ap option60 parameter %s\n",WTP[i]->option60_param);
+				cursor = showStr + totalLen;
+			} 
+			//struct wlanid *Wlanid = WTP[i]->WTP_Radio[0]->Wlan_Id;
+			struct wlanid *Wlanid = NULL;
+			while(Wlanid != NULL){					
+				if(vrrid != 0){
+					totalLen += sprintf(cursor," ");
+					cursor = showStr + totalLen;
+				}
+				totalLen += sprintf(cursor," wtp apply wlan %d\n",Wlanid->wlanid);
+				cursor = showStr + totalLen;
+				Wlanid = Wlanid->next;
+			}
+
+			if(WTP[i]->wtp_allowed_max_sta_num != gWTP_MAX_STA){/*wcl modfiy for globle variable*/
+				if(vrrid != 0){
+					totalLen += sprintf(cursor," ");
+					cursor = showStr + totalLen;
+				}
+				totalLen += sprintf(cursor," set wtp max sta num %d\n",WTP[i]->wtp_allowed_max_sta_num);
+				cursor = showStr + totalLen;
+			}    //xm add 08/12/05
+
+			if(WTP[i]->wtp_triger_num!=1){
+				if(vrrid != 0){
+					totalLen += sprintf(cursor," ");
+					cursor = showStr + totalLen;
+				}
+				totalLen += sprintf(cursor," set wtp number triger %d\n",WTP[i]->wtp_triger_num);
+				cursor = showStr + totalLen;
+			}    //xm add 08/12/05
+			
+			if(WTP[i]->wtp_flow_triger != gWTP_FLOW_TRIGER){/*wcl modify for globle variable*/
+				if(vrrid != 0){
+					totalLen += sprintf(cursor," ");
+					cursor = showStr + totalLen;
+				}
+				totalLen += sprintf(cursor," set wtp flow triger %d\n",WTP[i]->wtp_flow_triger);
+				cursor = showStr + totalLen;
+			}    //xm add 09/02/05
+			if(WTP[i]->WTP_Radio[0]->bandwidth != gBANDWIDTH)/*wcl modify for globle variable*/
+			{
+				if(vrrid != 0){
+					totalLen += sprintf(cursor," ");
+					cursor = showStr + totalLen;
+				}
+				totalLen += sprintf(cursor," set ap max throughout %d\n",WTP[i]->WTP_Radio[0]->bandwidth);
+				cursor = showStr + totalLen;
+			}
+			if((WTP[i]->updateversion != NULL)&&(WTP[i]->updatepath != NULL))
+			{
+				if(vrrid != 0){
+					totalLen += sprintf(cursor," ");
+					cursor = showStr + totalLen;
+				}
+				totalLen += sprintf(cursor," update ap img-file %s version %s later\n",WTP[i]->updatepath,WTP[i]->updateversion);
+				cursor = showStr + totalLen;
+			}
+			if(WTP[i]->dhcp_snooping != gDHCP_SNOOPING){/*wcl modify for globle variable*/
+				if(WTP[i]->dhcp_snooping != 0){
 					if(vrrid != 0){
 						totalLen += sprintf(cursor," ");
 						cursor = showStr + totalLen;
 					}
-					totalLen += sprintf(cursor,"config wtp %d\n",WTP[i]->WTPID);
+					totalLen += sprintf(cursor," set wtp dhcp snooping enable\n");
 					cursor = showStr + totalLen;
-					/*if(WTP[i]->isipv6addr == 1)
-					{
-						totalLen += sprintf(cursor,"wtp apply ipv6interface %s\n",WTP[i]->BindingIFName);
-						cursor = showStr + totalLen;
-					}
-					else
-					*/
-					/*{  //fengwenchao comment 20111123
+				}else{
 						if(vrrid != 0){
-							totalLen += sprintf(cursor," ");
-							cursor = showStr + totalLen;
-						}
-						totalLen += sprintf(cursor," wtp apply interface %s\n",WTP[i]->BindingIFName);
-						cursor = showStr + totalLen;
-					}*/
-					/*wcl modify*/
-					/*if(memcmp(WTP[i]->WTPSN, gdefaultsn,strlen(WTP[i]->WTPSN)) != 0)
-					{
-						if(vrrid != 0){
-							totalLen += sprintf(cursor," ");
-							cursor = showStr + totalLen;
-						}
-						totalLen += sprintf(cursor," set wtp sn %s\n",WTP[i]->WTPSN);
-						cursor = showStr + totalLen;
-					}*/
-					/*end*/
-					if(WTP[i]->location!=NULL){
-						if(vrrid != 0){
-							totalLen += sprintf(cursor," ");
-							cursor = showStr + totalLen;
-						}
-						totalLen += sprintf(cursor," set wtp location %s\n",WTP[i]->location);
-						cursor = showStr + totalLen;
-					} /*wuwl  add*/ 
-					/*to ap option60*/
-					if(WTP[i]->option60_param !=NULL){
-						if(vrrid != 0){
-							totalLen += sprintf(cursor," ");
-							cursor = showStr + totalLen;
-						}
-						totalLen += sprintf(cursor,"set ap option60 parameter %s\n",WTP[i]->option60_param);
-						cursor = showStr + totalLen;
-					} 
-					//struct wlanid *Wlanid = WTP[i]->WTP_Radio[0]->Wlan_Id;
-					struct wlanid *Wlanid = NULL;
-					while(Wlanid != NULL){					
-						if(vrrid != 0){
-							totalLen += sprintf(cursor," ");
-							cursor = showStr + totalLen;
-						}
-						totalLen += sprintf(cursor," wtp apply wlan %d\n",Wlanid->wlanid);
-						cursor = showStr + totalLen;
-						Wlanid = Wlanid->next;
-					}
-
-					if(WTP[i]->wtp_allowed_max_sta_num != gWTP_MAX_STA){/*wcl modfiy for globle variable*/
-						if(vrrid != 0){
-							totalLen += sprintf(cursor," ");
-							cursor = showStr + totalLen;
-						}
-						totalLen += sprintf(cursor," set wtp max sta num %d\n",WTP[i]->wtp_allowed_max_sta_num);
-						cursor = showStr + totalLen;
-					}    //xm add 08/12/05
-
-					if(WTP[i]->wtp_triger_num!=1){
-						if(vrrid != 0){
-							totalLen += sprintf(cursor," ");
-							cursor = showStr + totalLen;
-						}
-						totalLen += sprintf(cursor," set wtp number triger %d\n",WTP[i]->wtp_triger_num);
-						cursor = showStr + totalLen;
-					}    //xm add 08/12/05
-					
-					if(WTP[i]->wtp_flow_triger != gWTP_FLOW_TRIGER){/*wcl modify for globle variable*/
-						if(vrrid != 0){
-							totalLen += sprintf(cursor," ");
-							cursor = showStr + totalLen;
-						}
-						totalLen += sprintf(cursor," set wtp flow triger %d\n",WTP[i]->wtp_flow_triger);
-						cursor = showStr + totalLen;
-					}    //xm add 09/02/05
-					if(WTP[i]->WTP_Radio[0]->bandwidth != gBANDWIDTH)/*wcl modify for globle variable*/
-					{
-						if(vrrid != 0){
-							totalLen += sprintf(cursor," ");
-							cursor = showStr + totalLen;
-						}
-						totalLen += sprintf(cursor," set ap max throughout %d\n",WTP[i]->WTP_Radio[0]->bandwidth);
+						totalLen += sprintf(cursor," ");
 						cursor = showStr + totalLen;
 					}
-					if((WTP[i]->updateversion != NULL)&&(WTP[i]->updatepath != NULL))
-					{
-						if(vrrid != 0){
-							totalLen += sprintf(cursor," ");
-							cursor = showStr + totalLen;
-						}
-						totalLen += sprintf(cursor," update ap img-file %s version %s later\n",WTP[i]->updatepath,WTP[i]->updateversion);
-						cursor = showStr + totalLen;
-					}
-					if(WTP[i]->dhcp_snooping != gDHCP_SNOOPING){/*wcl modify for globle variable*/
-						if(WTP[i]->dhcp_snooping != 0){
-							if(vrrid != 0){
-								totalLen += sprintf(cursor," ");
-								cursor = showStr + totalLen;
-							}
-							totalLen += sprintf(cursor," set wtp dhcp snooping enable\n");
-							cursor = showStr + totalLen;
-						}else{
-								if(vrrid != 0){
-								totalLen += sprintf(cursor," ");
-								cursor = showStr + totalLen;
-							}
-							totalLen += sprintf(cursor," set wtp dhcp snooping disable\n");
-							cursor = showStr + totalLen;
-						}
-					}
-					if(WTP[i]->sta_ip_report != gSTAINFOREPORT){ /*wcl modify for globle variable*/
-						if(WTP[i]->sta_ip_report != 0)
-						{
-							if(vrrid != 0){
-								totalLen += sprintf(cursor," ");
-								cursor = showStr + totalLen;
-							}
-							totalLen += sprintf(cursor," set wtp sta info report enable\n");
-							cursor = showStr + totalLen;
-						}else{
-							if(vrrid != 0){
-								totalLen += sprintf(cursor," ");
-								cursor = showStr + totalLen;
-							}
-							totalLen += sprintf(cursor," set wtp sta info report disable\n");
-							cursor = showStr + totalLen;
-						}
-					}
-					if(WTP[i]->wtp_rogue_ap_threshold != gWTP_ROGUE_AP_THRESHOLD)/*wcl modify for globle variable*/
-					{
-						if(vrrid != 0){
-							totalLen += sprintf(cursor," ");
-							cursor = showStr + totalLen;
-						}
-						totalLen += sprintf(cursor," set wtp rogueap threshold %d\n",WTP[i]->wtp_rogue_ap_threshold);
-						cursor = showStr + totalLen;	
-					}
-					if(WTP[i]->wtp_rogue_terminal_threshold != gWTP_ROGUE_TERMINAL_THRESHOLD)/*wcl modify for globle variable*/
-					{
-						if(vrrid != 0){
-							totalLen += sprintf(cursor," ");
-							cursor = showStr + totalLen;
-						}
-						totalLen += sprintf(cursor," set wtp rogueterminal threshold %d\n",WTP[i]->wtp_rogue_terminal_threshold);
-						cursor = showStr + totalLen;	
-					}
-					if(WTP[i]->wtp_cpu_use_threshold != gWTP_CPU_USE_THRESHOLD)/*wcl modify for globle variable*/
-					{
-						if(vrrid != 0){
-							totalLen += sprintf(cursor," ");
-							cursor = showStr + totalLen;
-						}
-						totalLen += sprintf(cursor," set wtp cpu threshold %d\n",WTP[i]->wtp_cpu_use_threshold);
-						cursor = showStr + totalLen;	
-					}
-					if(WTP[i]->wtp_mem_use_threshold != gWTP_MEM_USE_THRESHOLD)/*wcl modify for globle variable*/
-					{
-						if(vrrid != 0){
-							totalLen += sprintf(cursor," ");
-							cursor = showStr + totalLen;
-						}
-						totalLen += sprintf(cursor," set wtp memory threshold %d\n",WTP[i]->wtp_mem_use_threshold);
-						cursor = showStr + totalLen;	
-					}
-					if(WTP[i]->EchoTimer != gEchoRequestTimer)					/*xiaodawei add for echotimer show running,20101210*/
-					{
-						if(vrrid != 0){
-							totalLen += sprintf(cursor," ");
-							cursor = showStr + totalLen;
-						}
-						totalLen += sprintf(cursor,"set ap echotimer %d\n",WTP[i]->EchoTimer);
-						cursor = showStr + totalLen;
-					}
-					if(WTP[i]->apstatisticsinterval != apstatisticsinterval)/*wcl modify for globle variable*/
-					{
-						if(vrrid != 0){
-							totalLen += sprintf(cursor," ");
-							cursor = showStr + totalLen;
-						}
-						totalLen += sprintf(cursor,"set ap statistics interval %d\n",WTP[i]->apstatisticsinterval);
-						cursor = showStr + totalLen;
-					}
-					if(WTP[i]->ap_sta_wapi_report_interval!= gAP_STA_WAPI_REPORT_INTERVAL)		/*xiaodawei add for ap sta wapi info reportinterval, 20101210*/
-					{
-						if(vrrid != 0){
-							totalLen += sprintf(cursor," ");
-							cursor = showStr + totalLen;
-						}
-						totalLen += sprintf(cursor,"set ap sta wapi info reportinterval %d\n",WTP[i]->ap_sta_wapi_report_interval);
-						cursor = showStr + totalLen;
-					}
-					if(WTP[i]->ap_sta_report_interval != gSTAREPORTINTERVAL) /*wcl modify for globle variable*/
-					{
-						if(vrrid != 0){
-							totalLen += sprintf(cursor," ");
-							cursor = showStr + totalLen;
-						}
-						totalLen += sprintf(cursor,"set ap sta infomation reportinterval %d\n",WTP[i]->ap_sta_report_interval);
-						cursor = showStr + totalLen;
-					}
-					if(WTP[i]->collect_time!= cpu_mem_collect_time)		/*xiaodawei add for ap cpu collect time, 20101210*//*wcl modify for globle variable*/
-					{
-						if(vrrid != 0){
-							totalLen += sprintf(cursor," ");
-							cursor = showStr + totalLen;
-						}
-						totalLen += sprintf(cursor,"set ap cpu_collect_time %d\n",WTP[i]->collect_time);
-						cursor = showStr + totalLen;
-					}
-					/*nl add 20100324*/
-					if(WTP[i]->ap_sta_report_switch != gSTAREPORTSWITCH) /*wcl modify for globle variable*/
-					{
-						if(WTP[i]->ap_sta_report_switch != 0)
-						{
-							if(vrrid != 0){
-								totalLen += sprintf(cursor," ");
-								cursor = showStr + totalLen;
-							}
-							totalLen += sprintf(cursor,"set ap sta infomation report switch enable\n");/*wcl modify for globle variable*/
-							cursor = showStr + totalLen;
-						}else{
-							if(vrrid != 0){
-								totalLen += sprintf(cursor," ");
-								cursor = showStr + totalLen;
-							}
-							totalLen += sprintf(cursor,"set ap sta infomation report switch disable\n");/*wcl modify for globle variable*/
-							cursor = showStr + totalLen;
-						}
-					}
-					if(WTP[i]->wifi_extension_reportinterval != gWIFIEXTENSIONREPORTINTERVAL)/*wcl modify for globle variable*/
-					{
-						if(vrrid != 0){
-							totalLen += sprintf(cursor," ");
-							cursor = showStr + totalLen;
-						}
-						totalLen += sprintf(cursor,"set ap extension infomation reportinterval %d\n",WTP[i]->wifi_extension_reportinterval);
-						cursor = showStr + totalLen;
-					}
-					if(WTP[i]->wifi_extension_reportswitch != g_AC_ALL_EXTENTION_INFORMATION_SWITCH)/*wcl modify for globle variable*/
-					{
-						if(WTP[i]->wifi_extension_reportswitch != 0)
-						{
-							if(vrrid != 0){
-								totalLen += sprintf(cursor," ");
-								cursor = showStr + totalLen;
-							}
-							totalLen += sprintf(cursor,"set ap extension infomation switch enable\n");/*wcl modify for globle variable*/
-							cursor = showStr + totalLen;
-							}
-						else{
-							if(vrrid != 0){
-							totalLen += sprintf(cursor," ");
-							cursor = showStr + totalLen;
-							}
-							totalLen += sprintf(cursor,"set ap extension infomation switch disable\n");/*wcl modify for globle variable*/
-							cursor = showStr + totalLen;
-						}
-					}
-					//set wtp longitude and latitude
-					if (strlen((char *)(WTP[i]->longitude)) != 0 || strlen((char *)(WTP[i]->latitude)) != 0) {
-						if (vrrid != 0) {
-							totalLen += sprintf(cursor, " ");
-							cursor = showStr + totalLen;
-						}
-						totalLen += sprintf(cursor, "set ap longitude %s latitude %s\n", WTP[i]->longitude, WTP[i]->latitude);
-						cursor = showStr + totalLen;
-					}
-
-					//set unauthorized mac report switch
-					if (WTP[i]->unauthorized_mac_reportswitch == UNKNOWN_MAC_TRAP_SWITCH_ENABLE) {
-						if (vrrid != 0) {
-							totalLen += sprintf(cursor, " ");
-							cursor = showStr + totalLen;
-						}
-						totalLen += sprintf(cursor, "set ap unauthorized mac switch enable\n");
-						cursor = showStr + totalLen;
-					}
-
-					//set configure error report switch
-					if (WTP[i]->wtp_configure_error_reportswitch == AP_CONFIG_FILE_ERR_TRAP_SWITCH_ENABLE) {
-						if (vrrid != 0) {
-							totalLen += sprintf(cursor, " ");
-							cursor = showStr + totalLen;
-						}
-						totalLen += sprintf(cursor, "set ap configure file error switch enable\n");
-						cursor = showStr + totalLen;
-					}
-
-					//set sta flow overlfow rx report switch
-					if (WTP[i]->sta_flow_overflow_rx_reportswitch == STA_FLOW_OVERFLOW_TRAP_RX_SWITCH_ENABLE) {
-						if (vrrid != 0) {
-							totalLen += sprintf(cursor, " ");
-							cursor = showStr + totalLen;
-						}
-						totalLen += sprintf(cursor, "set ap sta flow rx overflow report switch enable\n");
-						cursor = showStr + totalLen;
-					}
-
-					//set sta flow overlfow tx report switch
-					if (WTP[i]->sta_flow_overflow_tx_reportswitch == STA_FLOW_OVERFLOW_TRAP_RX_SWITCH_ENABLE) {
-						if (vrrid != 0) {
-							totalLen += sprintf(cursor, " ");
-							cursor = showStr + totalLen;
-						}
-						totalLen += sprintf(cursor, "set ap sta flow tx overflow report switch enable\n");
-						cursor = showStr + totalLen;
-					}
-
-					//set sta flow overlfow rx report threshold
-					if (WTP[i]->sta_flow_overflow_rx_threshold != STA_FLOW_OVERFLOW_RX_THRESHOLD && WTP[i]->sta_flow_overflow_rx_threshold != 0) {
-						if (vrrid != 0) {
-							totalLen += sprintf(cursor, " ");
-							cursor = showStr + totalLen;
-						}
-						totalLen += sprintf(cursor, "set ap sta flow rx overflow threshold %u\n", WTP[i]->sta_flow_overflow_rx_threshold);
-						cursor = showStr + totalLen;
-					}
-
-					//set sta flow overlfow tx report threshold
-					if (WTP[i]->sta_flow_overflow_tx_threshold != STA_FLOW_OVERFLOW_TX_THRESHOLD && WTP[i]->sta_flow_overflow_tx_threshold != 0) {
-						if (vrrid != 0) {
-							totalLen += sprintf(cursor, " ");
-							cursor = showStr + totalLen;
-						}
-						totalLen += sprintf(cursor, "set ap sta flow tx overflow threshold %u\n", WTP[i]->sta_flow_overflow_tx_threshold);
-						cursor = showStr + totalLen;
-					}
-					
-					if(WTP[i]->apifinfo.report_interval != gINFOREPORTINTERVAL) /*wcl modify for globle variable*/
-					{
-						if(vrrid != 0){
-							totalLen += sprintf(cursor," ");
-							cursor = showStr + totalLen;
-						}
-						totalLen += sprintf(cursor,"set ap interface infomation reportinterval %d\n",WTP[i]->apifinfo.report_interval);
-						cursor = showStr + totalLen;
-					}
-					if(WTP[i]->apifinfo.report_switch != gINFOREPORTSWITCH) /*wcl modify for globle modify*/
-					{	
-						if(WTP[i]->apifinfo.report_switch != 0)
-						{
-							if(vrrid != 0){
-								totalLen += sprintf(cursor," ");
-								cursor = showStr + totalLen;
-							}
-							totalLen += sprintf(cursor,"set ap interface infomation report switch enable\n");/*wcl modify for globle variable*/
-							cursor = showStr + totalLen;
-						}else{
-							if(vrrid != 0){
-								totalLen += sprintf(cursor," ");
-								cursor = showStr + totalLen;
-							}
-							totalLen += sprintf(cursor,"set ap interface infomation report switch disable\n");/*wcl modify for globle variable*/
-							cursor = showStr + totalLen;
-						}
-					}
-					if(WTP[i]->ap_sta_wapi_report_switch != gAP_STA_WAPI_REPORT_SWITCH)/*wcl modify for globle variable*/
-					{
-						if(WTP[i]->ap_sta_wapi_report_switch != 0)
-						{
-							if(vrrid != 0){
-								totalLen += sprintf(cursor," ");
-								cursor = showStr + totalLen;
-							}
-							totalLen += sprintf(cursor,"set ap sta wapi info report switch enable\n"); /*wcl modify for globle variable*/
-							cursor = showStr + totalLen;
-						}else{
-							if(vrrid != 0){
-								totalLen += sprintf(cursor," ");
-								cursor = showStr + totalLen;
-							}
-							totalLen += sprintf(cursor,"set ap sta wapi info report switch disable\n"); /*wcl modify for globle variable*/
-							cursor = showStr + totalLen;
-						}
-					}
-					if(WTP[i]->neighborchannelrssithold != gNEIGHBORCHANNELRSSITHOLD)/*wcl modify for globle variable*/
-					{
-						totalLen += sprintf(cursor,"set wtp neighborchannelrssi threshold %d\n",WTP[i]->neighborchannelrssithold);
-						cursor = showStr + totalLen;
-					}
-					if(WTP[i]->samechannelrssithold != gSAMECHANNELRSSITHOLD)/*wcl modify for globle variable*/
-					{
-						totalLen += sprintf(cursor,"set wtp samechannelrssi threshold %d\n",WTP[i]->samechannelrssithold);
-						cursor = showStr + totalLen;
-					}
-					
-					/*zhaoruijia,20100904,transplant ACTIMESYNCHROFAILURE from 1.2omc to 1.3,start*/
-					if((WTP[i]->ntp_state != gNTP_STATE)||(WTP[i]->ntp_interval != gNTP_INTERVAL))/*wcl modify for globle variable*/
-					{
-						if(WTP[i]->ntp_state != 1){
-							if(WTP[i]->ntp_interval == gNTP_INTERVAL){
-								totalLen += sprintf(cursor,"set ap ntp start\n");
-								cursor = showStr + totalLen;
-							}else{
-								totalLen += sprintf(cursor,"set ap ntp start %d\n",WTP[i]->ntp_interval);
-								cursor = showStr + totalLen;
-							}
-						}else{
-							totalLen += sprintf(cursor,"set ap ntp stop\n");
-							cursor = showStr + totalLen;
-						}
-					}/*wcl modify for globle variable*/
-					
-					/*zhaoruijia,20100904,transplant ACTIMESYNCHROFAILURE from 1.2omc to 1.3,end*/
-
-					/* zhangshu add for terminal disturb info, 2010-10-08 */
-                    if(WTP[i]->ter_dis_info.sta_trap_count != gTER_DIS_INFOSTA_TRAP_COUNT)/*wcl modify for globle variable*/
-                    {
-                        totalLen += sprintf(cursor,"set ap terminal distrub infomation sta_num %d\n",WTP[i]->ter_dis_info.sta_trap_count);
-						cursor = showStr + totalLen;
-                    }
-                    if(WTP[i]->ter_dis_info.reportpkt != gTER_DIS_INFOREPORTPKT)/*wcl modify for globle variable*/
-                    {
-                        totalLen += sprintf(cursor,"set ap terminal distrub infomation reportpkt %d\n",WTP[i]->ter_dis_info.reportpkt);
-						cursor = showStr + totalLen;
-                    }
-                    if(WTP[i]->ter_dis_info.reportswitch != gTER_DIS_INFOREPORTSWITCH)/*wcl modify for globle variable*/
-                    {
-                    	if(WTP[i]->ter_dis_info.reportswitch != 0){
-                     		totalLen += sprintf(cursor,"set ap terminal distrub infomation switch enable\n");
-							cursor = showStr + totalLen;
-                    	}else{
-							totalLen += sprintf(cursor,"set ap terminal distrub infomation switch disable\n");
-							cursor = showStr + totalLen;
-						}
-                    }
-					if(WTP[i]->sta_deauth_message_reportswitch != sta_deauth_message_reportswitch){
-						totalLen += sprintf(cursor,"set sta deauth message report switch %s\n",WTP[i]->sta_deauth_message_reportswitch?"enable":"disable");
-						cursor = showStr + totalLen;
-					}
-					if(WTP[i]->sta_flow_information_reportswitch != sta_flow_information_reportswitch){
-						totalLen += sprintf(cursor,"set ap report sta detail information switch %s\n",WTP[i]->sta_flow_information_reportswitch?"enable":"disable");
-						cursor = showStr + totalLen;
-					}
-                    /* zhangshu add END,2010-10-08 */
-					if(g_radio_5g_sw != WTP[i]->radio_5g_sw){
-						if(WTP[i]->RadioCount >= 2){
-							totalLen += sprintf(cursor," set ap 5g switch %s\n",(WTP[i]->radio_5g_sw == 1) ?"enable":"disable");
-							cursor = showStr + totalLen;
-						}
-					}
-					/*fengwenchao add 20110324*/
-					unsigned char jj=0;
-					for(jj = 0;jj<AP_ETH_IF_NUM;jj++)
-					{
-						if(WTP[i]->apifinfo.eth[jj].eth_mtu != gAPIFINFOETH_MTU[jj]) /*wcl modify for globle variable*/
-						{
-							totalLen += sprintf(cursor," set ap interface eth%d mtu %d\n",jj,WTP[i]->apifinfo.eth[jj].eth_mtu);
-							cursor = showStr + totalLen;							
-						}
-						if(WTP[i]->apifinfo.eth[jj].eth_rate != gAPIFINFOETH_RATE[jj]) /*wcl modify for globle variable*/
-						{
-							totalLen += sprintf(cursor," set ap interface eth %d rate %d\n",jj,WTP[i]->apifinfo.eth[jj].eth_rate);
-							cursor = showStr + totalLen;							
-						}	
-					}
-					/*fengwenchao add end*/
-                    
-					totalLen += sprintf(cursor,"exit\n");
+					totalLen += sprintf(cursor," set wtp dhcp snooping disable\n");
 					cursor = showStr + totalLen;
 				}
-				for(j = 0; j < rnum; j++){
+			}
+			if(WTP[i]->sta_ip_report != gSTAINFOREPORT){ /*wcl modify for globle variable*/
+				if(WTP[i]->sta_ip_report != 0)
+				{
+					if(vrrid != 0){
+						totalLen += sprintf(cursor," ");
+						cursor = showStr + totalLen;
+					}
+					totalLen += sprintf(cursor," set wtp sta info report enable\n");
+					cursor = showStr + totalLen;
+				}else{
+					if(vrrid != 0){
+						totalLen += sprintf(cursor," ");
+						cursor = showStr + totalLen;
+					}
+					totalLen += sprintf(cursor," set wtp sta info report disable\n");
+					cursor = showStr + totalLen;
+				}
+			}
+			if(WTP[i]->wtp_rogue_ap_threshold != gWTP_ROGUE_AP_THRESHOLD)/*wcl modify for globle variable*/
+			{
+				if(vrrid != 0){
+					totalLen += sprintf(cursor," ");
+					cursor = showStr + totalLen;
+				}
+				totalLen += sprintf(cursor," set wtp rogueap threshold %d\n",WTP[i]->wtp_rogue_ap_threshold);
+				cursor = showStr + totalLen;	
+			}
+			if(WTP[i]->wtp_rogue_terminal_threshold != gWTP_ROGUE_TERMINAL_THRESHOLD)/*wcl modify for globle variable*/
+			{
+				if(vrrid != 0){
+					totalLen += sprintf(cursor," ");
+					cursor = showStr + totalLen;
+				}
+				totalLen += sprintf(cursor," set wtp rogueterminal threshold %d\n",WTP[i]->wtp_rogue_terminal_threshold);
+				cursor = showStr + totalLen;	
+			}
+			if(WTP[i]->wtp_cpu_use_threshold != gWTP_CPU_USE_THRESHOLD)/*wcl modify for globle variable*/
+			{
+				if(vrrid != 0){
+					totalLen += sprintf(cursor," ");
+					cursor = showStr + totalLen;
+				}
+				totalLen += sprintf(cursor," set wtp cpu threshold %d\n",WTP[i]->wtp_cpu_use_threshold);
+				cursor = showStr + totalLen;	
+			}
+			if(WTP[i]->wtp_mem_use_threshold != gWTP_MEM_USE_THRESHOLD)/*wcl modify for globle variable*/
+			{
+				if(vrrid != 0){
+					totalLen += sprintf(cursor," ");
+					cursor = showStr + totalLen;
+				}
+				totalLen += sprintf(cursor," set wtp memory threshold %d\n",WTP[i]->wtp_mem_use_threshold);
+				cursor = showStr + totalLen;	
+			}
+			if(WTP[i]->EchoTimer != gEchoRequestTimer)					/*xiaodawei add for echotimer show running,20101210*/
+			{
+				if(vrrid != 0){
+					totalLen += sprintf(cursor," ");
+					cursor = showStr + totalLen;
+				}
+				totalLen += sprintf(cursor,"set ap echotimer %d\n",WTP[i]->EchoTimer);
+				cursor = showStr + totalLen;
+			}
+			if(WTP[i]->apstatisticsinterval != apstatisticsinterval)/*wcl modify for globle variable*/
+			{
+				if(vrrid != 0){
+					totalLen += sprintf(cursor," ");
+					cursor = showStr + totalLen;
+				}
+				totalLen += sprintf(cursor,"set ap statistics interval %d\n",WTP[i]->apstatisticsinterval);
+				cursor = showStr + totalLen;
+			}
+			if(WTP[i]->ap_sta_wapi_report_interval!= gAP_STA_WAPI_REPORT_INTERVAL)		/*xiaodawei add for ap sta wapi info reportinterval, 20101210*/
+			{
+				if(vrrid != 0){
+					totalLen += sprintf(cursor," ");
+					cursor = showStr + totalLen;
+				}
+				totalLen += sprintf(cursor,"set ap sta wapi info reportinterval %d\n",WTP[i]->ap_sta_wapi_report_interval);
+				cursor = showStr + totalLen;
+			}
+			if(WTP[i]->ap_sta_report_interval != gSTAREPORTINTERVAL) /*wcl modify for globle variable*/
+			{
+				if(vrrid != 0){
+					totalLen += sprintf(cursor," ");
+					cursor = showStr + totalLen;
+				}
+				totalLen += sprintf(cursor,"set ap sta infomation reportinterval %d\n",WTP[i]->ap_sta_report_interval);
+				cursor = showStr + totalLen;
+			}
+			if(WTP[i]->collect_time!= cpu_mem_collect_time)		/*xiaodawei add for ap cpu collect time, 20101210*//*wcl modify for globle variable*/
+			{
+				if(vrrid != 0){
+					totalLen += sprintf(cursor," ");
+					cursor = showStr + totalLen;
+				}
+				totalLen += sprintf(cursor,"set ap cpu_collect_time %d\n",WTP[i]->collect_time);
+				cursor = showStr + totalLen;
+			}
+			/*nl add 20100324*/
+			if(WTP[i]->ap_sta_report_switch != gSTAREPORTSWITCH) /*wcl modify for globle variable*/
+			{
+				if(WTP[i]->ap_sta_report_switch != 0)
+				{
+					if(vrrid != 0){
+						totalLen += sprintf(cursor," ");
+						cursor = showStr + totalLen;
+					}
+					totalLen += sprintf(cursor,"set ap sta infomation report switch enable\n");/*wcl modify for globle variable*/
+					cursor = showStr + totalLen;
+				}else{
+					if(vrrid != 0){
+						totalLen += sprintf(cursor," ");
+						cursor = showStr + totalLen;
+					}
+					totalLen += sprintf(cursor,"set ap sta infomation report switch disable\n");/*wcl modify for globle variable*/
+					cursor = showStr + totalLen;
+				}
+			}
+			if(WTP[i]->wifi_extension_reportinterval != gWIFIEXTENSIONREPORTINTERVAL)/*wcl modify for globle variable*/
+			{
+				if(vrrid != 0){
+					totalLen += sprintf(cursor," ");
+					cursor = showStr + totalLen;
+				}
+				totalLen += sprintf(cursor,"set ap extension infomation reportinterval %d\n",WTP[i]->wifi_extension_reportinterval);
+				cursor = showStr + totalLen;
+			}
+			if(WTP[i]->wifi_extension_reportswitch != g_AC_ALL_EXTENTION_INFORMATION_SWITCH)/*wcl modify for globle variable*/
+			{
+				if(WTP[i]->wifi_extension_reportswitch != 0)
+				{
+					if(vrrid != 0){
+						totalLen += sprintf(cursor," ");
+						cursor = showStr + totalLen;
+					}
+					totalLen += sprintf(cursor,"set ap extension infomation switch enable\n");/*wcl modify for globle variable*/
+					cursor = showStr + totalLen;
+					}
+				else{
+					if(vrrid != 0){
+					totalLen += sprintf(cursor," ");
+					cursor = showStr + totalLen;
+					}
+					totalLen += sprintf(cursor,"set ap extension infomation switch disable\n");/*wcl modify for globle variable*/
+					cursor = showStr + totalLen;
+				}
+			}
+			//set wtp longitude and latitude
+			if (strlen((char *)(WTP[i]->longitude)) != 0 || strlen((char *)(WTP[i]->latitude)) != 0) {
+				if (vrrid != 0) {
+					totalLen += sprintf(cursor, " ");
+					cursor = showStr + totalLen;
+				}
+				totalLen += sprintf(cursor, "set ap longitude %s latitude %s\n", WTP[i]->longitude, WTP[i]->latitude);
+				cursor = showStr + totalLen;
+			}
+
+			//set unauthorized mac report switch
+			if (WTP[i]->unauthorized_mac_reportswitch == UNKNOWN_MAC_TRAP_SWITCH_ENABLE) {
+				if (vrrid != 0) {
+					totalLen += sprintf(cursor, " ");
+					cursor = showStr + totalLen;
+				}
+				totalLen += sprintf(cursor, "set ap unauthorized mac switch enable\n");
+				cursor = showStr + totalLen;
+			}
+
+			//set configure error report switch
+			if (WTP[i]->wtp_configure_error_reportswitch == AP_CONFIG_FILE_ERR_TRAP_SWITCH_ENABLE) {
+				if (vrrid != 0) {
+					totalLen += sprintf(cursor, " ");
+					cursor = showStr + totalLen;
+				}
+				totalLen += sprintf(cursor, "set ap configure file error switch enable\n");
+				cursor = showStr + totalLen;
+			}
+
+			//set sta flow overlfow rx report switch
+			if (WTP[i]->sta_flow_overflow_rx_reportswitch == STA_FLOW_OVERFLOW_TRAP_RX_SWITCH_ENABLE) {
+				if (vrrid != 0) {
+					totalLen += sprintf(cursor, " ");
+					cursor = showStr + totalLen;
+				}
+				totalLen += sprintf(cursor, "set ap sta flow rx overflow report switch enable\n");
+				cursor = showStr + totalLen;
+			}
+
+			//set sta flow overlfow tx report switch
+			if (WTP[i]->sta_flow_overflow_tx_reportswitch == STA_FLOW_OVERFLOW_TRAP_RX_SWITCH_ENABLE) {
+				if (vrrid != 0) {
+					totalLen += sprintf(cursor, " ");
+					cursor = showStr + totalLen;
+				}
+				totalLen += sprintf(cursor, "set ap sta flow tx overflow report switch enable\n");
+				cursor = showStr + totalLen;
+			}
+
+			//set sta flow overlfow rx report threshold
+			if (WTP[i]->sta_flow_overflow_rx_threshold != STA_FLOW_OVERFLOW_RX_THRESHOLD && WTP[i]->sta_flow_overflow_rx_threshold != 0) {
+				if (vrrid != 0) {
+					totalLen += sprintf(cursor, " ");
+					cursor = showStr + totalLen;
+				}
+				totalLen += sprintf(cursor, "set ap sta flow rx overflow threshold %u\n", WTP[i]->sta_flow_overflow_rx_threshold);
+				cursor = showStr + totalLen;
+			}
+
+			//set sta flow overlfow tx report threshold
+			if (WTP[i]->sta_flow_overflow_tx_threshold != STA_FLOW_OVERFLOW_TX_THRESHOLD && WTP[i]->sta_flow_overflow_tx_threshold != 0) {
+				if (vrrid != 0) {
+					totalLen += sprintf(cursor, " ");
+					cursor = showStr + totalLen;
+				}
+				totalLen += sprintf(cursor, "set ap sta flow tx overflow threshold %u\n", WTP[i]->sta_flow_overflow_tx_threshold);
+				cursor = showStr + totalLen;
+			}
+			
+			if(WTP[i]->apifinfo.report_interval != gINFOREPORTINTERVAL) /*wcl modify for globle variable*/
+			{
+				if(vrrid != 0){
+					totalLen += sprintf(cursor," ");
+					cursor = showStr + totalLen;
+				}
+				totalLen += sprintf(cursor,"set ap interface infomation reportinterval %d\n",WTP[i]->apifinfo.report_interval);
+				cursor = showStr + totalLen;
+			}
+			if(WTP[i]->apifinfo.report_switch != gINFOREPORTSWITCH) /*wcl modify for globle modify*/
+			{	
+				if(WTP[i]->apifinfo.report_switch != 0)
+				{
+					if(vrrid != 0){
+						totalLen += sprintf(cursor," ");
+						cursor = showStr + totalLen;
+					}
+					totalLen += sprintf(cursor,"set ap interface infomation report switch enable\n");/*wcl modify for globle variable*/
+					cursor = showStr + totalLen;
+				}else{
+					if(vrrid != 0){
+						totalLen += sprintf(cursor," ");
+						cursor = showStr + totalLen;
+					}
+					totalLen += sprintf(cursor,"set ap interface infomation report switch disable\n");/*wcl modify for globle variable*/
+					cursor = showStr + totalLen;
+				}
+			}
+			if(WTP[i]->ap_sta_wapi_report_switch != gAP_STA_WAPI_REPORT_SWITCH)/*wcl modify for globle variable*/
+			{
+				if(WTP[i]->ap_sta_wapi_report_switch != 0)
+				{
+					if(vrrid != 0){
+						totalLen += sprintf(cursor," ");
+						cursor = showStr + totalLen;
+					}
+					totalLen += sprintf(cursor,"set ap sta wapi info report switch enable\n"); /*wcl modify for globle variable*/
+					cursor = showStr + totalLen;
+				}else{
+					if(vrrid != 0){
+						totalLen += sprintf(cursor," ");
+						cursor = showStr + totalLen;
+					}
+					totalLen += sprintf(cursor,"set ap sta wapi info report switch disable\n"); /*wcl modify for globle variable*/
+					cursor = showStr + totalLen;
+				}
+			}
+			if(WTP[i]->neighborchannelrssithold != gNEIGHBORCHANNELRSSITHOLD)/*wcl modify for globle variable*/
+			{
+				totalLen += sprintf(cursor,"set wtp neighborchannelrssi threshold %d\n",WTP[i]->neighborchannelrssithold);
+				cursor = showStr + totalLen;
+			}
+			if(WTP[i]->samechannelrssithold != gSAMECHANNELRSSITHOLD)/*wcl modify for globle variable*/
+			{
+				totalLen += sprintf(cursor,"set wtp samechannelrssi threshold %d\n",WTP[i]->samechannelrssithold);
+				cursor = showStr + totalLen;
+			}
+			
+			/*zhaoruijia,20100904,transplant ACTIMESYNCHROFAILURE from 1.2omc to 1.3,start*/
+			if((WTP[i]->ntp_state != gNTP_STATE)||(WTP[i]->ntp_interval != gNTP_INTERVAL))/*wcl modify for globle variable*/
+			{
+				if(WTP[i]->ntp_state != 1){
+					if(WTP[i]->ntp_interval == gNTP_INTERVAL){
+						totalLen += sprintf(cursor,"set ap ntp start\n");
+						cursor = showStr + totalLen;
+					}else{
+						totalLen += sprintf(cursor,"set ap ntp start %d\n",WTP[i]->ntp_interval);
+						cursor = showStr + totalLen;
+					}
+				}else{
+					totalLen += sprintf(cursor,"set ap ntp stop\n");
+					cursor = showStr + totalLen;
+				}
+			}/*wcl modify for globle variable*/
+			
+			/*zhaoruijia,20100904,transplant ACTIMESYNCHROFAILURE from 1.2omc to 1.3,end*/
+
+			/* zhangshu add for terminal disturb info, 2010-10-08 */
+            if(WTP[i]->ter_dis_info.sta_trap_count != gTER_DIS_INFOSTA_TRAP_COUNT)/*wcl modify for globle variable*/
+            {
+                totalLen += sprintf(cursor,"set ap terminal distrub infomation sta_num %d\n",WTP[i]->ter_dis_info.sta_trap_count);
+				cursor = showStr + totalLen;
+            }
+            if(WTP[i]->ter_dis_info.reportpkt != gTER_DIS_INFOREPORTPKT)/*wcl modify for globle variable*/
+            {
+                totalLen += sprintf(cursor,"set ap terminal distrub infomation reportpkt %d\n",WTP[i]->ter_dis_info.reportpkt);
+				cursor = showStr + totalLen;
+            }
+            if(WTP[i]->ter_dis_info.reportswitch != gTER_DIS_INFOREPORTSWITCH)/*wcl modify for globle variable*/
+            {
+            	if(WTP[i]->ter_dis_info.reportswitch != 0){
+             		totalLen += sprintf(cursor,"set ap terminal distrub infomation switch enable\n");
+					cursor = showStr + totalLen;
+            	}else{
+					totalLen += sprintf(cursor,"set ap terminal distrub infomation switch disable\n");
+					cursor = showStr + totalLen;
+				}
+            }
+			if(WTP[i]->sta_deauth_message_reportswitch != sta_deauth_message_reportswitch){
+				totalLen += sprintf(cursor,"set sta deauth message report switch %s\n",WTP[i]->sta_deauth_message_reportswitch?"enable":"disable");
+				cursor = showStr + totalLen;
+			}
+			if(WTP[i]->sta_flow_information_reportswitch != sta_flow_information_reportswitch){
+				totalLen += sprintf(cursor,"set ap report sta detail information switch %s\n",WTP[i]->sta_flow_information_reportswitch?"enable":"disable");
+				cursor = showStr + totalLen;
+			}
+            /* zhangshu add END,2010-10-08 */
+			if(g_radio_5g_sw != WTP[i]->radio_5g_sw){
+				if(WTP[i]->RadioCount >= 2){
+					totalLen += sprintf(cursor," set ap 5g switch %s\n",(WTP[i]->radio_5g_sw == 1) ?"enable":"disable");
+					cursor = showStr + totalLen;
+				}
+			}
+			/*fengwenchao add 20110324*/
+			unsigned char jj=0;
+			for(jj = 0;jj<AP_ETH_IF_NUM;jj++)
+			{
+				if(WTP[i]->apifinfo.eth[jj].eth_mtu != gAPIFINFOETH_MTU[jj]) /*wcl modify for globle variable*/
+				{
+					totalLen += sprintf(cursor," set ap interface eth%d mtu %d\n",jj,WTP[i]->apifinfo.eth[jj].eth_mtu);
+					cursor = showStr + totalLen;							
+				}
+				if(WTP[i]->apifinfo.eth[jj].eth_rate != gAPIFINFOETH_RATE[jj]) /*wcl modify for globle variable*/
+				{
+					totalLen += sprintf(cursor," set ap interface eth %d rate %d\n",jj,WTP[i]->apifinfo.eth[jj].eth_rate);
+					cursor = showStr + totalLen;							
+				}	
+			}
+			/*fengwenchao add end*/
+            
+			totalLen += sprintf(cursor,"exit\n");
+			cursor = showStr + totalLen;
+		}
+		for(j = 0; j < rnum; j++){
+			if(totalLen + 1024 > str_len) {
+				str_len *= 2;
+				showStr_new = (char*)realloc(showStr,str_len);
+				if(showStr_new == NULL){
+					wid_syslog_info("show running realloc failed\n");
+					return -1;
+				}else {
+					showStr = showStr_new;
+					*showStr2 = showStr;
+					memset(showStr+str_len/2,0,str_len/2);
+					showStr_new = NULL;
+				}
+				wid_syslog_debug_debug(WID_DBUS,"show running totalLen %d realloc strlen %d\n",totalLen,str_len);
+			}
+			cursor = showStr + totalLen;
+			if((WTP[i]->WTP_Radio[j] != NULL)){// && ((WTP[i]->WTP_Radio[j]->Radio_Chan != 0)||(WTP[i]->WTP_Radio[j]->Radio_TXP != 20)||(WTP[i]->WTP_Radio[j]->Support_Rate_Count != 12)||(WTP[i]->WTP_Radio[j]->BeaconPeriod != 100)||(WTP[i]->WTP_Radio[j]->FragThreshold != 2346)||(WTP[i]->WTP_Radio[j]->IsShortPreamble != 1)||(WTP[i]->WTP_Radio[j]->rtsthreshold != 2347)||(WTP[i]->WTP_Radio[j]->ShortRetry != 7)||(WTP[i]->WTP_Radio[j]->LongRetry != 4)||(WTP[i]->WTP_Radio[j]->DTIMPeriod != 1)||(WTP[i]->WTP_Radio[j]->Radio_Type != 5)||((j>0)&&(WTP[i]->WTP_Radio[j]->Radio_Type != 2))||(WTP[i]->WTP_Radio[j]->Wlan_Id != NULL)||(WTP[i]->WTP_Radio[j]->auto_channel != 0)||(WTP[i]->WTP_Radio[j]->diversity != 0)||(WTP[i]->WTP_Radio[j]->txantenna != 1)||(WTP[i]->WTP_Radio[j]->REFlag == 1))){
+				if(vrrid != 0){
+					totalLen += sprintf(cursor," ");
+					cursor = showStr + totalLen;
+				}
+				//totalLen += sprintf(cursor,"config radio %d\n",WTP[i]->WTP_Radio[j]->Radio_G_ID);
+				totalLen += sprintf(cursor,"config radio %d-%d\n",WTP[i]->WTPID,WTP[i]->WTP_Radio[j]->Radio_L_ID);
+				cursor = showStr + totalLen;	
+
+		/*wcl add for OSDEVTDPB-31*/
+
+		if(WTP[i]->WTP_Radio[j]->Radio_country_code != gCOUNTRYCODE)
+		{
+			char *countrycode;
+			countrycode = (char *)malloc(sizeof(char)*3);
+			memset(countrycode,0,3);
+							
+			switch(WTP[i]->WTP_Radio[j]->Radio_country_code)
+			{
+				case COUNTRY_CHINA_CN : 
+										strncpy(countrycode,"CN",2);
+										break;
+								
+				case COUNTRY_EUROPE_EU : 
+										strncpy(countrycode,"EU",2);
+										break;
+																
+				case COUNTRY_USA_US : 
+										strncpy(countrycode,"US",2);
+										break;
+																
+				case COUNTRY_JAPAN_JP : 
+										strncpy(countrycode,"JP",2);
+										break;
+																
+				case COUNTRY_FRANCE_FR : 
+										strncpy(countrycode,"FR",2);
+										break;
+																
+				case COUNTRY_SPAIN_ES : 
+										strncpy(countrycode,"ES",2);
+										break;
+
+				default : 
+								strncpy(countrycode,"CN",2);
+								break;
+			}
+
+			totalLen += sprintf(cursor,"country-code %s\n",countrycode);
+			cursor = showStr + totalLen; 
+
+			free(countrycode);
+			countrycode = NULL; 																			
+		}
+	/*end*/						
+				struct wlanid *radioWlanid = WTP[i]->WTP_Radio[j]->Wlan_Id;
+			/*	while(radioWlanid != NULL){					
+					totalLen += sprintf(cursor,"radio apply wlan %d\n",radioWlanid->wlanid);
+					cursor = showStr + totalLen;
+					radioWlanid = radioWlanid->next;
+				}*/
+				while(radioWlanid != NULL)
+				{					
+					int l_bssid = 0;
+					for(l_bssid=0;l_bssid<L_BSS_NUM;l_bssid++)
+					{
+						if(WTP[i]->WTP_Radio[j]->BSS[l_bssid] != NULL)
+						{
+							if((WTP[i]->WTP_Radio[j]->BSS[l_bssid]->WlanID == radioWlanid->wlanid)
+								&&(AC_WLAN[radioWlanid->wlanid] != NULL)&& (AC_WLAN[radioWlanid->wlanid]->want_to_delete != 1))		/* HuangLeilei add for AXSSZFI-1622 */
+							{
+								if(WTP[i]->WTP_Radio[j]->BSS[l_bssid]->vlanid != 0)
+								{
+									if(vrrid != 0){
+										totalLen += sprintf(cursor," ");
+										cursor = showStr + totalLen;
+									}
+									totalLen += sprintf(cursor," radio apply wlan %d base vlan %d\n",radioWlanid->wlanid,WTP[i]->WTP_Radio[j]->BSS[l_bssid]->vlanid);
+									cursor = showStr + totalLen;
+								}
+
+								if(WTP[i]->WTP_Radio[j]->BSS[l_bssid]->nas_port_id[0] != 0)
+								{
+									if(vrrid != 0){
+										totalLen += sprintf(cursor," ");
+										cursor = showStr + totalLen;
+									}
+									totalLen += sprintf(cursor," radio apply wlan %d base nas_port_id %s\n",radioWlanid->wlanid,WTP[i]->WTP_Radio[j]->BSS[l_bssid]->nas_port_id);
+									cursor = showStr + totalLen;
+								}
+								if((AC_WLAN[radioWlanid->wlanid] != NULL)
+									&&(WTP[i]->WTP_Radio[j]->BSS[l_bssid]->hotspot_id != AC_WLAN[radioWlanid->wlanid]->hotspot_id))
+								{
+									if(vrrid != 0){
+										totalLen += sprintf(cursor," ");
+										cursor = showStr + totalLen;
+									}
+									totalLen += sprintf(cursor," radio apply wlan %d base hotspot %d\n",radioWlanid->wlanid,WTP[i]->WTP_Radio[j]->BSS[l_bssid]->hotspot_id);
+									cursor = showStr + totalLen;
+								}
+								
+								else if((WTP[i]->WTP_Radio[j]->BSS[l_bssid]->vlanid == 0)&&(WTP[i]->WTP_Radio[j]->BSS[l_bssid]->nas_port_id[0] == 0))
+								{
+									if(vrrid != 0){
+										totalLen += sprintf(cursor," ");
+										cursor = showStr + totalLen;
+									}
+									totalLen += sprintf(cursor," radio apply wlan %d\n",radioWlanid->wlanid);
+									cursor = showStr + totalLen;
+								}
+								if(( AC_WLAN[radioWlanid->wlanid] != NULL)&&
+									(WTP[i]->WTP_Radio[j]->BSS[l_bssid]->multi_user_optimize_switch != AC_WLAN[radioWlanid->wlanid]->multi_user_optimize_switch))
+								{
+									if(vrrid != 0){
+										totalLen += sprintf(cursor," ");
+										cursor = showStr + totalLen;
+									}
+									totalLen += sprintf(cursor," set bss wlan %d multi_user switch %s\n",WTP[i]->WTP_Radio[j]->BSS[l_bssid]->WlanID,WTP[i]->WTP_Radio[j]->BSS[l_bssid]->multi_user_optimize_switch?"enable":"disable");
+									cursor = showStr + totalLen;
+								}
+
+								if(WTP[i]->WTP_Radio[j]->BSS[l_bssid]->WDSStat == WDS_SOME){
+									struct wds_bssid *wds = NULL;
+									if(WTP[i]->WTP_Radio[j]->BSS[l_bssid]->wblwm == 0){
+										wds = WTP[i]->WTP_Radio[j]->BSS[l_bssid]->wds_bss_list;
+										while(wds != NULL){
+											if(vrrid != 0){
+												totalLen += sprintf(cursor," ");
+												cursor = showStr + totalLen;
+											}
+											totalLen += sprintf(cursor," wlan %d add wds_bssid %02X:%02X:%02X:%02X:%02X:%02X\n",radioWlanid->wlanid,wds->BSSID[0],wds->BSSID[1],wds->BSSID[2],wds->BSSID[3],wds->BSSID[4],wds->BSSID[5]);
+											cursor = showStr + totalLen;												
+											wds = wds->next;
+										}
+									}
+									else{
+										wds = WTP[i]->WTP_Radio[j]->BSS[l_bssid]->wds_bss_list;
+										while(wds != NULL){
+											if(vrrid != 0){
+												totalLen += sprintf(cursor," ");
+												cursor = showStr + totalLen;
+											}
+											totalLen += sprintf(cursor," wlan %d add mesh_bssid %02X:%02X:%02X:%02X:%02X:%02X\n",radioWlanid->wlanid,wds->BSSID[0],wds->BSSID[1],wds->BSSID[2],wds->BSSID[3],wds->BSSID[4],wds->BSSID[5]);
+											cursor = showStr + totalLen;												
+											wds = wds->next;
+									}												}
+								}
+								if(WTP[i]->WTP_Radio[j]->BSS[l_bssid]->wsm_sta_info_reportinterval != 1800)
+								{
+									if(vrrid != 0){
+										totalLen += sprintf(cursor," ");
+										cursor = showStr + totalLen;
+									}
+									totalLen += sprintf(cursor," set wlan %d wsm sta info reportinterval %d\n",WTP[i]->WTP_Radio[j]->BSS[l_bssid]->WlanID,WTP[i]->WTP_Radio[j]->BSS[l_bssid]->wsm_sta_info_reportinterval);
+									cursor = showStr + totalLen;									
+								}
+								if(WTP[i]->WTP_Radio[j]->BSS[l_bssid]->wsm_sta_info_reportswitch == 1)
+								{
+									if(vrrid != 0){
+										totalLen += sprintf(cursor," ");
+										cursor = showStr + totalLen;
+									}
+									totalLen += sprintf(cursor," set wlan %d wsm sta info reportswitch enable\n",WTP[i]->WTP_Radio[j]->BSS[l_bssid]->WlanID);
+									cursor = showStr + totalLen;									
+								}
+
+								break;
+							}
+						}
+					}
+					radioWlanid = radioWlanid->next;
+				}
+				if(WTP[i]->WTP_Radio[j]->StartService.times != -1){
+					if(WTP[i]->WTP_Radio[j]->StartService.is_once == 0){
+						totalLen += sprintf(cursor," set radio start service at %d:%d:%d %s %s %s %s %s %s %s %s\n",(WTP[i]->WTP_Radio[j]->StartService.times)/3600,((WTP[i]->WTP_Radio[j]->StartService.times)%3600)/60,((WTP[i]->WTP_Radio[j]->StartService.times)%3600)%60,
+						(WTP[i]->WTP_Radio[j]->StartService.is_once == 1)?"once":"cycle",(WTP[i]->WTP_Radio[j]->StartService.wday[1]== 1)?"mon":"",(WTP[i]->WTP_Radio[j]->StartService.wday[2]== 1)?"tue":"",(WTP[i]->WTP_Radio[j]->StartService.wday[3]== 1)?"wed":"", 
+						(WTP[i]->WTP_Radio[j]->StartService.wday[4]== 1)?"thu":"",(WTP[i]->WTP_Radio[j]->StartService.wday[5]== 1)?"fri":"",(WTP[i]->WTP_Radio[j]->StartService.wday[6]== 1)?"sat":"",(WTP[i]->WTP_Radio[j]->StartService.wday[0]== 1)?"sun":"");
+						cursor = showStr + totalLen;	
+						if(WTP[i]->WTP_Radio[j]->StartService.TimerState == 1){
+							totalLen += sprintf(cursor," set radio starttimer enable\n");
+							cursor = showStr + totalLen;
+						}
+					}
+				}
+				if(WTP[i]->WTP_Radio[j]->StopService.times != -1){
+					if(WTP[i]->WTP_Radio[j]->StopService.is_once == 0){
+						totalLen += sprintf(cursor," set radio stop service at %d:%d:%d %s %s %s %s %s %s %s %s\n",(WTP[i]->WTP_Radio[j]->StopService.times)/3600,((WTP[i]->WTP_Radio[j]->StopService.times)%3600)/60,((WTP[i]->WTP_Radio[j]->StopService.times)%3600)%60,
+						(WTP[i]->WTP_Radio[j]->StopService.is_once == 1)?"once":"cycle",(WTP[i]->WTP_Radio[j]->StopService.wday[1]== 1)?"mon":"",(WTP[i]->WTP_Radio[j]->StopService.wday[2]== 1)?"tue":"",(WTP[i]->WTP_Radio[j]->StopService.wday[3]== 1)?"wed":"", 
+						(WTP[i]->WTP_Radio[j]->StopService.wday[4]== 1)?"thu":"",(WTP[i]->WTP_Radio[j]->StopService.wday[5]== 1)?"fri":"",(WTP[i]->WTP_Radio[j]->StopService.wday[6]== 1)?"sat":"",(WTP[i]->WTP_Radio[j]->StopService.wday[0]== 1)?"sun":"");
+						cursor = showStr + totalLen;
+						if(WTP[i]->WTP_Radio[j]->StopService.TimerState == 1){
+							totalLen += sprintf(cursor," set radio stoptimer enable\n");
+							cursor = showStr + totalLen;
+						}
+					}
+				}
+
+				//xm add 08/12/05
+				////////////////////////////////////////////////////
+				int mm=0;
+				int wlanid =0;
+				for(mm=0;mm<L_BSS_NUM;mm++){
 					if(totalLen + 1024 > str_len) {
 						str_len *= 2;
 						showStr_new = (char*)realloc(showStr,str_len);
@@ -75736,1302 +76193,1085 @@ int show_running_config_wtp(WID_WTP **WTP,int i,char *cursor,char **showStr2,cha
 						wid_syslog_debug_debug(WID_DBUS,"show running totalLen %d realloc strlen %d\n",totalLen,str_len);
 					}
 					cursor = showStr + totalLen;
-					if((WTP[i]->WTP_Radio[j] != NULL)){// && ((WTP[i]->WTP_Radio[j]->Radio_Chan != 0)||(WTP[i]->WTP_Radio[j]->Radio_TXP != 20)||(WTP[i]->WTP_Radio[j]->Support_Rate_Count != 12)||(WTP[i]->WTP_Radio[j]->BeaconPeriod != 100)||(WTP[i]->WTP_Radio[j]->FragThreshold != 2346)||(WTP[i]->WTP_Radio[j]->IsShortPreamble != 1)||(WTP[i]->WTP_Radio[j]->rtsthreshold != 2347)||(WTP[i]->WTP_Radio[j]->ShortRetry != 7)||(WTP[i]->WTP_Radio[j]->LongRetry != 4)||(WTP[i]->WTP_Radio[j]->DTIMPeriod != 1)||(WTP[i]->WTP_Radio[j]->Radio_Type != 5)||((j>0)&&(WTP[i]->WTP_Radio[j]->Radio_Type != 2))||(WTP[i]->WTP_Radio[j]->Wlan_Id != NULL)||(WTP[i]->WTP_Radio[j]->auto_channel != 0)||(WTP[i]->WTP_Radio[j]->diversity != 0)||(WTP[i]->WTP_Radio[j]->txantenna != 1)||(WTP[i]->WTP_Radio[j]->REFlag == 1))){
+					if(WTP[i]->WTP_Radio[j]->BSS[mm]!=NULL 
+						&& AC_WLAN[WTP[i]->WTP_Radio[j]->BSS[mm]->WlanID] != NULL 
+						&& AC_WLAN[WTP[i]->WTP_Radio[j]->BSS[mm]->WlanID]->want_to_delete != 1){		/* HuangLeilei add for AXSSZFI-1622 */
+						wlanid = WTP[i]->WTP_Radio[j]->BSS[mm]->WlanID;
+						if((AC_WLAN[wlanid] != NULL)&&(WTP[i]->WTP_Radio[j]->BSS[mm]->bss_max_allowed_sta_num != AC_WLAN[wlanid]->bss_allow_max_sta_num)){//fengwenchao modify 20120323
+							if(vrrid != 0){
+								totalLen += sprintf(cursor," ");
+								cursor = showStr + totalLen;
+							}
+							totalLen += sprintf(cursor," set bss wlan %d max_sta_num %d\n",WTP[i]->WTP_Radio[j]->BSS[mm]->WlanID,WTP[i]->WTP_Radio[j]->BSS[mm]->bss_max_allowed_sta_num);  //fengwenchao modify 20110513
+							cursor = showStr + totalLen;
+						}
+
+						//printf("0,mm %d WTP[i]->WTP_Radio[j]->BSS[mm]->ath_l2_isolation %d\n",mm,WTP[i]->WTP_Radio[j]->BSS[mm]->ath_l2_isolation);
+
+						if((AC_WLAN[wlanid] != NULL)&&(WTP[i]->WTP_Radio[j]->BSS[mm]->ath_l2_isolation != AC_WLAN[wlanid]->wlan_ath_l2_isolation)) //fengwenchao modify 20120323
+						{
+							if(vrrid != 0){
+								totalLen += sprintf(cursor," ");
+								cursor = showStr + totalLen;
+							}
+							totalLen += sprintf(cursor," set wlan %d l2 isolation %s\n",
+														WTP[i]->WTP_Radio[j]->BSS[mm]->WlanID,
+														(WTP[i]->WTP_Radio[j]->BSS[mm]->ath_l2_isolation ==1)?"enable":"disable");//fengwenchao modify 20120323
+							cursor = showStr + totalLen;
+						}
+						/*traffic limit*/
+						if(WTP[i]->WTP_Radio[j]->BSS[mm]->traffic_limit_able == 1)
+						{
+							if(WTP[i]->WTP_Radio[j]->BSS[mm]->traffic_limit != 0)
+							{
+								if(vrrid != 0){
+									totalLen += sprintf(cursor," ");
+									cursor = showStr + totalLen;
+								}
+								totalLen += sprintf(cursor," wlan %d traffic limit value %d\n",WTP[i]->WTP_Radio[j]->BSS[mm]->WlanID,WTP[i]->WTP_Radio[j]->BSS[mm]->traffic_limit);
+								cursor = showStr + totalLen;
+							}
+							if(WTP[i]->WTP_Radio[j]->BSS[mm]->average_rate != 0)
+							{
+								if(vrrid != 0){
+									totalLen += sprintf(cursor," ");
+									cursor = showStr + totalLen;
+								}
+								totalLen += sprintf(cursor," wlan %d traffic limit station average value %d\n",WTP[i]->WTP_Radio[j]->BSS[mm]->WlanID,WTP[i]->WTP_Radio[j]->BSS[mm]->average_rate);
+								cursor = showStr + totalLen;
+							}
+							if(WTP[i]->WTP_Radio[j]->BSS[mm]->send_traffic_limit != 0)
+							{
+								if(vrrid != 0){
+									totalLen += sprintf(cursor," ");
+									cursor = showStr + totalLen;
+								}
+								totalLen += sprintf(cursor," wlan %d traffic limit send value %d\n",WTP[i]->WTP_Radio[j]->BSS[mm]->WlanID,WTP[i]->WTP_Radio[j]->BSS[mm]->send_traffic_limit);
+								cursor = showStr + totalLen;
+							}
+							if(WTP[i]->WTP_Radio[j]->BSS[mm]->send_average_rate != 0)
+							{
+								if(vrrid != 0){
+									totalLen += sprintf(cursor," ");
+									cursor = showStr + totalLen;
+								}
+								totalLen += sprintf(cursor," wlan %d traffic limit station average send value %d\n",WTP[i]->WTP_Radio[j]->BSS[mm]->WlanID,WTP[i]->WTP_Radio[j]->BSS[mm]->send_average_rate);
+								cursor = showStr + totalLen;
+							}
+						}
+						if((AC_WLAN[wlanid] != NULL)&&(WTP[i]->WTP_Radio[j]->BSS[mm]->ip_mac_binding != AC_WLAN[wlanid]->sta_ip_mac_bind))//fengwenchao modify 20120323
+						{
+							if(vrrid != 0){
+								totalLen += sprintf(cursor," ");
+								cursor = showStr + totalLen;
+							}
+							totalLen += sprintf(cursor," wlan %d sta ip_mac binding %s\n",WTP[i]->WTP_Radio[j]->BSS[mm]->WlanID,(WTP[i]->WTP_Radio[j]->BSS[mm]->ip_mac_binding == 1)?"enable":"disable");//fengwenchao modify 20120323
+							cursor = showStr + totalLen;
+						}
+						if((AC_WLAN[wlanid] != NULL)&&((WTP[i]->WTP_Radio[j]->BSS[mm]->sta_static_arp_policy != AC_WLAN[wlanid]->wlan_sta_static_arp_policy)||(strcmp(WTP[i]->WTP_Radio[j]->BSS[mm]->arp_ifname,AC_WLAN[wlanid]->wlan_arp_ifname) != 0))){//fengwenchao modify 20120323
+							if(vrrid != 0){
+								totalLen += sprintf(cursor," ");
+								cursor = showStr + totalLen;
+							}
+							totalLen += sprintf(cursor," set wlan %d sta_static_arp %s base %s\n",WTP[i]->WTP_Radio[j]->BSS[mm]->WlanID,(WTP[i]->WTP_Radio[j]->BSS[mm]->sta_static_arp_policy == 1)?"enable":"disable",WTP[i]->WTP_Radio[j]->BSS[mm]->arp_ifname);
+							cursor = showStr + totalLen;
+						}
+						if(WTP[i]->WTP_Radio[j]->BSS[mm]->ip_mac_binding == 1)
+						{
+							if(vrrid != 0){
+								totalLen += sprintf(cursor," ");
+								cursor = showStr + totalLen;
+							}
+							totalLen += sprintf(cursor," wlan %d sta ip_mac binding enable\n",WTP[i]->WTP_Radio[j]->BSS[mm]->WlanID);
+							cursor = showStr + totalLen;
+						}
+						/*fengwenchao add 20120222 for RDIR-25*/
+						if((AC_WLAN[wlanid] != NULL)&&(WTP[i]->WTP_Radio[j]->BSS[mm]->limit_sta_rssi != AC_WLAN[wlanid]->wlan_limit_sta_rssi)){
+							if(vrrid != 0){
+								totalLen += sprintf(cursor," ");
+								cursor = showStr + totalLen;
+							}
+							totalLen += sprintf(cursor," set radio wlan %d access sta limit rssi %d\n",WTP[i]->WTP_Radio[j]->BSS[mm]->WlanID,WTP[i]->WTP_Radio[j]->BSS[mm]->limit_sta_rssi);
+							cursor = showStr + totalLen;
+						}								
+						/*fengwenchao add end*/
+						if((AC_WLAN[wlanid] != NULL)&&((WTP[i]->WTP_Radio[j]->BSS[mm]->muti_bro_cast_sw != AC_WLAN[wlanid]->wlan_muti_bro_cast_sw) 
+							||(WTP[i]->WTP_Radio[j]->BSS[mm]->unicast_sw != AC_WLAN[wlanid]->wlan_unicast_sw)
+							||(WTP[i]->WTP_Radio[j]->BSS[mm]->muti_rate != AC_WLAN[wlanid]->wlan_muti_rate)
+							||(WTP[i]->WTP_Radio[j]->BSS[mm]->wifi_sw != AC_WLAN[wlanid]->wlan_wifi_sw))){ /*fengwenchao modify 20120323*/
+							if((WTP[i]->WTP_Radio[j]->BSS[mm]->unicast_sw != AC_WLAN[wlanid]->wlan_unicast_sw)
+								&&(WTP[i]->WTP_Radio[j]->BSS[mm]->muti_bro_cast_sw != AC_WLAN[wlanid]->wlan_muti_bro_cast_sw)
+								&&(WTP[i]->WTP_Radio[j]->BSS[mm]->unicast_sw == WTP[i]->WTP_Radio[j]->BSS[mm]->muti_bro_cast_sw)){
+								if(vrrid != 0){
+									totalLen += sprintf(cursor," ");
+									cursor = showStr + totalLen;
+								}
+								totalLen += sprintf(cursor," wlan %d unicast_and_multicast_broadcast isolation %s\n",WTP[i]->WTP_Radio[j]->BSS[mm]->WlanID,(WTP[i]->WTP_Radio[j]->BSS[mm]->muti_bro_cast_sw == 1)?"enable":"disable");
+								cursor = showStr + totalLen;
+							}else if(WTP[i]->WTP_Radio[j]->BSS[mm]->unicast_sw != AC_WLAN[wlanid]->wlan_unicast_sw){
+								if(vrrid != 0){
+									totalLen += sprintf(cursor," ");
+									cursor = showStr + totalLen;
+								}
+								totalLen += sprintf(cursor," wlan %d unicast isolation %s\n",WTP[i]->WTP_Radio[j]->BSS[mm]->WlanID,(WTP[i]->WTP_Radio[j]->BSS[mm]->unicast_sw == 1)?"enable":"disable");
+								cursor = showStr + totalLen;
+							}else if(WTP[i]->WTP_Radio[j]->BSS[mm]->muti_bro_cast_sw != AC_WLAN[wlanid]->wlan_muti_bro_cast_sw){
+								if(vrrid != 0){
+									totalLen += sprintf(cursor," ");
+									cursor = showStr + totalLen;
+								}
+								totalLen += sprintf(cursor," wlan %d multicast_broadcast isolation %s\n",WTP[i]->WTP_Radio[j]->BSS[mm]->WlanID,(WTP[i]->WTP_Radio[j]->BSS[mm]->muti_bro_cast_sw == 1)?"enable":"disable");
+								cursor = showStr + totalLen;
+							}
+							if(WTP[i]->WTP_Radio[j]->BSS[mm]->wifi_sw != AC_WLAN[wlanid]->wlan_wifi_sw){
+								if(vrrid != 0){
+									totalLen += sprintf(cursor," ");
+									cursor = showStr + totalLen;
+								}
+								totalLen += sprintf(cursor," wlan %d wifi isolation %s\n",WTP[i]->WTP_Radio[j]->BSS[mm]->WlanID,(WTP[i]->WTP_Radio[j]->BSS[mm]->wifi_sw == 1)?"enable":"disable");
+								cursor = showStr + totalLen;
+							}
+							if(WTP[i]->WTP_Radio[j]->BSS[mm]->muti_rate != AC_WLAN[wlanid]->wlan_muti_rate){
+								if(vrrid != 0){
+									totalLen += sprintf(cursor," ");
+									cursor = showStr + totalLen;
+								}
+								totalLen += sprintf(cursor," wlan %d multicast_broadcast_rate %d\n",WTP[i]->WTP_Radio[j]->BSS[mm]->WlanID,WTP[i]->WTP_Radio[j]->BSS[mm]->muti_rate);
+								cursor = showStr + totalLen;
+							}
+							
+						}
+						/*fengwenchao add 20120331*/
+						if((AC_WLAN[wlanid] != NULL)&&(WTP[i]->WTP_Radio[j]->BSS[mm]->noResToStaProReqSW != AC_WLAN[wlanid]->wlan_noResToStaProReqSW))
+						{
+							if(vrrid != 0){
+								totalLen += sprintf(cursor," ");
+								cursor = showStr + totalLen;
+							}
+							totalLen += sprintf(cursor," wlan %d no response to sta probe request %s\n",WTP[i]->WTP_Radio[j]->BSS[mm]->WlanID,(WTP[i]->WTP_Radio[j]->BSS[mm]->noResToStaProReqSW == 1)?"enable":"disable");
+							cursor = showStr + totalLen;
+						}		
+						/*fengwenchao add end*/
+						if(WTP[i]->WTP_Radio[j]->BSS[mm]->sta_static_arp_policy == 1){
+							if(vrrid != 0){
+								totalLen += sprintf(cursor," ");
+								cursor = showStr + totalLen;
+							}
+							totalLen += sprintf(cursor," set wlan %d sta_static_arp enable base %s\n",WTP[i]->WTP_Radio[j]->BSS[mm]->WlanID,WTP[i]->WTP_Radio[j]->BSS[mm]->arp_ifname);
+							cursor = showStr + totalLen;
+						}
+					}
+					
+				}
+				if((WTP[i]->WTP_Radio[j]->txpowerautostate == 0)&&(WTP[i]->WTP_Radio[j]->Radio_TXP == 100))
+				{
+					if(vrrid != 0){
+						totalLen += sprintf(cursor," ");
+						cursor = showStr + totalLen;
+					}
+					totalLen += sprintf(cursor," txpower auto\n");
+					cursor = showStr + totalLen;
+				}
+				/*wcl modify*/
+				else if(WTP[i]->WTP_Radio[j]->txpowerautostate == 1){
+					if(WTP[i]->WTP_Radio[j]->ishighpower == 1)
+				{
+						if((WTP[i]->WTP_Radio[j]->Radio_TXP != 27)&&(WTP[i]->WTP_Radio[j]->Radio_TXP != 100))
+					{
 						if(vrrid != 0){
 							totalLen += sprintf(cursor," ");
 							cursor = showStr + totalLen;
 						}
-						//totalLen += sprintf(cursor,"config radio %d\n",WTP[i]->WTP_Radio[j]->Radio_G_ID);
-						totalLen += sprintf(cursor,"config radio %d-%d\n",WTP[i]->WTPID,WTP[i]->WTP_Radio[j]->Radio_L_ID);
-						cursor = showStr + totalLen;	
+						totalLen += sprintf(cursor," txpower %d\n",WTP[i]->WTP_Radio[j]->Radio_TXP);
+						cursor = showStr + totalLen;
+					}	
+						}else{
+							if((WTP[i]->WTP_Radio[j]->Radio_TXP != 20)&&(WTP[i]->WTP_Radio[j]->Radio_TXP != 100))
+						{
+							if(vrrid != 0){
+								totalLen += sprintf(cursor," ");
+								cursor = showStr + totalLen;
+							}
+							totalLen += sprintf(cursor," txpower %d\n",WTP[i]->WTP_Radio[j]->Radio_TXP);
+							cursor = showStr + totalLen;
+							}	
+						}
+				}
+				/*end*/
 
-				/*wcl add for OSDEVTDPB-31*/
-		
-				if(WTP[i]->WTP_Radio[j]->Radio_country_code != gCOUNTRYCODE)
+				if((WTP[i]->WTP_Radio[j]->Radio_TXPOF != 0)){
+					if(vrrid != 0){
+						totalLen += sprintf(cursor," ");
+						cursor = showStr + totalLen;
+					}
+					totalLen += sprintf(cursor," txpoweroffset %d\n",WTP[i]->WTP_Radio[j]->Radio_TXPOF);
+					cursor = showStr + totalLen;
+				}						
+               /*zhaoruijia,20100917,add*/
+				if((WTP[i]->WTP_Radio[j]->txpowerstep!= 1)){
+					if(vrrid != 0){
+						totalLen += sprintf(cursor," ");
+						cursor = showStr + totalLen;
+					}
+					totalLen += sprintf(cursor," txpowerstep %d\n",WTP[i]->WTP_Radio[j]->txpowerstep);
+					cursor = showStr + totalLen;
+				}	
+				/*fengwenchao modfiy 20120203 for autelan-2821*/
+				if(((WTP[i]->WTP_Radio[j]->Radio_Type & IEEE80211_11N) == IEEE80211_11N)&&(WTP[i]->WTP_Radio[j]->BeaconPeriod != 400))
 				{
-					char *countrycode;
-					countrycode = (char *)malloc(sizeof(char)*3);
-					memset(countrycode,0,3);
-									
-					switch(WTP[i]->WTP_Radio[j]->Radio_country_code)
-					{
-						case COUNTRY_CHINA_CN : 
-												strncpy(countrycode,"CN",2);
-												break;
-										
-						case COUNTRY_EUROPE_EU : 
-												strncpy(countrycode,"EU",2);
-												break;
-																		
-						case COUNTRY_USA_US : 
-												strncpy(countrycode,"US",2);
-												break;
-																		
-						case COUNTRY_JAPAN_JP : 
-												strncpy(countrycode,"JP",2);
-												break;
-																		
-						case COUNTRY_FRANCE_FR : 
-												strncpy(countrycode,"FR",2);
-												break;
-																		
-						case COUNTRY_SPAIN_ES : 
-												strncpy(countrycode,"ES",2);
-												break;
+					if(vrrid != 0){
+						totalLen += sprintf(cursor," ");
+						cursor = showStr + totalLen;
+					}
+					totalLen += sprintf(cursor," beaconinterval %d\n",WTP[i]->WTP_Radio[j]->BeaconPeriod);
+					cursor = showStr + totalLen;
+				}
+				else if(((WTP[i]->WTP_Radio[j]->Radio_Type & IEEE80211_11N) != IEEE80211_11N)&&(WTP[i]->WTP_Radio[j]->BeaconPeriod != 100))
+				{
+					if(vrrid != 0){
+						totalLen += sprintf(cursor," ");
+						cursor = showStr + totalLen;
+					}
+					totalLen += sprintf(cursor," beaconinterval %d\n",WTP[i]->WTP_Radio[j]->BeaconPeriod);
+					cursor = showStr + totalLen;
+				}
+				/*fengwenchao modify end*/
+				if(WTP[i]->WTP_Radio[j]->FragThreshold != 2346)
+				{
+					if(vrrid != 0){
+						totalLen += sprintf(cursor," ");
+						cursor = showStr + totalLen;
+					}
+					totalLen += sprintf(cursor," fragmentation %d\n",WTP[i]->WTP_Radio[j]->FragThreshold);
+					cursor = showStr + totalLen;
+				}
+				if(WTP[i]->WTP_Radio[j]->IsShortPreamble != 1)
+				{
+					if(vrrid != 0){
+						totalLen += sprintf(cursor," ");
+						cursor = showStr + totalLen;
+					}
+					totalLen += sprintf(cursor," preamble long\n");
+					cursor = showStr + totalLen;
+				}
 
-						default : 
-										strncpy(countrycode,"CN",2);
-										break;
+				if(WTP[i]->WTP_Radio[j]->Radio_Type != WTP[i]->WTP_Radio[j]->Radio_Type_Bank)
+				{
+				//	
+					switch(WTP[i]->WTP_Radio[j]->Radio_Type)
+						{
+						case 1: 
+							strcpy(radio_type, "11b");
+							if(vrrid != 0){
+								totalLen += sprintf(cursor," ");
+								cursor = showStr + totalLen;
+							}
+							totalLen += sprintf(cursor," mode %s\n",radio_type);
+							break;
+						case 2: 
+							//if(j == 0)
+							{
+								strcpy(radio_type, "11a");
+								if(vrrid != 0){
+									totalLen += sprintf(cursor," ");
+									cursor = showStr + totalLen;
+								}
+								totalLen += sprintf(cursor,"mode %s\n",radio_type);
+							}
+							break;
+						case 4:  
+							strcpy(radio_type, "11g");
+							if(vrrid != 0){
+								totalLen += sprintf(cursor," ");
+								cursor = showStr + totalLen;
+							}
+							totalLen += sprintf(cursor," mode %s\n",radio_type);
+							break;
+						case 5: 
+							//if(j > 0)
+							{
+							if(vrrid != 0){
+								totalLen += sprintf(cursor," ");
+								cursor = showStr + totalLen;
+							}
+								strcpy(radio_type, "11b/g");
+								totalLen += sprintf(cursor," mode %s\n",radio_type);
+							}
+							break;
+						case 8: 
+							if(vrrid != 0){
+								totalLen += sprintf(cursor," ");
+								cursor = showStr + totalLen;
+							}
+							strcpy(radio_type, "11n");
+							totalLen += sprintf(cursor," mode %s\n",radio_type);
+							break;	
+						case 10: 
+							if(vrrid != 0){
+								totalLen += sprintf(cursor," ");
+								cursor = showStr + totalLen;
+							}
+							strcpy(radio_type, "11a/n");
+							totalLen += sprintf(cursor," mode %s\n",radio_type);
+							break;	
+						case 13: 
+							if(vrrid != 0){
+								totalLen += sprintf(cursor," ");
+								cursor = showStr + totalLen;
+							}
+							strcpy(radio_type, "11b/g/n");
+							totalLen += sprintf(cursor," mode %s\n",radio_type);
+							break;
+					/*fengwenchao add 20111109 for GM*/
+					 case 26: 
+							if(vrrid != 0){
+								totalLen += sprintf(cursor," ");
+								cursor = showStr + totalLen;
+							}
+							strcpy(radio_type, "11a/an");
+							totalLen += sprintf(cursor," mode %s\n",radio_type);
+							break;
+					 case 12: 
+							if(vrrid != 0){
+								totalLen += sprintf(cursor," ");
+								cursor = showStr + totalLen;
+							}
+							strcpy(radio_type, "11gn");
+							totalLen += sprintf(cursor," mode %s\n",radio_type);
+							break;
+					 case 44: 
+							if(vrrid != 0){
+								totalLen += sprintf(cursor," ");
+								cursor = showStr + totalLen;
+							}
+							strcpy(radio_type, "11g/gn");
+							totalLen += sprintf(cursor," mode %s\n",radio_type);
+							break;								
+					/*fengwenchao add end*/
+						default : strcpy(radio_type, "unknown");break;
+						}
+					//totalLen += sprintf(cursor,"mode %d\n",WTP[i]->WTP_Radio[j]->Radio_Type);
+					//printf("mode %s\n",radio_type);
+				    cursor = showStr + totalLen;
+				}
+				//#endif
+				if(((WTP[i]->WTP_Radio[j]->Radio_Type&IEEE80211_11N) == 0)&&(WTP[i]->WTP_Radio[j]->Support_Rate_Count != 12))//sz change ratelist
+				{
+					//////
+					int m = 0;
+					int derate[12] = {10,20,55,60,90,110,120,180,240,360,480,540};
+					int rate[20];
+					int count = 0;
+					count = WTP[i]->WTP_Radio[j]->Support_Rate_Count;
+					//check whether the max rate 
+					if (WTP[i]->WTP_Radio[j]->Radio_Rate->Rate == derate[count - 1])
+					{
+						//printf("max mode\n");
+						if(vrrid != 0){
+							totalLen += sprintf(cursor," ");
+							cursor = showStr + totalLen;
+						}
+
+						totalLen += sprintf(cursor," set max rate %d\n",derate[count - 1]);
+						cursor = showStr + totalLen;
 					}
 
-					totalLen += sprintf(cursor,"country-code %s\n",countrycode);
-					cursor = showStr + totalLen; 
-
-					free(countrycode);
-					countrycode = NULL; 																			
-				}
-			/*end*/						
-						struct wlanid *radioWlanid = WTP[i]->WTP_Radio[j]->Wlan_Id;
-					/*	while(radioWlanid != NULL){					
-							totalLen += sprintf(cursor,"radio apply wlan %d\n",radioWlanid->wlanid);
-							cursor = showStr + totalLen;
-							radioWlanid = radioWlanid->next;
-						}*/
-						while(radioWlanid != NULL)
-						{					
-							int l_bssid = 0;
-							for(l_bssid=0;l_bssid<L_BSS_NUM;l_bssid++)
+					//rate list mode
+					else
+					{
+						//printf("list mode\n");
+						
+						struct Support_Rate_List *ptr = NULL;
+						ptr = WTP[i]->WTP_Radio[j]->Radio_Rate;
+						
+						char *ratelist = NULL;
+						ratelist = (char *)malloc(sizeof(char)*128);
+						int k = 0;
+						memset(ratelist,0,128);
+						
+						for (m=0;m<count;m++)
+						{
+							rate[m] = ptr->Rate;
+						
+							switch(rate[m])
 							{
-								if(WTP[i]->WTP_Radio[j]->BSS[l_bssid] != NULL)
-								{
-									if((WTP[i]->WTP_Radio[j]->BSS[l_bssid]->WlanID == radioWlanid->wlanid)
-										&&(AC_WLAN[radioWlanid->wlanid] != NULL)&& (AC_WLAN[radioWlanid->wlanid]->want_to_delete != 1))		/* HuangLeilei add for AXSSZFI-1622 */
-									{
-										if(WTP[i]->WTP_Radio[j]->BSS[l_bssid]->vlanid != 0)
-										{
-											if(vrrid != 0){
-												totalLen += sprintf(cursor," ");
-												cursor = showStr + totalLen;
-											}
-											totalLen += sprintf(cursor," radio apply wlan %d base vlan %d\n",radioWlanid->wlanid,WTP[i]->WTP_Radio[j]->BSS[l_bssid]->vlanid);
-											cursor = showStr + totalLen;
-										}
-
-										if(WTP[i]->WTP_Radio[j]->BSS[l_bssid]->nas_port_id[0] != 0)
-										{
-											if(vrrid != 0){
-												totalLen += sprintf(cursor," ");
-												cursor = showStr + totalLen;
-											}
-											totalLen += sprintf(cursor," radio apply wlan %d base nas_port_id %s\n",radioWlanid->wlanid,WTP[i]->WTP_Radio[j]->BSS[l_bssid]->nas_port_id);
-											cursor = showStr + totalLen;
-										}
-										if((AC_WLAN[radioWlanid->wlanid] != NULL)
-											&&(WTP[i]->WTP_Radio[j]->BSS[l_bssid]->hotspot_id != AC_WLAN[radioWlanid->wlanid]->hotspot_id))
-										{
-											if(vrrid != 0){
-												totalLen += sprintf(cursor," ");
-												cursor = showStr + totalLen;
-											}
-											totalLen += sprintf(cursor," radio apply wlan %d base hotspot %d\n",radioWlanid->wlanid,WTP[i]->WTP_Radio[j]->BSS[l_bssid]->hotspot_id);
-											cursor = showStr + totalLen;
-										}
-										
-										else if((WTP[i]->WTP_Radio[j]->BSS[l_bssid]->vlanid == 0)&&(WTP[i]->WTP_Radio[j]->BSS[l_bssid]->nas_port_id[0] == 0))
-										{
-											if(vrrid != 0){
-												totalLen += sprintf(cursor," ");
-												cursor = showStr + totalLen;
-											}
-											totalLen += sprintf(cursor," radio apply wlan %d\n",radioWlanid->wlanid);
-											cursor = showStr + totalLen;
-										}
-										if(( AC_WLAN[radioWlanid->wlanid] != NULL)&&
-											(WTP[i]->WTP_Radio[j]->BSS[l_bssid]->multi_user_optimize_switch != AC_WLAN[radioWlanid->wlanid]->multi_user_optimize_switch))
-										{
-											if(vrrid != 0){
-												totalLen += sprintf(cursor," ");
-												cursor = showStr + totalLen;
-											}
-											totalLen += sprintf(cursor," set bss wlan %d multi_user switch %s\n",WTP[i]->WTP_Radio[j]->BSS[l_bssid]->WlanID,WTP[i]->WTP_Radio[j]->BSS[l_bssid]->multi_user_optimize_switch?"enable":"disable");
-											cursor = showStr + totalLen;
-										}
-
-										if(WTP[i]->WTP_Radio[j]->BSS[l_bssid]->WDSStat == WDS_SOME){
-											struct wds_bssid *wds = NULL;
-											if(WTP[i]->WTP_Radio[j]->BSS[l_bssid]->wblwm == 0){
-												wds = WTP[i]->WTP_Radio[j]->BSS[l_bssid]->wds_bss_list;
-												while(wds != NULL){
-													if(vrrid != 0){
-														totalLen += sprintf(cursor," ");
-														cursor = showStr + totalLen;
-													}
-													totalLen += sprintf(cursor," wlan %d add wds_bssid %02X:%02X:%02X:%02X:%02X:%02X\n",radioWlanid->wlanid,wds->BSSID[0],wds->BSSID[1],wds->BSSID[2],wds->BSSID[3],wds->BSSID[4],wds->BSSID[5]);
-													cursor = showStr + totalLen;												
-													wds = wds->next;
-												}
-											}
-											else{
-												wds = WTP[i]->WTP_Radio[j]->BSS[l_bssid]->wds_bss_list;
-												while(wds != NULL){
-													if(vrrid != 0){
-														totalLen += sprintf(cursor," ");
-														cursor = showStr + totalLen;
-													}
-													totalLen += sprintf(cursor," wlan %d add mesh_bssid %02X:%02X:%02X:%02X:%02X:%02X\n",radioWlanid->wlanid,wds->BSSID[0],wds->BSSID[1],wds->BSSID[2],wds->BSSID[3],wds->BSSID[4],wds->BSSID[5]);
-													cursor = showStr + totalLen;												
-													wds = wds->next;
-											}												}
-										}
-										if(WTP[i]->WTP_Radio[j]->BSS[l_bssid]->wsm_sta_info_reportinterval != 1800)
-										{
-											if(vrrid != 0){
-												totalLen += sprintf(cursor," ");
-												cursor = showStr + totalLen;
-											}
-											totalLen += sprintf(cursor," set wlan %d wsm sta info reportinterval %d\n",WTP[i]->WTP_Radio[j]->BSS[l_bssid]->WlanID,WTP[i]->WTP_Radio[j]->BSS[l_bssid]->wsm_sta_info_reportinterval);
-											cursor = showStr + totalLen;									
-										}
-										if(WTP[i]->WTP_Radio[j]->BSS[l_bssid]->wsm_sta_info_reportswitch == 1)
-										{
-											if(vrrid != 0){
-												totalLen += sprintf(cursor," ");
-												cursor = showStr + totalLen;
-											}
-											totalLen += sprintf(cursor," set wlan %d wsm sta info reportswitch enable\n",WTP[i]->WTP_Radio[j]->BSS[l_bssid]->WlanID);
-											cursor = showStr + totalLen;									
-										}
-
-										break;
-									}
-								}
+								case 540 : strcpy(ratelist+k, "540");k=k+3;break;
+								case 480 : strcpy(ratelist+k, "480");k=k+3;break;
+								case 360 : strcpy(ratelist+k, "360");k=k+3;break;
+								case 240 : strcpy(ratelist+k, "240");k=k+3;break;
+								case 180 : strcpy(ratelist+k, "180");k=k+3;break;
+								case 120 : strcpy(ratelist+k, "120");k=k+3;break;
+								case 110 : strcpy(ratelist+k, "110");k=k+3;break;
+								case 90 : strcpy(ratelist+k, "90");k=k+2;break;
+								case 60 : strcpy(ratelist+k, "60");k=k+2;break;
+								case 55 : strcpy(ratelist+k, "55");k=k+2;break;
+								case 20 : strcpy(ratelist+k, "20");k=k+2;break;
+								case 10 : strcpy(ratelist+k, "10");k=k+2;break;
+								default : break;
 							}
-							radioWlanid = radioWlanid->next;
-						}
-						if(WTP[i]->WTP_Radio[j]->StartService.times != -1){
-							if(WTP[i]->WTP_Radio[j]->StartService.is_once == 0){
-								totalLen += sprintf(cursor," set radio start service at %d:%d:%d %s %s %s %s %s %s %s %s\n",(WTP[i]->WTP_Radio[j]->StartService.times)/3600,((WTP[i]->WTP_Radio[j]->StartService.times)%3600)/60,((WTP[i]->WTP_Radio[j]->StartService.times)%3600)%60,
-								(WTP[i]->WTP_Radio[j]->StartService.is_once == 1)?"once":"cycle",(WTP[i]->WTP_Radio[j]->StartService.wday[1]== 1)?"mon":"",(WTP[i]->WTP_Radio[j]->StartService.wday[2]== 1)?"tue":"",(WTP[i]->WTP_Radio[j]->StartService.wday[3]== 1)?"wed":"", 
-								(WTP[i]->WTP_Radio[j]->StartService.wday[4]== 1)?"thu":"",(WTP[i]->WTP_Radio[j]->StartService.wday[5]== 1)?"fri":"",(WTP[i]->WTP_Radio[j]->StartService.wday[6]== 1)?"sat":"",(WTP[i]->WTP_Radio[j]->StartService.wday[0]== 1)?"sun":"");
-								cursor = showStr + totalLen;	
-								if(WTP[i]->WTP_Radio[j]->StartService.TimerState == 1){
-									totalLen += sprintf(cursor," set radio starttimer enable\n");
-									cursor = showStr + totalLen;
-								}
-							}
-						}
-						if(WTP[i]->WTP_Radio[j]->StopService.times != -1){
-							if(WTP[i]->WTP_Radio[j]->StopService.is_once == 0){
-								totalLen += sprintf(cursor," set radio stop service at %d:%d:%d %s %s %s %s %s %s %s %s\n",(WTP[i]->WTP_Radio[j]->StopService.times)/3600,((WTP[i]->WTP_Radio[j]->StopService.times)%3600)/60,((WTP[i]->WTP_Radio[j]->StopService.times)%3600)%60,
-								(WTP[i]->WTP_Radio[j]->StopService.is_once == 1)?"once":"cycle",(WTP[i]->WTP_Radio[j]->StopService.wday[1]== 1)?"mon":"",(WTP[i]->WTP_Radio[j]->StopService.wday[2]== 1)?"tue":"",(WTP[i]->WTP_Radio[j]->StopService.wday[3]== 1)?"wed":"", 
-								(WTP[i]->WTP_Radio[j]->StopService.wday[4]== 1)?"thu":"",(WTP[i]->WTP_Radio[j]->StopService.wday[5]== 1)?"fri":"",(WTP[i]->WTP_Radio[j]->StopService.wday[6]== 1)?"sat":"",(WTP[i]->WTP_Radio[j]->StopService.wday[0]== 1)?"sun":"");
-								cursor = showStr + totalLen;
-								if(WTP[i]->WTP_Radio[j]->StopService.TimerState == 1){
-									totalLen += sprintf(cursor," set radio stoptimer enable\n");
-									cursor = showStr + totalLen;
-								}
-							}
-						}
-
-						//xm add 08/12/05
-						////////////////////////////////////////////////////
-						int mm=0;
-						int wlanid =0;
-						for(mm=0;mm<L_BSS_NUM;mm++){
-							if(totalLen + 1024 > str_len) {
-								str_len *= 2;
-								showStr_new = (char*)realloc(showStr,str_len);
-								if(showStr_new == NULL){
-									wid_syslog_info("show running realloc failed\n");
-									return -1;
-								}else {
-									showStr = showStr_new;
-									*showStr2 = showStr;
-									memset(showStr+str_len/2,0,str_len/2);
-									showStr_new = NULL;
-								}
-								wid_syslog_debug_debug(WID_DBUS,"show running totalLen %d realloc strlen %d\n",totalLen,str_len);
-							}
-							cursor = showStr + totalLen;
-							if(WTP[i]->WTP_Radio[j]->BSS[mm]!=NULL 
-								&& AC_WLAN[WTP[i]->WTP_Radio[j]->BSS[mm]->WlanID] != NULL 
-								&& AC_WLAN[WTP[i]->WTP_Radio[j]->BSS[mm]->WlanID]->want_to_delete != 1){		/* HuangLeilei add for AXSSZFI-1622 */
-								wlanid = WTP[i]->WTP_Radio[j]->BSS[mm]->WlanID;
-								if((AC_WLAN[wlanid] != NULL)&&(WTP[i]->WTP_Radio[j]->BSS[mm]->bss_max_allowed_sta_num != AC_WLAN[wlanid]->bss_allow_max_sta_num)){//fengwenchao modify 20120323
-									if(vrrid != 0){
-										totalLen += sprintf(cursor," ");
-										cursor = showStr + totalLen;
-									}
-									totalLen += sprintf(cursor," set bss wlan %d max_sta_num %d\n",WTP[i]->WTP_Radio[j]->BSS[mm]->WlanID,WTP[i]->WTP_Radio[j]->BSS[mm]->bss_max_allowed_sta_num);  //fengwenchao modify 20110513
-									cursor = showStr + totalLen;
-								}
-
-								//printf("0,mm %d WTP[i]->WTP_Radio[j]->BSS[mm]->ath_l2_isolation %d\n",mm,WTP[i]->WTP_Radio[j]->BSS[mm]->ath_l2_isolation);
-
-								if((AC_WLAN[wlanid] != NULL)&&(WTP[i]->WTP_Radio[j]->BSS[mm]->ath_l2_isolation != AC_WLAN[wlanid]->wlan_ath_l2_isolation)) //fengwenchao modify 20120323
-								{
-									if(vrrid != 0){
-										totalLen += sprintf(cursor," ");
-										cursor = showStr + totalLen;
-									}
-									totalLen += sprintf(cursor," set wlan %d l2 isolation %s\n",
-																WTP[i]->WTP_Radio[j]->BSS[mm]->WlanID,
-																(WTP[i]->WTP_Radio[j]->BSS[mm]->ath_l2_isolation ==1)?"enable":"disable");//fengwenchao modify 20120323
-									cursor = showStr + totalLen;
-								}
-								/*traffic limit*/
-								if(WTP[i]->WTP_Radio[j]->BSS[mm]->traffic_limit_able == 1)
-								{
-									if(WTP[i]->WTP_Radio[j]->BSS[mm]->traffic_limit != 0)
-									{
-										if(vrrid != 0){
-											totalLen += sprintf(cursor," ");
-											cursor = showStr + totalLen;
-										}
-										totalLen += sprintf(cursor," wlan %d traffic limit value %d\n",WTP[i]->WTP_Radio[j]->BSS[mm]->WlanID,WTP[i]->WTP_Radio[j]->BSS[mm]->traffic_limit);
-										cursor = showStr + totalLen;
-									}
-									if(WTP[i]->WTP_Radio[j]->BSS[mm]->average_rate != 0)
-									{
-										if(vrrid != 0){
-											totalLen += sprintf(cursor," ");
-											cursor = showStr + totalLen;
-										}
-										totalLen += sprintf(cursor," wlan %d traffic limit station average value %d\n",WTP[i]->WTP_Radio[j]->BSS[mm]->WlanID,WTP[i]->WTP_Radio[j]->BSS[mm]->average_rate);
-										cursor = showStr + totalLen;
-									}
-									if(WTP[i]->WTP_Radio[j]->BSS[mm]->send_traffic_limit != 0)
-									{
-										if(vrrid != 0){
-											totalLen += sprintf(cursor," ");
-											cursor = showStr + totalLen;
-										}
-										totalLen += sprintf(cursor," wlan %d traffic limit send value %d\n",WTP[i]->WTP_Radio[j]->BSS[mm]->WlanID,WTP[i]->WTP_Radio[j]->BSS[mm]->send_traffic_limit);
-										cursor = showStr + totalLen;
-									}
-									if(WTP[i]->WTP_Radio[j]->BSS[mm]->send_average_rate != 0)
-									{
-										if(vrrid != 0){
-											totalLen += sprintf(cursor," ");
-											cursor = showStr + totalLen;
-										}
-										totalLen += sprintf(cursor," wlan %d traffic limit station average send value %d\n",WTP[i]->WTP_Radio[j]->BSS[mm]->WlanID,WTP[i]->WTP_Radio[j]->BSS[mm]->send_average_rate);
-										cursor = showStr + totalLen;
-									}
-								}
-								if((AC_WLAN[wlanid] != NULL)&&(WTP[i]->WTP_Radio[j]->BSS[mm]->ip_mac_binding != AC_WLAN[wlanid]->sta_ip_mac_bind))//fengwenchao modify 20120323
-								{
-									if(vrrid != 0){
-										totalLen += sprintf(cursor," ");
-										cursor = showStr + totalLen;
-									}
-									totalLen += sprintf(cursor," wlan %d sta ip_mac binding %s\n",WTP[i]->WTP_Radio[j]->BSS[mm]->WlanID,(WTP[i]->WTP_Radio[j]->BSS[mm]->ip_mac_binding == 1)?"enable":"disable");//fengwenchao modify 20120323
-									cursor = showStr + totalLen;
-								}
-								if((AC_WLAN[wlanid] != NULL)&&((WTP[i]->WTP_Radio[j]->BSS[mm]->sta_static_arp_policy != AC_WLAN[wlanid]->wlan_sta_static_arp_policy)||(strcmp(WTP[i]->WTP_Radio[j]->BSS[mm]->arp_ifname,AC_WLAN[wlanid]->wlan_arp_ifname) != 0))){//fengwenchao modify 20120323
-									if(vrrid != 0){
-										totalLen += sprintf(cursor," ");
-										cursor = showStr + totalLen;
-									}
-									totalLen += sprintf(cursor," set wlan %d sta_static_arp %s base %s\n",WTP[i]->WTP_Radio[j]->BSS[mm]->WlanID,(WTP[i]->WTP_Radio[j]->BSS[mm]->sta_static_arp_policy == 1)?"enable":"disable",WTP[i]->WTP_Radio[j]->BSS[mm]->arp_ifname);
-									cursor = showStr + totalLen;
-								}
-								if(WTP[i]->WTP_Radio[j]->BSS[mm]->ip_mac_binding == 1)
-								{
-									if(vrrid != 0){
-										totalLen += sprintf(cursor," ");
-										cursor = showStr + totalLen;
-									}
-									totalLen += sprintf(cursor," wlan %d sta ip_mac binding enable\n",WTP[i]->WTP_Radio[j]->BSS[mm]->WlanID);
-									cursor = showStr + totalLen;
-								}
-								/*fengwenchao add 20120222 for RDIR-25*/
-								if((AC_WLAN[wlanid] != NULL)&&(WTP[i]->WTP_Radio[j]->BSS[mm]->limit_sta_rssi != AC_WLAN[wlanid]->wlan_limit_sta_rssi)){
-									if(vrrid != 0){
-										totalLen += sprintf(cursor," ");
-										cursor = showStr + totalLen;
-									}
-									totalLen += sprintf(cursor," set radio wlan %d access sta limit rssi %d\n",WTP[i]->WTP_Radio[j]->BSS[mm]->WlanID,WTP[i]->WTP_Radio[j]->BSS[mm]->limit_sta_rssi);
-									cursor = showStr + totalLen;
-								}								
-								/*fengwenchao add end*/
-								if((AC_WLAN[wlanid] != NULL)&&((WTP[i]->WTP_Radio[j]->BSS[mm]->muti_bro_cast_sw != AC_WLAN[wlanid]->wlan_muti_bro_cast_sw) 
-									||(WTP[i]->WTP_Radio[j]->BSS[mm]->unicast_sw != AC_WLAN[wlanid]->wlan_unicast_sw)
-									||(WTP[i]->WTP_Radio[j]->BSS[mm]->muti_rate != AC_WLAN[wlanid]->wlan_muti_rate)
-									||(WTP[i]->WTP_Radio[j]->BSS[mm]->wifi_sw != AC_WLAN[wlanid]->wlan_wifi_sw))){ /*fengwenchao modify 20120323*/
-									if((WTP[i]->WTP_Radio[j]->BSS[mm]->unicast_sw != AC_WLAN[wlanid]->wlan_unicast_sw)
-										&&(WTP[i]->WTP_Radio[j]->BSS[mm]->muti_bro_cast_sw != AC_WLAN[wlanid]->wlan_muti_bro_cast_sw)
-										&&(WTP[i]->WTP_Radio[j]->BSS[mm]->unicast_sw == WTP[i]->WTP_Radio[j]->BSS[mm]->muti_bro_cast_sw)){
-										if(vrrid != 0){
-											totalLen += sprintf(cursor," ");
-											cursor = showStr + totalLen;
-										}
-										totalLen += sprintf(cursor," wlan %d unicast_and_multicast_broadcast isolation %s\n",WTP[i]->WTP_Radio[j]->BSS[mm]->WlanID,(WTP[i]->WTP_Radio[j]->BSS[mm]->muti_bro_cast_sw == 1)?"enable":"disable");
-										cursor = showStr + totalLen;
-									}else if(WTP[i]->WTP_Radio[j]->BSS[mm]->unicast_sw != AC_WLAN[wlanid]->wlan_unicast_sw){
-										if(vrrid != 0){
-											totalLen += sprintf(cursor," ");
-											cursor = showStr + totalLen;
-										}
-										totalLen += sprintf(cursor," wlan %d unicast isolation %s\n",WTP[i]->WTP_Radio[j]->BSS[mm]->WlanID,(WTP[i]->WTP_Radio[j]->BSS[mm]->unicast_sw == 1)?"enable":"disable");
-										cursor = showStr + totalLen;
-									}else if(WTP[i]->WTP_Radio[j]->BSS[mm]->muti_bro_cast_sw != AC_WLAN[wlanid]->wlan_muti_bro_cast_sw){
-										if(vrrid != 0){
-											totalLen += sprintf(cursor," ");
-											cursor = showStr + totalLen;
-										}
-										totalLen += sprintf(cursor," wlan %d multicast_broadcast isolation %s\n",WTP[i]->WTP_Radio[j]->BSS[mm]->WlanID,(WTP[i]->WTP_Radio[j]->BSS[mm]->muti_bro_cast_sw == 1)?"enable":"disable");
-										cursor = showStr + totalLen;
-									}
-									if(WTP[i]->WTP_Radio[j]->BSS[mm]->wifi_sw != AC_WLAN[wlanid]->wlan_wifi_sw){
-										if(vrrid != 0){
-											totalLen += sprintf(cursor," ");
-											cursor = showStr + totalLen;
-										}
-										totalLen += sprintf(cursor," wlan %d wifi isolation %s\n",WTP[i]->WTP_Radio[j]->BSS[mm]->WlanID,(WTP[i]->WTP_Radio[j]->BSS[mm]->wifi_sw == 1)?"enable":"disable");
-										cursor = showStr + totalLen;
-									}
-									if(WTP[i]->WTP_Radio[j]->BSS[mm]->muti_rate != AC_WLAN[wlanid]->wlan_muti_rate){
-										if(vrrid != 0){
-											totalLen += sprintf(cursor," ");
-											cursor = showStr + totalLen;
-										}
-										totalLen += sprintf(cursor," wlan %d multicast_broadcast_rate %d\n",WTP[i]->WTP_Radio[j]->BSS[mm]->WlanID,WTP[i]->WTP_Radio[j]->BSS[mm]->muti_rate);
-										cursor = showStr + totalLen;
-									}
-									
-								}
-								/*fengwenchao add 20120331*/
-								if((AC_WLAN[wlanid] != NULL)&&(WTP[i]->WTP_Radio[j]->BSS[mm]->noResToStaProReqSW != AC_WLAN[wlanid]->wlan_noResToStaProReqSW))
-								{
-									if(vrrid != 0){
-										totalLen += sprintf(cursor," ");
-										cursor = showStr + totalLen;
-									}
-									totalLen += sprintf(cursor," wlan %d no response to sta probe request %s\n",WTP[i]->WTP_Radio[j]->BSS[mm]->WlanID,(WTP[i]->WTP_Radio[j]->BSS[mm]->noResToStaProReqSW == 1)?"enable":"disable");
-									cursor = showStr + totalLen;
-								}		
-								/*fengwenchao add end*/
-								if(WTP[i]->WTP_Radio[j]->BSS[mm]->sta_static_arp_policy == 1){
-									if(vrrid != 0){
-										totalLen += sprintf(cursor," ");
-										cursor = showStr + totalLen;
-									}
-									totalLen += sprintf(cursor," set wlan %d sta_static_arp enable base %s\n",WTP[i]->WTP_Radio[j]->BSS[mm]->WlanID,WTP[i]->WTP_Radio[j]->BSS[mm]->arp_ifname);
-									cursor = showStr + totalLen;
-								}
-							}
-							
-						}
-						if((WTP[i]->WTP_Radio[j]->txpowerautostate == 0)&&(WTP[i]->WTP_Radio[j]->Radio_TXP == 100))
-						{
-							if(vrrid != 0){
-								totalLen += sprintf(cursor," ");
-								cursor = showStr + totalLen;
-							}
-							totalLen += sprintf(cursor," txpower auto\n");
-							cursor = showStr + totalLen;
-						}
-						/*wcl modify*/
-						else if(WTP[i]->WTP_Radio[j]->txpowerautostate == 1){
-							if(WTP[i]->WTP_Radio[j]->ishighpower == 1)
-						{
-								if((WTP[i]->WTP_Radio[j]->Radio_TXP != 27)&&(WTP[i]->WTP_Radio[j]->Radio_TXP != 100))
+							if(m != (count-1))
 							{
-								if(vrrid != 0){
-									totalLen += sprintf(cursor," ");
-									cursor = showStr + totalLen;
-								}
-								totalLen += sprintf(cursor," txpower %d\n",WTP[i]->WTP_Radio[j]->Radio_TXP);
-								cursor = showStr + totalLen;
-							}	
-								}else{
-									if((WTP[i]->WTP_Radio[j]->Radio_TXP != 20)&&(WTP[i]->WTP_Radio[j]->Radio_TXP != 100))
-								{
-									if(vrrid != 0){
-										totalLen += sprintf(cursor," ");
-										cursor = showStr + totalLen;
-									}
-									totalLen += sprintf(cursor," txpower %d\n",WTP[i]->WTP_Radio[j]->Radio_TXP);
-									cursor = showStr + totalLen;
-									}	
-								}
-						}
-						/*end*/
-
-						if((WTP[i]->WTP_Radio[j]->Radio_TXPOF != 0)){
-							if(vrrid != 0){
-								totalLen += sprintf(cursor," ");
-								cursor = showStr + totalLen;
+								strcpy(ratelist+k, ",");
+								k=k+1;
 							}
-							totalLen += sprintf(cursor," txpoweroffset %d\n",WTP[i]->WTP_Radio[j]->Radio_TXPOF);
-							cursor = showStr + totalLen;
-						}						
-                       /*zhaoruijia,20100917,add*/
-						if((WTP[i]->WTP_Radio[j]->txpowerstep!= 1)){
-							if(vrrid != 0){
-								totalLen += sprintf(cursor," ");
-								cursor = showStr + totalLen;
-							}
-							totalLen += sprintf(cursor," txpowerstep %d\n",WTP[i]->WTP_Radio[j]->txpowerstep);
-							cursor = showStr + totalLen;
-						}	
-						/*fengwenchao modfiy 20120203 for autelan-2821*/
-						if(((WTP[i]->WTP_Radio[j]->Radio_Type & IEEE80211_11N) == IEEE80211_11N)&&(WTP[i]->WTP_Radio[j]->BeaconPeriod != 400))
-						{
-							if(vrrid != 0){
-								totalLen += sprintf(cursor," ");
-								cursor = showStr + totalLen;
-							}
-							totalLen += sprintf(cursor," beaconinterval %d\n",WTP[i]->WTP_Radio[j]->BeaconPeriod);
-							cursor = showStr + totalLen;
-						}
-						else if(((WTP[i]->WTP_Radio[j]->Radio_Type & IEEE80211_11N) != IEEE80211_11N)&&(WTP[i]->WTP_Radio[j]->BeaconPeriod != 100))
-						{
-							if(vrrid != 0){
-								totalLen += sprintf(cursor," ");
-								cursor = showStr + totalLen;
-							}
-							totalLen += sprintf(cursor," beaconinterval %d\n",WTP[i]->WTP_Radio[j]->BeaconPeriod);
-							cursor = showStr + totalLen;
-						}
-						/*fengwenchao modify end*/
-						if(WTP[i]->WTP_Radio[j]->FragThreshold != 2346)
-						{
-							if(vrrid != 0){
-								totalLen += sprintf(cursor," ");
-								cursor = showStr + totalLen;
-							}
-							totalLen += sprintf(cursor," fragmentation %d\n",WTP[i]->WTP_Radio[j]->FragThreshold);
-							cursor = showStr + totalLen;
-						}
-						if(WTP[i]->WTP_Radio[j]->IsShortPreamble != 1)
-						{
-							if(vrrid != 0){
-								totalLen += sprintf(cursor," ");
-								cursor = showStr + totalLen;
-							}
-							totalLen += sprintf(cursor," preamble long\n");
-							cursor = showStr + totalLen;
-						}
-
-						if(WTP[i]->WTP_Radio[j]->Radio_Type != WTP[i]->WTP_Radio[j]->Radio_Type_Bank)
-						{
-						//	
-    						switch(WTP[i]->WTP_Radio[j]->Radio_Type)
-    							{
-    							case 1: 
-    								strcpy(radio_type, "11b");
-    								if(vrrid != 0){
-    									totalLen += sprintf(cursor," ");
-    									cursor = showStr + totalLen;
-    								}
-    								totalLen += sprintf(cursor," mode %s\n",radio_type);
-    								break;
-    							case 2: 
-    								//if(j == 0)
-    								{
-    									strcpy(radio_type, "11a");
-    									if(vrrid != 0){
-    										totalLen += sprintf(cursor," ");
-    										cursor = showStr + totalLen;
-    									}
-    									totalLen += sprintf(cursor,"mode %s\n",radio_type);
-    								}
-    								break;
-    							case 4:  
-    								strcpy(radio_type, "11g");
-    								if(vrrid != 0){
-    									totalLen += sprintf(cursor," ");
-    									cursor = showStr + totalLen;
-    								}
-    								totalLen += sprintf(cursor," mode %s\n",radio_type);
-    								break;
-    							case 5: 
-    								//if(j > 0)
-    								{
-    								if(vrrid != 0){
-    									totalLen += sprintf(cursor," ");
-    									cursor = showStr + totalLen;
-    								}
-    									strcpy(radio_type, "11b/g");
-    									totalLen += sprintf(cursor," mode %s\n",radio_type);
-    								}
-    								break;
-    							case 8: 
-    								if(vrrid != 0){
-    									totalLen += sprintf(cursor," ");
-    									cursor = showStr + totalLen;
-    								}
-    								strcpy(radio_type, "11n");
-    								totalLen += sprintf(cursor," mode %s\n",radio_type);
-    								break;	
-    							case 10: 
-    								if(vrrid != 0){
-    									totalLen += sprintf(cursor," ");
-    									cursor = showStr + totalLen;
-    								}
-    								strcpy(radio_type, "11a/n");
-    								totalLen += sprintf(cursor," mode %s\n",radio_type);
-    								break;	
-    							case 13: 
-    								if(vrrid != 0){
-    									totalLen += sprintf(cursor," ");
-    									cursor = showStr + totalLen;
-    								}
-    								strcpy(radio_type, "11b/g/n");
-    								totalLen += sprintf(cursor," mode %s\n",radio_type);
-    								break;
-							/*fengwenchao add 20111109 for GM*/
-							 case 26: 
-    								if(vrrid != 0){
-    									totalLen += sprintf(cursor," ");
-    									cursor = showStr + totalLen;
-    								}
-    								strcpy(radio_type, "11a/an");
-    								totalLen += sprintf(cursor," mode %s\n",radio_type);
-    								break;
-							 case 12: 
-    								if(vrrid != 0){
-    									totalLen += sprintf(cursor," ");
-    									cursor = showStr + totalLen;
-    								}
-    								strcpy(radio_type, "11gn");
-    								totalLen += sprintf(cursor," mode %s\n",radio_type);
-    								break;
-							 case 44: 
-    								if(vrrid != 0){
-    									totalLen += sprintf(cursor," ");
-    									cursor = showStr + totalLen;
-    								}
-    								strcpy(radio_type, "11g/gn");
-    								totalLen += sprintf(cursor," mode %s\n",radio_type);
-    								break;								
-							/*fengwenchao add end*/
-    							default : strcpy(radio_type, "unknown");break;
-    							}
-							//totalLen += sprintf(cursor,"mode %d\n",WTP[i]->WTP_Radio[j]->Radio_Type);
-							//printf("mode %s\n",radio_type);
-						    cursor = showStr + totalLen;
-						}
-						//#endif
-						if(((WTP[i]->WTP_Radio[j]->Radio_Type&IEEE80211_11N) == 0)&&(WTP[i]->WTP_Radio[j]->Support_Rate_Count != 12))//sz change ratelist
-						{
-							//////
-							int m = 0;
-							int derate[12] = {10,20,55,60,90,110,120,180,240,360,480,540};
-							int rate[20];
-							int count = 0;
-							count = WTP[i]->WTP_Radio[j]->Support_Rate_Count;
-							//check whether the max rate 
-							if (WTP[i]->WTP_Radio[j]->Radio_Rate->Rate == derate[count - 1])
-							{
-								//printf("max mode\n");
-								if(vrrid != 0){
-									totalLen += sprintf(cursor," ");
-									cursor = showStr + totalLen;
-								}
-
-								totalLen += sprintf(cursor," set max rate %d\n",derate[count - 1]);
-								cursor = showStr + totalLen;
-							}
-
-							//rate list mode
 							else
 							{
-								//printf("list mode\n");
 								
-								struct Support_Rate_List *ptr = NULL;
-								ptr = WTP[i]->WTP_Radio[j]->Radio_Rate;
-								
-								char *ratelist = NULL;
-								ratelist = (char *)malloc(sizeof(char)*128);
-								int k = 0;
-								memset(ratelist,0,128);
-								
-								for (m=0;m<count;m++)
-								{
-									rate[m] = ptr->Rate;
-								
-									switch(rate[m])
-									{
-										case 540 : strcpy(ratelist+k, "540");k=k+3;break;
-										case 480 : strcpy(ratelist+k, "480");k=k+3;break;
-										case 360 : strcpy(ratelist+k, "360");k=k+3;break;
-										case 240 : strcpy(ratelist+k, "240");k=k+3;break;
-										case 180 : strcpy(ratelist+k, "180");k=k+3;break;
-										case 120 : strcpy(ratelist+k, "120");k=k+3;break;
-										case 110 : strcpy(ratelist+k, "110");k=k+3;break;
-										case 90 : strcpy(ratelist+k, "90");k=k+2;break;
-										case 60 : strcpy(ratelist+k, "60");k=k+2;break;
-										case 55 : strcpy(ratelist+k, "55");k=k+2;break;
-										case 20 : strcpy(ratelist+k, "20");k=k+2;break;
-										case 10 : strcpy(ratelist+k, "10");k=k+2;break;
-										default : break;
-									}
-									if(m != (count-1))
-									{
-										strcpy(ratelist+k, ",");
-										k=k+1;
-									}
-									else
-									{
-										
-									}
-									ptr = ptr->next;
-								}
-								if(vrrid != 0){
-									totalLen += sprintf(cursor," ");
-									cursor = showStr + totalLen;
-								}
-
-								totalLen += sprintf(cursor," set support ratelist %s\n",ratelist);
-								
-								cursor = showStr + totalLen;
-
-								free(ratelist);
-								ratelist = NULL;
-								//totalLen += sprintf(cursor,"rate %d\n",WTP[i]->WTP_Radio[j]->Radio_Rate);
-								//cursor = showStr + totalLen;
 							}
+							ptr = ptr->next;
 						}
-						if((WTP[i]->WTP_Radio[j]->Radio_Chan != 0)&&(WTP[i]->WTP_Radio[j]->auto_channel_cont != 0)){//sz1121 change 1 to 0
-							if(vrrid != 0){
-								totalLen += sprintf(cursor," ");
-								cursor = showStr + totalLen;
-							}
-							totalLen += sprintf(cursor," channel %d\n",WTP[i]->WTP_Radio[j]->Radio_Chan);
-							cursor = showStr + totalLen;
-						}						
-						if(WTP[i]->WTP_Radio[j]->rtsthreshold != 2346)//zhangshu modify rtsthreshold to 2347,2010-10-28, Huang Leilei change it for AXSSZFI-1406, 2012-01-09
-						{
-							if(vrrid != 0){
-								totalLen += sprintf(cursor," ");
-								cursor = showStr + totalLen;
-							}
-							totalLen += sprintf(cursor," rtsthreshold %d\n",WTP[i]->WTP_Radio[j]->rtsthreshold);
-							cursor = showStr + totalLen;
-						}
-						if(WTP[i]->WTP_Radio[j]->DTIMPeriod != 1)
-						{
-							if(vrrid != 0){
-								totalLen += sprintf(cursor," ");
-								cursor = showStr + totalLen;
-							}
-							totalLen += sprintf(cursor," dtim %d\n",WTP[i]->WTP_Radio[j]->DTIMPeriod);
-							cursor = showStr + totalLen;
-						}
-						if(WTP[i]->WTP_Radio[j]->ShortRetry != 7)
-						{
-							if(vrrid != 0){
-								totalLen += sprintf(cursor," ");
-								cursor = showStr + totalLen;
-							}
-							totalLen += sprintf(cursor," shortretry %d\n",WTP[i]->WTP_Radio[j]->ShortRetry);
-							cursor = showStr + totalLen;
-						}
-						if(WTP[i]->WTP_Radio[j]->LongRetry != 4)
-						{
-							if(vrrid != 0){
-								totalLen += sprintf(cursor," ");
-								cursor = showStr + totalLen;
-							}
-							totalLen += sprintf(cursor," longretry %d\n",WTP[i]->WTP_Radio[j]->LongRetry);
-							cursor = showStr + totalLen;
-						}
-						if(WTP[i]->WTP_Radio[j]->auto_channel != 0)
-						{
-							if(vrrid != 0){
-								totalLen += sprintf(cursor," ");
-								cursor = showStr + totalLen;
-							}
-							totalLen += sprintf(cursor," set radio auto channel enable\n");
-							cursor = showStr + totalLen;
-						}
-						/*fengwenchao modify 20120203 for autelan-2821 begin*/
-						if(((WTP[i]->WTP_Radio[j]->Radio_Type & IEEE80211_11N) != IEEE80211_11N)&&(WTP[i]->WTP_Radio[j]->diversity != 0)&&(((WTP[i]->APCode != NULL)&&(WTP[i]->APCode[strlen(WTP[i]->APCode)-1] != 'H'))&&(WTP[i]->WTP_Radio[j]->ishighpower  != 1)))   //fengwenchao modify 20110428
-						{
-							if(vrrid != 0){
-								totalLen += sprintf(cursor," ");
-								cursor = showStr + totalLen;
-							}
-							totalLen += sprintf(cursor," set radio diversity enable\n");
-							cursor = showStr + totalLen;
-						}
-						else if(((WTP[i]->WTP_Radio[j]->Radio_Type & IEEE80211_11N) == IEEE80211_11N)&&(WTP[i]->WTP_Radio[j]->diversity != 1)&&(((WTP[i]->APCode != NULL)&&(WTP[i]->APCode[strlen(WTP[i]->APCode)-1] != 'H'))&&(WTP[i]->WTP_Radio[j]->ishighpower  != 1)))
-						{
-							if(vrrid != 0){
-								totalLen += sprintf(cursor," ");
-								cursor = showStr + totalLen;
-							}
-							totalLen += sprintf(cursor," set radio diversity disable\n");
-							cursor = showStr + totalLen;
-						}
-
-						if(((WTP[i]->WTP_Radio[j]->Radio_Type & IEEE80211_11N) != IEEE80211_11N)&&(WTP[i]->WTP_Radio[j]->txantenna == 0))
-						{
-							if(vrrid != 0){
-								totalLen += sprintf(cursor," ");
-								cursor = showStr + totalLen;
-							}
-							totalLen += sprintf(cursor," set radio txantenna auto\n");
-							cursor = showStr + totalLen;
-						}
-						else if(((WTP[i]->WTP_Radio[j]->Radio_Type & IEEE80211_11N) == IEEE80211_11N)&&(WTP[i]->WTP_Radio[j]->txantenna == 1))
-						{
-							if(vrrid != 0){
-								totalLen += sprintf(cursor," ");
-								cursor = showStr + totalLen;
-							}
-							totalLen += sprintf(cursor," set radio txantenna main\n");
-							cursor = showStr + totalLen;
-						}
-						/*fengwenchao modify end*/
-						else if(WTP[i]->WTP_Radio[j]->txantenna == 2)
-						{
-							if(vrrid != 0){
-								totalLen += sprintf(cursor," ");
-								cursor = showStr + totalLen;
-							}
-							totalLen += sprintf(cursor," set radio txantenna vice\n");
-							cursor = showStr + totalLen;
-						}
-
-                        /* zhangshu add for save 11n paras, 2010-11-25 */
-                        if((WTP[i]->WTP_Radio[j]->Radio_Type & IEEE80211_11N) == IEEE80211_11N){
-						
-    						if(WTP[i]->WTP_Radio[j]->Ampdu.AmpduLimit != 65535)
-    						{
-    							if(vrrid != 0){
-    								totalLen += sprintf(cursor," ");
-    								cursor = showStr + totalLen;
-    							}
-    							totalLen += sprintf(cursor," 11n ampdu limit %d\n",WTP[i]->WTP_Radio[j]->Ampdu.AmpduLimit);
-    							cursor = showStr + totalLen;
-    						}
-    						if(WTP[i]->WTP_Radio[j]->Ampdu.subframe != 32)
-    						{
-    							if(vrrid != 0){
-    								totalLen += sprintf(cursor," ");
-    								cursor = showStr + totalLen;
-    							}
-    							totalLen += sprintf(cursor," 11n ampdu subframe %d\n",WTP[i]->WTP_Radio[j]->Ampdu.subframe);
-    							cursor = showStr + totalLen;
-    						}
-    						if(WTP[i]->WTP_Radio[j]->Ampdu.Able != 1)
-    						{
-    							if(vrrid != 0){
-    								totalLen += sprintf(cursor," ");
-    								cursor = showStr + totalLen;
-    							}
-    							totalLen += sprintf(cursor," 11n ampdu disable\n");
-    							cursor = showStr + totalLen;
-    						}
-    						if(WTP[i]->WTP_Radio[j]->Amsdu.AmsduLimit != 4000)
-    						{
-    							if(vrrid != 0){
-    								totalLen += sprintf(cursor," ");
-    								cursor = showStr + totalLen;
-    							}
-    							totalLen += sprintf(cursor," 11n amsdu limit %d\n",WTP[i]->WTP_Radio[j]->Amsdu.AmsduLimit);
-    							cursor = showStr + totalLen;
-    						}
-    						if(WTP[i]->WTP_Radio[j]->Amsdu.subframe != 32)
-    						{
-    							if(vrrid != 0){
-    								totalLen += sprintf(cursor," ");
-    								cursor = showStr + totalLen;
-    							}
-    							totalLen += sprintf(cursor," 11n amsdu subframe %d\n",WTP[i]->WTP_Radio[j]->Amsdu.subframe);
-    							cursor = showStr + totalLen;
-    						}
-    						if(WTP[i]->WTP_Radio[j]->Amsdu.Able != 0)
-    						{
-    							if(vrrid != 0){
-    								totalLen += sprintf(cursor," ");
-    								cursor = showStr + totalLen;
-    							}
-    							totalLen += sprintf(cursor," 11n amsdu enable\n");
-    							cursor = showStr + totalLen;
-    						}
-    						
-    						if(WTP[i]->WTP_Radio[j]->channel_offset == 1)/*wuwl default value is 0*/
-    						{
-    							if(vrrid != 0){
-    								totalLen += sprintf(cursor," ");
-    								cursor = showStr + totalLen;
-    							}
-    							totalLen += sprintf(cursor," channel offset up\n");
-    							cursor = showStr + totalLen;
-    						}
-    						else if(WTP[i]->WTP_Radio[j]->channel_offset == -1)
-    						{
-    							if(vrrid != 0){
-    								totalLen += sprintf(cursor," ");
-    								cursor = showStr + totalLen;
-    							}
-    							totalLen += sprintf(cursor," channel offset down\n");
-    							cursor = showStr + totalLen;
-    						}
-    						if((WTP[i]->WTP_Radio[j]->MixedGreenfield.Mixed_Greenfield != 0)
-						&& (WTP[i]->WTP_Radio[j]->MixedGreenfield.WlanID != 0)		/* HuangLeilei add for AXSSZFI-1622 */
-						&&((WTP[i]->WTP_Radio[j]->Radio_Type != 10)&&(WTP[i]->WTP_Radio[j]->Radio_Type !=12))) // fengwenchao modify 20120716 for autelan-3057
-    						{
-							if ((AC_WLAN[WTP[i]->WTP_Radio[j]->MixedGreenfield.WlanID] != NULL))
-								if ( (AC_WLAN[WTP[i]->WTP_Radio[j]->MixedGreenfield.WlanID]->want_to_delete != 1))
-    							if(vrrid != 0){
-    								totalLen += sprintf(cursor," ");
-    								cursor = showStr + totalLen;
-    							}
-    							totalLen += sprintf(cursor," wlan %d workmode puren\n",WTP[i]->WTP_Radio[j]->MixedGreenfield.WlanID);
-    							cursor = showStr + totalLen;
-    						}
-    						/* zhangshu modify for chainmask config, 2010-11-24 */
-    						if(((WTP[i]->WTP_Radio[j]->chainmask_num == 1) \
-    						&& (WTP[i]->WTP_Radio[j]->tx_chainmask_state_value != 1)) || 
-    						((WTP[i]->WTP_Radio[j]->chainmask_num == 2) \
-    						&& (WTP[i]->WTP_Radio[j]->tx_chainmask_state_value != 3)) ||
-    						((WTP[i]->WTP_Radio[j]->chainmask_num == 3) \
-    						&& (WTP[i]->WTP_Radio[j]->tx_chainmask_state_value != 7)))
-    						{
-    							if(WTP[i]->WTP_Radio[j]->tx_chainmask_state_value == 1){
-    								if(vrrid != 0){
-    									totalLen += sprintf(cursor," ");
-    									cursor = showStr + totalLen;
-    								}
-    								totalLen += sprintf(cursor," tx_chainmask 0.0.1\n");
-    								cursor = showStr + totalLen;
-    							}
-    							else if(WTP[i]->WTP_Radio[j]->tx_chainmask_state_value == 2){
-    								if(vrrid != 0){
-    									totalLen += sprintf(cursor," ");
-    									cursor = showStr + totalLen;
-    								}
-    								totalLen += sprintf(cursor," tx_chainmask 0.1.0\n");
-    								cursor = showStr + totalLen;
-    							}
-    							else if(WTP[i]->WTP_Radio[j]->tx_chainmask_state_value == 3){
-    								if(vrrid != 0){
-    									totalLen += sprintf(cursor," ");
-    									cursor = showStr + totalLen;
-    								}
-    								totalLen += sprintf(cursor," tx_chainmask 0.1.1\n");
-    								cursor = showStr + totalLen;
-    							}
-    							else if(WTP[i]->WTP_Radio[j]->tx_chainmask_state_value == 4){
-    								if(vrrid != 0){
-    									totalLen += sprintf(cursor," ");
-    									cursor = showStr + totalLen;
-    								}
-    								totalLen += sprintf(cursor," tx_chainmask 1.0.0\n");
-    								cursor = showStr + totalLen;
-    							}
-    							else if(WTP[i]->WTP_Radio[j]->tx_chainmask_state_value == 5){
-    								if(vrrid != 0){
-    									totalLen += sprintf(cursor," ");
-    									cursor = showStr + totalLen;
-    								}
-    								totalLen += sprintf(cursor," tx_chainmask 1.0.1\n");
-    								cursor = showStr + totalLen;
-    							}
-    							else if(WTP[i]->WTP_Radio[j]->tx_chainmask_state_value == 6){
-    								if(vrrid != 0){
-    									totalLen += sprintf(cursor," ");
-    									cursor = showStr + totalLen;
-    								}
-    								totalLen += sprintf(cursor," tx_chainmask 1.1.0\n");
-    								cursor = showStr + totalLen;
-    							}
-    							else if(WTP[i]->WTP_Radio[j]->tx_chainmask_state_value == 7){
-    								if(vrrid != 0){
-    									totalLen += sprintf(cursor," ");
-    									cursor = showStr + totalLen;
-    								}
-    								totalLen += sprintf(cursor," tx_chainmask 1.1.1\n");
-    								cursor = showStr + totalLen;
-    							}
-    						}
-    						
-    						if(((WTP[i]->WTP_Radio[j]->chainmask_num == 1) \
-    						&& (WTP[i]->WTP_Radio[j]->rx_chainmask_state_value != 1)) || 
-    						((WTP[i]->WTP_Radio[j]->chainmask_num == 2) \
-    						&& (WTP[i]->WTP_Radio[j]->rx_chainmask_state_value != 3)) ||
-    						((WTP[i]->WTP_Radio[j]->chainmask_num == 3) \
-    						&& (WTP[i]->WTP_Radio[j]->rx_chainmask_state_value != 7)))
-    						{
-    							if(WTP[i]->WTP_Radio[j]->rx_chainmask_state_value == 1){
-    								if(vrrid != 0){
-    									totalLen += sprintf(cursor," ");
-    									cursor = showStr + totalLen;
-    								}
-    								totalLen += sprintf(cursor," rx_chainmask 0.0.1\n");
-    								cursor = showStr + totalLen;
-    							}
-    							else if(WTP[i]->WTP_Radio[j]->rx_chainmask_state_value == 2){
-    								if(vrrid != 0){
-    									totalLen += sprintf(cursor," ");
-    									cursor = showStr + totalLen;
-    								}
-    								totalLen += sprintf(cursor," rx_chainmask 0.1.0\n");
-    								cursor = showStr + totalLen;
-    							}
-    							else if(WTP[i]->WTP_Radio[j]->rx_chainmask_state_value == 3){
-    								if(vrrid != 0){
-    									totalLen += sprintf(cursor," ");
-    									cursor = showStr + totalLen;
-    								}
-    								totalLen += sprintf(cursor," rx_chainmask 0.1.1\n");
-    								cursor = showStr + totalLen;
-    							}
-    							else if(WTP[i]->WTP_Radio[j]->rx_chainmask_state_value == 4){
-    								if(vrrid != 0){
-    									totalLen += sprintf(cursor," ");
-    									cursor = showStr + totalLen;
-    								}
-    								totalLen += sprintf(cursor," rx_chainmask 1.0.0\n");
-    								cursor = showStr + totalLen;
-    							}
-    							else if(WTP[i]->WTP_Radio[j]->rx_chainmask_state_value == 5){
-    								if(vrrid != 0){
-    									totalLen += sprintf(cursor," ");
-    									cursor = showStr + totalLen;
-    								}
-    								totalLen += sprintf(cursor," rx_chainmask 1.0.1\n");
-    								cursor = showStr + totalLen;
-    							}
-    							else if(WTP[i]->WTP_Radio[j]->rx_chainmask_state_value == 6){
-    								if(vrrid != 0){
-    									totalLen += sprintf(cursor," ");
-    									cursor = showStr + totalLen;
-    								}
-    								totalLen += sprintf(cursor," rx_chainmask 1.1.0\n");
-    								cursor = showStr + totalLen;
-    							}
-    							else if(WTP[i]->WTP_Radio[j]->rx_chainmask_state_value == 7){
-    								if(vrrid != 0){
-    									totalLen += sprintf(cursor," ");
-    									cursor = showStr + totalLen;
-    								}
-    								totalLen += sprintf(cursor," rx_chainmask 1.1.1\n");
-    								cursor = showStr + totalLen;
-    							}
-    						}
-						    /* zhangshu add for chainmask config END */
-    																							
-						if(WTP[i]->WTP_Radio[j]->guardinterval != 1){
-							if(vrrid != 0){
-								totalLen += sprintf(cursor," ");
-								cursor = showStr + totalLen;
-							}
-							totalLen += sprintf(cursor," 11n guard interval 800\n");
-							cursor = showStr + totalLen;
-						}
-						if(WTP[i]->WTP_Radio[j]->cwmode != 0){
-							if(WTP[i]->WTP_Radio[j]->cwmode == 1){
-								if(vrrid != 0){
-									totalLen += sprintf(cursor," ");
-									cursor = showStr + totalLen;
-								}
-								totalLen += sprintf(cursor," 11n cwmode ht20/40\n");
-								cursor = showStr + totalLen;
-							}else if(WTP[i]->WTP_Radio[j]->cwmode == 2){
-								if(vrrid != 0){
-									totalLen += sprintf(cursor," ");
-									cursor = showStr + totalLen;
-								}
-								totalLen += sprintf(cursor," 11n cwmode ht40\n");
-								cursor = showStr + totalLen;
-							}
-						}
-					/*	if(WTP[i]->WTP_Radio[j]->mcs != 0){
-							if(vrrid != 0){
-								totalLen += sprintf(cursor," ");
-								cursor = showStr + totalLen;
-							}
-							totalLen += sprintf(cursor," 11n mcs %d\n",WTP[i]->WTP_Radio[j]->mcs);
-							cursor = showStr + totalLen;
-						}*/
-						/*fengwenchao add 20120314 for requirements-407*/
-						if(check_ac_whether_or_not_set_mcs_list(WTP[i]->WTPID,j) == 1)
-						{
-							int q = 0;
-							if(vrrid != 0){
-								totalLen += sprintf(cursor," ");
-								cursor = showStr + totalLen;
-							}
-							totalLen += sprintf(cursor," 11n mcs ");
-							cursor = showStr + totalLen;
-							for(q = 0; q < WTP[i]->WTP_Radio[j]->mcs_count;q++)
-							{
-								if(q == (WTP[i]->WTP_Radio[j]->mcs_count-1))
-								{
-									totalLen += sprintf(cursor,"%d\n",WTP[i]->WTP_Radio[j]->mcs_list[q]);
-									cursor = showStr + totalLen;
-									break;
-								}
-								totalLen += sprintf(cursor,"%d,",WTP[i]->WTP_Radio[j]->mcs_list[q]);
-								cursor = showStr + totalLen;
-							}
-							
-						}
-						/*fengwenchao add end*/
-					}
-					 /* zhangshu add for 11n  END */
-						/*A8 set begin*/
-						if(WTP[i]->WTP_Radio[j]->REFlag == 1)
-							{
-							struct wds_rbmac *tmp = WTP[i]->WTP_Radio[j]->rbmac_list;
-							if(WTP[i]->WTP_Radio[j]->distance != 0){
-								if(vrrid != 0){
-									totalLen += sprintf(cursor," ");
-									cursor = showStr + totalLen;
-								}
-								totalLen += sprintf(cursor," set wds bridge distance %d\n",WTP[i]->WTP_Radio[j]->distance);
-								cursor = showStr + totalLen;
-							}							
-							if(WTP[i]->WTP_Radio[j]->cipherType != 0){
-								if(vrrid != 0){
-									totalLen += sprintf(cursor," ");
-									cursor = showStr + totalLen;
-								}
-								totalLen += sprintf(cursor," set wds encrption type %s\n",(WTP[i]->WTP_Radio[j]->cipherType==1)?"wep":"aes");
-								cursor = showStr + totalLen;
-								if(WTP[i]->WTP_Radio[j]->cipherType == 1){
-									if(vrrid != 0){
-										totalLen += sprintf(cursor," ");
-										cursor = showStr + totalLen;
-									}
-									totalLen += sprintf(cursor," set wds wep key %s\n",WTP[i]->WTP_Radio[j]->wepkey);
-									cursor = showStr + totalLen;
-								}
-							}
-							while(tmp != NULL){
-								if(vrrid != 0){
-									totalLen += sprintf(cursor," ");
-									cursor = showStr + totalLen;
-								}
-								totalLen += sprintf(cursor," add wds remote brmac %02x:%02x:%02x:%02x:%02x:%02x\n",tmp->mac[0],tmp->mac[1],tmp->mac[2],tmp->mac[3],tmp->mac[4],tmp->mac[5]);
-								cursor = showStr + totalLen;
-								if(WTP[i]->WTP_Radio[j]->cipherType == 2){
-									if(vrrid != 0){
-										totalLen += sprintf(cursor," ");
-										cursor = showStr + totalLen;
-									}
-									totalLen += sprintf(cursor," set wds brmac %02x:%02x:%02x:%02x:%02x:%02x aes key %s\n",tmp->mac[0],tmp->mac[1],tmp->mac[2],tmp->mac[3],tmp->mac[4],tmp->mac[5],tmp->key);
-									cursor = showStr + totalLen;
-								}
-								tmp = tmp->next;
-							}
-							if(WTP[i]->WTP_Radio[j]->supper_g.supper_g_type & 0x1){
-								if(vrrid != 0){
-									totalLen += sprintf(cursor," ");
-									cursor = showStr + totalLen;
-								}
-								totalLen += sprintf(cursor," set bursting enable\n");
-								cursor = showStr + totalLen;								
-							}							
-							if(WTP[i]->WTP_Radio[j]->supper_g.supper_g_type & 0x2){
-								if(vrrid != 0){
-									totalLen += sprintf(cursor," ");
-									cursor = showStr + totalLen;
-								}
-								totalLen += sprintf(cursor," set fastFrame enable\n");
-								cursor = showStr + totalLen;								
-							}
-							if(WTP[i]->WTP_Radio[j]->supper_g.supper_g_type & 0x4){
-								if(vrrid != 0){
-									totalLen += sprintf(cursor," ");
-									cursor = showStr + totalLen;
-								}
-								totalLen += sprintf(cursor," set compression enable\n");
-								cursor = showStr + totalLen;								
-							}
-							char *S_LIST = NULL;
-							int state_value = 0;
-							S_LIST = (char *)malloc(7+1);					
-							memset(S_LIST,0,7+1);
-							state_value = (int)(WTP[i]->WTP_Radio[j]->sector_state_value);
-							if(WTP[i]->WTP_Radio[j]->sector_state_value != 0){
-								if(state_value & 0x1)
-								{
-									strncat(S_LIST,"0",1);
-								}
-								if(state_value & 0x2)
-								{
-									strncat(S_LIST,",1",2);
-								}
-								if(state_value & 0x4)
-								{
-									strncat(S_LIST,",2",2);
-								}
-								if(state_value & 0x8)
-								{   
-									strncat(S_LIST,",3",2);
-								}
-								if(vrrid != 0){
-									totalLen += sprintf(cursor," ");
-									cursor = showStr + totalLen;
-								}
-								totalLen += sprintf(cursor," set radio sector %s enable\n",S_LIST);
-								cursor = showStr + totalLen;								
-							}
-							if(S_LIST){
-								free(S_LIST);
-								S_LIST = NULL;
-							}
-							/*"set radio sectorid (0|1|2|3|all) power VALUE"*/
-							for(s_id=0;s_id<SECTOR_NUM;s_id++){
-								s_state += WTP[i]->WTP_Radio[j]->sector[s_id]->state;
-							}
-							if(s_state == 4){
-								if(vrrid != 0){
-									totalLen += sprintf(cursor," ");
-									cursor = showStr + totalLen;
-								}
-								totalLen += sprintf(cursor," set radio sectorid all power %d\n",WTP[i]->WTP_Radio[j]->sector[0]->tx_power);
-								cursor = showStr + totalLen;		
-							}else if(s_state < 4){
-								//s_id=0;
-								for(s_id2=0;s_id2<SECTOR_NUM;s_id2++){
-									if(vrrid != 0){
-										totalLen += sprintf(cursor," ");
-										cursor = showStr + totalLen;
-									}
-									if((WTP[i]->WTP_Radio[j]->sector[s_id2]->state == 1)&&(WTP[i]->WTP_Radio[j]->sector[s_id2]->tx_power != 0)){
-										totalLen += sprintf(cursor," set radio sectorid %d power %d\n",s_id2,WTP[i]->WTP_Radio[j]->sector[s_id2]->tx_power);
-										cursor = showStr + totalLen;
-									}	
-								}	
-							}
-							/*countr code for a8*/
-							if(gCOUNTRYCODE == COUNTRY_USA_US){
-								if(vrrid != 0){
-									totalLen += sprintf(cursor," ");
-									cursor = showStr + totalLen;
-								}
-								totalLen += sprintf(cursor," country-code US\n");
-								cursor = showStr + totalLen; 
-							}
-							else if(gCOUNTRYCODE == COUNTRY_EUROPE_EU){
-								if(vrrid != 0){
-									totalLen += sprintf(cursor," ");
-									cursor = showStr + totalLen;
-								}
-								totalLen += sprintf(cursor," country-code EU\n");
-								cursor = showStr + totalLen; 
-							}
-							else {
-								if(vrrid != 0){
-									totalLen += sprintf(cursor," ");
-									cursor = showStr + totalLen;
-								}
-								totalLen += sprintf(cursor," country-code CN\n");/*in extern command actually send: set regdmn RoW*/
-								cursor = showStr + totalLen;								
-							}
-							
-							if(WTP[i]->WTP_Radio[j]->inter_vap_able == 1){
-								if(vrrid != 0){
-									totalLen += sprintf(cursor," ");
-									cursor = showStr + totalLen;
-								}
-								totalLen += sprintf(cursor," set inter-VAP-forwarding enable\n");
-								cursor = showStr + totalLen;								
-							}
-							if(WTP[i]->WTP_Radio[j]->intra_vap_able == 1){
-								if(vrrid != 0){
-									totalLen += sprintf(cursor," ");
-									cursor = showStr + totalLen;
-								}
-								totalLen += sprintf(cursor," set intra-VAP-forwarding enable\n");
-								cursor = showStr + totalLen;								
-							}
-							if(WTP[i]->WTP_Radio[j]->keep_alive_period != 3600){
-								if(vrrid != 0){
-									totalLen += sprintf(cursor," ");
-									cursor = showStr + totalLen;
-								}
-								totalLen += sprintf(cursor," set radio keep_alive_period %d\n",WTP[i]->WTP_Radio[j]->keep_alive_period);
-								cursor = showStr + totalLen;								
-							}
-							if(WTP[i]->WTP_Radio[j]->keep_alive_idle_time != 3600){
-								if(vrrid != 0){
-									totalLen += sprintf(cursor," ");
-									cursor = showStr + totalLen;
-								}
-								totalLen += sprintf(cursor," set radio keep_alive_idle_time %d\n",WTP[i]->WTP_Radio[j]->keep_alive_idle_time);
-								cursor = showStr + totalLen;								
-							}
-							if(WTP[i]->WTP_Radio[j]->congestion_avoidance == 1){
-								if(vrrid != 0){
-									totalLen += sprintf(cursor," ");
-									cursor = showStr + totalLen;
-								}
-								totalLen += sprintf(cursor," set radio congestion_avoidance tail-drop\n");
-								cursor = showStr + totalLen;								
-							}
-							else if(WTP[i]->WTP_Radio[j]->congestion_avoidance == 2){
-								if(vrrid != 0){
-									totalLen += sprintf(cursor," ");
-									cursor = showStr + totalLen;
-								}
-								totalLen += sprintf(cursor," set radio congestion_avoidance red\n");
-								cursor = showStr + totalLen;								
-							}
-							else if(WTP[i]->WTP_Radio[j]->congestion_avoidance == 3){
-								if(vrrid != 0){
-									totalLen += sprintf(cursor," ");
-									cursor = showStr + totalLen;
-								}
-								totalLen += sprintf(cursor," set radio congestion_avoidance fwred\n");
-								cursor = showStr + totalLen;								
-							}
-						}
-						if(WTP[i]->WTP_Radio[j]->ack.distance != 0){
-							if(vrrid != 0){
-								totalLen += sprintf(cursor," ");
-								cursor = showStr + totalLen;
-							}
-							totalLen += sprintf(cursor," acktimeout radio set distance %d\n",WTP[i]->WTP_Radio[j]->ack.distance);
-							cursor = showStr + totalLen;
-						}					/*wcl add for RDIR-33*/	
-						/*fengwenchao add 20111214 for AUTELAN-2712*/
-						if((WTP[i]->WTP_Radio[j] != NULL)&&(WTP[i]->WTP_Radio[j]->QOSstate != 0))
-						{
-							if(vrrid != 0){
-								totalLen += sprintf(cursor," ");
-								cursor = showStr + totalLen;
-							}
-							totalLen += sprintf(cursor," radio apply qos %d\n",WTP[i]->WTP_Radio[j]->QOSID);
-							cursor = showStr + totalLen;
-						}			
-						/*fengwenchao add end*/
-						/*fengwenchao add 20110921 for radio disable*/
-						if(WTP[i]->WTP_Radio[j]->radio_disable_flag == 1)
-						{
-							if(vrrid != 0){
-								totalLen += sprintf(cursor," ");
-								cursor = showStr + totalLen;
-							}
-							totalLen += sprintf(cursor," radio disable\n");
-							cursor = showStr + totalLen;							
-						}
-						/*fengwenchao add end*/
-
-						
-						/*A8 set end*/
 						if(vrrid != 0){
 							totalLen += sprintf(cursor," ");
 							cursor = showStr + totalLen;
 						}
 
-						totalLen += sprintf(cursor,"exit\n");
+						totalLen += sprintf(cursor," set support ratelist %s\n",ratelist);
+						
+						cursor = showStr + totalLen;
+
+						free(ratelist);
+						ratelist = NULL;
+						//totalLen += sprintf(cursor,"rate %d\n",WTP[i]->WTP_Radio[j]->Radio_Rate);
+						//cursor = showStr + totalLen;
+					}
+				}
+				if((WTP[i]->WTP_Radio[j]->Radio_Chan != 0)&&(WTP[i]->WTP_Radio[j]->auto_channel_cont != 0)){//sz1121 change 1 to 0
+					if(vrrid != 0){
+						totalLen += sprintf(cursor," ");
+						cursor = showStr + totalLen;
+					}
+					totalLen += sprintf(cursor," channel %d\n",WTP[i]->WTP_Radio[j]->Radio_Chan);
+					cursor = showStr + totalLen;
+				}						
+				if(WTP[i]->WTP_Radio[j]->rtsthreshold != 2346)//zhangshu modify rtsthreshold to 2347,2010-10-28, Huang Leilei change it for AXSSZFI-1406, 2012-01-09
+				{
+					if(vrrid != 0){
+						totalLen += sprintf(cursor," ");
+						cursor = showStr + totalLen;
+					}
+					totalLen += sprintf(cursor," rtsthreshold %d\n",WTP[i]->WTP_Radio[j]->rtsthreshold);
+					cursor = showStr + totalLen;
+				}
+				if(WTP[i]->WTP_Radio[j]->DTIMPeriod != 1)
+				{
+					if(vrrid != 0){
+						totalLen += sprintf(cursor," ");
+						cursor = showStr + totalLen;
+					}
+					totalLen += sprintf(cursor," dtim %d\n",WTP[i]->WTP_Radio[j]->DTIMPeriod);
+					cursor = showStr + totalLen;
+				}
+				if(WTP[i]->WTP_Radio[j]->ShortRetry != 7)
+				{
+					if(vrrid != 0){
+						totalLen += sprintf(cursor," ");
+						cursor = showStr + totalLen;
+					}
+					totalLen += sprintf(cursor," shortretry %d\n",WTP[i]->WTP_Radio[j]->ShortRetry);
+					cursor = showStr + totalLen;
+				}
+				if(WTP[i]->WTP_Radio[j]->LongRetry != 4)
+				{
+					if(vrrid != 0){
+						totalLen += sprintf(cursor," ");
+						cursor = showStr + totalLen;
+					}
+					totalLen += sprintf(cursor," longretry %d\n",WTP[i]->WTP_Radio[j]->LongRetry);
+					cursor = showStr + totalLen;
+				}
+				if(WTP[i]->WTP_Radio[j]->auto_channel != 0)
+				{
+					if(vrrid != 0){
+						totalLen += sprintf(cursor," ");
+						cursor = showStr + totalLen;
+					}
+					totalLen += sprintf(cursor," set radio auto channel enable\n");
+					cursor = showStr + totalLen;
+				}
+				/*fengwenchao modify 20120203 for autelan-2821 begin*/
+				if(((WTP[i]->WTP_Radio[j]->Radio_Type & IEEE80211_11N) != IEEE80211_11N)&&(WTP[i]->WTP_Radio[j]->diversity != 0)&&(((WTP[i]->APCode != NULL)&&(WTP[i]->APCode[strlen(WTP[i]->APCode)-1] != 'H'))&&(WTP[i]->WTP_Radio[j]->ishighpower  != 1)))   //fengwenchao modify 20110428
+				{
+					if(vrrid != 0){
+						totalLen += sprintf(cursor," ");
+						cursor = showStr + totalLen;
+					}
+					totalLen += sprintf(cursor," set radio diversity enable\n");
+					cursor = showStr + totalLen;
+				}
+				else if(((WTP[i]->WTP_Radio[j]->Radio_Type & IEEE80211_11N) == IEEE80211_11N)&&(WTP[i]->WTP_Radio[j]->diversity != 1)&&(((WTP[i]->APCode != NULL)&&(WTP[i]->APCode[strlen(WTP[i]->APCode)-1] != 'H'))&&(WTP[i]->WTP_Radio[j]->ishighpower  != 1)))
+				{
+					if(vrrid != 0){
+						totalLen += sprintf(cursor," ");
+						cursor = showStr + totalLen;
+					}
+					totalLen += sprintf(cursor," set radio diversity disable\n");
+					cursor = showStr + totalLen;
+				}
+
+				if(((WTP[i]->WTP_Radio[j]->Radio_Type & IEEE80211_11N) != IEEE80211_11N)&&(WTP[i]->WTP_Radio[j]->txantenna == 0))
+				{
+					if(vrrid != 0){
+						totalLen += sprintf(cursor," ");
+						cursor = showStr + totalLen;
+					}
+					totalLen += sprintf(cursor," set radio txantenna auto\n");
+					cursor = showStr + totalLen;
+				}
+				else if(((WTP[i]->WTP_Radio[j]->Radio_Type & IEEE80211_11N) == IEEE80211_11N)&&(WTP[i]->WTP_Radio[j]->txantenna == 1))
+				{
+					if(vrrid != 0){
+						totalLen += sprintf(cursor," ");
+						cursor = showStr + totalLen;
+					}
+					totalLen += sprintf(cursor," set radio txantenna main\n");
+					cursor = showStr + totalLen;
+				}
+				/*fengwenchao modify end*/
+				else if(WTP[i]->WTP_Radio[j]->txantenna == 2)
+				{
+					if(vrrid != 0){
+						totalLen += sprintf(cursor," ");
+						cursor = showStr + totalLen;
+					}
+					totalLen += sprintf(cursor," set radio txantenna vice\n");
+					cursor = showStr + totalLen;
+				}
+
+                /* zhangshu add for save 11n paras, 2010-11-25 */
+                if((WTP[i]->WTP_Radio[j]->Radio_Type & IEEE80211_11N) == IEEE80211_11N){
+				
+					if(WTP[i]->WTP_Radio[j]->Ampdu.AmpduLimit != 65535)
+					{
+						if(vrrid != 0){
+							totalLen += sprintf(cursor," ");
+							cursor = showStr + totalLen;
+						}
+						totalLen += sprintf(cursor," 11n ampdu limit %d\n",WTP[i]->WTP_Radio[j]->Ampdu.AmpduLimit);
+						cursor = showStr + totalLen;
+					}
+					if(WTP[i]->WTP_Radio[j]->Ampdu.subframe != 32)
+					{
+						if(vrrid != 0){
+							totalLen += sprintf(cursor," ");
+							cursor = showStr + totalLen;
+						}
+						totalLen += sprintf(cursor," 11n ampdu subframe %d\n",WTP[i]->WTP_Radio[j]->Ampdu.subframe);
+						cursor = showStr + totalLen;
+					}
+					if(WTP[i]->WTP_Radio[j]->Ampdu.Able != 1)
+					{
+						if(vrrid != 0){
+							totalLen += sprintf(cursor," ");
+							cursor = showStr + totalLen;
+						}
+						totalLen += sprintf(cursor," 11n ampdu disable\n");
+						cursor = showStr + totalLen;
+					}
+					if(WTP[i]->WTP_Radio[j]->Amsdu.AmsduLimit != 4000)
+					{
+						if(vrrid != 0){
+							totalLen += sprintf(cursor," ");
+							cursor = showStr + totalLen;
+						}
+						totalLen += sprintf(cursor," 11n amsdu limit %d\n",WTP[i]->WTP_Radio[j]->Amsdu.AmsduLimit);
+						cursor = showStr + totalLen;
+					}
+					if(WTP[i]->WTP_Radio[j]->Amsdu.subframe != 32)
+					{
+						if(vrrid != 0){
+							totalLen += sprintf(cursor," ");
+							cursor = showStr + totalLen;
+						}
+						totalLen += sprintf(cursor," 11n amsdu subframe %d\n",WTP[i]->WTP_Radio[j]->Amsdu.subframe);
+						cursor = showStr + totalLen;
+					}
+					if(WTP[i]->WTP_Radio[j]->Amsdu.Able != 0)
+					{
+						if(vrrid != 0){
+							totalLen += sprintf(cursor," ");
+							cursor = showStr + totalLen;
+						}
+						totalLen += sprintf(cursor," 11n amsdu enable\n");
 						cursor = showStr + totalLen;
 					}
 					
+					if(WTP[i]->WTP_Radio[j]->channel_offset == 1)/*wuwl default value is 0*/
+					{
+						if(vrrid != 0){
+							totalLen += sprintf(cursor," ");
+							cursor = showStr + totalLen;
+						}
+						totalLen += sprintf(cursor," channel offset up\n");
+						cursor = showStr + totalLen;
+					}
+					else if(WTP[i]->WTP_Radio[j]->channel_offset == -1)
+					{
+						if(vrrid != 0){
+							totalLen += sprintf(cursor," ");
+							cursor = showStr + totalLen;
+						}
+						totalLen += sprintf(cursor," channel offset down\n");
+						cursor = showStr + totalLen;
+					}
+					if((WTP[i]->WTP_Radio[j]->MixedGreenfield.Mixed_Greenfield != 0)
+				&& (WTP[i]->WTP_Radio[j]->MixedGreenfield.WlanID != 0)		/* HuangLeilei add for AXSSZFI-1622 */
+				&&((WTP[i]->WTP_Radio[j]->Radio_Type != 10)&&(WTP[i]->WTP_Radio[j]->Radio_Type !=12))) // fengwenchao modify 20120716 for autelan-3057
+					{
+					if ((AC_WLAN[WTP[i]->WTP_Radio[j]->MixedGreenfield.WlanID] != NULL))
+						if ( (AC_WLAN[WTP[i]->WTP_Radio[j]->MixedGreenfield.WlanID]->want_to_delete != 1))
+						if(vrrid != 0){
+							totalLen += sprintf(cursor," ");
+							cursor = showStr + totalLen;
+						}
+						totalLen += sprintf(cursor," wlan %d workmode puren\n",WTP[i]->WTP_Radio[j]->MixedGreenfield.WlanID);
+						cursor = showStr + totalLen;
+					}
+					/* zhangshu modify for chainmask config, 2010-11-24 */
+					if(((WTP[i]->WTP_Radio[j]->chainmask_num == 1) \
+					&& (WTP[i]->WTP_Radio[j]->tx_chainmask_state_value != 1)) || 
+					((WTP[i]->WTP_Radio[j]->chainmask_num == 2) \
+					&& (WTP[i]->WTP_Radio[j]->tx_chainmask_state_value != 3)) ||
+					((WTP[i]->WTP_Radio[j]->chainmask_num == 3) \
+					&& (WTP[i]->WTP_Radio[j]->tx_chainmask_state_value != 7)))
+					{
+						if(WTP[i]->WTP_Radio[j]->tx_chainmask_state_value == 1){
+							if(vrrid != 0){
+								totalLen += sprintf(cursor," ");
+								cursor = showStr + totalLen;
+							}
+							totalLen += sprintf(cursor," tx_chainmask 0.0.1\n");
+							cursor = showStr + totalLen;
+						}
+						else if(WTP[i]->WTP_Radio[j]->tx_chainmask_state_value == 2){
+							if(vrrid != 0){
+								totalLen += sprintf(cursor," ");
+								cursor = showStr + totalLen;
+							}
+							totalLen += sprintf(cursor," tx_chainmask 0.1.0\n");
+							cursor = showStr + totalLen;
+						}
+						else if(WTP[i]->WTP_Radio[j]->tx_chainmask_state_value == 3){
+							if(vrrid != 0){
+								totalLen += sprintf(cursor," ");
+								cursor = showStr + totalLen;
+							}
+							totalLen += sprintf(cursor," tx_chainmask 0.1.1\n");
+							cursor = showStr + totalLen;
+						}
+						else if(WTP[i]->WTP_Radio[j]->tx_chainmask_state_value == 4){
+							if(vrrid != 0){
+								totalLen += sprintf(cursor," ");
+								cursor = showStr + totalLen;
+							}
+							totalLen += sprintf(cursor," tx_chainmask 1.0.0\n");
+							cursor = showStr + totalLen;
+						}
+						else if(WTP[i]->WTP_Radio[j]->tx_chainmask_state_value == 5){
+							if(vrrid != 0){
+								totalLen += sprintf(cursor," ");
+								cursor = showStr + totalLen;
+							}
+							totalLen += sprintf(cursor," tx_chainmask 1.0.1\n");
+							cursor = showStr + totalLen;
+						}
+						else if(WTP[i]->WTP_Radio[j]->tx_chainmask_state_value == 6){
+							if(vrrid != 0){
+								totalLen += sprintf(cursor," ");
+								cursor = showStr + totalLen;
+							}
+							totalLen += sprintf(cursor," tx_chainmask 1.1.0\n");
+							cursor = showStr + totalLen;
+						}
+						else if(WTP[i]->WTP_Radio[j]->tx_chainmask_state_value == 7){
+							if(vrrid != 0){
+								totalLen += sprintf(cursor," ");
+								cursor = showStr + totalLen;
+							}
+							totalLen += sprintf(cursor," tx_chainmask 1.1.1\n");
+							cursor = showStr + totalLen;
+						}
+					}
+					
+					if(((WTP[i]->WTP_Radio[j]->chainmask_num == 1) \
+					&& (WTP[i]->WTP_Radio[j]->rx_chainmask_state_value != 1)) || 
+					((WTP[i]->WTP_Radio[j]->chainmask_num == 2) \
+					&& (WTP[i]->WTP_Radio[j]->rx_chainmask_state_value != 3)) ||
+					((WTP[i]->WTP_Radio[j]->chainmask_num == 3) \
+					&& (WTP[i]->WTP_Radio[j]->rx_chainmask_state_value != 7)))
+					{
+						if(WTP[i]->WTP_Radio[j]->rx_chainmask_state_value == 1){
+							if(vrrid != 0){
+								totalLen += sprintf(cursor," ");
+								cursor = showStr + totalLen;
+							}
+							totalLen += sprintf(cursor," rx_chainmask 0.0.1\n");
+							cursor = showStr + totalLen;
+						}
+						else if(WTP[i]->WTP_Radio[j]->rx_chainmask_state_value == 2){
+							if(vrrid != 0){
+								totalLen += sprintf(cursor," ");
+								cursor = showStr + totalLen;
+							}
+							totalLen += sprintf(cursor," rx_chainmask 0.1.0\n");
+							cursor = showStr + totalLen;
+						}
+						else if(WTP[i]->WTP_Radio[j]->rx_chainmask_state_value == 3){
+							if(vrrid != 0){
+								totalLen += sprintf(cursor," ");
+								cursor = showStr + totalLen;
+							}
+							totalLen += sprintf(cursor," rx_chainmask 0.1.1\n");
+							cursor = showStr + totalLen;
+						}
+						else if(WTP[i]->WTP_Radio[j]->rx_chainmask_state_value == 4){
+							if(vrrid != 0){
+								totalLen += sprintf(cursor," ");
+								cursor = showStr + totalLen;
+							}
+							totalLen += sprintf(cursor," rx_chainmask 1.0.0\n");
+							cursor = showStr + totalLen;
+						}
+						else if(WTP[i]->WTP_Radio[j]->rx_chainmask_state_value == 5){
+							if(vrrid != 0){
+								totalLen += sprintf(cursor," ");
+								cursor = showStr + totalLen;
+							}
+							totalLen += sprintf(cursor," rx_chainmask 1.0.1\n");
+							cursor = showStr + totalLen;
+						}
+						else if(WTP[i]->WTP_Radio[j]->rx_chainmask_state_value == 6){
+							if(vrrid != 0){
+								totalLen += sprintf(cursor," ");
+								cursor = showStr + totalLen;
+							}
+							totalLen += sprintf(cursor," rx_chainmask 1.1.0\n");
+							cursor = showStr + totalLen;
+						}
+						else if(WTP[i]->WTP_Radio[j]->rx_chainmask_state_value == 7){
+							if(vrrid != 0){
+								totalLen += sprintf(cursor," ");
+								cursor = showStr + totalLen;
+							}
+							totalLen += sprintf(cursor," rx_chainmask 1.1.1\n");
+							cursor = showStr + totalLen;
+						}
+					}
+				    /* zhangshu add for chainmask config END */
+																						
+				if(WTP[i]->WTP_Radio[j]->guardinterval != 1){
+					if(vrrid != 0){
+						totalLen += sprintf(cursor," ");
+						cursor = showStr + totalLen;
+					}
+					totalLen += sprintf(cursor," 11n guard interval 800\n");
+					cursor = showStr + totalLen;
+				}
+				if(WTP[i]->WTP_Radio[j]->cwmode != 0){
+					if(WTP[i]->WTP_Radio[j]->cwmode == 1){
+						if(vrrid != 0){
+							totalLen += sprintf(cursor," ");
+							cursor = showStr + totalLen;
+						}
+						totalLen += sprintf(cursor," 11n cwmode ht20/40\n");
+						cursor = showStr + totalLen;
+					}else if(WTP[i]->WTP_Radio[j]->cwmode == 2){
+						if(vrrid != 0){
+							totalLen += sprintf(cursor," ");
+							cursor = showStr + totalLen;
+						}
+						totalLen += sprintf(cursor," 11n cwmode ht40\n");
+						cursor = showStr + totalLen;
 					}
 				}
-				*totalLen_T = totalLen;
-				*str_len_T = str_len;
+			/*	if(WTP[i]->WTP_Radio[j]->mcs != 0){
+					if(vrrid != 0){
+						totalLen += sprintf(cursor," ");
+						cursor = showStr + totalLen;
+					}
+					totalLen += sprintf(cursor," 11n mcs %d\n",WTP[i]->WTP_Radio[j]->mcs);
+					cursor = showStr + totalLen;
+				}*/
+				/*fengwenchao add 20120314 for requirements-407*/
+				if(check_ac_whether_or_not_set_mcs_list(WTP[i]->WTPID,j) == 1)
+				{
+					int q = 0;
+					if(vrrid != 0){
+						totalLen += sprintf(cursor," ");
+						cursor = showStr + totalLen;
+					}
+					totalLen += sprintf(cursor," 11n mcs ");
+					cursor = showStr + totalLen;
+					for(q = 0; q < WTP[i]->WTP_Radio[j]->mcs_count;q++)
+					{
+						if(q == (WTP[i]->WTP_Radio[j]->mcs_count-1))
+						{
+							totalLen += sprintf(cursor,"%d\n",WTP[i]->WTP_Radio[j]->mcs_list[q]);
+							cursor = showStr + totalLen;
+							break;
+						}
+						totalLen += sprintf(cursor,"%d,",WTP[i]->WTP_Radio[j]->mcs_list[q]);
+						cursor = showStr + totalLen;
+					}
+					
+				}
+				/*fengwenchao add end*/
+			}
+			 /* zhangshu add for 11n  END */
+				/*A8 set begin*/
+				if(WTP[i]->WTP_Radio[j]->REFlag == 1)
+					{
+					struct wds_rbmac *tmp = WTP[i]->WTP_Radio[j]->rbmac_list;
+					if(WTP[i]->WTP_Radio[j]->distance != 0){
+						if(vrrid != 0){
+							totalLen += sprintf(cursor," ");
+							cursor = showStr + totalLen;
+						}
+						totalLen += sprintf(cursor," set wds bridge distance %d\n",WTP[i]->WTP_Radio[j]->distance);
+						cursor = showStr + totalLen;
+					}							
+					if(WTP[i]->WTP_Radio[j]->cipherType != 0){
+						if(vrrid != 0){
+							totalLen += sprintf(cursor," ");
+							cursor = showStr + totalLen;
+						}
+						totalLen += sprintf(cursor," set wds encrption type %s\n",(WTP[i]->WTP_Radio[j]->cipherType==1)?"wep":"aes");
+						cursor = showStr + totalLen;
+						if(WTP[i]->WTP_Radio[j]->cipherType == 1){
+							if(vrrid != 0){
+								totalLen += sprintf(cursor," ");
+								cursor = showStr + totalLen;
+							}
+							totalLen += sprintf(cursor," set wds wep key %s\n",WTP[i]->WTP_Radio[j]->wepkey);
+							cursor = showStr + totalLen;
+						}
+					}
+					while(tmp != NULL){
+						if(vrrid != 0){
+							totalLen += sprintf(cursor," ");
+							cursor = showStr + totalLen;
+						}
+						totalLen += sprintf(cursor," add wds remote brmac %02x:%02x:%02x:%02x:%02x:%02x\n",tmp->mac[0],tmp->mac[1],tmp->mac[2],tmp->mac[3],tmp->mac[4],tmp->mac[5]);
+						cursor = showStr + totalLen;
+						if(WTP[i]->WTP_Radio[j]->cipherType == 2){
+							if(vrrid != 0){
+								totalLen += sprintf(cursor," ");
+								cursor = showStr + totalLen;
+							}
+							totalLen += sprintf(cursor," set wds brmac %02x:%02x:%02x:%02x:%02x:%02x aes key %s\n",tmp->mac[0],tmp->mac[1],tmp->mac[2],tmp->mac[3],tmp->mac[4],tmp->mac[5],tmp->key);
+							cursor = showStr + totalLen;
+						}
+						tmp = tmp->next;
+					}
+					if(WTP[i]->WTP_Radio[j]->supper_g.supper_g_type & 0x1){
+						if(vrrid != 0){
+							totalLen += sprintf(cursor," ");
+							cursor = showStr + totalLen;
+						}
+						totalLen += sprintf(cursor," set bursting enable\n");
+						cursor = showStr + totalLen;								
+					}							
+					if(WTP[i]->WTP_Radio[j]->supper_g.supper_g_type & 0x2){
+						if(vrrid != 0){
+							totalLen += sprintf(cursor," ");
+							cursor = showStr + totalLen;
+						}
+						totalLen += sprintf(cursor," set fastFrame enable\n");
+						cursor = showStr + totalLen;								
+					}
+					if(WTP[i]->WTP_Radio[j]->supper_g.supper_g_type & 0x4){
+						if(vrrid != 0){
+							totalLen += sprintf(cursor," ");
+							cursor = showStr + totalLen;
+						}
+						totalLen += sprintf(cursor," set compression enable\n");
+						cursor = showStr + totalLen;								
+					}
+					char *S_LIST = NULL;
+					int state_value = 0;
+					S_LIST = (char *)malloc(7+1);					
+					memset(S_LIST,0,7+1);
+					state_value = (int)(WTP[i]->WTP_Radio[j]->sector_state_value);
+					if(WTP[i]->WTP_Radio[j]->sector_state_value != 0){
+						if(state_value & 0x1)
+						{
+							strncat(S_LIST,"0",1);
+						}
+						if(state_value & 0x2)
+						{
+							strncat(S_LIST,",1",2);
+						}
+						if(state_value & 0x4)
+						{
+							strncat(S_LIST,",2",2);
+						}
+						if(state_value & 0x8)
+						{   
+							strncat(S_LIST,",3",2);
+						}
+						if(vrrid != 0){
+							totalLen += sprintf(cursor," ");
+							cursor = showStr + totalLen;
+						}
+						totalLen += sprintf(cursor," set radio sector %s enable\n",S_LIST);
+						cursor = showStr + totalLen;								
+					}
+					if(S_LIST){
+						free(S_LIST);
+						S_LIST = NULL;
+					}
+					/*"set radio sectorid (0|1|2|3|all) power VALUE"*/
+					for(s_id=0;s_id<SECTOR_NUM;s_id++){
+						s_state += WTP[i]->WTP_Radio[j]->sector[s_id]->state;
+					}
+					if(s_state == 4){
+						if(vrrid != 0){
+							totalLen += sprintf(cursor," ");
+							cursor = showStr + totalLen;
+						}
+						totalLen += sprintf(cursor," set radio sectorid all power %d\n",WTP[i]->WTP_Radio[j]->sector[0]->tx_power);
+						cursor = showStr + totalLen;		
+					}else if(s_state < 4){
+						//s_id=0;
+						for(s_id2=0;s_id2<SECTOR_NUM;s_id2++){
+							if(vrrid != 0){
+								totalLen += sprintf(cursor," ");
+								cursor = showStr + totalLen;
+							}
+							if((WTP[i]->WTP_Radio[j]->sector[s_id2]->state == 1)&&(WTP[i]->WTP_Radio[j]->sector[s_id2]->tx_power != 0)){
+								totalLen += sprintf(cursor," set radio sectorid %d power %d\n",s_id2,WTP[i]->WTP_Radio[j]->sector[s_id2]->tx_power);
+								cursor = showStr + totalLen;
+							}	
+						}	
+					}
+					/*countr code for a8*/
+					if(gCOUNTRYCODE == COUNTRY_USA_US){
+						if(vrrid != 0){
+							totalLen += sprintf(cursor," ");
+							cursor = showStr + totalLen;
+						}
+						totalLen += sprintf(cursor," country-code US\n");
+						cursor = showStr + totalLen; 
+					}
+					else if(gCOUNTRYCODE == COUNTRY_EUROPE_EU){
+						if(vrrid != 0){
+							totalLen += sprintf(cursor," ");
+							cursor = showStr + totalLen;
+						}
+						totalLen += sprintf(cursor," country-code EU\n");
+						cursor = showStr + totalLen; 
+					}
+					else {
+						if(vrrid != 0){
+							totalLen += sprintf(cursor," ");
+							cursor = showStr + totalLen;
+						}
+						totalLen += sprintf(cursor," country-code CN\n");/*in extern command actually send: set regdmn RoW*/
+						cursor = showStr + totalLen;								
+					}
+					
+					if(WTP[i]->WTP_Radio[j]->inter_vap_able == 1){
+						if(vrrid != 0){
+							totalLen += sprintf(cursor," ");
+							cursor = showStr + totalLen;
+						}
+						totalLen += sprintf(cursor," set inter-VAP-forwarding enable\n");
+						cursor = showStr + totalLen;								
+					}
+					if(WTP[i]->WTP_Radio[j]->intra_vap_able == 1){
+						if(vrrid != 0){
+							totalLen += sprintf(cursor," ");
+							cursor = showStr + totalLen;
+						}
+						totalLen += sprintf(cursor," set intra-VAP-forwarding enable\n");
+						cursor = showStr + totalLen;								
+					}
+					if(WTP[i]->WTP_Radio[j]->keep_alive_period != 3600){
+						if(vrrid != 0){
+							totalLen += sprintf(cursor," ");
+							cursor = showStr + totalLen;
+						}
+						totalLen += sprintf(cursor," set radio keep_alive_period %d\n",WTP[i]->WTP_Radio[j]->keep_alive_period);
+						cursor = showStr + totalLen;								
+					}
+					if(WTP[i]->WTP_Radio[j]->keep_alive_idle_time != 3600){
+						if(vrrid != 0){
+							totalLen += sprintf(cursor," ");
+							cursor = showStr + totalLen;
+						}
+						totalLen += sprintf(cursor," set radio keep_alive_idle_time %d\n",WTP[i]->WTP_Radio[j]->keep_alive_idle_time);
+						cursor = showStr + totalLen;								
+					}
+					if(WTP[i]->WTP_Radio[j]->congestion_avoidance == 1){
+						if(vrrid != 0){
+							totalLen += sprintf(cursor," ");
+							cursor = showStr + totalLen;
+						}
+						totalLen += sprintf(cursor," set radio congestion_avoidance tail-drop\n");
+						cursor = showStr + totalLen;								
+					}
+					else if(WTP[i]->WTP_Radio[j]->congestion_avoidance == 2){
+						if(vrrid != 0){
+							totalLen += sprintf(cursor," ");
+							cursor = showStr + totalLen;
+						}
+						totalLen += sprintf(cursor," set radio congestion_avoidance red\n");
+						cursor = showStr + totalLen;								
+					}
+					else if(WTP[i]->WTP_Radio[j]->congestion_avoidance == 3){
+						if(vrrid != 0){
+							totalLen += sprintf(cursor," ");
+							cursor = showStr + totalLen;
+						}
+						totalLen += sprintf(cursor," set radio congestion_avoidance fwred\n");
+						cursor = showStr + totalLen;								
+					}
+				}
+				if(WTP[i]->WTP_Radio[j]->ack.distance != 0){
+					if(vrrid != 0){
+						totalLen += sprintf(cursor," ");
+						cursor = showStr + totalLen;
+					}
+					totalLen += sprintf(cursor," acktimeout radio set distance %d\n",WTP[i]->WTP_Radio[j]->ack.distance);
+					cursor = showStr + totalLen;
+				}					/*wcl add for RDIR-33*/	
+				/*fengwenchao add 20111214 for AUTELAN-2712*/
+				if((WTP[i]->WTP_Radio[j] != NULL)&&(WTP[i]->WTP_Radio[j]->QOSstate != 0))
+				{
+					if(vrrid != 0){
+						totalLen += sprintf(cursor," ");
+						cursor = showStr + totalLen;
+					}
+					totalLen += sprintf(cursor," radio apply qos %d\n",WTP[i]->WTP_Radio[j]->QOSID);
+					cursor = showStr + totalLen;
+				}			
+				/*fengwenchao add end*/
+				/*fengwenchao add 20110921 for radio disable*/
+				if(WTP[i]->WTP_Radio[j]->radio_disable_flag == 1)
+				{
+					if(vrrid != 0){
+						totalLen += sprintf(cursor," ");
+						cursor = showStr + totalLen;
+					}
+					totalLen += sprintf(cursor," radio disable\n");
+					cursor = showStr + totalLen;							
+				}
+				/*fengwenchao add end*/
+
+				
+				/*A8 set end*/
+				if(vrrid != 0){
+					totalLen += sprintf(cursor," ");
+					cursor = showStr + totalLen;
+				}
+
+				totalLen += sprintf(cursor,"exit\n");
+				cursor = showStr + totalLen;
+			}
+			
+			}
+	}
+	*totalLen_T = totalLen;
+	*str_len_T = str_len;
 	return 0;
 }
 
@@ -79026,7 +79266,13 @@ static DBusHandlerResult wid_dbus_message_handler (DBusConnection *connection, D
 		}
 		else if (dbus_message_is_method_call(message,WID_DBUS_AP_GROUP_INTERFACE,WID_DBUS_AP_GROUP_METHOD_DEL)) {
 			reply = wid_dbus_del_ap_group(connection,message,user_data);
-		}		
+		}
+		else if (dbus_message_is_method_call(message,WID_DBUS_AP_GROUP_INTERFACE,WID_DBUS_AP_GROUP_METHOD_SHOW_ALL)) {
+			reply = wid_dbus_show_ap_group_all(connection,message,user_data);
+		}
+		else if (dbus_message_is_method_call(message,WID_DBUS_AP_GROUP_INTERFACE,WID_DBUS_AP_GROUP_METHOD_SHOW_ALL_AP_GROUP_MEMBERS)){
+			reply = wid_dbus_show_ap_group_members_all(connection,message,user_data);
+		}
 		else if (dbus_message_is_method_call(message,WID_DBUS_AP_GROUP_INTERFACE,WID_DBUS_AP_GROUP_METHOD_ADD_DEL_MEMBER)) {
 			reply = wid_dbus_add_del_ap_group_member(connection,message,user_data);
 		}	

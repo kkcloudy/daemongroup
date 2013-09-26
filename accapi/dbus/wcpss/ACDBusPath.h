@@ -952,6 +952,9 @@ char WID_DBUS_AP_GROUP_INTERFACE[PATH_LEN]=		"aw.wid";
 char WID_DBUS_AP_GROUP_METHOD_CONFIG[PATH_LEN]=	"config_ap_group";
 char WID_DBUS_AP_GROUP_METHOD_CREATE[PATH_LEN]=	"create_ap_group";
 char WID_DBUS_AP_GROUP_METHOD_DEL[PATH_LEN]=	"delete_ap_group";
+char WID_DBUS_AP_GROUP_METHOD_SHOW_ALL[PATH_LEN]= 	"show_all_ap_group";
+char WID_DBUS_AP_GROUP_METHOD_SHOW_ALL_AP_GROUP_MEMBERS[PATH_LEN]=	"show_all_ap_group_members";
+
 char WID_DBUS_AP_GROUP_METHOD_ADD_DEL_MEMBER[PATH_LEN]=	"add_delete_ap_group_member";
 char WID_DBUS_AP_GROUP_METHOD_SHOW_MEMBER[PATH_LEN]= "show_ap_group_member";
 char WID_DBUS_CONF_METHOD_SERVICE_TFTP_SWITCH[PATH_LEN]="service_tftp_switch";

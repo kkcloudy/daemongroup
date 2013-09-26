@@ -32956,7 +32956,7 @@ int config_max_rate(dbus_parameter parameter, DBusConnection *connection,int id,
 	if(NULL == rad_rate)
 		return 0;
 	
-#if _GROUP_POLICY
+#if 0
 	int retu = 0;
 	struct RadioList *RadioList_Head = NULL;
 

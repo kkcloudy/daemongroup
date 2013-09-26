@@ -218,8 +218,8 @@ DEFUN(create_ap_group_cmd_func,
 		return CMD_WARNING;
 	}
 	len = strlen(argv[1]);
-	if(len > 128){		
-		vty_out(vty,"<error> name is too long,out of the limit of 128\n");
+	if(len > WTP_AP_GROUP_NAME_MAX_LEN){		
+		vty_out(vty,"<error> name is too long,out of the limit of %d\n", WTP_AP_GROUP_NAME_MAX_LEN);
 		return CMD_WARNING;
 	}
 	name = (char*)malloc(strlen(argv[1])+1);
@@ -278,22 +278,22 @@ DEFUN(create_ap_group_cmd_func,
 	dbus_message_iter_init(reply,&iter);
 	dbus_message_iter_get_basic(&iter,&ret);
 
-		if(ret == 0){
-				vty_out(vty,"ap group %d was successfully created.\n",id);
-		}
-		else if(ret == WLAN_ID_BE_USED){
-			vty_out(vty,"<error> id exist\n");
-			dbus_message_unref(reply);
-			free(name);
-			return CMD_WARNING;	
-		}
-		else{
-			vty_out(vty,"<error>  %d\n",ret);
-			dbus_message_unref(reply);
-			free(name);
-			return CMD_WARNING;	
+	if(ret == 0){
+			vty_out(vty,"ap group %d was successfully created.\n",id);
+	}
+	else if(ret == WLAN_ID_BE_USED){
+		vty_out(vty,"<error> id exist\n");
+		dbus_message_unref(reply);
+		free(name);
+		return CMD_WARNING;	
+	}
+	else{
+		vty_out(vty,"<error>  %d\n",ret);
+		dbus_message_unref(reply);
+		free(name);
+		return CMD_WARNING;	
 
-		}	
+	}	
 	dbus_message_unref(reply);
 	free(name);
 	return CMD_SUCCESS;	
@@ -368,16 +368,182 @@ DEFUN(del_ap_group_cmd_func,
 	dbus_message_iter_init(reply,&iter);
 	dbus_message_iter_get_basic(&iter,&ret);
 
-		if(ret == 0){
-			vty_out(vty,"ap group %d was successfully deleted.\n",id);
-		}
-		else if(ret == WLAN_ID_NOT_EXIST)
-			vty_out(vty,"<error>ap group id does not exist\n");
-		else
-			vty_out(vty,"<error>  %d\n",ret);
+	if(ret == 0){
+		vty_out(vty,"ap group %d was successfully deleted.\n",id);
+	}
+	else if(ret == WLAN_ID_NOT_EXIST)
+		vty_out(vty,"<error>ap group id does not exist\n");
+	else
+		vty_out(vty,"<error>  %d\n",ret);
 	dbus_message_unref(reply);
 
 	return CMD_SUCCESS;	
+}
+
+
+DEFUN(show_ap_group_func,
+		show_ap_group_cmd,
+		"show ap-group all",
+		"show all ap group\n"
+		"show all ap group\n"
+	)
+{
+	int ret;
+	unsigned int i = 0;
+	unsigned int ap_group_count = 0;
+	int index = 0;
+	int localid = 1;
+	int slot_id = HostSlotId;
+	char BUSNAME[PATH_LEN];
+	char OBJPATH[PATH_LEN];
+	char INTERFACE[PATH_LEN];
+	DBusMessage *query, *reply; 
+	DBusMessageIter  iter;
+	DBusError err;
+	unsigned int test_id;
+	unsigned char *test_name;
+	if(vty->node == HANSI_NODE){
+		index = vty->index;
+		localid = vty->local;
+        slot_id = vty->slotindex;
+	}
+    else if (vty->node == LOCAL_HANSI_NODE){
+        index = vty->index;
+        localid = vty->local;
+        slot_id = vty->slotindex;
+    }
+	
+	DBusConnection *dcli_dbus_connection = NULL;
+    ReInitDbusConnection(&dcli_dbus_connection,slot_id,distributFag);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_BUSNAME,BUSNAME);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_AP_GROUP_OBJPATH,OBJPATH);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_AP_GROUP_INTERFACE,INTERFACE);
+
+	query = dbus_message_new_method_call(BUSNAME,OBJPATH,INTERFACE,WID_DBUS_AP_GROUP_METHOD_SHOW_ALL);
+
+
+	dbus_error_init(&err);
+    reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection,query,-1, &err);
+
+	dbus_message_unref(query);
+
+	if (NULL == reply) {
+		vty_out(vty, "<error> failed get reply.\n");
+		if (dbus_error_is_set(&err)) {
+			dbus_error_free_for_dcli(&err);
+		}
+		return CMD_FAILURE;
+	}
+
+    dbus_message_iter_init(reply,&iter);
+	dbus_message_iter_get_basic(&iter,&ret);
+
+	dbus_message_iter_next(&iter);	
+	dbus_message_iter_get_basic(&iter,&ap_group_count);
+
+	vty_out(vty,"ap-group-count:%d\n", ap_group_count);
+	vty_out(vty, "group id\t\t\tgroup name\n");
+	for(i=0; i < ap_group_count; i++){
+		dbus_message_iter_next(&iter);	
+		dbus_message_iter_get_basic(&iter,&test_id);
+		dbus_message_iter_next(&iter);	
+		dbus_message_iter_get_basic(&iter,&test_name);
+		vty_out(vty,"%u\t\t\t\t%s\n", test_id, test_name);		
+	}
+	dbus_message_unref(reply);
+
+	return CMD_SUCCESS; 
+}
+
+
+DEFUN(show_ap_group_members_all_func,
+	show_ap_group_members_all_cmd,
+	"show ap-group members all",
+	"show all ap group members\n"
+	"show all ap group members\n"
+)
+{
+	int ret;
+	unsigned int i = 0, ii = 0;
+	unsigned int ap_group_count = 0;
+	int index = 0;
+	int localid = 1;
+	int slot_id = HostSlotId;
+	char BUSNAME[PATH_LEN];
+	char OBJPATH[PATH_LEN];
+	char INTERFACE[PATH_LEN];
+	DBusMessage *query, *reply; 
+	DBusMessageIter  iter;
+	DBusError err;
+	unsigned int test_id;
+	unsigned char *test_name;
+	unsigned int wtp_count, wtp_id;
+	if(vty->node == HANSI_NODE){
+		index = vty->index;
+		localid = vty->local;
+		slot_id = vty->slotindex;
+	}
+	else if (vty->node == LOCAL_HANSI_NODE){
+		index = vty->index;
+		localid = vty->local;
+		slot_id = vty->slotindex;
+	}
+	
+	DBusConnection *dcli_dbus_connection = NULL;
+	ReInitDbusConnection(&dcli_dbus_connection,slot_id,distributFag);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_BUSNAME,BUSNAME);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_AP_GROUP_OBJPATH,OBJPATH);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_AP_GROUP_INTERFACE,INTERFACE);
+
+	query = dbus_message_new_method_call(BUSNAME,OBJPATH,INTERFACE,WID_DBUS_AP_GROUP_METHOD_SHOW_ALL_AP_GROUP_MEMBERS);
+
+
+	dbus_error_init(&err);
+	reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection,query,-1, &err);
+
+	dbus_message_unref(query);
+
+	if (NULL == reply) {
+		vty_out(vty, "<error> failed get reply.\n");
+		if (dbus_error_is_set(&err)) {
+			dbus_error_free_for_dcli(&err);
+		}
+		return CMD_FAILURE;
+	}
+
+	dbus_message_iter_init(reply,&iter);
+	dbus_message_iter_get_basic(&iter,&ret);
+
+	dbus_message_iter_next(&iter);	
+	dbus_message_iter_get_basic(&iter,&ap_group_count);
+
+	vty_out(vty,"ap-group-count:%d\n", ap_group_count);
+	
+	for(i=0; i < ap_group_count; i++){
+		dbus_message_iter_next(&iter);	
+		dbus_message_iter_get_basic(&iter,&test_id);
+		dbus_message_iter_next(&iter);	
+		dbus_message_iter_get_basic(&iter,&test_name);
+		vty_out(vty,"ap_group:%u\t\t\t\t%s\n", test_id, test_name);
+		dbus_message_iter_next(&iter);	
+		dbus_message_iter_get_basic(&iter,&wtp_count);
+		vty_out(vty,"member count:%d\n", wtp_count);
+		for (ii=0; ii<wtp_count; ii++) {
+			if (ii==0 || ii % 16 == 0) {
+				vty_out(vty, "\t");
+			}
+				dbus_message_iter_next(&iter);	
+				dbus_message_iter_get_basic(&iter,&wtp_id);
+				vty_out(vty, "%2u  ", wtp_id);
+				if (ii!=0 && ii % 15 == 0) {
+					vty_out(vty, "\n");
+			}
+		}
+		vty_out(vty, "\n");
+	}
+	dbus_message_unref(reply);
+
+	return CMD_SUCCESS; 
 }
 
 DEFUN(add_del_ap_group_member_cmd_func,
@@ -409,19 +575,22 @@ DEFUN(add_del_ap_group_member_cmd_func,
 	}
 	
 	wtplist = (struct tag_wtpid_list*)malloc(sizeof(struct tag_wtpid_list));
+	if (!wtplist) {
+		vty_out(vty, "malloc for wtp list failed\n");
+		return CMD_FAILURE;
+	}
 	wtplist->wtpidlist = NULL ; 	
 	wtplist->count = 0;
 	
-	if (!strcmp(argv[1],"all"))
-	{
-		;	
-	}else{
+	if (!strcmp(argv[1],"all")) {
+		wtplist->wtpidlist = NULL ; 
+		wtplist->count = 0;	
+	} else {
 		ret = parse_wtpid_list((char*)argv[1],&wtplist);
 		if(ret != 0)
 		{
 			struct tag_wtpid * tmp = wtplist->wtpidlist;
 			while(tmp){
-				printf("tmp->wtpid %d\n",tmp->wtpid);
 				tmp = tmp->next;
 			}
 			vty_out(vty, "%% set wtp list error,like 1,8,9-20,33\n");
@@ -501,13 +670,13 @@ DEFUN(show_group_member_func,
     
 	if(vty->node == AP_GROUP_NODE)
 	{
-	    vty_out(vty,"AP_GROUP_NODE = %d",vty->node);
+	    //vty_out(vty,"AP_GROUP_NODE = %d",vty->node);
 		index = 0;
 		groupid = vty->index;
 	}
 	else if(vty->node == HANSI_AP_GROUP_NODE)
 	{
-	    vty_out(vty,"HANSI_AP_GROUP_NODE = %d",vty->node);
+	    //vty_out(vty,"HANSI_AP_GROUP_NODE = %d",vty->node);
 		index = vty->index;
 		localid = vty->local;
         slot_id = vty->slotindex;
@@ -523,7 +692,7 @@ DEFUN(show_group_member_func,
 	
 	ret = dcli_ap_group_show_member(localid,index,groupid,&wtp_list,&apcount,dcli_dbus_connection);
 
-    vty_out(vty,"ret =  %d\n",ret);
+    //vty_out(vty,"ret =  %d\n",ret);
 	if(ret == 0)
 	{
 	    vty_out(vty,"apcount = %d\n",apcount);
@@ -592,27 +761,25 @@ void dcli_ap_group_init(void) {
 	
 	install_element(HANSI_NODE,&create_ap_group_cmd);	
 	install_element(HANSI_NODE,&del_ap_group_cmd);
+	install_element(HANSI_NODE,&show_ap_group_cmd);
+	install_element(HANSI_NODE,&show_ap_group_members_all_cmd);
 	install_element(HANSI_NODE,&config_ap_group_cmd);	
 	
 	install_element(HANSI_AP_GROUP_NODE,&show_group_member_cmd);
-	//printf("qqqqqq***wwwww\n");
 	install_element(HANSI_AP_GROUP_NODE,&add_del_ap_group_member_cmd);
-	//printf("eeee***rrrr\n");
 	install_element(HANSI_AP_GROUP_NODE,&config_ap_group_wtp_cmd);
-	//intf("ttt***yyyy\n");
-	install_element(HANSI_AP_GROUP_NODE,&config_ap_group_radio_cmd);
+	//install_element(HANSI_AP_GROUP_NODE,&config_ap_group_radio_cmd);
 
 	install_element(LOCAL_HANSI_NODE,&create_ap_group_cmd);	
 	install_element(LOCAL_HANSI_NODE,&del_ap_group_cmd);
+	install_element(LOCAL_HANSI_NODE,&show_ap_group_cmd);
+	install_element(LOCAL_HANSI_NODE,&show_ap_group_members_all_cmd);
 	install_element(LOCAL_HANSI_NODE,&config_ap_group_cmd);	
 	
 	install_element(LOCAL_HANSI_AP_GROUP_NODE,&show_group_member_cmd);
-	//printf("qqqqqq***wwwww\n");
 	install_element(LOCAL_HANSI_AP_GROUP_NODE,&add_del_ap_group_member_cmd);
-	//printf("eeee***rrrr\n");
 	install_element(LOCAL_HANSI_AP_GROUP_NODE,&config_ap_group_wtp_cmd);
-	//intf("ttt***yyyy\n");
-	install_element(LOCAL_HANSI_AP_GROUP_NODE,&config_ap_group_radio_cmd);
+	//install_element(LOCAL_HANSI_AP_GROUP_NODE,&config_ap_group_radio_cmd);
 	
 	return;
 }

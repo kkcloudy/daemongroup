@@ -4,7 +4,7 @@
 
 #define	_WID_ASD_WSM_H
 
-#define _GROUP_POLICY 0  //fengwenchao add 
+#define _GROUP_POLICY 1  //fengwenchao add 
 #define IPv4_LEN	4
 #define IPv6_LEN	16
 #define MAC_LEN	6
@@ -44,6 +44,8 @@
 #define GROUP_NUM	4
 #define STA_HASH_SIZE 256
 #define WTP_GROUP_NUM		16
+#define WTP_AP_GROUP_NAME_MAX_LEN	64
+
 #define LONGITUDE_LATITUDE_MAX_LEN	16
 #define MANUFACTURE_DATA_MAX_LEN	32
 

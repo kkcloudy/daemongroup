@@ -29426,15 +29426,25 @@ static void wtp_group_hash_del(WID_WTP_GROUP *group, struct WTP_GROUP_MEMBER *wt
 }
 
 int create_ap_group(unsigned int ID,char *NAME){
-	int ret = 0;
-	int i,ii,jj;
+	int ret = WID_DBUS_SUCCESS;
+	int i,ii,jj,k,kk;
 	unsigned int RadioExternFlag[L_RADIO_NUM]={0};
 	unsigned int gwtpid = 0;
-	printf("%s ID %d\n",__func__,ID);
+	wid_syslog_debug_debug(WID_DEFAULT, "%s ID %d\n",__func__,ID);
 	WTP_GROUP[ID] = (WID_WTP_GROUP*)malloc(sizeof(WID_WTP_GROUP));
+	if (!WTP_GROUP[ID]) {
+		wid_syslog_err("malloc for ap-group %d failed\n", ID);
+		return WID_DBUS_ERROR;
+	}
 	memset(WTP_GROUP[ID], 0, sizeof(WID_WTP_GROUP));
 	WTP_GROUP[ID]->GID = ID;
 	WTP_GROUP[ID]->GNAME = (unsigned char*)malloc(strlen(NAME)+1);
+	if (!WTP_GROUP[ID]->GNAME) {
+		wid_syslog_err("malloc for ap-group %d name %s failed\n", ID, NAME);
+		free(WTP_GROUP[ID]);
+		WTP_GROUP[ID] = NULL;
+		return WID_DBUS_ERROR;
+	}
 	memset(WTP_GROUP[ID]->GNAME, 0, strlen(NAME)+1);
 	memcpy(WTP_GROUP[ID]->GNAME, NAME, strlen(NAME));
 
@@ -29512,6 +29522,26 @@ int create_ap_group(unsigned int ID,char *NAME){
 	for(i=0; (i<L_RADIO_NUM); i++){
 		WID_WTP_RADIO	* radio = NULL;
 		radio = (WID_WTP_RADIO*)malloc(sizeof(WID_WTP_RADIO));
+		if (!radio) {
+			wid_syslog_err("malloc for ap-group %d name %s radio %d failed\n", ID, NAME, i);
+			for (k=0; k<i; k++) {
+				for (kk=0; kk<SECTOR_NUM; kk++) {
+					free(WTP_GROUP[ID]->WTP_CONFIG.WTP_Radio[k]->sector[kk]);
+					WTP_GROUP[ID]->WTP_CONFIG.WTP_Radio[k]->sector[kk] = NULL;
+				}
+				for (kk=0; kk<TX_CHANIMASK_NUM; kk++) {
+					free(WTP_GROUP[ID]->WTP_CONFIG.WTP_Radio[k]->tx_chainmask[kk]);
+					WTP_GROUP[ID]->WTP_CONFIG.WTP_Radio[k]->tx_chainmask[kk] = NULL;
+				}
+				free(WTP_GROUP[ID]->WTP_CONFIG.WTP_Radio[k]);
+				WTP_GROUP[ID]->WTP_CONFIG.WTP_Radio[k] = NULL;
+			}
+			free(WTP_GROUP[ID]->GNAME);
+			WTP_GROUP[ID]->GNAME = NULL;
+			free(WTP_GROUP[ID]);
+			WTP_GROUP[ID] = NULL;
+			return WID_DBUS_ERROR;
+		}
 		memset(radio, 0, sizeof(WID_WTP_RADIO));
 		radio->WTPID = 0;
 		radio->Radio_G_ID = gwtpid;
@@ -29592,12 +29622,66 @@ int create_ap_group(unsigned int ID,char *NAME){
 		{	
 			//CW_CREATE_OBJECT_ERR(AC_RADIO[gwtpid]->sector[ii],WID_oem_sector,return NULL;);
 			radio->sector[ii] = (WID_oem_sector*)malloc(sizeof(WID_oem_sector));
+			if (!radio->sector[ii]) {
+				wid_syslog_err("malloc for ap-group %d name %s radio %d sector %d failed\n", ID, NAME, i, ii);
+				for (k=0; k<i; k++) {
+					for (kk=0; kk<SECTOR_NUM; kk++) {
+						free(WTP_GROUP[ID]->WTP_CONFIG.WTP_Radio[k]->sector[kk]);
+						WTP_GROUP[ID]->WTP_CONFIG.WTP_Radio[k]->sector[kk] = NULL;
+					}
+					for (kk=0; kk<TX_CHANIMASK_NUM; kk++) {
+						free(WTP_GROUP[ID]->WTP_CONFIG.WTP_Radio[k]->tx_chainmask[kk]);
+						WTP_GROUP[ID]->WTP_CONFIG.WTP_Radio[k]->tx_chainmask[kk] = NULL;
+					}
+					free(WTP_GROUP[ID]->WTP_CONFIG.WTP_Radio[k]);
+					WTP_GROUP[ID]->WTP_CONFIG.WTP_Radio[k] = NULL;
+				}
+				
+				for (kk=0; kk<ii; kk++) {
+					free(radio->sector[kk]);
+				}
+				free(radio);
+				free(WTP_GROUP[ID]->GNAME);
+				WTP_GROUP[ID]->GNAME = NULL;
+				free(WTP_GROUP[ID]);
+				WTP_GROUP[ID] = NULL;
+				return WID_DBUS_ERROR;
+			}
+			
 			radio->sector[ii]->state = 0;
 			radio->sector[ii]->tx_power = 0;
 		}
 		for(jj=0;jj<TX_CHANIMASK_NUM;jj++)
 		{	
 			radio->tx_chainmask[jj] = (WID_oem_tx_chainmask*)malloc(sizeof(WID_oem_tx_chainmask));
+			if (!radio->tx_chainmask[jj]) {
+				wid_syslog_err("malloc for ap-group %d name %s radio %d tx_chainmask %d failed\n", ID, NAME, i, jj);
+				for (k=0; k<i; k++) {
+					for (kk=0; kk<SECTOR_NUM; kk++) {
+						free(WTP_GROUP[ID]->WTP_CONFIG.WTP_Radio[k]->sector[kk]);
+						WTP_GROUP[ID]->WTP_CONFIG.WTP_Radio[k]->sector[kk] = NULL;
+					}
+					for (kk=0; kk<TX_CHANIMASK_NUM; kk++) {
+						free(WTP_GROUP[ID]->WTP_CONFIG.WTP_Radio[k]->tx_chainmask[kk]);
+						WTP_GROUP[ID]->WTP_CONFIG.WTP_Radio[k]->tx_chainmask[kk] = NULL;
+					}
+					free(WTP_GROUP[ID]->WTP_CONFIG.WTP_Radio[k]);
+					WTP_GROUP[ID]->WTP_CONFIG.WTP_Radio[k] = NULL;
+				}
+				for (kk=0; kk<SECTOR_NUM; kk++) {
+					free(radio->sector[kk]);
+				}
+				
+				for (kk=0; kk<jj; kk++) {
+					free(radio->tx_chainmask[kk]);
+				}
+				free(radio);
+				free(WTP_GROUP[ID]->GNAME);
+				WTP_GROUP[ID]->GNAME = NULL;
+				free(WTP_GROUP[ID]);
+				WTP_GROUP[ID] = NULL;
+				return WID_DBUS_ERROR;
+			}
 			radio->tx_chainmask[jj]->state = 0;
 		}
 		if((radio->Radio_Type & 0x08) == 0x08)//if mode is 11n,beacon interval set to 400
@@ -29663,9 +29747,7 @@ int create_ap_group(unsigned int ID,char *NAME){
 	return ret;
 }
 int delete_ap_group(unsigned int ID){
-
-
-	int num = 4;
+	
 	int i;
 	int j;
 	int ii;
@@ -29674,28 +29756,17 @@ int delete_ap_group(unsigned int ID){
 	struct WTP_GROUP_MEMBER * tmp = NULL;
 	struct WTP_GROUP_MEMBER * tmp1 = NULL;
 
-	for(i=0; i<num; i++){
+	for(i=0; i<L_RADIO_NUM; i++){
 		radio = WTP_GROUP[ID]->WTP_CONFIG.WTP_Radio[i];
 		WTP_GROUP[ID]->WTP_CONFIG.WTP_Radio[i] = NULL;
 		for(k=0; k<L_BSS_NUM; k++)
 		{
 			if(radio->BSS[k] != NULL)
 			{
-					
-				radio->BSS[k]->WlanID = 0;
-				radio->BSS[k]->Radio_G_ID = 0;
-				radio->BSS[k]->Radio_L_ID = 0;
-				radio->BSS[k]->State = 0;
-				radio->BSS[k]->BSSIndex = 0;
-				memset(radio->BSS[k]->BSSID, 0, 6);
 				free(radio->BSS[k]->BSSID);
-				radio->BSS[k]->BSSID = NULL;
-				free(radio->BSS[k]);
-				radio->BSS[k] = NULL;			
 			}
 
 		}
-		//added end 20080806
 		
 		if (radio->Support_Rate_Count != 0)
 		{
@@ -29718,20 +29789,19 @@ int delete_ap_group(unsigned int ID){
 		{	
 			if(radio->sector[j]){
 				free(radio->sector[j]);
-				radio->sector[j] = NULL;
 			}
 		}
 		for(ii=0;ii<TX_CHANIMASK_NUM;ii++)
 		{	
 			if(radio->tx_chainmask[ii]){
 				free(radio->tx_chainmask[ii]);
-				radio->tx_chainmask[ii] = NULL;
 			}
 		}
 		
 		free(radio);
 		radio = NULL;		
 	}
+	
 	tmp = WTP_GROUP[ID]->WTP_M;
 	tmp1 = WTP_GROUP[ID]->WTP_M; 
 	while(tmp){
@@ -29755,7 +29825,6 @@ int do_check_ap_group_config(unsigned int GID, unsigned int WTPID){
 
 int add_ap_group_member(unsigned int GID,unsigned int WTPID){
 	struct WTP_GROUP_MEMBER *tmp = NULL;
-	printf("%s GID %d\n",__func__,GID);
 	if(WTP_GROUP[GID]== NULL){
 		return GROUP_ID_NOT_EXIST;
 	}
@@ -29769,6 +29838,10 @@ int add_ap_group_member(unsigned int GID,unsigned int WTPID){
 		return 0;
 	}
 	tmp = (struct WTP_GROUP_MEMBER *)malloc(sizeof(struct WTP_GROUP_MEMBER));
+	if (!tmp) {
+		wid_syslog_err("malloc for adding wtp %d to ap-group %d failed\n", WTPID, GID);
+		return WID_DBUS_ERROR;
+	}
 	memset(tmp, 0, sizeof(struct WTP_GROUP_MEMBER));
 	tmp->WTPID = WTPID;
 	tmp->next = WTP_GROUP[GID]->WTP_M;

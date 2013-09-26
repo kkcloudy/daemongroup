@@ -11392,133 +11392,6 @@ DEFUN(set_ap_extension_command_func,
 	return CMD_SUCCESS;			
 }
 
-#else
-DEFUN(set_ap_extension_command_func,
-	  set_ap_extension_command_cmd,
-	  "set ap extension command .COMMAND",
-	  "wireless-control config\n"
-	  "ap config\n"
-	  "extension command\n"
-	  "extension command\n"
-	  "command send to ap\n"
-	 )
-{
-	int ret,ret1;
-
-	DBusMessage *query, *reply;	
-	DBusMessageIter	 iter;
-	DBusError err;
-
-    unsigned char* command;
-	unsigned int wtp_id = 0;
-//	wtp_id = (unsigned int)vty->index;
-	
-	/*command = (char*)malloc(strlen(argv[0])+1);
-	//memset(command, 0, strlen(argv[0])+1);
-	//memcpy(command, argv[0], strlen(argv[0]));*/
-	
-	if (argc > 0)
-	{
-    	command = WID_parse_ap_extension_command(argv, argc);
- 	}
-	else
-	{
-    	command = NULL;
-	}
-	if(!command) 
-	{
-		vty_out(vty,"<error> unknown id format\n");
-		return CMD_SUCCESS;
-	}
-	if(strlen(command) > 128)
-	{
-		if(command)
-		{
-			free(command);
-			command = NULL;
-		}
-		vty_out(vty,"<error> unknown id format\n");
-		return CMD_SUCCESS;
-	}
-	int localid = 1;
-	int slot_id = HostSlotId;
-	int index = 0;
-	char BUSNAME[PATH_LEN];
-	char OBJPATH[PATH_LEN];
-	char INTERFACE[PATH_LEN];
-	if(vty->node == WTP_NODE){
-		index = 0;			
-		wtp_id = (int)vty->index;
-	}else if(vty->node == HANSI_WTP_NODE){
-		index = vty->index; 		
-		wtp_id = (int)vty->index_sub;
-		localid = vty->local;
-		slot_id = vty->slotindex;
-	}else if(vty->node == LOCAL_HANSI_WTP_NODE){
-		index = vty->index; 		
-		wtp_id = (int)vty->index_sub;
-		localid = vty->local;
-		slot_id = vty->slotindex;
-	}
-	DBusConnection *dcli_dbus_connection = NULL;
-	ReInitDbusConnection(&dcli_dbus_connection,slot_id,distributFag);
-	ReInitDbusPath_V2(localid,index,WID_DBUS_BUSNAME,BUSNAME);
-	ReInitDbusPath_V2(localid,index,WID_DBUS_WTP_OBJPATH,OBJPATH);
-	ReInitDbusPath_V2(localid,index,WID_DBUS_WTP_INTERFACE,INTERFACE);
-	query = dbus_message_new_method_call(BUSNAME,OBJPATH,INTERFACE,WID_DBUS_CONF_METHOD_SET_WID_AP_EXTENSION_COMMAND);
-		
-
-	
-/*	query = dbus_message_new_method_call(WID_DBUS_BUSNAME,WID_DBUS_WTP_OBJPATH,\
-						WID_DBUS_WTP_INTERFACE,WID_DBUS_CONF_METHOD_SET_WID_AP_EXTENSION_COMMAND);*/
-	
-	dbus_error_init(&err);
-
-
-	dbus_message_append_args(query,
-							 DBUS_TYPE_UINT32,&wtp_id,
-							 DBUS_TYPE_STRING,&command,
-							 DBUS_TYPE_INVALID);
-
-	reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection,query,-1, &err);
-	dbus_message_unref(query);
-	if(command)
-	{
-		free(command);
-		command = NULL;
-	}
-	if (NULL == reply)
-	{
-		cli_syslog_info("<error> failed get reply.\n");
-		if (dbus_error_is_set(&err))
-		{
-			cli_syslog_info("%s raised: %s",err.name,err.message);
-			dbus_error_free_for_dcli(&err);
-		}
-		
-
-		return CMD_SUCCESS;
-	}
-	
-	dbus_message_iter_init(reply,&iter);
-	dbus_message_iter_get_basic(&iter,&ret);
-
-	if(ret == 0)
-	{
-		vty_out(vty,"set ap extension command %s successfully\n",argv[0]);
-	}
-	else if(ret == WTP_ID_NOT_EXIST)
-		vty_out(vty,"<error> wtp id does not exist\n");
-	else
-	{
-		vty_out(vty,"<error>  %d\n",ret);
-	}
-		
-	dbus_message_unref(reply);
-
-	
-	return CMD_SUCCESS;			
-}
 
 #define LONGITUDE_LATITUDE_MAX_LEN 16
 
@@ -11759,6 +11632,135 @@ DEFUN(set_ap_longitude_latitude_func,
 	
 	return CMD_SUCCESS;			
 }
+
+#else
+DEFUN(set_ap_extension_command_func,
+	  set_ap_extension_command_cmd,
+	  "set ap extension command .COMMAND",
+	  "wireless-control config\n"
+	  "ap config\n"
+	  "extension command\n"
+	  "extension command\n"
+	  "command send to ap\n"
+	 )
+{
+	int ret,ret1;
+
+	DBusMessage *query, *reply;	
+	DBusMessageIter	 iter;
+	DBusError err;
+
+    unsigned char* command;
+	unsigned int wtp_id = 0;
+//	wtp_id = (unsigned int)vty->index;
+	
+	/*command = (char*)malloc(strlen(argv[0])+1);
+	//memset(command, 0, strlen(argv[0])+1);
+	//memcpy(command, argv[0], strlen(argv[0]));*/
+	
+	if (argc > 0)
+	{
+    	command = WID_parse_ap_extension_command(argv, argc);
+ 	}
+	else
+	{
+    	command = NULL;
+	}
+	if(!command) 
+	{
+		vty_out(vty,"<error> unknown id format\n");
+		return CMD_SUCCESS;
+	}
+	if(strlen(command) > 128)
+	{
+		if(command)
+		{
+			free(command);
+			command = NULL;
+		}
+		vty_out(vty,"<error> unknown id format\n");
+		return CMD_SUCCESS;
+	}
+	int localid = 1;
+	int slot_id = HostSlotId;
+	int index = 0;
+	char BUSNAME[PATH_LEN];
+	char OBJPATH[PATH_LEN];
+	char INTERFACE[PATH_LEN];
+	if(vty->node == WTP_NODE){
+		index = 0;			
+		wtp_id = (int)vty->index;
+	}else if(vty->node == HANSI_WTP_NODE){
+		index = vty->index; 		
+		wtp_id = (int)vty->index_sub;
+		localid = vty->local;
+		slot_id = vty->slotindex;
+	}else if(vty->node == LOCAL_HANSI_WTP_NODE){
+		index = vty->index; 		
+		wtp_id = (int)vty->index_sub;
+		localid = vty->local;
+		slot_id = vty->slotindex;
+	}
+	DBusConnection *dcli_dbus_connection = NULL;
+	ReInitDbusConnection(&dcli_dbus_connection,slot_id,distributFag);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_BUSNAME,BUSNAME);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_WTP_OBJPATH,OBJPATH);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_WTP_INTERFACE,INTERFACE);
+	query = dbus_message_new_method_call(BUSNAME,OBJPATH,INTERFACE,WID_DBUS_CONF_METHOD_SET_WID_AP_EXTENSION_COMMAND);
+		
+
+	
+/*	query = dbus_message_new_method_call(WID_DBUS_BUSNAME,WID_DBUS_WTP_OBJPATH,\
+						WID_DBUS_WTP_INTERFACE,WID_DBUS_CONF_METHOD_SET_WID_AP_EXTENSION_COMMAND);*/
+	
+	dbus_error_init(&err);
+
+
+	dbus_message_append_args(query,
+							 DBUS_TYPE_UINT32,&wtp_id,
+							 DBUS_TYPE_STRING,&command,
+							 DBUS_TYPE_INVALID);
+
+	reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection,query,-1, &err);
+	dbus_message_unref(query);
+	if(command)
+	{
+		free(command);
+		command = NULL;
+	}
+	if (NULL == reply)
+	{
+		cli_syslog_info("<error> failed get reply.\n");
+		if (dbus_error_is_set(&err))
+		{
+			cli_syslog_info("%s raised: %s",err.name,err.message);
+			dbus_error_free_for_dcli(&err);
+		}
+		
+
+		return CMD_SUCCESS;
+	}
+	
+	dbus_message_iter_init(reply,&iter);
+	dbus_message_iter_get_basic(&iter,&ret);
+
+	if(ret == 0)
+	{
+		vty_out(vty,"set ap extension command %s successfully\n",argv[0]);
+	}
+	else if(ret == WTP_ID_NOT_EXIST)
+		vty_out(vty,"<error> wtp id does not exist\n");
+	else
+	{
+		vty_out(vty,"<error>  %d\n",ret);
+	}
+		
+	dbus_message_unref(reply);
+
+	
+	return CMD_SUCCESS;			
+}
+
 
 #endif
 
@@ -14773,8 +14775,6 @@ if(type==1)
 	return CMD_SUCCESS;			
 }
 
-#else
-
 DEFUN(set_wbs_cpe_switch_cmd_func,
 	  set_wbs_cpe_switch_cmd,
 	  "set ap wbs-cpe switch (enable|disable)",
@@ -16063,6 +16063,7 @@ DEFUN(set_ap_sta_flow_rx_tx_overflow_reportinterval_cmd_func,
 	return CMD_SUCCESS;			
 }
 
+#else
 
 DEFUN(set_ap_extension_infomation_reportinterval_cmd_func,
 	  set_ap_extension_infomation_reportinterval_cmd,
