@@ -1363,7 +1363,6 @@ void HmdRun(){
 
 	
 	g_loable_takesnapshot_fd = HmdCreateLogSaveFlag();
-	hmd_syslog_info("###%s line%d ret is %d  ###\n",__func__,__LINE__,g_loable_takesnapshot_fd);
 	
 	while(1){
 		g_loable_takesnapshot_fd = open("/var/run/hmd/log_save_hmd_flag",O_RDONLY);
@@ -1375,7 +1374,6 @@ void HmdRun(){
 		else 
 		{
 		    read(g_loable_takesnapshot_fd,&buf,1);
-			hmd_syslog_info("###%s line%d ret is %c###\n",__func__,__LINE__,buf);
 			if(buf == '0' && g_loable_takesnapshot_flag == 1)
 			{
 				g_loable_takesnapshot_flag = 0;

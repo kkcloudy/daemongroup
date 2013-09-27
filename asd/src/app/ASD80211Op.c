@@ -578,6 +578,7 @@ void ieee802_11_send_deauth(struct asd_data *wasd, u8 *addr, u16 reason)
 {
 	struct ieee80211_mgmt mgmt;
 	char buf[30];
+	
 	//qiuchen
 	u8 WTPMAC[MAC_LEN] = {0};
 	unsigned int wtpid = 0;
@@ -586,15 +587,9 @@ void ieee802_11_send_deauth(struct asd_data *wasd, u8 *addr, u16 reason)
 		wtpid = ASD_WTP_AP[wasd->Radio_G_ID/4]->WTPID;
 	}
 	//end
-	//qiuchen add it for Henan Mobile
-	unsigned char Wlanid = wasd->WlanID;
-	char *SSID = NULL;
-	if(ASD_WLAN[Wlanid])
-		SSID = ASD_WLAN[Wlanid]->ESSID;
-	//end
-	asd_logger(wasd, addr, asd_MODULE_IEEE80211,
-		       asd_LEVEL_NOTICE,
-		       "deauthenticate - reason %d", reason);
+	asd_printf(ASD_80211,MSG_DEBUG,"func: %s send_deauth to STA_MAC: %s reason:%d\n",__func__,addr,reason);
+
+	asd_logger(wasd, addr, asd_MODULE_IEEE80211,asd_LEVEL_NOTICE,"deauthenticate - reason %d", reason);
 	if(gASDLOGDEBUG & BIT(1))
 		syslog(LOG_INFO|LOG_LOCAL7, "[%d-%d]DEAUTH:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d, ErrorCode:%d.\n",
 		slotid,vrrid,MAC2STR(addr),MAC2STR(WTPMAC),wasd->BSSIndex,reason);//qiuchen 2013.01.14
@@ -1204,7 +1199,17 @@ static void handle_auth(struct asd_data *wasd, struct ieee80211_mgmt *mgmt,
 	int vlan_id = 0;
 	u8 resp_ies[2 + WLAN_AUTH_CHALLENGE_LEN];
 	size_t resp_ies_len = 0;
+	char reas[256] = {0};
+	unsigned int wtpid = 0;
+	unsigned char SID = 0;
+	unsigned int securitytype = 0;
+	u8 WTPMAC[MAC_LEN] = {0};
+	
+	/* For new format of syslog 2013-07-29 */
+	int Rcode = 0;
+	char *SSID = NULL;
 
+	
 	if(NULL == wasd || NULL == mgmt)
 		return;
 
@@ -1215,9 +1220,17 @@ static void handle_auth(struct asd_data *wasd, struct ieee80211_mgmt *mgmt,
 	}
 
 	wasd->usr_auth_tms++;
-	unsigned char SID = 0;
-	unsigned int securitytype = 0;//qiuchen
-	u8 WTPMAC[MAC_LEN] = {0};
+
+	/* Add SSID for BSS, instead of ESSID */
+	if(wasd->conf->ssid.ssid != NULL)
+	{
+		SSID = (char *)wasd->conf->ssid.ssid;  
+	}
+	else if(ASD_WLAN[wasd->WlanID] != NULL)
+	{
+		SSID = ASD_WLAN[wasd->WlanID]->ESSID;
+	}
+	
 	if(ASD_WLAN[wasd->WlanID]){
 		SID = ASD_WLAN[wasd->WlanID]->SecurityID;
 	}
@@ -1227,18 +1240,10 @@ static void handle_auth(struct asd_data *wasd, struct ieee80211_mgmt *mgmt,
 		wasd->assoc_auth_req_num++;
 	}
 	//qiuchen
-	unsigned int wtpid = 0;
 	if(ASD_WTP_AP[wasd->Radio_G_ID/4]){
 		memcpy(WTPMAC,ASD_WTP_AP[wasd->Radio_G_ID/4]->WTPMAC,MAC_LEN);
 		wtpid = ASD_WTP_AP[wasd->Radio_G_ID/4]->WTPID;
 	}
-	unsigned char Wlanid = wasd->WlanID;
-	char *SSID = NULL;
-	if(ASD_WLAN[Wlanid])
-		SSID = ASD_WLAN[Wlanid]->ESSID;
-	char reas[256] = {0};
-	/* For new format of syslog 2013-07-29 */
-	int Rcode = 0;
 	
 	if(gASDLOGDEBUG & BIT(1))
 		asd_syslog_auteview(LOG_INFO,STA_AUTH_START,mgmt,wasd,NULL,0,NULL);
@@ -1316,6 +1321,10 @@ static void handle_auth(struct asd_data *wasd, struct ieee80211_mgmt *mgmt,
 	
 	asd_printf(ASD_80211,MSG_DEBUG, "authentication: STA=" MACSTR " BSSIndex %d\n",
 		MAC2STR(mgmt->sa), wasd->BSSIndex);
+
+	asd_printf(ASD_80211,MSG_DEBUG,"mgmt->bssid:%s,  assoc_ap_addr:%s \n", mgmt->bssid,wasd->conf->assoc_ap_addr);
+	asd_printf(ASD_80211,MSG_DEBUG,"ASD_WLAN[Wlanid]->ESSID:%s  \n", ASD_WLAN[wasd->WlanID]->ESSID);
+	asd_printf(ASD_80211,MSG_DEBUG,"ASD_BSS[%d]->SSID:%s  \n",wasd->BSSIndex, ASD_BSS[wasd->BSSIndex]->SSID);
 
 		
 	if (wasd->assoc_ap_state == AUTHENTICATE && auth_transaction == 2 &&
@@ -1545,11 +1554,11 @@ static void handle_auth(struct asd_data *wasd, struct ieee80211_mgmt *mgmt,
 		wasd->info->auth_refused++;
 	else if (resp == WLAN_STATUS_UNSPECIFIED_FAILURE || resp == WLAN_STATUS_CAPS_UNSUPPORTED)
 		wasd->info->auth_others++;
-if(WTP_SEND_RESPONSE_TO_MOBILE==0)//nl1010
-{
-	send_auth_reply(wasd, mgmt->sa, mgmt->bssid, auth_alg,
-			auth_transaction + 1, resp, resp_ies, resp_ies_len);
-}
+    if(WTP_SEND_RESPONSE_TO_MOBILE==0)//nl1010
+    {
+    	send_auth_reply(wasd, mgmt->sa, mgmt->bssid, auth_alg,
+    			auth_transaction + 1, resp, resp_ies, resp_ies_len);
+    }
 
 	wasd->ac_rspauth_tms++;
 	
@@ -1614,6 +1623,8 @@ static void handle_assoc(struct asd_data *wasd,
 	u8 WTPMAC[MAC_LEN] = {0};
 	int Rcode = 0;//Qc
 	unsigned int wtpid = 0;
+	char reas[256] = {0};
+	char *SSID = NULL;
 	
 	if(NULL == wasd || NULL == mgmt)
 	{
@@ -1635,11 +1646,17 @@ static void handle_assoc(struct asd_data *wasd,
 		SID = (unsigned char)ASD_WLAN[wasd->WlanID]->SecurityID;
 	if(ASD_SECURITY[SID])
 		securitytype = ASD_SECURITY[SID]->securityType;
-	unsigned char Wlanid = wasd->WlanID;
-	char *SSID = NULL;
-	if(ASD_WLAN[Wlanid])
-		SSID = ASD_WLAN[Wlanid]->ESSID;
-	char reas[256] = {0};
+
+	/* Add SSID for BSS, instead of ESSID */
+	if(wasd->conf != NULL)
+	{
+		SSID = (char *)wasd->conf->ssid.ssid;  
+	}
+	else if(ASD_WLAN[wasd->WlanID] != NULL)
+	{
+		SSID = ASD_WLAN[wasd->WlanID]->ESSID;
+	}
+	
 	if(SID){
 		if (ASD_AUTH_TYPE_WEP_PSK(SID))
 		{
@@ -2590,6 +2607,25 @@ static void handle_disassoc(struct asd_data *wasd,
 	unsigned char SID = wasd->SecurityID;
 	unsigned int securitytype = 0;
 	unsigned int wtpid = 0;
+	char *SSID = NULL;
+	
+	if(NULL == wasd || NULL == mgmt)
+	{
+		asd_printf(ASD_80211,MSG_WARNING,"NULL == wasd  or  NULL == mgmt, handle_disassoc return !\n");		
+		return;
+	}
+
+	/* Add SSID for BSS, instead of ESSID */
+	if(wasd->conf != NULL)
+	{
+		SSID = (char *)wasd->conf->ssid.ssid;  
+	}
+	else if(ASD_WLAN[wasd->WlanID] != NULL)
+	{
+		SSID = ASD_WLAN[wasd->WlanID]->ESSID;
+	}
+
+	
 	if(ASD_SECURITY[SID])
 		securitytype = ASD_SECURITY[SID]->securityType;
 	if(ASD_WTP_AP[wasd->Radio_G_ID/4]){
@@ -2663,13 +2699,9 @@ static void handle_disassoc(struct asd_data *wasd,
 	}
 	//qiuchen
 	char reas[256] = {0};
-	char *SSID = NULL;
 	u8 *identity = NULL;
 	if(sta->eapol_sm)
 		identity = sta->eapol_sm->identity;
-	unsigned char Wlanid = wasd->WlanID;
-	if(ASD_WLAN[Wlanid])
-		SSID = ASD_WLAN[Wlanid]->ESSID;
 	if(gASDLOGDEBUG & BIT(0)){
 		log_parse_reason_80211(reason_code,reas);
 		if(securitytype == OPEN || securitytype == SHARED)
@@ -2727,6 +2759,23 @@ static void handle_deauth(struct asd_data *wasd,
 	u16 reason_code;
 	u8 WTPMAC[MAC_LEN] = {0};
 	unsigned int wtpid = 0;
+	char *SSID =NULL;
+	if(NULL == wasd || NULL == mgmt)
+	{
+		asd_printf(ASD_80211,MSG_WARNING,"NULL == wasd  or  NULL == mgmt, handle_disassoc return !\n");		
+		return;
+	}
+
+	/* Add SSID for BSS, instead of ESSID */
+	if(wasd->conf != NULL)
+	{
+		SSID = (char *)wasd->conf->ssid.ssid;  
+	}
+	else if(ASD_WLAN[wasd->WlanID] != NULL)
+	{
+		SSID = ASD_WLAN[wasd->WlanID]->ESSID;
+	}
+	
 	if(ASD_WTP_AP[wasd->Radio_G_ID/4]){
 		memcpy(WTPMAC,ASD_WTP_AP[wasd->Radio_G_ID/4]->WTPMAC,MAC_LEN);
 		wtpid = ASD_WTP_AP[wasd->Radio_G_ID/4]->WTPID;
@@ -2808,7 +2857,6 @@ static void handle_deauth(struct asd_data *wasd,
 			asd_syslog_auteview(LOG_INFO,DOT1X_USER_OFFLINE,mgmt,wasd,sta,reason_code,NULL);
 	}
 	//end
-	char *SSID = ASD_WLAN[wasd->WlanID]->ESSID;
 	if(gASDLOGDEBUG & BIT(0)){
 		asd_syslog_h(LOG_INFO,"WSTA","WMAC_CLIENT_GOES_OFFLINE:Client "MACSTR" disconnected from WLAN %s. Reason Code is %d.\n",MAC2STR(mgmt->sa),SSID,reason_code);
 	}

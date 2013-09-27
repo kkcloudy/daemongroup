@@ -125,12 +125,22 @@ int dynamic_num_blnc(struct asd_data *wasd){
 	struct asd_data *hd=NULL;
 	unsigned char addr[6];
 	struct sta_info *sta=NULL;
+	char *SSID = NULL;
 	
 	if(wasd==NULL){
 		asd_printf(ASD_DEFAULT,MSG_DEBUG, "wasd==NULL in %s\n", __func__);
 		return -1;
 	}
-
+	/* Add SSID for BSS, instead of ESSID */
+	if(wasd->conf != NULL)
+	{
+		SSID = (char *)wasd->conf->ssid.ssid;  
+	}
+	else if(ASD_WLAN[wasd->WlanID] != NULL)
+	{
+		SSID = ASD_WLAN[wasd->WlanID]->ESSID;
+	}	
+	
 	wlanid=wasd->WlanID;
 /*
 	if(wasd->num_sta<=ASD_WTP_AP[wasd->Radio_G_ID/L_RADIO_NUM]->wtp_triger_num){
@@ -186,9 +196,6 @@ int dynamic_num_blnc(struct asd_data *wasd){
 
 	asd_printf(ASD_DEFAULT,MSG_DEBUG, "kick sta:" MACSTR ".\n", MAC2STR(addr));
 	
-	char *SSID = NULL;
-	if(ASD_WLAN[wlanid])
-		SSID = ASD_WLAN[wlanid]->ESSID;
 	if(gASDLOGDEBUG & BIT(0)){
 		asd_syslog_h(6,"WSTA","WMAC_CLIENT_GOES_OFFLINE:Client "MAC_ADDRESS" disconnected from WLAN %s. Reason Code is %d.\n",MAC2STR(sta->addr),SSID,5);//idletime out
 	}

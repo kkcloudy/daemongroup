@@ -213,7 +213,7 @@ struct ROAMING_STAINFO * AsdRoamingStaInfoAdd(struct asd_data *wasd, const u8 *a
 					sta_cur->PreBssIndex = wasd_r->BSSIndex;
 					sta_cur->preAPID = wasd_r->Radio_G_ID/4;
 					memcpy(sta_cur->PreBSSID,wasd_r->own_addr,6);
-					char *SSID = ASD_WLAN[WLANID]->ESSID;
+					char *SSID = (char *)wasd_r->conf->ssid.ssid;
 					if(gASDLOGDEBUG & BIT(1) && !(sta->logflag&BIT(1))){
 						if((ASD_SECURITY[SID]) && (ASD_SECURITY[SID]->securityType == OPEN || ASD_SECURITY[SID]->securityType == SHARED) && (sta->flags & WLAN_STA_ASSOC)){
 							syslog(LOG_INFO|LOG_LOCAL3,"STA_ROAM_SUCCESS:UserMAC:"MACSTR" From AC(%lu.%lu.%lu.%lu)-AP%d-BSSID("MACSTR") To AC(%lu.%lu.%lu.%lu)-AP%d-BSSID("MACSTR").\n",

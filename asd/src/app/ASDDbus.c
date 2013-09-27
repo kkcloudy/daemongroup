@@ -14130,14 +14130,13 @@ DBusMessage *asd_dbus_show_sta_v2(DBusConnection *conn, DBusMessage *msg, void *
 			
 		dbus_message_iter_init_append (reply, &iter);
 
-		if((stainfo != NULL)&&(stainfo->sta != NULL)){
+		if((stainfo != NULL)&&(stainfo->sta != NULL)&&(stainfo->bss != NULL)){
+			/* Use SSID of BSS, instead of ESSID. 2013-09-27 */
 			auth_type = stainfo->sta->security_type ;
-			if(stainfo->bss->WlanID < WLAN_NUM && ASD_WLAN[stainfo->bss->WlanID] != NULL && ASD_WLAN[stainfo->bss->WlanID]->ESSID != NULL){
-
-				SecurityID = ASD_WLAN[stainfo->bss->WlanID]->SecurityID;
-				essid = ASD_WLAN[stainfo->bss->WlanID]->ESSID;
-				essidlen = strlen(essid);
-			}
+			SecurityID = stainfo->bss->SecurityID;			
+			essid = stainfo->bss->conf->ssid.ssid;
+			essidlen = stainfo->bss->conf->ssid.ssid_len;
+			
 			WTPID = stainfo->bss->Radio_G_ID/L_RADIO_NUM;
 			if(WTPID < WTP_NUM && ASD_WTP_AP[WTPID] != NULL){
 				memset(mac, 0, WID_MAC_LEN);
@@ -14147,7 +14146,7 @@ DBusMessage *asd_dbus_show_sta_v2(DBusConnection *conn, DBusMessage *msg, void *
 				vlanid = ASD_BSS[stainfo->bss->BSSIndex]->vlanid;
 				
 			//weichao add 2011.11.08
-			wlanid =	stainfo->bss->WlanID;
+			wlanid = stainfo->bss->WlanID;
 			dbus_message_iter_append_basic (&iter,
 												 DBUS_TYPE_UINT32,
 												 &ret);			
@@ -19332,16 +19331,21 @@ DBusMessage *asd_dbus_show_sta_base_info(DBusConnection *conn, DBusMessage *msg,
 			DBusMessageIter iter_struct;
 			DBusMessageIter iter_sub_array;
 			unsigned int wtpid = 0;
-			char essid[ESSID_DEFAULT_LEN] = {0};/*中文essid不能用字符串传输，会导致dbus线程退出AXSSZFI-1658*/
+			char essid[ESSID_DEFAULT_LEN+1] = {0};/*中文essid不能用字符串传输，会导致dbus线程退出AXSSZFI-1658*/
 			asd_printf(ASD_DBUS,MSG_DEBUG,"sta_num:%d\n",bss[i]->num_sta);
 			wtpid = bss[i]->Radio_G_ID/4;
 			if(wtpid < WTP_NUM && ASD_WTP_AP[wtpid] != NULL){
 				memset(mac, 0, WID_MAC_LEN);
 				memcpy(mac, ASD_WTP_AP[wtpid]->WTPMAC, WID_MAC_LEN);
 			}
+			/* Use SSID of BSS, instead of ESSID */
+			#if 0
 			if(bss[i]->WlanID < WLAN_NUM && ASD_WLAN[bss[i]->WlanID] != NULL && ASD_WLAN[bss[i]->WlanID]->ESSID != NULL)
 				memcpy(essid,ASD_WLAN[bss[i]->WlanID]->ESSID,strlen(ASD_WLAN[bss[i]->WlanID]->ESSID));
-			
+			#else
+			    /* change it copy for ssid of bss. 2013-09-27 */
+				memcpy(essid,bss[i]->conf->ssid.ssid,bss[i]->conf->ssid.ssid_len);			
+			#endif
 			dbus_message_iter_open_container (&iter_array,DBUS_TYPE_STRUCT,NULL,&iter_struct);
 			dbus_message_iter_append_basic(&iter_struct, DBUS_TYPE_UINT32, &(bss[i]->Radio_G_ID));
 			dbus_message_iter_append_basic(&iter_struct, DBUS_TYPE_UINT32, &(bss[i]->num_sta));
@@ -19354,9 +19358,11 @@ DBusMessage *asd_dbus_show_sta_base_info(DBusConnection *conn, DBusMessage *msg,
 			dbus_message_iter_append_basic(&iter_struct, DBUS_TYPE_BYTE, &(mac[5]));	
 
 			dbus_message_iter_append_basic(&iter_struct, DBUS_TYPE_BYTE, &(bss[i]->WlanID));
-			for(k=0;k<ESSID_DEFAULT_LEN;k++)
+			/* the max length is 32 bytes */
+			for(k=0; k < ESSID_DEFAULT_LEN; k++)
+			{
 				dbus_message_iter_append_basic(&iter_struct, DBUS_TYPE_BYTE,&(essid[k]));
-			
+			}
 			dbus_message_iter_open_container (&iter_struct,
 											   DBUS_TYPE_ARRAY,
 											   DBUS_STRUCT_BEGIN_CHAR_AS_STRING

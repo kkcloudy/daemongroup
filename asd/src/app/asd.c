@@ -3054,9 +3054,17 @@ void asd_syslog_auteview(int level,int type,struct ieee80211_mgmt *mgmt,struct a
 		extensible_auth = ASD_SECURITY[SID]->extensible_auth;
 		encryptiontype = ASD_SECURITY[SID]->encryptionType;
 	}
-	if(ASD_WLAN[wlanid]){
-		ssid = ASD_WLAN[wlanid]->ESSID;
+	
+	/* Add SSID for BSS, instead of ESSID */
+	if(wasd->conf != NULL)
+	{
+		ssid = (char *)wasd->conf->ssid.ssid;  
 	}
+	else if(ASD_WLAN[wasd->WlanID] != NULL)
+	{
+		ssid = ASD_WLAN[wasd->WlanID]->ESSID;
+	}	
+	
 	if(sta){
 		if(sta->eapol_sm)
 			username =  sta->eapol_sm->identity;

@@ -388,8 +388,12 @@ int rtnl_open_byproto(struct rtnl_handle *rth, unsigned subscriptions,
 	socklen_t addr_len;
 	int sndbuf = 32768;
 	int rcvbuf = 32768;
+	if(NULL == rth)
+	{
+		return -1;
+	}
 
-	memset(rth, 0, sizeof(*rth));//qiuchen
+	memset(rth, 0, sizeof(struct rtnl_handle));
 
 	rth->fd = socket(AF_NETLINK, SOCK_RAW, protocol);
 	if (rth->fd < 0) {
@@ -407,7 +411,11 @@ int rtnl_open_byproto(struct rtnl_handle *rth, unsigned subscriptions,
 		return -1;
 	}
 
-	fcntl(rth->fd, F_SETFL, O_NONBLOCK);
+	if (fcntl(rth->fd, F_SETFL, O_NONBLOCK) < 0)
+	{
+		return -1;
+	}	
+
 	memset(&rth->local, 0, sizeof(rth->local));
 	rth->local.nl_family = AF_NETLINK;
 	rth->local.nl_groups = subscriptions;
@@ -513,16 +521,22 @@ int rtnl_dump_filter(struct rtnl_handle *rth,
 		.msg_iov = &iov,
 		.msg_iovlen = 1,
 	};
-	char buf[16384];
+
+	char buf[16384] = {0};
+    if(NULL == rth || NULL == arg1)
+    {
+        return -1;
+    }
+	memset(&iov, 0, sizeof(struct iovec));
+	memset(&nladdr, 0, sizeof(struct sockaddr_nl));
 
 	iov.iov_base = buf;
 	while (1) {
-		int status;
-		struct nlmsghdr *h;
+		int status = 0;
+		struct nlmsghdr *h = NULL;
 
 		iov.iov_len = sizeof(buf);
 		status = recvmsg(rth->fd, &msg, 0);
-
 		if (status < 0) {
 			if (errno == EINTR)
 				continue;
@@ -538,7 +552,7 @@ int rtnl_dump_filter(struct rtnl_handle *rth,
 
 		h = (struct nlmsghdr*)buf;
 		while (NLMSG_OK(h, status)) {
-			int err;
+			int err = 0;
 
 			if (nladdr.nl_pid != 0 ||
 			    h->nlmsg_pid != rth->local.nl_pid ||
@@ -580,6 +594,8 @@ skip_it:
 			return -1;
 		}
 	}
+    /* Coverity: CID: 16186 Error-Type: Missing return statement */
+    return 0;	
 }
 
 int rtnl_talk(struct rtnl_handle *rtnl, struct nlmsghdr *n, pid_t peer,
@@ -1237,7 +1253,6 @@ int ipneigh_modify(int cmd, int flags, char *ip, char * mac, char * dev)
 	char * lla = NULL;
 	inet_prefix dst;
 	int preferred_family = AF_UNSPEC;
-	printf("%s 1\n",__func__);
 
 	memset(&req, 0, sizeof(req));
 
@@ -1249,41 +1264,37 @@ int ipneigh_modify(int cmd, int flags, char *ip, char * mac, char * dev)
 	lla = mac;
 	d = dev;	
 	get_addr(&dst, ip, preferred_family);
-	printf("%s 1\n",__func__);
 
 	if (d == NULL || dst.family == AF_UNSPEC) {
 		fprintf(stderr, "Device and destination are required arguments.\n");
 		return ASD_IFNAME_NOT_EXIST;
 	}
-	printf("%s 2\n",__func__);
 
 	req.ndm.ndm_family = dst.family;
 	addattr_l(&req.n, sizeof(req), NDA_DST, &dst.data, dst.bytelen);
-	printf("%s 3\n",__func__);
 
 	if (lla && strcmp(lla, "null")) {
 		char llabuf[20];
 		int l;
 
 		l = ll_addr_a2n(llabuf, sizeof(llabuf), lla);
-		if(l < 0)//Qiuchen
-			return ASD_DBUS_ERROR;
+		if(l < 0)
+		{
+			return ASD_IFNAME_NOT_EXIST;
+		}
 		addattr_l(&req.n, sizeof(req), NDA_LLADDR, llabuf, l);
 	}
-	printf("%s 4\n",__func__);
 
 	ll_init_map(&rth);
-	printf("%s 5\n",__func__);
 
 	if ((req.ndm.ndm_ifindex = ll_name_to_index(d)) == 0) {
 		fprintf(stderr, "Cannot find device \"%s\"\n", d);
 		return ASD_IFNAME_NOT_EXIST;
 	}
-	printf("%s 6\n",__func__);
 
 	if (rtnl_talk(&rth, &req.n, 0, 0, NULL, NULL, NULL) < 0)
 		return ASD_DBUS_ERROR;
-	printf("%s 7\n",__func__);
+	printf("%s finish.\n",__func__);
 
 	return 0;
 }

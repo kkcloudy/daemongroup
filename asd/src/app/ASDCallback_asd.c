@@ -575,9 +575,23 @@ static int wapid_setup_interface(apdata_info *wasd)
 int ASD_WAPI_INTERFACE_INIT(struct wapid_interfaces *user,struct asd_data * wasd){
 	unsigned char WLANID;
 	unsigned int SID;
+	char *SSID =NULL;
+
 	WLANID = wasd->WlanID;
 	SID = wasd->SecurityID;
 	int ret;
+
+	/* Add SSID for BSS, instead of ESSID */
+	if(wasd->conf != NULL)
+	{
+		SSID = (char *)wasd->conf->ssid.ssid;  
+	}
+	else if(ASD_WLAN[wasd->WlanID] != NULL)
+	{
+		SSID = ASD_WLAN[wasd->WlanID]->ESSID;
+	}
+
+	
 	if((ASD_WLAN[WLANID] == NULL)||(ASD_SECURITY[SID] == NULL))
 		return -1;
 	user->identity = os_zalloc(strlen(ASD_WLAN[WLANID]->WlanName)+1);
@@ -589,7 +603,7 @@ int ASD_WAPI_INTERFACE_INIT(struct wapid_interfaces *user,struct asd_data * wasd
 	memcpy(user->identity, ASD_WLAN[WLANID]->WlanName, strlen(ASD_WLAN[WLANID]->WlanName)+1);
 	asd_printf(ASD_WAPI,MSG_DEBUG,"user->identity = %s\n", user->identity);
 	user->identity_len = strlen(ASD_WLAN[WLANID]->WlanName);
-	user->ssid = os_zalloc(strlen(ASD_WLAN[WLANID]->ESSID)+1);
+	user->ssid = os_zalloc(strlen(SSID)+1);
 	if (user->ssid == NULL) {
 		asd_printf(ASD_WAPI,MSG_ERROR,"Failed to allocate memory for VAP "
 			   "ssid\n");
@@ -597,9 +611,9 @@ int ASD_WAPI_INTERFACE_INIT(struct wapid_interfaces *user,struct asd_data * wasd
 		user->identity=NULL;
 		return -1;
 	}
-	memcpy(user->ssid, ASD_WLAN[WLANID]->ESSID, strlen(ASD_WLAN[WLANID]->ESSID)+1);
+	memcpy(user->ssid, SSID, strlen(SSID));
 	asd_printf(ASD_WAPI,MSG_DEBUG,"user->ssid = %s\n", user->ssid);
-	user->ssid_len = strlen(ASD_WLAN[WLANID]->ESSID);
+	user->ssid_len = strlen(SSID);
 	user->ssid_method = 0;
 	if(ASD_SECURITY[SID]->securityType == WAPI_PSK)/*psk*/
 	{
@@ -1020,7 +1034,7 @@ static void handle_frame(struct asd_data *wasd, u8 *buf, size_t len)
 
 	/* PSPOLL is only 16 bytes, but driver does not (at least yet) pass
 	 * these to user space */
-	asd_printf(ASD_80211,MSG_DEBUG,"%s len = %d.\n",__func__,len);
+	asd_printf(ASD_80211,MSG_DEBUG,"%s recieve buf len = %d.\n",__func__,len);
 	if (len < 24) {
 		asd_printf(ASD_80211,MSG_MSGDUMP, "handle_frame: too short (%lu)",
 			   (unsigned long) len);
@@ -1697,8 +1711,20 @@ int ASD_BSS_INIT(struct asd_data * wasd){
 	ASD_BSS_DEFAULT_INIT(wasd);
 	bss = wasd->conf;
 	memset(bss->ssid.ssid, 0, asd_MAX_SSID_LEN + 1);
-	memcpy(bss->ssid.ssid, ASD_WLAN[wasd->WlanID]->ESSID, strlen(ASD_WLAN[wasd->WlanID]->ESSID));
-	bss->ssid.ssid_len = strlen(ASD_WLAN[wasd->WlanID]->ESSID);
+	/* Add ssid for bss, instead of essid. init wasd with ASD_BSS[]. */
+	if(ASD_BSS[BSSIndex]!=NULL)		
+	{
+    	memcpy(bss->ssid.ssid, ASD_BSS[BSSIndex]->SSID, asd_MAX_SSID_LEN);
+    	bss->ssid.ssid_len = strlen((char *)ASD_BSS[BSSIndex]->SSID);
+		asd_printf(ASD_DEFAULT,MSG_DEBUG,"ASD_BSS_INIT wasd bss->ssid.ssid %s !\n",bss->ssid.ssid);				
+		asd_printf(ASD_DEFAULT,MSG_DEBUG,"ASD_BSS_INIT wasd bss->ssid.ssid_len %d !\n",bss->ssid.ssid_len);		
+	}
+	else
+	{
+	    memcpy(bss->ssid.ssid, ASD_WLAN[wasd->WlanID]->ESSID, strlen(ASD_WLAN[wasd->WlanID]->ESSID));
+    	bss->ssid.ssid_len = strlen(ASD_WLAN[wasd->WlanID]->ESSID);
+		asd_printf(ASD_DEFAULT,MSG_INFO,"%s bss->ssid is null, use wlan->essid %s !\n",__func__,ASD_WLAN[wasd->WlanID]->ESSID);				
+	}
 
 
 	if(SID >= WLAN_NUM){
@@ -2851,20 +2877,26 @@ void BSS_OP(TableMsg *msg, struct wasd_interfaces *interfaces){
 	int i = 0 ,j = 0,len = 0;
 	unsigned int g_radio_id = 0;
 	if((msg->Op == WID_ADD) || (msg->Op == WID_DEL) || (msg->Op == WID_MODIFY))
-		asd_printf(ASD_DEFAULT,MSG_INFO,"BSS_OP type %u(ADD--0,DEL--1,MODIFY--2),BSSIndex %u\n",msg->Op,msg->u.BSS.BSSIndex);
+		asd_printf(ASD_DEFAULT,MSG_DEBUG,"BSS_OP type %u(ADD--0,DEL--1,MODIFY--2),BSSIndex %u\n",msg->Op,msg->u.BSS.BSSIndex);
 	switch(msg->Op){
 		case WID_ADD :{
 			if(ASD_WLAN[WLANID] && ASD_WLAN[WLANID]->Status == 1){
 				return;
 			}
 			if(ASD_BSS[msg->u.BSS.BSSIndex] == NULL){
-				asd_printf(ASD_DEFAULT,MSG_DEBUG,"ASD_BSS[%u] = NULL.\n",msg->u.BSS.BSSIndex);
+				asd_printf(ASD_DEFAULT,MSG_DEBUG,"ASD_BSS[%u] = NULL init NEW.\n",msg->u.BSS.BSSIndex);
 				
 				ASD_BSS[msg->u.BSS.BSSIndex] = (WID_BSS*)os_zalloc(sizeof(WID_BSS));
 				if(ASD_BSS[msg->u.BSS.BSSIndex] == NULL) {
 					asd_printf(ASD_DBUS,MSG_CRIT,"%s :malloc fail.\n",__func__);
 					exit(1);
 				}
+				asd_printf(ASD_DBUS,MSG_DEBUG,"msg->u.BSS.SSID : %s\n",msg->u.BSS.SSID);
+				/* Add SSID for BSS, instead of essid */
+				memset(ASD_BSS[msg->u.BSS.BSSIndex]->SSID,0,ESSID_DEFAULT_LEN+1);
+				memcpy(ASD_BSS[msg->u.BSS.BSSIndex]->SSID,msg->u.BSS.SSID,strlen((char *)msg->u.BSS.SSID));
+				asd_printf(ASD_DBUS,MSG_DEBUG,"ASD_BSS[msg->u.BSS.BSSIndex]->SSID : %s\n",ASD_BSS[msg->u.BSS.BSSIndex]->SSID);
+
 				
 				ASD_BSS[msg->u.BSS.BSSIndex]->BSSID = (unsigned char*)os_zalloc(7);
 				if(ASD_BSS[msg->u.BSS.BSSIndex]->BSSID==NULL){
@@ -2879,8 +2911,8 @@ void BSS_OP(TableMsg *msg, struct wasd_interfaces *interfaces){
 				if(len > 0){
 					memset(ASD_BSS[msg->u.BSS.BSSIndex]->nas_port_id,0,sizeof(ASD_BSS[msg->u.BSS.BSSIndex]->nas_port_id));
 					memcpy(ASD_BSS[msg->u.BSS.BSSIndex]->nas_port_id,msg->u.BSS.nas_port_id,len);
+    				asd_printf(ASD_DBUS,MSG_DEBUG,"%s :set nas_port_id %s\n",__func__,msg->u.BSS.nas_port_id);					
 				}
-				asd_printf(ASD_DBUS,MSG_DEBUG,"%s :nas_port_id %s\n",__func__,msg->u.BSS.nas_port_id);//for test
 
 				ASD_BSS[msg->u.BSS.BSSIndex]->BSSIndex = msg->u.BSS.BSSIndex;
 				ASD_BSS[msg->u.BSS.BSSIndex]->WlanID = msg->u.BSS.WlanID;
@@ -2909,19 +2941,19 @@ void BSS_OP(TableMsg *msg, struct wasd_interfaces *interfaces){
 				}
 				ASD_BSS[msg->u.BSS.BSSIndex]->sta_static_arp_policy = msg->u.BSS.sta_static_arp_policy;
 				memcpy(ASD_BSS[msg->u.BSS.BSSIndex]->arp_ifname, msg->u.BSS.arp_ifname,ETH_IF_NAME_LEN);
-				asd_printf(ASD_DEFAULT,MSG_INFO,"%d,%d,%d,%d,%02x:%02x:%02x:%02x:%02x:%02x\n",ASD_BSS[msg->u.BSS.BSSIndex]->BSSIndex,ASD_BSS[msg->u.BSS.BSSIndex]->WlanID,ASD_BSS[msg->u.BSS.BSSIndex]->Radio_G_ID,ASD_BSS[msg->u.BSS.BSSIndex]->Radio_L_ID,
+				asd_printf(ASD_DEFAULT,MSG_DEBUG,"%d,%d,%d,%d,%02x:%02x:%02x:%02x:%02x:%02x\n",ASD_BSS[msg->u.BSS.BSSIndex]->BSSIndex,ASD_BSS[msg->u.BSS.BSSIndex]->WlanID,ASD_BSS[msg->u.BSS.BSSIndex]->Radio_G_ID,ASD_BSS[msg->u.BSS.BSSIndex]->Radio_L_ID,
 					ASD_BSS[msg->u.BSS.BSSIndex]->BSSID[0],ASD_BSS[msg->u.BSS.BSSIndex]->BSSID[1],ASD_BSS[msg->u.BSS.BSSIndex]->BSSID[2],ASD_BSS[msg->u.BSS.BSSIndex]->BSSID[3],ASD_BSS[msg->u.BSS.BSSIndex]->BSSID[4],ASD_BSS[msg->u.BSS.BSSIndex]->BSSID[5]);
 				if((msg->u.BSS.BSSIndex / L_BSS_NUM) == msg->u.BSS.Radio_G_ID){
 					i = msg->u.BSS.BSSIndex % L_BSS_NUM;
 					g_radio_id = msg->u.BSS.Radio_G_ID;
 					for(j=g_radio_id%4; j>=0; j--){
 						unsigned int radio_id = g_radio_id - j;
-						asd_printf(ASD_DEFAULT,MSG_INFO,"interfaces->iface[%d] setup and init\n",radio_id);
+						asd_printf(ASD_DEFAULT,MSG_INFO,"interfaces->iface[%d] setup and init.\n",radio_id);
 						if(interfaces->iface[radio_id] == NULL)
 							asd_iface_malloc(radio_id);
 					}
 					if(interfaces->iface[ASD_BSS[msg->u.BSS.BSSIndex]->Radio_G_ID] == NULL){
-						asd_printf(ASD_DEFAULT,MSG_DEBUG,"interfaces->iface[%d] setup and init\n",ASD_BSS[msg->u.BSS.BSSIndex]->Radio_G_ID);
+						asd_printf(ASD_DEFAULT,MSG_DEBUG,"interfaces->iface[%d] setup and init.\n",ASD_BSS[msg->u.BSS.BSSIndex]->Radio_G_ID);
 						interfaces->iface[ASD_BSS[msg->u.BSS.BSSIndex]->Radio_G_ID] = (struct asd_iface*)os_zalloc(sizeof(struct asd_iface));
 						interfaces->iface[ASD_BSS[msg->u.BSS.BSSIndex]->Radio_G_ID]->bss = NULL;
 						interfaces->iface[ASD_BSS[msg->u.BSS.BSSIndex]->Radio_G_ID]->interfaces = interfaces;
@@ -2938,7 +2970,7 @@ void BSS_OP(TableMsg *msg, struct wasd_interfaces *interfaces){
 							asd_printf(ASD_DEFAULT,MSG_WARNING,"asd_hw_feature_init failed\n");
 					}
 					if(interfaces->iface[ASD_BSS[msg->u.BSS.BSSIndex]->Radio_G_ID]->bss[i] == NULL){
-							asd_printf(ASD_DEFAULT,MSG_DEBUG,"bss[%d] setup and init\n",i);
+							asd_printf(ASD_DEFAULT,MSG_DEBUG,"wasd setup and init.\n");
 							wasd = interfaces->iface[ASD_BSS[msg->u.BSS.BSSIndex]->Radio_G_ID]->bss[i] = os_zalloc(sizeof(struct asd_data));			
 							if(wasd == NULL){
 								asd_printf(ASD_DBUS,MSG_CRIT,"%s :malloc fail.\n",__func__);
@@ -3107,7 +3139,7 @@ void BSS_OP(TableMsg *msg, struct wasd_interfaces *interfaces){
 				}
 			}
 			else if((ASD_BSS[msg->u.BSS.BSSIndex]->BSSID==NULL) && (ASD_BSS[msg->u.BSS.BSSIndex]->acl_conf!=NULL)){
-				asd_printf(ASD_DEFAULT,MSG_DEBUG,"ASD_BSS[%u]->BSSID = NULL,acl_conf != NULL.\n",msg->u.BSS.BSSIndex);
+				asd_printf(ASD_DEFAULT,MSG_EMERG,"ASD_BSS[%u]->BSSID = NULL,acl_conf != NULL.\n",msg->u.BSS.BSSIndex);
 				ASD_BSS[msg->u.BSS.BSSIndex]->BSSID = (unsigned char*)os_zalloc(7);
 				memset(ASD_BSS[msg->u.BSS.BSSIndex]->BSSID,0,7);
 				memcpy(ASD_BSS[msg->u.BSS.BSSIndex]->BSSID,msg->u.BSS.BSSID,6);
@@ -3651,8 +3683,8 @@ void STA_OP(TableMsg *msg){
 					u8 *identity = NULL;
 					if(sta->eapol_sm)
 						identity = sta->eapol_sm->identity;
-					if(ASD_WLAN[bss[i]->WlanID])
-						SSID = ASD_WLAN[bss[i]->WlanID]->ESSID;
+					if(bss[i]->conf != NULL)
+						SSID = (char *)bss[i]->conf->ssid.ssid;
 					if(gASDLOGDEBUG & BIT(0)){
 						if(ASD_SECURITY[SID]&&((ASD_SECURITY[SID]->securityType == OPEN) || (ASD_SECURITY[SID]->securityType == SHARED)))
 							asd_syslog_h(LOG_INFO,"WSTA","WMAC_CLIENT_GOES_OFFLINE:Client "MACSTR" disconnected from WLAN %s. Reason Code is %d.\n",MAC2STR(sta->addr),SSID,1);
@@ -3893,8 +3925,8 @@ void STA_OP(TableMsg *msg){
 							memcpy(sta->PreBSSID,prewasd->own_addr,6);
 							sta->rflag = ASD_ROAM_2;
 							char *SSID = NULL;
-							if(ASD_WLAN[wasd->WlanID])
-								SSID = ASD_WLAN[wasd->WlanID]->ESSID;
+							if(wasd->conf != NULL)
+								SSID = (char *)wasd->conf->ssid.ssid;
 							if(gASDLOGDEBUG & BIT(1) && !(sta->logflag&BIT(1))){
 								if((ASD_SECURITY[SID]) && (ASD_SECURITY[SID]->securityType == OPEN || ASD_SECURITY[SID]->securityType == SHARED) && (sta->flags & WLAN_STA_ASSOC)){
 									syslog(LOG_INFO|LOG_LOCAL7,"[%d-%d]STA_ROAM_SUCCESS:UserMAC:"MACSTR" From AC(%lu.%lu.%lu.%lu)-AP%d-BSSID("MACSTR") To AC(%lu.%lu.%lu.%lu)-AP%d-BSSID("MACSTR").\n",
@@ -4128,8 +4160,8 @@ void STA_OP(TableMsg *msg){
 					u8 *identity = NULL;
 					if(sta->eapol_sm)
 						identity = sta->eapol_sm->identity;
-					if(ASD_WLAN[bss[i]->WlanID])
-						SSID = ASD_WLAN[bss[i]->WlanID]->ESSID;
+					if(bss[i]->conf != NULL)
+						SSID = (char *)bss[i]->conf->ssid.ssid;
 					if(gASDLOGDEBUG & BIT(0)){
 						if((ASD_SECURITY[SID])&& (ASD_SECURITY[SID]->securityType == OPEN || ASD_SECURITY[SID]->securityType == SHARED))
 							asd_syslog_h(LOG_INFO,"WSTA","WMAC_CLIENT_GOES_OFFLINE:Client "MAC_ADDRESS" disconnected from WLAN %s. Reason Code is %d.\n",MAC2STR(sta->addr),SSID,9);
@@ -4378,8 +4410,8 @@ void STA_OP(TableMsg *msg){
 							u8 *identity = NULL;
 							if(sta->eapol_sm)
 								identity = sta->eapol_sm->identity;
-							if(ASD_WLAN[wasd->WlanID])
-								SSID = ASD_WLAN[wasd->WlanID]->ESSID;
+							if(wasd->conf != NULL)
+								SSID = (char *)wasd->conf->ssid.ssid;
 							if(gASDLOGDEBUG & BIT(0)){
 								if((ASD_SECURITY[SID])&& (ASD_SECURITY[SID]->securityType == OPEN || ASD_SECURITY[SID]->securityType == SHARED))
 									asd_syslog_h(LOG_INFO,"WSTA","WMAC_CLIENT_GOES_OFFLINE:Client "MAC_ADDRESS" disconnected from WLAN %s. Reason Code is %d.\n",MAC2STR(sta->addr),SSID,reasonhn);
@@ -5234,15 +5266,19 @@ static void handle_buf(struct wasd_interfaces *interfaces, u8 *buf, size_t len)
 	EagMsg *msg1 = NULL;
 	STAStatisticsMsg *smsg;
 	int num,datalen;
+   	asd_printf(ASD_DEFAULT,MSG_DEBUG,"%s msg->Type: %d\n",__func__,msg->Type);			
+	
 	switch(msg->Type){
 		
-		case WLAN_TYPE :{			
+		case WLAN_TYPE :{
+        	asd_printf(ASD_DEFAULT,MSG_DEBUG,"%s msg->Type: WLAN_TYPE\n",__func__);			
 			pthread_mutex_lock(&asd_g_wlan_mutex);
 			WLAN_OP(msg);			
 			pthread_mutex_unlock(&asd_g_wlan_mutex);
 			break;
 		}
 		case WTP_TYPE :{
+        	asd_printf(ASD_DEFAULT,MSG_DEBUG,"%s msg->Type: WTP_TYPE\n",__func__);			
 			pthread_mutex_lock(&asd_g_wtp_mutex);
 			WTP_OP(msg);
 			pthread_mutex_unlock(&asd_g_wtp_mutex);
@@ -5254,12 +5290,14 @@ static void handle_buf(struct wasd_interfaces *interfaces, u8 *buf, size_t len)
 			break;
 		}*/
 		case STA_TYPE :{
+        	asd_printf(ASD_DEFAULT,MSG_DEBUG,"%s msg->Type: STA_TYPE\n",__func__);			
 			pthread_mutex_lock(&(asd_g_sta_mutex));			
 			STA_OP(msg);
 			pthread_mutex_unlock(&(asd_g_sta_mutex));	
 			break;
 		}
 		case BSS_TYPE :{
+        	asd_printf(ASD_DEFAULT,MSG_DEBUG,"%s msg->Type: BSS_TYPE\n",__func__);			
 			pthread_mutex_lock(&asd_g_bss_mutex);		
 			BSS_OP(msg, interfaces);
 			pthread_mutex_unlock(&asd_g_bss_mutex);		
@@ -5274,6 +5312,7 @@ static void handle_buf(struct wasd_interfaces *interfaces, u8 *buf, size_t len)
 			break;
 		}
 		case BAK_TYPE:{
+        	asd_printf(ASD_DEFAULT,MSG_DEBUG,"%s msg->Type: BAK_TYPE\n",__func__);			
 			BAK_OP(msg);
 			break;
 		}
@@ -5294,6 +5333,7 @@ static void handle_buf(struct wasd_interfaces *interfaces, u8 *buf, size_t len)
 			break;
 		}
 		case EAG_TYPE:
+        	asd_printf(ASD_DEFAULT,MSG_DEBUG,"%s msg->Type: EAG_TYPE\n",__func__);						
 			msg1 = (EagMsg*)buf;
 			EAG_OP(msg1);
 		default:
@@ -5463,8 +5503,8 @@ void CMD_STA_OP(ASDCmdMsg *msg){
 						ieee802_1x_notify_port_enabled(sta->eapol_sm, 0);
 					}
 					char *SSID = NULL;
-					if(ASD_WLAN[bss[i]->WlanID])
-						SSID = ASD_WLAN[bss[i]->WlanID]->ESSID;
+					if(bss[i]->conf != NULL)
+						SSID = (char *)bss[i]->conf->ssid.ssid;
 					if(gASDLOGDEBUG & BIT(0)){
 						asd_syslog_h(LOG_INFO,"WSTA","WMAC_CLIENT_GOES_OFFLINE:Client "MAC_ADDRESS" disconnected from WLAN %s. Reason Code is %d.\n",MAC2STR(sta->addr),SSID,255);//idletime out
 					}

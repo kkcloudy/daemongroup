@@ -1679,9 +1679,6 @@ ieee802_1x_receive_auth(struct radius_msg *msg, struct radius_msg *req,
 	unsigned int securitytype = 0;
 	if(ASD_SECURITY[SID])
 		securitytype = ASD_SECURITY[SID]->securityType;
-	char *SSID = NULL;
-	if(ASD_WLAN[wlanid])
-		SSID = ASD_WLAN[wlanid]->ESSID;
 	//end
 	//mahz modified 2010.12.8
 	if((wasd->conf) && (wasd->conf->wapi_radius_auth_enable != 1)){
