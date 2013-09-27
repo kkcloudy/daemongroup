@@ -120,7 +120,7 @@ unsigned char gmacfilterflag = 0;
 unsigned char gessidfilterflag = 0;
 extern unsigned int sample_infor_interval;
 extern unsigned char gWIDLOGHN;//qiuchen
-int wid_dbug_trap_ssid_key_conflict(unsigned int wtpid,unsigned char radio_l_id, unsigned char wlan1, unsigned char wlan2);
+
 
 #define CFDISK_MIN_MEM (1000)
 #define SYSTEM_MIN_MEM (300000)
@@ -327,6 +327,8 @@ int wid_update_bss_to_wifi(unsigned int bssindex,unsigned int WTPIndex,unsigned 
 		int ret = -1;									
 		IF_info ifinfo;
 		unsigned char wlan_id = 0;
+		unsigned char find_wlan=0;
+		struct wlanid *Wlan_id;
 		int fd = open("/dev/wifi0", O_RDWR);
 		wid_syslog_debug_debug(WID_DEFAULT,"***%s, fd:%d,flag=%d. ***\n",__func__,fd,flag);
 	
@@ -390,7 +392,25 @@ int wid_update_bss_to_wifi(unsigned int bssindex,unsigned int WTPIndex,unsigned 
 		memcpy(ifinfo.apname,AC_WTP[WTPIndex]->WTPNAME,strlen(AC_WTP[WTPIndex]->WTPNAME));		
 		if(AC_WLAN[wlan_id] != NULL && AC_WLAN[wlan_id]->want_to_delete != 1)  //fengwenchao add 20111220
 		{
-			memcpy(ifinfo.essid ,AC_WLAN[wlan_id]->ESSID ,strlen(AC_WLAN[wlan_id]->ESSID));
+			Wlan_id=AC_WTP[WTPIndex]->Wlan_Id;
+			while(Wlan_id != NULL)
+			{
+				if(Wlan_id->wlanid == wlan_id)
+				{
+					wid_syslog_info("wlanid= %d,ESSID = %s\n",wlan_id,Wlan_id->ESSID);
+					find_wlan = 1;
+					break;
+				}
+				Wlan_id = Wlan_id->next;
+			}
+			if(find_wlan == 1)
+			{
+				memcpy(ifinfo.essid ,Wlan_id->ESSID ,strlen(Wlan_id->ESSID));
+			}
+			else
+			{
+				memcpy(ifinfo.essid ,AC_WLAN[wlan_id]->ESSID ,strlen(AC_WLAN[wlan_id]->ESSID));
+			}
 			ifinfo.Eap1XServerSwitch = AC_WLAN[wlan_id]->eap_mac_switch;
 			memset(ifinfo.Eap1XServerMac,0,MAC_LEN);
 			memcpy(ifinfo.Eap1XServerMac,AC_WLAN[wlan_id]->eap_mac2,MAC_LEN);
@@ -3148,7 +3168,14 @@ int WID_ENABLE_WLAN(unsigned char WlanID){
 								msg.mqinfo.u.WlanInfo.Roaming_Policy = AC_WLAN[WlanID]->Roaming_Policy; 		/*Roaming (1 enable /0 disable)*/
 								memset(msg.mqinfo.u.WlanInfo.WlanEssid,0,ESSID_LENGTH);
 								//memcpy(msg.mqinfo.u.WlanInfo.WlanEssid,AC_WLAN[WlanID]->ESSID,ESSID_LENGTH);
-								memcpy(msg.mqinfo.u.WlanInfo.WlanEssid,AC_WLAN[WlanID]->ESSID,strlen(AC_WLAN[WlanID]->ESSID));
+								if(wlan_id->ESSID)
+								{
+									memcpy(msg.mqinfo.u.WlanInfo.WlanEssid,wlan_id->ESSID,strlen(wlan_id->ESSID));
+								}
+								else
+								{
+									memcpy(msg.mqinfo.u.WlanInfo.WlanEssid,AC_WLAN[WlanID]->ESSID,strlen(AC_WLAN[WlanID]->ESSID));
+								}
 								msg.mqinfo.u.WlanInfo.bssindex = AC_WLAN[WlanID]->S_WTP_BSS_List[m][n];
 								
 								if(AC_WTP[m]->WTPStat == 5){	
@@ -8921,6 +8948,7 @@ int WID_ADD_WLAN_APPLY_RADIO(unsigned int RadioID,unsigned char WlanID){
 	int i = 0;
 	char nas_id[NAS_IDENTIFIER_NAME];//zhanglei add
 	unsigned int nas_id_len = 0;//zhanglei add
+	int essid_len = 0;
 	int WtpID = RadioID/L_RADIO_NUM;
 	int localradio_id = RadioID%L_RADIO_NUM;
 		
@@ -8985,7 +9013,13 @@ int WID_ADD_WLAN_APPLY_RADIO(unsigned int RadioID,unsigned char WlanID){
 	struct wlanid *wlan_id;
 	struct wlanid *wlan_id_next;
 	wlan_id = (struct wlanid*)malloc(sizeof(struct wlanid));
-	
+
+	essid_len = strlen((char *)AC_WLAN[WlanID]->ESSID);
+	wlan_id->ESSID = (char *)malloc(essid_len + 1);
+	memset(wlan_id->ESSID,0,essid_len+1);
+	memcpy(wlan_id->ESSID,AC_WLAN[WlanID]->ESSID,essid_len);
+
+	wid_syslog_debug_debug(WID_DEFAULT,"@@@wlan_id->ESSID is  %s\n",wlan_id->ESSID);
 	wlan_id->wlanid= WlanID;
 	wlan_id->next = NULL;
 	wid_syslog_debug_debug(WID_DEFAULT,"*** wtp binding wlan id  is %d*\n", wlan_id->wlanid);
@@ -9008,8 +9042,9 @@ int WID_ADD_WLAN_APPLY_RADIO(unsigned int RadioID,unsigned char WlanID){
 			if(wlan_id_next->wlanid == WlanID)
 			{
 				wid_syslog_debug_debug(WID_DEFAULT,"warnning you have binding this wlan id,please do not binding this again");
+				free(wlan_id->ESSID);
 				free(wlan_id);
-				return 0;
+				return INTERFACE_BINDED_ALREADLY;
 			}else{
 				wid_syslog_debug_debug(WID_DEFAULT,"%s wid_dbug_trap_ssid_key_conflict\n",__func__);
 				if(((AC_WLAN[wlan_id_next->wlanid])&&(AC_WLAN[wlan_id_next->wlanid]->SecurityID == AC_WLAN[WlanID]->SecurityID)
@@ -9049,6 +9084,8 @@ int WID_ADD_WLAN_APPLY_RADIO(unsigned int RadioID,unsigned char WlanID){
                 /*zhaoruijia,初始化BSS_pkt_info数据防止随机数产生，end*/
 				AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->BSSID = (unsigned char*)malloc(6);
 				memset(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->BSSID,0,6);
+				memset(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->SSID,0,SSID_LENGTH+1);
+				memcpy(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->SSID,wlan_id->ESSID,strlen((char *)wlan_id->ESSID));
 				AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->bss_max_allowed_sta_num= AC_WLAN[WlanID]->bss_allow_max_sta_num;//fengwenchap modify 20120323
 				AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->WlanID = WlanID;
 				AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->Radio_G_ID = RadioID;
@@ -9354,6 +9391,461 @@ int WID_ADD_WLAN_APPLY_RADIO(unsigned int RadioID,unsigned char WlanID){
 	}	
 	return 0;
 
+}
+int WID_ADD_WLAN_APPLY_RADIO_BASE_ESSID(unsigned int RadioID,unsigned char WlanID,char *ESSID)
+{
+
+	int ret = -1;
+	int k1 = 0;	
+	int i = 0;
+	char nas_id[NAS_IDENTIFIER_NAME];//zhanglei add
+	unsigned int nas_id_len = 0;//zhanglei add
+	int WtpID = RadioID/L_RADIO_NUM;
+	int localradio_id = RadioID%L_RADIO_NUM;
+	unsigned int essid_len = 0;
+		
+	if(AC_RADIO[RadioID]->BindingWlanCount >= L_BSS_NUM)
+	{
+		return WTP_OVER_MAX_BSS_NUM;
+	}
+
+
+	if(AC_WLAN[WlanID] == NULL)
+	{
+		wid_syslog_debug_debug(WID_DEFAULT,"*** you binding wlan does not exist **\n");
+		return WLAN_ID_NOT_EXIST;
+	}
+	if (AC_WLAN[WlanID]->want_to_delete == 1)		/* Huangleilei add for ASXXZFI-1622 */
+	{
+		wid_syslog_err("operator want to delete wlan %d", WlanID);
+		return -1;
+	}
+
+	if(AC_WLAN[WlanID]->Wlan_Ifi != NULL)
+	{
+		if(AC_WTP[WtpID]->BindingSystemIndex != -1)
+		{
+			struct ifi * wlan_ifi = AC_WLAN[WlanID]->Wlan_Ifi;
+			while(wlan_ifi != NULL)
+			{
+
+				if(AC_WTP[WtpID]->BindingSystemIndex == wlan_ifi->ifi_index)
+				{
+					if(wlan_ifi->nas_id_len > 0)
+					{
+						nas_id_len = wlan_ifi->nas_id_len;//zhanglei add
+						memcpy(nas_id,wlan_ifi->nas_id,NAS_IDENTIFIER_NAME);//zhanglei add
+					}
+					break;
+				}
+				wlan_ifi = wlan_ifi->ifi_next;
+			}
+			
+			if(wlan_ifi == NULL)
+			{
+				wid_syslog_debug_debug(WID_DEFAULT,"*** wtp binding interface doesn't match with wlan binding interface **\n");
+				//return WTP_WLAN_BINDING_NOT_MATCH;
+			}
+			
+		}
+		else
+		{
+			wid_syslog_warning("<warning>,%s,%d,WTP_IF_NOT_BE_BINDED\n",__func__,__LINE__);
+			//return WTP_IF_NOT_BE_BINDED;
+		}
+	}
+	else
+	{
+		wid_syslog_warning("<warning>,%s,%d,Wlan_IF_NOT_BE_BINDED\n",__func__,__LINE__);
+		//return Wlan_IF_NOT_BE_BINDED;
+	}
+
+	//added end
+		
+	struct wlanid *wlan_id;
+	struct wlanid *wlan_id_next;
+	
+	wlan_id = (struct wlanid*)malloc(sizeof(struct wlanid));
+	
+	wlan_id->wlanid= WlanID;
+	essid_len = strlen((char *)ESSID);
+	if(essid_len <= ESSID_LENGTH)
+	{
+		wlan_id->ESSID = (char *)malloc(essid_len + 1);
+		memset(wlan_id->ESSID,0,essid_len+1);
+		memcpy(wlan_id->ESSID,ESSID,essid_len);
+	}
+	else
+	{
+		wlan_id->ESSID = (char *)malloc(ESSID_LENGTH);
+		memset(wlan_id->ESSID,0,ESSID_LENGTH);
+		memcpy(wlan_id->ESSID,ESSID,ESSID_LENGTH-1);
+	}
+	wlan_id->next = NULL;
+	wid_syslog_debug_debug(WID_DEFAULT,"*** wtp binding wlan id  is %d*\n", wlan_id->wlanid);
+	
+	if(AC_RADIO[RadioID]->Wlan_Id == NULL)
+	{
+		
+		AC_RADIO[RadioID]->Wlan_Id = wlan_id ;
+		
+		AC_RADIO[RadioID]->isBinddingWlan = 1;
+		AC_RADIO[RadioID]->BindingWlanCount++;
+		wid_syslog_debug_debug(WID_DEFAULT,"*** wtp id:%d binding first wlan id:%d  \n",WtpID,WlanID);
+	}
+	else
+	{
+	
+		wlan_id_next = AC_RADIO[RadioID]->Wlan_Id;
+		while(wlan_id_next != NULL)
+		{	
+			if(wlan_id_next->wlanid == WlanID)
+			{
+				wid_syslog_debug_debug(WID_DEFAULT,"############wlanid = %d,ESSID= %s\n",wlan_id_next->wlanid,wlan_id_next->ESSID);
+				wid_syslog_debug_debug(WID_DEFAULT,"warnning you have binding this wlan id,please do not binding this again");
+				free(wlan_id->ESSID);
+				free(wlan_id);
+				return INTERFACE_BINDED_ALREADLY;
+			}
+			else
+			{
+				wid_syslog_debug_debug(WID_DEFAULT,"%s wid_dbug_trap_ssid_key_conflict\n",__func__);
+				if(((AC_WLAN[wlan_id_next->wlanid])&&(AC_WLAN[wlan_id_next->wlanid]->SecurityID == AC_WLAN[WlanID]->SecurityID)
+					&&(AC_WLAN[WlanID]->KeyLen))
+					|| ((AC_WLAN[wlan_id_next->wlanid])&&(AC_WLAN[WlanID]->KeyLen) && (AC_WLAN[wlan_id_next->wlanid]->KeyLen == AC_WLAN[WlanID]->KeyLen)
+					&& (strncmp(AC_WLAN[wlan_id_next->wlanid]->WlanKey,AC_WLAN[WlanID]->WlanKey,AC_WLAN[WlanID]->KeyLen)==0)))
+					wid_dbug_trap_more_ssid_key_conflict(RadioID,wlan_id_next->wlanid, WlanID,wlan_id_next->ESSID,ESSID);
+			}
+			wlan_id_next = wlan_id_next->next;
+		}
+
+		wlan_id_next = AC_RADIO[RadioID]->Wlan_Id;
+		while(wlan_id_next->next!= NULL)
+		{	
+			wlan_id_next = wlan_id_next->next;//insert element int tail
+		}
+		
+		wlan_id_next->next= wlan_id;
+		AC_RADIO[RadioID]->BindingWlanCount++;
+
+		
+		
+		wid_syslog_debug_debug(WID_DEFAULT,"*** wtp id:%d binding more wlan id:%d  \n",WtpID,WlanID);
+	}
+
+	wid_syslog_debug_debug(WID_DEFAULT,"@@@@@@@@@@ESSID = %s\n",ESSID);
+	for(k1=0;k1<L_BSS_NUM;k1++)
+	{
+		if(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1] == NULL)
+		{
+			//printf("BSSIndex:%d\n",k1);
+			if((RadioID)*L_BSS_NUM+k1 >= BSS_NUM)
+			{
+				wid_syslog_err("<error>invalid bssindex:%d,%s\n",(RadioID)*L_BSS_NUM+k1,__func__);
+				return BSS_ID_LARGE_THAN_MAX;
+			}
+			AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1] = (WID_BSS*)malloc(sizeof(WID_BSS));
+			memset(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1],0,sizeof(WID_BSS));	//mahz add 2011.6.15
+			 /*zhaoruijia,初始化BSS_pkt_info数据防止随机数产生，star*/
+			memset(&(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->BSS_pkt_info),0,sizeof(BSSStatistics));
+            /*zhaoruijia,初始化BSS_pkt_info数据防止随机数产生，end*/
+			AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->BSSID = (unsigned char*)malloc(6);
+			memset(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->BSSID,0,6);
+			memset(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->SSID,0,SSID_LENGTH+1);
+			memcpy(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->SSID,wlan_id->ESSID,strlen((char *)wlan_id->ESSID));
+			AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->bss_max_allowed_sta_num= AC_WLAN[WlanID]->bss_allow_max_sta_num;//fengwenchap modify 20120323
+			AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->WlanID = WlanID;
+			AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->Radio_G_ID = RadioID;
+			AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->Radio_L_ID = localradio_id;
+			AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->State = 0;
+			AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->keyindex = 0;
+			AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->band_width = 25;
+			AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->ath_l2_isolation = AC_WLAN[WlanID]->wlan_ath_l2_isolation; //fengwenchao modify 20120323
+			AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->cwmmode = 1;
+			AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->traffic_limit_able = 0;
+			AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->traffic_limit = AC_WLAN[WlanID]->wlan_traffic_limit;
+			AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->average_rate = AC_WLAN[WlanID]->wlan_station_average_traffic_limit;
+			AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->send_traffic_limit = AC_WLAN[WlanID]->wlan_send_traffic_limit;
+			AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->send_average_rate = AC_WLAN[WlanID]->wlan_station_average_send_traffic_limit;
+			AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->ip_mac_binding = AC_WLAN[WlanID]->sta_ip_mac_bind; //fengwenchao modify 20120323
+			AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->upcount= 0;
+			AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->downcount = 0;				
+			AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->limit_sta_rssi = AC_WLAN[WlanID]->wlan_limit_sta_rssi; //fengwenchao add 20120222 for RDIR-25
+			AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->BSSIndex = (RadioID)*L_BSS_NUM+k1;
+			AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->BSS_IF_POLICY = AC_WLAN[WlanID]->wlan_if_policy;
+			AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->vMAC_STATE = 0;
+			AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->WDSStat = AC_WLAN[WlanID]->WDSStat;
+			AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->wds_mesh = AC_WLAN[WlanID]->wds_mesh;
+			AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->wblwm= AC_WLAN[WlanID]->wds_mesh;
+			AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->wds_bss_list = NULL;
+			AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->BSS_TUNNEL_POLICY = AC_WLAN[WlanID]->WLAN_TUNNEL_POLICY;
+			AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->multi_user_optimize_switch = AC_WLAN[WlanID]->multi_user_optimize_switch;//weichao add 
+			memset(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->BSS_IF_NAME, 0, ETH_IF_NAME_LEN);
+			memset(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->nas_id, 0, NAS_IDENTIFIER_NAME);//zhanglei add
+			AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->nas_id_len = 0;//zhanglei add
+			if(nas_id_len > 0)
+			{
+				AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->nas_id_len = nas_id_len;//zhanglei add
+				memcpy(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->nas_id, nas_id, NAS_IDENTIFIER_NAME);//zhanglei add
+			}
+			memset(&(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->BSS_pkt_info),0,sizeof(BSSStatistics));
+			AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->acl_conf = (struct acl_config *)malloc(sizeof(struct acl_config));
+			memset(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->acl_conf,0,sizeof(struct acl_config));
+			AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->acl_conf->macaddr_acl = 0;
+			AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->acl_conf->accept_mac = NULL;
+			AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->acl_conf->num_accept_mac = 0;
+			AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->acl_conf->deny_mac = NULL;
+			AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->acl_conf->num_deny_mac = 0;
+			AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->vlanid = 0;
+			//put wlan-vlan to bss
+			AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->wlan_vlanid = AC_WLAN[WlanID]->vlanid;
+
+			AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->hotspot_id = AC_WLAN[WlanID]->hotspot_id;
+			memset(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->arp_ifname,0,ETH_IF_NAME_LEN);      //fengwenchao  add				       
+			AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->sta_static_arp_policy = AC_WLAN[WlanID]->wlan_sta_static_arp_policy;      //fengwenchao   modify 20120323				
+			memset(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->nas_port_id,0,NAS_PORT_ID_LEN);		       
+			memcpy(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->nas_port_id,AC_WLAN[WlanID]->nas_port_id,NAS_PORT_ID_LEN);
+
+			AC_BSS[AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->BSSIndex] = AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1];
+			AC_RADIO[RadioID]->BSS[k1] = AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1];
+			AC_WLAN[WlanID]->S_WTP_BSS_List[WtpID][localradio_id] = AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->BSSIndex;
+			AC_RADIO[RadioID]->BSS[k1]->muti_rate = AC_WLAN[WlanID]->wlan_muti_rate;
+			AC_RADIO[RadioID]->BSS[k1]->noResToStaProReqSW = AC_WLAN[WlanID]->wlan_noResToStaProReqSW;
+			AC_RADIO[RadioID]->BSS[k1]->muti_bro_cast_sw = AC_WLAN[WlanID]->wlan_muti_bro_cast_sw;
+			AC_RADIO[RadioID]->BSS[k1]->unicast_sw = AC_WLAN[WlanID]->wlan_unicast_sw;
+			AC_RADIO[RadioID]->BSS[k1]->wifi_sw = AC_WLAN[WlanID]->wlan_wifi_sw;
+			AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->wsm_sta_info_reportswitch = 0;
+			AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->wsm_sta_info_reportinterval = 1800;
+			//radio apply wep wlan
+			if((AC_WLAN[WlanID]->EncryptionType == WEP)&&(AC_WLAN[WlanID]->SecurityType != IEEE8021X))
+			{
+				for(i=0;i<WTP_WEP_NUM;i++)
+				{
+					if(AC_RADIO[RadioID]->wep_flag[i] == 0)
+					{
+						int k =0;
+						for(k=0;k<i;k++)
+						{
+							if((AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k]->keyindex == AC_WLAN[WlanID]->SecurityIndex)&&(AC_WLAN[AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k]->WlanID]->EncryptionType == WEP))
+							{
+									WID_DELETE_WLAN_APPLY_RADIO_BASE_ESSID(RadioID,WlanID,ESSID);
+									return SECURITYINDEX_IS_SAME;
+							}
+						}
+					}
+					int j =0;
+					j = AC_WLAN[WlanID]->SecurityIndex - 1;
+					if(j<WTP_WEP_NUM)
+					{
+						if(AC_RADIO[RadioID]->wep_flag[j] == 0)
+						{
+							AC_RADIO[RadioID]->wep_flag[j] = (RadioID)*L_BSS_NUM+k1;
+							AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->keyindex = AC_WLAN[WlanID]->SecurityIndex;															
+							break;
+						}
+					}	
+					else
+					{
+						wid_syslog_debug_debug(WID_DEFAULT,"radio apply wep wlan over 4\n");
+						WID_DELETE_WLAN_APPLY_RADIO_BASE_ESSID(RadioID,WlanID,ESSID);
+						return WTP_WEP_NUM_OVER;
+					}	
+				}
+			}
+			
+			if(AC_WLAN[WlanID]->wlan_if_policy == BSS_INTERFACE)
+			{		
+			
+				ret = Create_BSS_L3_Interface(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->BSSIndex);
+				if(ret < 0)
+				{
+					//WID_DELETE_WLAN_APPLY_WTP(WtpID, WlanID);
+					WID_DELETE_WLAN_APPLY_RADIO_BASE_ESSID(RadioID,WlanID,ESSID);
+					return WLAN_CREATE_L3_INTERFACE_FAIL;
+				}
+
+			}
+			else if(AC_WLAN[WlanID]->wlan_if_policy == WLAN_INTERFACE)
+			{
+				ret = Create_BSS_L3_Interface(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->BSSIndex);
+				
+				if(ret < 0)
+				{
+					//WID_DELETE_WLAN_APPLY_WTP(WtpID, WlanID);
+					WID_DELETE_WLAN_APPLY_RADIO_BASE_ESSID(RadioID,WlanID,ESSID);
+					return WLAN_CREATE_L3_INTERFACE_FAIL;
+				}
+
+				ret = ADD_BSS_L3_Interface_BR(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->BSSIndex);
+				if(ret < 0)
+				{
+					//WID_DELETE_WLAN_APPLY_WTP(WtpID, WlanID);
+					WID_DELETE_WLAN_APPLY_RADIO_BASE_ESSID(RadioID,WlanID,ESSID);
+					return BSS_L3_INTERFACE_ADD_BR_FAIL;
+				}
+			}
+			break;
+		}
+	}	
+	
+	if(k1 == L_BSS_NUM)
+	{
+		return WTP_OVER_MAX_BSS_NUM;
+	}
+
+	wid_syslog_debug_debug(WID_DEFAULT,"11111111111111111111111111111\n");
+	if(AC_WLAN[WlanID]->Status == 1)
+	{
+		printf("wlan is disable,so just binging this wlan,not to send add wlan msg\n");
+		return 0;
+	}
+	wid_syslog_debug_debug(WID_DEFAULT,"2222222222222222222222222222222\n");
+	msgq msg;
+	//struct msgqlist *elem;
+	//add to control list
+	if((AC_WTP[WtpID] != NULL)&&(AC_WTP[WtpID]->WTPStat == 5))
+	{
+		wid_syslog_debug_debug(WID_DEFAULT,"333333333333333333333333333333\n");
+		memset((char*)&msg, 0, sizeof(msg));
+		msg.mqid = WtpID%THREAD_NUM+1;
+		msg.mqinfo.WTPID = WtpID;
+		msg.mqinfo.type = CONTROL_TYPE;
+		msg.mqinfo.subtype = WLAN_S_TYPE;
+		msg.mqinfo.u.WlanInfo.Wlan_Op = WLAN_ADD;
+		msg.mqinfo.u.WlanInfo.WLANID = WlanID;
+		msg.mqinfo.u.WlanInfo.Radio_L_ID = localradio_id;
+		msg.mqinfo.u.WlanInfo.HideESSid = AC_WLAN[WlanID]->HideESSid;
+		memset(msg.mqinfo.u.WlanInfo.WlanKey,0,DEFAULT_LEN);
+		memcpy(msg.mqinfo.u.WlanInfo.WlanKey,AC_WLAN[WlanID]->WlanKey,DEFAULT_LEN);
+		msg.mqinfo.u.WlanInfo.KeyLen = AC_WLAN[WlanID]->KeyLen;
+		msg.mqinfo.u.WlanInfo.SecurityType = AC_WLAN[WlanID]->SecurityType;
+		msg.mqinfo.u.WlanInfo.SecurityIndex = AC_WLAN[WlanID]->SecurityIndex;
+		msg.mqinfo.u.WlanInfo.asic_hex = AC_WLAN[WlanID]->asic_hex;/* 0 asic; 1 hex*/
+		msg.mqinfo.u.WlanInfo.Roaming_Policy = AC_WLAN[WlanID]->Roaming_Policy;			/*Roaming (1 enable /0 disable)*/
+		memset(msg.mqinfo.u.WlanInfo.WlanEssid,0,ESSID_LENGTH);
+		//memcpy(msg.mqinfo.u.WlanInfo.WlanEssid,AC_WLAN[WlanID]->ESSID,ESSID_LENGTH);
+		#if 0
+		memcpy(msg.mqinfo.u.WlanInfo.WlanEssid,AC_WLAN[WlanID]->ESSID,strlen(AC_WLAN[WlanID]->ESSID));
+		#endif
+		memcpy(msg.mqinfo.u.WlanInfo.WlanEssid,wlan_id->ESSID,strlen(wlan_id->ESSID));
+		wid_syslog_debug_debug(WID_DEFAULT,"!!!!!!!!!msg.mqinfo.u.WlanInfo.WlanEssid = %s\n",msg.mqinfo.u.WlanInfo.WlanEssid);
+		msg.mqinfo.u.WlanInfo.bssindex = AC_WLAN[WlanID]->S_WTP_BSS_List[WtpID][localradio_id];
+
+		if (msgsnd(ACDBUS_MSGQ, (msgq *)&msg, sizeof(msg.mqinfo), 0) == -1){
+				wid_syslog_crit("%s msgsend %s",__func__,strerror(errno));
+			perror("msgsnd");
+		}
+	}//delete unuseful code
+	#if 0
+	else if((AC_WTP[WtpID] != NULL))
+	{
+		memset((char*)&msg, 0, sizeof(msg));
+		msg.mqid = WtpID%THREAD_NUM+1;
+		msg.mqinfo.WTPID = WtpID;
+		msg.mqinfo.type = CONTROL_TYPE;
+		msg.mqinfo.subtype = WLAN_S_TYPE;
+		msg.mqinfo.u.WlanInfo.Wlan_Op = WLAN_ADD;
+		msg.mqinfo.u.WlanInfo.WLANID = WlanID;
+		msg.mqinfo.u.WlanInfo.Radio_L_ID = localradio_id;
+		msg.mqinfo.u.WlanInfo.HideESSid = AC_WLAN[WlanID]->HideESSid;
+		memset(msg.mqinfo.u.WlanInfo.WlanKey,0,DEFAULT_LEN);
+		memcpy(msg.mqinfo.u.WlanInfo.WlanKey,AC_WLAN[WlanID]->WlanKey,DEFAULT_LEN);
+		msg.mqinfo.u.WlanInfo.KeyLen = AC_WLAN[WlanID]->KeyLen;
+		msg.mqinfo.u.WlanInfo.SecurityType = AC_WLAN[WlanID]->SecurityType;
+		msg.mqinfo.u.WlanInfo.SecurityIndex = AC_WLAN[WlanID]->SecurityIndex;
+		msg.mqinfo.u.WlanInfo.asic_hex = AC_WLAN[WlanID]->asic_hex;
+		msg.mqinfo.u.WlanInfo.Roaming_Policy = AC_WLAN[WlanID]->Roaming_Policy;
+		memset(msg.mqinfo.u.WlanInfo.WlanEssid,0,ESSID_LENGTH);
+		#if 0
+		memcpy(msg.mqinfo.u.WlanInfo.WlanEssid,AC_WLAN[WlanID]->ESSID,ESSID_LENGTH);
+		#endif
+		memcpy(msg.mqinfo.u.WlanInfo.WlanEssid,wlan_id->ESSID,strlen(wlan_id->ESSID));
+		msg.mqinfo.u.WlanInfo.bssindex = AC_WLAN[WlanID]->S_WTP_BSS_List[WtpID][localradio_id];
+
+		elem = (struct msgqlist*)malloc(sizeof(struct msgqlist));
+		if(elem == NULL){
+			wid_syslog_crit("%s malloc %s",__func__,strerror(errno));
+			perror("malloc");
+			return 0;
+		}
+		memset((char*)&(elem->mqinfo), 0, sizeof(msgqdetail));
+		elem->next = NULL;
+		memcpy((char*)&(elem->mqinfo),(char*)&(msg.mqinfo),sizeof(msg.mqinfo));
+		WID_INSERT_CONTROL_LIST(WtpID, elem);		
+	}
+	#endif
+	if(AC_WTP[WtpID]!=NULL)
+	{
+		if((AC_WLAN[WlanID])&&(AC_WLAN[WlanID]->Status == 0))
+			WLAN_FLOW_CHECK(WlanID);
+	}
+
+	/* send eap switch & mac to ap,zhangshu add 2010-10-22 */
+	int bssindex = AC_WLAN[WlanID]->S_WTP_BSS_List[WtpID][localradio_id];
+	char apcmd[WID_SYSTEM_CMD_LENTH];
+	memset(apcmd,0,WID_SYSTEM_CMD_LENTH);
+	if((AC_WLAN[WlanID]->eap_mac_switch==1)&&(AC_WLAN[WlanID]->wlan_if_policy==NO_INTERFACE)&&(AC_BSS[bssindex]!=NULL)&&(AC_BSS[bssindex]->BSS_IF_POLICY == NO_INTERFACE))
+	{
+	    sprintf(apcmd,"set_eap_mac ath.%d-%d %s",AC_RADIO[RadioID]->Radio_L_ID,WlanID,AC_WLAN[WlanID]->eap_mac);
+	}
+	else
+	{
+	    sprintf(apcmd,"set_eap_mac ath.%d-%d 0",AC_RADIO[RadioID]->Radio_L_ID,WlanID);
+	}
+	wid_syslog_debug_debug(WID_DEFAULT,"Enable Wlan: set eap mac cmd %s\n",apcmd);
+	wid_radio_set_extension_command(WtpID,apcmd);
+	/* end */
+
+    /* zhangshu add , 2011-1-7 */
+	if((check_bssid_func(AC_WLAN[WlanID]->S_WTP_BSS_List[WtpID][localradio_id]))&&(AC_BSS[(AC_WLAN[WlanID]->S_WTP_BSS_List[WtpID][localradio_id])] != NULL))
+	{                                                                                        
+		unsigned int bssindex = AC_WLAN[WlanID]->S_WTP_BSS_List[WtpID][localradio_id];
+		wid_syslog_debug_debug(WID_DEFAULT,"!@#$ AC_BSS[%d]->traffic_limit_able = %d\n",bssindex,AC_BSS[bssindex]->traffic_limit_able);
+		WID_Save_Traffic_Limit(bssindex, WtpID);
+	}
+		
+	if((AC_BSS[bssindex])&&(AC_BSS[bssindex]->BSS_IF_POLICY != NO_INTERFACE)&&(AC_BSS[bssindex]->BSS_TUNNEL_POLICY != CW_802_DOT_11_TUNNEL)){
+		msgq msg;
+//		struct msgqlist *elem;
+		memset((char*)&msg, 0, sizeof(msg));
+		wid_syslog_debug_debug(WID_DEFAULT,"*** %s,%d.**\n",__func__,__LINE__);
+		msg.mqid = WtpID%THREAD_NUM+1;
+		msg.mqinfo.WTPID = WtpID;
+		msg.mqinfo.type = CONTROL_TYPE;
+		msg.mqinfo.subtype = WLAN_S_TYPE;
+		msg.mqinfo.u.WlanInfo.Wlan_Op = WLAN_CHANGE_TUNNEL;
+		msg.mqinfo.u.WlanInfo.WLANID = WlanID;
+		msg.mqinfo.u.WlanInfo.Radio_L_ID = localradio_id;
+		
+		msg.mqinfo.u.WlanInfo.bssindex = AC_WLAN[WlanID]->S_WTP_BSS_List[WtpID][localradio_id];
+		
+		if((AC_WTP[WtpID]->WTPStat == 5)){ 
+			if (msgsnd(ACDBUS_MSGQ, (msgq *)&msg, sizeof(msg.mqinfo), 0) == -1){
+				wid_syslog_crit("%s msgsend %s",__func__,strerror(errno));
+				perror("msgsnd");
+			}
+		}//delete unuseful code
+		/*else{
+			elem = (struct msgqlist*)malloc(sizeof(struct msgqlist));
+			if(elem == NULL){
+				wid_syslog_crit("%s malloc %s",__func__,strerror(errno));
+				perror("malloc");
+				return 0;
+			}
+			memset((char*)&(elem->mqinfo), 0, sizeof(msgqdetail));
+			elem->next = NULL;
+			memcpy((char*)&(elem->mqinfo),(char*)&(msg.mqinfo),sizeof(msg.mqinfo));
+			WID_INSERT_CONTROL_LIST(WtpID, elem);
+		}*/
+	}	
+	if((AC_BSS[bssindex])&&(AC_BSS[bssindex]->multi_user_optimize_switch == 1))
+	{
+		char wlanid =AC_BSS[bssindex]->WlanID;
+		int radioid = AC_BSS[bssindex]->Radio_G_ID;
+		muti_user_optimize_switch(wlanid,radioid,1);
+		
+	}	
+	return 0;
 }
 int WID_ADD_WLAN_APPLY_RADIO_BASE_VLANID(unsigned int RadioID,unsigned char WlanID,unsigned int vlan_id){
 
@@ -11225,6 +11717,7 @@ int WID_DELETE_WLAN_APPLY_RADIO(unsigned int RadioId, unsigned char WlanId)
 	int ebr_id = 0;
 	int WtpID = RadioId/L_RADIO_NUM;
 	int local_radioid = RadioId%L_RADIO_NUM;
+	int essid_len = 0;
 	//msgq msg;
 	//struct msgqlist *elem;
 	if(AC_WLAN[WlanId] == NULL)
@@ -11235,6 +11728,7 @@ int WID_DELETE_WLAN_APPLY_RADIO(unsigned int RadioId, unsigned char WlanId)
 
 	struct wlanid *wlan_id;
 	struct wlanid *wlan_id_next;
+	essid_len = strlen((char *)AC_WLAN[WlanId]->ESSID);
 	wlan_id = AC_RADIO[RadioId]->Wlan_Id;
 	
 	#if 0
@@ -11280,6 +11774,10 @@ int WID_DELETE_WLAN_APPLY_RADIO(unsigned int RadioId, unsigned char WlanId)
 	}
 	else if(wlan_id_next->wlanid == WlanId)
 	{
+			if(strncmp(wlan_id_next->ESSID,AC_WLAN[WlanId]->ESSID,essid_len) != 0)
+			{
+				return INTERFACE_BINDED_OTHER_ESSID;
+			}
 			if((AC_WLAN[WlanId]->S_WTP_BSS_List[WtpID][local_radioid] != 0)&&(AC_BSS[AC_WLAN[WlanId]->S_WTP_BSS_List[WtpID][local_radioid]] != NULL))
 			{		
 				int BSSIndex = AC_WLAN[WlanId]->S_WTP_BSS_List[WtpID][local_radioid];
@@ -11325,6 +11823,7 @@ int WID_DELETE_WLAN_APPLY_RADIO(unsigned int RadioId, unsigned char WlanId)
 			return BSS_NOT_EXIST;
 		}
 		AC_RADIO[RadioId]->Wlan_Id = wlan_id_next->next;
+		free(wlan_id_next->ESSID);
 		free(wlan_id_next);
 		wlan_id_next = NULL;
 		AC_RADIO[RadioId]->BindingWlanCount--;
@@ -11342,6 +11841,10 @@ int WID_DELETE_WLAN_APPLY_RADIO(unsigned int RadioId, unsigned char WlanId)
 		{	
 			if(wlan_id_next->next->wlanid == WlanId)
 			{
+				if(strncmp(wlan_id_next->ESSID,AC_WLAN[WlanId]->ESSID,essid_len) != 0)
+				{
+					return INTERFACE_BINDED_OTHER_ESSID;
+				}
 				ret = delete_wlan_bss_by_radioId(RadioId,WlanId);
 				if(ret == -1)
 				{
@@ -11353,6 +11856,7 @@ int WID_DELETE_WLAN_APPLY_RADIO(unsigned int RadioId, unsigned char WlanId)
 				}				
 				wlan_id = wlan_id_next->next;
 				wlan_id_next->next = wlan_id_next->next->next;
+				free(wlan_id->ESSID);
 				free(wlan_id);
 				wlan_id = NULL;
 				AC_RADIO[RadioId]->BindingWlanCount--;
@@ -11365,6 +11869,166 @@ int WID_DELETE_WLAN_APPLY_RADIO(unsigned int RadioId, unsigned char WlanId)
 	return INTERFACE_NOT_BE_BINDED;
 
 }
+
+int WID_DELETE_WLAN_APPLY_RADIO_BASE_ESSID(unsigned int RadioId, unsigned char WlanId,char *ESSID)
+{
+	int ret = 0;
+	int ebr_id = 0;
+	int WtpID = RadioId/L_RADIO_NUM;
+	int local_radioid = RadioId%L_RADIO_NUM;
+	int essid_len = 0;
+	//msgq msg;
+	//struct msgqlist *elem;
+	if(AC_WLAN[WlanId] == NULL)
+	{
+		wid_syslog_debug_debug(WID_DEFAULT,"*** you binding wlan does not exist **\n");
+		return WLAN_ID_NOT_EXIST;
+	}
+
+	struct wlanid *wlan_id;
+	struct wlanid *wlan_id_next;
+	essid_len = strlen(ESSID);
+	wlan_id = AC_RADIO[RadioId]->Wlan_Id;
+	
+	#if 0
+	if((AC_WLAN[WlanId])&&(AC_RADIO[RadioId])&&(!strncasecmp(AC_RADIO[RadioId]->br_ifname[WlanId],"ebr",3)))
+	{	
+		memset(ebrname,0,ETH_IF_NAME_LEN);
+		memcpy(ebrname,AC_RADIO[RadioId]->br_ifname[WlanId],strlen(AC_RADIO[RadioId]->br_ifname[WlanId]));
+		wid_syslog_debug_debug(WID_DEFAULT,"ebrname =  %s \n",ebrname);
+		 ret = Check_Interface_Exist(ebrname,&quitreason);
+		 if(ret == 0)
+		 	return RADIO_IN_EBR;			
+	}
+	#endif
+
+	/*fengwenchao add end*/
+	if(check_whether_in_ebr(vrrid,WtpID,local_radioid,WlanId,&ebr_id))
+	{
+		wid_syslog_debug_debug(WID_DEFAULT,"<error> %s check interface in ebr \n",__func__);
+		return RADIO_IN_EBR;
+	}	
+	wid_syslog_debug_debug(WID_DEFAULT,"**!!!!!!!!!!!! list start !!!!!!!!!!!!!!!***\n");
+//	printf("**!!!!!!!!!!!! list start !!!!!!!!!!!!!!!***\n");
+	while(wlan_id != NULL)
+	{
+		//printf("**!!!!!!!!!!!! list start !!!!!!!!!!!!!!!***\n");
+
+		wid_syslog_debug_debug(WID_DEFAULT,"**wlan id is:%d ***\n",wlan_id->wlanid);
+		wid_syslog_debug_debug(WID_DEFAULT,"vrrid = %d WtpID = %d ,  local_radioid   = %d  wlan_id->wlanid = %d \n",vrrid,WtpID,local_radioid,wlan_id->wlanid);
+
+
+		wlan_id = wlan_id->next;
+		//printf("**!!!!!!!!!!!! list end !!!!!!!!!!!!!!!***\n");
+		
+	}
+	wid_syslog_debug_debug(WID_DEFAULT,"**!!!!!!!!!!!! list end !!!!!!!!!!!!!!!***\n");
+//	printf("**!!!!!!!!!!!! list end !!!!!!!!!!!!!!!***\n");
+	wid_syslog_debug_debug(WID_DEFAULT,"ESSID= %s\n",ESSID);
+	wlan_id_next = AC_RADIO[RadioId]->Wlan_Id;
+
+	if(AC_RADIO[RadioId]->isBinddingWlan == 0)
+	{
+		return INTERFACE_NOT_BE_BINDED;
+	}
+	else if(wlan_id_next->wlanid == WlanId)
+	{
+			if(strncmp(wlan_id_next->ESSID,ESSID,essid_len) != 0)
+			{
+				return INTERFACE_BINDED_OTHER_ESSID;
+			}
+			if((AC_WLAN[WlanId]->S_WTP_BSS_List[WtpID][local_radioid] != 0)&&(AC_BSS[AC_WLAN[WlanId]->S_WTP_BSS_List[WtpID][local_radioid]] != NULL))
+			{		
+				int BSSIndex = AC_WLAN[WlanId]->S_WTP_BSS_List[WtpID][local_radioid];
+				
+				
+				if((AC_BSS[BSSIndex] != NULL)&&(AC_BSS[BSSIndex]->State == 1))
+				{
+					return BSS_BE_ENABLE;
+				}
+				#if 0
+				if(AC_WTP[WtpID]->WTPStat != 5){
+					AsdWsm_BSSOp(BSSIndex, WID_DEL, 1);
+					memset((char*)&msg, 0, sizeof(msg));
+					msg.mqid = WtpID%THREAD_NUM+1;
+					msg.mqinfo.WTPID = WtpID;
+					msg.mqinfo.type = CONTROL_TYPE;
+					msg.mqinfo.subtype = WLAN_S_TYPE;
+					msg.mqinfo.u.WlanInfo.Wlan_Op = WLAN_DEL;
+					msg.mqinfo.u.WlanInfo.WLANID = WlanId;
+					msg.mqinfo.u.WlanInfo.Radio_L_ID = local_radioid;
+
+					msg.mqinfo.u.WlanInfo.bssindex = AC_WLAN[WlanId]->S_WTP_BSS_List[WtpID][local_radioid];
+					elem = (struct msgqlist*)malloc(sizeof(struct msgqlist));
+					if(elem == NULL){
+						wid_syslog_crit("%s malloc %s",__func__,strerror(errno));
+						perror("malloc");
+						return 0;
+					}
+					memset((char*)&(elem->mqinfo), 0, sizeof(msgqdetail));
+					elem->next = NULL;
+					memcpy((char*)&(elem->mqinfo),(char*)&(msg.mqinfo),sizeof(msg.mqinfo));
+					WID_INSERT_CONTROL_LIST(WtpID, elem);
+				}
+				#endif
+			}
+		ret = delete_wlan_bss_by_radioId(RadioId,WlanId);
+		if(ret == -1)
+		{
+			return BSS_BE_ENABLE;
+		}
+		else if(ret == BSS_NOT_EXIST)  //fengwenchao add 20120131 for TESTBED-17
+		{
+			return BSS_NOT_EXIST;
+		}
+		AC_RADIO[RadioId]->Wlan_Id = wlan_id_next->next;
+		free(wlan_id_next->ESSID);
+		free(wlan_id_next);
+		wlan_id_next = NULL;
+		AC_RADIO[RadioId]->BindingWlanCount--;
+		if(AC_RADIO[RadioId]->Wlan_Id == NULL)
+		{
+			AC_RADIO[RadioId]->isBinddingWlan = 0;
+			AC_RADIO[RadioId]->BindingWlanCount = 0;
+		}
+		return 0;
+	}
+
+	else
+	{
+		while(wlan_id_next->next != NULL)
+		{	
+			if(wlan_id_next->next->wlanid == WlanId)
+			{
+				if(strncmp(wlan_id_next->ESSID,ESSID,essid_len) != 0)
+				{
+					return INTERFACE_BINDED_OTHER_ESSID;
+				}
+				ret = delete_wlan_bss_by_radioId(RadioId,WlanId);
+				if(ret == -1)
+				{
+					return BSS_BE_ENABLE;
+				}
+				else if(ret == BSS_NOT_EXIST)  //fengwenchao add 20120131 for TESTBED-17
+				{
+					return BSS_NOT_EXIST;
+				}				
+				wlan_id = wlan_id_next->next;
+				wlan_id_next->next = wlan_id_next->next->next;
+				free(wlan_id->ESSID);
+				free(wlan_id);
+				wlan_id = NULL;
+				AC_RADIO[RadioId]->BindingWlanCount--;
+				return 0;
+			}
+			wlan_id_next = wlan_id_next->next;
+		}
+	}
+
+	return INTERFACE_NOT_BE_BINDED;
+
+}
+
 int WID_DISABLE_WLAN_APPLY_RADIO(unsigned int RadioId, unsigned char WlanId)
 {
 	int ifind = 0;

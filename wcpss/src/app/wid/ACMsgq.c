@@ -167,7 +167,16 @@ void WID_WLAN_CONFIG_SAVE(unsigned int WTPIndex,unsigned int local_radio)
 								msg.mqinfo.u.WlanInfo.Roaming_Policy = AC_WLAN[k]->Roaming_Policy;		/*Roaming (1 enable /0 disable)*/
 								memset(msg.mqinfo.u.WlanInfo.WlanEssid,0,ESSID_LENGTH);
 								//memcpy(msg.mqinfo.u.WlanInfo.WlanEssid,AC_WLAN[k]->ESSID,ESSID_LENGTH);
-								memcpy(msg.mqinfo.u.WlanInfo.WlanEssid,AC_WLAN[k]->ESSID,strlen(AC_WLAN[k]->ESSID));
+								if(wlan_id->ESSID)
+								{
+									wid_syslog_debug_debug(WID_DEFAULT,"$$$$$$$$$$ wtp online !\n");
+									wid_syslog_debug_debug(WID_DEFAULT,"ESSID = %s\n",wlan_id->ESSID);
+									memcpy(msg.mqinfo.u.WlanInfo.WlanEssid,wlan_id->ESSID,strlen(wlan_id->ESSID));
+								}
+								else
+								{
+									memcpy(msg.mqinfo.u.WlanInfo.WlanEssid,AC_WLAN[k]->ESSID,strlen(AC_WLAN[k]->ESSID));
+								}
 								msg.mqinfo.u.WlanInfo.bssindex = AC_WLAN[k]->S_WTP_BSS_List[WTPIndex][local_radio];
 								
 								elem = (struct msgqlist*)malloc(sizeof(struct msgqlist));

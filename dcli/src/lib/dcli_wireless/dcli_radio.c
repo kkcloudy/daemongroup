@@ -19,6 +19,7 @@
 #include "sysdef/npd_sysdef.h"
 #include "dbus/wcpss/dcli_wid_radio.h"    /*fengwenchao add 20110315*/
 #include "bsd/bsdpub.h"
+#include "dcli_wlan.h"
 
 interface_wlan_tunnel_mode_cmd;
 interface_radio_tunnel_mode_cmd;
@@ -972,6 +973,7 @@ DEFUN(show_radio_cmd_func,
 	int index = 0;
 	int localid = 1;
     int slot_id = HostSlotId;
+	struct wlanid  *tmp = NULL;
 
 	ret = parse_radio_id((char*)argv[0],&wtpid,&l_radioid);
 
@@ -1504,6 +1506,18 @@ DEFUN(show_radio_cmd_func,
 						wds);
 				//free(RADIOINFO->RADIO[0]->BSS[i]->BSSID);
 				//free(RADIOINFO->RADIO[0]->BSS[i]);
+			}
+			
+			vty_out(vty,"==============================================================================\n");
+			vty_out(vty,"radio apply wlan summary\n");
+			vty_out(vty,"==============================================================================\n");
+			/*vty_out(vty,"%-6s	%-7s	%-17s  %-9s	%-16s %-16s\n","WLANID","RadioID","BSSID","BSS State","BSSPolicy","MaxStaNum");*/
+			vty_out(vty,"%-6s	%-8s\n","WLANID","ESSID");
+			tmp = RADIOINFO->RADIO[0]->Wlan_Id;
+			while(tmp != NULL)
+			{
+				vty_out(vty,"%-6d	%-32s\n",tmp->wlanid,tmp->ESSID);
+				tmp = tmp->next;
 			}
 			
 			vty_out(vty,"==============================================================================\n");
@@ -7340,6 +7354,10 @@ DEFUN(set_radio_apply_wlan_cmd_func,
 		{
 			vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
 		}
+		else if(ret == INTERFACE_BINDED_ALREADLY)
+		{
+			vty_out(vty,"<warning> radio has been binded this wlan already ,if you want use other ESSID,please unbind it first!\n");
+		}
 		else 
 			vty_out(vty,"<error> radio %d-%d apply wlan %s fail\n",radio_id/L_RADIO_NUM,radio_id%L_RADIO_NUM,argv[0]);
 		
@@ -7348,6 +7366,191 @@ DEFUN(set_radio_apply_wlan_cmd_func,
 
 }
 #endif
+
+
+DEFUN(set_radio_apply_wlan_base_essid_cmd_func,
+	  set_radio_apply_wlan_base_essid_cmd,
+	  "radio apply wlan ID essid .ESSID",
+	  "radio config \n"
+	  "radio binding wlan\n"
+	  "radio binding wlan\n"
+	  "wlan id\n"
+	  "base\n"
+	  "wlan ESSID\n"
+	 )
+{
+	int ret=0,len=0;
+	DBusMessage *query, *reply;
+	DBusError err;
+	DBusMessageIter	 iter;
+	unsigned int radio_id=0;
+	unsigned char wlanid = 0;
+	char *ESSID;
+	//radio_id = (int)vty->index;
+	
+	ret = parse_char_ID((char *)argv[0],&wlanid);
+	
+	if (ret != WID_DBUS_SUCCESS)
+	{	
+       if(ret == WID_ILLEGAL_INPUT)
+	   {
+            	vty_out(vty,"<error> illegal input:Input exceeds the maximum value of the parameter type \n");
+       }
+	   else
+	   {
+			vty_out(vty,"<error> input parameter %s error\n",argv[0]);
+	   }
+		return CMD_SUCCESS;
+	}
+	
+	if((wlanid < 1)||(wlanid >(WLAN_NUM-1)))
+	{
+		vty_out(vty,"<error> input parameter should be 1 to %d \n",WLAN_NUM-1);
+		return CMD_SUCCESS;
+	}
+
+	ESSID= WID_parse_CMD_str(&argv[1],argc-1,NULL,0);
+	if(ESSID== NULL)
+	{		
+		vty_out(vty,"UNKNOWN COMMAND\n");
+		vty_out(vty,"COMMAND should be :create wlan 1 w1 aq w\n");
+		return CMD_SUCCESS;
+	}
+	len = strlen(ESSID);
+	if(len > 32)
+	{		
+		vty_out(vty,"<error> essid is too long,out of the limit of 32\n");
+		if(ESSID)
+		{
+			free(ESSID);
+			ESSID = NULL;
+		}	
+		return CMD_SUCCESS;
+	}
+	/*end*/
+	if(-1 == ssid_illegal_character_check(ESSID,len))
+	{
+		vty_out(vty,"essid is null!or checkout the parameter len!\n");
+		if(ESSID)
+		{
+			free(ESSID);
+			ESSID = NULL;
+		}
+		return CMD_SUCCESS;
+	}
+	else if(-2==ssid_illegal_character_check(ESSID,len))
+	{
+		vty_out(vty,"illegal essid name!! ` \ \" & * ( ) not supported!\n");
+		if(ESSID)
+		{
+			free(ESSID);
+			ESSID = NULL;
+		}
+		return CMD_SUCCESS;
+	}
+	int index = 0;
+	int localid = 1;
+    int slot_id = HostSlotId;
+	char BUSNAME[PATH_LEN];
+	char OBJPATH[PATH_LEN];
+	char INTERFACE[PATH_LEN];
+	if(vty->node == RADIO_NODE)
+	{
+		index = 0;			
+		radio_id = (int)vty->index;
+	}else if(vty->node == HANSI_RADIO_NODE)
+	{
+		index = vty->index; 
+		localid = vty->local;
+        slot_id = vty->slotindex;
+		radio_id = (int)vty->index_sub;
+	}else if (vty->node == LOCAL_HANSI_RADIO_NODE)
+	{
+        index = vty->index;
+        localid = vty->local;
+        slot_id = vty->slotindex;
+		radio_id = (int)vty->index_sub;
+    }
+    DBusConnection *dcli_dbus_connection = NULL;
+    ReInitDbusConnection(&dcli_dbus_connection,slot_id,distributFag);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_BUSNAME,BUSNAME);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_RADIO_OBJPATH,OBJPATH);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_RADIO_INTERFACE,INTERFACE);
+	query = dbus_message_new_method_call(BUSNAME,OBJPATH,INTERFACE,WID_DBUS_RADIO_METHOD_APPLY_WLAN_BASE_ESSID);
+
+
+/*	query = dbus_message_new_method_call(WID_DBUS_BUSNAME,WID_DBUS_RADIO_OBJPATH,\
+						WID_DBUS_RADIO_INTERFACE,WID_DBUS_RADIO_METHOD_APPLY_WLAN);*/
+	
+	dbus_error_init(&err);
+
+	dbus_message_append_args(query,
+							 DBUS_TYPE_UINT32,&radio_id,
+							 DBUS_TYPE_BYTE,&wlanid,
+							 DBUS_TYPE_STRING,&ESSID,
+							 DBUS_TYPE_INVALID);
+
+	reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection,query,-1, &err);
+	
+	dbus_message_unref(query);
+	
+	if (NULL == reply) 
+	{
+		cli_syslog_info("<error> failed get reply.\n");
+		if (dbus_error_is_set(&err)) 
+		{
+			cli_syslog_info("%s raised: %s",err.name,err.message);
+			dbus_error_free_for_dcli(&err);
+		}
+		if(ESSID)
+		{
+			free(ESSID);
+			ESSID = NULL;
+		}
+		return CMD_SUCCESS;
+	}
+	
+	dbus_message_iter_init(reply,&iter);
+	dbus_message_iter_get_basic(&iter,&ret);
+	dbus_message_unref(reply);
+		if(ret == 0)
+			vty_out(vty,"radio %d-%d apply wlan %s successfully\n",radio_id/L_RADIO_NUM,radio_id%L_RADIO_NUM,argv[0]);
+		else if(ret==RADIO_ID_NOT_EXIST)
+			vty_out(vty,"<error> radio %d-%d not exist\n",radio_id/L_RADIO_NUM,radio_id%L_RADIO_NUM);
+		else if(ret==WLAN_ID_NOT_EXIST)
+			vty_out(vty,"<error> wlan %d not exist\n",wlanid);
+		else if(ret==WTP_OVER_MAX_BSS_NUM)
+			vty_out(vty,"<error> bss num is already %d\n",L_BSS_NUM);
+		else if(ret==WTP_WLAN_BINDING_NOT_MATCH)
+			vty_out(vty,"<error> wtp wlan binding interface not match\n");
+		else if(ret==WTP_IF_NOT_BE_BINDED)
+			vty_out(vty,"<error> wtp not bind interface\n");
+		else if(ret==Wlan_IF_NOT_BE_BINDED)
+			vty_out(vty,"<error> wlan not bind interface\n");
+		else if(ret==WLAN_CREATE_L3_INTERFACE_FAIL)
+			vty_out(vty,"<error> wlan crete wlan bridge fail\n");
+		else if(ret==BSS_L3_INTERFACE_ADD_BR_FAIL)
+			vty_out(vty,"<error> add bss if to wlan bridge fail\n");
+		else if(ret == WTP_WEP_NUM_OVER)
+			vty_out(vty,"<error> wtp over max wep wlan count 4 or wep index conflict\n");
+		else if(ret == SECURITYINDEX_IS_SAME)   //fengwenchao add 20110112
+			vty_out(vty,"<error> radio apply bingding securityindex is same with other\n");
+		else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+		{
+			vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+		}
+		else if(ret == INTERFACE_BINDED_ALREADLY)
+		{
+			vty_out(vty,"<warning> radio has been binded this wlan already ,if you want use other ESSID,please unbind it first!\n");
+		}
+		else 
+			vty_out(vty,"<error> radio %d-%d apply wlan %s fail\n",radio_id/L_RADIO_NUM,radio_id%L_RADIO_NUM,argv[0]);
+		
+	free(ESSID);
+	return CMD_SUCCESS;
+
+}
+
 #if _GROUP_POLICY
 DEFUN(set_radio_apply_qos_cmd_func,
 	  set_radio_apply_qos_cmd,
@@ -8452,6 +8655,14 @@ DEFUN(set_radio_delete_wlan_cmd_func,
 		{
 			vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
 		}
+		else if (ret == INTERFACE_BINDED_OTHER_ESSID)
+		{
+			vty_out(vty,"<error> radio interface is binded to this wlan used other ESSID\n");
+		}
+		else if (ret == BSS_BE_ENABLE)
+		{
+			vty_out(vty,"<error> please disable wlan service first !\n");
+		}
 		else 
 			vty_out(vty,"<error> radio %d-%d delete wlan %s fail\n",radio_id/L_RADIO_NUM,radio_id%L_RADIO_NUM,argv[0]);
 		
@@ -8460,6 +8671,176 @@ DEFUN(set_radio_delete_wlan_cmd_func,
 
 }
 #endif
+
+DEFUN(set_radio_delete_wlan_base_essid_cmd_func,
+	  set_radio_delete_wlan_base_essid_cmd,
+	  "radio delete wlan ID essid .ESSID",
+	  "radio config \n"
+	  "radio delete wlan\n"
+	  "radio delete wlan\n"
+	  "wlan id \n"
+	  "base\n"
+	  "ESSID\n"
+	 )
+{
+	int ret=0,len = 0;
+	DBusMessage *query, *reply;
+	DBusError err;
+	DBusMessageIter	 iter;
+	unsigned int radio_id=0;
+	unsigned char wlanid = 0;
+	char *ESSID;
+	//radio_id = (int)vty->index;
+	
+	ret = parse_char_ID((char *)argv[0],&wlanid);
+	
+	if (ret != WID_DBUS_SUCCESS)
+	{	
+       if(ret == WID_ILLEGAL_INPUT){
+            	vty_out(vty,"<error> illegal input:Input exceeds the maximum value of the parameter type \n");
+       }
+	   else{
+		vty_out(vty,"<error> input parameter %s error\n",argv[0]);
+	   }
+		return CMD_SUCCESS;
+	}
+	
+	if((wlanid < 1)||(wlanid >(WLAN_NUM-1)))
+	{
+		vty_out(vty,"<error> input parameter should be 1 to %d \n",WLAN_NUM-1);
+		return CMD_SUCCESS;
+	}
+
+	ESSID= WID_parse_CMD_str(&argv[1],argc-1,NULL,0);
+	if(ESSID== NULL)
+	{		
+		vty_out(vty,"UNKNOWN COMMAND\n");
+		vty_out(vty,"COMMAND should be :create wlan 1 w1 aq w\n");
+		return CMD_SUCCESS;
+	}
+	len = strlen(ESSID);
+	if(len > 32)
+	{		
+		vty_out(vty,"<error> essid is too long,out of the limit of 32\n");
+		if(ESSID)
+		{
+			free(ESSID);
+			ESSID = NULL;
+		}	
+		return CMD_SUCCESS;
+	}
+	/*end*/
+	if(-1 == ssid_illegal_character_check(ESSID,len))
+	{
+		vty_out(vty,"essid is null!or checkout the parameter len!\n");
+		if(ESSID)
+		{
+			free(ESSID);
+			ESSID = NULL;
+		}
+		return CMD_SUCCESS;
+	}
+	else if(-2==ssid_illegal_character_check(ESSID,len))
+	{
+		vty_out(vty,"illegal essid name!! ` \ \" & * ( ) not supported!\n");
+		if(ESSID)
+		{
+			free(ESSID);
+			ESSID = NULL;
+		}
+		return CMD_SUCCESS;
+	}
+	int index = 0;
+	int localid = 1;
+    int slot_id = HostSlotId;
+	char BUSNAME[PATH_LEN];
+	char OBJPATH[PATH_LEN];
+	char INTERFACE[PATH_LEN];
+	if(vty->node == RADIO_NODE){
+		index = 0;			
+		radio_id = (int)vty->index;
+	}else if(vty->node == HANSI_RADIO_NODE){
+		index = vty->index; 		
+		localid = vty->local;
+        slot_id = vty->slotindex;
+		radio_id = (int)vty->index_sub;
+	}else if (vty->node == LOCAL_HANSI_RADIO_NODE){
+        index = vty->index;
+        localid = vty->local;
+        slot_id = vty->slotindex;
+		radio_id = (int)vty->index_sub;
+    }
+    DBusConnection *dcli_dbus_connection = NULL;
+    ReInitDbusConnection(&dcli_dbus_connection,slot_id,distributFag);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_BUSNAME,BUSNAME);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_RADIO_OBJPATH,OBJPATH);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_RADIO_INTERFACE,INTERFACE);
+	query = dbus_message_new_method_call(BUSNAME,OBJPATH,INTERFACE,WID_DBUS_RADIO_METHOD_DELETE_WLAN_BASE_ESSID);
+
+
+/*	query = dbus_message_new_method_call(WID_DBUS_BUSNAME,WID_DBUS_RADIO_OBJPATH,\
+						WID_DBUS_RADIO_INTERFACE,WID_DBUS_RADIO_METHOD_DELETE_WLAN);*/
+	
+	dbus_error_init(&err);
+
+	dbus_message_append_args(query,
+							 DBUS_TYPE_UINT32,&radio_id,
+							 DBUS_TYPE_BYTE,&wlanid,
+							 DBUS_TYPE_STRING,&ESSID,
+							 DBUS_TYPE_INVALID);
+
+	reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection,query,-1, &err);
+	
+	dbus_message_unref(query);
+	
+	if (NULL == reply) 
+	{
+		cli_syslog_info("<error> failed get reply.\n");
+		if (dbus_error_is_set(&err)) 
+		{
+			cli_syslog_info("%s raised: %s",err.name,err.message);
+			dbus_error_free_for_dcli(&err);
+		}
+		if(ESSID)
+		{
+			free(ESSID);
+			ESSID = NULL;
+		}
+		return CMD_SUCCESS;
+	}
+	
+	dbus_message_iter_init(reply,&iter);
+	dbus_message_iter_get_basic(&iter,&ret);
+	dbus_message_unref(reply);
+		if(ret == 0)
+			vty_out(vty,"radio %d-%d delete wlan %s successfully\n",radio_id/L_RADIO_NUM,radio_id%L_RADIO_NUM,argv[0]);
+		else if(ret==RADIO_ID_NOT_EXIST)
+			vty_out(vty,"<error> radio %d-%d not exist\n",radio_id/L_RADIO_NUM,radio_id%L_RADIO_NUM);
+		else if(ret==WLAN_ID_NOT_EXIST)
+			vty_out(vty,"<error> wlan %d not exist\n",wlanid);
+		else if(ret == RADIO_IN_EBR)
+			vty_out(vty,"<error> radio interface is in ebr,please delete it from ebr first\n");
+		else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+		{
+			vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+		}
+		else if (ret == INTERFACE_BINDED_OTHER_ESSID)
+		{
+			vty_out(vty,"<error> radio interface is binded to this wlan used other ESSID\n");
+		}
+		else if (ret == BSS_BE_ENABLE)
+		{
+			vty_out(vty,"<error> please disable wlan service first !\n");
+		}
+		else 
+			vty_out(vty,"<error> radio %d-%d delete wlan %s fail\n",radio_id/L_RADIO_NUM,radio_id%L_RADIO_NUM,argv[0]);
+		
+	free(ESSID);
+	ESSID = NULL;
+	return CMD_SUCCESS;
+
+}
+
 #if _GROUP_POLICY
 DEFUN(set_radio_enable_wlan_cmd_func,
 	  set_radio_enable_wlan_cmd,
@@ -24333,7 +24714,9 @@ void dcli_radio_init(void) {
 	install_element(HANSI_RADIO_NODE,&set_radio_bss_max_throughput_cmd);
 	install_element(HANSI_RADIO_NODE,&show_radio_bss_max_throughput_cmd);
 	install_element(HANSI_RADIO_NODE,&set_radio_apply_wlan_cmd);
+	install_element(HANSI_RADIO_NODE,&set_radio_apply_wlan_base_essid_cmd);
 	install_element(HANSI_RADIO_NODE,&set_radio_delete_wlan_cmd);
+	install_element(HANSI_RADIO_NODE,&set_radio_delete_wlan_base_essid_cmd);
 	install_element(HANSI_RADIO_NODE,&set_radio_enable_wlan_cmd);
 	install_element(HANSI_RADIO_NODE,&set_radio_disable_wlan_cmd);
 	install_element(HANSI_RADIO_NODE,&set_radio_default_config_cmd);

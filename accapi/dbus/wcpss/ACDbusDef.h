@@ -587,6 +587,9 @@ out arg list:  // in the order as they are appended in the dbus message.
 */
 #define WID_DBUS_RADIO_METHOD_APPLY_WLAN	"radio_apply_wlan"
 #define WID_DBUS_RADIO_METHOD_DELETE_WLAN	"radio_delete_wlan"
+#define WID_DBUS_RADIO_METHOD_APPLY_WLAN_BASE_ESSID	    "radio_apply_wlan_base_essid"
+#define WID_DBUS_RADIO_METHOD_DELETE_WLAN_BASE_ESSID	"radio_delete_wlan_base_essid"
+
 #define WID_DBUS_RADIO_METHOD_ENABLE_WLAN	"radio_enable_wlan"
 #define WID_DBUS_RADIO_METHOD_DISABLE_WLAN	"radio_diable_wlan"
 

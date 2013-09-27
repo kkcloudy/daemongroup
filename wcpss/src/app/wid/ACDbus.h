@@ -116,6 +116,8 @@ int wid_dbus_reinit(void);
 void *wid_dbus_thread_restart();
 extern CWBool find_in_uptfail_wtp_list(int id);
 int notice_hmd_update_state_change(unsigned int vrrid,unsigned int state);
+int wid_dbug_trap_more_ssid_key_conflict(unsigned int RadioID,unsigned char wlan1, unsigned char wlan2,char *ESSID1,char *ESSID2);
+int wid_dbug_trap_ssid_key_conflict(unsigned int wtpid,unsigned char radio_l_id, unsigned char wlan1, unsigned char wlan2);
 
 
 #endif

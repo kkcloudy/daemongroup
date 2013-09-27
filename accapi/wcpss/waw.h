@@ -36,6 +36,7 @@
 #define ACIPLIST_NUM		129
 #define MIXIPLEN   16
 #define ESSID_LENGTH	32
+#define SSID_LENGTH     32
 #define PATH_LEN 64
 #define WID_BAK_AC_PORT		19528
 #define WID_LIC_AC_PORT		19628  /*license update*/
@@ -304,6 +305,7 @@ typedef struct{
 	unsigned int	Radio_G_ID;
 	unsigned char	WlanID;
 	unsigned char	BSSID[MAC_LEN];
+	unsigned char   SSID[SSID_LENGTH+1];
 	unsigned int    bss_max_sta_num;
 	unsigned int	nas_id_len;
 	unsigned int	protect_type;

@@ -214,6 +214,7 @@ struct ifi {
 
 struct wlanid{
 	unsigned char wlanid;
+	char *ESSID;
 	struct wlanid *next; 
 	
 };
@@ -907,6 +908,7 @@ typedef struct {
 	u_int32_t	Radio_G_ID;
 	u_int8_t	WlanID;
 	u_int8_t	*BSSID;
+	char    SSID[SSID_LENGTH+1];
 	u_int8_t	VidIf_Bitmap;
 	WID_VLAN	WVLAN;
 	u_int8_t	Wlan_Index;

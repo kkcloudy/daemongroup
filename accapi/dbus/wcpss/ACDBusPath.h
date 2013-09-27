@@ -404,6 +404,9 @@ out arg list:  // in the order as they are appended in the dbus message.
 */
 char WID_DBUS_RADIO_METHOD_APPLY_WLAN[PATH_LEN]=	"radio_apply_wlan";
 char WID_DBUS_RADIO_METHOD_DELETE_WLAN[PATH_LEN]=	"radio_delete_wlan";
+char WID_DBUS_RADIO_METHOD_APPLY_WLAN_BASE_ESSID[PATH_LEN]=	"radio_apply_wlan_base_essid";
+char WID_DBUS_RADIO_METHOD_DELETE_WLAN_BASE_ESSID[PATH_LEN]=	"radio_delete_wlan_base_essid";
+
 char WID_DBUS_RADIO_METHOD_ENABLE_WLAN[PATH_LEN]=	"radio_enable_wlan";
 char WID_DBUS_RADIO_METHOD_DISABLE_WLAN[PATH_LEN]=	"radio_diable_wlan";
 

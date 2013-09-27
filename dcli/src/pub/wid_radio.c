@@ -383,6 +383,7 @@ int dcli_radio_method_parse_first(char *DBUS_METHOD){
 void dcli_radio_free_fun(char *DBUS_METHOD,DCLI_RADIO_API_GROUP_ONE *RADIOINFO){
 		int i = 0;
 		int dcli_sn = 0;
+		struct wlanid *tmp = NULL;
 		dcli_sn = dcli_radio_method_parse_first(DBUS_METHOD);
 
 		switch(dcli_sn){
@@ -418,6 +419,16 @@ void dcli_radio_free_fun(char *DBUS_METHOD,DCLI_RADIO_API_GROUP_ONE *RADIOINFO){
 								free(RADIOINFO->RADIO[0]->BSS[i]);
 							}
 							CW_FREE_OBJECT(RADIOINFO->RADIO[0]->WlanId);
+							for(i=0;i<RADIOINFO->wlan_num;i++)
+							{
+								tmp = RADIOINFO->RADIO[0]->Wlan_Id;
+								if(tmp->next != NULL);
+								{
+									RADIOINFO->RADIO[0]->Wlan_Id = tmp->next;
+								}
+								CW_FREE_OBJECT(tmp->ESSID);
+								CW_FREE_OBJECT(tmp);
+							}
 							free(RADIOINFO->RADIO[0]);
 						}
 						if(RADIOINFO){
@@ -534,6 +545,7 @@ void* dcli_radio_show_api_group_one(
 	unsigned dcli_sn = 0;	
 	int radio_id = id;
 	unsigned char wlanid = 0;
+	struct wlanid *tmp = NULL,*last = NULL;
 	int localid = *num;
 	char BUSNAME[PATH_LEN];
 	char OBJPATH[PATH_LEN];
@@ -694,7 +706,8 @@ void* dcli_radio_show_api_group_one(
 			
 		}
 		else if(dcli_sn == 2){	
-			unsigned char wlanid = 0;
+			unsigned char wlan_id = 0;
+			char *ESSID = NULL;
 			LIST->RADIO = (WID_WTP_RADIO*)malloc(1*sizeof(WID_WTP_RADIO*));
 			LIST->RADIO[0] =  (WID_WTP_RADIO*)malloc(sizeof(WID_WTP_RADIO));
 			dbus_message_iter_next(&iter);	
@@ -726,13 +739,36 @@ void* dcli_radio_show_api_group_one(
 			//LIST->RADIO[0]->WlanId =  (struct wlanid *)malloc((LIST->wlan_num)*sizeof(struct wlanid));
 			LIST->RADIO[0]->WlanId =  (unsigned char*)malloc((LIST->wlan_num)*sizeof(unsigned char));
 			memset(LIST->RADIO[0]->WlanId, 0,LIST->wlan_num);
+			LIST->RADIO[0]->Wlan_Id = NULL;
 			for (i = 0; i < LIST->wlan_num; i++)
 			{	
 				//LIST->RADIO[0]->WlanId[i] =  (struct wlanid *)malloc(sizeof(struct wlanid));
 				dbus_message_iter_next(&iter);				
-				dbus_message_iter_get_basic(&iter,&wlanid);/*(*(LIST->RADIO[0]->WlanId[i]))*/
+				dbus_message_iter_get_basic(&iter,&wlan_id);/*(*(LIST->RADIO[0]->WlanId[i]))*/
+
+				dbus_message_iter_next(&iter);				
+				dbus_message_iter_get_basic(&iter,&ESSID);/*(*(LIST->RADIO[0]->WlanId[i]))*/
 				
-				LIST->RADIO[0]->WlanId[i] = wlanid;
+				LIST->RADIO[0]->WlanId[i] = wlan_id;
+				
+				tmp = (struct wlanid *)malloc(sizeof(struct wlanid));
+				memset(tmp,0,sizeof(struct wlanid));
+				tmp->wlanid = wlan_id;
+				tmp->ESSID = (char *)malloc(ESSID_LENGTH+1);
+				memset(tmp->ESSID,0,ESSID_LENGTH+1);
+				memcpy(tmp->ESSID,ESSID,strlen(ESSID));
+				tmp->next = NULL;
+				
+				if(LIST->RADIO[0]->Wlan_Id == NULL)
+				{
+					LIST->RADIO[0]->Wlan_Id = tmp;
+					last = tmp;
+				}
+				else
+				{
+					last->next = tmp;
+					last = tmp;
+				}
 				//printf("in pub api,wlanid is %d \n",(LIST->RADIO[0]->WlanId[i]));
 			}
 			#endif

@@ -25047,6 +25047,9 @@ DBusMessage * wid_dbus_interface_show_radioconf(DBusConnection *conn, DBusMessag
 			dbus_message_iter_append_basic (&iter,
 											 DBUS_TYPE_BYTE,
 											 &(pwlanid->wlanid));
+			dbus_message_iter_append_basic (&iter,
+											 DBUS_TYPE_STRING,
+											 &(pwlanid->ESSID));
 			pwlanid = pwlanid->next;
 
 		}
@@ -35106,6 +35109,108 @@ DBusMessage * wid_dbus_interface_radio_apply_wlan(DBusConnection *conn, DBusMess
 
 }
 #endif
+DBusMessage * wid_dbus_interface_radio_apply_wlan_base_essid(DBusConnection *conn, DBusMessage *msg, void *user_data){
+	DBusMessage* reply;
+	DBusError err;
+	DBusMessageIter	 iter;
+//	DBusMessageIter	 iter_array;
+	unsigned int RadioID;
+	//unsigned char wlan_count;
+	unsigned char WlanID;
+	char *ESSID;
+	
+	//int i=0;
+	int ret = WID_DBUS_SUCCESS;
+	/*
+	if (NULL == msg) {
+		printf("failed get msg.\n");
+		if (dbus_error_is_set(&err)) {
+			printf("%s raised: %s",err.name,err.message);
+			dbus_error_free(&err);
+		}
+	}*/
+	////////////////
+	dbus_error_init(&err);
+	if (!(dbus_message_get_args ( msg, &err,
+								DBUS_TYPE_UINT32,&RadioID,
+								DBUS_TYPE_BYTE,&WlanID,
+								DBUS_TYPE_STRING,&ESSID,
+								DBUS_TYPE_INVALID))){
+
+		printf("Unable to get input args\n");
+				
+		if (dbus_error_is_set(&err)) {
+			printf("%s raised: %s",err.name,err.message);
+			dbus_error_free(&err);
+		}
+		return NULL;
+	}
+	wid_syslog_debug_debug(WID_DEFAULT,"#########ESSID = %s\n",ESSID);
+//	printf("receive radioid %d wlanid %d\n",RadioID,WlanID);		
+	if(AC_RADIO[RadioID] == NULL)
+	{
+		ret = RADIO_ID_NOT_EXIST;
+	}
+	else if(AC_WLAN[WlanID] == NULL)
+	{
+		ret = WLAN_ID_NOT_EXIST;
+	}
+	else if (AC_WLAN[WlanID]->want_to_delete == 1)		/* Huangleilei add for ASXXZFI-1622 */
+	{
+		 ret = WID_WANT_TO_DELETE_WLAN;
+	}
+	else
+	{
+		if (ret == 0)
+		{
+			ret = WID_ADD_WLAN_APPLY_RADIO_BASE_ESSID(RadioID,WlanID,ESSID);
+			#if 0
+			AsdWsm_WLANOp_essid(RadioID,WlanID,WID_MODIFY,0);
+			#endif
+		}
+		if (ret == 0)
+		{
+			if (((AC_RADIO[RadioID]->Radio_Type & IEEE80211_11A) || (AC_RADIO[RadioID]->Radio_Type &IEEE80211_11AN)) 
+			&& (AC_RADIO[RadioID]->MixedGreenfield.Mixed_Greenfield == 1)
+			&& (AC_WLAN[WlanID]->SecurityType == 3)  /* WPA_P */
+			&& (AC_WLAN[WlanID]->EncryptionType == 3) /* TKIP */)
+			{
+				ret = WID_RADIO_SET_MODE(RadioID, 26);
+				wid_syslog_debug_debug(WID_DEFAULT, "__ %s %d AC_RADIO[RadioID]->Radio_Type : %d  __", __func__, __LINE__, AC_RADIO[RadioID]->Radio_Type );
+			}
+		}
+	}
+	wid_syslog_debug_debug(WID_DEFAULT, "__ %s %d radio [ %d ] 's type: %d __", __func__, __LINE__, RadioID, AC_RADIO[RadioID]->Radio_Type);
+	///////////////
+	/*
+	dbus_message_iter_init(msg, &iter);	
+	dbus_message_iter_get_basic(&iter,&RadioID);
+	if(AC_RADIO[RadioID] == NULL){
+		ret = RADIO_ID_NOT_EXIST;
+	}else{
+		dbus_message_iter_next(&iter);
+		dbus_message_iter_get_basic(&iter,&wlan_count);
+		dbus_message_iter_recurse(&iter,&iter_array);
+		for (i = 0; i < wlan_count; i++){
+			unsigned char WlanID;		
+			dbus_message_iter_get_basic(&iter_array,&WlanID);
+			dbus_message_iter_next(&iter_array);
+			ret = WID_ADD_WLAN_APPLY_RADIO(RadioID,WlanID);		
+		}
+	}
+	*/
+	reply = dbus_message_new_method_return(msg);
+	
+	dbus_message_iter_init_append (reply, &iter);
+	
+	dbus_message_iter_append_basic (&iter,
+									 DBUS_TYPE_UINT32,
+									 &ret);
+	return reply;
+	
+
+}
+
 #if _GROUP_POLICY
 DBusMessage * wid_dbus_interface_radio_apply_wlanid_base_vlanid(DBusConnection *conn, DBusMessage *msg, void *user_data){
 	DBusMessage* reply;
@@ -36342,6 +36447,63 @@ DBusMessage * wid_dbus_interface_radio_delete_wlan(DBusConnection *conn, DBusMes
 
 }
 #endif
+DBusMessage * wid_dbus_interface_radio_delete_wlan_base_essid(DBusConnection *conn, DBusMessage *msg, void *user_data){
+	DBusMessage* reply;
+	DBusError err;
+	DBusMessageIter	 iter;
+
+	unsigned int RadioID;
+
+	unsigned char WlanID;	
+	char *ESSID;
+
+	int ret = WID_DBUS_SUCCESS;
+
+	dbus_error_init(&err);
+	if (!(dbus_message_get_args ( msg, &err,
+								DBUS_TYPE_UINT32,&RadioID,
+								DBUS_TYPE_BYTE,&WlanID,
+								DBUS_TYPE_STRING,&ESSID,
+								DBUS_TYPE_INVALID))){
+
+		printf("Unable to get input args\n");
+				
+		if (dbus_error_is_set(&err)) {
+			printf("%s raised: %s",err.name,err.message);
+			dbus_error_free(&err);
+		}
+		return NULL;
+	}
+//	printf("receive radioid %d wlanid %d\n",RadioID,WlanID);		
+	if(AC_RADIO[RadioID] == NULL)
+	{
+		ret = RADIO_ID_NOT_EXIST;
+	}
+	else if(AC_WLAN[WlanID] == NULL)
+	{
+		ret = WLAN_ID_NOT_EXIST;
+	}
+	else if (AC_WLAN[WlanID]->want_to_delete == 1)		/* Huangleilei add for ASXXZFI-1622 */
+	{
+		ret = WID_WANT_TO_DELETE_WLAN;
+	}
+	else
+	{
+		ret = WID_DELETE_WLAN_APPLY_RADIO_BASE_ESSID(RadioID,WlanID,ESSID);
+	}
+	
+	reply = dbus_message_new_method_return(msg);
+	
+	dbus_message_iter_init_append (reply, &iter);
+	
+	dbus_message_iter_append_basic (&iter,
+									 DBUS_TYPE_UINT32,
+									 &ret);
+	return reply;
+	
+
+}
+
 #if _GROUP_POLICY
 DBusMessage * wid_dbus_interface_radio_enable_wlan(DBusConnection *conn, DBusMessage *msg, void *user_data){
 	DBusMessage* reply;
@@ -78718,6 +78880,12 @@ static DBusHandlerResult wid_dbus_message_handler (DBusConnection *connection, D
 		else if (dbus_message_is_method_call(message,WID_DBUS_RADIO_INTERFACE,WID_DBUS_RADIO_METHOD_DELETE_WLAN)) {
 			reply = wid_dbus_interface_radio_delete_wlan(connection,message,user_data);
 		}
+		else if (dbus_message_is_method_call(message,WID_DBUS_RADIO_INTERFACE,WID_DBUS_RADIO_METHOD_APPLY_WLAN_BASE_ESSID)) {
+			reply = wid_dbus_interface_radio_apply_wlan_base_essid(connection,message,user_data);
+		}
+		else if (dbus_message_is_method_call(message,WID_DBUS_RADIO_INTERFACE,WID_DBUS_RADIO_METHOD_DELETE_WLAN_BASE_ESSID)) {
+			reply = wid_dbus_interface_radio_delete_wlan_base_essid(connection,message,user_data);
+		}
 		else if (dbus_message_is_method_call(message,WID_DBUS_RADIO_INTERFACE,WID_DBUS_RADIO_METHOD_ENABLE_WLAN)) {
 			reply = wid_dbus_interface_radio_enable_wlan(connection,message,user_data);
 		}
@@ -83542,6 +83710,77 @@ int wid_dbus_trap_wtp_find_wids_attack(unsigned int wtpindex,struct tag_wids_dev
 	return 0;
 
 }
+
+int wid_dbug_trap_more_ssid_key_conflict(unsigned int RadioID,unsigned char wlan1, unsigned char wlan2,char *ESSID1,char *ESSID2)
+{
+	DBusMessage *query; 
+	DBusError err;
+	unsigned char mac[MAC_LEN]={0};
+	unsigned char ssid1_len=0, ssid2_len=0;
+	unsigned char *ssid1=NULL,*ssid2=NULL;
+	char *sn = NULL;
+	unsigned int wtpid = RadioID/L_RADIO_NUM;
+	unsigned char radio_l_id = RadioID%L_RADIO_NUM;
+	unsigned int TID = wtpid%THREAD_NUM;
+	
+	unsigned char traplevel=4;
+	
+	wid_syslog_debug_debug(WID_DBUS,"wid_dbug_trap_ssid_key_conflict wtpid %d\n",wtpid);
+	if(gtrapflag<traplevel){
+		return 0;
+	}
+	sn = (char *)malloc(NAS_IDENTIFIER_NAME);
+	memset(sn,0,NAS_IDENTIFIER_NAME);
+	if((AC_WTP[wtpid] != NULL)&&(AC_WTP[wtpid]->WTPSN != NULL))
+	{
+		memcpy(sn,AC_WTP[wtpid]->WTPSN,strlen(AC_WTP[wtpid]->WTPSN));
+	}
+
+	memcpy(mac,AC_WTP[wtpid]->WTPMAC,MAC_LEN);
+	ssid1_len = strlen(ESSID1);
+	ssid1 = (unsigned char *)malloc(ssid1_len+1);
+	memset(ssid1,0,ssid1_len+1);
+	memcpy(ssid1,ESSID1,ssid1_len);
+	ssid2_len = strlen(ESSID2);
+	ssid2 = (unsigned char *)malloc(ssid2_len+1);
+	memset(ssid2,0,ssid2_len+1);
+	memcpy(ssid2,ESSID2,ssid2_len);
+	unsigned int local_id = local;
+	unsigned int vrrp_id = vrrid;
+	query = dbus_message_new_signal(WID_TRAP_OBJPATH,\
+				WID_TRAP_INTERFACE,WID_DBUS_TRAP_WID_SSID_KEY_CONFLICT);
+
+	dbus_error_init(&err);
+
+	dbus_message_append_args(query,
+					DBUS_TYPE_UINT32,&wtpid,
+					DBUS_TYPE_STRING,&sn,
+					DBUS_TYPE_BYTE,&mac[0],
+					DBUS_TYPE_BYTE,&mac[1],
+					DBUS_TYPE_BYTE,&mac[2],
+					DBUS_TYPE_BYTE,&mac[3],
+					DBUS_TYPE_BYTE,&mac[4],
+					DBUS_TYPE_BYTE,&mac[5],
+					DBUS_TYPE_BYTE,&radio_l_id,
+					DBUS_TYPE_STRING,&ssid1,
+					DBUS_TYPE_STRING,&ssid2,
+					DBUS_TYPE_BYTE,&(AC_WLAN[wlan1]->SecurityIndex),
+					DBUS_TYPE_BYTE,&(AC_WLAN[wlan2]->SecurityIndex),
+					DBUS_TYPE_UINT32,&vrrp_id, //zhangshu add 2010-10-13
+					DBUS_TYPE_UINT32,&local_id,
+					DBUS_TYPE_INVALID);
+
+	dbus_connection_send(wid_dbus_connection_t[TID],query,NULL);
+
+	dbus_message_unref(query);
+	CW_FREE_OBJECT(sn);
+	CW_FREE_OBJECT(ssid1);
+	CW_FREE_OBJECT(ssid2);
+	wid_syslog_debug_debug(WID_DBUS,"wid_dbug_trap_ssid_key_conflict end\n");
+
+	return 0;
+}
+
 
 int wid_dbug_trap_ssid_key_conflict(unsigned int wtpid,unsigned char radio_l_id, unsigned char wlan1, unsigned char wlan2)
 {

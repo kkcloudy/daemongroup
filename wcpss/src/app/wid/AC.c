@@ -1316,6 +1316,87 @@ CWBool AsdWsm_WLANOp(unsigned char WlanID, Operate op, int both){
 	close(sock);
 	return CW_TRUE;
 }
+CWBool AsdWsm_WLANOp_essid(unsigned int RadioId,unsigned char WlanID, Operate op, int both){
+	if(!check_wlanid_func(WlanID)){
+		return CW_FALSE;
+	}else{
+		if(AC_WLAN[WlanID] == NULL){
+			return CW_FALSE;
+		}
+		else if (AC_WLAN[WlanID]->want_to_delete == 1)		/* Huang leilei add for wlan check */
+		{
+			wid_syslog_info("%s %d operator want to delete this wlan: %d", __func__, __LINE__, WlanID);
+			return CW_FALSE;
+		}
+	}
+	TableMsg wASD;
+	int len;
+	int sndbuf = SOCK_BUFSIZE;
+	int sock = socket(PF_UNIX, SOCK_DGRAM, 0);	
+	if(sock < 0){
+		return CW_FALSE;
+	}
+	if ((setsockopt(sock,SOL_SOCKET,SO_SNDBUF,&sndbuf,sizeof(sndbuf))) < 0) {	
+		wid_syslog_crit("%s setsockopt %s",__func__,strerror(errno));
+		perror("setsockopt");
+		close(sock);
+		return -1;
+	}
+	fcntl(sock, F_SETFL, O_NONBLOCK);
+	wASD.Op = op;
+	wASD.Type = WLAN_TYPE;
+	wASD.u.WLAN.WlanID = WlanID;
+	wASD.u.WLAN.WlanState = AC_WLAN[WlanID]->Status;
+	strcpy(wASD.u.WLAN.WlanName, AC_WLAN[WlanID]->WlanName);
+	#if 0
+	if((AC_WLAN[WlanID]->ESSID)&&(strlen(AC_WLAN[WlanID]->ESSID)<ESSID_LENGTH))
+		strcpy(wASD.u.WLAN.ESSID, AC_WLAN[WlanID]->ESSID);
+	else{
+		memcpy(wASD.u.WLAN.ESSID, AC_WLAN[WlanID]->ESSID,ESSID_LENGTH);
+	}
+	#endif
+	if((AC_RADIO[RadioId]->Wlan_Id->ESSID)&&(strlen(AC_RADIO[RadioId]->Wlan_Id->ESSID)<ESSID_LENGTH))
+	{
+		strcpy(wASD.u.WLAN.ESSID, AC_RADIO[RadioId]->Wlan_Id->ESSID);
+	}
+	else
+	{
+		memcpy(wASD.u.WLAN.ESSID, AC_RADIO[RadioId]->Wlan_Id->ESSID,ESSID_LENGTH);
+	}
+	wASD.u.WLAN.wlan_max_sta_num=AC_WLAN[WlanID]->wlan_max_allowed_sta_num;//xm add 08/12/04
+	wASD.u.WLAN.balance_para=AC_WLAN[WlanID]->balance_para;
+	wASD.u.WLAN.flow_balance_para=AC_WLAN[WlanID]->flow_balance_para;
+	wASD.u.WLAN.balance_switch=AC_WLAN[WlanID]->balance_switch;
+	wASD.u.WLAN.balance_method=AC_WLAN[WlanID]->balance_method;
+	wASD.u.WLAN.Roaming_policy=AC_WLAN[WlanID]->Roaming_Policy;
+	wASD.u.WLAN.flow_check = AC_WLAN[WlanID]->flow_check;
+	wASD.u.WLAN.limit_flow= AC_WLAN[WlanID]->limit_flow;
+	wASD.u.WLAN.no_flow_time= AC_WLAN[WlanID]->no_flow_time;
+	len = sizeof(wASD);
+	//wid_syslog_info("AsdWsm_WLANOp1\n");
+	if(sendto(sock, &wASD, len, 0, (struct sockaddr *) &toASD.addr, toASD.addrlen) < 0){
+		wid_syslog_info("%s sendtoASD %s",__func__,strerror(errno));
+		perror("send(wASDSocket)");
+		
+		//wid_syslog_info("AsdWsm_WLANOp2\n");
+		close(sock);
+		return CW_FALSE;
+	}else if(both){
+		if (sendto(sock, &wASD, len, 0, (struct sockaddr *) &toWSM.addr, toWSM.addrlen) < 0){ 	
+			wid_syslog_info("%s sendtoWSM %s",__func__,strerror(errno));
+			perror("send(wWSMSocket)");
+			
+			//wid_syslog_info("AsdWsm_WLANOp3\n");
+			close(sock);
+			return CW_FALSE;		
+		}
+	}
+	
+	//wid_syslog_info("AsdWsm_WLANOp4\n");
+	close(sock);
+	return CW_TRUE;
+}
+
 CWBool Wsm_BSSOp(unsigned int BSSIndex, Operate op, int both){
 	TableMsg wASD;
 	int len;
@@ -1488,6 +1569,9 @@ CWBool AsdWsm_BSSOp(unsigned int BSSIndex, Operate op, int both){
 	wASD.u.BSS.WlanID = AC_BSS[BSSIndex]->WlanID;
 	wASD.u.BSS.vlanid = AC_BSS[BSSIndex]->vlanid;
 	memcpy(wASD.u.BSS.BSSID,AC_BSS[BSSIndex]->BSSID, MAC_LEN);
+	memset(wASD.u.BSS.SSID,0,SSID_LENGTH+1);
+	memcpy(wASD.u.BSS.SSID,AC_BSS[BSSIndex]->SSID,strlen((char *)AC_BSS[BSSIndex]->SSID));
+	wid_syslog_debug_debug(WID_DEFAULT,"##ESSID is %s\n",wASD.u.BSS.SSID);
 	wASD.u.BSS.hotspot_id= AC_BSS[BSSIndex]->hotspot_id;
 	if(!check_g_radioid_func(wASD.u.BSS.Radio_G_ID)){
 		wid_syslog_err("%s\n",__func__);
