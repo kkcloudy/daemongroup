@@ -65,10 +65,31 @@ connected_withdraw (struct connected *ifc)
 
   if (!CHECK_FLAG (ifc->conf, ZEBRA_IFC_CONFIGURED))
     {
-	    
+	  /*  
 		router_id_del_address(ifc);
 	    listnode_delete (ifc->ifp->connected, ifc);
-	    connected_free (ifc);
+	    connected_free (ifc);*/
+		
+	  if(ifc->address->family == AF_INET)
+	  {
+		  router_id_del_address(ifc);
+		  listnode_delete (ifc->ifp->connected, ifc);
+		  connected_free (ifc);
+	  }
+	  else
+	  {
+		 if(!CHECK_FLAG(ifc->ipv6_config, RTMD_IPV6_ADDR_CONFIG))
+		  {
+			 router_id_del_address(ifc);
+			 listnode_delete (ifc->ifp->connected, ifc);
+			 connected_free (ifc);
+		  }
+		 else
+		  {
+			 zlog_debug("%s: line %d, Cannot delete IPv6 config addr .\n",__func__,__LINE__);
+		  }
+	   }
+		
     }
 }
 
@@ -171,6 +192,9 @@ connected_implicit_withdraw (struct interface *ifp, struct connected *ifc)
     {
       if (CHECK_FLAG(current->conf, ZEBRA_IFC_CONFIGURED))
         SET_FLAG(ifc->conf, ZEBRA_IFC_CONFIGURED);
+	  
+	  if (CHECK_FLAG (current->ipv6_config, RTMD_IPV6_ADDR_CONFIG))
+		SET_FLAG (ifc->ipv6_config, RTMD_IPV6_ADDR_CONFIG);
 	
       /* Avoid spurious withdraws, this might be just the kernel 'reflecting'
        * back an address we have already added.
@@ -183,6 +207,7 @@ connected_implicit_withdraw (struct interface *ifp, struct connected *ifc)
         }
       
       UNSET_FLAG(current->conf, ZEBRA_IFC_CONFIGURED);
+      UNSET_FLAG(current->ipv6_config, RTMD_IPV6_ADDR_CONFIG);
       connected_withdraw (current); /* implicit withdraw - freebsd does this */
     }
   return ifc;

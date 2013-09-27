@@ -1709,74 +1709,90 @@ if_addr_wakeup (struct interface *ifp)
   for (ALL_LIST_ELEMENTS (ifp->connected, node, nnode, ifc))
     {
       p = ifc->address;
-	
+	  
+	/*
       if (CHECK_FLAG (ifc->conf, ZEBRA_IFC_CONFIGURED)
 	  && ! CHECK_FLAG (ifc->conf, ZEBRA_IFC_REAL))
-	{
+    */
 	  /* Address check. */
 	  if (p->family == AF_INET)
 	    {
-	      if (! if_is_up (ifp))
-		{
-		  /* XXX: WTF is it trying to set flags here?
-		   * caller has just gotten a new interface, has been
-                   * handed the flags already. This code has no business
-                   * trying to override administrative status of the interface.
-                   * The only call path to here which doesn't originate from
-                   * kernel event is irdp - what on earth is it trying to do?
-                   *
-                   * further RUNNING is not a settable flag on any system
-                   * I (paulj) am aware of.
-                   */
-		  if_set_flags (ifp, IFF_UP | IFF_RUNNING);
-		  if_refresh (ifp);
-		}
+		  if (CHECK_FLAG (ifc->conf, ZEBRA_IFC_CONFIGURED)
+		  && ! CHECK_FLAG (ifc->conf, ZEBRA_IFC_REAL))
+		   {
+		      if (! if_is_up (ifp))
+			{
+			  /* XXX: WTF is it trying to set flags here?
+			   * caller has just gotten a new interface, has been
+	                   * handed the flags already. This code has no business
+	                   * trying to override administrative status of the interface.
+	                   * The only call path to here which doesn't originate from
+	                   * kernel event is irdp - what on earth is it trying to do?
+	                   *
+	                   * further RUNNING is not a settable flag on any system
+	                   * I (paulj) am aware of.
+	                   */
+			  if_set_flags (ifp, IFF_UP | IFF_RUNNING);
+			  if_refresh (ifp);
+			}
 
-	      ret = if_set_prefix (ifp, ifc);
-	      if (ret < 0)
-		{
-		  zlog_warn ("%s: line %d ,Can't set interface's address: %s", 
-			     __func__,__LINE__,safe_strerror(errno));
-		  continue;
-		}
+		      ret = if_set_prefix (ifp, ifc);
+		      if (ret < 0)
+			{
+			  zlog_warn ("%s: line %d ,Can't set interface's address: %s", 
+				     __func__,__LINE__,safe_strerror(errno));
+			  continue;
+			}
 
-	      /* Add to subnet chain list. */
-	      if_subnet_add (ifp, ifc);
+		      /* Add to subnet chain list. */
+		      if_subnet_add (ifp, ifc);
 
-	      SET_FLAG (ifc->conf, ZEBRA_IFC_REAL);
+		      SET_FLAG (ifc->conf, ZEBRA_IFC_REAL);
 
-	      zebra_interface_address_add_update (ifp, ifc);
+		      zebra_interface_address_add_update (ifp, ifc);
 
-	      if (if_is_operative(ifp))
-		connected_up_ipv4 (ifp, ifc);
+		      if (if_is_operative(ifp))
+			connected_up_ipv4 (ifp, ifc);
+		  	}
 	    }
+	  
 #ifdef HAVE_IPV6
-	  if (p->family == AF_INET6)
+	else if(p->family == AF_INET6)
 	    {
-	      if (! if_is_up (ifp))
+			if (CHECK_FLAG (ifc->conf, ZEBRA_IFC_CONFIGURED))
+		    {
+		      if (! if_is_up (ifp))
 				{
 				  /* XXX: See long comment above */
 				  if_set_flags (ifp, IFF_UP | IFF_RUNNING);
 				  if_refresh (ifp);
 				}
 
-	      ret = if_prefix_add_ipv6 (ifp, ifc);
-	      if (ret < 0)
-				{
-				  zlog_warn ("%s : line %d, Can't set interface's address: %s", 
-					    __func__,__LINE__, safe_strerror(errno));
-				  continue;
-				}
-	      SET_FLAG (ifc->conf, ZEBRA_IFC_REAL);
+		      ret = if_prefix_add_ipv6 (ifp, ifc);
+		      if (ret < 0)
+			  {
+				if(errno == EEXIST)
+				  {
+					zlog_info("%s:line %d,IP address is exist already.\n",__func__,__LINE__);
+				  }
+		  		else
+		  		{
+					  zlog_warn ("%s : line %d, Can't set interface's address: %s", 
+						    __func__,__LINE__, safe_strerror(errno));
+					  continue;
+		  		}
+			  }
+		      SET_FLAG (ifc->conf, ZEBRA_IFC_REAL);
 
-	      zebra_interface_address_add_update (ifp, ifc);
+		      zebra_interface_address_add_update (ifp, ifc);
 
-	      if (if_is_operative(ifp))
-		connected_up_ipv6 (ifp, ifc);
+		      if (if_is_operative(ifp))
+				connected_up_ipv6 (ifp, ifc);
+			}
 	    }
 #endif /* HAVE_IPV6 */
-	}
     }
+  
 }
 
 /* Handle interface addition */
@@ -1905,27 +1921,34 @@ if_delete_update (struct interface *ifp)
 		  	
 				router_id_del_address(ifc);
 				listnode_delete (ifp->connected, ifc);
-					connected_free (ifc);
+				connected_free (ifc);
 			}
 		  
 	    }
 #ifdef HAVE_IPV6
 	  else if (p->family == AF_INET6)
 	    {
+		  if (CHECK_FLAG (ifc->ipv6_config, RTMD_IPV6_ADDR_CONFIG))
+			UNSET_FLAG (ifc->ipv6_config, RTMD_IPV6_ADDR_CONFIG);
+		  
 	      connected_down_ipv6 (ifp, ifc);
+		  
 
 	      zebra_interface_address_delete_update (ifp, ifc);
 
 	      UNSET_FLAG (ifc->conf, ZEBRA_IFC_REAL);
 
 	      if (CHECK_FLAG (ifc->conf, ZEBRA_IFC_CONFIGURED))
-		last = node;
+	      {
+			last = node;
+	      	}
 	      else
-			{
+		  {
 			
 				router_id_del_address(ifc);
 				listnode_delete (ifp->connected, ifc);
 				connected_free (ifc);
+				
 			}
 	    }
 #endif /* HAVE_IPV6 */
@@ -2049,7 +2072,7 @@ if_up_redistribute(struct interface *ifp)
     zlog_debug ("%s: start ", __func__);
 
   /* Notify the protocol daemons and vice(or master) board for Distribute System */
-//  zebra_interface_up_update (ifp);
+/*  zebra_interface_up_update (ifp);*/
 
 	ifp->if_up_cnt++;
 
@@ -2064,13 +2087,22 @@ if_up_redistribute(struct interface *ifp)
 	    connected_up_ipv4 (ifp, ifc);
 #ifdef HAVE_IPV6
 	  else if (p->family == AF_INET6){
-			if(!CHECK_FLAG (ifc->conf, ZEBRA_IFC_REAL)&&CHECK_FLAG (ifc->conf, ZEBRA_IFC_CONFIGURED)){
+			/*if(!CHECK_FLAG (ifc->conf, ZEBRA_IFC_REAL)&&CHECK_FLAG (ifc->conf, ZEBRA_IFC_CONFIGURED)){*/
+			if(CHECK_FLAG (ifc->conf, ZEBRA_IFC_CONFIGURED)){
 				ret = if_prefix_add_ipv6 (ifp, ifc);
 				if (ret < 0)
 				{
+				
+				 if(errno == EEXIST)
+				 {
+					zlog_info("%s:line %d,IP address is exist already.\n",__func__,__LINE__);
+				  }
+		  		 else
+		  		 {
 					zlog_warn ("%s : line %d, Can't set interface's address: %s", 
 							 __func__,__LINE__,safe_strerror(errno));
 					continue;
+		  		  }
 				}
 			SET_FLAG (ifc->conf, ZEBRA_IFC_REAL);
 			zebra_interface_address_add_update (ifp, ifc);
@@ -2115,30 +2147,39 @@ if_up (struct interface *ifp)
   if (ifp->connected)
     {
       for (ALL_LIST_ELEMENTS (ifp->connected, node, next, ifc))
-	{
+	 {
 	  p = ifc->address;
 
 	  if (p->family == AF_INET)
 	    connected_up_ipv4 (ifp, ifc);
 #ifdef HAVE_IPV6
-	  else if (p->family == AF_INET6){
-			if(!CHECK_FLAG (ifc->conf, ZEBRA_IFC_REAL)&&CHECK_FLAG (ifc->conf, ZEBRA_IFC_CONFIGURED)){
+	  else if (p->family == AF_INET6)
+	  {
+		/*	if(!CHECK_FLAG (ifc->conf, ZEBRA_IFC_REAL)&&CHECK_FLAG (ifc->conf, ZEBRA_IFC_CONFIGURED)){*/
+			if(CHECK_FLAG (ifc->conf, ZEBRA_IFC_CONFIGURED))
+	         {
 				ret = if_prefix_add_ipv6 (ifp, ifc);
 				if (ret < 0)
 				{
-					zlog_warn ("%s : line %d, Can't set interface's address: %s", 
+					if(errno == EEXIST)
+					{
+						zlog_info("%s:line %d,IP address is exist already.\n",__func__,__LINE__);
+					  }
+					else
+					{
+						zlog_warn ("%s : line %d, Can't set interface's address: %s", 
 							__func__,__LINE__, safe_strerror(errno));
-					continue;
+						continue;
+					}
 				}
 			SET_FLAG (ifc->conf, ZEBRA_IFC_REAL);
 			zebra_interface_address_add_update (ifp, ifc);
-	
-	}
+	       }
 	    connected_up_ipv6 (ifp, ifc);
 			
 		}
 #endif /* HAVE_IPV6 */
-	}
+	  }
     }
   if (IS_ZEBRA_DEBUG_RIB)
     zlog_debug ("%s: goto rib_update ", __func__);
@@ -5253,6 +5294,9 @@ ipv6_address_install (struct vty *vty, struct interface *ifp,
   /* This address is configured from zebra. */
   if (! CHECK_FLAG (ifc->conf, ZEBRA_IFC_CONFIGURED))
     SET_FLAG (ifc->conf, ZEBRA_IFC_CONFIGURED);
+  
+  if (! CHECK_FLAG (ifc->ipv6_config, RTMD_IPV6_ADDR_CONFIG))
+    SET_FLAG (ifc->ipv6_config, RTMD_IPV6_ADDR_CONFIG);
 
   /* In case of this route need to install kernel. */
   if (! CHECK_FLAG (ifc->conf, ZEBRA_IFC_REAL)
@@ -5274,11 +5318,19 @@ ipv6_address_install (struct vty *vty, struct interface *ifp,
 		{
 	      ret = if_prefix_add_ipv6 (ifp, ifc);
 
-      if (ret < 0)
+         if(ret < 0)
+		  {
+			
+			if(errno == EEXIST)
+			 {
+				zlog_info("%s:line %d,IP address is exist already.\n",__func__,__LINE__);
+			  }
+			else
 			{
 			  vty_out (vty, "%% Can't set interface IP address: %s.%s", 
 				   safe_strerror(errno), VTY_NEWLINE);
 			  return CMD_WARNING;
+			  }
 			}
 		 }
 
@@ -5360,12 +5412,18 @@ ipv6_address_install (struct vty *vty, struct interface *ifp,
 	      ret = if_prefix_add_ipv6 (ifp, ifc);
 
 	      if (ret < 0)
-			{
-			  vty_out (vty, "%% Can't set interface IP address: %s.%s", 
+		  {
+			  if(errno == EEXIST)
+			  {
+				  zlog_info("%s:line %d,IP address is exist already.\n",__func__,__LINE__);
+				}
+			  else
+			   {
+			  	  vty_out (vty, "%% Can't set interface IP address: %s.%s", 
 				   safe_strerror(errno), VTY_NEWLINE);
-			  return CMD_WARNING;
+			    return CMD_WARNING;
+			   }
 			}
-		  zlog_debug("%s : line %d ....\n",__func__,__LINE__);
 		  /* IP address propery set. */
       SET_FLAG (ifc->conf, ZEBRA_IFC_REAL);
 
@@ -5374,7 +5432,7 @@ ipv6_address_install (struct vty *vty, struct interface *ifp,
 
       /* If interface is up register connected route. */
       if (if_is_operative(ifp))
-	connected_up_ipv6 (ifp, ifc);
+	   connected_up_ipv6 (ifp, ifc);
     }
 
   return CMD_SUCCESS;
@@ -5419,6 +5477,9 @@ ipv6_address_uninstall (struct vty *vty, struct interface *ifp,
       connected_free (ifc);
       return CMD_WARNING;
     }
+  
+  if (CHECK_FLAG (ifc->ipv6_config, RTMD_IPV6_ADDR_CONFIG))
+    UNSET_FLAG (ifc->ipv6_config, RTMD_IPV6_ADDR_CONFIG);
 
   /* This is real route. */
   ret = if_prefix_delete_ipv6 (ifp, ifc);

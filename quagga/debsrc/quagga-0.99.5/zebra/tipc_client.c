@@ -1053,6 +1053,7 @@ master_send_interface_address (int cmd, tipc_client *client,
 /**----gjd: packet ifc->conf when add/del ip address----**/
   stream_putc(s,ifc->conf);
 /**----------------------------**/
+  stream_putc(s,ifc->ipv6_config);
   
   /* Interface address flag. */
   stream_putc (s, ifc->flags);
@@ -1833,6 +1834,7 @@ ifp = check_interface_exist_by_name_len(ifname_tmp,
 	ifp->devnum = stream_getl(s);
 	if(tipc_client_debug)
 		zlog_debug("%s : line %d, interface(%s), slot(%d),devnum(%d).\n",__func__,__LINE__,ifp->name,ifp->slot,ifp->devnum);
+	 goto skip;
   	}
 /*gujd: 2012-09-04, pm 6:00 Add for interface sync mac addr. */  
 #ifdef HAVE_SOCKADDR_DL
@@ -2150,6 +2152,8 @@ ifp = check_interface_exist_by_name_len(ifname_tmp,
  #endif
   }
 #endif
+
+skip:
   if(judge_ve_sub_interface(ifp->name)==VE_SUB_INTERFACE)/*gujd : 2012-05-04, pm 5:30. Add code for use netlink message to delete ve sub.*/
 	return ifp;
   
@@ -2257,18 +2261,19 @@ skip:/*虚口去更新赋值*/
 
 struct connected *
 tipc_master_connected_add_by_prefix (struct interface *ifp, struct prefix *p, 
-                         struct prefix *destination)
+                         struct prefix *destination,u_char ipv6_config)
 {
   struct listnode *node3;
   struct connected *ifc;
   struct prefix *q;
   int ret;
 
- if(connected_check (ifp, p)!= NULL) {
- 	if(tipc_client_debug)
-	zlog_debug("%s, line %d,add the same address, so return....\n",__func__,__LINE__);
-	return NULL;
- }
+  if(connected_check (ifp, p)!= NULL) {
+	 if(tipc_client_debug)
+	 zlog_debug("%s, line %d,add the same address, so return....\n",__func__,__LINE__);
+	 return NULL;
+  }
+
   /* Allocate new connected address. */
   ifc = connected_new ();
   ifc->ifp = ifp;
@@ -2395,15 +2400,6 @@ tipc_master_connected_add_by_prefix (struct interface *ifp, struct prefix *p,
 
  /*add address to kernel*/
  skip:
- #if 0
-
-  ret = if_set_prefix (ifc->ifp, ifc);
-  if (ret < 0) {
-  	
-     zlog_debug("%s, line == %d, if_set_prefix failed:-----%s\n", __func__, __LINE__,safe_strerror(errno));
-     return NULL;
-  }
-  #endif
   if(ifc->address->family == AF_INET)
   {
 		if(tipc_client_debug)
@@ -2419,7 +2415,10 @@ tipc_master_connected_add_by_prefix (struct interface *ifp, struct prefix *p,
 	else if(ifc->address->family == AF_INET6)
 	{
 			if(tipc_client_debug)
-			 zlog_debug("%s : line %d , ipv6 : %d ....\n",__func__,__LINE__,ifc->address->family);
+			 zlog_debug("%s : line %d ,ifc->conf[%d] , ifc->ipv6_config[%d], ipv6_config[%d].\n",
+			     __func__,__LINE__,ifc->conf,ifc->ipv6_config,ipv6_config);
+
+			ifc->ipv6_config = ipv6_config;
 		    /*add by gjd: for rpa and real interface to add address to kernel*/
 			UNSET_FLAG(ifc->conf,ZEBRA_IFC_REAL);
 			SET_FLAG(ifc->conf,ZEBRA_IFC_CONFIGURED);
@@ -2427,12 +2426,16 @@ tipc_master_connected_add_by_prefix (struct interface *ifp, struct prefix *p,
 			ret = if_prefix_add_ipv6 (ifc->ifp, ifc);
 		    if (ret < 0) 
 			{
-				zlog_err("%s: line %d, kernel set ipv6 address failed :%s....\n", __func__, __LINE__,safe_strerror(errno));
-				/*CID 13539 (#3 of 3): Resource leak (RESOURCE_LEAK)
-                             17. leaked_storage: Variable "ifc" going out of scope leaks the storage it points to.
-                             No problem. Needon't free.*/
-		   		return NULL;
-		    }
+				 if(errno == EEXIST)
+				  {
+					zlog_info("%s:line %d,IP address is exist already.\n",__func__,__LINE__);
+				  }
+				  else
+				  {
+			    	zlog_warn("%s: line %d, kernel set ipv6 address failed :%s....\n", __func__, __LINE__,safe_strerror(errno));
+			   		return NULL;
+				  }
+			  }
 			SET_FLAG(ifc->conf,ZEBRA_IFC_REAL);
 		  }
 	else
@@ -2453,7 +2456,7 @@ tipc_master_connected_add_by_prefix (struct interface *ifp, struct prefix *p,
 
 
 struct connected *
-tipc_master_connected_delete_by_prefix (struct interface *ifp, struct prefix *p)
+tipc_master_connected_delete_by_prefix (struct interface *ifp, struct prefix *p,u_char ipv6_config)
 {
   struct listnode *node;
   struct listnode *next;
@@ -2518,6 +2521,7 @@ tipc_master_connected_delete_by_prefix (struct interface *ifp, struct prefix *p)
 	       	}
 		  else if(ifc->address->family == AF_INET6)/*ipv6*/
 		  	{
+			    ifc->ipv6_config = ipv6_config;
 		 		ret = if_prefix_delete_ipv6(ifc->ifp, ifc);
 	     		if (ret < 0) 
 				{
@@ -2531,7 +2535,20 @@ tipc_master_connected_delete_by_prefix (struct interface *ifp, struct prefix *p)
 				return NULL;
 		 	}
 		   
-           listnode_delete (ifp->connected, ifc);
+           /*listnode_delete (ifp->connected, ifc);*/
+		   if(ifc->address->family == AF_INET)
+			{
+				listnode_delete (ifp->connected, ifc);
+			}
+		   else
+			{
+				if(!CHECK_FLAG(ifc->ipv6_config, RTMD_IPV6_ADDR_CONFIG))
+					listnode_delete (ifp->connected, ifc);
+				else
+				 {
+					zlog_debug("%s: line %d, Cannot delete IPv6 config addr .\n",__func__,__LINE__);
+				 }
+			}
 		   #if 1
 	 	 if(ifp->if_types == REAL_INTERFACE )
 		  {
@@ -2579,10 +2596,11 @@ tipc_master_connected_delete_by_prefix (struct interface *ifp, struct prefix *p)
 		   }
 		  else if(ifc->address->family == AF_INET6)/*ipv6*/
 		   {
+			   ifc->ipv6_config = ipv6_config;
 			   ret = if_prefix_delete_ipv6(ifc->ifp, ifc);
 			   if (ret < 0) 
 			   {
-				   zlog_debug("%s, line %d, kernel uninstall ipv6 address failed", __func__, __LINE__);
+				   zlog_debug("%s, line %d, kernel uninstall ipv6 address failed[%s]", __func__, __LINE__,safe_strerror(errno));
 				   return NULL;
 			   }
 		   }
@@ -2591,7 +2609,21 @@ tipc_master_connected_delete_by_prefix (struct interface *ifp, struct prefix *p)
 			   zlog_err("%s : line %d , unkown protocol %d .\n",__func__,__LINE__,p->family);
 			   return NULL;
 		   }
-         listnode_delete (ifp->connected, ifc);
+        /* listnode_delete (ifp->connected, ifc);*/
+		
+		if(ifc->address->family == AF_INET)
+		 {
+			 listnode_delete (ifp->connected, ifc);
+		 }
+		else
+		 {
+			 if(!CHECK_FLAG(ifc->ipv6_config, RTMD_IPV6_ADDR_CONFIG))
+				 listnode_delete (ifp->connected, ifc);
+			 else
+			  {
+				 zlog_debug("%s: line %d, Cannot delete IPv6 config addr .\n",__func__,__LINE__);
+			  }
+		 }
          return ifc;
        }
      }
@@ -2619,6 +2651,7 @@ tipc_master_connected_delete_by_prefix (struct interface *ifp, struct prefix *p)
 		}
 		 else if(p->family== AF_INET6 )/*ipv6*/
 		 {
+			ifc->ipv6_config = ipv6_config;
 		 	ret = if_prefix_delete_ipv6(ifc->ifp, ifc);
 	     	if (ret < 0) 
 			{
@@ -2632,7 +2665,20 @@ tipc_master_connected_delete_by_prefix (struct interface *ifp, struct prefix *p)
 				return NULL;
 		 	}
 	     #endif	
-         listnode_delete (ifp->connected, ifc);
+        /* listnode_delete (ifp->connected, ifc);*/
+		 if(ifc->address->family == AF_INET)
+		  {
+			  listnode_delete (ifp->connected, ifc);
+		  }
+		 else
+		  {
+			  if(!CHECK_FLAG(ifc->ipv6_config, RTMD_IPV6_ADDR_CONFIG))
+				  listnode_delete (ifp->connected, ifc);
+			  else
+			   {
+				  zlog_debug("%s: line %d, Cannot delete IPv6 config addr .\n",__func__,__LINE__);
+			   }
+		  }
          return ifc;
        }
      }
@@ -2653,7 +2699,7 @@ tipc_master_zebra_interface_address_read (int type, struct stream *s)
   int family;
   int plen;
   u_char ifc_flags;
-  u_char ifc_conf;
+  u_char ifc_conf,ipv6_config;
   char buf[BUFSIZ];
 
   int ret;
@@ -2680,15 +2726,10 @@ tipc_master_zebra_interface_address_read (int type, struct stream *s)
 	 zlog_debug(" interface do not exist or the tipc interface not match!\n");
      return NULL;
   	}
-  #if 0
-  ifp->slot = stream_getl(s);
-  ifp->devnum = stream_getl(s);
-  if(tipc_client_debug)
-	 zlog_debug(" %s : line %d , when add/del ip recv rpa interface: slot %d , devnum %d .\n",__func__,__LINE__,ifp->slot,ifp->devnum);
-#endif
-/**--gjd: fetch packet with conf for  ip --**/
-ifc_conf = stream_getc(s);
-/**-------------------------------------**/
+  
+  ifc_conf = stream_getc(s);
+  ipv6_config = stream_getc(s);
+
 
   /* Fetch flag. */
   ifc_flags = stream_getc (s);
@@ -2721,26 +2762,14 @@ ifc_conf = stream_getc(s);
   stream_get (&d.u.prefix, s, plen);
   d.family = family;
   
- // if(tipc_client_debug)
+ /* if(tipc_client_debug)*/
 	 zlog_debug ("MASTER recv[%s] interface %s : ip address %s/%d ",zserv_command_string(type),ifp->name,inet_ntop (p.family, &p.u.prefix, buf, BUFSIZ), p.prefixlen);
 
-#if 0
-/*-----------------------------------------------------------------------------------*/
- /* ret = search_ipv4(ifp);*/
-  ret = ip_address_count(ifp);
-  if (ret < 1 && ifp->ifindex == IFINDEX_INTERNAL) 
-  	{
-  		ifp->if_types = VIRTUAL_INTERFACE;
-  }
-  if(tipc_client_debug)
-    zlog_debug("%s : line %d, ifp->if_types = %d",__func__,__LINE__,ifp->if_types);
-  /*-----------------------------------------------------------------------------------*/
-#endif
   if (type == ZEBRA_INTERFACE_ADDRESS_ADD) 
     {
        /* N.B. NULL destination pointers are encoded as all zeroes */
        ifc = tipc_master_connected_add_by_prefix(ifp, &p,(memconstant(&d.u.prefix,0,plen) ?
-					      NULL : &d));
+					      NULL : &d),ipv6_config);
        if (ifc != NULL)
        {
        	 ifc->conf = ifc_conf;/**--use conf--**/
@@ -2749,7 +2778,7 @@ ifc_conf = stream_getc(s);
     }
   else if(type == ZEBRA_INTERFACE_ADDRESS_DELETE)
     {
-      ifc = tipc_master_connected_delete_by_prefix(ifp, &p);
+      ifc = tipc_master_connected_delete_by_prefix(ifp, &p,ipv6_config);
     }
   else
   	{
@@ -2777,17 +2806,7 @@ tipc_master_interface_address_add (int command, tipc_client *master_board,
 /*  if (! CHECK_FLAG (ifc->conf, ZEBRA_IFC_CONFIGURED))
 	  SET_FLAG (ifc->conf, ZEBRA_IFC_CONFIGURED);
 */
-
   
-#if 0
-  ret = if_set_prefix (ifc->ifp, ifc);
-  if (ret < 0) {
-		zlog_debug("%s, line == %d, if_set_prefix failed", __func__, __LINE__);
-		return -1;
-  }
-#endif   
-  
-#if 1 
    if(ifc->address->family == AF_INET)
    {
 	   ret = if_subnet_add (ifc->ifp, ifc);
@@ -2797,20 +2816,10 @@ tipc_master_interface_address_add (int command, tipc_client *master_board,
 			return -1;
 	   }
 	}
- #endif
 
 /*send message to all the vice and router deamon*/
 
   master_redistribute_interface_address_add (ifc->ifp, ifc);
-#if 0
- /**add by gjd : for connect route 2011-04-15**/
-  if (if_is_operative(ifc->ifp))
-  {
-	if(tipc_client_debug)
-	 zlog_debug("%s : line %d, go to creat connect route ....\n",__func__,__LINE__);
-	 connected_up_ipv4 (ifc->ifp, ifc);  
-  }
-#endif
 
   if(ifc->address->family == AF_INET)
   {
@@ -2821,18 +2830,20 @@ tipc_master_interface_address_add (int command, tipc_client *master_board,
 	   zlog_debug("%s : line %d, go to creat ipv4 connect route ....\n",__func__,__LINE__);
 	  connected_up_ipv4 (ifc->ifp, ifc);  
 	}
-	  }
-	  else
-		 if(ifc->address->family == AF_INET6)
-		  {
-			  if(tipc_client_debug)
-			   zlog_debug("%s : line %d, go to creat ipv6 connect route ....\n",__func__,__LINE__);
-			  connected_up_ipv6 (ifc->ifp, ifc);  
-			}
-		  else
-		  {
-			  zlog_debug("XXXX err !\n");
-		  }
+  }
+  else if(ifc->address->family == AF_INET6)
+  {
+	  if (if_is_operative(ifc->ifp))
+	  {
+	    if(tipc_client_debug)
+	      zlog_debug("%s : line %d, go to creat ipv6 connect route ....\n",__func__,__LINE__);
+	    connected_up_ipv6 (ifc->ifp, ifc);  
+	   }
+	}
+  else
+  {
+	  zlog_debug("XXXX err !\n");
+  }
 
   return 0;
 }
@@ -2853,22 +2864,12 @@ tipc_master_interface_address_delete (int command, tipc_client *master_board,
    		zlog_debug(" %s , line == %d,  tipc_interface_address_read  ifc == NULL\n", __func__, __LINE__);
     	return -1;
    	}
-
-  if ( CHECK_FLAG (ifc->conf, ZEBRA_IFC_CONFIGURED))
+/*  if ( CHECK_FLAG (ifc->conf, ZEBRA_IFC_CONFIGURED))
 	  UNSET_FLAG (ifc->conf, ZEBRA_IFC_CONFIGURED);
-
-#if 0
-  ret = if_unset_prefix (ifc->ifp, ifc);
-  if (ret < 0) {
-		zlog_debug("%s, line == %d, if_unset_prefix failed", __func__, __LINE__);
-		return -1;
-  }
-//  listnode_delete (ifc->ifp->connected, ifc);
-#endif
+*/
 
   master_redistribute_interface_address_delete (ifc->ifp, ifc);
 
-#if 1
   if(ifc->address->family == AF_INET)
   {
 	ret = if_subnet_delete (ifc->ifp, ifc);
@@ -2878,7 +2879,6 @@ tipc_master_interface_address_delete (int command, tipc_client *master_board,
 		  return -1;  
 	}
   }
-#endif
 
   if(ifc->address->family == AF_INET)
 	{
@@ -2892,11 +2892,34 @@ tipc_master_interface_address_delete (int command, tipc_client *master_board,
 		zlog_debug("%s : line %d , go to del ipv6 connect route ......\n",__func__,__LINE__);
 	   connected_down_ipv6(ifc->ifp, ifc);
 	  }
-
-  
-  router_id_del_address(ifc);/*add*/
-  listnode_delete (ifc->ifp->connected, ifc);/*add*/
-  connected_free(ifc);
+	
+	if(ifc->address->family == AF_INET)
+	{
+	    if ( CHECK_FLAG (ifc->conf, ZEBRA_IFC_CONFIGURED))
+			UNSET_FLAG (ifc->conf, ZEBRA_IFC_CONFIGURED);
+		router_id_del_address(ifc);/*add*/
+		listnode_delete (ifc->ifp->connected, ifc);
+		connected_free(ifc);
+	}
+	else
+	{
+		if(!CHECK_FLAG(ifc->ipv6_config, RTMD_IPV6_ADDR_CONFIG))
+		 {/* move here*/
+		    if ( CHECK_FLAG (ifc->conf, ZEBRA_IFC_CONFIGURED))
+			  UNSET_FLAG (ifc->conf, ZEBRA_IFC_CONFIGURED);
+			router_id_del_address(ifc);/*add*/
+			listnode_delete (ifc->ifp->connected, ifc);
+			connected_free(ifc);
+		 }
+		else
+		 {
+			zlog_debug("%s: line %d, Cannot delete IPv6 config addr .\n",__func__,__LINE__);
+		 }
+	  }
+  /*
+  router_id_del_address(ifc);
+  listnode_delete (ifc->ifp->connected, ifc);
+  connected_free(ifc);*/
   return 0;
 }
 

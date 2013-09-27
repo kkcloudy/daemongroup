@@ -551,8 +551,9 @@ if_prefix_add_ipv6 (struct interface *ifp, struct connected *ifc)
   ifreq.ifr6_ifindex = ifp->ifindex;
   ifreq.ifr6_prefixlen = p->prefixlen;
 	
-	if(!CHECK_FLAG (ifc->conf, ZEBRA_IFC_REAL)&&CHECK_FLAG (ifc->conf, ZEBRA_IFC_CONFIGURED))
-  	ret = if_ioctl_ipv6 (SIOCSIFADDR, (caddr_t) &ifreq);
+  /*if(!CHECK_FLAG (ifc->conf, ZEBRA_IFC_REAL)&&CHECK_FLAG (ifc->conf, ZEBRA_IFC_CONFIGURED))*/
+  if(CHECK_FLAG (ifc->conf, ZEBRA_IFC_CONFIGURED))
+  ret = if_ioctl_ipv6 (SIOCSIFADDR, (caddr_t) &ifreq);
 	
 	/*CID 14335 (#1 of 1): Uninitialized scalar variable (UNINIT)
 	4. uninit_use: Using uninitialized value "ret".

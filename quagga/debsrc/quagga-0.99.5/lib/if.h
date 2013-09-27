@@ -244,6 +244,9 @@ struct connected
   #define RTMD_RESTART_IP_CONFIG   (1<<0)
   int ipv4_set_fail;
   int ipv6_set_fail;
+  
+  int ipv6_config;
+  #define RTMD_IPV6_ADDR_CONFIG	 (1<<0)
 };
 
 /* Given an IPV4 struct connected, this macro determines whether a /32

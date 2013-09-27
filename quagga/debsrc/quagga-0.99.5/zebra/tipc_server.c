@@ -2864,7 +2864,7 @@ vice_send_interface_address (int cmd, tipc_server *client,
 	/**2011-09-16: pm 5:45.**/
   
   if(tipc_server_debug)
-  zlog_debug("enter tipc_zsend_interface_address");
+   zlog_debug("enter tipc_zsend_interface_address");
   /* Check this client need interface information. */
   if (! client->ifinfo)
     return 0;
@@ -2881,19 +2881,11 @@ vice_send_interface_address (int cmd, tipc_server *client,
   tipc_packet_create_header (s, cmd);
   
   if(tipc_server_debug)
-  zlog_debug("%s, line %d, cmd ==  %d", __func__, __LINE__, cmd);
-  /*stream_putl (s, ifp->ifindex);*/
+   zlog_debug("%s, line %d, cmd ==  %d", __func__, __LINE__, cmd);
   
-  /*stream_putl (s, ifp->name);*/
   stream_put (s, ifp->name, INTERFACE_NAMSIZ);
-  #if 0
-  stream_putl(s,ifp->slot);
-  stream_putl(s, ifp->devnum);
-  if(tipc_server_debug)
-   zlog_debug("%s, line %d, put ifp->name = %s, slot = %d , devnum = %d ...\n", __func__, __LINE__, ifp->name,ifp->slot,ifp->devnum);
-#endif
-  /**----packet conf----**/
   stream_putc(s,ifc->conf);
+  stream_putc(s,ifc->ipv6_config);
 
   /* Interface address flag. */
   stream_putc (s, ifc->flags);  
@@ -2921,12 +2913,10 @@ vice_send_interface_address (int cmd, tipc_server *client,
    */
   stream_putc (s, p->prefixlen);
   
-  #if 1
-	stream_putl(s,ifp->slot);
-	stream_putl(s, ifp->devnum);
-	if(tipc_server_debug)
-	 zlog_debug("%s, line %d, put ifp->name = %s, slot = %d , devnum = %d ...\n", __func__, __LINE__, ifp->name,ifp->slot,ifp->devnum);
-#endif
+  stream_putl(s,ifp->slot);
+  stream_putl(s, ifp->devnum);
+  if(tipc_server_debug)
+    zlog_debug("%s, line %d, put ifp->name = %s, slot = %d , devnum = %d ...\n", __func__, __LINE__, ifp->name,ifp->slot,ifp->devnum);
 
   /* Destination. */
   p = ifc->destination;
@@ -2938,11 +2928,7 @@ vice_send_interface_address (int cmd, tipc_server *client,
 
   /* Write packet size. */
   stream_putw_at (s, 0, stream_get_endp (s));
- #if 0
-  if (stream_get_endp >37) {
-		return 0;
-  }
-#endif
+
   return vice_send_message_to_master(client);
 }
 
@@ -2954,31 +2940,12 @@ vice_redistribute_interface_up(struct interface *ifp)
   tipc_server  *vice_board;
   int ret;
 
-#if 1
   if(ifp->if_types != VIRTUAL_INTERFACE && ifp->ifindex != IFINDEX_INTERNAL )/*make susre ifindex effective, and redistribute */
-  for (ALL_LIST_ELEMENTS (zebrad.client_list, node, nnode, client))
-  {
+   for (ALL_LIST_ELEMENTS (zebrad.client_list, node, nnode, client))
+   {
       zsend_interface_update (ZEBRA_INTERFACE_UP, client, ifp);
-  }
-#endif
- #if 0 
-  if(zebrad.master_board_list == NULL)
-  {
-    if(tipc_server_debug)
-	 zlog_debug("%s, line = %d,zebrad.tipc_server_list is NULL", __func__, __LINE__);
-	return;
-  }
+   }
 
-//  ret = product->board_id;
- // if (ret !=0 ) return;
- if(product->board_type != BOARD_IS_ACTIVE_MASTER)
-   return ;
- 
-  for (ALL_LIST_ELEMENTS (zebrad.master_board_list, node, nnode, vice_board)) 
-  {
-    master_send_interface_update (ZEBRA_INTERFACE_UP, vice_board, ifp);
-  }
- #endif
 }
 
 
@@ -2991,32 +2958,13 @@ vice_redistribute_interface_down (struct interface *ifp)
   struct zserv *client;
   tipc_server  *vice_board;
   int ret;
-#if 1
+  
   if(ifp->if_types != VIRTUAL_INTERFACE && ifp->ifindex != IFINDEX_INTERNAL )/*make susre ifindex effective, and redistribute */
-  for (ALL_LIST_ELEMENTS (zebrad.client_list, node, nnode, client))
+   for (ALL_LIST_ELEMENTS (zebrad.client_list, node, nnode, client))
   	{
 	    zsend_interface_update (ZEBRA_INTERFACE_DOWN, client, ifp);
   	}
-#endif
 
-#if 0
-  if(zebrad.master_board_list == NULL)
-  {
-  if(tipc_server_debug)
-	zlog_debug("%s, line = %d,zebrad.tipc_server_list is NULL", __func__, __LINE__);
-	return;
-  }
-
-//  ret = product->board_id;
-//  if (ret != 0) return;
-  if(product->board_type != BOARD_IS_ACTIVE_MASTER)
-	return ;
-  
-  for (ALL_LIST_ELEMENTS (zebrad.master_board_list, node, nnode, vice_board))
-  	{ 
-	    vice_send_interface_update (ZEBRA_INTERFACE_DOWN, vice_board, ifp);
-	}
-  #endif
 
 }
 
@@ -3029,37 +2977,13 @@ vice_redistribute_interface_add (struct interface *ifp)
   tipc_server  *vice_board;
   int ret;
   
-#if 1
   /*send message to router deamon*/
   if(ifp->if_types != VIRTUAL_INTERFACE && ifp->ifindex != IFINDEX_INTERNAL )/*make susre ifindex effective, and redistribute */
-  for (ALL_LIST_ELEMENTS (zebrad.client_list, node, nnode, client)) {
+   for (ALL_LIST_ELEMENTS (zebrad.client_list, node, nnode, client)) {
     if (client->ifinfo)
       zsend_interface_add (client, ifp);
-  }
-#endif
+   }
 
-#if 0
-  if(zebrad.master_board_list == NULL)
-	{
-	if(tipc_server_debug)
-	  zlog_debug("%s, line %d, zebrad.master_board_list (NULL)....", __func__, __LINE__);
-	  return;
-	}
-
-
-   if(product->board_type == BOARD_IS_ACTIVE_MASTER)
-	 return ;
-
-   /*send message to all of connected vice board*/
-  for (ALL_LIST_ELEMENTS (zebrad.master_board_list, node, nnode, vice_board)) 
-  	{	
-	  // if (client->ifinfo) {
-	  if(tipc_server_debug)
-	  zlog_debug("enter redistrubute to all of vice_board add_interface_name = %s", ifp->name); 		
-	   		vice_send_interface_add (vice_board, ifp);
-	   	//}
-    }
-  #endif
 }
 
 
@@ -3072,39 +2996,13 @@ vice_redistribute_interface_delete (struct interface *ifp)
   tipc_server  *vice_board;
   int ret;
 
-#if 1
   if(ifp->if_types != VIRTUAL_INTERFACE && ifp->ifindex != IFINDEX_INTERNAL )/*make susre ifindex effective, and redistribute */
-  for (ALL_LIST_ELEMENTS (zebrad.client_list, node, nnode, client)) {
+   for (ALL_LIST_ELEMENTS (zebrad.client_list, node, nnode, client)) {
     if (client->ifinfo)
       zsend_interface_delete (client, ifp);
-  }
-#endif
-#if 0
-  if(zebrad.master_board_list == NULL)
-	{
-	if(tipc_server_debug)
-	  zlog_debug("%s, line = %d,zebrad.tipc_server_list is NULL....", __func__, __LINE__);
-	  return;
-	}
-#if 1
-//  ret = product->board_id;
-//  if (ret != 0) return;
-  if(product->board_type == BOARD_IS_ACTIVE_MASTER)
-	return ;
+   }
 
-  
-  for (ALL_LIST_ELEMENTS (zebrad.master_board_list, node, nnode, vice_board))
-  	{  		 
-	   //if (client->ifinfo) {
-	   		vice_send_interface_delete (vice_board, ifp);
-	   	//}
-	}
-  #endif
-#endif
 }
-
-
-
 
 /* Interface address addition. */
 void
@@ -3121,12 +3019,13 @@ vice_redistribute_interface_address_add (struct interface *ifp,
   char buf[BUFSIZ];
   int ret;
 
-   #if 0   /*log_message*/  
-      p = ifc->address;
-      zlog_debug ("MESSAGE: ZEBRA_INTERFACE_ADDRESS_ADD %s/%d on %s",
-		  inet_ntop (p->family, &p->u.prefix, buf, BUFSIZ),
-		  p->prefixlen, ifc->ifp->name);
-    #endif
+#if 0   /*log_message*/  
+  p = ifc->address;
+  zlog_debug ("MESSAGE: ZEBRA_INTERFACE_ADDRESS_ADD %s/%d on %s",
+	  inet_ntop (p->family, &p->u.prefix, buf, BUFSIZ),
+	  p->prefixlen, ifc->ifp->name);
+#endif
+
  if(ifp->if_types == VIRTUAL_INTERFACE || ifp->ifindex == IFINDEX_INTERNAL)
  	return;
   router_id_add_address(ifc);
@@ -3140,33 +3039,8 @@ vice_redistribute_interface_address_add (struct interface *ifp,
       zsend_interface_address (ZEBRA_INTERFACE_ADDRESS_ADD, client, ifp, ifc);
   	}
   
-  
-#if 0
-  if(zebrad.master_board_list == NULL)
-  {
   if(tipc_server_debug)
-	zlog_debug("%s, line = %d :tipc_server_list is NULL....", __func__, __LINE__);
-	return;
-  }
-
-//  ret = product->board_id;
-//  if (ret != 0) return;
-  if(product->board_type == BOARD_IS_ACTIVE_MASTER)
-	return ;
-  
-  if(tipc_server_debug)
-  zlog_debug("enter %s, line %d", __func__, __LINE__);
-  
-  for (ALL_LIST_ELEMENTS (zebrad.master_board_list, node, nnode, vice_board)) 
-  	{
-  		if (vice_board->ifinfo && CHECK_FLAG (ifc->conf, ZEBRA_IFC_REAL)) 
-		{
-			vice_send_interface_address (ZEBRA_INTERFACE_ADDRESS_ADD, vice_board, ifp, ifc);
-  		}
-	}
-  #endif
-  if(tipc_server_debug)
-  zlog_debug("leave %s, line %d", __func__, __LINE__);
+   zlog_debug("leave %s, line %d", __func__, __LINE__);
 
 }
 
@@ -3194,37 +3068,16 @@ vice_redistribute_interface_address_delete (struct interface *ifp,
       zlog_debug ("MESSAGE: ZEBRA_INTERFACE_ADDRESS_DELETE %s/%d on %s",
 		  inet_ntop (p->family, &p->u.prefix, buf, BUFSIZ),
 		  p->prefixlen, ifc->ifp->name);
-#endif   
-#if 1
+#endif  
+
   router_id_del_address(ifc);
-#endif
 
   for (ALL_LIST_ELEMENTS (zebrad.client_list, node, nnode, client)) {
     if (client->ifinfo && CHECK_FLAG (ifc->conf, ZEBRA_IFC_REAL))
       zsend_interface_address (ZEBRA_INTERFACE_ADDRESS_DELETE, client, ifp, ifc);
 
   	}
-#if 0
-  if(zebrad.master_board_list == NULL)
-  {
-  if(tipc_server_debug)
-	zlog_debug("%s, line = %d :tipc_server_list is NULL", __func__, __LINE__);
-	return;
-  }
-
-//  ret = product->board_id;
- // if (ret != 0) return;
-  if(product->board_type == BOARD_IS_ACTIVE_MASTER)
-   return ;
   
-  for (ALL_LIST_ELEMENTS (zebrad.master_board_list, node, nnode, vice_board))
-  	{
-  		if (vice_board->ifinfo && CHECK_FLAG (ifc->conf, ZEBRA_IFC_REAL)) 
-		{	
-			vice_send_interface_address (ZEBRA_INTERFACE_ADDRESS_DELETE, vice_board, ifp, ifc);
-  		}
-	}
-  #endif
 }
 
 
@@ -3677,9 +3530,7 @@ vice_interface_send_to_master(tipc_server *vice_board)
  struct interface *
  interface_state_down_set(struct interface *ifp, uint64_t tmp_flags )
  {
- 
-	 //  ifp->status = tmp_status;
- 
+
    if(!CHECK_FLAG(tmp_flags,IFF_UP))/*tmp is down*/
 	{
 	   
@@ -3860,9 +3711,11 @@ tipc_vice_zebra_interface_state_read (int command,struct stream *s)
   	zlog_info("%s, delete interface(%s).\n",__func__, ifp->name);
 	if(tipc_server_debug)  
 	  zlog_info("%s : line %d , interface %s scope is %d .\n",__func__,__LINE__,ifp->name,ifp->if_scope);
-  	ifp->if_scope = stream_getc(s);
+
+	ifp->if_scope = stream_getc(s);
 	if(tipc_server_debug)  
 		zlog_info("%s : line %d , interface %s scope is %d .\n",__func__,__LINE__,ifp->name,ifp->if_scope);
+
 	ifp->slot = stream_getl(s);
 	ifp->devnum = stream_getl(s);
 	if(tipc_server_debug)
@@ -4270,32 +4123,21 @@ tipc_vice_zebra_interface_add_read (struct stream *s)
   }
   
 skip:/*虚口去更新赋值*/
-  /* Read interface's index. */
- //ifp->ifindex = stream_getl (s);
-//zlog_debug("%s, line == %d, ifp->ifindex = %d", __func__, __LINE__, ifp->ifindex);
   /* Read interface's value. */
   ifp->status = stream_getc (s);
-// zlog_debug("%s, line == %d, ifp->status = %d", __func__, __LINE__, ifp->status); 
   ifp->flags = stream_getq (s);
-//  zlog_debug("%s, line == %d, ifp->falgs = %d", __func__, __LINE__, ifp->flags);
   ifp->metric = stream_getl (s);
-//  zlog_debug("%s, line == %d, ifp->metric = %d", __func__, __LINE__, ifp->metric);
   ifp->mtu = stream_getl (s);
- // zlog_debug("%s, line == %d, ifp->mtu = %d", __func__, __LINE__, ifp->mtu);
   ifp->mtu6 = stream_getl (s);
-//  zlog_debug("%s, line == %d, ifp->mtu6 = %d", __func__, __LINE__, ifp->mtu6);
   ifp->bandwidth = stream_getl (s);
- // zlog_debug("%s, line == %d, ifp->bandwidth = %d", __func__, __LINE__, ifp->bandwidth);
 
 #ifdef HAVE_SOCKADDR_DL
   stream_get (&ifp->sdl, s, sizeof (ifp->sdl));
 #else
   ifp->hw_addr_len = stream_getl (s);
-//  zlog_debug("%s, line == %d, ifp->ifindex = %d", __func__, __LINE__, ifp->hw_addr_len);
 
   if (ifp->hw_addr_len){
     stream_get (ifp->hw_addr, s, ifp->hw_addr_len);
-  //	zlog_debug("%s, line == %d, ifp->ifindex = %d", __func__, __LINE__, ifp->hw_addr);
   	}
 #endif /* HAVE_SOCKADDR_DL */
 
@@ -4346,11 +4188,14 @@ interface_ip_add_userspace(struct connected *ifc)
       }
 	}
 	else if(ifc->address->family == AF_INET6)
-		{
+	{
+		 if (if_is_operative(ifc->ifp))
+		 {
 	        if(tipc_server_debug)
 	      	 zlog_debug("%s : line %d, go to creat ipv6 connect route ....\n",__func__,__LINE__);
 			connected_up_ipv6 (ifc->ifp, ifc);  
-	      }
+		  }
+	   }
 	else
 	{
 		zlog_debug("XXXX err !\n");
@@ -4421,7 +4266,7 @@ set_ip_address_again_by_thread_timer(struct thread *thread)
 
 struct connected *
 tipc_vice_connected_add_by_prefix (struct interface *ifp, struct prefix *p, 
-                         struct prefix *destination)
+                         struct prefix *destination, u_char ipv6_config )
 {
   struct listnode *node3;
   struct connected *ifc = NULL;
@@ -4432,29 +4277,70 @@ tipc_vice_connected_add_by_prefix (struct interface *ifp, struct prefix *p,
   if(ifc!= NULL) 
   {
     zlog_info("%s:line %d,######### interface(%s) scope (%u)##########\n",__func__,__LINE__,ifp->name,ifp->if_scope);
-#if 0
-   	if(product->board_type == BOARD_IS_BACKUP_MASTER 
-		&& (!(CHECK_FLAG(ifp->if_scope, INTERFACE_LOCAL)))
-		&&(CHECK_FLAG(ifp->if_scope, INTERFACE_GLOBAL)))
-#else
 	if((product->board_type == BOARD_IS_BACKUP_MASTER )
 		||(product->board_type == BOARD_IS_VICE)
 		&& (!(CHECK_FLAG(ifp->if_scope, INTERFACE_LOCAL))))
-#endif
-   	  {
-   		zlog_info("Bakup master , ifc have address , so install kernel .\n ");
-	/*	ifc->ifp = ifp;///////////////delet/////////////////////////////
-		ifc->ifp->if_scope = ifp->if_scope;
-	*/
-		ret = if_set_prefix (ifp, ifc);
-	    if (ret < 0) 
-		{
-	    	zlog_err("%s: line %d, kernel set ipv4 address failed :%s....\n", __func__, __LINE__,safe_strerror(errno));
-	   		return NULL;
-	    }
-	/*	return ifc; */////////////////////null///////////////////////
-		return NULL;
-   	  }
+	{
+	   		zlog_info("Bakup master or Vice board , ifc have address , so install kernel .\n ");
+		/*	ifc->ifp = ifp;///////////////delet/////////////////////////////
+			ifc->ifp->if_scope = ifp->if_scope;
+		*/
+			if(ifc->address->family == AF_INET)
+			{
+				ret = if_set_prefix (ifp, ifc);
+			    if (ret < 0) 
+				{
+					if(errno == EEXIST)
+					 {
+					   zlog_info("%s:line %d,IP address is exist already.\n",__func__,__LINE__);
+					 }
+					else
+					{
+					  zlog_err("%s: line %d, kernel set ipv4 address failed :%s....\n", __func__, __LINE__,safe_strerror(errno));
+			   		  return NULL;
+					}
+			    }
+			}
+			else if(ifc->address->family == AF_INET6)
+			{
+				if(tipc_server_debug)
+				 zlog_debug("%s : line %d ,ifc->conf[%d] , ifc->ipv6_config[%d], ipv6_config[%d].\n",
+				     __func__,__LINE__,ifc->conf,ifc->ipv6_config,ipv6_config);
+
+				ifc->ipv6_config = ipv6_config;
+				
+				UNSET_FLAG(ifc->conf,ZEBRA_IFC_REAL);
+				SET_FLAG(ifc->conf,ZEBRA_IFC_CONFIGURED);	/*10*/
+				
+				zlog_debug("%s : line %d ,ifc->conf = %d .\n",__func__,__LINE__,ifc->conf);
+				ret = if_prefix_add_ipv6 (ifc->ifp, ifc);
+			    if (ret < 0) 
+				{
+				 if(errno == EEXIST)
+				  {
+					zlog_info("%s:line %d,IP address is exist already.\n",__func__,__LINE__);
+				  }
+				  else
+				  {
+			    	zlog_warn("%s: line %d, kernel set ipv6 address failed :%s....\n", __func__, __LINE__,safe_strerror(errno));
+					/*router_id_del_address(ifc);
+					listnode_delete(ifp->connected, ifc);
+					connected_free(ifc);*/
+			   		return NULL;
+				  }
+			    }
+				
+				SET_FLAG(ifc->conf,ZEBRA_IFC_REAL);
+			  }
+			else
+			{
+					
+					zlog_debug("%s : line %d , errXXXX  %d ....\n",__func__,__LINE__,ifc->address->family);
+				}
+		/*	return ifc; */////////////////////null///////////////////////
+			return NULL;
+	   	  }
+
    	  if(tipc_server_debug)
 	   zlog_debug("%s: line %d , the interface %s add the same address , so couldn't go on ....\n",__func__,__LINE__,ifp->name);
 	  return NULL;
@@ -4475,6 +4361,7 @@ tipc_vice_connected_add_by_prefix (struct interface *ifp, struct prefix *p,
   /* Fetch interface address */
   ifc->address = prefix_new();
   memcpy (ifc->address, p, sizeof(struct prefix));
+  ifc->ipv6_config = ipv6_config;
   	
 
   /* Fetch dest address */
@@ -4488,14 +4375,6 @@ tipc_vice_connected_add_by_prefix (struct interface *ifp, struct prefix *p,
   if((judge_eth_sub_interface(ifp->name)== ETH_SUB_INTERFACE) 
   	||(judge_ve_sub_interface(ifp->name) == VE_SUB_INTERFACE)
   	||(judge_eth_interface(ifp->name)==ETH_INTERFACE))/*ve sub interface , eth sub interface and eth interface deal as normal*/
-#if 0
-  {
-   	ifp->if_types = REAL_INTERFACE;
-   	ifp->devnum = 0;
-   	ifp->slot = 0;
-   	goto skip;
-	}
-#endif
    {
    	  int slot;
    	 
@@ -4730,11 +4609,18 @@ skip2:
 			ret = if_prefix_add_ipv6 (ifc->ifp, ifc);
 		    if (ret < 0) 
 			{
-		    	zlog_warn("%s: line %d, kernel set ipv4 address failed :%s....\n", __func__, __LINE__,safe_strerror(errno));
-				router_id_del_address(ifc);
-				listnode_delete(ifp->connected, ifc);
-				connected_free(ifc);
-		   		return NULL;
+				if(errno == EEXIST)
+				  {
+					zlog_info("%s:line %d,IP address is exist already.\n",__func__,__LINE__);
+				  }
+		  		else
+			  	 {
+		    	zlog_warn("%s: line %d, kernel set ipv6 address failed :%s....\n", __func__, __LINE__,safe_strerror(errno));
+					router_id_del_address(ifc);
+					listnode_delete(ifp->connected, ifc);
+					connected_free(ifc);
+			   		return NULL;
+			  	  }
 		    }
 			
 			SET_FLAG(ifc->conf,ZEBRA_IFC_REAL);
@@ -4760,21 +4646,13 @@ skip2:
 
 
 struct connected *
-tipc_vice_connected_delete_by_prefix (struct interface *ifp, struct prefix *p)
+tipc_vice_connected_delete_by_prefix (struct interface *ifp, struct prefix *p,u_char ipv6_config)
 {
   struct listnode *node;
   struct listnode *next;
   struct connected *ifc;
   int ret = 0;
   
-#if 0
-  if (ifp->if_types != RPA_INTERFACE)
-  {
-  if(tipc_server_debug)
-	zlog_debug("it's not PRA_INTERFACED that must be! return NULL!");
-	return NULL;
-  }
-#endif
 
 if((judge_eth_sub_interface(ifp->name)== ETH_SUB_INTERFACE) 
 	||(judge_ve_sub_interface(ifp->name) == VE_SUB_INTERFACE))/*ve sub interface and eth sub interface deal as normal*/
@@ -4813,107 +4691,131 @@ if((judge_eth_sub_interface(ifp->name)== ETH_SUB_INTERFACE)
 	{		   
   	  if(tipc_server_debug)
 		zlog_debug("%s : line %d , there is no ip (in future : used to check it's not RPA interafce!)\n",__func__,__LINE__);
-	return NULL;
-  }   	
-  else if (ret == 1)
-  {
-	  for (node = listhead (ifp->connected); node; node = next)
-      {
-        ifc = listgetdata (node);
-        next = node->next;
-      
-        if (connected_same_prefix (ifc->address, p))
-        {
-          if(ifc->address->family == AF_INET)/*ipv4*/
-	       {
-	            ret = if_unset_prefix (ifc->ifp, ifc);
-	        	if (ret < 0) 
-				{
-					
-					zlog_debug("%s, line %d, kernel uninstall ipv4 address failed", __func__, __LINE__);
-	        		return NULL;
-	        	}
-	       	}
-		  else if(ifc->address->family == AF_INET6)/*ipv6*/
-		  	{
-		 		ret = if_prefix_delete_ipv6(ifc->ifp, ifc);
-	     		if (ret < 0) 
-				{
-	     			zlog_debug("%s, line %d, kernel uninstall ipv6 address failed", __func__, __LINE__);
-	     			return NULL;
-	     	  	}
-			}
-		   else/*err : other*/
-		 	{
-		 		zlog_err("%s : line %d , unkown protocol %d .\n",__func__,__LINE__,p->family);
-				return NULL;
-		 	}
-		   
-           listnode_delete (ifp->connected, ifc);
-			#if 1
-		   if(ifp->if_types == REAL_INTERFACE )
-			  {
-			   if((strncmp(ifp->name, "ve",2) != 0 && strncmp(ifp->name, "obc",3)!= 0))
+	  return NULL;
+ 	 }   	
+  	else if (ret == 1)
+	 {
+		  for (node = listhead (ifp->connected); node; node = next)
+	      {
+	        ifc = listgetdata (node);
+	        next = node->next;
+	      
+	        if (connected_same_prefix (ifc->address, p))
+	        {
+	          if(ifc->address->family == AF_INET)/*ipv4*/
+		       {
+		            ret = if_unset_prefix (ifc->ifp, ifc);
+		        	if (ret < 0) 
+					{
+						
+						zlog_debug("%s, line %d, kernel uninstall ipv4 address failed", __func__, __LINE__);
+		        		return NULL;
+		        	}
+		       	}
+			  else if(ifc->address->family == AF_INET6)/*ipv6*/
 			  	{
-					unregister_rpa_interface_table(ifp);
-/*				ifp->if_types = 0; */ /**置回0**/
-					
-			  	}
-			  }
-		   
-	 		if(ifp->if_types == RPA_INTERFACE)
+			  		ifc->ipv6_config = ipv6_config;
+			 		ret = if_prefix_delete_ipv6(ifc->ifp, ifc);
+		     		if (ret < 0) 
+					{
+		     			zlog_debug("%s, line %d, kernel uninstall ipv6 address failed", __func__, __LINE__);
+		     			return NULL;
+		     	  	}
+				}
+			   else/*err : other*/
+			 	{
+			 		zlog_err("%s : line %d , unkown protocol %d .\n",__func__,__LINE__,p->family);
+					return NULL;
+			 	}
+			   if(ifc->address->family == AF_INET)
+			   	{
+	            	listnode_delete (ifp->connected, ifc);
+			   	}
+			   else
+			   	{
+			   		if(!CHECK_FLAG(ifc->ipv6_config, RTMD_IPV6_ADDR_CONFIG))
+						listnode_delete (ifp->connected, ifc);
+					else
+					 {
+					 	zlog_debug("%s: line %d, Cannot delete IPv6 config addr .\n",__func__,__LINE__);
+					 }
+			   	}
+				#if 1
+			   if(ifp->if_types == REAL_INTERFACE )
+				  {
+				   if((strncmp(ifp->name, "ve",2) != 0 && strncmp(ifp->name, "obc",3)!= 0))
+				  	{
+						unregister_rpa_interface_table(ifp);
+	/*				ifp->if_types = 0; */ /**置回0**/
+						
+				  	}
+				  }
+			   
+		 		if(ifp->if_types == RPA_INTERFACE)
+				  {
+					SET_FLAG(ifp->ip_flags,IPV4_ADDR_DISTRIBUTE_DEL);/*2011-10-10: pm 3:05 ,add for avoid vice or bakup master board when unregister rpa interface to send delet rpa interface info to active master board . */
+					delete_rpa_interface(ifp);
+				/*	vice_redistribute_interface_delete(ifp);*/ /*gjd : delete by WCG bug of AXSSZFI-229*/
+				  }
+				#endif
+	            return ifc;
+	        }		
+	      } 
+		  		
+	  }
+  	else if (ret > 1)	
+	 {	
+	     /* In case of same prefix come, replace it with new one. */
+	     for (node = listhead (ifp->connected); node; node = next)
+	     {
+	       ifc = listgetdata (node);
+	       next = node->next;
+	     
+	       if (connected_same_prefix (ifc->address, p))
+	       {
+			   if(ifc->address->family == AF_INET)/*ipv4*/
 			  {
-				SET_FLAG(ifp->ip_flags,IPV4_ADDR_DISTRIBUTE_DEL);/*2011-10-10: pm 3:05 ,add for avoid vice or bakup master board when unregister rpa interface to send delet rpa interface info to active master board . */
-				delete_rpa_interface(ifp);
-			/*	vice_redistribute_interface_delete(ifp);*/ /*gjd : delete by WCG bug of AXSSZFI-229*/
-			  }
-			#endif
-            return ifc;
-        }		
-      } 
-	  		
- 	  /*PRA interface turned to virtual interface, will change*/		
-// 	  ifp->if_types = VIRTUAL_INTERFACE;	
-  }
-  else if (ret > 1)	
-  {	
-     /* In case of same prefix come, replace it with new one. */
-     for (node = listhead (ifp->connected); node; node = next)
-     {
-       ifc = listgetdata (node);
-       next = node->next;
-     
-       if (connected_same_prefix (ifc->address, p))
-       {
-		   if(ifc->address->family == AF_INET)/*ipv4*/
-		  {
-			   ret = if_unset_prefix (ifc->ifp, ifc);
-			   if (ret < 0) 
+				   ret = if_unset_prefix (ifc->ifp, ifc);
+				   if (ret < 0) 
+				   {
+					   
+					   zlog_debug("%s, line %d, kernel uninstall ipv4 address failed", __func__, __LINE__);
+					   return NULL;
+				   }
+			   }
+			  else if(ifc->address->family == AF_INET6)/*ipv6*/
 			   {
-				   
-				   zlog_debug("%s, line %d, kernel uninstall ipv4 address failed", __func__, __LINE__);
+				   ifc->ipv6_config = ipv6_config;
+				   ret = if_prefix_delete_ipv6(ifc->ifp, ifc);
+				   if (ret < 0) 
+				   {
+					   zlog_debug("%s, line %d, kernel uninstall ipv6 address failed", __func__, __LINE__);
+					   return NULL;
+				   }
+			   }
+			   else/*err : other*/
+			   {
+				   zlog_err("%s : line %d , unkown protocol %d .\n",__func__,__LINE__,p->family);
 				   return NULL;
 			   }
-		   }
-		  else if(ifc->address->family == AF_INET6)/*ipv6*/
-		   {
-			   ret = if_prefix_delete_ipv6(ifc->ifp, ifc);
-			   if (ret < 0) 
-			   {
-				   zlog_debug("%s, line %d, kernel uninstall ipv6 address failed", __func__, __LINE__);
-				   return NULL;
-			   }
-		   }
-		   else/*err : other*/
-		   {
-			   zlog_err("%s : line %d , unkown protocol %d .\n",__func__,__LINE__,p->family);
-			   return NULL;
-		   }
-         listnode_delete (ifp->connected, ifc);
-         return ifc;
-       }
-     }
-  }
+	        /* listnode_delete (ifp->connected, ifc);*/
+			 if(ifc->address->family == AF_INET)
+			   	{
+	            	listnode_delete (ifp->connected, ifc);
+			   	}
+			   else
+			   	{
+			   		if(!CHECK_FLAG(ifc->ipv6_config, RTMD_IPV6_ADDR_CONFIG))
+						listnode_delete (ifp->connected, ifc);
+					else
+					 {
+					 	zlog_debug("%s: line %d, Cannot delete IPv6 config addr .\n",__func__,__LINE__);
+					 }
+			   	}
+	         return ifc;
+	       }
+	     }
+	  }
 
 skip:
 	for (node = listhead (ifp->connected); node; node = next)
@@ -4952,6 +4854,7 @@ skip:
 		}
 		 else if(p->family== AF_INET6 )/*ipv6*/
 		 {
+			ifc->ipv6_config = ipv6_config;
 		 	ret = if_prefix_delete_ipv6(ifc->ifp, ifc);
 	     	if (ret < 0) 
 			{
@@ -4974,15 +4877,29 @@ skip:
 	     			return NULL;
 					}
 	     	}
-			}
+		  }
 		 else/*err : other*/
 		 {
 		 		zlog_err("%s : line %d , unkown protocol %d .\n",__func__,__LINE__,p->family);
 				return NULL;
 		 	}
 	     #endif	
-         listnode_delete (ifp->connected, ifc);
-         return ifc;
+        /* listnode_delete (ifp->connected, ifc);*/
+        if(ifc->address->family == AF_INET)
+	   	{
+        	listnode_delete (ifp->connected, ifc);
+	   	}
+	   else
+	   	{
+	   		if(!CHECK_FLAG(ifc->ipv6_config, RTMD_IPV6_ADDR_CONFIG))
+				listnode_delete (ifp->connected, ifc);
+			else
+			 {
+			 	zlog_debug("%s: line %d, Cannot delete IPv6 config addr .\n",__func__,__LINE__);
+			 }
+	   	}
+	   
+        return ifc;
        }
      }
   
@@ -5003,7 +4920,7 @@ tipc_vice_zebra_interface_address_read (int type, struct stream *s)
   int plen;
   int ret;
   u_char ifc_flags;
-  u_char ifc_conf;  
+  u_char ifc_conf, ipv6_config;  
   char buf[BUFSIZ];/**for debug**/
 
   memset (&p, 0, sizeof(p));
@@ -5029,13 +4946,8 @@ tipc_vice_zebra_interface_address_read (int type, struct stream *s)
 	 zlog_debug(" %s: %s do not exist or the tipc interface not match!\n",__func__,ifname_tmp);
      return NULL;
   	}
-  #if 0
- ifp->slot = stream_getl(s);
- ifp->devnum = stream_getl(s);
-  if(tipc_server_debug)
-	  zlog_debug(" %s : line %d , when add/del ip recv rpa interface: slot %d , devnum %d .\n",__func__,__LINE__,ifp->slot,ifp->devnum);
-#endif
  ifc_conf =	stream_getc(s);
+ ipv6_config = stream_getc(s);
 
   /* Fetch flag. */
   ifc_flags = stream_getc (s);
@@ -5066,7 +4978,7 @@ tipc_vice_zebra_interface_address_read (int type, struct stream *s)
     {
        /* N.B. NULL destination pointers are encoded as all zeroes */
        ifc = tipc_vice_connected_add_by_prefix(ifp, &p,(memconstant(&d.u.prefix,0,plen) ?
-					      NULL : &d));
+					      NULL : &d),ipv6_config);
        if (ifc != NULL)
        	{
           ifc->conf = ifc_conf;
@@ -5076,7 +4988,7 @@ tipc_vice_zebra_interface_address_read (int type, struct stream *s)
   else if(type == ZEBRA_INTERFACE_ADDRESS_DELETE)
     {
       
-      ifc = tipc_vice_connected_delete_by_prefix(ifp, &p);
+      ifc = tipc_vice_connected_delete_by_prefix(ifp, &p,ipv6_config);
     }
   else
   {
@@ -5101,19 +5013,6 @@ tipc_vice_interface_address_add (int command, tipc_server *vice_board,
    		zlog_debug(" %s ,line = %d receive not match message  ifc(NULL).", __func__, __LINE__);
     	return -1;
    	}
-  #if 0//////////////////0/////////////////
-	if(ifc &&(product->board_type == BOARD_IS_BACKUP_MASTER 
-		&& (!(CHECK_FLAG(ifc->ifp->if_scope, INTERFACE_LOCAL)))
-		&&(CHECK_FLAG(ifc->ifp->if_scope, INTERFACE_GLOBAL))))
-	{
-		zlog_info("####local --> global , bakup master don't tell other route protocol process ####\n");
-		return 0;
-	}
-	#endif
-#if 0 
-  if (! CHECK_FLAG (ifc->conf, ZEBRA_IFC_REAL))
-	  SET_FLAG (ifc->conf, ZEBRA_IFC_CONFIGURED);
-#endif
 /*
 if (! CHECK_FLAG (ifc->conf, ZEBRA_IFC_CONFIGURED))
 	{
@@ -5140,22 +5039,24 @@ if (! CHECK_FLAG (ifc->conf, ZEBRA_IFC_CONFIGURED))
 /**add  for connect route 2011-04-15**/
       if (if_is_operative(ifc->ifp))
       {
-      if(tipc_server_debug)
+        if(tipc_server_debug)
       	 zlog_debug("%s : line %d, go to creat ipv4 connect route ....\n",__func__,__LINE__);
 		connected_up_ipv4 (ifc->ifp, ifc);  
       }
-		}
-	else
-		if(ifc->address->family == AF_INET6)
-		{
+	}
+	else if(ifc->address->family == AF_INET6)
+	 {
+		 if (if_is_operative(ifc->ifp))
+		 {
 	        if(tipc_server_debug)
 	      	 zlog_debug("%s : line %d, go to creat ipv6 connect route ....\n",__func__,__LINE__);
 			connected_up_ipv6 (ifc->ifp, ifc);  
-	      }
-		else
-		{
-			zlog_debug("XXXX err !\n");
-		}
+		  }
+	  }
+	else
+	{
+		zlog_debug("XXXX err !\n");
+	}
   return 0;
 }
 
@@ -5175,17 +5076,16 @@ tipc_vice_interface_address_delete (int command, tipc_server *vice_board,
    		zlog_debug(" %s , line %d,  tipc_interface_address_read  ifc == NULL", __func__, __LINE__);
     	return -1;
    	}
-
+/*
   if (CHECK_FLAG (ifc->conf, ZEBRA_IFC_CONFIGURED)) 
   	{
 	  	if(tipc_server_debug)
 	  	   zlog_debug("%s: line %d, ZEBRA_IFC_CONFIGURED",__func__,__LINE__);
 	  	UNSET_FLAG(ifc->conf, ZEBRA_IFC_CONFIGURED);
 	}
-
+	*/
   vice_redistribute_interface_address_delete(ifc->ifp, ifc);
   
-#if 1
   if(ifc->address->family == AF_INET)
   {
 	ret = if_subnet_delete (ifc->ifp, ifc);
@@ -5195,11 +5095,10 @@ tipc_vice_interface_address_delete (int command, tipc_server *vice_board,
 		  return -1;  
 	}
   }
-#endif
   
   /*free connect route*/
   if(tipc_server_debug)
-  zlog_debug("%s : line %d , go to del connect route ......\n",__func__,__LINE__);
+   zlog_debug("%s : line %d , go to del connect route ......\n",__func__,__LINE__);
   if(ifc->address->family == AF_INET)
   {
      if(tipc_server_debug)
@@ -5213,9 +5112,42 @@ tipc_vice_interface_address_delete (int command, tipc_server *vice_board,
   	 connected_down_ipv6(ifc->ifp, ifc);
   	}
   
-  router_id_del_address(ifc);/*add*/
+   if(ifc->address->family == AF_INET)
+   {
+	 if (CHECK_FLAG (ifc->conf, ZEBRA_IFC_CONFIGURED)) 
+	   {
+		   if(tipc_server_debug)
+			  zlog_debug("%s: line %d, ZEBRA_IFC_CONFIGURED",__func__,__LINE__);
+		   UNSET_FLAG(ifc->conf, ZEBRA_IFC_CONFIGURED);
+	   }
+	   router_id_del_address(ifc);/*add*/
+	   listnode_delete (ifc->ifp->connected, ifc);
+	   connected_free(ifc);
+   }
+   else
+   {
+	   if(!CHECK_FLAG(ifc->ipv6_config, RTMD_IPV6_ADDR_CONFIG))
+	   	{/*here*/
+		 if (CHECK_FLAG (ifc->conf, ZEBRA_IFC_CONFIGURED)) 
+		   {
+			   if(tipc_server_debug)
+				  zlog_debug("%s: line %d, ZEBRA_IFC_CONFIGURED",__func__,__LINE__);
+			   UNSET_FLAG(ifc->conf, ZEBRA_IFC_CONFIGURED);
+		   }
+		   router_id_del_address(ifc);/*add*/
+		   listnode_delete (ifc->ifp->connected, ifc);
+		   connected_free(ifc);
+	   	}
+	   else
+		{
+		   zlog_debug("%s: line %d, Cannot delete IPv6 config addr .\n",__func__,__LINE__);
+		}
+     }
+  /*
+  router_id_del_address(ifc);
   listnode_delete (ifc->ifp->connected, ifc);
   connected_free(ifc);
+  */
   return 0;
 }
 

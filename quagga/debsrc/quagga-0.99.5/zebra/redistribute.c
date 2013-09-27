@@ -1158,14 +1158,21 @@ skip:
     		  return;
     	   }
     
-			if(judge_real_local_interface(ifp->name)== LOCAL_BOARD_INTERFACE)
+		  if(judge_real_local_interface(ifp->name)== LOCAL_BOARD_INTERFACE)
 			{
-    	  for (ALL_LIST_ELEMENTS (zebrad.master_board_list, node, nnode, vice_board)) 
-		  	{
-				  if ( CHECK_FLAG (ifc->conf, ZEBRA_IFC_REAL)){ 
-    			 	 vice_send_interface_address (ZEBRA_INTERFACE_ADDRESS_DELETE, vice_board, ifp, ifc);
-	    			   }
-    			   }
+    	        for (ALL_LIST_ELEMENTS (zebrad.master_board_list, node, nnode, vice_board)) 
+			  	{
+			  		if(ifc->address->family == AF_INET6 
+						&&CHECK_FLAG(ifc->ipv6_config, RTMD_IPV6_ADDR_CONFIG))
+					{
+						zlog_debug("%s, line %d, The address is config by CLI , doesn't need to sync master .", __func__, __LINE__);
+						return;
+			  			}
+						
+					  if ( CHECK_FLAG (ifc->conf, ZEBRA_IFC_REAL)){ 
+	    			 	 vice_send_interface_address (ZEBRA_INTERFACE_ADDRESS_DELETE, vice_board, ifp, ifc);
+		    			   }
+	    		}
     	   }
   
   }
