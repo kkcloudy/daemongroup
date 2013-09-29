@@ -7205,6 +7205,10 @@ DEFUN(set_radio_apply_wlan_cmd_func,
 				vty_out(vty,"<error> add bss if to wlan bridge fail\n");
 			else if(ret == WTP_WEP_NUM_OVER)
 				vty_out(vty,"<error> wtp over max wep wlan count 4 or wep index conflict\n");
+			else if(ret == INTERFACE_BINDED_ALREADLY)
+			{
+				vty_out(vty,"<warning> radio has been binded this wlan already ,if you want use other ESSID,please unbind it first!\n");
+			}
 			else 
 				vty_out(vty,"<error> radio %d-%d apply wlan %s fail\n",id/L_RADIO_NUM,id%L_RADIO_NUM,argv[0]);
 		}
@@ -8520,6 +8524,18 @@ DEFUN(set_radio_delete_wlan_cmd_func,
 				vty_out(vty,"<error> radio %d-%d not exist\n",id/L_RADIO_NUM,id%L_RADIO_NUM);
 			else if(ret==WLAN_ID_NOT_EXIST)
 				vty_out(vty,"<error> wlan %d not exist\n",wlanid);
+			else if (ret == INTERFACE_BINDED_OTHER_ESSID)
+			{
+				vty_out(vty,"<error> radio interface is binded to this wlan used other ESSID\n");
+			}
+			else if (ret == BSS_BE_ENABLE)
+			{
+				vty_out(vty,"<error> please disable wlan service first !\n");
+			}
+			else if (ret == RADIO_IN_EBR)
+			{
+				vty_out(vty,"<error> please delete radio interface from ebr first !\n");
+			}
 			else 
 				vty_out(vty,"<error> radio %d-%d delete wlan %s fail\n",id/L_RADIO_NUM,id%L_RADIO_NUM,argv[0]);
 		}
@@ -8662,6 +8678,10 @@ DEFUN(set_radio_delete_wlan_cmd_func,
 		else if (ret == BSS_BE_ENABLE)
 		{
 			vty_out(vty,"<error> please disable wlan service first !\n");
+		}
+		else if (ret == RADIO_IN_EBR)
+		{
+			vty_out(vty,"<error> please delete radio interface from ebr first !\n");
 		}
 		else 
 			vty_out(vty,"<error> radio %d-%d delete wlan %s fail\n",radio_id/L_RADIO_NUM,radio_id%L_RADIO_NUM,argv[0]);
@@ -8831,6 +8851,10 @@ DEFUN(set_radio_delete_wlan_base_essid_cmd_func,
 		else if (ret == BSS_BE_ENABLE)
 		{
 			vty_out(vty,"<error> please disable wlan service first !\n");
+		}
+		else if (ret == RADIO_IN_EBR)
+		{
+			vty_out(vty,"<error> please delete radio interface from ebr first !\n");
 		}
 		else 
 			vty_out(vty,"<error> radio %d-%d delete wlan %s fail\n",radio_id/L_RADIO_NUM,radio_id%L_RADIO_NUM,argv[0]);

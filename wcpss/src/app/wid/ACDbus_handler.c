@@ -11841,7 +11841,7 @@ int WID_DELETE_WLAN_APPLY_RADIO(unsigned int RadioId, unsigned char WlanId)
 		{	
 			if(wlan_id_next->next->wlanid == WlanId)
 			{
-				if(strncmp(wlan_id_next->ESSID,AC_WLAN[WlanId]->ESSID,essid_len) != 0)
+				if(strncmp(wlan_id_next->next->ESSID,AC_WLAN[WlanId]->ESSID,essid_len) != 0)
 				{
 					return INTERFACE_BINDED_OTHER_ESSID;
 				}
@@ -11935,6 +11935,7 @@ int WID_DELETE_WLAN_APPLY_RADIO_BASE_ESSID(unsigned int RadioId, unsigned char W
 	{
 			if(strncmp(wlan_id_next->ESSID,ESSID,essid_len) != 0)
 			{
+				wid_syslog_debug_debug(WID_DEFAULT,"wlan_id_next->ESSID = %s\n",wlan_id_next->ESSID);
 				return INTERFACE_BINDED_OTHER_ESSID;
 			}
 			if((AC_WLAN[WlanId]->S_WTP_BSS_List[WtpID][local_radioid] != 0)&&(AC_BSS[AC_WLAN[WlanId]->S_WTP_BSS_List[WtpID][local_radioid]] != NULL))
@@ -12000,8 +12001,9 @@ int WID_DELETE_WLAN_APPLY_RADIO_BASE_ESSID(unsigned int RadioId, unsigned char W
 		{	
 			if(wlan_id_next->next->wlanid == WlanId)
 			{
-				if(strncmp(wlan_id_next->ESSID,ESSID,essid_len) != 0)
+				if(strncmp(wlan_id_next->next->ESSID,ESSID,essid_len) != 0)
 				{
+					wid_syslog_debug_debug(WID_DEFAULT,"wlan_id_next->ESSID = %s\n",wlan_id_next->next->ESSID);
 					return INTERFACE_BINDED_OTHER_ESSID;
 				}
 				ret = delete_wlan_bss_by_radioId(RadioId,WlanId);
