@@ -67267,6 +67267,19 @@ DBusMessage *wid_dbus_set_ac_local_hansi_state(DBusConnection *conn, DBusMessage
 
 }
 
+void reset_mcast_solicit()
+{
+	int ret = -1;
+	
+	ret = system("set_ebr_mcast.sh &");	
+	ret = WEXITSTATUS(ret);
+	if(0 != ret)
+	{
+		wid_syslog_debug_debug(WID_DBUS,"set ebr mcast_solicit error \n");
+	}
+	wid_syslog_debug_debug(WID_DBUS,"in line %d func %s ~~~~~~~~ret is %d\n",__LINE__,__func__,ret);
+
+}
 
 
 DBusMessage *wid_dbus_set_ac_as_secondary(DBusConnection *conn, DBusMessage *msg, void *user_data){
@@ -67469,6 +67482,8 @@ DBusMessage *wid_dbus_set_ac_as_secondary(DBusConnection *conn, DBusMessage *msg
 //		printf("1\n");
 		//primary  ac		
 		if(is_secondary != 0){
+			/* houxx add for ONLINEBUG-1044 */
+			reset_mcast_solicit();
 			/*fengwenchao add 20120117 for onlinebug-96*/
 			if(gwtpstate_mb !=0)
 			{
