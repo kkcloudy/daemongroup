@@ -41,7 +41,7 @@ HASH_FUNCTIONS(iasubopt, struct in6_addr *, struct iasubopt, iasubopt_hash_t,
 
 struct ipv6_pool **pools;
 int num_pools;
-
+char ia_tmp[INET6_ADDRSTRLEN];
 /*
  * Create a new IAADDR/PREFIX structure.
  *
@@ -1410,15 +1410,18 @@ cleanup_old_expired(struct ipv6_pool *pool) {
 	struct ia_xx *ia;
 	struct ia_xx *ia_active;
 	unsigned char *tmpd;
-	time_t timeout;
-	
+	time_t timeout = 0;
+	char tmp_buf3[INET6_ADDRSTRLEN];
 	while (pool->num_inactive > 0) {
 		tmp = (struct iasubopt *)
 				isc_heap_element(pool->inactive_timeouts, 1);
+		memset(tmp_buf3,0,INET6_ADDRSTRLEN);
+    	inet_ntop(AF_INET6, &(tmp->addr), tmp_buf3, sizeof(tmp_buf3));
 		if (tmp->hard_lifetime_end_time != 0) {
 			timeout = tmp->hard_lifetime_end_time;
-			timeout += EXPIRED_IPV6_CLEANUP_TIME;
+			//timeout += EXPIRED_IPV6_CLEANUP_TIME;
 		} else {
+				if(0 == strlen(ia_tmp) || strcmp(tmp_buf3,ia_tmp))
 			timeout = tmp->soft_lifetime_end_time;
 		}
 		if (cur_time < timeout) {
@@ -1534,6 +1537,12 @@ schedule_lease_timeout(struct ipv6_pool *pool) {
 		tmp = (struct iasubopt *)
 				isc_heap_element(pool->active_timeouts, 1);
 		if (tmp->hard_lifetime_end_time < next_timeout) {
+			if(((tmp->hard_lifetime_end_time) - cur_time) < 120){
+				inet_ntop(AF_INET6, &(tmp->addr),
+				  	    ia_tmp, sizeof(ia_tmp));
+			}else{
+				memset(ia_tmp,0,sizeof(ia_tmp));
+			}
 			next_timeout = tmp->hard_lifetime_end_time + 1;
 		}
 	}
