@@ -4634,11 +4634,29 @@ static int ip_address_install(struct vty *vty, struct interface *ifp,
 				
 				return CMD_SUCCESS;
 			}
+			#if 0/*Don't distinguish product type.*/
 			if(product->product_type == PRODUCT_TYPE_8610
 				||product->product_type == PRODUCT_TYPE_8606
 				||product->product_type == PRODUCT_TYPE_8800)/*8606 and 8610*/
 			{
-				zlog_debug("The interface %s set local , not let kernel install .Only send to his board .\n",ifp->name);
+			  	int slot_num = 0;
+
+				slot_num = get_slot_num(ifp->name);
+				zlog_debug("The interface %s set local .\n",ifp->name);
+				/*The interface set local , only local board install kernel .If is other board send to his board .*/
+				if(slot_num == product->board_id)
+				{
+					ret = if_set_prefix (ifp, ifc);
+     				 if (ret < 0)
+					{
+					  vty_out (vty, "%Can't set interface IP address: %s.%s", safe_strerror(errno), VTY_NEWLINE);		
+					  return CMD_WARNING;
+					}
+					zlog_debug("The interface %s set local and ip install kernel sucess .\n",ifp->name);
+				}
+							
+				if(slot_num == product->board_id)
+				  SET_FLAG (ifc->conf, ZEBRA_IFC_REAL);
 				/*goto skip;*/
 				if_subnet_add (ifp, ifc);/*USE for write loadconfig*/
 				zebra_interface_address_add_update (ifp, ifc);
@@ -4647,16 +4665,16 @@ static int ip_address_install(struct vty *vty, struct interface *ifp,
 				
 				return CMD_SUCCESS;
 			}
-			else
-			  if(product->product_type == PRODUCT_TYPE_7605I
+			else if(product->product_type == PRODUCT_TYPE_7605I
 			  	||product->product_type == PRODUCT_TYPE_8603)/*7605i and 8603*/
+			#endif
 			  {
 			  	int slot_num = 0;
 
 				slot_num = get_slot_num(ifp->name);
 				zlog_debug("The interface %s set local .\n",ifp->name);
 				/*goto skip;*/
-				if(slot_num == product->board_id)/*76 and 8603 local interface : install to kernel.*/
+				if(slot_num == product->board_id)/* local interface : install to kernel.*/
 				{
 					ret = if_set_prefix (ifp, ifc);
      				 if (ret < 0)
@@ -4669,7 +4687,7 @@ static int ip_address_install(struct vty *vty, struct interface *ifp,
 				
 				if_subnet_add (ifp, ifc);/*USE for write loadconfig*/
 				
-				if(slot_num == product->board_id)/*76: local real interface*/
+				if(slot_num == product->board_id)/* local real interface*/
 				  SET_FLAG (ifc->conf, ZEBRA_IFC_REAL);
 				
 				zebra_interface_address_add_update (ifp, ifc);
@@ -4679,15 +4697,16 @@ static int ip_address_install(struct vty *vty, struct interface *ifp,
 				 return CMD_SUCCESS;
 				
 			  }
+			/*
 			  else
 				{
 					zlog_warn("Unkown product type !\n");
 					return CMD_WARNING;
-				}
+				}*/
 			
 		}
    		ret = if_set_prefix (ifp, ifc);
-      if (ret < 0)
+        if (ret < 0)
 		{
 		  vty_out (vty, "%% Can't set interface IP address: %s.%s", 
 			   safe_strerror(errno), VTY_NEWLINE);		
@@ -4730,6 +4749,7 @@ static int ip_address_install(struct vty *vty, struct interface *ifp,
    	    	if((ifp->if_types == RPA_INTERFACE)
 				|| ((ifp->if_types == REAL_INTERFACE || ifp->if_types == 0)&&(ifp->ifindex != IFINDEX_INTERNAL)))
 	   	    {
+	   	    #if 0/*Don't distinguish product type.*/
 				if(product->product_type == PRODUCT_TYPE_8610
 					||product->product_type == PRODUCT_TYPE_8606
 					||product->product_type == PRODUCT_TYPE_8800)/*8610 and 8606*/
@@ -4743,9 +4763,9 @@ static int ip_address_install(struct vty *vty, struct interface *ifp,
 					
 					return CMD_SUCCESS;
 				}
-				else
-				  if(product->product_type == PRODUCT_TYPE_7605I
+				else if(product->product_type == PRODUCT_TYPE_7605I
 				  	||product->product_type == PRODUCT_TYPE_8603)/*7605i and 8603*/
+			#endif	  	
 				  {
 				  	int slot_num = 0;
 
@@ -4775,14 +4795,14 @@ static int ip_address_install(struct vty *vty, struct interface *ifp,
 					 return CMD_SUCCESS;
 					
 				  }
+				  /*
 				  else
 					{
 						zlog_warn("Unkown product type !\n");
 						return CMD_WARNING;
-					}
+					}*/
 	   	 		}
-			else
-			if(ifp->if_types == VIRTUAL_INTERFACE)/*virtual interface */
+			else if(ifp->if_types == VIRTUAL_INTERFACE)/*virtual interface */
 			 {   
 			   /*create_rpa_interface();*/
 			   ret = create_rpa_interface(ifp);
