@@ -68,6 +68,8 @@ int WID_DISABLE_WLAN_APPLY_WTP(unsigned int WtpID, unsigned char WlanId);
 int WID_ENABLE_WLAN_APPLY_WTP(unsigned int WtpID, unsigned char WlanId);
 
 int WID_DELETE_WLAN_APPLY_RADIO(unsigned int RadioId, unsigned char WlanId);
+int WID_DELETE_WLAN_APPLY_RADIO_DO_NOT_CARE_ESSID(unsigned int RadioId, unsigned char WlanId);
+
 int WID_DISABLE_WLAN_APPLY_RADIO(unsigned int RadioId, unsigned char WlanId);
 int WID_ENABLE_WLAN_APPLY_RADIO(unsigned int RadioId, unsigned char WlanId);
 

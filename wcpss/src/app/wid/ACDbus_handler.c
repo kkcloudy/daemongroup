@@ -816,7 +816,7 @@ void * free_wlan(void * arg)
 				if(AC_WLAN[WlanID]->S_WTP_BSS_List[i][j] != 0)
 				{
 					radioid = i*L_RADIO_NUM+j;
-					ret = WID_DELETE_WLAN_APPLY_RADIO(radioid,WlanID);
+					ret = WID_DELETE_WLAN_APPLY_RADIO_DO_NOT_CARE_ESSID(radioid,WlanID);
 					if(ret != 0)
 						wid_syslog_err("WID_DELETE_WLAN_APPLY_RADIO radio %d delete wlan %d error(ret = %d)\n",radioid,WlanID, ret);
 					continue;
@@ -11710,6 +11710,145 @@ int DELETE_WLAN_CHECK_APPLY_RADIO(unsigned int RadioId, unsigned char WlanId)
 	}	
 	return 0;
 }
+
+/*fengwenchao add end*/
+int WID_DELETE_WLAN_APPLY_RADIO_DO_NOT_CARE_ESSID(unsigned int RadioId, unsigned char WlanId)
+{
+	int ret = 0;
+	int ebr_id = 0;
+	int WtpID = RadioId/L_RADIO_NUM;
+	int local_radioid = RadioId%L_RADIO_NUM;
+	//msgq msg;
+	//struct msgqlist *elem;
+	if(AC_WLAN[WlanId] == NULL)
+	{
+		wid_syslog_debug_debug(WID_DEFAULT,"*** you binding wlan does not exist **\n");
+		return WLAN_ID_NOT_EXIST;
+	}
+
+	struct wlanid *wlan_id;
+	struct wlanid *wlan_id_next;
+	wlan_id = AC_RADIO[RadioId]->Wlan_Id;
+
+	/*fengwenchao add end*/
+	if(check_whether_in_ebr(vrrid,WtpID,local_radioid,WlanId,&ebr_id))
+	{
+		wid_syslog_debug_debug(WID_DEFAULT,"<error> %s check interface in ebr \n",__func__);
+		return RADIO_IN_EBR;
+	}	
+	wid_syslog_debug_debug(WID_DEFAULT,"**!!!!!!!!!!!! list start !!!!!!!!!!!!!!!***\n");
+//	printf("**!!!!!!!!!!!! list start !!!!!!!!!!!!!!!***\n");
+	while(wlan_id != NULL)
+	{
+		//printf("**!!!!!!!!!!!! list start !!!!!!!!!!!!!!!***\n");
+
+		wid_syslog_debug_debug(WID_DEFAULT,"**wlan id is:%d ***\n",wlan_id->wlanid);
+		wid_syslog_debug_debug(WID_DEFAULT,"vrrid = %d WtpID = %d ,  local_radioid   = %d  wlan_id->wlanid = %d \n",vrrid,WtpID,local_radioid,wlan_id->wlanid);
+
+
+		wlan_id = wlan_id->next;
+		//printf("**!!!!!!!!!!!! list end !!!!!!!!!!!!!!!***\n");
+		
+	}
+	wid_syslog_debug_debug(WID_DEFAULT,"**!!!!!!!!!!!! list end !!!!!!!!!!!!!!!***\n");
+//	printf("**!!!!!!!!!!!! list end !!!!!!!!!!!!!!!***\n");
+
+	wlan_id_next = AC_RADIO[RadioId]->Wlan_Id;
+
+	if(AC_RADIO[RadioId]->isBinddingWlan == 0)
+	{
+		return INTERFACE_NOT_BE_BINDED;
+	}
+	else if(wlan_id_next->wlanid == WlanId)
+	{
+			if((AC_WLAN[WlanId]->S_WTP_BSS_List[WtpID][local_radioid] != 0)&&(AC_BSS[AC_WLAN[WlanId]->S_WTP_BSS_List[WtpID][local_radioid]] != NULL))
+			{		
+				int BSSIndex = AC_WLAN[WlanId]->S_WTP_BSS_List[WtpID][local_radioid];
+				
+				
+				if((AC_BSS[BSSIndex] != NULL)&&(AC_BSS[BSSIndex]->State == 1))
+				{
+					return BSS_BE_ENABLE;
+				}
+				#if 0
+				if(AC_WTP[WtpID]->WTPStat != 5){
+					AsdWsm_BSSOp(BSSIndex, WID_DEL, 1);
+					memset((char*)&msg, 0, sizeof(msg));
+					msg.mqid = WtpID%THREAD_NUM+1;
+					msg.mqinfo.WTPID = WtpID;
+					msg.mqinfo.type = CONTROL_TYPE;
+					msg.mqinfo.subtype = WLAN_S_TYPE;
+					msg.mqinfo.u.WlanInfo.Wlan_Op = WLAN_DEL;
+					msg.mqinfo.u.WlanInfo.WLANID = WlanId;
+					msg.mqinfo.u.WlanInfo.Radio_L_ID = local_radioid;
+
+					msg.mqinfo.u.WlanInfo.bssindex = AC_WLAN[WlanId]->S_WTP_BSS_List[WtpID][local_radioid];
+					elem = (struct msgqlist*)malloc(sizeof(struct msgqlist));
+					if(elem == NULL){
+						wid_syslog_crit("%s malloc %s",__func__,strerror(errno));
+						perror("malloc");
+						return 0;
+					}
+					memset((char*)&(elem->mqinfo), 0, sizeof(msgqdetail));
+					elem->next = NULL;
+					memcpy((char*)&(elem->mqinfo),(char*)&(msg.mqinfo),sizeof(msg.mqinfo));
+					WID_INSERT_CONTROL_LIST(WtpID, elem);
+				}
+				#endif
+			}
+		ret = delete_wlan_bss_by_radioId(RadioId,WlanId);
+		if(ret == -1)
+		{
+			return BSS_BE_ENABLE;
+		}
+		else if(ret == BSS_NOT_EXIST)  //fengwenchao add 20120131 for TESTBED-17
+		{
+			return BSS_NOT_EXIST;
+		}
+		AC_RADIO[RadioId]->Wlan_Id = wlan_id_next->next;
+		free(wlan_id_next->ESSID);
+		free(wlan_id_next);
+		wlan_id_next = NULL;
+		AC_RADIO[RadioId]->BindingWlanCount--;
+		if(AC_RADIO[RadioId]->Wlan_Id == NULL)
+		{
+			AC_RADIO[RadioId]->isBinddingWlan = 0;
+			AC_RADIO[RadioId]->BindingWlanCount = 0;
+		}
+		return 0;
+	}
+
+	else
+	{
+		while(wlan_id_next->next != NULL)
+		{	
+			if(wlan_id_next->next->wlanid == WlanId)
+			{
+				ret = delete_wlan_bss_by_radioId(RadioId,WlanId);
+				if(ret == -1)
+				{
+					return BSS_BE_ENABLE;
+				}
+				else if(ret == BSS_NOT_EXIST)  //fengwenchao add 20120131 for TESTBED-17
+				{
+					return BSS_NOT_EXIST;
+				}				
+				wlan_id = wlan_id_next->next;
+				wlan_id_next->next = wlan_id_next->next->next;
+				free(wlan_id->ESSID);
+				free(wlan_id);
+				wlan_id = NULL;
+				AC_RADIO[RadioId]->BindingWlanCount--;
+				return 0;
+			}
+			wlan_id_next = wlan_id_next->next;
+		}
+	}
+
+	return INTERFACE_NOT_BE_BINDED;
+
+}
+
 /*fengwenchao add end*/
 int WID_DELETE_WLAN_APPLY_RADIO(unsigned int RadioId, unsigned char WlanId)
 {
