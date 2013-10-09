@@ -36,6 +36,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "eag_def.h"
 #include "appconn.h"
 
+extern int idletime_valuecheck;
+
 eag_radius_t *
 eag_radius_new(int hansitype, int insid);
 
@@ -125,5 +127,8 @@ eag_radius_log_all_sockradius(eag_radius_t *radius);
 
 const char *
 radius_terminate_cause_to_str(int terminate_cause);
+
+int
+eag_set_idletime_valuecheck(int value_check);
 
 #endif		/* _EAG_RADIUS_H */

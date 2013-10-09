@@ -85,6 +85,7 @@ struct eag_base_conf {
 	int henan_log;
 	int l2super_vlan;
 	int username_check;
+	int telecom_idletime_valuecheck;
 };
 
 struct api_nasid_map_t {
@@ -567,6 +568,11 @@ int
 eag_set_portal_protocol(DBusConnection *connection, 
 				int hansitype, int insid,
 				int portal_protocol);
+				
+int
+eag_set_telecom_idletime_valuecheck(DBusConnection *connection, 
+				int hansitype, int insid,
+				int value_check);
 
 int
 eag_set_l2super_vlan_switch(DBusConnection *connection, 

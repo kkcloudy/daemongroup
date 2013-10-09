@@ -57,6 +57,7 @@
 #define EAG_DBUS_METHOD_SHOW_RELATIVE_TIME	"eag_dbus_method_show_relative_time"
 #define EAG_DBUS_METHOD_SET_TRAP_SWITCH_ABNORMAL_LOGOFF		"eag_dbus_method_set_trap_switch_abnormal_logoff"
 #define EAG_DBUS_METHOD_SET_CLASS_TO_BANDWIDTH_SWITCH		"eag_dbus_method_set_class_to_bandwidth_switch"
+#define EAG_DBUS_METHOD_SET_TELECOM_IDLETIME_VALUECHECK		"eag_dbus_method_set_telecom_idletime_valuecheck"
 #define EAG_DBUS_METHOD_SET_PORTAL_PROTOCOL			"eag_dbus_method_set_portal_protocol"
 #define EAG_DBUS_METHOD_SET_MACAUTH_SWITCH			"eag_dbus_method_set_macauth_switch"
 #define EAG_DBUS_METHOD_SET_L2SUPER_VLAN_SWITCH		"eag_dbus_method_set_l2super_vlan_switch"
@@ -1291,6 +1292,47 @@ eag_set_portal_protocol(DBusConnection *connection,
 }
 
 int
+eag_set_telecom_idletime_valuecheck(DBusConnection *connection, 
+				int hansitype, int insid,
+				int value_check)
+{
+	DBusMessage *query, *reply;
+	DBusError err;
+	int iRet=EAG_ERR_UNKNOWN;
+	eag_dbus_path_reinit(hansitype,insid);
+	query = dbus_message_new_method_call(
+									EAG_DBUS_NAME,
+									EAG_DBUS_OBJPATH,
+									EAG_DBUS_INTERFACE, 
+									EAG_DBUS_METHOD_SET_TELECOM_IDLETIME_VALUECHECK);
+	dbus_error_init(&err);
+	
+	dbus_message_append_args(	query,
+								DBUS_TYPE_INT32,  &value_check,
+								DBUS_TYPE_INVALID );
+
+	reply = dbus_connection_send_with_reply_and_block ( connection, query, -1, &err );
+
+	dbus_message_unref(query);
+	
+	if ( NULL == reply ){	
+		if (dbus_error_is_set(&err)){
+			dbus_error_free(&err);
+		}
+		return EAG_ERR_DBUS_FAILED;
+	}else{
+		dbus_message_get_args(	reply,
+								&err,
+								DBUS_TYPE_INT32, &iRet,
+								DBUS_TYPE_INVALID );
+	}
+
+	dbus_message_unref(reply);
+	
+	return iRet;
+}
+
+int
 eag_set_l2super_vlan_switch(DBusConnection *connection, 
 				int hansitype, int insid,
 				int l2super_vlan_switch)
@@ -1786,6 +1828,8 @@ eag_get_base_conf( DBusConnection *connection,
 			dbus_message_iter_get_basic(&iter,&(baseconf->username_check));
 			dbus_message_iter_next(&iter);
 			dbus_message_iter_get_basic(&iter,&(baseconf->l2super_vlan));
+			dbus_message_iter_next(&iter);
+			dbus_message_iter_get_basic(&iter,&(baseconf->telecom_idletime_valuecheck));
 		}
 	}
 	

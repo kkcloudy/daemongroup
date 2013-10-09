@@ -76,6 +76,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define RADIUS_ERR_CODE_DIV			'#'
 #define ERR_CODE_DETECT_LEN			2	/* cmp ERR_CODE_DETECT_LEN char! */
 
+int idletime_valuecheck = 0;	/* for telecom */
+
 typedef struct sock_radius sock_radius_t;
 
 struct eag_radius {
@@ -1070,6 +1072,14 @@ radius_acct_nowait(eag_radius_t *radius,
 	return radius_acct_req(radius, appconn, status_type, RADIUS_REQ_NOWAIT);
 }
 
+int
+eag_set_idletime_valuecheck(int value_check)
+{
+	idletime_valuecheck = value_check;
+
+	return 0;
+}
+
 static void
 config_radius_session(struct app_conn_t *appconn,
 		struct radius_packet_t *pack)
@@ -1086,7 +1096,14 @@ config_radius_session(struct app_conn_t *appconn,
 
 	/* Idle timeout */
 	if (!radius_getattr(pack, &attr, RADIUS_ATTR_IDLE_TIMEOUT, 0, 0, 0)) {
-		appconn->session.idle_timeout = ntohl(attr->v.i);
+		unsigned long idle_timeout = ntohl(attr->v.i);
+		if (1 == idletime_valuecheck) {
+			if (idle_timeout < appconn->session.idle_timeout) {
+				appconn->session.idle_timeout = idle_timeout;
+			}
+		} else {
+			appconn->session.idle_timeout = ntohl(attr->v.i);
+		}
 		eag_log_debug("eag_radius",
 			"config_radius_session ip=%#x idletimeout=%lu",
 			appconn->session.user_ip, appconn->session.idle_timeout);

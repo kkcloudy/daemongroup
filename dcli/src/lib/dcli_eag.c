@@ -5740,6 +5740,10 @@ eag_base_config_show_running(struct vty* vty)
 			snprintf(showStr, sizeof(showStr), " set l2super-vlan enable");
 			vtysh_add_show_string(showStr);		
 		}
+		if (1 == baseconf.telecom_idletime_valuecheck) {
+			snprintf(showStr, sizeof(showStr), " set telecom idletime-valuecheck on");
+			vtysh_add_show_string(showStr);		
+		}
 		if (1 == baseconf.status) {
 			snprintf(showStr, sizeof(showStr), " service enable");
 			vtysh_add_show_string(showStr);		
@@ -5905,6 +5909,9 @@ eag_base_config_show_running_2(int localid, int slot_id,int index)
 		}
 		if (1 == baseconf.l2super_vlan) {
 			totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1, " set l2super-vlan enable\n");
+		}
+		if (1 == baseconf.telecom_idletime_valuecheck) {
+			totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1, " set telecom idletime-valuecheck on\n");
 		}
 		if (1 == baseconf.status) {
 			totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1, " service enable\n");	
@@ -7408,6 +7415,44 @@ DEFUN(set_eag_portal_protocol_func,
 	return CMD_SUCCESS;	
 }
 
+DEFUN(set_eag_telecom_idletime_valuecheck_func,
+	set_eag_telecom_idletime_valuecheck_cmd,
+	"set telecom idletime-valuecheck (on|off)",
+	SETT_STR
+	"set telecom\n"
+	"set telecom idletime-valuecheck\n"
+	"set idletime-valuecheck on\n"
+	"set idletime-valuecheck off\n"
+)
+{	
+	int value_check = 0;
+	int  ret = -1;
+
+	if (strncmp(argv[0], "on", strlen(argv[0])) == 0) {
+		value_check = 1;
+	}
+	else if (strncmp(argv[0], "off", strlen(argv[0])) == 0) {
+		value_check = 0;
+	}
+	else {
+		vty_out(vty, "input param error\n");
+		return CMD_SUCCESS;
+	}
+
+	EAG_DCLI_INIT_HANSI_INFO
+
+	ret = eag_set_telecom_idletime_valuecheck(dcli_dbus_connection_curr, 
+											hansitype, insid, 
+											value_check);
+	if (EAG_ERR_DBUS_FAILED == ret) {
+		vty_out(vty, "%% dbus error\n");
+	} else if ( EAG_RETURN_OK != ret ) {
+		vty_out(vty,"%% unknown error : %d\n", ret);
+	}
+	
+	return CMD_SUCCESS;	
+}
+
 DEFUN(set_eag_l2super_vlan_status_func,
 	set_eag_l2super_vlan_status_cmd,
 	"set l2super-vlan (enable|disable)",
@@ -7787,29 +7832,29 @@ DEFUN(show_eag_base_conf_func,
 		char nasip_str[32] = "";
 		char *flux_from = "";
 		char *macauth_flux_from = "";
-		vty_out(vty, "service status            :%s\n", (1 == baseconf.status) ? "enable" : "disable");
+		vty_out(vty, "service status               :%s\n", (1 == baseconf.status) ? "enable" : "disable");
 		ip2str( baseconf.nasip, nasip_str, sizeof(nasip_str)-1);
-		vty_out(vty, "nas ip                    :%s\n", nasip_str);
+		vty_out(vty, "nas ip                       :%s\n", nasip_str);
 		//vty_out(vty, "distributed switch        :%s\n", (1 == baseconf.is_distributed) ? "on" : "off");	
-		vty_out(vty, "rdc-distributed switch    :%s\n", (1 == baseconf.rdc_distributed) ? "on" : "off");
-		vty_out(vty, "pdc-distributed switch    :%s\n", (1 == baseconf.pdc_distributed) ? "on" : "off");
+		vty_out(vty, "rdc-distributed switch       :%s\n", (1 == baseconf.rdc_distributed) ? "on" : "off");
+		vty_out(vty, "pdc-distributed switch       :%s\n", (1 == baseconf.pdc_distributed) ? "on" : "off");
 		//vty_out(vty, "distributed rdc pdc param :%d-%d\n", baseconf.rdcpdc_slotid, baseconf.rdcpdc_insid);
-		vty_out(vty, "distributed rdc param     :%d-%d\n", baseconf.rdc_slotid, baseconf.rdc_insid);
-		vty_out(vty, "distributed pdc param     :%d-%d\n", baseconf.pdc_slotid, baseconf.pdc_insid);
-		vty_out(vty, "portal port               :%hu\n", baseconf.portal_port);
-		vty_out(vty, "portal retry interval     :%d\n", baseconf.portal_retry_interval);
-		vty_out(vty, "portal retry times        :%d\n", baseconf.portal_retry_times);
-		vty_out(vty, "auto-session              :%s\n", (1 == baseconf.auto_session) ? "enable" : "disable");
-		vty_out(vty, "account interval          :%d\n", baseconf.radius_acct_interval);
-		vty_out(vty, "radius retry interval     :%d\n", baseconf.radius_retry_interval);
-		vty_out(vty, "radius master retry times :%d\n", baseconf.radius_retry_times);
-		vty_out(vty, "radius backup retry times :%d\n", baseconf.vice_radius_retry_times);
-		vty_out(vty, "max-http-request per 5s   :%lu\n", baseconf.max_redir_times);
-		vty_out(vty, "force-dhcplease           :%s\n", (1 == baseconf.force_dhcplease) ? "enable" : "disable");
-		vty_out(vty, "check-errid               :%s\n", (1 == baseconf.check_errid)?"enable":"disable");
-		vty_out(vty, "idle timeout              :%d\n", baseconf.idle_timeout);
-		vty_out(vty, "idle flow                 :%llu\n", baseconf.idle_flow);
-		vty_out(vty, "force-wireless            :%s\n", (1 == baseconf.force_wireless)?"enable":"disable");
+		vty_out(vty, "distributed rdc param        :%d-%d\n", baseconf.rdc_slotid, baseconf.rdc_insid);
+		vty_out(vty, "distributed pdc param        :%d-%d\n", baseconf.pdc_slotid, baseconf.pdc_insid);
+		vty_out(vty, "portal port                  :%hu\n", baseconf.portal_port);
+		vty_out(vty, "portal retry interval        :%d\n", baseconf.portal_retry_interval);
+		vty_out(vty, "portal retry times           :%d\n", baseconf.portal_retry_times);
+		vty_out(vty, "auto-session                 :%s\n", (1 == baseconf.auto_session) ? "enable" : "disable");
+		vty_out(vty, "account interval             :%d\n", baseconf.radius_acct_interval);
+		vty_out(vty, "radius retry interval        :%d\n", baseconf.radius_retry_interval);
+		vty_out(vty, "radius master retry times    :%d\n", baseconf.radius_retry_times);
+		vty_out(vty, "radius backup retry times    :%d\n", baseconf.vice_radius_retry_times);
+		vty_out(vty, "max-http-request per 5s      :%lu\n", baseconf.max_redir_times);
+		vty_out(vty, "force-dhcplease              :%s\n", (1 == baseconf.force_dhcplease) ? "enable" : "disable");
+		vty_out(vty, "check-errid                  :%s\n", (1 == baseconf.check_errid)?"enable":"disable");
+		vty_out(vty, "idle timeout                 :%d\n", baseconf.idle_timeout);
+		vty_out(vty, "idle flow                    :%llu\n", baseconf.idle_flow);
+		vty_out(vty, "force-wireless               :%s\n", (1 == baseconf.force_wireless)?"enable":"disable");
  		if (FLUX_FROM_IPTABLES_L2 == baseconf.flux_from) {
 			flux_from = "iptables_L2";
 		} else if (FLUX_FROM_WIRELESS == baseconf.flux_from) {
@@ -7821,15 +7866,14 @@ DEFUN(show_eag_base_conf_func,
 		} else {
 			flux_from = "iptables";
 		}
-		vty_out(vty, "flux-from                 :%s\n", flux_from);
-		vty_out(vty, "flux-interval             :%d\n", baseconf.flux_interval);
-		vty_out(vty, "ipset-auth                :%s\n", (1 == baseconf.ipset_auth)?"enable":"disable");
-		vty_out(vty, "check-nasportid     	  :%s\n", (1 == baseconf.check_nasportid)?"enable":"disable");
-		vty_out(vty, "trap-switch abnormal logoff:%s\n", (1 == baseconf.trap_switch_abnormal_logoff)?"on":"off");
-		vty_out(vty, "trap-switch online-user-num:%s\n",
-								(1==baseconf.trap_onlineusernum_switch)?"on":"off");
-		vty_out(vty,"threshold online-user-num  :%d\n",baseconf.threshold_onlineusernum);
-		vty_out(vty, "portal protocol           :%s\n", (PORTAL_PROTOCOL_MOBILE == baseconf.portal_protocol)?"mobile":"telecom");
+		vty_out(vty, "flux-from                    :%s\n", flux_from);
+		vty_out(vty, "flux-interval                :%d\n", baseconf.flux_interval);
+		vty_out(vty, "ipset-auth                   :%s\n", (1 == baseconf.ipset_auth)?"enable":"disable");
+		vty_out(vty, "check-nasportid      	       :%s\n", (1 == baseconf.check_nasportid)?"enable":"disable");
+		vty_out(vty, "trap-switch abnormal logoff  :%s\n", (1 == baseconf.trap_switch_abnormal_logoff)?"on":"off");
+		vty_out(vty, "trap-switch online-user-num  :%s\n", (1==baseconf.trap_onlineusernum_switch)?"on":"off");
+		vty_out(vty,"threshold online-user-num     :%d\n", baseconf.threshold_onlineusernum);
+		vty_out(vty, "portal protocol              :%s\n", (PORTAL_PROTOCOL_MOBILE == baseconf.portal_protocol)?"mobile":"telecom");
  		if (FLUX_FROM_IPTABLES_L2 == baseconf.macauth_flux_from) {
 			macauth_flux_from = "iptables_L2";
 		} else if (FLUX_FROM_WIRELESS == baseconf.macauth_flux_from) {
@@ -7841,17 +7885,18 @@ DEFUN(show_eag_base_conf_func,
 		} else {
 			macauth_flux_from = "iptables";
 		}
-		vty_out(vty, "mac-auth server           :%s\n", (1 == baseconf.macauth_switch)?"enable":"disable");
-		vty_out(vty, "mac-auth ipset-auth       :%s\n", (1 == baseconf.macauth_ipset_auth)?"enable":"disable");
-		vty_out(vty, "mac-auth flux-from        :%s\n", macauth_flux_from);
-		vty_out(vty, "mac-auth flux-interval    :%d\n", baseconf.macauth_flux_interval);
-		vty_out(vty, "mac-auth flux-threshold   :%d\n", baseconf.macauth_flux_threshold);
-		vty_out(vty, "mac-auth check-interval   :%d\n", baseconf.macauth_check_interval);
+		vty_out(vty, "mac-auth server              :%s\n", (1 == baseconf.macauth_switch)?"enable":"disable");
+		vty_out(vty, "mac-auth ipset-auth          :%s\n", (1 == baseconf.macauth_ipset_auth)?"enable":"disable");
+		vty_out(vty, "mac-auth flux-from           :%s\n", macauth_flux_from);
+		vty_out(vty, "mac-auth flux-interval       :%d\n", baseconf.macauth_flux_interval);
+		vty_out(vty, "mac-auth flux-threshold      :%d\n", baseconf.macauth_flux_threshold);
+		vty_out(vty, "mac-auth check-interval      :%d\n", baseconf.macauth_check_interval);
 		vty_out(vty, "mac-auth notice-to-bindserver:%s\n", (1 == baseconf.macauth_notice_bindserver)?"enable":"disable");
-		vty_out(vty, "log-format autelan        :%s\n", (1 == baseconf.autelan_log)?"on":"off");
-		vty_out(vty, "log-format henan          :%s\n", (1 == baseconf.henan_log)?"on":"off");
-		vty_out(vty, "l2super-vlan              :%s\n", (1 == baseconf.l2super_vlan)?"enable":"disable");
-		vty_out(vty, "username check            :%s\n", (1 == baseconf.username_check)?"on":"off");
+		vty_out(vty, "log-format autelan           :%s\n", (1 == baseconf.autelan_log)?"on":"off");
+		vty_out(vty, "log-format henan             :%s\n", (1 == baseconf.henan_log)?"on":"off");
+		vty_out(vty, "l2super-vlan                 :%s\n", (1 == baseconf.l2super_vlan)?"enable":"disable");
+		vty_out(vty, "username check               :%s\n", (1 == baseconf.username_check)?"on":"off");
+		vty_out(vty, "telecom idletime-valuecheck  :%s\n", (1 == baseconf.telecom_idletime_valuecheck)?"on":"off");
 	}
 	else {
 		vty_out(vty, "%% unknown error: %d\n", ret);
@@ -10034,7 +10079,7 @@ DEFUN(set_eag_portal_server_wlanparameter_func,
 			vty_out(vty, "%% you should set DESkey\n");
 			return CMD_SUCCESS;
 		}
-		deskey = argv[3];
+		deskey = (char *)argv[3];
 		if ( strlen(deskey)>MAX_DES_KEY_LEN){
 			vty_out(vty, "%% deskey length should not larger than %d\n",MAX_DES_KEY_LEN);
 			return CMD_SUCCESS;
@@ -10870,7 +10915,7 @@ DEFUN(set_eag_portal_server_wlanusermac_func,
 			vty_out(vty, "%% you should set DESkey\n");
 			return CMD_SUCCESS;
 		}
-		deskey = argv[3];
+		deskey = (char *)argv[3];
 		if ( strlen(deskey)>MAX_DES_KEY_LEN){
 			vty_out(vty, "%% deskey length should not larger than %d\n",MAX_DES_KEY_LEN);
 			return CMD_SUCCESS;
@@ -11009,8 +11054,6 @@ DEFUN(set_eag_portal_server_secret_func,
 	}
 }
 
-
-
 DEFUN(set_eag_portal_server_wisprlogin_func,
 	set_eag_portal_server_wisprlogin_cmd,
 	"set portal-server (wlanid|vlanid|wtpid|interface) KEY wisprlogin (enable|disable) [TYPE]",
@@ -11070,7 +11113,7 @@ DEFUN(set_eag_portal_server_wisprlogin_func,
 			vty_out(vty, "%% you should set type for http or https\n");
 			return CMD_SUCCESS;
 		}
-		type = argv[3];
+		type = (char *)argv[3];
 	}
 	else if (0 == strncmp(argv[2],"disable",strlen(argv[2])))
 	{
@@ -11284,7 +11327,7 @@ DEFUN(set_eag_portal_server_essid_func,
 		} else if ((i+3) == argc) {
 			if (0 == strncmp(argv[i+1],"enable",strlen(argv[i+1]))) {
 				if_enable = 1;
-				DESkey = argv[i+2];
+				DESkey = (char *)argv[i+2];
 			} else {
 				vty_out(vty, "%% argument is wrong\n");
 				return CMD_WARNING;
@@ -11361,7 +11404,7 @@ DEFUN(set_eag_portal_server_essid_func,
 		} else if ((i+3) == argc) {
 			if (0 == strncmp(argv[i+1],"enable",strlen(argv[i+1]))) {
 				if_enable = 1;
-				DESkey = argv[i+2];
+				DESkey = (char *)argv[i+2];
 			} else {
 				vty_out(vty, "%% argument is wrong\n");
 				return CMD_WARNING;
@@ -11390,7 +11433,7 @@ DEFUN(set_eag_portal_server_essid_func,
 		} else if ((i+3) == argc) {
 			if (0 == strncmp(argv[i+1],"enable",strlen(argv[i+1]))) {
 				if_enable = 1;
-				type = argv[i+2];
+				type = (char *)argv[i+2];
 			} else {
 				vty_out(vty, "%% argument is wrong\n");
 				return CMD_WARNING;
@@ -11849,58 +11892,58 @@ DEFUN(eag_show_portal_conf_func,
 			vty_out( vty, "===========================================================\n" );
 			switch(portalconf.portal_srv[i].key_type) {
 			case PORTAL_KEYTYPE_ESSID:
-				vty_out(vty, "Portal key type			:Essid\n");
-				vty_out(vty, "portal key word			:%s\n", portalconf.portal_srv[i].key.essid);
+				vty_out(vty, "Portal key type           :Essid\n");
+				vty_out(vty, "portal key word           :%s\n", portalconf.portal_srv[i].key.essid);
 				break;
 			case PORTAL_KEYTYPE_WLANID:
-				vty_out(vty, "Portal key type			:Wlanid\n");
-				vty_out(vty, "portal key word			:%lu\n", portalconf.portal_srv[i].key.wlanid);
+				vty_out(vty, "Portal key type           :Wlanid\n");
+				vty_out(vty, "portal key word           :%lu\n", portalconf.portal_srv[i].key.wlanid);
 				break;
 			case PORTAL_KEYTYPE_VLANID:
-				vty_out(vty, "Portal key type			:Vlanid\n");
-				vty_out(vty, "portal key word			:%lu\n", portalconf.portal_srv[i].key.vlanid);
+				vty_out(vty, "Portal key type           :Vlanid\n");
+				vty_out(vty, "portal key word           :%lu\n", portalconf.portal_srv[i].key.vlanid);
 				break;
 			case PORTAL_KEYTYPE_WTPID:
-				vty_out(vty, "Portal key type			:Wtpid\n");
-				vty_out(vty, "portal key word			:%lu\n", portalconf.portal_srv[i].key.wtpid);
+				vty_out(vty, "Portal key type           :Wtpid\n");
+				vty_out(vty, "portal key word           :%lu\n", portalconf.portal_srv[i].key.wtpid);
 				break;
 			case PORTAL_KEYTYPE_INTF:
-				vty_out(vty, "Portal key type			:Intf\n");
-				vty_out(vty, "portal key word			:%s\n", portalconf.portal_srv[i].key.intf);
+				vty_out(vty, "Portal key type           :Intf\n");
+				vty_out(vty, "portal key word           :%s\n", portalconf.portal_srv[i].key.intf);
 				break;
 			default:
-				vty_out(vty, "Portal key type			:\n");
+				vty_out(vty, "Portal key type           :\n");
 				break;
 			}				
-			vty_out(vty, "portal url			:%s\n", portalconf.portal_srv[i].portal_url);				
-			vty_out(vty, "portal ntfport			:%u\n", portalconf.portal_srv[i].ntf_port);
+			vty_out(vty, "portal url                :%s\n", portalconf.portal_srv[i].portal_url);				
+			vty_out(vty, "portal ntfport            :%u\n", portalconf.portal_srv[i].ntf_port);
 			if(0 != strcmp(portalconf.portal_srv[i].domain, ""))
-				vty_out(vty, "portal domain			:%s\n", portalconf.portal_srv[i].domain);
+				vty_out(vty, "portal domain             :%s\n", portalconf.portal_srv[i].domain);
 			if(0 != strcmp(portalconf.portal_srv[i].acname, ""))
-				vty_out(vty, "portal acname			:%s\n", portalconf.portal_srv[i].acname);
+				vty_out(vty, "portal acname             :%s\n", portalconf.portal_srv[i].acname);
 			ip2str(portalconf.portal_srv[i].mac_server_ip, ip_str, sizeof(ip_str));
-			vty_out(vty, "mac server ip			:%s\n", ip_str);
-			vty_out(vty, "mac server port			:%u\n", portalconf.portal_srv[i].mac_server_port);
+			vty_out(vty, "mac server ip             :%s\n", ip_str);
+			vty_out(vty, "mac server port           :%u\n", portalconf.portal_srv[i].mac_server_port);
 			
-			vty_out(vty, "portal acip-to-url		:%s\n", (1 == portalconf.portal_srv[i].acip_to_url)?"enable":"disable");
-			vty_out(vty, "portal usermac-to-url		:%s\n", (1 == portalconf.portal_srv[i].usermac_to_url)?"enable":"disable");
-			vty_out(vty, "portal clientmac-to-url		:%s\n", (1 == portalconf.portal_srv[i].clientmac_to_url)?"enable":"disable");	
-			vty_out(vty, "portal apmac-to-url		:%s\n", (1 == portalconf.portal_srv[i].apmac_to_url)?"enable":"disable");	
-			vty_out(vty, "portal wlan-to-url		:%s\n", (1 == portalconf.portal_srv[i].wlan_to_url)?"enable":"disable");	
-			vty_out(vty, "portal redirect-to-url		:%s\n", (1 == portalconf.portal_srv[i].redirect_to_url)?"enable":"disable");			
-			vty_out(vty, "portal nasid-to-url		:%s\n", (1 == portalconf.portal_srv[i].nasid_to_url)?"enable":"disable");
-			vty_out(vty, "portal wlanparameter		:%s\n", (1==portalconf.portal_srv[i].wlanparameter)?"enable":"disable");
+			vty_out(vty, "portal acip-to-url        :%s\n", (1 == portalconf.portal_srv[i].acip_to_url)?"enable":"disable");
+			vty_out(vty, "portal usermac-to-url     :%s\n", (1 == portalconf.portal_srv[i].usermac_to_url)?"enable":"disable");
+			vty_out(vty, "portal clientmac-to-url   :%s\n", (1 == portalconf.portal_srv[i].clientmac_to_url)?"enable":"disable");	
+			vty_out(vty, "portal apmac-to-url       :%s\n", (1 == portalconf.portal_srv[i].apmac_to_url)?"enable":"disable");	
+			vty_out(vty, "portal wlan-to-url        :%s\n", (1 == portalconf.portal_srv[i].wlan_to_url)?"enable":"disable");	
+			vty_out(vty, "portal redirect-to-url    :%s\n", (1 == portalconf.portal_srv[i].redirect_to_url)?"enable":"disable");			
+			vty_out(vty, "portal nasid-to-url       :%s\n", (1 == portalconf.portal_srv[i].nasid_to_url)?"enable":"disable");
+			vty_out(vty, "portal wlanparameter      :%s\n", (1==portalconf.portal_srv[i].wlanparameter)?"enable":"disable");
 			if (1 == portalconf.portal_srv[i].wlanparameter) {
-				vty_out(vty, "portal deskey			:%s\n", portalconf.portal_srv[i].deskey );
+				vty_out(vty, "portal deskey             :%s\n", portalconf.portal_srv[i].deskey );
 			}
-			vty_out(vty, "portal wlanuserfirsturl		:%s\n", 
+			vty_out(vty, "portal wlanuserfirsturl   :%s\n", 
 						(1==portalconf.portal_srv[i].wlanuserfirsturl)?"enable":"disable");
 			if(0 != strcmp(portalconf.portal_srv[i].url_suffix, ""))
-				vty_out(vty, "portal url-suffix			:%s\n", portalconf.portal_srv[i].url_suffix);
+				vty_out(vty, "portal url-suffix         :%s\n", portalconf.portal_srv[i].url_suffix);
 			if(0 != strcmp(portalconf.portal_srv[i].secret, ""))
-				vty_out(vty, "portal secret			:%s\n", portalconf.portal_srv[i].secret);
-			vty_out(vty, "portal wlanapmac		:%s\n", (1 == portalconf.portal_srv[i].wlanapmac)?"enable":"disable");
-			vty_out(vty, "portal wlanusermac		:%s\n", (1==portalconf.portal_srv[i].wlanusermac)?"enable":"disable");
+				vty_out(vty, "portal secret             :%s\n", portalconf.portal_srv[i].secret);
+			vty_out(vty, "portal wlanapmac          :%s\n", (1 == portalconf.portal_srv[i].wlanapmac)?"enable":"disable");
+			vty_out(vty, "portal wlanusermac        :%s\n", (1==portalconf.portal_srv[i].wlanusermac)?"enable":"disable");
 			if (1 == portalconf.portal_srv[i].wlanusermac) {
 				vty_out(vty, "portal wlanusermac deskey :%s\n", portalconf.portal_srv[i].wlanusermac_deskey);
 			}
@@ -14846,7 +14889,11 @@ dcli_eag_init(void)
 	install_element(EAG_NODE, &set_eag_portal_protocol_cmd);
 	install_element(HANSI_EAG_NODE, &set_eag_portal_protocol_cmd);
 	install_element(LOCAL_HANSI_EAG_NODE, &set_eag_portal_protocol_cmd);
-    
+
+	install_element(EAG_NODE, &set_eag_telecom_idletime_valuecheck_cmd);
+	install_element(HANSI_EAG_NODE, &set_eag_telecom_idletime_valuecheck_cmd);
+	install_element(LOCAL_HANSI_EAG_NODE, &set_eag_telecom_idletime_valuecheck_cmd);
+	
 	install_element(EAG_NODE, &set_eag_mac_auth_service_status_cmd);
 	install_element(HANSI_EAG_NODE, &set_eag_mac_auth_service_status_cmd);
 	install_element(LOCAL_HANSI_EAG_NODE, &set_eag_mac_auth_service_status_cmd);

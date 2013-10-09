@@ -3704,6 +3704,7 @@ eag_dbus_method_get_base_conf(
 	int henan_log = 0;
 	int username_check = 0;
 	int l2super_vlan = 0;
+	int telecom_idletime_check = 0;
 	
 	reply = dbus_message_new_method_return(msg);
 	if (NULL == reply) {
@@ -3857,6 +3858,9 @@ replyx:
 		l2super_vlan= l2super_vlan_switch_t;
 		dbus_message_iter_append_basic(&iter, 
 								DBUS_TYPE_INT32, &l2super_vlan);
+		telecom_idletime_check = idletime_valuecheck;
+		dbus_message_iter_append_basic(&iter, 
+								DBUS_TYPE_INT32, &telecom_idletime_check);
 	}
 	
 	return reply;
@@ -10038,6 +10042,54 @@ replyx:
 }
 
 DBusMessage *
+eag_dbus_method_set_telecom_idletime_valuecheck(
+				DBusConnection *conn, 
+				DBusMessage *msg, 
+				void *user_data )
+{
+	eag_ins_t *eagins = NULL;
+	DBusMessage* reply = NULL;
+	DBusMessageIter iter = {0};
+	DBusError		err = {0};
+	int ret = EAG_RETURN_OK;
+	int value_check = 0;
+	reply = dbus_message_new_method_return(msg);
+	
+	if (NULL == reply) {
+		eag_log_err("eag_dbus_method_set_telecom_idletime_valuecheck "\
+					"DBUS new reply message error!\n");
+		return NULL;
+	}
+	eagins = (eag_ins_t *)user_data;
+	if ( NULL == eagins ){
+		eag_log_err("eag_dbus_method_set_telecom_idletime_valuecheck user_data eagins error!");
+		ret = EAG_ERR_UNKNOWN;
+		goto replyx;
+	}
+	dbus_error_init(&err);
+	if (!(dbus_message_get_args(msg ,&err,
+								DBUS_TYPE_INT32, &value_check,		
+								DBUS_TYPE_INVALID)))
+	{							
+		eag_log_err("eag_dbus_method_set_telecom_idletime_valuecheck "\
+					"unable to get input args\n");
+		if (dbus_error_is_set(&err)) {
+			eag_log_err("eag_dbus_method_set_telecom_idletime_valuecheck %s raised:%s\n",
+							err.name, err.message);
+			dbus_error_free(&err);
+		}
+		ret = EAG_ERR_DBUS_FAILED;
+		goto replyx;
+	}
+	eag_set_idletime_valuecheck(value_check);
+replyx:
+	dbus_message_iter_init_append(reply, &iter);
+	dbus_message_iter_append_basic(&iter,
+									DBUS_TYPE_INT32, &ret);
+	return reply;
+}
+
+DBusMessage *
 eag_dbus_method_add_debug_filter(
 			    DBusConnection *conn, 
 			    DBusMessage *msg, 
@@ -10760,6 +10812,8 @@ eagins_register_all_dbus_method(eag_ins_t *eagins)
 	
 	eag_dbus_register_method(eagins->eagdbus,
 		EAG_DBUS_INTERFACE, eag_dbus_method_set_portal_protocol, eagins);
+	eag_dbus_register_method(eagins->eagdbus,
+		EAG_DBUS_INTERFACE, eag_dbus_method_set_telecom_idletime_valuecheck, eagins);
 	eag_dbus_register_method(eagins->eagdbus,
 		EAG_DBUS_INTERFACE, eag_dbus_method_set_l2super_vlan_switch, eagins);
 	eag_dbus_register_method(eagins->eagdbus,
