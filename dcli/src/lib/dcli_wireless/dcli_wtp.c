@@ -12203,11 +12203,11 @@ DEFUN(show_wtp_runtime_cmd_func,
 #if _GROUP_POLICY
 DEFUN(set_wtp_location_cmd_func,
 	  set_wtp_location_cmd,
-	  "set wtp location LOCATION",
+	  "set wtp location .LINE",
 	  CONFIG_STR
 	  "wtp information\n"
 	  "wtp location\n"
-	  "wtp location name length <1-15>\n"
+	  "wtp location name length <1-256>\n"
 	 )
 {	
 	int i = 0;
@@ -12225,17 +12225,20 @@ DEFUN(set_wtp_location_cmd_func,
 	
 	//DBusConnection *dbus_connection = dcli_dbus_connection;
 	char *location = NULL;
+	char *line = NULL;
 	int len = 0;
 
-	len = strlen(argv[0]);
-	if(len > 15){		
-		vty_out(vty,"<error> wtp location is too long,should be 1 to 15\n");
+	line = argv_concat(argv, argc, 0);
+	len = strlen(line);
+	if((len <= 0) || (len > 256))
+	{		
+		vty_out(vty,"<error> wtp location is too long,should be 1 to 256\n");
 		return CMD_SUCCESS;
 	}
 	
-	location = (char*)malloc(strlen(argv[0])+1);
-	memset(location, 0, strlen(argv[0])+1);
-	memcpy(location, argv[0], strlen(argv[0]));
+	location = (char*)malloc(strlen(line)+1);
+	memset(location, 0, strlen(line)+1);
+	memcpy(location, line, strlen(line));
 
 	if(vty->node == WTP_NODE){
 		index = 0;			
@@ -12279,7 +12282,7 @@ DEFUN(set_wtp_location_cmd_func,
 		{
 			if(ret == 0)
 			{		
-				vty_out(vty,"set wtp location %s successfully\n",argv[0]);
+				vty_out(vty,"set wtp location %s successfully\n",line);
 			}
 			else if (ret == WTP_ID_NOT_EXIST)
 				vty_out(vty,"<error> wtp id does not exist\n");
@@ -12317,7 +12320,7 @@ DEFUN(set_wtp_location_cmd_func,
 #else
 DEFUN(set_wtp_location_cmd_func,
 	  set_wtp_location_cmd,
-	  "set wtp location LOCATION",
+	  "set wtp location .LINE",
 	  CONFIG_STR
 	  "wtp information\n"
 	  "wtp location\n"
@@ -12332,19 +12335,21 @@ DEFUN(set_wtp_location_cmd_func,
 	unsigned int WTPID;
 	int ret = WID_DBUS_SUCCESS;
 	char *location = NULL;
+	char *line = NULL;
 	int len = 0;
 	//WTPID = (unsigned int)vty->index;
 
-	len = strlen(argv[0]);
+	line = argv_concat(argv, argc, 0);
+	len = strlen(line);
 	if((len <= 0) || (len > 256))
 	{		
 		vty_out(vty,"<error> wtp location is too long,should be 1 to 256\n");
 		return CMD_SUCCESS;
 	}
 	
-	location = (char*)malloc(strlen(argv[0])+1);
-	memset(location, 0, strlen(argv[0])+1);
-	memcpy(location, argv[0], strlen(argv[0]));
+	location = (char*)malloc(strlen(line)+1);
+	memset(location, 0, strlen(line)+1);
+	memcpy(location, line, strlen(line));
 
 
 	int localid = 1;
@@ -12408,7 +12413,7 @@ DEFUN(set_wtp_location_cmd_func,
 	dbus_message_unref(reply);
 	if(ret == 0)
 	{		
-		vty_out(vty,"set wtp location %s successfully\n",argv[0]);
+		vty_out(vty,"set wtp location %s successfully\n",line);
 	}
 	else if (ret == WTP_ID_NOT_EXIST)
 	vty_out(vty,"<error> wtp id does not exist\n");
