@@ -656,6 +656,8 @@ eag_redirconn_build_redirurl( eag_redirconn_t *redirconn )
 	struct portal_srv_t * portal_srv = NULL;
 	char user_ipstr[32] = "";
 	char acip_str[32]= "";
+    char user_mac[24] = "";
+    char ap_mac[24] = "";
 	uint32_t nasip = 0;
 	eag_redir_t *redir = NULL;
 	
@@ -667,6 +669,11 @@ eag_redirconn_build_redirurl( eag_redirconn_t *redirconn )
 	appdb = redir->appdb;
 	eagins = redir->eagins;
 	ip2str(redirconn->sta_ip, user_ipstr, sizeof(user_ipstr));
+	
+    nasip = eag_ins_get_nasip(eagins);
+    ip2str(nasip, acip_str, sizeof(acip_str));
+    mac2str( appconn->session.apmac, ap_mac, sizeof(ap_mac), ':');
+    mac2str( appconn->session.usermac, user_mac, sizeof(user_mac), ':');
 
 	appconn = appconn_find_by_userip(appdb, redirconn->sta_ip);
 	if (NULL == appconn) {
@@ -690,8 +697,6 @@ eag_redirconn_build_redirurl( eag_redirconn_t *redirconn )
 			portal_srv->acname);
 	/* acip to url */
 	if (1 == portal_srv->acip_to_url) {
-		nasip = eag_ins_get_nasip(eagins);
-		ip2str(nasip, acip_str, sizeof(acip_str));
 		strncat( redirconn->redirurl, "&wlanacip=", sizeof(redirconn->redirurl)-strlen(redirconn->redirurl)-1);
 		strncat( redirconn->redirurl, acip_str, sizeof(redirconn->redirurl)-strlen(redirconn->redirurl)-1);
 	}
@@ -762,10 +767,8 @@ eag_redirconn_build_redirurl( eag_redirconn_t *redirconn )
 
 	/* usermac to url */
 	if (1 == portal_srv->usermac_to_url) {
-		char usermac_str[24] = "";
-		mac2str( appconn->session.usermac, usermac_str, sizeof(usermac_str), ':');
 		strncat( redirconn->redirurl, "&usermac=", sizeof(redirconn->redirurl)-strlen(redirconn->redirurl)-1);
-		strncat( redirconn->redirurl, usermac_str, sizeof(redirconn->redirurl)-strlen(redirconn->redirurl)-1);
+		strncat( redirconn->redirurl, user_mac, sizeof(redirconn->redirurl)-strlen(redirconn->redirurl)-1);
 	}
 
 	if (WISPR_URL_HTTP == portal_srv->wisprlogin ||
@@ -774,10 +777,7 @@ eag_redirconn_build_redirurl( eag_redirconn_t *redirconn )
 		char wisprloginurl[128];
 		char wisprloginurl_encode[256];
 		memset (wisprloginurl, 0, sizeof(wisprloginurl) );
-		memset (wisprloginurl_encode, 0, sizeof(wisprloginurl_encode));
-
-		nasip = eag_ins_get_nasip(eagins);
-		ip2str(nasip, acip_str, sizeof(acip_str));		
+		memset (wisprloginurl_encode, 0, sizeof(wisprloginurl_encode));	
 
 		if (WISPR_URL_HTTP == portal_srv->wisprlogin) {
 			snprintf (wisprloginurl, sizeof(wisprloginurl),
@@ -846,7 +846,10 @@ eag_redirconn_build_redirurl( eag_redirconn_t *redirconn )
 
 	eag_log_info("eag_redirconn_build_redirurl userip %s, redirURL = (%s)",
 			user_ipstr, redirconn->redirurl);
-	
+	admin_log_notice("PortalRedirect___UserIP:%s,UserMAC:%s,ApMAC:%s,SSID:%s,NasIP:%s,Interface:%s,NasID:%s,redirURL:%s", 
+			user_ipstr, user_mac, ap_mac, appconn->session.essid, acip_str, 
+			appconn->session.intf, appconn->session.nasid, redirconn->redirurl);
+
 	return EAG_RETURN_OK;
 }
 
