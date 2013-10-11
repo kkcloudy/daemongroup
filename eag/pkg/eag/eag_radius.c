@@ -836,11 +836,11 @@ radius_auth(eag_radius_t *radius,
 			0, (uint8_t *)appconn->user_agent, len);
 	}
 
-	admin_log_notice("RadiusAccessRequest___UserName:%s,UserIp:%s,UserMAC:%s,ApMAC:%s,SSID:%s,NasIP:%s,PortalIP:%s,RadiusAuthIP:%s,Interface:%s,NasID:%s,Authtype:%s",
+	admin_log_notice("RadiusAccessRequest___UserName:%s,UserIP:%s,UserMAC:%s,ApMAC:%s,SSID:%s,NasIP:%s,PortalIP:%s,RadiusAuthIP:%s,Interface:%s,NasID:%s,Authtype:%s",
 		appconn->session.username, user_ipstr, user_macstr, ap_macstr, appconn->session.essid, 
 		nas_ipstr, portal_ipstr, radius_auth_ipstr, appconn->session.intf, appconn->session.nasid,
 		(EAG_AUTH_TYPE_MAC==appconn->session.server_auth_type)?"MAC":"Portal");
-	log_app_filter(appconn,"RadiusAccessRequest___UserName:%s,UserIp:%s,UserMAC:%s,ApMAC:%s,SSID:%s,NasIP:%s,PortalIP:%s,RadiusAuthIP:%s,Interface:%s,NasID:%s,Authtype:%s",
+	log_app_filter(appconn,"RadiusAccessRequest___UserName:%s,UserIP:%s,UserMAC:%s,ApMAC:%s,SSID:%s,NasIP:%s,PortalIP:%s,RadiusAuthIP:%s,Interface:%s,NasID:%s,Authtype:%s",
 		appconn->session.username, user_ipstr, user_macstr, ap_macstr, appconn->session.essid, 
 		nas_ipstr, portal_ipstr, radius_auth_ipstr, appconn->session.intf, appconn->session.nasid,
 		(EAG_AUTH_TYPE_MAC==appconn->session.server_auth_type)?"MAC":"Portal");
