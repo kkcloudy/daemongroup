@@ -17185,7 +17185,7 @@ DEFUN(sta_arp_set_cmd_func,
 }
 DEFUN(set_asd_sta_arp_listen_cmd_func,
 		set_asd_sta_arp_listen_cmd,
-		"set asd sta arp (listen|listen_and_set) (enable|disable)",
+		"set asd station arp (listen|listen_and_set) (enable|disable)",
 		"asd sta arp listen\n"
 		"listen arp info \n"
 		)
