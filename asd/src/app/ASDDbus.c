@@ -27974,11 +27974,11 @@ DBusMessage *asd_dbus_security_show_running_config(DBusConnection *conn, DBusMes
 				cursor = showStr + totalLen;
 			}			
 			if(asd_sta_arp_listen == 1){
-				totalLen += sprintf(cursor,"set asd sta arp listen enable\n");
+				totalLen += sprintf(cursor,"set asd station arp listen enable\n");
 				cursor = showStr + totalLen;
 			}			
 			else if(asd_sta_arp_listen == 2){
-				totalLen += sprintf(cursor,"set asd sta arp listen_and_set enable\n");
+				totalLen += sprintf(cursor,"set asd station arp listen_and_set enable\n");
 				cursor = showStr + totalLen;
 			}			
 			if(asd_sta_idle_time != 8){
@@ -28120,11 +28120,11 @@ DBusMessage *asd_dbus_security_show_running_config(DBusConnection *conn, DBusMes
 			}				
 			
 			if(asd_sta_arp_listen == 1){
-				totalLen += sprintf(cursor,"set asd sta arp listen enable\n");
+				totalLen += sprintf(cursor,"set asd station arp listen enable\n");
 				cursor = showStr + totalLen;
 			}			
 			else if(asd_sta_arp_listen == 2){
-				totalLen += sprintf(cursor,"set asd sta arp listen_and_set enable\n");
+				totalLen += sprintf(cursor,"set asd station arp listen_and_set enable\n");
 				cursor = showStr + totalLen;
 			}			
 			if(asd_sta_idle_time != 8){
