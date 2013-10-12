@@ -3056,7 +3056,7 @@ void asd_syslog_auteview(int level,int type,struct ieee80211_mgmt *mgmt,struct a
 	}
 	
 	/* Add SSID for BSS, instead of ESSID */
-	if(wasd->conf != NULL)
+	if(wasd && wasd->conf)
 	{
 		ssid = (char *)wasd->conf->ssid.ssid;  
 	}

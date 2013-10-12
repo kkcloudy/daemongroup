@@ -3698,9 +3698,9 @@ void STA_OP(TableMsg *msg){
 					//end
 					if(gASDLOGDEBUG & BIT(1)){
 						if(ASD_SECURITY[SID]&&((ASD_SECURITY[SID]->securityType == OPEN) || (ASD_SECURITY[SID]->securityType == SHARED)))
-							asd_syslog_auteview(LOG_INFO,STA_LEAVING,NULL,wasd,sta,999,"Unknown");
+							asd_syslog_auteview(LOG_INFO,STA_LEAVING,NULL,bss[i],sta,999,"Unknown");
 						else
-							asd_syslog_auteview(LOG_INFO,DOT1X_USER_OFFLINE,NULL,wasd,sta,999,"Unknown");
+							asd_syslog_auteview(LOG_INFO,DOT1X_USER_OFFLINE,NULL,bss[i],sta,999,"Unknown");
 					}
 					
 					if(ASD_NOTICE_STA_INFO_TO_PORTAL)
