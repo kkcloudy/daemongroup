@@ -674,9 +674,6 @@ eag_redirconn_build_redirurl( eag_redirconn_t *redirconn )
     ip2str(nasip, acip_str, sizeof(acip_str));
 
 	appconn = appconn_find_by_userip(appdb, redirconn->sta_ip);
-	mac2str( appconn->session.apmac, ap_mac, sizeof(ap_mac)-1, ':');
-    mac2str( appconn->session.usermac, user_mac, sizeof(user_mac)-1, ':');
-    
 	if (NULL == appconn) {
 		eag_log_warning("redirconn build redirurl failed, cannot find appconn, userip=%s",
 			user_ipstr);
@@ -690,7 +687,10 @@ eag_redirconn_build_redirurl( eag_redirconn_t *redirconn )
 				"appconn_config_portalsrv failed, userip %s", user_ipstr);
 		return -1;
 	}
-	
+
+	mac2str( appconn->session.apmac, ap_mac, sizeof(ap_mac), ':');
+	mac2str( appconn->session.usermac, user_mac, sizeof(user_mac), ':');
+
 	portal_srv = &(appconn->session.portal_srv);
 	snprintf(redirconn->redirurl, sizeof(redirconn->redirurl)-1,
 			"%s?wlanuserip=%s&wlanacname=%s",
