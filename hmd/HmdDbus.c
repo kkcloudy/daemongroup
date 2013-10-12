@@ -1119,6 +1119,50 @@ DBusMessage * hmd_dbus_interface_config_remote_hansi(DBusConnection *conn, DBusM
 	return reply;
 	
 }
+DBusMessage * hmd_dbus_set_global_bridge_mcast(DBusConnection *conn, DBusMessage *msg, void *user_data){
+
+	DBusMessage* reply;
+	DBusError err;
+	char command[64] = {0};
+	char* ifname = NULL;
+	int ret = 0;	
+	unsigned char state = 0;
+	
+	dbus_error_init(&err);
+	if (!(dbus_message_get_args ( msg, &err,
+							 DBUS_TYPE_STRING,&ifname,
+							 DBUS_TYPE_BYTE,&state,
+							 DBUS_TYPE_INVALID))) 
+	{
+	    hmd_syslog_err("set hansi profile:Unable to get input args ");
+		if (dbus_error_is_set(&err)) {
+			hmd_syslog_err("set hansi profile %s raised: %s",err.name,err.message);
+			dbus_error_free(&err);
+		}
+		return NULL;
+	}	
+	if(ifname == NULL){
+		hmd_syslog_err("ifname error!\n");
+		return NULL;
+	}
+	sprintf(command,"set_g_mcast.sh %s %d",ifname,state);
+	
+	ret = system(command);
+	ret = WEXITSTATUS(ret);
+	hmd_syslog_info("ret  ==  %d \n",ret);
+	reply = dbus_message_new_method_return(msg);
+	if(NULL == reply){		
+		hmd_syslog_err("vrrp set hansi profile dbus reply null!\n");
+		return reply;
+	}
+		
+	dbus_message_append_args(reply,
+							 DBUS_TYPE_UINT32,&ret,
+							 DBUS_TYPE_INVALID);
+	
+	return reply;
+	
+}
 
 DBusMessage * hmd_dbus_interface_set_hansi_state(DBusConnection *conn, DBusMessage *msg, void *user_data){
 
@@ -4942,6 +4986,8 @@ static DBusHandlerResult hmd_dbus_message_handler (DBusConnection *connection, D
 		reply = hmd_dbus_set_hmd_timer_config_save_state(connection,message,user_data);
 		}else if (dbus_message_is_method_call(message,HMD_DBUS_INTERFACE,HMD_DBUS_METHOD_SET_HMD_TIMER_CONFIG_SAVE_TIMER)){/*fengwenchao add 20130412 for hmd timer config save*/
 		reply = hmd_dbus_set_hmd_timer_config_save_timer(connection,message,user_data);
+		}else if(dbus_message_is_method_call(message,HMD_DBUS_INTERFACE,HMD_DBUS_SET_GLOBAL_BRIDGE_MCAST)){
+		reply = hmd_dbus_set_global_bridge_mcast(connection,message,user_data);
 		}
 		else if (dbus_message_is_method_call(message,HMD_DBUS_INTERFACE,HMD_DBUS_CONF_SYNC_TO_VRRP_BAKUP)){
 		reply = hmd_dbus_conf_sync_to_vrrp_backup(connection, message, user_data);

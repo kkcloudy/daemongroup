@@ -6695,6 +6695,28 @@ void dcli_vrrp_notify_to_npd
 
 }
 extern struct vtysh_client vtysh_client[];
+int g_bridge_mcast_config_save()
+{
+	FILE* fp = NULL;
+	char cmd[64];
+	char buf[512]={0};
+	sprintf(cmd,"sudo chmod 777 %s	>/dev/NULL","/var/run/hmd/mcast_config_save");
+
+	fp = fopen("/var/run/hmd/mcast_config_save", "r");
+	if(NULL == fp) {
+		return -1;
+	}
+	else 
+	{
+		while(fgets(buf,512,fp))
+		{
+			vtysh_add_show_string(buf);
+		}
+		fclose(fp);
+	}
+	return 0;
+}
+
 #ifdef DISTRIBUT 
 #if 1
 int dcli_vrrp_show_running_cfg(struct vty *vty)
@@ -7429,6 +7451,8 @@ int dcli_vrrp_show_running_cfg(struct vty *vty)
 	
 	/**gjd :add pfm show running func**/
 			vtysh_pfm_config_write(vty);
+	/* houxx: add for bridge_mcast show running */
+	ret = g_bridge_mcast_config_save();
 	return 0;	
 }
 #endif
@@ -8166,6 +8190,128 @@ extern struct cmd_element vtysh_ping_ip_cmd;
 extern struct cmd_element vtysh_telnet_cmd;
 extern struct cmd_element vtysh_telnet_port_cmd;
 #endif
+
+DEFUN(set_global_bridge_mcast_cmd_func,
+	  set_global_bridge_mcast_cmd,
+	  "set global_bridge_mcast IFNAME (enable|disable)",
+	  CONFIG_STR
+	  "Global Bridge mcast\n"
+	  "Ebr/Wlan ifname\n"
+	  "ebr mcast_solicit enable|disable\n"
+)
+{
+	//vty_out(vty,"1\n");
+	DBusMessage *query = NULL, *reply = NULL;
+	DBusError err = {0};
+	unsigned int hmd_ret = 0;
+	unsigned int profile = 0;
+	unsigned int slot_no = 0;
+	unsigned int slot_no1 = 0;
+	unsigned int slot_id = HostSlotId;
+	
+	DBusMessage *query2 = NULL, *reply2 = NULL;
+	DBusError err2 = {0};
+	unsigned int op_ret = 0;
+	int instRun = 0;
+	char cmd[DCLI_VRRP_DBUSNAME_LEN] = {0}; /*wcl add*/
+	unsigned char insID = 0;
+	int flag = 0;
+	int local_id = 0;
+	int ret = 0;
+	char command[64] = {0};
+#if 1	
+	unsigned char state=0;
+	unsigned char * ifname = NULL;
+
+	int local_slot_id = get_product_info("/dbm/local_board/slot_id");
+	int slot_count = get_product_info("/dbm/product/slotcount");
+#endif
+	if (!strcmp(argv[1],"enable")){
+		state=1;
+	}
+	else if (!strcmp(argv[1],"disable")){
+		state=0;
+	}
+	else
+	{
+		vty_out(vty,"<error> input parameter should only be 'enable' or 'disable'\n");
+		return CMD_SUCCESS;
+	}
+	ifname = (unsigned char *)argv[0];
+	for(slot_id=1;slot_id<=slot_count;slot_id++)
+	{
+
+		query = dbus_message_new_method_call(HMD_DBUS_BUSNAME,HMD_DBUS_OBJPATH,HMD_DBUS_INTERFACE,HMD_DBUS_SET_GLOBAL_BRIDGE_MCAST);
+
+
+		dbus_error_init(&err);
+		dbus_message_append_args(query,
+								 DBUS_TYPE_STRING,&ifname,
+								 DBUS_TYPE_BYTE,&state,
+								 DBUS_TYPE_INVALID);
+		
+		if(NULL == dbus_connection_dcli[slot_id]->dcli_dbus_connection) 				
+		{
+			if(slot_id == local_slot_id)
+			{
+				reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection,query,-1, &err);
+			}
+			else 
+			{	
+				vty_out(vty,"Can not connect to slot:%d \n",slot_id);	
+				continue;
+			}
+		}
+		else
+		{
+			reply = dbus_connection_send_with_reply_and_block (dbus_connection_dcli[slot_id]->dcli_dbus_connection,query,-1, &err); 			
+		}
+
+		dbus_message_unref(query);
+		if (NULL == reply) {
+			vty_out(vty,"hmd failed get reply.\n");
+			if (dbus_error_is_set(&err)) {
+				printf("%s raised: %s",err.name,err.message);
+				dbus_error_free_for_dcli(&err);
+			}
+			return CMD_WARNING;
+		}
+
+		if (dbus_message_get_args ( reply, &err,
+					DBUS_TYPE_UINT32,&hmd_ret,
+					DBUS_TYPE_INVALID))
+		{	
+		
+			if(hmd_ret != 0){
+				vty_out(vty,"hmd_ret is %d\n",hmd_ret);
+			}
+		} 
+		else 
+		{	
+			if (dbus_error_is_set(&err)) 
+			{
+				printf("%s raised: %s",err.name,err.message);
+				dbus_error_free_for_dcli(&err);
+			}		
+			return CMD_WARNING;
+		}
+		
+		dbus_message_unref(reply);
+	}
+	if(state == 0)
+	{
+		sprintf(command,"mcast_config_save.sh %s",ifname);
+		ret = system(command);
+		ret = WEXITSTATUS(ret);
+		if(ret != 0)
+		{
+			vty_out(vty,"save config file! \n");
+			return CMD_WARNING;
+		}
+	}
+	return CMD_SUCCESS;
+}
+
 void dcli_vrrp_element_init(void)  
 {
 	install_node (&hansi_node, dcli_vrrp_show_running_cfg, "HANSI_NODE");
@@ -8230,6 +8376,7 @@ void dcli_vrrp_element_init(void)
 	install_element(HANSI_NODE,&config_vrrp_set_vip_back_down_cmd);	
 	install_element(HANSI_NODE,&show_hansi_backup_switch_times_cmd);
 	install_element(CONFIG_NODE,&show_vrrp_golbal_swtich_hansi_list_cmd);
+	install_element(CONFIG_NODE,&set_global_bridge_mcast_cmd);
 }
 #ifdef __cplusplus
 }

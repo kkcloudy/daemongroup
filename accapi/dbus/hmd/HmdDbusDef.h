@@ -54,6 +54,7 @@ extern char HMD_DBUS_METHOD_SET_HMD_TIMER_CONFIG_SAVE_STATE[PATH_LEN];/*fengwenc
 extern char HMD_DBUS_METHOD_SET_HMD_TIMER_CONFIG_SAVE_TIMER[PATH_LEN];/*fengwenchao add 20130412 for hmd timer config save*/
 extern char HMD_DBUS_METHOD_SYNC_WCPSS_CFG[PATH_LEN];
 extern char HMD_DBUS_CONF_SYNC_TO_VRRP_BAKUP[PATH_LEN];
+extern char HMD_DBUS_SET_GLOBAL_BRIDGE_MCAST[PATH_LEN];
 
 enum hmd_dbus_result_no_e {
 	HMD_DBUS_SUCCESS,
