@@ -30611,7 +30611,11 @@ int delete_ap_group(unsigned int ID){
 	tmp1 = WTP_GROUP[ID]->WTP_M; 
 	while(tmp){
 		tmp = tmp1->next;
+		if (AC_WTP[tmp1->WTPID]) {
+			AC_WTP[tmp1->WTPID]->APGroupID = 0;
+		}
 		free(tmp1);
+		tmp1 = tmp;
 	}
 	if(WTP_GROUP[ID]->GNAME != NULL){
 		free(WTP_GROUP[ID]->GNAME);

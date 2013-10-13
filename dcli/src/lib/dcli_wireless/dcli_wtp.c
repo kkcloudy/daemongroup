@@ -7104,7 +7104,9 @@ DEFUN(wtp_apply_wlan_cmd_func,
 	WtpList_Head = wtp_apply_wlan_cmd_wtp_apply_wlan_id(index,localid,dcli_dbus_connection,type,id,wlan_id,&count,&ret);
 	
 	if(ret == 0){
-		vty_out(vty,"wtp apply wlan  %s successfully.\n",argv[0]);
+		if (count == 0)
+			vty_out(vty,"wtp apply wlan  %s successfully.\n",argv[0]);
+		
 		if((count != 0)&&(type == 1)&&(WtpList_Head!= NULL)){
 			vty_out(vty,"wtp ");					
 			for(i=0; i<count; i++){

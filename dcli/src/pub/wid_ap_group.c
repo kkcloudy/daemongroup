@@ -95,6 +95,7 @@ int dcli_ap_group_show_member(int localid,int index,unsigned int groupid,unsigne
 	unsigned int count = 0;
 	int ret = 0;
 	unsigned int wtpid = 0;
+	DBusMessageIter  iter_array;
 	dbus_error_init(&err);
 
 	//printf("11111111111111111111111111\n");
@@ -140,9 +141,15 @@ int dcli_ap_group_show_member(int localid,int index,unsigned int groupid,unsigne
 	if(count != 0){
 		(*wtp_list) = (unsigned int *)malloc(count*(sizeof(unsigned int)));
 	}
+	dbus_message_iter_next(&iter);
+	dbus_message_iter_recurse(&iter,&iter_array);
 	for(i=0; i < count; i++){
-		dbus_message_iter_next(&iter);	
-		dbus_message_iter_get_basic(&iter,&wtpid);
+		DBusMessageIter iter_struct;
+		dbus_message_iter_recurse(&iter_array,&iter_struct);
+		dbus_message_iter_get_basic(&iter_struct,&wtpid);
+		dbus_message_iter_next(&iter_array);
+		//dbus_message_iter_next(&iter);	
+		//dbus_message_iter_get_basic(&iter,&wtpid);
 		(*wtp_list)[i] = wtpid;
 		//printf("wtpid[%d] = %d\n",i,wtpid);
 	}

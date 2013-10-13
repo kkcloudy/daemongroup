@@ -70757,8 +70757,10 @@ DBusMessage *wid_dbus_del_ap_group(DBusConnection *conn, DBusMessage *msg, void 
 	}
 	
 	if(WTP_GROUP[ID] != NULL){		
+		wid_syslog_debug_debug(WID_DEFAULT, "delete ap-group %d\n", ID);
 		ret = delete_ap_group(ID);		
 	}else{
+		wid_syslog_debug_debug(WID_DEFAULT, "ap-group %d is not exist\n", ID);
 		ret = GROUP_ID_NOT_EXIST;
 	}
 	reply = dbus_message_new_method_return(msg);
@@ -70818,13 +70820,12 @@ DBusMessage *wid_dbus_show_ap_group_all(DBusConnection *conn, DBusMessage *msg, 
 DBusMessage *wid_dbus_show_ap_group_members_all(DBusConnection *conn, DBusMessage *msg, void *user_data){
 	DBusMessage * reply;
 	DBusMessageIter  iter;
-	DBusMessageIter  iter1;
-	DBusError err;	
+	DBusError err;
 	int ret = WID_DBUS_SUCCESS;
 	unsigned int count = 0;
 	int i; 
 	struct WTP_GROUP_MEMBER *temp;
-	
+	DBusMessageIter	 iter_array;
 	dbus_error_init(&err);
 	
 	dbus_message_iter_init(msg,&iter);	
@@ -70837,35 +70838,35 @@ DBusMessage *wid_dbus_show_ap_group_members_all(DBusConnection *conn, DBusMessag
 	
 	reply = dbus_message_new_method_return(msg);
 		
-	dbus_message_iter_init_append(reply, &iter1);
+	dbus_message_iter_init_append(reply, &iter);
 		
-	dbus_message_iter_append_basic(&iter1, DBUS_TYPE_UINT32, &ret);
+	dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT32, &ret);
 
-	dbus_message_iter_append_basic (&iter1, DBUS_TYPE_UINT32, &count);
+	dbus_message_iter_append_basic (&iter, DBUS_TYPE_UINT32, &count);
 
 	for (i=0; i<WTP_GROUP_NUM; i++) {
 		if (WTP_GROUP[i] != NULL) {
-			dbus_message_iter_append_basic(&iter1,
-											DBUS_TYPE_UINT32,
-											&WTP_GROUP[i]->GID
-											);
-			dbus_message_iter_append_basic(&iter1,
-											DBUS_TYPE_STRING,
-											&WTP_GROUP[i]->GNAME
-											);
-			dbus_message_iter_append_basic(&iter1,
-											DBUS_TYPE_UINT32,
-											&WTP_GROUP[i]->WTP_COUNT
-											);
+			dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT32, &WTP_GROUP[i]->GID);
+			dbus_message_iter_append_basic(&iter, DBUS_TYPE_STRING, &WTP_GROUP[i]->GNAME);
+			dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT32, &WTP_GROUP[i]->WTP_COUNT);
+
+			dbus_message_iter_open_container (&iter,
+									DBUS_TYPE_ARRAY,
+									DBUS_STRUCT_BEGIN_CHAR_AS_STRING
+											DBUS_TYPE_UINT32_AS_STRING
+									DBUS_STRUCT_END_CHAR_AS_STRING,
+									&iter_array);
+			
 			temp = WTP_GROUP[i]->WTP_M;
 			while (temp) {
-				dbus_message_iter_append_basic(&iter1,
-											DBUS_TYPE_UINT32,
-											&temp->WTPID
-											);
+				DBusMessageIter iter_struct;
+				dbus_message_iter_open_container(&iter_array,DBUS_TYPE_STRUCT,NULL,&iter_struct);
+ 				dbus_message_iter_append_basic(&iter_struct, DBUS_TYPE_UINT32, &temp->WTPID);
+				dbus_message_iter_close_container (&iter_array, &iter_struct);
 				temp = temp->next;
 			}
 		}
+		dbus_message_iter_close_container (&iter, &iter_array);
 	}
 
 	return reply;	
@@ -70876,7 +70877,6 @@ DBusMessage *wid_dbus_show_ap_group_member(DBusConnection *conn, DBusMessage *ms
 {
 	DBusMessage * reply;
 	DBusMessageIter  iter;
-	DBusMessageIter  iter1;
 	DBusError err;	
 	int ret = WID_DBUS_SUCCESS;
 //	unsigned int i =0;
@@ -70884,6 +70884,7 @@ DBusMessage *wid_dbus_show_ap_group_member(DBusConnection *conn, DBusMessage *ms
 	unsigned int wtpid;
 	unsigned int count = 0;
 	//unsigned int *wtp_list;
+	DBusMessageIter	 iter_array;
 	struct WTP_GROUP_MEMBER * temp = NULL;
 	dbus_error_init(&err);
 	
@@ -70894,19 +70895,28 @@ DBusMessage *wid_dbus_show_ap_group_member(DBusConnection *conn, DBusMessage *ms
 	//memset(wtp_list, 0, num*sizeof(unsigned int));
 
     if(WTP_GROUP[groupid] == NULL) {
+		wid_syslog_debug_debug(WID_DEFAULT, "ap-group %d is not exist\n", groupid);
 		ret = GROUP_ID_NOT_EXIST;
     } else {
         count = WTP_GROUP[groupid]->WTP_COUNT;
+		wid_syslog_debug_debug(WID_DEFAULT, "ap-group %u member count %u\n", groupid, count);
     }
     
 	reply = dbus_message_new_method_return(msg);
 		
-	dbus_message_iter_init_append(reply, &iter1);
+	dbus_message_iter_init_append(reply, &iter);
 		
-	dbus_message_iter_append_basic(&iter1, DBUS_TYPE_UINT32, &ret);
+	dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT32, &ret);
 
-	dbus_message_iter_append_basic (&iter1,	DBUS_TYPE_UINT32, &count);
+	dbus_message_iter_append_basic (&iter,	DBUS_TYPE_UINT32, &count);
 
+	dbus_message_iter_open_container (&iter,
+									DBUS_TYPE_ARRAY,
+									DBUS_STRUCT_BEGIN_CHAR_AS_STRING
+											DBUS_TYPE_UINT32_AS_STRING
+									DBUS_STRUCT_END_CHAR_AS_STRING,
+									&iter_array);
+	
 	if(ret == WID_DBUS_SUCCESS)
 	{
     	if(count != 0)
@@ -70925,14 +70935,19 @@ DBusMessage *wid_dbus_show_ap_group_member(DBusConnection *conn, DBusMessage *ms
         	temp = WTP_GROUP[groupid]->WTP_M;
         	while(temp != NULL)
         	{
+        		DBusMessageIter iter_struct;
+				
                 wtpid = temp->WTPID;
-        		dbus_message_iter_append_basic (&iter1,
-        										DBUS_TYPE_UINT32,
-        										&wtpid);
+				wid_syslog_debug_debug(WID_DEFAULT, "append wtp %u", wtpid);
+				dbus_message_iter_open_container(&iter_array,DBUS_TYPE_STRUCT,NULL,&iter_struct);
+				dbus_message_iter_append_basic(&iter_struct, DBUS_TYPE_UINT32, &wtpid);
+				wid_syslog_debug_debug(WID_DEFAULT, "done\n");
+				dbus_message_iter_close_container (&iter_array, &iter_struct);
         		temp = temp->next;
         	}	
     	}
 	}
+	dbus_message_iter_close_container (&iter, &iter_array);
 	return reply;	
 }
 
@@ -70959,9 +70974,13 @@ DBusMessage *wid_dbus_add_del_ap_group_member(DBusConnection *conn, DBusMessage 
 
 	dbus_message_iter_next(&iter);	
 	dbus_message_iter_get_basic(&iter,&groupid);
+	wid_syslog_debug_debug(WID_DEFAULT, "%s for ap-group %d\n", isadd ? "add" : "delete", groupid);
 
 	dbus_message_iter_next(&iter);	
 	dbus_message_iter_get_basic(&iter,&num);
+	
+	wid_syslog_debug_debug(WID_DEFAULT, "wtpnum =%d(0 for all)\n", num);
+
 	if (num > 0) {
 		wtp_list = malloc(num*sizeof(unsigned int));
 		if (!wtp_list) {
@@ -70982,7 +71001,7 @@ DBusMessage *wid_dbus_add_del_ap_group_member(DBusConnection *conn, DBusMessage 
 					wtp_list[count] = wtpid;
 					count++;
 				}
-			}else if((AC_WTP[wtpid]!=NULL)&&(AC_WTP[wtpid]->APGroupID == groupid)){
+			}else if((isadd == 0) && (AC_WTP[wtpid]!=NULL)&&(AC_WTP[wtpid]->APGroupID == groupid)){
 				ret1 = del_ap_group_member(groupid,wtpid);
 				wid_syslog_debug_debug(WID_DEFAULT, "ret1111 %d for deleting wtp %d from ap-group %d\n", ret1, wtpid, groupid);
 				if(ret1 != 0){
@@ -70990,6 +71009,7 @@ DBusMessage *wid_dbus_add_del_ap_group_member(DBusConnection *conn, DBusMessage 
 					count++;
 				}
 			}else{
+				wid_syslog_err("unknow operate for wtp %d\n", wtpid);
 				wtp_list[count] = wtpid;
 				count++;
 			}
@@ -76253,15 +76273,7 @@ int show_running_config_wtp(WID_WTP **WTP,int i,char *cursor,char **showStr2,cha
 									totalLen += sprintf(cursor," radio apply wlan %d base hotspot %d\n",radioWlanid->wlanid,WTP[i]->WTP_Radio[j]->BSS[l_bssid]->hotspot_id);
 									cursor = showStr + totalLen;
 								}
-								else if((WTP[i]->WTP_Radio[j]->BSS[l_bssid]->vlanid == 0) && ((WTP[i]->WTP_Radio[j]->BSS[l_bssid]->nas_port_id[0] == 0)) && (radioWlanid->ESSID))
-								{
-									if(vrrid != 0){
-										totalLen += sprintf(cursor," ");
-										cursor = showStr + totalLen;
-									}
-									totalLen += sprintf(cursor," radio apply wlan %d essid %s\n",radioWlanid->wlanid,radioWlanid->ESSID);
-									cursor = showStr + totalLen;
-								}
+								
 								else if((WTP[i]->WTP_Radio[j]->BSS[l_bssid]->vlanid == 0)&&(WTP[i]->WTP_Radio[j]->BSS[l_bssid]->nas_port_id[0] == 0))
 								{
 									if(vrrid != 0){

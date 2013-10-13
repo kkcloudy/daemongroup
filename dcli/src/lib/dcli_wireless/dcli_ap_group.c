@@ -478,6 +478,8 @@ DEFUN(show_ap_group_members_all_func,
 	unsigned int test_id;
 	unsigned char *test_name;
 	unsigned int wtp_count, wtp_id;
+	DBusMessageIter  iter_array;
+	
 	if(vty->node == HANSI_NODE){
 		index = vty->index;
 		localid = vty->local;
@@ -528,16 +530,24 @@ DEFUN(show_ap_group_members_all_func,
 		dbus_message_iter_next(&iter);	
 		dbus_message_iter_get_basic(&iter,&wtp_count);
 		vty_out(vty,"member count:%d\n", wtp_count);
+		dbus_message_iter_next(&iter);
+		dbus_message_iter_recurse(&iter,&iter_array);
 		for (ii=0; ii<wtp_count; ii++) {
-			if (ii==0 || ii % 16 == 0) {
+			#if 0
+			if (ii==0 || ii % 10 == 0) {
 				vty_out(vty, "\t");
 			}
-				dbus_message_iter_next(&iter);	
-				dbus_message_iter_get_basic(&iter,&wtp_id);
-				vty_out(vty, "%2u  ", wtp_id);
-				if (ii!=0 && ii % 15 == 0) {
-					vty_out(vty, "\n");
+			#endif
+			DBusMessageIter iter_struct;
+			dbus_message_iter_recurse(&iter_array,&iter_struct);
+			dbus_message_iter_get_basic(&iter_struct,&wtp_id);
+			dbus_message_iter_next(&iter_array);
+
+			if (ii!=0 && ii % 10 == 0) {
+				vty_out(vty, "\n");
 			}
+			vty_out(vty, "%-3u  ", wtp_id);
+			
 		}
 		vty_out(vty, "\n");
 	}
@@ -562,6 +572,7 @@ DEFUN(add_del_ap_group_member_cmd_func,
 	update_wtp_list *wtplist = NULL;
 	unsigned int *wtp_list = NULL;
 	unsigned int apcount = 0;
+	 struct tag_wtpid *temp;
 	DBusMessage *query, *reply;	
 	DBusMessageIter	 iter;
 	DBusError err;	
@@ -622,6 +633,11 @@ DEFUN(add_del_ap_group_member_cmd_func,
         localid = vty->local;
         slot_id = vty->slotindex;
     }
+	if (wtplist->count > 200) {
+		vty_out(vty, "max support operating less than 200 wtps\n");
+		destroy_input_wtp_list(wtplist);
+		return CMD_WARNING;
+	}
     DBusConnection *dcli_dbus_connection = NULL;
     ReInitDbusConnection(&dcli_dbus_connection,slot_id,distributFag);
 	ret = dcli_ap_group_add_del_member(localid,index,GROUPID,isadd,wtplist,&wtp_list,&apcount,dcli_dbus_connection);

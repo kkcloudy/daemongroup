@@ -14285,7 +14285,7 @@ struct WtpList * wtp_apply_wlan_cmd_wtp_apply_wlan_id(int index,int localid,
 	if(type == 1){
 		dbus_message_iter_next(&iter);	
 		dbus_message_iter_get_basic(&iter,count);
-		printf("## count : %d\n",(*count));
+		//printf("## count : %d\n",(*count));
 		if((*count) != 0){
 			if((wtp_list_head = (struct WtpList*)malloc(sizeof(struct WtpList))) == NULL){
 				*ret = MALLOC_ERROR;
@@ -14982,7 +14982,7 @@ struct WtpList * wtp_max_sta_cmd_set_wtp_max_sta_num(int index,int localid,
 	DBusMessageIter  iter;
 	DBusMessage *reply =NULL; 
 	DBusMessage *query = NULL;
-	printf("access struct \n");
+	//printf("access struct \n");
 	char BUSNAME[PATH_LEN];
 	char OBJPATH[PATH_LEN];
 	char INTERFACE[PATH_LEN];
@@ -15080,10 +15080,10 @@ struct WtpList * wtp_max_sta_cmd_set_wtp_max_sta_num(int index,int localid,
 	
 	if((type == 1)&&(*ret == WID_DBUS_SUCCESS))
 		{
-			printf("access type1 wtp max sta\n");
+			//printf("access type1 wtp max sta\n");
 			dbus_message_iter_next(&iter);	
 			dbus_message_iter_get_basic(&iter,count);
-			printf("count = %d\n",*count);
+			//printf("count = %d\n",*count);
 			if(*count != 0)
 				{
 					if((wtp_list_head = (struct WtpList*)malloc(sizeof(struct WtpList))) == NULL)
@@ -15127,7 +15127,7 @@ struct WtpList * wtp_max_sta_cmd_set_wtp_max_sta_num(int index,int localid,
 					dbus_message_iter_get_basic(&iter,&wtpid);
 			
 					WtpNode->WtpId = wtpid;
-					printf("wtpid = %d\n",wtpid);
+					//printf("wtpid = %d\n",wtpid);
 				}
 	
 	   		dbus_message_unref(reply);
@@ -15148,7 +15148,7 @@ struct WtpList * wtp_max_sta_cmd_set_wtp_max_sta_num(int index,int localid,
 				 if(wtp_show_node == NULL)
 				 	break;
 			 
-				printf("QQQQQQQQQQQ \n");		
+				//printf("QQQQQQQQQQQ \n");		
 				*stanum = wtp_check_sta_num_asd(index,localid,dbus_connection,wtp_show_node->WtpId);
 			
 
@@ -15164,8 +15164,8 @@ struct WtpList * wtp_max_sta_cmd_set_wtp_max_sta_num(int index,int localid,
 						final_wtp[i].WtpStaNum = *stanum;
 						//*finalnum++;
 						j++;
-						printf("j = %d\n",j);
-						printf("final_wtp[%d].WtpStaNum = %d\n",i,final_wtp[i].WtpStaNum);
+						//printf("j = %d\n",j);
+						//printf("final_wtp[%d].WtpStaNum = %d\n",i,final_wtp[i].WtpStaNum);
 						//printf("failwtp[%d].wtpid = %d\n",i,failwtp[i].WtpId);
 						//printf("failwtp[%d].WtpStaNum = %d\n",i,failwtp[i].WtpStaNum);
 					}
@@ -15173,10 +15173,10 @@ struct WtpList * wtp_max_sta_cmd_set_wtp_max_sta_num(int index,int localid,
 					{
 						accesswtp[i].WtpId = wtp_show_node->WtpId;
 						accessnum++;
-						printf("wtp_show_node->WtpId = %d\n",wtp_show_node->WtpId);
-						printf("accesswtp[i].WtpId = %d\n",accesswtp[i].WtpId);
+						//printf("wtp_show_node->WtpId = %d\n",wtp_show_node->WtpId);
+						//printf("accesswtp[i].WtpId = %d\n",accesswtp[i].WtpId);
 
-						printf("WWWWWWWWWWW\n");
+						//printf("WWWWWWWWWWW\n");
 						memset(BUSNAME,0,PATH_LEN);
 						memset(OBJPATH,0,PATH_LEN);
 						memset(INTERFACE,0,PATH_LEN);
@@ -15193,7 +15193,7 @@ struct WtpList * wtp_max_sta_cmd_set_wtp_max_sta_num(int index,int localid,
 				   						DBUS_TYPE_UINT32,&wtp_max_sta,
 										DBUS_TYPE_UINT32,&accesswtp[i].WtpId, 					 
 										DBUS_TYPE_INVALID);
-						printf("accesswtp.wtpid =  %d\n",accesswtp[i].WtpId);
+						//printf("accesswtp.wtpid =  %d\n",accesswtp[i].WtpId);
 						reply = dbus_connection_send_with_reply_and_block (dbus_connection,query,-1, &err);
 	
 						dbus_message_unref(query);
@@ -15242,9 +15242,9 @@ struct WtpList * wtp_max_sta_cmd_set_wtp_max_sta_num(int index,int localid,
 					}
 						
 				}
-				printf("j = %d\n",j);
+				//printf("j = %d\n",j);
 				*finalnum = j;
-				printf("finalnum = %d\n",*finalnum);
+				//printf("finalnum = %d\n",*finalnum);
 				dcli_free_WtpList(accesswtp);
 				dcli_free_WtpList(wtp_list_head);
 				//dcli_free_WtpList(failwtp);
