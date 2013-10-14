@@ -8298,17 +8298,16 @@ DEFUN(set_global_bridge_mcast_cmd_func,
 		
 		dbus_message_unref(reply);
 	}
-	if(state == 0)
+	
+	sprintf(command,"mcast_config_save.sh %s %d",ifname,state);
+	ret = system(command);
+	ret = WEXITSTATUS(ret);
+	if(ret != 0)
 	{
-		sprintf(command,"mcast_config_save.sh %s",ifname);
-		ret = system(command);
-		ret = WEXITSTATUS(ret);
-		if(ret != 0)
-		{
-			vty_out(vty,"save config file! \n");
-			return CMD_WARNING;
-		}
+		vty_out(vty,"save config file! \n");
+		return CMD_WARNING;
 	}
+
 	return CMD_SUCCESS;
 }
 
