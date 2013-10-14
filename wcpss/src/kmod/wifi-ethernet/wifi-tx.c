@@ -69,7 +69,7 @@ module_param(wifi_tx_debug,int,0644);
 
 int wifi_QoS_open = 0;
 module_param(wifi_QoS_open,int,0644);
-int wifi_dp = 56;
+int wifi_dp = 0;
 module_param(wifi_dp,int,0644);
 int wifi_mm = 7; //fengwenchao change 0 to 7 20121213
 module_param(wifi_mm,int,0644);

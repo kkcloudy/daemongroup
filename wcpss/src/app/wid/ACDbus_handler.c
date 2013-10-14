@@ -30222,10 +30222,11 @@ static void wtp_group_hash_del(WID_WTP_GROUP *group, struct WTP_GROUP_MEMBER *wt
 		group->WTP_HASH[WTP_ID_HASH(wtp->WTPID)] = s->hnext;
 		return;
 	}
-
-	while (s->hnext != NULL &&
-	       s->hnext->WTPID == wtp->WTPID)
+	
+	while (s != NULL && s->hnext != NULL &&
+	       s->hnext->WTPID != wtp->WTPID)
 		s = s->hnext;
+	
 	if (s->hnext != NULL)
 		s->hnext = s->hnext->hnext;
 }
@@ -30252,7 +30253,10 @@ int create_ap_group(unsigned int ID,char *NAME){
 	}
 	memset(WTP_GROUP[ID]->GNAME, 0, strlen(NAME)+1);
 	memcpy(WTP_GROUP[ID]->GNAME, NAME, strlen(NAME));
-
+	WTP_GROUP[ID]->WTP_M = NULL;
+	for (i=0; i<256; i++)
+		WTP_GROUP[ID]->WTP_HASH[i] = NULL;
+	
 	WTP_GROUP[ID]->WTP_CONFIG.wtp_allowed_max_sta_num=gWTP_MAX_STA; //xm/*wcl modify for globle variable*/
 	WTP_GROUP[ID]->WTP_CONFIG.wtp_triger_num=1; //xm
 	WTP_GROUP[ID]->WTP_CONFIG.wtp_flow_triger= gWTP_FLOW_TRIGER; //xm/*wcl modify for globle variable*/
@@ -30644,7 +30648,7 @@ int add_ap_group_member(unsigned int GID,unsigned int WTPID){
 	}
 	tmp = wtp_group_get_ap(WTP_GROUP[GID],WTPID);
 	if(tmp){
-		return 0;
+		return WID_DBUS_SUCCESS;
 	}
 	tmp = (struct WTP_GROUP_MEMBER *)malloc(sizeof(struct WTP_GROUP_MEMBER));
 	if (!tmp) {
@@ -30658,7 +30662,7 @@ int add_ap_group_member(unsigned int GID,unsigned int WTPID){
 	wtp_group_hash_add(WTP_GROUP[GID],tmp);
 	WTP_GROUP[GID]->WTP_COUNT += 1;
 	AC_WTP[WTPID]->APGroupID = GID;
-	return 0;
+	return WID_DBUS_SUCCESS;
 }
 int del_ap_group_member(unsigned int GID,unsigned int WTPID){
 	struct WTP_GROUP_MEMBER *tmp = NULL;
@@ -30667,13 +30671,14 @@ int del_ap_group_member(unsigned int GID,unsigned int WTPID){
 		return GROUP_ID_NOT_EXIST;
 	}
 	if((AC_WTP[WTPID] != NULL)&&(AC_WTP[WTPID]->APGroupID != GID)){
-		return WTP_BE_USING;
+		return WID_DBUS_SUCCESS;
 	}
 	tmp = wtp_group_get_ap(WTP_GROUP[GID],WTPID);
 	if(tmp == NULL){
-		return 0;
+		return WID_DBUS_SUCCESS;
 	}
-	if(AC_WTP[WTPID] != NULL){
+
+	if(AC_WTP[WTPID] != NULL && AC_WTP[WTPID]->APGroupID == GID){
 		AC_WTP[WTPID]->APGroupID = 0;
 	}
 	tmp1 = WTP_GROUP[GID]->WTP_M;
@@ -30692,7 +30697,7 @@ int del_ap_group_member(unsigned int GID,unsigned int WTPID){
 	WTP_GROUP[GID]->WTP_COUNT -= 1;
 	free(tmp);
 	tmp = NULL;
-	return 0;
+	return WID_DBUS_SUCCESS;
 }
 
 CWBool check_radio_bind_wlan(unsigned int wtpid,unsigned char radio_l_id,unsigned char wlanId){

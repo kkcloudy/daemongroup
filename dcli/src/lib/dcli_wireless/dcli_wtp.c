@@ -2017,6 +2017,7 @@ DEFUN(show_wtp_cmd_func,
 			CheckWTPQuitReason(quitreason,WTPINFO->WTP[0]->quitreason);
 			vty_out(vty,"WTP NAME : %s\n",WTPINFO->WTP[0]->WTPNAME);
 			vty_out(vty,"WTP ID : %d\n",WTPINFO->WTP[0]->WTPID);
+			vty_out(vty,"APGROUP ID : %d\n",WTPINFO->WTP[0]->APGroupID);
 			vty_out(vty,"WTP SN : %s\n",WTPINFO->WTP[0]->WTPSN);
 			vty_out(vty,"WTP MODEL : %s\n",WTPINFO->WTP[0]->WTPModel);			
 			vty_out(vty,"Radio Count : %d\n",WTPINFO->WTP[0]->RadioCount);

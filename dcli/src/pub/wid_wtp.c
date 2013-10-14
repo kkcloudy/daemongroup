@@ -1501,6 +1501,9 @@ void* dcli_wtp_show_api_group_one(
 		
 		dbus_message_iter_next(&iter);	
 		dbus_message_iter_get_basic(&iter,&(LIST->WTP[0]->WTPID));	
+
+		dbus_message_iter_next(&iter);	
+		dbus_message_iter_get_basic(&iter,&(LIST->WTP[0]->APGroupID));
 		
 		dbus_message_iter_next(&iter);	
 		dbus_message_iter_get_basic(&iter,&wtpsn);	/*(LIST->WTP[0]->WTPSN)*/
