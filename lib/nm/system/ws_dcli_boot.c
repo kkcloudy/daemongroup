@@ -129,7 +129,7 @@ int sor_checkimg(char* imgname)
 			case 0:
 				for(i=0;i<imgnum;i++)
 				{
-					if(!strncasecmp(result_file[i],imgname,sizeof(imgname)))
+					if(!strncasecmp(result_file[i],imgname,strlen(imgname)))
 						return 0;
 				}
 				return -1;
@@ -303,6 +303,7 @@ int ssh_up_func_cmd(char *Port)  /*返回0表示失败，返回1表示成功*/
 			if((*(Port+i))>'9' || (*(Port+i))<'0')
 			{
 				system("sudo chmod 644 /etc/services");
+				close(fp);
 				return -3;
 			}
 		}

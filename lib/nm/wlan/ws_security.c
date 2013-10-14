@@ -1179,6 +1179,8 @@ int	secondary_radius_acct(dbus_parameter parameter, DBusConnection *connection,i
 	security_id = id;
 	if(security_id >= WLAN_NUM || security_id == 0){
 		syslog(LOG_DEBUG,"security id in secondary_radius_acct is %d\n",security_id);
+		FREE_OBJECT(ip);	
+		FREE_OBJECT(shared_secret);
 		return -6;
 	}
 	
@@ -1291,6 +1293,7 @@ int security_host_ip(dbus_parameter parameter, DBusConnection *connection,int id
 	security_id = (int)id;
 	if(security_id >= WLAN_NUM || security_id == 0){
 		syslog(LOG_DEBUG,"security id in security_host_ip is %d\n",security_id);
+		FREE_OBJECT(ip);
 		return -7;
 	}
 	
@@ -1390,6 +1393,8 @@ int secondary_radius_auth(dbus_parameter parameter ,DBusConnection *connection,i
 	security_id = id;
 	if(security_id >= WLAN_NUM || security_id == 0){
 		syslog(LOG_DEBUG,"security id in secondary_radius_auth is %d\n",security_id);
+		FREE_OBJECT(ip);
+		FREE_OBJECT(shared_secret);
 		return -6;
 	}
 	
@@ -2344,6 +2349,7 @@ int security_key(dbus_parameter parameter, DBusConnection *connection,int id,cha
 	security_id = id;
 	if(security_id >= WLAN_NUM || security_id == 0){
 		syslog(LOG_DEBUG,"security id in security_key is %d\n",security_id);
+		FREE_OBJECT(key);
 		return -9;
 	}
 	
@@ -2420,7 +2426,7 @@ int security_auth_acct(dbus_parameter parameter, DBusConnection *connection,int 
 	unsigned char security_id;
 	unsigned int type, port;
 	char *ip, *shared_secret;
-	DBusMessage *query, *reply;	
+	DBusMessage *query = NULL, *reply = NULL;	
 	DBusMessageIter	 iter;
 	DBusError err;
 	//security_id = id;
@@ -2452,6 +2458,8 @@ int security_auth_acct(dbus_parameter parameter, DBusConnection *connection,int 
 	security_id = id;
 	if(security_id >= WLAN_NUM || security_id == 0){
 		syslog(LOG_DEBUG,"security id in security_auth_acct is %d\n",security_id);
+		FREE_OBJECT(ip);
+		FREE_OBJECT(shared_secret);
 		return -6;
 	}
 	
@@ -3112,6 +3120,7 @@ int config_wapi_auth(dbus_parameter parameter, DBusConnection *connection,int si
 	security_id = (int)sid;
 	if(security_id >= WLAN_NUM || security_id == 0){
 		syslog(LOG_DEBUG,"security id in config_wapi_auth is %d\n",security_id);
+		FREE_OBJECT(ip);
 		return -6;
 	}
 	
@@ -3207,6 +3216,7 @@ int config_wapi_auth_path(dbus_parameter parameter, DBusConnection *connection,i
 	security_id = sid;
 	if(security_id >= WLAN_NUM || security_id == 0){
 		syslog(LOG_DEBUG,"security id in config_wapi_auth_path is %d\n",security_id);
+		FREE_OBJECT(cert_path);
 		return -6;
 	}
 	
@@ -4815,7 +4825,7 @@ int  show_security_wapi_info_cmd(dbus_parameter parameter, DBusConnection *conne
 		return 0;
 	}
 						
-	if((ret == 0 ) && (sec != NULL))
+	if((ret == 0 ) && (*sec != NULL))
 		retu = 1;
 	else if (ret == ASD_SECURITY_NOT_EXIST)
 		retu = -3;
@@ -5196,7 +5206,7 @@ int show_wlanid_security_wapi_config_cmd(dbus_parameter parameter, DBusConnectio
 		return 0;
 	}
 
-	if((ret == 0) && (sec != NULL))
+	if((ret == 0) && (*sec != NULL))
 		retu = 1;	
 	else if (ret == ASD_WLAN_NOT_EXIST)
 		retu = -3;
@@ -5297,7 +5307,7 @@ int show_radius_cmd(dbus_parameter parameter, DBusConnection *connection,char *R
 		return 0;
 	}
 
-	if ((ret == 0) && (sec != NULL)) 
+	if ((ret == 0) && (*sec != NULL)) 
 		retu = 1;
 	else if (ret == ASD_SECURITY_NOT_EXIST)
 		retu = -3;
@@ -5816,11 +5826,15 @@ int config_wapi_p12_cert_auth_path_cmd(dbus_parameter parameter, DBusConnection 
 		}
 		else
 		{
+			FREE_OBJECT(cert_path);	
+			FREE_OBJECT(pass_word);
 			return 0;
 		}
 	}
 	else
 	{
+		FREE_OBJECT(cert_path);	
+		FREE_OBJECT(pass_word);
 		return 0;
 	}
 

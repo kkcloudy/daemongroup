@@ -153,7 +153,7 @@ int ccgi_parse_ipport_check(char * str)
 	while((token!=NULL)&&(i<4))
 	{
 		token=strtok_r(NULL,sep,&tail_ptr);
-		if((NULL == token)||("" == token)||(strlen(token) < 1)|| \
+		if((NULL == token)||("" == *token)||(strlen(token) < 1)|| \
 			((strlen(token) > 1) && ('0' == token[0])))
 		{
 			return COMMON_ERROR;

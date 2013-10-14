@@ -530,10 +530,18 @@ int write_config_syslogallst( SYSLOGALL_ST *sysall, char *file_path)
 
 	if( NULL == file_path)
 	{
+		free(File_content);
+		free(des_name);
+		free(content);
 		return -1 ;  
 	}
 	if(( fp = fopen(file_path,"w+"))==NULL)
+	{
+		free(File_content);
+		free(des_name);
+		free(content);
 		return -2;
+	}
 
 	//option	
 	oq=sysall->optst.next;
@@ -1817,8 +1825,9 @@ char *first_ip(char *dstring)
 
 	p=strtok(input,";"); 
 	if(p)
-
-	return p;
+		return p;
+	else
+		return NULL;
 }
 
 
@@ -3410,6 +3419,7 @@ void if_ntp_exist()
 	{
 		if((fp=fopen(NTP_CONF_BK,"w"))==NULL); 
 		{ 
+			fclose(fp);
 			return ;
 		}
 		fclose(fp);
@@ -3432,7 +3442,7 @@ int if_syslog_enable()
 	}
 	else
 	{
-		fgets( tmpz, sizeof(tmpz), pp );	
+		fgets( tmpz, sizeof(20), pp );	
 		sflag=strtoul(tmpz,0,10);						   
 		pclose(pp);
 	}
@@ -3466,7 +3476,7 @@ int if_ntp_enable()
     
 	else
 	{
-		fgets( tmpz, sizeof(tmpz), pp );	
+		fgets( tmpz, sizeof(20), pp );	
 		sflag=strtoul(tmpz,0,10);						   
 		pclose(pp);
 	}

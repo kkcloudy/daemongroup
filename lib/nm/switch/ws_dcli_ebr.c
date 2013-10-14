@@ -755,6 +755,11 @@ int set_ebr_add_del_if_cmd(dbus_parameter parameter, DBusConnection *connection,
 	EBRID = ebr_id;
 	if(EBRID >= EBR_NUM || EBRID == 0){
 		syslog(LOG_DEBUG,"ebr id in set_ebr_add_del_if_cmd is %d\n",EBRID);
+		if(name)
+		{
+			free(name);
+			name = NULL;
+		}
 		return -9;
 	}
 	
@@ -885,6 +890,11 @@ int set_ebr_add_del_uplink_cmd(dbus_parameter parameter, DBusConnection *connect
 	EBRID = ebr_id;
 	if(EBRID >= EBR_NUM || EBRID == 0){
 		syslog(LOG_DEBUG,"ebr id in set_ebr_add_del_uplink_cmd is %d\n",EBRID);
+		if(name)
+		{
+			free(name);
+			name = NULL;
+		}
 		return -11;
 	}
 	

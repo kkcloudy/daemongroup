@@ -275,6 +275,7 @@ int add_del_ap_group_member_cmd(int instance_id,int ap_g_id,char *oper,char *wtp
 	GROUPID = ap_g_id;
 	if(GROUPID >= WTP_GROUP_NUM || GROUPID == 0){
 		syslog(LOG_DEBUG,"ap group id in add_del_ap_group_member_cmd is %d\n",GROUPID);
+		if(NULL!=wtplist){free(wtplist);wtplist=NULL;}
 		return -3;
 	}
 		

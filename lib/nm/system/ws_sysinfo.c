@@ -456,6 +456,7 @@ int get_bootimg_name(char* imgname)
 
 	if(retval == -1)
 		{		
+			close(fd);
 			return 2;	
 		}
 	else

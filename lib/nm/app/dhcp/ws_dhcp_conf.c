@@ -2039,10 +2039,15 @@ int write_dhcp_conf(char *fpath,struct optionsix *o_head,struct confinfo *c_head
 
    if( NULL == fpath)
 	{
+		free(File_content);
+		free(content);
 		return -1 ;  
 	}
-	if(( fp = fopen(fpath,"w+"))==NULL)
+	if(( fp = fopen(fpath,"w+"))==NULL){
+		free(File_content);
+		free(content);
 		return -2;
+	}
 
 	struct bindipmac *bq;
     int bnum=0;

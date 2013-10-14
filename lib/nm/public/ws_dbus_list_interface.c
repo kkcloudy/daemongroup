@@ -703,8 +703,8 @@ void get_slotID_localID_instanceID(char *plotid,dbus_parameter *parameter)/*·µ»Ø
 	int i = 0;	
 	if(NULL != plotid)
 	{
-		bake = (char *)malloc(sizeof(plotid)+1);
-		memset(bake,0,sizeof(bake));
+		bake = (char *)malloc(strlen(plotid)+1);
+		memset(bake,0,strlen(plotid)+1);
 		strcpy(bake,plotid);
 		
 		temp = strtok(bake,"-");

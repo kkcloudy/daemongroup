@@ -281,6 +281,7 @@ int file_ftp(char *ip,char *username,char *passwd,char *dir,char *filename,int t
 int iRet,status;
 char *cmd;
 cmd=(char *)malloc(128);
+memset(cmd,0,128);
 
 if(type==0)
 sprintf(cmd,"ftp_put.sh %s %s %s %s %s > /dev/null",ip,username,passwd,dir,filename);

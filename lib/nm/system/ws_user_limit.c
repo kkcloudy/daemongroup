@@ -133,7 +133,7 @@ int read_limit_xml(char * name, ST_LIMIT_ALL *sysall)
 	}  
 	pcurnode = xmlDocGetRootElement(pdoc);  //得到根节点   
 
-	xmlChar *value;
+	xmlChar *value = NULL;
 	xmlChar *content;
 	int i=0;
 	pcurnode=pcurnode->xmlChildrenNode;  //得到子节点集合,函数中有了

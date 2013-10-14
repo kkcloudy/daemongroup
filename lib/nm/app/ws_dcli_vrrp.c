@@ -568,6 +568,7 @@ int config_vrrp_heartbeat_cmd_func(char * profid,char *ifnamez,char *ipz)/*∑µªÿ0
 	heartbeat_ip = (char *)malloc(MAX_IPADDR_LEN);
     if(NULL == heartbeat_ip){
        //return -2;
+       free(heartbeat_ifname);
        return -2;
 	}	
 	memset(heartbeat_ip,0,MAX_IPADDR_LEN);
@@ -649,6 +650,10 @@ int config_vrrp_heartbeat_cmd_func_web(char * profid,char *ifnamez,char *ipz,DBu
 	
 	heartbeat_ip = (char *)malloc(MAX_IPADDR_LEN);
     if(NULL == heartbeat_ip){
+		if(heartbeat_ifname){
+			free(heartbeat_ifname);
+			heartbeat_ifname=NULL;
+		}
        return -2;
 	}	
 	memset(heartbeat_ip,0,MAX_IPADDR_LEN);
@@ -780,6 +785,7 @@ int ccgi_config_realip_downlink(char *profid,char *downifname,char *downip)/*∑µª
 	free(downlink_ip);
 	dbus_message_unref(reply);
 	//return 0;
+	free(downlink_ifname);
 	return 0;
 }
 
@@ -875,6 +881,7 @@ int ccgi_downanduplink_ifname(char *provrrp,char *upifname,char *upip,char *down
 	downlink_ifname = (char *)malloc(MAX_IFNAME_LEN);	
 	if(NULL == downlink_ifname){
        //return -2;
+       free(uplink_ifname);
        return -2;
 	}
 	memset(downlink_ifname,0,MAX_IFNAME_LEN);
@@ -1040,6 +1047,8 @@ int ccgi_downanduplink_ifname_mask(char *provrrp,char *upifname,char *upip,char 
 	if((priority < 1)||priority > 255){
         //vty_out(vty,"%% Bad parameter : %s !",argv[4]);
 		//return -2;
+		free(uplink_ifname);
+		free(downlink_ifname);
 		return -4;
 	}
 
@@ -1172,6 +1181,8 @@ int ccgi_downanduplink_ifname_mask_web(char *provrrp,char *upifname,char *upip,c
 	}
 	priority = strtoul((char *)prio,NULL,10);
 	if((priority < 1)||priority > 255){
+		free(uplink_ifname);
+	    free(downlink_ifname);
 		return -4;
 	}
 	profile=(unsigned int)strtoul(provrrp,0,10);
@@ -1283,6 +1294,7 @@ int config_vrrp_uplink(char *provrrp,char *upifname,char *upip,char *prio,int up
 		priority > 255) {
 		//vty_out(vty, "%%error priority %s, valid range [1-255]!", argv[2]);
 		//return -2;
+		free(uplink_ifname);
 		return -5;
 	}
 
@@ -1387,6 +1399,10 @@ int config_vrrp_uplink_web(char *provrrp,char *upifname,char *upip,char *prio,in
 	priority = strtoul((char *)prio,NULL,10);
 	if (priority < 1 ||
 		priority > 255) {
+		if(uplink_ifname){
+			free(uplink_ifname);
+			uplink_ifname=NULL;
+		}
 		return -5;
 	}
 
@@ -1469,6 +1485,8 @@ int ccgi_config_downlink(char *profid,char * dlinkname,char *dlinkip,char *dlink
 	if((priority < 1)||priority > 255){
         //vty_out(vty,"%% Bad parameter : %s !",dlinkprio);
 		//return -2;
+		free(downlink_ifname);
+		free(downlink_ip);
 		return -1;
 	}
 
@@ -1579,6 +1597,7 @@ int config_vrrp_downlink_mask(char *proid,char *downifname,char *downip,char *pr
 	if((priority < 1)||priority > 255){
         //vty_out(vty,"%% Bad parameter : %s !",argv[2]);
 		//return -2;
+		free(downlink_ifname);
 		return -3;
 	}
 
@@ -1684,6 +1703,10 @@ int config_vrrp_downlink_mask_web(char *proid,char *downifname,char *downip,char
 
 	priority = strtoul((char *)prio,NULL,10);
 	if((priority < 1)||priority > 255){
+		if(downlink_ifname){
+		free(downlink_ifname);
+		downlink_ifname=NULL;
+		}
 		return -3;
 	}
 
@@ -4804,7 +4827,7 @@ int ccgi_checkPoint_vrrp(char *ptr)
 			ret = 1;
 	 		break;
 		}
-		*ptr++;
+		ptr++;
 	}
 	return ret;
 }
@@ -5004,6 +5027,8 @@ int  send_arp(char *profid,char *ifnamez,char *ipz,char *macz)/*∑µªÿ0±Ì æ≥…π¶£¨∑
 
 	dbus_message_unref(reply);
 	//return 0;
+	free(ifname);
+	free(ip);
 	return retu;
 }
 #if 0

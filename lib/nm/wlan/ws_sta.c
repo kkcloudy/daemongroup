@@ -4392,11 +4392,17 @@ int sta_arp_set_cmd(dbus_parameter parameter, DBusConnection *connection,char *t
 		}
 		else
 		{
+			FREE_OBJECT(ip);
+			FREE_OBJECT(ifname);
+			FREE_OBJECT(mac);
 			return 0;
 		}
 	}
 	else
 	{
+		FREE_OBJECT(ip);
+		FREE_OBJECT(ifname);
+		FREE_OBJECT(mac);
 		return 0;
 	}
 	

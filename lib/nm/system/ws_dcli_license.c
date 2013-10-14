@@ -106,6 +106,11 @@ int license_install_cmd_func(char *SN)/*返回0表示失败，返回1表示成功，返回-1表示
 	}
 	else
 	{
+		if(cmd)
+		{
+			free(cmd);
+			cmd = NULL;
+		}
 		return 1;
 	}
 	if(cmd)

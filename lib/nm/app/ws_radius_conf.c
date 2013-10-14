@@ -78,7 +78,7 @@ int if_radius_enable()
 	}
 	else
 	{
-		fgets( tmpz, sizeof(tmpz), pipe );	
+		fgets( tmpz, 128, pipe );	
 		sflag=strtoul(tmpz,0,10);						   
 	}
 	pclose(pipe);
@@ -1007,10 +1007,16 @@ int write_xml2config_radiusd_client(char *filepath,struct radius_client_st * cli
     
      if(NULL == filepath)
      	{
+     		free(content);
+			free(secret);
+			free(nas);
      		return -1;
      	}
      if((fp=fopen(filepath,"w+"))==NULL)
      	{
+     		free(content);
+			free(secret);
+			free(nas);
      		return -2;
      	}
        char localhost[256]="client localhost  {  \n"

@@ -79,6 +79,7 @@ void Free_ccgi_show_dhcp6_lease(struct dhcp6_pool_show_st *head)
 	struct dhcp6_pool_show_st *f1,*f2;
 	struct dhcp6_sub *pf1,*pf2;
 	f1=head->next;
+	int i =0;
 	if(f1 != NULL)
 	{
 		f2=f1->next;
@@ -100,8 +101,14 @@ void Free_ccgi_show_dhcp6_lease(struct dhcp6_pool_show_st *head)
 			}	
 			free(f1->poolname);
 			free(f1->domain_name);
-			free(f1->option52);
-			free(f1->dnsip);
+			for (i=0;i<8;i++)
+			{
+				free(f1->option52[i]);
+			}
+			for (i=0;i<3;i++)
+			{
+				free(f1->dnsip[i]);
+			}
 			free(f1);
 			f1=f2;
 			f2=f2->next;
@@ -122,9 +129,15 @@ void Free_ccgi_show_dhcp6_lease(struct dhcp6_pool_show_st *head)
 		}
 		free(f1->poolname);
 		free(f1->domain_name);
-		free(f1->option52);
-		free(f1->dnsip);
-		free(f1);
+		for (i=0;i<8;i++)
+		{
+			free(f1->option52[i]);
+		}
+		for (i=0;i<3;i++)
+		{
+			free(f1->dnsip[i]);
+		}
+		//free(f1);
 		free(f1);
 	}
 }

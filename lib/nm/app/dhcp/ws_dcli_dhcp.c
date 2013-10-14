@@ -1977,6 +1977,11 @@ int ip_dhcp_server_option43(char *veoz,int modez,unsigned int pindex,int slot_id
 		//vty_out(vty,"% Bad parameter,pool %s NOT exists.\n", veo);		
 		retu = -1;
 	}
+	if(NULL!=veo)
+	{
+		free(veo);
+		veo=NULL;
+	}
 	return retu;
 }
 int no_ip_dhcp_server_option43(char *domainnamez,int modez,int slot_id)/*返回1表示成功，返回0表示失败，返回-1表示error*/
@@ -2011,6 +2016,11 @@ int no_ip_dhcp_server_option43(char *domainnamez,int modez,int slot_id)/*返回1表
 	else {
 		//vty_out(vty,"% Bad parameter,pool %s NOT exists.\n", veo);		
 		retu = -1;
+	}
+	if(NULL!=veo)
+	{
+		free(veo);
+		veo=NULL;
 	}
 	return retu;
 }
@@ -2878,6 +2888,11 @@ unsigned int ccgi_set_failover
 		if (dbus_error_is_set(&err)) {
 			dbus_error_free(&err);
 		}
+		if(NULL!=failname)
+		{
+			free(failname);
+			failname=NULL;
+		}
 		return 0;
 	}
 	if (dbus_message_get_args ( reply, &err,
@@ -2979,6 +2994,11 @@ unsigned int  ccgi_config_failover_pool
 		if (dbus_error_is_set(&err)) {
 			dbus_error_free(&err);
 		}
+		if(NULL!=failname)
+		{
+			free(failname);
+			failname=NULL;
+		}
 		return 0;
 	}
 	if (dbus_message_get_args ( reply, &err,
@@ -3071,6 +3091,11 @@ unsigned int ccgi_delete_failover_pool
 	if (NULL == reply) {
 		if (dbus_error_is_set(&err)) {
 			dbus_error_free(&err);
+		}
+		if(NULL!=failname)
+		{
+			free(failname);
+			failname=NULL;
 		}
 		return 0;
 	}

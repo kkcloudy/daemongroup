@@ -704,7 +704,7 @@ static int nl_parse_info ( int ( *filter ) ( struct sockaddr_nl *, struct nlmsgh
             }  
 
   			p = (if3 *)malloc(sizeof(if3));			
-			memset(p,0,sizeof(p));
+			memset(p,0,sizeof(if3));
             error = ( *filter ) ( &snl, h, arg, p);  
             if ( error < 0 ) {  
                 fprintf ( stderr, "%s filter function error/n", nl->name );  

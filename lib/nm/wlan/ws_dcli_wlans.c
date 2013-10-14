@@ -647,11 +647,15 @@ int create_wlan_cmd_cn(dbus_parameter parameter, DBusConnection *connection,char
 		}
 		else
 		{
+			if(NULL!=name){free(name);name=NULL;}
+			if(NULL!=ESSID){free(ESSID);ESSID=NULL;}
 			return 0;
 		}
 	}
 	else
 	{
+		if(NULL!=name){free(name);name=NULL;}
+		if(NULL!=ESSID){free(ESSID);ESSID=NULL;}
 		return 0;
 	}
 	
@@ -720,8 +724,10 @@ int delete_wlan(dbus_parameter parameter, DBusConnection *connection,int id)  /*
 	memset(name, 0, 1);
 	
 	ESSID = (char*)malloc(1);
-	if(NULL == ESSID)
+	if(NULL == ESSID){
+		if(NULL!=name){free(name);name=NULL;}
 		return 0;
+	}
 	memset(ESSID, 0, 1);
 
 
@@ -967,6 +973,7 @@ int wlan_apply_interface(dbus_parameter parameter, DBusConnection *connection,in
 	WlanID = id;
 	if(WlanID >= WLAN_NUM || WlanID == 0){
 		syslog(LOG_DEBUG,"wlan id in wlan_apply_interface is %d\n",WlanID);
+		if(NULL!=ifname){free(ifname);ifname=NULL;}
 		return -6;
 	}
 	
@@ -1139,6 +1146,7 @@ int wlan_apply_ipv6interface(dbus_parameter parameter, DBusConnection *connectio
 	WlanID = id;
 	if(WlanID >= WLAN_NUM || WlanID == 0){
 		syslog(LOG_DEBUG,"wlan id in wlan_apply_ipv6interface is %d\n",WlanID);
+		if(NULL!=ifname){free(ifname);ifname=NULL;}
 		return -7;
 	}
 
@@ -1247,6 +1255,7 @@ int wlan_delete_interface(dbus_parameter parameter, DBusConnection *connection,i
 	WlanID = id;
 	if(WlanID >= WLAN_NUM || WlanID == 0){
 		syslog(LOG_DEBUG,"wlan id in wlan_delete_interface is %d\n",WlanID);
+		if(NULL!=ifname){free(ifname);ifname=NULL;}
 		return -6;
 	}
 	
@@ -2250,6 +2259,8 @@ int  set_interface_nasid_cmd(dbus_parameter parameter, DBusConnection *connectio
 	WLANID = (int)id;
 	if(WLANID >= WLAN_NUM || WLANID == 0){
 		syslog(LOG_DEBUG,"wlan id in set_interface_nasid_cmd is %d\n",WLANID);
+		if(NULL!=ifname){free(ifname);ifname=NULL;}
+		if(NULL!=nas_id){free(nas_id);nas_id=NULL;}
 		return -10;
 	}
 
@@ -2363,6 +2374,7 @@ int remove_interface_nasid_cmd_func(dbus_parameter parameter, DBusConnection *co
 	WLANID = WlanID;
 	if(WLANID >= WLAN_NUM || WLANID == 0){
 		syslog(LOG_DEBUG,"wlan id in remove_interface_nasid_cmd_func is %d\n",WLANID);
+		if(NULL!=ifname){free(ifname);ifname=NULL;}
 		return -8;
 	}
 	
@@ -2470,6 +2482,10 @@ int no_interface_ifname(char *ifname)
 	if (!strcmp(ifmode,"wlan")) {
 		//vty_out(vty,"input ifname are small letters,please input capital letters");
 		retu = -1;
+		FREE_OBJECT(ifmode);
+		FREE_OBJECT(ifmode1);
+		FREE_OBJECT(id);
+		FREE_OBJECT(id1);
 		return retu;
 		}
 	else if (!strcmp(ifmode,"WLAN"))
@@ -3771,12 +3787,12 @@ int set_tunnel_wlan_vlan_cmd_func(dbus_parameter parameter, DBusConnection *conn
 		ret = parse_radio_ifname(id,&l_wtpid,&l_radioid,&l_wlanid);
 		if (ret != WID_DBUS_SUCCESS) 
 		{
-			if(id);
+			if(id)
 			{
 				free(id);
 				id = NULL;
 			}
-			if(name);
+			if(name)
 			{
 				free(name);
 				name = NULL;
@@ -3787,12 +3803,12 @@ int set_tunnel_wlan_vlan_cmd_func(dbus_parameter parameter, DBusConnection *conn
 		if (l_wlanid != WlanID)
 		{
 			//vty_out(vty,"<error> input interface name with wlanid %d not the same with wlan id %d\n",l_wlanid,WlanID);
-			if(id);
+			if(id)
 			{
 				free(id);
 				id = NULL;
 			}
-			if(name);
+			if(name)
 			{
 				free(name);
 				name = NULL;
@@ -4269,6 +4285,11 @@ int set_wlan_essid_func(dbus_parameter parameter, DBusConnection *connection,int
 	WlanID = wlan_id;
 	if(WlanID >= WLAN_NUM || WlanID == 0){
 		syslog(LOG_DEBUG,"wlan id in set_wlan_essid_func is %d\n",WlanID);
+		if(essid)
+		{
+			free(essid);
+			essid = NULL;
+		}
 		return -5;
 	}
 	
@@ -5615,6 +5636,16 @@ int set_wlan_ascii_essid_cmd(dbus_parameter parameter, DBusConnection *connectio
 	WlanID = wlan_id;
 	if(WlanID >= WLAN_NUM || WlanID == 0){
 		syslog(LOG_DEBUG,"wlan id in set_wlan_ascii_essid_cmd is %d\n",WlanID);
+		if(ESSID)
+		{
+			free(ESSID);
+			ESSID = NULL;
+		}
+		if(a)
+		{
+			free(a);
+			a = NULL;	
+		}
 		return -5;
 	}
 	
@@ -6932,14 +6963,19 @@ int create_wtp(dbus_parameter parameter, DBusConnection *connection,char *id, ch
 	memcpy(name, wtp_name, strlen(wtp_name));	
 	
 	model = (char*)malloc(strlen(wtp_model)+1);
-	if(NULL == model)
+	if(NULL == model){
+		FREE_OBJECT(name);
         return 0;
+	}
 	memset(model,0, strlen(wtp_model)+1);
 	memcpy(model,wtp_model,strlen(wtp_model)+1);
 	
 	sn = (char*)malloc(strlen(wtp_sn)+1);
-	if(NULL == sn)
+	if(NULL == sn){
+		FREE_OBJECT(name);
+		FREE_OBJECT(model);
         return 0;
+	}
 	memset(sn, 0, strlen(wtp_sn)+1);
 	memcpy(sn, wtp_sn, strlen(wtp_sn));
 	str2higher(&wtp_sn);
@@ -6961,7 +6997,8 @@ int create_wtp(dbus_parameter parameter, DBusConnection *connection,char *id, ch
 	ccgi_ReInitDbusPath_v2(parameter.local_id, parameter.instance_id,WID_DBUS_BUSNAME,BUSNAME);
 	ccgi_ReInitDbusPath_v2(parameter.local_id, parameter.instance_id,WID_DBUS_OBJPATH,OBJPATH);
 	ccgi_ReInitDbusPath_v2(parameter.local_id, parameter.instance_id,WID_DBUS_INTERFACE,INTERFACE);
-	query = dbus_message_new_method_call(BUSNAME,OBJPATH,INTERFACE,WID_DBUS_CONF_METHOD_ADD_DEL_WTP);
+	//query = dbus_message_new_method_call(BUSNAME,OBJPATH,INTERFACE,WID_DBUS_CONF_METHOD_ADD_DEL_WTP);
+	//2013-8-21 lipengcheng 注释了上面一行
 
 	/*query = dbus_message_new_method_call(WID_DBUS_BUSNAME,WID_DBUS_OBJPATH,\
 						WID_DBUS_INTERFACE,WID_DBUS_CONF_METHOD_ADD_DEL_WTP);*/
@@ -6988,6 +7025,9 @@ int create_wtp(dbus_parameter parameter, DBusConnection *connection,char *id, ch
 		if (dbus_error_is_set(&err)) {
 			dbus_error_free(&err);
 		}
+		FREE_OBJECT(name);
+		FREE_OBJECT(model);
+		FREE_OBJECT(sn);
 		return SNMPD_CONNECTION_ERROR;
 	}
 	dbus_message_iter_init(reply,&iter);
@@ -7064,15 +7104,20 @@ int create_wtp_bymac_cmd_func(dbus_parameter parameter, DBusConnection *connecti
 	memcpy(name, wtp_name, strlen(wtp_name));	
 	
 	model = (char*)malloc(strlen(wtp_model)+1);
-	if(NULL == model)
+	if(NULL == model){
+		FREE_OBJECT(name);
         return 0;
+	}
 	memset(model,0, strlen(wtp_model)+1);
 	memcpy(model,wtp_model,strlen(wtp_model)+1);
 	//str2higher(&model);
 	
 	mac = (char*)malloc(strlen(wtp_mac)+1);
-	if(NULL == mac)
+	if(NULL == mac){
+		FREE_OBJECT(name);
+		FREE_OBJECT(model);
         return 0;
+	}
 	memset(mac, 0, strlen(wtp_mac)+1);
 	memcpy(mac, wtp_mac, strlen(wtp_mac));
 
@@ -7194,13 +7239,18 @@ int delete_wtp(dbus_parameter parameter, DBusConnection *connection,int id) /*返
 	memset(name, 0, 1);
 	
 	model = (char*)malloc(1);
-	if(NULL == model)
+	if(NULL == model){
+		FREE_OBJECT(name);
         return 0;
+	}
 	memset(model,0,1);
 	
 	sn = (char*)malloc(1);
-	if(NULL == sn)
+	if(NULL == sn){
+		FREE_OBJECT(name);
+		FREE_OBJECT(model);
         return 0;
+	}
 	memset(sn, 0, 1);
 
 
@@ -7535,14 +7585,19 @@ int set_ap_model(dbus_parameter parameter, DBusConnection *connection,char*model
 	memcpy(buf_model, model, strlen(model));	
 
 	buf_version = (char*)malloc(strlen(ver)+1);
-	if(NULL == buf_version)
+	if(NULL == buf_version){
+		FREE_OBJECT(buf_model);
         return 0;
+	}
 	memset(buf_version, 0, strlen(ver)+1);
 	memcpy(buf_version, ver, strlen(ver));	
 
 	buf_path = (char*)malloc(strlen(path)+1);
-	if(NULL == buf_path)
+	if(NULL == buf_path){
+		FREE_OBJECT(buf_model);
+		FREE_OBJECT(buf_version);
         return 0;
+	}
 	memset(buf_path, 0, strlen(path)+1);
 	memcpy(buf_path, path, strlen(path));	
 
@@ -7580,6 +7635,9 @@ int set_ap_model(dbus_parameter parameter, DBusConnection *connection,char*model
 		if (dbus_error_is_set(&err)) {
 			dbus_error_free(&err);
 		}
+		FREE_OBJECT(buf_model);
+		FREE_OBJECT(buf_path);
+		FREE_OBJECT(buf_version);
 		return SNMPD_CONNECTION_ERROR;
 	}
 	
@@ -8300,6 +8358,7 @@ int wtp_apply_interface(dbus_parameter parameter, DBusConnection *connection,int
 	wtp_id = id;
 	if(wtp_id >= WTP_NUM || wtp_id == 0){
 		syslog(LOG_DEBUG,"wtp id in wtp_apply_interface is %d\n",wtp_id);
+		FREE_OBJECT(ifname);
 		return -5;
 	}
 	
@@ -8482,6 +8541,7 @@ int wtp_apply_ipv6interface(dbus_parameter parameter, DBusConnection *connection
 	wtp_id = (unsigned int)id;
 	if(wtp_id >= WTP_NUM || wtp_id == 0){
 		syslog(LOG_DEBUG,"wtp id in wtp_apply_ipv6interface is %d\n",wtp_id);
+		FREE_OBJECT(ifname);
 		return -9;
 	}
 	
@@ -11435,6 +11495,7 @@ int set_wtp_location(dbus_parameter parameter, DBusConnection *connection,int id
 	WTPID = (unsigned int)id;
 	if(WTPID >= WTP_NUM || WTPID == 0){
 		syslog(LOG_DEBUG,"wtp id in set_wtp_location is %d\n",WTPID);
+		FREE_OBJECT(location);
 		return -3;
 	}
 	
@@ -12012,6 +12073,7 @@ int set_wtp_netid(dbus_parameter parameter, DBusConnection *connection,int id,ch
 	WTPID = (unsigned int)id;
 	if(WTPID >= WTP_NUM || WTPID == 0){
 		syslog(LOG_DEBUG,"wtp id in set_wtp_netid is %d\n",WTPID);
+		FREE_OBJECT(netid);
 		return -3;
 	}
 	
@@ -12606,6 +12668,7 @@ int set_wtp_wtpname(dbus_parameter parameter, DBusConnection *connection,int id,
 	WTPID = id;
 	if(WTPID >= WTP_NUM || WTPID == 0){
 		syslog(LOG_DEBUG,"wtp id in set_wtp_wtpname is %d\n",WTPID);
+		FREE_OBJECT(name);
 		return -3;
 	}
 	
@@ -17381,6 +17444,7 @@ int set_ap_config_update_func(dbus_parameter parameter, DBusConnection *connecti
 	wtp_id = WtpID;
 	if(wtp_id >= WTP_NUM || wtp_id == 0){
 		syslog(LOG_DEBUG,"wtp id in set_ap_config_update_func is %d\n",wtp_id);
+		FREE_OBJECT(ip);
 		return -5;
 	}
 	
@@ -19567,6 +19631,10 @@ int uplink_detect_cmd_func(dbus_parameter parameter, DBusConnection *connection,
 	}else if(!strcmp(State,"disable")){
 		state = 0;
 	}else{
+		if(addr != NULL){
+		free(addr);
+		addr = NULL;
+		}
 		return -6;
 	}
 
@@ -20085,6 +20153,8 @@ int update_wtp_img_cmd_func(dbus_parameter parameter, DBusConnection *connection
 	wtp_id = WtpID;
 	if(wtp_id >= WTP_NUM || wtp_id == 0){
 		syslog(LOG_DEBUG,"wtp id in update_wtp_img_cmd_func is %d\n",wtp_id);
+		FREE_OBJECT(buf_path);
+		FREE_OBJECT(buf_version);
 		return -4;
 	}
 	
@@ -20880,8 +20950,12 @@ int set_update_img_file_name(dbus_parameter parameter, DBusConnection *connectio
 	wtplist = (struct tag_wtpid_list*)malloc(sizeof(struct tag_wtpid_list));
 	if(NULL == wtplist)
 	{
-		if(fd >= 0)
-			close(fd);
+		/*if(fd >= 0)
+			close(fd);*/   
+		//lipengcheng 注释上面两行
+		FREE_OBJECT(buf_path);
+		FREE_OBJECT(buf_version);
+		destroy_input_wtp_list(wtplist);
 		return 0;
 	}
 	wtplist->wtpidlist = NULL ;		
@@ -21622,6 +21696,7 @@ int set_wtp_sn(dbus_parameter parameter, DBusConnection *connection,int id,char 
 	WTPID = (unsigned int)id;
 	if(WTPID >= WTP_NUM || WTPID == 0){
 		syslog(LOG_DEBUG,"wtp id in set_wtp_sn is %d\n",WTPID);
+		FREE_OBJECT(name);
 		return -4;
 	}
 	
@@ -21802,11 +21877,13 @@ int set_wtp_list_dhcp_snooping_enable_cmd(dbus_parameter parameter, DBusConnecti
 		}
 		else
 		{
+			destroy_input_wtp_list(wtplist);
 			return 0;
 		}
 	}
 	else
 	{
+		destroy_input_wtp_list(wtplist);
 		return 0;
 	}
 	
@@ -22142,11 +22219,13 @@ int set_wtp_list_sta_info_report_enable_cmd(dbus_parameter parameter, DBusConnec
 		}
 		else
 		{
+			destroy_input_wtp_list(wtplist);
 			return 0;
 		}
 	}
 	else
 	{
+		destroy_input_wtp_list(wtplist);
 		return 0;
 	}
 	
@@ -28948,7 +29027,7 @@ int show_radio_list(dbus_parameter parameter, DBusConnection *connection,DCLI_RA
         return 0;
         
 	int ret = 0;
-	int retu;	
+	int retu = 0;	
 
 	void*(*dcli_init_func)(
 						int ,
@@ -32956,7 +33035,7 @@ int config_max_rate(dbus_parameter parameter, DBusConnection *connection,int id,
 	if(NULL == rad_rate)
 		return 0;
 	
-#if 0
+#if _GROUP_POLICY
 	int retu = 0;
 	struct RadioList *RadioList_Head = NULL;
 
@@ -36730,7 +36809,7 @@ int show_radio_qos_cmd_func(dbus_parameter parameter, DBusConnection *connection
         return 0;
         
 	int ret = 0;
-	int retu;	
+	int retu = 0;	
 
 	void*(*dcli_init_func)(
 						int ,
@@ -36807,7 +36886,7 @@ int show_radio_bss_cmd(dbus_parameter parameter, DBusConnection *connection,int 
         return 0;
         
 	int ret = 0;
-	int retu;	
+	int retu = 0;	
 	
 	if(radio_id > G_RADIO_NUM || radio_id == 0){
 		syslog(LOG_DEBUG,"radio id in show_radio_bss_cmd is %d\n",radio_id);
@@ -43603,6 +43682,7 @@ int set_radio_mcs_cmd(dbus_parameter parameter, DBusConnection *connection,int R
 	radio_id = RID;
 	if(radio_id > G_RADIO_NUM || radio_id == 0){
 		syslog(LOG_DEBUG,"radio id in set_radio_mcs_cmd is %d\n",radio_id);
+		free_mcs_list(mcslist);
 		return -5;
     }
 	
@@ -45131,12 +45211,14 @@ int set_wtp_list_sta_static_arp_enable_cmd(dbus_parameter parameter, DBusConnect
 		else
 		{
 			FREE_OBJECT(ifname);
+			destroy_input_wtp_list(wtplist);
 			return 0;
 		}
 	}
 	else
 	{
 		FREE_OBJECT(ifname);
+		destroy_input_wtp_list(wtplist);
 		return 0;
 	}
 

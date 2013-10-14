@@ -471,6 +471,10 @@ DBusMessage *ac_sample_dbus_method_get_cpu_rt_stat_info
 		if(NULL != pas){
 		rtime = (cpu_in_t *)get_sample_cpu_rt_data(pas);
 		}
+
+		if (NULL == rtime) {
+			return NULL;
+		}
 		dbus_message_iter_init(msg, &args);
 
 		

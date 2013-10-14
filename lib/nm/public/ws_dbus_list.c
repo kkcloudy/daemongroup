@@ -29,6 +29,7 @@ void init_distributed_flag(void)
     
 	if(fscanf(fp, "%d", &distributed_flag) <= 0) {
 		syslog(LOG_DEBUG, "Fscanf DISTRIBUTED_FILE error\n");
+		fclose(fp);
 		return ;
 	}
 	
@@ -390,7 +391,8 @@ int snmpd_dbus_connection_list_init(void)
     		if(NULL == temp_dbus_connection) {
                 syslog(LOG_DEBUG, "Get new %d dbus connection is error\n", slot_id);
                 ret = SNMPD_DBUS_ERROR;
-                continue;
+				free(info);
+				continue;
             }
 
             memcpy(&temp_dbus_connection->bInfo, info, sizeof(struct board_info));

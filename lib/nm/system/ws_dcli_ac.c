@@ -5523,11 +5523,13 @@ int show_model_cmd(dbus_parameter parameter, DBusConnection *connection,char *mo
 		}
 		else
 		{
+			free(model);
 			return 0;
 		}
 	}
 	else
 	{
+		free(model);
 		return 0;
 	}
 	
@@ -5572,8 +5574,10 @@ int set_model_cmd(dbus_parameter parameter, DBusConnection *connection,char *mod
 	memcpy(oldmodel, mode, strlen(mode));	
 	
 	newmodel = (char*)malloc(strlen(new_mode)+1);
-	if(NULL == newmodel)
+	if(NULL == newmodel){
+		if(NULL!=oldmodel){free(oldmodel);oldmodel=NULL;}
 		return 0;
+	}
 	memset(newmodel, 0, strlen(new_mode)+1);
 	memcpy(newmodel, new_mode, strlen(new_mode));	
 
@@ -5725,11 +5729,13 @@ int show_ap_model_code_func(dbus_parameter parameter, DBusConnection *connection
 		}
 		else
 		{
+			if(NULL!=model){free(model);model=NULL;}
 			return 0;
 		}
 	}
 	else
 	{
+		if(NULL!=model){free(model);model=NULL;}
 		return 0;
 	}
 
@@ -10139,8 +10145,10 @@ int modify_legal_essid_cmd(dbus_parameter parameter, DBusConnection *connection,
 	memcpy(essid,old_essid,strlen(old_essid));
 
 	char *essid_new=(char *)malloc(strlen(new_essid)+1);
-	if(NULL == essid_new)
+	if(NULL == essid_new){
+		if(NULL!=essid){free(essid);essid=NULL;}
 		return 0;
+	}
 	memset(essid_new,0,strlen(new_essid)+1);
 	memcpy(essid_new,new_essid,strlen(new_essid));
 	

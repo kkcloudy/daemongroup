@@ -455,7 +455,7 @@ int parse_ip_check(char * str)
 		while((token!=NULL)&&(i<4))
 		{
 			token=strtok(NULL,sep);
-			if((NULL == token)||("" == token)||(strlen(token) < 1)|| \
+			if((NULL == token)||("" == *token)||(strlen(token) < 1)|| \
 				((strlen(token) > 1) && ('0' == token[0]))){
 				return COMMON_ERROR;
 			}
@@ -583,7 +583,7 @@ int dcli_checkPoint(char *ptr)
 					ret = 1;
 					break;
 				}
-			*ptr++;
+			ptr++;
 		}
 	return ret;
 }

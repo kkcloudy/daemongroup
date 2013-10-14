@@ -1690,6 +1690,11 @@ int wid_config_set_qos_policy_name(dbus_parameter parameter, DBusConnection *con
 	ID = wqos_id;
 	if(ID >= QOS_NUM || ID == 0){
 		syslog(LOG_DEBUG,"wqos id in wid_config_set_qos_policy_name is %d\n",ID);
+		if(name)
+		{
+			free(name);
+			name = NULL;
+		}
 		return -5;
 	}
 	
@@ -1786,6 +1791,11 @@ int wid_config_set_qos_manage_arithmetic_name(dbus_parameter parameter, DBusConn
 	ID = wqos_id;
 	if(ID >= QOS_NUM || ID == 0){
 		syslog(LOG_DEBUG,"wqos id in wid_config_set_qos_manage_arithmetic_name is %d\n",ID);
+		if(name)
+		{
+			free(name);
+			name = NULL;
+		}
 		return -4;
 	}
 	

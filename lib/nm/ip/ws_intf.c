@@ -314,7 +314,7 @@ int intflib_open_byproto
 	int sndbuf = 32768;
 	int rcvbuf = 32768;
 
-	memset(rth, 0, sizeof(rth));
+	memset(rth, 0, sizeof(struct intflib_handle));
 
 	rth->fd = socket(AF_NETLINK, SOCK_RAW, protocol);
 	if (rth->fd < 0) {
@@ -461,6 +461,7 @@ static int intflib_store_nlmsg
 	if (ret < 0)
 	{
 		printf("collect link info error! ret = %d.\n", ret);
+		if(NULL!=temp){free(temp);temp=NULL;}
 		return -1;
 	}
 

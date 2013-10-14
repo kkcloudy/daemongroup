@@ -286,6 +286,7 @@ int snmp_get_userstate_bymac(char * mac)
 	if( rsv == NULL )
 	{
 		printf( "get respones failed!\n" );
+		if(NULL!=req){free(req);req=NULL;}
 		return -1;
 	}
 	printf( "rsv->all_user_num=%d!\n", rsv->all_user_num );
@@ -320,6 +321,7 @@ STUserManagePkg * show_auth_users_info(int * start, int * end)
 	if( rsv == NULL )
 	{
 		fprintf( stderr, "get respones failed!\n" );
+		if(NULL!=req){free(req);req=NULL;}
 		return NULL;
 	}
 	

@@ -280,7 +280,7 @@ char * get_decrypt_content()
 	memset(key,0,filesize);
 	memset(anylength,0,filesize);
 
-	char dd[filesize];
+    char dd[filesize];
 	memset(dd,0,filesize);
 
 	char buff[128];
@@ -412,7 +412,7 @@ char * get_decrypt_content()
 //get machine code 
 char *get_machine_code()
 {
-char mc[128];
+static char mc[128];
 strcpy(mc,"001F641C0001");
 return mc;
 }

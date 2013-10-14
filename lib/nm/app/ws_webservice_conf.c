@@ -413,7 +413,7 @@ ccgi_dcli_communicate_pfm_by_dbus(int opt,
 							unsigned int send_to)
 
 {
-	DBusMessage *query, *reply;
+	DBusMessage *query = NULL, *reply = NULL;
 	DBusError err;
 	unsigned int op_ret;	
     instance_parameter *paraHead2 = NULL;

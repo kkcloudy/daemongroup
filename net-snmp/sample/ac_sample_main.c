@@ -76,6 +76,8 @@ int main()
 	
     log_pid(SAMPLE_PID_FILE);	
 
+	memset(&act, 0, sizeof(act));
+
 	act.sa_handler = termination_handler;
     sigemptyset(&act.sa_mask);
 	sigaction(SIGTERM, &act, NULL);

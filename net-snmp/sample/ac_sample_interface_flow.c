@@ -46,11 +46,11 @@ int create_if_flow_info( struct if_flow_info_s **pifinfo  )
 
 int destroy_if_flow_info( struct if_flow_info_s **pifinfo )
 {
-	if (NULL != pifinfo)
+	if (NULL == pifinfo)
 	{
 		return -1;
 	}
-    if(NULL != *pifinfo )
+    if(NULL == *pifinfo )
     {
         return -1;
     }

@@ -1467,6 +1467,7 @@ subsample_data_t *create_subsample(  unsigned int match_word,
         {
             SAMPLE_FREE( pas );
             pas = NULL;
+			return NULL;
         }
 #if 0
         pas->avlwin = create_sample_window( AVL_WINDOW_LEN );

@@ -383,7 +383,7 @@ void Free_vlanlist_trunk_head( struct trunk_profile *head)
 	}
 	free(f1);
   }
-  free(head->vlanHead);
+  //free(head->vlanHead);
 }
 
 
@@ -432,6 +432,7 @@ int show_trunk_list(struct trunk_profile *trunk_head, int *trunk_num)      /*Ê§°
 		if (dbus_error_is_set(&err)) {
 			dbus_error_free(&err);
 		}
+		if(NULL!=trunkName){free(trunkName);trunkName=NULL;}
 		return 0;
 	}
 

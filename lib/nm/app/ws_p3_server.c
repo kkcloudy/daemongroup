@@ -65,7 +65,7 @@ int read_p3_xml(char * name, ST_P3_ALL *sysall)
 	}  
 	pcurnode = xmlDocGetRootElement(pdoc);  //得到根节点   
 
-	xmlChar *value;
+	xmlChar *value = NULL;
 	xmlChar *content;
 	int i=0,n=0,p=0,j=0;
 	pcurnode=pcurnode->xmlChildrenNode;  //得到子节点集合,函数中有了

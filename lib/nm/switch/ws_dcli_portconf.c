@@ -138,7 +138,7 @@ char *p_eth_media_str[3] = {
 
 int ccgi_get_port_index(char *str_port_name, unsigned int *pun_port_index)
 {
-	DBusMessage *query, *reply;
+	DBusMessage *query=NULL, *reply=NULL;
 	DBusError err;
 
 	int ret,op_ret;
@@ -866,7 +866,7 @@ int ccgi_port_auto_state(char *str_port_name, char *str_state)
 /* modify version 1.116 */
 int ccgi_port_speed_conf(char *str_port_name, char *str_speed)
 {
-	DBusMessage *query, *reply;
+	DBusMessage *query=NULL, *reply=NULL;
 	DBusError err;
 
 	int ret,op_ret;
@@ -1600,7 +1600,7 @@ int ccgi_port_auto_speed(char *str_port_name, char *str_autospe_state)
 
 int ccgi_port_auto_dup(char *str_port_name, char *str_autodup_state)
 {
-	DBusMessage *query, *reply;
+	DBusMessage *query=NULL, *reply=NULL;
 	DBusError err;
 
 	int ret,op_ret;
@@ -1868,7 +1868,7 @@ int ccgi_port_auto_dup(char *str_port_name, char *str_autodup_state)
 //modify v1.116
 int ccgi_port_auto_flowctl(char *str_port_name, char *str_autoflow_state)
 {
-	DBusMessage *query, *reply;
+	DBusMessage *query=NULL, *reply=NULL;
 	DBusError err;
 
 	int ret,op_ret;
@@ -2135,7 +2135,7 @@ int ccgi_port_auto_flowctl(char *str_port_name, char *str_autoflow_state)
 
 int ccgi_port_dupmode_conf(char *str_port_name, char *str_mode)
 {
-	DBusMessage *query, *reply;
+	DBusMessage *query=NULL, *reply=NULL;
 	DBusError err;
 
 	int ret,op_ret;
@@ -2384,7 +2384,7 @@ int ccgi_port_dupmode_conf(char *str_port_name, char *str_mode)
 
 int ccgi_port_flowctl_conf(char *str_port_name, char *str_flowctl_mode)
 {
-	DBusMessage *query, *reply;
+	DBusMessage *query=NULL, *reply=NULL;
 	DBusError err;
 
 	int ret,op_ret;
@@ -3439,14 +3439,22 @@ int ccgi_pinterface_state_return_err()
 			fgets(err_tmp,sizeof(err_tmp),error);
 			//fprintf(stderr,"err_tmp_test = %s\n",err_tmp);
 			p_err = err_tmp;
-			if(strstr(p_err, "delete the port from vlan first")!=NULL)
+			if(strstr(p_err, "delete the port from vlan first")!=NULL){
+				fclose(error);
 				return WS_DEL_FROM_VLAN_FIRST;
-			else if((strstr(p_err, "NO SUCH PORT")!=NULL)||(strstr(p_err, "Port interface not exists")!=NULL))
+			}
+			else if((strstr(p_err, "NO SUCH PORT")!=NULL)||(strstr(p_err, "Port interface not exists")!=NULL)){
+				fclose(error);
 				return WS_NO_SUCH_PORT;
-			else if(strstr(p_err, "Unsupport this command")!=NULL)
+			}
+			else if(strstr(p_err, "Unsupport this command")!=NULL){
+				fclose(error);
 				return WS_NOT_SUPPORT;
-			else
-				return WS_ERR_UNKNOW;							
+			}
+			else{
+				fclose(error);
+				return WS_ERR_UNKNOW;	
+			}
 		}
 		else
 			return WS_ERR_UNKNOW;	
@@ -3525,7 +3533,7 @@ int ccgi_port_interface_state_conf(char *str_port_name, char *state)
 
 int ccgi_port_medai_conf(char *str_port_name, char *str_media_mode)
 {
-	DBusMessage *query, *reply;
+	DBusMessage *query=NULL, *reply=NULL;
 	DBusError err;
 	unsigned int media = 0;
 	unsigned int ret,op_ret = 0;
