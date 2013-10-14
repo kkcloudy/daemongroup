@@ -2151,7 +2151,8 @@ int show_eth_port_stat
     		vty_out(vty,"======================================================\n");
     		vty_out(vty,"RX\t");
     		tmp = stat.rx.goodbytesh;
-    		tmp = (tmp<<32) | stat.rx.goodbytesl;
+			/* make add the low and high bit, as the low bit make overflow to more than 32 bit. zhangdi@autelan.com 2013-10-14*/			
+    		tmp = (tmp<<32) + stat.rx.goodbytesl;
 
 			vty_out(vty,"octets:              %lld\n", tmp);		
             vty_out(vty,"\tpackets:             %lld\n", stat.rx.badbytes);		
@@ -2182,7 +2183,7 @@ int show_eth_port_stat
     								stat.tx.packets,stat.tx.errors,stat.tx.dropped,stat.tx.overruns,stat.tx.frame);
     		*/
     		tmp = stat.tx.goodbytesh;
-    		tmp = (tmp<<32) | stat.tx.goodbytesl;
+    		tmp = (tmp<<32) + stat.tx.goodbytesl;
     		vty_out(vty,"\tgoodOctets:          %lld\n", tmp);    		
     		vty_out(vty,"\tpackets:             %lld\n", stat.tx.uncastframe);
 			vty_out(vty,"\tdoorBell:            %lld\n",  stat.tx.excessiveCollision << 32 | stat.tx.sent_deferred);
@@ -2294,7 +2295,9 @@ int show_eth_port_stat
     		vty_out(vty,"======================================================\n");
     		vty_out(vty,"RX\t");
     		tmp = stat.rx.goodbytesh;
-    		tmp = (tmp<<32) | stat.rx.goodbytesl;
+
+			/* make add the low and high bit, as the low bit make overflow to more than 32 bit. zhangdi@autelan.com 2013-10-14*/
+    		tmp = (tmp<<32) + stat.rx.goodbytesl;
 
 			vty_out(vty,"goodbytes:            %lld  ( %lld MiB )\n",	\
     								tmp, (tmp!=0) ? (tmp>>20) : 0);		
@@ -2316,7 +2319,7 @@ int show_eth_port_stat
     								stat.tx.packets,stat.tx.errors,stat.tx.dropped,stat.tx.overruns,stat.tx.frame);
     		*/
     		tmp = stat.tx.goodbytesh;
-    		tmp = (tmp<<32) | stat.tx.goodbytesl;
+    		tmp = (tmp<<32) + stat.tx.goodbytesl;
     		vty_out(vty,"\tgoodbytes:            %lld  ( %lld MiB )\n", tmp, (tmp!=0) ? (tmp>>20) : 0);
     		vty_out(vty,"\tsent_deferred:        %lld\n", stat.tx.sent_deferred);
 
