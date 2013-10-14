@@ -15871,7 +15871,11 @@ DBusMessage * wid_dbus_interface_show_wtpconf(DBusConnection *conn, DBusMessage 
 		dbus_message_iter_append_basic (&iter,
 										 DBUS_TYPE_UINT32,
 										 &(AC_WTP[WTPID]->WTPID));
-				
+
+		dbus_message_iter_append_basic (&iter,
+									 DBUS_TYPE_UINT32,
+									 &(AC_WTP[WTPID]->APGroupID));
+		
 		dbus_message_iter_append_basic (&iter,
 										 DBUS_TYPE_STRING,
 										 &(AC_WTP[WTPID]->WTPSN));
@@ -70997,16 +71001,25 @@ DBusMessage *wid_dbus_add_del_ap_group_member(DBusConnection *conn, DBusMessage 
 			if((isadd)&&(AC_WTP[wtpid]!=NULL)&&(AC_WTP[wtpid]->APGroupID == 0)){
 				ret1 = add_ap_group_member(groupid,wtpid);
 				wid_syslog_debug_debug(WID_DEFAULT, "ret1 %d for adding wtp %d to ap-group %d\n", ret1, wtpid, groupid);
-				if(ret1 != 0){
+				if (ret1 == WTP_BE_USING) {
+					wid_syslog_debug_debug(WID_DEFAULT, "wtp %d at ap-group %d\n", wtpid, AC_WTP[wtpid]->APGroupID);
+				}
+				if (ret1 == WTP_ID_NOT_EXIST) {
+					wid_syslog_debug_debug(WID_DEFAULT, "wtp %d not exist\n", wtpid);
+				}
+				if (ret1 == WID_DBUS_ERROR) {
+					wid_syslog_debug_debug(WID_DEFAULT, "add ap-group %d for wtp %d malloc failed\n", groupid, wtpid);
+				}
+				if(ret1 == WTP_ID_NOT_EXIST || ret1 == WTP_BE_USING || ret1 == WID_DBUS_ERROR){
 					wtp_list[count] = wtpid;
 					count++;
 				}
-			}else if((isadd == 0) && (AC_WTP[wtpid]!=NULL)&&(AC_WTP[wtpid]->APGroupID == groupid)){
-				ret1 = del_ap_group_member(groupid,wtpid);
-				wid_syslog_debug_debug(WID_DEFAULT, "ret1111 %d for deleting wtp %d from ap-group %d\n", ret1, wtpid, groupid);
-				if(ret1 != 0){
-					wtp_list[count] = wtpid;
-					count++;
+			}else if((isadd == 0) && (AC_WTP[wtpid]!=NULL)){
+				if (AC_WTP[wtpid]->APGroupID == groupid) {
+					ret1 = del_ap_group_member(groupid,wtpid);
+					//wid_syslog_debug_debug(WID_DEFAULT, "ret1111 %d for deleting wtp %d from ap-group %d\n", ret1, wtpid, groupid);
+				} else {
+					wid_syslog_debug_debug(WID_DEFAULT, "wtp %d not at ap-group %d", wtpid, groupid);
 				}
 			}else{
 				wid_syslog_err("unknow operate for wtp %d\n", wtpid);
@@ -71015,70 +71028,39 @@ DBusMessage *wid_dbus_add_del_ap_group_member(DBusConnection *conn, DBusMessage 
 			}
 		}
 	} else {
-		wtp_list = malloc(WTP_NUM*sizeof(unsigned int));
-		if (!wtp_list) {
-			ret = WID_DBUS_ERROR;
-			wid_syslog_err("%s for ap-group %d malloc failed\n", isadd ? "add" : "delete", groupid);
-			return reply;
-		} else {
-			wid_syslog_err("malloc for wtp_list success\n");
-		}
+		wid_syslog_debug_debug(WID_DEFAULT, "%s for ap-group %d all\n", isadd ? "add" : "delete", groupid);
 		count = 0;
-		if (isadd) {
-			for (i=1; i<WTP_NUM; i++) {
-				if (AC_WTP[i] != NULL && AC_WTP[i]->APGroupID == 0) {
-					ret1 = add_ap_group_member(groupid, i);
-					if (ret1 != 0) {
-						wtp_list[count] = i;
-						count++;
+		
+		//is group is exist
+		if (WTP_GROUP[groupid] == NULL) {
+			wid_syslog_err("ap-group %d is not exist\n", groupid);
+			ret = WID_DBUS_ERROR;
+		} else {
+			wtp_list = malloc(WTP_NUM*sizeof(unsigned int));
+			//is malloc for result success
+			if (!wtp_list) {
+				ret = WID_DBUS_ERROR;
+				wid_syslog_err("%s for ap-group %d malloc failed\n", isadd ? "add" : "delete", groupid);
+			} else {
+				memset(wtp_list, 0, WTP_NUM*sizeof(unsigned int));
+				if (isadd) {
+					for (i=1; i<WTP_NUM; i++) {
+						if (AC_WTP[i] != NULL && AC_WTP[i]->APGroupID == 0) {
+							ret1 = add_ap_group_member(groupid, i);
+							if (ret1 != 0) {
+								wtp_list[count] = i;
+								count++;
+							}
+						}
+					}
+				} else {
+					for (i=1; i<WTP_NUM; i++) {
+						if (AC_WTP[i] != NULL && AC_WTP[i]->APGroupID == groupid)
+							ret1 = del_ap_group_member(groupid, i);
 					}
 				}
 			}
-		} else {
-			for (i=1; i<WTP_NUM; i++) {
-				#if 0
-				del_ap_group_member(groupid, i);
-				#else
-				ret1 = del_ap_group_member(groupid, i);
-				if (ret1 != 0) {
-					wtp_list[count] = i;
-					count++;
-					wid_syslog_debug_debug(WID_DEFAULT, "delete wtp %d failed\n", i);
-				}
-				#endif
-			}
 		}
-		#if 0
-		for(i = 1; i < WTP_NUM; i++){
-			#if 1
-				if () {
-
-				}
-			#endif
-			if((isadd)&&(AC_WTP[i]!=NULL)&&(AC_WTP[i]->APGroupID == 0)){
-				ret1 = add_ap_group_member(groupid,i);				
-				if(ret1 != 0){
-					wid_syslog_err("add for wtp %d failed\n", i);
-					wtp_list[count] = i;
-					count++;
-				} else {
-					wid_syslog_err("add for wtp %d success\n", i);
-				}
-			}else if((AC_WTP[i]!=NULL)&&(AC_WTP[i]->APGroupID == groupid)){
-				ret1 = del_ap_group_member(groupid,i);				
-				if(ret1 != 0){
-					wid_syslog_err("delete for wtp %d failed\n", i);
-					wtp_list[count] = i;
-					count++;
-				} else {
-					wid_syslog_err("delete for wtp %d success\n", i);
-				}
-			}else{
-				wtp_list[count] = i;
-				count++;
-			}
-		}
-		#endif
 	}
 		
 	reply = dbus_message_new_method_return(msg);
