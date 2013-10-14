@@ -688,8 +688,8 @@ eag_redirconn_build_redirurl( eag_redirconn_t *redirconn )
 		return -1;
 	}
 
-	mac2str( appconn->session.apmac, ap_mac, sizeof(ap_mac), ':');
-	mac2str( appconn->session.usermac, user_mac, sizeof(user_mac), ':');
+	mac2str( appconn->session.apmac, ap_mac, sizeof(ap_mac), '-');
+	mac2str( appconn->session.usermac, user_mac, sizeof(user_mac), '-');
 
 	portal_srv = &(appconn->session.portal_srv);
 	snprintf(redirconn->redirurl, sizeof(redirconn->redirurl)-1,
@@ -735,6 +735,7 @@ eag_redirconn_build_redirurl( eag_redirconn_t *redirconn )
 	/* wlanapmac */
 	if (1 == portal_srv->wlanapmac) {
 		char apmac_str[20] = {0};
+        memset (apmac_str, 0, sizeof(apmac_str));
 		build_wlanapmac(apmac_str, appconn->session.apmac, sizeof(apmac_str));
 		strncat( redirconn->redirurl, "&wlanapmac=", sizeof(redirconn->redirurl)-strlen(redirconn->redirurl)-1);
 		strncat( redirconn->redirurl, apmac_str, sizeof(redirconn->redirurl)-strlen(redirconn->redirurl)-1);
@@ -768,8 +769,10 @@ eag_redirconn_build_redirurl( eag_redirconn_t *redirconn )
 
 	/* usermac to url */
 	if (1 == portal_srv->usermac_to_url) {
+		char usermac_str[24] = "";
+		mac2str( appconn->session.usermac, usermac_str, sizeof(usermac_str), ':');
 		strncat( redirconn->redirurl, "&usermac=", sizeof(redirconn->redirurl)-strlen(redirconn->redirurl)-1);
-		strncat( redirconn->redirurl, user_mac, sizeof(redirconn->redirurl)-strlen(redirconn->redirurl)-1);
+		strncat( redirconn->redirurl, usermac_str, sizeof(redirconn->redirurl)-strlen(redirconn->redirurl)-1);
 	}
 
 	if (WISPR_URL_HTTP == portal_srv->wisprlogin ||
@@ -778,7 +781,7 @@ eag_redirconn_build_redirurl( eag_redirconn_t *redirconn )
 		char wisprloginurl[128];
 		char wisprloginurl_encode[256];
 		memset (wisprloginurl, 0, sizeof(wisprloginurl) );
-		memset (wisprloginurl_encode, 0, sizeof(wisprloginurl_encode));	
+		memset (wisprloginurl_encode, 0, sizeof(wisprloginurl_encode));
 
 		if (WISPR_URL_HTTP == portal_srv->wisprlogin) {
 			snprintf (wisprloginurl, sizeof(wisprloginurl),

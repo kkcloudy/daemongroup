@@ -3344,6 +3344,7 @@ eag_portal_auth_success(eag_portal_t *portal,
 	int authed_user_num = 0;
 	int trap_onlineusernum_switch = 0;
 	int threshold_onlineusernum = 0;
+	const char *err_reason = "";
 	
 	if (NULL == portal || NULL == appconn) {
 		eag_log_err("eag_portal_auth_success input error");
@@ -3488,10 +3489,10 @@ eag_portal_auth_success(eag_portal_t *portal,
 	portal_packet_init_rsp(portal, &rsppkt, &(portalsess->rcvpkt));
 	eag_log_debug("eag_portal","eag_portal_auth_success userip %s, "
 		"send ack_auth, errcode=%u", user_ipstr, rsppkt.err_code);
-	admin_log_notice("PortalAckAuth___UserIP:%s,UserMAC:%s,Username:%s,ApMAC:%s,SSID:%s,NasIP:%s,PortalIP:%s,Interface:%s,ErrCode:%d",
-		user_ipstr, user_macstr, appconn->session.username, ap_macstr, appconn->session.essid, nas_ipstr, portal_ipstr, appconn->session.intf, rsppkt.err_code);
-	log_app_filter(appconn,"PortalAckAuth___UserIP:%s,UserMAC:%s,Username:%s,ApMAC:%s,SSID:%s,NasIP:%s,PortalIP:%s,Interface:%s,ErrCode:%d",
-		user_ipstr, user_macstr, appconn->session.username, ap_macstr, appconn->session.essid, nas_ipstr, portal_ipstr, appconn->session.intf, rsppkt.err_code);
+	admin_log_notice("PortalAckAuth___UserIP:%s,UserMAC:%s,Username:%s,ApMAC:%s,SSID:%s,NasIP:%s,PortalIP:%s,Interface:%s,ErrCode:%d,ErrReason:%s",
+		user_ipstr, user_macstr, appconn->session.username, ap_macstr, appconn->session.essid, nas_ipstr, portal_ipstr, appconn->session.intf, rsppkt.err_code, err_reason);
+	log_app_filter(appconn,"PortalAckAuth___UserIP:%s,UserMAC:%s,Username:%s,ApMAC:%s,SSID:%s,NasIP:%s,PortalIP:%s,Interface:%s,ErrCode:%d,ErrReason:%s",
+		user_ipstr, user_macstr, appconn->session.username, ap_macstr, appconn->session.essid, nas_ipstr, portal_ipstr, appconn->session.intf, rsppkt.err_code, err_reason);
 	portal_resp_authenticator(&rsppkt, &(portalsess->rcvpkt), portalsess->secret, 
 				portalsess->secretlen);
 	eag_portal_send_packet(portal, portalsess->portal_ip,
