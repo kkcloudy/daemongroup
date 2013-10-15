@@ -448,9 +448,17 @@ struct in_pktinfo
 
 #endif
 
+/*gujd: 2013-05-14, pm 3:55 . Add code for ipv6 nd suppress ra packet for Distribute System.*/
+#define ZEBRA_INTERFACE_ND_SUPPRESS_RA_ENABLE  	42
+#define ZEBRA_INTERFACE_ND_SUPPRESS_RA_DISABLE  43
+#define ZEBRA_INTERFACE_RTADV_ND_INFO_UPDATE    44
+/*ipv6 nd prefix deal*/
+#define ZEBRA_INTERFACE_ND_PREFIX_ADD           45
+#define ZEBRA_INTERFACE_ND_PREFIX_DELETE        46
 
 
-#define ZEBRA_MESSAGE_MAX                 42
+
+#define ZEBRA_MESSAGE_MAX                 47
 
 /* Marker value used in new Zserv, in the byte location corresponding
  * the command value in the old zserv header. To allow old and new
@@ -784,6 +792,7 @@ typedef struct product_inf
 /**2011-09-16:pm 5:40**/
 
 #define SYNC_TIMER 		20
+#define BUFFER_LEN     512
 
 
 #define RTSUIT_CONF_PATH "/mnt/rtsuit/"

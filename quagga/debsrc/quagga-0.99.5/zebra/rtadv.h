@@ -58,6 +58,8 @@ struct rtadv_prefix
 
 extern void rtadv_config_write (struct vty *, struct interface *);
 extern void rtadv_init (void);
+/*gujd : 2012-05-29,am 9:53 . Add for IPv6 Ready Test.*/
+#define ND_ADVER_SEND_PACKET_INTERVAL  3
 
 /* draft-ietf-mip6-mipext-advapi-03 */
 
@@ -66,6 +68,11 @@ extern void rtadv_init (void);
 #endif
 #ifndef ND_OPT_HA_INFORMATION
 #define ND_OPT_HA_INFORMATION	8   /* HA Information Option */
+#endif
+
+/*gujd : 2012-05-29,am 9:53 . Add for IPv6 Ready Test.*/
+#ifndef ND_OPT_ADV_LINKMTU
+#define ND_OPT_ADV_LINKMTU	5   /* Adv Interval Option */
 #endif
 
 #ifndef HAVE_ND_OPT_ADV_INTERVAL

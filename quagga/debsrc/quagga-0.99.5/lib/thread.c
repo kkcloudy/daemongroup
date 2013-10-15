@@ -228,6 +228,20 @@ quagga_gettimeofday_only(struct timeval *tv )
 	
 	return;	
 }
+/*gujd : 2012-05-28, pm 5:15 . Add code for IPv6 Ready Test , when send RS packet.*/
+time_t
+quagga_gettimeofday_only_second(struct timeval tv )
+{
+	int ret = 0;
+	ret = gettimeofday(&tv,NULL);
+	if(ret < 0)
+	{
+		zlog_warn("%s : gettimeofday fail .\n",__func__);
+		return -1;
+	}
+	return tv.tv_sec;
+	
+}
 
 
 /* Public export of recent_relative_time by value */

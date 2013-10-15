@@ -6776,6 +6776,33 @@ vice_board_read (struct thread *thread)
 		  
 		  break;
 		  
+	  /*gujd: 2013-05-14, am 4:11 . Add code for ipv6 nd suppress ra deal for Distribute System.*/
+	  case ZEBRA_INTERFACE_ND_SUPPRESS_RA_ENABLE:
+		  tipc_vice_interface_nd_suppress_ra_deal(ZEBRA_INTERFACE_ND_SUPPRESS_RA_ENABLE, vice_board, length);
+	  
+		  break;
+
+	  
+	  case ZEBRA_INTERFACE_ND_SUPPRESS_RA_DISABLE:
+		  tipc_vice_interface_nd_suppress_ra_deal(ZEBRA_INTERFACE_ND_SUPPRESS_RA_DISABLE, vice_board, length);
+	  
+		  break;
+	  /*gujd : 2013-05-13, Add IPv6 rtadv info update for other boards.*/
+	  case ZEBRA_INTERFACE_RTADV_ND_INFO_UPDATE:
+		  tipc_vice_rtadv_nd_info_update(ZEBRA_INTERFACE_RTADV_ND_INFO_UPDATE, vice_board, length);
+	  
+		  break;
+		  
+	  case ZEBRA_INTERFACE_ND_PREFIX_ADD:
+		  tipc_vice_interface_nd_prefix_update(ZEBRA_INTERFACE_ND_PREFIX_ADD, vice_board, length);
+	  
+		  break;
+
+	  case ZEBRA_INTERFACE_ND_PREFIX_DELETE:
+		  tipc_vice_interface_nd_prefix_update(ZEBRA_INTERFACE_ND_PREFIX_DELETE, vice_board, length);
+	  
+		  break;
+		  
 	 case ZEBRA_ROUTER_ID_UPDATE:
 /*		  if (vice_board->router_id_update)*/
 /*		ret = (*vice_board->router_id_update) (command, vice_board, length);*/

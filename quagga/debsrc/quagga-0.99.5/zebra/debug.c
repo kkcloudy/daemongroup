@@ -31,6 +31,7 @@ unsigned long zebra_debug_kernel;
 unsigned long zebra_debug_rib;
 unsigned long rtm_debug_distribute_system;
 unsigned long rtm_debug_if_flow_stats;
+unsigned long rtm_debug_rtadv;
 
 DEFUN (show_debugging_zebra,
        show_debugging_zebra_cmd,
@@ -297,6 +298,27 @@ DEFUN (no_debug_rtm_if_flow,
   rtm_debug_if_flow_stats = 0;
   return CMD_SUCCESS;
 }
+DEFUN (debug_rtm_rtadv,
+       debug_rtm_rtadv_cmd,
+       "debug rtm rtadv",
+       DEBUG_STR
+       "Rtm configuration\n"
+       "Debug option set for rtm ipv6 nd service.\n")
+{
+  rtm_debug_rtadv = RTM_DEBUG_IPV6_RTADV;
+  return CMD_SUCCESS;
+}
+DEFUN (no_debug_rtm_rtadv,
+       no_debug_rtm_rtadv_cmd,
+       "no debug rtm rtadv",
+       NO_STR
+       DEBUG_STR
+       "Rtm configuration\n"
+       "Debug option set for rtm rtm ipv6 nd service.\n")
+{
+	rtm_debug_rtadv = 0;
+	return CMD_SUCCESS;
+}
 
 
 
@@ -366,6 +388,7 @@ zebra_debug_init (void)
   zebra_debug_kernel = 0;
   zebra_debug_rib = 0;
   rtm_debug_distribute_system = 0;
+  rtm_debug_rtadv = 0;
 #if 1
   install_node (&debug_node, config_write_debug, "DEBUG_NODE");
 #else
@@ -390,6 +413,9 @@ install_node (&debug_node, NULL, "DEBUG_NODE");
   install_element (ENABLE_NODE, &debug_rtm_distribute_system_cmd);
   install_element (ENABLE_NODE, &no_debug_rtm_distribute_system_cmd);
   
+  install_element (ENABLE_NODE, &debug_rtm_rtadv_cmd);
+  install_element (ENABLE_NODE, &no_debug_rtm_rtadv_cmd);
+  
 
   install_element (CONFIG_NODE, &debug_zebra_events_cmd);
   install_element (CONFIG_NODE, &debug_zebra_packet_cmd);
@@ -411,5 +437,7 @@ install_node (&debug_node, NULL, "DEBUG_NODE");
   install_element (ENABLE_NODE, &no_debug_rtm_if_flow_cmd);
   install_element (CONFIG_NODE, &debug_rtm_if_flow_cmd);
   install_element (CONFIG_NODE, &no_debug_rtm_if_flow_cmd);
+  install_element (CONFIG_NODE, &debug_rtm_rtadv_cmd);
+  install_element (CONFIG_NODE, &no_debug_rtm_rtadv_cmd);
   
 }

@@ -43,6 +43,8 @@
 
 #define RTM_DEBUG_IF_FLOW_STATS   0x01
 #define rtm_debug_if_flow   (rtm_debug_if_flow_stats & RTM_DEBUG_IF_FLOW_STATS)
+#define RTM_DEBUG_IPV6_RTADV    0x01
+#define RTM_DEBUG_RTADV  (rtm_debug_rtadv &RTM_DEBUG_IPV6_RTADV)
 
 /* Debug related macro. */
 #define IS_ZEBRA_DEBUG_EVENT  (zebra_debug_event & ZEBRA_DEBUG_EVENT)
@@ -64,6 +66,7 @@ extern unsigned long zebra_debug_rib;
 
 extern unsigned long rtm_debug_distribute_system;
 extern unsigned long rtm_debug_if_flow_stats;
+extern unsigned long rtm_debug_rtadv;
 extern void zebra_debug_init (void);
 
 #endif /* _ZEBRA_DEBUG_H */

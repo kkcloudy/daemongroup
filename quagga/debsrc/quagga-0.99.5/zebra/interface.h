@@ -91,6 +91,8 @@ struct rtadvconf
 
      Default: FALSE */
   int AdvOtherConfigFlag;
+  /*gujd : 2012-05-29,am 9:53 . Add for IPv6 Ready Test.*/
+  int AdvLinkMtuOption;
 
   /* The value to be placed in MTU options sent by the router.  A
      value of zero indicates that no MTU options are sent.
@@ -114,7 +116,8 @@ struct rtadvconf
      unspecified (by this router).
 
      Default: 0 */
-  int AdvRetransTimer;
+  /*int AdvRetransTimer;*/
+  u_int32_t AdvRetransTimer;/*gujd : 2012-05-29,am 9:53 . Change for IPv6 Ready Test.*/
 
   /* The default value to be placed in the Cur Hop Limit field in the
      Router Advertisement messages sent by the router.  The value
@@ -188,6 +191,9 @@ struct zebra_if
 
   /* Router advertise configuration. */
   u_char rtadv_enable;
+  
+  /*gujd : 2012-05-29,am 9:53 . Add for IPv6 Ready Test.*/
+  struct timeval time_memory;
 
   /* Interface's address. */
   struct list *address;

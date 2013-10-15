@@ -37,9 +37,11 @@
 #include "zebra/debug.h"
 #include "zebra/rib.h"
 #include "zebra/zserv.h"
+#include "zebra/tipc_client.h"
+#include "zebra/tipc_server.h"
 
 extern struct zebra_privs_t zserv_privs;
-#define HAVE_RTADR_DEBUG 0
+/*#define HAVE_RTADR_DEBUG 0*/
 
 #if defined (HAVE_IPV6) && defined (RTADV)
 
@@ -61,12 +63,16 @@ extern struct zebra_privs_t zserv_privs;
 extern struct zebra_t zebrad;
 
 enum rtadv_event {RTADV_START, RTADV_STOP, RTADV_TIMER, 
-		  RTADV_TIMER_MSEC, RTADV_READ};
+		  RTADV_TIMER_MSEC, RTADV_READ,RTADV_TIMER_MSEC_IF};
 
-static void rtadv_event (enum rtadv_event, int);
+/*gujd : 2012-05-29,am 9:53 . Change for IPv6 Ready Test.*/
+static void rtadv_event (enum rtadv_event, int,void *);
 
 static int if_join_all_router (int, struct interface *);
 static int if_leave_all_router (int, struct interface *);
+static void rtadv_prefix_set (struct zebra_if *zif, struct rtadv_prefix *rp);
+static int rtadv_prefix_reset (struct zebra_if *zif, struct rtadv_prefix *rp);
+
 
 /* Structure which hold status of router advertisement. */
 struct rtadv
@@ -78,10 +84,799 @@ struct rtadv
 
   struct thread *ra_read;
   struct thread *ra_timer;
+  struct thread *ra_timer_send;/*gujd : 2012-05-29,am 9:53 . Add for IPv6 Ready Test.*/
 };
 
 struct rtadv *rtadv = NULL;
-
+extern product_inf *product;
+/*gujd : 2012-05-29,am 9:53 . Add for IPv6 Ready Test.*/
+static struct timeval this_time;
+static struct timeval last_time;
+
+int
+sysctl_set_proc_file_vlaue_of_AdvReachableTime(struct interface *ifp, u_int32_t value)
+{
+	unsigned char cmd[BUFFER_LEN] = {0};
+	int ret=CMD_SUCCESS;
+	
+	/*To change the system file :/proc/sys/net/ipv6/neigh/xxx/base_reachable_time_ms .*/
+	snprintf(cmd,BUFFER_LEN,"sudo sysctl -w net.ipv6.neigh.%s.base_reachable_time_ms=%d", ifp->name, value);
+	cmd[BUFFER_LEN - 1] = '\0';
+	ret = system(cmd);
+	ret = WEXITSTATUS(ret);
+				  
+	if(CMD_SUCCESS != ret )
+	 {
+		  zlog_warn("Modify Interface(%s) Reachable time(%u) fail.\n", ifp->name,value);
+		  return CMD_WARNING;
+	  }
+}
+
+/*use sysctl to change the proc file value.*/
+int
+sysctl_set_proc_file_vlaue_of_AdvRetransTimer(struct interface *ifp, u_int32_t value)
+{
+	unsigned char cmd[BUFFER_LEN] = {0};
+	int ret=CMD_SUCCESS;
+	
+	/*To change the system file :/proc/sys/net/ipv6/neigh/xxx/retrans_time_ms .*/
+  	snprintf(cmd,BUFFER_LEN,"sudo sysctl -w net.ipv6.neigh.%s.retrans_time_ms=%d", ifp->name,value);
+	cmd[BUFFER_LEN - 1] = '\0';
+	ret = system(cmd);
+	ret = WEXITSTATUS(ret);
+				  
+	if(CMD_SUCCESS != ret )
+	 {
+		  zlog_warn("Modify Interface(%s) RetransTime(%u) fail.\n", ifp->name,value);
+		  return CMD_WARNING;
+	  }
+}
+
+int
+sysctl_set_proc_file_vlaue_of_AdvCurHopLimit(struct interface *ifp, int value)
+{
+	unsigned char cmd[BUFFER_LEN] = {0};
+	int ret=CMD_SUCCESS;
+	
+	/*To change the system file :/proc/sys/net/ipv6/conf/xxxx/hop_limit .*/
+  	snprintf(cmd,BUFFER_LEN,"sudo sysctl -w net.ipv6.conf.%s.hop_limit=%d", ifp->name,value);
+	cmd[BUFFER_LEN - 1] = '\0';
+	ret = system(cmd);
+	ret = WEXITSTATUS(ret);
+				  
+	if(CMD_SUCCESS != ret )
+	 {
+		  zlog_warn("Modify Interface(%s) Hoplimit(%d) fail.\n", ifp->name,value);
+		  return CMD_WARNING;
+	  }
+}
+
+
+/*gujd: 2013-05-14, pm 4:05 . Add code for ipv6 nd suppress ra deal for Distribute System.*/
+struct interface *
+tipc_vice_interface_nd_surppress_ra_state_read(int command, struct stream *s)
+{
+	if(!s)
+	 return NULL;
+	
+	char ifname_tmp[INTERFACE_NAMSIZ] = {0};
+	struct interface *ifp;
+	
+	stream_get (ifname_tmp, s, INTERFACE_NAMSIZ);
+	/*if(tipc_server_debug)*/
+	 zlog_debug("%s : interface (%s) nd state (%s).\n", __func__,
+	 			ifname_tmp,zserv_command_string(command));
+	 ifp = if_lookup_by_name_len (ifname_tmp,
+			       strnlen(ifname_tmp, INTERFACE_NAMSIZ));
+ 
+ 	 if(ifp == NULL) 
+  	 {
+  		if(tipc_server_debug)
+	 	  zlog_debug("%s : line %d, interface do not exist or the interface not match!\n",__func__,__LINE__);
+     	return NULL;
+  	 }
+
+	 return ifp;
+	
+}
+
+int
+tipc_vice_interface_nd_suppress_ra_deal(int command, tipc_server *vice_board, zebra_size_t length)
+{
+	if(!vice_board)
+	 return -1;
+	
+	struct interface *ifp;	
+	struct zebra_if *zif;
+	
+	ifp = tipc_vice_interface_nd_surppress_ra_state_read( command,vice_board->ibuf);
+	if(ifp == NULL)
+	{
+	  if(tipc_server_debug)
+		zlog_debug("the interface not match !");
+	  return -1;
+	}
+#if 0
+	if(judge_real_local_interface(ifp->name)!= LOCAL_BOARD_INTERFACE)/*not local board, don't care*/
+	 return -1;
+#endif
+	zif = ifp->info;
+	
+	if(command == ZEBRA_INTERFACE_ND_SUPPRESS_RA_ENABLE)/*disable (turn off) nd router suppress*/
+	{
+		zlog_debug("%s : to enable interface(%s) nd suppress router advitisement.\n",
+					__func__,ifp->name);
+		if (zif->rtadv.AdvSendAdvertisements)
+  #if 0
+		{
+	      zif->rtadv.AdvSendAdvertisements = 0;
+	      zif->rtadv.AdvIntervalTimer = 0;
+	      rtadv->adv_if_count--;
+
+	      if_leave_all_router (rtadv->sock, ifp);
+
+	      if (rtadv->adv_if_count == 0)
+	      {
+	      	zlog_debug("to goto rtadv_event(RTADV_STOP).\n");
+			rtadv_event (RTADV_STOP, 0);
+	      	}
+		  
+	    }
+  #else
+	  {
+	      zif->rtadv.AdvSendAdvertisements = 0;
+	      zif->rtadv.AdvIntervalTimer = 0;
+	    /*  rtadv->adv_if_count--;*/
+	      rtadv->adv_if_count = 0;
+
+	 	/*  if_leave_all_router (rtadv->sock, ifp);*/
+		  if(RTM_DEBUG_RTADV)
+		    zlog_info("%s:line %d, adv_if_count is %d .\n",__func__,__LINE__,rtadv->adv_if_count);
+	      if (rtadv->adv_if_count == 0)
+	      {
+	     	/* zif->rtadv.AdvDefaultLifetime = 0;*/
+			if(RTM_DEBUG_RTADV)
+			 zlog_info("to RTADV_STOP_PRE \n");
+			/*rtadv_event (RTADV_STOP_PRE, 0,NULL);*/
+			rtadv_stop_pre_send_one_packet(ifp);
+	      	}
+	    }
+
+  #endif
+		return 0;
+	}
+	else if(command == ZEBRA_INTERFACE_ND_SUPPRESS_RA_DISABLE)/*enable (turn on) nd router suppress*/
+	{
+		zlog_debug("%s : to disable interface(%s) nd suppress router advitisement.\n",
+						__func__,ifp->name);
+		if (! zif->rtadv.AdvSendAdvertisements)
+	    {
+	      zif->rtadv.AdvSendAdvertisements = 1;
+	      zif->rtadv.AdvIntervalTimer = 0;
+	      rtadv->adv_if_count++;////////////////////////xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+	      if_join_all_router (rtadv->sock, ifp);
+
+	      if (rtadv->adv_if_count == 1)
+	      {
+			zlog_debug("to goto rtadv_event(RTADV_START).\n");
+			/*rtadv_event (RTADV_START, rtadv->sock);*/			
+			rtadv_event (RTADV_START, rtadv->sock,NULL);
+	      	}
+	    }
+		
+		return 0;
+		
+		}
+	else
+	{
+		zlog_debug("unkown command[%d].\n",command);
+		return -1;
+	}
+	
+
+	
+}
+
+struct interface *
+tipc_vice_rtadv_nd_info_read(int command, struct stream *s)
+{
+
+	if(!s)
+	{
+	  zlog_info("%s: line %d. The stream is NULL.\n",__func__,__LINE__);
+	  return NULL;
+	}
+	
+	char ifname_tmp[INTERFACE_NAMSIZ] = {0};
+	struct interface *ifp;
+	struct zebra_if *zif;
+	u_int32_t AdvReachableTime = 0;
+	u_int32_t AdvRetransTimer = 0;
+	int AdvCurHopLimit = 0;
+	
+	
+	stream_get (ifname_tmp, s, INTERFACE_NAMSIZ);
+	
+	if(RTM_DEBUG_RTADV)
+	 zlog_debug("%s : interface (%s) command (%s).\n", __func__,
+				ifname_tmp,zserv_command_string(command));
+	
+	 ifp = if_lookup_by_name_len (ifname_tmp,
+				   strnlen(ifname_tmp, INTERFACE_NAMSIZ));
+ 
+	 if(ifp == NULL) 
+	 {
+		if(RTM_DEBUG_RTADV)
+		  zlog_debug("%s : line %d, interface do not exist or the interface not match!\n",__func__,__LINE__);
+		return NULL;
+	 }
+	 
+	 zif = ifp->info;
+	 /*prase the packet info*/
+	 zif->rtadv.AdvSendAdvertisements = stream_getl(s);
+	 zif->rtadv.MaxRtrAdvInterval = stream_getl(s);
+	 zif->rtadv.MinRtrAdvInterval = stream_getl(s);
+	 zif->rtadv.AdvIntervalTimer = stream_getl(s);
+	 zif->rtadv.AdvManagedFlag = stream_getl(s);
+	 zif->rtadv.AdvOtherConfigFlag = stream_getl(s);
+	 zif->rtadv.AdvLinkMtuOption= stream_getl(s);
+	 zif->rtadv.AdvLinkMTU = stream_getl(s);
+	 
+	/* zif->rtadv.AdvReachableTime = stream_getl(s);*/
+	 AdvReachableTime = stream_getl(s);/*tmp*/
+	 if(zif->rtadv.AdvReachableTime != AdvReachableTime)
+	  {
+	  	zif->rtadv.AdvReachableTime = AdvReachableTime;/*update new value*/
+		/*If the parameter is valid , so to set system proc file for kernel.*/
+		if (zif->rtadv.AdvReachableTime > 0 && zif->rtadv.AdvReachableTime <= 0x7fffffff)
+		{
+		  sysctl_set_proc_file_vlaue_of_AdvReachableTime(ifp, AdvReachableTime);
+		 }
+		else
+		{
+		  zlog_debug("The interface(%s) of AdvReachableTime(%u) is not legal.\n",ifp->name,AdvReachableTime);
+		  }
+	   }
+	 
+	 /*zif->rtadv.AdvRetransTimer = stream_getl(s);*/
+	 AdvRetransTimer = stream_getl(s);
+	 if(zif->rtadv.AdvRetransTimer != AdvRetransTimer)
+	  {
+	    zif->rtadv.AdvRetransTimer = AdvRetransTimer;
+		if(zif->rtadv.AdvRetransTimer > 0)
+		{
+			sysctl_set_proc_file_vlaue_of_AdvRetransTimer(ifp,AdvRetransTimer);
+		 }
+		else
+		{
+		  zlog_debug("The interface(%s) of AdvRetransTimer(%u) is not legal.\n",ifp->name,AdvRetransTimer);
+		  }
+	   }
+	 
+	 /*zif->rtadv.AdvCurHopLimit = stream_getl(s);*/
+	 AdvCurHopLimit = stream_getl(s);
+	 if(zif->rtadv.AdvCurHopLimit != AdvCurHopLimit)
+	  {
+	  	 zif->rtadv.AdvCurHopLimit = AdvCurHopLimit;
+		 if(zif->rtadv.AdvCurHopLimit > 0)
+		 {
+		 	sysctl_set_proc_file_vlaue_of_AdvCurHopLimit(ifp, AdvCurHopLimit);
+		  }
+		 else
+		 {
+		   zlog_debug("The interface(%s) of AdvCurHopLimit(%d) is not legal.\n",ifp->name,AdvCurHopLimit);
+		   }
+	   }
+	 
+	 zif->rtadv.AdvDefaultLifetime = stream_getl(s);
+	 zif->rtadv.AdvHomeAgentFlag = stream_getl(s);
+	 zif->rtadv.HomeAgentPreference = stream_getl(s);
+	 zif->rtadv.HomeAgentLifetime = stream_getl(s);
+	 zif->rtadv.AdvIntervalOption = stream_getl(s);
+#if 1	 
+	 if(RTM_DEBUG_RTADV)
+	   zlog_debug("%s : interface(%s),\
+	   			  AdvSendAdvertisements[%d],\
+	              MaxRtrAdvInterval[%d],\
+	              MinRtrAdvInterval[%d],\
+	              AdvIntervalTimer[%d],\
+	              AdvManagedFlag[%d],\
+	              AdvOtherConfigFlag[%d],\
+	              AdvLinkMtuOption[%d],\
+	              AdvLinkMTU[%d],\
+	              AdvReachableTime[%d],\
+	              AdvRetransTimer[%d],\
+	              AdvCurHopLimit[%d],\
+	              AdvDefaultLifetime[%d],\
+	              AdvHomeAgentFlag[%d],\
+	              HomeAgentPreference[%d],\
+	              HomeAgentLifetime[%d],AdvIntervalOption[%d].\n",
+	              __func__,ifp->name,
+	 zif->rtadv.AdvSendAdvertisements ,
+	 zif->rtadv.MaxRtrAdvInterval ,
+	 zif->rtadv.MinRtrAdvInterval ,
+	 zif->rtadv.AdvIntervalTimer ,
+	 zif->rtadv.AdvManagedFlag ,
+	 zif->rtadv.AdvOtherConfigFlag ,
+	 zif->rtadv.AdvLinkMtuOption,
+	 zif->rtadv.AdvLinkMTU ,
+	 zif->rtadv.AdvReachableTime ,
+	 zif->rtadv.AdvRetransTimer ,
+	 zif->rtadv.AdvCurHopLimit ,
+	 zif->rtadv.AdvDefaultLifetime ,
+	 zif->rtadv.AdvHomeAgentFlag ,
+	 zif->rtadv.HomeAgentPreference ,
+	 zif->rtadv.HomeAgentLifetime ,
+	 zif->rtadv.AdvIntervalOption );
+#else	 
+	 if(RTM_DEBUG_RTADV)
+	   zlog_debug("%s : interface(%s),"
+	   "AdvSendAdvertisements[%d],"
+	   "MaxRtrAdvInterval[%d],"
+	   "MinRtrAdvInterval[%d], "
+	   "AdvIntervalTimer[%d],"
+	   "AdvManagedFlag[%d],"
+	   "AdvOtherConfigFlag[%d],"
+	   "AdvLinkMTU[%d],"
+	   "AdvReachableTime[%d],"
+	   "AdvRetransTimer[%d],"
+	   "AdvCurHopLimit[%d],"
+	   "AdvDefaultLifetime[%d],"
+	   "AdvHomeAgentFlag[%d],"
+	   "HomeAgentPreference[%d],"
+	   "HomeAgentLifetime[%d],"
+	   "AdvIntervalOption[%d].\n",
+	              __func__,ifp->name,
+	 zif->rtadv.AdvSendAdvertisements ,
+	 zif->rtadv.MaxRtrAdvInterval ,
+	 zif->rtadv.MinRtrAdvInterval ,
+	 zif->rtadv.AdvIntervalTimer ,
+	 zif->rtadv.AdvManagedFlag ,
+	 zif->rtadv.AdvOtherConfigFlag ,
+	 zif->rtadv.AdvLinkMTU ,
+	 zif->rtadv.AdvReachableTime ,
+	 zif->rtadv.AdvRetransTimer ,
+	 zif->rtadv.AdvCurHopLimit ,
+	 zif->rtadv.AdvDefaultLifetime ,
+	 zif->rtadv.AdvHomeAgentFlag ,
+	 zif->rtadv.HomeAgentPreference ,
+	 zif->rtadv.HomeAgentLifetime ,
+	 zif->rtadv.AdvIntervalOption );
+#endif
+	 return ifp;
+	
+}
+
+
+int
+tipc_vice_rtadv_nd_info_update(int command, tipc_server* vice_board, int length)
+{
+	if(!vice_board)
+	 return -1;
+	
+	struct interface *ifp;	
+	struct zebra_if *zif;
+	
+	ifp = tipc_vice_rtadv_nd_info_read( command,vice_board->ibuf);
+	
+	if(!ifp)
+	  return -1;
+
+#if 0
+	zif = ifp->info;
+	
+	if(command == ZEBRA_INTERFACE_ND_SUPPRESS_RA_ENABLE)/*disable (turn off) nd router suppress*/
+	{
+		zlog_debug("%s : to enable interface(%s) nd suppress router advitisement.\n",
+					__func__,ifp->name);
+		if (zif->rtadv.AdvSendAdvertisements)
+		{
+		  zif->rtadv.AdvSendAdvertisements = 0;
+		  zif->rtadv.AdvIntervalTimer = 0;
+		  rtadv->adv_if_count--;
+
+		  if_leave_all_router (rtadv->sock, ifp);
+
+		  if (rtadv->adv_if_count == 0)
+		  {
+			zlog_debug("to goto rtadv_event(RTADV_STOP).\n");
+			rtadv_event (RTADV_STOP, 0);
+			}
+		  
+		}
+		return 0;
+	}
+	else
+		if(command == ZEBRA_INTERFACE_ND_SUPPRESS_RA_DISABLE)/*enable (turn on) nd router suppress*/
+	{
+		zlog_debug("%s : to disable interface(%s) nd suppress router advitisement.\n",
+						__func__,ifp->name);
+		if (! zif->rtadv.AdvSendAdvertisements)
+		{
+		  zif->rtadv.AdvSendAdvertisements = 1;
+		  zif->rtadv.AdvIntervalTimer = 0;
+		  rtadv->adv_if_count++;
+
+		  if_join_all_router (rtadv->sock, ifp);
+
+		  if (rtadv->adv_if_count == 1)
+		  {
+			zlog_debug("to goto rtadv_event(RTADV_START).\n");
+			rtadv_event (RTADV_START, rtadv->sock);
+			}
+		}
+		
+		return 0;
+		
+		}
+	else
+	{
+		zlog_debug("unkown command[%d].\n",command);
+		return -1;
+	}
+	#endif
+
+	return 0;
+
+	
+}
+
+
+
+struct interface *
+tipc_vice_interface_nd_prefix_info_read(int command, struct stream *s,struct rtadv_prefix *rp)
+{
+
+	if(!s)
+	{
+	  zlog_info("%s: line %d. The stream is NULL.\n",__func__,__LINE__);
+	  return NULL;
+	}
+	
+	char ifname_tmp[INTERFACE_NAMSIZ] = {0};
+	struct interface *ifp;
+	struct zebra_if *zif;
+	int str_length = 0;
+	char prefix_str[IPV6_MAX_BITLEN]={0};
+	int ret = 0;
+	
+	stream_get (ifname_tmp, s, INTERFACE_NAMSIZ);
+	
+	if(RTM_DEBUG_RTADV)
+	 zlog_debug("%s : interface (%s) command (%s).\n", __func__,
+				ifname_tmp,zserv_command_string(command));
+	
+	 ifp = if_lookup_by_name_len (ifname_tmp,
+				   strnlen(ifname_tmp, INTERFACE_NAMSIZ));
+ 
+	 if(ifp == NULL) 
+	 {
+		if(RTM_DEBUG_RTADV)
+		  zlog_debug("%s : line %d, interface do not exist or the interface not match!\n",__func__,__LINE__);
+		return NULL;
+	 }
+
+	 str_length = stream_getl(s);/*fetch prefixe string length.*/
+	 stream_get(prefix_str, s, str_length);/*fetch prefixe string .*/
+	 prefix_str[str_length]='\0';
+	 
+	 ret = str2prefix_ipv6 (prefix_str, (struct prefix_ipv6 *)&rp->prefix);
+	 if (!ret)
+	 {
+		 zlog_warn ("Malformed IPv6 prefix[%s]", prefix_str);
+		 return NULL;
+	   }
+	 if(RTM_DEBUG_RTADV)
+	 	zlog_debug("IPv6 prefix string : %s .\n",prefix_str);
+	 
+	 
+	 if(command == ZEBRA_INTERFACE_ND_PREFIX_ADD)
+	{
+		rp->AdvOnLinkFlag = stream_putl(s);
+		rp->AdvAutonomousFlag = stream_putl(s);
+		rp->AdvRouterAddressFlag = stream_putl(s);
+		rp->AdvValidLifetime = stream_putl(s);
+		rp->AdvPreferredLifetime = stream_putl(s);
+
+		if(RTM_DEBUG_RTADV)
+	   	  zlog_debug("%s : interface(%s),\
+				  AdvOnLinkFlag[%d],\
+				  AdvAutonomousFlag[%d],\
+				  AdvRouterAddressFlag[%d],\
+				  AdvValidLifetime[%d],\
+				  AdvPreferredLifetime[%d]. \n",
+				  __func__,ifp->name,
+	    rp->AdvOnLinkFlag ,
+		rp->AdvAutonomousFlag ,
+		rp->AdvRouterAddressFlag,
+		rp->AdvValidLifetime ,
+		rp->AdvPreferredLifetime );
+	 }
+	
+	 
+	 return ifp;
+	
+}
+
+
+int
+tipc_vice_interface_nd_prefix_update(int command, tipc_server* vice_board, int length)
+{
+	
+	if(!vice_board)
+	 return -1;
+	
+	struct interface *ifp;	
+	struct zebra_if *zif;
+	struct rtadv_prefix rp;
+	int ret = 0;
+	
+	ifp = tipc_vice_interface_nd_prefix_info_read(command,vice_board->ibuf,&rp);
+	
+	if(!ifp)
+	  return -1;
+	
+	zif = ifp->info;
+	
+	if(command == ZEBRA_INTERFACE_ND_PREFIX_ADD)
+	{
+		if(RTM_DEBUG_RTADV)
+		  zlog_debug ("To add ipv6 nd prefix .\n");
+		rtadv_prefix_set (zif, &rp);
+		
+	 }
+	else if(command == ZEBRA_INTERFACE_ND_PREFIX_DELETE)
+	{
+		if(RTM_DEBUG_RTADV)
+		  zlog_debug ("To delete ipv6 nd prefix .\n");
+		ret = rtadv_prefix_reset (zif, &rp);
+		if (!ret)
+		{
+			zlog_info( "Non-exist IPv6 prefix.\n");
+			return -1;
+		  }
+	 }
+	else
+	{
+		zlog_warn("Unknow command [%d].\n",command);
+		return -1;
+	 }
+	
+	return 0;
+	
+}
+
+
+int
+tipc_master_packet_rtadv_nd_info(tipc_client *client, struct interface *ifp)
+{
+  struct stream *s;
+  struct zebra_if *zif;
+
+  
+  zif = ifp->info;
+
+/*Let all interface to support the ipv6 nd setup.*/
+#if 0
+  if((judge_ve_interface(ifp->name)== VE_INTERFACE)
+  	||(judge_obc_interface(ifp->name)== OBC_INTERFACE)
+  	||(judge_radio_interface(ifp->name)== DISABLE_RADIO_INTERFACE))
+  	return 0;
+#endif
+
+
+  /* Check this client need interface information. */
+  if (! client->ifinfo)
+    return 0;
+
+  s = client->obuf;
+  stream_reset (s);
+
+  tipc_packet_create_header(s, ZEBRA_INTERFACE_RTADV_ND_INFO_UPDATE);
+
+  /* Interface information. */
+  stream_put (s, ifp->name, INTERFACE_NAMSIZ);
+
+  /*packet the rtadv info.*/
+  stream_putl(s, zif->rtadv.AdvSendAdvertisements);
+  stream_putl(s, zif->rtadv.MaxRtrAdvInterval);
+  stream_putl(s, zif->rtadv.MinRtrAdvInterval);
+  stream_putl(s, zif->rtadv.AdvIntervalTimer);
+  stream_putl(s, zif->rtadv.AdvManagedFlag);
+  stream_putl(s, zif->rtadv.AdvOtherConfigFlag);
+  stream_putl(s, zif->rtadv.AdvLinkMtuOption);
+  stream_putl(s, zif->rtadv.AdvLinkMTU);
+  stream_putl(s, zif->rtadv.AdvReachableTime);
+  stream_putl(s, zif->rtadv.AdvRetransTimer);
+  stream_putl(s, zif->rtadv.AdvCurHopLimit);
+  stream_putl(s, zif->rtadv.AdvDefaultLifetime);
+  stream_putl(s, zif->rtadv.AdvHomeAgentFlag);
+  stream_putl(s, zif->rtadv.HomeAgentPreference);
+  stream_putl(s, zif->rtadv.HomeAgentLifetime);
+  stream_putl(s, zif->rtadv.AdvIntervalOption);
+  
+  stream_putw_at (s, 0, stream_get_endp (s));
+
+  return master_send_message_to_vice(client);
+  
+}
+
+
+int
+tipc_master_rtadv_nd_info_update(struct interface *ifp)
+{
+	
+	struct listnode *node, *nnode;
+	tipc_client *master_board;
+
+	if(product && product->board_type == BOARD_IS_ACTIVE_MASTER)
+	{
+		if(zebrad.vice_board_list == NULL)
+		{
+			zlog_debug("There is no one vice board connect.\n");
+			return -1;
+		  }
+	     
+		for (ALL_LIST_ELEMENTS (zebrad.vice_board_list, node, nnode, master_board)) 
+		{ 
+		   tipc_master_packet_rtadv_nd_info(master_board, ifp);
+		  }
+           
+	}
+
+	return 0;
+	
+}
+
+
+int
+tipc_master_interface_nd_suppress_ra_packet_info(int cmd, tipc_client *client, struct interface *ifp)
+{
+  struct stream *s;
+  
+#if 0
+  if((judge_ve_interface(ifp->name)== VE_INTERFACE)
+  	||(judge_obc_interface(ifp->name)== OBC_INTERFACE)
+  	||(judge_radio_interface(ifp->name)== DISABLE_RADIO_INTERFACE))
+  	return 0;
+#endif
+  /* Check this client need interface information. */
+  if (! client->ifinfo)
+    return 0;
+
+  s = client->obuf;
+  stream_reset (s);
+
+  tipc_packet_create_header(s, cmd);
+
+  /* Interface information. */
+  stream_put (s, ifp->name, INTERFACE_NAMSIZ);
+  
+  stream_putw_at (s, 0, stream_get_endp (s));
+
+  return master_send_message_to_vice(client);
+  
+}
+
+int tipc_master_interface_nd_suppress_ra_deal(int command, struct interface *ifp)
+{
+	if(product->board_type != BOARD_IS_ACTIVE_MASTER)
+	 return -1;
+	
+	struct listnode *node, *nnode;
+  	tipc_client *master_board;
+		
+    if(zebrad.vice_board_list == NULL)
+	{
+  	   zlog_debug("%s, line = %d, zebrad.vice_board_list is null...", __func__, __LINE__);
+       return;
+	}
+ 	  
+      /*send message to all of connected vice board*/
+	for (ALL_LIST_ELEMENTS (zebrad.vice_board_list, node, nnode, master_board)) 
+   	{ 
+		zlog_debug("master send interface(%s) msg to vice board .", ifp->name); 	   
+		tipc_master_interface_nd_suppress_ra_packet_info (command, master_board, ifp);
+	  }
+ 	 
+}
+
+
+int
+tipc_master_packet_interface_nd_prefix_info(tipc_client *client, int cmd,
+                                                struct interface *ifp,
+                                                struct rtadv_prefix *rp, 
+                                                const char *prefix_str)
+{
+  struct stream *s;
+  struct zebra_if *zif;
+  int length = 0;
+
+  
+  zif = ifp->info;
+
+  /* Check this client need interface information. */
+  if (! client->ifinfo)
+    return 0;
+
+  s = client->obuf;
+  stream_reset (s);
+
+  tipc_packet_create_header(s, cmd);
+
+  /* Interface information. */
+  stream_put (s, ifp->name, INTERFACE_NAMSIZ);
+  
+  /*Prefix str*/
+  length = strlen(prefix_str);
+  stream_putl(s,length);/*packet prefix string length*/
+  stream_put(s,prefix_str,length);/*packet prefix string*/
+
+  if(cmd == ZEBRA_INTERFACE_ND_PREFIX_ADD)/*when prefix add, packet rp info. Prefix delete, don't need*/
+  {
+  	
+	stream_putl(s, rp->AdvOnLinkFlag);
+	stream_putl(s, rp->AdvAutonomousFlag);
+	stream_putl(s, rp->AdvRouterAddressFlag);
+	stream_putl(s, rp->AdvValidLifetime);
+	stream_putl(s, rp->AdvPreferredLifetime);
+	
+  	}
+  
+  stream_putw_at (s, 0, stream_get_endp (s));
+
+  return master_send_message_to_vice(client);
+  
+}
+
+
+int
+tipc_master_interface_nd_prefix_update(int command, 
+                                struct interface *ifp,
+                                struct rtadv_prefix *rp, 
+                                const char *prefix_str)
+{
+	
+	struct listnode *node, *nnode;
+	tipc_client *master_board;
+
+	if(product && product->board_type == BOARD_IS_ACTIVE_MASTER)
+	{
+		if(zebrad.vice_board_list == NULL)
+		{
+			zlog_debug("There is no one vice board connect.\n");
+			return -1;
+		  }
+		if(command == ZEBRA_INTERFACE_ND_PREFIX_ADD)
+		{
+			for (ALL_LIST_ELEMENTS (zebrad.vice_board_list, node, nnode, master_board)) 
+			{ 
+			   tipc_master_packet_interface_nd_prefix_info(master_board,ZEBRA_INTERFACE_ND_PREFIX_ADD, ifp, rp, prefix_str);
+			  }
+		  }
+		else if(command == ZEBRA_INTERFACE_ND_PREFIX_DELETE)
+		{
+			for (ALL_LIST_ELEMENTS (zebrad.vice_board_list, node, nnode, master_board)) 
+			{ 
+			   tipc_master_packet_interface_nd_prefix_info(master_board,ZEBRA_INTERFACE_ND_PREFIX_DELETE, ifp, rp, prefix_str);
+			  }
+		  }
+		else
+		 {
+		 	zlog_warn("The unkown command.\n");
+			return -1;
+		  }
+			
+		   
+	}
+
+	return 0;
+	
+}
+
+
+
 static struct rtadv *
 rtadv_new (void)
 {
@@ -212,8 +1007,15 @@ rtadv_send_packet (int sock, struct interface *ifp)
   rtadv->nd_ra_type = ND_ROUTER_ADVERT;
   rtadv->nd_ra_code = 0;
   rtadv->nd_ra_cksum = 0;
+#if 0  /*gujd : 2012-05-29,am 9:53 . Change  for IPv6 Ready Test.*/
+  if(zif->rtadv.AdvCurHopLimit != 0)
+  	rtadv->nd_ra_curhoplimit = htonl(zif->rtadv.AdvCurHopLimit);
+  else
+    rtadv->nd_ra_curhoplimit = 64;
+#else
+	rtadv->nd_ra_curhoplimit = htonl(zif->rtadv.AdvCurHopLimit);
+#endif
 
-  rtadv->nd_ra_curhoplimit = 64;
   rtadv->nd_ra_flags_reserved = 0;
   if (zif->rtadv.AdvManagedFlag)
     rtadv->nd_ra_flags_reserved |= ND_RA_FLAG_MANAGED;
@@ -221,9 +1023,18 @@ rtadv_send_packet (int sock, struct interface *ifp)
     rtadv->nd_ra_flags_reserved |= ND_RA_FLAG_OTHER;
   if (zif->rtadv.AdvHomeAgentFlag)
     rtadv->nd_ra_flags_reserved |= ND_RA_FLAG_HOME_AGENT;
-  rtadv->nd_ra_router_lifetime = htons (zif->rtadv.AdvDefaultLifetime);
+  /*gujd : 2012-05-29,am 9:53 . Change for IPv6 Ready Test.*/
+  if (zif->rtadv.AdvSendAdvertisements)
+  	rtadv->nd_ra_router_lifetime = htons (zif->rtadv.AdvDefaultLifetime);
+  else
+  	rtadv->nd_ra_router_lifetime = htons (0);
+  
   rtadv->nd_ra_reachable = htonl (zif->rtadv.AdvReachableTime);
-  rtadv->nd_ra_retransmit = htonl (0);
+  /*gujd : 2012-05-29,am 9:53 . Change for IPv6 Ready Test.*/
+  if(zif->rtadv.AdvRetransTimer != 0)
+  	rtadv->nd_ra_retransmit = htonl(zif->rtadv.AdvRetransTimer);
+  else
+  	rtadv->nd_ra_retransmit = htonl (0);
 
   len = sizeof (struct nd_router_advert);
 
@@ -248,6 +1059,18 @@ rtadv_send_packet (int sock, struct interface *ifp)
       ndopt_adv->nd_opt_ai_reserved = 0;
       ndopt_adv->nd_opt_ai_interval = htonl(zif->rtadv.MaxRtrAdvInterval);
       len += sizeof(struct nd_opt_adv_interval);
+    }
+  /*gujd : 2012-05-29,am 9:53 . Add for IPv6 Ready Test.*/
+  if(zif->rtadv.AdvLinkMtuOption)
+  	{
+      struct nd_opt_adv_interval *ndopt_adv = 
+	(struct nd_opt_adv_interval *)(buf + len);
+      ndopt_adv->nd_opt_ai_type = ND_OPT_ADV_LINKMTU;
+      ndopt_adv->nd_opt_ai_len = 1;
+      ndopt_adv->nd_opt_ai_reserved = 0;
+      ndopt_adv->nd_opt_ai_interval = htonl(zif->rtadv.AdvLinkMTU);
+      len += sizeof(struct nd_opt_adv_interval);
+	 /* zlog_debug("packet have mtu option. \n");*/
     }
 
   /* Fill in prefix. */
@@ -350,12 +1173,12 @@ rtadv_timer (struct thread *thread)
   if (rtadv->adv_msec_if_count == 0)
     {
       period = 1000; /* 1 s */
-      rtadv_event (RTADV_TIMER, 1 /* 1 s */);
+      rtadv_event (RTADV_TIMER, 1 /* 1 s */,NULL);
     } 
   else
     {
       period = 10; /* 10 ms */
-      rtadv_event (RTADV_TIMER_MSEC, 10 /* 10 ms */);
+      rtadv_event (RTADV_TIMER_MSEC, 10 /* 10 ms */,NULL);
     }
 
   for (ALL_LIST_ELEMENTS (iflist, node, nnode, ifp))
@@ -379,19 +1202,115 @@ rtadv_timer (struct thread *thread)
   return 0;
 }
 
+/*gujd : 2012-05-29,am 9:53 . Add for IPv6 Ready Test. Before stop must send one packet out .*/
+/*like timer*/
+int
+rtadv_stop_pre_send_one_packet (struct interface *ifp)
+{
+  struct listnode *node, *nnode;
+  struct zebra_if *zif;
+  int period;
+
+  rtadv->ra_timer = NULL;
+  if (rtadv->adv_msec_if_count == 0)
+    {
+      period = 1000; /* 1 s */
+    } 
+  else
+    {
+      period = 10; /* 10 ms */
+    }
+  
+  if(RTM_DEBUG_RTADV)
+ 	 zlog_info(" begin to send packet.\n");
+
+      zif = ifp->info;
+	  zlog_info("%s: AdvSendAdvertisements is %d .\n",__func__,zif->rtadv.AdvSendAdvertisements);
+   /* if (zif->rtadv.AdvSendAdvertisements)*/
+	{ 
+	  zif->rtadv.AdvIntervalTimer -= period;
+	  if (zif->rtadv.AdvIntervalTimer <= 0)
+	    {
+	      zif->rtadv.AdvIntervalTimer = zif->rtadv.MaxRtrAdvInterval;
+				if (if_is_operative (ifp))
+				{
+				   if(RTM_DEBUG_RTADV)
+					 zlog_info(" sending packet .\n");
+					rtadv_send_packet (rtadv->sock, ifp);
+				}
+		}
+    }
+  
+  if(RTM_DEBUG_RTADV)
+  	zlog_info(" send packet over !\n");
+  
+  if_leave_all_router (rtadv->sock, ifp);
+  rtadv_event(RTADV_STOP,0,NULL);/*to stop*/
+  return 0;
+}
+
+/*gujd : 2012-05-29,am 9:53 . Change for IPv6 Ready Test.*/
 static void
 rtadv_process_solicit (struct interface *ifp)
 {
-	if(HAVE_RTADR_DEBUG)
-  	zlog_info ("Router solicitation received on %s", ifp->name);
-	if (if_is_operative (ifp))
-		rtadv_send_packet (rtadv->sock, ifp);
+	long int value = 0;
+	
+	struct zebra_if *zif;
+
+	zif = ifp->info;
+	
+	if(RTM_DEBUG_RTADV)
+  	  zlog_info ("Router solicitation received on %s", ifp->name);
+	
+	this_time.tv_sec = quagga_gettimeofday_only_second(this_time);
+	if(RTM_DEBUG_RTADV)
+	  zlog_info("%s: send before, this time is (%u), last time is %u \n",__func__,this_time.tv_sec,zif->time_memory.tv_sec);
+  /*value = this_time.tv_sec - last_time.tv_sec;*/
+	value = this_time.tv_sec - zif->time_memory.tv_sec;
+
+	if(RTM_DEBUG_RTADV)
+	  zlog_info("%s : this_time - last_time = value(%ld) \n",__func__,value);
+	value = labs(value);
+	if(RTM_DEBUG_RTADV)
+	  zlog_info("%s :  labs(value) = %ld .\n",__func__,value);
+	if(value >= ND_ADVER_SEND_PACKET_INTERVAL)
+	{
+	   if (if_is_operative (ifp))
+	   	{
+		 rtadv_send_packet (rtadv->sock, ifp);
+	  /*  last_time.tv_sec = quagga_gettimeofday_only_second(last_time);	*/	 
+		 zif->time_memory.tv_sec = quagga_gettimeofday_only_second(zif->time_memory);
+		 if(RTM_DEBUG_RTADV)
+		   zlog_info("%s: send over,this time is %u , last time is (%u) .\n",__func__,this_time.tv_sec,zif->time_memory.tv_sec);
+	   	}
+	}
+	else
+	{
+		if(RTM_DEBUG_RTADV)
+		  zlog_info("%s: to set timer, this time is %u , last time is (%u). \n",__func__,this_time.tv_sec,zif->time_memory.tv_sec);
+	  /* value = value*1000 + 500;*/
+		rtadv->ra_timer_send = NULL;
+		rtadv_event (RTADV_TIMER_MSEC_IF, 3000,ifp);/*ms*/
+	}
+		
+}
+
+/*gujd : 2012-05-29,am 9:53 . Add for IPv6 Ready Test. Used for set timer to send packet .*/
+static int
+rtadv_timer_send_packet (struct thread *thread)
+{
+  struct interface *ifp = THREAD_ARG(thread);
+  
+  rtadv->ra_timer_send = NULL;
+  rtadv_process_solicit(ifp);
+
+  return 0;
 }
 
 static void
 rtadv_process_advert (void)
 {
-	if(HAVE_RTADR_DEBUG)
+	if(RTM_DEBUG_RTADV)
 		zlog_info ("Router advertisement received");
 }
 
@@ -463,10 +1382,16 @@ rtadv_read (struct thread *thread)
   int hoplimit = -1;
 
   sock = THREAD_FD (thread);
+  
+  if(sock<=0)
+  {
+	  zlog_warn ("In func %s get THREAD_FD error\n",__func__);
+	  return -1;
+  }
   rtadv->ra_read = NULL;
 
   /* Register myself. */
-  rtadv_event (RTADV_READ, sock);
+  rtadv_event (RTADV_READ, sock,NULL);
 
   len = rtadv_recv_packet (sock, buf, BUFSIZ, &from, &ifindex, &hoplimit);
 
@@ -639,6 +1564,495 @@ rtadv_prefix_reset (struct zebra_if *zif, struct rtadv_prefix *rp)
     return 0;
 }
 
+/*gujd : 2012-05-29,am 9:53 . Add for IPv6 Ready Test.*/
+
+DEFUN (ipv6_nd_ra_link_mtu,
+       ipv6_nd_ra_link_mtu_cmd,
+       "ipv6 nd ra-link-mtu <0-1500>",
+       "Interface IPv6 config commands\n"
+       "Neighbor discovery\n"
+       "Router Advertisement link mtu \n"
+       "Router Advertisement link mtu value between <0-1500>\n")
+{
+  struct interface *ifp;
+  struct zebra_if *zif;
+  int value = 0;
+
+#if 0
+			ifp = (struct interface *) vty->index;
+#else
+			ifp = if_get_by_vty_index(vty->index);
+			if(NULL == ifp)
+			{
+				vty_out (vty, "%% Interface %s does not exist%s", (char*)(vty->index), VTY_NEWLINE);
+				return CMD_WARNING;
+			}
+#endif
+
+  zif = ifp->info;
+
+  value = atoi (argv[0]);
+
+  if (value < 0 || value > 1500)
+    {
+      vty_out (vty, "Invalid Router Advertisement link MTU between <0-1500>%s", VTY_NEWLINE);
+      return CMD_WARNING;
+    }
+
+  zif->rtadv.AdvLinkMTU = value;
+  if(value > 0)
+    zif->rtadv.AdvLinkMtuOption = 1;
+  else
+  	zif->rtadv.AdvLinkMtuOption = 0;
+  
+  /*gujd : 2013-05-13, Add IPv6 rtadv info update for other boards.*/
+  tipc_master_rtadv_nd_info_update(ifp);
+  
+  return CMD_SUCCESS;
+}
+
+
+
+DEFUN (no_ipv6_nd_ra_link_mtu,
+       no_ipv6_nd_ra_link_mtu_cmd,
+       "no ipv6 nd ra-link-mtu",
+       "Interface IPv6 config commands\n"
+       "Neighbor discovery\n"
+       "Router Advertisement link mtu \n"
+       "Router Advertisement link mtu value between \n")
+{
+  struct interface *ifp;
+  struct zebra_if *zif;
+
+#if 0
+			ifp = (struct interface *) vty->index;
+#else
+			ifp = if_get_by_vty_index(vty->index);
+			if(NULL == ifp)
+			{
+				vty_out (vty, "%% Interface %s does not exist%s", (char*)(vty->index), VTY_NEWLINE);
+				return CMD_WARNING;
+			}
+#endif
+
+  zif = ifp->info;
+
+  zif->rtadv.AdvLinkMTU = 0;
+  zif->rtadv.AdvLinkMtuOption = 0;
+  
+  /*gujd : 2013-05-13, Add IPv6 rtadv info update for other boards.*/
+  tipc_master_rtadv_nd_info_update(ifp);
+  
+  return CMD_SUCCESS;
+}
+
+DEFUN (ipv6_nd_ra_retrans_time,
+       ipv6_nd_ra_retrans_time_cmd,
+       "ipv6 nd ra-retrans-time SECONDS",
+       "Interface IPv6 config commands\n"
+       "Neighbor discovery\n"
+       "Router Advertisement retrans time \n"
+       "Router Advertisement time interval in seconds\n")
+{
+  u_int32_t interval ;
+  struct interface *ifp;
+  struct zebra_if *zif;
+
+#if 0
+			ifp = (struct interface *) vty->index;
+#else
+			ifp = if_get_by_vty_index(vty->index);
+			if(NULL == ifp)
+			{
+				vty_out (vty, "%% Interface %s does not exist%s", (char*)(vty->index), VTY_NEWLINE);
+				return CMD_WARNING;
+			}
+#endif
+
+  zif = ifp->info;
+
+ /* interval = atoi (argv[0]);*/
+ interval = (u_int32_t) strtoll (argv[0],(char **)NULL, 10);
+
+  if (interval < 0)
+    {
+      vty_out (vty, "Invalid Router min Advertisement Interval%s", VTY_NEWLINE);
+      return CMD_WARNING;
+    }
+
+/* convert to milliseconds */
+  interval = interval * 1000; 
+  zif->rtadv.AdvRetransTimer = interval;
+  
+  /*gujd : 2013-05-13, Add IPv6 rtadv info update for other boards.*/
+  tipc_master_rtadv_nd_info_update(ifp);
+  
+  return CMD_SUCCESS;
+}
+//////////////////////////////////////////////////////////////
+DEFUN (ipv6_nd_ra_retrans_time_ms,
+       ipv6_nd_ra_retrans_time_ms_cmd,
+       "ipv6 nd ra-retrans-time msec MSECONDS",
+       "Interface IPv6 config commands\n"
+       "Neighbor discovery\n"
+       "Router Advertisement retrans time \n"
+       "Router Advertisement time interval in seconds\n")
+{
+  u_int32_t interval = 0;
+  struct interface *ifp;
+  struct zebra_if *zif;  
+  unsigned char cmd[BUFFER_LEN] = {0};
+  int ret=CMD_SUCCESS;
+
+#if 0
+			ifp = (struct interface *) vty->index;
+#else
+			ifp = if_get_by_vty_index(vty->index);
+			if(NULL == ifp)
+			{
+				vty_out (vty, "%% Interface %s does not exist%s", (char*)(vty->index), VTY_NEWLINE);
+				return CMD_WARNING;
+			}
+#endif
+
+  zif = ifp->info;
+
+/*  interval = atoi (argv[0]);*/
+  interval = (u_int32_t) strtoll (argv[0],(char **)NULL, 10);
+
+  if (interval < 0)
+    {
+      vty_out (vty, "Invalid Router min Advertisement Interval%s", VTY_NEWLINE);
+      return CMD_WARNING;
+    }
+
+ /* convert to milliseconds */
+ /* interval = interval * 1000; */
+  zif->rtadv.AdvRetransTimer = interval;
+
+  /*To change the system file :/proc/sys/net/ipv6/neigh/xxx/retrans_time_ms .*/
+  if (zif->rtadv.AdvRetransTimer > 0)
+	{
+	  snprintf(cmd,BUFFER_LEN,"sudo sysctl -w net.ipv6.neigh.%s.retrans_time_ms=%u", ifp->name, zif->rtadv.AdvRetransTimer);
+	  cmd[BUFFER_LEN - 1] = '\0';
+	  ret = system(cmd);
+	  ret = WEXITSTATUS(ret);
+				  
+	  if(CMD_SUCCESS != ret )
+	  {
+		  vty_out(vty,"Modify Interface RetransTime fail%s", VTY_NEWLINE);
+		  return CMD_WARNING;
+	  }
+	}  
+  
+  /*gujd : 2013-05-13, Add IPv6 rtadv info update for other boards.*/
+  tipc_master_rtadv_nd_info_update(ifp);
+  
+  return CMD_SUCCESS;
+}
+
+//////////////////////////////////////////////////////
+DEFUN (no_ipv6_nd_ra_retrans_time_ms,
+       no_ipv6_nd_ra_retrans_time_ms_cmd,
+       "no ipv6 nd ra-retrans-time",
+       "Interface IPv6 config commands\n"
+       "Neighbor discovery\n"
+       "Router Advertisement retrans time \n"
+       "Router Advertisement time interval in seconds\n")
+{
+  u_int32_t interval = 0;
+  struct interface *ifp;
+  struct zebra_if *zif;
+  unsigned char cmd[BUFFER_LEN] = {0};
+  int ret=CMD_SUCCESS;
+
+#if 0
+			ifp = (struct interface *) vty->index;
+#else
+			ifp = if_get_by_vty_index(vty->index);
+			if(NULL == ifp)
+			{
+				vty_out (vty, "%% Interface %s does not exist%s", (char*)(vty->index), VTY_NEWLINE);
+				return CMD_WARNING;
+			}
+#endif
+
+  zif = ifp->info;
+
+  zif->rtadv.AdvRetransTimer = 1000;/*default : 1000ms*/
+
+  /*To change the system file :/proc/sys/net/ipv6/neigh/xxx/retrans_time_ms .*/
+  if (zif->rtadv.AdvRetransTimer > 0)
+  {
+  	snprintf(cmd,BUFFER_LEN,"sudo sysctl -w net.ipv6.neigh.%s.retrans_time_ms=%d", ifp->name, zif->rtadv.AdvRetransTimer);
+	cmd[BUFFER_LEN - 1] = '\0';
+	ret = system(cmd);
+	ret = WEXITSTATUS(ret);
+				
+	if(CMD_SUCCESS != ret )
+	{
+		vty_out(vty,"Modify Interface RetransTime fail%s", VTY_NEWLINE);
+		return CMD_WARNING;
+	}
+  } 
+  
+  /*gujd : 2013-05-13, Add IPv6 rtadv info update for other boards.*/
+  tipc_master_rtadv_nd_info_update(ifp);
+  
+  return CMD_SUCCESS;
+}
+
+#if 0
+DEFUN (no_ipv6_nd_ra_retrans_time,
+       no_ipv6_nd_ra_retrans_time_cmd,
+       "no ipv6 nd ra-retrans-time",
+       "Interface IPv6 config commands\n"
+       "Neighbor discovery\n"
+       "Router Advertisement retrans time \n"
+       "Router Advertisement time interval in seconds\n")
+{
+  u_int32_t interval;
+  struct interface *ifp;
+  struct zebra_if *zif;
+
+#if 0
+			ifp = (struct interface *) vty->index;
+#else
+			ifp = if_get_by_vty_index(vty->index);
+			if(NULL == ifp)
+			{
+				vty_out (vty, "%% Interface %s does not exist%s", (char*)(vty->index), VTY_NEWLINE);
+				return CMD_WARNING;
+			}
+#endif
+
+  zif = ifp->info;
+
+  zif->rtadv.AdvRetransTimer = 0;
+  
+  return CMD_SUCCESS;
+}
+#endif
+//////////////////////////////////////////////////
+DEFUN (ipv6_nd_adv_cur_hop_limit,
+       ipv6_nd_adv_cur_hop_limit_cmd,
+       "ipv6 nd adv-curhoplimt <0-255>",
+       "Interface IPv6 config commands\n"
+       "Neighbor discovery\n"
+       "Router Advertisement current hop limit\n"
+       "Router Advertisement hop limit betwween <0-255>\n")
+{
+  int hoplimt;
+  struct interface *ifp;
+  struct zebra_if *zif;
+  unsigned char cmd[BUFFER_LEN] = {0};
+  int ret=CMD_SUCCESS;
+
+#if 0
+			ifp = (struct interface *) vty->index;
+#else
+			ifp = if_get_by_vty_index(vty->index);
+			if(NULL == ifp)
+			{
+				vty_out (vty, "%% Interface %s does not exist%s", (char*)(vty->index), VTY_NEWLINE);
+				return CMD_WARNING;
+			}
+
+#endif
+
+  zif = ifp->info;
+
+  hoplimt = atoi (argv[0]);
+
+  if (hoplimt < 0 || hoplimt > 255)
+    {
+      vty_out (vty, "Invalid AdvCurHopLimit between <0--255> .%s", VTY_NEWLINE);
+      return CMD_WARNING;
+    }
+  
+  zif->rtadv.AdvCurHopLimit = hoplimt;
+  /*To change the system file :/proc/sys/net/ipv6/conf/xxxx/hop_limit .*/
+  if (zif->rtadv.AdvCurHopLimit > 0)
+  {
+  	snprintf(cmd,BUFFER_LEN,"sudo sysctl -w net.ipv6.conf.%s.hop_limit=%d", ifp->name, zif->rtadv.AdvCurHopLimit);
+	cmd[BUFFER_LEN - 1] = '\0';
+	ret = system(cmd);
+	ret = WEXITSTATUS(ret);
+				
+	if(CMD_SUCCESS != ret )
+	{
+		vty_out(vty,"Modify Interface Hoplimit fail%s", VTY_NEWLINE);
+		return CMD_WARNING;
+	}
+  }
+  
+  /*gujd : 2013-05-13, Add IPv6 rtadv info update for other boards.*/
+  tipc_master_rtadv_nd_info_update(ifp);
+
+  return CMD_SUCCESS;
+}
+
+DEFUN (no_ipv6_nd_adv_cur_hop_limit,
+       no_ipv6_nd_adv_cur_hop_limit_cmd,
+       "no ipv6 nd adv-curhoplimt",
+       "Interface IPv6 config commands\n"
+       "Neighbor discovery\n"
+       "Router Advertisement current hop limit\n"
+       "Router Advertisement hop limit betwween <0-255>\n")
+{
+  int hoplimt;
+  struct interface *ifp;
+  struct zebra_if *zif;
+  unsigned char cmd[BUFFER_LEN] = {0};
+  int ret=CMD_SUCCESS;
+
+#if 0
+			ifp = (struct interface *) vty->index;
+#else
+			ifp = if_get_by_vty_index(vty->index);
+			if(NULL == ifp)
+			{
+				vty_out (vty, "%% Interface %s does not exist%s", (char*)(vty->index), VTY_NEWLINE);
+				return CMD_WARNING;
+			}
+
+#endif
+
+  zif = ifp->info;
+  
+  zif->rtadv.AdvCurHopLimit = 64;/*default : 64*/
+  
+  /*To change the system file :/proc/sys/net/ipv6/conf/xxxx/hop_limit .*/
+  if (zif->rtadv.AdvCurHopLimit > 0)
+  {
+  	snprintf(cmd,BUFFER_LEN,"sudo sysctl -w net.ipv6.conf.%s.hop_limit=%d", ifp->name, zif->rtadv.AdvCurHopLimit);
+	cmd[BUFFER_LEN - 1] = '\0';
+	ret = system(cmd);
+	ret = WEXITSTATUS(ret);
+				
+	if(CMD_SUCCESS != ret )
+	{
+		vty_out(vty,"Modify Interface Hoplimit fail%s", VTY_NEWLINE);
+		return CMD_WARNING;
+	}
+  }
+  
+  /*gujd : 2013-05-13, Add IPv6 rtadv info update for other boards.*/
+  tipc_master_rtadv_nd_info_update(ifp);
+
+  return CMD_SUCCESS;
+}
+
+
+DEFUN (ipv6_nd_ra_min_interval,
+       ipv6_nd_ra_min_interval_cmd,
+       "ipv6 nd ra-min-interval SECONDS",
+       "Interface IPv6 config commands\n"
+       "Neighbor discovery\n"
+       "Router Advertisement interval\n"
+       "Router Advertisement interval in seconds\n")
+{
+  int interval;
+  struct interface *ifp;
+  struct zebra_if *zif;
+  int value = 0;
+
+#if 0
+			ifp = (struct interface *) vty->index;
+#else
+			ifp = if_get_by_vty_index(vty->index);
+			if(NULL == ifp)
+			{
+				vty_out (vty, "%% Interface %s does not exist%s", (char*)(vty->index), VTY_NEWLINE);
+				return CMD_WARNING;
+			}
+#endif
+
+  zif = ifp->info;
+
+  interval = atoi (argv[0]);
+
+  if (interval <= 0)
+    {
+      vty_out (vty, "Invalid Router min Advertisement Interval%s", VTY_NEWLINE);
+      return CMD_WARNING;
+    }
+#if 0
+  if (zif->rtadv.MaxRtrAdvInterval % 1000)
+    rtadv->adv_msec_if_count--;
+	
+  /* convert to milliseconds */
+  interval = interval * 1000; 
+	
+  zif->rtadv.MaxRtrAdvInterval = interval;
+  zif->rtadv.MinRtrAdvInterval = 0.33 * interval;
+  zif->rtadv.AdvIntervalTimer = 0;
+#else
+/* convert to milliseconds */
+  interval = interval * 1000; 
+  value = 0.75 * zif->rtadv.MaxRtrAdvInterval;
+  
+  if(interval < 3000 || interval > value)/*3s -- 0.75*max */
+  	{
+  		vty_out(vty,"The argument of min Advertisement Interval between (3--0.75*max).%s",VTY_NEWLINE);
+		return CMD_WARNING;
+  	}
+ 	zif->rtadv.MinRtrAdvInterval = interval;
+	zif->rtadv.AdvIntervalTimer = 0;
+
+#endif
+  /*gujd : 2013-05-13, Add IPv6 rtadv info update for other boards.*/
+  tipc_master_rtadv_nd_info_update(ifp);
+
+  return CMD_SUCCESS;
+}
+
+DEFUN (no_ipv6_nd_ra_min_interval,
+       no_ipv6_nd_ra_min_interval_cmd,
+       "no ipv6 nd ra-min-interval",
+       NO_STR
+       "Interface IPv6 config commands\n"
+       "Neighbor discovery\n"
+       "Router Advertisement interval\n")
+{
+  struct interface *ifp;
+  struct zebra_if *zif;
+
+#if 0
+			ifp = (struct interface *) vty->index;
+#else
+			ifp = if_get_by_vty_index(vty->index);
+			if(NULL == ifp)
+			{
+				vty_out (vty, "%% Interface %s does not exist%s", (char*)(vty->index), VTY_NEWLINE);
+				return CMD_WARNING;
+			}
+#endif
+
+  zif = ifp->info;
+#if 0
+  if (zif->rtadv.MaxRtrAdvInterval % 1000)
+    rtadv->adv_msec_if_count--;
+  
+  zif->rtadv.MaxRtrAdvInterval = RTADV_MAX_RTR_ADV_INTERVAL;
+  zif->rtadv.MinRtrAdvInterval = RTADV_MIN_RTR_ADV_INTERVAL;
+  zif->rtadv.AdvIntervalTimer = zif->rtadv.MaxRtrAdvInterval;
+#else
+ /* if (zif->rtadv.MaxRtrAdvInterval % 1000)
+    rtadv->adv_msec_if_count--;
+ */ 
+ /* zif->rtadv.MaxRtrAdvInterval = RTADV_MAX_RTR_ADV_INTERVAL;*/
+  zif->rtadv.MinRtrAdvInterval = RTADV_MIN_RTR_ADV_INTERVAL;
+  zif->rtadv.AdvIntervalTimer = zif->rtadv.MaxRtrAdvInterval;
+
+#endif
+  /*gujd : 2013-05-13, Add IPv6 rtadv info update for other boards.*/
+  tipc_master_rtadv_nd_info_update(ifp);
+
+  return CMD_SUCCESS;
+}
+/**gujd : Add for IPv6 Ready Test.----end---**/
+
 DEFUN (ipv6_nd_suppress_ra,
        ipv6_nd_suppress_ra_cmd,
        "ipv6 nd suppress-ra",
@@ -668,17 +2082,42 @@ DEFUN (ipv6_nd_suppress_ra,
       vty_out (vty, "Invalid interface%s", VTY_NEWLINE);
       return CMD_WARNING;
     }
-
+  
+  /*gujd : 2012-05-29,am 9:53 . Change for IPv6 Ready Test.*/
+  if(RTM_DEBUG_RTADV)
+    zlog_info("%s: line %d, AdvSendAdvertisements is %d .\n",__func__,__LINE__,zif->rtadv.AdvSendAdvertisements);
   if (zif->rtadv.AdvSendAdvertisements)
     {
       zif->rtadv.AdvSendAdvertisements = 0;
       zif->rtadv.AdvIntervalTimer = 0;
-      rtadv->adv_if_count--;
+    /*  rtadv->adv_if_count--;*/
+      rtadv->adv_if_count = 0;
+#if 1 
+	 /*gujd: 2013-05-14, pm 4:14 . Add code for ipv6 nd suppress ra (enable) for Distribute System.*/
+	 if(product && product->board_type == BOARD_IS_ACTIVE_MASTER)
+	 {
+	   tipc_master_interface_nd_suppress_ra_deal(ZEBRA_INTERFACE_ND_SUPPRESS_RA_ENABLE,ifp);
+	   }
+ #endif
 
-      if_leave_all_router (rtadv->sock, ifp);
-
+ 	/*  if_leave_all_router (rtadv->sock, ifp);*/
+	if(RTM_DEBUG_RTADV)
+	 zlog_info("%s:line %d, adv_if_count is %d .\n",__func__,__LINE__,rtadv->adv_if_count);
       if (rtadv->adv_if_count == 0)
-	rtadv_event (RTADV_STOP, 0);
+      {
+     	/* zif->rtadv.AdvDefaultLifetime = 0;*/
+		if(RTM_DEBUG_RTADV)
+		 zlog_info("to RTADV_STOP_PRE \n");
+		/*rtadv_event (RTADV_STOP_PRE, 0,NULL);*/
+		rtadv_stop_pre_send_one_packet(ifp);
+      	}
+	 #if 0 
+	  /*gujd: 2013-05-14, pm 4:14 . Add code for ipv6 nd suppress ra (enable) for Distribute System.*/
+	  if(product && product->board_type == BOARD_IS_ACTIVE_MASTER)
+	  {
+	  	tipc_master_interface_nd_suppress_ra_deal(ZEBRA_INTERFACE_ND_SUPPRESS_RA_ENABLE,ifp);
+	  	}
+	  #endif
     }
 
   return CMD_SUCCESS;
@@ -714,17 +2153,28 @@ DEFUN (no_ipv6_nd_suppress_ra,
       vty_out (vty, "Invalid interface%s", VTY_NEWLINE);
       return CMD_WARNING;
     }
+  
+  if(RTM_DEBUG_RTADV)
+  	zlog_info("%s: AdvSendAdvertisements is %d .\n",__func__,zif->rtadv.AdvSendAdvertisements);
 
   if (! zif->rtadv.AdvSendAdvertisements)
     {
       zif->rtadv.AdvSendAdvertisements = 1;
       zif->rtadv.AdvIntervalTimer = 0;
-      rtadv->adv_if_count++;
+   /*  rtadv->adv_if_count++;*/
+	  rtadv->adv_if_count = 1;/*gujd : 2012-05-29,pm 9:53 . Change for IPv6 Ready Test.*/
 
       if_join_all_router (rtadv->sock, ifp);
-
+	  if(RTM_DEBUG_RTADV)
+	 	 zlog_info("%s: adv_if_count is %d .\n",__func__,rtadv->adv_if_count);
       if (rtadv->adv_if_count == 1)
-	rtadv_event (RTADV_START, rtadv->sock);
+	    rtadv_event (RTADV_START, rtadv->sock,NULL);
+
+	  /*gujd: 2013-05-14, pm 4:14 . Add code for ipv6 nd suppress ra (disable) for Distribute System.*/
+	  if(product && product->board_type == BOARD_IS_ACTIVE_MASTER)
+	  {
+	  	tipc_master_interface_nd_suppress_ra_deal(ZEBRA_INTERFACE_ND_SUPPRESS_RA_DISABLE,ifp);
+	  	}
     }
 
   return CMD_SUCCESS;
@@ -758,21 +2208,24 @@ DEFUN (ipv6_nd_ra_interval_msec,
 
   interval = atoi (argv[0]);
 
-  if (interval <= 0)
+  if (interval <= 0 || interval > 1800000)
     {
       vty_out (vty, "Invalid Router Advertisement Interval%s", VTY_NEWLINE);
       return CMD_WARNING;
     }
 
   if (zif->rtadv.MaxRtrAdvInterval % 1000)
-    rtadv->adv_msec_if_count--;
+    rtadv->adv_msec_if_count--;///////////////////////////
 
   if (interval % 1000)
     rtadv->adv_msec_if_count++;
   
   zif->rtadv.MaxRtrAdvInterval = interval;
   zif->rtadv.MinRtrAdvInterval = 0.33 * interval;
-  zif->rtadv.AdvIntervalTimer = 0;
+  /*zif->rtadv.AdvIntervalTimer = 0;*//*gujd : change for IPv6 Ready Test*/
+
+  /*gujd : 2013-05-13, Add IPv6 rtadv info update for other boards.*/
+  tipc_master_rtadv_nd_info_update(ifp);
 
   return CMD_SUCCESS;
 }
@@ -804,7 +2257,7 @@ DEFUN (ipv6_nd_ra_interval,
 
   interval = atoi (argv[0]);
 
-  if (interval <= 0)
+  if (interval <= 0 || interval >1800)
     {
       vty_out (vty, "Invalid Router Advertisement Interval%s", VTY_NEWLINE);
       return CMD_WARNING;
@@ -818,7 +2271,10 @@ DEFUN (ipv6_nd_ra_interval,
 	
   zif->rtadv.MaxRtrAdvInterval = interval;
   zif->rtadv.MinRtrAdvInterval = 0.33 * interval;
-  zif->rtadv.AdvIntervalTimer = 0;
+  /*zif->rtadv.AdvIntervalTimer = 0;*//*gujd : change for IPv6 Ready Test*/
+  
+  /*gujd : 2013-05-13, Add IPv6 rtadv info update for other boards.*/
+  tipc_master_rtadv_nd_info_update(ifp);
 
   return CMD_SUCCESS;
 }
@@ -852,7 +2308,10 @@ DEFUN (no_ipv6_nd_ra_interval,
   
   zif->rtadv.MaxRtrAdvInterval = RTADV_MAX_RTR_ADV_INTERVAL;
   zif->rtadv.MinRtrAdvInterval = RTADV_MIN_RTR_ADV_INTERVAL;
-  zif->rtadv.AdvIntervalTimer = zif->rtadv.MaxRtrAdvInterval;
+  /*zif->rtadv.AdvIntervalTimer = zif->rtadv.MaxRtrAdvInterval;*//*gujd : change for IPv6 Ready Test*/
+  
+  /*gujd : 2013-05-13, Add IPv6 rtadv info update for other boards.*/
+  tipc_master_rtadv_nd_info_update(ifp);
 
   return CMD_SUCCESS;
 }
@@ -884,13 +2343,17 @@ DEFUN (ipv6_nd_ra_lifetime,
 
   lifetime = atoi (argv[0]);
 
-  if (lifetime < 0 || lifetime > 0xffff)
+ /* if (lifetime < 0 || lifetime > 0xffff)*//*gujd : change for IPv6 Ready Test*/
+  if (lifetime < 0 || lifetime > 9000)
     {
       vty_out (vty, "Invalid Router Lifetime%s", VTY_NEWLINE);
       return CMD_WARNING;
     }
 
   zif->rtadv.AdvDefaultLifetime = lifetime;
+  
+  /*gujd : 2013-05-13, Add IPv6 rtadv info update for other boards.*/
+  tipc_master_rtadv_nd_info_update(ifp);
 
   return CMD_SUCCESS;
 }
@@ -920,6 +2383,9 @@ DEFUN (no_ipv6_nd_ra_lifetime,
   zif = ifp->info;
 
   zif->rtadv.AdvDefaultLifetime = RTADV_ADV_DEFAULT_LIFETIME;
+  
+  /*gujd : 2013-05-13, Add IPv6 rtadv info update for other boards.*/
+  tipc_master_rtadv_nd_info_update(ifp);
 
   return CMD_SUCCESS;
 }
@@ -935,6 +2401,8 @@ DEFUN (ipv6_nd_reachable_time,
   u_int32_t rtime;
   struct interface *ifp;
   struct zebra_if *zif;
+  unsigned char cmd[BUFFER_LEN] = {0};
+  int ret=CMD_SUCCESS;
 
 #if 0
 			ifp = (struct interface *) vty->index;
@@ -958,6 +2426,24 @@ DEFUN (ipv6_nd_reachable_time,
     }
 
   zif->rtadv.AdvReachableTime = rtime;
+  
+  /*To change the system file :/proc/sys/net/ipv6/neigh/xxx/base_reachable_time_ms .*/
+  if (zif->rtadv.AdvReachableTime > 0 && zif->rtadv.AdvReachableTime <= 0x7fffffff)
+	{
+	  snprintf(cmd,BUFFER_LEN,"sudo sysctl -w net.ipv6.neigh.%s.base_reachable_time_ms=%d", ifp->name, zif->rtadv.AdvReachableTime);
+	  cmd[BUFFER_LEN - 1] = '\0';
+	  ret = system(cmd);
+	  ret = WEXITSTATUS(ret);
+				  
+	  if(CMD_SUCCESS != ret )
+	  {
+		  vty_out(vty,"Modify Interface Reachable time fail%s", VTY_NEWLINE);
+		  return CMD_WARNING;
+	  }
+	}
+  
+  /*gujd : 2013-05-13, Add IPv6 rtadv info update for other boards.*/
+  tipc_master_rtadv_nd_info_update(ifp);
 
   return CMD_SUCCESS;
 }
@@ -972,6 +2458,8 @@ DEFUN (no_ipv6_nd_reachable_time,
 {
   struct interface *ifp;
   struct zebra_if *zif;
+  unsigned char cmd[BUFFER_LEN] = {0};
+  int ret=CMD_SUCCESS;
 
 #if 0
 			ifp = (struct interface *) vty->index;
@@ -986,7 +2474,26 @@ DEFUN (no_ipv6_nd_reachable_time,
 
   zif = ifp->info;
 
-  zif->rtadv.AdvReachableTime = 0;
+ /* zif->rtadv.AdvReachableTime = 0;*/
+  zif->rtadv.AdvReachableTime = 30000;/*default : 30000ms = 30s*/
+
+ /*To change the system file :/proc/sys/net/ipv6/neigh/xxx/base_reachable_time_ms .*/
+  if (zif->rtadv.AdvReachableTime > 0)
+  {
+  	snprintf(cmd,BUFFER_LEN,"sudo sysctl -w net.ipv6.neigh.%s.base_reachable_time_ms=%d", ifp->name, zif->rtadv.AdvReachableTime);
+	cmd[BUFFER_LEN - 1] = '\0';
+	ret = system(cmd);
+	ret = WEXITSTATUS(ret);
+				
+	if(CMD_SUCCESS != ret)
+	{
+		vty_out(vty,"Modify Interface Reachable time fail%s", VTY_NEWLINE);
+	   return CMD_WARNING;
+	}
+  }
+  
+  /*gujd : 2013-05-13, Add IPv6 rtadv info update for other boards.*/
+  tipc_master_rtadv_nd_info_update(ifp);
 
   return CMD_SUCCESS;
 }
@@ -1025,6 +2532,9 @@ DEFUN (ipv6_nd_homeagent_preference,
     }
 
   zif->rtadv.HomeAgentPreference = hapref;
+  
+  /*gujd : 2013-05-13, Add IPv6 rtadv info update for other boards.*/
+  tipc_master_rtadv_nd_info_update(ifp);
 
   return CMD_SUCCESS;
 }
@@ -1054,6 +2564,9 @@ DEFUN (no_ipv6_nd_homeagent_preference,
   zif = ifp->info;
 
   zif->rtadv.HomeAgentPreference = 0;
+  
+  /*gujd : 2013-05-13, Add IPv6 rtadv info update for other boards.*/
+  tipc_master_rtadv_nd_info_update(ifp);
 
   return CMD_SUCCESS;
 }
@@ -1092,6 +2605,9 @@ DEFUN (ipv6_nd_homeagent_lifetime,
     }
 
   zif->rtadv.HomeAgentLifetime = ha_ltime;
+  
+  /*gujd : 2013-05-13, Add IPv6 rtadv info update for other boards.*/
+  tipc_master_rtadv_nd_info_update(ifp);
 
   return CMD_SUCCESS;
 }
@@ -1121,6 +2637,9 @@ DEFUN (no_ipv6_nd_homeagent_lifetime,
   zif = ifp->info;
 
   zif->rtadv.HomeAgentLifetime = 0;
+  
+  /*gujd : 2013-05-13, Add IPv6 rtadv info update for other boards.*/
+  tipc_master_rtadv_nd_info_update(ifp);
 
   return CMD_SUCCESS;
 }
@@ -1149,6 +2668,9 @@ DEFUN (ipv6_nd_managed_config_flag,
   zif = ifp->info;
 
   zif->rtadv.AdvManagedFlag = 1;
+  
+  /*gujd : 2013-05-13, Add IPv6 rtadv info update for other boards.*/
+  tipc_master_rtadv_nd_info_update(ifp);
 
   return CMD_SUCCESS;
 }
@@ -1178,6 +2700,9 @@ DEFUN (no_ipv6_nd_managed_config_flag,
   zif = ifp->info;
 
   zif->rtadv.AdvManagedFlag = 0;
+  
+  /*gujd : 2013-05-13, Add IPv6 rtadv info update for other boards.*/
+  tipc_master_rtadv_nd_info_update(ifp);
 
   return CMD_SUCCESS;
 }
@@ -1206,6 +2731,9 @@ DEFUN (ipv6_nd_homeagent_config_flag,
   zif = ifp->info;
 
   zif->rtadv.AdvHomeAgentFlag = 1;
+  
+  /*gujd : 2013-05-13, Add IPv6 rtadv info update for other boards.*/
+  tipc_master_rtadv_nd_info_update(ifp);
 
   return CMD_SUCCESS;
 }
@@ -1235,6 +2763,9 @@ DEFUN (no_ipv6_nd_homeagent_config_flag,
   zif = ifp->info;
 
   zif->rtadv.AdvHomeAgentFlag = 0;
+  
+  /*gujd : 2013-05-13, Add IPv6 rtadv info update for other boards.*/
+  tipc_master_rtadv_nd_info_update(ifp);
 
   return CMD_SUCCESS;
 }
@@ -1263,6 +2794,9 @@ DEFUN (ipv6_nd_adv_interval_config_option,
   zif = ifp->info;
 
   zif->rtadv.AdvIntervalOption = 1;
+  
+  /*gujd : 2013-05-13, Add IPv6 rtadv info update for other boards.*/
+  tipc_master_rtadv_nd_info_update(ifp);
 
   return CMD_SUCCESS;
 }
@@ -1292,6 +2826,9 @@ DEFUN (no_ipv6_nd_adv_interval_config_option,
   zif = ifp->info;
 
   zif->rtadv.AdvIntervalOption = 0;
+  
+  /*gujd : 2013-05-13, Add IPv6 rtadv info update for other boards.*/
+  tipc_master_rtadv_nd_info_update(ifp);
 
   return CMD_SUCCESS;
 }
@@ -1320,6 +2857,9 @@ DEFUN (ipv6_nd_other_config_flag,
   zif = ifp->info;
 
   zif->rtadv.AdvOtherConfigFlag = 1;
+  
+  /*gujd : 2013-05-13, Add IPv6 rtadv info update for other boards.*/
+  tipc_master_rtadv_nd_info_update(ifp);
 
   return CMD_SUCCESS;
 }
@@ -1349,10 +2889,13 @@ DEFUN (no_ipv6_nd_other_config_flag,
   zif = ifp->info;
 
   zif->rtadv.AdvOtherConfigFlag = 0;
+  
+  /*gujd : 2013-05-13, Add IPv6 rtadv info update for other boards.*/
+  tipc_master_rtadv_nd_info_update(ifp);
 
   return CMD_SUCCESS;
 }
-
+/////////////////////////////////////other deal////////////////////////////////////
 DEFUN (ipv6_nd_prefix,
        ipv6_nd_prefix_cmd,
        "ipv6 nd prefix X:X::X:X/M (<0-4294967295>|infinite) "
@@ -1438,6 +2981,11 @@ DEFUN (ipv6_nd_prefix,
     }
 
   rtadv_prefix_set (zebra_if, &rp);
+
+  /*gujd : 2013-05-13, Add IPv6 interface nd prefix update for other boards.
+      Use the parameters of argv[0] and rp .*/
+   tipc_master_interface_nd_prefix_update(ZEBRA_INTERFACE_ND_PREFIX_ADD,ifp,&rp,argv[0]);
+  
 
   return CMD_SUCCESS;
 }
@@ -1630,6 +3178,10 @@ DEFUN (no_ipv6_nd_prefix,
       vty_out (vty, "Malformed IPv6 prefix%s", VTY_NEWLINE);
       return CMD_WARNING;
     }
+  
+  /*gujd : 2013-05-13, Add IPv6 interface nd prefix update for other boards.
+      Use the parameters of argv[0] and rp .*/
+   tipc_master_interface_nd_prefix_update(ZEBRA_INTERFACE_ND_PREFIX_DELETE,ifp,&rp,argv[0]);
 
   ret = rtadv_prefix_reset (zebra_if, &rp);
   if (!ret)
@@ -1674,12 +3226,28 @@ rtadv_config_write (struct vty *vty, struct interface *ifp)
     if (interval != RTADV_MAX_RTR_ADV_INTERVAL)
       vty_out (vty, " ipv6 nd ra-interval %d%s", interval / 1000,
 	     VTY_NEWLINE);
+	/*gujd: 2012-05-29, pm 3:48. Add for IPv6 Ready Test. */
+#if 1
+  if (zif->rtadv.MinRtrAdvInterval != RTADV_MIN_RTR_ADV_INTERVAL && zif->rtadv.MinRtrAdvInterval != 0.33*zif->rtadv.MaxRtrAdvInterval)
+      vty_out (vty, " ipv6 nd ra-min-interval %d%s", zif->rtadv.MinRtrAdvInterval / 1000,
+	     VTY_NEWLINE);
+  if (zif->rtadv.AdvLinkMTU)
+      vty_out (vty, " ipv6 nd ra-link-mtu %d%s", zif->rtadv.AdvLinkMTU,
+	     VTY_NEWLINE);
+   if (zif->rtadv.AdvCurHopLimit != 64)
+      vty_out (vty, " ipv6 nd adv-curhoplimt %d%s", zif->rtadv.AdvCurHopLimit,
+	     VTY_NEWLINE);
+   if (zif->rtadv.AdvRetransTimer != 1000)
+      vty_out (vty, " ipv6 nd ra-retrans-time msec %u%s", zif->rtadv.AdvRetransTimer,
+	     VTY_NEWLINE);
+#endif
 
   if (zif->rtadv.AdvDefaultLifetime != RTADV_ADV_DEFAULT_LIFETIME)
     vty_out (vty, " ipv6 nd ra-lifetime %d%s", zif->rtadv.AdvDefaultLifetime,
 	     VTY_NEWLINE);
 
-  if (zif->rtadv.AdvReachableTime)
+ /* if (zif->rtadv.AdvReachableTime)*/
+  if (zif->rtadv.AdvReachableTime != 30000)
     vty_out (vty, " ipv6 nd reachable-time %d%s", zif->rtadv.AdvReachableTime,
 	     VTY_NEWLINE);
 
@@ -1719,17 +3287,31 @@ rtadv_config_write (struct vty *vty, struct interface *ifp)
 
 
 static void
-rtadv_event (enum rtadv_event event, int val)
+rtadv_event (enum rtadv_event event, int val, void *arg)
 {
   switch (event)
     {
     case RTADV_START:
       if (! rtadv->ra_read)
-	rtadv->ra_read = thread_add_read (zebrad.master, rtadv_read, NULL, val);
+      {
+      	zlog_debug(" to set read .\n");
+		rtadv->ra_read = thread_add_read (zebrad.master, rtadv_read, NULL, val);
+      	}
       if (! rtadv->ra_timer)
 	rtadv->ra_timer = thread_add_event (zebrad.master, rtadv_timer,
 	                                    NULL, 0);
       break;
+	/*gujd : 2012-05-29,pm 9:53 . Add for IPv6 Ready Test.*/	  
+	case RTADV_TIMER_MSEC_IF:
+	  	 if (! rtadv->ra_timer_send)
+	  	 {
+		   if(RTM_DEBUG_RTADV)
+		   	 zlog_info("%s : set timer to send one packet .\n",__func__);
+	       rtadv->ra_timer_send = thread_add_timer_msec(zebrad.master, rtadv_timer_send_packet,
+	                                    arg, val);
+	  	 	}
+	  break;
+	  	
     case RTADV_STOP:
       if (rtadv->ra_timer)
 	{
@@ -1740,6 +3322,12 @@ rtadv_event (enum rtadv_event event, int val)
 	{
 	  thread_cancel (rtadv->ra_read);
 	  rtadv->ra_read = NULL;
+	}
+	/*gujd : 2012-05-29,pm 9:53 . Add for IPv6 Ready Test.*/
+	  if(rtadv->ra_timer_send)
+	 {
+	  thread_cancel (rtadv->ra_timer_send);
+	  rtadv->ra_timer_send = NULL;
 	}
       break;
     case RTADV_TIMER:
@@ -1777,7 +3365,19 @@ rtadv_init (void)
   install_element (INTERFACE_NODE, &no_ipv6_nd_suppress_ra_cmd);
   install_element (INTERFACE_NODE, &ipv6_nd_ra_interval_cmd);
   install_element (INTERFACE_NODE, &ipv6_nd_ra_interval_msec_cmd);
+  /*gujd : 2012-05-29,pm 9:53 . Add for IPv6 Ready Test.*/
+  install_element (INTERFACE_NODE, &ipv6_nd_ra_min_interval_cmd);
+  install_element (INTERFACE_NODE, &no_ipv6_nd_ra_min_interval_cmd);
+  install_element (INTERFACE_NODE, &ipv6_nd_adv_cur_hop_limit_cmd);
+  install_element (INTERFACE_NODE, &no_ipv6_nd_adv_cur_hop_limit_cmd);
+  install_element (INTERFACE_NODE, &ipv6_nd_ra_retrans_time_cmd);
+  /*install_element (INTERFACE_NODE, &no_ipv6_nd_ra_retrans_time_cmd);*/
   install_element (INTERFACE_NODE, &no_ipv6_nd_ra_interval_cmd);
+  install_element (INTERFACE_NODE, &ipv6_nd_ra_link_mtu_cmd);
+  install_element (INTERFACE_NODE, &no_ipv6_nd_ra_link_mtu_cmd);
+  install_element (INTERFACE_NODE, &no_ipv6_nd_ra_retrans_time_ms_cmd);
+  install_element (INTERFACE_NODE, &ipv6_nd_ra_retrans_time_ms_cmd);
+  /** Add for IPv6 Ready Test.-----end--**/
   install_element (INTERFACE_NODE, &ipv6_nd_ra_lifetime_cmd);
   install_element (INTERFACE_NODE, &no_ipv6_nd_ra_lifetime_cmd);
   install_element (INTERFACE_NODE, &ipv6_nd_reachable_time_cmd);
@@ -1826,7 +3426,7 @@ if_join_all_router (int sock, struct interface *ifp)
 		    (char *) &mreq, sizeof mreq);
   if (ret < 0)
     zlog_warn ("can't setsockopt IPV6_JOIN_GROUP: %s", safe_strerror (errno));
-	if(HAVE_RTADR_DEBUG)
+	if(RTM_DEBUG_RTADV)
 	  zlog_info ("rtadv: %s join to all-routers multicast group", ifp->name);
   return 0;
 }
@@ -1846,7 +3446,7 @@ if_leave_all_router (int sock, struct interface *ifp)
 		    (char *) &mreq, sizeof mreq);
   if (ret < 0)
     zlog_warn ("can't setsockopt IPV6_LEAVE_GROUP: %s", safe_strerror (errno));
-	if(HAVE_RTADR_DEBUG)
+	if(RTM_DEBUG_RTADV)
 		zlog_info ("rtadv: %s leave from all-routers multicast group", ifp->name);
 
   return 0;
@@ -1860,4 +3460,4 @@ rtadv_init (void)
 }
 #endif /* RTADV && HAVE_IPV6 */
 
-#undef HAVE_RTADR_DEBUG
+/*#undef HAVE_RTADR_DEBUG*/

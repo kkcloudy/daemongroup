@@ -1404,9 +1404,10 @@ if_zebra_new_hook (struct interface *ifp)
     rtadv->AdvOtherConfigFlag = 0;
     rtadv->AdvHomeAgentFlag = 0;
     rtadv->AdvLinkMTU = 0;
-    rtadv->AdvReachableTime = 0;
-    rtadv->AdvRetransTimer = 0;
-    rtadv->AdvCurHopLimit = 0;
+	rtadv->AdvLinkMtuOption = 0;/*gujd : 2012-05-29,am 9:53 . Add for IPv6 Ready Test.*/
+    rtadv->AdvReachableTime = 30000;		
+    rtadv->AdvRetransTimer = 1000;			
+    rtadv->AdvCurHopLimit = 64;/*gujd : 2012-05-29,am 9:53 . Add for IPv6 Ready Test.*/
     rtadv->AdvDefaultLifetime = RTADV_ADV_DEFAULT_LIFETIME;
     rtadv->HomeAgentPreference = 0;
     rtadv->HomeAgentLifetime = RTADV_ADV_DEFAULT_LIFETIME;
@@ -2308,12 +2309,9 @@ connected_dump_vty (struct vty *vty, struct connected *connected)
 {
   struct prefix *p;
   struct interface *ifp;
-//  zlog_debug("++++++++++++++++++++1 %s line = %d",__func__,__LINE__);
 
   /* Set interface pointer. */
   ifp = connected->ifp;
-//  zlog_debug("++++++++++++++++++++1 %s line = %d",__func__,__LINE__);
- 
 
   /* Print interface address. */
   p = connected->address;
@@ -3090,39 +3088,83 @@ nd_dump_vty (struct vty *vty, struct interface *ifp)
   int interval;
 
   zif = (struct zebra_if *) ifp->info;
-  rtadv = &zif->rtadv;
-
+  rtadv = &zif->rtadv;    
+ 
+#if 0
+	if (rtadv->AdvSendAdvertisements)
+	  {
+		vty_out (vty, "  ND advertised reachable time is %d milliseconds%s",
+			 rtadv->AdvReachableTime, VTY_NEWLINE);
+		vty_out (vty, "  ND advertised retransmit interval is %u milliseconds%s",
+			 rtadv->AdvRetransTimer, VTY_NEWLINE);
+		interval = rtadv->MaxRtrAdvInterval;
+		if (interval % 1000)
+		  vty_out (vty, "  ND router advertisements are sent every "
+			  "%d milliseconds%s", interval,
+		   VTY_NEWLINE);
+		else
+		  vty_out (vty, "  ND router advertisements are sent every "
+			  "%d seconds%s", interval / 1000,
+		   VTY_NEWLINE);
+		vty_out (vty, "  ND router advertisements live for %d seconds%s",
+			 rtadv->AdvDefaultLifetime, VTY_NEWLINE);
+		if (rtadv->AdvManagedFlag)
+	  vty_out (vty, "  Hosts use DHCP to obtain routable addresses.%s",
+		   VTY_NEWLINE);
+		else
+	  vty_out (vty, "  Hosts use stateless autoconfig for addresses.%s",
+		   VTY_NEWLINE);
+		if (rtadv->AdvHomeAgentFlag)
+		  vty_out (vty, "  ND router advertisements with "
+				  "Home Agent flag bit set.%s",
+		   VTY_NEWLINE);
+		if (rtadv->AdvIntervalOption)
+		  vty_out (vty, "  ND router advertisements with Adv. Interval option.%s",
+		   VTY_NEWLINE);
+	  }
+#else
   if (rtadv->AdvSendAdvertisements)
-    {
-      vty_out (vty, "  ND advertised reachable time is %d milliseconds%s",
-	       rtadv->AdvReachableTime, VTY_NEWLINE);
-      vty_out (vty, "  ND advertised retransmit interval is %d milliseconds%s",
-	       rtadv->AdvRetransTimer, VTY_NEWLINE);
-      interval = rtadv->MaxRtrAdvInterval;
-      if (interval % 1000)
-        vty_out (vty, "  ND router advertisements are sent every "
-			"%d milliseconds%s", interval,
+	{
+	  vty_out (vty, "  ND advertised reachable time is %d milliseconds%s",
+		   rtadv->AdvReachableTime, VTY_NEWLINE);
+	  vty_out (vty, "  ND advertised retransmit interval is %u milliseconds%s",
+		   rtadv->AdvRetransTimer, VTY_NEWLINE);
+	  if (rtadv->MaxRtrAdvInterval % 1000)
+		vty_out (vty, "  ND router Max advertisements interval"
+			"%d milliseconds%s", rtadv->MaxRtrAdvInterval,
 		 VTY_NEWLINE);
-      else
-        vty_out (vty, "  ND router advertisements are sent every "
-			"%d seconds%s", interval / 1000,
+	  else
+		vty_out (vty, "  ND router Max advertisements interval "
+			"%d seconds%s", rtadv->MaxRtrAdvInterval / 1000,
 		 VTY_NEWLINE);
-      vty_out (vty, "  ND router advertisements live for %d seconds%s",
-	       rtadv->AdvDefaultLifetime, VTY_NEWLINE);
-      if (rtadv->AdvManagedFlag)
+	  if (rtadv->MinRtrAdvInterval % 1000)
+		vty_out (vty, "  ND router Min advertisements interval "
+			"%d milliseconds%s", rtadv->MinRtrAdvInterval,
+		 VTY_NEWLINE);
+	  else
+		vty_out (vty, "  ND router Min advertisements interval "
+			"%d seconds%s", rtadv->MinRtrAdvInterval / 1000,
+		 VTY_NEWLINE);
+	  
+	  vty_out (vty, "  ND router advertisements live for %d seconds%s",
+		   rtadv->AdvDefaultLifetime, VTY_NEWLINE);
+	  if (rtadv->AdvManagedFlag)
 	vty_out (vty, "  Hosts use DHCP to obtain routable addresses.%s",
 		 VTY_NEWLINE);
-      else
+	  else
 	vty_out (vty, "  Hosts use stateless autoconfig for addresses.%s",
 		 VTY_NEWLINE);
-      if (rtadv->AdvHomeAgentFlag)
-      	vty_out (vty, "  ND router advertisements with "
+	  if (rtadv->AdvHomeAgentFlag)
+		vty_out (vty, "  ND router advertisements with "
 				"Home Agent flag bit set.%s",
 		 VTY_NEWLINE);
-      if (rtadv->AdvIntervalOption)
-      	vty_out (vty, "  ND router advertisements with Adv. Interval option.%s",
+	  if (rtadv->AdvIntervalOption)
+		vty_out (vty, "  ND router advertisements with Adv. Interval option.%s",
 		 VTY_NEWLINE);
-    }
+	}
+  
+#endif
+
 }
 #endif /* RTADV */
 
