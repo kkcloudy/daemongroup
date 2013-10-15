@@ -1863,6 +1863,212 @@ DEFUN(show_fwd_pure_ip_enable_func,
 	return CMD_SUCCESS;
 }
 
+DEFUN(fastfwd_pure_ipv6_enable_func,
+	  fastfwd_pure_ipv6_enable_cmd,
+	  "config  fast-pure-ipv6 (enable|disable)",
+	  CONFIG_STR
+	  "fast pure ipv6 feature\n"
+	  "fast_forward pure ipv6 forward enable\n"
+	  "fast_forward pure ipv6 forward disable\n"
+)
+{
+	
+	char *enable=(char *)argv[0];
+	int flag = FUNC_DISABLE;
+	se_interative_t  cmd_data;
+	int ret = -1,i = 0;
+	struct timeval overtime;
+	memset(&overtime,0,sizeof(overtime));
+	memset(&cmd_data,0,sizeof(cmd_data));
+	if(argc > 1) 
+	{
+		vty_out(vty,CMD_PARAMETER_NUM_ERROR);
+		return CMD_WARNING;
+	}
+	if(0==strncmp(enable,"disable",strlen(enable)))
+	{
+		flag=FUNC_DISABLE;
+	}
+	else if(0==strncmp(enable,"enable",strlen(enable)))
+	{
+		flag=FUNC_ENABLE;
+	}
+	else
+	{
+		vty_out(vty,CMD_PARAMETER_ERROR);
+		return CMD_FAILURE;
+	}
+	cmd_data.fccp_cmd.fccp_data.module_enable=flag;
+	strncpy(cmd_data.hand_cmd,SE_AGENT_PURE_IPV6_ENABLE,strlen(SE_AGENT_PURE_IPV6_ENABLE));
+	ret=sendto_agent(dcli_sockfd,(char*)&cmd_data,sizeof(cmd_data),vty);
+	if(ret<=0)
+	{
+		vty_out(vty,WRITE_FAIL_STR);
+		return CMD_FAILURE;
+	}
+	overtime.tv_sec=DCLI_WAIT_TIME;
+	ret=read_within_time(dcli_sockfd,(char*)&cmd_data,sizeof(cmd_data),&overtime);
+	if(ret==READ_ERROR)
+	{
+		vty_out(vty,AGENT_NO_RESPOND_STR);
+		return CMD_FAILURE;
+	}
+	if(cmd_data.cmd_result!=AGENT_RETURN_OK)
+	{
+		vty_out(vty,"%s\n",cmd_data.err_info);
+		return CMD_FAILURE;
+	}
+	return CMD_SUCCESS;
+}
+
+DEFUN(show_fwd_pure_ipv6_enable_func,
+	  show_fwd_pure_ipv6_enable_cmd,
+	  "show  fast-pure-ipv6 enable",
+	  SHOW_STR
+	  "fast-pure-ipv6  \n"
+	  "fast_forward pure ipv6 forward whether enable \n"
+)
+{
+	se_interative_t  cmd_data;
+	int ret = 0;
+	struct timeval overtime;
+	memset(&overtime, 0, sizeof(overtime));
+	memset(&cmd_data, 0, sizeof(cmd_data));
+	strncpy(cmd_data.hand_cmd, SE_AGENT_SHOW_PURE_IPV6_ENABLE, strlen(SE_AGENT_SHOW_PURE_IPV6_ENABLE));
+	ret = sendto_agent(dcli_sockfd, (char*)&cmd_data, sizeof(cmd_data), vty);
+	if(ret <= 0)
+	{
+		vty_out(vty,WRITE_FAIL_STR);
+		return CMD_FAILURE;
+	}
+	memset(&cmd_data, 0, sizeof(cmd_data));
+	overtime.tv_sec = DCLI_WAIT_TIME;
+ 	ret = read_within_time(dcli_sockfd, (char*)&cmd_data, sizeof(cmd_data), &overtime);
+ 	if(ret == READ_ERROR)
+	{
+		vty_out(vty, AGENT_NO_RESPOND_STR);
+		return CMD_FAILURE;
+	}
+	
+	if(cmd_data.cmd_result != AGENT_RETURN_OK)
+	{
+		vty_out(vty, "%s\n", cmd_data.err_info);
+		return CMD_FAILURE;
+	}
+	if(cmd_data.fccp_cmd.ret_val != FCCP_RETURN_OK)
+	{
+		vty_out(vty, COMMAND_FAIL_STR);
+		return CMD_FAILURE;
+	}
+	vty_out(vty, "fast_forward pure ipv6 forward is %s\n", (cmd_data.fccp_cmd.fccp_data.module_enable == 1) ? "enable ": "disable");
+
+	return CMD_SUCCESS;
+}
+
+
+DEFUN(fastfwd_ipv6_enable_func,
+	  fastfwd_ipv6_enable_cmd,
+	  "config  fast-ipv6 (enable|disable)",
+	  CONFIG_STR
+	  "fast ipv6 feature\n"
+	  "fast_forward ipv6 forward enable\n"
+	  "fast_forward ipv6 forward disable\n"
+)
+{
+	
+	char *enable=(char *)argv[0];
+	int flag = FUNC_DISABLE;
+	se_interative_t  cmd_data;
+	int ret = -1,i = 0;
+	struct timeval overtime;
+	memset(&overtime,0,sizeof(overtime));
+	memset(&cmd_data,0,sizeof(cmd_data));
+	if(argc > 1) 
+	{
+		vty_out(vty,CMD_PARAMETER_NUM_ERROR);
+		return CMD_WARNING;
+	}
+	if(0==strncmp(enable,"disable",strlen(enable)))
+	{
+		flag=FUNC_DISABLE;
+	}
+	else if(0==strncmp(enable,"enable",strlen(enable)))
+	{
+		flag=FUNC_ENABLE;
+	}
+	else
+	{
+		vty_out(vty,CMD_PARAMETER_ERROR);
+		return CMD_FAILURE;
+	}
+	cmd_data.fccp_cmd.fccp_data.module_enable=flag;
+	strncpy(cmd_data.hand_cmd,SE_AGENT_IPV6_ENABLE,strlen(SE_AGENT_IPV6_ENABLE));
+	ret=sendto_agent(dcli_sockfd,(char*)&cmd_data,sizeof(cmd_data),vty);
+	if(ret<=0)
+	{
+		vty_out(vty,WRITE_FAIL_STR);
+		return CMD_FAILURE;
+	}
+	overtime.tv_sec=DCLI_WAIT_TIME;
+	ret=read_within_time(dcli_sockfd,(char*)&cmd_data,sizeof(cmd_data),&overtime);
+	if(ret==READ_ERROR)
+	{
+		vty_out(vty,AGENT_NO_RESPOND_STR);
+		return CMD_FAILURE;
+	}
+	if(cmd_data.cmd_result!=AGENT_RETURN_OK)
+	{
+		vty_out(vty,"%s\n",cmd_data.err_info);
+		return CMD_FAILURE;
+	}
+	return CMD_SUCCESS;
+}
+
+DEFUN(show_fwd_ipv6_enable_func,
+	  show_fwd_ipv6_enable_cmd,
+	  "show  fast-ipv6 enable",
+	  SHOW_STR
+	  "fast-ipv6  \n"
+	  "fast_forward ipv6 forward whether enable \n"
+)
+{
+	se_interative_t  cmd_data;
+	int ret = 0;
+	struct timeval overtime;
+	memset(&overtime, 0, sizeof(overtime));
+	memset(&cmd_data, 0, sizeof(cmd_data));
+	strncpy(cmd_data.hand_cmd, SE_AGENT_SHOW_IPV6_ENABLE, strlen(SE_AGENT_SHOW_IPV6_ENABLE));
+	ret = sendto_agent(dcli_sockfd, (char*)&cmd_data, sizeof(cmd_data), vty);
+	if(ret <= 0)
+	{
+		vty_out(vty,WRITE_FAIL_STR);
+		return CMD_FAILURE;
+	}
+	memset(&cmd_data, 0, sizeof(cmd_data));
+	overtime.tv_sec = DCLI_WAIT_TIME;
+ 	ret = read_within_time(dcli_sockfd, (char*)&cmd_data, sizeof(cmd_data), &overtime);
+ 	if(ret == READ_ERROR)
+	{
+		vty_out(vty, AGENT_NO_RESPOND_STR);
+		return CMD_FAILURE;
+	}
+	
+	if(cmd_data.cmd_result != AGENT_RETURN_OK)
+	{
+		vty_out(vty, "%s\n", cmd_data.err_info);
+		return CMD_FAILURE;
+	}
+	if(cmd_data.fccp_cmd.ret_val != FCCP_RETURN_OK)
+	{
+		vty_out(vty, COMMAND_FAIL_STR);
+		return CMD_FAILURE;
+	}
+	vty_out(vty, "fast_forward ipv6 forward is %s\n", (cmd_data.fccp_cmd.fccp_data.module_enable == 1) ? "enable ": "disable");
+
+	return CMD_SUCCESS;
+}
+
+
 
 DEFUN(config_fast_forward_enable_func,
 	config_fast_forward_enable_cmd,
@@ -1995,9 +2201,9 @@ DEFUN(show_rule_five_tuple_func,
 	}
 	vty_out(vty,"rule information:\n");
 	vty_out(vty,"    %u.%u.%u.%u:%u  ==> %u.%u.%u.%u:%u %s\n",
-		IP_FMT(cmd_data.fccp_cmd.fccp_data.rule_info.rule_param.sip),
+		IP_FMT(cmd_data.fccp_cmd.fccp_data.rule_info.rule_param.ipv4_sip),
 		cmd_data.fccp_cmd.fccp_data.rule_info.rule_param.sport,
-		IP_FMT(cmd_data.fccp_cmd.fccp_data.rule_info.rule_param.dip),
+		IP_FMT(cmd_data.fccp_cmd.fccp_data.rule_info.rule_param.ipv4_dip),
 		cmd_data.fccp_cmd.fccp_data.rule_info.rule_param.dport,
 		PROTO_STR(cmd_data.fccp_cmd.fccp_data.rule_info.rule_param.protocol));
 	if(cmd_data.fccp_cmd.fccp_data.rule_info.rule_param.rule_state == RULE_IS_LEARNING)
@@ -2035,16 +2241,16 @@ DEFUN(show_rule_five_tuple_func,
 			vty_out(vty,"    action_type = FLOW_ACTION_CAP802_3_FORWARD\n");
 			vty_out(vty,"    capwap use_num = %d\n", cmd_data.fccp_cmd.fccp_data.rule_info.cw_cache.use_num);
 			vty_out(vty,"    capwap tunnel: %d.%d.%d.%d:%d => %d.%d.%d.%d:%d  tos = 0x%02x\n",
-					IP_FMT(cmd_data.fccp_cmd.fccp_data.rule_info.cw_cache.sip), cmd_data.fccp_cmd.fccp_data.rule_info.cw_cache.sport,
-					IP_FMT(cmd_data.fccp_cmd.fccp_data.rule_info.cw_cache.dip), cmd_data.fccp_cmd.fccp_data.rule_info.cw_cache.dport,  
+					IP_FMT(cmd_data.fccp_cmd.fccp_data.rule_info.cw_cache.cw_sip), cmd_data.fccp_cmd.fccp_data.rule_info.cw_cache.sport,
+					IP_FMT(cmd_data.fccp_cmd.fccp_data.rule_info.cw_cache.cw_dip), cmd_data.fccp_cmd.fccp_data.rule_info.cw_cache.dport,  
 					cmd_data.fccp_cmd.fccp_data.rule_info.cw_cache.tos);
 			break;
 		case FLOW_ACTION_CAPWAP_FORWARD:
 			vty_out(vty,"    action_type = FLOW_ACTION_CAPWAP_FORWARD\n");
 			vty_out(vty,"    capwap use_num = %d\n", cmd_data.fccp_cmd.fccp_data.rule_info.cw_cache.use_num);
 			vty_out(vty,"    capwap tunnel: %d.%d.%d.%d:%d => %d.%d.%d.%d:%d  tos = 0x%02x\n",
-					IP_FMT(cmd_data.fccp_cmd.fccp_data.rule_info.cw_cache.sip), cmd_data.fccp_cmd.fccp_data.rule_info.cw_cache.sport,
-					IP_FMT(cmd_data.fccp_cmd.fccp_data.rule_info.cw_cache.dip), cmd_data.fccp_cmd.fccp_data.rule_info.cw_cache.dport,  
+					IP_FMT(cmd_data.fccp_cmd.fccp_data.rule_info.cw_cache.cw_sip), cmd_data.fccp_cmd.fccp_data.rule_info.cw_cache.sport,
+					IP_FMT(cmd_data.fccp_cmd.fccp_data.rule_info.cw_cache.cw_dip), cmd_data.fccp_cmd.fccp_data.rule_info.cw_cache.dport,  
 					cmd_data.fccp_cmd.fccp_data.rule_info.cw_cache.tos);
 			break;
 		default:
@@ -2207,7 +2413,7 @@ DEFUN(show_capwap_tbl_func,
 	se_interative_t  cmd_data;
 	int ret;
 	struct timeval overtime;
-	uint32_t cw_cache_index=0;
+	uint32_t cw_cache_index=0xFFFFFFFF;
 	uint32_t cw_cache_cnt=0;
 	int loop=0,j=0,i=0;
 	char str[2]={0};
@@ -2234,9 +2440,10 @@ DEFUN(show_capwap_tbl_func,
 		vty_out(vty,"%s\n",cmd_data.err_info);
 		return CMD_FAILURE;
 	}
-	if(cw_cache_index == 0)
+	if(cw_cache_index == 0xFFFFFFFF)
 	{
-		cw_cache_cnt=cmd_data.fccp_cmd.fccp_data.cw_cache_info.cw_use_cnt;
+		cw_cache_cnt = cmd_data.fccp_cmd.fccp_data.cw_cache_info.cw_use_cnt;
+		cw_cache_index = cmd_data.fccp_cmd.fccp_data.cw_cache_info.cw_cache_index;
 	}
 	vty_out(vty,"capwap cache total count:%d\n",cw_cache_cnt);
 	if(cw_cache_cnt == 0)
@@ -2273,10 +2480,28 @@ display_loop:
 			return CMD_FAILURE;
 		}
 		cw_cache_index = cmd_data.fccp_cmd.fccp_data.cw_cache_info.cw_cache_index;
-		vty_out(vty,"capwap tunnel: %d.%d.%d.%d:%d => %d.%d.%d.%d:%d  tos = 0x%02x\n",
-					IP_FMT(cmd_data.fccp_cmd.fccp_data.cw_cache_info.cw_cache_rule.sip), cmd_data.fccp_cmd.fccp_data.cw_cache_info.cw_cache_rule.sport,
-					IP_FMT(cmd_data.fccp_cmd.fccp_data.cw_cache_info.cw_cache_rule.dip), cmd_data.fccp_cmd.fccp_data.cw_cache_info.cw_cache_rule.dport,  
-					cmd_data.fccp_cmd.fccp_data.cw_cache_info.cw_cache_rule.tos);
+		if ((0 != cmd_data.fccp_cmd.fccp_data.cw_cache_info.cw_cache_rule.cw_ipv6_sip64[1]) || (0 != cmd_data.fccp_cmd.fccp_data.cw_cache_info.cw_cache_rule.cw_ipv6_dip64[1]))
+		{
+			vty_out(vty,"capwap tunnel: %x.%x.%x.%x:%d => %x.%x.%x.%x:%d  \n",
+						cmd_data.fccp_cmd.fccp_data.cw_cache_info.cw_cache_rule.cw_ipv6_sip32[0], 
+						cmd_data.fccp_cmd.fccp_data.cw_cache_info.cw_cache_rule.cw_ipv6_sip32[1], 
+						cmd_data.fccp_cmd.fccp_data.cw_cache_info.cw_cache_rule.cw_ipv6_sip32[2], 
+						cmd_data.fccp_cmd.fccp_data.cw_cache_info.cw_cache_rule.cw_ipv6_sip32[3], 
+						cmd_data.fccp_cmd.fccp_data.cw_cache_info.cw_cache_rule.sport,
+						cmd_data.fccp_cmd.fccp_data.cw_cache_info.cw_cache_rule.cw_ipv6_dip32[0], 
+						cmd_data.fccp_cmd.fccp_data.cw_cache_info.cw_cache_rule.cw_ipv6_dip32[1], 
+						cmd_data.fccp_cmd.fccp_data.cw_cache_info.cw_cache_rule.cw_ipv6_dip32[2], 
+						cmd_data.fccp_cmd.fccp_data.cw_cache_info.cw_cache_rule.cw_ipv6_dip32[3],
+						cmd_data.fccp_cmd.fccp_data.cw_cache_info.cw_cache_rule.dport);
+
+		}
+		else 
+		{
+			vty_out(vty,"capwap tunnel: %d.%d.%d.%d:%d => %d.%d.%d.%d:%d  tos = 0x%02x\n",
+						IP_FMT(cmd_data.fccp_cmd.fccp_data.cw_cache_info.cw_cache_rule.cw_sip), cmd_data.fccp_cmd.fccp_data.cw_cache_info.cw_cache_rule.sport,
+						IP_FMT(cmd_data.fccp_cmd.fccp_data.cw_cache_info.cw_cache_rule.cw_dip), cmd_data.fccp_cmd.fccp_data.cw_cache_info.cw_cache_rule.dport,  
+						cmd_data.fccp_cmd.fccp_data.cw_cache_info.cw_cache_rule.tos);
+		}
 		vty_out(vty,"    capwap use_num = %d\n", cmd_data.fccp_cmd.fccp_data.cw_cache_info.cw_cache_rule.use_num);
 		vty_out(vty,"capwap header:\n");
 		for(j = 0; j < CW_H_LEN; j++)
@@ -2575,13 +2800,28 @@ void dcli_show_fastfwd_rule(se_interative_t  *cmd_data,struct vty *vty)
 {
 
 	vty_out(vty,"rule information:\n");
-		
-	vty_out(vty,"    %u.%u.%u.%u:%u  ==> %u.%u.%u.%u:%u %s\n",
-		IP_FMT(cmd_data->fccp_cmd.fccp_data.acl_info.acl_param.sip),
-		cmd_data->fccp_cmd.fccp_data.acl_info.acl_param.sport,
-		IP_FMT(cmd_data->fccp_cmd.fccp_data.acl_info.acl_param.dip),
-		cmd_data->fccp_cmd.fccp_data.acl_info.acl_param.dport,
-		PROTO_STR(cmd_data->fccp_cmd.fccp_data.acl_info.acl_param.protocol));
+
+	if (0 == cmd_data->fccp_cmd.fccp_data.acl_info.acl_param.ipv6_flag)
+	{
+		vty_out(vty,"    %u.%u.%u.%u:%u  ==> %u.%u.%u.%u:%u %s\n",
+			IP_FMT(cmd_data->fccp_cmd.fccp_data.acl_info.acl_param.ipv4_sip),
+			cmd_data->fccp_cmd.fccp_data.acl_info.acl_param.sport,
+			IP_FMT(cmd_data->fccp_cmd.fccp_data.acl_info.acl_param.ipv4_dip),
+			cmd_data->fccp_cmd.fccp_data.acl_info.acl_param.dport,
+			PROTO_STR(cmd_data->fccp_cmd.fccp_data.acl_info.acl_param.protocol));
+	} 
+	else if (1 == cmd_data->fccp_cmd.fccp_data.acl_info.acl_param.ipv6_flag)
+	{
+		vty_out(vty,"    %04x%04x%04x%04x %04x%04x%04x%04x :%u  ==> %04x%04x%04x%04x %04x%04x%04x%04x :%u %s\n",
+			IPV6_FMT(cmd_data->fccp_cmd.fccp_data.acl_info.acl_param.ipv6_sip64[0]),
+			IPV6_FMT(cmd_data->fccp_cmd.fccp_data.acl_info.acl_param.ipv6_sip64[1]),
+			cmd_data->fccp_cmd.fccp_data.acl_info.acl_param.sport,
+			IPV6_FMT(cmd_data->fccp_cmd.fccp_data.acl_info.acl_param.ipv6_dip64[0]),
+			IPV6_FMT(cmd_data->fccp_cmd.fccp_data.acl_info.acl_param.ipv6_dip64[1]),
+			cmd_data->fccp_cmd.fccp_data.acl_info.acl_param.dport,
+			PROTO_STR(cmd_data->fccp_cmd.fccp_data.acl_info.acl_param.protocol));
+
+	}
 
 	if(cmd_data->fccp_cmd.fccp_data.acl_info.acl_param.rule_state == RULE_IS_LEARNING)
 	{
@@ -3463,16 +3703,72 @@ DEFUN(show_fast_forward_info,
 	return CMD_SUCCESS;
 }
 
+/**********************************************************************************
+ *  dcli_ipv62uint16_t
+ *
+ *	DESCRIPTION:
+ * 		 IPV6 (A:B:C:D:E:F:G:H) to acl_pararm 
+ *
+ *	INPUT:
+ *		str - (A:B:C:D:E:F:G:H)
+ *	
+ *	OUTPUT:
+ *		ipv6 - acl_param.
+ *
+ * 	RETURN:
+ *		
+ *		CMD_FAILURE	
+ *		CMD_SUCCESS
+ *		
+ **********************************************************************************/
+int dcli_ipv62uint16_t(struct cvm_ip6_in6_addr *ipv6_addr, char *str)
+{
+	char *sep=":";
+	char *token = NULL;
+	int i = 0;
+	
+	token = strtok(str,sep);
+
+	if(NULL != token){
+	    ipv6_addr->s6_addr16[i] = strtoul(token,NULL,16);
+		i++;
+		
+	}
+
+	while((token!=NULL)&&(i<8))
+	{
+		token=strtok(NULL,sep);
+		if(NULL != token){
+		    ipv6_addr->s6_addr16[i] = strtoul(token,NULL,16);
+		}
+		else
+		{
+			return CMD_FAILURE;
+		}
+		i++;
+	}
+
+	token=strtok(NULL,sep);
+
+	if ((i != 8) || (NULL != token))
+	{
+		return CMD_FAILURE;
+	}
+	
+	return CMD_SUCCESS;
+}
+
+
 /*wangjian 2012.07.09 add ip */
-DEFUN(show_rule_by_ip_func,
-	show_rule_by_ip_cmd,
-	"show fast-forward rule ip IP",
-	SHOW_STR
-	"fastfwd module\n"
-	"fastfwd acl information\n"
-	"fastfwd rule information by ip\n"
-	"ip address A.B.C.D\n"
-	)
+DEFUN(show_rule_by_ipv6_func,
+		show_rule_by_ipv6_cmd,
+		"show fast-forward rule ipv6 IPV6",
+		SHOW_STR
+		"fastfwd module\n"
+		"fastfwd acl information\n"
+		"fastfwd rule information by ipv6\n"
+		"ip address A:B:C:D:E:F:G:H\n"
+		)
 {
 	se_interative_t  cmd_data;
 	int ret;
@@ -3483,20 +3779,25 @@ DEFUN(show_rule_by_ip_func,
 	int loop=0,j=0,i=0;
 	uint8_t rule_state = 0;
 	uint32_t user_ip;
+	struct cvm_ip6_in6_addr user_ipv6;
 	
 	memset(&overtime,0,sizeof(overtime));
 	memset(&cmd_data,0,sizeof(cmd_data));
-	
-	if(COMMON_ERROR==parse_ip_check((char*)argv[0]))
+	memset(&user_ipv6,0,sizeof(user_ipv6));
+
+	if (CMD_FAILURE == dcli_ipv62uint16_t(&user_ipv6,(char*)argv[0]))
 	{
-		vty_out(vty,"ip address format error\n");
+		vty_out(vty,"ipv6 address format error. A:B:C:D:E:F:G:H\n");
 		return CMD_FAILURE;
 	}
-	user_ip=dcli_ip2ulong((char*)argv[0]);
-	cmd_data.fccp_cmd.fccp_data.acl_info.acl_param.sip=user_ip; /*wangjian to do sip*/
+	
+	cmd_data.fccp_cmd.fccp_data.acl_info.acl_param.ipv6_sip64[0] = user_ipv6.s6_addr64[0];
+	cmd_data.fccp_cmd.fccp_data.acl_info.acl_param.ipv6_sip64[1] = user_ipv6.s6_addr64[1];
+	cmd_data.fccp_cmd.fccp_data.acl_info.acl_param.ipv6_flag = 1;
+
 	cmd_data.fccp_cmd.fccp_data.acl_info.acl_static_index=acl_static_index;
 	
-	strncpy(cmd_data.hand_cmd,SE_AGENT_SHOW_RULE_IP,strlen(SE_AGENT_SHOW_RULE_IP));
+	strncpy(cmd_data.hand_cmd,SE_AGENT_SHOW_RULE_IPV6,strlen(SE_AGENT_SHOW_RULE_IPV6));
 	ret=sendto_agent(dcli_sockfd,(char*)&cmd_data,sizeof(cmd_data),vty);
 	if(ret<=0)
 	{
@@ -3525,8 +3826,9 @@ DEFUN(show_rule_by_ip_func,
 		acl_static_cnt=cmd_data.fccp_cmd.fccp_data.acl_info.acl_static_cnt;
 		acl_static_index = cmd_data.fccp_cmd.fccp_data.acl_info.acl_static_index;
 	}
-	vty_out(vty,"acl rule by ip total :%u\n",acl_cnt);
 
+	vty_out(vty,"acl rule by ipv6 total :%u\n",acl_cnt);
+	
 	if(acl_static_cnt == 0)
 		return CMD_SUCCESS;
 
@@ -3542,8 +3844,12 @@ display_loop:
             memset(&overtime,0,sizeof(overtime));
             memset(&cmd_data,0,sizeof(cmd_data));
             cmd_data.fccp_cmd.fccp_data.acl_info.acl_static_index=acl_static_index;
-	        cmd_data.fccp_cmd.fccp_data.acl_info.acl_param.sip=user_ip;
-            strncpy(cmd_data.hand_cmd,SE_AGENT_SHOW_RULE_IP,strlen(SE_AGENT_SHOW_RULE_IP));
+
+			cmd_data.fccp_cmd.fccp_data.acl_info.acl_param.ipv6_sip64[0] = user_ipv6.s6_addr64[0];
+			cmd_data.fccp_cmd.fccp_data.acl_info.acl_param.ipv6_sip64[1] = user_ipv6.s6_addr64[1];
+			cmd_data.fccp_cmd.fccp_data.acl_info.acl_param.ipv6_flag = 1;
+			
+			strncpy(cmd_data.hand_cmd,SE_AGENT_SHOW_RULE_IPV6,strlen(SE_AGENT_SHOW_RULE_IPV6));
             ret=sendto_agent(dcli_sockfd,(char*)&cmd_data,sizeof(cmd_data),vty);
             if(ret<=0)
             {
@@ -3567,14 +3873,18 @@ display_loop:
 			
             acl_static_index=cmd_data.fccp_cmd.fccp_data.acl_info.acl_static_index;
             rule_state = cmd_data.fccp_cmd.fccp_data.acl_info.acl_param.rule_state;
-            vty_out(vty,"acl information:\n");
-            vty_out(vty,"    %u.%u.%u.%u:%u  ==> %u.%u.%u.%u:%u protocol=%d (%s)\t",
-            IP_FMT(cmd_data.fccp_cmd.fccp_data.acl_info.acl_param.sip),
-            cmd_data.fccp_cmd.fccp_data.acl_info.acl_param.sport,
-            IP_FMT(cmd_data.fccp_cmd.fccp_data.acl_info.acl_param.dip),
-            cmd_data.fccp_cmd.fccp_data.acl_info.acl_param.dport,
-            cmd_data.fccp_cmd.fccp_data.acl_info.acl_param.protocol,
-            PROTO_STR(cmd_data.fccp_cmd.fccp_data.acl_info.acl_param.protocol));
+			vty_out(vty,"acl information:\n");
+
+			vty_out(vty,"    %04x%04x%04x%04x %04x%04x%04x%04x :%u  ==> %04x%04x%04x%04x %04x%04x%04x%04x :%u %s\n",
+				IPV6_FMT(cmd_data.fccp_cmd.fccp_data.acl_info.acl_param.ipv6_sip64[0]),
+				IPV6_FMT(cmd_data.fccp_cmd.fccp_data.acl_info.acl_param.ipv6_sip64[1]),
+				cmd_data.fccp_cmd.fccp_data.acl_info.acl_param.sport,
+				IPV6_FMT(cmd_data.fccp_cmd.fccp_data.acl_info.acl_param.ipv6_dip64[0]),
+				IPV6_FMT(cmd_data.fccp_cmd.fccp_data.acl_info.acl_param.ipv6_dip64[1]),
+				cmd_data.fccp_cmd.fccp_data.acl_info.acl_param.dport,
+				PROTO_STR(cmd_data.fccp_cmd.fccp_data.acl_info.acl_param.protocol));
+			
+			
             
             vty_out(vty,"\n    rule_state is %s\n", rule_state == RULE_IS_LEARNED ? "learned" : (rule_state == RULE_IS_LEARNING ? "learning" :"unknow"));
             if(cmd_data.fccp_cmd.fccp_data.acl_info.acl_param.time_stamp == RULE_IS_AGE) 
@@ -3660,6 +3970,212 @@ display_end:
         }
         return CMD_SUCCESS;
 }
+
+
+DEFUN(show_rule_by_ip_func,
+	show_rule_by_ip_cmd,
+	"show fast-forward rule ip IP",
+	SHOW_STR
+	"fastfwd module\n"
+	"fastfwd acl information\n"
+	"fastfwd rule information by ip\n"
+	"ip address A.B.C.D\n"
+	)
+{
+	se_interative_t  cmd_data;
+	int ret;
+	struct timeval overtime;
+	uint32_t acl_static_index = 0xFFFFFFFF;
+	uint32_t acl_cnt=0;
+	uint32_t acl_static_cnt=0;
+	int loop=0,j=0,i=0;
+	uint8_t rule_state = 0;
+	uint32_t user_ip;
+	struct cvm_ip6_in6_addr user_ipv6;
+	
+	memset(&overtime,0,sizeof(overtime));
+	memset(&cmd_data,0,sizeof(cmd_data));
+	memset(&user_ipv6,0,sizeof(user_ipv6));
+
+	if(COMMON_ERROR==parse_ip_check((char*)argv[0]))
+	{
+		vty_out(vty,"ip address format error\n");
+		return CMD_FAILURE;
+	}
+	
+	user_ip = dcli_ip2ulong((char*)argv[0]);
+	cmd_data.fccp_cmd.fccp_data.acl_info.acl_param.ipv4_sip = user_ip; /*wangjian to do sip*/
+	cmd_data.fccp_cmd.fccp_data.acl_info.acl_static_index=acl_static_index;
+	
+	strncpy(cmd_data.hand_cmd,SE_AGENT_SHOW_RULE_IP,strlen(SE_AGENT_SHOW_RULE_IP));
+	ret=sendto_agent(dcli_sockfd,(char*)&cmd_data,sizeof(cmd_data),vty);
+	if(ret<=0)
+	{
+		vty_out(vty,WRITE_FAIL_STR);
+		return CMD_FAILURE;
+	}
+	
+	memset(&cmd_data,0,sizeof(cmd_data));
+	overtime.tv_sec=DCLI_WAIT_TIME;
+	ret=read_within_time(dcli_sockfd,(char*)&cmd_data,sizeof(cmd_data),&overtime);
+	if(ret==READ_ERROR)
+	{
+		vty_out(vty,AGENT_NO_RESPOND_STR);
+		return CMD_FAILURE;
+	}
+	
+	if(cmd_data.cmd_result!=AGENT_RETURN_OK)
+	{
+		vty_out(vty,"%s\n",cmd_data.err_info);
+		return CMD_FAILURE;
+	}
+
+	if(acl_static_index == 0xFFFFFFFF)
+	{
+		acl_cnt=cmd_data.fccp_cmd.fccp_data.acl_info.acl_cnt;
+		acl_static_cnt=cmd_data.fccp_cmd.fccp_data.acl_info.acl_static_cnt;
+		acl_static_index = cmd_data.fccp_cmd.fccp_data.acl_info.acl_static_index;
+	}
+
+	vty_out(vty,"acl rule by ip total :%u\n",acl_cnt);
+	
+	if(acl_static_cnt == 0)
+		return CMD_SUCCESS;
+
+	vty_out(vty,"=====================================================\n");
+display_loop:
+        if(acl_static_cnt < DISPLAY_ACL_CNT)
+            loop = acl_static_cnt;
+        else
+            loop = DISPLAY_ACL_CNT;
+    
+        for(i=0;i<loop;i++)
+        {
+            memset(&overtime,0,sizeof(overtime));
+            memset(&cmd_data,0,sizeof(cmd_data));
+            cmd_data.fccp_cmd.fccp_data.acl_info.acl_static_index=acl_static_index;
+	        cmd_data.fccp_cmd.fccp_data.acl_info.acl_param.ipv4_sip=user_ip;
+			
+			strncpy(cmd_data.hand_cmd,SE_AGENT_SHOW_RULE_IP,strlen(SE_AGENT_SHOW_RULE_IP));
+            ret=sendto_agent(dcli_sockfd,(char*)&cmd_data,sizeof(cmd_data),vty);
+            if(ret<=0)
+            {
+                vty_out(vty,WRITE_FAIL_STR);
+                return CMD_FAILURE;
+            }
+            memset(&cmd_data,0,sizeof(cmd_data));
+            overtime.tv_sec=DCLI_WAIT_TIME;
+            ret=read_within_time(dcli_sockfd,(char*)&cmd_data,sizeof(cmd_data),&overtime);
+            if(ret==READ_ERROR)
+            {
+                vty_out(vty,AGENT_NO_RESPOND_STR);
+                return CMD_FAILURE;
+            }
+			
+            if(cmd_data.cmd_result!=AGENT_RETURN_OK)
+            {
+                vty_out(vty,"%s\n",cmd_data.err_info);
+                return CMD_FAILURE;
+            }
+			
+            acl_static_index=cmd_data.fccp_cmd.fccp_data.acl_info.acl_static_index;
+            rule_state = cmd_data.fccp_cmd.fccp_data.acl_info.acl_param.rule_state;
+			vty_out(vty,"acl information:\n");
+
+			vty_out(vty,"    %u.%u.%u.%u:%u  ==> %u.%u.%u.%u:%u protocol=%d (%s)\t",
+            IP_FMT(cmd_data.fccp_cmd.fccp_data.acl_info.acl_param.ipv4_sip),
+            cmd_data.fccp_cmd.fccp_data.acl_info.acl_param.sport,
+            IP_FMT(cmd_data.fccp_cmd.fccp_data.acl_info.acl_param.ipv4_dip),
+            cmd_data.fccp_cmd.fccp_data.acl_info.acl_param.dport,
+            cmd_data.fccp_cmd.fccp_data.acl_info.acl_param.protocol,
+            PROTO_STR(cmd_data.fccp_cmd.fccp_data.acl_info.acl_param.protocol));
+			
+            vty_out(vty,"\n    rule_state is %s\n", rule_state == RULE_IS_LEARNED ? "learned" : (rule_state == RULE_IS_LEARNING ? "learning" :"unknow"));
+            if(cmd_data.fccp_cmd.fccp_data.acl_info.acl_param.time_stamp == RULE_IS_AGE) 
+            {
+                vty_out(vty,"    age\n");
+            }
+            else
+            {
+                vty_out(vty,"    new\n");
+            }
+
+            
+            if (rule_state == RULE_IS_LEARNED) 
+            {
+                if(cmd_data.fccp_cmd.fccp_data.acl_info.acl_param.action_type == FLOW_ACTION_DROP)
+                {
+                    vty_out(vty,"    action_type = FLOW_ACTION_DROP\n");
+                    continue;
+                }
+                if(cmd_data.fccp_cmd.fccp_data.acl_info.acl_param.action_type == FLOW_ACTION_TOLINUX)
+                {
+                    vty_out(vty,"    action_type = FLOW_ACTION_TOLINUX\n");
+                    continue;
+                }
+
+                vty_out(vty,"    smac: %02x-%02x-%02x-%02x-%02x-%02x", MAC_FMT(cmd_data.fccp_cmd.fccp_data.acl_info.acl_param.ether_shost));
+                vty_out(vty,"    dmac: %02x-%02x-%02x-%02x-%02x-%02x\n", MAC_FMT(cmd_data.fccp_cmd.fccp_data.acl_info.acl_param.ether_dhost));
+                vty_out(vty,"    eth protocol: %04x\n", cmd_data.fccp_cmd.fccp_data.acl_info.acl_param.ether_type);
+
+                switch(cmd_data.fccp_cmd.fccp_data.acl_info.acl_param.action_type)
+                {
+                    case FLOW_ACTION_ETH_FORWARD:
+                        vty_out(vty,"    action_type = FLOW_ACTION_ETH_FORWARD\n");
+                        break;
+                    case FLOW_ACTION_CAP802_3_FORWARD:
+                        vty_out(vty,"    action_type = FLOW_ACTION_CAP802_3_FORWARD\n");
+        
+                        break;
+                    case FLOW_ACTION_CAPWAP_FORWARD:
+                        vty_out(vty,"    action_type = FLOW_ACTION_CAPWAP_FORWARD\n");
+                        break;
+                    default:
+                        vty_out(vty,"    action_type = UNKNOWN\n");
+                        break;
+                }
+                vty_out(vty,"    forward port = %d\n", cmd_data.fccp_cmd.fccp_data.acl_info.acl_param.forward_port);
+
+                vty_out(vty,"    dsa_info: 0x%08x\n", cmd_data.fccp_cmd.fccp_data.acl_info.acl_param.dsa_info);
+                vty_out(vty,"    out_type:0x%02x   out_tag:0x%02x   in_type:0x%02x   in_tag:0x%02x\n",
+                        cmd_data.fccp_cmd.fccp_data.acl_info.acl_param.out_ether_type, 
+                        cmd_data.fccp_cmd.fccp_data.acl_info.acl_param.out_tag, 
+                        cmd_data.fccp_cmd.fccp_data.acl_info.acl_param.in_ether_type, 
+                        cmd_data.fccp_cmd.fccp_data.acl_info.acl_param.in_tag);
+                vty_out(vty,"    action mask = 0x%x\n", cmd_data.fccp_cmd.fccp_data.acl_info.acl_param.action_mask);
+
+				/*add by wangjian for support pppoe 2013-3-15*/
+				if (cmd_data.fccp_cmd.fccp_data.acl_info.acl_param.pppoe_flag == 1)
+				{
+					vty_out(vty,"    pppoe_info:    session_id:%u \n", cmd_data.fccp_cmd.fccp_data.acl_info.acl_param.pppoe_session_id);
+				}
+			}
+            //if learned
+        }
+display_end:
+        acl_static_cnt -= loop;
+        if(acl_static_cnt == 0)
+        {
+            return CMD_SUCCESS;
+        }
+        else
+        {
+            vty_out(vty,"c[continue] q[quit]\n");
+            while(1)
+            {
+                int flag=getchar();
+                if((flag == (int)('c')) || (flag == (int)(' ')))
+                    goto display_loop;
+                else if(flag == (int)('q'))
+                    return CMD_SUCCESS;
+                else
+                    continue;
+            }
+        }
+        return CMD_SUCCESS;
+}
+
+
 
 DEFUN(fastfwd_equipment_test_func,
 	fastfwd_equipment_test_cmd,
@@ -4266,6 +4782,10 @@ void dcli_se_agent_init(void)
 	install_element(FAST_FWD_NODE,&fastfwd_learned_pppoe_enable_cmd);
 	install_element(FAST_FWD_NODE,&fastfwd_pure_ip_enable_cmd);
 	install_element(FAST_FWD_NODE,&show_fwd_pure_ip_enable_cmd);
+	install_element(FAST_FWD_NODE,&fastfwd_pure_ipv6_enable_cmd);
+	install_element(FAST_FWD_NODE,&show_fwd_pure_ipv6_enable_cmd);
+	install_element(FAST_FWD_NODE,&fastfwd_ipv6_enable_cmd);
+	install_element(FAST_FWD_NODE,&show_fwd_ipv6_enable_cmd);
 	install_element(FAST_FWD_NODE,&show_rule_stats_cmd);
 	install_element(FAST_FWD_NODE,&clear_rule_all_cmd);
 	install_element(FAST_FWD_NODE,&clear_aging_rule_cmd);
@@ -4287,6 +4807,7 @@ void dcli_se_agent_init(void)
 	install_element(FAST_FWD_NODE,&clear_rule_ip_cmd);          /*wangjian clear  */
 	install_element(FAST_FWD_NODE,&show_fast_forward_info_cmd);     /*wangjian 2012.07.09 add fwd info */
 	install_element(FAST_FWD_NODE,&show_rule_by_ip_cmd);         	/*wangjian 2012.07.09 add ip */
+	install_element(FAST_FWD_NODE,&show_rule_by_ipv6_cmd);
 	//install_element(FAST_FWD_NODE,&config_fwd_debug_log_enable_cmd);  
 	//install_element(FAST_FWD_NODE,&show_fwd_debug_log_enable_cmd);  
 	//install_element(FAST_FWD_NODE,&config_fwd_debug_log_level_cmd);
@@ -4309,6 +4830,10 @@ void dcli_se_agent_init(void)
 	install_element(HANSI_FAST_FWD_NODE,&fastfwd_learned_pppoe_enable_cmd);
 	install_element(HANSI_FAST_FWD_NODE,&fastfwd_pure_ip_enable_cmd);
 	install_element(HANSI_FAST_FWD_NODE,&show_fwd_pure_ip_enable_cmd);
+	install_element(HANSI_FAST_FWD_NODE,&fastfwd_pure_ipv6_enable_cmd);
+	install_element(HANSI_FAST_FWD_NODE,&show_fwd_pure_ipv6_enable_cmd);
+	install_element(HANSI_FAST_FWD_NODE,&fastfwd_ipv6_enable_cmd);
+	install_element(HANSI_FAST_FWD_NODE,&show_fwd_ipv6_enable_cmd);
 	install_element(HANSI_FAST_FWD_NODE,&show_fpa_buff_counter_cmd);
 	install_element(HANSI_FAST_FWD_NODE,&config_fast_forward_tag_type_cmd);
 	install_element(HANSI_FAST_FWD_NODE,&show_fast_forward_running_config_cmd);
@@ -4334,6 +4859,7 @@ void dcli_se_agent_init(void)
 	install_element(HANSI_FAST_FWD_NODE,&clear_rule_ip_cmd); //wangjian
 	install_element(HANSI_FAST_FWD_NODE,&show_fast_forward_info_cmd);     /*wangjian 2012.07.09 add fwd info */
 	install_element(HANSI_FAST_FWD_NODE,&show_rule_by_ip_cmd);         /*wangjian 2012.07.09 add ip */	
+	install_element(HANSI_FAST_FWD_NODE,&show_rule_by_ipv6_cmd);
 	//install_element(HANSI_FAST_FWD_NODE,&config_fwd_debug_log_enable_cmd);
 	//install_element(HANSI_FAST_FWD_NODE,&show_fwd_debug_log_enable_cmd); 
 	//install_element(HANSI_FAST_FWD_NODE,&config_fwd_debug_log_level_cmd);
@@ -4357,6 +4883,10 @@ void dcli_se_agent_init(void)
 	install_element(LOCAL_HANSI_FAST_FWD_NODE,&fastfwd_learned_pppoe_enable_cmd);
 	install_element(LOCAL_HANSI_FAST_FWD_NODE,&fastfwd_pure_ip_enable_cmd);
 	install_element(LOCAL_HANSI_FAST_FWD_NODE,&show_fwd_pure_ip_enable_cmd);
+	install_element(LOCAL_HANSI_FAST_FWD_NODE,&fastfwd_pure_ipv6_enable_cmd);
+	install_element(LOCAL_HANSI_FAST_FWD_NODE,&show_fwd_pure_ipv6_enable_cmd);
+	install_element(LOCAL_HANSI_FAST_FWD_NODE,&fastfwd_ipv6_enable_cmd);
+	install_element(LOCAL_HANSI_FAST_FWD_NODE,&show_fwd_ipv6_enable_cmd);
 	install_element(LOCAL_HANSI_FAST_FWD_NODE,&show_fpa_buff_counter_cmd);
 	install_element(LOCAL_HANSI_FAST_FWD_NODE,&config_fast_forward_tag_type_cmd);
 	install_element(LOCAL_HANSI_FAST_FWD_NODE,&show_fast_forward_running_config_cmd);
@@ -4381,7 +4911,8 @@ void dcli_se_agent_init(void)
 	install_element(LOCAL_HANSI_FAST_FWD_NODE,&show_user_flow_cmd);
 	install_element(LOCAL_HANSI_FAST_FWD_NODE,&clear_rule_ip_cmd); //wangjian
 	install_element(LOCAL_HANSI_FAST_FWD_NODE,&show_fast_forward_info_cmd);     /*wangjian 2012.07.09 add fwd info */
-	install_element(LOCAL_HANSI_FAST_FWD_NODE,&show_rule_by_ip_cmd);         /*wangjian 2012.07.09 add ip */	
+	install_element(LOCAL_HANSI_FAST_FWD_NODE,&show_rule_by_ip_cmd);         /*wangjian 2012.07.09 add ip */
+	install_element(LOCAL_HANSI_FAST_FWD_NODE,&show_rule_by_ipv6_cmd);
 	//install_element(LOCAL_HANSI_FAST_FWD_NODE,&config_fwd_debug_log_enable_cmd);
 	//install_element(LOCAL_HANSI_FAST_FWD_NODE,&show_fwd_debug_log_enable_cmd); 
 	//install_element(LOCAL_HANSI_FAST_FWD_NODE,&config_fwd_debug_log_level_cmd);

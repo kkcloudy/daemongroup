@@ -65,10 +65,10 @@
 #define FCCP_CMD_CLEAR_PART_FAU64 			48
 #define FCCP_CMD_ENABLE_PPPOE             	49
 #define FCCP_CMD_GET_PPPOE_STATE          	50
-
-
-
-
+#define FCCP_CMD_ENABLE_IPV6	            51
+#define FCCP_CMD_GET_IPV6_STATE    			52
+#define FCCP_CMD_ENABLE_PURE_IPV6           53
+#define FCCP_CMD_GET_PURE_IPV6_STATE    	54
 
 
 
@@ -138,6 +138,8 @@
 #define CPU_TAG_SLAVE				1
 #define CPU_TAG_ALL                 2
 
+#define IPV6_CMP(a, b) ((a.s6_addr64[0] == b.s6_addr64[0]) && (a.s6_addr64[1] == b.s6_addr64[1]))
+
 
 /* ethernet headers*/
 typedef struct eth_hdr_s 
@@ -147,12 +149,59 @@ typedef struct eth_hdr_s
     uint16_t h_vlan_proto; /* Should always be 0x8100 */
 }eth_hd_r;
 
+/*
+ *	IPv6 address structure
+ */
+
+struct cvm_ip6_in6_addr
+{
+	union 
+	{
+		uint8_t			u6_addr8[16];
+		uint16_t		u6_addr16[8];
+		uint32_t		u6_addr32[4];
+		uint64_t		u6_addr64[2];
+	} in6_u;
+#define s6_addr			in6_u.u6_addr8
+#define s6_addr16		in6_u.u6_addr16
+#define s6_addr32		in6_u.u6_addr32
+#define s6_addr64		in6_u.u6_addr64
+};
+
+
+
 typedef struct  capwap_cache_tbl_s
 {
     uint32_t use_num;
     /* Extern IP header */
-    uint32_t dip;
-    uint32_t sip;
+		union {
+				uint32_t cw_sip_v4;
+				struct	cvm_ip6_in6_addr	cw_sip_v6;
+	
+		}cw_sip_addr;
+	
+		union {
+				uint32_t cw_dip_v4;
+				struct	cvm_ip6_in6_addr	cw_dip_v6;
+		
+		}cw_dip_addr;
+					
+#define cw_sip 			cw_sip_addr.cw_sip_v4
+#define cw_dip 			cw_dip_addr.cw_dip_v4
+#define cw_ipv6_sip 	cw_sip_addr.cw_sip_v6
+#define cw_ipv6_sip8 	cw_sip_addr.cw_sip_v6.s6_addr8
+#define cw_ipv6_sip16 	cw_sip_addr.cw_sip_v6.s6_addr16
+#define cw_ipv6_sip32 	cw_sip_addr.cw_sip_v6.s6_addr32
+#define cw_ipv6_sip64 	cw_sip_addr.cw_sip_v6.s6_addr64
+#define cw_ipv6_dip 	cw_dip_addr.cw_dip_v6
+#define cw_ipv6_dip8 	cw_dip_addr.cw_dip_v6.s6_addr8
+#define cw_ipv6_dip16 	cw_dip_addr.cw_dip_v6.s6_addr16
+#define cw_ipv6_dip32 	cw_dip_addr.cw_dip_v6.s6_addr32
+#define cw_ipv6_dip64 	cw_dip_addr.cw_dip_v6.s6_addr64
+
+
+	//uint32_t dip;
+	//uint32_t sip;
     uint16_t dport;
     uint16_t sport;
     uint8_t tos;
@@ -212,10 +261,36 @@ typedef struct  rule_param_s{
 #define	acl_tunnel_eth_header_smac		tunnel_l2_header.eth_header.smac
 #define	acl_tunnel_eth_header_ether		tunnel_l2_header.eth_header.ether_type
 
+	union {
+			uint32_t acl_sip_v4;
+			struct	cvm_ip6_in6_addr acl_sip_v6;
 
+	}sip_addr;
+
+	union {
+			uint32_t acl_dip_v4;
+			struct	cvm_ip6_in6_addr acl_dip_v6;
+
+	}dip_addr;
+									
+#define ipv4_sip 	sip_addr.acl_sip_v4
+#define ipv4_dip 	dip_addr.acl_dip_v4
+#define ipv6_sip	sip_addr.acl_sip_v6
+#define ipv6_sip8 	sip_addr.acl_sip_v6.s6_addr
+#define ipv6_sip16 	sip_addr.acl_sip_v6.s6_addr16
+#define ipv6_sip32 	sip_addr.acl_sip_v6.s6_addr32
+#define ipv6_sip64 	sip_addr.acl_sip_v6.s6_addr64
+#define ipv6_dip 	dip_addr.acl_dip_v6
+#define ipv6_dip8 	dip_addr.acl_dip_v6.s6_addr
+#define ipv6_dip16 	dip_addr.acl_dip_v6.s6_addr16
+#define ipv6_dip32 	dip_addr.acl_dip_v6.s6_addr32
+#define ipv6_dip64 	dip_addr.acl_dip_v6.s6_addr64
+
+	
+	uint8_t ipv6_flag;
 	/*L3-4 header, the HASH key  14Bytes	*/	
-	uint32_t  sip;
-	uint32_t  dip;  
+	//uint32_t  sip;
+	//uint32_t  dip;  
 	uint16_t  sport;
 	uint16_t  dport;
 	uint8_t  protocol;
@@ -676,6 +751,10 @@ typedef struct se_interative_s
 #define SE_AGENT_PPPOE_ENABLE                           "config_pppoe_enable"
 #define SE_AGENT_PURE_IP_ENABLE                         "config_pure_ip_enable"
 #define SE_AGENT_SHOW_PURE_IP_ENABLE				    "show_pure_ip_enable"
+#define SE_AGENT_PURE_IPV6_ENABLE                       "config_pure_ipv6_enable"
+#define SE_AGENT_SHOW_PURE_IPV6_ENABLE				    "show_pure_ipv6_enable"
+#define SE_AGENT_IPV6_ENABLE                         	"config_ipv6_enable"
+#define SE_AGENT_SHOW_IPV6_ENABLE				    	"show_ipv6_enable"
 #define SE_AGENT_FASTFWD_ENABLE							"config_fastfwd_enable"
 #define SE_AGENT_DELETE_RULE                            "delete_specified_rule"
 #define SE_AGENT_SHOW_FIVE_TUPLE_ACL                    "show_specified_rule"
@@ -707,7 +786,8 @@ typedef struct se_interative_s
 #define SE_AGENT_SHOW_TRAFFIC_MONITOR                   "show_traffic_monitor"
 #define SE_AGENT_CLEAR_RULE_IP                          "clear_rule_ip" 
 #define SE_AGENT_SHOW_FAST_FWD_INFO                     "show fast_fwd_info"   
-#define SE_AGENT_SHOW_RULE_IP                           "show_rule_ip"          
+#define SE_AGENT_SHOW_RULE_IP                           "show_rule_ip"      
+#define SE_AGENT_SHOW_RULE_IPV6                         "show_rule_ipv6"  
 #define SE_AGENT_CONFIG_FWDLOG_ENABLE                   "config_fwdlog_enable"  
 #define SE_AGENT_SHOW_FWDLOG_ENABLE						"show_fwdlog_enable"
 #define SE_AGENT_CONFIG_FWDLOG_LEVEL                    "config_fwdlog_level"
