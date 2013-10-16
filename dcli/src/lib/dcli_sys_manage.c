@@ -6452,10 +6452,8 @@ int dcli_dns_server_write (struct vty *vty)
 	
 	if(fp && fgets(str,128,fp))
 	{	
-		fprintf(stdout,"%s",str);
 		int i = atoi(str);
 		
-		fprintf(stdout,"%d",i);
 		if(atoi(str) > 0)		
 		{
 			sprintf(show_str,"config dns server\n service dns enable\n exit\n");
