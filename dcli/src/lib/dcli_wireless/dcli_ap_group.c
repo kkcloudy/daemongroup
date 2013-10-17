@@ -633,11 +633,13 @@ DEFUN(add_del_ap_group_member_cmd_func,
         localid = vty->local;
         slot_id = vty->slotindex;
     }
+	#if 0
 	if (wtplist->count > 200) {
 		vty_out(vty, "max support operating less than 200 wtps\n");
 		destroy_input_wtp_list(wtplist);
 		return CMD_WARNING;
 	}
+	#endif
     DBusConnection *dcli_dbus_connection = NULL;
     ReInitDbusConnection(&dcli_dbus_connection,slot_id,distributFag);
 	ret = dcli_ap_group_add_del_member(localid,index,GROUPID,isadd,wtplist,&wtp_list,&apcount,dcli_dbus_connection);

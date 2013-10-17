@@ -21,6 +21,7 @@ int dcli_ap_group_add_del_member(int localid,int index,unsigned int groupid,int 
 	unsigned int count;
 	int ret;
 	unsigned int wtpid = 0;
+	DBusMessageIter	 iter_array;
 	dbus_error_init(&err);
 
 	char BUSNAME[PATH_LEN];
@@ -46,13 +47,22 @@ int dcli_ap_group_add_del_member(int localid,int index,unsigned int groupid,int 
 										 DBUS_TYPE_UINT32,
 										 &num);
 	tmp = wtplist->wtpidlist;
+	dbus_message_iter_open_container(&iter,
+								DBUS_TYPE_ARRAY,
+								DBUS_STRUCT_BEGIN_CHAR_AS_STRING
+									DBUS_TYPE_UINT32_AS_STRING
+								DBUS_STRUCT_END_CHAR_AS_STRING,
+								&iter_array);
 	for(i = 0; i < num; i++){
-		dbus_message_iter_append_basic (&iter,
-											 DBUS_TYPE_UINT32,
-											 &(tmp->wtpid));
-		tmp = tmp->next;
+		DBusMessageIter iter_struct;
+		dbus_message_iter_open_container(&iter_array,DBUS_TYPE_STRUCT,NULL,&iter_struct);
+		dbus_message_iter_append_basic (&iter_struct, DBUS_TYPE_UINT32, &(tmp->wtpid));
 
-	}	
+		tmp = tmp->next;
+		dbus_message_iter_close_container (&iter_array, &iter_struct);
+	}
+	dbus_message_iter_close_container (&iter, &iter_array);
+	
 	reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection,query,-1, &err);
 
 	dbus_message_unref(query);

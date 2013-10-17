@@ -70971,6 +70971,8 @@ DBusMessage *wid_dbus_add_del_ap_group_member(DBusConnection *conn, DBusMessage 
 	unsigned int wtpid;
 	unsigned int count = 0;
 	unsigned int *wtp_list;
+	DBusMessageIter  iter_array;
+	
 	dbus_error_init(&err);
 	
 	dbus_message_iter_init(msg,&iter);
@@ -70993,9 +70995,15 @@ DBusMessage *wid_dbus_add_del_ap_group_member(DBusConnection *conn, DBusMessage 
 			return reply;
 		}
 		memset(wtp_list, 0, num*sizeof(unsigned int));
+
+		dbus_message_iter_next(&iter);	
+		dbus_message_iter_recurse(&iter,&iter_array);
+
 		for(i = 0; i < num; i++){
-			dbus_message_iter_next(&iter);	
-			dbus_message_iter_get_basic(&iter,&wtpid);	
+			DBusMessageIter iter_struct;
+			dbus_message_iter_recurse(&iter_array,&iter_struct);
+			dbus_message_iter_get_basic(&iter_struct,&wtpid);
+			dbus_message_iter_next(&iter_array);
 			wid_syslog_debug_debug(WID_DEFAULT, "wtpid %d\n",wtpid);
 
 			if((isadd)&&(AC_WTP[wtpid]!=NULL)&&(AC_WTP[wtpid]->APGroupID == 0)){
