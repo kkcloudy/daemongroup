@@ -37,6 +37,7 @@ SCRIPT_NAME=${0##*/}
 
 if [ `ps -e | grep -c $SCRIPT_NAME` -gt 2 ] ; then
 	logger -t $LOGTAG -p cron.notice "logcheck already running."
+	logger -t $LOGTAG -p daemon.notice "logcheck already running."
 	exit 1
 fi
 
@@ -48,7 +49,7 @@ logarchive=0
 # Use Maxsize set in mount-movable
 if [ -f /var/log/log_maxsize ] ; then
 	MAXSIZE=`cat /var/log/log_maxsize 2>/dev/null`
-	if [ "$MAXSIZE" = "" -o "$MAXSIZE" = "0" ] ; then
+	if [ "$MAXSIZE"x = x -o "$MAXSIZE" = "0" ] ; then
 		MAXSIZE=$((64 * 1024 * 1024))
 	fi
 else
@@ -69,6 +70,7 @@ decho()
 }
 
 logger -t $LOGTAG -p cron.notice "MAXSIZE is [$MAXSIZE] and logarchive is [$logarchive]"
+logger -t $LOGTAG -p daemon.notice "MAXSIZE is [$MAXSIZE] and logarchive is [$logarchive]"
 
 rotate_log_archive()
 {
@@ -77,6 +79,7 @@ rotate_log_archive()
 	#We use count to check 
 	#if [ x"$logrlist" = x"" ] ; then
 	#	logger -t $LOGTAG -p cron.notice "No log archives need to be clean."
+	#	logger -t $LOGTAG -p daemon.notice "No log archives need to be clean."
 	#	return 1
 	#fi
 	count=0
@@ -90,6 +93,7 @@ rotate_log_archive()
 
 	if [ $count -eq 0 ] ; then
 		logger -t $LOGTAG -p cron.notice "No log archives need to be clean."
+		logger -t $LOGTAG -p daemon.notice "No log archives need to be clean."
 		return 1
 	fi
 
@@ -98,9 +102,11 @@ rotate_log_archive()
 		ret=$?
 		if [ $ret -eq 0 ] ; then
 			logger -t $LOGTAG -p cron.notice "Log archive $cleanfile was cleaned successfully."
+			logger -t $LOGTAG -p daemon.notice "Log archive $cleanfile was cleaned successfully."
 			return 0
 		else
 			logger -t $LOGTAG -p cron.notice "Failed to clean log archive $cleanfile with error code($ret)."
+			logger -t $LOGTAG -p daemon.notice "Failed to clean log archive $cleanfile with error code($ret)."
 			return 2
 		fi
 	else
@@ -120,6 +126,7 @@ archive_log()
 		while [ $ret -eq 5 ]  
 		do
 			logger -t $LOGTAG -p cron.notice "$ALOG failed archived with error code($ret), Trying to rotate log."
+			logger -t $LOGTAG -p daemon.notice "$ALOG failed archived with error code($ret), Trying to rotate log."
 			rotate_log_archive 0
 			ret=$?
 			if [ ! $ret -eq 0 ] ; then
@@ -129,8 +136,10 @@ archive_log()
 		done
 		if [ $ret -eq 0 ] ; then
 			logger -t $LOGTAG -p cron.notice "$ALOG was archived as $archivename successfully."
+			logger -t $LOGTAG -p daemon.notice "$ALOG was archived as $archivename successfully."
 		else
 			logger -t $LOGTAG -p cron.notice "$ALOG failed archived with error code($ret)."
+			logger -t $LOGTAG -p daemon.notice "$ALOG failed archived with error code($ret)."
 		fi
 		rm -rf /mnt/logarchives/$archivename
 	fi
@@ -177,7 +186,7 @@ check_and_clean_log()
 #		logger -t $LOGTAG -p cron.notice "$LOG still have size [$LOGSIZE], force delete it."
 #		logger -t $LOGTAG -p daemon.notice "$LOG still have size [$LOGSIZE], force delete it."
 #		> $LOG
-#		if [ "x$LOG" == "x/var/log/system.log" || "x$LOG" == "x/var/log/cron.log" || "x$LOG" == "x/var/log/sudo.log" ] ; then
+#		if [ "x$LOG" == "x/var/log/system.log" ] || [ "x$LOG" == "x/var/log/cron.log" ] || [ "x$LOG" == "x/var/log/sudo.log" ] ; then
 #			if [ -f $LOG ] ; then
 #				pkill -9 syslog-ng
 #				> $LOG
@@ -195,6 +204,7 @@ checkdir()
 	do
 		if [ -f $VFILE ] ; then
 			logger -t $LOGTAG -p cron.info "checking $VFILE."
+			logger -t $LOGTAG -p daemon.info "checking $VFILE."
 			check_and_clean_log $VFILE
 		elif [ -d $VFILE ] ; then
 			checkdir $VFILE
