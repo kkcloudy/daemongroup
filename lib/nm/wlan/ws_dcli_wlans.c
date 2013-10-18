@@ -8153,7 +8153,11 @@ int wtp_apply_interface_group(dbus_parameter parameter, DBusConnection *connecti
 						/*返回0表示失败，返回1表示成功，返回-1表示the length of interface name excel 16*/
 						/*返回-2表示interface does not exist，返回-3表示if you want to change binding interface, please delete binding wlan id first*/
 						/*返回-4表示error，返回-5示WTP ID非法，返回-6表示Group ID非法，返回-7表示partial failure*/
-						/*返回-8表示is no local interface, permission denial*/
+						//-8: IPV4  INTERFACE_NOT_EXIST ,IPV6 successfully; -9:IPV4  APPLY_IF_FAIL,IPV6 successfully
+						//-10:IPV4 delete binding wlan id first  ,IPV6 successfully; -11: IPV4 INTERFACE_NOT_EXIST,PV6 failed
+						//-12:IPV4 INTERFACE_NOT_EXIST,PV6 failed; -13:IPV4 delete binding wlan id first,IPV6 failed
+						//-14:is no local interface, permission denial;//-15:error
+
 {
     if(NULL == connection)
         return 0;
@@ -8163,7 +8167,6 @@ int wtp_apply_interface_group(dbus_parameter parameter, DBusConnection *connecti
 		*WtpList_Head = NULL;
 		return 0;
 	}
-	
 	int ret = 0;
 	int ret6 = 0;
 	int count =0;
@@ -8178,12 +8181,10 @@ int wtp_apply_interface_group(dbus_parameter parameter, DBusConnection *connecti
 	{
 		return -1; 
 	}
-	
-	//wtp_id = (unsigned int)vty->index;
-	
+		
 	ifname = (char*)malloc(strlen(inter_name)+1);
 	if(NULL == ifname)
-        return 0;
+        	return 0;
 	memset(ifname, 0, strlen(inter_name)+1);
 	memcpy(ifname, inter_name, strlen(inter_name));	
 
@@ -8250,54 +8251,40 @@ int wtp_apply_interface_group(dbus_parameter parameter, DBusConnection *connecti
 		retu = 1;
 		if((count != 0)&&(type == 1)&&(*WtpList_Head!=NULL)){
 			retu = -7;
-			/*vty_out(vty,"wtp ");					
-			for(i=0; i<count; i++){
-				
-				vty_out(vty," 555.\n");
-				if(Wtp_Show_Node == NULL)
-					Wtp_Show_Node = WtpList_Head->WtpList_list;
-				else 
-					Wtp_Show_Node = Wtp_Show_Node->next;
-
-				if(Wtp_Show_Node == NULL)
-					break;
-				
-				vty_out(vty,"%d \n",Wtp_Show_Node->WtpId);					
-			}
-			
-			vty_out(vty," failed.\n");*/
 		}
 	}	
 	else if(ret == 0)
 	{
-		retu = 1;
+		if(ret6 != 0) 
+			retu = -8;
 	}
 	else if(ret6 == 0)
 	{
-		retu = 1;
+		if(ret == INTERFACE_NOT_EXIST) 
+			retu = -9;
+		else if(ret == APPLY_IF_FAIL)
+			retu = -10;
+		else if(ret == WID_BINDING_WLAN)
+			retu = -11;
 	}
 	else
 	{			
 		if(ret == INTERFACE_NOT_EXIST) 
-			retu = -2;
+			retu = -12;
 		else if(ret == APPLY_IF_FAIL)
 			retu = 0;
 		else if(ret == WID_BINDING_WLAN)
-			retu = -3;		
+			retu = -13;		
 		else if (ret == WID_INTERFACE_NOT_BE_LOCAL_BOARD)
-			retu = -8;
+			retu = -14;
 		else
-			retu = -4;
+			retu = -15;
 	}
 	
 	if(ifname!= NULL){
 		free(ifname);
 		ifname = NULL;
 	}
-	/*if(*WtpList_Head != NULL){
-		dcli_free_WtpList(WtpList_Head);
-	}*/
-	
 	return retu; 
 }
 #endif
@@ -9521,7 +9508,7 @@ int wtp_used_group(dbus_parameter parameter, DBusConnection *connection,int grou
 				/*返回-6表示error，返回-7示WTP ID非法，返回-8表示Group ID非法，返回-9表示partial failure*/
 {	
 	if(NULL == connection)
-        return 0;
+        	return 0;
         
 	int ret = 0;
 	int count = 0;
@@ -9586,26 +9573,11 @@ int wtp_used_group(dbus_parameter parameter, DBusConnection *connection,int grou
 	{
 		return 0;
 	}
-
 	if(ret == 0)
 	{
 		retu = 1;
 		if((count != 0)&&(type == 1)&&(*WtpList_Head!=NULL)){
 			retu = -9;
-			/*vty_out(vty,"wtp ");					
-			for(i=0; i<count; i++){
-				if(Wtp_Show_Node == NULL)
-					Wtp_Show_Node = WtpList_Head->WtpList_list;
-				else 
-					Wtp_Show_Node = Wtp_Show_Node->next;
-
-				if(Wtp_Show_Node == NULL)
-					break;
-				
-				vty_out(vty,"%d \n",Wtp_Show_Node->WtpId);					
-			}
-			
-			vty_out(vty," failed.\n");*/
 		}
 	}	
 	else if(ret == WTP_ID_NOT_EXIST)
@@ -9632,7 +9604,6 @@ int wtp_used_group(dbus_parameter parameter, DBusConnection *connection,int grou
 	{
 		retu = -6;
 	}
-	
 	return retu; 
 }
 #endif
@@ -9848,7 +9819,6 @@ int config_wtp_max_sta_num_group(dbus_parameter parameter, DBusConnection *conne
 		else
 			retu = -4;
 	}
-
 	else if(type == 1){
 		if((ret == 0)&&(ret1 == 0))
 		{
@@ -9856,19 +9826,6 @@ int config_wtp_max_sta_num_group(dbus_parameter parameter, DBusConnection *conne
 			if(( finalnum!= 0)&&(type == 1)&&(*WtpList_Head!=NULL)){
 				*fail_num = finalnum;
 				retu = -8;
-				/*vty_out(vty,"wtp ");
-				for(i=0; i<finalnum; i++)
-				{
-					vty_out(vty,"%d \n",WtpList_Head[i].WtpId);
-					 if(WtpList_Head[i].FailReason == 'f')
-					{
-						vty_out(vty,"<error> %d sta(s) has accessed before you set max sta num %d\n",WtpList_Head[i].WtpStaNum,wtp_max_sta);
-					}
-					else
-					{
-						vty_out(vty,"fail\n");
-					}
-				}*/
 			}
 		}
 		else if (ret == GROUP_ID_NOT_EXIST)
@@ -12483,15 +12440,15 @@ void Free_set_wtp_wtpname_group(struct WtpList *WtpList_Head)
 /*返回-5时，调用Free_set_wtp_wtpname_group()释放空间*/
 /*group_type为1，表示组配置*/
 /*group_type为0，表示单独配置*/
-int set_wtp_wtpname_group(dbus_parameter parameter, DBusConnection *connection,int group_type,int group_id,char * wtpname,struct WtpList **WtpList_Head)
-																/*返回0表示失败，返回1表示成功*/
-																/*返回-1表示wtp name is too long,should be 1 to DEFAULT_LEN-1*/
-																/*返回-2表示wtp id does not exist，返回-3示WTP ID非法*/
-																/*返回-4表示Group ID非法，返回-5表示partial failure*/
-																/*返回-6表示group id does not exist*/
+int set_wtp_wtpname_group(dbus_parameter parameter, DBusConnection *connection,int group_type,int group_id,char *wtpname,struct WtpList **WtpList_Head)
+											/*返回0表示失败，返回1表示成功*/
+											/*返回-1表示wtp name is too long,should be 1 to DEFAULT_LEN-1*/
+											/*返回-2表示wtp id does not exist，返回-3示WTP ID非法*/
+											/*返回-4表示Group ID非法，返回-5表示partial failure*/
+											/*返回-6表示group id does not exist*/
 {	
-    if(NULL == connection)
-        return 0;
+    	if(NULL == connection)
+        	return 0;
 	
 	if(NULL == wtpname)
 	{
@@ -12554,7 +12511,7 @@ int set_wtp_wtpname_group(dbus_parameter parameter, DBusConnection *connection,i
 			*WtpList_Head =(*dcli_init_func)
 				  (
 					  parameter.instance_id,
-					  parameter.slot_id,
+					  0,
 					  connection, 
 					  type, 
 					  id, 
@@ -12589,21 +12546,6 @@ int set_wtp_wtpname_group(dbus_parameter parameter, DBusConnection *connection,i
 			if((count != 0)&&(type == 1)&&(*WtpList_Head!=NULL))
 			{
 				retu = -5;
-				/*vty_out(vty,"wtp ");					
-				for(i=0; i<count; i++)
-				{
-					if(Wtp_Show_Node == NULL)
-						Wtp_Show_Node = WtpList_Head->WtpList_list;
-					else 
-						Wtp_Show_Node = Wtp_Show_Node->next;
-
-					if(Wtp_Show_Node == NULL)
-						break;
-					
-					vty_out(vty,"%d ",Wtp_Show_Node->WtpId);
-					vty_out(vty,"%c",Wtp_Show_Node->FailReason);
-				}					
-				vty_out(vty," failed.\n");*/
 			}
 		}
 		else if (ret == GROUP_ID_NOT_EXIST)
@@ -16981,8 +16923,8 @@ int set_ac_ap_ntp_func_group(dbus_parameter parameter, DBusConnection *connectio
 												/*返回-5表示input interface only with 'start' or 'stop'，返回-6表示interval should be 60-65535*/
 												/*返回-7表示Group ID非法，返回-8表示partial failure，返回-9表示group id does not exist*/
 {
-    if(NULL == connection)
-        return 0;
+    	if(NULL == connection)
+       	 	return 0;
         
 	if((NULL == Type)||(NULL == value))
 	{
@@ -17028,19 +16970,11 @@ int set_ac_ap_ntp_func_group(dbus_parameter parameter, DBusConnection *connectio
 		return -5;
 	}
 	
-	//if (2 == argc) {
-		ntpinterval = strtoul((char *)value, NULL, 10);
-		/*if (ntpinterval <= 0)
-		{
-			vty_out(vty,"%% Invalid ntp interval: %s !", argv[1]);
-			return CMD_WARNING;
-		}*/
-		if (ntpinterval < 60 || ntpinterval > 65535)
-			{
-   				//vty_out(vty,"%% Invalid ntp interval: %s ! interval should be 60-65535!\n", argv[1]);   				
-   				return -6;
-			}
-	//}
+	ntpinterval = strtoul((char *)value, NULL, 10);
+	if (ntpinterval < 60 || ntpinterval > 65535)
+	{
+		return -6;
+	}
 	
 	void*(*dcli_init_func)(
 						int ,
@@ -17087,8 +17021,6 @@ int set_ac_ap_ntp_func_group(dbus_parameter parameter, DBusConnection *connectio
 	{
 		if(ret == 0)
 			retu = 1;
-		/*else if (ret == WTP_NOT_IN_RUN_STATE)
-			retu = -1;*/
 		else if(ret == WTP_ID_NOT_EXIST)
 			retu = -2;
 		else
@@ -17102,20 +17034,6 @@ int set_ac_ap_ntp_func_group(dbus_parameter parameter, DBusConnection *connectio
 			if((count != 0)&&(type == 1)&&(*WtpList_Head!=NULL))
 			{
 				retu = -8;
-				/*vty_out(vty,"wtp ");					
-				for(i=0; i<count; i++)
-				{
-					if(Wtp_Show_Node == NULL)
-						Wtp_Show_Node = WtpList_Head->WtpList_list;
-					else 
-						Wtp_Show_Node = Wtp_Show_Node->next;
-		
-					if(Wtp_Show_Node == NULL)
-						break;
-							
-					vty_out(vty,"%d ",Wtp_Show_Node->WtpId);					
-				}						
-				vty_out(vty," failed.\n");*/
 			}
 		}
 	else if (ret == GROUP_ID_NOT_EXIST)
@@ -27514,7 +27432,8 @@ int show_all_wtp_network_info_cmd(dbus_parameter parameter, DBusConnection *conn
 		retu = 1;
 	}
 	else if ((NULL == *WtpHead) && (0 == ret)) {
-        retu = SNMPD_CONNECTION_ERROR;
+//         retu = SNMPD_CONNECTION_ERROR;
+        retu = -2;
 	}
 	else
 	{

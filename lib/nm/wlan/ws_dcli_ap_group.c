@@ -45,17 +45,18 @@ extern "C"
 #include <dirent.h>
 
 
-int create_ap_group_cmd(int instance_id,char *ap_g_id,char *ap_g_name)/*·µ»Ø0±íÊ¾Ê§°Ü£¬·µ»Ø1±íÊ¾³É¹¦£¬·µ»Ø-1±íÊ¾unknown id format*/
-																		   /*·µ»Ø-2±íÊ¾ap_g_id should be 1 to WTP_GROUP_NUM-1£¬·µ»Ø-3±íÊ¾name is too long,out of the limit of 128*/
-																		   /*·µ»Ø-4±íÊ¾id exist£¬·µ»Ø-5±íÊ¾error*/
+int ccgi_create_ap_group_cmd(dbus_parameter  parameter, DBusConnection *connection, char *ap_g_id, char *ap_g_name)
+								/*·µ»Ø1±íÊ¾Ê§°Ü£¬·µ»Ø0±íÊ¾³É¹¦£¬·µ»Ø2±íÊ¾unknown id format*/
+								/*·µ»Ø3±íÊ¾ap_g_id should be 1 to WTP_GROUP_NUM-1£¬·µ»Ø4±íÊ¾name is too long,out of the limit of 64*/
+								/*·µ»Ø5±íÊ¾id exist£¬·µ»Ø6±íÊ¾error*/
 {
 	if((NULL == ap_g_id)||(NULL == ap_g_name))
-		return 0;
+		return 1;
 	
 	int ret,len;
 	unsigned char isAdd;	
 	unsigned int id;
-	char *name;
+	char *name = NULL;
 	DBusMessage *query, *reply;	
 	DBusMessageIter	 iter;
 	DBusError err;
@@ -64,35 +65,28 @@ int create_ap_group_cmd(int instance_id,char *ap_g_id,char *ap_g_name)/*·µ»Ø0±íÊ
 	
 	ret = parse_int_ID((char*)ap_g_id, &id);
 	if(ret != WID_DBUS_SUCCESS){
-		return -1;
+		return 2;
 	}	
 	if(id >= WTP_GROUP_NUM || id == 0){
-		return -2;
+		return 3;
 	}
 	len = strlen(ap_g_name);
-	if(len > 128){		
-		return -3;
+	if(len > WTP_AP_GROUP_NAME_MAX_LEN){		
+		return 4;
 	}
 	name = (char*)malloc(strlen(ap_g_name)+1);
 	if(NULL == name)
-		return 0;
+		return 1;
 	memset(name, 0, strlen(ap_g_name)+1);
 	memcpy(name, ap_g_name, strlen(ap_g_name));		
 	
-	int index;
 	char BUSNAME[PATH_LEN];
 	char OBJPATH[PATH_LEN];
 	char INTERFACE[PATH_LEN];
-	/*if(vty->node == CONFIG_NODE){
-		index = 0;
-	}else if(vty->node == HANSI_NODE){
-		index = vty->index;
-	}*/
-	index = instance_id;
-	
-	ReInitDbusPath(index,WID_DBUS_BUSNAME,BUSNAME);
-	ReInitDbusPath(index,WID_DBUS_AP_GROUP_OBJPATH,OBJPATH);
-	ReInitDbusPath(index,WID_DBUS_AP_GROUP_INTERFACE,INTERFACE);
+
+	ccgi_ReInitDbusPath_v2(parameter.local_id, parameter.instance_id,WID_DBUS_BUSNAME,BUSNAME);
+	ccgi_ReInitDbusPath_v2(parameter.local_id, parameter.instance_id,WID_DBUS_AP_GROUP_OBJPATH,OBJPATH);
+	ccgi_ReInitDbusPath_v2(parameter.local_id, parameter.instance_id,WID_DBUS_AP_GROUP_INTERFACE,INTERFACE);
 	query = dbus_message_new_method_call(BUSNAME,OBJPATH,INTERFACE,WID_DBUS_AP_GROUP_METHOD_CREATE);
 
 	dbus_error_init(&err);
@@ -102,7 +96,7 @@ int create_ap_group_cmd(int instance_id,char *ap_g_id,char *ap_g_name)/*·µ»Ø0±íÊ
 						DBUS_TYPE_STRING,&name,
 						DBUS_TYPE_INVALID);
 
-	reply = dbus_connection_send_with_reply_and_block (ccgi_dbus_connection,query,-1, &err);
+	reply = dbus_connection_send_with_reply_and_block (connection,query,-1, &err);
 	
 	dbus_message_unref(query);
 	
@@ -115,22 +109,22 @@ int create_ap_group_cmd(int instance_id,char *ap_g_id,char *ap_g_name)/*·µ»Ø0±íÊ
 			free(name);
 			name = NULL;
 		}
-		return 0;
+		return 1;
 	}
 	dbus_message_iter_init(reply,&iter);
 	dbus_message_iter_get_basic(&iter,&ret);
 
 	if(ret == 0)
 	{
-		retu = 1;
+		retu = 0;
 	}
 	else if(ret == WLAN_ID_BE_USED)
 	{
-		retu = -4;
+		retu = 5;
 	}
 	else
 	{
-		retu = -5;
+		retu = 6;
 	}
 
 	dbus_message_unref(reply);
@@ -138,12 +132,13 @@ int create_ap_group_cmd(int instance_id,char *ap_g_id,char *ap_g_name)/*·µ»Ø0±íÊ
 	return retu;	
 }
 
-int del_ap_group_cmd(int instance_id,char *ap_g_id)/*·µ»Ø0±íÊ¾Ê§°Ü£¬·µ»Ø1±íÊ¾³É¹¦£¬·µ»Ø-1±íÊ¾unknown id format*/
-													    /*·µ»Ø-2±íÊ¾ap_g_id should be 1 to WTP_GROUP_NUM-1£¬·µ»Ø-3±íÊ¾ap group id does not exist*/
-													    /*·µ»Ø-4±íÊ¾error*/
+int ccgi_del_ap_group_cmd(dbus_parameter  parameter, DBusConnection *connection, char *ap_g_id)
+										/*·µ»Ø0±íÊ¾³É¹¦£¬·µ»Ø-1±íÊ¾Ê§°Ü£¬·µ»Ø-2±íÊ¾unknown id format*/
+										/*·µ»Ø-3±íÊ¾ap_g_id should be 1 to WTP_GROUP_NUM-1£¬·µ»Ø-4±íÊ¾(NULL == reply)*/
+										/*·µ»Ø-5±íÊ¾WLAN_ID_NOT_EXIST£¬·µ»Ø-6±íÊ¾error*/
 {
-	if(NULL == ap_g_id)
-		return 0;
+	if((NULL == ap_g_id)||(NULL == connection))
+		return -1;
 	
 	int ret;
 	unsigned int id;
@@ -154,26 +149,19 @@ int del_ap_group_cmd(int instance_id,char *ap_g_id)/*·µ»Ø0±íÊ¾Ê§°Ü£¬·µ»Ø1±íÊ¾³É¹
 	
 	ret = parse_int_ID((char*)ap_g_id, &id);
 	if(ret != WID_DBUS_SUCCESS){
-		return -1;
+		return -2;
 	}	
 	if(id >= WTP_GROUP_NUM || id == 0){
-		return -2;
+		return -3;
 	}
 	
-	int index;
 	char BUSNAME[PATH_LEN];
 	char OBJPATH[PATH_LEN];
 	char INTERFACE[PATH_LEN];
-	/*if(vty->node == CONFIG_NODE){
-		index = 0;
-	}else if(vty->node == HANSI_NODE){
-		index = vty->index;
-	}*/
-	index = instance_id;
-	
-	ReInitDbusPath(index,WID_DBUS_BUSNAME,BUSNAME);
-	ReInitDbusPath(index,WID_DBUS_AP_GROUP_OBJPATH,OBJPATH);
-	ReInitDbusPath(index,WID_DBUS_AP_GROUP_INTERFACE,INTERFACE);
+
+	ccgi_ReInitDbusPath_v2(parameter.local_id, parameter.instance_id,WID_DBUS_BUSNAME,BUSNAME);
+	ccgi_ReInitDbusPath_v2(parameter.local_id, parameter.instance_id,WID_DBUS_AP_GROUP_OBJPATH,OBJPATH);
+	ccgi_ReInitDbusPath_v2(parameter.local_id, parameter.instance_id,WID_DBUS_AP_GROUP_INTERFACE,INTERFACE);
 	query = dbus_message_new_method_call(BUSNAME,OBJPATH,INTERFACE,WID_DBUS_AP_GROUP_METHOD_DEL);
 
 	dbus_error_init(&err);
@@ -182,7 +170,7 @@ int del_ap_group_cmd(int instance_id,char *ap_g_id)/*·µ»Ø0±íÊ¾Ê§°Ü£¬·µ»Ø1±íÊ¾³É¹
 						DBUS_TYPE_UINT32,&id,
 						DBUS_TYPE_INVALID);
 
-	reply = dbus_connection_send_with_reply_and_block (ccgi_dbus_connection,query,-1, &err);
+	reply = dbus_connection_send_with_reply_and_block (connection,query,-1, &err);
 	
 	dbus_message_unref(query);
 	
@@ -190,22 +178,22 @@ int del_ap_group_cmd(int instance_id,char *ap_g_id)/*·µ»Ø0±íÊ¾Ê§°Ü£¬·µ»Ø1±íÊ¾³É¹
 		if (dbus_error_is_set(&err)) {
 			dbus_error_free(&err);
 		}
-		return 0;
+		return -4;
 	}
 	dbus_message_iter_init(reply,&iter);
 	dbus_message_iter_get_basic(&iter,&ret);
 
 	if(ret == 0)
 	{
-		retu = 1;
+		retu = -0;
 	}
 	else if(ret == WLAN_ID_NOT_EXIST)
 	{
-		retu = -3;
+		retu = -5;
 	}
 	else
 	{
-		retu = -4;
+		retu = -6;
 	}
 
 	dbus_message_unref(reply);
@@ -215,12 +203,15 @@ int del_ap_group_cmd(int instance_id,char *ap_g_id)/*·µ»Ø0±íÊ¾Ê§°Ü£¬·µ»Ø1±íÊ¾³É¹
 
 /*operÎª"add"»ò"delete"*/
 /*wtp_id_listÎª"all"»òAP IDÁÐ±í£¬¸ñÊ½Îª1,8,9-20,33*/
-int add_del_ap_group_member_cmd(int instance_id,int ap_g_id,char *oper,char *wtp_id_list)/*·µ»Ø0±íÊ¾Ê§°Ü£¬·µ»Ø1±íÊ¾³É¹¦£¬·µ»Ø-1±íÊ¾unknown command*/
-																								  /*·µ»Ø-2±íÊ¾set wtp list error,like 1,8,9-20,33£¬·µ»Ø-3±íÊ¾ap group id·Ç·¨*/
-																							      /*·µ»Ø-4±íÊ¾ap group id does not exist£¬·µ»Ø-5±íÊ¾error*/
+int ccgi_add_del_ap_group_member_cmd(dbus_parameter  parameter, DBusConnection *connection,char *ap_g_id,char *oper,char *wtp_id_list)
+									/*·µ»Ø0±íÊ¾³É¹¦£¬·µ»Ø1±íÊ¾Ò»²¿·Öap Ã»ÓÐÉ¾³ý³É¹¦£¬*/
+									/*·µ»Ø-1±íÊ¾Ö¸ÕëÎª¿Õ·µ»Ø-2±íÊ¾²Ù×÷Ö»ÄÜÊÇaddºÍdelete;*/
+									/*-3±íÊ¾set wtp list error,like 1,8,9-20,33£¬*/
+									/*·µ»Ø-4±íÊ¾ap group id  ²»ÕýÈ·£¬·µ»Ø-5±íÊ¾ap group id  ²»´æÔÚ£¬·µ»Ø-6±íÊ¾error*/
 {
-	if((NULL == oper)||(NULL == wtp_id_list))
-		return 0;
+	int index = 0;
+	if((NULL == connection)||(NULL == ap_g_id)||(NULL == oper)||(NULL == wtp_id_list))
+		return -1;
 	
 	int ret;
 	unsigned int isadd = 1;	
@@ -235,18 +226,19 @@ int add_del_ap_group_member_cmd(int instance_id,int ap_g_id,char *oper,char *wtp
 	}else if(strncmp("delete",oper,(strlen(oper)>6)?6:strlen(oper))==0){
 		isadd = 0;
 	}else{
-		return -1;
+		return -2;
 	}
 	
 	wtplist = (struct tag_wtpid_list*)malloc(sizeof(struct tag_wtpid_list));
 	if(NULL == wtplist)
-		return 0;
+		return -1;
 	wtplist->wtpidlist = NULL ; 	
 	wtplist->count = 0;
 	
 	if (!strcmp(wtp_id_list,"all"))
 	{
-		;	
+		wtplist->wtpidlist = NULL ; 
+		wtplist->count = 0;	
 	}else{
 		ret = parse_wtpid_list((char*)wtp_id_list,&wtplist);
 		if(ret != 0)
@@ -256,30 +248,24 @@ int add_del_ap_group_member_cmd(int instance_id,int ap_g_id,char *oper,char *wtp
 				tmp = tmp->next;
 			}
 			destroy_input_wtp_list(wtplist);
-			return -2;
+			return -3;
 		}
 		else
 		{
 			delsame(wtplist);			
 		}
 	}
-	int index = 0;
-	/*if(vty->node == AP_GROUP_NODE){
-		index = 0;
-		GROUPID = vty->index;
-	}else if(vty->node == HANSI_AP_GROUP_NODE){
-		index = vty->index;
-		GROUPID = vty->index_sub;
-	}*/
-	index = instance_id;
-	GROUPID = ap_g_id;
+	index = parameter.instance_id;
+	ret = parse_int_ID((char*)ap_g_id, &GROUPID);
+	if(ret != WID_DBUS_SUCCESS){
+		return -4;
+	}	
 	if(GROUPID >= WTP_GROUP_NUM || GROUPID == 0){
-		syslog(LOG_DEBUG,"ap group id in add_del_ap_group_member_cmd is %d\n",GROUPID);
-		if(NULL!=wtplist){free(wtplist);wtplist=NULL;}
-		return -3;
+		return -4;
 	}
 		
 	int(*dcli_init_func)(
+						int ,
 						int ,
 						unsigned int ,
 						int ,
@@ -293,35 +279,37 @@ int add_del_ap_group_member_cmd(int instance_id,int ap_g_id,char *oper,char *wtp
 
 	ret =(*dcli_init_func)
 		  (
+		  	  0,
 			  index,
 			  GROUPID,
 			  isadd,
 			  wtplist,
 			  &wtp_list,
 			  &apcount,
-			  ccgi_dbus_connection
+			  connection
 		  );
 
 	if(ret == 0)
 	{
-		retu = 1;
+		retu = 0;
 		if(apcount != 0){
+			retu = 1;
 			FREE_OBJECT(wtp_list);
 		}
 	}
 	else if(ret == WLAN_ID_NOT_EXIST)
 	{
-		retu = -4;
+		retu = -5;
 	}
 	else
 	{
-		retu = -5;
+		retu = -6;
 	}
 
 	return retu;	
 }
 
-void Free_show_group_member_cmd(unsigned int *wtp_list)
+void Free_ccgi_show_group_member_cmd(unsigned int *wtp_list)
 {	
 	if(wtp_list){
 		free(wtp_list);
@@ -329,8 +317,9 @@ void Free_show_group_member_cmd(unsigned int *wtp_list)
 	}
 }
 
-/*Ö»Òªµ÷ÓÃº¯Êý£¬¾Íµ÷ÓÃFree_show_group_member_cmd()ÊÍ·Å¿Õ¼ä*/
-int show_group_member_cmd(int instance_id,int ap_g_id,unsigned int **wtp_list)/*·µ»Ø0±íÊ¾Ê§°Ü£¬·µ»Ø1±íÊ¾³É¹¦£¬·µ»Ø-1±íÊ¾ap group id·Ç·¨*/
+/*Ö»Òªµ÷ÓÃº¯Êý£¬¾Íµ÷ÓÃFree_ccgi_show_group_member_cmd()ÊÍ·Å¿Õ¼ä*/
+int ccgi_show_group_member_cmd(dbus_parameter  parameter, DBusConnection *connection,unsigned int id,unsigned int **wtp_list,unsigned int *count)
+									/*·µ»Ø0±íÊ¾Ê§°Ü£¬·µ»Ø1±íÊ¾³É¹¦£¬·µ»Ø-1±íÊ¾ap group id·Ç·¨*/
 																					   /*·µ»Ø-2±íÊ¾ap group id does not exist£¬·µ»Ø-3±íÊ¾error*/
 {
 	int ret;
@@ -338,27 +327,16 @@ int show_group_member_cmd(int instance_id,int ap_g_id,unsigned int **wtp_list)/*
 	unsigned int apcount = 0;
 	int index = 0;
 	int retu = 0;
-    
-	/*if(vty->node == AP_GROUP_NODE)
-	{
-	    vty_out(vty,"AP_GROUP_NODE = %d",vty->node);
-		index = 0;
-		groupid = vty->index;
-	}
-	else if(vty->node == HANSI_AP_GROUP_NODE)
-	{
-	    vty_out(vty,"HANSI_AP_GROUP_NODE = %d",vty->node);
-		index = vty->index;
-		groupid = vty->index_sub;
-	}*/
-	index = instance_id;
-	groupid = ap_g_id;
+
+    	index= parameter.instance_id;
+	groupid = id;
 	if(groupid >= WTP_GROUP_NUM || groupid == 0){
-		syslog(LOG_DEBUG,"ap group id in show_group_member_cmd is %d\n",groupid);
-		return -1;
+		
+		return -2;
 	}
 		
-	int(*dcli_init_func)(
+	int(*dcli_init_func)(			
+						int ,
 						int ,
 						unsigned int ,
 						unsigned int **,
@@ -370,29 +348,126 @@ int show_group_member_cmd(int instance_id,int ap_g_id,unsigned int **wtp_list)/*
 
 	ret =(*dcli_init_func)
 		  (
+		  	  0,
 			  index,
 			  groupid,
 			  wtp_list,
 			  &apcount,
-			  ccgi_dbus_connection
+			  connection
 		  );
 
 	if(ret == 0)
-	{
-		retu = 1;
+	{	
+		*count=apcount;
+		retu = 0;
 	}
 	else if(ret == WLAN_ID_NOT_EXIST)
 	{
-		retu = -2;
+		retu = -3;
 	}
 	else
 	{
-		retu = -3;
+		retu = -4;
 	}
 
 	return retu;	
 }
+void Free_ccgi_show_ap_group_cmd(struct ap_group_list *head)
+{
+	struct ap_group_list *f1= NULL, *f2= NULL;
+	if(head)
+	{	
+		f1= head->next;
+		if(f1)
+		{
+			f2=f1->next;
+			while(f2!=NULL)
+			{
+				FREE_OBJECT(f1->test_name);
+				free(f1);
+				f1=f2;
+				f2=f2->next;
+			}
+			FREE_OBJECT(f1->test_name);
+			free(f1);
+			f1=f2;
+			f2=f2->next;
+		}
+	}
+}
 
+/*Ö»Òªµ÷ÓÃº¯Êý£¬¾Íµ÷ÓÃFree_ccgi_show_ap_group_cmd()ÊÍ·Å¿Õ¼ä*/
+int ccgi_show_ap_group_cmd(dbus_parameter  parameter, DBusConnection *connection, struct ap_group_list *head)
+											/*·µ»Ø-1±íÊ¾Ê§°Ü£¬·µ»Ø0±íÊ¾³É¹¦£¬·µ»Ø-2±íÊ¾(NULL == reply)*/
+{
+	if((NULL == connection)||(NULL == head))
+		return  -1;
+
+	int ret;
+	char  i = 0,len=0;
+	unsigned int ap_group_count = 0;
+	char BUSNAME[PATH_LEN];
+	char OBJPATH[PATH_LEN];
+	char INTERFACE[PATH_LEN];
+	DBusMessage *query, *reply; 
+	DBusMessageIter  iter;
+	DBusError err;
+	unsigned int test_id;
+	unsigned char *test_name;
+	struct ap_group_list *q=NULL, *tail=NULL;
+
+
+	
+	ccgi_ReInitDbusPath_v2(parameter.local_id, parameter.instance_id,WID_DBUS_BUSNAME,BUSNAME);
+	ccgi_ReInitDbusPath_v2(parameter.local_id, parameter.instance_id,WID_DBUS_AP_GROUP_OBJPATH,OBJPATH);
+	ccgi_ReInitDbusPath_v2(parameter.local_id, parameter.instance_id,WID_DBUS_AP_GROUP_INTERFACE,INTERFACE);
+	query = dbus_message_new_method_call(BUSNAME,OBJPATH,INTERFACE,WID_DBUS_AP_GROUP_METHOD_SHOW_ALL);
+
+	dbus_error_init(&err);
+    	reply = dbus_connection_send_with_reply_and_block (connection,query,-1, &err);
+
+	dbus_message_unref(query);
+
+	if (NULL == reply) {
+		if (dbus_error_is_set(&err)) {
+			dbus_error_free(&err);
+		}
+		return -2;
+	}
+
+    	dbus_message_iter_init(reply,&iter);
+	dbus_message_iter_get_basic(&iter,&ret);
+
+	dbus_message_iter_next(&iter);	
+	dbus_message_iter_get_basic(&iter,&ap_group_count);
+	
+	head->next = NULL;
+	tail=head;
+	for(i=0; i < ap_group_count; i++){
+		dbus_message_iter_next(&iter);	
+		dbus_message_iter_get_basic(&iter,&test_id);
+		dbus_message_iter_next(&iter);	
+		dbus_message_iter_get_basic(&iter,&test_name);
+		q=(struct ap_group_list*)malloc(sizeof(struct ap_group_list));
+		if(NULL != q)
+		{
+			q->test_id = test_id;
+			len = strlen(test_name)+1;
+			q->test_name = (char *)malloc(len);
+			if(q->test_name != NULL)
+			{
+				memset(q->test_name, 0, len);
+				memcpy(q->test_name, test_name, len);
+			}
+			q->next = NULL;
+			tail->next = q;
+			tail=q;
+		}
+	}
+	dbus_message_unref(reply);
+
+	return 0; 
+}
 
 
 #ifdef __cplusplus

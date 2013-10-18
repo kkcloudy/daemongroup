@@ -203,7 +203,15 @@ void ShowWtpListPage(char *m,int n,char *t,struct list *lpublic,struct list *lwl
 				  {
                     fprintf(cgiOut,"<tr height=25>"\
   					  "<td align=left id=tdleft><a href=wp_wtpnew.cgi?UN=%s target=mainFrame class=top><font id=%s>%s</font><font id=yingwen_san> AP</font></a></td>",m,search(lpublic,"menu_san"),search(lpublic,"create"));                       
-                    fprintf(cgiOut,"</tr>");				 
+                    fprintf(cgiOut,"</tr>");
+		    				  		    
+		    fprintf(cgiOut,"<tr height=25>"\
+  					  "<td align=left id=tdleft><a href=wp_wtpgrouplist.cgi?UN=%s target=mainFrame class=top><font id=%s>%s</font></a></td>",m,search(lpublic,"menu_san"),search(lwlan,"ap_group_list"));                       
+                    fprintf(cgiOut,"</tr>");
+	
+		    fprintf(cgiOut,"<tr height=25>"\
+  					  "<td align=left id=tdleft><a href=wp_wtpgroupnew.cgi?UN=%s target=mainFrame class=top><font id=%s>%s</font></a></td>",m,search(lpublic,"menu_san"),search(lwlan,"create_apgroup"));                       
+                    fprintf(cgiOut,"</tr>");
 				  }
 				    fprintf(cgiOut,"<tr height=26>"\
                     "<td align=left id=tdleft background=/images/bottom_bg.gif style=\"border-right:0\"><font id=yingwen_san>AP</font><font id=%s> %s</font></td>",search(lpublic,"menu_san"),search(lpublic,"mode"));   /*Õª≥ˆœ‘ æ*/

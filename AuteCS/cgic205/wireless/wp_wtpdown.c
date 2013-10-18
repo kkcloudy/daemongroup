@@ -180,6 +180,14 @@ int ShowdownPage(char *m,struct list *lpublic,struct list *lwlan,struct list *ls
   				  "<tr height=25>"\
                     "<td align=left id=tdleft ><a href=wp_wtpnew.cgi?UN=%s target=mainFrame class=top><font id=%s>%s</font><font id=yingwen_san> AP</font></td>",m,search(lpublic,"menu_san"),search(lpublic,"create")); 
 				  fprintf(cgiOut,"</tr>");
+				  		    				  		    
+		    fprintf(cgiOut,"<tr height=25>"\
+  					  "<td align=left id=tdleft><a href=wp_wtpgrouplist.cgi?UN=%s target=mainFrame class=top><font id=%s>%s</font></a></td>",m,search(lpublic,"menu_san"),search(lwlan,"ap_group_list"));                       
+                    fprintf(cgiOut,"</tr>");
+		    
+		    fprintf(cgiOut,"<tr height=25>"\
+  					  "<td align=left id=tdleft><a href=wp_wtpgroupnew.cgi?UN=%s target=mainFrame class=top><font id=%s>%s</font></a></td>",m,search(lpublic,"menu_san"),search(lwlan,"create_apgroup"));                       
+                    fprintf(cgiOut,"</tr>");
 				   fprintf(cgiOut,"<tr height=25>"\
   					"<td align=left id=tdleft><a href=wp_wtpver.cgi?UN=%s target=mainFrame class=top><font id=yingwen_san>AP</font><font id=%s> %s</font></a></td>",m,search(lpublic,"menu_san"),search(lpublic,"mode"));                       
                   fprintf(cgiOut,"</tr>");
