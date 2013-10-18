@@ -1271,6 +1271,7 @@ static void handle_auth(struct asd_data *wasd, struct ieee80211_mgmt *mgmt,
 	if((wasd->conf->auth_algs & WPA_AUTH_ALG_SHARED) && (auth_transaction != 1) && (auth_transaction != 3)){
 		wasd->info->abort_key_error++;
 		resp = WLAN_STATUS_CHALLENGE_FAIL;
+		Rcode = REASON_CODE_MAX;
 		goto fail;
 	}
 	//
@@ -1345,6 +1346,7 @@ static void handle_auth(struct asd_data *wasd, struct ieee80211_mgmt *mgmt,
 
 	if (wasd->tkip_countermeasures) {
 		resp = WLAN_REASON_MICHAEL_MIC_FAILURE;
+		Rcode = REASON_CODE_MAX;		
 		goto fail;
 	}
 
@@ -1365,7 +1367,7 @@ static void handle_auth(struct asd_data *wasd, struct ieee80211_mgmt *mgmt,
 			asd_syslog_h(LOG_WARNING,"WSTA","Station Authentication Fail:StaMac:"MACSTR" Radio id %d SSIDName:%s Cause %d Desc:%s APID:%d\n",MAC2STR(mgmt->sa),wasd->Radio_L_ID,SSID,FLOW_BANLANCE,reas,wtpid);
 		}
 		resp = WLAN_STATUS_NOT_SUPPORTED_AUTH_ALG;
-		Rcode = WLAN_STATUS_NOT_SUPPORTED_AUTH_ALG;
+		Rcode = AUTH_ALG_FAIL;
 		goto fail;
 	}
 
@@ -1378,7 +1380,7 @@ static void handle_auth(struct asd_data *wasd, struct ieee80211_mgmt *mgmt,
 			asd_syslog_h(LOG_WARNING,"WSTA","Station Authentication Fail:StaMac:"MACSTR" Radio id %d SSIDName:%s Cause %d Desc:%s APID:%d\n",MAC2STR(mgmt->sa),wasd->Radio_L_ID,SSID,FLOW_BANLANCE,reas,wtpid);
 		}
 		resp = WLAN_STATUS_UNKNOWN_AUTH_TRANSACTION;
-		Rcode = WLAN_STATUS_UNKNOWN_AUTH_TRANSACTION;
+		Rcode = AUTH_TRANSNUM_WRONG;
 		goto fail;
 	}
 
@@ -1423,6 +1425,7 @@ static void handle_auth(struct asd_data *wasd, struct ieee80211_mgmt *mgmt,
 	if (!sta) {
 		resp = WLAN_STATUS_UNSPECIFIED_FAILURE;
 		wasd->info->deauth_ap_unable++;				//mahz copy from version 2.0,2011.3.14
+		Rcode = NO_RESOURCE;
 		goto fail;
 	}
 
@@ -1505,7 +1508,7 @@ static void handle_auth(struct asd_data *wasd, struct ieee80211_mgmt *mgmt,
 				asd_syslog_h(LOG_INFO,"WSTA","Station Authentication Fail:StaMac:"MACSTR" Radio id %d SSIDName:%s Cause %d Desc:%s APID:%d\n",MAC2STR(mgmt->sa),wasd->Radio_L_ID,SSID,FLOW_BANLANCE,reas,wtpid);
 			}
 			resp = WLAN_STATUS_UNSPECIFIED_FAILURE;
-			Rcode = WLAN_STATUS_UNSPECIFIED_FAILURE;
+			Rcode = WPA_SM_FAILED;
 			goto fail;
 		}
 		wpa_ft_process_auth(sta->wpa_sm, mgmt->bssid,
@@ -1775,7 +1778,7 @@ static void handle_assoc(struct asd_data *wasd,
 		wasd->assoc_reject_no_resource++;
 		send_deauth = 1;
 		resp = WLAN_STATUS_AP_UNABLE_TO_HANDLE_NEW_STA;
-		Rcode = WLAN_STATUS_AP_UNABLE_TO_HANDLE_NEW_STA;
+		Rcode = NO_RESOURCE;
 		goto fail;
 	}
 	//
@@ -1800,6 +1803,7 @@ static void handle_assoc(struct asd_data *wasd,
 
 	if (wasd->tkip_countermeasures) {
 		resp = WLAN_REASON_MICHAEL_MIC_FAILURE;
+		Rcode = REASON_CODE_MAX;		
 		goto fail;
 	}
 
@@ -1873,7 +1877,7 @@ static void handle_assoc(struct asd_data *wasd,
 			asd_syslog_h(LOG_WARNING,"WSTA","Station Association Fail:StaMac:"MACSTR" Radio id %d SSIDName:%s Cause %d Desc:%s APID:%d\n",MAC2STR(mgmt->sa),wasd->Radio_L_ID,SSID,FLOW_BANLANCE,reas,wtpid);
 		}
 		resp = WLAN_STATUS_ASSOC_DENIED_RATES;		//ht change 1 to 18
-		Rcode = WLAN_STATUS_ASSOC_DENIED_RATES;
+		Rcode = RATES_NOT_SUPPORT;
 		goto fail;
 	}
 
@@ -1888,7 +1892,7 @@ static void handle_assoc(struct asd_data *wasd,
 			asd_syslog_h(LOG_WARNING,"WSTA","Station Association Fail:StaMac:"MACSTR" Radio id %d SSIDName:%s Cause %d Desc:%s APID:%d\n",MAC2STR(mgmt->sa),wasd->Radio_L_ID,SSID,FLOW_BANLANCE,reas,wtpid);
 		}
 		resp = WLAN_STATUS_UNSPECIFIED_FAILURE;
-		Rcode = WLAN_STATUS_UNSPECIFIED_FAILURE;
+		Rcode = RATES_LEN_INVALID;
 		goto fail;
 	}
 
@@ -1913,7 +1917,7 @@ static void handle_assoc(struct asd_data *wasd,
 				asd_syslog_h(LOG_WARNING,"WSTA","Station Association Fail:StaMac:"MACSTR" Radio id %d SSIDName:%s Cause %d Desc:%s APID:%d\n",MAC2STR(mgmt->sa),wasd->Radio_L_ID,SSID,FLOW_BANLANCE,reas,wtpid);
 			}
 			resp = WLAN_STATUS_UNSPECIFIED_FAILURE;		
-			Rcode = WLAN_STATUS_UNSPECIFIED_FAILURE;
+			Rcode = RATES_LEN_INVALID;
 			goto fail;
 		}
 
@@ -1967,7 +1971,7 @@ static void handle_assoc(struct asd_data *wasd,
 			asd_syslog_h(LOG_WARNING,"WSTA","Station Association Fail:StaMac:"MACSTR" Radio id %d SSIDName:%s Cause %d Desc:%s APID:%d\n",MAC2STR(mgmt->sa),wasd->Radio_L_ID,SSID,FLOW_BANLANCE,reas,wtpid);
 		}
 		resp = WLAN_STATUS_INVALID_IE;
-		Rcode = WLAN_STATUS_INVALID_IE;
+		Rcode = NO_WPARASN_IE;
 		goto fail;
 	}
 
@@ -1986,7 +1990,7 @@ static void handle_assoc(struct asd_data *wasd,
 				asd_syslog_h(LOG_WARNING,"WSTA","Station Association Fail:StaMac:"MACSTR" Radio id %d SSIDName:%s Cause %d Desc:%s APID:%d\n",MAC2STR(mgmt->sa),wasd->Radio_L_ID,SSID,FLOW_BANLANCE,reas,wtpid);
 			}
 			resp = WLAN_STATUS_UNSPECIFIED_FAILURE;
-			Rcode = WLAN_STATUS_UNSPECIFIED_FAILURE;
+			Rcode = WPA_SM_FAILED;
 			goto fail;
 		}
 		res = wpa_validate_wpa_ie(wasd->wpa_auth, sta->wpa_sm,
@@ -2012,8 +2016,10 @@ static void handle_assoc(struct asd_data *wasd,
 		else if (res != WPA_IE_OK)
 			resp = WLAN_STATUS_INVALID_IE;
 		if (resp != WLAN_STATUS_SUCCESS)
+		{
+    		Rcode = REASON_CODE_MAX;			
 			goto fail;
-
+		}
 #ifdef ASD_IEEE80211R
 		if (sta->auth_alg == WLAN_AUTH_FT) {
 			if (!reassoc) {
@@ -2026,13 +2032,16 @@ static void handle_assoc(struct asd_data *wasd,
 					asd_syslog_h(LOG_WARNING,"WSTA","Station Association Fail:StaMac:"MACSTR" Radio id %d SSIDName:%s Cause %d Desc:%s APID:%d\n",MAC2STR(mgmt->sa),wasd->Radio_L_ID,SSID,FLOW_BANLANCE,reas,wtpid);
 				}
 				resp = WLAN_STATUS_UNSPECIFIED_FAILURE;
-				Rcode = WLAN_STATUS_NOT_SUPPORTED_AUTH_ALG;
+				Rcode = AUTH_ALG_FAIL;
 				goto fail;
 			}
 
 			resp = wpa_ft_validate_reassoc(sta->wpa_sm, pos, left);
 			if (resp != WLAN_STATUS_SUCCESS)
+			{
+        		Rcode = REASON_CODE_MAX;				
 				goto fail;
+			}
 		}
 #endif /* ASD_IEEE80211R */
 #ifdef ASD_IEEE80211N
@@ -2048,7 +2057,7 @@ static void handle_assoc(struct asd_data *wasd,
 					asd_syslog_h(LOG_WARNING,"WSTA","Station Association Fail:StaMac:"MACSTR" Radio id %d SSIDName:%s Cause %d Desc:%s APID:%d\n",MAC2STR(mgmt->sa),wasd->Radio_L_ID,SSID,FLOW_BANLANCE,reas,wtpid);
 				}
 				resp = WLAN_STATUS_CIPHER_REJECTED_PER_POLICY;
-				Rcode = WLAN_STATUS_CIPHER_REJECTED_PER_POLICY;
+				Rcode = CIPHER_NOT_MATCH;
 				goto fail;
 			}
 		}
@@ -2067,7 +2076,7 @@ static void handle_assoc(struct asd_data *wasd,
 			asd_syslog_h(LOG_WARNING,"WSTA","Station Association Fail:StaMac:"MACSTR" Radio id %d SSIDName:%s Cause %d Desc:%s APID:%d\n",MAC2STR(mgmt->sa),wasd->Radio_L_ID,SSID,FLOW_BANLANCE,reas,wtpid);
 		}
 		Rcode = WLAN_STATUS_INVALID_IE;
-		resp = WLAN_STATUS_INVALID_IE;
+		resp = NO_WAPI_IE;
 		goto fail;
 	}
 
@@ -2100,7 +2109,7 @@ static void handle_assoc(struct asd_data *wasd,
 				       asd_LEVEL_DEBUG,
 				       "Power capabilities of the station not "
 				       "acceptable");
-			Rcode = WLAN_STATUS_PWR_CAPABILITY_NOT_VALID;
+			Rcode = STA_POWER_NOT_ACCEPTED;
 			if(gASDLOGDEBUG & BIT(0)){
 				log_parse_reason(STA_POWER_NOT_ACCEPTED,reas);
 				asd_syslog_h(LOG_WARNING,"WSTA","Station Association Fail:StaMac:"MACSTR" Radio id %d SSIDName:%s Cause %d Desc:%s APID:%d\n",MAC2STR(mgmt->sa),wasd->Radio_L_ID,SSID,FLOW_BANLANCE,reas,wtpid);
@@ -2208,7 +2217,7 @@ static void handle_assoc(struct asd_data *wasd,
 		if (sta->aid > MAX_AID_TABLE_SIZE) {
 			sta->aid = 0;
 			resp = WLAN_STATUS_AP_UNABLE_TO_HANDLE_NEW_STA;
-			Rcode = WLAN_STATUS_AP_UNABLE_TO_HANDLE_NEW_STA;
+			Rcode = NO_MORE_AID;
 			asd_printf(ASD_80211,MSG_ERROR, "  no room for more AIDs");
 			if(gASDLOGDEBUG & BIT(1))
 			syslog(LOG_INFO|LOG_LOCAL7, "[%d-%d]ASSOCFAILED:UserMAC:" MACSTR " APMAC:" MACSTR " BSSIndex:%d,SecurityType:%d,ErrorCode:%d.\n",

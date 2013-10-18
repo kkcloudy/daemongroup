@@ -2941,7 +2941,7 @@ void asd_parse_log_rcode(int *Rcode,char *str)
 			strcpy(str,"Psk Exchange Failed");
 			break;
 		default:
-			strcpy(str,"Psk Exchange Failed");			
+			strcpy(str,"Unspecific Failed");	  /* REASON_CODE_MAX */		
 			break;
 	}
 }

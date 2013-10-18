@@ -563,7 +563,8 @@ enum{
 	RADIUS_FAILED,
 	RADIUS_SUCCESS,
 	PSK_SUCCESS,
-	PSK_FAILED
+	PSK_FAILED,
+	REASON_CODE_MAX
 };
 struct r_sta_wlan_info{
  unsigned int roaming_sta_num;
