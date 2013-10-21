@@ -3163,7 +3163,9 @@ void asd_syslog_auteview(int level,int type,struct ieee80211_mgmt *mgmt,struct a
 			syslog(level|LOG_LOCAL7,"STA_ROAM_SUCCESS "DS_STRUCTURE_ALL"[STA"AUTELANID" "LOG_MAC"][FROM"AUTELANID" "LOG_ROAM"][TO"AUTELANID" "LOG_ROAM"]",
 				slotid,vrrid,MAC2STR(sta_mac),IPSTRINT(gASD_AC_MANAGEMENT_IP),MAC2STR(sta->PreBSSID),MAC2STR(preap_mac),IPSTRINT(gASD_AC_MANAGEMENT_IP),MAC2STR(bssid),MAC2STR(ap_mac));
 			break;
-		case STA_ROAM_FAIL: 
+		case STA_ROAM_FAIL:
+			if(ASD_WTP_AP[sta->preAPID])
+				memcpy(preap_mac,ASD_WTP_AP[sta->preAPID]->WTPMAC,MAC_LEN);			
 			syslog(level|LOG_LOCAL7,"STA_ROAM_FAIL [STA"AUTELANID" "LOG_MAC"][FROM"AUTELANID" "LOG_ROAM"][TO"AUTELANID" "LOG_ROAM"][REASON"AUTELANID" "LOG_CODE"%s",
 				MAC2STR(sta_mac),IPSTRINT(gASD_AC_MANAGEMENT_IP),MAC2STR(sta->PreBSSID),MAC2STR(preap_mac),IPSTRINT(gASD_AC_MANAGEMENT_IP),MAC2STR(bssid),MAC2STR(ap_mac),/*"WL"*/" ",Rcode,asd_sprintf_desc(buf," "LOG_DESC"]",error_str));
 			break;

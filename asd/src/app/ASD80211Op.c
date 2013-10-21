@@ -2279,8 +2279,8 @@ static void handle_assoc(struct asd_data *wasd,
 				asd_syslog_auteview(LOG_WARNING,STA_ASSOC_FAIL,mgmt,wasd,NULL,Rcode,error_str);
 		}
 		else{
-			if(sta && sta->rflag && (securitytype == OPEN || securitytype == SHARED)){
-				signal_jianquan_failed(sta->addr,5,sta->BssIndex);
+			if(sta && sta->rflag && (securitytype == OPEN || securitytype == SHARED)){				
+				/*signal_jianquan_failed(sta->addr,5,sta->BssIndex); remove for fujian log-test 2013-10-21*/
 				asd_syslog_auteview(LOG_INFO,STA_ROAM_SUCCESS,mgmt,wasd,sta,0,NULL);
 				if(ASD_WLAN[wasd->WlanID])
 					ASD_WLAN[wasd->WlanID]->sta_roaming_suc_times++;
