@@ -23,6 +23,7 @@
 #define DHCP6_DBUS_METHOD_CREATE_POOL_NODE				"dhcp6_create_pool_node"
 #define DHCP6_DBUS_METHOD_SHOW_RUNNING_HANSI_CFG				"dhcp6_show_hansi_running_config"
 #define DHCP6_DBUS_METHOD_ADD_IP_POOL_RANGE				"dhcp6_add_ip_pool_range"
+#define DHCP6_DBUS_METHOD_GET_SERVER_STATE				"dhcp6_get_server_state"
 #define DHCP6_DBUS_METHOD_ADD_STATIC_HOST				"dhcp6_add_static_host"
 #define DHCP6_DBUS_METHOD_ADD_DHCP_FAILOVER_PEER			"dhcp6_add_failover_peer"
 #define DHCP6_DBUS_METHOD_CFG_DHCP_FAILOVER_PEER			"dhcp6_cfg_failover_peer"

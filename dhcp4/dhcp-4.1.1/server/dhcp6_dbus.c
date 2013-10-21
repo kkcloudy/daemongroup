@@ -4613,6 +4613,52 @@ dhcp6_dbus_set_server_enable
 }
 
 DBusMessage * 
+dhcp6_dbus_get_server_state
+(	
+	DBusConnection *conn, 
+	DBusMessage *msg, 
+	void *user_data
+)
+{
+	DBusMessage* reply;
+	DBusMessageIter	 iter;
+	unsigned int enable = 0;
+	unsigned int op_ret = 0;
+	DBusError err;
+
+	dbus_error_init(&err);
+	
+	if (!(dbus_message_get_args ( msg, &err,
+		DBUS_TYPE_UINT32, &enable,
+		DBUS_TYPE_INVALID))) {
+		 log_error("Unable to get input args ");
+		if (dbus_error_is_set(&err)) {
+			 log_error("%s raised: %s",err.name,err.message);
+			dbus_error_free(&err);
+		}
+		return NULL;
+	}
+
+	enable = dhcp_server_enable;
+	log_debug("get dhcp server state is %s\n", (enable)?"enalbe":"disable");
+
+	reply = dbus_message_new_method_return(msg);
+	
+	dbus_message_iter_init_append (reply, &iter);
+
+	dbus_message_iter_append_basic (&iter,
+									 DBUS_TYPE_UINT32, 
+									 &enable);
+	
+	dbus_message_iter_append_basic (&iter,
+									 DBUS_TYPE_UINT32, 
+									 &op_ret);
+
+	
+	return reply;	
+}
+
+DBusMessage * 
 dhcp6_dbus_add_dhcp_pool_ip_range
 (	
 	DBusConnection *conn, 
@@ -5439,6 +5485,9 @@ dhcp6_dbus_message_handler
 	}
 	if (dbus_message_is_method_call(message, DHCP6_DBUS_INTERFACE, DHCP6_DBUS_METHOD_ADD_IP_POOL_RANGE)) {
 		reply = dhcp6_dbus_add_dhcp_pool_ip_range(connection, message, user_data);
+	}
+	if (dbus_message_is_method_call(message, DHCP6_DBUS_INTERFACE, DHCP6_DBUS_METHOD_GET_SERVER_STATE)) {
+		reply = dhcp6_dbus_get_server_state(connection, message, user_data);
 	}
 	if (dbus_message_is_method_call(message, DHCP6_DBUS_INTERFACE, DHCP6_DBUS_METHOD_ADD_STATIC_HOST)) {
 		reply = dhcp6_dbus_add_dhcp_static_host(connection, message, user_data);

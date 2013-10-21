@@ -2413,6 +2413,66 @@ DEFUN(set_interface_ipv6_pool_cmd_func,
 	}
 }
 
+unsigned int
+dcli_get_server_v6_state
+(
+	struct vty *vty,
+	unsigned int *state
+)
+{
+	DBusMessage *query = NULL, *reply = NULL;
+	DBusError err;
+	unsigned int op_ret = 0;
+	unsigned int isenable = 0;
+
+	int localid = 1, slot_id = HostSlotId, indextmp = 0;
+	get_slotid_index(vty, &indextmp, &slot_id, &localid);
+
+	DBusConnection *dcli_dbus_connection = NULL;
+	ReInitDbusConnection(&dcli_dbus_connection, slot_id, distributFag);
+
+	query = dbus_message_new_method_call(DHCP6_DBUS_BUSNAME, 
+									DHCP6_DBUS_OBJPATH, 
+									DHCP6_DBUS_INTERFACE,
+									DHCP6_DBUS_METHOD_GET_SERVER_STATE);
+	
+	dbus_error_init(&err);
+	dbus_message_append_args(query,
+							 DBUS_TYPE_UINT32, &state, 
+							 DBUS_TYPE_INVALID);
+
+	reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection,query,-1, &err);
+				
+	dbus_message_unref(query);
+	
+	if (NULL == reply) {
+		if (dbus_error_is_set(&err)) {
+			dbus_error_free_for_dcli(&err);
+		}
+		return CMD_SUCCESS;
+	}
+
+	if (dbus_message_get_args ( reply, &err,
+					DBUS_TYPE_UINT32, &isenable,		
+					DBUS_TYPE_UINT32, &op_ret,
+					DBUS_TYPE_INVALID)) {
+		if(!op_ret) {
+	
+			dbus_message_unref(reply);
+			*state = isenable;
+			return CMD_SUCCESS;
+		} 
+	} 
+	else {
+		if (dbus_error_is_set(&err)) {
+			dbus_error_free_for_dcli(&err);
+		}
+		dbus_message_unref(reply);
+	
+		return CMD_WARNING;
+	}
+}
+
 DEFUN(del_interface_ipv6_pool_cmd_func,
 	del_interface_ipv6_pool_cmd,
 	"no ipv6 pool POOLNAME",
@@ -2426,6 +2486,14 @@ DEFUN(del_interface_ipv6_pool_cmd_func,
 	unsigned int nameSize = 0, nodeSave = 0 ,dest_slotid = 0;
 	int ret = 0, index = 0;
 	unsigned int op_ret = 0;
+	unsigned int state = 0;
+
+	/* check server state */
+	dcli_get_server_v6_state(vty, &state);
+	if (state) {
+		vty_out(vty, "Please first disable dhcp server\n");
+		return CMD_WARNING;		
+	}
 
 	poolName = (char*)malloc(ALIAS_NAME_SIZE);
 	ifname = (char*)malloc(ALIAS_NAME_SIZE);
