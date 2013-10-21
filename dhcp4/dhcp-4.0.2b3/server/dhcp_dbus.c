@@ -2521,7 +2521,10 @@ string_to_option43_s
 			memcpy(ip, &(str[4 + i*8]), 8);
 			option->ip[i] = strtoul((char *)ip, &endstr, 16);
 			if (dhcp_dbus_check_ipaddr_uint(option->ip[i])) {
+/* in order to support option43 express date */
+#if 0 	
 				return 1;
+#endif
 			}
 		}
 	}
