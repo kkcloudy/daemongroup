@@ -1158,6 +1158,7 @@ dhcp6_dbus_interface_bind_pool
 			 delete || subnode->interface_num*/
 		if (!ret || subnode->interface_num) {
 			log_debug("interface %s have this subnet before\n", interface_name);
+			subnode = subnode->next;
 			continue;
 		}
 		ret = discover_interfaces_test(1, interface_name);
