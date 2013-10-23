@@ -1099,6 +1099,11 @@ struct asd_data * AsdCheckBSSIndex(unsigned int BSSIndex)
 {
 	struct wasd_interfaces *interfaces = (struct wasd_interfaces*) circle.user_data;
 	struct asd_data * wasd;
+	if(BSSIndex>BSS_NUM)
+	{
+		asd_printf(ASD_DEFAULT,MSG_CRIT, "%s BSSIndex = %d is max than BSS_NUM(%d).\n",__func__,BSSIndex,BSS_NUM);
+		return NULL;
+	}
 	unsigned int RadioID = BSSIndex/L_BSS_NUM;
 	unsigned int BSS_L_ID = BSSIndex%L_BSS_NUM;
 	if((interfaces->iface[RadioID] != NULL)&&(interfaces->iface[RadioID]->bss != NULL)&&(interfaces->iface[RadioID]->bss[BSS_L_ID] != NULL)){
