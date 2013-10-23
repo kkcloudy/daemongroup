@@ -254,6 +254,7 @@ typedef struct  rule_param_s{
 			uint16_t ether_type;
 		} eth_header;
 	}tunnel_l2_header;
+	uint8_t ipv6_flag;
 #define	acl_tunnel_wifi_header_fc		tunnel_l2_header.wifi_header.fc
 #define	acl_tunnel_wifi_header_qos		tunnel_l2_header.wifi_header.qos
 #define	acl_tunnel_wifi_header_addr		tunnel_l2_header.wifi_header.addr
@@ -286,8 +287,7 @@ typedef struct  rule_param_s{
 #define ipv6_dip32 	dip_addr.acl_dip_v6.s6_addr32
 #define ipv6_dip64 	dip_addr.acl_dip_v6.s6_addr64
 
-	
-	uint8_t ipv6_flag;
+
 	/*L3-4 header, the HASH key  14Bytes	*/	
 	//uint32_t  sip;
 	//uint32_t  dip;  
