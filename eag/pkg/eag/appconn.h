@@ -61,6 +61,7 @@ struct app_conn_t {
 
 	uint32_t nascon;
 	struct appsession session;
+	struct portal_srv_t portal_srv;
 
 	uint32_t bk_input_packets;
 	uint64_t bk_input_octets;
@@ -164,6 +165,10 @@ appconn_create_by_sta_v2(appconn_db_t *appdb, struct appsession *session);
 
 int 
 appconn_config_portalsrv(struct app_conn_t *appconn,
+		struct portal_conf *portalconf);
+
+int
+appconn_config_portalsrv_bk(struct app_conn_t *appconn,
 		struct portal_conf *portalconf);
 
 int

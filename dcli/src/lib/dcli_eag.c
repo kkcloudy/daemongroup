@@ -4398,7 +4398,7 @@ eag_multi_portal_config_show_running(struct vty* vty)
 					|| 0 != portalconf.portal_srv[i].mac_server_port))
 			{
 				ip2str(portalconf.portal_srv[i].mac_server_ip, ip_str, sizeof(ip_str));
-				snprintf(showStr, sizeof(showStr), 
+				snprintf(showStr, sizeof(showStr)-1, 
 					" add portal-server %s %s %s %u domain %s macauth %s %u", 
 					key_type, key, portalconf.portal_srv[i].portal_url,
 					portalconf.portal_srv[i].ntf_port, portalconf.portal_srv[i].domain,
@@ -4407,7 +4407,7 @@ eag_multi_portal_config_show_running(struct vty* vty)
 			} 
 			else if (0 != strcmp(portalconf.portal_srv[i].domain, ""))
 			{
-				snprintf(showStr, sizeof(showStr), 
+				snprintf(showStr, sizeof(showStr)-1, 
 					" add portal-server %s %s %s %u domain %s",
 					key_type, key, portalconf.portal_srv[i].portal_url, 
 					portalconf.portal_srv[i].ntf_port, portalconf.portal_srv[i].domain);
@@ -4417,7 +4417,7 @@ eag_multi_portal_config_show_running(struct vty* vty)
 					|| 0 != portalconf.portal_srv[i].mac_server_port)
 			{
 				ip2str(portalconf.portal_srv[i].mac_server_ip, ip_str, sizeof(ip_str));
-				snprintf(showStr, sizeof(showStr), 
+				snprintf(showStr, sizeof(showStr)-1, 
 					" add portal-server %s %s %s %u macauth %s %u", 
 					key_type, key, portalconf.portal_srv[i].portal_url,
 					portalconf.portal_srv[i].ntf_port,
@@ -4425,7 +4425,7 @@ eag_multi_portal_config_show_running(struct vty* vty)
 				vtysh_add_show_string(showStr);
 			}
 			else  {
-				snprintf(showStr, sizeof(showStr), 
+				snprintf(showStr, sizeof(showStr)-1, 
 					" add portal-server %s %s %s %u", 
 					key_type, key, portalconf.portal_srv[i].portal_url,
 					portalconf.portal_srv[i].ntf_port);
@@ -4434,57 +4434,57 @@ eag_multi_portal_config_show_running(struct vty* vty)
 
 			if( 0 != strcmp(portalconf.portal_srv[i].acname, ""))
 			{
-				snprintf(showStr, sizeof(showStr), " set portal-server %s %s ac-name %s",\
+				snprintf(showStr, sizeof(showStr)-1, " set portal-server %s %s ac-name %s",\
 													key_type, key, portalconf.portal_srv[i].acname);
 				vtysh_add_show_string(showStr);
 			}
 
 			if( 1 == portalconf.portal_srv[i].acip_to_url)
 			{
-				snprintf(showStr, sizeof(showStr), " set portal-server %s %s acip-to-url enable",\
+				snprintf(showStr, sizeof(showStr)-1, " set portal-server %s %s acip-to-url enable",\
 													key_type, key);
 				vtysh_add_show_string(showStr);
 			}
 			if( 1 == portalconf.portal_srv[i].nasid_to_url)
 			{
-				snprintf(showStr, sizeof(showStr), " set portal-server %s %s nasid-to-url enable",\
+				snprintf(showStr, sizeof(showStr)-1, " set portal-server %s %s nasid-to-url enable",\
 													key_type, key);
 				vtysh_add_show_string(showStr);
 			}
 			if( 1 == portalconf.portal_srv[i].usermac_to_url)
 			{
-				snprintf(showStr, sizeof(showStr), " set portal-server %s %s usermac-to-url enable",\
+				snprintf(showStr, sizeof(showStr)-1, " set portal-server %s %s usermac-to-url enable",\
 													key_type, key);
 				vtysh_add_show_string(showStr);
 			}		
 			if( 1 == portalconf.portal_srv[i].clientmac_to_url)
 			{
-				snprintf(showStr, sizeof(showStr), " set portal-server %s %s clientmac_to_url enable",\
+				snprintf(showStr, sizeof(showStr)-1, " set portal-server %s %s clientmac_to_url enable",\
 													key_type, key);
 				vtysh_add_show_string(showStr);
 			}			
 			if( 1 == portalconf.portal_srv[i].apmac_to_url)
 			{
-				snprintf(showStr, sizeof(showStr), " set portal-server %s %s apmac_to_url enable",\
+				snprintf(showStr, sizeof(showStr)-1, " set portal-server %s %s apmac_to_url enable",\
 													key_type, key);
 				vtysh_add_show_string(showStr);
 			}			
 			if( 1 == portalconf.portal_srv[i].wlan_to_url)
 			{
-				snprintf(showStr, sizeof(showStr), " set portal-server %s %s wlan_to_url enable",\
+				snprintf(showStr, sizeof(showStr)-1, " set portal-server %s %s wlan_to_url enable",\
 													key_type, key);
 				vtysh_add_show_string(showStr);
 			}			
 			if( 1 == portalconf.portal_srv[i].redirect_to_url)
 			{
-				snprintf(showStr, sizeof(showStr), " set portal-server %s %s redirect_to_url enable",\
+				snprintf(showStr, sizeof(showStr)-1, " set portal-server %s %s redirect_to_url enable",\
 													key_type, key);
 				vtysh_add_show_string(showStr);
 			}
 			if( 1 == portalconf.portal_srv[i].wlanparameter 
 				&& strlen(portalconf.portal_srv[i].deskey)>0)
 			{
-				snprintf(showStr, sizeof(showStr), 
+				snprintf(showStr, sizeof(showStr)-1, 
 							" set portal-server %s %s wlanparameter enable %s",
 							key_type, key, portalconf.portal_srv[i].deskey );
 				vtysh_add_show_string(showStr);
@@ -4492,27 +4492,27 @@ eag_multi_portal_config_show_running(struct vty* vty)
 
 			if( 1 == portalconf.portal_srv[i].wlanuserfirsturl )
 			{
-				snprintf(showStr, sizeof(showStr), 
+				snprintf(showStr, sizeof(showStr)-1, 
 							" set portal-server %s %s wlanuserfirsturl enable",\
 							key_type, key);
 				vtysh_add_show_string(showStr);
 			}
 			if( 0 != strcmp(portalconf.portal_srv[i].url_suffix, ""))
 			{
-				snprintf(showStr, sizeof(showStr), " set portal-server %s %s url-suffix %s",\
+				snprintf(showStr, sizeof(showStr)-1, " set portal-server %s %s url-suffix %s",\
 													key_type, key, portalconf.portal_srv[i].url_suffix);
 				vtysh_add_show_string(showStr);
 			}
 
 			if( 0 != strcmp(portalconf.portal_srv[i].secret, ""))
 			{
-				snprintf(showStr, sizeof(showStr), " set portal-server %s %s secret %s",\
+				snprintf(showStr, sizeof(showStr)-1, " set portal-server %s %s secret %s",\
 													key_type, key, portalconf.portal_srv[i].secret);
 				vtysh_add_show_string(showStr);
 			}
 			if( 1 == portalconf.portal_srv[i].wlanapmac)
 			{
-				snprintf(showStr, sizeof(showStr), " set portal-server %s %s wlanapmac enable",\
+				snprintf(showStr, sizeof(showStr)-1, " set portal-server %s %s wlanapmac enable",\
 													key_type, key);
 				vtysh_add_show_string(showStr);
 			}
@@ -4520,7 +4520,7 @@ eag_multi_portal_config_show_running(struct vty* vty)
 			if( 1 == portalconf.portal_srv[i].wlanusermac
 				&& strlen(portalconf.portal_srv[i].wlanusermac_deskey)>0)
 			{
-				snprintf(showStr, sizeof(showStr), 
+				snprintf(showStr, sizeof(showStr)-1, 
 							" set portal-server %s %s wlanusermac enable %s",
 							key_type, key, portalconf.portal_srv[i].wlanusermac_deskey );
 				vtysh_add_show_string(showStr);
@@ -4528,15 +4528,29 @@ eag_multi_portal_config_show_running(struct vty* vty)
 			
 			if( WISPR_URL_HTTP == portalconf.portal_srv[i].wisprlogin )
 			{
-				snprintf(showStr, sizeof(showStr), " set portal-server %s %s wisprlogin enable http",\
+				snprintf(showStr, sizeof(showStr)-1, " set portal-server %s %s wisprlogin enable http",\
 													key_type, key);
 				vtysh_add_show_string(showStr);
 			}else if( WISPR_URL_HTTPS == portalconf.portal_srv[i].wisprlogin ){
-				snprintf(showStr, sizeof(showStr), " set portal-server %s %s wisprlogin enable https",\
+				snprintf(showStr, sizeof(showStr)-1, " set portal-server %s %s wisprlogin enable https",\
 													key_type, key);
 				vtysh_add_show_string(showStr);
 			}
 
+			if( 1 == portalconf.portal_srv[i].mobile_urlparam ) {
+				snprintf(showStr, sizeof(showStr)-1, 
+							" set portal-server %s %s mobile-urlparam disable", key_type, key);
+				vtysh_add_show_string(showStr);
+			}
+			
+			if( 1 == portalconf.portal_srv[i].urlparam_add
+				&& strlen(portalconf.portal_srv[i].save_urlparam_config)>0)
+			{
+				snprintf(showStr, sizeof(showStr)-1, 
+							" set portal-server %s %s urlparam-add %s",
+							key_type, key, portalconf.portal_srv[i].save_urlparam_config);
+				vtysh_add_show_string(showStr);
+			}
 		}
 	}
 
@@ -4561,7 +4575,6 @@ eag_multi_portal_config_show_running_2(int localid, int slot_id, int index)
 	char *cursor = NULL;
 	int totalLen = 0;
 	char ip_str[32] = "";
-	memset(showStr, 0, sizeof(showStr));
 	cursor = showStr;
 	
 	ReInitDbusConnection(&dcli_dbus_connection_curr, slot_id, distributFag);
@@ -4707,6 +4720,19 @@ eag_multi_portal_config_show_running_2(int localid, int slot_id, int index)
 										" set portal-server %s %s wisprlogin enable https\n",\
 										key_type, key);
 			}			
+
+			if( 1 == portalconf.portal_srv[i].mobile_urlparam ) {
+				totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1, 
+							" set portal-server %s %s mobile-urlparam disable\n", key_type, key);
+			}
+			
+			if( 1 == portalconf.portal_srv[i].urlparam_add
+				&& strlen(portalconf.portal_srv[i].save_urlparam_config)>0)
+			{
+				totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1, 
+							" set portal-server %s %s urlparam-add %s\n",
+							key_type, key, portalconf.portal_srv[i].save_urlparam_config );
+			}
 		}
 	}
 #if 0	
@@ -7869,10 +7895,10 @@ DEFUN(show_eag_base_conf_func,
 		vty_out(vty, "flux-from                    :%s\n", flux_from);
 		vty_out(vty, "flux-interval                :%d\n", baseconf.flux_interval);
 		vty_out(vty, "ipset-auth                   :%s\n", (1 == baseconf.ipset_auth)?"enable":"disable");
-		vty_out(vty, "check-nasportid      	       :%s\n", (1 == baseconf.check_nasportid)?"enable":"disable");
+		vty_out(vty, "check-nasportid              :%s\n", (1 == baseconf.check_nasportid)?"enable":"disable");
 		vty_out(vty, "trap-switch abnormal logoff  :%s\n", (1 == baseconf.trap_switch_abnormal_logoff)?"on":"off");
 		vty_out(vty, "trap-switch online-user-num  :%s\n", (1==baseconf.trap_onlineusernum_switch)?"on":"off");
-		vty_out(vty,"threshold online-user-num     :%d\n", baseconf.threshold_onlineusernum);
+		vty_out(vty, "threshold online-user-num    :%d\n", baseconf.threshold_onlineusernum);
 		vty_out(vty, "portal protocol              :%s\n", (PORTAL_PROTOCOL_MOBILE == baseconf.portal_protocol)?"mobile":"telecom");
  		if (FLUX_FROM_IPTABLES_L2 == baseconf.macauth_flux_from) {
 			macauth_flux_from = "iptables_L2";
@@ -11159,6 +11185,413 @@ DEFUN(set_eag_portal_server_wisprlogin_func,
 	return CMD_SUCCESS;
 }
 
+DEFUN(set_eag_portal_server_mobile_urlparam_func,
+	set_eag_portal_server_mobile_urlparam_cmd,
+	"set portal-server (wlanid|vlanid|wtpid|interface) KEY mobile-urlparam (enable|disable)",
+	"set parameter of portal policy, if not exist, create it\n"
+	"portal policy\n"
+	"portal server index type wlanid\n" 
+	"portal server index type vlanid\n" 	
+	"portal server index type wtpid\n"	
+	"portal server index type l3interface name\n"
+	"key word name, specify a item of portal policy\n"
+	"set mobile-urlparam such as:wlanuserip wlanacname ssid\n"
+	"set mobile-urlparam to url enable\n"
+	"set mobile-urlparam to url disable\n"
+)
+{
+	int ret = -1;
+	PORTAL_KEY_TYPE key_type;
+	unsigned long keyid = 0;
+	char *keystr = "";
+	int mobile_urlparam = 0;
+
+	if (strncmp(argv[0], "wlanid", strlen(argv[0])) == 0) {
+		key_type = PORTAL_KEYTYPE_WLANID;
+		keyid = atoi(argv[1]);
+		if (keyid == 0 || keyid > 128){
+			vty_out(vty, "%% wlan id is out of range 1~128\n");
+			return CMD_SUCCESS;
+		}
+	}
+	else if (strncmp(argv[0], "vlanid", strlen(argv[0])) == 0) {
+		key_type = PORTAL_KEYTYPE_VLANID;
+		keyid = atoi(argv[1]);
+		if(keyid == 0 || keyid > 4096) {
+			vty_out(vty, "%% vlan id is out of range 1~4096\n");
+			return CMD_SUCCESS;
+		}		
+	}
+	else if (0 == strncmp(argv[0], "wtpid", strlen(argv[0]))){
+		keyid = atoi(argv[1]);
+		key_type = PORTAL_KEYTYPE_WTPID;
+	}
+	else if (0 == strncmp(argv[0], "interface", strlen(argv[0]))) {
+		key_type = PORTAL_KEYTYPE_INTF;
+		keystr = (char *)argv[1];
+	}
+	else {
+		vty_out(vty, "%% unknown index type %s\n", argv[0]);
+		return CMD_SUCCESS;
+	}
+
+	if (0 == strncmp(argv[2], "enable", strlen(argv[2])))
+	{
+		mobile_urlparam = 0;/*default 0 is enable*/
+	}
+	else if (0 == strncmp(argv[2], "disable", strlen(argv[2])))
+	{
+		mobile_urlparam = 1;
+	}
+	else
+	{
+		vty_out(vty, "%% bad command parameter\n");
+		return CMD_SUCCESS;
+	}
+	EAG_DCLI_INIT_HANSI_INFO
+
+	ret = eag_set_portal_server_mobile_urlparam( dcli_dbus_connection_curr,
+										hansitype,insid,
+										key_type,
+										keyid,
+										keystr,
+										mobile_urlparam );
+	if(EAG_ERR_DBUS_FAILED == ret) {
+		vty_out(vty, "%% dbus error\n");
+	}
+	else if (EAG_ERR_UNKNOWN == ret) {
+		vty_out(vty, "%% unknown error\n");
+	}
+	else if (EAG_ERR_PORTAL_MODIFY_SRV_NOT_EXIST == ret) {
+		vty_out(vty, "%% the add key is not exist\n");
+	}
+	else if (EAG_ERR_PORTAL_MODIFY_SRV_ERR_TYPE == ret) {
+		vty_out(vty, "%% error index type\n");
+	}
+	else if (EAG_RETURN_OK != ret) {
+		vty_out(vty, "%% unknown error: %d\n", ret);
+	}
+	
+	return CMD_SUCCESS;
+}
+
+DEFUN(set_eag_portal_server_urlparam_func,
+	set_eag_portal_server_urlparam_cmd,
+	"set portal-server (wlanid|vlanid|wtpid|interface) KEY (urlparam-add|urlparam-del) PARAMSTR",
+	"set parameter of portal policy, if not exist, create it\n"
+	"portal policy\n"
+	"portal server index type wlanid\n" 
+	"portal server index type vlanid\n" 	
+	"portal server index type wtpid\n"	
+	"portal server index type l3interface name\n"
+	"key word name, specify a item of portal policy\n"
+	"add portal server url param\n"
+	"del portal server url param\n"
+	"1.urlparam-add: "\
+	"PARAM=${NEWNAME;deskey=...(len:0-8);format=-(or default :);letter=lower(or default upper);"\
+	"type=https(or default http);encode=off(or default on);value=...(len:0-127)};PARAM=${NEWNAME;...;PARAM=${NEWNEME;...}}     "\
+	"PS: You can choose PARAM from [nasip,userip,usermac,apmac,apname,essid,nasid,acname,firsturl,wisprurl], "\
+	"wisrpurl can take PARAM except wisprurl.   and deskey(for mac encrypt),format(for mac delimiter),letter(for mac upper or lower), "\
+	"so usermac and apmac need.   and type(for url type),encode(for url coding), so firsturl and wisprurl need.   "\
+	"and value for acname(also for other param you assign value).     "\
+	"For example: nasip=${acip};userip=${userip};"\
+	"usermac=${clientmac;deskey=12345678;format=-;letter=lower};apmac=${apmac;letter=lower};apname=${apname};essid=${wlan};"\
+	"nasid=${nasid};acname=${acname;value=Autelan};firsturl=${redirect;encode=on};wisprurl=${wisprlogin;type=https;encode=on;"\
+	"nasip=${...};userip=${...};usermac=${...};...}          "\
+	"2.urlparam-del: PARAM1;PARAM2;PARAM3{PARAM1;PARAM2...};PARAM4.   "\
+	"For example: nasip;userip;usermac;apmac;apname;essid;nasid;acname;firsturl;wisprurl{nasip;userip;usermac;...}.   "\
+	"or nasip;wisprurl.   you can delete one or more.\n"
+)
+{
+	PORTAL_KEY_TYPE key_type;
+	unsigned long keyid = 0;
+	char *key_word = "";
+	int add_or_del = 0;
+	char *url_param = NULL;
+	int ret = -1;
+
+	if (strncmp(argv[2], "urlparam-add", strlen(argv[2])) == 0) {
+		add_or_del = 1;
+	} else if (strncmp(argv[2], "urlparam-del", strlen(argv[2])) == 0) {
+		add_or_del = 0;
+	}
+
+	if (strncmp(argv[0], "wlanid", strlen(argv[0])) == 0) {
+		key_type = PORTAL_KEYTYPE_WLANID;
+		keyid = atoi(argv[1]);
+		if (keyid == 0 || keyid > 128){
+			vty_out(vty, "%% wlan id is out of range 1~128\n");
+			return CMD_SUCCESS;
+		}
+	}
+	else if (strncmp(argv[0], "vlanid", strlen(argv[0])) == 0) {
+		key_type = PORTAL_KEYTYPE_VLANID;
+		keyid = atoi(argv[1]);
+		if(keyid == 0 || keyid > 4096) {
+			vty_out(vty, "%% vlan id is out of range 1~4096\n");
+			return CMD_SUCCESS;
+		}		
+	}
+	else if (strncmp(argv[0], "wtpid", strlen(argv[0])) == 0){
+		keyid = atoi(argv[1]);
+		key_type = PORTAL_KEYTYPE_WTPID;
+	}
+	else if (strncmp(argv[0], "interface", strlen(argv[0])) == 0) {
+		key_type = PORTAL_KEYTYPE_INTF;
+		key_word = (char *)argv[1];
+	}
+	else {
+		vty_out(vty, "%% unknown index type %s\n", argv[0]);
+		return CMD_SUCCESS;
+	}
+	
+	url_param = (char *)argv[3];
+	if (strlen(url_param) > URL_PARAM_QUERY_STR_LEN-1){
+		vty_out(vty, "%% url-param length out of limite:%d\n", URL_PARAM_QUERY_STR_LEN-1);
+		return CMD_WARNING;
+	}
+	
+	EAG_DCLI_INIT_HANSI_INFO
+
+	ret = eag_set_portal_server_urlparam( dcli_dbus_connection_curr,
+										hansitype,insid,
+										key_type,
+										keyid,
+										key_word,
+										add_or_del,
+										url_param);
+	
+	if (EAG_ERR_DBUS_FAILED == ret) {
+		vty_out(vty, "%% dbus error\n");
+	}
+	else if (EAG_ERR_INPUT_PARAM_ERR == ret) {
+		vty_out(vty, "%% input prarm error\n");
+	}
+	else if (EAG_ERR_PORTAL_ADD_SRV_ERR_TYPE == ret) {
+		vty_out(vty, "%% keyword type error\n");
+	}
+	else if (EAG_ERR_PORTAL_MODIFY_SRV_NOT_EXIST == ret) {
+		vty_out(vty, "%% the add key is not exist\n");
+	}
+	else if (EAG_ERR_PORTAL_MODIFY_SRV_ERR_TYPE == ret) {
+		vty_out(vty, "%% error index type\n");
+	}
+	else if (EAG_ERR_PORTAL_SET_URLPARAM_INPUT_ERR == ret) {
+		vty_out(vty, "%% url param str input error\n");
+	}
+	else if (EAG_ERR_PORTAL_SET_URLPARAM_LEN_LINITE == ret) {
+		vty_out(vty, "%% url param str input length out of limite\n");
+	}
+	else if (EAG_RETURN_OK != ret) {
+		vty_out(vty, "%% unknown error: %d\n", ret);
+	}
+}
+
+static int eag_urlparam_show_v2(struct vty* vty, struct url_param_t *param)
+{
+	if (vty == NULL || param == NULL) {
+		return -1;
+	}
+	switch (param->param_type) {
+    case URL_PARAM_NASIP:
+        vty_out(vty, "[nasip]:\n   name:%s\n", param->param_name);
+        if (strlen(param->param_value) > 0) {
+			vty_out(vty, "   value:%s\n", param->param_value);
+        }
+        break;
+    case URL_PARAM_USERIP:
+        vty_out(vty, "[userip]:\n   name:%s\n", param->param_name);
+		if (strlen(param->param_value) > 0) {
+			vty_out(vty, "   value:%s\n", param->param_value);
+        }
+        break;
+    case URL_PARAM_USERMAC:
+        vty_out(vty, "[usermac]:\n   name:%s\n   deskey:%s\n   format:%s\n   letter:%s\n", 
+                param->param_name, param->mac_deskey, 
+                strlen(param->mac_format)>0?(param->mac_format):":", 
+				(UP_LETTER_LOWER == param->letter_type)?"lower":"upper");
+		if (strlen(param->param_value) > 0) {
+			vty_out(vty, "   value:%s\n", param->param_value);
+        }
+        break;
+    case URL_PARAM_APMAC:
+        vty_out(vty, "[apmac]:\n   name:%s\n   deskey:%s\n   format:%s\n   letter:%s\n", 
+                param->param_name, param->mac_deskey, 
+                strlen(param->mac_format)>0?(param->mac_format):":", 
+            	(UP_LETTER_LOWER == param->letter_type)?"lower":"upper");
+		if (strlen(param->param_value) > 0) {
+			vty_out(vty, "   value:%s\n", param->param_value);
+        }
+        break;
+    case URL_PARAM_APNAME:
+        vty_out(vty, "[apname]:\n   name:%s\n", param->param_name);
+		if (strlen(param->param_value) > 0) {
+			vty_out(vty, "   value:%s\n", param->param_value);
+        }
+        break;
+    case URL_PARAM_ESSID:
+        vty_out(vty, "[essid]:\n   name:%s\n", param->param_name);
+		if (strlen(param->param_value) > 0) {
+			vty_out(vty, "   value:%s\n", param->param_value);
+        }
+        break;
+    case URL_PARAM_NASID:
+        vty_out(vty, "[nasid]:\n   name:%s\n", param->param_name);
+		if (strlen(param->param_value) > 0) {
+			vty_out(vty, "   value:%s\n", param->param_value);
+        }
+        break;
+    case URL_PARAM_ACNAME:
+        vty_out(vty, "[acname]:\n   name:%s\n   value:%s\n", param->param_name, param->param_value);
+		break;
+    case URL_PARAM_FIRSTURL:
+        vty_out(vty, "[firsturl]:\n   name:%s\n   type:%s\n   encode:%s\n", 
+                param->param_name, (UP_HTTPS == param->url_type)?"https":"http", 
+                (UP_ENCODE_OFF == param->url_encode)?"off":"on");
+		if (strlen(param->param_value) > 0) {
+			vty_out(vty, "   value:%s\n", param->param_value);
+        }
+        break;
+    default:
+        break;
+	}
+
+	return 0;
+}
+
+static int eag_urlparam_show_v1( struct vty* vty, 
+							struct urlparam_query_str_t *urlparam, 
+							URLPARAM com_or_wis )
+{
+    if (urlparam == NULL || vty == NULL) {
+		return -1;
+    }
+    
+    struct url_param_t *param = NULL;
+	int i = 0;
+
+	if (UP_COMMON == com_or_wis) {
+		for(i = 0; i < urlparam->common_param_num; i++) {
+			param = &(urlparam->common_param[i]);
+			eag_urlparam_show_v2(vty, param);
+		}
+	} else if (UP_WISPR == com_or_wis) {
+		for(i = 0; i < urlparam->wispr_param_num; i++) {
+			param = &(urlparam->wispr_param[i]);
+			eag_urlparam_show_v2(vty, param);
+		}
+	}
+	
+	return 0;
+}
+
+static int eag_urlparam_show(struct vty* vty, struct urlparam_query_str_t *urlparam)
+{
+	if (urlparam == NULL || vty == NULL) {
+		return -1;
+	}
+	
+    vty_out(vty, "========================= url param =========================\n");
+    if (urlparam->common_param_num > 0) {
+        eag_urlparam_show_v1(vty, urlparam, UP_COMMON);
+    }
+    if (UP_STATUS_ON == urlparam->wispr_status) {
+        vty_out(vty, "[wisprurl]:\n   name:%s\n   type:%s\n   encode:%s\n", 
+                urlparam->wispr_name, (UP_HTTPS == urlparam->wispr_type)?"https":"http", 
+                (UP_ENCODE_OFF == urlparam->wispr_encode)?"off":"on");
+        if (strlen(urlparam->wispr_value) > 0) {
+            vty_out(vty, "   value:%s\n", urlparam->wispr_value);
+        }
+        if (urlparam->wispr_param_num > 0) {
+            vty_out(vty, "=================== wispr param ===================\n");
+            eag_urlparam_show_v1(vty, urlparam, UP_WISPR);
+            vty_out(vty, "==================== wispr END ====================\n");
+        }
+    }
+    vty_out(vty, "============================ END ============================\n");
+
+	return 0;
+}
+
+DEFUN(show_eag_portal_server_urlparam_func,
+	show_eag_portal_server_urlparam_cmd,
+	"set portal-server (wlanid|vlanid|wtpid|interface) KEY urlparam-show",
+	"set parameter of portal policy, if not exist, create it\n"
+	"portal policy\n"
+	"portal server index type wlanid\n" 
+	"portal server index type vlanid\n" 	
+	"portal server index type wtpid\n"	
+	"portal server index type l3interface name\n"
+	"key word name, specify a item of portal policy\n"
+	"urlparam-show\n"
+)
+{
+	PORTAL_KEY_TYPE key_type;
+	unsigned long keyid = 0;
+	char *key_word = "";
+	struct portal_srv_t portal_srv = {0};
+	int ret = -1;
+
+	if (strncmp(argv[0], "wlanid", strlen(argv[0])) == 0) {
+		key_type = PORTAL_KEYTYPE_WLANID;
+		keyid = atoi(argv[1]);
+		if (keyid == 0 || keyid > 128){
+			vty_out(vty, "%% wlan id is out of range 1~128\n");
+			return CMD_SUCCESS;
+		}
+	}
+	else if (strncmp(argv[0], "vlanid", strlen(argv[0])) == 0) {
+		key_type = PORTAL_KEYTYPE_VLANID;
+		keyid = atoi(argv[1]);
+		if(keyid == 0 || keyid > 4096) {
+			vty_out(vty, "%% vlan id is out of range 1~4096\n");
+			return CMD_SUCCESS;
+		}		
+	}
+	else if (strncmp(argv[0], "wtpid", strlen(argv[0])) == 0){
+		keyid = atoi(argv[1]);
+		key_type = PORTAL_KEYTYPE_WTPID;
+	}
+	else if (strncmp(argv[0], "interface", strlen(argv[0])) == 0) {
+		key_type = PORTAL_KEYTYPE_INTF;
+		key_word = (char *)argv[1];
+	}
+	else {
+		vty_out(vty, "%% unknown index type %s\n", argv[0]);
+		return CMD_SUCCESS;
+	}
+	
+	EAG_DCLI_INIT_HANSI_INFO
+
+	ret = eag_show_portal_server_urlparam( dcli_dbus_connection_curr,
+										hansitype,insid,
+										key_type,
+										keyid,
+										key_word, 
+										&portal_srv );
+	if (EAG_RETURN_OK == ret) {
+		eag_urlparam_show(vty, &(portal_srv.urlparam_query_str));
+	}
+	
+	if (EAG_ERR_DBUS_FAILED == ret) {
+		vty_out(vty, "%% dbus error\n");
+	}
+	else if (EAG_ERR_INPUT_PARAM_ERR == ret) {
+		vty_out(vty, "%% input prarm error\n");
+	}
+	else if (EAG_ERR_PORTAL_ADD_SRV_ERR_TYPE == ret) {
+		vty_out(vty, "%% keyword type error\n");
+	}
+	else if (EAG_ERR_PORTAL_MODIFY_SRV_NOT_EXIST == ret) {
+		vty_out(vty, "%% the add key is not exist\n");
+	}
+	else if (EAG_ERR_PORTAL_MODIFY_SRV_ERR_TYPE == ret) {
+		vty_out(vty, "%% error index type\n");
+	}
+	else if (EAG_RETURN_OK != ret) {
+		vty_out(vty, "%% unknown error: %d\n", ret);
+	}
+}
 
 DEFUN(set_eag_portal_server_essid_func,
 	set_eag_portal_server_essid_cmd,
@@ -11166,7 +11599,7 @@ DEFUN(set_eag_portal_server_essid_func,
 	"set parameter of portal policy, if not exist, create it\n"
 	"portal policy\n"
 	"portal server index type essid\n"	
-	"eg:set portal-server essid KEY (ac-name|acip-to-url|nasid-to-url|url-suffix|wlanparameter|wlanuserfirsturl|secret|wlanapmac|wlanusermac|wisprlogin|usermac-to-url|clientmac-to-url|apmac-to-url|wlan-to-url|redirect-to-url) params,the format like other keytypes.\n"		
+	"eg:set portal-server essid KEY (ac-name|acip-to-url|nasid-to-url|url-suffix|wlanparameter|wlanuserfirsturl|secret|wlanapmac|wlanusermac|wisprlogin|usermac-to-url|clientmac-to-url|apmac-to-url|wlan-to-url|redirect-to-url|urlparam-add|urlparam-del|urlparam-show) params,the format like other keytypes.\n"		
 )
 {
 	char *key_word = (char *)argv[0];
@@ -11181,6 +11614,9 @@ DEFUN(set_eag_portal_server_essid_func,
 	char *DESkey = NULL;
 	char *url_suffix = NULL;
 	char *secret = NULL;
+	int add_or_del = 0;
+	char *url_param = NULL;
+	struct portal_srv_t portal_srv = {0};
 	
 	for (i = 0;i < argc; i++) {
 		if (0 != i) {
@@ -11228,6 +11664,15 @@ DEFUN(set_eag_portal_server_essid_func,
 				break;
 			} else if (0 == strcmp(argv[i], "redirect-to-url")) {
 				func_type = 17;
+				break;
+			} else if (0 == strcmp(argv[i], "urlparam-add")) {
+				func_type = 18;
+				break;
+			} else if (0 == strcmp(argv[i], "urlparam-del")) {
+				func_type = 19;
+				break;
+			} else if (0 == strcmp(argv[i], "urlparam-show")) {
+				func_type = 20;
 				break;
 			}
 			strncat(essid, " ", 1);
@@ -11531,6 +11976,43 @@ DEFUN(set_eag_portal_server_essid_func,
 		}
 		ret = eag_set_portal_server_redirect_to_url(dcli_dbus_connection_curr, hansitype, insid,
 										key_type, keyid, key_word, if_enable);
+		break;
+		case 18:
+        case 19:
+   		if (strncmp(argv[i], "urlparam-add", strlen(argv[i])) == 0) {
+			add_or_del = 1;
+		} else if (strncmp(argv[i], "urlparam-del", strlen(argv[i])) == 0) {
+			add_or_del = 0;
+		}
+        if ((i+2) == argc) {
+            url_param = (char *)argv[i+1];
+            if (strlen(url_param) > URL_PARAM_QUERY_STR_LEN-1){
+				vty_out(vty, "%% url-param length out of limite:%d\n", URL_PARAM_QUERY_STR_LEN-1);
+				return CMD_WARNING;
+			}
+        } else {
+            vty_out(vty, "%% argument is wrong\n");
+			return CMD_WARNING;
+        }
+        
+		ret = eag_set_portal_server_urlparam( dcli_dbus_connection_curr, hansitype,insid, 
+										key_type, keyid, key_word, add_or_del, url_param);
+		break;
+		case 20:
+   		if (strncmp(argv[i], "urlparam-show", strlen(argv[i])) == 0) {
+            ret = eag_show_portal_server_urlparam( dcli_dbus_connection_curr,
+                                                hansitype,insid,
+                                                key_type,
+                                                keyid,
+                                                key_word, 
+                                                &portal_srv );
+            if (EAG_RETURN_OK == ret) {
+                eag_urlparam_show(vty, &(portal_srv.urlparam_query_str));
+            }
+        } else {
+            vty_out(vty, "%% argument is wrong\n");
+			return CMD_WARNING;
+        }
 		break;
 	default:
 		break;
@@ -11953,6 +12435,10 @@ DEFUN(eag_show_portal_conf_func,
 				vty_out(vty, "portal wisprurl type      :%s\n","https");
 			}else{
 				vty_out(vty, "portal wisprurl type      :%s\n","disable");
+			}
+			if( 1 == portalconf.portal_srv[i].urlparam_add
+				&& strlen(portalconf.portal_srv[i].save_urlparam_config) > 0) {
+				vty_out(vty, "portal urlparam-add str   :%s\n", portalconf.portal_srv[i].save_urlparam_config);
 			}
 		}
 	}
@@ -15101,6 +15587,18 @@ dcli_eag_init(void)
 	install_element(EAG_NODE, &set_eag_portal_server_wisprlogin_cmd);
 	install_element(HANSI_EAG_NODE, &set_eag_portal_server_wisprlogin_cmd);
 	install_element(LOCAL_HANSI_EAG_NODE, &set_eag_portal_server_wisprlogin_cmd);
+
+	install_element(EAG_NODE, &set_eag_portal_server_mobile_urlparam_cmd);
+	install_element(HANSI_EAG_NODE, &set_eag_portal_server_mobile_urlparam_cmd);
+	install_element(LOCAL_HANSI_EAG_NODE, &set_eag_portal_server_mobile_urlparam_cmd);
+
+	//install_element(EAG_NODE, &show_eag_portal_server_urlparam_cmd);
+	//install_element(HANSI_EAG_NODE, &show_eag_portal_server_urlparam_cmd);
+	//install_element(LOCAL_HANSI_EAG_NODE, &show_eag_portal_server_urlparam_cmd);
+	
+	install_element(EAG_NODE, &set_eag_portal_server_urlparam_cmd);
+	install_element(HANSI_EAG_NODE, &set_eag_portal_server_urlparam_cmd);
+	install_element(LOCAL_HANSI_EAG_NODE, &set_eag_portal_server_urlparam_cmd);
 	/*multi radius*/
 	install_element(EAG_NODE, &eag_add_radius_server_cmd);
 	install_element(HANSI_EAG_NODE, &eag_add_radius_server_cmd);

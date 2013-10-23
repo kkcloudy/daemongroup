@@ -259,6 +259,7 @@ stamsg_proc(eag_stamsg_t *stamsg, uint8_t usermac[6],
 		tmpsession.radioid = sta_msg->STA.radio_id%L_RADIO_NUM;
 		tmpsession.wtpid= sta_msg->STA.wtp_id;
 		strncpy(tmpsession.essid, (char *)sta_msg->STA.essid, sizeof(tmpsession.essid)-1);
+		strncpy(tmpsession.apname, (char *)sta_msg->STA.wtp_name, sizeof(tmpsession.apname)-1);
 		memcpy(tmpsession.apmac, sta_msg->STA.wtp_mac, sizeof(tmpsession.apmac));
 		tmpsession.vlanid = sta_msg->STA.vlan_id;
 		security_type = sta_msg->STA.auth_type;
@@ -266,12 +267,12 @@ stamsg_proc(eag_stamsg_t *stamsg, uint8_t usermac[6],
 		mac2str(tmpsession.apmac, new_apmacstr, sizeof(new_apmacstr), ':');
 
 		eag_log_info("Receive WID_ADD msg usermac:%s, userip:%s, status:%s,"
-			" from apmac:%s, ssid:%s to apmac:%s, ssid:%s",
+			" from apmac:%s, apname:%s, ssid:%s to apmac:%s, apname:%s, ssid:%s",
 			user_macstr, user_ipstr,
 			APPCONN_STATUS_AUTHED == appconn->session.state?
 				"Authed":"NotAuthed",
-			ap_macstr, appconn->session.essid,
-			new_apmacstr, tmpsession.essid);
+			ap_macstr, appconn->session.apname, appconn->session.essid,
+			new_apmacstr, tmpsession.apname, tmpsession.essid);
 
 		if (0 != strcmp(tmpsession.essid, appconn->session.essid)) {
 			if (macauth_switch) {
@@ -303,6 +304,8 @@ stamsg_proc(eag_stamsg_t *stamsg, uint8_t usermac[6],
 			appconn->session.wtpid= tmpsession.wtpid;
 			strncpy(appconn->session.essid, tmpsession.essid,
 								sizeof(appconn->session.essid)-1);
+			strncpy(appconn->session.apname, tmpsession.apname,
+								sizeof(appconn->session.apname)-1);
 			memcpy(appconn->session.apmac, tmpsession.apmac, 
 							sizeof(appconn->session.apmac));
 			appconn->session.vlanid = tmpsession.vlanid;
@@ -360,11 +363,12 @@ stamsg_proc(eag_stamsg_t *stamsg, uint8_t usermac[6],
 		appconn->session.leave_reason = sta_msg->STA.reason;
 		
 		eag_log_info("Receive leave msg usermac:%s, userip:%s, status:%s,"
-			" apmac:%s, ssid:%s, leave_reason:%d",
+			" apmac:%s, apname:%s, ssid:%s, leave_reason:%d",
 			user_macstr, user_ipstr,
 			APPCONN_STATUS_AUTHED == appconn->session.state?
 				"Authed":"NotAuthed",
-			ap_macstr, appconn->session.essid, appconn->session.leave_reason);
+			ap_macstr, appconn->session.apname, appconn->session.essid, 
+			appconn->session.leave_reason);
 
 		if (macauth_switch) {
 			del_eag_preauth_by_ip_or_mac(stamsg->macauth, appconn->session.user_ip, usermac);
@@ -435,12 +439,12 @@ stamsg_proc(eag_stamsg_t *stamsg, uint8_t usermac[6],
 		mac2str(tmpsession.apmac, new_apmacstr, sizeof(new_apmacstr), ':');
 
 		eag_log_info("Receive roam msg usermac:%s, userip:%s, status:%s,"
-			" from apmac:%s, ssid:%s to apmac:%s, ssid:%s",
+			" from apmac:%s, apname:%s, ssid:%s to apmac:%s, apname:%s, ssid:%s",
 			user_macstr, user_ipstr,
 			APPCONN_STATUS_AUTHED == appconn->session.state?
 				"Authed":"NotAuthed",
-			ap_macstr, appconn->session.essid,
-			new_apmacstr, tmpsession.essid);
+			ap_macstr, appconn->session.apname, appconn->session.essid,
+			new_apmacstr, tmpsession.apname, tmpsession.essid);
 
 		if (0 != strcmp(tmpsession.essid, appconn->session.essid)) {
 			if (macauth_switch) {
@@ -472,6 +476,8 @@ stamsg_proc(eag_stamsg_t *stamsg, uint8_t usermac[6],
 			appconn->session.wtpid= tmpsession.wtpid;
 			strncpy(appconn->session.essid, tmpsession.essid,
 								sizeof(appconn->session.essid)-1);
+			strncpy(appconn->session.apname, tmpsession.apname,
+								sizeof(appconn->session.apname)-1);
 			memcpy(appconn->session.apmac, tmpsession.apmac, 
 							sizeof(appconn->session.apmac));
 			appconn->session.vlanid = tmpsession.vlanid;

@@ -1089,6 +1089,8 @@ appconn_create_by_sta_v2(appconn_db_t * appdb, struct appsession *session)
 	appconn->session.wtpid = session->wtpid;	
 	strncpy(appconn->session.essid, session->essid, 
 			sizeof(appconn->session.essid)-1);
+	strncpy(appconn->session.apname, session->apname, 
+			sizeof(appconn->session.apname)-1);
 	memcpy(appconn->session.apmac, session->apmac,
 			sizeof(appconn->session.apmac));
 	appconn->session.vlanid = session->vlanid;
@@ -1209,10 +1211,45 @@ appconn_config_portalsrv(struct app_conn_t *appconn,
 		"appconn_config_portalsrv domain=%s, portal-url=%s",
 		portal_srv->domain, portal_srv->portal_url);
 
-	memcpy(&(appconn->session.portal_srv), portal_srv, 
+	memcpy(&(appconn->portal_srv), portal_srv, 
 			sizeof(struct portal_srv_t));
 	strncpy(appconn->session.domain_name, portal_srv->domain,
 			sizeof(appconn->session.domain_name)-1);
+	
+	return EAG_RETURN_OK;
+}
+
+int 
+appconn_config_portalsrv_bk(struct app_conn_t *appconn,
+					struct portal_conf *portalconf)
+{
+	struct portal_srv_t *portal_srv = NULL;
+	int i = 0;
+
+	if (0 == portalconf->current_num) {
+		eag_log_err("appconn_config_portalsrv portal_srv num = 0");
+		return EAG_ERR_UNKNOWN;
+	}
+
+	for (i = 0; i < portalconf->current_num; i++) {
+		portal_srv = &(portalconf->portal_srv[i]);
+		if (appconn_match_portalsrv(appconn, portal_srv)) {
+			break;
+		}
+	}
+	if (i >= portalconf->current_num) {
+		portal_srv = &(portalconf->portal_srv[0]);
+		eag_log_debug("appconn", 
+			"appconn_config_portalsrv not match portal srv, "
+			"use the first portal srv as default");
+	}
+	
+	eag_log_debug("appconn",
+		"appconn_config_portalsrv domain=%s, portal-url=%s",
+		portal_srv->domain, portal_srv->portal_url);
+
+	memcpy(&(appconn->portal_srv), portal_srv, 
+			sizeof(struct portal_srv_t));
 	
 	return EAG_RETURN_OK;
 }

@@ -30,6 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define _EAG_CONF_H
 
 #include <stdint.h>
+#include "nm_list.h"
 
 /*default config*/
 #define DEFAULT_PORTAL_PORT				2000
@@ -126,14 +127,19 @@ radius_srv_get_by_domain(struct radius_conf *radiusconf,
 
 
 /*portal config!!!!!*/
-#define MAX_PORTAL_NUM			128
-#define MAX_PORTAL_URL_LEN		256
-#define MAX_PORTAL_KEY_BUFF_LEN	64
-#define MAX_MULTPORTAL_ACNAME_LEN	32
-#define MAX_PORTAL_URL_SUFFIX_LEN	64
-#define MAX_DES_KEY_LEN			8
+#define MAX_PORTAL_NUM                128
+#define MAX_PORTAL_URL_LEN            256
+#define MAX_PORTAL_KEY_BUFF_LEN       64
+#define MAX_MULTPORTAL_ACNAME_LEN     32
+#define MAX_PORTAL_URL_SUFFIX_LEN     128
+#define MAX_DES_KEY_LEN               8
 
-#define PORTAL_SECRETSIZE       128
+#define PORTAL_SECRETSIZE             128
+#define MAX_URL_PARAM_NUM             16
+#define URL_PARAM_QUERY_STR_LEN       512
+#define URL_PARAM_NAME_LEN            32
+#define URL_PARAM_VALUE_LEN           128
+#define URL_PARAM_WISPR_VALUE_LEN     512
 
 typedef enum {
 	PORTAL_KEYTYPE_ESSID,
@@ -143,13 +149,65 @@ typedef enum {
 	PORTAL_KEYTYPE_INTF
 } PORTAL_KEY_TYPE;
 
-
 enum{
 	WISPR_URL_NO,
 	WISPR_URL_HTTP,
 	WISPR_URL_HTTPS
 };
 
+typedef enum {
+    URL_PARAM_NASIP = 1, //1
+    URL_PARAM_USERIP,
+    URL_PARAM_USERMAC,
+    URL_PARAM_APMAC,
+    URL_PARAM_APNAME,
+    URL_PARAM_ESSID,     //6
+    URL_PARAM_NASID,
+    URL_PARAM_ACNAME,
+    URL_PARAM_FIRSTURL,
+    URL_PARAM_WISPRURL   //10
+} URL_PARAM_TYPE;
+
+enum{
+	UP_STATUS_ON = 1,
+	UP_STATUS_OFF,  //2
+	UP_HTTP,        //3
+	UP_HTTPS,       //4
+	UP_LETTER_UPPER,//5
+	UP_LETTER_LOWER,//6
+	UP_ENCODE_ON,   //7
+	UP_ENCODE_OFF   //8
+};
+
+typedef enum{
+	UP_COMMON,
+	UP_WISPR
+} URLPARAM;
+
+struct url_param_t {
+	URL_PARAM_TYPE param_type;
+	char mac_deskey[MAX_DES_KEY_LEN+1];    // for mac
+	char mac_format[3];   // : or - for mac
+	uint32_t letter_type; //upper or lower for mac
+	uint32_t url_type;    // https or http for url
+	uint32_t url_encode;  // on or off for url
+	char param_name[URL_PARAM_NAME_LEN];   // new param name
+	char param_value[URL_PARAM_VALUE_LEN]; // for user define value
+};
+
+struct urlparam_query_str_t {
+	uint32_t common_param_num;
+
+	uint32_t wispr_status;
+	uint32_t wispr_param_num;
+	uint32_t wispr_type;   // https or http for wispr url
+	uint32_t wispr_encode; // on or off for wispr url
+	char wispr_name[URL_PARAM_NAME_LEN];  // for new wispr name
+	char wispr_value[URL_PARAM_WISPR_VALUE_LEN];  // for user define value
+	
+	struct url_param_t common_param[MAX_URL_PARAM_NUM];
+	struct url_param_t wispr_param[MAX_URL_PARAM_NUM];
+};
 
 struct portal_srv_t {
 	PORTAL_KEY_TYPE key_type;
@@ -189,6 +247,12 @@ struct portal_srv_t {
 	uint32_t ip;
 	uint32_t mac_server_ip;
 	uint16_t mac_server_port;
+
+	/* url param by houyongtao 2013-9-10 Teachers' Day */
+	int mobile_urlparam;//url param : wlanuserip wlanacname ssid
+    int urlparam_add;
+    char save_urlparam_config[URL_PARAM_QUERY_STR_LEN];
+    struct urlparam_query_str_t urlparam_query_str;
 };
 
 struct portal_conf{

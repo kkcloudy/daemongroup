@@ -786,7 +786,7 @@ radius_auth(eag_radius_t *radius,
 	mac2str(appconn->session.apmac, ap_macstr, sizeof(ap_macstr), '-');
 	mac2str(appconn->session.usermac, user_macstr, sizeof(user_macstr), '-');
 	ip2str(appconn->session.nasip, nas_ipstr, sizeof(nas_ipstr));
-	ip2str(appconn->session.portal_srv.ip, portal_ipstr, sizeof(portal_ipstr));
+	ip2str(appconn->portal_srv.ip, portal_ipstr, sizeof(portal_ipstr));
 	ip2str(appconn->session.radius_srv.auth_ip, radius_auth_ipstr, sizeof(radius_auth_ipstr));
 	
 	radius_packet_init(&packet, RADIUS_CODE_ACCESS_REQUEST);

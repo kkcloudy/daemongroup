@@ -850,6 +850,30 @@ eag_set_portal_server_wisprlogin( DBusConnection *connection,
 				int status,
 				char *type);
 
+int
+eag_set_portal_server_mobile_urlparam( DBusConnection *connection, 
+				int hansitype, int insid, 	
+				PORTAL_KEY_TYPE key_type,
+				unsigned long keyid,
+				char *key_word,
+				int mobile_urlparam );
+
+int
+eag_set_portal_server_urlparam( DBusConnection *connection, 
+				int hansitype, int insid, 
+				PORTAL_KEY_TYPE key_type, 
+				unsigned long keyid, 
+				char *key_word, 
+				int add_or_del, 
+				char *url_param );
+
+int
+eag_show_portal_server_urlparam( DBusConnection *connection, 
+				int hansitype, int insid, 
+				PORTAL_KEY_TYPE key_type,
+				unsigned long keyid,
+				char *key_word,
+				struct portal_srv_t *portal_srv );
 
 int
 eag_add_radius( DBusConnection *connection, 

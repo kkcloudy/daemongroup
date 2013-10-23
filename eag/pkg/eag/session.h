@@ -91,6 +91,7 @@ struct appsession {
 	uint32_t user_ip;
 	uint8_t usermac[PKT_ETH_ALEN];
 	uint8_t apmac[PKT_ETH_ALEN];
+	char apname[MAX_APNAME_LENGTH];
 	char essid[MAX_ESSID_LENGTH];
 	uint8_t wlanid;
 	uint8_t radioid;
@@ -135,7 +136,6 @@ struct appsession {
 	
 	int terminate_cause;
 
-	struct portal_srv_t portal_srv;
 	struct radius_srv_t radius_srv;
 
 	uint64_t last_idle_check_output_octets;

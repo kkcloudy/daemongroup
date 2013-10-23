@@ -106,6 +106,9 @@
 #define EAG_DBUS_METHOD_SET_REDIRECT_TO_URL			"eag_dbus_method_set_redirect_to_url"
 #define EAG_DBUS_METHOD_SET_WLANUSERMAC				"eag_dbus_method_set_wlanusermac"
 #define EAG_DBUS_METHOD_SET_WISPRLOGIN				"eag_dbus_method_set_wisprlogin"
+#define EAG_DBUS_METHOD_SET_MOBILE_URLPARAM			"eag_dbus_method_set_mobile_urlparam"
+#define EAG_DBUS_METHOD_SET_URLPARAM				"eag_dbus_method_set_urlparam"
+#define EAG_DBUS_METHOD_SHOW_URLPARAM				"eag_dbus_method_show_urlparam"
 
 /*radius*/
 #define EAG_DBUS_METHOD_ADD_RADIUS					"eag_dbus_method_add_radius"
@@ -3499,6 +3502,9 @@ eag_get_portal_conf( DBusConnection *connection,
 	int wlanusermac = 0;
 	char *wlanusermac_DESkey = NULL;
 	int wisprlogin = 0;
+	int mobile_urlparam = 0;
+	int urlparam_add = 0;
+	char *save_urlparam_config = NULL;
 
 	if( NULL == portalconf ){
 		return EAG_ERR_INPUT_PARAM_ERR;
@@ -3677,6 +3683,19 @@ eag_get_portal_conf( DBusConnection *connection,
 					
 					dbus_message_iter_get_basic(&iter_struct, &wisprlogin);
 					portalconf->portal_srv[i].wisprlogin = wisprlogin;
+					dbus_message_iter_next(&iter_struct);
+					
+					dbus_message_iter_get_basic(&iter_struct, &mobile_urlparam);
+					portalconf->portal_srv[i].mobile_urlparam = mobile_urlparam;
+					dbus_message_iter_next(&iter_struct);
+					
+					dbus_message_iter_get_basic(&iter_struct, &urlparam_add);
+					portalconf->portal_srv[i].urlparam_add = urlparam_add;
+					dbus_message_iter_next(&iter_struct);
+					
+					dbus_message_iter_get_basic(&iter_struct, &save_urlparam_config);
+					if( NULL != save_urlparam_config)
+						strncpy(portalconf->portal_srv[i].save_urlparam_config, save_urlparam_config, URL_PARAM_QUERY_STR_LEN-1);
 					dbus_message_iter_next(&iter_struct);
 					
 					dbus_message_iter_next(&iter_array);
@@ -4739,6 +4758,326 @@ eag_set_portal_server_wisprlogin( DBusConnection *connection,
 	return iRet;
 }
 
+int
+eag_set_portal_server_mobile_urlparam( DBusConnection *connection, 
+				int hansitype, int insid, 	
+				PORTAL_KEY_TYPE key_type,
+				unsigned long keyid,
+				char *key_word,
+				int mobile_urlparam )
+{
+	DBusMessage *query, *reply;
+	DBusError err;
+	int iRet = 0;
+
+	if( NULL == key_word ){
+		return EAG_ERR_INPUT_PARAM_ERR;
+	}
+
+	switch(key_type){
+	case PORTAL_KEYTYPE_ESSID:
+	case PORTAL_KEYTYPE_INTF:
+		keyid = 0;
+		break;
+	case PORTAL_KEYTYPE_WLANID:
+	case PORTAL_KEYTYPE_VLANID:
+	case PORTAL_KEYTYPE_WTPID:
+		key_word = "";
+		break;
+	default:
+		return EAG_ERR_PORTAL_ADD_SRV_ERR_TYPE;
+	}
+	
+	eag_dbus_path_reinit(hansitype,insid);
+	query = dbus_message_new_method_call(
+									EAG_DBUS_NAME,
+									EAG_DBUS_OBJPATH,
+									EAG_DBUS_INTERFACE, 
+									EAG_DBUS_METHOD_SET_MOBILE_URLPARAM );
+	dbus_error_init(&err);
+
+	dbus_message_append_args(	query,
+								DBUS_TYPE_UINT32, &key_type,
+								DBUS_TYPE_UINT32, &keyid,
+								DBUS_TYPE_STRING, &key_word,
+								DBUS_TYPE_INT32, &mobile_urlparam,
+								DBUS_TYPE_INVALID );
+	reply = dbus_connection_send_with_reply_and_block (
+						connection, query, -1, &err );
+
+	dbus_message_unref(query);
+	
+	if ( NULL == reply ){	
+		if (dbus_error_is_set(&err)){
+			dbus_error_free(&err);
+		}
+		return EAG_ERR_DBUS_FAILED;
+	}else{
+		dbus_message_get_args( reply,
+								&err,
+								DBUS_TYPE_INT32, &iRet,
+								DBUS_TYPE_INVALID );
+	}
+	
+	dbus_message_unref(reply);
+	
+	return iRet;
+}
+
+int
+eag_set_portal_server_urlparam( DBusConnection *connection, 
+				int hansitype, int insid, 
+				PORTAL_KEY_TYPE key_type, 
+				unsigned long keyid, 
+				char *key_word, 
+				int add_or_del, 
+				char *url_param )
+{
+	DBusMessage *query, *reply;
+	DBusError err;
+	int iRet = 0;
+	
+	if( NULL == key_word ){
+		return EAG_ERR_INPUT_PARAM_ERR;
+	}
+	
+	if( 1 != add_or_del && 0 != add_or_del){
+		return EAG_ERR_INPUT_PARAM_ERR;
+	}
+
+	switch(key_type){
+	case PORTAL_KEYTYPE_ESSID:
+	case PORTAL_KEYTYPE_INTF:
+		keyid = 0;
+		break;
+	case PORTAL_KEYTYPE_WLANID:
+	case PORTAL_KEYTYPE_VLANID:
+	case PORTAL_KEYTYPE_WTPID:
+		key_word = "";
+		break;
+	default:
+		return EAG_ERR_PORTAL_ADD_SRV_ERR_TYPE;
+	}
+	
+	if (NULL == url_param || 0 == strlen(url_param)) {
+		return EAG_ERR_INPUT_PARAM_ERR;
+	}
+	if (strlen(url_param) >= URL_PARAM_QUERY_STR_LEN) {
+		return EAG_ERR_PORTAL_SET_URLPARAM_LEN_LINITE;
+	}
+
+	eag_dbus_path_reinit(hansitype,insid);
+	query = dbus_message_new_method_call(
+									EAG_DBUS_NAME,
+									EAG_DBUS_OBJPATH,
+									EAG_DBUS_INTERFACE, 
+									EAG_DBUS_METHOD_SET_URLPARAM);
+	dbus_error_init(&err);
+
+	dbus_message_append_args(	query,
+						        DBUS_TYPE_UINT32, &key_type,
+								DBUS_TYPE_UINT32, &keyid,
+								DBUS_TYPE_STRING, &key_word,
+								DBUS_TYPE_UINT32, &add_or_del,
+								DBUS_TYPE_STRING, &url_param,
+								DBUS_TYPE_INVALID );
+	reply = dbus_connection_send_with_reply_and_block (
+						connection, query, -1, &err );
+
+	dbus_message_unref(query);
+	
+	if ( NULL == reply ){	
+		if (dbus_error_is_set(&err)){
+			dbus_error_free(&err);
+		}
+		return EAG_ERR_DBUS_FAILED;
+	}else{
+		dbus_message_get_args(  reply,
+								&err,
+								DBUS_TYPE_INT32, &iRet,
+								DBUS_TYPE_INVALID );
+	}
+	
+	dbus_message_unref(reply);
+	
+	return iRet;
+}
+
+int
+eag_show_portal_server_urlparam( DBusConnection *connection, 
+				int hansitype, int insid, 
+				PORTAL_KEY_TYPE key_type, 
+				unsigned long keyid, 
+ 				char *key_word, 
+ 				struct portal_srv_t *portal_srv )
+{
+	DBusMessage *query = NULL;
+	DBusMessage *reply = NULL;
+	DBusError err = {0};
+	DBusMessageIter iter = {0};
+	DBusMessageIter iter_array = {0};
+	DBusMessageIter iter_struct = {0};
+	struct urlparam_query_str_t *urlparam = NULL;
+	struct url_param_t *param = NULL;
+	char *param_name = NULL;
+	char *param_value = NULL;
+	char *mac_deskey = NULL;
+	char *mac_format = NULL;
+	int iRet = 0;
+	int i = 0;
+
+	if( NULL == key_word ){
+		return EAG_ERR_INPUT_PARAM_ERR;
+	}
+	
+	switch(key_type){
+	case PORTAL_KEYTYPE_ESSID:
+	case PORTAL_KEYTYPE_INTF:
+		keyid = 0;
+		break;
+	case PORTAL_KEYTYPE_WLANID:
+	case PORTAL_KEYTYPE_VLANID:
+	case PORTAL_KEYTYPE_WTPID:
+		key_word = "";
+		break;
+	default:
+		return EAG_ERR_PORTAL_ADD_SRV_ERR_TYPE;
+	}
+	eag_dbus_path_reinit(hansitype,insid);
+	query = dbus_message_new_method_call(
+									EAG_DBUS_NAME,
+									EAG_DBUS_OBJPATH,
+									EAG_DBUS_INTERFACE, 
+									EAG_DBUS_METHOD_SHOW_URLPARAM);
+	dbus_error_init(&err);
+
+	dbus_message_append_args(	query,
+						        DBUS_TYPE_UINT32, &key_type,
+								DBUS_TYPE_UINT32, &keyid,
+								DBUS_TYPE_STRING, &key_word,
+								DBUS_TYPE_INVALID );
+								
+    reply = dbus_connection_send_with_reply_and_block (
+                        connection, query, -1, &err );
+    
+    dbus_message_unref(query);
+
+	if (NULL == reply) {
+		if (dbus_error_is_set(&err)) {
+			dbus_error_free(&err);
+		}
+		return EAG_ERR_DBUS_FAILED;
+	} else {
+		dbus_message_iter_init(reply,&iter);
+		dbus_message_iter_get_basic(&iter, &iRet);
+		
+		if (EAG_RETURN_OK == iRet) {
+			urlparam = &(portal_srv->urlparam_query_str);
+            memset(urlparam, 0, sizeof(struct urlparam_query_str_t));
+			dbus_message_iter_next(&iter);
+			dbus_message_iter_get_basic(&iter, &(urlparam->common_param_num));
+			if (urlparam->common_param_num > 0) {
+				dbus_message_iter_next(&iter);
+				dbus_message_iter_recurse(&iter,&iter_array);
+
+				for (i = 0; i < urlparam->common_param_num; i++) {
+					param = &(urlparam->common_param[i]);
+					dbus_message_iter_recurse(&iter_array, &iter_struct);
+					dbus_message_iter_get_basic(&iter_struct, &(param->param_type));
+					dbus_message_iter_next(&iter_struct);
+					dbus_message_iter_get_basic(&iter_struct, &param_name);
+					if (NULL != param_name) {
+						strncpy(param->param_name, param_name, sizeof(param->param_name)-1);
+					}
+					dbus_message_iter_next(&iter_struct);
+					dbus_message_iter_get_basic(&iter_struct, &param_value);
+					if (NULL != param_value) {
+						strncpy(param->param_value, param_value, sizeof(param->param_value)-1);
+					}
+					dbus_message_iter_next(&iter_struct);
+					dbus_message_iter_get_basic(&iter_struct, &mac_deskey);
+					if (NULL != mac_deskey) {
+						strncpy(param->mac_deskey, mac_deskey, sizeof(param->mac_deskey)-1);
+					}
+					dbus_message_iter_next(&iter_struct);
+					dbus_message_iter_get_basic(&iter_struct, &mac_format);
+					if (NULL != mac_format) {
+						strncpy(param->mac_format, mac_format, sizeof(param->mac_format)-1);
+					}
+					dbus_message_iter_next(&iter_struct);
+					dbus_message_iter_get_basic(&iter_struct, &(param->letter_type));
+					dbus_message_iter_next(&iter_struct);
+					dbus_message_iter_get_basic(&iter_struct, &(param->url_type));
+					dbus_message_iter_next(&iter_struct);
+					dbus_message_iter_get_basic(&iter_struct, &(param->url_encode));
+					dbus_message_iter_next(&iter_array);
+				}
+			}
+
+			dbus_message_iter_next(&iter);
+			dbus_message_iter_get_basic(&iter, &(urlparam->wispr_status));
+			if (urlparam->wispr_status == UP_STATUS_ON) {
+				dbus_message_iter_next(&iter);
+				dbus_message_iter_get_basic(&iter, &(urlparam->wispr_param_num));
+				dbus_message_iter_next(&iter);
+				dbus_message_iter_get_basic(&iter, &param_name);
+				if (NULL != param_name) {
+					strncpy(urlparam->wispr_name, param_name, sizeof(urlparam->wispr_name)-1);
+				}
+				dbus_message_iter_next(&iter);
+				dbus_message_iter_get_basic(&iter, &param_value);
+				if (NULL != param_value) {
+					strncpy(urlparam->wispr_value, param_value, sizeof(urlparam->wispr_value)-1);
+				}
+				dbus_message_iter_next(&iter);
+				dbus_message_iter_get_basic(&iter, &(urlparam->wispr_type));
+				dbus_message_iter_next(&iter);
+				dbus_message_iter_get_basic(&iter, &(urlparam->wispr_encode));
+			}
+			
+			if (urlparam->wispr_status == UP_STATUS_ON && urlparam->wispr_param_num > 0) {
+				dbus_message_iter_next(&iter);
+				dbus_message_iter_recurse(&iter,&iter_array);
+				for (i = 0; i < urlparam->wispr_param_num; i++) {
+					param = &(urlparam->wispr_param[i]);
+					dbus_message_iter_recurse(&iter_array, &iter_struct);
+					dbus_message_iter_get_basic(&iter_struct, &(param->param_type));
+					dbus_message_iter_next(&iter_struct);
+					dbus_message_iter_get_basic(&iter_struct, &param_name);
+					if (NULL != param_name) {
+						strncpy(param->param_name, param_name, sizeof(param->param_name)-1);
+					}
+					dbus_message_iter_next(&iter_struct);
+					dbus_message_iter_get_basic(&iter_struct, &param_value);
+					if (NULL != param_value) {
+						strncpy(param->param_value, param_value, sizeof(param->param_value)-1);
+					}
+					dbus_message_iter_next(&iter_struct);
+					dbus_message_iter_get_basic(&iter_struct, &mac_deskey);
+					if (NULL != mac_deskey) {
+						strncpy(param->mac_deskey, mac_deskey, sizeof(param->mac_deskey)-1);
+					}
+					dbus_message_iter_next(&iter_struct);
+					dbus_message_iter_get_basic(&iter_struct, &mac_format);
+					if (NULL != mac_format) {
+						strncpy(param->mac_format, mac_format, sizeof(param->mac_format)-1);
+					}
+					dbus_message_iter_next(&iter_struct);
+					dbus_message_iter_get_basic(&iter_struct, &(param->letter_type));
+					dbus_message_iter_next(&iter_struct);
+					dbus_message_iter_get_basic(&iter_struct, &(param->url_type));
+					dbus_message_iter_next(&iter_struct);
+					dbus_message_iter_get_basic(&iter_struct, &(param->url_encode));
+					dbus_message_iter_next(&iter_array);
+				}
+			}
+		}
+	}
+	
+    dbus_message_unref(reply);
+    
+    return iRet;    
+}
 
 int
 eag_add_radius( DBusConnection *connection, 

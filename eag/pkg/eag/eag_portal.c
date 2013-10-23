@@ -805,8 +805,8 @@ eag_portal_onmacbind_timeout(eag_thread_t *thread)
 		admin_log_notice("PortalReqMacBindInfo___UserIP:%s", user_ipstr);
 		eag_log_filter(user_ipstr,"PortalReqMacBindInfo___UserIP:%s", user_ipstr);
 		eag_portal_send_packet(portal, 
-			appconn->session.portal_srv.mac_server_ip,
-			appconn->session.portal_srv.mac_server_port, &req_packet);
+			appconn->portal_srv.mac_server_ip,
+			appconn->portal_srv.mac_server_port, &req_packet);
 		portalsess->retry_count++;
 		portalsess->timeout = portal->retry_interval;
 		portal_sess_event(SESS_ONMACBIND_TIMEOUT, portalsess);
@@ -1140,8 +1140,8 @@ eag_portal_ntf_logout_wait_timeout(eag_thread_t * thread)
 		mac2str(appconn->session.apmac, ap_macstr, sizeof(ap_macstr)-1, '-');
 		ip2str(appconn->session.nasip, nas_ipstr, sizeof(nas_ipstr));
 		ip2str(portalsess->portal_ip, portal_ipstr, sizeof(portal_ipstr));
-		portal_req_authenticator(&ntfpkt, appconn->session.portal_srv.secret,
-				appconn->session.portal_srv.secretlen);
+		portal_req_authenticator(&ntfpkt, appconn->portal_srv.secret,
+				appconn->portal_srv.secretlen);
 		admin_log_notice("PortalNtfLogout___UserIP:%s,UserMAC:%s,UserName:%s,ApMAC:%s,SSID:%s,NasIP:%s,PortalIP:%s,Interface:%s,NasID:%s",
 			user_ipstr, user_macstr, appconn->session.username, ap_macstr, appconn->session.essid, 
 			nas_ipstr, portal_ipstr, appconn->session.intf, appconn->session.nasid);
@@ -1246,11 +1246,11 @@ eag_portal_challenge_proc(eag_portal_t *portal,
 		goto send;
 	}
 
-	if (0 != portal_request_check(reqpkt, appconn->session.portal_srv.secret,
-				appconn->session.portal_srv.secretlen))
+	if (0 != portal_request_check(reqpkt, appconn->portal_srv.secret,
+				appconn->portal_srv.secretlen))
 	{
 		eag_log_warning("portal_challenge_proc authenticator not match secret=%s userip=%s",
-			appconn->session.portal_srv.secret, user_ipstr);
+			appconn->portal_srv.secret, user_ipstr);
 		return -1;
 	}
 	
@@ -1406,8 +1406,8 @@ send:
 	}
 	eag_bss_message_count(portal->eagstat, appconn, BSS_CHALLENGE_REQ_COUNT, 1);
 	if (NULL != appconn) {
-		portal_resp_authenticator(&rsppkt, reqpkt, appconn->session.portal_srv.secret, 
-				appconn->session.portal_srv.secretlen);
+		portal_resp_authenticator(&rsppkt, reqpkt, appconn->portal_srv.secret, 
+				appconn->portal_srv.secretlen);
 	}
 	eag_portal_send_packet(portal, portal_ip, portal_port, &rsppkt);
 
@@ -1513,11 +1513,11 @@ eag_portal_chapauth_proc(eag_portal_t *portal,
 		goto send;
 	}
 
-	if (0 != portal_request_check(reqpkt, appconn->session.portal_srv.secret,
-				appconn->session.portal_srv.secretlen))
+	if (0 != portal_request_check(reqpkt, appconn->portal_srv.secret,
+				appconn->portal_srv.secretlen))
 	{
 		eag_log_warning("portal_chapauth_proc authenticator not match secret=%s userip=%s",
-			appconn->session.portal_srv.secret, user_ipstr);
+			appconn->portal_srv.secret, user_ipstr);
 		return -1;
 	}
 	/* add username to session_filter_prefix */
@@ -1544,7 +1544,7 @@ eag_portal_chapauth_proc(eag_portal_t *portal,
 		err_reason = PORTAL_ERR_REASON_NO_FIND_SERVER;
 		goto send;
 	}
-	if (portal_ip == appconn->session.portal_srv.mac_server_ip) {
+	if (portal_ip == appconn->portal_srv.mac_server_ip) {
 		appconn->session.server_auth_type = EAG_AUTH_TYPE_MAC;
 	} else {
 		appconn->session.server_auth_type = EAG_AUTH_TYPE_PORTAL;
@@ -1699,14 +1699,14 @@ eag_portal_chapauth_proc(eag_portal_t *portal,
 					CHALLENGESIZE);
 		appconn->on_auth = 1;
 		appconn->session.nasip = eag_ins_get_nasip(portal->eagins);
-		appconn->session.portal_srv.ip = portal_ip;
+		appconn->portal_srv.ip = portal_ip;
 		radius_auth(portal->radius, appconn, AUTH_CHAP);
 		
 		portalsess->portal_ip = portal_ip;
 		portalsess->portal_port = portal_port;
 		memcpy(&(portalsess->rcvpkt), reqpkt, sizeof(portalsess->rcvpkt));
-		memcpy(portalsess->secret, appconn->session.portal_srv.secret, PORTAL_SECRETSIZE);
-		portalsess->secretlen = appconn->session.portal_srv.secretlen;
+		memcpy(portalsess->secret, appconn->portal_srv.secret, PORTAL_SECRETSIZE);
+		portalsess->secretlen = appconn->portal_srv.secretlen;
 		portalsess->status = SESS_STATUS_ON_CHAPAUTH;
 		strncpy(portalsess->username, username, sizeof(portalsess->username));
 		eag_radius_get_retry_params(portal->radius, 
@@ -1779,8 +1779,8 @@ send:
 	}
 
 	if (NULL != appconn) {
-		portal_resp_authenticator(&rsppkt, reqpkt, appconn->session.portal_srv.secret, 
-				appconn->session.portal_srv.secretlen);
+		portal_resp_authenticator(&rsppkt, reqpkt, appconn->portal_srv.secret, 
+				appconn->portal_srv.secretlen);
 	}
 	eag_portal_send_packet(portal, portal_ip, portal_port, &(rsppkt));
 	switch (rsppkt.err_code) {
@@ -1908,11 +1908,11 @@ eag_portal_papauth_proc(eag_portal_t *portal,
 		goto send;
 	}
 
-	if (0 != portal_request_check(reqpkt, appconn->session.portal_srv.secret,
-				appconn->session.portal_srv.secretlen))
+	if (0 != portal_request_check(reqpkt, appconn->portal_srv.secret,
+				appconn->portal_srv.secretlen))
 	{
 		eag_log_warning("portal_papauth_proc authenticator not match secret=%s userip=%s",
-			appconn->session.portal_srv.secret, user_ipstr);
+			appconn->portal_srv.secret, user_ipstr);
 		return -1;
 	}
 	/* add username to session_filter_prefix */
@@ -1938,7 +1938,7 @@ eag_portal_papauth_proc(eag_portal_t *portal,
 		err_reason = PORTAL_ERR_REASON_NO_FIND_SERVER;
 		goto send;
 	}
-	if (portal_ip == appconn->session.portal_srv.mac_server_ip) {
+	if (portal_ip == appconn->portal_srv.mac_server_ip) {
 		appconn->session.server_auth_type = EAG_AUTH_TYPE_MAC;
 	} else {
 		appconn->session.server_auth_type = EAG_AUTH_TYPE_PORTAL;
@@ -2066,14 +2066,14 @@ eag_portal_papauth_proc(eag_portal_t *portal,
 		memcpy(appconn->session.passwd, attr->value, attr->len - 2);
 		appconn->on_auth = 1;
 		appconn->session.nasip = eag_ins_get_nasip(portal->eagins);
-		appconn->session.portal_srv.ip = portal_ip;
+		appconn->portal_srv.ip = portal_ip;
 		radius_auth(portal->radius, appconn, AUTH_PAP);
 		
 		portalsess->portal_ip = portal_ip;
 		portalsess->portal_port = portal_port;
 		memcpy(&(portalsess->rcvpkt), reqpkt, sizeof(portalsess->rcvpkt));
-		memcpy(portalsess->secret, appconn->session.portal_srv.secret, PORTAL_SECRETSIZE);
-		portalsess->secretlen = appconn->session.portal_srv.secretlen;
+		memcpy(portalsess->secret, appconn->portal_srv.secret, PORTAL_SECRETSIZE);
+		portalsess->secretlen = appconn->portal_srv.secretlen;
 		portalsess->status = SESS_STATUS_ON_PAPAUTH;
 		strncpy(portalsess->username, username, sizeof(portalsess->username));
 		eag_radius_get_retry_params(radius, 
@@ -2146,8 +2146,8 @@ send:
 		eag_bss_message_count(portal->eagstat, appconn, BSS_MACAUTH_REQ_COUNT, 1);
 	}
 	if (NULL != appconn) {
-		portal_resp_authenticator(&rsppkt, reqpkt, appconn->session.portal_srv.secret, 
-				appconn->session.portal_srv.secretlen);
+		portal_resp_authenticator(&rsppkt, reqpkt, appconn->portal_srv.secret, 
+				appconn->portal_srv.secretlen);
 	}
 	eag_portal_send_packet(portal, portal_ip, portal_port, &(rsppkt));
 	switch (rsppkt.err_code) {
@@ -2253,11 +2253,11 @@ eag_portal_logout_proc(eag_portal_t *portal,
 		goto send;
 	}
 
-	if (0 != portal_request_check(reqpkt, appconn->session.portal_srv.secret,
-				appconn->session.portal_srv.secretlen))
+	if (0 != portal_request_check(reqpkt, appconn->portal_srv.secret,
+				appconn->portal_srv.secretlen))
 	{
 		eag_log_warning("portal_logout_proc authenticator not match secret=%s userip=%s",
-			appconn->session.portal_srv.secret, user_ipstr);
+			appconn->portal_srv.secret, user_ipstr);
 		return -1;
 	}
 	
@@ -2330,8 +2330,8 @@ eag_portal_logout_proc(eag_portal_t *portal,
 				user_ipstr, user_macstr, appconn->session.username, ap_macstr, appconn->session.essid, nas_ipstr, portal_ipstr, appconn->session.intf, appconn->session.nasid, rsppkt.err_code);
 			log_app_filter(appconn,"PortalAckLogout___UserIP:%s,UserMAC:%s,Username:%s,ApMAC:%s,SSID:%s,NasIP:%s,PortalIP:%s,Interface:%s,NasID:%s,ErrCode:%u",
 				user_ipstr, user_macstr, appconn->session.username, ap_macstr, appconn->session.essid, nas_ipstr, portal_ipstr, appconn->session.intf, appconn->session.nasid, rsppkt.err_code);
-			portal_resp_authenticator(&rsppkt, reqpkt, appconn->session.portal_srv.secret, 
-					appconn->session.portal_srv.secretlen);
+			portal_resp_authenticator(&rsppkt, reqpkt, appconn->portal_srv.secret, 
+					appconn->portal_srv.secretlen);
 			eag_portal_send_packet(portal, portal_ip, portal_port, &(rsppkt));
 			terminate_appconn(appconn, portal->eagins,
 						RADIUS_TERMINATE_CAUSE_USER_REQUEST);
@@ -2346,8 +2346,8 @@ eag_portal_logout_proc(eag_portal_t *portal,
 		}
 		break;
 	case SESS_STATUS_LOGOUT_WAIT:
-		portal_resp_authenticator(&rsppkt, reqpkt, appconn->session.portal_srv.secret, 
-					appconn->session.portal_srv.secretlen);
+		portal_resp_authenticator(&rsppkt, reqpkt, appconn->portal_srv.secret, 
+					appconn->portal_srv.secretlen);
 		eag_portal_send_packet(portal, portal_ip, portal_port, &(rsppkt));
 		admin_log_notice("PortalAckLogout___UserIP:%s,UserMAC:%s,Username:%s,ApMAC:%s,SSID:%s,NasIP:%s,PortalIP:%s,Interface:%s,ErrCode:%u",
 				user_ipstr, user_macstr, appconn->session.username, ap_macstr, appconn->session.essid, nas_ipstr, portal_ipstr, appconn->session.intf, rsppkt.err_code);
@@ -2400,8 +2400,8 @@ send:
 					user_ipstr, user_macstr, appconn->session.username, ap_macstr, appconn->session.essid, nas_ipstr, portal_ipstr, appconn->session.intf, rsppkt.err_code, err_reason);
 	}
 	if (NULL != appconn) {
-		portal_resp_authenticator(&rsppkt, reqpkt, appconn->session.portal_srv.secret, 
-					appconn->session.portal_srv.secretlen);
+		portal_resp_authenticator(&rsppkt, reqpkt, appconn->portal_srv.secret, 
+					appconn->portal_srv.secretlen);
 	}
 	eag_portal_send_packet(portal, portal_ip, portal_port, &(rsppkt));
 
@@ -2626,11 +2626,11 @@ eag_portal_aff_ack_auth_proc(eag_portal_t *portal,
 		admin_log_notice("PortalAffAckAuth___UserIP:%s,UserMAC:%s,Username:%s,ApMAC:%s,SSID:%s,NasIP:%s,PortalIP:%s,Interface:%s,NasID:%s",
 			user_ipstr, user_macstr, appconn->session.username, ap_macstr, appconn->session.essid, nas_ipstr, portal_ipstr, appconn->session.intf, appconn->session.nasid);
 	}
-	if (0 != portal_request_check(reqpkt, appconn->session.portal_srv.secret,
-				appconn->session.portal_srv.secretlen))
+	if (0 != portal_request_check(reqpkt, appconn->portal_srv.secret,
+				appconn->portal_srv.secretlen))
 	{
 		eag_log_warning("portal_logout_proc authenticator not match secret=%s userip=%s",
-			appconn->session.portal_srv.secret, user_ipstr);
+			appconn->portal_srv.secret, user_ipstr);
 		return -1;
 	}
 
@@ -2736,11 +2736,11 @@ eag_portal_reqinfo_proc(eag_portal_t *portal,
 		goto send;
 	}
 
-	if (0 != portal_request_check(reqpkt, appconn->session.portal_srv.secret,
-				appconn->session.portal_srv.secretlen))
+	if (0 != portal_request_check(reqpkt, appconn->portal_srv.secret,
+				appconn->portal_srv.secretlen))
 	{
 		eag_log_warning("portal_reqinfo_proc authenticator not match secret=%s userip=%s",
-			appconn->session.portal_srv.secret, user_ipstr);
+			appconn->portal_srv.secret, user_ipstr);
 		return -1;
 	}
 	
@@ -2802,8 +2802,8 @@ send:
 	admin_log_notice("PortalAckInfo___UserIP:%s,ErrCode:%d,ErrReason:%s",
 			user_ipstr, rsppkt.err_code, err_reason);
 	if (NULL != appconn) {
-		portal_resp_authenticator(&(rsppkt), reqpkt, appconn->session.portal_srv.secret,
-		appconn->session.portal_srv.secretlen);
+		portal_resp_authenticator(&(rsppkt), reqpkt, appconn->portal_srv.secret,
+		appconn->portal_srv.secretlen);
 	}
 	eag_portal_send_packet(portal, portal_ip, portal_port, &(rsppkt));
 	
@@ -3508,7 +3508,7 @@ eag_portal_auth_success(eag_portal_t *portal,
 	portalsess->timeout = portal->retry_interval;
 	portal_sess_event(SESS_AFF_WAIT_TIMEOUT, portalsess);
 
-	appconn->session.portal_srv.ip = portalsess->portal_ip;
+	appconn->portal_srv.ip = portalsess->portal_ip;
 	appconn->session.state = APPCONN_STATUS_AUTHED;
 	appconn->session.session_start_time = timenow;
 	appconn->session.accurate_start_time = time(NULL);
@@ -3522,7 +3522,7 @@ eag_portal_auth_success(eag_portal_t *portal,
 	/* bind server */
 	if (eag_macauth_get_macauth_switch(portal->macauth)
 		&& appconn->session.wlanid > 0
-		&& appconn->session.portal_srv.mac_server_ip != 0
+		&& appconn->portal_srv.mac_server_ip != 0
 		&& 1 == notice_to_bindserver)
 	{
 		eag_portal_ntf_user_logon(portal, appconn);
@@ -3559,7 +3559,7 @@ eag_portal_notify_logout(eag_portal_t * portal,
 	mac2str(appconn->session.usermac, user_macstr, sizeof(user_macstr)-1, '-');
 	mac2str(appconn->session.apmac, ap_macstr, sizeof(ap_macstr)-1, '-');
 	ip2str(appconn->session.nasip, nas_ipstr, sizeof(nas_ipstr));
-	ip2str(appconn->session.portal_srv.ip, portal_ipstr, sizeof(portal_ipstr));
+	ip2str(appconn->portal_srv.ip, portal_ipstr, sizeof(portal_ipstr));
 	
 	portalsess = portal_sess_find_by_userip(portal, userip);
 	if (NULL == portalsess) {
@@ -3619,8 +3619,8 @@ eag_portal_notify_logout(eag_portal_t * portal,
 	}
 	portalsess->terminate_cause = terminate_cause;
 	portalsess->status = SESS_STATUS_NTF_LOGOUT_WAIT;
-	portalsess->portal_ip = appconn->session.portal_srv.ip;
-	portalsess->portal_port = appconn->session.portal_srv.ntf_port;
+	portalsess->portal_ip = appconn->portal_srv.ip;
+	portalsess->portal_port = appconn->portal_srv.ntf_port;
 	portalsess->retry_count = 0;
 	portalsess->timeout = portal->retry_interval;
 	portal_sess_event(SESS_NTF_LOGOUT_WAIT_TIMEOUT, portalsess);
@@ -3635,8 +3635,8 @@ eag_portal_notify_logout(eag_portal_t * portal,
 	log_app_filter(appconn,"PortalNtfLogout___UserIP:%s,UserMAC:%s,UserName:%s,ApMAC:%s,SSID:%s,NasIP:%s,PortalIP:%s,Interface:%s,NasID:%s",
 			user_ipstr, user_macstr, appconn->session.username, ap_macstr, appconn->session.essid, 
 			nas_ipstr, portal_ipstr, appconn->session.intf, appconn->session.nasid);
-	portal_req_authenticator(&ntfpkt, appconn->session.portal_srv.secret,
-		appconn->session.portal_srv.secretlen);
+	portal_req_authenticator(&ntfpkt, appconn->portal_srv.secret,
+		appconn->portal_srv.secretlen);
 	eag_portal_send_packet(portal, portalsess->portal_ip,
 			portalsess->portal_port, &(ntfpkt));
 	
@@ -3667,7 +3667,7 @@ eag_portal_notify_logout_nowait(eag_portal_t * portal,
 	mac2str(appconn->session.usermac, user_macstr, sizeof(user_macstr)-1, '-');
 	mac2str(appconn->session.apmac, ap_macstr, sizeof(ap_macstr)-1, '-');
 	ip2str(appconn->session.nasip, nas_ipstr, sizeof(nas_ipstr));
-	ip2str(appconn->session.portal_srv.ip, portal_ipstr, sizeof(portal_ipstr));
+	ip2str(appconn->portal_srv.ip, portal_ipstr, sizeof(portal_ipstr));
 
 	portalsess = portal_sess_find_by_userip(portal, userip);
 	if (NULL != portalsess) {
@@ -3721,10 +3721,10 @@ eag_portal_notify_logout_nowait(eag_portal_t * portal,
 	log_app_filter(appconn,"PortalNtfLogout___UserIP:%s,UserMAC:%s,UserName:%s,ApMAC:%s,SSID:%s,NasIP:%s,PortalIP:%s,Interface:%s,NasID:%s",
 			user_ipstr, user_macstr, appconn->session.username, ap_macstr, appconn->session.essid, 
 			nas_ipstr, portal_ipstr, appconn->session.intf, appconn->session.nasid);
-	portal_req_authenticator(&ntfpkt, appconn->session.portal_srv.secret,
-		appconn->session.portal_srv.secretlen);
-	eag_portal_send_packet(portal, appconn->session.portal_srv.ip,
-			appconn->session.portal_srv.ntf_port, &(ntfpkt));
+	portal_req_authenticator(&ntfpkt, appconn->portal_srv.secret,
+		appconn->portal_srv.secretlen);
+	eag_portal_send_packet(portal, appconn->portal_srv.ip,
+			appconn->portal_srv.ntf_port, &(ntfpkt));
 	
 	return EAG_RETURN_OK;
 }
@@ -3911,8 +3911,8 @@ eag_portal_macbind_req(eag_portal_t *portal,
 	log_app_filter(appconn,"PortalReqMacBindInfo___UserIP:%s",
 			user_ipstr);
 	eag_portal_send_packet(portal, 
-		appconn->session.portal_srv.mac_server_ip,
-		appconn->session.portal_srv.mac_server_port, &req_packet);
+		appconn->portal_srv.mac_server_ip,
+		appconn->portal_srv.mac_server_port, &req_packet);
 	
 	return EAG_RETURN_OK;
 }
@@ -3975,8 +3975,8 @@ eag_portal_ntf_user_logon(eag_portal_t *portal,
 			user_ipstr, appconn->session.username);
 
 	eag_portal_send_packet(portal, 
-		appconn->session.portal_srv.mac_server_ip,
-		appconn->session.portal_srv.mac_server_port, &req_packet);
+		appconn->portal_srv.mac_server_ip,
+		appconn->portal_srv.mac_server_port, &req_packet);
 	
 	return EAG_RETURN_OK;
 }
@@ -4064,8 +4064,8 @@ eag_portal_ntf_user_logoff(eag_portal_t *portal,
 			user_ipstr, appconn->session.username);
 
 	eag_portal_send_packet(portal, 
-		appconn->session.portal_srv.mac_server_ip,
-		appconn->session.portal_srv.mac_server_port, &req_packet);
+		appconn->portal_srv.mac_server_ip,
+		appconn->portal_srv.mac_server_port, &req_packet);
 	
 	return EAG_RETURN_OK;
 }

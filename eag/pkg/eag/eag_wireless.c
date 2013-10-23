@@ -163,9 +163,11 @@ reget:
 	session->idle_timeout = sta->no_flow_time;	
 	session->idle_flow = sta->limit_flow;
 #endif	
-	if (NULL != sta->essid)
-	{
+	if (NULL != sta->essid) {
 		strncpy(session->essid, sta->essid, sizeof(session->essid)-1);
+	}
+	if (NULL != sta->wtp_name) {
+		strncpy(session->apname, sta->wtp_name, sizeof(session->apname)-1);
 	}
 	memcpy(session->apmac, sta->addr, sizeof(session->apmac));
 	session->vlanid = sta->vlan_id;
@@ -174,10 +176,10 @@ reget:
 	mac2str(session->apmac, str_wtp_mac, sizeof(str_wtp_mac), '-');
 	eag_log_info("eag_get_sta_info_by_mac_v2 success, "
 			"sta_mac=%s, radio_id=%d, wlan_id=%d, wtp_id=%d, "
-			"essid=%s, wtp_mac=%s, vlanid=%d, idle_check=%u, "
+			"essid=%s, wtp_mac=%s, wtp_name=%s, vlanid=%d, idle_check=%u, "
 			"idle_timeout=%lu, idle_flow=%llu, security_type=%d",
 			str_sta_mac, session->radioid, session->wlanid, session->wtpid,
-			session->essid, str_wtp_mac, session->vlanid, session->idle_check,
+			session->essid, str_wtp_mac, session->apname, session->vlanid, session->idle_check,
 			session->idle_timeout, session->idle_flow, *security_type);
 	
 end:
