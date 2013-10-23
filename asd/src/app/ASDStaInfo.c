@@ -3070,8 +3070,11 @@ int AsdStaInfoToEAG(struct asd_data *wasd, struct sta_info *sta, Operate op){
 	msg.STA.auth_type = sta->security_type;
 	msg.STA.reason = sta->acct_terminate_cause;
 
+    /* add wtp name for REQUIREMENTS-667 */
+	if(NULL != ASD_WTP_AP[wtpid])
+		os_memcpy(msg.STA.wtp_name,ASD_WTP_AP[wtpid]->WTPNAME,WTP_NAME_LEN);
 	if(NULL != sta->ssid)
-		os_memcpy(msg.STA.essid,sta->ssid->ssid,sta->ssid->ssid_len);
+		os_memcpy(msg.STA.essid,sta->ssid->ssid,sta->ssid->ssid_len);	
 	if(NULL != ASD_WTP_AP[wtpid])
 		os_memcpy(msg.STA.wtp_mac,ASD_WTP_AP[wtpid]->WTPMAC,MAC_LEN);
 	if(NULL != ASD_BSS[wasd->BSSIndex])
@@ -3095,6 +3098,7 @@ int AsdStaInfoToEAG(struct asd_data *wasd, struct sta_info *sta, Operate op){
 	asd_printf(ASD_DEFAULT,MSG_DEBUG,"reason = %d\n",msg.STA.reason );
 	asd_printf(ASD_DEFAULT,MSG_DEBUG,"auth_type = %d\n",msg.STA.auth_type );
 	asd_printf(ASD_DEFAULT,MSG_DEBUG,"essid : %s\n",msg.STA.essid);
+	asd_printf(ASD_DEFAULT,MSG_DEBUG,"wtpid : %d, wtp_name: %s\n",wtpid,msg.STA.wtp_name);
 	return 0;
 }
 void asd_sta_roaming_management(struct sta_info *new_sta)

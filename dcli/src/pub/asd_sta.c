@@ -1324,6 +1324,16 @@ struct dcli_sta_info_v2* get_sta_info_by_mac_v2(DBusConnection *dcli_dbus_connec
 				dbus_message_iter_next(&iter);	
 				dbus_message_iter_get_basic(&iter,&(essid[i]));	
 			}
+
+			dbus_message_iter_next(&iter);	
+			dbus_message_iter_get_basic(&iter,&(sta->wtp_name_len));
+			
+			sta->wtp_name = (char*)malloc(sta->wtp_name_len+1);
+			memset(sta->wtp_name,0,sta->wtp_name_len+1);			
+			for(i=0;i<sta->wtp_name_len+1;i++){
+				dbus_message_iter_next(&iter);	
+				dbus_message_iter_get_basic(&iter,&(sta->wtp_name[i]));	
+			}			
 			dbus_message_iter_next(&iter);	
 			dbus_message_iter_get_basic(&iter,&(sta->flow_check));	
 			

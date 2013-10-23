@@ -8338,6 +8338,7 @@ DEFUN(show_sta_v2_cmd_func,
 		vty_out(vty,"%02X:",sta->addr[3]);
 		vty_out(vty,"%02X:",sta->addr[4]);
 		vty_out(vty,"%02X\n",sta->addr[5]);
+		vty_out(vty,"WTP NAME: %s\n",sta->wtp_name);		
 		vty_out(vty,"Radio_L_ID: %d\n",Radio_L_ID);		
 		vty_out(vty,"Radio_G_ID: %d\n",sta->radio_g_id);		
 		vty_out(vty,"BSSIndex: %d\n",sta->bssindex);

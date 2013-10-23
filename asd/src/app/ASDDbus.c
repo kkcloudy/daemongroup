@@ -14092,6 +14092,9 @@ DBusMessage *asd_dbus_show_sta_v2(DBusConnection *conn, DBusMessage *msg, void *
 		char *essid = NULL;
 		int essidlen = 0,i = 0;
 		int WTPID = 0;
+		int wtp_name_len = 0;
+		char wtp_name[WTP_NAME_LEN] = {0};
+		
 		DBusError err;
 		int ret = ASD_DBUS_SUCCESS;
 		struct asd_stainfo *stainfo = NULL;
@@ -14123,6 +14126,7 @@ DBusMessage *asd_dbus_show_sta_v2(DBusConnection *conn, DBusMessage *msg, void *
 		}
 		pthread_mutex_lock(&asd_g_wlan_mutex);
 		pthread_mutex_lock(&asd_g_sta_mutex);	
+		pthread_mutex_lock(&asd_g_wtp_mutex);	
 
 		stainfo = ASD_SEARCH_STA(mac);
 		
@@ -14141,7 +14145,12 @@ DBusMessage *asd_dbus_show_sta_v2(DBusConnection *conn, DBusMessage *msg, void *
 			if(WTPID < WTP_NUM && ASD_WTP_AP[WTPID] != NULL){
 				memset(mac, 0, WID_MAC_LEN);
 				memcpy(mac, ASD_WTP_AP[WTPID]->WTPMAC, WID_MAC_LEN);
+
+                wtp_name_len = strlen(ASD_WTP_AP[WTPID]->WTPNAME);
+				memset(wtp_name, 0, WTP_NAME_LEN);
+				memcpy(wtp_name, ASD_WTP_AP[WTPID]->WTPNAME,wtp_name_len+1);				
 			}
+			
 			if(stainfo->bss->BSSIndex < BSS_NUM && ASD_BSS[stainfo->bss->BSSIndex] != NULL)
 				vlanid = ASD_BSS[stainfo->bss->BSSIndex]->vlanid;
 				
@@ -14192,7 +14201,16 @@ DBusMessage *asd_dbus_show_sta_v2(DBusConnection *conn, DBusMessage *msg, void *
 			for(i = 0;i<essidlen;i++)
 				dbus_message_iter_append_basic (&iter,
 													 DBUS_TYPE_BYTE,
-													 &(essid[i]));	
+													 &(essid[i]));
+            /* add wtp name for REQUIREMENTS-667 */
+			dbus_message_iter_append_basic (&iter,
+												 DBUS_TYPE_UINT32,
+												 &(wtp_name_len));	
+			for(i = 0;i<wtp_name_len+1;i++)
+				dbus_message_iter_append_basic (&iter,
+													 DBUS_TYPE_BYTE,
+													 &(wtp_name[i]));
+			
 			if(wlanid < 129)
 			{
 				dbus_message_iter_append_basic (&iter,
@@ -14232,6 +14250,7 @@ DBusMessage *asd_dbus_show_sta_v2(DBusConnection *conn, DBusMessage *msg, void *
 		}
 		pthread_mutex_unlock(&asd_g_wlan_mutex);
 		pthread_mutex_unlock(&asd_g_sta_mutex);	
+		pthread_mutex_unlock(&asd_g_wtp_mutex);	
 
 		return reply;	
 
@@ -19264,153 +19283,155 @@ DBusMessage *asd_dbus_show_sta_base_info(DBusConnection *conn, DBusMessage *msg,
 	asd_printf(ASD_DBUS,MSG_DEBUG,"In the asd_dbus_show_sta_base_info\n");
 	dbus_error_init(&err);
 	pthread_mutex_lock(&asd_g_sta_mutex);   
+	pthread_mutex_lock(&asd_g_bss_mutex);   
+	pthread_mutex_lock(&asd_g_wtp_mutex);   
 
-		num = ASD_SEARCH_ALL_STA(bss);
-		reply = dbus_message_new_method_return(msg);
-		dbus_message_iter_init_append (reply, &iter);
-		dbus_message_iter_append_basic (&iter, DBUS_TYPE_UINT32,&ret); 
-		dbus_message_iter_append_basic (&iter, DBUS_TYPE_UINT32,&num);
+	num = ASD_SEARCH_ALL_STA(bss);
+	reply = dbus_message_new_method_return(msg);
+	dbus_message_iter_init_append (reply, &iter);
+	dbus_message_iter_append_basic (&iter, DBUS_TYPE_UINT32,&ret); 
+	dbus_message_iter_append_basic (&iter, DBUS_TYPE_UINT32,&num);
+	
+	dbus_message_iter_open_container (&iter,
+									   DBUS_TYPE_ARRAY,
+									   DBUS_STRUCT_BEGIN_CHAR_AS_STRING
+												DBUS_TYPE_UINT32_AS_STRING
+												DBUS_TYPE_UINT32_AS_STRING
+												DBUS_TYPE_BYTE_AS_STRING
+												DBUS_TYPE_BYTE_AS_STRING
+												DBUS_TYPE_BYTE_AS_STRING
+												DBUS_TYPE_BYTE_AS_STRING
+												DBUS_TYPE_BYTE_AS_STRING
+												DBUS_TYPE_BYTE_AS_STRING
+												DBUS_TYPE_BYTE_AS_STRING
+												DBUS_TYPE_BYTE_AS_STRING//ESSID
+												DBUS_TYPE_BYTE_AS_STRING
+												DBUS_TYPE_BYTE_AS_STRING
+												DBUS_TYPE_BYTE_AS_STRING
+												DBUS_TYPE_BYTE_AS_STRING
+												DBUS_TYPE_BYTE_AS_STRING
+												DBUS_TYPE_BYTE_AS_STRING
+												DBUS_TYPE_BYTE_AS_STRING
+												DBUS_TYPE_BYTE_AS_STRING
+												DBUS_TYPE_BYTE_AS_STRING
+												DBUS_TYPE_BYTE_AS_STRING
+												DBUS_TYPE_BYTE_AS_STRING
+												DBUS_TYPE_BYTE_AS_STRING
+												DBUS_TYPE_BYTE_AS_STRING
+												DBUS_TYPE_BYTE_AS_STRING
+												DBUS_TYPE_BYTE_AS_STRING
+												DBUS_TYPE_BYTE_AS_STRING
+												DBUS_TYPE_BYTE_AS_STRING
+												DBUS_TYPE_BYTE_AS_STRING
+												DBUS_TYPE_BYTE_AS_STRING
+												DBUS_TYPE_BYTE_AS_STRING
+												DBUS_TYPE_BYTE_AS_STRING
+												DBUS_TYPE_BYTE_AS_STRING
+												DBUS_TYPE_BYTE_AS_STRING
+												DBUS_TYPE_BYTE_AS_STRING
+												DBUS_TYPE_BYTE_AS_STRING
+												DBUS_TYPE_BYTE_AS_STRING
+												DBUS_TYPE_BYTE_AS_STRING
+												DBUS_TYPE_BYTE_AS_STRING
+												DBUS_TYPE_BYTE_AS_STRING
+												DBUS_TYPE_BYTE_AS_STRING
+												DBUS_TYPE_BYTE_AS_STRING//ESSID
+												DBUS_TYPE_ARRAY_AS_STRING
+													DBUS_STRUCT_BEGIN_CHAR_AS_STRING
+														DBUS_TYPE_BYTE_AS_STRING
+														DBUS_TYPE_BYTE_AS_STRING
+														DBUS_TYPE_BYTE_AS_STRING
+														DBUS_TYPE_BYTE_AS_STRING
+														DBUS_TYPE_BYTE_AS_STRING
+														DBUS_TYPE_BYTE_AS_STRING
+														DBUS_TYPE_STRING_AS_STRING
+													DBUS_STRUCT_END_CHAR_AS_STRING
+									   DBUS_STRUCT_END_CHAR_AS_STRING,
+									   &iter_array);
+	for(i = 0; i < num ; i++){			
+		DBusMessageIter iter_struct;
+		DBusMessageIter iter_sub_array;
+		unsigned int wtpid = 0;
+		char essid[ESSID_DEFAULT_LEN+1] = {0};/*中文essid不能用字符串传输，会导致dbus线程退出AXSSZFI-1658*/
+		asd_printf(ASD_DBUS,MSG_DEBUG,"sta_num:%d\n",bss[i]->num_sta);
+		wtpid = bss[i]->Radio_G_ID/4;
+		if(wtpid < WTP_NUM && ASD_WTP_AP[wtpid] != NULL){
+			memset(mac, 0, WID_MAC_LEN);
+			memcpy(mac, ASD_WTP_AP[wtpid]->WTPMAC, WID_MAC_LEN);
+		}
+		/* Use SSID of BSS, instead of ESSID */
+		#if 0
+		if(bss[i]->WlanID < WLAN_NUM && ASD_WLAN[bss[i]->WlanID] != NULL && ASD_WLAN[bss[i]->WlanID]->ESSID != NULL)
+			memcpy(essid,ASD_WLAN[bss[i]->WlanID]->ESSID,strlen(ASD_WLAN[bss[i]->WlanID]->ESSID));
+		#else
+		    /* change it copy for ssid of bss. 2013-09-27 */
+			memcpy(essid,bss[i]->conf->ssid.ssid,bss[i]->conf->ssid.ssid_len);			
+		#endif
+		dbus_message_iter_open_container (&iter_array,DBUS_TYPE_STRUCT,NULL,&iter_struct);
+		dbus_message_iter_append_basic(&iter_struct, DBUS_TYPE_UINT32, &(bss[i]->Radio_G_ID));
+		dbus_message_iter_append_basic(&iter_struct, DBUS_TYPE_UINT32, &(bss[i]->num_sta));
 		
-		dbus_message_iter_open_container (&iter,
+		dbus_message_iter_append_basic(&iter_struct, DBUS_TYPE_BYTE, &(mac[0]));	
+		dbus_message_iter_append_basic(&iter_struct, DBUS_TYPE_BYTE, &(mac[1]));	
+		dbus_message_iter_append_basic(&iter_struct, DBUS_TYPE_BYTE, &(mac[2]));	
+		dbus_message_iter_append_basic(&iter_struct, DBUS_TYPE_BYTE, &(mac[3]));	
+		dbus_message_iter_append_basic(&iter_struct, DBUS_TYPE_BYTE, &(mac[4]));	
+		dbus_message_iter_append_basic(&iter_struct, DBUS_TYPE_BYTE, &(mac[5]));	
+
+		dbus_message_iter_append_basic(&iter_struct, DBUS_TYPE_BYTE, &(bss[i]->WlanID));
+		/* the max length is 32 bytes */
+		for(k=0; k < ESSID_DEFAULT_LEN; k++)
+		{
+			dbus_message_iter_append_basic(&iter_struct, DBUS_TYPE_BYTE,&(essid[k]));
+		}
+		dbus_message_iter_open_container (&iter_struct,
 										   DBUS_TYPE_ARRAY,
 										   DBUS_STRUCT_BEGIN_CHAR_AS_STRING
-													DBUS_TYPE_UINT32_AS_STRING
-													DBUS_TYPE_UINT32_AS_STRING
-													DBUS_TYPE_BYTE_AS_STRING
-													DBUS_TYPE_BYTE_AS_STRING
-													DBUS_TYPE_BYTE_AS_STRING
-													DBUS_TYPE_BYTE_AS_STRING
-													DBUS_TYPE_BYTE_AS_STRING
-													DBUS_TYPE_BYTE_AS_STRING
-													DBUS_TYPE_BYTE_AS_STRING
-													DBUS_TYPE_BYTE_AS_STRING//ESSID
-													DBUS_TYPE_BYTE_AS_STRING
-													DBUS_TYPE_BYTE_AS_STRING
-													DBUS_TYPE_BYTE_AS_STRING
-													DBUS_TYPE_BYTE_AS_STRING
-													DBUS_TYPE_BYTE_AS_STRING
-													DBUS_TYPE_BYTE_AS_STRING
-													DBUS_TYPE_BYTE_AS_STRING
-													DBUS_TYPE_BYTE_AS_STRING
-													DBUS_TYPE_BYTE_AS_STRING
-													DBUS_TYPE_BYTE_AS_STRING
-													DBUS_TYPE_BYTE_AS_STRING
-													DBUS_TYPE_BYTE_AS_STRING
-													DBUS_TYPE_BYTE_AS_STRING
-													DBUS_TYPE_BYTE_AS_STRING
-													DBUS_TYPE_BYTE_AS_STRING
-													DBUS_TYPE_BYTE_AS_STRING
-													DBUS_TYPE_BYTE_AS_STRING
-													DBUS_TYPE_BYTE_AS_STRING
-													DBUS_TYPE_BYTE_AS_STRING
-													DBUS_TYPE_BYTE_AS_STRING
-													DBUS_TYPE_BYTE_AS_STRING
-													DBUS_TYPE_BYTE_AS_STRING
-													DBUS_TYPE_BYTE_AS_STRING
-													DBUS_TYPE_BYTE_AS_STRING
-													DBUS_TYPE_BYTE_AS_STRING
-													DBUS_TYPE_BYTE_AS_STRING
-													DBUS_TYPE_BYTE_AS_STRING
-													DBUS_TYPE_BYTE_AS_STRING
-													DBUS_TYPE_BYTE_AS_STRING
-													DBUS_TYPE_BYTE_AS_STRING
-													DBUS_TYPE_BYTE_AS_STRING//ESSID
-													DBUS_TYPE_ARRAY_AS_STRING
-														DBUS_STRUCT_BEGIN_CHAR_AS_STRING
-															DBUS_TYPE_BYTE_AS_STRING
-															DBUS_TYPE_BYTE_AS_STRING
-															DBUS_TYPE_BYTE_AS_STRING
-															DBUS_TYPE_BYTE_AS_STRING
-															DBUS_TYPE_BYTE_AS_STRING
-															DBUS_TYPE_BYTE_AS_STRING
-															DBUS_TYPE_STRING_AS_STRING
-														DBUS_STRUCT_END_CHAR_AS_STRING
-										   DBUS_STRUCT_END_CHAR_AS_STRING,
-										   &iter_array);
-		for(i = 0; i < num ; i++){			
-			DBusMessageIter iter_struct;
-			DBusMessageIter iter_sub_array;
-			unsigned int wtpid = 0;
-			char essid[ESSID_DEFAULT_LEN+1] = {0};/*中文essid不能用字符串传输，会导致dbus线程退出AXSSZFI-1658*/
-			asd_printf(ASD_DBUS,MSG_DEBUG,"sta_num:%d\n",bss[i]->num_sta);
-			wtpid = bss[i]->Radio_G_ID/4;
-			if(wtpid < WTP_NUM && ASD_WTP_AP[wtpid] != NULL){
-				memset(mac, 0, WID_MAC_LEN);
-				memcpy(mac, ASD_WTP_AP[wtpid]->WTPMAC, WID_MAC_LEN);
-			}
-			/* Use SSID of BSS, instead of ESSID */
-			#if 0
-			if(bss[i]->WlanID < WLAN_NUM && ASD_WLAN[bss[i]->WlanID] != NULL && ASD_WLAN[bss[i]->WlanID]->ESSID != NULL)
-				memcpy(essid,ASD_WLAN[bss[i]->WlanID]->ESSID,strlen(ASD_WLAN[bss[i]->WlanID]->ESSID));
-			#else
-			    /* change it copy for ssid of bss. 2013-09-27 */
-				memcpy(essid,bss[i]->conf->ssid.ssid,bss[i]->conf->ssid.ssid_len);			
-			#endif
-			dbus_message_iter_open_container (&iter_array,DBUS_TYPE_STRUCT,NULL,&iter_struct);
-			dbus_message_iter_append_basic(&iter_struct, DBUS_TYPE_UINT32, &(bss[i]->Radio_G_ID));
-			dbus_message_iter_append_basic(&iter_struct, DBUS_TYPE_UINT32, &(bss[i]->num_sta));
+												   DBUS_TYPE_BYTE_AS_STRING
+												   DBUS_TYPE_BYTE_AS_STRING
+												   DBUS_TYPE_BYTE_AS_STRING
+												   DBUS_TYPE_BYTE_AS_STRING
+												   DBUS_TYPE_BYTE_AS_STRING
+												   DBUS_TYPE_BYTE_AS_STRING
+												   DBUS_TYPE_STRING_AS_STRING
+											DBUS_STRUCT_END_CHAR_AS_STRING,
+										   &iter_sub_array);
+		int j = 0;			
+		struct sta_info *sta;
+		sta = bss[i]->sta_list;
+		char *in_addr = NULL;
+		for(j = 0; (j < bss[i]->num_sta)&&(sta!=NULL); j++){
+			DBusMessageIter iter_sub_struct;
+			dbus_message_iter_open_container (&iter_sub_array, DBUS_TYPE_STRUCT, NULL, &iter_sub_struct);
 			
-			dbus_message_iter_append_basic(&iter_struct, DBUS_TYPE_BYTE, &(mac[0]));	
-			dbus_message_iter_append_basic(&iter_struct, DBUS_TYPE_BYTE, &(mac[1]));	
-			dbus_message_iter_append_basic(&iter_struct, DBUS_TYPE_BYTE, &(mac[2]));	
-			dbus_message_iter_append_basic(&iter_struct, DBUS_TYPE_BYTE, &(mac[3]));	
-			dbus_message_iter_append_basic(&iter_struct, DBUS_TYPE_BYTE, &(mac[4]));	
-			dbus_message_iter_append_basic(&iter_struct, DBUS_TYPE_BYTE, &(mac[5]));	
-
-			dbus_message_iter_append_basic(&iter_struct, DBUS_TYPE_BYTE, &(bss[i]->WlanID));
-			/* the max length is 32 bytes */
-			for(k=0; k < ESSID_DEFAULT_LEN; k++)
-			{
-				dbus_message_iter_append_basic(&iter_struct, DBUS_TYPE_BYTE,&(essid[k]));
-			}
-			dbus_message_iter_open_container (&iter_struct,
-											   DBUS_TYPE_ARRAY,
-											   DBUS_STRUCT_BEGIN_CHAR_AS_STRING
-													   DBUS_TYPE_BYTE_AS_STRING
-													   DBUS_TYPE_BYTE_AS_STRING
-													   DBUS_TYPE_BYTE_AS_STRING
-													   DBUS_TYPE_BYTE_AS_STRING
-													   DBUS_TYPE_BYTE_AS_STRING
-													   DBUS_TYPE_BYTE_AS_STRING
-													   DBUS_TYPE_STRING_AS_STRING
-												DBUS_STRUCT_END_CHAR_AS_STRING,
-											   &iter_sub_array);
-			int j = 0;			
-			struct sta_info *sta;
-			sta = bss[i]->sta_list;
-			char *in_addr = NULL;
-			for(j = 0; (j < bss[i]->num_sta)&&(sta!=NULL); j++){
-				DBusMessageIter iter_sub_struct;
-				dbus_message_iter_open_container (&iter_sub_array, DBUS_TYPE_STRUCT, NULL, &iter_sub_struct);
-				
-				dbus_message_iter_append_basic(&iter_sub_struct,  DBUS_TYPE_BYTE, &(sta->addr[0]));
-				dbus_message_iter_append_basic(&iter_sub_struct,  DBUS_TYPE_BYTE, &(sta->addr[1]));
-				dbus_message_iter_append_basic(&iter_sub_struct,  DBUS_TYPE_BYTE, &(sta->addr[2]));
-				dbus_message_iter_append_basic(&iter_sub_struct,  DBUS_TYPE_BYTE, &(sta->addr[3]));
-				dbus_message_iter_append_basic(&iter_sub_struct,  DBUS_TYPE_BYTE, &(sta->addr[4]));
-				dbus_message_iter_append_basic(&iter_sub_struct,  DBUS_TYPE_BYTE, &(sta->addr[5]));
-				
-				in_addr = (char*)malloc(strlen(sta->in_addr)+1);
-				if(in_addr){
-					os_memset(in_addr,0,strlen(sta->in_addr)+1);
-					os_memcpy(in_addr,sta->in_addr,strlen(sta->in_addr));
-				}else{
-					in_addr = " ";
-				}
- 			 	dbus_message_iter_append_basic(&iter_sub_struct, DBUS_TYPE_STRING, &(in_addr));
-
-				dbus_message_iter_close_container (&iter_sub_array, &iter_sub_struct);
-				sta = sta->next;
-				if(in_addr){
-					free(in_addr);
-					in_addr = NULL;
-				}
-			}
+			dbus_message_iter_append_basic(&iter_sub_struct,  DBUS_TYPE_BYTE, &(sta->addr[0]));
+			dbus_message_iter_append_basic(&iter_sub_struct,  DBUS_TYPE_BYTE, &(sta->addr[1]));
+			dbus_message_iter_append_basic(&iter_sub_struct,  DBUS_TYPE_BYTE, &(sta->addr[2]));
+			dbus_message_iter_append_basic(&iter_sub_struct,  DBUS_TYPE_BYTE, &(sta->addr[3]));
+			dbus_message_iter_append_basic(&iter_sub_struct,  DBUS_TYPE_BYTE, &(sta->addr[4]));
+			dbus_message_iter_append_basic(&iter_sub_struct,  DBUS_TYPE_BYTE, &(sta->addr[5]));
 			
-			dbus_message_iter_close_container (&iter_struct, &iter_sub_array);			
-			dbus_message_iter_close_container (&iter_array, &iter_struct);
-		}		
-		dbus_message_iter_close_container (&iter, &iter_array);
+			in_addr = (char*)malloc(strlen(sta->in_addr)+1);
+			if(in_addr){
+				os_memset(in_addr,0,strlen(sta->in_addr)+1);
+				os_memcpy(in_addr,sta->in_addr,strlen(sta->in_addr));
+			}else{
+				in_addr = " ";
+			}
+			 	dbus_message_iter_append_basic(&iter_sub_struct, DBUS_TYPE_STRING, &(in_addr));
+
+			dbus_message_iter_close_container (&iter_sub_array, &iter_sub_struct);
+			sta = sta->next;
+			if(in_addr){
+				free(in_addr);
+				in_addr = NULL;
+			}
+		}
+		
+		dbus_message_iter_close_container (&iter_struct, &iter_sub_array);			
+		dbus_message_iter_close_container (&iter_array, &iter_struct);
+	}		
+	dbus_message_iter_close_container (&iter, &iter_array);
 
 	if(mac){
 		free(mac);
@@ -19421,7 +19442,8 @@ DBusMessage *asd_dbus_show_sta_base_info(DBusConnection *conn, DBusMessage *msg,
 		bss=NULL;
 	}
 	pthread_mutex_unlock(&asd_g_sta_mutex);   
-
+	pthread_mutex_unlock(&asd_g_bss_mutex);   
+	pthread_mutex_unlock(&asd_g_wtp_mutex);   
 	return reply;
 }
 

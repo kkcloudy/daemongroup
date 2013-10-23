@@ -447,12 +447,14 @@ struct dcli_sta_info_v2
 	unsigned int wtp_id;
 	unsigned int vlan_id;
 	char * essid;
+	char * wtp_name;
 	//weichao add 
 	u_int16_t   flow_check;
 	u_int32_t   no_flow_time;
 	u_int32_t   limit_flow;
 	unsigned int	auth_type;		//weichao add
 	int essidlen;
+	int wtp_name_len;
 };
 
 struct dcli_sta_base_info
