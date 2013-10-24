@@ -1695,6 +1695,7 @@ DEFUN(config_pfm_cmd_func,
 		protocol = 6;
 		dest_port = 22;
 		
+		sprintf(serv_name,"ssh");
 			if(strncmp(argv[3],"enable",strlen(argv[3])) == 0) /*enable ssh*/
 		{
 			char cmd[128];
