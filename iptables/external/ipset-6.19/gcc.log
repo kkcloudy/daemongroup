@@ -1,0 +1,263 @@
+make  all-recursive
+make[1]: Entering directory `/home/wangchao/ipset-6.19'
+Making all in include/libipset
+make[2]: Entering directory `/home/wangchao/ipset-6.19/include/libipset'
+make[2]: Nothing to be done for `all'.
+make[2]: Leaving directory `/home/wangchao/ipset-6.19/include/libipset'
+Making all in lib
+make[2]: Entering directory `/home/wangchao/ipset-6.19/lib'
+  CC     session.lo
+Using built-in specs.
+Target: mips-linux-gnu
+Configured with: ../src/configure -v --enable-languages=c,c++ --prefix=/usr --enable-shared --with-system-zlib --libexecdir=/usr/lib --without-included-gettext --enable-threads=posix --enable-nls --with-gxx-include-dir=/usr/mips-linux-gnu/include/c++/4.1.2 --program-suffix=-4.1 --enable-__cxa_atexit --enable-clocale=gnu --enable-libstdcxx-debug --disable-libssp --enable-checking=release --program-prefix=mips-linux-gnu- --includedir=/usr/mips-linux-gnu/include --build=x86_64-linux-gnu --host=x86_64-linux-gnu --target=mips-linux-gnu
+Thread model: posix
+gcc version 4.1.2 20061115 (prerelease) (Debian 4.1.1-21)
+ /usr/lib/gcc/mips-linux-gnu/4.1.2/cc1 -quiet -v -I. -I.. -I../include -I/usr/local/include -I/home/wangchao/libmnl/mnl/include -I/usr/mips-linux-gnu/include/ -I/home/wangchao/aw2.0.18sp8_new/aw2.0.18sp8_pb/src/kernel2.6.32.27cn/include/ -MD session.d -MF .deps/session.Tpo -MP -MT session.lo -DHAVE_CONFIG_H -DNDEBUG session.c -quiet -dumpbase session.c -auxbase session -O2 -Wall -std=gnu99 -version -o /tmp/ccYA8OMc.s
+ignoring duplicate directory "/usr/lib/gcc/mips-linux-gnu/4.1.2/../../../../mips-linux-gnu/include"
+ignoring duplicate directory "/usr/mips-linux-gnu/include/"
+  as it is a non-system directory that duplicates a system directory
+#include "..." search starts here:
+#include <...> search starts here:
+ .
+ ..
+ ../include
+ /usr/local/include
+ /home/wangchao/libmnl/mnl/include
+ /home/wangchao/aw2.0.18sp8_new/aw2.0.18sp8_pb/src/kernel2.6.32.27cn/include/
+ /usr/lib/gcc/mips-linux-gnu/4.1.2/include
+ /usr/mips-linux-gnu/include
+End of search list.
+GNU C version 4.1.2 20061115 (prerelease) (Debian 4.1.1-21) (mips-linux-gnu)
+	compiled by GNU C version 4.1.2 20061115 (prerelease) (Debian 4.1.1-21).
+GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072
+Compiler executable checksum: 32bb04632d4c75f18cbd53e64017e28e
+session.c: In function ‘attr2data’:
+session.c:613: warning: implicit declaration of function ‘be64toh’
+session.c: In function ‘rawdata2attr’:
+session.c:1490: warning: implicit declaration of function ‘htobe64’
+ /usr/lib/gcc/mips-linux-gnu/4.1.2/../../../../mips-linux-gnu/bin/as -EB -O2 -no-mdebug -mabi=32 -v -KPIC -o session.o /tmp/ccYA8OMc.s
+GNU assembler version 2.17 (mips-linux-gnu) using BFD version 2.17 Debian GNU/Linux
+  CC     types.lo
+Using built-in specs.
+Target: mips-linux-gnu
+Configured with: ../src/configure -v --enable-languages=c,c++ --prefix=/usr --enable-shared --with-system-zlib --libexecdir=/usr/lib --without-included-gettext --enable-threads=posix --enable-nls --with-gxx-include-dir=/usr/mips-linux-gnu/include/c++/4.1.2 --program-suffix=-4.1 --enable-__cxa_atexit --enable-clocale=gnu --enable-libstdcxx-debug --disable-libssp --enable-checking=release --program-prefix=mips-linux-gnu- --includedir=/usr/mips-linux-gnu/include --build=x86_64-linux-gnu --host=x86_64-linux-gnu --target=mips-linux-gnu
+Thread model: posix
+gcc version 4.1.2 20061115 (prerelease) (Debian 4.1.1-21)
+ /usr/lib/gcc/mips-linux-gnu/4.1.2/cc1 -quiet -v -I. -I.. -I../include -I/usr/local/include -I/home/wangchao/libmnl/mnl/include -I/usr/mips-linux-gnu/include/ -I/home/wangchao/aw2.0.18sp8_new/aw2.0.18sp8_pb/src/kernel2.6.32.27cn/include/ -MD types.d -MF .deps/types.Tpo -MP -MT types.lo -DHAVE_CONFIG_H -DNDEBUG types.c -quiet -dumpbase types.c -auxbase types -O2 -Wall -std=gnu99 -version -o /tmp/ccZR6HnD.s
+ignoring duplicate directory "/usr/lib/gcc/mips-linux-gnu/4.1.2/../../../../mips-linux-gnu/include"
+ignoring duplicate directory "/usr/mips-linux-gnu/include/"
+  as it is a non-system directory that duplicates a system directory
+#include "..." search starts here:
+#include <...> search starts here:
+ .
+ ..
+ ../include
+ /usr/local/include
+ /home/wangchao/libmnl/mnl/include
+ /home/wangchao/aw2.0.18sp8_new/aw2.0.18sp8_pb/src/kernel2.6.32.27cn/include/
+ /usr/lib/gcc/mips-linux-gnu/4.1.2/include
+ /usr/mips-linux-gnu/include
+End of search list.
+GNU C version 4.1.2 20061115 (prerelease) (Debian 4.1.1-21) (mips-linux-gnu)
+	compiled by GNU C version 4.1.2 20061115 (prerelease) (Debian 4.1.1-21).
+GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072
+Compiler executable checksum: 32bb04632d4c75f18cbd53e64017e28e
+ /usr/lib/gcc/mips-linux-gnu/4.1.2/../../../../mips-linux-gnu/bin/as -EB -O2 -no-mdebug -mabi=32 -v -KPIC -o types.o /tmp/ccZR6HnD.s
+GNU assembler version 2.17 (mips-linux-gnu) using BFD version 2.17 Debian GNU/Linux
+  CC     ui.lo
+Using built-in specs.
+Target: mips-linux-gnu
+Configured with: ../src/configure -v --enable-languages=c,c++ --prefix=/usr --enable-shared --with-system-zlib --libexecdir=/usr/lib --without-included-gettext --enable-threads=posix --enable-nls --with-gxx-include-dir=/usr/mips-linux-gnu/include/c++/4.1.2 --program-suffix=-4.1 --enable-__cxa_atexit --enable-clocale=gnu --enable-libstdcxx-debug --disable-libssp --enable-checking=release --program-prefix=mips-linux-gnu- --includedir=/usr/mips-linux-gnu/include --build=x86_64-linux-gnu --host=x86_64-linux-gnu --target=mips-linux-gnu
+Thread model: posix
+gcc version 4.1.2 20061115 (prerelease) (Debian 4.1.1-21)
+ /usr/lib/gcc/mips-linux-gnu/4.1.2/cc1 -quiet -v -I. -I.. -I../include -I/usr/local/include -I/home/wangchao/libmnl/mnl/include -I/usr/mips-linux-gnu/include/ -I/home/wangchao/aw2.0.18sp8_new/aw2.0.18sp8_pb/src/kernel2.6.32.27cn/include/ -MD ui.d -MF .deps/ui.Tpo -MP -MT ui.lo -DHAVE_CONFIG_H -DNDEBUG ui.c -quiet -dumpbase ui.c -auxbase ui -O2 -Wall -std=gnu99 -version -o /tmp/ccZTYKoR.s
+ignoring duplicate directory "/usr/lib/gcc/mips-linux-gnu/4.1.2/../../../../mips-linux-gnu/include"
+ignoring duplicate directory "/usr/mips-linux-gnu/include/"
+  as it is a non-system directory that duplicates a system directory
+#include "..." search starts here:
+#include <...> search starts here:
+ .
+ ..
+ ../include
+ /usr/local/include
+ /home/wangchao/libmnl/mnl/include
+ /home/wangchao/aw2.0.18sp8_new/aw2.0.18sp8_pb/src/kernel2.6.32.27cn/include/
+ /usr/lib/gcc/mips-linux-gnu/4.1.2/include
+ /usr/mips-linux-gnu/include
+End of search list.
+GNU C version 4.1.2 20061115 (prerelease) (Debian 4.1.1-21) (mips-linux-gnu)
+	compiled by GNU C version 4.1.2 20061115 (prerelease) (Debian 4.1.1-21).
+GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072
+Compiler executable checksum: 32bb04632d4c75f18cbd53e64017e28e
+ /usr/lib/gcc/mips-linux-gnu/4.1.2/../../../../mips-linux-gnu/bin/as -EB -O2 -no-mdebug -mabi=32 -v -KPIC -o ui.o /tmp/ccZTYKoR.s
+GNU assembler version 2.17 (mips-linux-gnu) using BFD version 2.17 Debian GNU/Linux
+  CC     types_init.lo
+Using built-in specs.
+Target: mips-linux-gnu
+Configured with: ../src/configure -v --enable-languages=c,c++ --prefix=/usr --enable-shared --with-system-zlib --libexecdir=/usr/lib --without-included-gettext --enable-threads=posix --enable-nls --with-gxx-include-dir=/usr/mips-linux-gnu/include/c++/4.1.2 --program-suffix=-4.1 --enable-__cxa_atexit --enable-clocale=gnu --enable-libstdcxx-debug --disable-libssp --enable-checking=release --program-prefix=mips-linux-gnu- --includedir=/usr/mips-linux-gnu/include --build=x86_64-linux-gnu --host=x86_64-linux-gnu --target=mips-linux-gnu
+Thread model: posix
+gcc version 4.1.2 20061115 (prerelease) (Debian 4.1.1-21)
+ /usr/lib/gcc/mips-linux-gnu/4.1.2/cc1 -quiet -v -I. -I.. -I../include -I/usr/local/include -I/home/wangchao/libmnl/mnl/include -I/usr/mips-linux-gnu/include/ -I/home/wangchao/aw2.0.18sp8_new/aw2.0.18sp8_pb/src/kernel2.6.32.27cn/include/ -MD types_init.d -MF .deps/types_init.Tpo -MP -MT types_init.lo -DHAVE_CONFIG_H -DNDEBUG types_init.c -quiet -dumpbase types_init.c -auxbase types_init -O2 -Wall -std=gnu99 -version -o /tmp/ccz2km3W.s
+ignoring duplicate directory "/usr/lib/gcc/mips-linux-gnu/4.1.2/../../../../mips-linux-gnu/include"
+ignoring duplicate directory "/usr/mips-linux-gnu/include/"
+  as it is a non-system directory that duplicates a system directory
+#include "..." search starts here:
+#include <...> search starts here:
+ .
+ ..
+ ../include
+ /usr/local/include
+ /home/wangchao/libmnl/mnl/include
+ /home/wangchao/aw2.0.18sp8_new/aw2.0.18sp8_pb/src/kernel2.6.32.27cn/include/
+ /usr/lib/gcc/mips-linux-gnu/4.1.2/include
+ /usr/mips-linux-gnu/include
+End of search list.
+GNU C version 4.1.2 20061115 (prerelease) (Debian 4.1.1-21) (mips-linux-gnu)
+	compiled by GNU C version 4.1.2 20061115 (prerelease) (Debian 4.1.1-21).
+GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072
+Compiler executable checksum: 32bb04632d4c75f18cbd53e64017e28e
+ /usr/lib/gcc/mips-linux-gnu/4.1.2/../../../../mips-linux-gnu/bin/as -EB -O2 -no-mdebug -mabi=32 -v -KPIC -o types_init.o /tmp/ccz2km3W.s
+GNU assembler version 2.17 (mips-linux-gnu) using BFD version 2.17 Debian GNU/Linux
+  CCLD   libipset.la
+make  all-am
+make[3]: Entering directory `/home/wangchao/ipset-6.19/lib'
+make[3]: Nothing to be done for `all-am'.
+make[3]: Leaving directory `/home/wangchao/ipset-6.19/lib'
+make[2]: Leaving directory `/home/wangchao/ipset-6.19/lib'
+Making all in src
+make[2]: Entering directory `/home/wangchao/ipset-6.19/src'
+  CC     ipset.o
+Using built-in specs.
+Target: mips-linux-gnu
+Configured with: ../src/configure -v --enable-languages=c,c++ --prefix=/usr --enable-shared --with-system-zlib --libexecdir=/usr/lib --without-included-gettext --enable-threads=posix --enable-nls --with-gxx-include-dir=/usr/mips-linux-gnu/include/c++/4.1.2 --program-suffix=-4.1 --enable-__cxa_atexit --enable-clocale=gnu --enable-libstdcxx-debug --disable-libssp --enable-checking=release --program-prefix=mips-linux-gnu- --includedir=/usr/mips-linux-gnu/include --build=x86_64-linux-gnu --host=x86_64-linux-gnu --target=mips-linux-gnu
+Thread model: posix
+gcc version 4.1.2 20061115 (prerelease) (Debian 4.1.1-21)
+ /usr/lib/gcc/mips-linux-gnu/4.1.2/cc1 -quiet -v -I. -I.. -I../include -I/usr/local/include -I/usr/mips-linux-gnu/include/ -I/home/wangchao/aw2.0.18sp8_new/aw2.0.18sp8_pb/src/kernel2.6.32.27cn/include/ -MD ipset.d -MF .deps/ipset.Tpo -MP -MT ipset.o -MQ ipset.o -DHAVE_CONFIG_H -DNDEBUG ipset.c -quiet -dumpbase ipset.c -auxbase-strip ipset.o -O2 -Wall -std=gnu99 -version -o /tmp/ccB0wwT4.s
+ignoring duplicate directory "/usr/lib/gcc/mips-linux-gnu/4.1.2/../../../../mips-linux-gnu/include"
+ignoring duplicate directory "/usr/mips-linux-gnu/include/"
+  as it is a non-system directory that duplicates a system directory
+#include "..." search starts here:
+#include <...> search starts here:
+ .
+ ..
+ ../include
+ /usr/local/include
+ /home/wangchao/aw2.0.18sp8_new/aw2.0.18sp8_pb/src/kernel2.6.32.27cn/include/
+ /usr/lib/gcc/mips-linux-gnu/4.1.2/include
+ /usr/mips-linux-gnu/include
+End of search list.
+GNU C version 4.1.2 20061115 (prerelease) (Debian 4.1.1-21) (mips-linux-gnu)
+	compiled by GNU C version 4.1.2 20061115 (prerelease) (Debian 4.1.1-21).
+GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072
+Compiler executable checksum: 32bb04632d4c75f18cbd53e64017e28e
+ /usr/lib/gcc/mips-linux-gnu/4.1.2/../../../../mips-linux-gnu/bin/as -EB -O2 -no-mdebug -mabi=32 -v -KPIC -o ipset.o /tmp/ccB0wwT4.s
+GNU assembler version 2.17 (mips-linux-gnu) using BFD version 2.17 Debian GNU/Linux
+  CC     ui.o
+Using built-in specs.
+Target: mips-linux-gnu
+Configured with: ../src/configure -v --enable-languages=c,c++ --prefix=/usr --enable-shared --with-system-zlib --libexecdir=/usr/lib --without-included-gettext --enable-threads=posix --enable-nls --with-gxx-include-dir=/usr/mips-linux-gnu/include/c++/4.1.2 --program-suffix=-4.1 --enable-__cxa_atexit --enable-clocale=gnu --enable-libstdcxx-debug --disable-libssp --enable-checking=release --program-prefix=mips-linux-gnu- --includedir=/usr/mips-linux-gnu/include --build=x86_64-linux-gnu --host=x86_64-linux-gnu --target=mips-linux-gnu
+Thread model: posix
+gcc version 4.1.2 20061115 (prerelease) (Debian 4.1.1-21)
+ /usr/lib/gcc/mips-linux-gnu/4.1.2/cc1 -quiet -v -I. -I.. -I../include -I/usr/local/include -I/usr/mips-linux-gnu/include/ -I/home/wangchao/aw2.0.18sp8_new/aw2.0.18sp8_pb/src/kernel2.6.32.27cn/include/ -MD ui.d -MF .deps/ui.Tpo -MP -MT ui.o -MQ ui.o -DHAVE_CONFIG_H -DNDEBUG ui.c -quiet -dumpbase ui.c -auxbase-strip ui.o -O2 -Wall -std=gnu99 -version -o /tmp/ccd8Wloh.s
+ignoring duplicate directory "/usr/lib/gcc/mips-linux-gnu/4.1.2/../../../../mips-linux-gnu/include"
+ignoring duplicate directory "/usr/mips-linux-gnu/include/"
+  as it is a non-system directory that duplicates a system directory
+#include "..." search starts here:
+#include <...> search starts here:
+ .
+ ..
+ ../include
+ /usr/local/include
+ /home/wangchao/aw2.0.18sp8_new/aw2.0.18sp8_pb/src/kernel2.6.32.27cn/include/
+ /usr/lib/gcc/mips-linux-gnu/4.1.2/include
+ /usr/mips-linux-gnu/include
+End of search list.
+GNU C version 4.1.2 20061115 (prerelease) (Debian 4.1.1-21) (mips-linux-gnu)
+	compiled by GNU C version 4.1.2 20061115 (prerelease) (Debian 4.1.1-21).
+GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072
+Compiler executable checksum: 32bb04632d4c75f18cbd53e64017e28e
+ /usr/lib/gcc/mips-linux-gnu/4.1.2/../../../../mips-linux-gnu/bin/as -EB -O2 -no-mdebug -mabi=32 -v -KPIC -o ui.o /tmp/ccd8Wloh.s
+GNU assembler version 2.17 (mips-linux-gnu) using BFD version 2.17 Debian GNU/Linux
+  CCLD   ipset
+Using built-in specs.
+Target: mips-linux-gnu
+Configured with: ../src/configure -v --enable-languages=c,c++ --prefix=/usr --enable-shared --with-system-zlib --libexecdir=/usr/lib --without-included-gettext --enable-threads=posix --enable-nls --with-gxx-include-dir=/usr/mips-linux-gnu/include/c++/4.1.2 --program-suffix=-4.1 --enable-__cxa_atexit --enable-clocale=gnu --enable-libstdcxx-debug --disable-libssp --enable-checking=release --program-prefix=mips-linux-gnu- --includedir=/usr/mips-linux-gnu/include --build=x86_64-linux-gnu --host=x86_64-linux-gnu --target=mips-linux-gnu
+Thread model: posix
+gcc version 4.1.2 20061115 (prerelease) (Debian 4.1.1-21)
+ /usr/lib/gcc/mips-linux-gnu/4.1.2/collect2 --eh-frame-hdr -EB -dynamic-linker /lib/ld.so.1 -o ipset /usr/lib/gcc/mips-linux-gnu/4.1.2/../../../../mips-linux-gnu/lib/crt1.o /usr/lib/gcc/mips-linux-gnu/4.1.2/../../../../mips-linux-gnu/lib/crti.o /usr/lib/gcc/mips-linux-gnu/4.1.2/crtbegin.o -L/usr/mips-linux-gnu/lib/ -L/usr/lib/gcc/mips-linux-gnu/4.1.2 -L/usr/lib/gcc/mips-linux-gnu/4.1.2 -L/usr/lib/gcc/mips-linux-gnu/4.1.2/../../../../mips-linux-gnu/lib ipset.o ui.o ../lib/.libs/libipset.a -ldl -lgcc --as-needed -lgcc_s --no-as-needed -lc -lgcc --as-needed -lgcc_s --no-as-needed /usr/lib/gcc/mips-linux-gnu/4.1.2/crtend.o /usr/lib/gcc/mips-linux-gnu/4.1.2/../../../../mips-linux-gnu/lib/crtn.o
+../lib/.libs/libipset.a(session.o): In function `generic_data_attr_cb':
+session.c:(.text+0x378): undefined reference to `mnl_attr_get_type'
+session.c:(.text+0x398): undefined reference to `mnl_attr_type_valid'
+session.c:(.text+0x3b4): undefined reference to `mnl_attr_validate'
+session.c:(.text+0x404): undefined reference to `mnl_attr_get_payload_len'
+../lib/.libs/libipset.a(session.o): In function `rawdata2attr':
+session.c:(.text+0x64c): undefined reference to `mnl_attr_nest_start'
+session.c:(.text+0x664): undefined reference to `mnl_attr_put'
+session.c:(.text+0x68c): undefined reference to `mnl_attr_nest_end'
+session.c:(.text+0x6b4): undefined reference to `mnl_attr_put'
+session.c:(.text+0x6e4): undefined reference to `mnl_attr_put'
+session.c:(.text+0x710): undefined reference to `htobe64'
+session.c:(.text+0x730): undefined reference to `mnl_attr_put'
+session.c:(.text+0x768): undefined reference to `mnl_attr_put'
+../lib/.libs/libipset.a(session.o): In function `build_send_private_msg':
+session.c:(.text+0xb50): undefined reference to `mnl_attr_put_u8'
+session.c:(.text+0xd38): undefined reference to `mnl_attr_put_u8'
+../lib/.libs/libipset.a(session.o): In function `attr2data':
+session.c:(.text+0xd88): undefined reference to `mnl_attr_get_payload'
+session.c:(.text+0xe58): undefined reference to `mnl_attr_parse_nested'
+session.c:(.text+0xed0): undefined reference to `be64toh'
+session.c:(.text+0xf28): undefined reference to `mnl_attr_get_payload'
+../lib/.libs/libipset.a(session.o): In function `ipset_commit':
+session.c:(.text+0x1080): undefined reference to `mnl_attr_nest_end'
+../lib/.libs/libipset.a(session.o): In function `build_msg':
+session.c:(.text+0x1288): undefined reference to `mnl_attr_put_u8'
+session.c:(.text+0x1588): undefined reference to `mnl_attr_nest_start'
+session.c:(.text+0x17b0): undefined reference to `mnl_attr_nest_end'
+session.c:(.text+0x19a8): undefined reference to `mnl_attr_nest_end'
+session.c:(.text+0x19c0): undefined reference to `mnl_attr_nest_start'
+session.c:(.text+0x1a60): undefined reference to `mnl_attr_nest_cancel'
+session.c:(.text+0x1ae8): undefined reference to `mnl_attr_put_u8'
+session.c:(.text+0x1b90): undefined reference to `mnl_attr_nest_start'
+session.c:(.text+0x1bc0): undefined reference to `mnl_attr_nest_start'
+../lib/.libs/libipset.a(session.o): In function `callback_error':
+session.c:(.text+0x23b4): undefined reference to `mnl_nlmsg_get_payload'
+session.c:(.text+0x23d0): undefined reference to `mnl_nlmsg_size'
+session.c:(.text+0x2418): undefined reference to `mnl_nlmsg_get_payload'
+session.c:(.text+0x258c): undefined reference to `mnl_attr_parse'
+session.c:(.text+0x25d0): undefined reference to `mnl_attr_get_u32'
+../lib/.libs/libipset.a(session.o): In function `callback_list':
+session.c:(.text+0x2cac): undefined reference to `mnl_attr_get_payload'
+session.c:(.text+0x2cc8): undefined reference to `mnl_attr_get_payload'
+session.c:(.text+0x2ce4): undefined reference to `mnl_attr_get_payload_len'
+session.c:(.text+0x2cfc): undefined reference to `mnl_attr_ok'
+session.c:(.text+0x2d58): undefined reference to `mnl_attr_parse_nested'
+session.c:(.text+0x2f88): undefined reference to `mnl_attr_next'
+session.c:(.text+0x31e0): undefined reference to `mnl_attr_parse_nested'
+../lib/.libs/libipset.a(session.o): In function `callback_data':
+session.c:(.text+0x3a1c): undefined reference to `mnl_attr_parse'
+session.c:(.text+0x3a54): undefined reference to `mnl_attr_get_u8'
+session.c:(.text+0x3b58): undefined reference to `mnl_attr_get_u8'
+session.c:(.text+0x3b78): undefined reference to `mnl_attr_get_u8'
+session.c:(.text+0x3c40): undefined reference to `mnl_attr_get_str'
+session.c:(.text+0x3d1c): undefined reference to `mnl_attr_get_str'
+../lib/.libs/libipset.a(mnl.o): In function `ipset_mnl_query':
+mnl.c:(.text+0x38): undefined reference to `mnl_socket_sendto'
+mnl.c:(.text+0x6c): undefined reference to `mnl_socket_recvfrom'
+mnl.c:(.text+0xbc): undefined reference to `mnl_cb_run2'
+mnl.c:(.text+0xe4): undefined reference to `mnl_socket_recvfrom'
+../lib/.libs/libipset.a(mnl.o): In function `ipset_mnl_fill_hdr':
+mnl.c:(.text+0x15c): undefined reference to `mnl_nlmsg_put_header'
+mnl.c:(.text+0x194): undefined reference to `mnl_nlmsg_put_extra_header'
+../lib/.libs/libipset.a(mnl.o): In function `ipset_mnl_fini':
+mnl.c:(.text+0x208): undefined reference to `mnl_socket_close'
+../lib/.libs/libipset.a(mnl.o): In function `ipset_mnl_init':
+mnl.c:(.text+0x294): undefined reference to `mnl_socket_open'
+mnl.c:(.text+0x2b4): undefined reference to `mnl_socket_bind'
+mnl.c:(.text+0x2d8): undefined reference to `mnl_socket_get_portid'
+mnl.c:(.text+0x2e4): undefined reference to `mnl_socket_close'
+collect2: ld returned 1 exit status
+make[2]: *** [ipset] Error 1
+make[2]: Leaving directory `/home/wangchao/ipset-6.19/src'
+make[1]: *** [all-recursive] Error 1
+make[1]: Leaving directory `/home/wangchao/ipset-6.19'
+make: *** [all] Error 2

@@ -1,0 +1,1 @@
+types_init.lo .libs/types_init.o: types_init.c

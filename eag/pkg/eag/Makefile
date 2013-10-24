@@ -11,8 +11,8 @@ LD_PATH = -L$(MIPS_ADDITION_LIB_ROOT_PATH)/usr/lib
 
 LDFLAGS += -Wl,--gc-sections
 
-#INCLUDE += -I ../../../iptables/debsrc/iptables-1.4.6/include
-INCLUDE += -I ${BUILD_DIR}/${IPTABLES_MOD}/debsrc/iptables-1.4.6/include
+#INCLUDE += -I ../../../iptables/debsrc/iptables-1.4.6/include  wangchao change
+INCLUDE += -I ${BUILD_DIR}/${IPTABLES_MOD}/debsrc/iptables-1.4.20/include
 INCLUDE += -I ./
 INCLUDE += -I $(MIPS_ADDITION_LIB_ROOT_PATH)/usr/include/libxml2
 INCLUDE += -I $(MIPS_ADDITION_LIB_ROOT_PATH)/usr/include
@@ -37,7 +37,10 @@ LOCAL_LIB = -L ./
 LDFLAGS += -L ${BUILD_DIR}/${ASD_MOD}/src/app/wapi -lwcrypto
 
 #soruces := $(shell ls *.c|grep -v main|grep -v radius|grep -v portal|grep -v redir|grep -v eag_ins|grep -v eag_thread)
-iptcsource = ${BUILD_DIR}/${IPTABLES_MOD}/debsrc/iptables-1.4.6/libiptc/.libs/lib*.a
+
+#wanchao change
+#iptcsource = ${BUILD_DIR}/${IPTABLES_MOD}/debsrc/iptables-1.4.6/libiptc/.libs/lib*.a
+iptcsource = ${BUILD_DIR}/${IPTABLES_MOD}/debsrc/iptables-1.4.20/libiptc/.libs/lib*.so
 
 publicsources = eag_log.o eag_blkmem.o  eag_thread.o eag_errcode.o eag_hansi.o eag_time.o hashtable.o eag_dbus.o eag_util.o eag_ifipaddr.o \
 		nmp_process.o md5.o portal_packet.o radius_packet.o

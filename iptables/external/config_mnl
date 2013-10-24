@@ -1,0 +1,12 @@
+#!/bin/bash
+#echo "WE USE 1.3.6 CURRENTLY,which doesn't need config."
+#exit 0
+#[ -d mipsbuild ] || mkdir mipsbuild
+
+#OCT_KERNEL_ROOT="`pwd`/src/kernel2.6.32.27cn"
+#OCT_KERNEL_ROOT=${KERNEL_ROOT}
+curdir=`pwd`
+cd ${BUILD_DIR}/${IPTALES_MOD}/external/libmnl-1.0.1/
+./configure --host=mips-linux-gnu --enable-shared=yes --enable-static=no
+
+cd $curdir

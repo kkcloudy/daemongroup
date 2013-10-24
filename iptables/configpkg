@@ -7,7 +7,8 @@
 #OCT_KERNEL_ROOT=${KERNEL_ROOT}
 curdir=`pwd`
 echo ${OCT_KERNET_ROOT}
-cd ${BUILD_DIR}/${IPTABLES_MOD}/debsrc/iptables-1.4.6/
-./configure --host=mips-linux-gnu --with-kernel=${OCT_KERNEL_ROOT} --with-xtlibdir=/opt/lib/iptables --enable-static
+cd ${BUILD_DIR}/${IPTABLES_MOD}/debsrc/iptables-1.4.20/
+./configure --host=mips-linux-gnu --with-kernel=${OCT_KERNEL_ROOT} --prefix=/opt/  --with-xtlibdir=/opt/lib/iptables 
+#--enable-static
 
 cd $curdir

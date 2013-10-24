@@ -1,0 +1,12 @@
+kernel//home/zhangdi/commit_dg2/aw2.0.18sp8_new/daemongroup-1.0.2/iptables/external/ipset-6.19/kernel/net/netfilter/ipset/ip_set.ko
+kernel//home/zhangdi/commit_dg2/aw2.0.18sp8_new/daemongroup-1.0.2/iptables/external/ipset-6.19/kernel/net/netfilter/ipset/ip_set_bitmap_ip.ko
+kernel//home/zhangdi/commit_dg2/aw2.0.18sp8_new/daemongroup-1.0.2/iptables/external/ipset-6.19/kernel/net/netfilter/ipset/ip_set_bitmap_ipmac.ko
+kernel//home/zhangdi/commit_dg2/aw2.0.18sp8_new/daemongroup-1.0.2/iptables/external/ipset-6.19/kernel/net/netfilter/ipset/ip_set_bitmap_port.ko
+kernel//home/zhangdi/commit_dg2/aw2.0.18sp8_new/daemongroup-1.0.2/iptables/external/ipset-6.19/kernel/net/netfilter/ipset/ip_set_hash_ip.ko
+kernel//home/zhangdi/commit_dg2/aw2.0.18sp8_new/daemongroup-1.0.2/iptables/external/ipset-6.19/kernel/net/netfilter/ipset/ip_set_hash_ipport.ko
+kernel//home/zhangdi/commit_dg2/aw2.0.18sp8_new/daemongroup-1.0.2/iptables/external/ipset-6.19/kernel/net/netfilter/ipset/ip_set_hash_ipportip.ko
+kernel//home/zhangdi/commit_dg2/aw2.0.18sp8_new/daemongroup-1.0.2/iptables/external/ipset-6.19/kernel/net/netfilter/ipset/ip_set_hash_ipportnet.ko
+kernel//home/zhangdi/commit_dg2/aw2.0.18sp8_new/daemongroup-1.0.2/iptables/external/ipset-6.19/kernel/net/netfilter/ipset/ip_set_hash_net.ko
+kernel//home/zhangdi/commit_dg2/aw2.0.18sp8_new/daemongroup-1.0.2/iptables/external/ipset-6.19/kernel/net/netfilter/ipset/ip_set_hash_netport.ko
+kernel//home/zhangdi/commit_dg2/aw2.0.18sp8_new/daemongroup-1.0.2/iptables/external/ipset-6.19/kernel/net/netfilter/ipset/ip_set_hash_netiface.ko
+kernel//home/zhangdi/commit_dg2/aw2.0.18sp8_new/daemongroup-1.0.2/iptables/external/ipset-6.19/kernel/net/netfilter/ipset/ip_set_list_set.ko

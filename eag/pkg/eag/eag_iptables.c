@@ -40,6 +40,7 @@ extern "C"
 #include <dlfcn.h>
 #include <time.h>
 #include <iptables.h>
+#include <linux/netfilter/xt_iprange.h>   /* wangchao add for new iptables */   
 #include <arpa/inet.h>
 #include <linux/netfilter_ipv4/ip_nat.h>
 #include <pthread.h>
@@ -687,8 +688,9 @@ add_and_del_entry	(const char *table_name,const char *chain_name,
 		eag_log_debug("iptables","can't init iptc handle,table name:%s",table_name);
 		goto return_error;
 	}
+    //	entry_size = IPT_ALIGN(sizeof(struct ipt_entry)); wangchao change
 
-	entry_size = IPT_ALIGN(sizeof(struct ipt_entry));
+	entry_size = sizeof(struct ipt_entry);
 
 	match_size = 0;
 	#if 0//if match port ,use this
@@ -704,7 +706,9 @@ add_and_del_entry	(const char *table_name,const char *chain_name,
 		target_size += IPT_ALIGN(sizeof(int));
 	}
 	#endif
-	target_size = IPT_ALIGN(sizeof(struct ipt_entry_target))+IPT_ALIGN(sizeof(int));
+	//	target_size = IPT_ALIGN(sizeof(struct ipt_entry_target))+IPT_ALIGN(sizeof(int));wangchao change
+
+	target_size = XT_ALIGN(sizeof(struct ipt_entry_target))+XT_ALIGN(sizeof(int));
 	all_size = target_size + match_size + entry_size;
 
 	p_entry = eag_malloc(all_size);
@@ -1421,7 +1425,8 @@ iptable_mask(size_t all_size)
 	memset(mask, 0xFF, all_size);
 	return mask;
 }
-
+/***wangchao change about IPT_AGLIN****/
+#if 0
 static unsigned char *
 string_mask(size_t all_size)
 {
@@ -1444,6 +1449,29 @@ string_mask(size_t all_size)
 	return mask;
 		
 }
+#endif
+static unsigned char *
+string_mask(size_t all_size)
+{
+	unsigned char *mask, *mptr;
+	mask = eag_calloc(1, all_size);
+	if (NULL == mask) {
+		eag_log_err("calloc error:mask = NULL");
+		return NULL;
+	}
+	memset(mask, 0xFF, sizeof(struct ipt_entry));
+	mptr = mask + sizeof(struct ipt_entry);
+	memset(mptr, 0xFF,
+		       XT_ALIGN(sizeof(struct ipt_entry_match))
+		       + offsetof(struct ipt_string_info, config));
+	mptr += XT_ALIGN(sizeof(struct ipt_entry_match))
+ 	 	+ XT_ALIGN(sizeof(struct ipt_string_info));
+	memset(mptr, 0xFF,
+	       XT_ALIGN(sizeof(struct ipt_entry_target))
+	       + XT_ALIGN(sizeof(int)));
+	return mask;
+		
+}
 
 struct ipt_entry *
 eag_iptable_entry_new(const struct ipt_entry *fw,
@@ -1455,7 +1483,8 @@ eag_iptable_entry_new(const struct ipt_entry *fw,
 	size_t size = 0;
 	int i = 0;
 	
-	size = IPT_ALIGN(sizeof(struct ipt_entry));
+	//size = IPT_ALIGN(sizeof(struct ipt_entry)); wangchao change
+	size = sizeof(struct ipt_entry); 
 	list_for_each_entry(matchp, ipt_match_node, node) {
 		size += matchp->match->u.match_size;
 	}
@@ -1601,7 +1630,7 @@ eag_match_comment(const char *comment_str,
 	struct ipt_comment_info *commentinfo = (struct ipt_comment_info *)match->data;
 
 	eag_log_debug("eag_iptables", "comment size:%u, str:%s",
-		IPT_ALIGN(sizeof(struct ipt_comment_info)), comment_str);
+		XT_ALIGN(sizeof(struct ipt_comment_info)), comment_str);
 
 	parse_comment(comment_str, commentinfo);
 
@@ -1745,8 +1774,10 @@ eag_iprange_entry(int range_flag, char *proto,
 			eag_log_err("calloc error:matchp = NULL");
 			goto return_error;
 		}
-		size = IPT_ALIGN(sizeof(struct ipt_entry_match))
-			+ IPT_ALIGN(sizeof(struct ipt_multiport_v1));
+		/*size = IPT_ALIGN(sizeof(struct ipt_entry_match))
+			+ IPT_ALIGN(sizeof(struct ipt_multiport_v1)); wangchao change*/
+		size = XT_ALIGN(sizeof(struct ipt_entry_match))
+			+ XT_ALIGN(sizeof(struct ipt_multiport_v1));			
 		matchp->match = eag_calloc(1, size);
 		if (NULL == matchp->match) {
 			eag_log_err("calloc error:matchp->match = NULL");
@@ -1765,8 +1796,11 @@ eag_iprange_entry(int range_flag, char *proto,
 			eag_log_err("calloc error:matchp = NULL");
 			goto return_error;
 		}
-		size = IPT_ALIGN(sizeof(struct ipt_entry_match))
- 			+ IPT_ALIGN(sizeof(struct ipt_comment_info));
+		/*size = IPT_ALIGN(sizeof(struct ipt_entry_match))
+ 			+ IPT_ALIGN(sizeof(struct ipt_comment_info));wangchao change*/
+
+        size = XT_ALIGN(sizeof(struct ipt_entry_match))
+ 			+ XT_ALIGN(sizeof(struct ipt_comment_info));		
 		matchp->match = eag_calloc(1, size);
 		if (NULL == matchp->match) {
 			eag_log_err("calloc error:matchp->match = NULL");
@@ -1784,8 +1818,10 @@ eag_iprange_entry(int range_flag, char *proto,
 			eag_log_err("calloc error:matchp = NULL");
 			goto return_error;
 		}
-		size = IPT_ALIGN(sizeof(struct ipt_entry_match))
-			+ IPT_ALIGN(sizeof(struct xt_iprange_mtinfo));
+		/*size = IPT_ALIGN(sizeof(struct ipt_entry_match))
+			+ IPT_ALIGN(sizeof(struct xt_iprange_mtinfo));wangchao change*/
+		size = XT_ALIGN(sizeof(struct ipt_entry_match))
+			+ XT_ALIGN(sizeof(struct xt_iprange_mtinfo));			
 		matchp->match = eag_calloc(1, size);
 		if (NULL == matchp->match) {
 			eag_log_err("calloc error:matchp->match = NULL");
@@ -1804,7 +1840,8 @@ eag_iprange_entry(int range_flag, char *proto,
 	}
 
 /* target */
-	size= IPT_ALIGN(sizeof(struct ipt_entry_target))+IPT_ALIGN(sizeof(int));
+	//size= IPT_ALIGN(sizeof(struct ipt_entry_target))+IPT_ALIGN(sizeof(int)); wangchao change
+    size= XT_ALIGN(sizeof(struct ipt_entry_target))+XT_ALIGN(sizeof(int));	
 	target = eag_calloc(1, size);
 	if (NULL == target) {
 		eag_log_err("calloc error:target = NULL");
@@ -1873,8 +1910,10 @@ eag_add_del_intf_entry(struct eag_intf_entry_info *info)
 			eag_log_err("eag_add_del_intf_entry calloc set error");
 			goto return_error;
 		}
-		size = IPT_ALIGN(sizeof(struct ipt_entry_match))
-			+ IPT_ALIGN(sizeof(struct ipt_set_info_match));
+		/*size = IPT_ALIGN(sizeof(struct ipt_entry_match))
+			+ IPT_ALIGN(sizeof(struct ipt_set_info_match));wangchao change*/
+		size = XT_ALIGN(sizeof(struct ipt_entry_match))
+			+ XT_ALIGN(sizeof(struct ipt_set_info_match));			
 		matchp->match = eag_calloc(1, size);
 		if (NULL == matchp->match) {
 			eag_log_err("eag_add_del_intf_entry calloc set error");
@@ -1888,7 +1927,8 @@ eag_add_del_intf_entry(struct eag_intf_entry_info *info)
 	}
 
 /* target */
-	size= IPT_ALIGN(sizeof(struct ipt_entry_target))+IPT_ALIGN(sizeof(int));
+	//size= IPT_ALIGN(sizeof(struct ipt_entry_target))+IPT_ALIGN(sizeof(int));wangchao change
+	size= XT_ALIGN(sizeof(struct ipt_entry_target))+XT_ALIGN(sizeof(int));
 	target = eag_calloc(1, size);
 	if (NULL == target) {
 		eag_log_err("calloc error:target = NULL");

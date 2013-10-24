@@ -1,0 +1,190 @@
+data.lo .libs/data.o: data.c /usr/mips-linux-gnu/include/assert.h \
+  /usr/mips-linux-gnu/include/features.h \
+  /usr/mips-linux-gnu/include/sys/cdefs.h \
+  /usr/mips-linux-gnu/include/gnu/stubs.h \
+  /usr/mips-linux-gnu/include/arpa/inet.h \
+  /usr/mips-linux-gnu/include/netinet/in.h \
+  /usr/mips-linux-gnu/include/stdint.h \
+  /usr/mips-linux-gnu/include/bits/wchar.h \
+  /usr/mips-linux-gnu/include/bits/wordsize.h \
+  /usr/mips-linux-gnu/include/sys/socket.h \
+  /usr/mips-linux-gnu/include/sys/uio.h \
+  /usr/mips-linux-gnu/include/sys/types.h \
+  /usr/mips-linux-gnu/include/bits/types.h \
+  /usr/lib/gcc/mips-linux-gnu/4.1.2/include/stddef.h \
+  /usr/mips-linux-gnu/include/bits/typesizes.h \
+  /usr/mips-linux-gnu/include/time.h endian.h \
+  /usr/mips-linux-gnu/include/bits/endian.h \
+  /usr/mips-linux-gnu/include/sys/select.h \
+  /usr/mips-linux-gnu/include/bits/select.h \
+  /usr/mips-linux-gnu/include/bits/sigset.h \
+  /usr/mips-linux-gnu/include/bits/time.h \
+  /usr/mips-linux-gnu/include/sys/sysmacros.h \
+  /usr/mips-linux-gnu/include/bits/pthreadtypes.h \
+  /usr/mips-linux-gnu/include/bits/sched.h \
+  /usr/mips-linux-gnu/include/bits/uio.h \
+  /usr/mips-linux-gnu/include/bits/socket.h \
+  /usr/lib/gcc/mips-linux-gnu/4.1.2/include/limits.h \
+  /usr/lib/gcc/mips-linux-gnu/4.1.2/include/syslimits.h \
+  /usr/mips-linux-gnu/include/limits.h \
+  /usr/mips-linux-gnu/include/bits/posix1_lim.h \
+  /usr/mips-linux-gnu/include/bits/local_lim.h \
+  /home/wangchao/aw2.0.18sp8_new/aw2.0.18sp8_pb/src/kernel2.6.32.27cn/include/linux/limits.h \
+  /usr/mips-linux-gnu/include/bits/posix2_lim.h \
+  /usr/mips-linux-gnu/include/bits/sockaddr.h \
+  /usr/mips-linux-gnu/include/asm/socket.h \
+  /usr/mips-linux-gnu/include/asm/sockios.h \
+  /usr/mips-linux-gnu/include/asm/ioctl.h \
+  /usr/mips-linux-gnu/include/bits/in.h \
+  /usr/mips-linux-gnu/include/bits/byteswap.h \
+  /usr/mips-linux-gnu/include/net/ethernet.h \
+  /home/wangchao/aw2.0.18sp8_new/aw2.0.18sp8_pb/src/kernel2.6.32.27cn/include/linux/if_ether.h \
+  /home/wangchao/aw2.0.18sp8_new/aw2.0.18sp8_pb/src/kernel2.6.32.27cn/include/linux/types.h \
+  /usr/mips-linux-gnu/include/asm/types.h \
+  /home/wangchao/aw2.0.18sp8_new/aw2.0.18sp8_pb/src/kernel2.6.32.27cn/include/linux/posix_types.h \
+  /home/wangchao/aw2.0.18sp8_new/aw2.0.18sp8_pb/src/kernel2.6.32.27cn/include/linux/stddef.h \
+  /home/wangchao/aw2.0.18sp8_new/aw2.0.18sp8_pb/src/kernel2.6.32.27cn/include/linux/compiler.h \
+  /usr/mips-linux-gnu/include/asm/posix_types.h \
+  /usr/mips-linux-gnu/include/asm/sgidefs.h \
+  /usr/mips-linux-gnu/include/net/if.h \
+  /usr/mips-linux-gnu/include/stdlib.h \
+  /usr/mips-linux-gnu/include/alloca.h \
+  /usr/mips-linux-gnu/include/string.h \
+  /usr/mips-linux-gnu/include/bits/string.h \
+  /usr/mips-linux-gnu/include/bits/string2.h \
+  ../include/libipset/linux_ip_set.h ../include/libipset/debug.h \
+  ../include/libipset/types.h ../include/libipset/data.h \
+  /usr/lib/gcc/mips-linux-gnu/4.1.2/include/stdbool.h \
+  ../include/libipset/nf_inet_addr.h ../include/libipset/parse.h \
+  ../include/libipset/print.h ../include/libipset/nfproto.h \
+  ../include/libipset/utils.h
+
+/usr/mips-linux-gnu/include/assert.h:
+
+/usr/mips-linux-gnu/include/features.h:
+
+/usr/mips-linux-gnu/include/sys/cdefs.h:
+
+/usr/mips-linux-gnu/include/gnu/stubs.h:
+
+/usr/mips-linux-gnu/include/arpa/inet.h:
+
+/usr/mips-linux-gnu/include/netinet/in.h:
+
+/usr/mips-linux-gnu/include/stdint.h:
+
+/usr/mips-linux-gnu/include/bits/wchar.h:
+
+/usr/mips-linux-gnu/include/bits/wordsize.h:
+
+/usr/mips-linux-gnu/include/sys/socket.h:
+
+/usr/mips-linux-gnu/include/sys/uio.h:
+
+/usr/mips-linux-gnu/include/sys/types.h:
+
+/usr/mips-linux-gnu/include/bits/types.h:
+
+/usr/lib/gcc/mips-linux-gnu/4.1.2/include/stddef.h:
+
+/usr/mips-linux-gnu/include/bits/typesizes.h:
+
+/usr/mips-linux-gnu/include/time.h:
+
+endian.h:
+
+/usr/mips-linux-gnu/include/bits/endian.h:
+
+/usr/mips-linux-gnu/include/sys/select.h:
+
+/usr/mips-linux-gnu/include/bits/select.h:
+
+/usr/mips-linux-gnu/include/bits/sigset.h:
+
+/usr/mips-linux-gnu/include/bits/time.h:
+
+/usr/mips-linux-gnu/include/sys/sysmacros.h:
+
+/usr/mips-linux-gnu/include/bits/pthreadtypes.h:
+
+/usr/mips-linux-gnu/include/bits/sched.h:
+
+/usr/mips-linux-gnu/include/bits/uio.h:
+
+/usr/mips-linux-gnu/include/bits/socket.h:
+
+/usr/lib/gcc/mips-linux-gnu/4.1.2/include/limits.h:
+
+/usr/lib/gcc/mips-linux-gnu/4.1.2/include/syslimits.h:
+
+/usr/mips-linux-gnu/include/limits.h:
+
+/usr/mips-linux-gnu/include/bits/posix1_lim.h:
+
+/usr/mips-linux-gnu/include/bits/local_lim.h:
+
+/home/wangchao/aw2.0.18sp8_new/aw2.0.18sp8_pb/src/kernel2.6.32.27cn/include/linux/limits.h:
+
+/usr/mips-linux-gnu/include/bits/posix2_lim.h:
+
+/usr/mips-linux-gnu/include/bits/sockaddr.h:
+
+/usr/mips-linux-gnu/include/asm/socket.h:
+
+/usr/mips-linux-gnu/include/asm/sockios.h:
+
+/usr/mips-linux-gnu/include/asm/ioctl.h:
+
+/usr/mips-linux-gnu/include/bits/in.h:
+
+/usr/mips-linux-gnu/include/bits/byteswap.h:
+
+/usr/mips-linux-gnu/include/net/ethernet.h:
+
+/home/wangchao/aw2.0.18sp8_new/aw2.0.18sp8_pb/src/kernel2.6.32.27cn/include/linux/if_ether.h:
+
+/home/wangchao/aw2.0.18sp8_new/aw2.0.18sp8_pb/src/kernel2.6.32.27cn/include/linux/types.h:
+
+/usr/mips-linux-gnu/include/asm/types.h:
+
+/home/wangchao/aw2.0.18sp8_new/aw2.0.18sp8_pb/src/kernel2.6.32.27cn/include/linux/posix_types.h:
+
+/home/wangchao/aw2.0.18sp8_new/aw2.0.18sp8_pb/src/kernel2.6.32.27cn/include/linux/stddef.h:
+
+/home/wangchao/aw2.0.18sp8_new/aw2.0.18sp8_pb/src/kernel2.6.32.27cn/include/linux/compiler.h:
+
+/usr/mips-linux-gnu/include/asm/posix_types.h:
+
+/usr/mips-linux-gnu/include/asm/sgidefs.h:
+
+/usr/mips-linux-gnu/include/net/if.h:
+
+/usr/mips-linux-gnu/include/stdlib.h:
+
+/usr/mips-linux-gnu/include/alloca.h:
+
+/usr/mips-linux-gnu/include/string.h:
+
+/usr/mips-linux-gnu/include/bits/string.h:
+
+/usr/mips-linux-gnu/include/bits/string2.h:
+
+../include/libipset/linux_ip_set.h:
+
+../include/libipset/debug.h:
+
+../include/libipset/types.h:
+
+../include/libipset/data.h:
+
+/usr/lib/gcc/mips-linux-gnu/4.1.2/include/stdbool.h:
+
+../include/libipset/nf_inet_addr.h:
+
+../include/libipset/parse.h:
+
+../include/libipset/print.h:
+
+../include/libipset/nfproto.h:
+
+../include/libipset/utils.h:
