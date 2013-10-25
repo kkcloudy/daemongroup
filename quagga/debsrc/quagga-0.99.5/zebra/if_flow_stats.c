@@ -165,12 +165,29 @@ rtm_if_flow_stats_data_packet(process_info *process_information, struct interfac
 {
   struct stream *s;
   
+  if(!process_information || process_information->sock < 0)
+  {
+	  zlog_warn("process_information[%p].\n",process_information);	  
+	  if((process_information)&&(process_information->sock < 0))
+	  {
+	    zlog_warn("Rtmd send if_flow fd[%d].\n",process_information->sock);
+	  	rtm_if_flow_client_unix_close(&process_information);
+		
+	  }
+
+	  return;
+   }
   if(rtm_debug_if_flow)
   {
 	  quagga_gettimeofday_only(&current_time);
 	  zlog_debug("%s:line %d, Time[%u:%u].\n",__func__,__LINE__,current_time.tv_sec,current_time.tv_usec);
 	}
   s = process_information->obuf;
+  if(!s)
+  {
+	  zlog_warn("process_information->obuf[%p].\n",s);	  
+	  return;
+   }
   stream_reset (s);
 
   /* Message type. */
@@ -253,24 +270,49 @@ rtm_if_flow_client_unix_close (process_info **_process_information)
 
 	/* Release threads. */
 	if (process_information->t_read)
+	{
 		thread_cancel (process_information->t_read);
+		process_information->t_read=NULL;
+	}
 	if (process_information->t_write)
+	{	
 		thread_cancel (process_information->t_write);
+		process_information->t_write=NULL;
+	}
 	if (process_information->t_suicide)
+	{
 		thread_cancel (process_information->t_suicide);
+		process_information->t_suicide = NULL;
+		
+	}
 
 	if(process_information->ibuf)
+	{
 		stream_free(process_information->ibuf);
+		process_information->ibuf=NULL;
+	}
 	
 	if(process_information->obuf)
+	{
 		stream_free(process_information->obuf);
+		process_information->obuf=NULL;
+	}
 	
 	if(process_information->wb)
+	{
 		buffer_free(process_information->wb);
+		process_information->wb=NULL;
+	}
+	
 	if(rtm_debug_if_flow)
 		zlog_debug("To close cuurt ACSAMPLE break fd[%d], then to creat a new fd.\n",process_information->sock);
 	/* Close file descriptor. */	
 	close(process_information->sock);
+	process_information->sock=-1;
+	if(process_information->name_type == PROCESS_NAME_SNMP)
+			process_snmp = NULL;
+	if(process_information->name_type == PROCESS_NAME_ACSAMPLE)
+			process_acsample = NULL;
 
 	XFREE(MTYPE_PROCESS_INFO,process_information);
 	*_process_information = NULL;
