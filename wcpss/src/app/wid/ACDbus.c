@@ -67275,7 +67275,7 @@ void reset_mcast_solicit()
 {
 	int ret = -1;
 	
-	ret = system("set_ebr_mcast.sh &");	
+	ret = system("reset_ebr_wlan_mcast.sh &");	
 	ret = WEXITSTATUS(ret);
 	if(0 != ret)
 	{
