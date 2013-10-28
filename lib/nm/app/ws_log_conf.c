@@ -2707,7 +2707,7 @@ int add_syslog_server( char *xml_fpath, int enable, char *ip, int port, int filt
 	sprintf( logall.suinfo[0].content, "df_server_%d", timez );
 	
 	sprintf( logall.suinfo[1].suname,  "%s",NODE_CONTENT );
-	sprintf( logall.suinfo[1].content, "udp(\"%s\" port(%d));", ip, port );
+	sprintf( logall.suinfo[1].content, "udp(\"%s\" template(\"$MONTH-$DAY $HOUR:$MIN:$SEC.$MSEC $PRIORITY $PROGRAM($PID) $MSGONLY\n\") port(%d));", ip, port );
 	
 	sprintf( logall.suinfo[2].suname,  "%s",NODE_MARKZ);
 	sprintf( logall.suinfo[2].content, "%d", timez);
@@ -2819,7 +2819,7 @@ int add_syslog_serve_web( char *xml_fpath, char *enable, char *ip,char *port, ch
 	sprintf( logall.suinfo[0].content, "df_server_%d", timez );
 	
 	sprintf( logall.suinfo[1].suname,  "%s",NODE_CONTENT );
-	sprintf( logall.suinfo[1].content, "udp(\"%s\" port(%s));", ip, port );
+	sprintf( logall.suinfo[1].content, "udp(\"%s\" template(\"$MONTH-$DAY $HOUR:$MIN:$SEC.$MSEC $PRIORITY $PROGRAM($PID) $MSGONLY\n\") port(%s));", ip, port );
 	
 	sprintf( logall.suinfo[2].suname,  "%s",NODE_MARKZ);
 	sprintf( logall.suinfo[2].content, "%d", timez);
@@ -3119,7 +3119,7 @@ int mod_syslog_server( char *xml_fpath, char *timeflag, int enable, char *ipaddr
 	 if(flagz != 0)
 	 {
 		memset(tempz,0,128);
-		sprintf(tempz,"udp(\"%s\" port(%d))",ipaddr,port);
+		sprintf(tempz,"udp(\"%s\" template(\"$MONTH-$DAY $HOUR:$MIN:$SEC.$MSEC $PRIORITY $PROGRAM($PID) $MSGONLY\n\") port(%d))",ipaddr,port);
 		mod_second_xmlnode(xml_fpath, NODE_DES, NODE_CONTENT, tempz, flagz);		
 		mod_second_xmlnode(xml_fpath, NODE_DES, NODE_SYSIP, ipaddr, flagz);
 		memset(strport,0,20);
@@ -4894,7 +4894,7 @@ int add_destination_rule(char *rulename,char *ip ,char *port)
 	sprintf( logall.suinfo[0].content, "%s", rulename );
 	
 	sprintf( logall.suinfo[1].suname,  "%s",NODE_CONTENT );
-	sprintf( logall.suinfo[1].content, "udp(\"%s\" port(%s));", ip, port );
+	sprintf( logall.suinfo[1].content, "udp(\"%s\" template(\"$MONTH-$DAY $HOUR:$MIN:$SEC.$MSEC $PRIORITY $PROGRAM($PID) $MSGONLY\n\") port(%s));", ip, port );
 	
 	sprintf( logall.suinfo[2].suname,  "%s",NODE_MARKZ);
 	sprintf( logall.suinfo[2].content, "%d", 1);
