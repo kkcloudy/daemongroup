@@ -310,6 +310,14 @@ void ShowWtpdtaPage(char *m,char *n,char *t,char *ins_id,struct list *lpublic,st
 					  fprintf(cgiOut,"<td id=td2>%s</td>",wtp->WTP[0]->WTPSN);
 			  	  }
 			  fprintf(cgiOut,"</tr>");
+			  
+			fprintf(cgiOut,"<tr align=left>"\
+				  "<td id=td1>%s</td>",search(lwlan,"location"));
+			  	  if(wtp->WTP[0]->location)
+			  	  {
+					  fprintf(cgiOut,"<td id=td2>%s</td>",wtp->WTP[0]->location);
+			  	  }
+			  fprintf(cgiOut,"</tr>");
 			  #ifdef __WITH_AP_CPU_FREQ
 			  	FILE *fp = NULL;
 			    char cpu_freq[256] = { 0 };

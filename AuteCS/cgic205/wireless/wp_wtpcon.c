@@ -405,8 +405,13 @@ int ShowWtpconPage(char *m,char *n,char *pn,char *ins_id,instance_parameter *ins
                                   "<option value=100>100M</option>"\
                                   "<option value=1000>1000M</option>"\
                                 "</td>"\
-				"</tr>"\
-				"<tr valign=top style=\"padding-top:10px\">"\
+				"</tr>");
+
+				fprintf(cgiOut,"<tr height=30>"\
+						"<td>%s:</td>",search(lwlan,"location"));
+				fprintf(cgiOut,"<td colspan=2><input name=ap_location size=40 maxLength=256 style=\"ime-mode: disabled;\"  onkeypress=\"return event.keyCode!=32\" value=\"\"><font color=red>(%s)</font></td>",search(lwlan,"mod_ap_name"));
+					
+				 fprintf(cgiOut,"<tr valign=top style=\"padding-top:10px\">"\
 				  "<td colspan=2 width=250>"\
 				    "<fieldset align=left>"\
 					  "<legend><font color=Navy>%s</font></legend>",search(lwlan,"force_update"));
@@ -509,6 +514,7 @@ void config_wtp(instance_parameter *ins_para,int id,struct list *lpublic,struct 
   char file_name[64] = { 0 };
   char version[64] = { 0 };
   char time[10] = { 0 };
+  char *ap_location=NULL;
   
   memset(state,0,sizeof(state));
   cgiFormStringNoNewlines("wtp_use",state,20);	
@@ -1155,6 +1161,46 @@ void config_wtp(instance_parameter *ins_para,int id,struct list *lpublic,struct 
 	  		  }
 	}
   }
+
+
+	ap_location=(char *)malloc(270)	;
+	if(ap_location !=NULL)
+	{	
+		struct WtpList *WtpList_Head = NULL;
+		  memset(ap_location,0,sizeof(ap_location));
+		   cgiFormStringNoNewlines("ap_location",ap_location,270);
+		   if(strcmp(ap_location,"")!=0)
+		   {
+			 ret11=set_wtp_location_group(ins_para->parameter,ins_para->connection,0,id,ap_location,&WtpList_Head);
+			 switch(ret11)										   
+			 {
+			   case SNMPD_CONNECTION_ERROR:
+			   case 0:{
+					       ShowAlert(search(lwlan,"mod_ap_name_fail"));
+					       hidden = 0;
+					       break;
+					  }
+			   case 1:break;
+			   case -1:{
+						   ShowAlert(search(lpublic,"unknown_id_format"));
+						   hidden = 0;
+						   break;
+					   }
+			   case -2:
+			   case -3:{
+					   ShowAlert(search(lwlan,"wtp_not_exist"));
+					   hidden = 0;
+					   break;
+					   }	
+			   default:{
+					   ShowAlert(search(lpublic,"error"));
+					   hidden = 0;
+					   break;
+					   }	
+			   	
+			 }
+		   }
+	}
 
   memset(file_name,0,sizeof(file_name));
   cgiFormStringNoNewlines("filename",file_name,64);
