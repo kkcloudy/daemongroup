@@ -76263,7 +76263,15 @@ int show_running_config_wtp(WID_WTP **WTP,int i,char *cursor,char **showStr2,cha
 									totalLen += sprintf(cursor," radio apply wlan %d base hotspot %d\n",radioWlanid->wlanid,WTP[i]->WTP_Radio[j]->BSS[l_bssid]->hotspot_id);
 									cursor = showStr + totalLen;
 								}
-								
+								else if((WTP[i]->WTP_Radio[j]->BSS[l_bssid]->vlanid == 0) && ((WTP[i]->WTP_Radio[j]->BSS[l_bssid]->nas_port_id[0] == 0)) && (radioWlanid->ESSID))
+								{
+									if(vrrid != 0){
+										totalLen += sprintf(cursor," ");
+										cursor = showStr + totalLen;
+									}
+									totalLen += sprintf(cursor," radio apply wlan %d essid %s\n",radioWlanid->wlanid,radioWlanid->ESSID);
+									cursor = showStr + totalLen;
+								}
 								else if((WTP[i]->WTP_Radio[j]->BSS[l_bssid]->vlanid == 0)&&(WTP[i]->WTP_Radio[j]->BSS[l_bssid]->nas_port_id[0] == 0))
 								{
 									if(vrrid != 0){
