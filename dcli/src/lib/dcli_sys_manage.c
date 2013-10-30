@@ -5296,8 +5296,10 @@ void sync_hostname()
 	fd = fopen("/dbm/product/product_serial", "r");		
 	fscanf(fd, "%d", &product_serial);
 	fclose(fd);
-
+	/*
 	fd = fopen("/dbm/product/master_slot_id", "r");
+	*/
+	fd = fopen("/dbm/product/active_master_slot_id", "r");
 	fscanf(fd, "%d", &src_slotid);
 	fclose(fd);
 #if 0
@@ -5374,8 +5376,10 @@ void sync_hostname_v2(int slot_ID)
 	sprintf(filename,"%sslot%d%s",PRODUCT_SLOT_DIR,slot_ID,HOSTNAME_FILE);
 	/*vty_out(vty,"%s: line %d ..filename[%s]..\n",__func__,__LINE__,filename);*/
 	src_path_temp = filename;
-	
+	/*
 	fd = fopen("/dbm/product/master_slot_id", "r");
+	*/
+	fd = fopen("/dbm/product/active_master_slot_id", "r");
 	fscanf(fd, "%d", &src_slotid);
 	fclose(fd);
 
