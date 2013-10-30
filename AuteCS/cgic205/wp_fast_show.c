@@ -578,9 +578,9 @@ int ShowWebservicePage(struct list *lpublic, struct list *lcontrol)
 					{
 						fprintf(cgiOut,"<tr height=30>");
 							fprintf(cgiOut,"<td colspan=4>%u.%u.%u.%u:%u  ==> %u.%u.%u.%u:%u %s</td>",\
-												IP_FMT(cmd_data.fccp_cmd.fccp_data.rule_info.rule_param.sip),
+												IP_FMT(cmd_data.fccp_cmd.fccp_data.rule_info.rule_param.ipv4_sip),
 												cmd_data.fccp_cmd.fccp_data.rule_info.rule_param.sport,
-												IP_FMT(cmd_data.fccp_cmd.fccp_data.rule_info.rule_param.dip),
+												IP_FMT(cmd_data.fccp_cmd.fccp_data.rule_info.rule_param.ipv4_dip),
 												cmd_data.fccp_cmd.fccp_data.rule_info.rule_param.dport,
 												PROTO_STR(cmd_data.fccp_cmd.fccp_data.rule_info.rule_param.protocol));
 							fprintf(cgiOut,"</tr>");
@@ -645,8 +645,8 @@ int ShowWebservicePage(struct list *lpublic, struct list *lcontrol)
 										fprintf(cgiOut,"</tr>");	
 										fprintf(cgiOut,"<tr>"); 
 										fprintf(cgiOut,"<td colspan=4>	 capwap tunnel: %d.%d.%d.%d:%d => %d.%d.%d.%d:%d  tos = 0x%02x</td>",\
-																			IP_FMT(cmd_data.fccp_cmd.fccp_data.rule_info.cw_cache.sip), cmd_data.fccp_cmd.fccp_data.rule_info.cw_cache.sport,
-																			IP_FMT(cmd_data.fccp_cmd.fccp_data.rule_info.cw_cache.dip), cmd_data.fccp_cmd.fccp_data.rule_info.cw_cache.dport,  
+																			IP_FMT(cmd_data.fccp_cmd.fccp_data.rule_info.cw_cache.cw_sip), cmd_data.fccp_cmd.fccp_data.rule_info.cw_cache.sport,
+																			IP_FMT(cmd_data.fccp_cmd.fccp_data.rule_info.cw_cache.cw_dip), cmd_data.fccp_cmd.fccp_data.rule_info.cw_cache.dport,  
 																			cmd_data.fccp_cmd.fccp_data.rule_info.cw_cache.tos);
 										fprintf(cgiOut,"</tr>");	
 										break;
@@ -659,8 +659,8 @@ int ShowWebservicePage(struct list *lpublic, struct list *lcontrol)
 										fprintf(cgiOut,"</tr>");	
 										fprintf(cgiOut,"<tr>"); 
 										fprintf(cgiOut,"<td colspan=4>	 capwap tunnel: %d.%d.%d.%d:%d => %d.%d.%d.%d:%d  tos = 0x%02x</td>",\
-																								IP_FMT(cmd_data.fccp_cmd.fccp_data.rule_info.cw_cache.sip), cmd_data.fccp_cmd.fccp_data.rule_info.cw_cache.sport,
-																								IP_FMT(cmd_data.fccp_cmd.fccp_data.rule_info.cw_cache.dip), cmd_data.fccp_cmd.fccp_data.rule_info.cw_cache.dport,  
+																								IP_FMT(cmd_data.fccp_cmd.fccp_data.rule_info.cw_cache.cw_sip), cmd_data.fccp_cmd.fccp_data.rule_info.cw_cache.sport,
+																								IP_FMT(cmd_data.fccp_cmd.fccp_data.rule_info.cw_cache.cw_dip), cmd_data.fccp_cmd.fccp_data.rule_info.cw_cache.dport,  
 																								cmd_data.fccp_cmd.fccp_data.rule_info.cw_cache.tos);
 										fprintf(cgiOut,"</tr>");	
 										break;
