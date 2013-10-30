@@ -1133,6 +1133,13 @@ enum dhcp_state {
 	S_REBINDING = 7,
 	S_STOPPED = 8
 };
+enum dhcp_debug_type {	
+	DEBUG_TYPE_INFO  = 1,
+	DEBUG_TYPE_ERROR = 2,
+	DEBUG_TYPE_DEBUG = 4,
+	DEBUG_TYPE_ALL   = 7
+	
+};
 
 /* Authentication and BOOTP policy possibilities (not all values work
    for each). */
@@ -2517,6 +2524,9 @@ extern struct in_addr limited_broadcast;
 extern int local_family;
 extern struct in_addr local_address;
 extern struct in6_addr local_address6;
+char dhcpv6_msg_type_g;
+u_int32_t dhcpv6_transaction_id_g;
+
 
 extern u_int16_t local_port;
 extern u_int16_t remote_port;

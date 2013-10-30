@@ -3714,6 +3714,146 @@ DEFUN(no_ipv6_dhcp_server_option43_cmd_func,
 }
 */
 unsigned int
+dcli_set_dhcpv6_debug_state
+(	
+	struct vty *vty,
+	unsigned int debug_type,
+	unsigned int debug_enable
+)
+{
+	DBusMessage *query = NULL, *reply = NULL;
+	DBusError err;
+	unsigned int op_ret = 0;
+
+	int localid = 1, slot_id = HostSlotId, indextmp = 0;
+	get_slotid_index(vty, &indextmp, &slot_id, &localid);
+
+	DBusConnection *dcli_dbus_connection = NULL;
+	ReInitDbusConnection(&dcli_dbus_connection, slot_id, distributFag);
+	
+	query = dbus_message_new_method_call(DHCP6_DBUS_BUSNAME, 
+									DHCP6_DBUS_OBJPATH, 
+									DHCP6_DBUS_INTERFACE, 
+									DHCP6_DBUS_METHOD_SET_DEBUG_STATE);
+	
+	dbus_error_init(&err);
+	dbus_message_append_args(query, 
+							DBUS_TYPE_UINT32, &debug_type,
+							 DBUS_TYPE_UINT32, &debug_enable,
+							 DBUS_TYPE_INVALID);
+
+	reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection,query,-1, &err);
+				
+	dbus_message_unref(query);
+	
+	if (NULL == reply) {
+		if (dbus_error_is_set(&err)) {
+			dbus_error_free_for_dcli(&err);
+		}
+		return CMD_SUCCESS;
+	}
+
+	if (dbus_message_get_args ( reply, &err,
+					DBUS_TYPE_UINT32, &op_ret,
+					DBUS_TYPE_INVALID)) {
+		if(!op_ret) {
+	
+			dbus_message_unref(reply);
+			return CMD_SUCCESS;
+		}
+	} 
+	else {
+		if (dbus_error_is_set(&err)) {
+			dbus_error_free_for_dcli(&err);
+		}
+		dbus_message_unref(reply);
+	
+		return CMD_WARNING;
+	}
+}
+	
+DEFUN(dhcp_debug_enable_cmd_func,
+	dhcpv6_debug_enable_cmd,
+	"debug dhcpv6 (all|info|error|debug)",
+	"Add debug dhcp Information\n"
+	"Dhcp server\n" 
+	"Open dhcp debug level all\n"	
+	"Open dhcp debug level info\n"
+	"Open dhcp debug level error\n"
+	"Open dhcp debug level debug\n"
+)
+{
+	unsigned int ret = 0, debug_type = 0, debug_enable = 1;
+
+	 if(strncmp("all",argv[0],strlen(argv[0]))==0) {
+		debug_type = DEBUG_TYPE_ALL;
+	}
+	else if (strncmp("info",argv[0],strlen(argv[0]))==0) {
+		debug_type = DEBUG_TYPE_INFO;
+	}
+	else if (strncmp("error",argv[0],strlen(argv[0]))==0) {
+		debug_type = DEBUG_TYPE_ERROR;
+	}
+	else if (strncmp("debug",argv[0],strlen(argv[0]))==0) {
+		debug_type = DEBUG_TYPE_DEBUG;
+	}
+	else {
+		vty_out(vty,"bad command parameter %s\n", argv[0]);
+		return CMD_WARNING;
+	}
+	ret = dcli_set_dhcpv6_debug_state(vty, debug_type, debug_enable);
+	
+	if (!ret) {
+		return CMD_SUCCESS;
+	}
+	else {
+		return CMD_WARNING;
+	}
+}
+
+DEFUN(dhcp_debug_disable_cmd_func,
+	dhcpv6_debug_disable_cmd,
+	"no debug dhcpv6 (all|info|error|debug)",
+	"Delete old Configuration\n"
+	"Config dhcp debugging close\n"
+	"Dhcp server\n"
+	"Close dhcp debug level all\n"	
+	"Close dhcp debug level info\n"
+	"Close dhcp debug level error\n"
+	"Close dhcp debug level debug\n"
+
+)
+{
+	unsigned int ret = 0, debug_type = 0, isEnable = 0;
+
+    if(strncmp("all",argv[0],strlen(argv[0]))==0) {
+		debug_type = DEBUG_TYPE_ALL;
+	}
+	else if (strncmp("info",argv[0],strlen(argv[0]))==0) {
+		debug_type = DEBUG_TYPE_INFO;
+	}
+	else if (strncmp("error",argv[0],strlen(argv[0]))==0) {
+		debug_type = DEBUG_TYPE_ERROR;
+	}
+	else if (strncmp("debug",argv[0],strlen(argv[0]))==0) {
+		debug_type = DEBUG_TYPE_DEBUG;
+	}
+	else {
+		vty_out(vty,"bad command parameter %s\n", argv[0]);
+		return CMD_WARNING;
+	}
+
+	ret = dcli_set_dhcpv6_debug_state(vty, debug_type, isEnable);
+	
+	if (!ret) {
+		return CMD_SUCCESS;
+	}
+	else {
+		return CMD_WARNING;
+	}
+}
+
+unsigned int
 dcli_set_dhcpv6_server_enable
 (
 	unsigned int enable,struct vty *vty
@@ -3866,6 +4006,8 @@ dcli_dhcp_ipv6_init
 	install_node (&poolv6_node, dcli_dhcp_ipv6_show_running_cfg,"POOLV6_NODE");
 	install_default(POOLV6_NODE);	
 	install_element(CONFIG_NODE, &create_ipv6_pool_name_cmd);	
+	install_element(CONFIG_NODE, &dhcpv6_debug_enable_cmd);
+	install_element(CONFIG_NODE, &dhcpv6_debug_disable_cmd);
 	install_element(CONFIG_NODE, &delete_ipv6_pool_name_cmd);
 	install_element(CONFIG_NODE, &config_ipv6_pool_name_cmd);
 	install_element(CONFIG_NODE, &show_dhcpv6_running_config);
@@ -3913,6 +4055,8 @@ dcli_dhcp_ipv6_init
 	install_element(HANSI_NODE, &delete_ipv6_pool_name_cmd);
 	install_element(HANSI_NODE, &config_ipv6_pool_name_cmd);
 	install_element(HANSI_NODE, &show_dhcpv6_running_config);
+	install_element(HANSI_NODE, &dhcpv6_debug_enable_cmd);
+	install_element(HANSI_NODE, &dhcpv6_debug_disable_cmd);
 //	install_element(CONFIG_NODE, &add_dhcp_static_host_cmd);	
 //	install_element(CONFIG_NODE, &delete_dhcp_static_host_cmd);	
 	install_element(HANSI_NODE, &ipv6_dhcp_server_enable_cmd);

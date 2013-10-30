@@ -1098,7 +1098,7 @@ log_debug("info name %s tmp name\n", info.name);
 */		
 
 
-		log_info ("while all interface name is %s \n",tmp->name);
+		log_debug ("while all interface name is %s \n",tmp->name);
 		if (next)
 			interface_dereference (&next, MDL);
 		if (tmp -> next)
@@ -1296,13 +1296,13 @@ log_debug("discover use interface %s run 333333333333\n", tmp->name);
 			continue;
 #ifdef DHCPv6 
 		if (local_family == AF_INET6) {	
-			log_info ("run here 2+1 tmp->name %s size is %d\n", tmp->name, sizeof(tmp->name));
+			log_debug ("run here 2+1 tmp->name %s size is %d\n", tmp->name, sizeof(tmp->name));
 			if (tmp && !strncmp(tmp->name, name, sizeof(tmp->name))) {
 				status = omapi_register_io_object((omapi_object_t *)tmp,
 								  if_readsocket, 
 								  0, got_one_v6, 0, 0);
 				
-				log_info ("run here 2 tmp->name %s size is %d\n", tmp->name, sizeof(tmp->name));
+				log_debug ("run here 2 tmp->name %s size is %d\n", tmp->name, sizeof(tmp->name));
 				status = ISC_R_SUCCESS;
 				break;
 			}	
@@ -1318,7 +1318,7 @@ log_debug("discover use interface %s run 333333333333\n", tmp->name);
 								  if_readsocket, 
 								  0, got_one, 0, 0);
 				
-				log_info ("run here 2 tmp->name %s size is %d\n", tmp->name, sizeof(tmp->name));
+				log_debug ("run here 2 tmp->name %s size is %d\n", tmp->name, sizeof(tmp->name));
 				status = ISC_R_SUCCESS;
 				break;
 			}
@@ -1326,18 +1326,18 @@ log_debug("discover use interface %s run 333333333333\n", tmp->name);
 				continue;
 			}
 		}
-		log_info ("run here status %d \n", status);
+		log_debug ("run here status %d \n", status);
 
 		if (status != ISC_R_SUCCESS) {
 			
-		log_info ("run here 3 \n");
+		log_debug ("run here 3 \n");
 			log_error ("Can't register I/O handle for %s: %s",
 				   tmp -> name, isc_result_totext (status));
 			}
 	}
 
 	if (state == DISCOVER_SERVER && wifcount == 0) {
-		log_info ("%s", "");
+		log_debug ("%s", "");
 		//log_fatal ("Not configured to listen on any interfaces!");		
 		log_error("Not configured to listen on any interfaces!");
 		return 1;

@@ -44,6 +44,7 @@ int log_perror = 1;
 #endif
 int log_priority;
 void (*log_cleanup) (void);
+unsigned int dhcp_log_level;
 
 #define CVT_BUF_MAX 1023
 static char mbuf [CVT_BUF_MAX + 1];
@@ -162,13 +163,15 @@ int log_debug (const char *fmt, ...)
   /* %Audit% This is log output. %2004.06.17,Safe%
    * If we truncate we hope the user can get a hint from the log.
    */
-  va_start (list, fmt);
-  vsnprintf (mbuf, sizeof mbuf, fbuf, list);
-  va_end (list);
+   if(dhcp_log_level & DEBUG_TYPE_DEBUG){
+		va_start (list, fmt);
+		vsnprintf (mbuf, sizeof mbuf, fbuf, list);
+		va_end (list);
 
 #ifndef DEBUG
   syslog (log_priority | LOG_DEBUG, "%s", mbuf);
 #endif
+   	}
 /*
   if (log_perror) {
 	  IGNORE_RET (write (STDERR_FILENO, mbuf, strlen (mbuf)));

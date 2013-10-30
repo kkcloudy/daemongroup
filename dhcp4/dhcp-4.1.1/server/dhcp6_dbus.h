@@ -2,6 +2,7 @@
 #define __DHCP6_DBUS_H__
 
 void dhcp6_dbus_start(void);
+unsigned int dhcp_log_level;
 
 /* VRRP state machine -- rfc2338.6.4 */
 #define VRRP_STATE_INIT	1	/* rfc2338.6.4.1 */

@@ -9,6 +9,14 @@
 #define DHCP_SERVER_MAX_LEASE_TIME 6
 #define DHCP_SERVER_DEFAULT_LEASE_TIME 7
 
+enum dhcpv6_debug_type {	
+	DEBUG_TYPE_INFO  = 1,
+	DEBUG_TYPE_ERROR = 2,
+	DEBUG_TYPE_DEBUG = 4,
+	DEBUG_TYPE_ALL   = 7
+	
+};
+
 
 /* distrubuted */
 #define INTERFACE_BIND_POOL			(1)

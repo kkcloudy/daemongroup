@@ -32,6 +32,7 @@
 #define DHCP6_DBUS_METHOD_SET_SERVER_VEO					"dhcp6_set_server_vci"
 #define DHCP6_DBUS_METHOD_SET_SERVER_ROUTERS_IP			"dhcp6_set_server_routers_ip"
 #define DHCP6_DBUS_METHOD_SET_SERVER_ENABLE				"dhcp6_set_server_enable"
+#define DHCP6_DBUS_METHOD_SET_DEBUG_STATE				"dhcp6_set_debug_state"
 #define DHCP6_DBUS_METHOD_SET_SERVER_DNS					"dhcp6_set_server_dns"
 #define DHCP6_DBUS_METHOD_SET_SERVER_WINS_IP				"dhcp6_set_server_wins_ip"
 #define DHCP6_DBUS_METHOD_SET_SERVER_LEASE_DEFAULT		"dhcp6_set_server_lease_default"

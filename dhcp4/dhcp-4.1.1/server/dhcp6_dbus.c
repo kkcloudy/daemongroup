@@ -722,8 +722,8 @@ dhcp6_dbus_check_pool_ip
 		if (head->headsubnet) {
 			for (head_sub = head->headsubnet; head_sub; head_sub = head_sub->next) {
 				for (i = 0; i < check_sub->ipaddr.len; i++) {
-					log_debug("check_sub->ipaddr.iabuf[i] %d, head_sub->ipaddr.iabuf[i] %d\n", 
-						check_sub->ipaddr.iabuf[i], head_sub->ipaddr.iabuf[i]);
+					//log_debug("check_sub->ipaddr.iabuf[i] %d, head_sub->ipaddr.iabuf[i] %d\n", 
+					//	check_sub->ipaddr.iabuf[i], head_sub->ipaddr.iabuf[i]);
 					if (((check_sub->ipaddr.iabuf[i]) & ((head_sub->mask.iabuf[i])&(check_sub->mask.iabuf[i]))) != 
 						((head_sub->ipaddr.iabuf[i]) & ((head_sub->mask.iabuf[i])&(check_sub->mask.iabuf[i])))) {			
 						/*when break i not ++*/
@@ -4571,6 +4571,67 @@ log_debug("owned_option->maxtime is %d ", max_time);
 	return reply;
 }
 
+DBusMessage*
+dhcp6_dbus_set_debug_state
+(	
+	DBusConnection *conn, 
+	DBusMessage *msg, 
+	void *user_data
+)
+{
+	DBusMessage* reply;
+	DBusMessageIter	 iter;
+	unsigned int debug_type = 0;
+	unsigned int enable = 0;
+	unsigned int op_ret = 0;
+	DBusError err;
+
+	dbus_error_init(&err);
+
+	if (!(dbus_message_get_args ( msg, &err,
+		DBUS_TYPE_UINT32, &debug_type,
+		DBUS_TYPE_UINT32, &enable,
+		DBUS_TYPE_INVALID))) {
+		 log_error("while set_debug_state,unable to get input args ");
+		if (dbus_error_is_set(&err)) {
+			 log_error("%s raised: %s",err.name,err.message);
+			dbus_error_free(&err);
+		}
+		return NULL;
+	}
+	if(debug_type == DEBUG_TYPE_ALL){
+		log_debug("dhcp debug_type is %s \n", "all");
+	}
+	else if(debug_type == DEBUG_TYPE_INFO){
+		log_debug("dhcp debug_type is %s \n", "info");
+	}
+	else if(debug_type == DEBUG_TYPE_ERROR){
+		log_debug("dhcp debug_type is %s \n", "error");
+	}
+	else if(debug_type == DEBUG_TYPE_DEBUG){
+		log_debug("dhcp debug_type is %s \n", "debug");
+	}
+
+	if(enable){
+		dhcp_log_level |= debug_type;
+	}else{
+		dhcp_log_level &= ~debug_type;
+	}
+		
+	log_debug("globle dhcpv6_log_level is %d \n", dhcp_log_level);	
+	
+		
+	reply = dbus_message_new_method_return(msg);
+
+	dbus_message_iter_init_append (reply, &iter);
+
+	dbus_message_iter_append_basic (&iter,
+									 DBUS_TYPE_UINT32,
+									 &op_ret);
+
+	return reply;
+}
+
 DBusMessage * 
 dhcp6_dbus_set_server_enable
 (	
@@ -5471,6 +5532,9 @@ dhcp6_dbus_message_handler
 	}	
 	if (dbus_message_is_method_call(message, DHCP6_DBUS_INTERFACE, DHCP6_DBUS_METHOD_SET_SERVER_ENABLE)) {
 		reply = dhcp6_dbus_set_server_enable(connection, message, user_data);
+	}
+	if (dbus_message_is_method_call(message, DHCP6_DBUS_INTERFACE, DHCP6_DBUS_METHOD_SET_DEBUG_STATE)) {
+		reply = dhcp6_dbus_set_debug_state(connection, message, user_data);
 	}
 	if (dbus_message_is_method_call(message, DHCP6_DBUS_INTERFACE, DHCP6_DBUS_METHOD_SET_SERVER_WINS_IP)) {
 		reply = dhcp6_dbus_set_server_wins_ip(connection, message, user_data);
