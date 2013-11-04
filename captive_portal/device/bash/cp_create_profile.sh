@@ -71,17 +71,17 @@ if [ ! $? -eq 0 ];then
     iptables -t nat -A $CP_DNAT -j RETURN
 fi
 
-ipset -L $MAC_PRE_IPHASH_SET > /dev/null 2>&1
+ipset list $MAC_PRE_IPHASH_SET > /dev/null 2>&1
 if [ ! $? -eq 0 ]; then
-	ipset -N $MAC_PRE_IPHASH_SET iphash
+	ipset create $MAC_PRE_IPHASH_SET hash:ip
 fi
 
 iptables -nL $MAC_PRE_AUTH_F  > /dev/null 2>&1
 if [ ! $? -eq 0 ];then   
 	iptables -N $MAC_PRE_AUTH_F
 	iptables -I $MAC_PRE_FILTER -j $MAC_PRE_AUTH_F
-	iptables -I $MAC_PRE_AUTH_F -m set --set ${MAC_PRE_IPHASH_SET} src -j ${FW_FILTER}
-	iptables -I $MAC_PRE_AUTH_F -m set --set ${MAC_PRE_IPHASH_SET} dst -j ${FW_FILTER}
+	iptables -I $MAC_PRE_AUTH_F -m set --match-set ${MAC_PRE_IPHASH_SET} src -j ${FW_FILTER}
+	iptables -I $MAC_PRE_AUTH_F -m set --match-set ${MAC_PRE_IPHASH_SET} dst -j ${FW_FILTER}
 	iptables -A $MAC_PRE_AUTH_F -j RETURN
 fi
 
@@ -89,7 +89,7 @@ iptables -nL $MAC_PRE_AUTH_N -t nat > /dev/null 2>&1
 if [ ! $? -eq 0 ];then   
 	iptables -t nat -N $MAC_PRE_AUTH_N
 	iptables -t nat -I $MAC_PRE_DNAT -j $MAC_PRE_AUTH_N
-	iptables -t nat -I $MAC_PRE_AUTH_N -m set --set ${MAC_PRE_IPHASH_SET} src -j ${FW_DNAT}
+	iptables -t nat -I $MAC_PRE_AUTH_N -m set --match-set ${MAC_PRE_IPHASH_SET} src -j ${FW_DNAT}
 	iptables -t nat -A $MAC_PRE_AUTH_N -j RETURN
 fi
 
@@ -131,5 +131,5 @@ iptables -I $CP_FILTER_AUTHORIZED_DEFAULT -j FW_FILTER
 iptables -t nat -N $CP_NAT_AUTHORIZED_DEFAULT
 iptables -t nat -I $CP_NAT_AUTHORIZED_DEFAULT -j FW_DNAT
 
-ipset -N $CP_IPHASH_SET iphash
+ipset create $CP_IPHASH_SET hash:ip
 

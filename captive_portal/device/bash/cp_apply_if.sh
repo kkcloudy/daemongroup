@@ -54,15 +54,15 @@ fi
 
 iptables -N $CP_FILTER_AUTH_IF
 iptables -I $CP_FILTER_AUTH_IF -j RETURN
-iptables -I $CP_FILTER_AUTH_IF -m set --set ${CP_IPHASH_SET} src -j ${CP_FILTER_AUTHORIZED_DEFAULT}
+iptables -I $CP_FILTER_AUTH_IF -m set --match-set ${CP_IPHASH_SET} src -j ${CP_FILTER_AUTHORIZED_DEFAULT}
 
 iptables -N $CP_FILTER_AUTH_IF_IN
 iptables -I $CP_FILTER_AUTH_IF_IN -j RETURN
-iptables -I $CP_FILTER_AUTH_IF_IN -m set --set ${CP_IPHASH_SET} dst -j ${CP_FILTER_AUTHORIZED_DEFAULT}
+iptables -I $CP_FILTER_AUTH_IF_IN -m set --match-set ${CP_IPHASH_SET} dst -j ${CP_FILTER_AUTHORIZED_DEFAULT}
 
 iptables -t nat -N $CP_NAT_AUTH_IF
 iptables -t nat -I $CP_NAT_AUTH_IF -j RETURN
-iptables -t nat -I $CP_NAT_AUTH_IF -m set --set ${CP_IPHASH_SET} src -j ${CP_NAT_AUTHORIZED_DEFAULT}
+iptables -t nat -I $CP_NAT_AUTH_IF -m set --match-set ${CP_IPHASH_SET} src -j ${CP_NAT_AUTHORIZED_DEFAULT}
 
 iptables -I $CP_FILTER -i ${CP_IF} -j ${CP_FILTER_DEFAULT}
 iptables -I $CP_FILTER -i ${CP_IF} -j ${CP_FILTER_AUTH_IF}

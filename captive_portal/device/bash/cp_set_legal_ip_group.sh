@@ -46,8 +46,8 @@ do
 			ipset -X ${CP_SET_AUTHORIZED}_${CP_CUR_IF}
 			ipset -N ${CP_SET_AUTHORIZED}_${CP_CUR_IF} ipmap --network $CP_CUR_IF_NETWORK
 			if [ $? -eq 0 ]; then
-				iptables -I FORWARD -m set --set ${CP_SET_AUTHORIZED}_${CP_CUR_IF} src,dst -j ${CP_FILTER_AUTHORIZED}
-				iptables -t nat -I PREROUTING -m set --set ${CP_SET_AUTHORIZED}_${CP_CUR_IF} src,dst  -j ${CP_NAT_AUTHORIZED}
+				iptables -I FORWARD -m set --match-set ${CP_SET_AUTHORIZED}_${CP_CUR_IF} src,dst -j ${CP_FILTER_AUTHORIZED}
+				iptables -t nat -I PREROUTING -m set --match-set ${CP_SET_AUTHORIZED}_${CP_CUR_IF} src,dst  -j ${CP_NAT_AUTHORIZED}
 			fi
 		else
 			iptables -X ${CP_FILTER_GROUP_AUTHORIZED}_${CP_CUR_IF}

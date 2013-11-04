@@ -13,6 +13,7 @@ LDFLAGS += -Wl,--gc-sections
 
 #INCLUDE += -I ../../../iptables/debsrc/iptables-1.4.6/include  wangchao change
 INCLUDE += -I ${BUILD_DIR}/${IPTABLES_MOD}/debsrc/iptables-1.4.20/include
+INCLUDE += -I ${BUILD_DIR}/${IPTABLES_MOD}/external/libmnl-1.0.1/include
 INCLUDE += -I ./
 INCLUDE += -I $(MIPS_ADDITION_LIB_ROOT_PATH)/usr/include/libxml2
 INCLUDE += -I $(MIPS_ADDITION_LIB_ROOT_PATH)/usr/include
@@ -41,6 +42,7 @@ LDFLAGS += -L ${BUILD_DIR}/${ASD_MOD}/src/app/wapi -lwcrypto
 #wanchao change
 #iptcsource = ${BUILD_DIR}/${IPTABLES_MOD}/debsrc/iptables-1.4.6/libiptc/.libs/lib*.a
 iptcsource = ${BUILD_DIR}/${IPTABLES_MOD}/debsrc/iptables-1.4.20/libiptc/.libs/lib*.so
+libmnlsource = ${BUILD_DIR}/${IPTABLES_MOD}/external/libmnl-1.0.1/src/.libs/lib*.so
 
 publicsources = eag_log.o eag_blkmem.o  eag_thread.o eag_errcode.o eag_hansi.o eag_time.o hashtable.o eag_dbus.o eag_util.o eag_ifipaddr.o \
 		nmp_process.o md5.o portal_packet.o radius_packet.o
@@ -49,7 +51,7 @@ eagsources =  eag_main.o eag_radius.o eag_redir.o eag_portal.o eag_stamsg.o eag_
 		eag_captive.o appconn.o  eag_license.o eag_wireless.o  \
 		eag_authorize.o eag_conf.o \
 		eag_ins.o  eag_ipinfo.o eag_statistics.o eag_iptables.o \
-		rdc_handle.o pdc_handle.o eag_coa.o eag_ipset.o eag_trap.o eag_macauth.o eag_arp.o
+		rdc_handle.o pdc_handle.o eag_coa.o eag_ipset.o eag_ipset6.o eag_trap.o eag_macauth.o eag_arp.o
 
 rdcsources = rdc_main.o rdc_ins.o rdc_pktconn.o rdc_server.o rdc_client.o rdc_userconn.o rdc_coa.o rdc_coaconn.o
 
@@ -80,7 +82,7 @@ rdc:$(publicsources) $(rdcsources)
 	$(CC) $^ $(LDFLAGS) -ldl -o $@
 
 eag:$(publicsources) $(eagsources)
-	$(CC) $^ $(iptcsource) $(LDFLAGS) -ldl -o $@
+	$(CC) $^ $(iptcsource) $(libmnlsource) $(LDFLAGS) -ldl -o $@
 
 libeagintf.so:$(libeagintfsources)
 	$(CC) $(LDFLAGS) -shared -Wl,-soname,libeagintf.so -o $@ $^

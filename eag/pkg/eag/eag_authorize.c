@@ -45,6 +45,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "hashtable.h"
 #include "appconn.h"
 #include "eag_ipset.h"
+#include "eag_ipset6.h" /* add by houyongtao */
 #include "eag_iptables.h"
 #include "eag_authorize.h"
 
@@ -189,7 +190,12 @@ eag_authorize_ipset_do_authorize( eag_authorize_t *this, struct appsession *apps
 					appsession->intf, ipstr );
 		return EAG_ERR_INPUT_PARAM_ERR;
 	}
+	#if 0
 	return add_user_to_set( eag_captive_get_capid(this->cap),
+							eag_captive_get_hansitype(this->cap),
+							appsession->user_ip );
+	#endif /* modify by houyongtao */
+	return add_user_to_ipset6( eag_captive_get_capid(this->cap),
 							eag_captive_get_hansitype(this->cap),
 							appsession->user_ip );
 }
@@ -217,7 +223,12 @@ eag_authorize_ipset_de_authorize( eag_authorize_t *this, struct appsession *apps
 						appsession->intf, ipstr );
 		return EAG_ERR_INPUT_PARAM_ERR;	
 	}
+	#if 0
 	return del_user_from_set( eag_captive_get_capid(this->cap),
+								eag_captive_get_hansitype(this->cap),
+								appsession->user_ip );
+	#endif /* modify by houyongtao */
+	return del_user_from_ipset6( eag_captive_get_capid(this->cap),
 								eag_captive_get_hansitype(this->cap),
 								appsession->user_ip );
 }
@@ -258,7 +269,12 @@ eag_authorize_ipset_do_macpre_authorize( eag_authorize_t *this, unsigned int use
 		eag_log_err("eag_authorize_ipset_do_macpre_authorize ip=%s", ipstr );
 		return EAG_ERR_INPUT_PARAM_ERR;
 	}
+	#if 0
 	return add_preauth_user_to_set( eag_captive_get_capid(this->cap),
+							eag_captive_get_hansitype(this->cap),
+							user_ip );
+	#endif /* modify by houyongtao */
+	return add_preauth_user_to_ipset6( eag_captive_get_capid(this->cap),
 							eag_captive_get_hansitype(this->cap),
 							user_ip );
 	//return EAG_RETURN_OK;
@@ -282,7 +298,12 @@ eag_authorize_ipset_del_macpre_authorize( eag_authorize_t *this, unsigned int us
 		eag_log_err( "eag_authorize_ipset_del_macpre_authorize ip=%s", ipstr );
 		return EAG_ERR_INPUT_PARAM_ERR;
 	}
+	#if 0
 	return del_preauth_user_from_set( eag_captive_get_capid(this->cap),
+								eag_captive_get_hansitype(this->cap),
+								user_ip );
+	#endif /* modify by houyongtao */
+	return del_preauth_user_from_ipset6( eag_captive_get_capid(this->cap),
 								eag_captive_get_hansitype(this->cap),
 								user_ip );
 	//return EAG_RETURN_OK;
@@ -456,6 +477,7 @@ eag_authorize_ipset_auth_init( eag_captive_t *cap,DBusConnection *dbusconn, void
 	eag_authorize_ipset.do_flux = eag_authorize_ipset_do_flux;
 
 	eag_ipset_init();
+	eag_ipset6_init(); /* add by houyongtao */
 
 	return EAG_RETURN_OK;
 }
@@ -464,6 +486,8 @@ int
 eag_authorize_ipset_auth_uninit(  )
 {
 	eag_ipset_exit();
+	eag_ipset6_exit(); /* add by houyongtao */
+	
 	return EAG_RETURN_OK;
 }
 

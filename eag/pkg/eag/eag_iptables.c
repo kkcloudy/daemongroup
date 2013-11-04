@@ -1384,7 +1384,7 @@ parse_bindings(const char *str, struct ipt_set_info *info)
 	saved = eag_calloc(1, strlen(str) + 1);
 	strncpy(saved, str, strlen(str));
 	tmp = saved;
-	
+	#if 0
 	while (i < (EAG_SET_MAX_BINDINGS - 1) && tmp != NULL) {
 		ptr = strsep(&tmp, ",");
 		if (strncmp(ptr, "src", 3) == 0)
@@ -1394,10 +1394,20 @@ parse_bindings(const char *str, struct ipt_set_info *info)
 		else
 			eag_log_err("You must spefify (the comma separated list of) 'src' or 'dst'.");
 	}
+	#endif /* modify by houyongtao */
+	info->dim = 0;
+    while (info->dim < EAG_SET_MAX_BINDINGS && tmp != NULL) {
+        info->dim++;
+        ptr = strsep(&tmp, ",");
+        if (strncmp(ptr, "src", 3) == 0)
+            info->flags |= (1 << info->dim);
+        else if (strncmp(ptr, "dst", 3) != 0)
+			eag_log_err("You must spefify (the comma separated list of) 'src' or 'dst'.");
+    }
 
 	if (tmp) {
 		eag_log_err("Can't follow bindings deeper than %i.", 
-					   EAG_SET_MAX_BINDINGS - 1);
+					   EAG_SET_MAX_BINDINGS);
 	}
 	eag_free(saved);
 }
@@ -1648,6 +1658,7 @@ eag_match_set(const char *setname, const char *setflag,
 {
 	match = (struct ipt_entry_match *)match;
 	match->u.match_size = size;
+	match->u.user.revision = 3; /* add by houyongtao */
 	strcpy(match->u.user.name, "set");
 	struct ipt_set_info_match *myinfo = (struct ipt_set_info_match *)match->data;
 	struct ipt_set_info *info = &myinfo->match_set;
@@ -2235,7 +2246,7 @@ eag_iptable_add_interface_filter_commit(int insid, char ins_type, char *intf, ch
 	eag_free(entry);
 	entry = NULL;
 	
-/* iptables -I $CP_FILTER_AUTH_IF -m set --set ${CP_IPHASH_SET} src -j ${CP_FILTER_AUTHORIZED_DEFAULT} */
+/* iptables -I $CP_FILTER_AUTH_IF -m set --match-set ${CP_IPHASH_SET} src -j ${CP_FILTER_AUTHORIZED_DEFAULT} */
 	memset(&intf_info, 0, sizeof(struct eag_intf_entry_info));
 	intf_info.chain = cap_auth_intf_chain;
 	intf_info.setname = setname;
@@ -2274,7 +2285,7 @@ eag_iptable_add_interface_filter_commit(int insid, char ins_type, char *intf, ch
 	eag_free(entry);
 	entry = NULL;
 	
-/* iptables -I $CP_FILTER_AUTH_IF_IN -m set --set ${CP_IPHASH_SET} dst -j ${CP_FILTER_AUTHORIZED_DEFAULT}*/
+/* iptables -I $CP_FILTER_AUTH_IF_IN -m set --match-set ${CP_IPHASH_SET} dst -j ${CP_FILTER_AUTHORIZED_DEFAULT}*/
 	memset(&intf_info, 0, sizeof(struct eag_intf_entry_info));
 	intf_info.chain = cap_auth_intf_in_chain;
 	intf_info.setname = setname;
@@ -2417,7 +2428,7 @@ eag_iptable_add_interface_nat_commit(int insid, char ins_type, char *intf, char 
 	eag_free(entry);
 	entry = NULL;
 	
-/* iptables -t nat -I $CP_NAT_AUTH_IF -m set --set ${CP_IPHASH_SET} src -j ${CP_NAT_AUTHORIZED_DEFAULT} */
+/* iptables -t nat -I $CP_NAT_AUTH_IF -m set --match-set ${CP_IPHASH_SET} src -j ${CP_NAT_AUTHORIZED_DEFAULT} */
 	memset(&intf_info, 0, sizeof(struct eag_intf_entry_info));
 	intf_info.chain = cap_nat_auth_intf_chain;
 	intf_info.setname = setname;

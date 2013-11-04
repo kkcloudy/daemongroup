@@ -31,6 +31,7 @@ int web_host_ip_port_check(const char *address, int port)
 {
 	int fd = 0;
 	int ret = 0;
+    int on = 1;
 	struct sockaddr_in addr;
 	
 	fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -48,6 +49,12 @@ int web_host_ip_port_check(const char *address, int port)
         return WEB_FAILURE;
     }
 	addr.sin_port = htons(port);
+
+    ret = setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, (void *)&on, sizeof(on));
+    if (ret < 0) {
+        LOG("Can't set sockopt SO_REUSEADDR to socket %d", fd);
+        return WEB_FAILURE;
+    }
 
 	ret = bind(fd, (struct sockaddr *) &addr, sizeof(struct sockaddr_in));
 	if (ret < 0) {

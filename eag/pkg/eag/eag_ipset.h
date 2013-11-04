@@ -30,7 +30,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <sys/types.h>
 #include <netdb.h>
 
-#define IP_SET_PROTOCOL_VERSION	4	/* ipset hash protocol version */
+//#define IP_SET_PROTOCOL_VERSION	4	/* ipset hash protocol version */
+#define IP_SET_PROTOCOL_VERSION	6	/* ipset hash protocol version modify by houyongtao */
 #define SO_IP_SET		83	/* socket protocol */
 
 #define LIST_TRIES 		5
@@ -128,6 +129,7 @@ struct ip_set_req_adt {
 };
 /******************************************************************************/
 /* linux/netfilter_ipv4/ipt_set.h */
+#if 0
 struct ipt_set_info {
 	ip_set_id_t index;
 	u_int32_t flags[IP_SET_MAX_BINDINGS + 1];
@@ -136,6 +138,25 @@ struct ipt_set_info {
 /* match info */
 struct ipt_set_info_match {
 	struct ipt_set_info match_set;
+};
+#endif /* modify by houyongtao */
+struct ipt_set_info {
+    ip_set_id_t index;
+    uint8_t dim;
+    uint8_t flags;
+};
+
+struct ip_set_counter_match {
+	uint8_t op;
+	uint64_t value;
+};
+
+/* match info */
+struct ipt_set_info_match {
+	struct ipt_set_info match_set;
+	struct ip_set_counter_match packets;
+	struct ip_set_counter_match bytes;
+	uint32_t flags;
 };
 
 struct ipt_set_info_target {
