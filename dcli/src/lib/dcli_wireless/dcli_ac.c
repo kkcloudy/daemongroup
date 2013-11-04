@@ -22071,9 +22071,9 @@ DEFUN(show_lic_bak_req_interval_cmd_func,
 */
 DEFUN(set_asd_new_log_group_cmd_func,
 		set_asd_new_log_group_cmd,
-		"set asd_wid log group (hn_mobile|mobile) (enable|disable)",
-		"asd/wid log group config\n"
-		"log group\n"
+		"set sta_ap syslog format (hn_mobile|mobile) (enable|disable)",
+		"set asd & wid log format\n"
+		"log format: henan or mobile\n"
 		"enable\n"
 		"disable\n"
 )

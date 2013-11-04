@@ -28032,6 +28032,23 @@ DBusMessage *asd_dbus_security_show_running_config(DBusConnection *conn, DBusMes
 				totalLen += sprintf(cursor,"set sta static fdb enable\n");
 				cursor = showStr + totalLen;
 			}
+			
+			/* add to save config of moblie log format. 2013-11-01 */
+            if(gASDLOGDEBUG & BIT(0))
+            {
+				totalLen += sprintf(cursor,"set sta_ap syslog format hn_mobile enable\n");
+				cursor = showStr + totalLen;				
+            }
+            if(gASDLOGDEBUG & BIT(1))
+            {
+				totalLen += sprintf(cursor,"set sta_ap syslog format mobile enable\n");
+				cursor = showStr + totalLen;				
+            }
+
+			if(gASDLOGDEBUG == 1){
+				totalLen += sprintf(cursor,"set sta static fdb enable\n");
+				cursor = showStr + totalLen;
+			}			
 			/*if(ASD_SWITCH == 0){//wuwl del.share mem has been removed,so cannot get msg from wsm.
 				totalLen += sprintf(cursor,"set asd switch disable\n");
 				cursor = showStr + totalLen;
@@ -28170,6 +28187,19 @@ DBusMessage *asd_dbus_security_show_running_config(DBusConnection *conn, DBusMes
 				totalLen +=sprintf(cursor,"set asd sta get ip from dhcpsnooping enable\n");
 				cursor = showStr + totalLen;
 			}
+
+			/* add to save config of moblie log format. 2013-11-01 */
+            if(gASDLOGDEBUG & BIT(0))
+            {
+				totalLen += sprintf(cursor,"set sta_ap syslog format hn_mobile enable\n");
+				cursor = showStr + totalLen;				
+            }
+            if(gASDLOGDEBUG & BIT(1))
+            {
+				totalLen += sprintf(cursor,"set sta_ap syslog format mobile enable\n");
+				cursor = showStr + totalLen;				
+            }
+			
 			if(asd_sta_static_arp == 1){
 				totalLen += sprintf(cursor,"set asd static arp op enable\n");
 				cursor = showStr + totalLen;
