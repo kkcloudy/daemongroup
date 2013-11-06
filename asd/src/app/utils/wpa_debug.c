@@ -360,10 +360,20 @@ static void _wpa_hexdump(int level, const char *title, const u8 *buf,
 	} else {
 #endif /* ASD_DEBUG_FILE */
 	//sprintf(format,"%s - hexdump(len=%lu):", title, (unsigned long) len);
+	#if 0
 	snprintf(format,sizeof(format),"%s - hexdump(len=%lu):", title, (unsigned long) len);
+	#else
+	asd_printf(ASD_WPA,MSG_DEBUG,"%s - hexdump(len=%d):\n",title,(unsigned int)len);
+	#endif
 	if (buf == NULL) {
 		strcat(format," [NULL]");
 	} else if (show) {
+	    /* bugfix for format[] overflow if len is too long, zhangdi@autelan.com 2013-11-05 */
+		if((len*3) > 2000)
+		{
+        	asd_printf(ASD_WPA,MSG_NOTICE,"len %d is too long, just dump %d:\n",(unsigned int)len,2000/3);
+			len = 2000/3;
+		}	
 		for (i = 0; i < len; i++) {
 			sprintf(buffer," %02x", buf[i]);
 			strncat(format,buffer,sizeof(buffer));
