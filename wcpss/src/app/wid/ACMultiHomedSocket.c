@@ -39,7 +39,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #endif
 
 __inline__ void CWNetworkDeleteMHInterface(void *intPtr) {
-	CW_FREE_OBJECT(intPtr);
+	CW_FREE_OBJECT_WID(intPtr);
 }
 
 // multihomed sockets maps the system index for each interface to a array-like int index in range
@@ -455,7 +455,7 @@ CWBool CWNetworkInitSocketServerMultiHomed(CWMultiHomedSocket *sockPtr, int port
 				wid_syslog_info("bound %s", str);
 			);
 			
-			CW_CREATE_OBJECT_ERR(p, struct CWMultiHomedInterface, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
+			CW_CREATE_OBJECT_ERR_WID(p, struct CWMultiHomedInterface, close(sock); return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
 			memset(p->ifname, 0, IFI_NAME);
 			memcpy(p->ifname,"LocalHost",9);
 			p->sock = sock;
@@ -512,6 +512,7 @@ CWBool CWNetworkInitSocketServerMultiHomed(CWMultiHomedSocket *sockPtr, int port
 			}
 			
 			if(mcast_join(sock, res->ai_addr, res->ai_addrlen, NULL, 0) != 0) {
+				close(sock);
 				CWNetworkRaiseSystemError(CW_ERROR_CREATING);
 			}
 			
@@ -519,7 +520,7 @@ CWBool CWNetworkInitSocketServerMultiHomed(CWMultiHomedSocket *sockPtr, int port
 				wid_syslog_info("Joined Multicast Group: %s", str);
 			);
 			
-			CW_CREATE_OBJECT_ERR(p, struct CWMultiHomedInterface, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
+			CW_CREATE_OBJECT_ERR_WID(p, struct CWMultiHomedInterface, close(sock); return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
 			memset(p->ifname, 0, IFI_NAME);			
 			memcpy(p->ifname,"LocalHost",9);
 			p->sock = sock;
@@ -553,7 +554,7 @@ CWBool CWNetworkInitSocketServerMultiHomed(CWMultiHomedSocket *sockPtr, int port
 			struct CWMultiHomedInterface *inf;
 			
 			
-			inf = (struct CWMultiHomedInterface *)malloc(sizeof(struct CWMultiHomedInterface));
+			inf = (struct CWMultiHomedInterface *)WID_MALLOC(sizeof(struct CWMultiHomedInterface));
 			
 	//		inf->wlaninfo = (struct wlan_inf*)malloc(sizeof(struct wlan_inf));
 			
@@ -606,7 +607,7 @@ void CWNetworkCloseMultiHomedSocket(CWMultiHomedSocket *sockPtr) {
 			break;
 		inf = inf->if_next;
 	}
-	CW_FREE_OBJECT(sockPtr->interfaces);
+	CW_FREE_OBJECT_WID(sockPtr->interfaces);
 	sockPtr->count = 0;
 }
 

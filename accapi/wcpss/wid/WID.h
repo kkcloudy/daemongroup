@@ -12,6 +12,7 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <pthread.h>
+#include <stdlib.h>
 
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -59,10 +60,31 @@ typedef unsigned int		u_int32_t;
 #define WIFI_IOC_IP_ADD   _IOWR(WIFI_IOC_MAGIC, 4, ex_ip_info)
 #define WIFI_IOC_IP_DEL   _IOWR(WIFI_IOC_MAGIC, 5, ex_ip_info)
 
-#define		CW_CREATE_OBJECT_ERR(obj_name, obj_type, on_err)	{obj_name = (obj_type*) (malloc(sizeof(obj_type))); if(!(obj_name)) {on_err}}
+extern int wid_memory_trace_switch;
+extern void wid_syslog_err(char *format,...);
+extern void wid_free(void *ptr, const char* func_name, unsigned int line);
+extern void *wid_malloc(unsigned int len, const char* func_name, unsigned int line);
+
+
+#define WID_FREE(pointer)	wid_free(pointer, __FUNCTION__, __LINE__) 
+#define WID_MALLOC(value)	wid_malloc(value, __FUNCTION__, __LINE__)
+
+#define 	CW_WID_MEMORY_TRACE_MALLOC_LOG(value, ptr)		{if (wid_memory_trace_switch) {wid_syslog_err("wid_memory_trace:%s %d malloc %d Bytes addr %p success\n", __FUNCTION__, __LINE__, value, ptr);}}
+#define		CW_WID_MEMORY_TRACE_FREE_LOG(ptr)		{if (wid_memory_trace_switch) {wid_syslog_err("wid_memory_trace:%s %d free at addr %p success\n", __FUNCTION__, __LINE__, ptr);}}
+
+#define		CW_CREATE_OBJECT_ERR_WID(obj_name, obj_type, on_err)	{obj_name = (obj_type*) (malloc(sizeof(obj_type))); if(!(obj_name)) {on_err}; if (obj_name) {CW_WID_MEMORY_TRACE_MALLOC_LOG((sizeof(obj_type)), obj_name)}}
+#define		CW_CREATE_OBJECT_ERR(obj_name, obj_type, on_err)	{obj_name = (obj_type*) (malloc(sizeof(obj_type))); if(!(obj_name)) {on_err};}
+#define		CW_FREE_OBJECT_WID(obj_name)				{if(obj_name){WID_FREE((obj_name)); (obj_name) = NULL;}}
 #define		CW_FREE_OBJECT(obj_name)				{if(obj_name){free((obj_name)); (obj_name) = NULL;}}
-#define		CW_CREATE_STRING_ERR(str_name, str_length, on_err)	{str_name = (char*) (malloc(sizeof(char) * ((str_length)+1) ) ); if(!(str_name)) {on_err}}
-#define		CW_CREATE_STRING_ERR_UNSIGNED(str_name, str_length, on_err)	{str_name = (unsigned char*) (malloc(sizeof(char) * ((str_length)+1) ) ); if(!(str_name)) {on_err}}
+#define		CW_CREATE_STRING_ERR_WID(str_name, str_length, on_err)	{str_name = (char*) (malloc(sizeof(char) * ((str_length)+1) ) ); if(!(str_name)) {on_err}; if (str_name) {CW_WID_MEMORY_TRACE_MALLOC_LOG((sizeof(char) * ((str_length)+1) ), str_name)}}
+#define		CW_CREATE_STRING_ERR(str_name, str_length, on_err)	{str_name = (char*) (malloc(sizeof(char) * ((str_length)+1) ) ); if(!(str_name)) {on_err};}
+#define		CW_CREATE_STRING_ERR_UNSIGNED(str_name, str_length, on_err)	{str_name = (unsigned char*) (malloc(sizeof(char) * ((str_length)+1) ) ); if(!(str_name)) {on_err}; if (str_name) {CW_WID_MEMORY_TRACE_MALLOC_LOG((sizeof(char) * ((str_length)+1) ), str_name)}}
+#define		CW_CREATE_ARRAY_ERR(ar_name, ar_size, ar_type, on_err)	{ar_name = (ar_type*) (malloc(sizeof(ar_type) * (ar_size))); if(!(ar_name)) {on_err}; if (ar_name) {CW_WID_MEMORY_TRACE_MALLOC_LOG((sizeof(ar_type) * (ar_size)), ar_name)}}
+#define		CW_CREATE_STRING_FROM_STRING_ERR(str_name, str, on_err)	{CW_CREATE_STRING_ERR_WID(str_name, strlen(str), on_err); strcpy((str_name), str);}
+#define		CW_CREATE_STRING_FROM_STRING_ERR_DCLI(str_name, str, on_err)	{CW_CREATE_STRING_ERR_DCLI(str_name, strlen(str), on_err); strcpy((str_name), str);}
+#define		CW_CREATE_OBJECT_SIZE_ERR(obj_name, obj_size,on_err)	{obj_name = (malloc(obj_size)); if(!(obj_name)) {on_err}; if (obj_name) {CW_WID_MEMORY_TRACE_MALLOC_LOG((obj_size), obj_name)}}
+#define		CW_PRINT_STRING_ARRAY(ar_name, ar_size)			{int i = 0; for(i = 0; i < (ar_size); i++) printf("[%d]: **%s**\n", i, ar_name[i]);}
+#define		CW_FREE_OBJECTS_ARRAY(ar_name, ar_size)			{int _i = 0; for(_i = ((ar_size)-1); _i >= 0; _i--) {if(((ar_name)[_i]) != NULL){ WID_FREE((ar_name)[_i]);}} WID_FREE(ar_name); (ar_name) = NULL;}
 
 //#define		CW_ADD_OBJECT_ELE(obj_name1, obj_type1,obj_count1,,obj_ele1,obj_name2,obj_type2)	{if((obj_name2 == NULL)||((*obj_name1) == NULL)){printf("insert_elem_into_list_heads parameter error\n");	return -1;}	if((*obj_name1)->obj_count1 == 0){(*obj_name1)->obj_ele1 = obj_name2;(*obj_name1)->obj_count1++;return 0;}struct obj_type2 *pnode = (*obj_name1)->obj_ele1;(*obj_name1)->obj_ele1 = obj_name2;obj_name2->next = pnode;(*obj_name1)->obj_count1++; return 0;}
 #ifndef MAC2STR

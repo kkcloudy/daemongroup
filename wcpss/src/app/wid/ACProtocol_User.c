@@ -153,10 +153,10 @@ __inline__ void CWACDestroyVendorInfos(CWACVendorInfos *valPtr) {
 	if(valPtr == NULL) return;
 	
 	for(i = 0; i < valPtr->vendorInfosCount; i++) {
-		CW_FREE_OBJECT((valPtr->vendorInfos)[i].valuePtr);
+		CW_FREE_OBJECT_WID((valPtr->vendorInfos)[i].valuePtr);
 	}
 	
-	CW_FREE_OBJECT(valPtr->vendorInfos);
+	CW_FREE_OBJECT_WID(valPtr->vendorInfos);
 }
 
 CWBool CWACGetACIPv4List(int **listPtr, int *countPtr) 

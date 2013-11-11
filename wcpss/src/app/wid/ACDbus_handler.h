@@ -478,9 +478,9 @@ int wid_dbus_trap_wtp_neighbor_channel_ap_interference(int wtpindex,char chchann
 int parse_radio_ifname(char* ptr,int *wtpid,int *radioid,int *wlanid);
 int parse_radio_ifname_v2(char * ptr,int * wtpid,int * radioid,int * wlanid,unsigned int * vrrid);
 
-int add_mac_in_maclist(struct acl_config *conf, unsigned char *addr, char type);
-int del_mac_in_maclist(struct acl_config *conf, unsigned char  *addr, char type);
-int change_maclist_security(struct acl_config *conf, char type);
+int add_mac_in_maclist(struct acl_config **conf, unsigned char *addr, char type);
+int del_mac_in_maclist(struct acl_config **conf, unsigned char  *addr, char type);
+int change_maclist_security(struct acl_config **conf, char type);
 int WID_RADIO_SET_COUNTRYCODE(unsigned int RadioID);
 int WID_SET_COUNTRY_CODE_CHECK_CHAN(unsigned int RadioID);
 int WLAN_FLOW_CHECK(unsigned char WlanID);

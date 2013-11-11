@@ -179,7 +179,7 @@ void WID_WLAN_CONFIG_SAVE(unsigned int WTPIndex,unsigned int local_radio)
 								}
 								msg.mqinfo.u.WlanInfo.bssindex = AC_WLAN[k]->S_WTP_BSS_List[WTPIndex][local_radio];
 								
-								elem = (struct msgqlist*)malloc(sizeof(struct msgqlist));
+								elem = (struct msgqlist*)WID_MALLOC(sizeof(struct msgqlist));
 								if(elem == NULL){
 									perror("malloc");
 									return ;
@@ -192,11 +192,11 @@ void WID_WLAN_CONFIG_SAVE(unsigned int WTPIndex,unsigned int local_radio)
 								if((AC_WLAN[wlan_id->wlanid]!=NULL)&&(AC_WLAN[wlan_id->wlanid]->balance_switch==1)){
 
 									char *command=NULL;
-									command = (char *)malloc(sizeof(char)*50);
+									command = (char *)WID_MALLOC(sizeof(char)*50);
 									memset(command,0,50);
 									strncpy(command,"echo 1 > /proc/sys/dev/wifi0/traffic_balance",44);
 									set_balance_probe_extension_command(WTPIndex,command);
-									free(command);
+									WID_FREE(command);
 								}
 								//wds state 
 								if((check_bssid_func(AC_WLAN[k]->S_WTP_BSS_List[WTPIndex][local_radio]))
@@ -210,7 +210,7 @@ void WID_WLAN_CONFIG_SAVE(unsigned int WTPIndex,unsigned int local_radio)
 									msg2.mqinfo.u.WlanInfo.WLANID = k;
 									msg2.mqinfo.u.WlanInfo.Radio_L_ID = local_radio;
 									
-									elem2 = (struct msgqlist*)malloc(sizeof(struct msgqlist));
+									elem2 = (struct msgqlist*)WID_MALLOC(sizeof(struct msgqlist));
 									if(elem2 == NULL){
 										perror("malloc");
 										return;
@@ -334,7 +334,7 @@ void WID_WLAN_CONFIG_SAVE(unsigned int WTPIndex,unsigned int local_radio)
 									msg3.mqinfo.u.WlanInfo.no_flow_time = AC_WLAN[k]->no_flow_time;
 									msg3.mqinfo.u.WlanInfo.limit_flow = AC_WLAN[k]->limit_flow;
 								//weichao add 
-								elem3 = (struct msgqlist*)malloc(sizeof(struct msgqlist));
+								elem3 = (struct msgqlist*)WID_MALLOC(sizeof(struct msgqlist));
 								if(elem3 == NULL){			
 									wid_syslog_crit("%s malloc %s",__func__,strerror(errno));
 									perror("malloc");
@@ -349,15 +349,16 @@ void WID_WLAN_CONFIG_SAVE(unsigned int WTPIndex,unsigned int local_radio)
 								
 								//weichao add 
 								if(AC_WLAN[k]->Status == 0){
-								command = (char *)malloc(sizeof(char)*100);
+								command = (char *)WID_MALLOC(sizeof(char)*100);
 								if(NULL == command)
 								{							
 									wid_syslog_crit("%s malloc %s",__func__,strerror(errno));
 									return ;
 								}
-								ath_str = (char *)malloc(sizeof(char)*20);
+								ath_str = (char *)WID_MALLOC(sizeof(char)*20);
 								if(NULL == ath_str)
 								{
+									WID_FREE(command);
 									wid_syslog_crit("%s malloc %s",__func__,strerror(errno));
 									return ;
 								}
@@ -373,13 +374,13 @@ void WID_WLAN_CONFIG_SAVE(unsigned int WTPIndex,unsigned int local_radio)
 								sprintf(ath_str,"ath.%d-%d",local_radio,k);
 								sprintf(command,"ifconfig %s down;iwpriv %s inact %u;ifconfig %s up",ath_str,ath_str,AC_WLAN[k]->ap_max_inactivity,ath_str);
 								memcpy(msg4.mqinfo.u.WtpInfo.value, command, strlen(command));
-								elem4 = (struct msgqlist*)malloc(sizeof(struct msgqlist));
+								elem4 = (struct msgqlist*)WID_MALLOC(sizeof(struct msgqlist));
 								if(elem4 == NULL){			
 									wid_syslog_crit("%s malloc %s",__func__,strerror(errno));
 									perror("malloc");
-									free(command);
+									WID_FREE(command);
 									command = NULL;
-									free(ath_str);
+									WID_FREE(ath_str);
 									ath_str = NULL;
 									return ;
 								}
@@ -388,9 +389,9 @@ void WID_WLAN_CONFIG_SAVE(unsigned int WTPIndex,unsigned int local_radio)
 								elem4->next = NULL;
 								memcpy((char*)&(elem4->mqinfo),(char*)&(msg4.mqinfo),sizeof(msg4.mqinfo));
 								WID_INSERT_CONTROL_LIST(WTPIndex, elem4);
-								free(command);
+								WID_FREE(command);
 								command = NULL;
-								free(ath_str);
+								WID_FREE(ath_str);
 								ath_str = NULL;
 								}
 								/* send eap switch & mac to ap,zhangshu add 2010-10-22 */
@@ -434,7 +435,7 @@ void WID_WLAN_CONFIG_SAVE(unsigned int WTPIndex,unsigned int local_radio)
 										}
 									}
 									else{
-										elem = (struct msgqlist*)malloc(sizeof(struct msgqlist));
+										elem = (struct msgqlist*)WID_MALLOC(sizeof(struct msgqlist));
 										if(elem == NULL){
 											wid_syslog_crit("%s malloc %s",__func__,strerror(errno));
 											perror("malloc");
@@ -581,7 +582,7 @@ void WID_CONFIG_SAVE(unsigned int WTPIndex){
 			msg.mqinfo.u.RadioInfo.Radio_L_ID = i;
 			msg.mqinfo.u.RadioInfo.Radio_G_ID = AC_WTP[WTPIndex]->WTP_Radio[i]->Radio_G_ID;
 			struct msgqlist *elem;
-			elem = (struct msgqlist*)malloc(sizeof(struct msgqlist));
+			elem = (struct msgqlist*)WID_MALLOC(sizeof(struct msgqlist));
 			if(elem == NULL){
 				wid_syslog_crit("%s malloc %s",__func__,strerror(errno));
 				perror("malloc");
@@ -610,7 +611,7 @@ void WID_CONFIG_SAVE(unsigned int WTPIndex){
 			msg.mqinfo.u.WtpInfo.Wtp_Op = WTP_DHCP_SNOOPING;
 			msg.mqinfo.u.WtpInfo.value2 = AC_WTP[WTPIndex]->dhcp_snooping;
 		
-			elem = (struct msgqlist*)malloc(sizeof(struct msgqlist));
+			elem = (struct msgqlist*)WID_MALLOC(sizeof(struct msgqlist));
 			if(elem == NULL){
 				wid_syslog_crit("%s malloc %s",__func__,strerror(errno));
 				perror("malloc");
@@ -631,7 +632,7 @@ void WID_CONFIG_SAVE(unsigned int WTPIndex){
 			msg.mqinfo.u.WtpInfo.Wtp_Op = WTP_STA_INFO_REPORT;
 			msg.mqinfo.u.WtpInfo.value2 = AC_WTP[WTPIndex]->sta_ip_report;
 		
-			elem = (struct msgqlist*)malloc(sizeof(struct msgqlist));
+			elem = (struct msgqlist*)WID_MALLOC(sizeof(struct msgqlist));
 			if(elem == NULL){
 				wid_syslog_crit("%s malloc %s",__func__,strerror(errno));
 				perror("malloc");
@@ -653,7 +654,7 @@ void WID_CONFIG_SAVE(unsigned int WTPIndex){
 			msg.mqinfo.subtype = WTP_S_TYPE;
 			msg.mqinfo.u.WtpInfo.Wtp_Op = WTP_EXTEND_INFO_GET;
 			
-			elem = (struct msgqlist*)malloc(sizeof(struct msgqlist));
+			elem = (struct msgqlist*)WID_MALLOC(sizeof(struct msgqlist));
 			if(elem == NULL){
 				wid_syslog_info("%s malloc %s",__func__,strerror(errno));
 				perror("malloc");
@@ -674,7 +675,7 @@ void WID_CONFIG_SAVE(unsigned int WTPIndex){
 			msg.mqinfo.type = CONTROL_TYPE;
 			msg.mqinfo.subtype = WTP_S_TYPE;
 			msg.mqinfo.u.WtpInfo.Wtp_Op = WTP_STA_WAPI_INFO_SET;
-			elem = (struct msgqlist*)malloc(sizeof(struct msgqlist));
+			elem = (struct msgqlist*)WID_MALLOC(sizeof(struct msgqlist));
 			if(elem == NULL){
 				wid_syslog_info("%s malloc %s",__func__,strerror(errno));
 				perror("malloc");
@@ -696,7 +697,7 @@ void WID_CONFIG_SAVE(unsigned int WTPIndex){
 			msg.mqinfo.subtype = WTP_S_TYPE;
 			msg.mqinfo.u.WtpInfo.Wtp_Op = WTP_STA_INFO_SET;
 			
-			elem = (struct msgqlist*)malloc(sizeof(struct msgqlist));
+			elem = (struct msgqlist*)WID_MALLOC(sizeof(struct msgqlist));
 			if(elem == NULL){
 				wid_syslog_info("%s malloc %s",__func__,strerror(errno));
 				perror("malloc");
@@ -724,7 +725,7 @@ void WID_CONFIG_SAVE(unsigned int WTPIndex){
 			msg.mqinfo.subtype = WTP_S_TYPE;
 			msg.mqinfo.u.WtpInfo.Wtp_Op = WTP_IF_INFO_SET;
 
-			elem = (struct msgqlist*)malloc(sizeof(struct msgqlist));
+			elem = (struct msgqlist*)WID_MALLOC(sizeof(struct msgqlist));
 			if(elem == NULL){
 				wid_syslog_info("%s malloc %s",__func__,strerror(errno));
 				perror("malloc");
@@ -751,7 +752,7 @@ void WID_CONFIG_SAVE(unsigned int WTPIndex){
 				msg.mqinfo.u.WtpInfo.Wtp_Op = WTP_STATISTICS_REPORT_INTERVAL;
 				msg.mqinfo.u.WtpInfo.value2 = AC_WTP[WTPIndex]->apstatisticsinterval;
 
-				elem = (struct msgqlist*)malloc(sizeof(struct msgqlist));
+				elem = (struct msgqlist*)WID_MALLOC(sizeof(struct msgqlist));
 				if(elem == NULL){
 					wid_syslog_info("%s malloc %s",__func__,strerror(errno));
 					perror("malloc");
@@ -774,7 +775,7 @@ void WID_CONFIG_SAVE(unsigned int WTPIndex){
 			msg.mqinfo.subtype = WTP_S_TYPE;
 			msg.mqinfo.u.WtpInfo.Wtp_Op = WTP_TERMINAL_DISTRUB_INFO;
 			
-			elem = (struct msgqlist*)malloc(sizeof(struct msgqlist));
+			elem = (struct msgqlist*)WID_MALLOC(sizeof(struct msgqlist));
 			if(elem == NULL){
 				wid_syslog_info("%s malloc %s",__func__,strerror(errno));
 				perror("malloc");
@@ -795,7 +796,7 @@ void WID_CONFIG_SAVE(unsigned int WTPIndex){
 			msg.mqinfo.subtype = WTP_S_TYPE;
 			msg.mqinfo.u.WtpInfo.Wtp_Op = WTP_STA_DEAUTH_SWITCH;
 			
-			elem = (struct msgqlist*)malloc(sizeof(struct msgqlist));
+			elem = (struct msgqlist*)WID_MALLOC(sizeof(struct msgqlist));
 			if(elem == NULL){
 				wid_syslog_info("%s malloc %s",__func__,strerror(errno));
 				perror("malloc");
@@ -816,7 +817,7 @@ void WID_CONFIG_SAVE(unsigned int WTPIndex){
 			msg.mqinfo.subtype = WTP_S_TYPE;
 			msg.mqinfo.u.WtpInfo.Wtp_Op = WTP_STA_FLOW_INFORMATION_SWITCH;
 			
-			elem = (struct msgqlist*)malloc(sizeof(struct msgqlist));
+			elem = (struct msgqlist*)WID_MALLOC(sizeof(struct msgqlist));
 			if(elem == NULL){
 				wid_syslog_info("%s malloc %s",__func__,strerror(errno));
 				perror("malloc");
@@ -836,7 +837,7 @@ void WID_CONFIG_SAVE(unsigned int WTPIndex){
 		msg.mqinfo.subtype = WTP_S_TYPE;
 		msg.mqinfo.u.WtpInfo.Wtp_Op = WTP_OPTION60_PARAM;
 		memcpy(msg.mqinfo.u.WtpInfo.value, AC_WTP[WTPIndex]->option60_param, strlen(AC_WTP[WTPIndex]->option60_param));
-		elem = (struct msgqlist*)malloc(sizeof(struct msgqlist));
+		elem = (struct msgqlist*)WID_MALLOC(sizeof(struct msgqlist));
 		if(elem == NULL){
 			wid_syslog_info("%s malloc %s",__func__,strerror(errno));
 			perror("malloc");
@@ -874,7 +875,7 @@ void WID_CLEAN_CONTROL_LIST(unsigned int WTPID)
 	CWThreadMutexLock(&(gWTPs[WTPID].mutex_controlList));
 	
 	if(AC_WTP[WTPID]->ControlWait != NULL){
-		free(AC_WTP[WTPID]->ControlWait);
+		WID_FREE(AC_WTP[WTPID]->ControlWait);
 		AC_WTP[WTPID]->ControlWait = NULL;
 	}
 	if(AC_WTP[WTPID]->ControlList == NULL){
@@ -886,7 +887,7 @@ void WID_CLEAN_CONTROL_LIST(unsigned int WTPID)
 		tmp_t = tmp;		
 		tmp = tmp->next;
 		tmp_t->next = NULL;
-		free(tmp_t);
+		WID_FREE(tmp_t);
 		tmp_t = NULL;		
 	}
 	AC_WTP[WTPID]->ControlList = NULL;	

@@ -107,7 +107,7 @@ int get_if_addr_ipv6_list(const char *ifname,
             //if ((strlen(ifname) == strlen(ifn))&&(strcmp(ifn, ifname) == 0))
 			if ((strcmp(seg[0],"fe80") != 0)&&(strlen(ifname) == strlen(ifn))&&(strcmp(ifn, ifname) == 0))
             {
-                struct tag_ipv6_addr *ipv6addr = (struct tag_ipv6_addr *)malloc(sizeof(struct tag_ipv6_addr));
+                struct tag_ipv6_addr *ipv6addr = (struct tag_ipv6_addr *)WID_MALLOC(sizeof(struct tag_ipv6_addr));
 				if(ipv6addr == NULL)
 				{
 					 goto out;
@@ -270,7 +270,7 @@ int ipv6_bind_interface_for_wid(struct ifi_info *ifi, int port)
 
 	// store socket inside multihomed socket
 		
-	CW_CREATE_OBJECT_ERR(p, struct CWMultiHomedInterface, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
+	CW_CREATE_OBJECT_ERR_WID(p, struct CWMultiHomedInterface, close(sockfd); return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
 	memset(p->ifname, 0, IFI_NAME);
 	strncpy(p->ifname, ifi->ifi_name, IFI_NAME);
 	p->sock = sockfd; 	
@@ -338,14 +338,14 @@ void free_ipv6_addr_list(struct tag_ipv6_addr_list *ipv6list)
 		
 	struct tag_ipv6_addr *ipv6addr = ipv6list->ipv6list;
 	struct tag_ipv6_addr *ipv6addr_next = ipv6addr;
-	free(ipv6list);
+	WID_FREE(ipv6list);
 	ipv6list = NULL;
 
 	while(ipv6addr != NULL)
 	{
 		ipv6addr_next = ipv6addr->next;
 		
-		free(ipv6addr);
+		WID_FREE(ipv6addr);
 		ipv6addr = NULL;
 		ipv6addr = ipv6addr_next;
 	}		
@@ -435,7 +435,7 @@ struct tag_ipv6_addr_list * get_ipv6_addr_list(char * ifname)
 	//printf ("ifindex = %d, stat = %d, cnt = %d\n", addr.ifindex, addr.stat, addr.addr_cnt);
 	i = addr.addr_cnt;
 
-	ipv6list = (struct tag_ipv6_addr_list *)malloc(sizeof(struct tag_ipv6_addr_list));
+	ipv6list = (struct tag_ipv6_addr_list *)WID_MALLOC(sizeof(struct tag_ipv6_addr_list));
 	ipv6list->ifindex = addr.ifindex;
 	ipv6list->ipv6list = NULL;
 	ipv6list->ipv6num = 0;
@@ -446,7 +446,7 @@ struct tag_ipv6_addr_list * get_ipv6_addr_list(char * ifname)
 		if(addr.addr[i].addr[0] != 0xfe)
 		{
 			//printf("strcmp after\n");	
-			struct tag_ipv6_addr *ipv6addr = (struct tag_ipv6_addr *)malloc(sizeof(struct tag_ipv6_addr));
+			struct tag_ipv6_addr *ipv6addr = (struct tag_ipv6_addr *)WID_MALLOC(sizeof(struct tag_ipv6_addr));
 			if(ipv6addr == NULL)
 			{
 				 goto out;

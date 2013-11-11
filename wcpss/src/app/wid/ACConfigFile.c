@@ -33,6 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "CWAC.h"
 #include "ACDbus.h"
 
+#include "wcpss/wid/WID.h"
 #include <libxml/tree.h>
 #include <libxml/xpath.h>
 #include <sys/types.h>
@@ -153,7 +154,7 @@ CWBool CWConfigFileInitLib1() {
 			gConfigValues[0].code = "</AC_HW_VERSION> ";
 			
 			len = strlen(Hw_version_name);
-			gConfigValues[0].value.str_value = (char*)malloc(len+1);
+			gConfigValues[0].value.str_value = (char*)WID_MALLOC(len+1);
 			memset(gConfigValues[0].value.str_value,0,len+1);
 			memcpy(gConfigValues[0].value.str_value,Hw_version_name,len);
 		}
@@ -181,7 +182,7 @@ CWBool CWConfigFileInitLib1() {
 			gConfigValues[1].code = "</AC_SW_VERSION> ";
 			
 			len = strlen(Sw_version_name);
-			gConfigValues[1].value.str_value = (char*)malloc(len+1);
+			gConfigValues[1].value.str_value = (char*)WID_MALLOC(len+1);
 			memset(gConfigValues[1].value.str_value,0,len+1);
 			memcpy(gConfigValues[1].value.str_value,Sw_version_name,len);
 		}
@@ -211,13 +212,13 @@ CWBool CWConfigFileInitLib1() {
 			gConfigValues[3].code = "</AC_MAX_WTPS> ";
 
 			len = strlen(wtp_count);
-			wtpnum_char = (char*)malloc(len+1);
+			wtpnum_char = (char*)WID_MALLOC(len+1);
 			memset(wtpnum_char,0,len+1);
 			memcpy(wtpnum_char,wtp_count,len);
 
 			wtpnum = atoi(wtpnum_char);
 			gConfigValues[3].value.int_value = wtpnum;
-			CW_FREE_OBJECT(wtpnum_char);
+			CW_FREE_OBJECT_WID(wtpnum_char);
 		}
 	}
 	
@@ -232,7 +233,7 @@ CWBool CWConfigFileInitLib1() {
 	gConfigValues[4].type = CW_STRING;
 	gConfigValues[4].code = "</AC_SECURITY> ";
 	len = strlen("X509_CERTIFICATE");
-	gConfigValues[4].value.str_value = (char*)malloc(len+1);
+	gConfigValues[4].value.str_value = (char*)WID_MALLOC(len+1);
 	memset(gConfigValues[4].value.str_value,0,len+1);
 	memcpy(gConfigValues[4].value.str_value,"X509_CERTIFICATE",len);
 
@@ -247,7 +248,7 @@ CWBool CWConfigFileInitLib1() {
 			gConfigValues[5].type = CW_STRING;
 			gConfigValues[5].code = "</AC_NAME> ";
 			len = strlen("Autelan AC");
-			gConfigValues[5].value.str_value = (char*)malloc(len+1);
+			gConfigValues[5].value.str_value = (char*)WID_MALLOC(len+1);
 			memset(gConfigValues[5].value.str_value,0,len+1);
 			memcpy(gConfigValues[5].value.str_value,"Autelan AC",len);
 		}
@@ -258,7 +259,7 @@ CWBool CWConfigFileInitLib1() {
 			gConfigValues[5].code = "</AC_NAME> ";
 			
 			len = strlen(ac_name);
-			gConfigValues[5].value.str_value = (char*)malloc(len+1);
+			gConfigValues[5].value.str_value = (char*)WID_MALLOC(len+1);
 			memset(gConfigValues[5].value.str_value,0,len+1);
 			memcpy(gConfigValues[5].value.str_value,ac_name,len);
 		}
@@ -285,7 +286,7 @@ CWBool CWConfigFileInitLib1() {
 	gConfigValues[8].code = "</AC_LEV3_PROTOCOL> ";
 	//gConfigValues[8].value.str_value = NULL;	
 	len = strlen(ACPROTOCOL);
-	gConfigValues[8].value.str_value = (char*)malloc(len+1);
+	gConfigValues[8].value.str_value = (char*)WID_MALLOC(len+1);
 	memset(gConfigValues[8].value.str_value,0,len+1);
 	memcpy(gConfigValues[8].value.str_value,ACPROTOCOL,len);
 
@@ -326,12 +327,12 @@ CWBool CWDistroyConfigVersionInfoXML(CWConfigVersionInfo ** VersionInfo)
 	confignode = *VersionInfo;
 	while(confignode != NULL){
 		confignode1 = confignode->next;
-		CW_FREE_OBJECT(confignode->str_ap_code);
-		CW_FREE_OBJECT(confignode->str_ap_version_name);
-		CW_FREE_OBJECT(confignode->str_ap_model);
-		CW_FREE_OBJECT(confignode->str_oem_version);
-		CW_FREE_OBJECT(confignode->str_ap_version_path);
-		CW_FREE_OBJECT(confignode);
+		CW_FREE_OBJECT_WID(confignode->str_ap_code);
+		CW_FREE_OBJECT_WID(confignode->str_ap_version_name);
+		CW_FREE_OBJECT_WID(confignode->str_ap_model);
+		CW_FREE_OBJECT_WID(confignode->str_oem_version);
+		CW_FREE_OBJECT_WID(confignode->str_ap_version_path);
+		CW_FREE_OBJECT_WID(confignode);
 		confignode = confignode1;
 	}
 	return CW_TRUE;
@@ -389,7 +390,7 @@ CWBool CWParseConfigVersionInfoXML(CWConfigVersionInfo ** VersionInfo)
 		if (xmlStrcmp(cur->name, (const xmlChar *) "body") == 0)
 		{
 			CWConfigVersionInfo *confignode = NULL;
-			CW_CREATE_OBJECT_ERR(confignode, CWConfigVersionInfo, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););	
+			CW_CREATE_OBJECT_ERR_WID(confignode, CWConfigVersionInfo, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););	
 			memset(confignode,0,sizeof(CWConfigVersionInfo));
 			confignode->eth_num = 1;  //fengwenchao add 20110407
 			tmp_cur = cur->xmlChildrenNode;
@@ -403,7 +404,7 @@ CWBool CWParseConfigVersionInfoXML(CWConfigVersionInfo ** VersionInfo)
 					key = xmlNodeListGetString(doc,tmp_cur->xmlChildrenNode,1);
 					if(key != NULL)
 					{
-						CW_CREATE_STRING_ERR(confignode->str_ap_model,strlen((char*)(key)),return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
+						CW_CREATE_STRING_ERR_WID(confignode->str_ap_model,strlen((char*)(key)),return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
 						strcpy(confignode->str_ap_model,(char*)(key));
 						xmlFree(key);
 					}
@@ -415,7 +416,7 @@ CWBool CWParseConfigVersionInfoXML(CWConfigVersionInfo ** VersionInfo)
 					key = xmlNodeListGetString(doc,tmp_cur->xmlChildrenNode,1);
 					if(key != NULL)
 					{
-						CW_CREATE_STRING_ERR(confignode->str_ap_version_name,strlen((char*)(key)),return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
+						CW_CREATE_STRING_ERR_WID(confignode->str_ap_version_name,strlen((char*)(key)),return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
 						strcpy(confignode->str_ap_version_name,(char*)(key));
 						xmlFree(key);
 					}	
@@ -426,7 +427,7 @@ CWBool CWParseConfigVersionInfoXML(CWConfigVersionInfo ** VersionInfo)
 					key = xmlNodeListGetString(doc,tmp_cur->xmlChildrenNode,1);
 					if(key != NULL)
 					{
-						CW_CREATE_STRING_ERR(confignode->str_oem_version,strlen((char*)(key)),return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
+						CW_CREATE_STRING_ERR_WID(confignode->str_oem_version,strlen((char*)(key)),return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
 						strcpy(confignode->str_oem_version,(char*)(key));
 						xmlFree(key);
 					}	
@@ -437,7 +438,7 @@ CWBool CWParseConfigVersionInfoXML(CWConfigVersionInfo ** VersionInfo)
 					key = xmlNodeListGetString(doc,tmp_cur->xmlChildrenNode,1);
 					if(key != NULL)
 					{
-						CW_CREATE_STRING_ERR(confignode->str_ap_version_path,strlen((char*)(key)),return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
+						CW_CREATE_STRING_ERR_WID(confignode->str_ap_version_path,strlen((char*)(key)),return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
 						strcpy(confignode->str_ap_version_path,(char*)(key));
 						xmlFree(key);
 					}	
@@ -556,8 +557,8 @@ CWBool CWParseConfigVersionInfoXML(CWConfigVersionInfo ** VersionInfo)
 							gModelCount++;
 						}
 					}else{
-						CW_FREE_OBJECT(confignode->str_ap_model);
-						CW_FREE_OBJECT(confignode);
+						CW_FREE_OBJECT_WID(confignode->str_ap_model);
+						CW_FREE_OBJECT_WID(confignode);
 					}
 				}	
 				else
@@ -580,7 +581,7 @@ CWBool CWParseConfigVersionInfoXML(CWConfigVersionInfo ** VersionInfo)
 					key = xmlNodeListGetString(doc,tmp_cur->xmlChildrenNode,1);
 					if(key != NULL)
 					{
-						CW_CREATE_STRING_ERR(confignode->str_ap_code,strlen((char*)(key)),return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
+						CW_CREATE_STRING_ERR_WID(confignode->str_ap_code,strlen((char*)(key)),return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
 						strcpy(confignode->str_ap_code,(char*)(key));
 						xmlFree(key);
 
@@ -608,12 +609,12 @@ CWBool CWParseConfigVersionInfoXML(CWConfigVersionInfo ** VersionInfo)
 								gModelCount++;
 							}
 						}else{
-							CW_FREE_OBJECT(confignode->str_ap_code);
-							CW_FREE_OBJECT(confignode->str_ap_version_name);
-							CW_FREE_OBJECT(confignode->str_ap_model);
-							CW_FREE_OBJECT(confignode->str_oem_version);
-							CW_FREE_OBJECT(confignode->str_ap_version_path);
-							CW_FREE_OBJECT(confignode);
+							CW_FREE_OBJECT_WID(confignode->str_ap_code);
+							CW_FREE_OBJECT_WID(confignode->str_ap_version_name);
+							CW_FREE_OBJECT_WID(confignode->str_ap_model);
+							CW_FREE_OBJECT_WID(confignode->str_oem_version);
+							CW_FREE_OBJECT_WID(confignode->str_ap_version_path);
+							CW_FREE_OBJECT_WID(confignode);
 						}
 					}
 				}
@@ -674,13 +675,13 @@ CWBool CWParseConfigVersionInfo()
 			char *myLine_model = line + strlen(AP_MODEL);
 
 			CWConfigVersionInfo *confignode = NULL;
-			CW_CREATE_OBJECT_ERR(confignode, CWConfigVersionInfo, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););	
+			CW_CREATE_OBJECT_ERR_WID(confignode, CWConfigVersionInfo, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););	
 			confignode->str_oem_version = NULL;
-			CW_CREATE_STRING_ERR(confignode->str_ap_model,strlen(myLine_model),return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
+			CW_CREATE_STRING_ERR_WID(confignode->str_ap_model,strlen(myLine_model),return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
 
 			strcpy(confignode->str_ap_model,myLine_model);
 
-			CW_FREE_OBJECT(line);//parse ap model
+			CW_FREE_OBJECT_WID(line);//parse ap model
 			
 			////////////////////////////////////////////////////
 			
@@ -691,11 +692,11 @@ CWBool CWParseConfigVersionInfo()
 			{
 				char *myLine_name = line + strlen(AP_VERSION_NAME);
 
-				CW_CREATE_STRING_ERR(confignode->str_ap_version_name,strlen(myLine_name),return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
+				CW_CREATE_STRING_ERR_WID(confignode->str_ap_version_name,strlen(myLine_name),return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
 
 				strcpy(confignode->str_ap_version_name,myLine_name);
 
-				CW_FREE_OBJECT(line);//parse version name
+				CW_FREE_OBJECT_WID(line);//parse version name
 				
 					
 				line = CWGetCommand(fp);//parse verision image path  start
@@ -706,11 +707,11 @@ CWBool CWParseConfigVersionInfo()
 
 					char *myLine_path = line + strlen(AP_VERSION_PATH);
 
-					CW_CREATE_STRING_ERR(confignode->str_ap_version_path,strlen(myLine_path),return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
+					CW_CREATE_STRING_ERR_WID(confignode->str_ap_version_path,strlen(myLine_path),return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
 
 					strcpy(confignode->str_ap_version_path,myLine_path);
 
-					CW_FREE_OBJECT(line);//parse Radio num
+					CW_FREE_OBJECT_WID(line);//parse Radio num
 					
 					line = CWGetCommand(fp);//parseRadio num
 					//printf("*** Parsing radio num(%s) ***\n", line);
@@ -724,7 +725,7 @@ CWBool CWParseConfigVersionInfo()
 							confignode->radio_num = L_RADIO_NUM;
 						}
 
-						CW_FREE_OBJECT(line);//parse Radio num
+						CW_FREE_OBJECT_WID(line);//parse Radio num
 						
 						//printf("*** Parsing bss num(%s) ***\n", line);
 						for(i=0; i<confignode->radio_num; i++)
@@ -735,7 +736,7 @@ CWBool CWParseConfigVersionInfo()
 								char *myLine_type = line + strlen(AP_RADIO_TYPE);
 								confignode->radio_info[i].radio_type = atoi(myLine_type);
 
-								CW_FREE_OBJECT(line);
+								CW_FREE_OBJECT_WID(line);
 
 								line = CWGetCommand(fp);
 								if(!strncmp(line, AP_BSS_NUM, strlen(AP_BSS_NUM)))
@@ -748,17 +749,17 @@ CWBool CWParseConfigVersionInfo()
 										confignode->radio_info[i].bss_count = L_BSS_NUM;
 									}
 
-									CW_FREE_OBJECT(line);//parse Radio num	
+									CW_FREE_OBJECT_WID(line);//parse Radio num	
 
 									//wid_syslog_debug_debug("*** model:%s name:%s path:%s radionum:%d bssnum:%d***\n",confignode->str_ap_model,confignode->str_ap_version_name,confignode->str_ap_version_path,confignode->radio_num,confignode->bss_num);
 								}
 								else
 								{
-									CW_FREE_OBJECT(confignode->str_ap_model);
-									CW_FREE_OBJECT(confignode->str_ap_version_name);
-									CW_FREE_OBJECT(confignode->str_ap_version_path);
-									CW_FREE_OBJECT(confignode);
-									CW_FREE_OBJECT(line);//parse ap model
+									CW_FREE_OBJECT_WID(confignode->str_ap_model);
+									CW_FREE_OBJECT_WID(confignode->str_ap_version_name);
+									CW_FREE_OBJECT_WID(confignode->str_ap_version_path);
+									CW_FREE_OBJECT_WID(confignode);
+									CW_FREE_OBJECT_WID(line);//parse ap model
 
 									wid_syslog_debug_debug(WID_DEFAULT,"####### wtpcompatible error 004-bss err#########\n");
 									break;
@@ -766,11 +767,11 @@ CWBool CWParseConfigVersionInfo()
 							}
 							else
 							{
-								CW_FREE_OBJECT(confignode->str_ap_model);
-								CW_FREE_OBJECT(confignode->str_ap_version_name);
-								CW_FREE_OBJECT(confignode->str_ap_version_path);
-								CW_FREE_OBJECT(confignode);
-								CW_FREE_OBJECT(line);//parse ap model
+								CW_FREE_OBJECT_WID(confignode->str_ap_model);
+								CW_FREE_OBJECT_WID(confignode->str_ap_version_name);
+								CW_FREE_OBJECT_WID(confignode->str_ap_version_path);
+								CW_FREE_OBJECT_WID(confignode);
+								CW_FREE_OBJECT_WID(line);//parse ap model
 
 								wid_syslog_debug_debug(WID_DEFAULT,"####### wtpcompatible error 004-bss err#########\n");
 								break;
@@ -785,11 +786,11 @@ CWBool CWParseConfigVersionInfo()
 						{
 							char *myLine_apcode = line + strlen(AP_SW_CODE);
 							
-							CW_CREATE_STRING_ERR(confignode->str_ap_code,strlen(myLine_apcode),return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
+							CW_CREATE_STRING_ERR_WID(confignode->str_ap_code,strlen(myLine_apcode),return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
 							
 							strcpy(confignode->str_ap_code,myLine_apcode);
 							
-							CW_FREE_OBJECT(line);//parse Radio num
+							CW_FREE_OBJECT_WID(line);//parse Radio num
 							confignode->bss_num = L_BSS_NUM;
 							
 							confignode->next = NULL;
@@ -814,11 +815,11 @@ CWBool CWParseConfigVersionInfo()
 					}
 					else
 					{
-						CW_FREE_OBJECT(confignode->str_ap_model);
-						CW_FREE_OBJECT(confignode->str_ap_version_name);
-						CW_FREE_OBJECT(confignode->str_ap_version_path);
-						CW_FREE_OBJECT(confignode);
-						CW_FREE_OBJECT(line);//parse ap model
+						CW_FREE_OBJECT_WID(confignode->str_ap_model);
+						CW_FREE_OBJECT_WID(confignode->str_ap_version_name);
+						CW_FREE_OBJECT_WID(confignode->str_ap_version_path);
+						CW_FREE_OBJECT_WID(confignode);
+						CW_FREE_OBJECT_WID(line);//parse ap model
 
 						wid_syslog_debug_debug(WID_DEFAULT,"####### wtpcompatible error 003-radio err#########\n");
 					}
@@ -826,10 +827,10 @@ CWBool CWParseConfigVersionInfo()
 				}
 				else
 				{
-					CW_FREE_OBJECT(confignode->str_ap_model);
-					CW_FREE_OBJECT(confignode->str_ap_version_name);
-					CW_FREE_OBJECT(confignode);
-					CW_FREE_OBJECT(line);//parse ap model
+					CW_FREE_OBJECT_WID(confignode->str_ap_model);
+					CW_FREE_OBJECT_WID(confignode->str_ap_version_name);
+					CW_FREE_OBJECT_WID(confignode);
+					CW_FREE_OBJECT_WID(line);//parse ap model
 
 					wid_syslog_debug_debug(WID_DEFAULT,"####### wtpcompatible error 002-version path err#########\n");
 				}
@@ -837,9 +838,9 @@ CWBool CWParseConfigVersionInfo()
 			}
 			else
 			{
-				CW_FREE_OBJECT(confignode->str_ap_model);
-				CW_FREE_OBJECT(confignode);
-				CW_FREE_OBJECT(line);//parse ap model
+				CW_FREE_OBJECT_WID(confignode->str_ap_model);
+				CW_FREE_OBJECT_WID(confignode);
+				CW_FREE_OBJECT_WID(line);//parse ap model
 				wid_syslog_debug_debug(WID_DEFAULT,"####### wtpcompatible error 001-version name err#########\n");
 			}
 
@@ -898,7 +899,7 @@ CWBool CWConfigFileDestroyLib() {
 	if(gConfigValues[0].type == CW_STRING)//hw
 	{
 		len = strlen(gConfigValues[0].value.str_value);
-		gACHWVersion_char = (char *)malloc(len+1);
+		gACHWVersion_char = (char *)WID_MALLOC(len+1);
 		memset(gACHWVersion_char,0,len+1);
 		memcpy(gACHWVersion_char,gConfigValues[0].value.str_value,len);
 	}
@@ -911,7 +912,7 @@ CWBool CWConfigFileDestroyLib() {
 	if(gConfigValues[1].type == CW_STRING)//sw
 	{
 		len = strlen(gConfigValues[1].value.str_value);
-		gACSWVersion_char = (char *)malloc(len+1);
+		gACSWVersion_char = (char *)WID_MALLOC(len+1);
 		memset(gACSWVersion_char,0,len+1);
 		memcpy(gACSWVersion_char,gConfigValues[1].value.str_value,len);
 	}
@@ -952,7 +953,7 @@ CWBool CWConfigFileDestroyLib() {
 	
 	for(i = 0; i < gConfigValuesCount; i++) {
 		if(gConfigValues[i].type == CW_STRING) {
-			CW_FREE_OBJECT(gConfigValues[i].value.str_value);
+			CW_FREE_OBJECT_WID(gConfigValues[i].value.str_value);
 		} else if(gConfigValues[i].type == CW_STRING_ARRAY) {
 			CW_FREE_OBJECTS_ARRAY((gConfigValues[i].value.str_array_value), gConfigValues[i].count);
 		}
@@ -961,7 +962,7 @@ CWBool CWConfigFileDestroyLib() {
 	gEnabledLog=gConfigValues[9].value.int_value;
 	gMaxLogFileSize=gConfigValues[10].value.int_value;
 	
-	CW_FREE_OBJECT(gConfigValues);
+	CW_FREE_OBJECT_WID(gConfigValues);
 	
 	return CW_TRUE;
 }
@@ -1044,8 +1045,8 @@ int wid_oui_mac_format_check(char* str,int len){
 	 curOuiInfoNode = *OuiInfoList;
 	 while(curOuiInfoNode != NULL){
 		 tmpOuiInfoNode = curOuiInfoNode->next;
-		 CW_FREE_OBJECT(curOuiInfoNode->oui_mac);
-	     CW_FREE_OBJECT(curOuiInfoNode);
+		 CW_FREE_OBJECT_WID(curOuiInfoNode->oui_mac);
+	     CW_FREE_OBJECT_WID(curOuiInfoNode);
 		 curOuiInfoNode = tmpOuiInfoNode;
 	 }
 	 return CW_TRUE;
@@ -1424,7 +1425,7 @@ int wid_oui_mac_format_check(char* str,int len){
 		 while(cur != NULL){
 			 if(xmlStrcmp(cur->name, (const xmlChar *) "oui_body") == 0){
 				 CWOUIInfo *whiteOuiNode = NULL;
-				 CW_CREATE_OBJECT_ERR(whiteOuiNode, CWOUIInfo, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););  
+				 CW_CREATE_OBJECT_ERR_WID(whiteOuiNode, CWOUIInfo, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););  
 				 memset(whiteOuiNode,0,sizeof(CWOUIInfo));
 				 tmp_cur = cur->xmlChildrenNode;
 				 while(tmp_cur != NULL){
@@ -1437,8 +1438,8 @@ int wid_oui_mac_format_check(char* str,int len){
 						 ret = wid_parse_oui_mac_addr((char*)(key),whiteOuiNode->oui_mac);
 						 if(ret == -1){
 						   wid_syslog_err("%s parse oui mac erro ret =%d",__func__,ret);
-						   CW_FREE_OBJECT(whiteOuiNode->oui_mac);
-						   CW_FREE_OBJECT(whiteOuiNode);
+						   CW_FREE_OBJECT_WID(whiteOuiNode->oui_mac);
+						   CW_FREE_OBJECT_WID(whiteOuiNode);
 						   xmlFree(key);
 						   return CW_TRUE;
 						 }
@@ -1459,8 +1460,8 @@ int wid_oui_mac_format_check(char* str,int len){
 							 }
 						 }else{
 							 wid_syslog_crit("Error:whiteOuiNode->oui_mac == NULL\n");
-							 CW_FREE_OBJECT(whiteOuiNode->oui_mac);
-							 CW_FREE_OBJECT(whiteOuiNode);
+							 CW_FREE_OBJECT_WID(whiteOuiNode->oui_mac);
+							 CW_FREE_OBJECT_WID(whiteOuiNode);
 						 }
 					 }
 				 }
@@ -1508,7 +1509,7 @@ CWBool CWParseBlackOuiInfoXML(CWOUIInfo **BlackOuiInfoList){
 		while(cur != NULL){
 			if(xmlStrcmp(cur->name, (const xmlChar *) "oui_body") == 0){
 				CWOUIInfo *blackOuiNode = NULL;
-				CW_CREATE_OBJECT_ERR(blackOuiNode, CWOUIInfo, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););	
+				CW_CREATE_OBJECT_ERR_WID(blackOuiNode, CWOUIInfo, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););	
 				memset(blackOuiNode,0,sizeof(CWOUIInfo));
 			    tmp_cur = cur->xmlChildrenNode;
 				while(tmp_cur != NULL){
@@ -1521,8 +1522,8 @@ CWBool CWParseBlackOuiInfoXML(CWOUIInfo **BlackOuiInfoList){
 						ret = wid_parse_oui_mac_addr((char*)(key),blackOuiNode->oui_mac);
 						if(ret == -1){
                           wid_syslog_err("%s parse oui mac erro ret =%d",__func__,ret);
-						  CW_FREE_OBJECT(blackOuiNode->oui_mac);
-						  CW_FREE_OBJECT(blackOuiNode);
+						  CW_FREE_OBJECT_WID(blackOuiNode->oui_mac);
+						  CW_FREE_OBJECT_WID(blackOuiNode);
 						  xmlFree(key);
 						  return CW_TRUE;
 						}
@@ -1543,8 +1544,8 @@ CWBool CWParseBlackOuiInfoXML(CWOUIInfo **BlackOuiInfoList){
 							}
 						}else{
 						    wid_syslog_crit("Error:blackOuiNode->oui_mac == NULL\n");
-							CW_FREE_OBJECT(blackOuiNode->oui_mac);
-							CW_FREE_OBJECT(blackOuiNode);
+							CW_FREE_OBJECT_WID(blackOuiNode->oui_mac);
+							CW_FREE_OBJECT_WID(blackOuiNode);
 						}
 					}
 				}
@@ -1635,7 +1636,7 @@ CWBool CWInit11nRateTable()
 		if (xmlStrcmp(cur->name, (const xmlChar *) "body") == 0)
 		{
 			struct n_rate_list *rateList = NULL;
-		    rateList = (struct n_rate_list *)malloc(sizeof(struct n_rate_list));
+		    rateList = (struct n_rate_list *)WID_MALLOC(sizeof(struct n_rate_list));
 		    //CW_CREATE_OBJECT_ERR(rateList, (struct n_rate_list), return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
 			rateList->next = NULL;
 			tmp_cur = cur->xmlChildrenNode;
@@ -1793,7 +1794,7 @@ CWBool CWParseApimgXML(CWConfigVersionInfo_new ** VersionInfo, char *model_name)
 		if (xmlStrcmp(cur->name, (const xmlChar *) "body") == 0)
 		{
 			CWConfigVersionInfo_new *confignode = NULL;
-			CW_CREATE_OBJECT_ERR(confignode, CWConfigVersionInfo_new, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););	
+			CW_CREATE_OBJECT_ERR_WID(confignode, CWConfigVersionInfo_new, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););	
 			memset(confignode,0,sizeof(CWConfigVersionInfo_new));
 			confignode->next = NULL;
 			tmp_cur = cur->xmlChildrenNode;
@@ -1808,10 +1809,10 @@ CWBool CWParseApimgXML(CWConfigVersionInfo_new ** VersionInfo, char *model_name)
 						/*compare parsed model with input model here, go to next node if they are different*/
 						if(strcmp((char*)key,model_name)){
 							//cur = cur->next; //this will be excuted outside this while
-							CW_FREE_OBJECT(confignode);
+							CW_FREE_OBJECT_WID(confignode);
 							break;
 						}
-						CW_CREATE_STRING_ERR(confignode->str_ap_model,strlen((char*)(key)),return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
+						CW_CREATE_STRING_ERR_WID(confignode->str_ap_model,strlen((char*)(key)),return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
 						memset(confignode->str_ap_model,0,strlen((char*)(key)));
 						strcpy(confignode->str_ap_model,(char*)(key));
 						xmlFree(key);
@@ -1829,7 +1830,7 @@ CWBool CWParseApimgXML(CWConfigVersionInfo_new ** VersionInfo, char *model_name)
 					for(i=0; i<(confignode->code_num); i++)
 					{
 						CWCodeInfo *codenode = NULL;
-						CW_CREATE_OBJECT_ERR(codenode, CWCodeInfo, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););	
+						CW_CREATE_OBJECT_ERR_WID(codenode, CWCodeInfo, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););	
 						memset(codenode,0,sizeof(CWCodeInfo));
 						codenode->next = NULL;
 					
@@ -1845,7 +1846,7 @@ CWBool CWParseApimgXML(CWConfigVersionInfo_new ** VersionInfo, char *model_name)
 								key = xmlNodeListGetString(doc,tmp_cur->xmlChildrenNode,1);
 								if(key != NULL)
 								{
-									CW_CREATE_STRING_ERR(codenode->str_ap_version_name,strlen((char*)(key)),return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
+									CW_CREATE_STRING_ERR_WID(codenode->str_ap_version_name,strlen((char*)(key)),return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
 									memset(codenode->str_ap_version_name,0,strlen((char*)(key)));
 									strcpy(codenode->str_ap_version_name,(char*)(key));
 									xmlFree(key);
@@ -1858,7 +1859,7 @@ CWBool CWParseApimgXML(CWConfigVersionInfo_new ** VersionInfo, char *model_name)
 								key = xmlNodeListGetString(doc,tmp_cur->xmlChildrenNode,1);
 								if(key != NULL)
 								{
-									CW_CREATE_STRING_ERR(codenode->str_ap_version_path,strlen((char*)(key)),return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
+									CW_CREATE_STRING_ERR_WID(codenode->str_ap_version_path,strlen((char*)(key)),return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
 									memset(codenode->str_ap_version_path,0,strlen((char*)(key)));
 									strcpy(codenode->str_ap_version_path,(char*)(key));
 									xmlFree(key);
@@ -1871,7 +1872,7 @@ CWBool CWParseApimgXML(CWConfigVersionInfo_new ** VersionInfo, char *model_name)
 								key = xmlNodeListGetString(doc,tmp_cur->xmlChildrenNode,1);
 								if(key != NULL)
 								{
-									CW_CREATE_STRING_ERR(codenode->str_ap_version_code,strlen((char*)(key)),return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
+									CW_CREATE_STRING_ERR_WID(codenode->str_ap_version_code,strlen((char*)(key)),return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
 									memset(codenode->str_ap_version_code,0,strlen((char*)(key)));
 									strcpy(codenode->str_ap_version_code,(char*)(key));
 									xmlFree(key);
@@ -1894,10 +1895,10 @@ CWBool CWParseApimgXML(CWConfigVersionInfo_new ** VersionInfo, char *model_name)
 										confignode->code_info = codenode;
 									}
 								}else{
-									CW_FREE_OBJECT(codenode->str_ap_version_name);
-									CW_FREE_OBJECT(codenode->str_ap_version_path);
-									CW_FREE_OBJECT(codenode->str_ap_version_code);
-									CW_FREE_OBJECT(codenode);
+									CW_FREE_OBJECT_WID(codenode->str_ap_version_name);
+									CW_FREE_OBJECT_WID(codenode->str_ap_version_path);
+									CW_FREE_OBJECT_WID(codenode->str_ap_version_code);
+									CW_FREE_OBJECT_WID(codenode);
 								}
 							}
 							else{
@@ -1920,8 +1921,8 @@ CWBool CWParseApimgXML(CWConfigVersionInfo_new ** VersionInfo, char *model_name)
 						}
 					}else{
 						/*should the codenode be freed here?*/
-						CW_FREE_OBJECT(confignode->str_ap_model);
-						CW_FREE_OBJECT(confignode);
+						CW_FREE_OBJECT_WID(confignode->str_ap_model);
+						CW_FREE_OBJECT_WID(confignode);
 					}
 					
 					model_parsed = 1;

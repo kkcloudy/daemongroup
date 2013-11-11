@@ -39,7 +39,7 @@ CW_THREAD_RETURN_TYPE CWSTARoamingOP(void * arg){
 		int nIndex = 0;
 		unsigned char WLANID;
 		char *command = NULL;
-		command = (char*)malloc(128);
+		command = (char*)WID_MALLOC(128);
 		//=============================================
 		//printf("created roaming thread\n");
 		while(1){

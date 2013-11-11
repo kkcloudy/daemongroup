@@ -357,7 +357,8 @@ void license_binding_init(char *string){
 
 	strlength = strlen(string);
 	/*process license type list*/
-	licenselist = (int *)malloc((glicensecount+1)*sizeof(int));
+	//licenselist = (int *)malloc((glicensecount+1)*sizeof(int));
+	CW_CREATE_ARRAY_ERR(licenselist, (glicensecount+1), int, ;);
 	for(i=0,j=0; i<strlength;i++){
 		if(string[i]!=','){
 			licenselist[j] = string[i]-'0';
@@ -372,7 +373,8 @@ void license_binding_init(char *string){
 		//binding license type
 		for(flag=1; flag<glicensecount+1; flag++){
 			if(g_wtp_binding_count[flag]==NULL){
-				g_wtp_binding_count[flag] = malloc(sizeof(LICENSE_TYPE));
+				//g_wtp_binding_count[flag] = malloc(sizeof(LICENSE_TYPE));
+				CW_CREATE_OBJECT_ERR_WID(g_wtp_binding_count[flag], LICENSE_TYPE, );
 				break;
 			}
 		}
@@ -390,7 +392,7 @@ void license_binding_init(char *string){
 		}
 	}
 	if(licenselist!=NULL){
-		free(licenselist);
+		WID_FREE(licenselist);
 		licenselist = NULL;
 	}
 	wid_syslog_debug_debug(WID_DEFAULT,"set license binding\n");
@@ -406,7 +408,7 @@ void license_binding_Reinit(char *string){
 
 	strlength = strlen(string);
 	/*process license type list*/
-	licenselist = (int *)malloc((glicensecount+1)*sizeof(int));
+	licenselist = (int *)WID_MALLOC((glicensecount+1)*sizeof(int));
 	for(i=0,j=0; i<strlength;i++){
 		if(string[i]!=','){
 			licenselist[j] = string[i]-'0';
@@ -437,7 +439,7 @@ void license_binding_Reinit(char *string){
 		}
 	}
 	if(licenselist!=NULL){
-		free(licenselist);
+		WID_FREE(licenselist);
 		licenselist = NULL;
 	}
 	wid_syslog_debug_debug(WID_DEFAULT,"set license binding reinit.\n");
@@ -590,10 +592,10 @@ void CWACInit() {
 
 	for(i = 0; i < THREAD_NUM; i++){	
 		CWACThreadArg_clone*argPtr;		
-		CW_CREATE_OBJECT_ERR(argPtr, CWACThreadArg_clone, { wid_syslog_crit("Out Of Memory"); return; });
+		CW_CREATE_OBJECT_ERR_WID(argPtr, CWACThreadArg_clone, { wid_syslog_crit("Out Of Memory"); return; });
 		argPtr->index = i+1;
 		if(!CWErr(CWCreateThread(&(WidThread[i]), CWManageWTP, argPtr,0))) {
-			CW_FREE_OBJECT(argPtr);
+			CW_FREE_OBJECT_WID(argPtr);
 			return;
 		}
 	}
@@ -704,7 +706,7 @@ void CWWIDInit(){
 	}
 
 	/*xiaodawei add, 20101104, initialization for g_wtp_binding_count*/
-	g_wtp_binding_count = malloc((glicensecount+1)*sizeof(LICENSE_TYPE *));
+	g_wtp_binding_count = WID_MALLOC((glicensecount+1)*sizeof(LICENSE_TYPE *));
 	for(i=0; i<glicensecount+1; i++){
 		g_wtp_binding_count[i] = NULL;
 	}
@@ -712,8 +714,8 @@ void CWWIDInit(){
 	if(glicensecount == 0)
 	{
 		/*xiaodawei modify, 20101029*/
-		g_wtp_count = malloc(sizeof(LICENSE_TYPE *));
-		g_wtp_count[0] = malloc(sizeof(LICENSE_TYPE));
+		g_wtp_count = WID_MALLOC(sizeof(LICENSE_TYPE *));
+		g_wtp_count[0] = WID_MALLOC(sizeof(LICENSE_TYPE));
 		g_wtp_count[0]->gcurrent_wtp_count = 0;
 		g_wtp_count[0]->gmax_wtp_count = WTP_DEFAULT_NUM_AUTELAN;
 		g_wtp_count[0]->gmax_wtp_count_assign = WTP_DEFAULT_NUM_AUTELAN;
@@ -724,11 +726,11 @@ void CWWIDInit(){
 	else
 	{
 		/*xiaodawei modify, 20101029*/
-		g_wtp_count = malloc(glicensecount*(sizeof(LICENSE_TYPE *)));
+		g_wtp_count = WID_MALLOC(glicensecount*(sizeof(LICENSE_TYPE *)));
 		
 		for(i=0; i<glicensecount; i++)
 		{
-			g_wtp_count[i] = malloc(sizeof(LICENSE_TYPE));
+			g_wtp_count[i] = WID_MALLOC(sizeof(LICENSE_TYPE));
 			g_wtp_count[i]->gcurrent_wtp_count = 0;
 			g_wtp_count[i]->gmax_wtp_count_assign = 0;
 			g_wtp_count[i]->gmax_wtp_count = 0;
@@ -764,17 +766,17 @@ void CWWIDInit(){
 	WTP_NUM += 1;
 	G_RADIO_NUM = WTP_NUM*L_RADIO_NUM;
 	BSS_NUM = G_RADIO_NUM*L_BSS_NUM;
-	AC_WTP = malloc(WTP_NUM*(sizeof(WID_WTP *)));
+	AC_WTP = WID_MALLOC(WTP_NUM*(sizeof(WID_WTP *)));
 	memset(AC_WTP,0,WTP_NUM*(sizeof(WID_WTP *)));
-	AC_RADIO = malloc(G_RADIO_NUM*(sizeof(WID_WTP_RADIO *)));
+	AC_RADIO = WID_MALLOC(G_RADIO_NUM*(sizeof(WID_WTP_RADIO *)));
 	memset(AC_RADIO,0,G_RADIO_NUM*(sizeof(WID_WTP_RADIO *)));
-	AC_BSS = malloc(BSS_NUM*(sizeof(WID_BSS *)));
+	AC_BSS = WID_MALLOC(BSS_NUM*(sizeof(WID_BSS *)));
 	memset(AC_BSS,0,BSS_NUM*(sizeof(WID_BSS *)));
-	AC_ATTACH = malloc(WTP_NUM*(sizeof(CWWTPAttach *)));
+	AC_ATTACH = WID_MALLOC(WTP_NUM*(sizeof(CWWTPAttach *)));
 	memset(AC_ATTACH,0,WTP_NUM*(sizeof(CWWTPAttach *)));
-	gWTPs = malloc(WTP_NUM*(sizeof(CWWTPManager)));
+	gWTPs = WID_MALLOC(WTP_NUM*(sizeof(CWWTPManager)));
 	memset(gWTPs,0,WTP_NUM*(sizeof(CWWTPManager)));
-	AC_WTP_ACC = malloc(sizeof(WID_ACCESS));
+	AC_WTP_ACC = WID_MALLOC(sizeof(WID_ACCESS));
 	memset(AC_WTP_ACC, 0, sizeof(WID_ACCESS));
 	memset(AC_WTP_ACC->wtp_list_hash, 0, 256*sizeof(struct wtp_access_info *));
 	/*fengwenchao add for read gMaxWTPs from /dbm/local_board/board_ap_max_counter begin*/
@@ -802,10 +804,10 @@ void CWACDestroy() {
 	CWDestroyThreadMutex(&gWTPsMutex);
 	CWDestroyThreadMutex(&gCreateIDMutex);
 	CWDestroyThreadMutex(&gActiveWTPsMutex);
-	CW_FREE_OBJECT(gACName);
-	CW_FREE_OBJECT(gACHWVersion_char);
-	CW_FREE_OBJECT(gACSWVersion_char);
-	CW_FREE_OBJECT(gInterfaces);
+	CW_FREE_OBJECT_WID(gACName);
+	CW_FREE_OBJECT_WID(gACHWVersion_char);
+	CW_FREE_OBJECT_WID(gACSWVersion_char);
+	CW_FREE_OBJECT_WID(gInterfaces);
 	wid_syslog_info("AC Destroyed");
 	wid_syslog_debug_debug(WID_DEFAULT,"CWACDestroy end");
 }
@@ -817,7 +819,7 @@ void ACInterfaceReInit(){
 	CWNetworkLev4Address *addresses = NULL;
 	struct sockaddr_in *IPv4Addresses = NULL;
 	CWNetworkCloseMultiHomedSocket(&gACSocket);
-	CW_FREE_OBJECT(gInterfaces);
+	CW_FREE_OBJECT_WID(gInterfaces);
 	gACSocket.count = 0;
 	if(	!CWErr(CWNetworkInitSocketServerMultiHomed(&gACSocket, CW_CONTROL_PORT, gMulticastGroups, gMulticastGroupsCount))	||
 	//	!CWErr(CWNetworkInitSocketServerMultiHomed(&gACSocket, CW_CONTROL_PORT_AU, gMulticastGroups, gMulticastGroupsCount))	||
@@ -836,7 +838,7 @@ void ACInterfaceReInit(){
 		wid_syslog_crit("Can't start AC");
 	}
 	
-	CW_CREATE_ARRAY_ERR(gInterfaces, gInterfacesCount, CWProtocolNetworkInterface, wid_syslog_crit("Out of Memory"); return;);
+	CW_CREATE_ARRAY_ERR(gInterfaces, gInterfacesCount, CWProtocolNetworkInterface, wid_syslog_crit("Out of Memory"); CW_FREE_OBJECT_WID(addresses);CW_FREE_OBJECT_WID(IPv4Addresses); return;);
 	for(i = 0; i < gInterfacesCount; i++) {
 		gInterfaces[i].WTPCount = 0;
 		CW_COPY_NET_ADDR_PTR(&(gInterfaces[i].addr), ((CWNetworkLev4Address*)&((addresses)[i])) );
@@ -845,8 +847,8 @@ void ACInterfaceReInit(){
 		}
 	}
 	
-	CW_FREE_OBJECT(addresses);
-	CW_FREE_OBJECT(IPv4Addresses);
+	CW_FREE_OBJECT_WID(addresses);
+	CW_FREE_OBJECT_WID(IPv4Addresses);
 	LISTEN_IF_INIT();
 	wid_syslog_debug_debug(WID_DEFAULT,"ACInterfaceReInit end");
 
@@ -947,9 +949,10 @@ CWBool CWwAWInitSocket(int *sock){
 
 CWBool CWInitMsgQueue(int *msgqid){
 	key_t key;
+	FILE *fp;
 	InitPath(vrrid,MSGQ_PATH);
 	//printf("%s\n",MSGQ_PATH);
-	if(fopen(MSGQ_PATH,"w") == NULL){		
+	if((fp = fopen(MSGQ_PATH,"w")) == NULL){		
 		wid_syslog_crit("%s fopen %s",__func__,strerror(errno));
 		perror("fopen");
 		exit(1);	
@@ -958,14 +961,17 @@ CWBool CWInitMsgQueue(int *msgqid){
 	if ((key = ftok(MSGQ_PATH, 'W')) == -1) {
 		wid_syslog_crit("%s ftok %s",__func__,strerror(errno));
 		perror("ftok");
+		fclose(fp);
 		exit(1);
 	}
 	if ((*msgqid = msgget(key, 0666 | IPC_CREAT)) == -1) {		
 		wid_syslog_crit("%s msgget %s",__func__,strerror(errno));
 		perror("msgget");
+		fclose(fp);
 		exit(1);
 	}
 	//printf("*msgqid %d\n",*msgqid);
+	fclose(fp);
 	return CW_TRUE;
 }
 
@@ -1664,7 +1670,7 @@ CWBool AsdWsm_BSSOp(unsigned int BSSIndex, Operate op, int both){
 			
 			msg1.mqinfo.u.WtpInfo.Wtp_Op = WTP_REBOOT;
 						
-			elem1 = (struct msgqlist*)malloc(sizeof(struct msgqlist));
+			elem1 = (struct msgqlist*)WID_MALLOC(sizeof(struct msgqlist));
 			
 			if(elem1 == NULL){
 			
@@ -2883,7 +2889,7 @@ struct conflict_wtp_info * wid_update_wtp(struct conflict_wtp_info * tmp,struct 
 	tmpInfo = tmp->wtpindexInfo;
 	if(tmpInfo == NULL)
 		return NULL;
-	idinfo = (struct ConflictWtp*)malloc(sizeof(struct ConflictWtp));
+	idinfo = (struct ConflictWtp*)WID_MALLOC(sizeof(struct ConflictWtp));
 	if(NULL == idinfo){
 		return NULL;
 	}
@@ -2923,13 +2929,13 @@ struct conflict_wtp_info * wid_del_conflict_wtpinfo(struct wtp_con_info * con_in
 	tmpInfo_next = tmpInfo->next;
 	if((tmpInfo->wtpindex == con_info->wtpindex)){
 		tmp->wtpindexInfo = tmpInfo->next;
-		free(tmpInfo);
+		WID_FREE(tmpInfo);
 		tmpInfo = NULL;
 		tmp->conf_num -- ;
 		//return;
 	}else if((tmpInfo->wtpindex == con_info->wtpindex2)){
 		tmp->wtpindexInfo = tmpInfo->next;
-		free(tmpInfo);
+		WID_FREE(tmpInfo);
 		tmpInfo = NULL;
 		tmp->conf_num -- ;
 		//return;
@@ -2949,7 +2955,7 @@ struct conflict_wtp_info * wid_del_conflict_wtpinfo(struct wtp_con_info * con_in
 		if(tmpInfo_next != NULL){
 			tmpInfo->next = tmpInfo_next->next;
 			tmpInfo_next->next = NULL;
-			free(tmpInfo_next);
+			WID_FREE(tmpInfo_next);
 			tmpInfo_next = NULL;
 			tmp->conf_num -- ;
 			wid_syslog_debug_debug(WID_DEFAULT,"%s,%d.\n",__func__,__LINE__);
@@ -3015,7 +3021,7 @@ struct conflict_wtp_info* wid_add_wtp(struct wtp_con_info * con_info){
 		wid_update_wtp(tmp,con_info);
 		return tmp;
 	}
-	tmp =(struct conflict_wtp_info*)malloc(sizeof(struct conflict_wtp_info));
+	tmp =(struct conflict_wtp_info*)WID_MALLOC(sizeof(struct conflict_wtp_info));
 	memset(tmp, 0, sizeof(struct conflict_wtp_info));
 	tmp->next = allif.wtp_list;
 	allif.wtp_list = tmp;
@@ -3023,13 +3029,13 @@ struct conflict_wtp_info* wid_add_wtp(struct wtp_con_info * con_info){
 	
 	if(tmp->wtpindexInfo == NULL){
 		
-		node1 = malloc(sizeof(struct ConflictWtp));
+		node1 = WID_MALLOC(sizeof(struct ConflictWtp));
 		memset(node1,0,sizeof(struct ConflictWtp));
 		tmp->wtpindexInfo = node1;
 		node1->wtpindex = con_info->wtpindex;
 		tmp->conf_num ++;
 		if((con_info->wtpindex != con_info->wtpindex2)&&(con_info->wtpindex > 0)&&(con_info->wtpindex2 > 0)){
-			node2 = malloc(sizeof(struct ConflictWtp));
+			node2 = WID_MALLOC(sizeof(struct ConflictWtp));
 			memset(node2,0,sizeof(struct ConflictWtp));
 			node2->next = tmp->wtpindexInfo;
 			tmp->wtpindexInfo = node2;
@@ -3050,7 +3056,7 @@ int wid_del_wtp(struct wtp_con_info * con_info){
 		if_wtp_list_del(&allif, tmp);
 		if_wtp_hash_del(&allif, tmp);
 		wid_syslog_info("%s,%d,del wtp.\n",__func__,__LINE__);
-		free(tmp);
+		WID_FREE(tmp);
 		tmp = NULL;
 	}
 	allif.list_len --;

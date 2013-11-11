@@ -113,7 +113,7 @@ __inline__ void CWVLog(const char *format, va_list args) {
 	nowReadable[strlen(nowReadable)-1] = '\0';
 	
 	// return in case of memory err: we're not performing a critical task
-	CW_CREATE_STRING_ERR(logStr, (strlen(format)+strlen(nowReadable)+100), return;);
+	CW_CREATE_STRING_ERR_WID(logStr, (strlen(format)+strlen(nowReadable)+100), return;);
 	
 	//sprintf(logStr, "[CAPWAP::%s]\t\t %s\n", nowReadable, format);
 	sprintf(logStr, "[CAPWAP::%s]\t%08x\t %s\n", nowReadable, (unsigned int)CWThreadSelf(), format);
@@ -145,7 +145,7 @@ __inline__ void CWVLog(const char *format, va_list args) {
 	vprintf(logStr, args);
 #endif	
 	
-	CW_FREE_OBJECT(logStr);
+	CW_FREE_OBJECT_WID(logStr);
 }
 
 __inline__ void CWLog(const char *format, ...) {
@@ -179,7 +179,7 @@ __inline__ void CWDebugLog(const char *format, ...) {
 		nowReadable[strlen(nowReadable)-1] = '\0';
 		
 		// return in case of memory err: we're not performing a critical task
-		CW_CREATE_STRING_ERR(logStr, (strlen(format)+strlen(nowReadable)+100), return;);
+		CW_CREATE_STRING_ERR_WID(logStr, (strlen(format)+strlen(nowReadable)+100), return;);
 		
 		//sprintf(logStr, "[[CAPWAP::%s]]\t\t %s\n", nowReadable, format);
 		sprintf(logStr, "[CAPWAP::%s]\t%08x\t %s\n", nowReadable, (unsigned int)CWThreadSelf(), format);
@@ -215,7 +215,7 @@ __inline__ void CWDebugLog(const char *format, ...) {
 #endif
 		
 		va_end(args);
-		CW_FREE_OBJECT(logStr);
+		CW_FREE_OBJECT_WID(logStr);
 	#endif
 }
 
@@ -232,7 +232,7 @@ __inline__ void WIDVLog(int level,const char *format, va_list args) {
 	nowReadable[strlen(nowReadable)-1] = '\0';
 	
 	// return in case of memory err: we're not performing a critical task
-	CW_CREATE_STRING_ERR(logStr, (strlen(format)+strlen(nowReadable)+100), return;);
+	CW_CREATE_STRING_ERR_WID(logStr, (strlen(format)+strlen(nowReadable)+100), return;);
 	
 	switch(level){
 		case WID_SYSLOG_EMERG:
@@ -304,7 +304,7 @@ __inline__ void WIDVLog(int level,const char *format, va_list args) {
 	vprintf(logStr, args);
 #endif	
 	
-	CW_FREE_OBJECT(logStr);
+	CW_FREE_OBJECT_WID(logStr);
 }
 __inline__ void WID_Log(int level,const char *format, ...) 
 {

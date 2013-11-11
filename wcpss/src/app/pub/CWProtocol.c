@@ -32,6 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "CWCommon.h"
 #include "CWAC.h"
+#include "wcpss/wid/WID.h"
 
 #ifdef DMALLOC
 #include "../dmalloc-5.5.0/dmalloc.h"
@@ -145,7 +146,7 @@ char *CWProtocolRetrieveRawBytes(CWProtocolMessage *msgPtr, int len) {
 }
 
 void CWProtocolDestroyMsgElemData(void *f) {
-	CW_FREE_OBJECT(f);
+	CW_FREE_OBJECT_WID(f);
 }
 
 // Assemble a Message Element creating the appropriate header and storing the message.
@@ -407,9 +408,9 @@ CWBool CWAssembleMessage(CWProtocolMessage **completeMsgPtr, int *fragmentsNumPt
 	if(!(CWAssembleControlHeader(&controlHdr, &controlVal))) {
 		CW_FREE_PROTOCOL_MESSAGE(controlHdr);
 		for(i = 0; i < msgElemNum; i++) { CW_FREE_PROTOCOL_MESSAGE(msgElems[i]);}
-		CW_FREE_OBJECT(msgElems);
+		CW_FREE_OBJECT_WID(msgElems);
 		for(i = 0; i < msgElemBindingNum; i++) { CW_FREE_PROTOCOL_MESSAGE(msgElemsBinding[i]);}
-		CW_FREE_OBJECT(msgElemsBinding);
+		CW_FREE_OBJECT_WID(msgElemsBinding);
 		return CW_FALSE; // will be handled by the caller
 	}
 	
@@ -427,9 +428,9 @@ CWBool CWAssembleMessage(CWProtocolMessage **completeMsgPtr, int *fragmentsNumPt
 	//Free memory not needed anymore
 	CW_FREE_PROTOCOL_MESSAGE(controlHdr);
 	for(i = 0; i < msgElemNum; i++) { CW_FREE_PROTOCOL_MESSAGE(msgElems[i]);}
-	CW_FREE_OBJECT(msgElems);
+	CW_FREE_OBJECT_WID(msgElems);
 	for(i = 0; i < msgElemBindingNum; i++) { CW_FREE_PROTOCOL_MESSAGE(msgElemsBinding[i]);}
-	CW_FREE_OBJECT(msgElemsBinding);
+	CW_FREE_OBJECT_WID(msgElemsBinding);
 	
 //	CWDebugLog("PMTU: %d", PMTU);
 	
@@ -454,7 +455,7 @@ CWBool CWAssembleMessage(CWProtocolMessage **completeMsgPtr, int *fragmentsNumPt
 	if(*fragmentsNumPtr == 1) {
 //		CWDebugLog("1 Fragment");
 
-		CW_CREATE_OBJECT_ERR(*completeMsgPtr, CWProtocolMessage, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
+		CW_CREATE_OBJECT_ERR_WID(*completeMsgPtr, CWProtocolMessage, *completeMsgPtr = NULL; return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
 		
 		transportVal.isFragment = transportVal.last = transportVal.fragmentOffset = transportVal.fragmentID = 0;
 		transportVal.payloadType = is_crypted;
@@ -464,7 +465,8 @@ CWBool CWAssembleMessage(CWProtocolMessage **completeMsgPtr, int *fragmentsNumPt
 		if	(!(CWAssembleTransportHeader(&transportHdr, &transportVal))) {
 			CW_FREE_PROTOCOL_MESSAGE(msg);
 			CW_FREE_PROTOCOL_MESSAGE(transportHdr);
-			CW_FREE_OBJECT(*completeMsgPtr);
+			CW_FREE_OBJECT_WID(*completeMsgPtr);
+			*completeMsgPtr = NULL;
 			return CW_FALSE; // will be handled by the caller
 		} 
 	
@@ -481,7 +483,7 @@ CWBool CWAssembleMessage(CWProtocolMessage **completeMsgPtr, int *fragmentsNumPt
 		int totalSize = msg.offset;
 		//CWDebugLog("%d Fragments", *fragmentsNumPtr);
 
-		CW_CREATE_PROTOCOL_MSG_ARRAY_ERR(*completeMsgPtr, *fragmentsNumPtr, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
+		CW_CREATE_PROTOCOL_MSG_ARRAY_ERR(*completeMsgPtr, *fragmentsNumPtr, *completeMsgPtr = NULL; return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
 		msg.offset = 0;
 	
 		for(i = 0; i < *fragmentsNumPtr; i++) { // for each fragment to assemble
@@ -506,7 +508,8 @@ CWBool CWAssembleMessage(CWProtocolMessage **completeMsgPtr, int *fragmentsNumPt
 			if(!(CWAssembleTransportHeader(&transportHdr, &transportVal))) {
 				CW_FREE_PROTOCOL_MESSAGE(msg);
 				CW_FREE_PROTOCOL_MESSAGE(transportHdr);
-				CW_FREE_OBJECT(*completeMsgPtr);
+				CW_FREE_OBJECT_WID(*completeMsgPtr);
+				*completeMsgPtr = NULL;
 				return CW_FALSE; // will be handled by the caller
 			}
 
@@ -525,8 +528,8 @@ CWBool CWAssembleMessage(CWProtocolMessage **completeMsgPtr, int *fragmentsNumPt
 }
 
 void CWProtocolDestroyFragment(void *f) {
-	CW_FREE_OBJECT(((CWProtocolFragment*)f)->data);
-	CW_FREE_OBJECT(f);
+	CW_FREE_OBJECT_WID(((CWProtocolFragment*)f)->data);
+	CW_FREE_OBJECT_WID(f);
 }
 
 CWBool CWCompareFragment(void *newFrag, void *oldFrag)
@@ -570,7 +573,7 @@ CWBool CWProtocolParseFragment(char *buf, int readBytes, CWList *fragmentsListPt
 		CWProtocolFragment *fragPtr;
 		int currentSize;
 
-		CW_CREATE_OBJECT_ERR(fragPtr, CWProtocolFragment, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
+		CW_CREATE_OBJECT_ERR_WID(fragPtr, CWProtocolFragment, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
 
 		fragPtr->transportVal.fragmentID = values.fragmentID;
 		fragPtr->transportVal.fragmentOffset = values.fragmentOffset;
@@ -602,24 +605,24 @@ CWBool CWProtocolParseFragment(char *buf, int readBytes, CWList *fragmentsListPt
 	
 				if(!CWAddElementToList(fragmentsListPtr, fragPtr)) {
 					CWDeleteList(fragmentsListPtr, CWProtocolDestroyFragment);
-					CW_FREE_OBJECT(fragPtr);
+					CW_FREE_OBJECT_WID(fragPtr);
 					return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL);
 				}
 			}
 			else{
 				CWDebugLog("Received a copy of a fragment already in List");
-				CW_FREE_OBJECT(fragPtr);
+				CW_FREE_OBJECT_WID(fragPtr);
 				return CWErrorRaise(CW_ERROR_NEED_RESOURCE, NULL);
 			}	
 		} 
 		else { 
 			CWDebugLog("Discarded old fragments for different fragment ID: %d Vs %d", fragPtr->transportVal.fragmentID, (((CWProtocolFragment*)((*fragmentsListPtr)->data))->transportVal).fragmentID);
 			CWDeleteList(fragmentsListPtr, CWProtocolDestroyFragment);
-			CW_CREATE_OBJECT_SIZE_ERR(fragPtr->data, fragPtr->dataLen, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
+			CW_CREATE_OBJECT_SIZE_ERR(fragPtr->data, fragPtr->dataLen, CW_FREE_OBJECT_WID(fragPtr); return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
 			CW_COPY_MEMORY(fragPtr->data, &(buf[msg.offset]), fragPtr->dataLen);
 			if(!CWAddElementToList(fragmentsListPtr, fragPtr)) {
 				CWDeleteList(fragmentsListPtr, CWProtocolDestroyFragment);
-				CW_FREE_OBJECT(fragPtr);
+				CW_FREE_OBJECT_WID(fragPtr);
 				return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL);
 			}
 		}
@@ -731,7 +734,7 @@ CWBool CWProtocolParseFragment_GetCAPWAPheadInfo(char *buf, int readBytes, CWLis
 //		CW_CREATE_PROTOCOL_MESSAGE() is turned away to avoid free() error.
 //		The offset of 12 Bytes is used to construct a capwap head.
 #if 0
-		reassembledMsg->msg = (char *)malloc((readBytes-msg.offset+20));
+		reassembledMsg->msg = (char *)WID_MALLOC((readBytes-msg.offset+20));
 		if( NULL == reassembledMsg->msg )
 			{
 				printf("malloc memory failure");
@@ -757,7 +760,7 @@ CWBool CWProtocolParseFragment_GetCAPWAPheadInfo(char *buf, int readBytes, CWLis
 		CWProtocolFragment *fragPtr = NULL;
 		int currentSize;
 
-		CW_CREATE_OBJECT_ERR(fragPtr, CWProtocolFragment, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
+		CW_CREATE_OBJECT_ERR_WID(fragPtr, CWProtocolFragment, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
 		memset(fragPtr,0,sizeof(CWProtocolFragment));
 		fragPtr->transportVal.fragmentID = values.fragmentID;
 		fragPtr->transportVal.fragmentOffset = values.fragmentOffset;
@@ -789,13 +792,13 @@ CWBool CWProtocolParseFragment_GetCAPWAPheadInfo(char *buf, int readBytes, CWLis
 	
 				if(!CWAddElementToList(fragmentsListPtr, fragPtr)) {
 					CWDeleteList(fragmentsListPtr, CWProtocolDestroyFragment);
-					CW_FREE_OBJECT(fragPtr);
+					CW_FREE_OBJECT_WID(fragPtr);
 					return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL);
 				}
 			}
 			else{
 				CWDebugLog("Received a copy of a fragment already in List");
-				CW_FREE_OBJECT(fragPtr);
+				CW_FREE_OBJECT_WID(fragPtr);
 				return CWErrorRaise(CW_ERROR_NEED_RESOURCE, NULL);
 			}	
 		} 
@@ -806,7 +809,7 @@ CWBool CWProtocolParseFragment_GetCAPWAPheadInfo(char *buf, int readBytes, CWLis
 			CW_COPY_MEMORY(fragPtr->data, &(buf[msg.offset]), fragPtr->dataLen);
 			if(!CWAddElementToList(fragmentsListPtr, fragPtr)) {
 				CWDeleteList(fragmentsListPtr, CWProtocolDestroyFragment);
-				CW_FREE_OBJECT(fragPtr);
+				CW_FREE_OBJECT_WID(fragPtr);
 				return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL);
 			}
 		}
@@ -844,7 +847,7 @@ CWBool CWProtocolParseFragment_GetCAPWAPheadInfo(char *buf, int readBytes, CWLis
 			//luoxun
 //			CW_CREATE_PROTOCOL_MESSAGE() is turned away to avoid free() error.
 //			The offset of 12 Bytes is used to construct a capwap head.
-			reassembledMsg->msg = (char *)malloc((totalSize+20));
+			reassembledMsg->msg = (char *)WID_MALLOC((totalSize+20));
 			if( NULL == reassembledMsg->msg )
 				{
 					printf("malloc memory failure");
@@ -947,12 +950,12 @@ CWBool CWParseTransportHeader(CWProtocolMessage *msgPtr, CWProtocolTransportHead
 	valuesPtr->bindingValuesPtr = NULL;
 	if(transport4BytesLen == 4 && optionalWireless == 1){
 		*dataFlagPtr = CW_TRUE;
-		CW_CREATE_OBJECT_ERR( valuesPtr->bindingValuesPtr, CWBindingTransportHeaderValues, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY,NULL););
+		CW_CREATE_OBJECT_ERR_WID( valuesPtr->bindingValuesPtr, CWBindingTransportHeaderValues, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY,NULL););
 		if (!CWParseTransportHeaderBinding(msgPtr, valuesPtr->bindingValuesPtr)){
-			CW_FREE_OBJECT(valuesPtr->bindingValuesPtr);
+			CW_FREE_OBJECT_WID(valuesPtr->bindingValuesPtr);
 			return CW_FALSE;
 		}
-		CW_FREE_OBJECT(valuesPtr->bindingValuesPtr);
+		CW_FREE_OBJECT_WID(valuesPtr->bindingValuesPtr);
 	}
 
 	CWDebugLog(NULL);
@@ -999,10 +1002,10 @@ CWBool CWAssembleUnrecognizedMessageResponse(CWProtocolMessage **messagesPtr, in
 	
 	CWDebugLog("Assembling Unrecognized Message Response...");
 	
-	CW_CREATE_OBJECT_ERR(msgElems, CWProtocolMessage, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
+	CW_CREATE_OBJECT_ERR_WID(msgElems, CWProtocolMessage, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
 
 	if (!(CWAssembleMsgElemResultCode(msgElems,CW_PROTOCOL_FAILURE_UNRECOGNIZED_REQ))) {
-		CW_FREE_OBJECT(msgElems);
+		CW_FREE_OBJECT_WID(msgElems);
 		return CW_FALSE;
 	}
 	

@@ -363,20 +363,33 @@ int netlink_interface_addr(struct sockaddr_nl *snl, struct nlmsghdr *h)
 #ifdef HAVE_IPV6
 	    && ifa->ifa_family != AF_INET6
 #endif				/* HAVE_IPV6 */
-	    )
-		return 0;
-
-	if (h->nlmsg_type != RTM_NEWADDR && h->nlmsg_type != RTM_DELADDR){
+	    ) {
 		if(ifi_tmp->ifi_addr){
-			free(ifi_tmp->ifi_addr);
+			WID_FREE(ifi_tmp->ifi_addr);
 			ifi_tmp->ifi_addr = NULL;
 		}
 		if(ifi_tmp->ifi_addr6){
-			free(ifi_tmp->ifi_addr6);
+			WID_FREE(ifi_tmp->ifi_addr6);
 			ifi_tmp->ifi_addr6 = NULL;
 		}
 		if(ifi_tmp){
-			free(ifi_tmp);
+			WID_FREE(ifi_tmp);
+			ifi_tmp = NULL;
+		}
+		return 0;
+	}
+
+	if (h->nlmsg_type != RTM_NEWADDR && h->nlmsg_type != RTM_DELADDR){
+		if(ifi_tmp->ifi_addr){
+			WID_FREE(ifi_tmp->ifi_addr);
+			ifi_tmp->ifi_addr = NULL;
+		}
+		if(ifi_tmp->ifi_addr6){
+			WID_FREE(ifi_tmp->ifi_addr6);
+			ifi_tmp->ifi_addr6 = NULL;
+		}
+		if(ifi_tmp){
+			WID_FREE(ifi_tmp);
 			ifi_tmp = NULL;
 		}
 		return 0;
@@ -528,15 +541,15 @@ int netlink_interface_addr(struct sockaddr_nl *snl, struct nlmsghdr *h)
 	gInterfacesCountIpv4 = CWNetworkCountInterfaceAddressesIpv4(&gACSocket);
     gInterfacesCountIpv6 = CWNetworkCountInterfaceAddressesIpv6(&gACSocket);
 	if(ifa->ifa_family == AF_INET){
-		free(ifi_tmp->ifi_addr);
+		WID_FREE(ifi_tmp->ifi_addr);
 		ifi_tmp->ifi_addr = NULL;
 	}
 	else
 	{
-		free(ifi_tmp->ifi_addr6);
+		WID_FREE(ifi_tmp->ifi_addr6);
 		ifi_tmp->ifi_addr6 = NULL;
 	}
-	free(ifi_tmp);
+	WID_FREE(ifi_tmp);
 	ifi_tmp = NULL;
 	return 0;
 }

@@ -100,7 +100,7 @@ void CWACStopRetransmission(int WTPIndex) {
 			CW_FREE_PROTOCOL_MESSAGE(gWTPs[WTPIndex].messages[i]);
 		}
 
-		CW_FREE_OBJECT(gWTPs[WTPIndex].messages);
+		CW_FREE_OBJECT_WID(gWTPs[WTPIndex].messages);
 		//wid_syslog_debug_debug("~~~~~~ End of Stop Retransmission");
 	}
 }

@@ -81,7 +81,7 @@ CWBool CWAssembleDiscoveryResponse(CWProtocolMessage **messagesPtr, int seqNum, 
 		CWErrorHandleLast();
 		int i;
 		for(i = 0; i <= k; i++) {CW_FREE_PROTOCOL_MESSAGE(msgElems[i]);}
-		CW_FREE_OBJECT(msgElems);
+		CW_FREE_OBJECT_WID(msgElems);
 		return CW_FALSE; // error will be handled by the caller
 	}
 	
@@ -196,44 +196,44 @@ void CWDestroyDiscoveryRequestValues(CWDiscoveryRequestValues *valPtr) {
 		//added by weiay 20080618
 		if(((valPtr->WTPDescriptor.vendorInfos).vendorInfos)[i].type == CW_WTP_HARDWARE_VERSION)
 		{
-			CW_FREE_OBJECT(((valPtr->WTPDescriptor.vendorInfos).vendorInfos)[i].sysver);
+			CW_FREE_OBJECT_WID(((valPtr->WTPDescriptor.vendorInfos).vendorInfos)[i].sysver);
 		}else if(((valPtr->WTPDescriptor.vendorInfos).vendorInfos)[i].type == CW_WTP_SOFTWARE_VERSION)
 		{
-			CW_FREE_OBJECT(((valPtr->WTPDescriptor.vendorInfos).vendorInfos)[i].ver);
+			CW_FREE_OBJECT_WID(((valPtr->WTPDescriptor.vendorInfos).vendorInfos)[i].ver);
 		}
 		else
 		{
-			CW_FREE_OBJECT(((valPtr->WTPDescriptor.vendorInfos).vendorInfos)[i].valuePtr);
+			CW_FREE_OBJECT_WID(((valPtr->WTPDescriptor.vendorInfos).vendorInfos)[i].valuePtr);
 		}
 	}
 	
-	CW_FREE_OBJECT((valPtr->WTPDescriptor.vendorInfos).vendorInfos);
+	CW_FREE_OBJECT_WID((valPtr->WTPDescriptor.vendorInfos).vendorInfos);
 
 	for(i = 0; i < valPtr->WTPBoardData.vendorInfosCount; i++) {
 		//added by weiay 20080618
 		if((valPtr->WTPBoardData.vendorInfos)[i].type == CW_WTP_MODEL_NUMBER)
 		{
-			CW_FREE_OBJECT((valPtr->WTPBoardData.vendorInfos)[i].model);
+			CW_FREE_OBJECT_WID((valPtr->WTPBoardData.vendorInfos)[i].model);
 		}else if((valPtr->WTPBoardData.vendorInfos)[i].type == CW_WTP_SERIAL_NUMBER)
 		{
-			CW_FREE_OBJECT((valPtr->WTPBoardData.vendorInfos)[i].SN);
+			CW_FREE_OBJECT_WID((valPtr->WTPBoardData.vendorInfos)[i].SN);
 		}else if((valPtr->WTPBoardData.vendorInfos)[i].type == CW_BOARD_MAC_ADDRESS)
 		{
-			CW_FREE_OBJECT((valPtr->WTPBoardData.vendorInfos)[i].mac);
+			CW_FREE_OBJECT_WID((valPtr->WTPBoardData.vendorInfos)[i].mac);
 		}else if((valPtr->WTPBoardData.vendorInfos)[i].type == CW_WTP_REAL_MODEL_NUMBER)
 		{
-			CW_FREE_OBJECT((valPtr->WTPBoardData.vendorInfos)[i].Rmodel);
+			CW_FREE_OBJECT_WID((valPtr->WTPBoardData.vendorInfos)[i].Rmodel);
 		}else if((valPtr->WTPBoardData.vendorInfos)[i].type == CW_WTP_CODE_VERSION)
 		{
-			CW_FREE_OBJECT((valPtr->WTPBoardData.vendorInfos)[i].codever);
+			CW_FREE_OBJECT_WID((valPtr->WTPBoardData.vendorInfos)[i].codever);
 		}
 		else
 		{
-			CW_FREE_OBJECT((valPtr->WTPBoardData.vendorInfos)[i].valuePtr);
+			CW_FREE_OBJECT_WID((valPtr->WTPBoardData.vendorInfos)[i].valuePtr);
 		}
 	}
 	
-	CW_FREE_OBJECT(valPtr->WTPBoardData.vendorInfos);
+	CW_FREE_OBJECT_WID(valPtr->WTPBoardData.vendorInfos);
 	
 	//CW_FREE_OBJECT((valPtr->radios).radios);
 }

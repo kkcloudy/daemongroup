@@ -109,19 +109,19 @@ CWBool ACEnterJoin(int WTPIndex, CWProtocolMessage *msgPtr)
 	
 	CWMsgElemData *auxData;
 	if(ACIpv4List) {
-		CW_CREATE_OBJECT_ERR(auxData, CWMsgElemData, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
+		CW_CREATE_OBJECT_ERR_WID(auxData, CWMsgElemData, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
                 auxData->type = CW_MSG_ELEMENT_AC_IPV4_LIST_CW_TYPE;
 		auxData->value = 0;
 		CWAddElementToList(&msgElemList,auxData);
 	}
 	if(ACIpv6List){
-		CW_CREATE_OBJECT_ERR(auxData, CWMsgElemData, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
+		CW_CREATE_OBJECT_ERR_WID(auxData, CWMsgElemData, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
                 auxData->type = CW_MSG_ELEMENT_AC_IPV6_LIST_CW_TYPE;
                 auxData->value = 0;
                 CWAddElementToList(&msgElemList,auxData);
 	}
 	if(resultCode){
-		CW_CREATE_OBJECT_ERR(auxData, CWMsgElemData, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
+		CW_CREATE_OBJECT_ERR_WID(auxData, CWMsgElemData, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
                 auxData->type =  CW_MSG_ELEMENT_RESULT_CODE_CW_TYPE;
                 auxData->value = resultCodeValue;
                 CWAddElementToList(&msgElemList,auxData);
@@ -160,8 +160,8 @@ CWBool ACEnterJoin(int WTPIndex, CWProtocolMessage *msgPtr)
 			
 			if((AC_WTP[WTPIndex])&&(AC_WTP[WTPIndex]->APCode)&&(strncmp(AC_WTP[WTPIndex]->APCode,(char *)str_wtp_model,lenmodel) != 0))
 			{
-				CW_FREE_OBJECT(AC_WTP[WTPIndex]->APCode);
-				AC_WTP[WTPIndex]->APCode = (char *)malloc(lenmodel+1);
+				CW_FREE_OBJECT_WID(AC_WTP[WTPIndex]->APCode);
+				AC_WTP[WTPIndex]->APCode = (char *)WID_MALLOC(lenmodel+1);
 				memset(AC_WTP[WTPIndex]->APCode,0,lenmodel+1);
 				memcpy(AC_WTP[WTPIndex]->APCode,str_wtp_model,lenmodel);
 			}
@@ -435,7 +435,7 @@ CWBool ACEnterJoin(int WTPIndex, CWProtocolMessage *msgPtr)
 		CW_FREE_PROTOCOL_MESSAGE(gWTPs[WTPIndex].messages[i]);
 	}
 	
-	CW_FREE_OBJECT(gWTPs[WTPIndex].messages);
+	CW_FREE_OBJECT_WID(gWTPs[WTPIndex].messages);
 	if(!CWErr(CWTimerRequest(CW_JOIN_INTERVAL_DEFAULT, &(gWTPs[WTPIndex].thread), &(gWTPs[WTPIndex].currentTimer), CW_CRITICAL_TIMER_EXPIRED_SIGNAL,WTPIndex))) { // start Change State Pending timer
 		_CWCloseThread(WTPIndex);
 	}
@@ -500,7 +500,7 @@ CWBool CWAssembleJoinResponse(CWProtocolMessage **messagesPtr, int *fragmentsNum
 		CWErrorHandleLast();
 		int i;
 		for(i = 0; i <= k; i++) {CW_FREE_PROTOCOL_MESSAGE(msgElems[i]);}
-		CW_FREE_OBJECT(msgElems);
+		CW_FREE_OBJECT_WID(msgElems);
 		return CW_FALSE; // error will be handled by the caller
 	} 
 
@@ -528,7 +528,7 @@ CWBool CWAssembleJoinResponse(CWProtocolMessage **messagesPtr, int *fragmentsNum
                         default: {
                                 int j;
                                 for(j = 0; j <= k; j++) { CW_FREE_PROTOCOL_MESSAGE(msgElems[j]);}
-                                CW_FREE_OBJECT(msgElems);
+                                CW_FREE_OBJECT_WID(msgElems);
                                 return CWErrorRaise(CW_ERROR_INVALID_FORMAT, "Unrecognized Message Element for Join Response Message");
 				break;
 		        }
@@ -548,7 +548,7 @@ cw_assemble_error:
 	{
 		int i;
 		for(i = 0; i <= k; i++) { CW_FREE_PROTOCOL_MESSAGE(msgElems[i]);}
-		CW_FREE_OBJECT(msgElems);
+		CW_FREE_OBJECT_WID(msgElems);
 		return CW_FALSE; // error will be handled by the caller
 	}
 
@@ -636,14 +636,14 @@ CWBool CWSaveJoinRequestMessage (CWProtocolJoinRequestValues *joinRequest, CWWTP
 	
 	if ((joinRequest->location)!= NULL)
 	{
-		CW_FREE_OBJECT(WTPProtocolManager->locationData);
+		CW_FREE_OBJECT_WID(WTPProtocolManager->locationData);
 		WTPProtocolManager->locationData= joinRequest->location;
 	}
 	else return CWErrorRaise(CW_ERROR_WRONG_ARG, NULL);
 	
 	if ((joinRequest->name)!= NULL)
 	{
-		CW_FREE_OBJECT(WTPProtocolManager->name);
+		CW_FREE_OBJECT_WID(WTPProtocolManager->name);
 		WTPProtocolManager->name= joinRequest->name;
 	}
 	else return CWErrorRaise(CW_ERROR_WRONG_ARG, NULL);
@@ -652,28 +652,28 @@ CWBool CWSaveJoinRequestMessage (CWProtocolJoinRequestValues *joinRequest, CWWTP
 
 		if((WTPProtocolManager->WTPBoardData.vendorInfos)[i].type == CW_WTP_MODEL_NUMBER)
 		{
-			CW_FREE_OBJECT((WTPProtocolManager->WTPBoardData.vendorInfos)[i].model);
+			CW_FREE_OBJECT_WID((WTPProtocolManager->WTPBoardData.vendorInfos)[i].model);
 		}else if((WTPProtocolManager->WTPBoardData.vendorInfos)[i].type == CW_WTP_SERIAL_NUMBER)
 		{
-			CW_FREE_OBJECT((WTPProtocolManager->WTPBoardData.vendorInfos)[i].SN);
+			CW_FREE_OBJECT_WID((WTPProtocolManager->WTPBoardData.vendorInfos)[i].SN);
 		}else if((WTPProtocolManager->WTPBoardData.vendorInfos)[i].type == CW_BOARD_MAC_ADDRESS)
 		{
-			CW_FREE_OBJECT((WTPProtocolManager->WTPBoardData.vendorInfos)[i].mac);
+			CW_FREE_OBJECT_WID((WTPProtocolManager->WTPBoardData.vendorInfos)[i].mac);
 		}else if((WTPProtocolManager->WTPBoardData.vendorInfos)[i].type == CW_WTP_REAL_MODEL_NUMBER)
 		{
-			CW_FREE_OBJECT((WTPProtocolManager->WTPBoardData.vendorInfos)[i].Rmodel);
+			CW_FREE_OBJECT_WID((WTPProtocolManager->WTPBoardData.vendorInfos)[i].Rmodel);
 		}
 		else if((WTPProtocolManager->WTPBoardData.vendorInfos)[i].type == CW_WTP_CODE_VERSION)
 		{
 			AC_WTP[WTPIndex]->codever = NULL;
-			CW_FREE_OBJECT((WTPProtocolManager->WTPBoardData.vendorInfos)[i].codever);
+			CW_FREE_OBJECT_WID((WTPProtocolManager->WTPBoardData.vendorInfos)[i].codever);
 		}
 		else
 		{
-			CW_FREE_OBJECT((WTPProtocolManager->WTPBoardData.vendorInfos)[i].valuePtr);
+			CW_FREE_OBJECT_WID((WTPProtocolManager->WTPBoardData.vendorInfos)[i].valuePtr);
 		}
 	}
-	CW_FREE_OBJECT((WTPProtocolManager->WTPBoardData).vendorInfos);
+	CW_FREE_OBJECT_WID((WTPProtocolManager->WTPBoardData).vendorInfos);
 	WTPProtocolManager->WTPBoardData = joinRequest->WTPBoardData;
 
 	WTPProtocolManager->sessionID= joinRequest->sessionID;
@@ -683,21 +683,21 @@ CWBool CWSaveJoinRequestMessage (CWProtocolJoinRequestValues *joinRequest, CWWTP
 
 		if(((WTPProtocolManager->descriptor.vendorInfos).vendorInfos)[i].type == CW_WTP_HARDWARE_VERSION)
 		{
-			CW_FREE_OBJECT(((WTPProtocolManager->descriptor.vendorInfos).vendorInfos)[i].sysver);
+			CW_FREE_OBJECT_WID(((WTPProtocolManager->descriptor.vendorInfos).vendorInfos)[i].sysver);
 		}else if(((WTPProtocolManager->descriptor.vendorInfos).vendorInfos)[i].type == CW_WTP_SOFTWARE_VERSION)
 		{
 			AC_WTP[WTPIndex]->ver = NULL;
-			CW_FREE_OBJECT(((WTPProtocolManager->descriptor.vendorInfos).vendorInfos)[i].ver);
+			CW_FREE_OBJECT_WID(((WTPProtocolManager->descriptor.vendorInfos).vendorInfos)[i].ver);
 		}
 		else
 		{
-			CW_FREE_OBJECT(((WTPProtocolManager->descriptor.vendorInfos).vendorInfos)[i].valuePtr);
+			CW_FREE_OBJECT_WID(((WTPProtocolManager->descriptor.vendorInfos).vendorInfos)[i].valuePtr);
 		}
 	}
-	CW_FREE_OBJECT((WTPProtocolManager->descriptor.vendorInfos).vendorInfos);
+	CW_FREE_OBJECT_WID((WTPProtocolManager->descriptor.vendorInfos).vendorInfos);
 	WTPProtocolManager->descriptor= joinRequest->WTPDescriptor;
 	WTPProtocolManager->radiosInfo.radioCount = (joinRequest->WTPDescriptor).radiosInUse;
-	CW_FREE_OBJECT(WTPProtocolManager->radiosInfo.radiosInfo);
+	CW_FREE_OBJECT_WID(WTPProtocolManager->radiosInfo.radiosInfo);
 	CW_CREATE_ARRAY_ERR(WTPProtocolManager->radiosInfo.radiosInfo, WTPProtocolManager->radiosInfo.radioCount, CWWTPRadioInfoValues,return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
 	
 

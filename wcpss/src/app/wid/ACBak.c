@@ -114,7 +114,7 @@ int Get_Tunnel_Interface_Info(char * ifname, struct ifi_info *ifi){
 	if(ioctl(sockfd, SIOCGIFHWADDR, &ifr) == -1){
 //		 printf("SIOCGIFHWADDR error\n");
 		 wid_syslog_debug_debug(WID_MB,"SIOCGIFHWADDR error");
-		 free(ifi->ifi_addr);
+		 WID_FREE(ifi->ifi_addr);
 		 close(sockfd);
 		 return -1;
 	 }
@@ -444,7 +444,7 @@ int send_all_tunnel_interface_arp(){
 //				printf("mac %02x:%02x:%02x:%02x:%02x:%02x\n",ifinfo.mac[0],ifinfo.mac[1],ifinfo.mac[2],ifinfo.mac[3],ifinfo.mac[4],ifinfo.mac[5]);
 				if(ret == 0){
 					send_tunnel_interface_arp(ifinfo.mac,ifinfo.addr[0],name);
-					free(ifinfo.ifi_addr);
+					WID_FREE(ifinfo.ifi_addr);
 				}
 			}
 		}
@@ -812,10 +812,10 @@ void B_WTP_ADD_OP(B_Msg *msg){
 		/*AXSSZFI-1204*/
 		if(memcmp(AC_WTP[WTPID]->WTPMAC,msg->Bu.WTP.WTP_MAC,MAC_LEN) ==0){
 			if(AC_WTP[WTPID]->WTPSN != NULL){
-				free(AC_WTP[WTPID]->WTPSN);
+				WID_FREE(AC_WTP[WTPID]->WTPSN);
 				AC_WTP[WTPID]->WTPSN = NULL;
 			}
-			AC_WTP[WTPID]->WTPSN = (char*)malloc(NAS_IDENTIFIER_NAME);
+			AC_WTP[WTPID]->WTPSN = (char*)WID_MALLOC(NAS_IDENTIFIER_NAME);
 			memset(AC_WTP[WTPID]->WTPSN,0,NAS_IDENTIFIER_NAME);
 			memcpy(AC_WTP[WTPID]->WTPSN,msg->Bu.WTP.SN,strlen((char *)(msg->Bu.WTP.SN)));
 			memset(AC_WTP[WTPID]->WTPMAC,0,7);
@@ -823,20 +823,20 @@ void B_WTP_ADD_OP(B_Msg *msg){
 			memset(AC_WTP[WTPID]->WTPIP,0,DEFAULT_LEN);
 			memcpy(AC_WTP[WTPID]->WTPIP,msg->Bu.WTP.WTP_IP,strlen((char *)(msg->Bu.WTP.WTP_IP)));
 			memcpy((struct sockaddr*)&(gWTPs[WTPID].address),&(msg->Bu.WTP.addr),sizeof(struct sockaddr));		
-			CW_FREE_OBJECT(AC_WTP[WTPID]->codever);
-			AC_WTP[WTPID]->codever = (char*)malloc(strlen((char *)(msg->Bu.WTP.WTP_CODEVER))+1);
+			CW_FREE_OBJECT_WID(AC_WTP[WTPID]->codever);
+			AC_WTP[WTPID]->codever = (char*)WID_MALLOC(strlen((char *)(msg->Bu.WTP.WTP_CODEVER))+1);
 			memset(AC_WTP[WTPID]->codever,0,strlen((char *)(msg->Bu.WTP.WTP_CODEVER))+1);
 			memcpy(AC_WTP[WTPID]->codever,msg->Bu.WTP.WTP_CODEVER,strlen((char *)(msg->Bu.WTP.WTP_CODEVER)));
 			wid_syslog_debug_debug(WID_MB,"AC_WTP[%d]->codever =  %s ",WTPID,AC_WTP[WTPID]->codever);	
 
-			CW_FREE_OBJECT(AC_WTP[WTPID]->ver);	
-			AC_WTP[WTPID]->ver = (char*)malloc(strlen((char *)(msg->Bu.WTP.WTP_VER))+1);
+			CW_FREE_OBJECT_WID(AC_WTP[WTPID]->ver);	
+			AC_WTP[WTPID]->ver = (char*)WID_MALLOC(strlen((char *)(msg->Bu.WTP.WTP_VER))+1);
 			memset(AC_WTP[WTPID]->ver,0,strlen((char *)(msg->Bu.WTP.WTP_VER))+1);
 			memcpy(AC_WTP[WTPID]->ver,msg->Bu.WTP.WTP_VER,strlen((char *)(msg->Bu.WTP.WTP_VER)));
 			wid_syslog_debug_debug(WID_MB,"AC_WTP[%d]->ver =  %s ",WTPID,AC_WTP[WTPID]->ver);	
 
-			CW_FREE_OBJECT(AC_WTP[WTPID]->sysver);
-			AC_WTP[WTPID]->sysver = (char*)malloc(strlen((char *)(msg->Bu.WTP.WTP_SYSVER))+1);
+			CW_FREE_OBJECT_WID(AC_WTP[WTPID]->sysver);
+			AC_WTP[WTPID]->sysver = (char*)WID_MALLOC(strlen((char *)(msg->Bu.WTP.WTP_SYSVER))+1);
 			memset(AC_WTP[WTPID]->sysver,0,strlen((char *)(msg->Bu.WTP.WTP_SYSVER))+1);
 			memcpy(AC_WTP[WTPID]->sysver,msg->Bu.WTP.WTP_SYSVER,strlen((char *)(msg->Bu.WTP.WTP_SYSVER)));
 			wid_syslog_debug_debug(WID_MB,"AC_WTP[%d]->sysver =  %s ",WTPID,AC_WTP[WTPID]->sysver);	
@@ -872,7 +872,7 @@ void B_WTP_ADD_OP(B_Msg *msg){
 				*(AC_WTP[WTPID]->add_time) = msg->Bu.WTP.add_time;
 			}else{
 
-				AC_WTP[WTPID]->add_time = (time_t *)malloc(sizeof(time_t));
+				AC_WTP[WTPID]->add_time = (time_t *)WID_MALLOC(sizeof(time_t));
 				*(AC_WTP[WTPID]->add_time) = msg->Bu.WTP.add_time;
 			}
 			AC_WTP[WTPID]->imagedata_time = msg->Bu.WTP.imagedata_time;
@@ -888,7 +888,7 @@ void B_WTP_ADD_OP(B_Msg *msg){
 			BakArgPtr.index = WTPID;
 			CWThreadMutexLock(&(gWTPs[WTPID].WTPThreadControllistMutex));
 			if(AC_WTP[WTPID]->ControlWait != NULL){
-				free(AC_WTP[WTPID]->ControlWait);
+				WID_FREE(AC_WTP[WTPID]->ControlWait);
 				AC_WTP[WTPID]->ControlWait = NULL;
 			}
 			CWThreadMutexUnlock(&(gWTPs[WTPID].WTPThreadControllistMutex));
@@ -1192,7 +1192,7 @@ void *wid_master_thread()
 		}
 		CWThreadMutexLock(&MasterBak);
 		if(bak_list == NULL){
-			bsock = (struct bak_sock*)malloc(sizeof(struct bak_sock));
+			bsock = (struct bak_sock*)WID_MALLOC(sizeof(struct bak_sock));
 			memset(bsock,0,sizeof(struct bak_sock));
 			bsock->sock = new_sock;
 			//memcpy(&(bsock->ip),&(ac_addr.sin_addr.s_addr),sizeof(int));
@@ -1212,7 +1212,7 @@ void *wid_master_thread()
 				tmp = tmp->next;
 			}
 			if(tmp == NULL){
-				bsock = (struct bak_sock*)malloc(sizeof(struct bak_sock));
+				bsock = (struct bak_sock*)WID_MALLOC(sizeof(struct bak_sock));
 				memset(bsock,0,sizeof(struct bak_sock));
 				bsock->sock = new_sock;
 				//memcpy(&(bsock->ip),&(ac_addr.sin_addr.s_addr),sizeof(int));
@@ -1646,7 +1646,7 @@ void *wid_master_thread()
 			
 			CWThreadMutexLock(&MasterBak);
 			if(bak_list == NULL){
-				bsock = (struct bak_sock*)malloc(sizeof(struct bak_sock));
+				bsock = (struct bak_sock*)WID_MALLOC(sizeof(struct bak_sock));
 				memset(bsock,0,sizeof(struct bak_sock));
 				bsock->sock = wid_sock;
 				//memcpy(&(bsock->ip),&(ac_addr.sin_addr.s_addr),sizeof(int));

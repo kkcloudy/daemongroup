@@ -73,13 +73,13 @@ CWBool CWParseSettingsFile()
 		
 		if((startTag=strchr (line, '<'))==NULL) 
 		{
-			CW_FREE_OBJECT(line);
+			CW_FREE_OBJECT_WID(line);
 			continue;
 		}
 
 		if((endTag=strchr (line, '>'))==NULL) 
 		{
-			CW_FREE_OBJECT(line);
+			CW_FREE_OBJECT_WID(line);
 			continue;
 		}
 		
@@ -90,7 +90,7 @@ CWBool CWParseSettingsFile()
 			if(value==0) value=CWMIN_DEFAULT;
 			gDefaultQosValues[VOICE_QUEUE_INDEX].cwMin = value;
 			wid_syslog_debug_debug(WID_DEFAULT,"CWMIN_VOICE: %d", gDefaultQosValues[VOICE_QUEUE_INDEX].cwMin);
-			CW_FREE_OBJECT(line);
+			CW_FREE_OBJECT_WID(line);
 			continue;	
 		}
 		if (!strncmp(startTag+1, "CWMAX_VOICE", endTag-startTag-1))
@@ -100,7 +100,7 @@ CWBool CWParseSettingsFile()
 			if(value==0) value=CWMAX_DEFAULT;
 			gDefaultQosValues[VOICE_QUEUE_INDEX].cwMax = value;
 			wid_syslog_debug_debug(WID_DEFAULT,"CWMAX_VOICE: %d", gDefaultQosValues[VOICE_QUEUE_INDEX].cwMax);
-			CW_FREE_OBJECT(line);
+			CW_FREE_OBJECT_WID(line);
 			continue;	
 		}
 		if (!strncmp(startTag+1, "AIFS_VOICE", endTag-startTag-1))
@@ -110,7 +110,7 @@ CWBool CWParseSettingsFile()
 			if(value==0) value=AIFS_DEFAULT;
 			gDefaultQosValues[VOICE_QUEUE_INDEX].AIFS = value;
 			wid_syslog_debug_debug(WID_DEFAULT,"AIFS_VOICE: %d", gDefaultQosValues[VOICE_QUEUE_INDEX].AIFS);
-			CW_FREE_OBJECT(line);
+			CW_FREE_OBJECT_WID(line);
 			continue;	
 		}
 
@@ -122,7 +122,7 @@ CWBool CWParseSettingsFile()
 			if(value==0) value=CWMIN_DEFAULT;
 			gDefaultQosValues[VIDEO_QUEUE_INDEX].cwMin = value;
 			wid_syslog_debug_debug(WID_DEFAULT,"CWMIN_VIDEO: %d", gDefaultQosValues[VIDEO_QUEUE_INDEX].cwMin);
-			CW_FREE_OBJECT(line);
+			CW_FREE_OBJECT_WID(line);
 			continue;	
 		}
 		if (!strncmp(startTag+1, "CWMAX_VIDEO", endTag-startTag-1))
@@ -132,7 +132,7 @@ CWBool CWParseSettingsFile()
 			if(value==0) value=CWMAX_DEFAULT;
 			gDefaultQosValues[VIDEO_QUEUE_INDEX].cwMax = value;
 			wid_syslog_debug_debug(WID_DEFAULT,"CWMAX_VIDEO: %d", gDefaultQosValues[VIDEO_QUEUE_INDEX].cwMax);
-			CW_FREE_OBJECT(line);
+			CW_FREE_OBJECT_WID(line);
 			continue;	
 		}
 		if (!strncmp(startTag+1, "AIFS_VIDEO", endTag-startTag-1))
@@ -142,7 +142,7 @@ CWBool CWParseSettingsFile()
 			if(value==0) value=AIFS_DEFAULT;
 			gDefaultQosValues[VIDEO_QUEUE_INDEX].AIFS = value;
 			wid_syslog_debug_debug(WID_DEFAULT,"AIFS_VIDEO: %d", gDefaultQosValues[VIDEO_QUEUE_INDEX].AIFS);
-			CW_FREE_OBJECT(line);
+			CW_FREE_OBJECT_WID(line);
 			continue;	
 		}
 		
@@ -154,7 +154,7 @@ CWBool CWParseSettingsFile()
 			if(value==0) value=CWMIN_DEFAULT;
 			gDefaultQosValues[BESTEFFORT_QUEUE_INDEX].cwMin = value;
 			wid_syslog_debug_debug(WID_DEFAULT,"CWMIN_BEST_EFFORT: %d", gDefaultQosValues[BESTEFFORT_QUEUE_INDEX].cwMin);
-			CW_FREE_OBJECT(line);
+			CW_FREE_OBJECT_WID(line);
 			continue;	
 		}
 		if (!strncmp(startTag+1, "CWMAX_BEST_EFFORT", endTag-startTag-1))
@@ -164,7 +164,7 @@ CWBool CWParseSettingsFile()
 			if(value==0) value=CWMAX_DEFAULT;
 			gDefaultQosValues[BESTEFFORT_QUEUE_INDEX].cwMax = value;
 			wid_syslog_debug_debug(WID_DEFAULT,"CWMAX_BEST_EFFORT: %d", gDefaultQosValues[BESTEFFORT_QUEUE_INDEX].cwMax);
-			CW_FREE_OBJECT(line);
+			CW_FREE_OBJECT_WID(line);
 			continue;	
 		}
 		if (!strncmp(startTag+1, "AIFS_BEST_EFFORT", endTag-startTag-1))
@@ -174,7 +174,7 @@ CWBool CWParseSettingsFile()
 			if(value==0) value=AIFS_DEFAULT;
 			gDefaultQosValues[BESTEFFORT_QUEUE_INDEX].AIFS = value;
 			wid_syslog_debug_debug(WID_DEFAULT,"AIFS_BEST_EFFORT: %d", gDefaultQosValues[BESTEFFORT_QUEUE_INDEX].AIFS);
-			CW_FREE_OBJECT(line);
+			CW_FREE_OBJECT_WID(line);
 			continue;	
 		}
 
@@ -186,7 +186,7 @@ CWBool CWParseSettingsFile()
 			if(value==0) value=CWMIN_DEFAULT;
 			gDefaultQosValues[BACKGROUND_QUEUE_INDEX].cwMin = value;
 			wid_syslog_debug_debug(WID_DEFAULT,"CWMIN_BACKGROUND: %d", gDefaultQosValues[BACKGROUND_QUEUE_INDEX].cwMin);
-			CW_FREE_OBJECT(line);
+			CW_FREE_OBJECT_WID(line);
 			continue;	
 		}
 		if (!strncmp(startTag+1, "CWMAX_BACKGROUND", endTag-startTag-1))
@@ -196,7 +196,7 @@ CWBool CWParseSettingsFile()
 			if(value==0) value=CWMAX_DEFAULT;
 			gDefaultQosValues[BACKGROUND_QUEUE_INDEX].cwMax = value;
 			wid_syslog_debug_debug(WID_DEFAULT,"CWMAX_BACKGROUND: %d", gDefaultQosValues[BACKGROUND_QUEUE_INDEX].cwMax);
-			CW_FREE_OBJECT(line);
+			CW_FREE_OBJECT_WID(line);
 			continue;	
 		}
 		if (!strncmp(startTag+1, "AIFS_BACKGROUND", endTag-startTag-1))
@@ -206,10 +206,10 @@ CWBool CWParseSettingsFile()
 			if(value==0) value=AIFS_DEFAULT;
 			gDefaultQosValues[BACKGROUND_QUEUE_INDEX].AIFS = value;
 			wid_syslog_debug_debug(WID_DEFAULT,"AIFS_BACKGROUND: %d", gDefaultQosValues[BACKGROUND_QUEUE_INDEX].AIFS);
-			CW_FREE_OBJECT(line);
+			CW_FREE_OBJECT_WID(line);
 			continue;	
 		}
-		CW_FREE_OBJECT(line);
+		CW_FREE_OBJECT_WID(line);
 	}
 	return CW_TRUE;
 }

@@ -547,11 +547,11 @@ int set_balance_probe_extension_command(int wtpid, char * command)
 //	struct msgqlist *elem;
 
 	if(AC_WTP[wtpid]->WTP_Radio[0]->excommand!=NULL){
-		free(AC_WTP[wtpid]->WTP_Radio[0]->excommand);
+		WID_FREE(AC_WTP[wtpid]->WTP_Radio[0]->excommand);
 		AC_WTP[wtpid]->WTP_Radio[0]->excommand = NULL;
 	}
 
-	AC_WTP[wtpid]->WTP_Radio[0]->excommand = (char*)malloc(strlen(command)+1);
+	AC_WTP[wtpid]->WTP_Radio[0]->excommand = (char*)WID_MALLOC(strlen(command)+1);
 	memset(AC_WTP[wtpid]->WTP_Radio[0]->excommand, 0, strlen(command)+1);
 	memcpy(AC_WTP[wtpid]->WTP_Radio[0]->excommand, command, strlen(command));
 	
@@ -602,7 +602,7 @@ int balance_probe_extend_command(unsigned char wlanid,unsigned char state){
 	if(AC_WLAN[wlanid]==NULL)
 		return -1;
 
-	command = (char *)malloc(sizeof(char)*50);
+	command = (char *)WID_MALLOC(sizeof(char)*50);
 	memset(command,0,50);
 
 	if(state==1)
@@ -621,7 +621,7 @@ int balance_probe_extend_command(unsigned char wlanid,unsigned char state){
 			}
 		}
 		
-	free(command);	
+	WID_FREE(command);	
 
 	return 0;
 }
@@ -635,30 +635,30 @@ int wid_set_ap_eth_if_mtu(unsigned int wtpid,unsigned char eth_index);   //fengw
 int WID_CREATE_NEW_WLAN(char *WlanName, unsigned char WlanID,unsigned char *ESSID,unsigned char *ESSID_STR,unsigned char cnFlag){
 	int i = 0, j = 0;
 	unsigned int essid_len = 0;
-	AC_WLAN[WlanID] = (WID_WLAN*)malloc(sizeof(WID_WLAN));
+	AC_WLAN[WlanID] = (WID_WLAN*)WID_MALLOC(sizeof(WID_WLAN));
 	memset(AC_WLAN[WlanID], 0 ,sizeof(WID_WLAN));
-	AC_WLAN[WlanID]->WlanName = (char*)malloc(strlen(WlanName)+1);
+	AC_WLAN[WlanID]->WlanName = (char*)WID_MALLOC(strlen(WlanName)+1);
 	memset(AC_WLAN[WlanID]->WlanName,0,strlen(WlanName)+1);
 	memcpy(AC_WLAN[WlanID]->WlanName,WlanName,strlen(WlanName));
 	essid_len = strlen((char *)ESSID);
 	if(essid_len <= ESSID_LENGTH){  //fengwenchao modify 20111013 for AXSSZFI-477,AUTELAN-2546
-		AC_WLAN[WlanID]->ESSID = (char*)malloc(essid_len + 1);	
+		AC_WLAN[WlanID]->ESSID = (char*)WID_MALLOC(essid_len + 1);	
 		memset(AC_WLAN[WlanID]->ESSID,0,essid_len + 1);
 		memcpy(AC_WLAN[WlanID]->ESSID,ESSID,essid_len);
 	}
 	else{
-		AC_WLAN[WlanID]->ESSID = (char*)malloc(ESSID_LENGTH);	
+		AC_WLAN[WlanID]->ESSID = (char*)WID_MALLOC(ESSID_LENGTH);	
 		memset(AC_WLAN[WlanID]->ESSID,0,ESSID_LENGTH);
 		memcpy(AC_WLAN[WlanID]->ESSID,ESSID,(ESSID_LENGTH-1));
 	}
 	AC_WLAN[WlanID]->chinaEssid = cnFlag;
 	if(cnFlag == 1){
 		if(strlen((char *)ESSID_STR)< ESSID_DEFAULT_LEN){
-			AC_WLAN[WlanID]->ESSID_CN_STR = (unsigned char*)malloc(ESSID_DEFAULT_LEN);	
+			AC_WLAN[WlanID]->ESSID_CN_STR = (unsigned char*)WID_MALLOC(ESSID_DEFAULT_LEN);	
 			memset(AC_WLAN[WlanID]->ESSID_CN_STR,0,ESSID_DEFAULT_LEN);
 			memcpy(AC_WLAN[WlanID]->ESSID_CN_STR,ESSID_STR,strlen((char *)ESSID_STR));
 		}else{
-			AC_WLAN[WlanID]->ESSID_CN_STR = (unsigned char*)malloc(strlen((char *)ESSID_STR)+1);	
+			AC_WLAN[WlanID]->ESSID_CN_STR = (unsigned char*)WID_MALLOC(strlen((char *)ESSID_STR)+1);	
 			memset(AC_WLAN[WlanID]->ESSID_CN_STR,0,strlen((char *)ESSID_STR)+1);
 			memcpy(AC_WLAN[WlanID]->ESSID_CN_STR,ESSID_STR,strlen((char *)ESSID_STR));
 		}
@@ -730,7 +730,7 @@ int WID_CREATE_NEW_WLAN(char *WlanName, unsigned char WlanID,unsigned char *ESSI
 	AC_WLAN[WlanID]->limit_flow = 10240;
 	/* zhangshu add for eap mac initial,2010-10-22 */
 	AC_WLAN[WlanID]->eap_mac_switch = 0;
-	AC_WLAN[WlanID]->eap_mac = (unsigned char*)malloc(18);
+	AC_WLAN[WlanID]->eap_mac = (unsigned char*)WID_MALLOC(18);
 	memset(AC_WLAN[WlanID]->eap_mac,0,18);
 	memcpy(AC_WLAN[WlanID]->eap_mac,"0",1);
 	AC_WLAN[WlanID]->wlan_muti_rate = gWLAN_UNI_MUTI_BRO_CAST.rate; //fengwenchao modify 20120323
@@ -830,7 +830,7 @@ void * free_wlan(void * arg)
 	while(wlan_vlan != NULL)
 	{
 		AC_WLAN[WlanID]->tunnel_wlan_vlan = wlan_vlan->ifnext;
-		free(wlan_vlan);
+		WID_FREE(wlan_vlan);
 		wlan_vlan = NULL;
 		wlan_vlan = AC_WLAN[WlanID]->tunnel_wlan_vlan;
 	}
@@ -857,17 +857,17 @@ void * free_wlan(void * arg)
 	while(wlan_ifi != NULL)
 	{
 		AC_WLAN[WlanID]->Wlan_Ifi = wlan_ifi->ifi_next;
-		free(wlan_ifi);
+		WID_FREE(wlan_ifi);
 		wlan_ifi = NULL;
 		wlan_ifi = AC_WLAN[WlanID]->Wlan_Ifi;
 	}
-	free(AC_WLAN[WlanID]->WlanName);
+	WID_FREE(AC_WLAN[WlanID]->WlanName);
 	AC_WLAN[WlanID]->WlanName = NULL;
-	free(AC_WLAN[WlanID]->ESSID);
+	WID_FREE(AC_WLAN[WlanID]->ESSID);
 	AC_WLAN[WlanID]->ESSID = NULL;
-	free(AC_WLAN[WlanID]->eap_mac);//zhangshu add
+	WID_FREE(AC_WLAN[WlanID]->eap_mac);//zhangshu add
 	AC_WLAN[WlanID]->eap_mac= NULL;
-	free(AC_WLAN[WlanID]);
+	WID_FREE(AC_WLAN[WlanID]);
 	AC_WLAN[WlanID] = NULL;
 	gettimeofday(&tpend, NULL);
 	if (tpend.tv_usec < tpstart.tv_usec)
@@ -1027,12 +1027,12 @@ int WID_CREATE_NEW_WTP(char *WTPNAME, unsigned int WTPID, char* WTPSN, char* WTP
 		return 1;
 	}else{
 	}
-	AC_WTP[WTPID] = (WID_WTP*)malloc(sizeof(WID_WTP));
+	AC_WTP[WTPID] = (WID_WTP*)WID_MALLOC(sizeof(WID_WTP));
 	memset(AC_WTP[WTPID], 0, sizeof(WID_WTP));
-	AC_WTP[WTPID]->WTPNAME = (char*)malloc(strlen(WTPNAME)+1);	
+	AC_WTP[WTPID]->WTPNAME = (char*)WID_MALLOC(strlen(WTPNAME)+1);	
 	memset(AC_WTP[WTPID]->WTPNAME,0,strlen(WTPNAME)+1);
 	memcpy(AC_WTP[WTPID]->WTPNAME,WTPNAME,strlen(WTPNAME));	
-	AC_WTP[WTPID]->WTPIP= (char*)malloc(DEFAULT_LEN);	
+	AC_WTP[WTPID]->WTPIP= (char*)WID_MALLOC(DEFAULT_LEN);	
 	memset(AC_WTP[WTPID]->WTPIP,0,DEFAULT_LEN);
 
 	AC_WTP[WTPID]->WTPID = WTPID;
@@ -1045,10 +1045,10 @@ int WID_CREATE_NEW_WTP(char *WTPNAME, unsigned int WTPID, char* WTPSN, char* WTP
 
 	if(issn == 1)
 	{
-		AC_WTP[WTPID]->WTPMAC = (unsigned char*)malloc(7);	
+		AC_WTP[WTPID]->WTPMAC = (unsigned char*)WID_MALLOC(7);	
 		memset(AC_WTP[WTPID]->WTPMAC,0,7);
 		
-		AC_WTP[WTPID]->WTPSN = (char*)malloc(NAS_IDENTIFIER_NAME);
+		AC_WTP[WTPID]->WTPSN = (char*)WID_MALLOC(NAS_IDENTIFIER_NAME);
 		memset(AC_WTP[WTPID]->WTPSN, 0, NAS_IDENTIFIER_NAME);
 		//AC_WTP[WTPID]->WTPSN = (char*)malloc(strlen(WTPSN)+1);
 		//memset(AC_WTP[WTPID]->WTPSN, 0, strlen(WTPSN)+1);
@@ -1061,16 +1061,16 @@ int WID_CREATE_NEW_WTP(char *WTPNAME, unsigned int WTPID, char* WTPSN, char* WTP
 		memset(AC_WTP[WTPID]->WTPSN, 0, DEFAULT_SN_LENTH+1);
 		memcpy(AC_WTP[WTPID]->WTPSN, gdefaultsn, DEFAULT_SN_LENTH);
 		*/
-		AC_WTP[WTPID]->WTPSN = (char*)malloc(NAS_IDENTIFIER_NAME);
+		AC_WTP[WTPID]->WTPSN = (char*)WID_MALLOC(NAS_IDENTIFIER_NAME);
 		memset(AC_WTP[WTPID]->WTPSN, 0, NAS_IDENTIFIER_NAME);
 		memcpy(AC_WTP[WTPID]->WTPSN, gdefaultsn, 20);
 		/*used to test ,avoid the point of sn error*/
-		AC_WTP[WTPID]->WTPMAC = (unsigned char*)malloc(MAC_LEN+1);	
+		AC_WTP[WTPID]->WTPMAC = (unsigned char*)WID_MALLOC(MAC_LEN+1);	
 		memset(AC_WTP[WTPID]->WTPMAC,0,(MAC_LEN+1));
 		memcpy(AC_WTP[WTPID]->WTPMAC,(unsigned char *)WTPSN,MAC_LEN);
 	}	
 	
-	AC_WTP[WTPID]->WTPModel = (char*)malloc(strlen(WTPModel)+1);
+	AC_WTP[WTPID]->WTPModel = (char*)WID_MALLOC(strlen(WTPModel)+1);
 	memset(AC_WTP[WTPID]->WTPModel, 0, strlen(WTPModel)+1);
 	memcpy(AC_WTP[WTPID]->WTPModel, WTPModel, strlen(WTPModel));
 	AC_WTP[WTPID]->updateversion = NULL;
@@ -1092,7 +1092,7 @@ int WID_CREATE_NEW_WTP(char *WTPNAME, unsigned int WTPID, char* WTPSN, char* WTP
 	//AC_WTP[WTPID]->Wlan_Id = NULL;
 	AC_WTP[WTPID]->wtp_login_mode = 0;
 	AC_WTP[WTPID]->WFR_Index = WTPID*L_RADIO_NUM;
-	AC_WTP[WTPID]->CMD = (WID_CMD*)malloc(sizeof(WID_CMD));
+	AC_WTP[WTPID]->CMD = (WID_CMD*)WID_MALLOC(sizeof(WID_CMD));
 	AC_WTP[WTPID]->CMD->CMD = 0;
 	AC_WTP[WTPID]->CMD->setCMD = 0;
 	AC_WTP[WTPID]->CMD->wlanCMD = 0;
@@ -1131,7 +1131,7 @@ int WID_CREATE_NEW_WTP(char *WTPNAME, unsigned int WTPID, char* WTPSN, char* WTP
 	AC_WTP[WTPID]->ControlList = NULL;
 	AC_WTP[WTPID]->ControlWait = NULL;
 	//AC_WTP[WTPID]->netid = NULL;
-	AC_WTP[WTPID]->netid = (char*)malloc(sizeof(char)*12);
+	AC_WTP[WTPID]->netid = (char*)WID_MALLOC(sizeof(char)*12);
 	memset(AC_WTP[WTPID]->netid, 0, 12);
 	memcpy(AC_WTP[WTPID]->netid, "defaultcode", 11);
 	memset(AC_WTP[WTPID]->cpuType,0,WTP_TYPE_DEFAULT_LEN);
@@ -1242,7 +1242,7 @@ int WID_CREATE_NEW_WTP(char *WTPNAME, unsigned int WTPID, char* WTPSN, char* WTP
 		{
 			num = pnode->radio_num;
 			
-			AC_WTP[WTPID]->APCode= (char*)malloc(strlen(pnode->str_ap_code)+1);
+			AC_WTP[WTPID]->APCode= (char*)WID_MALLOC(strlen(pnode->str_ap_code)+1);
 			memset(AC_WTP[WTPID]->APCode, 0, strlen(pnode->str_ap_code)+1);
 			memcpy(AC_WTP[WTPID]->APCode, pnode->str_ap_code, strlen(pnode->str_ap_code));
 			//printf("model:%s innercode:%s\n",WTPModel,AC_WTP[WTPID]->APCode);
@@ -1263,21 +1263,21 @@ int WID_CREATE_NEW_WTP(char *WTPNAME, unsigned int WTPID, char* WTPSN, char* WTP
 	wid_syslog_debug_debug(WID_DEFAULT,"wtp model:%s radio count is:%d\n",WTPModel,num);
 	if(num == -1)
 	{
-		free(AC_WTP[WTPID]->WTPMAC);
+		WID_FREE(AC_WTP[WTPID]->WTPMAC);
 		AC_WTP[WTPID]->WTPMAC = NULL;
-		free(AC_WTP[WTPID]->WTPIP);
+		WID_FREE(AC_WTP[WTPID]->WTPIP);
 		AC_WTP[WTPID]->WTPIP = NULL;
-		free(AC_WTP[WTPID]->WTPNAME);
+		WID_FREE(AC_WTP[WTPID]->WTPNAME);
 		AC_WTP[WTPID]->WTPNAME = NULL;
-		free(AC_WTP[WTPID]->WTPSN);
+		WID_FREE(AC_WTP[WTPID]->WTPSN);
 		AC_WTP[WTPID]->WTPSN = NULL;
-		free(AC_WTP[WTPID]->WTPModel);
+		WID_FREE(AC_WTP[WTPID]->WTPModel);
 		AC_WTP[WTPID]->WTPModel = NULL;
-		free(AC_WTP[WTPID]->netid);
+		WID_FREE(AC_WTP[WTPID]->netid);
 		AC_WTP[WTPID]->netid = NULL;
-		free(AC_WTP[WTPID]->CMD);
+		WID_FREE(AC_WTP[WTPID]->CMD);
 		AC_WTP[WTPID]->CMD = NULL;
-		free(AC_WTP[WTPID]);
+		WID_FREE(AC_WTP[WTPID]);
 		AC_WTP[WTPID] = NULL;
 		return 1;
 	}
@@ -1286,7 +1286,7 @@ int WID_CREATE_NEW_WTP(char *WTPNAME, unsigned int WTPID, char* WTPSN, char* WTP
 	AC_WTP[WTPID]->RadioCount = num;
   //AC_WTP[WTPID]->channelsendtimes = 1;   /*wuwl add for send channel_cont only one time at the beginning of the wtp access*/
 	for(i=0; ((i<num)&&(i<L_RADIO_NUM)); i++){	
-		AC_RADIO[gwtpid] = (WID_WTP_RADIO*)malloc(sizeof(WID_WTP_RADIO));
+		AC_RADIO[gwtpid] = (WID_WTP_RADIO*)WID_MALLOC(sizeof(WID_WTP_RADIO));
 		memset(AC_RADIO[gwtpid], 0, sizeof(WID_WTP_RADIO));
 		AC_RADIO[gwtpid]->WTPID = WTPID;
 		AC_RADIO[gwtpid]->Radio_G_ID = gwtpid;
@@ -1376,13 +1376,13 @@ int WID_CREATE_NEW_WTP(char *WTPNAME, unsigned int WTPID, char* WTPSN, char* WTP
 		for(ii=0;ii<SECTOR_NUM;ii++)
 		{	
 			//CW_CREATE_OBJECT_ERR(AC_RADIO[gwtpid]->sector[ii],WID_oem_sector,return NULL;);
-			AC_RADIO[gwtpid]->sector[ii] = (WID_oem_sector*)malloc(sizeof(WID_oem_sector));
+			AC_RADIO[gwtpid]->sector[ii] = (WID_oem_sector*)WID_MALLOC(sizeof(WID_oem_sector));
 			AC_RADIO[gwtpid]->sector[ii]->state = 0;
 			AC_RADIO[gwtpid]->sector[ii]->tx_power = 0;
 		}
 		for(jj=0;jj<TX_CHANIMASK_NUM;jj++)
 		{	
-			AC_RADIO[gwtpid]->tx_chainmask[jj] = (WID_oem_tx_chainmask*)malloc(sizeof(WID_oem_tx_chainmask));
+			AC_RADIO[gwtpid]->tx_chainmask[jj] = (WID_oem_tx_chainmask*)WID_MALLOC(sizeof(WID_oem_tx_chainmask));
 			AC_RADIO[gwtpid]->tx_chainmask[jj]->state = 0;
 		}
 		if((AC_RADIO[gwtpid]->Radio_Type & 0x08) == 0x08)//if mode is 11n,beacon interval set to 400
@@ -1551,12 +1551,12 @@ int WID_CREATE_NEW_WTP(char *WTPNAME, unsigned int WTPID, unsigned char* WTPSN, 
 		return 1;
 	}else{
 	}
-	AC_WTP[WTPID] = (WID_WTP*)malloc(sizeof(WID_WTP));
+	AC_WTP[WTPID] = (WID_WTP*)WID_MALLOC(sizeof(WID_WTP));
 	memset(AC_WTP[WTPID], 0, sizeof(WID_WTP));
-	AC_WTP[WTPID]->WTPNAME = (char*)malloc(strlen(WTPNAME)+1);	
+	AC_WTP[WTPID]->WTPNAME = (char*)WID_MALLOC(strlen(WTPNAME)+1);	
 	memset(AC_WTP[WTPID]->WTPNAME,0,strlen(WTPNAME)+1);
 	memcpy(AC_WTP[WTPID]->WTPNAME,WTPNAME,strlen(WTPNAME));	
-	AC_WTP[WTPID]->WTPIP= (char*)malloc(DEFAULT_LEN);	
+	AC_WTP[WTPID]->WTPIP= (char*)WID_MALLOC(DEFAULT_LEN);	
 	memset(AC_WTP[WTPID]->WTPIP,0,DEFAULT_LEN);
 
 	AC_WTP[WTPID]->WTPID = WTPID;
@@ -1571,10 +1571,10 @@ int WID_CREATE_NEW_WTP(char *WTPNAME, unsigned int WTPID, unsigned char* WTPSN, 
 
 	if(issn == 1)
 	{
-		AC_WTP[WTPID]->WTPMAC = (unsigned char*)malloc(7);	
+		AC_WTP[WTPID]->WTPMAC = (unsigned char*)WID_MALLOC(7);	
 		memset(AC_WTP[WTPID]->WTPMAC,0,7);
 		
-		AC_WTP[WTPID]->WTPSN = (char*)malloc(NAS_IDENTIFIER_NAME);
+		AC_WTP[WTPID]->WTPSN = (char*)WID_MALLOC(NAS_IDENTIFIER_NAME);
 		memset(AC_WTP[WTPID]->WTPSN, 0, NAS_IDENTIFIER_NAME);
 		//AC_WTP[WTPID]->WTPSN = (char*)malloc(strlen(WTPSN)+1);
 		//memset(AC_WTP[WTPID]->WTPSN, 0, strlen(WTPSN)+1);
@@ -1587,16 +1587,16 @@ int WID_CREATE_NEW_WTP(char *WTPNAME, unsigned int WTPID, unsigned char* WTPSN, 
 		memset(AC_WTP[WTPID]->WTPSN, 0, DEFAULT_SN_LENTH+1);
 		memcpy(AC_WTP[WTPID]->WTPSN, gdefaultsn, DEFAULT_SN_LENTH);
 		*/
-		AC_WTP[WTPID]->WTPSN = (char*)malloc(NAS_IDENTIFIER_NAME);
+		AC_WTP[WTPID]->WTPSN = (char*)WID_MALLOC(NAS_IDENTIFIER_NAME);
 		memset(AC_WTP[WTPID]->WTPSN, 0, NAS_IDENTIFIER_NAME);
 		memcpy(AC_WTP[WTPID]->WTPSN, gdefaultsn, 20);
 		/*used to test ,avoid the point of sn error*/
-		AC_WTP[WTPID]->WTPMAC = (unsigned char*)malloc(MAC_LEN+1);	
+		AC_WTP[WTPID]->WTPMAC = (unsigned char*)WID_MALLOC(MAC_LEN+1);	
 		memset(AC_WTP[WTPID]->WTPMAC,0,(MAC_LEN+1));
 		memcpy(AC_WTP[WTPID]->WTPMAC,(unsigned char *)WTPSN,MAC_LEN);
 	}	
 	
-	AC_WTP[WTPID]->WTPModel = (char*)malloc(strlen(WTPModel)+1);
+	AC_WTP[WTPID]->WTPModel = (char*)WID_MALLOC(strlen(WTPModel)+1);
 	memset(AC_WTP[WTPID]->WTPModel, 0, strlen(WTPModel)+1);
 	memcpy(AC_WTP[WTPID]->WTPModel, WTPModel, strlen(WTPModel));
 	AC_WTP[WTPID]->updateversion = NULL;
@@ -1619,7 +1619,7 @@ int WID_CREATE_NEW_WTP(char *WTPNAME, unsigned int WTPID, unsigned char* WTPSN, 
 	//AC_WTP[WTPID]->Wlan_Id = NULL;
 	AC_WTP[WTPID]->wtp_login_mode = 0;
 	AC_WTP[WTPID]->WFR_Index = WTPID*L_RADIO_NUM;
-	AC_WTP[WTPID]->CMD = (WID_CMD*)malloc(sizeof(WID_CMD));
+	AC_WTP[WTPID]->CMD = (WID_CMD*)WID_MALLOC(sizeof(WID_CMD));
 	AC_WTP[WTPID]->CMD->CMD = 0;
 	AC_WTP[WTPID]->CMD->setCMD = 0;
 	AC_WTP[WTPID]->CMD->wlanCMD = 0;
@@ -1661,7 +1661,7 @@ int WID_CREATE_NEW_WTP(char *WTPNAME, unsigned int WTPID, unsigned char* WTPSN, 
 	AC_WTP[WTPID]->ControlWait = NULL;
 	AC_WTP[WTPID]->sta_ip_report = gSTAINFOREPORT ; /*wcl add for globle variable*/
 	//AC_WTP[WTPID]->netid = NULL;
-	AC_WTP[WTPID]->netid = (char*)malloc(sizeof(char)*12);
+	AC_WTP[WTPID]->netid = (char*)WID_MALLOC(sizeof(char)*12);
 	memset(AC_WTP[WTPID]->netid, 0, 12);
 	memcpy(AC_WTP[WTPID]->netid, "defaultcode", 11);
 	memset(AC_WTP[WTPID]->cpuType,0,WTP_TYPE_DEFAULT_LEN);
@@ -1810,10 +1810,10 @@ int WID_CREATE_NEW_WTP(char *WTPNAME, unsigned int WTPID, unsigned char* WTPSN, 
 			if(code != NULL)
 			{
 			    if(AC_WTP[WTPID]->APCode != NULL){
-					free(AC_WTP[WTPID]->APCode);
+					WID_FREE(AC_WTP[WTPID]->APCode);
 					AC_WTP[WTPID]->APCode = NULL;
 				}
-                AC_WTP[WTPID]->APCode = (char*)malloc(strlen(code)+1);
+                AC_WTP[WTPID]->APCode = (char*)WID_MALLOC(strlen(code)+1);
                 memset(AC_WTP[WTPID]->APCode, 0, strlen(code)+1);
                 memcpy(AC_WTP[WTPID]->APCode, code, strlen(code));
 			        
@@ -1839,21 +1839,21 @@ int WID_CREATE_NEW_WTP(char *WTPNAME, unsigned int WTPID, unsigned char* WTPSN, 
 	wid_syslog_debug_debug(WID_DEFAULT,"wtp model:%s radio count is:%d\n",WTPModel,num);
 	if(num == -1)
 	{
-		free(AC_WTP[WTPID]->WTPMAC);
+		WID_FREE(AC_WTP[WTPID]->WTPMAC);
 		AC_WTP[WTPID]->WTPMAC = NULL;
-		free(AC_WTP[WTPID]->WTPIP);
+		WID_FREE(AC_WTP[WTPID]->WTPIP);
 		AC_WTP[WTPID]->WTPIP = NULL;
-		free(AC_WTP[WTPID]->WTPNAME);
+		WID_FREE(AC_WTP[WTPID]->WTPNAME);
 		AC_WTP[WTPID]->WTPNAME = NULL;
-		free(AC_WTP[WTPID]->WTPSN);
+		WID_FREE(AC_WTP[WTPID]->WTPSN);
 		AC_WTP[WTPID]->WTPSN = NULL;
-		free(AC_WTP[WTPID]->WTPModel);
+		WID_FREE(AC_WTP[WTPID]->WTPModel);
 		AC_WTP[WTPID]->WTPModel = NULL;
-		free(AC_WTP[WTPID]->netid);
+		WID_FREE(AC_WTP[WTPID]->netid);
 		AC_WTP[WTPID]->netid = NULL;
-		free(AC_WTP[WTPID]->CMD);
+		WID_FREE(AC_WTP[WTPID]->CMD);
 		AC_WTP[WTPID]->CMD = NULL;
-		free(AC_WTP[WTPID]);
+		WID_FREE(AC_WTP[WTPID]);
 		AC_WTP[WTPID] = NULL;
 		return 1;
 	}
@@ -1862,7 +1862,7 @@ int WID_CREATE_NEW_WTP(char *WTPNAME, unsigned int WTPID, unsigned char* WTPSN, 
 	AC_WTP[WTPID]->RadioCount = num;
   //AC_WTP[WTPID]->channelsendtimes = 1;   /*wuwl add for send channel_cont only one time at the beginning of the wtp access*/
 	for(i=0; ((i<num)&&(i<L_RADIO_NUM)); i++){	
-		AC_RADIO[gwtpid] = (WID_WTP_RADIO*)malloc(sizeof(WID_WTP_RADIO));
+		AC_RADIO[gwtpid] = (WID_WTP_RADIO*)WID_MALLOC(sizeof(WID_WTP_RADIO));
 		memset(AC_RADIO[gwtpid], 0, sizeof(WID_WTP_RADIO));
 		AC_RADIO[gwtpid]->WTPID = WTPID;
 		AC_RADIO[gwtpid]->Radio_G_ID = gwtpid;
@@ -2020,13 +2020,13 @@ int WID_CREATE_NEW_WTP(char *WTPNAME, unsigned int WTPID, unsigned char* WTPSN, 
 		for(ii=0;ii<SECTOR_NUM;ii++)
 		{	
 			//CW_CREATE_OBJECT_ERR(AC_RADIO[gwtpid]->sector[ii],WID_oem_sector,return NULL;);
-			AC_RADIO[gwtpid]->sector[ii] = (WID_oem_sector*)malloc(sizeof(WID_oem_sector));
+			AC_RADIO[gwtpid]->sector[ii] = (WID_oem_sector*)WID_MALLOC(sizeof(WID_oem_sector));
 			AC_RADIO[gwtpid]->sector[ii]->state = 0;
 			AC_RADIO[gwtpid]->sector[ii]->tx_power = 0;
 		}
 		for(jj=0;jj<TX_CHANIMASK_NUM;jj++)
 		{	
-			AC_RADIO[gwtpid]->tx_chainmask[jj] = (WID_oem_tx_chainmask*)malloc(sizeof(WID_oem_tx_chainmask));
+			AC_RADIO[gwtpid]->tx_chainmask[jj] = (WID_oem_tx_chainmask*)WID_MALLOC(sizeof(WID_oem_tx_chainmask));
 			AC_RADIO[gwtpid]->tx_chainmask[jj]->state = 0;
 		}
 		if((AC_RADIO[gwtpid]->Radio_Type & 0x08) == 0x08)//if mode is 11n,beacon interval set to 400
@@ -2270,7 +2270,7 @@ int WID_DELETE_WTP(unsigned int WTPID){
 						free_maclist(AC_BSS[bssindex]->acl_conf,AC_BSS[bssindex]->acl_conf->deny_mac);
 						AC_BSS[bssindex]->acl_conf->deny_mac = NULL;
 						}
-					free(AC_BSS[bssindex]->acl_conf);
+					WID_FREE(AC_BSS[bssindex]->acl_conf);
 					AC_BSS[bssindex]->acl_conf = NULL;
 				}
 				wlanid = AC_RADIO[RID]->BSS[k]->WlanID;
@@ -2290,9 +2290,9 @@ int WID_DELETE_WTP(unsigned int WTPID){
 				AC_RADIO[RID]->radio_noise = 0;
 		
 				memset(AC_RADIO[RID]->BSS[k]->BSSID, 0, 6);
-				free(AC_RADIO[RID]->BSS[k]->BSSID);
+				WID_FREE(AC_RADIO[RID]->BSS[k]->BSSID);
 				AC_RADIO[RID]->BSS[k]->BSSID = NULL;
-				free(AC_RADIO[RID]->BSS[k]);
+				WID_FREE(AC_RADIO[RID]->BSS[k]);
 				AC_RADIO[RID]->BSS[k] = NULL;
 				AC_WTP[WTPID]->WTP_Radio[i]->BSS[k]=NULL;
 				
@@ -2317,26 +2317,26 @@ int WID_DELETE_WTP(unsigned int WTPID){
 		{			
 			wlan_id_next = wlan_id->next;
 		
-			CW_FREE_OBJECT(wlan_id);
+			CW_FREE_OBJECT_WID(wlan_id);
 		
 			wlan_id = wlan_id_next;
 		}
 		for(j=0;j<SECTOR_NUM;j++)
 		{	
 			if(AC_RADIO[RID]->sector[j]){
-				free(AC_RADIO[RID]->sector[j]);
+				WID_FREE(AC_RADIO[RID]->sector[j]);
 				AC_RADIO[RID]->sector[j] = NULL;
 			}
 		}
 		for(ii=0;ii<TX_CHANIMASK_NUM;ii++)
 		{	
 			if(AC_RADIO[RID]->tx_chainmask[ii]){
-				free(AC_RADIO[RID]->tx_chainmask[ii]);
+				WID_FREE(AC_RADIO[RID]->tx_chainmask[ii]);
 				AC_RADIO[RID]->tx_chainmask[ii] = NULL;
 			}
 		}
 		
-		free(AC_RADIO[RID]);
+		WID_FREE(AC_RADIO[RID]);
 		AC_RADIO[RID] = NULL;
 		
 		RID++;
@@ -2356,34 +2356,34 @@ int WID_DELETE_WTP(unsigned int WTPID){
 	AC_WTP[WTPID]->sta_flow_overflow_tx_reportswitch = STA_FLOW_OVERFLOW_TRAP_TX_SWITCH_DISABLE;
 	AC_WTP[WTPID]->sta_flow_overflow_tx_threshold = STA_FLOW_OVERFLOW_TX_THRESHOLD;	//kB
 	
-	free(AC_WTP[WTPID]->WTPIP);
+	WID_FREE(AC_WTP[WTPID]->WTPIP);
 	AC_WTP[WTPID]->WTPIP = NULL;
-	free(AC_WTP[WTPID]->WTPMAC);
+	WID_FREE(AC_WTP[WTPID]->WTPMAC);
 	AC_WTP[WTPID]->WTPMAC = NULL;
-	free(AC_WTP[WTPID]->CMD);
+	WID_FREE(AC_WTP[WTPID]->CMD);
 	AC_WTP[WTPID]->CMD = NULL;
-	free(AC_WTP[WTPID]->WTPSN);
+	WID_FREE(AC_WTP[WTPID]->WTPSN);
 	AC_WTP[WTPID]->WTPSN = NULL;
-	free(AC_WTP[WTPID]->WTPNAME);
+	WID_FREE(AC_WTP[WTPID]->WTPNAME);
 	AC_WTP[WTPID]->WTPNAME = NULL;
-	free(AC_WTP[WTPID]->WTPModel);
+	WID_FREE(AC_WTP[WTPID]->WTPModel);
 	AC_WTP[WTPID]->WTPModel = NULL;
 	if (NULL == AC_WTP[WTPID]->APCode)
 	{
-	free(AC_WTP[WTPID]->APCode);
+	WID_FREE(AC_WTP[WTPID]->APCode);
 	AC_WTP[WTPID]->APCode = NULL;
 	}
-	free(AC_WTP[WTPID]->add_time);
+	WID_FREE(AC_WTP[WTPID]->add_time);
 	AC_WTP[WTPID]->add_time = NULL;
-	free(AC_WTP[WTPID]->quit_time);
+	WID_FREE(AC_WTP[WTPID]->quit_time);
 	AC_WTP[WTPID]->quit_time = NULL;
-	free(AC_WTP[WTPID]->location);
+	WID_FREE(AC_WTP[WTPID]->location);
 	AC_WTP[WTPID]->location = NULL;
-	free(AC_WTP[WTPID]->netid);
+	WID_FREE(AC_WTP[WTPID]->netid);
 	AC_WTP[WTPID]->netid = NULL;
 	if (NULL != AC_WTP[WTPID]->option60_param)
 	{
-	free(AC_WTP[WTPID]->option60_param);
+	WID_FREE(AC_WTP[WTPID]->option60_param);
 	AC_WTP[WTPID]->option60_param = NULL;
 	}
 //	CW_FREE_OBJECT(AC_WTP[WTPID]->sysver);
@@ -2402,7 +2402,7 @@ int WID_DELETE_WTP(unsigned int WTPID){
 			tmp = p;
 			p = p->next;
 			tmp->next =NULL;
-			free(tmp);
+			WID_FREE(tmp);
 			tmp = NULL;
 			AC_WTP[WTPID]->apcminfo.ap_cpu_info_length--;
 		}
@@ -2416,7 +2416,7 @@ int WID_DELETE_WTP(unsigned int WTPID){
 			tmp = p;
 			p = p->next;
 			tmp->next =NULL;
-			free(tmp);
+			WID_FREE(tmp);
 			tmp = NULL;
 			AC_WTP[WTPID]->apcminfo.ap_mem_info_length--;
 		}
@@ -2430,7 +2430,7 @@ int WID_DELETE_WTP(unsigned int WTPID){
 			tmp = p;
 			p = p->next;
 			tmp->next =NULL;
-			free(tmp);
+			WID_FREE(tmp);
 			tmp = NULL;
 			AC_WTP[WTPID]->apcminfo.ap_snr_info_length--;
 			printf("ap_snr_info_length:%d",AC_WTP[WTPID]->apcminfo.ap_snr_info_length);
@@ -2447,7 +2447,7 @@ int WID_DELETE_WTP(unsigned int WTPID){
 			tmp = p;
 			p = p->next;
 			tmp->next =NULL;
-			free(tmp);
+			WID_FREE(tmp);
 			tmp = NULL;
 			AC_WTP[WTPID]->heart_time.heart_time_value_length--;
 			printf("heart_time_value_length:%d",AC_WTP[WTPID]->heart_time.heart_time_value_length);
@@ -2481,13 +2481,13 @@ int WID_DELETE_WTP(unsigned int WTPID){
 	if(AC_WTP[WTPID]->APGroupID != 0){
 		del_ap_group_member(AC_WTP[WTPID]->APGroupID,WTPID);
 	}
-	free(AC_WTP[WTPID]);
+	WID_FREE(AC_WTP[WTPID]);
 	AC_WTP[WTPID] = NULL;
 
 	gStaticWTPs--;
 	
 	struct wtp_con_info * con_info = NULL;
-	con_info = malloc(sizeof(struct wtp_con_info));
+	con_info = WID_MALLOC(sizeof(struct wtp_con_info));
 	memset(con_info,0,sizeof(struct wtp_con_info));
 	memcpy(con_info->wtpmac,macAddr,MAC_LEN);
 	wid_syslog_info("%s,%d,con_info->wtpmac:%2X:%2X:%2X:%2X:%2X:%2X.\n",__func__,__LINE__,con_info->wtpmac[0],con_info->wtpmac[1],con_info->wtpmac[2],con_info->wtpmac[3],con_info->wtpmac[4],con_info->wtpmac[5]);
@@ -2495,7 +2495,7 @@ int WID_DELETE_WTP(unsigned int WTPID){
 	con_info->wtpindex2 = WTPID;
 	wid_del_conflict_wtpinfo(con_info);
 	if(con_info){
-		free(con_info);
+		WID_FREE(con_info);
 		con_info = NULL;
 	}
 	return 0;
@@ -3233,17 +3233,18 @@ int WID_ENABLE_WLAN(unsigned char WlanID){
 								}*/
 							}
 							//weichao add 
-								command = (char *)malloc(sizeof(char)*100);
+								command = (char *)WID_MALLOC(sizeof(char)*100);
 								if(NULL == command)
 								{							
-									wid_syslog_crit("%s malloc %s",__func__,strerror(errno));
+									wid_syslog_crit("%s WID_MALLOC %s",__func__,strerror(errno));
 									return 0;
 								}
 								memset(command,0,100);
-								ath_str = (char *)malloc(sizeof(char)*20);
+								ath_str = (char *)WID_MALLOC(sizeof(char)*20);
 								if(NULL == ath_str)
 								{
 									wid_syslog_crit("%s malloc %s",__func__,strerror(errno));
+									WID_FREE(command);
 									return 0;
 								}
 								memset(ath_str,0,20);
@@ -3287,9 +3288,9 @@ int WID_ENABLE_WLAN(unsigned char WlanID){
 								}*/
 							
 							
-							free(command);
+							WID_FREE(command);
 							command = NULL;
-							free(ath_str);
+							WID_FREE(ath_str);
 							ath_str = NULL;
 
 								//add wds state info
@@ -3304,7 +3305,7 @@ int WID_ENABLE_WLAN(unsigned char WlanID){
 									msg2.mqinfo.u.WlanInfo.WLANID = WlanID;
 									msg2.mqinfo.u.WlanInfo.Radio_L_ID = n;
 									
-									elem2 = (struct msgqlist*)malloc(sizeof(struct msgqlist));
+									elem2 = (struct msgqlist*)WID_MALLOC(sizeof(struct msgqlist));
 									if(elem2 == NULL){
 										wid_syslog_crit("%s malloc %s",__func__,strerror(errno));
 										perror("malloc");
@@ -4034,7 +4035,7 @@ int Delete_Bind_Interface_For_WID(struct ifi_info *ifi){
 					//fengwenchao modify end					
 					wid_syslog_notice("111111111delete %d (%d, %s) index %d sock %d\n", tmp_next->gIf_Index, tmp_next->systemIndex, tmp_next->ifname,ifi->ifi_index,tmp_next->sock);
 					close(tmp_next->sock);
-					free(tmp_next);
+					WID_FREE(tmp_next);
 					tmp_next = tmp;
 					
 					WIDWsm_VRRPIFOp((unsigned char*)ifi->ifi_name,ifi->addr[i],VRRP_UNREG_IF);
@@ -4081,7 +4082,7 @@ int Delete_Bind_Interface_For_WID(struct ifi_info *ifi){
 						//fengwenchao modify end					
 						wid_syslog_notice("222222222222delete %d (%d, %s) index %d sock %d\n", tmp_next->gIf_Index, tmp_next->systemIndex, tmp_next->ifname,ifi->ifi_index,tmp_next->sock);
 						close(tmp_next->sock);
-						free(tmp_next);
+						WID_FREE(tmp_next);
 						tmp_next = tmp->if_next;						
 						WIDWsm_VRRPIFOp((unsigned char*)ifi->ifi_name,ifi->addr[i],VRRP_UNREG_IF);
 						if(gACSocket.count > 0)
@@ -4126,7 +4127,7 @@ void Check_Current_Interface_and_delete(char * ifname, struct ifi_info *ifi){
 				}
 				//fengwenchao modify end
 				close(tmp_next->sock);
-				free(tmp_next);
+				WID_FREE(tmp_next);
 				tmp_next = tmp;
 				gACSocket.interfaces = tmp;
 				if(gACSocket.count > 0)
@@ -4165,7 +4166,7 @@ void Check_Current_Interface_and_delete(char * ifname, struct ifi_info *ifi){
 					//fengwenchao modify end
 					//printf("delete %d (%d, %s)", tmp_next->gIf_Index, tmp_next->systemIndex, tmp_next->ifname,ifi->ifi_index);
 					close(tmp_next->sock);
-					free(tmp_next);
+					WID_FREE(tmp_next);
 					tmp_next = tmp;
 					gACSocket.interfaces = tmp;
 					if(gACSocket.count > 0)
@@ -4202,7 +4203,7 @@ void Check_Current_Interface_and_delete(char * ifname, struct ifi_info *ifi){
 				}
 				//fengwenchao modify end
 				close(tmp_next->sock);
-				free(tmp_next);
+				WID_FREE(tmp_next);
 				tmp_next = tmp->if_next;				
 				if(gACSocket.count > 0)
 					gACSocket.count --;
@@ -4241,7 +4242,7 @@ void Check_Current_Interface_and_delete(char * ifname, struct ifi_info *ifi){
 					}
 					//fengwenchao modify end
 					close(tmp_next->sock);
-					free(tmp_next);
+					WID_FREE(tmp_next);
 					tmp_next = tmp->if_next;
 					if(gACSocket.count > 0)
 						gACSocket.count --;
@@ -4279,7 +4280,7 @@ int Delete_listenning_IF(char * ifname){
 		if((m == n)&&(tmp2->lic_flag == DOWN_LINK_IF_TYPE)&&(memcmp(tmp2->ifi_name,ifname,m)==0)){
 			WID_IF = tmp2->ifi_next;
 			tmp2->ifi_next = NULL;
-			free(tmp2);
+			WID_FREE(tmp2);
 			tmp2 = NULL;
 			wid_syslog_debug_debug(WID_DEFAULT,"%s,11delete interface from WID_IF,ifname=%s\n",__func__,ifname);
 		}else{
@@ -4290,7 +4291,7 @@ int Delete_listenning_IF(char * ifname){
 				if((m == n)&&(tmp2->lic_flag == DOWN_LINK_IF_TYPE)&&(memcmp(tmp2->ifi_name,ifname,m)==0)){
 					tmp3->ifi_next = tmp2->ifi_next;
 					tmp2->ifi_next = NULL;
-					free(tmp2);
+					WID_FREE(tmp2);
 					tmp2 = NULL;	
 					wid_syslog_debug_debug(WID_DEFAULT,"%s,33delete interface from WID_IF,ifname=%s\n",__func__,ifname);
 					break;
@@ -4337,7 +4338,7 @@ int Delete_listenning_IF(char * ifname){
 					Set_Interface_binding_Info(ifname,0);			
 					ip = ((struct sockaddr_in *)&(tmp->addr))->sin_addr.s_addr;
 					WIDWsm_VRRPIFOp((unsigned char*)(tmp->ifname),ip,VRRP_UNREG_IF);
-					free(tmp);
+					WID_FREE(tmp);
 					tmp = NULL;
 					if(gACSocket.count > 0)
 						gACSocket.count--;
@@ -4369,7 +4370,7 @@ int Delete_listenning_IF(char * ifname){
 					Set_Interface_binding_Info(ifname,0);
 					ip = ((struct sockaddr_in *)&(tmp_next->addr))->sin_addr.s_addr;
 					WIDWsm_VRRPIFOp((unsigned char*)(tmp_next->ifname),ip,VRRP_UNREG_IF);
-					free(tmp_next);
+					WID_FREE(tmp_next);
 					tmp_next = NULL;
 					tmp_next = tmp->if_next;
 					if(gACSocket.count > 0)
@@ -4413,7 +4414,7 @@ int Delete_listenning_IP(unsigned int ipaddr,LISTEN_FLAG flag){
 		if((tmp2->addr == ipaddr)&&(tmp2->lic_flag == flag)){
 			WID_IF = tmp2->ifi_next;
 			tmp2->ifi_next = NULL;
-			free(tmp2);
+			WID_FREE(tmp2);
 			tmp2 = NULL;
 			wid_syslog_debug_debug(WID_DEFAULT,"1,%s,ip=%d.%d.%d.%d.\n",__func__,(ipaddr>>24)&0xFF,(ipaddr>>16)&0xFF,(ipaddr>>8)&0xFF,(ipaddr)&0xFF);
 		}else{
@@ -4425,7 +4426,7 @@ int Delete_listenning_IP(unsigned int ipaddr,LISTEN_FLAG flag){
 				if((tmp2->addr == ipaddr)&&(tmp2->lic_flag == flag)){
 					tmp3->ifi_next = tmp2->ifi_next;
 					tmp2->ifi_next = NULL;
-					free(tmp2);
+					WID_FREE(tmp2);
 					tmp2 = NULL;	
 					wid_syslog_debug_debug(WID_DEFAULT,"3,%s,ip=%d.%d.%d.%d.\n",__func__,(ipaddr>>24)&0xFF,(ipaddr>>16)&0xFF,(ipaddr>>8)&0xFF,(ipaddr)&0xFF);
 					break;
@@ -4451,7 +4452,7 @@ int Delete_listenning_IP(unsigned int ipaddr,LISTEN_FLAG flag){
 			close(tmp->sock);
 			if(flag != LIC_TYPE)
 				WIDWsm_VRRPIFOp((unsigned char*)(tmp->ifname),ipaddr,VRRP_UNREG_IF);
-			free(tmp);
+			WID_FREE(tmp);
 			tmp = NULL;
 			if(gACSocket.count > 0)
 				gACSocket.count--;
@@ -4480,7 +4481,7 @@ int Delete_listenning_IP(unsigned int ipaddr,LISTEN_FLAG flag){
 					close(tmp_next->sock);
 					if(flag != LIC_TYPE)
 						WIDWsm_VRRPIFOp((unsigned char*)(tmp_next->ifname),ipaddr,VRRP_UNREG_IF);
-					free(tmp_next);
+					WID_FREE(tmp_next);
 					tmp_next = NULL;
 					tmp_next = tmp->if_next;
 					if(gACSocket.count > 0)
@@ -4668,7 +4669,7 @@ int Bind_BroadAddr_For_WID(struct ifi_info *ifi, int port){
 		
 		// store socket inside multihomed socket
 		
-		CW_CREATE_OBJECT_ERR(p, struct CWMultiHomedInterface, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
+		CW_CREATE_OBJECT_ERR_WID(p, struct CWMultiHomedInterface, close(sock); return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
 		memset(p->ifname, 0, IFI_NAME);
 		strncpy(p->ifname, ifi->ifi_name, IFI_NAME);
 		p->sock = sock; 		
@@ -4766,7 +4767,7 @@ int Add_Listenning_IF(char * ifname){
 	
 	struct CWMultiHomedInterface *ptr;
 	struct CWMultiHomedInterface* inf2 = gListenningIF.interfaces;
-	CW_CREATE_OBJECT_ERR(ptr, struct CWMultiHomedInterface, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
+	CW_CREATE_OBJECT_ERR_WID(ptr, struct CWMultiHomedInterface, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
 	if(ptr == NULL){
 		wid_syslog_crit("%s malloc %s",__func__,strerror(errno));
 		perror("malloc");
@@ -4795,7 +4796,7 @@ int Add_Listenning_IF(char * ifname){
 			gListenningIF.count ++;
 			wid_syslog_debug_debug(WID_DEFAULT,"%s,22gListenningIF.count ++,count=%d\n",__func__,gListenningIF.count);
 		}else{
-			free(ptr);
+			WID_FREE(ptr);
 			ptr = NULL;
 		}
 	}
@@ -4805,7 +4806,7 @@ int Add_Listenning_IP(char * ifname,unsigned int addr,LISTEN_FLAG flag){
 	
 	struct CWMultiHomedInterface *ptr;
 	struct CWMultiHomedInterface* inf2 = gListenningIF.interfaces;
-	CW_CREATE_OBJECT_ERR(ptr, struct CWMultiHomedInterface, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
+	CW_CREATE_OBJECT_ERR_WID(ptr, struct CWMultiHomedInterface, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
 	if(ptr == NULL){
 		wid_syslog_crit("%s malloc %s",__func__,strerror(errno));
 		perror("malloc");
@@ -4836,7 +4837,7 @@ int Add_Listenning_IP(char * ifname,unsigned int addr,LISTEN_FLAG flag){
 			gListenningIF.count ++;
 			wid_syslog_debug_debug(WID_DEFAULT,"%s,22gListenningIF.count ++,count=%d\n",__func__,gListenningIF.count);
 		}else{
-			free(ptr);
+			WID_FREE(ptr);
 			ptr = NULL;
 		}
 	}
@@ -4915,7 +4916,7 @@ int Bind_Interface_For_WID(struct ifi_info *ifi, int port,LISTEN_FLAG lic_flag){
 		
 		// store socket inside multihomed socket
 		
-		CW_CREATE_OBJECT_ERR(p, struct CWMultiHomedInterface, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
+		CW_CREATE_OBJECT_ERR_WID(p, struct CWMultiHomedInterface, close(sock); return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
 		memset(p,0,sizeof(struct CWMultiHomedInterface));
 		//memset(p->ifname, 0, IFI_NAME);
 		strncpy(p->ifname, ifi->ifi_name, IFI_NAME);
@@ -5056,7 +5057,7 @@ int Repair_WID_Listening_Socket(struct CWMultiHomedInterface *inf){
 				wid_syslog_info("%s,%d errror:%s\n",__func__,__LINE__,strerror(errno));
 				wid_syslog_info("%s,%d wid socket repair error\n",__func__,__LINE__);
 				pre = tmp->if_next;
-				free(tmp);
+				WID_FREE(tmp);
 				tmp = NULL;
 				return -1;
 			}
@@ -5067,7 +5068,7 @@ int Repair_WID_Listening_Socket(struct CWMultiHomedInterface *inf){
 				wid_syslog_info("%s,%d errror:%s\n",__func__,__LINE__,strerror(errno));
 				wid_syslog_info("%s,%d socket repair error\n",__func__,__LINE__);
 				pre = tmp->if_next;
-				free(tmp);
+				WID_FREE(tmp);
 				tmp = NULL;
 				return -1;
 			}
@@ -5152,7 +5153,7 @@ unsigned int is_local_board_interface(const char *ifname)
 	}
 	close(sock);
 
-	printf("%s\n", (IFF_RPA == tmp.ifr_flags) ? "rpa interface" : " ");
+	wid_syslog_err("%s\n", (IFF_RPA == tmp.ifr_flags) ? "rpa interface" : " ");
 	
 	return ((tmp.ifr_flags & IFF_RPA) != IFF_RPA);	
 }
@@ -5169,7 +5170,7 @@ int Check_And_Bind_Interface_For_WID(char * ifname){
 	
 	if(!is_local_board_interface(ifname)){
 		if(ifi_tmp){
-			free(ifi_tmp);
+			WID_FREE(ifi_tmp);
 			ifi_tmp = NULL;
 		}
 		return WID_INTERFACE_NOT_BE_LOCAL_BOARD;	
@@ -5182,14 +5183,14 @@ int Check_And_Bind_Interface_For_WID(char * ifname){
 	if(ret != 0){		
 		Delete_Interface(ifname, ifi_tmp->ifi_index);
 		if(ifi_tmp->ifi_addr != NULL){
-			free(ifi_tmp->ifi_addr);
+			WID_FREE(ifi_tmp->ifi_addr);
 			ifi_tmp->ifi_addr = NULL;
 		}		
 		if(ifi_tmp->ifi_brdaddr != NULL){
-			free(ifi_tmp->ifi_brdaddr);
+			WID_FREE(ifi_tmp->ifi_brdaddr);
 			ifi_tmp->ifi_brdaddr = NULL;
 		}
-		free(ifi_tmp);
+		WID_FREE(ifi_tmp);
 		ifi_tmp = NULL;
 		return ret;		
 	}	
@@ -5199,14 +5200,14 @@ int Check_And_Bind_Interface_For_WID(char * ifname){
 		   if((ifi_tmp->ifi_bflags&IFF_BINDING_FLAG)==IFF_BINDING_FLAG){
 			   
 			   if(ifi_tmp->ifi_addr != NULL){
-				   free(ifi_tmp->ifi_addr);
+				   WID_FREE(ifi_tmp->ifi_addr);
 				   ifi_tmp->ifi_addr = NULL;
 			   }	   
 			   if(ifi_tmp->ifi_brdaddr != NULL){
-				   free(ifi_tmp->ifi_brdaddr);
+				   WID_FREE(ifi_tmp->ifi_brdaddr);
 				   ifi_tmp->ifi_brdaddr = NULL;
 			   }
-			   free(ifi_tmp);
+			   WID_FREE(ifi_tmp);
 			   ifi_tmp = NULL;
 		   
 			   wid_syslog_err("interface %s has be binded in other hansi.\n",ifname);
@@ -5217,7 +5218,7 @@ int Check_And_Bind_Interface_For_WID(char * ifname){
 			wid_syslog_info("%s,%d,isNoCheck =%d,now is load config,not check if binding flag.\n",__func__,__LINE__,isNoCheck);
 	   }
 		/*fengwenchao copy end*/
-		tmp = (struct ifi*)malloc(sizeof(struct ifi));
+		tmp = (struct ifi*)WID_MALLOC(sizeof(struct ifi));
 		memset(tmp,0,sizeof(struct ifi));
 		memcpy(tmp->ifi_name,ifi_tmp->ifi_name,IFI_NAME);
 		tmp->lic_flag = DOWN_LINK_IF_TYPE;
@@ -5230,14 +5231,14 @@ int Check_And_Bind_Interface_For_WID(char * ifname){
 		while(tmp != NULL){
 			if((tmp->lic_flag == DOWN_LINK_IF_TYPE)&&(memcmp(tmp->ifi_name,ifi_tmp->ifi_name,IFI_NAME)==0)){
 				if(ifi_tmp->ifi_addr != NULL){
-					free(ifi_tmp->ifi_addr);
+					WID_FREE(ifi_tmp->ifi_addr);
 					ifi_tmp->ifi_addr = NULL;
 				}		
 				if(ifi_tmp->ifi_brdaddr != NULL){
-					free(ifi_tmp->ifi_brdaddr);
+					WID_FREE(ifi_tmp->ifi_brdaddr);
 					ifi_tmp->ifi_brdaddr = NULL;
 				}
-				free(ifi_tmp);
+				WID_FREE(ifi_tmp);
 				ifi_tmp = NULL;
 				wid_syslog_debug_debug(WID_DEFAULT,"interface has been in WID_IF\n");
 				return 0;
@@ -5250,14 +5251,14 @@ int Check_And_Bind_Interface_For_WID(char * ifname){
 			if((ifi_tmp->ifi_bflags&IFF_BINDING_FLAG)==IFF_BINDING_FLAG){
 				
 				if(ifi_tmp->ifi_addr != NULL){
-					free(ifi_tmp->ifi_addr);
+					WID_FREE(ifi_tmp->ifi_addr);
 					ifi_tmp->ifi_addr = NULL;
 				}		
 				if(ifi_tmp->ifi_brdaddr != NULL){
-					free(ifi_tmp->ifi_brdaddr);
+					WID_FREE(ifi_tmp->ifi_brdaddr);
 					ifi_tmp->ifi_brdaddr = NULL;
 				}
-				free(ifi_tmp);
+				WID_FREE(ifi_tmp);
 				ifi_tmp = NULL;
 			
 				wid_syslog_err("interface %s has be binded in other hansi.\n",ifname);
@@ -5268,7 +5269,7 @@ int Check_And_Bind_Interface_For_WID(char * ifname){
 			 wid_syslog_info("%s,%d,isNoCheck =%d,now is load config,not check if binding flag.\n",__func__,__LINE__,isNoCheck);
 		}
 		/*fengwenchao copy end*/
-		tmp = (struct ifi*)malloc(sizeof(struct ifi));
+		tmp = (struct ifi*)WID_MALLOC(sizeof(struct ifi));
 		memset(tmp,0,sizeof(struct ifi));
 		memcpy(tmp->ifi_name,ifi_tmp->ifi_name,IFI_NAME);
 		tmp2 = WID_IF;		
@@ -5319,14 +5320,14 @@ int Check_And_Bind_Interface_For_WID(char * ifname){
 	//printf("gInterfacesCount %d\n",gInterfacesCount);
 
 	if(ifi_tmp->ifi_addr != NULL){
-		free(ifi_tmp->ifi_addr);
+		WID_FREE(ifi_tmp->ifi_addr);
 		ifi_tmp->ifi_addr = NULL;
 	}		
 	if(ifi_tmp->ifi_brdaddr != NULL){
-		free(ifi_tmp->ifi_brdaddr);
+		WID_FREE(ifi_tmp->ifi_brdaddr);
 		ifi_tmp->ifi_brdaddr = NULL;
 	}
-	free(ifi_tmp);
+	WID_FREE(ifi_tmp);
 	ifi_tmp = NULL;
 	if((ret == 0)&&(retv6 == BINDING_IPV6_ADDRE_RROR))
 	{
@@ -5356,7 +5357,7 @@ int Check_And_Bind_Ipaddr_For_WID(unsigned int ipaddr,LISTEN_FLAG flag){
 		
 		if(!is_local_board_interface(ifname)){
 			if(ifi_tmp){
-				free(ifi_tmp);
+				WID_FREE(ifi_tmp);
 				ifi_tmp= NULL;
 			}
 			return WID_INTERFACE_NOT_BE_LOCAL_BOARD;	
@@ -5365,14 +5366,14 @@ int Check_And_Bind_Ipaddr_For_WID(unsigned int ipaddr,LISTEN_FLAG flag){
 		if(ret != 0){		
 			Delete_Interface(ifname, ifi_tmp->ifi_index);
 			if(ifi_tmp->ifi_addr != NULL){
-				free(ifi_tmp->ifi_addr);
+				WID_FREE(ifi_tmp->ifi_addr);
 				ifi_tmp->ifi_addr = NULL;
 			}		
 			if(ifi_tmp->ifi_brdaddr != NULL){
-				free(ifi_tmp->ifi_brdaddr);
+				WID_FREE(ifi_tmp->ifi_brdaddr);
 				ifi_tmp->ifi_brdaddr = NULL;
 			}
-			free(ifi_tmp);
+			WID_FREE(ifi_tmp);
 			ifi_tmp = NULL;
 			return ret;		
 		}	
@@ -5381,7 +5382,7 @@ int Check_And_Bind_Ipaddr_For_WID(unsigned int ipaddr,LISTEN_FLAG flag){
 	}
 	wid_syslog_debug_debug(WID_DEFAULT,"%s,%d.",__func__,__LINE__);
 	if(WID_IF == NULL){
-		tmp = (struct ifi*)malloc(sizeof(struct ifi));
+		tmp = (struct ifi*)WID_MALLOC(sizeof(struct ifi));
 		memset(tmp,0,sizeof(struct ifi));
 		memset(tmp->ifi_name,0,IFI_NAME);
 		memcpy(tmp->ifi_name,ifi_tmp->ifi_name,IFI_NAME);
@@ -5399,21 +5400,21 @@ int Check_And_Bind_Ipaddr_For_WID(unsigned int ipaddr,LISTEN_FLAG flag){
 			if((tmp->addr == ifi_tmp->addr[0])&&(tmp->lic_flag == flag))
 			{
 				if(ifi_tmp->ifi_addr != NULL){
-					free(ifi_tmp->ifi_addr);
+					WID_FREE(ifi_tmp->ifi_addr);
 					ifi_tmp->ifi_addr = NULL;
 				}		
 				if(ifi_tmp->ifi_brdaddr != NULL){
-					free(ifi_tmp->ifi_brdaddr);
+					WID_FREE(ifi_tmp->ifi_brdaddr);
 					ifi_tmp->ifi_brdaddr = NULL;
 				}
-				free(ifi_tmp);
+				WID_FREE(ifi_tmp);
 				ifi_tmp = NULL;
 				wid_syslog_debug_debug(WID_DEFAULT,"interface has been in WID_IF\n");
 				return 0;
 			}
 			tmp = tmp->ifi_next;
 		}
-		tmp = (struct ifi*)malloc(sizeof(struct ifi));
+		tmp = (struct ifi*)WID_MALLOC(sizeof(struct ifi));
 		memset(tmp,0,sizeof(struct ifi));
 		memset(tmp->ifi_name,0,IFI_NAME);
 		memcpy(tmp->ifi_name,ifi_tmp->ifi_name,IFI_NAME);
@@ -5463,14 +5464,14 @@ int Check_And_Bind_Ipaddr_For_WID(unsigned int ipaddr,LISTEN_FLAG flag){
 	//printf("gInterfacesCount %d\n",gInterfacesCount);
 
 	if(ifi_tmp->ifi_addr != NULL){
-		free(ifi_tmp->ifi_addr);
+		WID_FREE(ifi_tmp->ifi_addr);
 		ifi_tmp->ifi_addr = NULL;
 	}		
 	if(ifi_tmp->ifi_brdaddr != NULL){
-		free(ifi_tmp->ifi_brdaddr);
+		WID_FREE(ifi_tmp->ifi_brdaddr);
 		ifi_tmp->ifi_brdaddr = NULL;
 	}
-	free(ifi_tmp);
+	WID_FREE(ifi_tmp);
 	ifi_tmp = NULL;
 	if((ret == 0)&&(retv6 == BINDING_IPV6_ADDRE_RROR))
 	{
@@ -5502,7 +5503,7 @@ int WID_ADD_IF_APPLY_WLAN(unsigned char WlanID, char * ifname){
 		return APPLY_IF_FAIL;
 	}
 	close(sockfd);
-	wif = (struct ifi*)malloc(sizeof(struct ifi));
+	wif = (struct ifi*)WID_MALLOC(sizeof(struct ifi));
 	memset(wif->ifi_name,0,ETH_IF_NAME_LEN);
 	memcpy(wif->ifi_name,ifname,strlen(ifname));
 	wif->ifi_index = ifr.ifr_ifindex;
@@ -5523,7 +5524,7 @@ int WID_ADD_IF_APPLY_WLAN(unsigned char WlanID, char * ifname){
 			if(wifnext->ifi_index == wif->ifi_index)
 			{
 				//printf("warnning you have binding this wlan eth ,please do not binding this again");
-				free(wif);//zhanglei add
+				WID_FREE(wif);//zhanglei add
 				wif = NULL;//zhanglei add
 				return 0;
 			}
@@ -5616,10 +5617,10 @@ int WID_ADD_IF_APPLY_WLAN_ipv6(unsigned char WlanID, char * ifname){
 	memset(ifi_tmp->ifi_name,0,sizeof(ifi_tmp->ifi_name));
 	strncpy(ifi_tmp->ifi_name,ifname,sizeof(ifi_tmp->ifi_name));
 
-	struct tag_ipv6_addr_list *ipv6list = (struct tag_ipv6_addr_list *)malloc(sizeof(struct tag_ipv6_addr_list));
+	struct tag_ipv6_addr_list *ipv6list = (struct tag_ipv6_addr_list *)WID_MALLOC(sizeof(struct tag_ipv6_addr_list));
 	if(ipv6list == NULL)
 	{
-		free(ifi_tmp);
+		WID_FREE(ifi_tmp);
 		ifi_tmp = NULL;
 		return BINDING_IPV6_ADDRE_RROR;
 	}
@@ -5652,7 +5653,7 @@ int WID_ADD_IF_APPLY_WLAN_ipv6(unsigned char WlanID, char * ifname){
 		}
 		if(ret != 0)
 		{
-			free(ifi_tmp);
+			WID_FREE(ifi_tmp);
 			ifi_tmp = NULL;
 			free_ipv6_addr_list(ipv6list);
 			ret = BINDING_IPV6_ADDRE_RROR;
@@ -5681,7 +5682,7 @@ int WID_ADD_IF_APPLY_WLAN_ipv6(unsigned char WlanID, char * ifname){
 
 		if(ret == 0)
 		{
-		   	tmp = (struct ifi*)malloc(sizeof(struct ifi));
+		   	tmp = (struct ifi*)WID_MALLOC(sizeof(struct ifi));
 			memset(tmp,0,sizeof(struct ifi));
 			memcpy(tmp->ifi_name,ifname,strlen(ifname));
 			
@@ -5692,9 +5693,9 @@ int WID_ADD_IF_APPLY_WLAN_ipv6(unsigned char WlanID, char * ifname){
 		}
 		else
 		{
-			free(ifi_tmp->ifi_addr6);
+			WID_FREE(ifi_tmp->ifi_addr6);
 			ifi_tmp->ifi_addr6 = NULL;
-			free(ifi_tmp);
+			WID_FREE(ifi_tmp);
 			ifi_tmp = NULL;
 			free_ipv6_addr_list(ipv6list);
 			return ret;
@@ -5728,7 +5729,7 @@ int WID_ADD_IF_APPLY_WLAN_ipv6(unsigned char WlanID, char * ifname){
 
 			if(ret == 0)
 			{
-				tmp = (struct ifi*)malloc(sizeof(struct ifi));
+				tmp = (struct ifi*)WID_MALLOC(sizeof(struct ifi));
 				memset(tmp,0,sizeof(struct ifi));
 				memcpy(tmp->ifi_name,ifname,strlen(ifname));
 				tmp->ifi_index = isystemindex;
@@ -5739,9 +5740,9 @@ int WID_ADD_IF_APPLY_WLAN_ipv6(unsigned char WlanID, char * ifname){
 			}
 			else
 			{
-				free(ifi_tmp->ifi_addr6);
+				WID_FREE(ifi_tmp->ifi_addr6);
 				ifi_tmp->ifi_addr6 = NULL;
-				free(ifi_tmp);
+				WID_FREE(ifi_tmp);
 				ifi_tmp = NULL;
 				free_ipv6_addr_list(ipv6list);
 				return ret;
@@ -5754,9 +5755,9 @@ int WID_ADD_IF_APPLY_WLAN_ipv6(unsigned char WlanID, char * ifname){
 	gInterfacesCount = CWNetworkCountInterfaceAddresses(&gACSocket);
 	gInterfacesCountIpv4 = CWNetworkCountInterfaceAddressesIpv4(&gACSocket);
 	gInterfacesCountIpv6 = CWNetworkCountInterfaceAddressesIpv6(&gACSocket);
-	free(ifi_tmp->ifi_addr6);
+	WID_FREE(ifi_tmp->ifi_addr6);
 	ifi_tmp->ifi_addr6 = NULL;
-	free(ifi_tmp);
+	WID_FREE(ifi_tmp);
 	ifi_tmp = NULL;
 	free_ipv6_addr_list(ipv6list);
 
@@ -5765,7 +5766,7 @@ int WID_ADD_IF_APPLY_WLAN_ipv6(unsigned char WlanID, char * ifname){
 
 	ifr.ifr_ifindex = isystemindex;
 
-	wif = (struct ifi*)malloc(sizeof(struct ifi));
+	wif = (struct ifi*)WID_MALLOC(sizeof(struct ifi));
 	memset(wif->ifi_name,0,ETH_IF_NAME_LEN);
 	memcpy(wif->ifi_name,ifname,strlen(ifname));
 	wif->ifi_index = ifr.ifr_ifindex;
@@ -5788,7 +5789,7 @@ int WID_ADD_IF_APPLY_WLAN_ipv6(unsigned char WlanID, char * ifname){
 			if(wifnext->ifi_index == wif->ifi_index)
 			{
 				//printf("warnning you have binding this wlan eth ,please do not binding this again");
-				free(wif);//zhanglei add
+				WID_FREE(wif);//zhanglei add
 				wif = NULL;//zhanglei add
 				return 0;
 			}
@@ -5889,7 +5890,7 @@ int WID_DELETE_IF_APPLY_WLAN(unsigned char WlanID, char * ifname)
 	else if(strcmp(wifnext->ifi_name,ifname) == 0)
 	{
 		AC_WLAN[WlanID]->Wlan_Ifi = wifnext->ifi_next;
-		free(wifnext);
+		WID_FREE(wifnext);
 		wifnext = NULL;		
 		AC_WLAN[WlanID]->ifcount--;
 		//delete wtp binding relationship
@@ -5907,7 +5908,7 @@ int WID_DELETE_IF_APPLY_WLAN(unsigned char WlanID, char * ifname)
 			{
 				wif = wifnext->ifi_next;
 				wifnext->ifi_next = wifnext->ifi_next->ifi_next;
-				free(wif);
+				WID_FREE(wif);
 				wif = NULL;				
 				AC_WLAN[WlanID]->ifcount--;
 				//delete wtp binding relationship
@@ -9012,10 +9013,10 @@ int WID_ADD_WLAN_APPLY_RADIO(unsigned int RadioID,unsigned char WlanID){
 		
 	struct wlanid *wlan_id;
 	struct wlanid *wlan_id_next;
-	wlan_id = (struct wlanid*)malloc(sizeof(struct wlanid));
+	wlan_id = (struct wlanid*)WID_MALLOC(sizeof(struct wlanid));
 
 	essid_len = strlen((char *)AC_WLAN[WlanID]->ESSID);
-	wlan_id->ESSID = (char *)malloc(essid_len + 1);
+	wlan_id->ESSID = (char *)WID_MALLOC(essid_len + 1);
 	memset(wlan_id->ESSID,0,essid_len+1);
 	memcpy(wlan_id->ESSID,AC_WLAN[WlanID]->ESSID,essid_len);
 
@@ -9042,8 +9043,8 @@ int WID_ADD_WLAN_APPLY_RADIO(unsigned int RadioID,unsigned char WlanID){
 			if(wlan_id_next->wlanid == WlanID)
 			{
 				wid_syslog_debug_debug(WID_DEFAULT,"warnning you have binding this wlan id,please do not binding this again");
-				free(wlan_id->ESSID);
-				free(wlan_id);
+				WID_FREE(wlan_id->ESSID);
+				WID_FREE(wlan_id);
 				return INTERFACE_BINDED_ALREADLY;
 			}else{
 				wid_syslog_debug_debug(WID_DEFAULT,"%s wid_dbug_trap_ssid_key_conflict\n",__func__);
@@ -9077,12 +9078,12 @@ int WID_ADD_WLAN_APPLY_RADIO(unsigned int RadioID,unsigned char WlanID){
 					wid_syslog_err("<error>invalid bssindex:%d,%s\n",(RadioID)*L_BSS_NUM+k1,__func__);
 					return BSS_ID_LARGE_THAN_MAX;
 				}
-				AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1] = (WID_BSS*)malloc(sizeof(WID_BSS));
+				AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1] = (WID_BSS*)WID_MALLOC(sizeof(WID_BSS));
 				memset(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1],0,sizeof(WID_BSS));	//mahz add 2011.6.15
 				 /*zhaoruijia,初始化BSS_pkt_info数据防止随机数产生，star*/
 				memset(&(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->BSS_pkt_info),0,sizeof(BSSStatistics));
                 /*zhaoruijia,初始化BSS_pkt_info数据防止随机数产生，end*/
-				AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->BSSID = (unsigned char*)malloc(6);
+				AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->BSSID = (unsigned char*)WID_MALLOC(6);
 				memset(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->BSSID,0,6);
 				memset(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->SSID,0,SSID_LENGTH+1);
 				memcpy(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->SSID,wlan_id->ESSID,strlen((char *)wlan_id->ESSID));
@@ -9121,7 +9122,7 @@ int WID_ADD_WLAN_APPLY_RADIO(unsigned int RadioID,unsigned char WlanID){
 					memcpy(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->nas_id, nas_id, NAS_IDENTIFIER_NAME);//zhanglei add
 				}
 				memset(&(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->BSS_pkt_info),0,sizeof(BSSStatistics));
-				AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->acl_conf = (struct acl_config *)malloc(sizeof(struct acl_config));
+				AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->acl_conf = (struct acl_config *)WID_MALLOC(sizeof(struct acl_config));
 				memset(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->acl_conf,0,sizeof(struct acl_config));
 				AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->acl_conf->macaddr_acl = 0;
 				AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->acl_conf->accept_mac = NULL;
@@ -9465,19 +9466,19 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_ESSID(unsigned int RadioID,unsigned char WlanI
 	struct wlanid *wlan_id;
 	struct wlanid *wlan_id_next;
 	
-	wlan_id = (struct wlanid*)malloc(sizeof(struct wlanid));
+	wlan_id = (struct wlanid*)WID_MALLOC(sizeof(struct wlanid));
 	
 	wlan_id->wlanid= WlanID;
 	essid_len = strlen((char *)ESSID);
 	if(essid_len <= ESSID_LENGTH)
 	{
-		wlan_id->ESSID = (char *)malloc(essid_len + 1);
+		wlan_id->ESSID = (char *)WID_MALLOC(essid_len + 1);
 		memset(wlan_id->ESSID,0,essid_len+1);
 		memcpy(wlan_id->ESSID,ESSID,essid_len);
 	}
 	else
 	{
-		wlan_id->ESSID = (char *)malloc(ESSID_LENGTH);
+		wlan_id->ESSID = (char *)WID_MALLOC(ESSID_LENGTH);
 		memset(wlan_id->ESSID,0,ESSID_LENGTH);
 		memcpy(wlan_id->ESSID,ESSID,ESSID_LENGTH-1);
 	}
@@ -9544,12 +9545,12 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_ESSID(unsigned int RadioID,unsigned char WlanI
 				wid_syslog_err("<error>invalid bssindex:%d,%s\n",(RadioID)*L_BSS_NUM+k1,__func__);
 				return BSS_ID_LARGE_THAN_MAX;
 			}
-			AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1] = (WID_BSS*)malloc(sizeof(WID_BSS));
+			AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1] = (WID_BSS*)WID_MALLOC(sizeof(WID_BSS));
 			memset(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1],0,sizeof(WID_BSS));	//mahz add 2011.6.15
 			 /*zhaoruijia,初始化BSS_pkt_info数据防止随机数产生，star*/
 			memset(&(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->BSS_pkt_info),0,sizeof(BSSStatistics));
             /*zhaoruijia,初始化BSS_pkt_info数据防止随机数产生，end*/
-			AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->BSSID = (unsigned char*)malloc(6);
+			AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->BSSID = (unsigned char*)WID_MALLOC(6);
 			memset(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->BSSID,0,6);
 			memset(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->SSID,0,SSID_LENGTH+1);
 			memcpy(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->SSID,wlan_id->ESSID,strlen((char *)wlan_id->ESSID));
@@ -9589,7 +9590,7 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_ESSID(unsigned int RadioID,unsigned char WlanI
 				memcpy(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->nas_id, nas_id, NAS_IDENTIFIER_NAME);//zhanglei add
 			}
 			memset(&(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->BSS_pkt_info),0,sizeof(BSSStatistics));
-			AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->acl_conf = (struct acl_config *)malloc(sizeof(struct acl_config));
+			AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->acl_conf = (struct acl_config *)WID_MALLOC(sizeof(struct acl_config));
 			memset(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->acl_conf,0,sizeof(struct acl_config));
 			AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->acl_conf->macaddr_acl = 0;
 			AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->acl_conf->accept_mac = NULL;
@@ -9762,7 +9763,7 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_ESSID(unsigned int RadioID,unsigned char WlanI
 		memcpy(msg.mqinfo.u.WlanInfo.WlanEssid,wlan_id->ESSID,strlen(wlan_id->ESSID));
 		msg.mqinfo.u.WlanInfo.bssindex = AC_WLAN[WlanID]->S_WTP_BSS_List[WtpID][localradio_id];
 
-		elem = (struct msgqlist*)malloc(sizeof(struct msgqlist));
+		elem = (struct msgqlist*)WID_MALLOC(sizeof(struct msgqlist));
 		if(elem == NULL){
 			wid_syslog_crit("%s malloc %s",__func__,strerror(errno));
 			perror("malloc");
@@ -9916,7 +9917,7 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_VLANID(unsigned int RadioID,unsigned char Wlan
 		
 	struct wlanid *wlan_id;
 	struct wlanid *wlan_id_next;
-	wlan_id = (struct wlanid*)malloc(sizeof(struct wlanid));
+	wlan_id = (struct wlanid*)WID_MALLOC(sizeof(struct wlanid));
 	
 	wlan_id->wlanid= WlanID;
 	wlan_id->next = NULL;
@@ -9953,7 +9954,7 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_VLANID(unsigned int RadioID,unsigned char Wlan
 						}
 					}
 				}
-				free(wlan_id);
+				WID_FREE(wlan_id);
 				return 0;
 			}
 			wlan_id_next = wlan_id_next->next;
@@ -9978,12 +9979,12 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_VLANID(unsigned int RadioID,unsigned char Wlan
 					wid_syslog_err("<error>invalid bssindex:%d,%s\n",(RadioID)*L_BSS_NUM+k1,__func__);
 					return BSS_ID_LARGE_THAN_MAX;
 				}
-				AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1] = (WID_BSS*)malloc(sizeof(WID_BSS));
+				AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1] = (WID_BSS*)WID_MALLOC(sizeof(WID_BSS));
 				memset(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1],0,sizeof(WID_BSS));	//mahz add 2011.6.15
 				/*zhaoruijia,初始化BSS_pkt_info数据防止随机数产生，star*/
 				memset(&(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->BSS_pkt_info),0,sizeof(BSSStatistics));
                 /*zhaoruijia,初始化BSS_pkt_info数据防止随机数产生，end*/
-				AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->BSSID = (unsigned char*)malloc(6);
+				AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->BSSID = (unsigned char*)WID_MALLOC(6);
 				memset(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->BSSID,0,6);
 				AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->bss_max_allowed_sta_num= AC_WLAN[WlanID]->bss_allow_max_sta_num;//fengwenchap modify 20120323
 				AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->WlanID = WlanID;
@@ -10019,7 +10020,7 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_VLANID(unsigned int RadioID,unsigned char Wlan
 				}
 				AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->hotspot_id = AC_WLAN[WlanID]->hotspot_id;
 				AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->multi_user_optimize_switch = AC_WLAN[WlanID]->multi_user_optimize_switch;//weichao add 
-				AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->acl_conf = (struct acl_config *)malloc(sizeof(struct acl_config));
+				AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->acl_conf = (struct acl_config *)WID_MALLOC(sizeof(struct acl_config));
 				memset(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->acl_conf,0,sizeof(struct acl_config));
 				AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->acl_conf->macaddr_acl = 0;
 				AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->acl_conf->accept_mac = NULL;
@@ -10331,7 +10332,7 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_NAS_PORT_ID(unsigned int RadioID,unsigned char
 		
 	struct wlanid *wlan_id;
 	struct wlanid *wlan_id_next;
-	wlan_id = (struct wlanid*)malloc(sizeof(struct wlanid));
+	wlan_id = (struct wlanid*)WID_MALLOC(sizeof(struct wlanid));
 	
 	wlan_id->wlanid= WlanID;
 	wlan_id->next = NULL;
@@ -10363,7 +10364,7 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_NAS_PORT_ID(unsigned int RadioID,unsigned char
 						}
 					}
 				}
-				free(wlan_id);
+				WID_FREE(wlan_id);
 				return 0;
 			}
 			wlan_id_next = wlan_id_next->next;
@@ -10387,12 +10388,12 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_NAS_PORT_ID(unsigned int RadioID,unsigned char
 					wid_syslog_err("<error>invalid bssindex:%d,%s\n",(RadioID)*L_BSS_NUM+k1,__func__);
 					return BSS_ID_LARGE_THAN_MAX;
 				}
-				AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1] = (WID_BSS*)malloc(sizeof(WID_BSS));
+				AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1] = (WID_BSS*)WID_MALLOC(sizeof(WID_BSS));
 				memset(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1],0,sizeof(WID_BSS));	//mahz add 2011.6.15
 				/*zhaoruijia,初始化BSS_pkt_info数据防止随机数产生，star*/
 				memset(&(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->BSS_pkt_info),0,sizeof(BSSStatistics));
                 /*zhaoruijia,初始化BSS_pkt_info数据防止随机数产生，end*/
-				AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->BSSID = (unsigned char*)malloc(6);
+				AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->BSSID = (unsigned char*)WID_MALLOC(6);
 				memset(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->BSSID,0,6);
 				AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->bss_max_allowed_sta_num= AC_WLAN[WlanID]->bss_allow_max_sta_num;//fengwenchap modify 20120323
 				AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->WlanID = WlanID;
@@ -10426,7 +10427,7 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_NAS_PORT_ID(unsigned int RadioID,unsigned char
 					AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->nas_id_len = nas_id_len;//zhanglei add
 					memcpy(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->nas_id, nas_id, NAS_IDENTIFIER_NAME);//zhanglei add
 				}
-				AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->acl_conf = (struct acl_config *)malloc(sizeof(struct acl_config));
+				AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->acl_conf = (struct acl_config *)WID_MALLOC(sizeof(struct acl_config));
 				memset(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->acl_conf,0,sizeof(struct acl_config));
 				AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->acl_conf->macaddr_acl = 0;
 				AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->acl_conf->accept_mac = NULL;
@@ -10775,7 +10776,7 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_HOTSPOT_ID(unsigned int RadioID,unsigned char 
 		
 	struct wlanid *wlan_id;
 	struct wlanid *wlan_id_next;
-	wlan_id = (struct wlanid*)malloc(sizeof(struct wlanid));
+	wlan_id = (struct wlanid*)WID_MALLOC(sizeof(struct wlanid));
 	
 	wlan_id->wlanid= WlanID;
 	wlan_id->next = NULL;
@@ -10805,7 +10806,7 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_HOTSPOT_ID(unsigned int RadioID,unsigned char 
 						}
 					}
 				}
-				free(wlan_id);
+				WID_FREE(wlan_id);
 				return 0;
 			}
 			wlan_id_next = wlan_id_next->next;
@@ -10825,12 +10826,12 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_HOTSPOT_ID(unsigned int RadioID,unsigned char 
 	for(k1=0;k1<L_BSS_NUM;k1++){
 			if(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1] == NULL){
 				//printf("BSSIndex:%d\n",k1);
-				AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1] = (WID_BSS*)malloc(sizeof(WID_BSS));
+				AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1] = (WID_BSS*)WID_MALLOC(sizeof(WID_BSS));
 				memset(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1],0,sizeof(WID_BSS));	//mahz add 2011.6.14
 				/*zhaoruijia,初始化BSS_pkt_info数据防止随机数产生，star*/
 				memset(&(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->BSS_pkt_info),0,sizeof(BSSStatistics));
                 /*zhaoruijia,初始化BSS_pkt_info数据防止随机数产生，end*/
-				AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->BSSID = (unsigned char*)malloc(6);
+				AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->BSSID = (unsigned char*)WID_MALLOC(6);
 				memset(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->BSSID,0,6);
 				AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->bss_max_allowed_sta_num=128;//xm add
 				AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->WlanID = WlanID;
@@ -10862,7 +10863,7 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_HOTSPOT_ID(unsigned int RadioID,unsigned char 
 					AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->nas_id_len = nas_id_len;//zhanglei add
 					memcpy(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->nas_id, nas_id, NAS_IDENTIFIER_NAME);//zhanglei add
 				}
-				AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->acl_conf = (struct acl_config *)malloc(sizeof(struct acl_config));
+				AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->acl_conf = (struct acl_config *)WID_MALLOC(sizeof(struct acl_config));
 				memset(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->acl_conf,0,sizeof(struct acl_config));
 				AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->acl_conf->macaddr_acl = 0;
 				AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->acl_conf->accept_mac = NULL;
@@ -11276,10 +11277,10 @@ int WID_BINDING_IF_APPLY_WTP_ipv6(unsigned int WtpID, char * ifname)
 	memset(ifi_tmp->ifi_name,0,sizeof(ifi_tmp->ifi_name));
 	strncpy(ifi_tmp->ifi_name,ifname,sizeof(ifi_tmp->ifi_name));
 
-	struct tag_ipv6_addr_list *ipv6list = (struct tag_ipv6_addr_list *)malloc(sizeof(struct tag_ipv6_addr_list));
+	struct tag_ipv6_addr_list *ipv6list = (struct tag_ipv6_addr_list *)WID_MALLOC(sizeof(struct tag_ipv6_addr_list));
 	if(ipv6list == NULL)
 	{
-		free(ifi_tmp);
+		WID_FREE(ifi_tmp);
 		ifi_tmp = NULL;
 		return BINDING_IPV6_ADDRE_RROR;
 	}
@@ -11290,7 +11291,7 @@ int WID_BINDING_IF_APPLY_WTP_ipv6(unsigned int WtpID, char * ifname)
 	ret = get_if_addr_ipv6_list(ifname, ipv6list);
 	if(ret != 0)
 	{
-		free(ifi_tmp);
+		WID_FREE(ifi_tmp);
 		ifi_tmp = NULL;
 		free_ipv6_addr_list(ipv6list);
 		ret = BINDING_IPV6_ADDRE_RROR;
@@ -11314,7 +11315,7 @@ int WID_BINDING_IF_APPLY_WTP_ipv6(unsigned int WtpID, char * ifname)
 
 		if(ret == 0)
 		{
-		   	tmp = (struct ifi*)malloc(sizeof(struct ifi));
+		   	tmp = (struct ifi*)WID_MALLOC(sizeof(struct ifi));
 			memset(tmp,0,sizeof(struct ifi));
 			memcpy(tmp->ifi_name,ifname,strlen(ifname));
 			tmp->ifi_index = isystemindex;
@@ -11322,9 +11323,9 @@ int WID_BINDING_IF_APPLY_WTP_ipv6(unsigned int WtpID, char * ifname)
 		}
 		else
 		{
-			free(ifi_tmp->ifi_addr6);
+			WID_FREE(ifi_tmp->ifi_addr6);
 			ifi_tmp->ifi_addr6 = NULL;
-			free(ifi_tmp);
+			WID_FREE(ifi_tmp);
 			ifi_tmp = NULL;
 			free_ipv6_addr_list(ipv6list);
 			return ret;
@@ -11339,9 +11340,9 @@ int WID_BINDING_IF_APPLY_WTP_ipv6(unsigned int WtpID, char * ifname)
 			printf("ifname = %s name = %s\n",tmp->ifi_name,ifname);
 			if(( strlen(ifname) ==  strlen(tmp->ifi_name))&&(strcmp(tmp->ifi_name,ifname)==0))
 			{	
-				free(ifi_tmp->ifi_addr6);
+				WID_FREE(ifi_tmp->ifi_addr6);
 				ifi_tmp->ifi_addr6 = NULL;
-				free(ifi_tmp);
+				WID_FREE(ifi_tmp);
 				ifi_tmp = NULL;
 				free_ipv6_addr_list(ipv6list);
 
@@ -11379,7 +11380,7 @@ int WID_BINDING_IF_APPLY_WTP_ipv6(unsigned int WtpID, char * ifname)
 
 		if(ret == 0)
 		{
-			tmp = (struct ifi*)malloc(sizeof(struct ifi));
+			tmp = (struct ifi*)WID_MALLOC(sizeof(struct ifi));
 			memset(tmp,0,sizeof(struct ifi));
 			memcpy(tmp->ifi_name,ifname,strlen(ifname));
 			tmp->ifi_index = isystemindex;
@@ -11389,9 +11390,9 @@ int WID_BINDING_IF_APPLY_WTP_ipv6(unsigned int WtpID, char * ifname)
 		}
 		else
 		{
-			free(ifi_tmp->ifi_addr6);
+			WID_FREE(ifi_tmp->ifi_addr6);
 			ifi_tmp->ifi_addr6 = NULL;
-			free(ifi_tmp);
+			WID_FREE(ifi_tmp);
 			ifi_tmp = NULL;
 			free_ipv6_addr_list(ipv6list);
 			return ret;
@@ -11402,9 +11403,9 @@ int WID_BINDING_IF_APPLY_WTP_ipv6(unsigned int WtpID, char * ifname)
 	gInterfacesCount = CWNetworkCountInterfaceAddresses(&gACSocket);
 	gInterfacesCountIpv4 = CWNetworkCountInterfaceAddressesIpv4(&gACSocket);
 	gInterfacesCountIpv6 = CWNetworkCountInterfaceAddressesIpv6(&gACSocket);
-	free(ifi_tmp->ifi_addr6);
+	WID_FREE(ifi_tmp->ifi_addr6);
 	ifi_tmp->ifi_addr6 = NULL;
-	free(ifi_tmp);
+	WID_FREE(ifi_tmp);
 	ifi_tmp = NULL;
 	free_ipv6_addr_list(ipv6list);
 
@@ -11783,7 +11784,7 @@ int WID_DELETE_WLAN_APPLY_RADIO_DO_NOT_CARE_ESSID(unsigned int RadioId, unsigned
 					msg.mqinfo.u.WlanInfo.Radio_L_ID = local_radioid;
 
 					msg.mqinfo.u.WlanInfo.bssindex = AC_WLAN[WlanId]->S_WTP_BSS_List[WtpID][local_radioid];
-					elem = (struct msgqlist*)malloc(sizeof(struct msgqlist));
+					elem = (struct msgqlist*)WID_MALLOC(sizeof(struct msgqlist));
 					if(elem == NULL){
 						wid_syslog_crit("%s malloc %s",__func__,strerror(errno));
 						perror("malloc");
@@ -11806,8 +11807,8 @@ int WID_DELETE_WLAN_APPLY_RADIO_DO_NOT_CARE_ESSID(unsigned int RadioId, unsigned
 			return BSS_NOT_EXIST;
 		}
 		AC_RADIO[RadioId]->Wlan_Id = wlan_id_next->next;
-		free(wlan_id_next->ESSID);
-		free(wlan_id_next);
+		WID_FREE(wlan_id_next->ESSID);
+		WID_FREE(wlan_id_next);
 		wlan_id_next = NULL;
 		AC_RADIO[RadioId]->BindingWlanCount--;
 		if(AC_RADIO[RadioId]->Wlan_Id == NULL)
@@ -11835,8 +11836,8 @@ int WID_DELETE_WLAN_APPLY_RADIO_DO_NOT_CARE_ESSID(unsigned int RadioId, unsigned
 				}				
 				wlan_id = wlan_id_next->next;
 				wlan_id_next->next = wlan_id_next->next->next;
-				free(wlan_id->ESSID);
-				free(wlan_id);
+				WID_FREE(wlan_id->ESSID);
+				WID_FREE(wlan_id);
 				wlan_id = NULL;
 				AC_RADIO[RadioId]->BindingWlanCount--;
 				return 0;
@@ -11939,7 +11940,7 @@ int WID_DELETE_WLAN_APPLY_RADIO(unsigned int RadioId, unsigned char WlanId)
 					msg.mqinfo.u.WlanInfo.Radio_L_ID = local_radioid;
 
 					msg.mqinfo.u.WlanInfo.bssindex = AC_WLAN[WlanId]->S_WTP_BSS_List[WtpID][local_radioid];
-					elem = (struct msgqlist*)malloc(sizeof(struct msgqlist));
+					elem = (struct msgqlist*)WID_MALLOC(sizeof(struct msgqlist));
 					if(elem == NULL){
 						wid_syslog_crit("%s malloc %s",__func__,strerror(errno));
 						perror("malloc");
@@ -12099,7 +12100,7 @@ int WID_DELETE_WLAN_APPLY_RADIO_BASE_ESSID(unsigned int RadioId, unsigned char W
 					msg.mqinfo.u.WlanInfo.Radio_L_ID = local_radioid;
 
 					msg.mqinfo.u.WlanInfo.bssindex = AC_WLAN[WlanId]->S_WTP_BSS_List[WtpID][local_radioid];
-					elem = (struct msgqlist*)malloc(sizeof(struct msgqlist));
+					elem = (struct msgqlist*)WID_MALLOC(sizeof(struct msgqlist));
 					if(elem == NULL){
 						wid_syslog_crit("%s malloc %s",__func__,strerror(errno));
 						perror("malloc");
@@ -12589,7 +12590,7 @@ int WID_ENABLE_WLAN_APPLY_RADIO(unsigned int RadioId, unsigned char WlanId)
 		msg2.mqinfo.u.WlanInfo.WLANID = WlanId;
 		msg2.mqinfo.u.WlanInfo.Radio_L_ID = local_radioid;
 		
-		elem2 = (struct msgqlist*)malloc(sizeof(struct msgqlist));
+		elem2 = (struct msgqlist*)WID_MALLOC(sizeof(struct msgqlist));
 		if(elem2 == NULL){
 			wid_syslog_crit("%s malloc %s",__func__,strerror(errno));
 			perror("malloc");
@@ -12649,17 +12650,17 @@ int WID_ENABLE_WLAN_APPLY_RADIO(unsigned int RadioId, unsigned char WlanId)
 		}
 		//weichao add 
 			if(AC_WLAN[WlanId]->Status == 0){
-			command = (char *)malloc(sizeof(char)*100);
+			command = (char *)WID_MALLOC(sizeof(char)*100);
 			if(NULL == command)
 			{							
 				wid_syslog_crit("%s malloc %s",__func__,strerror(errno));
 				return 0;
 			}
-			ath_str = (char *)malloc(sizeof(char)*20);
+			ath_str = (char *)WID_MALLOC(sizeof(char)*20);
 			if(NULL == ath_str)
 			{
-				wid_syslog_crit("%s malloc %s",__func__,strerror(errno));
-				CW_FREE_OBJECT(command);
+				wid_syslog_crit("%s WID_MALLOC %s",__func__,strerror(errno));
+				CW_FREE_OBJECT_WID(command);
 				return 0;
 			}
 			memset(command,0,100);
@@ -12693,9 +12694,9 @@ int WID_ENABLE_WLAN_APPLY_RADIO(unsigned int RadioId, unsigned char WlanId)
 				memcpy((char*)&(elem4->mqinfo),(char*)&(msg4.mqinfo),sizeof(msg4.mqinfo));
 				WID_INSERT_CONTROL_LIST(WtpID, elem4);
 			}*/
-			free(command);
+			WID_FREE(command);
 			command = NULL;
-			free(ath_str);
+			WID_FREE(ath_str);
 			ath_str = NULL;
 			}
 	if(gtrapflag>=4){
@@ -13143,7 +13144,7 @@ int WID_ENABLE_WLAN_APPLY_WTP(unsigned int WtpID, unsigned char WlanId)
 				msg2.mqinfo.u.WlanInfo.WLANID = WlanId;
 				msg2.mqinfo.u.WlanInfo.Radio_L_ID = j;
 				
-				elem2 = (struct msgqlist*)malloc(sizeof(struct msgqlist));
+				elem2 = (struct msgqlist*)WID_MALLOC(sizeof(struct msgqlist));
 				if(elem2 == NULL){
 					wid_syslog_crit("%s malloc %s",__func__,strerror(errno));
 					perror("malloc");
@@ -13227,21 +13228,21 @@ int delete_wlan_bss(unsigned int WtpID, unsigned char WlanId)
 						free_maclist(AC_BSS[BSSIndex]->acl_conf,AC_BSS[BSSIndex]->acl_conf->deny_mac);
 						AC_BSS[BSSIndex]->acl_conf->deny_mac = NULL;
 						}
-					free(AC_BSS[BSSIndex]->acl_conf);
+					WID_FREE(AC_BSS[BSSIndex]->acl_conf);
 					AC_BSS[BSSIndex]->acl_conf = NULL;
 				}
 				memset(AC_BSS[BSSIndex]->BSSID, 0, 6);
-				free(AC_BSS[BSSIndex]->BSSID);
+				WID_FREE(AC_BSS[BSSIndex]->BSSID);
 				AC_BSS[BSSIndex]->BSSID = NULL;
 				wds = AC_BSS[BSSIndex]->wds_bss_list;
 				while(wds){
 					wds1 = wds;
 					wds = wds->next;
-					free(wds1);
+					WID_FREE(wds1);
 					wds1 = NULL;
 				}
 				AC_BSS[BSSIndex]->wds_bss_list = NULL;
-				free(AC_BSS[BSSIndex]);
+				WID_FREE(AC_BSS[BSSIndex]);
 				AC_BSS[BSSIndex] = NULL;
 				
 				AC_WTP[WtpID]->WTP_Radio[RadioID]->BSS[L_ID] = NULL;
@@ -13336,13 +13337,13 @@ int delete_wlan_bss_by_radioId(unsigned int RadioId, unsigned char WlanId)
 				free_maclist(AC_BSS[BSSIndex]->acl_conf,AC_BSS[BSSIndex]->acl_conf->deny_mac);
 				AC_BSS[BSSIndex]->acl_conf->deny_mac = NULL;
 				}
-			free(AC_BSS[BSSIndex]->acl_conf);
+			WID_FREE(AC_BSS[BSSIndex]->acl_conf);
 			AC_BSS[BSSIndex]->acl_conf = NULL;
 		}
 		memset(AC_BSS[BSSIndex]->BSSID, 0, 6);
-		free(AC_BSS[BSSIndex]->BSSID);
+		WID_FREE(AC_BSS[BSSIndex]->BSSID);
 		AC_BSS[BSSIndex]->BSSID = NULL;
-		free(AC_BSS[BSSIndex]);
+		WID_FREE(AC_BSS[BSSIndex]);
 		AC_BSS[BSSIndex] = NULL;
 		
 		AC_WTP[WtpID]->WTP_Radio[L_RadioId]->BSS[L_ID] = NULL;
@@ -13421,7 +13422,7 @@ int delete_wlan_all_bss(unsigned int WtpID)
 						free_maclist(AC_BSS[bssindex]->acl_conf,AC_BSS[bssindex]->acl_conf->deny_mac);
 						AC_BSS[bssindex]->acl_conf->deny_mac = NULL;
 						}
-					free(AC_BSS[bssindex]->acl_conf);
+					WID_FREE(AC_BSS[bssindex]->acl_conf);
 					AC_BSS[bssindex]->acl_conf = NULL;
 				}
 				unsigned char WlanId = AC_BSS[bssindex]->WlanID;
@@ -13431,9 +13432,9 @@ int delete_wlan_all_bss(unsigned int WtpID)
 				AC_RADIO[RID]->BSS[k]->State = 0;
 				AC_RADIO[RID]->BSS[k]->BSSIndex = 0;
 				memset(AC_RADIO[RID]->BSS[k]->BSSID, 0, 6);
-				free(AC_RADIO[RID]->BSS[k]->BSSID);
+				WID_FREE(AC_RADIO[RID]->BSS[k]->BSSID);
 				AC_RADIO[RID]->BSS[k]->BSSID = NULL;
-				free(AC_RADIO[RID]->BSS[k]);
+				WID_FREE(AC_RADIO[RID]->BSS[k]);
 				AC_RADIO[RID]->BSS[k] = NULL;
 				AC_WTP[WtpID]->WTP_Radio[i]->BSS[k]=NULL;	
 				if(AC_WLAN[WlanId])
@@ -13452,7 +13453,7 @@ int delete_wlan_all_bss(unsigned int WtpID)
 	while(wlan_id != NULL)
 	{
 		AC_WTP[WtpID]->WTP_Radio[0]->Wlan_Id = wlan_id->next;
-		free(wlan_id);
+		WID_FREE(wlan_id);
 		wlan_id = NULL;
 		wlan_id = AC_WTP[WtpID]->WTP_Radio[0]->Wlan_Id;
 		
@@ -14188,7 +14189,7 @@ void destroy_ap_info_list(Neighbor_AP_INFOS **paplist)
 	if(((*paplist) == NULL)||((*paplist)->neighborapInfosCount == 0))
 	{
 		//printf("destroy_ap_info_list parameter error\n");
-		CW_FREE_OBJECT(*paplist);
+		CW_FREE_OBJECT_WID(*paplist);
 		return;
 	}
 	
@@ -14206,9 +14207,9 @@ void destroy_ap_info_list(Neighbor_AP_INFOS **paplist)
 		pnext = phead->next;
 		
 		//CW_FREE_OBJECT(phead->ESSID);
-		CW_FREE_OBJECT(phead->IEs_INFO);
+		CW_FREE_OBJECT_WID(phead->IEs_INFO);
 
-		CW_FREE_OBJECT(phead);
+		CW_FREE_OBJECT_WID(phead);
 
 		phead = pnext;
 		
@@ -14216,7 +14217,7 @@ void destroy_ap_info_list(Neighbor_AP_INFOS **paplist)
 	}
 
 	(*paplist)->neighborapInfosCount = 0;
-	CW_FREE_OBJECT(*paplist);
+	CW_FREE_OBJECT_WID(*paplist);
 
 }
 
@@ -14224,7 +14225,7 @@ Neighbor_AP_INFOS * create_ap_info_list(int count)
 {
 	Neighbor_AP_INFOS *create_ap_info;
 	int i = 0;
-	CW_CREATE_OBJECT_ERR(create_ap_info, Neighbor_AP_INFOS, return NULL;);	
+	CW_CREATE_OBJECT_ERR_WID(create_ap_info, Neighbor_AP_INFOS, return NULL;);	
 				
 	create_ap_info->neighborapInfosCount = count;
 	create_ap_info->neighborapInfos = NULL;
@@ -14232,10 +14233,11 @@ Neighbor_AP_INFOS * create_ap_info_list(int count)
 	struct Neighbor_AP_ELE *neighborapelem = NULL;
 	struct Neighbor_AP_ELE *phead = NULL;
 
+	CW_CREATE_OBJECT_SIZE_ERR(neighborapelem, create_ap_info->neighborapInfosCount*sizeof(struct Neighbor_AP_ELE), WID_FREE(create_ap_info); create_ap_info = NULL; return NULL;);
+	
 	for(i=0; i<create_ap_info->neighborapInfosCount; i++)
 	{
-		CW_CREATE_OBJECT_SIZE_ERR(neighborapelem, sizeof(struct Neighbor_AP_ELE), return NULL;);		
-		
+		neighborapelem += i;
 		char str[3][6] = {{"111111"},{"222222"},{"333333"}};
 		memcpy(neighborapelem->BSSID ,str[i], 6);
 		
@@ -14250,7 +14252,7 @@ Neighbor_AP_INFOS * create_ap_info_list(int count)
 		neighborapelem->opstatus = 0;
 		neighborapelem->capabilityinfo = 0;
 
-		char *essid = (char *)malloc(5);
+		char *essid = (char *)WID_MALLOC(5);
 		memset(essid,0,5);
 		memcpy(essid,"way",3);
 
@@ -14258,7 +14260,7 @@ Neighbor_AP_INFOS * create_ap_info_list(int count)
 		memcpy(neighborapelem->ESSID,essid,strlen(essid));
 		//neighborapelem->ESSID = essid;
 
-		char *ie = (char *)malloc(7);
+		char *ie = (char *)WID_MALLOC(7);
 		memset(ie,0,7);
 		memcpy(ie,"capwap",6);
 		neighborapelem->IEs_INFO = ie;
@@ -14270,18 +14272,18 @@ Neighbor_AP_INFOS * create_ap_info_list(int count)
 			//printf("parse first ap info\n");
 			create_ap_info->neighborapInfos = neighborapelem;
 			phead = neighborapelem;
-			neighborapelem = NULL;
+			//neighborapelem = NULL;
 		}
 		else
 		{
 			//printf("parse more ap info\n");
 			phead->next = neighborapelem;
 			phead = neighborapelem;
-			neighborapelem = NULL;
+			//neighborapelem = NULL;
 		}
 		//printf("######002####\n");
 		if(essid){
-			free(essid);
+			WID_FREE(essid);
 			essid = NULL;
 		}
 	}	
@@ -14348,7 +14350,7 @@ Neighbor_AP_INFOS * wid_check_rogue_ap_mac(int wtpid)
 	int charlen = 0;
 	int flag = 0;
 
-	CW_CREATE_OBJECT_ERR(rouge_ap_info, Neighbor_AP_INFOS, return NULL;);					
+	CW_CREATE_OBJECT_ERR_WID(rouge_ap_info, Neighbor_AP_INFOS, return NULL;);					
 	rouge_ap_info->neighborapInfosCount = 0;
 	rouge_ap_info->neighborapInfos = NULL;
 	memset(rouge_ap_info,0,sizeof(*rouge_ap_info));
@@ -14389,7 +14391,7 @@ Neighbor_AP_INFOS * wid_check_rogue_ap_mac(int wtpid)
 
 		if(flag == 0)
 		{
-			CW_CREATE_OBJECT_SIZE_ERR(neighborapelem, sizeof(struct Neighbor_AP_ELE), return NULL;);		
+			CW_CREATE_OBJECT_SIZE_ERR(neighborapelem, sizeof(struct Neighbor_AP_ELE), WID_FREE(rouge_ap_info); rouge_ap_info = NULL; return NULL;);		
 			memset(neighborapelem, 0,sizeof(struct Neighbor_AP_ELE));
 			/////////////////copy information//////////////////////
 			memcpy(neighborapelem->BSSID, phead->BSSID, 6);
@@ -14413,7 +14415,7 @@ Neighbor_AP_INFOS * wid_check_rogue_ap_mac(int wtpid)
 
 
 			charlen = strlen(phead->IEs_INFO);
-			neighborapelem->IEs_INFO = (char *)malloc(charlen+1);
+			neighborapelem->IEs_INFO = (char *)WID_MALLOC(charlen+1);
 			memset(neighborapelem->IEs_INFO, 0, charlen+1);
 			memcpy(neighborapelem->IEs_INFO, phead->IEs_INFO, charlen);
 				
@@ -14456,7 +14458,7 @@ Neighbor_AP_INFOS * wid_check_rogue_ap_mac(int wtpid)
 	}
 	else
 	{
-		CW_FREE_OBJECT(rouge_ap_info);
+		CW_FREE_OBJECT_WID(rouge_ap_info);
 		return NULL;
 	}
 
@@ -14720,9 +14722,9 @@ CWBool delete_elem_from_ap_list_wtpid(Neighbor_AP_INFOS *paplist,struct Neighbor
 		}
 
 		//CW_FREE_OBJECT(pnode->ESSID);
-		CW_FREE_OBJECT(pnode->IEs_INFO);
+		CW_FREE_OBJECT_WID(pnode->IEs_INFO);
 
-		CW_FREE_OBJECT(pnode);
+		CW_FREE_OBJECT_WID(pnode);
 
 		(paplist)->neighborapInfosCount--;
 
@@ -14773,9 +14775,9 @@ CWBool delete_elem_from_ap_list_wtpid(Neighbor_AP_INFOS *paplist,struct Neighbor
 			pnode->next = pnext->next;
 
 			//CW_FREE_OBJECT(pnext->ESSID);
-			CW_FREE_OBJECT(pnext->IEs_INFO);
+			CW_FREE_OBJECT_WID(pnext->IEs_INFO);
 
-			CW_FREE_OBJECT(pnext);	
+			CW_FREE_OBJECT_WID(pnext);	
 			(paplist)->neighborapInfosCount--;
 			
 			//printf("delete_elem_from_ap_list delete node success\n");
@@ -14810,9 +14812,9 @@ CWBool delete_elem_from_ap_list(Neighbor_AP_INFOS *paplist,struct Neighbor_AP_EL
 		(paplist)->neighborapInfos = (paplist)->neighborapInfos->next;
 
 		//CW_FREE_OBJECT(pnode->ESSID);
-		CW_FREE_OBJECT(pnode->IEs_INFO);
+		CW_FREE_OBJECT_WID(pnode->IEs_INFO);
 
-		CW_FREE_OBJECT(pnode);
+		CW_FREE_OBJECT_WID(pnode);
 
 		(paplist)->neighborapInfosCount--;
 
@@ -14829,9 +14831,9 @@ CWBool delete_elem_from_ap_list(Neighbor_AP_INFOS *paplist,struct Neighbor_AP_EL
 			pnode->next = pnext->next;
 
 			//CW_FREE_OBJECT(pnext->ESSID);
-			CW_FREE_OBJECT(pnext->IEs_INFO);
+			CW_FREE_OBJECT_WID(pnext->IEs_INFO);
 
-			CW_FREE_OBJECT(pnext);
+			CW_FREE_OBJECT_WID(pnext);
 
 			
 			(paplist)->neighborapInfosCount--;
@@ -14861,7 +14863,7 @@ void merge_ap_list(Neighbor_AP_INFOS *pdestlist,Neighbor_AP_INFOS **psrclist,int
 	if(((*psrclist) == NULL)||((*psrclist)->neighborapInfos == NULL)||((*psrclist)->neighborapInfosCount== 0))
 	{
 		//printf("merge_ap_list src parameter error\n");
-		CW_FREE_OBJECT(*psrclist);
+		CW_FREE_OBJECT_WID(*psrclist);
 		return ;
 	}	
 
@@ -14878,9 +14880,9 @@ void merge_ap_list(Neighbor_AP_INFOS *pdestlist,Neighbor_AP_INFOS **psrclist,int
 		delete_elem_from_ap_list_wtpid(pdestlist,pnode,wtpid);
 
 		//CW_FREE_OBJECT(pnode->ESSID);
-		CW_FREE_OBJECT(pnode->IEs_INFO);
+		CW_FREE_OBJECT_WID(pnode->IEs_INFO);
 
-		CW_FREE_OBJECT(pnode);
+		CW_FREE_OBJECT_WID(pnode);
 		//printf("delete_elem_from_ap_list src modify node success\n");
 	}
 	else //change element
@@ -14888,9 +14890,9 @@ void merge_ap_list(Neighbor_AP_INFOS *pdestlist,Neighbor_AP_INFOS **psrclist,int
 		modify_elem_into_ap_list(pdestlist,pnode);
 
 		//CW_FREE_OBJECT(pnode->ESSID);
-		CW_FREE_OBJECT(pnode->IEs_INFO);
+		CW_FREE_OBJECT_WID(pnode->IEs_INFO);
 
-		CW_FREE_OBJECT(pnode);
+		CW_FREE_OBJECT_WID(pnode);
 
 		//printf("modify_elem_into_ap_list src modify node success\n");
 
@@ -14910,9 +14912,9 @@ void merge_ap_list(Neighbor_AP_INFOS *pdestlist,Neighbor_AP_INFOS **psrclist,int
 			delete_elem_from_ap_list(pdestlist,pnext);
 		
 			//CW_FREE_OBJECT(pnext->ESSID);
-			CW_FREE_OBJECT(pnext->IEs_INFO);
+			CW_FREE_OBJECT_WID(pnext->IEs_INFO);
 		
-			CW_FREE_OBJECT(pnext);
+			CW_FREE_OBJECT_WID(pnext);
 			//sprintf("delete_elem_from_ap_list src modify node success\n");
 		}
 		else //change element
@@ -14920,9 +14922,9 @@ void merge_ap_list(Neighbor_AP_INFOS *pdestlist,Neighbor_AP_INFOS **psrclist,int
 			modify_elem_into_ap_list(pdestlist,pnext);
 		
 			//CW_FREE_OBJECT(pnext->ESSID);
-			CW_FREE_OBJECT(pnext->IEs_INFO);
+			CW_FREE_OBJECT_WID(pnext->IEs_INFO);
 		
-			CW_FREE_OBJECT(pnext);
+			CW_FREE_OBJECT_WID(pnext);
 		
 			//printf("modify_elem_into_ap_list src modify node success\n");
 		
@@ -14932,7 +14934,7 @@ void merge_ap_list(Neighbor_AP_INFOS *pdestlist,Neighbor_AP_INFOS **psrclist,int
 		
 	}
 
-	CW_FREE_OBJECT(*psrclist);
+	CW_FREE_OBJECT_WID(*psrclist);
 	
 	//printf("merge_ap_list to end\n");
 	
@@ -15025,7 +15027,7 @@ struct Neighbor_AP_ELE * create_mac_elem(char *mac)
 	neighborapelem->opstatus = 0;
 	neighborapelem->capabilityinfo = 0;
 	
-	char *essid = (char *)malloc(5);
+	char *essid = (char *)WID_MALLOC(5);
 	memset(essid,0,5);
 	memcpy(essid,"way",3);
 
@@ -15033,14 +15035,14 @@ struct Neighbor_AP_ELE * create_mac_elem(char *mac)
 	memcpy(neighborapelem->ESSID,essid,strlen(essid));
 	//neighborapelem->ESSID = essid;
 	
-	char *ie = (char *)malloc(7);
+	char *ie = (char *)WID_MALLOC(7);
 	memset(ie,0,7);
 	memcpy(ie,"capwap",6);
 	neighborapelem->IEs_INFO = ie;
 	
 	neighborapelem->next = NULL;
 	if(essid){
-		free(essid);
+		WID_FREE(essid);
 		essid = NULL;
 	}
 	return neighborapelem;
@@ -15050,7 +15052,7 @@ Neighbor_AP_INFOS * create_ap_info_list_test(int count)//just for test will dele
 {
 	Neighbor_AP_INFOS *create_ap_info;
 	int i = 0;
-	CW_CREATE_OBJECT_ERR(create_ap_info, Neighbor_AP_INFOS, return NULL;);	
+	CW_CREATE_OBJECT_ERR_WID(create_ap_info, Neighbor_AP_INFOS, return NULL;);	
 				
 	create_ap_info->neighborapInfosCount = count;
 	create_ap_info->neighborapInfos = NULL;
@@ -15058,9 +15060,12 @@ Neighbor_AP_INFOS * create_ap_info_list_test(int count)//just for test will dele
 	struct Neighbor_AP_ELE *neighborapelem = NULL;
 	struct Neighbor_AP_ELE *phead = NULL;
 
+	CW_CREATE_OBJECT_SIZE_ERR(neighborapelem, create_ap_info->neighborapInfosCount*sizeof(struct Neighbor_AP_ELE), WID_FREE(create_ap_info); create_ap_info = NULL; return NULL;);
+	
 	for(i=0; i<create_ap_info->neighborapInfosCount; i++)
 	{
-		CW_CREATE_OBJECT_SIZE_ERR(neighborapelem, sizeof(struct Neighbor_AP_ELE), return NULL;);		
+				
+		neighborapelem = neighborapelem + i;
 		
 		char str[3][6] = {{"444444"},{"222222"},{"333333"}};
 		memcpy(neighborapelem->BSSID ,str[i], 6);
@@ -15076,7 +15081,7 @@ Neighbor_AP_INFOS * create_ap_info_list_test(int count)//just for test will dele
 		neighborapelem->opstatus = 0;
 		neighborapelem->capabilityinfo = 0;
 
-		char *essid = (char *)malloc(5);
+		char *essid = (char *)WID_MALLOC(5);
 		memset(essid,0,5);
 		memcpy(essid,"way",3);
 		//neighborapelem->ESSID = essid;
@@ -15084,7 +15089,7 @@ Neighbor_AP_INFOS * create_ap_info_list_test(int count)//just for test will dele
 		memcpy(neighborapelem->ESSID,essid,strlen(essid));
 
 
-		char *ie = (char *)malloc(7);
+		char *ie = (char *)WID_MALLOC(7);
 		memset(ie,0,7);
 		memcpy(ie,"capwap",6);
 		neighborapelem->IEs_INFO = ie;
@@ -15096,18 +15101,18 @@ Neighbor_AP_INFOS * create_ap_info_list_test(int count)//just for test will dele
 			//printf("parse first ap info\n");
 			create_ap_info->neighborapInfos = neighborapelem;
 			phead = neighborapelem;
-			neighborapelem = NULL;
+			//neighborapelem = NULL;
 		}
 		else
 		{
 			//printf("parse more ap info\n");
 			phead->next = neighborapelem;
 			phead = neighborapelem;
-			neighborapelem = NULL;
+			//neighborapelem = NULL;
 		}
 		//printf("######002####\n");
 		if(essid){
-			free(essid);
+			WID_FREE(essid);
 			essid = NULL;
 		}
 	}	
@@ -15125,7 +15130,7 @@ white_mac_list * wid_check_white_mac()
 	struct white_mac *pmac = NULL;
 	struct white_mac *phead = NULL;
 	white_mac_list *maclist = NULL;
-	CW_CREATE_OBJECT_ERR(maclist, white_mac_list, return NULL;);
+	CW_CREATE_OBJECT_ERR_WID(maclist, white_mac_list, return NULL;);
 	
 	maclist->imaccount = 0;
 	maclist->list_mac = NULL;
@@ -15142,7 +15147,7 @@ white_mac_list * wid_check_white_mac()
 					{
 						if((AC_WTP[i]->WTP_Radio[j]->BSS[k] != NULL)&&(AC_WTP[i]->WTP_Radio[j]->BSS[k]->BSSID != NULL))
 						{
-							CW_CREATE_OBJECT_SIZE_ERR(pmac,sizeof(struct white_mac),return NULL;);
+							CW_CREATE_OBJECT_SIZE_ERR(pmac,sizeof(struct white_mac),  WID_FREE(maclist); return NULL;);
 
 							memcpy(pmac->elem_mac, AC_WTP[i]->WTP_Radio[j]->BSS[k]->BSSID, 6);
 							pmac->next = NULL;
@@ -15179,7 +15184,7 @@ Neighbor_AP_INFOS * wid_get_neighbor_ap_list()
 	struct Neighbor_AP_ELE *Pnode = NULL;
 	
 	Neighbor_AP_INFOS *create_ap_info;
-	CW_CREATE_OBJECT_ERR(create_ap_info, Neighbor_AP_INFOS, return NULL;);		
+	CW_CREATE_OBJECT_ERR_WID(create_ap_info, Neighbor_AP_INFOS, return NULL;);		
 	create_ap_info->neighborapInfosCount = 0;
 	create_ap_info->neighborapInfos = NULL;
 
@@ -15203,9 +15208,9 @@ Neighbor_AP_INFOS * wid_get_neighbor_ap_list()
 							if(insert_elem_into_ap_list_head(create_ap_info,Pnode) == CW_FALSE)
 							{
 								//CW_FREE_OBJECT(Pnode->ESSID);
-								CW_FREE_OBJECT(Pnode->IEs_INFO);
+								CW_FREE_OBJECT_WID(Pnode->IEs_INFO);
 
-								CW_FREE_OBJECT(Pnode);
+								CW_FREE_OBJECT_WID(Pnode);
 							}
 						}
 						
@@ -15220,7 +15225,7 @@ Neighbor_AP_INFOS * wid_get_neighbor_ap_list()
 
 	if((create_ap_info->neighborapInfos == NULL)||(create_ap_info->neighborapInfosCount == 0))
 	{
-		CW_FREE_OBJECT(create_ap_info);
+		CW_FREE_OBJECT_WID(create_ap_info);
 		return NULL;
 	}
 
@@ -15280,15 +15285,15 @@ CWBool delete_elem_from_ap_list_byoui(Neighbor_AP_INFOS **paplist,struct oui_nod
 		(*paplist) ->neighborapInfos = (*paplist)->neighborapInfos->next;
 
 		//CW_FREE_OBJECT(pnode->ESSID);
-		CW_FREE_OBJECT(pnode->IEs_INFO);
+		CW_FREE_OBJECT_WID(pnode->IEs_INFO);
 
-		CW_FREE_OBJECT(pnode);
+		CW_FREE_OBJECT_WID(pnode);
 
 		(*paplist)->neighborapInfosCount--;
 
 		if((*paplist)->neighborapInfosCount == 0)
 		{
-			CW_FREE_OBJECT((*paplist));
+			CW_FREE_OBJECT_WID((*paplist));
 		}
 //		printf("delete_elem_from_ap_list_byoui delete node success\n");
 		//return CW_TRUE;
@@ -15308,9 +15313,9 @@ CWBool delete_elem_from_ap_list_byoui(Neighbor_AP_INFOS **paplist,struct oui_nod
 			pnode->next = pnext->next;
 
 			//CW_FREE_OBJECT(pnext->ESSID);
-			CW_FREE_OBJECT(pnext->IEs_INFO);
+			CW_FREE_OBJECT_WID(pnext->IEs_INFO);
 
-			CW_FREE_OBJECT(pnext);
+			CW_FREE_OBJECT_WID(pnext);
 
 			
 			(*paplist)->neighborapInfosCount--;
@@ -15379,15 +15384,15 @@ CWBool delete_elem_from_ap_list_byessid(Neighbor_AP_INFOS **paplist,struct essid
 		(*paplist) ->neighborapInfos = (*paplist)->neighborapInfos->next;
 
 		//CW_FREE_OBJECT(pnode->ESSID);
-		CW_FREE_OBJECT(pnode->IEs_INFO);
+		CW_FREE_OBJECT_WID(pnode->IEs_INFO);
 
-		CW_FREE_OBJECT(pnode);
+		CW_FREE_OBJECT_WID(pnode);
 
 		(*paplist)->neighborapInfosCount--;
 
 		if((*paplist)->neighborapInfosCount == 0)
 		{
-			CW_FREE_OBJECT((*paplist));
+			CW_FREE_OBJECT_WID((*paplist));
 		}
 //		printf("delete_elem_from_ap_list_byessid delete node success\n");
 		//return CW_TRUE;
@@ -15407,9 +15412,9 @@ CWBool delete_elem_from_ap_list_byessid(Neighbor_AP_INFOS **paplist,struct essid
 			pnode->next = pnext->next;
 
 			//CW_FREE_OBJECT(pnext->ESSID);
-			CW_FREE_OBJECT(pnext->IEs_INFO);
+			CW_FREE_OBJECT_WID(pnext->IEs_INFO);
 
-			CW_FREE_OBJECT(pnext);
+			CW_FREE_OBJECT_WID(pnext);
 
 			
 			(*paplist)->neighborapInfosCount--;
@@ -15449,15 +15454,15 @@ CWBool delete_elem_from_ap_list_bymac(Neighbor_AP_INFOS **paplist,struct white_m
 		(*paplist) ->neighborapInfos = (*paplist)->neighborapInfos->next;
 
 		//CW_FREE_OBJECT(pnode->ESSID);
-		CW_FREE_OBJECT(pnode->IEs_INFO);
+		CW_FREE_OBJECT_WID(pnode->IEs_INFO);
 
-		CW_FREE_OBJECT(pnode);
+		CW_FREE_OBJECT_WID(pnode);
 
 		(*paplist)->neighborapInfosCount--;
 
 		if((*paplist)->neighborapInfosCount == 0)
 		{
-			CW_FREE_OBJECT((*paplist));
+			CW_FREE_OBJECT_WID((*paplist));
 		}
 		//printf("delete_elem_from_ap_list_bymac delete node success\n");
 		return CW_TRUE;
@@ -15471,9 +15476,9 @@ CWBool delete_elem_from_ap_list_bymac(Neighbor_AP_INFOS **paplist,struct white_m
 			pnode->next = pnext->next;
 
 			//CW_FREE_OBJECT(pnext->ESSID);
-			CW_FREE_OBJECT(pnext->IEs_INFO);
+			CW_FREE_OBJECT_WID(pnext->IEs_INFO);
 
-			CW_FREE_OBJECT(pnext);
+			CW_FREE_OBJECT_WID(pnext);
 
 			
 			(*paplist)->neighborapInfosCount--;
@@ -15513,13 +15518,13 @@ void wid_destroy_white_mac(white_mac_list **pmaclist)
 		
 		pnext = phead->next;
 
-		CW_FREE_OBJECT(phead);
+		CW_FREE_OBJECT_WID(phead);
 
 		phead = pnext;
 	}
 
 	(*pmaclist)->imaccount= 0;
-	CW_FREE_OBJECT(*pmaclist);
+	CW_FREE_OBJECT_WID(*pmaclist);
 
 }
 void display_mac_info_list(white_mac_list *pmaclist)
@@ -15614,7 +15619,7 @@ struct Neighbor_AP_ELE * create_ap_elem(struct Neighbor_AP_ELE *apelem)
 	struct Neighbor_AP_ELE *neighborapelem = NULL;
 	CW_CREATE_OBJECT_SIZE_ERR(neighborapelem, sizeof(struct Neighbor_AP_ELE), return NULL;);
 	//CW_CREATE_OBJECT_SIZE_ERR(neighborapelem->ESSID,(strlen(apelem->ESSID)+1),return NULL;);
-	CW_CREATE_OBJECT_SIZE_ERR(neighborapelem->IEs_INFO,(strlen(apelem->IEs_INFO)+1),return NULL;);
+	CW_CREATE_OBJECT_SIZE_ERR(neighborapelem->IEs_INFO,(strlen(apelem->IEs_INFO)+1), WID_FREE(neighborapelem); return NULL;);
 
 
 	
@@ -15703,7 +15708,7 @@ void destroy_support_rate_list(struct Support_Rate_List *ratelist)
 		
 		pnext = phead->next;
 	
-		CW_FREE_OBJECT(phead);
+		CW_FREE_OBJECT_WID(phead);
 
 		phead = pnext;
 		
@@ -15723,10 +15728,11 @@ struct Support_Rate_List *create_support_rate_list(int count)
 	struct Support_Rate_List *supportrate = NULL;
 	struct Support_Rate_List *phead = NULL;
 
+	CW_CREATE_OBJECT_SIZE_ERR(supportrate, count*sizeof(struct Support_Rate_List), return NULL;);
+	
 	for(i=0; i<count; i++)
-	{
-		CW_CREATE_OBJECT_SIZE_ERR(supportrate, sizeof(struct Support_Rate_List), return NULL;);		
-		
+	{		
+		supportrate = supportrate + i;
 		
 		supportrate->Rate = 0;
 
@@ -15737,14 +15743,14 @@ struct Support_Rate_List *create_support_rate_list(int count)
 			
 			create_rate_list = supportrate;
 			phead = supportrate;
-			supportrate = NULL;
+			//supportrate = NULL;
 		}
 		else
 		{
 			
 			phead->next = supportrate;
 			phead = supportrate;
-			supportrate = NULL;
+			//supportrate = NULL;
 		}
 
 	}	
@@ -15793,7 +15799,7 @@ struct Support_Rate_List *insert_rate_into_list(struct Support_Rate_List *rateli
 	{
 		//create new element
 		struct Support_Rate_List *newnode = NULL;
-		newnode=(struct Support_Rate_List *)malloc(sizeof(struct Support_Rate_List));
+		newnode=(struct Support_Rate_List *)WID_MALLOC(sizeof(struct Support_Rate_List));
 		if(!newnode)  
 		{
 			//printf("malloc error\n");
@@ -15862,7 +15868,7 @@ struct Support_Rate_List *delete_rate_from_list(struct Support_Rate_List *rateli
 			//del
 			temp->next = ptr->next;
 			ptr->next = NULL;
-			CW_FREE_OBJECT(ptr);
+			CW_FREE_OBJECT_WID(ptr);
 			
 			return ratelist;
 		}
@@ -15895,7 +15901,7 @@ int   length_of_rate_list(struct Support_Rate_List *ratelist)
 {
 	if(pblack_mac_list == NULL)
 	{
-		CW_CREATE_OBJECT_ERR(pblack_mac_list, white_mac_list, return CW_FALSE;);
+		CW_CREATE_OBJECT_ERR_WID(pblack_mac_list, white_mac_list, return CW_FALSE;);
 		pblack_mac_list->imaccount = 0;
 	 	pblack_mac_list->list_mac = NULL;
 	} 
@@ -15940,7 +15946,7 @@ CWBool wid_add_mac_whitelist(unsigned char * pmac)
 {
 	if(pwhite_mac_list == NULL)
 	{
-		CW_CREATE_OBJECT_ERR(pwhite_mac_list, white_mac_list, return CW_FALSE;);
+		CW_CREATE_OBJECT_ERR_WID(pwhite_mac_list, white_mac_list, return CW_FALSE;);
 		pwhite_mac_list->imaccount = 0;
 	 	pwhite_mac_list->list_mac = NULL;
 	} 
@@ -15997,17 +16003,17 @@ CWBool wid_delete_mac_blacklist(unsigned char * pmac)
 				{
 					pblack_mac_list->list_mac = phead->next;
 					pblack_mac_list->imaccount--;
-					CW_FREE_OBJECT(phead);
+					CW_FREE_OBJECT_WID(phead);
 					if(pblack_mac_list->imaccount == 0)
 					{
-						CW_FREE_OBJECT(pblack_mac_list);
+						CW_FREE_OBJECT_WID(pblack_mac_list);
 					}
 					break;
 				}
 				else
 				{
 					pnode->next = phead->next;
-					CW_FREE_OBJECT(phead);
+					CW_FREE_OBJECT_WID(phead);
 					pblack_mac_list->imaccount--;
 					break;
 					
@@ -16037,18 +16043,18 @@ CWBool wid_delete_mac_whitelist(unsigned char * pmac)
 				{
 					pwhite_mac_list->list_mac = phead->next;
 					pwhite_mac_list->imaccount--;
-					CW_FREE_OBJECT(phead);
+					CW_FREE_OBJECT_WID(phead);
 
 					if(pwhite_mac_list->imaccount == 0)
 					{
-						CW_FREE_OBJECT(pwhite_mac_list);
+						CW_FREE_OBJECT_WID(pwhite_mac_list);
 					}
 					break;
 				}
 				else
 				{
 					pnode->next = phead->next;
-					CW_FREE_OBJECT(phead);
+					CW_FREE_OBJECT_WID(phead);
 					pwhite_mac_list->imaccount--;
 					break;
 					
@@ -16471,7 +16477,7 @@ int WID_CHECK_SAME_ATH_OF_ALL_WTP(unsigned char wlanid,unsigned int *tx_pkt,unsi
 	unsigned int wtp_num = 0;
 
 	WID_WTP **WTP;
-	WTP = malloc(WTP_NUM*(sizeof(WID_WTP *)));
+	WTP = WID_MALLOC(WTP_NUM*(sizeof(WID_WTP *)));
 	wtp_num = Wid_Find_Wtp(WTP);
 	//WID_WTP_RADIO	**AC_RADIO_FOR_SEARCH;
 	//AC_RADIO_FOR_SEARCH = malloc(G_RADIO_NUM*(sizeof(WID_WTP_RADIO *)));
@@ -16513,7 +16519,7 @@ int WID_CHECK_SAME_ATH_OF_ALL_WTP(unsigned char wlanid,unsigned int *tx_pkt,unsi
 	}
 	if(WTP)
 	{
-		free(WTP);
+		WID_FREE(WTP);
 		WTP = NULL;
 	}
 	return 0;
@@ -16677,7 +16683,7 @@ int WID_INTERFACE_SET_NASID(unsigned char WlanID,char* ifname,char* nas_id)
 		return APPLY_IF_FAIL;
 	}
 	close(sockfd);
-	wif = (struct ifi*)malloc(sizeof(struct ifi));
+	wif = (struct ifi*)WID_MALLOC(sizeof(struct ifi));
 	memset(wif->ifi_name,0,ETH_IF_NAME_LEN);
 	memcpy(wif->ifi_name,ifname,strlen(ifname));
 	wif->ifi_index = ifr.ifr_ifindex;
@@ -16704,7 +16710,7 @@ int WID_INTERFACE_SET_NASID(unsigned char WlanID,char* ifname,char* nas_id)
 				//printf("warnning you have binding this wlan eth ,please do not binding this again");
 				wid_syslog_debug_debug(WID_DEFAULT,"warnning you have binding this wlan eth ,please do not binding this again");
 				WID_CHECK_WLAN_APPLY_WTP_BSS_NAS_ID(WlanID, wif->ifi_index, wifnext->nas_id_len, nas_id);
-				free(wif);
+				WID_FREE(wif);
 				wif = NULL;
 				return 0;
 			}
@@ -16903,9 +16909,9 @@ int WID_ADD_QOS_PROFILE(char *name,int ID){
 	int i = 0;
 	
 
-	WID_QOS[ID] = (AC_QOS*)malloc(sizeof(AC_QOS));
+	WID_QOS[ID] = (AC_QOS*)WID_MALLOC(sizeof(AC_QOS));
 	WID_QOS[ID]->QosID = ID;
-	WID_QOS[ID]->name = (char *)malloc(strlen(name)+1);
+	WID_QOS[ID]->name = (char *)WID_MALLOC(strlen(name)+1);
 	memset(WID_QOS[ID]->name, 0, strlen(name)+1);
 	memcpy(WID_QOS[ID]->name, name, strlen(name));
 
@@ -16925,7 +16931,7 @@ int WID_ADD_QOS_PROFILE(char *name,int ID){
 	memcpy(WID_QOS[ID]->qos_res_shove_arithmetic, "ShovePolicy",11);
 	for(i=0;i<4;i++)
 	{
-		WID_QOS[ID]->radio_qos[i] = (qos_profile*)malloc(sizeof(qos_profile));
+		WID_QOS[ID]->radio_qos[i] = (qos_profile*)WID_MALLOC(sizeof(qos_profile));
 
 		WID_QOS[ID]->radio_qos[i]->qos_average_rate = 5;
 		WID_QOS[ID]->radio_qos[i]->qos_max_degree = 100;
@@ -16998,7 +17004,7 @@ int WID_ADD_QOS_PROFILE(char *name,int ID){
 		
 
 		//client type
-		WID_QOS[ID]->client_qos[i] = (qos_profile*)malloc(sizeof(qos_profile));
+		WID_QOS[ID]->client_qos[i] = (qos_profile*)WID_MALLOC(sizeof(qos_profile));
 		WID_QOS[ID]->client_qos[i]->QueueDepth = 199;
 		/*
 		WID_QOS[ID]->client_qos[i]->CWMin = WID_QOS_CWMIN_DEFAULT;
@@ -17067,13 +17073,13 @@ int WID_DELETE_QOS_PROFILE(int ID){
 		WID_QOS[ID]->client_qos[i]->DSCPTag = UNUSED_QOS_VALUE;
 		WID_QOS[ID]->client_qos[i]->ACK = UNUSED_QOS_VALUE;
 
-		CW_FREE_OBJECT(WID_QOS[ID]->radio_qos[i]);
-		CW_FREE_OBJECT(WID_QOS[ID]->client_qos[i]);
+		CW_FREE_OBJECT_WID(WID_QOS[ID]->radio_qos[i]);
+		CW_FREE_OBJECT_WID(WID_QOS[ID]->client_qos[i]);
 	}
 
-	CW_FREE_OBJECT(WID_QOS[ID]->name);
+	CW_FREE_OBJECT_WID(WID_QOS[ID]->name);
 	
-	CW_FREE_OBJECT(WID_QOS[ID]);
+	CW_FREE_OBJECT_WID(WID_QOS[ID]);
 	
 	return WID_DBUS_SUCCESS;
 }
@@ -17477,13 +17483,13 @@ int wid_radio_set_ip_gateway(int wtpid,unsigned int ip,unsigned int gateway,unsi
 int wid_update_ap_config(int wtpid,char *ip)
 {
 	char *command;
-	command = (char *)malloc(sizeof(char)*50);
+	command = (char *)WID_MALLOC(sizeof(char)*50);
 	memset(command,0,50);
 	sprintf(command,"cd /jffs && tftp -g -r config.wtp %s",ip);
 	wid_syslog_debug_debug(WID_DEFAULT,"command %s\n",command);
 	//printf("command %s\n",command);
 	wid_radio_set_extension_command(wtpid,command);
-	CW_FREE_OBJECT(command);
+	CW_FREE_OBJECT_WID(command);
 	time(&AC_WTP[wtpid]->config_update_time);
 	return 0;	
 
@@ -17537,10 +17543,10 @@ int wid_radio_set_extension_command(int wtpid, char * command)
 	struct msgqlist *elem;
 	
 //	int WTPIndex = wtpid;
-	free(AC_WTP[wtpid]->WTP_Radio[0]->excommand);
+	WID_FREE(AC_WTP[wtpid]->WTP_Radio[0]->excommand);
 	AC_WTP[wtpid]->WTP_Radio[0]->excommand = NULL;
 	
-	AC_WTP[wtpid]->WTP_Radio[0]->excommand = (char*)malloc(strlen(command)+1);
+	AC_WTP[wtpid]->WTP_Radio[0]->excommand = (char*)WID_MALLOC(strlen(command)+1);
 	memset(AC_WTP[wtpid]->WTP_Radio[0]->excommand, 0, strlen(command)+1);
 	memcpy(AC_WTP[wtpid]->WTP_Radio[0]->excommand, command, strlen(command));
 
@@ -17589,7 +17595,7 @@ int wid_radio_set_extension_command(int wtpid, char * command)
 		msg.mqinfo.u.WtpInfo.Wtp_Op = WTP_EXTEND_CMD;
 		memcpy(msg.mqinfo.u.WtpInfo.value, command, strlen(command));
 
-		elem = (struct msgqlist*)malloc(sizeof(struct msgqlist));
+		elem = (struct msgqlist*)WID_MALLOC(sizeof(struct msgqlist));
 		if(elem == NULL){
 			wid_syslog_crit("%s malloc %s",__func__,strerror(errno));
 			perror("malloc");
@@ -17609,10 +17615,10 @@ int wid_radio_set_option60_parameter(int wtpid, char * parameter)
 	
 	int WTPIndex = wtpid;
 	if(AC_WTP[WTPIndex]->option60_param != NULL){
-		free(AC_WTP[WTPIndex]->option60_param);
+		WID_FREE(AC_WTP[WTPIndex]->option60_param);
 		AC_WTP[WTPIndex]->option60_param = NULL;
 	}
-	AC_WTP[WTPIndex]->option60_param = (char *)malloc(strlen(parameter)+1);
+	AC_WTP[WTPIndex]->option60_param = (char *)WID_MALLOC(strlen(parameter)+1);
 	memset(AC_WTP[WTPIndex]->option60_param,0,(strlen(parameter)+1));
 	memcpy(AC_WTP[WTPIndex]->option60_param,parameter,strlen(parameter));
 	
@@ -17644,7 +17650,7 @@ int wid_radio_set_option60_parameter(int wtpid, char * parameter)
 		msg.mqinfo.u.WtpInfo.Wtp_Op = WTP_OPTION60_PARAM;
 		memcpy(msg.mqinfo.u.WtpInfo.value, parameter, strlen(parameter));
 
-		elem = (struct msgqlist*)malloc(sizeof(struct msgqlist));
+		elem = (struct msgqlist*)WID_MALLOC(sizeof(struct msgqlist));
 		if(elem == NULL){
 			wid_syslog_crit("%s malloc %s",__func__,strerror(errno));
 			perror("malloc");
@@ -17665,7 +17671,7 @@ int wid_trap_remote_restart(unsigned int wtpid)
 		return -1;
 	}
 	char *command;
-	command = (char *)malloc(sizeof(char)*10);
+	command = (char *)WID_MALLOC(sizeof(char)*10);
 	memset(command,0,10);
 	strncpy(command,"sysreboot",9);
 	wid_syslog_debug_debug(WID_DEFAULT,"sysreboot %s\n",command);
@@ -17674,7 +17680,7 @@ int wid_trap_remote_restart(unsigned int wtpid)
 		wid_dbus_trap_set_wtp_remote_restart(wtpid);
 		}
 	wid_radio_set_extension_command(wtpid,command);
-	free(command);	
+	WID_FREE(command);	
 	return 0;
 }
 int wid_trap_channel_disturb_enable(unsigned int wtpid)
@@ -17684,19 +17690,19 @@ int wid_trap_channel_disturb_enable(unsigned int wtpid)
 		return -1;
 	}
 	char *command;
-	command = (char *)malloc(sizeof(char)*27);
+	command = (char *)WID_MALLOC(sizeof(char)*27);
 	memset(command,0,27);
 	strncpy(command,"touch /tmp/disturb_warning",26);
 
 	char *command2;
-	command2 = (char *)malloc(sizeof(char)*30);
+	command2 = (char *)WID_MALLOC(sizeof(char)*30);
 	memset(command2,0,30);
 	strncpy(command2,"echo 1 > /tmp/disturb_warning",29);
 	
 	//wid_radio_set_extension_command(wtpid,command);
 	wid_radio_set_extension_command(wtpid,command2);
-	CW_FREE_OBJECT(command);
-	CW_FREE_OBJECT(command2);
+	CW_FREE_OBJECT_WID(command);
+	CW_FREE_OBJECT_WID(command2);
 	return 0;
 }
 int wid_trap_channel_disturb_disable(unsigned int wtpid)
@@ -17706,11 +17712,11 @@ int wid_trap_channel_disturb_disable(unsigned int wtpid)
 		return -1;
 	}
 	char *command;
-	command = (char *)malloc(sizeof(char)*30);
+	command = (char *)WID_MALLOC(sizeof(char)*30);
 	memset(command,0,30);
 	strncpy(command,"echo 0 > /tmp/disturb_warning",29);
 	wid_radio_set_extension_command(wtpid,command);
-	CW_FREE_OBJECT(command);
+	CW_FREE_OBJECT_WID(command);
 	return 0;
 }
 int wid_set_ap_l2_isolation_enable(unsigned int wtpid,unsigned char wlanid)
@@ -17745,12 +17751,12 @@ int wid_set_ap_l2_isolation_enable(unsigned int wtpid,unsigned char wlanid)
 		return -1;
 	}
 	char *command;
-	command = (char *)malloc(sizeof(char)*25);
+	command = (char *)WID_MALLOC(sizeof(char)*25);
 	memset(command,0,25);
 	sprintf(command,"iwpriv ath%d ap_bridge 0",wlanid);//0 means open isolation,sta can not ping
 	wid_syslog_debug_debug(WID_DEFAULT,"command %s\n",command);
 	wid_radio_set_extension_command(wtpid,command);
-	CW_FREE_OBJECT(command);
+	CW_FREE_OBJECT_WID(command);
 	return 0;
 }
 int wid_set_ap_l2_isolation_disable(unsigned int wtpid,unsigned char wlanid)
@@ -17779,12 +17785,12 @@ int wid_set_ap_l2_isolation_disable(unsigned int wtpid,unsigned char wlanid)
 	}
 	
 	char *command;
-	command = (char *)malloc(sizeof(char)*25);
+	command = (char *)WID_MALLOC(sizeof(char)*25);
 	memset(command,0,25);
 	sprintf(command,"iwpriv ath%d ap_bridge 1",wlanid);
 	wid_syslog_debug_debug(WID_DEFAULT,"command %s\n",command);
 	wid_radio_set_extension_command(wtpid,command);
-	CW_FREE_OBJECT(command);
+	CW_FREE_OBJECT_WID(command);
 	return 0;
 }
 int wid_set_radio_l2_isolation_enable(unsigned int wtpid,unsigned int radioid,unsigned char wlanid)
@@ -17808,12 +17814,12 @@ int wid_set_radio_l2_isolation_enable(unsigned int wtpid,unsigned int radioid,un
 	}
 	
 	char *command;
-	command = (char *)malloc(sizeof(char)*28);
+	command = (char *)WID_MALLOC(sizeof(char)*28);
 	memset(command,0,28);
 	sprintf(command,"iwpriv ath.%d-%d ap_bridge 0",radioid,wlanid);//0 means open isolation,sta can not ping
 	wid_syslog_debug_debug(WID_DEFAULT,"command %s\n",command);
 	wid_radio_set_extension_command(wtpid,command);
-	CW_FREE_OBJECT(command);
+	CW_FREE_OBJECT_WID(command);
 	return 0;
 }
 int wid_set_radio_l2_isolation_disable(unsigned int wtpid,unsigned int radioid,unsigned char wlanid)
@@ -17837,12 +17843,12 @@ int wid_set_radio_l2_isolation_disable(unsigned int wtpid,unsigned int radioid,u
 	}
 	
 	char *command;
-	command = (char *)malloc(sizeof(char)*28);
+	command = (char *)WID_MALLOC(sizeof(char)*28);
 	memset(command,0,28);
 	sprintf(command,"iwpriv ath.%d-%d ap_bridge 1",radioid,wlanid);
 	wid_syslog_debug_debug(WID_DEFAULT,"command %s\n",command);
 	wid_radio_set_extension_command(wtpid,command);
-	CW_FREE_OBJECT(command);
+	CW_FREE_OBJECT_WID(command);
 	return 0;
 }
 int wid_set_radio_11n_cwmmode(unsigned int wtpid,unsigned int radioid,unsigned char wlanid,unsigned char policy)
@@ -17862,12 +17868,12 @@ int wid_set_radio_11n_cwmmode(unsigned int wtpid,unsigned int radioid,unsigned c
 		return 0;
 	}
 	char *command;
-	command = (char *)malloc(sizeof(char)*32);
+	command = (char *)WID_MALLOC(sizeof(char)*32);
 	memset(command,0,32);
 	sprintf(command,"iwpriv ath.%d-%d cwmmode %d",radioid,wlanid,policy);//0 means 20 mode;1 means 20/40 mode
 	wid_syslog_debug_debug(WID_DEFAULT,"command %s\n",command);
 	wid_radio_set_extension_command(wtpid,command);
-	CW_FREE_OBJECT(command);
+	CW_FREE_OBJECT_WID(command);
 
 	AC_BSS[bssindex]->cwmmode = policy;
 	return 0;
@@ -17881,12 +17887,12 @@ int wid_set_ap_dos_def_enable(unsigned int wtpid)
 	}
 	AC_WTP[wtpid]->mib_info.dos_def_switch = 1;
 	char *command;
-	command = (char *)malloc(sizeof(char)*13);
+	command = (char *)WID_MALLOC(sizeof(char)*13);
 	memset(command,0,13);
 	strncpy(command,"dosdef start",12);
 	wid_syslog_debug_debug(WID_DEFAULT,"command %s\n",command);
 	wid_radio_set_extension_command(wtpid,command);
-	CW_FREE_OBJECT(command);
+	CW_FREE_OBJECT_WID(command);
 	return 0;
 }
 int wid_set_ap_dos_def_disable(unsigned int wtpid)
@@ -17897,12 +17903,12 @@ int wid_set_ap_dos_def_disable(unsigned int wtpid)
 	}
 	AC_WTP[wtpid]->mib_info.dos_def_switch = 0;
 	char *command;
-	command = (char *)malloc(sizeof(char)*12);
+	command = (char *)WID_MALLOC(sizeof(char)*12);
 	memset(command,0,12);
 	strncpy(command,"dosdef stop",11);
 
 	wid_radio_set_extension_command(wtpid,command);
-	CW_FREE_OBJECT(command);
+	CW_FREE_OBJECT_WID(command);
 	return 0;
 }
 int wid_set_ap_igmp_snoop_enable(unsigned int wtpid)
@@ -17913,12 +17919,12 @@ int wid_set_ap_igmp_snoop_enable(unsigned int wtpid)
 	}
 	AC_WTP[wtpid]->mib_info.igmp_snoop_switch = 1;
 	char *command;
-	command = (char *)malloc(sizeof(char)*17);
+	command = (char *)WID_MALLOC(sizeof(char)*17);
 	memset(command,0,17);
 	strncpy(command,"igmp_snoop start",16);
 	wid_syslog_debug_debug(WID_DEFAULT,"command %s\n",command);
 	wid_radio_set_extension_command(wtpid,command);
-	CW_FREE_OBJECT(command);
+	CW_FREE_OBJECT_WID(command);
 	return 0;
 }
 int wid_set_ap_igmp_snoop_disable(unsigned int wtpid)
@@ -17929,12 +17935,12 @@ int wid_set_ap_igmp_snoop_disable(unsigned int wtpid)
 	}
 	AC_WTP[wtpid]->mib_info.igmp_snoop_switch = 0;
 	char *command;
-	command = (char *)malloc(sizeof(char)*16);
+	command = (char *)WID_MALLOC(sizeof(char)*16);
 	memset(command,0,16);
 	strncpy(command,"igmp_snoop stop",15);
 	wid_syslog_debug_debug(WID_DEFAULT,"command %s\n",command);
 	wid_radio_set_extension_command(wtpid,command);
-	CW_FREE_OBJECT(command);
+	CW_FREE_OBJECT_WID(command);
 	return 0;
 }
 
@@ -18220,7 +18226,7 @@ int wid_send_to_ap_unauthorized_mac_reportinterval(unsigned int wtpid)
 		msg.mqinfo.subtype = WTP_S_TYPE;
 		msg.mqinfo.u.WtpInfo.Wtp_Op = WTP_UNAUTHORIZED_MAC_REPORT;
 		
-		elem = (struct msgqlist*)malloc(sizeof(struct msgqlist));
+		elem = (struct msgqlist*)WID_MALLOC(sizeof(struct msgqlist));
 		if(elem == NULL){
 			wid_syslog_info("%s malloc %s",__func__,strerror(errno));
 			perror("malloc");
@@ -18271,7 +18277,7 @@ int wid_send_to_ap_configure_error_reportinterval(unsigned int wtpid)
 			msg.mqinfo.subtype = WTP_S_TYPE;
 			msg.mqinfo.u.WtpInfo.Wtp_Op = WTP_CONFIGURE_ERROR_REPROT;
 			
-			elem = (struct msgqlist*)malloc(sizeof(struct msgqlist));
+			elem = (struct msgqlist*)WID_MALLOC(sizeof(struct msgqlist));
 			if(elem == NULL){
 				wid_syslog_info("%s malloc %s",__func__,strerror(errno));
 				perror("malloc");
@@ -18325,7 +18331,7 @@ int wid_send_to_ap_sta_online_full_reportinterval(unsigned int wtpid)
 		msg.mqinfo.subtype = WTP_S_TYPE;
 		msg.mqinfo.u.WtpInfo.Wtp_Op = WTP_STA_ONLINE_FULL_REPROT;
 		
-		elem = (struct msgqlist*)malloc(sizeof(struct msgqlist));
+		elem = (struct msgqlist*)WID_MALLOC(sizeof(struct msgqlist));
 		if(elem == NULL){
 			wid_syslog_info("%s malloc %s",__func__,strerror(errno));
 			perror("malloc");
@@ -18380,7 +18386,7 @@ int wid_send_to_ap_sta_flow_rx_tx_overflow_reportinterval(unsigned int wtpid, un
 		msg.mqinfo.subtype = WTP_S_TYPE;
 		msg.mqinfo.u.WtpInfo.Wtp_Op = WTP_STA_FLOW_OVERFLOW_RX_REPORT;
 		
-		elem = (struct msgqlist*)malloc(sizeof(struct msgqlist));
+		elem = (struct msgqlist*)WID_MALLOC(sizeof(struct msgqlist));
 		if(elem == NULL){
 			wid_syslog_info("%s malloc %s",__func__,strerror(errno));
 			perror("malloc");
@@ -18948,11 +18954,11 @@ int CHECK_AND_UPDATE_IF_POLICY(char* ifname,int *wtpid1,int *radioid1,int *wlani
 	int wtpid = 0,radioid = 0, wlanid = 0;
 	
 	if(!strncasecmp(ifname,"r",1)){
-		char *id = (char *)malloc(sizeof(char)*25);
+		char *id = (char *)WID_MALLOC(sizeof(char)*25);
 		memset(id,0,25);
 		if(id == NULL)
 		{
-			wid_syslog_err("malloc error,%s",__func__);
+			wid_syslog_err("WID_MALLOC error,%s",__func__);
 			return MALLOC_ERROR;
 		}
 		memcpy(id,ifname+1,(strlen(ifname)-1));
@@ -18964,13 +18970,13 @@ int CHECK_AND_UPDATE_IF_POLICY(char* ifname,int *wtpid1,int *radioid1,int *wlani
 		}else{
 			wid_syslog_warning("parse radio interface %s error",ifname);;
 			if(id != NULL){
-				free(id);
+				WID_FREE(id);
 				id = NULL;
 			}
 			return -1;
 		}
 		if(id != NULL){
-			free(id);
+			WID_FREE(id);
 			id = NULL;
 		}
 	}else{
@@ -19064,7 +19070,7 @@ int wid_set_tunnel_wlan_vlan(unsigned char wlanid,char * ifname)
 		struct WID_TUNNEL_WLAN_VLAN *wif;
 		struct WID_TUNNEL_WLAN_VLAN *wifnext;
 		
-		wif = (struct WID_TUNNEL_WLAN_VLAN*)malloc(sizeof(struct WID_TUNNEL_WLAN_VLAN));
+		wif = (struct WID_TUNNEL_WLAN_VLAN*)WID_MALLOC(sizeof(struct WID_TUNNEL_WLAN_VLAN));
 		memset(wif->ifname,0,ETH_IF_NAME_LEN);
 		memcpy(wif->ifname,ifname,strlen(ifname));
 		wif->ifnext = NULL;
@@ -19083,7 +19089,7 @@ int wid_set_tunnel_wlan_vlan(unsigned char wlanid,char * ifname)
 				if(strncmp(wifnext->ifname,ifname,strlen(ifname)) == 0)
 				{
 //					printf("already in the list\n");
-					free(wif);
+					WID_FREE(wif);
 					wif = NULL;
 					return 0;
 				}
@@ -19158,7 +19164,7 @@ int wid_undo_tunnel_wlan_vlan(unsigned char wlanid,char * ifname)
 			if(strncmp(wifnext->ifname,ifname,strlen(ifname)) == 0)
 			{
 				AC_WLAN[wlanid]->tunnel_wlan_vlan = wifnext->ifnext;
-				free(wifnext);
+				WID_FREE(wifnext);
 				wifnext = NULL;		
 //				printf("delete ifname %s from list\n",ifname);
 			}
@@ -19170,7 +19176,7 @@ int wid_undo_tunnel_wlan_vlan(unsigned char wlanid,char * ifname)
 					{
 						wif = wifnext->ifnext;
 						wifnext->ifnext = wifnext->ifnext->ifnext;
-						free(wif);
+						WID_FREE(wif);
 						wif = NULL;				
 //						printf("delete ifname %s from list\n",ifname);
 						return 0;
@@ -19297,7 +19303,7 @@ int wid_add_manufacturer_oui(unsigned char oui[]){
 		return -1;
 
 	if(0==g_oui_list.list_len){
-		CW_CREATE_OBJECT_ERR(node, struct oui_node, return -1;);
+		CW_CREATE_OBJECT_ERR_WID(node, struct oui_node, return -1;);
 		node->oui[0]=oui[0];
 		node->oui[1]=oui[1];
 		node->oui[2]=oui[2];
@@ -19311,7 +19317,7 @@ int wid_add_manufacturer_oui(unsigned char oui[]){
 		if(0==ret)
 			return 0;
 		else{
-			CW_CREATE_OBJECT_ERR(node, struct oui_node, return -1;);
+			CW_CREATE_OBJECT_ERR_WID(node, struct oui_node, return -1;);
 			node->oui[0]=oui[0];
 			node->oui[1]=oui[1];
 			node->oui[2]=oui[2];
@@ -19336,9 +19342,9 @@ int wid_add_legal_essid(char *essid){
 		return -1;
 
 	if(0==g_essid_list.list_len){
-		CW_CREATE_OBJECT_ERR(node, struct essid_node, return -1;);
+		CW_CREATE_OBJECT_ERR_WID(node, struct essid_node, return -1;);
 
-		node->essid=(char *)malloc(strlen(essid)+1);
+		node->essid=(char *)WID_MALLOC(strlen(essid)+1);
 		memset(node->essid,0,strlen(essid)+1);
 		memcpy(node->essid,essid,strlen(essid));
 
@@ -19353,9 +19359,9 @@ int wid_add_legal_essid(char *essid){
 		if(0==ret)
 			return 0;
 		else{
-			CW_CREATE_OBJECT_ERR(node, struct essid_node, return -1;);
+			CW_CREATE_OBJECT_ERR_WID(node, struct essid_node, return -1;);
 			
-			node->essid=(char *)malloc(strlen(essid)+1);
+			node->essid=(char *)WID_MALLOC(strlen(essid)+1);
 			memset(node->essid,0,strlen(essid)+1);
 			memcpy(node->essid,essid,strlen(essid));
 			
@@ -19395,7 +19401,7 @@ int wid_add_attack_ap_mac(unsigned char mac[]){
 		return -1;
 
 	if(0==g_attack_mac_list.list_len){
-		CW_CREATE_OBJECT_ERR(node, struct attack_mac_node, return -1;);
+		CW_CREATE_OBJECT_ERR_WID(node, struct attack_mac_node, return -1;);
 
 		memset(node->mac,0,6);
 		memcpy(node->mac,mac,6);
@@ -19410,7 +19416,7 @@ int wid_add_attack_ap_mac(unsigned char mac[]){
 		if(0==ret)
 			return 0;
 		else{
-			CW_CREATE_OBJECT_ERR(node, struct attack_mac_node, return -1;);
+			CW_CREATE_OBJECT_ERR_WID(node, struct attack_mac_node, return -1;);
 			
 			memset(node->mac,0,6);
 			memcpy(node->mac,mac,6);
@@ -19440,7 +19446,7 @@ int wid_del_manufacturer_oui(unsigned char oui[]){
 			od->next=cr->next;
 		}
 		cr->next=NULL;
-		free(cr);
+		WID_FREE(cr);
 		cr=NULL;
 		g_oui_list.list_len--;
 	}else
@@ -19463,9 +19469,9 @@ int wid_del_legal_essid(char *essid){
 		}
 		cr->next=NULL;
 
-		free(cr->essid);
+		WID_FREE(cr->essid);
 		cr->essid=NULL;
-		free(cr);
+		WID_FREE(cr);
 		cr=NULL;
 		g_essid_list.list_len--;
 	}else
@@ -19487,7 +19493,7 @@ int wid_del_attack_ap_mac(unsigned char mac[]){
 		}
 		
 		cr->next=NULL;
-		free(cr);
+		WID_FREE(cr);
 		cr=NULL;
 		g_attack_mac_list.list_len--;
 	}else
@@ -20124,9 +20130,9 @@ int WID_ADD_ETHEREAL_BRIDGE(char *name,unsigned int ID)
 			return SYSTEM_CMD_ERROR;
 		}
 	}
-	WID_EBR[ID] = (ETHEREAL_BRIDGE *)malloc(sizeof(ETHEREAL_BRIDGE));
+	WID_EBR[ID] = (ETHEREAL_BRIDGE *)WID_MALLOC(sizeof(ETHEREAL_BRIDGE));
 	WID_EBR[ID]->EBRID = ID;
-	WID_EBR[ID]->name = (char *)malloc(strlen(name)+1);
+	WID_EBR[ID]->name = (char *)WID_MALLOC(strlen(name)+1);
 	memset(WID_EBR[ID]->name, 0, strlen(name)+1);
 	memcpy(WID_EBR[ID]->name, name, strlen(name));
 	WID_EBR[ID]->state = 0;
@@ -20193,7 +20199,7 @@ int WID_DELETE_ETHEREAL_BRIDGE(unsigned int ID)
 	while(iflist != NULL)
 	{
 		WID_EBR[ID]->iflist = iflist->ifnext;
-		free(iflist);
+		WID_FREE(iflist);
 		iflist = NULL;
 		iflist = WID_EBR[ID]->iflist;
 	}
@@ -20202,13 +20208,13 @@ int WID_DELETE_ETHEREAL_BRIDGE(unsigned int ID)
 	while(iflist != NULL)
 	{
 		WID_EBR[ID]->uplinklist = iflist->ifnext;
-		free(iflist);
+		WID_FREE(iflist);
 		iflist = NULL;
 		iflist = WID_EBR[ID]->uplinklist;
 	}	
 	
-	CW_FREE_OBJECT(WID_EBR[ID]->name);
-	CW_FREE_OBJECT(WID_EBR[ID]);
+	CW_FREE_OBJECT_WID(WID_EBR[ID]->name);
+	CW_FREE_OBJECT_WID(WID_EBR[ID]);
 	
 	return WID_DBUS_SUCCESS;
 }
@@ -20548,9 +20554,9 @@ int WID_SET_ETHEREAL_BRIDGE_IF_UPLINK(unsigned int ID,char *ifname,int is_radio,
 		EBR_IF_LIST *wif;
 		EBR_IF_LIST *wifnext;
 		
-		wif = (EBR_IF_LIST *)malloc(sizeof(EBR_IF_LIST));
+		wif = (EBR_IF_LIST *)WID_MALLOC(sizeof(EBR_IF_LIST));
 		memset(wif,0,sizeof(EBR_IF_LIST));
-		wif->ifname = (char *)malloc(ETH_IF_NAME_LEN);
+		wif->ifname = (char *)WID_MALLOC(ETH_IF_NAME_LEN);
 		memset(wif->ifname,0,ETH_IF_NAME_LEN);
 		memcpy(wif->ifname,ifname,strlen(ifname));
 		wif->ifnext = NULL;
@@ -20570,8 +20576,8 @@ int WID_SET_ETHEREAL_BRIDGE_IF_UPLINK(unsigned int ID,char *ifname,int is_radio,
 				if((strlen(ifname) == strlen(wifnext->ifname))&&(strncmp(wifnext->ifname,ifname,strlen(ifname)) == 0))
 				{
 					//printf("already in the list\n");
-					free(wif->ifname);
-					free(wif);
+					WID_FREE(wif->ifname);
+					WID_FREE(wif);
 					wif = NULL;
 					return 0;
 				}
@@ -20687,8 +20693,8 @@ int WID_SET_ETHEREAL_BRIDGE_IF_DOWNLINK(unsigned int ID,char *ifname,int is_radi
 			if((strlen(ifname) == strlen(wifnext->ifname))&&(strncmp(wifnext->ifname,ifname,strlen(ifname)) == 0))
 			{
 				WID_EBR[ID]->iflist = wifnext->ifnext;
-				free(wifnext->ifname);
-				free(wifnext);
+				WID_FREE(wifnext->ifname);
+				WID_FREE(wifnext);
 				wifnext = NULL;		
 				//printf("delete ifname %s from list\n",ifname);				
 				wifnext = WID_EBR[ID]->iflist;
@@ -20720,8 +20726,8 @@ int WID_SET_ETHEREAL_BRIDGE_IF_DOWNLINK(unsigned int ID,char *ifname,int is_radi
 					{
 						wif = wifnext->ifnext;
 						wifnext->ifnext = wifnext->ifnext->ifnext;
-						free(wif->ifname);
-						free(wif);
+						WID_FREE(wif->ifname);
+						WID_FREE(wif);
 						wif = NULL;				
 						//printf("delete ifname %s from list\n",ifname);
 						if(is_radio){
@@ -20766,7 +20772,8 @@ int WID_SET_ETHEREAL_BRIDGE_IF_DOWNLINK(unsigned int ID,char *ifname,int is_radi
 }
 int wid_add_cpu_value_for_accounting_average(unsigned int wtpid,unsigned int cpu_value){
 	struct ap_cpu_info  *cpu_node = NULL;
-	if((cpu_node = (struct ap_cpu_info*)malloc(sizeof(struct ap_cpu_info))) == NULL){
+	cpu_node = (struct ap_cpu_info*)WID_MALLOC(sizeof(struct ap_cpu_info));
+	if( cpu_node == NULL){
 		wid_syslog_debug_debug(WID_DEFAULT,"malloc fail in wid_add_cpu_value_for_accounting_average. \n");
 		return -1;
 	}
@@ -20789,7 +20796,8 @@ int wid_add_cpu_value_for_accounting_average(unsigned int wtpid,unsigned int cpu
 int wid_add_mem_value_for_accounting_average(unsigned int wtpid,unsigned int mem_value){
 	wid_syslog_debug_debug(WID_DEFAULT,"mem value : %d \n", AC_WTP[wtpid]->wifi_extension_info.memoryuse );
 	struct ap_cpu_info  *mem_node = NULL;
-	if((mem_node = (struct ap_cpu_info*)malloc(sizeof(struct ap_cpu_info))) == NULL){
+	mem_node = (struct ap_cpu_info*)WID_MALLOC(sizeof(struct ap_cpu_info));
+	if(mem_node == NULL){
 		wid_syslog_debug_debug(WID_DEFAULT,"malloc fail in %s. \n",__func__);
 		return -1;
 	}
@@ -20828,7 +20836,7 @@ int wid_del_cpu_value_for_accounting_average(unsigned int wtpid,unsigned int tot
 		tmp = p;
 		p = p->next;
 		tmp->next = NULL;
-		free(tmp);
+		WID_FREE(tmp);
 		tmp = NULL;
 		AC_WTP[wtpid]->apcminfo.ap_cpu_info_length--;
  	}
@@ -20854,7 +20862,7 @@ int wid_del_mem_value_for_accounting_average(unsigned int wtpid,unsigned int tot
 		tmp = p;
 		p = p->next;
 		tmp->next = NULL;
-		free(tmp);
+		WID_FREE(tmp);
 		tmp = NULL;
 		AC_WTP[wtpid]->apcminfo.ap_mem_info_length--;
  	}
@@ -21118,7 +21126,8 @@ int wid_add_snr_value_for_accounting_average(unsigned int wtpid,unsigned char sn
 	wid_syslog_debug_debug(WID_DEFAULT,"snr value : %d \n", snr_value);
 
 	struct ap_snr_info  *snr_node = NULL;
-	if((snr_node = (struct ap_snr_info*)malloc(sizeof(struct ap_snr_info))) == NULL){
+	snr_node = (struct ap_snr_info*)WID_MALLOC(sizeof(struct ap_snr_info));
+	if(snr_node == NULL){
 		wid_syslog_debug_debug(WID_DEFAULT,"malloc fail in %s. \n",__func__);
 		return -1;
 	}
@@ -21156,7 +21165,7 @@ int wid_del_snr_value_for_accounting_average(unsigned int wtpid,unsigned int tot
 		tmp = p;
 		p = p->next;
 		tmp->next = NULL;
-		free(tmp);
+		WID_FREE(tmp);
 		tmp = NULL;
 		AC_WTP[wtpid]->apcminfo.wifi_snr[l_radioid].ap_snr_info_length--;
  	}
@@ -21478,7 +21487,7 @@ int wid_ap_cpu_mem_statistics(unsigned int wtpid)
 #if 0	
 	{
 		AC_WTP[wtpid]->apcminfo.mem_times++;
-		if((mem_node = (struct ap_cpu_info*)malloc(sizeof(struct ap_cpu_info))) == NULL){
+		if((mem_node = (struct ap_cpu_info*)WID_MALLOC(sizeof(struct ap_cpu_info))) == NULL){
 			wid_syslog_debug_debug(WID_DEFAULT,"malloc fail in %s \n",__func__);
 		}else{ 
 			mem_node->value = AC_WTP[wtpid]->wifi_extension_info.memoryuse;
@@ -21511,7 +21520,7 @@ int wid_ap_cpu_mem_statistics(unsigned int wtpid)
 				tmp = p;
 				p = p->next;
 				tmp->next = NULL;
-				free(tmp);
+				WID_FREE(tmp);
 				tmp = NULL;
 				AC_WTP[wtpid]->apcminfo.ap_mem_info_length--;
 			}
@@ -22267,7 +22276,7 @@ int wid_auto_ap_login_insert_iflist(char *ifname)
 	wid_auto_ap_if *wif = NULL;
 	wid_auto_ap_if *wifnext = NULL;
 	
-	wif = (wid_auto_ap_if *)malloc(sizeof(wid_auto_ap_if));
+	wif = (wid_auto_ap_if *)WID_MALLOC(sizeof(wid_auto_ap_if));
 	wif->ifindex = ifindex;
 	wif->wlannum = 0;
 	memset(wif->wlanid,0,L_BSS_NUM);
@@ -22289,7 +22298,7 @@ int wid_auto_ap_login_insert_iflist(char *ifname)
 			if(strcmp(wifnext->ifname,ifname) == 0) //fengwenchao modify 20110414
 			{
 				//printf("already in the list\n");
-				free(wif);
+				WID_FREE(wif);
 				wif = NULL;
 				return 0;
 			}
@@ -22322,7 +22331,7 @@ int wid_auto_ap_login_remove_iflist(char *ifname)
 		{
 			g_auto_ap_login.auto_ap_if = wifnext->ifnext;
 			g_auto_ap_login.ifnum--;
-			free(wifnext);
+			WID_FREE(wifnext);
 			wifnext = NULL;		
 			//printf("delete ifname %s from list\n",ifname);
 		}
@@ -22335,7 +22344,7 @@ int wid_auto_ap_login_remove_iflist(char *ifname)
 					wif = wifnext->ifnext;
 					wifnext->ifnext = wifnext->ifnext->ifnext;
 					g_auto_ap_login.ifnum--;
-					free(wif);
+					WID_FREE(wif);
 					wif = NULL;				
 					//printf("delete ifname %s from list\n",ifname);
 					return 0;
@@ -22422,7 +22431,7 @@ int WID_WDS_BSSID_OP(unsigned int RadioID, unsigned char WlanID, unsigned char *
 		if(oper == 1){//add
 			BSS->WDSStat = WDS_SOME;
 			if(BSS->wds_bss_list == NULL){
-				wds = malloc(sizeof(struct wds_bssid));
+				wds = WID_MALLOC(sizeof(struct wds_bssid));
 				if(wds == NULL){
 					return WID_DBUS_ERROR;
 				}
@@ -22449,7 +22458,7 @@ int WID_WDS_BSSID_OP(unsigned int RadioID, unsigned char WlanID, unsigned char *
 						return WID_DBUS_SUCCESS;
 					wds_next = wds_next->next;
 				}
-				wds = malloc(sizeof(struct wds_bssid));
+				wds = WID_MALLOC(sizeof(struct wds_bssid));
 				if(wds == NULL){
 					return WID_DBUS_ERROR;
 				}
@@ -22480,7 +22489,7 @@ int WID_WDS_BSSID_OP(unsigned int RadioID, unsigned char WlanID, unsigned char *
 				if(memcmp(wds_next->BSSID, MAC, MAC_LEN) == 0){
 					BSS->wds_bss_list = wds_next->next;
 					wds_next->next = NULL;
-					free(wds_next);
+					WID_FREE(wds_next);
 					wds_next = NULL;	
 					if((OP&0x04) == 0){
 						BSS->wblwm = 0;
@@ -22505,7 +22514,7 @@ int WID_WDS_BSSID_OP(unsigned int RadioID, unsigned char WlanID, unsigned char *
 						wds = wds_next->next;
 						wds_next->next = wds->next;
 						wds->next = NULL;
-						free(wds);
+						WID_FREE(wds);
 						wds = NULL;
 						if((OP&0x04) == 0){
 							BSS->wblwm = 0;
@@ -22678,7 +22687,7 @@ int CWWIDReInit(){
 	char strdir[DEFAULT_LEN];
 	
 	if(g_wtp_binding_count == NULL){
-		g_wtp_binding_count = malloc((glicensecount+1)*sizeof(LICENSE_TYPE *));
+		g_wtp_binding_count = WID_MALLOC((glicensecount+1)*sizeof(LICENSE_TYPE *));
 		memset(g_wtp_binding_count,0,(glicensecount+1)*sizeof(LICENSE_TYPE *));
 		for(i=0; i<glicensecount+1; i++){
 			g_wtp_binding_count[i] = NULL;
@@ -22692,14 +22701,14 @@ int CWWIDReInit(){
 	}
 
 	if(g_wtp_count == NULL){
-		g_wtp_count = malloc(glicensecount*(sizeof(LICENSE_TYPE *)));
+		g_wtp_count = WID_MALLOC(glicensecount*(sizeof(LICENSE_TYPE *)));
 		memset(g_wtp_count,0,sizeof(LICENSE_TYPE *));
 	}
 	
 	for(i=0; i<glicensecount; i++)
 	{
 		if(g_wtp_count[i] == NULL){
-			g_wtp_count[i] = malloc(sizeof(LICENSE_TYPE));
+			g_wtp_count[i] = WID_MALLOC(sizeof(LICENSE_TYPE));
 			memset(g_wtp_count[i],0,sizeof(LICENSE_TYPE));
 		}
 		//g_wtp_count[i]->gcurrent_wtp_count = 0;
@@ -23013,7 +23022,7 @@ void merge_wids_list(wid_wids_device *pdestlist, wid_wids_device **psrclist,int 
 	{
 //		printf("merge_wids_list src parameter error\n");
 		wid_syslog_debug_debug(WID_DEFAULT,"merge_wids_list src parameter error\n");
-		CW_FREE_OBJECT(*psrclist);
+		CW_FREE_OBJECT_WID(*psrclist);
 		return;
 	}	
 	int now_rssi = 0;   //fengwenchao add 20110507
@@ -23022,7 +23031,7 @@ void merge_wids_list(wid_wids_device *pdestlist, wid_wids_device **psrclist,int 
 	struct tag_wids_device_ele *pnode_trap = pdestlist->wids_device_info;     //fengwenchao add 20110507
 	if(pdestlist->wids_device_info->bssid!=NULL){
 		unsigned char *name = NULL;
-		name= (unsigned char *)malloc(MAC_LEN+1);
+		name= (unsigned char *)WID_MALLOC(MAC_LEN+1);
 		if(name!=NULL){
 			memset(name,0,MAC_LEN+1);
 			memcpy(name,pdestlist->wids_device_info->bssid,MAC_LEN);  
@@ -23050,7 +23059,7 @@ void merge_wids_list(wid_wids_device *pdestlist, wid_wids_device **psrclist,int 
 						AC_WTP[wtpid]->find_wids_attack_flag = 0;   //fengwenchao add 20110221
 					}
 			}
-			CW_FREE_OBJECT(name);
+			CW_FREE_OBJECT_WID(name);
 
 		}
 	}else
@@ -23072,7 +23081,7 @@ void merge_wids_list(wid_wids_device *pdestlist, wid_wids_device **psrclist,int 
 	{
 		update_elem_in_wids_list(pdestlist,pnode);
 
-		CW_FREE_OBJECT(pnode);
+		CW_FREE_OBJECT_WID(pnode);
 
 	}
 
@@ -23091,7 +23100,7 @@ void merge_wids_list(wid_wids_device *pdestlist, wid_wids_device **psrclist,int 
 		{
 			update_elem_in_wids_list(pdestlist,pnext);
 		
-			CW_FREE_OBJECT(pnext);
+			CW_FREE_OBJECT_WID(pnext);
 		
 		}
 
@@ -23099,7 +23108,7 @@ void merge_wids_list(wid_wids_device *pdestlist, wid_wids_device **psrclist,int 
 		
 	}
 
-	CW_FREE_OBJECT(*psrclist);
+	CW_FREE_OBJECT_WID(*psrclist);
 	
 	//printf("merge_ap_list to end\n");
 	
@@ -23225,7 +23234,7 @@ void delete_wids_list(wid_wids_device **paplist)
 {
 	if(((*paplist) == NULL)||((*paplist)->count == 0))
 	{
-		CW_FREE_OBJECT(*paplist);
+		CW_FREE_OBJECT_WID(*paplist);
 		return;
 	}
 
@@ -23239,7 +23248,7 @@ void delete_wids_list(wid_wids_device **paplist)
 		
 		pnext = phead->next;
 
-		CW_FREE_OBJECT(phead);
+		CW_FREE_OBJECT_WID(phead);
 
 		phead = pnext;
 
@@ -23247,7 +23256,7 @@ void delete_wids_list(wid_wids_device **paplist)
 
 	(*paplist)->count = 0;
 	
-	CW_FREE_OBJECT(*paplist);
+	CW_FREE_OBJECT_WID(*paplist);
 
 }
 
@@ -23273,7 +23282,7 @@ wid_wids_device * wid_get_wids_device_list()
 	struct tag_wids_device_ele *Pnode = NULL;
 	
 	wid_wids_device *create_wids_info;
-	CW_CREATE_OBJECT_ERR(create_wids_info, wid_wids_device, return NULL;);		
+	CW_CREATE_OBJECT_ERR_WID(create_wids_info, wid_wids_device, return NULL;);		
 	create_wids_info->count = 0;
 	create_wids_info->wids_device_info = NULL;
 
@@ -23302,7 +23311,7 @@ wid_wids_device * wid_get_wids_device_list()
 								if(insert_elem_into_wids_list_head(create_wids_info,Pnode) == CW_FALSE)
 								{
 
-									CW_FREE_OBJECT(Pnode);
+									CW_FREE_OBJECT_WID(Pnode);
 								}
 							}
 						}
@@ -23319,7 +23328,7 @@ wid_wids_device * wid_get_wids_device_list()
 
 	if((create_wids_info->wids_device_info == NULL)||(create_wids_info->count == 0))
 	{
-		CW_FREE_OBJECT(create_wids_info);
+		CW_FREE_OBJECT_WID(create_wids_info);
 		return NULL;
 	}
 
@@ -23417,7 +23426,7 @@ wid_wids_device * create_wids_info_list(int count)
 {
 	wid_wids_device *create_wids_info;
 	int i = 0;
-	CW_CREATE_OBJECT_ERR(create_wids_info, wid_wids_device, return NULL;);	
+	CW_CREATE_OBJECT_ERR_WID(create_wids_info, wid_wids_device, return NULL;);	
 				
 	create_wids_info->count = count;
 	create_wids_info->wids_device_info = NULL;
@@ -23425,9 +23434,12 @@ wid_wids_device * create_wids_info_list(int count)
 	struct tag_wids_device_ele *neighborapelem = NULL;
 	struct tag_wids_device_ele *phead = NULL;
 
+	CW_CREATE_OBJECT_SIZE_ERR(neighborapelem, create_wids_info->count*sizeof(struct tag_wids_device_ele), WID_FREE(create_wids_info); return NULL;);
+	
 	for(i=0; i<create_wids_info->count; i++)
 	{
-		CW_CREATE_OBJECT_SIZE_ERR(neighborapelem, sizeof(struct tag_wids_device_ele), return NULL;);		
+				
+		neighborapelem = neighborapelem + i;
 		
 		char str[3][6] = {{"111111"},{"222222"},{"333333"}};
 		memcpy(neighborapelem->bssid,str[i], 6);
@@ -23453,14 +23465,14 @@ wid_wids_device * create_wids_info_list(int count)
 			//printf("parse first ap info\n");
 			create_wids_info->wids_device_info = neighborapelem;
 			phead = neighborapelem;
-			neighborapelem = NULL;
+			//neighborapelem = NULL;
 		}
 		else
 		{
 			//printf("parse more ap info\n");
 			phead->next = neighborapelem;
 			phead = neighborapelem;
-			neighborapelem = NULL;
+			//neighborapelem = NULL;
 		}
 		//printf("######002####\n");
 	}	
@@ -24930,7 +24942,7 @@ int wid_set_radio_sector_tx_power_value(unsigned int wtpid,	unsigned int l_radio
 	int j = 0;
 	int send_flag = 0;
 	char* Sector = NULL;
-	Sector = (char*)malloc(3+1);
+	Sector = (char*)WID_MALLOC(3+1);
 	memset(Sector,0,3+1);
 	radio_sectorid_parse_func(sectorid,Sector);
 	char apcmd[WID_SYSTEM_CMD_LENTH];
@@ -24967,7 +24979,7 @@ int wid_set_radio_sector_tx_power_value(unsigned int wtpid,	unsigned int l_radio
 	}
 
 	if(Sector){
-		free(Sector);
+		WID_FREE(Sector);
 		Sector = NULL;
 	}
 	return 0;
@@ -25200,7 +25212,7 @@ CWBool insert_wtp_list(int id)
 
 	struct tag_wtpid *wtp_id;
 	struct tag_wtpid *wtp_id_next;
-	wtp_id = (struct tag_wtpid*)malloc(sizeof(struct tag_wtpid));
+	wtp_id = (struct tag_wtpid*)WID_MALLOC(sizeof(struct tag_wtpid));
 	
 	wtp_id->wtpid = id;
 	wtp_id->next = NULL;
@@ -25208,7 +25220,7 @@ CWBool insert_wtp_list(int id)
 	
 	if(updatewtplist == NULL)
 	{
-		updatewtplist = (struct tag_wtpid_list*)malloc(sizeof(struct tag_wtpid_list));
+		updatewtplist = (struct tag_wtpid_list*)WID_MALLOC(sizeof(struct tag_wtpid_list));
 		updatewtplist->wtpidlist = wtp_id ;		
 		updatewtplist->count = 1;
 		//printf("*** wtp id:%d insert first  \n",id);
@@ -25252,14 +25264,14 @@ CWBool delete_wtp_list(int id)
 	{
 
 		updatewtplist->wtpidlist = wtp_id_next->next;
-		free(wtp_id_next);
+		WID_FREE(wtp_id_next);
 		wtp_id_next = NULL;
 		
 		updatewtplist->count--;
 		
 		if(updatewtplist->wtpidlist == NULL)
 		{
-			free(updatewtplist);
+			WID_FREE(updatewtplist);
 			updatewtplist = NULL;
 		}
 		return CW_TRUE;
@@ -25274,7 +25286,7 @@ CWBool delete_wtp_list(int id)
 
 				wtp_id = wtp_id_next->next;
 				wtp_id_next->next = wtp_id_next->next->next;
-				free(wtp_id);
+				WID_FREE(wtp_id);
 				wtp_id = NULL;
 				updatewtplist->count--;
 				return CW_TRUE;
@@ -25320,7 +25332,7 @@ void destroy_wtp_list()
 	struct tag_wtpid *pnext = NULL;
 	phead = updatewtplist->wtpidlist;
 	
-	free(updatewtplist);
+	WID_FREE(updatewtplist);
 	updatewtplist = NULL;
 	
 	while(phead != NULL)
@@ -25328,7 +25340,7 @@ void destroy_wtp_list()
 		
 		pnext = phead->next;
 	
-		CW_FREE_OBJECT(phead);
+		CW_FREE_OBJECT_WID(phead);
 
 		phead = pnext;
 
@@ -25401,12 +25413,12 @@ int create_ac_ip_list_group(unsigned char ID,char *IFNAME){
 	ret = Check_And_Bind_Interface_For_WID(IFNAME);
 	if(ret != 0)
 		return ret;
-	AC_IP_GROUP[ID] = (wid_ac_ip_group*)malloc(sizeof(wid_ac_ip_group));
+	AC_IP_GROUP[ID] = (wid_ac_ip_group*)WID_MALLOC(sizeof(wid_ac_ip_group));
 	memset(AC_IP_GROUP[ID], 0, sizeof(wid_ac_ip_group));
 	AC_IP_GROUP[ID]->GroupID = ID;
 	AC_IP_GROUP[ID]->load_banlance = 0;
 	AC_IP_GROUP[ID]->diff_count = 0;
-	AC_IP_GROUP[ID]->ifname = (unsigned char*)malloc(strlen(IFNAME)+1);
+	AC_IP_GROUP[ID]->ifname = (unsigned char*)WID_MALLOC(strlen(IFNAME)+1);
 	memset(AC_IP_GROUP[ID]->ifname, 0, strlen(IFNAME)+1);
 	memcpy(AC_IP_GROUP[ID]->ifname, IFNAME, strlen(IFNAME));
 
@@ -25414,11 +25426,11 @@ int create_ac_ip_list_group(unsigned char ID,char *IFNAME){
 	
 	if(get_ipv4addr_by_ifname(ID) == INTERFACE_HAVE_NO_IP_ADDR){	//xiaodawei add, 20110324
 		if(AC_IP_GROUP[ID]->ifname){
-			free(AC_IP_GROUP[ID]->ifname);
+			WID_FREE(AC_IP_GROUP[ID]->ifname);
 			AC_IP_GROUP[ID]->ifname = NULL;
 		}
 		if(AC_IP_GROUP[ID]){
-			free(AC_IP_GROUP[ID]);
+			WID_FREE(AC_IP_GROUP[ID]);
 			AC_IP_GROUP[ID] = NULL;
 		}
 		return INTERFACE_HAVE_NO_IP_ADDR;
@@ -25437,19 +25449,19 @@ int delete_ac_ip_list_group(unsigned char ID){
 	AC_IP_GROUP[ID]->ipnum = 0;
 	while(tmp != NULL){
 		tmp1 = tmp->next;
-		free(tmp->ip);
+		WID_FREE(tmp->ip);
 		tmp->ip = NULL;
-		free(tmp);
+		WID_FREE(tmp);
 		tmp = NULL;
 		tmp = tmp1;
 	}
 	AC_IP_GROUP[ID]->ip_list = NULL;
-	free(AC_IP_GROUP[ID]->ifname);
+	WID_FREE(AC_IP_GROUP[ID]->ifname);
 	AC_IP_GROUP[ID]->ifname = NULL;
-	free(AC_IP_GROUP[ID]->ipaddr);
+	WID_FREE(AC_IP_GROUP[ID]->ipaddr);
 	AC_IP_GROUP[ID]->ipaddr = NULL;
 	close(AC_IP_GROUP[ID]->isock);
-	free(AC_IP_GROUP[ID]);
+	WID_FREE(AC_IP_GROUP[ID]);
 	AC_IP_GROUP[ID] = NULL;
 	return ret;
 }
@@ -25463,10 +25475,10 @@ int add_ac_ip(unsigned char ID, char * ip, unsigned char priority){
 	printf("2\n");
 	if(AC_IP_GROUP[ID]->ip_list == NULL){
 		printf("3\n");
-		tmp = (struct wid_ac_ip *)malloc(sizeof(struct wid_ac_ip));
+		tmp = (struct wid_ac_ip *)WID_MALLOC(sizeof(struct wid_ac_ip));
 		memset(tmp, 0, sizeof(struct wid_ac_ip));
 		tmp->priority = priority;
-		tmp->ip = malloc(strlen(ip)+1);
+		tmp->ip = WID_MALLOC(strlen(ip)+1);
 		tmp->wtpcount = 0;
 		tmp->threshold = 0;
 		memset(tmp->ip, 0, strlen(ip)+1);
@@ -25487,12 +25499,12 @@ int add_ac_ip(unsigned char ID, char * ip, unsigned char priority){
 		tmp1 = AC_IP_GROUP[ID]->ip_list;
 		if((tmp1->priority < priority)){
 			printf("5\n");
-			tmp = (struct wid_ac_ip *)malloc(sizeof(struct wid_ac_ip));
+			tmp = (struct wid_ac_ip *)WID_MALLOC(sizeof(struct wid_ac_ip));
 			memset(tmp, 0, sizeof(struct wid_ac_ip));
 			tmp->priority = priority;
 			tmp->wtpcount = 0;
 			tmp->threshold = 0;
-			tmp->ip = malloc(strlen(ip)+1);
+			tmp->ip = WID_MALLOC(strlen(ip)+1);
 			memset(tmp->ip, 0, strlen(ip)+1);
 			memcpy(tmp->ip, ip, strlen(ip));
 			tmp->next = NULL;
@@ -25505,12 +25517,12 @@ int add_ac_ip(unsigned char ID, char * ip, unsigned char priority){
 			printf("6\n");
 			if((tmp1->next->priority < priority)){
 				printf("8\n");
-				tmp = (struct wid_ac_ip *)malloc(sizeof(struct wid_ac_ip));
+				tmp = (struct wid_ac_ip *)WID_MALLOC(sizeof(struct wid_ac_ip));
 				memset(tmp, 0, sizeof(struct wid_ac_ip));
 				tmp->priority = priority;
 				tmp->wtpcount = 0;
 				tmp->threshold = 0;
-				tmp->ip = malloc(strlen(ip)+1);
+				tmp->ip = WID_MALLOC(strlen(ip)+1);
 				memset(tmp->ip, 0, strlen(ip)+1);
 				memcpy(tmp->ip, ip, strlen(ip));
 				tmp->next = NULL;
@@ -25523,12 +25535,12 @@ int add_ac_ip(unsigned char ID, char * ip, unsigned char priority){
 			tmp = NULL;
 		}
 		printf("9\n");
-		tmp = (struct wid_ac_ip *)malloc(sizeof(struct wid_ac_ip));
+		tmp = (struct wid_ac_ip *)WID_MALLOC(sizeof(struct wid_ac_ip));
 		memset(tmp, 0, sizeof(struct wid_ac_ip));
 		tmp->priority = priority;
 		tmp->wtpcount = 0;
 		tmp->threshold = 0;
-		tmp->ip = malloc(strlen(ip)+1);
+		tmp->ip = WID_MALLOC(strlen(ip)+1);
 		memset(tmp->ip, 0, strlen(ip)+1);
 		memcpy(tmp->ip, ip, strlen(ip));
 		tmp->next = NULL;
@@ -25557,9 +25569,9 @@ int delete_ac_ip(unsigned char ID,char *ip){
 	if(strcmp(tmp->ip,ip)==0){
 		AC_IP_GROUP[ID]->ip_list = tmp->next;
 		tmp->next = NULL;
-		free(tmp->ip);
+		WID_FREE(tmp->ip);
 		tmp->ip = NULL;
-		free(tmp);
+		WID_FREE(tmp);
 		tmp = NULL;
 		AC_IP_GROUP[ID]->ipnum -= 1;
 		return ret;
@@ -25569,9 +25581,9 @@ int delete_ac_ip(unsigned char ID,char *ip){
 		if(strcmp(tmp1->ip,ip)==0){
 			tmp->next = tmp1->next;
 			tmp1->next = NULL;
-			free(tmp1->ip);
+			WID_FREE(tmp1->ip);
 			tmp1->ip = NULL;
-			free(tmp1);
+			WID_FREE(tmp1);
 			tmp1 = NULL;			
 			AC_IP_GROUP[ID]->ipnum -= 1;
 			return ret;
@@ -25964,7 +25976,7 @@ CWBool delete_elem_into_wids_list(wid_wids_device  *paplist,struct tag_wids_devi
 
 	if(memcmp((pnode->bssid),elem->bssid,6) == 0)
 	{
-		CW_FREE_OBJECT(pnode);
+		CW_FREE_OBJECT_WID(pnode);
 		paplist->wids_device_info = pnext;
 		paplist->count--;
 			
@@ -25979,7 +25991,7 @@ CWBool delete_elem_into_wids_list(wid_wids_device  *paplist,struct tag_wids_devi
 			
 			pnode->next = pnext->next;
 			
-			CW_FREE_OBJECT(pnext);
+			CW_FREE_OBJECT_WID(pnext);
 			paplist->count--;
 
 
@@ -25999,7 +26011,7 @@ int wid_add_del_wids_mac(unsigned char mac[],int isadd)
 {
 	if(wids_ignore_list == NULL)
 	{
-		CW_CREATE_OBJECT_ERR(wids_ignore_list, wid_wids_device, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););	
+		CW_CREATE_OBJECT_ERR_WID(wids_ignore_list, wid_wids_device, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););	
 					
 		wids_ignore_list->count = 0;
 		wids_ignore_list->wids_device_info = NULL;
@@ -26019,7 +26031,7 @@ int wid_add_del_wids_mac(unsigned char mac[],int isadd)
 		}
 		else
 		{
-			CW_FREE_OBJECT(wids_device_ele);
+			CW_FREE_OBJECT_WID(wids_device_ele);
 		}
 		
 	}
@@ -26028,10 +26040,10 @@ int wid_add_del_wids_mac(unsigned char mac[],int isadd)
 		if(isadd == CW_FALSE)
 		{
 			delete_elem_into_wids_list(wids_ignore_list,wids_device_ele);
-			CW_FREE_OBJECT(wids_device_ele);
+			CW_FREE_OBJECT_WID(wids_device_ele);
 		}
 		else{
-			CW_FREE_OBJECT(wids_device_ele);
+			CW_FREE_OBJECT_WID(wids_device_ele);
 		}
 	}
 
@@ -26135,7 +26147,7 @@ int wid_radio_set_acktimeout_distance(unsigned int RadioID)
 		msg.mqinfo.u.RadioInfo.Radio_L_ID = RadioID%L_RADIO_NUM;
 		msg.mqinfo.u.RadioInfo.Radio_G_ID = RadioID;
 	
-		elem = (struct msgqlist*)malloc(sizeof(struct msgqlist));
+		elem = (struct msgqlist*)WID_MALLOC(sizeof(struct msgqlist));
 		if(elem == NULL){
 			wid_syslog_crit("%s malloc %s",__func__,strerror(errno));
 			perror("malloc");
@@ -26198,7 +26210,7 @@ int wid_radio_set_guard_interval(unsigned int RadioID)
 		msg.mqinfo.u.RadioInfo.Radio_L_ID = RadioID%L_RADIO_NUM;
 		msg.mqinfo.u.RadioInfo.Radio_G_ID = RadioID;
 		struct msgqlist *elem;
-		elem = (struct msgqlist*)malloc(sizeof(struct msgqlist));
+		elem = (struct msgqlist*)WID_MALLOC(sizeof(struct msgqlist));
 		if(elem == NULL){
 			wid_syslog_crit("%s malloc %s",__func__,strerror(errno));
 			perror("malloc");
@@ -26276,7 +26288,7 @@ int wid_radio_set_ampdu_able(unsigned int RadioID, unsigned char type)
 		msg.mqinfo.u.RadioInfo.Radio_L_ID = RadioID%L_RADIO_NUM;
 		msg.mqinfo.u.RadioInfo.Radio_G_ID = RadioID;
 	
-		elem = (struct msgqlist*)malloc(sizeof(struct msgqlist));
+		elem = (struct msgqlist*)WID_MALLOC(sizeof(struct msgqlist));
 		if(elem == NULL){
 			wid_syslog_crit("%s malloc %s",__func__,strerror(errno));
 			perror("malloc");
@@ -26349,7 +26361,7 @@ int wid_radio_set_ampdu_limit(unsigned int RadioID, unsigned char type)
 		msg.mqinfo.u.RadioInfo.Radio_L_ID = RadioID%L_RADIO_NUM;
 		msg.mqinfo.u.RadioInfo.Radio_G_ID = RadioID;
 	
-		elem = (struct msgqlist*)malloc(sizeof(struct msgqlist));
+		elem = (struct msgqlist*)WID_MALLOC(sizeof(struct msgqlist));
 		if(elem == NULL){
 			wid_syslog_crit("%s malloc %s",__func__,strerror(errno));
 			perror("malloc");
@@ -28518,7 +28530,7 @@ int wid_radio_set_ampdu_subframe(unsigned int RadioID, unsigned char type)
 			msg.mqinfo.u.RadioInfo.Radio_L_ID = RadioID%L_RADIO_NUM;
 			msg.mqinfo.u.RadioInfo.Radio_G_ID = RadioID;
 		
-			elem = (struct msgqlist*)malloc(sizeof(struct msgqlist));
+			elem = (struct msgqlist*)WID_MALLOC(sizeof(struct msgqlist));
 			if(elem == NULL){
 				wid_syslog_crit("%s malloc %s",__func__,strerror(errno));
 				perror("malloc");
@@ -28583,7 +28595,7 @@ int wid_radio_set_mixed_puren_switch(unsigned int RadioID)
 			msg.mqinfo.u.RadioInfo.Radio_L_ID = RadioID%L_RADIO_NUM;
 			msg.mqinfo.u.RadioInfo.Radio_G_ID = RadioID;
 		
-			elem = (struct msgqlist*)malloc(sizeof(struct msgqlist));
+			elem = (struct msgqlist*)WID_MALLOC(sizeof(struct msgqlist));
 			if(elem == NULL){
 				wid_syslog_crit("%s malloc %s",__func__,strerror(errno));
 				perror("malloc");
@@ -28771,7 +28783,7 @@ int wid_radio_set_channel_Extoffset(unsigned int RadioID)
 				msg.mqinfo.u.RadioInfo.Radio_L_ID = RadioID%L_RADIO_NUM;
 				msg.mqinfo.u.RadioInfo.Radio_G_ID = RadioID;
 			
-				elem = (struct msgqlist*)malloc(sizeof(struct msgqlist));
+				elem = (struct msgqlist*)WID_MALLOC(sizeof(struct msgqlist));
 				if(elem == NULL){
 					wid_syslog_crit("%s malloc %s",__func__,strerror(errno));
 					perror("malloc");
@@ -28837,7 +28849,7 @@ int wid_radio_set_tx_chainmask(unsigned int RadioID)
 				msg.mqinfo.u.RadioInfo.Radio_L_ID = RadioID%L_RADIO_NUM;
 				msg.mqinfo.u.RadioInfo.Radio_G_ID = RadioID;
 			
-				elem = (struct msgqlist*)malloc(sizeof(struct msgqlist));
+				elem = (struct msgqlist*)WID_MALLOC(sizeof(struct msgqlist));
 				if(elem == NULL){
 					wid_syslog_crit("%s malloc %s",__func__,strerror(errno));
 					perror("malloc");
@@ -28918,7 +28930,7 @@ int wid_radio_set_chainmask(unsigned int RadioID, unsigned char type)
 		msg.mqinfo.u.RadioInfo.Radio_L_ID = RadioID%L_RADIO_NUM;
 		msg.mqinfo.u.RadioInfo.Radio_G_ID = RadioID;
 	
-		elem = (struct msgqlist*)malloc(sizeof(struct msgqlist));
+		elem = (struct msgqlist*)WID_MALLOC(sizeof(struct msgqlist));
 		if(elem == NULL){
 			wid_syslog_crit("%s malloc %s",__func__,strerror(errno));
 			perror("malloc");
@@ -29096,7 +29108,7 @@ int wid_radio_set_mcs_list(unsigned int RadioID)
 				msg.mqinfo.u.RadioInfo.Radio_L_ID = RadioID%L_RADIO_NUM;
 				msg.mqinfo.u.RadioInfo.Radio_G_ID = RadioID;
 				struct msgqlist *elem;
-				elem = (struct msgqlist*)malloc(sizeof(struct msgqlist));
+				elem = (struct msgqlist*)WID_MALLOC(sizeof(struct msgqlist));
 				if(elem == NULL){
 					wid_syslog_crit("%s malloc %s",__func__,strerror(errno));
 					perror("malloc");
@@ -29159,10 +29171,10 @@ int wid_radio_set_cmmode(unsigned int RadioID)
 			msg.mqinfo.u.RadioInfo.Radio_L_ID = RadioID%L_RADIO_NUM;
 			msg.mqinfo.u.RadioInfo.Radio_G_ID = RadioID;
 			struct msgqlist *elem;
-			elem = (struct msgqlist*)malloc(sizeof(struct msgqlist));
+			elem = (struct msgqlist*)WID_MALLOC(sizeof(struct msgqlist));
 			if(elem == NULL){
 				wid_syslog_crit("%s malloc %s",__func__,strerror(errno));
-				perror("malloc");
+				perror("WID_MALLOC");
 				return 0;
 			}
 			memset((char*)&(elem->mqinfo), 0, sizeof(msgqdetail));
@@ -29205,7 +29217,7 @@ int WID_BINDING_IF_APPLY_WTP_ipv6_ioctl(unsigned int WtpID, char * ifname)
 		if(ipv6list != NULL)
 		{
 			//display_ipv6_addr_list(ipv6list);
-			tmp = (struct ifi*)malloc(sizeof(struct ifi));
+			tmp = (struct ifi*)WID_MALLOC(sizeof(struct ifi));
 			memset(tmp,0,sizeof(struct ifi));
 			memcpy(tmp->ifi_name,ifname,strlen(ifname));
 			tmp->ifi_index = ipv6list->ifindex;
@@ -29214,9 +29226,9 @@ int WID_BINDING_IF_APPLY_WTP_ipv6_ioctl(unsigned int WtpID, char * ifname)
 		}
 		else
 		{
-			free(ifi_tmp->ifi_addr6);
+			WID_FREE(ifi_tmp->ifi_addr6);
 			ifi_tmp->ifi_addr6 = NULL;
-			free(ifi_tmp);
+			WID_FREE(ifi_tmp);
 			ifi_tmp = NULL;
 			free_ipv6_addr_list(ipv6list);
 			return -1;
@@ -29238,9 +29250,9 @@ int WID_BINDING_IF_APPLY_WTP_ipv6_ioctl(unsigned int WtpID, char * ifname)
 
 		if(ipv6list->ipv6num == 0)
 		{
-			free(ifi_tmp->ifi_addr6);
+			WID_FREE(ifi_tmp->ifi_addr6);
 			ifi_tmp->ifi_addr6 = NULL;
-			free(ifi_tmp);
+			WID_FREE(ifi_tmp);
 			ifi_tmp = NULL;
 			free_ipv6_addr_list(ipv6list);
 			return ret;
@@ -29255,9 +29267,9 @@ int WID_BINDING_IF_APPLY_WTP_ipv6_ioctl(unsigned int WtpID, char * ifname)
 			printf("ifname = %s name = %s\n",tmp->ifi_name,ifname);
 			if(( strlen(ifname) ==	strlen(tmp->ifi_name))&&(strcmp(tmp->ifi_name,ifname)==0))
 			{	
-				free(ifi_tmp->ifi_addr6);
+				WID_FREE(ifi_tmp->ifi_addr6);
 				ifi_tmp->ifi_addr6 = NULL;
-				free(ifi_tmp);
+				WID_FREE(ifi_tmp);
 				ifi_tmp = NULL;
 				free_ipv6_addr_list(ipv6list);
 
@@ -29291,7 +29303,7 @@ int WID_BINDING_IF_APPLY_WTP_ipv6_ioctl(unsigned int WtpID, char * ifname)
 		if(ipv6list != NULL)
 		{
 			display_ipv6_addr_list(ipv6list);
-			tmp = (struct ifi*)malloc(sizeof(struct ifi));
+			tmp = (struct ifi*)WID_MALLOC(sizeof(struct ifi));
 			memset(tmp,0,sizeof(struct ifi));
 			memcpy(tmp->ifi_name,ifname,strlen(ifname));
 			tmp->ifi_index = ipv6list->ifindex;
@@ -29303,9 +29315,9 @@ int WID_BINDING_IF_APPLY_WTP_ipv6_ioctl(unsigned int WtpID, char * ifname)
 		}
 		else
 		{
-			free(ifi_tmp->ifi_addr6);
+			WID_FREE(ifi_tmp->ifi_addr6);
 			ifi_tmp->ifi_addr6 = NULL;
-			free(ifi_tmp);
+			WID_FREE(ifi_tmp);
 			ifi_tmp = NULL;
 			free_ipv6_addr_list(ipv6list);
 			return -1;
@@ -29328,9 +29340,9 @@ int WID_BINDING_IF_APPLY_WTP_ipv6_ioctl(unsigned int WtpID, char * ifname)
 
 		if(ipv6list->ipv6num == 0)
 		{
-			free(ifi_tmp->ifi_addr6);
+			WID_FREE(ifi_tmp->ifi_addr6);
 			ifi_tmp->ifi_addr6 = NULL;
-			free(ifi_tmp);
+			WID_FREE(ifi_tmp);
 			ifi_tmp = NULL;
 			free_ipv6_addr_list(ipv6list);
 			return ret;
@@ -29342,9 +29354,9 @@ int WID_BINDING_IF_APPLY_WTP_ipv6_ioctl(unsigned int WtpID, char * ifname)
 	gInterfacesCount = CWNetworkCountInterfaceAddresses(&gACSocket);
 	gInterfacesCountIpv4 = CWNetworkCountInterfaceAddressesIpv4(&gACSocket);
 	gInterfacesCountIpv6 = CWNetworkCountInterfaceAddressesIpv6(&gACSocket);
-	free(ifi_tmp->ifi_addr6);
+	WID_FREE(ifi_tmp->ifi_addr6);
 	ifi_tmp->ifi_addr6 = NULL;
-	free(ifi_tmp);
+	WID_FREE(ifi_tmp);
 	ifi_tmp = NULL;
 	free_ipv6_addr_list(ipv6list);
 
@@ -29409,7 +29421,7 @@ int WID_ADD_IF_APPLY_WLAN_ipv6_ioctl(unsigned char WlanID, char * ifname)
 		if(ipv6list != NULL)
 		{
 			//display_ipv6_addr_list(ipv6list);
-			tmp = (struct ifi*)malloc(sizeof(struct ifi));
+			tmp = (struct ifi*)WID_MALLOC(sizeof(struct ifi));
 			memset(tmp,0,sizeof(struct ifi));
 			memcpy(tmp->ifi_name,ifname,strlen(ifname));
 			
@@ -29422,9 +29434,9 @@ int WID_ADD_IF_APPLY_WLAN_ipv6_ioctl(unsigned char WlanID, char * ifname)
 		}
 		else
 		{
-			free(ifi_tmp->ifi_addr6);
+			WID_FREE(ifi_tmp->ifi_addr6);
 			ifi_tmp->ifi_addr6 = NULL;
-			free(ifi_tmp);
+			WID_FREE(ifi_tmp);
 			ifi_tmp = NULL;
 			free_ipv6_addr_list(ipv6list);
 			return -1;
@@ -29445,9 +29457,9 @@ int WID_ADD_IF_APPLY_WLAN_ipv6_ioctl(unsigned char WlanID, char * ifname)
 
 		if(ipv6list->ipv6num == 0)
 		{
-			free(ifi_tmp->ifi_addr6);
+			WID_FREE(ifi_tmp->ifi_addr6);
 			ifi_tmp->ifi_addr6 = NULL;
-			free(ifi_tmp);
+			WID_FREE(ifi_tmp);
 			ifi_tmp = NULL;
 			free_ipv6_addr_list(ipv6list);
 			return ret;
@@ -29479,7 +29491,7 @@ int WID_ADD_IF_APPLY_WLAN_ipv6_ioctl(unsigned char WlanID, char * ifname)
 			if(ipv6list != NULL)
 			{
 				display_ipv6_addr_list(ipv6list);
-				tmp = (struct ifi*)malloc(sizeof(struct ifi));
+				tmp = (struct ifi*)WID_MALLOC(sizeof(struct ifi));
 				memset(tmp,0,sizeof(struct ifi));
 				memcpy(tmp->ifi_name,ifname,strlen(ifname));
 				tmp->ifi_index = ipv6list->ifindex;
@@ -29493,9 +29505,9 @@ int WID_ADD_IF_APPLY_WLAN_ipv6_ioctl(unsigned char WlanID, char * ifname)
 			}
 			else
 			{
-				free(ifi_tmp->ifi_addr6);
+				WID_FREE(ifi_tmp->ifi_addr6);
 				ifi_tmp->ifi_addr6 = NULL;
-				free(ifi_tmp);
+				WID_FREE(ifi_tmp);
 				ifi_tmp = NULL;
 				free_ipv6_addr_list(ipv6list);
 				return -1;
@@ -29514,9 +29526,9 @@ int WID_ADD_IF_APPLY_WLAN_ipv6_ioctl(unsigned char WlanID, char * ifname)
 
 			if(ipv6list->ipv6num == 0); 
 			{
-				free(ifi_tmp->ifi_addr6);
+				WID_FREE(ifi_tmp->ifi_addr6);
 				ifi_tmp->ifi_addr6 = NULL;
-				free(ifi_tmp);
+				WID_FREE(ifi_tmp);
 				ifi_tmp = NULL;
 				free_ipv6_addr_list(ipv6list);
 				return ret;
@@ -29529,9 +29541,9 @@ int WID_ADD_IF_APPLY_WLAN_ipv6_ioctl(unsigned char WlanID, char * ifname)
 	gInterfacesCount = CWNetworkCountInterfaceAddresses(&gACSocket);
 	gInterfacesCountIpv4 = CWNetworkCountInterfaceAddressesIpv4(&gACSocket);
 	gInterfacesCountIpv6 = CWNetworkCountInterfaceAddressesIpv6(&gACSocket);
-	free(ifi_tmp->ifi_addr6);
+	WID_FREE(ifi_tmp->ifi_addr6);
 	ifi_tmp->ifi_addr6 = NULL;
-	free(ifi_tmp);
+	WID_FREE(ifi_tmp);
 	ifi_tmp = NULL;
 	free_ipv6_addr_list(ipv6list);
 
@@ -29540,7 +29552,7 @@ int WID_ADD_IF_APPLY_WLAN_ipv6_ioctl(unsigned char WlanID, char * ifname)
 
 	ifr.ifr_ifindex = isystemindex;
 
-	wif = (struct ifi*)malloc(sizeof(struct ifi));
+	wif = (struct ifi*)WID_MALLOC(sizeof(struct ifi));
 	memset(wif->ifi_name,0,ETH_IF_NAME_LEN);
 	memcpy(wif->ifi_name,ifname,strlen(ifname));
 	wif->ifi_index = ifr.ifr_ifindex;
@@ -29563,7 +29575,7 @@ int WID_ADD_IF_APPLY_WLAN_ipv6_ioctl(unsigned char WlanID, char * ifname)
 			if(wifnext->ifi_index == wif->ifi_index)
 			{
 				//printf("warnning you have binding this wlan eth ,please do not binding this again");
-				free(wif);//zhanglei add
+				WID_FREE(wif);//zhanglei add
 				wif = NULL;//zhanglei add
 				return 0;
 			}
@@ -29734,9 +29746,9 @@ int wid_set_ethereal_bridge_add_uplink(unsigned int ID,char *ifname)
 		EBR_IF_LIST *wif;
 		EBR_IF_LIST *wifnext;
 		
-		wif = (EBR_IF_LIST *)malloc(sizeof(EBR_IF_LIST));
+		wif = (EBR_IF_LIST *)WID_MALLOC(sizeof(EBR_IF_LIST));
 		memset(wif,0,sizeof(EBR_IF_LIST));
-		wif->ifname = (char *)malloc(ETH_IF_NAME_LEN);
+		wif->ifname = (char *)WID_MALLOC(ETH_IF_NAME_LEN);
 		memset(wif->ifname,0,ETH_IF_NAME_LEN);
 		memcpy(wif->ifname,ifname,strlen(ifname));
 		wif->ifnext = NULL;
@@ -29753,8 +29765,8 @@ int wid_set_ethereal_bridge_add_uplink(unsigned int ID,char *ifname)
 			{	
 				if((strlen(ifname) == strlen(wifnext->ifname))&&(strncmp(wifnext->ifname,ifname,strlen(ifname)) == 0))
 				{
-					free(wif->ifname);
-					free(wif);
+					WID_FREE(wif->ifname);
+					WID_FREE(wif);
 					wif = NULL;
 					return UNKNOWN_ERROR;  //fengwenchao modify "0" to"UNKNOWN_ERROR"  for onlinebug-904
 				}
@@ -29845,8 +29857,8 @@ int wid_set_ethereal_bridge_del_uplink(unsigned int ID,char *ifname)
 			if((strlen(ifname) == strlen(wifnext->ifname))&&(strncmp(wifnext->ifname,ifname,strlen(ifname)) == 0))
 			{
 				WID_EBR[ID]->uplinklist = wifnext->ifnext;
-				free(wifnext->ifname);
-				free(wifnext);
+				WID_FREE(wifnext->ifname);
+				WID_FREE(wifnext);
 				wifnext = NULL;		
 			}
 			else
@@ -29857,8 +29869,8 @@ int wid_set_ethereal_bridge_del_uplink(unsigned int ID,char *ifname)
 					{
 						wif = wifnext->ifnext;
 						wifnext->ifnext = wifnext->ifnext->ifnext;
-						free(wif->ifname);
-						free(wif);
+						WID_FREE(wif->ifname);
+						WID_FREE(wif);
 						wif = NULL;				
 						return 0;
 					}
@@ -29884,7 +29896,7 @@ int wid_wds_remote_bridge_mac_op(int RadioID, int is_add, unsigned char *mac)
 	if(is_add == 1){
 		if(AC_RADIO[RadioID]->rbmac_list == NULL)
 		{
-			tmp = (struct wds_rbmac *)malloc(sizeof(struct wds_rbmac));
+			tmp = (struct wds_rbmac *)WID_MALLOC(sizeof(struct wds_rbmac));
 			memset(tmp,0,sizeof(struct wds_rbmac));
 			memcpy(tmp->mac,mac,MAC_LEN);
 			AC_RADIO[RadioID]->rbmac_list = tmp;
@@ -29897,7 +29909,7 @@ int wid_wds_remote_bridge_mac_op(int RadioID, int is_add, unsigned char *mac)
 			}
 			if(memcmp(tmp->mac,mac,MAC_LEN)==0)
 				return 0;
-			tmp1 = (struct wds_rbmac *)malloc(sizeof(struct wds_rbmac));
+			tmp1 = (struct wds_rbmac *)WID_MALLOC(sizeof(struct wds_rbmac));
 			memset(tmp1,0,sizeof(struct wds_rbmac));
 			memcpy(tmp1->mac,mac,MAC_LEN);
 			tmp->next = tmp1;
@@ -29909,7 +29921,7 @@ int wid_wds_remote_bridge_mac_op(int RadioID, int is_add, unsigned char *mac)
 		tmp = AC_RADIO[RadioID]->rbmac_list;
 		if((memcmp(tmp->mac,mac,MAC_LEN) == 0)){
 			AC_RADIO[RadioID]->rbmac_list = tmp->next;
-			free(tmp);
+			WID_FREE(tmp);
 			tmp = NULL;
 			AC_RADIO[RadioID]->rbmacNum--;
 			return 0;
@@ -29918,7 +29930,7 @@ int wid_wds_remote_bridge_mac_op(int RadioID, int is_add, unsigned char *mac)
 			tmp1 = tmp->next;
 			if(memcmp(tmp1->mac,mac,MAC_LEN) == 0){
 				tmp->next = tmp1->next;
-				free(tmp1);
+				WID_FREE(tmp1);
 				tmp1 = NULL;
 				AC_RADIO[RadioID]->rbmacNum--;
 				return 0;
@@ -30237,14 +30249,14 @@ int create_ap_group(unsigned int ID,char *NAME){
 	unsigned int RadioExternFlag[L_RADIO_NUM]={0};
 	unsigned int gwtpid = 0;
 	wid_syslog_debug_debug(WID_DEFAULT, "%s ID %d\n",__func__,ID);
-	WTP_GROUP[ID] = (WID_WTP_GROUP*)malloc(sizeof(WID_WTP_GROUP));
+	WTP_GROUP[ID] = (WID_WTP_GROUP*)WID_MALLOC(sizeof(WID_WTP_GROUP));
 	if (!WTP_GROUP[ID]) {
 		wid_syslog_err("malloc for ap-group %d failed\n", ID);
 		return WID_DBUS_ERROR;
 	}
 	memset(WTP_GROUP[ID], 0, sizeof(WID_WTP_GROUP));
 	WTP_GROUP[ID]->GID = ID;
-	WTP_GROUP[ID]->GNAME = (unsigned char*)malloc(strlen(NAME)+1);
+	WTP_GROUP[ID]->GNAME = (unsigned char*)WID_MALLOC(strlen(NAME)+1);
 	if (!WTP_GROUP[ID]->GNAME) {
 		wid_syslog_err("malloc for ap-group %d name %s failed\n", ID, NAME);
 		free(WTP_GROUP[ID]);
@@ -30330,7 +30342,7 @@ int create_ap_group(unsigned int ID,char *NAME){
 	WTP_GROUP[ID]->WTP_CONFIG.RadioCount = 4;
 	for(i=0; (i<L_RADIO_NUM); i++){
 		WID_WTP_RADIO	* radio = NULL;
-		radio = (WID_WTP_RADIO*)malloc(sizeof(WID_WTP_RADIO));
+		radio = (WID_WTP_RADIO*)WID_MALLOC(sizeof(WID_WTP_RADIO));
 		if (!radio) {
 			wid_syslog_err("malloc for ap-group %d name %s radio %d failed\n", ID, NAME, i);
 			for (k=0; k<i; k++) {
@@ -30430,7 +30442,7 @@ int create_ap_group(unsigned int ID,char *NAME){
 		for(ii=0;ii<SECTOR_NUM;ii++)
 		{	
 			//CW_CREATE_OBJECT_ERR(AC_RADIO[gwtpid]->sector[ii],WID_oem_sector,return NULL;);
-			radio->sector[ii] = (WID_oem_sector*)malloc(sizeof(WID_oem_sector));
+			radio->sector[ii] = (WID_oem_sector*)WID_MALLOC(sizeof(WID_oem_sector));
 			if (!radio->sector[ii]) {
 				wid_syslog_err("malloc for ap-group %d name %s radio %d sector %d failed\n", ID, NAME, i, ii);
 				for (k=0; k<i; k++) {
@@ -30462,7 +30474,7 @@ int create_ap_group(unsigned int ID,char *NAME){
 		}
 		for(jj=0;jj<TX_CHANIMASK_NUM;jj++)
 		{	
-			radio->tx_chainmask[jj] = (WID_oem_tx_chainmask*)malloc(sizeof(WID_oem_tx_chainmask));
+			radio->tx_chainmask[jj] = (WID_oem_tx_chainmask*)WID_MALLOC(sizeof(WID_oem_tx_chainmask));
 			if (!radio->tx_chainmask[jj]) {
 				wid_syslog_err("malloc for ap-group %d name %s radio %d tx_chainmask %d failed\n", ID, NAME, i, jj);
 				for (k=0; k<i; k++) {
@@ -30590,24 +30602,24 @@ int delete_ap_group(unsigned int ID){
 		{			
 			wlan_id_next = wlan_id->next;
 		
-			CW_FREE_OBJECT(wlan_id);
+			CW_FREE_OBJECT_WID(wlan_id);
 		
 			wlan_id = wlan_id_next;
 		}
 		for(j=0;j<SECTOR_NUM;j++)
 		{	
 			if(radio->sector[j]){
-				free(radio->sector[j]);
+				WID_FREE(radio->sector[j]);
 			}
 		}
 		for(ii=0;ii<TX_CHANIMASK_NUM;ii++)
 		{	
 			if(radio->tx_chainmask[ii]){
-				free(radio->tx_chainmask[ii]);
+				WID_FREE(radio->tx_chainmask[ii]);
 			}
 		}
 		
-		free(radio);
+		WID_FREE(radio);
 		radio = NULL;		
 	}
 	
@@ -30618,14 +30630,14 @@ int delete_ap_group(unsigned int ID){
 		if (AC_WTP[tmp1->WTPID]) {
 			AC_WTP[tmp1->WTPID]->APGroupID = 0;
 		}
-		free(tmp1);
+		WID_FREE(tmp1);
 		tmp1 = tmp;
 	}
 	if(WTP_GROUP[ID]->GNAME != NULL){
-		free(WTP_GROUP[ID]->GNAME);
+		WID_FREE(WTP_GROUP[ID]->GNAME);
 		WTP_GROUP[ID]->GNAME = NULL;
 	}	
-	free(WTP_GROUP[ID]);
+	WID_FREE(WTP_GROUP[ID]);
 	WTP_GROUP[ID] = NULL;
 
 	return 0;
@@ -30650,7 +30662,7 @@ int add_ap_group_member(unsigned int GID,unsigned int WTPID){
 	if(tmp){
 		return WID_DBUS_SUCCESS;
 	}
-	tmp = (struct WTP_GROUP_MEMBER *)malloc(sizeof(struct WTP_GROUP_MEMBER));
+	tmp = (struct WTP_GROUP_MEMBER *)WID_MALLOC(sizeof(struct WTP_GROUP_MEMBER));
 	if (!tmp) {
 		wid_syslog_err("malloc for adding wtp %d to ap-group %d failed\n", WTPID, GID);
 		return WID_DBUS_ERROR;
@@ -30695,7 +30707,7 @@ int del_ap_group_member(unsigned int GID,unsigned int WTPID){
 	}
 	wtp_group_hash_del(WTP_GROUP[GID],tmp);	
 	WTP_GROUP[GID]->WTP_COUNT -= 1;
-	free(tmp);
+	WID_FREE(tmp);
 	tmp = NULL;
 	return WID_DBUS_SUCCESS;
 }
@@ -30754,7 +30766,8 @@ int wid_prase_heart_time_avarge(unsigned int wtpid)
 	}	
 
 	/*save value for list, begin*/
-		if((heart_time_node = (struct heart_time_value_head*)malloc(sizeof(struct heart_time_value_head))) == NULL)
+	heart_time_node = (struct heart_time_value_head*)WID_MALLOC(sizeof(struct heart_time_value_head));
+		if( heart_time_node == NULL)
 		{
 			wid_syslog_debug_debug(WID_WTPINFO,"malloc fail in %s. \n",__func__);
 			return -1;
@@ -30802,7 +30815,7 @@ int wid_prase_heart_time_avarge(unsigned int wtpid)
 			tmp = p;
 			p = p->next;
 			tmp->next = NULL;
-			free(tmp);
+			WID_FREE(tmp);
 			tmp = NULL;
 			AC_WTP[wtpid]->heart_time.heart_time_value_length--;
 			wid_syslog_debug_debug(WID_WTPINFO,"AC_WTP[%d]->heart_time.heart_time_value_length--  =%d.   %d\n",wtpid,AC_WTP[wtpid]->heart_time.heart_time_value_length,__LINE__);
@@ -30939,14 +30952,14 @@ int measure_quality_of_network_link(char *wtpip, struct NetworkQuality *networkq
 	int j = 0;
 	int k = 0;
 
-	string = (char **)malloc(IPERF_LINE_NUM*sizeof(char *));
+	string = (char **)WID_MALLOC(IPERF_LINE_NUM*sizeof(char *));
 	for(i=0; i<IPERF_LINE_NUM; i++){
-		string[i] = (char *)malloc(IPERF_LINE_CONTENT*sizeof(char));
+		string[i] = (char *)WID_MALLOC(IPERF_LINE_CONTENT*sizeof(char));
 		memset(string[i], 0, IPERF_LINE_CONTENT);
 	}
-	str = (char **)malloc(IPERF_LINE_NUM*sizeof(char *));
+	str = (char **)WID_MALLOC(IPERF_LINE_NUM*sizeof(char *));
 	for(i=0; i<IPERF_LINE_NUM; i++){
-		str[i] = malloc(IPERF_LINE_CONTENT*sizeof(char));
+		str[i] = WID_MALLOC(IPERF_LINE_CONTENT*sizeof(char));
 		memset(str[i], 0, IPERF_LINE_CONTENT);
 	}
 	
@@ -30989,6 +31002,7 @@ int measure_quality_of_network_link(char *wtpip, struct NetworkQuality *networkq
 						else{
 							FREE(string);
 							FREE(str);
+							fclose(fp);
 							return -1;
 						}
 						if(k>1 && str[k-1]){		//datagram loss
@@ -31002,16 +31016,19 @@ int measure_quality_of_network_link(char *wtpip, struct NetworkQuality *networkq
 							else{
 								FREE(string);
 								FREE(str);
+								fclose(fp);
 								return -1;
 							}
 						}
 						else{
 							FREE(string);
 							FREE(str);
+							fclose(fp);
 							return -1;
 						}
 						FREE(string);
 						FREE(str);
+						fclose(fp);
 						return 0;
 					}
 				}
@@ -31144,7 +31161,7 @@ success:
 	}
 
 	
-	CW_CREATE_OBJECT_ERR(p, struct CWMultiHomedInterface, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
+	CW_CREATE_OBJECT_ERR_WID(p, struct CWMultiHomedInterface, close(sock); return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
 	memset(p->ifname, 0, IFI_NAME);
 	memcpy(p->ifname,"LocalHost",9);
 	p->sock = sock;
@@ -31183,7 +31200,7 @@ CWBool wid_multicast_listen_close(CWMultiHomedSocket *sockPtr){
 			sockPtr->interfaces = inf->if_next;
 			sockPtr->count--;
 			close(inf->sock);
-			free(inf);		
+			WID_FREE(inf);		
 			Check_gACSokcet_Poll(sockPtr);
 			return CW_TRUE;
 		}	
@@ -31194,7 +31211,7 @@ CWBool wid_multicast_listen_close(CWMultiHomedSocket *sockPtr){
 		if(inf->if_next->kind == CW_BROADCAST_OR_ALIAS){
 			inf->if_next = inf1->if_next;
 			close(inf1->sock);
-			free(inf1);
+			WID_FREE(inf1);
 			sockPtr->count--;
 			break;						
 		}
@@ -31319,27 +31336,30 @@ int wid_radio_set_11n_rate_paras(int ID, struct n_rate_info nRateInfo, unsigned 
         
     return ret;
 }
-int add_mac_in_maclist(struct acl_config *conf, unsigned char *addr, char type)
+int add_mac_in_maclist(struct acl_config **conf, unsigned char *addr, char type)
 {
 	struct maclist *entry, *prev,*tmp;
 
 	if(addr==NULL||(type!=1&&type!=2))
 		return -1;
 
-	if(conf == NULL) {
-		conf = (struct acl_config*)malloc(sizeof(struct acl_config));
-		if(conf == NULL) return -1;
-		conf->macaddr_acl = 0;
-		conf->accept_mac = NULL;
-		conf->num_accept_mac = 0;
-		conf->deny_mac = NULL;
-		conf->num_accept_mac = 0;
+	if(*conf == NULL) {
+		*conf = (struct acl_config*)WID_MALLOC(sizeof(struct acl_config));
+		if(*conf == NULL) {
+			wid_syslog_err("%s %d:malloc fail.\n",__func__, __LINE__);
+			return -1;
+		}
+		(*conf)->macaddr_acl = 0;
+		(*conf)->accept_mac = NULL;
+		(*conf)->num_accept_mac = 0;
+		(*conf)->deny_mac = NULL;
+		(*conf)->num_accept_mac = 0;
 	}
 
-	tmp = malloc(sizeof(*tmp));
+	tmp = WID_MALLOC(sizeof(*tmp));
 	if (tmp == NULL) {
-		wid_syslog_debug_debug(WID_DEFAULT,"%s :malloc fail.\n",__func__);
-		exit(1);
+		wid_syslog_err("%s :malloc fail.\n",__func__);
+		return -1;
 	}else {
 		memset(tmp,0,sizeof(*tmp));
 		memcpy(tmp->addr, addr, ETH_ALEN);
@@ -31347,19 +31367,19 @@ int add_mac_in_maclist(struct acl_config *conf, unsigned char *addr, char type)
 	}
 
 	if(1==type){
-		entry = conf->deny_mac;
+		entry = (*conf)->deny_mac;
 		prev = NULL;
 		while (entry) {
 			if (memcmp(entry->addr, addr, ETH_ALEN) == 0) {
 				wid_syslog_debug_debug(WID_DEFAULT,"entry->add_reason = %d\n",entry->add_reason);
 				if(entry->add_reason) {
 					entry->add_reason = 0;
-					conf->num_deny_mac++;
-					conf->num_wids_mac--;
+					(*conf)->num_deny_mac++;
+					(*conf)->num_wids_mac--;
 					wid_syslog_debug_debug(WID_DEFAULT,MACSTR" is put in black list from wids black list.\n",MAC2STR(addr));
 				}else 
 					wid_syslog_debug_debug(WID_DEFAULT,MACSTR" is already in the black list.\n",MAC2STR(addr));
-				free(tmp);
+				WID_FREE(tmp);
 				tmp = NULL;
 				return 1;
 			}
@@ -31367,19 +31387,19 @@ int add_mac_in_maclist(struct acl_config *conf, unsigned char *addr, char type)
 			entry = entry->next;
 		}
 		if(prev == NULL)
-			conf->deny_mac = tmp;
+			(*conf)->deny_mac = tmp;
 		else 
 			prev->next = tmp;
-		conf->num_deny_mac++;
+		(*conf)->num_deny_mac++;
 		wid_syslog_debug_debug(WID_DEFAULT,MACSTR"add success!\n",MAC2STR(tmp->addr));
 		return 0;			
 	}else {
-		entry = conf->accept_mac;
+		entry = (*conf)->accept_mac;
 		prev = NULL;
 		while (entry) {
 			if (memcmp(entry->addr, addr, ETH_ALEN) == 0) {
 				wid_syslog_debug_debug(WID_DEFAULT,MACSTR" is already in the white list.\n",MAC2STR(addr));
-				free(tmp);
+				WID_FREE(tmp);
 				tmp = NULL;
 				return 1;
 			}
@@ -31387,16 +31407,16 @@ int add_mac_in_maclist(struct acl_config *conf, unsigned char *addr, char type)
 			entry = entry->next;
 		}
 		if(prev == NULL)
-			conf->accept_mac = tmp;
+			(*conf)->accept_mac = tmp;
 		else 
 			prev->next = tmp;
-		conf->num_accept_mac++;
+		(*conf)->num_accept_mac++;
 		return 0;			
 	}
 
 }
 
-int del_mac_in_maclist(struct acl_config *conf, unsigned char  *addr, char type)
+int del_mac_in_maclist(struct acl_config **conf, unsigned char  *addr, char type)
 {
 	struct maclist *entry, *prev, *tmp;
 	
@@ -31404,18 +31424,18 @@ int del_mac_in_maclist(struct acl_config *conf, unsigned char  *addr, char type)
 	if(addr==NULL||(type!=1&&type!=2))	//1--black list, 2--white list
 		return -1;
 	
-	if(conf == NULL) {
-		conf = (struct acl_config*)malloc(sizeof(struct acl_config));
-		if(conf == NULL) return -1;
-		conf->macaddr_acl = 0;
-		conf->accept_mac = NULL;
-		conf->num_accept_mac = 0;
-		conf->deny_mac = NULL;
-		conf->num_accept_mac = 0;
+	if(*conf == NULL) {
+		*conf = (struct acl_config*)WID_MALLOC(sizeof(struct acl_config));
+		if(*conf == NULL) return -1;
+		(*conf)->macaddr_acl = 0;
+		(*conf)->accept_mac = NULL;
+		(*conf)->num_accept_mac = 0;
+		(*conf)->deny_mac = NULL;
+		(*conf)->num_accept_mac = 0;
 	}
 
 	if(1==type){
-		entry = conf->deny_mac;
+		entry = (*conf)->deny_mac;
 		prev = NULL;
 		while (entry) {
 			if ((memcmp(entry->addr, addr, ETH_ALEN) == 0) && (entry->add_reason == 0)) {
@@ -31424,11 +31444,11 @@ int del_mac_in_maclist(struct acl_config *conf, unsigned char  *addr, char type)
 				if (prev)
 					prev->next = entry->next;
 				else
-					conf->deny_mac = entry->next;
+					(*conf)->deny_mac = entry->next;
 				tmp = entry;
 				tmp->next = NULL;
-				free(tmp);
-				conf->num_deny_mac--;
+				WID_FREE(tmp);
+				(*conf)->num_deny_mac--;
 				return 0;
 			}
 			prev = entry;
@@ -31437,18 +31457,18 @@ int del_mac_in_maclist(struct acl_config *conf, unsigned char  *addr, char type)
 		wid_syslog_debug_debug(WID_DEFAULT,MACSTR" is not in the black list.\n",MAC2STR(addr));
 		return -1;			
 	}else {
-		entry = conf->accept_mac;
+		entry = (*conf)->accept_mac;
 		prev = NULL;
 		while (entry) {
 			if (memcmp(entry->addr, addr, ETH_ALEN) == 0) {
 				if (prev)
 					prev->next = entry->next;
 				else
-					conf->accept_mac = entry->next;
+					(*conf)->accept_mac = entry->next;
 				tmp = entry;
 				tmp->next = NULL;
-				free(tmp);
-				conf->num_accept_mac--;
+				WID_FREE(tmp);
+				(*conf)->num_accept_mac--;
 				return 0;
 			}
 			prev = entry;
@@ -31459,28 +31479,28 @@ int del_mac_in_maclist(struct acl_config *conf, unsigned char  *addr, char type)
 	}
 
 }
-int change_maclist_security(struct acl_config *conf, char type)
+int change_maclist_security(struct acl_config **conf, char type)
 {
 	wid_syslog_debug_debug(WID_DEFAULT,"%s:type = %d\n",__func__,type);
 	if(type!=0&&type!=1&&type!=2)
 		return -1;
 
-	if(conf == NULL) {
-		conf = (struct acl_config*)malloc(sizeof(struct acl_config));
-		if(conf == NULL) return -1;
-		conf->macaddr_acl = 0;
-		conf->accept_mac = NULL;
-		conf->num_accept_mac = 0;
-		conf->deny_mac = NULL;
-		conf->num_accept_mac = 0;
+	if(*conf == NULL) {
+		*conf = (struct acl_config*)WID_MALLOC(sizeof(struct acl_config));
+		if(*conf == NULL) return -1;
+		(*conf)->macaddr_acl = 0;
+		(*conf)->accept_mac = NULL;
+		(*conf)->num_accept_mac = 0;
+		(*conf)->deny_mac = NULL;
+		(*conf)->num_accept_mac = 0;
 	}
 	
 	if(0==type)
-		conf->macaddr_acl = 0;
+		(*conf)->macaddr_acl = 0;
 	else if(1==type)
-		conf->macaddr_acl = 1;
+		(*conf)->macaddr_acl = 1;
 	else if(2==type)
-		conf->macaddr_acl = 2;
+		(*conf)->macaddr_acl = 2;
 
 	return 0;
 }
@@ -31494,7 +31514,7 @@ void free_maclist(struct acl_config *conf, struct maclist *list)
 		tmp = entry;
 		entry = entry->next;
 		memset(tmp,0,sizeof(struct maclist));
-		free(tmp);
+		WID_FREE(tmp);
 		tmp = NULL;
 	}
 }
@@ -31590,7 +31610,7 @@ int wid_set_ap_longitude_latitude(unsigned int wtpid, unsigned char *longitude, 
 						memcpy((char *)AC_WTP[wtpid]->latitude, (char *)latitude, strlen((char*)latitude));
 					}
 					
-					elem = (struct msgqlist*)malloc(sizeof(struct msgqlist));
+					elem = (struct msgqlist*)WID_MALLOC(sizeof(struct msgqlist));
 					if(elem == NULL){
 						wid_syslog_info("%s malloc %s",__func__,strerror(errno));
 						perror("malloc");
@@ -31680,7 +31700,7 @@ int wid_set_ap_longitude_latitude(unsigned int wtpid, unsigned char *longitude, 
 				memcpy((char *)AC_WTP[wtpid]->latitude, (char *)latitude, strlen((char*)latitude));
 			}
 				
-			elem = (struct msgqlist*)malloc(sizeof(struct msgqlist));
+			elem = (struct msgqlist*)WID_MALLOC(sizeof(struct msgqlist));
 
 			if(elem == NULL){
 				wid_syslog_info("%s malloc %s",__func__,strerror(errno));

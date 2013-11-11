@@ -30,6 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *******************************************************************************/
  
 #include "CWCommon.h"
+#include "wcpss/wid/WID.h"
 
 #ifdef DMALLOC
 #include "../dmalloc-5.5.0/dmalloc.h"
@@ -39,6 +40,26 @@ int gCWForceMTU = 0;
 int gCWRetransmitTimer = CW_RETRANSMIT_INTERVAL_DEFAULT;	//Default value for RetransmitInterval
 int gCWNeighborDeadInterval = CW_NEIGHBORDEAD_INTERVAL_DEFAULT; //Default value for NeighbourDeadInterval (no less than 2*EchoInterval and no greater than 240) 
 int gCWMaxRetransmit = CW_MAX_RETRANSMIT_DEFAULT;		//Default value for MaxRetransmit 
+int wid_memory_trace_switch = 0;
+void wid_free(void *ptr, const char* func_name, unsigned int line) {
+	free(ptr);
+	if (wid_memory_trace_switch) 
+		wid_syslog_err("wid_memory_trace:%s %d free addr %p success\n", func_name, line, ptr);
+}
+
+void *wid_malloc(unsigned int len, const char* func_name, unsigned int line) {
+	void *temp;
+	temp = malloc(len);
+	if (temp) {
+		if (wid_memory_trace_switch) 
+			wid_syslog_err("wid_memory_trace:%s %d malloc %d Bytes addr %p success\n", func_name, line, len, temp);
+		return temp;
+	} else {
+		if (wid_memory_trace_switch)
+			wid_syslog_err("wid_memory_trace:%s %d malloc %d Bytes failed\n");
+		return NULL;
+	}
+}
 
 /*
 __inline__ int CWGetFragmentID() {

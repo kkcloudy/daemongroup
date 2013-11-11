@@ -208,7 +208,7 @@ void _clkini() {
                 exit(-1); 
         }
 */
-	if ((new_stack.ss_sp = malloc(SIGSTKSZ)) == NULL) {
+	if ((new_stack.ss_sp = WID_MALLOC(SIGSTKSZ)) == NULL) {
 
 		perror("impossibile allocare memeoria per il nuovo stack");
 	}

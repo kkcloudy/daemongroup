@@ -62,7 +62,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 											}\
 										}
 
-#define		CW_FREE_PROTOCOL_MESSAGE(mess)				CW_FREE_OBJECT(((mess).msg));								\
+#define		CW_FREE_PROTOCOL_MESSAGE(mess)				CW_FREE_OBJECT_WID(((mess).msg));								\
 									(mess).offset = 0;
 															
 #define		CWParseMessageElementStart()				int oldOffset;												\

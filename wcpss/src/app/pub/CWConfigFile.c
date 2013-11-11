@@ -31,6 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
  
 #include "CWCommon.h"
+#include "wcpss/wid/WID.h"
 
 #ifdef DMALLOC
 #include "../dmalloc-5.5.0/dmalloc.h"
@@ -84,7 +85,7 @@ char * CWGetCommand(FILE *configFile) {
 	char *buff = NULL;
 	char *command = NULL;
 	char *ret = NULL;
-	CW_CREATE_STRING_ERR(buff, CW_BUFFER_SIZE, return NULL;);
+	CW_CREATE_STRING_ERR_WID(buff, CW_BUFFER_SIZE, return NULL;);
 	
 	while (((ret = CWFgets(buff, CW_BUFFER_SIZE, configFile)) != NULL) && (buff[0] == '\n' || buff[0] == '\r' || buff[0] == '#')); // skip comments and blank lines
 	
@@ -92,12 +93,12 @@ char * CWGetCommand(FILE *configFile) {
 		int len = strlen(buff);
 		buff[len-1] = '\0'; // remove new line
 		
-		CW_CREATE_STRING_ERR(command, len, return NULL;);
+		CW_CREATE_STRING_ERR_WID(command, len, CW_FREE_OBJECT_WID(buff); return NULL;);
 		memset(command,0,len);
 		strcpy(command, buff);
 	}
 	
-	CW_FREE_OBJECT(buff);
+	CW_FREE_OBJECT_WID(buff);
 	
 	return command;
 }
@@ -150,14 +151,14 @@ CWBool CWParseTheFile(CWBool isCount) {
 						gConfigValues[i].value.int_value = atoi(myLine);
 						break;
 					case CW_STRING:
-						CW_CREATE_STRING_FROM_STRING_ERR(gConfigValues[i].value.str_value, myLine, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
+						CW_CREATE_STRING_FROM_STRING_ERR(gConfigValues[i].value.str_value, myLine, CW_FREE_OBJECT_WID(line); return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
 						break;
 					case CW_STRING_ARRAY:
 						#ifdef CW_DEBUGGING
 							CWDebugLog("*** Parsing String Array... *** \n");
 						#endif
 						j = 0;
-						CW_FREE_OBJECT(line);
+						CW_FREE_OBJECT_WID(line);
 						while((line = CWGetCommand(gCWConfigFile)) != NULL && strcmp(line, gConfigValues[i].endCode)) {
 							#ifdef CW_DEBUGGING
 								CWDebugLog("*** Parsing String (%s) *** \n", line);
@@ -165,10 +166,10 @@ CWBool CWParseTheFile(CWBool isCount) {
 							
 							if(isCount) gConfigValues[i].count++;
 							else {
-								CW_CREATE_STRING_FROM_STRING_ERR((gConfigValues[i].value.str_array_value)[j], line, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
+								CW_CREATE_STRING_FROM_STRING_ERR((gConfigValues[i].value.str_array_value)[j], line, CW_FREE_OBJECT_WID(line); return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
 								j++;
 							}
-							CW_FREE_OBJECT(line);
+							CW_FREE_OBJECT_WID(line);
 						}
 						break;
 				}
@@ -178,7 +179,7 @@ CWBool CWParseTheFile(CWBool isCount) {
 		}
 
 		
-		CW_FREE_OBJECT(line);
+		CW_FREE_OBJECT_WID(line);
 	}
 	
 	CWDebugLog("*** Config File Parsed ***");

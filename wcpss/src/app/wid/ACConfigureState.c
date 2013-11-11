@@ -80,7 +80,7 @@ CWBool ACEnterConfigure(int WTPIndex, CWProtocolMessage *msgPtr)
 		CW_FREE_PROTOCOL_MESSAGE(gWTPs[WTPIndex].messages[i]);
 	}
 	
-	CW_FREE_OBJECT(gWTPs[WTPIndex].messages);
+	CW_FREE_OBJECT_WID(gWTPs[WTPIndex].messages);
 	wid_syslog_debug_debug(WID_WTPINFO,"Configure Response Sent");
 
 	if(!CWErr(CWTimerRequest(gCWChangeStatePendingTimer, &(gWTPs[WTPIndex].thread), &(gWTPs[WTPIndex].currentTimer), CW_CRITICAL_TIMER_EXPIRED_SIGNAL,WTPIndex))) { // start Change State Pending timer
@@ -148,7 +148,7 @@ CWBool CWParseConfigureRequestMessage(char *msg, int len, int *seqNumPtr, CWProt
 				if(!(CWParseWTPStatisticsTimer(&completeMsg, elemLen, &(valuesPtr->StatisticsTimer)))) return CW_FALSE; // will be handled by the caller
 				break;
 			case CW_MSG_ELEMENT_WTP_REBOOT_STATISTICS_CW_TYPE:
-				CW_CREATE_OBJECT_ERR(valuesPtr->WTPRebootStatistics, WTPRebootStatisticsInfo, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
+				CW_CREATE_OBJECT_ERR_WID(valuesPtr->WTPRebootStatistics, WTPRebootStatisticsInfo, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
 				if(!(CWParseWTPRebootStatistics(&completeMsg, elemLen, valuesPtr->WTPRebootStatistics))) return CW_FALSE; // will be handled by the caller
 				break;
 			case BINDING_MSG_ELEMENT_TYPE_SET_TXP:
@@ -268,7 +268,7 @@ CWBool CWAssembleConfigureResponse(CWProtocolMessage **messagesPtr, int *fragmen
 	){
 		int i;
 		for(i = 0; i <= k; i++) { CW_FREE_PROTOCOL_MESSAGE(msgElems[i]);}
-		CW_FREE_OBJECT(msgElems);
+		CW_FREE_OBJECT_WID(msgElems);
 		return CW_FALSE; // error will be handled by the caller
 	}
 	for(j=0; j<AC_WTP[WTPIndex]->RadioCount; j++)
@@ -282,7 +282,7 @@ CWBool CWAssembleConfigureResponse(CWProtocolMessage **messagesPtr, int *fragmen
 		){
 			int i;
 			for(i = 0; i <= k; i++) { CW_FREE_PROTOCOL_MESSAGE(msgElems[i]);}
-			CW_FREE_OBJECT(msgElems);
+			CW_FREE_OBJECT_WID(msgElems);
 			return CW_FALSE; // error will be handled by the caller
 		 }
 	}
@@ -291,7 +291,7 @@ CWBool CWAssembleConfigureResponse(CWProtocolMessage **messagesPtr, int *fragmen
 	
 	k = -1;
 	/*fengwenchao add 20111214 for AUTELAN-2713*/
-	CW_CREATE_PROTOCOL_MSG_ARRAY_ERR(msgElemsBinding,msgElemBindingCount, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
+	CW_CREATE_PROTOCOL_MSG_ARRAY_ERR(msgElemsBinding,msgElemBindingCount, CW_FREE_OBJECT_WID(msgElems); return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
 	for(j=0; j<AC_WTP[WTPIndex]->RadioCount; j++)
 	{
 		if((AC_WTP[WTPIndex]->WTP_Radio[j] != NULL)&&(AC_WTP[WTPIndex]->WTP_Radio[j]->QOSID != 0))
@@ -307,7 +307,8 @@ CWBool CWAssembleConfigureResponse(CWProtocolMessage **messagesPtr, int *fragmen
 				int i;
 				for(i = 0; i <= k; i++) { CW_FREE_PROTOCOL_MESSAGE(msgElemsBinding[i]);}
 				/*fengwenchao add end*/
-				CW_FREE_OBJECT(msgElemsBinding);
+				CW_FREE_OBJECT_WID(msgElemsBinding);
+				CW_FREE_OBJECT_WID(msgElems);
 				return CW_FALSE; // error will be handled by the caller
 			}
 			
@@ -338,14 +339,14 @@ CWBool CWSaveConfigureRequestMessage (CWProtocolConfigureRequestValues *configur
 	wid_syslog_debug_debug(WID_WTPINFO,"Saving Configure Request...");
 	int i = 0;
 	int l_radio_id = 0;
-	CW_FREE_OBJECT(WTPProtocolManager->ACName);
+	CW_FREE_OBJECT_WID(WTPProtocolManager->ACName);
 	if((configureRequest->ACName) != NULL)
 		WTPProtocolManager->ACName = configureRequest->ACName;
 	
-	CW_FREE_OBJECT((WTPProtocolManager->ACNameIndex).ACNameIndex);
+	CW_FREE_OBJECT_WID((WTPProtocolManager->ACNameIndex).ACNameIndex);
 	WTPProtocolManager->ACNameIndex = configureRequest->ACinWTP;
 	
-	CW_FREE_OBJECT((WTPProtocolManager->radioAdminInfo).radios);
+	CW_FREE_OBJECT_WID((WTPProtocolManager->radioAdminInfo).radios);
 	(WTPProtocolManager->radioAdminInfo).radiosCount = configureRequest->radioAdminInfoCount;
 	(WTPProtocolManager->radioAdminInfo).radios = configureRequest->radioAdminInfo;
 
@@ -372,7 +373,7 @@ CWBool CWSaveConfigureRequestMessage (CWProtocolConfigureRequestValues *configur
 	//CW_FREE_OBJECT((WTPProtocolManager->WTPRadioInfo).radios);
 	//WTPProtocolManager->WTPRadioInfo = configureRequest->WTPRadioInfo;	
 	
-	CW_FREE_OBJECT(WTPProtocolManager->WTPRebootStatistics);
+	CW_FREE_OBJECT_WID(WTPProtocolManager->WTPRebootStatistics);
 	WTPProtocolManager->WTPRebootStatistics = configureRequest->WTPRebootStatistics;
 
 	wid_syslog_debug_debug(WID_WTPINFO,"Configure Request Saved");

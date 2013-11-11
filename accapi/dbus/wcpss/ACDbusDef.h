@@ -754,6 +754,7 @@ Wid config infomation
 #define WID_DBUS_CONF_METHOD_CONTROL_SCOPE    "set_transmit_power_control_scope"	
 /*auto ap area*/
 #define WID_DBUS_CONF_METHOD_SET_WID_DYNAMIC_AP_LOGIN_SWITCH	"set_auto_ap_login_switch"
+#define WID_DBUS_CONF_METHOD_SET_WID_MEMORY_TRACE_SWITCH	"set_memory_trace_switch"
 #define WID_DBUS_CONF_METHOD_SET_WID_DYNAMIC_AP_LOGIN_L3_INTERFACE	"set_auto_ap_login_binding_l3_interface"
 #define WID_DBUS_CONF_METHOD_SET_WID_LISTEN_L3_INTERFACE	"set_wid_listen_l3_interface"
 #define WID_DBUS_CONF_METHOD_SET_WID_LISTEN_IP	"set_wid_listen_ip"

@@ -126,7 +126,7 @@ int get_wtps_info(WTP_RRM_INFO ** WTP){
 		if((AC_WTP[i] != NULL)&&(AC_WTP[i]->WTPStat == 5))
 		{
 			if(WTP[i] == NULL){
-				WTP[i] = malloc(sizeof(WTP_RRM_INFO));
+				WTP[i] = WID_MALLOC(sizeof(WTP_RRM_INFO));
 				if(WTP[i] == NULL){
 					//perror(malloc);
 					return 0;
@@ -297,7 +297,7 @@ CW_THREAD_RETURN_TYPE CWDynamicChannelSelection(void * arg)
 	int num = WTP_NUM;
 	WTP_RRM_INFO **WTP;
 	//gCOUNTRYCODE = 2;
-	WTP = malloc(WTP_NUM*sizeof(WTP_RRM_INFO *));
+	WTP = WID_MALLOC(WTP_NUM*sizeof(WTP_RRM_INFO *));
 	for(i = 0; i < WTP_NUM; i++){
 		WTP[i] = NULL;
 	}
@@ -333,7 +333,7 @@ CW_THREAD_RETURN_TYPE CWDynamicChannelSelection(void * arg)
 				//CWThreadMutexUnlock(&gACChannelMutex);					
 				wid_syslog_debug_debug(WID_WTPINFO,"WTP %d Channel %d\n",i,WTP[i]->channel);
 				memset(WTP[i],0,sizeof(WTP_RRM_INFO));
-				free(WTP[i]);
+				WID_FREE(WTP[i]);
 				WTP[i] = NULL;
 			}
 		}

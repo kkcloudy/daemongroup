@@ -46,6 +46,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 	static CWErrorHandlingInfo *gLastErrorDataPtr;
 #endif
 
+extern int wid_memory_trace_switch;
+
 void CWErrorHandlingInitLib() {	
 	
 	wid_syslog_debug_debug(WID_DEFAULT,"Init Error");
@@ -57,7 +59,7 @@ void CWErrorHandlingInitLib() {
 			exit(1);
 		}
 	#else
-		CW_CREATE_OBJECT_ERR(infoPtr, CWErrorHandlingInfo, return;);
+		CW_CREATE_OBJECT_ERR_WID(infoPtr, CWErrorHandlingInfo, return;);
 		infoPtr->code = CW_ERROR_NONE;
 		gLastErrorDataPtr = infoPtr;
 	#endif
@@ -68,7 +70,7 @@ CWBool _CWErrorRaise(CWErrorCode code, const char *msg, const char *fileName, in
 	#ifndef CW_SINGLE_THREAD
 		infoPtr = CWThreadGetSpecific(&gLastError);
 		if(infoPtr==NULL){
-			CW_CREATE_OBJECT_ERR(infoPtr, CWErrorHandlingInfo, exit(1););
+			CW_CREATE_OBJECT_ERR_WID(infoPtr, CWErrorHandlingInfo, exit(1););
 			infoPtr->code = CW_ERROR_NONE;
 			if(!CWThreadSetSpecific(&gLastError, infoPtr))
 			{
@@ -78,7 +80,7 @@ CWBool _CWErrorRaise(CWErrorCode code, const char *msg, const char *fileName, in
 
 					wid_syslog_crit("free infoPtr.....\n");
 
-		            CW_FREE_OBJECT(infoPtr);
+		            CW_FREE_OBJECT_WID(infoPtr);
 					return CW_FALSE;
 				}
 				//exit(1);

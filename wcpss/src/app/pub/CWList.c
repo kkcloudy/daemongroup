@@ -31,6 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 #include "CWCommon.h"
+#include "wcpss/wid/WID.h"
 
 #ifdef DMALLOC
 #include "../dmalloc-5.5.0/dmalloc.h"
@@ -44,13 +45,13 @@ CWBool CWAddElementToList(CWList *list, void *element) {
 	if(element == NULL || list == NULL) return CW_FALSE;
 	
 	if((*list) == NULL) { // first element
-		CW_CREATE_OBJECT_ERR((*list), CWListElement, return CW_FALSE;);
+		CW_CREATE_OBJECT_ERR_WID((*list), CWListElement, return CW_FALSE;);
 		(*list)->data = element;
 		(*list)->next = NULL;
 		return CW_TRUE;
 	}
 	
-	CW_CREATE_OBJECT_ERR(newElem, CWListElement, return CW_FALSE;);
+	CW_CREATE_OBJECT_ERR_WID(newElem, CWListElement, return CW_FALSE;);
 	newElem->data = element;
 	newElem->next = (*list);
 	
@@ -67,7 +68,7 @@ CWBool CWAddElementToListTail(CWList *list, void *element) {
 	if(element == NULL || list == NULL) return CW_FALSE;
 	
 	if((*list) == NULL) { // first element
-		CW_CREATE_OBJECT_ERR((*list), CWListElement, return CW_FALSE;);
+		CW_CREATE_OBJECT_ERR_WID((*list), CWListElement, return CW_FALSE;);
 		(*list)->data = element;
 		(*list)->next = NULL;
 		return CW_TRUE;
@@ -79,7 +80,7 @@ CWBool CWAddElementToListTail(CWList *list, void *element) {
 		newElem= newElem->next;
 	}
 	
-	CW_CREATE_OBJECT_ERR(newElem->next, CWListElement, return CW_FALSE;);
+	CW_CREATE_OBJECT_ERR_WID(newElem->next, CWListElement, return CW_FALSE;);
 	newElem->next->data = element;
 	newElem->next->next = NULL;
 	
@@ -144,12 +145,12 @@ void *CWDeleteInList(CWList *list, void *baseElement, CWBool (*compareFunc) (voi
 			if(oldEl != NULL) {
 				oldEl->next = el->next;
 				
-				CW_FREE_OBJECT(el);
+				CW_FREE_OBJECT_WID(el);
 				return data;
 			} else { // first element
 				(*list) = el->next;
 				
-				CW_FREE_OBJECT(el);
+				CW_FREE_OBJECT_WID(el);
 				return data;
 			}
 
@@ -169,7 +170,7 @@ void CWDeleteList(CWList *list , void (*deleteFunc) (void *)) {
 		el = (*list);
 		(*list) = (*list)->next;
 		deleteFunc(el->data);
-		CW_FREE_OBJECT(el);
+		CW_FREE_OBJECT_WID(el);
 	} while((*list) != NULL);
 }
 

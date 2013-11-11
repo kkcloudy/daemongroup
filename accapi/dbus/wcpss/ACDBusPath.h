@@ -565,6 +565,7 @@ char WID_DBUS_CONF_METHOD_SHOW_NEIGHBOR_RSSI_INFO[PATH_LEN]=	"show_neighbor_rssi
 char WID_DBUS_CONF_METHOD_CONTROL_SCOPE[PATH_LEN]=    "set_transmit_power_control_scope"	;
 /*auto ap area*/
 char WID_DBUS_CONF_METHOD_SET_WID_DYNAMIC_AP_LOGIN_SWITCH[PATH_LEN]=	"set_auto_ap_login_switch";
+char WID_DBUS_CONF_METHOD_SET_WID_MEMORY_TRACE_SWITCH[PATH_LEN]=		"set_memory_trace_switch";
 char WID_DBUS_CONF_METHOD_SET_WID_DYNAMIC_AP_LOGIN_L3_INTERFACE[PATH_LEN]=	"set_auto_ap_login_binding_l3_interface";
 char WID_DBUS_CONF_METHOD_SET_WID_LISTEN_L3_INTERFACE[PATH_LEN]=	"set_wid_listen_l3_interface";
 char WID_DBUS_CONF_METHOD_SET_WID_LISTEN_IP[PATH_LEN]=	"set_wid_listen_ip";

@@ -96,7 +96,7 @@ static int memory_new(BIO *bi)
 	bi->init = 1;
 	bi->num = 0;
 	bi->flags = 0;
-	bi->ptr = (char*)malloc(sizeof(BIO_memory_data));
+	bi->ptr = (char*)WID_MALLOC(sizeof(BIO_memory_data));
 
 	return 1;
 }
@@ -139,7 +139,7 @@ static int memory_read(BIO *b, char *out, int outl)
 	{
 		ret = ((size < outl) ? size : outl) - 4;	
 		memcpy(out, buf + 4, ret);
-		CW_FREE_OBJECT(buf);
+		CW_FREE_OBJECT_WID(buf);
 	}
 
 	return ret;

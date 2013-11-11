@@ -55,7 +55,7 @@ CWBool CWAssembleResetRequestMessage(CWProtocolMessage **messagesPtr, int *fragm
 		if ((!(CWAssembleMsgElemImageIdentifierAC(&(msgElems[++k]), resPtr)))){
 			int i;
 			for(i = 0; i <= k; i++) { CW_FREE_PROTOCOL_MESSAGE(msgElems[i]);}
-			CW_FREE_OBJECT(msgElems);
+			CW_FREE_OBJECT_WID(msgElems);
 			return CW_FALSE; // error will be handled by the caller
 		}
 				

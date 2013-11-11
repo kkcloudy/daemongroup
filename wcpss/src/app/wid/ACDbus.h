@@ -52,7 +52,7 @@ typedef struct
 {
     unsigned char       macaddr[ACDBUS_MAC_LEN];
 }WIDMACADDR;
-#define FREE(STR) {if(STR) {free(STR); STR=NULL;}}	//xiaodawei add for iperf, 20110407
+#define FREE(STR) {if(STR) {WID_FREE(STR); STR=NULL;}}	//xiaodawei add for iperf, 20110407
 #define IPERF_LINE_NUM 32
 #define IPERF_LINE_CONTENT 128
 /*struct NetworkQuality{//xiaodawei add, 20110312

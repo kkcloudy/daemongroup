@@ -1251,7 +1251,7 @@ DBusMessage * wid_dbus_interface_wtp_add_del_by_mac(DBusConnection *conn, DBusMe
 
 				}*/
 				if(ret != WTP_MAC_BE_USED){
-					macstr = (unsigned char*)malloc(7);	
+					macstr = (unsigned char*)WID_MALLOC(7);	
 					memset(macstr,0,7);
 
 					macstr[0] = macAddr[0];
@@ -1263,7 +1263,7 @@ DBusMessage * wid_dbus_interface_wtp_add_del_by_mac(DBusConnection *conn, DBusMe
 					
 		
 					ret = WID_CREATE_NEW_WTP(WTPName,WTPID,macstr,WTPModel,issn);
-					free(macstr);
+					WID_FREE(macstr);
 					macstr = NULL;
 					if (ret == 0){
 						AsdWsm_WTPOp(WTPID,WID_ADD);//xm add 08/12/04
@@ -1453,7 +1453,7 @@ DBusMessage * wid_dbus_interface_wtp_add_del_by_mac(DBusConnection *conn, DBusMe
 					{
 						wid_syslog_debug_debug(WID_DEFAULT,"%s,%d,:bootflag:%d,ret=%d.\n",__func__,__LINE__,bootflag,ret);
 						if(bootflag){
-							con_info = malloc(sizeof(struct wtp_con_info));
+							con_info = WID_MALLOC(sizeof(struct wtp_con_info));
 							memset(con_info,0,sizeof(struct wtp_con_info));
 							memcpy(con_info->wtpmac,macAddr,MAC_LEN);
 							con_info->wtpindex = i;
@@ -1476,7 +1476,7 @@ DBusMessage * wid_dbus_interface_wtp_add_del_by_mac(DBusConnection *conn, DBusMe
 				
 				}
 				if(ret != WTP_MAC_BE_USED){
-					macstr = (unsigned char*)malloc(7);	
+					macstr = (unsigned char*)WID_MALLOC(7);	
 					memset(macstr,0,7);
 
 					macstr[0] = macAddr[0];
@@ -1490,7 +1490,7 @@ DBusMessage * wid_dbus_interface_wtp_add_del_by_mac(DBusConnection *conn, DBusMe
 					ret = WID_CREATE_NEW_WTP(WTPName,WTPID,macstr,WTPModel,issn,apcodeflag," ");
 					CWThreadMutexUnlock(&(gWTPs[WTPID].WTPThreadMutex));
 					
-					free(macstr);
+					WID_FREE(macstr);
 					macstr = NULL;
 					if (ret == 0){
 						AsdWsm_WTPOp(WTPID,WID_ADD);//xm add 08/12/04
@@ -1523,7 +1523,7 @@ DBusMessage * wid_dbus_interface_wtp_add_del_by_mac(DBusConnection *conn, DBusMe
 	dbus_message_iter_append_basic (&iter,
 									 DBUS_TYPE_UINT32,
 									 &ret);
-	CW_FREE_OBJECT(con_info);
+	CW_FREE_OBJECT_WID(con_info);
 	return reply;
 	
 }
@@ -1646,7 +1646,7 @@ DBusMessage * wid_dbus_interface_wlan_add_del_CN(DBusConnection *conn, DBusMessa
 	//DBusMessageIter	 iter_array;
 	unsigned char isAdd;
 	//char name[32];
-	//name = (char*)malloc(32+1);
+	//name = (char*)WID_MALLOC(32+1);
 	//memset(name,0,32+1);
 	unsigned char WlanID;
 	char* WlanName;
@@ -1719,9 +1719,9 @@ DBusMessage * wid_dbus_interface_wlan_add_del_CN(DBusConnection *conn, DBusMessa
 	
 	printf("###wlan##essid###%s,[%s]\n",WlanName,ESSID);
 	unsigned char essid_str2[ESSID_DEFAULT_LEN+1];
-	//essid_str2 = (char*)malloc(ESSID_DEFAULT_LEN+1);
+	//essid_str2 = (char*)WID_MALLOC(ESSID_DEFAULT_LEN+1);
 	char *s1=NULL;
-	s1 = (char*)malloc(1+1);
+	s1 = (char*)WID_MALLOC(1+1);
 
 	memset(essid_str2,0,ESSID_DEFAULT_LEN+1);
 	for(j = 0;j < ESSID_DEFAULT_LEN; j++ ){
@@ -1767,7 +1767,7 @@ DBusMessage * wid_dbus_interface_wlan_add_del_CN(DBusConnection *conn, DBusMessa
 									 DBUS_TYPE_UINT32,
 									 &ret);
 	if(s1 != NULL) 
-		free(s1);
+		WID_FREE(s1);
 	return reply;
 	
 }
@@ -1892,7 +1892,7 @@ DBusMessage * wid_dbus_interface_show_wlanconf_of_all(DBusConnection *conn, DBus
 	int wlan_num = 0;
 	unsigned char bif_num = 0;
 	WID_WLAN **WLAN;
-	WLAN = malloc(WLAN_NUM*(sizeof(WID_WLAN*)));
+	WLAN = WID_MALLOC(WLAN_NUM*(sizeof(WID_WLAN*)));
 
 	while(i<WLAN_NUM){
 		if(AC_WLAN[i] != NULL && (AC_WLAN[i]->want_to_delete != 1))		/* Huangleilei add for ASXXZFI-1622 */
@@ -2034,8 +2034,8 @@ DBusMessage * wid_dbus_interface_show_wlanconf_of_all(DBusConnection *conn, DBus
 		ifi = WLAN[i]->Wlan_Ifi;		
 		char *name;
 		//char *nas_id;
-		name = (char*)malloc(ETH_IF_NAME_LEN+1);
-		//nas_id = (char*)malloc(NAS_IDENTIFIER_NAME+1);
+		name = (char*)WID_MALLOC(ETH_IF_NAME_LEN+1);
+		//nas_id = (char*)WID_MALLOC(NAS_IDENTIFIER_NAME+1);
 		for(j = 0; j < bif_num; j++){			
 			memset(name,0,(ETH_IF_NAME_LEN+1));
 			memcpy(name,ifi->ifi_name,ETH_IF_NAME_LEN);
@@ -2060,7 +2060,7 @@ DBusMessage * wid_dbus_interface_show_wlanconf_of_all(DBusConnection *conn, DBus
 		}
 		bif_num = 0;
 		if(name){
-		free(name);
+		WID_FREE(name);
 		name = NULL;
 			}
 		dbus_message_iter_close_container(&iter_struct, &iter_sub_array);	
@@ -2068,7 +2068,7 @@ DBusMessage * wid_dbus_interface_show_wlanconf_of_all(DBusConnection *conn, DBus
 	}
 
 	if(WLAN){
-		free(WLAN);
+		WID_FREE(WLAN);
 		WLAN = NULL;
 		}
 	dbus_message_iter_close_container (&iter, &iter_array);
@@ -2142,7 +2142,7 @@ DBusMessage * wid_dbus_interface_show_wlanconf(DBusConnection *conn, DBusMessage
 			num++;
 			ifi = ifi->ifi_next;
 		}
-		wlankey = (char*)malloc(DEFAULT_LEN+1);
+		wlankey = (char*)WID_MALLOC(DEFAULT_LEN+1);
 		memset(wlankey,0,DEFAULT_LEN+1);
 		if(WLAN->WlanKey != NULL){				
 			memcpy(wlankey,WLAN->WlanKey,DEFAULT_LEN);		
@@ -2345,8 +2345,8 @@ DBusMessage * wid_dbus_interface_show_wlanconf(DBusConnection *conn, DBusMessage
 		ifi = WLAN->Wlan_Ifi;		
 		char *name;
 		char *nas_id;
-		name = (char*)malloc(ETH_IF_NAME_LEN+1);
-		nas_id = (char*)malloc(NAS_IDENTIFIER_NAME+1);
+		name = (char*)WID_MALLOC(ETH_IF_NAME_LEN+1);
+		nas_id = (char*)WID_MALLOC(NAS_IDENTIFIER_NAME+1);
 		for(i = 0; i < num; i++){			
 			//DBusMessageIter iter_struct;
 			memset(name,0,(ETH_IF_NAME_LEN+1));
@@ -2371,9 +2371,9 @@ DBusMessage * wid_dbus_interface_show_wlanconf(DBusConnection *conn, DBusMessage
 			ifi = ifi->ifi_next;
 			dbus_message_iter_close_container (&iter_array, &iter_struct);
 		}
-		free(name);
-		free(nas_id);
-		free(wlankey);
+		WID_FREE(name);
+		WID_FREE(nas_id);
+		WID_FREE(wlankey);
 		dbus_message_iter_close_container (&iter, &iter_array);
 				
 	}
@@ -2448,7 +2448,7 @@ DBusMessage * wid_dbus_interface_show_wlanlist(DBusConnection *conn, DBusMessage
 			printf("happen error\n");
 		}
 		else{
-			wlan_name = (char *)malloc(strlen(WLAN[i]->WlanName) + 1);
+			wlan_name = (char *)WID_MALLOC(strlen(WLAN[i]->WlanName) + 1);
 			memset(wlan_name,0,strlen(WLAN[i]->WlanName) + 1);
 			memcpy(wlan_name,WLAN[i]->WlanName,strlen(WLAN[i]->WlanName));
 		}
@@ -2473,7 +2473,7 @@ DBusMessage * wid_dbus_interface_show_wlanlist(DBusConnection *conn, DBusMessage
 			//printf("happen error\n");
 		}
 		else{
-			essid = (char *)malloc(ESSID_DEFAULT_LEN + 1);
+			essid = (char *)WID_MALLOC(ESSID_DEFAULT_LEN + 1);
 			memset(essid,0,(ESSID_DEFAULT_LEN + 1));
 			//memcpy use error
 			//memcpy(essid,WLAN[i]->ESSID,ESSID_DEFAULT_LEN);
@@ -2525,11 +2525,11 @@ DBusMessage * wid_dbus_interface_show_wlanlist(DBusConnection *conn, DBusMessage
 		
 		dbus_message_iter_close_container (&iter_array, &iter_struct);
 		if(wlan_name != NULL){
-			free(wlan_name);
+			WID_FREE(wlan_name);
 			wlan_name = NULL;
 		}
 		if(essid != NULL){
-			free(essid);
+			WID_FREE(essid);
 			essid = NULL;
 		}
 	}
@@ -2551,7 +2551,7 @@ DBusMessage *wid_dbus_interface_show_wtplist_bymodel(DBusConnection *conn, DBusM
 	int ret = WID_DBUS_SUCCESS;
 	int i=0;
 	WID_WTP **WTP;
-	WTP = malloc(WTP_NUM*(sizeof(WID_WTP *)));
+	WTP = WID_MALLOC(WTP_NUM*(sizeof(WID_WTP *)));
 	char *no_info = "none";
 	while(i<WTP_NUM){
 		CWThreadMutexLock(&(gWTPs[i].WTPThreadMutex));//fengwenchao add 20121123 for AXSSZFI-1050
@@ -2568,7 +2568,7 @@ DBusMessage *wid_dbus_interface_show_wtplist_bymodel(DBusConnection *conn, DBusM
 		ret = WTP_ID_NOT_EXIST;
 
 	unsigned char *mac = NULL;
-	mac = (unsigned char *)malloc(MAC_LEN+1);
+	mac = (unsigned char *)WID_MALLOC(MAC_LEN+1);
 	
 	reply = dbus_message_new_method_return(msg);
 		
@@ -2669,9 +2669,9 @@ DBusMessage *wid_dbus_interface_show_wtplist_bymodel(DBusConnection *conn, DBusM
 				
 	dbus_message_iter_close_container (&iter, &iter_array);
 				
-	free(WTP);
+	WID_FREE(WTP);
 	WTP = NULL;
-	CW_FREE_OBJECT(mac);
+	CW_FREE_OBJECT_WID(mac);
 	return reply;	
 }
 //fengwenchao add end
@@ -2688,7 +2688,7 @@ DBusMessage * wid_dbus_interface_show_wtplist_byversion(DBusConnection *conn, DB
 	int ret = WID_DBUS_SUCCESS;
 	int i=0;
 	WID_WTP **WTP;
-	WTP = malloc(WTP_NUM*(sizeof(WID_WTP *)));
+	WTP = WID_MALLOC(WTP_NUM*(sizeof(WID_WTP *)));
 	char *no_info = "none";
 	while(i<WTP_NUM){
 		CWThreadMutexLock(&(gWTPs[i].WTPThreadMutex));//fengwenchao add 20121123 for AXSSZFI-1050
@@ -2704,7 +2704,7 @@ DBusMessage * wid_dbus_interface_show_wtplist_byversion(DBusConnection *conn, DB
 		ret = WTP_ID_NOT_EXIST;
 
 	unsigned char *mac = NULL;
-	mac = (unsigned char *)malloc(MAC_LEN+1);
+	mac = (unsigned char *)WID_MALLOC(MAC_LEN+1);
 	
 	reply = dbus_message_new_method_return(msg);
 		
@@ -2805,9 +2805,9 @@ DBusMessage * wid_dbus_interface_show_wtplist_byversion(DBusConnection *conn, DB
 				
 	dbus_message_iter_close_container (&iter, &iter_array);
 				
-	free(WTP);
+	WID_FREE(WTP);
 	WTP = NULL;
-	CW_FREE_OBJECT(mac);
+	CW_FREE_OBJECT_WID(mac);
 	return reply;	
 }
 //fengwenchao add end
@@ -2823,7 +2823,7 @@ DBusMessage * wid_dbus_interface_show_wtplist_new(DBusConnection *conn, DBusMess
 	int i=0;
 	WID_WTP **WTP;
 	char *wtp_location = NULL;
-	WTP = malloc(WTP_NUM*(sizeof(WID_WTP *)));
+	WTP = WID_MALLOC(WTP_NUM*(sizeof(WID_WTP *)));
 	while(i<WTP_NUM){
 		CWThreadMutexLock(&(gWTPs[i].WTPThreadMutex));//fengwenchao add 20121123 for AXSSZFI-1050
 		if(AC_WTP[i] != NULL)
@@ -2839,8 +2839,8 @@ DBusMessage * wid_dbus_interface_show_wtplist_new(DBusConnection *conn, DBusMess
 
 	/*store sn&mac of ap*/
 	unsigned char *mac = NULL;
-	mac = (unsigned char *)malloc(MAC_LEN+1);
-	wtp_location = (char *)malloc(strlen("Location not setted")+1);
+	mac = (unsigned char *)WID_MALLOC(MAC_LEN+1);		
+	wtp_location = (char *)WID_MALLOC(strlen("Location not setted")+1);
 	memset(wtp_location,0,strlen("Location not setted")+1);
 	memcpy(wtp_location,"Location not setted",strlen("Location not setted"));
 	
@@ -2922,10 +2922,10 @@ DBusMessage * wid_dbus_interface_show_wtplist_new(DBusConnection *conn, DBusMess
 				
 	dbus_message_iter_close_container (&iter, &iter_array);
 				
-	free(WTP);
+	WID_FREE(WTP);
 	WTP = NULL;
-	CW_FREE_OBJECT(mac);
-	CW_FREE_OBJECT(wtp_location);
+	CW_FREE_OBJECT_WID(mac);
+	CW_FREE_OBJECT_WID(wtp_location);
 	return reply;	
 }
 /*xiaodawei transplant from 2.0 for telecom test, 20110301*/
@@ -2944,8 +2944,8 @@ DBusMessage * wid_dbus_interface_show_wtplist_byinterface(DBusConnection *conn, 
 	char *name = NULL;
 	char __str[128];			
 	char *str = "lo";   //fengwenchao modify 20110525
-	sn = (char *)malloc(NAS_IDENTIFIER_NAME);		
-	WTP = malloc(WTP_NUM*(sizeof(WID_WTP *)));
+	sn = (char *)WID_MALLOC(NAS_IDENTIFIER_NAME);		
+	WTP = WID_MALLOC(WTP_NUM*(sizeof(WID_WTP *)));
 	while(i<WTP_NUM){
 		CWThreadMutexLock(&(gWTPs[i].WTPThreadMutex));//fengwenchao add 20121123 for AXSSZFI-1050
 		if(AC_WTP[i] != NULL)
@@ -2961,7 +2961,7 @@ DBusMessage * wid_dbus_interface_show_wtplist_byinterface(DBusConnection *conn, 
 
 	/*store sn&mac of ap*/
 	unsigned char *mac = NULL;
-	mac = (unsigned char *)malloc(MAC_LEN+1);		
+	mac = (unsigned char *)WID_MALLOC(MAC_LEN+1);		
 	
 	reply = dbus_message_new_method_return(msg);
 		
@@ -3020,11 +3020,11 @@ DBusMessage * wid_dbus_interface_show_wtplist_byinterface(DBusConnection *conn, 
 		memcpy(sn,WTP[i]->WTPSN,strlen(WTP[i]->WTPSN));
 		dbus_message_iter_append_basic(&iter_struct,DBUS_TYPE_STRING,&sn);
 
-		name = (char*)malloc(ETH_IF_NAME_LEN+1); //20080710
+		name = (char*)WID_MALLOC(ETH_IF_NAME_LEN+1); //20080710
 		memset(name,0,(ETH_IF_NAME_LEN+1));
 		memcpy(name,WTP[i]->BindingIFName,ETH_IF_NAME_LEN);
 		dbus_message_iter_append_basic(&iter_struct,DBUS_TYPE_STRING,&(name));
-		free(name);
+		WID_FREE(name);
 		name = NULL;
 		//memset(str,0,128);
 		memset(__str,0,128);
@@ -3058,10 +3058,10 @@ DBusMessage * wid_dbus_interface_show_wtplist_byinterface(DBusConnection *conn, 
 				
 	dbus_message_iter_close_container (&iter, &iter_array);
 				
-	free(WTP);
+	WID_FREE(WTP);
 	WTP = NULL;
-	CW_FREE_OBJECT(mac);
-	CW_FREE_OBJECT(sn);
+	CW_FREE_OBJECT_WID(mac);
+	CW_FREE_OBJECT_WID(sn);
 	return reply;	
 }
 
@@ -3080,9 +3080,9 @@ DBusMessage * wid_dbus_interface_show_wtplist_update(DBusConnection *conn, DBusM
 	dbus_error_init(&err);
 	int i=0,j=0;
 	WID_WTP **WTP;
-	WTP = malloc(WTP_NUM*(sizeof(WID_WTP *)));
+	WTP = WID_MALLOC(WTP_NUM*(sizeof(WID_WTP *)));
 	if( WTP == NULL){
-		wid_syslog_debug_debug(WID_DBUS,"%s :malloc fail.\n",__func__);
+		wid_syslog_debug_debug(WID_DBUS,"%s :WID_MALLOC fail.\n",__func__);
 		exit(1);
 	}
 	memset(WTP,0,WTP_NUM*(sizeof(WID_WTP *)));
@@ -3152,22 +3152,22 @@ DBusMessage * wid_dbus_interface_show_wtplist_update(DBusConnection *conn, DBusM
 		
 		if(WTP[i]->WTPIP != NULL)
 		{
-			wtp_ip = (char*)malloc(strlen(WTP[i]->WTPIP)+1);
+			wtp_ip = (char*)WID_MALLOC(strlen(WTP[i]->WTPIP)+1);
 			memset(wtp_ip,0,strlen(WTP[i]->WTPIP)+1);
 			memcpy(wtp_ip,WTP[i]->WTPIP,strlen(WTP[i]->WTPIP));		
 		}else{
-			wtp_ip = (char*)malloc(2);
+			wtp_ip = (char*)WID_MALLOC(2);
 			memset(wtp_ip,0,2);
 			memcpy(wtp_ip," ",1);					
 		}
 		
 		if(WTP[i]->WTPModel != NULL)
 		{
-			wtp_model = (char*)malloc(strlen(WTP[i]->WTPModel)+1);
+			wtp_model = (char*)WID_MALLOC(strlen(WTP[i]->WTPModel)+1);
 			memset(wtp_model,0,strlen(WTP[i]->WTPModel)+1);
 			memcpy(wtp_model,WTP[i]->WTPModel,strlen(WTP[i]->WTPModel));		
 		}else{
-			wtp_model = (char*)malloc(2);
+			wtp_model = (char*)WID_MALLOC(2);
 			memset(wtp_model,0,2);
 			memcpy(wtp_model," ",1);					
 		}
@@ -3183,14 +3183,14 @@ DBusMessage * wid_dbus_interface_show_wtplist_update(DBusConnection *conn, DBusM
 		dbus_message_iter_append_basic(&iter_struct,DBUS_TYPE_UINT32,&(WTP[i]->manual_update_time));
 
 		dbus_message_iter_close_container (&iter_array, &iter_struct);
-		CW_FREE_OBJECT(wtp_ip);
-		CW_FREE_OBJECT(wtp_model);
+		CW_FREE_OBJECT_WID(wtp_ip);
+		CW_FREE_OBJECT_WID(wtp_model);
 
 	}
 				
 	dbus_message_iter_close_container (&iter, &iter_array);
 				
-	free(WTP);
+	WID_FREE(WTP);
 	WTP = NULL;
 	return reply;	
 }
@@ -3206,7 +3206,7 @@ DBusMessage * wid_dbus_interface_show_wtplist_update_fail(DBusConnection *conn, 
 	dbus_error_init(&err);
 	int i=0;
 	WID_WTP **WTP;
-	WTP = malloc(WTP_NUM*(sizeof(WID_WTP *)));
+	WTP = WID_MALLOC(WTP_NUM*(sizeof(WID_WTP *)));
 	if( WTP == NULL){
 		wid_syslog_debug_debug(WID_DBUS,"%s :malloc fail.\n",__func__);
 		return NULL;
@@ -3287,7 +3287,7 @@ DBusMessage * wid_dbus_interface_show_wtplist_update_fail(DBusConnection *conn, 
 				
 	dbus_message_iter_close_container (&iter, &iter_array);
 				
-	free(WTP);
+	WID_FREE(WTP);
 	WTP = NULL;
 	return reply;	
 }
@@ -3319,7 +3319,7 @@ DBusMessage * wid_dbus_interface_show_wtplist(DBusConnection *conn, DBusMessage 
 	dbus_error_init(&err);
 	int i=0;
 	WID_WTP **WTP =NULL;
-	WTP = malloc(WTP_NUM*(sizeof(WID_WTP *)));
+	WTP = WID_MALLOC(WTP_NUM*(sizeof(WID_WTP *)));
 	while(i<WTP_NUM){
 		CWThreadMutexLock(&(gWTPs[i].WTPThreadMutex));//fengwenchao add 20121123 for AXSSZFI-1050	
 		if((AC_WTP[i] != NULL)&&(AC_WTP[i]->WTPID<WTP_NUM))
@@ -3335,7 +3335,7 @@ DBusMessage * wid_dbus_interface_show_wtplist(DBusConnection *conn, DBusMessage 
 
 	/*store sn&mac of ap*/
 	char *sn = NULL;
-	sn = (char *)malloc(NAS_IDENTIFIER_NAME);		
+	sn = (char *)WID_MALLOC(NAS_IDENTIFIER_NAME);		
 	
 	reply = dbus_message_new_method_return(msg);
 		
@@ -3438,8 +3438,8 @@ DBusMessage * wid_dbus_interface_show_wtplist(DBusConnection *conn, DBusMessage 
 				
 	dbus_message_iter_close_container (&iter, &iter_array);
 				
-	CW_FREE_OBJECT(WTP);
-	CW_FREE_OBJECT(sn);
+	CW_FREE_OBJECT_WID(WTP);
+	CW_FREE_OBJECT_WID(sn);
 	return reply;	
 }
 /*nl add for showing wtp basic information table 1*/
@@ -3469,7 +3469,7 @@ DBusMessage * wid_dbus_interface_show_wtp_basic_information(DBusConnection *conn
 
 	wid_syslog_debug_debug(WID_DBUS,"call %s\n", __FUNCTION__);
 	
-	sn = (char *)malloc(NAS_IDENTIFIER_NAME);
+	sn = (char *)WID_MALLOC(NAS_IDENTIFIER_NAME);
 	if (!sn) {
 		wid_syslog_err("malloc for sn failed\n");
 		return NULL;
@@ -3478,38 +3478,38 @@ DBusMessage * wid_dbus_interface_show_wtp_basic_information(DBusConnection *conn
 	char *latitude=NULL;
 	char *manufacture_date=NULL;
 	
-	longitude = malloc(LONGITUDE_LATITUDE_MAX_LEN);
+	longitude = WID_MALLOC(LONGITUDE_LATITUDE_MAX_LEN);
 	if (!longitude) {
 		wid_syslog_err("malloc for longitude failed\n");
 		goto free_sn;
 	}
 	
-	latitude = malloc(LONGITUDE_LATITUDE_MAX_LEN);
+	latitude = WID_MALLOC(LONGITUDE_LATITUDE_MAX_LEN);
 	if (!latitude) {
 		wid_syslog_err("malloc for latitude failed\n");
 		goto free_longitude;
 	}
 	
-	manufacture_date = malloc(MANUFACTURE_DATA_MAX_LEN);
+	manufacture_date = WID_MALLOC(MANUFACTURE_DATA_MAX_LEN);
 	if (!manufacture_date) {
 		wid_syslog_err("malloc for manufacture_date failed\n");
 		goto free_latitude;
 	}
 	
-	WTP = malloc(WTP_NUM*(sizeof(WID_WTP *)));
+	WTP = WID_MALLOC(WTP_NUM*(sizeof(WID_WTP *)));
 	if (!WTP) {
 		wid_syslog_err("malloc for WTP failed\n");
 		goto free_manufacture_date;
 	}
 	
 	memset(WTP,0,WTP_NUM*(sizeof(WID_WTP *)));
-	location = (char *)malloc(7+1);
+	location = (char *)WID_MALLOC(7+1);
 	if (!location) {
 		wid_syslog_err("malloc for location failed\n");
 		goto free_WTP;
 	}
 	
-	mac = (unsigned char *)malloc(MAC_LEN+1);
+	mac = (unsigned char *)WID_MALLOC(MAC_LEN+1);
 	if (!mac) {
 		wid_syslog_err("malloc for mac failed\n");
 		goto free_location;
@@ -3520,7 +3520,7 @@ DBusMessage * wid_dbus_interface_show_wtp_basic_information(DBusConnection *conn
 	if(num == 0)
 		ret = WTP_ID_NOT_EXIST;
 	
-	model_info = (wid_code_infomation *)malloc(sizeof(wid_code_infomation));
+	model_info = (wid_code_infomation *)WID_MALLOC(sizeof(wid_code_infomation));
 	if (!model_info) {
 		wid_syslog_err("malloc for model_info failed\n");
 		goto free_mac;
@@ -3535,7 +3535,7 @@ DBusMessage * wid_dbus_interface_show_wtp_basic_information(DBusConnection *conn
 		memcpy(name,"Autelan",7);
 	}
 
-	model_info->sw_supplier = (char *)malloc(strlen(name)+1);
+	model_info->sw_supplier = (char *)WID_MALLOC(strlen(name)+1);
 	if (!model_info->sw_supplier) {
 		wid_syslog_err("malloc for model_info->sw_supplier failed\n");
 		goto free_model_info;
@@ -3543,7 +3543,7 @@ DBusMessage * wid_dbus_interface_show_wtp_basic_information(DBusConnection *conn
 	memset(model_info->sw_supplier,0,strlen(name)+1);	
 	memcpy(model_info->sw_supplier,name,strlen(name));
 
-	model_info->supplier = (char *)malloc(strlen(name)+1);
+	model_info->supplier = (char *)WID_MALLOC(strlen(name)+1);
 	if (!model_info->supplier) {
 		wid_syslog_err("malloc for model_info->supplier failed\n");
 		goto free_sw_supplier;
@@ -3551,7 +3551,7 @@ DBusMessage * wid_dbus_interface_show_wtp_basic_information(DBusConnection *conn
 	memset(model_info->supplier,0,strlen(name)+1);	
 	memcpy(model_info->supplier,name,strlen(name));
 
-	//model_info->hw_version = (char *)malloc(8);
+	//model_info->hw_version = (char *)WID_MALLOC(8);
 	
 	/*store sn&mac of ap*/
 	
@@ -3656,7 +3656,7 @@ DBusMessage * wid_dbus_interface_show_wtp_basic_information(DBusConnection *conn
 				{
 					if(now_time == NULL)
 					{
-						now_time = (time_t*)malloc(sizeof(time_t));
+						now_time = (time_t*)WID_MALLOC(sizeof(time_t));
 						time(now_time);
 					}
 					else
@@ -3670,7 +3670,7 @@ DBusMessage * wid_dbus_interface_show_wtp_basic_information(DBusConnection *conn
 				time1 = *WTP[i]->add_time;
 				if(now_time == NULL)
 				{
-					now_time = (time_t*)malloc(sizeof(time_t));
+					now_time = (time_t*)WID_MALLOC(sizeof(time_t));
 					time(now_time);
 				}
 				else
@@ -3786,7 +3786,7 @@ DBusMessage * wid_dbus_interface_show_wtp_basic_information(DBusConnection *conn
     		if(pnode == NULL){
     			wid_syslog_debug_debug(WID_DBUS," 55555555555\n");
 
-    			model_info->sw_name = (char *)malloc(8);
+    			model_info->sw_name = (char *)WID_MALLOC(8);
     			memset(model_info->sw_name,0,8);		
     			memcpy(model_info->sw_name,"NULL",4);	
     		} else {
@@ -3795,7 +3795,7 @@ DBusMessage * wid_dbus_interface_show_wtp_basic_information(DBusConnection *conn
 				{
 					if((WTP[i]->APCode != NULL)&&(code_node->str_ap_version_code != NULL)&&(strcmp(code_node->str_ap_version_code,WTP[i]->APCode) == 0))
 					{
-						model_info->sw_name = (char *)malloc(strlen(code_node->str_ap_version_path)+1);
+						model_info->sw_name = (char *)WID_MALLOC(strlen(code_node->str_ap_version_path)+1);
 						memset(model_info->sw_name,0,strlen(code_node->str_ap_version_path)+1);		
 						memcpy(model_info->sw_name,code_node->str_ap_version_path,strlen(code_node->str_ap_version_path));			
 						break;
@@ -3803,7 +3803,7 @@ DBusMessage * wid_dbus_interface_show_wtp_basic_information(DBusConnection *conn
 					code_node = code_node->next;
 				}	
 				if(model_info->sw_name == NULL){
-					model_info->sw_name = (char *)malloc(8);
+					model_info->sw_name = (char *)WID_MALLOC(8);
 					memset(model_info->sw_name,0,8);		
 					memcpy(model_info->sw_name,"NULL",4);	
 				}
@@ -3861,33 +3861,33 @@ DBusMessage * wid_dbus_interface_show_wtp_basic_information(DBusConnection *conn
 			
     		dbus_message_iter_close_container (&iter_array, &iter_struct);
 		
-    		CW_FREE_OBJECT(model_info->sw_name);
-			CW_FREE_OBJECT(now_time);
+    		CW_FREE_OBJECT_WID(model_info->sw_name);
+			CW_FREE_OBJECT_WID(now_time);
     		//CW_FREE_OBJECT(model_info->sw_version);
     	}
     				
     	dbus_message_iter_close_container (&iter, &iter_array);
 	}
 
-	CW_FREE_OBJECT(model_info->supplier);
+	CW_FREE_OBJECT_WID(model_info->supplier);
 free_sw_supplier:
-	CW_FREE_OBJECT(model_info->sw_supplier);
+	CW_FREE_OBJECT_WID(model_info->sw_supplier);
 free_model_info:
-	CW_FREE_OBJECT(model_info);
+	CW_FREE_OBJECT_WID(model_info);
 free_mac:
-	CW_FREE_OBJECT(mac);
+	CW_FREE_OBJECT_WID(mac);
 free_location:
-	CW_FREE_OBJECT(location);
+	CW_FREE_OBJECT_WID(location);
 free_WTP:
-	CW_FREE_OBJECT(WTP);
+	CW_FREE_OBJECT_WID(WTP);
 free_manufacture_date:
-	CW_FREE_OBJECT(manufacture_date);
+	CW_FREE_OBJECT_WID(manufacture_date);
 free_latitude:
-	CW_FREE_OBJECT(latitude);
+	CW_FREE_OBJECT_WID(latitude);
 free_longitude:
-	CW_FREE_OBJECT(longitude);
+	CW_FREE_OBJECT_WID(longitude);
 free_sn:
-	CW_FREE_OBJECT(sn);
+	CW_FREE_OBJECT_WID(sn);
 	return reply;	
 }
 /*for showing wtp collect information table 3*/
@@ -3911,9 +3911,9 @@ DBusMessage * wid_dbus_interface_show_wtp_collect_information(DBusConnection *co
 	unsigned char *mac = NULL;
 	WID_WTP **WTP = NULL;
 	
-	WTP = malloc(WTP_NUM*(sizeof(WID_WTP *)));
+	WTP = WID_MALLOC(WTP_NUM*(sizeof(WID_WTP *)));
 	memset(WTP,0,WTP_NUM*(sizeof(WID_WTP *)));
-	mac = (unsigned char *)malloc(MAC_LEN+1);
+	mac = (unsigned char *)WID_MALLOC(MAC_LEN+1);
 	
 	if(hide_quit_wtp_in_showting == 0){
 		num = Wid_Find_Wtp(WTP);
@@ -4006,8 +4006,8 @@ DBusMessage * wid_dbus_interface_show_wtp_collect_information(DBusConnection *co
     	dbus_message_iter_close_container (&iter, &iter_array);
     }
 				
-	CW_FREE_OBJECT(WTP);
-	CW_FREE_OBJECT(mac);
+	CW_FREE_OBJECT_WID(WTP);
+	CW_FREE_OBJECT_WID(mac);
 	
 	return reply;	
 }
@@ -4036,9 +4036,9 @@ DBusMessage * wid_dbus_interface_show_wtp_para_information(DBusConnection *conn,
 	WID_WTP **WTP = NULL;
 	WID_WTP_RADIO	**AC_RADIO_FOR_SEARCH = NULL;
 	
-	mac = (unsigned char *)malloc(MAC_LEN+1);
-	AC_RADIO_FOR_SEARCH = malloc(L_RADIO_NUM*(sizeof(WID_WTP_RADIO *)));
-	WTP = malloc(WTP_NUM*(sizeof(WID_WTP *)));
+	mac = (unsigned char *)WID_MALLOC(MAC_LEN+1);
+	AC_RADIO_FOR_SEARCH = WID_MALLOC(L_RADIO_NUM*(sizeof(WID_WTP_RADIO *)));
+	WTP = WID_MALLOC(WTP_NUM*(sizeof(WID_WTP *)));
 	memset(WTP,0,WTP_NUM*(sizeof(WID_WTP *)));
 	
 	wtp_num = Wid_Find_Wtp(WTP);
@@ -4263,9 +4263,9 @@ DBusMessage * wid_dbus_interface_show_wtp_para_information(DBusConnection *conn,
     	dbus_message_iter_close_container (&iter, &iter_array);
     }
 
-	CW_FREE_OBJECT(WTP);
-	CW_FREE_OBJECT(mac);
-	CW_FREE_OBJECT(AC_RADIO_FOR_SEARCH);
+	CW_FREE_OBJECT_WID(WTP);
+	CW_FREE_OBJECT_WID(mac);
+	CW_FREE_OBJECT_WID(AC_RADIO_FOR_SEARCH);
 
 	return reply;	
 }
@@ -4320,9 +4320,9 @@ DBusMessage * wid_dbus_interface_show_wtp_wireless_ifstats_information(DBusConne
 	WID_WTP_RADIO	**AC_RADIO_FOR_SEARCH = NULL;
 	unsigned char *mac = NULL;
 	
-	WTP = malloc(WTP_NUM*(sizeof(WID_WTP *)));
-	mac = (unsigned char *)malloc(MAC_LEN+1);
-	AC_RADIO_FOR_SEARCH = malloc(L_RADIO_NUM*(sizeof(WID_WTP_RADIO *)));
+	WTP = WID_MALLOC(WTP_NUM*(sizeof(WID_WTP *)));
+	mac = (unsigned char *)WID_MALLOC(MAC_LEN+1);
+	AC_RADIO_FOR_SEARCH = WID_MALLOC(L_RADIO_NUM*(sizeof(WID_WTP_RADIO *)));
 	memset(WTP,0,WTP_NUM*(sizeof(WID_WTP *)));
 
 	if(hide_quit_wtp_in_showting == 0){
@@ -5114,9 +5114,9 @@ DBusMessage * wid_dbus_interface_show_wtp_wireless_ifstats_information(DBusConne
     	dbus_message_iter_close_container (&iter, &iter_array);
     }
 				
-	CW_FREE_OBJECT(WTP);
-	CW_FREE_OBJECT(mac);
-	CW_FREE_OBJECT(AC_RADIO_FOR_SEARCH);
+	CW_FREE_OBJECT_WID(WTP);
+	CW_FREE_OBJECT_WID(mac);
+	CW_FREE_OBJECT_WID(AC_RADIO_FOR_SEARCH);
 	
 	return reply;	
 }
@@ -5148,7 +5148,7 @@ DBusMessage * wid_dbus_interface_show_wtp_wireless_ifstats_information(DBusConne
 	WID_WTP **WTP = NULL;	
 	unsigned char *mac = NULL;
 	
-	WTP = (WID_WTP **)malloc(WTP_NUM*(sizeof(WID_WTP *)));
+	WTP = (WID_WTP **)WID_MALLOC(WTP_NUM*(sizeof(WID_WTP *)));
 	if(NULL == WTP)
 	{
 		wid_syslog_info("%s %d: ERR out of memory\n",__func__,__LINE__);
@@ -5156,10 +5156,11 @@ DBusMessage * wid_dbus_interface_show_wtp_wireless_ifstats_information(DBusConne
 	}
 	memset(WTP,0,WTP_NUM*(sizeof(WID_WTP *)));
 
-	mac = (unsigned char *)malloc(MAC_LEN+1);
+	mac = (unsigned char *)WID_MALLOC(MAC_LEN+1);
 	if(NULL == mac)
 	{
 		wid_syslog_info("%s %d: ERR out of memory\n",__func__,__LINE__);
+		WID_FREE(WTP);
 		return NULL;
 	}
 	memset(mac, 0, MAC_LEN+1);	
@@ -5681,8 +5682,8 @@ DBusMessage * wid_dbus_interface_show_wtp_wireless_ifstats_information(DBusConne
     	dbus_message_iter_close_container (&iter, &iter_array);
     }
 				
-	CW_FREE_OBJECT(WTP);
-	CW_FREE_OBJECT(mac);
+	CW_FREE_OBJECT_WID(WTP);
+	CW_FREE_OBJECT_WID(mac);
 	
 	return reply;	
 }
@@ -5703,7 +5704,7 @@ DBusMessage * wid_dbus_interface_show_radio_info_bywtpid_wid(DBusConnection *con
 	unsigned int WTPID = 0;
 	
 	WID_WTP_RADIO	**AC_RADIO_FOR_SEARCH = NULL;
-	AC_RADIO_FOR_SEARCH = malloc(L_RADIO_NUM*(sizeof(WID_WTP_RADIO *)));
+	AC_RADIO_FOR_SEARCH = WID_MALLOC(L_RADIO_NUM*(sizeof(WID_WTP_RADIO *)));
 	
 	if (!(dbus_message_get_args ( msg, &err,DBUS_TYPE_UINT32,&WTPID,DBUS_TYPE_INVALID))){
 		wid_syslog_debug_debug(WID_DBUS,"Unable to get input args\n");	
@@ -5712,7 +5713,7 @@ DBusMessage * wid_dbus_interface_show_radio_info_bywtpid_wid(DBusConnection *con
 			wid_syslog_debug_debug(WID_DBUS,"%s raised: %s",err.name,err.message);	
 			dbus_error_free(&err);
 		}
-		CW_FREE_OBJECT(AC_RADIO_FOR_SEARCH);
+		CW_FREE_OBJECT_WID(AC_RADIO_FOR_SEARCH);
 		return NULL;
 	}
 	CWThreadMutexLock(&(gWTPs[WTPID].WTPThreadMutex));//fengwenchao add 20121123 for AXSSZFI-1050
@@ -5803,7 +5804,7 @@ DBusMessage * wid_dbus_interface_show_radio_info_bywtpid_wid(DBusConnection *con
 	dbus_message_iter_close_container (&iter, &iter_array);
 	}
 				
-	CW_FREE_OBJECT(AC_RADIO_FOR_SEARCH);
+	CW_FREE_OBJECT_WID(AC_RADIO_FOR_SEARCH);
 
 	return reply;	
 }
@@ -5821,7 +5822,7 @@ DBusMessage * wid_dbus_interface_bss_add_mac_list(DBusConnection *conn, DBusMess
 	unsigned char wlanid=0;
 	unsigned char list_type = 0 ; 
 	unsigned char *mac = NULL;
-	mac = (unsigned char *)malloc(WID_MAC_LEN);
+	mac = (unsigned char *)WID_MALLOC(WID_MAC_LEN);
 	if(NULL == mac)
 		return NULL;
 	memset(mac,0,WID_MAC_LEN);
@@ -5843,7 +5844,7 @@ DBusMessage * wid_dbus_interface_bss_add_mac_list(DBusConnection *conn, DBusMess
 			wid_syslog_debug_debug(WID_DBUS,"%s raised: %s",err.name,err.message);	
 			dbus_error_free(&err);
 		}
-		free(mac);
+		WID_FREE(mac);
 		mac = NULL;
 		return NULL;
 	}
@@ -5856,7 +5857,7 @@ DBusMessage * wid_dbus_interface_bss_add_mac_list(DBusConnection *conn, DBusMess
 	else	if(AC_RADIO[radioid] != NULL){
 		for(i = 0; i < L_BSS_NUM; i++){
 			if((AC_RADIO[radioid] != NULL)&&(AC_RADIO[radioid]->BSS[i] != NULL)&&(AC_BSS[radioid*L_BSS_NUM+i] != NULL)&&(AC_RADIO[radioid]->BSS[i]->WlanID ==	wlanid)){
-				if((ret = add_mac_in_maclist(AC_BSS[radioid*L_BSS_NUM+i] ->acl_conf,mac,list_type)) == -1)
+				if((ret = add_mac_in_maclist(&AC_BSS[radioid*L_BSS_NUM+i] ->acl_conf,mac,list_type)) == -1)
 						wid_syslog_debug_debug(WID_DBUS,"wid add sta mac list error!\n ");
 				if (ret == 1 )
 				   ret	= WID_MAC_ADD_ALREADY;
@@ -5899,7 +5900,7 @@ DBusMessage * wid_dbus_interface_bss_del_mac_list(DBusConnection *conn, DBusMess
 	unsigned char wlanid=0;
 	unsigned char list_type = 0 ; 
 	unsigned char *mac = NULL;
-	mac = (unsigned char *)malloc(WID_MAC_LEN);
+	mac = (unsigned char *)WID_MALLOC(WID_MAC_LEN);
 	if(NULL == mac)
 		return NULL;
 	memset(mac,0,WID_MAC_LEN);
@@ -5921,7 +5922,7 @@ DBusMessage * wid_dbus_interface_bss_del_mac_list(DBusConnection *conn, DBusMess
 			wid_syslog_debug_debug(WID_DBUS,"%s raised: %s",err.name,err.message);	
 			dbus_error_free(&err);
 		}
-		free(mac);
+		WID_FREE(mac);
 		mac = NULL;
 		return NULL;
 	}
@@ -5934,7 +5935,7 @@ DBusMessage * wid_dbus_interface_bss_del_mac_list(DBusConnection *conn, DBusMess
 	else	if(AC_RADIO[radioid] != NULL){
 		for(i = 0; i < L_BSS_NUM; i++){
 			if((AC_RADIO[radioid] != NULL)&&(AC_RADIO[radioid]->BSS[i] != NULL)&&(AC_BSS[radioid*L_BSS_NUM+i] != NULL)&&(AC_RADIO[radioid]->BSS[i]->WlanID ==	wlanid)){
-				if((ret = del_mac_in_maclist(AC_BSS[radioid*L_BSS_NUM+i] ->acl_conf,mac,list_type)) == -1)
+				if((ret = del_mac_in_maclist(&AC_BSS[radioid*L_BSS_NUM+i] ->acl_conf,mac,list_type)) == -1)
 				{
 					wid_syslog_debug_debug(WID_DBUS,"the mac is not in the list!\n ");
 					ret = WID_UNKNOWN_ID;
@@ -5999,7 +6000,7 @@ DBusMessage *wid_dbus_interface_bss_use_mac_list(DBusConnection *conn, DBusMessa
 			{
 			
 				wid_syslog_debug_debug(WID_DBUS,"AC_BSS[radioid*L_BSS_NUM+i] ->State  :%d\n",AC_BSS[radioid*L_BSS_NUM+i] ->State );
-				 if((ret = change_maclist_security(AC_BSS[radioid*L_BSS_NUM+i]->acl_conf,list_type))!=0)
+				 if((ret = change_maclist_security(&AC_BSS[radioid*L_BSS_NUM+i]->acl_conf,list_type))!=0)
 						wid_syslog_debug_debug(WID_DBUS,"change mac list failed\n");
 				 if(AC_BSS[radioid*L_BSS_NUM+i] ->State != 1)	
 				 {	 
@@ -6455,7 +6456,7 @@ DBusMessage * wid_dbus_interface_show_wtp_wlan_data_pkts_information(DBusConnect
 	char * wtp_mac_p=wtp_mac;
 	unsigned int wlanID[WLAN_NUM];
 	WID_WTP **WTP = NULL;
-	WTP = malloc(WTP_NUM*(sizeof(WID_WTP *)));
+	WTP = WID_MALLOC(WTP_NUM*(sizeof(WID_WTP *)));
 	if( WTP == NULL){
 		wid_syslog_debug_debug(WID_DBUS,"%s :malloc fail.\n",__func__);
 		return NULL;
@@ -6658,7 +6659,7 @@ DBusMessage * wid_dbus_interface_show_wtp_wlan_data_pkts_information(DBusConnect
 	}
 	dbus_message_iter_close_container(&iter,&iter_wtp_array);
 
-	CW_FREE_OBJECT(WTP);
+	CW_FREE_OBJECT_WID(WTP);
 	
 	return reply;
 }
@@ -6679,9 +6680,9 @@ DBusMessage * wid_dbus_interface_show_wtp_device_information(DBusConnection *con
 	char *cpu_type = NULL;
 	char *mem_type = NULL;
 	char *flash_type = NULL;
-	cpu_type =(char*) malloc(WTP_TYPE_DEFAULT_LEN+1);
-	mem_type =(char*) malloc(WTP_TYPE_DEFAULT_LEN+1);
-	flash_type = (char*) malloc(WTP_TYPE_DEFAULT_LEN+1);
+	cpu_type =(char*) WID_MALLOC(WTP_TYPE_DEFAULT_LEN+1);
+	mem_type =(char*) WID_MALLOC(WTP_TYPE_DEFAULT_LEN+1);
+	flash_type = (char*) WID_MALLOC(WTP_TYPE_DEFAULT_LEN+1);
 	memset(cpu_type,0,WTP_TYPE_DEFAULT_LEN+1);
 	memset(mem_type,0,WTP_TYPE_DEFAULT_LEN+1);
 	memset(flash_type,0,WTP_TYPE_DEFAULT_LEN+1);
@@ -6699,9 +6700,9 @@ DBusMessage * wid_dbus_interface_show_wtp_device_information(DBusConnection *con
 	unsigned int defalt_int = 0;
 	unsigned short defalt_short = 0;
 
-	mac = (unsigned char *)malloc(MAC_LEN+1);
-	//code = (char *)malloc(sizeof(char)*128);
-	WTP = malloc(WTP_NUM*(sizeof(WID_WTP *)));
+	mac = (unsigned char *)WID_MALLOC(MAC_LEN+1);
+	//code = (char *)WID_MALLOC(sizeof(char)*128);
+	WTP = WID_MALLOC(WTP_NUM*(sizeof(WID_WTP *)));
 	memset(WTP,0,WTP_NUM*(sizeof(WID_WTP *)));
 
 	if(hide_quit_wtp_in_showting == 0){
@@ -6915,12 +6916,12 @@ DBusMessage * wid_dbus_interface_show_wtp_device_information(DBusConnection *con
 
     	dbus_message_iter_close_container (&iter, &iter_array);
     }
-	CW_FREE_OBJECT(WTP);
-	CW_FREE_OBJECT(mac);
+	CW_FREE_OBJECT_WID(WTP);
+	CW_FREE_OBJECT_WID(mac);
 	//CW_FREE_OBJECT(code);
-	CW_FREE_OBJECT(cpu_type);
-	CW_FREE_OBJECT(mem_type);
-	CW_FREE_OBJECT(flash_type);
+	CW_FREE_OBJECT_WID(cpu_type);
+	CW_FREE_OBJECT_WID(mem_type);
+	CW_FREE_OBJECT_WID(flash_type);
 	
 	return reply;	
 }
@@ -6940,8 +6941,8 @@ DBusMessage * wid_dbus_interface_show_wtp_datapkts_information(DBusConnection *c
 	unsigned char *mac = NULL;
 	WID_WTP **WTP = NULL;
 	
-	mac = (unsigned char *)malloc(MAC_LEN+1);
-	WTP = malloc(WTP_NUM*(sizeof(WID_WTP *)));
+	mac = (unsigned char *)WID_MALLOC(MAC_LEN+1);
+	WTP = WID_MALLOC(WTP_NUM*(sizeof(WID_WTP *)));
 	memset(WTP,0,WTP_NUM*(sizeof(WID_WTP *)));
 	
 	wtp_num = Wid_Find_Wtp(WTP);
@@ -7139,8 +7140,8 @@ DBusMessage * wid_dbus_interface_show_wtp_datapkts_information(DBusConnection *c
     	}
     	dbus_message_iter_close_container (&iter, &iter_array);
     }
-	CW_FREE_OBJECT(WTP);
-	CW_FREE_OBJECT(mac);
+	CW_FREE_OBJECT_WID(WTP);
+	CW_FREE_OBJECT_WID(mac);
 
 	return reply;	
 }
@@ -7171,10 +7172,10 @@ DBusMessage * wid_dbus_interface_show_wtp_stats_information(DBusConnection *conn
 	unsigned char wlanlist[WLAN_NUM] = {0};//wlanlist has 16 elements,0 means not bind this wlan,1 means bind this wlan
 	unsigned char wlanid = 0;
 	
-	WTP = malloc(WTP_NUM*(sizeof(WID_WTP *)));
+	WTP = WID_MALLOC(WTP_NUM*(sizeof(WID_WTP *)));
 	memset(WTP,0,WTP_NUM*(sizeof(WID_WTP *)));
-	mac = (unsigned char *)malloc(MAC_LEN+1);
-	AC_RADIO_FOR_SEARCH = malloc(L_RADIO_NUM*(sizeof(WID_WTP_RADIO *)));
+	mac = (unsigned char *)WID_MALLOC(MAC_LEN+1);
+	AC_RADIO_FOR_SEARCH = WID_MALLOC(L_RADIO_NUM*(sizeof(WID_WTP_RADIO *)));
 
 	if(hide_quit_wtp_in_showting == 0){
 		wtp_num = Wid_Find_Wtp(WTP);
@@ -7410,9 +7411,9 @@ DBusMessage * wid_dbus_interface_show_wtp_stats_information(DBusConnection *conn
     	dbus_message_iter_close_container (&iter, &iter_array);			//whole for() function
     }
 
-	CW_FREE_OBJECT(WTP);
-	CW_FREE_OBJECT(mac);
-	CW_FREE_OBJECT(AC_RADIO_FOR_SEARCH);
+	CW_FREE_OBJECT_WID(WTP);
+	CW_FREE_OBJECT_WID(mac);
+	CW_FREE_OBJECT_WID(AC_RADIO_FOR_SEARCH);
 
 	return reply;	
 }
@@ -7447,10 +7448,10 @@ DBusMessage * wid_dbus_interface_show_wlan_stats_information(DBusConnection *con
 	unsigned char wlanlist[WLAN_NUM] = {0};//wlanlist has 16 elements,0 means not bind this wlan,1 means bind this wlan
 	unsigned char wlanid = 0;
 
-	WTP = malloc(WTP_NUM*(sizeof(WID_WTP *)));
+	WTP = WID_MALLOC(WTP_NUM*(sizeof(WID_WTP *)));
 	memset(WTP,0,WTP_NUM*(sizeof(WID_WTP *)));
-	mac = (unsigned char *)malloc(MAC_LEN+1);
-	mac1 =(unsigned char *)malloc(MAC_LEN+1);
+	mac = (unsigned char *)WID_MALLOC(MAC_LEN+1);
+	mac1 =(unsigned char *)WID_MALLOC(MAC_LEN+1);
 	memset(mac,0,MAC_LEN+1);
 	memset(mac1,0,MAC_LEN+1);
 	
@@ -7653,7 +7654,7 @@ DBusMessage * wid_dbus_interface_show_wlan_stats_information(DBusConnection *con
 					int bssindex = 0;
 					unsigned int wirelessifindex = 0;
 					char *wlan_essid = NULL;
-					wlan_essid = (char *)malloc(ESSID_DEFAULT_LEN+1);
+					wlan_essid = (char *)WID_MALLOC(ESSID_DEFAULT_LEN+1);
 					memset(wlan_essid, 0, ESSID_DEFAULT_LEN+1);
 					if(WLAN->ESSID!=NULL){
 						//memcpy(wlan_essid, WLAN->ESSID, ESSID_DEFAULT_LEN);
@@ -7814,7 +7815,7 @@ DBusMessage * wid_dbus_interface_show_wlan_stats_information(DBusConnection *con
 				printf("tx_bts = %llu\n",tx_bts);				
 				/*fengwenchao add end*/
     				dbus_message_iter_close_container (&iter_sub_array, &iter_sub_struct);
-				free(wlan_essid);
+				CW_FREE_OBJECT_WID(wlan_essid);
     			}
     		}
     		dbus_message_iter_close_container (&iter_struct, &iter_sub_array);
@@ -7822,9 +7823,9 @@ DBusMessage * wid_dbus_interface_show_wlan_stats_information(DBusConnection *con
     	}
     	dbus_message_iter_close_container (&iter, &iter_array);			//whole for() function
     }
-	CW_FREE_OBJECT(WTP);
-	CW_FREE_OBJECT(mac);
-	CW_FREE_OBJECT(mac1);
+	CW_FREE_OBJECT_WID(WTP);
+	CW_FREE_OBJECT_WID(mac);
+	CW_FREE_OBJECT_WID(mac1);
 	//CW_FREE_OBJECT(AC_RADIO_FOR_SEARCH);
 
 	return reply;	
@@ -7851,17 +7852,17 @@ DBusMessage * wid_dbus_interface_show_wlan_ssid_stats_information(DBusConnection
 
 	unsigned int wtp_bss_num = 0;
 	unsigned char *mac = NULL;
-	mac = (unsigned char *)malloc(MAC_LEN+1);
+	mac = (unsigned char *)WID_MALLOC(MAC_LEN+1);
 	memset(mac,0,MAC_LEN+1);
 
 	WID_WTP **WTP;
-	WTP = malloc(WTP_NUM*(sizeof(WID_WTP *)));
+	WTP = WID_MALLOC(WTP_NUM*(sizeof(WID_WTP *)));
 	
 	wtp_num = Wid_Find_Wtp(WTP);
 	
 	/*for  accounting bss infor*/
 	WID_WTP_RADIO	**AC_RADIO_FOR_SEARCH;
-	AC_RADIO_FOR_SEARCH = malloc(G_RADIO_NUM*(sizeof(WID_WTP_RADIO *)));
+	AC_RADIO_FOR_SEARCH = WID_MALLOC(G_RADIO_NUM*(sizeof(WID_WTP_RADIO *)));
 	WID_BSS *BSS[L_BSS_NUM];
 	
 	/*for wlan infor*/
@@ -8204,9 +8205,9 @@ DBusMessage * wid_dbus_interface_show_wlan_ssid_stats_information(DBusConnection
 	}
 	dbus_message_iter_close_container (&iter, &iter_array);			
 
-	CW_FREE_OBJECT(WTP);
-	CW_FREE_OBJECT(mac);
-	CW_FREE_OBJECT(AC_RADIO_FOR_SEARCH);
+	CW_FREE_OBJECT_WID(WTP);
+	CW_FREE_OBJECT_WID(mac);
+	CW_FREE_OBJECT_WID(AC_RADIO_FOR_SEARCH);
 
 	return reply;	
 }
@@ -8367,14 +8368,14 @@ DBusMessage *wid_dbus_interface_show_info_allwlan(DBusConnection *conn, DBusMess
 	int j =0;
 	int k = 0;
 	WID_WTP **WTP=NULL;
-	WTP = malloc(WTP_NUM*(sizeof(WID_WTP *)));
+	WTP = WID_MALLOC(WTP_NUM*(sizeof(WID_WTP *)));
 	memset(WTP,0,WTP_NUM*(sizeof(WID_WTP *)));
 	wtp_num = Wid_Find_Wtp(WTP);
 	
 
 	
 	WID_WLAN **WLAN;
-	WLAN = malloc(WLAN_NUM*(sizeof(WID_WLAN )));
+	WLAN = WID_MALLOC(WLAN_NUM*(sizeof(WID_WLAN )));
 	memset(WLAN,0,WLAN_NUM*(sizeof(WID_WLAN )));
 
 	while(i<WLAN_NUM)
@@ -8465,8 +8466,8 @@ DBusMessage *wid_dbus_interface_show_info_allwlan(DBusConnection *conn, DBusMess
 	}
 	dbus_message_iter_close_container(&iter,&iter_array);
 
-	CW_FREE_OBJECT(WTP);
-	CW_FREE_OBJECT(WLAN);
+	CW_FREE_OBJECT_WID(WTP);
+	CW_FREE_OBJECT_WID(WLAN);
 
 	return reply;	
 }
@@ -8508,7 +8509,7 @@ DBusMessage *wid_dbus_interface_show_info_bywlanid(DBusConnection *conn, DBusMes
 
 
 	WID_WTP **WTP=NULL;
-	WTP = malloc(WTP_NUM*(sizeof(WID_WTP *)));
+	WTP = WID_MALLOC(WTP_NUM*(sizeof(WID_WTP *)));
 	if( WTP == NULL){
 		wid_syslog_debug_debug(WID_DBUS,"%s :malloc fail.\n",__func__);
 		exit(1);
@@ -8542,7 +8543,7 @@ DBusMessage *wid_dbus_interface_show_info_bywlanid(DBusConnection *conn, DBusMes
 	dbus_message_iter_append_basic (&iter,DBUS_TYPE_UINT64,&tx_data_bytes);	
 	if(WTP)
 	{
-		free(WTP);
+		WID_FREE(WTP);
 		WTP = NULL;
 	}
 	return reply;									 
@@ -8568,7 +8569,7 @@ DBusMessage * wid_dbus_interface_show_conjunction_info_of_all_wtp(DBusConnection
 	int j = 0;
 
 	WID_WTP **WTP=NULL;
-	WTP = malloc(WTP_NUM*(sizeof(WID_WTP *)));
+	WTP = WID_MALLOC(WTP_NUM*(sizeof(WID_WTP *)));
 	if( WTP == NULL){
 		wid_syslog_debug_debug(WID_DBUS,"%s :malloc fail.\n",__func__);
 		exit(1);
@@ -8635,7 +8636,7 @@ DBusMessage * wid_dbus_interface_show_conjunction_info_of_all_wtp(DBusConnection
 
 	if(WTP)
 	{
-		free(WTP);
+		WID_FREE(WTP);
 		WTP=NULL;
 	}
 
@@ -8648,7 +8649,7 @@ DBusMessage * wid_dbus_interface_show_conjunction_info_of_all_wtp(DBusConnection
 /*table 9*/
 DBusMessage * wid_dbus_interface_show_wlan_ssid_stats_information(DBusConnection *conn, DBusMessage *msg, void *user_data){
 	
-	DBusMessage* reply;	
+	DBusMessage* reply = NULL;	
 	DBusMessageIter	 iter;
 	DBusMessageIter	 iter_array;
 	DBusMessageIter iter_struct;
@@ -8670,11 +8671,11 @@ DBusMessage * wid_dbus_interface_show_wlan_ssid_stats_information(DBusConnection
 	unsigned char radioBindToWlanNum = 0;//用来计数同一个radio 绑定不同的wlan
     //unsigned int wtp_bss_num = 0;
 	unsigned char *mac = NULL;
-	mac = (unsigned char *)malloc(MAC_LEN+1);
+	mac = (unsigned char *)WID_MALLOC(MAC_LEN+1);
 	memset(mac,0,MAC_LEN+1);
 
 	WID_WTP **WTP=NULL;
-	WTP = malloc(WTP_NUM*(sizeof(WID_WTP *)));
+	WTP = WID_MALLOC(WTP_NUM*(sizeof(WID_WTP *)));
 	if( WTP == NULL){
 		wid_syslog_debug_debug(WID_DBUS,"%s :malloc fail.\n",__func__);
 		exit(1);
@@ -8682,12 +8683,12 @@ DBusMessage * wid_dbus_interface_show_wlan_ssid_stats_information(DBusConnection
 	memset(WTP,0,WTP_NUM*(sizeof(WID_WTP *)));
 	
     unsigned char * bss_id =NULL;
-	bss_id = (unsigned char *)malloc(MAC_LEN+1);
+	bss_id = (unsigned char *)WID_MALLOC(MAC_LEN+1);
 	wtp_num = Wid_Find_Wtp(WTP);
 	
 	/*for  accounting bss infor*/
 	WID_WTP_RADIO	**AC_RADIO_FOR_SEARCH=NULL;
-	AC_RADIO_FOR_SEARCH = malloc(G_RADIO_NUM*(sizeof(WID_WTP_RADIO *)));
+	AC_RADIO_FOR_SEARCH = WID_MALLOC(G_RADIO_NUM*(sizeof(WID_WTP_RADIO *)));
 	if( AC_RADIO_FOR_SEARCH == NULL){
 		wid_syslog_debug_debug(WID_DBUS,"%s :malloc fail.\n",__func__);
 		exit(1);
@@ -8702,7 +8703,11 @@ DBusMessage * wid_dbus_interface_show_wlan_ssid_stats_information(DBusConnection
 	unsigned char wlanid =0;
 
 	char * Essid = NULL;
-	Essid = (char*)malloc(ESSID_LENGTH+1);
+	Essid = (char*)WID_MALLOC(ESSID_LENGTH+1);
+	if (!Essid) {
+		wid_syslog_err("wid_snmp_debug: %s %d\n", __FUNCTION__, __LINE__);
+		return reply;
+	}
 	memset(Essid,0,ESSID_LENGTH+1);
 	memcpy(Essid,"illegalEssid",sizeof("illegalEssid"));
 	if(wtp_num == 0)
@@ -9325,11 +9330,11 @@ DBusMessage * wid_dbus_interface_show_wlan_ssid_stats_information(DBusConnection
   		dbus_message_iter_close_container (&iter_array, &iter_struct);	//wtp num
     }
 	dbus_message_iter_close_container (&iter, &iter_array);			
-	CW_FREE_OBJECT(Essid);
-	CW_FREE_OBJECT(WTP);
-	CW_FREE_OBJECT(mac);
-	CW_FREE_OBJECT(AC_RADIO_FOR_SEARCH);
-	CW_FREE_OBJECT(bss_id);    //fengwenchao add 20101224
+	CW_FREE_OBJECT_WID(Essid);
+	CW_FREE_OBJECT_WID(WTP);
+	CW_FREE_OBJECT_WID(mac);
+	CW_FREE_OBJECT_WID(AC_RADIO_FOR_SEARCH);
+	CW_FREE_OBJECT_WID(bss_id);    //fengwenchao add 20101224
 	return reply;	
 }
 
@@ -9351,9 +9356,9 @@ DBusMessage * wid_dbus_interface_show_wtp_ifname_information(DBusConnection *con
 	int i=0, j =0;
 	int k=0;
 	unsigned char *mac = NULL;
-	mac = (unsigned char *)malloc(MAC_LEN+1);
+	mac = (unsigned char *)WID_MALLOC(MAC_LEN+1);
 	WID_WTP **WTP;
-	WTP = malloc(WTP_NUM*(sizeof(WID_WTP *)));
+	WTP = WID_MALLOC(WTP_NUM*(sizeof(WID_WTP *)));
 	
 	num = Wid_Find_Wtp(WTP);
 	
@@ -9540,8 +9545,8 @@ DBusMessage * wid_dbus_interface_show_wtp_ifname_information(DBusConnection *con
 		dbus_message_iter_close_container (&iter_array, &iter_struct);
 	}
 	dbus_message_iter_close_container (&iter, &iter_array);
-	CW_FREE_OBJECT(WTP);
-	CW_FREE_OBJECT(mac);
+	CW_FREE_OBJECT_WID(WTP);
+	CW_FREE_OBJECT_WID(mac);
 	
 	return reply;	
 }
@@ -9565,9 +9570,9 @@ DBusMessage * wid_dbus_interface_show_wtp_radio_para_information(DBusConnection 
 	WID_WTP_RADIO	**AC_RADIO_FOR_SEARCH;
 	
 	int ret = WID_DBUS_SUCCESS;
-	WTP = malloc(WTP_NUM*(sizeof(WID_WTP *)));
-	mac = (unsigned char *)malloc(MAC_LEN+1);
-	AC_RADIO_FOR_SEARCH = malloc(G_RADIO_NUM*(sizeof(WID_WTP_RADIO *)));
+	WTP = WID_MALLOC(WTP_NUM*(sizeof(WID_WTP *)));
+	mac = (unsigned char *)WID_MALLOC(MAC_LEN+1);
+	AC_RADIO_FOR_SEARCH = WID_MALLOC(G_RADIO_NUM*(sizeof(WID_WTP_RADIO *)));
 	
 	wtp_num = Wid_Find_Wtp(WTP);
 	
@@ -9732,9 +9737,9 @@ DBusMessage * wid_dbus_interface_show_wtp_radio_para_information(DBusConnection 
 	}
 	dbus_message_iter_close_container (&iter, &iter_array);
 				
-	CW_FREE_OBJECT(WTP);
-	CW_FREE_OBJECT(mac);
-	CW_FREE_OBJECT(AC_RADIO_FOR_SEARCH);
+	CW_FREE_OBJECT_WID(WTP);
+	CW_FREE_OBJECT_WID(mac);
+	CW_FREE_OBJECT_WID(AC_RADIO_FOR_SEARCH);
 	
 	return reply;	
 }
@@ -9753,10 +9758,10 @@ DBusMessage * wid_dbus_interface_show_wtp_eth_port_information(DBusConnection *c
 	unsigned int num=0;
 	int i=0, j = 0, k=0;
 	unsigned char *mac = NULL;
-	mac = (unsigned char *)malloc(MAC_LEN+1);
+	mac = (unsigned char *)WID_MALLOC(MAC_LEN+1);
 	
 	WID_WTP **WTP;
-	WTP = malloc(WTP_NUM*(sizeof(WID_WTP *)));
+	WTP = WID_MALLOC(WTP_NUM*(sizeof(WID_WTP *)));
 	
 	num = Wid_Find_Wtp(WTP);
 	
@@ -9899,8 +9904,8 @@ DBusMessage * wid_dbus_interface_show_wtp_eth_port_information(DBusConnection *c
 	}
 				
 	dbus_message_iter_close_container (&iter, &iter_array);
-	CW_FREE_OBJECT(WTP);
-	CW_FREE_OBJECT(mac);
+	CW_FREE_OBJECT_WID(WTP);
+	CW_FREE_OBJECT_WID(mac);
 	
 	return reply;	
 }
@@ -9921,12 +9926,12 @@ DBusMessage * wid_dbus_interface_show_wtp_radio_stats_information(DBusConnection
 	int i=0, k=0;
 	unsigned int defalt_zero = 0;
 	unsigned char *mac = NULL;
-	mac = (unsigned char *)malloc(MAC_LEN+1);
+	mac = (unsigned char *)WID_MALLOC(MAC_LEN+1);
 	
 	WID_WTP **WTP;
-	WTP = malloc(WTP_NUM*(sizeof(WID_WTP *)));
+	WTP = WID_MALLOC(WTP_NUM*(sizeof(WID_WTP *)));
 	WID_WTP_RADIO	**AC_RADIO_FOR_SEARCH;
-	AC_RADIO_FOR_SEARCH = malloc(G_RADIO_NUM*(sizeof(WID_WTP_RADIO *)));
+	AC_RADIO_FOR_SEARCH = WID_MALLOC(G_RADIO_NUM*(sizeof(WID_WTP_RADIO *)));
 	
 	wtp_num = Wid_Find_Wtp(WTP);
 	
@@ -10087,9 +10092,9 @@ DBusMessage * wid_dbus_interface_show_wtp_radio_stats_information(DBusConnection
 	}
 	dbus_message_iter_close_container (&iter, &iter_array);
 				
-	CW_FREE_OBJECT(WTP);
-	CW_FREE_OBJECT(mac);
-	CW_FREE_OBJECT(AC_RADIO_FOR_SEARCH);
+	CW_FREE_OBJECT_WID(WTP);
+	CW_FREE_OBJECT_WID(mac);
+	CW_FREE_OBJECT_WID(AC_RADIO_FOR_SEARCH);
 	
 	return reply;	
 }
@@ -10115,12 +10120,12 @@ DBusMessage * wid_dbus_interface_show_wtp_radio_config_information(DBusConnectio
 	int i=0, k=0, ii=0; 
 	unsigned char wlan_id =0;
 	unsigned char *mac = NULL;
-	mac = (unsigned char *)malloc(MAC_LEN+1);
+	mac = (unsigned char *)WID_MALLOC(MAC_LEN+1);
 	
 	WID_WTP **WTP;
-	WTP = malloc(WTP_NUM*(sizeof(WID_WTP *)));
+	WTP = WID_MALLOC(WTP_NUM*(sizeof(WID_WTP *)));
 	WID_WTP_RADIO	**AC_RADIO_FOR_SEARCH;
-	AC_RADIO_FOR_SEARCH = malloc(G_RADIO_NUM*(sizeof(WID_WTP_RADIO *)));
+	AC_RADIO_FOR_SEARCH = WID_MALLOC(G_RADIO_NUM*(sizeof(WID_WTP_RADIO *)));
 	
 	wtp_num = Wid_Find_Wtp(WTP);
 	
@@ -10440,9 +10445,9 @@ DBusMessage * wid_dbus_interface_show_wtp_radio_config_information(DBusConnectio
  	}
  	dbus_message_iter_close_container (&iter, &iter_array);
 				
-	CW_FREE_OBJECT(WTP);
-	CW_FREE_OBJECT(mac);
-	CW_FREE_OBJECT(AC_RADIO_FOR_SEARCH);
+	CW_FREE_OBJECT_WID(WTP);
+	CW_FREE_OBJECT_WID(mac);
+	CW_FREE_OBJECT_WID(AC_RADIO_FOR_SEARCH);
 	
 	return reply;	
 }
@@ -10466,13 +10471,13 @@ DBusMessage * wid_dbus_interface_show_wtp_wired_if_stats_information(DBusConnect
  	unsigned char *mac = NULL;
  	WID_WTP **WTP=NULL;
 	
-	WTP = malloc(WTP_NUM*(sizeof(WID_WTP *)));
+	WTP = WID_MALLOC(WTP_NUM*(sizeof(WID_WTP *)));
 	if( WTP == NULL){
 		wid_syslog_debug_debug(WID_DBUS,"%s :malloc fail.\n",__func__);
 		exit(1);
 	}
 	memset(WTP,0,WTP_NUM*(sizeof(WID_WTP *)));
- 	mac = (unsigned char *)malloc(MAC_LEN+1);
+ 	mac = (unsigned char *)WID_MALLOC(MAC_LEN+1);
 	
 	if(hide_quit_wtp_in_showting == 0){
 		wtp_num = Wid_Find_Wtp(WTP);
@@ -10687,8 +10692,8 @@ DBusMessage * wid_dbus_interface_show_wtp_wired_if_stats_information(DBusConnect
 	}
 	dbus_message_iter_close_container (&iter, &iter_array);
 
-	CW_FREE_OBJECT(WTP);
-	CW_FREE_OBJECT(mac);
+	CW_FREE_OBJECT_WID(WTP);
+	CW_FREE_OBJECT_WID(mac);
 
 	return reply;	
 }
@@ -10712,8 +10717,8 @@ DBusMessage * wid_dbus_interface_show_wtp_wired_if_stats_information(DBusConnect
  	unsigned char *mac = NULL;
  	WID_WTP **WTP;
 	
-	WTP = malloc(WTP_NUM*(sizeof(WID_WTP *)));
- 	mac = (unsigned char *)malloc(MAC_LEN+1);
+	WTP = WID_MALLOC(WTP_NUM*(sizeof(WID_WTP *)));
+ 	mac = (unsigned char *)WID_MALLOC(MAC_LEN+1);
 	
 	if(hide_quit_wtp_in_showting == 0){
 		wtp_num = Wid_Find_Wtp(WTP);
@@ -11067,8 +11072,8 @@ DBusMessage * wid_dbus_interface_show_wtp_wired_if_stats_information(DBusConnect
 	}
 	dbus_message_iter_close_container (&iter, &iter_array);
 
-	CW_FREE_OBJECT(WTP);
-	CW_FREE_OBJECT(mac);
+	CW_FREE_OBJECT_WID(WTP);
+	CW_FREE_OBJECT_WID(mac);
 
 	return reply;	
 }
@@ -11084,7 +11089,7 @@ DBusMessage * wid_dbus_show_terminal_info_of_all_wtp(DBusConnection *conn, DBusM
 	
 	unsigned int radio_num=0;
 	int i=0;
-	WID_WTP_RADIO ** G_RADIO = (WID_WTP_RADIO **)malloc(WTP_NUM * L_RADIO_NUM * sizeof(WID_WTP_RADIO*));
+	WID_WTP_RADIO ** G_RADIO = (WID_WTP_RADIO **)WID_MALLOC(WTP_NUM * L_RADIO_NUM * sizeof(WID_WTP_RADIO*));
 	if(!G_RADIO)
 		return NULL;
 	
@@ -11119,7 +11124,7 @@ DBusMessage * wid_dbus_show_terminal_info_of_all_wtp(DBusConnection *conn, DBusM
 	}
 	dbus_message_iter_close_container(&iter,&iter_radio_array);
 	if(G_RADIO){
-		free(G_RADIO);
+		WID_FREE(G_RADIO);
 		G_RADIO = NULL;
 	}
 	return reply;
@@ -11154,7 +11159,7 @@ DBusMessage *wid_dbus_show_statistics_information_of_all_wtp_whole(DBusConnectio
 	//unsigned int wtpTxPacketLossRate = 0;
 
 	WID_WTP **WTP;
-	WTP = malloc(WTP_NUM*(sizeof(WID_WTP *)));
+	WTP = WID_MALLOC(WTP_NUM*(sizeof(WID_WTP *)));
 
 	wtp_num = Wid_Find_Wtp(WTP);
 	if(wtp_num == 0)
@@ -11289,7 +11294,7 @@ DBusMessage *wid_dbus_show_statistics_information_of_all_wtp_whole(DBusConnectio
 		dbus_message_iter_close_container(&iter_wtp_array,&iter_wtp);
 	}
 	dbus_message_iter_close_container(&iter,&iter_wtp_array);
-	CW_FREE_OBJECT(WTP);
+	CW_FREE_OBJECT_WID(WTP);
 	//printf("over le !!!!!!!\n");
 	return reply;
 }
@@ -11315,7 +11320,7 @@ DBusMessage *wid_dbus_interface_show_all_wtp_ath_statistics_information(DBusConn
 	unsigned int ath_id = 0;
 	
 	WID_WTP **WTP;
-	WTP = malloc(WTP_NUM*(sizeof(WID_WTP *)));
+	WTP = WID_MALLOC(WTP_NUM*(sizeof(WID_WTP *)));
 	
 	wtp_num = Wid_Find_Wtp(WTP);
 	if(wtp_num == 0)
@@ -11533,7 +11538,7 @@ DBusMessage *wid_dbus_interface_show_all_wtp_ath_statistics_information(DBusConn
 	}
 	dbus_message_iter_close_container(&iter,&iter_wtp_array);
 	//printf("eeeeeeeennnnnnddddddd wid \n");
-	CW_FREE_OBJECT(WTP);
+	CW_FREE_OBJECT_WID(WTP);
 	return reply;
 }
 
@@ -11554,21 +11559,21 @@ DBusMessage * wid_dbus_interface_show_wtp_wireless_if_stats_information(DBusConn
 	
 	unsigned int wtp_num = 0;
 	char *code;
-	code = (char *)malloc(sizeof(char)*128);
+	code = (char *)WID_MALLOC(sizeof(char)*128);
 	int i=0,m=0,j=0;
 	int jj=0,kk=0/*,ii=0*/;
 	unsigned char default_char_zero = 0;
 	//wid_code_infomation *model_info;
-	//model_info = (wid_code_infomation *)malloc(sizeof(wid_code_infomation));
+	//model_info = (wid_code_infomation *)WID_MALLOC(sizeof(wid_code_infomation));
 	
 	unsigned int ap_antenna_gain = 0;
 	unsigned int txpower ;
 	unsigned char *mac = NULL;
-	mac = (unsigned char *)malloc(MAC_LEN+1);
+	mac = (unsigned char *)WID_MALLOC(MAC_LEN+1);
 	WID_BSS *BSS[L_BSS_NUM];
 	
 	WID_WTP **WTP;
-	WTP = malloc(WTP_NUM*(sizeof(WID_WTP *)));
+	WTP = WID_MALLOC(WTP_NUM*(sizeof(WID_WTP *)));
 	
 	if(hide_quit_wtp_in_showting == 0){
 		wtp_num = Wid_Find_Wtp(WTP);
@@ -11992,9 +11997,9 @@ DBusMessage * wid_dbus_interface_show_wtp_wireless_if_stats_information(DBusConn
 	}
 	dbus_message_iter_close_container (&iter, &iter_array);
 
-	CW_FREE_OBJECT(WTP);
-	CW_FREE_OBJECT(mac);
-	CW_FREE_OBJECT(code);
+	CW_FREE_OBJECT_WID(WTP);
+	CW_FREE_OBJECT_WID(mac);
+	CW_FREE_OBJECT_WID(code);
 	//CW_FREE_OBJECT(model_info);
 
 	return reply;	
@@ -12019,10 +12024,10 @@ DBusMessage * wid_dbus_interface_show_new_wireless_ifstats_information(DBusConne
 	unsigned char *mac = NULL;
 	
 	WID_WTP **WTP;
-	WTP = malloc(WTP_NUM*(sizeof(WID_WTP *)));
+	WTP = WID_MALLOC(WTP_NUM*(sizeof(WID_WTP *)));
 	WID_WTP_RADIO	**AC_RADIO_FOR_SEARCH;
-	AC_RADIO_FOR_SEARCH = malloc(G_RADIO_NUM*(sizeof(WID_WTP_RADIO *)));
-	mac = (unsigned char *)malloc(MAC_LEN+1);
+	AC_RADIO_FOR_SEARCH = WID_MALLOC(G_RADIO_NUM*(sizeof(WID_WTP_RADIO *)));
+	mac = (unsigned char *)WID_MALLOC(MAC_LEN+1);
 
 	wtp_num = Wid_Find_Wtp(WTP);
 	
@@ -12209,9 +12214,9 @@ DBusMessage * wid_dbus_interface_show_new_wireless_ifstats_information(DBusConne
 				
 	dbus_message_iter_close_container (&iter, &iter_array);
 				
-	CW_FREE_OBJECT(WTP);
-	CW_FREE_OBJECT(AC_RADIO_FOR_SEARCH);
-	CW_FREE_OBJECT(mac);
+	CW_FREE_OBJECT_WID(WTP);
+	CW_FREE_OBJECT_WID(AC_RADIO_FOR_SEARCH);
+	CW_FREE_OBJECT_WID(mac);
 	
 	return reply;	
 }
@@ -12250,14 +12255,14 @@ DBusMessage * wid_dbus_interface_show_new_wtp_wireless_ifstats_information(DBusC
 	
 	unsigned char wtp_ath_updown_times;
 	unsigned char *mac = NULL;
-	mac = (unsigned char *)malloc(MAC_LEN+1);
+	mac = (unsigned char *)WID_MALLOC(MAC_LEN+1);
 	unsigned char default_char_value = 0;
 	unsigned int default_int_value = 0;
 	
 	WID_WTP **WTP;
-	WTP = malloc(WTP_NUM*(sizeof(WID_WTP *)));
+	WTP = WID_MALLOC(WTP_NUM*(sizeof(WID_WTP *)));
 	WID_WTP_RADIO	**AC_RADIO_FOR_SEARCH;
-	AC_RADIO_FOR_SEARCH = malloc(G_RADIO_NUM*(sizeof(WID_WTP_RADIO *)));
+	AC_RADIO_FOR_SEARCH = WID_MALLOC(G_RADIO_NUM*(sizeof(WID_WTP_RADIO *)));
 	
 	wtp_num = Wid_Find_Wtp(WTP);
 	
@@ -12614,9 +12619,9 @@ DBusMessage * wid_dbus_interface_show_new_wtp_wireless_ifstats_information(DBusC
 	}
 	dbus_message_iter_close_container (&iter, &iter_array);
 				
-	CW_FREE_OBJECT(WTP);
-	CW_FREE_OBJECT(mac);
-	CW_FREE_OBJECT(AC_RADIO_FOR_SEARCH);
+	CW_FREE_OBJECT_WID(WTP);
+	CW_FREE_OBJECT_WID(mac);
+	CW_FREE_OBJECT_WID(AC_RADIO_FOR_SEARCH);
 	
 	return reply;	
 }
@@ -12643,8 +12648,8 @@ DBusMessage * wid_dbus_interface_show_all_rogue_ap_information(DBusConnection *c
 	struct Neighbor_AP_ELE *phead = NULL;
 	unsigned int  rouge_ap_count = 0;
 	
-	mac = (unsigned char *)malloc(MAC_LEN+1);
-	WTP = malloc(WTP_NUM*(sizeof(WID_WTP *)));
+	mac = (unsigned char *)WID_MALLOC(MAC_LEN+1);
+	WTP = WID_MALLOC(WTP_NUM*(sizeof(WID_WTP *)));
 
 	if(gapscanset.opstate == 0){
 		ret = WID_AP_SCANNING_DISABLE;
@@ -12825,11 +12830,11 @@ DBusMessage * wid_dbus_interface_show_all_rogue_ap_information(DBusConnection *c
 
 			if(phead->ESSID != NULL)
 			{
-				essid = (char*)malloc(ESSID_DEFAULT_LEN+1);
+				essid = (char*)WID_MALLOC(ESSID_DEFAULT_LEN+1);
 				memset(essid,0,ESSID_DEFAULT_LEN+1);
 				memcpy(essid,phead->ESSID,ESSID_DEFAULT_LEN);		
 			}else{
-				essid = (char*)malloc(ESSID_DEFAULT_LEN);
+				essid = (char*)WID_MALLOC(ESSID_DEFAULT_LEN);
 				memset(essid,0,ESSID_DEFAULT_LEN);
 				memcpy(essid," ",1);					
 			}
@@ -12857,7 +12862,7 @@ DBusMessage * wid_dbus_interface_show_all_rogue_ap_information(DBusConnection *c
 											  &(phead->IEs_INFO));						//a8
 
 			dbus_message_iter_close_container (&iter_sub_array, &iter_sub_struct);
-			CW_FREE_OBJECT(essid);
+			CW_FREE_OBJECT_WID(essid);
 			phead = phead->next;
 		}
 		dbus_message_iter_close_container (&iter_struct, &iter_sub_array);
@@ -12866,8 +12871,8 @@ DBusMessage * wid_dbus_interface_show_all_rogue_ap_information(DBusConnection *c
 	}
 	dbus_message_iter_close_container (&iter, &iter_array);
 
-	CW_FREE_OBJECT(WTP);
-	CW_FREE_OBJECT(mac);
+	CW_FREE_OBJECT_WID(WTP);
+	CW_FREE_OBJECT_WID(mac);
 	
 	return reply;	
 }
@@ -13174,7 +13179,7 @@ DBusMessage * wid_dbus_interface_show_wtplist_bymac(DBusConnection *conn, DBusMe
 	dbus_error_init(&err);
 	int i=0;
 	WID_WTP **WTP;
-	WTP = malloc(WTP_NUM*(sizeof(WID_WTP *)));
+	WTP = WID_MALLOC(WTP_NUM*(sizeof(WID_WTP *)));
 	while(i<WTP_NUM){
 		CWThreadMutexLock(&(gWTPs[i].WTPThreadMutex));//fengwenchao add 20121123 for AXSSZFI-1050	
 		if(AC_WTP[i] != NULL)
@@ -13190,7 +13195,7 @@ DBusMessage * wid_dbus_interface_show_wtplist_bymac(DBusConnection *conn, DBusMe
 
 	/*store sn&mac of ap*/
 	unsigned char *mac = NULL;
-	mac = (unsigned char *)malloc(MAC_LEN+1);		
+	mac = (unsigned char *)WID_MALLOC(MAC_LEN+1);		
 
 	reply = dbus_message_new_method_return(msg);
 		
@@ -13299,8 +13304,8 @@ DBusMessage * wid_dbus_interface_show_wtplist_bymac(DBusConnection *conn, DBusMe
 				
 	dbus_message_iter_close_container (&iter, &iter_array);
 				
-	free(WTP);
-	CW_FREE_OBJECT(mac);
+	WID_FREE(WTP);
+	CW_FREE_OBJECT_WID(mac);
 	return reply;	
 }
 
@@ -13316,7 +13321,7 @@ DBusMessage * wid_dbus_interface_show_all_wtp_network_info(DBusConnection *conn,
 	dbus_error_init(&err);
 	int i=0;
 	WID_WTP **WTP;
-	WTP = malloc(WTP_NUM*(sizeof(WID_WTP *)));
+	WTP = WID_MALLOC(WTP_NUM*(sizeof(WID_WTP *)));
 	while(i<WTP_NUM){
 		CWThreadMutexLock(&(gWTPs[i].WTPThreadMutex));//fengwenchao add 20121123 for AXSSZFI-1050	
 		if(AC_WTP[i] != NULL)
@@ -13332,7 +13337,7 @@ DBusMessage * wid_dbus_interface_show_all_wtp_network_info(DBusConnection *conn,
 	}
 
 	unsigned char *mac = NULL;
-	mac = (unsigned char *)malloc(MAC_LEN+1);		
+	mac = (unsigned char *)WID_MALLOC(MAC_LEN+1);		
 
 	reply = dbus_message_new_method_return(msg);
 		
@@ -13418,8 +13423,8 @@ DBusMessage * wid_dbus_interface_show_all_wtp_network_info(DBusConnection *conn,
 	}			
 	dbus_message_iter_close_container (&iter, &iter_array);
 				
-	free(WTP);
-	CW_FREE_OBJECT(mac);
+	WID_FREE(WTP);
+	CW_FREE_OBJECT_WID(mac);
 	return reply;	
 }
 DBusMessage * wid_dbus_interface_show_acversion(DBusConnection *conn, DBusMessage *msg, void *user_data)
@@ -13483,11 +13488,11 @@ DBusMessage * wid_dbus_interface_show_acversion(DBusConnection *conn, DBusMessag
 
 		if(pnode->str_ap_model != NULL)
 		{
-			str_ap_model = (char*)malloc(strlen(pnode->str_ap_model)+1);
+			str_ap_model = (char*)WID_MALLOC(strlen(pnode->str_ap_model)+1);
 			memset(str_ap_model,0,strlen(pnode->str_ap_model)+1);
 			memcpy(str_ap_model,pnode->str_ap_model,strlen(pnode->str_ap_model));		
 		}else{
-			str_ap_model = (char*)malloc(2);
+			str_ap_model = (char*)WID_MALLOC(2);
 			memset(str_ap_model,0,2);
 			memcpy(str_ap_model," ",1);					
 		}
@@ -13499,14 +13504,14 @@ DBusMessage * wid_dbus_interface_show_acversion(DBusConnection *conn, DBusMessag
 					//there is no oem_version info in apimg.xml,so here use str_oem_version to transport str_ap_version_name
 					if(pnode_new->code_info->str_ap_version_name != NULL){
 						char *vesionname = pnode_new->code_info->str_ap_version_name;
-						str_oem_version = (char*)malloc(strlen(vesionname)+1);
+						str_oem_version = (char*)WID_MALLOC(strlen(vesionname)+1);
 						memset(str_oem_version,0,strlen(vesionname)+1);
 						memcpy(str_oem_version,vesionname,strlen(vesionname));
 					}
 
 					if(pnode_new->code_info->str_ap_version_path != NULL){
 						char *vesionpath = pnode_new->code_info->str_ap_version_path;
-						str_ap_version_path = (char*)malloc(strlen(vesionpath)+1);
+						str_ap_version_path = (char*)WID_MALLOC(strlen(vesionpath)+1);
 						memset(str_ap_version_path,0,strlen(vesionpath)+1);
 						memcpy(str_ap_version_path,vesionpath,strlen(vesionpath));
 					}
@@ -13518,14 +13523,14 @@ DBusMessage * wid_dbus_interface_show_acversion(DBusConnection *conn, DBusMessag
 
 		if(str_oem_version == NULL)
 		{
-			str_oem_version = (char*)malloc(2);
+			str_oem_version = (char*)WID_MALLOC(2);
 			memset(str_oem_version,0,2);
 			memcpy(str_oem_version," ",1);					
 		}
 
 		if(str_ap_version_path == NULL)
 		{
-			str_ap_version_path = (char*)malloc(2);
+			str_ap_version_path = (char*)WID_MALLOC(2);
 			memset(str_ap_version_path,0,2);
 			memcpy(str_ap_version_path," ",1);					
 		}
@@ -13559,9 +13564,9 @@ DBusMessage * wid_dbus_interface_show_acversion(DBusConnection *conn, DBusMessag
 		dbus_message_iter_close_container (&iter_array, &iter_struct);
 
 		pnode = pnode->next;
-		CW_FREE_OBJECT(str_ap_model);
-		CW_FREE_OBJECT(str_oem_version);
-		CW_FREE_OBJECT(str_ap_version_path);
+		CW_FREE_OBJECT_WID(str_ap_model);
+		CW_FREE_OBJECT_WID(str_oem_version);
+		CW_FREE_OBJECT_WID(str_ap_version_path);
 	}
 				
 	dbus_message_iter_close_container (&iter, &iter_array);
@@ -13637,11 +13642,11 @@ DBusMessage * wid_dbus_interface_show_model_list(DBusConnection *conn, DBusMessa
 
 		if(pnode->str_ap_model != NULL)
 		{
-			str_ap_model = (char*)malloc(strlen(pnode->str_ap_model)+1);
+			str_ap_model = (char*)WID_MALLOC(strlen(pnode->str_ap_model)+1);
 			memset(str_ap_model,0,strlen(pnode->str_ap_model)+1);
 			memcpy(str_ap_model,pnode->str_ap_model,strlen(pnode->str_ap_model));		
 		}else{
-			str_ap_model = (char*)malloc(2);
+			str_ap_model = (char*)WID_MALLOC(2);
 			memset(str_ap_model,0,2);
 			memcpy(str_ap_model," ",1);					
 		}
@@ -13652,14 +13657,14 @@ DBusMessage * wid_dbus_interface_show_model_list(DBusConnection *conn, DBusMessa
 				if(pnode_new->code_info != NULL){
 					if(pnode_new->code_info->str_ap_version_name != NULL){
 						char *vesionname = pnode_new->code_info->str_ap_version_name;
-						str_ap_version_name = (char*)malloc(strlen(vesionname)+1);
+						str_ap_version_name = (char*)WID_MALLOC(strlen(vesionname)+1);
 						memset(str_ap_version_name,0,strlen(vesionname)+1);
 						memcpy(str_ap_version_name,vesionname,strlen(vesionname));
 					}
 
 					if(pnode_new->code_info->str_ap_version_path != NULL){
 						char *vesionpath = pnode_new->code_info->str_ap_version_path;
-						str_ap_version_path = (char*)malloc(strlen(vesionpath)+1);
+						str_ap_version_path = (char*)WID_MALLOC(strlen(vesionpath)+1);
 						memset(str_ap_version_path,0,strlen(vesionpath)+1);
 						memcpy(str_ap_version_path,vesionpath,strlen(vesionpath));
 					}
@@ -13671,14 +13676,14 @@ DBusMessage * wid_dbus_interface_show_model_list(DBusConnection *conn, DBusMessa
 		
 		if(str_ap_version_name == NULL)
 		{
-			str_ap_version_name = (char*)malloc(2);
+			str_ap_version_name = (char*)WID_MALLOC(2);
 			memset(str_ap_version_name,0,2);
 			memcpy(str_ap_version_name," ",1);					
 		}
 
 		if(str_ap_version_path == NULL)
 		{
-			str_ap_version_path = (char*)malloc(2);
+			str_ap_version_path = (char*)WID_MALLOC(2);
 			memset(str_ap_version_path,0,2);
 			memcpy(str_ap_version_path," ",1);					
 		}	
@@ -13721,9 +13726,9 @@ DBusMessage * wid_dbus_interface_show_model_list(DBusConnection *conn, DBusMessa
 
 		pnode = pnode->next;
 		
-		CW_FREE_OBJECT(str_ap_model);		
-		CW_FREE_OBJECT(str_ap_version_name);		
-		CW_FREE_OBJECT(str_ap_version_path);
+		CW_FREE_OBJECT_WID(str_ap_model);		
+		CW_FREE_OBJECT_WID(str_ap_version_name);		
+		CW_FREE_OBJECT_WID(str_ap_version_path);
 
 	}
 				
@@ -13805,33 +13810,33 @@ DBusMessage * wid_dbus_interface_show_model(DBusConnection *conn, DBusMessage *m
 
 		if(pnode->str_ap_model != NULL)
 		{
-			str_ap_model = (char*)malloc(strlen(pnode->str_ap_model)+1);
+			str_ap_model = (char*)WID_MALLOC(strlen(pnode->str_ap_model)+1);
 			memset(str_ap_model,0,strlen(pnode->str_ap_model)+1);
 			memcpy(str_ap_model,pnode->str_ap_model,strlen(pnode->str_ap_model));		
 		}else{
-			str_ap_model = (char*)malloc(2);
+			str_ap_model = (char*)WID_MALLOC(2);
 			memset(str_ap_model,0,2);
 			memcpy(str_ap_model," ",1);					
 		}		
 
 		if((pnode_new != NULL)&&(pnode_new->code_info != NULL)&&(pnode_new->code_info->str_ap_version_name != NULL))
 		{
-			str_ap_version_name = (char*)malloc(strlen(pnode_new->code_info->str_ap_version_name)+1);
+			str_ap_version_name = (char*)WID_MALLOC(strlen(pnode_new->code_info->str_ap_version_name)+1);
 			memset(str_ap_version_name,0,strlen(pnode_new->code_info->str_ap_version_name)+1);
 			memcpy(str_ap_version_name,pnode_new->code_info->str_ap_version_name,strlen(pnode_new->code_info->str_ap_version_name));		
 		}else{
-			str_ap_version_name = (char*)malloc(2);
+			str_ap_version_name = (char*)WID_MALLOC(2);
 			memset(str_ap_version_name,0,2);
 			memcpy(str_ap_version_name," ",1);					
 		}	
 
 		if((pnode_new != NULL)&&(pnode_new->code_info != NULL)&&(pnode_new->code_info->str_ap_version_path != NULL))
 		{
-			str_ap_version_path = (char*)malloc(strlen(pnode_new->code_info->str_ap_version_path)+1);
+			str_ap_version_path = (char*)WID_MALLOC(strlen(pnode_new->code_info->str_ap_version_path)+1);
 			memset(str_ap_version_path,0,strlen(pnode_new->code_info->str_ap_version_path)+1);
 			memcpy(str_ap_version_path,pnode_new->code_info->str_ap_version_path,strlen(pnode_new->code_info->str_ap_version_path));		
 		}else{
-			str_ap_version_path = (char*)malloc(2);
+			str_ap_version_path = (char*)WID_MALLOC(2);
 			memset(str_ap_version_path,0,2);
 			memcpy(str_ap_version_path," ",1);					
 		}	
@@ -13909,9 +13914,9 @@ DBusMessage * wid_dbus_interface_show_model(DBusConnection *conn, DBusMessage *m
 		
 		dbus_message_iter_close_container (&iter, &iter_array);
 		/*fengwenchao modify end*/
-		CW_FREE_OBJECT(str_ap_model);
-		CW_FREE_OBJECT(str_ap_version_name);
-		CW_FREE_OBJECT(str_ap_version_path);
+		CW_FREE_OBJECT_WID(str_ap_model);
+		CW_FREE_OBJECT_WID(str_ap_version_name);
+		CW_FREE_OBJECT_WID(str_ap_version_path);
 		//CW_FREE_OBJECT(str_ap_code);
 	}
 	
@@ -13975,10 +13980,10 @@ DBusMessage * wid_dbus_interface_set_model(DBusConnection *conn, DBusMessage *ms
 		{
 			if(strcmp(pnode->str_ap_model,oldmodel) == 0)
 			{
-				free(pnode->str_ap_model);
+				WID_FREE(pnode->str_ap_model);
 				pnode->str_ap_model = NULL;
 
-				pnode->str_ap_model= (char*)malloc(strlen(newmodel)+1);
+				pnode->str_ap_model= (char*)WID_MALLOC(strlen(newmodel)+1);
 				memset(pnode->str_ap_model, 0, strlen(newmodel)+1);
 				memcpy(pnode->str_ap_model, newmodel, strlen(newmodel));
 				pnode->ismodelchanged = CW_TRUE;
@@ -14353,7 +14358,7 @@ else if (type == 1){
  
 	 if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL)){
 		tmp = WTP_GROUP[ID]->WTP_M;
-		wtp_head = (struct Wtp_List *)malloc(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
+		wtp_head = (struct Wtp_List *)WID_MALLOC(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
 		
 		while(tmp){
 			ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
@@ -14414,7 +14419,7 @@ if((type == 1)&&(ret == WID_DBUS_SUCCESS)){
 	}	
 
 	if(wtp_head!=NULL){
-	free(wtp_head);
+	WID_FREE(wtp_head);
 	wtp_head = NULL;	
 	}
 }
@@ -14538,7 +14543,7 @@ else if (type == 1){
  
 	 if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL)){
 		tmp = WTP_GROUP[ID]->WTP_M;
-		wtp_head = (struct Wtp_List *)malloc(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
+		wtp_head = (struct Wtp_List *)WID_MALLOC(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
 		
 		while(tmp){
 			ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
@@ -14599,7 +14604,7 @@ if((type == 1)&&(ret == WID_DBUS_SUCCESS)){
 	}	
 
 	if(wtp_head!=NULL){
-	free(wtp_head);
+	WID_FREE(wtp_head);
 	wtp_head = NULL;	
 	}
 }
@@ -14904,21 +14909,21 @@ if(type==0)
 	
 	if(AC_WTP[ID]->updateversion != NULL)
 	{
-		free(AC_WTP[ID]->updateversion);
+		WID_FREE(AC_WTP[ID]->updateversion);
 		AC_WTP[ID]->updateversion = NULL;
 	}
 	
 	if(AC_WTP[ID]->updatepath != NULL)
 	{
-		free(AC_WTP[ID]->updatepath);
+		WID_FREE(AC_WTP[ID]->updatepath);
 		AC_WTP[ID]->updatepath = NULL;
 	}
 	
-	AC_WTP[ID]->updateversion = (char*)malloc(strlen(vs)+1);
+	AC_WTP[ID]->updateversion = (char*)WID_MALLOC(strlen(vs)+1);
 	memset(AC_WTP[ID]->updateversion, 0, strlen(vs)+1);
 	memcpy(AC_WTP[ID]->updateversion, vs, strlen(vs));
 
-	AC_WTP[ID]->updatepath = (char*)malloc(strlen(pt)+1);
+	AC_WTP[ID]->updatepath = (char*)WID_MALLOC(strlen(pt)+1);
 	memset(AC_WTP[ID]->updatepath, 0, strlen(pt)+1);
 	memcpy(AC_WTP[ID]->updatepath, pt, strlen(pt));	
 
@@ -14934,7 +14939,7 @@ else if (type == 1){
  
 	 if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL)){
 		tmp = WTP_GROUP[ID]->WTP_M;
-		wtp_head = (struct Wtp_List *)malloc(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
+		wtp_head = (struct Wtp_List *)WID_MALLOC(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
 		
 		while(tmp){
 			ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
@@ -14943,23 +14948,23 @@ else if (type == 1){
 					
 					if(AC_WTP[tmp->WTPID]->updateversion != NULL)
 					{
-						free(AC_WTP[tmp->WTPID]->updateversion);
+						WID_FREE(AC_WTP[tmp->WTPID]->updateversion);
 						AC_WTP[tmp->WTPID]->updateversion = NULL;
 						wid_syslog_debug_debug(WID_DEFAULT,"wtp%d clear updateversion successful",tmp->WTPID);
 					}
 					
 					if(AC_WTP[tmp->WTPID]->updatepath != NULL)
 					{
-						free(AC_WTP[tmp->WTPID]->updatepath);
+						WID_FREE(AC_WTP[tmp->WTPID]->updatepath);
 						AC_WTP[tmp->WTPID]->updatepath = NULL;
 						wid_syslog_debug_debug(WID_DEFAULT,"wtp%d clear updatepath successful",tmp->WTPID);
 					}
 					
-					AC_WTP[tmp->WTPID]->updateversion = (char*)malloc(strlen(vs)+1);
+					AC_WTP[tmp->WTPID]->updateversion = (char*)WID_MALLOC(strlen(vs)+1);
 					memset(AC_WTP[tmp->WTPID]->updateversion, 0, strlen(vs)+1);
 					memcpy(AC_WTP[tmp->WTPID]->updateversion, vs, strlen(vs));
 					
-					AC_WTP[tmp->WTPID]->updatepath = (char*)malloc(strlen(pt)+1);
+					AC_WTP[tmp->WTPID]->updatepath = (char*)WID_MALLOC(strlen(pt)+1);
 					memset(AC_WTP[tmp->WTPID]->updatepath, 0, strlen(pt)+1);
 					memcpy(AC_WTP[tmp->WTPID]->updatepath, pt, strlen(pt)); 
 					
@@ -15008,7 +15013,7 @@ if((type == 1)&&(ret == WID_DBUS_SUCCESS)){
 		
 	}	
 	if(wtp_head!=NULL){
-	free(wtp_head);
+	WID_FREE(wtp_head);
 	wtp_head = NULL;	
 	}
 }
@@ -15058,21 +15063,21 @@ DBusMessage * wid_dbus_interface_update_wtp_img_version(DBusConnection *conn, DB
 	//save parameter
 	if(AC_WTP[wtpid]->updateversion != NULL)
 	{
-		free(AC_WTP[wtpid]->updateversion);
+		WID_FREE(AC_WTP[wtpid]->updateversion);
 		AC_WTP[wtpid]->updateversion = NULL;
 	}
 	
 	if(AC_WTP[wtpid]->updatepath != NULL)
 	{
-		free(AC_WTP[wtpid]->updatepath);
+		WID_FREE(AC_WTP[wtpid]->updatepath);
 		AC_WTP[wtpid]->updatepath = NULL;
 	}
 	
-	AC_WTP[wtpid]->updateversion = (char*)malloc(strlen(vs)+1);
+	AC_WTP[wtpid]->updateversion = (char*)WID_MALLOC(strlen(vs)+1);
 	memset(AC_WTP[wtpid]->updateversion, 0, strlen(vs)+1);
 	memcpy(AC_WTP[wtpid]->updateversion, vs, strlen(vs));
 
-	AC_WTP[wtpid]->updatepath = (char*)malloc(strlen(pt)+1);
+	AC_WTP[wtpid]->updatepath = (char*)WID_MALLOC(strlen(pt)+1);
 	memset(AC_WTP[wtpid]->updatepath, 0, strlen(pt)+1);
 	memcpy(AC_WTP[wtpid]->updatepath, pt, strlen(pt));	
 
@@ -15133,13 +15138,13 @@ if(type==0)
 {
 	if(AC_WTP[ID]->updateversion != NULL)
 	{
-		free(AC_WTP[ID]->updateversion);
+		WID_FREE(AC_WTP[ID]->updateversion);
 		AC_WTP[ID]->updateversion = NULL;
 	}
 	
 	if(AC_WTP[ID]->updatepath != NULL)
 	{
-		free(AC_WTP[ID]->updatepath);
+		WID_FREE(AC_WTP[ID]->updatepath);
 		AC_WTP[ID]->updatepath = NULL;
 	}
 	
@@ -15150,7 +15155,7 @@ if(type==0)
 	 
 		 if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL)){
 			tmp = WTP_GROUP[ID]->WTP_M;
-			wtp_head = (struct Wtp_List *)malloc(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
+			wtp_head = (struct Wtp_List *)WID_MALLOC(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
 			
 			while(tmp){
 				ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
@@ -15159,14 +15164,14 @@ if(type==0)
 						
 						if(AC_WTP[tmp->WTPID]->updateversion != NULL)
 						{
-							free(AC_WTP[tmp->WTPID]->updateversion);
+							WID_FREE(AC_WTP[tmp->WTPID]->updateversion);
 							AC_WTP[tmp->WTPID]->updateversion = NULL;
 							wid_syslog_debug_debug(WID_DEFAULT,"wtp%d clear updateversion successful",tmp->WTPID);
 						}
 	
 						if(AC_WTP[tmp->WTPID]->updatepath != NULL)
 						{
-							free(AC_WTP[tmp->WTPID]->updatepath);
+							WID_FREE(AC_WTP[tmp->WTPID]->updatepath);
 							AC_WTP[tmp->WTPID]->updatepath = NULL;
 							wid_syslog_debug_debug(WID_DEFAULT,"wtp%d clear updatpath successful",tmp->WTPID);
 						}
@@ -15209,7 +15214,7 @@ if(type==0)
 			
 		}
 		if(wtp_head!=NULL){
-		free(wtp_head);
+		WID_FREE(wtp_head);
 		wtp_head = NULL;	
 		}
 	}
@@ -15252,13 +15257,13 @@ DBusMessage * wid_dbus_interface_clear_update_wtp_img_version(DBusConnection *co
 	//save parameter
 	if(AC_WTP[wtpid]->updateversion != NULL)
 	{
-		free(AC_WTP[wtpid]->updateversion);
+		WID_FREE(AC_WTP[wtpid]->updateversion);
 		AC_WTP[wtpid]->updateversion = NULL;
 	}
 	
 	if(AC_WTP[wtpid]->updatepath != NULL)
 	{
-		free(AC_WTP[wtpid]->updatepath);
+		WID_FREE(AC_WTP[wtpid]->updatepath);
 		AC_WTP[wtpid]->updatepath = NULL;
 	}
 	
@@ -15318,10 +15323,10 @@ DBusMessage * wid_dbus_interface_update_wtp_img_version_list(DBusConnection *con
 		if((AC_WTP[wtpid] != NULL))
 		{
 			if(AC_WTP[wtpid]->updateversion != NULL){
-				free(AC_WTP[wtpid]->updateversion);
+				WID_FREE(AC_WTP[wtpid]->updateversion);
 				AC_WTP[wtpid]->updateversion = NULL;
 			}
-			AC_WTP[wtpid]->updateversion = (char*)malloc(strlen(vs)+1);
+			AC_WTP[wtpid]->updateversion = (char*)WID_MALLOC(strlen(vs)+1);
 			memset(AC_WTP[wtpid]->updateversion, 0, strlen(vs)+1);
 			memcpy(AC_WTP[wtpid]->updateversion, vs, strlen(vs));
 			success_num++;    //fengwenchao add 20110516
@@ -15336,10 +15341,10 @@ DBusMessage * wid_dbus_interface_update_wtp_img_version_list(DBusConnection *con
 		if((AC_WTP[wtpid] != NULL))
 		{
 			if(AC_WTP[wtpid]->updatepath != NULL){
-				free(AC_WTP[wtpid]->updatepath);
+				WID_FREE(AC_WTP[wtpid]->updatepath);
 				AC_WTP[wtpid]->updatepath = NULL;
 			}
-			AC_WTP[wtpid]->updatepath = (char*)malloc(strlen(pt)+1);
+			AC_WTP[wtpid]->updatepath = (char*)WID_MALLOC(strlen(pt)+1);
 			memset(AC_WTP[wtpid]->updatepath, 0, strlen(pt)+1);
 			memcpy(AC_WTP[wtpid]->updatepath, pt, strlen(pt));	
 		}
@@ -15410,13 +15415,13 @@ DBusMessage * wid_dbus_interface_clear_update_wtp_img_version_list(DBusConnectio
 		//save parameter
 		if((AC_WTP[wtpid] != NULL)&&(AC_WTP[wtpid]->updateversion != NULL))
 		{
-			free(AC_WTP[wtpid]->updateversion);
+			WID_FREE(AC_WTP[wtpid]->updateversion);
 			AC_WTP[wtpid]->updateversion = NULL;	
 		}
 		
 		if((AC_WTP[wtpid] != NULL)&&(AC_WTP[wtpid]->updatepath != NULL))
 		{
-			free(AC_WTP[wtpid]->updatepath);
+			WID_FREE(AC_WTP[wtpid]->updatepath);
 			AC_WTP[wtpid]->updatepath = NULL;
 		}
 		dbus_message_iter_next(&iter_array);
@@ -15429,13 +15434,13 @@ DBusMessage * wid_dbus_interface_clear_update_wtp_img_version_list(DBusConnectio
 		//save parameter
 		if((AC_WTP[wtpid] != NULL)&&(AC_WTP[wtpid]->updateversion != NULL))
 		{
-			free(AC_WTP[wtpid]->updateversion);
+			WID_FREE(AC_WTP[wtpid]->updateversion);
 			AC_WTP[wtpid]->updateversion = NULL;	
 		}
 		
 		if((AC_WTP[wtpid] != NULL)&&(AC_WTP[wtpid]->updatepath != NULL))
 		{
-			free(AC_WTP[wtpid]->updatepath);
+			WID_FREE(AC_WTP[wtpid]->updatepath);
 			AC_WTP[wtpid]->updatepath = NULL;
 		}
 
@@ -15446,13 +15451,13 @@ DBusMessage * wid_dbus_interface_clear_update_wtp_img_version_list(DBusConnectio
 		for(i = 0; i < WTP_NUM; i++){
 			if((AC_WTP[i] != NULL)&&(AC_WTP[i]->updateversion != NULL))
 			{
-				free(AC_WTP[i]->updateversion);
+				WID_FREE(AC_WTP[i]->updateversion);
 				AC_WTP[i]->updateversion = NULL;	
 			}
 			
 			if((AC_WTP[i] != NULL)&&(AC_WTP[i]->updatepath != NULL))
 			{
-				free(AC_WTP[i]->updatepath);
+				WID_FREE(AC_WTP[i]->updatepath);
 				AC_WTP[i]->updatepath = NULL;
 			}
 		}
@@ -15540,7 +15545,7 @@ DBusMessage *wid_dbus_interface_show_wtpconf_allwtp(DBusConnection *conn, DBusMe
 	unsigned char *mac = NULL;
 
 	WID_WTP **WTP = NULL;
-	WTP = malloc(WTP_NUM*(sizeof(WID_WTP*)));//hjw change sizeof(WTP_WTP) sizeof(WTP_WTP*)
+	WTP = WID_MALLOC(WTP_NUM*(sizeof(WID_WTP*)));//hjw change sizeof(WTP_WTP) sizeof(WTP_WTP*)
 	struct wlanid *wlanidlist = NULL;
 	unsigned char wlanlist[WLAN_NUM];//wlanlist has 16 elements,0 means not bind this wlan,1 means bind this wlan
 	unsigned char wlanid =0;
@@ -15616,13 +15621,13 @@ DBusMessage *wid_dbus_interface_show_wtpconf_allwtp(DBusConnection *conn, DBusMe
 
 		dbus_message_iter_append_basic (&iter_struct,DBUS_TYPE_UINT32,&(WTP[i]->wtp_allowed_max_sta_num));
 
-		name = (char*)malloc(ETH_IF_NAME_LEN+1);
+		name = (char*)WID_MALLOC(ETH_IF_NAME_LEN+1);
 		memset(name,0,(ETH_IF_NAME_LEN+1));
 		memcpy(name,WTP[i]->BindingIFName,ETH_IF_NAME_LEN);	
 
 		dbus_message_iter_append_basic (&iter_struct,DBUS_TYPE_STRING,&(name));
 
-		free(name);
+		WID_FREE(name);
 		name = NULL;
 		dbus_message_iter_append_basic (&iter_struct,DBUS_TYPE_BYTE,&(WTP[i]->isused));
 
@@ -15657,7 +15662,7 @@ DBusMessage *wid_dbus_interface_show_wtpconf_allwtp(DBusConnection *conn, DBusMe
 		dbus_message_iter_append_basic (&iter_struct,DBUS_TYPE_BYTE,&bwlannum);
 		//printf("bwlannum = %d \n",bwlannum);
 
-		mac = (unsigned char *)malloc(MAC_LEN+1);
+		mac = (unsigned char *)WID_MALLOC(MAC_LEN+1);
 		memset(mac,0,MAC_LEN+1);
 		if(WTP[i]->WTPMAC != NULL)
 		memcpy(mac,WTP[i]->WTPMAC,MAC_LEN);
@@ -15676,7 +15681,7 @@ DBusMessage *wid_dbus_interface_show_wtpconf_allwtp(DBusConnection *conn, DBusMe
 										DBUS_TYPE_BYTE,&(mac[5]));
 		if(mac)
 		{
-			free(mac);
+			WID_FREE(mac);
 			mac = NULL;
 		}
 		dbus_message_iter_open_container (&iter_struct,
@@ -15767,7 +15772,7 @@ DBusMessage *wid_dbus_interface_show_wtpconf_allwtp(DBusConnection *conn, DBusMe
 	dbus_message_iter_close_container (&iter, &iter_array);
 	if(WTP)
 	{
-		free(WTP);
+		WID_FREE(WTP);
 		WTP = NULL;
 	}
 	return reply;
@@ -15962,13 +15967,13 @@ DBusMessage * wid_dbus_interface_show_wtpconf(DBusConnection *conn, DBusMessage 
 											 &(AC_WTP[WTPID]->updateversion));
 		}
 		
-		name = (char*)malloc(ETH_IF_NAME_LEN+1); //20080710
+		name = (char*)WID_MALLOC(ETH_IF_NAME_LEN+1); //20080710
 		memset(name,0,(ETH_IF_NAME_LEN+1));
 		memcpy(name,AC_WTP[WTPID]->BindingIFName,ETH_IF_NAME_LEN);
 		dbus_message_iter_append_basic (&iter,
 										 DBUS_TYPE_STRING,
 										 &(name));
-		free(name);
+		WID_FREE(name);
 		name=NULL;
 		dbus_message_iter_append_basic (&iter,
 										 DBUS_TYPE_BYTE,
@@ -16129,7 +16134,7 @@ DBusMessage * wid_dbus_interface_show_wtpconf(DBusConnection *conn, DBusMessage 
 										 &(AC_WTP[WTPID]->apstatisticsinterval));
 
 
-		wtp_location = (char *)malloc(strlen("Location not setted")+1);
+		wtp_location = (char *)WID_MALLOC(strlen("Location not setted")+1);
 		memset(wtp_location,0,strlen("Location not setted")+1);
 		memcpy(wtp_location,"Location not setted",strlen("Location not setted"));
 		if(AC_WTP[WTPID]->location == NULL)
@@ -16145,7 +16150,7 @@ DBusMessage * wid_dbus_interface_show_wtpconf(DBusConnection *conn, DBusMessage 
 										 &(AC_WTP[WTPID]->location));
 		}/*zhangcl addef for wtp location*/
 
-		CW_FREE_OBJECT(wtp_location);
+		CW_FREE_OBJECT_WID(wtp_location);
 		
 	}	
 	return reply;	
@@ -16191,7 +16196,7 @@ DBusMessage * wid_dbus_interface_show_wtpconf_bywlanid(DBusConnection *conn, DBu
 	}
 	else{
 		WID_WTP **WTP = NULL;
-		WTP = malloc(WTP_NUM*(sizeof(WID_WTP *)));	
+		WTP = WID_MALLOC(WTP_NUM*(sizeof(WID_WTP *)));	
 		memset(WTP,0,WTP_NUM*(sizeof(WID_WTP *)));
 
 		while(i<WTP_NUM){
@@ -16274,7 +16279,7 @@ DBusMessage * wid_dbus_interface_show_wtpconf_bywlanid(DBusConnection *conn, DBu
 					
 		dbus_message_iter_close_container (&iter, &iter_array);
 					
-		free(WTP);
+		WID_FREE(WTP);
 		WTP = NULL;
 	}
 
@@ -16519,10 +16524,10 @@ DBusMessage * wid_dbus_interface_set_wid_name(DBusConnection *conn, DBusMessage 
 	dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT32, &ret);
 
 	//save parameter
-	free(gACName);
+	WID_FREE(gACName);
 	gACName = NULL;
 	
-	CW_CREATE_STRING_ERR(gACName,strlen(acname),return NULL;);
+	CW_CREATE_STRING_ERR_WID(gACName,strlen(acname),return NULL;);
 	strcpy(gACName,acname);
 	wid_syslog_debug_debug(WID_DBUS,"set ac name is:%s\n",gACName);
 	
@@ -16559,10 +16564,10 @@ DBusMessage * wid_dbus_interface_set_wid_sw_version(DBusConnection *conn, DBusMe
 	dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT32, &ret);
 
 	//save parameter
-	free(gACSWVersion_char);
+	WID_FREE(gACSWVersion_char);
 	gACSWVersion_char = NULL;
 	
-	CW_CREATE_STRING_ERR(gACSWVersion_char,strlen(swversion),return NULL;);
+	CW_CREATE_STRING_ERR_WID(gACSWVersion_char,strlen(swversion),return NULL;);
 	strcpy(gACSWVersion_char,swversion);
 
 	wid_syslog_debug_debug(WID_DBUS,"set ac sw version is:%s\n",gACSWVersion_char);
@@ -16600,10 +16605,10 @@ DBusMessage * wid_dbus_interface_set_wid_hw_version(DBusConnection *conn, DBusMe
 	dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT32, &ret);
 
 	//save parameter
-	free(gACHWVersion_char);
+	WID_FREE(gACHWVersion_char);
 	gACHWVersion_char = NULL;
 	
-	CW_CREATE_STRING_ERR(gACHWVersion_char,strlen(hwversion),return NULL;);
+	CW_CREATE_STRING_ERR_WID(gACHWVersion_char,strlen(hwversion),return NULL;);
 	strcpy(gACHWVersion_char,hwversion);
 
 	wid_syslog_debug_debug(WID_DBUS,"set ac hw version is:%s\n",gACHWVersion_char);
@@ -17661,7 +17666,7 @@ DBusMessage * wid_dbus_interface_set_ap_countermeasures(DBusConnection *conn, DB
 	if(policy == 0)
 	{
 		WID_WTP_RADIO **RADIO;	
-		RADIO = malloc(G_RADIO_NUM*(sizeof(WID_WTP_RADIO *)));
+		RADIO = WID_MALLOC(G_RADIO_NUM*(sizeof(WID_WTP_RADIO *)));
 		while(i<WTP_NUM)
 			{		
 				if(AC_WTP[i] != NULL)
@@ -17687,7 +17692,7 @@ DBusMessage * wid_dbus_interface_set_ap_countermeasures(DBusConnection *conn, DB
 				RADIO[i]->radio_countermeasures_flag = 0;
 			}
 		}
-		CW_FREE_OBJECT(RADIO);
+		CW_FREE_OBJECT_WID(RADIO);
 	}
 	//fengwenchao add end
 
@@ -18945,7 +18950,7 @@ DBusMessage * wid_dbus_interface_set_license_bind(DBusConnection *conn, DBusMess
 			return reply;
 		}
 	}
-	licenselist = (int *)malloc((glicensecount+1)*sizeof(int));
+	licenselist = (int *)WID_MALLOC((glicensecount+1)*sizeof(int));
 	for(i=0,j=0; i<strlength;i++){
 		if(string[i]!=','){
 			licenselist[j] = string[i]-'0';
@@ -18963,7 +18968,7 @@ DBusMessage * wid_dbus_interface_set_license_bind(DBusConnection *conn, DBusMess
 											 DBUS_TYPE_UINT32,
 											 &ret);
 			if(licenselist!=NULL){
-				free(licenselist);
+				WID_FREE(licenselist);
 				licenselist = NULL;
 			}
 			return reply;
@@ -18978,7 +18983,7 @@ DBusMessage * wid_dbus_interface_set_license_bind(DBusConnection *conn, DBusMess
 										 DBUS_TYPE_UINT32,
 										 &ret);
 		if(licenselist!=NULL){
-			free(licenselist);
+			WID_FREE(licenselist);
 			licenselist = NULL;
 		}
 		return reply;
@@ -18996,7 +19001,7 @@ DBusMessage * wid_dbus_interface_set_license_bind(DBusConnection *conn, DBusMess
 											DBUS_TYPE_UINT32,
 											&licenselist[i]);
 			if(licenselist!=NULL){
-				free(licenselist);
+				WID_FREE(licenselist);
 				licenselist = NULL;
 			}
 			return reply;
@@ -19013,7 +19018,7 @@ DBusMessage * wid_dbus_interface_set_license_bind(DBusConnection *conn, DBusMess
 												 DBUS_TYPE_UINT32,
 												 &ret);
 				if(licenselist!=NULL){
-					free(licenselist);
+					WID_FREE(licenselist);
 					licenselist = NULL;
 				}
 				return reply;
@@ -19033,7 +19038,7 @@ DBusMessage * wid_dbus_interface_set_license_bind(DBusConnection *conn, DBusMess
 											DBUS_TYPE_UINT32,
 											&licenselist[i]);
 			if(licenselist!=NULL){
-				free(licenselist);
+				WID_FREE(licenselist);
 				licenselist = NULL;
 			}
 			return reply;
@@ -19044,7 +19049,7 @@ DBusMessage * wid_dbus_interface_set_license_bind(DBusConnection *conn, DBusMess
 		//binding license type
 		for(flag=1; flag<glicensecount+1; flag++){
 			if(g_wtp_binding_count[flag]==NULL){
-				g_wtp_binding_count[flag] = malloc(sizeof(LICENSE_TYPE));
+				g_wtp_binding_count[flag] = WID_MALLOC(sizeof(LICENSE_TYPE));
 				break;
 			}
 		}
@@ -19081,7 +19086,7 @@ DBusMessage * wid_dbus_interface_set_license_bind(DBusConnection *conn, DBusMess
 												DBUS_TYPE_UINT32,
 												&licenselist[i]);
 				if(licenselist!=NULL){
-					free(licenselist);
+					WID_FREE(licenselist);
 					licenselist = NULL;
 				}
 				return reply;
@@ -19100,7 +19105,7 @@ DBusMessage * wid_dbus_interface_set_license_bind(DBusConnection *conn, DBusMess
 												DBUS_TYPE_UINT32,
 												&licenselist[i]);
 				if(licenselist!=NULL){
-					free(licenselist);
+					WID_FREE(licenselist);
 					licenselist = NULL;
 				}
 				return reply;
@@ -19129,7 +19134,7 @@ DBusMessage * wid_dbus_interface_set_license_bind(DBusConnection *conn, DBusMess
 													&licenselist[i]);
 					CWThreadMutexUnlock(&ACLicense);
 					if(licenselist!=NULL){
-						free(licenselist);
+						WID_FREE(licenselist);
 						licenselist = NULL;
 					}
 					return reply;
@@ -19147,7 +19152,7 @@ DBusMessage * wid_dbus_interface_set_license_bind(DBusConnection *conn, DBusMess
 												&licenselist[i]);
 				CWThreadMutexUnlock(&ACLicense);
 				if(licenselist!=NULL){
-					free(licenselist);
+					WID_FREE(licenselist);
 					licenselist = NULL;
 				}
 				return reply;
@@ -19165,14 +19170,14 @@ DBusMessage * wid_dbus_interface_set_license_bind(DBusConnection *conn, DBusMess
 			for(i=0; i<glicensecount; i++){
 				if(g_wtp_count[i]->flag == flag){
 					g_wtp_count[i]->flag = 0;
-					free(g_wtp_binding_count[flag]);
+					WID_FREE(g_wtp_binding_count[flag]);
 					g_wtp_binding_count[flag]=NULL;
 					break;
 				}
 			}	
 		}
 		if(g_wtp_binding_count[flag]!=NULL&&g_wtp_binding_count[flag]->gmax_wtp_count==0){
-			free(g_wtp_binding_count[flag]);
+			WID_FREE(g_wtp_binding_count[flag]);
 			g_wtp_binding_count[flag]=NULL;
 		}
 		CWThreadMutexUnlock(&ACLicense);
@@ -19182,7 +19187,7 @@ DBusMessage * wid_dbus_interface_set_license_bind(DBusConnection *conn, DBusMess
 		dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT32, &ret);
 	}
 	if(licenselist!=NULL){
-		free(licenselist);
+		WID_FREE(licenselist);
 		licenselist = NULL;
 	}
 	
@@ -19216,7 +19221,7 @@ DBusMessage * wid_dbus_interface_iperf_wtpip(DBusConnection *conn, DBusMessage *
 		}
 		return NULL;
 	}
-	ip = (char*)malloc(strlen(wtp_ip)+1);
+	ip = (char*)WID_MALLOC(strlen(wtp_ip)+1);
 	memset(ip, 0 ,strlen(wtp_ip)+1);
 	memcpy(ip, wtp_ip, strlen(wtp_ip));
 	
@@ -20047,7 +20052,7 @@ DBusMessage * wid_dbus_interface_show_rogue_ap_list_v1(DBusConnection *conn, DBu
 	struct white_mac *Wmacnode = NULL;
 	struct white_mac *Bmacnode = NULL;
 
-	WTP = malloc(WTP_NUM*(sizeof(WID_WTP *)));
+	WTP = WID_MALLOC(WTP_NUM*(sizeof(WID_WTP *)));
 
 	wtp_num = Wid_Find_Wtp(WTP);
 	
@@ -20080,7 +20085,7 @@ DBusMessage * wid_dbus_interface_show_rogue_ap_list_v1(DBusConnection *conn, DBu
 		}
 		if(WTP)
 		{
-			free(WTP);
+			WID_FREE(WTP);
 			WTP = NULL;
 		}
 		return NULL;
@@ -20346,7 +20351,7 @@ DBusMessage * wid_dbus_interface_show_rogue_ap_list_v1(DBusConnection *conn, DBu
 	/*fengwenchao add 20110401*/
 	if(WTP)
 	{
-		free(WTP);
+		WID_FREE(WTP);
 		WTP = NULL;
 	}
 	/*fengwenchao add end*/
@@ -20643,15 +20648,15 @@ DBusMessage * wid_dbus_interface_show_neighbor_ap_list(DBusConnection *conn, DBu
 	struct Neighbor_AP_ELE *phead;
 
 	unsigned char *mac = NULL;
-	mac = (unsigned char *)malloc(MAC_LEN+1);
+	mac = (unsigned char *)WID_MALLOC(MAC_LEN+1);
 	if(NULL == mac){
 		return NULL;
 	}
 
 	WID_WTP **WTP;
-	WTP = malloc(WTP_NUM*(sizeof(WID_WTP *)));
+	WTP = WID_MALLOC(WTP_NUM*(sizeof(WID_WTP *)));
 	if(NULL == WTP){
-		CW_FREE_OBJECT(mac);
+		CW_FREE_OBJECT_WID(mac);
 		return NULL;
 	}
 	wtp_num = Wid_Find_Wtp(WTP);
@@ -20667,8 +20672,8 @@ DBusMessage * wid_dbus_interface_show_neighbor_ap_list(DBusConnection *conn, DBu
 			printf("%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
-		CW_FREE_OBJECT(WTP);
-		CW_FREE_OBJECT(mac);
+		CW_FREE_OBJECT_WID(WTP);
+		CW_FREE_OBJECT_WID(mac);
 		return NULL;
 	}
 
@@ -21068,8 +21073,8 @@ DBusMessage * wid_dbus_interface_show_neighbor_ap_list(DBusConnection *conn, DBu
 				dbus_message_iter_close_container (&iter_array, &iter_struct);		
 			}	
 	dbus_message_iter_close_container (&iter,&iter_array);
-	CW_FREE_OBJECT(WTP);
-	CW_FREE_OBJECT(mac);
+	CW_FREE_OBJECT_WID(WTP);
+	CW_FREE_OBJECT_WID(mac);
 	//printf("over LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL");
 	return reply;
 }
@@ -22740,6 +22745,44 @@ DBusMessage * wid_dbus_interface_set_wid_auto_ap_login_switch(DBusConnection *co
 	return reply;	
 
 }
+DBusMessage * wid_dbus_interface_set_wid_memory_trace_switch(DBusConnection *conn, DBusMessage *msg, void *user_data)
+{
+	DBusMessage* reply; 
+	DBusMessageIter  iter;
+	DBusError err;
+	dbus_error_init(&err);
+		
+	int ret = WID_DBUS_SUCCESS;
+	unsigned int log_switch = 0;
+
+	if (!(dbus_message_get_args ( msg, &err,
+								DBUS_TYPE_UINT32,&log_switch,
+								DBUS_TYPE_INVALID))){
+
+		wid_syslog_err("Unable to get input args\n");
+				
+		if (dbus_error_is_set(&err)) {
+			wid_syslog_err("%s raised: %s",err.name,err.message);
+			dbus_error_free(&err);
+		}
+		return NULL;
+	}
+
+	wid_memory_trace_switch = log_switch;
+	wid_syslog_debug_debug(WID_DEFAULT, "set wid memory leak trace switch %s successfully\n", log_switch ? "enable" : "disable");
+	ret = WID_DBUS_SUCCESS;
+
+	
+	reply = dbus_message_new_method_return(msg);
+			
+	dbus_message_iter_init_append(reply, &iter);
+		
+	dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT32, &ret);
+	
+	return reply;	
+
+}
+
 DBusMessage * wid_dbus_interface_set_wid_auto_ap_login_binding_l3_interface(DBusConnection *conn, DBusMessage *msg, void *user_data)
 {
 	DBusMessage* reply;	
@@ -22768,7 +22811,7 @@ DBusMessage * wid_dbus_interface_set_wid_auto_ap_login_binding_l3_interface(DBus
 	}
 	unsigned char ret_flag = 0;
 	char *name;
-	name = (char*)malloc(strlen(ifname)+5);
+	name = (char*)WID_MALLOC(strlen(ifname)+5);
 	memset(name,0,strlen(ifname)+5);
 	if(check_ve_interface(ifname,name)){
 		wid_syslog_debug_debug(WID_DBUS,"input ve interface dosen't exist!\n");
@@ -22818,7 +22861,7 @@ DBusMessage * wid_dbus_interface_set_wid_auto_ap_login_binding_l3_interface(DBus
 	dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT32, &ret);
 	dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT32, &quitreason);
 	wid_syslog_debug_debug(WID_DBUS,"set wid auto_ap_login_interface %s\n",name);
-	free(name);
+	WID_FREE(name);
 	name = NULL;
 	//printf("set wid auto_ap_login_interface %s\n",g_AUTO_AP_LOGIN_BINDING_L3_INTERFACE);
 	return reply;	
@@ -22851,7 +22894,7 @@ DBusMessage * wid_dbus_interface_set_wid_listen_l3_interface(DBusConnection *con
 	}
 	unsigned char ret_flag = 0;
 	char *name;
-	name = (char*)malloc(strlen(ifname)+5);
+	name = (char*)WID_MALLOC(strlen(ifname)+5);
 	memset(name,0,strlen(ifname));
 	if(check_ve_interface(ifname,name)){
 		wid_syslog_debug_debug(WID_DBUS,"input ve interface dosen't exist!\n");
@@ -22914,7 +22957,7 @@ DBusMessage * wid_dbus_interface_set_wid_listen_l3_interface(DBusConnection *con
 	dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT32, &quitreason);
 	wid_syslog_debug_debug(WID_DBUS,"set wid auto_ap_login_interface %s\n",name);
 	//printf("set wid auto_ap_login_interface %s\n",g_AUTO_AP_LOGIN_BINDING_L3_INTERFACE);
-	free(name);
+	WID_FREE(name);
 	name = NULL;
 	return reply;	
 
@@ -23018,11 +23061,11 @@ DBusMessage * wid_dbus_show_wid_listen_l3_interface(DBusConnection *conn, DBusMe
 		if(inf != NULL){
 			DBusMessageIter iter_struct;
 			if(name != NULL){
-				free(name);
+				WID_FREE(name);
 				name = NULL;
 			}else{
 			}
-			name = (char *)malloc(sizeof(inf->ifname)+1);
+			name = (char *)WID_MALLOC(sizeof(inf->ifname)+1);
 			memset(name,0,(sizeof(inf->ifname)+1));
 			wid_syslog_info("name=%s,inf->ifname=%s,tmpname=%s.\n",name,inf->ifname,tmpname);
 			if((memcmp(tmpname,inf->ifname,IFI_NAME) == 0) || (memcmp(tmpname,"NONE",strlen("NONE")) == 0)){
@@ -23052,7 +23095,7 @@ DBusMessage * wid_dbus_show_wid_listen_l3_interface(DBusConnection *conn, DBusMe
 						  &lic_type);
 			dbus_message_iter_close_container (&iter_array, &iter_struct);
 			inf = inf->if_next;
-			free(name);
+			WID_FREE(name);
 			name = NULL;
 		}
 	}
@@ -23094,7 +23137,7 @@ DBusMessage * wid_dbus_interface_set_wid_auto_ap_login_binding_wlan(DBusConnecti
 	}
 	unsigned char ret_flag = 0;
 	char *name;
-	name = (char*)malloc(strlen(ifname)+5);
+	name = (char*)WID_MALLOC(strlen(ifname)+5);
 	memset(name,0,strlen(ifname)+5);
 	if(check_ve_interface(ifname,name)){
 		wid_syslog_debug_debug(WID_DBUS,"input ve interface dosen't exist!\n");
@@ -23206,7 +23249,7 @@ DBusMessage * wid_dbus_interface_set_wid_auto_ap_login_binding_wlan(DBusConnecti
 		
 	dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT32, &ret);
 	
-	free(name);
+	WID_FREE(name);
 	name = NULL;
 	return reply;	
 
@@ -23241,7 +23284,7 @@ DBusMessage * wid_dbus_interface_del_wid_auto_ap_login_binding_wlan(DBusConnecti
 	}
 	unsigned char ret_flag = 0;
 	char *name;
-	name = (char*)malloc(strlen(ifname)+5);
+	name = (char*)WID_MALLOC(strlen(ifname)+5);
 	memset(name,0,strlen(ifname)+5);
 	if(check_ve_interface(ifname,name)){
 		wid_syslog_debug_debug(WID_DBUS,"input ve interface dosen't exist!\n");
@@ -23344,7 +23387,7 @@ DBusMessage * wid_dbus_interface_del_wid_auto_ap_login_binding_wlan(DBusConnecti
 	dbus_message_iter_init_append(reply, &iter);
 		
 	dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT32, &ret);
-	free(name);
+	WID_FREE(name);
 	name = NULL;
 	
 	return reply;	
@@ -23426,7 +23469,7 @@ DBusMessage * wid_dbus_interface_show_wid_auto_ap_login_config(DBusConnection *c
 	wid_auto_ap_if *ifi= NULL;
 	ifi = g_auto_ap_login.auto_ap_if;
 	char *name = NULL;
-	name = (char *)malloc(ETH_IF_NAME_LEN+1);
+	name = (char *)WID_MALLOC(ETH_IF_NAME_LEN+1);
 	unsigned char ifnum = g_auto_ap_login.ifnum;
 #if 0
 	for(i=0;i<g_auto_ap_login.ifnum;i++)
@@ -23507,7 +23550,7 @@ DBusMessage * wid_dbus_interface_show_wid_auto_ap_login_config(DBusConnection *c
 		}
 		dbus_message_iter_close_container (&iter, &iter_array);
 	
-	free(name);
+	WID_FREE(name);
 	name = NULL;
 	return reply;
 			
@@ -23538,12 +23581,12 @@ DBusMessage * wid_dbus_interface_clear_wid_auto_ap_login_config(DBusConnection *
 				
 				pnext = phead->ifnext;
 
-				CW_FREE_OBJECT(phead);
+				CW_FREE_OBJECT_WID(phead);
 
 				phead = pnext;
 
 			}			
-			CW_FREE_OBJECT(g_auto_ap_login.auto_ap_if);
+			CW_FREE_OBJECT_WID(g_auto_ap_login.auto_ap_if);
 		}
 	}
 	
@@ -24796,7 +24839,7 @@ DBusMessage * wid_dbus_interface_show_radiolist(DBusConnection *conn, DBusMessag
 	dbus_error_init(&err);
 	int i=0,j=0;
 	WID_WTP_RADIO **RADIO;	
-	RADIO = malloc(G_RADIO_NUM*(sizeof(WID_WTP_RADIO *)));
+	RADIO = WID_MALLOC(G_RADIO_NUM*(sizeof(WID_WTP_RADIO *)));
 	while(i<WTP_NUM){		
 		if(AC_WTP[i] != NULL)
 		{	int n=0,m=0;
@@ -24930,7 +24973,7 @@ DBusMessage * wid_dbus_interface_show_radiolist(DBusConnection *conn, DBusMessag
 				
 	dbus_message_iter_close_container (&iter, &iter_array);
 				
-	free(RADIO);
+	WID_FREE(RADIO);
 	return reply;	
 	
 
@@ -25426,7 +25469,7 @@ DBusMessage * wid_dbus_interface_set_nas_id(DBusConnection *conn, DBusMessage *m
 	}
 	unsigned char ret_flag = 0;
 	char *name;
-	name = (char*)malloc(strlen(if_name)+5);
+	name = (char*)WID_MALLOC(strlen(if_name)+5);
 	memset(name,0,strlen(if_name)+5);
 	if(check_ve_interface(if_name,name)){
 		wid_syslog_debug_debug(WID_DBUS,"input ve interface doesn't exist!\n"); 
@@ -25459,7 +25502,7 @@ DBusMessage * wid_dbus_interface_set_nas_id(DBusConnection *conn, DBusMessage *m
 	dbus_message_iter_init_append (reply, &iter);
 	
 	dbus_message_iter_append_basic (&iter, DBUS_TYPE_UINT32, &ret);
-	free(name);
+	WID_FREE(name);
 	name = NULL;
 	return reply;
 
@@ -25494,7 +25537,7 @@ DBusMessage * wid_dbus_interface_remove_nas_id(DBusConnection *conn, DBusMessage
 	}
 	unsigned char ret_flag = 0;
 	char *name;
-	name = (char*)malloc(strlen(if_name)+5);
+	name = (char*)WID_MALLOC(strlen(if_name)+5);
 	memset(name,0,strlen(if_name)+5);
 	if(check_ve_interface(if_name,name)){
 		wid_syslog_debug_debug(WID_DBUS,"input ve interface dosen't exist!\n");
@@ -25569,7 +25612,7 @@ DBusMessage * wid_dbus_interface_remove_nas_id(DBusConnection *conn, DBusMessage
 	dbus_message_iter_init_append (reply, &iter);
 	
 	dbus_message_iter_append_basic (&iter, DBUS_TYPE_UINT32, &ret);
-	free(name);
+	WID_FREE(name);
 	name = NULL;
 	
 	return reply;
@@ -26242,7 +26285,7 @@ DBusMessage * wid_dbus_interface_set_tunnel_wlan_vlan(DBusConnection *conn, DBus
 					if(strncmp(wifnext->ifname,name,strlen(name)) == 0)
 					{
 						AC_WLAN[wlanid]->tunnel_wlan_vlan = wifnext->ifnext;
-						free(wifnext);
+						WID_FREE(wifnext);
 						wifnext = NULL;		
 //						printf("delete ifname from list\n");
 					}
@@ -26254,7 +26297,7 @@ DBusMessage * wid_dbus_interface_set_tunnel_wlan_vlan(DBusConnection *conn, DBus
 							{
 								wif = wifnext->ifnext;
 								wifnext->ifnext = wifnext->ifnext->ifnext;
-								free(wif);
+								WID_FREE(wif);
 								wif = NULL;				
 //								printf("delete ifname from list\n");
 							}
@@ -26336,7 +26379,7 @@ DBusMessage * wid_dbus_interface_show_tunnel_wlan_vlan(DBusConnection *conn, DBu
 			
 		ifi = WLAN->tunnel_wlan_vlan;		
 		char *name;
-		name = (char*)malloc(ETH_IF_NAME_LEN+1);
+		name = (char*)WID_MALLOC(ETH_IF_NAME_LEN+1);
 
 		for(i = 0; i < num; i++){			
 			
@@ -26353,7 +26396,7 @@ DBusMessage * wid_dbus_interface_show_tunnel_wlan_vlan(DBusConnection *conn, DBu
 			
 			ifi = ifi->ifnext;
 		}
-		free(name);
+		WID_FREE(name);
 		name = NULL;
 	}
 	return reply;
@@ -26598,8 +26641,8 @@ DBusMessage * wid_dbus_interface_set_wlan_essid(DBusConnection *conn, DBusMessag
 	}
 	else
 	{
-		CW_FREE_OBJECT(AC_WLAN[wlanid]->ESSID);
-		AC_WLAN[wlanid]->ESSID = (char *)malloc(strlen(essid)+1);
+		CW_FREE_OBJECT_WID(AC_WLAN[wlanid]->ESSID);
+		AC_WLAN[wlanid]->ESSID = (char *)WID_MALLOC(strlen(essid)+1);
 		memset(AC_WLAN[wlanid]->ESSID, 0, strlen(essid)+1);
 		memcpy(AC_WLAN[wlanid]->ESSID,essid,strlen(essid));
 
@@ -26683,7 +26726,7 @@ DBusMessage * wid_dbus_interface_set_wlan_ascii_essid(DBusConnection *conn, DBus
 	printf("ESSID = %s \n",ESSID);
 	char essid_str2[ESSID_DEFAULT_LEN+1];
 	char *s1=NULL;
-	s1 = (char*)malloc(1+1);
+	s1 = (char*)WID_MALLOC(1+1);
 
 	memset(essid_str2,0,ESSID_DEFAULT_LEN+1);
 	
@@ -26714,15 +26757,15 @@ DBusMessage * wid_dbus_interface_set_wlan_ascii_essid(DBusConnection *conn, DBus
 	}
 	else
 	{
-		CW_FREE_OBJECT(AC_WLAN[wlanid]->ESSID);
-		CW_FREE_OBJECT(AC_WLAN[wlanid]->ESSID_CN_STR);
-		AC_WLAN[wlanid]->ESSID = (char *)malloc(strlen((char*)ESSID)+1);
+		CW_FREE_OBJECT_WID(AC_WLAN[wlanid]->ESSID);
+		CW_FREE_OBJECT_WID(AC_WLAN[wlanid]->ESSID_CN_STR);
+		AC_WLAN[wlanid]->ESSID = (char *)WID_MALLOC(strlen((char*)ESSID)+1);
 		memset(AC_WLAN[wlanid]->ESSID, 0, strlen((char*)ESSID)+1);
 		memcpy(AC_WLAN[wlanid]->ESSID,ESSID,strlen((char*)ESSID));
 
 		AC_WLAN[wlanid]->chinaEssid = 1;
 
-		AC_WLAN[wlanid]->ESSID_CN_STR = (unsigned char *)malloc(strlen(essid_str2)+1);
+		AC_WLAN[wlanid]->ESSID_CN_STR = (unsigned char *)WID_MALLOC(strlen(essid_str2)+1);
 		memset(AC_WLAN[wlanid]->ESSID_CN_STR, 0, strlen(essid_str2)+1);
 		memcpy(AC_WLAN[wlanid]->ESSID_CN_STR,essid_str2,strlen(essid_str2));		
 
@@ -26737,7 +26780,7 @@ DBusMessage * wid_dbus_interface_set_wlan_ascii_essid(DBusConnection *conn, DBus
 	
 	dbus_message_iter_append_basic (&iter,DBUS_TYPE_UINT32,&ret); 
 	if(s1 !=NULL){
-		CW_FREE_OBJECT(s1);
+		CW_FREE_OBJECT_WID(s1);
 	}
 
 	return reply;	
@@ -27629,7 +27672,7 @@ DBusMessage * wid_dbus_interface_wlan_apply_ifname (DBusConnection *conn, DBusMe
 
 	unsigned char ret_flag = 0;
 	char * name;
-	name = (char*)malloc(strlen(if_name)+5);
+	name = (char*)WID_MALLOC(strlen(if_name)+5);
 	memset(name, 0, strlen(if_name)+5);
 
 	if(check_ve_interface(if_name, name)){
@@ -27678,7 +27721,7 @@ DBusMessage * wid_dbus_interface_wlan_apply_ifname (DBusConnection *conn, DBusMe
 	dbus_message_iter_append_basic (&iter, DBUS_TYPE_UINT32, &ret);
 	dbus_message_iter_append_basic (&iter, DBUS_TYPE_UINT32, &retv6);
 	
-	free(name);
+	WID_FREE(name);
 	name = NULL;
 	return reply;
 
@@ -27715,7 +27758,7 @@ DBusMessage * wid_dbus_interface_wlan_apply_ifname_ipv6(DBusConnection *conn, DB
 	}
 	unsigned char ret_flag = 0;
 	char *name;
-	name = (char *)malloc(strlen(if_name)+1);
+	name = (char *)WID_MALLOC(strlen(if_name)+1);
 	memset(name,0,strlen(if_name)+1);
 	if(check_ve_interface(if_name,name)){
 		wid_syslog_debug_debug(WID_DBUS,"input ve interface dosen't exist!\n");
@@ -27748,7 +27791,7 @@ DBusMessage * wid_dbus_interface_wlan_apply_ifname_ipv6(DBusConnection *conn, DB
 	dbus_message_iter_init_append (reply, &iter);
 	
 	dbus_message_iter_append_basic (&iter, DBUS_TYPE_UINT32, &ret);
-	free(name);
+	WID_FREE(name);
 	name = NULL;
 	
 	return reply;
@@ -27772,7 +27815,7 @@ DBusMessage * wid_dbus_interface_wlan_set_eap_mac(DBusConnection *conn, DBusMess
 //    unsigned int wtp_num = 0;
 
     WID_WTP **WTP;
-	WTP = malloc(WTP_NUM*(sizeof(WID_WTP *)));
+	WTP = WID_MALLOC(WTP_NUM*(sizeof(WID_WTP *)));
 	if( WTP == NULL){
 		wid_syslog_debug_debug(WID_DBUS,"%s :malloc fail.\n",__func__);
 		exit(1);
@@ -27795,7 +27838,7 @@ DBusMessage * wid_dbus_interface_wlan_set_eap_mac(DBusConnection *conn, DBusMess
             printf("%s raised: %s",err.name,err.message);
             dbus_error_free(&err);
         }
-		CW_FREE_OBJECT(WTP);						  
+		CW_FREE_OBJECT_WID(WTP);						  
         return NULL;
     }
     //printf("eap_mac_len = %d\n",strlen(eap_mac));
@@ -27892,7 +27935,7 @@ DBusMessage * wid_dbus_interface_wlan_set_eap_mac(DBusConnection *conn, DBusMess
                                     DBUS_TYPE_UINT32,
                                     &ret); 
     //printf("@@@@@@@@@@@@@@@@@@@@@@@@@@@\n");
-    CW_FREE_OBJECT(WTP);                          
+    CW_FREE_OBJECT_WID(WTP);                          
     return reply;
 
 }
@@ -28383,7 +28426,7 @@ DBusMessage * wid_dbus_interface_wlan_sta_static_arp(DBusConnection *conn, DBusM
 	}
 	unsigned char ret_flag = 0;
 	char *name;
-	name = (char*)malloc(strlen(ifname)+5);
+	name = (char*)WID_MALLOC(strlen(ifname)+5);
 	memset(name,0,strlen(ifname)+5);
 	if(check_ve_interface(ifname,name)){
 		wid_syslog_debug_debug(WID_DBUS,"intput ve interface dosen't exist!\n");
@@ -28497,7 +28540,7 @@ DBusMessage * wid_dbus_interface_wlan_sta_static_arp(DBusConnection *conn, DBusM
 	dbus_message_iter_append_basic (&iter,
 									DBUS_TYPE_UINT32,
 									&ret);
-	free(name);
+	WID_FREE(name);
 	name = NULL;
 	return reply;	
 }
@@ -28818,7 +28861,7 @@ DBusMessage * wid_dbus_interface_wlan_delete_ifname (DBusConnection *conn, DBusM
 	}
 	unsigned char ret_flag = 0;
 	char *name;
-	name = (char *)malloc(strlen(if_name)+5);
+	name = (char *)WID_MALLOC(strlen(if_name)+5);
 	memset(name,0,strlen(if_name)+5);
 	if(check_ve_interface(if_name,name)){
 		wid_syslog_debug_debug(WID_DBUS,"input ve interface dosen't exist!\n");
@@ -28848,7 +28891,7 @@ DBusMessage * wid_dbus_interface_wlan_delete_ifname (DBusConnection *conn, DBusM
 	dbus_message_iter_init_append (reply, &iter);
 	
 	dbus_message_iter_append_basic (&iter, DBUS_TYPE_UINT32, &ret);
-	free(name);
+	WID_FREE(name);
 	name = NULL;
 	
 	return reply;	
@@ -29745,7 +29788,7 @@ DBusMessage * wid_dbus_interface_wtp_flow_triger(DBusConnection *conn, DBusMessa
 		}
 		else if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL)){
 			tmp = WTP_GROUP[ID]->WTP_M;
-			wtp_head = (struct Wtp_List *)malloc(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
+			wtp_head = (struct Wtp_List *)WID_MALLOC(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
 			
 			while(tmp){
 				ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
@@ -29800,7 +29843,7 @@ DBusMessage * wid_dbus_interface_wtp_flow_triger(DBusConnection *conn, DBusMessa
 	}
 
 	if(wtp_head!=NULL){
-		free(wtp_head);
+		WID_FREE(wtp_head);
 		wtp_head = NULL;	
 	}
 	
@@ -29929,7 +29972,7 @@ DBusMessage * wid_dbus_interface_wtp_triger(DBusConnection *conn, DBusMessage *m
 		
 		if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL)){
 			tmp = WTP_GROUP[ID]->WTP_M;
-			wtp_head = (struct Wtp_List *)malloc(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
+			wtp_head = (struct Wtp_List *)WID_MALLOC(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
 			
 			while(tmp){
 				ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
@@ -29988,7 +30031,7 @@ DBusMessage * wid_dbus_interface_wtp_triger(DBusConnection *conn, DBusMessage *m
 	}
 
 	if(wtp_head!=NULL){
-		free(wtp_head);
+		WID_FREE(wtp_head);
 		wtp_head = NULL;	
 	}
 	
@@ -30083,10 +30126,10 @@ DBusMessage * wid_dbus_interface_wtp_check_wlanid(DBusConnection *conn, DBusMess
 		}
 		if(ret == WID_DBUS_SUCCESS){
 			if(AC_WLAN[uplinkWlanId]->uplink_addr != NULL){
-				free(AC_WLAN[uplinkWlanId]->uplink_addr);
+				WID_FREE(AC_WLAN[uplinkWlanId]->uplink_addr);
 				AC_WLAN[uplinkWlanId]->uplink_addr = NULL;
 			}	
-			AC_WLAN[uplinkWlanId]->uplink_addr = (char *)malloc(strlen(uplink_addr)+1);
+			AC_WLAN[uplinkWlanId]->uplink_addr = (char *)WID_MALLOC(strlen(uplink_addr)+1);
 			memset(AC_WLAN[uplinkWlanId]->uplink_addr, 0, strlen(uplink_addr)+1);
 			memcpy(AC_WLAN[uplinkWlanId]->uplink_addr,uplink_addr,strlen(uplink_addr));
 			AC_WLAN[uplinkWlanId]->uplinkState = uplinkState;
@@ -30144,7 +30187,7 @@ DBusMessage * wid_dbus_interface_check_wtp_sta(DBusConnection *conn, DBusMessage
 		
 	if(AC_WTP[ID]!=NULL)
 		{	
-		    wtp_head = (struct Wtp_List *)malloc(sizeof(struct Wtp_List));
+		    wtp_head = (struct Wtp_List *)WID_MALLOC(sizeof(struct Wtp_List));
 			wtp_head->WtpId = ID;
 			printf("asd id %d\n",ID);
 		}
@@ -30159,7 +30202,7 @@ DBusMessage * wid_dbus_interface_check_wtp_sta(DBusConnection *conn, DBusMessage
 	   if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL))
 	   	{
 			tmp = WTP_GROUP[ID]->WTP_M;
-			wtp_head = (struct Wtp_List *)malloc(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
+			wtp_head = (struct Wtp_List *)WID_MALLOC(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
 				
 			while(tmp)
 				{
@@ -30212,7 +30255,7 @@ DBusMessage * wid_dbus_interface_check_wtp_sta(DBusConnection *conn, DBusMessage
 		    }
 		
 		if(wtp_head!=NULL){
-			free(wtp_head);
+			WID_FREE(wtp_head);
 			wtp_head = NULL;	
 		}
 		
@@ -30487,7 +30530,7 @@ DBusMessage * wid_dbus_interface_wtp_apply_ifname(DBusConnection *conn, DBusMess
 	}
 	unsigned char ret_flag = 0;
 	char * name;
-	name = (char*)malloc(strlen(if_name)+5);
+	name = (char*)WID_MALLOC(strlen(if_name)+5);
 	memset(name, 0, strlen(if_name)+5);
 
 	if(check_ve_interface(if_name, name)){
@@ -30521,7 +30564,7 @@ DBusMessage * wid_dbus_interface_wtp_apply_ifname(DBusConnection *conn, DBusMess
 			if(WTP_GROUP[id] != NULL)
 			{
 				tmp = WTP_GROUP[id]->WTP_M;
-				wtp_head = (struct Wtp_List *)malloc(WTP_GROUP[id]->WTP_COUNT *(sizeof(struct Wtp_List)));
+				wtp_head = (struct Wtp_List *)WID_MALLOC(WTP_GROUP[id]->WTP_COUNT *(sizeof(struct Wtp_List)));
 			
 				while(tmp)
 				{
@@ -30577,10 +30620,10 @@ DBusMessage * wid_dbus_interface_wtp_apply_ifname(DBusConnection *conn, DBusMess
 	}
 
 	if(wtp_head!=NULL){
-		free(wtp_head);
+		WID_FREE(wtp_head);
 		wtp_head = NULL;	
 	}
-	free(name);
+	WID_FREE(name);
 	name = NULL;
 	return reply;
 }
@@ -30617,7 +30660,7 @@ DBusMessage * wid_dbus_interface_wtp_apply_ifname(DBusConnection *conn, DBusMess
 
 	unsigned char ret_flag = 0;
 	char *name;
-	name = (char*)malloc(strlen(if_name)+5);
+	name = (char*)WID_MALLOC(strlen(if_name)+5);
 	memset(name, 0, strlen(if_name)+5);
 	if(check_ve_interface(if_name,name))
 	{
@@ -30657,7 +30700,7 @@ DBusMessage * wid_dbus_interface_wtp_apply_ifname(DBusConnection *conn, DBusMess
 	
 	dbus_message_iter_append_basic (&iter, DBUS_TYPE_UINT32, &ret);
 	dbus_message_iter_append_basic (&iter, DBUS_TYPE_UINT32, &retv6);	
-	free(name);
+	WID_FREE(name);
 	name = NULL;
 	return reply;
 
@@ -30693,7 +30736,7 @@ DBusMessage * wid_dbus_interface_wtp_apply_ifname_ipv6(DBusConnection *conn, DBu
 	}
 	unsigned char ret_flag = 0;
 	char *name;
-	name = (char*)malloc(strlen(if_name)+5);
+	name = (char*)WID_MALLOC(strlen(if_name)+5);
 	memset(name,0,strlen(if_name)+5);
 	if(check_ve_interface(if_name,name))
 	{
@@ -30722,7 +30765,7 @@ DBusMessage * wid_dbus_interface_wtp_apply_ifname_ipv6(DBusConnection *conn, DBu
 	dbus_message_iter_init_append (reply, &iter);
 	
 	dbus_message_iter_append_basic (&iter, DBUS_TYPE_UINT32, &ret);
-	free(name);
+	WID_FREE(name);
 	name =  NULL;
 	return reply;
 
@@ -30829,7 +30872,7 @@ DBusMessage * wid_dbus_interface_wtp_disable_wlanid(DBusConnection *conn, DBusMe
 		printf("******** type == 1 *****\n");
 		if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL)){
 			tmp = WTP_GROUP[ID]->WTP_M;
-			wtp_head = (struct Wtp_List *)malloc(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
+			wtp_head = (struct Wtp_List *)WID_MALLOC(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
 			
 			while(tmp){
 				ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
@@ -30877,7 +30920,7 @@ DBusMessage * wid_dbus_interface_wtp_disable_wlanid(DBusConnection *conn, DBusMe
 	}
 	
 	if(wtp_head!=NULL){
-		free(wtp_head);
+		WID_FREE(wtp_head);
 		wtp_head = NULL;	
 	}
 	
@@ -30984,7 +31027,7 @@ DBusMessage * wid_dbus_interface_wtp_enable_wlanid(DBusConnection *conn, DBusMes
 		printf("******** type == 1 *****\n");
 		if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL)){
 			tmp = WTP_GROUP[ID]->WTP_M;
-			wtp_head = (struct Wtp_List *)malloc(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
+			wtp_head = (struct Wtp_List *)WID_MALLOC(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
 			
 			while(tmp){
 				ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
@@ -31031,7 +31074,7 @@ DBusMessage * wid_dbus_interface_wtp_enable_wlanid(DBusConnection *conn, DBusMes
 	}
 	
 	if(wtp_head!=NULL){
-		free(wtp_head);
+		WID_FREE(wtp_head);
 		wtp_head = NULL;	
 	}
 	
@@ -31147,7 +31190,7 @@ DBusMessage * wid_dbus_interface_wtp_apply_wlanid(DBusConnection *conn, DBusMess
 		printf("##### type == 1 #####\n");
 		if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M)){
 			tmp = WTP_GROUP[ID]->WTP_M;
-			wtp_head = (struct Wtp_List *)malloc(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List )));
+			wtp_head = (struct Wtp_List *)WID_MALLOC(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List )));
 			while(tmp){
 				ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
 				printf("ret %d   \n",ret);
@@ -31192,7 +31235,7 @@ DBusMessage * wid_dbus_interface_wtp_apply_wlanid(DBusConnection *conn, DBusMess
 		}	
 		
 		if(wtp_head!=NULL){
-			free(wtp_head);
+			WID_FREE(wtp_head);
 			wtp_head = NULL;	
 		}
 	}
@@ -31307,7 +31350,7 @@ DBusMessage * wid_dbus_interface_wtp_used(DBusConnection *conn, DBusMessage *msg
 		printf("******** type == 1 *****\n");
 		if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL)){
 			tmp = WTP_GROUP[ID]->WTP_M;
-			wtp_head = (struct Wtp_List *)malloc(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
+			wtp_head = (struct Wtp_List *)WID_MALLOC(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
 			
 			while(tmp){
 				ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
@@ -31357,7 +31400,7 @@ DBusMessage * wid_dbus_interface_wtp_used(DBusConnection *conn, DBusMessage *msg
 		}	
 		
 		if(wtp_head!=NULL){
-			free(wtp_head);
+			WID_FREE(wtp_head);
 			wtp_head = NULL;	
 		}
 	}
@@ -31559,13 +31602,13 @@ DBusMessage * wid_dbus_interface_wtp_set_ap_update_path(DBusConnection *conn, DB
 		{
 			if(strcmp(pnode->str_ap_model,chmodel) == 0)
 			{
-				CW_CREATE_OBJECT_ERR(gConfigVersionUpdateInfo, CWConfigVersionInfo, return NULL;);	
+				CW_CREATE_OBJECT_ERR_WID(gConfigVersionUpdateInfo, CWConfigVersionInfo, return NULL;);	
 				memset(gConfigVersionUpdateInfo,0,sizeof(CWConfigVersionInfo));
 				
-				CW_CREATE_STRING_ERR(gConfigVersionUpdateInfo->str_ap_version_name,strlen(vs),return NULL;);
-				CW_CREATE_STRING_ERR(gConfigVersionUpdateInfo->str_ap_version_path,strlen(pt),return NULL;);
-				CW_CREATE_STRING_ERR(gConfigVersionUpdateInfo->str_ap_model,strlen(chmodel),return NULL;);
-				CW_CREATE_STRING_ERR(gConfigVersionUpdateInfo->str_ap_code,sizeof(char)*20,return NULL;);
+				CW_CREATE_STRING_ERR_WID(gConfigVersionUpdateInfo->str_ap_version_name,strlen(vs),return NULL;);
+				CW_CREATE_STRING_ERR_WID(gConfigVersionUpdateInfo->str_ap_version_path,strlen(pt),return NULL;);
+				CW_CREATE_STRING_ERR_WID(gConfigVersionUpdateInfo->str_ap_model,strlen(chmodel),return NULL;);
+				CW_CREATE_STRING_ERR_WID(gConfigVersionUpdateInfo->str_ap_code,sizeof(char)*20,return NULL;);
 				
 				memset(gConfigVersionUpdateInfo->str_ap_version_name,0,strlen(vs));
 				memset(gConfigVersionUpdateInfo->str_ap_version_path,0,strlen(pt));
@@ -31583,17 +31626,17 @@ DBusMessage * wid_dbus_interface_wtp_set_ap_update_path(DBusConnection *conn, DB
 				update_current_wtp();
 				if(updatewtplist == NULL)
 				{
-					free(gConfigVersionUpdateInfo->str_ap_model);
+					WID_FREE(gConfigVersionUpdateInfo->str_ap_model);
 					gConfigVersionUpdateInfo->str_ap_model = NULL;
 					
-					free(gConfigVersionUpdateInfo->str_ap_version_name);
+					WID_FREE(gConfigVersionUpdateInfo->str_ap_version_name);
 					gConfigVersionUpdateInfo->str_ap_version_name = NULL;
 					
-					free(gConfigVersionUpdateInfo->str_ap_version_path);
+					WID_FREE(gConfigVersionUpdateInfo->str_ap_version_path);
 					gConfigVersionUpdateInfo->str_ap_version_path = NULL;
 
 								
-					free(gConfigVersionUpdateInfo);
+					WID_FREE(gConfigVersionUpdateInfo);
 					gConfigVersionUpdateInfo = NULL;
 							
 					checkwtpcount =0;					
@@ -31763,7 +31806,7 @@ DBusMessage * wid_dbus_interface_wtp_bind_model_with_file(DBusConnection *conn, 
 			if(strcmp(confignode->str_ap_model,chmodel) == 0){
 				/*store the tar file name here,which is going to be used in show cmd*/
 				wid_syslog_debug_debug(WID_DBUS,"the model exists in apimg.xml\n");	//for test
-				confignode->tar_file_name = (char*)malloc(strlen(file_name)+1);
+				confignode->tar_file_name = (char*)WID_MALLOC(strlen(file_name)+1);
 				memset(confignode->tar_file_name,0,strlen(file_name)+1);
 				memcpy(confignode->tar_file_name,file_name,strlen(file_name)); 	
 				
@@ -31852,14 +31895,14 @@ DBusMessage * wid_dbus_interface_wtp_set_ap_update_base_model(DBusConnection *co
 						wid_syslog_debug_debug(WID_DBUS,"ready to find the code in apimg.xml\n");
 						while(code_node != NULL){
 							CWConfigVersionInfo *update_node = NULL;
-							CW_CREATE_OBJECT_ERR(update_node, CWConfigVersionInfo, return NULL;);	
+							CW_CREATE_OBJECT_ERR_WID(update_node, CWConfigVersionInfo, return NULL;);	
 							memset(update_node,0,sizeof(CWConfigVersionInfo));
 							update_node->next = NULL;
 
-							CW_CREATE_STRING_ERR(update_node->str_ap_version_name,strlen(code_node->str_ap_version_name),return NULL;);
-							CW_CREATE_STRING_ERR(update_node->str_ap_version_path,strlen(code_node->str_ap_version_path),return NULL;);
-							CW_CREATE_STRING_ERR(update_node->str_ap_model,strlen(chmodel),return NULL;);
-							CW_CREATE_STRING_ERR(update_node->str_ap_code,strlen(code_node->str_ap_version_code),return NULL;);
+							CW_CREATE_STRING_ERR_WID(update_node->str_ap_version_name,strlen(code_node->str_ap_version_name),CW_FREE_OBJECT_WID(update_node); return NULL;);
+							CW_CREATE_STRING_ERR_WID(update_node->str_ap_version_path,strlen(code_node->str_ap_version_path),CW_FREE_OBJECT_WID(update_node->str_ap_version_name);CW_FREE_OBJECT_WID(update_node); return NULL;);
+							CW_CREATE_STRING_ERR_WID(update_node->str_ap_model,strlen(chmodel),CW_FREE_OBJECT_WID(update_node->str_ap_version_path);CW_FREE_OBJECT_WID(update_node->str_ap_version_name);CW_FREE_OBJECT_WID(update_node); return NULL;);
+							CW_CREATE_STRING_ERR_WID(update_node->str_ap_code,strlen(code_node->str_ap_version_code),CW_FREE_OBJECT_WID(update_node->str_ap_model);CW_FREE_OBJECT_WID(update_node->str_ap_version_path);CW_FREE_OBJECT_WID(update_node->str_ap_version_name);CW_FREE_OBJECT_WID(update_node); return NULL;);
 							memset(update_node->str_ap_version_name,0,strlen(code_node->str_ap_version_name));
 							memset(update_node->str_ap_version_path,0,strlen(code_node->str_ap_version_path));
 							memset(update_node->str_ap_model,0,strlen(chmodel));
@@ -31880,6 +31923,12 @@ DBusMessage * wid_dbus_interface_wtp_set_ap_update_base_model(DBusConnection *co
 									gConfigVersionUpdateInfo[i] = update_node;
 									ret = WID_DBUS_SUCCESS;
 									break;
+								} else {
+									CW_FREE_OBJECT_WID(update_node->str_ap_code);
+									CW_FREE_OBJECT_WID(update_node->str_ap_model);
+									CW_FREE_OBJECT_WID(update_node->str_ap_version_path);
+									CW_FREE_OBJECT_WID(update_node->str_ap_version_name);
+									CW_FREE_OBJECT_WID(update_node);
 								}
 							}
 							if(i == BATCH_UPGRADE_AP_NUM){
@@ -32001,22 +32050,22 @@ DBusMessage * wid_dbus_interface_show_model_bind_info(DBusConnection *conn, DBus
 
 		if(pnode->str_ap_model != NULL)
 		{
-			str_ap_model = (char*)malloc(strlen(pnode->str_ap_model)+1);
+			str_ap_model = (char*)WID_MALLOC(strlen(pnode->str_ap_model)+1);
 			memset(str_ap_model,0,strlen(pnode->str_ap_model)+1);
 			memcpy(str_ap_model,pnode->str_ap_model,strlen(pnode->str_ap_model));		
 		}else{
-			str_ap_model = (char*)malloc(2);
+			str_ap_model = (char*)WID_MALLOC(2);
 			memset(str_ap_model,0,2);
 			memcpy(str_ap_model," ",1); 				
 		}
 
 		if(pnode->tar_file_name != NULL)
 		{
-			file_name = (char*)malloc(strlen(pnode->tar_file_name)+1);
+			file_name = (char*)WID_MALLOC(strlen(pnode->tar_file_name)+1);
 			memset(file_name,0,strlen(pnode->tar_file_name)+1);
 			memcpy(file_name,pnode->tar_file_name,strlen(pnode->tar_file_name));		
 		}else{
-			file_name = (char*)malloc(2);
+			file_name = (char*)WID_MALLOC(2);
 			memset(file_name,0,2);
 			memcpy(file_name," ",1); 				
 		}
@@ -32027,8 +32076,8 @@ DBusMessage * wid_dbus_interface_show_model_bind_info(DBusConnection *conn, DBus
 
 		pnode = pnode->next;
 		
-		CW_FREE_OBJECT(str_ap_model);		
-		CW_FREE_OBJECT(file_name);		
+		CW_FREE_OBJECT_WID(str_ap_model);		
+		CW_FREE_OBJECT_WID(file_name);		
 	}
 				
 	dbus_message_iter_close_container (&iter, &iter_array);
@@ -32122,7 +32171,7 @@ DBusMessage * wid_dbus_interface_delete_model_bind_info(DBusConnection *conn, DB
 			ret = WID_DBUS_SUCCESS;
 			gConfigVerInfo = gConfigVerInfo->next;
 			if(confignode->str_ap_model){
-				free(confignode->str_ap_model);
+				WID_FREE(confignode->str_ap_model);
 				confignode->str_ap_model = NULL;
 			}
 			if(confignode->tar_file_name){
@@ -32130,7 +32179,7 @@ DBusMessage * wid_dbus_interface_delete_model_bind_info(DBusConnection *conn, DB
 				sprintf(cmd,"rm /mnt/wtp/%s",confignode->tar_file_name);
 				system(cmd);
 			*/	
-				free(confignode->tar_file_name);
+				WID_FREE(confignode->tar_file_name);
 				confignode->tar_file_name = NULL;
 			}
 			//rm apimg.xml
@@ -32150,19 +32199,19 @@ DBusMessage * wid_dbus_interface_delete_model_bind_info(DBusConnection *conn, DB
 					system(cmd);
 
 					if(tmpcodenode->str_ap_version_code){
-						free(tmpcodenode->str_ap_version_code);
+						WID_FREE(tmpcodenode->str_ap_version_code);
 						tmpcodenode->str_ap_version_code = NULL;
 					}
 					if(tmpcodenode->str_ap_version_name){
-						free(tmpcodenode->str_ap_version_name);
+						WID_FREE(tmpcodenode->str_ap_version_name);
 						tmpcodenode->str_ap_version_name = NULL;
 					}
 					if(tmpcodenode->str_ap_version_path){
-						free(tmpcodenode->str_ap_version_path);
+						WID_FREE(tmpcodenode->str_ap_version_path);
 						tmpcodenode->str_ap_version_path = NULL;
 					}
 					if(tmpcodenode){
-						free(tmpcodenode);
+						WID_FREE(tmpcodenode);
 						tmpcodenode = NULL;
 					}
 				}
@@ -32179,7 +32228,7 @@ DBusMessage * wid_dbus_interface_delete_model_bind_info(DBusConnection *conn, DB
 				confignode->next = tmp->next;
 				
 				if(tmp->str_ap_model){
-					free(tmp->str_ap_model);
+					WID_FREE(tmp->str_ap_model);
 					tmp->str_ap_model = NULL;
 				}
 				if(tmp->tar_file_name){
@@ -32187,7 +32236,7 @@ DBusMessage * wid_dbus_interface_delete_model_bind_info(DBusConnection *conn, DB
 					sprintf(cmd,"rm /mnt/wtp/%s",confignode->tar_file_name);
 					system(cmd);
 				*/	
-					free(tmp->tar_file_name);
+					WID_FREE(tmp->tar_file_name);
 					tmp->tar_file_name = NULL;
 				}
 
@@ -32208,19 +32257,19 @@ DBusMessage * wid_dbus_interface_delete_model_bind_info(DBusConnection *conn, DB
 						system(cmd);
 			
 						if(tmpcodenode->str_ap_version_code){
-							free(tmpcodenode->str_ap_version_code);
+							WID_FREE(tmpcodenode->str_ap_version_code);
 							tmpcodenode->str_ap_version_code = NULL;
 						}
 						if(tmpcodenode->str_ap_version_name){
-							free(tmpcodenode->str_ap_version_name);
+							WID_FREE(tmpcodenode->str_ap_version_name);
 							tmpcodenode->str_ap_version_name = NULL;
 						}
 						if(tmpcodenode->str_ap_version_path){
-							free(tmpcodenode->str_ap_version_path);
+							WID_FREE(tmpcodenode->str_ap_version_path);
 							tmpcodenode->str_ap_version_path = NULL;
 						}
 						if(tmpcodenode){
-							free(tmpcodenode);
+							WID_FREE(tmpcodenode);
 							tmpcodenode = NULL;
 						}
 					}
@@ -32229,7 +32278,7 @@ DBusMessage * wid_dbus_interface_delete_model_bind_info(DBusConnection *conn, DB
 				}
 				
 				if(tmp){
-					free(tmp);
+					WID_FREE(tmp);
 					tmp = NULL;
 				}
 				break;
@@ -32398,11 +32447,11 @@ DBusMessage * wid_dbus_interface_wtp_clear_ap_one_model_update_path(DBusConnecti
 			CWConfigVersionInfo *free_node = tmp_node;
 			tmp_node = tmp_node->next;
 		
-			CW_FREE_OBJECT(free_node->str_ap_model);		
-			CW_FREE_OBJECT(free_node->str_ap_version_name);		
-			CW_FREE_OBJECT(free_node->str_ap_version_path);		
-			CW_FREE_OBJECT(free_node->str_ap_code);		
-			CW_FREE_OBJECT(free_node);		
+			CW_FREE_OBJECT_WID(free_node->str_ap_model);		
+			CW_FREE_OBJECT_WID(free_node->str_ap_version_name);		
+			CW_FREE_OBJECT_WID(free_node->str_ap_version_path);		
+			CW_FREE_OBJECT_WID(free_node->str_ap_code);		
+			CW_FREE_OBJECT_WID(free_node);		
 		}
 		gConfigVersionUpdateInfo[i] = NULL;
 	}
@@ -32474,11 +32523,11 @@ DBusMessage * wid_dbus_interface_show_model_detail_bind_info(DBusConnection *con
 		
 		if(pnode->str_ap_model != NULL)
 		{
-			str_ap_model = (char*)malloc(strlen(pnode->str_ap_model)+1);
+			str_ap_model = (char*)WID_MALLOC(strlen(pnode->str_ap_model)+1);
 			memset(str_ap_model,0,strlen(pnode->str_ap_model)+1);
 			memcpy(str_ap_model,pnode->str_ap_model,strlen(pnode->str_ap_model));		
 		}else{
-			str_ap_model = (char*)malloc(2);
+			str_ap_model = (char*)WID_MALLOC(2);
 			memset(str_ap_model,0,2);
 			memcpy(str_ap_model," ",1); 				
 		}
@@ -32510,33 +32559,33 @@ DBusMessage * wid_dbus_interface_show_model_detail_bind_info(DBusConnection *con
 
 			if((codenode != NULL)&&(codenode->str_ap_version_name != NULL))
 			{
-				str_ap_version_name = (char*)malloc(strlen(codenode->str_ap_version_name)+1);
+				str_ap_version_name = (char*)WID_MALLOC(strlen(codenode->str_ap_version_name)+1);
 				memset(str_ap_version_name,0,strlen(codenode->str_ap_version_name)+1);
 				memcpy(str_ap_version_name,codenode->str_ap_version_name,strlen(codenode->str_ap_version_name));		
 			}else{
-				str_ap_version_name = (char*)malloc(2);
+				str_ap_version_name = (char*)WID_MALLOC(2);
 				memset(str_ap_version_name,0,2);
 				memcpy(str_ap_version_name," ",1);				
 			}
 			
 			if((codenode != NULL)&&(codenode->str_ap_version_path != NULL))
 			{
-				str_ap_version_path = (char*)malloc(strlen(codenode->str_ap_version_path)+1);
+				str_ap_version_path = (char*)WID_MALLOC(strlen(codenode->str_ap_version_path)+1);
 				memset(str_ap_version_path,0,strlen(codenode->str_ap_version_path)+1);
 				memcpy(str_ap_version_path,codenode->str_ap_version_path,strlen(codenode->str_ap_version_path));		
 			}else{
-				str_ap_version_path = (char*)malloc(2);
+				str_ap_version_path = (char*)WID_MALLOC(2);
 				memset(str_ap_version_path,0,2);
 				memcpy(str_ap_version_path," ",1);				
 			}
 			
 			if((codenode != NULL)&&(codenode->str_ap_version_code != NULL))
 			{
-				str_ap_version_code = (char*)malloc(strlen(codenode->str_ap_version_code)+1);
+				str_ap_version_code = (char*)WID_MALLOC(strlen(codenode->str_ap_version_code)+1);
 				memset(str_ap_version_code,0,strlen(codenode->str_ap_version_code)+1);
 				memcpy(str_ap_version_code,codenode->str_ap_version_code,strlen(codenode->str_ap_version_code));		
 			}else{
-				str_ap_version_code = (char*)malloc(2);
+				str_ap_version_code = (char*)WID_MALLOC(2);
 				memset(str_ap_version_code,0,2);
 				memcpy(str_ap_version_code," ",1);				
 			}
@@ -32549,16 +32598,16 @@ DBusMessage * wid_dbus_interface_show_model_detail_bind_info(DBusConnection *con
 			
 			if(codenode != NULL)
 				codenode = codenode->next;
-			CW_FREE_OBJECT(str_ap_version_code);		
-			CW_FREE_OBJECT(str_ap_version_name);		
-			CW_FREE_OBJECT(str_ap_version_path);		
+			CW_FREE_OBJECT_WID(str_ap_version_code);		
+			CW_FREE_OBJECT_WID(str_ap_version_name);		
+			CW_FREE_OBJECT_WID(str_ap_version_path);		
 		}
 
 		dbus_message_iter_close_container (&iter_struct, &iter_sub_array);	
 		dbus_message_iter_close_container (&iter_array, &iter_struct);
 		pnode = pnode->next;
 		
-		CW_FREE_OBJECT(str_ap_model);		
+		CW_FREE_OBJECT_WID(str_ap_model);		
 	}
 				
 	dbus_message_iter_close_container (&iter, &iter_array);
@@ -32583,7 +32632,7 @@ DBusMessage * wid_dbus_interface_wtp_show_ap_upgrade_result(DBusConnection *conn
 	char *wtp_model = NULL;
 	
 	unsigned char *mac = NULL;
-	mac = (unsigned char *)malloc(MAC_LEN+1);		
+	mac = (unsigned char *)WID_MALLOC(MAC_LEN+1);		
 	if( mac == NULL){
 		wid_syslog_debug_debug(WID_DBUS,"%s :malloc fail.\n",__func__);
 		return NULL;
@@ -32593,29 +32642,29 @@ DBusMessage * wid_dbus_interface_wtp_show_ap_upgrade_result(DBusConnection *conn
 	WID_WTP **WTP_SUCC = NULL;
 	WID_WTP **WTP_FAIL = NULL;
 	WID_WTP **WTP_OTHE = NULL;
-	WTP_SUCC = malloc(WTP_NUM*(sizeof(WID_WTP *)));
+	WTP_SUCC = WID_MALLOC(WTP_NUM*(sizeof(WID_WTP *)));
 	if( WTP_SUCC == NULL){
 		wid_syslog_err("%s %d:malloc fail.\n",__func__,__LINE__);
-		CW_FREE_OBJECT(mac);
+		CW_FREE_OBJECT_WID(mac);
 		return NULL;
 	}
 	memset(WTP_SUCC,0,WTP_NUM*(sizeof(WID_WTP *)));
 
-	WTP_FAIL = malloc(WTP_NUM*(sizeof(WID_WTP *)));
+	WTP_FAIL = WID_MALLOC(WTP_NUM*(sizeof(WID_WTP *)));
 	if( WTP_FAIL == NULL){
 		wid_syslog_err("%s %d:malloc fail.\n",__func__,__LINE__);
-		CW_FREE_OBJECT(mac);
-		CW_FREE_OBJECT(WTP_SUCC);
+		CW_FREE_OBJECT_WID(mac);
+		CW_FREE_OBJECT_WID(WTP_SUCC);
 		return NULL;
 	}
 	memset(WTP_FAIL,0,WTP_NUM*(sizeof(WID_WTP *)));
 
-	WTP_OTHE = malloc(WTP_NUM*(sizeof(WID_WTP *)));
+	WTP_OTHE = WID_MALLOC(WTP_NUM*(sizeof(WID_WTP *)));
 	if( WTP_OTHE == NULL){
 		wid_syslog_err("%s %d:malloc fail.\n",__func__,__LINE__);
-		CW_FREE_OBJECT(mac);
-		CW_FREE_OBJECT(WTP_SUCC);
-		CW_FREE_OBJECT(WTP_FAIL);
+		CW_FREE_OBJECT_WID(mac);
+		CW_FREE_OBJECT_WID(WTP_SUCC);
+		CW_FREE_OBJECT_WID(WTP_FAIL);
 		return NULL;
 	}
 	memset(WTP_OTHE,0,WTP_NUM*(sizeof(WID_WTP *)));
@@ -32729,22 +32778,22 @@ DBusMessage * wid_dbus_interface_wtp_show_ap_upgrade_result(DBusConnection *conn
 
 		if(WTP_SUCC[i]->WTPIP != NULL)
 		{
-			wtp_ip = (char*)malloc(strlen(WTP_SUCC[i]->WTPIP)+1);
+			wtp_ip = (char*)WID_MALLOC(strlen(WTP_SUCC[i]->WTPIP)+1);
 			memset(wtp_ip,0,strlen(WTP_SUCC[i]->WTPIP)+1);
 			memcpy(wtp_ip,WTP_SUCC[i]->WTPIP,strlen(WTP_SUCC[i]->WTPIP));	
 		}else{
-			wtp_ip = (char*)malloc(2);
+			wtp_ip = (char*)WID_MALLOC(2);
 			memset(wtp_ip,0,2);
 			memcpy(wtp_ip," ",1);
 		}
 		
 		if(WTP_SUCC[i]->WTPModel != NULL)
 		{
-			wtp_model = (char*)malloc(strlen(WTP_SUCC[i]->WTPModel)+1);
+			wtp_model = (char*)WID_MALLOC(strlen(WTP_SUCC[i]->WTPModel)+1);
 			memset(wtp_model,0,strlen(WTP_SUCC[i]->WTPModel)+1);
 			memcpy(wtp_model,WTP_SUCC[i]->WTPModel,strlen(WTP_SUCC[i]->WTPModel));		
 		}else{
-			wtp_model = (char*)malloc(2);
+			wtp_model = (char*)WID_MALLOC(2);
 			memset(wtp_model,0,2);
 			memcpy(wtp_model," ",1);					
 		}
@@ -32755,8 +32804,8 @@ DBusMessage * wid_dbus_interface_wtp_show_ap_upgrade_result(DBusConnection *conn
 		
 		dbus_message_iter_close_container (&iter_array, &iter_struct);
 
-		CW_FREE_OBJECT(wtp_ip);
-		CW_FREE_OBJECT(wtp_model);
+		CW_FREE_OBJECT_WID(wtp_ip);
+		CW_FREE_OBJECT_WID(wtp_model);
 	}
 				
 	for(i = 0; ((i < num_fail)&&(WTP_FAIL[i] != NULL)); i++){			
@@ -32784,22 +32833,22 @@ DBusMessage * wid_dbus_interface_wtp_show_ap_upgrade_result(DBusConnection *conn
 	
 		if(WTP_FAIL[i]->WTPIP != NULL)
 		{
-			wtp_ip = (char*)malloc(strlen(WTP_FAIL[i]->WTPIP)+1);
+			wtp_ip = (char*)WID_MALLOC(strlen(WTP_FAIL[i]->WTPIP)+1);
 			memset(wtp_ip,0,strlen(WTP_FAIL[i]->WTPIP)+1);
 			memcpy(wtp_ip,WTP_FAIL[i]->WTPIP,strlen(WTP_FAIL[i]->WTPIP));	
 		}else{
-			wtp_ip = (char*)malloc(2);
+			wtp_ip = (char*)WID_MALLOC(2);
 			memset(wtp_ip,0,2);
 			memcpy(wtp_ip," ",1);
 		}
 		
 		if(WTP_FAIL[i]->WTPModel != NULL)
 		{
-			wtp_model = (char*)malloc(strlen(WTP_FAIL[i]->WTPModel)+1);
+			wtp_model = (char*)WID_MALLOC(strlen(WTP_FAIL[i]->WTPModel)+1);
 			memset(wtp_model,0,strlen(WTP_FAIL[i]->WTPModel)+1);
 			memcpy(wtp_model,WTP_FAIL[i]->WTPModel,strlen(WTP_FAIL[i]->WTPModel));		
 		}else{
-			wtp_model = (char*)malloc(2);
+			wtp_model = (char*)WID_MALLOC(2);
 			memset(wtp_model,0,2);
 			memcpy(wtp_model," ",1);					
 		}
@@ -32810,8 +32859,8 @@ DBusMessage * wid_dbus_interface_wtp_show_ap_upgrade_result(DBusConnection *conn
 		
 		dbus_message_iter_close_container (&iter_array, &iter_struct);
 	
-		CW_FREE_OBJECT(wtp_ip);
-		CW_FREE_OBJECT(wtp_model);
+		CW_FREE_OBJECT_WID(wtp_ip);
+		CW_FREE_OBJECT_WID(wtp_model);
 	}
 	
 	for(i = 0; ((i < num_other)&&(WTP_OTHE[i] != NULL)); i++){			
@@ -32839,22 +32888,22 @@ DBusMessage * wid_dbus_interface_wtp_show_ap_upgrade_result(DBusConnection *conn
 	
 		if(WTP_OTHE[i]->WTPIP != NULL)
 		{
-			wtp_ip = (char*)malloc(strlen(WTP_OTHE[i]->WTPIP)+1);
+			wtp_ip = (char*)WID_MALLOC(strlen(WTP_OTHE[i]->WTPIP)+1);
 			memset(wtp_ip,0,strlen(WTP_OTHE[i]->WTPIP)+1);
 			memcpy(wtp_ip,WTP_OTHE[i]->WTPIP,strlen(WTP_OTHE[i]->WTPIP));	
 		}else{
-			wtp_ip = (char*)malloc(2);
+			wtp_ip = (char*)WID_MALLOC(2);
 			memset(wtp_ip,0,2);
 			memcpy(wtp_ip," ",1);
 		}
 		
 		if(WTP_OTHE[i]->WTPModel != NULL)
 		{
-			wtp_model = (char*)malloc(strlen(WTP_OTHE[i]->WTPModel)+1);
+			wtp_model = (char*)WID_MALLOC(strlen(WTP_OTHE[i]->WTPModel)+1);
 			memset(wtp_model,0,strlen(WTP_OTHE[i]->WTPModel)+1);
 			memcpy(wtp_model,WTP_OTHE[i]->WTPModel,strlen(WTP_OTHE[i]->WTPModel));		
 		}else{
-			wtp_model = (char*)malloc(2);
+			wtp_model = (char*)WID_MALLOC(2);
 			memset(wtp_model,0,2);
 			memcpy(wtp_model," ",1);					
 		}
@@ -32865,17 +32914,17 @@ DBusMessage * wid_dbus_interface_wtp_show_ap_upgrade_result(DBusConnection *conn
 		
 		dbus_message_iter_close_container (&iter_array, &iter_struct);
 	
-		CW_FREE_OBJECT(wtp_ip);
-		CW_FREE_OBJECT(wtp_model);
+		CW_FREE_OBJECT_WID(wtp_ip);
+		CW_FREE_OBJECT_WID(wtp_model);
 	}
 
 	dbus_message_iter_close_container (&iter, &iter_array);
 				
 	CWThreadMutexUnlock(&(gAllThreadMutex));		
-	CW_FREE_OBJECT(mac);
-	CW_FREE_OBJECT(WTP_SUCC);
-	CW_FREE_OBJECT(WTP_FAIL);
-	CW_FREE_OBJECT(WTP_OTHE);
+	CW_FREE_OBJECT_WID(mac);
+	CW_FREE_OBJECT_WID(WTP_SUCC);
+	CW_FREE_OBJECT_WID(WTP_FAIL);
+	CW_FREE_OBJECT_WID(WTP_OTHE);
 	return reply;	
 }
 
@@ -32934,33 +32983,33 @@ DBusMessage * wid_dbus_interface_wtp_show_ap_update_path(DBusConnection *conn, D
 			for(m=0;m<k;m++){
 				if(tmpnode->str_ap_model != NULL)
 				{
-					str_ap_model= (char*)malloc(strlen(tmpnode->str_ap_model)+1);
+					str_ap_model= (char*)WID_MALLOC(strlen(tmpnode->str_ap_model)+1);
 					memset(str_ap_model,0,strlen(tmpnode->str_ap_model)+1);
 					memcpy(str_ap_model,tmpnode->str_ap_model,strlen(tmpnode->str_ap_model));		
 				}else{
-					str_ap_model = (char*)malloc(2);
+					str_ap_model = (char*)WID_MALLOC(2);
 					memset(str_ap_model,0,2);
 					memcpy(str_ap_model," ",1);					
 				}
 				
 				if(tmpnode->str_ap_version_name != NULL)
 				{
-					str_ap_version_name= (char*)malloc(strlen(tmpnode->str_ap_version_name)+1);
+					str_ap_version_name= (char*)WID_MALLOC(strlen(tmpnode->str_ap_version_name)+1);
 					memset(str_ap_version_name,0,strlen(tmpnode->str_ap_version_name)+1);
 					memcpy(str_ap_version_name,tmpnode->str_ap_version_name,strlen(tmpnode->str_ap_version_name));		
 				}else{
-					str_ap_version_name = (char*)malloc(2);
+					str_ap_version_name = (char*)WID_MALLOC(2);
 					memset(str_ap_version_name,0,2);
 					memcpy(str_ap_version_name," ",1);					
 				}
 				
 				if(tmpnode->str_ap_version_path != NULL)
 				{
-					str_ap_version_path= (char*)malloc(strlen(tmpnode->str_ap_version_path)+1);
+					str_ap_version_path= (char*)WID_MALLOC(strlen(tmpnode->str_ap_version_path)+1);
 					memset(str_ap_version_path,0,strlen(tmpnode->str_ap_version_path)+1);
 					memcpy(str_ap_version_path,tmpnode->str_ap_version_path,strlen(tmpnode->str_ap_version_path));		
 				}else{
-					str_ap_version_path = (char*)malloc(2);
+					str_ap_version_path = (char*)WID_MALLOC(2);
 					memset(str_ap_version_path,0,2);
 					memcpy(str_ap_version_path," ",1);					
 				}		
@@ -32969,9 +33018,9 @@ DBusMessage * wid_dbus_interface_wtp_show_ap_update_path(DBusConnection *conn, D
 				dbus_message_iter_append_basic(&iter, DBUS_TYPE_STRING, &str_ap_version_path);
 				tmpnode = tmpnode->next;
 				
-				CW_FREE_OBJECT(str_ap_model);
-				CW_FREE_OBJECT(str_ap_version_name);
-				CW_FREE_OBJECT(str_ap_version_path);
+				CW_FREE_OBJECT_WID(str_ap_model);
+				CW_FREE_OBJECT_WID(str_ap_version_name);
+				CW_FREE_OBJECT_WID(str_ap_version_path);
 			}
 		}
 	}
@@ -33025,19 +33074,19 @@ DBusMessage * wid_dbus_interface_wtp_clear_ap_update_path(DBusConnection *conn, 
 				CWConfigVersionInfo *free_node = tmp_node;
 				tmp_node = tmp_node->next;
 			
-				free(free_node->str_ap_model);
+				WID_FREE(free_node->str_ap_model);
 				free_node->str_ap_model = NULL;
 				
-				free(free_node->str_ap_version_name);
+				WID_FREE(free_node->str_ap_version_name);
 				free_node->str_ap_version_name = NULL;
 				
-				free(free_node->str_ap_version_path);
+				WID_FREE(free_node->str_ap_version_path);
 				free_node->str_ap_version_path = NULL;
 			
-				free(free_node->str_ap_code);
+				WID_FREE(free_node->str_ap_code);
 				free_node->str_ap_code = NULL;
 				
-				free(free_node);
+				WID_FREE(free_node);
 				free_node = NULL;
 			}
 			gConfigVersionUpdateInfo[i] = NULL;
@@ -33111,13 +33160,13 @@ DBusMessage * wid_dbus_interface_wtp_delete_ap_model(DBusConnection *conn, DBusM
 		{
 			gConfigVersionInfo = pnode->next;
 
-			free(pnode->str_ap_model);
+			WID_FREE(pnode->str_ap_model);
 			pnode->str_ap_model = NULL;
 		//	free(pnode->str_ap_version_name);
 		//	pnode->str_ap_version_name = NULL;
 		//	free(pnode->str_ap_version_path);
 		//	pnode->str_ap_version_path = NULL;
-			free(pnode);
+			WID_FREE(pnode);
 			pnode = NULL;
 
 			ret = WID_DBUS_SUCCESS;
@@ -33137,13 +33186,13 @@ DBusMessage * wid_dbus_interface_wtp_delete_ap_model(DBusConnection *conn, DBusM
 				deletenode = pnode->next;
 				pnode->next = pnode->next->next;
 				
-				free(deletenode->str_ap_model);
+				WID_FREE(deletenode->str_ap_model);
 				deletenode->str_ap_model = NULL;
 			//	free(deletenode->str_ap_version_name);
 			//	deletenode->str_ap_version_name = NULL;
 			//	free(deletenode->str_ap_version_path);
 			//	deletenode->str_ap_version_path = NULL;
-				free(deletenode);
+				WID_FREE(deletenode);
 				deletenode = NULL;	
 				
 				ret = WID_DBUS_SUCCESS;
@@ -33404,7 +33453,7 @@ DBusMessage * wid_dbus_interface_radio_set_txp(DBusConnection *conn, DBusMessage
 							radionum +=AC_WTP[radiotmp->WTPID]->RadioCount;
 							radiotmp = radiotmp->next;
 						}
-					radio_head = (struct Radio_List *)malloc(radionum*(sizeof(struct Radio_List)));
+					radio_head = (struct Radio_List *)WID_MALLOC(radionum*(sizeof(struct Radio_List)));
 
 					while(tmp)
 						{
@@ -33500,7 +33549,7 @@ DBusMessage * wid_dbus_interface_radio_set_txp(DBusConnection *conn, DBusMessage
 				
 				if(radio_head!=NULL)
 					{
-						free(radio_head);
+						WID_FREE(radio_head);
 						radio_head = NULL;	
 					}
 
@@ -33712,7 +33761,7 @@ DBusMessage * wid_dbus_interface_radio_set_txpof(DBusConnection *conn, DBusMessa
 							radionum +=AC_WTP[radiotmp->WTPID]->RadioCount;
 							radiotmp = radiotmp->next;
 						}
-					radio_head = (struct Radio_List *)malloc(radionum*(sizeof(struct Radio_List)));
+					radio_head = (struct Radio_List *)WID_MALLOC(radionum*(sizeof(struct Radio_List)));
 					//radio_country_fail = (struct Radio_List *)malloc(radionum*(sizeof(struct Radio_List)));
 					printf("@@@@@@@@@@@@@@@@@@@\n");
 					while(tmp)
@@ -33831,7 +33880,7 @@ DBusMessage * wid_dbus_interface_radio_set_txpof(DBusConnection *conn, DBusMessa
 				
 				if(radio_head!=NULL)
 					{
-						free(radio_head);
+						WID_FREE(radio_head);
 						radio_head = NULL;	
 					}
 
@@ -33999,7 +34048,7 @@ DBusMessage * wid_dbus_interface_radio_set_txpower_step(DBusConnection *conn, DB
 							radionum +=AC_WTP[radiotmp->WTPID]->RadioCount;
 							radiotmp = radiotmp->next;
 						}
-					radio_head = (struct Radio_List *)malloc(radionum*(sizeof(struct Radio_List)));
+					radio_head = (struct Radio_List *)WID_MALLOC(radionum*(sizeof(struct Radio_List)));
 					while(tmp)
 						{
 							ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
@@ -34067,7 +34116,7 @@ DBusMessage * wid_dbus_interface_radio_set_txpower_step(DBusConnection *conn, DB
 				
 				if(radio_head!=NULL)
 					{
-						free(radio_head);
+						WID_FREE(radio_head);
 						radio_head = NULL;	
 					}
 			}
@@ -34444,7 +34493,7 @@ DBusMessage * wid_dbus_interface_radio_set_chan(DBusConnection *conn, DBusMessag
 							radionum +=AC_WTP[radiotmp->WTPID]->RadioCount;
 							radiotmp = radiotmp->next;
 						}
-					radio_head = (struct Radio_List *)malloc(radionum*(sizeof(struct Radio_List)));
+					radio_head = (struct Radio_List *)WID_MALLOC(radionum*(sizeof(struct Radio_List)));
 					while(tmp)
 						{
 							ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
@@ -34672,7 +34721,7 @@ DBusMessage * wid_dbus_interface_radio_set_chan(DBusConnection *conn, DBusMessag
 				
 				if(radio_head!=NULL)
 					{
-						free(radio_head);
+						WID_FREE(radio_head);
 						radio_head = NULL;	
 					}
 			}
@@ -34943,7 +34992,7 @@ DBusMessage * wid_dbus_interface_radio_apply_wlan(DBusConnection *conn, DBusMess
 							radionum +=AC_WTP[radiotmp->WTPID]->RadioCount;
 							radiotmp = radiotmp->next;
 						}
-					radio_head = (struct Radio_List *)malloc(radionum*(sizeof(struct Radio_List)));
+					radio_head = (struct Radio_List *)WID_MALLOC(radionum*(sizeof(struct Radio_List)));
 					while(tmp)
 						{
 							ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
@@ -35010,7 +35059,7 @@ DBusMessage * wid_dbus_interface_radio_apply_wlan(DBusConnection *conn, DBusMess
 				
 				if(radio_head!=NULL)
 					{
-						free(radio_head);
+						WID_FREE(radio_head);
 						radio_head = NULL;	
 					}
 			}
@@ -35302,7 +35351,7 @@ DBusMessage * wid_dbus_interface_radio_apply_wlanid_base_vlanid(DBusConnection *
 							radionum +=AC_WTP[radiotmp->WTPID]->RadioCount;
 							radiotmp = radiotmp->next;
 						}
-					radio_head = (struct Radio_List *)malloc(radionum*(sizeof(struct Radio_List)));
+					radio_head = (struct Radio_List *)WID_MALLOC(radionum*(sizeof(struct Radio_List)));
 					while(tmp)
 						{
 							ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
@@ -35387,7 +35436,7 @@ DBusMessage * wid_dbus_interface_radio_apply_wlanid_base_vlanid(DBusConnection *
 				
 				if(radio_head!=NULL)
 					{
-						free(radio_head);
+						WID_FREE(radio_head);
 						radio_head = NULL;	
 					}
 			}
@@ -35559,7 +35608,7 @@ DBusMessage * wid_dbus_interface_radio_apply_wlanid_clean_vlanid(DBusConnection 
 							radionum +=AC_WTP[radiotmp->WTPID]->RadioCount;
 							radiotmp = radiotmp->next;
 						}
-					radio_head = (struct Radio_List *)malloc(radionum*(sizeof(struct Radio_List)));
+					radio_head = (struct Radio_List *)WID_MALLOC(radionum*(sizeof(struct Radio_List)));
 					while(tmp)
 						{
 							ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
@@ -35642,7 +35691,7 @@ DBusMessage * wid_dbus_interface_radio_apply_wlanid_clean_vlanid(DBusConnection 
 				
 				if(radio_head!=NULL)
 					{
-						free(radio_head);
+						WID_FREE(radio_head);
 						radio_head = NULL;	
 					}
 			}
@@ -36162,7 +36211,7 @@ DBusMessage *  wid_dbus_interface_check_radio_member(DBusConnection *conn, DBusM
 		printf("#############\n");
 			if(AC_RADIO[ID] != NULL)
 				{
-					radio_head = (struct Radio_List *)malloc(sizeof(struct Radio_List));
+					radio_head = (struct Radio_List *)WID_MALLOC(sizeof(struct Radio_List));
 					radio_head->RadioId = ID;
 					ret = WID_DBUS_SUCCESS;
 				}
@@ -36184,7 +36233,7 @@ DBusMessage *  wid_dbus_interface_check_radio_member(DBusConnection *conn, DBusM
 							radionum +=AC_WTP[radiotmp->WTPID]->RadioCount;
 							radiotmp = radiotmp->next;
 						}
-					radio_head = (struct Radio_List *)malloc(radionum*(sizeof(struct Radio_List)));
+					radio_head = (struct Radio_List *)WID_MALLOC(radionum*(sizeof(struct Radio_List)));
 					while(tmp)
 						{
 							ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
@@ -36232,7 +36281,7 @@ DBusMessage *  wid_dbus_interface_check_radio_member(DBusConnection *conn, DBusM
 				printf("radio_head->RadioId = %d\n",radio_head->RadioId);
 				if(radio_head!=NULL)
 					{
-						free(radio_head);
+						WID_FREE(radio_head);
 						radio_head = NULL;	
 					}
 				
@@ -36253,7 +36302,7 @@ DBusMessage *  wid_dbus_interface_check_radio_member(DBusConnection *conn, DBusM
 				
 				if(radio_head!=NULL)
 					{
-						free(radio_head);
+						WID_FREE(radio_head);
 						radio_head = NULL;	
 					}
 			}
@@ -36322,7 +36371,7 @@ DBusMessage * wid_dbus_interface_radio_delete_wlan(DBusConnection *conn, DBusMes
 							radionum +=AC_WTP[radiotmp->WTPID]->RadioCount;
 							radiotmp = radiotmp->next;
 						}
-					radio_head = (struct Radio_List *)malloc(radionum*(sizeof(struct Radio_List)));
+					radio_head = (struct Radio_List *)WID_MALLOC(radionum*(sizeof(struct Radio_List)));
 					while(tmp)
 						{
 							ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
@@ -36389,7 +36438,7 @@ DBusMessage * wid_dbus_interface_radio_delete_wlan(DBusConnection *conn, DBusMes
 				
 				if(radio_head!=NULL)
 					{
-						free(radio_head);
+						WID_FREE(radio_head);
 						radio_head = NULL;	
 					}
 			}
@@ -36572,7 +36621,7 @@ DBusMessage * wid_dbus_interface_radio_enable_wlan(DBusConnection *conn, DBusMes
 							radionum +=AC_WTP[radiotmp->WTPID]->RadioCount;
 							radiotmp = radiotmp->next;
 						}
-					radio_head = (struct Radio_List *)malloc(radionum*(sizeof(struct Radio_List)));
+					radio_head = (struct Radio_List *)WID_MALLOC(radionum*(sizeof(struct Radio_List)));
 					while(tmp)
 						{
 							ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
@@ -36639,7 +36688,7 @@ DBusMessage * wid_dbus_interface_radio_enable_wlan(DBusConnection *conn, DBusMes
 				
 				if(radio_head!=NULL)
 					{
-						free(radio_head);
+						WID_FREE(radio_head);
 						radio_head = NULL;	
 					}
 			}
@@ -36767,7 +36816,7 @@ DBusMessage * wid_dbus_interface_radio_disable_wlan(DBusConnection *conn, DBusMe
 							radionum +=AC_WTP[radiotmp->WTPID]->RadioCount;
 							radiotmp = radiotmp->next;
 						}
-					radio_head = (struct Radio_List *)malloc(radionum*(sizeof(struct Radio_List)));
+					radio_head = (struct Radio_List *)WID_MALLOC(radionum*(sizeof(struct Radio_List)));
 					while(tmp)
 						{
 							ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
@@ -36835,7 +36884,7 @@ DBusMessage * wid_dbus_interface_radio_disable_wlan(DBusConnection *conn, DBusMe
 				
 				if(radio_head!=NULL)
 					{
-						free(radio_head);
+						WID_FREE(radio_head);
 						radio_head = NULL;	
 					}
 			}
@@ -36980,7 +37029,7 @@ DBusMessage * wid_dbus_interface_radio_recover_default_config(DBusConnection *co
 							radionum +=AC_WTP[radiotmp->WTPID]->RadioCount;
 							radiotmp = radiotmp->next;
 						}
-					radio_head = (struct Radio_List *)malloc(radionum*(sizeof(struct Radio_List)));
+					radio_head = (struct Radio_List *)WID_MALLOC(radionum*(sizeof(struct Radio_List)));
 					while(tmp)
 						{
 							ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
@@ -37062,7 +37111,7 @@ DBusMessage * wid_dbus_interface_radio_recover_default_config(DBusConnection *co
 				
 				if(radio_head!=NULL)
 					{
-						free(radio_head);
+						WID_FREE(radio_head);
 						radio_head = NULL;	
 					}
 			}
@@ -37333,7 +37382,7 @@ DBusMessage * wid_dbus_interface_radio_set_support_ratelist(DBusConnection *conn
 							radionum +=AC_WTP[radiotmp->WTPID]->RadioCount;
 							radiotmp = radiotmp->next;
 						}
-					radio_head = (struct Radio_List *)malloc(radionum*(sizeof(struct Radio_List)));
+					radio_head = (struct Radio_List *)WID_MALLOC(radionum*(sizeof(struct Radio_List)));
 					while(tmp)
 						{
 							ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
@@ -37417,7 +37466,7 @@ DBusMessage * wid_dbus_interface_radio_set_support_ratelist(DBusConnection *conn
 				
 				if(radio_head!=NULL)
 					{
-						free(radio_head);
+						WID_FREE(radio_head);
 						radio_head = NULL;	
 					}
 			}
@@ -37709,7 +37758,7 @@ DBusMessage * wid_dbus_interface_radio_set_max_rate(DBusConnection *conn, DBusMe
 							radionum +=AC_WTP[radiotmp->WTPID]->RadioCount;
 							radiotmp = radiotmp->next;
 						}
-					radio_head = (struct Radio_List *)malloc(radionum*(sizeof(struct Radio_List)));
+					radio_head = (struct Radio_List *)WID_MALLOC(radionum*(sizeof(struct Radio_List)));
 					while(tmp)
 						{
 							ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
@@ -37776,7 +37825,7 @@ DBusMessage * wid_dbus_interface_radio_set_max_rate(DBusConnection *conn, DBusMe
 				
 				if(radio_head!=NULL)
 					{
-						free(radio_head);
+						WID_FREE(radio_head);
 						radio_head = NULL;	
 					}
 			}
@@ -38019,7 +38068,7 @@ DBusMessage * wid_dbus_interface_radio_set_bss_l3_policy(DBusConnection *conn, D
 							radionum +=AC_WTP[radiotmp->WTPID]->RadioCount;
 							radiotmp = radiotmp->next;
 						}
-					radio_head = (struct Radio_List *)malloc(radionum*(sizeof(struct Radio_List)));
+					radio_head = (struct Radio_List *)WID_MALLOC(radionum*(sizeof(struct Radio_List)));
 					while(tmp)
 						{
 							ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
@@ -38112,7 +38161,7 @@ DBusMessage * wid_dbus_interface_radio_set_bss_l3_policy(DBusConnection *conn, D
 				
 				if(radio_head!=NULL)
 					{
-						free(radio_head);
+						WID_FREE(radio_head);
 						radio_head = NULL;	
 					}
 			}
@@ -38367,7 +38416,7 @@ DBusMessage * wid_dbus_interface_radio_set_bss_max_throughput(DBusConnection *co
 							radionum +=AC_WTP[radiotmp->WTPID]->RadioCount;
 							radiotmp = radiotmp->next;
 						}
-					radio_head = (struct Radio_List *)malloc(radionum*(sizeof(struct Radio_List)));
+					radio_head = (struct Radio_List *)WID_MALLOC(radionum*(sizeof(struct Radio_List)));
 					while(tmp)
 						{
 							ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
@@ -38465,7 +38514,7 @@ DBusMessage * wid_dbus_interface_radio_set_bss_max_throughput(DBusConnection *co
 				
 				if(radio_head!=NULL)
 					{
-						free(radio_head);
+						WID_FREE(radio_head);
 						radio_head = NULL;	
 					}
 			}
@@ -38687,7 +38736,7 @@ DBusMessage * wid_dbus_interface_radio_show_bss_list(DBusConnection *conn, DBusM
 	int count = 0;
 	unsigned int radio_id = 0;
 	char *nas_id = NULL;
-	nas_id = (char *)malloc(NAS_IDENTIFIER_NAME+1);
+	nas_id = (char *)WID_MALLOC(NAS_IDENTIFIER_NAME+1);
 	if(NULL == nas_id){
 		return NULL;
 	}
@@ -38703,7 +38752,7 @@ DBusMessage * wid_dbus_interface_radio_show_bss_list(DBusConnection *conn, DBusM
 			printf("%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
-		CW_FREE_OBJECT(nas_id);
+		CW_FREE_OBJECT_WID(nas_id);
 		return NULL;
 	}
 	unsigned int wtp_id = radio_id/L_RADIO_NUM;
@@ -38848,7 +38897,7 @@ DBusMessage * wid_dbus_interface_radio_show_bss_list(DBusConnection *conn, DBusM
 					
 		dbus_message_iter_close_container (&iter, &iter_array);
 	}			
-	free(nas_id);
+	WID_FREE(nas_id);
 	nas_id = NULL;
 	return reply;	
 
@@ -39002,7 +39051,7 @@ DBusMessage * wid_dbus_interface_radio_set_mode(DBusConnection *conn, DBusMessag
 						}
 					//int RADIOID[radionum]={0};
 					//radio_num = (struct Radio_List *)malloc(radionum*(sizeof(struct Radio_List)));
-					radio_head = (struct Radio_List *)malloc(radionum*(sizeof(struct Radio_List)));
+					radio_head = (struct Radio_List *)WID_MALLOC(radionum*(sizeof(struct Radio_List)));
 					while(tmp)
 						{
 							ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
@@ -39068,7 +39117,7 @@ DBusMessage * wid_dbus_interface_radio_set_mode(DBusConnection *conn, DBusMessag
 				
 				if(radio_head!=NULL)
 					{
-						free(radio_head);
+						WID_FREE(radio_head);
 						radio_head = NULL;	
 					}
 
@@ -39207,7 +39256,7 @@ DBusMessage * wid_dbus_interface_radio_set_beacon(DBusConnection *conn, DBusMess
 							radionum +=AC_WTP[radiotmp->WTPID]->RadioCount;
 							radiotmp = radiotmp->next;
 						}
-					radio_head = (struct Radio_List *)malloc(radionum*(sizeof(struct Radio_List)));
+					radio_head = (struct Radio_List *)WID_MALLOC(radionum*(sizeof(struct Radio_List)));
 					while(tmp)
 						{
 							ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
@@ -39272,7 +39321,7 @@ DBusMessage * wid_dbus_interface_radio_set_beacon(DBusConnection *conn, DBusMess
 				
 				if(radio_head!=NULL)
 					{
-						free(radio_head);
+						WID_FREE(radio_head);
 						radio_head = NULL;	
 					}
 			}
@@ -39384,7 +39433,7 @@ DBusMessage * wid_dbus_interface_radio_set_fragmentation(DBusConnection *conn, D
 							radionum +=AC_WTP[radiotmp->WTPID]->RadioCount;
 							radiotmp = radiotmp->next;
 						}
-					radio_head = (struct Radio_List *)malloc(radionum*(sizeof(struct Radio_List)));
+					radio_head = (struct Radio_List *)WID_MALLOC(radionum*(sizeof(struct Radio_List)));
 					while(tmp)
 						{
 							ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
@@ -39449,7 +39498,7 @@ DBusMessage * wid_dbus_interface_radio_set_fragmentation(DBusConnection *conn, D
 				
 				if(radio_head!=NULL)
 					{
-						free(radio_head);
+						WID_FREE(radio_head);
 						radio_head = NULL;	
 					}
 			}
@@ -39558,7 +39607,7 @@ DBusMessage * wid_dbus_interface_radio_set_dtim(DBusConnection *conn, DBusMessag
 							radionum +=AC_WTP[radiotmp->WTPID]->RadioCount;
 							radiotmp = radiotmp->next;
 						}
-					radio_head = (struct Radio_List *)malloc(radionum*(sizeof(struct Radio_List)));
+					radio_head = (struct Radio_List *)WID_MALLOC(radionum*(sizeof(struct Radio_List)));
 					while(tmp)
 						{
 							ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
@@ -39623,7 +39672,7 @@ DBusMessage * wid_dbus_interface_radio_set_dtim(DBusConnection *conn, DBusMessag
 				
 				if(radio_head!=NULL)
 					{
-						free(radio_head);
+						WID_FREE(radio_head);
 						radio_head = NULL;	
 					}
 			}
@@ -39732,7 +39781,7 @@ DBusMessage * wid_dbus_interface_radio_set_rtsthreshold(DBusConnection *conn, DB
 							radionum +=AC_WTP[radiotmp->WTPID]->RadioCount;
 							radiotmp = radiotmp->next;
 						}
-					radio_head = (struct Radio_List *)malloc(radionum*(sizeof(struct Radio_List)));
+					radio_head = (struct Radio_List *)WID_MALLOC(radionum*(sizeof(struct Radio_List)));
 					while(tmp)
 						{
 							ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
@@ -39797,7 +39846,7 @@ DBusMessage * wid_dbus_interface_radio_set_rtsthreshold(DBusConnection *conn, DB
 				
 				if(radio_head!=NULL)
 					{
-						free(radio_head);
+						WID_FREE(radio_head);
 						radio_head = NULL;	
 					}
 			}
@@ -39971,7 +40020,7 @@ DBusMessage * wid_dbus_interface_radio_set_guardinterval(DBusConnection *conn, D
 							radionum +=AC_WTP[radiotmp->WTPID]->RadioCount;
 							radiotmp = radiotmp->next;
 						}
-					radio_head = (struct Radio_List *)malloc(radionum*(sizeof(struct Radio_List)));
+					radio_head = (struct Radio_List *)WID_MALLOC(radionum*(sizeof(struct Radio_List)));
 					while(tmp)
 						{
 							ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
@@ -40051,7 +40100,7 @@ DBusMessage * wid_dbus_interface_radio_set_guardinterval(DBusConnection *conn, D
 				
 				if(radio_head!=NULL)
 					{
-						free(radio_head);
+						WID_FREE(radio_head);
 						radio_head = NULL;	
 					}
 			}
@@ -40222,7 +40271,7 @@ DBusMessage * wid_dbus_interface_radio_set_ampdu_able(DBusConnection *conn, DBus
 							radionum +=AC_WTP[radiotmp->WTPID]->RadioCount;
 							radiotmp = radiotmp->next;
 						}
-					radio_head = (struct Radio_List *)malloc(radionum*(sizeof(struct Radio_List)));
+					radio_head = (struct Radio_List *)WID_MALLOC(radionum*(sizeof(struct Radio_List)));
 					while(tmp)
 						{
 							ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
@@ -40342,7 +40391,7 @@ DBusMessage * wid_dbus_interface_radio_set_ampdu_able(DBusConnection *conn, DBus
 					}	
 				if(radio_head!=NULL)
 					{
-						free(radio_head);
+						WID_FREE(radio_head);
 						radio_head = NULL;	
 					}
 			}
@@ -40551,7 +40600,7 @@ DBusMessage * wid_dbus_interface_radio_set_ampdu_limit(DBusConnection *conn, DBu
 							radionum +=AC_WTP[radiotmp->WTPID]->RadioCount;
 							radiotmp = radiotmp->next;
 						}
-					radio_head = (struct Radio_List *)malloc(radionum*(sizeof(struct Radio_List)));
+					radio_head = (struct Radio_List *)WID_MALLOC(radionum*(sizeof(struct Radio_List)));
 					while(tmp)
 						{
 							ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
@@ -40666,7 +40715,7 @@ DBusMessage * wid_dbus_interface_radio_set_ampdu_limit(DBusConnection *conn, DBu
 					}	
 				if(radio_head!=NULL)
 					{
-						free(radio_head);
+						WID_FREE(radio_head);
 						radio_head = NULL;	
 					}
 			}
@@ -40871,7 +40920,7 @@ DBusMessage * wid_dbus_interface_radio_set_ampdu_subframe(DBusConnection *conn, 
 							radionum +=AC_WTP[radiotmp->WTPID]->RadioCount;
 							radiotmp = radiotmp->next;
 						}
-					radio_head = (struct Radio_List *)malloc(radionum*(sizeof(struct Radio_List)));
+					radio_head = (struct Radio_List *)WID_MALLOC(radionum*(sizeof(struct Radio_List)));
 					while(tmp)
 						{
 							ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
@@ -40987,7 +41036,7 @@ DBusMessage * wid_dbus_interface_radio_set_ampdu_subframe(DBusConnection *conn, 
 				
 				if(radio_head!=NULL)
 					{
-						free(radio_head);
+						WID_FREE(radio_head);
 						radio_head = NULL;	
 					}
 			}
@@ -41204,7 +41253,7 @@ DBusMessage * wid_dbus_interface_radio_set_mixed_puren_switch(DBusConnection *co
 							radionum +=AC_WTP[radiotmp->WTPID]->RadioCount;
 							radiotmp = radiotmp->next;
 						}
-					radio_head = (struct Radio_List *)malloc(radionum*(sizeof(struct Radio_List)));
+					radio_head = (struct Radio_List *)WID_MALLOC(radionum*(sizeof(struct Radio_List)));
 					while(tmp)
 						{
 							ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
@@ -41310,7 +41359,7 @@ DBusMessage * wid_dbus_interface_radio_set_mixed_puren_switch(DBusConnection *co
 				
 				if(radio_head!=NULL)
 					{
-						free(radio_head);
+						WID_FREE(radio_head);
 						radio_head = NULL;	
 					}
 			}
@@ -41530,7 +41579,7 @@ DBusMessage * wid_dbus_interface_radio_set_channel_offset(DBusConnection *conn, 
 							radionum +=AC_WTP[radiotmp->WTPID]->RadioCount;
 							radiotmp = radiotmp->next;
 						}
-					radio_head = (struct Radio_List *)malloc(radionum*(sizeof(struct Radio_List)));
+					radio_head = (struct Radio_List *)WID_MALLOC(radionum*(sizeof(struct Radio_List)));
 					while(tmp)
 						{
 							ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
@@ -41635,7 +41684,7 @@ DBusMessage * wid_dbus_interface_radio_set_channel_offset(DBusConnection *conn, 
 				
 				if(radio_head!=NULL)
 					{
-						free(radio_head);
+						WID_FREE(radio_head);
 						radio_head = NULL;	
 					}
 			}
@@ -41763,7 +41812,7 @@ DBusMessage * wid_dbus_interface_radio_set_mcs(DBusConnection *conn, DBusMessage
 	struct Radio_List  *radio_head = NULL;
 	struct WTP_GROUP_MEMBER *tmp = NULL;
 	struct WTP_GROUP_MEMBER *radiotmp = NULL;
-//cs = (update_mcs_list *)malloc(sizeof(mcs));
+//cs = (update_mcs_list *)WID_MALLOC(sizeof(mcs));
 	//qiuchen change it
 	dbus_error_init(&err);
 	/* (!(dbus_message_get_args ( msg, &err,
@@ -41860,7 +41909,7 @@ DBusMessage * wid_dbus_interface_radio_set_mcs(DBusConnection *conn, DBusMessage
 							radionum +=AC_WTP[radiotmp->WTPID]->RadioCount;
 							radiotmp = radiotmp->next;
 						}
-					radio_head = (struct Radio_List *)malloc(radionum*(sizeof(struct Radio_List)));
+					radio_head = (struct Radio_List *)WID_MALLOC(radionum*(sizeof(struct Radio_List)));
 					while(tmp)
 						{
 							ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
@@ -41972,7 +42021,7 @@ DBusMessage * wid_dbus_interface_radio_set_mcs(DBusConnection *conn, DBusMessage
 				
 				if(radio_head!=NULL)
 					{
-						free(radio_head);
+						WID_FREE(radio_head);
 						radio_head = NULL;	
 					}
 			}
@@ -42182,7 +42231,7 @@ DBusMessage * wid_dbus_interface_radio_set_cmmode(DBusConnection *conn, DBusMess
 							radionum +=AC_WTP[radiotmp->WTPID]->RadioCount;
 							radiotmp = radiotmp->next;
 						}
-					radio_head = (struct Radio_List *)malloc(radionum*(sizeof(struct Radio_List)));
+					radio_head = (struct Radio_List *)WID_MALLOC(radionum*(sizeof(struct Radio_List)));
 					while(tmp)
 						{
 							ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
@@ -42299,7 +42348,7 @@ DBusMessage * wid_dbus_interface_radio_set_cmmode(DBusConnection *conn, DBusMess
 				
 				if(radio_head!=NULL)
 					{
-						free(radio_head);
+						WID_FREE(radio_head);
 						radio_head = NULL;	
 					}
 			}
@@ -42479,7 +42528,7 @@ DBusMessage * wid_dbus_interface_radio_set_wds_distance(DBusConnection *conn, DB
 							radionum +=AC_WTP[radiotmp->WTPID]->RadioCount;
 							radiotmp = radiotmp->next;
 						}
-					radio_head = (struct Radio_List *)malloc(radionum*(sizeof(struct Radio_List)));
+					radio_head = (struct Radio_List *)WID_MALLOC(radionum*(sizeof(struct Radio_List)));
 					while(tmp)
 						{
 							ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
@@ -42555,7 +42604,7 @@ DBusMessage * wid_dbus_interface_radio_set_wds_distance(DBusConnection *conn, DB
 				
 				if(radio_head!=NULL)
 					{
-						free(radio_head);
+						WID_FREE(radio_head);
 						radio_head = NULL;	
 					}
 			}
@@ -42695,7 +42744,7 @@ DBusMessage * wid_dbus_interface_radio_set_wds_remote_brmac(DBusConnection *conn
 							radionum +=AC_WTP[radiotmp->WTPID]->RadioCount;
 							radiotmp = radiotmp->next;
 						}
-					radio_head = (struct Radio_List *)malloc(radionum*(sizeof(struct Radio_List)));
+					radio_head = (struct Radio_List *)WID_MALLOC(radionum*(sizeof(struct Radio_List)));
 					while(tmp)
 						{
 							ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
@@ -42772,7 +42821,7 @@ DBusMessage * wid_dbus_interface_radio_set_wds_remote_brmac(DBusConnection *conn
 				
 				if(radio_head!=NULL)
 					{
-						free(radio_head);
+						WID_FREE(radio_head);
 						radio_head = NULL;	
 					}
 			}
@@ -42925,7 +42974,7 @@ DBusMessage * wid_dbus_interface_radio_set_wds_wep_key(DBusConnection *conn, DBu
 							radionum +=AC_WTP[radiotmp->WTPID]->RadioCount;
 							radiotmp = radiotmp->next;
 						}
-					radio_head = (struct Radio_List *)malloc(radionum*(sizeof(struct Radio_List)));
+					radio_head = (struct Radio_List *)WID_MALLOC(radionum*(sizeof(struct Radio_List)));
 					while(tmp)
 						{
 							ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
@@ -43014,7 +43063,7 @@ DBusMessage * wid_dbus_interface_radio_set_wds_wep_key(DBusConnection *conn, DBu
 				
 				if(radio_head!=NULL)
 					{
-						free(radio_head);
+						WID_FREE(radio_head);
 						radio_head = NULL;	
 					}
 			}
@@ -43167,7 +43216,7 @@ DBusMessage * wid_dbus_interface_radio_set_wds_encryption_type(DBusConnection *c
 							radionum +=AC_WTP[radiotmp->WTPID]->RadioCount;
 							radiotmp = radiotmp->next;
 						}
-					radio_head = (struct Radio_List *)malloc(radionum*(sizeof(struct Radio_List)));
+					radio_head = (struct Radio_List *)WID_MALLOC(radionum*(sizeof(struct Radio_List)));
 					while(tmp)
 						{
 							ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
@@ -43256,7 +43305,7 @@ DBusMessage * wid_dbus_interface_radio_set_wds_encryption_type(DBusConnection *c
 				
 				if(radio_head!=NULL)
 					{
-						free(radio_head);
+						WID_FREE(radio_head);
 						radio_head = NULL;	
 					}
 			}
@@ -43405,7 +43454,7 @@ DBusMessage * wid_dbus_interface_radio_set_wds_aes_key(DBusConnection *conn, DBu
 							radionum +=AC_WTP[radiotmp->WTPID]->RadioCount;
 							radiotmp = radiotmp->next;
 						}
-					radio_head = (struct Radio_List *)malloc(radionum*(sizeof(struct Radio_List)));
+					radio_head = (struct Radio_List *)WID_MALLOC(radionum*(sizeof(struct Radio_List)));
 					while(tmp)
 						{
 							ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
@@ -43482,7 +43531,7 @@ DBusMessage * wid_dbus_interface_radio_set_wds_aes_key(DBusConnection *conn, DBu
 				
 				if(radio_head!=NULL)
 					{
-						free(radio_head);
+						WID_FREE(radio_head);
 						radio_head = NULL;	
 					}
 			}
@@ -43608,7 +43657,7 @@ DBusMessage * wid_dbus_interface_radio_set_status(DBusConnection *conn, DBusMess
 							radionum +=AC_WTP[radiotmp->WTPID]->RadioCount;
 							radiotmp = radiotmp->next;
 						}
-					radio_head = (struct Radio_List *)malloc(radionum*(sizeof(struct Radio_List)));
+					radio_head = (struct Radio_List *)WID_MALLOC(radionum*(sizeof(struct Radio_List)));
 					while(tmp)
 						{
 							ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
@@ -43673,7 +43722,7 @@ DBusMessage * wid_dbus_interface_radio_set_status(DBusConnection *conn, DBusMess
 					}		
 				if(radio_head!=NULL)
 					{
-						free(radio_head);
+						WID_FREE(radio_head);
 						radio_head = NULL;	
 					}
 			}
@@ -43786,7 +43835,7 @@ DBusMessage * wid_dbus_interface_radio_set_wds_status(DBusConnection *conn, DBus
 							radionum +=AC_WTP[radiotmp->WTPID]->RadioCount;
 							radiotmp = radiotmp->next;
 						}
-					radio_head = (struct Radio_List *)malloc(radionum*(sizeof(struct Radio_List)));
+					radio_head = (struct Radio_List *)WID_MALLOC(radionum*(sizeof(struct Radio_List)));
 					while(tmp)
 						{
 							ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
@@ -43851,7 +43900,7 @@ DBusMessage * wid_dbus_interface_radio_set_wds_status(DBusConnection *conn, DBus
 					}		
 				if(radio_head!=NULL)
 					{
-						free(radio_head);
+						WID_FREE(radio_head);
 						radio_head = NULL;	
 					}
 			}
@@ -43963,7 +44012,7 @@ DBusMessage * wid_dbus_interface_radio_set_preamble(DBusConnection *conn, DBusMe
 							radionum +=AC_WTP[radiotmp->WTPID]->RadioCount;
 							radiotmp = radiotmp->next;
 						}
-					radio_head = (struct Radio_List *)malloc(radionum*(sizeof(struct Radio_List)));
+					radio_head = (struct Radio_List *)WID_MALLOC(radionum*(sizeof(struct Radio_List)));
 					while(tmp)
 						{
 							ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
@@ -44028,7 +44077,7 @@ DBusMessage * wid_dbus_interface_radio_set_preamble(DBusConnection *conn, DBusMe
 					}		
 				if(radio_head!=NULL)
 					{
-						free(radio_head);
+						WID_FREE(radio_head);
 						radio_head = NULL;	
 					}
 			}
@@ -44138,7 +44187,7 @@ DBusMessage * wid_dbus_interface_radio_set_shortretry(DBusConnection *conn, DBus
 							radionum +=AC_WTP[radiotmp->WTPID]->RadioCount;
 							radiotmp = radiotmp->next;
 						}
-					radio_head = (struct Radio_List *)malloc(radionum*(sizeof(struct Radio_List)));
+					radio_head = (struct Radio_List *)WID_MALLOC(radionum*(sizeof(struct Radio_List)));
 					while(tmp)
 						{
 							ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
@@ -44204,7 +44253,7 @@ DBusMessage * wid_dbus_interface_radio_set_shortretry(DBusConnection *conn, DBus
 				
 				if(radio_head!=NULL)
 					{
-						free(radio_head);
+						WID_FREE(radio_head);
 						radio_head = NULL;	
 					}
 			}
@@ -44312,7 +44361,7 @@ DBusMessage * wid_dbus_interface_radio_set_longretry(DBusConnection *conn, DBusM
 							radionum +=AC_WTP[radiotmp->WTPID]->RadioCount;
 							radiotmp = radiotmp->next;
 						}
-					radio_head = (struct Radio_List *)malloc(radionum*(sizeof(struct Radio_List)));
+					radio_head = (struct Radio_List *)WID_MALLOC(radionum*(sizeof(struct Radio_List)));
 					while(tmp)
 						{
 							ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
@@ -44378,7 +44427,7 @@ DBusMessage * wid_dbus_interface_radio_set_longretry(DBusConnection *conn, DBusM
 				
 				if(radio_head!=NULL)
 					{
-						free(radio_head);
+						WID_FREE(radio_head);
 						radio_head = NULL;	
 					}
 			}
@@ -44445,7 +44494,7 @@ DBusMessage *wid_dbus_radio_wlan_wds_mac_op(DBusConnection *conn, DBusMessage *m
 	unsigned char wlanid=0;
 	unsigned char list_type=0;	//1--black list, 2--white list
 	unsigned char *mac = NULL;
-	mac = (unsigned char*)malloc(6);
+	mac = (unsigned char*)WID_MALLOC(6);
 	memset(mac, 0, 6);
 
 	int ret = WID_DBUS_SUCCESS;
@@ -44498,7 +44547,7 @@ DBusMessage *wid_dbus_radio_wlan_wds_mac_op(DBusConnection *conn, DBusMessage *m
 							radionum +=AC_WTP[radiotmp->WTPID]->RadioCount;
 							radiotmp = radiotmp->next;
 						}
-					radio_head = (struct Radio_List *)malloc(radionum*(sizeof(struct Radio_List)));
+					radio_head = (struct Radio_List *)WID_MALLOC(radionum*(sizeof(struct Radio_List)));
 					while(tmp)
 						{
 							ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
@@ -44563,12 +44612,12 @@ DBusMessage *wid_dbus_radio_wlan_wds_mac_op(DBusConnection *conn, DBusMessage *m
 				
 				if(radio_head!=NULL)
 					{
-						free(radio_head);
+						WID_FREE(radio_head);
 						radio_head = NULL;	
 					}
 			}
 
-	free(mac);
+	WID_FREE(mac);
 	mac = NULL;
 	return reply;	
 }
@@ -44585,7 +44634,7 @@ DBusMessage *wid_dbus_radio_wlan_wds_mac_op(DBusConnection *conn, DBusMessage *m
 	unsigned char wlanid=0;
 	unsigned char list_type=0;	//1--black list, 2--white list
 	unsigned char *mac;
-	mac = (unsigned char*)malloc(6);
+	mac = (unsigned char*)WID_MALLOC(6);
 	memset(mac, 0, 6);
 
 
@@ -44627,7 +44676,7 @@ DBusMessage *wid_dbus_radio_wlan_wds_mac_op(DBusConnection *conn, DBusMessage *m
 									DBUS_TYPE_UINT32,
 									&ret); 
 
-	free(mac);
+	WID_FREE(mac);
 	mac = NULL;
 	return reply;	
 }
@@ -44646,7 +44695,7 @@ DBusMessage * wid_dbus_interface_show_wds_bssid_list(DBusConnection *conn, DBusM
 	int i;	
 	unsigned int num = 0;
 	unsigned char *bssid;
-	bssid = (unsigned char*)malloc(MAC_LEN);
+	bssid = (unsigned char*)WID_MALLOC(MAC_LEN);
 	if (!(dbus_message_get_args ( msg, &err,
 								DBUS_TYPE_BYTE,&WlanID,
 								DBUS_TYPE_UINT32,&RadioID,
@@ -44658,7 +44707,7 @@ DBusMessage * wid_dbus_interface_show_wds_bssid_list(DBusConnection *conn, DBusM
 			printf("%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
-		CW_FREE_OBJECT(bssid);
+		CW_FREE_OBJECT_WID(bssid);
 		return NULL;
 	}
 	BSSIndex = RadioID*L_BSS_NUM;
@@ -44745,7 +44794,7 @@ DBusMessage * wid_dbus_interface_show_wds_bssid_list(DBusConnection *conn, DBusM
 		dbus_message_iter_close_container (&iter, &iter_array);
 				
 	}
-	free(bssid);
+	WID_FREE(bssid);
 	return reply;	
 }
 
@@ -45446,7 +45495,7 @@ DBusMessage * wid_dbus_interface_radio_apply_qos(DBusConnection *conn, DBusMessa
 							radionum +=AC_WTP[radiotmp->WTPID]->RadioCount;
 							radiotmp = radiotmp->next;
 						}
-					radio_head = (struct Radio_List *)malloc(radionum*(sizeof(struct Radio_List)));
+					radio_head = (struct Radio_List *)WID_MALLOC(radionum*(sizeof(struct Radio_List)));
 					while(tmp)
 						{
 							ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
@@ -45520,7 +45569,7 @@ DBusMessage * wid_dbus_interface_radio_apply_qos(DBusConnection *conn, DBusMessa
 				
 				if(radio_head!=NULL)
 					{
-						free(radio_head);
+						WID_FREE(radio_head);
 						radio_head = NULL;	
 					}
 			}
@@ -45663,7 +45712,7 @@ DBusMessage * wid_dbus_interface_radio_delete_qos(DBusConnection *conn, DBusMess
 							radionum +=AC_WTP[radiotmp->WTPID]->RadioCount;
 							radiotmp = radiotmp->next;
 						}
-					radio_head = (struct Radio_List *)malloc(radionum*(sizeof(struct Radio_List)));
+					radio_head = (struct Radio_List *)WID_MALLOC(radionum*(sizeof(struct Radio_List)));
 					while(tmp)
 						{
 							ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
@@ -45751,7 +45800,7 @@ DBusMessage * wid_dbus_interface_radio_delete_qos(DBusConnection *conn, DBusMess
 				
 				if(radio_head!=NULL)
 					{
-						free(radio_head);
+						WID_FREE(radio_head);
 						radio_head = NULL;	
 					}
 			}
@@ -46037,19 +46086,19 @@ DBusMessage * wid_dbus_interface_qos_show_qos_extension_info(DBusConnection *con
 	int QOSID;
 	int i;
 	int ret=WID_DBUS_SUCCESS;
-	char *manage_name = (char *)malloc(sizeof(char)*WID_QOS_ARITHMETIC_NAME_LEN);
+	char *manage_name = (char *)WID_MALLOC(sizeof(char)*WID_QOS_ARITHMETIC_NAME_LEN);
 	if(NULL == manage_name){
 		return NULL;
 	}
-	char *grab_name = (char *)malloc(sizeof(char)*WID_QOS_ARITHMETIC_NAME_LEN);
+	char *grab_name = (char *)WID_MALLOC(sizeof(char)*WID_QOS_ARITHMETIC_NAME_LEN);
 	if(NULL == grab_name){
-		CW_FREE_OBJECT(manage_name);
+		CW_FREE_OBJECT_WID(manage_name);
 		return NULL;
 	}
-	char *shove_name = (char *)malloc(sizeof(char)*WID_QOS_ARITHMETIC_NAME_LEN);
+	char *shove_name = (char *)WID_MALLOC(sizeof(char)*WID_QOS_ARITHMETIC_NAME_LEN);
 	if(NULL == shove_name){
-		CW_FREE_OBJECT(manage_name);
-		CW_FREE_OBJECT(grab_name);
+		CW_FREE_OBJECT_WID(manage_name);
+		CW_FREE_OBJECT_WID(grab_name);
 		return NULL;
 	}
 	memset(manage_name,0,WID_QOS_ARITHMETIC_NAME_LEN);
@@ -46067,9 +46116,9 @@ DBusMessage * wid_dbus_interface_qos_show_qos_extension_info(DBusConnection *con
 			printf("%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
-		CW_FREE_OBJECT(manage_name);
-		CW_FREE_OBJECT(grab_name);
-		CW_FREE_OBJECT(shove_name);
+		CW_FREE_OBJECT_WID(manage_name);
+		CW_FREE_OBJECT_WID(grab_name);
+		CW_FREE_OBJECT_WID(shove_name);
 		return NULL;
 	}
 	if(WID_QOS[QOSID] == NULL)
@@ -46220,9 +46269,9 @@ DBusMessage * wid_dbus_interface_qos_show_qos_extension_info(DBusConnection *con
 		}					
 		dbus_message_iter_close_container (&iter, &iter_array);
 	}	
-	CW_FREE_OBJECT(manage_name);
-	CW_FREE_OBJECT(grab_name);
-	CW_FREE_OBJECT(shove_name);
+	CW_FREE_OBJECT_WID(manage_name);
+	CW_FREE_OBJECT_WID(grab_name);
+	CW_FREE_OBJECT_WID(shove_name);
 	return reply;	
 }
 
@@ -46713,7 +46762,7 @@ DBusMessage * wid_dbus_interface_radio_set_max_throughout(DBusConnection *conn, 
 							radionum +=AC_WTP[radiotmp->WTPID]->RadioCount;
 							radiotmp = radiotmp->next;
 						}
-					radio_head = (struct Radio_List *)malloc(radionum*(sizeof(struct Radio_List)));
+					radio_head = (struct Radio_List *)WID_MALLOC(radionum*(sizeof(struct Radio_List)));
 					while(tmp)
 						{
 							ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
@@ -46778,7 +46827,7 @@ DBusMessage * wid_dbus_interface_radio_set_max_throughout(DBusConnection *conn, 
 				
 				if(radio_head!=NULL)
 					{
-						free(radio_head);
+						WID_FREE(radio_head);
 						radio_head = NULL;	
 					}
 			}
@@ -46891,7 +46940,7 @@ DBusMessage * wid_dbus_interface_set_ap_max_throughout(DBusConnection *conn, DBu
 		printf("******** type == 1 *****\n");
 		if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL)){
 			tmp = WTP_GROUP[ID]->WTP_M;
-			wtp_head = (struct Wtp_List *)malloc(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
+			wtp_head = (struct Wtp_List *)WID_MALLOC(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
 			
 			while(tmp){
 				ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
@@ -46939,7 +46988,7 @@ DBusMessage * wid_dbus_interface_set_ap_max_throughout(DBusConnection *conn, DBu
 	}
 	
 	if(wtp_head!=NULL){
-		free(wtp_head);
+		WID_FREE(wtp_head);
 		wtp_head = NULL;	
 	}
 	
@@ -47046,7 +47095,7 @@ DBusMessage * wid_dbus_interface_set_ap_extension_command(DBusConnection *conn, 
 		printf("******** type == 1 *****\n");
 		if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL)){
 			tmp = WTP_GROUP[ID]->WTP_M;
-			wtp_head = (struct Wtp_List *)malloc(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
+			wtp_head = (struct Wtp_List *)WID_MALLOC(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
 			
 			while(tmp){
 				ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
@@ -47104,7 +47153,7 @@ DBusMessage * wid_dbus_interface_set_ap_extension_command(DBusConnection *conn, 
 		}	
 
 		if(wtp_head!=NULL){
-		free(wtp_head);
+		WID_FREE(wtp_head);
 		wtp_head = NULL;	
 		}
 	}
@@ -47309,7 +47358,7 @@ if(type==0)
 		return WID_DBUS_SUCCESS;}
 	sprintf(buffer," -w /tmp/wtp%d.pcap && cd /tmp && tftp -pl wtp%d.pcap %s&",ID,ID,inet_ntoa(((struct sockaddr_in*)(&ifr.ifr_addr))->sin_addr));
 	sprintf(buffer1,"tcpdump ");
-	buffercommand = (char *)malloc(256);
+	buffercommand = (char *)WID_MALLOC(256);
 	//command=strcat(buffer1,strcat(command,buffer));
 	buffer1command=strcat(buffer1,strcat(buffercommand,buffer));
 	if(strlen(buffer1command) > 256){
@@ -47349,7 +47398,7 @@ if(type==0)
 		}
 	if(buffercommand)
 		 {
-			free(buffercommand);
+			WID_FREE(buffercommand);
 			buffercommand = NULL;
 
 		 }
@@ -47362,16 +47411,16 @@ else if (type == 1)
 		if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL))
 			{
 				tmp = WTP_GROUP[ID]->WTP_M;
-				wtp_head = (struct Wtp_List *)malloc(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
+				wtp_head = (struct Wtp_List *)WID_MALLOC(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
 				printf("access type1\n");
 				printf("strlen:%d\n",(strlen(command)+1));
 
 		while(tmp)
 			{
 
-			    buffercommand = (char *)malloc(256);
+			    buffercommand = (char *)WID_MALLOC(256);
 				//buffercommand = command;
-				//buffercommand = (char *)malloc(strlen(command)+1);
+				//buffercommand = (char *)WID_MALLOC(strlen(command)+1);
 				//if(buffercommand == NULL){
 				//	printf("buffercommand:%p\n",buffercommand);
 				//}
@@ -47462,7 +47511,7 @@ else if (type == 1)
 						}
 				if(buffercommand)
 		 		{
-						free(buffercommand);
+						WID_FREE(buffercommand);
 		 				buffercommand = NULL;
 
 				}
@@ -47470,7 +47519,7 @@ else if (type == 1)
 
 				/*if(buffercommand)
 		 			{
-						free(buffercommand);
+						WID_FREE(buffercommand);
 		 				buffercommand = NULL;
 
 			 		}*/
@@ -47509,7 +47558,7 @@ if((type == 1)&&(ret == WID_DBUS_SUCCESS))
 
 	     if(wtp_head!=NULL)
 	 	{
-			free(wtp_head);
+			WID_FREE(wtp_head);
 			wtp_head = NULL;	
 		}
 	}
@@ -47734,7 +47783,7 @@ DBusMessage * wid_dbus_interface_set_ap_ip_gateway_dns(DBusConnection *conn, DBu
 		printf("******** type == 1 *****\n");
 		if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL)){
 			tmp = WTP_GROUP[ID]->WTP_M;
-			wtp_head = (struct Wtp_List *)malloc(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
+			wtp_head = (struct Wtp_List *)WID_MALLOC(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
 			
 			while(tmp){
 				ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
@@ -47789,7 +47838,7 @@ DBusMessage * wid_dbus_interface_set_ap_ip_gateway_dns(DBusConnection *conn, DBu
 		}
 
 		if(wtp_head!=NULL){
-		free(wtp_head);
+		WID_FREE(wtp_head);
 		wtp_head = NULL;	
 		}
 	}
@@ -47900,7 +47949,7 @@ else if (type == 1){
 	printf("******** type == 1 *****\n");
 	if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL)){
 		tmp = WTP_GROUP[ID]->WTP_M;
-		wtp_head = (struct Wtp_List *)malloc(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
+		wtp_head = (struct Wtp_List *)WID_MALLOC(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
 		
 		while(tmp){
 			ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
@@ -47956,7 +48005,7 @@ if((type == 1)&&(ret == WID_DBUS_SUCCESS)){
 	}
 
 	if(wtp_head!=NULL){
-	free(wtp_head);
+	WID_FREE(wtp_head);
 	wtp_head = NULL;	
    }	
 }
@@ -48055,7 +48104,7 @@ DBusMessage * wid_dbus_interface_show_wtp_runtime(DBusConnection *conn, DBusMess
 		{
 			if(now_time == NULL)
 			{
-				now_time = (time_t *)malloc(sizeof(time_t));
+				now_time = (time_t *)WID_MALLOC(sizeof(time_t));
 				time(now_time);
 			}
 			else
@@ -48069,7 +48118,7 @@ DBusMessage * wid_dbus_interface_show_wtp_runtime(DBusConnection *conn, DBusMess
 		add_time = *AC_WTP[wtpid]->add_time;
 		if(now_time == NULL)
 		{
-			now_time = (time_t*)malloc(sizeof(time_t));
+			now_time = (time_t*)WID_MALLOC(sizeof(time_t));
 			time(now_time);
 		}
 		else
@@ -48141,7 +48190,7 @@ DBusMessage * wid_dbus_interface_show_wtp_runtime(DBusConnection *conn, DBusMess
 
 		dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT32, &checktimes);
 	}
-	CW_FREE_OBJECT(now_time);
+	CW_FREE_OBJECT_WID(now_time);
 	return reply;
 	
 }
@@ -48187,14 +48236,14 @@ DBusMessage * wid_dbus_interface_set_wtp_location(DBusConnection *conn, DBusMess
 			}
 			else if(AC_WTP[ID]->location == NULL)
 			{
-				AC_WTP[ID]->location = (char *)malloc(strlen(location)+1);
+				AC_WTP[ID]->location = (char *)WID_MALLOC(strlen(location)+1);
 				memset(AC_WTP[ID]->location, 0, strlen(location)+1);
 				memcpy(AC_WTP[ID]->location,location,strlen(location));
 			}
 			else
 			{
-				CW_FREE_OBJECT(AC_WTP[ID]->location);
-				AC_WTP[ID]->location = (char *)malloc(strlen(location)+1);
+				CW_FREE_OBJECT_WID(AC_WTP[ID]->location);
+				AC_WTP[ID]->location = (char *)WID_MALLOC(strlen(location)+1);
 				memset(AC_WTP[ID]->location, 0, strlen(location)+1);
 				memcpy(AC_WTP[ID]->location,location,strlen(location));
 	
@@ -48205,7 +48254,7 @@ DBusMessage * wid_dbus_interface_set_wtp_location(DBusConnection *conn, DBusMess
 		printf("******** type == 1 *****\n");
 		if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL)){
 			tmp = WTP_GROUP[ID]->WTP_M;
-			wtp_head = (struct Wtp_List *)malloc(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
+			wtp_head = (struct Wtp_List *)WID_MALLOC(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
 			
 			while(tmp){
 				ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
@@ -48219,7 +48268,7 @@ DBusMessage * wid_dbus_interface_set_wtp_location(DBusConnection *conn, DBusMess
 						}
 						else if(AC_WTP[tmp->WTPID]->location== NULL)
 						{
-							AC_WTP[tmp->WTPID]->location = (char *)malloc(strlen(location)+1);
+							AC_WTP[tmp->WTPID]->location = (char *)WID_MALLOC(strlen(location)+1);
 							memset(AC_WTP[tmp->WTPID]->location, 0, strlen(location)+1);
 							memcpy(AC_WTP[tmp->WTPID]->location,location,strlen(location));
 
@@ -48229,8 +48278,8 @@ DBusMessage * wid_dbus_interface_set_wtp_location(DBusConnection *conn, DBusMess
 						}
 						else
 						{
-							CW_FREE_OBJECT(AC_WTP[ID]->location);
-							AC_WTP[tmp->WTPID]->location = (char *)malloc(strlen(location)+1);
+							CW_FREE_OBJECT_WID(AC_WTP[ID]->location);
+							AC_WTP[tmp->WTPID]->location = (char *)WID_MALLOC(strlen(location)+1);
 							memset(AC_WTP[tmp->WTPID]->location, 0, strlen(location)+1);
 							memcpy(AC_WTP[tmp->WTPID]->location,location,strlen(location));
 						
@@ -48277,7 +48326,7 @@ DBusMessage * wid_dbus_interface_set_wtp_location(DBusConnection *conn, DBusMess
 		}
 
 		if(wtp_head!=NULL){
-		free(wtp_head);
+		WID_FREE(wtp_head);
 		wtp_head = NULL;	
 		}
 	}
@@ -48317,14 +48366,14 @@ DBusMessage * wid_dbus_interface_set_wtp_location(DBusConnection *conn, DBusMess
 	}
 	else if(AC_WTP[wtpid]->location == NULL)
 	{
-		AC_WTP[wtpid]->location = (char *)malloc(strlen(location)+1);
+		AC_WTP[wtpid]->location = (char *)WID_MALLOC(strlen(location)+1);
 		memset(AC_WTP[wtpid]->location, 0, strlen(location)+1);
 		memcpy(AC_WTP[wtpid]->location,location,strlen(location));
 	}
 	else
 	{
-		CW_FREE_OBJECT(AC_WTP[wtpid]->location);
-		AC_WTP[wtpid]->location = (char *)malloc(strlen(location)+1);
+		CW_FREE_OBJECT_WID(AC_WTP[wtpid]->location);
+		AC_WTP[wtpid]->location = (char *)WID_MALLOC(strlen(location)+1);
 		memset(AC_WTP[wtpid]->location, 0, strlen(location)+1);
 		memcpy(AC_WTP[wtpid]->location,location,strlen(location));
 	
@@ -48435,7 +48484,7 @@ DBusMessage * wid_dbus_interface_set_wtpname(DBusConnection *conn, DBusMessage *
 			}
 			else if(AC_WTP[ID]->WTPNAME == NULL)
 			{
-				AC_WTP[ID]->WTPNAME = (char *)malloc(strlen(name)+1);
+				AC_WTP[ID]->WTPNAME = (char *)WID_MALLOC(strlen(name)+1);
 				memset(AC_WTP[ID]->WTPNAME, 0, strlen(name)+1);
 				memcpy(AC_WTP[ID]->WTPNAME,name,strlen(name));
 				if(1!=AsdWsm_WTPOp(ID,WID_MODIFY))
@@ -48447,8 +48496,8 @@ DBusMessage * wid_dbus_interface_set_wtpname(DBusConnection *conn, DBusMessage *
 			}
 			else
 			{
-				CW_FREE_OBJECT(AC_WTP[ID]->WTPNAME);
-				AC_WTP[ID]->WTPNAME = (char *)malloc(strlen(name)+1);
+				CW_FREE_OBJECT_WID(AC_WTP[ID]->WTPNAME);
+				AC_WTP[ID]->WTPNAME = (char *)WID_MALLOC(strlen(name)+1);
 				memset(AC_WTP[ID]->WTPNAME, 0, strlen(name)+1);
 				memcpy(AC_WTP[ID]->WTPNAME,name,strlen(name));
 				if(1!=AsdWsm_WTPOp(ID,WID_MODIFY))
@@ -48463,7 +48512,7 @@ DBusMessage * wid_dbus_interface_set_wtpname(DBusConnection *conn, DBusMessage *
 		printf("******** type == 1 *****\n");
 		if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL)){
 			tmp = WTP_GROUP[ID]->WTP_M;
-			wtp_head = (struct Wtp_List *)malloc(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
+			wtp_head = (struct Wtp_List *)WID_MALLOC(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
 			
 			while(tmp){
 				ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
@@ -48477,7 +48526,7 @@ DBusMessage * wid_dbus_interface_set_wtpname(DBusConnection *conn, DBusMessage *
 						}
 						else if(AC_WTP[tmp->WTPID]->WTPNAME== NULL)
 						{
-							AC_WTP[tmp->WTPID]->WTPNAME = (char *)malloc(strlen(name)+1);
+							AC_WTP[tmp->WTPID]->WTPNAME = (char *)WID_MALLOC(strlen(name)+1);
 							memset(AC_WTP[tmp->WTPID]->WTPNAME, 0, strlen(name)+1);
 							memcpy(AC_WTP[tmp->WTPID]->WTPNAME,name,strlen(name));
 							wid_syslog_debug_debug(WID_DEFAULT,"WTP%d set wtpname successful\n",tmp->WTPID);
@@ -48492,8 +48541,8 @@ DBusMessage * wid_dbus_interface_set_wtpname(DBusConnection *conn, DBusMessage *
 						}
 						else
 						{
-							CW_FREE_OBJECT(AC_WTP[tmp->WTPID]->WTPNAME);
-							AC_WTP[tmp->WTPID]->WTPNAME = (char *)malloc(strlen(name)+1);
+							CW_FREE_OBJECT_WID(AC_WTP[tmp->WTPID]->WTPNAME);
+							AC_WTP[tmp->WTPID]->WTPNAME = (char *)WID_MALLOC(strlen(name)+1);
 							memset(AC_WTP[tmp->WTPID]->WTPNAME, 0, strlen(name)+1);
 							memcpy(AC_WTP[tmp->WTPID]->WTPNAME,name,strlen(name));
 						
@@ -48544,7 +48593,7 @@ DBusMessage * wid_dbus_interface_set_wtpname(DBusConnection *conn, DBusMessage *
 		}
 
 		if(wtp_head!=NULL){
-		free(wtp_head);
+		WID_FREE(wtp_head);
 		wtp_head = NULL;	
 		}
 	}
@@ -48584,7 +48633,7 @@ DBusMessage * wid_dbus_interface_set_wtpname(DBusConnection *conn, DBusMessage *
 	}
 	else if(AC_WTP[wtpid]->WTPNAME == NULL)
 	{
-		AC_WTP[wtpid]->WTPNAME = (char *)malloc(strlen(name)+1);
+		AC_WTP[wtpid]->WTPNAME = (char *)WID_MALLOC(strlen(name)+1);
 		memset(AC_WTP[wtpid]->WTPNAME, 0, strlen(name)+1);
 		memcpy(AC_WTP[wtpid]->WTPNAME,name,strlen(name));
 		if(1!=AsdWsm_WTPOp(wtpid,WID_MODIFY)){
@@ -48595,8 +48644,8 @@ DBusMessage * wid_dbus_interface_set_wtpname(DBusConnection *conn, DBusMessage *
 	}
 	else
 	{
-		CW_FREE_OBJECT(AC_WTP[wtpid]->WTPNAME);
-		AC_WTP[wtpid]->WTPNAME = (char *)malloc(strlen(name)+1);
+		CW_FREE_OBJECT_WID(AC_WTP[wtpid]->WTPNAME);
+		AC_WTP[wtpid]->WTPNAME = (char *)WID_MALLOC(strlen(name)+1);
 		memset(AC_WTP[wtpid]->WTPNAME, 0, strlen(name)+1);
 		memcpy(AC_WTP[wtpid]->WTPNAME,name,strlen(name));
 		if(1!=AsdWsm_WTPOp(wtpid,WID_MODIFY)){
@@ -48674,7 +48723,7 @@ DBusMessage * wid_dbus_interface_set_wtpsn(DBusConnection *conn, DBusMessage *ms
 		printf("******** type == 1 *****\n");
 		if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL)){
 			tmp = WTP_GROUP[ID]->WTP_M;
-			wtp_head = (struct Wtp_List *)malloc(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
+			wtp_head = (struct Wtp_List *)WID_MALLOC(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
 			
 			while(tmp){
 				ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
@@ -48737,7 +48786,7 @@ DBusMessage * wid_dbus_interface_set_wtpsn(DBusConnection *conn, DBusMessage *ms
 		}
 
 		if(wtp_head!=NULL){
-		free(wtp_head);
+		WID_FREE(wtp_head);
 		wtp_head = NULL;	
 		}
 	}
@@ -48837,15 +48886,15 @@ DBusMessage * wid_dbus_interface_set_wtp_netid(DBusConnection *conn, DBusMessage
 			}
 			else if(AC_WTP[ID]->netid == NULL)
 			{
-				AC_WTP[ID]->netid = (char *)malloc(strlen(netid)+1);
+				AC_WTP[ID]->netid = (char *)WID_MALLOC(strlen(netid)+1);
 				memset(AC_WTP[ID]->netid, 0, strlen(netid)+1);
 				memcpy(AC_WTP[ID]->netid,netid,strlen(netid));
 				AsdWsm_WTPOp(ID,WID_MODIFY);  
 			}
 			else
 			{
-				CW_FREE_OBJECT(AC_WTP[ID]->netid);
-				AC_WTP[ID]->netid = (char *)malloc(strlen(netid)+1);
+				CW_FREE_OBJECT_WID(AC_WTP[ID]->netid);
+				AC_WTP[ID]->netid = (char *)WID_MALLOC(strlen(netid)+1);
 				memset(AC_WTP[ID]->netid, 0, strlen(netid)+1);
 				memcpy(AC_WTP[ID]->netid,netid,strlen(netid));
 				AsdWsm_WTPOp(ID,WID_MODIFY);  
@@ -48857,7 +48906,7 @@ DBusMessage * wid_dbus_interface_set_wtp_netid(DBusConnection *conn, DBusMessage
 		printf("******** type == 1 *****\n");
 		if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL)){
 			tmp = WTP_GROUP[ID]->WTP_M;
-			wtp_head = (struct Wtp_List *)malloc(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
+			wtp_head = (struct Wtp_List *)WID_MALLOC(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
 			
 			while(tmp){
 				ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
@@ -48871,7 +48920,7 @@ DBusMessage * wid_dbus_interface_set_wtp_netid(DBusConnection *conn, DBusMessage
 					}
 					else if(AC_WTP[tmp->WTPID]->netid == NULL)
 					{
-						AC_WTP[tmp->WTPID]->netid = (char *)malloc(strlen(netid)+1);
+						AC_WTP[tmp->WTPID]->netid = (char *)WID_MALLOC(strlen(netid)+1);
 						memset(AC_WTP[tmp->WTPID]->netid, 0, strlen(netid)+1);
 						memcpy(AC_WTP[tmp->WTPID]->netid,netid,strlen(netid));
 						wid_syslog_debug_debug(WID_DEFAULT,"WTP%d set wtp netid successful\n",tmp->WTPID);
@@ -48879,8 +48928,8 @@ DBusMessage * wid_dbus_interface_set_wtp_netid(DBusConnection *conn, DBusMessage
 					}
 					else
 					{
-						CW_FREE_OBJECT(AC_WTP[tmp->WTPID]->netid);
-						AC_WTP[tmp->WTPID]->netid = (char *)malloc(strlen(netid)+1);
+						CW_FREE_OBJECT_WID(AC_WTP[tmp->WTPID]->netid);
+						AC_WTP[tmp->WTPID]->netid = (char *)WID_MALLOC(strlen(netid)+1);
 						memset(AC_WTP[tmp->WTPID]->netid, 0, strlen(netid)+1);
 						memcpy(AC_WTP[tmp->WTPID]->netid,netid,strlen(netid));
 						wid_syslog_debug_debug(WID_DEFAULT,"WTP%d set wtp netid successful\n",tmp->WTPID);
@@ -48926,7 +48975,7 @@ DBusMessage * wid_dbus_interface_set_wtp_netid(DBusConnection *conn, DBusMessage
 											 &(wtp_head[i].FailReason));
 		}	
 		if(wtp_head!=NULL){
-		free(wtp_head);
+		WID_FREE(wtp_head);
 		wtp_head = NULL;	
 		}
 	
@@ -48966,15 +49015,15 @@ DBusMessage * wid_dbus_interface_set_wtp_netid(DBusConnection *conn, DBusMessage
 	}
 	else if(AC_WTP[wtpid]->netid == NULL)
 	{
-		AC_WTP[wtpid]->netid = (char *)malloc(strlen(netid)+1);
+		AC_WTP[wtpid]->netid = (char *)WID_MALLOC(strlen(netid)+1);
 		memset(AC_WTP[wtpid]->netid, 0, strlen(netid)+1);
 		memcpy(AC_WTP[wtpid]->netid,netid,strlen(netid));
 		AsdWsm_WTPOp(wtpid,WID_MODIFY);  //zhangshu add for sending wtp_netid to asd, 2010-10-19
 	}
 	else
 	{
-		CW_FREE_OBJECT(AC_WTP[wtpid]->netid);
-		AC_WTP[wtpid]->netid = (char *)malloc(strlen(netid)+1);
+		CW_FREE_OBJECT_WID(AC_WTP[wtpid]->netid);
+		AC_WTP[wtpid]->netid = (char *)WID_MALLOC(strlen(netid)+1);
 		memset(AC_WTP[wtpid]->netid, 0, strlen(netid)+1);
 		memcpy(AC_WTP[wtpid]->netid,netid,strlen(netid));
 		AsdWsm_WTPOp(wtpid,WID_MODIFY);  //zhangshu add for sending wtp_netid to asd, 2010-10-19
@@ -49326,7 +49375,7 @@ DBusMessage * wid_dbus_interface_show_radio_qos(DBusConnection *conn, DBusMessag
 		dbus_error_init(&err);
 		int i=0,j=0;
 		WID_WTP_RADIO **RADIO;
-		RADIO = malloc(G_RADIO_NUM*sizeof(WID_WTP_RADIO *));
+		RADIO = WID_MALLOC(G_RADIO_NUM*sizeof(WID_WTP_RADIO *));
 		while(i<WTP_NUM){		
 			if(AC_WTP[i] != NULL)
 			{	int n=0,m=0;
@@ -49379,7 +49428,7 @@ DBusMessage * wid_dbus_interface_show_radio_qos(DBusConnection *conn, DBusMessag
 					
 		dbus_message_iter_close_container (&iter, &iter_array);
 					
-		free(RADIO);
+		WID_FREE(RADIO);
 		return reply;	
 		
 
@@ -49983,7 +50032,7 @@ DBusMessage * wid_dbus_interface_set_ap_heart_statistics_switch(DBusConnection *
 					tmp = p;	
 					p = p->next;			
 					tmp->next =NULL;
-					free(tmp);
+					WID_FREE(tmp);
 					tmp = NULL;
 
 						//printf("222222222222222\n");
@@ -50154,7 +50203,7 @@ DBusMessage * wid_dbus_interface_set_wtp_extension_infomation_enable(DBusConnect
 				printf("******** type == 1 *****\n");
 				if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL)){
 					tmp = WTP_GROUP[ID]->WTP_M;
-					wtp_head = (struct Wtp_List *)malloc(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
+					wtp_head = (struct Wtp_List *)WID_MALLOC(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
 					
 					while(tmp){
 						ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
@@ -50220,7 +50269,7 @@ DBusMessage * wid_dbus_interface_set_wtp_extension_infomation_enable(DBusConnect
 				}	
 				
 				if(wtp_head!=NULL){
-					free(wtp_head);
+					WID_FREE(wtp_head);
 					wtp_head = NULL;	
 				}
 			}
@@ -50360,7 +50409,7 @@ DBusMessage * wid_dbus_interface_set_wtp_terminal_disturb_info_switch(DBusConnec
 				printf("******** type == 1 *****\n");
 				if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL)){
 					tmp = WTP_GROUP[ID]->WTP_M;
-					wtp_head = (struct Wtp_List *)malloc(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
+					wtp_head = (struct Wtp_List *)WID_MALLOC(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
 					
 					while(tmp){
 						ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
@@ -50428,7 +50477,7 @@ DBusMessage * wid_dbus_interface_set_wtp_terminal_disturb_info_switch(DBusConnec
 				}	
 				
 				if(wtp_head!=NULL){
-					free(wtp_head);
+					WID_FREE(wtp_head);
 					wtp_head = NULL;	
 				}
 			}
@@ -50736,7 +50785,7 @@ else if(type==1)
 			printf("******** type == 1 *****\n");
 			if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL)){
 				tmp = WTP_GROUP[ID]->WTP_M;
-				wtp_head = (struct Wtp_List *)malloc(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
+				wtp_head = (struct Wtp_List *)WID_MALLOC(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
 				
 				while(tmp){
 					ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
@@ -50806,7 +50855,7 @@ else if(type==1)
 			}	
 			
 			if(wtp_head!=NULL){
-				free(wtp_head);
+				WID_FREE(wtp_head);
 				wtp_head = NULL;	
 			}
 		}
@@ -51004,7 +51053,7 @@ else if(type==1)
 			printf("******** type == 1 *****\n");
 			if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL)){
 				tmp = WTP_GROUP[ID]->WTP_M;
-				wtp_head = (struct Wtp_List *)malloc(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
+				wtp_head = (struct Wtp_List *)WID_MALLOC(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
 				
 				while(tmp){
 					ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
@@ -51074,7 +51123,7 @@ else if(type==1)
 			}	
 			
 			if(wtp_head!=NULL){
-				free(wtp_head);
+				WID_FREE(wtp_head);
 				wtp_head = NULL;	
 			}
 		}
@@ -52371,7 +52420,7 @@ DBusMessage * wid_dbus_interface_set_wtp_extension_infomation_interval(DBusConne
 			printf("******** type == 1 *****\n");
 			if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL)){
 				tmp = WTP_GROUP[ID]->WTP_M;
-				wtp_head = (struct Wtp_List *)malloc(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
+				wtp_head = (struct Wtp_List *)WID_MALLOC(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
 				
 				while(tmp){
 					ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
@@ -52432,7 +52481,7 @@ DBusMessage * wid_dbus_interface_set_wtp_extension_infomation_interval(DBusConne
 			}	
 			
 			if(wtp_head!=NULL){
-				free(wtp_head);
+				WID_FREE(wtp_head);
 				wtp_head = NULL;	
 			}
 		}
@@ -53611,7 +53660,7 @@ DBusMessage * wid_dbus_interface_set_wtp_moment_infomation_enable(DBusConnection
 	int ret = WID_DBUS_SUCCESS;
 	dbus_error_init(&err);
 	
-	WTP = malloc(WTP_NUM*(sizeof(WID_WTP *)));
+	WTP = WID_MALLOC(WTP_NUM*(sizeof(WID_WTP *)));
 	memset(WTP,0,WTP_NUM*(sizeof(WID_WTP *)));
 	
 	num = Wid_Find_Wtp(WTP);
@@ -53626,7 +53675,7 @@ DBusMessage * wid_dbus_interface_set_wtp_moment_infomation_enable(DBusConnection
 			printf("%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
-		CW_FREE_OBJECT(WTP);
+		CW_FREE_OBJECT_WID(WTP);
 		return NULL;
 	}
 	
@@ -53686,7 +53735,7 @@ DBusMessage * wid_dbus_interface_set_wtp_moment_infomation_enable(DBusConnection
 	dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT32, &ret);
 
 	if(WTP!=NULL){
-		free(WTP);
+		WID_FREE(WTP);
 		WTP = NULL;
 	}
 	
@@ -53802,7 +53851,7 @@ DBusMessage * wid_dbus_interface_set_wtp_sta_infomation_enable(DBusConnection *c
 			if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL)){
 				//printf("1111111111111111\n");
 				tmp = WTP_GROUP[ID]->WTP_M;
-				wtp_head = (struct Wtp_List *)malloc(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
+				wtp_head = (struct Wtp_List *)WID_MALLOC(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
 				
 				while(tmp){
 					ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
@@ -53866,7 +53915,7 @@ DBusMessage * wid_dbus_interface_set_wtp_sta_infomation_enable(DBusConnection *c
 			}	
 			
 			if(wtp_head!=NULL){
-				free(wtp_head);
+				WID_FREE(wtp_head);
 				wtp_head = NULL;	
 			}
 		}
@@ -54007,7 +54056,7 @@ DBusMessage * wid_dbus_interface_set_wtp_sta_infomation_interval(DBusConnection 
 			printf("******** type == 1 *****\n");
 		if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL)){
 			tmp = WTP_GROUP[ID]->WTP_M;
-			wtp_head = (struct Wtp_List *)malloc(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
+			wtp_head = (struct Wtp_List *)WID_MALLOC(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
 			
 			while(tmp){
 				ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
@@ -54061,7 +54110,7 @@ DBusMessage * wid_dbus_interface_set_wtp_sta_infomation_interval(DBusConnection 
 		}	
 		
 		if(wtp_head!=NULL){
-			free(wtp_head);
+			WID_FREE(wtp_head);
 			wtp_head = NULL;	
 		}
 	}
@@ -54205,7 +54254,7 @@ DBusMessage * wid_dbus_interface_set_wtp_sta_wapi_info_enable(DBusConnection *co
 			if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL))
 				{
 					tmp = WTP_GROUP[ID]->WTP_M;
-					wtp_head = (struct Wtp_List *)malloc(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
+					wtp_head = (struct Wtp_List *)WID_MALLOC(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
 					
 					while(tmp)
 						{
@@ -54267,7 +54316,7 @@ DBusMessage * wid_dbus_interface_set_wtp_sta_wapi_info_enable(DBusConnection *co
 				}	
 				
 				if(wtp_head!=NULL){
-					free(wtp_head);
+					WID_FREE(wtp_head);
 					wtp_head = NULL;	
 				}
 			}
@@ -54418,7 +54467,7 @@ DBusMessage * wid_dbus_interface_set_wtp_sta_wapi_info_interval(DBusConnection *
 				printf("******** type == 1 *****\n");
 				if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL)){
 					tmp = WTP_GROUP[ID]->WTP_M;
-					wtp_head = (struct Wtp_List *)malloc(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
+					wtp_head = (struct Wtp_List *)WID_MALLOC(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
 					
 					while(tmp){
 						ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
@@ -54476,7 +54525,7 @@ DBusMessage * wid_dbus_interface_set_wtp_sta_wapi_info_interval(DBusConnection *
 				}	
 				
 				if(wtp_head!=NULL){
-					free(wtp_head);
+					WID_FREE(wtp_head);
 					wtp_head = NULL;	
 				}
 			}
@@ -54622,7 +54671,7 @@ DBusMessage * wid_dbus_interface_set_wtp_if_info_report_enable(DBusConnection *c
 		printf("******** type == 1 *****\n");
 		if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL)){
 			tmp = WTP_GROUP[ID]->WTP_M;
-			wtp_head = (struct Wtp_List *)malloc(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
+			wtp_head = (struct Wtp_List *)WID_MALLOC(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
 			
 			while(tmp){
 				ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
@@ -54666,7 +54715,7 @@ DBusMessage * wid_dbus_interface_set_wtp_if_info_report_enable(DBusConnection *c
 		}	
 		
 		if(wtp_head!=NULL){
-			free(wtp_head);
+			WID_FREE(wtp_head);
 			wtp_head = NULL;	
 		}
 	}
@@ -54810,7 +54859,7 @@ DBusMessage * wid_dbus_interface_set_wtp_if_info_report_interval(DBusConnection 
 		printf("******** type == 1 *****\n");
 		if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL)){
 			tmp = WTP_GROUP[ID]->WTP_M;
-			wtp_head = (struct Wtp_List *)malloc(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
+			wtp_head = (struct Wtp_List *)WID_MALLOC(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
 			
 			while(tmp){
 				ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
@@ -54859,7 +54908,7 @@ DBusMessage * wid_dbus_interface_set_wtp_if_info_report_interval(DBusConnection 
 		}	
 		
 		if(wtp_head!=NULL){
-			free(wtp_head);
+			WID_FREE(wtp_head);
 			wtp_head = NULL;	
 		}
 	}
@@ -55705,7 +55754,7 @@ DBusMessage * wid_dbus_interface_set_ap_if_updown(DBusConnection *conn, DBusMess
 			if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL))
 				{
 					tmp = WTP_GROUP[ID]->WTP_M;
-					wtp_head = (struct Wtp_List *)malloc(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
+					wtp_head = (struct Wtp_List *)WID_MALLOC(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
 			
 					while(tmp)
 						{
@@ -55763,7 +55812,7 @@ DBusMessage * wid_dbus_interface_set_ap_if_updown(DBusConnection *conn, DBusMess
 		}	
 		
 		if(wtp_head!=NULL){
-			free(wtp_head);
+			WID_FREE(wtp_head);
 			wtp_head = NULL;	
 		}
 	}
@@ -55923,7 +55972,7 @@ DBusMessage * wid_dbus_interface_set_ap_if_eth_rate(DBusConnection *conn, DBusMe
 			if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL))
 				{
 					tmp = WTP_GROUP[ID]->WTP_M;
-					wtp_head = (struct Wtp_List *)malloc(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
+					wtp_head = (struct Wtp_List *)WID_MALLOC(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
 			
 					while(tmp)
 						{
@@ -55997,7 +56046,7 @@ DBusMessage * wid_dbus_interface_set_ap_if_eth_rate(DBusConnection *conn, DBusMe
 		}	
 		
 		if(wtp_head!=NULL){
-			free(wtp_head);
+			WID_FREE(wtp_head);
 			wtp_head = NULL;	
 		}
 	}
@@ -56265,7 +56314,7 @@ if(type==1)
 		if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL))
 			{
 				tmp = WTP_GROUP[ID]->WTP_M;
-				wtp_head = (struct Wtp_List *)malloc(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
+				wtp_head = (struct Wtp_List *)WID_MALLOC(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
 		
 				while(tmp)
 					{
@@ -56334,7 +56383,7 @@ if(type==1)
 	}	
 	
 	if(wtp_head!=NULL){
-		free(wtp_head);
+		WID_FREE(wtp_head);
 		wtp_head = NULL;	
 	}
 }
@@ -56468,7 +56517,7 @@ if(type==1)
 		if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL))
 			{
 				tmp = WTP_GROUP[ID]->WTP_M;
-				wtp_head = (struct Wtp_List *)malloc(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
+				wtp_head = (struct Wtp_List *)WID_MALLOC(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
 		
 				while(tmp)
 					{
@@ -56529,7 +56578,7 @@ if(type==1)
 	}	
 	
 	if(wtp_head!=NULL){
-		free(wtp_head);
+		WID_FREE(wtp_head);
 		wtp_head = NULL;	
 	}
 }
@@ -56712,7 +56761,7 @@ DBusMessage * wid_dbus_interface_set_ap_reboot_by_interface(DBusConnection *conn
 	}
 	unsigned char ret_flag = 0;
 	char *name;
-	name = (char*)malloc(strlen(ifname)+5);
+	name = (char*)WID_MALLOC(strlen(ifname)+5);
 	memset(name,0,strlen(ifname)+5);
 	if(check_ve_interface(ifname,name)){
 		wid_syslog_debug_debug(WID_DBUS,"input ve interface dosen't exist!\n");
@@ -56764,7 +56813,7 @@ DBusMessage * wid_dbus_interface_set_ap_reboot_by_interface(DBusConnection *conn
 	dbus_message_iter_init_append(reply, &iter);
 		
 	dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT32, &ret); 
-	free(name);
+	WID_FREE(name);
 	name = NULL;
 	return reply;
 	
@@ -56965,7 +57014,7 @@ if(type==1)
 		if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL))
 			{
 				tmp = WTP_GROUP[ID]->WTP_M;
-				wtp_head = (struct Wtp_List *)malloc(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
+				wtp_head = (struct Wtp_List *)WID_MALLOC(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
 		
 				while(tmp)
 					{
@@ -57030,7 +57079,7 @@ if(type==1)
 	}	
 	
 	if(wtp_head!=NULL){
-		free(wtp_head);
+		WID_FREE(wtp_head);
 		wtp_head = NULL;	
 	}
 }
@@ -57704,7 +57753,7 @@ DBusMessage * wid_dbus_interface_show_ap_model_infomation(DBusConnection *conn, 
 
 	//assemble model infomation
 	model_infomation *model_info;
-	model_info = (model_infomation *)malloc(sizeof(model_infomation));
+	model_info = (model_infomation *)WID_MALLOC(sizeof(model_infomation));
 
 	model_info->ap_eth_num = 0;
 	model_info->ap_wifi_num = 0;
@@ -57713,15 +57762,15 @@ DBusMessage * wid_dbus_interface_show_ap_model_infomation(DBusConnection *conn, 
 	model_info->ap_if_mtu = 1500;
 	model_info->ap_if_rate = 100;
 
-	model_info->sw_name = (char *)malloc(19);
+	model_info->sw_name = (char *)WID_MALLOC(19);
 	memset(model_info->sw_name,0,19);		
 	memcpy(model_info->sw_name,"AQWAREv1.1.9#1.BIN",18);
 
-	model_info->sw_supplier = (char *)malloc(8);
+	model_info->sw_supplier = (char *)WID_MALLOC(8);
 	memset(model_info->sw_supplier,0,8);	
 	memcpy(model_info->sw_supplier,"AUTELAN",7);
 
-	model_info->supplier = (char *)malloc(8);
+	model_info->supplier = (char *)WID_MALLOC(8);
 	memset(model_info->supplier,0,8);	
 	memcpy(model_info->supplier,"AUTELAN",7);
 	
@@ -57736,10 +57785,10 @@ DBusMessage * wid_dbus_interface_show_ap_model_infomation(DBusConnection *conn, 
 			printf("%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
-		CW_FREE_OBJECT(model_info->sw_name);
-		CW_FREE_OBJECT(model_info->sw_supplier);
-		CW_FREE_OBJECT(model_info->supplier);
-		CW_FREE_OBJECT(model_info);
+		CW_FREE_OBJECT_WID(model_info->sw_name);
+		CW_FREE_OBJECT_WID(model_info->sw_supplier);
+		CW_FREE_OBJECT_WID(model_info->supplier);
+		CW_FREE_OBJECT_WID(model_info);
 		return NULL;
 	}
 	if(gConfigVersionInfo == NULL)
@@ -57752,17 +57801,17 @@ DBusMessage * wid_dbus_interface_show_ap_model_infomation(DBusConnection *conn, 
 	}
 	if(model == 1)//1110T
 	{
-		model_info->model = (char *)malloc(8);
+		model_info->model = (char *)WID_MALLOC(8);
 		memset(model_info->model,0,8);		
 		memcpy(model_info->model,"1110T",5);
 
 		model_info->ap_eth_num = 1;
 		model_info->ap_wifi_num = 1;
-		model_info->hw_version = (char *)malloc(8);
+		model_info->hw_version = (char *)WID_MALLOC(8);
 		memset(model_info->hw_version,0,8);		
 		memcpy(model_info->hw_version,"1.0.3",5);
 		
-		model_info->sw_version = (char *)malloc(8);
+		model_info->sw_version = (char *)WID_MALLOC(8);
 		memset(model_info->sw_version,0,8);		
 		memcpy(model_info->sw_version,"1.1.2",5);
 
@@ -57772,17 +57821,17 @@ DBusMessage * wid_dbus_interface_show_ap_model_infomation(DBusConnection *conn, 
 	}
 	else if(model == 2)//2010
 	{
-		model_info->model = (char *)malloc(8);
+		model_info->model = (char *)WID_MALLOC(8);
 		memset(model_info->model,0,8);		
 		memcpy(model_info->model,"2010",4);
 	
 		model_info->ap_eth_num = 1;
 		model_info->ap_wifi_num = 1;
-		model_info->hw_version = (char *)malloc(8);
+		model_info->hw_version = (char *)WID_MALLOC(8);
 		memset(model_info->hw_version,0,8);		
 		memcpy(model_info->hw_version,"1.0.3",5);
 	
-		model_info->sw_version = (char *)malloc(8);
+		model_info->sw_version = (char *)WID_MALLOC(8);
 		memset(model_info->sw_version,0,8);		
 		memcpy(model_info->sw_version,"1.0.19",6);
 
@@ -57792,17 +57841,17 @@ DBusMessage * wid_dbus_interface_show_ap_model_infomation(DBusConnection *conn, 
 	}
 	else if(model == 3)//2110
 	{
-		model_info->model = (char *)malloc(8);
+		model_info->model = (char *)WID_MALLOC(8);
 		memset(model_info->model,0,8);		
 		memcpy(model_info->model,"2110",4);
 
 		model_info->ap_eth_num = 2;
 		model_info->ap_wifi_num = 2;
-		model_info->hw_version = (char *)malloc(8);
+		model_info->hw_version = (char *)WID_MALLOC(8);
 		memset(model_info->hw_version,0,8);		
 		memcpy(model_info->hw_version,"1.20",4);
 		
-		model_info->sw_version = (char *)malloc(8);
+		model_info->sw_version = (char *)WID_MALLOC(8);
 		memset(model_info->sw_version,0,8);		
 		memcpy(model_info->sw_version,"1.1.9",5);
 
@@ -57812,17 +57861,17 @@ DBusMessage * wid_dbus_interface_show_ap_model_infomation(DBusConnection *conn, 
 	}
 	else if(model == 4)//AQ1000
 	{
-		model_info->model = (char *)malloc(8);
+		model_info->model = (char *)WID_MALLOC(8);
 		memset(model_info->model,0,8);		
 		memcpy(model_info->model,"AQ1000",6);
 
 		model_info->ap_eth_num = 1;
 		model_info->ap_wifi_num = 1;
-		model_info->hw_version = (char *)malloc(8);
+		model_info->hw_version = (char *)WID_MALLOC(8);
 		memset(model_info->hw_version,0,8);		
 		memcpy(model_info->hw_version,"1.20",4);
 		
-		model_info->sw_version = (char *)malloc(8);
+		model_info->sw_version = (char *)WID_MALLOC(8);
 		memset(model_info->sw_version,0,8);		
 		memcpy(model_info->sw_version,"1.1.9",5);
 
@@ -57832,17 +57881,17 @@ DBusMessage * wid_dbus_interface_show_ap_model_infomation(DBusConnection *conn, 
 	}
 	else if(model == 5)//AQ1000-H
 	{
-		model_info->model = (char *)malloc(9);
+		model_info->model = (char *)WID_MALLOC(9);
 		memset(model_info->model,0,9);		
 		memcpy(model_info->model,"AQ1000-H",8);
 
 		model_info->ap_eth_num = 1;
 		model_info->ap_wifi_num = 1;
-		model_info->hw_version = (char *)malloc(8);
+		model_info->hw_version = (char *)WID_MALLOC(8);
 		memset(model_info->hw_version,0,8);		
 		memcpy(model_info->hw_version,"1.20",4);
 		
-		model_info->sw_version = (char *)malloc(8);
+		model_info->sw_version = (char *)WID_MALLOC(8);
 		memset(model_info->sw_version,0,8);		
 		memcpy(model_info->sw_version,"1.1.9",5);
 
@@ -57852,17 +57901,17 @@ DBusMessage * wid_dbus_interface_show_ap_model_infomation(DBusConnection *conn, 
 	}
 	else if(model == 6)//AQ3110-H
 	{
-		model_info->model = (char *)malloc(9);
+		model_info->model = (char *)WID_MALLOC(9);
 		memset(model_info->model,0,9);		
 		memcpy(model_info->model,"AQ3110-H",8);
 
 		model_info->ap_eth_num = 1;
 		model_info->ap_wifi_num = 1;
-		model_info->hw_version = (char *)malloc(8);
+		model_info->hw_version = (char *)WID_MALLOC(8);
 		memset(model_info->hw_version,0,8);		
 		memcpy(model_info->hw_version,"1.20",4);
 		
-		model_info->sw_version = (char *)malloc(8);
+		model_info->sw_version = (char *)WID_MALLOC(8);
 		memset(model_info->sw_version,0,8);		
 		memcpy(model_info->sw_version,"1.1.9",5);
 
@@ -57872,17 +57921,17 @@ DBusMessage * wid_dbus_interface_show_ap_model_infomation(DBusConnection *conn, 
 	}
 	else if(model == 7)//AQ3120-H
 	{
-		model_info->model = (char *)malloc(9);
+		model_info->model = (char *)WID_MALLOC(9);
 		memset(model_info->model,0,9);		
 		memcpy(model_info->model,"AQ3120-H",8);
 
 		model_info->ap_eth_num = 1;
 		model_info->ap_wifi_num = 2;
-		model_info->hw_version = (char *)malloc(8);
+		model_info->hw_version = (char *)WID_MALLOC(8);
 		memset(model_info->hw_version,0,8);		
 		memcpy(model_info->hw_version,"1.20",4);
 		
-		model_info->sw_version = (char *)malloc(8);
+		model_info->sw_version = (char *)WID_MALLOC(8);
 		memset(model_info->sw_version,0,8);		
 		memcpy(model_info->sw_version,"1.1.9",5);
 
@@ -57931,13 +57980,13 @@ DBusMessage * wid_dbus_interface_show_ap_model_infomation(DBusConnection *conn, 
 		dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT32, &model_info->ap_if_rate);
 	}
 	
-	CW_FREE_OBJECT(model_info->hw_version);
-	CW_FREE_OBJECT(model_info->model);
-	CW_FREE_OBJECT(model_info->sw_version);
-	CW_FREE_OBJECT(model_info->sw_name);
-	CW_FREE_OBJECT(model_info->sw_supplier);
-	CW_FREE_OBJECT(model_info->supplier);
-	CW_FREE_OBJECT(model_info);
+	CW_FREE_OBJECT_WID(model_info->hw_version);
+	CW_FREE_OBJECT_WID(model_info->model);
+	CW_FREE_OBJECT_WID(model_info->sw_version);
+	CW_FREE_OBJECT_WID(model_info->sw_name);
+	CW_FREE_OBJECT_WID(model_info->sw_supplier);
+	CW_FREE_OBJECT_WID(model_info->supplier);
+	CW_FREE_OBJECT_WID(model_info);
 	return reply;
 	
 }
@@ -58072,7 +58121,7 @@ DBusMessage * wid_dbus_interface_set_radio_11n_cwmmode(DBusConnection *conn, DBu
 							radionum +=AC_WTP[radiotmp->WTPID]->RadioCount;
 							radiotmp = radiotmp->next;
 						}
-					radio_head = (struct Radio_List *)malloc(radionum*(sizeof(struct Radio_List)));
+					radio_head = (struct Radio_List *)WID_MALLOC(radionum*(sizeof(struct Radio_List)));
 					while(tmp)
 						{
 							ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
@@ -58177,7 +58226,7 @@ DBusMessage * wid_dbus_interface_set_radio_11n_cwmmode(DBusConnection *conn, DBu
 				
 				if(radio_head!=NULL)
 					{
-						free(radio_head);
+						WID_FREE(radio_head);
 						radio_head = NULL;	
 					}
 			}
@@ -58345,7 +58394,7 @@ DBusMessage * wid_dbus_interface_show_ap_model_code_infomation(DBusConnection *c
 		model_info->code = (char *)malloc(sizeof(char)*128);
 		memset(model_info->code,0,128);
 		memcpy(model_info->code,code,strlen(code));*/
-		model_info = (wid_code_infomation *)malloc(sizeof(wid_code_infomation));
+		model_info = (wid_code_infomation *)WID_MALLOC(sizeof(wid_code_infomation));
 		
 		if((!strncmp(model,"1010",4))||(!strncmp(model,"2010",4)))
 		{
@@ -58353,17 +58402,17 @@ DBusMessage * wid_dbus_interface_show_ap_model_code_infomation(DBusConnection *c
 			model_info->flash_capacity = 16;//M
 			model_info->ap_eth_num = 1;
 
-			model_info->hw_version = (char *)malloc(8);
+			model_info->hw_version = (char *)WID_MALLOC(8);
 			memset(model_info->hw_version,0,8);		
 			memcpy(model_info->hw_version,"3.00",4);
 			
 			if(pnode_new != NULL && pnode_new->code_info != NULL && pnode_new->code_info->str_ap_version_name != NULL){
 				char *path = pnode_new->code_info->str_ap_version_name;
-				model_info->sw_version = (char *)malloc(strlen(path)+1);
+				model_info->sw_version = (char *)WID_MALLOC(strlen(path)+1);
 				memset(model_info->sw_version,0,strlen(path)+1);		
 				memcpy(model_info->sw_version,path,strlen(path));
 			}else{
-				model_info->sw_version = (char *)malloc(2);
+				model_info->sw_version = (char *)WID_MALLOC(2);
 				memset(model_info->sw_version,0,2);		
 				memcpy(model_info->sw_version," ",1);
 			}
@@ -58374,17 +58423,17 @@ DBusMessage * wid_dbus_interface_show_ap_model_code_infomation(DBusConnection *c
 			model_info->flash_capacity = 256;//M
 			model_info->ap_eth_num = 2;
 
-			model_info->hw_version = (char *)malloc(8);
+			model_info->hw_version = (char *)WID_MALLOC(8);
 			memset(model_info->hw_version,0,8);		
 			memcpy(model_info->hw_version,"1.21",4);
 			
 			if(pnode_new != NULL && pnode_new->code_info != NULL && pnode_new->code_info->str_ap_version_name != NULL){
 				char *path = pnode_new->code_info->str_ap_version_name;
-				model_info->sw_version = (char *)malloc(strlen(path)+1);
+				model_info->sw_version = (char *)WID_MALLOC(strlen(path)+1);
 				memset(model_info->sw_version,0,strlen(path)+1);		
 				memcpy(model_info->sw_version,path,strlen(path));
 			}else{
-				model_info->sw_version = (char *)malloc(2);
+				model_info->sw_version = (char *)WID_MALLOC(2);
 				memset(model_info->sw_version,0,2);		
 				memcpy(model_info->sw_version," ",1);
 			}
@@ -58446,20 +58495,20 @@ DBusMessage * wid_dbus_interface_show_ap_model_code_infomation(DBusConnection *c
 		
 		if(pnode_new != NULL && pnode_new->code_info != NULL && pnode_new->code_info->str_ap_version_path != NULL){
 			char *path = pnode_new->code_info->str_ap_version_path;
-			model_info->sw_name = (char *)malloc(strlen(path)+1);
+			model_info->sw_name = (char *)WID_MALLOC(strlen(path)+1);
 			memset(model_info->sw_name,0,strlen(path)+1);		
 			memcpy(model_info->sw_name,path,strlen(path));
 		}else{
-			model_info->sw_name = (char *)malloc(2);
+			model_info->sw_name = (char *)WID_MALLOC(2);
 			memset(model_info->sw_name,0,2); 	
 			memcpy(model_info->sw_name," ",1);
 		}
 		
-		model_info->sw_supplier = (char *)malloc(strlen(name)+1);
+		model_info->sw_supplier = (char *)WID_MALLOC(strlen(name)+1);
 		memset(model_info->sw_supplier,0,strlen(name)+1);	
 		memcpy(model_info->sw_supplier,name,strlen(name));
 
-		model_info->supplier = (char *)malloc(strlen(name)+1);
+		model_info->supplier = (char *)WID_MALLOC(strlen(name)+1);
 		memset(model_info->supplier,0,strlen(name)+1);	
 		memcpy(model_info->supplier,name,strlen(name));
 
@@ -58506,15 +58555,15 @@ DBusMessage * wid_dbus_interface_show_ap_model_code_infomation(DBusConnection *c
 		{
 			dbus_message_iter_append_basic (&iter,DBUS_TYPE_BYTE,&model_info->support_mode[i]);	
 		}
-//		free(code);
+//		WID_FREE(code);
 //		code = NULL;
-//		free(model_info->code);
-		free(model_info->hw_version);
-		free(model_info->sw_name);
-		free(model_info->sw_version);
-		free(model_info->sw_supplier);
-		free(model_info->supplier);
-		free(model_info);		
+//		WID_FREE(model_info->code);
+		WID_FREE(model_info->hw_version);
+		WID_FREE(model_info->sw_name);
+		WID_FREE(model_info->sw_version);
+		WID_FREE(model_info->sw_supplier);
+		WID_FREE(model_info->supplier);
+		WID_FREE(model_info);		
 	}
 	
 	return reply;	
@@ -58583,7 +58632,7 @@ DBusMessage * wid_dbus_interface_wtp_channel_disturb_trap(DBusConnection *conn, 
 		if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL))
 			{
 				tmp = WTP_GROUP[ID]->WTP_M;
-				wtp_head = (struct Wtp_List *)malloc(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
+				wtp_head = (struct Wtp_List *)WID_MALLOC(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
 		
 				while(tmp)
 					{
@@ -58650,7 +58699,7 @@ DBusMessage * wid_dbus_interface_wtp_channel_disturb_trap(DBusConnection *conn, 
 	}	
 	
 	if(wtp_head!=NULL){
-		free(wtp_head);
+		WID_FREE(wtp_head);
 		wtp_head = NULL;	
 	}
 }
@@ -58811,7 +58860,7 @@ DBusMessage * wid_dbus_interface_set_ap_l2_siolation(DBusConnection *conn, DBusM
 			printf("******** type == 1 *****\n");
 			if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL)){
 				tmp = WTP_GROUP[ID]->WTP_M;
-				wtp_head = (struct Wtp_List *)malloc(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
+				wtp_head = (struct Wtp_List *)WID_MALLOC(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
 				
 				while(tmp){
 					ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
@@ -58909,7 +58958,7 @@ DBusMessage * wid_dbus_interface_set_ap_l2_siolation(DBusConnection *conn, DBusM
 			}	
 			
 			if(wtp_head!=NULL){
-				free(wtp_head);
+				WID_FREE(wtp_head);
 				wtp_head = NULL;	
 			}
 		}
@@ -59128,7 +59177,7 @@ DBusMessage * wid_dbus_interface_set_radio_l2_siolation(DBusConnection *conn, DB
 							radionum +=AC_WTP[radiotmp->WTPID]->RadioCount;
 							radiotmp = radiotmp->next;
 						}
-					radio_head = (struct Radio_List *)malloc(radionum*(sizeof(struct Radio_List)));
+					radio_head = (struct Radio_List *)WID_MALLOC(radionum*(sizeof(struct Radio_List)));
 					while(tmp)
 						{
 							ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
@@ -59238,7 +59287,7 @@ DBusMessage * wid_dbus_interface_set_radio_l2_siolation(DBusConnection *conn, DB
 				
 				if(radio_head!=NULL)
 					{
-						free(radio_head);
+						WID_FREE(radio_head);
 						radio_head = NULL;	
 					}
 			}
@@ -59411,7 +59460,7 @@ DBusMessage * wid_dbus_interface_set_radio_auto_channel_able(DBusConnection *con
 							radionum +=AC_WTP[radiotmp->WTPID]->RadioCount;
 							radiotmp = radiotmp->next;
 						}
-					radio_head = (struct Radio_List *)malloc(radionum*(sizeof(struct Radio_List)));
+					radio_head = (struct Radio_List *)WID_MALLOC(radionum*(sizeof(struct Radio_List)));
 					while(tmp)
 						{
 							ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
@@ -59480,7 +59529,7 @@ DBusMessage * wid_dbus_interface_set_radio_auto_channel_able(DBusConnection *con
 				
 				if(radio_head!=NULL)
 					{
-						free(radio_head);
+						WID_FREE(radio_head);
 						radio_head = NULL;	
 					}
 			}
@@ -59623,7 +59672,7 @@ DBusMessage * wid_dbus_interface_set_radio_auto_channel_cont_able(DBusConnection
 							radionum +=AC_WTP[radiotmp->WTPID]->RadioCount;
 							radiotmp = radiotmp->next;
 						}
-					radio_head = (struct Radio_List *)malloc(radionum*(sizeof(struct Radio_List)));
+					radio_head = (struct Radio_List *)WID_MALLOC(radionum*(sizeof(struct Radio_List)));
 					while(tmp)
 						{
 							ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
@@ -59711,7 +59760,7 @@ DBusMessage * wid_dbus_interface_set_radio_auto_channel_cont_able(DBusConnection
 				
 				if(radio_head!=NULL)
 					{
-						free(radio_head);
+						WID_FREE(radio_head);
 						radio_head = NULL;	
 					}
 			}
@@ -59871,7 +59920,7 @@ DBusMessage * wid_dbus_interface_set_radio_diversity_able(DBusConnection *conn, 
 							radionum +=AC_WTP[radiotmp->WTPID]->RadioCount;
 							radiotmp = radiotmp->next;
 						}
-					radio_head = (struct Radio_List *)malloc(radionum*(sizeof(struct Radio_List)));
+					radio_head = (struct Radio_List *)WID_MALLOC(radionum*(sizeof(struct Radio_List)));
 					while(tmp)
 						{
 							ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
@@ -59962,7 +60011,7 @@ DBusMessage * wid_dbus_interface_set_radio_diversity_able(DBusConnection *conn, 
 				
 				if(radio_head!=NULL)
 					{
-						free(radio_head);
+						WID_FREE(radio_head);
 						radio_head = NULL;	
 					}
 			}
@@ -60174,7 +60223,7 @@ DBusMessage * wid_dbus_interface_set_radio_txantenna_able(DBusConnection *conn, 
 							radionum +=AC_WTP[radiotmp->WTPID]->RadioCount;
 							radiotmp = radiotmp->next;
 						}
-					radio_head = (struct Radio_List *)malloc(radionum*(sizeof(struct Radio_List)));
+					radio_head = (struct Radio_List *)WID_MALLOC(radionum*(sizeof(struct Radio_List)));
 					while(tmp)
 						{
 							ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
@@ -60303,7 +60352,7 @@ DBusMessage * wid_dbus_interface_set_radio_txantenna_able(DBusConnection *conn, 
 				
 				if(radio_head!=NULL)
 					{
-						free(radio_head);
+						WID_FREE(radio_head);
 						radio_head = NULL;	
 					}
 			}
@@ -60501,7 +60550,7 @@ DBusMessage * wid_dbus_interface_set_radio_inter_vap_forwarding_able(DBusConnect
 							radionum +=AC_WTP[radiotmp->WTPID]->RadioCount;
 							radiotmp = radiotmp->next;
 						}
-					radio_head = (struct Radio_List *)malloc(radionum*(sizeof(struct Radio_List)));
+					radio_head = (struct Radio_List *)WID_MALLOC(radionum*(sizeof(struct Radio_List)));
 					while(tmp)
 						{
 							ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
@@ -60586,7 +60635,7 @@ DBusMessage * wid_dbus_interface_set_radio_inter_vap_forwarding_able(DBusConnect
 				
 				if(radio_head!=NULL)
 					{
-						free(radio_head);
+						WID_FREE(radio_head);
 						radio_head = NULL;	
 					}
 			}
@@ -60738,7 +60787,7 @@ DBusMessage * wid_dbus_interface_set_radio_intra_vap_forwarding_able(DBusConnect
 							radionum +=AC_WTP[radiotmp->WTPID]->RadioCount;
 							radiotmp = radiotmp->next;
 						}
-					radio_head = (struct Radio_List *)malloc(radionum*(sizeof(struct Radio_List)));
+					radio_head = (struct Radio_List *)WID_MALLOC(radionum*(sizeof(struct Radio_List)));
 					while(tmp)
 						{
 							ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
@@ -60823,7 +60872,7 @@ DBusMessage * wid_dbus_interface_set_radio_intra_vap_forwarding_able(DBusConnect
 				
 				if(radio_head!=NULL)
 					{
-						free(radio_head);
+						WID_FREE(radio_head);
 						radio_head = NULL;	
 					}
 			}
@@ -60978,7 +61027,7 @@ DBusMessage * wid_dbus_interface_set_radio_keep_alive_period_value(DBusConnectio
 							radionum +=AC_WTP[radiotmp->WTPID]->RadioCount;
 							radiotmp = radiotmp->next;
 						}
-					radio_head = (struct Radio_List *)malloc(radionum*(sizeof(struct Radio_List)));
+					radio_head = (struct Radio_List *)WID_MALLOC(radionum*(sizeof(struct Radio_List)));
 					while(tmp)
 						{
 							ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
@@ -61063,7 +61112,7 @@ DBusMessage * wid_dbus_interface_set_radio_keep_alive_period_value(DBusConnectio
 				
 				if(radio_head!=NULL)
 					{
-						free(radio_head);
+						WID_FREE(radio_head);
 						radio_head = NULL;	
 					}
 			}
@@ -61217,7 +61266,7 @@ DBusMessage * wid_dbus_interface_set_radio_keep_alive_idle_time_value(DBusConnec
 							radionum +=AC_WTP[radiotmp->WTPID]->RadioCount;
 							radiotmp = radiotmp->next;
 						}
-					radio_head = (struct Radio_List *)malloc(radionum*(sizeof(struct Radio_List)));
+					radio_head = (struct Radio_List *)WID_MALLOC(radionum*(sizeof(struct Radio_List)));
 					while(tmp)
 						{
 							ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
@@ -61302,7 +61351,7 @@ DBusMessage * wid_dbus_interface_set_radio_keep_alive_idle_time_value(DBusConnec
 				
 				if(radio_head!=NULL)
 					{
-						free(radio_head);
+						WID_FREE(radio_head);
 						radio_head = NULL;	
 					}
 			}
@@ -61454,7 +61503,7 @@ DBusMessage * wid_dbus_interface_set_radio_congestion_avoid_state(DBusConnection
 							radionum +=AC_WTP[radiotmp->WTPID]->RadioCount;
 							radiotmp = radiotmp->next;
 						}
-					radio_head = (struct Radio_List *)malloc(radionum*(sizeof(struct Radio_List)));
+					radio_head = (struct Radio_List *)WID_MALLOC(radionum*(sizeof(struct Radio_List)));
 					while(tmp)
 						{
 							ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
@@ -61539,7 +61588,7 @@ DBusMessage * wid_dbus_interface_set_radio_congestion_avoid_state(DBusConnection
 				
 				if(radio_head!=NULL)
 					{
-						free(radio_head);
+						WID_FREE(radio_head);
 						radio_head = NULL;	
 					}
 			}
@@ -61703,7 +61752,7 @@ DBusMessage * wid_dbus_interface_set_radio_wlan_traffic_limit_able(DBusConnectio
 							radionum +=AC_WTP[radiotmp->WTPID]->RadioCount;
 							radiotmp = radiotmp->next;
 						}
-					radio_head = (struct Radio_List *)malloc(radionum*(sizeof(struct Radio_List)));
+					radio_head = (struct Radio_List *)WID_MALLOC(radionum*(sizeof(struct Radio_List)));
 					while(tmp)
 						{
 							ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
@@ -61802,7 +61851,7 @@ DBusMessage * wid_dbus_interface_set_radio_wlan_traffic_limit_able(DBusConnectio
 				
 				if(radio_head!=NULL)
 					{
-						free(radio_head);
+						WID_FREE(radio_head);
 						radio_head = NULL;	
 					}
 			}
@@ -61985,7 +62034,7 @@ DBusMessage * wid_dbus_interface_set_radio_wlan_traffic_limit_value(DBusConnecti
 							radionum +=AC_WTP[radiotmp->WTPID]->RadioCount;
 							radiotmp = radiotmp->next;
 						}
-					radio_head = (struct Radio_List *)malloc(radionum*(sizeof(struct Radio_List)));
+					radio_head = (struct Radio_List *)WID_MALLOC(radionum*(sizeof(struct Radio_List)));
 					while(tmp)
 						{
 							ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
@@ -62084,7 +62133,7 @@ DBusMessage * wid_dbus_interface_set_radio_wlan_traffic_limit_value(DBusConnecti
 				
 				if(radio_head!=NULL)
 					{
-						free(radio_head);
+						WID_FREE(radio_head);
 						radio_head = NULL;	
 					}
 			}
@@ -62269,7 +62318,7 @@ DBusMessage * wid_dbus_interface_set_radio_wlan_traffic_limit_average_value(DBus
 							radionum +=AC_WTP[radiotmp->WTPID]->RadioCount;
 							radiotmp = radiotmp->next;
 						}
-					radio_head = (struct Radio_List *)malloc(radionum*(sizeof(struct Radio_List)));
+					radio_head = (struct Radio_List *)WID_MALLOC(radionum*(sizeof(struct Radio_List)));
 					while(tmp)
 						{
 							ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
@@ -62368,7 +62417,7 @@ DBusMessage * wid_dbus_interface_set_radio_wlan_traffic_limit_average_value(DBus
 				
 				if(radio_head!=NULL)
 					{
-						free(radio_head);
+						WID_FREE(radio_head);
 						radio_head = NULL;	
 					}
 			}
@@ -62872,7 +62921,7 @@ DBusMessage * wid_dbus_interface_set_radio_wlan_traffic_limit_send_value(DBusCon
 							radionum +=AC_WTP[radiotmp->WTPID]->RadioCount;
 							radiotmp = radiotmp->next;
 						}
-					radio_head = (struct Radio_List *)malloc(radionum*(sizeof(struct Radio_List)));
+					radio_head = (struct Radio_List *)WID_MALLOC(radionum*(sizeof(struct Radio_List)));
 					while(tmp)
 						{
 							ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
@@ -62971,7 +63020,7 @@ DBusMessage * wid_dbus_interface_set_radio_wlan_traffic_limit_send_value(DBusCon
 				
 				if(radio_head!=NULL)
 					{
-						free(radio_head);
+						WID_FREE(radio_head);
 						radio_head = NULL;	
 					}
 			}
@@ -63156,7 +63205,7 @@ DBusMessage * wid_dbus_interface_set_radio_wlan_traffic_limit_average_send_value
 							radionum +=AC_WTP[radiotmp->WTPID]->RadioCount;
 							radiotmp = radiotmp->next;
 						}
-					radio_head = (struct Radio_List *)malloc(radionum*(sizeof(struct Radio_List)));
+					radio_head = (struct Radio_List *)WID_MALLOC(radionum*(sizeof(struct Radio_List)));
 					while(tmp)
 						{
 							ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
@@ -63257,7 +63306,7 @@ DBusMessage * wid_dbus_interface_set_radio_wlan_traffic_limit_average_send_value
 				
 				if(radio_head!=NULL)
 					{
-						free(radio_head);
+						WID_FREE(radio_head);
 						radio_head = NULL;	
 					}
 			}
@@ -63652,7 +63701,7 @@ DBusMessage * wid_dbus_interface_set_radio_wlan_sta_dhcp_before_autherized(DBusC
 							radionum +=AC_WTP[radiotmp->WTPID]->RadioCount;
 							radiotmp = radiotmp->next;
 						}
-					radio_head = (struct Radio_List *)malloc(radionum*(sizeof(struct Radio_List)));
+					radio_head = (struct Radio_List *)WID_MALLOC(radionum*(sizeof(struct Radio_List)));
 					while(tmp)
 						{
 							ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
@@ -63737,7 +63786,7 @@ DBusMessage * wid_dbus_interface_set_radio_wlan_sta_dhcp_before_autherized(DBusC
 				
 				if(radio_head!=NULL)
 					{
-						free(radio_head);
+						WID_FREE(radio_head);
 						radio_head = NULL;	
 					}
 			}
@@ -63889,7 +63938,7 @@ DBusMessage * wid_dbus_interface_set_radio_wlan_sta_ip_mac_binding(DBusConnectio
 							radionum +=AC_WTP[radiotmp->WTPID]->RadioCount;
 							radiotmp = radiotmp->next;
 						}
-					radio_head = (struct Radio_List *)malloc(radionum*(sizeof(struct Radio_List)));
+					radio_head = (struct Radio_List *)WID_MALLOC(radionum*(sizeof(struct Radio_List)));
 					while(tmp)
 						{
 							ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
@@ -63969,7 +64018,7 @@ DBusMessage * wid_dbus_interface_set_radio_wlan_sta_ip_mac_binding(DBusConnectio
 				
 				if(radio_head!=NULL)
 					{
-						free(radio_head);
+						WID_FREE(radio_head);
 						radio_head = NULL;	
 					}
 			}
@@ -64115,7 +64164,7 @@ DBusMessage * wid_dbus_interface_set_radio_sector_value(DBusConnection *conn, DB
 							radionum +=AC_WTP[radiotmp->WTPID]->RadioCount;
 							radiotmp = radiotmp->next;
 						}
-					radio_head = (struct Radio_List *)malloc(radionum*(sizeof(struct Radio_List)));
+					radio_head = (struct Radio_List *)WID_MALLOC(radionum*(sizeof(struct Radio_List)));
 					while(tmp)
 						{
 							ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
@@ -64189,7 +64238,7 @@ DBusMessage * wid_dbus_interface_set_radio_sector_value(DBusConnection *conn, DB
 				
 				if(radio_head!=NULL)
 					{
-						free(radio_head);
+						WID_FREE(radio_head);
 						radio_head = NULL;	
 					}
 			}
@@ -64325,7 +64374,7 @@ DBusMessage * wid_dbus_interface_set_radio_tx_chainmask_value(DBusConnection *co
 							radionum +=AC_WTP[radiotmp->WTPID]->RadioCount;
 							radiotmp = radiotmp->next;
 						}
-					radio_head = (struct Radio_List *)malloc(radionum*(sizeof(struct Radio_List)));
+					radio_head = (struct Radio_List *)WID_MALLOC(radionum*(sizeof(struct Radio_List)));
 					while(tmp)
 						{
 							ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
@@ -64395,7 +64444,7 @@ DBusMessage * wid_dbus_interface_set_radio_tx_chainmask_value(DBusConnection *co
 				
 				if(radio_head!=NULL)
 					{
-						free(radio_head);
+						WID_FREE(radio_head);
 						radio_head = NULL;	
 					}
 			}
@@ -64613,7 +64662,7 @@ DBusMessage * wid_dbus_interface_set_radio_chainmask_value(DBusConnection *conn,
 							radionum +=AC_WTP[radiotmp->WTPID]->RadioCount;
 							radiotmp = radiotmp->next;
 						}
-					radio_head = (struct Radio_List *)malloc(radionum*(sizeof(struct Radio_List)));
+					radio_head = (struct Radio_List *)WID_MALLOC(radionum*(sizeof(struct Radio_List)));
 				
 					while(tmp)
 						{
@@ -64715,7 +64764,7 @@ DBusMessage * wid_dbus_interface_set_radio_chainmask_value(DBusConnection *conn,
 				
 				if(radio_head!=NULL)
 					{
-						free(radio_head);
+						WID_FREE(radio_head);
 						radio_head = NULL;	
 					}
 			}
@@ -64884,7 +64933,7 @@ DBusMessage * wid_dbus_interface_set_radio_tx_power_sector_value(DBusConnection 
 							radionum +=AC_WTP[radiotmp->WTPID]->RadioCount;
 							radiotmp = radiotmp->next;
 						}
-					radio_head = (struct Radio_List *)malloc(radionum*(sizeof(struct Radio_List)));
+					radio_head = (struct Radio_List *)WID_MALLOC(radionum*(sizeof(struct Radio_List)));
 				
 					while(tmp)
 						{
@@ -64989,7 +65038,7 @@ DBusMessage * wid_dbus_interface_set_radio_tx_power_sector_value(DBusConnection 
 				
 				if(radio_head!=NULL)
 					{
-						free(radio_head);
+						WID_FREE(radio_head);
 						radio_head = NULL;	
 					}
 			}
@@ -65138,7 +65187,7 @@ DBusMessage * wid_dbus_interface_set_radio_supper_g_type_state(DBusConnection *c
 							radionum +=AC_WTP[radiotmp->WTPID]->RadioCount;
 							radiotmp = radiotmp->next;
 						}
-					radio_head = (struct Radio_List *)malloc(radionum*(sizeof(struct Radio_List)));
+					radio_head = (struct Radio_List *)WID_MALLOC(radionum*(sizeof(struct Radio_List)));
 					while(tmp)
 						{
 							ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
@@ -65213,7 +65262,7 @@ DBusMessage * wid_dbus_interface_set_radio_supper_g_type_state(DBusConnection *c
 				
 				if(radio_head!=NULL)
 					{
-						free(radio_head);
+						WID_FREE(radio_head);
 						radio_head = NULL;	
 					}
 			}
@@ -65340,7 +65389,7 @@ DBusMessage * wid_dbus_interface_set_ap_dos_def(DBusConnection *conn, DBusMessag
 			printf("******** type == 1 *****\n");
 			if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL)){
 				tmp = WTP_GROUP[ID]->WTP_M;
-				wtp_head = (struct Wtp_List *)malloc(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
+				wtp_head = (struct Wtp_List *)WID_MALLOC(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
 				
 				while(tmp){
 					ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
@@ -65401,7 +65450,7 @@ DBusMessage * wid_dbus_interface_set_ap_dos_def(DBusConnection *conn, DBusMessag
 			}	
 			
 			if(wtp_head!=NULL){
-				free(wtp_head);
+				WID_FREE(wtp_head);
 				wtp_head = NULL;	
 			}
 		}
@@ -65527,7 +65576,7 @@ DBusMessage * wid_dbus_interface_set_ap_igmp_snoop(DBusConnection *conn, DBusMes
 		printf("******** type == 1 *****\n");
 		if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL)){
 			tmp = WTP_GROUP[ID]->WTP_M;
-			wtp_head = (struct Wtp_List *)malloc(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
+			wtp_head = (struct Wtp_List *)WID_MALLOC(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
 			
 			while(tmp){
 				ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
@@ -65588,7 +65637,7 @@ DBusMessage * wid_dbus_interface_set_ap_igmp_snoop(DBusConnection *conn, DBusMes
 		}	
 		
 		if(wtp_head!=NULL){
-			free(wtp_head);
+			WID_FREE(wtp_head);
 			wtp_head = NULL;	
 		}
 	}
@@ -65729,19 +65778,19 @@ DBusMessage * wid_dbus_interface_show_ap_cm_statistics(DBusConnection *conn, DBu
 	char *cpu_type =NULL;
 	char *flash_type =NULL;
 	char *mem_type =NULL;
-	cpu_type =(char*) malloc(WTP_TYPE_DEFAULT_LEN+1);
+	cpu_type =(char*) WID_MALLOC(WTP_TYPE_DEFAULT_LEN+1);
 	if(NULL == cpu_type){
 		return NULL;
 	}
-	flash_type =(char*) malloc(WTP_TYPE_DEFAULT_LEN+1);
+	flash_type =(char*) WID_MALLOC(WTP_TYPE_DEFAULT_LEN+1);
 	if(NULL == flash_type){
-		CW_FREE_OBJECT(cpu_type);
+		CW_FREE_OBJECT_WID(cpu_type);
 		return NULL;
 	}
-	mem_type =(char*) malloc(WTP_TYPE_DEFAULT_LEN+1);
+	mem_type =(char*) WID_MALLOC(WTP_TYPE_DEFAULT_LEN+1);
 	if(NULL == mem_type){
-		CW_FREE_OBJECT(cpu_type);
-		CW_FREE_OBJECT(mem_type);
+		CW_FREE_OBJECT_WID(cpu_type);
+		CW_FREE_OBJECT_WID(mem_type);
 		return NULL;
 	}
 	memset(cpu_type,0,WTP_TYPE_DEFAULT_LEN+1);
@@ -65759,11 +65808,11 @@ DBusMessage * wid_dbus_interface_show_ap_cm_statistics(DBusConnection *conn, DBu
 			printf("%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
-		free(cpu_type);
+		WID_FREE(cpu_type);
 		cpu_type = NULL;
-		free(flash_type);
+		WID_FREE(flash_type);
 		flash_type = NULL;
-		free(mem_type);
+		WID_FREE(mem_type);
 		mem_type = NULL;
 		return NULL;
 	}
@@ -65808,11 +65857,11 @@ DBusMessage * wid_dbus_interface_show_ap_cm_statistics(DBusConnection *conn, DBu
 		dbus_message_iter_append_basic (&iter,DBUS_TYPE_STRING,&mem_type);
 		//dbus_message_iter_append_basic (&iter,DBUS_TYPE_UINT32,&(AC_WTP[wtpid]->memSize)); 
 	}
-	free(cpu_type);
+	WID_FREE(cpu_type);
 	cpu_type = NULL;
-	free(flash_type);
+	WID_FREE(flash_type);
 	flash_type = NULL;
-	free(mem_type);
+	WID_FREE(mem_type);
 	mem_type = NULL;
 	return reply;
 
@@ -66598,7 +66647,7 @@ DBusMessage * wid_dbus_interface_set_ebr_add_del_if(DBusConnection *conn, DBusMe
 	}
 	unsigned char ret_flag = 0;
 	char *vename;
-	vename = (char*)malloc(strlen(ifname)+5);
+	vename = (char*)WID_MALLOC(strlen(ifname)+5);
 	memset(vename,0,strlen(ifname)+5);
 	if(check_ve_interface(ifname,vename)){
 		wid_syslog_debug_debug(WID_DBUS,"input ve interface dosen't exist!\n");
@@ -66698,7 +66747,7 @@ DBusMessage * wid_dbus_interface_set_ebr_add_del_if(DBusConnection *conn, DBusMe
 					
 	dbus_message_iter_init_append (reply, &iter);	
 	dbus_message_iter_append_basic (&iter,DBUS_TYPE_UINT32,&ret); 
-	free(vename);
+	WID_FREE(vename);
 	vename = NULL;
 	return reply;
 
@@ -67011,7 +67060,7 @@ DBusMessage * wid_dbus_interface_show_fdb_summary_detail(DBusConnection *conn, D
 	int i, n;
 	int offset = 0;
 	struct fdb_entry *fdb = NULL;
-	struct fdb_entry *new_fdb=(struct fdb_entry *)malloc((offset + CHUNK) * sizeof(struct fdb_entry));
+	struct fdb_entry *new_fdb=(struct fdb_entry *)WID_MALLOC((offset + CHUNK) * sizeof(struct fdb_entry));
 	
 
 	printf("222\n");
@@ -67032,7 +67081,7 @@ DBusMessage * wid_dbus_interface_show_fdb_summary_detail(DBusConnection *conn, D
 			fprintf(stderr, "read of forward table failed: %s\n",
 				strerror(errno));
 			if(fdb){
-				free(fdb);
+				WID_FREE(fdb);
 				fdb=NULL;
 			}
 			return reply;
@@ -67082,7 +67131,7 @@ DBusMessage * wid_dbus_interface_show_fdb_summary_detail(DBusConnection *conn, D
 	}	
 	
 	if(fdb){
-		free(fdb);
+		WID_FREE(fdb);
 		fdb=NULL;
 	}
 	return reply;
@@ -67121,7 +67170,7 @@ DBusMessage * wid_dbus_interface_set_ebr_add_del_uplink(DBusConnection *conn, DB
 	}
 	unsigned char ret_flag = 0;
 	char *vename;
-	vename = (char*)malloc(strlen(ifname)+5);
+	vename = (char*)WID_MALLOC(strlen(ifname)+5);
 	memset(vename,0,strlen(ifname)+5);
 	if(check_ve_interface(ifname,vename)){
 		wid_syslog_debug_debug(WID_DBUS,"intput ve interface dosen't exist!\n");
@@ -67189,7 +67238,7 @@ DBusMessage * wid_dbus_interface_set_ebr_add_del_uplink(DBusConnection *conn, DB
 					
 	dbus_message_iter_init_append (reply, &iter);	
 	dbus_message_iter_append_basic (&iter,DBUS_TYPE_UINT32,&ret); 
-	free(vename);
+	WID_FREE(vename);
 	vename = NULL;
 	
 	return reply;
@@ -67349,10 +67398,10 @@ DBusMessage *wid_dbus_set_ac_as_secondary(DBusConnection *conn, DBusMessage *msg
 	vir_uplinkip = NULL;
 	vir_uplinkname = NULL;
 	if(uplink_cnt > 0){
-		master_uplinkip = (int *)malloc(uplink_cnt*(sizeof(int)));
-		bak_uplinkip  = (int *)malloc(uplink_cnt*(sizeof(int)));
-		vir_uplinkip = (int *)malloc(uplink_cnt*(sizeof(int)));
-		vir_uplinkname = malloc(uplink_cnt*(sizeof(char*)));
+		master_uplinkip = (int *)WID_MALLOC(uplink_cnt*(sizeof(int)));
+		bak_uplinkip  = (int *)WID_MALLOC(uplink_cnt*(sizeof(int)));
+		vir_uplinkip = (int *)WID_MALLOC(uplink_cnt*(sizeof(int)));
+		vir_uplinkname = WID_MALLOC(uplink_cnt*(sizeof(char*)));
 	}
 	
 	dbus_message_iter_next(&iter);	
@@ -67376,10 +67425,10 @@ DBusMessage *wid_dbus_set_ac_as_secondary(DBusConnection *conn, DBusMessage *msg
 	vir_downlinkip = NULL;
 	vir_downlinkname = NULL;
 	if(downlink_cnt > 0){
-		master_downlinkip = (int *)malloc(downlink_cnt*(sizeof(int)));
-		bak_downlinkip  = (int *)malloc(downlink_cnt*(sizeof(int)));
-		vir_downlinkip = (int *)malloc(downlink_cnt*(sizeof(int)));
-		vir_downlinkname = malloc(downlink_cnt*(sizeof(char*)));
+		master_downlinkip = (int *)WID_MALLOC(downlink_cnt*(sizeof(int)));
+		bak_downlinkip  = (int *)WID_MALLOC(downlink_cnt*(sizeof(int)));
+		vir_downlinkip = (int *)WID_MALLOC(downlink_cnt*(sizeof(int)));
+		vir_downlinkname = WID_MALLOC(downlink_cnt*(sizeof(char*)));
 	}
 	
 	dbus_message_iter_next(&iter);	
@@ -67433,18 +67482,18 @@ DBusMessage *wid_dbus_set_ac_as_secondary(DBusConnection *conn, DBusMessage *msg
 		vinfo.bak_uplinkip = bak_uplinkip[0];
 		vinfo.vir_uplinkip = vir_uplinkip[0];
 		if(vinfo.vir_uplinkname != NULL){
-			free(vinfo.vir_uplinkname);
+			WID_FREE(vinfo.vir_uplinkname);
 			vinfo.vir_uplinkname = NULL;
 		}
-		vinfo.vir_uplinkname = malloc(strlen(vir_uplinkname[0])+1);
+		vinfo.vir_uplinkname = WID_MALLOC(strlen(vir_uplinkname[0])+1);
 		memset(vinfo.vir_uplinkname, 0, strlen(vir_uplinkname[0])+1);
 		memcpy(vinfo.vir_uplinkname,vir_uplinkname[0],strlen(vir_uplinkname[0]));
 	}else{
 		if(vinfo.vir_uplinkname != NULL){
-			free(vinfo.vir_uplinkname);
+			WID_FREE(vinfo.vir_uplinkname);
 			vinfo.vir_uplinkname = NULL;
 		}
-		vinfo.vir_uplinkname = malloc(1);
+		vinfo.vir_uplinkname = WID_MALLOC(1);
 		memset(vinfo.vir_uplinkname, 0, 1);
 	}
 	if(downlink_cnt > 0){
@@ -67452,27 +67501,27 @@ DBusMessage *wid_dbus_set_ac_as_secondary(DBusConnection *conn, DBusMessage *msg
 		vinfo.bak_downlinkip = bak_downlinkip[0];
 		vinfo.vir_downlinkip = vir_downlinkip[0];
 		if(vinfo.vir_downlinkname != NULL){
-			free(vinfo.vir_downlinkname);
+			WID_FREE(vinfo.vir_downlinkname);
 			vinfo.vir_downlinkname = NULL;
 		}
-		vinfo.vir_downlinkname = malloc(strlen(vir_downlinkname[0])+1);
+		vinfo.vir_downlinkname = WID_MALLOC(strlen(vir_downlinkname[0])+1);
 		memset(vinfo.vir_downlinkname, 0, strlen(vir_downlinkname[0])+1);
 		memcpy(vinfo.vir_downlinkname,vir_downlinkname[0],strlen(vir_downlinkname[0]));
 	}else{
 		if(vinfo.vir_downlinkname != NULL){
-			free(vinfo.vir_downlinkname);
+			WID_FREE(vinfo.vir_downlinkname);
 			vinfo.vir_downlinkname = NULL;
 		}
-		vinfo.vir_downlinkname = malloc(1);
+		vinfo.vir_downlinkname = WID_MALLOC(1);
 		memset(vinfo.vir_downlinkname, 0, 1);
 	}
 	vinfo.global_ht_ip = global_ht_ip;
 	vinfo.global_ht_opposite_ip = global_ht_opposite_ip;
 	if(vinfo.global_ht_ifname != NULL){
-		free(vinfo.global_ht_ifname);
+		WID_FREE(vinfo.global_ht_ifname);
 		vinfo.global_ht_ifname = NULL;
 	}
-	vinfo.global_ht_ifname = malloc(strlen(global_ht_ifname)+1);
+	vinfo.global_ht_ifname = WID_MALLOC(strlen(global_ht_ifname)+1);
 	memset(vinfo.global_ht_ifname, 0, strlen(global_ht_ifname)+1);
 	memcpy(vinfo.global_ht_ifname,global_ht_ifname,strlen(global_ht_ifname));
 
@@ -67504,7 +67553,7 @@ DBusMessage *wid_dbus_set_ac_as_secondary(DBusConnection *conn, DBusMessage *msg
 		#ifndef _AC_BAK_UDP_
 				close(bak->sock);
 		#endif
-				free(bak);
+				WID_FREE(bak);
 				bak = bak2;
 			}
 			CWThreadMutexUnlock(&MasterBak);
@@ -67583,7 +67632,7 @@ DBusMessage *wid_dbus_set_ac_as_secondary(DBusConnection *conn, DBusMessage *msg
 #ifndef _AC_BAK_UDP_
 			close(bak->sock);
 #endif
-			free(bak);
+			WID_FREE(bak);
 			bak = bak2;
 		}
 		bak_list = NULL;
@@ -67642,7 +67691,7 @@ DBusMessage *wid_dbus_set_ac_as_secondary(DBusConnection *conn, DBusMessage *msg
 #ifndef _AC_BAK_UDP_
 					close(bak->sock);
 #endif
-					free(bak);
+					WID_FREE(bak);
 					bak = bak2;
 				}
 				bak_list = NULL;
@@ -67681,24 +67730,24 @@ DBusMessage *wid_dbus_set_ac_as_secondary(DBusConnection *conn, DBusMessage *msg
 	}
 */	
 	if(uplink_cnt > 0){
-		free(master_uplinkip);
+		WID_FREE(master_uplinkip);
 		master_uplinkip = NULL;
-		free(bak_uplinkip);
+		WID_FREE(bak_uplinkip);
 		bak_uplinkip  = NULL;
-		free(vir_uplinkip);
+		WID_FREE(vir_uplinkip);
 		vir_uplinkip = NULL;
-		free(vir_uplinkname);
+		WID_FREE(vir_uplinkname);
 		vir_uplinkname = NULL;
 	}
 
 	if(downlink_cnt > 0){
-		free(master_downlinkip);
+		WID_FREE(master_downlinkip);
 		master_downlinkip = NULL;
-		free(bak_downlinkip);
+		WID_FREE(bak_downlinkip);
 		bak_downlinkip  = NULL;
-		free(vir_downlinkip);
+		WID_FREE(vir_downlinkip);
 		vir_downlinkip = NULL;
-		free(vir_downlinkname);
+		WID_FREE(vir_downlinkname);
 		vir_downlinkname = NULL;
 	}
 	
@@ -67750,7 +67799,7 @@ DBusMessage *wid_dbus_set_local_hansi_state(DBusConnection *conn, DBusMessage *m
 	wid_syslog_info("%s2\n",__func__);	
 	vir_uplinkname = NULL;
 	if(uplink_cnt > 0){
-		vir_uplinkname = malloc(uplink_cnt*(sizeof(char*)));
+		vir_uplinkname = WID_MALLOC(uplink_cnt*(sizeof(char*)));
 	}
 	
 	dbus_message_iter_next(&iter);	
@@ -67768,7 +67817,7 @@ DBusMessage *wid_dbus_set_local_hansi_state(DBusConnection *conn, DBusMessage *m
 
 	vir_downlinkname = NULL;
 	if(downlink_cnt > 0){
-		vir_downlinkname = malloc(downlink_cnt*(sizeof(char*)));
+		vir_downlinkname = WID_MALLOC(downlink_cnt*(sizeof(char*)));
 	}
 	
 	dbus_message_iter_next(&iter);	
@@ -67785,7 +67834,7 @@ DBusMessage *wid_dbus_set_local_hansi_state(DBusConnection *conn, DBusMessage *m
 	
 	vir_gatewayname = NULL;
 	if(gateway_cnt > 0){
-		vir_gatewayname = malloc(gateway_cnt*(sizeof(char*)));
+		vir_gatewayname = WID_MALLOC(gateway_cnt*(sizeof(char*)));
 	}	
 
 	dbus_message_iter_next(&iter);	
@@ -67812,34 +67861,34 @@ DBusMessage *wid_dbus_set_local_hansi_state(DBusConnection *conn, DBusMessage *m
 	vinfo.vrrid = vrid;
 	if(uplink_cnt > 0){
 		if(vinfo.vir_uplinkname != NULL){
-			free(vinfo.vir_uplinkname);
+			WID_FREE(vinfo.vir_uplinkname);
 			vinfo.vir_uplinkname = NULL;
 		}
-		vinfo.vir_uplinkname = malloc(strlen(vir_uplinkname[0])+1);
+		vinfo.vir_uplinkname = WID_MALLOC(strlen(vir_uplinkname[0])+1);
 		memset(vinfo.vir_uplinkname, 0, strlen(vir_uplinkname[0])+1);
 		memcpy(vinfo.vir_uplinkname,vir_uplinkname[0],strlen(vir_uplinkname[0]));
 	}else{
 		if(vinfo.vir_uplinkname != NULL){
-			free(vinfo.vir_uplinkname);
+			WID_FREE(vinfo.vir_uplinkname);
 			vinfo.vir_uplinkname = NULL;
 		}
-		vinfo.vir_uplinkname = malloc(1);
+		vinfo.vir_uplinkname = WID_MALLOC(1);
 		memset(vinfo.vir_uplinkname, 0, 1);
 	}
 	if(downlink_cnt > 0){
 		if(vinfo.vir_downlinkname != NULL){
-			free(vinfo.vir_downlinkname);
+			WID_FREE(vinfo.vir_downlinkname);
 			vinfo.vir_downlinkname = NULL;
 		}
-		vinfo.vir_downlinkname = malloc(strlen(vir_downlinkname[0])+1);
+		vinfo.vir_downlinkname = WID_MALLOC(strlen(vir_downlinkname[0])+1);
 		memset(vinfo.vir_downlinkname, 0, strlen(vir_downlinkname[0])+1);
 		memcpy(vinfo.vir_downlinkname,vir_downlinkname[0],strlen(vir_downlinkname[0]));
 	}else{
 		if(vinfo.vir_downlinkname != NULL){
-			free(vinfo.vir_downlinkname);
+			WID_FREE(vinfo.vir_downlinkname);
 			vinfo.vir_downlinkname = NULL;
 		}
-		vinfo.vir_downlinkname = malloc(1);
+		vinfo.vir_downlinkname = WID_MALLOC(1);
 		memset(vinfo.vir_downlinkname, 0, 1);
 	}
 
@@ -67861,7 +67910,7 @@ DBusMessage *wid_dbus_set_local_hansi_state(DBusConnection *conn, DBusMessage *m
 			wid_syslog_info("%s11\n",__func__);	
 			while(bak != NULL){
 				bak2 = bak->next;
-				free(bak);
+				WID_FREE(bak);
 				bak = bak2;
 			}
 			CWThreadMutexUnlock(&MasterBak);
@@ -67933,7 +67982,7 @@ DBusMessage *wid_dbus_set_local_hansi_state(DBusConnection *conn, DBusMessage *m
 #ifndef _AC_BAK_UDP_
 			close(bak->sock);
 #endif
-			free(bak);
+			WID_FREE(bak);
 			bak = bak2;
 		}
 		bak_list = NULL;
@@ -67985,7 +68034,7 @@ DBusMessage *wid_dbus_set_local_hansi_state(DBusConnection *conn, DBusMessage *m
 #ifndef _AC_BAK_UDP_
 					close(bak->sock);
 #endif
-					free(bak);
+					WID_FREE(bak);
 					bak = bak2;
 				}
 				bak_list = NULL;
@@ -68013,16 +68062,16 @@ DBusMessage *wid_dbus_set_local_hansi_state(DBusConnection *conn, DBusMessage *m
 		}
 	}	
 	if(uplink_cnt > 0){
-		free(vir_uplinkname);
+		WID_FREE(vir_uplinkname);
 		vir_uplinkname = NULL;
 	}
 
 	if(downlink_cnt > 0){
-		free(vir_downlinkname);
+		WID_FREE(vir_downlinkname);
 		vir_downlinkname = NULL;
 	}
 	if(gateway_cnt > 0){
-		free(vir_gatewayname);
+		WID_FREE(vir_gatewayname);
 		vir_gatewayname = NULL;
 	}
 	
@@ -68281,7 +68330,7 @@ DBusMessage *wid_dbus_add_ac_ip_list_group(DBusConnection *conn, DBusMessage *ms
 	}
 	unsigned char ret_flag = 0;
 	char *name;
-	name = (char *)malloc(strlen(IFName)+5);
+	name = (char *)WID_MALLOC(strlen(IFName)+5);
 	memset(name,0,strlen(IFName)+5);
 	if(check_ve_interface(IFName,name)){
 		wid_syslog_debug_debug(WID_DBUS,"input ve interface dosen't exist!\n");
@@ -68304,7 +68353,7 @@ DBusMessage *wid_dbus_add_ac_ip_list_group(DBusConnection *conn, DBusMessage *ms
 	dbus_message_iter_append_basic (&iter,
 									 DBUS_TYPE_UINT32,
 									 &ret);
-	free(name);
+	WID_FREE(name);
 	name = NULL;
 	return reply;
 	
@@ -69163,7 +69212,7 @@ DBusMessage * wid_dbus_interface_wtp_list_dhcp_snooping(DBusConnection *conn, DB
 				msg.mqinfo.u.WtpInfo.Wtp_Op = WTP_DHCP_SNOOPING;
 				msg.mqinfo.u.WtpInfo.value2 = policy;
 			
-				elem = (struct msgqlist*)malloc(sizeof(struct msgqlist));
+				elem = (struct msgqlist*)WID_MALLOC(sizeof(struct msgqlist));
 				if(elem == NULL){
 					wid_syslog_crit("%s malloc %s",__func__,strerror(errno));
 					perror("malloc");
@@ -69310,7 +69359,7 @@ DBusMessage * wid_dbus_interface_wtp_dhcp_snooping(DBusConnection *conn, DBusMes
 		printf("******** type == 1 *****\n");
 		if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL)){
 			tmp = WTP_GROUP[ID]->WTP_M;
-			wtp_head = (struct Wtp_List *)malloc(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
+			wtp_head = (struct Wtp_List *)WID_MALLOC(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
 			
 			while(tmp){
 				ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
@@ -69371,7 +69420,7 @@ DBusMessage * wid_dbus_interface_wtp_dhcp_snooping(DBusConnection *conn, DBusMes
 		}	
 		
 		if(wtp_head!=NULL){
-			free(wtp_head);
+			WID_FREE(wtp_head);
 			wtp_head = NULL;	
 		}
 	}
@@ -69605,7 +69654,7 @@ DBusMessage * wid_dbus_interface_wtp_list_sta_info_report(DBusConnection *conn, 
 				msg.mqinfo.u.WtpInfo.Wtp_Op = WTP_STA_INFO_REPORT;
 				msg.mqinfo.u.WtpInfo.value2 = policy;
 			
-				elem = (struct msgqlist*)malloc(sizeof(struct msgqlist));
+				elem = (struct msgqlist*)WID_MALLOC(sizeof(struct msgqlist));
 				if(elem == NULL){
 					wid_syslog_crit("%s malloc %s",__func__,strerror(errno));
 					perror("malloc");
@@ -69747,7 +69796,7 @@ DBusMessage * wid_dbus_interface_wtp_sta_info_report(DBusConnection *conn, DBusM
 		printf("******** type == 1 *****\n");
 		if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL)){
 			tmp = WTP_GROUP[ID]->WTP_M;
-			wtp_head = (struct Wtp_List *)malloc(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
+			wtp_head = (struct Wtp_List *)WID_MALLOC(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
 			
 			while(tmp){
 				ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
@@ -69808,7 +69857,7 @@ DBusMessage * wid_dbus_interface_wtp_sta_info_report(DBusConnection *conn, DBusM
 		}	
 		
 		if(wtp_head!=NULL){
-			free(wtp_head);
+			WID_FREE(wtp_head);
 			wtp_head = NULL;	
 		}
 	}
@@ -70263,7 +70312,7 @@ DBusMessage * wid_dbus_interface_wlan_wtp_sta_static_arp(DBusConnection *conn, D
 							radionum +=AC_WTP[radiotmp->WTPID]->RadioCount;
 							radiotmp = radiotmp->next;
 						}
-					radio_head = (struct Radio_List *)malloc(radionum*(sizeof(struct Radio_List)));
+					radio_head = (struct Radio_List *)WID_MALLOC(radionum*(sizeof(struct Radio_List)));
 					while(tmp)
 						{
 							ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
@@ -70347,7 +70396,7 @@ DBusMessage * wid_dbus_interface_wlan_wtp_sta_static_arp(DBusConnection *conn, D
 				
 				if(radio_head!=NULL)
 					{
-						free(radio_head);
+						WID_FREE(radio_head);
 						radio_head = NULL;	
 					}
 			}
@@ -70989,7 +71038,7 @@ DBusMessage *wid_dbus_add_del_ap_group_member(DBusConnection *conn, DBusMessage 
 	wid_syslog_debug_debug(WID_DEFAULT, "wtpnum =%d(0 for all)\n", num);
 
 	if (num > 0) {
-		wtp_list = malloc(num*sizeof(unsigned int));
+		wtp_list = WID_MALLOC(num*sizeof(unsigned int));
 		if (!wtp_list) {
 			ret = WID_DBUS_ERROR;
 			wid_syslog_err("%s for ap-group %d malloc failed\n", isadd ? "add" : "delete", groupid);
@@ -71045,7 +71094,7 @@ DBusMessage *wid_dbus_add_del_ap_group_member(DBusConnection *conn, DBusMessage 
 			wid_syslog_err("ap-group %d is not exist\n", groupid);
 			ret = WID_DBUS_ERROR;
 		} else {
-			wtp_list = malloc(WTP_NUM*sizeof(unsigned int));
+			wtp_list = WID_MALLOC(WTP_NUM*sizeof(unsigned int));
 			//is malloc for result success
 			if (!wtp_list) {
 				ret = WID_DBUS_ERROR;
@@ -71089,7 +71138,7 @@ DBusMessage *wid_dbus_add_del_ap_group_member(DBusConnection *conn, DBusMessage 
 											 &(wtp_list[i]));
 		wid_syslog_debug_debug(WID_DEFAULT, "wtp_list[i] %d\n",wtp_list[i]);
 	}	
-	free(wtp_list);
+	WID_FREE(wtp_list);
 	wtp_list = NULL;
 	return reply;	
 }
@@ -71568,7 +71617,7 @@ DBusMessage * wid_dbus_wlan_show_running_config_start(DBusConnection *conn, DBus
 	}
 	
 	if(num == 0){
-		showStr = (char*)malloc(1024);		
+		showStr = (char*)WID_MALLOC(1024);		
 		memset(showStr,0,1024);
 		cursor = showStr;
 
@@ -71615,10 +71664,10 @@ DBusMessage * wid_dbus_wlan_show_running_config_start(DBusConnection *conn, DBus
 		}
 		wid_syslog_debug_debug(WID_DBUS,"no wlan config");
 	}else{
-		showStr = (char*)malloc(num*1024);
+		showStr = (char*)WID_MALLOC(num*1024);
 		str_len = num*1024;    //fengwenchao add 20110504
 		if(NULL == showStr) {
-			//printf(("memory malloc error\n"));
+			//printf(("memory WID_MALLOC error\n"));
 			wid_syslog_crit("memory malloc error\n");
 			//return NULL;
 		}else{
@@ -71800,12 +71849,12 @@ DBusMessage * wid_dbus_wlan_show_running_config_start(DBusConnection *conn, DBus
 								if(tmp->nas_id_len != 0)
 								{
 									char *nas_id = NULL;
-									nas_id = malloc(NAS_IDENTIFIER_NAME+1);
+									nas_id = WID_MALLOC(NAS_IDENTIFIER_NAME+1);
 									if(nas_id == NULL)
 									{
 										printf("malloc error!\n");
 										if(showStr){
-											free(showStr);
+											WID_FREE(showStr);
 											showStr = NULL;
 										}
 										return NULL;
@@ -71817,7 +71866,7 @@ DBusMessage * wid_dbus_wlan_show_running_config_start(DBusConnection *conn, DBus
 									totalLen += sprintf(cursor," wlan apply interface %s nas_identifier %s\n",tmp->ifi_name,nas_id);
 									cursor = showStr + totalLen;
 									tmp = tmp->ifi_next;
-									free(nas_id);
+									WID_FREE(nas_id);
 									nas_id = NULL;
 								}
 								else
@@ -72024,7 +72073,7 @@ DBusMessage * wid_dbus_wlan_show_running_config_start(DBusConnection *conn, DBus
 	dbus_message_iter_append_basic (&iter,
 									 DBUS_TYPE_STRING,
 									 &showStr);	
-	free(showStr);
+	WID_FREE(showStr);
 	showStr = NULL;
 	return reply;
 
@@ -72051,12 +72100,12 @@ DBusMessage * wid_dbus_wlan_show_running_config_end(DBusConnection *conn, DBusMe
 	}
 	
 	if(num == 0){
-		showStr = (char*)malloc(1);		
+		showStr = (char*)WID_MALLOC(1);		
 		memset(showStr,0,1);
 		//printf("no wlan config\n");
 		wid_syslog_debug_debug(WID_DBUS,"no wlan config\n");
 	}else{
-		showStr = (char*)malloc(num*1024);
+		showStr = (char*)WID_MALLOC(num*1024);
 	
 		if(NULL == showStr) {
 			//printf(("memory malloc error\n"));
@@ -72177,7 +72226,7 @@ DBusMessage * wid_dbus_wlan_show_running_config_end(DBusConnection *conn, DBusMe
 	dbus_message_iter_append_basic (&iter,
 									 DBUS_TYPE_STRING,
 									 &showStr);	
-	free(showStr);
+	WID_FREE(showStr);
 	showStr = NULL;
 	return reply;
 
@@ -72195,7 +72244,7 @@ DBusMessage * wid_dbus_show_wtp_config(DBusConnection *conn, DBusMessage *msg, v
 	char *showStr = NULL,*cursor = NULL;
 	char *showStr_new = NULL;
 	WID_WTP **WTP;
-	WTP = malloc(WTP_NUM*(sizeof(WID_WTP *)));
+	WTP = WID_MALLOC(WTP_NUM*(sizeof(WID_WTP *)));
 
 
 
@@ -72233,11 +72282,11 @@ DBusMessage * wid_dbus_show_wtp_config(DBusConnection *conn, DBusMessage *msg, v
 		}
 	}
 	str_len = WTP_NUM*1024;
-	showStr = (char*)malloc(str_len);
+	showStr = (char*)WID_MALLOC(str_len);
 	if(NULL == showStr) {
 		wid_syslog_debug_debug(WID_DBUS,"alloc memory fail when mirror show running-config\n");
 		if(WTP){
-			free(WTP);
+			WID_FREE(WTP);
 			WTP = NULL;
 		}
 		return NULL;
@@ -72267,10 +72316,10 @@ DBusMessage * wid_dbus_show_wtp_config(DBusConnection *conn, DBusMessage *msg, v
 								   DBUS_TYPE_STRING,
 								   &showStr);
 	
-	free(showStr);
+	WID_FREE(showStr);
 	showStr = NULL;
 	
-	free(WTP);
+	WID_FREE(WTP);
 	WTP = NULL;
 	return reply;
 }
@@ -72359,7 +72408,7 @@ DBusMessage * wid_dbus_wtp_show_running_config_start(DBusConnection *conn, DBusM
 //	int s_id2 = 0;
 //	int s_state = 0;
 	WID_WTP **WTP=NULL;
-	WTP = malloc(WTP_NUM*(sizeof(WID_WTP *)));
+	WTP = WID_MALLOC(WTP_NUM*(sizeof(WID_WTP *)));
 
 	while(i<WTP_NUM){
 		if(AC_WTP[i] != NULL)
@@ -72371,7 +72420,7 @@ DBusMessage * wid_dbus_wtp_show_running_config_start(DBusConnection *conn, DBusM
 	}
 	if(num == 0){
 		str_len = DEFAULT_LEN*1024;
-		showStr = (char*)malloc(str_len);		
+		showStr = (char*)WID_MALLOC(str_len);		
 		memset(showStr,0,str_len);
 		cursor = showStr;
 
@@ -72495,7 +72544,7 @@ DBusMessage * wid_dbus_wtp_show_running_config_start(DBusConnection *conn, DBusM
 		wid_syslog_debug_debug(WID_DBUS,"no wtp config\n");
 	}else{
 		str_len = num*1024;
-		showStr = (char*)malloc(str_len);
+		showStr = (char*)WID_MALLOC(str_len);
 	
 		if(NULL == showStr) {
 			wid_syslog_crit("memory malloc error\n");
@@ -72645,7 +72694,7 @@ DBusMessage * wid_dbus_wtp_show_running_config_start(DBusConnection *conn, DBusM
 			if(gCOUNTRYCODE != COUNTRY_CHINA_CN)/*wcl modify for OSDEVTDPB-31*/
 			{
 				char *countrycode;
-				countrycode = (char *)malloc(sizeof(char)*3);
+				countrycode = (char *)WID_MALLOC(sizeof(char)*3);
 				memset(countrycode,0,3);
 				
 				switch(gCOUNTRYCODE)
@@ -72687,7 +72736,7 @@ DBusMessage * wid_dbus_wtp_show_running_config_start(DBusConnection *conn, DBusM
 				totalLen += sprintf(cursor,"country-code %s\n",countrycode);
 				cursor = showStr + totalLen; 
 
-				free(countrycode);
+				WID_FREE(countrycode);
 				countrycode = NULL;
 			}
 			/*fengwenchao add for AUTELAN-2712,20111214*/
@@ -72883,7 +72932,7 @@ DBusMessage * wid_dbus_wtp_show_running_config_start(DBusConnection *conn, DBusM
 								if(mapnum2 != 0)
 								{
 									char *mapstr = NULL,*mapmsg = NULL;
-									mapstr = (char*)malloc(16);		
+									mapstr = (char*)WID_MALLOC(16);		
 									memset(mapstr,0,16);
 									mapmsg = mapstr;
 									int length = 0;
@@ -72921,7 +72970,7 @@ DBusMessage * wid_dbus_wtp_show_running_config_start(DBusConnection *conn, DBusM
 										default : break;
 									}
 
-									CW_FREE_OBJECT(mapstr);
+									CW_FREE_OBJECT_WID(mapstr);
 									
 								}
 							}
@@ -73558,8 +73607,8 @@ DBusMessage * wid_dbus_wtp_show_running_config_start(DBusConnection *conn, DBusM
 	unsigned int flag = 0;
 	char *string = NULL;
 	char ** LICE_LIST = NULL;
-	string = (char *)malloc(4);
-	LICE_LIST = (char *)malloc(glicensecount*sizeof(char *));
+	string = (char *)WID_MALLOC(4);
+	LICE_LIST = (char *)WID_MALLOC(glicensecount*sizeof(char *));
 	for(i=0; i<glicensecount; i++){
 		if(LICE_LIST[i])
 			LICE_LIST[i] = NULL;
@@ -73570,7 +73619,7 @@ DBusMessage * wid_dbus_wtp_show_running_config_start(DBusConnection *conn, DBusM
 			memset(string, 0, 4);
 			sprintf(string, "%d", i+1);
 			if(LICE_LIST[flag]==NULL){
-				LICE_LIST[flag] = (char *)malloc(2*glicensecount+1);
+				LICE_LIST[flag] = (char *)WID_MALLOC(2*glicensecount+1);
 				memset(LICE_LIST[flag], 0, 2*glicensecount+1);
 				strncat(LICE_LIST[flag],string,strlen(string));
 			}
@@ -73588,11 +73637,11 @@ DBusMessage * wid_dbus_wtp_show_running_config_start(DBusConnection *conn, DBusM
 		}
 	}
 	if(LICE_LIST!=NULL){
-		free(LICE_LIST);
+		WID_FREE(LICE_LIST);
 		LICE_LIST = NULL;
 	}
 	if(string!=NULL){
-		free(string);
+		WID_FREE(string);
 		string = NULL;
 	}
 	/*END*/
@@ -73856,9 +73905,9 @@ fail:
 	dbus_message_iter_append_basic (&iter,
 									 DBUS_TYPE_STRING,
 									 &showStr);	
-	free(showStr);
+	WID_FREE(showStr);
 	showStr = NULL;
-	free(WTP);
+	WID_FREE(WTP);
 	WTP = NULL;
 	return reply;
 
@@ -73887,12 +73936,12 @@ DBusMessage * wid_dbus_wtp_show_running_config_end(DBusConnection *conn, DBusMes
 	WID_WTP **WTP=NULL;	
 	unsigned int bss_num = 0 ; 
 	unsigned int command_num = 0;
-	bssid = (unsigned int*)malloc(BSS_NUM*sizeof(unsigned int));
+	bssid = (unsigned int*)WID_MALLOC(BSS_NUM*sizeof(unsigned int));
 	if(bssid == NULL){
 		wid_syslog_err("%s :bssid malloc fail.\n",__func__);
 		goto fail;		
 	}
-	WTP = malloc(WTP_NUM*(sizeof(WID_WTP *)));
+	WTP = WID_MALLOC(WTP_NUM*(sizeof(WID_WTP *)));
 	if( WTP == NULL){
 		wid_syslog_err("%s %d:WTP malloc fail.\n",__func__,__LINE__);
 		goto fail;
@@ -73908,14 +73957,14 @@ DBusMessage * wid_dbus_wtp_show_running_config_end(DBusConnection *conn, DBusMes
 	}
 	if(num == 0){	
 		str_len = 1;
-		showStr = (char*)malloc(1);		
+		showStr = (char*)WID_MALLOC(1);		
 		memset(showStr,0,1);
 		wid_syslog_debug_debug(WID_DBUS,"no wtp config\n");
 	}else{
-		showStr = (char*)malloc(num*1024);
+		showStr = (char*)WID_MALLOC(num*1024);
 	
 		if(NULL == showStr) {
-			wid_syslog_crit("memory malloc error\n");
+			wid_syslog_crit("memory WID_MALLOC error\n");
 			//return NULL;
 		}else{
 			str_len = num*1024;
@@ -74063,7 +74112,7 @@ DBusMessage * wid_dbus_wtp_show_running_config_end(DBusConnection *conn, DBusMes
 				showStr_new = (char*)realloc(showStr,totalLen+command_num*50);
 				
 				if(NULL == showStr_new){
-					wid_syslog_crit("memory malloc error\n");
+					wid_syslog_crit("memory WID_MALLOC error\n");
 					exit(1);
 				} else {
 					showStr = showStr_new;
@@ -74102,13 +74151,13 @@ fail:
 	dbus_message_iter_append_basic (&iter,
 									 DBUS_TYPE_STRING,
 									 &showStr);	
-	free(showStr);
+	WID_FREE(showStr);
 	showStr = NULL;
 	if(bssid){
-		free(bssid);
+		WID_FREE(bssid);
 		bssid = NULL;
 	}
-	free(WTP);
+	WID_FREE(WTP);
 	WTP = NULL;
 	return reply;
 
@@ -74134,11 +74183,11 @@ DBusMessage * wid_dbus_ebr_show_running_config_start(DBusConnection *conn, DBusM
 		i++;
 	}
 	if(num == 0){		
-		showStr = (char*)malloc(1); 	
+		showStr = (char*)WID_MALLOC(1); 	
 		memset(showStr,0,1);
 		wid_syslog_debug_debug(WID_DBUS,"no ebr config\n");
 	}else{
-		showStr = (char*)malloc(num*1024);
+		showStr = (char*)WID_MALLOC(num*1024);
 	
 		if(NULL == showStr) {
 			wid_syslog_crit("memory malloc error\n");
@@ -74167,7 +74216,7 @@ DBusMessage * wid_dbus_ebr_show_running_config_start(DBusConnection *conn, DBusM
 	dbus_message_iter_append_basic (&iter,
 									 DBUS_TYPE_STRING,
 									 &showStr);	
-	free(showStr);
+	WID_FREE(showStr);
 	showStr = NULL;
 	return reply;
 
@@ -74207,7 +74256,7 @@ DBusMessage * wid_dbus_ebr_show_running_config_end(DBusConnection *conn, DBusMes
 	}
 	
 	if(num == 0){		
-		showStr = (char*)malloc(1); 	
+		showStr = (char*)WID_MALLOC(1); 	
 		memset(showStr,0,1);
 		wid_syslog_debug_debug(WID_DBUS,"no ebr config\n");
 	}else{
@@ -74215,7 +74264,7 @@ DBusMessage * wid_dbus_ebr_show_running_config_end(DBusConnection *conn, DBusMes
 			str_len = wtp_num*1024;	
 		else
 			str_len = num*1024;
-		showStr = (char*)malloc(str_len);
+		showStr = (char*)WID_MALLOC(str_len);
 	
 		if(NULL == showStr) {
 			wid_syslog_crit("memory malloc error\n");
@@ -74332,7 +74381,7 @@ DBusMessage * wid_dbus_ebr_show_running_config_end(DBusConnection *conn, DBusMes
 	dbus_message_iter_append_basic (&iter,
 									 DBUS_TYPE_STRING,
 									 &showStr); 
-	free(showStr);
+	WID_FREE(showStr);
 	showStr = NULL;
 	return reply;
 
@@ -74360,11 +74409,11 @@ DBusMessage * wid_dbus_ac_ip_list_show_running_config(DBusConnection *conn, DBus
 		i++;
 	}
 	if(num == 0){		
-		showStr = (char*)malloc(1); 	
+		showStr = (char*)WID_MALLOC(1); 	
 		memset(showStr,0,1);
 		wid_syslog_debug_debug(WID_DBUS,"no ac ip list config\n");
 	}else{
-		showStr = (char*)malloc(num*1024);
+		showStr = (char*)WID_MALLOC(num*1024);
 	
 		if(NULL == showStr) {
 			wid_syslog_crit("memory malloc error\n");
@@ -74399,7 +74448,7 @@ DBusMessage * wid_dbus_ac_ip_list_show_running_config(DBusConnection *conn, DBus
 	dbus_message_iter_append_basic (&iter,
 									 DBUS_TYPE_STRING,
 									 &showStr);	
-	free(showStr);
+	WID_FREE(showStr);
 	showStr = NULL;
 	return reply;
 
@@ -75285,11 +75334,11 @@ int get_dbus_uname(int index){
 	}
 	if(len > 0){
 		if(dbus_count[index].uname != NULL){
-			free(dbus_count[index].uname);
+			WID_FREE(dbus_count[index].uname);
 			dbus_count[index].uname = NULL;
 			dbus_count[index].num = 0;
 		}
-		dbus_count[index].uname = malloc(len*SENDER_LEN);
+		dbus_count[index].uname = WID_MALLOC(len*SENDER_LEN);
 		memset(dbus_count[index].uname, 0, len*SENDER_LEN);
 		dbus_count[index].num = len;
 	}
@@ -76173,97 +76222,97 @@ int show_running_config_wtp(WID_WTP **WTP,int i,char *cursor,char **showStr2,cha
 				totalLen += sprintf(cursor,"config radio %d-%d\n",WTP[i]->WTPID,WTP[i]->WTP_Radio[j]->Radio_L_ID);
 				cursor = showStr + totalLen;	
 
-		/*wcl add for OSDEVTDPB-31*/
+				/*wcl add for OSDEVTDPB-31*/
+		
+				if(WTP[i]->WTP_Radio[j]->Radio_country_code != gCOUNTRYCODE)
+				{
+					char *countrycode;
+					countrycode = (char *)WID_MALLOC(sizeof(char)*3);
+					memset(countrycode,0,3);
+									
+					switch(WTP[i]->WTP_Radio[j]->Radio_country_code)
+					{
+						case COUNTRY_CHINA_CN : 
+												strncpy(countrycode,"CN",2);
+												break;
+										
+						case COUNTRY_EUROPE_EU : 
+												strncpy(countrycode,"EU",2);
+												break;
+																		
+						case COUNTRY_USA_US : 
+												strncpy(countrycode,"US",2);
+												break;
+																		
+						case COUNTRY_JAPAN_JP : 
+												strncpy(countrycode,"JP",2);
+												break;
+																		
+						case COUNTRY_FRANCE_FR : 
+												strncpy(countrycode,"FR",2);
+												break;
+																		
+						case COUNTRY_SPAIN_ES : 
+												strncpy(countrycode,"ES",2);
+												break;
 
-		if(WTP[i]->WTP_Radio[j]->Radio_country_code != gCOUNTRYCODE)
-		{
-			char *countrycode;
-			countrycode = (char *)malloc(sizeof(char)*3);
-			memset(countrycode,0,3);
-							
-			switch(WTP[i]->WTP_Radio[j]->Radio_country_code)
-			{
-				case COUNTRY_CHINA_CN : 
+						default : 
 										strncpy(countrycode,"CN",2);
 										break;
-								
-				case COUNTRY_EUROPE_EU : 
-										strncpy(countrycode,"EU",2);
-										break;
-																
-				case COUNTRY_USA_US : 
-										strncpy(countrycode,"US",2);
-										break;
-																
-				case COUNTRY_JAPAN_JP : 
-										strncpy(countrycode,"JP",2);
-										break;
-																
-				case COUNTRY_FRANCE_FR : 
-										strncpy(countrycode,"FR",2);
-										break;
-																
-				case COUNTRY_SPAIN_ES : 
-										strncpy(countrycode,"ES",2);
-										break;
+					}
 
-				default : 
-								strncpy(countrycode,"CN",2);
-								break;
-			}
+					totalLen += sprintf(cursor,"country-code %s\n",countrycode);
+					cursor = showStr + totalLen; 
 
-			totalLen += sprintf(cursor,"country-code %s\n",countrycode);
-			cursor = showStr + totalLen; 
-
-			free(countrycode);
-			countrycode = NULL; 																			
-		}
-	/*end*/						
-				struct wlanid *radioWlanid = WTP[i]->WTP_Radio[j]->Wlan_Id;
-			/*	while(radioWlanid != NULL){					
-					totalLen += sprintf(cursor,"radio apply wlan %d\n",radioWlanid->wlanid);
-					cursor = showStr + totalLen;
-					radioWlanid = radioWlanid->next;
-				}*/
-				while(radioWlanid != NULL)
-				{					
-					int l_bssid = 0;
-					for(l_bssid=0;l_bssid<L_BSS_NUM;l_bssid++)
-					{
-						if(WTP[i]->WTP_Radio[j]->BSS[l_bssid] != NULL)
-						{
-							if((WTP[i]->WTP_Radio[j]->BSS[l_bssid]->WlanID == radioWlanid->wlanid)
-								&&(AC_WLAN[radioWlanid->wlanid] != NULL)&& (AC_WLAN[radioWlanid->wlanid]->want_to_delete != 1))		/* HuangLeilei add for AXSSZFI-1622 */
+					WID_FREE(countrycode);
+					countrycode = NULL; 																			
+				}
+			/*end*/						
+						struct wlanid *radioWlanid = WTP[i]->WTP_Radio[j]->Wlan_Id;
+					/*	while(radioWlanid != NULL){					
+							totalLen += sprintf(cursor,"radio apply wlan %d\n",radioWlanid->wlanid);
+							cursor = showStr + totalLen;
+							radioWlanid = radioWlanid->next;
+						}*/
+						while(radioWlanid != NULL)
+						{					
+							int l_bssid = 0;
+							for(l_bssid=0;l_bssid<L_BSS_NUM;l_bssid++)
 							{
-								if(WTP[i]->WTP_Radio[j]->BSS[l_bssid]->vlanid != 0)
+								if(WTP[i]->WTP_Radio[j]->BSS[l_bssid] != NULL)
 								{
-									if(vrrid != 0){
-										totalLen += sprintf(cursor," ");
-										cursor = showStr + totalLen;
-									}
-									totalLen += sprintf(cursor," radio apply wlan %d base vlan %d\n",radioWlanid->wlanid,WTP[i]->WTP_Radio[j]->BSS[l_bssid]->vlanid);
-									cursor = showStr + totalLen;
-								}
+									if((WTP[i]->WTP_Radio[j]->BSS[l_bssid]->WlanID == radioWlanid->wlanid)
+										&&(AC_WLAN[radioWlanid->wlanid] != NULL)&& (AC_WLAN[radioWlanid->wlanid]->want_to_delete != 1))		/* HuangLeilei add for AXSSZFI-1622 */
+									{
+										if(WTP[i]->WTP_Radio[j]->BSS[l_bssid]->vlanid != 0)
+										{
+											if(vrrid != 0){
+												totalLen += sprintf(cursor," ");
+												cursor = showStr + totalLen;
+											}
+											totalLen += sprintf(cursor," radio apply wlan %d base vlan %d\n",radioWlanid->wlanid,WTP[i]->WTP_Radio[j]->BSS[l_bssid]->vlanid);
+											cursor = showStr + totalLen;
+										}
 
-								if(WTP[i]->WTP_Radio[j]->BSS[l_bssid]->nas_port_id[0] != 0)
-								{
-									if(vrrid != 0){
-										totalLen += sprintf(cursor," ");
-										cursor = showStr + totalLen;
-									}
-									totalLen += sprintf(cursor," radio apply wlan %d base nas_port_id %s\n",radioWlanid->wlanid,WTP[i]->WTP_Radio[j]->BSS[l_bssid]->nas_port_id);
-									cursor = showStr + totalLen;
-								}
-								if((AC_WLAN[radioWlanid->wlanid] != NULL)
-									&&(WTP[i]->WTP_Radio[j]->BSS[l_bssid]->hotspot_id != AC_WLAN[radioWlanid->wlanid]->hotspot_id))
-								{
-									if(vrrid != 0){
-										totalLen += sprintf(cursor," ");
-										cursor = showStr + totalLen;
-									}
-									totalLen += sprintf(cursor," radio apply wlan %d base hotspot %d\n",radioWlanid->wlanid,WTP[i]->WTP_Radio[j]->BSS[l_bssid]->hotspot_id);
-									cursor = showStr + totalLen;
-								}
+										if(WTP[i]->WTP_Radio[j]->BSS[l_bssid]->nas_port_id[0] != 0)
+										{
+											if(vrrid != 0){
+												totalLen += sprintf(cursor," ");
+												cursor = showStr + totalLen;
+											}
+											totalLen += sprintf(cursor," radio apply wlan %d base nas_port_id %s\n",radioWlanid->wlanid,WTP[i]->WTP_Radio[j]->BSS[l_bssid]->nas_port_id);
+											cursor = showStr + totalLen;
+										}
+										if((AC_WLAN[radioWlanid->wlanid] != NULL)
+											&&(WTP[i]->WTP_Radio[j]->BSS[l_bssid]->hotspot_id != AC_WLAN[radioWlanid->wlanid]->hotspot_id))
+										{
+											if(vrrid != 0){
+												totalLen += sprintf(cursor," ");
+												cursor = showStr + totalLen;
+											}
+											totalLen += sprintf(cursor," radio apply wlan %d base hotspot %d\n",radioWlanid->wlanid,WTP[i]->WTP_Radio[j]->BSS[l_bssid]->hotspot_id);
+											cursor = showStr + totalLen;
+										}
 								else if((WTP[i]->WTP_Radio[j]->BSS[l_bssid]->vlanid == 0) && ((WTP[i]->WTP_Radio[j]->BSS[l_bssid]->nas_port_id[0] == 0)) && (radioWlanid->ESSID))
 								{
 									if(vrrid != 0){
@@ -76293,1181 +76342,1181 @@ int show_running_config_wtp(WID_WTP **WTP,int i,char *cursor,char **showStr2,cha
 									cursor = showStr + totalLen;
 								}
 
-								if(WTP[i]->WTP_Radio[j]->BSS[l_bssid]->WDSStat == WDS_SOME){
-									struct wds_bssid *wds = NULL;
-									if(WTP[i]->WTP_Radio[j]->BSS[l_bssid]->wblwm == 0){
-										wds = WTP[i]->WTP_Radio[j]->BSS[l_bssid]->wds_bss_list;
-										while(wds != NULL){
-											if(vrrid != 0){
-												totalLen += sprintf(cursor," ");
-												cursor = showStr + totalLen;
+										if(WTP[i]->WTP_Radio[j]->BSS[l_bssid]->WDSStat == WDS_SOME){
+											struct wds_bssid *wds = NULL;
+											if(WTP[i]->WTP_Radio[j]->BSS[l_bssid]->wblwm == 0){
+												wds = WTP[i]->WTP_Radio[j]->BSS[l_bssid]->wds_bss_list;
+												while(wds != NULL){
+													if(vrrid != 0){
+														totalLen += sprintf(cursor," ");
+														cursor = showStr + totalLen;
+													}
+													totalLen += sprintf(cursor," wlan %d add wds_bssid %02X:%02X:%02X:%02X:%02X:%02X\n",radioWlanid->wlanid,wds->BSSID[0],wds->BSSID[1],wds->BSSID[2],wds->BSSID[3],wds->BSSID[4],wds->BSSID[5]);
+													cursor = showStr + totalLen;												
+													wds = wds->next;
+												}
 											}
-											totalLen += sprintf(cursor," wlan %d add wds_bssid %02X:%02X:%02X:%02X:%02X:%02X\n",radioWlanid->wlanid,wds->BSSID[0],wds->BSSID[1],wds->BSSID[2],wds->BSSID[3],wds->BSSID[4],wds->BSSID[5]);
-											cursor = showStr + totalLen;												
-											wds = wds->next;
+											else{
+												wds = WTP[i]->WTP_Radio[j]->BSS[l_bssid]->wds_bss_list;
+												while(wds != NULL){
+													if(vrrid != 0){
+														totalLen += sprintf(cursor," ");
+														cursor = showStr + totalLen;
+													}
+													totalLen += sprintf(cursor," wlan %d add mesh_bssid %02X:%02X:%02X:%02X:%02X:%02X\n",radioWlanid->wlanid,wds->BSSID[0],wds->BSSID[1],wds->BSSID[2],wds->BSSID[3],wds->BSSID[4],wds->BSSID[5]);
+													cursor = showStr + totalLen;												
+													wds = wds->next;
+											}												}
 										}
-									}
-									else{
-										wds = WTP[i]->WTP_Radio[j]->BSS[l_bssid]->wds_bss_list;
-										while(wds != NULL){
+										if(WTP[i]->WTP_Radio[j]->BSS[l_bssid]->wsm_sta_info_reportinterval != 1800)
+										{
 											if(vrrid != 0){
 												totalLen += sprintf(cursor," ");
 												cursor = showStr + totalLen;
 											}
-											totalLen += sprintf(cursor," wlan %d add mesh_bssid %02X:%02X:%02X:%02X:%02X:%02X\n",radioWlanid->wlanid,wds->BSSID[0],wds->BSSID[1],wds->BSSID[2],wds->BSSID[3],wds->BSSID[4],wds->BSSID[5]);
-											cursor = showStr + totalLen;												
-											wds = wds->next;
-									}												}
+											totalLen += sprintf(cursor," set wlan %d wsm sta info reportinterval %d\n",WTP[i]->WTP_Radio[j]->BSS[l_bssid]->WlanID,WTP[i]->WTP_Radio[j]->BSS[l_bssid]->wsm_sta_info_reportinterval);
+											cursor = showStr + totalLen;									
+										}
+										if(WTP[i]->WTP_Radio[j]->BSS[l_bssid]->wsm_sta_info_reportswitch == 1)
+										{
+											if(vrrid != 0){
+												totalLen += sprintf(cursor," ");
+												cursor = showStr + totalLen;
+											}
+											totalLen += sprintf(cursor," set wlan %d wsm sta info reportswitch enable\n",WTP[i]->WTP_Radio[j]->BSS[l_bssid]->WlanID);
+											cursor = showStr + totalLen;									
+										}
+
+										break;
+									}
 								}
-								if(WTP[i]->WTP_Radio[j]->BSS[l_bssid]->wsm_sta_info_reportinterval != 1800)
+							}
+							radioWlanid = radioWlanid->next;
+						}
+						if(WTP[i]->WTP_Radio[j]->StartService.times != -1){
+							if(WTP[i]->WTP_Radio[j]->StartService.is_once == 0){
+								totalLen += sprintf(cursor," set radio start service at %d:%d:%d %s %s %s %s %s %s %s %s\n",(WTP[i]->WTP_Radio[j]->StartService.times)/3600,((WTP[i]->WTP_Radio[j]->StartService.times)%3600)/60,((WTP[i]->WTP_Radio[j]->StartService.times)%3600)%60,
+								(WTP[i]->WTP_Radio[j]->StartService.is_once == 1)?"once":"cycle",(WTP[i]->WTP_Radio[j]->StartService.wday[1]== 1)?"mon":"",(WTP[i]->WTP_Radio[j]->StartService.wday[2]== 1)?"tue":"",(WTP[i]->WTP_Radio[j]->StartService.wday[3]== 1)?"wed":"", 
+								(WTP[i]->WTP_Radio[j]->StartService.wday[4]== 1)?"thu":"",(WTP[i]->WTP_Radio[j]->StartService.wday[5]== 1)?"fri":"",(WTP[i]->WTP_Radio[j]->StartService.wday[6]== 1)?"sat":"",(WTP[i]->WTP_Radio[j]->StartService.wday[0]== 1)?"sun":"");
+								cursor = showStr + totalLen;	
+								if(WTP[i]->WTP_Radio[j]->StartService.TimerState == 1){
+									totalLen += sprintf(cursor," set radio starttimer enable\n");
+									cursor = showStr + totalLen;
+								}
+							}
+						}
+						if(WTP[i]->WTP_Radio[j]->StopService.times != -1){
+							if(WTP[i]->WTP_Radio[j]->StopService.is_once == 0){
+								totalLen += sprintf(cursor," set radio stop service at %d:%d:%d %s %s %s %s %s %s %s %s\n",(WTP[i]->WTP_Radio[j]->StopService.times)/3600,((WTP[i]->WTP_Radio[j]->StopService.times)%3600)/60,((WTP[i]->WTP_Radio[j]->StopService.times)%3600)%60,
+								(WTP[i]->WTP_Radio[j]->StopService.is_once == 1)?"once":"cycle",(WTP[i]->WTP_Radio[j]->StopService.wday[1]== 1)?"mon":"",(WTP[i]->WTP_Radio[j]->StopService.wday[2]== 1)?"tue":"",(WTP[i]->WTP_Radio[j]->StopService.wday[3]== 1)?"wed":"", 
+								(WTP[i]->WTP_Radio[j]->StopService.wday[4]== 1)?"thu":"",(WTP[i]->WTP_Radio[j]->StopService.wday[5]== 1)?"fri":"",(WTP[i]->WTP_Radio[j]->StopService.wday[6]== 1)?"sat":"",(WTP[i]->WTP_Radio[j]->StopService.wday[0]== 1)?"sun":"");
+								cursor = showStr + totalLen;
+								if(WTP[i]->WTP_Radio[j]->StopService.TimerState == 1){
+									totalLen += sprintf(cursor," set radio stoptimer enable\n");
+									cursor = showStr + totalLen;
+								}
+							}
+						}
+
+						//xm add 08/12/05
+						////////////////////////////////////////////////////
+						int mm=0;
+						int wlanid =0;
+						for(mm=0;mm<L_BSS_NUM;mm++){
+							if(totalLen + 1024 > str_len) {
+								str_len *= 2;
+								showStr_new = (char*)realloc(showStr,str_len);
+								if(showStr_new == NULL){
+									wid_syslog_info("show running realloc failed\n");
+									return -1;
+								}else {
+									showStr = showStr_new;
+									*showStr2 = showStr;
+									memset(showStr+str_len/2,0,str_len/2);
+									showStr_new = NULL;
+								}
+								wid_syslog_debug_debug(WID_DBUS,"show running totalLen %d realloc strlen %d\n",totalLen,str_len);
+							}
+							cursor = showStr + totalLen;
+							if(WTP[i]->WTP_Radio[j]->BSS[mm]!=NULL 
+								&& AC_WLAN[WTP[i]->WTP_Radio[j]->BSS[mm]->WlanID] != NULL 
+								&& AC_WLAN[WTP[i]->WTP_Radio[j]->BSS[mm]->WlanID]->want_to_delete != 1){		/* HuangLeilei add for AXSSZFI-1622 */
+								wlanid = WTP[i]->WTP_Radio[j]->BSS[mm]->WlanID;
+								if((AC_WLAN[wlanid] != NULL)&&(WTP[i]->WTP_Radio[j]->BSS[mm]->bss_max_allowed_sta_num != AC_WLAN[wlanid]->bss_allow_max_sta_num)){//fengwenchao modify 20120323
+									if(vrrid != 0){
+										totalLen += sprintf(cursor," ");
+										cursor = showStr + totalLen;
+									}
+									totalLen += sprintf(cursor," set bss wlan %d max_sta_num %d\n",WTP[i]->WTP_Radio[j]->BSS[mm]->WlanID,WTP[i]->WTP_Radio[j]->BSS[mm]->bss_max_allowed_sta_num);  //fengwenchao modify 20110513
+									cursor = showStr + totalLen;
+								}
+
+								//printf("0,mm %d WTP[i]->WTP_Radio[j]->BSS[mm]->ath_l2_isolation %d\n",mm,WTP[i]->WTP_Radio[j]->BSS[mm]->ath_l2_isolation);
+
+								if((AC_WLAN[wlanid] != NULL)&&(WTP[i]->WTP_Radio[j]->BSS[mm]->ath_l2_isolation != AC_WLAN[wlanid]->wlan_ath_l2_isolation)) //fengwenchao modify 20120323
 								{
 									if(vrrid != 0){
 										totalLen += sprintf(cursor," ");
 										cursor = showStr + totalLen;
 									}
-									totalLen += sprintf(cursor," set wlan %d wsm sta info reportinterval %d\n",WTP[i]->WTP_Radio[j]->BSS[l_bssid]->WlanID,WTP[i]->WTP_Radio[j]->BSS[l_bssid]->wsm_sta_info_reportinterval);
-									cursor = showStr + totalLen;									
+									totalLen += sprintf(cursor," set wlan %d l2 isolation %s\n",
+																WTP[i]->WTP_Radio[j]->BSS[mm]->WlanID,
+																(WTP[i]->WTP_Radio[j]->BSS[mm]->ath_l2_isolation ==1)?"enable":"disable");//fengwenchao modify 20120323
+									cursor = showStr + totalLen;
 								}
-								if(WTP[i]->WTP_Radio[j]->BSS[l_bssid]->wsm_sta_info_reportswitch == 1)
+								/*traffic limit*/
+								if(WTP[i]->WTP_Radio[j]->BSS[mm]->traffic_limit_able == 1)
+								{
+									if(WTP[i]->WTP_Radio[j]->BSS[mm]->traffic_limit != 0)
+									{
+										if(vrrid != 0){
+											totalLen += sprintf(cursor," ");
+											cursor = showStr + totalLen;
+										}
+										totalLen += sprintf(cursor," wlan %d traffic limit value %d\n",WTP[i]->WTP_Radio[j]->BSS[mm]->WlanID,WTP[i]->WTP_Radio[j]->BSS[mm]->traffic_limit);
+										cursor = showStr + totalLen;
+									}
+									if(WTP[i]->WTP_Radio[j]->BSS[mm]->average_rate != 0)
+									{
+										if(vrrid != 0){
+											totalLen += sprintf(cursor," ");
+											cursor = showStr + totalLen;
+										}
+										totalLen += sprintf(cursor," wlan %d traffic limit station average value %d\n",WTP[i]->WTP_Radio[j]->BSS[mm]->WlanID,WTP[i]->WTP_Radio[j]->BSS[mm]->average_rate);
+										cursor = showStr + totalLen;
+									}
+									if(WTP[i]->WTP_Radio[j]->BSS[mm]->send_traffic_limit != 0)
+									{
+										if(vrrid != 0){
+											totalLen += sprintf(cursor," ");
+											cursor = showStr + totalLen;
+										}
+										totalLen += sprintf(cursor," wlan %d traffic limit send value %d\n",WTP[i]->WTP_Radio[j]->BSS[mm]->WlanID,WTP[i]->WTP_Radio[j]->BSS[mm]->send_traffic_limit);
+										cursor = showStr + totalLen;
+									}
+									if(WTP[i]->WTP_Radio[j]->BSS[mm]->send_average_rate != 0)
+									{
+										if(vrrid != 0){
+											totalLen += sprintf(cursor," ");
+											cursor = showStr + totalLen;
+										}
+										totalLen += sprintf(cursor," wlan %d traffic limit station average send value %d\n",WTP[i]->WTP_Radio[j]->BSS[mm]->WlanID,WTP[i]->WTP_Radio[j]->BSS[mm]->send_average_rate);
+										cursor = showStr + totalLen;
+									}
+								}
+								if((AC_WLAN[wlanid] != NULL)&&(WTP[i]->WTP_Radio[j]->BSS[mm]->ip_mac_binding != AC_WLAN[wlanid]->sta_ip_mac_bind))//fengwenchao modify 20120323
 								{
 									if(vrrid != 0){
 										totalLen += sprintf(cursor," ");
 										cursor = showStr + totalLen;
 									}
-									totalLen += sprintf(cursor," set wlan %d wsm sta info reportswitch enable\n",WTP[i]->WTP_Radio[j]->BSS[l_bssid]->WlanID);
-									cursor = showStr + totalLen;									
-								}
-
-								break;
-							}
-						}
-					}
-					radioWlanid = radioWlanid->next;
-				}
-				if(WTP[i]->WTP_Radio[j]->StartService.times != -1){
-					if(WTP[i]->WTP_Radio[j]->StartService.is_once == 0){
-						totalLen += sprintf(cursor," set radio start service at %d:%d:%d %s %s %s %s %s %s %s %s\n",(WTP[i]->WTP_Radio[j]->StartService.times)/3600,((WTP[i]->WTP_Radio[j]->StartService.times)%3600)/60,((WTP[i]->WTP_Radio[j]->StartService.times)%3600)%60,
-						(WTP[i]->WTP_Radio[j]->StartService.is_once == 1)?"once":"cycle",(WTP[i]->WTP_Radio[j]->StartService.wday[1]== 1)?"mon":"",(WTP[i]->WTP_Radio[j]->StartService.wday[2]== 1)?"tue":"",(WTP[i]->WTP_Radio[j]->StartService.wday[3]== 1)?"wed":"", 
-						(WTP[i]->WTP_Radio[j]->StartService.wday[4]== 1)?"thu":"",(WTP[i]->WTP_Radio[j]->StartService.wday[5]== 1)?"fri":"",(WTP[i]->WTP_Radio[j]->StartService.wday[6]== 1)?"sat":"",(WTP[i]->WTP_Radio[j]->StartService.wday[0]== 1)?"sun":"");
-						cursor = showStr + totalLen;	
-						if(WTP[i]->WTP_Radio[j]->StartService.TimerState == 1){
-							totalLen += sprintf(cursor," set radio starttimer enable\n");
-							cursor = showStr + totalLen;
-						}
-					}
-				}
-				if(WTP[i]->WTP_Radio[j]->StopService.times != -1){
-					if(WTP[i]->WTP_Radio[j]->StopService.is_once == 0){
-						totalLen += sprintf(cursor," set radio stop service at %d:%d:%d %s %s %s %s %s %s %s %s\n",(WTP[i]->WTP_Radio[j]->StopService.times)/3600,((WTP[i]->WTP_Radio[j]->StopService.times)%3600)/60,((WTP[i]->WTP_Radio[j]->StopService.times)%3600)%60,
-						(WTP[i]->WTP_Radio[j]->StopService.is_once == 1)?"once":"cycle",(WTP[i]->WTP_Radio[j]->StopService.wday[1]== 1)?"mon":"",(WTP[i]->WTP_Radio[j]->StopService.wday[2]== 1)?"tue":"",(WTP[i]->WTP_Radio[j]->StopService.wday[3]== 1)?"wed":"", 
-						(WTP[i]->WTP_Radio[j]->StopService.wday[4]== 1)?"thu":"",(WTP[i]->WTP_Radio[j]->StopService.wday[5]== 1)?"fri":"",(WTP[i]->WTP_Radio[j]->StopService.wday[6]== 1)?"sat":"",(WTP[i]->WTP_Radio[j]->StopService.wday[0]== 1)?"sun":"");
-						cursor = showStr + totalLen;
-						if(WTP[i]->WTP_Radio[j]->StopService.TimerState == 1){
-							totalLen += sprintf(cursor," set radio stoptimer enable\n");
-							cursor = showStr + totalLen;
-						}
-					}
-				}
-
-				//xm add 08/12/05
-				////////////////////////////////////////////////////
-				int mm=0;
-				int wlanid =0;
-				for(mm=0;mm<L_BSS_NUM;mm++){
-					if(totalLen + 1024 > str_len) {
-						str_len *= 2;
-						showStr_new = (char*)realloc(showStr,str_len);
-						if(showStr_new == NULL){
-							wid_syslog_info("show running realloc failed\n");
-							return -1;
-						}else {
-							showStr = showStr_new;
-							*showStr2 = showStr;
-							memset(showStr+str_len/2,0,str_len/2);
-							showStr_new = NULL;
-						}
-						wid_syslog_debug_debug(WID_DBUS,"show running totalLen %d realloc strlen %d\n",totalLen,str_len);
-					}
-					cursor = showStr + totalLen;
-					if(WTP[i]->WTP_Radio[j]->BSS[mm]!=NULL 
-						&& AC_WLAN[WTP[i]->WTP_Radio[j]->BSS[mm]->WlanID] != NULL 
-						&& AC_WLAN[WTP[i]->WTP_Radio[j]->BSS[mm]->WlanID]->want_to_delete != 1){		/* HuangLeilei add for AXSSZFI-1622 */
-						wlanid = WTP[i]->WTP_Radio[j]->BSS[mm]->WlanID;
-						if((AC_WLAN[wlanid] != NULL)&&(WTP[i]->WTP_Radio[j]->BSS[mm]->bss_max_allowed_sta_num != AC_WLAN[wlanid]->bss_allow_max_sta_num)){//fengwenchao modify 20120323
-							if(vrrid != 0){
-								totalLen += sprintf(cursor," ");
-								cursor = showStr + totalLen;
-							}
-							totalLen += sprintf(cursor," set bss wlan %d max_sta_num %d\n",WTP[i]->WTP_Radio[j]->BSS[mm]->WlanID,WTP[i]->WTP_Radio[j]->BSS[mm]->bss_max_allowed_sta_num);  //fengwenchao modify 20110513
-							cursor = showStr + totalLen;
-						}
-
-						//printf("0,mm %d WTP[i]->WTP_Radio[j]->BSS[mm]->ath_l2_isolation %d\n",mm,WTP[i]->WTP_Radio[j]->BSS[mm]->ath_l2_isolation);
-
-						if((AC_WLAN[wlanid] != NULL)&&(WTP[i]->WTP_Radio[j]->BSS[mm]->ath_l2_isolation != AC_WLAN[wlanid]->wlan_ath_l2_isolation)) //fengwenchao modify 20120323
-						{
-							if(vrrid != 0){
-								totalLen += sprintf(cursor," ");
-								cursor = showStr + totalLen;
-							}
-							totalLen += sprintf(cursor," set wlan %d l2 isolation %s\n",
-														WTP[i]->WTP_Radio[j]->BSS[mm]->WlanID,
-														(WTP[i]->WTP_Radio[j]->BSS[mm]->ath_l2_isolation ==1)?"enable":"disable");//fengwenchao modify 20120323
-							cursor = showStr + totalLen;
-						}
-						/*traffic limit*/
-						if(WTP[i]->WTP_Radio[j]->BSS[mm]->traffic_limit_able == 1)
-						{
-							if(WTP[i]->WTP_Radio[j]->BSS[mm]->traffic_limit != 0)
-							{
-								if(vrrid != 0){
-									totalLen += sprintf(cursor," ");
+									totalLen += sprintf(cursor," wlan %d sta ip_mac binding %s\n",WTP[i]->WTP_Radio[j]->BSS[mm]->WlanID,(WTP[i]->WTP_Radio[j]->BSS[mm]->ip_mac_binding == 1)?"enable":"disable");//fengwenchao modify 20120323
 									cursor = showStr + totalLen;
 								}
-								totalLen += sprintf(cursor," wlan %d traffic limit value %d\n",WTP[i]->WTP_Radio[j]->BSS[mm]->WlanID,WTP[i]->WTP_Radio[j]->BSS[mm]->traffic_limit);
-								cursor = showStr + totalLen;
-							}
-							if(WTP[i]->WTP_Radio[j]->BSS[mm]->average_rate != 0)
-							{
-								if(vrrid != 0){
-									totalLen += sprintf(cursor," ");
+								if((AC_WLAN[wlanid] != NULL)&&((WTP[i]->WTP_Radio[j]->BSS[mm]->sta_static_arp_policy != AC_WLAN[wlanid]->wlan_sta_static_arp_policy)||(strcmp(WTP[i]->WTP_Radio[j]->BSS[mm]->arp_ifname,AC_WLAN[wlanid]->wlan_arp_ifname) != 0))){//fengwenchao modify 20120323
+									if(vrrid != 0){
+										totalLen += sprintf(cursor," ");
+										cursor = showStr + totalLen;
+									}
+									totalLen += sprintf(cursor," set wlan %d sta_static_arp %s base %s\n",WTP[i]->WTP_Radio[j]->BSS[mm]->WlanID,(WTP[i]->WTP_Radio[j]->BSS[mm]->sta_static_arp_policy == 1)?"enable":"disable",WTP[i]->WTP_Radio[j]->BSS[mm]->arp_ifname);
 									cursor = showStr + totalLen;
 								}
-								totalLen += sprintf(cursor," wlan %d traffic limit station average value %d\n",WTP[i]->WTP_Radio[j]->BSS[mm]->WlanID,WTP[i]->WTP_Radio[j]->BSS[mm]->average_rate);
-								cursor = showStr + totalLen;
-							}
-							if(WTP[i]->WTP_Radio[j]->BSS[mm]->send_traffic_limit != 0)
-							{
-								if(vrrid != 0){
-									totalLen += sprintf(cursor," ");
+								if(WTP[i]->WTP_Radio[j]->BSS[mm]->ip_mac_binding == 1)
+								{
+									if(vrrid != 0){
+										totalLen += sprintf(cursor," ");
+										cursor = showStr + totalLen;
+									}
+									totalLen += sprintf(cursor," wlan %d sta ip_mac binding enable\n",WTP[i]->WTP_Radio[j]->BSS[mm]->WlanID);
 									cursor = showStr + totalLen;
 								}
-								totalLen += sprintf(cursor," wlan %d traffic limit send value %d\n",WTP[i]->WTP_Radio[j]->BSS[mm]->WlanID,WTP[i]->WTP_Radio[j]->BSS[mm]->send_traffic_limit);
-								cursor = showStr + totalLen;
-							}
-							if(WTP[i]->WTP_Radio[j]->BSS[mm]->send_average_rate != 0)
-							{
-								if(vrrid != 0){
-									totalLen += sprintf(cursor," ");
+								/*fengwenchao add 20120222 for RDIR-25*/
+								if((AC_WLAN[wlanid] != NULL)&&(WTP[i]->WTP_Radio[j]->BSS[mm]->limit_sta_rssi != AC_WLAN[wlanid]->wlan_limit_sta_rssi)){
+									if(vrrid != 0){
+										totalLen += sprintf(cursor," ");
+										cursor = showStr + totalLen;
+									}
+									totalLen += sprintf(cursor," set radio wlan %d access sta limit rssi %d\n",WTP[i]->WTP_Radio[j]->BSS[mm]->WlanID,WTP[i]->WTP_Radio[j]->BSS[mm]->limit_sta_rssi);
+									cursor = showStr + totalLen;
+								}								
+								/*fengwenchao add end*/
+								if((AC_WLAN[wlanid] != NULL)&&((WTP[i]->WTP_Radio[j]->BSS[mm]->muti_bro_cast_sw != AC_WLAN[wlanid]->wlan_muti_bro_cast_sw) 
+									||(WTP[i]->WTP_Radio[j]->BSS[mm]->unicast_sw != AC_WLAN[wlanid]->wlan_unicast_sw)
+									||(WTP[i]->WTP_Radio[j]->BSS[mm]->muti_rate != AC_WLAN[wlanid]->wlan_muti_rate)
+									||(WTP[i]->WTP_Radio[j]->BSS[mm]->wifi_sw != AC_WLAN[wlanid]->wlan_wifi_sw))){ /*fengwenchao modify 20120323*/
+									if((WTP[i]->WTP_Radio[j]->BSS[mm]->unicast_sw != AC_WLAN[wlanid]->wlan_unicast_sw)
+										&&(WTP[i]->WTP_Radio[j]->BSS[mm]->muti_bro_cast_sw != AC_WLAN[wlanid]->wlan_muti_bro_cast_sw)
+										&&(WTP[i]->WTP_Radio[j]->BSS[mm]->unicast_sw == WTP[i]->WTP_Radio[j]->BSS[mm]->muti_bro_cast_sw)){
+										if(vrrid != 0){
+											totalLen += sprintf(cursor," ");
+											cursor = showStr + totalLen;
+										}
+										totalLen += sprintf(cursor," wlan %d unicast_and_multicast_broadcast isolation %s\n",WTP[i]->WTP_Radio[j]->BSS[mm]->WlanID,(WTP[i]->WTP_Radio[j]->BSS[mm]->muti_bro_cast_sw == 1)?"enable":"disable");
+										cursor = showStr + totalLen;
+									}else if(WTP[i]->WTP_Radio[j]->BSS[mm]->unicast_sw != AC_WLAN[wlanid]->wlan_unicast_sw){
+										if(vrrid != 0){
+											totalLen += sprintf(cursor," ");
+											cursor = showStr + totalLen;
+										}
+										totalLen += sprintf(cursor," wlan %d unicast isolation %s\n",WTP[i]->WTP_Radio[j]->BSS[mm]->WlanID,(WTP[i]->WTP_Radio[j]->BSS[mm]->unicast_sw == 1)?"enable":"disable");
+										cursor = showStr + totalLen;
+									}else if(WTP[i]->WTP_Radio[j]->BSS[mm]->muti_bro_cast_sw != AC_WLAN[wlanid]->wlan_muti_bro_cast_sw){
+										if(vrrid != 0){
+											totalLen += sprintf(cursor," ");
+											cursor = showStr + totalLen;
+										}
+										totalLen += sprintf(cursor," wlan %d multicast_broadcast isolation %s\n",WTP[i]->WTP_Radio[j]->BSS[mm]->WlanID,(WTP[i]->WTP_Radio[j]->BSS[mm]->muti_bro_cast_sw == 1)?"enable":"disable");
+										cursor = showStr + totalLen;
+									}
+									if(WTP[i]->WTP_Radio[j]->BSS[mm]->wifi_sw != AC_WLAN[wlanid]->wlan_wifi_sw){
+										if(vrrid != 0){
+											totalLen += sprintf(cursor," ");
+											cursor = showStr + totalLen;
+										}
+										totalLen += sprintf(cursor," wlan %d wifi isolation %s\n",WTP[i]->WTP_Radio[j]->BSS[mm]->WlanID,(WTP[i]->WTP_Radio[j]->BSS[mm]->wifi_sw == 1)?"enable":"disable");
+										cursor = showStr + totalLen;
+									}
+									if(WTP[i]->WTP_Radio[j]->BSS[mm]->muti_rate != AC_WLAN[wlanid]->wlan_muti_rate){
+										if(vrrid != 0){
+											totalLen += sprintf(cursor," ");
+											cursor = showStr + totalLen;
+										}
+										totalLen += sprintf(cursor," wlan %d multicast_broadcast_rate %d\n",WTP[i]->WTP_Radio[j]->BSS[mm]->WlanID,WTP[i]->WTP_Radio[j]->BSS[mm]->muti_rate);
+										cursor = showStr + totalLen;
+									}
+									
+								}
+								/*fengwenchao add 20120331*/
+								if((AC_WLAN[wlanid] != NULL)&&(WTP[i]->WTP_Radio[j]->BSS[mm]->noResToStaProReqSW != AC_WLAN[wlanid]->wlan_noResToStaProReqSW))
+								{
+									if(vrrid != 0){
+										totalLen += sprintf(cursor," ");
+										cursor = showStr + totalLen;
+									}
+									totalLen += sprintf(cursor," wlan %d no response to sta probe request %s\n",WTP[i]->WTP_Radio[j]->BSS[mm]->WlanID,(WTP[i]->WTP_Radio[j]->BSS[mm]->noResToStaProReqSW == 1)?"enable":"disable");
+									cursor = showStr + totalLen;
+								}		
+								/*fengwenchao add end*/
+								if(WTP[i]->WTP_Radio[j]->BSS[mm]->sta_static_arp_policy == 1){
+									if(vrrid != 0){
+										totalLen += sprintf(cursor," ");
+										cursor = showStr + totalLen;
+									}
+									totalLen += sprintf(cursor," set wlan %d sta_static_arp enable base %s\n",WTP[i]->WTP_Radio[j]->BSS[mm]->WlanID,WTP[i]->WTP_Radio[j]->BSS[mm]->arp_ifname);
 									cursor = showStr + totalLen;
 								}
-								totalLen += sprintf(cursor," wlan %d traffic limit station average send value %d\n",WTP[i]->WTP_Radio[j]->BSS[mm]->WlanID,WTP[i]->WTP_Radio[j]->BSS[mm]->send_average_rate);
-								cursor = showStr + totalLen;
-							}
-						}
-						if((AC_WLAN[wlanid] != NULL)&&(WTP[i]->WTP_Radio[j]->BSS[mm]->ip_mac_binding != AC_WLAN[wlanid]->sta_ip_mac_bind))//fengwenchao modify 20120323
-						{
-							if(vrrid != 0){
-								totalLen += sprintf(cursor," ");
-								cursor = showStr + totalLen;
-							}
-							totalLen += sprintf(cursor," wlan %d sta ip_mac binding %s\n",WTP[i]->WTP_Radio[j]->BSS[mm]->WlanID,(WTP[i]->WTP_Radio[j]->BSS[mm]->ip_mac_binding == 1)?"enable":"disable");//fengwenchao modify 20120323
-							cursor = showStr + totalLen;
-						}
-						if((AC_WLAN[wlanid] != NULL)&&((WTP[i]->WTP_Radio[j]->BSS[mm]->sta_static_arp_policy != AC_WLAN[wlanid]->wlan_sta_static_arp_policy)||(strcmp(WTP[i]->WTP_Radio[j]->BSS[mm]->arp_ifname,AC_WLAN[wlanid]->wlan_arp_ifname) != 0))){//fengwenchao modify 20120323
-							if(vrrid != 0){
-								totalLen += sprintf(cursor," ");
-								cursor = showStr + totalLen;
-							}
-							totalLen += sprintf(cursor," set wlan %d sta_static_arp %s base %s\n",WTP[i]->WTP_Radio[j]->BSS[mm]->WlanID,(WTP[i]->WTP_Radio[j]->BSS[mm]->sta_static_arp_policy == 1)?"enable":"disable",WTP[i]->WTP_Radio[j]->BSS[mm]->arp_ifname);
-							cursor = showStr + totalLen;
-						}
-						if(WTP[i]->WTP_Radio[j]->BSS[mm]->ip_mac_binding == 1)
-						{
-							if(vrrid != 0){
-								totalLen += sprintf(cursor," ");
-								cursor = showStr + totalLen;
-							}
-							totalLen += sprintf(cursor," wlan %d sta ip_mac binding enable\n",WTP[i]->WTP_Radio[j]->BSS[mm]->WlanID);
-							cursor = showStr + totalLen;
-						}
-						/*fengwenchao add 20120222 for RDIR-25*/
-						if((AC_WLAN[wlanid] != NULL)&&(WTP[i]->WTP_Radio[j]->BSS[mm]->limit_sta_rssi != AC_WLAN[wlanid]->wlan_limit_sta_rssi)){
-							if(vrrid != 0){
-								totalLen += sprintf(cursor," ");
-								cursor = showStr + totalLen;
-							}
-							totalLen += sprintf(cursor," set radio wlan %d access sta limit rssi %d\n",WTP[i]->WTP_Radio[j]->BSS[mm]->WlanID,WTP[i]->WTP_Radio[j]->BSS[mm]->limit_sta_rssi);
-							cursor = showStr + totalLen;
-						}								
-						/*fengwenchao add end*/
-						if((AC_WLAN[wlanid] != NULL)&&((WTP[i]->WTP_Radio[j]->BSS[mm]->muti_bro_cast_sw != AC_WLAN[wlanid]->wlan_muti_bro_cast_sw) 
-							||(WTP[i]->WTP_Radio[j]->BSS[mm]->unicast_sw != AC_WLAN[wlanid]->wlan_unicast_sw)
-							||(WTP[i]->WTP_Radio[j]->BSS[mm]->muti_rate != AC_WLAN[wlanid]->wlan_muti_rate)
-							||(WTP[i]->WTP_Radio[j]->BSS[mm]->wifi_sw != AC_WLAN[wlanid]->wlan_wifi_sw))){ /*fengwenchao modify 20120323*/
-							if((WTP[i]->WTP_Radio[j]->BSS[mm]->unicast_sw != AC_WLAN[wlanid]->wlan_unicast_sw)
-								&&(WTP[i]->WTP_Radio[j]->BSS[mm]->muti_bro_cast_sw != AC_WLAN[wlanid]->wlan_muti_bro_cast_sw)
-								&&(WTP[i]->WTP_Radio[j]->BSS[mm]->unicast_sw == WTP[i]->WTP_Radio[j]->BSS[mm]->muti_bro_cast_sw)){
-								if(vrrid != 0){
-									totalLen += sprintf(cursor," ");
-									cursor = showStr + totalLen;
-								}
-								totalLen += sprintf(cursor," wlan %d unicast_and_multicast_broadcast isolation %s\n",WTP[i]->WTP_Radio[j]->BSS[mm]->WlanID,(WTP[i]->WTP_Radio[j]->BSS[mm]->muti_bro_cast_sw == 1)?"enable":"disable");
-								cursor = showStr + totalLen;
-							}else if(WTP[i]->WTP_Radio[j]->BSS[mm]->unicast_sw != AC_WLAN[wlanid]->wlan_unicast_sw){
-								if(vrrid != 0){
-									totalLen += sprintf(cursor," ");
-									cursor = showStr + totalLen;
-								}
-								totalLen += sprintf(cursor," wlan %d unicast isolation %s\n",WTP[i]->WTP_Radio[j]->BSS[mm]->WlanID,(WTP[i]->WTP_Radio[j]->BSS[mm]->unicast_sw == 1)?"enable":"disable");
-								cursor = showStr + totalLen;
-							}else if(WTP[i]->WTP_Radio[j]->BSS[mm]->muti_bro_cast_sw != AC_WLAN[wlanid]->wlan_muti_bro_cast_sw){
-								if(vrrid != 0){
-									totalLen += sprintf(cursor," ");
-									cursor = showStr + totalLen;
-								}
-								totalLen += sprintf(cursor," wlan %d multicast_broadcast isolation %s\n",WTP[i]->WTP_Radio[j]->BSS[mm]->WlanID,(WTP[i]->WTP_Radio[j]->BSS[mm]->muti_bro_cast_sw == 1)?"enable":"disable");
-								cursor = showStr + totalLen;
-							}
-							if(WTP[i]->WTP_Radio[j]->BSS[mm]->wifi_sw != AC_WLAN[wlanid]->wlan_wifi_sw){
-								if(vrrid != 0){
-									totalLen += sprintf(cursor," ");
-									cursor = showStr + totalLen;
-								}
-								totalLen += sprintf(cursor," wlan %d wifi isolation %s\n",WTP[i]->WTP_Radio[j]->BSS[mm]->WlanID,(WTP[i]->WTP_Radio[j]->BSS[mm]->wifi_sw == 1)?"enable":"disable");
-								cursor = showStr + totalLen;
-							}
-							if(WTP[i]->WTP_Radio[j]->BSS[mm]->muti_rate != AC_WLAN[wlanid]->wlan_muti_rate){
-								if(vrrid != 0){
-									totalLen += sprintf(cursor," ");
-									cursor = showStr + totalLen;
-								}
-								totalLen += sprintf(cursor," wlan %d multicast_broadcast_rate %d\n",WTP[i]->WTP_Radio[j]->BSS[mm]->WlanID,WTP[i]->WTP_Radio[j]->BSS[mm]->muti_rate);
-								cursor = showStr + totalLen;
 							}
 							
 						}
-						/*fengwenchao add 20120331*/
-						if((AC_WLAN[wlanid] != NULL)&&(WTP[i]->WTP_Radio[j]->BSS[mm]->noResToStaProReqSW != AC_WLAN[wlanid]->wlan_noResToStaProReqSW))
+						if((WTP[i]->WTP_Radio[j]->txpowerautostate == 0)&&(WTP[i]->WTP_Radio[j]->Radio_TXP == 100))
 						{
 							if(vrrid != 0){
 								totalLen += sprintf(cursor," ");
 								cursor = showStr + totalLen;
 							}
-							totalLen += sprintf(cursor," wlan %d no response to sta probe request %s\n",WTP[i]->WTP_Radio[j]->BSS[mm]->WlanID,(WTP[i]->WTP_Radio[j]->BSS[mm]->noResToStaProReqSW == 1)?"enable":"disable");
-							cursor = showStr + totalLen;
-						}		
-						/*fengwenchao add end*/
-						if(WTP[i]->WTP_Radio[j]->BSS[mm]->sta_static_arp_policy == 1){
-							if(vrrid != 0){
-								totalLen += sprintf(cursor," ");
-								cursor = showStr + totalLen;
-							}
-							totalLen += sprintf(cursor," set wlan %d sta_static_arp enable base %s\n",WTP[i]->WTP_Radio[j]->BSS[mm]->WlanID,WTP[i]->WTP_Radio[j]->BSS[mm]->arp_ifname);
+							totalLen += sprintf(cursor," txpower auto\n");
 							cursor = showStr + totalLen;
 						}
-					}
-					
-				}
-				if((WTP[i]->WTP_Radio[j]->txpowerautostate == 0)&&(WTP[i]->WTP_Radio[j]->Radio_TXP == 100))
-				{
-					if(vrrid != 0){
-						totalLen += sprintf(cursor," ");
-						cursor = showStr + totalLen;
-					}
-					totalLen += sprintf(cursor," txpower auto\n");
-					cursor = showStr + totalLen;
-				}
-				/*wcl modify*/
-				else if(WTP[i]->WTP_Radio[j]->txpowerautostate == 1){
-					if(WTP[i]->WTP_Radio[j]->ishighpower == 1)
-				{
-						if((WTP[i]->WTP_Radio[j]->Radio_TXP != 27)&&(WTP[i]->WTP_Radio[j]->Radio_TXP != 100))
-					{
-						if(vrrid != 0){
-							totalLen += sprintf(cursor," ");
-							cursor = showStr + totalLen;
-						}
-						totalLen += sprintf(cursor," txpower %d\n",WTP[i]->WTP_Radio[j]->Radio_TXP);
-						cursor = showStr + totalLen;
-					}	
-						}else{
-							if((WTP[i]->WTP_Radio[j]->Radio_TXP != 20)&&(WTP[i]->WTP_Radio[j]->Radio_TXP != 100))
+						/*wcl modify*/
+						else if(WTP[i]->WTP_Radio[j]->txpowerautostate == 1){
+							if(WTP[i]->WTP_Radio[j]->ishighpower == 1)
 						{
-							if(vrrid != 0){
-								totalLen += sprintf(cursor," ");
-								cursor = showStr + totalLen;
-							}
-							totalLen += sprintf(cursor," txpower %d\n",WTP[i]->WTP_Radio[j]->Radio_TXP);
-							cursor = showStr + totalLen;
-							}	
-						}
-				}
-				/*end*/
-
-				if((WTP[i]->WTP_Radio[j]->Radio_TXPOF != 0)){
-					if(vrrid != 0){
-						totalLen += sprintf(cursor," ");
-						cursor = showStr + totalLen;
-					}
-					totalLen += sprintf(cursor," txpoweroffset %d\n",WTP[i]->WTP_Radio[j]->Radio_TXPOF);
-					cursor = showStr + totalLen;
-				}						
-               /*zhaoruijia,20100917,add*/
-				if((WTP[i]->WTP_Radio[j]->txpowerstep!= 1)){
-					if(vrrid != 0){
-						totalLen += sprintf(cursor," ");
-						cursor = showStr + totalLen;
-					}
-					totalLen += sprintf(cursor," txpowerstep %d\n",WTP[i]->WTP_Radio[j]->txpowerstep);
-					cursor = showStr + totalLen;
-				}	
-				/*fengwenchao modfiy 20120203 for autelan-2821*/
-				if(((WTP[i]->WTP_Radio[j]->Radio_Type & IEEE80211_11N) == IEEE80211_11N)&&(WTP[i]->WTP_Radio[j]->BeaconPeriod != 400))
-				{
-					if(vrrid != 0){
-						totalLen += sprintf(cursor," ");
-						cursor = showStr + totalLen;
-					}
-					totalLen += sprintf(cursor," beaconinterval %d\n",WTP[i]->WTP_Radio[j]->BeaconPeriod);
-					cursor = showStr + totalLen;
-				}
-				else if(((WTP[i]->WTP_Radio[j]->Radio_Type & IEEE80211_11N) != IEEE80211_11N)&&(WTP[i]->WTP_Radio[j]->BeaconPeriod != 100))
-				{
-					if(vrrid != 0){
-						totalLen += sprintf(cursor," ");
-						cursor = showStr + totalLen;
-					}
-					totalLen += sprintf(cursor," beaconinterval %d\n",WTP[i]->WTP_Radio[j]->BeaconPeriod);
-					cursor = showStr + totalLen;
-				}
-				/*fengwenchao modify end*/
-				if(WTP[i]->WTP_Radio[j]->FragThreshold != 2346)
-				{
-					if(vrrid != 0){
-						totalLen += sprintf(cursor," ");
-						cursor = showStr + totalLen;
-					}
-					totalLen += sprintf(cursor," fragmentation %d\n",WTP[i]->WTP_Radio[j]->FragThreshold);
-					cursor = showStr + totalLen;
-				}
-				if(WTP[i]->WTP_Radio[j]->IsShortPreamble != 1)
-				{
-					if(vrrid != 0){
-						totalLen += sprintf(cursor," ");
-						cursor = showStr + totalLen;
-					}
-					totalLen += sprintf(cursor," preamble long\n");
-					cursor = showStr + totalLen;
-				}
-
-				if(WTP[i]->WTP_Radio[j]->Radio_Type != WTP[i]->WTP_Radio[j]->Radio_Type_Bank)
-				{
-				//	
-					switch(WTP[i]->WTP_Radio[j]->Radio_Type)
-						{
-						case 1: 
-							strcpy(radio_type, "11b");
-							if(vrrid != 0){
-								totalLen += sprintf(cursor," ");
-								cursor = showStr + totalLen;
-							}
-							totalLen += sprintf(cursor," mode %s\n",radio_type);
-							break;
-						case 2: 
-							//if(j == 0)
+								if((WTP[i]->WTP_Radio[j]->Radio_TXP != 27)&&(WTP[i]->WTP_Radio[j]->Radio_TXP != 100))
 							{
-								strcpy(radio_type, "11a");
 								if(vrrid != 0){
 									totalLen += sprintf(cursor," ");
 									cursor = showStr + totalLen;
 								}
-								totalLen += sprintf(cursor,"mode %s\n",radio_type);
-							}
-							break;
-						case 4:  
-							strcpy(radio_type, "11g");
-							if(vrrid != 0){
-								totalLen += sprintf(cursor," ");
+								totalLen += sprintf(cursor," txpower %d\n",WTP[i]->WTP_Radio[j]->Radio_TXP);
 								cursor = showStr + totalLen;
-							}
-							totalLen += sprintf(cursor," mode %s\n",radio_type);
-							break;
-						case 5: 
-							//if(j > 0)
-							{
-							if(vrrid != 0){
-								totalLen += sprintf(cursor," ");
-								cursor = showStr + totalLen;
-							}
-								strcpy(radio_type, "11b/g");
-								totalLen += sprintf(cursor," mode %s\n",radio_type);
-							}
-							break;
-						case 8: 
-							if(vrrid != 0){
-								totalLen += sprintf(cursor," ");
-								cursor = showStr + totalLen;
-							}
-							strcpy(radio_type, "11n");
-							totalLen += sprintf(cursor," mode %s\n",radio_type);
-							break;	
-						case 10: 
-							if(vrrid != 0){
-								totalLen += sprintf(cursor," ");
-								cursor = showStr + totalLen;
-							}
-							strcpy(radio_type, "11a/n");
-							totalLen += sprintf(cursor," mode %s\n",radio_type);
-							break;	
-						case 13: 
-							if(vrrid != 0){
-								totalLen += sprintf(cursor," ");
-								cursor = showStr + totalLen;
-							}
-							strcpy(radio_type, "11b/g/n");
-							totalLen += sprintf(cursor," mode %s\n",radio_type);
-							break;
-					/*fengwenchao add 20111109 for GM*/
-					 case 26: 
-							if(vrrid != 0){
-								totalLen += sprintf(cursor," ");
-								cursor = showStr + totalLen;
-							}
-							strcpy(radio_type, "11a/an");
-							totalLen += sprintf(cursor," mode %s\n",radio_type);
-							break;
-					 case 12: 
-							if(vrrid != 0){
-								totalLen += sprintf(cursor," ");
-								cursor = showStr + totalLen;
-							}
-							strcpy(radio_type, "11gn");
-							totalLen += sprintf(cursor," mode %s\n",radio_type);
-							break;
-					 case 44: 
-							if(vrrid != 0){
-								totalLen += sprintf(cursor," ");
-								cursor = showStr + totalLen;
-							}
-							strcpy(radio_type, "11g/gn");
-							totalLen += sprintf(cursor," mode %s\n",radio_type);
-							break;								
-					/*fengwenchao add end*/
-						default : strcpy(radio_type, "unknown");break;
+							}	
+								}else{
+									if((WTP[i]->WTP_Radio[j]->Radio_TXP != 20)&&(WTP[i]->WTP_Radio[j]->Radio_TXP != 100))
+								{
+									if(vrrid != 0){
+										totalLen += sprintf(cursor," ");
+										cursor = showStr + totalLen;
+									}
+									totalLen += sprintf(cursor," txpower %d\n",WTP[i]->WTP_Radio[j]->Radio_TXP);
+									cursor = showStr + totalLen;
+									}	
+								}
 						}
-					//totalLen += sprintf(cursor,"mode %d\n",WTP[i]->WTP_Radio[j]->Radio_Type);
-					//printf("mode %s\n",radio_type);
-				    cursor = showStr + totalLen;
-				}
-				//#endif
-				if(((WTP[i]->WTP_Radio[j]->Radio_Type&IEEE80211_11N) == 0)&&(WTP[i]->WTP_Radio[j]->Support_Rate_Count != 12))//sz change ratelist
-				{
-					//////
-					int m = 0;
-					int derate[12] = {10,20,55,60,90,110,120,180,240,360,480,540};
-					int rate[20];
-					int count = 0;
-					count = WTP[i]->WTP_Radio[j]->Support_Rate_Count;
-					//check whether the max rate 
-					if (WTP[i]->WTP_Radio[j]->Radio_Rate->Rate == derate[count - 1])
-					{
-						//printf("max mode\n");
-						if(vrrid != 0){
-							totalLen += sprintf(cursor," ");
+						/*end*/
+
+						if((WTP[i]->WTP_Radio[j]->Radio_TXPOF != 0)){
+							if(vrrid != 0){
+								totalLen += sprintf(cursor," ");
+								cursor = showStr + totalLen;
+							}
+							totalLen += sprintf(cursor," txpoweroffset %d\n",WTP[i]->WTP_Radio[j]->Radio_TXPOF);
+							cursor = showStr + totalLen;
+						}						
+                       /*zhaoruijia,20100917,add*/
+						if((WTP[i]->WTP_Radio[j]->txpowerstep!= 1)){
+							if(vrrid != 0){
+								totalLen += sprintf(cursor," ");
+								cursor = showStr + totalLen;
+							}
+							totalLen += sprintf(cursor," txpowerstep %d\n",WTP[i]->WTP_Radio[j]->txpowerstep);
+							cursor = showStr + totalLen;
+						}	
+						/*fengwenchao modfiy 20120203 for autelan-2821*/
+						if(((WTP[i]->WTP_Radio[j]->Radio_Type & IEEE80211_11N) == IEEE80211_11N)&&(WTP[i]->WTP_Radio[j]->BeaconPeriod != 400))
+						{
+							if(vrrid != 0){
+								totalLen += sprintf(cursor," ");
+								cursor = showStr + totalLen;
+							}
+							totalLen += sprintf(cursor," beaconinterval %d\n",WTP[i]->WTP_Radio[j]->BeaconPeriod);
+							cursor = showStr + totalLen;
+						}
+						else if(((WTP[i]->WTP_Radio[j]->Radio_Type & IEEE80211_11N) != IEEE80211_11N)&&(WTP[i]->WTP_Radio[j]->BeaconPeriod != 100))
+						{
+							if(vrrid != 0){
+								totalLen += sprintf(cursor," ");
+								cursor = showStr + totalLen;
+							}
+							totalLen += sprintf(cursor," beaconinterval %d\n",WTP[i]->WTP_Radio[j]->BeaconPeriod);
+							cursor = showStr + totalLen;
+						}
+						/*fengwenchao modify end*/
+						if(WTP[i]->WTP_Radio[j]->FragThreshold != 2346)
+						{
+							if(vrrid != 0){
+								totalLen += sprintf(cursor," ");
+								cursor = showStr + totalLen;
+							}
+							totalLen += sprintf(cursor," fragmentation %d\n",WTP[i]->WTP_Radio[j]->FragThreshold);
+							cursor = showStr + totalLen;
+						}
+						if(WTP[i]->WTP_Radio[j]->IsShortPreamble != 1)
+						{
+							if(vrrid != 0){
+								totalLen += sprintf(cursor," ");
+								cursor = showStr + totalLen;
+							}
+							totalLen += sprintf(cursor," preamble long\n");
 							cursor = showStr + totalLen;
 						}
 
-						totalLen += sprintf(cursor," set max rate %d\n",derate[count - 1]);
-						cursor = showStr + totalLen;
-					}
-
-					//rate list mode
-					else
-					{
-						//printf("list mode\n");
-						
-						struct Support_Rate_List *ptr = NULL;
-						ptr = WTP[i]->WTP_Radio[j]->Radio_Rate;
-						
-						char *ratelist = NULL;
-						ratelist = (char *)malloc(sizeof(char)*128);
-						int k = 0;
-						memset(ratelist,0,128);
-						
-						for (m=0;m<count;m++)
+						if(WTP[i]->WTP_Radio[j]->Radio_Type != WTP[i]->WTP_Radio[j]->Radio_Type_Bank)
 						{
-							rate[m] = ptr->Rate;
-						
-							switch(rate[m])
+						//	
+    						switch(WTP[i]->WTP_Radio[j]->Radio_Type)
+    							{
+    							case 1: 
+    								strcpy(radio_type, "11b");
+    								if(vrrid != 0){
+    									totalLen += sprintf(cursor," ");
+    									cursor = showStr + totalLen;
+    								}
+    								totalLen += sprintf(cursor," mode %s\n",radio_type);
+    								break;
+    							case 2: 
+    								//if(j == 0)
+    								{
+    									strcpy(radio_type, "11a");
+    									if(vrrid != 0){
+    										totalLen += sprintf(cursor," ");
+    										cursor = showStr + totalLen;
+    									}
+    									totalLen += sprintf(cursor,"mode %s\n",radio_type);
+    								}
+    								break;
+    							case 4:  
+    								strcpy(radio_type, "11g");
+    								if(vrrid != 0){
+    									totalLen += sprintf(cursor," ");
+    									cursor = showStr + totalLen;
+    								}
+    								totalLen += sprintf(cursor," mode %s\n",radio_type);
+    								break;
+    							case 5: 
+    								//if(j > 0)
+    								{
+    								if(vrrid != 0){
+    									totalLen += sprintf(cursor," ");
+    									cursor = showStr + totalLen;
+    								}
+    									strcpy(radio_type, "11b/g");
+    									totalLen += sprintf(cursor," mode %s\n",radio_type);
+    								}
+    								break;
+    							case 8: 
+    								if(vrrid != 0){
+    									totalLen += sprintf(cursor," ");
+    									cursor = showStr + totalLen;
+    								}
+    								strcpy(radio_type, "11n");
+    								totalLen += sprintf(cursor," mode %s\n",radio_type);
+    								break;	
+    							case 10: 
+    								if(vrrid != 0){
+    									totalLen += sprintf(cursor," ");
+    									cursor = showStr + totalLen;
+    								}
+    								strcpy(radio_type, "11a/n");
+    								totalLen += sprintf(cursor," mode %s\n",radio_type);
+    								break;	
+    							case 13: 
+    								if(vrrid != 0){
+    									totalLen += sprintf(cursor," ");
+    									cursor = showStr + totalLen;
+    								}
+    								strcpy(radio_type, "11b/g/n");
+    								totalLen += sprintf(cursor," mode %s\n",radio_type);
+    								break;
+							/*fengwenchao add 20111109 for GM*/
+							 case 26: 
+    								if(vrrid != 0){
+    									totalLen += sprintf(cursor," ");
+    									cursor = showStr + totalLen;
+    								}
+    								strcpy(radio_type, "11a/an");
+    								totalLen += sprintf(cursor," mode %s\n",radio_type);
+    								break;
+							 case 12: 
+    								if(vrrid != 0){
+    									totalLen += sprintf(cursor," ");
+    									cursor = showStr + totalLen;
+    								}
+    								strcpy(radio_type, "11gn");
+    								totalLen += sprintf(cursor," mode %s\n",radio_type);
+    								break;
+							 case 44: 
+    								if(vrrid != 0){
+    									totalLen += sprintf(cursor," ");
+    									cursor = showStr + totalLen;
+    								}
+    								strcpy(radio_type, "11g/gn");
+    								totalLen += sprintf(cursor," mode %s\n",radio_type);
+    								break;								
+							/*fengwenchao add end*/
+    							default : strcpy(radio_type, "unknown");break;
+    							}
+							//totalLen += sprintf(cursor,"mode %d\n",WTP[i]->WTP_Radio[j]->Radio_Type);
+							//printf("mode %s\n",radio_type);
+						    cursor = showStr + totalLen;
+						}
+						//#endif
+						if(((WTP[i]->WTP_Radio[j]->Radio_Type&IEEE80211_11N) == 0)&&(WTP[i]->WTP_Radio[j]->Support_Rate_Count != 12))//sz change ratelist
+						{
+							//////
+							int m = 0;
+							int derate[12] = {10,20,55,60,90,110,120,180,240,360,480,540};
+							int rate[20];
+							int count = 0;
+							count = WTP[i]->WTP_Radio[j]->Support_Rate_Count;
+							//check whether the max rate 
+							if (WTP[i]->WTP_Radio[j]->Radio_Rate->Rate == derate[count - 1])
 							{
-								case 540 : strcpy(ratelist+k, "540");k=k+3;break;
-								case 480 : strcpy(ratelist+k, "480");k=k+3;break;
-								case 360 : strcpy(ratelist+k, "360");k=k+3;break;
-								case 240 : strcpy(ratelist+k, "240");k=k+3;break;
-								case 180 : strcpy(ratelist+k, "180");k=k+3;break;
-								case 120 : strcpy(ratelist+k, "120");k=k+3;break;
-								case 110 : strcpy(ratelist+k, "110");k=k+3;break;
-								case 90 : strcpy(ratelist+k, "90");k=k+2;break;
-								case 60 : strcpy(ratelist+k, "60");k=k+2;break;
-								case 55 : strcpy(ratelist+k, "55");k=k+2;break;
-								case 20 : strcpy(ratelist+k, "20");k=k+2;break;
-								case 10 : strcpy(ratelist+k, "10");k=k+2;break;
-								default : break;
+								//printf("max mode\n");
+								if(vrrid != 0){
+									totalLen += sprintf(cursor," ");
+									cursor = showStr + totalLen;
+								}
+
+								totalLen += sprintf(cursor," set max rate %d\n",derate[count - 1]);
+								cursor = showStr + totalLen;
 							}
-							if(m != (count-1))
-							{
-								strcpy(ratelist+k, ",");
-								k=k+1;
-							}
+
+							//rate list mode
 							else
 							{
+								//printf("list mode\n");
 								
-							}
-							ptr = ptr->next;
-						}
-						if(vrrid != 0){
-							totalLen += sprintf(cursor," ");
-							cursor = showStr + totalLen;
-						}
+								struct Support_Rate_List *ptr = NULL;
+								ptr = WTP[i]->WTP_Radio[j]->Radio_Rate;
+								
+								char *ratelist = NULL;
+								ratelist = (char *)WID_MALLOC(sizeof(char)*128);
+								int k = 0;
+								memset(ratelist,0,128);
+								
+								for (m=0;m<count;m++)
+								{
+									rate[m] = ptr->Rate;
+								
+									switch(rate[m])
+									{
+										case 540 : strcpy(ratelist+k, "540");k=k+3;break;
+										case 480 : strcpy(ratelist+k, "480");k=k+3;break;
+										case 360 : strcpy(ratelist+k, "360");k=k+3;break;
+										case 240 : strcpy(ratelist+k, "240");k=k+3;break;
+										case 180 : strcpy(ratelist+k, "180");k=k+3;break;
+										case 120 : strcpy(ratelist+k, "120");k=k+3;break;
+										case 110 : strcpy(ratelist+k, "110");k=k+3;break;
+										case 90 : strcpy(ratelist+k, "90");k=k+2;break;
+										case 60 : strcpy(ratelist+k, "60");k=k+2;break;
+										case 55 : strcpy(ratelist+k, "55");k=k+2;break;
+										case 20 : strcpy(ratelist+k, "20");k=k+2;break;
+										case 10 : strcpy(ratelist+k, "10");k=k+2;break;
+										default : break;
+									}
+									if(m != (count-1))
+									{
+										strcpy(ratelist+k, ",");
+										k=k+1;
+									}
+									else
+									{
+										
+									}
+									ptr = ptr->next;
+								}
+								if(vrrid != 0){
+									totalLen += sprintf(cursor," ");
+									cursor = showStr + totalLen;
+								}
 
 						totalLen += sprintf(cursor," set support ratelist %s\n",ratelist);
 						
 						cursor = showStr + totalLen;
 
-						free(ratelist);
-						ratelist = NULL;
-						//totalLen += sprintf(cursor,"rate %d\n",WTP[i]->WTP_Radio[j]->Radio_Rate);
-						//cursor = showStr + totalLen;
-					}
-				}
-				if((WTP[i]->WTP_Radio[j]->Radio_Chan != 0)&&(WTP[i]->WTP_Radio[j]->auto_channel_cont != 0)){//sz1121 change 1 to 0
-					if(vrrid != 0){
-						totalLen += sprintf(cursor," ");
-						cursor = showStr + totalLen;
-					}
-					totalLen += sprintf(cursor," channel %d\n",WTP[i]->WTP_Radio[j]->Radio_Chan);
-					cursor = showStr + totalLen;
-				}						
-				if(WTP[i]->WTP_Radio[j]->rtsthreshold != 2346)//zhangshu modify rtsthreshold to 2347,2010-10-28, Huang Leilei change it for AXSSZFI-1406, 2012-01-09
-				{
-					if(vrrid != 0){
-						totalLen += sprintf(cursor," ");
-						cursor = showStr + totalLen;
-					}
-					totalLen += sprintf(cursor," rtsthreshold %d\n",WTP[i]->WTP_Radio[j]->rtsthreshold);
-					cursor = showStr + totalLen;
-				}
-				if(WTP[i]->WTP_Radio[j]->DTIMPeriod != 1)
-				{
-					if(vrrid != 0){
-						totalLen += sprintf(cursor," ");
-						cursor = showStr + totalLen;
-					}
-					totalLen += sprintf(cursor," dtim %d\n",WTP[i]->WTP_Radio[j]->DTIMPeriod);
-					cursor = showStr + totalLen;
-				}
-				if(WTP[i]->WTP_Radio[j]->ShortRetry != 7)
-				{
-					if(vrrid != 0){
-						totalLen += sprintf(cursor," ");
-						cursor = showStr + totalLen;
-					}
-					totalLen += sprintf(cursor," shortretry %d\n",WTP[i]->WTP_Radio[j]->ShortRetry);
-					cursor = showStr + totalLen;
-				}
-				if(WTP[i]->WTP_Radio[j]->LongRetry != 4)
-				{
-					if(vrrid != 0){
-						totalLen += sprintf(cursor," ");
-						cursor = showStr + totalLen;
-					}
-					totalLen += sprintf(cursor," longretry %d\n",WTP[i]->WTP_Radio[j]->LongRetry);
-					cursor = showStr + totalLen;
-				}
-				if(WTP[i]->WTP_Radio[j]->auto_channel != 0)
-				{
-					if(vrrid != 0){
-						totalLen += sprintf(cursor," ");
-						cursor = showStr + totalLen;
-					}
-					totalLen += sprintf(cursor," set radio auto channel enable\n");
-					cursor = showStr + totalLen;
-				}
-				/*fengwenchao modify 20120203 for autelan-2821 begin*/
-				if(((WTP[i]->WTP_Radio[j]->Radio_Type & IEEE80211_11N) != IEEE80211_11N)&&(WTP[i]->WTP_Radio[j]->diversity != 0)&&(((WTP[i]->APCode != NULL)&&(WTP[i]->APCode[strlen(WTP[i]->APCode)-1] != 'H'))&&(WTP[i]->WTP_Radio[j]->ishighpower  != 1)))   //fengwenchao modify 20110428
-				{
-					if(vrrid != 0){
-						totalLen += sprintf(cursor," ");
-						cursor = showStr + totalLen;
-					}
-					totalLen += sprintf(cursor," set radio diversity enable\n");
-					cursor = showStr + totalLen;
-				}
-				else if(((WTP[i]->WTP_Radio[j]->Radio_Type & IEEE80211_11N) == IEEE80211_11N)&&(WTP[i]->WTP_Radio[j]->diversity != 1)&&(((WTP[i]->APCode != NULL)&&(WTP[i]->APCode[strlen(WTP[i]->APCode)-1] != 'H'))&&(WTP[i]->WTP_Radio[j]->ishighpower  != 1)))
-				{
-					if(vrrid != 0){
-						totalLen += sprintf(cursor," ");
-						cursor = showStr + totalLen;
-					}
-					totalLen += sprintf(cursor," set radio diversity disable\n");
-					cursor = showStr + totalLen;
-				}
+								WID_FREE(ratelist);
+								ratelist = NULL;
+								//totalLen += sprintf(cursor,"rate %d\n",WTP[i]->WTP_Radio[j]->Radio_Rate);
+								//cursor = showStr + totalLen;
+							}
+						}
+						if((WTP[i]->WTP_Radio[j]->Radio_Chan != 0)&&(WTP[i]->WTP_Radio[j]->auto_channel_cont != 0)){//sz1121 change 1 to 0
+							if(vrrid != 0){
+								totalLen += sprintf(cursor," ");
+								cursor = showStr + totalLen;
+							}
+							totalLen += sprintf(cursor," channel %d\n",WTP[i]->WTP_Radio[j]->Radio_Chan);
+							cursor = showStr + totalLen;
+						}						
+						if(WTP[i]->WTP_Radio[j]->rtsthreshold != 2346)//zhangshu modify rtsthreshold to 2347,2010-10-28, Huang Leilei change it for AXSSZFI-1406, 2012-01-09
+						{
+							if(vrrid != 0){
+								totalLen += sprintf(cursor," ");
+								cursor = showStr + totalLen;
+							}
+							totalLen += sprintf(cursor," rtsthreshold %d\n",WTP[i]->WTP_Radio[j]->rtsthreshold);
+							cursor = showStr + totalLen;
+						}
+						if(WTP[i]->WTP_Radio[j]->DTIMPeriod != 1)
+						{
+							if(vrrid != 0){
+								totalLen += sprintf(cursor," ");
+								cursor = showStr + totalLen;
+							}
+							totalLen += sprintf(cursor," dtim %d\n",WTP[i]->WTP_Radio[j]->DTIMPeriod);
+							cursor = showStr + totalLen;
+						}
+						if(WTP[i]->WTP_Radio[j]->ShortRetry != 7)
+						{
+							if(vrrid != 0){
+								totalLen += sprintf(cursor," ");
+								cursor = showStr + totalLen;
+							}
+							totalLen += sprintf(cursor," shortretry %d\n",WTP[i]->WTP_Radio[j]->ShortRetry);
+							cursor = showStr + totalLen;
+						}
+						if(WTP[i]->WTP_Radio[j]->LongRetry != 4)
+						{
+							if(vrrid != 0){
+								totalLen += sprintf(cursor," ");
+								cursor = showStr + totalLen;
+							}
+							totalLen += sprintf(cursor," longretry %d\n",WTP[i]->WTP_Radio[j]->LongRetry);
+							cursor = showStr + totalLen;
+						}
+						if(WTP[i]->WTP_Radio[j]->auto_channel != 0)
+						{
+							if(vrrid != 0){
+								totalLen += sprintf(cursor," ");
+								cursor = showStr + totalLen;
+							}
+							totalLen += sprintf(cursor," set radio auto channel enable\n");
+							cursor = showStr + totalLen;
+						}
+						/*fengwenchao modify 20120203 for autelan-2821 begin*/
+						if(((WTP[i]->WTP_Radio[j]->Radio_Type & IEEE80211_11N) != IEEE80211_11N)&&(WTP[i]->WTP_Radio[j]->diversity != 0)&&(((WTP[i]->APCode != NULL)&&(WTP[i]->APCode[strlen(WTP[i]->APCode)-1] != 'H'))&&(WTP[i]->WTP_Radio[j]->ishighpower  != 1)))   //fengwenchao modify 20110428
+						{
+							if(vrrid != 0){
+								totalLen += sprintf(cursor," ");
+								cursor = showStr + totalLen;
+							}
+							totalLen += sprintf(cursor," set radio diversity enable\n");
+							cursor = showStr + totalLen;
+						}
+						else if(((WTP[i]->WTP_Radio[j]->Radio_Type & IEEE80211_11N) == IEEE80211_11N)&&(WTP[i]->WTP_Radio[j]->diversity != 1)&&(((WTP[i]->APCode != NULL)&&(WTP[i]->APCode[strlen(WTP[i]->APCode)-1] != 'H'))&&(WTP[i]->WTP_Radio[j]->ishighpower  != 1)))
+						{
+							if(vrrid != 0){
+								totalLen += sprintf(cursor," ");
+								cursor = showStr + totalLen;
+							}
+							totalLen += sprintf(cursor," set radio diversity disable\n");
+							cursor = showStr + totalLen;
+						}
 
-				if(((WTP[i]->WTP_Radio[j]->Radio_Type & IEEE80211_11N) != IEEE80211_11N)&&(WTP[i]->WTP_Radio[j]->txantenna == 0))
-				{
-					if(vrrid != 0){
-						totalLen += sprintf(cursor," ");
-						cursor = showStr + totalLen;
-					}
-					totalLen += sprintf(cursor," set radio txantenna auto\n");
-					cursor = showStr + totalLen;
-				}
-				else if(((WTP[i]->WTP_Radio[j]->Radio_Type & IEEE80211_11N) == IEEE80211_11N)&&(WTP[i]->WTP_Radio[j]->txantenna == 1))
-				{
-					if(vrrid != 0){
-						totalLen += sprintf(cursor," ");
-						cursor = showStr + totalLen;
-					}
-					totalLen += sprintf(cursor," set radio txantenna main\n");
-					cursor = showStr + totalLen;
-				}
-				/*fengwenchao modify end*/
-				else if(WTP[i]->WTP_Radio[j]->txantenna == 2)
-				{
-					if(vrrid != 0){
-						totalLen += sprintf(cursor," ");
-						cursor = showStr + totalLen;
-					}
-					totalLen += sprintf(cursor," set radio txantenna vice\n");
-					cursor = showStr + totalLen;
-				}
+						if(((WTP[i]->WTP_Radio[j]->Radio_Type & IEEE80211_11N) != IEEE80211_11N)&&(WTP[i]->WTP_Radio[j]->txantenna == 0))
+						{
+							if(vrrid != 0){
+								totalLen += sprintf(cursor," ");
+								cursor = showStr + totalLen;
+							}
+							totalLen += sprintf(cursor," set radio txantenna auto\n");
+							cursor = showStr + totalLen;
+						}
+						else if(((WTP[i]->WTP_Radio[j]->Radio_Type & IEEE80211_11N) == IEEE80211_11N)&&(WTP[i]->WTP_Radio[j]->txantenna == 1))
+						{
+							if(vrrid != 0){
+								totalLen += sprintf(cursor," ");
+								cursor = showStr + totalLen;
+							}
+							totalLen += sprintf(cursor," set radio txantenna main\n");
+							cursor = showStr + totalLen;
+						}
+						/*fengwenchao modify end*/
+						else if(WTP[i]->WTP_Radio[j]->txantenna == 2)
+						{
+							if(vrrid != 0){
+								totalLen += sprintf(cursor," ");
+								cursor = showStr + totalLen;
+							}
+							totalLen += sprintf(cursor," set radio txantenna vice\n");
+							cursor = showStr + totalLen;
+						}
 
-                /* zhangshu add for save 11n paras, 2010-11-25 */
-                if((WTP[i]->WTP_Radio[j]->Radio_Type & IEEE80211_11N) == IEEE80211_11N){
-				
-					if(WTP[i]->WTP_Radio[j]->Ampdu.AmpduLimit != 65535)
-					{
-						if(vrrid != 0){
-							totalLen += sprintf(cursor," ");
+                        /* zhangshu add for save 11n paras, 2010-11-25 */
+                        if((WTP[i]->WTP_Radio[j]->Radio_Type & IEEE80211_11N) == IEEE80211_11N){
+						
+    						if(WTP[i]->WTP_Radio[j]->Ampdu.AmpduLimit != 65535)
+    						{
+    							if(vrrid != 0){
+    								totalLen += sprintf(cursor," ");
+    								cursor = showStr + totalLen;
+    							}
+    							totalLen += sprintf(cursor," 11n ampdu limit %d\n",WTP[i]->WTP_Radio[j]->Ampdu.AmpduLimit);
+    							cursor = showStr + totalLen;
+    						}
+    						if(WTP[i]->WTP_Radio[j]->Ampdu.subframe != 32)
+    						{
+    							if(vrrid != 0){
+    								totalLen += sprintf(cursor," ");
+    								cursor = showStr + totalLen;
+    							}
+    							totalLen += sprintf(cursor," 11n ampdu subframe %d\n",WTP[i]->WTP_Radio[j]->Ampdu.subframe);
+    							cursor = showStr + totalLen;
+    						}
+    						if(WTP[i]->WTP_Radio[j]->Ampdu.Able != 1)
+    						{
+    							if(vrrid != 0){
+    								totalLen += sprintf(cursor," ");
+    								cursor = showStr + totalLen;
+    							}
+    							totalLen += sprintf(cursor," 11n ampdu disable\n");
+    							cursor = showStr + totalLen;
+    						}
+    						if(WTP[i]->WTP_Radio[j]->Amsdu.AmsduLimit != 4000)
+    						{
+    							if(vrrid != 0){
+    								totalLen += sprintf(cursor," ");
+    								cursor = showStr + totalLen;
+    							}
+    							totalLen += sprintf(cursor," 11n amsdu limit %d\n",WTP[i]->WTP_Radio[j]->Amsdu.AmsduLimit);
+    							cursor = showStr + totalLen;
+    						}
+    						if(WTP[i]->WTP_Radio[j]->Amsdu.subframe != 32)
+    						{
+    							if(vrrid != 0){
+    								totalLen += sprintf(cursor," ");
+    								cursor = showStr + totalLen;
+    							}
+    							totalLen += sprintf(cursor," 11n amsdu subframe %d\n",WTP[i]->WTP_Radio[j]->Amsdu.subframe);
+    							cursor = showStr + totalLen;
+    						}
+    						if(WTP[i]->WTP_Radio[j]->Amsdu.Able != 0)
+    						{
+    							if(vrrid != 0){
+    								totalLen += sprintf(cursor," ");
+    								cursor = showStr + totalLen;
+    							}
+    							totalLen += sprintf(cursor," 11n amsdu enable\n");
+    							cursor = showStr + totalLen;
+    						}
+    						
+    						if(WTP[i]->WTP_Radio[j]->channel_offset == 1)/*wuwl default value is 0*/
+    						{
+    							if(vrrid != 0){
+    								totalLen += sprintf(cursor," ");
+    								cursor = showStr + totalLen;
+    							}
+    							totalLen += sprintf(cursor," channel offset up\n");
+    							cursor = showStr + totalLen;
+    						}
+    						else if(WTP[i]->WTP_Radio[j]->channel_offset == -1)
+    						{
+    							if(vrrid != 0){
+    								totalLen += sprintf(cursor," ");
+    								cursor = showStr + totalLen;
+    							}
+    							totalLen += sprintf(cursor," channel offset down\n");
+    							cursor = showStr + totalLen;
+    						}
+    						if((WTP[i]->WTP_Radio[j]->MixedGreenfield.Mixed_Greenfield != 0)
+						&& (WTP[i]->WTP_Radio[j]->MixedGreenfield.WlanID != 0)		/* HuangLeilei add for AXSSZFI-1622 */
+						&&((WTP[i]->WTP_Radio[j]->Radio_Type != 10)&&(WTP[i]->WTP_Radio[j]->Radio_Type !=12))) // fengwenchao modify 20120716 for autelan-3057
+    						{
+							if ((AC_WLAN[WTP[i]->WTP_Radio[j]->MixedGreenfield.WlanID] != NULL))
+								if ( (AC_WLAN[WTP[i]->WTP_Radio[j]->MixedGreenfield.WlanID]->want_to_delete != 1))
+    							if(vrrid != 0){
+    								totalLen += sprintf(cursor," ");
+    								cursor = showStr + totalLen;
+    							}
+    							totalLen += sprintf(cursor," wlan %d workmode puren\n",WTP[i]->WTP_Radio[j]->MixedGreenfield.WlanID);
+    							cursor = showStr + totalLen;
+    						}
+    						/* zhangshu modify for chainmask config, 2010-11-24 */
+    						if(((WTP[i]->WTP_Radio[j]->chainmask_num == 1) \
+    						&& (WTP[i]->WTP_Radio[j]->tx_chainmask_state_value != 1)) || 
+    						((WTP[i]->WTP_Radio[j]->chainmask_num == 2) \
+    						&& (WTP[i]->WTP_Radio[j]->tx_chainmask_state_value != 3)) ||
+    						((WTP[i]->WTP_Radio[j]->chainmask_num == 3) \
+    						&& (WTP[i]->WTP_Radio[j]->tx_chainmask_state_value != 7)))
+    						{
+    							if(WTP[i]->WTP_Radio[j]->tx_chainmask_state_value == 1){
+    								if(vrrid != 0){
+    									totalLen += sprintf(cursor," ");
+    									cursor = showStr + totalLen;
+    								}
+    								totalLen += sprintf(cursor," tx_chainmask 0.0.1\n");
+    								cursor = showStr + totalLen;
+    							}
+    							else if(WTP[i]->WTP_Radio[j]->tx_chainmask_state_value == 2){
+    								if(vrrid != 0){
+    									totalLen += sprintf(cursor," ");
+    									cursor = showStr + totalLen;
+    								}
+    								totalLen += sprintf(cursor," tx_chainmask 0.1.0\n");
+    								cursor = showStr + totalLen;
+    							}
+    							else if(WTP[i]->WTP_Radio[j]->tx_chainmask_state_value == 3){
+    								if(vrrid != 0){
+    									totalLen += sprintf(cursor," ");
+    									cursor = showStr + totalLen;
+    								}
+    								totalLen += sprintf(cursor," tx_chainmask 0.1.1\n");
+    								cursor = showStr + totalLen;
+    							}
+    							else if(WTP[i]->WTP_Radio[j]->tx_chainmask_state_value == 4){
+    								if(vrrid != 0){
+    									totalLen += sprintf(cursor," ");
+    									cursor = showStr + totalLen;
+    								}
+    								totalLen += sprintf(cursor," tx_chainmask 1.0.0\n");
+    								cursor = showStr + totalLen;
+    							}
+    							else if(WTP[i]->WTP_Radio[j]->tx_chainmask_state_value == 5){
+    								if(vrrid != 0){
+    									totalLen += sprintf(cursor," ");
+    									cursor = showStr + totalLen;
+    								}
+    								totalLen += sprintf(cursor," tx_chainmask 1.0.1\n");
+    								cursor = showStr + totalLen;
+    							}
+    							else if(WTP[i]->WTP_Radio[j]->tx_chainmask_state_value == 6){
+    								if(vrrid != 0){
+    									totalLen += sprintf(cursor," ");
+    									cursor = showStr + totalLen;
+    								}
+    								totalLen += sprintf(cursor," tx_chainmask 1.1.0\n");
+    								cursor = showStr + totalLen;
+    							}
+    							else if(WTP[i]->WTP_Radio[j]->tx_chainmask_state_value == 7){
+    								if(vrrid != 0){
+    									totalLen += sprintf(cursor," ");
+    									cursor = showStr + totalLen;
+    								}
+    								totalLen += sprintf(cursor," tx_chainmask 1.1.1\n");
+    								cursor = showStr + totalLen;
+    							}
+    						}
+    						
+    						if(((WTP[i]->WTP_Radio[j]->chainmask_num == 1) \
+    						&& (WTP[i]->WTP_Radio[j]->rx_chainmask_state_value != 1)) || 
+    						((WTP[i]->WTP_Radio[j]->chainmask_num == 2) \
+    						&& (WTP[i]->WTP_Radio[j]->rx_chainmask_state_value != 3)) ||
+    						((WTP[i]->WTP_Radio[j]->chainmask_num == 3) \
+    						&& (WTP[i]->WTP_Radio[j]->rx_chainmask_state_value != 7)))
+    						{
+    							if(WTP[i]->WTP_Radio[j]->rx_chainmask_state_value == 1){
+    								if(vrrid != 0){
+    									totalLen += sprintf(cursor," ");
+    									cursor = showStr + totalLen;
+    								}
+    								totalLen += sprintf(cursor," rx_chainmask 0.0.1\n");
+    								cursor = showStr + totalLen;
+    							}
+    							else if(WTP[i]->WTP_Radio[j]->rx_chainmask_state_value == 2){
+    								if(vrrid != 0){
+    									totalLen += sprintf(cursor," ");
+    									cursor = showStr + totalLen;
+    								}
+    								totalLen += sprintf(cursor," rx_chainmask 0.1.0\n");
+    								cursor = showStr + totalLen;
+    							}
+    							else if(WTP[i]->WTP_Radio[j]->rx_chainmask_state_value == 3){
+    								if(vrrid != 0){
+    									totalLen += sprintf(cursor," ");
+    									cursor = showStr + totalLen;
+    								}
+    								totalLen += sprintf(cursor," rx_chainmask 0.1.1\n");
+    								cursor = showStr + totalLen;
+    							}
+    							else if(WTP[i]->WTP_Radio[j]->rx_chainmask_state_value == 4){
+    								if(vrrid != 0){
+    									totalLen += sprintf(cursor," ");
+    									cursor = showStr + totalLen;
+    								}
+    								totalLen += sprintf(cursor," rx_chainmask 1.0.0\n");
+    								cursor = showStr + totalLen;
+    							}
+    							else if(WTP[i]->WTP_Radio[j]->rx_chainmask_state_value == 5){
+    								if(vrrid != 0){
+    									totalLen += sprintf(cursor," ");
+    									cursor = showStr + totalLen;
+    								}
+    								totalLen += sprintf(cursor," rx_chainmask 1.0.1\n");
+    								cursor = showStr + totalLen;
+    							}
+    							else if(WTP[i]->WTP_Radio[j]->rx_chainmask_state_value == 6){
+    								if(vrrid != 0){
+    									totalLen += sprintf(cursor," ");
+    									cursor = showStr + totalLen;
+    								}
+    								totalLen += sprintf(cursor," rx_chainmask 1.1.0\n");
+    								cursor = showStr + totalLen;
+    							}
+    							else if(WTP[i]->WTP_Radio[j]->rx_chainmask_state_value == 7){
+    								if(vrrid != 0){
+    									totalLen += sprintf(cursor," ");
+    									cursor = showStr + totalLen;
+    								}
+    								totalLen += sprintf(cursor," rx_chainmask 1.1.1\n");
+    								cursor = showStr + totalLen;
+    							}
+    						}
+						    /* zhangshu add for chainmask config END */
+    																							
+						if(WTP[i]->WTP_Radio[j]->guardinterval != 1){
+							if(vrrid != 0){
+								totalLen += sprintf(cursor," ");
+								cursor = showStr + totalLen;
+							}
+							totalLen += sprintf(cursor," 11n guard interval 800\n");
 							cursor = showStr + totalLen;
 						}
-						totalLen += sprintf(cursor," 11n ampdu limit %d\n",WTP[i]->WTP_Radio[j]->Ampdu.AmpduLimit);
-						cursor = showStr + totalLen;
+						if(WTP[i]->WTP_Radio[j]->cwmode != 0){
+							if(WTP[i]->WTP_Radio[j]->cwmode == 1){
+								if(vrrid != 0){
+									totalLen += sprintf(cursor," ");
+									cursor = showStr + totalLen;
+								}
+								totalLen += sprintf(cursor," 11n cwmode ht20/40\n");
+								cursor = showStr + totalLen;
+							}else if(WTP[i]->WTP_Radio[j]->cwmode == 2){
+								if(vrrid != 0){
+									totalLen += sprintf(cursor," ");
+									cursor = showStr + totalLen;
+								}
+								totalLen += sprintf(cursor," 11n cwmode ht40\n");
+								cursor = showStr + totalLen;
+							}
+						}
+					/*	if(WTP[i]->WTP_Radio[j]->mcs != 0){
+							if(vrrid != 0){
+								totalLen += sprintf(cursor," ");
+								cursor = showStr + totalLen;
+							}
+							totalLen += sprintf(cursor," 11n mcs %d\n",WTP[i]->WTP_Radio[j]->mcs);
+							cursor = showStr + totalLen;
+						}*/
+						/*fengwenchao add 20120314 for requirements-407*/
+						if(check_ac_whether_or_not_set_mcs_list(WTP[i]->WTPID,j) == 1)
+						{
+							int q = 0;
+							if(vrrid != 0){
+								totalLen += sprintf(cursor," ");
+								cursor = showStr + totalLen;
+							}
+							totalLen += sprintf(cursor," 11n mcs ");
+							cursor = showStr + totalLen;
+							for(q = 0; q < WTP[i]->WTP_Radio[j]->mcs_count;q++)
+							{
+								if(q == (WTP[i]->WTP_Radio[j]->mcs_count-1))
+								{
+									totalLen += sprintf(cursor,"%d\n",WTP[i]->WTP_Radio[j]->mcs_list[q]);
+									cursor = showStr + totalLen;
+									break;
+								}
+								totalLen += sprintf(cursor,"%d,",WTP[i]->WTP_Radio[j]->mcs_list[q]);
+								cursor = showStr + totalLen;
+							}
+							
+						}
+						/*fengwenchao add end*/
 					}
-					if(WTP[i]->WTP_Radio[j]->Ampdu.subframe != 32)
-					{
+					 /* zhangshu add for 11n  END */
+						/*A8 set begin*/
+						if(WTP[i]->WTP_Radio[j]->REFlag == 1)
+							{
+							struct wds_rbmac *tmp = WTP[i]->WTP_Radio[j]->rbmac_list;
+							if(WTP[i]->WTP_Radio[j]->distance != 0){
+								if(vrrid != 0){
+									totalLen += sprintf(cursor," ");
+									cursor = showStr + totalLen;
+								}
+								totalLen += sprintf(cursor," set wds bridge distance %d\n",WTP[i]->WTP_Radio[j]->distance);
+								cursor = showStr + totalLen;
+							}							
+							if(WTP[i]->WTP_Radio[j]->cipherType != 0){
+								if(vrrid != 0){
+									totalLen += sprintf(cursor," ");
+									cursor = showStr + totalLen;
+								}
+								totalLen += sprintf(cursor," set wds encrption type %s\n",(WTP[i]->WTP_Radio[j]->cipherType==1)?"wep":"aes");
+								cursor = showStr + totalLen;
+								if(WTP[i]->WTP_Radio[j]->cipherType == 1){
+									if(vrrid != 0){
+										totalLen += sprintf(cursor," ");
+										cursor = showStr + totalLen;
+									}
+									totalLen += sprintf(cursor," set wds wep key %s\n",WTP[i]->WTP_Radio[j]->wepkey);
+									cursor = showStr + totalLen;
+								}
+							}
+							while(tmp != NULL){
+								if(vrrid != 0){
+									totalLen += sprintf(cursor," ");
+									cursor = showStr + totalLen;
+								}
+								totalLen += sprintf(cursor," add wds remote brmac %02x:%02x:%02x:%02x:%02x:%02x\n",tmp->mac[0],tmp->mac[1],tmp->mac[2],tmp->mac[3],tmp->mac[4],tmp->mac[5]);
+								cursor = showStr + totalLen;
+								if(WTP[i]->WTP_Radio[j]->cipherType == 2){
+									if(vrrid != 0){
+										totalLen += sprintf(cursor," ");
+										cursor = showStr + totalLen;
+									}
+									totalLen += sprintf(cursor," set wds brmac %02x:%02x:%02x:%02x:%02x:%02x aes key %s\n",tmp->mac[0],tmp->mac[1],tmp->mac[2],tmp->mac[3],tmp->mac[4],tmp->mac[5],tmp->key);
+									cursor = showStr + totalLen;
+								}
+								tmp = tmp->next;
+							}
+							if(WTP[i]->WTP_Radio[j]->supper_g.supper_g_type & 0x1){
+								if(vrrid != 0){
+									totalLen += sprintf(cursor," ");
+									cursor = showStr + totalLen;
+								}
+								totalLen += sprintf(cursor," set bursting enable\n");
+								cursor = showStr + totalLen;								
+							}							
+							if(WTP[i]->WTP_Radio[j]->supper_g.supper_g_type & 0x2){
+								if(vrrid != 0){
+									totalLen += sprintf(cursor," ");
+									cursor = showStr + totalLen;
+								}
+								totalLen += sprintf(cursor," set fastFrame enable\n");
+								cursor = showStr + totalLen;								
+							}
+							if(WTP[i]->WTP_Radio[j]->supper_g.supper_g_type & 0x4){
+								if(vrrid != 0){
+									totalLen += sprintf(cursor," ");
+									cursor = showStr + totalLen;
+								}
+								totalLen += sprintf(cursor," set compression enable\n");
+								cursor = showStr + totalLen;								
+							}
+							char *S_LIST = NULL;
+							int state_value = 0;
+							S_LIST = (char *)WID_MALLOC(7+1);					
+							memset(S_LIST,0,7+1);
+							state_value = (int)(WTP[i]->WTP_Radio[j]->sector_state_value);
+							if(WTP[i]->WTP_Radio[j]->sector_state_value != 0){
+								if(state_value & 0x1)
+								{
+									strncat(S_LIST,"0",1);
+								}
+								if(state_value & 0x2)
+								{
+									strncat(S_LIST,",1",2);
+								}
+								if(state_value & 0x4)
+								{
+									strncat(S_LIST,",2",2);
+								}
+								if(state_value & 0x8)
+								{   
+									strncat(S_LIST,",3",2);
+								}
+								if(vrrid != 0){
+									totalLen += sprintf(cursor," ");
+									cursor = showStr + totalLen;
+								}
+								totalLen += sprintf(cursor," set radio sector %s enable\n",S_LIST);
+								cursor = showStr + totalLen;								
+							}
+							if(S_LIST){
+								WID_FREE(S_LIST);
+								S_LIST = NULL;
+							}
+							/*"set radio sectorid (0|1|2|3|all) power VALUE"*/
+							for(s_id=0;s_id<SECTOR_NUM;s_id++){
+								s_state += WTP[i]->WTP_Radio[j]->sector[s_id]->state;
+							}
+							if(s_state == 4){
+								if(vrrid != 0){
+									totalLen += sprintf(cursor," ");
+									cursor = showStr + totalLen;
+								}
+								totalLen += sprintf(cursor," set radio sectorid all power %d\n",WTP[i]->WTP_Radio[j]->sector[0]->tx_power);
+								cursor = showStr + totalLen;		
+							}else if(s_state < 4){
+								//s_id=0;
+								for(s_id2=0;s_id2<SECTOR_NUM;s_id2++){
+									if(vrrid != 0){
+										totalLen += sprintf(cursor," ");
+										cursor = showStr + totalLen;
+									}
+									if((WTP[i]->WTP_Radio[j]->sector[s_id2]->state == 1)&&(WTP[i]->WTP_Radio[j]->sector[s_id2]->tx_power != 0)){
+										totalLen += sprintf(cursor," set radio sectorid %d power %d\n",s_id2,WTP[i]->WTP_Radio[j]->sector[s_id2]->tx_power);
+										cursor = showStr + totalLen;
+									}	
+								}	
+							}
+							/*countr code for a8*/
+							if(gCOUNTRYCODE == COUNTRY_USA_US){
+								if(vrrid != 0){
+									totalLen += sprintf(cursor," ");
+									cursor = showStr + totalLen;
+								}
+								totalLen += sprintf(cursor," country-code US\n");
+								cursor = showStr + totalLen; 
+							}
+							else if(gCOUNTRYCODE == COUNTRY_EUROPE_EU){
+								if(vrrid != 0){
+									totalLen += sprintf(cursor," ");
+									cursor = showStr + totalLen;
+								}
+								totalLen += sprintf(cursor," country-code EU\n");
+								cursor = showStr + totalLen; 
+							}
+							else {
+								if(vrrid != 0){
+									totalLen += sprintf(cursor," ");
+									cursor = showStr + totalLen;
+								}
+								totalLen += sprintf(cursor," country-code CN\n");/*in extern command actually send: set regdmn RoW*/
+								cursor = showStr + totalLen;								
+							}
+							
+							if(WTP[i]->WTP_Radio[j]->inter_vap_able == 1){
+								if(vrrid != 0){
+									totalLen += sprintf(cursor," ");
+									cursor = showStr + totalLen;
+								}
+								totalLen += sprintf(cursor," set inter-VAP-forwarding enable\n");
+								cursor = showStr + totalLen;								
+							}
+							if(WTP[i]->WTP_Radio[j]->intra_vap_able == 1){
+								if(vrrid != 0){
+									totalLen += sprintf(cursor," ");
+									cursor = showStr + totalLen;
+								}
+								totalLen += sprintf(cursor," set intra-VAP-forwarding enable\n");
+								cursor = showStr + totalLen;								
+							}
+							if(WTP[i]->WTP_Radio[j]->keep_alive_period != 3600){
+								if(vrrid != 0){
+									totalLen += sprintf(cursor," ");
+									cursor = showStr + totalLen;
+								}
+								totalLen += sprintf(cursor," set radio keep_alive_period %d\n",WTP[i]->WTP_Radio[j]->keep_alive_period);
+								cursor = showStr + totalLen;								
+							}
+							if(WTP[i]->WTP_Radio[j]->keep_alive_idle_time != 3600){
+								if(vrrid != 0){
+									totalLen += sprintf(cursor," ");
+									cursor = showStr + totalLen;
+								}
+								totalLen += sprintf(cursor," set radio keep_alive_idle_time %d\n",WTP[i]->WTP_Radio[j]->keep_alive_idle_time);
+								cursor = showStr + totalLen;								
+							}
+							if(WTP[i]->WTP_Radio[j]->congestion_avoidance == 1){
+								if(vrrid != 0){
+									totalLen += sprintf(cursor," ");
+									cursor = showStr + totalLen;
+								}
+								totalLen += sprintf(cursor," set radio congestion_avoidance tail-drop\n");
+								cursor = showStr + totalLen;								
+							}
+							else if(WTP[i]->WTP_Radio[j]->congestion_avoidance == 2){
+								if(vrrid != 0){
+									totalLen += sprintf(cursor," ");
+									cursor = showStr + totalLen;
+								}
+								totalLen += sprintf(cursor," set radio congestion_avoidance red\n");
+								cursor = showStr + totalLen;								
+							}
+							else if(WTP[i]->WTP_Radio[j]->congestion_avoidance == 3){
+								if(vrrid != 0){
+									totalLen += sprintf(cursor," ");
+									cursor = showStr + totalLen;
+								}
+								totalLen += sprintf(cursor," set radio congestion_avoidance fwred\n");
+								cursor = showStr + totalLen;								
+							}
+						}
+						if(WTP[i]->WTP_Radio[j]->ack.distance != 0){
+							if(vrrid != 0){
+								totalLen += sprintf(cursor," ");
+								cursor = showStr + totalLen;
+							}
+							totalLen += sprintf(cursor," acktimeout radio set distance %d\n",WTP[i]->WTP_Radio[j]->ack.distance);
+							cursor = showStr + totalLen;
+						}					/*wcl add for RDIR-33*/	
+						/*fengwenchao add 20111214 for AUTELAN-2712*/
+						if((WTP[i]->WTP_Radio[j] != NULL)&&(WTP[i]->WTP_Radio[j]->QOSstate != 0))
+						{
+							if(vrrid != 0){
+								totalLen += sprintf(cursor," ");
+								cursor = showStr + totalLen;
+							}
+							totalLen += sprintf(cursor," radio apply qos %d\n",WTP[i]->WTP_Radio[j]->QOSID);
+							cursor = showStr + totalLen;
+						}			
+						/*fengwenchao add end*/
+						/*fengwenchao add 20110921 for radio disable*/
+						if(WTP[i]->WTP_Radio[j]->radio_disable_flag == 1)
+						{
+							if(vrrid != 0){
+								totalLen += sprintf(cursor," ");
+								cursor = showStr + totalLen;
+							}
+							totalLen += sprintf(cursor," radio disable\n");
+							cursor = showStr + totalLen;							
+						}
+						/*fengwenchao add end*/
+
+						
+						/*A8 set end*/
 						if(vrrid != 0){
 							totalLen += sprintf(cursor," ");
 							cursor = showStr + totalLen;
 						}
-						totalLen += sprintf(cursor," 11n ampdu subframe %d\n",WTP[i]->WTP_Radio[j]->Ampdu.subframe);
-						cursor = showStr + totalLen;
-					}
-					if(WTP[i]->WTP_Radio[j]->Ampdu.Able != 1)
-					{
-						if(vrrid != 0){
-							totalLen += sprintf(cursor," ");
-							cursor = showStr + totalLen;
-						}
-						totalLen += sprintf(cursor," 11n ampdu disable\n");
-						cursor = showStr + totalLen;
-					}
-					if(WTP[i]->WTP_Radio[j]->Amsdu.AmsduLimit != 4000)
-					{
-						if(vrrid != 0){
-							totalLen += sprintf(cursor," ");
-							cursor = showStr + totalLen;
-						}
-						totalLen += sprintf(cursor," 11n amsdu limit %d\n",WTP[i]->WTP_Radio[j]->Amsdu.AmsduLimit);
-						cursor = showStr + totalLen;
-					}
-					if(WTP[i]->WTP_Radio[j]->Amsdu.subframe != 32)
-					{
-						if(vrrid != 0){
-							totalLen += sprintf(cursor," ");
-							cursor = showStr + totalLen;
-						}
-						totalLen += sprintf(cursor," 11n amsdu subframe %d\n",WTP[i]->WTP_Radio[j]->Amsdu.subframe);
-						cursor = showStr + totalLen;
-					}
-					if(WTP[i]->WTP_Radio[j]->Amsdu.Able != 0)
-					{
-						if(vrrid != 0){
-							totalLen += sprintf(cursor," ");
-							cursor = showStr + totalLen;
-						}
-						totalLen += sprintf(cursor," 11n amsdu enable\n");
+
+						totalLen += sprintf(cursor,"exit\n");
 						cursor = showStr + totalLen;
 					}
 					
-					if(WTP[i]->WTP_Radio[j]->channel_offset == 1)/*wuwl default value is 0*/
-					{
-						if(vrrid != 0){
-							totalLen += sprintf(cursor," ");
-							cursor = showStr + totalLen;
-						}
-						totalLen += sprintf(cursor," channel offset up\n");
-						cursor = showStr + totalLen;
-					}
-					else if(WTP[i]->WTP_Radio[j]->channel_offset == -1)
-					{
-						if(vrrid != 0){
-							totalLen += sprintf(cursor," ");
-							cursor = showStr + totalLen;
-						}
-						totalLen += sprintf(cursor," channel offset down\n");
-						cursor = showStr + totalLen;
-					}
-					if((WTP[i]->WTP_Radio[j]->MixedGreenfield.Mixed_Greenfield != 0)
-				&& (WTP[i]->WTP_Radio[j]->MixedGreenfield.WlanID != 0)		/* HuangLeilei add for AXSSZFI-1622 */
-				&&((WTP[i]->WTP_Radio[j]->Radio_Type != 10)&&(WTP[i]->WTP_Radio[j]->Radio_Type !=12))) // fengwenchao modify 20120716 for autelan-3057
-					{
-					if ((AC_WLAN[WTP[i]->WTP_Radio[j]->MixedGreenfield.WlanID] != NULL))
-						if ( (AC_WLAN[WTP[i]->WTP_Radio[j]->MixedGreenfield.WlanID]->want_to_delete != 1))
-						if(vrrid != 0){
-							totalLen += sprintf(cursor," ");
-							cursor = showStr + totalLen;
-						}
-						totalLen += sprintf(cursor," wlan %d workmode puren\n",WTP[i]->WTP_Radio[j]->MixedGreenfield.WlanID);
-						cursor = showStr + totalLen;
-					}
-					/* zhangshu modify for chainmask config, 2010-11-24 */
-					if(((WTP[i]->WTP_Radio[j]->chainmask_num == 1) \
-					&& (WTP[i]->WTP_Radio[j]->tx_chainmask_state_value != 1)) || 
-					((WTP[i]->WTP_Radio[j]->chainmask_num == 2) \
-					&& (WTP[i]->WTP_Radio[j]->tx_chainmask_state_value != 3)) ||
-					((WTP[i]->WTP_Radio[j]->chainmask_num == 3) \
-					&& (WTP[i]->WTP_Radio[j]->tx_chainmask_state_value != 7)))
-					{
-						if(WTP[i]->WTP_Radio[j]->tx_chainmask_state_value == 1){
-							if(vrrid != 0){
-								totalLen += sprintf(cursor," ");
-								cursor = showStr + totalLen;
-							}
-							totalLen += sprintf(cursor," tx_chainmask 0.0.1\n");
-							cursor = showStr + totalLen;
-						}
-						else if(WTP[i]->WTP_Radio[j]->tx_chainmask_state_value == 2){
-							if(vrrid != 0){
-								totalLen += sprintf(cursor," ");
-								cursor = showStr + totalLen;
-							}
-							totalLen += sprintf(cursor," tx_chainmask 0.1.0\n");
-							cursor = showStr + totalLen;
-						}
-						else if(WTP[i]->WTP_Radio[j]->tx_chainmask_state_value == 3){
-							if(vrrid != 0){
-								totalLen += sprintf(cursor," ");
-								cursor = showStr + totalLen;
-							}
-							totalLen += sprintf(cursor," tx_chainmask 0.1.1\n");
-							cursor = showStr + totalLen;
-						}
-						else if(WTP[i]->WTP_Radio[j]->tx_chainmask_state_value == 4){
-							if(vrrid != 0){
-								totalLen += sprintf(cursor," ");
-								cursor = showStr + totalLen;
-							}
-							totalLen += sprintf(cursor," tx_chainmask 1.0.0\n");
-							cursor = showStr + totalLen;
-						}
-						else if(WTP[i]->WTP_Radio[j]->tx_chainmask_state_value == 5){
-							if(vrrid != 0){
-								totalLen += sprintf(cursor," ");
-								cursor = showStr + totalLen;
-							}
-							totalLen += sprintf(cursor," tx_chainmask 1.0.1\n");
-							cursor = showStr + totalLen;
-						}
-						else if(WTP[i]->WTP_Radio[j]->tx_chainmask_state_value == 6){
-							if(vrrid != 0){
-								totalLen += sprintf(cursor," ");
-								cursor = showStr + totalLen;
-							}
-							totalLen += sprintf(cursor," tx_chainmask 1.1.0\n");
-							cursor = showStr + totalLen;
-						}
-						else if(WTP[i]->WTP_Radio[j]->tx_chainmask_state_value == 7){
-							if(vrrid != 0){
-								totalLen += sprintf(cursor," ");
-								cursor = showStr + totalLen;
-							}
-							totalLen += sprintf(cursor," tx_chainmask 1.1.1\n");
-							cursor = showStr + totalLen;
-						}
-					}
-					
-					if(((WTP[i]->WTP_Radio[j]->chainmask_num == 1) \
-					&& (WTP[i]->WTP_Radio[j]->rx_chainmask_state_value != 1)) || 
-					((WTP[i]->WTP_Radio[j]->chainmask_num == 2) \
-					&& (WTP[i]->WTP_Radio[j]->rx_chainmask_state_value != 3)) ||
-					((WTP[i]->WTP_Radio[j]->chainmask_num == 3) \
-					&& (WTP[i]->WTP_Radio[j]->rx_chainmask_state_value != 7)))
-					{
-						if(WTP[i]->WTP_Radio[j]->rx_chainmask_state_value == 1){
-							if(vrrid != 0){
-								totalLen += sprintf(cursor," ");
-								cursor = showStr + totalLen;
-							}
-							totalLen += sprintf(cursor," rx_chainmask 0.0.1\n");
-							cursor = showStr + totalLen;
-						}
-						else if(WTP[i]->WTP_Radio[j]->rx_chainmask_state_value == 2){
-							if(vrrid != 0){
-								totalLen += sprintf(cursor," ");
-								cursor = showStr + totalLen;
-							}
-							totalLen += sprintf(cursor," rx_chainmask 0.1.0\n");
-							cursor = showStr + totalLen;
-						}
-						else if(WTP[i]->WTP_Radio[j]->rx_chainmask_state_value == 3){
-							if(vrrid != 0){
-								totalLen += sprintf(cursor," ");
-								cursor = showStr + totalLen;
-							}
-							totalLen += sprintf(cursor," rx_chainmask 0.1.1\n");
-							cursor = showStr + totalLen;
-						}
-						else if(WTP[i]->WTP_Radio[j]->rx_chainmask_state_value == 4){
-							if(vrrid != 0){
-								totalLen += sprintf(cursor," ");
-								cursor = showStr + totalLen;
-							}
-							totalLen += sprintf(cursor," rx_chainmask 1.0.0\n");
-							cursor = showStr + totalLen;
-						}
-						else if(WTP[i]->WTP_Radio[j]->rx_chainmask_state_value == 5){
-							if(vrrid != 0){
-								totalLen += sprintf(cursor," ");
-								cursor = showStr + totalLen;
-							}
-							totalLen += sprintf(cursor," rx_chainmask 1.0.1\n");
-							cursor = showStr + totalLen;
-						}
-						else if(WTP[i]->WTP_Radio[j]->rx_chainmask_state_value == 6){
-							if(vrrid != 0){
-								totalLen += sprintf(cursor," ");
-								cursor = showStr + totalLen;
-							}
-							totalLen += sprintf(cursor," rx_chainmask 1.1.0\n");
-							cursor = showStr + totalLen;
-						}
-						else if(WTP[i]->WTP_Radio[j]->rx_chainmask_state_value == 7){
-							if(vrrid != 0){
-								totalLen += sprintf(cursor," ");
-								cursor = showStr + totalLen;
-							}
-							totalLen += sprintf(cursor," rx_chainmask 1.1.1\n");
-							cursor = showStr + totalLen;
-						}
-					}
-				    /* zhangshu add for chainmask config END */
-																						
-				if(WTP[i]->WTP_Radio[j]->guardinterval != 1){
-					if(vrrid != 0){
-						totalLen += sprintf(cursor," ");
-						cursor = showStr + totalLen;
-					}
-					totalLen += sprintf(cursor," 11n guard interval 800\n");
-					cursor = showStr + totalLen;
-				}
-				if(WTP[i]->WTP_Radio[j]->cwmode != 0){
-					if(WTP[i]->WTP_Radio[j]->cwmode == 1){
-						if(vrrid != 0){
-							totalLen += sprintf(cursor," ");
-							cursor = showStr + totalLen;
-						}
-						totalLen += sprintf(cursor," 11n cwmode ht20/40\n");
-						cursor = showStr + totalLen;
-					}else if(WTP[i]->WTP_Radio[j]->cwmode == 2){
-						if(vrrid != 0){
-							totalLen += sprintf(cursor," ");
-							cursor = showStr + totalLen;
-						}
-						totalLen += sprintf(cursor," 11n cwmode ht40\n");
-						cursor = showStr + totalLen;
 					}
 				}
-			/*	if(WTP[i]->WTP_Radio[j]->mcs != 0){
-					if(vrrid != 0){
-						totalLen += sprintf(cursor," ");
-						cursor = showStr + totalLen;
-					}
-					totalLen += sprintf(cursor," 11n mcs %d\n",WTP[i]->WTP_Radio[j]->mcs);
-					cursor = showStr + totalLen;
-				}*/
-				/*fengwenchao add 20120314 for requirements-407*/
-				if(check_ac_whether_or_not_set_mcs_list(WTP[i]->WTPID,j) == 1)
-				{
-					int q = 0;
-					if(vrrid != 0){
-						totalLen += sprintf(cursor," ");
-						cursor = showStr + totalLen;
-					}
-					totalLen += sprintf(cursor," 11n mcs ");
-					cursor = showStr + totalLen;
-					for(q = 0; q < WTP[i]->WTP_Radio[j]->mcs_count;q++)
-					{
-						if(q == (WTP[i]->WTP_Radio[j]->mcs_count-1))
-						{
-							totalLen += sprintf(cursor,"%d\n",WTP[i]->WTP_Radio[j]->mcs_list[q]);
-							cursor = showStr + totalLen;
-							break;
-						}
-						totalLen += sprintf(cursor,"%d,",WTP[i]->WTP_Radio[j]->mcs_list[q]);
-						cursor = showStr + totalLen;
-					}
-					
-				}
-				/*fengwenchao add end*/
-			}
-			 /* zhangshu add for 11n  END */
-				/*A8 set begin*/
-				if(WTP[i]->WTP_Radio[j]->REFlag == 1)
-					{
-					struct wds_rbmac *tmp = WTP[i]->WTP_Radio[j]->rbmac_list;
-					if(WTP[i]->WTP_Radio[j]->distance != 0){
-						if(vrrid != 0){
-							totalLen += sprintf(cursor," ");
-							cursor = showStr + totalLen;
-						}
-						totalLen += sprintf(cursor," set wds bridge distance %d\n",WTP[i]->WTP_Radio[j]->distance);
-						cursor = showStr + totalLen;
-					}							
-					if(WTP[i]->WTP_Radio[j]->cipherType != 0){
-						if(vrrid != 0){
-							totalLen += sprintf(cursor," ");
-							cursor = showStr + totalLen;
-						}
-						totalLen += sprintf(cursor," set wds encrption type %s\n",(WTP[i]->WTP_Radio[j]->cipherType==1)?"wep":"aes");
-						cursor = showStr + totalLen;
-						if(WTP[i]->WTP_Radio[j]->cipherType == 1){
-							if(vrrid != 0){
-								totalLen += sprintf(cursor," ");
-								cursor = showStr + totalLen;
-							}
-							totalLen += sprintf(cursor," set wds wep key %s\n",WTP[i]->WTP_Radio[j]->wepkey);
-							cursor = showStr + totalLen;
-						}
-					}
-					while(tmp != NULL){
-						if(vrrid != 0){
-							totalLen += sprintf(cursor," ");
-							cursor = showStr + totalLen;
-						}
-						totalLen += sprintf(cursor," add wds remote brmac %02x:%02x:%02x:%02x:%02x:%02x\n",tmp->mac[0],tmp->mac[1],tmp->mac[2],tmp->mac[3],tmp->mac[4],tmp->mac[5]);
-						cursor = showStr + totalLen;
-						if(WTP[i]->WTP_Radio[j]->cipherType == 2){
-							if(vrrid != 0){
-								totalLen += sprintf(cursor," ");
-								cursor = showStr + totalLen;
-							}
-							totalLen += sprintf(cursor," set wds brmac %02x:%02x:%02x:%02x:%02x:%02x aes key %s\n",tmp->mac[0],tmp->mac[1],tmp->mac[2],tmp->mac[3],tmp->mac[4],tmp->mac[5],tmp->key);
-							cursor = showStr + totalLen;
-						}
-						tmp = tmp->next;
-					}
-					if(WTP[i]->WTP_Radio[j]->supper_g.supper_g_type & 0x1){
-						if(vrrid != 0){
-							totalLen += sprintf(cursor," ");
-							cursor = showStr + totalLen;
-						}
-						totalLen += sprintf(cursor," set bursting enable\n");
-						cursor = showStr + totalLen;								
-					}							
-					if(WTP[i]->WTP_Radio[j]->supper_g.supper_g_type & 0x2){
-						if(vrrid != 0){
-							totalLen += sprintf(cursor," ");
-							cursor = showStr + totalLen;
-						}
-						totalLen += sprintf(cursor," set fastFrame enable\n");
-						cursor = showStr + totalLen;								
-					}
-					if(WTP[i]->WTP_Radio[j]->supper_g.supper_g_type & 0x4){
-						if(vrrid != 0){
-							totalLen += sprintf(cursor," ");
-							cursor = showStr + totalLen;
-						}
-						totalLen += sprintf(cursor," set compression enable\n");
-						cursor = showStr + totalLen;								
-					}
-					char *S_LIST = NULL;
-					int state_value = 0;
-					S_LIST = (char *)malloc(7+1);					
-					memset(S_LIST,0,7+1);
-					state_value = (int)(WTP[i]->WTP_Radio[j]->sector_state_value);
-					if(WTP[i]->WTP_Radio[j]->sector_state_value != 0){
-						if(state_value & 0x1)
-						{
-							strncat(S_LIST,"0",1);
-						}
-						if(state_value & 0x2)
-						{
-							strncat(S_LIST,",1",2);
-						}
-						if(state_value & 0x4)
-						{
-							strncat(S_LIST,",2",2);
-						}
-						if(state_value & 0x8)
-						{   
-							strncat(S_LIST,",3",2);
-						}
-						if(vrrid != 0){
-							totalLen += sprintf(cursor," ");
-							cursor = showStr + totalLen;
-						}
-						totalLen += sprintf(cursor," set radio sector %s enable\n",S_LIST);
-						cursor = showStr + totalLen;								
-					}
-					if(S_LIST){
-						free(S_LIST);
-						S_LIST = NULL;
-					}
-					/*"set radio sectorid (0|1|2|3|all) power VALUE"*/
-					for(s_id=0;s_id<SECTOR_NUM;s_id++){
-						s_state += WTP[i]->WTP_Radio[j]->sector[s_id]->state;
-					}
-					if(s_state == 4){
-						if(vrrid != 0){
-							totalLen += sprintf(cursor," ");
-							cursor = showStr + totalLen;
-						}
-						totalLen += sprintf(cursor," set radio sectorid all power %d\n",WTP[i]->WTP_Radio[j]->sector[0]->tx_power);
-						cursor = showStr + totalLen;		
-					}else if(s_state < 4){
-						//s_id=0;
-						for(s_id2=0;s_id2<SECTOR_NUM;s_id2++){
-							if(vrrid != 0){
-								totalLen += sprintf(cursor," ");
-								cursor = showStr + totalLen;
-							}
-							if((WTP[i]->WTP_Radio[j]->sector[s_id2]->state == 1)&&(WTP[i]->WTP_Radio[j]->sector[s_id2]->tx_power != 0)){
-								totalLen += sprintf(cursor," set radio sectorid %d power %d\n",s_id2,WTP[i]->WTP_Radio[j]->sector[s_id2]->tx_power);
-								cursor = showStr + totalLen;
-							}	
-						}	
-					}
-					/*countr code for a8*/
-					if(gCOUNTRYCODE == COUNTRY_USA_US){
-						if(vrrid != 0){
-							totalLen += sprintf(cursor," ");
-							cursor = showStr + totalLen;
-						}
-						totalLen += sprintf(cursor," country-code US\n");
-						cursor = showStr + totalLen; 
-					}
-					else if(gCOUNTRYCODE == COUNTRY_EUROPE_EU){
-						if(vrrid != 0){
-							totalLen += sprintf(cursor," ");
-							cursor = showStr + totalLen;
-						}
-						totalLen += sprintf(cursor," country-code EU\n");
-						cursor = showStr + totalLen; 
-					}
-					else {
-						if(vrrid != 0){
-							totalLen += sprintf(cursor," ");
-							cursor = showStr + totalLen;
-						}
-						totalLen += sprintf(cursor," country-code CN\n");/*in extern command actually send: set regdmn RoW*/
-						cursor = showStr + totalLen;								
-					}
-					
-					if(WTP[i]->WTP_Radio[j]->inter_vap_able == 1){
-						if(vrrid != 0){
-							totalLen += sprintf(cursor," ");
-							cursor = showStr + totalLen;
-						}
-						totalLen += sprintf(cursor," set inter-VAP-forwarding enable\n");
-						cursor = showStr + totalLen;								
-					}
-					if(WTP[i]->WTP_Radio[j]->intra_vap_able == 1){
-						if(vrrid != 0){
-							totalLen += sprintf(cursor," ");
-							cursor = showStr + totalLen;
-						}
-						totalLen += sprintf(cursor," set intra-VAP-forwarding enable\n");
-						cursor = showStr + totalLen;								
-					}
-					if(WTP[i]->WTP_Radio[j]->keep_alive_period != 3600){
-						if(vrrid != 0){
-							totalLen += sprintf(cursor," ");
-							cursor = showStr + totalLen;
-						}
-						totalLen += sprintf(cursor," set radio keep_alive_period %d\n",WTP[i]->WTP_Radio[j]->keep_alive_period);
-						cursor = showStr + totalLen;								
-					}
-					if(WTP[i]->WTP_Radio[j]->keep_alive_idle_time != 3600){
-						if(vrrid != 0){
-							totalLen += sprintf(cursor," ");
-							cursor = showStr + totalLen;
-						}
-						totalLen += sprintf(cursor," set radio keep_alive_idle_time %d\n",WTP[i]->WTP_Radio[j]->keep_alive_idle_time);
-						cursor = showStr + totalLen;								
-					}
-					if(WTP[i]->WTP_Radio[j]->congestion_avoidance == 1){
-						if(vrrid != 0){
-							totalLen += sprintf(cursor," ");
-							cursor = showStr + totalLen;
-						}
-						totalLen += sprintf(cursor," set radio congestion_avoidance tail-drop\n");
-						cursor = showStr + totalLen;								
-					}
-					else if(WTP[i]->WTP_Radio[j]->congestion_avoidance == 2){
-						if(vrrid != 0){
-							totalLen += sprintf(cursor," ");
-							cursor = showStr + totalLen;
-						}
-						totalLen += sprintf(cursor," set radio congestion_avoidance red\n");
-						cursor = showStr + totalLen;								
-					}
-					else if(WTP[i]->WTP_Radio[j]->congestion_avoidance == 3){
-						if(vrrid != 0){
-							totalLen += sprintf(cursor," ");
-							cursor = showStr + totalLen;
-						}
-						totalLen += sprintf(cursor," set radio congestion_avoidance fwred\n");
-						cursor = showStr + totalLen;								
-					}
-				}
-				if(WTP[i]->WTP_Radio[j]->ack.distance != 0){
-					if(vrrid != 0){
-						totalLen += sprintf(cursor," ");
-						cursor = showStr + totalLen;
-					}
-					totalLen += sprintf(cursor," acktimeout radio set distance %d\n",WTP[i]->WTP_Radio[j]->ack.distance);
-					cursor = showStr + totalLen;
-				}					/*wcl add for RDIR-33*/	
-				/*fengwenchao add 20111214 for AUTELAN-2712*/
-				if((WTP[i]->WTP_Radio[j] != NULL)&&(WTP[i]->WTP_Radio[j]->QOSstate != 0))
-				{
-					if(vrrid != 0){
-						totalLen += sprintf(cursor," ");
-						cursor = showStr + totalLen;
-					}
-					totalLen += sprintf(cursor," radio apply qos %d\n",WTP[i]->WTP_Radio[j]->QOSID);
-					cursor = showStr + totalLen;
-				}			
-				/*fengwenchao add end*/
-				/*fengwenchao add 20110921 for radio disable*/
-				if(WTP[i]->WTP_Radio[j]->radio_disable_flag == 1)
-				{
-					if(vrrid != 0){
-						totalLen += sprintf(cursor," ");
-						cursor = showStr + totalLen;
-					}
-					totalLen += sprintf(cursor," radio disable\n");
-					cursor = showStr + totalLen;							
-				}
-				/*fengwenchao add end*/
-
-				
-				/*A8 set end*/
-				if(vrrid != 0){
-					totalLen += sprintf(cursor," ");
-					cursor = showStr + totalLen;
-				}
-
-				totalLen += sprintf(cursor,"exit\n");
-				cursor = showStr + totalLen;
-			}
-			
-			}
-	}
-	*totalLen_T = totalLen;
-	*str_len_T = str_len;
+				*totalLen_T = totalLen;
+				*str_len_T = str_len;
 	return 0;
 }
 
@@ -77850,6 +77899,9 @@ static DBusHandlerResult wid_dbus_message_handler (DBusConnection *connection, D
 		//auto ap area
 		else if (dbus_message_is_method_call(message,WID_DBUS_INTERFACE,WID_DBUS_CONF_METHOD_SET_WID_DYNAMIC_AP_LOGIN_SWITCH)) {
 			reply = wid_dbus_interface_set_wid_auto_ap_login_switch(connection,message,user_data);
+		}
+		else if (dbus_message_is_method_call(message,WID_DBUS_INTERFACE,WID_DBUS_CONF_METHOD_SET_WID_MEMORY_TRACE_SWITCH)) {
+			reply = wid_dbus_interface_set_wid_memory_trace_switch(connection,message,user_data);
 		}
 		else if (dbus_message_is_method_call(message,WID_DBUS_INTERFACE,WID_DBUS_CONF_METHOD_SET_WID_DYNAMIC_AP_LOGIN_L3_INTERFACE)) {
 			reply = wid_dbus_interface_set_wid_auto_ap_login_binding_l3_interface(connection,message,user_data);
@@ -79716,7 +79768,7 @@ int wid_dbus_trap_wtp_channel_change(unsigned char chan_past,unsigned char chan_
 	wid_syslog_debug_debug(WID_DBUS,"wid_dbus_trap_wtp_channel_change tid %d\n",TID);
 	/*store sn&mac of ap*/
 	unsigned char *mac = NULL;
-	mac = (unsigned char *)malloc(MAC_LEN+1);
+	mac = (unsigned char *)WID_MALLOC(MAC_LEN+1);
 	memset(mac,0,MAC_LEN+1);
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->WTPMAC != NULL))
 	{
@@ -79724,7 +79776,7 @@ int wid_dbus_trap_wtp_channel_change(unsigned char chan_past,unsigned char chan_
 	}
 
 	char *sn = NULL;
-	sn = (char *)malloc(NAS_IDENTIFIER_NAME);
+	sn = (char *)WID_MALLOC(NAS_IDENTIFIER_NAME);
 	memset(sn,0,NAS_IDENTIFIER_NAME);
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->WTPSN != NULL))
 	{
@@ -79736,13 +79788,13 @@ int wid_dbus_trap_wtp_channel_change(unsigned char chan_past,unsigned char chan_
     
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->netid != NULL))
 	{
-	    netid = (char *)malloc(strlen(AC_WTP[wtpindex]->netid)+1);
+	    netid = (char *)WID_MALLOC(strlen(AC_WTP[wtpindex]->netid)+1);
 	    memset(netid,0,(strlen(AC_WTP[wtpindex]->netid)+1));
 		memcpy(netid,AC_WTP[wtpindex]->netid,strlen(AC_WTP[wtpindex]->netid));
 	}
 	else
 	{
-	    netid = (char *)malloc(sizeof(char)*12);
+	    netid = (char *)WID_MALLOC(sizeof(char)*12);
 	    memset(netid,0,12);
 		memcpy(netid,"defaultcode",11);
 	}
@@ -79775,9 +79827,9 @@ int wid_dbus_trap_wtp_channel_change(unsigned char chan_past,unsigned char chan_
 	dbus_connection_send (wid_dbus_connection_t[TID],query,NULL);
 	
 	dbus_message_unref(query);
-	CW_FREE_OBJECT(sn);
-	CW_FREE_OBJECT(mac);
-	CW_FREE_OBJECT(netid);
+	CW_FREE_OBJECT_WID(sn);
+	CW_FREE_OBJECT_WID(mac);
+	CW_FREE_OBJECT_WID(netid);
 	return 0;
 }
 //when a wtp enter imagedata state,send this trap
@@ -79790,7 +79842,7 @@ int wid_dbus_trap_wtp_enter_imagedata_state(int wtpindex)
 
 	/*store sn&mac of ap*/
 	unsigned char *mac = NULL;
-	mac = (unsigned char *)malloc(MAC_LEN+1);
+	mac = (unsigned char *)WID_MALLOC(MAC_LEN+1);
 	memset(mac,0,MAC_LEN+1);
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->WTPMAC != NULL))
 	{
@@ -79798,7 +79850,7 @@ int wid_dbus_trap_wtp_enter_imagedata_state(int wtpindex)
 	}
 
 	char *sn = NULL;
-	sn = (char *)malloc(NAS_IDENTIFIER_NAME);
+	sn = (char *)WID_MALLOC(NAS_IDENTIFIER_NAME);
 	memset(sn,0,NAS_IDENTIFIER_NAME);
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->WTPSN != NULL))
 	{
@@ -79809,13 +79861,13 @@ int wid_dbus_trap_wtp_enter_imagedata_state(int wtpindex)
     
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->netid != NULL))
 	{
-	    netid = (char *)malloc(strlen(AC_WTP[wtpindex]->netid)+1);
+	    netid = (char *)WID_MALLOC(strlen(AC_WTP[wtpindex]->netid)+1);
 	    memset(netid,0,(strlen(AC_WTP[wtpindex]->netid)+1));
 		memcpy(netid,AC_WTP[wtpindex]->netid,strlen(AC_WTP[wtpindex]->netid));
 	}
 	else
 	{
-	    netid = (char *)malloc(sizeof(char)*12);
+	    netid = (char *)WID_MALLOC(sizeof(char)*12);
 	    memset(netid,0,12);
 		memcpy(netid,"defaultcode",11);
 	}
@@ -79845,9 +79897,9 @@ int wid_dbus_trap_wtp_enter_imagedata_state(int wtpindex)
 	dbus_connection_send(wid_dbus_connection_t[TID],query,NULL);
 	
 	dbus_message_unref(query);
-	CW_FREE_OBJECT(sn);
-	CW_FREE_OBJECT(mac);
-	CW_FREE_OBJECT(netid);
+	CW_FREE_OBJECT_WID(sn);
+	CW_FREE_OBJECT_WID(mac);
+	CW_FREE_OBJECT_WID(netid);
 	return 0;
 }
 //when a wtp enter imagedata state,send this trap
@@ -79860,7 +79912,7 @@ int wid_dbus_trap_wtp_tranfer_file(int wtpindex)
 
 	/*store sn&mac of ap*/
 	unsigned char *mac = NULL;
-	mac = (unsigned char *)malloc(MAC_LEN+1);
+	mac = (unsigned char *)WID_MALLOC(MAC_LEN+1);
 	memset(mac,0,MAC_LEN+1);
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->WTPMAC != NULL))
 	{
@@ -79868,7 +79920,7 @@ int wid_dbus_trap_wtp_tranfer_file(int wtpindex)
 	}
 
 	char *sn = NULL;
-	sn = (char *)malloc(NAS_IDENTIFIER_NAME);
+	sn = (char *)WID_MALLOC(NAS_IDENTIFIER_NAME);
 	memset(sn,0,NAS_IDENTIFIER_NAME);
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->WTPSN != NULL))
 	{
@@ -79880,13 +79932,13 @@ int wid_dbus_trap_wtp_tranfer_file(int wtpindex)
     
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->netid != NULL))
 	{
-	    netid = (char *)malloc(strlen(AC_WTP[wtpindex]->netid)+1);
+	    netid = (char *)WID_MALLOC(strlen(AC_WTP[wtpindex]->netid)+1);
 	    memset(netid,0,(strlen(AC_WTP[wtpindex]->netid)+1));
 		memcpy(netid,AC_WTP[wtpindex]->netid,strlen(AC_WTP[wtpindex]->netid));
 	}
 	else
 	{
-	    netid = (char *)malloc(sizeof(char)*12);
+	    netid = (char *)WID_MALLOC(sizeof(char)*12);
 	    memset(netid,0,12);
 		memcpy(netid,"defaultcode",11);
 	}
@@ -79916,9 +79968,9 @@ int wid_dbus_trap_wtp_tranfer_file(int wtpindex)
 	dbus_connection_send(wid_dbus_connection_t[TID],query,NULL);
 	
 	dbus_message_unref(query);
-	CW_FREE_OBJECT(sn);
-	CW_FREE_OBJECT(mac);
-	CW_FREE_OBJECT(netid);
+	CW_FREE_OBJECT_WID(sn);
+	CW_FREE_OBJECT_WID(mac);
+	CW_FREE_OBJECT_WID(netid);
 	return 0;
 }
 
@@ -79932,7 +79984,7 @@ int wid_dbus_trap_wtp_update_successful(int wtpindex)
 
 	/*store sn&mac of ap*/
 	unsigned char *mac = NULL;
-	mac = (unsigned char *)malloc(MAC_LEN+1);
+	mac = (unsigned char *)WID_MALLOC(MAC_LEN+1);
 	memset(mac,0,MAC_LEN+1);
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->WTPMAC != NULL))
 	{
@@ -79940,7 +79992,7 @@ int wid_dbus_trap_wtp_update_successful(int wtpindex)
 	}
 
 	char *sn = NULL;
-	sn = (char *)malloc(NAS_IDENTIFIER_NAME);
+	sn = (char *)WID_MALLOC(NAS_IDENTIFIER_NAME);
 	memset(sn,0,NAS_IDENTIFIER_NAME);
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->WTPSN != NULL))
 	{
@@ -79952,13 +80004,13 @@ int wid_dbus_trap_wtp_update_successful(int wtpindex)
     
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->netid != NULL))
 	{
-	    netid = (char *)malloc(strlen(AC_WTP[wtpindex]->netid)+1);
+	    netid = (char *)WID_MALLOC(strlen(AC_WTP[wtpindex]->netid)+1);
 	    memset(netid,0,(strlen(AC_WTP[wtpindex]->netid)+1));
 		memcpy(netid,AC_WTP[wtpindex]->netid,strlen(AC_WTP[wtpindex]->netid));
 	}
 	else
 	{
-	    netid = (char *)malloc(sizeof(char)*12);
+	    netid = (char *)WID_MALLOC(sizeof(char)*12);
 	    memset(netid,0,12);
 		memcpy(netid,"defaultcode",11);
 	}
@@ -79988,9 +80040,9 @@ int wid_dbus_trap_wtp_update_successful(int wtpindex)
 	dbus_connection_send(wid_dbus_connection_t[TID],query,NULL);
 	
 	dbus_message_unref(query);
-	CW_FREE_OBJECT(sn);
-	CW_FREE_OBJECT(mac);
-	CW_FREE_OBJECT(netid);
+	CW_FREE_OBJECT_WID(sn);
+	CW_FREE_OBJECT_WID(mac);
+	CW_FREE_OBJECT_WID(netid);
 	return 0;	
 }
 //fengwenchao add end
@@ -80005,7 +80057,7 @@ int wid_dbus_trap_wtp_update_fail(int wtpindex)
 
 	/*store sn&mac of ap*/
 	unsigned char *mac = NULL;
-	mac = (unsigned char *)malloc(MAC_LEN+1);
+	mac = (unsigned char *)WID_MALLOC(MAC_LEN+1);
 	memset(mac,0,MAC_LEN+1);
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->WTPMAC != NULL))
 	{
@@ -80013,7 +80065,7 @@ int wid_dbus_trap_wtp_update_fail(int wtpindex)
 	}
 
 	char *sn = NULL;
-	sn = (char *)malloc(NAS_IDENTIFIER_NAME);
+	sn = (char *)WID_MALLOC(NAS_IDENTIFIER_NAME);
 	memset(sn,0,NAS_IDENTIFIER_NAME);
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->WTPSN != NULL))
 	{
@@ -80025,13 +80077,13 @@ int wid_dbus_trap_wtp_update_fail(int wtpindex)
     
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->netid != NULL))
 	{
-	    netid = (char *)malloc(strlen(AC_WTP[wtpindex]->netid)+1);
+	    netid = (char *)WID_MALLOC(strlen(AC_WTP[wtpindex]->netid)+1);
 	    memset(netid,0,(strlen(AC_WTP[wtpindex]->netid)+1));
 		memcpy(netid,AC_WTP[wtpindex]->netid,strlen(AC_WTP[wtpindex]->netid));
 	}
 	else
 	{
-	    netid = (char *)malloc(sizeof(char)*12);
+	    netid = (char *)WID_MALLOC(sizeof(char)*12);
 	    memset(netid,0,12);
 		memcpy(netid,"defaultcode",11);
 	}
@@ -80061,9 +80113,9 @@ int wid_dbus_trap_wtp_update_fail(int wtpindex)
 	dbus_connection_send(wid_dbus_connection_t[TID],query,NULL);
 	
 	dbus_message_unref(query);
-	CW_FREE_OBJECT(sn);
-	CW_FREE_OBJECT(mac);
-	CW_FREE_OBJECT(netid);
+	CW_FREE_OBJECT_WID(sn);
+	CW_FREE_OBJECT_WID(mac);
+	CW_FREE_OBJECT_WID(netid);
 	return 0;	
 }
 //fengwenchao add end
@@ -80081,7 +80133,7 @@ int wid_dbus_trap_wlan_encryption_type_change(int Wlanid)
 	int j = 0;
 	int num = 0;
 	unsigned int *wtpid;	
-	wtpid = (unsigned int *)malloc(WTP_NUM*(sizeof(unsigned int)));
+	wtpid = (unsigned int *)WID_MALLOC(WTP_NUM*(sizeof(unsigned int)));
 	memset(wtpid,0,WTP_NUM);
 	for (i=0;i<WTP_NUM;i++)
 	{
@@ -80112,7 +80164,7 @@ int wid_dbus_trap_wlan_encryption_type_change(int Wlanid)
 		}
 	}
 	char *sn = NULL;
-	sn = (char *)malloc(NAS_IDENTIFIER_NAME);	
+	sn = (char *)WID_MALLOC(NAS_IDENTIFIER_NAME);	
 
 	unsigned char securityid = AC_WLAN[Wlanid]->SecurityID; /*ht change char to unsigned char*/
 	unsigned int encryptionType = AC_WLAN[Wlanid]->EncryptionType;
@@ -80155,13 +80207,13 @@ int wid_dbus_trap_wlan_encryption_type_change(int Wlanid)
         
     	if((AC_WTP[i] != NULL)&&(AC_WTP[i]->netid != NULL))
     	{
-    	    netid = (char *)malloc(strlen(AC_WTP[i]->netid)+1);
+    	    netid = (char *)WID_MALLOC(strlen(AC_WTP[i]->netid)+1);
     	    memset(netid,0,(strlen(AC_WTP[i]->netid)+1));
     		memcpy(netid,AC_WTP[i]->netid,strlen(AC_WTP[i]->netid));
     	}
     	else
     	{
-    	    netid = (char *)malloc(sizeof(char)*12);
+    	    netid = (char *)WID_MALLOC(sizeof(char)*12);
     	    memset(netid,0,12);
     		memcpy(netid,"defaultcode",11);
     	}
@@ -80188,7 +80240,7 @@ int wid_dbus_trap_wlan_encryption_type_change(int Wlanid)
 
 		dbus_message_iter_close_container (&iter_array, &iter_struct);
 		
-        CW_FREE_OBJECT(netid);
+        CW_FREE_OBJECT_WID(netid);
 	}					
 
 	dbus_message_iter_close_container (&iter, &iter_array);	
@@ -80197,8 +80249,8 @@ int wid_dbus_trap_wlan_encryption_type_change(int Wlanid)
 
 	
 	dbus_message_unref(query);
-	free(wtpid);
-	CW_FREE_OBJECT(sn);
+	WID_FREE(wtpid);
+	CW_FREE_OBJECT_WID(sn);
 	return 0;
 	
 }
@@ -80215,7 +80267,7 @@ int wid_dbus_trap_wlan_preshared_key_change(int Wlanid,char *key)
 	int j = 0;
 	int num = 0;
 	unsigned int *wtpid;	
-	wtpid = (unsigned int *)malloc(WTP_NUM*(sizeof(unsigned int)));
+	wtpid = (unsigned int *)WID_MALLOC(WTP_NUM*(sizeof(unsigned int)));
 	memset(wtpid,0,WTP_NUM);
 	for (i=0;i<WTP_NUM;i++)
 	{
@@ -80246,7 +80298,7 @@ int wid_dbus_trap_wlan_preshared_key_change(int Wlanid,char *key)
 		}
 	}
 	char *sn = NULL;
-	sn = (char *)malloc(NAS_IDENTIFIER_NAME);	
+	sn = (char *)WID_MALLOC(NAS_IDENTIFIER_NAME);	
 
 	unsigned char securityid = AC_WLAN[Wlanid]->SecurityID; /*ht change char to unsigned char*/
 
@@ -80288,13 +80340,13 @@ int wid_dbus_trap_wlan_preshared_key_change(int Wlanid,char *key)
         
     	if((AC_WTP[i] != NULL)&&(AC_WTP[i]->netid != NULL))
     	{
-    	    netid = (char *)malloc(strlen(AC_WTP[i]->netid)+1);
+    	    netid = (char *)WID_MALLOC(strlen(AC_WTP[i]->netid)+1);
     	    memset(netid,0,(strlen(AC_WTP[i]->netid)+1));
     		memcpy(netid,AC_WTP[i]->netid,strlen(AC_WTP[i]->netid));
     	}
     	else
     	{
-    	    netid = (char *)malloc(sizeof(char)*12);
+    	    netid = (char *)WID_MALLOC(sizeof(char)*12);
     	    memset(netid,0,12);
     		memcpy(netid,"defaultcode",11);
     	}
@@ -80322,7 +80374,7 @@ int wid_dbus_trap_wlan_preshared_key_change(int Wlanid,char *key)
 		
 		dbus_message_iter_close_container (&iter_array, &iter_struct);
 		
-        CW_FREE_OBJECT(netid);
+        CW_FREE_OBJECT_WID(netid);
 	}					
 
 	dbus_message_iter_close_container (&iter, &iter_array);	
@@ -80330,8 +80382,8 @@ int wid_dbus_trap_wlan_preshared_key_change(int Wlanid,char *key)
 	dbus_connection_send(wid_dbus_connection2,query,NULL);
 	
 	dbus_message_unref(query);
-	free(wtpid);
-	CW_FREE_OBJECT(sn);
+	WID_FREE(wtpid);
+	CW_FREE_OBJECT_WID(sn);
 	return 0;
 }
 
@@ -80346,7 +80398,7 @@ int wid_dbus_trap_wtp_code_start(int wtpindex)
 
 	/*store sn&mac of ap*/
 	unsigned char *mac = NULL;
-	mac = (unsigned char *)malloc(MAC_LEN+1);
+	mac = (unsigned char *)WID_MALLOC(MAC_LEN+1);
 	memset(mac,0,MAC_LEN+1);
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->WTPMAC != NULL))
 	{
@@ -80354,7 +80406,7 @@ int wid_dbus_trap_wtp_code_start(int wtpindex)
 	}
 
 	char *sn = NULL;
-	sn = (char *)malloc(NAS_IDENTIFIER_NAME);
+	sn = (char *)WID_MALLOC(NAS_IDENTIFIER_NAME);
 	memset(sn,0,NAS_IDENTIFIER_NAME);
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->WTPSN != NULL))
 	{
@@ -80365,13 +80417,13 @@ int wid_dbus_trap_wtp_code_start(int wtpindex)
     
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->netid != NULL))
 	{
-	    netid = (char *)malloc(strlen(AC_WTP[wtpindex]->netid)+1);
+	    netid = (char *)WID_MALLOC(strlen(AC_WTP[wtpindex]->netid)+1);
 	    memset(netid,0,(strlen(AC_WTP[wtpindex]->netid)+1));
 		memcpy(netid,AC_WTP[wtpindex]->netid,strlen(AC_WTP[wtpindex]->netid));
 	}
 	else
 	{
-	    netid = (char *)malloc(sizeof(char)*12);
+	    netid = (char *)WID_MALLOC(sizeof(char)*12);
 	    memset(netid,0,12);
 		memcpy(netid,"defaultcode",11);
 	}
@@ -80401,9 +80453,9 @@ int wid_dbus_trap_wtp_code_start(int wtpindex)
 	dbus_connection_send(wid_dbus_connection_t[TID],query,NULL);
 	
 	dbus_message_unref(query);
-	CW_FREE_OBJECT(sn);
-	CW_FREE_OBJECT(mac);
-	CW_FREE_OBJECT(netid);
+	CW_FREE_OBJECT_WID(sn);
+	CW_FREE_OBJECT_WID(mac);
+	CW_FREE_OBJECT_WID(netid);
 	return 0;
 
 }
@@ -80417,7 +80469,7 @@ int wid_dbus_trap_wtp_electrify_register_circle(int wtpindex, int registertimer)
 	wid_syslog_debug_debug(WID_DBUS,"wid_dbus_trap_wtp_electrify_register_circle tid %d\n",TID);
 	/*store sn&mac of ap*/
 	unsigned char *mac = NULL;
-	mac = (unsigned char *)malloc(MAC_LEN+1);
+	mac = (unsigned char *)WID_MALLOC(MAC_LEN+1);
 	memset(mac,0,MAC_LEN+1);
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->WTPMAC != NULL))
 	{
@@ -80425,7 +80477,7 @@ int wid_dbus_trap_wtp_electrify_register_circle(int wtpindex, int registertimer)
 	}
 
 	char *sn = NULL;
-	sn = (char *)malloc(NAS_IDENTIFIER_NAME);
+	sn = (char *)WID_MALLOC(NAS_IDENTIFIER_NAME);
 	memset(sn,0,NAS_IDENTIFIER_NAME);
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->WTPSN != NULL))
 	{
@@ -80437,13 +80489,13 @@ int wid_dbus_trap_wtp_electrify_register_circle(int wtpindex, int registertimer)
     
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->netid != NULL))
 	{
-	    netid = (char *)malloc(strlen(AC_WTP[wtpindex]->netid)+1);
+	    netid = (char *)WID_MALLOC(strlen(AC_WTP[wtpindex]->netid)+1);
 	    memset(netid,0,(strlen(AC_WTP[wtpindex]->netid)+1));
 		memcpy(netid,AC_WTP[wtpindex]->netid,strlen(AC_WTP[wtpindex]->netid));
 	}
 	else
 	{
-	    netid = (char *)malloc(sizeof(char)*12);
+	    netid = (char *)WID_MALLOC(sizeof(char)*12);
 	    memset(netid,0,12);
 		memcpy(netid,"defaultcode",11);
 	}
@@ -80473,9 +80525,9 @@ int wid_dbus_trap_wtp_electrify_register_circle(int wtpindex, int registertimer)
 	dbus_connection_send(wid_dbus_connection_t[TID],query,NULL);
 	
 	dbus_message_unref(query);
-	CW_FREE_OBJECT(sn);
-	CW_FREE_OBJECT(mac);
-	CW_FREE_OBJECT(netid);
+	CW_FREE_OBJECT_WID(sn);
+	CW_FREE_OBJECT_WID(mac);
+	CW_FREE_OBJECT_WID(netid);
 	return 0;
 
 }
@@ -80488,7 +80540,7 @@ int wid_dbus_trap_sta_online_full(int wtpindex, unsigned int sta_max_support_by_
 
 	/*store sn&mac of ap*/
 	unsigned char *mac = NULL;
-	mac = (unsigned char *)malloc(MAC_LEN+1);
+	mac = (unsigned char *)WID_MALLOC(MAC_LEN+1);
 	if (!mac) {
 		wid_syslog_err("malloc for wtp mac failed\n");
 		return 1;
@@ -80502,10 +80554,10 @@ int wid_dbus_trap_sta_online_full(int wtpindex, unsigned int sta_max_support_by_
 
 
 	char *sn = NULL;
-	sn = (char *)malloc(NAS_IDENTIFIER_NAME);
+	sn = (char *)WID_MALLOC(NAS_IDENTIFIER_NAME);
 	if (!sn) {
 		wid_syslog_err("malloc for wtp sn failed\n");
-		free(mac);
+		WID_FREE(mac);
 		return 1;
 	}
 	memset(sn,0,NAS_IDENTIFIER_NAME);
@@ -80518,11 +80570,11 @@ int wid_dbus_trap_sta_online_full(int wtpindex, unsigned int sta_max_support_by_
     
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->netid != NULL))
 	{
-	    netid = (char *)malloc(strlen(AC_WTP[wtpindex]->netid)+1);
+	    netid = (char *)WID_MALLOC(strlen(AC_WTP[wtpindex]->netid)+1);
 		if (!netid) {
 			wid_syslog_err("malloc for wtp netid failed1\n");
-			free(mac);
-			free(sn);
+			WID_FREE(mac);
+			WID_FREE(sn);
 			return 1;
 		}
 	    memset(netid,0,(strlen(AC_WTP[wtpindex]->netid)+1));
@@ -80530,11 +80582,11 @@ int wid_dbus_trap_sta_online_full(int wtpindex, unsigned int sta_max_support_by_
 	}
 	else
 	{
-	    netid = (char *)malloc(sizeof(char)*12);
+	    netid = (char *)WID_MALLOC(sizeof(char)*12);
 		if (!netid) {
 			wid_syslog_err("malloc for wtp netid failed2\n");
-			free(mac);
-			free(sn);
+			WID_FREE(mac);
+			WID_FREE(sn);
 			return 1;
 		}
 	    memset(netid,0,12);
@@ -80567,9 +80619,9 @@ int wid_dbus_trap_sta_online_full(int wtpindex, unsigned int sta_max_support_by_
 	dbus_connection_send(wid_dbus_connection_t[TID],query,NULL);
 	
 	dbus_message_unref(query);
-	CW_FREE_OBJECT(sn);
-	CW_FREE_OBJECT(mac);
-	CW_FREE_OBJECT(netid);
+	CW_FREE_OBJECT_WID(sn);
+	CW_FREE_OBJECT_WID(mac);
+	CW_FREE_OBJECT_WID(netid);
 	return 0;	
 }
 
@@ -80589,7 +80641,7 @@ int wid_dbus_trap_sta_overflow(int wtpindex, unsigned char *sta_mac, unsigned ch
 	}
 	/*store sn&mac of ap*/
 	unsigned char *mac = NULL;
-	mac = (unsigned char *)malloc(MAC_LEN+1);
+	mac = (unsigned char *)WID_MALLOC(MAC_LEN+1);
 	if (!mac) {
 		wid_syslog_err("malloc for wtp mac failed\n");
 		return 1;
@@ -80603,10 +80655,10 @@ int wid_dbus_trap_sta_overflow(int wtpindex, unsigned char *sta_mac, unsigned ch
 
 
 	char *sn = NULL;
-	sn = (char *)malloc(NAS_IDENTIFIER_NAME);
+	sn = (char *)WID_MALLOC(NAS_IDENTIFIER_NAME);
 	if (!sn) {
 		wid_syslog_err("malloc for wtp sn failed\n");
-		free(mac);
+		WID_FREE(mac);
 		return 1;
 	}
 	memset(sn,0,NAS_IDENTIFIER_NAME);
@@ -80619,11 +80671,11 @@ int wid_dbus_trap_sta_overflow(int wtpindex, unsigned char *sta_mac, unsigned ch
     
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->netid != NULL))
 	{
-	    netid = (char *)malloc(strlen(AC_WTP[wtpindex]->netid)+1);
+	    netid = (char *)WID_MALLOC(strlen(AC_WTP[wtpindex]->netid)+1);
 		if (!netid) {
 			wid_syslog_err("malloc for wtp netid failed1\n");
-			free(mac);
-			free(sn);
+			WID_FREE(mac);
+			WID_FREE(sn);
 			return 1;
 		}
 	    memset(netid,0,(strlen(AC_WTP[wtpindex]->netid)+1));
@@ -80631,11 +80683,11 @@ int wid_dbus_trap_sta_overflow(int wtpindex, unsigned char *sta_mac, unsigned ch
 	}
 	else
 	{
-	    netid = (char *)malloc(sizeof(char)*12);
+	    netid = (char *)WID_MALLOC(sizeof(char)*12);
 		if (!netid) {
 			wid_syslog_err("malloc for wtp netid failed2\n");
-			free(mac);
-			free(sn);
+			WID_FREE(mac);
+			WID_FREE(sn);
 			return 1;
 		}
 	    memset(netid,0,12);
@@ -80675,9 +80727,9 @@ int wid_dbus_trap_sta_overflow(int wtpindex, unsigned char *sta_mac, unsigned ch
 	dbus_connection_send(wid_dbus_connection_t[TID],query,NULL);
 	
 	dbus_message_unref(query);
-	CW_FREE_OBJECT(sn);
-	CW_FREE_OBJECT(mac);
-	CW_FREE_OBJECT(netid);
+	CW_FREE_OBJECT_WID(sn);
+	CW_FREE_OBJECT_WID(mac);
+	CW_FREE_OBJECT_WID(netid);
 	return 0;	
 }
 
@@ -80689,7 +80741,7 @@ int wid_dbus_trap_configure_error(int wtpindex, unsigned char err_code) {
 
 	/*store sn&mac of ap*/
 	unsigned char *mac = NULL;
-	mac = (unsigned char *)malloc(MAC_LEN+1);
+	mac = (unsigned char *)WID_MALLOC(MAC_LEN+1);
 	if (!mac) {
 		wid_syslog_err("malloc for wtp mac failed\n");
 		return 1;
@@ -80703,10 +80755,10 @@ int wid_dbus_trap_configure_error(int wtpindex, unsigned char err_code) {
 
 
 	char *sn = NULL;
-	sn = (char *)malloc(NAS_IDENTIFIER_NAME);
+	sn = (char *)WID_MALLOC(NAS_IDENTIFIER_NAME);
 	if (!sn) {
 		wid_syslog_err("malloc for wtp sn failed\n");
-		free(mac);
+		WID_FREE(mac);
 		return 1;
 	}
 	memset(sn,0,NAS_IDENTIFIER_NAME);
@@ -80719,11 +80771,11 @@ int wid_dbus_trap_configure_error(int wtpindex, unsigned char err_code) {
     
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->netid != NULL))
 	{
-	    netid = (char *)malloc(strlen(AC_WTP[wtpindex]->netid)+1);
+	    netid = (char *)WID_MALLOC(strlen(AC_WTP[wtpindex]->netid)+1);
 		if (!netid) {
 			wid_syslog_err("malloc for wtp netid failed1\n");
-			free(mac);
-			free(sn);
+			WID_FREE(mac);
+			WID_FREE(sn);
 			return 1;
 		}
 	    memset(netid,0,(strlen(AC_WTP[wtpindex]->netid)+1));
@@ -80731,11 +80783,11 @@ int wid_dbus_trap_configure_error(int wtpindex, unsigned char err_code) {
 	}
 	else
 	{
-	    netid = (char *)malloc(sizeof(char)*12);
+	    netid = (char *)WID_MALLOC(sizeof(char)*12);
 		if (!netid) {
 			wid_syslog_err("malloc for wtp netid failed2\n");
-			free(mac);
-			free(sn);
+			WID_FREE(mac);
+			WID_FREE(sn);
 			return 1;
 		}
 	    memset(netid,0,12);
@@ -80768,9 +80820,9 @@ int wid_dbus_trap_configure_error(int wtpindex, unsigned char err_code) {
 	dbus_connection_send(wid_dbus_connection_t[TID],query,NULL);
 	
 	dbus_message_unref(query);
-	CW_FREE_OBJECT(sn);
-	CW_FREE_OBJECT(mac);
-	CW_FREE_OBJECT(netid);
+	CW_FREE_OBJECT_WID(sn);
+	CW_FREE_OBJECT_WID(mac);
+	CW_FREE_OBJECT_WID(netid);
 	return 0;
 
 }
@@ -80791,7 +80843,7 @@ int wid_dbus_trap_sta_unauthorized_mac(int wtpindex, int mac_count, unsigned cha
 	}
 	/*store sn&mac of ap*/
 	unsigned char *mac = NULL;
-	mac = (unsigned char *)malloc(MAC_LEN+1);
+	mac = (unsigned char *)WID_MALLOC(MAC_LEN+1);
 	if (!mac) {
 		wid_syslog_err("malloc for wtp mac failed\n");
 		return 1;
@@ -80803,10 +80855,10 @@ int wid_dbus_trap_sta_unauthorized_mac(int wtpindex, int mac_count, unsigned cha
 		memcpy(mac,AC_WTP[wtpindex]->WTPMAC,MAC_LEN);
 	}
 	
-	temp_macs = malloc(mac_count*18);//for mac and ,and :
+	temp_macs = WID_MALLOC(mac_count*18);//for mac and ,and :
 	if (!temp_macs) {
 		wid_syslog_err("malloc for sta macs failed\n");
-		free(mac);
+		WID_FREE(mac);
 		return 1;
 	}
 	memset(temp_macs, '\0', mac_count*18);
@@ -80828,11 +80880,11 @@ int wid_dbus_trap_sta_unauthorized_mac(int wtpindex, int mac_count, unsigned cha
 	wid_syslog_debug_debug(WID_DBUS,"mac str is :%s\n", temp_macs);
 
 	char *sn = NULL;
-	sn = (char *)malloc(NAS_IDENTIFIER_NAME);
+	sn = (char *)WID_MALLOC(NAS_IDENTIFIER_NAME);
 	if (!sn) {
 		wid_syslog_err("malloc for wtp sn failed\n");
-		free(mac);
-		free(temp_macs);
+		WID_FREE(mac);
+		WID_FREE(temp_macs);
 		return 1;
 	}
 	memset(sn,0,NAS_IDENTIFIER_NAME);
@@ -80845,12 +80897,12 @@ int wid_dbus_trap_sta_unauthorized_mac(int wtpindex, int mac_count, unsigned cha
     
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->netid != NULL))
 	{
-	    netid = (char *)malloc(strlen(AC_WTP[wtpindex]->netid)+1);
+	    netid = (char *)WID_MALLOC(strlen(AC_WTP[wtpindex]->netid)+1);
 		if (!netid) {
 			wid_syslog_err("malloc for wtp netid failed1\n");
-			free(mac);
-			free(temp_macs);
-			free(sn);
+			WID_FREE(mac);
+			WID_FREE(temp_macs);
+			WID_FREE(sn);
 			return 1;
 		}
 	    memset(netid,0,(strlen(AC_WTP[wtpindex]->netid)+1));
@@ -80858,12 +80910,12 @@ int wid_dbus_trap_sta_unauthorized_mac(int wtpindex, int mac_count, unsigned cha
 	}
 	else
 	{
-	    netid = (char *)malloc(sizeof(char)*12);
+	    netid = (char *)WID_MALLOC(sizeof(char)*12);
 		if (!netid) {
 			wid_syslog_err("malloc for wtp netid failed2\n");
-			free(mac);
-			free(temp_macs);
-			free(sn);
+			WID_FREE(mac);
+			WID_FREE(temp_macs);
+			WID_FREE(sn);
 			return 1;
 		}
 	    memset(netid,0,12);
@@ -80896,10 +80948,10 @@ int wid_dbus_trap_sta_unauthorized_mac(int wtpindex, int mac_count, unsigned cha
 	dbus_connection_send(wid_dbus_connection_t[TID],query,NULL);
 	
 	dbus_message_unref(query);
-	CW_FREE_OBJECT(sn);
-	CW_FREE_OBJECT(mac);
-	CW_FREE_OBJECT(netid);
-	CW_FREE_OBJECT(temp_macs);
+	CW_FREE_OBJECT_WID(sn);
+	CW_FREE_OBJECT_WID(mac);
+	CW_FREE_OBJECT_WID(netid);
+	CW_FREE_OBJECT_WID(temp_macs);
 	return 0;
 
 }
@@ -80914,7 +80966,7 @@ int wid_dbus_trap_wtp_ap_power_off(int wtpindex)
 
 	/*store sn&mac of ap*/
 	unsigned char *mac = NULL;
-	mac = (unsigned char *)malloc(MAC_LEN+1);
+	mac = (unsigned char *)WID_MALLOC(MAC_LEN+1);
 	memset(mac,0,MAC_LEN+1);
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->WTPMAC != NULL))
 	{
@@ -80922,7 +80974,7 @@ int wid_dbus_trap_wtp_ap_power_off(int wtpindex)
 	}
 
 	char *sn = NULL;
-	sn = (char *)malloc(NAS_IDENTIFIER_NAME);
+	sn = (char *)WID_MALLOC(NAS_IDENTIFIER_NAME);
 	memset(sn,0,NAS_IDENTIFIER_NAME);
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->WTPSN != NULL))
 	{
@@ -80933,13 +80985,13 @@ int wid_dbus_trap_wtp_ap_power_off(int wtpindex)
     
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->netid != NULL))
 	{
-	    netid = (char *)malloc(strlen(AC_WTP[wtpindex]->netid)+1);
+	    netid = (char *)WID_MALLOC(strlen(AC_WTP[wtpindex]->netid)+1);
 	    memset(netid,0,(strlen(AC_WTP[wtpindex]->netid)+1));
 		memcpy(netid,AC_WTP[wtpindex]->netid,strlen(AC_WTP[wtpindex]->netid));
 	}
 	else
 	{
-	    netid = (char *)malloc(sizeof(char)*12);
+	    netid = (char *)WID_MALLOC(sizeof(char)*12);
 	    memset(netid,0,12);
 		memcpy(netid,"defaultcode",11);
 	}
@@ -80968,9 +81020,9 @@ int wid_dbus_trap_wtp_ap_power_off(int wtpindex)
 	dbus_connection_send(wid_dbus_connection_t[TID],query,NULL);
 	
 	dbus_message_unref(query);
-	CW_FREE_OBJECT(sn);
-	CW_FREE_OBJECT(mac);
-	CW_FREE_OBJECT(netid);
+	CW_FREE_OBJECT_WID(sn);
+	CW_FREE_OBJECT_WID(mac);
+	CW_FREE_OBJECT_WID(netid);
 	return 0;
 
 }
@@ -80984,7 +81036,7 @@ int wid_dbus_trap_wtp_ap_reboot(int wtpindex)
 
 	/*store sn&mac of ap*/
 	unsigned char *mac = NULL;
-	mac = (unsigned char *)malloc(MAC_LEN+1);
+	mac = (unsigned char *)WID_MALLOC(MAC_LEN+1);
 	memset(mac,0,MAC_LEN+1);
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->WTPMAC != NULL))
 	{
@@ -80992,7 +81044,7 @@ int wid_dbus_trap_wtp_ap_reboot(int wtpindex)
 	}
 
 	char *sn = NULL;
-	sn = (char *)malloc(NAS_IDENTIFIER_NAME);
+	sn = (char *)WID_MALLOC(NAS_IDENTIFIER_NAME);
 	memset(sn,0,NAS_IDENTIFIER_NAME);
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->WTPSN != NULL))
 	{
@@ -81003,13 +81055,13 @@ int wid_dbus_trap_wtp_ap_reboot(int wtpindex)
     
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->netid != NULL))
 	{
-	    netid = (char *)malloc(strlen(AC_WTP[wtpindex]->netid)+1);
+	    netid = (char *)WID_MALLOC(strlen(AC_WTP[wtpindex]->netid)+1);
 	    memset(netid,0,(strlen(AC_WTP[wtpindex]->netid)+1));
 		memcpy(netid,AC_WTP[wtpindex]->netid,strlen(AC_WTP[wtpindex]->netid));
 	}
 	else
 	{
-	    netid = (char *)malloc(sizeof(char)*12);
+	    netid = (char *)WID_MALLOC(sizeof(char)*12);
 	    memset(netid,0,12);
 		memcpy(netid,"defaultcode",11);
 	}
@@ -81038,9 +81090,9 @@ int wid_dbus_trap_wtp_ap_reboot(int wtpindex)
 	dbus_connection_send(wid_dbus_connection_t[TID],query,NULL);
 	
 	dbus_message_unref(query);
-	CW_FREE_OBJECT(sn);
-	CW_FREE_OBJECT(mac);
-	CW_FREE_OBJECT(netid);
+	CW_FREE_OBJECT_WID(sn);
+	CW_FREE_OBJECT_WID(mac);
+	CW_FREE_OBJECT_WID(netid);
 	return 0;
 
 }
@@ -81055,7 +81107,7 @@ int wid_dbus_trap_wtp_ap_ACTimeSynchroFailure(int wtpindex,unsigned char flag)
 	
 		/*store sn&mac of ap*/
 		unsigned char *mac = NULL;
-		mac = (unsigned char *)malloc(MAC_LEN+1);
+		mac = (unsigned char *)WID_MALLOC(MAC_LEN+1);
 		memset(mac,0,MAC_LEN+1);
 		if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->WTPMAC != NULL))
 		{
@@ -81063,7 +81115,7 @@ int wid_dbus_trap_wtp_ap_ACTimeSynchroFailure(int wtpindex,unsigned char flag)
 		}
 	
 		char *sn = NULL;
-		sn = (char *)malloc(NAS_IDENTIFIER_NAME);
+		sn = (char *)WID_MALLOC(NAS_IDENTIFIER_NAME);
 		memset(sn,0,NAS_IDENTIFIER_NAME);
 		if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->WTPSN != NULL))
 		{
@@ -81075,13 +81127,13 @@ int wid_dbus_trap_wtp_ap_ACTimeSynchroFailure(int wtpindex,unsigned char flag)
         
     	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->netid != NULL))
     	{
-    	    netid = (char *)malloc(strlen(AC_WTP[wtpindex]->netid)+1);
+    	    netid = (char *)WID_MALLOC(strlen(AC_WTP[wtpindex]->netid)+1);
     	    memset(netid,0,(strlen(AC_WTP[wtpindex]->netid)+1));
     		memcpy(netid,AC_WTP[wtpindex]->netid,strlen(AC_WTP[wtpindex]->netid));
     	}
     	else
     	{
-    	    netid = (char *)malloc(sizeof(char)*12);
+    	    netid = (char *)WID_MALLOC(sizeof(char)*12);
     	    memset(netid,0,12);
     		memcpy(netid,"defaultcode",11);
     	}
@@ -81113,9 +81165,9 @@ int wid_dbus_trap_wtp_ap_ACTimeSynchroFailure(int wtpindex,unsigned char flag)
 		
 		dbus_message_unref(query);
 		
-		CW_FREE_OBJECT(sn);
-		CW_FREE_OBJECT(mac);
-		CW_FREE_OBJECT(netid);
+		CW_FREE_OBJECT_WID(sn);
+		CW_FREE_OBJECT_WID(mac);
+		CW_FREE_OBJECT_WID(netid);
 		return 0;
 	
 	}
@@ -81131,7 +81183,7 @@ int wid_dbus_trap_wtp_ip_change_alarm(int wtpindex)
 
 	/*store sn&mac of ap*/
 	unsigned char *mac = NULL;
-	mac = (unsigned char *)malloc(MAC_LEN+1);
+	mac = (unsigned char *)WID_MALLOC(MAC_LEN+1);
 	memset(mac,0,MAC_LEN+1);
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->WTPMAC != NULL))
 	{
@@ -81139,7 +81191,7 @@ int wid_dbus_trap_wtp_ip_change_alarm(int wtpindex)
 	}
 
 	char *sn = NULL;
-	sn = (char *)malloc(NAS_IDENTIFIER_NAME);
+	sn = (char *)WID_MALLOC(NAS_IDENTIFIER_NAME);
 	memset(sn,0,NAS_IDENTIFIER_NAME);
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->WTPSN != NULL))
 	{
@@ -81150,13 +81202,13 @@ int wid_dbus_trap_wtp_ip_change_alarm(int wtpindex)
     
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->netid != NULL))
 	{
-	    netid = (char *)malloc(strlen(AC_WTP[wtpindex]->netid)+1);
+	    netid = (char *)WID_MALLOC(strlen(AC_WTP[wtpindex]->netid)+1);
 	    memset(netid,0,(strlen(AC_WTP[wtpindex]->netid)+1));
 		memcpy(netid,AC_WTP[wtpindex]->netid,strlen(AC_WTP[wtpindex]->netid));
 	}
 	else
 	{
-	    netid = (char *)malloc(sizeof(char)*12);
+	    netid = (char *)WID_MALLOC(sizeof(char)*12);
 	    memset(netid,0,12);
 		memcpy(netid,"defaultcode",11);
 	}
@@ -81185,9 +81237,9 @@ int wid_dbus_trap_wtp_ip_change_alarm(int wtpindex)
 	dbus_connection_send(wid_dbus_connection_t[TID],query,NULL);
 	
 	dbus_message_unref(query);
-	CW_FREE_OBJECT(sn);
-	CW_FREE_OBJECT(mac);
-	CW_FREE_OBJECT(netid);
+	CW_FREE_OBJECT_WID(sn);
+	CW_FREE_OBJECT_WID(mac);
+	CW_FREE_OBJECT_WID(netid);
 	return 0;
 
 }
@@ -81200,7 +81252,7 @@ int wid_dbus_trap_wtp_device_interference(int wtpindex)
 
 	/*store sn&mac of ap*/
 	unsigned char *mac = NULL;
-	mac = (unsigned char *)malloc(MAC_LEN+1);
+	mac = (unsigned char *)WID_MALLOC(MAC_LEN+1);
 	memset(mac,0,MAC_LEN+1);
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->WTPMAC != NULL))
 	{
@@ -81210,7 +81262,7 @@ int wid_dbus_trap_wtp_device_interference(int wtpindex)
 	unsigned int local_id = local;
 	unsigned int vrrp_id = vrrid;	
 	char *sn = NULL;
-	sn = (char *)malloc(NAS_IDENTIFIER_NAME);
+	sn = (char *)WID_MALLOC(NAS_IDENTIFIER_NAME);
 	memset(sn,0,NAS_IDENTIFIER_NAME);
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->WTPSN != NULL))
 	{
@@ -81238,8 +81290,8 @@ int wid_dbus_trap_wtp_device_interference(int wtpindex)
 	dbus_connection_send(wid_dbus_connection_t[TID],query,NULL);
 	
 	dbus_message_unref(query);
-	CW_FREE_OBJECT(sn);
-	CW_FREE_OBJECT(mac);
+	CW_FREE_OBJECT_WID(sn);
+	CW_FREE_OBJECT_WID(mac);
 	return 0;
 
 }
@@ -81289,7 +81341,7 @@ int wid_dbus_trap_set_wtp_remote_restart(unsigned int wtpindex)
 
 	/*store sn&mac of ap*/
 	unsigned char *mac = NULL;
-	mac = (unsigned char *)malloc(MAC_LEN+1);
+	mac = (unsigned char *)WID_MALLOC(MAC_LEN+1);
 	memset(mac,0,MAC_LEN+1);
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->WTPMAC != NULL))
 	{
@@ -81299,7 +81351,7 @@ int wid_dbus_trap_set_wtp_remote_restart(unsigned int wtpindex)
 	unsigned int vrrp_id = vrrid;
 
 	char *sn = NULL;
-	sn = (char *)malloc(NAS_IDENTIFIER_NAME);
+	sn = (char *)WID_MALLOC(NAS_IDENTIFIER_NAME);
 	memset(sn,0,NAS_IDENTIFIER_NAME);
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->WTPSN != NULL))
 	{
@@ -81329,8 +81381,8 @@ int wid_dbus_trap_set_wtp_remote_restart(unsigned int wtpindex)
 	wid_syslog_debug_debug(WID_DBUS,"wtp %d remote restart",wtpindex);
 	
 	dbus_message_unref(query);
-	CW_FREE_OBJECT(sn);
-	CW_FREE_OBJECT(mac);
+	CW_FREE_OBJECT_WID(sn);
+	CW_FREE_OBJECT_WID(mac);
 	return 0;
 
 }
@@ -81343,7 +81395,7 @@ int wid_dbus_trap_wtp_divorce_networwok(unsigned int wtpindex)
 
 	/*store sn&mac of ap*/
 	unsigned char *mac = NULL;
-	mac = (unsigned char *)malloc(MAC_LEN+1);
+	mac = (unsigned char *)WID_MALLOC(MAC_LEN+1);
 	memset(mac,0,MAC_LEN+1);
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->WTPMAC != NULL))
 	{
@@ -81351,7 +81403,7 @@ int wid_dbus_trap_wtp_divorce_networwok(unsigned int wtpindex)
 	}
 
 	char *sn = NULL;
-	sn = (char *)malloc(NAS_IDENTIFIER_NAME);
+	sn = (char *)WID_MALLOC(NAS_IDENTIFIER_NAME);
 	memset(sn,0,NAS_IDENTIFIER_NAME);
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->WTPSN != NULL))
 	{
@@ -81362,13 +81414,13 @@ int wid_dbus_trap_wtp_divorce_networwok(unsigned int wtpindex)
     
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->netid != NULL))
 	{
-	    netid = (char *)malloc(strlen(AC_WTP[wtpindex]->netid)+1);
+	    netid = (char *)WID_MALLOC(strlen(AC_WTP[wtpindex]->netid)+1);
 	    memset(netid,0,(strlen(AC_WTP[wtpindex]->netid)+1));
 		memcpy(netid,AC_WTP[wtpindex]->netid,strlen(AC_WTP[wtpindex]->netid));
 	}
 	else
 	{
-	    netid = (char *)malloc(sizeof(char)*12);
+	    netid = (char *)WID_MALLOC(sizeof(char)*12);
 	    memset(netid,0,12);
 		memcpy(netid,"defaultcode",11);
 	}
@@ -81399,9 +81451,9 @@ int wid_dbus_trap_wtp_divorce_networwok(unsigned int wtpindex)
 	wid_syslog_debug_debug(WID_DBUS,"wtp %d divorce network",wtpindex);
 	
 	dbus_message_unref(query);
-	CW_FREE_OBJECT(sn);
-	CW_FREE_OBJECT(mac);
-	CW_FREE_OBJECT(netid);
+	CW_FREE_OBJECT_WID(sn);
+	CW_FREE_OBJECT_WID(mac);
+	CW_FREE_OBJECT_WID(netid);
 	return 0;
 
 }
@@ -81417,7 +81469,7 @@ int wid_dbus_trap_wtp_channel_device_interference(int wtpindex,char chchannel,un
 
 	/*store sn&mac of ap*/
 	unsigned char *wtpmac = NULL;
-	wtpmac = (unsigned char *)malloc(MAC_LEN+1);
+	wtpmac = (unsigned char *)WID_MALLOC(MAC_LEN+1);
 	memset(wtpmac,0,MAC_LEN+1);
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->WTPMAC != NULL))
 	{
@@ -81425,7 +81477,7 @@ int wid_dbus_trap_wtp_channel_device_interference(int wtpindex,char chchannel,un
 	}
 
 	char *sn = NULL;
-	sn = (char *)malloc(NAS_IDENTIFIER_NAME);
+	sn = (char *)WID_MALLOC(NAS_IDENTIFIER_NAME);
 	memset(sn,0,NAS_IDENTIFIER_NAME);
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->WTPSN != NULL))
 	{
@@ -81436,13 +81488,13 @@ int wid_dbus_trap_wtp_channel_device_interference(int wtpindex,char chchannel,un
     
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->netid != NULL))
 	{
-	    netid = (char *)malloc(strlen(AC_WTP[wtpindex]->netid)+1);
+	    netid = (char *)WID_MALLOC(strlen(AC_WTP[wtpindex]->netid)+1);
 	    memset(netid,0,(strlen(AC_WTP[wtpindex]->netid)+1));
 		memcpy(netid,AC_WTP[wtpindex]->netid,strlen(AC_WTP[wtpindex]->netid));
 	}
 	else
 	{
-	    netid = (char *)malloc(sizeof(char)*12);
+	    netid = (char *)WID_MALLOC(sizeof(char)*12);
 	    memset(netid,0,12);
 		memcpy(netid,"defaultcode",11);
 	}
@@ -81478,9 +81530,9 @@ int wid_dbus_trap_wtp_channel_device_interference(int wtpindex,char chchannel,un
 	dbus_connection_send(wid_dbus_connection_t[TID],query,NULL);
 	wid_syslog_debug_debug(WID_DBUS,"wtp %d channel %d device interference",wtpindex,chchannel);
 	dbus_message_unref(query);
-	CW_FREE_OBJECT(sn);
-	CW_FREE_OBJECT(wtpmac);
-	CW_FREE_OBJECT(netid);
+	CW_FREE_OBJECT_WID(sn);
+	CW_FREE_OBJECT_WID(wtpmac);
+	CW_FREE_OBJECT_WID(netid);
 	return 0;
 
 }
@@ -81493,7 +81545,7 @@ int wid_dbus_trap_wtp_channel_ap_interference(int wtpindex,char chchannel,unsign
 
 	/*store sn&mac of ap*/
 	unsigned char *wtpmac = NULL;
-	wtpmac = (unsigned char *)malloc(MAC_LEN+1);
+	wtpmac = (unsigned char *)WID_MALLOC(MAC_LEN+1);
 	memset(wtpmac,0,MAC_LEN+1);
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->WTPMAC != NULL))
 	{
@@ -81501,7 +81553,7 @@ int wid_dbus_trap_wtp_channel_ap_interference(int wtpindex,char chchannel,unsign
 	}
 
 	char *sn = NULL;
-	sn = (char *)malloc(NAS_IDENTIFIER_NAME);
+	sn = (char *)WID_MALLOC(NAS_IDENTIFIER_NAME);
 	memset(sn,0,NAS_IDENTIFIER_NAME);
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->WTPSN != NULL))
 	{
@@ -81512,13 +81564,13 @@ int wid_dbus_trap_wtp_channel_ap_interference(int wtpindex,char chchannel,unsign
     
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->netid != NULL))
 	{
-	    netid = (char *)malloc(strlen(AC_WTP[wtpindex]->netid)+1);
+	    netid = (char *)WID_MALLOC(strlen(AC_WTP[wtpindex]->netid)+1);
 	    memset(netid,0,(strlen(AC_WTP[wtpindex]->netid)+1));
 		memcpy(netid,AC_WTP[wtpindex]->netid,strlen(AC_WTP[wtpindex]->netid));
 	}
 	else
 	{
-	    netid = (char *)malloc(sizeof(char)*12);
+	    netid = (char *)WID_MALLOC(sizeof(char)*12);
 	    memset(netid,0,12);
 		memcpy(netid,"defaultcode",11);
 	}
@@ -81556,9 +81608,9 @@ int wid_dbus_trap_wtp_channel_ap_interference(int wtpindex,char chchannel,unsign
 	wid_syslog_debug_debug(WID_DBUS,"wtp %d channel %d ap interference",wtpindex,chchannel);
 	
 	dbus_message_unref(query);
-	CW_FREE_OBJECT(sn);
-	CW_FREE_OBJECT(wtpmac);
-	CW_FREE_OBJECT(netid);
+	CW_FREE_OBJECT_WID(sn);
+	CW_FREE_OBJECT_WID(wtpmac);
+	CW_FREE_OBJECT_WID(netid);
 	return 0;
 
 }
@@ -81574,7 +81626,7 @@ int wid_dbus_trap_wtp_neighbor_channel_ap_interference(int wtpindex,char chchann
 
 	/*store sn&mac of ap*/
 	unsigned char *wtpmac = NULL;
-	wtpmac = (unsigned char *)malloc(MAC_LEN+1);
+	wtpmac = (unsigned char *)WID_MALLOC(MAC_LEN+1);
 	memset(wtpmac,0,MAC_LEN+1);
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->WTPMAC != NULL))
 	{
@@ -81582,7 +81634,7 @@ int wid_dbus_trap_wtp_neighbor_channel_ap_interference(int wtpindex,char chchann
 	}
 
 	char *sn = NULL;
-	sn = (char *)malloc(NAS_IDENTIFIER_NAME);
+	sn = (char *)WID_MALLOC(NAS_IDENTIFIER_NAME);
 	memset(sn,0,NAS_IDENTIFIER_NAME);
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->WTPSN != NULL))
 	{
@@ -81593,13 +81645,13 @@ int wid_dbus_trap_wtp_neighbor_channel_ap_interference(int wtpindex,char chchann
     
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->netid != NULL))
 	{
-	    netid = (char *)malloc(strlen(AC_WTP[wtpindex]->netid)+1);
+	    netid = (char *)WID_MALLOC(strlen(AC_WTP[wtpindex]->netid)+1);
 	    memset(netid,0,(strlen(AC_WTP[wtpindex]->netid)+1));
 		memcpy(netid,AC_WTP[wtpindex]->netid,strlen(AC_WTP[wtpindex]->netid));
 	}
 	else
 	{
-	    netid = (char *)malloc(sizeof(char)*12);
+	    netid = (char *)WID_MALLOC(sizeof(char)*12);
 	    memset(netid,0,12);
 		memcpy(netid,"defaultcode",11);
 	}
@@ -81639,9 +81691,9 @@ int wid_dbus_trap_wtp_neighbor_channel_ap_interference(int wtpindex,char chchann
 	wid_syslog_debug_debug(WID_DBUS,"wtp %d channel %d ap interference",wtpindex,chchannel);
 	
 	dbus_message_unref(query);
-	CW_FREE_OBJECT(sn);
-	CW_FREE_OBJECT(wtpmac);
-	CW_FREE_OBJECT(netid);
+	CW_FREE_OBJECT_WID(sn);
+	CW_FREE_OBJECT_WID(wtpmac);
+	CW_FREE_OBJECT_WID(netid);
 	//CW_FREE_OBJECT(netid);
 	return 0;
 
@@ -81656,7 +81708,7 @@ int wid_dbus_trap_wtp_channel_terminal_interference(int wtpindex,unsigned char r
 
 	/*store sn&mac of ap*/
 	unsigned char *wtpmac = NULL;
-	wtpmac = (unsigned char *)malloc(MAC_LEN+1);
+	wtpmac = (unsigned char *)WID_MALLOC(MAC_LEN+1);
 	memset(wtpmac,0,MAC_LEN+1);
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->WTPMAC != NULL))
 	{
@@ -81664,7 +81716,7 @@ int wid_dbus_trap_wtp_channel_terminal_interference(int wtpindex,unsigned char r
 	}
 
 	char *sn = NULL;
-	sn = (char *)malloc(NAS_IDENTIFIER_NAME);
+	sn = (char *)WID_MALLOC(NAS_IDENTIFIER_NAME);
 	memset(sn,0,NAS_IDENTIFIER_NAME);
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->WTPSN != NULL))
 	{
@@ -81675,13 +81727,13 @@ int wid_dbus_trap_wtp_channel_terminal_interference(int wtpindex,unsigned char r
     
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->netid != NULL))
 	{
-	    netid = (char *)malloc(strlen(AC_WTP[wtpindex]->netid)+1);
+	    netid = (char *)WID_MALLOC(strlen(AC_WTP[wtpindex]->netid)+1);
 	    memset(netid,0,(strlen(AC_WTP[wtpindex]->netid)+1));
 		memcpy(netid,AC_WTP[wtpindex]->netid,strlen(AC_WTP[wtpindex]->netid));
 	}
 	else
 	{
-	    netid = (char *)malloc(sizeof(char)*12);
+	    netid = (char *)WID_MALLOC(sizeof(char)*12);
 	    memset(netid,0,12);
 		memcpy(netid,"defaultcode",11);
 	}
@@ -81720,9 +81772,9 @@ int wid_dbus_trap_wtp_channel_terminal_interference(int wtpindex,unsigned char r
 	wid_syslog_debug_debug(WID_DBUS,"wtp %d channel %d terminal interference",wtpindex,chchannel);
 	
 	dbus_message_unref(query);
-	CW_FREE_OBJECT(sn);
-	CW_FREE_OBJECT(wtpmac);
-	CW_FREE_OBJECT(netid);
+	CW_FREE_OBJECT_WID(sn);
+	CW_FREE_OBJECT_WID(wtpmac);
+	CW_FREE_OBJECT_WID(netid);
 	return 0;
 
 }
@@ -81735,7 +81787,7 @@ int wid_dbus_trap_wtp_channel_count_minor(int wtpindex)
 	wid_syslog_debug_debug(WID_DBUS,"wid_dbus_trap_wtp_channel_count_minor tid %d\n",TID);
 	/*store sn&mac of ap*/
 	unsigned char *mac = NULL;
-	mac = (unsigned char *)malloc(MAC_LEN+1);
+	mac = (unsigned char *)WID_MALLOC(MAC_LEN+1);
 	memset(mac,0,MAC_LEN+1);
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->WTPMAC != NULL))
 	{
@@ -81743,7 +81795,7 @@ int wid_dbus_trap_wtp_channel_count_minor(int wtpindex)
 	}
 
 	char *sn = NULL;
-	sn = (char *)malloc(NAS_IDENTIFIER_NAME);
+	sn = (char *)WID_MALLOC(NAS_IDENTIFIER_NAME);
 	memset(sn,0,NAS_IDENTIFIER_NAME);
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->WTPSN != NULL))
 	{
@@ -81754,13 +81806,13 @@ int wid_dbus_trap_wtp_channel_count_minor(int wtpindex)
     
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->netid != NULL))
 	{
-	    netid = (char *)malloc(strlen(AC_WTP[wtpindex]->netid)+1);
+	    netid = (char *)WID_MALLOC(strlen(AC_WTP[wtpindex]->netid)+1);
 	    memset(netid,0,(strlen(AC_WTP[wtpindex]->netid)+1));
 		memcpy(netid,AC_WTP[wtpindex]->netid,strlen(AC_WTP[wtpindex]->netid));
 	}
 	else
 	{
-	    netid = (char *)malloc(sizeof(char)*12);
+	    netid = (char *)WID_MALLOC(sizeof(char)*12);
 	    memset(netid,0,12);
 		memcpy(netid,"defaultcode",11);
 	}
@@ -81791,9 +81843,9 @@ int wid_dbus_trap_wtp_channel_count_minor(int wtpindex)
 	wid_syslog_debug_debug(WID_DBUS,"wtp %d channel count minor",wtpindex);
 	
 	dbus_message_unref(query);
-	CW_FREE_OBJECT(sn);
-	CW_FREE_OBJECT(mac);
-	CW_FREE_OBJECT(netid);
+	CW_FREE_OBJECT_WID(sn);
+	CW_FREE_OBJECT_WID(mac);
+	CW_FREE_OBJECT_WID(netid);
 	return 0;
 
 }
@@ -81807,7 +81859,7 @@ int wid_dbus_trap_wtp_ap_flash_write_failed(unsigned int wtpindex)
 
 	/*store sn&mac of ap*/
 	unsigned char *mac = NULL;
-	mac = (unsigned char *)malloc(MAC_LEN+1);
+	mac = (unsigned char *)WID_MALLOC(MAC_LEN+1);
 	memset(mac,0,MAC_LEN+1);
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->WTPMAC != NULL))
 	{
@@ -81815,7 +81867,7 @@ int wid_dbus_trap_wtp_ap_flash_write_failed(unsigned int wtpindex)
 	}
 
 	char *sn = NULL;
-	sn = (char *)malloc(NAS_IDENTIFIER_NAME);
+	sn = (char *)WID_MALLOC(NAS_IDENTIFIER_NAME);
 	memset(sn,0,NAS_IDENTIFIER_NAME);
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->WTPSN != NULL))
 	{
@@ -81826,13 +81878,13 @@ int wid_dbus_trap_wtp_ap_flash_write_failed(unsigned int wtpindex)
     
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->netid != NULL))
 	{
-	    netid = (char *)malloc(strlen(AC_WTP[wtpindex]->netid)+1);
+	    netid = (char *)WID_MALLOC(strlen(AC_WTP[wtpindex]->netid)+1);
 	    memset(netid,0,(strlen(AC_WTP[wtpindex]->netid)+1));
 		memcpy(netid,AC_WTP[wtpindex]->netid,strlen(AC_WTP[wtpindex]->netid));
 	}
 	else
 	{
-	    netid = (char *)malloc(sizeof(char)*12);
+	    netid = (char *)WID_MALLOC(sizeof(char)*12);
 	    memset(netid,0,12);
 		memcpy(netid,"defaultcode",11);
 	}
@@ -81863,9 +81915,9 @@ int wid_dbus_trap_wtp_ap_flash_write_failed(unsigned int wtpindex)
 	wid_syslog_debug_debug(WID_DBUS,"wtp %d flash write fail",wtpindex);
 	
 	dbus_message_unref(query);
-	CW_FREE_OBJECT(sn);
-	CW_FREE_OBJECT(mac);
-	CW_FREE_OBJECT(netid);
+	CW_FREE_OBJECT_WID(sn);
+	CW_FREE_OBJECT_WID(mac);
+	CW_FREE_OBJECT_WID(netid);
 	return 0;
 
 }
@@ -81879,7 +81931,7 @@ int wid_dbus_trap_wtp_ac_discovery_danger_ap(unsigned int wtpindex,struct Neighb
 
 	/*store sn&mac of ap*/
 	unsigned char *mac = NULL;
-	mac = (unsigned char *)malloc(MAC_LEN+1);
+	mac = (unsigned char *)WID_MALLOC(MAC_LEN+1);
 	memset(mac,0,MAC_LEN+1);
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->WTPMAC != NULL))
 	{
@@ -81887,7 +81939,7 @@ int wid_dbus_trap_wtp_ac_discovery_danger_ap(unsigned int wtpindex,struct Neighb
 	}
 
 	char *sn = NULL;
-	sn = (char *)malloc(NAS_IDENTIFIER_NAME);
+	sn = (char *)WID_MALLOC(NAS_IDENTIFIER_NAME);
 	memset(sn,0,NAS_IDENTIFIER_NAME);
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->WTPSN != NULL))
 	{
@@ -81898,13 +81950,13 @@ int wid_dbus_trap_wtp_ac_discovery_danger_ap(unsigned int wtpindex,struct Neighb
     
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->netid != NULL))
 	{
-	    netid = (char *)malloc(strlen(AC_WTP[wtpindex]->netid)+1);
+	    netid = (char *)WID_MALLOC(strlen(AC_WTP[wtpindex]->netid)+1);
 	    memset(netid,0,(strlen(AC_WTP[wtpindex]->netid)+1));
 		memcpy(netid,AC_WTP[wtpindex]->netid,strlen(AC_WTP[wtpindex]->netid));
 	}
 	else
 	{
-	    netid = (char *)malloc(sizeof(char)*12);
+	    netid = (char *)WID_MALLOC(sizeof(char)*12);
 	    memset(netid,0,12);
 		memcpy(netid,"defaultcode",11);
 	}
@@ -81912,13 +81964,13 @@ int wid_dbus_trap_wtp_ac_discovery_danger_ap(unsigned int wtpindex,struct Neighb
 	char *essid = NULL;
 	if((p_rssi != NULL)&&(p_rssi->ESSID != NULL))
 	{
-		essid = (char *)malloc(strlen((char*)(p_rssi->ESSID))+1);
+		essid = (char *)WID_MALLOC(strlen((char*)(p_rssi->ESSID))+1);
 		memset(essid,0,(strlen((char*)p_rssi->ESSID)+1));
 		memcpy(essid,p_rssi->ESSID,strlen((char*)p_rssi->ESSID));
 	}
 	else
 	{
-		essid = (char *)malloc(sizeof(char)*5);
+		essid = (char *)WID_MALLOC(sizeof(char)*5);
 		memset(essid,0,5);
 		memcpy(essid,"none",4);		
 	}
@@ -81960,10 +82012,10 @@ int wid_dbus_trap_wtp_ac_discovery_danger_ap(unsigned int wtpindex,struct Neighb
 	wid_syslog_debug_debug(WID_DBUS,"wtp %d discovery danger ap",wtpindex);
 	
 	dbus_message_unref(query);
-	CW_FREE_OBJECT(sn);
-	CW_FREE_OBJECT(mac);
-	CW_FREE_OBJECT(netid);
-	CW_FREE_OBJECT(essid);     //fengwenchao add 20110511
+	CW_FREE_OBJECT_WID(sn);
+	CW_FREE_OBJECT_WID(mac);
+	CW_FREE_OBJECT_WID(netid);
+	CW_FREE_OBJECT_WID(essid);     //fengwenchao add 20110511
 	return 0;
 
 }
@@ -81977,7 +82029,7 @@ int wid_dbus_trap_wtp_ac_discovery_cover_hole(unsigned int wtpindex)
 
 	/*store sn&mac of ap*/
 	unsigned char *mac = NULL;
-	mac = (unsigned char *)malloc(MAC_LEN+1);
+	mac = (unsigned char *)WID_MALLOC(MAC_LEN+1);
 	memset(mac,0,MAC_LEN+1);
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->WTPMAC != NULL))
 	{
@@ -81985,7 +82037,7 @@ int wid_dbus_trap_wtp_ac_discovery_cover_hole(unsigned int wtpindex)
 	}
 
 	char *sn = NULL;
-	sn = (char *)malloc(NAS_IDENTIFIER_NAME);
+	sn = (char *)WID_MALLOC(NAS_IDENTIFIER_NAME);
 	memset(sn,0,NAS_IDENTIFIER_NAME);
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->WTPSN != NULL))
 	{
@@ -81996,13 +82048,13 @@ int wid_dbus_trap_wtp_ac_discovery_cover_hole(unsigned int wtpindex)
     
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->netid != NULL))
 	{
-	    netid = (char *)malloc(strlen(AC_WTP[wtpindex]->netid)+1);
+	    netid = (char *)WID_MALLOC(strlen(AC_WTP[wtpindex]->netid)+1);
 	    memset(netid,0,(strlen(AC_WTP[wtpindex]->netid)+1));
 		memcpy(netid,AC_WTP[wtpindex]->netid,strlen(AC_WTP[wtpindex]->netid));
 	}
 	else
 	{
-	    netid = (char *)malloc(sizeof(char)*12);
+	    netid = (char *)WID_MALLOC(sizeof(char)*12);
 	    memset(netid,0,12);
 		memcpy(netid,"defaultcode",11);
 	}
@@ -82033,9 +82085,9 @@ int wid_dbus_trap_wtp_ac_discovery_cover_hole(unsigned int wtpindex)
 	wid_syslog_debug_debug(WID_DBUS,"wtp %d discovery cover hole",wtpindex);
 	
 	dbus_message_unref(query);
-	CW_FREE_OBJECT(sn);
-	CW_FREE_OBJECT(mac);
-	CW_FREE_OBJECT(netid);
+	CW_FREE_OBJECT_WID(sn);
+	CW_FREE_OBJECT_WID(mac);
+	CW_FREE_OBJECT_WID(netid);
 	return 0;
 
 }
@@ -82048,7 +82100,7 @@ int wid_dbus_trap_ap_cpu_threshold(unsigned int wtpindex,unsigned char flag)
 
 	/*store sn&mac of ap*/
 	unsigned char *mac = NULL;
-	mac = (unsigned char *)malloc(MAC_LEN+1);
+	mac = (unsigned char *)WID_MALLOC(MAC_LEN+1);
 	memset(mac,0,MAC_LEN+1);
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->WTPMAC != NULL))
 	{
@@ -82056,7 +82108,7 @@ int wid_dbus_trap_ap_cpu_threshold(unsigned int wtpindex,unsigned char flag)
 	}
 
 	char *sn = NULL;
-	sn = (char *)malloc(NAS_IDENTIFIER_NAME);
+	sn = (char *)WID_MALLOC(NAS_IDENTIFIER_NAME);
 	memset(sn,0,NAS_IDENTIFIER_NAME);
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->WTPSN != NULL))
 	{
@@ -82074,13 +82126,13 @@ int wid_dbus_trap_ap_cpu_threshold(unsigned int wtpindex,unsigned char flag)
     
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->netid != NULL))
 	{
-	    netid = (char *)malloc(strlen(AC_WTP[wtpindex]->netid)+1);
+	    netid = (char *)WID_MALLOC(strlen(AC_WTP[wtpindex]->netid)+1);
 	    memset(netid,0,(strlen(AC_WTP[wtpindex]->netid)+1));
 		memcpy(netid,AC_WTP[wtpindex]->netid,strlen(AC_WTP[wtpindex]->netid));
 	}
 	else
 	{
-	    netid = (char *)malloc(sizeof(char)*12);
+	    netid = (char *)WID_MALLOC(sizeof(char)*12);
 	    memset(netid,0,12);
 		memcpy(netid,"defaultcode",11);
 	}
@@ -82113,9 +82165,9 @@ int wid_dbus_trap_ap_cpu_threshold(unsigned int wtpindex,unsigned char flag)
 //	wid_syslog_debug_debug("wtp %d cpu threshold cpu %d cpu threshold %d flag %d",wtpindex,AC_WTP[wtpindex]->wifi_extension_info.cpu,g_ap_cpu_threshold,flag);
 	
 	dbus_message_unref(query);
-	CW_FREE_OBJECT(sn);
-	CW_FREE_OBJECT(mac);
-	CW_FREE_OBJECT(netid);
+	CW_FREE_OBJECT_WID(sn);
+	CW_FREE_OBJECT_WID(mac);
+	CW_FREE_OBJECT_WID(netid);
 	return 0;
 
 }
@@ -82128,7 +82180,7 @@ int wid_dbus_trap_ap_mem_threshold(unsigned int wtpindex,unsigned char flag)
 
 	/*store sn&mac of ap*/
 	unsigned char *mac = NULL;
-	mac = (unsigned char *)malloc(MAC_LEN+1);
+	mac = (unsigned char *)WID_MALLOC(MAC_LEN+1);
 	memset(mac,0,MAC_LEN+1);
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->WTPMAC != NULL))
 	{
@@ -82136,7 +82188,7 @@ int wid_dbus_trap_ap_mem_threshold(unsigned int wtpindex,unsigned char flag)
 	}
 
 	char *sn = NULL;
-	sn = (char *)malloc(NAS_IDENTIFIER_NAME);
+	sn = (char *)WID_MALLOC(NAS_IDENTIFIER_NAME);
 	memset(sn,0,NAS_IDENTIFIER_NAME);
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->WTPSN != NULL))
 	{
@@ -82154,13 +82206,13 @@ int wid_dbus_trap_ap_mem_threshold(unsigned int wtpindex,unsigned char flag)
     
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->netid != NULL))
 	{
-	    netid = (char *)malloc(strlen(AC_WTP[wtpindex]->netid)+1);
+	    netid = (char *)WID_MALLOC(strlen(AC_WTP[wtpindex]->netid)+1);
 	    memset(netid,0,(strlen(AC_WTP[wtpindex]->netid)+1));
 		memcpy(netid,AC_WTP[wtpindex]->netid,strlen(AC_WTP[wtpindex]->netid));
 	}
 	else
 	{
-	    netid = (char *)malloc(sizeof(char)*12);
+	    netid = (char *)WID_MALLOC(sizeof(char)*12);
 	    memset(netid,0,12);
 		memcpy(netid,"defaultcode",11);
 	}
@@ -82193,9 +82245,9 @@ int wid_dbus_trap_ap_mem_threshold(unsigned int wtpindex,unsigned char flag)
 	//wid_syslog_debug_debug("wtp %d mem threshold mem %d mem threshold %d flag %d",wtpindex,AC_WTP[wtpindex]->wifi_extension_info.memoryuse,g_ap_memuse_threshold,flag);
 	
 	dbus_message_unref(query);
-	CW_FREE_OBJECT(sn);
-	CW_FREE_OBJECT(mac);
-	CW_FREE_OBJECT(netid);
+	CW_FREE_OBJECT_WID(sn);
+	CW_FREE_OBJECT_WID(mac);
+	CW_FREE_OBJECT_WID(netid);
 	return 0;
 
 }
@@ -82209,7 +82261,7 @@ int wid_dbus_trap_ap_temp_threshold(unsigned int wtpindex,unsigned char flag)
 
 	/*store sn&mac of ap*/
 	unsigned char *mac = NULL;
-	mac = (unsigned char *)malloc(MAC_LEN+1);
+	mac = (unsigned char *)WID_MALLOC(MAC_LEN+1);
 	memset(mac,0,MAC_LEN+1);
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->WTPMAC != NULL))
 	{
@@ -82217,7 +82269,7 @@ int wid_dbus_trap_ap_temp_threshold(unsigned int wtpindex,unsigned char flag)
 	}
 
 	char *sn = NULL;
-	sn = (char *)malloc(NAS_IDENTIFIER_NAME);
+	sn = (char *)WID_MALLOC(NAS_IDENTIFIER_NAME);
 	memset(sn,0,NAS_IDENTIFIER_NAME);
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->WTPSN != NULL))
 	{
@@ -82236,13 +82288,13 @@ int wid_dbus_trap_ap_temp_threshold(unsigned int wtpindex,unsigned char flag)
     
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->netid != NULL))
 	{
-	    netid = (char *)malloc(strlen(AC_WTP[wtpindex]->netid)+1);
+	    netid = (char *)WID_MALLOC(strlen(AC_WTP[wtpindex]->netid)+1);
 	    memset(netid,0,(strlen(AC_WTP[wtpindex]->netid)+1));
 		memcpy(netid,AC_WTP[wtpindex]->netid,strlen(AC_WTP[wtpindex]->netid));
 	}
 	else
 	{
-	    netid = (char *)malloc(sizeof(char)*12);
+	    netid = (char *)WID_MALLOC(sizeof(char)*12);
 	    memset(netid,0,12);
 		memcpy(netid,"defaultcode",11);
 	}
@@ -82275,9 +82327,9 @@ int wid_dbus_trap_ap_temp_threshold(unsigned int wtpindex,unsigned char flag)
 	//wid_syslog_debug_debug("wtp %d  temp %d temp threshold %d flag %d",wtpindex,AC_WTP[wtpindex]->wifi_extension_info.temperature,g_ap_temp_threshold,flag);
 	
 	dbus_message_unref(query);
-	CW_FREE_OBJECT(sn);
-	CW_FREE_OBJECT(mac);
-	CW_FREE_OBJECT(netid);
+	CW_FREE_OBJECT_WID(sn);
+	CW_FREE_OBJECT_WID(mac);
+	CW_FREE_OBJECT_WID(netid);
 	return 0;
 
 }
@@ -82291,7 +82343,7 @@ int wid_dbus_trap_ap_rogue_threshold(unsigned int wtpindex,unsigned int count,un
 
 	/*store sn&mac of ap*/
 	unsigned char *mac = NULL;
-	mac = (unsigned char *)malloc(MAC_LEN+1);
+	mac = (unsigned char *)WID_MALLOC(MAC_LEN+1);
 	memset(mac,0,MAC_LEN+1);
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->WTPMAC != NULL))
 	{
@@ -82301,7 +82353,7 @@ int wid_dbus_trap_ap_rogue_threshold(unsigned int wtpindex,unsigned int count,un
 	unsigned int vrrp_id = vrrid;
 
 	char *sn = NULL;
-	sn = (char *)malloc(NAS_IDENTIFIER_NAME);
+	sn = (char *)WID_MALLOC(NAS_IDENTIFIER_NAME);
 	memset(sn,0,NAS_IDENTIFIER_NAME);
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->WTPSN != NULL))
 	{
@@ -82338,8 +82390,8 @@ int wid_dbus_trap_ap_rogue_threshold(unsigned int wtpindex,unsigned int count,un
 	//wid_syslog_debug_debug("wtp %d  temp %d temp threshold %d flag %d",wtpindex,AC_WTP[wtpindex]->wifi_extension_info.temperature,g_ap_temp_threshold,flag);
 	
 	dbus_message_unref(query);
-	CW_FREE_OBJECT(sn);
-	CW_FREE_OBJECT(mac);
+	CW_FREE_OBJECT_WID(sn);
+	CW_FREE_OBJECT_WID(mac);
 	//printf("here is end of wid_dbus_trap_ap_rogue_threshold\n");
 	return 0;
 
@@ -82354,7 +82406,7 @@ int wid_dbus_trap_ap_wifi_if_error(unsigned int wtpindex,unsigned char ifindex,u
 
 	/*store sn&mac of ap*/
 	unsigned char *mac = NULL;
-	mac = (unsigned char *)malloc(MAC_LEN+1);
+	mac = (unsigned char *)WID_MALLOC(MAC_LEN+1);
 	memset(mac,0,MAC_LEN+1);
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->WTPMAC != NULL))
 	{
@@ -82362,7 +82414,7 @@ int wid_dbus_trap_ap_wifi_if_error(unsigned int wtpindex,unsigned char ifindex,u
 	}
 
 	char *sn = NULL;
-	sn = (char *)malloc(NAS_IDENTIFIER_NAME);
+	sn = (char *)WID_MALLOC(NAS_IDENTIFIER_NAME);
 	memset(sn,0,NAS_IDENTIFIER_NAME);
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->WTPSN != NULL))
 	{
@@ -82379,13 +82431,13 @@ int wid_dbus_trap_ap_wifi_if_error(unsigned int wtpindex,unsigned char ifindex,u
     
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->netid != NULL))
 	{
-	    netid = (char *)malloc(strlen(AC_WTP[wtpindex]->netid)+1);
+	    netid = (char *)WID_MALLOC(strlen(AC_WTP[wtpindex]->netid)+1);
 	    memset(netid,0,(strlen(AC_WTP[wtpindex]->netid)+1));
 		memcpy(netid,AC_WTP[wtpindex]->netid,strlen(AC_WTP[wtpindex]->netid));
 	}
 	else
 	{
-	    netid = (char *)malloc(sizeof(char)*12);
+	    netid = (char *)WID_MALLOC(sizeof(char)*12);
 	    memset(netid,0,12);
 		memcpy(netid,"defaultcode",11);
 	}
@@ -82418,9 +82470,9 @@ int wid_dbus_trap_ap_wifi_if_error(unsigned int wtpindex,unsigned char ifindex,u
 	//wid_syslog_debug_debug("wtp %d  wifi %d wifi state %d flag %d",wtpindex,ifindex,AC_WTP[wtpindex]->wifi_extension_info.wifi_state[ifindex],flag);
 	
 	dbus_message_unref(query);
-	CW_FREE_OBJECT(sn);
-	CW_FREE_OBJECT(mac);
-	CW_FREE_OBJECT(netid);
+	CW_FREE_OBJECT_WID(sn);
+	CW_FREE_OBJECT_WID(mac);
+	CW_FREE_OBJECT_WID(netid);
 	return 0;
 
 }
@@ -82433,7 +82485,7 @@ int wid_dbus_trap_ap_ath_error(unsigned int wtpindex,unsigned char radioid,unsig
 
 	/*store sn&mac of ap*/
 	unsigned char *mac = NULL;
-	mac = (unsigned char *)malloc(MAC_LEN+1);
+	mac = (unsigned char *)WID_MALLOC(MAC_LEN+1);
 	memset(mac,0,MAC_LEN+1);
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->WTPMAC != NULL))
 	{
@@ -82441,7 +82493,7 @@ int wid_dbus_trap_ap_ath_error(unsigned int wtpindex,unsigned char radioid,unsig
 	}
 
 	char *sn = NULL;
-	sn = (char *)malloc(NAS_IDENTIFIER_NAME);
+	sn = (char *)WID_MALLOC(NAS_IDENTIFIER_NAME);
 	memset(sn,0,NAS_IDENTIFIER_NAME);
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->WTPSN != NULL))
 	{
@@ -82452,13 +82504,13 @@ int wid_dbus_trap_ap_ath_error(unsigned int wtpindex,unsigned char radioid,unsig
     
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->netid != NULL))
 	{
-	    netid = (char *)malloc(strlen(AC_WTP[wtpindex]->netid)+1);
+	    netid = (char *)WID_MALLOC(strlen(AC_WTP[wtpindex]->netid)+1);
 	    memset(netid,0,(strlen(AC_WTP[wtpindex]->netid)+1));
 		memcpy(netid,AC_WTP[wtpindex]->netid,strlen(AC_WTP[wtpindex]->netid));
 	}
 	else
 	{
-	    netid = (char *)malloc(sizeof(char)*12);
+	    netid = (char *)WID_MALLOC(sizeof(char)*12);
 	    memset(netid,0,12);
 		memcpy(netid,"defaultcode",11);
 	}
@@ -82492,9 +82544,9 @@ int wid_dbus_trap_ap_ath_error(unsigned int wtpindex,unsigned char radioid,unsig
 	wid_syslog_debug_debug(WID_DBUS,"wtp %d  radioid %d wlanid %d type %d flag %d",wtpindex,radioid,wlanid,type,flag);
 	
 	dbus_message_unref(query);
-	CW_FREE_OBJECT(sn);
-	CW_FREE_OBJECT(mac);
-	CW_FREE_OBJECT(netid);
+	CW_FREE_OBJECT_WID(sn);
+	CW_FREE_OBJECT_WID(mac);
+	CW_FREE_OBJECT_WID(netid);
 	return 0;
 
 }
@@ -82507,7 +82559,7 @@ int wid_dbus_trap_ap_rrm_state_change(unsigned int wtpindex,unsigned char state)
 
 	/*store sn&mac of ap*/
 	unsigned char *mac = NULL;
-	mac = (unsigned char *)malloc(MAC_LEN+1);
+	mac = (unsigned char *)WID_MALLOC(MAC_LEN+1);
 	memset(mac,0,MAC_LEN+1);
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->WTPMAC != NULL))
 	{
@@ -82515,7 +82567,7 @@ int wid_dbus_trap_ap_rrm_state_change(unsigned int wtpindex,unsigned char state)
 	}
 
 	char *sn = NULL;
-	sn = (char *)malloc(NAS_IDENTIFIER_NAME);
+	sn = (char *)WID_MALLOC(NAS_IDENTIFIER_NAME);
 	memset(sn,0,NAS_IDENTIFIER_NAME);
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->WTPSN != NULL))
 	{
@@ -82526,13 +82578,13 @@ int wid_dbus_trap_ap_rrm_state_change(unsigned int wtpindex,unsigned char state)
     
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->netid != NULL))
 	{
-	    netid = (char *)malloc(strlen(AC_WTP[wtpindex]->netid)+1);
+	    netid = (char *)WID_MALLOC(strlen(AC_WTP[wtpindex]->netid)+1);
 	    memset(netid,0,(strlen(AC_WTP[wtpindex]->netid)+1));
 		memcpy(netid,AC_WTP[wtpindex]->netid,strlen(AC_WTP[wtpindex]->netid));
 	}
 	else
 	{
-	    netid = (char *)malloc(sizeof(char)*12);
+	    netid = (char *)WID_MALLOC(sizeof(char)*12);
 	    memset(netid,0,12);
 		memcpy(netid,"defaultcode",11);
 	}
@@ -82563,9 +82615,9 @@ int wid_dbus_trap_ap_rrm_state_change(unsigned int wtpindex,unsigned char state)
 	wid_syslog_debug_debug(WID_DBUS,"wtp %d  wid_dbus_trap_ap_rrm_state_change state %d 0-disable /1-enable\n",wtpindex,state);
 	
 	dbus_message_unref(query);
-	CW_FREE_OBJECT(sn);
-	CW_FREE_OBJECT(mac);
-	CW_FREE_OBJECT(netid);
+	CW_FREE_OBJECT_WID(sn);
+	CW_FREE_OBJECT_WID(mac);
+	CW_FREE_OBJECT_WID(netid);
 	return 0;
 
 }
@@ -82578,7 +82630,7 @@ int wid_dbus_trap_ap_run_quit(unsigned int wtpindex,unsigned char state)
 
 	/*store sn&mac of ap*/
 	unsigned char *mac = NULL;
-	mac = (unsigned char *)malloc(MAC_LEN+1);
+	mac = (unsigned char *)WID_MALLOC(MAC_LEN+1);
 	memset(mac,0,MAC_LEN+1);
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->WTPMAC != NULL))
 	{
@@ -82586,7 +82638,7 @@ int wid_dbus_trap_ap_run_quit(unsigned int wtpindex,unsigned char state)
 	}
 
 	char *sn = NULL;
-	sn = (char *)malloc(NAS_IDENTIFIER_NAME);
+	sn = (char *)WID_MALLOC(NAS_IDENTIFIER_NAME);
 	memset(sn,0,NAS_IDENTIFIER_NAME);
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->WTPSN != NULL))
 	{
@@ -82597,13 +82649,13 @@ int wid_dbus_trap_ap_run_quit(unsigned int wtpindex,unsigned char state)
     
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->netid != NULL))
 	{
-	    netid = (char *)malloc(strlen(AC_WTP[wtpindex]->netid)+1);
+	    netid = (char *)WID_MALLOC(strlen(AC_WTP[wtpindex]->netid)+1);
 	    memset(netid,0,(strlen(AC_WTP[wtpindex]->netid)+1));
 		memcpy(netid,AC_WTP[wtpindex]->netid,strlen(AC_WTP[wtpindex]->netid));
 	}
 	else
 	{
-	    netid = (char *)malloc(sizeof(char)*12);
+	    netid = (char *)WID_MALLOC(sizeof(char)*12);
 	    memset(netid,0,12);
 		memcpy(netid,"defaultcode",11);
 	}
@@ -82634,9 +82686,9 @@ int wid_dbus_trap_ap_run_quit(unsigned int wtpindex,unsigned char state)
 	wid_syslog_debug_debug(WID_DBUS,"wtp %d  wid_dbus_trap_ap_run_quit state %d 0-quit /1-run\n",wtpindex,state);
 	
 	dbus_message_unref(query);
-	CW_FREE_OBJECT(sn);
-	CW_FREE_OBJECT(mac);
-	CW_FREE_OBJECT(netid);
+	CW_FREE_OBJECT_WID(sn);
+	CW_FREE_OBJECT_WID(mac);
+	CW_FREE_OBJECT_WID(netid);
 	return 0;
 
 }
@@ -83080,7 +83132,7 @@ int wid_dbus_trap_wtp_wireless_interface_down(unsigned int wtpindex)
 
 	/*store sn&mac of ap*/
 	unsigned char *mac = NULL;
-	mac = (unsigned char *)malloc(MAC_LEN+1);
+	mac = (unsigned char *)WID_MALLOC(MAC_LEN+1);
 	memset(mac,0,MAC_LEN+1);
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->WTPMAC != NULL))
 	{
@@ -83088,7 +83140,7 @@ int wid_dbus_trap_wtp_wireless_interface_down(unsigned int wtpindex)
 	}
 
 	char *sn = NULL;
-	sn = (char *)malloc(NAS_IDENTIFIER_NAME);
+	sn = (char *)WID_MALLOC(NAS_IDENTIFIER_NAME);
 	memset(sn,0,NAS_IDENTIFIER_NAME);
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->WTPSN != NULL))
 	{
@@ -83099,13 +83151,13 @@ int wid_dbus_trap_wtp_wireless_interface_down(unsigned int wtpindex)
     
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->netid != NULL))
 	{
-	    netid = (char *)malloc(strlen(AC_WTP[wtpindex]->netid)+1);
+	    netid = (char *)WID_MALLOC(strlen(AC_WTP[wtpindex]->netid)+1);
 	    memset(netid,0,(strlen(AC_WTP[wtpindex]->netid)+1));
 		memcpy(netid,AC_WTP[wtpindex]->netid,strlen(AC_WTP[wtpindex]->netid));
 	}
 	else
 	{
-	    netid = (char *)malloc(sizeof(char)*12);
+	    netid = (char *)WID_MALLOC(sizeof(char)*12);
 	    memset(netid,0,12);
 		memcpy(netid,"defaultcode",11);
 	}
@@ -83136,9 +83188,9 @@ int wid_dbus_trap_wtp_wireless_interface_down(unsigned int wtpindex)
 	wid_syslog_debug_debug(WID_DBUS,"wtp %d wireless interface down",wtpindex);
 	
 	dbus_message_unref(query);
-	CW_FREE_OBJECT(sn);
-	CW_FREE_OBJECT(mac);
-    CW_FREE_OBJECT(netid);
+	CW_FREE_OBJECT_WID(sn);
+	CW_FREE_OBJECT_WID(mac);
+    CW_FREE_OBJECT_WID(netid);
 	return 0;
 
 }
@@ -83152,7 +83204,7 @@ int wid_dbus_trap_wtp_wireless_interface_down_clear(unsigned int wtpindex)
 
 	/*store sn&mac of ap*/
 	unsigned char *mac = NULL;
-	mac = (unsigned char *)malloc(MAC_LEN+1);
+	mac = (unsigned char *)WID_MALLOC(MAC_LEN+1);
 	memset(mac,0,MAC_LEN+1);
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->WTPMAC != NULL))
 	{
@@ -83160,7 +83212,7 @@ int wid_dbus_trap_wtp_wireless_interface_down_clear(unsigned int wtpindex)
 	}
 
 	char *sn = NULL;
-	sn = (char *)malloc(NAS_IDENTIFIER_NAME);
+	sn = (char *)WID_MALLOC(NAS_IDENTIFIER_NAME);
 	memset(sn,0,NAS_IDENTIFIER_NAME);
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->WTPSN != NULL))
 	{
@@ -83171,13 +83223,13 @@ int wid_dbus_trap_wtp_wireless_interface_down_clear(unsigned int wtpindex)
     
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->netid != NULL))
 	{
-	    netid = (char *)malloc(strlen(AC_WTP[wtpindex]->netid)+1);
+	    netid = (char *)WID_MALLOC(strlen(AC_WTP[wtpindex]->netid)+1);
 	    memset(netid,0,(strlen(AC_WTP[wtpindex]->netid)+1));
 		memcpy(netid,AC_WTP[wtpindex]->netid,strlen(AC_WTP[wtpindex]->netid));
 	}
 	else
 	{
-	    netid = (char *)malloc(sizeof(char)*12);
+	    netid = (char *)WID_MALLOC(sizeof(char)*12);
 	    memset(netid,0,12);
 		memcpy(netid,"defaultcode",11);
 	}
@@ -83208,9 +83260,9 @@ int wid_dbus_trap_wtp_wireless_interface_down_clear(unsigned int wtpindex)
 	wid_syslog_debug_debug(WID_DEFAULT,"wtp %d wireless interface down clear",wtpindex);
 	
 	dbus_message_unref(query);
-	CW_FREE_OBJECT(sn);
-	CW_FREE_OBJECT(mac);
-	CW_FREE_OBJECT(netid);
+	CW_FREE_OBJECT_WID(sn);
+	CW_FREE_OBJECT_WID(mac);
+	CW_FREE_OBJECT_WID(netid);
 	return 0;
 
 }
@@ -83223,7 +83275,7 @@ int wid_dbus_trap_wtp_channel_device_interference_clear(int wtpindex,char chchan
 
 	/*store sn&mac of ap*/
 	unsigned char *mac = NULL;
-	mac = (unsigned char *)malloc(MAC_LEN+1);
+	mac = (unsigned char *)WID_MALLOC(MAC_LEN+1);
 	memset(mac,0,MAC_LEN+1);
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->WTPMAC != NULL))
 	{
@@ -83231,7 +83283,7 @@ int wid_dbus_trap_wtp_channel_device_interference_clear(int wtpindex,char chchan
 	}
 
 	char *sn = NULL;
-	sn = (char *)malloc(NAS_IDENTIFIER_NAME);
+	sn = (char *)WID_MALLOC(NAS_IDENTIFIER_NAME);
 	memset(sn,0,NAS_IDENTIFIER_NAME);
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->WTPSN != NULL))
 	{
@@ -83242,13 +83294,13 @@ int wid_dbus_trap_wtp_channel_device_interference_clear(int wtpindex,char chchan
     
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->netid != NULL))
 	{
-	    netid = (char *)malloc(strlen(AC_WTP[wtpindex]->netid)+1);
+	    netid = (char *)WID_MALLOC(strlen(AC_WTP[wtpindex]->netid)+1);
 	    memset(netid,0,(strlen(AC_WTP[wtpindex]->netid)+1));
 		memcpy(netid,AC_WTP[wtpindex]->netid,strlen(AC_WTP[wtpindex]->netid));
 	}
 	else
 	{
-	    netid = (char *)malloc(sizeof(char)*12);
+	    netid = (char *)WID_MALLOC(sizeof(char)*12);
 	    memset(netid,0,12);
 		memcpy(netid,"defaultcode",11);
 	}
@@ -83280,9 +83332,9 @@ int wid_dbus_trap_wtp_channel_device_interference_clear(int wtpindex,char chchan
 	wid_syslog_debug_debug(WID_DBUS,"wtp %d channel %d device interference clear",wtpindex,chchannel);
 	
 	dbus_message_unref(query);
-	CW_FREE_OBJECT(sn);
-	CW_FREE_OBJECT(mac);
-	CW_FREE_OBJECT(netid);
+	CW_FREE_OBJECT_WID(sn);
+	CW_FREE_OBJECT_WID(mac);
+	CW_FREE_OBJECT_WID(netid);
 	return 0;
 
 }
@@ -83295,7 +83347,7 @@ int wid_dbus_trap_wtp_channel_ap_interference_clear(int wtpindex,char chchannel)
 
 	/*store sn&mac of ap*/
 	unsigned char *mac = NULL;
-	mac = (unsigned char *)malloc(MAC_LEN+1);
+	mac = (unsigned char *)WID_MALLOC(MAC_LEN+1);
 	memset(mac,0,MAC_LEN+1);
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->WTPMAC != NULL))
 	{
@@ -83303,7 +83355,7 @@ int wid_dbus_trap_wtp_channel_ap_interference_clear(int wtpindex,char chchannel)
 	}
 
 	char *sn = NULL;
-	sn = (char *)malloc(NAS_IDENTIFIER_NAME);
+	sn = (char *)WID_MALLOC(NAS_IDENTIFIER_NAME);
 	memset(sn,0,NAS_IDENTIFIER_NAME);
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->WTPSN != NULL))
 	{
@@ -83314,13 +83366,13 @@ int wid_dbus_trap_wtp_channel_ap_interference_clear(int wtpindex,char chchannel)
     
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->netid != NULL))
 	{
-	    netid = (char *)malloc(strlen(AC_WTP[wtpindex]->netid)+1);
+	    netid = (char *)WID_MALLOC(strlen(AC_WTP[wtpindex]->netid)+1);
 	    memset(netid,0,(strlen(AC_WTP[wtpindex]->netid)+1));
 		memcpy(netid,AC_WTP[wtpindex]->netid,strlen(AC_WTP[wtpindex]->netid));
 	}
 	else
 	{
-	    netid = (char *)malloc(sizeof(char)*12);
+	    netid = (char *)WID_MALLOC(sizeof(char)*12);
 	    memset(netid,0,12);
 		memcpy(netid,"defaultcode",11);
 	}
@@ -83352,9 +83404,9 @@ int wid_dbus_trap_wtp_channel_ap_interference_clear(int wtpindex,char chchannel)
 	wid_syslog_debug_debug(WID_DBUS,"wtp %d channel %d ap interference clear",wtpindex,chchannel);
 	
 	dbus_message_unref(query);
-	CW_FREE_OBJECT(sn);
-	CW_FREE_OBJECT(mac);
-	CW_FREE_OBJECT(netid);
+	CW_FREE_OBJECT_WID(sn);
+	CW_FREE_OBJECT_WID(mac);
+	CW_FREE_OBJECT_WID(netid);
 	return 0;
 
 }
@@ -83367,7 +83419,7 @@ int wid_dbus_trap_wtp_channel_terminal_interference_clear(int wtpindex,unsigned 
 
 	/*store sn&mac of ap*/
 	unsigned char *wtpmac = NULL;
-	wtpmac = (unsigned char *)malloc(MAC_LEN+1);
+	wtpmac = (unsigned char *)WID_MALLOC(MAC_LEN+1);
 	memset(wtpmac,0,MAC_LEN+1);
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->WTPMAC != NULL))
 	{
@@ -83375,7 +83427,7 @@ int wid_dbus_trap_wtp_channel_terminal_interference_clear(int wtpindex,unsigned 
 	}
 
 	char *sn = NULL;
-	sn = (char *)malloc(NAS_IDENTIFIER_NAME);
+	sn = (char *)WID_MALLOC(NAS_IDENTIFIER_NAME);
 	memset(sn,0,NAS_IDENTIFIER_NAME);
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->WTPSN != NULL))
 	{
@@ -83392,13 +83444,13 @@ int wid_dbus_trap_wtp_channel_terminal_interference_clear(int wtpindex,unsigned 
     
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->netid != NULL))
 	{
-	    netid = (char *)malloc(strlen(AC_WTP[wtpindex]->netid)+1);
+	    netid = (char *)WID_MALLOC(strlen(AC_WTP[wtpindex]->netid)+1);
 	    memset(netid,0,(strlen(AC_WTP[wtpindex]->netid)+1));
 		memcpy(netid,AC_WTP[wtpindex]->netid,strlen(AC_WTP[wtpindex]->netid));
 	}
 	else
 	{
-	    netid = (char *)malloc(sizeof(char)*12);
+	    netid = (char *)WID_MALLOC(sizeof(char)*12);
 	    memset(netid,0,12);
 		memcpy(netid,"defaultcode",11);
 	}
@@ -83437,10 +83489,10 @@ int wid_dbus_trap_wtp_channel_terminal_interference_clear(int wtpindex,unsigned 
 	wid_syslog_debug_debug(WID_DBUS,"wtp %d channel %d terminal interference clear",wtpindex,chchannel);
 	
 	dbus_message_unref(query);
-	CW_FREE_OBJECT(sn);
+	CW_FREE_OBJECT_WID(sn);
 	//CW_FREE_OBJECT(mac);
-	CW_FREE_OBJECT(wtpmac);
-	CW_FREE_OBJECT(netid);
+	CW_FREE_OBJECT_WID(wtpmac);
+	CW_FREE_OBJECT_WID(netid);
 	return 0;
 
 }
@@ -83453,7 +83505,7 @@ int wid_dbus_trap_wtp_channel_count_minor_clear(int wtpindex)
 
 	/*store sn&mac of ap*/
 	unsigned char *mac = NULL;
-	mac = (unsigned char *)malloc(MAC_LEN+1);
+	mac = (unsigned char *)WID_MALLOC(MAC_LEN+1);
 	memset(mac,0,MAC_LEN+1);
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->WTPMAC != NULL))
 	{
@@ -83461,7 +83513,7 @@ int wid_dbus_trap_wtp_channel_count_minor_clear(int wtpindex)
 	}
 
 	char *sn = NULL;
-	sn = (char *)malloc(NAS_IDENTIFIER_NAME);
+	sn = (char *)WID_MALLOC(NAS_IDENTIFIER_NAME);
 	memset(sn,0,NAS_IDENTIFIER_NAME);
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->WTPSN != NULL))
 	{
@@ -83472,13 +83524,13 @@ int wid_dbus_trap_wtp_channel_count_minor_clear(int wtpindex)
     
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->netid != NULL))
 	{
-	    netid = (char *)malloc(strlen(AC_WTP[wtpindex]->netid)+1);
+	    netid = (char *)WID_MALLOC(strlen(AC_WTP[wtpindex]->netid)+1);
 	    memset(netid,0,(strlen(AC_WTP[wtpindex]->netid)+1));
 		memcpy(netid,AC_WTP[wtpindex]->netid,strlen(AC_WTP[wtpindex]->netid));
 	}
 	else
 	{
-	    netid = (char *)malloc(sizeof(char)*12);
+	    netid = (char *)WID_MALLOC(sizeof(char)*12);
 	    memset(netid,0,12);
 		memcpy(netid,"defaultcode",11);
 	}
@@ -83509,9 +83561,9 @@ int wid_dbus_trap_wtp_channel_count_minor_clear(int wtpindex)
 	wid_syslog_debug_debug(WID_DBUS,"wtp %d channel count minor clear",wtpindex);
 	
 	dbus_message_unref(query);
-	CW_FREE_OBJECT(sn);
-	CW_FREE_OBJECT(mac);
-	CW_FREE_OBJECT(netid);
+	CW_FREE_OBJECT_WID(sn);
+	CW_FREE_OBJECT_WID(mac);
+	CW_FREE_OBJECT_WID(netid);
 	return 0;
 
 }
@@ -83525,7 +83577,7 @@ int wid_dbus_trap_wtp_ac_discovery_cover_hole_clear(unsigned int wtpindex)
 
 	/*store sn&mac of ap*/
 	unsigned char *mac = NULL;
-	mac = (unsigned char *)malloc(MAC_LEN+1);
+	mac = (unsigned char *)WID_MALLOC(MAC_LEN+1);
 	memset(mac,0,MAC_LEN+1);
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->WTPMAC != NULL))
 	{
@@ -83533,7 +83585,7 @@ int wid_dbus_trap_wtp_ac_discovery_cover_hole_clear(unsigned int wtpindex)
 	}
 
 	char *sn = NULL;
-	sn = (char *)malloc(NAS_IDENTIFIER_NAME);
+	sn = (char *)WID_MALLOC(NAS_IDENTIFIER_NAME);
 	memset(sn,0,NAS_IDENTIFIER_NAME);
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->WTPSN != NULL))
 	{
@@ -83544,13 +83596,13 @@ int wid_dbus_trap_wtp_ac_discovery_cover_hole_clear(unsigned int wtpindex)
     
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->netid != NULL))
 	{
-	    netid = (char *)malloc(strlen(AC_WTP[wtpindex]->netid)+1);
+	    netid = (char *)WID_MALLOC(strlen(AC_WTP[wtpindex]->netid)+1);
 	    memset(netid,0,(strlen(AC_WTP[wtpindex]->netid)+1));
 		memcpy(netid,AC_WTP[wtpindex]->netid,strlen(AC_WTP[wtpindex]->netid));
 	}
 	else
 	{
-	    netid = (char *)malloc(sizeof(char)*12);
+	    netid = (char *)WID_MALLOC(sizeof(char)*12);
 	    memset(netid,0,12);
 		memcpy(netid,"defaultcode",11);
 	}
@@ -83581,9 +83633,9 @@ int wid_dbus_trap_wtp_ac_discovery_cover_hole_clear(unsigned int wtpindex)
 	wid_syslog_debug_debug(WID_DBUS,"wtp %d discovery cover hole clear",wtpindex);
 	
 	dbus_message_unref(query);
-	CW_FREE_OBJECT(sn);
-	CW_FREE_OBJECT(mac);
-	CW_FREE_OBJECT(netid);
+	CW_FREE_OBJECT_WID(sn);
+	CW_FREE_OBJECT_WID(mac);
+	CW_FREE_OBJECT_WID(netid);
 	return 0;
 
 }
@@ -83596,7 +83648,7 @@ int wid_dbus_trap_wtp_find_unsafe_essid(unsigned int wtpindex,char *name)
 
 	/*store sn&mac of ap*/
 	unsigned char *mac = NULL;
-	mac = (unsigned char *)malloc(MAC_LEN+1);
+	mac = (unsigned char *)WID_MALLOC(MAC_LEN+1);
 	memset(mac,0,MAC_LEN+1);
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->WTPMAC != NULL))
 	{
@@ -83604,7 +83656,7 @@ int wid_dbus_trap_wtp_find_unsafe_essid(unsigned int wtpindex,char *name)
 	}
 
 	char *sn = NULL;
-	sn = (char *)malloc(NAS_IDENTIFIER_NAME);
+	sn = (char *)WID_MALLOC(NAS_IDENTIFIER_NAME);
 	memset(sn,0,NAS_IDENTIFIER_NAME);
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->WTPSN != NULL))
 	{
@@ -83615,13 +83667,13 @@ int wid_dbus_trap_wtp_find_unsafe_essid(unsigned int wtpindex,char *name)
     
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->netid != NULL))
 	{
-	    netid = (char *)malloc(strlen(AC_WTP[wtpindex]->netid)+1);
+	    netid = (char *)WID_MALLOC(strlen(AC_WTP[wtpindex]->netid)+1);
 	    memset(netid,0,(strlen(AC_WTP[wtpindex]->netid)+1));
 		memcpy(netid,AC_WTP[wtpindex]->netid,strlen(AC_WTP[wtpindex]->netid));
 	}
 	else
 	{
-	    netid = (char *)malloc(sizeof(char)*12);
+	    netid = (char *)WID_MALLOC(sizeof(char)*12);
 	    memset(netid,0,12);
 		memcpy(netid,"defaultcode",11);
 	}
@@ -83653,9 +83705,9 @@ int wid_dbus_trap_wtp_find_unsafe_essid(unsigned int wtpindex,char *name)
 	wid_syslog_debug_debug(WID_DBUS,"wtp %d find unsafe essid %s\n",wtpindex,name);
 	
 	dbus_message_unref(query);
-	CW_FREE_OBJECT(sn);
-	CW_FREE_OBJECT(mac);
-	CW_FREE_OBJECT(netid);
+	CW_FREE_OBJECT_WID(sn);
+	CW_FREE_OBJECT_WID(mac);
+	CW_FREE_OBJECT_WID(netid);
 	return 0;
 
 }
@@ -83668,7 +83720,7 @@ int wid_dbus_trap_wtp_find_wids_attack(unsigned int wtpindex,struct tag_wids_dev
 	wid_syslog_debug_debug(WID_DEFAULT,"wid_dbus_trap_wtp_find_wids_attack tid %d\n",TID);
 	/*store sn&mac of ap*/
 	unsigned char *mac = NULL;
-	mac = (unsigned char *)malloc(MAC_LEN+1);
+	mac = (unsigned char *)WID_MALLOC(MAC_LEN+1);
 	memset(mac,0,MAC_LEN+1);
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->WTPMAC != NULL))
 	{
@@ -83676,7 +83728,7 @@ int wid_dbus_trap_wtp_find_wids_attack(unsigned int wtpindex,struct tag_wids_dev
 	}
 
 	char *sn = NULL;
-	sn = (char *)malloc(NAS_IDENTIFIER_NAME);
+	sn = (char *)WID_MALLOC(NAS_IDENTIFIER_NAME);
 	memset(sn,0,NAS_IDENTIFIER_NAME);
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->WTPSN != NULL))
 	{
@@ -83687,13 +83739,13 @@ int wid_dbus_trap_wtp_find_wids_attack(unsigned int wtpindex,struct tag_wids_dev
     
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->netid != NULL))
 	{
-	    netid = (char *)malloc(strlen(AC_WTP[wtpindex]->netid)+1);
+	    netid = (char *)WID_MALLOC(strlen(AC_WTP[wtpindex]->netid)+1);
 	    memset(netid,0,(strlen(AC_WTP[wtpindex]->netid)+1));
 		memcpy(netid,AC_WTP[wtpindex]->netid,strlen(AC_WTP[wtpindex]->netid));
 	}
 	else
 	{
-	    netid = (char *)malloc(sizeof(char)*12);
+	    netid = (char *)WID_MALLOC(sizeof(char)*12);
 	    memset(netid,0,12);
 		memcpy(netid,"defaultcode",11);
 	}
@@ -83738,9 +83790,9 @@ int wid_dbus_trap_wtp_find_wids_attack(unsigned int wtpindex,struct tag_wids_dev
 		phead->bssid[1],phead->bssid[2],phead->bssid[3],phead->bssid[4],phead->bssid[5]);
 	
 	dbus_message_unref(query);
-	CW_FREE_OBJECT(sn);
-	CW_FREE_OBJECT(mac);
-	CW_FREE_OBJECT(netid);
+	CW_FREE_OBJECT_WID(sn);
+	CW_FREE_OBJECT_WID(mac);
+	CW_FREE_OBJECT_WID(netid);
 	return 0;
 
 }
@@ -83763,7 +83815,7 @@ int wid_dbug_trap_more_ssid_key_conflict(unsigned int RadioID,unsigned char wlan
 	if(gtrapflag<traplevel){
 		return 0;
 	}
-	sn = (char *)malloc(NAS_IDENTIFIER_NAME);
+	sn = (char *)WID_MALLOC(NAS_IDENTIFIER_NAME);
 	memset(sn,0,NAS_IDENTIFIER_NAME);
 	if((AC_WTP[wtpid] != NULL)&&(AC_WTP[wtpid]->WTPSN != NULL))
 	{
@@ -83772,11 +83824,11 @@ int wid_dbug_trap_more_ssid_key_conflict(unsigned int RadioID,unsigned char wlan
 
 	memcpy(mac,AC_WTP[wtpid]->WTPMAC,MAC_LEN);
 	ssid1_len = strlen(ESSID1);
-	ssid1 = (unsigned char *)malloc(ssid1_len+1);
+	ssid1 = (unsigned char *)WID_MALLOC(ssid1_len+1);
 	memset(ssid1,0,ssid1_len+1);
 	memcpy(ssid1,ESSID1,ssid1_len);
 	ssid2_len = strlen(ESSID2);
-	ssid2 = (unsigned char *)malloc(ssid2_len+1);
+	ssid2 = (unsigned char *)WID_MALLOC(ssid2_len+1);
 	memset(ssid2,0,ssid2_len+1);
 	memcpy(ssid2,ESSID2,ssid2_len);
 	unsigned int local_id = local;
@@ -83807,9 +83859,9 @@ int wid_dbug_trap_more_ssid_key_conflict(unsigned int RadioID,unsigned char wlan
 	dbus_connection_send(wid_dbus_connection_t[TID],query,NULL);
 
 	dbus_message_unref(query);
-	CW_FREE_OBJECT(sn);
-	CW_FREE_OBJECT(ssid1);
-	CW_FREE_OBJECT(ssid2);
+	CW_FREE_OBJECT_WID(sn);
+	CW_FREE_OBJECT_WID(ssid1);
+	CW_FREE_OBJECT_WID(ssid2);
 	wid_syslog_debug_debug(WID_DBUS,"wid_dbug_trap_ssid_key_conflict end\n");
 
 	return 0;
@@ -83832,7 +83884,7 @@ int wid_dbug_trap_ssid_key_conflict(unsigned int wtpid,unsigned char radio_l_id,
 	if(gtrapflag<traplevel){
 		return 0;
 	}
-	sn = (char *)malloc(NAS_IDENTIFIER_NAME);
+	sn = (char *)WID_MALLOC(NAS_IDENTIFIER_NAME);
 	memset(sn,0,NAS_IDENTIFIER_NAME);
 	if((AC_WTP[wtpid] != NULL)&&(AC_WTP[wtpid]->WTPSN != NULL))
 	{
@@ -83841,11 +83893,11 @@ int wid_dbug_trap_ssid_key_conflict(unsigned int wtpid,unsigned char radio_l_id,
 
 	memcpy(mac,AC_WTP[wtpid]->WTPMAC,MAC_LEN);
 	ssid1_len = strlen(AC_WLAN[wlan1]->ESSID);
-	ssid1 = (unsigned char *)malloc(ssid1_len+1);
+	ssid1 = (unsigned char *)WID_MALLOC(ssid1_len+1);
 	memset(ssid1,0,ssid1_len+1);
 	memcpy(ssid1,AC_WLAN[wlan1]->ESSID,ssid1_len);
 	ssid2_len = strlen(AC_WLAN[wlan2]->ESSID);
-	ssid2 = (unsigned char *)malloc(ssid2_len+1);
+	ssid2 = (unsigned char *)WID_MALLOC(ssid2_len+1);
 	memset(ssid2,0,ssid2_len+1);
 	memcpy(ssid2,AC_WLAN[wlan2]->ESSID,ssid2_len);
 	unsigned int local_id = local;
@@ -83876,9 +83928,9 @@ int wid_dbug_trap_ssid_key_conflict(unsigned int wtpid,unsigned char radio_l_id,
 	dbus_connection_send(wid_dbus_connection_t[TID],query,NULL);
 
 	dbus_message_unref(query);
-	CW_FREE_OBJECT(sn);
-	CW_FREE_OBJECT(ssid1);
-	CW_FREE_OBJECT(ssid2);
+	CW_FREE_OBJECT_WID(sn);
+	CW_FREE_OBJECT_WID(ssid1);
+	CW_FREE_OBJECT_WID(ssid2);
 	wid_syslog_debug_debug(WID_DBUS,"wid_dbug_trap_ssid_key_conflict end\n");
 
 	return 0;

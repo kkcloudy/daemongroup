@@ -131,7 +131,7 @@ int get_wtps_info2(WTP_RRM_INFO ** WTP){
 		if((AC_WTP[i] != NULL)&&(AC_WTP[i]->WTPStat == 5)&&(AC_WTP[i]->RadioCount == 2)&&(AC_WTP[i]->WTP_Radio[1]->Radio_Type & 0x2))
 		{
 			if(WTP[i] == NULL){
-				WTP[i] = malloc(sizeof(WTP_RRM_INFO));
+				WTP[i] = WID_MALLOC(sizeof(WTP_RRM_INFO));
 				if(WTP[i] == NULL){
 					//perror(malloc);
 					return 0;
@@ -294,7 +294,11 @@ CW_THREAD_RETURN_TYPE CWDynamicChannelSelection2(void * arg)
 	int num = WTP_NUM;
 	WTP_RRM_INFO **WTP;
 	//gCOUNTRYCODE = 2;
-	WTP = malloc(WTP_NUM*sizeof(WTP_RRM_INFO *));
+	WTP = WID_MALLOC(WTP_NUM*sizeof(WTP_RRM_INFO *));
+	if (!WTP) {
+		wid_syslog_err("%s malloc for WTP failed \n", __FUNCTION__);
+		return NULL;
+	}
 	for(i = 0; i < WTP_NUM; i++){
 		WTP[i] = NULL;
 	}
@@ -332,7 +336,7 @@ CW_THREAD_RETURN_TYPE CWDynamicChannelSelection2(void * arg)
 				printf("WTP %d Channel %d\n",i,WTP[i]->channel);
 				memset(WTP[i],0,sizeof(WTP_RRM_INFO));
 				//wid_syslog_debug_debug(WID_DEFAULT,"%s,%d\n",__func__,__LINE__);
-				free(WTP[i]);
+				WID_FREE(WTP[i]);
 				WTP[i] = NULL;
 				//wid_syslog_debug_debug(WID_DEFAULT,"%s,%d\n",__func__,__LINE__);
 			}

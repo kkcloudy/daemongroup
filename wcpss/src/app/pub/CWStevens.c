@@ -31,6 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
  
 #include	"CWCommon.h"
+#include	"wcpss/wid/WID.h"
 #include <sys/un.h>
 #ifdef	HAVE_SOCKADDR_DL_STRUCT
 #include	<net/if_dl.h>
@@ -253,7 +254,7 @@ struct ifi_info* get_ifi_info(int family, int doaliases)
 	lastlen = 0;
 	len = 100 * sizeof(struct ifreq);	/* initial buffer size guess */
 	for ( ; ; ) {
-		buf = (char*)malloc(len);
+		buf = (char*)WID_MALLOC(len);
 		ifc.ifc_len = len;
 		ifc.ifc_buf = buf;
 		if (ioctl(sockfd, SIOCGIFCONF, &ifc) >= 0) {
@@ -262,7 +263,7 @@ struct ifi_info* get_ifi_info(int family, int doaliases)
 			lastlen = ifc.ifc_len;
 		}
 		len += 10 * sizeof(struct ifreq);	/* increment */
-		free(buf);
+		WID_FREE(buf);
 	}
 	ifihead = NULL;
 	ifipnext = &ifihead;
@@ -366,7 +367,7 @@ struct ifi_info* get_ifi_info(int family, int doaliases)
 			break;
 		}
 	}
-	free(buf);
+	WID_FREE(buf);
 	close(sockfd);
 	return(ifihead);	/* pointer to first structure in linked list */
 }
@@ -379,11 +380,11 @@ void free_ifi_info(struct ifi_info *ifihead)
 
 	for (ifi = ifihead; ifi != NULL; ifi = ifinext) {
 		if (ifi->ifi_addr != NULL)
-			free(ifi->ifi_addr);
+			WID_FREE(ifi->ifi_addr);
 		if (ifi->ifi_brdaddr != NULL)
-			free(ifi->ifi_brdaddr);
+			WID_FREE(ifi->ifi_brdaddr);
 		ifinext = ifi->ifi_next;	/* can't fetch ifi_next after free() */
-		free(ifi);					/* the ifi_info{} itself */
+		WID_FREE(ifi);					/* the ifi_info{} itself */
 	}
 }
 /* end free_ifi_info */

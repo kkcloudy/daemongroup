@@ -31,6 +31,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 #include "CWCommon.h"
+#include "wcpss/wid/WID.h"
+
 
 #ifdef DMALLOC
 #include "../dmalloc-5.5.0/dmalloc.h"
@@ -87,7 +89,7 @@ CWBool CWAssembleDataMessage(CWProtocolMessage **completeMsgPtr, int *fragmentsN
 			return CW_FALSE; // will be handled by the caller
 		} 
 		
-		CW_CREATE_OBJECT_ERR(*completeMsgPtr, CWProtocolMessage, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
+		CW_CREATE_OBJECT_ERR_WID(*completeMsgPtr, CWProtocolMessage, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
 		CW_CREATE_PROTOCOL_MESSAGE(((*completeMsgPtr)[0]), transportHdr.offset + frame->offset, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
 		
 		CWProtocolStoreMessage(&((*completeMsgPtr)[0]), &transportHdr);
@@ -123,7 +125,7 @@ CWBool CWAssembleDataMessage(CWProtocolMessage **completeMsgPtr, int *fragmentsN
 			// Assemble Transport Header for this fragment
 			if(!(CWAssembleTransportHeader(&transportHdr, &transportVal))) {
 				CW_FREE_PROTOCOL_MESSAGE(transportHdr);
-				CW_FREE_OBJECT(completeMsgPtr);
+				CW_FREE_OBJECT_WID(completeMsgPtr);
 				return CW_FALSE; // will be handled by the caller
 			}
 			

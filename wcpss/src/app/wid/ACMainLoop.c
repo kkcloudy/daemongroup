@@ -86,7 +86,7 @@ CWBool WID_WTP_INIT(void *arg){
 		CWSocket sock = ((CWACThreadArg*)arg)->sock;
 		int interfaceIndex = ((CWACThreadArg*)arg)->interfaceIndex;
 		unsigned int flag = 0;
-		CW_FREE_OBJECT(arg);
+		CW_FREE_OBJECT_WID(arg);
 		if(!check_wtpid_func(i)){
 			wid_syslog_err("%s\n",__func__);
 			return CW_FALSE;
@@ -422,7 +422,7 @@ void WLAN_OP(TableMsg *msg){
 				{
 					AC_WLAN[WLANID]->KeyLen = msg->u.WLAN.WlanKey.key_len;
 					memcpy(AC_WLAN[WLANID]->WlanKey, msg->u.WLAN.WlanKey.key, msg->u.WLAN.WlanKey.key_len);
-					key = (char *)malloc(msg->u.WLAN.WlanKey.key_len+1);
+					key = (char *)WID_MALLOC(msg->u.WLAN.WlanKey.key_len+1);
 					memset(key,0,(msg->u.WLAN.WlanKey.key_len+1));
 					strncpy(key, msg->u.WLAN.WlanKey.key, msg->u.WLAN.WlanKey.key_len);
 					AC_WLAN[WLANID]->SecurityIndex = msg->u.WLAN.WlanKey.SecurityIndex;
@@ -440,7 +440,7 @@ void WLAN_OP(TableMsg *msg){
 				}
 					
 					
-					CW_FREE_OBJECT(key);
+					CW_FREE_OBJECT_WID(key);
 					wid_syslog_debug_debug(WID_DEFAULT,"keylen %d %d\n",msg->u.WLAN.WlanKey.key_len,AC_WLAN[WLANID]->KeyLen);
 					wid_syslog_debug_debug(WID_DEFAULT,"key %s %s\n",msg->u.WLAN.WlanKey.key,AC_WLAN[WLANID]->WlanKey);
 					wid_syslog_debug_debug(WID_DEFAULT,"keytype %d %d\n",msg->u.WLAN.ascii_hex,AC_WLAN[WLANID]->asic_hex);
@@ -736,7 +736,7 @@ void Delete_Interface(char *ifname, int ifindex){
 				}
 			}
 			close(p->sock);
-			free(p);
+			WID_FREE(p);
 			p = NULL;
 			gACSocket.count--;
 			p = p1->if_next;
@@ -770,14 +770,14 @@ void Modify_WLAN_WTP_SETTING(int index){
 	if(ret != 0){
 		Delete_Interface(ifname, ifindex);
 		if(ifi->ifi_addr != NULL){
-			free(ifi->ifi_addr);
+			WID_FREE(ifi->ifi_addr);
 			ifi->ifi_addr = NULL;
 		}
 		if(ifi->ifi_brdaddr != NULL){
-			free(ifi->ifi_brdaddr);
+			WID_FREE(ifi->ifi_brdaddr);
 			ifi->ifi_brdaddr = NULL;
 		}
-		free(ifi);
+		WID_FREE(ifi);
 		ifi = NULL;
 		return; 
 	}else{
@@ -810,14 +810,14 @@ void Modify_WLAN_WTP_SETTING(int index){
 		}
 	}	
 	if(ifi->ifi_addr != NULL){
-		free(ifi->ifi_addr);
+		WID_FREE(ifi->ifi_addr);
 		ifi->ifi_addr = NULL;
 	}
 	if(ifi->ifi_brdaddr != NULL){
-		free(ifi->ifi_brdaddr);
+		WID_FREE(ifi->ifi_brdaddr);
 		ifi->ifi_brdaddr = NULL;
 	}
-	free(ifi);
+	WID_FREE(ifi);
 	ifi = NULL;
 	return;
 
@@ -843,7 +843,7 @@ int DELETE_LISTENNING_INTERFACE(char *ifname){
 		ifindex = p->systemIndex;
 		gListenningIF.interfaces = p_next;
 		p->if_next = NULL;
-		free(p);
+		WID_FREE(p);
 		p = NULL;
 		find = 1;
 		if(gListenningIF.count > 0)
@@ -858,7 +858,7 @@ int DELETE_LISTENNING_INTERFACE(char *ifname){
 				p->if_next = p_next->if_next;
 				p_next->if_next = NULL;
 				ifindex = p_next->systemIndex;
-				free(p_next);
+				WID_FREE(p_next);
 				p_next = NULL;
 				find = 1;
 				if(gListenningIF.count > 0)
@@ -907,7 +907,7 @@ int DELETE_LISTENNING_IPADDR(unsigned int ipaddr,LISTEN_FLAG flag){
 		ifindex = p->systemIndex;
 		gListenningIF.interfaces = p_next;
 		p->if_next = NULL;
-		free(p);
+		WID_FREE(p);
 		p = NULL;
 		find = 1;
 		if(gListenningIF.count > 0)
@@ -923,7 +923,7 @@ int DELETE_LISTENNING_IPADDR(unsigned int ipaddr,LISTEN_FLAG flag){
 				p->if_next = p_next->if_next;
 				p_next->if_next = NULL;
 				ifindex = p_next->systemIndex;
-				free(p_next);
+				WID_FREE(p_next);
 				p_next = NULL;
 				find = 1;
 				if(gListenningIF.count > 0)
@@ -1243,7 +1243,7 @@ void CWACManageIncomingPacket(CWSocket sock, char *buf, int readBytes, int incom
 				}
 				
 				CW_FREE_PROTOCOL_MESSAGE(*msgPtr);
-				CW_FREE_OBJECT(msgPtr);
+				CW_FREE_OBJECT_WID(msgPtr);
 			}
 			//////check if match dynamic ap login
 			else
@@ -1334,7 +1334,7 @@ void CWACManageIncomingPacket(CWSocket sock, char *buf, int readBytes, int incom
 						}
 					
 						CW_FREE_PROTOCOL_MESSAGE(*msgPtr);
-						CW_FREE_OBJECT(msgPtr);
+						CW_FREE_OBJECT_WID(msgPtr);
 					}
 					WidDestroyAutoApLoginInfo(auto_ap_info);
 				}
@@ -1409,7 +1409,7 @@ void CWACManageIncomingPacket(CWSocket sock, char *buf, int readBytes, int incom
 			CWSetMutexSafeList(gWTPs[i].packetReceiveList, &gWTPs[i].interfaceMutex);
 			CWSetConditionSafeList(gWTPs[i].packetReceiveList, &gWTPs[i].interfaceWait);
 			#endif		
-			CW_CREATE_OBJECT_ERR(argPtr, CWACThreadArg, { wid_syslog_crit("Out Of Memory"); return; });
+			CW_CREATE_OBJECT_ERR_WID(argPtr, CWACThreadArg, { wid_syslog_crit("Out Of Memory"); return; });
 
 			argPtr->index = i;
 			argPtr->sock = sock;
@@ -1578,7 +1578,7 @@ void CWACManageIncomingPacket(CWSocket sock, char *buf, int readBytes, int incom
 							}
 							char *sn = (char *)(auto_ap_info2->sn);
 							char *model = (char *)(auto_ap_info2->realmodel);
-							unsigned char *mac = (unsigned char *)malloc(7);
+							unsigned char *mac = (unsigned char *)WID_MALLOC(7);
 							//int apcodeflag = auto_ap_info2->apcodeflag;
 							char *code = (char*)(auto_ap_info2->model);
 							memset(mac,0,7);
@@ -1602,7 +1602,7 @@ void CWACManageIncomingPacket(CWSocket sock, char *buf, int readBytes, int incom
 									//if(AC_WTP[i]->WTPStat == 7)
 									CWAddAC_ATTACH_For_Auto(addrPtr, i);
 									wid_syslog_err("wtp mac has already be used\n");
-									CW_FREE_OBJECT(mac);
+									CW_FREE_OBJECT_WID(mac);
 									WidDestroyAutoApLoginInfo(auto_ap_info2);	
 									WidDestroyJoinRequestValuesForAutoApLogin(&joinRequest);
 									CWThreadMutexUnlock(&(gWTPs[i].WTPThreadMutex));
@@ -1613,7 +1613,7 @@ void CWACManageIncomingPacket(CWSocket sock, char *buf, int readBytes, int incom
 							//ret = WID_CREATE_NEW_WTP(name,wtp_index,sn,model,1);
 							if(!check_wtpid_func(wtp_index)){
 								wid_syslog_err("%s\n",__func__);
-								CW_FREE_OBJECT(mac);
+								CW_FREE_OBJECT_WID(mac);
 								WidDestroyAutoApLoginInfo(auto_ap_info2);	
 								WidDestroyJoinRequestValuesForAutoApLogin(&joinRequest);
 								return ;
@@ -1668,7 +1668,7 @@ void CWACManageIncomingPacket(CWSocket sock, char *buf, int readBytes, int incom
 									CWThreadMutexUnlock(&(gWTPs[WTPID].WTPThreadMutex));
 								}
 							}
-							CW_FREE_OBJECT(mac);
+							CW_FREE_OBJECT_WID(mac);
 						}
 					}
 					//////
@@ -1749,7 +1749,7 @@ CW_THREAD_RETURN_TYPE CWManageWTP(void *arg) {
 	int QID = ((CWACThreadArg*)arg)->index;
 	wid_pid_write_v2("CWManageWTP",QID,vrrid);
 	int WTPMsgqID;
-	CW_FREE_OBJECT(arg);
+	CW_FREE_OBJECT_WID(arg);
 	CWGetMsgQueue(&WTPMsgqID);
 	int total;
 	int WTPFirst;
@@ -1857,7 +1857,7 @@ CW_THREAD_RETURN_TYPE CWManageWTP(void *arg) {
 					GoBack = 1;
 					break;
 				}else{
-					elem = (struct msgqlist*)malloc(sizeof(struct msgqlist));
+					elem = (struct msgqlist*)WID_MALLOC(sizeof(struct msgqlist));
 					if(elem == NULL){
 						perror("malloc");
 						return 0;
@@ -2123,7 +2123,7 @@ CW_THREAD_RETURN_TYPE CWManageWTP(void *arg) {
 					wid_syslog_info("reboot wtp %d for table update\n",i);
 					_CWCloseThread(i);
 				}
-				free(elem);
+				WID_FREE(elem);
 				continue;
 			}
 
@@ -2157,7 +2157,7 @@ CW_THREAD_RETURN_TYPE CWManageWTP(void *arg) {
 
 					memcpy(msg1.mqinfo.u.WtpInfo.value, wlan_cmd_expand, strlen(wlan_cmd_expand));
 
-					elem1 = (struct msgqlist*)malloc(sizeof(struct msgqlist));
+					elem1 = (struct msgqlist*)WID_MALLOC(sizeof(struct msgqlist));
 
 					if(elem1 == NULL){
 
@@ -2200,7 +2200,7 @@ CW_THREAD_RETURN_TYPE CWManageWTP(void *arg) {
 
 				memcpy(msg1.mqinfo.u.WtpInfo.value, wlan_cmd_expand, strlen(wlan_cmd_expand));
 
-				elem1 = (struct msgqlist*)malloc(sizeof(struct msgqlist));
+				elem1 = (struct msgqlist*)WID_MALLOC(sizeof(struct msgqlist));
 
 				if(elem1 == NULL){
 
@@ -2242,7 +2242,7 @@ CW_THREAD_RETURN_TYPE CWManageWTP(void *arg) {
 				CWThreadMutexLock(&(gWTPs[i].WTPThreadControllistMutex));
 				if((AC_WTP[i])&&(AC_WTP[i]->ControlWait != NULL)){
 					printf("WLAN op something wrong (subtype)%d\n",AC_WTP[i]->ControlWait->mqinfo.subtype);
-					free(AC_WTP[i]->ControlWait);
+					WID_FREE(AC_WTP[i]->ControlWait);
 					AC_WTP[i]->ControlWait = NULL;
 				}
 					AC_WTP[i]->ControlWait = elem;
@@ -2256,11 +2256,11 @@ CW_THREAD_RETURN_TYPE CWManageWTP(void *arg) {
 					//printf("WLAN op something wrong (subtype)%d\n",AC_WTP[i]->ControlWait->mqinfo.subtype);
 					wid_syslog_debug_debug(WID_WTPINFO,"WLAN op something wrong (subtype)%d\n",AC_WTP[i]->ControlWait->mqinfo.subtype);
 
-					free(AC_WTP[i]->ControlWait);
+					WID_FREE(AC_WTP[i]->ControlWait);
 					AC_WTP[i]->ControlWait = NULL;
 				}
 					AC_WTP[i]->ControlWait = NULL;
-					free(elem);
+					WID_FREE(elem);
 					elem = NULL;
 				wid_syslog_err("Error sending command.(WLAN_S_TYPE)");
 				CWThreadMutexUnlock(&(gWTPs[i].WTPThreadControllistMutex));
@@ -2289,7 +2289,7 @@ CW_THREAD_RETURN_TYPE CWManageWTP(void *arg) {
 						CWThreadMutexLock(&(gWTPs[i].WTPThreadControllistMutex));
 						if((AC_WTP[i])&&(AC_WTP[i]->ControlWait != NULL)){
 							printf("radio op something wrong (subtype)%d\n",AC_WTP[i]->ControlWait->mqinfo.subtype);
-							free(AC_WTP[i]->ControlWait);
+							WID_FREE(AC_WTP[i]->ControlWait);
 							AC_WTP[i]->ControlWait = NULL;
 						}
 							AC_WTP[i]->ControlWait = elem;
@@ -2300,12 +2300,12 @@ CW_THREAD_RETURN_TYPE CWManageWTP(void *arg) {
 						CWThreadMutexLock(&(gWTPs[i].WTPThreadControllistMutex));
 						//WID_INSERT_CONTROL_LIST(i, elem);
 						if((AC_WTP[i])&&(AC_WTP[i]->ControlWait != NULL)){
-							free(AC_WTP[i]->ControlWait);
+							WID_FREE(AC_WTP[i]->ControlWait);
 							AC_WTP[i]->ControlWait = NULL;
 						}
 						AC_WTP[i]->ControlWait = NULL;
 						if(elem){
-							free(elem);
+							WID_FREE(elem);
 							elem = NULL;
 						}
 						CWThreadMutexUnlock(&(gWTPs[i].WTPThreadControllistMutex));
@@ -2336,7 +2336,7 @@ CW_THREAD_RETURN_TYPE CWManageWTP(void *arg) {
 					wid_syslog_debug_debug(WID_DEFAULT," sta op successful\n");
 					if((AC_WTP[i])&&(AC_WTP[i]->ControlWait != NULL)){
 						printf("sta op something wrong (subtype)%d\n",AC_WTP[i]->ControlWait->mqinfo.subtype);
-						free(AC_WTP[i]->ControlWait);
+						WID_FREE(AC_WTP[i]->ControlWait);
 						AC_WTP[i]->ControlWait = NULL;
 					}
 						AC_WTP[i]->ControlWait = elem;
@@ -2347,12 +2347,12 @@ CW_THREAD_RETURN_TYPE CWManageWTP(void *arg) {
 					CWThreadMutexLock(&(gWTPs[i].WTPThreadControllistMutex));
 					//WID_INSERT_CONTROL_LIST(i, elem);
 					if((AC_WTP[i])&&(AC_WTP[i]->ControlWait != NULL)){
-						free(AC_WTP[i]->ControlWait);
+						WID_FREE(AC_WTP[i]->ControlWait);
 						AC_WTP[i]->ControlWait = NULL;
 					}
 					AC_WTP[i]->ControlWait = NULL;
 					if(elem){
-						free(elem);
+						WID_FREE(elem);
 						elem = NULL;
 					}
 					CWThreadMutexUnlock(&(gWTPs[i].WTPThreadControllistMutex));
@@ -2384,7 +2384,7 @@ CW_THREAD_RETURN_TYPE CWManageWTP(void *arg) {
 					if((AC_WTP[i])&&(AC_WTP[i]->ControlWait != NULL)){
 	//					printf("sta op something wrong (subtype)%d\n",AC_WTP[i]->ControlWait->mqinfo.subtype);
 						wid_syslog_debug_debug(WID_DEFAULT,"sta op something wrong (subtype)%d\n",AC_WTP[i]->ControlWait->mqinfo.subtype);
-						free(AC_WTP[i]->ControlWait);
+						WID_FREE(AC_WTP[i]->ControlWait);
 						AC_WTP[i]->ControlWait = NULL;
 					}
 						AC_WTP[i]->ControlWait = elem;
@@ -2395,12 +2395,12 @@ CW_THREAD_RETURN_TYPE CWManageWTP(void *arg) {
 					CWThreadMutexLock(&(gWTPs[i].WTPThreadControllistMutex));
 					//WID_INSERT_CONTROL_LIST(i, elem);
 					if((AC_WTP[i])&&(AC_WTP[i]->ControlWait != NULL)){
-						free(AC_WTP[i]->ControlWait);
+						WID_FREE(AC_WTP[i]->ControlWait);
 						AC_WTP[i]->ControlWait = NULL ;
 					}
 					AC_WTP[i]->ControlWait = NULL;
 					if(elem){
-						free(elem);
+						WID_FREE(elem);
 						elem = NULL;
 					}
 					CWThreadMutexUnlock(&(gWTPs[i].WTPThreadControllistMutex));
@@ -2439,7 +2439,7 @@ CW_THREAD_RETURN_TYPE CWManageWTP(void *arg) {
 						if((AC_WTP[i])&&(AC_WTP[i]->ControlWait != NULL)){
 	//						printf("wtp op something wrong (subtype)%d\n",AC_WTP[i]->ControlWait->mqinfo.subtype);
 							wid_syslog_debug_debug(WID_DEFAULT,"wtp op something wrong (subtype)%d\n",AC_WTP[i]->ControlWait->mqinfo.subtype);
-							free(AC_WTP[i]->ControlWait);
+							WID_FREE(AC_WTP[i]->ControlWait);
 							AC_WTP[i]->ControlWait = NULL;
 						}
 							AC_WTP[i]->ControlWait = elem;
@@ -2450,12 +2450,12 @@ CW_THREAD_RETURN_TYPE CWManageWTP(void *arg) {
 						CWThreadMutexLock(&(gWTPs[i].WTPThreadControllistMutex));
 						//WID_INSERT_CONTROL_LIST(i, elem);
 						if((AC_WTP[i])&&(AC_WTP[i]->ControlWait != NULL)){
-							free(AC_WTP[i]->ControlWait);
+							WID_FREE(AC_WTP[i]->ControlWait);
 							AC_WTP[i]->ControlWait = NULL;
 						}
 						AC_WTP[i]->ControlWait = NULL;
 						if(elem){
-							free(elem);
+							WID_FREE(elem);
 							elem = NULL;
 						}
 						CWThreadMutexUnlock(&(gWTPs[i].WTPThreadControllistMutex));
@@ -2471,7 +2471,7 @@ CW_THREAD_RETURN_TYPE CWManageWTP(void *arg) {
 			CWThreadMutexLock(&gWTPs[i].interfaceMutex);
 			wid_set_wds_state(i,elem->mqinfo.u.WlanInfo.Radio_L_ID,elem->mqinfo.u.WlanInfo.WLANID,elem->mqinfo.u.WlanInfo.Wlan_Op);
 			CWThreadMutexUnlock(&gWTPs[i].interfaceMutex);
-			free(elem);
+			WID_FREE(elem);
 			elem = NULL;
 		}
 		
@@ -2739,7 +2739,7 @@ void CWSoftTimerExpiredHandler(int arg) {
 		CWThreadSetSignals(SIG_UNBLOCK, 2, CW_SOFT_TIMER_EXPIRED_SIGNAL,CW_CRITICAL_TIMER_EXPIRED_SIGNAL);
 		CWThreadMutexLock(&(gWTPs[*iPtr].WTPThreadControllistMutex));
 		if((AC_WTP[*iPtr] != NULL)&&(AC_WTP[*iPtr]->ControlWait != NULL)){
-			free(AC_WTP[*iPtr]->ControlWait);
+			WID_FREE(AC_WTP[*iPtr]->ControlWait);
 			AC_WTP[*iPtr]->ControlWait = NULL;
 		}
 		CWThreadMutexUnlock(&(gWTPs[*iPtr].WTPThreadControllistMutex));
@@ -2786,8 +2786,8 @@ void CWSoftTimerExpiredHandler(int arg) {
 void CWResetWTPProtocolManager(CWWTPProtocolManager *WTPProtocolManager)
 {
 	int i;
-	CW_FREE_OBJECT(WTPProtocolManager->locationData);
-	CW_FREE_OBJECT(WTPProtocolManager->name);
+	CW_FREE_OBJECT_WID(WTPProtocolManager->locationData);
+	CW_FREE_OBJECT_WID(WTPProtocolManager->name);
 	WTPProtocolManager->sessionID = 0;
 	WTPProtocolManager->descriptor.maxRadios= 0;
 	WTPProtocolManager->descriptor.radiosInUse= 0;
@@ -2796,51 +2796,51 @@ void CWResetWTPProtocolManager(CWWTPProtocolManager *WTPProtocolManager)
 	for(i = 0; i < (WTPProtocolManager->descriptor.vendorInfos).vendorInfosCount; i++) {
 		if(((WTPProtocolManager->descriptor.vendorInfos).vendorInfos)[i].type == CW_WTP_HARDWARE_VERSION)
 		{
-			CW_FREE_OBJECT(((WTPProtocolManager->descriptor.vendorInfos).vendorInfos)[i].sysver);
+			CW_FREE_OBJECT_WID(((WTPProtocolManager->descriptor.vendorInfos).vendorInfos)[i].sysver);
 		}else if(((WTPProtocolManager->descriptor.vendorInfos).vendorInfos)[i].type == CW_WTP_SOFTWARE_VERSION)
 		{
-			CW_FREE_OBJECT(((WTPProtocolManager->descriptor.vendorInfos).vendorInfos)[i].ver);
+			CW_FREE_OBJECT_WID(((WTPProtocolManager->descriptor.vendorInfos).vendorInfos)[i].ver);
 		}
 		else
 		{
-			CW_FREE_OBJECT(((WTPProtocolManager->descriptor.vendorInfos).vendorInfos)[i].valuePtr);
+			CW_FREE_OBJECT_WID(((WTPProtocolManager->descriptor.vendorInfos).vendorInfos)[i].valuePtr);
 		}
 	}
 	WTPProtocolManager->descriptor.vendorInfos.vendorInfosCount= 0;
-	CW_FREE_OBJECT(WTPProtocolManager->descriptor.vendorInfos.vendorInfos);
+	CW_FREE_OBJECT_WID(WTPProtocolManager->descriptor.vendorInfos.vendorInfos);
 	
 	WTPProtocolManager->radiosInfo.radioCount= 0;
-	CW_FREE_OBJECT(WTPProtocolManager->radiosInfo.radiosInfo);
-	CW_FREE_OBJECT(WTPProtocolManager->ACName);
+	CW_FREE_OBJECT_WID(WTPProtocolManager->radiosInfo.radiosInfo);
+	CW_FREE_OBJECT_WID(WTPProtocolManager->ACName);
 	(WTPProtocolManager->ACNameIndex).count = 0;
-	CW_FREE_OBJECT((WTPProtocolManager->ACNameIndex).ACNameIndex);
+	CW_FREE_OBJECT_WID((WTPProtocolManager->ACNameIndex).ACNameIndex);
 	(WTPProtocolManager->radioAdminInfo).radiosCount = 0;
-	CW_FREE_OBJECT((WTPProtocolManager->radioAdminInfo).radios);
+	CW_FREE_OBJECT_WID((WTPProtocolManager->radioAdminInfo).radios);
 	WTPProtocolManager->StatisticsTimer = 0;
 	
 	for(i = 0; i < WTPProtocolManager->WTPBoardData.vendorInfosCount; i++) {
 
 		if((WTPProtocolManager->WTPBoardData.vendorInfos)[i].type == CW_WTP_MODEL_NUMBER)
 		{
-			CW_FREE_OBJECT((WTPProtocolManager->WTPBoardData.vendorInfos)[i].model);
+			CW_FREE_OBJECT_WID((WTPProtocolManager->WTPBoardData.vendorInfos)[i].model);
 		}else if((WTPProtocolManager->WTPBoardData.vendorInfos)[i].type == CW_WTP_SERIAL_NUMBER)
 		{
-			CW_FREE_OBJECT((WTPProtocolManager->WTPBoardData.vendorInfos)[i].SN);
+			CW_FREE_OBJECT_WID((WTPProtocolManager->WTPBoardData.vendorInfos)[i].SN);
 		}else if((WTPProtocolManager->WTPBoardData.vendorInfos)[i].type == CW_BOARD_MAC_ADDRESS)
 		{
-			CW_FREE_OBJECT((WTPProtocolManager->WTPBoardData.vendorInfos)[i].mac);
+			CW_FREE_OBJECT_WID((WTPProtocolManager->WTPBoardData.vendorInfos)[i].mac);
 		}else if((WTPProtocolManager->WTPBoardData.vendorInfos)[i].type == CW_WTP_REAL_MODEL_NUMBER)
 		{
-			CW_FREE_OBJECT((WTPProtocolManager->WTPBoardData.vendorInfos)[i].Rmodel);
+			CW_FREE_OBJECT_WID((WTPProtocolManager->WTPBoardData.vendorInfos)[i].Rmodel);
 		}
 		else
 		{
-			CW_FREE_OBJECT((WTPProtocolManager->WTPBoardData.vendorInfos)[i].valuePtr);
+			CW_FREE_OBJECT_WID((WTPProtocolManager->WTPBoardData.vendorInfos)[i].valuePtr);
 		}
 	}
 	(WTPProtocolManager->WTPBoardData).vendorInfosCount = 0;
-	CW_FREE_OBJECT((WTPProtocolManager->WTPBoardData).vendorInfos);
-	CW_FREE_OBJECT(WTPProtocolManager->WTPRebootStatistics);
+	CW_FREE_OBJECT_WID((WTPProtocolManager->WTPBoardData).vendorInfos);
+	CW_FREE_OBJECT_WID(WTPProtocolManager->WTPRebootStatistics);
 
 	//CWWTPResetRebootStatistics(&(WTPProtocolManager->WTPRebootStatistics));
 
@@ -3069,7 +3069,7 @@ void CWDownWTP(unsigned int WTPIndex){
 	AC_WTP[WTPIndex]->sysver = NULL;
 	AC_WTP[WTPIndex]->ver = NULL;	
 	AC_WTP[WTPIndex]->neighbordeatimes = 0;
-	CW_FREE_OBJECT(AC_WTP[WTPIndex]->codever);
+	CW_FREE_OBJECT_WID(AC_WTP[WTPIndex]->codever);
 	//memset(AC_WTP[WTPIndex]->WTPIP, 0, 128);
 	//memset(AC_WTP[WTPIndex]->WTPMAC, 0, 6);
 	//release memory
@@ -3134,7 +3134,7 @@ void CWDownWTP(unsigned int WTPIndex){
 	//ap quit time
 	if(AC_WTP[WTPIndex]->quit_time == NULL)
 	{
-		AC_WTP[WTPIndex]->quit_time = (time_t *)malloc(sizeof(time_t));
+		AC_WTP[WTPIndex]->quit_time = (time_t *)WID_MALLOC(sizeof(time_t));
 		time(AC_WTP[WTPIndex]->quit_time);
 	}
 	else
@@ -3358,7 +3358,7 @@ WIDAUTOAPINFO *parse_dynamic_wtp_login_situation(CWWTPVendorInfos *valPtr)
 	//WIDAUTOAPINFO *return_autoapinfo = NULL;
 	
 	WIDAUTOAPINFO *autoapinfo;
-	autoapinfo = (WIDAUTOAPINFO *)malloc(sizeof(WIDAUTOAPINFO));
+	autoapinfo = (WIDAUTOAPINFO *)WID_MALLOC(sizeof(WIDAUTOAPINFO));
 	if(autoapinfo == NULL)
 	{
 		return NULL;
@@ -3379,11 +3379,11 @@ WIDAUTOAPINFO *parse_dynamic_wtp_login_situation(CWWTPVendorInfos *valPtr)
 		if((valPtr->vendorInfos)[i].type == CW_WTP_MODEL_NUMBER)
 		{
 			len = (valPtr->vendorInfos)[i].length;
-			autoapinfo->model = (unsigned char*)malloc(len+1);
+			autoapinfo->model = (unsigned char*)WID_MALLOC(len+1);
 			if(autoapinfo->model == NULL)
 			{
 				if(autoapinfo){
-					free(autoapinfo);
+					WID_FREE(autoapinfo);
 					autoapinfo = NULL;
 				}
 				perror("malloc");
@@ -3401,11 +3401,11 @@ WIDAUTOAPINFO *parse_dynamic_wtp_login_situation(CWWTPVendorInfos *valPtr)
 			str2higher(&sn);
 			(valPtr->vendorInfos)[i].SN = (unsigned char *)sn;
 
-			autoapinfo->sn = (unsigned char*)malloc(len+1);
+			autoapinfo->sn = (unsigned char*)WID_MALLOC(len+1);
 			if(autoapinfo->sn == NULL)
 			{
 				if(autoapinfo){
-					free(autoapinfo);
+					WID_FREE(autoapinfo);
 					autoapinfo = NULL;
 				}
 				perror("malloc");
@@ -3419,11 +3419,11 @@ WIDAUTOAPINFO *parse_dynamic_wtp_login_situation(CWWTPVendorInfos *valPtr)
 		if((valPtr->vendorInfos)[i].type == CW_WTP_REAL_MODEL_NUMBER)
 		{
 			len = (valPtr->vendorInfos)[i].length; 
-			autoapinfo->realmodel = (unsigned char*)malloc(len+1);
+			autoapinfo->realmodel = (unsigned char*)WID_MALLOC(len+1);
 			if(autoapinfo->realmodel == NULL)
 			{
 				if(autoapinfo){
-					free(autoapinfo);
+					WID_FREE(autoapinfo);
 					autoapinfo = NULL;
 				}
 				perror("malloc");
@@ -3460,27 +3460,25 @@ WIDAUTOAPINFO *parse_dynamic_wtp_login_situation(CWWTPVendorInfos *valPtr)
 			}
 			/*fengwenchao add end*/
 
-			WTP_MAC = (unsigned char*)malloc(MAC_LEN+1);
+			WTP_MAC = (unsigned char*)WID_MALLOC(MAC_LEN+1);
 			memset(WTP_MAC,0,MAC_LEN+1);
 			if(WTP_MAC == NULL)
 			{
 				perror("malloc");
 				if(autoapinfo){
-					free(autoapinfo);
+					WID_FREE(autoapinfo);
 					autoapinfo = NULL;
 				} 			
 				return NULL;
 			}
-			autoapinfo->mac = (unsigned char*)malloc(MAC_LEN+1);
+			autoapinfo->mac = (unsigned char*)WID_MALLOC(MAC_LEN+1);
 			if(autoapinfo->mac == NULL)
 			{
 				perror("malloc");
-				if(WTP_MAC){
-					free(WTP_MAC);
-					WTP_MAC = NULL;
-				}
+				WID_FREE(WTP_MAC);
+				WTP_MAC = NULL;
 				if(autoapinfo){
-					free(autoapinfo);
+					WID_FREE(autoapinfo);
 					autoapinfo = NULL;
 				}
 				return NULL;
@@ -3503,6 +3501,10 @@ WIDAUTOAPINFO *parse_dynamic_wtp_login_situation(CWWTPVendorInfos *valPtr)
 				//printf("not autelan ap\n");
 				wid_syslog_debug_debug(WID_DEFAULT,"not autelan ap\n");
 			}
+			if(WTP_MAC){
+				WID_FREE(WTP_MAC);
+				WTP_MAC = NULL;
+			}
 		}
 		else 
 		{
@@ -3514,7 +3516,6 @@ WIDAUTOAPINFO *parse_dynamic_wtp_login_situation(CWWTPVendorInfos *valPtr)
 	{
 		//printf("incoming wtp match dynamic wtp policy,AC will send a response\n");
 		wid_syslog_debug_debug(WID_DEFAULT,"incoming wtp match dynamic wtp policy,AC will send a response\n");
-		free(WTP_MAC);
 		//return_autoapinfo = autoapinfo;
 		//printf("WTP MAC:%02X %02X %02X match dynamic wtp mac policy\n",return_autoapinfo->mac[0],return_autoapinfo->mac[1],return_autoapinfo->mac[2]);
 		
@@ -3525,20 +3526,19 @@ WIDAUTOAPINFO *parse_dynamic_wtp_login_situation(CWWTPVendorInfos *valPtr)
 	{
 		//printf("incoming wtp not match dynamic wtp policy\n");
 		wid_syslog_debug_debug(WID_DEFAULT,"incoming wtp not match dynamic wtp policy,no response\n");
-		free(WTP_MAC);
 		if(autoapinfo->mac != NULL){
-			free(autoapinfo->mac);
+			WID_FREE(autoapinfo->mac);
 		}
 		if(autoapinfo->model != NULL){
-			free(autoapinfo->model);
+			WID_FREE(autoapinfo->model);
 		}
 		if(autoapinfo->sn != NULL){
-			free(autoapinfo->sn);
+			WID_FREE(autoapinfo->sn);
 		}
 		if(autoapinfo->realmodel != NULL){
-			free(autoapinfo->realmodel);
+			WID_FREE(autoapinfo->realmodel);
 		}
-		free(autoapinfo);
+		WID_FREE(autoapinfo);
 		return NULL;
 	}
 }
@@ -3589,7 +3589,7 @@ int wid_auto_ap_binding(int wtpid,int ifindex)
 	unsigned int radioid = wtpid*L_RADIO_NUM;
 	
 	char *name;
-	name = (char *)malloc(ETH_IF_NAME_LEN+1);
+	name = (char *)WID_MALLOC(ETH_IF_NAME_LEN+1);
 	if(name == NULL)
 	{
 		perror("malloc");
@@ -3629,7 +3629,7 @@ int wid_auto_ap_binding(int wtpid,int ifindex)
 	{
 		//printf("wtp login interface is not the auto ap login interface\n");
 		//printf("wtp login interface ifindex %d\n",ifindex);
-		free(name);
+		WID_FREE(name);
 		name = NULL;
 		return -1;
 	}
@@ -3672,19 +3672,19 @@ int wid_auto_ap_binding(int wtpid,int ifindex)
 		if(used_state == 0)
 		{
 			wid_syslog_debug_debug(WID_DEFAULT,"wid_auto_ap_binding wtp used success\n");
-			free(name);
+			WID_FREE(name);
 			name = NULL;			
 			return 0;
 		}
 		else
 		{
 			wid_syslog_debug_debug(WID_DEFAULT,"wid_auto_ap_binding wtp used fail\n");
-			free(name);
+			WID_FREE(name);
 			name = NULL;				
 			return -1;
 		}
 	}
-	free(name);
+	WID_FREE(name);
 	name = NULL;		
 	
 	return -1;
@@ -3743,8 +3743,8 @@ int wid_dynamic_change_wtp_info(int wtpid,WIDAUTOAPINFO *info)
 		len = strlen((char *)info->model);
 		if((AC_WTP[wtpid])&&(AC_WTP[wtpid]->APCode)&&(strncmp(AC_WTP[wtpid]->APCode,(char *)info->model,len) != 0))
 		{
-			CW_FREE_OBJECT(AC_WTP[wtpid]->APCode);
-			AC_WTP[wtpid]->APCode = (char *)malloc(len+1);
+			CW_FREE_OBJECT_WID(AC_WTP[wtpid]->APCode);
+			AC_WTP[wtpid]->APCode = (char *)WID_MALLOC(len+1);
 			memset(AC_WTP[wtpid]->APCode,0,len+1);
 			memcpy(AC_WTP[wtpid]->APCode,info->model,len);
 		}
@@ -3754,8 +3754,8 @@ int wid_dynamic_change_wtp_info(int wtpid,WIDAUTOAPINFO *info)
 		len = strlen((char *)info->realmodel);
 		if((AC_WTP[wtpid])&&(AC_WTP[wtpid]->WTPModel)&&(strncmp(AC_WTP[wtpid]->WTPModel,(char *)info->realmodel,len) != 0))
 		{
-			CW_FREE_OBJECT(AC_WTP[wtpid]->WTPModel);
-			AC_WTP[wtpid]->WTPModel= (char *)malloc(len+1);
+			CW_FREE_OBJECT_WID(AC_WTP[wtpid]->WTPModel);
+			AC_WTP[wtpid]->WTPModel= (char *)WID_MALLOC(len+1);
 			memset(AC_WTP[wtpid]->WTPModel,0,len+1);
 			memcpy(AC_WTP[wtpid]->WTPModel,info->realmodel,len);
 		}
@@ -3820,59 +3820,59 @@ void WidDestroyJoinRequestValuesForAutoApLogin(CWProtocolJoinRequestValues *valP
 		
 		if((valPtr->WTPBoardData.vendorInfos)[i].type == CW_WTP_MODEL_NUMBER)
 		{
-			CW_FREE_OBJECT((valPtr->WTPBoardData.vendorInfos)[i].model);
+			CW_FREE_OBJECT_WID((valPtr->WTPBoardData.vendorInfos)[i].model);
 		}
 		else if((valPtr->WTPBoardData.vendorInfos)[i].type == CW_WTP_SERIAL_NUMBER)
 		{
-			CW_FREE_OBJECT((valPtr->WTPBoardData.vendorInfos)[i].SN);
+			CW_FREE_OBJECT_WID((valPtr->WTPBoardData.vendorInfos)[i].SN);
 		}
 		else if((valPtr->WTPBoardData.vendorInfos)[i].type == CW_BOARD_MAC_ADDRESS)
 		{
-			CW_FREE_OBJECT((valPtr->WTPBoardData.vendorInfos)[i].mac);
+			CW_FREE_OBJECT_WID((valPtr->WTPBoardData.vendorInfos)[i].mac);
 		}
 		else if((valPtr->WTPBoardData.vendorInfos)[i].type == CW_WTP_REAL_MODEL_NUMBER)
 		{
-			CW_FREE_OBJECT((valPtr->WTPBoardData.vendorInfos)[i].Rmodel);
+			CW_FREE_OBJECT_WID((valPtr->WTPBoardData.vendorInfos)[i].Rmodel);
 		}
 		else if((valPtr->WTPBoardData.vendorInfos)[i].type == CW_WTP_CODE_VERSION)
 		{
-			CW_FREE_OBJECT((valPtr->WTPBoardData.vendorInfos)[i].codever);
+			CW_FREE_OBJECT_WID((valPtr->WTPBoardData.vendorInfos)[i].codever);
 		}
 		else
 		{
-			CW_FREE_OBJECT((valPtr->WTPBoardData.vendorInfos)[i].valuePtr);
+			CW_FREE_OBJECT_WID((valPtr->WTPBoardData.vendorInfos)[i].valuePtr);
 		}
 	}
 	
-	CW_FREE_OBJECT(valPtr->WTPBoardData.vendorInfos);
+	CW_FREE_OBJECT_WID(valPtr->WTPBoardData.vendorInfos);
 
 	for(i = 0; i < (valPtr->WTPDescriptor.vendorInfos).vendorInfosCount; i++) {
 
 		if(((valPtr->WTPDescriptor.vendorInfos).vendorInfos)[i].type == CW_WTP_HARDWARE_VERSION)
 		{
-			CW_FREE_OBJECT(((valPtr->WTPDescriptor.vendorInfos).vendorInfos)[i].sysver);
+			CW_FREE_OBJECT_WID(((valPtr->WTPDescriptor.vendorInfos).vendorInfos)[i].sysver);
 		}else if(((valPtr->WTPDescriptor.vendorInfos).vendorInfos)[i].type == CW_WTP_SOFTWARE_VERSION)
 		{
-			CW_FREE_OBJECT(((valPtr->WTPDescriptor.vendorInfos).vendorInfos)[i].ver);
+			CW_FREE_OBJECT_WID(((valPtr->WTPDescriptor.vendorInfos).vendorInfos)[i].ver);
 		}
 		else
 		{
-			CW_FREE_OBJECT(((valPtr->WTPDescriptor.vendorInfos).vendorInfos)[i].valuePtr);
+			CW_FREE_OBJECT_WID(((valPtr->WTPDescriptor.vendorInfos).vendorInfos)[i].valuePtr);
 		}
 	}
-	CW_FREE_OBJECT((valPtr->WTPDescriptor.vendorInfos).vendorInfos);
+	CW_FREE_OBJECT_WID((valPtr->WTPDescriptor.vendorInfos).vendorInfos);
 	
 }
 void WidDestroyAutoApLoginInfo(WIDAUTOAPINFO *info)
 {
 	if(info == NULL) return;
 
-	CW_FREE_OBJECT(info->mac);
-	CW_FREE_OBJECT(info->sn);
-	CW_FREE_OBJECT(info->model);
-	CW_FREE_OBJECT(info->realmodel);
+	CW_FREE_OBJECT_WID(info->mac);
+	CW_FREE_OBJECT_WID(info->sn);
+	CW_FREE_OBJECT_WID(info->model);
+	CW_FREE_OBJECT_WID(info->realmodel);
 	
-	CW_FREE_OBJECT(info);
+	CW_FREE_OBJECT_WID(info);
 
 	return ;
 }

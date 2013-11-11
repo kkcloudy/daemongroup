@@ -41,37 +41,37 @@ int get_ipv4addr_by_ifname(unsigned char ID)
 	ret = Get_Interface_Info((char*)AC_IP_GROUP[ID]->ifname,ifi);
 	if(ifi->addr_num == 0){	//xiaodawei add for interface no ip address, 20110324
 		if(ifi->ifi_addr != NULL){
-			free(ifi->ifi_addr);
+			WID_FREE(ifi->ifi_addr);
 			ifi->ifi_addr = NULL;
 		}		
 		if(ifi->ifi_brdaddr != NULL){
-			free(ifi->ifi_brdaddr);
+			WID_FREE(ifi->ifi_brdaddr);
 			ifi->ifi_brdaddr = NULL;
 		}
-		free(ifi);
+		WID_FREE(ifi);
 		ifi = NULL;
 		return INTERFACE_HAVE_NO_IP_ADDR;		
 
 	}
 	if((ret != 0)/*||(ifi->addr_num == 0)*/){
 		if(ifi->ifi_addr != NULL){
-			free(ifi->ifi_addr);
+			WID_FREE(ifi->ifi_addr);
 			ifi->ifi_addr = NULL;
 		}		
 		if(ifi->ifi_brdaddr != NULL){
-			free(ifi->ifi_brdaddr);
+			WID_FREE(ifi->ifi_brdaddr);
 			ifi->ifi_brdaddr = NULL;
 		}
-		free(ifi);
+		WID_FREE(ifi);
 		ifi = NULL;
 		return WID_DBUS_ERROR;		
 	}
-	AC_IP_GROUP[ID]->ipaddr = (unsigned char *)malloc(ETH_IF_NAME_LEN+1);
+	AC_IP_GROUP[ID]->ipaddr = (unsigned char *)WID_MALLOC(ETH_IF_NAME_LEN+1);
 	if(AC_IP_GROUP[ID]->ipaddr == NULL)
 	{
 		wid_syslog_crit("%s malloc %s",__func__,strerror(errno));
 		perror("malloc");
-		free(ifi);
+		WID_FREE(ifi);
 		ifi = NULL;
 		return MALLOC_ERROR;
 	}
@@ -80,14 +80,14 @@ int get_ipv4addr_by_ifname(unsigned char ID)
 	printf("get_ipv4addr_by_ifname = %s \n",AC_IP_GROUP[ID]->ipaddr);
 
 	if(ifi->ifi_addr != NULL){
-		free(ifi->ifi_addr);
+		WID_FREE(ifi->ifi_addr);
 		ifi->ifi_addr = NULL;
 	}		
 	if(ifi->ifi_brdaddr != NULL){
-		free(ifi->ifi_brdaddr);
+		WID_FREE(ifi->ifi_brdaddr);
 		ifi->ifi_brdaddr = NULL;
 	}
-	free(ifi);
+	WID_FREE(ifi);
 	ifi = NULL;
 
 	return WID_DBUS_SUCCESS;

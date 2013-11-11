@@ -100,7 +100,7 @@ CWBool CWParseMsgElemImageIdentifier(CWProtocolMessage *msgPtr, int len, CWImage
 	{
 		case 1000:
 			
-			CW_CREATE_STRING_ERR(valPtr->model, 4, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
+			CW_CREATE_STRING_ERR_WID(valPtr->model, 4, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
 			memset(valPtr->model,0, 5);
 			memcpy(valPtr->model,"2010",4);
 			valPtr->modelLEN = 4;
@@ -108,7 +108,7 @@ CWBool CWParseMsgElemImageIdentifier(CWProtocolMessage *msgPtr, int len, CWImage
 			valPtr->Ver = CWProtocolRetrieveRawBytes(msgPtr, valPtr->VerLen);
 			break;
 		case 2000:
-			CW_CREATE_STRING_ERR(valPtr->model, 5, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
+			CW_CREATE_STRING_ERR_WID(valPtr->model, 5, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
 			memset(valPtr->model,0, 6);
 			memcpy(valPtr->model,"1110T",5);
 			valPtr->modelLEN = 5;
@@ -123,7 +123,7 @@ CWBool CWParseMsgElemImageIdentifier(CWProtocolMessage *msgPtr, int len, CWImage
 			//printf("valPtr->model:%s,valPtr->VerLen:%d,valPtr->Ver:%s",valPtr->model,valPtr->VerLen,valPtr->Ver);
 			break;
 		default:
-			CW_CREATE_STRING_ERR(valPtr->model, 4, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
+			CW_CREATE_STRING_ERR_WID(valPtr->model, 4, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
 			memset(valPtr->model,0, 5);
 			memcpy(valPtr->model,"1000",4);
 			valPtr->modelLEN = 4;
@@ -157,7 +157,7 @@ CWBool CWParseImageDataRequestMessage(CWProtocolMessage* msgPtr, int len, CWImag
 		
 		switch(elemType) {
 			case CW_MSG_ELEMENT_IMAGE_IDENTIFIER_CW_TYPE:
-				CW_CREATE_OBJECT_ERR(valuesPtr->ImageRequest, CWImageIdentifier, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););	
+				CW_CREATE_OBJECT_ERR_WID(valuesPtr->ImageRequest, CWImageIdentifier, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););	
 				if (!(CWParseMsgElemImageIdentifier(msgPtr, elemLen, valuesPtr->ImageRequest))){
 					wid_syslog_debug_debug(WID_WTPINFO,"wrong in CWParseMsgElemImageIdentifier\n");
 					return CW_FALSE;
@@ -211,7 +211,7 @@ CWBool CWAssembleImageDataRequestMessage(CWProtocolMessage **messagesPtr, int *f
 		if ((!(CWAssembleMsgElemImageIdentifierAC(&(msgElems[++k]), resPtr)))){
 			int i;
 			for(i = 0; i <= k; i++) { CW_FREE_PROTOCOL_MESSAGE(msgElems[i]);}
-			CW_FREE_OBJECT(msgElems);
+			CW_FREE_OBJECT_WID(msgElems);
 			return CW_FALSE; // error will be handled by the caller
 		}
 				
@@ -421,16 +421,16 @@ CWBool ACEnterImageData(int WTPIndex, CWProtocolMessage *msgPtr)
 					wid_dbus_trap_wtp_tranfer_file(WTPIndex);
 			}
 			//fengwenchao add 20110216   save ap report version  for ap updata successful or fail
-			AC_WTP[WTPIndex]->ApReportVer = malloc(strlen(valuesPtr.ImageRequest->Ver)+1);
+			AC_WTP[WTPIndex]->ApReportVer = WID_MALLOC(strlen(valuesPtr.ImageRequest->Ver)+1);
 			memset(AC_WTP[WTPIndex]->ApReportVer,0,strlen(valuesPtr.ImageRequest->Ver)+1);
 			memcpy(AC_WTP[WTPIndex]->ApReportVer,valuesPtr.ImageRequest->Ver,strlen(valuesPtr.ImageRequest->Ver));
 			//AC_WTP[WTPIndex]->ApReportVerLen = 	valuesPtr.ImageRequest->VerLen;
 			//wid_syslog_debug_debug(WID_WTPINFO,"valuesPtr.ImageRequest->Ver = %s\n",valuesPtr.ImageRequest->Ver);
 			//wid_syslog_debug_debug(WID_WTPINFO,"AC_WTP[WTPIndex]->ApReportVer = %s\n",AC_WTP[WTPIndex]->ApReportVer);
 			//fengwenchao add end 
-			CW_FREE_OBJECT(valuesPtr.ImageRequest->model);
-			CW_FREE_OBJECT(valuesPtr.ImageRequest->Ver);
-			CW_FREE_OBJECT(valuesPtr.ImageRequest);
+			CW_FREE_OBJECT_WID(valuesPtr.ImageRequest->model);
+			CW_FREE_OBJECT_WID(valuesPtr.ImageRequest->Ver);
+			CW_FREE_OBJECT_WID(valuesPtr.ImageRequest);
 			
 			
 			break;
@@ -518,7 +518,7 @@ CWBool ACEnterImageData(int WTPIndex, CWProtocolMessage *msgPtr)
 		CW_FREE_PROTOCOL_MESSAGE(gWTPs[WTPIndex].messages[i]);
 	}
 	
-	CW_FREE_OBJECT(gWTPs[WTPIndex].messages);
+	CW_FREE_OBJECT_WID(gWTPs[WTPIndex].messages);
 
 	
 	return CW_TRUE;

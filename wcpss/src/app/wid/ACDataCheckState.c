@@ -60,10 +60,10 @@ CWBool ACEnterDataCheck (int WTPIndex, CWProtocolMessage *msgPtr)
 	CWProtocolChangeStateEventRequestValues *changeStateEvent;
 	wid_syslog_debug_debug(WID_WTPINFO,"######### WTP %d Enter Data Check #########",WTPIndex);	
 	
-	CW_CREATE_OBJECT_ERR(changeStateEvent, CWProtocolChangeStateEventRequestValues, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
+	CW_CREATE_OBJECT_ERR_WID(changeStateEvent, CWProtocolChangeStateEventRequestValues, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
 	
 	if(!(CWParseChangeStateEventRequestMessage(msgPtr->msg, msgPtr->offset, &seqNum, changeStateEvent))) {
-		CW_FREE_OBJECT(changeStateEvent);	
+		CW_FREE_OBJECT_WID(changeStateEvent);	
 		return CW_FALSE; // note: we can kill our thread in case of out-of-memory error to free some space/
 				// we can see this just calling CWErrorGetLastErrorCode()
 	}
@@ -89,7 +89,7 @@ CWBool ACEnterDataCheck (int WTPIndex, CWProtocolMessage *msgPtr)
 		CW_FREE_PROTOCOL_MESSAGE(gWTPs[WTPIndex].messages[i]);
 	}
 	
-	CW_FREE_OBJECT(gWTPs[WTPIndex].messages);
+	CW_FREE_OBJECT_WID(gWTPs[WTPIndex].messages);
 
 	/*radio admin state*/
 	for(i=0;i<AC_WTP[WTPIndex]->RadioCount;i++)
@@ -158,7 +158,7 @@ CWBool ACEnterDataCheck (int WTPIndex, CWProtocolMessage *msgPtr)
 	////ap run time
 	if(AC_WTP[WTPIndex]->add_time == NULL)
 	{
-		AC_WTP[WTPIndex]->add_time = (time_t *)malloc(sizeof(time_t));
+		AC_WTP[WTPIndex]->add_time = (time_t *)WID_MALLOC(sizeof(time_t));
 		time(AC_WTP[WTPIndex]->add_time);
 		//printf("%s\n",ctime(AC_WTP[WTPIndex]->add_time));
 	}
@@ -220,7 +220,7 @@ CWBool ACEnterDataCheck (int WTPIndex, CWProtocolMessage *msgPtr)
 				{
 					wid_dbus_trap_wtp_update_successful(WTPIndex);//trap successful
 					wid_syslog_debug_debug(WID_WTPINFO,"ap update %s successful\n",AC_WTP[WTPIndex]->ver);
-					CW_FREE_OBJECT(AC_WTP[WTPIndex]->ApReportVer);
+					CW_FREE_OBJECT_WID(AC_WTP[WTPIndex]->ApReportVer);
 				}
 			}
 			else
@@ -231,7 +231,7 @@ CWBool ACEnterDataCheck (int WTPIndex, CWProtocolMessage *msgPtr)
 					wid_dbus_trap_wtp_ap_flash_write_failed(WTPIndex);
 					wid_syslog_debug_debug(WID_WTPINFO,"ap update %s fail\n",AC_WTP[WTPIndex]->ver);
 					wid_syslog_debug_debug(WID_WTPINFO,"ap flash write faild \n");
-					CW_FREE_OBJECT(AC_WTP[WTPIndex]->ApReportVer);
+					CW_FREE_OBJECT_WID(AC_WTP[WTPIndex]->ApReportVer);
 				}
 			}		
 		}
@@ -243,7 +243,7 @@ CWBool ACEnterDataCheck (int WTPIndex, CWProtocolMessage *msgPtr)
 				{
 					wid_dbus_trap_wtp_update_successful(WTPIndex);//trap successful
 					wid_syslog_debug_debug(WID_WTPINFO,"ap update %s successful\n",AC_WTP[WTPIndex]->codever);	
-					CW_FREE_OBJECT(AC_WTP[WTPIndex]->ApReportVer);				
+					CW_FREE_OBJECT_WID(AC_WTP[WTPIndex]->ApReportVer);				
 				}
 			}
 			else
@@ -254,7 +254,7 @@ CWBool ACEnterDataCheck (int WTPIndex, CWProtocolMessage *msgPtr)
 					wid_dbus_trap_wtp_ap_flash_write_failed(WTPIndex);
 					wid_syslog_debug_debug(WID_WTPINFO,"ap update %s fail\n",AC_WTP[WTPIndex]->codever);
 					wid_syslog_debug_debug(WID_WTPINFO,"ap flash write faild \n");
-					CW_FREE_OBJECT(AC_WTP[WTPIndex]->ApReportVer);					
+					CW_FREE_OBJECT_WID(AC_WTP[WTPIndex]->ApReportVer);					
 				}
 			}	
 		}

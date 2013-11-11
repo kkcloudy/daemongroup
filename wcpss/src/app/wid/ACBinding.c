@@ -45,10 +45,10 @@ CWBool CWACInitBinding(int i)
 	int j;
 	bindingValues* aux;
 	wid_syslog_debug_debug(WID_DEFAULT,"CWACInitBinding start");
-	CW_CREATE_OBJECT_ERR(aux, bindingValues, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
+	CW_CREATE_OBJECT_ERR_WID(aux, bindingValues, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
 	if((gWTPs[i].WTPProtocolManager).bindingValuesPtr){
-		CW_FREE_OBJECT(((bindingValues*)(gWTPs[i].WTPProtocolManager).bindingValuesPtr)->qosValues);		
-		CW_FREE_OBJECT((gWTPs[i].WTPProtocolManager).bindingValuesPtr);
+		CW_FREE_OBJECT_WID(((bindingValues*)(gWTPs[i].WTPProtocolManager).bindingValuesPtr)->qosValues);		
+		CW_FREE_OBJECT_WID((gWTPs[i].WTPProtocolManager).bindingValuesPtr);
 	}
 	(gWTPs[i].WTPProtocolManager).bindingValuesPtr=(void*) aux;
 
@@ -221,7 +221,7 @@ CWBool CWAssembleWTPRadioConfiguration(CWProtocolMessage *msgPtr, BindingRadioCo
 	//test so close it
 	/////country code area
 	char *countrycode;
-	countrycode = (char *)malloc(sizeof(char)*4);
+	countrycode = (char *)WID_MALLOC(sizeof(char)*4);
 	memset(countrycode,0,4);
 	
 	switch(stRadioConfiguration.CountryCode) /*wcl modify for OSDEVTDPB-31*/
@@ -259,7 +259,7 @@ CWBool CWAssembleWTPRadioConfiguration(CWProtocolMessage *msgPtr, BindingRadioCo
 	//printf("countrycode %s\n",countrycode);
 	
 	CWProtocolStoreRawBytes(msgPtr,countrycode,4);
-	free(countrycode);
+	WID_FREE(countrycode);
 	countrycode = NULL;
 	
 	return CWAssembleMsgElem(msgPtr, BINDING_MSG_ELEMENT_TYPE_IEEE80211_WTP_RADIO_CONFIGURATON);
@@ -662,7 +662,7 @@ CWBool CWBindingAssembleConfigureResponse2(CWProtocolMessage **msgElems, int *ms
 		{
 			int i;
 			for(i = 0; i <= k; i++) {CW_FREE_PROTOCOL_MESSAGE(*msgElems[i]);}
-			CW_FREE_OBJECT(*msgElems);
+			CW_FREE_OBJECT_WID(*msgElems);
 			return CW_FALSE; // error will be handled by the caller
 		}
 	}
@@ -711,7 +711,7 @@ CWBool CWBindingAssembleConfigureResponse(CWProtocolMessage **msgElems, int *msg
 			{
 				int i;
 				for(i = 0; i <= k; i++) {CW_FREE_PROTOCOL_MESSAGE(*msgElems[i]);}
-				CW_FREE_OBJECT(*msgElems);
+				CW_FREE_OBJECT_WID(*msgElems);
 				CWThreadMutexUnlock(&(gWTPs[*iPtr].interfaceMutex));
 				return CW_FALSE; // error will be handled by the caller
 			}
@@ -757,7 +757,7 @@ CWBool CWBindingAssembleConfigurationUpdateRequest2(CWProtocolMessage **msgElems
 	i = elem->mqinfo.u.RadioInfo.Radio_L_ID;
 	if(!check_l_radioid_func(i)){
 		wid_syslog_err("%s\n",__func__);
-		CW_FREE_OBJECT(*msgElems);
+		CW_FREE_OBJECT_WID(*msgElems);
 		return CW_FALSE;
 	}else{
 	}
@@ -777,7 +777,7 @@ CWBool CWBindingAssembleConfigurationUpdateRequest2(CWProtocolMessage **msgElems
 				wid_syslog_debug_debug(WID_DEFAULT,"txpoweroffset is %d (in case Radio_TXP)\n",TXP.TXPOF);			
 				int i1;
 				for(i1 = 0; i1 <= k; i1++) {CW_FREE_PROTOCOL_MESSAGE(*msgElems[i1]);}
-				CW_FREE_OBJECT(*msgElems);
+				CW_FREE_OBJECT_WID(*msgElems);
 				return CW_FALSE; // error will be handled by the caller
 			}
 			wid_syslog_debug_debug(WID_DEFAULT,"txpoweroffset is %d (after case Radio_TXP)\n",TXP.TXPOF);
@@ -795,7 +795,7 @@ CWBool CWBindingAssembleConfigurationUpdateRequest2(CWProtocolMessage **msgElems
 				wid_syslog_debug_debug(WID_DEFAULT,"txpoweroffset is %d (in case Radio_TXPOF)\n",TXP.TXPOF);			
 				int i1;
 				for(i1 = 0; i1 <= k; i1++) {CW_FREE_PROTOCOL_MESSAGE(*msgElems[i1]);}
-				CW_FREE_OBJECT(*msgElems);
+				CW_FREE_OBJECT_WID(*msgElems);
 				return CW_FALSE; // error will be handled by the caller
 			}
 			wid_syslog_debug_debug(WID_DEFAULT,"txpoweroffset is %d (after case Radio_TXPOF)\n",TXP.TXPOF);
@@ -812,7 +812,7 @@ CWBool CWBindingAssembleConfigurationUpdateRequest2(CWProtocolMessage **msgElems
 			{
 				int i1;
 				for(i1 = 0; i1 <= k; i1++) {CW_FREE_PROTOCOL_MESSAGE(*msgElems[i1]);}
-				CW_FREE_OBJECT(*msgElems);
+				CW_FREE_OBJECT_WID(*msgElems);
 				return CW_FALSE; // error will be handled by the caller
 			}
 			break;
@@ -828,7 +828,7 @@ CWBool CWBindingAssembleConfigurationUpdateRequest2(CWProtocolMessage **msgElems
 			{
 				int i1;
 				for(i1 = 0; i1 <= k; i1++) {CW_FREE_PROTOCOL_MESSAGE(*msgElems[i1]);}
-				CW_FREE_OBJECT(*msgElems);
+				CW_FREE_OBJECT_WID(*msgElems);
 				return CW_FALSE; // error will be handled by the caller
 			}
 			break;
@@ -845,7 +845,7 @@ CWBool CWBindingAssembleConfigurationUpdateRequest2(CWProtocolMessage **msgElems
 			{
 				int i1;
 				for(i1 = 0; i1 <= k; i1++) {CW_FREE_PROTOCOL_MESSAGE(*msgElems[i1]);}
-				CW_FREE_OBJECT(*msgElems);
+				CW_FREE_OBJECT_WID(*msgElems);
 				return CW_FALSE; // error will be handled by the caller
 			}
 			//wid_syslog_debug_debug("Radio type:%d\n",radiotype[q].radiotype);
@@ -867,7 +867,7 @@ CWBool CWBindingAssembleConfigurationUpdateRequest2(CWProtocolMessage **msgElems
 			{
 				int i1;
 				for(i1 = 0; i1 <= k; i1++) {CW_FREE_PROTOCOL_MESSAGE(*msgElems[i1]);}
-				CW_FREE_OBJECT(*msgElems);
+				CW_FREE_OBJECT_WID(*msgElems);
 				return CW_FALSE; // error will be handled by the caller
 			}
 			break;
@@ -889,7 +889,7 @@ CWBool CWBindingAssembleConfigurationUpdateRequest2(CWProtocolMessage **msgElems
 			{
 				int i1;
 				for(i1 = 0; i1 <= k; i1++) {CW_FREE_PROTOCOL_MESSAGE(*msgElems[i1]);}
-				CW_FREE_OBJECT(*msgElems);
+				CW_FREE_OBJECT_WID(*msgElems);
 				return CW_FALSE; // error will be handled by the caller
 			}
 			break;
@@ -913,7 +913,7 @@ CWBool CWBindingAssembleConfigurationUpdateRequest2(CWProtocolMessage **msgElems
 			{
 				int i1;
 				for(i1 = 0; i1 <= k; i1++) {CW_FREE_PROTOCOL_MESSAGE(*msgElems[i1]);}
-				CW_FREE_OBJECT(*msgElems);
+				CW_FREE_OBJECT_WID(*msgElems);
 				return CW_FALSE; // error will be handled by the caller
 			}
 			break;
@@ -926,7 +926,7 @@ CWBool CWBindingAssembleConfigurationUpdateRequest2(CWProtocolMessage **msgElems
 			{
 				int i1;
 				for(i1 = 0; i1 <= k; i1++) {CW_FREE_PROTOCOL_MESSAGE(*msgElems[i1]);}
-				CW_FREE_OBJECT(*msgElems);
+				CW_FREE_OBJECT_WID(*msgElems);
 				return CW_FALSE; // error will be handled by the caller
 			}
 			break;
@@ -940,7 +940,7 @@ CWBool CWBindingAssembleConfigurationUpdateRequest2(CWProtocolMessage **msgElems
 			{
 				int i1;
 				for(i1 = 0; i1 <= k; i1++) {CW_FREE_PROTOCOL_MESSAGE(*msgElems[i1]);}
-				CW_FREE_OBJECT(*msgElems);
+				CW_FREE_OBJECT_WID(*msgElems);
 				return CW_FALSE; // error will be handled by the caller
 			}
 			break;			
@@ -955,7 +955,7 @@ CWBool CWBindingAssembleConfigurationUpdateRequest2(CWProtocolMessage **msgElems
 			{
 				int i1;
 				for(i1 = 0; i1 <= k; i1++) {CW_FREE_PROTOCOL_MESSAGE(*msgElems[i1]);}
-				CW_FREE_OBJECT(*msgElems);
+				CW_FREE_OBJECT_WID(*msgElems);
 				return CW_FALSE; 
 			}
 		    break;	/*wcl add for RDIR-33*/
@@ -971,7 +971,7 @@ CWBool CWBindingAssembleConfigurationUpdateRequest2(CWProtocolMessage **msgElems
 			{
 				int i1;
 				for(i1 = 0; i1 <= k; i1++) {CW_FREE_PROTOCOL_MESSAGE(*msgElems[i1]);}
-				CW_FREE_OBJECT(*msgElems);
+				CW_FREE_OBJECT_WID(*msgElems);
 				return CW_FALSE; // error will be handled by the caller
 			}
 		    break;	
@@ -988,7 +988,7 @@ CWBool CWBindingAssembleConfigurationUpdateRequest2(CWProtocolMessage **msgElems
 			{
 				int i1;
 				for(i1 = 0; i1 <= k; i1++) {CW_FREE_PROTOCOL_MESSAGE(*msgElems[i1]);}
-				CW_FREE_OBJECT(*msgElems);
+				CW_FREE_OBJECT_WID(*msgElems);
 				return CW_FALSE; // error will be handled by the caller
 			}
 		break;		
@@ -1002,7 +1002,7 @@ CWBool CWBindingAssembleConfigurationUpdateRequest2(CWProtocolMessage **msgElems
 			{
 				int i1;
 				for(i1 = 0; i1 <= k; i1++) {CW_FREE_PROTOCOL_MESSAGE(*msgElems[i1]);}
-				CW_FREE_OBJECT(*msgElems);
+				CW_FREE_OBJECT_WID(*msgElems);
 				return CW_FALSE; // error will be handled by the caller
 			}
 		break;
@@ -1013,7 +1013,7 @@ CWBool CWBindingAssembleConfigurationUpdateRequest2(CWProtocolMessage **msgElems
 			{
 				int i1;
 				for(i1 = 0; i1 <= k; i1++) {CW_FREE_PROTOCOL_MESSAGE(*msgElems[i1]);}
-				CW_FREE_OBJECT(*msgElems);
+				CW_FREE_OBJECT_WID(*msgElems);
 				return CW_FALSE; // error will be handled by the caller
 			}
 		break;		
@@ -1024,7 +1024,7 @@ CWBool CWBindingAssembleConfigurationUpdateRequest2(CWProtocolMessage **msgElems
 			{
 				int i1;
 				for(i1 = 0; i1 <= k; i1++) {CW_FREE_PROTOCOL_MESSAGE(*msgElems[i1]);}
-				CW_FREE_OBJECT(*msgElems);
+				CW_FREE_OBJECT_WID(*msgElems);
 				return CW_FALSE; // error will be handled by the caller
 			}
 		break;
@@ -1035,7 +1035,7 @@ CWBool CWBindingAssembleConfigurationUpdateRequest2(CWProtocolMessage **msgElems
 			{
 				int i1;
 				for(i1 = 0; i1 <= k; i1++) {CW_FREE_PROTOCOL_MESSAGE(*msgElems[i1]);}
-				CW_FREE_OBJECT(*msgElems);
+				CW_FREE_OBJECT_WID(*msgElems);
 				return CW_FALSE; // error will be handled by the caller
 			}
 		break;
@@ -1046,7 +1046,7 @@ CWBool CWBindingAssembleConfigurationUpdateRequest2(CWProtocolMessage **msgElems
 			{
 				int i1;
 				for(i1 = 0; i1 <= k; i1++) {CW_FREE_PROTOCOL_MESSAGE(*msgElems[i1]);}
-				CW_FREE_OBJECT(*msgElems);
+				CW_FREE_OBJECT_WID(*msgElems);
 				return CW_FALSE; // error will be handled by the caller
 			}
 		break;
@@ -1055,7 +1055,7 @@ CWBool CWBindingAssembleConfigurationUpdateRequest2(CWProtocolMessage **msgElems
 			{													
 				int i;
 				for(i = 0; i <= k; i++) { CW_FREE_PROTOCOL_MESSAGE(*msgElems[i]);}
-				CW_FREE_OBJECT(*msgElems);
+				CW_FREE_OBJECT_WID(*msgElems);
 				return CW_FALSE; 
 			}
 			break;
@@ -1064,7 +1064,7 @@ CWBool CWBindingAssembleConfigurationUpdateRequest2(CWProtocolMessage **msgElems
 			{													
 				int i;
 				for(i = 0; i <= k; i++) { CW_FREE_PROTOCOL_MESSAGE(*msgElems[i]);}
-				CW_FREE_OBJECT(*msgElems);
+				CW_FREE_OBJECT_WID(*msgElems);
 				return CW_FALSE; 
 			}
 			break;
@@ -1073,7 +1073,7 @@ CWBool CWBindingAssembleConfigurationUpdateRequest2(CWProtocolMessage **msgElems
 			{													
 				int i;
 				for(i = 0; i <= k; i++) { CW_FREE_PROTOCOL_MESSAGE(*msgElems[i]);}
-				CW_FREE_OBJECT(*msgElems);
+				CW_FREE_OBJECT_WID(*msgElems);
 				return CW_FALSE; 
 			}
 			break;
@@ -1086,7 +1086,7 @@ CWBool CWBindingAssembleConfigurationUpdateRequest2(CWProtocolMessage **msgElems
 				{
 					int i1;
 					for(i1 = 0; i1 <= k; i1++) {CW_FREE_PROTOCOL_MESSAGE(*msgElems[i1]);}
-					CW_FREE_OBJECT(*msgElems);
+					CW_FREE_OBJECT_WID(*msgElems);
 					return CW_FALSE; // error will be handled by the caller
 				}
 			}	
@@ -1142,7 +1142,7 @@ CWBool CWBindingAssembleConfigurationUpdateRequest(CWProtocolMessage **msgElems,
 		{
 			int i;
 			for(i = 0; i <= k; i++) {CW_FREE_PROTOCOL_MESSAGE(*msgElems[i]);}
-			CW_FREE_OBJECT(*msgElems);
+			CW_FREE_OBJECT_WID(*msgElems);
 			return CW_FALSE; // error will be handled by the caller
 		}
 	}

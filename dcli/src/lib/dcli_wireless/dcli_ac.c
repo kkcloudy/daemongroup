@@ -9367,6 +9367,103 @@ DEFUN(set_wirelesscontrol_auto_ap_switch_func,
 	
 	return CMD_SUCCESS;			
 }
+DEFUN(set_wireless_memory_trace_switch_func,
+	  set_wireless_memory_trace_switch_cmd,
+	  "set wid_memory_trace_switch (enable|disable)",
+	  "wid memory trace config\n"
+	  "wireless_memory_trace_switch config\n"
+	  "wireless_memory_trace_switch enable|disable\n"
+	 )
+{
+	int ret;
+
+	DBusMessage *query, *reply;	
+	DBusMessageIter	 iter;
+	DBusError err;
+
+    unsigned int log_print_switch = 0;
+
+	if (!strcmp(argv[0],"enable"))
+	{
+		log_print_switch = 1;	
+	}
+	else if (!strcmp(argv[0],"disable"))
+	{
+		log_print_switch = 0;	
+	}
+	else
+	{
+		vty_out(vty,"<error> input patameter should only be 'enable' or 'disable'\n");
+		return CMD_SUCCESS;
+	}
+	
+	int localid = 1;
+	int slot_id = HostSlotId;
+	int index = 0;
+	char BUSNAME[PATH_LEN];
+	char OBJPATH[PATH_LEN];
+	char INTERFACE[PATH_LEN];
+	if(vty->node == CONFIG_NODE){
+		index = 0;
+	}else if(vty->node == HANSI_NODE){
+		index = (int)vty->index;
+		localid = vty->local;
+		slot_id = vty->slotindex;
+	}
+	else if(vty->node == LOCAL_HANSI_NODE){
+		index = (int)vty->index;
+		localid = vty->local;
+		slot_id = vty->slotindex;
+	}
+	DBusConnection *dcli_dbus_connection = NULL;
+	ReInitDbusConnection(&dcli_dbus_connection,slot_id,distributFag);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_BUSNAME,BUSNAME);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_OBJPATH,OBJPATH);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_INTERFACE,INTERFACE);
+	query = dbus_message_new_method_call(BUSNAME,OBJPATH,INTERFACE,WID_DBUS_CONF_METHOD_SET_WID_MEMORY_TRACE_SWITCH);
+	
+	dbus_error_init(&err);
+
+
+	dbus_message_append_args(query,
+							 DBUS_TYPE_UINT32,&log_print_switch,
+							 DBUS_TYPE_INVALID);
+
+	reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection,query,-1, &err);
+	
+	dbus_message_unref(query);
+	
+	if (NULL == reply)
+	{
+		cli_syslog_info("<error> failed get reply.\n");
+		if (dbus_error_is_set(&err))
+		{
+			cli_syslog_info("%s raised: %s",err.name,err.message);
+			dbus_error_free_for_dcli(&err);
+		}
+		
+
+		return CMD_SUCCESS;
+	}
+	
+	dbus_message_iter_init(reply,&iter);
+	dbus_message_iter_get_basic(&iter,&ret);
+
+	if(ret == 0)
+	{
+		vty_out(vty,"set wid_memory_trace_switch %s successfully\n",argv[0]);
+	}				
+	else
+	{
+		vty_out(vty,"<error>  %d\n",ret);
+	}
+		
+	dbus_message_unref(reply);
+
+	
+	return CMD_SUCCESS;			
+}
+
 DEFUN(set_wirelesscontrol_auto_ap_binding_l3_interface_func,
 	  set_wirelesscontrol_auto_ap_binding_l3_interface_cmd,
 	  "set auto_ap_login interface (uplink|downlink) IFNAME",
@@ -23033,6 +23130,7 @@ void dcli_ac_init(void)
 	install_element(HANSI_NODE,&set_asd_daemonlog_level_cmd);
 	/*auto ap area*/
 	install_element(HANSI_NODE,&set_wirelesscontrol_auto_ap_switch_cmd);
+	install_element(HANSI_NODE,&set_wireless_memory_trace_switch_cmd);
 	install_element(HANSI_NODE,&set_wirelesscontrol_auto_ap_binding_l3_interface_cmd);
 	install_element(HANSI_NODE,&set_wirelesscontrol_auto_ap_binding_l3_interface_new_cmd);
 	install_element(HANSI_NODE,&set_wirelesscontrol_listen_l3_interface_cmd);
@@ -23222,6 +23320,7 @@ void dcli_ac_init(void)
 	install_element(LOCAL_HANSI_NODE,&set_asd_daemonlog_level_cmd);
 	/*auto ap area*/
 	install_element(LOCAL_HANSI_NODE,&set_wirelesscontrol_auto_ap_switch_cmd);
+	install_element(LOCAL_HANSI_NODE,&set_wireless_memory_trace_switch_cmd);
 	install_element(LOCAL_HANSI_NODE,&set_wirelesscontrol_auto_ap_binding_l3_interface_cmd);
 	install_element(LOCAL_HANSI_NODE,&set_wirelesscontrol_auto_ap_binding_l3_interface_new_cmd);
 	install_element(LOCAL_HANSI_NODE,&set_wirelesscontrol_listen_l3_interface_cmd);

@@ -103,14 +103,14 @@ void free_ap(WID_ACCESS *AC, struct wtp_access_info *wtp)
 	ap_hash_del(AC, wtp);
 	ap_list_del(AC, wtp);
 	AC->num--;
-	free(wtp->apcode);
-	free(wtp->model);
-	free(wtp->sn);
-	free(wtp->version);
-	free(wtp->codever);
-	free(wtp->WTPMAC);
-	free(wtp->ifname);
-	free(wtp);
+	WID_FREE(wtp->apcode);
+	WID_FREE(wtp->model);
+	WID_FREE(wtp->sn);
+	WID_FREE(wtp->version);
+	WID_FREE(wtp->codever);
+	WID_FREE(wtp->WTPMAC);
+	WID_FREE(wtp->ifname);
+	WID_FREE(wtp);
 
 }
 
@@ -131,14 +131,14 @@ struct wtp_access_info * ap_add(WID_ACCESS *AC, struct sockaddr_in * sa, CWWTPVe
 		memset(wtp->ifname,0,16);
 		for(i = 0; i < valPtr->vendorInfosCount; i++){
 			if((valPtr->vendorInfos)[i].type == CW_WTP_MODEL_NUMBER){
-				free(wtp->apcode);				
-				wtp->apcode= ( char *)malloc((valPtr->vendorInfos)[i].length + 1);	
+				WID_FREE(wtp->apcode);				
+				wtp->apcode= ( char *)WID_MALLOC((valPtr->vendorInfos)[i].length + 1);	
 				memset(wtp->apcode,0,(valPtr->vendorInfos)[i].length + 1);
 				memcpy(wtp->apcode, (valPtr->vendorInfos)[i].model, (valPtr->vendorInfos)[i].length);
 			}
 			else if((valPtr->vendorInfos)[i].type == CW_WTP_SERIAL_NUMBER){
-				free(wtp->sn);
-				wtp->sn = ( char *)malloc((valPtr->vendorInfos)[i].length + 1);
+				WID_FREE(wtp->sn);
+				wtp->sn = ( char *)WID_MALLOC((valPtr->vendorInfos)[i].length + 1);
 				memset(wtp->sn,0,(valPtr->vendorInfos)[i].length + 1);
 				if(wid_illegal_character_check((char*)(valPtr->vendorInfos)[i].SN,(valPtr->vendorInfos)[i].length,1) > 0){
 					memcpy(wtp->sn, (valPtr->vendorInfos)[i].SN, (valPtr->vendorInfos)[i].length);
@@ -150,15 +150,15 @@ struct wtp_access_info * ap_add(WID_ACCESS *AC, struct sockaddr_in * sa, CWWTPVe
 				memcpy(wtp->WTPMAC, (valPtr->vendorInfos)[i].mac, (valPtr->vendorInfos)[i].length);
 			}
 			else if((valPtr->vendorInfos)[i].type == CW_WTP_REAL_MODEL_NUMBER){ 
-				free(wtp->model);
-				wtp->model= ( char *)malloc((valPtr->vendorInfos)[i].length + 1);
+				WID_FREE(wtp->model);
+				wtp->model= ( char *)WID_MALLOC((valPtr->vendorInfos)[i].length + 1);
 				memset(wtp->model,0,(valPtr->vendorInfos)[i].length + 1);
 				memcpy(wtp->model, (valPtr->vendorInfos)[i].Rmodel, (valPtr->vendorInfos)[i].length);			
 			}
 			else if((valPtr->vendorInfos)[i].type == 6)//CW_WTP_CODE_VERSION = 6
 			{
-				free(wtp->codever);
-				wtp->codever = ( char *)malloc((valPtr->vendorInfos)[i].length + 1);
+				WID_FREE(wtp->codever);
+				wtp->codever = ( char *)WID_MALLOC((valPtr->vendorInfos)[i].length + 1);
 				memset(wtp->codever,0,(valPtr->vendorInfos)[i].length + 1);
 				if(wid_illegal_character_check((char*)(valPtr->vendorInfos)[i].codever,(valPtr->vendorInfos)[i].length,1) > 0){
 					memcpy(wtp->codever, (valPtr->vendorInfos)[i].codever, (valPtr->vendorInfos)[i].length);	
@@ -172,8 +172,8 @@ struct wtp_access_info * ap_add(WID_ACCESS *AC, struct sockaddr_in * sa, CWWTPVe
 		
 		for(i = 0; i < valPtr1->vendorInfos.vendorInfosCount; i++){
 			if((valPtr1->vendorInfos.vendorInfos)[i].type == CW_WTP_SOFTWARE_VERSION){
-				free(wtp->version);
-				wtp->version = (char *)malloc((valPtr1->vendorInfos.vendorInfos)[i].length+1);
+				WID_FREE(wtp->version);
+				wtp->version = (char *)WID_MALLOC((valPtr1->vendorInfos.vendorInfos)[i].length+1);
 				memset(wtp->version, 0,(valPtr1->vendorInfos.vendorInfos)[i].length+1);
 				memcpy(wtp->version, (valPtr1->vendorInfos.vendorInfos)[i].ver, (valPtr1->vendorInfos.vendorInfos)[i].length);
 			}
@@ -186,37 +186,36 @@ struct wtp_access_info * ap_add(WID_ACCESS *AC, struct sockaddr_in * sa, CWWTPVe
 		return wtp;
 	}
 	
-	wtp = malloc(sizeof(struct wtp_access_info));
+	wtp = WID_MALLOC(sizeof(struct wtp_access_info));
 	if (wtp == NULL) {
 		return NULL;
 	}
 	memset(wtp, 0, sizeof(struct wtp_access_info));	
-	wtp->WTPMAC = (unsigned char *)malloc(MAC_LEN+1);
-	//wtp->WTPMAC= ( char *)malloc(6);
+	wtp->WTPMAC = (unsigned char *)WID_MALLOC(MAC_LEN+1);
 	memset(wtp->WTPMAC,0,6);
-	wtp->model= ( char *)malloc(1);
+	wtp->model= ( char *)WID_MALLOC(1);
 	memset(wtp->model,0,1);
-	wtp->apcode= ( char *)malloc(1);	
+	wtp->apcode= ( char *)WID_MALLOC(1);	
 	memset(wtp->apcode,0,1);
-	wtp->sn = ( char *)malloc(1);
+	wtp->sn = ( char *)WID_MALLOC(1);
 	memset(wtp->sn,0,1);
-	wtp->version = ( char *)malloc(1);
+	wtp->version = ( char *)WID_MALLOC(1);
 	memset(wtp->version,0,1);
-	wtp->codever = ( char *)malloc(1);
+	wtp->codever = ( char *)WID_MALLOC(1);
 	memset(wtp->codever,0,1);
-	wtp->ifname = ( char *)malloc(16);
+	wtp->ifname = ( char *)WID_MALLOC(16);
 	memset(wtp->ifname,0,16);
 
 	for(i = 0; i < valPtr->vendorInfosCount; i++){
 		if((valPtr->vendorInfos)[i].type == CW_WTP_MODEL_NUMBER){	
-			free(wtp->apcode);
-			wtp->apcode= ( char *)malloc((valPtr->vendorInfos)[i].length + 1);	
+			WID_FREE(wtp->apcode);
+			wtp->apcode= ( char *)WID_MALLOC((valPtr->vendorInfos)[i].length + 1);	
 			memset(wtp->apcode,0,(valPtr->vendorInfos)[i].length + 1);
 			memcpy(wtp->apcode, (valPtr->vendorInfos)[i].model, (valPtr->vendorInfos)[i].length);
 		}
 		else if((valPtr->vendorInfos)[i].type == CW_WTP_SERIAL_NUMBER){
-			free(wtp->sn);
-			wtp->sn = ( char *)malloc((valPtr->vendorInfos)[i].length + 1);
+			WID_FREE(wtp->sn);
+			wtp->sn = ( char *)WID_MALLOC((valPtr->vendorInfos)[i].length + 1);
 			memset(wtp->sn,0,(valPtr->vendorInfos)[i].length + 1);
 			memcpy(wtp->sn, (valPtr->vendorInfos)[i].SN, (valPtr->vendorInfos)[i].length);
 		}
@@ -225,15 +224,15 @@ struct wtp_access_info * ap_add(WID_ACCESS *AC, struct sockaddr_in * sa, CWWTPVe
 			memcpy(wtp->WTPMAC, (valPtr->vendorInfos)[i].mac, (valPtr->vendorInfos)[i].length);
 		}
 		else if((valPtr->vendorInfos)[i].type == CW_WTP_REAL_MODEL_NUMBER){
-			free(wtp->model);
-			wtp->model= ( char *)malloc((valPtr->vendorInfos)[i].length + 1);
+			WID_FREE(wtp->model);
+			wtp->model= ( char *)WID_MALLOC((valPtr->vendorInfos)[i].length + 1);
 			memset(wtp->model,0,(valPtr->vendorInfos)[i].length + 1);
 			memcpy(wtp->model, (valPtr->vendorInfos)[i].Rmodel, (valPtr->vendorInfos)[i].length);			
 		}
 		else if((valPtr->vendorInfos)[i].type == 6)//CW_WTP_CODE_VERSION = 6
 		{
-			free(wtp->codever);
-			wtp->codever = ( char *)malloc((valPtr->vendorInfos)[i].length + 1);
+			WID_FREE(wtp->codever);
+			wtp->codever = ( char *)WID_MALLOC((valPtr->vendorInfos)[i].length + 1);
 			memset(wtp->codever,0,(valPtr->vendorInfos)[i].length + 1);		
 			if(wid_illegal_character_check((char*)(valPtr->vendorInfos)[i].codever,(valPtr->vendorInfos)[i].length,1) > 0){
 				memcpy(wtp->codever, (valPtr->vendorInfos)[i].codever, (valPtr->vendorInfos)[i].length);	
@@ -247,8 +246,8 @@ struct wtp_access_info * ap_add(WID_ACCESS *AC, struct sockaddr_in * sa, CWWTPVe
 
 	for(i = 0; i < valPtr1->vendorInfos.vendorInfosCount; i++){
 		if((valPtr1->vendorInfos.vendorInfos)[i].type == CW_WTP_SOFTWARE_VERSION){
-			free(wtp->version);
-			wtp->version = (char *)malloc((valPtr1->vendorInfos.vendorInfos)[i].length+1);
+			WID_FREE(wtp->version);
+			wtp->version = (char *)WID_MALLOC((valPtr1->vendorInfos.vendorInfos)[i].length+1);
 			memset(wtp->version, 0,(valPtr1->vendorInfos.vendorInfos)[i].length+1);
 			memcpy(wtp->version, (valPtr1->vendorInfos.vendorInfos)[i].ver, (valPtr1->vendorInfos.vendorInfos)[i].length);
 		}

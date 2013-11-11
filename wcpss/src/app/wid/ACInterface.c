@@ -294,7 +294,7 @@ CW_THREAD_RETURN_TYPE CWThreadTest(void *arg)
 //	printf("exit %d\n", nIndex);
 	wid_syslog_debug_debug(WID_DEFAULT,"exit %d\n", nIndex);
 
-	CW_FREE_OBJECT(qosValues);
+	CW_FREE_OBJECT_WID(qosValues);
 	return NULL;
 }
 
@@ -376,7 +376,7 @@ CW_THREAD_RETURN_TYPE CWInterface(void* arg)
 		{
 			case -1: {
 				if(qosValues){
-					free(qosValues);
+					WID_FREE(qosValues);
 					qosValues = NULL;
 				}
 				return 0;
@@ -405,7 +405,7 @@ CW_THREAD_RETURN_TYPE CWInterface(void* arg)
 			}
 		}
 	}
-	CW_FREE_OBJECT(qosValues);
+	CW_FREE_OBJECT_WID(qosValues);
 	return 0;
 }
 

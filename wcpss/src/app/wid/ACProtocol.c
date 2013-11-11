@@ -122,20 +122,20 @@ CWBool CWAssembleMsgElemACIPv4List(CWProtocolMessage *msgPtr)
 	
 	if(!CWACGetACIPv4List(&list, &count)) {
 		if(list){
-			free(list);
+			WID_FREE(list);
 			list = NULL;
 		}
 		return CW_FALSE;
 	}
 	// create message
-	CW_CREATE_PROTOCOL_MESSAGE(*msgPtr, IPv4_List_length*count, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
+	CW_CREATE_PROTOCOL_MESSAGE(*msgPtr, IPv4_List_length*count, WID_FREE(list); list = NULL; return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
 	
 	for(i = 0; i < count; i++) {
 		CWProtocolStore32(msgPtr, list[i]);
 //		wid_syslog_debug_debug("AC IPv4 List(%d): %d", i, list[i]);
 	}
 	
-	CW_FREE_OBJECT(list);
+	CW_FREE_OBJECT_WID(list);
 				
 	return CWAssembleMsgElem(msgPtr, CW_MSG_ELEMENT_AC_IPV4_LIST_CW_TYPE);
 }
@@ -151,14 +151,14 @@ CWBool CWAssembleMsgElemACIPv6List (CWProtocolMessage *msgPtr)
 	if(!CWACGetACIPv6List(&list, &count)) return CW_FALSE;
 	
 	// create message
-	CW_CREATE_PROTOCOL_MESSAGE(*msgPtr, IPv6_List_length*count, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
+	CW_CREATE_PROTOCOL_MESSAGE(*msgPtr, IPv6_List_length*count, WID_FREE(list); list = NULL; return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
 	
 	/*--- ATTENZIONE! l'indirizzo ipv6 forse deve essere girato ---*/
 	for(i = 0; i < count; i++) {
 		CWProtocolStoreRawBytes(msgPtr, (char*)list[i].s6_addr, 16);
 	}
 	
-	CW_FREE_OBJECT(list);
+	CW_FREE_OBJECT_WID(list);
 
 	return CWAssembleMsgElem(msgPtr, CW_MSG_ELEMENT_AC_IPV6_LIST_CW_TYPE);
 }
@@ -354,13 +354,13 @@ CWBool CWAssembleMsgElemDecryptErrorReportPeriod (CWProtocolMessage *msgPtr, int
 	for (i=0; i<radioCount; i++)
 	{
 		// create message
-		CW_CREATE_PROTOCOL_MESSAGE(msgs[i], radio_Decrypt_Error_Report_Period_Length, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
+		CW_CREATE_PROTOCOL_MESSAGE(msgs[i], radio_Decrypt_Error_Report_Period_Length, CW_FREE_OBJECT_WID(msgs); return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
 		CWProtocolStore8(&(msgs[i]), radiosInfoPtr[i].ID); // ID of the radio
 		CWProtocolStore16(&(msgs[i]), reportInterval); // state of the radio
 		
 		if(!(CWAssembleMsgElem(&(msgs[i]), CW_MSG_ELEMENT_CW_DECRYPT_ER_REPORT_PERIOD_CW_TYPE))) {
 			for(j = i; j >= 0; j--) { CW_FREE_PROTOCOL_MESSAGE(msgs[j]);}
-			CW_FREE_OBJECT(msgs);
+			CW_FREE_OBJECT_WID(msgs);
 			return CW_FALSE;
 		}
 		
@@ -368,14 +368,14 @@ CWBool CWAssembleMsgElemDecryptErrorReportPeriod (CWProtocolMessage *msgPtr, int
 //	wid_syslog_debug_debug("Decrypt Error Report Period: %d - %d", radiosInfoPtr[i].ID, reportInterval);
 	}
 	
-	CW_CREATE_PROTOCOL_MESSAGE(*msgPtr, len, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
+	CW_CREATE_PROTOCOL_MESSAGE(*msgPtr, len, WID_FREE(msgs); msgs = NULL; return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
 	
 	for(i = 0; i < radioCount; i++) {
 		CWProtocolStoreMessage(msgPtr, &(msgs[i]));
 		CW_FREE_PROTOCOL_MESSAGE(msgs[i]);
 	}
 	
-	CW_FREE_OBJECT(msgs);
+	CW_FREE_OBJECT_WID(msgs);
 
 	return CW_TRUE;
 }
@@ -513,7 +513,7 @@ CWBool CWAssembleMsgElemAP_NTP_Set(CWProtocolMessage *msgPtr,unsigned wtpid)
 	char *addr;
 	char *ifname;
 
-	ifname = (char *)malloc(ETH_IF_NAME_LEN+1);
+	ifname = (char *)WID_MALLOC(ETH_IF_NAME_LEN+1);
 	if(ifname == NULL)
 	{
 		wid_syslog_info("%s malloc %s",__func__,strerror(errno));
@@ -531,41 +531,41 @@ CWBool CWAssembleMsgElemAP_NTP_Set(CWProtocolMessage *msgPtr,unsigned wtpid)
 	if(ret != 0){
 		wid_syslog_err("<err>%s ret=%d.",__func__,ret);
 		if(ifi->ifi_addr != NULL){
-			free(ifi->ifi_addr);
+			WID_FREE(ifi->ifi_addr);
 			ifi->ifi_addr = NULL;
 		}		
 #ifdef	SIOCGIFBRDADDR
 		if(ifi->ifi_brdaddr != NULL){
-			free(ifi->ifi_brdaddr);
+			WID_FREE(ifi->ifi_brdaddr);
 			ifi->ifi_brdaddr = NULL;
 		}
 #endif
-		free(ifi);
+		WID_FREE(ifi);
 		ifi = NULL;
-		CW_FREE_OBJECT(ifname);
+		CW_FREE_OBJECT_WID(ifname);
 		//return WID_DBUS_ERROR;		
 	}else{
-		addr = (char *)malloc(ETH_IF_NAME_LEN+1);
+		addr = (char *)WID_MALLOC(ETH_IF_NAME_LEN+1);
 		if(addr == NULL)
 		{
 			wid_syslog_info("%s malloc %s",__func__,strerror(errno));
 			perror("malloc");
 			if(ifname){
-				free(ifname);
+				WID_FREE(ifname);
 				ifname = NULL;
 			}
 			if(ifi->ifi_addr != NULL){
-				free(ifi->ifi_addr);
+				WID_FREE(ifi->ifi_addr);
 				ifi->ifi_addr = NULL;
 			}		
 #ifdef	SIOCGIFBRDADDR
 			if(ifi->ifi_brdaddr != NULL){
-				free(ifi->ifi_brdaddr);
+				WID_FREE(ifi->ifi_brdaddr);
 				ifi->ifi_brdaddr = NULL;
 			}
 #endif
 			if(ifi){
-				free(ifi);
+				WID_FREE(ifi);
 				ifi = NULL;
 			}
 			return 0;
@@ -576,20 +576,20 @@ CWBool CWAssembleMsgElemAP_NTP_Set(CWProtocolMessage *msgPtr,unsigned wtpid)
 		sprintf(addr,"%s",inet_ntoa(((struct sockaddr_in*)(ifi->ifi_addr))->sin_addr));
 		
 		inet_aton(addr,&adr_inet.sin_addr);
-		CW_FREE_OBJECT(ifname);
-		CW_FREE_OBJECT(addr);
+		CW_FREE_OBJECT_WID(ifname);
+		CW_FREE_OBJECT_WID(addr);
 		if(ifi->ifi_addr != NULL){
-			free(ifi->ifi_addr);
+			WID_FREE(ifi->ifi_addr);
 			ifi->ifi_addr = NULL;
 		}		
 #ifdef	SIOCGIFBRDADDR
 		if(ifi->ifi_brdaddr != NULL){
-			free(ifi->ifi_brdaddr);
+			WID_FREE(ifi->ifi_brdaddr);
 			ifi->ifi_brdaddr = NULL;
 		}
 #endif
 		if(ifi){
-			free(ifi);
+			WID_FREE(ifi);
 			ifi = NULL;
 		}
 	}
@@ -1204,8 +1204,8 @@ CWBool CWAssembleMsgElemRadioOperationalState(int radioID, CWProtocolMessage *ms
 		
 		if(!(CWAssembleMsgElem(&(msgs[i]), CW_MSG_ELEMENT_RADIO_OPERAT_STATE_CW_TYPE))) {
 			for(j = i; j >= 0; j--) { CW_FREE_PROTOCOL_MESSAGE(msgs[j]);}
-			CW_FREE_OBJECT(infos.radios);
-			CW_FREE_OBJECT(msgs);
+			CW_FREE_OBJECT_WID(infos.radios);
+			CW_FREE_OBJECT_WID(msgs);
 			return CW_FALSE;
 		}
 		
@@ -1213,15 +1213,15 @@ CWBool CWAssembleMsgElemRadioOperationalState(int radioID, CWProtocolMessage *ms
 //		wid_syslog_debug_debug("Radio operational State: %d - %d - %d", infos.radios[i].ID, infos.radios[i].state, infos.radios[i].cause);
 	}
 	
-	CW_CREATE_PROTOCOL_MESSAGE(*msgPtr, len, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
+	CW_CREATE_PROTOCOL_MESSAGE(*msgPtr, len, WID_FREE(msgs); msgs = NULL; return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
 	
 	for(i = 0; i < infos.radiosCount; i++) {
 		CWProtocolStoreMessage(msgPtr, &(msgs[i]));
 		CW_FREE_PROTOCOL_MESSAGE(msgs[i]);
 	}
 	
-	CW_FREE_OBJECT(msgs);
-	CW_FREE_OBJECT(infos.radios);
+	CW_FREE_OBJECT_WID(msgs);
+	CW_FREE_OBJECT_WID(infos.radios);
 
 	return CW_TRUE;
 }
@@ -1285,9 +1285,15 @@ CWBool CWParseMsgElemDuplicateIPv6Address(CWProtocolMessage *msgPtr, int len, WT
 	
 	int i;
 	for(i=0; i<16; i++)
-	{	char *aux;
+	{	
+		#if 0
+		char *aux;
 		aux= CWProtocolRetrieveRawBytes(msgPtr, 1);
 		(valPtr->ipv6Address).s6_addr[i] = *aux;
+		#else
+		CW_COPY_MEMORY(&(valPtr->ipv6Address).s6_addr[i], &((msgPtr->msg)[(msgPtr->offset)]), 1);
+		(msgPtr->offset) += 1;
+		#endif
 	}
 
 	//wid_syslog_debug_debug("Duplicate IPv6");
@@ -1361,7 +1367,7 @@ CWBool CWParseMsgElemCWWtpStaIpMacReportInfo(CWProtocolMessage *msgPtr, int len,
 	printf("##staIpMac##mac :%s\n",mac);
 	
 	memcpy(valPtr->mac, mac, 6);
-	free(mac);
+	WID_FREE(mac);
 	mac = NULL;
 
 	//valPtr->mac =  CWProtocolRetrieveStr(msgPtr,valPtr->mac_length);
@@ -1375,7 +1381,7 @@ CWBool CWParseMsgElemCWWtpStaIpMacReportInfo(CWProtocolMessage *msgPtr, int len,
 			aux= CWProtocolRetrieveRawBytes(msgPtr, 1);
 			(valPtr->ipv6Address).s6_addr[i] = *aux;
 			if(aux){
-				free(aux);
+				WID_FREE(aux);
 				aux = NULL;
 			}
 			printf("##staIpMac##ipv6Address :%d",(valPtr->ipv6Address).s6_addr[i]);
@@ -1436,7 +1442,7 @@ CWBool CWParseMsgElemAPNeighborAPInfos(CWProtocolMessage *msgPtr, int len, Neigh
 		memset(neighborapelem, 0, sizeof(struct Neighbor_AP_ELE));		
 		char * str = CWProtocolRetrieveStr(msgPtr,6);
 		memcpy(neighborapelem->BSSID ,str, 6);
-		free(str);
+		WID_FREE(str);
 		str = NULL;
 		
 		neighborapelem->Rate = CWProtocolRetrieve16(msgPtr);
@@ -1457,7 +1463,7 @@ CWBool CWParseMsgElemAPNeighborAPInfos(CWProtocolMessage *msgPtr, int len, Neigh
 			essidlen = 32;
 			valPtr->neighborapInfosCount = count_n;
 			wid_syslog_warning("<warning>%s line==%d,count_n =%d.\n",__func__,__LINE__,count_n);
-			CW_FREE_OBJECT(neighborapelem);			//fengwenchao add for autelan-3251 20121129
+			CW_FREE_OBJECT_WID(neighborapelem);			//fengwenchao add for autelan-3251 20121129
 			oldOffset2 = msgPtr->offset;
 			msgPtr->offset += len - oldOffset2;
 			return CW_TRUE;
@@ -1467,7 +1473,7 @@ CWBool CWParseMsgElemAPNeighborAPInfos(CWProtocolMessage *msgPtr, int len, Neigh
 		essid = CWProtocolRetrieveStr(msgPtr,essidlen);
 		if(check_ascii_32_to126(essid) == CW_FALSE)
 		{
-			CW_FREE_OBJECT(essid);
+			CW_FREE_OBJECT_WID(essid);
 			//CW_CREATE_OBJECT_SIZE_ERR(neighborapelem->ESSID, ESSID_DEFAULT_LEN, return CW_FALSE;);
 			memset(neighborapelem->ESSID, 0, 5);
 			memcpy(neighborapelem->ESSID, "none", 4);
@@ -1477,7 +1483,7 @@ CWBool CWParseMsgElemAPNeighborAPInfos(CWProtocolMessage *msgPtr, int len, Neigh
 		{
 			memset(neighborapelem->ESSID, 0, strlen(essid)+1);
 			memcpy(neighborapelem->ESSID,  essid, strlen(essid));
-			CW_FREE_OBJECT(essid);
+			CW_FREE_OBJECT_WID(essid);
 		}
 		
 		ielen = CWProtocolRetrieve8(msgPtr);
@@ -1486,7 +1492,7 @@ CWBool CWParseMsgElemAPNeighborAPInfos(CWProtocolMessage *msgPtr, int len, Neigh
 			wid_syslog_err("%s ielen==%d\n",__func__,ielen);
 			valPtr->neighborapInfosCount = count_n;
 			wid_syslog_warning("<warning>%s line==%d,count_n =%d.\n",__func__,__LINE__,count_n);
-			CW_FREE_OBJECT(neighborapelem);		//fengwenchao add for autelan-3251 20121129	
+			CW_FREE_OBJECT_WID(neighborapelem);		//fengwenchao add for autelan-3251 20121129	
 			oldOffset2 = msgPtr->offset;
 			msgPtr->offset += len - oldOffset2;
 			return CW_TRUE;
@@ -1496,8 +1502,8 @@ CWBool CWParseMsgElemAPNeighborAPInfos(CWProtocolMessage *msgPtr, int len, Neigh
 		neighborapelem->IEs_INFO = CWProtocolRetrieveStr(msgPtr,ielen);
 		if(check_ascii_32_to126(neighborapelem->IEs_INFO) == CW_FALSE)
 		{
-			CW_FREE_OBJECT(neighborapelem->IEs_INFO);
-			CW_CREATE_OBJECT_SIZE_ERR(neighborapelem->IEs_INFO, 1, return CW_FALSE;);
+			CW_FREE_OBJECT_WID(neighborapelem->IEs_INFO);
+			CW_CREATE_OBJECT_SIZE_ERR(neighborapelem->IEs_INFO, 1, WID_FREE(neighborapelem); neighborapelem = NULL; return CW_FALSE;);
 			neighborapelem->IEs_INFO[0] = '\0';
 		}
 
@@ -1604,12 +1610,12 @@ CWBool CWParseMsgElemAPWidsInfos(CWProtocolMessage *msgPtr, int len, wid_wids_de
 		//printf("03333 %d %d %d\n",AC_WTP[wtpindex]->wids_statist.floodingcount,AC_WTP[wtpindex]->wids_statist.sproofcount,AC_WTP[wtpindex]->wids_statist.weakivcount);
 		str = (unsigned char*)CWProtocolRetrieveStr(msgPtr,6);
 		memcpy(wids_device_ele->bssid,str, 6);
-		free(str);
+		WID_FREE(str);
 		str = NULL;
 
 		str = (unsigned char*)CWProtocolRetrieveStr(msgPtr,6);
 		memcpy(wids_device_ele->vapbssid,str, 6);
-		free(str);
+		WID_FREE(str);
 		str = NULL;
 						
 		wids_device_ele->frametype = CWProtocolRetrieve8(msgPtr);
@@ -1692,7 +1698,7 @@ CWBool CWParseMsgElemAPStaInfoReport(CWProtocolMessage *msgPtr, int len, WIDStat
 		
 		unsigned char* mac = (unsigned char*)CWProtocolRetrieveStr(msgPtr,6);
 		memcpy(valPtr1[i].mac, mac, 6);
-		free(mac);
+		WID_FREE(mac);
 		mac = NULL;
 			
 		//for(i=0;i<6;i++)
@@ -2082,12 +2088,12 @@ CWBool CWParseMsgElemAPStaWapiInfos(CWProtocolMessage *msgPtr, int len, WIDStaWa
 		valPtr->StaWapiInfo[i].WlanId = CWProtocolRetrieve8(msgPtr);		
 		char * str = CWProtocolRetrieveStr(msgPtr,6);
 		memcpy(valPtr->StaWapiInfo[i].mac,str, 6);
-		free(str);
+		WID_FREE(str);
 		valPtr->StaWapiInfo[i].WAPIVersion = CWProtocolRetrieve32(msgPtr); 
 		valPtr->StaWapiInfo[i].ControlledPortStatus = CWProtocolRetrieve8(msgPtr);		
 		str =  CWProtocolRetrieveStr(msgPtr,4);
 		memcpy(valPtr->StaWapiInfo[i].SelectedUnicastCipher,str, 4);
-		free(str);		
+		WID_FREE(str);		
 		valPtr->StaWapiInfo[i].WPIReplayCounters= CWProtocolRetrieve32(msgPtr); 
 		valPtr->StaWapiInfo[i].WPIDecryptableErrors = CWProtocolRetrieve32(msgPtr); 
 		valPtr->StaWapiInfo[i].WPIMICErrors = CWProtocolRetrieve32(msgPtr); 	
@@ -2166,7 +2172,7 @@ CWBool CWParseWTPBoardData (CWProtocolMessage *msgPtr, int len, CWWTPVendorInfos
 			
 			}
 			SN_t = (CWProtocolRetrieveRawBytes(msgPtr, (valPtr->vendorInfos)[i].length));	
-			(valPtr->vendorInfos)[i].SN = (unsigned char *)malloc(((valPtr->vendorInfos)[i].length)+1);
+			(valPtr->vendorInfos)[i].SN = (unsigned char *)WID_MALLOC(((valPtr->vendorInfos)[i].length)+1);
 			memset((valPtr->vendorInfos)[i].SN,0,(((valPtr->vendorInfos)[i].length)+1));
 			if(wid_illegal_character_check(SN_t, strlen(SN_t),0) == 1){
 				memcpy((valPtr->vendorInfos)[i].SN,SN_t,(valPtr->vendorInfos)[i].length);
@@ -2174,7 +2180,7 @@ CWBool CWParseWTPBoardData (CWProtocolMessage *msgPtr, int len, CWWTPVendorInfos
 				wid_syslog_info("%s CW_WTP_SERIAL_NUMBER %s something wrong\n",__func__,SN_t);
 			}
 			if(SN_t != NULL){
-				free(SN_t);
+				WID_FREE(SN_t);
 				SN_t = NULL;
 			}
 			//(valPtr->vendorInfos)[i].SN = (unsigned char*)(CWProtocolRetrieveRawBytes(msgPtr, (valPtr->vendorInfos)[i].length));	
@@ -2206,14 +2212,14 @@ CWBool CWParseWTPBoardData (CWProtocolMessage *msgPtr, int len, CWWTPVendorInfos
 			}
 			strmodel = (CWProtocolRetrieveRawBytes(msgPtr, (valPtr->vendorInfos)[i].length));	
 
-			(valPtr->vendorInfos)[i].model = (unsigned char *)malloc(((valPtr->vendorInfos)[i].length)+1);
+			(valPtr->vendorInfos)[i].model = (unsigned char *)WID_MALLOC(((valPtr->vendorInfos)[i].length)+1);
 			memset((valPtr->vendorInfos)[i].model,0,(((valPtr->vendorInfos)[i].length)+1));
 			if(wid_illegal_character_check(strmodel, strlen(strmodel),0) == 1){
 				memcpy((valPtr->vendorInfos)[i].model,strmodel,(((valPtr->vendorInfos)[i].length)));
 			}else{
 				wid_syslog_info("%s CW_WTP_MODEL_NUMBER %s something wrong\n",__func__,strmodel);
 			}
-			free(strmodel);
+			WID_FREE(strmodel);
 			strmodel = NULL;
 			if((valPtr->vendorInfos)[i].model == NULL) return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL);
 
@@ -2237,14 +2243,14 @@ CWBool CWParseWTPBoardData (CWProtocolMessage *msgPtr, int len, CWWTPVendorInfos
 			}
 			strmodel = (CWProtocolRetrieveRawBytes(msgPtr, (valPtr->vendorInfos)[i].length));	
 
-			(valPtr->vendorInfos)[i].Rmodel = (unsigned char *)malloc(((valPtr->vendorInfos)[i].length)+1);
+			(valPtr->vendorInfos)[i].Rmodel = (unsigned char *)WID_MALLOC(((valPtr->vendorInfos)[i].length)+1);
 			memset((valPtr->vendorInfos)[i].Rmodel,0,(((valPtr->vendorInfos)[i].length)+1));
 			if(wid_illegal_character_check(strmodel, strlen(strmodel),0) == 1){
 				memcpy((valPtr->vendorInfos)[i].Rmodel,strmodel,(((valPtr->vendorInfos)[i].length)));
 			}else{
 				wid_syslog_info("%s CW_WTP_REAL_MODEL_NUMBER %s something wrong\n",__func__,strmodel);
 			}
-			free(strmodel);
+			WID_FREE(strmodel);
 			strmodel = NULL;
 			if((valPtr->vendorInfos)[i].Rmodel == NULL) return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL);
 
@@ -2267,14 +2273,14 @@ CWBool CWParseWTPBoardData (CWProtocolMessage *msgPtr, int len, CWWTPVendorInfos
 			}
 			codever = (CWProtocolRetrieveRawBytes(msgPtr, (valPtr->vendorInfos)[i].length));	
 
-			(valPtr->vendorInfos)[i].codever = (unsigned char *)malloc(((valPtr->vendorInfos)[i].length)+1);
+			(valPtr->vendorInfos)[i].codever = (unsigned char *)WID_MALLOC(((valPtr->vendorInfos)[i].length)+1);
 			memset((valPtr->vendorInfos)[i].codever,0,(((valPtr->vendorInfos)[i].length)+1));
 			if(wid_illegal_character_check(codever, strlen(codever),0) == 1){
 				memcpy((valPtr->vendorInfos)[i].codever,codever,(((valPtr->vendorInfos)[i].length)));
 			}else{
 				wid_syslog_info("%s CW_WTP_CODE_VERSION %s something wrong\n",__func__,codever);
 			}
-			free(codever);
+			WID_FREE(codever);
 			codever = NULL;
 			if((valPtr->vendorInfos)[i].codever == NULL) return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL);
 			
@@ -2355,7 +2361,7 @@ CWBool CWCheckWTPBoardData(int WTPIndex, CWWTPVendorInfos *valPtr){
 						free(savesn);
 						savesn = NULL;
 					}
-					savesn = (char*)malloc((valPtr->vendorInfos)[i].length +1);
+					savesn = (char*)WID_MALLOC((valPtr->vendorInfos)[i].length +1);
 					memset(savesn, 0, (valPtr->vendorInfos)[i].length+1);
 					/*??*/
 					if((valPtr->vendorInfos)[i].length > NAS_IDENTIFIER_NAME){
@@ -2372,7 +2378,7 @@ CWBool CWCheckWTPBoardData(int WTPIndex, CWWTPVendorInfos *valPtr){
 						free(savesn);
 						savesn = NULL;
 					}
-					savesn = (char*)malloc((valPtr->vendorInfos)[i].length +1);
+					savesn = (char*)WID_MALLOC((valPtr->vendorInfos)[i].length +1);
 					memset(savesn, 0, (valPtr->vendorInfos)[i].length+1);
 					if((valPtr->vendorInfos)[i].length > NAS_IDENTIFIER_NAME){
 						wid_syslog_info("SN length %d\n",(valPtr->vendorInfos)[i].length);
@@ -2451,7 +2457,7 @@ CWBool CWCheckWTPBoardData(int WTPIndex, CWWTPVendorInfos *valPtr){
 			else{
 			    wid_syslog_info("Error:model not match\n");
 			    wid_syslog_debug_debug(WID_WTPINFO,"WTPModel = %s, Rmodel = %s\n",AC_WTP[WTPIndex]->WTPModel,(valPtr->vendorInfos)[i].Rmodel);
-				CW_FREE_OBJECT(savesn);
+				free(savesn);
 			    return CW_FALSE;
 			}
 	    }
@@ -2462,7 +2468,7 @@ CWBool CWCheckWTPBoardData(int WTPIndex, CWWTPVendorInfos *valPtr){
 	if(mac > 0)
 	memcpy(AC_WTP[WTPIndex]->WTPMAC, (valPtr->vendorInfos)[i].mac, 6);	
 	printf("CWCheckWTPBoardData finish\n");*/
-	CW_FREE_OBJECT(savesn);
+	free(savesn);
 	return CW_TRUE;
 }
 
@@ -2529,11 +2535,11 @@ int CWCmpWTPAttach(CWNetworkLev4Address *addrPtr){
 			}
 			if((AC_WTP[ret]==NULL)||((AC_WTP[ret]!=NULL)&&(AC_WTP[ret]->WTPStat != 7)))
 			{
-				free(AC_ATTACH[i]);
+				WID_FREE(AC_ATTACH[i]);
 				AC_ATTACH[i] = NULL;
 				continue;
 			}
-			free(AC_ATTACH[i]);
+			WID_FREE(AC_ATTACH[i]);
 			AC_ATTACH[i] = NULL;
 			return ret;
 		}
@@ -2565,7 +2571,7 @@ CWBool CWDisCheckWTPBoardData(int bindingSystemIndex,CWNetworkLev4Address *addrP
 					if(AC_ATTACH[j] == NULL){						
 					//printf("one attach\n");
 					wid_syslog_debug_debug(WID_WTPINFO,"one attach");
-						AC_ATTACH[j] = (CWWTPAttach*)malloc(sizeof(CWWTPAttach));
+						AC_ATTACH[j] = (CWWTPAttach*)WID_MALLOC(sizeof(CWWTPAttach));
 						AC_ATTACH[j]->WTPID = i;						
 						CW_COPY_NET_ADDR_PTR(&(AC_ATTACH[j]->address), addrPtr);
 						*WTPID = i;
@@ -2604,7 +2610,7 @@ CWBool CWAddAC_ATTACH_For_Auto(CWNetworkLev4Address *addrPtr, unsigned int WTPID
 	if((AC_WTP[WTPID] != NULL)&&(AC_WTP[WTPID]->WTPStat == 7)&&(AC_WTP[WTPID]->isused == 1)){
 		while(j<WTP_NUM){
 			if(AC_ATTACH[j] == NULL){						
-				AC_ATTACH[j] = (CWWTPAttach*)malloc(sizeof(CWWTPAttach));
+				AC_ATTACH[j] = (CWWTPAttach*)WID_MALLOC(sizeof(CWWTPAttach));
 				AC_ATTACH[j]->WTPID = WTPID;						
 				CW_COPY_NET_ADDR_PTR(&(AC_ATTACH[j]->address), addrPtr);	
 				return CW_TRUE;
@@ -2691,10 +2697,10 @@ CWBool CWParseWTPDescriptor(CWProtocolMessage *msgPtr, int len, CWWTPDescriptor 
 			//(valPtr->vendorInfos.vendorInfos)[i].ver = CWProtocolRetrieveRawBytes(msgPtr, (valPtr->vendorInfos.vendorInfos)[i].length);
 			strversion = (CWProtocolRetrieveRawBytes(msgPtr, (valPtr->vendorInfos.vendorInfos)[i].length));	
 
-			(valPtr->vendorInfos.vendorInfos)[i].sysver = (unsigned char *)malloc(((valPtr->vendorInfos.vendorInfos)[i].length)+1);
+			(valPtr->vendorInfos.vendorInfos)[i].sysver = (unsigned char *)WID_MALLOC(((valPtr->vendorInfos.vendorInfos)[i].length)+1);
 			memset((valPtr->vendorInfos.vendorInfos)[i].sysver,0,(((valPtr->vendorInfos.vendorInfos)[i].length)+1));
 			memcpy((valPtr->vendorInfos.vendorInfos)[i].sysver,strversion,(((valPtr->vendorInfos.vendorInfos)[i].length)));
-			free(strversion);
+			WID_FREE(strversion);
 			strversion = NULL;
 			wid_syslog_debug_debug(WID_WTPINFO,"*** id is:%d sys_version is:%s ***",i,(valPtr->vendorInfos.vendorInfos)[i].sysver);
 
@@ -2704,10 +2710,10 @@ CWBool CWParseWTPDescriptor(CWProtocolMessage *msgPtr, int len, CWWTPDescriptor 
 			//(valPtr->vendorInfos.vendorInfos)[i].ver = CWProtocolRetrieveRawBytes(msgPtr, (valPtr->vendorInfos.vendorInfos)[i].length);
 			strversion = (CWProtocolRetrieveRawBytes(msgPtr, (valPtr->vendorInfos.vendorInfos)[i].length));	
 
-			(valPtr->vendorInfos.vendorInfos)[i].ver = (unsigned char *)malloc(((valPtr->vendorInfos.vendorInfos)[i].length)+1);
+			(valPtr->vendorInfos.vendorInfos)[i].ver = (unsigned char *)WID_MALLOC(((valPtr->vendorInfos.vendorInfos)[i].length)+1);
 			memset((valPtr->vendorInfos.vendorInfos)[i].ver,0,(((valPtr->vendorInfos.vendorInfos)[i].length)+1));
 			memcpy((valPtr->vendorInfos.vendorInfos)[i].ver,strversion,(((valPtr->vendorInfos.vendorInfos)[i].length)));
-			free(strversion);
+			WID_FREE(strversion);
 			strversion = NULL;
 
 
@@ -2858,14 +2864,14 @@ CWBool CWParseWTPOperationalStatistics(CWProtocolMessage *msgPtr, int len, WTPOp
 		unsigned char* cpuType = (unsigned char*)CWProtocolRetrieveStr(msgPtr,32);
 		memcpy(valPtr->cpuType, cpuType, 32);
 		printf("cpuType %s\n",cpuType);
-		free(cpuType);
+		WID_FREE(cpuType);
 		cpuType = NULL;
 		printf("cpuType %s\n",valPtr->cpuType);
 
 		unsigned char* flashType = (unsigned char*)CWProtocolRetrieveStr(msgPtr,32);
 		memcpy(valPtr->flashType, flashType, 32);
 		printf("flashType  %s\n",flashType);
-		free(flashType);
+		WID_FREE(flashType);
 		flashType = NULL;
 		printf("flashType  %s\n",valPtr->flashType);
 
@@ -2874,7 +2880,7 @@ CWBool CWParseWTPOperationalStatistics(CWProtocolMessage *msgPtr, int len, WTPOp
 		unsigned char* memType = (unsigned char*)CWProtocolRetrieveStr(msgPtr,32);
 		memcpy(valPtr->memType, memType, 32);
 		printf("memType %s\n",memType);
-		free(memType);
+		WID_FREE(memType);
 		memType = NULL;
 		//valPtr->memSize = CWProtocolRetrieve16(msgPtr);
 		printf("memType %s\n",valPtr->memType);
@@ -2918,7 +2924,7 @@ CWBool CWParseMsgElemDecryptErrorReport(CWProtocolMessage *msgPtr, int len, CWDe
 		char *ptr = CWProtocolRetrieveRawBytes(msgPtr, size);
 		CW_COPY_MEMORY(valPtr->decryptErrorMACAddressList, ptr, size);
 		if(ptr){
-			free(ptr);
+			WID_FREE(ptr);
 			ptr = NULL;
 		}
 		//CW_COPY_MEMORY(valPtr->decryptErrorMACAddressList, CWProtocolRetrieveRawBytes(msgPtr, size), size);
@@ -3003,7 +3009,7 @@ CWBool CWParseAPStatisInfo(CWProtocolMessage *msgPtr, int len, int WTPIndex)
 		
 		unsigned char* mac = (unsigned char*)CWProtocolRetrieveStr(msgPtr,6);
 		memcpy(AC_WTP[WTPIndex]->apstatsinfo[i].mac, mac, 6);
-		free(mac);
+		WID_FREE(mac);
 		mac = NULL;
 
 		AC_WTP[WTPIndex]->apstatsinfo[i].rx_pkt_data = CWProtocolRetrieve32(msgPtr);	//xiaodawei modify, ap report data pkts not all pkts, 20110225
@@ -3178,7 +3184,7 @@ CWBool CWParseAPStatisInfo_v2(CWProtocolMessage *msgPtr, int len,char *valPtr, i
 		
 		unsigned char* mac = (unsigned char*)CWProtocolRetrieveStr(msgPtr,6);
 		memcpy(AC_WTP[WTPIndex]->apstatsinfo[i].mac, mac, 6);
-		free(mac);
+		WID_FREE(mac);
 		mac = NULL;
 
 		AC_WTP[WTPIndex]->apstatsinfo[i].rx_pkt_data = CWProtocolRetrieve32(msgPtr);    //book modify
@@ -3430,7 +3436,7 @@ CWBool CWParseAttack_addr_Redirect(CWProtocolMessage *msgPtr, int len, int WTPIn
 	reserve = CWProtocolRetrieve32(msgPtr);
 	rd_sta_count = CWProtocolRetrieve16(msgPtr);
 
-	CW_CREATE_OBJECT_ERR(valPtr, WIDStaWapiInfoList, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););	
+	CW_CREATE_OBJECT_ERR_WID(valPtr, WIDStaWapiInfoList, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););	
 	memset(valPtr, 0, sizeof(WIDStaWapiInfoList));
 	valPtr->WTPID = WTPIndex;
 	valPtr->sta_num = rd_sta_count;
@@ -3458,11 +3464,13 @@ CWBool CWParseAttack_addr_Redirect(CWProtocolMessage *msgPtr, int len, int WTPIn
 		valPtr->StaWapiInfo[i].WlanId = wlan_id;
 		memset(valPtr->StaWapiInfo[i].mac,0,6);
 		memcpy(valPtr->StaWapiInfo[i].mac,stamac,6);
+		WID_FREE(stamac);
+		stamac = NULL;
 	}
 	WidAsdStaWapiInfoUpdate(WTPIndex, valPtr);
 
-	free(stamac);
-	stamac = NULL;
+
+	WID_FREE(valPtr);
 	return CW_TRUE;
 }
 
@@ -3485,7 +3493,7 @@ CWBool CWParseAP_challenge_replay(CWProtocolMessage *msgPtr, int len, int WTPInd
 	reserve = CWProtocolRetrieve32(msgPtr);
 	rd_sta_count = CWProtocolRetrieve16(msgPtr);
 
-	CW_CREATE_OBJECT_ERR(valPtr, WIDStaWapiInfoList, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););	
+	CW_CREATE_OBJECT_ERR_WID(valPtr, WIDStaWapiInfoList, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););	
 	memset(valPtr, 0, sizeof(WIDStaWapiInfoList));
 	valPtr->WTPID = WTPIndex;
 	valPtr->sta_num = rd_sta_count;
@@ -3514,14 +3522,14 @@ CWBool CWParseAP_challenge_replay(CWProtocolMessage *msgPtr, int len, int WTPInd
 		memset(valPtr->StaWapiInfo[i].mac,0,6);
 		memcpy(valPtr->StaWapiInfo[i].mac,stamac,6);
 		if(stamac){
-			free(stamac);
+			WID_FREE(stamac);
 			stamac = NULL;
 		}
 	}
 	WidAsdStaWapiInfoUpdate(WTPIndex, valPtr);
 	if(valPtr){
 
-		free(valPtr);
+		WID_FREE(valPtr);
 		valPtr = NULL;
 	}
 	return CW_TRUE;
@@ -3540,7 +3548,7 @@ CWBool CWPareseWtp_Sta_Flow_Check_Report(CWProtocolMessage *msgPtr, int len, WID
 	
 	unsigned char* mac = (unsigned char*)CWProtocolRetrieveStr(msgPtr,6);
 	memcpy(valPtr->mac, mac, 6);
-	free(mac);
+	WID_FREE(mac);
 	mac = NULL;
 	
 	valPtr->rx_frames = CWProtocolRetrieve32(msgPtr);
@@ -3606,7 +3614,7 @@ CWBool CWPareseWtp_Sta_leave_Report(CWProtocolMessage *msgPtr, int len, WIDStati
 			mac = (unsigned char*)CWProtocolRetrieveStr(msgPtr,6);
 			memcpy(valPtr1[i].mac, mac, 6);
 			if(mac){
-				free(mac);
+				WID_FREE(mac);
 				mac = NULL;
 			}
 			CWProtocolRetrieve64(msgPtr, &valPtr1[i].rx_data_bytes);
@@ -3795,6 +3803,8 @@ CWBool CWParaseWTPTerminalStatistics(
 		{
 			valPtr1[i].wtp_sta_statistics_info.APStaTxSignalStrengthPkts[j] = CWProtocolRetrieve32(msgPtr);		
 		}
+		WID_FREE(sta_mac);
+		sta_mac = NULL;
 #if 0
 			int m = 0;
 			int mcs_idx = 0;
@@ -3911,7 +3921,7 @@ CWBool CWParseWtp_Sta_Terminal_Disturb_Report(CWProtocolMessage *msgPtr, int len
     
     if(sta_mac)
     {
-        free(sta_mac);
+        WID_FREE(sta_mac);
 	    sta_mac = NULL;
 	}
     }

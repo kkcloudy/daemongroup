@@ -116,6 +116,7 @@ typedef struct{
 	int c;
 }common;
 
+extern int wid_memory_trace_switch;
 static void timer_free(tl_timer_t *t, int isFree) {
 
 	if (t == NULL) return;

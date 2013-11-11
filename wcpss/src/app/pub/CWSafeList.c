@@ -30,6 +30,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *******************************************************************************/
 
 #include "CWCommon.h"
+#include "wcpss/wid/WID.h"
+
 
 #ifdef DMALLOC
 #include "../dmalloc-5.5.0/dmalloc.h"
@@ -42,7 +44,7 @@ CWBool CWCreateSafeList(CWSafeList* pSafeList)
 	if (pSafeList == NULL)
 		return CW_FALSE;
 
-	CW_CREATE_OBJECT_ERR(pNewList, CWPrivateSafeList, return CW_FALSE;);
+	CW_CREATE_OBJECT_ERR_WID(pNewList, CWPrivateSafeList, return CW_FALSE;);
 
 	//
 	pNewList->pThreadMutex = NULL;
@@ -66,7 +68,7 @@ void CWDestroySafeList(CWSafeList safeList)
 		return;
 
 	//
-	CW_FREE_OBJECT(pList);
+	CW_FREE_OBJECT_WID(pList);
 }
 
 void CWSetMutexSafeList(CWSafeList safeList, CWThreadMutex* pThreadMutex)
@@ -151,7 +153,7 @@ CWBool CWAddElementToSafeListHead(CWSafeList safeList, void* pData, int nSize)
 	if ((pList == NULL) || (pData == NULL))
 		return CW_FALSE;
 
-	CW_CREATE_OBJECT_ERR(pNewElement, CWPrivateSafeElement, return CW_FALSE;);
+	CW_CREATE_OBJECT_ERR_WID(pNewElement, CWPrivateSafeElement, return CW_FALSE;);
 	pNewElement->pData = pData;
 	pNewElement->nSize = nSize;
 	pNewElement->pNext = pList->pFirstElement;
@@ -206,7 +208,7 @@ void* CWRemoveHeadElementFromSafeList(CWSafeList safeList, int* pSize)
 	if (pSize != NULL)
 		*pSize = pElement->nSize;
 
-	CW_FREE_OBJECT(pElement);
+	CW_FREE_OBJECT_WID(pElement);
 
 	pList->nCount--;
 	return pData;
@@ -221,7 +223,7 @@ CWBool CWAddElementToSafeListTail(CWSafeList safeList, void* pData, int nSize)
 	if ((pList == NULL) || (pData == NULL))
 		return CW_FALSE;
 
-	CW_CREATE_OBJECT_ERR(pNewElement, CWPrivateSafeElement, return CW_FALSE;);
+	CW_CREATE_OBJECT_ERR_WID(pNewElement, CWPrivateSafeElement, return CW_FALSE;);
 	pNewElement->pData = pData;
 	pNewElement->nSize = nSize;
 	pNewElement->pNext = NULL;
@@ -259,7 +261,7 @@ void* CWRemoveTailElementFromSafeList(CWSafeList safeList, int* pSize)
 	if (pSize != NULL)
 		*pSize = pElement->nSize;
 
-	CW_FREE_OBJECT(pElement);
+	CW_FREE_OBJECT_WID(pElement);
 
 	pList->nCount--;
 	return pData;

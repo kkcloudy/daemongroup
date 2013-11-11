@@ -39,7 +39,7 @@ CWBool insert_uptfail_wtp_list(int id)
 
 	struct tag_wtpid *wtp_id;
 	struct tag_wtpid *wtp_id_next;
-	wtp_id = (struct tag_wtpid*)malloc(sizeof(struct tag_wtpid));
+	wtp_id = (struct tag_wtpid*)WID_MALLOC(sizeof(struct tag_wtpid));
 	
 	wtp_id->wtpid = id;
 	wtp_id->next = NULL;
@@ -47,7 +47,7 @@ CWBool insert_uptfail_wtp_list(int id)
 	
 	if(updatefailwtplist == NULL)
 	{
-		updatefailwtplist = (struct tag_wtpid_list*)malloc(sizeof(struct tag_wtpid_list));
+		updatefailwtplist = (struct tag_wtpid_list*)WID_MALLOC(sizeof(struct tag_wtpid_list));
 		updatefailwtplist->wtpidlist = wtp_id ;		
 		updatefailwtplist->count = 1;
 		//printf("*** wtp id:%d insert first  \n",id);
@@ -91,14 +91,14 @@ CWBool delete_uptfail_wtp_list(unsigned int id)
 	{
 
 		updatefailwtplist->wtpidlist = wtp_id_next->next;
-		free(wtp_id_next);
+		WID_FREE(wtp_id_next);
 		wtp_id_next = NULL;
 		
 		updatefailwtplist->count--;
 		
 		if(updatefailwtplist->wtpidlist == NULL)
 		{
-			free(updatefailwtplist);
+			WID_FREE(updatefailwtplist);
 			updatefailwtplist = NULL;
 		}
 		return CW_TRUE;
@@ -113,7 +113,7 @@ CWBool delete_uptfail_wtp_list(unsigned int id)
 
 				wtp_id = wtp_id_next->next;
 				wtp_id_next->next = wtp_id_next->next->next;
-				free(wtp_id);
+				WID_FREE(wtp_id);
 				wtp_id = NULL;
 				updatefailwtplist->count--;
 				return CW_TRUE;
@@ -161,7 +161,7 @@ void destroy_uptfail_wtp_list()
 	struct tag_wtpid *pnext = NULL;
 	phead = updatefailwtplist->wtpidlist;
 	
-	free(updatefailwtplist);
+	WID_FREE(updatefailwtplist);
 	updatefailwtplist = NULL;
 	
 	while(phead != NULL)
@@ -169,7 +169,7 @@ void destroy_uptfail_wtp_list()
 		
 		pnext = phead->next;
 	
-		CW_FREE_OBJECT(phead);
+		CW_FREE_OBJECT_WID(phead);
 
 		phead = pnext;
 
@@ -211,11 +211,11 @@ void update_complete_check()
 						CWConfigVersionInfo *free_node = tmp_node;
 						tmp_node = tmp_node->next;
 						
-						CW_FREE_OBJECT(free_node->str_ap_model);		
-						CW_FREE_OBJECT(free_node->str_ap_version_name); 	
-						CW_FREE_OBJECT(free_node->str_ap_version_path); 	
-						CW_FREE_OBJECT(free_node->str_ap_code); 	
-						CW_FREE_OBJECT(free_node);		
+						CW_FREE_OBJECT_WID(free_node->str_ap_model);		
+						CW_FREE_OBJECT_WID(free_node->str_ap_version_name); 	
+						CW_FREE_OBJECT_WID(free_node->str_ap_version_path); 	
+						CW_FREE_OBJECT_WID(free_node->str_ap_code); 	
+						CW_FREE_OBJECT_WID(free_node);		
 					}
 					gConfigVersionUpdateInfo[i] = NULL;
 				}
