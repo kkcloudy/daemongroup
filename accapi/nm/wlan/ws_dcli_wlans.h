@@ -204,6 +204,55 @@ struct SSIDStatsInfo_v2 {
     struct SSIDStatsInfo_v2 *next;
 };
 
+#if 0
+/*dt 2013.11.6*/
+struct WlanDataPktsInfo_v2{
+		
+	long  wlanCurrID;			//Wlan当前ID
+	unsigned long long wtpSsidSendTermAllByte;		//指定SSID AP发送到终端的字节数
+	unsigned long wtpSsidRecvTermAllPack;		//指定SSID AP从终端接收的包数
+	unsigned long long wtpSsidRecvTermAllByte;		//指定SSID AP从终端接收的字节数	
+	unsigned long long wtpSsidWirelessMacRecvDataRightByte;	/*xiaodawei modify,20101116, 指定SSID MAC层接收的正确的数据字节数*/
+	unsigned long long wtpSsidWirelessMacSendDataRightByte;	/*xiaodawei modify,20101116, 指定SSID MAC层发送的正确的数据字节数*/
+	unsigned long wtpSsidWiredMacRecvDataWrongPack;	//指定SSID MAC层接收的错误的数据包数
+	unsigned long wtpNetWiredRecvPack;		//指定SSID 网络测（有线侧）接收的包数
+	unsigned long wtpUsrWirelessMacRecvDataPack;/*xiaodawei modify,20101116, 无线侧MAC层收到的数据包数*/
+	unsigned long wtpUsrWirelessMacSendDataPack;/*xiaodawei modify,20101116, 无线侧MAC层发送的数据包数*/
+	unsigned long wtpNetWiredSendPack;		//指定SSID 网络侧（有线侧）发送的包数
+	unsigned long WtpWirelessSendFailPkts;		//指定SSID 无线侧发送失败的包数
+	unsigned long wtpWirelessResendPkts; 	//指定SSID 无线侧总的重传包数
+	char *wtpWirelessWrongPktsRate; 	//指定SSID 无线侧错包率
+	unsigned long wtpWirelessSendBroadcastMsgNum;	//指定SSID 无线侧发送的广播包数
+	unsigned long wtpStaUplinkMaxRate;		//指定SSID station上行最大速率
+	unsigned long wtpStaDwlinkMaxRate;		//指定SSID station下行最大速率
+	unsigned long wtpNetWiredRecvErrPack;		//指定SSID 网络侧（有线侧）接收的错包数
+	unsigned long wtpNetWiredRecvRightPack;		//指定SSID 网络侧（有线侧）接收的正确包数
+	unsigned long long wtpNetWiredRecvByte;		//指定SSID 网络侧（有线侧）接收的字节数
+	unsigned long long wtpNetWiredSendByte;		//指定SSID 网络侧（有线侧）发送的字节数
+	unsigned long wtpNetWiredSendErrPack;		//指定SSID 网络侧（有线侧）发送的错包数
+	unsigned long wtpNetWiredSendRightPack;		//指定SSID 网络侧（有线侧）发送的正确包数
+	unsigned long wtpSsidSendDataAllPack;		//制定SSID 网络侧（有线侧）发送的所有包数
+	char *wtpNetWiredRxWrongPktsRate;	//指定SSID 网络侧（有线侧）接收的错误包百分比
+	char *wtpNetWiredTxWrongPktsRate;	//指定SSID 网络侧（有线侧）发送的错误包百分比
+	unsigned int wtpSsidTxDataDropPkts;
+	unsigned int wtpSsidRxDataDropPkts;
+	
+	struct WlanDataPktsInfo_v2 *next;
+};
+struct WtpWlanDataPktsInfo_v2 {
+	long  wtpCurrID;			//AP当前ID
+	char *wtpMacAddr;           //AP的MAC地址
+	unsigned int wlan_num;    //numbers of entries in wlan_list
+	struct WlanDataPktsInfo_v2* wlan_list;
+	
+	struct WtpWlanDataPktsInfo_v2* next;
+};
+
+#endif
+
+
+
+
 struct ap_num_by_interface
 {
 	char if_name[255];
@@ -969,12 +1018,12 @@ extern void Free_set_wtp_location_group(struct WtpList *WtpList_Head);
 /*group_type为1，表示组配置*/
 /*group_type为0，表示单独配置*/
 extern int set_wtp_location_group(dbus_parameter parameter, DBusConnection *connection,int group_type,int group_id,char *Location,struct WtpList **WtpList_Head);
-										/*返回0表示失败，返回1表示成功，返回-1表示wtp location is too long,should be 1 to 15*/
+										/*返回0表示失败，返回1表示成功，返回-1表示wtp location is too long,should be 1 to 256*/
 										/*返回-2表示wtp id does not exist，返回-3示WTP ID非法，返回-4表示Group ID非法*/
 										/*返回-5表示partial failure，返回-6表示group id does not exist*/
 #endif
 
-extern int set_wtp_location(dbus_parameter parameter, DBusConnection *connection,int id,char *Location); /*返回0表示失败，返回1表示成功，返回-1表示wtp location is too long,should be 1 to 15，返回-2表示wtp id does not exist，返回-3示WTP ID非法*/
+extern int set_wtp_location(dbus_parameter parameter, DBusConnection *connection,int id,char *Location); /*返回0表示失败，返回1表示成功，返回-1表示wtp location is too long,should be 1 to 256，返回-2表示wtp id does not exist，返回-3示WTP ID非法*/
 																										   /*返回SNMPD_CONNECTION_ERROR表示connection error*/
 																		
 extern void free_show_wtp_location(DCLI_WTP_API_GROUP_THREE *WTPINFO);
@@ -1970,10 +2019,14 @@ extern int show_all_wlan_ssid_stats_information_cmd(dbus_parameter parameter, DB
 extern void Free_show_all_wlan_ssid_stats_information_cmd_v2(struct SSIDStatsInfo_v2 *WtpHead_v2);
 /*返回1时，调用Free_show_all_wlan_ssid_stats_information_cmd_v2()释放空间*/
 extern int show_all_wlan_ssid_stats_information_cmd_v2(dbus_parameter parameter, DBusConnection *connection,struct SSIDStatsInfo_v2 **WtpHead_v2);
-																													  /*返回0表示失败，返回1表示成功*/
-																													  /*返回-1表示There is no WTP now*/
-																													  /*返回-2表示error*/
-																													  /*返回SNMPD_CONNECTION_ERROR表示connection error*/
+
+
+/*dt*/
+extern void Free_show_all_wtp_wlan_data_pkts_information_cmd_v2(struct WtpWlanDataPktsInfo *WtpHead_v2);/*返回0表示失败，返回1表示成功*/
+extern int show_all_wtp_wlan_data_pkts_information_cmd_v2(dbus_parameter parameter, DBusConnection *connection,struct WtpWlanDataPktsInfo **WtpHead_v2);																													  /*返回-1表示There is no WTP now*/
+																												
+
+
 
 extern void Free_show_all_wtp_collect_information_cmd(struct WtpCollectInfo *WtpHead);
 /*只要调用，就通过Free_show_all_wtp_collect_information_cmd()释放空间*/

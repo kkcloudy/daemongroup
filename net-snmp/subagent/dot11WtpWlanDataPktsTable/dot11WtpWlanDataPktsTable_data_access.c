@@ -237,9 +237,9 @@ dot11WtpWlanDataPktsTable_cache_load(netsnmp_container *container)
 
     snmpd_dbus_message *messageHead = NULL, *messageNode = NULL;
     
-    snmp_log(LOG_DEBUG, "enter list_connection_call_dbus_method:show_all_wtp_wlan_data_pkts_information_cmd\n");
-    messageHead = list_connection_call_dbus_method(show_all_wtp_wlan_data_pkts_information_cmd, SHOW_ALL_WTP_TABLE_METHOD);
-	snmp_log(LOG_DEBUG, "exit list_connection_call_dbus_method:show_all_wtp_wlan_data_pkts_information_cmd,messageHead=%p\n", messageHead);
+    snmp_log(LOG_DEBUG, "enter list_connection_call_dbus_method:show_all_wtp_wlan_data_pkts_information_cmd_v2\n");
+    messageHead = list_connection_call_dbus_method(show_all_wtp_wlan_data_pkts_information_cmd_v2, SHOW_ALL_WTP_TABLE_METHOD);
+	snmp_log(LOG_DEBUG, "exit list_connection_call_dbus_method:show_all_wtp_wlan_data_pkts_information_cmd_v2,messageHead=%p\n", messageHead);
 
 	if(messageHead)
 	{
@@ -299,7 +299,7 @@ dot11WtpWlanDataPktsTable_cache_load(netsnmp_container *container)
         rowreq_ctx = dot11WtpWlanDataPktsTable_allocate_rowreq_ctx();
         if (NULL == rowreq_ctx) {
             snmp_log(LOG_ERR, "memory allocation failed\n");
-            free_dbus_message_list(&messageHead, Free_show_all_wtp_wlan_data_pkts_information_cmd);
+            free_dbus_message_list(&messageHead, Free_show_all_wtp_wlan_data_pkts_information_cmd_v2);
             return MFD_RESOURCE_UNAVAILABLE;
         }
         if(MFD_SUCCESS != dot11WtpWlanDataPktsTable_indexes_set(rowreq_ctx
@@ -708,7 +708,7 @@ dot11WtpWlanDataPktsTable_cache_load(netsnmp_container *container)
     			}
     		}
     	}
-        free_dbus_message_list(&messageHead, Free_show_all_wtp_wlan_data_pkts_information_cmd);
+        free_dbus_message_list(&messageHead, Free_show_all_wtp_wlan_data_pkts_information_cmd_v2);
 	}
 
 

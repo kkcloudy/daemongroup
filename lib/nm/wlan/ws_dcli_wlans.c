@@ -39,7 +39,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 extern "C"
 {
 #endif
-
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <fcntl.h> 
 #include <dirent.h>
 #include <syslog.h>
@@ -53,6 +55,8 @@ extern "C"
 #include "ws_dcli_ac.h"
 #include "ws_public.h"
 #include "ws_dcli_wlans.h"
+
+#define AP_MAX_NUM 139
 
 int parse_radio_ifname(char* ptr,int *wtpid,int *radioid,int *wlanid)
 {
@@ -23744,6 +23748,7 @@ void Free_show_all_wtp_data_pkts_information_cmd(struct WtpDataPktsInfo *WtpHead
 	void (*dcli_init_free_func)(struct WtpDataPktsInfo *);
 	if(NULL != ccgi_dl_handle)
 	{
+	//dcli_free_wtp_wlan_data_pktsinfo_head
 		dcli_init_free_func = dlsym(ccgi_dl_handle,"dcli_free_wtp_data_pkts_Info");
 		if(NULL != dcli_init_free_func)
 		{
@@ -24755,7 +24760,7 @@ int show_all_wtp_wlan_data_pkts_information_cmd(dbus_parameter parameter, DBusCo
 					 connection, 
 					 &wtp_num, 
 					 &ret
-				  );
+				  ); 
 		}
 		else
 		{
@@ -24787,7 +24792,291 @@ int show_all_wtp_wlan_data_pkts_information_cmd(dbus_parameter parameter, DBusCo
 	return retu;
 }
 
+/*add 2013.11.6 bydongtao*/
+void Free_show_all_wtp_wlan_data_pkts_information_cmd_wlannode_v2(struct WlanDataPktsInfo* wlannode_v2)
+{
+	struct WlanDataPktsInfo* p1=NULL,*p2=NULL;
+	if(wlannode_v2 == NULL)
+	{
+		return;
+	}
+	p1=wlannode_v2->next;
+	if(p1 != NULL)
+	{
+		p2=p1->next;
+		while(p2!=NULL)
+		{
+			FREE_OBJECT(p1->wtpNetWiredRxWrongPktsRate);
+			FREE_OBJECT(p1->wtpNetWiredTxWrongPktsRate);
+			FREE_OBJECT(p1->wtpStaDwlinkMaxRate);
+			FREE_OBJECT(p1->wtpStaUplinkMaxRate);
+			FREE_OBJECT(p1->wtpWirelessWrongPktsRate);
+			free(p1);
+			p1=p2;
+			p2=p2->next;
+		}
+		FREE_OBJECT(p1->wtpNetWiredRxWrongPktsRate);
+		FREE_OBJECT(p1->wtpNetWiredTxWrongPktsRate);
+		FREE_OBJECT(p1->wtpStaDwlinkMaxRate);
+		FREE_OBJECT(p1->wtpStaUplinkMaxRate);
+		FREE_OBJECT(p1->wtpWirelessWrongPktsRate);
+		free(p1);
+	}
 
+}
+void Free_show_all_wtp_wlan_data_pkts_information_cmd_v2(struct WtpWlanDataPktsInfo* WtpHead_v2)
+{
+	struct WtpWlanDataPktsInfo *p1 = NULL,*p2 = NULL;
+	if(NULL == WtpHead_v2)
+	{
+		return ;
+	}
+	p1= WtpHead_v2->next;
+	if(p1 != NULL)
+	{
+		p2 = p1->next;
+		while(p2!=NULL)
+		{
+
+			FREE_OBJECT(p1->wtpMacAddr);
+			Free_show_all_wtp_wlan_data_pkts_information_cmd_wlannode_v2(p1->wlan_list);
+			FREE_OBJECT(p1->wlan_list);
+			free(p1);
+			p1=p2;
+			p2=p2->next;
+		}
+		FREE_OBJECT(p1->wtpMacAddr);
+		Free_show_all_wtp_wlan_data_pkts_information_cmd_wlannode_v2(p1->wlan_list);
+		FREE_OBJECT(p1->wlan_list);
+		free(p1);
+	}
+
+}
+int show_all_wtp_wlan_data_pkts_information_cmd_v2(dbus_parameter parameter, DBusConnection *connection,struct WtpWlanDataPktsInfo **WtpHead_v2)
+{
+    if(NULL == connection)
+        return 0;
+	struct WtpWlanDataPktsInfo  *WtpHead = NULL;
+	struct WtpWlanDataPktsInfo  *WtpShowNode = NULL;
+	struct WtpWlanDataPktsInfo *WtpShowNode_tail = NULL;
+	struct WlanDataPktsInfo    *WlanShowNode_tail =NULL;
+    int i;
+	int j;
+	int k;
+	int wlan_real_num;
+	int ret=0;
+	unsigned int wtp_num;
+	int retu;
+
+	void *(*dcli_init_func)(
+							int ,
+							int ,
+							DBusConnection *, 
+							unsigned int *, 
+							unsigned int *
+						);
+
+    WtpHead = NULL;
+	if(NULL != ccgi_dl_handle)
+	{
+		dcli_init_func = dlsym(ccgi_dl_handle,"show_WlanDataPkts_Info_of_all_wtp");
+		if(NULL != dcli_init_func)
+		{
+			WtpHead = (*dcli_init_func)
+				  (
+					 parameter.instance_id,
+					 parameter.local_id,
+					 connection, 
+					 &wtp_num, 
+					 &ret
+				  );
+		}
+		else
+		{
+			return 0;
+		}
+	}
+	else
+	{
+		return 0;
+	}
+	*WtpHead_v2 = (struct WtpWlanDataPktsInfo  *)malloc(sizeof(struct WtpWlanDataPktsInfo ));
+	if(*WtpHead_v2==NULL)
+	{
+		return 0;
+	}
+	memset(*WtpHead_v2,0,sizeof(struct WtpWlanDataPktsInfo));
+	WtpShowNode_tail = *WtpHead_v2;
+
+	if((WtpHead != NULL)&&(ret == 0))
+	{
+		WtpShowNode=WtpHead;
+	 	while(WtpShowNode)
+		{
+			wlan_real_num = 1;// the real num of wlan under the ap
+			int wlan_num_count= WtpHead->wlan_num;//the count num of wlan under the ap
+			int flag[AP_MAX_NUM] = {0};
+			
+			struct WtpWlanDataPktsInfo *WtpShowNode_v2 = NULL;
+			WtpShowNode_v2 = (struct WtpWlanDataPktsInfo *)malloc(sizeof(struct WtpWlanDataPktsInfo));
+			if(WtpShowNode_v2 != NULL)
+			{
+				memset(WtpShowNode_v2,0,sizeof(struct WtpWlanDataPktsInfo));
+				WtpShowNode_v2->wtpCurrID = WtpShowNode->wtpCurrID;
+				
+				WtpShowNode_v2->wtpMacAddr = (char*)malloc(strlen(WtpShowNode->wtpMacAddr) + 1);
+				memset(WtpShowNode_v2->wtpMacAddr,0,(strlen(WtpShowNode->wtpMacAddr) + 1));
+				if(WtpShowNode_v2->wtpMacAddr)
+				{
+					memcpy(WtpShowNode_v2->wtpMacAddr,WtpShowNode->wtpMacAddr,strlen(WtpShowNode->wtpMacAddr));			
+				}
+				
+			struct WlanDataPktsInfo * WlanShowNode = NULL;
+			WtpShowNode_v2->wlan_list = (struct WlanDataPktsInfo *)malloc(sizeof(struct WlanDataPktsInfo));
+			memset(WtpShowNode_v2->wlan_list,0,sizeof(struct WlanDataPktsInfo));
+			
+			WlanShowNode_tail = WtpShowNode_v2->wlan_list;
+
+			for(k=0,WlanShowNode=WtpShowNode->wlan_list;((k<wlan_num_count)&&(NULL != WlanShowNode));WlanShowNode = WlanShowNode->next,k++)
+			{
+				struct WlanDataPktsInfo *WlanShowNode_v2= WtpShowNode_v2->wlan_list;
+				
+				struct WlanDataPktsInfo *temp_wlan_node = WlanShowNode->next;
+		
+	
+				if(0 == flag[WlanShowNode->wlanCurrID])
+				{
+					if( k > 0)
+	
+					{
+						WlanShowNode_v2 = (struct WlanDataPktsInfo *)malloc(sizeof(struct WlanDataPktsInfo));
+						memset(WlanShowNode_v2,0,sizeof(struct WlanDataPktsInfo));
+						wlan_real_num++;
+					}
+					WlanShowNode_v2->wtpNetWiredRecvByte = WlanShowNode->wtpNetWiredRecvByte;
+					WlanShowNode_v2->wtpNetWiredRecvErrPack = WlanShowNode->wtpNetWiredRecvErrPack;
+					WlanShowNode_v2->wtpNetWiredRecvPack = WlanShowNode->wtpNetWiredRecvPack;
+					WlanShowNode_v2->wtpNetWiredRecvRightPack = WlanShowNode->wtpNetWiredRecvRightPack;
+					WlanShowNode_v2->wtpNetWiredSendByte = WlanShowNode->wtpNetWiredSendByte;
+					WlanShowNode_v2->wtpNetWiredSendErrPack = WlanShowNode->wtpNetWiredSendErrPack;
+					WlanShowNode_v2->wtpNetWiredSendPack = WlanShowNode->wtpNetWiredSendPack;
+					WlanShowNode_v2->wtpNetWiredSendRightPack = WlanShowNode->wtpNetWiredSendRightPack;
+					WlanShowNode_v2->wtpSsidRecvTermAllByte = WlanShowNode->wtpSsidRecvTermAllByte;
+					WlanShowNode_v2->wtpSsidRecvTermAllPack = WlanShowNode->wtpSsidRecvTermAllPack;
+					WlanShowNode_v2->wtpSsidRxDataDropPkts = WlanShowNode->wtpSsidRxDataDropPkts;
+					WlanShowNode_v2->wtpSsidSendDataAllPack = WlanShowNode->wtpSsidSendDataAllPack;
+					WlanShowNode_v2->wtpSsidTxDataDropPkts = WlanShowNode->wtpSsidTxDataDropPkts;
+					WlanShowNode_v2->wtpSsidWiredMacRecvDataWrongPack = WlanShowNode->wtpSsidWiredMacRecvDataWrongPack;
+					WlanShowNode_v2->wtpSsidWirelessMacRecvDataRightByte = WlanShowNode->wtpSsidWirelessMacRecvDataRightByte;
+					WlanShowNode_v2->wtpSsidWirelessMacSendDataRightByte = WlanShowNode->wtpSsidWirelessMacSendDataRightByte;
+					WlanShowNode_v2->wtpUsrWirelessMacRecvDataPack = WlanShowNode->wtpUsrWirelessMacRecvDataPack;
+					WlanShowNode_v2->wtpUsrWirelessMacSendDataPack = WlanShowNode->wtpUsrWirelessMacSendDataPack;
+					WlanShowNode_v2->wtpWirelessResendPkts = WlanShowNode->wtpWirelessResendPkts;
+					WlanShowNode_v2->wtpWirelessSendBroadcastMsgNum = WlanShowNode->wtpWirelessSendBroadcastMsgNum;
+					WlanShowNode_v2->WtpWirelessSendFailPkts = WlanShowNode->WtpWirelessSendFailPkts;
+					WlanShowNode_v2->wlanCurrID = WlanShowNode->wlanCurrID;
+					WlanShowNode_v2->wtpStaUplinkMaxRate = WlanShowNode->wtpStaUplinkMaxRate;
+					WlanShowNode_v2->wtpStaDwlinkMaxRate = WlanShowNode->wtpStaDwlinkMaxRate;
+					WlanShowNode_v2->wtpSsidSendTermAllByte = WlanShowNode->wtpSsidSendTermAllByte;
+			
+					WlanShowNode_v2->wtpWirelessWrongPktsRate = (char *)malloc(strlen(WlanShowNode->wtpWirelessWrongPktsRate) + 1);
+					if(WlanShowNode_v2->wtpWirelessWrongPktsRate)
+					{
+						memset(WlanShowNode_v2->wtpWirelessWrongPktsRate ,0,strlen(WlanShowNode->wtpWirelessWrongPktsRate));
+						strcpy(WlanShowNode_v2->wtpWirelessWrongPktsRate,WlanShowNode->wtpWirelessWrongPktsRate);
+					}
+					
+					WlanShowNode_v2->wtpNetWiredTxWrongPktsRate = (char *)malloc(strlen(WlanShowNode->wtpNetWiredTxWrongPktsRate) + 1);
+					if(WlanShowNode_v2->wtpNetWiredTxWrongPktsRate)
+					{
+						memset(WlanShowNode_v2->wtpNetWiredTxWrongPktsRate,0,strlen(WlanShowNode->wtpNetWiredTxWrongPktsRate) + 1);
+						strcpy(WlanShowNode_v2->wtpNetWiredTxWrongPktsRate,WlanShowNode->wtpNetWiredTxWrongPktsRate);
+					}
+					
+					WlanShowNode_v2->wtpNetWiredRxWrongPktsRate = (char *)malloc(strlen(WlanShowNode->wtpNetWiredRxWrongPktsRate) + 1);
+					if(WlanShowNode_v2->wtpNetWiredRxWrongPktsRate)
+					{
+						memset(WlanShowNode_v2->wtpNetWiredRxWrongPktsRate,0,strlen(WlanShowNode->wtpNetWiredRxWrongPktsRate) + 1);
+						strcpy(WlanShowNode_v2->wtpNetWiredRxWrongPktsRate,WlanShowNode->wtpNetWiredRxWrongPktsRate);
+					}					
+					
+					
+				}
+				else
+					continue;
+				
+				while(NULL != temp_wlan_node)
+				{
+					if((temp_wlan_node->wlanCurrID == WlanShowNode->wlanCurrID) )
+					{
+						flag[temp_wlan_node->wlanCurrID] = 1; // repeat flag
+											
+						WlanShowNode_v2->wtpNetWiredRecvByte += temp_wlan_node->wtpNetWiredRecvByte;
+						WlanShowNode_v2->wtpNetWiredRecvErrPack += temp_wlan_node->wtpNetWiredRecvErrPack;
+						WlanShowNode_v2->wtpNetWiredRecvPack += temp_wlan_node->wtpNetWiredRecvPack;
+						WlanShowNode_v2->wtpNetWiredRecvRightPack += temp_wlan_node->wtpNetWiredRecvRightPack;
+						WlanShowNode_v2->wtpNetWiredSendByte += temp_wlan_node->wtpNetWiredSendByte;
+						WlanShowNode_v2->wtpNetWiredSendErrPack += temp_wlan_node->wtpNetWiredSendErrPack;
+						WlanShowNode_v2->wtpNetWiredSendPack += temp_wlan_node->wtpNetWiredSendPack;
+						WlanShowNode_v2->wtpNetWiredSendRightPack += temp_wlan_node->wtpNetWiredSendRightPack;
+						WlanShowNode_v2->wtpSsidRecvTermAllByte += temp_wlan_node->wtpSsidRecvTermAllByte;
+						WlanShowNode_v2->wtpSsidRecvTermAllPack += temp_wlan_node->wtpSsidRecvTermAllPack;
+						WlanShowNode_v2->wtpSsidRxDataDropPkts += temp_wlan_node->wtpSsidRxDataDropPkts;
+						WlanShowNode_v2->wtpSsidSendDataAllPack += temp_wlan_node->wtpSsidSendDataAllPack;
+						WlanShowNode_v2->wtpSsidTxDataDropPkts += temp_wlan_node->wtpSsidTxDataDropPkts;
+						WlanShowNode_v2->wtpSsidWiredMacRecvDataWrongPack += temp_wlan_node->wtpSsidWiredMacRecvDataWrongPack;
+						WlanShowNode_v2->wtpSsidWirelessMacRecvDataRightByte += temp_wlan_node->wtpSsidWirelessMacRecvDataRightByte;
+						WlanShowNode_v2->wtpSsidWirelessMacSendDataRightByte += temp_wlan_node->wtpSsidWirelessMacSendDataRightByte;
+						WlanShowNode_v2->wtpUsrWirelessMacRecvDataPack += temp_wlan_node->wtpUsrWirelessMacRecvDataPack;
+						WlanShowNode_v2->wtpUsrWirelessMacSendDataPack += temp_wlan_node->wtpUsrWirelessMacSendDataPack;
+						WlanShowNode_v2->wtpWirelessResendPkts += temp_wlan_node->wtpWirelessResendPkts;
+						WlanShowNode_v2->wtpWirelessSendBroadcastMsgNum += temp_wlan_node->wtpWirelessSendBroadcastMsgNum;
+						WlanShowNode_v2->WtpWirelessSendFailPkts += temp_wlan_node->WtpWirelessSendFailPkts;
+
+
+
+					}
+					temp_wlan_node = temp_wlan_node->next;
+				}
+				
+				WlanShowNode_v2->next = NULL;
+				if(WlanShowNode_tail)
+				{
+					WlanShowNode_tail->next = WlanShowNode_v2;
+					WlanShowNode_tail = WlanShowNode_v2;
+				}	
+			}
+			WtpShowNode_v2->wlan_num = wlan_real_num;
+			WtpShowNode_v2->next = NULL;
+			if(WtpShowNode_tail)
+			{
+					WtpShowNode_tail->next=WtpShowNode_v2;
+					WtpShowNode_tail=WtpShowNode_v2;
+			}
+
+			}
+			WtpShowNode = WtpShowNode->next;
+		}
+		retu = 1;
+	}
+	else if (ret == WID_DBUS_ERROR)
+	{
+		retu = SNMPD_CONNECTION_ERROR;
+	}
+	else if(ret == WTP_ID_NOT_EXIST)
+	{
+		retu = 1;
+	}
+	else
+	{
+		retu = -2;
+	}
+	Free_show_all_wtp_wlan_data_pkts_information_cmd(WtpHead);
+
+	return retu;
+
+}
+//end add by dongtao
 void Free_show_all_wlan_stats_information_cmd(struct WtpWlanStatsInfo *WtpHead)
 {
 	void (*dcli_init_free_func)(struct WtpWlanStatsInfo *);
