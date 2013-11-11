@@ -2691,6 +2691,7 @@ extern int radio_apply_wlan_group(dbus_parameter parameter, DBusConnection *conn
 										   /*返回-14表示radio apply bingding securityindex is same with other*/
 										   /*返回-15表示Group ID非法，返回-16表示partial failure*/
 										   /*返回-17表示group id does not exist*/
+										   /*返回-18表示radio has been binded this wlan already ,if you want use other ESSID,please unbind it first!*/
 #endif
 
 extern int radio_apply_wlan(dbus_parameter parameter, DBusConnection *connection,int rid,char *wlan_id);	
@@ -2702,6 +2703,7 @@ extern int radio_apply_wlan(dbus_parameter parameter, DBusConnection *connection
 																		/*返回-11表示wtp over max wep wlan count 4，返回-12表示Radio ID非法*/
 																		/*返回-13表示illegal input:Input exceeds the maximum value of the parameter type*/
 																		/*返回-14表示radio apply bingding securityindex is same with other*/
+																		/*返回-18表示radio has been binded this wlan already ,if you want use other ESSID,please unbind it first!*/
 																		/*返回SNMPD_CONNECTION_ERROR表示connection error*/
 
 #if _GROUP_POLICY
@@ -2792,7 +2794,8 @@ extern int set_radio_delete_wlan_cmd_group(dbus_parameter parameter, DBusConnect
 											 /*返回-4表示wlan not exist，返回-5表示radio delete wlan fail，返回-6表示Radio ID非法*/
 											 /*返回-7表示illegal input:Input exceeds the maximum value of the parameter type*/
 											 /*返回-8表示Group ID非法，返回-9表示partial failure，返回-10表示group id does not exist*/
-											 /*返回-11表示bss is enable*/
+											 /*返回-12表示please delete radio interface from ebr first*/
+											 /*返回-14表示radio interface is binded to this wlan used other ESSID，返回-15表示please disable wlan service first*/
 #endif
 
 extern int set_radio_delete_wlan_cmd(dbus_parameter parameter, DBusConnection *connection,int RID,char *wlan_id);  
@@ -2801,6 +2804,9 @@ extern int set_radio_delete_wlan_cmd(dbus_parameter parameter, DBusConnection *c
 																					/*返回-4表示wlan not exist，返回-5表示radio delete wlan fail，返回-6表示Radio ID非法*/
 																					/*返回-7表示illegal input:Input exceeds the maximum value of the parameter type，返回-11表示bss is enable*/
 																					/*返回-12表示radio interface is in ebr,please delete it from ebr first*/
+																					/*返回-13表示you want to delete wlan, please do not operate like this*/
+																					/*返回-14表示radio interface is binded to this wlan used other ESSID*/
+																					/*返回-15表示please disable wlan service first*/
 																					/*返回SNMPD_CONNECTION_ERROR表示connection error*/
 
 #if _GROUP_POLICY

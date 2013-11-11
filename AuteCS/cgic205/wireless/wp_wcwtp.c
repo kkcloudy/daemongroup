@@ -48,7 +48,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "ws_init_dbus.h"
 #include "ws_dbus_list_interface.h"
 
-char *asd_log_level[] = {"dump","debug","info","notice","warning","error","crit","alert","emerg"};
+char *asd_log_level[] = {"dump","debug","info","notice","warning","error","crit","alert","emerg","default"};
 
 int ShowACconPage(char *m,struct list *lpublic,struct list *lwcontrol,struct list *lwlan);    
 void ACConfig(instance_parameter *ins_para,struct list *lpublic,struct list *lwcontrol,struct list *lwlan);
@@ -338,7 +338,7 @@ int ShowACconPage(char *m,struct list *lpublic,struct list *lwcontrol,struct lis
 		  "<td>%s:</td>",search(lwcontrol,"asd_log_level"));
 		  fprintf(cgiOut,"<td align=left colspan=2><select name=asd_log_level id=asd_log_level style=width:130px>");
 		 	fprintf(cgiOut,"<option value=>");
-				for(i=0; i<9; i++)
+				for(i=0; i<10; i++)
 				{
 					fprintf(cgiOut,"<option value=%s>%s",asd_log_level[i],asd_log_level[i]);
 				}

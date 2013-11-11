@@ -113,6 +113,7 @@ struct asd_global_variable_info
 	unsigned int asd_bak_sta_update_time;
 	unsigned char  asd_ipset_switch;
 	unsigned char asd_getip_from_dhcpsnp;
+	unsigned char asd_syslog_debug;
 };
 
 

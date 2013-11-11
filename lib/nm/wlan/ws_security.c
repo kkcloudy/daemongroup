@@ -6120,6 +6120,7 @@ int show_asd_global_variable_cmd(dbus_parameter parameter, DBusConnection *conne
 	unsigned int asd_bak_sta_update_time =0;
 	unsigned char  asd_ipset_switch = 0;
 	unsigned char asd_getip_from_dhcpsnp = 0;
+	unsigned char asd_syslog_debug = 0;
 	char BUSNAME[PATH_LEN];
 	char OBJPATH[PATH_LEN];
 	char INTERFACE[PATH_LEN];
@@ -6187,6 +6188,9 @@ int show_asd_global_variable_cmd(dbus_parameter parameter, DBusConnection *conne
 		dbus_message_iter_next(&iter);	
 		dbus_message_iter_get_basic(&iter,&asd_getip_from_dhcpsnp);
 
+		dbus_message_iter_next(&iter);	
+		dbus_message_iter_get_basic(&iter,&asd_syslog_debug);
+
 		/*vty_out(vty,"================================================================================\n");
 		vty_out(vty,"ASD global variable list summary\n");
 		vty_out(vty,"======================================================\n");
@@ -6208,6 +6212,7 @@ int show_asd_global_variable_cmd(dbus_parameter parameter, DBusConnection *conne
 				vty_out(vty,"asd bak sta update time:                 %dmin\n",asd_bak_sta_update_time);
 				vty_out(vty,"asd ipset switch:                        %s\n",(asd_ipset_switch == 1)?"enable":"disable");
 				vty_out(vty,"asd get ip from dhcp-snooping:           %s\n",(asd_getip_from_dhcpsnp == 1)?"enable":"disable");
+				vty_out(vty,"asd syslog debug:                        %d\n",asd_syslog_debug);
 		vty_out(vty,"================================================================================\n");*/
 		info->asd_notice_sta_info_to_portal_timer = asd_notice_sta_info_to_portal_timer;
 		info->asd_notice_sta_info_to_portal = asd_notice_sta_info_to_portal;
@@ -6222,6 +6227,7 @@ int show_asd_global_variable_cmd(dbus_parameter parameter, DBusConnection *conne
 		info->asd_bak_sta_update_time = asd_bak_sta_update_time;
 		info->asd_ipset_switch = asd_ipset_switch;
 		info->asd_getip_from_dhcpsnp = asd_getip_from_dhcpsnp;
+		info->asd_syslog_debug = asd_syslog_debug;
 		retu = 1;
 	}	
 	else

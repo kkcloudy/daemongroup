@@ -737,7 +737,7 @@ extern int set_wids_monitor_mode_cmd(dbus_parameter parameter, DBusConnection *c
 																			                                                    /*返回-2表示invalid wtp id，返回-3表示error*/
 
 
-/*level为"dump","debug","info","notice","warning","error","crit","alert","emerg"*/
+/*level为"dump","debug","info","notice","warning","error","crit","alert","emerg","default"*/
 extern int set_asd_daemonlog_level_cmd(dbus_parameter parameter, DBusConnection *connection,char *level);
 																			/*返回0表示失败，返回1表示成功*/
 																			/*返回-1表示input patameter should only be dump|debug|info|notice|warning|error|crit|alert|emerg*/

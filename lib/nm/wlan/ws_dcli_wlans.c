@@ -8699,7 +8699,8 @@ int wtp_apply_wlan_group(dbus_parameter parameter, DBusConnection *connection,in
 	
 	if(ret == 0)
 	{
-		retu = 1;
+		if (count == 0)
+			retu = 1;
 		if((count != 0)&&(type == 1)&&(*WtpList_Head!= NULL)){
 			retu = -15;
 			/*vty_out(vty,"wtp ");					
@@ -11266,7 +11267,7 @@ void Free_set_wtp_location_group(struct WtpList *WtpList_Head)
 /*group_type为1，表示组配置*/
 /*group_type为0，表示单独配置*/
 int set_wtp_location_group(dbus_parameter parameter, DBusConnection *connection,int group_type,int group_id,char *Location,struct WtpList **WtpList_Head)
-										/*返回0表示失败，返回1表示成功，返回-1表示wtp location is too long,should be 1 to 15*/
+										/*返回0表示失败，返回1表示成功，返回-1表示wtp location is too long,should be 1 to 256*/
 										/*返回-2表示wtp id does not exist，返回-3示WTP ID非法，返回-4表示Group ID非法*/
 										/*返回-5表示partial failure，返回-6表示group id does not exist*/
 {	
@@ -11288,7 +11289,8 @@ int set_wtp_location_group(dbus_parameter parameter, DBusConnection *connection,
 	int len = 0;
 
 	len = strlen(Location);
-	if(len > 15){		
+	if((len <= 0) || (len > 256))
+	{		
 		return -1;
 	}
 	
@@ -11408,7 +11410,7 @@ int set_wtp_location_group(dbus_parameter parameter, DBusConnection *connection,
 
 #endif
 
-int set_wtp_location(dbus_parameter parameter, DBusConnection *connection,int id,char *Location)/*返回0表示失败，返回1表示成功，返回-1表示wtp location is too long,should be 1 to 15，返回-2表示wtp id does not exist，返回-3示WTP ID非法*/
+int set_wtp_location(dbus_parameter parameter, DBusConnection *connection,int id,char *Location)/*返回0表示失败，返回1表示成功，返回-1表示wtp location is too long,should be 1 to 256，返回-2表示wtp id does not exist，返回-3示WTP ID非法*/
 																								   /*返回SNMPD_CONNECTION_ERROR表示connection error*/
 {	
     if(NULL == connection)
@@ -11439,7 +11441,8 @@ int set_wtp_location(dbus_parameter parameter, DBusConnection *connection,int id
 	//WTPID = (unsigned int)id;
 
 	len = strlen(Location);
-	if(len > 15){		
+	if((len <= 0) || (len > 256))
+	{		
 		return -1;
 	}
 	
@@ -34181,6 +34184,7 @@ int radio_apply_wlan_group(dbus_parameter parameter, DBusConnection *connection,
 											/*返回-14表示radio apply bingding securityindex is same with other*/
 											/*返回-15表示Group ID非法，返回-16表示partial failure*/
 											/*返回-17表示group id does not exist*/
+											/*返回-18表示radio has been binded this wlan already ,if you want use other ESSID,please unbind it first!*/
 {
     if(NULL == connection)
         return 0;
@@ -34294,6 +34298,8 @@ int radio_apply_wlan_group(dbus_parameter parameter, DBusConnection *connection,
 			retu = -10;
 		else if(ret == WTP_WEP_NUM_OVER)
 			retu = -11;
+		else if(ret == INTERFACE_BINDED_ALREADLY)
+			retu = -18;
 		else 
 			retu = 0;
 	}
@@ -34337,6 +34343,7 @@ int radio_apply_wlan(dbus_parameter parameter, DBusConnection *connection,int ri
 																/*返回-11表示wtp over max wep wlan count 4，返回-12表示Radio ID非法*/
 																/*返回-13表示illegal input:Input exceeds the maximum value of the parameter type*/
 																/*返回-14表示radio apply bingding securityindex is same with other*/
+																/*返回-18表示radio has been binded this wlan already ,if you want use other ESSID,please unbind it first!*/
 																/*返回SNMPD_CONNECTION_ERROR表示connection error*/
 {
     if(NULL == connection)
@@ -34443,6 +34450,10 @@ int radio_apply_wlan(dbus_parameter parameter, DBusConnection *connection,int ri
 		retu=-11;
 	else if(ret == SECURITYINDEX_IS_SAME)
 		retu=-14;
+	else if (ret == WID_WANT_TO_DELETE_WLAN)
+		retu = 0;
+	else if(ret == INTERFACE_BINDED_ALREADLY)
+		retu = -18;
 	else 
 		retu=0;
 	
@@ -35330,7 +35341,8 @@ int set_radio_delete_wlan_cmd_group(dbus_parameter parameter, DBusConnection *co
 												/*返回-4表示wlan not exist，返回-5表示radio delete wlan fail，返回-6表示Radio ID非法*/
 												/*返回-7表示illegal input:Input exceeds the maximum value of the parameter type*/
 												/*返回-8表示Group ID非法，返回-9表示partial failure，返回-10表示group id does not exist*/
-												/*返回-11表示bss is enable*/
+												/*返回-12表示please delete radio interface from ebr first*/
+												/*返回-14表示radio interface is binded to this wlan used other ESSID，返回-15表示please disable wlan service first*/
 {
 
     if(NULL == connection)
@@ -35431,8 +35443,12 @@ int set_radio_delete_wlan_cmd_group(dbus_parameter parameter, DBusConnection *co
 			retu = -3;
 		else if(ret==WLAN_ID_NOT_EXIST)
 			retu = -4;
+		else if (ret == INTERFACE_BINDED_OTHER_ESSID)
+			retu = -14;
 		else if(ret == BSS_BE_ENABLE)
-			retu = -11;
+			retu = -15;
+		else if (ret == RADIO_IN_EBR)
+			retu = -12;
 		else 
 			retu = -5;
 	}
@@ -35471,6 +35487,9 @@ int set_radio_delete_wlan_cmd(dbus_parameter parameter, DBusConnection *connecti
 																			/*返回-4表示wlan not exist，返回-5表示radio delete wlan fail，返回-6表示Radio ID非法*/
 																			/*返回-7表示illegal input:Input exceeds the maximum value of the parameter type，返回-11表示bss is enable*/
 																			/*返回-12表示radio interface is in ebr,please delete it from ebr first*/
+																			/*返回-13表示you want to delete wlan, please do not operate like this*/
+																			/*返回-14表示radio interface is binded to this wlan used other ESSID*/
+																			/*返回-15表示please disable wlan service first*/
 																			/*返回SNMPD_CONNECTION_ERROR表示connection error*/
 {
     if(NULL == connection)
@@ -35565,6 +35584,14 @@ int set_radio_delete_wlan_cmd(dbus_parameter parameter, DBusConnection *connecti
 	//else if(ret == BSS_BE_ENABLE)
 		//retu=-11;
 	else if(ret == RADIO_IN_EBR)
+		retu=-12;
+	else if (ret == WID_WANT_TO_DELETE_WLAN)
+		retu=-13;
+	else if (ret == INTERFACE_BINDED_OTHER_ESSID)
+		retu=-14;
+	else if (ret == BSS_BE_ENABLE)
+		retu=-15;
+	else if (ret == RADIO_IN_EBR)
 		retu=-12;
 	else 
 		retu=-5;

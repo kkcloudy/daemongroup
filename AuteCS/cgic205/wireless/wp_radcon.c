@@ -2283,6 +2283,11 @@ void config_radio(instance_parameter *ins_para,int id,struct list *lpublic,struc
 					  ShowAlert(search(lwlan,"secIndex_is_same_with_other"));
 					  break;
 				    }
+		   case -18:{
+					  flag=0;
+					  ShowAlert(search(lwlan,"radio_has_bind_wlan"));
+					  break;
+				    }
 		 }
      }
 	 else

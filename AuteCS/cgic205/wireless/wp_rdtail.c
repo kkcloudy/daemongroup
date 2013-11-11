@@ -1030,6 +1030,9 @@ void RadDeleteWlan(instance_parameter *ins_para,int id,struct list *lpublic,stru
 																								/*返回-4表示wlan not exist，返回-5表示radio delete wlan fail，返回-6表示Radio ID非法*/
 																								/*返回-7表示illegal input:Input exceeds the maximum value of the parameter type，返回-11表示bss is enable*/
 																								/*返回-12表示radio interface is in ebr,please delete it from ebr first*/
+																								/*返回-13表示you want to delete wlan, please do not operate like this*/
+																								/*返回-14表示radio interface is binded to this wlan used other ESSID*/
+																								/*返回-15表示please disable wlan service first*/
 																								/*返回SNMPD_CONNECTION_ERROR表示connection error*/
 	    switch(ret)
 	    {
@@ -1094,6 +1097,21 @@ void RadDeleteWlan(instance_parameter *ins_para,int id,struct list *lpublic,stru
 			       }
 		  case -12:{
 			         ShowAlert(search(lwlan,"delete_inter_from_ebr"));
+	                 flag=0;
+				     break;
+			       }
+		  case -13:{
+			         ShowAlert(search(lwlan,"dont_del_wlan"));
+	                 flag=0;
+				     break;
+			       }
+		  case -14:{
+			         ShowAlert(search(lwlan,"radio_has_bind_wlan"));
+	                 flag=0;
+				     break;
+			       }
+		  case -15:{
+			         ShowAlert(search(lwlan,"dis_wlan"));
 	                 flag=0;
 				     break;
 			       }

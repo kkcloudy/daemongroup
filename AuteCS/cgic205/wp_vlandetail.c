@@ -1148,9 +1148,6 @@ void MapVeInterface(char *id,struct list *lpublic,struct list *lcontrol)
 	char cpu[5] = { 0 };
 	char cpu_port[5] = { 0 };
 	char command[100] = { 0 };
-	char alt[100] = { 0 };
-	char max_wlan_num[10] = { 0 };
-	char tmp[10] = { 0 };
 
 	memset(slotid,0,sizeof(slotid));
 	cgiFormStringNoNewlines("slot_id",slotid,5);
@@ -1185,9 +1182,6 @@ void UnMapVeInterface(char *id,struct list *lpublic,struct list *lcontrol)
 	char cpu[5] = { 0 };
 	char cpu_port[5] = { 0 };
 	char command[100] = { 0 };
-	char alt[100] = { 0 };
-	char max_wlan_num[10] = { 0 };
-	char tmp[10] = { 0 };
 
 	memset(slotid,0,sizeof(slotid));
 	cgiFormStringNoNewlines("slot_id",slotid,5);

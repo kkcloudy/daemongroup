@@ -22,7 +22,7 @@ IMPORTS
 	enterprises
        			FROM SNMPv2-SMI;
 dot11WtpGroup MODULE-IDENTITY
-    LAST-UPDATED "201309170000Z"        -- Sep 17rd, 2013
+    LAST-UPDATED "201309170000Z"        -- Sep 17th, 2013
     ORGANIZATION " AuteLan Network Management Working Group
                   http://www.autelan.com"
     CONTACT-INFO
@@ -51,7 +51,7 @@ dot11WtpGroup MODULE-IDENTITY
 
          This MIB module contains managed object definitions for
          the AuteLan Protocol."
-    REVISION    "201308270000Z"
+    REVISION    "201309170000Z"
     DESCRIPTION
         "Initial version published as RFC xxx,
 	wtp means ACCESS POINT(AP)."

@@ -11097,7 +11097,7 @@ int set_wids_monitor_mode_cmd(dbus_parameter parameter, DBusConnection *connecti
 	}
 }
 
-/*level为"dump","debug","info","notice","warning","error","crit","alert","emerg"*/
+/*level为"dump","debug","info","notice","warning","error","crit","alert","emerg","default"*/
 int set_asd_daemonlog_level_cmd(dbus_parameter parameter, DBusConnection *connection,char *level)
 																			/*返回0表示失败，返回1表示成功*/
 																			/*返回-1表示input patameter should only be dump|debug|info|notice|warning|error|crit|alert|emerg*/
@@ -11129,7 +11129,7 @@ int set_asd_daemonlog_level_cmd(dbus_parameter parameter, DBusConnection *connec
 	{
 		daemonloglevel = 3;	
 	}
-	else if (!strcmp(level,"notice"))
+	else if ((!strcmp(level,"notice"))||(!strcmp(level,"default")))
 	{
 		daemonloglevel = 4;	
 	}
