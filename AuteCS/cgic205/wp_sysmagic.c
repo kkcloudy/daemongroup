@@ -43,7 +43,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "ws_secondary_container.h"
 #include "ws_dbus_list.h"
 
-
+#define AX81_CRSMU_BOARD_CODE		0x0
+#define AX81_AC12C_BOARD_CODE 		0x1
+#define AX81_AC8C_BOARD_CODE 		0x2
+#define AX81_2X12G12S_BOARD_CODE	0x4
+#define AX81_1X12G12S_BOARD_CODE	0x5
+#define AX81_12X_BOARD_CODE			0x3
+#define AX81_AC4X_BOARD_CODE		0x6
 
 void ShowSysmagPage(char *m,char *n,struct list *lpublic,struct list *lsys,struct list *lcon,unsigned int Pid);     /*m代表用户名，n代表加密后的字符串*/
 
@@ -93,8 +99,10 @@ int panel_5K_5612i(unsigned int value,struct eth_port_s pt,int retu,char *n,char
 int panel_5K_5612E(unsigned int value,struct eth_port_s pt,int retu,char *n,char *m);
 
 void  panel_7605i();
-void panel_86();
-void  select_86_slotinfo(int slotid);
+void panel_86(char *n);
+void  select_86_slotinfo(int slotid,char *n);
+int get_port_state(int slot_no,int port_no);
+int get_port_media(int slot_no,int port_no);
 
 
 ////////////////////////////////// begin new
@@ -384,7 +392,7 @@ static int ShowPage(struct secondary_module_container *p )
 		  
 		if(devicetype == 4)
 		{
-			panel_86();
+			panel_86(p->encry);
 		}		
 		else if((p_getid == 7)||(devicetype == 6))
 		{
@@ -6069,7 +6077,7 @@ int light_spe_new(int key,struct eth_port_s pt,char *content)
 	fprintf(cgiOut,"%s",content);
 	return 0;
 }
-void panel_86()
+void panel_86(char *n)
 {
 	fprintf(cgiOut,"<table id=Table_01 width=719 height=842 border=0 cellpadding=0 cellspacing=0>"\
 	"<tr>"\
@@ -6122,70 +6130,70 @@ void panel_86()
 		"<td>");
 	//slot 1
 	//fprintf(cgiOut,"<img src=\"/images/8610/8610_23.gif\" width=63 height=708 >");
-	select_86_slotinfo(1);
+	select_86_slotinfo(1,n);
 	fprintf(cgiOut,"</td>"\
 		"<td>"\
 			"<img src=\"/images/8610/8610_24.gif\" width=6 height=708 ></td>"\
 		"<td>");
 	//slot 2
 	//fprintf(cgiOut,"<img src=\"/images/8610/8610_25.gif\" width=63 height=708 >");
-	select_86_slotinfo(2);
+	select_86_slotinfo(2,n);
 	fprintf(cgiOut,"</td>"\
 		"<td>"\
 			"<img src=\"/images/8610/8610_26.gif\" width=6 height=708 ></td>"\
 		"<td>");
 	//slot 3
 	//fprintf(cgiOut,"<img src=\"/images/8610/8610_27.gif\" width=63 height=708 >");
-	select_86_slotinfo(3);
+	select_86_slotinfo(3,n);
 	fprintf(cgiOut,"</td>"\
 		"<td>"\
 			"<img src=\"/images/8610/8610_28.gif\" width=6 height=708 ></td>"\
 		"<td>");
 	//slot 4
 	//fprintf(cgiOut,"<img src=\"/images/8610/8610_29.gif\" width=63 height=708 >");
-	select_86_slotinfo(4);
+	select_86_slotinfo(4,n);
 	fprintf(cgiOut,"</td>"\
 		"<td>"\
 			"<img src=\"/images/8610/8610_30.gif\" width=8 height=708 ></td>"\
 		"<td>");
 	//slot 5
 	//fprintf(cgiOut,"<img src=\"/images/8610/8610_31.gif\" width=63 height=708 >");
-	select_86_slotinfo(5);
+	select_86_slotinfo(5,n);
 	fprintf(cgiOut,"</td>"\
 		"<td>"\
 			"<img src=\"/images/8610/8610_32.gif\" width=6 height=708 ></td>"\
 		"<td>");
 	//slot 6
 	//fprintf(cgiOut,"<img src=\"/images/8610/8610_33.gif\" width=63 height=708 >");
-	select_86_slotinfo(6);
+	select_86_slotinfo(6,n);
 	fprintf(cgiOut,"</td>"\
 		"<td>"\
 			"<img src=\"/images/8610/8610_34.gif\" width=6 height=708 ></td>"\
 		"<td>");
 	//slot 7
 	//fprintf(cgiOut,"<img src=\"/images/8610/8610_35.gif\" width=63 height=708 >");
-	select_86_slotinfo(7);
+	select_86_slotinfo(7,n);
 	fprintf(cgiOut,"</td>"\
 		"<td>"\
 			"<img src=\"/images/8610/8610_36.gif\" width=7 height=708 ></td>"\
 		"<td>");
 	//slot 8	
 	//fprintf(cgiOut,"<img src=\"/images/8610/8610_37.gif\" width=63 height=708 >");
-	select_86_slotinfo(8);
+	select_86_slotinfo(8,n);
 	fprintf(cgiOut,"</td>"\
 		"<td>"\
 			"<img src=\"/images/8610/8610_38.gif\" width=9 height=708 ></td>"\
 		"<td bgcolor=#A3A3A3>");
 	//slot 9	
 	//fprintf(cgiOut,"<img src=\"/images/8610/8610_39.gif\" width=63 height=708 >");
-	select_86_slotinfo(9);
+	select_86_slotinfo(9,n);
 	fprintf(cgiOut,"</td>"\
 		"<td>"\
 			"<img src=\"/images/8610/8610_40.gif\" width=8 height=708 ></td>"\
 		"<td bgcolor=#A3A3A3>");
 	//slot 10
 	//fprintf(cgiOut,"<img src=\"/images/8610/8610_41.gif\" width=63 height=708 >");
-	select_86_slotinfo(10);
+	select_86_slotinfo(10,n);
 	fprintf(cgiOut,"</td>"\
 		"<td>"\
 			"<img src=\"/images/8610/8610_42.gif\" width=14 height=708 ></td>"\
@@ -6236,27 +6244,23 @@ void panel_86()
 	"</tr>"\
 "</table>");
 }
-void  select_86_slotinfo(int slotid)
+void  select_86_slotinfo(int slotid,char *n)
 {
-	int ret = 0;
 	char path_buf[128] = {0};
-	char board_name[30] = {0};
+	int board_code = -1;
+	int port_state = 0;
+	int port_media = 0;
 	
 	memset(path_buf,0,sizeof(path_buf));
-	sprintf(path_buf, "/dbm/product/slot/slot%d/name", slotid);
-	memset(board_name,0,sizeof(board_name));
-	ret = get_str_from_file(path_buf, &board_name);
-	if(ret == -1)
+	sprintf(path_buf, "/dbm/product/slot/slot%d/board_code", slotid);
+	board_code = get_int_from_file(path_buf);	
+	if(board_code == -1)
 	{
 		fprintf(cgiOut,"<img src=\"/images/8610/8610_gray.gif\" width=63 height=708 >");
 	}
 	else
 	{
-		if(0 == strcmp(board_name,"unkown"))
-		{
-			fprintf(cgiOut,"<img src=\"/images/8610/8610_gray.gif\" width=63 height=708 >");
-		}
-		if(0 == strcmp(board_name,"AX81_AC8C"))
+		if(AX81_AC8C_BOARD_CODE  == board_code)
 		{
 			//fprintf(cgiOut,"<img src=\"/images/8610/8610_8ports.gif\" width=63 height=708 >");
 			fprintf(cgiOut,"<table id=Table_01 width=63 height=708 border=0 cellpadding=0 cellspacing=0>"\
@@ -6284,13 +6288,55 @@ void  select_86_slotinfo(int slotid)
 				"<tr>"\
 					"<td>"\
 						"<img src=\"/images/8610/8610_8ports_02_06.gif\" width=18 height=20 ></td>"\
-					"<td>"\
-						"<img src=\"/images/8610/8610_8ports_eblack.gif\" width=12 height=20 ></td>"\
-					"<td>"\
+					"<td>");
+						port_media = get_port_media(slotid,7);
+						if(1 == port_media)
+						{
+							fprintf(cgiOut,"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,7);
+							port_state = get_port_state(slotid,7);
+							if(1 == port_state)
+							{
+								fprintf(cgiOut,"<img src=\"/images/8610/8610_8ports_egreen.gif\" width=12 height=20 border=0 alt=\"%d-%d\"></td>",slotid,7);
+							}
+							else if(2 == port_state)
+							{
+								fprintf(cgiOut,"<img src=\"/images/8610/8610_8ports_ered.gif\" width=12 height=20 border=0 alt=\"%d-%d\"></td>",slotid,7);
+							}
+							else
+							{
+								fprintf(cgiOut,"<img src=\"/images/8610/8610_8ports_eblack.gif\" width=12 height=20 border=0 alt=\"%d-%d\"></td>",slotid,7);
+							}
+						}	
+						else
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_8ports_eblack.gif\" width=12 height=20 border=0 alt=\"%d-%d\"></td>",slotid,7);
+						}
+					fprintf(cgiOut,"<td>"\
 						"<img src=\"/images/8610/8610_8ports_3_20.gif\" width=3 height=20 ></td>"\
-					"<td>"\
-						"<img src=\"/images/8610/8610_8ports_eblack.gif\" width=12 height=20 ></td>"\
-					"<td>"\
+					"<td>");
+						port_media = get_port_media(slotid,8);
+						if(1 == port_media)
+						{
+							fprintf(cgiOut,"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,8);
+							port_state = get_port_state(slotid,8);
+							if(1 == port_state)
+							{
+								fprintf(cgiOut,"<img src=\"/images/8610/8610_8ports_egreen.gif\" width=12 height=20 border=0 alt=\"%d-%d\"></td>",slotid,8);
+							}
+							else if(2 == port_state)
+							{
+								fprintf(cgiOut,"<img src=\"/images/8610/8610_8ports_ered.gif\" width=12 height=20 border=0 alt=\"%d-%d\"></td>",slotid,8);
+							}
+							else
+							{
+								fprintf(cgiOut,"<img src=\"/images/8610/8610_8ports_eblack.gif\" width=12 height=20 border=0 alt=\"%d-%d\"></td>",slotid,8);
+							}
+						}	
+						else
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_8ports_eblack.gif\" width=12 height=20 border=0 alt=\"%d-%d\"></td>",slotid,8);
+						}
+					fprintf(cgiOut,"<td>"\
 						"<img src=\"/images/8610/8610_8ports_02_10.gif\" width=18 height=20 ></td>"\
 				"</tr>"\
 				"<tr>"\
@@ -6308,13 +6354,55 @@ void  select_86_slotinfo(int slotid)
 				"<tr>"\
 					"<td>"\
 						"<img src=\"/images/8610/8610_8ports_02_16.gif\" width=18 height=20 ></td>"\
-					"<td>"\
-						"<img src=\"/images/8610/8610_8ports_eblack.gif\" width=12 height=20 ></td>"\
-					"<td>"\
+					"<td>");
+						port_media = get_port_media(slotid,5);
+						if(1 == port_media)
+						{
+							fprintf(cgiOut,"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,5);
+							port_state = get_port_state(slotid,5);
+							if(1 == port_state)
+							{
+								fprintf(cgiOut,"<img src=\"/images/8610/8610_8ports_egreen.gif\" width=12 height=20 border=0 alt=\"%d-%d\"></td>",slotid,5);
+							}
+							else if(2 == port_state)
+							{
+								fprintf(cgiOut,"<img src=\"/images/8610/8610_8ports_ered.gif\" width=12 height=20 border=0 alt=\"%d-%d\"></td>",slotid,5);
+							}
+							else
+							{
+								fprintf(cgiOut,"<img src=\"/images/8610/8610_8ports_eblack.gif\" width=12 height=20 border=0 alt=\"%d-%d\"></td>",slotid,5);
+							}
+						}	
+						else
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_8ports_eblack.gif\" width=12 height=20 border=0 alt=\"%d-%d\"></td>",slotid,5);
+						}
+					fprintf(cgiOut,"<td>"\
 						"<img src=\"/images/8610/8610_8ports_3_20.gif\" width=3 height=20 ></td>"\
-					"<td>"\
-						"<img src=\"/images/8610/8610_8ports_eblack.gif\" width=12 height=20 ></td>"\
-					"<td>"\
+					"<td>");
+						port_media = get_port_media(slotid,6);
+						if(1 == port_media)
+						{
+							fprintf(cgiOut,"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,6);
+							port_state = get_port_state(slotid,6);
+							if(1 == port_state)
+							{
+								fprintf(cgiOut,"<img src=\"/images/8610/8610_8ports_egreen.gif\" width=12 height=20 border=0 alt=\"%d-%d\"></td>",slotid,6);
+							}
+							else if(2 == port_state)
+							{
+								fprintf(cgiOut,"<img src=\"/images/8610/8610_8ports_ered.gif\" width=12 height=20 border=0 alt=\"%d-%d\"></td>",slotid,6);
+							}
+							else
+							{
+								fprintf(cgiOut,"<img src=\"/images/8610/8610_8ports_eblack.gif\" width=12 height=20 border=0 alt=\"%d-%d\"></td>",slotid,6);
+							}
+						}	
+						else
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_8ports_eblack.gif\" width=12 height=20 border=0 alt=\"%d-%d\"></td>",slotid,6);
+						}
+					fprintf(cgiOut,"<td>"\
 						"<img src=\"/images/8610/8610_8ports_02_20.gif\" width=18 height=20 ></td>"\
 				"</tr>"\
 				"<tr>"\
@@ -6332,13 +6420,55 @@ void  select_86_slotinfo(int slotid)
 				"<tr>"\
 					"<td>"\
 						"<img src=\"/images/8610/8610_8ports_02_26.gif\" width=18 height=20 ></td>"\
-					"<td>"\
-						"<img src=\"/images/8610/8610_8ports_eblack.gif\" width=12 height=20 ></td>"\
-					"<td>"\
+					"<td>");
+						port_media = get_port_media(slotid,3);
+						if(1 == port_media)
+						{
+							fprintf(cgiOut,"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,3);
+							port_state = get_port_state(slotid,3);
+							if(1 == port_state)
+							{
+								fprintf(cgiOut,"<img src=\"/images/8610/8610_8ports_egreen.gif\" width=12 height=20 border=0 alt=\"%d-%d\"></td>",slotid,3);
+							}
+							else if(2 == port_state)
+							{
+								fprintf(cgiOut,"<img src=\"/images/8610/8610_8ports_ered.gif\" width=12 height=20 border=0 alt=\"%d-%d\"></td>",slotid,3);
+							}
+							else
+							{
+								fprintf(cgiOut,"<img src=\"/images/8610/8610_8ports_eblack.gif\" width=12 height=20 border=0 alt=\"%d-%d\"></td>",slotid,3);
+							}
+						}	
+						else
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_8ports_eblack.gif\" width=12 height=20 border=0 alt=\"%d-%d\"></td>",slotid,3);
+						}
+					fprintf(cgiOut,"<td>"\
 						"<img src=\"/images/8610/8610_8ports_3_20.gif\" width=3 height=20 ></td>"\
-					"<td>"\
-						"<img src=\"/images/8610/8610_8ports_eblack.gif\" width=12 height=20 ></td>"\
-					"<td>"\
+					"<td>");
+						port_media = get_port_media(slotid,4);
+						if(1 == port_media)
+						{
+							fprintf(cgiOut,"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,4);
+							port_state = get_port_state(slotid,4);
+							if(1 == port_state)
+							{
+								fprintf(cgiOut,"<img src=\"/images/8610/8610_8ports_egreen.gif\" width=12 height=20 border=0 alt=\"%d-%d\"></td>",slotid,4);
+							}
+							else if(2 == port_state)
+							{
+								fprintf(cgiOut,"<img src=\"/images/8610/8610_8ports_ered.gif\" width=12 height=20 border=0 alt=\"%d-%d\"></td>",slotid,4);
+							}
+							else
+							{
+								fprintf(cgiOut,"<img src=\"/images/8610/8610_8ports_eblack.gif\" width=12 height=20 border=0 alt=\"%d-%d\"></td>",slotid,4);
+							}
+						}	
+						else
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_8ports_eblack.gif\" width=12 height=20 border=0 alt=\"%d-%d\"></td>",slotid,4);
+						}
+					fprintf(cgiOut,"<td>"\
 						"<img src=\"/images/8610/8610_8ports_02_30.gif\" width=18 height=20 ></td>"\
 				"</tr>"\
 				"<tr>"\
@@ -6356,13 +6486,55 @@ void  select_86_slotinfo(int slotid)
 				"<tr>"\
 					"<td>"\
 						"<img src=\"/images/8610/8610_8ports_02_36.gif\" width=18 height=20 ></td>"\
-					"<td>"\
-						"<img src=\"/images/8610/8610_8ports_eblack.gif\" width=12 height=20 ></td>"\
-					"<td>"\
+					"<td>");
+						port_media = get_port_media(slotid,1);
+						if(1 == port_media)
+						{
+							fprintf(cgiOut,"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,1);
+							port_state = get_port_state(slotid,1);
+							if(1 == port_state)
+							{
+								fprintf(cgiOut,"<img src=\"/images/8610/8610_8ports_egreen.gif\" width=12 height=20 border=0 alt=\"%d-%d\"></td>",slotid,1);
+							}
+							else if(2 == port_state)
+							{
+								fprintf(cgiOut,"<img src=\"/images/8610/8610_8ports_ered.gif\" width=12 height=20 border=0 alt=\"%d-%d\"></td>",slotid,1);
+							}
+							else
+							{
+								fprintf(cgiOut,"<img src=\"/images/8610/8610_8ports_eblack.gif\" width=12 height=20 border=0 alt=\"%d-%d\"></td>",slotid,1);
+							}
+						}	
+						else
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_8ports_eblack.gif\" width=12 height=20 border=0 alt=\"%d-%d\"></td>",slotid,1);
+						}
+					fprintf(cgiOut,"<td>"\
 						"<img src=\"/images/8610/8610_8ports_02_38.gif\" width=3 height=20 ></td>"\
-					"<td>"\
-						"<img src=\"/images/8610/8610_8ports_eblack.gif\" width=12 height=20 ></td>"\
-					"<td>"\
+					"<td>");
+						port_media = get_port_media(slotid,2);
+						if(1 == port_media)
+						{
+							fprintf(cgiOut,"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,2);
+							port_state = get_port_state(slotid,2);
+							if(1 == port_state)
+							{
+								fprintf(cgiOut,"<img src=\"/images/8610/8610_8ports_egreen.gif\" width=12 height=20 border=0 alt=\"%d-%d\"></td>",slotid,2);
+							}
+							else if(2 == port_state)
+							{
+								fprintf(cgiOut,"<img src=\"/images/8610/8610_8ports_ered.gif\" width=12 height=20 border=0 alt=\"%d-%d\"></td>",slotid,2);
+							}
+							else
+							{
+								fprintf(cgiOut,"<img src=\"/images/8610/8610_8ports_eblack.gif\" width=12 height=20 border=0 alt=\"%d-%d\"></td>",slotid,2);
+							}
+						}	
+						else
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_8ports_eblack.gif\" width=12 height=20 border=0 alt=\"%d-%d\"></td>",slotid,2);
+						}
+					fprintf(cgiOut,"<td>"\
 						"<img src=\"/images/8610/8610_8ports_02_40.gif\" width=18 height=20 ></td>"\
 				"</tr>"\
 				"<tr>"\
@@ -6404,13 +6576,55 @@ void  select_86_slotinfo(int slotid)
 				"<tr>"\
 					"<td>"\
 						"<img src=\"/images/8610/8610_8ports_04_06.gif\" width=12 height=20 ></td>"\
-					"<td>"\
-						"<img src=\"/images/8610/8610_8ports_lblack.gif\" width=18 height=20 ></td>"\
-					"<td>"\
+					"<td>");
+						port_media = get_port_media(slotid,7);
+						if(0 == port_media)
+						{
+							fprintf(cgiOut,"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,7);
+							port_state = get_port_state(slotid,7);
+							if(1 == port_state)
+							{
+								fprintf(cgiOut,"<img src=\"/images/8610/8610_8ports_lgreen.gif\" width=18 height=20 border=0 alt=\"%d-%d\"></td>",slotid,7);
+							}
+							else if(2 == port_state)
+							{
+								fprintf(cgiOut,"<img src=\"/images/8610/8610_8ports_lred.gif\" width=18 height=20 border=0 alt=\"%d-%d\"></td>",slotid,7);
+							}
+							else
+							{
+								fprintf(cgiOut,"<img src=\"/images/8610/8610_8ports_lblack.gif\" width=18 height=20 border=0 alt=\"%d-%d\"></td>",slotid,7);
+							}
+						}	
+						else
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_8ports_lblack.gif\" width=18 height=20 border=0 alt=\"%d-%d\"></td>",slotid,7);
+						}
+					fprintf(cgiOut,"<td>"\
 						"<img src=\"/images/8610/8610_8ports_3_20.gif\" width=3 height=20 ></td>"\
-					"<td>"\
-						"<img src=\"/images/8610/8610_8ports_rblack.gif\" width=18 height=20 ></td>"\
-					"<td>"\
+					"<td>");
+						port_media = get_port_media(slotid,8);
+						if(0 == port_media)
+						{
+							fprintf(cgiOut,"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,8);
+							port_state = get_port_state(slotid,8);
+							if(1 == port_state)
+							{
+								fprintf(cgiOut,"<img src=\"/images/8610/8610_8ports_rgreen.gif\" width=18 height=20 border=0 alt=\"%d-%d\"></td>",slotid,8);
+							}
+							else if(2 == port_state)
+							{
+								fprintf(cgiOut,"<img src=\"/images/8610/8610_8ports_rred.gif\" width=18 height=20 border=0 alt=\"%d-%d\"></td>",slotid,8);
+							}
+							else
+							{
+								fprintf(cgiOut,"<img src=\"/images/8610/8610_8ports_rblack.gif\" width=18 height=20 border=0 alt=\"%d-%d\"></td>",slotid,8);
+							}
+						}	
+						else
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_8ports_rblack.gif\" width=18 height=20 border=0 alt=\"%d-%d\"></td>",slotid,8);
+						}
+					fprintf(cgiOut,"<td>"\
 						"<img src=\"/images/8610/8610_8ports_04_10.gif\" width=12 height=20 ></td>"\
 				"</tr>"\
 				"<tr>"\
@@ -6428,13 +6642,55 @@ void  select_86_slotinfo(int slotid)
 				"<tr>"\
 					"<td>"\
 						"<img src=\"/images/8610/8610_8ports_04_16.gif\" width=12 height=20 ></td>"\
-					"<td>"\
-						"<img src=\"/images/8610/8610_8ports_lblack.gif\" width=18 height=20 ></td>"\
-					"<td>"\
+					"<td>");
+						port_media = get_port_media(slotid,5);
+						if(0 == port_media)
+						{
+							fprintf(cgiOut,"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,5);
+							port_state = get_port_state(slotid,5);
+							if(1 == port_state)
+							{
+								fprintf(cgiOut,"<img src=\"/images/8610/8610_8ports_lgreen.gif\" width=18 height=20 border=0 alt=\"%d-%d\"></td>",slotid,5);
+							}
+							else if(2 == port_state)
+							{
+								fprintf(cgiOut,"<img src=\"/images/8610/8610_8ports_lred.gif\" width=18 height=20 border=0 alt=\"%d-%d\"></td>",slotid,5);
+							}
+							else
+							{
+								fprintf(cgiOut,"<img src=\"/images/8610/8610_8ports_lblack.gif\" width=18 height=20 border=0 alt=\"%d-%d\"></td>",slotid,5);
+							}
+						}	
+						else
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_8ports_lblack.gif\" width=18 height=20 border=0 alt=\"%d-%d\"></td>",slotid,5);
+						}
+					fprintf(cgiOut,"<td>"\
 						"<img src=\"/images/8610/8610_8ports_3_20.gif\" width=3 height=20 ></td>"\
-					"<td>"\
-						"<img src=\"/images/8610/8610_8ports_rblack.gif\" width=18 height=20 ></td>"\
-					"<td>"\
+					"<td>");
+						port_media = get_port_media(slotid,6);
+						if(0 == port_media)
+						{
+							fprintf(cgiOut,"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,6);
+							port_state = get_port_state(slotid,6);
+							if(1 == port_state)
+							{
+								fprintf(cgiOut,"<img src=\"/images/8610/8610_8ports_rgreen.gif\" width=18 height=20 border=0 alt=\"%d-%d\"></td>",slotid,6);
+							}
+							else if(2 == port_state)
+							{
+								fprintf(cgiOut,"<img src=\"/images/8610/8610_8ports_rred.gif\" width=18 height=20 border=0 alt=\"%d-%d\"></td>",slotid,6);
+							}
+							else
+							{
+								fprintf(cgiOut,"<img src=\"/images/8610/8610_8ports_rblack.gif\" width=18 height=20 border=0 alt=\"%d-%d\"></td>",slotid,6);
+							}
+						}	
+						else
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_8ports_rblack.gif\" width=18 height=20 border=0 alt=\"%d-%d\"></td>",slotid,6);
+						}
+					fprintf(cgiOut,"<td>"\
 						"<img src=\"/images/8610/8610_8ports_04_20.gif\" width=12 height=20 ></td>"\
 				"</tr>"\
 				"<tr>"\
@@ -6452,13 +6708,55 @@ void  select_86_slotinfo(int slotid)
 				"<tr>"\
 					"<td>"\
 						"<img src=\"/images/8610/8610_8ports_04_26.gif\" width=12 height=20 ></td>"\
-					"<td>"\
-						"<img src=\"/images/8610/8610_8ports_lblack.gif\" width=18 height=20 ></td>"\
-					"<td>"\
+					"<td>");
+						port_media = get_port_media(slotid,3);
+						if(0 == port_media)
+						{
+							fprintf(cgiOut,"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,3);
+							port_state = get_port_state(slotid,3);
+							if(1 == port_state)
+							{
+								fprintf(cgiOut,"<img src=\"/images/8610/8610_8ports_lgreen.gif\" width=18 height=20 border=0 alt=\"%d-%d\"></td>",slotid,3);
+							}
+							else if(2 == port_state)
+							{
+								fprintf(cgiOut,"<img src=\"/images/8610/8610_8ports_lred.gif\" width=18 height=20 border=0 alt=\"%d-%d\"></td>",slotid,3);
+							}
+							else
+							{
+								fprintf(cgiOut,"<img src=\"/images/8610/8610_8ports_lblack.gif\" width=18 height=20 border=0 alt=\"%d-%d\"></td>",slotid,3);
+							}
+						}	
+						else
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_8ports_lblack.gif\" width=18 height=20 border=0 alt=\"%d-%d\"></td>",slotid,3);
+						}
+					fprintf(cgiOut,"<td>"\
 						"<img src=\"/images/8610/8610_8ports_3_20.gif\" width=3 height=20 ></td>"\
-					"<td>"\
-						"<img src=\"/images/8610/8610_8ports_rblack.gif\" width=18 height=20 ></td>"\
-					"<td>"\
+					"<td>");
+						port_media = get_port_media(slotid,4);
+						if(0 == port_media)
+						{
+							fprintf(cgiOut,"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,4);
+							port_state = get_port_state(slotid,4);
+							if(1 == port_state)
+							{
+								fprintf(cgiOut,"<img src=\"/images/8610/8610_8ports_rgreen.gif\" width=18 height=20 border=0 alt=\"%d-%d\"></td>",slotid,4);
+							}
+							else if(2 == port_state)
+							{
+								fprintf(cgiOut,"<img src=\"/images/8610/8610_8ports_rred.gif\" width=18 height=20 border=0 alt=\"%d-%d\"></td>",slotid,4);
+							}
+							else
+							{
+								fprintf(cgiOut,"<img src=\"/images/8610/8610_8ports_rblack.gif\" width=18 height=20 border=0 alt=\"%d-%d\"></td>",slotid,4);
+							}
+						}	
+						else
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_8ports_rblack.gif\" width=18 height=20 border=0 alt=\"%d-%d\"></td>",slotid,4);
+						}
+					fprintf(cgiOut,"<td>"\
 						"<img src=\"/images/8610/8610_8ports_04_30.gif\" width=12 height=20 ></td>"\
 				"</tr>"\
 				"<tr>"\
@@ -6476,13 +6774,55 @@ void  select_86_slotinfo(int slotid)
 				"<tr>"\
 					"<td>"\
 						"<img src=\"/images/8610/8610_8ports_04_36.gif\" width=12 height=20 ></td>"\
-					"<td>"\
-						"<img src=\"/images/8610/8610_8ports_lblack.gif\" width=18 height=20 ></td>"\
-					"<td>"\
+					"<td>");
+						port_media = get_port_media(slotid,1);
+						if(0 == port_media)
+						{
+							fprintf(cgiOut,"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,1);
+							port_state = get_port_state(slotid,1);
+							if(1 == port_state)
+							{
+								fprintf(cgiOut,"<img src=\"/images/8610/8610_8ports_lgreen.gif\" width=18 height=20 border=0 alt=\"%d-%d\"></td>",slotid,1);
+							}
+							else if(2 == port_state)
+							{
+								fprintf(cgiOut,"<img src=\"/images/8610/8610_8ports_lred.gif\" width=18 height=20 border=0 alt=\"%d-%d\"></td>",slotid,1);
+							}
+							else
+							{
+								fprintf(cgiOut,"<img src=\"/images/8610/8610_8ports_lblack.gif\" width=18 height=20 border=0 alt=\"%d-%d\"></td>",slotid,1);
+							}
+						}	
+						else
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_8ports_lblack.gif\" width=18 height=20 border=0 alt=\"%d-%d\"></td>",slotid,1);
+						}
+					fprintf(cgiOut,"<td>"\
 						"<img src=\"/images/8610/8610_8ports_3_20.gif\" width=3 height=20 ></td>"\
-					"<td>"\
-						"<img src=\"/images/8610/8610_8ports_rblack.gif\" width=18 height=20 ></td>"\
-					"<td>"\
+					"<td>");
+						port_media = get_port_media(slotid,2);
+						if(0 == port_media)
+						{
+							fprintf(cgiOut,"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,2);
+							port_state = get_port_state(slotid,2);
+							if(1 == port_state)
+							{
+								fprintf(cgiOut,"<img src=\"/images/8610/8610_8ports_rgreen.gif\" width=18 height=20 border=0 alt=\"%d-%d\"></td>",slotid,2);
+							}
+							else if(2 == port_state)
+							{
+								fprintf(cgiOut,"<img src=\"/images/8610/8610_8ports_rred.gif\" width=18 height=20 border=0 alt=\"%d-%d\"></td>",slotid,2);
+							}
+							else
+							{
+								fprintf(cgiOut,"<img src=\"/images/8610/8610_8ports_rblack.gif\" width=18 height=20 border=0 alt=\"%d-%d\"></td>",slotid,2);
+							}
+						}	
+						else
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_8ports_rblack.gif\" width=18 height=20 border=0 alt=\"%d-%d\"></td>",slotid,2);
+						}
+					fprintf(cgiOut,"<td>"\
 						"<img src=\"/images/8610/8610_8ports_04_40.gif\" width=12 height=20 ></td>"\
 				"</tr>"\
 				"<tr>"\
@@ -6506,7 +6846,7 @@ void  select_86_slotinfo(int slotid)
 			"</tr>"\
 		"</table>");
 		}
-		if(0 == strcmp(board_name,"AX81_2X12G12S"))
+		if(AX81_2X12G12S_BOARD_CODE == board_code)
 		{
 			//fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports.gif\" width=63 height=708 >");
 			fprintf(cgiOut,"<table id=Table_01 width=63 height=708 border=0 cellpadding=0 cellspacing=0>"\
@@ -6535,12 +6875,38 @@ void  select_86_slotinfo(int slotid)
 				"<td>"\
 					"<img src=\"/images/8610/8610_12ports_02_06.gif\" width=17 height=21 ></td>"\
 				"<td>"\
-					"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 ></td>"\
-				"<td>"\
+					"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,25);
+					port_state = get_port_state(slotid,25);
+					if(1 == port_state)
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_egreen.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,25);
+					}
+					else if(2 == port_state)
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_ered.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,25);
+					}
+					else
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,25);
+					}
+				fprintf(cgiOut,"<td>"\
 					"<img src=\"/images/8610/8610_12ports_2_21.gif\" width=2 height=21 ></td>"\
 				"<td>"\
-					"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 ></td>"\
-				"<td>"\
+					"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,26);
+					port_state = get_port_state(slotid,26);
+					if(1 == port_state)
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_egreen.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,26);
+					}
+					else if(2 == port_state)
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_ered.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,26);
+					}
+					else
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,26);
+					}
+				fprintf(cgiOut,"<td>"\
 					"<img src=\"/images/8610/8610_12ports_02_10.gif\" width=18 height=21 ></td>"\
 			"</tr>"\
 			"<tr>"\
@@ -6559,12 +6925,38 @@ void  select_86_slotinfo(int slotid)
 				"<td>"\
 					"<img src=\"/images/8610/8610_12ports_02_16.gif\" width=17 height=21 ></td>"\
 				"<td>"\
-					"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 ></td>"\
-				"<td>"\
+					"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,23);
+					port_state = get_port_state(slotid,23);
+					if(1 == port_state)
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_egreen.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,23);
+					}
+					else if(2 == port_state)
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_ered.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,23);
+					}
+					else
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,23);
+					}
+				fprintf(cgiOut,"<td>"\
 					"<img src=\"/images/8610/8610_12ports_2_21.gif\" width=2 height=21 ></td>"\
 				"<td>"\
-					"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 ></td>"\
-				"<td>"\
+					"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,24);
+					port_state = get_port_state(slotid,24);
+					if(1 == port_state)
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_egreen.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,24);
+					}
+					else if(2 == port_state)
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_ered.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,24);
+					}
+					else
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,24);
+					}
+				fprintf(cgiOut,"<td>"\
 					"<img src=\"/images/8610/8610_12ports_02_20.gif\" width=18 height=21 ></td>"\
 			"</tr>"\
 			"<tr>"\
@@ -6583,12 +6975,38 @@ void  select_86_slotinfo(int slotid)
 				"<td>"\
 					"<img src=\"/images/8610/8610_12ports_02_26.gif\" width=17 height=21 ></td>"\
 				"<td>"\
-					"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 ></td>"\
-				"<td>"\
+					"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,21);
+					port_state = get_port_state(slotid,21);
+					if(1 == port_state)
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_egreen.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,21);
+					}
+					else if(2 == port_state)
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_ered.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,21);
+					}
+					else
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,21);
+					}
+				fprintf(cgiOut,"<td>"\
 					"<img src=\"/images/8610/8610_12ports_2_21.gif\" width=2 height=21 ></td>"\
 				"<td>"\
-					"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 ></td>"\
-				"<td>"\
+					"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,22);
+					port_state = get_port_state(slotid,22);
+					if(1 == port_state)
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_egreen.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,22);
+					}
+					else if(2 == port_state)
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_ered.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,22);
+					}
+					else
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,22);
+					}
+				fprintf(cgiOut,"<td>"\
 					"<img src=\"/images/8610/8610_12ports_02_30.gif\" width=18 height=21 ></td>"\
 			"</tr>"\
 			"<tr>"\
@@ -6607,12 +7025,38 @@ void  select_86_slotinfo(int slotid)
 				"<td>"\
 					"<img src=\"/images/8610/8610_12ports_02_36.gif\" width=17 height=21 ></td>"\
 				"<td>"\
-					"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 ></td>"\
-				"<td>"\
+					"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,19);
+					port_state = get_port_state(slotid,19);
+					if(1 == port_state)
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_egreen.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,19);
+					}
+					else if(2 == port_state)
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_ered.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,19);
+					}
+					else
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,19);
+					}
+				fprintf(cgiOut,"<td>"\
 					"<img src=\"/images/8610/8610_12ports_2_21.gif\" width=2 height=21 ></td>"\
 				"<td>"\
-					"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 ></td>"\
-				"<td>"\
+					"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,20);
+					port_state = get_port_state(slotid,20);
+					if(1 == port_state)
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_egreen.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,20);
+					}
+					else if(2 == port_state)
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_ered.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,20);
+					}
+					else
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,20);
+					}
+				fprintf(cgiOut,"<td>"\
 					"<img src=\"/images/8610/8610_12ports_02_40.gif\" width=18 height=21 ></td>"\
 			"</tr>"\
 			"<tr>"\
@@ -6631,12 +7075,38 @@ void  select_86_slotinfo(int slotid)
 				"<td>"\
 					"<img src=\"/images/8610/8610_12ports_02_46.gif\" width=17 height=21 ></td>"\
 				"<td>"\
-					"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 ></td>"\
-				"<td>"\
+					"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,17);
+					port_state = get_port_state(slotid,17);
+					if(1 == port_state)
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_egreen.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,17);
+					}
+					else if(2 == port_state)
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_ered.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,17);
+					}
+					else
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,17);
+					}
+				fprintf(cgiOut,"<td>"\
 					"<img src=\"/images/8610/8610_12ports_2_21.gif\" width=2 height=21 ></td>"\
 				"<td>"\
-					"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 ></td>"\
-				"<td>"\
+					"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,18);
+					port_state = get_port_state(slotid,18);
+					if(1 == port_state)
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_egreen.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,18);
+					}
+					else if(2 == port_state)
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_ered.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,18);
+					}
+					else
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,18);
+					}
+				fprintf(cgiOut,"<td>"\
 					"<img src=\"/images/8610/8610_12ports_02_50.gif\" width=18 height=21 ></td>"\
 			"</tr>"\
 			"<tr>"\
@@ -6655,12 +7125,38 @@ void  select_86_slotinfo(int slotid)
 				"<td>"\
 					"<img src=\"/images/8610/8610_12ports_02_56.gif\" width=17 height=21 ></td>"\
 				"<td>"\
-					"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 ></td>"\
-				"<td>"\
+					"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,15);
+					port_state = get_port_state(slotid,15);
+					if(1 == port_state)
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_egreen.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,15);
+					}
+					else if(2 == port_state)
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_ered.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,15);
+					}
+					else
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,15);
+					}
+				fprintf(cgiOut,"<td>"\
 					"<img src=\"/images/8610/8610_12ports_2_21.gif\" width=2 height=21 ></td>"\
 				"<td>"\
-					"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 ></td>"\
-				"<td>"\
+					"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,16);
+					port_state = get_port_state(slotid,16);
+					if(1 == port_state)
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_egreen.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,16);
+					}
+					else if(2 == port_state)
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_ered.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,16);
+					}
+					else
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,16);
+					}
+				fprintf(cgiOut,"<td>"\
 					"<img src=\"/images/8610/8610_12ports_02_60.gif\" width=18 height=21 ></td>"\
 			"</tr>"\
 			"<tr>"\
@@ -6703,12 +7199,38 @@ void  select_86_slotinfo(int slotid)
 				"<td>"\
 					"<img src=\"/images/8610/8610_12ports_04_06.gif\" width=11 height=21 ></td>"\
 				"<td>"\
-					"<img src=\"/images/8610/8610_12ports_lblack.gif\" width=19 height=21 ></td>"\
-				"<td>"\
+					"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,13);
+					port_state = get_port_state(slotid,13);
+					if(1 == port_state)
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_lgreen.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,13);
+					}
+					else if(2 == port_state)
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_lred.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,13);
+					}
+					else
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_lblack.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,13);
+					}
+				fprintf(cgiOut,"<td>"\
 					"<img src=\"/images/8610/8610_12ports_2_21.gif\" width=2 height=21 ></td>"\
 				"<td>"\
-					"<img src=\"/images/8610/8610_12ports_rblack.gif\" width=19 height=21 ></td>"\
-				"<td>"\
+					"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,14);
+					port_state = get_port_state(slotid,14);
+					if(1 == port_state)
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_rgreen.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,14);
+					}
+					else if(2 == port_state)
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_rred.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,14);
+					}
+					else
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_rblack.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,14);
+					}
+				fprintf(cgiOut,"<td>"\
 					"<img src=\"/images/8610/8610_12ports_04_10.gif\" width=12 height=21 ></td>"\
 			"</tr>"\
 			"<tr>"\
@@ -6727,12 +7249,38 @@ void  select_86_slotinfo(int slotid)
 				"<td>"\
 					"<img src=\"/images/8610/8610_12ports_04_16.gif\" width=11 height=21 ></td>"\
 				"<td>"\
-					"<img src=\"/images/8610/8610_12ports_lblack.gif\" width=19 height=21 ></td>"\
-				"<td>"\
+					"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,11);
+					port_state = get_port_state(slotid,11);
+					if(1 == port_state)
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_lgreen.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,11);
+					}
+					else if(2 == port_state)
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_lred.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,11);
+					}
+					else
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_lblack.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,11);
+					}
+				fprintf(cgiOut,"<td>"\
 					"<img src=\"/images/8610/8610_12ports_2_21.gif\" width=2 height=21 ></td>"\
 				"<td>"\
-					"<img src=\"/images/8610/8610_12ports_rblack.gif\" width=19 height=21 ></td>"\
-				"<td>"\
+					"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,12);
+					port_state = get_port_state(slotid,12);
+					if(1 == port_state)
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_rgreen.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,12);
+					}
+					else if(2 == port_state)
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_rred.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,12);
+					}
+					else
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_rblack.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,12);
+					}
+				fprintf(cgiOut,"<td>"\
 					"<img src=\"/images/8610/8610_12ports_04_20.gif\" width=12 height=21 ></td>"\
 			"</tr>"\
 			"<tr>"\
@@ -6751,12 +7299,38 @@ void  select_86_slotinfo(int slotid)
 				"<td>"\
 					"<img src=\"/images/8610/8610_12ports_04_26.gif\" width=11 height=21 ></td>"\
 				"<td>"\
-					"<img src=\"/images/8610/8610_12ports_lblack.gif\" width=19 height=21 ></td>"\
-				"<td>"\
+					"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,9);
+					port_state = get_port_state(slotid,9);
+					if(1 == port_state)
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_lgreen.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,9);
+					}
+					else if(2 == port_state)
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_lred.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,9);
+					}
+					else
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_lblack.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,9);
+					}
+				fprintf(cgiOut,"<td>"\
 					"<img src=\"/images/8610/8610_12ports_2_21.gif\" width=2 height=21 ></td>"\
 				"<td>"\
-					"<img src=\"/images/8610/8610_12ports_rblack.gif\" width=19 height=21 ></td>"\
-				"<td>"\
+					"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,10);
+					port_state = get_port_state(slotid,10);
+					if(1 == port_state)
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_rgreen.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,10);
+					}
+					else if(2 == port_state)
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_rred.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,10);
+					}
+					else
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_rblack.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,10);
+					}
+				fprintf(cgiOut,"<td>"\
 					"<img src=\"/images/8610/8610_12ports_04_30.gif\" width=12 height=21 ></td>"\
 			"</tr>"\
 			"<tr>"\
@@ -6775,12 +7349,38 @@ void  select_86_slotinfo(int slotid)
 				"<td>"\
 					"<img src=\"/images/8610/8610_12ports_04_36.gif\" width=11 height=21 ></td>"\
 				"<td>"\
-					"<img src=\"/images/8610/8610_12ports_lblack.gif\" width=19 height=21 ></td>"\
-				"<td>"\
+					"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,7);
+					port_state = get_port_state(slotid,7);
+					if(1 == port_state)
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_lgreen.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,7);
+					}
+					else if(2 == port_state)
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_lred.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,7);
+					}
+					else
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_lblack.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,7);
+					}
+				fprintf(cgiOut,"<td>"\
 					"<img src=\"/images/8610/8610_12ports_2_21.gif\" width=2 height=21 ></td>"\
 				"<td>"\
-					"<img src=\"/images/8610/8610_12ports_rblack.gif\" width=19 height=21 ></td>"\
-				"<td>"\
+					"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,8);
+					port_state = get_port_state(slotid,8);
+					if(1 == port_state)
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_rgreen.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,8);
+					}
+					else if(2 == port_state)
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_rred.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,8);
+					}
+					else
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_rblack.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,8);
+					}
+				fprintf(cgiOut,"<td>"\
 					"<img src=\"/images/8610/8610_12ports_04_40.gif\" width=12 height=21 ></td>"\
 			"</tr>"\
 			"<tr>"\
@@ -6799,12 +7399,38 @@ void  select_86_slotinfo(int slotid)
 				"<td>"\
 					"<img src=\"/images/8610/8610_12ports_04_46.gif\" width=11 height=21 ></td>"\
 				"<td>"\
-					"<img src=\"/images/8610/8610_12ports_lblack.gif\" width=19 height=21 ></td>"\
-				"<td>"\
+					"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,5);
+					port_state = get_port_state(slotid,5);
+					if(1 == port_state)
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_lgreen.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,5);
+					}
+					else if(2 == port_state)
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_lred.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,5);
+					}
+					else
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_lblack.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,5);
+					}
+				fprintf(cgiOut,"<td>"\
 					"<img src=\"/images/8610/8610_12ports_2_21.gif\" width=2 height=21 ></td>"\
 				"<td>"\
-					"<img src=\"/images/8610/8610_12ports_rblack.gif\" width=19 height=21 ></td>"\
-				"<td>"\
+					"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,6);
+					port_state = get_port_state(slotid,6);
+					if(1 == port_state)
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_rgreen.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,6);
+					}
+					else if(2 == port_state)
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_rred.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,6);
+					}
+					else
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_rblack.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,6);
+					}
+				fprintf(cgiOut,"<td>"\
 					"<img src=\"/images/8610/8610_12ports_04_50.gif\" width=12 height=21 ></td>"\
 			"</tr>"\
 			"<tr>"\
@@ -6823,12 +7449,38 @@ void  select_86_slotinfo(int slotid)
 				"<td>"\
 					"<img src=\"/images/8610/8610_12ports_04_56.gif\" width=11 height=21 ></td>"\
 				"<td>"\
-					"<img src=\"/images/8610/8610_12ports_lblack.gif\" width=19 height=21 ></td>"\
-				"<td>"\
+					"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,3);
+					port_state = get_port_state(slotid,3);
+					if(1 == port_state)
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_lgreen.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,3);
+					}
+					else if(2 == port_state)
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_lred.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,3);
+					}
+					else
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_lblack.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,3);
+					}
+				fprintf(cgiOut,"<td>"\
 					"<img src=\"/images/8610/8610_12ports_2_21.gif\" width=2 height=21 ></td>"\
 				"<td>"\
-					"<img src=\"/images/8610/8610_12ports_rblack.gif\" width=19 height=21 ></td>"\
-				"<td>"\
+					"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,4);
+					port_state = get_port_state(slotid,4);
+					if(1 == port_state)
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_rgreen.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,4);
+					}
+					else if(2 == port_state)
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_rred.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,4);
+					}
+					else
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_rblack.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,4);
+					}
+				fprintf(cgiOut,"<td>"\
 					"<img src=\"/images/8610/8610_12ports_04_60.gif\" width=12 height=21 ></td>"\
 			"</tr>"\
 			"<tr>"\
@@ -6848,15 +7500,126 @@ void  select_86_slotinfo(int slotid)
 			"</tr>"\
 			"<tr>"\
 				"<td>"\
-					"<img src=\"/images/8610/8610_12ports_05.gif\" width=63 height=307 ></td>"\
+					/*"<img src=\"/images/8610/8610_12ports_05.gif\" width=63 height=307 >"\*/
+					"<table width=63 height=307 border=0 cellpadding=0 cellspacing=0>"\
+						"<tr>"\
+							"<td colspan=3>"\
+								"<img src=\"/images/8610/8610_12ports_05_01.jpg\" width=63 height=36 alt=""></td>"\
+						"</tr>"\
+						"<tr>"\
+							"<td rowspan=3>"\
+								"<img src=\"/images/8610/8610_12ports_05_02.jpg\" width=35 height=48 alt=""></td>"\
+							"<td>"\
+								"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,2);
+								port_state = get_port_state(slotid,2);
+								if(1 == port_state)
+								{
+									fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_egreen.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,2);
+								}
+								else if(2 == port_state)
+								{
+									fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_ered.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,2);
+								}
+								else
+								{
+									fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,2);
+								}
+							fprintf(cgiOut,"<td rowspan=3>"\
+								"<img src=\"/images/8610/8610_12ports_05_04.jpg\" width=15 height=48 alt=""></td>"\
+						"</tr>"\
+						"<tr>"\
+							"<td>"\
+								"<img src=\"/images/8610/8610_12ports_05_05.jpg\" width=13 height=6 alt=""></td>"\
+						"</tr>"\
+						"<tr>"\
+							"<td>"\
+								"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,1);
+								port_state = get_port_state(slotid,1);
+								if(1 == port_state)
+								{
+									fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_egreen.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,1);
+								}
+								else if(2 == port_state)
+								{
+									fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_ered.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,1);
+								}
+								else
+								{
+									fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,1);
+								}
+						fprintf(cgiOut,"</tr>"\
+						"<tr>"\
+							"<td colspan=3>"\
+								"<img src=\"/images/8610/8610_12ports_05_07.jpg\" width=63 height=223 alt=""></td>"\
+						"</tr>"\
+					"</table>"\
+				"</td>"\
 			"</tr>"\
 		"</table>");
 		}
-		if(0 == strcmp(board_name,"AX81_SMU"))
+		if(AX81_CRSMU_BOARD_CODE == board_code)
 		{
-			fprintf(cgiOut,"<img src=\"/images/8610/8610_mcontrol.gif\" width=63 height=708 >");
+			/*fprintf(cgiOut,"<img src=\"/images/8610/8610_mcontrol.gif\" width=63 height=708 >");*/
+			fprintf(cgiOut,"<table width=63 height=708 border=0 cellpadding=0 cellspacing=0>"\
+				"<tr>"\
+					"<td colspan=3>"\
+						"<img src=\"/images/8610/8610_mcontrol_01.jpg\" width=63 height=136 alt=""></td>"\
+				"</tr>"\
+				"<tr>"\
+					"<td rowspan=4>"\
+						"<img src=\"/images/8610/8610_mcontrol_02.jpg\" width=18 height=50 alt=""></td>"\
+					"<td>"\
+						"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,2);
+						port_state = get_port_state(slotid,2);
+						if(1 == port_state)
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_lgreen.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,2);
+						}
+						else if(2 == port_state)
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_lred.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,2);
+						}
+						else
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_lblack.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,2);
+						}
+					fprintf(cgiOut,"<td>"\
+						"<img src=\"/images/8610/8610_mcontrol_04.jpg\" width=26 height=21 alt=""></td>"\
+				"</tr>"\
+				"<tr>"\
+					"<td colspan=2>"\
+						"<img src=\"/images/8610/8610_mcontrol_05.jpg\" width=45 height=7 alt=""></td>"\
+				"</tr>"\
+				"<tr>"\
+					"<td>"\
+						"<img src=\"/images/8610/8610_mcontrol_06.jpg\" width=19 height=1 alt=""></td>"\
+					"<td rowspan=2>"\
+						"<img src=\"/images/8610/8610_mcontrol_07.jpg\" width=26 height=22 alt=""></td>"\
+				"</tr>"\
+				"<tr>"\
+					"<td>"\
+						"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,1);
+						port_state = get_port_state(slotid,1);
+						if(1 == port_state)
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_lgreen.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,1);
+						}
+						else if(2 == port_state)
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_lred.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,1);
+						}
+						else
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_lblack.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,1);
+						}
+				fprintf(cgiOut,"</tr>"\
+				"<tr>"\
+					"<td colspan=3>"\
+						"<img src=\"/images/8610/8610_mcontrol_09.jpg\" width=63 height=522 alt=""></td>"\
+				"</tr>"\
+			"</table>");
 		}
-		if(0 == strcmp(board_name,"AX81_1X12G12S"))
+		if(AX81_1X12G12S_BOARD_CODE == board_code)
 		{
 			//fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports.gif\" width=63 height=708 >");
 			fprintf(cgiOut,"<table id=Table_01 width=63 height=708 border=0 cellpadding=0 cellspacing=0>"\
@@ -6885,12 +7648,38 @@ void  select_86_slotinfo(int slotid)
 				"<td>"\
 					"<img src=\"/images/8610/8610_12ports_02_06.gif\" width=17 height=21 ></td>"\
 				"<td>"\
-					"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 ></td>"\
-				"<td>"\
+					"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,23);
+					port_state = get_port_state(slotid,23);
+					if(1 == port_state)
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_egreen.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,23);
+					}
+					else if(2 == port_state)
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_ered.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,23);
+					}
+					else
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,23);
+					}
+				fprintf(cgiOut,"<td>"\
 					"<img src=\"/images/8610/8610_12ports_2_21.gif\" width=2 height=21 ></td>"\
 				"<td>"\
-					"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 ></td>"\
-				"<td>"\
+					"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,24);
+					port_state = get_port_state(slotid,24);
+					if(1 == port_state)
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_egreen.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,24);
+					}
+					else if(2 == port_state)
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_ered.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,24);
+					}
+					else
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,24);
+					}
+				fprintf(cgiOut,"<td>"\
 					"<img src=\"/images/8610/8610_12ports_02_10.gif\" width=18 height=21 ></td>"\
 			"</tr>"\
 			"<tr>"\
@@ -6909,12 +7698,38 @@ void  select_86_slotinfo(int slotid)
 				"<td>"\
 					"<img src=\"/images/8610/8610_12ports_02_16.gif\" width=17 height=21 ></td>"\
 				"<td>"\
-					"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 ></td>"\
-				"<td>"\
+					"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,21);
+					port_state = get_port_state(slotid,21);
+					if(1 == port_state)
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_egreen.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,21);
+					}
+					else if(2 == port_state)
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_ered.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,21);
+					}
+					else
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,21);
+					}
+				fprintf(cgiOut,"<td>"\
 					"<img src=\"/images/8610/8610_12ports_2_21.gif\" width=2 height=21 ></td>"\
 				"<td>"\
-					"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 ></td>"\
-				"<td>"\
+					"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,22);
+					port_state = get_port_state(slotid,22);
+					if(1 == port_state)
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_egreen.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,22);
+					}
+					else if(2 == port_state)
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_ered.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,22);
+					}
+					else
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,22);
+					}
+				fprintf(cgiOut,"<td>"\
 					"<img src=\"/images/8610/8610_12ports_02_20.gif\" width=18 height=21 ></td>"\
 			"</tr>"\
 			"<tr>"\
@@ -6933,12 +7748,38 @@ void  select_86_slotinfo(int slotid)
 				"<td>"\
 					"<img src=\"/images/8610/8610_12ports_02_26.gif\" width=17 height=21 ></td>"\
 				"<td>"\
-					"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 ></td>"\
-				"<td>"\
+					"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,19);
+					port_state = get_port_state(slotid,19);
+					if(1 == port_state)
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_egreen.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,19);
+					}
+					else if(2 == port_state)
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_ered.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,19);
+					}
+					else
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,19);
+					}
+				fprintf(cgiOut,"<td>"\
 					"<img src=\"/images/8610/8610_12ports_2_21.gif\" width=2 height=21 ></td>"\
 				"<td>"\
-					"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 ></td>"\
-				"<td>"\
+					"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,20);
+					port_state = get_port_state(slotid,20);
+					if(1 == port_state)
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_egreen.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,20);
+					}
+					else if(2 == port_state)
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_ered.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,20);
+					}
+					else
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,20);
+					}
+				fprintf(cgiOut,"<td>"\
 					"<img src=\"/images/8610/8610_12ports_02_30.gif\" width=18 height=21 ></td>"\
 			"</tr>"\
 			"<tr>"\
@@ -6957,12 +7798,38 @@ void  select_86_slotinfo(int slotid)
 				"<td>"\
 					"<img src=\"/images/8610/8610_12ports_02_36.gif\" width=17 height=21 ></td>"\
 				"<td>"\
-					"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 ></td>"\
-				"<td>"\
+					"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,17);
+					port_state = get_port_state(slotid,17);
+					if(1 == port_state)
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_egreen.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,17);
+					}
+					else if(2 == port_state)
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_ered.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,17);
+					}
+					else
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,17);
+					}
+				fprintf(cgiOut,"<td>"\
 					"<img src=\"/images/8610/8610_12ports_2_21.gif\" width=2 height=21 ></td>"\
 				"<td>"\
-					"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 ></td>"\
-				"<td>"\
+					"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,18);
+					port_state = get_port_state(slotid,18);
+					if(1 == port_state)
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_egreen.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,18);
+					}
+					else if(2 == port_state)
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_ered.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,18);
+					}
+					else
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,18);
+					}
+				fprintf(cgiOut,"<td>"\
 					"<img src=\"/images/8610/8610_12ports_02_40.gif\" width=18 height=21 ></td>"\
 			"</tr>"\
 			"<tr>"\
@@ -6981,12 +7848,38 @@ void  select_86_slotinfo(int slotid)
 				"<td>"\
 					"<img src=\"/images/8610/8610_12ports_02_46.gif\" width=17 height=21 ></td>"\
 				"<td>"\
-					"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 ></td>"\
-				"<td>"\
+					"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,15);
+					port_state = get_port_state(slotid,15);
+					if(1 == port_state)
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_egreen.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,15);
+					}
+					else if(2 == port_state)
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_ered.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,15);
+					}
+					else
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,15);
+					}
+				fprintf(cgiOut,"<td>"\
 					"<img src=\"/images/8610/8610_12ports_2_21.gif\" width=2 height=21 ></td>"\
 				"<td>"\
-					"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 ></td>"\
-				"<td>"\
+					"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,16);
+					port_state = get_port_state(slotid,16);
+					if(1 == port_state)
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_egreen.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,16);
+					}
+					else if(2 == port_state)
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_ered.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,16);
+					}
+					else
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,16);
+					}
+				fprintf(cgiOut,"<td>"\
 					"<img src=\"/images/8610/8610_12ports_02_50.gif\" width=18 height=21 ></td>"\
 			"</tr>"\
 			"<tr>"\
@@ -7005,12 +7898,38 @@ void  select_86_slotinfo(int slotid)
 				"<td>"\
 					"<img src=\"/images/8610/8610_12ports_02_56.gif\" width=17 height=21 ></td>"\
 				"<td>"\
-					"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 ></td>"\
-				"<td>"\
+					"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,13);
+					port_state = get_port_state(slotid,13);
+					if(1 == port_state)
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_egreen.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,13);
+					}
+					else if(2 == port_state)
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_ered.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,13);
+					}
+					else
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,13);
+					}
+				fprintf(cgiOut,"<td>"\
 					"<img src=\"/images/8610/8610_12ports_2_21.gif\" width=2 height=21 ></td>"\
 				"<td>"\
-					"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 ></td>"\
-				"<td>"\
+					"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,14);
+					port_state = get_port_state(slotid,14);
+					if(1 == port_state)
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_egreen.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,14);
+					}
+					else if(2 == port_state)
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_ered.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,14);
+					}
+					else
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,14);
+					}
+				fprintf(cgiOut,"<td>"\
 					"<img src=\"/images/8610/8610_12ports_02_60.gif\" width=18 height=21 ></td>"\
 			"</tr>"\
 			"<tr>"\
@@ -7053,12 +7972,38 @@ void  select_86_slotinfo(int slotid)
 				"<td>"\
 					"<img src=\"/images/8610/8610_12ports_04_06.gif\" width=11 height=21 ></td>"\
 				"<td>"\
-					"<img src=\"/images/8610/8610_12ports_lblack.gif\" width=19 height=21 ></td>"\
-				"<td>"\
+					"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,11);
+					port_state = get_port_state(slotid,11);
+					if(1 == port_state)
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_lgreen.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,11);
+					}
+					else if(2 == port_state)
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_lred.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,11);
+					}
+					else
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_lblack.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,11);
+					}
+				fprintf(cgiOut,"<td>"\
 					"<img src=\"/images/8610/8610_12ports_2_21.gif\" width=2 height=21 ></td>"\
 				"<td>"\
-					"<img src=\"/images/8610/8610_12ports_rblack.gif\" width=19 height=21 ></td>"\
-				"<td>"\
+					"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,12);
+					port_state = get_port_state(slotid,12);
+					if(1 == port_state)
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_rgreen.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,12);
+					}
+					else if(2 == port_state)
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_rred.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,12);
+					}
+					else
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_rblack.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,12);
+					}
+				fprintf(cgiOut,"<td>"\
 					"<img src=\"/images/8610/8610_12ports_04_10.gif\" width=12 height=21 ></td>"\
 			"</tr>"\
 			"<tr>"\
@@ -7077,12 +8022,38 @@ void  select_86_slotinfo(int slotid)
 				"<td>"\
 					"<img src=\"/images/8610/8610_12ports_04_16.gif\" width=11 height=21 ></td>"\
 				"<td>"\
-					"<img src=\"/images/8610/8610_12ports_lblack.gif\" width=19 height=21 ></td>"\
-				"<td>"\
+					"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,9);
+					port_state = get_port_state(slotid,9);
+					if(1 == port_state)
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_lgreen.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,9);
+					}
+					else if(2 == port_state)
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_lred.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,9);
+					}
+					else
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_lblack.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,9);
+					}
+				fprintf(cgiOut,"<td>"\
 					"<img src=\"/images/8610/8610_12ports_2_21.gif\" width=2 height=21 ></td>"\
 				"<td>"\
-					"<img src=\"/images/8610/8610_12ports_rblack.gif\" width=19 height=21 ></td>"\
-				"<td>"\
+					"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,10);
+					port_state = get_port_state(slotid,10);
+					if(1 == port_state)
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_rgreen.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,10);
+					}
+					else if(2 == port_state)
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_rred.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,10);
+					}
+					else
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_rblack.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,10);
+					}
+				fprintf(cgiOut,"<td>"\
 					"<img src=\"/images/8610/8610_12ports_04_20.gif\" width=12 height=21 ></td>"\
 			"</tr>"\
 			"<tr>"\
@@ -7101,12 +8072,38 @@ void  select_86_slotinfo(int slotid)
 				"<td>"\
 					"<img src=\"/images/8610/8610_12ports_04_26.gif\" width=11 height=21 ></td>"\
 				"<td>"\
-					"<img src=\"/images/8610/8610_12ports_lblack.gif\" width=19 height=21 ></td>"\
-				"<td>"\
+					"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,7);
+					port_state = get_port_state(slotid,7);
+					if(1 == port_state)
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_lgreen.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,7);
+					}
+					else if(2 == port_state)
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_lred.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,7);
+					}
+					else
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_lblack.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,7);
+					}
+				fprintf(cgiOut,"<td>"\
 					"<img src=\"/images/8610/8610_12ports_2_21.gif\" width=2 height=21 ></td>"\
 				"<td>"\
-					"<img src=\"/images/8610/8610_12ports_rblack.gif\" width=19 height=21 ></td>"\
-				"<td>"\
+					"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,8);
+					port_state = get_port_state(slotid,8);
+					if(1 == port_state)
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_rgreen.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,8);
+					}
+					else if(2 == port_state)
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_rred.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,8);
+					}
+					else
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_rblack.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,8);
+					}
+				fprintf(cgiOut,"<td>"\
 					"<img src=\"/images/8610/8610_12ports_04_30.gif\" width=12 height=21 ></td>"\
 			"</tr>"\
 			"<tr>"\
@@ -7125,12 +8122,38 @@ void  select_86_slotinfo(int slotid)
 				"<td>"\
 					"<img src=\"/images/8610/8610_12ports_04_36.gif\" width=11 height=21 ></td>"\
 				"<td>"\
-					"<img src=\"/images/8610/8610_12ports_lblack.gif\" width=19 height=21 ></td>"\
-				"<td>"\
+					"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,5);
+					port_state = get_port_state(slotid,5);
+					if(1 == port_state)
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_lgreen.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,5);
+					}
+					else if(2 == port_state)
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_lred.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,5);
+					}
+					else
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_lblack.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,5);
+					}
+				fprintf(cgiOut,"<td>"\
 					"<img src=\"/images/8610/8610_12ports_2_21.gif\" width=2 height=21 ></td>"\
 				"<td>"\
-					"<img src=\"/images/8610/8610_12ports_rblack.gif\" width=19 height=21 ></td>"\
-				"<td>"\
+					"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,6);
+					port_state = get_port_state(slotid,6);
+					if(1 == port_state)
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_rgreen.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,6);
+					}
+					else if(2 == port_state)
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_rred.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,6);
+					}
+					else
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_rblack.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,6);
+					}
+				fprintf(cgiOut,"<td>"\
 					"<img src=\"/images/8610/8610_12ports_04_40.gif\" width=12 height=21 ></td>"\
 			"</tr>"\
 			"<tr>"\
@@ -7149,12 +8172,38 @@ void  select_86_slotinfo(int slotid)
 				"<td>"\
 					"<img src=\"/images/8610/8610_12ports_04_46.gif\" width=11 height=21 ></td>"\
 				"<td>"\
-					"<img src=\"/images/8610/8610_12ports_lblack.gif\" width=19 height=21 ></td>"\
-				"<td>"\
+					"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,3);
+					port_state = get_port_state(slotid,3);
+					if(1 == port_state)
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_lgreen.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,3);
+					}
+					else if(2 == port_state)
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_lred.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,3);
+					}
+					else
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_lblack.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,3);
+					}
+				fprintf(cgiOut,"<td>"\
 					"<img src=\"/images/8610/8610_12ports_2_21.gif\" width=2 height=21 ></td>"\
 				"<td>"\
-					"<img src=\"/images/8610/8610_12ports_rblack.gif\" width=19 height=21 ></td>"\
-				"<td>"\
+					"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,4);
+					port_state = get_port_state(slotid,4);
+					if(1 == port_state)
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_rgreen.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,4);
+					}
+					else if(2 == port_state)
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_rred.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,4);
+					}
+					else
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_rblack.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,4);
+					}
+				fprintf(cgiOut,"<td>"\
 					"<img src=\"/images/8610/8610_12ports_04_50.gif\" width=12 height=21 ></td>"\
 			"</tr>"\
 			"<tr>"\
@@ -7173,12 +8222,38 @@ void  select_86_slotinfo(int slotid)
 				"<td>"\
 					"<img src=\"/images/8610/8610_12ports_04_56.gif\" width=11 height=21 ></td>"\
 				"<td>"\
-					"<img src=\"/images/8610/8610_12ports_lblack.gif\" width=19 height=21 ></td>"\
-				"<td>"\
+					"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,1);
+					port_state = get_port_state(slotid,1);
+					if(1 == port_state)
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_lgreen.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,1);
+					}
+					else if(2 == port_state)
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_lred.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,1);
+					}
+					else
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_lblack.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,1);
+					}
+				fprintf(cgiOut,"<td>"\
 					"<img src=\"/images/8610/8610_12ports_2_21.gif\" width=2 height=21 ></td>"\
 				"<td>"\
-					"<img src=\"/images/8610/8610_12ports_rblack.gif\" width=19 height=21 ></td>"\
-				"<td>"\
+					"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,2);
+					port_state = get_port_state(slotid,2);
+					if(1 == port_state)
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_rgreen.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,2);
+					}
+					else if(2 == port_state)
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_rred.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,2);
+					}
+					else
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_rblack.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,2);
+					}
+				fprintf(cgiOut,"<td>"\
 					"<img src=\"/images/8610/8610_12ports_04_60.gif\" width=12 height=21 ></td>"\
 			"</tr>"\
 			"<tr>"\
@@ -7198,11 +8273,43 @@ void  select_86_slotinfo(int slotid)
 			"</tr>"\
 			"<tr>"\
 				"<td>"\
-					"<img src=\"/images/8610/8610_12ports_05_02.gif\" width=63 height=307 ></td>"\
+					/*"<img src=\"/images/8610/8610_12ports_05_02.gif\" width=63 height=307 >"\*/
+					"<table width=63 height=307 border=0 cellpadding=0 cellspacing=0>"\
+						"<tr>"\
+							"<td colspan=3>"\
+								"<img src=\"/images/8610/8610_12ports_05_02_01.jpg\" width=63 height=49 alt=""></td>"\
+						"</tr>"\
+						"<tr>"\
+							"<td>"\
+								"<img src=\"/images/8610/8610_12ports_05_02_02.jpg\" width=34 height=21 alt=""></td>"\
+							"<td>"\
+								"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,25);
+								port_state = get_port_state(slotid,25);
+								if(1 == port_state)
+								{
+									fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_egreen.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,25);
+								}
+								else if(2 == port_state)
+								{
+									fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_ered.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,25);
+								}
+								else
+								{
+									fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,25);
+								}
+							fprintf(cgiOut,"<td>"\
+								"<img src=\"/images/8610/8610_12ports_05_02_04.jpg\" width=16 height=21 alt=""></td>"\
+						"</tr>"\
+						"<tr>"\
+							"<td colspan=3>"\
+								"<img src=\"/images/8610/8610_12ports_05_02_05.jpg\" width=63 height=237 alt=""></td>"\
+						"</tr>"\
+					"</table>"\
+				"</td>"\
 			"</tr>"\
 		"</table>");
 		}
-		if(0 == strcmp(board_name,"AX81_AC12C"))
+		if(AX81_AC12C_BOARD_CODE  == board_code)
 		{
 			//fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports.gif\" width=63 height=708 >");
 			fprintf(cgiOut,"<table id=Table_01 width=63 height=708 border=0 cellpadding=0 cellspacing=0>"\
@@ -7230,13 +8337,55 @@ void  select_86_slotinfo(int slotid)
 			"<tr>"\
 				"<td>"\
 					"<img src=\"/images/8610/8610_12ports_02_06.gif\" width=17 height=21 ></td>"\
-				"<td>"\
-					"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 ></td>"\
-				"<td>"\
+				"<td>");
+					port_media = get_port_media(slotid,11);
+					if(1 == port_media)
+					{
+						fprintf(cgiOut,"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,11);
+						port_state = get_port_state(slotid,11);
+						if(1 == port_state)
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_egreen.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,11);
+						}
+						else if(2 == port_state)
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_ered.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,11);
+						}
+						else
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,11);
+						}
+					}	
+					else
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,11);
+					}
+				fprintf(cgiOut,"<td>"\
 					"<img src=\"/images/8610/8610_12ports_2_21.gif\" width=2 height=21 ></td>"\
-				"<td>"\
-					"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 ></td>"\
-				"<td>"\
+				"<td>");
+					port_media = get_port_media(slotid,12);
+					if(1 == port_media)
+					{
+						fprintf(cgiOut,"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,12);
+						port_state = get_port_state(slotid,12);
+						if(1 == port_state)
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_egreen.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,12);
+						}
+						else if(2 == port_state)
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_ered.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,12);
+						}
+						else
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,12);
+						}
+					}	
+					else
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,12);
+					}
+				fprintf(cgiOut,"<td>"\
 					"<img src=\"/images/8610/8610_12ports_02_10.gif\" width=18 height=21 ></td>"\
 			"</tr>"\
 			"<tr>"\
@@ -7254,13 +8403,55 @@ void  select_86_slotinfo(int slotid)
 			"<tr>"\
 				"<td>"\
 					"<img src=\"/images/8610/8610_12ports_02_16.gif\" width=17 height=21 ></td>"\
-				"<td>"\
-					"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 ></td>"\
-				"<td>"\
+				"<td>");
+					port_media = get_port_media(slotid,9);
+					if(1 == port_media)
+					{
+						fprintf(cgiOut,"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,9);
+						port_state = get_port_state(slotid,9);
+						if(1 == port_state)
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_egreen.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,9);
+						}
+						else if(2 == port_state)
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_ered.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,9);
+						}
+						else
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,9);
+						}
+					}	
+					else
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,9);
+					}
+				fprintf(cgiOut,"<td>"\
 					"<img src=\"/images/8610/8610_12ports_2_21.gif\" width=2 height=21 ></td>"\
-				"<td>"\
-					"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 ></td>"\
-				"<td>"\
+				"<td>");
+					port_media = get_port_media(slotid,10);
+					if(1 == port_media)
+					{
+						fprintf(cgiOut,"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,10);
+						port_state = get_port_state(slotid,10);
+						if(1 == port_state)
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_egreen.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,10);
+						}
+						else if(2 == port_state)
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_ered.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,10);
+						}
+						else
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,10);
+						}
+					}	
+					else
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,10);
+					}
+				fprintf(cgiOut,"<td>"\
 					"<img src=\"/images/8610/8610_12ports_02_20.gif\" width=18 height=21 ></td>"\
 			"</tr>"\
 			"<tr>"\
@@ -7278,13 +8469,55 @@ void  select_86_slotinfo(int slotid)
 			"<tr>"\
 				"<td>"\
 					"<img src=\"/images/8610/8610_12ports_02_26.gif\" width=17 height=21 ></td>"\
-				"<td>"\
-					"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 ></td>"\
-				"<td>"\
+				"<td>");
+					port_media = get_port_media(slotid,7);
+					if(1 == port_media)
+					{
+						fprintf(cgiOut,"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,7);
+						port_state = get_port_state(slotid,7);
+						if(1 == port_state)
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_egreen.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,7);
+						}
+						else if(2 == port_state)
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_ered.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,7);
+						}
+						else
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,7);
+						}
+					}	
+					else
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,7);
+					}
+				fprintf(cgiOut,"<td>"\
 					"<img src=\"/images/8610/8610_12ports_2_21.gif\" width=2 height=21 ></td>"\
-				"<td>"\
-					"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 ></td>"\
-				"<td>"\
+				"<td>");
+					port_media = get_port_media(slotid,8);
+					if(1 == port_media)
+					{
+						fprintf(cgiOut,"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,8);
+						port_state = get_port_state(slotid,8);
+						if(1 == port_state)
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_egreen.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,8);
+						}
+						else if(2 == port_state)
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_ered.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,8);
+						}
+						else
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,8);
+						}
+					}	
+					else
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,8);
+					}
+				fprintf(cgiOut,"<td>"\
 					"<img src=\"/images/8610/8610_12ports_02_30.gif\" width=18 height=21 ></td>"\
 			"</tr>"\
 			"<tr>"\
@@ -7302,13 +8535,55 @@ void  select_86_slotinfo(int slotid)
 			"<tr>"\
 				"<td>"\
 					"<img src=\"/images/8610/8610_12ports_02_36.gif\" width=17 height=21 ></td>"\
-				"<td>"\
-					"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 ></td>"\
-				"<td>"\
+				"<td>");
+					port_media = get_port_media(slotid,5);
+					if(1 == port_media)
+					{
+						fprintf(cgiOut,"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,5);
+						port_state = get_port_state(slotid,5);
+						if(1 == port_state)
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_egreen.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,5);
+						}
+						else if(2 == port_state)
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_ered.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,5);
+						}
+						else
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,5);
+						}
+					}	
+					else
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,5);
+					}
+				fprintf(cgiOut,"<td>"\
 					"<img src=\"/images/8610/8610_12ports_2_21.gif\" width=2 height=21 ></td>"\
-				"<td>"\
-					"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 ></td>"\
-				"<td>"\
+				"<td>");
+					port_media = get_port_media(slotid,6);
+					if(1 == port_media)
+					{
+						fprintf(cgiOut,"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,6);
+						port_state = get_port_state(slotid,6);
+						if(1 == port_state)
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_egreen.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,6);
+						}
+						else if(2 == port_state)
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_ered.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,6);
+						}
+						else
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,6);
+						}
+					}	
+					else
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,6);
+					}
+				fprintf(cgiOut,"<td>"\
 					"<img src=\"/images/8610/8610_12ports_02_40.gif\" width=18 height=21 ></td>"\
 			"</tr>"\
 			"<tr>"\
@@ -7326,13 +8601,55 @@ void  select_86_slotinfo(int slotid)
 			"<tr>"\
 				"<td>"\
 					"<img src=\"/images/8610/8610_12ports_02_46.gif\" width=17 height=21 ></td>"\
-				"<td>"\
-					"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 ></td>"\
-				"<td>"\
+				"<td>");
+					port_media = get_port_media(slotid,3);
+					if(1 == port_media)
+					{
+						fprintf(cgiOut,"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,3);
+						port_state = get_port_state(slotid,3);
+						if(1 == port_state)
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_egreen.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,3);
+						}
+						else if(2 == port_state)
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_ered.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,3);
+						}
+						else
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,3);
+						}
+					}	
+					else
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,3);
+					}
+				fprintf(cgiOut,"<td>"\
 					"<img src=\"/images/8610/8610_12ports_2_21.gif\" width=2 height=21 ></td>"\
-				"<td>"\
-					"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 ></td>"\
-				"<td>"\
+				"<td>");
+					port_media = get_port_media(slotid,4);
+					if(1 == port_media)
+					{
+						fprintf(cgiOut,"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,4);
+						port_state = get_port_state(slotid,4);
+						if(1 == port_state)
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_egreen.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,4);
+						}
+						else if(2 == port_state)
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_ered.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,4);
+						}
+						else
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,4);
+						}
+					}	
+					else
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,4);
+					}
+				fprintf(cgiOut,"<td>"\
 					"<img src=\"/images/8610/8610_12ports_02_50.gif\" width=18 height=21 ></td>"\
 			"</tr>"\
 			"<tr>"\
@@ -7350,13 +8667,55 @@ void  select_86_slotinfo(int slotid)
 			"<tr>"\
 				"<td>"\
 					"<img src=\"/images/8610/8610_12ports_02_56.gif\" width=17 height=21 ></td>"\
-				"<td>"\
-					"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 ></td>"\
-				"<td>"\
+				"<td>");
+					port_media = get_port_media(slotid,1);
+					if(1 == port_media)
+					{
+						fprintf(cgiOut,"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,1);
+						port_state = get_port_state(slotid,1);
+						if(1 == port_state)
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_egreen.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,1);
+						}
+						else if(2 == port_state)
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_ered.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,1);
+						}
+						else
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,1);
+						}
+					}	
+					else
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,1);
+					}
+				fprintf(cgiOut,"<td>"\
 					"<img src=\"/images/8610/8610_12ports_2_21.gif\" width=2 height=21 ></td>"\
-				"<td>"\
-					"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 ></td>"\
-				"<td>"\
+				"<td>");
+					port_media = get_port_media(slotid,2);
+					if(1 == port_media)
+					{
+						fprintf(cgiOut,"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,2);
+						port_state = get_port_state(slotid,2);
+						if(1 == port_state)
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_egreen.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,2);
+						}
+						else if(2 == port_state)
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_ered.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,2);
+						}
+						else
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,2);
+						}
+					}	
+					else
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,2);
+					}
+				fprintf(cgiOut,"<td>"\
 					"<img src=\"/images/8610/8610_12ports_02_60.gif\" width=18 height=21 ></td>"\
 			"</tr>"\
 			"<tr>"\
@@ -7398,13 +8757,55 @@ void  select_86_slotinfo(int slotid)
 			"<tr>"\
 				"<td>"\
 					"<img src=\"/images/8610/8610_12ports_04_06.gif\" width=11 height=21 ></td>"\
-				"<td>"\
-					"<img src=\"/images/8610/8610_12ports_lblack.gif\" width=19 height=21 ></td>"\
-				"<td>"\
+				"<td>");
+					port_media = get_port_media(slotid,11);
+					if(0 == port_media)
+					{
+						fprintf(cgiOut,"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,11);
+						port_state = get_port_state(slotid,11);
+						if(1 == port_state)
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_lgreen.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,11);
+						}
+						else if(2 == port_state)
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_lred.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,11);
+						}
+						else
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_lblack.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,11);
+						}
+					}	
+					else
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_lblack.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,11);
+					}
+				fprintf(cgiOut,"<td>"\
 					"<img src=\"/images/8610/8610_12ports_2_21.gif\" width=2 height=21 ></td>"\
-				"<td>"\
-					"<img src=\"/images/8610/8610_12ports_rblack.gif\" width=19 height=21 ></td>"\
-				"<td>"\
+				"<td>");
+					port_media = get_port_media(slotid,12);
+					if(0 == port_media)
+					{
+						fprintf(cgiOut,"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,12);
+						port_state = get_port_state(slotid,12);
+						if(1 == port_state)
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_rgreen.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,12);
+						}
+						else if(2 == port_state)
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_rred.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,12);
+						}
+						else
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_rblack.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,12);
+						}
+					}	
+					else
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_rblack.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,12);
+					}
+				fprintf(cgiOut,"<td>"\
 					"<img src=\"/images/8610/8610_12ports_04_10.gif\" width=12 height=21 ></td>"\
 			"</tr>"\
 			"<tr>"\
@@ -7422,13 +8823,55 @@ void  select_86_slotinfo(int slotid)
 			"<tr>"\
 				"<td>"\
 					"<img src=\"/images/8610/8610_12ports_04_16.gif\" width=11 height=21 ></td>"\
-				"<td>"\
-					"<img src=\"/images/8610/8610_12ports_lblack.gif\" width=19 height=21 ></td>"\
-				"<td>"\
+				"<td>");
+					port_media = get_port_media(slotid,9);
+					if(0 == port_media)
+					{
+						fprintf(cgiOut,"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,9);
+						port_state = get_port_state(slotid,9);
+						if(1 == port_state)
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_lgreen.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,9);
+						}
+						else if(2 == port_state)
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_lred.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,9);
+						}
+						else
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_lblack.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,9);
+						}
+					}	
+					else
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_lblack.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,9);
+					}
+				fprintf(cgiOut,"<td>"\
 					"<img src=\"/images/8610/8610_12ports_2_21.gif\" width=2 height=21 ></td>"\
-				"<td>"\
-					"<img src=\"/images/8610/8610_12ports_rblack.gif\" width=19 height=21 ></td>"\
-				"<td>"\
+				"<td>");
+					port_media = get_port_media(slotid,10);
+					if(0 == port_media)
+					{
+						fprintf(cgiOut,"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,10);
+						port_state = get_port_state(slotid,10);
+						if(1 == port_state)
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_rgreen.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,10);
+						}
+						else if(2 == port_state)
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_rred.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,10);
+						}
+						else
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_rblack.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,10);
+						}
+					}	
+					else
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_rblack.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,10);
+					}
+				fprintf(cgiOut,"<td>"\
 					"<img src=\"/images/8610/8610_12ports_04_20.gif\" width=12 height=21 ></td>"\
 			"</tr>"\
 			"<tr>"\
@@ -7446,13 +8889,55 @@ void  select_86_slotinfo(int slotid)
 			"<tr>"\
 				"<td>"\
 					"<img src=\"/images/8610/8610_12ports_04_26.gif\" width=11 height=21 ></td>"\
-				"<td>"\
-					"<img src=\"/images/8610/8610_12ports_lblack.gif\" width=19 height=21 ></td>"\
-				"<td>"\
+				"<td>");
+					port_media = get_port_media(slotid,7);
+					if(0 == port_media)
+					{
+						fprintf(cgiOut,"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,7);
+						port_state = get_port_state(slotid,7);
+						if(1 == port_state)
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_lgreen.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,7);
+						}
+						else if(2 == port_state)
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_lred.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,7);
+						}
+						else
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_lblack.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,7);
+						}
+					}	
+					else
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_lblack.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,7);
+					}
+				fprintf(cgiOut,"<td>"\
 					"<img src=\"/images/8610/8610_12ports_2_21.gif\" width=2 height=21 ></td>"\
-				"<td>"\
-					"<img src=\"/images/8610/8610_12ports_rblack.gif\" width=19 height=21 ></td>"\
-				"<td>"\
+				"<td>");
+					port_media = get_port_media(slotid,8);
+					if(0 == port_media)
+					{
+						fprintf(cgiOut,"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,8);
+						port_state = get_port_state(slotid,8);
+						if(1 == port_state)
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_rgreen.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,8);
+						}
+						else if(2 == port_state)
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_rred.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,8);
+						}
+						else
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_rblack.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,8);
+						}
+					}	
+					else
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_rblack.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,8);
+					}
+				fprintf(cgiOut,"<td>"\
 					"<img src=\"/images/8610/8610_12ports_04_30.gif\" width=12 height=21 ></td>"\
 			"</tr>"\
 			"<tr>"\
@@ -7470,13 +8955,55 @@ void  select_86_slotinfo(int slotid)
 			"<tr>"\
 				"<td>"\
 					"<img src=\"/images/8610/8610_12ports_04_36.gif\" width=11 height=21 ></td>"\
-				"<td>"\
-					"<img src=\"/images/8610/8610_12ports_lblack.gif\" width=19 height=21 ></td>"\
-				"<td>"\
+				"<td>");
+					port_media = get_port_media(slotid,5);
+					if(0 == port_media)
+					{
+						fprintf(cgiOut,"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,5);
+						port_state = get_port_state(slotid,5);
+						if(1 == port_state)
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_lgreen.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,5);
+						}
+						else if(2 == port_state)
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_lred.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,5);
+						}
+						else
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_lblack.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,5);
+						}
+					}	
+					else
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_lblack.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,5);
+					}
+				fprintf(cgiOut,"<td>"\
 					"<img src=\"/images/8610/8610_12ports_2_21.gif\" width=2 height=21 ></td>"\
-				"<td>"\
-					"<img src=\"/images/8610/8610_12ports_rblack.gif\" width=19 height=21 ></td>"\
-				"<td>"\
+				"<td>");
+					port_media = get_port_media(slotid,6);
+					if(0 == port_media)
+					{
+						fprintf(cgiOut,"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,6);
+						port_state = get_port_state(slotid,6);
+						if(1 == port_state)
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_rgreen.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,6);
+						}
+						else if(2 == port_state)
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_rred.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,6);
+						}
+						else
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_rblack.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,6);
+						}
+					}	
+					else
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_rblack.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,6);
+					}
+				fprintf(cgiOut,"<td>"\
 					"<img src=\"/images/8610/8610_12ports_04_40.gif\" width=12 height=21 ></td>"\
 			"</tr>"\
 			"<tr>"\
@@ -7494,13 +9021,55 @@ void  select_86_slotinfo(int slotid)
 			"<tr>"\
 				"<td>"\
 					"<img src=\"/images/8610/8610_12ports_04_46.gif\" width=11 height=21 ></td>"\
-				"<td>"\
-					"<img src=\"/images/8610/8610_12ports_lblack.gif\" width=19 height=21 ></td>"\
-				"<td>"\
+				"<td>");
+					port_media = get_port_media(slotid,3);
+					if(0 == port_media)
+					{
+						fprintf(cgiOut,"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,3);
+						port_state = get_port_state(slotid,3);
+						if(1 == port_state)
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_lgreen.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,3);
+						}
+						else if(2 == port_state)
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_lred.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,3);
+						}
+						else
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_lblack.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,3);
+						}
+					}	
+					else
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_lblack.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,3);
+					}
+				fprintf(cgiOut,"<td>"\
 					"<img src=\"/images/8610/8610_12ports_2_21.gif\" width=2 height=21 ></td>"\
-				"<td>"\
-					"<img src=\"/images/8610/8610_12ports_rblack.gif\" width=19 height=21 ></td>"\
-				"<td>"\
+				"<td>");
+					port_media = get_port_media(slotid,4);
+					if(0 == port_media)
+					{
+						fprintf(cgiOut,"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,4);
+						port_state = get_port_state(slotid,4);
+						if(1 == port_state)
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_rgreen.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,4);
+						}
+						else if(2 == port_state)
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_rred.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,4);
+						}
+						else
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_rblack.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,4);
+						}
+					}	
+					else
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_rblack.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,4);
+					}
+				fprintf(cgiOut,"<td>"\
 					"<img src=\"/images/8610/8610_12ports_04_50.gif\" width=12 height=21 ></td>"\
 			"</tr>"\
 			"<tr>"\
@@ -7518,13 +9087,55 @@ void  select_86_slotinfo(int slotid)
 			"<tr>"\
 				"<td>"\
 					"<img src=\"/images/8610/8610_12ports_04_56.gif\" width=11 height=21 ></td>"\
-				"<td>"\
-					"<img src=\"/images/8610/8610_12ports_lblack.gif\" width=19 height=21 ></td>"\
-				"<td>"\
+				"<td>");
+					port_media = get_port_media(slotid,1);
+					if(0 == port_media)
+					{
+						fprintf(cgiOut,"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,1);
+						port_state = get_port_state(slotid,1);
+						if(1 == port_state)
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_lgreen.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,1);
+						}
+						else if(2 == port_state)
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_lred.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,1);
+						}
+						else
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_lblack.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,1);
+						}
+					}	
+					else
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_lblack.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,1);
+					}
+				fprintf(cgiOut,"<td>"\
 					"<img src=\"/images/8610/8610_12ports_2_21.gif\" width=2 height=21 ></td>"\
-				"<td>"\
-					"<img src=\"/images/8610/8610_12ports_rblack.gif\" width=19 height=21 ></td>"\
-				"<td>"\
+				"<td>");
+					port_media = get_port_media(slotid,2);
+					if(0 == port_media)
+					{
+						fprintf(cgiOut,"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,2);
+						port_state = get_port_state(slotid,2);
+						if(1 == port_state)
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_rgreen.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,2);
+						}
+						else if(2 == port_state)
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_rred.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,2);
+						}
+						else
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_rblack.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,2);
+						}
+					}	
+					else
+					{
+						fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_rblack.gif\" width=19 height=21 border=0 alt=\"%d-%d\"></td>",slotid,2);
+					}
+				fprintf(cgiOut,"<td>"\
 					"<img src=\"/images/8610/8610_12ports_04_60.gif\" width=12 height=21 ></td>"\
 			"</tr>"\
 			"<tr>"\
@@ -7548,6 +9159,444 @@ void  select_86_slotinfo(int slotid)
 			"</tr>"\
 		"</table>");
 		}
+		if(AX81_12X_BOARD_CODE  == board_code)
+		{
+			/*fprintf(cgiOut,"<img src=\"/images/8610/8610_12x.gif\" width=63 height=708 >");*/
+			fprintf(cgiOut,"<table width=63 height=708 border=0 cellpadding=0 cellspacing=0>"\
+				"<tr>"\
+					"<td colspan=3>"\
+						"<img src=\"/images/8610/8610_12x_01.jpg\" width=63 height=42 alt=""></td>"\
+				"</tr>"\
+				"<tr>"\
+					"<td rowspan=23>"\
+						"<img src=\"/images/8610/8610_12x_02.jpg\" width=26 height=316 alt=""></td>"\
+					"<td>"\
+						"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,12);
+						port_state = get_port_state(slotid,12);
+						if(1 == port_state)
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_egreen.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,12);
+						}
+						else if(2 == port_state)
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_ered.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,12);
+						}
+						else
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,12);
+						}
+					fprintf(cgiOut,"<td>"\
+						"<img src=\"/images/8610/8610_12x_04.jpg\" width=24 height=21 alt=""></td>"\
+				"</tr>"\
+				"<tr>"\
+					"<td colspan=2>"\
+						"<img src=\"/images/8610/8610_12x_05.jpg\" width=37 height=6 alt=""></td>"\
+				"</tr>"\
+				"<tr>"\
+					"<td>"\
+						"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,11);
+						port_state = get_port_state(slotid,11);
+						if(1 == port_state)
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_egreen.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,11);
+						}
+						else if(2 == port_state)
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_ered.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,11);
+						}
+						else
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,11);
+						}
+					fprintf(cgiOut,"<td>"\
+						"<img src=\"/images/8610/8610_12x_07.jpg\" width=24 height=21 alt=""></td>"\
+				"</tr>"\
+				"<tr>"\
+					"<td colspan=2>"\
+						"<img src=\"/images/8610/8610_12x_08.jpg\" width=37 height=6 alt=""></td>"\
+				"</tr>"\
+				"<tr>"\
+					"<td>"\
+						"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,10);
+						port_state = get_port_state(slotid,10);
+						if(1 == port_state)
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_egreen.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,10);
+						}
+						else if(2 == port_state)
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_ered.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,10);
+						}
+						else
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,10);
+						}
+					fprintf(cgiOut,"<td>"\
+						"<img src=\"/images/8610/8610_12x_10.jpg\" width=24 height=21 alt=""></td>"\
+				"</tr>"\
+				"<tr>"\
+					"<td colspan=2>"\
+						"<img src=\"/images/8610/8610_12x_11.jpg\" width=37 height=6 alt=""></td>"\
+				"</tr>"\
+				"<tr>"\
+					"<td>"\
+						"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,9);
+						port_state = get_port_state(slotid,9);
+						if(1 == port_state)
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_egreen.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,9);
+						}
+						else if(2 == port_state)
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_ered.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,9);
+						}
+						else
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,9);
+						}
+					fprintf(cgiOut,"<td>"\
+						"<img src=\"/images/8610/8610_12x_13.jpg\" width=24 height=21 alt=""></td>"\
+				"</tr>"\
+				"<tr>"\
+					"<td colspan=2>"\
+						"<img src=\"/images/8610/8610_12x_14.jpg\" width=37 height=6 alt=""></td>"\
+				"</tr>"\
+				"<tr>"\
+					"<td>"\
+						"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,8);
+						port_state = get_port_state(slotid,8);
+						if(1 == port_state)
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_egreen.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,8);
+						}
+						else if(2 == port_state)
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_ered.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,8);
+						}
+						else
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,8);
+						}
+					fprintf(cgiOut,"<td>"\
+						"<img src=\"/images/8610/8610_12x_16.jpg\" width=24 height=21 alt=""></td>"\
+				"</tr>"\
+				"<tr>"\
+					"<td colspan=2>"\
+						"<img src=\"/images/8610/8610_12x_17.jpg\" width=37 height=6 alt=""></td>"\
+				"</tr>"\
+				"<tr>"\
+					"<td>"\
+						"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,7);
+						port_state = get_port_state(slotid,7);
+						if(1 == port_state)
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_egreen.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,7);
+						}
+						else if(2 == port_state)
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_ered.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,7);
+						}
+						else
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,7);
+						}
+					fprintf(cgiOut,"<td>"\
+						"<img src=\"/images/8610/8610_12x_19.jpg\" width=24 height=21 alt=""></td>"\
+				"</tr>"\
+				"<tr>"\
+					"<td colspan=2>"\
+						"<img src=\"/images/8610/8610_12x_20.jpg\" width=37 height=6 alt=""></td>"\
+				"</tr>"\
+				"<tr>"\
+					"<td>"\
+						"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,6);
+						port_state = get_port_state(slotid,6);
+						if(1 == port_state)
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_egreen.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,6);
+						}
+						else if(2 == port_state)
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_ered.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,6);
+						}
+						else
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,6);
+						}
+					fprintf(cgiOut,"<td>"\
+						"<img src=\"/images/8610/8610_12x_22.jpg\" width=24 height=21 alt=""></td>"\
+				"</tr>"\
+				"<tr>"\
+					"<td colspan=2>"\
+						"<img src=\"/images/8610/8610_12x_23.jpg\" width=37 height=5 alt=""></td>"\
+				"</tr>"\
+				"<tr>"\
+					"<td>"\
+						"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,5);
+						port_state = get_port_state(slotid,5);
+						if(1 == port_state)
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_egreen.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,5);
+						}
+						else if(2 == port_state)
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_ered.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,5);
+						}
+						else
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,5);
+						}
+					fprintf(cgiOut,"<td>"\
+						"<img src=\"/images/8610/8610_12x_25.jpg\" width=24 height=21 alt=""></td>"\
+				"</tr>"\
+				"<tr>"\
+					"<td colspan=2>"\
+						"<img src=\"/images/8610/8610_12x_26.jpg\" width=37 height=6 alt=""></td>"\
+				"</tr>"\
+				"<tr>"\
+					"<td>"\
+						"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,4);
+						port_state = get_port_state(slotid,4);
+						if(1 == port_state)
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_egreen.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,4);
+						}
+						else if(2 == port_state)
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_ered.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,4);
+						}
+						else
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,4);
+						}
+					fprintf(cgiOut,"<td>"\
+						"<img src=\"/images/8610/8610_12x_28.jpg\" width=24 height=21 alt=""></td>"\
+				"</tr>"\
+				"<tr>"\
+					"<td colspan=2>"\
+						"<img src=\"/images/8610/8610_12x_29.jpg\" width=37 height=5 alt=""></td>"\
+				"</tr>"\
+				"<tr>"\
+					"<td>"\
+						"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,3);
+						port_state = get_port_state(slotid,3);
+						if(1 == port_state)
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_egreen.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,3);
+						}
+						else if(2 == port_state)
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_ered.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,3);
+						}
+						else
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,3);
+						}
+					fprintf(cgiOut,"<td>"\
+						"<img src=\"/images/8610/8610_12x_31.jpg\" width=24 height=21 alt=""></td>"\
+				"</tr>"\
+				"<tr>"\
+					"<td colspan=2>"\
+						"<img src=\"/images/8610/8610_12x_32.jpg\" width=37 height=6 alt=""></td>"\
+				"</tr>"\
+				"<tr>"\
+					"<td>"\
+						"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,2);
+						port_state = get_port_state(slotid,2);
+						if(1 == port_state)
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_egreen.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,2);
+						}
+						else if(2 == port_state)
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_ered.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,2);
+						}
+						else
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,2);
+						}
+					fprintf(cgiOut,"<td>"\
+						"<img src=\"/images/8610/8610_12x_34.jpg\" width=24 height=21 alt=""></td>"\
+				"</tr>"\
+				"<tr>"\
+					"<td colspan=2>"\
+						"<img src=\"/images/8610/8610_12x_35.jpg\" width=37 height=6 alt=""></td>"\
+				"</tr>"\
+				"<tr>"\
+					"<td>"\
+						"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,1);
+						port_state = get_port_state(slotid,1);
+						if(1 == port_state)
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_egreen.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,1);
+						}
+						else if(2 == port_state)
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_ered.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,1);
+						}
+						else
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,1);
+						}
+					fprintf(cgiOut,"<td>"\
+						"<img src=\"/images/8610/8610_12x_37.jpg\" width=24 height=21 alt=""></td>"\
+				"</tr>"\
+				"<tr>"\
+					"<td colspan=3>"\
+						"<img src=\"/images/8610/8610_12x_38.jpg\" width=63 height=350 alt=""></td>"\
+				"</tr>"\
+			"</table>");		
+		}
+		if(AX81_AC4X_BOARD_CODE  == board_code)
+		{
+			/*fprintf(cgiOut,"<img src=\"/images/8610/8610_4x.gif\" width=63 height=708 >");*/
+			fprintf(cgiOut,"<table width=63 height=708 border=0 cellpadding=0 cellspacing=0>"\
+				"<tr>"\
+					"<td colspan=3>"\
+						"<img src=\"/images/8610/8610_4x_01.jpg\" width=63 height=256 alt=""></td>"\
+				"</tr>"\
+				"<tr>"\
+					"<td rowspan=7>"\
+						"<img src=\"/images/8610/8610_4x_02.jpg\" width=26 height=102 alt=""></td>"\
+					"<td>"\
+						"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,4);
+						port_state = get_port_state(slotid,4);
+						if(1 == port_state)
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_egreen.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,4);
+						}
+						else if(2 == port_state)
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_ered.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,4);
+						}
+						else
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,4);
+						}
+					fprintf(cgiOut,"<td>"\
+						"<img src=\"/images/8610/8610_4x_04.jpg\" width=24 height=21 alt=""></td>"\
+				"</tr>"\
+				"<tr>"\
+					"<td colspan=2>"\
+						"<img src=\"/images/8610/8610_4x_05.jpg\" width=37 height=6 alt=""></td>"\
+				"</tr>"\
+				"<tr>"\
+					"<td>"\
+						"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,3);
+						port_state = get_port_state(slotid,3);
+						if(1 == port_state)
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_egreen.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,3);
+						}
+						else if(2 == port_state)
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_ered.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,3);
+						}
+						else
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,3);
+						}
+					fprintf(cgiOut,"<td>"\
+						"<img src=\"/images/8610/8610_4x_07.jpg\" width=24 height=21 alt=""></td>"\
+				"</tr>"\
+				"<tr>"\
+					"<td colspan=2>"\
+						"<img src=\"/images/8610/8610_4x_08.jpg\" width=37 height=6 alt=""></td>"\
+				"</tr>"\
+				"<tr>"\
+					"<td>"\
+						"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,2);
+						port_state = get_port_state(slotid,2);
+						if(1 == port_state)
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_egreen.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,2);
+						}
+						else if(2 == port_state)
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_ered.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,2);
+						}
+						else
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,2);
+						}
+					fprintf(cgiOut,"<td>"\
+						"<img src=\"/images/8610/8610_4x_10.jpg\" width=24 height=21 alt=""></td>"\
+				"</tr>"\
+				"<tr>"\
+					"<td colspan=2>"\
+						"<img src=\"/images/8610/8610_4x_11.jpg\" width=37 height=6 alt=""></td>"\
+				"</tr>"\
+				"<tr>"\
+					"<td>"\
+						"<a href=wp_prtcfg.cgi?UN=%s&ID=%d-%d target=mainFrame>",n,slotid,1);
+						port_state = get_port_state(slotid,1);
+						if(1 == port_state)
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_egreen.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,1);
+						}
+						else if(2 == port_state)
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_ered.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,1);
+						}
+						else
+						{
+							fprintf(cgiOut,"<img src=\"/images/8610/8610_12ports_eblack.gif\" width=13 height=21 border=0 alt=\"%d-%d\"></td>",slotid,1);
+						}
+					fprintf(cgiOut,"<td>"\
+						"<img src=\"/images/8610/8610_4x_13.jpg\" width=24 height=21 alt=""></td>"\
+				"</tr>"\
+				"<tr>"\
+					"<td colspan=3>"\
+						"<img src=\"/images/8610/8610_4x_14.jpg\" width=63 height=350 alt=""></td>"\
+				"</tr>"\
+			"</table>");
+		}
 	}
 }
+
+int get_port_state(int slot_no,int port_no)/*0:admin down,1:link up,2:link down*/
+{
+	unsigned int value = 0;
+	unsigned char type = 1;
+	struct global_ethport_s PortV;
+	int port_state = 0;
+
+	value = (slot_no - 1)* 64 + port_no - 1;
+	if(show_eth_port_atrr(value,type,&PortV)==CCGI_SUCCESS)
+	{
+		if(1 == (PortV.attr_bitmap & ETH_ATTR_ADMIN_STATUS) >> ETH_ADMIN_STATUS_BIT)/*admin state is on*/
+		{
+			if(1 == (PortV.attr_bitmap & ETH_ATTR_LINK_STATUS) >> ETH_LINK_STATUS_BIT)/*link state is up*/
+			{
+				port_state = 1;
+			}
+			else
+			{
+				port_state = 2;
+			}
+		}
+	}
+
+	return port_state;
+}
+
+int get_port_media(int slot_no,int port_no)/*0:COPPER,1:FIBER*/
+{
+	unsigned int value = 0;
+	unsigned char type = 1;
+	struct global_ethport_s PortV;
+	int port_media = 0;
+
+	value = (slot_no - 1)* 64 + port_no - 1;
+	if(show_eth_port_atrr(value,type,&PortV)==CCGI_SUCCESS)
+	{
+		if((PortV.attr_bitmap & ETH_ATTR_PREFERRED_FIBER_MEDIA) >> ETH_PREFERRED_FIBER_MEDIA_BIT)/*preferred media is fiber*/
+		{
+			port_media = 1;
+		}
+	}
+
+	return port_media;
+}
+
 
