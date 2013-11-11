@@ -7814,6 +7814,7 @@ DBusMessage * wid_dbus_interface_show_wlan_stats_information(DBusConnection *con
 				printf("tx_bts = %llu\n",tx_bts);				
 				/*fengwenchao add end*/
     				dbus_message_iter_close_container (&iter_sub_array, &iter_sub_struct);
+				free(wlan_essid);
     			}
     		}
     		dbus_message_iter_close_container (&iter_struct, &iter_sub_array);

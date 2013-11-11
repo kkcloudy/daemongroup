@@ -77,6 +77,7 @@ void CWHandleTimer(CWTimerArg arg) {
 	{
 		if(AC_WTP[WTPID] == NULL){
 			wid_syslog_err("%s WTP %d NULL!!!",__func__,WTPID);	
+			CW_FREE_OBJECT(a);
 			return;
 		}
 		if(AC_WTP[WTPID])
@@ -156,6 +157,7 @@ void CWHandleTimer(CWTimerArg arg) {
 				printf("%s\n",command);*/
 			}
 			if(!CWErr(CWTimerRequest(gCWNeighborDeadInterval/3, &(gWTPs[WTPID].thread), &(gWTPs[WTPID].currentTimer), CW_CRITICAL_TIMER_EXPIRED_SIGNAL,WTPID))) { // start NeighborDeadInterval timer
+				CW_FREE_OBJECT(a);
 				return ;
 			}
 		}
@@ -189,6 +191,7 @@ void CWHandleTimer(CWTimerArg arg) {
 				}
 				CWThreadMutexUnlock(&(gWTPs[WTPID].WTPThreadControllistMutex));
 			}
+			CW_FREE_OBJECT(a);
 			return;
 		}
 	
@@ -215,6 +218,7 @@ void CWHandleTimer(CWTimerArg arg) {
 				perror("msgsnd");
 			}
 	//		CWSignalThreadCondition(&gWTPs[*iPtr].interfaceWait);
+			CW_FREE_OBJECT(a);
 			return;
 		}else{
 			memset((char*)&msg, 0, sizeof(msg));
@@ -263,6 +267,7 @@ void CWHandleTimer(CWTimerArg arg) {
 						timer = 24*3600 - times + AC_WLAN[WLANID]->StartService.times;
 					}
 					if(!(CWTimerRequest(timer, NULL, &(AC_WLAN[WLANID]->StartService.TimerID), 501,WLANID))) {
+						CW_FREE_OBJECT(a);
 						return ;
 					}					
 					printf("AC_WLAN[wlanid]->StartService.TimerID33333333 %d\n",AC_WLAN[WLANID]->StartService.TimerID);
@@ -306,6 +311,7 @@ void CWHandleTimer(CWTimerArg arg) {
 						timer = 24*3600 - times + AC_WLAN[WLANID]->StopService.times;
 					}
 					if(!(CWTimerRequest(timer, NULL, &(AC_WLAN[WLANID]->StopService.TimerID), 502,WLANID))) {
+						CW_FREE_OBJECT(a);
 						return ;
 					}	
 					
@@ -347,6 +353,7 @@ void CWHandleTimer(CWTimerArg arg) {
 						timer = 24*3600 - times + AC_RADIO[RADIOID]->StartService.times;
 					}
 					if(!(CWTimerRequest(timer, NULL, &(AC_RADIO[RADIOID]->StartService.TimerID), 503,WLANID))) {
+						CW_FREE_OBJECT(a);
 						return ;
 					}					
 					printf("AC_WLAN[wlanid]->StartService.TimerID33333333 %d\n",AC_RADIO[RADIOID]->StartService.TimerID);
@@ -390,6 +397,7 @@ void CWHandleTimer(CWTimerArg arg) {
 						timer = 24*3600 - times + AC_RADIO[RADIOID]->StopService.times;
 					}
 					if(!(CWTimerRequest(timer, NULL, &(AC_RADIO[RADIOID]->StopService.TimerID), 504,WLANID))) {
+						CW_FREE_OBJECT(a);
 						return ;
 					}	
 					
@@ -405,6 +413,7 @@ void CWHandleTimer(CWTimerArg arg) {
 			sleep(1);
 			bak_check_req(wid_bak_sock);			
 			if(!CWErr(CWTimerRequest(BakCheckInterval, NULL, &(bak_check_timer), 900, 0))) { 
+				CW_FREE_OBJECT(a);
 				return ;
 			}
 		}		
@@ -414,6 +423,7 @@ void CWHandleTimer(CWTimerArg arg) {
 			//lic_bak_req();
 			update_license_req(lic_bak_fd , (struct sockaddr_in *)&Lic_Active_addr);
 			if(!CWErr(CWTimerRequest(LicBakReqInterval, NULL, &(Lic_bak_req_timer), 901, 0))) { 
+				CW_FREE_OBJECT(a);
 				return ;
 			}
 		}
