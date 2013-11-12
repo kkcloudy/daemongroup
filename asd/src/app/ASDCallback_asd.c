@@ -4188,90 +4188,132 @@ void STA_OP(TableMsg *msg){
 			break;	
 				//weichao add 2011.11.11
 			case  DHCP_IP:
-				asd_printf(ASD_DEFAULT,MSG_DEBUG,"in sta case DHCP_IP\n");
-				asd_printf(ASD_DEFAULT,MSG_DEBUG,"sta->ip = %d\n",msg->u.STA.ipv4Address);
-				asd_printf(ASD_DEFAULT,MSG_DEBUG,"BSSIndex = %d\n",BSSIndex);
-				asd_printf(ASD_DBUS,MSG_DEBUG,"MAC:"MACSTR"\n",MAC2STR(msg->u.STA.STAMAC));
+				asd_printf(ASD_DEFAULT,MSG_DEBUG,"in STA_OP case DHCP_IP:\n");
+				asd_printf(ASD_DBUS,MSG_DEBUG,"MAC:"MACSTR" at BSSIndex = %d\n",MAC2STR(msg->u.STA.STAMAC),BSSIndex);
 				unsigned char *ip = (unsigned char *)&msg->u.STA.ipv4Address;
 				wasd = AsdCheckBSSIndex(BSSIndex);
 				if(wasd != NULL){
 					sta = ap_get_sta(wasd, msg->u.STA.STAMAC);
 					if(sta != NULL)
-					{
+    				{    						
+    					if(msg->u.STA.ipv4Address == 0){						
+    						asd_printf(ASD_DEFAULT,MSG_DEBUG,"msg from dhcp ipv4 address is null!\n");
+    						break;
+    					}	
+    					else if(sta->ip_addr.s_addr == msg->u.STA.ipv4Address){						
+    						asd_printf(ASD_DEFAULT,MSG_DEBUG,"sta has got IP from listen arp!\n");
+    						break;
+    					}	
+    					else if((sta->ip_addr.s_addr != 0)&&(sta->ip_addr.s_addr != msg->u.STA.ipv4Address))
+    					{
+    							if((sta->security_type == NO_NEED_AUTH)||(HYBRID_AUTH_EAPOL_SUCCESS(sta)))
+    							{
+    								if(asd_ipset_switch)
+    									eap_connect_down(sta->ip_addr.s_addr);
+    								else
+    									AsdStaInfoToEAG(wasd,sta,ASD_DEL_AUTH);
+    							}
+    							//qiuchen
+    							if(gASDLOGDEBUG & BIT(1)){
+    								unsigned char *ipold = (unsigned char *)&(sta->ipaddr);
+    								syslog(LOG_INFO|LOG_LOCAL7, "[%d-%d]STA_IP_UPDATE:UserMAC:" MACSTR "OLD_IP:%d.%d.%d.%d NEW_IP:%d.%d.%d.%d\n",
+    									slotid,vrrid,MAC2STR(sta->addr),ipold[0],ipold[1],ipold[2],ipold[3],ip[0],ip[1],ip[2],ip[3]);//qiuchen 2013.01.14
+    							}
+    					}
+    					else{
+    						//qiuchen
+    						time_t at = time(NULL);
+    						if(gASDLOGDEBUG & BIT(1))
+    							syslog(LOG_INFO|LOG_LOCAL7, "[%d-%d]STA_GET_ONLINE:UserMAC:" MACSTR "IP:%d.%d.%d.%d TIME:%s\n",
+    								slotid,vrrid,MAC2STR(sta->addr),ip[0],ip[1],ip[2],ip[3],ctime(&at));//qiuchen 2013.01.14
+    					}
+    					sta->ip_addr.s_addr = msg->u.STA.ipv4Address;
+    					sta->ipaddr = msg->u.STA.ipv4Address;
+    					memset(sta->in_addr,0,16);
+    					memcpy(sta->in_addr,inet_ntoa(sta->ip_addr),strlen(inet_ntoa(sta->ip_addr)));
+    					memcpy(sta->arpifname,msg->u.STA.arpifname,sizeof(msg->u.STA.arpifname));
+        				asd_printf(ASD_DEFAULT,MSG_DEBUG,"get ipv4 form dhcp, sta->ip_addr = %s\n",sta->in_addr);														
+    					asd_printf(ASD_DEFAULT,MSG_DEBUG,"sta->arpifname: %s\n",sta->arpifname);
 						
-						asd_printf(ASD_DBUS,MSG_DEBUG,"the sta is exist!\n\n");
-					if(msg->u.STA.ipv4Address == 0){						
-						asd_printf(ASD_DEFAULT,MSG_DEBUG,"msg ip is null!\n");
-						break;
-					}	
-					else if(sta->ip_addr.s_addr == msg->u.STA.ipv4Address){						
-						asd_printf(ASD_DEFAULT,MSG_DEBUG,"sta has got IP from listen arp!\n");
-						break;
-					}	
-					else if((sta->ip_addr.s_addr != 0)&&(sta->ip_addr.s_addr != msg->u.STA.ipv4Address))
-					{
-							if((sta->security_type == NO_NEED_AUTH)||(HYBRID_AUTH_EAPOL_SUCCESS(sta)))
-							{
-								if(asd_ipset_switch)
-									eap_connect_down(sta->ip_addr.s_addr);
-								else
-									AsdStaInfoToEAG(wasd,sta,ASD_DEL_AUTH);
-							}
-							//qiuchen
-							if(gASDLOGDEBUG & BIT(1)){
-								unsigned char *ipold = (unsigned char *)&(sta->ipaddr);
-								syslog(LOG_INFO|LOG_LOCAL7, "[%d-%d]STA_IP_UPDATE:UserMAC:" MACSTR "OLD_IP:%d.%d.%d.%d NEW_IP:%d.%d.%d.%d\n",
-									slotid,vrrid,MAC2STR(sta->addr),ipold[0],ipold[1],ipold[2],ipold[3],ip[0],ip[1],ip[2],ip[3]);//qiuchen 2013.01.14
-							}
-					}
-					else{
-						//qiuchen
-						time_t at = time(NULL);
-						if(gASDLOGDEBUG & BIT(1))
-							syslog(LOG_INFO|LOG_LOCAL7, "[%d-%d]STA_GET_ONLINE:UserMAC:" MACSTR "IP:%d.%d.%d.%d TIME:%s\n",
-								slotid,vrrid,MAC2STR(sta->addr),ip[0],ip[1],ip[2],ip[3],ctime(&at));//qiuchen 2013.01.14
-					}
-					sta->ip_addr.s_addr = msg->u.STA.ipv4Address;
-					sta->ipaddr = msg->u.STA.ipv4Address;
-					memset(sta->in_addr,0,16);
-					memcpy(sta->in_addr,inet_ntoa(sta->ip_addr),strlen(inet_ntoa(sta->ip_addr)));
-					memcpy(sta->arpifname,msg->u.STA.arpifname,sizeof(msg->u.STA.arpifname));
-					asd_printf(ASD_DEFAULT,MSG_DEBUG,"sta->arpifname:%s\n",sta->arpifname);
-					asd_printf(ASD_DEFAULT,MSG_DEBUG,"sta->in_addr "MACSTR"\n",MAC2STR(sta->in_addr));
-					if(ASD_WLAN[wasd->WlanID] == NULL){
-						break ;
-					}	
-					SID = (unsigned char)ASD_WLAN[wasd->WlanID]->SecurityID;
-					
-					if((ASD_SECURITY[SID])&&((ASD_SECURITY[SID]->securityType == WPA_E)||(ASD_SECURITY[SID]->securityType == WPA2_E)||(ASD_SECURITY[SID]->securityType == WPA_P)||(ASD_SECURITY[SID]->securityType == WPA2_P)||(ASD_SECURITY[SID]->securityType == IEEE8021X)||(ASD_SECURITY[SID]->securityType == MD5)||(ASD_SECURITY[SID]->extensible_auth == 1)))
-					{
-							if((ASD_SECURITY[SID]->account_after_authorize == 0)&&(sta->flags &WLAN_STA_AUTHORIZED)){
-								accounting_sta_start(wasd,sta);
-							}
-					}	
-					if(is_secondary == 0)
-						bak_update_sta_ip_info(wasd, sta);
-					if( 0 != sta->ipaddr){
-						 if((NO_NEED_AUTH == sta->security_type)||(HYBRID_AUTH_EAPOL_SUCCESS(sta))) 
-						{
-							if(asd_ipset_switch)
-								eap_connect_up(sta->ip_addr.s_addr);
-							else
-								AsdStaInfoToEAG(wasd,sta,ASD_AUTH);
-						}
-						
-					}
-					}
+    					if(ASD_WLAN[wasd->WlanID] == NULL){
+    						break ;
+    					}	
+    					SID = (unsigned char)ASD_WLAN[wasd->WlanID]->SecurityID;
+    					
+    					if((ASD_SECURITY[SID])&&((ASD_SECURITY[SID]->securityType == WPA_E)||(ASD_SECURITY[SID]->securityType == WPA2_E)||(ASD_SECURITY[SID]->securityType == WPA_P)||(ASD_SECURITY[SID]->securityType == WPA2_P)||(ASD_SECURITY[SID]->securityType == IEEE8021X)||(ASD_SECURITY[SID]->securityType == MD5)||(ASD_SECURITY[SID]->extensible_auth == 1)))
+    					{
+    							if((ASD_SECURITY[SID]->account_after_authorize == 0)&&(sta->flags &WLAN_STA_AUTHORIZED)){
+    								accounting_sta_start(wasd,sta);
+    							}
+    					}	
+    					if(is_secondary == 0)
+    						bak_update_sta_ip_info(wasd, sta);
+    					if( 0 != sta->ipaddr){
+    						 if((NO_NEED_AUTH == sta->security_type)||(HYBRID_AUTH_EAPOL_SUCCESS(sta))) 
+    						{
+    							if(asd_ipset_switch)
+    								eap_connect_up(sta->ip_addr.s_addr);
+    							else
+    								AsdStaInfoToEAG(wasd,sta,ASD_AUTH);
+    						}
+    						
+    					}
+    				}
 					else
 					{
-						asd_printf(ASD_DEFAULT,MSG_DEBUG,"In case DHCP_IP,the sta is not exit!!!!\n");
+						asd_printf(ASD_DEFAULT,MSG_DEBUG,"In case DHCP_IP,the sta is not exist!!!!\n");
 					}	
 				}
 				else	
 				{
-					asd_printf(ASD_DEFAULT,MSG_DEBUG,"In case DHCP_IP,the wasd is not exit!!!!\n");
+					asd_printf(ASD_DEFAULT,MSG_DEBUG,"In case DHCP_IP,the wasd is not exist!!!!\n");
 				}
-			break;
+			    break;
+            /* add for ipv6 address */
+			case  DHCP_IPv6:
+				asd_printf(ASD_DEFAULT,MSG_DEBUG,"in STA_OP case DHCP_IPv6:\n");
+				asd_printf(ASD_DBUS,MSG_DEBUG,"MAC:"MACSTR" at BSSIndex = %d\n",MAC2STR(msg->u.STA.STAMAC),BSSIndex);
+				wasd = AsdCheckBSSIndex(BSSIndex);
+				if(wasd != NULL){
+					sta = ap_get_sta(wasd, msg->u.STA.STAMAC);
+					if(sta != NULL)
+    				{   
+						asd_print_ipv6(msg->u.STA.ipv6Address);
+						if(asd_check_ipv6(msg->u.STA.ipv6Address) != 0)
+						{
+    		                sta->ip6_addr = msg->u.STA.ipv6Address;
+							asd_printf(ASD_DEFAULT,MSG_DEBUG,"get ipv6 form dhcp, sta->ip6_addr:");							
+                            asd_print_ipv6(sta->ip6_addr);
+        					memcpy(sta->arpifname,msg->u.STA.arpifname,sizeof(msg->u.STA.arpifname));
+        					asd_printf(ASD_DEFAULT,MSG_DEBUG,"sta->arpifname: %s\n",sta->arpifname);
+
+        					if(is_secondary == 0)
+        						bak_update_sta_ip_info(wasd, sta);
+        					
+    						if((NO_NEED_AUTH == sta->security_type)||(HYBRID_AUTH_EAPOL_SUCCESS(sta))) 
+    						{
+    							if(asd_ipset_switch)
+    								eap_connect_up(sta->ip_addr.s_addr);
+    							else
+    								AsdStaInfoToEAG(wasd,sta,ASD_AUTH);
+    						}
+        						
+						}
+						else
+						{
+    						asd_printf(ASD_DEFAULT,MSG_DEBUG,"In case DHCP_IPv6,asd_check_ipv6 is 0 .\n");							
+						}
+    				}
+					else
+					{
+						asd_printf(ASD_DEFAULT,MSG_DEBUG,"In case DHCP_IPv6,the sta is not exist!!!!\n");
+					}	
+				}
+				else	
+				{
+					asd_printf(ASD_DEFAULT,MSG_DEBUG,"In case DHCP_IPv6,the wasd is not exist!!!!\n");
+				}
+			    break;
 
 			case STA_LEAVE_REPORT:
 				asd_printf(ASD_LEAVE,MSG_DEBUG,"now in case STA_LEAVE_REPORT\n");
@@ -5037,6 +5079,7 @@ void STA_IP_ARP_OP(TableMsg *msg){
 		case EAG_NTF_ASD_STA_INFO:
 		case STA_CHECK_DEL:
 		case STA_WTP_TERMINAL_STATISTICS:
+		default:
 			break;
 	}
 }

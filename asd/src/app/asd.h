@@ -502,6 +502,10 @@ void asd_log_roam_statistics();
 void asd_syslog_auteview(int level,int type,struct ieee80211_mgmt *mgmt,struct asd_data *wasd,struct sta_info *sta,int Rcode,char *error_str);
 void asd_syslog_auteview_acct_stop(struct asd_data *wasd,struct sta_info *sta,struct asd_sta_driver_data *data,int sessiontime);
 void asd_parse_log_rcode(int *Rcode,char *str);
+int asd_check_ipv6(	struct in6_addr ip6_addr);
+void asd_print_ipv6(struct in6_addr ip6_addr);
+int asd_compare_ipv6(struct in6_addr ip6_a,struct in6_addr ip6_b);
+
 /* WEP/PSK associate auth  (SHARE:WEP) */
 #define ASD_AUTH_TYPE_WEP_PSK(security_id)	\
 		(NULL != ASD_SECURITY[(security_id)]		\

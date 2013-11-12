@@ -1125,6 +1125,15 @@ struct dcli_sta_info* get_sta_info_by_mac(DBusConnection *dcli_dbus_connection,i
 										memset(sta->ip,0,strlen(in_addr)+1);
 										memcpy(sta->ip,in_addr,strlen(in_addr));		
 				}
+
+			dbus_message_iter_next(&iter);	
+			dbus_message_iter_get_basic(&iter,&(sta->ip6_addr.in6_u.u6_addr32[0]));
+			dbus_message_iter_next(&iter);	
+			dbus_message_iter_get_basic(&iter,&(sta->ip6_addr.in6_u.u6_addr32[1]));
+			dbus_message_iter_next(&iter);	
+			dbus_message_iter_get_basic(&iter,&(sta->ip6_addr.in6_u.u6_addr32[2]));
+			dbus_message_iter_next(&iter);	
+			dbus_message_iter_get_basic(&iter,&(sta->ip6_addr.in6_u.u6_addr32[3]));
 		
 			dbus_message_iter_next(&iter);	
 			dbus_message_iter_get_basic(&iter,&(sta->snr)); 
@@ -1810,6 +1819,15 @@ struct dcli_ac_info* show_sta_list(DBusConnection *dcli_dbus_connection,int inde
 					memcpy(sta->ip,in_addr,strlen(in_addr));
 				}
 
+				dbus_message_iter_next(&iter_sub_struct);	
+				dbus_message_iter_get_basic(&iter_sub_struct,&(sta->ip6_addr.in6_u.u6_addr32[0]));
+				dbus_message_iter_next(&iter_sub_struct);	
+				dbus_message_iter_get_basic(&iter_sub_struct,&(sta->ip6_addr.in6_u.u6_addr32[1]));
+				dbus_message_iter_next(&iter_sub_struct);	
+				dbus_message_iter_get_basic(&iter_sub_struct,&(sta->ip6_addr.in6_u.u6_addr32[2]));
+				dbus_message_iter_next(&iter_sub_struct);	
+				dbus_message_iter_get_basic(&iter_sub_struct,&(sta->ip6_addr.in6_u.u6_addr32[3]));
+				
 				dbus_message_iter_next(&iter_sub_struct);	
 				dbus_message_iter_get_basic(&iter_sub_struct,&(sta->rxbytes));
 

@@ -8231,6 +8231,19 @@ DBusMessage *asd_dbus_show_sta_by_mac(DBusConnection *conn, DBusMessage *msg, vo
 
 			dbus_message_iter_append_basic (&iter,
 												 DBUS_TYPE_UINT32,
+												 &(stainfo->sta->ip6_addr.s6_addr32[0]));
+			dbus_message_iter_append_basic (&iter,
+												 DBUS_TYPE_UINT32,
+												 &(stainfo->sta->ip6_addr.s6_addr32[1]));
+			dbus_message_iter_append_basic (&iter,
+												 DBUS_TYPE_UINT32,
+												 &(stainfo->sta->ip6_addr.s6_addr32[2]));
+			dbus_message_iter_append_basic (&iter,
+												 DBUS_TYPE_UINT32,
+												 &(stainfo->sta->ip6_addr.s6_addr32[3]));
+
+			dbus_message_iter_append_basic (&iter,
+												 DBUS_TYPE_UINT32,
 												 &(stainfo->sta->snr));
 
 			dbus_message_iter_append_basic (&iter,
@@ -17547,11 +17560,10 @@ DBusMessage *asd_dbus_show_stalist(DBusConnection *conn, DBusMessage *msg, void 
 						  DBUS_TYPE_BYTE,
 						  &(sta->addr[5]));
 				
-			  dbus_message_iter_append_basic
+			    dbus_message_iter_append_basic
 						(&iter_sub_struct,
 						DBUS_TYPE_STRING,
-						 &(sta->in_addr));
-			  
+						 &(sta->in_addr));			  
 				dbus_message_iter_close_container (&iter_sub_array, &iter_sub_struct);
 				sta = sta->next;
 			}
@@ -18668,7 +18680,7 @@ DBusMessage *asd_dbus_show_stalist_by_group(DBusConnection *conn, DBusMessage *m
 	unsigned int num_wired = 0;
 //=============================
 
-	asd_printf(ASD_DBUS,MSG_DEBUG,"In the asd_dbus_show_stalist\n");
+	asd_printf(ASD_DEFAULT,MSG_DEBUG,"%s,%d.\n",__func__,__LINE__);
 	dbus_error_init(&err);
 	pthread_mutex_lock(&asd_g_sta_mutex);   
 
@@ -18761,6 +18773,10 @@ DBusMessage *asd_dbus_show_stalist_by_group(DBusConnection *conn, DBusMessage *m
 															DBUS_TYPE_UINT32_AS_STRING//
 															DBUS_TYPE_UINT32_AS_STRING//sta_online_time
 															DBUS_TYPE_STRING_AS_STRING
+															DBUS_TYPE_UINT32_AS_STRING //ipv6 address
+													        DBUS_TYPE_UINT32_AS_STRING
+													        DBUS_TYPE_UINT32_AS_STRING
+													        DBUS_TYPE_UINT32_AS_STRING
 															DBUS_TYPE_UINT64_AS_STRING
 															DBUS_TYPE_UINT64_AS_STRING//ht add,081025
 															DBUS_TYPE_UINT32_AS_STRING
@@ -18845,7 +18861,6 @@ DBusMessage *asd_dbus_show_stalist_by_group(DBusConnection *conn, DBusMessage *m
 						(&iter_struct,
 						  DBUS_TYPE_STRING,
 					  	&Binding_IF_NAME);
-			
 			dbus_message_iter_open_container (&iter_struct,
 											   DBUS_TYPE_ARRAY,
 											   DBUS_STRUCT_BEGIN_CHAR_AS_STRING
@@ -18863,17 +18878,22 @@ DBusMessage *asd_dbus_show_stalist_by_group(DBusConnection *conn, DBusMessage *m
 													   DBUS_TYPE_UINT32_AS_STRING
 													   DBUS_TYPE_UINT32_AS_STRING/////
 													   DBUS_TYPE_UINT32_AS_STRING//sta_online_time
-													   DBUS_TYPE_STRING_AS_STRING
-														DBUS_TYPE_UINT64_AS_STRING
-														DBUS_TYPE_UINT64_AS_STRING//ht add,081025
+													   DBUS_TYPE_STRING_AS_STRING//ipv4 address                                                                    
+													   DBUS_TYPE_UINT32_AS_STRING //ipv6 address
+													   DBUS_TYPE_UINT32_AS_STRING
+													   DBUS_TYPE_UINT32_AS_STRING
+													   DBUS_TYPE_UINT32_AS_STRING													   
+													   DBUS_TYPE_UINT64_AS_STRING
+													   DBUS_TYPE_UINT64_AS_STRING//ht add,081025
 													   //DBUS_TYPE_STRING_AS_STRING
-														DBUS_TYPE_UINT32_AS_STRING
-														DBUS_TYPE_BYTE_AS_STRING
-														DBUS_TYPE_STRING_AS_STRING
-														DBUS_TYPE_UINT32_AS_STRING//sta_access_time
-														DBUS_TYPE_UINT32_AS_STRING//online_time
+													   DBUS_TYPE_UINT32_AS_STRING
+													   DBUS_TYPE_BYTE_AS_STRING
+													   DBUS_TYPE_STRING_AS_STRING
+													   DBUS_TYPE_UINT32_AS_STRING//sta_access_time
+													   DBUS_TYPE_UINT32_AS_STRING//online_time
 												DBUS_STRUCT_END_CHAR_AS_STRING,
 											   &iter_sub_array);
+
 			int j = 0;			
 			struct sta_info *sta;
 			time_t sta_time;
@@ -18967,20 +18987,41 @@ DBusMessage *asd_dbus_show_stalist_by_group(DBusConnection *conn, DBusMessage *m
 					 	  &(sta->sta_online_time));
 				//end
 
-					in_addr = (char*)malloc(strlen(sta->in_addr)+1);
-					os_memset(in_addr,0,strlen(sta->in_addr)+1);
-					os_memcpy(in_addr,sta->in_addr,strlen(sta->in_addr));
-			  dbus_message_iter_append_basic
+				in_addr = (char*)malloc(strlen(sta->in_addr)+1);
+				os_memset(in_addr,0,strlen(sta->in_addr)+1);
+				os_memcpy(in_addr,sta->in_addr,strlen(sta->in_addr));
+                dbus_message_iter_append_basic
 						(&iter_sub_struct,
 			  			DBUS_TYPE_STRING,
 		 	 			 &(in_addr));
+				
+				dbus_message_iter_append_basic
+						(&iter_sub_struct,
+						  DBUS_TYPE_UINT32,
+					 	 &(sta->ip6_addr.s6_addr32[0]));
+
+				dbus_message_iter_append_basic
+						(&iter_sub_struct,
+						  DBUS_TYPE_UINT32,
+					 	 &(sta->ip6_addr.s6_addr32[1]));
+
+				dbus_message_iter_append_basic
+						(&iter_sub_struct,
+						  DBUS_TYPE_UINT32,
+					 	 &(sta->ip6_addr.s6_addr32[2]));
+
+				dbus_message_iter_append_basic
+						(&iter_sub_struct,
+						  DBUS_TYPE_UINT32,
+					 	 &(sta->ip6_addr.s6_addr32[3]));
+
 			  
-			  dbus_message_iter_append_basic
+			    dbus_message_iter_append_basic
 						(&iter_sub_struct,
 			  			DBUS_TYPE_UINT64,
 		 	 			 &(sta->rxbytes));
 			  
-			  dbus_message_iter_append_basic
+			    dbus_message_iter_append_basic
 						(&iter_sub_struct,
 			  			DBUS_TYPE_UINT64,
 		 	 			 &(sta->txbytes));	//ht add,081025
@@ -18996,24 +19037,24 @@ DBusMessage *asd_dbus_show_stalist_by_group(DBusConnection *conn, DBusMessage *m
 								   DBUS_TYPE_UINT32,
 								   &(securitytype));
 				
-				 if((sta->eapol_sm != NULL)&&(sta->eapol_sm->identity != NULL)){
-					 dbus_message_iter_append_basic
-							   (&iter_sub_struct,
-							   DBUS_TYPE_BYTE,
-								&(sta->eapol_sm->eap_type_authsrv));
-					 
-					 dbus_message_iter_append_basic
-							   (&iter_sub_struct,
-							   DBUS_TYPE_STRING,
-								&(sta->eapol_sm->identity));
-				 }
+                if((sta->eapol_sm != NULL)&&(sta->eapol_sm->identity != NULL)){
+                    dbus_message_iter_append_basic
+                		   (&iter_sub_struct,
+                		   DBUS_TYPE_BYTE,
+                			&(sta->eapol_sm->eap_type_authsrv));
+                 
+                    dbus_message_iter_append_basic
+                		   (&iter_sub_struct,
+                		   DBUS_TYPE_STRING,
+                			&(sta->eapol_sm->identity));
+                }
 				else{
-					  dbus_message_iter_append_basic
+					dbus_message_iter_append_basic
 								(&iter_sub_struct,
 								DBUS_TYPE_BYTE,
 								 &(eap_type));
 					  
-					  dbus_message_iter_append_basic
+					dbus_message_iter_append_basic
 								(&iter_sub_struct,
 								DBUS_TYPE_STRING,
 								 &(identify));

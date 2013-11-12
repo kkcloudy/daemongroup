@@ -213,6 +213,8 @@ int bak_update_sta_ip_info(struct asd_data *wasd, struct sta_info *sta){
 	msg.Bu.U_STA.WTPID = wasd->BSSIndex/L_BSS_NUM/L_RADIO_NUM;
 	msg.Bu.U_STA.BSSIndex = wasd->BSSIndex;
 	msg.Bu.U_STA.ipaddr = sta->ipaddr;
+	/* add for ipv6 addr */
+	msg.Bu.U_STA.ip6_addr = sta->ip6_addr;	
 	msg.Bu.U_STA.gifindex = sta->gifidx;
 	len = sizeof(msg);
 	asd_printf(ASD_DEFAULT,MSG_DEBUG,"len %d\n",len);
@@ -529,6 +531,7 @@ int bak_add_sta(struct asd_data *wasd, struct sta_info *sta){
 		msg.Bu.U_STA.sta_add = *(sta->add_time);
 		msg.Bu.U_STA.sta_online_time = now - sta->add_time_sysruntime+sta->sta_online_time;//qiuchen add it
 		msg.Bu.U_STA.ipaddr = sta->ipaddr;
+		msg.Bu.U_STA.ip6_addr = sta->ip6_addr;      /* add to support ipv6 address */
 		msg.Bu.U_STA.gifindex = sta->gifidx;
 		/*Qiuchen add it to synchronize the sta's roaming infomation
 		because of the master AC will send a msg to the bak to delete the sta info in the old bss when it's roaming
@@ -1050,11 +1053,10 @@ void B_STA_OP(B_Msg *msg){
 					asd_printf(ASD_DEFAULT,MSG_ERROR,"B_STA_OP sta add failed!!!!!!\n");
 					return;
 				}
-				if(msg->Bu.U_STA.ipaddr != 0)
+				if((msg->Bu.U_STA.ipaddr != 0)||(asd_check_ipv6(msg->Bu.U_STA.ip6_addr)!=0))
 				{
-					if(sta->ipaddr == msg->Bu.U_STA.ipaddr){
-						break;
-					}else{
+					if(sta->ipaddr != msg->Bu.U_STA.ipaddr)
+					{
 						char mac[20];
 						char ifname[ETH_IF_NAME_LEN];
 						unsigned char *ip;						
@@ -1109,6 +1111,21 @@ void B_STA_OP(B_Msg *msg){
 						}
 						if(asd_sta_static_arp)
 							ipneigh_modify(RTM_NEWNEIGH, NLM_F_CREATE|NLM_F_REPLACE,sta->in_addr, mac,ifname);
+					}
+					else if(asd_compare_ipv6(sta->ip6_addr,msg->Bu.U_STA.ip6_addr)!=0)
+					{
+						memset(sta->arpifname,0,16);						
+						if(ASD_ARP_GROUP[msg->Bu.U_STA.gifindex] != NULL){
+							strcpy(sta->arpifname,ASD_ARP_GROUP[msg->Bu.U_STA.gifindex]);							
+						}
+						sta->gifidx = msg->Bu.U_STA.gifindex;						
+						sta->ip6_addr = msg->Bu.U_STA.ip6_addr;
+						asd_printf(ASD_DEFAULT,MSG_DEBUG,"B_STA_OP() case B_ADD add new sta ipv6:");
+                        asd_print_ipv6(sta->ip6_addr);
+					}
+					else
+					{
+        				asd_printf(ASD_DEFAULT,MSG_DEBUG,"B_STA_OP() case B_ADD: ip is the same, need not update.\n");						
 					}
 				}
 			}
@@ -1204,33 +1221,14 @@ void B_STA_OP(B_Msg *msg){
 				wasd = interfaces->iface[Radio_ID]->bss[i];
 				sta = ap_get_sta(wasd, msg->Bu.U_STA.STAMAC);
 				if(sta != NULL){
-					if(sta->ipaddr == msg->Bu.U_STA.ipaddr){
-						break;
-					}else{
+					if(sta->ipaddr != msg->Bu.U_STA.ipaddr)
+					{   						
 						char mac[20];
 						char ifname[ETH_IF_NAME_LEN];
 						unsigned char *ip;						
-						//struct if_nameindex *ifin = NULL;
-						//int gindex = 0;
 						memset(mac,0,20);
 						memset(ifname,0,ETH_IF_NAME_LEN);
 						sprintf(mac,"%02X:%02X:%02X:%02X:%02X:%02X",MAC2STR(sta->addr));
-						#if 0
-						ifin = if_nameindex();
-						
-						if(ifin) {
-							i = 0;
-							while(ifin[i].if_name && ifin[i].if_index) {
-								ret = if_name2gindex(ifin[i].if_name, &gindex);
-								if((!ret)&&(gindex == msg->Bu.U_STA.gifindex)) {
-									strcpy(ifname,ifin[i].if_name);
-									break;
-								}
-								i++;
-							}
-							if_freenameindex(ifin);
-						}	
-						#endif						
 						if(ASD_ARP_GROUP[msg->Bu.U_STA.gifindex] != NULL){
 							strcpy(ifname,ASD_ARP_GROUP[msg->Bu.U_STA.gifindex]);
 						}
@@ -1244,6 +1242,7 @@ void B_STA_OP(B_Msg *msg){
 							}
 						}
 						sta->ipaddr = msg->Bu.U_STA.ipaddr;
+						sta->ip6_addr = msg->Bu.U_STA.ip6_addr;
 						sta->gifidx = msg->Bu.U_STA.gifindex;
 						memset(sta->arpifname,0,16);
 						memset(sta->in_addr, 0, 16);
@@ -1271,11 +1270,30 @@ void B_STA_OP(B_Msg *msg){
 						if(asd_sta_static_arp)
 							ipneigh_modify(RTM_NEWNEIGH, NLM_F_CREATE|NLM_F_REPLACE,sta->in_addr, mac,ifname);
 					}
+					else if(asd_compare_ipv6(sta->ip6_addr,msg->Bu.U_STA.ip6_addr)!=0)
+                    {
+						memset(sta->arpifname,0,16);						
+						if(ASD_ARP_GROUP[msg->Bu.U_STA.gifindex] != NULL){
+							strcpy(sta->arpifname,ASD_ARP_GROUP[msg->Bu.U_STA.gifindex]);							
+						}
+						sta->gifidx = msg->Bu.U_STA.gifindex;						
+						sta->ip6_addr = msg->Bu.U_STA.ip6_addr;
+						asd_printf(ASD_DEFAULT,MSG_DEBUG,"B_STA_OP() case B_MODIFY sta ipv6:");
+                        asd_print_ipv6(sta->ip6_addr);
+					}
+					else
+					{
+        				asd_printf(ASD_DEFAULT,MSG_DEBUG,"B_STA_OP() case B_MODIFY: ip is the same, need not update.\n");						
+					}      
+				}
+				else
+				{
+        			asd_printf(ASD_DEFAULT,MSG_DEBUG,"B_STA_OP() case B_MODIFY: sta is NULL !!!\n");											
 				}
 			}
 			break;
 		case B_UPDATE:
-			asd_printf(ASD_DEFAULT,MSG_DEBUG,"case B_UPDATE\n");
+			asd_printf(ASD_DEFAULT,MSG_DEBUG,"case B_UPDATE, do nothing!!!\n");
 			break;
 	}
 }	

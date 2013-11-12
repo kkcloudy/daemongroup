@@ -348,6 +348,7 @@ struct dcli_sta_info
 	struct dcli_sta_info *next; /* next entry in sta list */
 	unsigned char addr[6];
 	unsigned char *ip;	
+	struct in6_addr ip6_addr;
 	
 	unsigned char 	wlan_id;
 	unsigned char 	security_id;

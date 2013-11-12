@@ -227,7 +227,7 @@ static int radius_client_retransmit(struct radius_send_info *send_info,
 	struct asd_radius_servers *conf = radius->conf;
 	int s;
 	int res;
-	socklen_t addrlen;
+	socklen_t addrlen = 0;
 	struct sockaddr_in serv;
 	struct sockaddr *serv_addr = NULL;
 	struct asd_radius_server *nserv;
@@ -687,7 +687,7 @@ int radius_test_client_send_without_retrans(struct heart_test_radius_data *radiu
 	size_t shared_secret_len;
 	char *name;
 	int s, res;
-	socklen_t addrlen;
+	socklen_t addrlen = 0;
 	struct sockaddr_in serv;
 	struct sockaddr *serv_addr = NULL;
 	struct asd_radius_server *nserv;
@@ -963,7 +963,7 @@ int radius_client_send(struct radius_client_info *client_info,
 	size_t shared_secret_len;
 	char *name;
 	int s, res,radius_id;
-	socklen_t addrlen;
+	socklen_t addrlen = 0;
 	struct sockaddr_in serv;
 	struct sockaddr *serv_addr = NULL;
 	struct asd_radius_server *nserv;

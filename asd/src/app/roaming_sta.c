@@ -209,6 +209,14 @@ struct ROAMING_STAINFO * AsdRoamingStaInfoAdd(struct asd_data *wasd, const u8 *a
 						memset(sta_cur->arpifname,0,sizeof(sta_cur->arpifname));
 						memcpy(sta_cur->arpifname,sta->arpifname,sizeof(sta->arpifname));
 					}
+					
+					/* add to support ipv6 address */
+					if((asd_check_ipv6(sta->ip6_addr) != 0) && (asd_check_ipv6(sta_cur->ip6_addr) == 0))
+					{
+						sta_cur->ip6_addr = sta->ip6_addr;
+						memset(sta_cur->arpifname,0,sizeof(sta_cur->arpifname));
+						memcpy(sta_cur->arpifname,sta->arpifname,sizeof(sta->arpifname));
+					}					
 					sta_cur->rflag = ASD_ROAM_3;//qiuchen
 					sta_cur->PreBssIndex = wasd_r->BSSIndex;
 					sta_cur->preAPID = wasd_r->Radio_G_ID/4;

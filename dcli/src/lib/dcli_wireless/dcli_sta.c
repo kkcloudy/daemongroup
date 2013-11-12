@@ -6384,7 +6384,7 @@ DEFUN(show_bss_info_cmd_func,
 #endif
 DEFUN(show_sta_list_by_interface_func,
 	  show_sta_list_by_interface_cmd,
-	  "show sta (list|all) by interface",
+	  "show sta list by interface",
 	  CONFIG_STR
 	  "ASD station list information\n"
 	  "all sta\n"
@@ -7690,6 +7690,7 @@ DEFUN(show_sta_cmd_func,
 	int profile = 0;
 	int instRun = 0;
 	int flag = 0;
+	int i = 0;
 	
 	memset(ieee80211_state, 0, 20);
 	memset(PAE, 0, 20);
@@ -7815,6 +7816,20 @@ DEFUN(show_sta_cmd_func,
 
 #if 1		
 			vty_out(vty,"ip:  %s\n",sta->ip);
+			vty_out(vty,"ipv6: ");
+			/* add ipv6 address */
+			for (i = 0; i < 8; i++)
+        	{   
+				if(i==7)
+				{
+                    vty_out(vty,"%x\n",sta->ip6_addr.s6_addr16[i]);
+				}
+			    else
+			    {
+                    vty_out(vty,"%x:",sta->ip6_addr.s6_addr16[i]);
+			    }
+        	}
+
 			vty_out(vty,"snr:  %llu\n",sta->snr);
 			vty_out(vty,"rr:  %llu\n",sta->rr);
 			vty_out(vty,"tr:  %llu\n",sta->tr);
@@ -9014,7 +9029,7 @@ DEFUN(show_sta_summary_cmd_func,
 #if DCLI_NEW
 DEFUN(show_sta_list_cmd_func,
 	  show_sta_list_cmd,
-	  "show sta (list|all) [remote] [local] [PARAMETER]",
+	  "show sta list [remote] [local] [PARAMETER]",
 	  CONFIG_STR
 	  "ASD station list information\n"
 	  "all sta\n"
@@ -9140,6 +9155,19 @@ DEFUN(show_sta_list_cmd_func,
 					vty_out(vty,"%-5d     ",bss->BSSIndex);
 					vty_out(vty,"%-5d   ",bss->WlanID);
 					vty_out(vty,"%-5d\n",bss->SecurityID);
+					
+					vty_out(vty,"ipv6 address:      ");
+					for (i = 0; i < 8; i++)
+                	{   
+						if(i==7)
+						{
+                            vty_out(vty,"%x\n",sta->ip6_addr.s6_addr16[i]);
+						}
+					    else
+					    {
+                            vty_out(vty,"%x:",sta->ip6_addr.s6_addr16[i]);
+					    }
+                	}
 				}
 			}
 			
@@ -9171,8 +9199,7 @@ DEFUN(show_sta_list_cmd_func,
 					vty_out(vty,"%-15s  ",sta->ip);
 					vty_out(vty,"%-5d   ",bss->PortID);
 					vty_out(vty,"%-5d   ",bss->VlanID);		
-					vty_out(vty,"%-5d\n",bss->SecurityID);	
-					
+					vty_out(vty,"%-5d\n",bss->SecurityID);
 				}
 			}
 			vty_out(vty,"==============================================================================\n");
@@ -9391,7 +9418,7 @@ DEFUN(show_sta_list_cmd_func,
 #else
 DEFUN(show_sta_list_cmd_func,
 	  show_sta_list_cmd,
-	  "show sta (list|all)",
+	  "show sta list",
 	  CONFIG_STR
 	  "ASD station list information\n"
 	  "all sta\n"
@@ -9610,7 +9637,7 @@ DEFUN(show_sta_list_cmd_func,
 #if DCLI_NEW
 DEFUN(show_sta_list_by_group_cmd_func,
 	  show_sta_list_by_group_cmd,
-	  "show sta (list|all) by group [remote] [local] [PARAMETER]",
+	  "show sta list by group [remote] [local] [PARAMETER]",
 	  CONFIG_STR
 	  "ASD station list information\n"
 	  "all sta\n"
@@ -10260,7 +10287,7 @@ DEFUN(show_sta_list_by_group_cmd_func,
 #else
 DEFUN(show_sta_list_by_group_cmd_func,
 	  show_sta_list_by_group_cmd,
-	  "show sta (list|all) by group",
+	  "show sta list by group",
 	  CONFIG_STR
 	  "ASD station list information\n"
 	  "all sta\n"
@@ -18020,7 +18047,7 @@ DEFUN(del_sta_hotspot_cmd_func,
 }
 DEFUN(show_sta_list_detail_cmd_func,
 	  show_sta_list_detial_cmd,
-	  "show sta (list|all) detail [remote] [local] [PARAMETER]",
+	  "show sta list detail [remote] [local] [PARAMETER]",
 	  CONFIG_STR
 	  "ASD station list information\n"
 	  "detail information"	

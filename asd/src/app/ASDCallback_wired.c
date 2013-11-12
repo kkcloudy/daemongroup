@@ -260,6 +260,7 @@ void WIRED_STA_OP(WIRED_TableMsg *msg){
 		case EAG_NTF_ASD_STA_INFO:
 		case STA_CHECK_DEL:
 		case STA_WTP_TERMINAL_STATISTICS:
+        default:
 			break;
 	}
 }
@@ -391,6 +392,7 @@ void WIRED_PORT_OP(WIRED_TableMsg *msg){
 		case EAG_NTF_ASD_STA_INFO:
 		case STA_CHECK_DEL:
 		case STA_WTP_TERMINAL_STATISTICS:
+        default:
 			break;
 	}
 }
@@ -520,6 +522,7 @@ void WIRED_VLAN_OP(WIRED_TableMsg *msg){
 		case EAG_NTF_ASD_STA_INFO:
 		case STA_CHECK_DEL:
 		case STA_WTP_TERMINAL_STATISTICS:
+		default:
 			break;	
 	}
 }

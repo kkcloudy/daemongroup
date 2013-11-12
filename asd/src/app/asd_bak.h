@@ -49,6 +49,7 @@ typedef struct {
 	unsigned char PreBSSID[MAC_LEN];
 	unsigned char rflag;
 	unsigned int PreApID;
+	struct in6_addr ip6_addr;
 }B_UPDATE_STA;
 
 typedef struct {

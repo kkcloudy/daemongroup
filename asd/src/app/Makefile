@@ -439,9 +439,9 @@ CFLAGS += -DRADIUS_SERVER
 OBJS += ./ASDRadius/radius_server.o
 endif
 
-ifdef ASD_IPV6
+#ifdef ASD_IPV6
 CFLAGS += -DASD_IPV6
-endif
+#endif
 
 ifdef ASD_FULL_DYNAMIC_VLAN
 CFLAGS += -DASD_FULL_DYNAMIC_VLAN

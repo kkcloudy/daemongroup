@@ -3207,3 +3207,31 @@ void asd_syslog_auteview(int level,int type,struct ieee80211_mgmt *mgmt,struct a
 }
 /* add end */
 
+/* add to support ipv6, check if ipv6 address is zero */
+int asd_check_ipv6(	struct in6_addr ip6_addr)
+{
+	return ((ip6_addr.in6_u.u6_addr32[0]) | (ip6_addr.in6_u.u6_addr32[1])    \
+		|(ip6_addr.in6_u.u6_addr32[2]) | (ip6_addr.in6_u.u6_addr32[3]));
+}
+
+int asd_compare_ipv6(struct in6_addr ip6_a,struct in6_addr ip6_b)
+{
+	if((ip6_a.in6_u.u6_addr32[0] == ip6_b.in6_u.u6_addr32[0]) &&    \
+		(ip6_a.in6_u.u6_addr32[1] == ip6_b.in6_u.u6_addr32[1]) &&   \
+		(ip6_a.in6_u.u6_addr32[2] == ip6_b.in6_u.u6_addr32[2]) &&   \
+		(ip6_a.in6_u.u6_addr32[3] == ip6_b.in6_u.u6_addr32[3]))
+	{
+        return 0;
+	}
+	return 1;
+}
+
+void asd_print_ipv6(struct in6_addr ip6_addr)
+{
+	asd_printf(ASD_DEFAULT,MSG_DEBUG,"ipv6_address of sta is: %X:%X:%X:%X:%X:%X:%X:%X .\n", \
+		ip6_addr.in6_u.u6_addr16[0],ip6_addr.in6_u.u6_addr16[1],ip6_addr.in6_u.u6_addr16[2],    \
+		ip6_addr.in6_u.u6_addr16[3],ip6_addr.in6_u.u6_addr16[4],ip6_addr.in6_u.u6_addr16[5],    \
+		ip6_addr.in6_u.u6_addr16[6],ip6_addr.in6_u.u6_addr16[7]);
+	return ;
+}
+

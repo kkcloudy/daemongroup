@@ -74,6 +74,7 @@ struct sta_info {
 	u32 flags;
 	char *in_addr;	//ht add,081025
 	struct in_addr ip_addr;
+	struct in6_addr ip6_addr;
 	u64 rxbytes;
 	u64 txbytes;
 	u64 pre_rxbytes;
