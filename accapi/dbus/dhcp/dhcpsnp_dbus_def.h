@@ -120,6 +120,7 @@
 #define DHCPSNP_DBUS_METHOD_DEBUG_STATE			"endis_dbg"
 
 #define DHCPSNP_DBUS_METHOD_SHOW_WAN_BIND_TABLE		"dhcp_snp_show_wan_bindtable"
+#define DHCPSNP_DBUS_METHOD_SHOW_WAN_IPV6_BIND_TABLE		"dhcp_snp_show_wan_ipv6_bindtable"
 #define DHCPSNP_DBUS_METHOD_DELETE_WAN_TABLE		"dhcp_snp_delelte_wan_bind_table"
 #define DHCPSNP_DBUS_METHOD_DELETE_HOST_ROUTER		"dhcp_snp_delelte_host_router"
 #define DHCPSNP_DBUS_METHOD_CONFIG_AGING_TIME		"dhcp_snp_config_aging_time"

@@ -17,6 +17,9 @@
 #define NPD_DHCP_SNP_OPT_LEN			(1)
 #define NPD_DHCP_SNP_OPT_DATA			(2)
 
+#define NPD_DHCPv6_SNP_OPT_CODE			(1)
+#define NPD_DHCPv6_SNP_OPT_LEN			(3)
+
 
 /* DHCP option codes (partial list) */
 #define DHCP_PADDING		0x00
@@ -58,6 +61,15 @@
 
 #define DHCP_END			0xFF
 
+#define DHCPv6_ELP_TIME       0x08
+#define DCHPv6_CLIENT_ID      0x01
+#define DHCPv6_IANA           0x03
+#define DHCPv6_VENDOR_CLASS   0x10
+#define DHCPv6_OPO_REQ        0x06
+#define DHCPv6_FLL_DNS        0x27
+#define DHCPv6_SERVER_ID      0x02
+#define DHCPv6_STATUS_CODE    0x0d
+
 /* type of the DHCP packet */
 enum dhcp_packet_type {
 	NPD_DHCP_TYPE_ZERO = 0,
@@ -71,7 +83,19 @@ enum dhcp_packet_type {
 	NPD_DHCP_INFORM,
 	NPD_DHCP_TYPE_MAX = 0xFF
 };
-
+/* type of the DHCPv6 packet */
+enum dhcpv6_packet_type {
+	NPD_DHCPv6_TYPE_ZERO,
+	NPD_DHCPv6_TYPE_SOLICIT,
+	NPD_DHCPv6_TYPE_ADVERTISE,
+	NPD_DHCPv6_TYPE_REQUEST,
+	NPD_DHCPv6_TYPE_CONFIRM,
+	NPD_DHCPv6_TYPE_RENEW = 5,
+	NPD_DHCPv6_TYPE_REBIND = 6,
+	NPD_DHCPv6_TYPE_REPLY = 7,
+	NPD_DHCPv6_TYPE_DECLINE,
+	NPD_DHCPv6_TYPE_RELEASE
+};
 #define NPD_DHCP_SNP_REMOTEID_STR_LEN		(64)	/* length of user-defined remote-id string, 64	*/
 #define NPD_DHCP_SNP_CIRCUITID_STR_LEN		(64)	/* length of user-defined circuit-id string, 64	*/
 

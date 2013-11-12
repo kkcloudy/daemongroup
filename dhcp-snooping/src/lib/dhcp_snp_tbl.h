@@ -45,6 +45,20 @@ typedef struct NPD_DHCP_SNP_USER_ITEM_S
 	unsigned int ifindex;
 	unsigned int flags;
 }NPD_DHCP_SNP_USER_ITEM_T;
+typedef struct NPD_DHCPv6_SNP_USER_ITEM_S
+{
+	unsigned int  bind_type;
+	unsigned char state;
+	unsigned char haddr_len;
+	unsigned char chaddr[NPD_DHCP_SNP_MAC_ADD_LEN];
+	unsigned short vlanId;
+	unsigned char ipv6_addr[16];
+	unsigned int lease_time;
+	unsigned int sys_escape; /*添加绑定表项时系统启动以来所过的时间 */
+	unsigned int cur_expire;	   /* 当前使用的有效的IP地址状态超时时间,仅显示时使用*/
+	unsigned int ifindex;
+	unsigned int flags;
+}NPD_DHCPv6_SNP_USER_ITEM_T;
 
 typedef struct NPD_DHCP_SNP_TBL_ITEM_S
 {
@@ -62,6 +76,22 @@ typedef struct NPD_DHCP_SNP_TBL_ITEM_S
 	unsigned int   ifindex;
 	unsigned int   flags;
 }NPD_DHCP_SNP_TBL_ITEM_T;
+typedef struct NPD_DHCPv6_SNP_TBL_ITEM_S
+{
+	struct NPD_DHCPv6_SNP_TBL_ITEM_S *next;
+	struct NPD_DHCPv6_SNP_TBL_ITEM_S *ip_next;	
+	unsigned int   bind_type;
+	unsigned char  state;
+	unsigned char  haddr_len;
+	unsigned char  chaddr[NPD_DHCP_SNP_MAC_ADD_LEN];
+	unsigned short vlanId;
+	unsigned char   ipv6_addr[16];
+	unsigned int   lease_time;
+	unsigned int   sys_escape;
+	unsigned int   cur_expire;
+	unsigned int   ifindex;
+	unsigned int   flags;
+}NPD_DHCPv6_SNP_TBL_ITEM_T;
 
 struct dhcp_snp_static_table {
 	unsigned int ipaddr;
@@ -86,6 +116,16 @@ struct unresolved_table {
 	int vrrpid;
 	unsigned int local_flag;
 	unsigned int ipaddr;
+	unsigned int   ifindex;
+	unsigned int expired;	/* cur_uptime + 300 seconds */
+	unsigned char  chaddr[NPD_DHCP_SNP_MAC_ADD_LEN];
+};
+struct unresolved_ipv6_table {
+	struct unresolved_table *next;
+	unsigned int bssindex;
+	int vrrpid;
+	unsigned int local_flag;
+	unsigned char ipv6_addr[16];
 	unsigned int   ifindex;
 	unsigned int expired;	/* cur_uptime + 300 seconds */
 	unsigned char  chaddr[NPD_DHCP_SNP_MAC_ADD_LEN];
@@ -257,6 +297,10 @@ unsigned int dhcp_snp_tbl_item_delete
 unsigned int dhcp_snp_tbl_item_delete_iphash
 (
 	NPD_DHCP_SNP_TBL_ITEM_T *item
+);
+unsigned int dhcpv6_snp_tbl_item_delete_iphash
+(
+	NPD_DHCPv6_SNP_TBL_ITEM_T *item
 );
 
 /*********************************************************************

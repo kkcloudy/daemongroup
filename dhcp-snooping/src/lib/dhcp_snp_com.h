@@ -97,7 +97,12 @@ typedef struct NPD_DHCP_MESSAGE_S
 	unsigned int cookie;
 	unsigned char options[NPD_DHCP_SNP_OPTION_LEN]; /* 312 - cookie */ 
 } NPD_DHCP_MESSAGE_T;
-
+typedef struct NPD_DHCPv6_MESSAGE_S
+{
+	unsigned char msg_type;
+	unsigned char transaction_id[3];
+	unsigned char options[NPD_DHCP_SNP_OPTION_LEN];
+}NPD_DHCPv6_MESSAGE_T;
 typedef struct NPD_DHCP_OPTION_S{
   unsigned char	code;
   unsigned char	leng;

@@ -259,6 +259,12 @@ static DBusHandlerResult dhcp_snp_dbus_message_handler
 		}
 		else if (dbus_message_is_method_call(message,
 										DHCPSNP_DBUS_INTERFACE,
+										DHCPSNP_DBUS_METHOD_SHOW_WAN_IPV6_BIND_TABLE))
+		{
+			reply = dhcp_snp_dbus_show_wan_ipv6_bind_table(connection, message, user_data);
+		}
+		else if (dbus_message_is_method_call(message,
+										DHCPSNP_DBUS_INTERFACE,
 										DHCPSNP_DBUS_METHOD_DELETE_WAN_TABLE))
 		{
 			pthread_mutex_lock(&mutexDhcpsnptbl);

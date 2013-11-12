@@ -96,6 +96,89 @@ unsigned int dhcp_snp_notify_portal_enable = 1;	/* 1:enable 0:disable */
 **********************************************************/
 
 /**********************************************************************************
+ *dhcpv6_snp_get_item_from_pkt()
+ *
+ *	DESCRIPTION:
+ *
+ *	INPUTS:
+ *		unsigned short vlanid,
+ *		unsigned int ifindex
+ *		NPD_DHCP_MESSAGE_T *packet
+ *
+ *	OUTPUTS:
+ *		NPD_DHCP_SNP_USER_ITEM_T *user
+ *
+ *	RETURN VALUE:
+ *		DHCP_SNP_RETURN_CODE_OK
+ *		DHCP_SNP_RETURN_CODE_ERROR
+ *		DHCP_SNP_RETURN_CODE_PARAM_NULL
+ *
+ ***********************************************************************************/
+unsigned int dhcpv6_snp_get_item_from_pkt
+(
+	unsigned short vlanid,
+	unsigned int ifindex,
+	enum dhcpv6_packet_type type,
+	NPD_DHCPv6_MESSAGE_T *packet,
+	NPD_DHCPv6_SNP_USER_ITEM_T *user
+)
+{
+    unsigned char *temp = NULL;
+	int status_g = 0;
+
+    if ((packet == NULL) || (user == NULL)) {
+		syslog_ax_dhcp_snp_err("dhcp snp get item from pkt error, parameter is null\n");
+		return DHCP_SNP_RETURN_CODE_PARAM_NULL;
+    }
+
+	temp = (unsigned char *)dhcpv6_snp_get_option(packet, DCHPv6_CLIENT_ID);
+    user->vlanId    = vlanid;
+    user->haddr_len = 6;
+
+    memcpy(user->chaddr, temp+8, NPD_DHCP_SNP_MAC_ADD_LEN);
+	
+    /* 为了支持从RELAY到本地SERVER申请IP地址，同时在本地支持SNOOPING的处理
+     * 添加对没有通过用户MAC+VLAN定位到用户接口时从数据包取接口的处理，同时
+     * 支持对响应数据包不带接口的处理
+     */
+    user->ifindex = ifindex;
+    if ((NPD_DHCPv6_TYPE_ADVERTISE == type) || (NPD_DHCPv6_TYPE_REPLY == type))
+    {
+    	temp = (unsigned char *)dhcpv6_snp_get_option(packet, DHCPv6_IANA);
+		if(!temp){
+			temp = (unsigned char *)dhcpv6_snp_get_option(packet, DHCPv6_STATUS_CODE);
+			if(temp)
+				status_g = 1;
+		}
+		if(temp && status_g){
+			if(0 == temp[1])
+				log_debug("DHCPv6 REPLY for CONFIRM :success\n");
+			else
+				log_debug("DHCPv6 REPLY for CONFIRM : not success");
+			return DHCP_SNP_RETURN_CODE_OK;
+		}else if(temp){
+			memcpy(user->ipv6_addr, temp+16 ,16);
+			temp = (unsigned char*)(temp+36);
+			memcpy((char*)&(user->lease_time), temp, 4);
+			user->lease_time = ntohl(user->lease_time);
+		}else{
+			syslog_ax_dhcp_snp_err("couldn't get lease-time option from packet\n");
+			return DHCP_SNP_RETURN_CODE_ERROR;
+		}
+    }
+	else if(NPD_DHCPv6_TYPE_CONFIRM == type) {
+		temp = (unsigned char *)dhcpv6_snp_get_option(packet, DHCPv6_IANA);
+		memcpy(user->ipv6_addr, temp+16 ,16);
+		user->lease_time = NPD_DHCP_SNP_REQUEST_TIMEOUT; 
+	}
+	else {
+		memset(user->ipv6_addr, 0, 16);
+		user->lease_time = NPD_DHCP_SNP_REQUEST_TIMEOUT;
+    }
+
+    return DHCP_SNP_RETURN_CODE_OK;
+}
+/**********************************************************************************
  *dhcp_snp_get_item_from_pkt()
  *
  *	DESCRIPTION:
@@ -164,6 +247,123 @@ unsigned int dhcp_snp_get_item_from_pkt
     }
 
     return DHCP_SNP_RETURN_CODE_OK;
+}
+
+/**********************************************************************************
+ *dhcp_snp_discovery_process()
+ *
+ *	DESCRIPTION:
+ *		destroy DHCP Snooping packet receive
+ *
+ *	INPUTS:
+ *		unsigned short vlanid,
+ *		unsigned int ifindex,
+ *		NPD_DHCP_MESSAGE_T *dhcp
+ *
+ *	OUTPUTS:
+ *		NULL
+ *
+ *	RETURN VALUE:
+ *		DHCP_SNP_RETURN_CODE_OK 		- success
+ *		DHCP_SNP_RETURN_CODE_ERROR			- fail
+ *		DHCP_SNP_RETURN_CODE_PARAM_NULL - error, parameter is null
+ ***********************************************************************************/
+unsigned int dhcp_snp_solicit_process
+(
+	unsigned short vlanid,
+	unsigned int ifindex,
+	NPD_DHCPv6_MESSAGE_T *dhcp,
+    unsigned char *mac_2
+)
+{
+	unsigned int ret = DHCP_SNP_RETURN_CODE_OK;
+	NPD_DHCPv6_SNP_USER_ITEM_T user;
+	NPD_DHCPv6_SNP_TBL_ITEM_T *item = NULL;
+
+	syslog_ax_dhcp_snp_dbg("receive DHCPv6 SOLICIT packet from vlan %d ifindex %d\n", vlanid, ifindex);
+	if (dhcp == NULL) {
+		syslog_ax_dhcp_snp_err("dhcp snp solicit process error, parameter is null\n");
+		return DHCP_SNP_RETURN_CODE_PARAM_NULL;
+	}
+
+	memset(&user, 0, sizeof(NPD_DHCPv6_SNP_USER_ITEM_T));
+	ret = dhcpv6_snp_get_item_from_pkt(vlanid, ifindex, NPD_DHCPv6_TYPE_SOLICIT, dhcp, &user);
+	if (DHCP_SNP_RETURN_CODE_OK != ret) {
+		syslog_ax_dhcp_snp_err("get item value from packet error, ret %x\n", ret);		
+		return ret;
+	}
+	if(memcmp(user.chaddr, mac_2, 6)){
+		log_debug("layor address different from link address!\n");
+		memcpy(user.chaddr, mac_2, 6);
+	}
+	item = (NPD_DHCPv6_SNP_TBL_ITEM_T *)dhcpv6_snp_tbl_item_find(&user);
+	if (item == NULL) {
+		syslog_ax_dhcp_snp_dbg("no found item from dhcp snooping hash table, then insert a new.\n");
+		user.state = NPD_DHCP_SNP_BIND_STATE_REQUEST;
+		if (!dhcpv6_snp_tbl_item_insert(&user))
+		{
+			syslog_ax_dhcp_snp_err("insert item to table error\n"); 		
+			return DHCP_SNP_RETURN_CODE_ERROR;
+		}
+	}
+
+	return DHCP_SNP_RETURN_CODE_OK;
+}
+
+/**********************************************************************************
+ *dhcp_snp_advertise_process()
+ *
+ *	DESCRIPTION:
+ *		destroy DHCP Snooping packet receive
+ *
+ *	INPUTS:
+ *		unsigned short vlanid,
+ *		unsigned int ifindex,
+ *		NPD_DHCP_MESSAGE_T *dhcp
+ *
+ *	OUTPUTS:
+ *		NULL
+ *
+ *	RETURN VALUE:
+ *		DHCP_SNP_RETURN_CODE_OK			- success
+ ***********************************************************************************/
+unsigned int dhcp_snp_advertise_process
+(
+	unsigned short vlanid,
+	unsigned int ifindex,
+	NPD_DHCPv6_MESSAGE_T *dhcp, 
+	unsigned char * dhcp_buffr, 
+	unsigned long buffr_len,
+	int fd,
+	unsigned char* mac_2
+)
+{
+#if 0
+/* dhcp broadcast to unicast */
+	int ret = -1;
+	unsigned char det_mac[6] ={0xff, 0xff, 0xff, 0xff, 0xff,0xff}; /*det mac is boardcast*/
+
+	if(0 == memcmp(dhcp_buffr,det_mac, 6)) {
+		memcpy(dhcp_buffr, &(dhcp->chaddr), 6);
+		if(fd < 0 || !dhcp_buffr){
+			if(fd < 0){
+				syslog_ax_dhcp_snp_err("socket fd is err, receive offer packet from vlan %d ifindex %d\n", vlanid, ifindex);
+			}else{
+				syslog_ax_dhcp_snp_err("packet buffer is null, receive offer packet from vlan %d ifindex %d\n", vlanid, ifindex);
+			}			
+			return DHCP_SNP_RETURN_CODE_ERROR;			
+		}
+		ret = write(fd, dhcp_buffr, buffr_len);
+		if(ret < 0) {
+			syslog_ax_dhcp_snp_err("change to unist is error , receive offer packet from vlan %d ifindex %d \n", vlanid, ifindex);
+			return DHCP_SNP_RETURN_CODE_ERROR;
+		}
+		syslog_ax_dhcp_snp_dbg("receive offer packet from socket %d vlan %d ifindex %d pscket len %d\n", fd, vlanid, ifindex,  buffr_len);
+	} else {
+		syslog_ax_dhcp_snp_dbg("receive offer packet from vlan %d ifindex %d\n", vlanid, ifindex);
+	}
+#endif	
+	return DHCP_SNP_RETURN_CODE_OK;
 }
 
 /**********************************************************************************
@@ -275,6 +475,229 @@ unsigned int dhcp_snp_offer_process
 		syslog_ax_dhcp_snp_dbg("receive offer packet from vlan %d ifindex %d\n", vlanid, ifindex);
 	}
 #endif	
+	return DHCP_SNP_RETURN_CODE_OK;
+}
+
+/**********************************************************************************
+ *dhcpv6_snp_confirm_process()
+ *
+ *	DESCRIPTION:
+ *		destroy DHCP Snooping packet receive
+ *
+ *	INPUTS:
+ *		unsigned short vlanid,
+ *		unsigned int ifindex,
+ *		NPD_DHCP_MESSAGE_T *dhcp
+ *
+ *	OUTPUTS:
+ *		NULL
+ *
+ *	RETURN VALUE:
+ *		DHCP_SNP_RETURN_CODE_OK			- success
+ *		DHCP_SNP_RETURN_CODE_ERROR			- fail
+ *		DHCP_SNP_RETURN_CODE_PARAM_NULL	- error, parameter is null
+ ***********************************************************************************/
+unsigned int dhcpv6_snp_confirm_process
+(
+	unsigned short vlanid,
+	unsigned int ifindex,
+	NPD_DHCPv6_MESSAGE_T *dhcp,
+	unsigned char* mac_2
+)
+{
+	unsigned int ret = DHCP_SNP_RETURN_CODE_OK;
+	NPD_DHCPv6_SNP_USER_ITEM_T user;
+	NPD_DHCPv6_SNP_TBL_ITEM_T *item = NULL;
+
+	log_debug("recv DHCPv6 CONFIRM packet vlan %d ifindex %d\n", vlanid, ifindex);
+    if (dhcp == NULL) {
+		log_error("%s: parameter null.\n", __func__);
+        return DHCP_SNP_RETURN_CODE_PARAM_NULL;
+	}
+
+	memset(&user, 0, sizeof(NPD_DHCPv6_SNP_USER_ITEM_T));
+	ret = dhcpv6_snp_get_item_from_pkt(vlanid, ifindex,NPD_DHCPv6_TYPE_CONFIRM, dhcp, &user);
+	if (DHCP_SNP_RETURN_CODE_OK != ret) {
+		log_error("get item value from packet error, ret %x\n", ret);
+		return ret;
+	}
+
+	if(memcmp(mac_2 , user.chaddr, 6)){
+		log_debug("layor address different from link address!\n");
+		memcpy(user.chaddr, mac_2, 6);
+	}
+	item = (NPD_DHCPv6_SNP_TBL_ITEM_T *)dhcpv6_snp_tbl_item_find(&user);
+	if (!item) {
+		
+		log_debug("request: no item then insert %s %s\n", 
+			mac2str(user.chaddr), u128ip2str(user.ipv6_addr));
+		
+		user.state = NPD_DHCP_SNP_BIND_STATE_REQUEST;
+		if (!dhcpv6_snp_tbl_item_insert(&user))
+		{
+			log_error("insert item to table error\n");
+			return DHCP_SNP_RETURN_CODE_ERROR;
+		}
+	}
+
+	return DHCP_SNP_RETURN_CODE_OK;
+}
+
+/**********************************************************************************
+ *dhcpv6_snp_request_process()
+ *
+ *	DESCRIPTION:
+ *		destroy DHCP Snooping packet receive
+ *
+ *	INPUTS:
+ *		unsigned short vlanid,
+ *		unsigned int ifindex,
+ *		NPD_DHCP_MESSAGE_T *dhcp
+ *
+ *	OUTPUTS:
+ *		NULL
+ *
+ *	RETURN VALUE:
+ *		DHCP_SNP_RETURN_CODE_OK			- success
+ *		DHCP_SNP_RETURN_CODE_ERROR			- fail
+ *		DHCP_SNP_RETURN_CODE_PARAM_NULL	- error, parameter is null
+ ***********************************************************************************/
+unsigned int dhcpv6_snp_request_process
+(
+	unsigned short vlanid,
+	unsigned int ifindex,
+	NPD_DHCPv6_MESSAGE_T *dhcp,
+	unsigned char *mac_2
+)
+{
+	unsigned int ret = DHCP_SNP_RETURN_CODE_OK;
+	NPD_DHCPv6_SNP_USER_ITEM_T user;
+	NPD_DHCPv6_SNP_TBL_ITEM_T *item = NULL;
+
+    if (dhcp == NULL) {
+		log_error("%s: parameter null.\n", __func__);
+        return DHCP_SNP_RETURN_CODE_PARAM_NULL;
+	}
+
+	memset(&user, 0, sizeof(NPD_DHCPv6_SNP_USER_ITEM_T));
+	ret = dhcpv6_snp_get_item_from_pkt(vlanid, ifindex,NPD_DHCPv6_TYPE_REQUEST, dhcp, &user);
+	if (DHCP_SNP_RETURN_CODE_OK != ret) {
+		log_error("get item value from packet error, ret %x\n", ret);
+		return ret;
+	}
+	if(memcmp(mac_2 , user.chaddr, 6)){
+		log_debug("layor address different from link address!\n");
+		memcpy(user.chaddr, mac_2, 6);
+	}
+	item = (NPD_DHCPv6_SNP_TBL_ITEM_T *)dhcpv6_snp_tbl_item_find(&user);
+	if (!item) {
+		
+		log_debug("request: no item then insert %s %s\n", 
+			mac2str(user.chaddr), u128ip2str(user.ipv6_addr));
+		
+		user.state = NPD_DHCP_SNP_BIND_STATE_REQUEST;
+		if (!dhcpv6_snp_tbl_item_insert(&user))
+		{
+			log_error("insert item to table error\n");
+			return DHCP_SNP_RETURN_CODE_ERROR;
+		}
+	}
+
+	return DHCP_SNP_RETURN_CODE_OK;
+}
+
+/**********************************************************************************
+ *dhcp_snp_reply_process()
+ *
+ *	DESCRIPTION:
+ *		destroy DHCP Snooping packet receive
+ *
+ *	INPUTS:
+ *		unsigned short vlanid,
+ *		unsigned int ifindex,
+ *		NPD_DHCP_MESSAGE_T *dhcp
+ *
+ *	OUTPUTS:
+ *		NULL
+ *
+ *	RETURN VALUE:
+ *		DHCP_SNP_RETURN_CODE_OK			- success
+ *		DHCP_SNP_RETURN_CODE_ERROR			- fail
+ *		DHCP_SNP_RETURN_CODE_PARAM_NULL	- error, parameter is null
+ ***********************************************************************************/
+unsigned int dhcp_snp_reply_process
+(
+	unsigned short vlanid,
+	unsigned int ifindex,
+	NPD_DHCPv6_MESSAGE_T *dhcp,
+	struct dhcp_snp_listener *node,
+	unsigned char* mac_2
+)
+{
+	unsigned int ret = DHCP_SNP_RETURN_CODE_OK;
+	NPD_DHCPv6_SNP_USER_ITEM_T user;
+	NPD_DHCPv6_SNP_TBL_ITEM_T *item = NULL;
+	NPD_DHCPv6_SNP_TBL_ITEM_T *del_item = NULL;
+
+	if (!node || !dhcp) {
+		log_error("%s: parameter null.\n", __func__);
+		return DHCP_SNP_RETURN_CODE_PARAM_NULL;
+	}
+	
+	log_debug("interface %s recv REPLY packet, vlan %d\n", node->ifname, vlanid);
+
+	memset(&user, 0, sizeof(NPD_DHCPv6_SNP_USER_ITEM_T));
+	ret = dhcpv6_snp_get_item_from_pkt(vlanid, ifindex,NPD_DHCPv6_TYPE_REPLY, dhcp, &user);
+	if (DHCP_SNP_RETURN_CODE_OK != ret) {
+		log_error("get item value from packet error, ret %x\n", ret);
+		return ret;
+	}
+	if(memcmp(mac_2 , user.chaddr, 6)){
+		log_debug("layor address different from link address!\n");
+		memcpy(user.chaddr, mac_2, 6);
+	}
+	item = (NPD_DHCPv6_SNP_TBL_ITEM_T *)dhcpv6_snp_tbl_item_find(&user);
+	if (item == NULL) {
+		return DHCP_SNP_RETURN_CODE_OK; /*from trust to trust interface*/
+	}
+	
+    if (item->bind_type == NPD_DHCP_SNP_BIND_TYPE_STATIC) {
+		/* maybe here need add some codes */
+        return DHCP_SNP_RETURN_CODE_OK;
+    }
+
+	#if 0
+	if (item->ip_addr && (del_item = dhcp_snp_tbl_item_find_by_ip(item->ip_addr))) {
+
+		/* delete static arp */
+		if (node->no_arp) {
+			if((0xFFFF == del_item->vlanId)&&(NPD_DHCP_SNP_BIND_STATE_BOUND == del_item->state)) {
+				dhcp_snp_netlink_do_ipneigh(DHCPSNP_RTNL_IPNEIGH_DEL_E,  \
+													del_item->ifindex, del_item->ip_addr, del_item->chaddr);
+				dhcp_snp_listener_handle_host_ebtables(del_item->chaddr, del_item->ip_addr, DHCPSNP_EBT_DEL_E);
+			}
+		}
+		
+	//	dhcp_snp_tbl_item_delete_iphash(del_item);
+	}
+	#endif
+	
+	user.state = NPD_DHCP_SNP_BIND_STATE_BOUND;
+	ret = dhcpv6_snp_tbl_refresh_bind(&user, item, node);
+	if (DHCP_SNP_RETURN_CODE_OK != ret) {
+		log_error("refresh bind table item value error, ret %x\n", ret);
+		return DHCP_SNP_RETURN_CODE_ERROR;
+	}
+
+	pthread_mutex_lock(&mutexsnpunsolve);	
+	dhcpv6_snp_initiative_notify_asd(item->chaddr, item->ipv6_addr);	
+	pthread_mutex_unlock(&mutexsnpunsolve);	
+
+	if (dhcp_snp_notify_portal_enable) {
+		dhcpv6_snp_notify_to_protal(item->ipv6_addr, item->chaddr);
+	}
+	
+	
 	return DHCP_SNP_RETURN_CODE_OK;
 }
 
@@ -487,6 +910,109 @@ unsigned int dhcp_snp_nack_process
 
 	if (item->bind_type == NPD_DHCP_SNP_BIND_TYPE_DYNAMIC) {
 		ret = dhcp_snp_tbl_item_delete(item);
+		if (DHCP_SNP_RETURN_CODE_OK != ret) {
+			syslog_ax_dhcp_snp_err("delete item from bind table error, ret %x\n", ret);
+			return DHCP_SNP_RETURN_CODE_ERROR;
+		}
+	}
+
+	return DHCP_SNP_RETURN_CODE_OK;
+}
+
+/**********************************************************************************
+ *dhcpv6_snp_release_process()
+ *
+ *	DESCRIPTION:
+ *		release DHCP Snooping packet receive
+ *
+ *	INPUTS:
+ *		unsigned short vlanid,
+ *		unsigned int ifindex,
+ *		NPD_DHCP_MESSAGE_T *dhcp
+ *
+ *	OUTPUTS:
+ *		NULL
+ *
+ *	RETURN VALUE:
+ *		DHCP_SNP_RETURN_CODE_OK			- success
+ *		DHCP_SNP_RETURN_CODE_ERROR			- fail
+ *		DHCP_SNP_RETURN_CODE_PARAM_NULL	- error, parameter is null
+ ***********************************************************************************/
+unsigned int dhcpv6_snp_release_process
+(
+	unsigned short vlanid,
+	unsigned int ifindex,
+	NPD_DHCPv6_MESSAGE_T *dhcp,
+	struct dhcp_snp_listener *node,
+	unsigned char* mac_2
+)
+{
+	unsigned int ret = DHCP_SNP_RETURN_CODE_OK;
+	NPD_DHCPv6_SNP_USER_ITEM_T user;
+	NPD_DHCPv6_SNP_TBL_ITEM_T *item = NULL;
+	char ifname[IF_NAMESIZE]={0};
+	char command[128] = {0};
+
+	syslog_ax_dhcp_snp_dbg("receive DHCPv6 RELEASE packet from vlan %d ifindex %d\n", vlanid, ifindex);
+	if (dhcp == NULL) {
+		syslog_ax_dhcp_snp_err("dhcp snp release process error, parameter is null\n");
+		return DHCP_SNP_RETURN_CODE_PARAM_NULL;
+	}
+
+	ret = dhcpv6_snp_get_item_from_pkt(vlanid, ifindex,NPD_DHCPv6_TYPE_RELEASE, dhcp, &user);
+	if (DHCP_SNP_RETURN_CODE_OK != ret) {
+		syslog_ax_dhcp_snp_err("get item value from packet error, ret %x\n", ret);
+		return ret;
+	}
+	if(memcmp(mac_2 , user.chaddr, 6)){
+		log_debug("layor address different from link address!\n");
+		memcpy(user.chaddr, mac_2, 6);
+	}
+	item = (NPD_DHCPv6_SNP_TBL_ITEM_T *)dhcpv6_snp_tbl_item_find(&user);
+	if (item == NULL) {
+		return DHCP_SNP_RETURN_CODE_OK; /*from trust to trust interface*/
+	}	
+	
+	if (item->bind_type == NPD_DHCP_SNP_BIND_TYPE_STATIC) {
+		return DHCP_SNP_RETURN_CODE_OK;
+	}
+
+	ret = dhcpv6_snp_tbl_identity_item(item, &user);
+	if (DHCP_SNP_RETURN_CODE_OK != ret) {
+		return DHCP_SNP_RETURN_CODE_OK;
+	}
+
+	if (item->bind_type == NPD_DHCP_SNP_BIND_TYPE_DYNAMIC) {
+		/* special branch for cpu interface or RGMII interface
+		  * delete previous ip neigh item
+		  */
+	/*
+		if (node->no_arp) {
+			if((0xFFFF == item->vlanId)&&(NPD_DHCP_SNP_BIND_STATE_BOUND == item->state)) {
+				ret = dhcp_snp_netlink_do_ipneigh(DHCPSNP_RTNL_IPNEIGH_DEL_E,  \
+													item->ifindex, item->ip_addr, item->chaddr);
+				if(DHCP_SNP_RETURN_CODE_OK != ret) {
+					syslog_ax_dhcp_snp_err("dhcp snp release item del ip neigh error %x\n", ret);
+				}
+				dhcp_snp_listener_handle_host_ebtables(item->chaddr, item->ip_addr, DHCPSNP_EBT_DEL_E);
+			}
+		}
+		if (node->add_router) {//delete router to host,next jump is the interface opening dhcp-snooping
+			if((0xFFFF == item->vlanId)&&(NPD_DHCP_SNP_BIND_STATE_BOUND == item->state)) {
+				
+				if(!if_indextoname(item->ifindex, ifname)) {
+					syslog_ax_dhcp_snp_err("no intf found as idx %d netlink error !\n", item->ifindex);
+					return DHCP_SNP_RETURN_CODE_ERROR;
+				}
+				dhcp_snp_netlink_add_static_route(DHCPSNP_RTNL_STATIC_ROUTE_DEL_E,  \
+													item->ifindex, item->ip_addr);
+				//sprintf(command,"sudo route del -host %u.%u.%u.%u dev %s",(item->ip_addr>>24)&0xff,\
+				//(item->ip_addr>>16)&0xff,(item->ip_addr>>8)&0xff,(item->ip_addr>>0)&0xff,ifname);
+				//system(command);
+				}
+		}
+	*/	
+		ret = dhcpv6_snp_tbl_item_delete(item);
 		if (DHCP_SNP_RETURN_CODE_OK != ret) {
 			syslog_ax_dhcp_snp_err("delete item from bind table error, ret %x\n", ret);
 			return DHCP_SNP_RETURN_CODE_ERROR;
@@ -1091,6 +1617,76 @@ int dhcp_snp_init_tipc_sock(void)
 */
 	return sockfd;
 }
+/**********************************************************************************
+ *  dhcpsnp_notify_to_protal
+ *
+ *	DESCRIPTION:
+ * 		when receive ACK, notify protal client IP and MAC
+ *
+ *	INPUT:
+ *	
+ *	OUTPUT:
+ *		NULL
+ *
+ * 	RETURN:
+ *		0   ->  success
+ *		-1  ->  failed
+ *		
+ **********************************************************************************/
+int dhcpv6_snp_notify_to_protal(char* userip, uint8_t *usermac)
+{
+#define MACAUTH_SERVER_TYPE			0x4000
+#define MACAUTH_SERVER_INSTANCE		0x10000
+
+	struct dhcpv6_sta_msg {
+		char userip[16];
+		uint8_t usermac[ETH_ALEN];
+	};
+
+	static int sock_fd = -1;
+
+	size_t size = 0;
+	struct sockaddr_tipc servaddr;
+	struct dhcpv6_sta_msg msg;
+
+	if (!usermac) {
+		return -1;
+	}
+	
+	if (sock_fd < 0) {
+		sock_fd = dhcp_snp_init_tipc_sock();
+	}
+	
+	if (sock_fd >= 0) {
+		/* server address */
+		memset(&servaddr, 0, sizeof(struct sockaddr_tipc));
+		servaddr.family = AF_TIPC;
+		servaddr.addrtype = TIPC_ADDR_NAMESEQ;
+		servaddr.addr.nameseq.type = MACAUTH_SERVER_TYPE;
+		servaddr.addr.nameseq.lower = MACAUTH_SERVER_INSTANCE;
+		servaddr.addr.nameseq.upper = MACAUTH_SERVER_INSTANCE;
+		servaddr.scope = TIPC_CLUSTER_SCOPE;
+
+		/* msg */
+		memset(&msg, 0, sizeof(msg));
+		memcpy(msg.userip, userip, 16);
+		memcpy(msg.usermac, usermac, ETH_ALEN);
+
+		syslog_ax_dhcp_snp_dbg("msg %s %02x:%02x:%02x:%02x:%02x:%02x\n",
+			u128ip2str(msg.userip), 
+			usermac[0], usermac[1], usermac[2], usermac[3], usermac[4], usermac[5]);
+
+		size = sendto(sock_fd, &msg, sizeof(msg), MSG_DONTWAIT, 
+			(struct sockaddr *)(&servaddr), sizeof(servaddr));
+		if (size != sizeof(msg)) {
+			syslog_ax_dhcp_snp_dbg("%s %s %02x:%02x:%02x:%02x:%02x:%02x :%m\n",
+				"send msg to portal failed",u128ip2str(userip), 
+				usermac[0], usermac[1], usermac[2], usermac[3], usermac[4], usermac[5]);
+		}
+	}
+	
+	return 0;
+}
 
 /**********************************************************************************
  *  dhcpsnp_notify_to_protal
@@ -1190,6 +1786,39 @@ int dhcp_snp_u32ip_check
 		return -1;
 	}
 	   
+	return 0;
+}
+
+
+/********************************************************
+ * check_ipv6_address
+ *
+ * Check the legality of the ipv6 address
+ *
+ *	INPUT:
+ *		ipv6_address
+ *		
+ *	OUTPUT:
+ *		void
+ *
+ *	RETURN:
+ *		DHCP_IP6_RET_ERROR	      - Legal address
+ *		DHCP_IP6_RET_SUCCESS	- Illegal address
+ *
+ *********************************************************/
+int check_ipv6_address(char *ipv6_address)
+{
+	char addrptr[16] = {0};
+	if(NULL == ipv6_address)
+	{
+		return -1;
+	}
+
+	if(NULL == inet_ntop(AF_INET6, ipv6_address, addrptr, sizeof(addrptr)))
+	{
+		return -1;
+	}
+
 	return 0;
 }
 

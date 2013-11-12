@@ -875,6 +875,166 @@ unsigned int dcli_dhcp_snp_show_bind_table
 }
 
 /**********************************************************************************
+ * dcli_dhcpv6_snp_show_bind_table()
+ *	DESCRIPTION:
+ *		show DHCP-Snooping bind table
+ *
+ *	INPUTS:
+ *		struct vty* vty
+ *
+ *	OUTPUTS:
+ *		NULL
+ *
+ *	RETURN VALUE:
+ *		CMD_SUCCESS		- success
+ *		CMD_WARNING		- fail
+***********************************************************************************/
+unsigned int dcli_dhcpv6_snp_show_wan_bind_table
+(
+	struct vty* vty
+)
+{
+	DBusMessage *query = NULL;
+	DBusMessage *reply = NULL;
+	DBusError err;
+	DBusMessageIter iter;
+	DBusMessageIter	iter_array;
+	unsigned int ret = DHCP_SNP_RETURN_CODE_OK;
+	unsigned int record_count = DCLI_DHCP_SNP_INIT_0;
+	unsigned char macaddr[6] = {0};
+	int j = DCLI_DHCP_SNP_INIT_0;
+	unsigned char bind_state = DCLI_DHCP_SNP_INIT_0;
+	unsigned int  bind_type = DCLI_DHCP_SNP_INIT_0;
+	char ip_addr[16] = {0};
+	unsigned short vlanId = DCLI_DHCP_SNP_INIT_0;
+	unsigned int   lease_time = DCLI_DHCP_SNP_INIT_0;
+	unsigned int   ifindex = DCLI_DHCP_SNP_INIT_0;
+	//char ifname[IF_NAMESIZE];
+	char *ifname_ep=NULL;
+	char pbuf[16] = {0};
+	DBusConnection *dcli_dbus_connection = NULL;
+	dhcp_snp_reinitDbusConnection(&dcli_dbus_connection, vty);
+	query = dbus_message_new_method_call(
+								DHCPSNP_DBUS_BUSNAME,
+								DHCPSNP_DBUS_OBJPATH,
+								DHCPSNP_DBUS_INTERFACE,
+								DHCPSNP_DBUS_METHOD_SHOW_WAN_IPV6_BIND_TABLE);
+	dbus_error_init(&err);
+	reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection, query, -1, &err);
+	dbus_message_unref(query);
+	if (NULL == reply) {
+		vty_out(vty, "failed get reply.\n");
+		if (dbus_error_is_set(&err)) {
+			vty_out(vty, "%s raised: %s", err.name, err.message);
+			dbus_error_free_for_dcli(&err);
+		}
+		return DHCP_SNP_RETURN_CODE_ERROR;
+	}
+	dbus_message_iter_init(reply, &iter);
+	dbus_message_iter_get_basic(&iter, &ret);
+	if (DHCP_SNP_RETURN_CODE_ENABLE_GBL == ret) {
+		dbus_message_iter_next(&iter);	
+		dbus_message_iter_get_basic(&iter, &record_count);
+		dbus_message_iter_next(&iter);	
+		dbus_message_iter_recurse(&iter, &iter_array);
+		vty_out(vty, "DHCP-Snooping is enabled.\n");
+		vty_out(vty, "Type : D--Dynamic , S--Static\n");
+		vty_out(vty, "===============================================================\n");
+		vty_out(vty, "%-4s %-16s %-17s %-8s %-5s %-9s\n",
+					 "Type", "IPv6 Address", "MAC Address", "Lease", "Vlan", "Interface");
+		vty_out(vty, "==== =============== ================= ======== ===== =========\n");
+		vty_out(vty,"total %d\n",record_count);
+		for (j = 0; j < record_count; j++) {
+			memset(macaddr, 0, 6);
+			bind_state = DCLI_DHCP_SNP_INIT_0;
+			bind_type  = DCLI_DHCP_SNP_INIT_0;
+			memset(ip_addr, 0 , 16);
+			vlanId     = DCLI_DHCP_SNP_INIT_0;
+			lease_time = DCLI_DHCP_SNP_INIT_0;
+			ifindex    = DCLI_DHCP_SNP_INIT_0;
+			DBusMessageIter iter_struct;
+			dbus_message_iter_recurse(&iter_array, &iter_struct);
+			dbus_message_iter_get_basic(&iter_struct, &bind_type);
+			dbus_message_iter_next(&iter_struct);
+			dbus_message_iter_get_basic(&iter_struct, &bind_state);
+			dbus_message_iter_next(&iter_struct);
+			dbus_message_iter_get_basic(&iter_struct, &macaddr[0]);
+			dbus_message_iter_next(&iter_struct);
+			dbus_message_iter_get_basic(&iter_struct, &macaddr[1]);
+			dbus_message_iter_next(&iter_struct);
+			dbus_message_iter_get_basic(&iter_struct, &macaddr[2]);
+			dbus_message_iter_next(&iter_struct);
+			dbus_message_iter_get_basic(&iter_struct, &macaddr[3]);
+			dbus_message_iter_next(&iter_struct);
+			dbus_message_iter_get_basic(&iter_struct, &macaddr[4]);
+			dbus_message_iter_next(&iter_struct);
+			dbus_message_iter_get_basic(&iter_struct, &macaddr[5]);
+			dbus_message_iter_next(&iter_struct);
+			dbus_message_iter_get_basic(&iter_struct, &vlanId);
+			dbus_message_iter_next(&iter_struct);
+			dbus_message_iter_get_basic(&iter_struct, &ip_addr[0]);
+			dbus_message_iter_next(&iter_struct);
+			dbus_message_iter_get_basic(&iter_struct, &ip_addr[1]);
+			dbus_message_iter_next(&iter_struct);
+			dbus_message_iter_get_basic(&iter_struct, &ip_addr[2]);
+			dbus_message_iter_next(&iter_struct);
+			dbus_message_iter_get_basic(&iter_struct, &ip_addr[3]);
+			dbus_message_iter_next(&iter_struct);
+			dbus_message_iter_get_basic(&iter_struct, &ip_addr[4]);
+			dbus_message_iter_next(&iter_struct);
+			dbus_message_iter_get_basic(&iter_struct, &ip_addr[5]);
+			dbus_message_iter_next(&iter_struct);
+			dbus_message_iter_get_basic(&iter_struct, &ip_addr[6]);
+			dbus_message_iter_next(&iter_struct);
+			dbus_message_iter_get_basic(&iter_struct, &ip_addr[7]);
+			dbus_message_iter_next(&iter_struct);
+			dbus_message_iter_get_basic(&iter_struct, &ip_addr[8]);
+			dbus_message_iter_next(&iter_struct);
+			dbus_message_iter_get_basic(&iter_struct, &ip_addr[9]);
+			dbus_message_iter_next(&iter_struct);
+			dbus_message_iter_get_basic(&iter_struct, &ip_addr[10]);
+			dbus_message_iter_next(&iter_struct);
+			dbus_message_iter_get_basic(&iter_struct, &ip_addr[11]);
+			dbus_message_iter_next(&iter_struct);
+			dbus_message_iter_get_basic(&iter_struct, &ip_addr[12]);
+			dbus_message_iter_next(&iter_struct);
+			dbus_message_iter_get_basic(&iter_struct, &ip_addr[13]);
+			dbus_message_iter_next(&iter_struct);
+			dbus_message_iter_get_basic(&iter_struct, &ip_addr[14]);
+			dbus_message_iter_next(&iter_struct);
+			dbus_message_iter_get_basic(&iter_struct, &ip_addr[15]);
+			dbus_message_iter_next(&iter_struct);
+			dbus_message_iter_get_basic(&iter_struct, &lease_time);
+			dbus_message_iter_next(&iter_struct);
+			dbus_message_iter_get_basic(&iter_struct, &ifname_ep);
+			dbus_message_iter_next(&iter_array);
+			vty_out(vty, "%-4s ", bind_type ? " S" : " D");
+			vty_out(vty, "%-16s ", inet_ntop(AF_INET6, ip_addr, pbuf, sizeof(pbuf)));
+			vty_out(vty, "%02x:%02x:%02x:%02x:%02x:%02x ",
+						macaddr[0], macaddr[1], macaddr[2], macaddr[3], macaddr[4], macaddr[5]);
+			if (0 == bind_type) {	/* dynamic item */
+				vty_out(vty, "%-8d ", lease_time);
+			}else {					/* static item */
+				vty_out(vty, "%-8s ", "infinite");
+			}
+			vty_out(vty, "%-5d ", vlanId);
+			
+			vty_out(vty, "%s",  ifname_ep);
+			vty_out(vty, "\n");
+		}
+		vty_out(vty, "===============================================================\n");
+	}
+	else if (DHCP_SNP_RETURN_CODE_NOT_ENABLE_GBL == ret){
+		vty_out(vty, "%% DHCP-Snooping not enabled global.\n");
+	}
+	else if (DHCP_SNP_RETURN_CODE_ERROR == ret) {
+		vty_out(vty, "%% Show DHCP-Snooping bind table error!\n");	
+	}
+	dbus_message_unref(reply);
+	return DHCP_SNP_RETURN_CODE_OK;
+}
+
+/**********************************************************************************
  * dcli_dhcp_snp_show_bind_table()
  *	DESCRIPTION:
  *		show DHCP-Snooping bind table
@@ -5129,6 +5289,25 @@ DEFUN(show_dhcp_snp_wan_bindtable_cmd_func,
 		return CMD_WARNING;
 	}
 }
+
+DEFUN(show_dhcpv6_snp_wan_bindtable_cmd_func,
+	show_dhcpv6_snp_wan_bindtable_cmd,
+	"show dhcp-snooping bind-table-ipv6",
+	SHOW_STR
+	DCLI_DHCP_SNP_STR
+	"Show DHCP-Snooping binding table\n"
+)
+{
+	unsigned int ret = DHCP_SNP_RETURN_CODE_OK;
+	ret = dcli_dhcpv6_snp_show_wan_bind_table(vty);
+	if (DHCP_SNP_RETURN_CODE_OK == ret) {
+		return CMD_SUCCESS;
+	}else {
+		vty_out(vty, "%% Show dhcp-snooping error!\n", ret);
+		return CMD_WARNING;
+	}
+}
+
 unsigned int 
 dcli_dhcp_snp_del_route
 (
@@ -5741,6 +5920,7 @@ void dcli_dhcp_snp_element_init
 	install_element(HIDDENDEBUG_NODE,&no_debug_dhcp_snp_info_cmd);
 
 	install_element(CONFIG_NODE, &show_dhcp_snp_wan_bindtable_cmd);
+	install_element(CONFIG_NODE, &show_dhcpv6_snp_wan_bindtable_cmd);
 	install_element(CONFIG_NODE, &add_dhcp_snp_wan_bindtable_cmd);	
 	install_element(CONFIG_NODE, &delete_dhcp_snp_wan_bindtable_by_mac_cmd);
 	install_element(CONFIG_NODE, &delete_dhcp_snp_router_cmd);
@@ -5752,6 +5932,7 @@ void dcli_dhcp_snp_element_init
 	/* hansi node */	
 	install_element(HANSI_NODE, &show_dhcp_snp_running_config_cmd);
 	install_element(HANSI_NODE, &show_dhcp_snp_wan_bindtable_cmd);
+	install_element(HANSI_NODE, &show_dhcpv6_snp_wan_bindtable_cmd);
 	install_element(HANSI_NODE, &config_dhcp_snp_wan_enable_cmd);
 	install_element(HANSI_NODE, &config_dhcp_snp_wan_set_intf_cmd);
 	install_element(HANSI_NODE, &config_dhcp_snp_wan_set_arp_intf_cmd);

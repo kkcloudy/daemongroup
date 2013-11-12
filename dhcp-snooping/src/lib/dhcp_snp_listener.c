@@ -135,24 +135,27 @@ struct sock_filter arp_and_dhcp_filter[] = {
 #endif
 struct sock_filter arp_and_dhcp_filter[] = {
 	{ 0x28, 0, 0, 0x0000000c },
-	{ 0x15, 17, 0, 0x00000806 },
-	{ 0x15, 0, 6, 0x000086dd },
+	{ 0x15, 20, 0, 0x00000806 },
+	{ 0x15, 0, 7, 0x000086dd },
 	{ 0x30, 0, 0, 0x00000014 },
-	{ 0x15, 0, 15, 0x00000011 },
+	{ 0x15, 0, 18, 0x00000011 },
 	{ 0x28, 0, 0, 0x00000036 },
-	{ 0x15, 12, 0, 0x00000043 },
+	{ 0x15, 15, 0, 0x00000043 },
+	{ 0x15, 14, 0, 0x00000223 },
 	{ 0x28, 0, 0, 0x00000038 },
-	{ 0x15, 10, 11, 0x00000043 },
-	{ 0x15, 0, 10, 0x00000800 },
+	{ 0x15, 12, 11, 0x00000043 },
+	{ 0x15, 0, 12, 0x00000800 },
 	{ 0x30, 0, 0, 0x00000017 },
-	{ 0x15, 0, 8, 0x00000011 },
+	{ 0x15, 0, 10, 0x00000011 },
 	{ 0x28, 0, 0, 0x00000014 },
-	{ 0x45, 6, 0, 0x00001fff },
+	{ 0x45, 8, 0, 0x00001fff },
 	{ 0xb1, 0, 0, 0x0000000e },
 	{ 0x48, 0, 0, 0x0000000e },
-	{ 0x15, 2, 0, 0x00000043 },
+	{ 0x15, 4, 0, 0x00000043 },
+	{ 0x15, 3, 0, 0x00000223 },
 	{ 0x48, 0, 0, 0x00000010 },
-	{ 0x15, 0, 1, 0x00000043 },
+	{ 0x15, 1, 0, 0x00000043 },
+	{ 0x15, 0, 1, 0x00000223 },
 	{ 0x6, 0, 0, -1 },
 	{ 0x6, 0, 0, 0 },
 };
@@ -568,7 +571,7 @@ int dhcp_snp_listener_open
 	filter.filter = arp_and_dhcp_filter;
 	
 	/* update udp listen port to configured port */
-	arp_and_dhcp_filter[16].k = arp_and_dhcp_filter[18].k = ntohs(dhcp_server_port);
+	//arp_and_dhcp_filter[16].k = arp_and_dhcp_filter[18].k = ntohs(547);
 
 	/* apply filter */
 	ret = setsockopt(sockfd, SOL_SOCKET, SO_ATTACH_FILTER, &filter, sizeof(filter));
@@ -1053,6 +1056,49 @@ int dhcp_snp_listener_save_hansi_cfg
 	return DHCP_SNP_RETURN_CODE_OK;
 }
 
+/********************************************************************************************
+ *	dhcp_snp_listener_type_check
+ *
+ *	DESCRIPTION:
+ *			   This function check out whether the packet is dhcp or not.
+ *
+ *	INPUT:
+ *			   packetBuff - points to the packet's first buffer' head
+ *	OUTPUT:
+ *				 NONE
+ *	RETURNS:
+ *				DHCP_SNP_TRUE - indicate the packet is dhcp packet
+ *				DHCP_SNP_FALSE - indicate the packet is not dhcp packet
+ *
+ *	COMMENTS:
+ *			   NONE.
+ *
+ **********************************************************************************************/
+unsigned char dhcp_snp_listener_dhcpv6_packet_check
+(		
+	unsigned char  *packetBuff
+)
+{
+	ether_header_t	*layer2 = NULL;
+	ipv6_header_t 	*layer3 = NULL;
+	udp_header_t	*layer4 = NULL;
+
+	layer2 = (ether_header_t*)(packetBuff);
+	layer3 = (ipv6_header_t *)((unsigned char*)packetBuff + sizeof(ether_header_t));
+	layer4 = (udp_header_t*)((unsigned char *)layer3 + sizeof(ipv6_header_t));
+
+	if ((ETHER_IPv6 == layer2->etherType) && 
+			(IPVER6 == layer3->version) &&
+				(IPPROTOCOL_UDP == layer3->next_hdr)) {
+		if (((DHCPv6_SERVER_PORT == layer4->dest) && (DHCPv6_CLIENT_PORT == layer4->source)) /* DHCPv6 request */
+			|| ((DHCPv6_SERVER_PORT == layer4->source) && (DHCPv6_CLIENT_PORT == layer4->dest))){ /* DHCPv6 reply<ack/nak> */
+
+			return DHCP_SNP_TRUE;
+		}
+	}
+	return DHCP_SNP_FALSE;
+	
+}
 
 /********************************************************************************************
  * 	dhcp_snp_listener_type_check
@@ -1571,6 +1617,19 @@ int dhcp_snp_listener_read_sock
 					ret = dhcp_snp_arp_request_process(vid, ifindex,sock_pack_buf, node->fd);
 					pthread_mutex_unlock(&mutexDhcpsnptbl);	
 					
+					continue;
+				}
+				/* check if dhcpv6 packet or not */
+				else if(DHCP_SNP_TRUE == dhcp_snp_listener_dhcpv6_packet_check((unsigned char*)sock_pack_buf)){
+					pktPool[0] = (unsigned char*)sock_pack_buf;
+					pLenPool[0] = len;
+					pthread_mutex_lock(&mutexDhcpsnptbl);
+					ret = dhcp_snp_dhcpv6_packet_process(1 ,pktPool, pLenPool, ifindex, 0,vid ,node);
+					pthread_mutex_unlock(&mutexDhcpsnptbl);
+					if(DHCP_SNP_RETURN_CODE_OK != ret){
+						syslog_ax_dhcp_snp_err("dhcpv6 packed process error %d!\n", ret);
+					}
+					memset(sock_pack_buf, 0, 	DHCP_SNP_PACKET_SIZE);
 					continue;
 				}
 				/* check if dhcp packet or not*/

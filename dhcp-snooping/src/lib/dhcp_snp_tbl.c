@@ -95,12 +95,18 @@ NPD_DHCP_SNP_TBL_ITEM_T *g_DHCP_Snp_Hash_Table[NPD_DHCP_SNP_HASH_TABLE_SIZE] = {
 NPD_DHCP_SNP_TBL_ITEM_T *g_DHCP_Snp_Hash_Table_ip[NPD_DHCP_SNP_HASH_TABLE_SIZE] = {0};
 struct dhcp_snp_static_table *dhcp_snp_static_table_head = NULL;
 
+NPD_DHCPv6_SNP_TBL_ITEM_T *g_DHCPv6_Snp_Hash_Table[NPD_DHCP_SNP_HASH_TABLE_SIZE] = {0};
+NPD_DHCPv6_SNP_TBL_ITEM_T *g_DHCPv6_Snp_Hash_Table_ip[NPD_DHCP_SNP_HASH_TABLE_SIZE] = {0};
+
+
 unsigned int dhcp_snp_ageing_time = DHCP_SNP_DEFAULT_AGING_TIME;
 pthread_mutex_t mutexDhcpsnptbl = PTHREAD_MUTEX_INITIALIZER;
 
 pthread_mutex_t mutexsnpunsolve = PTHREAD_MUTEX_INITIALIZER;
 struct fd_table *fd_table[MAX_HANSI_PROFILE * 2];
 struct unresolved_table *g_dhcp_snp_unresolved_hash[NPD_DHCP_SNP_HASH_TABLE_SIZE] = {0};
+struct unresolved_table *g_dhcpv6_snp_unresolved_hash[NPD_DHCP_SNP_HASH_TABLE_SIZE] = {0};
+
 
 static sqlite3 *dhcp_snp_db = NULL;
 
@@ -239,6 +245,24 @@ void
 	}
 	return count;
 }
+
+int dhcpv6_snp_tbl_mac_hash_foreach
+(
+void
+)
+{
+	int count = 0;
+	unsigned int key = 0;
+	NPD_DHCP_SNP_TBL_ITEM_T *tempItem = NULL;
+	for (key = 0; key < NPD_DHCP_SNP_HASH_TABLE_SIZE; key++) {
+		tempItem = g_DHCPv6_Snp_Hash_Table[key];
+		while(tempItem) {
+			count++;
+			tempItem = tempItem->next;
+		}
+	}
+	return count;
+}
 int dhcp_snp_tbl_ip_hash_foreach
 (
 	void
@@ -256,6 +280,28 @@ int dhcp_snp_tbl_ip_hash_foreach
 	}
 	return count;
 }
+void dhcpv6_snp_copy_bind_table(NPD_DHCPv6_SNP_TBL_ITEM_T *item, int total)
+{
+	int count = 0;
+	unsigned int key = 0;
+	NPD_DHCPv6_SNP_TBL_ITEM_T *tempItem = NULL;
+	if (!item || (total < 0)) {
+		return;
+	}
+	for (key = 0; key < NPD_DHCP_SNP_HASH_TABLE_SIZE; key++) {
+		tempItem = g_DHCPv6_Snp_Hash_Table[key];
+		while(tempItem) {
+			if (count >= total) {
+				return;
+			}
+			memcpy(&item[count], tempItem, sizeof(NPD_DHCPv6_SNP_TBL_ITEM_T));
+			count++;
+			tempItem = tempItem->next;
+		}
+	}
+	return;
+}
+
 void dhcp_snp_copy_bind_table(NPD_DHCP_SNP_TBL_ITEM_T *item, int total)
 {
 	int count = 0;
@@ -415,6 +461,69 @@ unsigned int dhcp_snp_tbl_destroy
 
 
 /**********************************************************************************
+ *dhcpv6_snp_tbl_item_find ()
+ *
+ *	DESCRIPTION:
+ *		Get the item of specifical user
+ *
+ *	INPUTS:
+ *		NPD_DHCP_SNP_USER_ITEM_T *user
+ *
+ *	OUTPUTS:
+ *		NPD_DHCP_SNP_TBL_ITEM_T *item
+ *
+ *	RETURN VALUE:
+ *
+ ***********************************************************************************/
+void *dhcpv6_snp_tbl_item_find
+(
+	NPD_DHCPv6_SNP_USER_ITEM_T *user
+)
+{
+	unsigned int key = NPD_DHCP_SNP_INIT_0;
+	unsigned int match = NPD_DHCP_SNP_INIT_0;
+	NPD_DHCPv6_SNP_TBL_ITEM_T *item = NULL;
+	NPD_DHCPv6_SNP_TBL_ITEM_T *tempItem = NULL;
+
+
+	if (!user) {
+		log_error("%s: parameter null\n", __func__);
+		return NULL;
+	}
+
+	key = dhcp_snp_tbl_hash(user->chaddr);
+	if (key >= NPD_DHCP_SNP_HASH_TABLE_SIZE) {
+		log_error("%s: error calculate the hash value\n", __func__);
+		return NULL;
+	} 
+	
+	log_debug("find by mac %s : %s ifindex %d vlanid %d\n", 
+		mac2str(user->chaddr),u128ip2str(user->ipv6_addr),
+		user->ifindex, user->vlanId);
+
+	tempItem = g_DHCPv6_Snp_Hash_Table[key];
+	while((tempItem != NULL) && (!match)) {
+
+		if (memcmp(tempItem->chaddr, user->chaddr, 6) == 0) {
+			match = 1;
+			item = tempItem;
+		}
+		tempItem = tempItem->next;
+	}
+
+	if (!match)	{
+		log_debug("not found  %s %s ifindex %d vlanid %d\n", 
+			mac2str(user->chaddr), u128ip2str(user->ipv6_addr),
+			user->ifindex, user->vlanId);
+		return NULL;
+	}
+
+
+	return item;
+}
+
+
+/**********************************************************************************
  *dhcp_snp_tbl_item_find ()
  *
  *	DESCRIPTION:
@@ -475,6 +584,42 @@ void *dhcp_snp_tbl_item_find
 
 	return item;
 }
+void *dhcpv6_snp_tbl_item_find_by_ip
+(
+	unsigned char* ipaddr
+)
+{
+	unsigned int key = NPD_DHCP_SNP_INIT_0;
+	NPD_DHCPv6_SNP_TBL_ITEM_T *tempItem = NULL;
+	unsigned int key_ipaddr = NPD_DHCP_SNP_INIT_0;
+	if (strlen(ipaddr) == 0) {
+		syslog_ax_dhcp_snp_err("dhcp snp find item in bind table error, parameter is null\n");
+		return NULL;
+	}
+	memcpy((char*)&key_ipaddr, ipaddr+12, 4);
+	key = dhcp_snp_tbl_ip_hash(key_ipaddr);
+	if (key >= NPD_DHCP_SNP_HASH_TABLE_SIZE) {
+		syslog_ax_dhcp_snp_err("error in calculate the hash value %d, ip %#x\n", key, ipaddr);
+		return NULL;
+	}
+
+	syslog_ax_dhcp_snp_dbg("find item by ip %s\n", u128ip2str(ipaddr));
+
+	
+	tempItem = g_DHCPv6_Snp_Hash_Table_ip[key];
+	while (tempItem) {
+		if (!strcmp(tempItem->ipv6_addr ,ipaddr)) {
+			syslog_ax_dhcp_snp_dbg("find item by ip %s %02x:%02x:%02x:%02x:%02x:%02x\n", u128ip2str(ipaddr),
+				tempItem->chaddr[0], tempItem->chaddr[1], tempItem->chaddr[2], 
+				tempItem->chaddr[3], tempItem->chaddr[4], tempItem->chaddr[5]);
+			
+			break;
+		}
+		tempItem = tempItem->ip_next;
+	}
+	return tempItem;
+}
+
 void *dhcp_snp_tbl_item_find_by_ip
 (
 	unsigned int ipaddr
@@ -511,6 +656,48 @@ void *dhcp_snp_tbl_item_find_by_ip
 		tempItem = tempItem->ip_next;
 	}
 	return tempItem;
+}
+
+/**********************************************************************************
+ *dhcpv6_snp_tbl_fill_item ()
+ *
+ *	DESCRIPTION:
+ *		fill the dhcp bind table according user information
+ *
+ *	INPUTS:
+ *		NPD_DHCP_SNP_USER_ITEM_T *user
+ *
+ *	OUTPUTS:
+ *		NPD_DHCP_SNP_TBL_ITEM_T *item
+ *
+ *	RETURN VALUE:
+ *		DHCP_SNP_RETURN_CODE_OK			- success
+ *		DHCP_SNP_RETURN_CODE_PARAM_NULL	- fail
+ ***********************************************************************************/
+unsigned int dhcpv6_snp_tbl_fill_item
+(
+	NPD_DHCPv6_SNP_USER_ITEM_T *user,
+	NPD_DHCPv6_SNP_TBL_ITEM_T *item
+)
+{
+
+    if((user == NULL) || (item == NULL)) {
+		syslog_ax_dhcp_snp_err("dhcp snp fill bind table item error, pointer NULL\n");
+        return DHCP_SNP_RETURN_CODE_PARAM_NULL;
+    }
+
+    memcpy(item->chaddr, user->chaddr, 6);
+    item->haddr_len     = user->haddr_len;
+    item->bind_type     = user->bind_type;
+    item->state         = user->state;
+    item->ifindex       = user->ifindex;
+	memcpy(item->ipv6_addr, user->ipv6_addr, 16);
+    item->lease_time    = user->lease_time;
+    item->vlanId        = user->vlanId;
+    item->sys_escape    = time(0);
+	item->cur_expire	= dhcp_snp_get_system_uptime() + user->lease_time;
+
+    return DHCP_SNP_RETURN_CODE_OK;
 }
 
 /**********************************************************************************
@@ -553,6 +740,71 @@ unsigned int dhcp_snp_tbl_fill_item
 	item->cur_expire	= dhcp_snp_get_system_uptime() + user->lease_time;
 
     return DHCP_SNP_RETURN_CODE_OK;
+}
+
+/**********************************************************************************
+ *dhcpv6_snp_tbl_item_insert ()
+ *
+ *	DESCRIPTION:
+ *		insert the user bind information into the bind table
+ *
+ *	INPUTS:
+ *		NPD_DHCP_SNP_USER_ITEM_T *user
+ *
+ *	OUTPUTS:
+ *		NPD_DHCP_SNP_TBL_ITEM_T *item
+ *
+ *	RETURN VALUE:
+ *
+ ***********************************************************************************/
+void *dhcpv6_snp_tbl_item_insert
+(
+	NPD_DHCPv6_SNP_USER_ITEM_T *user
+)
+{
+	unsigned int ret = DHCP_SNP_RETURN_CODE_OK;
+	unsigned int key = NPD_DHCP_SNP_INIT_0;
+	NPD_DHCPv6_SNP_TBL_ITEM_T *item = NULL;
+
+
+	if (user == NULL) {
+		syslog_ax_dhcp_snp_err("dhcp snp insert item in bind table error, parameter is null\n");
+		return NULL;
+	}
+
+	item = malloc(sizeof(NPD_DHCPv6_SNP_TBL_ITEM_T));
+	if (!item) {
+		syslog_ax_dhcp_snp_err("can not malloc the memory\n");			
+		return NULL;
+	}
+	memset(item, 0, sizeof(NPD_DHCPv6_SNP_TBL_ITEM_T));
+
+	ret = dhcpv6_snp_tbl_fill_item(user, item);
+	if (DHCP_SNP_RETURN_CODE_OK != ret) {
+		syslog_ax_dhcp_snp_err("dhcp snooping table fill error, ret %x\n", ret);			
+		free(item);
+		item=NULL;
+		return NULL;
+	}
+
+	key = dhcp_snp_tbl_hash(user->chaddr);
+	if (key >= NPD_DHCP_SNP_HASH_TABLE_SIZE)	{
+		syslog_ax_dhcp_snp_err("error in calculate the hash value\n");
+		return NULL;
+	}
+
+	item->next = g_DHCPv6_Snp_Hash_Table[key];
+	g_DHCPv6_Snp_Hash_Table[key] = item;
+
+	/* insert item to db */
+/*
+	ret = dhcp_snp_db_insert(dhcp_snp_db, item);
+	if (DHCP_SNP_RETURN_CODE_OK != ret) {
+		syslog_ax_dhcp_snp_err("insert dhcp snooping table error, ret %x\n", ret);			
+		return NULL;
+	}
+*/
+    return item;
 }
 
 /**********************************************************************************
@@ -617,6 +869,43 @@ void *dhcp_snp_tbl_item_insert
 		return NULL;
 	}
 */
+    return item;
+}
+
+void *dhcp_snp_ipv6_tbl_item_insert_ip_hash
+(
+	NPD_DHCPv6_SNP_TBL_ITEM_T *item
+)
+{
+	unsigned int key = NPD_DHCP_SNP_INIT_0;
+	NPD_DHCPv6_SNP_TBL_ITEM_T *tmp = NULL;
+	unsigned int key_ipaddr = NPD_DHCP_SNP_INIT_0;
+
+	
+	if ((NULL == item)) {
+		log_error("dhcp snp insert item in bind table(ip hash) error, parameter is null\n");
+		return NULL;
+	}
+
+	/* if ip address is 0.0.0.0 don't insert into ip hash */
+	if (!strlen(item->ipv6_addr)) {
+		return NULL;
+	}
+
+	while (tmp = dhcpv6_snp_tbl_item_find_by_ip(item->ipv6_addr)) {
+		dhcpv6_snp_tbl_item_delete_iphash(tmp);
+		log_info("%s %s already in ip hash table\n", 
+			mac2str(tmp->chaddr), u128ip2str(tmp->ipv6_addr));
+	}
+	memcpy((char*)&key_ipaddr, item->ipv6_addr+12, 4);
+	key = dhcp_snp_tbl_ip_hash(key_ipaddr);
+	if (key >= NPD_DHCP_SNP_HASH_TABLE_SIZE)	{
+		syslog_ax_dhcp_snp_err("error in calculate the ip hash value\n");
+		return NULL;
+	}
+	item->ip_next = g_DHCPv6_Snp_Hash_Table_ip[key];
+	g_DHCPv6_Snp_Hash_Table_ip[key] = item;
+
     return item;
 }
 
@@ -701,6 +990,85 @@ inline int dhcp_snp_update_timestamp
  *		DHCP_SNP_RETURN_CODE_PARAM_NULL	- error, paramter is null
  *	
  ***********************************************************************************/
+unsigned int dhcpv6_snp_tbl_item_delete
+(
+	NPD_DHCPv6_SNP_TBL_ITEM_T *item
+)
+{
+	unsigned int ret = DHCP_SNP_RETURN_CODE_OK;
+    unsigned int key = NPD_DHCP_SNP_INIT_0;
+    NPD_DHCPv6_SNP_TBL_ITEM_T *tempItem = NULL;
+
+
+	if (item  == NULL) {
+		log_error("dhcp snp delete bind table item error, parameter is null\n");
+		return DHCP_SNP_RETURN_CODE_PARAM_NULL;
+    }
+
+	if (strlen(item->ipv6_addr)) {
+		dhcpv6_snp_tbl_item_delete_iphash(item);
+	}
+	
+	key = dhcp_snp_tbl_hash(item->chaddr);
+	if (key >= NPD_DHCP_SNP_HASH_TABLE_SIZE) {
+		log_error("error in calculate the hash value\n");
+		return DHCP_SNP_RETURN_CODE_ERROR;
+	} 
+
+	if (g_DHCPv6_Snp_Hash_Table[key] == item)
+	{
+		g_DHCPv6_Snp_Hash_Table[key] = item->next;
+		//ret = dhcp_snp_db_delete(dhcp_snp_db, item);
+		if (DHCP_SNP_RETURN_CODE_OK != ret) {
+			log_error("delete dhcp snooping table error, ret %x\n", ret);			
+			return DHCP_SNP_RETURN_CODE_ERROR;
+		}
+		free(item);
+		item=NULL;
+		return DHCP_SNP_RETURN_CODE_OK;
+	}
+
+	tempItem = g_DHCPv6_Snp_Hash_Table[key];
+	while(tempItem && tempItem->next)
+	{
+		if (tempItem->next == item)
+		{
+			tempItem->next = item->next;
+			//ret = dhcp_snp_db_delete(dhcp_snp_db, item);
+			if (DHCP_SNP_RETURN_CODE_OK != ret) {
+				log_error("delete dhcp snooping table error, ret %x\n", ret);			
+				return DHCP_SNP_RETURN_CODE_ERROR;
+			}
+			free(item);
+
+			return DHCP_SNP_RETURN_CODE_OK;
+		}
+
+		tempItem = tempItem->next;
+	}
+
+	log_error("no found the special entry, delete fail\n");	
+	return DHCP_SNP_RETURN_CODE_ERROR;
+}
+
+/**********************************************************************************
+ *npe_dhcp_snp_tbl_item_delete ()
+ *
+ *	DESCRIPTION:
+ *		delete the user bind item from the bind table
+ *
+ *	INPUTS:
+ *		NPD_DHCP_SNP_USER_ITEM_T *user
+ *
+ *	OUTPUTS:
+ *		NPD_DHCP_SNP_TBL_ITEM_T *item
+ *
+ *	RETURN VALUE:
+ *		DHCP_SNP_RETURN_CODE_OK			- success
+ *		DHCP_SNP_RETURN_CODE_ERROR			- fail
+ *		DHCP_SNP_RETURN_CODE_PARAM_NULL	- error, paramter is null
+ *	
+ ***********************************************************************************/
 unsigned int dhcp_snp_tbl_item_delete
 (
 	NPD_DHCP_SNP_TBL_ITEM_T *item
@@ -759,6 +1127,57 @@ unsigned int dhcp_snp_tbl_item_delete
 	}
 
 	log_error("no found the special entry, delete fail\n");	
+	return DHCP_SNP_RETURN_CODE_ERROR;
+}
+unsigned int dhcpv6_snp_tbl_item_delete_iphash
+(
+	NPD_DHCPv6_SNP_TBL_ITEM_T *item
+)
+{
+    unsigned int key = NPD_DHCP_SNP_INIT_0;
+	NPD_DHCPv6_SNP_TBL_ITEM_T *tempItem = NULL;
+	unsigned int key_ipaddr = NPD_DHCP_SNP_INIT_0;
+
+	if ((item  == NULL)) {
+		syslog_ax_dhcp_snp_err("dhcp snp delete bind table item error, parameter is null\n");
+		return DHCP_SNP_RETURN_CODE_PARAM_NULL;
+    }
+	if (!strlen(item->ipv6_addr)) {
+		return DHCP_SNP_RETURN_CODE_OK;
+	}
+	memcpy((char*)&key_ipaddr, (item->ipv6_addr)+12, 4);
+	key = dhcp_snp_tbl_ip_hash(key_ipaddr);
+	if (key >= NPD_DHCP_SNP_HASH_TABLE_SIZE) {
+		syslog_ax_dhcp_snp_err("error in calculate the hash value %#x\n", item->ipv6_addr);
+		return DHCP_SNP_RETURN_CODE_ERROR;
+	} 
+
+	if (g_DHCPv6_Snp_Hash_Table_ip[key] == item) {	
+		g_DHCPv6_Snp_Hash_Table_ip[key] = item->ip_next;
+		item->ip_next = NULL;
+		syslog_ax_dhcp_snp_dbg("delete table from ip hash %s, %02x:%02x:%02x:%02x:%02x:%02x\n", 
+			u128ip2str(item->ipv6_addr),
+			item->chaddr[0], item->chaddr[1], item->chaddr[2], 
+			item->chaddr[3], item->chaddr[4], item->chaddr[5]);
+		
+		return DHCP_SNP_RETURN_CODE_OK;
+	}
+
+	tempItem = g_DHCPv6_Snp_Hash_Table_ip[key];
+	while(tempItem && tempItem->ip_next) {
+		if (tempItem->ip_next == item) {
+			tempItem->ip_next = item->ip_next;
+			item->ip_next = NULL;
+
+			syslog_ax_dhcp_snp_dbg("delete table from ip hash %s, %02x:%02x:%02x:%02x:%02x:%02x\n", 
+				u128ip2str(item->ipv6_addr),
+				item->chaddr[0], item->chaddr[1], item->chaddr[2], 
+				item->chaddr[3], item->chaddr[4], item->chaddr[5]);
+
+			return DHCP_SNP_RETURN_CODE_OK;
+		}
+		tempItem = tempItem->ip_next;
+	}
 	return DHCP_SNP_RETURN_CODE_ERROR;
 }
 unsigned int dhcp_snp_tbl_item_delete_iphash
@@ -912,6 +1331,49 @@ unsigned int dhcp_snp_tbl_get_item
 
 
 /**********************************************************************************
+ *dhcpv6_snp_tbl_fill_bind ()
+ *
+ *	DESCRIPTION:
+ *		fill the bind table according user information
+ *
+ *	INPUTS:
+ *		NPD_DHCPv6_SNP_USER_ITEM_T *user
+ *
+ *	OUTPUTS:
+ *		NPD_DHCPv6_SNP_TBL_ITEM_T *item
+ *
+ *	RETURN VALUE:
+ *
+ ***********************************************************************************/
+void dhcpv6_snp_tbl_fill_bind
+(
+	NPD_DHCPv6_SNP_USER_ITEM_T *user,
+	NPD_DHCPv6_SNP_TBL_ITEM_T *item
+)
+{
+    if ((!user) || (!item)) {
+		log_error("dhcp snp fill bind table item error, parameter is null\n");
+		return ;
+    }
+	if (NPD_DHCP_SNP_REQUEST_TIMEOUT != user->lease_time) {
+		item->cur_expire	= dhcp_snp_get_system_uptime() + user->lease_time;
+		
+	    item->lease_time = user->lease_time;
+	}
+	
+	item->ifindex = user->ifindex;		/* update ifindex */
+    item->state      = user->state;
+	memcpy(item->ipv6_addr, user->ipv6_addr, 16);
+    item->sys_escape = time(0);    
+	/*	
+	item->cur_expire = user->lease_time + now.tv_sec;	
+	*/
+	
+    return ;
+}
+
+
+/**********************************************************************************
  *dhcp_snp_tbl_fill_bind ()
  *
  *	DESCRIPTION:
@@ -951,6 +1413,56 @@ void dhcp_snp_tbl_fill_bind
 	*/
 	
     return ;
+}
+
+/**********************************************************************************
+ *dhcpv6_snp_tbl_item_insert ()
+ *
+ *	DESCRIPTION:
+ *		insert the user bind information into the bind table
+ *
+ *	INPUTS:
+ *		NPD_DHCP_SNP_USER_ITEM_T *user
+ *		NPD_DHCP_SNP_TBL_ITEM_T *item
+ *
+ *	OUTPUTS:
+ *		NULL
+ *
+ *	RETURN VALUE:
+ *		DHCP_SNP_RETURN_CODE_OK			- success
+ *		DHCP_SNP_RETURN_CODE_ERROR			- fail
+ *		DHCP_SNP_RETURN_CODE_PARAM_NULL	- error, parameter is null
+ ***********************************************************************************/
+unsigned int dhcpv6_snp_tbl_identity_item
+(
+	NPD_DHCPv6_SNP_TBL_ITEM_T *item,
+	NPD_DHCPv6_SNP_USER_ITEM_T *user
+)
+{
+    if ((item == NULL) || (user  == NULL)) {
+		log_error("dhcp snp identity bind table item error, parameter is null\n");
+		return DHCP_SNP_RETURN_CODE_PARAM_NULL;
+    }
+
+    if ((item->vlanId != user->vlanId) ||
+		(item->haddr_len != user->haddr_len))
+    {
+        log_error("vid is not the same\n");
+		return DHCP_SNP_RETURN_CODE_ERROR;
+    }
+	
+	if ((user->ifindex != 0) && (item->ifindex != user->ifindex)) {
+    /*if (item->ifindex != user->ifindex) {*/
+		syslog_ax_dhcp_snp_err("have different ifindex\n");
+		return DHCP_SNP_RETURN_CODE_ERROR;
+    }
+
+    if (memcmp(item->chaddr, user->chaddr, item->haddr_len) != 0) {
+		log_error("have different chaddr value\n");        
+		return DHCP_SNP_RETURN_CODE_ERROR;
+    }
+
+    return DHCP_SNP_RETURN_CODE_OK;
 }
 
 /**********************************************************************************
@@ -999,6 +1511,161 @@ unsigned int dhcp_snp_tbl_identity_item
 		log_error("have different chaddr value\n");        
 		return DHCP_SNP_RETURN_CODE_ERROR;
     }
+
+    return DHCP_SNP_RETURN_CODE_OK;
+}
+
+/**********************************************************************************
+ *dhcpv6_snp_tbl_refresh_bind ()
+ *
+ *	DESCRIPTION:
+ *		fill the bind table according user information
+ *
+ *	INPUTS:
+ *		NPD_DHCPv6_SNP_USER_ITEM_T *user
+ *
+ *	OUTPUTS:
+ *		NPD_DHCPv6_SNP_TBL_ITEM_T *item
+ *
+ *	RETURN VALUE:
+ *		DHCP_SNP_RETURN_CODE_OK			- success
+ *		DHCP_SNP_RETURN_CODE_ERROR			- fail
+ *		DHCP_SNP_RETURN_CODE_PARAM_NULL	- error, paramter is null
+ *
+ ***********************************************************************************/
+unsigned int dhcpv6_snp_tbl_refresh_bind
+(
+	NPD_DHCPv6_SNP_USER_ITEM_T *user,
+	NPD_DHCPv6_SNP_TBL_ITEM_T *item,
+	struct dhcp_snp_listener *node	
+)
+{
+	NPD_DHCPv6_SNP_TBL_ITEM_T *tmp = NULL;
+	unsigned int ret = DHCP_SNP_RETURN_CODE_OK;
+	char ifname[IF_NAMESIZE]={0};
+	char command[128] = {0};
+
+
+    if ((!item) || (!user) || (!node)) {
+		log_error("dhcp snp refresh item in bind table error, parameter is null\n");
+		return DHCP_SNP_RETURN_CODE_PARAM_NULL;
+    }
+
+	/* check ip address */
+	if (check_ipv6_address(user->ipv6_addr)) {
+		log_error("%s: invalid ip address %s\n", 
+			u128ip2str(user->ipv6_addr), mac2str(user->chaddr));
+		return DHCP_SNP_RETURN_CODE_ERROR;
+	}
+	
+	/*
+	ret = dhcp_snp_tbl_identity_item(item, user);
+	if (DHCP_SNP_RETURN_CODE_OK != ret) {
+		syslog_ax_dhcp_snp_err("dhcp snp identity item error, ret %x\n", ret);
+		return DHCP_SNP_RETURN_CODE_ERROR;
+	}
+	*/
+	
+	/* special branch for cpu interface or RGMII interface
+	  * delete previous ip neigh item
+	  */
+/*
+	if (node->no_arp) {
+		if((0xFFFF == item->vlanId)&&(NPD_DHCP_SNP_BIND_STATE_BOUND == item->state)) {
+			ret = dhcp_snp_netlink_do_ipneigh(DHCPSNP_RTNL_IPNEIGH_DEL_E,  \
+												item->ifindex, item->ip_addr, item->chaddr);
+			if(DHCP_SNP_RETURN_CODE_OK != ret) {
+				log_error("dhcp snp refresh binding item del ip neigh error %x\n", ret);
+				return ret;
+			}
+			dhcp_snp_listener_handle_host_ebtables(item->chaddr, item->ip_addr, DHCPSNP_EBT_DEL_E);
+		}
+	}
+	if (node->add_router) {  //delete router to host,next jump is the interface opening dhcp-snooping
+		if((0xFFFF == item->vlanId)&&(NPD_DHCP_SNP_BIND_STATE_BOUND == item->state)) {
+			
+			if(!if_indextoname(item->ifindex, ifname)) {
+				syslog_ax_dhcp_snp_err("no intf found as idx %d netlink error !\n", item->ifindex);
+				return DHCP_SNP_RETURN_CODE_ERROR;
+			}
+			dhcp_snp_netlink_add_static_route(DHCPSNP_RTNL_STATIC_ROUTE_DEL_E,  \
+													item->ifindex, item->ip_addr);
+			//sprintf(command,"sudo route del -host %u.%u.%u.%u dev %s",(item->ip_addr>>24)&0xff,\
+			//	(item->ip_addr>>16)&0xff,(item->ip_addr>>8)&0xff,(item->ip_addr>>0)&0xff,ifname);
+			//system(command);
+			}
+	}
+*/
+	if (user->ipv6_addr) {
+		while (tmp = dhcpv6_snp_tbl_item_find_by_ip(user->ipv6_addr)) {
+			dhcpv6_snp_tbl_item_delete_iphash(tmp);
+		}
+	}
+
+	/* if item has ip address, delete from ip hash, then insert again */
+	if (strlen(item->ipv6_addr)) {
+		dhcpv6_snp_tbl_item_delete_iphash(item);
+	}
+	
+	dhcpv6_snp_tbl_fill_bind(user, item);
+	if (strlen(item->ipv6_addr)) {
+		dhcp_snp_ipv6_tbl_item_insert_ip_hash(item);
+	}
+
+#if 0
+	/* first, delete */
+	ret = dhcp_snp_db_delete(dhcp_snp_db, item);
+	if (DHCP_SNP_RETURN_CODE_OK != ret) {
+		log_error("delete dhcp snooping table error, ret %x\n", ret);			
+	}
+	
+	/* then, insert record to db*/
+	ret = dhcp_snp_db_insert(dhcp_snp_db, item);
+	if (DHCP_SNP_RETURN_CODE_OK != ret) {
+		log_error("dhcp snp insert item error, ret %x\n", ret);
+		return DHCP_SNP_RETURN_CODE_ERROR;
+	}
+#endif
+	
+	/* special branch for cpu interface or RGMII interface */
+/*
+	if (node->no_arp) {
+	 	if(0xFFFF == item->vlanId) {
+			ret = dhcp_snp_netlink_do_ipneigh(DHCPSNP_RTNL_IPNEIGH_ADD_E,  \
+												item->ifindex, item->ip_addr, item->chaddr);
+			if(DHCP_SNP_RETURN_CODE_OK != ret) {
+				log_error("dhcp snp refresh binding item add ip neigh error %x\n", ret);
+				return ret;
+			}
+			else {
+				dhcp_snp_listener_handle_host_ebtables(item->chaddr, item->ip_addr, DHCPSNP_EBT_ADD_E);
+				dhcp_snp_send_arp_solicit(item->ifindex, item->chaddr, item->ip_addr);
+			}
+		}
+	}
+	if (node->add_router) { //add router to host,next jump is the interface opening dhcp-snooping
+		if((0xFFFF == item->vlanId)&&(NPD_DHCP_SNP_BIND_STATE_BOUND == item->state)) {
+			
+			if(!if_indextoname(item->ifindex, ifname)) {
+				syslog_ax_dhcp_snp_err("no intf found as idx %d netlink error !\n", item->ifindex);
+				return DHCP_SNP_RETURN_CODE_ERROR;
+			}
+			dhcp_snp_netlink_add_static_route(DHCPSNP_RTNL_STATIC_ROUTE_ADD_E,  \
+													item->ifindex, item->ip_addr);
+			//sprintf(command,"sudo route add -host %u.%u.%u.%u dev %s",(item->ip_addr>>24)&0xff,\
+			//	(item->ip_addr>>16)&0xff,(item->ip_addr>>8)&0xff,(item->ip_addr>>0)&0xff,ifname);
+			//system(command);
+			}
+	}
+*/
+	/* update record to db */
+/*
+	ret = dhcp_snp_db_update(dhcp_snp_db, item);
+	if (DHCP_SNP_RETURN_CODE_OK != ret) {
+		syslog_ax_dhcp_snp_err("dhcp snp update item error, ret %x\n", ret);
+		return DHCP_SNP_RETURN_CODE_ERROR;
+	}
+*/
 
     return DHCP_SNP_RETURN_CODE_OK;
 }
@@ -1500,11 +2167,16 @@ void * dhcp_snp_tbl_thread_aging
 
 		/* bind table aging */
 		dhcp_snp_aging_mechanism();
+		dhcpv6_snp_aging_mechanism();
 
 
 			/* notice asd table aging */
 			pthread_mutex_lock(&mutexsnpunsolve);
 			dhcp_snp_asd_table_aging_mechanism();
+			pthread_mutex_unlock(&mutexsnpunsolve);
+
+			pthread_mutex_lock(&mutexsnpunsolve);
+			dhcpv6_snp_asd_table_aging_mechanism();
 			pthread_mutex_unlock(&mutexsnpunsolve);
 
 		pthread_mutex_unlock(&mutexDhcpsnptbl);
@@ -1513,7 +2185,42 @@ void * dhcp_snp_tbl_thread_aging
 	}
 	return NULL;
 }
+int dhcpv6_snp_aging_mechanism(void)
+{
+	unsigned int key = NPD_DHCP_SNP_INIT_0;
+	NPD_DHCPv6_SNP_TBL_ITEM_T *del_item = NULL;	
+	NPD_DHCPv6_SNP_TBL_ITEM_T *tempItem = NULL;
+	NPD_DHCPv6_SNP_TBL_ITEM_T *next = NULL;
+	unsigned int cur_time = 0;
+	int ret = -1;
+	char ifname[IF_NAMESIZE]={0};
+	char command[128] = {0};
+	
+	cur_time = dhcp_snp_get_system_uptime();
+	
+	for (key = 0; key < NPD_DHCP_SNP_HASH_TABLE_SIZE; key++) {
+		tempItem = g_DHCPv6_Snp_Hash_Table[key];
+		while(tempItem) {
 
+			next = tempItem->next;
+			
+			log_debug("aging bind-table: %s %s ifindex %d vlanid %d expired %d, curtime %d.\n", 
+				mac2str(tempItem->chaddr), u128ip2str(tempItem->ipv6_addr),
+				tempItem->ifindex, tempItem->vlanId,
+				tempItem->cur_expire, cur_time);
+			
+			if ((NPD_DHCP_SNP_BIND_TYPE_DYNAMIC == tempItem->bind_type)
+				&& (cur_time > tempItem->cur_expire)) {	  
+				dhcpv6_snp_tbl_item_delete(tempItem);				
+			}
+
+			tempItem = next;
+		}
+		
+	}
+	
+	return 0;
+}
 
 int dhcp_snp_aging_mechanism(void)
 {
@@ -1781,6 +2488,56 @@ void dhcp_snp_print_unresolved_table
 
 
 /**********************************************************************************
+ *	dhcpv6_snp_find_from_bind_table ()
+ *
+ *	DESCRIPTION:
+ *		find ip by mac from bind table, if find fill ip address, and return 1
+ *
+ *	INPUTS:
+ *		table - unresolved_table
+ *
+ *	OUTPUTS:
+ *		 
+ *	RETURN VALUE:
+ *		1 - find
+ *		0 - not find
+ *		-1 - error
+ *	
+ ***********************************************************************************/
+int dhcpv6_snp_find_from_bind_table(struct unresolved_ipv6_table *table)
+{
+	int ret = -1;
+	NPD_DHCPv6_SNP_USER_ITEM_T user;
+	NPD_DHCPv6_SNP_TBL_ITEM_T *item = NULL;
+
+	if (!table) {
+		return -1;
+	}
+
+	log_debug("find from bind table by %s\n", mac2str(table->chaddr));
+		
+	memset(&user, 0, sizeof(user));
+	memcpy(user.chaddr, table->chaddr, NPD_DHCP_SNP_MAC_ADD_LEN);
+	
+	if (item = dhcpv6_snp_tbl_item_find(&user)) {
+		if ((NPD_DHCP_SNP_BIND_STATE_BOUND == item->state) && strlen(item->ipv6_addr)) {
+			memcpy(table->ipv6_addr, item->ipv6_addr, 16);
+			table->ifindex = item->ifindex;
+			
+			log_debug("find item from bind table: %s %s\n", 
+				mac2str(table->chaddr), u128ip2str(table->ipv6_addr));
+			
+			ret = 1;
+		}
+	} else {
+		ret = 0;
+	}
+	
+	return ret;
+}
+
+
+/**********************************************************************************
  *	dhcp_snp_find_from_bind_table ()
  *
  *	DESCRIPTION:
@@ -1830,6 +2587,41 @@ int dhcp_snp_find_from_bind_table(struct unresolved_table *table)
 }
 
 
+
+/**********************************************************************************
+ *	dhcpv6_snp_find_from_unresolved_table()
+ *
+ *	DESCRIPTION:
+ *		find unresolved table if this MAC table exist. if exist return the table
+ *
+ *	INPUTS:
+ *		haddr - MAC
+ *
+ *	OUTPUTS:
+ *		table
+ *
+ *	RETURN VALUE:
+ *		table - if not find, table is NULL
+ *		
+ ***********************************************************************************/
+struct unresolved_table *dhcpv6_snp_find_from_unresolved_table(unsigned char *haddr)
+{
+	unsigned int key = 0;
+	struct unresolved_ipv6_table *table = NULL;
+	
+	key = dhcp_snp_tbl_hash(haddr);
+
+	table = g_dhcpv6_snp_unresolved_hash[key];
+
+	while (table) {
+		if (0 == memcmp(table->chaddr, haddr, NPD_DHCP_SNP_MAC_ADD_LEN)) {
+			break;
+		}
+		table = table->next;
+	}
+	return table;
+}
+
 /**********************************************************************************
  *	dhcp_snp_find_from_unresolved_table()
  *
@@ -1862,6 +2654,63 @@ struct unresolved_table *dhcp_snp_find_from_unresolved_table(unsigned char *hadd
 		table = table->next;
 	}
 	return table;
+}
+
+/**********************************************************************************
+ *	dhcpv6_snp_add_unresolved_node()
+ *
+ *	DESCRIPTION:
+ *		add to unresolved table. if exist, just update the date
+ *
+ *	INPUTS:
+ *
+ *	OUTPUTS:
+ *		NULL
+ *
+ *	RETURN VALUE:
+ *		0 - success
+ *		-1 - failed
+ *		
+ ***********************************************************************************/
+int dhcpv6_snp_add_unresolved_node(struct unresolved_ipv6_table *table)
+{
+	unsigned int key = 0;
+	struct unresolved_ipv6_table *tmp = NULL;
+
+	if (!table) {
+		log_error("%s: parameter null.\n", __func__);
+		return -1;
+	}
+
+	log_info("add table: bssindex %d vrrid %d %s %s\n", 
+		table->bssindex, table->vrrpid,
+		mac2str(table->chaddr), u128ip2str(table->ipv6_addr));
+
+	if (tmp = dhcpv6_snp_find_from_unresolved_table(table->chaddr)) {
+		tmp->bssindex = table->bssindex;
+		memcpy(tmp->ipv6_addr, table->ipv6_addr, 16);
+		tmp->vrrpid = table->vrrpid;
+		tmp->local_flag = table->local_flag;
+		memcpy(tmp->chaddr, table->chaddr, NPD_DHCP_SNP_MAC_ADD_LEN);
+		tmp->expired = dhcp_snp_get_system_uptime() + TBL_EXPIRED_TIME;
+		
+	} else {
+		tmp = (struct unresolved_ipv6_table *)malloc(sizeof(struct unresolved_ipv6_table));
+		if (NULL == tmp) {
+			return -1;
+		}
+		memset(tmp, 0, sizeof(*tmp));
+		memcpy(tmp, table, sizeof(*table));
+		tmp->expired = dhcp_snp_get_system_uptime() + TBL_EXPIRED_TIME;
+		tmp->next = NULL;
+
+		key = dhcp_snp_tbl_hash(table->chaddr);
+
+		tmp->next = g_dhcpv6_snp_unresolved_hash[key];
+		g_dhcpv6_snp_unresolved_hash[key] = tmp;
+	}
+
+	return 0;	
 }
 
 /**********************************************************************************
@@ -2030,6 +2879,66 @@ int dhcp_snp_del_unresolved_node(struct unresolved_table *table)
 	return -1;	
 }
 
+/******************************************************************************
+ *	dhcpv6_snp_asd_table_aging_mechanism()
+ *
+ *	DESCRIPTION:
+ *		dhcp snp unresolved table aging (to asd)
+ *
+ *	INPUTS:
+ *
+ *	OUTPUTS:
+ *		NULL
+ *
+ *	RETURN VALUE:
+ *		0 - success
+ *		-1 - failed
+ *		
+ *****************************************************************************/
+int dhcpv6_snp_asd_table_aging_mechanism(void)
+{
+	unsigned int cur_time = 0;
+	unsigned int key = 0;
+	struct unresolved_ipv6_table *tmp = NULL;
+
+	struct unresolved_ipv6_table  *next = NULL;
+
+	/* get system uptime */
+	cur_time = dhcp_snp_get_system_uptime();
+
+	for(key = 0 ; key < NPD_DHCP_SNP_HASH_TABLE_SIZE ; key++)
+	{
+		if(g_dhcpv6_snp_unresolved_hash[key] == NULL)
+			continue;
+		while(g_dhcpv6_snp_unresolved_hash[key]->expired < cur_time)
+		{
+			tmp = g_dhcpv6_snp_unresolved_hash[key];
+			g_dhcpv6_snp_unresolved_hash[key] = g_dhcpv6_snp_unresolved_hash[key]->next;
+			free(tmp);
+			tmp = NULL;
+			if(g_dhcpv6_snp_unresolved_hash[key] == NULL)
+				break;
+		}
+		tmp = g_dhcpv6_snp_unresolved_hash[key];
+		if(tmp == NULL)
+			continue;
+		next = tmp->next;
+		while((tmp!= NULL)&&(next!=NULL))
+		{
+			if(next->expired < cur_time)
+			{
+				tmp->next = next->next;
+				free(next);
+				
+			}
+			else{
+				tmp = tmp->next;
+			}			
+			next = tmp->next;
+		}
+	}
+	return 0;	
+}
 
 
 /******************************************************************************
@@ -2093,6 +3002,43 @@ int dhcp_snp_asd_table_aging_mechanism(void)
 	return 0;	
 }
 
+/**********************************************************************************
+ *	__fill_tablemsg_ipv6 ()
+ *
+ *	DESCRIPTION:
+ *		fill tableMsg frem unresolved table
+ *
+ *	INPUTS:
+ *		msg - TableMsg
+ *		table - unresolved table
+ *
+ *	OUTPUTS:
+ *
+ *	RETURN VALUE:
+ *
+ ***********************************************************************************/
+inline void __fill_tablemsg_ipv6(TableMsg *msg, struct unresolved_ipv6_table *table)
+{
+	unsigned char ifname[16];
+	memset(ifname,0,sizeof(ifname));
+	msg->Type = STA_TYPE;
+	msg->Op = DHCP_IPv6;
+	msg->u.STA.BSSIndex = table->bssindex;
+	msg->u.STA.local = table->local_flag;
+
+    memcpy(msg->u.STA.ipv6Address.s6_addr, table->ipv6_addr, 16);
+	log_debug("__fill_tablemsg_ipv6 ipv6_address of sta is: %X:%X:%X:%X:%X:%X:%X:%X .\n", \
+		msg->u.STA.ipv6Address.in6_u.u6_addr16[0],msg->u.STA.ipv6Address.in6_u.u6_addr16[1],msg->u.STA.ipv6Address.in6_u.u6_addr16[2],    \
+		msg->u.STA.ipv6Address.in6_u.u6_addr16[3],msg->u.STA.ipv6Address.in6_u.u6_addr16[4],msg->u.STA.ipv6Address.in6_u.u6_addr16[5],    \
+		msg->u.STA.ipv6Address.in6_u.u6_addr16[6],msg->u.STA.ipv6Address.in6_u.u6_addr16[7]);
+	
+	memcpy(msg->u.STA.STAMAC, table->chaddr, NPD_DHCP_SNP_MAC_ADD_LEN);
+	if(if_indextoname(table->ifindex, ifname)) 
+	{
+		memset(msg->u.STA.arpifname,0,sizeof(msg->u.STA.arpifname));
+		memcpy(msg->u.STA.arpifname,ifname,sizeof(ifname));
+	}	
+}
 
 /**********************************************************************************
  *	__fill_tablemsg ()
@@ -2126,7 +3072,50 @@ inline void __fill_tablemsg(TableMsg *msg, struct unresolved_table *table)
 		memcpy(msg->u.STA.arpifname,ifname,sizeof(ifname));
 	}	
 }
+int dhcpv6_snp_notify_asd(struct unresolved_ipv6_table *table)
+{
+	TableMsg msg;
+	
+	if (!table) {
+		return -1;
+	}
 
+	if (!fd_table[TBL_INDEX(table->vrrpid, table->local_flag)]) {
+		init_sock_unix_client_asd(table->vrrpid, table->local_flag);
+		if (!fd_table[TBL_INDEX(table->vrrpid, table->local_flag)]) {
+			return -1;
+		}
+	}
+
+	memset(&msg, 0, sizeof(msg));
+
+	__fill_tablemsg_ipv6(&msg, table);	
+	
+	log_info("66666666666666666666666666 msg to asd: bssindex %d vrrid %d %s %s %s\n",
+		table->bssindex, table->vrrpid,
+		(table->local_flag ? "local hansi" : "remote hansi"),
+		mac2str(table->chaddr), u128ip2str(table->ipv6_addr));
+
+	if (sendto(fd_table[TBL_INDEX(table->vrrpid, table->local_flag)]->sock_fd, (char *)&msg, sizeof(msg), 0, 
+				(struct sockaddr *)&(fd_table[TBL_INDEX(table->vrrpid, table->local_flag)]->servaddr),  
+				sizeof(fd_table[TBL_INDEX(table->vrrpid, table->local_flag)]->servaddr)) < 0) {
+		log_error("msg (bssindex %d vrrpid %d %s %s %s)"
+			" send to asd failed. %m\n",
+			table->bssindex, table->vrrpid, 
+			(table->local_flag ? "local hansi" : "remote hansi"),
+			mac2str(table->chaddr), u128ip2str(table->ipv6_addr));
+
+		log_error("socket %d path %s\n", 
+			fd_table[TBL_INDEX(table->vrrpid, table->local_flag)]->sock_fd, 
+			fd_table[TBL_INDEX(table->vrrpid, table->local_flag)]->servaddr.sun_path);
+		
+		return -1;
+	}
+
+	dhcp_snp_del_unresolved_node(table);
+
+	return 0;
+}
 int dhcp_snp_notify_asd(struct unresolved_table *table)
 {
 	TableMsg msg;
@@ -2173,6 +3162,43 @@ int dhcp_snp_notify_asd(struct unresolved_table *table)
 }
 
 
+
+/**********************************************************************************
+ *	dhcpv6_snp_process_asd_interactive()
+ *
+ *	DESCRIPTION:
+ *		when recv msg from asd, look for bind table, if this MAC table exist 
+ *		and state is BOUND, send ip to asd. or add to unresolved table
+ *
+ *	INPUTS:
+ *		table - unresolved_table
+ *
+ *	OUTPUTS:
+ *		NULL
+ *
+ *	RETURN VALUE:
+ *		-1 - FAILED
+ *		0 - SUCCESS
+ ***********************************************************************************/
+int dhcpv6_snp_process_asd_interactive(struct unresolved_ipv6_table *table)
+{
+	if ((!table)) {
+		log_error("%s: parameter null.\n", __func__);		
+		return -1;
+	}
+	
+	/* find from bind table, then send to asd */
+	if (1 == dhcpv6_snp_find_from_bind_table(table)) {
+		dhcpv6_snp_notify_asd(table);
+	}
+	/* add to unresolve list */
+	else {
+		/* malloc node and add to list */
+		dhcpv6_snp_add_unresolved_node(table);
+	}
+	return 0;
+}
+
 /**********************************************************************************
  *	dhcp_snp_process_asd_interactive()
  *
@@ -2211,6 +3237,31 @@ int dhcp_snp_process_asd_interactive(struct unresolved_table *table)
 
 
 /**********************************************************************************
+ *	fill_ipv6_unsoloved_table_from_tableMsg()
+ *
+ *	DESCRIPTION:
+ *		fill unsoloved table from recv msg, NO CHECK, PLEASE CARFULL.
+ *
+ *	INPUTS:
+ *		msg - recv msg
+ *		table - unresolved table
+ *
+ *	OUTPUTS:
+ *		NULL
+ *
+ *	RETURN VALUE:
+ *		
+ ***********************************************************************************/
+inline void fill_ipv6_unresolved_table_from_tableMsg(TableMsg *msg, struct unresolved_ipv6_table *table)
+{
+	table->bssindex = msg->u.STA.BSSIndex;
+	table->vrrpid = msg->u.STA.vrrid;
+	table->local_flag = msg->u.STA.local;
+	memcpy(table->chaddr, msg->u.STA.STAMAC, NPD_DHCP_SNP_MAC_ADD_LEN);
+}
+
+
+/**********************************************************************************
  *	fill_unsoloved_table_from_tableMsg()
  *
  *	DESCRIPTION:
@@ -2234,6 +3285,35 @@ inline void fill_unresolved_table_from_tableMsg(TableMsg *msg, struct unresolved
 	memcpy(table->chaddr, msg->u.STA.STAMAC, NPD_DHCP_SNP_MAC_ADD_LEN);
 }
 
+
+
+/**********************************************************************************
+ *	dhcpv6_snp_initiative_notify_asd()
+ *
+ *	DESCRIPTION:
+ *		when recv DHCPv6 reply, look for unresolved table, if this MAC not send to asd, 
+ *		send to asd
+ *
+ *	INPUTS:
+ *		haddr - clinet MAC
+ *		ipaddr - IPv4 address
+ *
+ *	OUTPUTS:
+ *		NULL
+ *
+ *	RETURN VALUE:
+ *		
+ ***********************************************************************************/
+void dhcpv6_snp_initiative_notify_asd(unsigned char *haddr, unsigned char* ipaddr)
+{
+	struct unresolved_ipv6_table *table = NULL;
+
+	if (table = dhcpv6_snp_find_from_unresolved_table(haddr)) {
+		memcpy(table->ipv6_addr, ipaddr, 16);
+		dhcpv6_snp_notify_asd(table);
+	} 
+	return ;
+}
 
 /**********************************************************************************
  *	dhcp_snp_initiative_notify_asd()
@@ -2317,6 +3397,7 @@ void * dhcp_snp_asd_interactive
 	unsigned char status = 0;
 	fd_set rd_set, rd;
 	struct unresolved_table table;
+	struct unresolved_ipv6_table table_ipv6;
 	TableMsg msg;
 
 	
@@ -2381,7 +3462,7 @@ again:
 				msg.u.STA.BSSIndex, msg.u.STA.vrrid,
 				(msg.u.STA.local ? "local hansi" : "remote hansi"),
 				mac2str(msg.u.STA.STAMAC));
-						
+			
 			memset(&table, 0, sizeof(table));			
 			fill_unresolved_table_from_tableMsg(&msg, &table);
 
@@ -2390,6 +3471,17 @@ again:
 			dhcp_snp_process_asd_interactive(&table);
 			pthread_mutex_unlock(&mutexsnpunsolve);						
 			pthread_mutex_unlock(&mutexDhcpsnptbl);
+		
+			memset(&table_ipv6, 0, sizeof(table_ipv6));			
+			fill_ipv6_unresolved_table_from_tableMsg(&msg, &table_ipv6);
+
+			pthread_mutex_lock(&mutexDhcpsnptbl);
+			pthread_mutex_lock(&mutexsnpunsolve);
+			dhcpv6_snp_process_asd_interactive(&table_ipv6);
+			pthread_mutex_unlock(&mutexsnpunsolve);						
+			pthread_mutex_unlock(&mutexDhcpsnptbl);
+			
+			
 		}	
 	}
 }

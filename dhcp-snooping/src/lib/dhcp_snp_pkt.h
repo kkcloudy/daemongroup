@@ -17,9 +17,12 @@
 	
 #define ETH_ALEN 		 6
 #define IP_ADDR_LEN     4
+#define IPV6_ADDR_LEN   16
 
 #define ETHER_ARP	0x0806
 #define ETHER_IP	0x0800
+#define ETHER_IPv6	0x86dd
+
 
 #define IPVER4		0x4
 #define IPVER6		0x6
@@ -29,6 +32,9 @@
 
 #define DHCP_SERVER_PORT	0x43
 #define DHCP_CLIENT_PORT	0x44
+
+#define DHCPv6_SERVER_PORT  0x0223
+#define DHCPv6_CLIENT_PORT  0x0222
 
 #define ARP_OPCODE_REQUEST	0x1
 #define ARP_OPCODE_REPLY	0x2
@@ -87,6 +93,20 @@ typedef struct
 	unsigned char	   sip[IP_ADDR_LEN];
 	unsigned char	   dip[IP_ADDR_LEN];
 }ip_header_t;
+typedef struct
+{
+	unsigned int	   version:4;
+	//unsigned int	   dscp:6;
+	//unsigned int       ecn_cp:1;
+	//unsigned int       ecn_ce:1;
+	//unsigned int       fll:20;
+	unsigned int       TC:28;
+	unsigned short	   payload_len;
+	unsigned char	   next_hdr;
+	unsigned char	   hot_limit;
+	unsigned char	   sip[IPV6_ADDR_LEN];
+	unsigned char	   dip[IPV6_ADDR_LEN];
+}ipv6_header_t;
 
 typedef struct 
 {
@@ -157,6 +177,61 @@ unsigned int dhcp_snp_discovery_process
 );
 
 /**********************************************************************************
+ *dhcp_snp_solicit_process()
+ *
+ *	DESCRIPTION:
+ *		destroy DHCP Snooping packet receive
+ *
+ *	INPUTS:
+ *		unsigned short vlanid,
+ *		unsigned int ifindex,
+ *		NPD_DHCP_MESSAGE_T *dhcp
+ *
+ *	OUTPUTS:
+ *		NULL
+ *
+ *	RETURN VALUE:
+ *		DHCP_SNP_RETURN_CODE_OK			- success
+ *		DHCP_SNP_RETURN_CODE_ERROR			- fail
+ *		DHCP_SNP_RETURN_CODE_PARAM_NULL	- error, parameter is null
+ ***********************************************************************************/
+unsigned int dhcp_snp_solicit_process
+(
+	unsigned short vlanid,
+	unsigned int ifindex,
+	NPD_DHCPv6_MESSAGE_T *dhcp,
+	unsigned char* mac_2
+);
+
+/**********************************************************************************
+ *dhcp_snp_reply_process()
+ *
+ *	DESCRIPTION:
+ *		destroy DHCP Snooping packet receive
+ *
+ *	INPUTS:
+ *		unsigned short vlanid,
+ *		unsigned int ifindex,
+ *		NPD_DHCP_MESSAGE_T *dhcp
+ *
+ *	OUTPUTS:
+ *		NULL
+ *
+ *	RETURN VALUE:
+ *		DHCP_SNP_RETURN_CODE_OK			- success
+ *		DHCP_SNP_RETURN_CODE_ERROR			- fail
+ *		DHCP_SNP_RETURN_CODE_PARAM_NULL	- error, parameter is null
+ ***********************************************************************************/
+unsigned int dhcp_snp_reply_process
+(
+	unsigned short vlanid,
+	unsigned int ifindex,
+	NPD_DHCPv6_MESSAGE_T *dhcp,
+	struct dhcp_snp_listener *node,
+	unsigned char* mac_2
+);
+
+/**********************************************************************************
  *dhcp_snp_offer_process()
  *
  *	DESCRIPTION:
@@ -190,6 +265,16 @@ unsigned int dhcp_snp_offer_process
 	unsigned long buffr_len,
 	int fd
 );
+unsigned int dhcp_snp_advertise_process
+(
+	unsigned short vlanid,
+	unsigned int ifindex,
+	NPD_DHCPv6_MESSAGE_T *dhcp, 
+	unsigned char * dhcp_buffr, 
+	unsigned long buffr_len,
+	int fd,
+	unsigned char* mac_2
+);
 
 /**********************************************************************************
  *dhcp_snp_request_process()
@@ -215,6 +300,33 @@ unsigned int dhcp_snp_request_process
 	unsigned short vlanid,
 	unsigned int ifindex,
 	NPD_DHCP_MESSAGE_T *dhcp
+);
+
+/**********************************************************************************
+ *dhcpv6_snp_request_process()
+ *
+ *	DESCRIPTION:
+ *		destroy DHCP Snooping packet receive
+ *
+ *	INPUTS:
+  *		unsigned short vlanid,
+ *		unsigned int ifindex,
+ *		NPD_DHCP_MESSAGE_T *dhcp
+ *
+ *	OUTPUTS:
+ *		NULL
+ *
+ *	RETURN VALUE:
+ *		DHCP_SNP_RETURN_CODE_OK			- success
+ *		DHCP_SNP_RETURN_CODE_ERROR			- fail
+ *		DHCP_SNP_RETURN_CODE_PARAM_NULL	- error, parameter is null
+ ***********************************************************************************/
+unsigned int dhcpv6_snp_request_process
+(
+	unsigned short vlanid,
+	unsigned int ifindex,
+	NPD_DHCPv6_MESSAGE_T *dhcp,
+	unsigned char* mac_2
 );
 
 /**********************************************************************************
@@ -296,6 +408,34 @@ unsigned int dhcp_snp_release_process
 	unsigned int ifindex,
 	NPD_DHCP_MESSAGE_T *dhcp,
 	struct dhcp_snp_listener *node	
+);
+
+/**********************************************************************************
+ *dhcpv6_snp_release_process()
+ *
+ *	DESCRIPTION:
+ *		release DHCP Snooping packet receive
+ *
+ *	INPUTS:
+ *		unsigned short vlanid,
+ *		unsigned int ifindex,
+ *		NPD_DHCP_MESSAGE_T *dhcp
+ *
+ *	OUTPUTS:
+ *		NULL
+ *
+ *	RETURN VALUE:
+ *		DHCP_SNP_RETURN_CODE_OK			- success
+ *		DHCP_SNP_RETURN_CODE_ERROR			- fail
+ *		DHCP_SNP_RETURN_CODE_PARAM_NULL	- error, parameter is null
+ ***********************************************************************************/
+unsigned int dhcpv6_snp_release_process
+(
+	unsigned short vlanid,
+	unsigned int ifindex,
+	NPD_DHCPv6_MESSAGE_T *dhcp,
+	struct dhcp_snp_listener *node,
+	unsigned char* mac_2
 );
 
 /**********************************************************************************
@@ -422,6 +562,10 @@ int dhcp_snp_notify_to_protal(uint32_t userip, uint8_t *usermac);
 int dhcp_snp_u32ip_check
 (
 	unsigned int ipaddr
+);
+int check_ipv6_address
+(
+	char *ipv6_address
 );
 
 /*********************************************************

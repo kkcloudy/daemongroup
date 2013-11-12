@@ -769,6 +769,62 @@ unsigned int dhcp_snp_set_port_trust_mode
 }
 #endif
 /**********************************************************************************
+ * dhcpv6_snp_get_option
+ *		get an option with bounds checking (warning, not aligned).
+ *
+ *	INPUT:
+ *		NPD_DHCP_MESSAGE_T *packet,
+ *		unsigned int code
+ *
+ *	OUTPUT:
+ *		NULL
+ *
+ *	RETURN:
+ *		NULL			- not get the option
+ *		not NULL 		- string of the option
+ **********************************************************************************/
+void *dhcpv6_snp_get_option
+(
+	NPD_DHCPv6_MESSAGE_T *packet,
+	unsigned int code
+)
+{
+	unsigned int i = NPD_DHCP_SNP_INIT_0;
+	unsigned int length = NPD_DHCP_SNP_INIT_0;
+	unsigned int over = NPD_DHCP_SNP_INIT_0;
+	unsigned int done = NPD_DHCP_SNP_INIT_0;
+	unsigned int curr = NPD_DHCP_SNP_OPTION_FIELD;
+	unsigned char *optionptr = NULL;
+
+	if (!packet) {
+		log_error("%s: parameter null\n", __func__);
+		return NULL;
+	}
+
+	optionptr = (unsigned char *)packet->options;
+	i = 0;
+	length = NPD_DHCP_SNP_OPTION_LEN;
+
+	while (!done) {
+		if (i >= length) {
+			log_error("bogus packet, option fields too long.");
+			return NULL;
+		}
+		if (optionptr[i + NPD_DHCPv6_SNP_OPT_CODE] == code) {
+			if (i + 3 + optionptr[i + NPD_DHCPv6_SNP_OPT_LEN] >= length) {
+				log_error("bogus packet, option fields too long.");
+				return NULL;
+			}
+			return optionptr + i + 4;
+		}						
+	  i += optionptr[NPD_DHCPv6_SNP_OPT_LEN + i] + 4;	 
+	}
+	log_error("get dhcp option %d failed.\n", code);
+	
+	return NULL;
+}
+
+/**********************************************************************************
  * dhcp_snp_get_option
  *		get an option with bounds checking (warning, not aligned).
  *
@@ -1263,6 +1319,220 @@ unsigned int dhcp_snp_remove_vlan_broadcast_ports
 	return DHCP_SNP_RETURN_CODE_OK;
 }
 #endif
+/**********************************************************************************
+ * dhcp_snp_packet_rx_process()
+ *	DESCRIPTION:
+ *		receive packets for DHCP Snooping rx 
+ *
+ *	INPUTS:
+ *		unsigned long numOfBuff 	- number of buffer
+ *		unsigned char *packetBuffs[]	- array of buffer
+ *		unsigned long buffLen[] 		- array of buffer length
+ *		unsigned int interfaceId			- port Or TrunkId has been transfer to eth_g_index
+ *		unsigned char isTagged			- tag flag of port
+ *		unsigned short vid				- vlanid
+ *
+ *	OUTPUTS:
+ *		NULL
+ *
+ *	RETURN VALUE:
+ *		GT_FAIL 		- build fail
+ *		GT_NO_RESOURCE	- alloc memory error
+ *		GT_BAD_SIZE 	- packet length is invalid
+ *		GT_OK			- build ok
+ *		totalLen			- receive packet length
+***********************************************************************************/
+unsigned int dhcp_snp_dhcpv6_packet_process
+(
+	unsigned long numOfBuff,
+	unsigned char *packetBuffs[],
+	unsigned long buffLen[],
+	unsigned int ifindex,
+	unsigned char isTagged,
+	unsigned short vid,
+	struct dhcp_snp_listener *node
+)
+{
+	unsigned int ret = DHCP_SNP_RETURN_CODE_OK;
+	/*unsigned char *temp = NULL;*/
+	unsigned char message_type = 0;
+	unsigned char trust_mode = NPD_DHCP_SNP_PORT_MODE_INVALID;
+	NPD_DHCPv6_MESSAGE_T *data = NULL;
+	ether_header_t	*layer2 = NULL;
+	unsigned char *mac_2 = NULL;
+	if (!node || !packetBuffs || !packetBuffs[0]) {
+		log_error("%s: parameter null.\n", __func__);
+		return DHCP_SNP_RETURN_CODE_ERROR;		
+	}
+	
+	if (dhcp_snp_status != NPD_DHCP_SNP_ENABLE) {
+		log_info("dhcp snooping not enabled global.\n");
+		return DHCP_SNP_RETURN_CODE_OK;
+	}
+
+	log_debug("interface %s recv dhcp packet vlan %d\n", node->ifname, vid);
+
+	data = (NPD_DHCPv6_MESSAGE_T *)(packetBuffs[0] + sizeof(struct ethhdr) + sizeof(ipv6_header_t) + sizeof(struct udphdr)); 
+
+	//message = (unsigned char *)dhcp_snp_get_option(data, NPD_DHCP_MESSAGE_TYPE);
+	if (NULL == data) {
+		log_error("DHCPv6 packet NULL, ignoring.\n");
+		return DHCP_SNP_RETURN_CODE_PKT_DROP;
+	}
+/*
+	if (NPD_DHCP_BOOTREPLY == data->op) {
+		ret = dhcp_snp_is_trusted(vid, ifindex, isTagged, &trust_mode);
+		if ((DHCP_SNP_RETURN_CODE_OK != ret) ||
+			((DHCP_SNP_RETURN_CODE_OK == ret) && (NPD_DHCP_SNP_PORT_MODE_NOTRUST == trust_mode))) {
+			log_error("receive dhcp reply packet from untrusted interface %d, discard\n", ifindex);
+		#if DHCPSNP_RD_DEBUG
+			log_error("ret %#x trust mode %d!\n", ret, trust_mode);
+		#endif
+			return DHCP_SNP_RETURN_CODE_PKT_DROP;
+		}
+	}
+*/
+	/*
+	 * trust mode port	: record ip-mac infor, and transmit dhcp packets
+	 * no-bind port 	: not record ip-mac infor, but transmit dhcp packets
+	 * notrust mode port	: not record ip-mac infor, drop dhcp packets
+	 *
+	 * note: dhcp snooping only deal(transmit or drop) offer and ack packet of dhcp protocol,
+	 *		other packets of dhcp protocol transmit as usual.
+	*/
+	trust_mode = NPD_DHCP_SNP_PORT_MODE_TRUST;
+	message_type = data ->msg_type;
+	switch (message_type)
+	{
+		case NPD_DHCPv6_TYPE_SOLICIT:
+			layer2 = (ether_header_t*)(packetBuffs[0]);
+	        mac_2 = layer2->smac;
+			ret = dhcp_snp_solicit_process(vid, ifindex, data , mac_2);
+			if (DHCP_SNP_RETURN_CODE_OK != ret) {
+				log_error("receive dhcpv6 solicit packet error, ret %x\n", ret);
+				return DHCP_SNP_RETURN_CODE_PKT_DROP;
+			}
+			break;
+		case NPD_DHCPv6_TYPE_ADVERTISE:
+			log_debug("recv DHCPv6 ADVERTISE packet vlan %d ifindex %d\n", vid, ifindex);
+			if (NPD_DHCP_SNP_PORT_MODE_TRUST == trust_mode) {
+				layer2 = (ether_header_t*)(packetBuffs[0]);
+	            mac_2 = layer2->dmac;
+				ret = dhcp_snp_advertise_process(vid, ifindex, data, packetBuffs[0], buffLen[0], node->fd ,mac_2);
+				if (DHCP_SNP_RETURN_CODE_OK != ret) {
+					log_error("receive dhcp offer packet error, ret %x\n", ret);
+					return DHCP_SNP_RETURN_CODE_PKT_DROP;
+				}
+			}else if (NPD_DHCP_SNP_PORT_MODE_NOBIND == trust_mode) {
+				log_error("receive dhcp offer packet from no-bind interface %d\n", ifindex);
+			}else {
+				log_error("receive dhcp offer packet from untrusted interface %d, discard\n", ifindex);
+				return DHCP_SNP_RETURN_CODE_PKT_DROP;
+			}
+			break;
+		case NPD_DHCPv6_TYPE_REQUEST:
+			layer2 = (ether_header_t*)(packetBuffs[0]);
+	        mac_2 = layer2->smac;
+			log_debug("recv DHCPv6 REQUEST packet vlan %d ifindex %d\n", vid, ifindex);
+			ret = dhcpv6_snp_request_process(vid, ifindex, data, mac_2);
+			if (DHCP_SNP_RETURN_CODE_OK != ret) {
+				log_error("receive dhcp request packet error, ret %x\n", ret);
+				return DHCP_SNP_RETURN_CODE_PKT_DROP;
+			}
+			break;
+		case NPD_DHCPv6_TYPE_REPLY:
+			if (NPD_DHCP_SNP_PORT_MODE_TRUST == trust_mode) {
+				layer2 = (ether_header_t*)(packetBuffs[0]);
+	            mac_2 = layer2->dmac;
+				ret = dhcp_snp_reply_process(vid, ifindex, data, node , mac_2);
+				if (DHCP_SNP_RETURN_CODE_OK != ret) {
+					log_error("receive dhcpv6 reply packet error, ret %x\n", ret);
+					return DHCP_SNP_RETURN_CODE_PKT_DROP;
+				}
+			}else if (NPD_DHCP_SNP_PORT_MODE_NOBIND == trust_mode) {
+				syslog_ax_dhcp_snp_dbg("receive dhcpv6 reply packet from no-bind interface %d\n", ifindex);
+			}else {
+				syslog_ax_dhcp_snp_err("receive dhcpv6 reply packet from untrusted interface %d, discard\n", ifindex);
+				return DHCP_SNP_RETURN_CODE_PKT_DROP;
+			}
+			break;
+		case NPD_DHCPv6_TYPE_RENEW :
+			layer2 = (ether_header_t*)(packetBuffs[0]);
+	        mac_2 = layer2->smac;
+			log_debug("recv DHCPv6 RENEW packet vlan %d ifindex %d\n", vid, ifindex);
+			ret = dhcpv6_snp_request_process(vid, ifindex, data ,mac_2);
+			if (DHCP_SNP_RETURN_CODE_OK != ret) {
+				syslog_ax_dhcp_snp_err("receive dhcp nak packet error, ret %x\n", ret);
+				return DHCP_SNP_RETURN_CODE_PKT_DROP;
+			}
+			break;
+		case NPD_DHCPv6_TYPE_RELEASE:
+			layer2 = (ether_header_t*)(packetBuffs[0]);
+	        mac_2 = layer2->smac;
+			ret = dhcpv6_snp_release_process(vid, ifindex, data, node, mac_2);
+			if (DHCP_SNP_RETURN_CODE_OK != ret) {
+				syslog_ax_dhcp_snp_err("receive dhcp release packet error, ret %x\n", ret);
+				return DHCP_SNP_RETURN_CODE_PKT_DROP;
+			}
+			break;
+		case NPD_DHCPv6_TYPE_CONFIRM:
+			layer2 = (ether_header_t*)(packetBuffs[0]);
+	        mac_2 = layer2->smac;
+			ret = dhcpv6_snp_confirm_process(vid, ifindex, data, mac_2);
+			if (DHCP_SNP_RETURN_CODE_OK != ret) {
+				syslog_ax_dhcp_snp_err("receive dhcp inform packet error, ret %x\n", ret);
+				return DHCP_SNP_RETURN_CODE_PKT_DROP;
+			}			
+			break;
+		case NPD_DHCPv6_TYPE_DECLINE:
+			break;
+		default :
+			syslog_ax_dhcp_snp_err("receive dhcp packet unknown message\n");
+			break;
+	}	
+
+	/*
+	*********************************************
+	*  option 82 process
+	*********************************************
+	*/
+/*
+	if (g_dhcp_snp_opt82_enable == NPD_DHCP_SNP_OPT82_ENABLE) {
+		syslog_ax_dhcp_snp_dbg("start option 82 process.\n");
+*/
+/*		if (((*message) == NPD_DHCP_DISCOVER) || ((*message) == NPD_DHCP_REQUEST))
+		{
+			ret = dhcp_snp_attach_opt82(packetBuffs[0], ifindex, isTagged, vid, &buffLen[0]);
+			if (DHCP_SNP_RETURN_CODE_OK != ret) {
+				syslog_ax_dhcp_snp_err("attach option 82 error, ret %x\n", ret);
+				return DHCP_SNP_RETURN_CODE_PKT_DROP;
+			}
+		}
+*/
+		/* remove option 82 */
+/*		if (NPD_DHCP_BOOTREPLY == data->op)
+		{
+			endposition = dhcp_snp_end_option(data->options);
+			ret = dhcp_snp_remove_opt82(data, DHCP_OPTION_82, endposition, &del_len);
+			if (DHCP_SNP_RETURN_CODE_OK != ret) {
+				syslog_ax_dhcp_snp_err("remove option 82 error, ret %x\n", ret);
+				return DHCP_SNP_RETURN_CODE_PKT_DROP;
+			}
+
+			buffLen[0] = buffLen[0] - del_len;
+		}
+
+		syslog_ax_dhcp_snp_dbg("end option 82 process.\n");
+	}
+*/
+#if 0
+	/* for debug */
+	syslog_ax_dhcp_snp_dbg("for debug packet content: please open nam debug\n");
+	dhcp_snp_listener_dump_detail(packetBuffs[0], buffLen[0]);
+#endif
+
+	return DHCP_SNP_RETURN_CODE_OK; 
+}
 
 /**********************************************************************************
  * dhcp_snp_packet_rx_process()
@@ -5263,6 +5533,158 @@ void dhcp_snp_save_intf_hansi_cfg
 	
 	return ;
 } 
+DBusMessage *dhcp_snp_dbus_show_wan_ipv6_bind_table
+(
+	DBusConnection *conn,
+	DBusMessage *msg,
+	void *user_data
+) 
+{	
+	DBusMessage* reply = NULL;
+	DBusMessageIter iter;
+	DBusMessageIter iter_array;
+	DBusError err;
+	unsigned int ret = DHCP_SNP_RETURN_CODE_OK;
+	unsigned int i = NPD_DHCP_SNP_INIT_0;
+	unsigned char tmp_caddr[NPD_DHCP_SNP_MAC_ADD_LEN] =  {0};
+	unsigned int record_count = NPD_DHCP_SNP_INIT_0;
+	NPD_DHCPv6_SNP_TBL_ITEM_T *show_items = NULL;
+	char ifname[IF_NAMESIZE]={0};
+	char *ifname_ep=ifname;
+	dbus_error_init(&err);
+	ret = dhcp_snp_check_global_status();
+	if (ret != DHCP_SNP_RETURN_CODE_ENABLE_GBL) {
+		syslog_ax_dhcp_snp_dbg("check DHCP-Snooping global status not enabled global.\n");
+	}
+
+	pthread_mutex_lock(&mutexDhcpsnptbl);
+	record_count = dhcpv6_snp_tbl_mac_hash_foreach();
+	pthread_mutex_unlock(&mutexDhcpsnptbl);		
+
+	show_items = (NPD_DHCPv6_SNP_TBL_ITEM_T *)malloc(sizeof(NPD_DHCPv6_SNP_TBL_ITEM_T) * record_count);
+	if (!show_items) {
+		syslog_ax_dhcp_snp_err("show dhcp-snooping bind-table: malloc show items failed\n");
+		return NULL;
+	}
+	
+	pthread_mutex_lock(&mutexDhcpsnptbl);
+	dhcpv6_snp_copy_bind_table(show_items, record_count);	
+	pthread_mutex_unlock(&mutexDhcpsnptbl);
+	
+	reply = dbus_message_new_method_return(msg);
+	dbus_message_iter_init_append (reply, &iter);
+	dbus_message_iter_append_basic (&iter,
+									 DBUS_TYPE_UINT32, &ret);
+	dbus_message_iter_append_basic (&iter,
+									 DBUS_TYPE_UINT32, &record_count);
+	dbus_message_iter_open_container(&iter,
+								   DBUS_TYPE_ARRAY,
+								      DBUS_STRUCT_BEGIN_CHAR_AS_STRING  /*begin*/
+   											DBUS_TYPE_UINT32_AS_STRING /*bind_type*/
+											DBUS_TYPE_BYTE_AS_STRING /*bind state*/ 
+											DBUS_TYPE_BYTE_AS_STRING /*chaddr[0]*/
+											DBUS_TYPE_BYTE_AS_STRING /*chaddr[1]*/
+											DBUS_TYPE_BYTE_AS_STRING /*chaddr[2]*/
+											DBUS_TYPE_BYTE_AS_STRING /*chaddr[3]*/
+											DBUS_TYPE_BYTE_AS_STRING /*chaddr[4]*/
+											DBUS_TYPE_BYTE_AS_STRING /*chaddr[5]*/
+										   	DBUS_TYPE_UINT16_AS_STRING /*vlanId*/
+										   	DBUS_TYPE_BYTE_AS_STRING  /*ip_addr[1]*/
+										   	DBUS_TYPE_BYTE_AS_STRING  /*ip_addr[2]*/
+										   	DBUS_TYPE_BYTE_AS_STRING  /*ip_addr[3]*/
+										   	DBUS_TYPE_BYTE_AS_STRING  /*ip_addr[4]*/
+										   	DBUS_TYPE_BYTE_AS_STRING  /*ip_addr[5]*/
+										   	DBUS_TYPE_BYTE_AS_STRING  /*ip_addr[6]*/
+										   	DBUS_TYPE_BYTE_AS_STRING  /*ip_addr[7]*/
+										   	DBUS_TYPE_BYTE_AS_STRING  /*ip_addr[8]*/
+										   	DBUS_TYPE_BYTE_AS_STRING  /*ip_addr[9]*/
+										   	DBUS_TYPE_BYTE_AS_STRING  /*ip_addr[10]*/
+										   	DBUS_TYPE_BYTE_AS_STRING  /*ip_addr[11]*/
+										   	DBUS_TYPE_BYTE_AS_STRING  /*ip_addr[12]*/
+										   	DBUS_TYPE_BYTE_AS_STRING  /*ip_addr[13]*/
+										   	DBUS_TYPE_BYTE_AS_STRING  /*ip_addr[14]*/
+										   	DBUS_TYPE_BYTE_AS_STRING  /*ip_addr[15]*/
+										   	DBUS_TYPE_BYTE_AS_STRING  /*ip_addr[16]*/
+										   	DBUS_TYPE_UINT32_AS_STRING /*lease_time	*/									   	
+										   	DBUS_TYPE_STRING_AS_STRING /*ifname*/
+    								  DBUS_STRUCT_END_CHAR_AS_STRING, /*end*/
+								   &iter_array);
+	for (i = 0; i < record_count; i++) {
+		if(!if_indextoname(show_items[i].ifindex, ifname)) {
+			syslog_ax_dhcp_snp_err("no intf found as idx %d netlink error !\n", \
+									show_items[i].ifindex);
+			free(show_items);
+			show_items=NULL;
+			return NULL;
+		}
+		//memset(tmp_caddr, 0, 6);
+		DBusMessageIter iter_struct;
+		dbus_message_iter_open_container(&iter_array,
+										DBUS_TYPE_STRUCT,
+										NULL,
+										&iter_struct);
+		dbus_message_iter_append_basic(&iter_struct,
+										DBUS_TYPE_UINT32, &(show_items[i].bind_type));
+		dbus_message_iter_append_basic(&iter_struct,
+										DBUS_TYPE_BYTE, &(show_items[i].state));
+		dbus_message_iter_append_basic(&iter_struct,
+										DBUS_TYPE_BYTE, &(show_items[i].chaddr[0]));
+		dbus_message_iter_append_basic(&iter_struct,
+										DBUS_TYPE_BYTE, &(show_items[i].chaddr[1]));
+		dbus_message_iter_append_basic(&iter_struct,
+										DBUS_TYPE_BYTE, &(show_items[i].chaddr[2]));
+		dbus_message_iter_append_basic(&iter_struct,
+										DBUS_TYPE_BYTE, &(show_items[i].chaddr[3]));
+		dbus_message_iter_append_basic(&iter_struct,
+										DBUS_TYPE_BYTE, &(show_items[i].chaddr[4]));
+		dbus_message_iter_append_basic(&iter_struct,
+										DBUS_TYPE_BYTE, &(show_items[i].chaddr[5]));
+		dbus_message_iter_append_basic(&iter_struct,
+										DBUS_TYPE_UINT16, &(show_items[i].vlanId));
+		dbus_message_iter_append_basic(&iter_struct,
+										DBUS_TYPE_BYTE, &(show_items[i].ipv6_addr[0]));
+		dbus_message_iter_append_basic(&iter_struct,
+										DBUS_TYPE_BYTE, &(show_items[i].ipv6_addr[1]));
+		dbus_message_iter_append_basic(&iter_struct,
+										DBUS_TYPE_BYTE, &(show_items[i].ipv6_addr[2]));
+		dbus_message_iter_append_basic(&iter_struct,
+										DBUS_TYPE_BYTE, &(show_items[i].ipv6_addr[3]));
+		dbus_message_iter_append_basic(&iter_struct,
+										DBUS_TYPE_BYTE, &(show_items[i].ipv6_addr[4]));
+		dbus_message_iter_append_basic(&iter_struct,
+										DBUS_TYPE_BYTE, &(show_items[i].ipv6_addr[5]));
+		dbus_message_iter_append_basic(&iter_struct,
+										DBUS_TYPE_BYTE, &(show_items[i].ipv6_addr[6]));
+		dbus_message_iter_append_basic(&iter_struct,
+										DBUS_TYPE_BYTE, &(show_items[i].ipv6_addr[7]));
+		dbus_message_iter_append_basic(&iter_struct,
+										DBUS_TYPE_BYTE, &(show_items[i].ipv6_addr[8]));
+		dbus_message_iter_append_basic(&iter_struct,
+										DBUS_TYPE_BYTE, &(show_items[i].ipv6_addr[9]));
+		dbus_message_iter_append_basic(&iter_struct,
+										DBUS_TYPE_BYTE, &(show_items[i].ipv6_addr[10]));
+		dbus_message_iter_append_basic(&iter_struct,
+										DBUS_TYPE_BYTE, &(show_items[i].ipv6_addr[11]));
+		dbus_message_iter_append_basic(&iter_struct,
+										DBUS_TYPE_BYTE, &(show_items[i].ipv6_addr[12]));
+		dbus_message_iter_append_basic(&iter_struct,
+										DBUS_TYPE_BYTE, &(show_items[i].ipv6_addr[13]));
+		dbus_message_iter_append_basic(&iter_struct,
+										DBUS_TYPE_BYTE, &(show_items[i].ipv6_addr[14]));
+		dbus_message_iter_append_basic(&iter_struct,
+										DBUS_TYPE_BYTE, &(show_items[i].ipv6_addr[15]));										
+		dbus_message_iter_append_basic(&iter_struct,
+										DBUS_TYPE_UINT32, &(show_items[i].lease_time));
+		dbus_message_iter_append_basic(&iter_struct,
+										DBUS_TYPE_STRING, &ifname_ep);
+		dbus_message_iter_close_container(&iter_array, &iter_struct);
+		memset(ifname,0,IF_NAMESIZE);	
+	}
+	dbus_message_iter_close_container(&iter, &iter_array);
+	free(show_items);
+	show_items=NULL;
+	return reply;
+}
 
 DBusMessage *dhcp_snp_dbus_show_wan_bind_table
 (

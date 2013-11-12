@@ -479,6 +479,32 @@ inline char *u32ip2str(unsigned int u32_ipaddr)
 	return inet_ntoa(inaddr);
 }
 
+/*****************************************************************************
+ *	u128ip2str
+ * 
+ *	IPv4 address to string (EXP: 0x0a01010a -> 10:1::1:10)
+ *
+ *  INPUT:
+ *		u128_ipaddr - IPv6 address 
+ *  
+ *  OUTPUT:
+ * 	 NULL
+ *
+ *  RETURN:
+ * 	 char * - ipv6 address string
+ * 	 NULL - failed
+ *
+ ****************************************************************************/
+const char *u128ip2str(unsigned char* u128_ipaddr)
+{
+	static char
+		pbuf[sizeof("ffff:ffff:ffff:ffff:ffff:ffff:255.255.255.255")];
+	
+	return inet_ntop(AF_INET6, u128_ipaddr, pbuf, sizeof(pbuf));
+	log_fatal(" u128ip2str ->   piaddr():error.");
+		/* quell compiler warnings */
+	return NULL;
+}
 
 
 #ifdef __cplusplus
