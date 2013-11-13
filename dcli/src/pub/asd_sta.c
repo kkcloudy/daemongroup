@@ -885,6 +885,16 @@ struct dcli_ac_info* show_sta_by_interface(DBusConnection *dcli_dbus_connection,
 					memcpy(sta->ip,in_addr,strlen(in_addr));
 				}
 
+                /* add for ipv6 sta */
+				dbus_message_iter_next(&iter_sub_struct);	
+				dbus_message_iter_get_basic(&iter_sub_struct,&(sta->ip6_addr.s6_addr32[0]));
+				dbus_message_iter_next(&iter_sub_struct);	
+				dbus_message_iter_get_basic(&iter_sub_struct,&(sta->ip6_addr.s6_addr32[1]));
+				dbus_message_iter_next(&iter_sub_struct);	
+				dbus_message_iter_get_basic(&iter_sub_struct,&(sta->ip6_addr.s6_addr32[2]));
+				dbus_message_iter_next(&iter_sub_struct);	
+				dbus_message_iter_get_basic(&iter_sub_struct,&(sta->ip6_addr.s6_addr32[3]));
+
 				dbus_message_iter_next(&iter_sub_struct);	
 				dbus_message_iter_get_basic(&iter_sub_struct,&(sta->rxbytes));
 
@@ -1818,15 +1828,15 @@ struct dcli_ac_info* show_sta_list(DBusConnection *dcli_dbus_connection,int inde
 					memset(sta->ip,0,strlen(in_addr)+1);
 					memcpy(sta->ip,in_addr,strlen(in_addr));
 				}
-
+                /* add for ipv6 sta */
 				dbus_message_iter_next(&iter_sub_struct);	
-				dbus_message_iter_get_basic(&iter_sub_struct,&(sta->ip6_addr.in6_u.u6_addr32[0]));
+				dbus_message_iter_get_basic(&iter_sub_struct,&(sta->ip6_addr.s6_addr32[0]));
 				dbus_message_iter_next(&iter_sub_struct);	
-				dbus_message_iter_get_basic(&iter_sub_struct,&(sta->ip6_addr.in6_u.u6_addr32[1]));
+				dbus_message_iter_get_basic(&iter_sub_struct,&(sta->ip6_addr.s6_addr32[1]));
 				dbus_message_iter_next(&iter_sub_struct);	
-				dbus_message_iter_get_basic(&iter_sub_struct,&(sta->ip6_addr.in6_u.u6_addr32[2]));
+				dbus_message_iter_get_basic(&iter_sub_struct,&(sta->ip6_addr.s6_addr32[2]));
 				dbus_message_iter_next(&iter_sub_struct);	
-				dbus_message_iter_get_basic(&iter_sub_struct,&(sta->ip6_addr.in6_u.u6_addr32[3]));
+				dbus_message_iter_get_basic(&iter_sub_struct,&(sta->ip6_addr.s6_addr32[3]));
 				
 				dbus_message_iter_next(&iter_sub_struct);	
 				dbus_message_iter_get_basic(&iter_sub_struct,&(sta->rxbytes));

@@ -1331,10 +1331,10 @@ void B_BATCH_STA_OP(_B_Msg *msg){
 						asd_printf(ASD_DEFAULT,MSG_ERROR,"B_BATCH_STA_OP sta add failed!!!!!!\n");
 						return;
 					}
-					if((msg->U_STA[j].ipaddr != 0)||(asd_check_ipv6(msg->u.STA.ipv6Address) != 0))
+					if((msg->U_STA[j].ipaddr != 0)||(asd_check_ipv6(msg->U_STA[j].ip6_addr) != 0))
 					{
 						/* ipv4 & ipv6 is all not change */						
-						if((sta->ipaddr == msg->U_STA[j].ipaddr)&&(asd_compare_ipv6(sta->ip6_addr,msg->Bu.U_STA.ip6_addr)==0))
+						if((sta->ipaddr == msg->U_STA[j].ipaddr)&&(asd_compare_ipv6(sta->ip6_addr,msg->U_STA[j].ip6_addr)==0))
 						{
 							continue;
 						}
@@ -1396,7 +1396,7 @@ void B_BATCH_STA_OP(_B_Msg *msg){
 							if(asd_sta_static_arp)
 								ipneigh_modify(RTM_NEWNEIGH, NLM_F_CREATE|NLM_F_REPLACE,sta->in_addr, mac,ifname);
 						}
-						else if(asd_compare_ipv6(sta->ip6_addr,msg->Bu.U_STA.ip6_addr)!=0)        /* for ipv6 sta */
+						else if(asd_compare_ipv6(sta->ip6_addr,msg->U_STA[j].ip6_addr)!=0)        /* for ipv6 sta */
 						{
                				asd_printf(ASD_DEFAULT,MSG_DEBUG,"B_BATCH_STA_OP B_ADD for for ipv6 sta.\n");														
 							char mac[20];
@@ -1411,7 +1411,7 @@ void B_BATCH_STA_OP(_B_Msg *msg){
 							sta->gifidx = msg->U_STA[j].gifindex;
 							memset(sta->arpifname,0,16);
 							strcpy(sta->arpifname,ifname);
-							if(asd_compare_ipv6(sta->ip6_addr,msg->Bu.U_STA.ip6_addr)!=0)
+							if(asd_compare_ipv6(sta->ip6_addr,msg->U_STA[j].ip6_addr)!=0)
 							{
 								/*
 								if((sta->security_type == NO_NEED_AUTH)||(HYBRID_AUTH_EAPOL == sta->security_type)){
