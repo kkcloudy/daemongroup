@@ -1271,6 +1271,7 @@ DEFUN(show_fast_forward_running_config,
 }
 
 /*dcli command show runnig-config fast_forward*/	
+/*
 DEFUN (show_fast_forward_running_cfg_cmd_func,
 	   show_fast_forward_running_cfg_cmd,
 	   "show running-config fast-forward",
@@ -1306,6 +1307,7 @@ DEFUN (show_fast_forward_running_cfg_cmd_func,
 	vty_out(vty, "%s\n", showStr);
 	return CMD_SUCCESS;
 }
+*/
 /*dcli command read register*/ 
 DEFUN(read_register_fun,
 	  read_register_fun_cmd,
@@ -4757,7 +4759,7 @@ void dcli_se_agent_init(void)
 	install_node(&local_hansi_slave_fwd_node,se_agent_show_running_return,"LOCAL_HANSI_SLAVE_FAST_FWD_NODE");
 	install_default(LOCAL_HANSI_SLAVE_FAST_FWD_NODE);
 	
-	install_element(ENABLE_NODE,&show_fast_forward_running_cfg_cmd);
+	//install_element(ENABLE_NODE,&show_fast_forward_running_cfg_cmd);
 	install_element(CONFIG_NODE,&debug_se_agent_cmd);
 	install_element(CONFIG_NODE,&no_debug_se_agent_cmd);
 	install_element(CONFIG_NODE,&config_fastfwd_cmd);
