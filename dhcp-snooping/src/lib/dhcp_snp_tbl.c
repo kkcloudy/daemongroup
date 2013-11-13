@@ -2691,6 +2691,7 @@ int dhcpv6_snp_add_unresolved_node(struct unresolved_ipv6_table *table)
 		memcpy(tmp->ipv6_addr, table->ipv6_addr, 16);
 		tmp->vrrpid = table->vrrpid;
 		tmp->local_flag = table->local_flag;
+		memset(tmp->chaddr, 0 , NPD_DHCP_SNP_MAC_ADD_LEN);
 		memcpy(tmp->chaddr, table->chaddr, NPD_DHCP_SNP_MAC_ADD_LEN);
 		tmp->expired = dhcp_snp_get_system_uptime() + TBL_EXPIRED_TIME;
 		
