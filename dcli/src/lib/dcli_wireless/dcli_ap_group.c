@@ -371,7 +371,7 @@ DEFUN(del_ap_group_cmd_func,
 	if(ret == 0){
 		vty_out(vty,"ap group %d was successfully deleted.\n",id);
 	}
-	else if(ret == WLAN_ID_NOT_EXIST)
+	else if(ret == GROUP_ID_NOT_EXIST)
 		vty_out(vty,"<error>ap group id does not exist\n");
 	else
 		vty_out(vty,"<error>  %d\n",ret);
