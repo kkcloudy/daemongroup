@@ -3187,7 +3187,7 @@ int dhcpv6_snp_process_asd_interactive(struct unresolved_ipv6_table *table)
 		log_error("%s: parameter null.\n", __func__);		
 		return -1;
 	}
-	
+#if 0	
 	/* find from bind table, then send to asd */
 	if (1 == dhcpv6_snp_find_from_bind_table(table)) {
 		dhcpv6_snp_notify_asd(table);
@@ -3197,6 +3197,9 @@ int dhcpv6_snp_process_asd_interactive(struct unresolved_ipv6_table *table)
 		/* malloc node and add to list */
 		dhcpv6_snp_add_unresolved_node(table);
 	}
+#endif
+	dhcpv6_snp_add_unresolved_node(table);
+
 	return 0;
 }
 
@@ -3223,7 +3226,7 @@ int dhcp_snp_process_asd_interactive(struct unresolved_table *table)
 		log_error("%s: parameter null.\n", __func__);		
 		return -1;
 	}
-	
+#if 0	
 	/* find from bind table, then send to asd */
 	if (1 == dhcp_snp_find_from_bind_table(table)) {
 		dhcp_snp_notify_asd(table);
@@ -3233,6 +3236,9 @@ int dhcp_snp_process_asd_interactive(struct unresolved_table *table)
 		/* malloc node and add to list */
 		dhcp_snp_add_unresolved_node(table);
 	}
+#endif
+	dhcp_snp_add_unresolved_node(table);
+
 	return 0;
 }
 
