@@ -605,6 +605,7 @@ typedef struct{
 }Check_Sta;
 typedef struct {
   	unsigned int ipaddr;
+	struct in6_addr ip6_addr;	
 	unsigned char addr[MAC_LEN];
 	unsigned char wtp_mac[MAC_LEN];
 	unsigned char wtp_name[WTP_NAME_LEN];
@@ -621,7 +622,6 @@ typedef struct {
     	unsigned long long tx_data_bytes;        //新加64bit，值还是上面的tx_bytes
     	unsigned long long rx_frames;                  //新加   （AP收到用户的总帧数）
     	unsigned long long tx_frames;                  //新加   （AP发给用户的总帧数）
-
 }nEAG_STA;
 typedef struct {
 	MsgType Type;

@@ -2553,8 +2553,7 @@ static void handle_assoc(struct asd_data *wasd,
 	}
 	if((resp == 0)&&(asd_sta_getip_from_dhcpsnoop == 1)&&(1 == check_sta_authorized(wasd,sta)))
 	{
-		asd_notice_to_dhcp(wasd,sta->addr,DHCP_IP);
-		asd_notice_to_dhcp(wasd,sta->addr,DHCP_IPv6);
+		asd_notice_to_dhcp(wasd,sta->addr,DHCP_IP);     /* send msg to dhcp, get ipv4/ipv6 address */
 	}
 }
 

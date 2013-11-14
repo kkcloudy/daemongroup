@@ -4201,7 +4201,7 @@ void STA_OP(TableMsg *msg){
     						break;
     					}	
     					else if(sta->ip_addr.s_addr == msg->u.STA.ipv4Address){						
-    						asd_printf(ASD_DEFAULT,MSG_DEBUG,"sta has got IP from listen arp!\n");
+    						asd_printf(ASD_DEFAULT,MSG_DEBUG,"sta already have the IP!\n");
     						break;
     					}	
     					else if((sta->ip_addr.s_addr != 0)&&(sta->ip_addr.s_addr != msg->u.STA.ipv4Address))

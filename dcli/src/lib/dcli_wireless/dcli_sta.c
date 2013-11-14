@@ -6394,7 +6394,7 @@ DEFUN(show_sta_list_by_interface_func,
 	struct dcli_ac_info *ac = NULL;
 	struct dcli_iface_info *iface = NULL;
 	unsigned int ret = 0;
-	int i,j,k;
+	int i,j,k,m;
 	int localid = 1;int slot_id = HostSlotId;int index = 0;
 	if((vty->node == CONFIG_NODE)||(vty->node == ENABLE_NODE)){
 		index = 0;
@@ -6438,7 +6438,7 @@ DEFUN(show_sta_list_by_interface_func,
 
 				if(bss == NULL)
 					break;
-
+				
 				for(j=0; j<bss->num_sta; j++){	
 					if(sta == NULL)
 						sta = bss->sta_list;
@@ -6453,15 +6453,15 @@ DEFUN(show_sta_list_by_interface_func,
 					vty_out(vty,"%-5d	",bss->WlanID);
 					vty_out(vty,"%-5d\n",bss->SecurityID);
 					vty_out(vty,"ipv6 address:      ");     /* add for ipv6 sta */
-					for (i = 0; i < 8; i++)
+					for (m = 0; m < 8; m++)
                 	{   
-						if(i==7)
+						if(m==7)
 						{
-                            vty_out(vty,"%x\n",sta->ip6_addr.s6_addr16[i]);
+                            vty_out(vty,"%x\n",sta->ip6_addr.s6_addr16[m]);
 						}
 					    else
 					    {
-                            vty_out(vty,"%x:",sta->ip6_addr.s6_addr16[i]);
+                            vty_out(vty,"%x:",sta->ip6_addr.s6_addr16[m]);
 					    }
                 	}					
 				}
@@ -9059,7 +9059,8 @@ DEFUN(show_sta_list_cmd_func,
 	int profile = 0;
 	int instRun = 0;
 	int flag = 0;
-
+    int m = 0;
+	
 	if((vty->node == CONFIG_NODE)||(vty->node == ENABLE_NODE)){
 		index = 0;
 	}else if(vty->node == HANSI_NODE){
@@ -9169,15 +9170,15 @@ DEFUN(show_sta_list_cmd_func,
 					vty_out(vty,"%-5d\n",bss->SecurityID);
 					
 					vty_out(vty,"ipv6 address:      ");
-					for (i = 0; i < 8; i++)
+					for (m = 0; m < 8; m++)
                 	{   
-						if(i==7)
+						if(m==7)
 						{
-                            vty_out(vty,"%x\n",sta->ip6_addr.s6_addr16[i]);
+                            vty_out(vty,"%x\n",sta->ip6_addr.s6_addr16[m]);
 						}
 					    else
 					    {
-                            vty_out(vty,"%x:",sta->ip6_addr.s6_addr16[i]);
+                            vty_out(vty,"%x:",sta->ip6_addr.s6_addr16[m]);
 					    }
                 	}
 				}
@@ -18078,6 +18079,7 @@ DEFUN(show_sta_list_detail_cmd_func,
 	int profile = 0;
 	int instRun = 0;
 	int flag = 0;
+	int m = 0;
 	char SecurityType[20] = {0};
 	char *sta_method = NULL;
 	char *username = NULL;
@@ -18222,16 +18224,16 @@ DEFUN(show_sta_list_detail_cmd_func,
     						vty_out(vty,"%-5s ",sta_method);
     					vty_out(vty,"%-11s ",onlinetime);
     					vty_out(vty,"%-s\n",sta->identify);
-    					vty_out(vty,"ipv6 address:      ");     /* add for ipv6 sta */
-    					for (i = 0; i < 8; i++)
+    					vty_out(vty,"ipv6 address:    ");     /* add for ipv6 sta */
+    					for (m = 0; m < 8; m++)
                     	{   
-    						if(i==7)
+    						if(m==7)
     						{
-                                vty_out(vty,"%x\n",sta->ip6_addr.s6_addr16[i]);
+                                vty_out(vty,"%x\n",sta->ip6_addr.s6_addr16[m]);
     						}
     					    else
     					    {
-                                vty_out(vty,"%x:",sta->ip6_addr.s6_addr16[i]);
+                                vty_out(vty,"%x:",sta->ip6_addr.s6_addr16[m]);
     					    }
                     	}
 					}
@@ -18466,7 +18468,8 @@ DEFUN(show_sta_detail_bywlan_cmd_func,
 	struct dcli_ac_info *ac = NULL;
 	struct dcli_bss_info *bss = NULL;
 	unsigned int ret = 0;
-	int i,j;int localid = 1;int slot_id = HostSlotId;int index = 0;
+	int i,j,m;
+	int localid = 1;int slot_id = HostSlotId;int index = 0;
 	int profile = 0;
 	int instRun = 0;
 	int flag = 0;
@@ -18477,6 +18480,7 @@ DEFUN(show_sta_detail_bywlan_cmd_func,
 	unsigned char wlan_id = 0;
 	char sta_exist = 0;
 	char bss_exist = 0;
+	
 	ret = parse2_char_ID((char*)argv[0], &wlan_id);
 	if(ret != ASD_DBUS_SUCCESS){
 		vty_out(vty,"<error> unknown id format\n");
@@ -18603,31 +18607,45 @@ DEFUN(show_sta_detail_bywlan_cmd_func,
 							memcpy(SecurityType,"open",5);
 						}	
 					}
-					if((((!strcmp(SecurityType,"open")) || (!strcmp(SecurityType,"shared"))) && (sta->sta_flags & 0x00000002)) || (sta->sta_flags & 0x00000020)){
-					//time_t online_time,now_sysrun;//qiuchen
-					//time(&now);
-					//get_sysruntime(&now_sysrun);
-					time_t online_time=sta->sta_online_time_new;
-					int hour,min,sec;
-					
-					hour=online_time/3600;
-					min=(online_time-hour*3600)/60;
-					sec=(online_time-hour*3600)%60;
-					memset(onlinetime,0,10);
-					sprintf(onlinetime,"%2d:%2d:%2d",hour,min,sec);
-					
-					vty_out(vty,MACSTR" ",MAC2STR(sta->addr));
-					vty_out(vty,"%-15s ",sta->ip);
-					vty_out(vty,"%-7llu ",sta->txbytes);
-					vty_out(vty,"%-6llu ",sta->rxbytes);		
-					
-					if(!strcmp(sta_method,"Unknown"))
-						vty_out(vty,"%-5s ",SecurityType);
-					else
-						vty_out(vty,"%-5s ",sta_method);
-					
-					vty_out(vty,"%-11s ",onlinetime);
-					vty_out(vty,"%-s\n",sta->identify);
+					if((((!strcmp(SecurityType,"open")) || (!strcmp(SecurityType,"shared"))) && (sta->sta_flags & 0x00000002)) || (sta->sta_flags & 0x00000020))
+					{
+    					//time_t online_time,now_sysrun;//qiuchen
+    					//time(&now);
+    					//get_sysruntime(&now_sysrun);
+    					time_t online_time=sta->sta_online_time_new;
+    					int hour,min,sec;
+    					
+    					hour=online_time/3600;
+    					min=(online_time-hour*3600)/60;
+    					sec=(online_time-hour*3600)%60;
+    					memset(onlinetime,0,10);
+    					sprintf(onlinetime,"%2d:%2d:%2d",hour,min,sec);
+    					
+    					vty_out(vty,MACSTR" ",MAC2STR(sta->addr));
+    					vty_out(vty,"%-15s ",sta->ip);
+    					vty_out(vty,"%-7llu ",sta->txbytes);
+    					vty_out(vty,"%-6llu ",sta->rxbytes);		
+    					
+    					if(!strcmp(sta_method,"Unknown"))
+    						vty_out(vty,"%-5s ",SecurityType);
+    					else
+    						vty_out(vty,"%-5s ",sta_method);
+    					
+    					vty_out(vty,"%-11s ",onlinetime);
+    					vty_out(vty,"%-s\n",sta->identify);
+						
+    					vty_out(vty,"ipv6 address:     ");     /* add ipv6 addres for sta */
+    					for (m = 0; m < 8; m++)
+                    	{   
+    						if(m==7)
+    						{
+                                vty_out(vty,"%x\n",sta->ip6_addr.s6_addr16[m]);
+    						}
+    					    else
+    					    {
+                                vty_out(vty,"%x:",sta->ip6_addr.s6_addr16[m]);
+    					    }
+                    	}					
 					}
 				}
 				
@@ -18874,7 +18892,8 @@ DEFUN(show_sta_detail_bywtp_cmd_func,
 	struct dcli_ac_info *ac = NULL;
 	struct dcli_bss_info *bss = NULL;
 	unsigned int ret = 0;
-	int i,j;int localid = 1;int slot_id = HostSlotId;int index = 0;
+	int i,j,m;
+	int localid = 1;int slot_id = HostSlotId;int index = 0;
 	int profile = 0;
 	int instRun = 0;
 	int flag = 0;
@@ -19012,30 +19031,44 @@ DEFUN(show_sta_detail_bywtp_cmd_func,
 							memcpy(SecurityType,"open",5);
 						}	
 					}
-					if((((!strcmp(SecurityType,"open")) || (!strcmp(SecurityType,"shared"))) && (sta->sta_flags & 0x00000002)) || (sta->sta_flags & 0x00000020)){
-					//time_t online_time,now_sysrun;//qiuchen
-					//time(&now);
-					//get_sysruntime(&now_sysrun);
-					time_t online_time=sta->sta_online_time_new;
-					int hour,min,sec;
-					
-					hour=online_time/3600;
-					min=(online_time-hour*3600)/60;
-					sec=(online_time-hour*3600)%60;
-					memset(onlinetime,0,10);
-					sprintf(onlinetime,"%2d:%2d:%2d",hour,min,sec);
-					
-					vty_out(vty,MACSTR" ",MAC2STR(sta->addr));
-					vty_out(vty,"%-15s ",sta->ip);
-					vty_out(vty,"%-7llu ",sta->txbytes);
-					vty_out(vty,"%-6llu ",sta->rxbytes);
-					if(!strcmp(sta_method,"Unknown"))
-						vty_out(vty,"%-5s ",SecurityType);
-					else
-						vty_out(vty,"%-5s ",sta_method);
-					
-					vty_out(vty,"%-11s ",onlinetime);
-					vty_out(vty,"%-s\n",sta->identify);
+					if((((!strcmp(SecurityType,"open")) || (!strcmp(SecurityType,"shared"))) && (sta->sta_flags & 0x00000002)) || (sta->sta_flags & 0x00000020))
+					{
+    					//time_t online_time,now_sysrun;//qiuchen
+    					//time(&now);
+    					//get_sysruntime(&now_sysrun);
+    					time_t online_time=sta->sta_online_time_new;
+    					int hour,min,sec;
+    					
+    					hour=online_time/3600;
+    					min=(online_time-hour*3600)/60;
+    					sec=(online_time-hour*3600)%60;
+    					memset(onlinetime,0,10);
+    					sprintf(onlinetime,"%2d:%2d:%2d",hour,min,sec);
+    					
+    					vty_out(vty,MACSTR" ",MAC2STR(sta->addr));
+    					vty_out(vty,"%-15s ",sta->ip);
+    					vty_out(vty,"%-7llu ",sta->txbytes);
+    					vty_out(vty,"%-6llu ",sta->rxbytes);
+    					if(!strcmp(sta_method,"Unknown"))
+    						vty_out(vty,"%-5s ",SecurityType);
+    					else
+    						vty_out(vty,"%-5s ",sta_method);
+    					
+    					vty_out(vty,"%-11s ",onlinetime);
+    					vty_out(vty,"%-s\n",sta->identify);
+
+						vty_out(vty,"ipv6 address:     ");     /* add ipv6 addres for sta */
+    					for (m = 0; m < 8; m++)
+                    	{   
+    						if(m==7)
+    						{
+                                vty_out(vty,"%x\n",sta->ip6_addr.s6_addr16[m]);
+    						}
+    					    else
+    					    {
+                                vty_out(vty,"%x:",sta->ip6_addr.s6_addr16[m]);
+    					    }
+                    	}
 					}
 				}
 				

@@ -3066,6 +3066,7 @@ int AsdStaInfoToEAG(struct asd_data *wasd, struct sta_info *sta, Operate op){
 	os_memcpy(msg.STA.addr,sta->addr,MAC_LEN);
 	msg.STA.radio_id = wasd->Radio_G_ID;
 	msg.STA.ipaddr = sta->ipaddr;
+	msg.STA.ip6_addr = sta->ip6_addr;	/* add ipv6 add of sta */
 	msg.STA.wlan_id = wasd->WlanID;
 	msg.STA.auth_type = sta->security_type;
 	msg.STA.reason = sta->acct_terminate_cause;
