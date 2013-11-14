@@ -2604,7 +2604,7 @@ int dhcp_snp_find_from_bind_table(struct unresolved_table *table)
  *		table - if not find, table is NULL
  *		
  ***********************************************************************************/
-struct unresolved_table *dhcpv6_snp_find_from_unresolved_table(unsigned char *haddr)
+struct unresolved_ipv6_table *dhcpv6_snp_find_from_unresolved_table(unsigned char *haddr)
 {
 	unsigned int key = 0;
 	struct unresolved_ipv6_table *table = NULL;
