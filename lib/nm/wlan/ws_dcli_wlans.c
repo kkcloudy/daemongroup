@@ -56,7 +56,7 @@ extern "C"
 #include "ws_public.h"
 #include "ws_dcli_wlans.h"
 
-#define AP_MAX_NUM 139
+#define WLAN_MAX_NUM 64
 
 int parse_radio_ifname(char* ptr,int *wtpid,int *radioid,int *wlanid)
 {
@@ -24918,7 +24918,7 @@ int show_all_wtp_wlan_data_pkts_information_cmd_v2(dbus_parameter parameter, DBu
 		{
 			wlan_real_num = 1;// the real num of wlan under the ap
 			int wlan_num_count= WtpHead->wlan_num;//the count num of wlan under the ap
-			int flag[AP_MAX_NUM] = {0};
+			int flag[WLAN_MAX_NUM] = {0};
 			
 			struct WtpWlanDataPktsInfo *WtpShowNode_v2 = NULL;
 			WtpShowNode_v2 = (struct WtpWlanDataPktsInfo *)malloc(sizeof(struct WtpWlanDataPktsInfo));
