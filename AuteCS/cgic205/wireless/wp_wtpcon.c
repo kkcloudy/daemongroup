@@ -409,7 +409,7 @@ int ShowWtpconPage(char *m,char *n,char *pn,char *ins_id,instance_parameter *ins
 
 				fprintf(cgiOut,"<tr height=30>"\
 						"<td>%s:</td>",search(lwlan,"location"));
-				fprintf(cgiOut,"<td colspan=2><input name=ap_location size=40 maxLength=256 style=\"ime-mode: disabled;\"  onkeypress=\"return event.keyCode!=32\" value=\"\"><font color=red>(%s)</font></td>",search(lwlan,"mod_ap_name"));
+				fprintf(cgiOut,"<td colspan=2><input name=ap_location size=40 maxLength=256 style=\"ime-mode: disabled;\"  onkeypress=\"return event.keyCode!=32\" value=\"\"><font color=red>(%s)</font></td>",search(lwlan,"mod_ap_localtion"));
 					
 				 fprintf(cgiOut,"<tr valign=top style=\"padding-top:10px\">"\
 				  "<td colspan=2 width=250>"\
