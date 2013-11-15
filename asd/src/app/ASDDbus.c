@@ -14242,7 +14242,15 @@ DBusMessage *asd_dbus_show_sta_v2(DBusConnection *conn, DBusMessage *msg, void *
 				asd_printf(ASD_DBUS,MSG_DEBUG,"no_flow_time = %d\n",ASD_WLAN[wlanid]->no_flow_time);
 				asd_printf(ASD_DBUS,MSG_DEBUG,"limit_flow = %d\n",ASD_WLAN[wlanid]->limit_flow);
 			}
-			
+
+			/* add sta ip info for ipv6 protal */
+			dbus_message_iter_append_basic (&iter,
+												 DBUS_TYPE_UINT32,
+												 &(stainfo->sta->ip_addr));	
+			for(i = 0;i<4;i++)
+				dbus_message_iter_append_basic (&iter,
+													 DBUS_TYPE_BYTE,
+													 &(stainfo->sta->ip6_addr.s6_addr32[i]));
 
 
 		}else{

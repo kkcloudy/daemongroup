@@ -456,6 +456,8 @@ struct dcli_sta_info_v2
 	unsigned int	auth_type;		//weichao add
 	int essidlen;
 	int wtp_name_len;
+	struct in_addr ip_addr;     /* add sta ip info for ipv6 protal */
+	struct in6_addr ip6_addr;	
 };
 
 struct dcli_sta_base_info

@@ -8318,6 +8318,7 @@ DEFUN(show_sta_v2_cmd_func,
 	unsigned int WTPID;
 	char auth_type[20] = {0}; //weichao add
 	int localid = 1;int slot_id = HostSlotId;int index = 0;
+	int m = 0;
 	memset(mac,0,MAC_LEN);	
 	memset(mac1,0,MAC_LEN);
 	sscanf(argv[0],"%X:%X:%X:%X:%X:%X",&mac[0],&mac[1],&mac[2],&mac[3],&mac[4],&mac[5]);
@@ -8379,6 +8380,23 @@ DEFUN(show_sta_v2_cmd_func,
 		}
 		else
 			vty_out(vty,"STA flow check : disable\n");
+
+		/* add sta ip info for ipv6 protal */
+		vty_out(vty,"ipv4 address: ");
+        vty_out(vty,"%d.%d.%d.%d\n",(sta->ip_addr.s_addr & 0xFF000000)>>24,(sta->ip_addr.s_addr&0xFF0000)>>16,(sta->ip_addr.s_addr&0xFF00)>>8,(sta->ip_addr.s_addr&0xFF));
+		vty_out(vty,"ipv6 address: ");
+		for (m = 0; m < 8; m++)
+    	{   
+			if(m==7)
+			{
+                vty_out(vty,"%x\n",sta->ip6_addr.s6_addr16[m]);
+			}
+		    else
+		    {
+                vty_out(vty,"%x:",sta->ip6_addr.s6_addr16[m]);
+		    }
+    	}
+
 		vty_out(vty,"==============================================================================\n");
 		dcli_free_sta_v2(sta);
 	}else if (ret == ASD_STA_NOT_EXIST)
