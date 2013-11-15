@@ -14249,7 +14249,7 @@ DBusMessage *asd_dbus_show_sta_v2(DBusConnection *conn, DBusMessage *msg, void *
 												 &(stainfo->sta->ip_addr));	
 			for(i = 0;i<4;i++)
 				dbus_message_iter_append_basic (&iter,
-													 DBUS_TYPE_BYTE,
+													 DBUS_TYPE_UINT32,
 													 &(stainfo->sta->ip6_addr.s6_addr32[i]));
 
 
