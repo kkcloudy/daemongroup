@@ -3793,11 +3793,12 @@ static void update_data_for_show_sys_ver()
 		delete_enter(acSoftwareVersion);
 		snprintf(acProductName, sizeof(acProductName)-1, "%s", ptrsysver.sw_product_name);
 		delete_enter(acProductName);
+		
+		FREE_OBJECT(ptrsysver.product_name);
+		FREE_OBJECT(ptrsysver.base_mac);
+		FREE_OBJECT(ptrsysver.serial_no);
+		FREE_OBJECT(ptrsysver.swname);
 	}
-	FREE_OBJECT(ptrsysver.product_name);
-	FREE_OBJECT(ptrsysver.base_mac);
-	FREE_OBJECT(ptrsysver.serial_no);
-	FREE_OBJECT(ptrsysver.swname);
 	
 	sysinfo(&info); 		
 	update_time_show_sys_ver = info.uptime;
