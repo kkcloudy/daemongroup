@@ -115,6 +115,8 @@ int snmpd_dbus_init(void)
 int dbus_connection_init(void) {
 
 	DBusError dbus_error;
+	dbus_threads_init_default();
+	
 	dbus_error_init(&dbus_error);
 	
 	if(NULL == ccgi_dbus_connection) {

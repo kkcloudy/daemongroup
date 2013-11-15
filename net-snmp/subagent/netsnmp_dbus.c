@@ -71,8 +71,10 @@ static int
 netsnmp_dbus_init(void) {	
 
 	DBusError dbus_error;
+	dbus_threads_init_default();
 
     DBusObjectPathVTable snmpd_vtable = {NULL, &netsnmp_dbus_message_handler, NULL, NULL, NULL, NULL};	
+    dbus_connection_set_change_sigpipe(TRUE);
     
 	dbus_error_init(&dbus_error);
 	

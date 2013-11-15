@@ -218,6 +218,8 @@ dbus_get_tipc_connection(unsigned int slot_id)
 	DBusError dbus_error;
 	DBusConnection *tempConnection = NULL;
 	
+	dbus_threads_init_default();
+
 	dbus_error_init (&dbus_error);
 	
 	tempConnection = dbus_bus_get_remote(DBUS_BUS_SYSTEM, slot_id, &dbus_error);
