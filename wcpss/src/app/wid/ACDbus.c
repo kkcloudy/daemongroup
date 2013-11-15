@@ -25033,19 +25033,7 @@ DBusMessage * wid_dbus_interface_show_radioconf(DBusConnection *conn, DBusMessag
 										 DBUS_TYPE_UINT32,
 										 &ret);
 	if(ret == 0){	
-		/*int ii=0;
-		unsigned int dd=64;
-		for(ii=0;ii<4;ii++){
-			if(AC_RADIO[radioID]->BSS[ii]!=NULL)
-				dbus_message_iter_append_basic (&iter,
-										 DBUS_TYPE_UINT32,
-										 &(AC_RADIO[radioID]->BSS[ii]->bss_max_allowed_sta_num));
-			else
-				dbus_message_iter_append_basic (&iter,
-										 DBUS_TYPE_UINT32,
-										 &dd);
-		}*/
-		
+
 		dbus_message_iter_append_basic (&iter,
 										 DBUS_TYPE_UINT32,
 										 &(AC_RADIO[radioID]->WTPID));
@@ -25090,18 +25078,65 @@ DBusMessage * wid_dbus_interface_show_radioconf(DBusConnection *conn, DBusMessag
 		
 		pwlanid = AC_RADIO[radioID]->Wlan_Id;
 		
-		for(i = 0; i < bwlannum; i++){			
+		char *essid;
+		dbus_message_iter_open_container (&iter,
+								DBUS_TYPE_ARRAY,
+								DBUS_STRUCT_BEGIN_CHAR_AS_STRING
+										DBUS_TYPE_BYTE_AS_STRING
+										DBUS_TYPE_ARRAY_AS_STRING
+											DBUS_STRUCT_BEGIN_CHAR_AS_STRING
+												DBUS_TYPE_BYTE_AS_STRING
+											DBUS_STRUCT_END_CHAR_AS_STRING
+								DBUS_STRUCT_END_CHAR_AS_STRING,
+								&iter_array);
 		
-			dbus_message_iter_append_basic (&iter,
+		for(i = 0; i < bwlannum; i++){
+			DBusMessageIter iter_struct;
+			DBusMessageIter  iter_sub_array;
+			dbus_message_iter_open_container (&iter_array,
+										DBUS_TYPE_STRUCT,
+										NULL,
+										&iter_struct);
+			
+			dbus_message_iter_append_basic (&iter_struct,
 											 DBUS_TYPE_BYTE,
 											 &(pwlanid->wlanid));
-			dbus_message_iter_append_basic (&iter,
-											 DBUS_TYPE_STRING,
-											 &(pwlanid->ESSID));
+			
+			dbus_message_iter_open_container (&iter_struct,
+							   DBUS_TYPE_ARRAY,
+							   DBUS_STRUCT_BEGIN_CHAR_AS_STRING  
+								  DBUS_TYPE_BYTE_AS_STRING
+							   DBUS_STRUCT_END_CHAR_AS_STRING, 
+							   &iter_sub_array);
+
+			if(NULL == pwlanid->ESSID){
+				return NULL;
+			} else{
+				essid = (char *)WID_MALLOC(ESSID_DEFAULT_LEN + 1);
+				memset(essid,0,(ESSID_DEFAULT_LEN + 1));
+				memcpy(essid,pwlanid->ESSID,strlen(pwlanid->ESSID));
+			}
+			for(j=0;j<ESSID_DEFAULT_LEN;j++)
+			{
+				DBusMessageIter iter_sub_struct;				
+				dbus_message_iter_open_container (&iter_sub_array,
+													DBUS_TYPE_STRUCT,
+													NULL,
+												  &iter_sub_struct);
+				dbus_message_iter_append_basic
+							(&iter_sub_struct,
+							  DBUS_TYPE_BYTE,
+							  &essid[j]);
+				dbus_message_iter_close_container (&iter_sub_array, &iter_sub_struct);
+			}
+			dbus_message_iter_close_container (&iter_struct, &iter_sub_array);
+			WID_FREE(essid);
 			pwlanid = pwlanid->next;
 
+			dbus_message_iter_close_container(&iter_array, &iter_struct);
+			
 		}
-		
+		dbus_message_iter_close_container(&iter, &iter_array);
 		#endif
 
 		dbus_message_iter_append_basic (&iter,
@@ -25260,9 +25295,6 @@ DBusMessage * wid_dbus_interface_show_radioconf(DBusConnection *conn, DBusMessag
 			  &(BSS[i]->WDSStat));
 		
 		dbus_message_iter_close_container (&iter_array, &iter_struct);
-
-		
-
 	}
 	
 				

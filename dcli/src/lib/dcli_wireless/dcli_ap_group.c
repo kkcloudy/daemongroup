@@ -281,8 +281,8 @@ DEFUN(create_ap_group_cmd_func,
 	if(ret == 0){
 			vty_out(vty,"ap group %d was successfully created.\n",id);
 	}
-	else if(ret == WLAN_ID_BE_USED){
-		vty_out(vty,"<error> id exist\n");
+	else if(ret == GROUP_ID_EXIST){
+		vty_out(vty,"<error> ap-group id exist\n");
 		dbus_message_unref(reply);
 		free(name);
 		return CMD_WARNING;	
