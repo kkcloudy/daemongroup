@@ -93,8 +93,8 @@ enum dhcpv6_packet_type {
 	NPD_DHCPv6_TYPE_RENEW = 5,
 	NPD_DHCPv6_TYPE_REBIND = 6,
 	NPD_DHCPv6_TYPE_REPLY = 7,
-	NPD_DHCPv6_TYPE_DECLINE,
-	NPD_DHCPv6_TYPE_RELEASE
+	NPD_DHCPv6_TYPE_RELEASE,
+	NPD_DHCPv6_TYPE_DECLINE	
 };
 #define NPD_DHCP_SNP_REMOTEID_STR_LEN		(64)	/* length of user-defined remote-id string, 64	*/
 #define NPD_DHCP_SNP_CIRCUITID_STR_LEN		(64)	/* length of user-defined circuit-id string, 64	*/
