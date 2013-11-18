@@ -32,6 +32,9 @@ typedef struct tipc_server
 
   /* Thread to write buffered data to zebra. */
   struct thread *t_write;
+  
+  /* Thread to timer event to zebra. */
+  struct thread *t_timer;
 
   /* Interface information. */ 
   u_char ifinfo;

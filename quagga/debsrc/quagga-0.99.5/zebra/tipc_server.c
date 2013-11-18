@@ -6174,7 +6174,7 @@ vice_send_route_request_message_to_master (struct thread *thread)
 
   /* Get thread data.  Reset reading thread because I'm running. */
   vice_board = THREAD_ARG (thread);
-
+  vice_board->t_timer = NULL;
   vice_send_request_message_to_master(vice_board,ZEBRA_ROUTE_INFOMATION_REQUEST);
   
   return 0;
@@ -6194,18 +6194,18 @@ vice_send_interface_request_message_to_master (struct thread *thread)
 
   /* Get thread data.  Reset reading thread because I'm running. */
   vice_board = THREAD_ARG (thread);
-
+  vice_board->t_timer = NULL;
   ret = vice_send_request_message_to_master(vice_board,ZEBRA_INTERFACE_INFOMATION_REQUEST);
   if(ret < 0 )/*fd not connect*/
   {
   		zlog_info("%s: tipc fd not connect , to set timer(1s) to retry [interface request].\n",__func__);
-		thread_add_timer(zebrad.master,vice_send_interface_request_message_to_master,vice_board,1);
+		vice_board->t_timer = thread_add_timer(zebrad.master,vice_send_interface_request_message_to_master,vice_board,1);
 		return -1;
   	}
   else/*fd is connected*/
   {
   		zlog_info("%s: tipc fd is connected , to set timer to send [route request].\n",__func__);
-		thread_add_timer(zebrad.master,vice_send_route_request_message_to_master,vice_board,1);
+		vice_board->t_timer = thread_add_timer(zebrad.master,vice_send_route_request_message_to_master,vice_board,1);
   	}
 
   return 0;
@@ -6311,7 +6311,7 @@ vice_accept_master (int sock)
 	/*usleep(fetch_rand_time_interval());*/
  	
 	/*after 1 s , to send interface request .*/
-	thread_add_timer(zebrad.master,vice_send_interface_request_message_to_master,vice_board,1);
+	vice_board->t_timer = thread_add_timer(zebrad.master,vice_send_interface_request_message_to_master,vice_board,1);
 	
 #endif
 	#if 0
@@ -6347,11 +6347,20 @@ vice_board_close (tipc_server *vice_board)
 
   /* Free stream buffers. */
   if (vice_board->ibuf)
-    stream_free (vice_board->ibuf);
+  { 
+  	stream_free (vice_board->ibuf);
+  	vice_board->ibuf = NULL;
+  }
   if (vice_board->obuf)
-    stream_free (vice_board->obuf);
+  {
+	stream_free (vice_board->obuf);
+  	vice_board->obuf = NULL;
+  }
   if (vice_board->wb)
-    buffer_free(vice_board->wb);
+  {
+  	buffer_free(vice_board->wb);
+  	vice_board->wb = NULL;
+  }
 
   /* Release threads. */
   if (vice_board->t_read)
@@ -6360,6 +6369,9 @@ vice_board_close (tipc_server *vice_board)
     thread_cancel (vice_board->t_write);
   if (vice_board->t_suicide)
     thread_cancel (vice_board->t_suicide);
+    
+  if (vice_board->t_timer)
+	  thread_cancel (vice_board->t_timer);
 
   /* Free client structure. */
   listnode_delete (zebrad.master_board_list, vice_board);
