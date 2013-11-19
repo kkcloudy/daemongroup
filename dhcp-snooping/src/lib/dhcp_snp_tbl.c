@@ -105,7 +105,7 @@ pthread_mutex_t mutexDhcpsnptbl = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutexsnpunsolve = PTHREAD_MUTEX_INITIALIZER;
 struct fd_table *fd_table[MAX_HANSI_PROFILE * 2];
 struct unresolved_table *g_dhcp_snp_unresolved_hash[NPD_DHCP_SNP_HASH_TABLE_SIZE] = {0};
-struct unresolved_table *g_dhcpv6_snp_unresolved_hash[NPD_DHCP_SNP_HASH_TABLE_SIZE] = {0};
+struct unresolved_ipv6_table *g_dhcpv6_snp_unresolved_hash[NPD_DHCP_SNP_HASH_TABLE_SIZE] = {0};
 
 
 static sqlite3 *dhcp_snp_db = NULL;
