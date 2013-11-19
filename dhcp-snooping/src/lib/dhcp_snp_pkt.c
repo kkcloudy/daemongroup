@@ -120,22 +120,23 @@ unsigned int dhcpv6_snp_get_item_from_pkt
 	unsigned int ifindex,
 	enum dhcpv6_packet_type type,
 	NPD_DHCPv6_MESSAGE_T *packet,
-	NPD_DHCPv6_SNP_USER_ITEM_T *user
+	NPD_DHCPv6_SNP_USER_ITEM_T *user,
+	unsigned char* mac_2
 )
 {
     unsigned char *temp = NULL;
 	int status_g = 0;
-
+	NPD_DHCPv6_SNP_USER_ITEM_T *item = NULL;
     if ((packet == NULL) || (user == NULL)) {
 		syslog_ax_dhcp_snp_err("dhcp snp get item from pkt error, parameter is null\n");
 		return DHCP_SNP_RETURN_CODE_PARAM_NULL;
     }
 
-	temp = (unsigned char *)dhcpv6_snp_get_option(packet, DCHPv6_CLIENT_ID);
+	//temp = (unsigned char *)dhcpv6_snp_get_option(packet, DCHPv6_CLIENT_ID);
     user->vlanId    = vlanid;
     user->haddr_len = 6;
 
-    memcpy(user->chaddr, temp+8, NPD_DHCP_SNP_MAC_ADD_LEN);
+    memcpy(user->chaddr, mac_2, NPD_DHCP_SNP_MAC_ADD_LEN);
 	
     /* 为了支持从RELAY到本地SERVER申请IP地址，同时在本地支持SNOOPING的处理
      * 添加对没有通过用户MAC+VLAN定位到用户接口时从数据包取接口的处理，同时
@@ -152,9 +153,14 @@ unsigned int dhcpv6_snp_get_item_from_pkt
 		}
 		if(temp && status_g){
 			if(0 == temp[1])
-				log_debug("DHCPv6 REPLY for CONFIRM :success\n");
+				log_debug("DHCPv6 REPLY for :success\n");
 			else
 				log_debug("DHCPv6 REPLY for CONFIRM : not success");
+			item = (NPD_DHCPv6_SNP_TBL_ITEM_T *)dhcpv6_snp_tbl_item_find(user);
+			if(item){
+				memcpy(user->ipv6_addr, item ->ipv6_addr, 16);
+				user->lease_time = item ->lease_time;
+			}
 			return DHCP_SNP_RETURN_CODE_OK;
 		}else if(temp){
 			memcpy(user->ipv6_addr, temp+16 ,16);
@@ -287,15 +293,12 @@ unsigned int dhcp_snp_solicit_process
 	}
 
 	memset(&user, 0, sizeof(NPD_DHCPv6_SNP_USER_ITEM_T));
-	ret = dhcpv6_snp_get_item_from_pkt(vlanid, ifindex, NPD_DHCPv6_TYPE_SOLICIT, dhcp, &user);
+	ret = dhcpv6_snp_get_item_from_pkt(vlanid, ifindex, NPD_DHCPv6_TYPE_SOLICIT, dhcp, &user, mac_2);
 	if (DHCP_SNP_RETURN_CODE_OK != ret) {
 		syslog_ax_dhcp_snp_err("get item value from packet error, ret %x\n", ret);		
 		return ret;
 	}
-	if(memcmp(user.chaddr, mac_2, 6)){
-		log_debug("layor address different from link address!\n");
-		memcpy(user.chaddr, mac_2, 6);
-	}
+
 	item = (NPD_DHCPv6_SNP_TBL_ITEM_T *)dhcpv6_snp_tbl_item_find(&user);
 	if (item == NULL) {
 		syslog_ax_dhcp_snp_dbg("no found item from dhcp snooping hash table, then insert a new.\n");
@@ -516,16 +519,12 @@ unsigned int dhcpv6_snp_confirm_process
 	}
 
 	memset(&user, 0, sizeof(NPD_DHCPv6_SNP_USER_ITEM_T));
-	ret = dhcpv6_snp_get_item_from_pkt(vlanid, ifindex,NPD_DHCPv6_TYPE_CONFIRM, dhcp, &user);
+	ret = dhcpv6_snp_get_item_from_pkt(vlanid, ifindex,NPD_DHCPv6_TYPE_CONFIRM, dhcp, &user,mac_2);
 	if (DHCP_SNP_RETURN_CODE_OK != ret) {
 		log_error("get item value from packet error, ret %x\n", ret);
 		return ret;
 	}
 
-	if(memcmp(mac_2 , user.chaddr, 6)){
-		log_debug("layor address different from link address!\n");
-		memcpy(user.chaddr, mac_2, 6);
-	}
 	item = (NPD_DHCPv6_SNP_TBL_ITEM_T *)dhcpv6_snp_tbl_item_find(&user);
 	if (!item) {
 		
@@ -580,15 +579,12 @@ unsigned int dhcpv6_snp_request_process
 	}
 
 	memset(&user, 0, sizeof(NPD_DHCPv6_SNP_USER_ITEM_T));
-	ret = dhcpv6_snp_get_item_from_pkt(vlanid, ifindex,NPD_DHCPv6_TYPE_REQUEST, dhcp, &user);
+	ret = dhcpv6_snp_get_item_from_pkt(vlanid, ifindex,NPD_DHCPv6_TYPE_REQUEST, dhcp, &user, mac_2);
 	if (DHCP_SNP_RETURN_CODE_OK != ret) {
 		log_error("get item value from packet error, ret %x\n", ret);
 		return ret;
 	}
-	if(memcmp(mac_2 , user.chaddr, 6)){
-		log_debug("layor address different from link address!\n");
-		memcpy(user.chaddr, mac_2, 6);
-	}
+
 	item = (NPD_DHCPv6_SNP_TBL_ITEM_T *)dhcpv6_snp_tbl_item_find(&user);
 	if (!item) {
 		
@@ -647,15 +643,12 @@ unsigned int dhcp_snp_reply_process
 	log_debug("interface %s recv REPLY packet, vlan %d\n", node->ifname, vlanid);
 
 	memset(&user, 0, sizeof(NPD_DHCPv6_SNP_USER_ITEM_T));
-	ret = dhcpv6_snp_get_item_from_pkt(vlanid, ifindex,NPD_DHCPv6_TYPE_REPLY, dhcp, &user);
+	ret = dhcpv6_snp_get_item_from_pkt(vlanid, ifindex,NPD_DHCPv6_TYPE_REPLY, dhcp, &user, mac_2);
 	if (DHCP_SNP_RETURN_CODE_OK != ret) {
 		log_error("get item value from packet error, ret %x\n", ret);
 		return ret;
 	}
-	if(memcmp(mac_2 , user.chaddr, 6)){
-		log_debug("layor address different from link address!\n");
-		memcpy(user.chaddr, mac_2, 6);
-	}
+
 	item = (NPD_DHCPv6_SNP_TBL_ITEM_T *)dhcpv6_snp_tbl_item_find(&user);
 	if (item == NULL) {
 		return DHCP_SNP_RETURN_CODE_OK; /*from trust to trust interface*/
@@ -690,6 +683,7 @@ unsigned int dhcp_snp_reply_process
 	}
 
 	pthread_mutex_lock(&mutexsnpunsolve);	
+	if(strlen(item->ipv6_addr))
 	dhcpv6_snp_initiative_notify_asd(item->chaddr, item->ipv6_addr);	
 	pthread_mutex_unlock(&mutexsnpunsolve);	
 
@@ -959,15 +953,12 @@ unsigned int dhcpv6_snp_release_process
 		return DHCP_SNP_RETURN_CODE_PARAM_NULL;
 	}
 
-	ret = dhcpv6_snp_get_item_from_pkt(vlanid, ifindex,NPD_DHCPv6_TYPE_RELEASE, dhcp, &user);
+	ret = dhcpv6_snp_get_item_from_pkt(vlanid, ifindex,NPD_DHCPv6_TYPE_RELEASE, dhcp, &user, mac_2);
 	if (DHCP_SNP_RETURN_CODE_OK != ret) {
 		syslog_ax_dhcp_snp_err("get item value from packet error, ret %x\n", ret);
 		return ret;
 	}
-	if(memcmp(mac_2 , user.chaddr, 6)){
-		log_debug("layor address different from link address!\n");
-		memcpy(user.chaddr, mac_2, 6);
-	}
+
 	item = (NPD_DHCPv6_SNP_TBL_ITEM_T *)dhcpv6_snp_tbl_item_find(&user);
 	if (item == NULL) {
 		return DHCP_SNP_RETURN_CODE_OK; /*from trust to trust interface*/

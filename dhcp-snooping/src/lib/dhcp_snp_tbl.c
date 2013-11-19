@@ -1596,7 +1596,7 @@ unsigned int dhcpv6_snp_tbl_refresh_bind
 			}
 	}
 */
-	if (user->ipv6_addr) {
+	if (strlen(user->ipv6_addr)) {
 		while (tmp = dhcpv6_snp_tbl_item_find_by_ip(user->ipv6_addr)) {
 			dhcpv6_snp_tbl_item_delete_iphash(tmp);
 		}
@@ -3092,7 +3092,7 @@ int dhcpv6_snp_notify_asd(struct unresolved_ipv6_table *table)
 
 	__fill_tablemsg_ipv6(&msg, table);	
 	
-	log_info("66666666666666666666666666 msg to asd: bssindex %d vrrid %d %s %s %s\n",
+	log_info("msg to asd: bssindex %d vrrid %d %s %s %s\n",
 		table->bssindex, table->vrrpid,
 		(table->local_flag ? "local hansi" : "remote hansi"),
 		mac2str(table->chaddr), u128ip2str(table->ipv6_addr));
