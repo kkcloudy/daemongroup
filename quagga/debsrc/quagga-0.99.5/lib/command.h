@@ -122,7 +122,6 @@ enum node_type
   STP_NODE,				/*RSTP config node*/
 	IGMP_SNP_NODE,
 	MLD_SNP_NODE,
-	DHCP_SNP_NODE,
 	DLDP_NODE,
 	FDB_NODE,
 	ZEBRA_NODE,			/* zebra connection node. */
@@ -209,6 +208,7 @@ enum node_type
 	HANSI_CBAT_RADIO_NODE,
 #endif
   STATIC_ARP_NODE,
+  DHCP_SNP_NODE,
   POOL_NODE,			/*dhcp pool node*/
   POOLV6_NODE,			/*dhcp v6 pool node*/
   HANSI_NODE,  /*HANSI node*/
