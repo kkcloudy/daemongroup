@@ -23120,6 +23120,12 @@ DEFUN(set_radio_txpowerstep_cmd_func,
 
 		ret = parse_short_ID((char *)argv[0],&txpowerstep);
 		//printf("@@@@@@@@@txpowerstep = %d@@@@@@@@@@\n",txpowerstep);
+
+		if(txpowerstep == 0)
+		{
+			vty_out(vty,"txpowerstep should > 0!!\n");
+			return CMD_SUCCESS;
+		}
 		if(ret != WID_DBUS_SUCCESS){
             if(ret == WID_ILLEGAL_INPUT){
             	vty_out(vty,"<error> illegal input:Input exceeds the maximum value of the parameter type \n");
