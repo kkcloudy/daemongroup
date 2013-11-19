@@ -155,7 +155,7 @@ int cgiMain()
   int num,ret=-1;
   memset(init_port,0,20);
   memset(prt_no,0,10);
-  if(cgiFormStringNoNewlines("ID", prt_no, 10)!=cgiFormNotFound )  
+  if(cgiFormStringNoNewlines("port_no", prt_no, 10)!=cgiFormNotFound )  
     ShowPortConfPage(prt_no);
   else
   {
@@ -164,18 +164,12 @@ int cgiMain()
 	p=head.next;
 	if(p!=NULL)
 	{
-		while(p!=NULL)
+		pp=p->port.next;
+		if(pp)
 		{
-			pp=p->port.next;
-			while(pp!=NULL)
-			{
-				memset(init_port,0,10);							
-				sprintf(init_port,"%d-%d",p->slot_no,pp->port_no);		 /*int转成char*/
-				pp=pp->next;
-				break;
-			}
-			p=p->next;
-       }
+			memset(init_port,0,10); 	
+			sprintf(init_port,"%d-%d",p->slot_no,pp->port_no);		 /*int转成char*/
+		}
 	}
 	ShowPortConfPage(init_port);
   }
@@ -623,16 +617,16 @@ int ShowPortConfPage(char *prtno)
                      "}\n"\
      				 "str_sUrl = str_temp1;\n"\
      				 "bl_SendFlag++;\n"\
-     				 /*
+     				 
    				 	"document.port_config.speed.disabled = (document.port_config.an_spe.value=='ON')?true:false;\n"
-					"document.port_config.duplex.disabled = ((document.port_config.an_dup.value=='ON')||(document.port_config.speed.value=='1000M'))?true:false;\n"\
+					"document.port_config.duplex.disabled = ((document.port_config.an_dup.value=='ON')||(document.port_config.speed.value=='1000M')||(document.port_config.back_pres.value=='ON'))?true:false;\n"\
 					"document.port_config.flow_ctrl.disabled = ((document.port_config.an_flowctrl.value=='ON')||(document.port_config.duplex.value=='HALF'))?true:false;\n"\
-					"document.port_config.back_pres.disabled = ((document.port_config.an_flowctrl.value=='ON')||(document.port_config.duplex.value=='FULL'))?true:false;\n"\
-					*/
-				  "document.port_config.speed.disabled = false;\n"
+					"document.port_config.back_pres.disabled = ((document.port_config.flow_ctrl.value=='ON')||(document.port_config.duplex.value=='FULL'))?true:false;\n"\
+					
+				  /*"document.port_config.speed.disabled = false;\n"
 					"document.port_config.duplex.disabled = false;\n"\
 					"document.port_config.flow_ctrl.disabled = false;\n"\
-					"document.port_config.back_pres.disabled = false;\n"\
+					"document.port_config.back_pres.disabled = false;\n"\*/
 				"}\n"\
    	              "function oninitialize()\n"\
                   "{\n"\
@@ -713,6 +707,7 @@ int ShowPortConfPage(char *prtno)
 		
 		 //interface_state    add by liuyu 2011-5-9
 
+		#if 0
 		fprintf(cgiOut,"<tr height=30>\n"\
   			           "<td align=left id=tdprompt>%s:</td>",search(llocal,"port_inf_state"));
 		fprintf(cgiOut, "<td colspan=2 width=150>\n"\
@@ -730,6 +725,7 @@ int ShowPortConfPage(char *prtno)
 						  "<input type=button value=%s onclick=port_default()>\n"\
 						"</td>\n"\
 					   "</tr>",search(llocal,"default"));
+		#endif
 
 		 //port type
         fprintf(cgiOut,"<tr height=30>\n"\
@@ -738,7 +734,11 @@ int ShowPortConfPage(char *prtno)
 						  "<select name=\"port_type\" style=\"width:100px\" onchange='port_conf_change(this);'>\n"\
 						  "</select>\n"\
 						"</td>\n"\
-					   "</tr>");
+		 //default
+						"<td colspan=2>\n"\
+						  "<input type=button value=%s onclick=port_default()>\n"\
+						"</td>\n"\
+					   "</tr>",search(llocal,"default"));
          //port admin status
 
         fprintf(cgiOut,"<tr height=30>\n"\
@@ -774,7 +774,7 @@ int ShowPortConfPage(char *prtno)
         fprintf(cgiOut,"<tr height=30>\n"\
   			           "<td align=left id=tdprompt>%s:</td>",search(llocal,"an_spe"));
 		fprintf(cgiOut, "<td colspan=2>\n"\
-						  "<select name=\"an_spe\" disabled style=\"width:100px\" onchange='port_conf_change(this);'>\n"\
+						  "<select name=\"an_spe\" style=\"width:100px\" onchange='port_conf_change(this);'>\n"\
 						  "</select>\n"\
 						"</td>\n"\
 					   "");
@@ -794,7 +794,7 @@ int ShowPortConfPage(char *prtno)
         fprintf(cgiOut,"<tr height=30>\n"\
   			           "<td align=left id=tdprompt>%s:</td>",search(llocal,"an_dup"));
 		fprintf(cgiOut, "<td colspan=2>\n"\
-						  "<select name=\"an_dup\" disabled style=\"width:100px\" onchange='port_conf_change(this);'>\n"\
+						  "<select name=\"an_dup\" style=\"width:100px\" onchange='port_conf_change(this);'>\n"\
 						  "</select>\n"\
 						"</td>\n"\
 					   "");
@@ -812,7 +812,7 @@ int ShowPortConfPage(char *prtno)
         fprintf(cgiOut,"<tr height=30>\n"\
   			           "<td align=left id=tdprompt>%s:</td>",search(llocal,"an_flowctrl"));
 		fprintf(cgiOut, "<td colspan=2>\n"\
-						  "<select name=\"an_flowctrl\" disabled style=\"width:100px\" onchange='port_conf_change(this);'>\n"\
+						  "<select name=\"an_flowctrl\" style=\"width:100px\" onchange='port_conf_change(this);'>\n"\
 						  "</select>\n"\
 						"</td>\n"\
 					   "");
@@ -849,6 +849,7 @@ int ShowPortConfPage(char *prtno)
 	  fprintf(cgiOut, "<td colspan=2>\n"\
 						"<input type=text name=mtu size=15 onblur='port_conf_change(this);'>\n"\
 					  "</td>\n"\
+					  "<td colspan=2><font color=red>(64-8192)</font></td>\n"\
 					 "</tr>"); 
 {// add by shaojunwu 2008-11-7 14:50:01
 		  //buffer mode
@@ -994,12 +995,17 @@ void port_config(char *def_portno)
    		ShowRes(search(llocal,"an_flowctrl"),op_ret );
     }
 
-	result = cgiFormStringNoNewlines("duplex", str_para_1, 16);
-    if( cgiFormSuccess == result )
-    {                
-		op_ret = ccgi_port_dupmode_conf(str_portno, str_para_1);
-		ShowRes(search(llocal,"duplex"),op_ret );
-    }
+	cgiFormStringNoNewlines("speed", str_para_1, 16);
+	if(strcmp(str_para_1,"1000M"))
+	{
+		memset(str_para_1, 0, sizeof(str_para_1));
+		result = cgiFormStringNoNewlines("duplex", str_para_1, 16);
+		if( cgiFormSuccess == result )
+		{			  
+			op_ret = ccgi_port_dupmode_conf(str_portno, str_para_1);
+			ShowRes(search(llocal,"duplex"),op_ret );
+		}
+	}
 	
     result = cgiFormStringNoNewlines("flow_ctrl", str_para_1, 16);
     if( cgiFormSuccess == result )
@@ -1030,6 +1036,7 @@ void port_config(char *def_portno)
         }
 
 	  //interface_state    add by liuyu 2011-5-9
+	#if 0
 	  result = cgiFormStringNoNewlines("interface_state", str_para_1, 16);
 	    if( cgiFormSuccess == result )
 	    {
@@ -1037,6 +1044,7 @@ void port_config(char *def_portno)
 	        op_ret = ccgi_port_interface_state_conf(str_portno, str_para_1);
 			ShowRes( search(llocal,"port_inf_state"),op_ret );
 	    }
+	#endif
 	
     result = cgiFormStringNoNewlines("mtu", str_para_1, 16);
 	if (strcmp(str_para_1,"") != 0)

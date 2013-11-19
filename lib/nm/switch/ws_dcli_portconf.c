@@ -764,6 +764,9 @@ int ccgi_port_auto_state(char *str_port_name, char *str_state)
 			
 				ret = 7;
 				}
+			else if (ETHPORT_RETURN_CODE_ERR_PRODUCT_TYPE == op_ret) {
+    			ret = 13;
+    		}
 			else
 			{
 			
