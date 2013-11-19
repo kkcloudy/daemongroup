@@ -341,6 +341,7 @@ int BSDSendMemeryCheckRequest(const unsigned int slotid, const char *src_path, c
         bsd_syslog_err("failed to open file %s\n",src_path);
     	//bsd_syslog_debug_debug(BSD_DEFAULT, "open file %s to syn failed\n", src_path);
 	    iReturnValue = BSD_ILLEGAL_SOURCE_FILE_PATH;
+		system("sudo umount /blk");
     } else {
         //printf("111\n");
     	fseek(fp, 0, SEEK_END);
@@ -351,7 +352,7 @@ int BSDSendMemeryCheckRequest(const unsigned int slotid, const char *src_path, c
     	fp = NULL;
         fileInfo.file_head.file_total_len = file_len;
         memcpy(fileInfo.file_head.uchFileName, des_path, PATH_LEN);
-
+		system("sudo umount /blk");
         if(0 != wait_for_server(&(BSD_BOARD[slotid]->tipcaddr.addr.name.name),10000)){
     		bsd_syslog_err("******server not catch*\n\n");
     		//printf("******server not catch*\n");
@@ -369,7 +370,7 @@ int BSDSendMemeryCheckRequest(const unsigned int slotid, const char *src_path, c
             }
     	}
     }
-	system("sudo umount /blk");
+	
     return iReturnValue;
 }
 
