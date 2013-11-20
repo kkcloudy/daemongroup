@@ -862,6 +862,7 @@ struct WtpStaInfo {
 	char 		 *wtpMacAddr;				//AP的MAC地址	
 	char 		 *wtpTerminalMacAddr;			//端站的MAC地址
 	long 		  wtpStaIp;					//端站的IP
+	struct in6_addr wtpStaIp6;					//端站的IP6地址	
 	unsigned long wtpWirelessClientSNR;		//无线端站的信噪比
 	unsigned long long wtpSendTerminalPackMount;		//发送到端站的总包数//xiaodawei modify, change 32bits to 64bits, 20110309
 	unsigned long long wtpSendTerminalDataPackMount;	//data pkts sent to terminal, xiaodawei add, 20110309
@@ -903,6 +904,7 @@ struct Wtp_TerminalInfo {
     char *wtpTerminalMacAddr;				
     long wtpEndWMMSta;					//端站的WMM属性
     unsigned int wtpStaIPAddress;			//端站IP地址
+	struct in6_addr wtpStaIP6Address;	        //ipv6 address    
     unsigned int wtpStaRadioMode;				//端站的无线模式
     long wtpStaRadioChannel;				//端站的信道
     long wtpAPTxRates;					//端站当前接入速率

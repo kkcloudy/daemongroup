@@ -9057,6 +9057,10 @@ DBusMessage *asd_dbus_show_sta_info_of_all_wtp(DBusConnection *conn, DBusMessage
 									DBUS_STRUCT_BEGIN_CHAR_AS_STRING
 										DBUS_TYPE_STRING_AS_STRING	//sta_mac_p
 										DBUS_TYPE_UINT32_AS_STRING	//sta_ip
+										DBUS_TYPE_UINT32_AS_STRING //ipv6 address in6_addr[0]
+										DBUS_TYPE_UINT32_AS_STRING //in6_addr[1]
+										DBUS_TYPE_UINT32_AS_STRING //in6_addr[2]
+										DBUS_TYPE_UINT32_AS_STRING //in6_addr[3]										
 										DBUS_TYPE_UINT32_AS_STRING	//sta->snr
 										DBUS_TYPE_UINT64_AS_STRING	//rx_pkts
 										DBUS_TYPE_UINT64_AS_STRING	//rx_data_pkts, xiaodawei add
@@ -9240,6 +9244,10 @@ DBusMessage *asd_dbus_show_sta_info_of_all_wtp(DBusConnection *conn, DBusMessage
 									DBUS_STRUCT_BEGIN_CHAR_AS_STRING
 										DBUS_TYPE_STRING_AS_STRING	//sta_mac_p
 										DBUS_TYPE_UINT32_AS_STRING	//sta_ip
+										DBUS_TYPE_UINT32_AS_STRING //ipv6 address in6_addr[0]
+										DBUS_TYPE_UINT32_AS_STRING //in6_addr[1]
+										DBUS_TYPE_UINT32_AS_STRING //in6_addr[2]
+										DBUS_TYPE_UINT32_AS_STRING //in6_addr[3]										
 										DBUS_TYPE_UINT32_AS_STRING	//sta->snr
 										DBUS_TYPE_UINT64_AS_STRING	//rx_pkts
 										DBUS_TYPE_UINT64_AS_STRING	//rx_data_pkts, xiaodawei add
@@ -9453,6 +9461,12 @@ DBusMessage *asd_dbus_show_sta_info_of_all_wtp(DBusConnection *conn, DBusMessage
 				dbus_message_iter_open_container(&iter_sta_array,DBUS_TYPE_STRUCT,NULL,&iter_sta);
 				dbus_message_iter_append_basic(&iter_sta,DBUS_TYPE_STRING,&sta_mac_p); 
 				dbus_message_iter_append_basic(&iter_sta,DBUS_TYPE_UINT32,&sta_ip);
+				
+			    dbus_message_iter_append_basic(&iter_sta,DBUS_TYPE_UINT32,&(sta->ip6_addr.s6_addr32[0]));
+			    dbus_message_iter_append_basic(&iter_sta,DBUS_TYPE_UINT32,&(sta->ip6_addr.s6_addr32[1]));
+			    dbus_message_iter_append_basic(&iter_sta,DBUS_TYPE_UINT32,&(sta->ip6_addr.s6_addr32[2]));
+			    dbus_message_iter_append_basic(&iter_sta,DBUS_TYPE_UINT32,&(sta->ip6_addr.s6_addr32[3]));
+				
 				dbus_message_iter_append_basic(&iter_sta,DBUS_TYPE_UINT32,&sta->snr);
 				dbus_message_iter_append_basic(&iter_sta,DBUS_TYPE_UINT64,&rx_pkts);
 				dbus_message_iter_append_basic(&iter_sta,DBUS_TYPE_UINT64,&rx_data_pkts);	//xiaodawei add
@@ -10109,6 +10123,10 @@ DBusMessage *asd_dbus_show_terminal_info_of_all_wtp(DBusConnection *conn, DBusMe
 												DBUS_TYPE_STRING_AS_STRING //sta_mac
 												DBUS_TYPE_UINT32_AS_STRING //isqos
 												DBUS_TYPE_UINT32_AS_STRING //in_addr
+												DBUS_TYPE_UINT32_AS_STRING //ipv6 address in6_addr[0]
+												DBUS_TYPE_UINT32_AS_STRING //in6_addr[1]
+												DBUS_TYPE_UINT32_AS_STRING //in6_addr[2]
+												DBUS_TYPE_UINT32_AS_STRING //in6_addr[3]
 												DBUS_TYPE_UINT32_AS_STRING //mode
 												DBUS_TYPE_UINT32_AS_STRING //channel
 												DBUS_TYPE_UINT32_AS_STRING //nrate
@@ -10161,6 +10179,10 @@ DBusMessage *asd_dbus_show_terminal_info_of_all_wtp(DBusConnection *conn, DBusMe
 												DBUS_TYPE_STRING_AS_STRING //sta_mac
 												DBUS_TYPE_UINT32_AS_STRING //isqos
 												DBUS_TYPE_UINT32_AS_STRING //in_addr
+												DBUS_TYPE_UINT32_AS_STRING //ipv6 address in6_addr[0]
+												DBUS_TYPE_UINT32_AS_STRING //in6_addr[1]
+												DBUS_TYPE_UINT32_AS_STRING //in6_addr[2]
+												DBUS_TYPE_UINT32_AS_STRING //in6_addr[3]												
 												DBUS_TYPE_UINT32_AS_STRING //mode
 												DBUS_TYPE_UINT32_AS_STRING //channel
 												DBUS_TYPE_UINT32_AS_STRING //nrate
@@ -10210,6 +10232,10 @@ DBusMessage *asd_dbus_show_terminal_info_of_all_wtp(DBusConnection *conn, DBusMe
 												DBUS_TYPE_STRING_AS_STRING //sta_mac
 												DBUS_TYPE_UINT32_AS_STRING //isqos
 												DBUS_TYPE_UINT32_AS_STRING //in_addr
+												DBUS_TYPE_UINT32_AS_STRING //ipv6 address in6_addr[0]
+												DBUS_TYPE_UINT32_AS_STRING //in6_addr[1]
+												DBUS_TYPE_UINT32_AS_STRING //in6_addr[2]
+												DBUS_TYPE_UINT32_AS_STRING //in6_addr[3]												
 												DBUS_TYPE_UINT32_AS_STRING //mode
 												DBUS_TYPE_UINT32_AS_STRING //channel
 												DBUS_TYPE_UINT32_AS_STRING //nrate
@@ -10284,7 +10310,21 @@ DBusMessage *asd_dbus_show_terminal_info_of_all_wtp(DBusConnection *conn, DBusMe
 											 &isQos);
 				dbus_message_iter_append_basic (&iter_sta,
 											DBUS_TYPE_UINT32,
-											 &in_addr);				
+											 &in_addr);
+				
+			    dbus_message_iter_append_basic (&iter_sta,
+										    DBUS_TYPE_UINT32,
+											 &(sta->ip6_addr.s6_addr32[0]));
+			    dbus_message_iter_append_basic (&iter_sta,
+										    DBUS_TYPE_UINT32,
+											 &(sta->ip6_addr.s6_addr32[1]));
+			    dbus_message_iter_append_basic (&iter_sta,
+										    DBUS_TYPE_UINT32,
+											 &(sta->ip6_addr.s6_addr32[2]));
+			    dbus_message_iter_append_basic (&iter_sta,
+										    DBUS_TYPE_UINT32,
+											 &(sta->ip6_addr.s6_addr32[3]));
+				
 				dbus_message_iter_append_basic (&iter_sta,
 											DBUS_TYPE_UINT32,
 											 &mode);

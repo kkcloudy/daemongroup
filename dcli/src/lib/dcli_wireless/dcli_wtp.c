@@ -29958,6 +29958,7 @@ DEFUN(show_all_wtp_station_information_func,
 	int localid = 1;
 	int slot_id = HostSlotId;
 	int index=0;
+	int m = 0;
 	if(vty->node == CONFIG_NODE){
 		index = 0;
 	}else if(vty->node == HANSI_NODE){
@@ -29994,6 +29995,18 @@ DEFUN(show_all_wtp_station_information_func,
 			vty_out(vty,"wtpMacAddr :		 			%-5s  \n",StaNode->wtpMacAddr);
 			vty_out(vty,"wtpTerminalMacAddr :				%s  \n",StaNode->wtpTerminalMacAddr);
 			vty_out(vty,"wtpStaIp :					%d.%d.%d.%d \n",ip[0],ip[1],ip[2],ip[3]);
+			vty_out(vty,"wtpStaIp6 :					");     /* print ipv6 address */
+    		for (m = 0; m < 8; m++)
+        	{   
+    			if(m==7)
+    			{
+                    vty_out(vty,"%x\n",StaNode->wtpStaIp6.s6_addr16[m]);
+    			}
+    		    else
+    		    {
+                    vty_out(vty,"%x:",StaNode->wtpStaIp6.s6_addr16[m]);
+    		    }
+        	}			
 			vty_out(vty,"wtpWirelessClientSNR :				%-5lu  \n",StaNode->wtpWirelessClientSNR);
 			vty_out(vty,"wtpSendTerminalPackMount :			%-5llu  \n",StaNode->wtpSendTerminalPackMount);
 			vty_out(vty,"wtpSendTerminalDataPackMount :			%-5llu  \n",StaNode->wtpSendTerminalDataPackMount);
@@ -30174,6 +30187,7 @@ DEFUN(show_all_wtp_terminal_information_func,
 	
 	int ret=0;
 	int i=0;
+	int m =0;
 	int localid = 1;
 	int slot_id = HostSlotId;
 	int index=0;
@@ -30212,7 +30226,20 @@ DEFUN(show_all_wtp_terminal_information_func,
 				vty_out(vty,"\tstaqRadioID:   %-5d  \n",WtpTermNode->staqRadioID);			
 				vty_out(vty,"\tTerminal MAC:  %s\n",WtpTermNode->wtpTerminalMacAddr);
 				vty_out(vty,"\twtpEndWMMSta:  %-5d  \n",WtpTermNode->wtpEndWMMSta);
-				vty_out(vty,"\twtpStaIPAddress: %d.%d.%d.%d  \n",ip[0],ip[1],ip[2],ip[3]);
+				vty_out(vty,"\twtpStaIPAddress:  %d.%d.%d.%d  \n",ip[0],ip[1],ip[2],ip[3]);
+				vty_out(vty,"\twtpStaIP6Address: ");    /* print ipv6 address */
+        		for (m = 0; m < 8; m++)
+            	{   
+        			if(m==7)
+        			{
+                        vty_out(vty,"%x\n",WtpTermNode->wtpStaIP6Address.s6_addr16[m]);
+        			}
+        		    else
+        		    {
+                        vty_out(vty,"%x:",WtpTermNode->wtpStaIP6Address.s6_addr16[m]);
+        		    }
+            	}
+				
 				//vty_out(vty,"\twtpStaRadioMode: %-5d \n",WtpTermNode->wtpStaRadioMode);
 				vty_out(vty,"\twtpStaRadioMode:	");
 				/*fengwenchao modify begin  20111109 for GM*/

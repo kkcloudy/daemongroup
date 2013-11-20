@@ -6450,6 +6450,16 @@ struct WtpStaInfo* show_sta_info_of_all_wtp(int index,int localid,DBusConnection
 				dbus_message_iter_get_basic(&iter_sta,&sta_mac);
 				dbus_message_iter_next(&iter_sta);
 				dbus_message_iter_get_basic(&iter_sta,&StaNode->wtpStaIp);
+                /* get ipv6 address of sta */
+				dbus_message_iter_next(&iter_sta);
+				dbus_message_iter_get_basic(&iter_sta,&StaNode->wtpStaIp6.s6_addr32[0]);
+				dbus_message_iter_next(&iter_sta);
+				dbus_message_iter_get_basic(&iter_sta,&StaNode->wtpStaIp6.s6_addr32[1]);
+				dbus_message_iter_next(&iter_sta);
+				dbus_message_iter_get_basic(&iter_sta,&StaNode->wtpStaIp6.s6_addr32[2]);
+				dbus_message_iter_next(&iter_sta);
+				dbus_message_iter_get_basic(&iter_sta,&StaNode->wtpStaIp6.s6_addr32[3]);
+				
 				dbus_message_iter_next(&iter_sta);
 				dbus_message_iter_get_basic(&iter_sta,&StaNode->wtpWirelessClientSNR);
 				dbus_message_iter_next(&iter_sta);
@@ -6937,6 +6947,16 @@ struct WtpTerminalInfo* show_terminal_info_of_all_wtp(int index,int localid,DBus
 					dbus_message_iter_get_basic(&iter_sta,&WtpTermNode->wtpEndWMMSta);
 					dbus_message_iter_next(&iter_sta);
 					dbus_message_iter_get_basic(&iter_sta,&WtpTermNode->wtpStaIPAddress);
+
+					/* get ipv6 address of sta */
+					dbus_message_iter_next(&iter_sta);
+					dbus_message_iter_get_basic(&iter_sta,&WtpTermNode->wtpStaIP6Address.s6_addr32[0]);
+					dbus_message_iter_next(&iter_sta);
+					dbus_message_iter_get_basic(&iter_sta,&WtpTermNode->wtpStaIP6Address.s6_addr32[1]);
+					dbus_message_iter_next(&iter_sta);
+					dbus_message_iter_get_basic(&iter_sta,&WtpTermNode->wtpStaIP6Address.s6_addr32[2]);
+					dbus_message_iter_next(&iter_sta);
+					dbus_message_iter_get_basic(&iter_sta,&WtpTermNode->wtpStaIP6Address.s6_addr32[3]);
 					
 					dbus_message_iter_next(&iter_sta);
 					dbus_message_iter_get_basic(&iter_sta,&WtpTermNode->wtpStaRadioMode);
