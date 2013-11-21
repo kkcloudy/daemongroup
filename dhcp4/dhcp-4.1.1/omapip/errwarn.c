@@ -47,14 +47,15 @@ void (*log_cleanup) (void);
 unsigned int dhcp_log_level;
 
 #define CVT_BUF_MAX 1023
-static char mbuf [CVT_BUF_MAX + 1];
-static char fbuf [CVT_BUF_MAX + 1];
+
 
 /* Log an error message, then exit... */
 
 void log_fatal (const char * fmt, ... )
 {
   va_list list;
+  char mbuf [CVT_BUF_MAX + 1] = {0};
+  char fbuf [CVT_BUF_MAX + 1] = {0};
 
   do_percentm (fbuf, fmt);
 
@@ -104,6 +105,8 @@ void log_fatal (const char * fmt, ... )
 int log_error (const char * fmt, ...)
 {
   va_list list;
+  char mbuf [CVT_BUF_MAX + 1] = {0};
+  char fbuf [CVT_BUF_MAX + 1] = {0};
 
   do_percentm (fbuf, fmt);
 
@@ -130,6 +133,8 @@ int log_error (const char * fmt, ...)
 int log_info (const char *fmt, ...)
 {
   va_list list;
+  char mbuf [CVT_BUF_MAX + 1] = {0};
+  char fbuf [CVT_BUF_MAX + 1] = {0};
 
   do_percentm (fbuf, fmt);
 
@@ -157,6 +162,8 @@ int log_info (const char *fmt, ...)
 int log_debug (const char *fmt, ...)
 {
   va_list list;
+  char mbuf [CVT_BUF_MAX + 1] = {0};
+  char fbuf [CVT_BUF_MAX + 1] = {0};
 
   do_percentm (fbuf, fmt);
 
