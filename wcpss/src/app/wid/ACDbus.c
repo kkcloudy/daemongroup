@@ -4035,7 +4035,11 @@ DBusMessage * wid_dbus_interface_show_wtp_para_information(DBusConnection *conn,
 	unsigned char *mac = NULL;
 	WID_WTP **WTP = NULL;
 	WID_WTP_RADIO	**AC_RADIO_FOR_SEARCH = NULL;
-	
+	unsigned char wtp_ipv6_ip_prifix = 128;
+	char *wtp_ipv6_ip;
+	wtp_ipv6_ip = WID_MALLOC(64);
+	memset(wtp_ipv6_ip, '\0', 64);
+	strncpy(wtp_ipv6_ip, "::/128", strlen("::/128"));
 	mac = (unsigned char *)WID_MALLOC(MAC_LEN+1);
 	AC_RADIO_FOR_SEARCH = WID_MALLOC(L_RADIO_NUM*(sizeof(WID_WTP_RADIO *)));
 	WTP = WID_MALLOC(WTP_NUM*(sizeof(WID_WTP *)));
@@ -4074,6 +4078,7 @@ DBusMessage * wid_dbus_interface_show_wtp_para_information(DBusConnection *conn,
 
     											DBUS_TYPE_STRING_AS_STRING		//WTPModel
     											DBUS_TYPE_STRING_AS_STRING		//netid
+    											DBUS_TYPE_BYTE_AS_STRING		//ipv6 prefix
     											DBUS_TYPE_UINT32_AS_STRING		//mask
     											DBUS_TYPE_UINT32_AS_STRING		//ap_gateway
 
@@ -4085,6 +4090,7 @@ DBusMessage * wid_dbus_interface_show_wtp_para_information(DBusConnection *conn,
     											DBUS_TYPE_BYTE_AS_STRING		//isused
     											DBUS_TYPE_BYTE_AS_STRING		//WTPStat
     											DBUS_TYPE_STRING_AS_STRING		//wtpip
+    											DBUS_TYPE_STRING_AS_STRING		//wtp ipv6 ip
     											DBUS_TYPE_STRING_AS_STRING		//wtp name
     											DBUS_TYPE_UINT32_AS_STRING		//add_time, xiaodawei add for telecom test, 20110302
     											DBUS_TYPE_UINT32_AS_STRING		//ElectrifyRegisterCircle
@@ -4122,7 +4128,9 @@ DBusMessage * wid_dbus_interface_show_wtp_para_information(DBusConnection *conn,
     			dbus_message_iter_append_basic(&iter_struct, DBUS_TYPE_STRING, &WTP[i]->netid);
     		else
     			dbus_message_iter_append_basic(&iter_struct, DBUS_TYPE_STRING, &WTP[i]->netid);
-
+			
+			dbus_message_iter_append_basic(&iter_struct,DBUS_TYPE_BYTE,&(wtp_ipv6_ip_prifix));
+			
     		dbus_message_iter_append_basic(&iter_struct,DBUS_TYPE_UINT32,&WTP[i]->ap_mask_new);
     		dbus_message_iter_append_basic(&iter_struct,DBUS_TYPE_UINT32,&WTP[i]->ap_gateway);
     		dbus_message_iter_append_basic(&iter_struct, DBUS_TYPE_BYTE, &WTP[i]->WIDS.monitorMode);  //fengwenchao change "gapscanset.opstate" to WTP[i]->WIDS.monitorMode,20111122 for AXSSZFI-525  
@@ -4134,6 +4142,8 @@ DBusMessage * wid_dbus_interface_show_wtp_para_information(DBusConnection *conn,
     		dbus_message_iter_append_basic (&iter_struct,DBUS_TYPE_BYTE,&(WTP[i]->isused));
     		dbus_message_iter_append_basic(&iter_struct, DBUS_TYPE_BYTE,&(WTP[i]->WTPStat));
     		dbus_message_iter_append_basic (&iter_struct,DBUS_TYPE_STRING,&WTP[i]->WTPIP);
+			
+			dbus_message_iter_append_basic (&iter_struct,DBUS_TYPE_STRING,&wtp_ipv6_ip);
     		
     		if(WTP[i]->WTPNAME == NULL){
     			dbus_message_iter_append_basic (&iter_struct,
@@ -6699,6 +6709,11 @@ DBusMessage * wid_dbus_interface_show_wtp_device_information(DBusConnection *con
 	unsigned char defalt_char = 0;
 	unsigned int defalt_int = 0;
 	unsigned short defalt_short = 0;
+	char *wtp_ipv6_ip = NULL;
+	wtp_ipv6_ip = (char *)WID_MALLOC(64);
+
+	memset(wtp_ipv6_ip, '\0', 64);
+	strncpy(wtp_ipv6_ip, "::/128:*****", strlen("::/128:*****"));
 
 	mac = (unsigned char *)WID_MALLOC(MAC_LEN+1);
 	//code = (char *)WID_MALLOC(sizeof(char)*128);
@@ -6764,6 +6779,7 @@ DBusMessage * wid_dbus_interface_show_wtp_device_information(DBusConnection *con
     											DBUS_TYPE_UINT32_AS_STRING
     											
     											DBUS_TYPE_STRING_AS_STRING		//ip
+    											DBUS_TYPE_STRING_AS_STRING		//IPV6
     											DBUS_TYPE_UINT32_AS_STRING
     									DBUS_STRUCT_END_CHAR_AS_STRING,
     									&iter_array);
@@ -6906,6 +6922,11 @@ DBusMessage * wid_dbus_interface_show_wtp_device_information(DBusConnection *con
 
     		dbus_message_iter_append_basic(&iter_struct,
     										DBUS_TYPE_STRING,&(WTP[i]->WTPIP));
+
+
+			dbus_message_iter_append_basic(&iter_struct,
+    										DBUS_TYPE_STRING,&wtp_ipv6_ip);
+
     		dbus_message_iter_append_basic (&iter_struct,
     										DBUS_TYPE_UINT32,
     										&WTP[i]->wifi_extension_info.cpu_collect_average); 
@@ -6922,6 +6943,7 @@ DBusMessage * wid_dbus_interface_show_wtp_device_information(DBusConnection *con
 	CW_FREE_OBJECT_WID(cpu_type);
 	CW_FREE_OBJECT_WID(mem_type);
 	CW_FREE_OBJECT_WID(flash_type);
+	CW_FREE_OBJECT_WID(wtp_ipv6_ip);
 	
 	return reply;	
 }

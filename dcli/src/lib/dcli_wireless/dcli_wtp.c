@@ -31130,18 +31130,20 @@ DEFUN(show_all_wtp_para_information_func,
 				vty_out(vty,"NetElemCode:   %s  \n",WtpShowNode->wtpNetElementCode);
 
 				vty_out(vty,"WtpAddrMask:   %s  \t\t",WtpShowNode->wtpAddrMask);
-				vty_out(vty,"WtpGateAddr:   %s  \n",WtpShowNode->wtpGateAddr);
-				vty_out(vty,"CurrAPMode:   %d  \t\t\t",WtpShowNode->wtpCurrAPMode);
+				vty_out(vty,"WtpIpv6Prefix:	%d	\n", WtpShowNode->wtp_ipv6_ip_prefix);
+				vty_out(vty,"WtpGateAddr:   %s  \t\t",WtpShowNode->wtpGateAddr);
+				vty_out(vty,"CurrAPMode:   %d  \n",WtpShowNode->wtpCurrAPMode);
 				
-				vty_out(vty,"DefenceDOSAttack:   %d  \n",WtpShowNode->wtpDefenceDOSAttack);
-				vty_out(vty,"IGMPSwitch:   %d  \t\t\t",WtpShowNode->wtpIGMPSwitch);
-				vty_out(vty,"ReceiverSignalPWL: %0.1f V \n",WtpShowNode->wtpReceiverSignalPWL/10.0);
-				vty_out(vty,"IfType: %s \t\t\t",WtpShowNode->wtpIfType);
+				vty_out(vty,"DefenceDOSAttack:   %d  \t\t\t",WtpShowNode->wtpDefenceDOSAttack);
+				vty_out(vty,"IGMPSwitch:   %d  \n",WtpShowNode->wtpIGMPSwitch);
+				vty_out(vty,"ReceiverSignalPWL: %0.1f V \t\t",WtpShowNode->wtpReceiverSignalPWL/10.0);
+				vty_out(vty,"IfType: %s \n",WtpShowNode->wtpIfType);
 				
-				vty_out(vty,"RemoteRestartFun: %d \n",WtpShowNode->wtpRemoteRestartFun);
-				vty_out(vty,"State: %s \t\t\t\t",state);
-				vty_out(vty,"CurBssidNumber: %d \n",WtpShowNode->wtpCurBssidNumber);
-				vty_out(vty,"WtpIP: %s \t\t",WtpShowNode->wtpIP);
+				vty_out(vty,"RemoteRestartFun: %d \t\t\t",WtpShowNode->wtpRemoteRestartFun);
+				vty_out(vty,"State: %s \n",state);
+				vty_out(vty,"CurBssidNumber: %d \t\t\t",WtpShowNode->wtpCurBssidNumber);
+				vty_out(vty,"WtpIP: %s \n",WtpShowNode->wtpIP);
+				vty_out(vty,"WtpIpv6:	%s\t\t\t",WtpShowNode->wtp_ipv6_ip);
 				vty_out(vty,"WtpNAME: %s \n",WtpShowNode->wtpName);
 				vty_out(vty,"total_if_num: %d \n",WtpShowNode->total_if_num);
 
@@ -32300,10 +32302,10 @@ DEFUN(show_all_wtp_device_information_func,
 				vty_out(vty,"wtpWorkTemp:	 %-5d  \t\t",WtpShowNode->wtpWorkTemp);
 				vty_out(vty,"WtpIP:	 % s  \n",WtpShowNode->WtpIP);
 				//vty_out(vty,"cpu average:	%0.2f %\t\t\t",WtpShowNode->wtpCPUAvgUsage/100.00);
-				
-				vty_out(vty,"cpu average:	%0.2f %\t\t\t",WtpShowNode->cpu_collect_average/100.00);
-				vty_out(vty,"cpu peak value:	%0.2f %\n",WtpShowNode->wtpCPUPeakUsage/100.00);
-				vty_out(vty,"wtpMemAvgUsage:	 %-5d % \t\t",WtpShowNode->wtpMemAvgUsage);
+				vty_out(vty,"WtpIpv6Ip:	%s\t\t", WtpShowNode->wtp_ipv6_ip);
+				vty_out(vty,"cpu average:	%0.2f %\n",WtpShowNode->cpu_collect_average/100.00);
+				vty_out(vty,"cpu peak value:	%0.2f %\t\t",WtpShowNode->wtpCPUPeakUsage/100.00);
+				vty_out(vty,"wtpMemAvgUsage:	 %-5d % \n",WtpShowNode->wtpMemAvgUsage);
 				vty_out(vty,"wtpMemPeakUsage:	 %-5d % \n",WtpShowNode->wtpMemPeakUsage);
 
 				vty_out(vty,"-------------------------------------------------------------------------\n");

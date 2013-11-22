@@ -137,10 +137,7 @@ int set_wid_src_mac()
 	   printf("open error!");
 	  }
 	 ret = ioctl(fd,BM_IOC_GET_MAC,&mac_add);
-//	 for(i = 0; i < 5; i++)
-//	   printf("%02X:",mac_add.mac_add[i]);
-//	   printf("%02X",mac_add.mac_add[5]);	 
-//	   printf("\n");
+
 	 set_wid_mac((char*)mac_add.mac_add,0);
 	 set_vmac = 0;
 	 close(fd);

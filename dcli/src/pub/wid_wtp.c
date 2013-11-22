@@ -4729,6 +4729,7 @@ void dcli_free_WtpParaInfo(struct WtpParaInfo *WtpNode)
 		DCLI_FORMIB_FREE_OBJECT(tmp->wtpAddrMask);
 		DCLI_FORMIB_FREE_OBJECT(tmp->wtpMacConApAc);
 		DCLI_FORMIB_FREE_OBJECT(tmp->wtpIP);
+		DCLI_FORMIB_FREE_OBJECT(tmp->wtp_ipv6_ip);
 		DCLI_FORMIB_FREE_OBJECT(tmp->wtpName);
 		
 		tmp->next = NULL;
@@ -4818,7 +4819,7 @@ void dcli_free_wtp_device_Info(struct WtpDeviceInfo *WtpNode)
 		DCLI_FORMIB_FREE_OBJECT(tmp->wtpMacAddr);	
 		DCLI_FORMIB_FREE_OBJECT(tmp->wtpModel);
 		DCLI_FORMIB_FREE_OBJECT(tmp->WtpIP);
-		
+		DCLI_FORMIB_FREE_OBJECT(tmp->wtp_ipv6_ip);
 		tmp->next = NULL;
 		free(tmp);
 		tmp=NULL;
@@ -7350,6 +7351,7 @@ struct WtpParaInfo* show_para_info_of_all_wtp(int index,int localid,DBusConnecti
 	char ip[WTP_WTP_IP_LEN+1]={0};
 	char *wtp_name = NULL;
 	char * wtpip = NULL;
+	char *wtp_ipv6_ip = NULL;
 	unsigned char mymaskBuf[16] = {0};	
 	unsigned char *mymaskPtr = mymaskBuf;
 	unsigned int wtp_mask = 0;
@@ -7473,6 +7475,10 @@ struct WtpParaInfo* show_para_info_of_all_wtp(int index,int localid,DBusConnecti
 			dbus_message_iter_next(&iter_struct);
 			dbus_message_iter_get_basic(&iter_struct,&netid);
 
+
+			dbus_message_iter_next(&iter_struct);
+			dbus_message_iter_get_basic(&iter_struct,&WtpNode->wtp_ipv6_ip_prefix);
+
 			dbus_message_iter_next(&iter_struct);	
 			dbus_message_iter_get_basic(&iter_struct,&wtp_mask);
 
@@ -7538,6 +7544,17 @@ struct WtpParaInfo* show_para_info_of_all_wtp(int index,int localid,DBusConnecti
 			else
 				memcpy(WtpNode->wtpIP,ip,strlen(ip));
 
+
+			dbus_message_iter_next(&iter_struct);	
+			dbus_message_iter_get_basic(&iter_struct,&wtp_ipv6_ip);
+			WtpNode->wtp_ipv6_ip=(char *)malloc(64+1);
+			memset(WtpNode->wtp_ipv6_ip,0, 64+1);
+			
+			if (strlen(wtp_ipv6_ip) > 0) {
+				memcpy(WtpNode->wtp_ipv6_ip, wtp_ipv6_ip, strlen(wtp_ipv6_ip));
+			} else {
+				memcpy(WtpNode->wtp_ipv6_ip, "::/128", strlen("::/128"));
+			}
 			dbus_message_iter_next(&iter_struct);	
 			dbus_message_iter_get_basic(&iter_struct,&wtp_name);
 
@@ -8479,6 +8496,7 @@ struct WtpDeviceInfo* show_WtpDeviceInfo_of_all_wtp(int index,int localid,DBusCo
 	int i =0;
 	char *wtpModel =NULL;
 	char * wtpip =NULL;
+	char *wtp_ipv6_ip = NULL;
 	unsigned int result = 0;
 	char ip[WTP_WTP_IP_LEN+1]={0};
 
@@ -8656,6 +8674,11 @@ struct WtpDeviceInfo* show_WtpDeviceInfo_of_all_wtp(int index,int localid,DBusCo
 			dbus_message_iter_next(&iter_struct);	
 			dbus_message_iter_get_basic(&iter_struct,&wtpip);
 
+
+			dbus_message_iter_next(&iter_struct);	
+			dbus_message_iter_get_basic(&iter_struct,&wtp_ipv6_ip);
+
+
 			dbus_message_iter_next(&iter_struct);	
 			dbus_message_iter_get_basic(&iter_struct,&(WtpNode->cpu_collect_average));
 
@@ -8669,6 +8692,16 @@ struct WtpDeviceInfo* show_WtpDeviceInfo_of_all_wtp(int index,int localid,DBusCo
 			else
 				memcpy(WtpNode->WtpIP,ip,strlen(ip));
 
+
+			WtpNode->wtp_ipv6_ip=(char *)malloc(64+1);
+			memset(WtpNode->wtp_ipv6_ip,0,64+1);
+			
+			if (strlen(wtp_ipv6_ip) > 0) {
+				memcpy(WtpNode->wtp_ipv6_ip, wtp_ipv6_ip, strlen(wtp_ipv6_ip));
+			} else {
+				memcpy(WtpNode->wtp_ipv6_ip, "::/128:*****", strlen("::/128:*****"));
+			}
+			
 			dbus_message_iter_next(&iter_array);
 		}
 	}
