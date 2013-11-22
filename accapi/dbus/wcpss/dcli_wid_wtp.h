@@ -69,11 +69,13 @@ struct WtpParaInfo{
 	char *wtpGateAddr;		//AP网关地址
 	char *wtpNetElementCode;		//AP网元编码
 	char *wtpAddrMask;		//AP地址掩码
+	unsigned char wtp_ipv6_ip_prefix;	//AP ipv6 prefix
 	unsigned char wtpRemoteRestartFun;		//AP远程重启功能
 	unsigned int wtpReceiverSignalPWL;		//AP接收信号强度
 	unsigned char *wtpMacConApAc;		//AP的MAC地址
 	unsigned char wtpState;				//AP状态
 	char *wtpIP;			//AP的IP地址//20100714
+	char *wtp_ipv6_ip;		//AP ipv6 ip
 	char *wtpName;			//AP的名字//20100722
 	unsigned char wtpDefenceDOSAttack;		//AP防DOS攻击
 	unsigned char wtpIGMPSwitch;			//AP的IGMP开关
@@ -236,7 +238,7 @@ struct WtpDeviceInfo {
 	char *wtpCPUProcessAbility;			//AP CPU处理能力			//mib自己加
 	char *wtpFlashType;				//AP Flash类型						//默认
 	char *WtpIP;				//AP的IP地址					//ip
-
+	char *wtp_ipv6_ip;			//AP ipv6 ip
 	unsigned int cpu_collect_average;
 /////////////////////////
 	
