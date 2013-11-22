@@ -59,8 +59,8 @@
  * XXX: this is gross.  we need to go back and overhaul the API for socket
  * handling.
  */
-//static unsigned int global_v6_socket_references = 0;
-//static int global_v6_socket = -1;
+static unsigned int global_v6_socket_references = 0;
+static int global_v6_socket = -1;
 
 static void if_register_multicast(struct interface_info *info);
 #endif
@@ -398,17 +398,16 @@ void
 if_register6(struct interface_info *info, int do_multicast) {
 	/* Bounce do_multicast to a stack variable because we may change it. */
 	int req_multi = do_multicast;
-/*
+
 	if (global_v6_socket_references == 0) {
 		global_v6_socket = if_register_socket(info, AF_INET6,
 						      &req_multi);
 		if (global_v6_socket < 0) {
-*/
 			/*
 			 * if_register_socket() fatally logs if it fails to
 			 * create a socket, this is just a sanity check.
 			 */
-/*			log_fatal("Impossible condition at %s:%d", MDL);
+			log_fatal("Impossible condition at %s:%d", MDL);
 		} else {
 			log_info("Bound to *:%d", ntohs(local_port));
 		}
@@ -417,9 +416,6 @@ if_register6(struct interface_info *info, int do_multicast) {
 	info->rfdesc = global_v6_socket;
 	info->wfdesc = global_v6_socket;
 	global_v6_socket_references++;
-*/
-	info->rfdesc = if_register_socket(info, AF_INET6, &do_multicast);
-	info->wfdesc = info->rfdesc;
 
 	if (req_multi)
 		if_register_multicast(info);
@@ -429,10 +425,10 @@ if_register6(struct interface_info *info, int do_multicast) {
 	if (!quiet_interface_discovery) {
 		if (info->shared_network != NULL) {
 			log_info("Listening on Socket/%d/%s/%s",
-				 info->rfdesc, info->name, 
+				 global_v6_socket, info->name, 
 				 info->shared_network->name);
 			log_info("Sending on   Socket/%d/%s/%s",
-				 info->rfdesc, info->name,
+				 global_v6_socket, info->name,
 				 info->shared_network->name);
 		} else {
 			log_info("Listening on Socket/%s", info->name);
@@ -444,7 +440,6 @@ if_register6(struct interface_info *info, int do_multicast) {
 void 
 if_deregister6(struct interface_info *info) {
 	/* Dereference the global v6 socket. */
-/*	
 	if ((info->rfdesc == global_v6_socket) &&
 	    (info->wfdesc == global_v6_socket) &&
 	    (global_v6_socket_references > 0)) {
@@ -454,11 +449,6 @@ if_deregister6(struct interface_info *info) {
 	} else {
 		log_fatal("Impossible condition at %s:%d", MDL);
 	}
-*/
-	close(info->rfdesc);	
-	info->rfdesc = -1;
-	close(info->wfdesc);	
-	info->wfdesc = -1;
 
 	if (!quiet_interface_discovery) {
 		if (info->shared_network != NULL) {
@@ -471,14 +461,13 @@ if_deregister6(struct interface_info *info) {
 			log_info("Disabling output on Socket/%s", info->name);
 		}
 	}
-/*
+
 	if (global_v6_socket_references == 0) {
 		close(global_v6_socket);
 		global_v6_socket = -1;
 
 		log_info("Unbound from *:%d", ntohs(local_port));
 	}
-*/
 }
 #endif /* DHCPv6 */
 

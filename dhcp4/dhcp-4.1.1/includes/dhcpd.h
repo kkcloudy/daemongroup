@@ -2524,8 +2524,8 @@ extern struct in_addr limited_broadcast;
 extern int local_family;
 extern struct in_addr local_address;
 extern struct in6_addr local_address6;
-char dhcpv6_msg_type_g;
-u_int32_t dhcpv6_transaction_id_g;
+//char dhcpv6_msg_type_g;
+//u_int32_t dhcpv6_transaction_id_g;
 
 
 extern u_int16_t local_port;

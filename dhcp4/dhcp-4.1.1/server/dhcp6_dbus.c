@@ -69,7 +69,7 @@ extern "C"
 #define DHCP6_INVALID_FD		(-1)
 #define DHCP6_FD_INIT		DHCP6_INVALID_FD
 #define DHCP_SAVE_CFG_MEM	10*1024*1024
-#define DHCP6_MAX_POOL_NUM	1024
+#define DHCP6_MAX_POOL_NUM	128
 
 
 #define DHCP6_PID_FILE_PATH "/var/run/"

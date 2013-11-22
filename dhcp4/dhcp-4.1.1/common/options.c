@@ -3820,7 +3820,7 @@ do_packet6(struct interface_info *interface, const char *packet,
 	   isc_boolean_t was_unicast) {
 	unsigned char msg_type;
 	const struct dhcpv6_packet *msg;
-	const struct dhcpv6_packet *msg_g;
+	//const struct dhcpv6_packet *msg_g;
 	const struct dhcpv6_relay_packet *relay; 
 	struct packet *decoded_packet;
 
@@ -3830,6 +3830,7 @@ do_packet6(struct interface_info *interface, const char *packet,
 			 piaddr(*from), from_port, len);
 		return;
 	}
+/*
 	msg_g = (const struct dhcpv6_packet *)packet;
 	u_int32_t msg_transaction_id_g = 0;
 	char msg_type_g= 0;
@@ -3841,6 +3842,7 @@ do_packet6(struct interface_info *interface, const char *packet,
 		memcpy(((char *)&dhcpv6_transaction_id_g)+1, msg_g->transaction_id , sizeof(msg_g->transaction_id));
 		memcpy(&dhcpv6_msg_type_g, &(msg_g->msg_type) , sizeof(msg_g->msg_type));
 	}
+*/
 	decoded_packet = NULL;
 	if (!packet_allocate(&decoded_packet, MDL)) {
 		log_error("do_packet6: no memory for incoming packet.");
