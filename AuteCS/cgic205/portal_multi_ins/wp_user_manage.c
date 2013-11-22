@@ -471,7 +471,7 @@ static int s_usr_mng_content_of_page( STPageInfo *pstPageInfo )
 			memset(ipstr,0,sizeof(ipstr));
 			memset(macstr,0,sizeof(macstr));
 			memset(ap_macstr,0,sizeof(ap_macstr));
-			ccgi_ip2str(user->userip, ipstr, sizeof(ipstr));
+			ccgi_ip2str(user->user_ip, ipstr, sizeof(ipstr));
 			sprintf( macstr, "%2.2X:%2.2X:%2.2X:%2.2X:%2.2X:%2.2X", user->usermac[0],user->usermac[1],user->usermac[2],user->usermac[3],user->usermac[4],user->usermac[5] );
 			sprintf( ap_macstr, "%2.2X:%2.2X:%2.2X:%2.2X:%2.2X:%2.2X", user->apmac[0],user->apmac[1],user->apmac[2],user->apmac[3],user->apmac[4],user->apmac[5] );
 			//ccgi_mac2str(user->usermac, macstr, sizeof(macstr), ':');

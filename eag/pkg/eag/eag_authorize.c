@@ -47,6 +47,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "eag_ipset.h"
 #include "eag_ipset6.h" /* add by houyongtao */
 #include "eag_iptables.h"
+#include "eag_ip6tables.h" /* add by houyongtao */
 #include "eag_authorize.h"
 
 
@@ -60,8 +61,8 @@ struct eag_authorize{
 	int (*do_eap_authorize)( eag_authorize_t *this, unsigned int user_ip);
 	int (*del_eap_authorize)( eag_authorize_t *this, unsigned int user_ip);
 	#endif
-	int (*do_macpre_authorize)( eag_authorize_t *this, unsigned int user_ip);
-	int (*del_macpre_authorize)( eag_authorize_t *this, unsigned int user_ip);
+	int (*do_macpre_authorize)( eag_authorize_t *this, user_addr_t *user_addr);
+	int (*del_macpre_authorize)( eag_authorize_t *this, user_addr_t *user_addr);
 	int (*do_flux)( eag_authorize_t *this, struct appsession *appsession );
 	void *param;
 };
@@ -118,10 +119,10 @@ eag_authorize_del_eap_authorize( eag_authorize_t *this, unsigned int user_ip )
 }
 #endif
 int 
-eag_authorize_do_macpre_authorize( eag_authorize_t *this, unsigned int user_ip )
+eag_authorize_do_macpre_authorize( eag_authorize_t *this, user_addr_t *user_addr )
 {
 	if( NULL != this && NULL != this->do_macpre_authorize){
-		return this->do_macpre_authorize(this, user_ip );
+		return this->do_macpre_authorize(this, user_addr );
 	}
 
 	eag_log_err("eag_authorize_do_macpre_authorize param error this=%p "\
@@ -130,10 +131,10 @@ eag_authorize_do_macpre_authorize( eag_authorize_t *this, unsigned int user_ip )
 }
 
 int 
-eag_authorize_del_macpre_authorize( eag_authorize_t *this, unsigned int user_ip )
+eag_authorize_del_macpre_authorize( eag_authorize_t *this, user_addr_t *user_addr )
 {
 	if( NULL != this && NULL != this->del_macpre_authorize){
-		return this->del_macpre_authorize(this, user_ip );
+		return this->del_macpre_authorize(this, user_addr );
 	}
 
 	eag_log_err("eag_authorize_del_macpre_authorize param error this=%p "\
@@ -183,6 +184,7 @@ eag_authorize_ipset_do_authorize( eag_authorize_t *this, struct appsession *apps
 		eag_log_err("eag_authorize_ipset_do_authorize appsession = NULL");
 		return EAG_ERR_INPUT_PARAM_ERR;	
 	}
+	#if 0
 	if( 0 == appsession->user_ip ){
 		char ipstr[32];
 		ip2str( appsession->user_ip, ipstr, sizeof(ipstr) );
@@ -190,14 +192,14 @@ eag_authorize_ipset_do_authorize( eag_authorize_t *this, struct appsession *apps
 					appsession->intf, ipstr );
 		return EAG_ERR_INPUT_PARAM_ERR;
 	}
-	#if 0
 	return add_user_to_set( eag_captive_get_capid(this->cap),
 							eag_captive_get_hansitype(this->cap),
 							appsession->user_ip );
 	#endif /* modify by houyongtao */
-	return add_user_to_ipset6( eag_captive_get_capid(this->cap),
+	return set_user_in_ipset6( eag_captive_get_capid(this->cap),
 							eag_captive_get_hansitype(this->cap),
-							appsession->user_ip );
+							&(appsession->user_addr), 
+							IPSET6_CMD_ADD );
 }
 
 static int 
@@ -216,6 +218,7 @@ eag_authorize_ipset_de_authorize( eag_authorize_t *this, struct appsession *apps
 		eag_log_err( "eag_authorize_ipset_de_authorize appsession = NULL" );
 		return EAG_ERR_INPUT_PARAM_ERR;	
 	}
+	#if 0
 	if( strlen(appsession->intf)==0 || 0 == appsession->user_ip ){
 		char ipstr[32];
 		ip2str( appsession->user_ip, ipstr, sizeof(ipstr) );
@@ -223,14 +226,14 @@ eag_authorize_ipset_de_authorize( eag_authorize_t *this, struct appsession *apps
 						appsession->intf, ipstr );
 		return EAG_ERR_INPUT_PARAM_ERR;	
 	}
-	#if 0
 	return del_user_from_set( eag_captive_get_capid(this->cap),
 								eag_captive_get_hansitype(this->cap),
 								appsession->user_ip );
 	#endif /* modify by houyongtao */
-	return del_user_from_ipset6( eag_captive_get_capid(this->cap),
+	return set_user_in_ipset6( eag_captive_get_capid(this->cap),
 								eag_captive_get_hansitype(this->cap),
-								appsession->user_ip );
+								&(appsession->user_addr), 
+								IPSET6_CMD_DEL );
 }
 
 static int 
@@ -252,10 +255,10 @@ eag_authorize_ipset_del_eap_authorize( eag_authorize_t *this, unsigned int user_
 }
 #endif
 static int 
-eag_authorize_ipset_do_macpre_authorize( eag_authorize_t *this, unsigned int user_ip)
+eag_authorize_ipset_do_macpre_authorize( eag_authorize_t *this, user_addr_t *user_addr)
 {
-    if( NULL == this ){
-		eag_log_err("eag_authorize_ipset_do_macpre_authorize this = %p", this);
+    if( NULL == this || NULL == user_addr){
+		eag_log_err("eag_authorize_ipset_do_macpre_authorize this = %p, user_addr = %p", this, user_addr);
 		return EAG_ERR_INPUT_PARAM_ERR; 
 	}
 	if( NULL == this->cap ){
@@ -263,28 +266,30 @@ eag_authorize_ipset_do_macpre_authorize( eag_authorize_t *this, unsigned int use
 					this, this->cap);
 		return EAG_ERR_INPUT_PARAM_ERR;	
 	}
+	#if 0
+	unsigned int user_ip = user_addr->user_ip;
 	if( 0 == user_ip ){
 		char ipstr[32];
 		ip2str( user_ip, ipstr, sizeof(ipstr) );
 		eag_log_err("eag_authorize_ipset_do_macpre_authorize ip=%s", ipstr );
 		return EAG_ERR_INPUT_PARAM_ERR;
 	}
-	#if 0
 	return add_preauth_user_to_set( eag_captive_get_capid(this->cap),
 							eag_captive_get_hansitype(this->cap),
 							user_ip );
 	#endif /* modify by houyongtao */
-	return add_preauth_user_to_ipset6( eag_captive_get_capid(this->cap),
-							eag_captive_get_hansitype(this->cap),
-							user_ip );
+	return set_preauth_user_in_ipset6( eag_captive_get_capid(this->cap),
+									eag_captive_get_hansitype(this->cap),
+									user_addr, 
+									IPSET6_CMD_ADD );
 	//return EAG_RETURN_OK;
 }
 
 static int 
-eag_authorize_ipset_del_macpre_authorize( eag_authorize_t *this, unsigned int user_ip )
+eag_authorize_ipset_del_macpre_authorize( eag_authorize_t *this, user_addr_t *user_addr )
 {
-    if( NULL == this ){
-		eag_log_err( "eag_authorize_ipset_del_macpre_authorize this = %p", this);
+    if( NULL == this || NULL == user_addr){
+		eag_log_err("eag_authorize_ipset_del_macpre_authorize this = %p, user_addr = %p", this, user_addr);
 		return EAG_ERR_INPUT_PARAM_ERR; 
 	}
 	if( NULL == this->cap ){
@@ -292,26 +297,31 @@ eag_authorize_ipset_del_macpre_authorize( eag_authorize_t *this, unsigned int us
 					this, this->cap );
 		return EAG_ERR_INPUT_PARAM_ERR;	
 	}
+	#if 0
+	unsigned int user_ip = user_addr->user_ip;
 	if( 0 == user_ip ){
 		char ipstr[32];
 		ip2str( user_ip, ipstr, sizeof(ipstr) );
 		eag_log_err( "eag_authorize_ipset_del_macpre_authorize ip=%s", ipstr );
 		return EAG_ERR_INPUT_PARAM_ERR;
 	}
-	#if 0
 	return del_preauth_user_from_set( eag_captive_get_capid(this->cap),
 								eag_captive_get_hansitype(this->cap),
 								user_ip );
 	#endif /* modify by houyongtao */
-	return del_preauth_user_from_ipset6( eag_captive_get_capid(this->cap),
-								eag_captive_get_hansitype(this->cap),
-								user_ip );
+	return set_preauth_user_in_ipset6( eag_captive_get_capid(this->cap),
+									eag_captive_get_hansitype(this->cap),
+									user_addr, 
+									IPSET6_CMD_DEL );
 	//return EAG_RETURN_OK;
 }
 
 static int 
 eag_authorize_iptables_do_authorize( eag_authorize_t *this, struct appsession *appsession )
 {
+	char user_ipstr[IPX_LEN] = "";
+	int ret = 0;
+	
     if( NULL == this ){
 		eag_log_err("eag_authorize_iptables_do_authorize this = %p", this);
 		return EAG_ERR_INPUT_PARAM_ERR;
@@ -325,21 +335,36 @@ eag_authorize_iptables_do_authorize( eag_authorize_t *this, struct appsession *a
 		eag_log_err("eag_authorize_iptables_do_authorize appsession = NULL");
 		return EAG_ERR_INPUT_PARAM_ERR;
 	}
-	if( strlen(appsession->intf)==0 || 0 == appsession->user_ip ){
-		char ipstr[32];
-		ip2str(appsession->user_ip, ipstr, sizeof(ipstr) );
+	ipx2str(&(appsession->user_addr), user_ipstr, sizeof(user_ipstr));
+	if( strlen(appsession->intf)==0 || 0 == memcmp_ipx(&(appsession->user_addr), NULL)){
 		eag_log_err("eag_authorize_iptables_do_authorize appsession if=%s ip=%s",
-						appsession->intf, ipstr );
+						appsession->intf, user_ipstr);
 		return EAG_ERR_INPUT_PARAM_ERR;
 	}
-	return connect_up(  eag_captive_get_capid(this->cap), 
-						eag_captive_get_hansitype(this->cap), 
-						appsession->intf, appsession->user_ip);
+	if (EAG_IPV6 == appsession->user_addr.family
+		|| EAG_MIX == appsession->user_addr.family) {
+		ret = ipv6_connect_up(eag_captive_get_capid(this->cap), 
+                        eag_captive_get_hansitype(this->cap), 
+                        appsession->intf, 
+                        &(appsession->user_addr.user_ipv6));
+	}
+	if (EAG_IPV4 == appsession->user_addr.family
+		|| EAG_MIX == appsession->user_addr.family) {
+		ret = connect_up(eag_captive_get_capid(this->cap), 
+                    eag_captive_get_hansitype(this->cap), 
+                    appsession->intf, 
+                    appsession->user_addr.user_ip);
+	}
+
+	return ret;
 }
 
 static int 
 eag_authorize_iptables_de_authorize( eag_authorize_t *this, struct appsession *appsession )
 {
+	char user_ipstr[IPX_LEN] = "";
+	int ret = 0;
+	
     if( NULL == this ){
 		eag_log_err("eag_authorize_iptables_de_authorize this = %p", this);
 		return EAG_ERR_INPUT_PARAM_ERR;
@@ -353,18 +378,30 @@ eag_authorize_iptables_de_authorize( eag_authorize_t *this, struct appsession *a
 		eag_log_err("eag_authorize_iptables_de_authorize appsession = NULL");
 		return EAG_ERR_INPUT_PARAM_ERR;
 	}
-	if( strlen(appsession->intf)==0 || 0 == appsession->user_ip ){
-		char ipstr[32];
-		ip2str( appsession->user_ip, ipstr, sizeof(ipstr) );
-		
+	
+	ipx2str(&(appsession->user_addr), user_ipstr, sizeof(user_ipstr));
+	
+	if( strlen(appsession->intf)==0 || 0 == memcmp_ipx(&(appsession->user_addr), NULL)){
 		eag_log_err("eag_authorize_iptables_de_authorize appsession if=%s ip=%s",
-						appsession->intf, ipstr );
+						appsession->intf, user_ipstr);
 		return EAG_ERR_INPUT_PARAM_ERR;
 	}
-	return connect_down( eag_captive_get_capid(this->cap), 
-						eag_captive_get_hansitype(this->cap), 
-						appsession->intf, appsession->user_ip);
-
+	if (EAG_IPV6 == appsession->user_addr.family
+		|| EAG_MIX == appsession->user_addr.family) {
+		ret = ipv6_connect_down(eag_captive_get_capid(this->cap), 
+	                            eag_captive_get_hansitype(this->cap), 
+	            				appsession->intf, 
+	            				&(appsession->user_addr.user_ipv6));
+	}
+	if (EAG_IPV4 == appsession->user_addr.family
+		|| EAG_MIX == appsession->user_addr.family) {
+		ret = connect_down( eag_captive_get_capid(this->cap), 
+                            eag_captive_get_hansitype(this->cap), 
+							appsession->intf, 
+							appsession->user_addr.user_ip );
+	}
+	
+	return ret;
 }
 #if 0
 static int 
@@ -411,10 +448,13 @@ eag_authorize_iptables_del_eap_authorize( eag_authorize_t *this, unsigned int us
 }
 #endif
 static int 
-eag_authorize_iptables_do_macpre_authorize( eag_authorize_t *this, unsigned int user_ip )
+eag_authorize_iptables_do_macpre_authorize( eag_authorize_t *this, user_addr_t *user_addr )
 {
-    if( NULL == this ){
-		eag_log_err("eag_authorize_iptables_do_macpre_authorize this = %p", this);
+	char user_ipstr[IPX_LEN] = "";
+	int ret = 0;
+	
+    if( NULL == this || NULL == user_addr){
+		eag_log_err("eag_authorize_iptables_do_macpre_authorize this = %p, user_addr = %p", this, user_addr);
 		return EAG_ERR_INPUT_PARAM_ERR;
 	}
 	if( NULL == this->cap ){
@@ -422,20 +462,37 @@ eag_authorize_iptables_do_macpre_authorize( eag_authorize_t *this, unsigned int 
 					this, this->cap);
 		return EAG_ERR_INPUT_PARAM_ERR;
 	}
-	if( 0 == user_ip ){
+	if(0 == memcmp_ipx(user_addr, NULL)){
 		eag_log_err("eag_authorize_iptables_do_macpre_authorize user_ip = 0");
 		return EAG_ERR_INPUT_PARAM_ERR;
 	}
-	eag_log_debug("eag_macauth", "macpre_connect_up BEGIN!user_ip:%#x", user_ip);
-	return macpre_connect_up(  eag_captive_get_capid(this->cap), 
-						eag_captive_get_hansitype(this->cap), user_ip);
+	ipx2str(user_addr, user_ipstr, sizeof(user_ipstr));
+	
+	eag_log_debug("eag_macauth", "macpre_connect_up BEGIN!user_ip:%s", user_ipstr);
+	if (EAG_IPV6 == user_addr->family
+		|| EAG_MIX == user_addr->family) {
+		ret = ipv6_macpre_connect_up(eag_captive_get_capid(this->cap), 
+			                        eag_captive_get_hansitype(this->cap), 
+			                        &(user_addr->user_ipv6));
+	}
+	if (EAG_IPV4 == user_addr->family
+		|| EAG_MIX == user_addr->family) {
+		ret = macpre_connect_up(eag_captive_get_capid(this->cap), 
+								eag_captive_get_hansitype(this->cap), 
+								user_addr->user_ip);
+	}
+	
+	return ret;
 }
 
 static int 
-eag_authorize_iptables_del_macpre_authorize( eag_authorize_t *this, unsigned int user_ip )
+eag_authorize_iptables_del_macpre_authorize( eag_authorize_t *this, user_addr_t *user_addr )
 {
-    if( NULL == this ){
-		eag_log_err("eag_authorize_iptables_del_macpre_authorize this = %p", this);
+	char user_ipstr[IPX_LEN] = "";
+	int ret = 0;
+	
+    if( NULL == this || NULL == user_addr){
+		eag_log_err("eag_authorize_ipset_del_macpre_authorize this = %p, user_addr = %p", this, user_addr);
 		return EAG_ERR_INPUT_PARAM_ERR;
 	}
 	if( NULL == this->cap ){
@@ -443,14 +500,27 @@ eag_authorize_iptables_del_macpre_authorize( eag_authorize_t *this, unsigned int
 					this, this->cap);
 		return EAG_ERR_INPUT_PARAM_ERR;
 	}
-	if( 0 == user_ip ){
-		eag_log_err("eag_authorize_iptables_del_macpre_authorize  user_ip = 0");
+	if(0 == memcmp_ipx(user_addr, NULL)){
+		eag_log_err("eag_authorize_iptables_do_macpre_authorize user_ip = 0");
 		return EAG_ERR_INPUT_PARAM_ERR;
 	}
-	eag_log_debug("eag_macauth", "macpre_connect_down BEGIN!user_ip:%#x", user_ip);
-	return macpre_connect_down( eag_captive_get_capid(this->cap), 
-						eag_captive_get_hansitype(this->cap), user_ip);
-
+	ipx2str(user_addr, user_ipstr, sizeof(user_ipstr));
+	
+	eag_log_debug("eag_macauth", "macpre_connect_down BEGIN!user_ip:%s", user_ipstr);
+	if (EAG_IPV6 == user_addr->family
+		|| EAG_MIX == user_addr->family) {
+		ret = ipv6_macpre_connect_down(eag_captive_get_capid(this->cap), 
+			                        eag_captive_get_hansitype(this->cap), 
+			                        &(user_addr->user_ipv6));
+	}
+	if (EAG_IPV4 == user_addr->family
+		|| EAG_MIX == user_addr->family) {
+		ret = macpre_connect_down(eag_captive_get_capid(this->cap), 
+								eag_captive_get_hansitype(this->cap), 
+								user_addr->user_ip);
+	}
+	
+	return ret;
 }
 
 static int 

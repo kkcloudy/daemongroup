@@ -51,6 +51,12 @@ int
 eag_redir_stop(eag_redir_t *redir);
 
 int
+eag_ipv6_redir_start(eag_redir_t * redir);
+
+int
+eag_ipv6_redir_stop(eag_redir_t *redir);
+
+int
 eag_redir_set_local_addr(eag_redir_t *redir,
 							uint32_t local_ip,
 							uint16_t local_port);

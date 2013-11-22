@@ -36,8 +36,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "eag_conf.h"
 #include "limits2.h"
 #include "eag_time.h"
+#include "eag_errcode.h"
 #include "eag_log.h"
 #include <string.h>
+#include <arpa/inet.h>
 
 #define SESSION_STA_STATUS_CONNECT	0
 #define SESSION_STA_STATUS_UNCONNECT	1
@@ -45,6 +47,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define SESSION_STA_LEAVE_ABNORMAL	0
 #define SESSION_STA_LEAVE_NORMAL	1
 
+#define EAG_IPV6_LEN (sizeof(struct in6_addr))
 
 struct wireless_data_t {
 	uint64_t init_input_octets;
@@ -82,13 +85,21 @@ struct fastfwd_data_t {
 	uint64_t output_octets;
 };
 
+typedef struct user_addr {
+	uint8_t family;
+	uint32_t user_ip;
+	struct in6_addr user_ipv6;
+} user_addr_t;
+
 struct appsession {
 	int state;
 	uint32_t index;
+	uint32_t ipv6_index;
+	
 	int sta_state;
 	int leave_reason;
-	
-	uint32_t user_ip;
+
+	user_addr_t user_addr;
 	uint8_t usermac[PKT_ETH_ALEN];
 	uint8_t apmac[PKT_ETH_ALEN];
 	char apname[MAX_APNAME_LENGTH];

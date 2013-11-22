@@ -82,6 +82,7 @@ struct appconn_db {
 
 	uint32_t appindex;
 	hashtable *ip_htable;
+	hashtable *ipv6_htable;
 	hashtable *mac_htable;
 	hashtable *name_htable;
 
@@ -128,14 +129,18 @@ appconn_db_create(	uint8_t hansi_type,
 		eag_log_err("appconn_db_create ip hashtable create failed");
 		goto failed_1;
 	}
+	if (EAG_RETURN_OK != hashtable_create_table(&(appdb->ipv6_htable), size)) {
+		eag_log_err("appconn_db_create ipv6 hashtable create failed");
+		goto failed_2;
+	}
 
 	if (EAG_RETURN_OK != hashtable_create_table(&(appdb->mac_htable), size)) {
 		eag_log_err("appconn_db_create mac hashtable create failed");
-		goto failed_2;
+		goto failed_3;
 	}
 	if (EAG_RETURN_OK != hashtable_create_table(&(appdb->name_htable), size)) {
 		eag_log_err("appconn_db_create name hashtable create failed");
-		goto failed_3;
+		goto failed_4;
 	}
 	if (EAG_RETURN_OK != eag_blkmem_create(&(appdb->conn_blkmem),
 							APPCONN_BLKMEM_NAME,
@@ -143,7 +148,7 @@ appconn_db_create(	uint8_t hansi_type,
 							APPCONN_BLKMEM_ITEMNUM, 
 							APPCONN_BLKMEM_MAXNUM)) {
 		eag_log_err("appconn_db_create blkmem_create failed");
-		goto failed_4;
+		goto failed_5;
 	}
 	INIT_LIST_HEAD(&(appdb->head));
 	appdb->hansi_type = hansi_type;
@@ -157,10 +162,12 @@ appconn_db_create(	uint8_t hansi_type,
 	
 	return appdb;
 
-failed_4:
+failed_5:
 	hashtable_destroy_table(&(appdb->name_htable));
-failed_3:
+failed_4:
 	hashtable_destroy_table(&(appdb->mac_htable));
+failed_3:
+	hashtable_destroy_table(&(appdb->ipv6_htable));
 failed_2:
 	hashtable_destroy_table(&(appdb->ip_htable));
 failed_1:
@@ -182,6 +189,9 @@ appconn_db_destroy(appconn_db_t *appdb)
 	}
 	if (NULL != appdb->ip_htable) {
 		hashtable_destroy_table(&(appdb->ip_htable));
+	}
+	if (NULL != appdb->ipv6_htable) {
+		hashtable_destroy_table(&(appdb->ipv6_htable));
 	}
 	if (NULL != appdb->mac_htable) {
 		hashtable_destroy_table(&(appdb->mac_htable));
@@ -251,11 +261,17 @@ static int
 appconn_update_ip_htable(appconn_db_t *appdb,
 						struct app_conn_t *appconn)
 {
-	return hashtable_check_add_node(appdb->ip_htable,
-					&(appconn->session.user_ip),
-					sizeof(appconn->session.user_ip),
-					&(appconn->ip_hnode));
-
+	if (EAG_IPV6 == appconn->session.user_addr.family) {
+        return hashtable_check_add_node(appdb->ipv6_htable,
+                        &(appconn->session.user_addr.user_ipv6),
+                        sizeof(struct in6_addr),
+                        &(appconn->ip_hnode));
+	} else {
+		return hashtable_check_add_node(appdb->ip_htable,
+						&(appconn->session.user_addr.user_ip),
+						sizeof(struct in_addr),
+						&(appconn->ip_hnode));
+	}
 }
 
 static int
@@ -319,27 +335,34 @@ appconn_del_from_db(struct app_conn_t *appconn)
 
 struct app_conn_t *
 appconn_find_by_userip(appconn_db_t *appdb,
-					uint32_t userip)
+					user_addr_t *user_addr)
 {
 	struct app_conn_t *appconn = NULL;
 	struct hlist_head *head = NULL;
 	struct hlist_node *node = NULL;
-
-	head = hashtable_get_hash_list(appdb->ip_htable, &userip, sizeof(userip));
+	char user_ipstr[IPX_LEN] = "";
+	//Can be optimized
+    ipx2str(user_addr, user_ipstr, sizeof(user_ipstr));
+	if (EAG_IPV6 == user_addr->family) {
+		/* ipv6 single-stack user */
+		head = hashtable_get_hash_list(appdb->ipv6_htable, &(user_addr->user_ipv6), sizeof(struct in6_addr));
+	} else {
+		/* ipv4 single-stack user or dual-stack users */
+		head = hashtable_get_hash_list(appdb->ip_htable, &(user_addr->user_ip), sizeof(struct in_addr));
+	}
 	if (NULL == head) {
 		eag_log_err("appconn_find_by_userip "
-			"hashtable_get_hash_list failed, userip %#x", userip);
+			"hashtable_get_hash_list failed, userip %s", user_ipstr);
 		return NULL;
 	}
 
 	hlist_for_each_entry(appconn, node, head, ip_hnode) {
-		if (userip == appconn->session.user_ip) {
+        if (!memcmp_ipx(user_addr, &(appconn->session.user_addr))) {
 			return appconn;
 		}
 	}
 
-	debug_appconn("appconn_find_by_userip, not find user, userip=%#x",
-			userip);
+	debug_appconn("appconn_find_by_userip, not find user, userip %s", user_ipstr);
 	return NULL;
 }
 
@@ -443,7 +466,7 @@ appconn_count_by_username(appconn_db_t *appdb,
 
 int
 appconn_count_by_userip(appconn_db_t *appdb,
-								uint32_t userip)
+						user_addr_t *user_addr)
 {
 	int num = 0;
 	struct app_conn_t *appconn = NULL;
@@ -455,7 +478,7 @@ appconn_count_by_userip(appconn_db_t *appdb,
 	
 	list_for_each_entry(appconn, &(appdb->head), node) {
 		if (APPCONN_STATUS_AUTHED == appconn->session.state
-			&& userip == appconn->session.user_ip) {
+			&& 0 == memcmp_ipx(user_addr, &(appconn->session.user_addr))) {
 			num++;
 		}
 	}
@@ -488,14 +511,14 @@ appconn_count_by_usermac(appconn_db_t *appdb,
 int
 appconn_set_debug_prefix(struct app_conn_t *appconn)
 {
-	char ipstr[32] = "";
+	char user_ipstr[IPX_LEN] = "";
 	char macstr[32] = "";
 	
-	ip2str(appconn->session.user_ip, ipstr, sizeof (ipstr));
+	ipx2str(&(appconn->session.user_addr), user_ipstr, sizeof(user_ipstr));
 	mac2str(appconn->session.usermac, macstr, sizeof(macstr), '-');
 	
 	snprintf(appconn->log_prefix, sizeof(appconn->log_prefix)-1,
-			"%s:%s", ipstr, macstr);
+			"%s:%s", user_ipstr, macstr);
 
 	return 0;
 }
@@ -503,19 +526,19 @@ appconn_set_debug_prefix(struct app_conn_t *appconn)
 int
 appconn_set_filter_prefix(struct app_conn_t *appconn, int hansi_type, int hansi_id)
 {
-	char ipstr[32] = "";
+	char user_ipstr[IPX_LEN] = "";
 	char macstr[32] = "";
 	char *username = NULL;
 
 	if (NULL == appconn) {
 		return -1;
 	}
-	ip2str(appconn->session.user_ip, ipstr, sizeof (ipstr));
+	ipx2str(&(appconn->session.user_addr), user_ipstr, sizeof(user_ipstr));
 	mac2str(appconn->session.usermac, macstr, sizeof(macstr), '-');
 	username = appconn->session.username;
 	
 	snprintf(appconn->session_filter_prefix, sizeof(appconn->session_filter_prefix)-1,
-				"USERLOG:%d-%d: %s", hansi_type, hansi_id, ipstr);
+				"USERLOG:%d-%d: %s", hansi_type, hansi_id, user_ipstr);
 	if (0 != strcmp(macstr,"")) {
 		strncat(appconn->session_filter_prefix, ": ",
 			sizeof(appconn->session_filter_prefix)-strlen(appconn->session_filter_prefix)-1);
@@ -575,7 +598,7 @@ appconn_get_sub_interface(struct app_conn_t *appconn)
 {
 	int i = 0;
 	char mac_str[32] = "";
-	char ip_str[32] = "";
+	char user_ipstr[IPX_LEN] = "";
 	char sub_if_name[MAX_IF_NAME_LEN] = "";
 	char if_name[MAX_IF_NAME_LEN] = "";
 
@@ -585,7 +608,7 @@ appconn_get_sub_interface(struct app_conn_t *appconn)
 	}
 
 	mac2str(appconn->session.usermac, mac_str, sizeof(mac_str), ':');
-	ip2str(appconn->session.user_ip, ip_str, sizeof(ip_str));
+	ipx2str(&(appconn->session.user_addr), user_ipstr, sizeof(user_ipstr));
 
 	if (is_sub_interface(appconn->session.intf)) {
 		strncpy(appconn->sub_intf, appconn->session.intf,
@@ -694,8 +717,9 @@ appconn_set_nasid(struct app_conn_t *appconn,
 			break;
 		case NASID_KEYTYPE_IPRANGE:
 			iprange = &(map->key.iprange);
-			if (appconn->session.user_ip >= iprange->ip_begin
-				&& appconn->session.user_ip <= iprange->ip_end) {
+			if (EAG_IPV4 == appconn->session.user_addr.family 
+				&& appconn->session.user_addr.user_ip >= iprange->ip_begin
+				&& appconn->session.user_addr.user_ip <= iprange->ip_end) {
 				strncpy(appconn->session.nasid, map->nasid, RADIUS_MAX_NASID_LEN-1);
 				appconn->nascon = map->conid;
 				return EAG_RETURN_OK;
@@ -780,10 +804,10 @@ appconn_check_nasportid(struct app_conn_t *appconn)
 }
 
 int
-appconn_check_is_conflict(uint32_t userip, appconn_db_t *appdb, struct appsession *session, struct app_conn_t **app)
+appconn_check_is_conflict(user_addr_t *user_addr, appconn_db_t *appdb, struct appsession *session, struct app_conn_t **app)
 {
-	char ipstr[32] = "";
-	char ipstr2[32] = "";
+	char user_ipstr[IPX_LEN] = "";
+	char user_ipstr2[IPX_LEN] = "";
 	char macstr[32] = "";
 	uint8_t zero_mac[6] = {0};
 	struct app_conn_t *appconn = NULL;
@@ -792,28 +816,32 @@ appconn_check_is_conflict(uint32_t userip, appconn_db_t *appdb, struct appsessio
 		eag_log_err("appconn_check_with_session input err");
 		return EAG_ERR_INPUT_PARAM_ERR;
 	}	
-	ip2str(userip, ipstr, sizeof(ipstr));
+	ipx2str(user_addr, user_ipstr, sizeof(user_ipstr));
 
 	*app = NULL;
-	session->user_ip = userip;
-	eag_log_debug("ipinfo_get", "eag_ipinfo_get before userip=%s", ipstr);
-	eag_ipinfo_get(session->intf, sizeof(session->intf)-1, session->usermac, userip);
+	memcpy(&(session->user_addr), user_addr, sizeof(user_addr_t));
+	eag_log_debug("eag_ipinfo", "eag_ipinfo_get before userip=%s", user_ipstr);
+	if (EAG_IPV6 == user_addr->family) {
+		eag_ipv6info_get(session->usermac, &(user_addr->user_ipv6));
+    } else {
+		eag_ipinfo_get(session->intf, sizeof(session->intf)-1, session->usermac, user_addr->user_ip);// houyt
+	}
 	mac2str(session->usermac, macstr, sizeof(macstr), ':');
-	eag_log_debug("ipinfo_get", "eag_ipinfo_get after userip=%s,usermac=%s,interface=%s",
-		ipstr, macstr, session->intf);
+	eag_log_debug("eag_ipinfo", "eag_ipinfo_get after userip=%s,usermac=%s,interface=%s",
+		user_ipstr, macstr, session->intf);
 
 	eag_log_debug("appconn", "appconn_check_is_conflict eag_ipinfo_get "
-		"userip %s, interface(%s), usermac(%s)", ipstr, session->intf, macstr);
+		"userip %s, interface(%s), usermac(%s)", user_ipstr, session->intf, macstr);
 
 	if (memcmp(zero_mac, session->usermac, 6) == 0) {
 		return EAG_RETURN_OK;
 	}
 	
 	appconn = appconn_find_by_usermac(appdb, session->usermac);
-	if (NULL != appconn && userip != appconn->session.user_ip) {
-		ip2str(appconn->session.user_ip, ipstr2, sizeof(ipstr2));
+	if (NULL != appconn && 0 != memcmp_ipx(user_addr, &(appconn->session.user_addr))) {
+		ipx2str(&(appconn->session.user_addr), user_ipstr2, sizeof(user_ipstr2));
 		eag_log_warning("appconn_check_is_conflict user mac %s conflict"
-			"ip1=%s, ip2=%s", macstr, ipstr, ipstr2);
+			"ip1=%s, ip2=%s", macstr, user_ipstr, user_ipstr2);
 		*app = appconn;
 		return EAG_ERR_APPCONN_APP_IS_CONFLICT;
 	}
@@ -827,12 +855,12 @@ appconn_create_no_arp(appconn_db_t * appdb, struct appsession *session)
 {
 	struct app_conn_t *appconn = NULL;
 	int ret = 0;
-	char ipstr[32] = "";
+	char user_ipstr[IPX_LEN] = "";
 	char macstr[32] = "";
 	uint8_t zero_mac[6] = {0};
 	unsigned int security_type = 0;
 
-	if(NULL == appdb) {
+	if (NULL == appdb || NULL == session) {
 		eag_log_err("appconn_create_no_arp appdb is NULL!");
 		return NULL;
 	}	
@@ -844,8 +872,8 @@ appconn_create_no_arp(appconn_db_t * appdb, struct appsession *session)
 	}
 	
 	appconn->session.nasip = eag_ins_get_nasip(appdb->eagins);
-	ip2str(session->user_ip, ipstr, sizeof(ipstr));
-	appconn->session.user_ip = session->user_ip;
+	ipx2str(&(session->user_addr), user_ipstr, sizeof(user_ipstr));
+	memcpy(&(appconn->session.user_addr), &(session->user_addr), sizeof(user_addr_t));
 	memcpy(appconn->session.usermac, session->usermac, sizeof(appconn->session.usermac));
 	strncpy(appconn->session.intf, session->intf, sizeof(appconn->session.intf)-1);
 
@@ -855,7 +883,7 @@ appconn_create_no_arp(appconn_db_t * appdb, struct appsession *session)
 		&& appdb->force_wireless) {
 		eag_log_warning("appconn_create_no_arp"
 			"userip %s, usermac is zero, force_wireless enable, appconn free",
-			ipstr);
+			user_ipstr);
 		appconn_free(appconn);
 		return NULL;
 	}
@@ -863,7 +891,7 @@ appconn_create_no_arp(appconn_db_t * appdb, struct appsession *session)
 	if (strlen(appconn->session.intf) == 0) {
 		eag_log_warning("appconn_create_no_arp"
 			"userip %s, interface not found, appconn free",
-			ipstr);
+			user_ipstr);
 		appconn_free(appconn);
 		return NULL;
 	}
@@ -873,14 +901,14 @@ appconn_create_no_arp(appconn_db_t * appdb, struct appsession *session)
 	if (0 != ret && appdb->force_wireless) {
 		eag_log_err("appconn_create_no_arp "
 			"eag_get_sta_info_by_mac_v2 failed, userip=%s, usermac=%s, ret=%d",
-			ipstr, macstr, ret);
+			user_ipstr, macstr, ret);
 		appconn_free(appconn);
 		return NULL;
 	}
 	if (0 == ret && NO_NEED_AUTH == security_type) {
 		eag_log_err("appconn_create_no_arp failed security_type=NO_NEED_AUTH"
 			" failed , userip=%s, usermac=%s",
-			ipstr, macstr);
+			user_ipstr, macstr);
 		appconn_free(appconn);
 		return NULL;
 	}
@@ -913,22 +941,22 @@ appconn_create_no_arp(appconn_db_t * appdb, struct appsession *session)
 }
 
 struct app_conn_t *
-appconn_find_by_ip_autocreate(appconn_db_t *appdb, uint32_t userip)
+appconn_find_by_ip_autocreate(appconn_db_t *appdb, user_addr_t *user_addr)
 {	
 	struct app_conn_t *appconn = NULL;
 	int ret = 0;
-	char ipstr[32] = "";
+	char user_ipstr[IPX_LEN] = "";
 	char macstr[32] = "";
 	uint8_t zero_mac[6] = {0};
 	unsigned int security_type = 0;
 	
-	if (NULL == appdb) {
+	if (NULL == appdb || NULL == user_addr) {
 		eag_log_err("appconn_find_by_ip_autocreate input error");
 		return NULL;
 	}
 
-	ip2str(userip, ipstr, sizeof(ipstr));
-	appconn = appconn_find_by_userip(appdb, userip);
+	ipx2str(user_addr, user_ipstr, sizeof(user_ipstr));
+	appconn = appconn_find_by_userip(appdb, user_addr);
 	if (NULL != appconn) {
 		return appconn;
 	}
@@ -938,22 +966,25 @@ appconn_find_by_ip_autocreate(appconn_db_t *appdb, uint32_t userip)
 		eag_log_err("appconn_find_by_ip_autocreate appconn_new failed");
 		return NULL;
 	}
-	appconn->session.user_ip = userip;
+	memcpy(&(appconn->session.user_addr), user_addr, sizeof(user_addr));
 	appconn->session.nasip = eag_ins_get_nasip(appdb->eagins);
-
-	eag_log_debug("ipinfo_get", "eag_ipinfo_get before userip=%s", ipstr);
-	eag_ipinfo_get(appconn->session.intf, sizeof(appconn->session.intf)-1,
-				appconn->session.usermac, userip);
+	eag_log_debug("eag_ipinfo", "eag_ipinfo_get before userip=%s", user_ipstr);
+	if (EAG_IPV6 == user_addr->family) {
+		eag_ipv6info_get(appconn->session.usermac, &(user_addr->user_ipv6));
+    } else {
+		eag_ipinfo_get(appconn->session.intf, sizeof(appconn->session.intf)-1,
+				appconn->session.usermac, user_addr->user_ip);
+	}
 	mac2str(appconn->session.usermac, macstr, sizeof(macstr), '-');
-	eag_log_debug("ipinfo_get", "eag_ipinfo_get after userip=%s,usermac=%s,interface=%s",
-		ipstr, macstr, appconn->session.intf);
+	eag_log_debug("eag_ipinfo", "eag_ipinfo_get after userip=%s,usermac=%s,interface=%s",
+		user_ipstr, macstr, appconn->session.intf);
 	debug_appconn("eag_ipinfo_get userip %s, interface(%s), usermac(%s)",
-		ipstr, appconn->session.intf, macstr);
+		user_ipstr, appconn->session.intf, macstr);
 	if (0 == memcmp(zero_mac, appconn->session.usermac, 6)
 		&& appdb->force_wireless) {
 		eag_log_warning("appconn_find_by_ip_autocreate"
 			"userip %s, usermac is zero, force_wireless enable, appconn free",
-			ipstr);
+			user_ipstr);
 		appconn_free(appconn);
 		return NULL;
 	}
@@ -962,11 +993,11 @@ appconn_find_by_ip_autocreate(appconn_db_t *appdb, uint32_t userip)
 		ip_interface(userip, appconn->session.intf, 
 					sizeof(appconn->session.intf)-1);
 		debug_appconn("ip_interface userip %s, interface(%s)",
-		ipstr, appconn->session.intf);
+		user_ipstr, appconn->session.intf);
 		if (strlen(appconn->session.intf) == 0) {
 			eag_log_warning("appconn_find_by_ip_autocreate"
 				"ip_interface userip %s, interface not found, appconn free",
-				ipstr);
+				user_ipstr);
 			appconn_free(appconn);
 			return NULL;
 		}
@@ -975,7 +1006,7 @@ appconn_find_by_ip_autocreate(appconn_db_t *appdb, uint32_t userip)
 	if (strlen(appconn->session.intf) == 0) {
 		eag_log_warning("appconn_find_by_ip_autocreate"
 			"userip %s, interface not found, appconn free",
-			ipstr);
+			user_ipstr);
 		appconn_free(appconn);
 		return NULL;
 	}
@@ -987,14 +1018,14 @@ appconn_find_by_ip_autocreate(appconn_db_t *appdb, uint32_t userip)
 	if (0 != ret && appdb->force_wireless) {
 		eag_log_err("appconn_find_by_ip_autocreate "
 			"eag_get_sta_info_by_mac_v2 failed, userip=%s, usermac=%s, ret=%d",
-			ipstr, macstr, ret);
+			user_ipstr, macstr, ret);
 		appconn_free(appconn);
 		return NULL;
 	}
 	if (0 == ret && NO_NEED_AUTH == security_type) {
 		eag_log_err("appconn_find_by_ip_autocreate failed security_type=NO_NEED_AUTH"
 			" failed , userip=%s, usermac=%s",
-			ipstr, macstr);
+			user_ipstr, macstr);
 		appconn_free(appconn);
 		return NULL;
 	}
@@ -1032,7 +1063,7 @@ appconn_create_by_sta_v2(appconn_db_t * appdb, struct appsession *session)
 {
 	struct app_conn_t *appconn = NULL;
 	int ret = 0;
-	char ipstr[32] = "";
+	char user_ipstr[IPX_LEN] = "";
 	uint8_t zero_mac[6] = {0};
 
 	DEBUG_FUNCTION_BEGIN();
@@ -1048,8 +1079,8 @@ appconn_create_by_sta_v2(appconn_db_t * appdb, struct appsession *session)
 	}
 	
 	appconn->session.nasip = eag_ins_get_nasip(appdb->eagins);
-	ip2str(session->user_ip, ipstr, sizeof(ipstr));
-	appconn->session.user_ip = session->user_ip;
+	ipx2str(&(session->user_addr), user_ipstr, sizeof(user_ipstr));
+	memcpy(&(appconn->session.user_addr), &(session->user_addr), sizeof(user_addr_t));
 	memcpy(appconn->session.usermac, session->usermac, sizeof(appconn->session.usermac));
 	strncpy(appconn->session.intf, session->intf, sizeof(appconn->session.intf)-1);
 	
@@ -1057,7 +1088,7 @@ appconn_create_by_sta_v2(appconn_db_t * appdb, struct appsession *session)
 		&& appdb->force_wireless) {
 		eag_log_warning("appconn_create_by_sta_v2"
 			"userip %s, usermac is zero, force_wireless enable, appconn free",
-			ipstr);
+			user_ipstr);
 		appconn_free(appconn);
 		return NULL;
 	}
@@ -1066,11 +1097,11 @@ appconn_create_by_sta_v2(appconn_db_t * appdb, struct appsession *session)
 		ip_interface(session->user_ip, appconn->session.intf,  
 				sizeof(appconn->session.intf)-1);
 		debug_appconn("ip_interface userip %s, interface(%s)",
-			ipstr, appconn->session.intf);
+			user_ipstr, appconn->session.intf);
 		if (strlen(appconn->session.intf) == 0) {
 			eag_log_warning("appconn_create_by_sta_v2"
 				"ip_interface userip %s, interface not found, appconn free",
-				ipstr);
+				user_ipstr);
 			appconn_free(appconn);
 			return NULL;
 		}
@@ -1079,7 +1110,7 @@ appconn_create_by_sta_v2(appconn_db_t * appdb, struct appsession *session)
 	if (strlen(appconn->session.intf) == 0) {
 		eag_log_warning("appconn_create_by_sta_v2"
 			"userip %s, interface not found, appconn free",
-			ipstr);
+			user_ipstr);
 		appconn_free(appconn);
 		return NULL;
 	}
@@ -1328,7 +1359,7 @@ appconn_check_redir_count(struct app_conn_t *appconn,
 
 static int
 eag_show_dhcplease_by_userip(DBusConnection *dbus_conn,
-							uint32_t user_ip,
+							user_addr_t *user_addr,
 							uint8_t mac[6])
 {
 	DBusMessage *query = NULL;
@@ -1346,9 +1377,12 @@ eag_show_dhcplease_by_userip(DBusConnection *dbus_conn,
 	uint32_t ip_temp = 0;
 	uint8_t mac_temp[6] = {0};
 	char mac_temp_str[32] = "";
+	char user_ipstr[IPX_LEN] = "";
+	ipx2str(user_addr, user_ipstr, sizeof(user_ipstr));
 
-	eag_log_debug("appconn", "eag_show_dhcplease_by_userip, user_ip=%#x",
-				user_ip);
+	uint32_t user_ip = user_addr->user_ip;
+	eag_log_debug("appconn", "eag_show_dhcplease_by_userip, user_ip=%s",
+				user_ipstr);
 	query = dbus_message_new_method_call(EAG_DBUS_DHCP_BUSNAME,
 									EAG_DBUS_DHCP_OBJPATH,
 									EAG_DBUS_DHCP_INTERFACE,
@@ -1438,7 +1472,7 @@ appconn_check_dhcplease(struct app_conn_t *appconn)
 	}
 	appconn->last_check_dhcp_time = time_now;
 	
-	ret = eag_show_dhcplease_by_userip(dbus_conn, appconn->session.user_ip, mac);
+	ret = eag_show_dhcplease_by_userip(dbus_conn, &(appconn->session.user_addr), mac);
 	if (0 == ret && memcmp(appconn->session.usermac, mac, 6) == 0) {
 		log_app_debug(appconn, "appconn_check_dhcplease success");
 		appconn->last_check_dhcp_resault = EAG_RETURN_OK;
@@ -1456,7 +1490,7 @@ appconn_check_dhcplease(struct app_conn_t *appconn)
 
 int 
 eag_get_sta_dhcplease_info(DBusConnection *dbus_conn,
-				uint32_t sta_ip,
+				user_addr_t *user_addr,
 				unsigned int *addr_in_pool_flag,
 				unsigned int *addr_lease_status)
 {
@@ -1473,9 +1507,9 @@ eag_get_sta_dhcplease_info(DBusConnection *dbus_conn,
 		#define FTS_EXPIRED	3
 	*/
 	unsigned int lease_states = 0;
-	char user_ipstr[32] = "";
+	char user_ipstr[IPX_LEN] = "";
 
-	ip2str(sta_ip, user_ipstr, sizeof(user_ipstr));
+	ipx2str(user_addr, user_ipstr, sizeof(user_ipstr));
 	eag_log_debug("appconn", "eag_get_sta_dhcplease_info sta_ip=%s", user_ipstr);
 	query = dbus_message_new_method_call(EAG_DBUS_DHCP_BUSNAME, 
 									EAG_DBUS_DHCP_OBJPATH, 
@@ -1483,7 +1517,7 @@ eag_get_sta_dhcplease_info(DBusConnection *dbus_conn,
 									EAG_DBUS_METHOD_GET_DHCP_LEASE_INFO);
 	dbus_error_init(&err);
 	dbus_message_append_args(query,
-							DBUS_TYPE_UINT32, &sta_ip,
+							DBUS_TYPE_UINT32, &(user_addr->user_ip),
 							DBUS_TYPE_INVALID);
 	
 	reply = dbus_connection_send_with_reply_and_block (dbus_conn,query, 1000, &err);
@@ -1650,14 +1684,14 @@ appdb_log_all_appconn(appconn_db_t *appdb)
 {
 	struct app_conn_t *appconn = NULL;
 	struct app_conn_t *next = NULL;
-	char user_ipstr[32] = "";
+	char user_ipstr[IPX_LEN] = "";
 	char user_macstr[32] = "";
 	char *userintf = "";
 	int authed_num = 0;
 	int unauth_num = 0;
 	
 	list_for_each_entry_safe(appconn, next, &(appdb->head), node) {
-		ip2str(appconn->session.user_ip, user_ipstr, sizeof (user_ipstr));
+		ipx2str(&(appconn->session.user_addr), user_ipstr, sizeof(user_ipstr));
 		mac2str(appconn->session.usermac, user_macstr, sizeof(user_macstr), '-');
 		userintf = appconn->session.intf;
 		
@@ -1691,7 +1725,9 @@ set_appconn_flux(struct app_conn_t *appconn)
 {
 	appconn_db_t *appdb = NULL;
 	int flux_from = 0;
+	char user_ipstr[IPX_LEN] = "";
 
+	ipx2str(&(appconn->session.user_addr), user_ipstr, sizeof(user_ipstr));
 	appdb = appconn->appdb;
 	flux_from = eag_ins_get_flux_from(appdb->eagins);
 	uint32_t input_factor = appdb->input_correct_factor;
@@ -1732,8 +1768,7 @@ set_appconn_flux(struct app_conn_t *appconn)
 			appconn->session.wireless_data.fixed_input_packets += appconn->session.wireless_data.last_input_packets;
 			appconn->session.wireless_data.fixed_output_octets += appconn->session.wireless_data.last_output_octets;
 			appconn->session.wireless_data.fixed_output_packets += appconn->session.wireless_data.last_output_packets;
-			eag_log_info("set_appconn_flux by wireless userip=%#x flux reduced",
-					appconn->session.user_ip);
+			eag_log_info("set_appconn_flux by wireless userip=%s flux reduced", user_ipstr);
 		}
 		if (appconn->session.wireless_data.fixed_input_octets + appconn->session.wireless_data.cur_input_octets
 			> appconn->session.wireless_data.init_input_octets)
@@ -1794,7 +1829,7 @@ set_appconn_flux(struct app_conn_t *appconn)
 int
 appconn_check_flux(struct app_conn_t *appconn, time_t time_now)
 {
-	char user_ipstr[32] = "";
+	char user_ipstr[IPX_LEN] = "";
 	
 	if (APPCONN_STATUS_AUTHED == appconn->session.state
 		&& (appconn->session.output_octets - appconn->session.last_idle_check_output_octets > 0)	/*上行流量大于0*/
@@ -1804,7 +1839,7 @@ appconn_check_flux(struct app_conn_t *appconn, time_t time_now)
 		appconn->session.last_flux_time = time_now;
 		appconn->session.last_idle_check_output_octets = appconn->session.output_octets;
 		appconn->session.last_idle_check_octets = appconn->session.output_octets + appconn->session.input_octets;
-		ip2str(appconn->session.user_ip, user_ipstr, sizeof(user_ipstr));
+		ipx2str(&(appconn->session.user_addr), user_ipstr, sizeof(user_ipstr));
 		eag_log_info("appconn_check_flux userip=%s, output_octets=%llu, total_octets=%llu",
 			user_ipstr, appconn->session.last_idle_check_output_octets,
 			appconn->session.last_idle_check_octets);
@@ -1891,7 +1926,7 @@ flush_all_appconn_flux_from_iptables(appconn_db_t *appdb, int time_interval)
 	struct ipt_counters *my_counter = NULL;
 	unsigned int rule_num = 0;
 	struct app_conn_t *appconn = NULL;
-	uint32_t userip = 0;
+	user_addr_t user_addr = {0};
 	char hansi_type = (HANSI_LOCAL == appdb->hansi_type)?'L':'R';
 	
 	eag_time_gettimeofday(&tv, NULL);
@@ -1949,8 +1984,10 @@ flush_all_appconn_flux_from_iptables(appconn_db_t *appdb, int time_interval)
 					continue;
 				}
 				my_counter = iptc_read_counter(chain_name, rule_num, handle);
-				userip = ntohl(p_entry->ip.dst.s_addr);
-				appconn = appconn_find_by_userip(appdb, userip);
+				memset(&user_addr, 0, sizeof(user_addr_t));
+				user_addr.family = EAG_IPV4;
+				user_addr.user_ip = ntohl(p_entry->ip.dst.s_addr);
+				appconn = appconn_find_by_userip(appdb, &user_addr);
 				if (NULL != appconn) {
 					appconn->iptables_data.input_octets = my_counter->bcnt;
 					appconn->iptables_data.input_packets = my_counter->pcnt;
@@ -1973,8 +2010,10 @@ flush_all_appconn_flux_from_iptables(appconn_db_t *appdb, int time_interval)
  					continue;
 				}
 				my_counter = iptc_read_counter(chain_name,rule_num, handle);
-				userip = ntohl(p_entry->ip.src.s_addr);
-				appconn = appconn_find_by_userip(appdb, userip);
+				memset(&user_addr, 0, sizeof(user_addr_t));
+				user_addr.family = EAG_IPV4;
+				user_addr.user_ip = ntohl(p_entry->ip.src.s_addr);
+				appconn = appconn_find_by_userip(appdb, &user_addr);
 				if (NULL != appconn) {
 					appconn->iptables_data.output_octets = my_counter->bcnt;
 					appconn->iptables_data.output_packets = my_counter->pcnt;
@@ -1998,7 +2037,7 @@ appconn_init_flux_from_wireless(struct app_conn_t *appconn)
 	struct WtpStaInfo *StaNode = NULL;
 	DBusConnection *dbus_conn = NULL;
 	int ret = 0;
-	char userip_str[32] = "";
+	char user_ipstr[IPX_LEN] = "";
 	int found = 0;
 	
 	if (NULL == appconn) {
@@ -2008,7 +2047,7 @@ appconn_init_flux_from_wireless(struct app_conn_t *appconn)
 	
 	appdb = appconn->appdb;
 	dbus_conn = eag_dbus_get_dbus_conn(appdb->eagdbus);
-	ip2str(appconn->session.user_ip, userip_str, sizeof(userip_str));
+	ipx2str(&(appconn->session.user_addr), user_ipstr, sizeof(user_ipstr));
 	
 	StaHead = eag_show_sta_info_of_all_wtp(appdb->hansi_id,
 							appdb->hansi_type, dbus_conn, &ret);
@@ -2044,7 +2083,7 @@ appconn_init_flux_from_wireless(struct app_conn_t *appconn)
 					"appconn_init_flux_from_wireless userip %s, "
 					"input_octets %llu, input_packets %u, "
 					"output_octets %llu, output_packets %u",
-					userip_str,
+					user_ipstr,
 					appconn->session.wireless_data.init_input_octets,
 					appconn->session.wireless_data.init_input_packets,
 					appconn->session.wireless_data.init_output_octets,
@@ -2057,7 +2096,7 @@ appconn_init_flux_from_wireless(struct app_conn_t *appconn)
 	
 	if (!found) {
 		eag_log_err("appconn_init_flux_from_wireless not found sta %s",
-			userip_str);
+			user_ipstr);
 		return -1;
 	}
 	

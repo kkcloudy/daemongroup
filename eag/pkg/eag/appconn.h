@@ -111,7 +111,7 @@ appconn_del_from_db(struct app_conn_t *appconn);
 
 struct app_conn_t *
 appconn_find_by_userip(appconn_db_t *appdb,
-		uint32_t userip);
+		user_addr_t *user_addr);
 
 struct app_conn_t *
 appconn_find_by_usermac(appconn_db_t *appdb,
@@ -130,7 +130,7 @@ appconn_count_by_username(appconn_db_t *appdb,
 
 int
 appconn_count_by_userip(appconn_db_t *appdb,
-		uint32_t userip);
+		user_addr_t *user_addr);
 
 int
 appconn_count_by_usermac(appconn_db_t *appdb,
@@ -151,14 +151,14 @@ appconn_set_nasportid(struct app_conn_t *appconn,
 		struct nasportid_conf *nasportidconf);
 
 int
-appconn_check_is_conflict(uint32_t userip, appconn_db_t *appdb, struct appsession *session, struct app_conn_t **app);
+appconn_check_is_conflict(user_addr_t *user_addr, appconn_db_t *appdb, struct appsession *session, struct app_conn_t **app);
 
 struct app_conn_t *
 appconn_create_no_arp(appconn_db_t * appdb, struct appsession *session);
 
 struct app_conn_t *
 appconn_find_by_ip_autocreate(appconn_db_t *appdb,
-		uint32_t userip);
+		user_addr_t *user_addr);
 
 struct app_conn_t *
 appconn_create_by_sta_v2(appconn_db_t *appdb, struct appsession *session);
@@ -267,7 +267,7 @@ flush_all_appconn_flux_immediate(appconn_db_t *appdb);
 
 int 
 eag_get_sta_dhcplease_info(DBusConnection *dbus_conn,
-				uint32_t sta_ip,
+				user_addr_t *user_addr,
 				unsigned int *addr_in_pool_flag,
 				unsigned int *addr_lease_status);
 

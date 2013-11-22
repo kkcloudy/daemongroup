@@ -1926,13 +1926,55 @@ int brctl_show(char *mac,char *br,char *intf)
 	return 0;
 }
 
+int 
+eag_ipv6info_get(unsigned char *const mac, struct in6_addr *ipv6)
+{
+	char ipv6_str[48] = "";
+	char mac_str[36] = "";
+    char cmd[128] = "";
+	char buff[128] = "";
+	FILE *p_file = NULL;
+	char *pos = NULL;
+
+	memset(ipv6_str, 0, sizeof(ipv6_str));
+    memset(mac_str, 0, sizeof(mac_str));
+    memset(cmd, 0, sizeof(cmd));
+    memset(buff, 0, sizeof(buff));
+    /* 
+     *	cmd: sudo ip -6 neighbour show to fe80::222:5fff:feb3:d0e2 
+     *	get: fe80::222:5fff:feb3:d0e2 dev wlan1-1-1 lladdr 00:22:5f:b3:d0:e2 STALE
+     */
+    ipv6tostr(ipv6, ipv6_str, sizeof(ipv6_str));
+    snprintf(cmd, sizeof(cmd) - 1, "sudo ip -6 neighbour show to %s", ipv6_str);
+	eag_log_debug("eag_ipinfo", "eag_ipv6info_get cmd=%s", cmd);
+	
+	p_file = popen(cmd, "r");
+	if (NULL == p_file) {
+		eag_log_err("eag_ipv6info_get can not open file!\n");
+		return -1;
+	}
+	fgets(buff, sizeof(buff), p_file);
+	pclose(p_file);
+	
+	eag_log_debug("eag_ipinfo", "eag_ipv6info_get %s", buff);
+	pos = strstr(buff, "lladdr ");
+	if (NULL == pos) {
+		return -1;
+	}
+	memcpy(mac_str, pos + 7, 18);
+	mac_str[17] = '\0';
+	str2mac(mac, 6, mac_str);
+	eag_log_debug("eag_ipinfo", "eag_ipv6info_get mac: %s", mac_str);
+
+	return EAG_RETURN_OK;
+}
 
 int 
 eag_ipinfo_get(char * const intf, size_t n, unsigned char *const mac, uint32_t ip)
 {
 	struct arpreq req;
 	struct sockaddr_in *sin = NULL;
-        struct in_addr ip_addr;
+    struct in_addr ip_addr;
 	unsigned char *ptr = NULL;
 	int ret = -1;
 

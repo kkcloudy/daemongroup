@@ -280,7 +280,7 @@ dot11PortalNoAuthenticatedTable_commit( dot11PortalNoAuthenticatedTable_rowreq_c
 				   if(SNMPD_DBUS_SUCCESS == get_instance_dbus_connection(rowreq_ctx->data.parameter, &connection, SNMPD_INSTANCE_MASTER_V3)) {
 					   int ret = -1;
 		 
-					   ret = eag_add_captive_intf( connection, rowreq_ctx->data.parameter.local_id, rowreq_ctx->data.parameter.instance_id, rowreq_ctx->tbl_idx.CaptiveInterface );
+					   ret = eag_add_captive_intf( connection, rowreq_ctx->data.parameter.local_id, rowreq_ctx->data.parameter.instance_id, 4, rowreq_ctx->tbl_idx.CaptiveInterface );
 			
 					   snmp_log(LOG_DEBUG, "dot11PortalNoAuthenticatedTable_commit: eag_add_captive_intf: ret = %d\n", ret);
 					   if(EAG_RETURN_OK == ret) {
@@ -303,7 +303,7 @@ dot11PortalNoAuthenticatedTable_commit( dot11PortalNoAuthenticatedTable_rowreq_c
 				   if(SNMPD_DBUS_SUCCESS == get_instance_dbus_connection(rowreq_ctx->data.parameter, &connection, SNMPD_INSTANCE_MASTER_V3)) {
 				   		int ret = -1;
 	
-						ret = eag_del_captive_intf( connection, rowreq_ctx->data.parameter.local_id, rowreq_ctx->data.parameter.instance_id, rowreq_ctx->tbl_idx.CaptiveInterface );
+						ret = eag_del_captive_intf( connection, rowreq_ctx->data.parameter.local_id, rowreq_ctx->data.parameter.instance_id, 4, rowreq_ctx->tbl_idx.CaptiveInterface );
 		
 						snmp_log(LOG_DEBUG, "dot11PortalNoAuthenticatedTable_commit: eag_del_captive_intf: CaptiveInterface %s: ret = %d\n", rowreq_ctx->tbl_idx.CaptiveInterface, ret);
 					    if(EAG_RETURN_OK == ret) {

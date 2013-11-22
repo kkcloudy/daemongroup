@@ -24,6 +24,8 @@
 
 /*base conf*/
 #define EAG_DBUS_METHOD_SET_NASIP			"eag_dbus_method_set_nasip"
+#define EAG_DBUS_METHOD_SET_NASIPV6			"eag_dbus_method_set_nasipv6"
+#define EAG_DBUS_METHOD_SET_IPV6_SERVICE	"eag_dbus_method_set_ipv6_service"
 //#define EAG_DBUS_METHOD_SET_DISTRIBUTED		"eag_dbus_method_set_distributed"
 #define EAG_DBUS_METHOD_SET_RDC_DISTRIBUTED	"eag_dbus_method_set_rdc_distributed"
 #define EAG_DBUS_METHOD_SET_PDC_DISTRIBUTED	"eag_dbus_method_set_pdc_distributed"
@@ -83,6 +85,7 @@
 #define EAG_DBUS_METHOD_DEL_CAPTIVE_INTF			"eag_dbus_method_del_captive_intf"
 #define EAG_DBUS_METHOD_SHOW_CAPTIVE_INTFS			"eag_dbus_method_show_captive_intfs"
 #define EAG_DBUS_METHOD_CONF_CAPTIVE_LIST			"eag_dbus_method_conf_captive_list"
+#define EAG_DBUS_METHOD_CONF_CAPTIVE_IPV6_LIST		"eag_dbus_method_conf_captive_ipv6_list"
 #define EAG_DBUS_METHOD_SHOW_WHITE_LIST				"eag_dbus_method_show_white_list"
 #define EAG_DBUS_METHOD_SHOW_BLACK_LIST				"eag_dbus_method_show_black_list"
 
@@ -91,6 +94,7 @@
 #define EAG_DBUS_METHOD_MODIFY_PORTAL				"eag_dbus_method_modify_portal"
 #define EAG_DBUS_METHOD_DEL_PORTAL					"eag_dbus_method_del_portal"
 #define EAG_DBUS_METHOD_GET_PORTAL_CONF				"eag_dbus_method_get_portal_conf"
+#define EAG_DBUS_METHOD_SET_MACBIND					"eag_dbus_method_set_macbind"
 #define EAG_DBUS_METHOD_SET_ACNAME					"eag_dbus_method_set_acname"
 #define EAG_DBUS_METHOD_SET_ACIP_TO_URL				"eag_dbus_method_set_acip_to_url"
 #define EAG_DBUS_METHOD_SET_NASID_TO_URL			"eag_dbus_method_set_nasid_to_url"
@@ -274,6 +278,86 @@ eag_set_nasip(DBusConnection *connection,
 	}
 
 	
+	dbus_message_unref(reply);
+	
+	return iRet;
+}
+
+int
+eag_set_nasipv6(DBusConnection *connection, 
+				int hansitype, int insid,
+				char *nasipv6)
+{
+	DBusMessage *query, *reply;
+	DBusError err;
+	int iRet=EAG_ERR_UNKNOWN;
+	eag_dbus_path_reinit(hansitype,insid);
+	query = dbus_message_new_method_call(
+									EAG_DBUS_NAME,
+									EAG_DBUS_OBJPATH,
+									EAG_DBUS_INTERFACE, 
+									EAG_DBUS_METHOD_SET_NASIPV6 );
+	dbus_error_init(&err);
+	
+	dbus_message_append_args(	query,
+								DBUS_TYPE_STRING,  &nasipv6,
+								DBUS_TYPE_INVALID );
+
+	reply = dbus_connection_send_with_reply_and_block ( connection, query, -1, &err );
+
+	dbus_message_unref(query);
+	
+	if ( NULL == reply ){	
+		if (dbus_error_is_set(&err)){
+			dbus_error_free(&err);
+		}
+		return EAG_ERR_DBUS_FAILED;
+	}else{
+		dbus_message_get_args(	reply,
+								&err,
+								DBUS_TYPE_INT32, &iRet,
+								DBUS_TYPE_INVALID );
+	}
+
+	dbus_message_unref(reply);
+	
+	return iRet;
+}
+
+int
+eag_set_ipv6_server(DBusConnection *connection, 
+				int hansitype, int insid,
+				int ipv6_service)
+{
+	DBusMessage *query, *reply;
+	DBusError err;
+	int iRet=EAG_ERR_UNKNOWN;
+	eag_dbus_path_reinit(hansitype,insid);
+	query = dbus_message_new_method_call(
+									EAG_DBUS_NAME,
+									EAG_DBUS_OBJPATH,
+									EAG_DBUS_INTERFACE, 
+									EAG_DBUS_METHOD_SET_IPV6_SERVICE);
+	dbus_error_init(&err);
+	
+	dbus_message_append_args(	query,
+								DBUS_TYPE_INT32,  &ipv6_service,
+								DBUS_TYPE_INVALID );
+
+	reply = dbus_connection_send_with_reply_and_block ( connection, query, -1, &err );
+
+	dbus_message_unref(query);	
+	if ( NULL == reply ){	
+		if (dbus_error_is_set(&err)){
+			dbus_error_free(&err);
+		}
+		return EAG_ERR_DBUS_FAILED;
+	}else{
+		dbus_message_get_args(	reply,
+								&err,
+								DBUS_TYPE_INT32, &iRet,
+								DBUS_TYPE_INVALID );
+	}
 	dbus_message_unref(reply);
 	
 	return iRet;
@@ -1708,6 +1792,8 @@ eag_get_base_conf( DBusConnection *connection,
 	DBusError err;
 	int iRet=0;
 	DBusMessageIter  iter;
+	unsigned int nasipv6[4];
+	memset(nasipv6, 0, sizeof(nasipv6));
 	if( NULL == baseconf ){
 		return EAG_ERR_INPUT_PARAM_ERR;
 	}
@@ -1833,6 +1919,17 @@ eag_get_base_conf( DBusConnection *connection,
 			dbus_message_iter_get_basic(&iter,&(baseconf->l2super_vlan));
 			dbus_message_iter_next(&iter);
 			dbus_message_iter_get_basic(&iter,&(baseconf->telecom_idletime_valuecheck));
+			dbus_message_iter_next(&iter);
+			dbus_message_iter_get_basic(&iter,&(baseconf->ipv6_switch));
+			dbus_message_iter_next(&iter);
+			dbus_message_iter_get_basic(&iter,&nasipv6[0]);
+			dbus_message_iter_next(&iter);
+			dbus_message_iter_get_basic(&iter,&nasipv6[1]);
+			dbus_message_iter_next(&iter);
+			dbus_message_iter_get_basic(&iter,&nasipv6[2]);
+			dbus_message_iter_next(&iter);
+			dbus_message_iter_get_basic(&iter,&nasipv6[3]);
+			memcpy(&(baseconf->nasipv6), nasipv6, sizeof(baseconf->nasipv6));
 		}
 	}
 	
@@ -2846,7 +2943,7 @@ eag_get_nasportid ( DBusConnection *connection,
 int
 eag_add_captive_intf( DBusConnection *connection, 
 				int hansitype, int insid,
-				char *intfs )
+				uint32_t family, char *intfs )
 {
 	DBusMessage *query, *reply;
 	DBusError err;
@@ -2861,6 +2958,7 @@ eag_add_captive_intf( DBusConnection *connection,
 	dbus_error_init(&err);
 	
 	dbus_message_append_args(	query,
+								DBUS_TYPE_UINT32, &family,
 								DBUS_TYPE_STRING, &intfs,
 								DBUS_TYPE_INVALID );
 
@@ -2889,7 +2987,7 @@ eag_add_captive_intf( DBusConnection *connection,
 int
 eag_del_captive_intf(DBusConnection *connection, 
 				int hansitype, int insid, 
-				char *intfs)
+				uint32_t family, char *intfs)
 {
 	
 	DBusMessage *query, *reply;
@@ -2905,6 +3003,7 @@ eag_del_captive_intf(DBusConnection *connection,
 	dbus_error_init(&err);
 	
 	dbus_message_append_args(	query,
+								DBUS_TYPE_UINT32, &family,
 								DBUS_TYPE_STRING, &intfs,
 								DBUS_TYPE_INVALID );
 
@@ -2942,6 +3041,7 @@ eag_get_captive_intfs(DBusConnection *connection,
 	DBusMessageIter  iter;
 	
 	unsigned long num = 0;
+	unsigned long ipv6_num = 0;
 	char *intfs = NULL;
 		
 	if( NULL == captive_intfs ){
@@ -2986,6 +3086,20 @@ eag_get_captive_intfs(DBusConnection *connection,
 					dbus_message_iter_next(&iter);
 					dbus_message_iter_get_basic(&iter, &intfs);
 					strncpy(captive_intfs->cpif[i], intfs, MAX_IF_NAME_LEN-1);
+				}
+			}
+
+			dbus_message_iter_next(&iter);
+			dbus_message_iter_get_basic(&iter, &ipv6_num);
+			if( ipv6_num > CP_MAX_INTERFACE_NUM ){
+				ipv6_num = CP_MAX_INTERFACE_NUM;
+			}
+			captive_intfs->ipv6_curr_ifnum = ipv6_num;
+			if( num > 0 ){
+				for( i=0; i<ipv6_num; i++ ){
+					dbus_message_iter_next(&iter);
+					dbus_message_iter_get_basic(&iter, &intfs);
+					strncpy(captive_intfs->ipv6_cpif[i], intfs, MAX_IF_NAME_LEN-1);
 				}
 			}
 		}
@@ -3047,6 +3161,57 @@ eag_conf_captive_list(DBusConnection *connection,
 }
 
 int
+eag_conf_captive_ipv6_list(DBusConnection *connection, 
+				int hansitype, int insid,
+				RULE_TYPE type_tmp, char *ipv6range, char *portset, char * domain, char * intfs,
+				char *add_or_del, char *white_or_black)
+
+{
+	DBusMessage *query, *reply;
+	DBusError err;
+	int iRet = 0;
+
+	int type = (int)type_tmp;
+	eag_dbus_path_reinit(hansitype,insid);
+	query = dbus_message_new_method_call(
+									EAG_DBUS_NAME,
+									EAG_DBUS_OBJPATH,
+									EAG_DBUS_INTERFACE, 
+									EAG_DBUS_METHOD_CONF_CAPTIVE_IPV6_LIST );
+	dbus_error_init(&err);
+	dbus_message_append_args(	query,
+								DBUS_TYPE_UINT32, &type,
+								DBUS_TYPE_STRING, &ipv6range,
+								DBUS_TYPE_STRING, &portset,
+								DBUS_TYPE_STRING, &domain,
+								DBUS_TYPE_STRING, &intfs,
+								DBUS_TYPE_STRING, &add_or_del,
+								DBUS_TYPE_STRING, &white_or_black,
+								DBUS_TYPE_INVALID );
+
+	reply = dbus_connection_send_with_reply_and_block (
+						connection, query, -1, &err );
+
+	dbus_message_unref(query);
+	
+	if ( NULL == reply ){	
+		if (dbus_error_is_set(&err)){
+			dbus_error_free(&err);
+		}
+		return EAG_ERR_DBUS_FAILED;
+	}else{
+		dbus_message_get_args( reply,
+								&err,
+								DBUS_TYPE_INT32, &iRet,
+								DBUS_TYPE_INVALID );
+	}
+	
+	dbus_message_unref(reply);
+	
+	return iRet;
+}
+
+int
 eag_show_white_list(DBusConnection *connection, 
 				int hansitype, int insid,
 				struct bw_rules *white)
@@ -3058,6 +3223,8 @@ eag_show_white_list(DBusConnection *connection,
 	DBusMessageIter  iter_array;
 	int ret = 0, i = 0, num = 0;
 	struct bw_rule_t *rule= NULL;
+	unsigned long ipv6_begin[4];
+	unsigned long ipv6_end[4];
 	char * domain = NULL;
 	char * ports = NULL;
 	char * intf = NULL;
@@ -3106,34 +3273,78 @@ eag_show_white_list(DBusConnection *connection,
 					DBusMessageIter iter_struct;
 					dbus_message_iter_recurse(&iter_array,&iter_struct);
 					dbus_message_iter_get_basic(&iter_struct, &type);
-					if((RULE_TYPE)type == RULE_DOMAIN)
+					if((RULE_TYPE)type == RULE_DOMAIN) {
 						rule[i].type = RULE_DOMAIN;
-					else
+					} else if ((RULE_TYPE)type == RULE_IPADDR) {
 						rule[i].type = RULE_IPADDR;
-
+					} else if ((RULE_TYPE)type == RULE_IPV6DOMAIN) {
+						rule[i].type = RULE_IPV6DOMAIN;
+					} else if ((RULE_TYPE)type == RULE_IPV6ADDR) {
+						rule[i].type = RULE_IPV6ADDR;
+					}
 					switch(rule[i].type){						
-						case RULE_IPADDR:	
-							dbus_message_iter_next(&iter_struct);
-							dbus_message_iter_get_basic(&iter_struct, &(rule[i].key.ip.ipbegin));
-					
-							dbus_message_iter_next(&iter_struct);
-							dbus_message_iter_get_basic(&iter_struct, &(rule[i].key.ip.ipend));
+					case RULE_IPADDR:	
+						dbus_message_iter_next(&iter_struct);
+						dbus_message_iter_get_basic(&iter_struct, &(rule[i].key.ip.ipbegin));
+		                dbus_message_iter_next(&iter_struct);
+		                dbus_message_iter_next(&iter_struct);
+		                dbus_message_iter_next(&iter_struct);
+		                
+						dbus_message_iter_next(&iter_struct);
+						dbus_message_iter_get_basic(&iter_struct, &(rule[i].key.ip.ipend));
+						dbus_message_iter_next(&iter_struct);
+						dbus_message_iter_next(&iter_struct);
+						dbus_message_iter_next(&iter_struct);
 
-							dbus_message_iter_next(&iter_struct);
-							dbus_message_iter_get_basic(&iter_struct, &ports);					
-							strncpy(rule[i].key.ip.ports, ports, CP_MAX_PORTS_BUFF_LEN-1);
+						dbus_message_iter_next(&iter_struct);
+						dbus_message_iter_get_basic(&iter_struct, &ports);					
+						strncpy(rule[i].key.ip.ports, ports, CP_MAX_PORTS_BUFF_LEN-1);
 
-							dbus_message_iter_next(&iter_struct);
-							break;
-						case RULE_DOMAIN:
-							dbus_message_iter_next(&iter_struct);
-							dbus_message_iter_next(&iter_struct);
-							dbus_message_iter_next(&iter_struct);
-							dbus_message_iter_next(&iter_struct);		
-							dbus_message_iter_get_basic(&iter_struct, &domain);
-							strncpy(rule[i].key.domain.name, domain, CP_MAX_BW_DOMAIN_NAME_LEN-1);
-							break;
-						}
+						dbus_message_iter_next(&iter_struct);
+						break;
+					case RULE_DOMAIN:
+						dbus_message_iter_next(&iter_struct);
+						dbus_message_iter_next(&iter_struct);
+						dbus_message_iter_next(&iter_struct);
+						dbus_message_iter_next(&iter_struct);
+						
+						dbus_message_iter_next(&iter_struct);
+						dbus_message_iter_next(&iter_struct);
+						dbus_message_iter_next(&iter_struct);
+						dbus_message_iter_next(&iter_struct);
+						
+						dbus_message_iter_next(&iter_struct);
+						dbus_message_iter_get_basic(&iter_struct, &domain);
+						strncpy(rule[i].key.domain.name, domain, CP_MAX_BW_DOMAIN_NAME_LEN-1);
+						break;
+					case RULE_IPV6ADDR:	
+						dbus_message_iter_next(&iter_struct);
+						dbus_message_iter_get_basic(&iter_struct, &ipv6_begin[0]);
+						dbus_message_iter_next(&iter_struct);
+						dbus_message_iter_get_basic(&iter_struct, &ipv6_begin[1]);
+						dbus_message_iter_next(&iter_struct);
+						dbus_message_iter_get_basic(&iter_struct, &ipv6_begin[2]);
+						dbus_message_iter_next(&iter_struct);
+						dbus_message_iter_get_basic(&iter_struct, &ipv6_begin[3]);
+						memcpy(&(rule[i].key.ipv6.ipv6begin), ipv6_begin, sizeof(ipv6_begin));
+						
+						dbus_message_iter_next(&iter_struct);
+						dbus_message_iter_get_basic(&iter_struct, &ipv6_end[0]);
+						dbus_message_iter_next(&iter_struct);
+						dbus_message_iter_get_basic(&iter_struct, &ipv6_end[1]);
+						dbus_message_iter_next(&iter_struct);
+						dbus_message_iter_get_basic(&iter_struct, &ipv6_end[2]);
+						dbus_message_iter_next(&iter_struct);
+						dbus_message_iter_get_basic(&iter_struct, &ipv6_end[3]);
+						memcpy(&(rule[i].key.ipv6.ipv6end), ipv6_end, sizeof(ipv6_end));
+						
+						dbus_message_iter_next(&iter_struct);
+						dbus_message_iter_get_basic(&iter_struct, &ports);					
+						strncpy(rule[i].key.ipv6.ports, ports, CP_MAX_PORTS_BUFF_LEN-1);
+
+						dbus_message_iter_next(&iter_struct);
+						break;
+					}
 					dbus_message_iter_next(&iter_struct);		
 					dbus_message_iter_get_basic(&iter_struct, &intf);
 					strncpy(rule[i].intf, intf, MAX_IF_NAME_LEN-1);
@@ -3162,6 +3373,8 @@ eag_show_black_list(DBusConnection *connection,
 	DBusMessageIter  iter_array;
 	int ret = 0, i = 0, num = 0;
 	struct bw_rule_t *rule= NULL;
+	unsigned long ipv6_begin[4];
+	unsigned long ipv6_end[4];
 	char * domain = NULL;
 	char * ports = NULL;
 	char * intf = NULL;
@@ -3210,34 +3423,78 @@ eag_show_black_list(DBusConnection *connection,
 					DBusMessageIter iter_struct;
 					dbus_message_iter_recurse(&iter_array,&iter_struct);
 					dbus_message_iter_get_basic(&iter_struct, &type);
-					if((RULE_TYPE)type == RULE_DOMAIN)
+					if((RULE_TYPE)type == RULE_DOMAIN) {
 						rule[i].type = RULE_DOMAIN;
-					else
+					} else if ((RULE_TYPE)type == RULE_IPADDR) {
 						rule[i].type = RULE_IPADDR;
-
+					} else if ((RULE_TYPE)type == RULE_IPV6DOMAIN) {
+						rule[i].type = RULE_IPV6DOMAIN;
+					} else if ((RULE_TYPE)type == RULE_IPV6ADDR) {
+						rule[i].type = RULE_IPV6ADDR;
+					}
 					switch(rule[i].type){						
-						case RULE_IPADDR:	
-							dbus_message_iter_next(&iter_struct);
-							dbus_message_iter_get_basic(&iter_struct, &(rule[i].key.ip.ipbegin));
-					
-							dbus_message_iter_next(&iter_struct);
-							dbus_message_iter_get_basic(&iter_struct, &(rule[i].key.ip.ipend));
+					case RULE_IPADDR:	
+						dbus_message_iter_next(&iter_struct);
+						dbus_message_iter_get_basic(&iter_struct, &(rule[i].key.ip.ipbegin));
+		                dbus_message_iter_next(&iter_struct);
+		                dbus_message_iter_next(&iter_struct);
+		                dbus_message_iter_next(&iter_struct);
+		                
+						dbus_message_iter_next(&iter_struct);
+						dbus_message_iter_get_basic(&iter_struct, &(rule[i].key.ip.ipend));
+						dbus_message_iter_next(&iter_struct);
+						dbus_message_iter_next(&iter_struct);
+						dbus_message_iter_next(&iter_struct);
 
-							dbus_message_iter_next(&iter_struct);
-							dbus_message_iter_get_basic(&iter_struct, &ports);					
-							strncpy(rule[i].key.ip.ports, ports, CP_MAX_PORTS_BUFF_LEN-1);
+						dbus_message_iter_next(&iter_struct);
+						dbus_message_iter_get_basic(&iter_struct, &ports);					
+						strncpy(rule[i].key.ip.ports, ports, CP_MAX_PORTS_BUFF_LEN-1);
 
-							dbus_message_iter_next(&iter_struct);
-							break;
-						case RULE_DOMAIN:
-							dbus_message_iter_next(&iter_struct);
-							dbus_message_iter_next(&iter_struct);
-							dbus_message_iter_next(&iter_struct);
-							dbus_message_iter_next(&iter_struct);		
-							dbus_message_iter_get_basic(&iter_struct, &domain);
-							strncpy(rule[i].key.domain.name, domain, CP_MAX_BW_DOMAIN_NAME_LEN-1);
-							break;
-						}
+						dbus_message_iter_next(&iter_struct);
+						break;
+					case RULE_DOMAIN:
+						dbus_message_iter_next(&iter_struct);
+						dbus_message_iter_next(&iter_struct);
+						dbus_message_iter_next(&iter_struct);
+						dbus_message_iter_next(&iter_struct);
+						
+						dbus_message_iter_next(&iter_struct);
+						dbus_message_iter_next(&iter_struct);
+						dbus_message_iter_next(&iter_struct);
+						dbus_message_iter_next(&iter_struct);
+						
+						dbus_message_iter_next(&iter_struct);
+						dbus_message_iter_get_basic(&iter_struct, &domain);
+						strncpy(rule[i].key.domain.name, domain, CP_MAX_BW_DOMAIN_NAME_LEN-1);
+						break;
+					case RULE_IPV6ADDR:	
+						dbus_message_iter_next(&iter_struct);
+						dbus_message_iter_get_basic(&iter_struct, &ipv6_begin[0]);
+						dbus_message_iter_next(&iter_struct);
+						dbus_message_iter_get_basic(&iter_struct, &ipv6_begin[1]);
+						dbus_message_iter_next(&iter_struct);
+						dbus_message_iter_get_basic(&iter_struct, &ipv6_begin[2]);
+						dbus_message_iter_next(&iter_struct);
+						dbus_message_iter_get_basic(&iter_struct, &ipv6_begin[3]);
+						memcpy(&(rule[i].key.ipv6.ipv6begin), ipv6_begin, sizeof(ipv6_begin));
+						
+						dbus_message_iter_next(&iter_struct);
+						dbus_message_iter_get_basic(&iter_struct, &ipv6_end[0]);
+						dbus_message_iter_next(&iter_struct);
+						dbus_message_iter_get_basic(&iter_struct, &ipv6_end[1]);
+						dbus_message_iter_next(&iter_struct);
+						dbus_message_iter_get_basic(&iter_struct, &ipv6_end[2]);
+						dbus_message_iter_next(&iter_struct);
+						dbus_message_iter_get_basic(&iter_struct, &ipv6_end[3]);
+						memcpy(&(rule[i].key.ipv6.ipv6end), ipv6_end, sizeof(ipv6_end));
+						
+						dbus_message_iter_next(&iter_struct);
+						dbus_message_iter_get_basic(&iter_struct, &ports);					
+						strncpy(rule[i].key.ipv6.ports, ports, CP_MAX_PORTS_BUFF_LEN-1);
+
+						dbus_message_iter_next(&iter_struct);
+						break;
+					}
 					dbus_message_iter_next(&iter_struct);		
 					dbus_message_iter_get_basic(&iter_struct, &intf);
 					strncpy(rule[i].intf, intf, MAX_IF_NAME_LEN-1);
@@ -3505,6 +3762,7 @@ eag_get_portal_conf( DBusConnection *connection,
 	int mobile_urlparam = 0;
 	int urlparam_add = 0;
 	char *save_urlparam_config = NULL;
+	char *macbind_server_domain = NULL;
 
 	if( NULL == portalconf ){
 		return EAG_ERR_INPUT_PARAM_ERR;
@@ -3604,6 +3862,12 @@ eag_get_portal_conf( DBusConnection *connection,
 					dbus_message_iter_get_basic(&iter_struct, &acname);
 					if( NULL != acname)
 						strncpy(portalconf->portal_srv[i].acname, acname, MAX_MULTPORTAL_ACNAME_LEN-1);
+					dbus_message_iter_next(&iter_struct);					
+					dbus_message_iter_get_basic(&iter_struct, &portalconf->portal_srv[i].ip_or_domain);
+					dbus_message_iter_next(&iter_struct);					
+					dbus_message_iter_get_basic(&iter_struct, &macbind_server_domain);
+					if( NULL != macbind_server_domain)
+						strncpy(portalconf->portal_srv[i].macbind_server_domain, macbind_server_domain, MAX_MACBIND_SERVER_DOMAIN_LEN-1);
 					dbus_message_iter_next(&iter_struct);					
 					dbus_message_iter_get_basic(&iter_struct, &portalconf->portal_srv[i].mac_server_ip);
 					dbus_message_iter_next(&iter_struct);					
@@ -3706,6 +3970,78 @@ eag_get_portal_conf( DBusConnection *connection,
 	
 	dbus_message_unref(reply);
 	return ret; 
+}
+
+int
+eag_set_macbind_server( DBusConnection *connection, 
+				int hansitype, int insid, 					
+				PORTAL_KEY_TYPE key_type,
+				unsigned long keyid,
+				const char *keystr,
+				int ip_or_domain,
+				char *domain,
+				uint32_t macbind_server_ip,
+				uint16_t macbind_server_port)
+{
+	DBusMessage *query, *reply;
+	DBusError err;
+	int iRet=0;
+
+	switch(key_type){
+	case PORTAL_KEYTYPE_ESSID:
+	case PORTAL_KEYTYPE_INTF:
+		keyid = 0;
+		break;
+	case PORTAL_KEYTYPE_WLANID:
+	case PORTAL_KEYTYPE_VLANID:
+	case PORTAL_KEYTYPE_WTPID:
+		keystr = "";
+		break;
+	default:
+		return EAG_ERR_PORTAL_ADD_SRV_ERR_TYPE;
+	}
+
+	if (MACBIND_SERVER_IP == ip_or_domain) {
+		domain = "";
+	}
+	eag_dbus_path_reinit(hansitype,insid);
+	query = dbus_message_new_method_call(
+									EAG_DBUS_NAME,
+									EAG_DBUS_OBJPATH,
+									EAG_DBUS_INTERFACE, 
+									EAG_DBUS_METHOD_SET_MACBIND );
+	dbus_error_init(&err);
+
+	dbus_message_append_args(	query,
+								DBUS_TYPE_UINT32, &key_type,
+								DBUS_TYPE_UINT32, &keyid,
+								DBUS_TYPE_STRING, &keystr,
+								DBUS_TYPE_INT32, &ip_or_domain,
+								DBUS_TYPE_STRING, &domain,
+								DBUS_TYPE_UINT32, &macbind_server_ip,
+								DBUS_TYPE_UINT16, &macbind_server_port,
+								DBUS_TYPE_INVALID );
+
+	reply = dbus_connection_send_with_reply_and_block (
+						connection, query, -1, &err );
+
+	dbus_message_unref(query);
+	
+	if ( NULL == reply ){	
+		if (dbus_error_is_set(&err)){
+			dbus_error_free(&err);
+		}
+		return EAG_ERR_DBUS_FAILED;
+	}else{
+		dbus_message_get_args( reply,
+								&err,
+								DBUS_TYPE_INT32, &iRet,
+								DBUS_TYPE_INVALID );
+	}
+	
+	dbus_message_unref(reply);
+	
+	return iRet;
 }
 
 int
@@ -6157,7 +6493,8 @@ eag_show_user_all(DBusConnection *connection,
 	char *username = NULL;
 	int iRet = 0;
 	int i = 0;
-
+	uint32_t cmp[4];
+	
 	eag_dbus_path_reinit(hansitype,insid);
 	query = dbus_message_new_method_call(
 									EAG_DBUS_NAME,
@@ -6207,7 +6544,21 @@ eag_show_user_all(DBusConnection *connection,
 					}
 					dbus_message_iter_next(&iter_struct);
 					dbus_message_iter_get_basic(&iter_struct, 
-													&(user->userip));
+													&(user->user_ip));
+					memset(cmp, 0, sizeof(cmp));
+					dbus_message_iter_next(&iter_struct);
+					dbus_message_iter_get_basic(&iter_struct, 
+													&cmp[0]);
+					dbus_message_iter_next(&iter_struct);
+					dbus_message_iter_get_basic(&iter_struct, 
+													&cmp[1]);
+					dbus_message_iter_next(&iter_struct);
+					dbus_message_iter_get_basic(&iter_struct, 
+													&cmp[2]);
+					dbus_message_iter_next(&iter_struct);
+					dbus_message_iter_get_basic(&iter_struct, 
+													&cmp[3]);
+					memcpy(&(user->user_ipv6), cmp, sizeof(cmp));
 					dbus_message_iter_next(&iter_struct);
 					dbus_message_iter_get_basic(&iter_struct,
 													&(user->usermac[0]));
@@ -6296,6 +6647,7 @@ eag_show_user_by_username(DBusConnection *connection,
 	char *name = NULL;
 	int iRet = 0;
 	int i = 0;
+	uint32_t cmp[4];
 
 	eag_dbus_path_reinit(hansitype,insid);
 	query = dbus_message_new_method_call(
@@ -6350,7 +6702,21 @@ eag_show_user_by_username(DBusConnection *connection,
 					}
 					dbus_message_iter_next(&iter_struct);
 					dbus_message_iter_get_basic(&iter_struct, 
-													&(user->userip));
+													&(user->user_ip));
+					memset(cmp, 0, sizeof(cmp));
+					dbus_message_iter_next(&iter_struct);
+					dbus_message_iter_get_basic(&iter_struct, 
+													&cmp[0]);
+					dbus_message_iter_next(&iter_struct);
+					dbus_message_iter_get_basic(&iter_struct, 
+													&cmp[1]);
+					dbus_message_iter_next(&iter_struct);
+					dbus_message_iter_get_basic(&iter_struct, 
+													&cmp[2]);
+					dbus_message_iter_next(&iter_struct);
+					dbus_message_iter_get_basic(&iter_struct, 
+													&cmp[3]);
+					memcpy(&(user->user_ipv6), cmp, sizeof(cmp));
 					dbus_message_iter_next(&iter_struct);
 					dbus_message_iter_get_basic(&iter_struct,
 													&(user->usermac[0]));
@@ -6430,6 +6796,7 @@ eag_show_user_by_userip(DBusConnection *connection,
 	char *username = NULL;
 	int iRet = 0;
 	int i = 0;
+	uint32_t cmp[4];
 
 	eag_dbus_path_reinit(hansitype,insid);
 	query = dbus_message_new_method_call(
@@ -6484,7 +6851,21 @@ eag_show_user_by_userip(DBusConnection *connection,
 					}
 					dbus_message_iter_next(&iter_struct);
 					dbus_message_iter_get_basic(&iter_struct, 
-													&(user->userip));
+													&(user->user_ip));
+					memset(cmp, 0, sizeof(cmp));
+					dbus_message_iter_next(&iter_struct);
+					dbus_message_iter_get_basic(&iter_struct, 
+													&cmp[0]);
+					dbus_message_iter_next(&iter_struct);
+					dbus_message_iter_get_basic(&iter_struct, 
+													&cmp[1]);
+					dbus_message_iter_next(&iter_struct);
+					dbus_message_iter_get_basic(&iter_struct, 
+													&cmp[2]);
+					dbus_message_iter_next(&iter_struct);
+					dbus_message_iter_get_basic(&iter_struct, 
+													&cmp[3]);
+					memcpy(&(user->user_ipv6), cmp, sizeof(cmp));
 					dbus_message_iter_next(&iter_struct);
 					dbus_message_iter_get_basic(&iter_struct,
 													&(user->usermac[0]));
@@ -6564,6 +6945,7 @@ eag_show_user_by_usermac(DBusConnection *connection,
 	char *username = NULL;
 	int iRet = 0;
 	int i = 0;
+	uint32_t cmp[4];
 
 	eag_dbus_path_reinit(hansitype,insid);
 	query = dbus_message_new_method_call(
@@ -6623,7 +7005,21 @@ eag_show_user_by_usermac(DBusConnection *connection,
 					}
 					dbus_message_iter_next(&iter_struct);
 					dbus_message_iter_get_basic(&iter_struct, 
-													&(user->userip));
+													&(user->user_ip));
+					memset(cmp, 0, sizeof(cmp));
+					dbus_message_iter_next(&iter_struct);
+					dbus_message_iter_get_basic(&iter_struct, 
+													&cmp[0]);
+					dbus_message_iter_next(&iter_struct);
+					dbus_message_iter_get_basic(&iter_struct, 
+													&cmp[1]);
+					dbus_message_iter_next(&iter_struct);
+					dbus_message_iter_get_basic(&iter_struct, 
+													&cmp[2]);
+					dbus_message_iter_next(&iter_struct);
+					dbus_message_iter_get_basic(&iter_struct, 
+													&cmp[3]);
+					memcpy(&(user->user_ipv6), cmp, sizeof(cmp));
 					dbus_message_iter_next(&iter_struct);
 					dbus_message_iter_get_basic(&iter_struct,
 													&(user->usermac[0]));
@@ -6703,6 +7099,7 @@ eag_show_user_by_index(DBusConnection *connection,
 	char *username = NULL;
 	int iRet = 0;
 	int i = 0;
+	uint32_t cmp[4];
 
 	eag_dbus_path_reinit(hansitype,insid);
 	query = dbus_message_new_method_call(
@@ -6757,7 +7154,21 @@ eag_show_user_by_index(DBusConnection *connection,
 					}
 					dbus_message_iter_next(&iter_struct);
 					dbus_message_iter_get_basic(&iter_struct, 
-													&(user->userip));
+													&(user->user_ip));
+					memset(cmp, 0, sizeof(cmp));
+					dbus_message_iter_next(&iter_struct);
+					dbus_message_iter_get_basic(&iter_struct, 
+													&cmp[0]);
+					dbus_message_iter_next(&iter_struct);
+					dbus_message_iter_get_basic(&iter_struct, 
+													&cmp[1]);
+					dbus_message_iter_next(&iter_struct);
+					dbus_message_iter_get_basic(&iter_struct, 
+													&cmp[2]);
+					dbus_message_iter_next(&iter_struct);
+					dbus_message_iter_get_basic(&iter_struct, 
+													&cmp[3]);
+					memcpy(&(user->user_ipv6), cmp, sizeof(cmp));
 					dbus_message_iter_next(&iter_struct);
 					dbus_message_iter_get_basic(&iter_struct,
 													&(user->usermac[0]));

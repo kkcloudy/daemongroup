@@ -52,9 +52,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #define MAX_HANSI_ID					16
 #define IPTABLES_LOCK_FILE				"/var/run/eag_iptables_lock"
+#define IP6TABLES_LOCK_FILE				"/var/run/eag_ip6tables_lock"
 #define SLOT_ID_FILE					"/dbm/local_board/slot_id"
 
 extern nmp_mutex_t eag_iptables_lock;
+extern nmp_mutex_t eag_ip6tables_lock;
 
 static int keep_going = 1;
 eag_ins_t *eagins = NULL;
@@ -223,6 +225,7 @@ int main(int argc, char *argv[])
 	eag_ipinfo_init();
 	eag_dcli_dl_init();
 	nmp_mutex_init(&eag_iptables_lock, IPTABLES_LOCK_FILE);
+	nmp_mutex_init(&eag_ip6tables_lock, IP6TABLES_LOCK_FILE);
 
 	while (keep_going) {
 		eag_ins_dispatch(eagins);
@@ -241,6 +244,7 @@ int main(int argc, char *argv[])
 	#endif
 	eag_dcli_dl_uninit();
 	nmp_mutex_destroy(&eag_iptables_lock);
+	nmp_mutex_destroy(&eag_ip6tables_lock);
 	
 	return 0;
 }

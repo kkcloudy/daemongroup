@@ -97,6 +97,8 @@ eag_get_sta_info_by_mac_v2( eag_dbus_t *eag_dbus,
 	char str_sta_mac[32] = "";
 	char str_wtp_mac[32] = "";
 	uint8_t zero_mac[6] = {0};
+	char ipstr[32] = "";
+	char ipv6str[48] = "";
 	DBusConnection * conn = eag_dbus_get_dbus_conn(eag_dbus);
 	
 	if (NULL == eag_dbus || NULL == sta_mac || NULL == session || NULL == handle) {
@@ -172,13 +174,25 @@ reget:
 	memcpy(session->apmac, sta->addr, sizeof(session->apmac));
 	session->vlanid = sta->vlan_id;
 	*security_type = sta->auth_type;
-
+	
+	if (EAG_IPV4 == session->user_addr.family
+		&& 0 != ipv6_compare_null(&(sta->ip6_addr))) {
+		session->user_addr.user_ipv6 = sta->ip6_addr;
+		session->user_addr.family = EAG_MIX;
+	} else if (EAG_IPV6 == session->user_addr.family
+		&& 0 != sta->ip_addr.s_addr) {
+		session->user_addr.user_ip = sta->ip_addr.s_addr;
+		session->user_addr.family = EAG_MIX;
+	}
+	
 	mac2str(session->apmac, str_wtp_mac, sizeof(str_wtp_mac), '-');
+	ip2str(session->user_addr.user_ip, ipstr, sizeof(ipstr));
+	ipv6tostr(&(session->user_addr.user_ipv6), ipv6str, sizeof(ipv6str));
 	eag_log_info("eag_get_sta_info_by_mac_v2 success, "
-			"sta_mac=%s, radio_id=%d, wlan_id=%d, wtp_id=%d, "
+			"sta_mac=%s, sta_ip=%s, sta_ipv6=%s, radio_id=%d, wlan_id=%d, wtp_id=%d, "
 			"essid=%s, wtp_mac=%s, wtp_name=%s, vlanid=%d, idle_check=%u, "
 			"idle_timeout=%lu, idle_flow=%llu, security_type=%d",
-			str_sta_mac, session->radioid, session->wlanid, session->wtpid,
+			str_sta_mac, ipstr, ipv6str, session->radioid, session->wlanid, session->wtpid,
 			session->essid, str_wtp_mac, session->apname, session->vlanid, session->idle_check,
 			session->idle_timeout, session->idle_flow, *security_type);
 	

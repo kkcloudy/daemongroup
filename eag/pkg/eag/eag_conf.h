@@ -133,6 +133,7 @@ radius_srv_get_by_domain(struct radius_conf *radiusconf,
 #define MAX_MULTPORTAL_ACNAME_LEN     32
 #define MAX_PORTAL_URL_SUFFIX_LEN     128
 #define MAX_DES_KEY_LEN               8
+#define MAX_MACBIND_SERVER_DOMAIN_LEN 256
 
 #define PORTAL_SECRETSIZE             128
 #define MAX_URL_PARAM_NUM             16
@@ -140,6 +141,17 @@ radius_srv_get_by_domain(struct radius_conf *radiusconf,
 #define URL_PARAM_NAME_LEN            32
 #define URL_PARAM_VALUE_LEN           128
 #define URL_PARAM_WISPR_VALUE_LEN     512
+
+enum{
+	MACBIND_SERVER_IP = 1,
+	MACBIND_SERVER_DOMAIN
+};
+
+enum {
+	EAG_IPV4 = 4, //ipv4 single-stack user
+	EAG_IPV6 = 6, //ipv6 single-stack user
+	EAG_MIX  = 7, //dual-stack users
+};
 
 typedef enum {
 	PORTAL_KEYTYPE_ESSID,
@@ -158,6 +170,7 @@ enum{
 typedef enum {
     URL_PARAM_NASIP = 1, //1
     URL_PARAM_USERIP,
+	URL_PARAM_USERIPV6,
     URL_PARAM_USERMAC,
     URL_PARAM_APMAC,
     URL_PARAM_APNAME,
@@ -245,8 +258,10 @@ struct portal_srv_t {
 	char wisprloginurl[MAX_PORTAL_URL_LEN];
 	/*get by config! */
 	uint32_t ip;
+	int ip_or_domain;
 	uint32_t mac_server_ip;
 	uint16_t mac_server_port;
+	char macbind_server_domain[MAX_MACBIND_SERVER_DOMAIN_LEN];
 
 	/* url param by houyongtao 2013-9-10 Teachers' Day */
 	int mobile_urlparam;//url param : wlanuserip wlanacname ssid

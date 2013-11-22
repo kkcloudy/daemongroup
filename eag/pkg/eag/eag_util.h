@@ -33,9 +33,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define _EAG_UTIL_H
 
 #include <stdint.h>
+#include <arpa/inet.h>
+#include "session.h"
 
 #define MIN(a,b) ((a)>(b))?(b):(a)
 #define MAX(a,b) ((a)>(b))?(a):(b)
+
+#define IPX_LEN 80
 
 int
 sockopt_reuseaddr(int sock);
@@ -51,6 +55,21 @@ rand_buff(uint8_t *buff, size_t size);
 
 char *
 ip2str(uint32_t ip, char *str, size_t size);
+
+char *
+ipv6tostr(struct in6_addr *ipv6, char *str, size_t size);
+
+char *
+ipx2str(user_addr_t *user_addr, char *str, size_t size);
+
+int
+ipv6_compare_null(struct in6_addr *ipv6);
+
+int
+memcmp_ipx(user_addr_t *user_addr1, user_addr_t *user_addr2);
+
+char *
+str2ipv6(struct in6_addr *ipv6, char *str);
 
 char *
 mac2str(const uint8_t mac[6], char *str, size_t size, char separator);

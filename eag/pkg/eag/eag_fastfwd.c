@@ -202,8 +202,8 @@ eag_fastfwd_receive(eag_thread_t *thread)
 	socklen_t len = 0;
 	ssize_t nbyte = 0;
 	se_interative_t se_data;
-	uint32_t user_ip = 0;
-	char user_ipstr[32] = "";
+	user_addr_t user_addr = {0};
+	char user_ipstr[IPX_LEN] = "";
 	struct timeval tv = {0};
 	time_t time_now = 0;
 	
@@ -246,8 +246,11 @@ eag_fastfwd_receive(eag_thread_t *thread)
 			se_data.cmd_result, se_data.err_info);
 		return -1;
 	}
-	user_ip = se_data.fccp_cmd.fccp_data.user_info.user_ip;
-	ip2str(user_ip, user_ipstr, sizeof(user_ipstr));
+	memset(&user_addr, 0, sizeof(user_addr));
+	user_addr.family = EAG_IPV4;
+	user_addr.user_ip = se_data.fccp_cmd.fccp_data.user_info.user_ip;
+	//memcpy(&user_addr, &(appconn->session.user_addr), sizeof(user_addr_t));
+	ipx2str(&user_addr, user_ipstr, sizeof(user_ipstr));
 	
 	eag_log_debug("eag_fastfwd", 
 		"eag_fastfwd_receive: userip:%s, output_octets:%llu, output_packets:%llu, "
@@ -258,7 +261,7 @@ eag_fastfwd_receive(eag_thread_t *thread)
 		se_data.fccp_cmd.fccp_data.user_info.forward_down_bytes, 
 		se_data.fccp_cmd.fccp_data.user_info.forward_down_packet);
 
-	appconn = appconn_find_by_userip(fastfwd->appdb, user_ip);
+	appconn = appconn_find_by_userip(fastfwd->appdb, &user_addr);
 	if (NULL != appconn && APPCONN_STATUS_AUTHED == appconn->session.state) {
 		appconn->fastfwd_data.input_octets = se_data.fccp_cmd.fccp_data.user_info.forward_down_bytes;
 		appconn->fastfwd_data.input_packets = se_data.fccp_cmd.fccp_data.user_info.forward_down_packet;
@@ -268,7 +271,7 @@ eag_fastfwd_receive(eag_thread_t *thread)
 		appconn_check_flux(appconn, time_now);
 	}
 
-	flush_preauth_flux_from_fastfwd(fastfwd->macauth, user_ip,
+	flush_preauth_flux_from_fastfwd(fastfwd->macauth, &user_addr,
 		se_data.fccp_cmd.fccp_data.user_info.forward_down_bytes,
 		se_data.fccp_cmd.fccp_data.user_info.forward_up_bytes);
 
@@ -277,14 +280,14 @@ eag_fastfwd_receive(eag_thread_t *thread)
 
 int
 eag_fastfwd_send(eag_fastfwd_t *fastfwd, 
-		uint32_t user_ip, const char *hand_cmd)
+		user_addr_t *user_addr, const char *hand_cmd)
 {
 	se_interative_t se_data;
 	/* struct sockaddr_un addr = {0}; */
 	struct sockaddr_tipc addr = {0};
 	socklen_t len = 0;
 	ssize_t nbyte = 0;
-	char user_ipstr[32] = "";
+	char user_ipstr[IPX_LEN] = "";
 
 	if (NULL == fastfwd || NULL == hand_cmd) {
 		eag_log_err("eag_fastfwd_send input error");
@@ -297,8 +300,8 @@ eag_fastfwd_send(eag_fastfwd_t *fastfwd,
 
 	memset(&se_data, 0, sizeof(se_interative_t));
 	strncpy(se_data.hand_cmd, hand_cmd, sizeof(se_data.hand_cmd)-1);
-	se_data.fccp_cmd.fccp_data.user_info.user_ip = user_ip;
-	ip2str(user_ip, user_ipstr, sizeof(user_ipstr));
+	se_data.fccp_cmd.fccp_data.user_info.user_ip = user_addr->user_ip;
+	ipx2str(user_addr, user_ipstr, sizeof(user_ipstr));
 	eag_log_debug("eag_fastfwd", 
 		"eag_fastfwd_send sockfd(%d) slotid(%d), userip:%s, Op:%s",
 		fastfwd->sockfd, fastfwd->slotid, user_ipstr, hand_cmd);

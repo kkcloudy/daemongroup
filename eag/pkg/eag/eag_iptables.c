@@ -65,7 +65,7 @@ extern "C"
 #include "hashtable.h"
 #include "session.h"
 #include "appconn.h"
-
+#include "eag_ipset.h"
 #include "eag_interface.h"
 #include "eag_iptables.h"
 
@@ -2508,7 +2508,7 @@ eag_iptable_add_interface(int insid, char ins_type, char *intf)
 	int ret = 0;
 	char cap_iphash_set[EAG_IPTABLES_MAXNAMESIZE] = {0};
 
-	snprintf(cap_iphash_set, EAG_IPTABLES_MAXNAMELEN, "CP_%c%d_AUTHORIZED_SET", ins_type, insid);
+	snprintf(cap_iphash_set, EAG_IPTABLES_MAXNAMELEN, "CP_%c%d_AUTHORIZED_IPV4_SET", ins_type, insid);
 
 	ret = eag_iptable_add_interface_filter_commit(insid, ins_type, intf, cap_iphash_set);
 	if (!ret) {

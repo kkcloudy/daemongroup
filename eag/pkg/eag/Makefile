@@ -50,7 +50,7 @@ publicsources = eag_log.o eag_blkmem.o  eag_thread.o eag_errcode.o eag_hansi.o e
 eagsources =  eag_main.o eag_radius.o eag_redir.o eag_portal.o eag_stamsg.o eag_fastfwd.o\
 		eag_captive.o appconn.o  eag_license.o eag_wireless.o  \
 		eag_authorize.o eag_conf.o \
-		eag_ins.o  eag_ipinfo.o eag_statistics.o eag_iptables.o \
+		eag_ins.o  eag_ipinfo.o eag_statistics.o eag_iptables.o eag_ip6tables.o\
 		rdc_handle.o pdc_handle.o eag_coa.o eag_ipset.o eag_ipset6.o eag_trap.o eag_macauth.o eag_arp.o
 
 rdcsources = rdc_main.o rdc_ins.o rdc_pktconn.o rdc_server.o rdc_client.o rdc_userconn.o rdc_coa.o rdc_coaconn.o

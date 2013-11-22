@@ -32,6 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef _EAG_CAPTIVE_H
 #define _EAG_CAPTIVE_H
 
+#include <arpa/inet.h>
 #include "limits2.h"
 #include "session.h"
 #include "eag_def.h"
@@ -48,13 +49,15 @@ eag_captive_free(eag_captive_t * cap);
 int
 eag_captive_set_redir_srv(eag_captive_t * cap,
 			  unsigned long srv_ip, unsigned short srv_port);
-
 int
-eag_captive_is_intf_in_list(eag_captive_t * cap, char *intf);
+eag_captive_set_ipv6_redir_srv(eag_captive_t * cap,
+			  struct in6_addr *srv_ipv6, unsigned short srv_port);
 int
-eag_captive_add_interface(eag_captive_t * cap, char *intf);
+eag_captive_is_intf_in_list(eag_captive_t * cap, uint32_t family, char *intf);
 int
-eag_captive_del_interface(eag_captive_t * cap, char *intfs);
+eag_captive_add_interface(eag_captive_t * cap, uint32_t family, char *intf);
+int
+eag_captive_del_interface(eag_captive_t * cap, uint32_t family, char *intfs);
 
 int eag_captive_start(eag_captive_t * cap);
 int eag_captive_stop(eag_captive_t * cap);
@@ -62,14 +65,14 @@ int eag_captive_stop(eag_captive_t * cap);
 int eag_captive_authorize(eag_captive_t * cap, struct appsession *appsession);
 
 int eag_captive_deauthorize(eag_captive_t * cap, struct appsession *appsession);
-
+#if 0
 int eag_captive_eap_authorize(eag_captive_t * cap, unsigned int user_ip);
 
 int eag_captive_del_eap_authorize(eag_captive_t * cap, unsigned int user_ip);
+#endif
+int eag_captive_macpre_authorize(eag_captive_t * cap, user_addr_t *user_addr);
 
-int eag_captive_macpre_authorize(eag_captive_t * cap, unsigned int user_ip);
-
-int eag_captive_del_macpre_authorize(eag_captive_t * cap, unsigned int user_ip);
+int eag_captive_del_macpre_authorize(eag_captive_t * cap, user_addr_t *user_addr);
 
 int eag_captive_update_session(eag_captive_t * cap,struct appsession *appsession);
 
@@ -99,9 +102,42 @@ int eag_captive_del_black_list(eag_captive_t * cap,
 				   char *ports,
 			       char *domain, char *intf);
 
+int
+eag_captive_add_white_ipv6_list(eag_captive_t * cap,
+			   RULE_TYPE type,
+			   struct in6_addr *ipv6begin, struct in6_addr *ipv6end,
+			   /*unsigned short portbegin, unsigned short portend,*/
+			   char *ports,
+			   char *domain, char *intf);
+
+int
+eag_captive_del_white_ipv6_list(eag_captive_t *cap,
+				RULE_TYPE type,
+				struct in6_addr *ipv6begin, struct in6_addr *ipv6end,
+				char *ports, char *domain, char *intf );		   
+
+int
+eag_captive_add_black_ipv6_list(eag_captive_t * cap,
+			   RULE_TYPE type,
+			   struct in6_addr *ipv6begin, struct in6_addr *ipv6end,
+			   /*unsigned short portbegin, unsigned short portend,*/
+			   char *ports,
+			   char *domain, char *intf);
+
+int
+eag_captive_del_black_ipv6_list(eag_captive_t *cap,
+				RULE_TYPE type,
+				struct in6_addr *ipv6begin, struct in6_addr *ipv6end,
+				char *ports, char *domain, char *intf );
 
 DBusMessage *
 eag_dbus_method_conf_captive_list(
+				DBusConnection *conn, 
+				DBusMessage *msg, 
+				void *user_data );
+
+DBusMessage *
+eag_dbus_method_conf_captive_ipv6_list(
 				DBusConnection *conn, 
 				DBusMessage *msg, 
 				void *user_data );
@@ -130,5 +166,13 @@ int eag_captive_set_macauth_ipset( eag_captive_t * cap, int switch_t);
 int eag_captive_get_macauth_ipset( eag_captive_t *cap );
 int
 eag_captive_is_disable(eag_captive_t * cap);
+
+int
+eag_captive_set_eagins(eag_captive_t *captive,
+		eag_ins_t *eagins);
+
+int
+eag_captive_set_redir(eag_captive_t *captive,
+		eag_redir_t *redir);
 
 #endif

@@ -66,6 +66,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "eag_fastfwd.h"
 #include "eag_trap.h"
 #include "eag_macauth.h"
+#include "session.h"
 
 /* prime number */
 #define EAG_PORTALSESS_HASHSIZE			101
@@ -116,6 +117,7 @@ struct eag_portal {
 	eag_thread_master_t *master;
 	struct list_head sess_head;
 	hashtable *htable;
+	hashtable *ipv6_htable;
 	eag_blk_mem_t *sess_blkmem;
 	
 	int auto_session;
@@ -156,7 +158,7 @@ typedef enum {
 struct portal_sess {
 	struct list_head node;
 	struct hlist_node hnode;
-	uint32_t userip;
+	user_addr_t user_addr;
 	SESS_STATUS status;
 	eag_portal_t *portal;
 	eag_thread_master_t *master;
@@ -263,10 +265,12 @@ sess_status_is_valid(portal_sess_t *portalsess,
 
 static portal_sess_t *
 portal_sess_new(eag_portal_t *portal,
-		uint32_t userip)
+		user_addr_t *user_addr)
 {
 	portal_sess_t *portalsess = NULL;
+	char user_ipstr[IPX_LEN] = "";
 
+    ipx2str(user_addr, user_ipstr, sizeof(user_ipstr));
 	portalsess = eag_blkmem_malloc_item(portal->sess_blkmem);
 	if (NULL == portalsess) {
 		eag_log_err("portal_sess_new blkmem_malloc_item failed");
@@ -274,15 +278,23 @@ portal_sess_new(eag_portal_t *portal,
 	}
 	
 	memset(portalsess, 0, sizeof(struct portal_sess));
-	portalsess->userip = userip;
+    memcpy(&(portalsess->user_addr), user_addr, sizeof(user_addr_t));
 	portalsess->status = SESS_STATUS_NONE;
 	portalsess->portal = portal;
 	portalsess->master = portal->master;
 	list_add(&(portalsess->node), &(portal->sess_head));
-	hashtable_check_add_node(portal->htable, &userip, sizeof(userip), 
-						&(portalsess->hnode));
-
-	eag_log_debug("eag_portal", "portal_sess_new userip=%#x", userip);
+	if (EAG_IPV6 == user_addr->family) {
+		hashtable_check_add_node(portal->ipv6_htable,
+        						&(user_addr->user_ipv6),
+        						sizeof(struct in6_addr),
+                            	&(portalsess->hnode));
+	} else {
+        hashtable_check_add_node(portal->htable,
+                                &(user_addr->user_ip),
+                                sizeof(struct in_addr),
+                                &(portalsess->hnode));
+	}
+    eag_log_debug("eag_portal", "portal_sess_new userip=%s", user_ipstr);
 	return portalsess;
 }
 
@@ -290,15 +302,15 @@ static int
 portal_sess_free(portal_sess_t *portalsess)
 {
 	eag_portal_t *portal = NULL;
-
+	char user_ipstr[IPX_LEN] = "";
 	if (NULL == portalsess) {
 		eag_log_err("portal_sess_free input error");
 		return -1;
 	}
 	portal = portalsess->portal;
-
-	eag_log_debug("eag_portal", "portal_sess_free userip=%#x",
-			portalsess->userip);
+    ipx2str(&(portalsess->user_addr), user_ipstr, sizeof(user_ipstr));
+	eag_log_debug("eag_portal", "portal_sess_free userip=%s", 
+					user_ipstr);
 	
 	list_del(&(portalsess->node));
 	hlist_del(&(portalsess->hnode));
@@ -313,28 +325,38 @@ portal_sess_free(portal_sess_t *portalsess)
 
 static portal_sess_t *
 portal_sess_find_by_userip(eag_portal_t *portal,
-		uint32_t userip)
+		user_addr_t *user_addr)
 {
 	portal_sess_t *portalsess = NULL;
 	struct hlist_head *head = NULL;
 	struct hlist_node *node = NULL;
+	char user_ipstr[IPX_LEN] = "";
 
-	head = hashtable_get_hash_list(portal->htable, &userip, sizeof(userip));
+    ipx2str(user_addr, user_ipstr, sizeof(user_ipstr));
+	if (EAG_IPV6 == user_addr->family) {
+        head = hashtable_get_hash_list(portal->ipv6_htable, 
+        								&(user_addr->user_ipv6), 
+        								sizeof(struct in6_addr));
+	} else {
+		head = hashtable_get_hash_list(portal->htable,         								
+        								&(user_addr->user_ip), 
+        								sizeof(struct in_addr));
+	}
 	if (NULL == head) {
 		eag_log_err("portal_sess_find_by_userip head is null");
 		return NULL;
 	}
 	
 	hlist_for_each_entry(portalsess, node, head, hnode) {
-		if (userip == portalsess->userip) {
-			eag_log_debug("eag_portal", "found portal sess by userip %#x",
-				userip);
+        if (!memcmp_ipx(user_addr, &(portalsess->user_addr))) {
+            eag_log_debug("eag_portal", "found portal sess by userip %s",
+				user_ipstr);
 			return portalsess;
 		}
 	}
 
-	eag_log_debug("eag_portal", "not found portal sess by userip %#x",
-				userip);
+    eag_log_debug("eag_portal", "not found portal sess by userip %s",
+				user_ipstr);
 	return NULL;
 }
 
@@ -428,11 +450,41 @@ portal_detect_unique_reqid(eag_portal_t *portal)
 }
 
 int
+portal_packet_init_ipx(const struct portal_packet_t *reqpkt, 
+					user_addr_t *user_addr)
+{
+	struct portal_packet_attr *attr = NULL;
+	if (NULL == reqpkt || NULL == user_addr) {
+		eag_log_err("portal_packet_init_ipx input error reqpkt=%p, user_addr=%p", 
+			reqpkt, user_addr);
+		return -1;
+	}
+	memset(user_addr, 0, sizeof(user_addr_t));
+	user_addr->user_ip = ntohl(reqpkt->user_ip);
+	
+	attr = portal_packet_get_attr(reqpkt, ATTR_USER_IPV6);
+	if (NULL == attr && 0 != user_addr->user_ip) {
+	    user_addr->family = EAG_IPV4;
+	    eag_log_err("portal_packet_init_ipx userip %#x "
+	        " not get user ipv6 attr", user_addr->user_ip);
+	} else if (NULL != attr && 0 == user_addr->user_ip) {
+	    user_addr->family = EAG_IPV6;
+	    memcpy(&(user_addr->user_ipv6), attr->value, attr->len - 2);
+	} else if (NULL != attr && 0 != user_addr->user_ip) {
+	    user_addr->family = EAG_MIX;
+	    memcpy(&(user_addr->user_ipv6), attr->value, attr->len - 2);
+	}
+
+	return 0;
+}
+
+int
 portal_packet_init_rsp(eag_portal_t *portal,
 		struct portal_packet_t *rsppkt,
 		const struct portal_packet_t *reqpkt)
 {
 	uint16_t reqid = 0;
+	struct portal_packet_attr *attr = NULL;
 
 	if (NULL == rsppkt || NULL == reqpkt) {
 		eag_log_err("portal_packet_init_rsp input error");
@@ -444,7 +496,10 @@ portal_packet_init_rsp(eag_portal_t *portal,
 	rsppkt->serial_no = reqpkt->serial_no;
 	rsppkt->user_ip = reqpkt->user_ip;
 	rsppkt->attr_num = 0;
-
+	attr = portal_packet_get_attr(reqpkt, ATTR_USER_IPV6);
+    if (NULL != attr) {
+		portal_packet_add_attr(rsppkt, ATTR_USER_IPV6, attr->value, attr->len - 2);
+    }
 	switch (reqpkt->type) {
 	case REQ_CHALLENGE:
 		rsppkt->type = ACK_CHALLENGE;
@@ -588,6 +643,11 @@ eag_portal_new(uint8_t hansi_type, uint8_t hansi_id)
 		eag_log_err("eag_portal_new hashtable_create failed");
 		goto failed_2;
 	}
+	if (EAG_RETURN_OK != hashtable_create_table(&(portal->ipv6_htable),
+							EAG_PORTALSESS_HASHSIZE)) {
+		eag_log_err("eag_portal_new hashtable_create failed");
+		goto failed_3;
+	}
 	INIT_LIST_HEAD(&(portal->sess_head));
 	portal->sockfd = -1;
 	portal->portal_port = PORTAL_PORT_DEFAULT;
@@ -604,6 +664,8 @@ eag_portal_new(uint8_t hansi_type, uint8_t hansi_id)
 	eag_log_info("portal new ok");
 	return portal;
 	
+failed_3:
+    hashtable_destroy_table(&(portal->htable));
 failed_2:
 	eag_blkmem_destroy(&(portal->sess_blkmem));
 failed_1:
@@ -625,6 +687,9 @@ eag_portal_free(eag_portal_t *portal)
 	}
 	if (NULL != portal->htable) {
 		hashtable_destroy_table(&(portal->htable));
+	}
+	if (NULL != portal->ipv6_htable) {
+		hashtable_destroy_table(&(portal->ipv6_htable));
 	}
 	eag_free(portal);
 
@@ -760,8 +825,8 @@ eag_portal_onmacbind_timeout(eag_thread_t *thread)
 {
 	portal_sess_t *portalsess = NULL;
 	eag_portal_t *portal = NULL;
-	uint32_t userip = 0;
-	char user_ipstr[32] = "";
+	user_addr_t user_addr = {0};
+	char user_ipstr[IPX_LEN] = "";
 	struct app_conn_t *appconn = NULL;
 	struct portal_packet_t req_packet = {0};
 
@@ -781,13 +846,14 @@ eag_portal_onmacbind_timeout(eag_thread_t *thread)
 	}
 
 	portal = portalsess->portal;
-	userip = portalsess->userip;
-	ip2str(userip, user_ipstr, sizeof(user_ipstr));
-	appconn = appconn_find_by_userip(portal->appdb, userip);
+    memset(&user_addr, 0, sizeof(user_addr));
+	memcpy(&user_addr, &(portalsess->user_addr), sizeof(user_addr_t));
+    ipx2str(&user_addr, user_ipstr, sizeof(user_ipstr));
+	appconn = appconn_find_by_userip(portal->appdb, &user_addr);
 	if (NULL == appconn) {
 		eag_log_warning("portal_onmacbind_timeout not found appconn userip=%s",
 			user_ipstr);
-		eag_del_mac_preauth(portal->macauth, userip);
+		eag_del_mac_preauth(portal->macauth, &user_addr);
 		portal_sess_free(portalsess);
 		return -1;
 	}
@@ -795,7 +861,7 @@ eag_portal_onmacbind_timeout(eag_thread_t *thread)
 	eag_log_debug("eag_portal", "portalsess onmacbind timeout userip=%s", user_ipstr);
 	if (portalsess->retry_count < portal->retry_times) {
 		/* retry macbind req  */
-		portal_packet_init(&req_packet, REQ_MACBINDING_INFO, userip);
+		portal_packet_init(&req_packet, REQ_MACBINDING_INFO, &user_addr);
 		req_packet.serial_no = rand_serialNo();
 
 		portal_add_macbind_req_attr(&req_packet, appconn, portal);
@@ -812,7 +878,7 @@ eag_portal_onmacbind_timeout(eag_thread_t *thread)
 		portal_sess_event(SESS_ONMACBIND_TIMEOUT, portalsess);
 	} else {
 		/*  del mac pre_auth */
-		eag_del_mac_preauth(portal->macauth, userip);
+		eag_del_mac_preauth(portal->macauth, &user_addr);
 		portal_sess_free(portalsess);
 	}
 
@@ -824,8 +890,8 @@ eag_portal_macbound_timeout(eag_thread_t *thread)
 {
 	portal_sess_t *portalsess = NULL;
 	eag_portal_t *portal = NULL;
-	uint32_t userip = 0;
-	char user_ipstr[32] = "";
+	user_addr_t user_addr = {0};
+	char user_ipstr[IPX_LEN] = "";
 
 	if (NULL == thread) {
 		eag_log_err("eag_portal_macbound_timeout input error");
@@ -843,14 +909,15 @@ eag_portal_macbound_timeout(eag_thread_t *thread)
 	}
 	
 	portal = portalsess->portal;
-	userip = portalsess->userip;
-	ip2str(userip, user_ipstr, sizeof(user_ipstr));
+    memset(&user_addr, 0, sizeof(user_addr));
+	memcpy(&user_addr, &(portalsess->user_addr), sizeof(user_addr_t));
+    ipx2str(&user_addr, user_ipstr, sizeof(user_ipstr));
 	
 	eag_log_debug("eag_portal", "macbound timeout userip %s, "
 		"ack_macbind received, but no req_auth or req_challenge received",
 		user_ipstr);
 	/* del mac pre_auth */
-	eag_del_mac_preauth(portal->macauth, userip);
+	eag_del_mac_preauth(portal->macauth, &user_addr);
 	portal_sess_free(portalsess);
 
 	return EAG_RETURN_OK;
@@ -861,8 +928,8 @@ eag_portal_challenged_timeout(eag_thread_t *thread)
 {
 	portal_sess_t *portalsess = NULL;
 	eag_portal_t *portal = NULL;
-	uint32_t userip = 0;
-	char user_ipstr[32] = "";
+	user_addr_t user_addr = {0};
+	char user_ipstr[IPX_LEN] = "";
 
 	if (NULL == thread) {
 		eag_log_err("eag_portal_challenged_timeout input error");
@@ -879,14 +946,15 @@ eag_portal_challenged_timeout(eag_thread_t *thread)
 	}
 	
 	portal = portalsess->portal;
-	userip = portalsess->userip;
-	ip2str(userip, user_ipstr, sizeof(user_ipstr));
+    memset(&user_addr, 0, sizeof(user_addr));
+	memcpy(&user_addr, &(portalsess->user_addr), sizeof(user_addr_t));
+    ipx2str(&user_addr, user_ipstr, sizeof(user_ipstr));
 	
 	eag_log_info("portalsess challenged timeout userip=%s", user_ipstr);
 	if (eag_macauth_get_macauth_switch(portal->macauth))
 	{
 		/* del mac pre_auth */
-		eag_del_mac_preauth(portal->macauth, userip);
+		eag_del_mac_preauth(portal->macauth, &user_addr);
 	}
 	portal_sess_free(portalsess);
 
@@ -899,8 +967,8 @@ eag_portal_onauth_timeout(eag_thread_t *thread)
 	portal_sess_t *portalsess = NULL;
 	eag_portal_t *portal = NULL;
 	struct portal_packet_t rsppkt = {0};
-	uint32_t userip = 0;
-	char user_ipstr[32] = "";
+	user_addr_t user_addr = {0};
+	char user_ipstr[IPX_LEN] = "";
 	char user_macstr[32] = "";
 	char ap_macstr[32]= "";
 	char nas_ipstr[32]= "";
@@ -924,8 +992,9 @@ eag_portal_onauth_timeout(eag_thread_t *thread)
 	}
 	
 	portal = portalsess->portal;
-	userip = portalsess->userip;
-	ip2str(userip, user_ipstr, sizeof(user_ipstr));
+    memset(&user_addr, 0, sizeof(user_addr));
+	memcpy(&user_addr, &(portalsess->user_addr), sizeof(user_addr_t));
+    ipx2str(&user_addr, user_ipstr, sizeof(user_ipstr));
 
 	eag_log_debug("eag_portal","portalsess onauth timeout userip=%s", user_ipstr);
 	portal_packet_init_rsp(portal, &rsppkt, &(portalsess->rcvpkt));
@@ -947,7 +1016,7 @@ eag_portal_onauth_timeout(eag_thread_t *thread)
 	eag_portal_send_packet(portal, portalsess->portal_ip,
 			portalsess->portal_port, &rsppkt);
 
-	appconn = appconn_find_by_userip(portal->appdb, userip);
+	appconn = appconn_find_by_userip(portal->appdb, &user_addr);
 	if (NULL != appconn) {
 		appconn->on_auth = 0;
 	}
@@ -975,7 +1044,7 @@ eag_portal_onauth_timeout(eag_thread_t *thread)
 	eag_bss_message_count(portal->eagstat, appconn, BSS_AUTH_ACK_1_COUNT, 1);
 	/* del mac pre_auth */
 	if (eag_macauth_get_macauth_switch(portal->macauth)) {
-		eag_del_mac_preauth(portal->macauth, userip);
+		eag_del_mac_preauth(portal->macauth, &user_addr);
 	}
 	portal_sess_free(portalsess);
 
@@ -988,8 +1057,8 @@ eag_portal_aff_wait_timeout(eag_thread_t * thread)
 	portal_sess_t *portalsess = NULL;
 	eag_portal_t *portal = NULL;
 	struct portal_packet_t rsppkt = {0};
-	uint32_t userip = 0;
-	char user_ipstr[32] = "";
+	user_addr_t user_addr = {0};
+	char user_ipstr[IPX_LEN] = "";
 	char user_macstr[32] = "";
 	char ap_macstr[32]= "";
 	char nas_ipstr[32]= "";
@@ -1013,8 +1082,9 @@ eag_portal_aff_wait_timeout(eag_thread_t * thread)
 	}
 	
 	portal = portalsess->portal;
-	userip = portalsess->userip;
-	ip2str(userip, user_ipstr, sizeof(user_ipstr));
+    memset(&user_addr, 0, sizeof(user_addr));
+	memcpy(&user_addr, &(portalsess->user_addr), sizeof(user_addr_t));
+    ipx2str(&user_addr, user_ipstr, sizeof(user_ipstr));
 	
 	eag_log_debug("eag_portal","eag_portal_aff_wait_timeout "
 		"userip=%s, retry_count=%d, retry_times=%d",
@@ -1028,7 +1098,7 @@ eag_portal_aff_wait_timeout(eag_thread_t * thread)
 		eag_log_debug("eag_portal","eag_portal_aff_wait_timeout userip %s, "
 			"send ack_auth, errcode=%u", user_ipstr, rsppkt.err_code);
 
-		appconn = appconn_find_by_userip(portal->appdb, userip);
+		appconn = appconn_find_by_userip(portal->appdb, &user_addr);
 		if (NULL == appconn) {
 			eag_log_filter(user_ipstr,"PortalAckAuth___UserIP:%s,Username:%s,ErrCode:%d,ErrReason:%s",
 				user_ipstr, portalsess->username, rsppkt.err_code, err_reason);
@@ -1093,8 +1163,8 @@ eag_portal_ntf_logout_wait_timeout(eag_thread_t * thread)
 	eag_portal_t *portal = NULL;
 	struct portal_packet_t ntfpkt = {0};
 	struct app_conn_t *appconn = NULL;
-	uint32_t userip = 0;
-	char user_ipstr[32] = "";
+	user_addr_t user_addr = {0};
+	char user_ipstr[IPX_LEN] = "";
 	char user_macstr[32] = "";
 	char ap_macstr[32]= "";
 	char nas_ipstr[32]= "";
@@ -1116,10 +1186,11 @@ eag_portal_ntf_logout_wait_timeout(eag_thread_t * thread)
 	}
 	
 	portal = portalsess->portal;
-	userip = portalsess->userip;
-	ip2str(userip, user_ipstr, sizeof(user_ipstr));
+    memset(&user_addr, 0, sizeof(user_addr));
+	memcpy(&user_addr, &(portalsess->user_addr), sizeof(user_addr_t));
+    ipx2str(&user_addr, user_ipstr, sizeof(user_ipstr));
 	
-	appconn = appconn_find_by_userip(portal->appdb, userip);
+	appconn = appconn_find_by_userip(portal->appdb, &user_addr);
 	if (NULL == appconn) {
 		eag_log_err("eag_portal_ntf_logout_wait_timeout "
 			"not found appconn by userip %s", user_ipstr);
@@ -1132,7 +1203,7 @@ eag_portal_ntf_logout_wait_timeout(eag_thread_t * thread)
 		user_ipstr, portalsess->retry_count, portal->retry_times);
 		
 	if (portalsess->retry_count < portal->retry_times) {
-		portal_packet_init(&ntfpkt, NTF_LOGOUT, userip);
+		portal_packet_init(&ntfpkt, NTF_LOGOUT, &user_addr);
 
 		eag_log_debug("eag_portal","ntf_logout_wait_timeout userip %s resend ntf_logout",
 				user_ipstr);
@@ -1182,8 +1253,8 @@ eag_portal_challenge_proc(eag_portal_t *portal,
 	struct app_conn_t *appconn = NULL;
 	portal_sess_t *portalsess = NULL;
 	struct portal_packet_t rsppkt = {0};
-	uint32_t userip = 0;
-	char user_ipstr[32] = "";
+	user_addr_t user_addr = {0};
+	char user_ipstr[IPX_LEN] = "";
 	char user_macstr[32] = "";
 	char ap_macstr[32]= "";
 	char nas_ipstr[32]= "";
@@ -1202,15 +1273,15 @@ eag_portal_challenge_proc(eag_portal_t *portal,
 		return -1;
 	}
 
-	userip = ntohl(reqpkt->user_ip);
-	ip2str(userip, user_ipstr, sizeof(user_ipstr));
+    portal_packet_init_ipx(reqpkt, &user_addr);
 	portal_packet_init_rsp(portal, &rsppkt, reqpkt);
+    ipx2str(&user_addr, user_ipstr, sizeof(user_ipstr));
 
 	dbus_conn = eag_dbus_get_dbus_conn(portal->eagdbus);
 	if (portal->check_errid
 		&& PORTAL_PROTOCOL_MOBILE == portal_get_protocol_type())
 	{
-		dhcp_op_ret = eag_get_sta_dhcplease_info(dbus_conn, userip, 
+		dhcp_op_ret = eag_get_sta_dhcplease_info(dbus_conn, &user_addr, 
 				&addr_in_pool_flag, &addr_lease_status);
 		if (0 != dhcp_op_ret || ADDRESS_OUT_POOL == addr_in_pool_flag
 			|| ADDRESS_ALLOCATE != addr_lease_status)
@@ -1224,11 +1295,11 @@ eag_portal_challenge_proc(eag_portal_t *portal,
 		}
 	}
 	
-	appconn = appconn_find_by_userip(portal->appdb, userip);
+	appconn = appconn_find_by_userip(portal->appdb, &(user_addr));
 	if (NULL == appconn && portal->auto_session) {
 		eag_log_debug("eag_portal", "eag_portal_challenge_proc userip %s, "
 			"appconn is null, auto_session is enable", user_ipstr);
-		app_check_ret = appconn_check_is_conflict(userip, portal->appdb, &tmpsession, &tmp_appconn);
+		app_check_ret = appconn_check_is_conflict(&(user_addr), portal->appdb, &tmpsession, &tmp_appconn);
 		appconn = appconn_create_no_arp(portal->appdb, &tmpsession);	
 	}
 	if (NULL == appconn || EAG_RETURN_OK != app_check_ret) {
@@ -1264,12 +1335,12 @@ eag_portal_challenge_proc(eag_portal_t *portal,
 	admin_log_notice("PortalReqChallenge___UserIP:%s,UserMAC:%s,ApMAC:%s,SSID:%s,NasIP:%s,PortalIP:%s,Interface:%s,NasID:%s",
 			user_ipstr, user_macstr, ap_macstr, appconn->session.essid, nas_ipstr, portal_ipstr, appconn->session.intf, appconn->session.nasid);
 
-	portalsess = portal_sess_find_by_userip(portal, userip);
+	portalsess = portal_sess_find_by_userip(portal, &(user_addr));
 	if (NULL == portalsess) {
 		eag_log_debug("eag_portal", "eag_portal_challenge_proc "
 			"not found portal_sess by userip %s, new one",
 			user_ipstr);
-		portalsess = portal_sess_new(portal, userip);
+		portalsess = portal_sess_new(portal, &(user_addr));
 	}
 	if (NULL == portalsess) {
 		eag_log_err("eag_portal_challenge_proc userip %s, "
@@ -1363,7 +1434,7 @@ send:
 			&& CHALLENGE_SUCCESS != rsppkt.err_code)
 	{
 		/* del mac pre_auth */
-		eag_del_mac_preauth(portal->macauth, userip);
+		eag_del_mac_preauth(portal->macauth, &(user_addr));
 	}
 	if (portal->check_errid
 		&& PORTAL_PROTOCOL_MOBILE == portal_get_protocol_type()
@@ -1452,8 +1523,8 @@ eag_portal_chapauth_proc(eag_portal_t *portal,
 	struct app_conn_t *appconn = NULL;
 	portal_sess_t *portalsess = NULL;
 	struct portal_packet_t rsppkt = {0};
-	uint32_t userip = 0;
-	char user_ipstr[32] = "";
+	user_addr_t user_addr = {0};
+	char user_ipstr[IPX_LEN] = "";
 	char user_macstr[32]= "";
 	char ap_macstr[32]= "";
 	char nas_ipstr[32]= "";
@@ -1477,9 +1548,9 @@ eag_portal_chapauth_proc(eag_portal_t *portal,
 		return -1;
 	}
 
-	userip = ntohl(reqpkt->user_ip);
-	ip2str(userip, user_ipstr, sizeof(user_ipstr));
+    portal_packet_init_ipx(reqpkt, &user_addr);
 	portal_packet_init_rsp(portal, &rsppkt, reqpkt);
+    ipx2str(&user_addr, user_ipstr, sizeof(user_ipstr));
 
 	attr = portal_packet_get_attr(reqpkt, ATTR_USERNAME);
 	if (NULL == attr) {
@@ -1491,11 +1562,11 @@ eag_portal_chapauth_proc(eag_portal_t *portal,
 		memcpy(username, attr->value, attr->len - 2);
 	}
 
-	appconn = appconn_find_by_userip(portal->appdb, userip);
+	appconn = appconn_find_by_userip(portal->appdb, &user_addr);
 	if (NULL == appconn && portal->auto_session) {
 		eag_log_debug("eag_portal", "eag_portal_chapauth_proc userip %s, "
 			"appconn is null, auto_session is enable", user_ipstr);
-		app_check_ret = appconn_check_is_conflict(userip, portal->appdb, &tmpsession, &tmp_appconn);
+		app_check_ret = appconn_check_is_conflict(&user_addr, portal->appdb, &tmpsession, &tmp_appconn);
 		appconn = appconn_create_no_arp(portal->appdb, &tmpsession);
 	}
 	if (NULL == appconn || EAG_RETURN_OK != app_check_ret) {
@@ -1550,12 +1621,12 @@ eag_portal_chapauth_proc(eag_portal_t *portal,
 		appconn->session.server_auth_type = EAG_AUTH_TYPE_PORTAL;
 	}
 
-	portalsess = portal_sess_find_by_userip(portal, userip);
+	portalsess = portal_sess_find_by_userip(portal, &user_addr);
 	if (NULL == portalsess) {
 		eag_log_debug("eag_portal", "eag_portal_chapauth_proc "
 			"not found portal_sess by userip %s, new one",
 			user_ipstr);
-		portalsess = portal_sess_new(portal, userip);
+		portalsess = portal_sess_new(portal, &user_addr);
 	}
 	if (NULL == portalsess) {
 		eag_log_err("eag_portal_chapauth_proc userip %s, "
@@ -1750,7 +1821,7 @@ send:
 			&& PORTAL_AUTH_SUCCESS != rsppkt.err_code)
 	{
 		/* del mac pre_auth */
-		eag_del_mac_preauth(portal->macauth, userip);
+		eag_del_mac_preauth(portal->macauth, &user_addr);
 	}
 	if (portal->check_errid
 		&& PORTAL_PROTOCOL_MOBILE == portal_get_protocol_type()
@@ -1845,8 +1916,8 @@ eag_portal_papauth_proc(eag_portal_t *portal,
 	struct app_conn_t *appconn = NULL;
 	portal_sess_t *portalsess = NULL;
 	struct portal_packet_t rsppkt = {0};
-	uint32_t userip = 0;
-	char user_ipstr[32] = "";
+	user_addr_t user_addr = {0};
+	char user_ipstr[IPX_LEN] = "";
 	char user_macstr[32] = "";
 	char ap_macstr[32]= "";
 	char nas_ipstr[32]= "";
@@ -1871,10 +1942,10 @@ eag_portal_papauth_proc(eag_portal_t *portal,
 		return -1;
 	}
 
-	userip = ntohl(reqpkt->user_ip);
-	ip2str(userip, user_ipstr, sizeof(user_ipstr));
-	radius = portal->radius;
+    portal_packet_init_ipx(reqpkt, &user_addr);
 	portal_packet_init_rsp(portal, &rsppkt, reqpkt);
+    ipx2str(&user_addr, user_ipstr, sizeof(user_ipstr));
+	radius = portal->radius;
 
 	attr = portal_packet_get_attr(reqpkt, ATTR_USERNAME);
 	if (NULL == attr) {
@@ -1886,11 +1957,11 @@ eag_portal_papauth_proc(eag_portal_t *portal,
 		memcpy(username, attr->value, attr->len - 2);
 	}
 	
-	appconn = appconn_find_by_userip(portal->appdb, userip);
+	appconn = appconn_find_by_userip(portal->appdb, &user_addr);
 	if (NULL == appconn && portal->auto_session) {
 		eag_log_debug("eag_portal", "eag_portal_papauth_proc userip %s, "
 			"appconn is null, auto_session is enable", user_ipstr);
-		app_check_ret = appconn_check_is_conflict(userip, portal->appdb, &tmpsession, &tmp_appconn);
+		app_check_ret = appconn_check_is_conflict(&user_addr, portal->appdb, &tmpsession, &tmp_appconn);
 		appconn = appconn_create_no_arp(portal->appdb, &tmpsession);
 	}
 	if (NULL == appconn || EAG_RETURN_OK != app_check_ret) {
@@ -1944,12 +2015,12 @@ eag_portal_papauth_proc(eag_portal_t *portal,
 		appconn->session.server_auth_type = EAG_AUTH_TYPE_PORTAL;
 	}
 	
-	portalsess = portal_sess_find_by_userip(portal, userip);
+	portalsess = portal_sess_find_by_userip(portal, &user_addr);
 	if (NULL == portalsess) {
 		eag_log_debug("eag_portal", "eag_portal_papauth_proc "
 			"not found portal_sess by userip %s, new one",
 			user_ipstr);
-		portalsess = portal_sess_new(portal, userip);
+		portalsess = portal_sess_new(portal, &user_addr);
 	}
 	if (NULL == portalsess) {
 		eag_log_err("eag_portal_papauth_proc userip %s, "
@@ -2118,7 +2189,7 @@ send:
 			&& PORTAL_AUTH_SUCCESS != rsppkt.err_code)
 	{
 		/* del mac pre_auth */
-		eag_del_mac_preauth(portal->macauth, userip);
+		eag_del_mac_preauth(portal->macauth, &user_addr);
 	}
 	if (portal->check_errid
 		&& PORTAL_PROTOCOL_MOBILE == portal_get_protocol_type()
@@ -2212,8 +2283,8 @@ eag_portal_logout_proc(eag_portal_t *portal,
 	struct app_conn_t *appconn = NULL;
 	portal_sess_t *portalsess = NULL;
 	struct portal_packet_t rsppkt = {0};
-	uint32_t userip = 0;
-	char user_ipstr[32] = "";
+	user_addr_t user_addr = {0};
+	char user_ipstr[IPX_LEN] = "";
 	char user_macstr[32] = "";
 	char ap_macstr[32]= "";
 	char nas_ipstr[32]= "";
@@ -2229,13 +2300,13 @@ eag_portal_logout_proc(eag_portal_t *portal,
 		return -1;
 	}
 
-	userip = ntohl(reqpkt->user_ip);
-	ip2str(userip, user_ipstr, sizeof(user_ipstr));
+    portal_packet_init_ipx(reqpkt, &user_addr);
 	portal_packet_init_rsp(portal, &rsppkt, reqpkt);
+    ipx2str(&user_addr, user_ipstr, sizeof(user_ipstr));
 
-	appconn = appconn_find_by_userip(portal->appdb, userip);
+	appconn = appconn_find_by_userip(portal->appdb, &user_addr);
 	if (NULL == appconn) {
-		app_check_ret = appconn_check_is_conflict(userip, portal->appdb, &tmpsession, &tmp_appconn);
+		app_check_ret = appconn_check_is_conflict(&user_addr, portal->appdb, &tmpsession, &tmp_appconn);
 		appconn = appconn_create_no_arp(portal->appdb, &tmpsession);
 	}
 	if (NULL == appconn || EAG_RETURN_OK != app_check_ret) {
@@ -2275,12 +2346,12 @@ eag_portal_logout_proc(eag_portal_t *portal,
 	log_app_filter(appconn,"PortalReqLogout___UserIP:%s,UserMAC:%s,Username:%s,ApMAC:%s,SSID:%s,NasIP:%s,PortalIP:%s,Interface:%s,NasID:%s,ErrCode:%u",
 		user_ipstr, user_macstr, appconn->session.username, ap_macstr, appconn->session.essid, nas_ipstr, portal_ipstr, appconn->session.intf, appconn->session.nasid, reqpkt->err_code);
 	
-	portalsess = portal_sess_find_by_userip(portal, userip);
+	portalsess = portal_sess_find_by_userip(portal, &user_addr);
 	if (NULL == portalsess) {
 		eag_log_debug("eag_portal", "eag_portal_logout_proc "
 			"not found portal_sess by userip %s, new one",
 			user_ipstr);
-		portalsess = portal_sess_new(portal, userip);
+		portalsess = portal_sess_new(portal, &user_addr);
 	}
 	if (NULL == portalsess) {
 		eag_log_err("eag_portal_logout_proc userip %s, "
@@ -2425,8 +2496,8 @@ eag_portal_logout_errcode1_proc(eag_portal_t *portal,
 		uint16_t portal_port,
 		struct portal_packet_t *reqpkt)
 {
-	uint32_t userip = 0;
-	char user_ipstr[32] = "";
+	user_addr_t user_addr = {0};
+	char user_ipstr[IPX_LEN] = "";
 	char user_macstr[32] = "";
 	char ap_macstr[32]= "";
 	char nas_ipstr[32]= "";
@@ -2439,10 +2510,10 @@ eag_portal_logout_errcode1_proc(eag_portal_t *portal,
 	}
 	
 	/* logout_errcode1_proc */
-	userip = ntohl(reqpkt->user_ip);
-	ip2str(userip, user_ipstr, sizeof(user_ipstr));
+    portal_packet_init_ipx(reqpkt, &user_addr);
+    ipx2str(&user_addr, user_ipstr, sizeof(user_ipstr));
 	
-	appconn = appconn_find_by_userip(portal->appdb,userip);
+	appconn = appconn_find_by_userip(portal->appdb, &user_addr);
 	if (NULL == appconn) {
 		eag_log_filter(user_ipstr,"PortalReqLogout___UserIP:%s,ErrCode:%u",
 			user_ipstr, reqpkt->err_code);
@@ -2470,8 +2541,8 @@ eag_portal_ack_logout_proc(eag_portal_t *portal,
 {
 	struct app_conn_t *appconn = NULL;
 	portal_sess_t *portalsess = NULL;
-	uint32_t userip = 0;
-	char user_ipstr[32] = "";
+	user_addr_t user_addr = {0};
+	char user_ipstr[IPX_LEN] = "";
 	char user_macstr[32] = "";
 	char ap_macstr[32]= "";
 	char nas_ipstr[32]= "";
@@ -2483,10 +2554,10 @@ eag_portal_ack_logout_proc(eag_portal_t *portal,
 		return -1;
 	}
 
-	userip = ntohl(reqpkt->user_ip);
-	ip2str(userip, user_ipstr, sizeof(user_ipstr));
+    portal_packet_init_ipx(reqpkt, &user_addr);
+    ipx2str(&user_addr, user_ipstr, sizeof(user_ipstr));
 	
-	appconn = appconn_find_by_userip(portal->appdb, userip);
+	appconn = appconn_find_by_userip(portal->appdb, &user_addr);
 	if (NULL == appconn) {
 		eag_log_warning("eag_portal_ack_logout_proc "
 			"not found appconn by userip %s", user_ipstr);
@@ -2506,7 +2577,7 @@ eag_portal_ack_logout_proc(eag_portal_t *portal,
 				user_ipstr, user_macstr, appconn->session.username, ap_macstr, appconn->session.essid, nas_ipstr, portal_ipstr, appconn->session.intf, reqpkt->err_code);
 	}
 
-	portalsess = portal_sess_find_by_userip(portal, userip);
+	portalsess = portal_sess_find_by_userip(portal, &user_addr);
 	if (NULL == portalsess) {
 		eag_log_warning("eag_portal_logout_proc "
 			"not found portal_sess by userip %s", user_ipstr);
@@ -2592,8 +2663,8 @@ eag_portal_aff_ack_auth_proc(eag_portal_t *portal,
 {
 	struct app_conn_t *appconn = NULL;
 	portal_sess_t *portalsess = NULL;
-	uint32_t userip = 0;
-	char user_ipstr[32] = "";
+	user_addr_t user_addr = {0};
+	char user_ipstr[IPX_LEN] = "";
 	char user_macstr[32] = "";
 	char ap_macstr[32]= "";
 	char nas_ipstr[32]= "";
@@ -2604,10 +2675,10 @@ eag_portal_aff_ack_auth_proc(eag_portal_t *portal,
 		return -1;
 	}
 
-	userip = ntohl(reqpkt->user_ip);
-	ip2str(userip, user_ipstr, sizeof(user_ipstr));
+    portal_packet_init_ipx(reqpkt, &user_addr);
+    ipx2str(&user_addr, user_ipstr, sizeof(user_ipstr));
 	
-	appconn = appconn_find_by_userip(portal->appdb, userip);
+	appconn = appconn_find_by_userip(portal->appdb, &user_addr);
 	if (NULL == appconn) {
 		eag_log_warning("eag_portal_aff_ack_auth_proc "
 			"not found appconn by userip %s", user_ipstr);
@@ -2634,7 +2705,7 @@ eag_portal_aff_ack_auth_proc(eag_portal_t *portal,
 		return -1;
 	}
 
-	portalsess = portal_sess_find_by_userip(portal, userip);
+	portalsess = portal_sess_find_by_userip(portal, &user_addr);
 	if (NULL == portalsess) {
 		eag_log_warning("eag_portal_aff_ack_auth_proc "
 			"not found portal_sess by userip %s", user_ipstr);
@@ -2700,8 +2771,8 @@ eag_portal_reqinfo_proc(eag_portal_t *portal,
 {
 	struct app_conn_t *appconn = NULL;
 	struct portal_packet_t rsppkt = {0};
-	uint32_t userip = 0;
-	char user_ipstr[32] = "";
+	user_addr_t user_addr = {0};
+	char user_ipstr[IPX_LEN] = "";
 	int app_check_ret = 0;
 	struct app_conn_t *tmp_appconn = NULL;
 	struct appsession tmpsession = {0};
@@ -2712,16 +2783,16 @@ eag_portal_reqinfo_proc(eag_portal_t *portal,
 		return -1;
 	}
 
-	userip = ntohl(reqpkt->user_ip);
-	ip2str(userip, user_ipstr, sizeof(user_ipstr));
+    portal_packet_init_ipx(reqpkt, &user_addr);
+    ipx2str(&user_addr, user_ipstr, sizeof(user_ipstr));
 	portal_packet_init_rsp(portal, &rsppkt, reqpkt);
 
 	admin_log_notice("PortalReqInfo___UserIP:%s",
 			user_ipstr);
 	
-	appconn = appconn_find_by_userip(portal->appdb, userip);
+	appconn = appconn_find_by_userip(portal->appdb, &user_addr);
 	if (NULL == appconn) {
-		app_check_ret = appconn_check_is_conflict(userip, portal->appdb, &tmpsession, &tmp_appconn);
+		app_check_ret = appconn_check_is_conflict(&user_addr, portal->appdb, &tmpsession, &tmp_appconn);
 		appconn = appconn_create_no_arp(portal->appdb, &tmpsession);
 	}
 	if (NULL == appconn || EAG_RETURN_OK != app_check_ret) {
@@ -2818,22 +2889,22 @@ eag_portal_ack_macbind_proc(eag_portal_t *portal,
 {
 	struct app_conn_t *appconn = NULL;
 	portal_sess_t *portalsess = NULL;
-	uint32_t userip = 0;
-	char user_ipstr[32] = "";
+	user_addr_t user_addr = {0};
+	char user_ipstr[IPX_LEN] = "";
 
 	if (NULL == portal || NULL == reqpkt) {
 		eag_log_err("eag_portal_ack_macbind_proc input error");
 		return -1;
 	}
 
-	userip = ntohl(reqpkt->user_ip);
-	ip2str(userip, user_ipstr, sizeof(user_ipstr));
+    portal_packet_init_ipx(reqpkt, &user_addr);
+    ipx2str(&user_addr, user_ipstr, sizeof(user_ipstr));
 
 	admin_log_notice("PortalAckMacBindInfo___UserIP:%s,ErrCode:%u,%s",
 			user_ipstr, reqpkt->err_code,
 			(0x01 == reqpkt->err_code)?"NotBound":"Bound");
 		
-	appconn = appconn_find_by_userip(portal->appdb, userip);
+	appconn = appconn_find_by_userip(portal->appdb, &user_addr);
 	if (NULL == appconn) {
 		eag_log_warning("eag_portal_ack_macbind_proc "
 			"not found appconn by userip %s",
@@ -2846,7 +2917,7 @@ eag_portal_ack_macbind_proc(eag_portal_t *portal,
 	log_app_filter(appconn, "PortalAckMacBindInfo___UserIP:%s,ErrCode:%u,%s",
 			user_ipstr, reqpkt->err_code,
 			(0x01 == reqpkt->err_code)?"NotBound":"Bound");
-	portalsess = portal_sess_find_by_userip(portal, userip);
+	portalsess = portal_sess_find_by_userip(portal, &user_addr);
 	if (NULL == portalsess) {
 		eag_log_warning("eag_portal_ack_macbind_proc "
 			"not found portal_sess by userip %s", user_ipstr);
@@ -2892,7 +2963,7 @@ eag_portal_ack_macbind_proc(eag_portal_t *portal,
 			portalsess->t_timeout = NULL;
 		}
 		if (0x01 == reqpkt->err_code) {
-			eag_del_mac_preauth(portal->macauth,userip);
+			eag_del_mac_preauth(portal->macauth, &user_addr);
 			portal_sess_free(portalsess);
 		} else {
 			portalsess->status = SESS_STATUS_MACBOUND;
@@ -2923,9 +2994,9 @@ eag_portal_user_offline_proc(eag_portal_t *portal,
 	struct app_conn_t *appconn = NULL;
 	struct timeval tv = {0};
 	time_t timenow = 0;
-	uint32_t userip = 0;
+	user_addr_t user_addr = {0};
 	uint8_t usermac[6] = {0};
-	char user_ipstr[32] = "";
+	char user_ipstr[IPX_LEN] = "";
 	char user_macstr[32] = "";
 	char user_macstr_pack[32] = "";
 	struct portal_packet_attr *attr = NULL;
@@ -2935,8 +3006,8 @@ eag_portal_user_offline_proc(eag_portal_t *portal,
 		return -1;
 	}
 
-	userip = ntohl(reqpkt->user_ip);
-	ip2str(userip, user_ipstr, sizeof(user_ipstr));
+    portal_packet_init_ipx(reqpkt, &user_addr);
+    ipx2str(&user_addr, user_ipstr, sizeof(user_ipstr));
 
 	attr = portal_packet_get_attr(reqpkt, ATTR_USERMAC);
 	if (NULL == attr || attr->len != 8) {
@@ -2954,7 +3025,7 @@ eag_portal_user_offline_proc(eag_portal_t *portal,
 	eag_time_gettimeofday(&tv,NULL);
 	timenow = tv.tv_sec;
 
-	appconn = appconn_find_by_userip(portal->appdb, userip);
+	appconn = appconn_find_by_userip(portal->appdb, &user_addr);
 	if (NULL == appconn) {
 		eag_log_warning("eag_portal_user_offline_proc userip %s, "
 			"appconn is null", user_ipstr);
@@ -2992,17 +3063,16 @@ portal_proc_packet(eag_portal_t *portal,
 		uint16_t portal_port,
 		struct portal_packet_t *reqpkt)
 {
-	uint32_t userip = 0;
-	char user_ipstr[32] = "";
+	user_addr_t user_addr = {0};
+	char user_ipstr[IPX_LEN] = "";
 	
 	if (NULL == portal || NULL == reqpkt) {
 		eag_log_err("portal_proc_packet input error");
 		return -1;
 	}
-
-	userip = reqpkt->user_ip;
-	ip2str(userip, user_ipstr, sizeof(user_ipstr));
-
+	eag_log_info("&user_addr=%p", &user_addr);
+    portal_packet_init_ipx(reqpkt, &user_addr);
+    ipx2str(&user_addr, user_ipstr, sizeof(user_ipstr));
 	eag_log_debug("eag_portal","Receive portal packet type=%x,userip=%#x,errcode=%u "
 		" from portal server %#x:%u",
 		reqpkt->type, reqpkt->user_ip, reqpkt->err_code,
@@ -3164,14 +3234,14 @@ portal_receive(eag_thread_t *thread)
 * this function is for the 2nd one. */
 int
 eag_portal_auth_failure(eag_portal_t *portal,
-		uint32_t userip,
+		user_addr_t *user_addr,
 		uint8_t err_code,
 		const char *err_id)
 {
 	portal_sess_t *portalsess = NULL;
 	struct portal_packet_t rsppkt = {0};
 	struct app_conn_t *appconn = NULL;
-	char user_ipstr[32] = "";
+	char user_ipstr[IPX_LEN] = "";
 	char user_macstr[32] = "";
 	char ap_macstr[32]= "";
 	char nas_ipstr[32]= "";
@@ -3182,21 +3252,21 @@ eag_portal_auth_failure(eag_portal_t *portal,
 		err_reason = err_id;
 	}
 
-	ip2str(userip, user_ipstr, sizeof(user_ipstr));
+    ipx2str(user_addr, user_ipstr, sizeof(user_ipstr));
 	
 	if (eag_macauth_get_macauth_switch(portal->macauth))
 	{
 		/* del mac pre_auth */
-		eag_del_mac_preauth(portal->macauth, userip);
+		eag_del_mac_preauth(portal->macauth, user_addr);
 	}
-	portalsess = portal_sess_find_by_userip(portal, userip);
+	portalsess = portal_sess_find_by_userip(portal, user_addr);
 	if (NULL == portalsess) {
 		eag_log_err("eag_portal_auth_failure "
 			"portal_sess_find_by_userip %s failed", user_ipstr);
 		return -1;
 	}
 
-	appconn = appconn_find_by_userip(portal->appdb, userip);
+	appconn = appconn_find_by_userip(portal->appdb, user_addr);
 	if (NULL == appconn) {
 		eag_log_warning("eag_portal_auth_failure "
 			"not found appconn by userip %s", user_ipstr);
@@ -3330,8 +3400,8 @@ eag_portal_auth_success(eag_portal_t *portal,
 {
 	portal_sess_t *portalsess = NULL;
 	struct portal_packet_t rsppkt = {0};
-	uint32_t userip = 0;
-	char user_ipstr[32] = "";
+	user_addr_t user_addr = {0};
+	char user_ipstr[IPX_LEN] = "";
 	char user_macstr[32] = "";
 	char ap_macstr[32]= "";
 	char nas_ipstr[32]= "";
@@ -3351,12 +3421,13 @@ eag_portal_auth_success(eag_portal_t *portal,
 		return -1;
 	}
 	
-	userip = appconn->session.user_ip;
-	ip2str(userip, user_ipstr, sizeof(user_ipstr));
+	memset(&user_addr, 0, sizeof(user_addr));
+	memcpy(&user_addr, &(appconn->session.user_addr), sizeof(user_addr_t));
+    ipx2str(&user_addr, user_ipstr, sizeof(user_ipstr));
 	mac2str(appconn->session.usermac, user_macstr, sizeof(user_macstr)-1, '-');
 	eagins = portal->eagins;
 	
-	portalsess = portal_sess_find_by_userip(portal, userip);
+	portalsess = portal_sess_find_by_userip(portal, &user_addr);
 	if (NULL == portalsess) {
 		eag_log_err("eag_portal_auth_success "
 			"portal_sess_find_by_userip %s failed", user_ipstr);
@@ -3422,7 +3493,7 @@ eag_portal_auth_success(eag_portal_t *portal,
 	if (eag_macauth_get_macauth_switch(portal->macauth))
 	{
 		/* del mac pre_auth */
-		eag_del_mac_preauth(portal->macauth, userip);
+		eag_del_mac_preauth(portal->macauth, &user_addr);
 	}
 
 	/*flux */
@@ -3434,7 +3505,7 @@ eag_portal_auth_success(eag_portal_t *portal,
 	{
 		eag_log_debug("eag_portal","portal_auth_success fastfwd_send userip:%s online",
 			user_ipstr);
-		eag_fastfwd_send(portal->fastfwd, appconn->session.user_ip,
+		eag_fastfwd_send(portal->fastfwd, &user_addr,
 								SE_AGENT_USER_ONLINE);
 		appconn->session.last_fastfwd_flow_time = timenow;
 	}
@@ -3541,8 +3612,8 @@ eag_portal_notify_logout(eag_portal_t * portal,
 {
 	portal_sess_t *portalsess = NULL;
 	struct portal_packet_t ntfpkt = {0};
-	uint32_t userip = 0;
-	char user_ipstr[32] = "";
+	user_addr_t user_addr = {0};
+	char user_ipstr[IPX_LEN] = "";
 	char user_macstr[32] = "";
 	char ap_macstr[32]= "";
 	char nas_ipstr[32]= "";
@@ -3554,19 +3625,20 @@ eag_portal_notify_logout(eag_portal_t * portal,
 	}
 	
 	memset(&ntfpkt, 0, sizeof(ntfpkt));
-	userip = appconn->session.user_ip;
-	ip2str(appconn->session.user_ip, user_ipstr, sizeof(user_ipstr));
+	memset(&user_addr, 0, sizeof(user_addr));
+	memcpy(&user_addr, &(appconn->session.user_addr), sizeof(user_addr_t));
+    ipx2str(&user_addr, user_ipstr, sizeof(user_ipstr));
 	mac2str(appconn->session.usermac, user_macstr, sizeof(user_macstr)-1, '-');
 	mac2str(appconn->session.apmac, ap_macstr, sizeof(ap_macstr)-1, '-');
 	ip2str(appconn->session.nasip, nas_ipstr, sizeof(nas_ipstr));
 	ip2str(appconn->portal_srv.ip, portal_ipstr, sizeof(portal_ipstr));
 	
-	portalsess = portal_sess_find_by_userip(portal, userip);
+	portalsess = portal_sess_find_by_userip(portal, &user_addr);
 	if (NULL == portalsess) {
 		eag_log_debug("eag_portal", "eag_portal_notify_logout "
 			"not found portalsess by userip %s, new portalsess",
 			user_ipstr);
-		portalsess = portal_sess_new(portal, userip);
+		portalsess = portal_sess_new(portal, &user_addr);
 		if (NULL == portalsess) {
 			eag_log_err("eag_portal_notify_logout userip %s, "
 				"portal_sess_new failed", user_ipstr);
@@ -3625,7 +3697,7 @@ eag_portal_notify_logout(eag_portal_t * portal,
 	portalsess->timeout = portal->retry_interval;
 	portal_sess_event(SESS_NTF_LOGOUT_WAIT_TIMEOUT, portalsess);
 
-	portal_packet_init(&ntfpkt, NTF_LOGOUT, userip);
+	portal_packet_init(&ntfpkt, NTF_LOGOUT, &user_addr);
 
 	eag_log_debug("eag_portal","portal_notify_logout userip %s, "
 			"send ntf_logout, errcode=%u", user_ipstr, ntfpkt.err_code);
@@ -3649,8 +3721,8 @@ eag_portal_notify_logout_nowait(eag_portal_t * portal,
 {
 	portal_sess_t *portalsess = NULL;
 	struct portal_packet_t ntfpkt = {0};
-	uint32_t userip = 0;
-	char user_ipstr[32] = "";
+	user_addr_t user_addr = {0};
+	char user_ipstr[IPX_LEN] = "";
 	char user_macstr[32] = "";
 	char ap_macstr[32]= "";
 	char nas_ipstr[32]= "";
@@ -3662,14 +3734,15 @@ eag_portal_notify_logout_nowait(eag_portal_t * portal,
 	}
 	
 	memset(&ntfpkt, 0, sizeof(ntfpkt));
-	userip = appconn->session.user_ip;
-	ip2str(userip, user_ipstr, sizeof(user_ipstr));
+	memset(&user_addr, 0, sizeof(user_addr));
+	memcpy(&user_addr, &(appconn->session.user_addr), sizeof(user_addr_t));
+    ipx2str(&user_addr, user_ipstr, sizeof(user_ipstr));
 	mac2str(appconn->session.usermac, user_macstr, sizeof(user_macstr)-1, '-');
 	mac2str(appconn->session.apmac, ap_macstr, sizeof(ap_macstr)-1, '-');
 	ip2str(appconn->session.nasip, nas_ipstr, sizeof(nas_ipstr));
 	ip2str(appconn->portal_srv.ip, portal_ipstr, sizeof(portal_ipstr));
 
-	portalsess = portal_sess_find_by_userip(portal, userip);
+	portalsess = portal_sess_find_by_userip(portal, &user_addr);
 	if (NULL != portalsess) {
 		eag_log_debug("eag_portal", "eag_portal_notify_logout_nowait "
 			"found portalsess by userip %s, portalsess status %s",
@@ -3713,7 +3786,7 @@ eag_portal_notify_logout_nowait(eag_portal_t * portal,
 		portal_sess_free(portalsess);
 	}
 	
-	portal_packet_init(&ntfpkt, NTF_LOGOUT, userip);
+	portal_packet_init(&ntfpkt, NTF_LOGOUT, &user_addr);
 
 	admin_log_notice("PortalNtfLogout___UserIP:%s,UserMAC:%s,UserName:%s,ApMAC:%s,SSID:%s,NasIP:%s,PortalIP:%s,Interface:%s,NasID:%s",
 			user_ipstr, user_macstr, appconn->session.username, ap_macstr, appconn->session.essid, 
@@ -3737,8 +3810,8 @@ eag_portal_proc_dm_request(eag_portal_t *portal,
 		uint8_t id)
 {
 	portal_sess_t *portalsess = NULL;
-	uint32_t userip = 0;
-	char user_ipstr[32] = "";
+	user_addr_t user_addr = {0};
+	char user_ipstr[IPX_LEN] = "";
 	time_t timenow = 0;
 	struct timeval tv = {0};
 
@@ -3750,15 +3823,16 @@ eag_portal_proc_dm_request(eag_portal_t *portal,
 		return -1;
 	}
 
-	userip = appconn->session.user_ip;
-	ip2str(userip, user_ipstr, sizeof(user_ipstr));
+	memset(&user_addr, 0, sizeof(user_addr));
+	memcpy(&user_addr, &(appconn->session.user_addr), sizeof(user_addr_t));
+    ipx2str(&user_addr, user_ipstr, sizeof(user_ipstr));
 	
-	portalsess = portal_sess_find_by_userip(portal, userip);
+	portalsess = portal_sess_find_by_userip(portal, &user_addr);
 	if (NULL == portalsess) {
 		eag_log_debug("eag_portal", "eag_portal_proc_dm_request "
 			"not found portalsess by userip %s, new portalsess",
 			user_ipstr);
-		portalsess = portal_sess_new(portal, userip);
+		portalsess = portal_sess_new(portal, &user_addr);
 	}
 	if (NULL == portalsess) {
 		eag_log_err("eag_portal_proc_dm_request userip %s, "
@@ -3829,8 +3903,8 @@ eag_portal_macbind_req(eag_portal_t *portal,
 {
 	portal_sess_t *portalsess = NULL;
 	struct portal_packet_t req_packet = {0};
-	uint32_t userip = 0;
-	char user_ipstr[32] = "";
+	user_addr_t user_addr = {0};
+	char user_ipstr[IPX_LEN] = "";
 		
 	if (NULL == portal || NULL == appconn) {
 		eag_log_err("eag_portal_macbind_req input error");
@@ -3838,15 +3912,16 @@ eag_portal_macbind_req(eag_portal_t *portal,
 	}
 	
 	memset(&req_packet, 0, sizeof(req_packet));
-	userip = appconn->session.user_ip;
-	ip2str(userip, user_ipstr, sizeof(user_ipstr));
+	memset(&user_addr, 0, sizeof(user_addr));
+	memcpy(&user_addr, &(appconn->session.user_addr), sizeof(user_addr_t));
+    ipx2str(&user_addr, user_ipstr, sizeof(user_ipstr));
 	
-	portalsess = portal_sess_find_by_userip(portal, userip);
+	portalsess = portal_sess_find_by_userip(portal, &user_addr);
 	if (NULL == portalsess) {
 		eag_log_debug("eag_portal", "eag_portal_macbind_req "
 			"not found portalsess by userip %s, new portalsess",
 			user_ipstr);
-		portalsess = portal_sess_new(portal, userip);
+		portalsess = portal_sess_new(portal, &user_addr);
 		if (NULL == portalsess) {
 			eag_log_err("eag_portal_macbind_req userip %s, "
 				"portal_sess_new failed", user_ipstr);
@@ -3899,7 +3974,7 @@ eag_portal_macbind_req(eag_portal_t *portal,
 	portalsess->timeout = portal->retry_interval;
 	portal_sess_event(SESS_ONMACBIND_TIMEOUT, portalsess);
 
-	portal_packet_init(&req_packet, REQ_MACBINDING_INFO, userip);
+	portal_packet_init(&req_packet, REQ_MACBINDING_INFO, &user_addr);
 	req_packet.serial_no = rand_serialNo();
 
 	portal_add_macbind_req_attr(&req_packet, appconn, portal);
@@ -3922,8 +3997,8 @@ eag_portal_ntf_user_logon(eag_portal_t *portal,
 		struct app_conn_t *appconn)
 {
 	struct portal_packet_t req_packet = {0};
-	uint32_t userip = 0;
-	char user_ipstr[32] = "";
+	user_addr_t user_addr = {0};
+	char user_ipstr[IPX_LEN] = "";
 	uint32_t nasip = 0;
 	unsigned long starttime = 0;
 	
@@ -3933,10 +4008,11 @@ eag_portal_ntf_user_logon(eag_portal_t *portal,
 	}
 	
 	memset(&req_packet, 0, sizeof(req_packet));
-	userip = appconn->session.user_ip;
-	ip2str(userip, user_ipstr, sizeof(user_ipstr));
+	memset(&user_addr, 0, sizeof(user_addr));
+	memcpy(&user_addr, &(appconn->session.user_addr), sizeof(user_addr_t));
+    ipx2str(&user_addr, user_ipstr, sizeof(user_ipstr));
 
-	portal_packet_init(&req_packet, NTF_USER_LOGON, userip);
+	portal_packet_init(&req_packet, NTF_USER_LOGON, &user_addr);
 	req_packet.serial_no = rand_serialNo();
 
 	portal_packet_add_attr(&req_packet, ATTR_USERNAME, appconn->session.username,
@@ -3986,8 +4062,8 @@ eag_portal_ntf_user_logoff(eag_portal_t *portal,
 		struct app_conn_t *appconn)
 {
 	struct portal_packet_t req_packet = {0};
-	uint32_t userip = 0;
-	char user_ipstr[32] = "";
+	user_addr_t user_addr = {0};
+	char user_ipstr[IPX_LEN] = "";
 	uint32_t nasip = 0;
 	unsigned long stoptime = 0;
 	struct timeval tv = {0};
@@ -4005,10 +4081,11 @@ eag_portal_ntf_user_logoff(eag_portal_t *portal,
 	}
 	
 	memset(&req_packet, 0, sizeof(req_packet));
-	userip = appconn->session.user_ip;
-	ip2str(userip, user_ipstr, sizeof(user_ipstr));
+	memset(&user_addr, 0, sizeof(user_addr));
+	memcpy(&user_addr, &(appconn->session.user_addr), sizeof(user_addr_t));
+    ipx2str(&user_addr, user_ipstr, sizeof(user_ipstr));
 	
-	portal_packet_init(&req_packet, NTF_USER_LOGOUT, userip);
+	portal_packet_init(&req_packet, NTF_USER_LOGOUT, &user_addr);
 	req_packet.serial_no = rand_serialNo();
 
 	portal_packet_add_attr(&req_packet, ATTR_USERNAME, appconn->session.username,
@@ -4072,15 +4149,16 @@ eag_portal_ntf_user_logoff(eag_portal_t *portal,
 
 int
 eag_portal_set_pdc_usermap(eag_portal_t * portal,
-		uint32_t userip)
+		user_addr_t *user_addr)
 {
 	if (cmtest_no_notice_to_pdc) {
 		return 0;
 	}
 	int ret = 0;
-
-	ret = pdc_send_usermap(portal->sockfd, userip, portal->slot_id,
-						portal->hansi_type, portal->hansi_id);
+	if (EAG_IPV4 == user_addr->family) {
+		ret = pdc_send_usermap(portal->sockfd, user_addr->user_ip, portal->slot_id,
+							portal->hansi_type, portal->hansi_id);
+	}
 	if	(EAG_RETURN_OK != ret) {
 		eag_log_err("eag_portal_set_pdc_usermap failed, ret = %d", ret);
 	}
@@ -4405,7 +4483,7 @@ int
 eag_portal_log_all_portalsess(eag_portal_t *portal)
 {
 	portal_sess_t *portalsess = NULL;	
-	char ipstr[32] = "";
+	char user_ipstr[IPX_LEN] = "";
 	int num = 0;
 
 	if (NULL == portal) {
@@ -4416,9 +4494,9 @@ eag_portal_log_all_portalsess(eag_portal_t *portal)
 	eag_log_info( "-----log all portalsess begin-----");
 	list_for_each_entry(portalsess, &(portal->sess_head), node) {
 		num++;
-		ip2str(portalsess->userip, ipstr, sizeof(ipstr));	
+		ipx2str(&(portalsess->user_addr), user_ipstr, sizeof(user_ipstr));	
 		eag_log_info("%-5d portalsess userip:%s sess_status:%s ",
-			num, ipstr, sess_status2str(portalsess->status));
+			num, user_ipstr, sess_status2str(portalsess->status));
 	}
 	eag_log_info( "-----log all portalsess end, num: %d-----", num);
 

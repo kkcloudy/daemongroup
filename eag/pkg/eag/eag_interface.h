@@ -4,6 +4,7 @@
 
 #include <dbus/dbus.h>
 #include <stdint.h>
+#include <arpa/inet.h>
 #include "nm_list.h"
 
 /*define hansi type!*/
@@ -86,6 +87,8 @@ struct eag_base_conf {
 	int l2super_vlan;
 	int username_check;
 	int telecom_idletime_valuecheck;
+	int ipv6_switch;
+	struct in6_addr nasipv6;
 };
 
 struct api_nasid_map_t {
@@ -116,6 +119,8 @@ struct api_nasid_conf {
 typedef enum {
 	RULE_IPADDR,
 	RULE_DOMAIN,
+	RULE_IPV6ADDR,
+	RULE_IPV6DOMAIN,
 } RULE_TYPE;
 
 #define MAX_DOMAIN_IP_NUM	16
@@ -129,16 +134,26 @@ struct bw_rule_t {
 			char ports[CP_MAX_PORTS_BUFF_LEN];
 		} ip;
 		struct {
+			struct in6_addr ipv6begin;
+			struct in6_addr ipv6end;
+			char ports[CP_MAX_PORTS_BUFF_LEN];
+		} ipv6;
+		struct {
 			char name[CP_MAX_BW_DOMAIN_NAME_LEN];
 			int num;
 			unsigned long ip[MAX_DOMAIN_IP_NUM];
-		}domain;
+		} domain;
 		//char domain[CP_MAX_BW_DOMAIN_NAME_LEN];
+		struct {
+			char name[CP_MAX_BW_DOMAIN_NAME_LEN];
+			int num;
+			struct in6_addr ipv6[MAX_DOMAIN_IP_NUM];
+		} ipv6_domain;
 	} key;
 	char intf[MAX_IF_NAME_LEN];
 };
 
-#define MAX_BW_RULES_NUM	128
+#define MAX_BW_RULES_NUM	256
 struct bw_rules{
 	unsigned long curr_num;
 	struct bw_rule_t rule[MAX_BW_RULES_NUM];
@@ -147,6 +162,8 @@ struct bw_rules{
 typedef struct{
 	unsigned long curr_ifnum;
 	char cpif[CP_MAX_INTERFACE_NUM][MAX_IF_NAME_LEN];
+	unsigned long ipv6_curr_ifnum;
+	char ipv6_cpif[CP_MAX_INTERFACE_NUM][MAX_IF_NAME_LEN];
 }eag_captive_intfs;
 
 struct eag_bss_stat {
@@ -421,7 +438,8 @@ struct eag_all_stat {
 struct eag_user {
 	struct list_head node;	
 	char username[USERNAMESIZE];
-	uint32_t userip;
+	uint32_t user_ip;
+	struct in6_addr user_ipv6;
 	uint8_t usermac[6];
 	uint32_t session_time;
 	long accurate_start_time;
@@ -448,6 +466,17 @@ int
 eag_set_nasip(DBusConnection *connection, 
 				int hansitype, int insid,
 				uint32_t nasip);
+
+int
+eag_set_nasipv6(DBusConnection *connection, 
+				int hansitype, int insid,
+				char *nasipv6);
+
+int
+eag_set_ipv6_server(DBusConnection *connection, 
+				int hansitype, int insid,
+				int ipv6_service);
+
 /*
 int
 eag_set_distributed(DBusConnection *connection, 
@@ -662,12 +691,12 @@ eag_get_nasportid ( DBusConnection *connection,
 int
 eag_add_captive_intf( DBusConnection *connection, 
 				int hansitype, int insid,
-				char *intfs );
+				uint32_t family, char *intfs );
 
 int
 eag_del_captive_intf(DBusConnection *connection, 
 				int hansitype, int insid, 
-				char *intfs);
+			    uint32_t family, char *intfs );
 
 int
 eag_get_captive_intfs(DBusConnection *connection, 
@@ -677,6 +706,12 @@ int
 eag_conf_captive_list(DBusConnection *connection, 
 				int hansitype, int insid,
 				RULE_TYPE type_tmp, char *iprange, char *portset, char * domain, char * intfs,
+				char *add_or_del, char *white_or_black);
+
+int
+eag_conf_captive_ipv6_list(DBusConnection *connection, 
+				int hansitype, int insid,
+				RULE_TYPE type_tmp, char *ipv6range, char *portset, char * domain, char * intfs,
 				char *add_or_del, char *white_or_black);
 
 int
@@ -719,6 +754,17 @@ eag_del_portal_server( DBusConnection *connection,
 				PORTAL_KEY_TYPE key_type,
 				unsigned long keyid,
 				char *keystr);
+
+int
+eag_set_macbind_server( DBusConnection *connection, 
+				int hansitype, int insid, 					
+				PORTAL_KEY_TYPE key_type,
+				unsigned long keyid,
+				const char *keystr,
+				int ip_or_domain,
+				char *domain,
+				uint32_t macbind_server_ip,
+				uint16_t macbind_server_port);
 
 int
 eag_get_portal_conf( DBusConnection *connection, 

@@ -69,6 +69,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdio.h>
 #include <sys/wait.h>
 #include <sys/types.h>
+#include <arpa/inet.h>
 
 #include "dcli_main.h"
 
@@ -87,6 +88,30 @@ ip2str(uint32_t ip, char *str, size_t size)
 		(ip>>24)&0xff, (ip>>16)&0xff, (ip>>8)&0xff, ip&0xff);
 
 	return str;
+}
+
+static char *
+ipv6tostr(struct in6_addr *ipv6, char *str, size_t size)
+{
+	if (NULL == str || NULL == ipv6) {
+		return NULL;
+	}
+	
+	memset(str, 0, size);
+	if(!inet_ntop(AF_INET6, (const void *)ipv6, str, size)) {
+		return "[ipv6 error]";
+	}
+
+	return str;
+}
+
+static int
+ipv6_compare_null(struct in6_addr *ipv6)
+{
+	unsigned char cmp[16] = "";
+	memset(cmp, 0, sizeof(cmp));
+
+	return memcmp(ipv6, cmp, sizeof(struct in6_addr));
 }
 
 static char *
@@ -4397,13 +4422,45 @@ eag_multi_portal_config_show_running(struct vty* vty)
 				&& (0 != portalconf.portal_srv[i].mac_server_ip 
 					|| 0 != portalconf.portal_srv[i].mac_server_port))
 			{
-				ip2str(portalconf.portal_srv[i].mac_server_ip, ip_str, sizeof(ip_str));
-				snprintf(showStr, sizeof(showStr)-1, 
-					" add portal-server %s %s %s %u domain %s macauth %s %u", 
-					key_type, key, portalconf.portal_srv[i].portal_url,
-					portalconf.portal_srv[i].ntf_port, portalconf.portal_srv[i].domain,
-					ip_str, portalconf.portal_srv[i].mac_server_port);
-				vtysh_add_show_string(showStr);
+				if (MACBIND_SERVER_IP == portalconf.portal_srv[i].ip_or_domain)
+				{
+					snprintf(showStr, sizeof(showStr)-1, 
+						" add portal-server %s %s %s %u domain %s",
+						key_type, key, portalconf.portal_srv[i].portal_url, 
+						portalconf.portal_srv[i].ntf_port, portalconf.portal_srv[i].domain);
+					vtysh_add_show_string(showStr);
+					
+					ip2str(portalconf.portal_srv[i].mac_server_ip, ip_str, sizeof(ip_str));
+					snprintf(showStr, sizeof(showStr)-1, 
+						" set macbind-server %s %s ip %s %u", 
+						key_type, key, ip_str, 
+						portalconf.portal_srv[i].mac_server_port);
+					vtysh_add_show_string(showStr);
+				}
+				else if (MACBIND_SERVER_DOMAIN == portalconf.portal_srv[i].ip_or_domain)
+				{
+					snprintf(showStr, sizeof(showStr)-1, 
+						" add portal-server %s %s %s %u domain %s",
+						key_type, key, portalconf.portal_srv[i].portal_url, 
+						portalconf.portal_srv[i].ntf_port, portalconf.portal_srv[i].domain);
+					vtysh_add_show_string(showStr);
+					
+					snprintf(showStr, sizeof(showStr)-1, 
+						" set macbind-server %s %s domain %s %u", 
+						key_type, key, portalconf.portal_srv[i].macbind_server_domain, 
+						portalconf.portal_srv[i].mac_server_port);
+					vtysh_add_show_string(showStr);
+				}
+				else 
+				{
+                    ip2str(portalconf.portal_srv[i].mac_server_ip, ip_str, sizeof(ip_str));
+                    snprintf(showStr, sizeof(showStr)-1, 
+                        " add portal-server %s %s %s %u domain %s macauth %s %u", 
+                        key_type, key, portalconf.portal_srv[i].portal_url,
+                        portalconf.portal_srv[i].ntf_port, portalconf.portal_srv[i].domain,
+                        ip_str, portalconf.portal_srv[i].mac_server_port);
+                    vtysh_add_show_string(showStr);
+				}
 			} 
 			else if (0 != strcmp(portalconf.portal_srv[i].domain, ""))
 			{
@@ -4416,13 +4473,43 @@ eag_multi_portal_config_show_running(struct vty* vty)
 			else if (0 != portalconf.portal_srv[i].mac_server_ip 
 					|| 0 != portalconf.portal_srv[i].mac_server_port)
 			{
-				ip2str(portalconf.portal_srv[i].mac_server_ip, ip_str, sizeof(ip_str));
-				snprintf(showStr, sizeof(showStr)-1, 
-					" add portal-server %s %s %s %u macauth %s %u", 
-					key_type, key, portalconf.portal_srv[i].portal_url,
-					portalconf.portal_srv[i].ntf_port,
-					ip_str, portalconf.portal_srv[i].mac_server_port);
-				vtysh_add_show_string(showStr);
+				if (MACBIND_SERVER_IP == portalconf.portal_srv[i].ip_or_domain)
+				{
+                    snprintf(showStr, sizeof(showStr)-1, 
+                        " add portal-server %s %s %s %u", 
+                        key_type, key, portalconf.portal_srv[i].portal_url,
+                        portalconf.portal_srv[i].ntf_port);
+                    vtysh_add_show_string(showStr);
+					
+					ip2str(portalconf.portal_srv[i].mac_server_ip, ip_str, sizeof(ip_str));
+					snprintf(showStr, sizeof(showStr)-1, 
+						" set macbind-server %s %s ip %s %u", 
+						key_type, key, ip_str, 
+						portalconf.portal_srv[i].mac_server_port);
+					vtysh_add_show_string(showStr);
+				}
+				else if (MACBIND_SERVER_DOMAIN == portalconf.portal_srv[i].ip_or_domain)
+				{
+                    snprintf(showStr, sizeof(showStr)-1, 
+                        " add portal-server %s %s %s %u", 
+                        key_type, key, portalconf.portal_srv[i].portal_url,
+                        portalconf.portal_srv[i].ntf_port);
+                    vtysh_add_show_string(showStr);
+
+					snprintf(showStr, sizeof(showStr)-1, 
+						" set macbind-server %s %s domain %s %u", 
+						key_type, key, portalconf.portal_srv[i].macbind_server_domain, 
+						portalconf.portal_srv[i].mac_server_port);
+					vtysh_add_show_string(showStr);
+				} else {
+					ip2str(portalconf.portal_srv[i].mac_server_ip, ip_str, sizeof(ip_str));
+					snprintf(showStr, sizeof(showStr)-1, 
+						" add portal-server %s %s %s %u macauth %s %u", 
+						key_type, key, portalconf.portal_srv[i].portal_url,
+						portalconf.portal_srv[i].ntf_port,
+						ip_str, portalconf.portal_srv[i].mac_server_port);
+					vtysh_add_show_string(showStr);
+				}
 			}
 			else  {
 				snprintf(showStr, sizeof(showStr)-1, 
@@ -4614,11 +4701,37 @@ eag_multi_portal_config_show_running_2(int localid, int slot_id, int index)
 				&& (0 != portalconf.portal_srv[i].mac_server_ip 
 					|| 0 != portalconf.portal_srv[i].mac_server_port))
 			{
-				ip2str(portalconf.portal_srv[i].mac_server_ip, ip_str, sizeof(ip_str));
-				totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1," add portal-server %s %s %s %u domain %s macauth %s %u\n",
-								key_type, key, portalconf.portal_srv[i].portal_url, 
-								portalconf.portal_srv[i].ntf_port, portalconf.portal_srv[i].domain,
-								ip_str, portalconf.portal_srv[i].mac_server_port);
+				if (MACBIND_SERVER_IP == portalconf.portal_srv[i].ip_or_domain)
+				{
+					totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1," add portal-server %s %s %s %u domain %s\n",
+									key_type, key, portalconf.portal_srv[i].portal_url, 
+									portalconf.portal_srv[i].ntf_port, portalconf.portal_srv[i].domain);
+
+					ip2str(portalconf.portal_srv[i].mac_server_ip, ip_str, sizeof(ip_str));
+					totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1, 
+									" set macbind-server %s %s ip %s %u\n", 
+									key_type, key, ip_str, 
+									portalconf.portal_srv[i].mac_server_port);
+				}
+				else if (MACBIND_SERVER_DOMAIN == portalconf.portal_srv[i].ip_or_domain)
+				{
+					totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1," add portal-server %s %s %s %u domain %s\n",
+									key_type, key, portalconf.portal_srv[i].portal_url, 
+									portalconf.portal_srv[i].ntf_port, portalconf.portal_srv[i].domain);
+
+					totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1, 
+									" set macbind-server %s %s domain %s %u\n", 
+									key_type, key, portalconf.portal_srv[i].macbind_server_domain, 
+									portalconf.portal_srv[i].mac_server_port);
+				}
+				else 
+				{
+					ip2str(portalconf.portal_srv[i].mac_server_ip, ip_str, sizeof(ip_str));
+					totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1," add portal-server %s %s %s %u domain %s macauth %s %u\n",
+									key_type, key, portalconf.portal_srv[i].portal_url, 
+									portalconf.portal_srv[i].ntf_port, portalconf.portal_srv[i].domain,
+									ip_str, portalconf.portal_srv[i].mac_server_port);
+				}
 			} 
 			else if (0 != strcmp(portalconf.portal_srv[i].domain, ""))
 			{
@@ -4629,11 +4742,35 @@ eag_multi_portal_config_show_running_2(int localid, int slot_id, int index)
 			else if (0 != portalconf.portal_srv[i].mac_server_ip 
 					|| 0 != portalconf.portal_srv[i].mac_server_port)
 			{
-				ip2str(portalconf.portal_srv[i].mac_server_ip, ip_str, sizeof(ip_str));
-				totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1," add portal-server %s %s %s %u macauth %s %u\n",
-								key_type, key, portalconf.portal_srv[i].portal_url, 
-								portalconf.portal_srv[i].ntf_port,
-								ip_str, portalconf.portal_srv[i].mac_server_port);
+				if (MACBIND_SERVER_IP == portalconf.portal_srv[i].ip_or_domain)
+				{
+                    totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1, " add portal-server %s %s %s %u\n",
+                                    key_type, key, portalconf.portal_srv[i].portal_url, 
+                                    portalconf.portal_srv[i].ntf_port);
+
+					ip2str(portalconf.portal_srv[i].mac_server_ip, ip_str, sizeof(ip_str));
+					totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1, 
+									" set macbind-server %s %s ip %s %u\n", 
+									key_type, key, ip_str, 
+									portalconf.portal_srv[i].mac_server_port);
+				}
+				else if (MACBIND_SERVER_DOMAIN == portalconf.portal_srv[i].ip_or_domain)
+				{
+                    totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1, " add portal-server %s %s %s %u\n",
+                                    key_type, key, portalconf.portal_srv[i].portal_url, 
+                                    portalconf.portal_srv[i].ntf_port);
+
+					totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1, 
+									" set macbind-server %s %s domain %s %u\n", 
+									key_type, key, portalconf.portal_srv[i].macbind_server_domain, 
+									portalconf.portal_srv[i].mac_server_port);
+				} else {
+					ip2str(portalconf.portal_srv[i].mac_server_ip, ip_str, sizeof(ip_str));
+					totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1," add portal-server %s %s %s %u macauth %s %u\n",
+									key_type, key, portalconf.portal_srv[i].portal_url, 
+									portalconf.portal_srv[i].ntf_port,
+									ip_str, portalconf.portal_srv[i].mac_server_port);
+				}
 			}
 			else {
 				totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1, " add portal-server %s %s %s %u\n",
@@ -4943,10 +5080,16 @@ eag_captive_portal_config_show_running(struct vty* vty)
 	if (EAG_RETURN_OK == ret) {		
 		if (captive_intfs.curr_ifnum > 0) {
 			for (i = 0; i < captive_intfs.curr_ifnum; i++) {
-				snprintf(showStr, sizeof(showStr), " add captive-interface %s", captive_intfs.cpif[i]);
+				snprintf(showStr, sizeof(showStr), " add captive-interface ipv4 %s", captive_intfs.cpif[i]);
 				vtysh_add_show_string(showStr);
 			}
-		}		
+		}
+		if (captive_intfs.ipv6_curr_ifnum > 0) {
+			for (i = 0; i < captive_intfs.ipv6_curr_ifnum; i++) {
+				snprintf(showStr, sizeof(showStr), " add captive-interface ipv6 %s", captive_intfs.ipv6_cpif[i]);
+				vtysh_add_show_string(showStr);
+			}
+		}	
 	}
 
 	/* add white list */
@@ -5116,9 +5259,14 @@ eag_captive_portal_config_show_running_2(int localid, int slot_id,int index)
 	if (EAG_RETURN_OK == ret) {
 		if (captive_intfs.curr_ifnum > 0) {
 			for (i=0; i < captive_intfs.curr_ifnum; i++) {
-				totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1, " add captive-interface %s\n", captive_intfs.cpif[i]);
+				totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1, " add captive-interface ipv4 %s\n", captive_intfs.cpif[i]);
 			}
-		}		
+		}
+		if (captive_intfs.ipv6_curr_ifnum > 0) {
+			for (i=0; i < captive_intfs.ipv6_curr_ifnum; i++) {
+				totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1, " add captive-interface ipv6 %s\n", captive_intfs.ipv6_cpif[i]);
+			}
+		}	
 	}
 
 	/* add white list */
@@ -5579,6 +5727,7 @@ eag_base_config_show_running(struct vty* vty)
 	struct eag_base_conf baseconf = {0};
 	char showStr[SHOW_STR_LEN] = "";
 	char nasip_str[32] = "";
+	char nasipv6_str[48] = "";
 	memset(&baseconf, 0, sizeof(baseconf));
 
 	ret = eag_get_base_conf(dcli_dbus_connection, HANSI_LOCAL, 0, &baseconf);
@@ -5587,6 +5736,15 @@ eag_base_config_show_running(struct vty* vty)
 			ip2str(baseconf.nasip, nasip_str, sizeof(nasip_str));
 			snprintf(showStr, sizeof(showStr), " set nasip %s", nasip_str);
 			vtysh_add_show_string(showStr);
+		}
+		if (ipv6_compare_null(&(baseconf.nasipv6))) {
+			ipv6tostr(&(baseconf.nasipv6), nasipv6_str, sizeof(nasipv6_str));
+			snprintf(showStr, sizeof(showStr), " set nasipv6 %s", nasipv6_str);
+			vtysh_add_show_string(showStr);		
+		}
+		if (1 == baseconf.ipv6_switch) {
+			snprintf(showStr, sizeof(showStr), " set ipv6 service enable");
+			vtysh_add_show_string(showStr);		
 		}
 		if (DEFAULT_PORTAL_PORT != baseconf.portal_port) {
 			snprintf(showStr, sizeof(showStr), " set portal-port %u", baseconf.portal_port);
@@ -5785,7 +5943,8 @@ eag_base_config_show_running_2(int localid, int slot_id,int index)
 	int ret = -1;
 	struct eag_base_conf baseconf = {0};
 	char showStr[SHOW_STR_LEN*5] = "";
-	char nasip_str[32] = "";	
+	char nasip_str[32] = "";
+	char nasipv6_str[48] = "";	
 	memset( &baseconf, 0, sizeof(baseconf));
 	char *tmp = NULL;
 	DBusConnection *dcli_dbus_connection_curr = NULL;
@@ -5800,6 +5959,13 @@ eag_base_config_show_running_2(int localid, int slot_id,int index)
 		if (0 != baseconf.nasip) {
 			ip2str(baseconf.nasip, nasip_str, sizeof(nasip_str));
 			totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1, " set nasip %s\n", nasip_str);
+		}
+		if (ipv6_compare_null(&(baseconf.nasipv6))) {
+			ipv6tostr(&(baseconf.nasipv6), nasipv6_str, sizeof(nasipv6_str));
+			totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1, " set nasipv6 %s\n", nasipv6_str);
+		}
+		if (1 == baseconf.ipv6_switch) {
+			totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1, " set ipv6 service enable\n");
 		}
 		if (DEFAULT_PORTAL_PORT != baseconf.portal_port) {
 			totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1, " set portal-port %u\n", baseconf.portal_port);
@@ -6343,6 +6509,105 @@ DEFUN(set_eag_nasip_func,
 	}
 
 	return CMD_SUCCESS;
+}
+
+DEFUN(set_eag_nasipv6_func,
+	set_eag_nasipv6_cmd,
+	"set nasipv6 IPV6",
+	SETT_STR
+	"set nasipv6\n"
+	"ipv6 addr like A::B.C.D.E or A::B:C which used to identify nas!\n"
+)
+{
+	int ret;
+	struct in6_addr ipv6;
+	char ipv6str[48] = "";
+	
+	int hansitype = HANSI_LOCAL;	
+	int slot_id = HostSlotId;   
+	int insid = 0;
+	if (vty->node == EAG_NODE) {
+		insid = 0;
+	}
+	else if (vty->node == HANSI_EAG_NODE) {
+		insid = (int)vty->index; 	
+		hansitype = HANSI_REMOTE;
+		slot_id = vty->slotindex; 
+	}
+	else if (vty->node == LOCAL_HANSI_EAG_NODE) {
+		insid = (int)vty->index;
+		hansitype = HANSI_LOCAL;
+		slot_id = vty->slotindex;
+	}
+	DBusConnection *dcli_dbus_connection_curr = NULL;
+	ReInitDbusConnection(&dcli_dbus_connection_curr, slot_id, distributFag);
+
+	memset(&ipv6, 0, sizeof(ipv6));
+	ret = inet_pton(AF_INET6, argv[0], &ipv6);
+	if (!ret) {
+		vty_out(vty, "%% invalid ipv6 address, please like A::B.C.D.E or A::B:C\n");
+		return CMD_WARNING;
+    }
+	if (0 == memcmp(argv[0], "::", 2)) {
+		vty_out(vty, "%% invalid ipv6 address, please like A::B.C.D.E or A::B:C, A should not be NULL\n");
+		return CMD_WARNING;
+	}
+	if (eag_ins_running_state(dcli_dbus_connection_curr, hansitype, insid)) {
+		vty_out(vty, "%% eag is running, please stop it first\n");
+		return CMD_FAILURE;
+	}
+	memset(ipv6str, 0, sizeof(ipv6str));
+	strncpy(ipv6str, argv[0], sizeof(ipv6str) - 1);
+	ret = eag_set_nasipv6(dcli_dbus_connection_curr, hansitype, insid, ipv6str);
+	if (EAG_ERR_DBUS_FAILED == ret) {
+		vty_out(vty, "%% dbus error\n");
+	}
+	else if (EAG_ERR_UNKNOWN == ret) {
+		vty_out(vty, "%% unknown error: %d\n", ret);
+	}
+
+	return CMD_SUCCESS;
+}
+
+DEFUN(set_eag_ipv6_service_status_func,
+	set_eag_ipv6_service_status_cmd,
+	"set ipv6 service (enable|disable)",
+	SETT_STR
+	"ipv6 service\n"
+	"ipv6 service\n"
+	"Enable\n"
+	"Disable\n"
+)
+{
+	int ipv6_service = 0;
+	int ret = -1;
+	
+	if (strncmp(argv[0], "enable", strlen(argv[0])) == 0) {
+		ipv6_service = 1;
+	} 
+	else if (strncmp(argv[0], "disable", strlen(argv[0])) == 0) {
+		ipv6_service = 0;
+	}
+	else {
+		vty_out(vty,"%% bad command parameter\n");
+		return CMD_WARNING;
+	}
+	
+	EAG_DCLI_INIT_HANSI_INFO
+#if 1		
+	if(eag_ins_running_state(dcli_dbus_connection_curr, hansitype, insid)){
+		vty_out(vty, "eag instance %d is running, please stop it first\n",insid);
+		return CMD_FAILURE;
+	}
+#endif	
+	ret = eag_set_ipv6_server(dcli_dbus_connection_curr, hansitype, insid, ipv6_service);
+	if (EAG_ERR_DBUS_FAILED == ret) {
+		vty_out(vty, "%% dbus error\n");
+	}
+	else if (EAG_RETURN_OK != ret) {
+		vty_out(vty, "%% unknown error: %d\n", ret);
+	}
+	return CMD_SUCCESS; 
 }
 
 DEFUN(set_eag_distributed_func,
@@ -7828,6 +8093,9 @@ DEFUN(eag_service_status_func,
 	else if (EAG_ERR_EAGINS_NASIP_IS_EMPTY == ret) {
 		vty_out(vty, "%% please config nasip before service enable\n");
 	}
+	else if (EAG_ERR_EAGINS_NASIPV6_IS_EMPTY == ret) {
+		vty_out(vty, "%% please config nasipv6 before service enable\n");
+	}
 	else {
 		vty_out(vty, "%% unknown error: %d\n", ret);
 	}
@@ -7856,11 +8124,15 @@ DEFUN(show_eag_base_conf_func,
 	}
 	else if (EAG_RETURN_OK == ret) {
 		char nasip_str[32] = "";
+		char nasipv6_str[48] = "";
 		char *flux_from = "";
 		char *macauth_flux_from = "";
 		vty_out(vty, "service status               :%s\n", (1 == baseconf.status) ? "enable" : "disable");
 		ip2str( baseconf.nasip, nasip_str, sizeof(nasip_str)-1);
 		vty_out(vty, "nas ip                       :%s\n", nasip_str);
+		vty_out(vty, "ipv6 service status          :%s\n", (1 == baseconf.ipv6_switch) ? "enable" : "disable");
+        ipv6tostr( &(baseconf.nasipv6), nasipv6_str, sizeof(nasipv6_str));
+		vty_out(vty, "nas ipv6                     :%s\n", nasipv6_str);
 		//vty_out(vty, "distributed switch        :%s\n", (1 == baseconf.is_distributed) ? "on" : "off");	
 		vty_out(vty, "rdc-distributed switch       :%s\n", (1 == baseconf.rdc_distributed) ? "on" : "off");
 		vty_out(vty, "pdc-distributed switch       :%s\n", (1 == baseconf.pdc_distributed) ? "on" : "off");
@@ -9773,6 +10045,324 @@ DEFUN(eag_add_portal_server_essid_func,
 	}
 	
 	return CMD_SUCCESS;
+}
+
+DEFUN(eag_set_macbind_server_func,
+	eag_set_macbind_server_cmd,
+	"set macbind-server (wlanid|vlanid|wtpid|interface) KEY (ip|domain) ADDRESS <1-65535>",
+	"set\n"
+	"set macbind-server\n"
+	"macbind server index type wlanid\n"
+	"macbind server index type vlanid\n"
+	"macbind server index type wtpid\n"
+	"macbind server index type l3interface name\n"
+	"macbind server index key\n"
+	"macbind server ip\n"
+	"macbind server domain\n"
+	"ip or domain\n"
+	"macbind server port\n"
+)
+{
+	int ret = -1;
+	PORTAL_KEY_TYPE key_type = PORTAL_KEYTYPE_ESSID;
+	unsigned long keyid = 0;
+	const char *keystr = "";
+	uint32_t macbind_server_ip = 0;
+	uint16_t macbind_server_port = 0;
+	struct in_addr addr = {0};
+	const char *tmp_port = NULL;
+    char domain[MAX_MACBIND_SERVER_DOMAIN_LEN] = "";
+    domain_pt domain_conf;
+    domain_ct domain_ctr;
+    int slotid = HostSlotId;
+    int ip_or_domain = 0;
+    int i = 0;
+
+	if (strncmp(argv[0], "wlanid", strlen(argv[0])) == 0) {
+		key_type = PORTAL_KEYTYPE_WLANID;
+		keyid = atoi(argv[1]);
+		if (keyid == 0 || keyid > 128){
+			vty_out(vty, "%% wlan id is out of range 1~128\n");
+			return CMD_SUCCESS;
+		}
+	}
+	else if (strncmp(argv[0], "vlanid", strlen(argv[0])) == 0) {
+		key_type = PORTAL_KEYTYPE_VLANID;
+		keyid = atoi(argv[1]);
+		if(keyid == 0 || keyid > 4096) {
+			vty_out(vty, "%% vlan id is out of range 1~4096\n");
+			return CMD_SUCCESS;
+		}		
+	}
+	else if (0 == strncmp(argv[0], "wtpid", strlen(argv[0]))){
+		keyid = atoi(argv[1]);
+		key_type = PORTAL_KEYTYPE_WTPID;
+	}
+	else if (0 == strncmp(argv[0], "interface", strlen(argv[0]))) {
+		key_type = PORTAL_KEYTYPE_INTF;
+		keystr = (char *)argv[1];
+	}
+	else {
+		vty_out(vty, "%% unknown index type %s\n", argv[0]);
+		return CMD_SUCCESS;
+	}
+
+	EAG_DCLI_INIT_HANSI_INFO
+	
+#if 0		
+    if(eag_ins_running_state(dcli_dbus_connection_curr,hansitype, insid)){
+        vty_out(vty, "eag instance %d is running, please stop it first\n",insid);
+        return CMD_FAILURE;
+    }
+#endif
+
+	if (0 == strcmp(argv[2], "ip")) {
+        memset(&addr, 0, sizeof(addr));
+		ret = inet_aton(argv[3], &addr);
+		if (!ret) {
+			vty_out(vty, "%% invalid ip address\n");
+			return CMD_WARNING;
+		}
+		macbind_server_ip = ntohl(addr.s_addr);
+		macbind_server_port = atoi(argv[4]);
+		ip_or_domain = MACBIND_SERVER_IP;
+        //vty_out(vty, "%% ip:%x port:%x\n", macbind_server_ip, macbind_server_port);
+	} else if (0 == strcmp(argv[2], "domain")) {
+        if (MAX_MACBIND_SERVER_DOMAIN_LEN < strlen(argv[3]) + 1) {
+            vty_out(vty, "%% this domain is too long, out of limite:%d\n", MAX_MACBIND_SERVER_DOMAIN_LEN - 1);
+            return CMD_SUCCESS;
+        }
+        if (0 == is_domain(argv[3])) {
+            vty_out(vty, "%% this domain format error, please check it\n");
+            return CMD_SUCCESS;
+        }
+        memset(domain, 0, sizeof(domain));
+        strncpy(domain, argv[3], sizeof(domain) - 1);
+        
+        ret = conf_drp_get_dbus_connect_params(&slotid);
+        if (ret < 0){
+            vty_out(vty, "%% eag get drp connection config error:%d\n",ret);
+            return CMD_FAILURE;
+        }
+        memset(&domain_ctr, 0, sizeof(domain_ctr));
+        memset(&domain_conf, 0, sizeof(domain_conf));
+        strncpy((domain_conf.domain_name), domain, sizeof(domain_conf.domain_name) - 1);
+        
+        ReInitDbusConnection(&dcli_dbus_connection_curr, slotid, distributFag);
+        ret = conf_drp_get_domain_ip(dcli_dbus_connection_curr, &domain_conf, &domain_ctr);
+        _drp_return_if_fail(0 == ret,ret,CMD_WARNING);
+        
+        ReInitDbusConnection(&dcli_dbus_connection_curr, slot_id, distributFag);
+        
+        if (0 == domain_ctr.num) {
+            vty_out(vty, "%% this domain can not parse, please check it\n");
+            return CMD_SUCCESS;
+        }
+        //vty_out(vty, "conf_drp_get_domain_ip ret = %d\n",ret);
+        if ( 0 == ret){
+            //vty_out(vty, "domain %s ip num %d\n", domain_ctr.domain_name, domain_ctr.num);
+            if (0 < domain_ctr.num){
+                macbind_server_ip = domain_ctr.domain_ip[0].ipaddr;
+            }
+        }
+		macbind_server_port = atoi(argv[4]);
+		ip_or_domain = MACBIND_SERVER_DOMAIN;
+        //vty_out(vty, "%% ip:%x port:%x\n", macbind_server_ip, macbind_server_port);
+	} else {
+		vty_out(vty, "%% invalid input format!\n");
+		return CMD_WARNING;
+	}
+	
+	if (0 == macbind_server_ip 
+		|| 0 == macbind_server_port) {
+		vty_out(vty, "%% invalid ip or port\n");
+        return CMD_SUCCESS;
+	}
+	
+	ret = eag_set_macbind_server( dcli_dbus_connection_curr,
+										hansitype,insid,					
+										key_type,
+										keyid,
+										keystr,
+										ip_or_domain,
+										domain,
+										macbind_server_ip,
+										macbind_server_port);
+	if (EAG_ERR_DBUS_FAILED == ret) {
+		vty_out(vty, "%% dbus error\n");
+	}
+	else if (EAG_ERR_INPUT_PARAM_ERR == ret) {
+		vty_out(vty, "%% input prarm error\n");
+	}
+	else if (EAG_ERR_PORTAL_ADD_SRV_ERR_TYPE == ret) {
+		vty_out(vty, "%% keyword type error\n");
+	}
+	else if (EAG_ERR_PORTAL_MODIFY_SRV_NOT_EXIST == ret) {
+		vty_out(vty, "%% the add key is not exist\n");
+	}
+	else if (EAG_ERR_PORTAL_MODIFY_SRV_ERR_TYPE == ret) {
+		vty_out(vty, "%% error index type\n");
+	}
+	else if (EAG_RETURN_OK != ret) {
+		vty_out(vty, "%% unknown error: %d\n", ret);
+	}
+    return CMD_SUCCESS;
+}
+
+DEFUN(eag_set_macbind_server_essid_func,
+	eag_set_macbind_server_essid_cmd,
+	"set macbind-server essid .ARGUMENTS",
+	"set\n"
+	"set macbind-server\n"
+	"macbind server index type essid\n"
+	"eg:set macbind-server essid KEY (ip|domain) ADDRESS <1-65535>"
+)
+{
+	int ret = -1;
+	PORTAL_KEY_TYPE key_type = PORTAL_KEYTYPE_ESSID;
+	unsigned long keyid = 0;
+	const char *keystr = "";
+	char essid[MAX_PORTAL_SSID_LEN] = "";
+	uint32_t macbind_server_ip = 0;
+	uint16_t macbind_server_port = 0;
+	struct in_addr addr = {0};
+    char domain[MAX_DOMAIN_NAME_LEN];
+    domain_pt domain_conf;
+    domain_ct domain_ctr;
+    int slotid = HostSlotId;
+    int ip_or_domain = 0;
+    int i = 0;
+    
+    memset(essid, 0, sizeof(essid));
+	for (i = 0;i < argc; i++) {
+		if (0 != i) {
+			if (0 == strcmp(argv[i], "ip")) {
+                ip_or_domain = MACBIND_SERVER_IP;
+				break;
+			} else if (0 == strcmp(argv[i], "domain")) {
+                ip_or_domain = MACBIND_SERVER_DOMAIN;
+				break;
+			}
+			strncat(essid, " ", 1);
+		}
+		if ((strlen(essid) + strlen(argv[i])) > MAX_PORTAL_SSID_LEN-1) {
+			vty_out(vty, "%% essid length is too long\n");
+			return CMD_SUCCESS;
+		}
+		strncat(essid, argv[i], strlen(argv[i]));
+		keystr = essid;
+	}
+	
+	if (strlen(keystr) == 0) {
+		vty_out(vty, "essid is null\n");
+		return CMD_SUCCESS;
+	}
+
+	EAG_DCLI_INIT_HANSI_INFO
+	
+#if 0		
+	if(eag_ins_running_state(dcli_dbus_connection_curr,hansitype, insid)){
+		vty_out(vty, "eag instance %d is running, please stop it first\n",insid);
+		return CMD_FAILURE;
+	}
+#endif
+
+	switch(ip_or_domain) {
+	case MACBIND_SERVER_IP:
+		if ((i+3) == argc) {
+            memset(&addr, 0, sizeof(addr));
+            ret = inet_aton((char *)argv[i+1], &addr);
+            if (!ret) {
+                vty_out(vty, "%% invalid ip address\n");
+                return CMD_WARNING;
+            }
+            macbind_server_ip = ntohl(addr.s_addr);
+            macbind_server_port = atoi(argv[i+2]);
+            //vty_out(vty, "%% ip:%x port:%x\n", macbind_server_ip, macbind_server_port);
+		} else {
+			vty_out(vty, "%% argument is wrong\n");
+		}
+		break;
+	case MACBIND_SERVER_DOMAIN:
+		if ((i+3) == argc){
+            if (MAX_MACBIND_SERVER_DOMAIN_LEN < strlen(argv[i+1]) + 1) {
+                vty_out(vty, "%% this domain is too long, out of limite:%d\n", MAX_MACBIND_SERVER_DOMAIN_LEN - 1);
+                return CMD_SUCCESS;
+            }
+            if (0 == is_domain(argv[i+1])) {
+                vty_out(vty, "%% this domain format error, please check it\n");
+                return CMD_SUCCESS;
+            }
+            memset(domain, 0, sizeof(domain));
+            strncpy(domain, argv[i+1], sizeof(domain) - 1);
+            
+            ret = conf_drp_get_dbus_connect_params(&slotid);
+            if (ret < 0){
+                vty_out(vty, "%% eag get drp connection config error:%d\n",ret);
+                return CMD_FAILURE;
+            }
+            memset(&domain_ctr, 0, sizeof(domain_ctr));
+            memset(&domain_conf, 0, sizeof(domain_conf));
+            strncpy((domain_conf.domain_name), domain, sizeof(domain_conf.domain_name) - 1);
+            
+            ReInitDbusConnection(&dcli_dbus_connection_curr, slotid, distributFag);
+            ret = conf_drp_get_domain_ip(dcli_dbus_connection_curr, &domain_conf, &domain_ctr);
+            _drp_return_if_fail(0 == ret,ret,CMD_WARNING);
+            
+            ReInitDbusConnection(&dcli_dbus_connection_curr, slot_id, distributFag);
+            
+            if (0 == domain_ctr.num) {
+                vty_out(vty, "%% this domain can not parse, please check it\n");
+                return CMD_SUCCESS;
+            }
+           // vty_out(vty, "conf_drp_get_domain_ip ret = %d\n",ret);
+            if ( 0 == ret){
+                //vty_out(vty, "domain %s ip num %d\n", domain_ctr.domain_name, domain_ctr.num);
+                if (0 < domain_ctr.num){
+                    macbind_server_ip = domain_ctr.domain_ip[0].ipaddr;
+                }
+            }
+            macbind_server_port = atoi(argv[i+2]);
+            //vty_out(vty, "%% ip:%x port:%x\n", macbind_server_ip, macbind_server_port);
+        } else {
+            vty_out(vty, "%% invalid input format!\n");
+            return CMD_WARNING;
+        }
+	}
+    if (0 == macbind_server_ip 
+        || 0 == macbind_server_port) {
+        vty_out(vty, "%% invalid ip or port\n");
+        return CMD_SUCCESS;
+    }
+    
+    ret = eag_set_macbind_server( dcli_dbus_connection_curr,
+                                        hansitype,insid,                    
+                                        key_type,
+                                        keyid,
+                                        keystr,
+                                        ip_or_domain,
+                                        domain,
+                                        macbind_server_ip,
+                                        macbind_server_port);
+	if (EAG_ERR_DBUS_FAILED == ret) {
+		vty_out(vty, "%% dbus error\n");
+	}
+	else if (EAG_ERR_INPUT_PARAM_ERR == ret) {
+		vty_out(vty, "%% input prarm error\n");
+	}
+	else if (EAG_ERR_PORTAL_ADD_SRV_ERR_TYPE == ret) {
+		vty_out(vty, "%% keyword type error\n");
+	}
+	else if (EAG_ERR_PORTAL_MODIFY_SRV_NOT_EXIST == ret) {
+		vty_out(vty, "%% the add key is not exist\n");
+	}
+	else if (EAG_ERR_PORTAL_MODIFY_SRV_ERR_TYPE == ret) {
+		vty_out(vty, "%% error index type\n");
+	}
+	else if (EAG_RETURN_OK != ret) {
+		vty_out(vty, "%% unknown error: %d\n", ret);
+	}
+    return CMD_SUCCESS;
 }
 
 DEFUN(set_eag_portal_server_acname_func,
@@ -12403,9 +12993,12 @@ DEFUN(eag_show_portal_conf_func,
 				vty_out(vty, "portal domain             :%s\n", portalconf.portal_srv[i].domain);
 			if(0 != strcmp(portalconf.portal_srv[i].acname, ""))
 				vty_out(vty, "portal acname             :%s\n", portalconf.portal_srv[i].acname);
+			if (MACBIND_SERVER_DOMAIN == portalconf.portal_srv[i].ip_or_domain) {
+				vty_out(vty, "macbind server domain     :%s\n", portalconf.portal_srv[i].macbind_server_domain);
+            }
 			ip2str(portalconf.portal_srv[i].mac_server_ip, ip_str, sizeof(ip_str));
-			vty_out(vty, "mac server ip             :%s\n", ip_str);
-			vty_out(vty, "mac server port           :%u\n", portalconf.portal_srv[i].mac_server_port);
+			vty_out(vty, "macbind server ip         :%s\n", ip_str);
+			vty_out(vty, "macbind server port       :%u\n", portalconf.portal_srv[i].mac_server_port);
 			
 			vty_out(vty, "portal acip-to-url        :%s\n", (1 == portalconf.portal_srv[i].acip_to_url)?"enable":"disable");
 			vty_out(vty, "portal usermac-to-url     :%s\n", (1 == portalconf.portal_srv[i].usermac_to_url)?"enable":"disable");
@@ -13459,15 +14052,18 @@ DEFUN(eag_set_pdc_client_log_func,
 #endif
 DEFUN(add_captive_portal_intfs_func,
 	add_captive_portal_intfs_cmd,	
-	"add captive-interface INTERFACE",
+	"add captive-interface (ipv4|ipv6) INTERFACE",
 	SHOW_STR
 	"add captive-portal interface\n"
+	"iptables\n"
+	"ip6tables\n"
 	"add captive-portal interface\n"
 	"the interface name\n"
 )
 {
 	int ret = -1;
-	char *intfs = (char *)argv[0];
+	uint32_t family = 0;
+	char *intfs = (char *)argv[1];
 
 #if 0
 	if (!if_nametoindex(intfs)) {
@@ -13487,8 +14083,19 @@ DEFUN(add_captive_portal_intfs_func,
 		return CMD_FAILURE;
 	}
 #endif
+
+	if (0 == strcmp(argv[0], "ipv4")) {
+		family = EAG_IPV4;
+	} else if (0 == strcmp(argv[0], "ipv6")) {
+		family = EAG_IPV6;
+	} else if (0 == strcmp(argv[0], "mix")) {
+		family = EAG_MIX;
+	} else {
+		vty_out(vty,"%% input prarm error\n");
+        return CMD_FAILURE;
+	}
 	ret = eag_add_captive_intf( dcli_dbus_connection_curr,
-						hansitype,insid, intfs );
+						hansitype,insid, family, intfs );
 	
 	if (EAG_ERR_DBUS_FAILED == ret) {
 		vty_out(vty,"%% dbus error\n");
@@ -13514,15 +14121,17 @@ DEFUN(add_captive_portal_intfs_func,
 
 DEFUN(del_captive_portal_intfs_func,
 	del_captive_portal_intfs_cmd,	
-	"del captive-interface INTERFACE",
-	"del params!\n"
+	"del captive-interface (ipv4|ipv6) INTERFACE",
+	SHOW_STR
 	"del captive-portal interface\n"
-	"del captive-portal interface\n"
+	"iptables\n"
+	"ip6tables\n"
 	"the interface name\n"
 )
 {
 	int ret = -1;
-	char *intfs = (char *)argv[0];
+	uint32_t family = 0;
+	char *intfs = (char *)argv[1];
 	
 	EAG_DCLI_INIT_HANSI_INFO
 #if 0
@@ -13531,8 +14140,18 @@ DEFUN(del_captive_portal_intfs_func,
 		return CMD_FAILURE;
 	}
 #endif
+	if (strcmp(argv[0], "ipv4")) {
+		family = EAG_IPV4;
+	} else if (strcmp(argv[0], "ipv6")) {
+		family = EAG_IPV6;
+	} else if (strcmp(argv[0], "mix")) {
+		family = EAG_MIX;
+	} else {
+		vty_out(vty,"%% input prarm error\n");
+        return CMD_FAILURE;
+	}
 	ret = eag_del_captive_intf( dcli_dbus_connection_curr,
-						hansitype,insid, intfs );
+						hansitype,insid, family, intfs );
 	
 	if (EAG_ERR_DBUS_FAILED == ret) {
 		vty_out(vty,"%% dbus error\n");
@@ -13571,9 +14190,17 @@ DEFUN(show_captive_portal_intfs_func,
 	if( EAG_RETURN_OK == ret ){		
 		if( captive_intfs.curr_ifnum > 0 ){
 			vty_out(vty, "================================================\n");
-			vty_out(vty, "%-10s %s\n","Index","Interface Name");	
+			vty_out(vty, "%-10s %s\n","Index","ipv4 Interface Name");	
 			for( i=0; i < captive_intfs.curr_ifnum; i++ ){						
 				vty_out(vty, "%2d %14s\n",i+1, captive_intfs.cpif[i]);
+			}
+			vty_out(vty, "================================================\n");	
+		}
+		if( captive_intfs.ipv6_curr_ifnum > 0 ){
+			vty_out(vty, "================================================\n");
+			vty_out(vty, "%-10s %s\n","Index","ipv6 Interface Name");	
+			for( i=0; i < captive_intfs.ipv6_curr_ifnum; i++ ){						
+				vty_out(vty, "%2d %14s\n",i+1, captive_intfs.ipv6_cpif[i]);
 			}
 			vty_out(vty, "================================================\n");	
 		}
@@ -13614,37 +14241,57 @@ DEFUN(show_captive_portal_white_list_func,
 		if( white.curr_num > 0 ) {
 			char ipbegin[32] = {0};
 			char ipend[32] = {0};
+			char ipv6begin[48] = {0};
+			char ipv6end[48] = {0};
 			char eagins_ip[32] = {0};
 			vty_out(vty, "================================================\n");
-			vty_out(vty, "%-7s %-20s %-10s\n","Mode","IP-range/Domain","Interface");
+			vty_out(vty, "%-7s %-20s %-10s\n","Mode","IPx-range/Domain","Interface");
 			for( i=0; i < white.curr_num; i++ ){
-			
-				if(white.rule[i].type == RULE_IPADDR)
+				if(white.rule[i].type == RULE_IPADDR) {
 					type = "IP";
-				else if (white.rule[i].type == RULE_DOMAIN)
+					ip2str( white.rule[i].key.ip.ipbegin, ipbegin,sizeof(ipbegin));
+					ip2str( white.rule[i].key.ip.ipend, ipend,sizeof(ipend));
+				} else if (white.rule[i].type == RULE_DOMAIN 
+					|| white.rule[i].type == RULE_IPV6DOMAIN) {
 					type = "Domain";
-
-				ip2str( white.rule[i].key.ip.ipbegin, ipbegin,sizeof(ipbegin));
-				ip2str( white.rule[i].key.ip.ipend, ipend,sizeof(ipend));
+				} else if(white.rule[i].type == RULE_IPV6ADDR) {
+					type = "IPV6";
+					ipv6tostr( &(white.rule[i].key.ipv6.ipv6begin), ipv6begin,sizeof(ipv6begin));
+					ipv6tostr( &(white.rule[i].key.ipv6.ipv6end), ipv6end,sizeof(ipv6end));
+				}
 
 				type_tmp = white.rule[i].type;
 				if( ((RULE_TYPE)type_tmp == RULE_IPADDR) && ((strcmp(argv[0],"all") == 0)||((strcmp(argv[0],"ip") == 0))) )
 				{
 					if(strcmp(ipend, "0.0.0.0") == 0)
 					{
-						vty_out(vty, "%-7s %s:%-12s %s\n","IP",ipbegin,white.rule[i].key.ip.ports, 
+						vty_out(vty, "%-7s %s:%-12s %s\n",type,ipbegin,white.rule[i].key.ip.ports, 
 								white.rule[i].intf);
 					}
 					else
 					{
-						vty_out(vty, "%-7s %s-%s:%-3s %s\n","IP",ipbegin,ipend,white.rule[i].key.ip.ports, 
+						vty_out(vty, "%-7s %s-%s:%-3s %s\n",type,ipbegin,ipend,white.rule[i].key.ip.ports, 
+									white.rule[i].intf);
+					}
+					
+				} 
+				else if( ((RULE_TYPE)type_tmp == RULE_IPV6ADDR) && ((strcmp(argv[0],"all") == 0)||((strcmp(argv[0],"ip") == 0))) )
+				{
+					if(strcmp(ipv6end, "::") == 0)
+					{
+						vty_out(vty, "%-7s %s:%-12s %s\n",type,ipv6begin,white.rule[i].key.ipv6.ports, 
+								white.rule[i].intf);
+					}
+					else
+					{
+						vty_out(vty, "%-7s %s-%s:%-3s %s\n",type,ipv6begin,ipv6end,white.rule[i].key.ipv6.ports, 
 									white.rule[i].intf);
 					}
 					
 				}
 				else if( ((RULE_TYPE)type_tmp == RULE_DOMAIN) && ((strcmp(argv[0],"all") == 0)||((strcmp(argv[0],"domain") == 0))) )
 				{
-					vty_out(vty, "%-7s %-20s %s\n","Domain", white.rule[i].key.domain.name, 	white.rule[i].intf);
+					vty_out(vty, "%-7s %-20s %s\n",type, white.rule[i].key.domain.name, 	white.rule[i].intf);
 				}
 				
 			}
@@ -13687,34 +14334,54 @@ DEFUN(show_captive_portal_black_list_func,
 		if( black.curr_num > 0 ){
 			char ipbegin[32] = {0};
 			char ipend[32] = {0};
+			char ipv6begin[48] = {0};
+			char ipv6end[48] = {0};
 			char eagins_ip[32] = {0};
 			vty_out(vty, "================================================\n");
 			vty_out(vty, "%-7s %-20s %-10s\n","Mode","IP-range/Domain","Interface");
 			for( i=0; i < black.curr_num; i++ ){
-			
-				if(black.rule[i].type == RULE_IPADDR)
+				if(black.rule[i].type == RULE_IPADDR) {
 					type = "IP";
-				else if (black.rule[i].type == RULE_DOMAIN)
+					ip2str( black.rule[i].key.ip.ipbegin, ipbegin,sizeof(ipbegin));
+					ip2str( black.rule[i].key.ip.ipend, ipend,sizeof(ipend));
+				} else if (black.rule[i].type == RULE_DOMAIN 
+					|| black.rule[i].type == RULE_IPV6DOMAIN) {
 					type = "Domain";
-					
-				ip2str( black.rule[i].key.ip.ipbegin, ipbegin,sizeof(ipbegin));
-				ip2str( black.rule[i].key.ip.ipend, ipend,sizeof(ipend));
+				} else if(black.rule[i].type == RULE_IPV6ADDR) {
+					type = "IPV6";
+					ipv6tostr( &(black.rule[i].key.ipv6.ipv6begin), ipv6begin,sizeof(ipv6begin));
+					ipv6tostr( &(black.rule[i].key.ipv6.ipv6end), ipv6end,sizeof(ipv6end));
+				}
 
 				type_tmp = black.rule[i].type;
 				if(((RULE_TYPE)type_tmp == RULE_IPADDR) && ((strcmp(argv[0],"all") == 0)||((strcmp(argv[0],"ip") == 0))) )
 				{
 					if(strcmp(ipend, "0.0.0.0") == 0)
 					{
-						vty_out(vty, "%-7s %s:%-12s %s\n", "IP", ipbegin, black.rule[i].key.ip.ports, black.rule[i].intf);
+						vty_out(vty, "%-7s %s:%-12s %s\n", type, ipbegin, black.rule[i].key.ip.ports, black.rule[i].intf);
 					}
 					else
 					{
-						vty_out(vty, "%-7s %s-%s:%-3s %s\n", "IP", ipbegin, ipend, black.rule[i].key.ip.ports, black.rule[i].intf);
+						vty_out(vty, "%-7s %s-%s:%-3s %s\n", type, ipbegin, ipend, black.rule[i].key.ip.ports, black.rule[i].intf);
 					}
+				}
+				else if( ((RULE_TYPE)type_tmp == RULE_IPV6ADDR) && ((strcmp(argv[0],"all") == 0)||((strcmp(argv[0],"ip") == 0))) )
+				{
+					if(strcmp(ipv6end, "::") == 0)
+					{
+						vty_out(vty, "%-7s %s:%-12s %s\n",type,ipv6begin,black.rule[i].key.ipv6.ports, 
+								black.rule[i].intf);
+					}
+					else
+					{
+						vty_out(vty, "%-7s %s-%s:%-3s %s\n",type,ipv6begin,ipv6end,black.rule[i].key.ipv6.ports, 
+									black.rule[i].intf);
+					}
+					
 				}
 				else if(((RULE_TYPE)type_tmp == RULE_DOMAIN) && ((strcmp(argv[0],"all") == 0)||((strcmp(argv[0],"domain") == 0))) )
 				{
-					vty_out(vty, "%-7s %-20s %s\n","Domain", black.rule[i].key.domain.name, black.rule[i].intf);
+					vty_out(vty, "%-7s %-20s %s\n",type, black.rule[i].key.domain.name, black.rule[i].intf);
 				}
 				
 			}
@@ -13798,7 +14465,6 @@ DEFUN(conf_captive_portal_white_list_with_ip_func,
 	return CMD_SUCCESS;
 }
 
-
 DEFUN(conf_captive_portal_black_list_with_ip_func,
 	conf_captive_portal_black_list_with_ip_cmd,	
 	"(add|del) black-list ip IPRANGE[:PORTSET] [INTFS]",
@@ -13843,6 +14509,138 @@ DEFUN(conf_captive_portal_black_list_with_ip_func,
 	else if(0 == strcmp(argv[0], "del")) {
 		ret = eag_conf_captive_list( dcli_dbus_connection_curr,	hansitype,insid,
 											type, item.iprange, item.portset, "", intfs, CP_DEL_LIST, CP_BLACK_LIST);
+	}
+	
+	if (EAG_ERR_DBUS_FAILED == ret) {
+		vty_out(vty, "%% dbus error\n");
+	}
+	else if ( EAG_ERR_CAPTIVE_RULE_AREADY_IN_BLACK == ret ){
+		vty_out(vty, "%% This rule aready in black-list\n");
+	}
+	else if( EAG_ERR_CAPTIVE_RULE_NOT_IN_BLACK == ret ){
+		vty_out(vty, "%% This rule not in black-list\n");
+	}
+	else if(EAG_ERR_CAPTIVE_BLACK_LIST_NUM_LIMITE == ret) {
+		vty_out(vty, "%% max black-list num limite:%d\n", MAX_BW_RULES_NUM);
+	}
+	else if( EAG_RETURN_OK != ret ){
+		vty_out(vty, "%% unknown error: %d\n", ret);
+	}
+	
+	return CMD_SUCCESS;
+}
+
+DEFUN(conf_captive_portal_white_list_with_ipv6_func,
+	conf_captive_portal_white_list_with_ipv6_cmd,	
+	"(add|del) white-list ipv6 IPRANGE[:PORTSET] [INTFS]",
+	"add\n"
+	"delete\n"
+	"add or delete white list\n"
+	"add or delete white list by ipv6 format\n"
+	"specifys that white list is described with ipv6range:postset format\n"
+	"ipv6 range and port set to be applied to the white list, with format A::B[-A::B][:(all|PORT[,PORT]...)]\n"
+)
+{
+	
+	int ret = -1;
+	RULE_TYPE type = RULE_IPV6ADDR;
+	ipv6range_portset_t item;
+	char intfs[50];
+	EAG_DCLI_INIT_HANSI_INFO
+#if 0		
+	if(eag_ins_running_state(dcli_dbus_connection_curr, hansitype, insid)){
+		vty_out(vty, "eag instance %d is running, please stop it first\n",insid);
+		return CMD_FAILURE;
+	}
+#endif	
+	memset(&intfs, 0, sizeof(intfs));
+	memset(&item, 0, sizeof(item));
+	if(3 == argc) {
+		strncpy(intfs, argv[2], sizeof(intfs)-1);
+		if (!if_nametoindex(intfs)) {
+			vty_out(vty, "%% No such interface %s\n", intfs);
+			return CMD_WARNING;
+		}	
+	}
+	
+	ret = parse_ipv6range_portset(argv[1], &item);//test_L
+	if (0 != ret){
+		vty_out(vty, "%% error iprange-portset format\n");
+		return CMD_FAILURE;
+	}
+	
+	if(0 == strcmp(argv[0], "add")) {
+		ret = eag_conf_captive_ipv6_list( dcli_dbus_connection_curr,
+							hansitype,insid, type, item.ipv6range, item.portset, "", intfs, CP_ADD_LIST, CP_WHITE_LIST);
+	}
+	else if(0 == strcmp(argv[0], "del")) {
+		ret = eag_conf_captive_ipv6_list( dcli_dbus_connection_curr,
+							hansitype,insid, type, item.ipv6range, item.portset, "", intfs, CP_DEL_LIST, CP_WHITE_LIST);
+	}
+	
+	if (EAG_ERR_DBUS_FAILED == ret) {
+		vty_out(vty, "%% dbus error\n");
+	}
+	else if(EAG_ERR_CAPTIVE_RULE_AREADY_IN_WHITE == ret) {
+		vty_out(vty, "%% This rule aready in white-list\n");
+	}
+	else if(EAG_ERR_CAPTIVE_RULE_NOT_IN_WHITE == ret) {
+		vty_out(vty, "%% This rule not in white-list\n");
+	}
+	else if(EAG_ERR_CAPTIVE_WHITE_LIST_NUM_LIMITE == ret) {
+		vty_out(vty, "%% max white-list num limite:%d\n", MAX_BW_RULES_NUM);
+	}
+	else if (EAG_RETURN_OK != ret) {
+		vty_out(vty, "%% unknown error: %d\n", ret);
+	}
+	
+	return CMD_SUCCESS;
+}
+
+DEFUN(conf_captive_portal_black_list_with_ipv6_func,
+	conf_captive_portal_black_list_with_ipv6_cmd,	
+	"(add|del) black-list ipv6 IPRANGE[:PORTSET] [INTFS]",
+	"add\n"
+	"delete\n"
+	"add or delete black list\n"
+	"add or delete black list by ipv6 format\n"
+	"specifys that black list is described with iprange:postset format\n"
+	"ipv6 range and port set to be applied to the black list, with format A::B[-A::B][:(all|PORT[,PORT]...)]\n"
+)
+{
+	int ret = -1;
+	RULE_TYPE type = RULE_IPV6ADDR;
+	ipv6range_portset_t item;
+	char intfs[50];
+	EAG_DCLI_INIT_HANSI_INFO
+#if 0
+	if(eag_ins_running_state(dcli_dbus_connection_curr, hansitype, insid)){
+		vty_out(vty, "eag instance %d is running, please stop it first\n",insid);
+		return CMD_FAILURE;
+	}
+#endif	
+	memset(&intfs, 0, sizeof(intfs));
+	memset(&item, 0, sizeof(item));
+	if(3 == argc) {
+		strncpy(intfs, argv[2], sizeof(intfs)-1);
+		if (!if_nametoindex(intfs)) {
+			vty_out(vty, "%% No such interface %s\n", intfs);
+			return CMD_WARNING;
+		}
+	}
+	ret = parse_ipv6range_portset(argv[1], &item);//test_L
+	if (0 != ret){
+		vty_out(vty, "%% error iprange-portset format\n");
+		return CMD_FAILURE;
+	}
+	
+	if(0 == strcmp(argv[0], "add")) {
+		ret = eag_conf_captive_ipv6_list( dcli_dbus_connection_curr,	hansitype,insid,
+											type, item.ipv6range, item.portset, "", intfs, CP_ADD_LIST, CP_BLACK_LIST);
+	}
+	else if(0 == strcmp(argv[0], "del")) {
+		ret = eag_conf_captive_ipv6_list( dcli_dbus_connection_curr,	hansitype,insid,
+											type, item.ipv6range, item.portset, "", intfs, CP_DEL_LIST, CP_BLACK_LIST);
 	}
 	
 	if (EAG_ERR_DBUS_FAILED == ret) {
@@ -14256,6 +15054,7 @@ DEFUN(eag_show_user_list_func,
 	struct eag_userdb userdb = {0};
 	struct eag_user *user = NULL;
 	char ipstr[32] = "";
+	char ipv6str[48] = "";
 	char macstr[36] = "";
 	char ap_macstr[36] = "";
 	uint32_t hour = 0;
@@ -14271,13 +15070,14 @@ DEFUN(eag_show_user_list_func,
 							&userdb);
 	if (EAG_RETURN_OK == ret) {
 		vty_out(vty, "user num : %d\n", userdb.num);
-		vty_out(vty, "%-7s %-18s %-18s %-20s %-12s %-18s %-18s %-20s %-12s\n",
-				"ID", "UserName", "UserIP", "UserMAC", 
+		vty_out(vty, "%-7s %-18s %-16s %-40s %-18s %-12s %-18s %-18s %-18s %-12s\n",
+				"ID", "UserName", "UserIP", "UserIPV6", "UserMAC", 
 				"SessionTime", "OutputFlow", "InputFlow", "ApMAC","VLANID");
 
 		list_for_each_entry(user, &(userdb.head), node) {
 			i++;
-			ip2str(user->userip, ipstr, sizeof(ipstr));
+			ip2str(user->user_ip, ipstr, sizeof(ipstr));
+			ipv6tostr(&(user->user_ipv6), ipv6str, sizeof(ipv6str));
 			mac2str(user->usermac, macstr, sizeof(macstr), ':');
 			mac2str(user->apmac, ap_macstr, sizeof(ap_macstr), ':');
 			hour = user->session_time/3600;
@@ -14286,8 +15086,8 @@ DEFUN(eag_show_user_list_func,
 			snprintf(timestr, sizeof(timestr), "%u:%02u:%02u",
 				hour, minute, second);
 			
-			vty_out(vty, "%-7d %-18s %-18s %-20s %-12s %-18llu %-18llu %-20s %-12lu\n",
-				i, user->username, ipstr, macstr,
+			vty_out(vty, "%-7d %-18s %-16s %-40s %-18s %-12s %-18llu %-18llu %-18s %-12lu\n",
+				i, user->username, ipstr, ipv6str, macstr,
 				timestr, user->output_octets, user->input_octets,ap_macstr,user->vlanid);
 		}
 		vty_out(vty, "user num : %d\n", userdb.num);
@@ -14317,6 +15117,7 @@ DEFUN(eag_show_user_by_username_func,
 	struct eag_userdb userdb = {0};
 	struct eag_user *user = NULL;
 	char ipstr[32] = "";
+	char ipv6str[48] = "";
 	char macstr[36] = "";
 	uint32_t hour = 0;
 	uint32_t minute = 0;
@@ -14332,13 +15133,14 @@ DEFUN(eag_show_user_by_username_func,
 							argv[0]);
 	if (EAG_RETURN_OK == ret) {
 		vty_out(vty, "user num : %d\n", userdb.num);
-		vty_out(vty, "%-7s %-18s %-18s %-20s %-12s %-18s %-18s\n",
-				"ID", "UserName", "UserIP", "UserMAC", 
+		vty_out(vty, "%-7s %-18s %-16s %-40s %-18s %-12s %-18s %-18s\n",
+				"ID", "UserName", "UserIP", "UserIPV6", "UserIPV6", "UserMAC", 
 				"SessionTime", "OutputFlow", "InputFlow");
 
 		list_for_each_entry(user, &(userdb.head), node) {
 			i++;
-			ip2str(user->userip, ipstr, sizeof(ipstr));
+			ip2str(user->user_ip, ipstr, sizeof(ipstr));
+			ipv6tostr(&(user->user_ipv6), ipv6str, sizeof(ipv6str));
 			mac2str(user->usermac, macstr, sizeof(macstr), ':');
 			hour = user->session_time/3600;
 			minute = (user->session_time%3600)/60;
@@ -14346,8 +15148,8 @@ DEFUN(eag_show_user_by_username_func,
 			snprintf(timestr, sizeof(timestr), "%u:%02u:%02u",
 				hour, minute, second);
 			
-			vty_out(vty, "%-7d %-18s %-18s %-20s %-12s %-18llu %-18llu\n",
-				i, user->username, ipstr, macstr,
+			vty_out(vty, "%-7d %-18s %-16s %-40s %-18s %-12s %-18llu %-18llu\n",
+				i, user->username, ipstr, ipv6str, macstr,
 				timestr, user->output_octets, user->input_octets);
 		}
 		vty_out(vty, "user num : %d\n", userdb.num);
@@ -14377,6 +15179,7 @@ DEFUN(eag_show_user_by_userip_func,
 	struct eag_userdb userdb = {0};
 	struct eag_user *user = NULL;
 	char ipstr[32] = "";
+	char ipv6str[48] = "";
 	char macstr[36] = "";
 	uint32_t hour = 0;
 	uint32_t minute = 0;
@@ -14401,13 +15204,14 @@ DEFUN(eag_show_user_by_userip_func,
 							userip);
 	if (EAG_RETURN_OK == ret) {
 		vty_out(vty, "user num : %d\n", userdb.num);
-		vty_out(vty, "%-7s %-18s %-18s %-20s %-12s %-18s %-18s\n",
-				"ID", "UserName", "UserIP", "UserMAC", 
+		vty_out(vty, "%-7s %-18s %-16s %-40s %-18s %-12s %-18s %-18s\n",
+				"ID", "UserName", "UserIP", "UserIPV6", "UserMAC", 
 				"SessionTime", "OutputFlow", "InputFlow");
 
 		list_for_each_entry(user, &(userdb.head), node) {
 			i++;
-			ip2str(user->userip, ipstr, sizeof(ipstr));
+			ip2str(user->user_ip, ipstr, sizeof(ipstr));
+			ipv6tostr(&(user->user_ipv6), ipv6str, sizeof(ipv6str));
 			mac2str(user->usermac, macstr, sizeof(macstr), ':');
 			hour = user->session_time/3600;
 			minute = (user->session_time%3600)/60;
@@ -14415,8 +15219,8 @@ DEFUN(eag_show_user_by_userip_func,
 			snprintf(timestr, sizeof(timestr), "%u:%02u:%02u",
 				hour, minute, second);
 			
-			vty_out(vty, "%-7d %-18s %-18s %-20s %-12s %-18llu %-18llu\n",
-				i, user->username, ipstr, macstr,
+			vty_out(vty, "%-7d %-18s %-16s %-40s %-18s %-12s %-18llu %-18llu\n",
+				i, user->username, ipstr, ipv6str, macstr,
 				timestr, user->output_octets, user->input_octets);
 		}
 		vty_out(vty, "user num : %d\n", userdb.num);
@@ -14446,6 +15250,7 @@ DEFUN(eag_show_user_by_usermac_func,
 	struct eag_userdb userdb = {0};
 	struct eag_user *user = NULL;
 	char ipstr[32] = "";
+	char ipv6str[48] = "";
 	char macstr[36] = "";
 	uint32_t hour = 0;
 	uint32_t minute = 0;
@@ -14468,13 +15273,14 @@ DEFUN(eag_show_user_by_usermac_func,
 							usermac);
 	if (EAG_RETURN_OK == ret) {
 		vty_out(vty, "user num : %d\n", userdb.num);
-		vty_out(vty, "%-7s %-18s %-18s %-20s %-12s %-18s %-18s\n",
-				"ID", "UserName", "UserIP", "UserMAC", 
+		vty_out(vty, "%-7s %-18s %-16s %-40s %-18s %-12s %-18s %-18s\n",
+				"ID", "UserName", "UserIP", "UserIPV6", "UserMAC", 
 				"SessionTime", "OutputFlow", "InputFlow");
 
 		list_for_each_entry(user, &(userdb.head), node) {
 			i++;
-			ip2str(user->userip, ipstr, sizeof(ipstr));
+			ip2str(user->user_ip, ipstr, sizeof(ipstr));
+			ipv6tostr(&(user->user_ipv6), ipv6str, sizeof(ipv6str));
 			mac2str(user->usermac, macstr, sizeof(macstr), ':');
 			hour = user->session_time/3600;
 			minute = (user->session_time%3600)/60;
@@ -14482,8 +15288,8 @@ DEFUN(eag_show_user_by_usermac_func,
 			snprintf(timestr, sizeof(timestr), "%u:%02u:%02u",
 				hour, minute, second);
 			
-			vty_out(vty, "%-7d %-18s %-18s %-20s %-12s %-18llu %-18llu\n",
-				i, user->username, ipstr, macstr,
+			vty_out(vty, "%-7d %-18s %-16s %-40s %-18s %-12s %-18llu %-18llu\n",
+				i, user->username, ipstr, ipv6str, macstr,
 				timestr, user->output_octets, user->input_octets);
 		}
 		vty_out(vty, "user num : %d\n", userdb.num);
@@ -14513,6 +15319,7 @@ DEFUN(eag_show_user_by_index_func,
 	struct eag_userdb userdb = {0};
 	struct eag_user *user = NULL;
 	char ipstr[32] = "";
+	char ipv6str[48] = "";
 	char macstr[36] = "";
 	uint32_t hour = 0;
 	uint32_t minute = 0;
@@ -14531,13 +15338,14 @@ DEFUN(eag_show_user_by_index_func,
 							index);
 	if (EAG_RETURN_OK == ret) {
 		vty_out(vty, "user num : %d\n", userdb.num);
-		vty_out(vty, "%-7s %-18s %-18s %-20s %-12s %-18s %-18s\n",
-				"ID", "UserName", "UserIP", "UserMAC", 
+		vty_out(vty, "%-7s %-18s %-16s %-40s %-18s %-12s %-18s %-18s\n",
+				"ID", "UserName", "UserIP", "UserIPV6", "UserMAC", 
 				"SessionTime", "OutputFlow", "InputFlow");
 
 		list_for_each_entry(user, &(userdb.head), node) {
 			i++;
-			ip2str(user->userip, ipstr, sizeof(ipstr));
+			ip2str(user->user_ip, ipstr, sizeof(ipstr));
+			ipv6tostr(&(user->user_ipv6), ipv6str, sizeof(ipv6str));
 			mac2str(user->usermac, macstr, sizeof(macstr), ':');
 			hour = user->session_time/3600;
 			minute = (user->session_time%3600)/60;
@@ -14545,8 +15353,8 @@ DEFUN(eag_show_user_by_index_func,
 			snprintf(timestr, sizeof(timestr), "%u:%02u:%02u",
 				hour, minute, second);
 			
-			vty_out(vty, "%-7d %-18s %-18s %-20s %-12s %-18llu %-18llu\n",
-				i, user->username, ipstr, macstr,
+			vty_out(vty, "%-7d %-18s %-16s %-40s %-18s %-12s %-18llu %-18llu\n",
+				i, user->username, ipstr, ipv6str, macstr,
 				timestr, user->output_octets, user->input_octets);
 		}
 		vty_out(vty, "user num : %d\n", userdb.num);
@@ -15271,6 +16079,14 @@ dcli_eag_init(void)
 	install_element(EAG_NODE, &set_eag_nasip_cmd);
 	install_element(HANSI_EAG_NODE, &set_eag_nasip_cmd);
 	install_element(LOCAL_HANSI_EAG_NODE, &set_eag_nasip_cmd);
+	
+	install_element(EAG_NODE, &set_eag_nasipv6_cmd);
+	install_element(HANSI_EAG_NODE, &set_eag_nasipv6_cmd);
+	install_element(LOCAL_HANSI_EAG_NODE, &set_eag_nasipv6_cmd);
+
+    install_element(EAG_NODE, &set_eag_ipv6_service_status_cmd);
+    install_element(HANSI_EAG_NODE, &set_eag_ipv6_service_status_cmd);
+    install_element(LOCAL_HANSI_EAG_NODE, &set_eag_ipv6_service_status_cmd);
 
 	install_element(EAG_NODE, &set_eag_distributed_cmd);
 	install_element(HANSI_EAG_NODE, &set_eag_distributed_cmd);
@@ -15484,6 +16300,14 @@ dcli_eag_init(void)
 	install_element(HANSI_EAG_NODE, &eag_add_portal_server_cmd_macauth);
 	install_element(LOCAL_HANSI_EAG_NODE, &eag_add_portal_server_cmd_macauth);
 
+	install_element(EAG_NODE, &eag_set_macbind_server_cmd);
+	install_element(HANSI_EAG_NODE, &eag_set_macbind_server_cmd);
+	install_element(LOCAL_HANSI_EAG_NODE, &eag_set_macbind_server_cmd);
+
+	install_element(EAG_NODE, &eag_set_macbind_server_essid_cmd);
+	install_element(HANSI_EAG_NODE, &eag_set_macbind_server_essid_cmd);
+	install_element(LOCAL_HANSI_EAG_NODE, &eag_set_macbind_server_essid_cmd);
+
 	install_element(EAG_NODE, &eag_add_portal_server_cmd_domain_macauth);
 	install_element(HANSI_EAG_NODE, &eag_add_portal_server_cmd_domain_macauth);
 	install_element(LOCAL_HANSI_EAG_NODE, &eag_add_portal_server_cmd_domain_macauth);
@@ -15652,7 +16476,7 @@ dcli_eag_init(void)
 	install_element(EAG_NODE, &conf_captive_portal_black_list_with_ip_cmd);
 	install_element(HANSI_EAG_NODE, &conf_captive_portal_black_list_with_ip_cmd);
 	install_element(LOCAL_HANSI_EAG_NODE, &conf_captive_portal_black_list_with_ip_cmd);	
-	
+
 	install_element(EAG_NODE, &conf_captive_portal_white_list_with_domain_cmd);
 	install_element(HANSI_EAG_NODE, &conf_captive_portal_white_list_with_domain_cmd);
 	install_element(LOCAL_HANSI_EAG_NODE, &conf_captive_portal_white_list_with_domain_cmd);	
@@ -15660,7 +16484,15 @@ dcli_eag_init(void)
 	install_element(EAG_NODE, &conf_captive_portal_black_list_with_domain_cmd);
 	install_element(HANSI_EAG_NODE, &conf_captive_portal_black_list_with_domain_cmd);
 	install_element(LOCAL_HANSI_EAG_NODE, &conf_captive_portal_black_list_with_domain_cmd);	
+
+	install_element(EAG_NODE, &conf_captive_portal_white_list_with_ipv6_cmd);
+	install_element(HANSI_EAG_NODE, &conf_captive_portal_white_list_with_ipv6_cmd);
+	install_element(LOCAL_HANSI_EAG_NODE, &conf_captive_portal_white_list_with_ipv6_cmd);	
 	
+	install_element(EAG_NODE, &conf_captive_portal_black_list_with_ipv6_cmd);
+	install_element(HANSI_EAG_NODE, &conf_captive_portal_black_list_with_ipv6_cmd);
+	install_element(LOCAL_HANSI_EAG_NODE, &conf_captive_portal_black_list_with_ipv6_cmd);	
+
 	install_element(EAG_NODE, &show_captive_portal_white_list_cmd);
 	install_element(HANSI_EAG_NODE, &show_captive_portal_white_list_cmd);
 	install_element(LOCAL_HANSI_EAG_NODE, &show_captive_portal_white_list_cmd);	

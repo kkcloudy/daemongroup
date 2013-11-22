@@ -71,6 +71,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define IP_ADDR_LEN					24
 #define IPRANGE_LEN					40
 #define PORTSET_LEN					40
+#define IPV6_ADDR_LEN				48
+#define IPV6RANGE_LEN				80
 
 #define MAX_ID_NUM					8
 #define MAX_ID_NUM_DOMAIN			8
@@ -84,6 +86,11 @@ typedef struct {
 	char iprange[IPRANGE_LEN];
 	char portset[PORTSET_LEN];
 } iprange_portset_t;
+
+typedef struct {
+	char ipv6range[IPV6RANGE_LEN];
+	char portset[PORTSET_LEN];
+} ipv6range_portset_t;
 
 typedef struct {
 	int id;
@@ -112,11 +119,13 @@ enum BLACKLIST_OPERATE_TYPE
 int parse_captive_portal_id(char *str, int *id);
 int getRecordById( int id, char *record, int len );
 int captive_check_ip_format(const char *str);
+int captive_check_ipv6_format(const char *str);
 int captive_check_interfaces_format(const char *str, char *err, int size);
 int captive_check_mac_format(char * mac,int len);
 
 int captive_check_portset_format(const char *str);
 int parse_iprange_portset(const char *str, iprange_portset_t *item);
+int parse_ipv6range_portset(const char *str, ipv6range_portset_t *item);
 int get_white_list(int id, white_list_t *p_list);
 int find_in_white_list(const white_list_t *p_list, const iprange_portset_t *p_item);
 int get_black_list(int id, black_list_t *p_list);

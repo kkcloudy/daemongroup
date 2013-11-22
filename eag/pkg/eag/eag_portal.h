@@ -55,7 +55,7 @@ eag_portal_stop(eag_portal_t *portal);
 
 int
 eag_portal_auth_failure(eag_portal_t *portal,
-		uint32_t userip,
+		user_addr_t *user_addr,
 		uint8_t err_code,
 		const char *err_id);
 
@@ -93,7 +93,7 @@ eag_portal_ntf_user_logoff(eag_portal_t *portal,
 
 int
 eag_portal_set_pdc_usermap(eag_portal_t * portal,
-		uint32_t userip);
+		user_addr_t *user_addr);
 
 int
 eag_portal_set_nasip(eag_portal_t *portal,

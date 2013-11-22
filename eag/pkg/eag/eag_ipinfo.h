@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <sys/time.h>
 #include <time.h>
+#include <arpa/inet.h>
 
 #define MAX_MACADDR_LEN		6
 #define MAX_IPADDR_LEN		32
@@ -27,6 +28,8 @@ int brctl_show(char * mac,char * brname,char *intf);
 
 int get_vlanid_by_intf(const char *intf );
 
+int 
+eag_ipv6info_get(unsigned char *const mac, struct in6_addr *ipv6);
 
 int 
 eag_ipinfo_get(char * const intf, size_t n, unsigned char * const mac, uint32_t ip);

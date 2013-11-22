@@ -20,7 +20,7 @@ eag_fastfwd_stop(eag_fastfwd_t *fastfwd);
 
 int
 eag_fastfwd_send(eag_fastfwd_t *fastfwd,
-		uint32_t user_ip,
+		user_addr_t *user_addr,
 		const char *hand_cmd);
 
 int

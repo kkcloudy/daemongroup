@@ -201,7 +201,7 @@ eag_stamsg_stop(eag_stamsg_t *stamsg)
 
 static int
 stamsg_proc(eag_stamsg_t *stamsg, uint8_t usermac[6],
-		uint32_t user_ip, EagMsg *sta_msg)
+		user_addr_t *user_addr, EagMsg *sta_msg)
 {
 	struct app_conn_t *appconn = NULL;
 	struct appsession tmpsession = {0};
@@ -209,7 +209,7 @@ stamsg_proc(eag_stamsg_t *stamsg, uint8_t usermac[6],
 	time_t timenow = 0;
 	int ret = 0;
 	char user_macstr[32] = "";
-	char user_ipstr[32] = "";
+	char user_ipstr[IPX_LEN] = "";
 	char ap_macstr[32] = "";
 	char new_apmacstr[32] = "";
 	unsigned int security_type = 0;
@@ -221,17 +221,10 @@ stamsg_proc(eag_stamsg_t *stamsg, uint8_t usermac[6],
 	
 	switch(sta_msg->Op) {
 	case WID_ADD:
-		if (0 == user_ip) {
+		if (0 == memcmp_ipx(user_addr, NULL)) {
 			eag_log_warning("stamsg_proc receive WID_ADD, userip = 0");
 		}
-		#if 0
-		if (0 != user_ip) {
-			ip2str(user_ip, user_ipstr, sizeof(user_ipstr));
-			eag_log_info("stamsg_proc, WID_ADD del eap or none authorize user_ip %s",
-				user_ipstr);
-			eag_captive_del_eap_authorize(stamsg->captive, user_ip);
-		}
-		#endif
+
 		/* TODO: if essid changed, del mac_preauth */
 		mac2str(usermac, user_macstr, sizeof(user_macstr), ':');
 
@@ -252,7 +245,7 @@ stamsg_proc(eag_stamsg_t *stamsg, uint8_t usermac[6],
 		appconn->session.sta_state = SESSION_STA_STATUS_CONNECT;
 
 		mac2str(appconn->session.apmac, ap_macstr, sizeof(ap_macstr), ':');
-		ip2str(appconn->session.user_ip, user_ipstr, sizeof(user_ipstr));
+		ipx2str(&(appconn->session.user_addr), user_ipstr, sizeof(user_ipstr));
 		
 		tmpsession.wlanid = sta_msg->STA.wlan_id;
 		tmpsession.g_radioid = sta_msg->STA.radio_id;
@@ -276,7 +269,7 @@ stamsg_proc(eag_stamsg_t *stamsg, uint8_t usermac[6],
 
 		if (0 != strcmp(tmpsession.essid, appconn->session.essid)) {
 			if (macauth_switch) {
-				del_eag_preauth_by_ip_or_mac(stamsg->macauth, user_ip, usermac);
+				del_eag_preauth_by_ip_or_mac(stamsg->macauth, user_addr, usermac);
 			}
 			if (APPCONN_STATUS_AUTHED == appconn->session.state) {
 				appconn->session.session_stop_time = timenow;
@@ -325,19 +318,12 @@ stamsg_proc(eag_stamsg_t *stamsg, uint8_t usermac[6],
 		}
 		break;		
 	case WID_DEL:
-		if (0 == user_ip) {
+		if (0 == memcmp_ipx(user_addr, NULL)) {
 			eag_log_warning("stamsg_proc receive WID_DEL, userip = 0");
 		}
-		#if 0
-		if (0 != user_ip) {
-			ip2str(user_ip, user_ipstr, sizeof(user_ipstr));
-			eag_log_info("stamsg_proc, WID_DEL del eap or none authorize user_ip %s",
-				user_ipstr);
-			eag_captive_del_eap_authorize(stamsg->captive, user_ip);
-		}
-		#endif
+
 		if (macauth_switch) {
-			del_eag_preauth_by_ip_or_mac(stamsg->macauth, user_ip, usermac);
+			del_eag_preauth_by_ip_or_mac(stamsg->macauth, user_addr, usermac);
 		}
 		mac2str(usermac, user_macstr, sizeof(user_macstr), ':');
 	
@@ -357,7 +343,7 @@ stamsg_proc(eag_stamsg_t *stamsg, uint8_t usermac[6],
 		}
 
 		mac2str(appconn->session.apmac, ap_macstr, sizeof(ap_macstr), ':');
-		ip2str(appconn->session.user_ip, user_ipstr, sizeof(user_ipstr));
+		ipx2str(&(appconn->session.user_addr), user_ipstr, sizeof(user_ipstr));
 
 		appconn->session.sta_state = SESSION_STA_STATUS_UNCONNECT;
 		appconn->session.leave_reason = sta_msg->STA.reason;
@@ -371,7 +357,7 @@ stamsg_proc(eag_stamsg_t *stamsg, uint8_t usermac[6],
 			appconn->session.leave_reason);
 
 		if (macauth_switch) {
-			del_eag_preauth_by_ip_or_mac(stamsg->macauth, appconn->session.user_ip, usermac);
+			del_eag_preauth_by_ip_or_mac(stamsg->macauth, &(appconn->session.user_addr), usermac);
 		}
 		
 		if (APPCONN_STATUS_AUTHED == appconn->session.state) {
@@ -395,17 +381,10 @@ stamsg_proc(eag_stamsg_t *stamsg, uint8_t usermac[6],
 		break;	
 	case OPEN_ROAM:
 		/* STAMSG_ROAM */
-		if (0 == user_ip) {
+		if (0 == memcmp_ipx(user_addr, NULL)) {
 			eag_log_warning("stamsg_proc receive OPEN_ROAM, userip = 0");
 		}
-		#if 0
-		if (0 != user_ip) {
-			ip2str(user_ip, user_ipstr, sizeof(user_ipstr));
-			eag_log_info("stamsg_proc, OPEN_ROAM del eap or none authorize user_ip %s",
-				user_ipstr);
-			eag_captive_del_eap_authorize(stamsg->captive, user_ip);
-		}
-		#endif
+
 		/* TODO: if essid changed, del mac_preauth */
 		mac2str(usermac, user_macstr, sizeof(user_macstr), ':');
 
@@ -426,7 +405,7 @@ stamsg_proc(eag_stamsg_t *stamsg, uint8_t usermac[6],
 		appconn->session.sta_state = SESSION_STA_STATUS_CONNECT;
 		
 		mac2str(appconn->session.apmac, ap_macstr, sizeof(ap_macstr), ':');
-		ip2str(appconn->session.user_ip, user_ipstr, sizeof(user_ipstr));
+		ipx2str(&(appconn->session.user_addr), user_ipstr, sizeof(user_ipstr));
 		
 		ret = eag_get_sta_info_by_mac_v2(stamsg->eagdbus, stamsg->hansi_type,
 					stamsg->hansi_id, usermac, &tmpsession, &security_type);
@@ -448,7 +427,7 @@ stamsg_proc(eag_stamsg_t *stamsg, uint8_t usermac[6],
 
 		if (0 != strcmp(tmpsession.essid, appconn->session.essid)) {
 			if (macauth_switch) {
-				del_eag_preauth_by_ip_or_mac(stamsg->macauth, user_ip, usermac);
+				del_eag_preauth_by_ip_or_mac(stamsg->macauth, user_addr, usermac);
 			}
 			if (APPCONN_STATUS_AUTHED == appconn->session.state) {
 				appconn->session.session_stop_time = timenow;
@@ -496,30 +475,6 @@ stamsg_proc(eag_stamsg_t *stamsg, uint8_t usermac[6],
 			}
 		}
 		break;
-	#if 0
-	case ASD_AUTH:
-		if (0 == user_ip) {
-			eag_log_warning("stamsg_proc receive ASD_AUTH, userip = 0");
-			return -1;
-		}
-		
-		ip2str(user_ip, user_ipstr, sizeof(user_ipstr));
-		eag_log_info("stamsg_proc, ASD_AUTH add eap or none authorize user_ip %s",
-				user_ipstr);
-		eag_captive_eap_authorize(stamsg->captive, user_ip);
-		break;
-	case ASD_DEL_AUTH:
-		if (0 == user_ip) {
-			eag_log_warning("stamsg_proc receive ASD_DEL_AUTH, userip = 0");
-			return -1;
-		}
-		
-		ip2str(user_ip, user_ipstr, sizeof(user_ipstr));
-		eag_log_info("stamsg_proc, ASD_DEL_AUTH del eap or none authorize user_ip %s",
-				user_ipstr);
-		eag_captive_del_eap_authorize(stamsg->captive, user_ip);
-		break;
-	#endif
 	default:
 		eag_log_err("stamsg_proc unexpected stamsg type %u", sta_msg->Op);
 		break;
@@ -537,8 +492,8 @@ stamsg_receive(eag_thread_t *thread)
 	ssize_t nbyte = 0;
 	EagMsg sta_msg = {0};
 	uint8_t usermac[6] = {0};
-	uint32_t user_ip=0;
-	char user_ipstr[32] = "";
+	user_addr_t user_addr = {0};
+	char user_ipstr[IPX_LEN] = "";
 	char user_macstr[32] = "";
 	
 	if (NULL == thread) {
@@ -585,15 +540,16 @@ stamsg_receive(eag_thread_t *thread)
 	}
 
 	memcpy(usermac, sta_msg.STA.addr, sizeof(sta_msg.STA.addr));
-	user_ip=sta_msg.STA.ipaddr;
-	ip2str(user_ip, user_ipstr, sizeof(user_ipstr));
+	user_addr.family = EAG_IPV4;
+	user_addr.user_ip = sta_msg.STA.ipaddr;
+	ipx2str(&user_addr, user_ipstr, sizeof(user_ipstr));
 	mac2str(usermac, user_macstr, sizeof(user_macstr), ':');
 	
 	eag_log_debug("eag_stamsg",
 		"stamsg receive EagMsg tm.Op=%d, userip=%s, usermac=%s",
 		sta_msg.Op, user_ipstr, user_macstr);
 
-	stamsg_proc(stamsg, usermac, user_ip, &sta_msg);
+	stamsg_proc(stamsg, usermac, &user_addr, &sta_msg);
 
 	return EAG_RETURN_OK;
 }
@@ -608,7 +564,7 @@ eag_stamsg_send(eag_stamsg_t *stamsg,
 	struct sockaddr_un addr = {0};
 	socklen_t len = 0;
 	ssize_t nbyte = 0;
-	char ipstr[32] = "";
+	char user_ipstr[IPX_LEN] = "";
 	char macstr[32] = "";
 	
 	if (NULL == stamsg || NULL == session) {
@@ -620,7 +576,8 @@ eag_stamsg_send(eag_stamsg_t *stamsg,
 	sta_msg.Type = EAG_TYPE;
 	sta_msg.Op = Op;
 	sta_msg.STA.wtp_id = session->wtpid;
-	sta_msg.STA.ipaddr = session->user_ip;
+	sta_msg.STA.ipaddr = session->user_addr.user_ip;
+	sta_msg.STA.ip6_addr = session->user_addr.user_ipv6;
 	memcpy(sta_msg.STA.addr, session->usermac, sizeof(sta_msg.STA.addr));
 	strncpy(sta_msg.STA.arpifname, session->intf, sizeof(sta_msg.STA.arpifname)-1);
 
@@ -632,11 +589,10 @@ eag_stamsg_send(eag_stamsg_t *stamsg,
 #else
 	len = offsetof(struct sockaddr_un, sun_path) + strlen(addr.sun_path);
 #endif /* HAVE_STRUCT_SOCKADDR_UN_SUN_LEN */
-
-	ip2str(session->user_ip, ipstr, sizeof(ipstr));
 	mac2str(session->usermac, macstr, sizeof(macstr), ':');
+	ipx2str(&(session->user_addr), user_ipstr, sizeof(user_ipstr));
 	eag_log_info("stamsg send sockpath:%s, userip:%s, usermac:%s, Op:%d",
-			addr.sun_path, ipstr, macstr, Op);
+			addr.sun_path, user_ipstr, macstr, Op);
 	nbyte = sendto(stamsg->sockfd, &sta_msg, sizeof(EagMsg), MSG_DONTWAIT,
 					(struct sockaddr *)(&addr), len);
 	if (nbyte < 0) {

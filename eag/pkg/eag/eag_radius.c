@@ -58,6 +58,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "appconn.h"
 #include "eag_ins.h"
 #include "eag_statistics.h"
+#include "session.h"
 
 #define SOCKRADIUS_BLKMEM_NAME 			"sockradius_blkmem"
 #define SOCKRADIUS_BLKMEM_ITEMNUM		4
@@ -127,7 +128,7 @@ struct radius_id {
 	unsigned long total_time;
 	time_t start_time;
 	struct radius_srv_t radius_srv;
-	uint32_t userip;
+	user_addr_t user_addr;
 };
 
 struct sock_radius {
@@ -525,7 +526,7 @@ sock_radius_stop(sock_radius_t *sockradius)
 		sockradius->id[i].start_time = 0;
 		memset(&(sockradius->id[i].radius_srv), 0,
 					sizeof(sockradius->id[i].radius_srv));
-		sockradius->id[i].userip = 0;
+		memset(&(sockradius->id[i].user_addr), 0, sizeof(user_addr_t));
 	}
 	
 	return 0;
@@ -541,8 +542,17 @@ radius_add_public_attr(struct radius_packet_t *packet,
 		eag_log_err("radius_add_public_attr input error");
 		return -1;
 	}
-	radius_addattr(packet, RADIUS_ATTR_FRAMED_IP_ADDRESS, 0, 0,
+	if (EAG_IPV6 == appconn->session.user_addr.family) {
+	#if 0 // to add
+		radius_addattr(packet, RADIUS_ATTR_FRAMED_IP_ADDRESS, 0, 0,
 		       appconn->session.user_ip, NULL, 0);
+		radius_addattr(&packet, RADIUS_ATTR_USER_NAME, 0, 0, 0,
+			(uint8_t *)(appconn->session.user_addr.user_ipv6), sizeof(struct in6_addr));
+	#endif
+	} else {
+		radius_addattr(packet, RADIUS_ATTR_FRAMED_IP_ADDRESS, 0, 0,
+		       appconn->session.user_addr.user_ip, NULL, 0);
+	}
 
 	radius_addattr(packet, RADIUS_ATTR_NAS_IDENTIFIER, 0, 0, 0,
 		       (uint8_t *)appconn->session.nasid,
@@ -656,7 +666,7 @@ sock_radius_send_packet(sock_radius_t *sockradius,
 
 static int
 sock_radius_req(sock_radius_t *sockradius,
-		uint32_t userip,
+		user_addr_t *user_addr,
 		struct radius_packet_t *packet,
 		struct radius_srv_t *radius_srv,
 		int wait)
@@ -667,7 +677,7 @@ sock_radius_req(sock_radius_t *sockradius,
 	eag_radius_t *radius = NULL;
 	uint32_t radius_ip = 0;
 	uint16_t radius_port = 0;
-	
+	char user_ipstr[IPX_LEN] = "";
 	if (NULL == sockradius || NULL == packet 
 		|| NULL == radius_srv) {
 		eag_log_err("sock_radius_req input error");
@@ -693,7 +703,7 @@ sock_radius_req(sock_radius_t *sockradius,
 			*(radius->retry_times+radius->vice_retry_times+1)*2;
 	radid->start_time = timenow;
 	memcpy(&(radid->radius_srv), radius_srv, sizeof(radid->radius_srv));
-	radid->userip = userip;
+	memcpy(&(radid->user_addr), user_addr, sizeof(user_addr_t));
 	
 	if (0 == radid->radius_srv.backup_auth_ip) {
 		radid->radius_srv.backup_auth_ip = radid->radius_srv.auth_ip;
@@ -712,9 +722,10 @@ sock_radius_req(sock_radius_t *sockradius,
 		radius_port = radius_srv->acct_port;
 	}
 
-	eag_log_debug("eag_radius","sock_radius_req userip %#x, fd=%d, "
+    ipx2str(user_addr, user_ipstr, sizeof(user_ipstr));
+	eag_log_debug("eag_radius","sock_radius_req userip %s, fd=%d, "
 		"radius server=%#x:%u, packet code=%u, id=%u, wait=%d",
-		userip, sockradius->sockfd,
+		user_ipstr, sockradius->sockfd,
 		radius_ip, radius_port, packet->code, packet->id, wait);
 	sock_radius_send_packet(sockradius, radius_ip, radius_port, packet);
 	if (wait) {
@@ -730,7 +741,7 @@ sock_radius_req(sock_radius_t *sockradius,
 
 static int
 radius_req(eag_radius_t *radius,
-		uint32_t userip,
+		user_addr_t *user_addr,
 		struct radius_packet_t *packet,
 		struct radius_srv_t *radius_srv,
 		int wait)
@@ -746,7 +757,7 @@ radius_req(eag_radius_t *radius,
 	}
 
 	if (found) {
-		sock_radius_req(sockradius, userip, packet, radius_srv, wait);
+		sock_radius_req(sockradius, user_addr, packet, radius_srv, wait);
 		eag_log_debug("eag_radius", "radius_req ok");
 		return EAG_RETURN_OK;
 	}
@@ -757,7 +768,7 @@ radius_req(eag_radius_t *radius,
 		return -1;
 	}
 	sock_radius_start(sockradius);
-	sock_radius_req(sockradius, userip, packet, radius_srv, wait);
+	sock_radius_req(sockradius, user_addr, packet, radius_srv, wait);
 	eag_log_debug("eag_radius", "radius_req ok");
 	
 	return EAG_RETURN_OK;
@@ -772,7 +783,7 @@ radius_auth(eag_radius_t *radius,
 	uint32_t len = 0;
 	char ap_macstr[32] = "";
 	char user_macstr[32] = "";
-	char user_ipstr[32] = "";
+	char user_ipstr[IPX_LEN] = "";
 	char nas_ipstr[32]= "";
 	char portal_ipstr[32]= "";
 	char radius_auth_ipstr[32]= "";
@@ -782,7 +793,7 @@ radius_auth(eag_radius_t *radius,
 		return -1;
 	}
 
-	ip2str(appconn->session.user_ip, user_ipstr, sizeof(user_ipstr));
+    ipx2str(&(appconn->session.user_addr), user_ipstr, sizeof(user_ipstr));
 	mac2str(appconn->session.apmac, ap_macstr, sizeof(ap_macstr), '-');
 	mac2str(appconn->session.usermac, user_macstr, sizeof(user_macstr), '-');
 	ip2str(appconn->session.nasip, nas_ipstr, sizeof(nas_ipstr));
@@ -846,7 +857,7 @@ radius_auth(eag_radius_t *radius,
 		(EAG_AUTH_TYPE_MAC==appconn->session.server_auth_type)?"MAC":"Portal");
 
 	eag_bss_message_count(radius->eagstat, appconn, BSS_ACCESS_REQUEST_COUNT, 1);
-	radius_req(radius, appconn->session.user_ip, &packet,
+	radius_req(radius, &(appconn->session.user_addr), &packet,
 		&(appconn->session.radius_srv), RADIUS_REQ_WAIT);
 
 	return EAG_RETURN_OK;
@@ -867,7 +878,7 @@ radius_acct_req(eag_radius_t *radius,
 	struct timeval tv = {0};
 	time_t timenow = 0;
 	unsigned long timediff = 0;
-	char user_ipstr[32] = "";
+	char user_ipstr[IPX_LEN] = "";
 	char ap_macstr[32] = "";
 	char user_macstr[32] = "";
 	char nas_ipstr[32]= "";
@@ -880,7 +891,6 @@ radius_acct_req(eag_radius_t *radius,
 		return -1;
 	}
 
-	ip2str(appconn->session.user_ip, user_ipstr, sizeof(user_ipstr));
 	mac2str(appconn->session.apmac, ap_macstr, sizeof(ap_macstr), '-');
 	mac2str(appconn->session.usermac, user_macstr, sizeof(user_macstr), '-');
 	ip2str(appconn->session.nasip, nas_ipstr, sizeof(nas_ipstr));
@@ -897,7 +907,7 @@ radius_acct_req(eag_radius_t *radius,
 	
 	eag_time_gettimeofday(&tv, NULL);
 	timenow = tv.tv_sec;
-	ip2str(appconn->session.user_ip, user_ipstr, sizeof(user_ipstr));
+	ipx2str(&(appconn->session.user_addr), user_ipstr, sizeof(user_ipstr));
 	
 	radius_packet_init(&packet, RADIUS_CODE_ACCOUNTING_REQUEST);
 
@@ -1051,7 +1061,7 @@ radius_acct_req(eag_radius_t *radius,
 		break;
 	}
 
-	radius_req(radius, appconn->session.user_ip,
+	radius_req(radius, &(appconn->session.user_addr),
 			&packet, &(appconn->session.radius_srv), wait);
 
 	return EAG_RETURN_OK;
@@ -1085,13 +1095,15 @@ config_radius_session(struct app_conn_t *appconn,
 		struct radius_packet_t *pack)
 {
 	struct radius_attr_t *attr = NULL;
+	char user_ipstr[IPX_LEN] = "";
 
+	ipx2str(&(appconn->session.user_addr), user_ipstr, sizeof(user_ipstr));
 	/* Session timeout */
 	if (!radius_getattr(pack, &attr, RADIUS_ATTR_SESSION_TIMEOUT, 0, 0, 0)) {
 		appconn->session.sessiontimeout = ntohl(attr->v.i);
 		eag_log_debug("eag_radius",
-			"config_radius_session ip=%#x sessiontimeout=%lu",
-			appconn->session.user_ip, appconn->session.sessiontimeout);
+			"config_radius_session ip=%s sessiontimeout=%lu",
+			user_ipstr, appconn->session.sessiontimeout);
 	}
 
 	/* Idle timeout */
@@ -1105,8 +1117,8 @@ config_radius_session(struct app_conn_t *appconn,
 			appconn->session.idle_timeout = ntohl(attr->v.i);
 		}
 		eag_log_debug("eag_radius",
-			"config_radius_session ip=%#x idletimeout=%lu",
-			appconn->session.user_ip, appconn->session.idle_timeout);
+			"config_radius_session ip=%s idletimeout=%lu",
+			user_ipstr, appconn->session.idle_timeout);
 	}
 
 	/* Interim interval */
@@ -1118,12 +1130,12 @@ config_radius_session(struct app_conn_t *appconn,
 		if (interim_interval >= 60) {
 			appconn->session.interim_interval = interim_interval;
 			eag_log_debug("eag_radius",
-				"config_radius_session ip=%#x interim_interval=%lu",
-				appconn->session.user_ip, appconn->session.interim_interval);
+				"config_radius_session ip=%s interim_interval=%lu",
+				user_ipstr, appconn->session.interim_interval);
 		} else {
 			eag_log_warning("config_radius_session "
-				"ip=%#x interim_interval keep old %lu",
-				appconn->session.user_ip, appconn->session.interim_interval);
+				"ip=%s interim_interval keep old %lu",
+				user_ipstr, appconn->session.interim_interval);
 		}
 	}
 
@@ -1303,19 +1315,19 @@ config_radius_session(struct app_conn_t *appconn,
 
 static int
 access_accept_proc(eag_radius_t *radius,
-		uint32_t userip,
+		user_addr_t *user_addr,
 		struct radius_packet_t *packet)
 {
 	struct app_conn_t *appconn = NULL;
 	const char *errid = NULL;
-	char user_ipstr[32] = "";
+	char user_ipstr[IPX_LEN] = "";
 	
 	if (NULL == radius || NULL == packet) {
 		eag_log_err("access_accept_proc input error");
 		return -1;
 	}
-	ip2str(userip, user_ipstr, sizeof(user_ipstr));	
-	appconn = appconn_find_by_userip(radius->appdb, userip);
+	ipx2str(user_addr, user_ipstr, sizeof(user_ipstr));
+	appconn = appconn_find_by_userip(radius->appdb, user_addr);
 	eag_bss_message_count(radius->eagstat, appconn, BSS_ACCESS_ACCEPT_COUNT, 1);
 	if (NULL == appconn) {
 		eag_log_warning("access_accept_proc "
@@ -1324,7 +1336,7 @@ access_accept_proc(eag_radius_t *radius,
 		if (PORTAL_PROTOCOL_MOBILE == portal_get_protocol_type()) {
 			errid = ERRID_AC999;
 		}
-		eag_portal_auth_failure(radius->portal, userip,
+		eag_portal_auth_failure(radius->portal, user_addr,
 				PORTAL_AUTH_REJECT, errid);
 		return 0;
 	}
@@ -1335,7 +1347,7 @@ access_accept_proc(eag_radius_t *radius,
 		if (PORTAL_PROTOCOL_MOBILE == portal_get_protocol_type()) {
 			errid = ERRID_AC999;
 		}
-		eag_portal_auth_failure(radius->portal, userip,
+		eag_portal_auth_failure(radius->portal, user_addr,
 				PORTAL_AUTH_REJECT, errid);
 		return 0;
 	}
@@ -1352,7 +1364,7 @@ access_accept_proc(eag_radius_t *radius,
 
 static int
 access_reject_proc(eag_radius_t *radius,
-		uint32_t userip,
+		user_addr_t *user_addr,
 		struct radius_packet_t *packet)
 {
 	struct app_conn_t *appconn = NULL;
@@ -1360,16 +1372,16 @@ access_reject_proc(eag_radius_t *radius,
 	char replymsg[256] = "";
 	uint8_t err_code = PORTAL_AUTH_REJECT;
 	const char *err_id = NULL;
-	char user_ipstr[32] = "";
+	char user_ipstr[IPX_LEN] = "";
 
 	if (NULL == radius || NULL == packet) {
 		eag_log_err("access_reject_proc input error");
 		return -1;
 	}
 
-	ip2str(userip, user_ipstr, sizeof(user_ipstr));
+	ipx2str(user_addr, user_ipstr, sizeof(user_ipstr));
 	
-	appconn = appconn_find_by_userip(radius->appdb, userip);
+	appconn = appconn_find_by_userip(radius->appdb, user_addr);
 	if (NULL == appconn) {
 		eag_log_warning("access_reject_proc "
 			"appconn_find_by_userip failed, userip %s",
@@ -1394,7 +1406,7 @@ access_reject_proc(eag_radius_t *radius,
 						replymsg);
 
 	eag_bss_message_count(radius->eagstat, appconn, BSS_ACCESS_REJECT_COUNT, 1);
-	eag_portal_auth_failure(radius->portal, userip,
+	eag_portal_auth_failure(radius->portal, user_addr,
 			err_code, err_id);
 
 	return EAG_RETURN_OK;
@@ -1407,7 +1419,7 @@ acct_response_proc(eag_radius_t *radius,
 {
 	struct app_conn_t *appconn = NULL;
 	struct radius_attr_t *attr = NULL;
-	char user_ipstr[32] = "";
+	char user_ipstr[IPX_LEN] = "";
 	char username[256] = "";
 	char user_macstr[32] = "";
 	char radius_ipstr[32] = "";
@@ -1423,7 +1435,7 @@ acct_response_proc(eag_radius_t *radius,
 
 	nasip = eag_ins_get_nasip(radius->eagins);
 	ip2str(nasip, nas_ipstr, sizeof(nas_ipstr));
-	ip2str(radid->userip, user_ipstr, sizeof(user_ipstr));
+	ipx2str(&(radid->user_addr), user_ipstr, sizeof(user_ipstr));
 	ip2str(radid->radius_srv.acct_ip, radius_ipstr, sizeof(radius_ipstr));
 	if (!radius_getattr(&(radid->req_packet), &attr, RADIUS_ATTR_USER_NAME, 0, 0, 0)) {
 		memcpy(username, attr->v.t, attr->l-2);
@@ -1437,7 +1449,7 @@ acct_response_proc(eag_radius_t *radius,
 	eag_get_debug_filter_key(session_filter_prefix, sizeof(session_filter_prefix),
 				user_ipstr, user_macstr, username,radius->hansi_type,radius->hansi_id);
 	
-	appconn = appconn_find_by_userip(radius->appdb, radid->userip);
+	appconn = appconn_find_by_userip(radius->appdb, &(radid->user_addr));
 	if (NULL == appconn) { /* may be acct-stop */
 		eag_log_debug("eag_radius",
 			"acct_response_proc, not found appconn by userip %s",
@@ -1493,7 +1505,7 @@ sockradius_receive(eag_thread_t *thread)
 	int rdc_distributed = 0;
 	struct radius_attr_t *attr = NULL;
 	char username[256] = "";
-	char user_ipstr[32] = "";
+	char user_ipstr[IPX_LEN] = "";
 	char user_macstr[32] = "";
 	char nasid[RADIUS_MAX_NASID_LEN] = "";
 	char session_filter_prefix[512] = ""; /* add for debug-filter */
@@ -1642,7 +1654,7 @@ sockradius_receive(eag_thread_t *thread)
 			"wait %u second for free status",
 			sockradius->sockfd, packet.id, radid->timeout);
 
-	ip2str(radid->userip, user_ipstr, sizeof(user_ipstr));
+	ipx2str(&(radid->user_addr), user_ipstr, sizeof(user_ipstr));
 	if (!radius_getattr(&(radid->req_packet), &attr, RADIUS_ATTR_USER_NAME, 0, 0, 0)) {
 		memcpy(username, attr->v.t, attr->l-2);
 	}
@@ -1662,7 +1674,7 @@ sockradius_receive(eag_thread_t *thread)
 			username, user_ipstr, user_macstr, nas_ipstr, radius_ipstr, nasid);
 		eag_log_filter(session_filter_prefix,"RadiusAccessAccept___UserName:%s,UserIP:%s,UserMAC:%s,NasIP:%s,RadiusAuthIP:%s,NasID:%s",
 			username, user_ipstr, user_macstr, nas_ipstr, radius_ipstr, nasid);
-		access_accept_proc(sockradius->radius, radid->userip, &packet);
+		access_accept_proc(sockradius->radius, &(radid->user_addr), &packet);
 	} else if (RADIUS_CODE_ACCESS_REJECT == packet.code) {
 		if (!radius_getattr(&packet, &attr, RADIUS_ATTR_REPLY_MESSAGE, 0, 0, 0)) {
 			memcpy(replymsg, attr->v.t, attr->l - 2);
@@ -1671,7 +1683,7 @@ sockradius_receive(eag_thread_t *thread)
 			username, user_ipstr, user_macstr, nas_ipstr, radius_ipstr, nasid, replymsg);
 		eag_log_filter(session_filter_prefix,"RadiusAccessReject___UserName:%s,UserIP:%s,UserMAC:%s,NasIP:%s,RadiusAuthIP:%s,NasID:%s,ReplyMessage:%s",
 			username, user_ipstr, user_macstr, nas_ipstr, radius_ipstr, nasid, replymsg);
-		access_reject_proc(sockradius->radius, radid->userip, &packet);
+		access_reject_proc(sockradius->radius, &(radid->user_addr), &packet);
 	} else {
 		acct_response_proc(sockradius->radius, radid, &packet);
 	}
@@ -1690,7 +1702,7 @@ radius_id_retry_timeout(eag_thread_t *thread)
 	uint16_t radius_port = 0;
 	struct timeval tv = {0};
 	time_t timenow = 0;
-	char user_ipstr[32] = "";
+	char user_ipstr[IPX_LEN] = "";
 	char user_macstr[32] = "";
 	char nasid[RADIUS_MAX_NASID_LEN] = "";
 	struct radius_attr_t *attr = NULL;
@@ -1720,7 +1732,7 @@ radius_id_retry_timeout(eag_thread_t *thread)
 	}
 	radius = sockradius->radius;
 
-	appconn = appconn_find_by_userip(radius->appdb, radid->userip);	//used for bss stat
+	appconn = appconn_find_by_userip(radius->appdb, &(radid->user_addr));	//used for bss stat
 	
 	eag_time_gettimeofday(&tv, NULL);
 	timenow = tv.tv_sec;
@@ -1728,7 +1740,7 @@ radius_id_retry_timeout(eag_thread_t *thread)
 	eag_log_debug("eag_radius","radius_id_retry_timeout sockradius fd(%d) id(%u)",
 			sockradius->sockfd, radid->index);
 
-	ip2str(radid->userip, user_ipstr, sizeof(user_ipstr));
+	ipx2str(&(radid->user_addr), user_ipstr, sizeof(user_ipstr));
 	if (!radius_getattr(&(radid->req_packet), &attr, RADIUS_ATTR_USER_NAME, 0, 0, 0)) {
 		memcpy(username, attr->v.t, attr->l-2);
 	}
@@ -1834,9 +1846,9 @@ radius_id_retry_timeout(eag_thread_t *thread)
 		return 0;
 	}
 
-	eag_log_debug("eag_radius","radius_id_retry_timeout userip %#x, fd=%d, "
+	eag_log_debug("eag_radius","radius_id_retry_timeout userip %s, fd=%d, "
 		"radius server=%#x:%u, packet code=%u, id=%u",
-		radid->userip, sockradius->sockfd,
+		user_ipstr, sockradius->sockfd,
 		radius_ip, radius_port, radid->req_packet.code, radid->req_packet.id);
 
 	sock_radius_send_packet(sockradius, radius_ip, radius_port, &(radid->req_packet));

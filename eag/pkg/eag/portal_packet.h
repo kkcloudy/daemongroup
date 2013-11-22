@@ -33,6 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define _PORTAL_PACKET_H
 
 #include <stdint.h>
+#include "session.h"
 
 #define PORTAL_PACKET_MOBILE_HEADSIZE		16
 #define PORTAL_PACKET_TELECOM_HEADSIZE		32
@@ -47,6 +48,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #define PORTAL_TELECOM_USERNAME_LEN		32
 #define PORTAL_MOBILE_ERRID_LEN			5
+
+#define IPV4_VERSION	0x01
+#define IPV6_VERSION	0x02
 
 #define ERRID_AC101		"AC101"		/*IP地址是本AC所述的地址池中的有效地址，但这个地址目前已经通过认证在线*/
 #define ERRID_AC102		"AC102"		/*AC发现用户请求认证的IP地址不是本AC所述的地址池中的有效地址*/
@@ -79,6 +83,11 @@ struct portal_packet_attr {
 	uint8_t type;
 	uint8_t len;
 	uint8_t value[0];
+};
+
+enum {
+	IPV4_USER,
+	IPV6_USER,
 };
 
 typedef enum {
@@ -158,7 +167,8 @@ typedef enum {
 	ATTR_INPUT_PACKETS,
 	ATTR_OUTPUT_PACKETS,
 	ATTR_INPUT_GIGAWORDS,
-	ATTR_OUTPUT_GIGAWORDS   
+	ATTR_OUTPUT_GIGAWORDS,
+	ATTR_USER_IPV6 = 0xf1, /* add by houyongtao for ipv6 */
 } ATTR_TYPE;
 
 /*
@@ -190,7 +200,7 @@ portal_packet_log_packet(struct portal_packet_t *packet);
 
 int
 portal_packet_init(struct portal_packet_t *packet,
-				uint8_t type, uint32_t userip);
+				uint8_t type, user_addr_t *user_addr);
 
 int
 portal_set_protocol_type(int protocol_type);

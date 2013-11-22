@@ -52,9 +52,9 @@ int
 eag_authorize_del_eap_authorize( eag_authorize_t *this, unsigned int user_ip );
 #endif
 int 
-eag_authorize_do_macpre_authorize( eag_authorize_t *this, unsigned int user_ip );
+eag_authorize_do_macpre_authorize( eag_authorize_t *this, user_addr_t *user_addr );
 int 
-eag_authorize_del_macpre_authorize( eag_authorize_t *this, unsigned int user_ip );
+eag_authorize_del_macpre_authorize( eag_authorize_t *this, user_addr_t *user_addr );
 
 int 
 eag_authorize_do_flux( eag_authorize_t *this, struct appsession *appsession );

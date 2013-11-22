@@ -55,15 +55,15 @@ eag_macauth_preauth_check(eag_macauth_t *macauth);
 
 int
 eag_add_mac_preauth(eag_macauth_t *macauth,
-		uint32_t userip, uint8_t usermac[6]);
+		user_addr_t *user_addr, uint8_t usermac[6]);
 
 int
 eag_del_mac_preauth(eag_macauth_t *macauth,
-		uint32_t userip);
+		user_addr_t *user_addr);
 
 int
 del_eag_preauth_by_ip_or_mac(eag_macauth_t *macauth,
-		uint32_t userip, uint8_t usermac[6]);
+		user_addr_t *user_addr, uint8_t usermac[6]);
 
 int 
 eag_macauth_log_all_preauth(eag_macauth_t *macauth);
@@ -133,7 +133,7 @@ eag_macauth_set_portalconf(eag_macauth_t *macauth,
 
 int
 flush_preauth_flux_from_fastfwd(eag_macauth_t *macauth,
-		uint32_t userip,
+		user_addr_t *user_addr,
 		uint64_t fastfwd_input_octets,
 		uint64_t fastfwd_output_octets);
 

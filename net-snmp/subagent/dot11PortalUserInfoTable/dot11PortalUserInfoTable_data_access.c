@@ -353,7 +353,7 @@ dot11PortalUserInfoTable_cache_load(netsnmp_container *container)
 	     *
 	     * Integer based value can usually just do a direct copy.
 	     */
-	    rowreq_ctx->data.portalUserip = user->userip;
+	    rowreq_ctx->data.portalUserip = user->user_ip;
 	    
 	    /*
 	     * setup/save data for portalUsername

@@ -139,6 +139,113 @@ ip2str(uint32_t ip, char *str, size_t size)
 }
 
 char *
+ipv6tostr(struct in6_addr *ipv6, char *str, size_t size)
+{
+	if (NULL == str || NULL == ipv6) {
+		return NULL;
+	}
+	
+	memset(str, 0, size);
+	if(!inet_ntop(AF_INET6, (const void *)ipv6, str, size)) {
+		return "[ipv6 error]";
+	}
+
+	return str;
+}
+
+char *
+ipx2str(user_addr_t *user_addr, char *str, size_t size)
+{
+	char cmp_v4[32] = "";
+	char cmp_v6[48] = "";
+	if (NULL == user_addr || NULL == str) {
+		return -1;
+	}
+	
+    memset(str, 0, size);
+    memset(cmp_v4, 0, sizeof(cmp_v4));
+    memset(cmp_v6, 0, sizeof(cmp_v6));
+	if (EAG_IPV4 == user_addr->family) {
+        ip2str(user_addr->user_ip, str, size - 1);
+	} else if (EAG_IPV6 == user_addr->family) {
+        ipv6tostr(&(user_addr->user_ipv6), cmp_v6, sizeof(cmp_v6) - 1);
+        snprintf(str, size - 1, "[ipv6:%s]", cmp_v6);
+	} else if (EAG_MIX == user_addr->family) {
+        ip2str(user_addr->user_ip, cmp_v4, sizeof(cmp_v4) - 1);
+        ipv6tostr(&(user_addr->user_ipv6), cmp_v6, sizeof(cmp_v6) - 1);
+        snprintf(str, size - 1, "%s[ipv6:%s]", cmp_v4, cmp_v6);
+	}
+	
+	return str;
+}
+
+int
+ipv6_compare_null(struct in6_addr *ipv6)
+{
+	unsigned char cmp[16] = "";
+	memset(cmp, 0, sizeof(cmp));
+
+	return memcmp(ipv6, cmp, sizeof(struct in6_addr));
+}
+
+int
+memcmp_ipx(user_addr_t *user_addr1, user_addr_t *user_addr2)
+{
+	uint32_t ipv4 = 0;
+	struct in6_addr ipv6;
+
+	if (NULL == user_addr1) {
+		return -1;
+	}
+	memset(&ipv6, 0, sizeof(ipv6));
+	if (NULL != user_addr2) {
+		if (user_addr1->family != user_addr2->family 
+			&& EAG_MIX != user_addr1->family 
+			&& EAG_MIX != user_addr2->family) {
+			return -1;
+		}
+		if (EAG_IPV4 == user_addr1->family 
+			|| EAG_IPV4 == user_addr2->family) {
+			return memcmp(&(user_addr1->user_ip), &(user_addr2->user_ip), sizeof(struct in_addr));
+		} else if (EAG_IPV6 == user_addr1->family 
+			|| EAG_IPV6 == user_addr1->family){
+			return memcmp(&(user_addr1->user_ipv6), &(user_addr2->user_ipv6), sizeof(struct in6_addr));
+		} else if (EAG_MIX == user_addr1->family 
+			&& EAG_MIX == user_addr1->family) {
+			return memcmp(user_addr1, user_addr2, sizeof(user_addr_t));
+		}
+	} else {/* if user_addr2 is NULL, Compare user_addr1 to zero*/
+		if (EAG_IPV4 == user_addr1->family) {
+			return memcmp(&(user_addr1->user_ip), &ipv4, sizeof(struct in_addr));
+		} else if (EAG_IPV6 == user_addr1->family) {
+			return memcmp(&(user_addr1->user_ipv6), &ipv6, sizeof(struct in6_addr));
+		} else if (EAG_MIX == user_addr1->family) {
+			if (memcmp(&(user_addr1->user_ip), &ipv4, sizeof(struct in_addr)) 
+				|| memcmp(&(user_addr1->user_ipv6), &ipv6, sizeof(struct in6_addr))) {
+				return -1;
+			}
+		}
+	}
+	
+	return -1;
+}
+
+char *
+str2ipv6(struct in6_addr *ipv6, char *str)
+{
+	if (NULL == str || NULL == ipv6) {
+		return NULL;
+	}
+	
+	memset(ipv6, 0, sizeof(struct in6_addr));
+	if(!inet_pton(AF_INET6, str, (void *)ipv6)) {
+		return NULL;
+	}
+
+	return str;
+}
+
+char *
 mac2str(const uint8_t mac[6], char *str, size_t size, char separator)
 {
 	if (NULL == mac || NULL == str || size <= 0) {

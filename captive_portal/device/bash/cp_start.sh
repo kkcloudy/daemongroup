@@ -34,13 +34,14 @@ CP_RECORD_IF_INDEX=6
 CP_RECORD_DOMAIN_NUM=6
 #end define record domain
 
-#两种模式
+#Three modes
 CP_MODE_IPSET=1
 CP_MODE_IPTABLES=2
+CP_MODE_IP6TABLES=3
 #使用哪种模式
 #使用iptables能统计流量
 CP_CUR_MODE=${CP_MODE_IPTABLES}
-
+CP_CUR_IP6_MODE=${CP_MODE_IP6TABLES}
 
 
 DEBUG_LOG=1

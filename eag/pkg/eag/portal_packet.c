@@ -381,10 +381,9 @@ portal_packet_log_packet(struct portal_packet_t *packet)
 	}
 }
 
-
 int
 portal_packet_init(struct portal_packet_t *packet,
-				uint8_t type, uint32_t userip)
+				uint8_t type, user_addr_t *user_addr)
 {
 	memset(packet, 0, sizeof(struct portal_packet_t));
 
@@ -393,10 +392,14 @@ portal_packet_init(struct portal_packet_t *packet,
 	} else {
 		packet->version = 0x2;
 	}
-
+	/* telcom and ipv6 version is same ??? */
 	packet->type = type;
-	packet->user_ip = htonl(userip);
-
+	packet->user_ip = htonl(user_addr->user_ip);
+	if (EAG_IPV6 == user_addr->family) {
+        portal_packet_add_attr(packet, ATTR_USER_IPV6, 
+						        &(user_addr->user_ipv6), 
+						        sizeof(struct in6_addr));
+	}
 	return 0;
 }
 

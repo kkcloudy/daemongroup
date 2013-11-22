@@ -623,7 +623,7 @@ get_dm_param(struct appsession *usrsession,
 		struct radius_packet_t *pack)
 {
 	struct radius_attr_t *attr = NULL;
-	char ipstr[32] = "";
+	char user_ipstr[IPX_LEN] = "";
 	
 	memset(usrsession, 0, sizeof(struct appsession));
 	/* User-Name */
@@ -636,11 +636,12 @@ get_dm_param(struct appsession *usrsession,
 
 	/* Framed-IP-Address */
 	if (!radius_getattr(pack, &attr, RADIUS_ATTR_FRAMED_IP_ADDRESS, 0, 0, 0)) {
-		usrsession->user_ip = ntohl(attr->v.i);
-		ip2str(usrsession->user_ip, ipstr, sizeof(ipstr));
+		usrsession->user_addr.family = EAG_IPV4;
+		usrsession->user_addr.user_ip = ntohl(attr->v.i);
+		ipx2str(&(usrsession->user_addr), user_ipstr, sizeof(user_ipstr));
 		eag_log_debug("eag_coa",
 				"get_dm_param Framed-IP-Address=%#X(%s)",
-				usrsession->user_ip, ipstr);
+				usrsession->user_addr.user_ip, user_ipstr);
 	}
 
 	/* Acct-Session-ID */
@@ -658,7 +659,7 @@ get_appconn_by_dm_param(appconn_db_t *appdb,
 {
 	struct app_conn_t *appconn = NULL;
 	struct list_head *head = NULL;
-
+	char user_ipstr[IPX_LEN] = "";
 	if (NULL == appdb || NULL == session) {
 		eag_log_err("get_appconn_by_dm_param input error");
 		return NULL;
@@ -666,7 +667,7 @@ get_appconn_by_dm_param(appconn_db_t *appdb,
 	head = appconn_db_get_head(appdb);
 	
 	if (0 == strlen(session->username)
-		&& 0 == session->user_ip
+		&& 0 == memcmp_ipx(&(session->user_addr), NULL)
 		&& 0 == strlen(session->sessionid)) {
 		eag_log_warning("get_appconn_by_dm_param, all of params is null");
 		return NULL;
@@ -679,8 +680,8 @@ get_appconn_by_dm_param(appconn_db_t *appdb,
 				continue;
 			}
 			
-			if (0 != session->user_ip
-				&& session->user_ip != appconn->session.user_ip) {
+			if (0 != memcmp_ipx(&(session->user_addr), NULL)
+				&& 0 != memcmp_ipx(&(session->user_addr), &(appconn->session.user_addr))) {
 				continue;
 			}
 			
@@ -689,9 +690,9 @@ get_appconn_by_dm_param(appconn_db_t *appdb,
 							appconn->session.sessionid)) {
 				continue;
 			}
-
-			eag_log_debug("eag_coa", "get appconn by dm_param, userip %#x",
-				appconn->session.user_ip);
+			ipx2str(&(appconn->session.user_addr), user_ipstr, sizeof(user_ipstr));
+			eag_log_debug("eag_coa", "get appconn by dm_param, userip %s",
+				user_ipstr);
 			
 			return appconn;
 		}
@@ -765,7 +766,7 @@ eag_coa_proc_disconnect_request(eag_coa_t *coa,
 	struct radius_attr_t *ma = NULL; /* Message authenticator */
 	struct app_conn_t *appconn = NULL;
 	int ret = 0;
-	char user_ipstr[32] = "";
+	char user_ipstr[IPX_LEN] = "";
 	
 	if (NULL == coa || NULL == coaconn || NULL == reqpkt) {
 		eag_log_err("eag_coa_proc_disconnect_request input error");
@@ -774,14 +775,14 @@ eag_coa_proc_disconnect_request(eag_coa_t *coa,
 
 	get_dm_param(&session, reqpkt);
 	if (0 == strlen(session.username)
-		&& 0 == session.user_ip
+		&& 0 == memcmp_ipx(&(session.user_addr), NULL)
 		&& 0 == strlen(session.sessionid)) {
 		error_cause = RADIUS_ERROR_CAUSE_402;
 		admin_log_notice("RadiusDisconnectRequest___MissingAttribute");
 		goto error;
 	}
 	
-	ip2str(session.user_ip, user_ipstr, sizeof(user_ipstr));
+	ipx2str(&(session.user_addr), user_ipstr, sizeof(user_ipstr));
 	admin_log_notice("RadiusDisconnectRequest___UserName:%s,UserIP:%s,SessionID:%s",
 		session.username, user_ipstr, session.sessionid);
 	

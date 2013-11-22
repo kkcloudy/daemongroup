@@ -33,6 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define _EAG_INS_H
 
 #include <stdint.h>
+#include <arpa/inet.h>
 #include "eag_def.h"
 #include "appconn.h"
 #include "eag_statistics.h"
@@ -77,6 +78,15 @@ eag_ins_is_running(eag_ins_t *eagins);
 
 uint32_t
 eag_ins_get_nasip(eag_ins_t *eagins);
+
+struct in6_addr *
+eag_ins_get_nasipv6(eag_ins_t *eagins);
+
+int
+eag_ins_get_ipv6_switch(eag_ins_t *eagins);
+
+int
+eag_ins_set_ipv6_switch(eag_ins_t *eagins, int ipv6_switch);
 
 /* 
 int

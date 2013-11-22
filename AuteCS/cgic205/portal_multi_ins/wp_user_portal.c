@@ -226,7 +226,7 @@ int ShowportalPage(struct list *lLicense,struct list *lsystem,struct list *lpubl
 		cgiFormStringNoNewlines("inf_str",infstr, sizeof(infstr)); 
 		fprintf(stderr, "inf_add, %s", infstr);	
 		ret = eag_add_captive_intf(ccgi_connection, parameter.local_id,
-					parameter.instance_id, infstr);
+					parameter.instance_id, 4, infstr);
 	}
 	cgiFormStringNoNewlines("DELRULE",delstr, sizeof(delstr)); 
 	if(0 == strcmp(delstr,"delete"))
@@ -248,7 +248,7 @@ int ShowportalPage(struct list *lLicense,struct list *lsystem,struct list *lpubl
 	#endif
 		cgiFormStringNoNewlines("INF",infstr, sizeof(infstr)); 
 		ret = eag_del_captive_intf(ccgi_connection, parameter.local_id,
-						parameter.instance_id, infstr);
+						parameter.instance_id, 4, infstr);
 
 	}
 
