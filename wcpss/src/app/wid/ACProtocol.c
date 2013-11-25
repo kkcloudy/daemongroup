@@ -782,6 +782,35 @@ CWBool CWAssembleMsgElemAPLongitudeLatitude(CWProtocolMessage *msgPtr, unsigned 
 
 }
 
+CWBool CWAssembleMsgElemAPSetCPEChannelIntf(CWProtocolMessage *msgPtr, unsigned char op, unsigned short vlanId,unsigned char radioId,unsigned char wlanId)
+{
+	
+	char  value=32; 
+	unsigned char length = 10;
+	
+	if(msgPtr == NULL) 
+		return CWErrorRaise(CW_ERROR_WRONG_ARG, NULL);
+
+	CW_CREATE_PROTOCOL_MESSAGE(*msgPtr, length, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
+	
+	CWProtocolStore8(msgPtr, value); 
+	CWProtocolStore8(msgPtr, op);
+	CWProtocolStore16(msgPtr, vlanId); 
+	CWProtocolStore8(msgPtr, radioId); 
+	CWProtocolStore8(msgPtr, wlanId); 
+	
+	wid_syslog_debug_debug(WID_DEFAULT,"value = %d\n",value);
+	wid_syslog_debug_debug(WID_DEFAULT,"length = %d\n",(length-4));
+	wid_syslog_debug_debug(WID_DEFAULT,"op = %d\n",op);
+	wid_syslog_debug_debug(WID_DEFAULT,"vlanId = %d\n",vlanId);
+	wid_syslog_debug_debug(WID_DEFAULT,"radioId = %d\n",radioId);
+	wid_syslog_debug_debug(WID_DEFAULT,"wlanId = %d\n",wlanId);
+		
+	return CWAssembleMsgElem(msgPtr, CW_MSG_ELEMENT_VENDOR_SPEC_PAYLOAD_CW_TYPE);
+
+}
+
+
 
 CWBool CWAssembleMsgElemAPPasswd(CWProtocolMessage *msgPtr,char *username,char*password)
 {

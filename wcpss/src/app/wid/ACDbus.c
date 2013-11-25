@@ -35578,6 +35578,123 @@ DBusMessage * wid_dbus_interface_radio_apply_wlanid_base_vlanid(DBusConnection *
 
 }
 #endif
+
+DBusMessage * wid_dbus_interface_radio_cpe_channel_apply_wlanid_base_vlanid(DBusConnection *conn, DBusMessage *msg, void *user_data){
+	DBusMessage* reply;
+	DBusError err;
+	DBusMessageIter  iter;
+//	DBusMessageIter  iter_array;
+	unsigned int RadioID;
+	unsigned int vlanid;
+	unsigned char WlanID;	
+	//int i=0;
+	int ret = WID_DBUS_SUCCESS;
+	
+	dbus_error_init(&err);
+	if (!(dbus_message_get_args ( msg, &err,
+								DBUS_TYPE_UINT32,&RadioID,
+								DBUS_TYPE_BYTE,&WlanID,
+								DBUS_TYPE_UINT32,&vlanid,
+								DBUS_TYPE_INVALID))){
+
+		printf("Unable to get input args\n");
+				
+		if (dbus_error_is_set(&err)) {
+			printf("%s raised: %s",err.name,err.message);
+			dbus_error_free(&err);
+		}
+		return NULL;
+	}
+//	printf("receive radioid %d wlanid %d vlanid %d\n",RadioID,WlanID,vlanid);		
+	if(AC_RADIO[RadioID] == NULL)
+	{
+		ret = RADIO_ID_NOT_EXIST;
+	}
+	else if(AC_WLAN[WlanID] == NULL)
+	{
+		ret = WLAN_ID_NOT_EXIST;
+	}
+	else if (AC_WLAN[WlanID]->want_to_delete == 1)		/* Huangleilei add for ASXXZFI-1622 */
+	{
+		ret = WID_WANT_TO_DELETE_WLAN;
+	}
+	
+	
+	if(ret == WID_DBUS_SUCCESS)
+	{
+		ret = WID_ADD_WLAN_CPE_CHANNEL_APPLY_RADIO_BASE_VLANID(RadioID,WlanID,vlanid);
+	}
+	
+	reply = dbus_message_new_method_return(msg);
+	
+	dbus_message_iter_init_append (reply, &iter);
+	
+	dbus_message_iter_append_basic (&iter,
+									 DBUS_TYPE_UINT32,
+									 &ret);
+	return reply;
+	
+
+}
+
+DBusMessage * wid_dbus_interface_radio_cpe_channel_apply_wlanid_clean_vlanid(DBusConnection *conn, DBusMessage *msg, void *user_data){
+	DBusMessage* reply;
+	DBusError err;
+	DBusMessageIter  iter;
+//	DBusMessageIter  iter_array;
+	unsigned int RadioID = 0;
+	unsigned char WlanID = 0;	
+	unsigned int vlan_id = 0;
+	//int i=0;
+	int ret = WID_DBUS_SUCCESS;
+	
+	dbus_error_init(&err);
+	if (!(dbus_message_get_args ( msg, &err,
+								DBUS_TYPE_UINT32,&RadioID,
+								DBUS_TYPE_BYTE,&WlanID,
+								DBUS_TYPE_UINT32,&vlan_id,
+								DBUS_TYPE_INVALID))){
+
+		printf("Unable to get input args\n");
+				
+		if (dbus_error_is_set(&err)) {
+			printf("%s raised: %s",err.name,err.message);
+			dbus_error_free(&err);
+		}
+		return NULL;
+	}
+//	printf("receive radioid %d wlanid %d\n",RadioID,WlanID);		
+	if(AC_RADIO[RadioID] == NULL)
+	{
+		ret = RADIO_ID_NOT_EXIST;
+	}
+	else if(AC_WLAN[WlanID] == NULL)
+	{
+		ret = WLAN_ID_NOT_EXIST;
+	}
+	else if (AC_WLAN[WlanID]->want_to_delete == 1)		/* Huangleilei add for ASXXZFI-1622 */
+	{
+		ret = WID_WANT_TO_DELETE_WLAN;
+	}
+	
+	
+	if(ret == WID_DBUS_SUCCESS)
+	{
+		ret = WID_ADD_WLAN_CPE_CHANNEL_APPLY_RADIO_CLEAN_VLANID(RadioID,WlanID,vlan_id);
+	}
+	
+	reply = dbus_message_new_method_return(msg);
+	
+	dbus_message_iter_init_append (reply, &iter);
+	
+	dbus_message_iter_append_basic (&iter,
+									 DBUS_TYPE_UINT32,
+									 &ret);
+	return reply;
+	
+
+}
+
 #if _GROUP_POLICY
 DBusMessage * wid_dbus_interface_radio_apply_wlanid_clean_vlanid(DBusConnection *conn, DBusMessage *msg, void *user_data){
 	DBusMessage* reply;
@@ -36399,20 +36516,25 @@ DBusMessage * wid_dbus_interface_radio_delete_wlan(DBusConnection *conn, DBusMes
 		return NULL;
 	}
 	if(type==0)
+	{
+		if(AC_RADIO[ID] == NULL)
 		{
-			if(AC_RADIO[ID] == NULL)
-				{
-					ret = RADIO_ID_NOT_EXIST;
-				}
-			else if(AC_WLAN[WlanID] == NULL)
-				{
-					ret = WLAN_ID_NOT_EXIST;
-				}
-			else
-				{
-					ret = WID_DELETE_WLAN_APPLY_RADIO(ID,WlanID);
-				}
+			ret = RADIO_ID_NOT_EXIST;
 		}
+		else if(AC_WLAN[WlanID] == NULL)
+		{
+			ret = WLAN_ID_NOT_EXIST;
+		}
+		else
+		{
+			ret = WID_DELETE_WLAN_APPLY_RADIO(ID,WlanID);
+
+			if(ret == WID_DBUS_SUCCESS)
+			{
+				 WID_ADD_WLAN_CPE_CHANNEL_APPLY_RADIO_CLEAN_VLANID(ID,WlanID,0);   
+			}
+		}
+	}
 	else if(type == 1)
 		{
 			printf("******** type == 1 *****\n");
@@ -36541,6 +36663,10 @@ DBusMessage * wid_dbus_interface_radio_delete_wlan(DBusConnection *conn, DBusMes
 	else
 	{
 		ret = WID_DELETE_WLAN_APPLY_RADIO(RadioID,WlanID);
+		if(ret == WID_DBUS_SUCCESS)
+		{
+			 WID_ADD_WLAN_CPE_CHANNEL_APPLY_RADIO_CLEAN_VLANID(RadioID,WlanID,0);   
+		}
 	}
 	
 	reply = dbus_message_new_method_return(msg);
@@ -76367,7 +76493,8 @@ int show_running_config_wtp(WID_WTP **WTP,int i,char *cursor,char **showStr2,cha
 											totalLen += sprintf(cursor," radio apply wlan %d base hotspot %d\n",radioWlanid->wlanid,WTP[i]->WTP_Radio[j]->BSS[l_bssid]->hotspot_id);
 											cursor = showStr + totalLen;
 										}
-								else if((WTP[i]->WTP_Radio[j]->BSS[l_bssid]->vlanid == 0) && ((WTP[i]->WTP_Radio[j]->BSS[l_bssid]->nas_port_id[0] == 0)) && (radioWlanid->ESSID))
+								else if((WTP[i]->WTP_Radio[j]->BSS[l_bssid]->vlanid == 0) && ((WTP[i]->WTP_Radio[j]->BSS[l_bssid]->nas_port_id[0] == 0)) && (radioWlanid->ESSID)\
+									&& (strcmp(AC_WLAN[radioWlanid->wlanid]->ESSID,radioWlanid->ESSID) != 0))
 								{
 									if(vrrid != 0){
 										totalLen += sprintf(cursor," ");
@@ -76446,6 +76573,31 @@ int show_running_config_wtp(WID_WTP **WTP,int i,char *cursor,char **showStr2,cha
 								}
 							}
 							radioWlanid = radioWlanid->next;
+						}
+
+						int bind_wlan = 0;
+						struct vlan_id * tmp = NULL;
+						for(bind_wlan=0;bind_wlan<8;bind_wlan++)
+						{
+							if(WTP[i]->WTP_Radio[j]->cpe_intf[bind_wlan].wlanid != 0)
+							{
+
+								tmp = WTP[i]->WTP_Radio[j]->cpe_intf[bind_wlan].vlanid;
+								while(tmp)
+								{
+									if(tmp->vlanId != 0)
+									{
+										if(vrrid != 0)
+										{
+												totalLen += sprintf(cursor," ");
+												cursor = showStr + totalLen;
+										}
+										totalLen += sprintf(cursor," radio cpe channel apply wlan %d base vlan %d\n",WTP[i]->WTP_Radio[j]->cpe_intf[bind_wlan].wlanid,tmp->vlanId);
+										cursor = showStr + totalLen;
+									}
+									tmp = tmp->next;
+								}
+							}
 						}
 						if(WTP[i]->WTP_Radio[j]->StartService.times != -1){
 							if(WTP[i]->WTP_Radio[j]->StartService.is_once == 0){
@@ -79187,6 +79339,14 @@ static DBusHandlerResult wid_dbus_message_handler (DBusConnection *connection, D
 		else if (dbus_message_is_method_call(message,WID_DBUS_RADIO_INTERFACE,WID_DBUS_RADIO_METHOD_RADIO_APPLY_WLANID_BASE_VLANID)) 
 		{
 			reply = wid_dbus_interface_radio_apply_wlanid_base_vlanid(connection,message,user_data);
+		}
+		else if (dbus_message_is_method_call(message,WID_DBUS_RADIO_INTERFACE,WID_DBUS_RADIO_METHOD_RADIO_CPE_CHANNEL_APPLY_WLANID_BASE_VLANID)) 
+		{
+			reply = wid_dbus_interface_radio_cpe_channel_apply_wlanid_base_vlanid(connection,message,user_data);
+		}
+		else if (dbus_message_is_method_call(message,WID_DBUS_RADIO_INTERFACE,WID_DBUS_RADIO_METHOD_RADIO_CPE_CHANNEL_APPLY_WLANID_CLEAN_VLANID)) 
+		{
+			reply = wid_dbus_interface_radio_cpe_channel_apply_wlanid_clean_vlanid(connection,message,user_data);
 		}
 		//mahz add 2011.5.30
 		else if (dbus_message_is_method_call(message,WID_DBUS_RADIO_INTERFACE,WID_DBUS_RADIO_METHOD_RADIO_APPLY_WLANID_BASE_NAS_PORT_ID)) 

@@ -567,6 +567,9 @@ out arg list:  // in the order as they are appended in the dbus message.
 
 #define WID_DBUS_RADIO_METHOD_RADIO_APPLY_WLANID_BASE_VLANID	"radio_apply_wlanid_base_vlanid"
 #define WID_DBUS_RADIO_METHOD_RADIO_APPLY_WLANID_CLEAN_VLANID	"radio_apply_wlanid_clean_vlanid"
+#define WID_DBUS_RADIO_METHOD_RADIO_CPE_CHANNEL_APPLY_WLANID_BASE_VLANID	"radio_cpe_channel_apply_wlanid_base_vlanid"
+#define WID_DBUS_RADIO_METHOD_RADIO_CPE_CHANNEL_APPLY_WLANID_CLEAN_VLANID	"radio_cpe_channel_apply_wlanid_clean_vlanid"
+
 #define WID_DBUS_RADIO_METHOD_RADIO_CHECK_RADIO_MEMBER  "check_radio_member"
 #define WID_DBUS_RADIO_METHOD_SET_RADIO_RX_DATA_DEAD_TIME	"radio_receive_data_dead_time"
 #define WID_DBUS_RADIO_METHOD_SET_RADIO_RX_DATA_DEAD_TIME_SHOW	"radio_receive_data_dead_time_show"

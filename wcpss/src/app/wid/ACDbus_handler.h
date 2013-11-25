@@ -253,6 +253,8 @@ int wid_set_ap_igmp_snoop_disable(unsigned int wtpid);
 int wid_set_ap_dos_def_enable(unsigned int wtpid);
 int wid_set_ap_dos_def_disable(unsigned int wtpid);
 int WID_ADD_WLAN_APPLY_RADIO_BASE_VLANID(unsigned int RadioID,unsigned char WlanID,unsigned int vlan_id);
+int WID_ADD_WLAN_CPE_CHANNEL_APPLY_RADIO_BASE_VLANID(unsigned int RadioID,unsigned char WlanID,unsigned int vlanid);
+
 int WID_ADD_WLAN_APPLY_RADIO_BASE_NAS_PORT_ID(unsigned int RadioID,unsigned char WlanID,char* nas_port_id);	//mahz add 2011.5.30
 //wlan l3 interface turn to br area
 int ADD_BSS_L3_Interface_BR(unsigned int BSSIndex);
@@ -385,6 +387,8 @@ CWBool find_in_wtp_list(int id);
 void destroy_wtp_list();
 int wid_remove_wlan_interface_nasid(unsigned char WlanID,char * ifname);
 int WID_ADD_WLAN_APPLY_RADIO_CLEAN_VLANID(unsigned int RadioID,unsigned char WlanID);
+int WID_ADD_WLAN_CPE_CHANNEL_APPLY_RADIO_CLEAN_VLANID(unsigned int RadioID,unsigned char WlanID,unsigned int vlanid);
+
 CWBool CWSaveWTPExtensionInfo2(wid_wifi_info ap_wifi_info, unsigned int WTPIndex);
 void save_sample_throughput_info(int WTPIndex, wid_sample_rate_info sample_throughput);
 void save_extension_info(int WTPIndex, wid_wifi_info ap_wifi_info);
@@ -456,6 +460,8 @@ int wid_radio_set_inter_vap_forwarding_able(unsigned int wtpid,unsigned int l_ra
 int wid_radio_set_keep_alive_period_value(unsigned int wtpid,unsigned int l_radioid,unsigned int idle_period);
 int wid_radio_set_congestion_avoid_state(unsigned int wtpid,unsigned int l_radioid,unsigned int congestion_av_state);
 int wid_radio_set_chainmask(unsigned int RadioID, unsigned char type); // zhangshu add for set chainmask
+int wid_radio_set_cpe_channel(unsigned int WTPIndex,unsigned char local_radio_id,unsigned int bind_wlan);
+
 int wid_set_radio_netgear_supper_g_technology_state(unsigned int wtpid,	unsigned int l_radioid,unsigned short supper_g_type,unsigned int supper_g_state);
 CWBool check_radio_bind_wlan(unsigned int wtpid,unsigned char radio_l_id,unsigned char wlanId);
 int br_read_fdb(const char *bridge, struct fdb_entry *fdbs,unsigned long offset, int num);

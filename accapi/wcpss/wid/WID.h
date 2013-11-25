@@ -921,6 +921,17 @@ struct wlan_service_control{
 	int times;
 	int is_once;
 };
+struct vlan_id{
+	unsigned short vlanId;
+	struct vlan_id *next;
+};
+
+struct cpe_apply_wlan_vlan{
+	unsigned char wlanid;
+	unsigned int vlan_count;
+	struct vlan_id *vlanid;
+};
+
 typedef struct wlan_service_control WID_WSC;
 
 
@@ -1076,6 +1087,7 @@ struct radio{
 	unsigned int radio_channel_change_counter;
 	unsigned int radio_channel_width;
 	int radio_noise;
+	struct cpe_apply_wlan_vlan cpe_intf[8];
 };
 typedef struct radio WID_WTP_RADIO;
 struct wtp_extend {

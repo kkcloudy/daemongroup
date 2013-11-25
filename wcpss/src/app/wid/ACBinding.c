@@ -1091,6 +1091,15 @@ CWBool CWBindingAssembleConfigurationUpdateRequest2(CWProtocolMessage **msgElems
 				}
 			}	
 			break;
+		case Radio_set_cpe_channel:
+			if (!(CWAssembleMsgElemAPSetCPEChannelIntf(&(*msgElems[++k]),elem->mqinfo.u.RadioInfo.op,elem->mqinfo.u.RadioInfo.vlan_id,elem->mqinfo.u.RadioInfo.Radio_L_ID,elem->mqinfo.u.RadioInfo.wlanid))) 
+			{													
+				int i;
+				for(i = 0; i <= k; i++) { CW_FREE_PROTOCOL_MESSAGE(*msgElems[i]);}
+				CW_FREE_OBJECT_WID(*msgElems);
+				return CW_FALSE; 
+			}
+			break;
 		default:
 			return CW_TRUE;
 	}

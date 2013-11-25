@@ -472,6 +472,7 @@ void WID_CONFIG_SAVE(unsigned int WTPIndex){
 	unsigned char eth_index = 0;
 	msgq msg;
 	struct msgqlist *elem;	
+	int bind_wlan = 0;
 
 	for(i=0; i<AC_WTP[WTPIndex]->RadioCount; i++){		
 
@@ -593,6 +594,14 @@ void WID_CONFIG_SAVE(unsigned int WTPIndex){
 			memcpy((char*)&(elem->mqinfo),(char*)&(msg.mqinfo),sizeof(msg.mqinfo));
 			WID_INSERT_CONTROL_LIST(WTPIndex, elem);
 			elem = NULL;			
+		}
+
+		for(bind_wlan = 0;bind_wlan < 8; bind_wlan++)
+		{
+			if(AC_WTP[WTPIndex]->WTP_Radio[i]->cpe_intf[bind_wlan].vlan_count != 0)
+			{
+				wid_radio_set_cpe_channel(WTPIndex,i,bind_wlan);
+			}
 		}
 		/*fengwenchao add end*/
 	}

@@ -120,7 +120,7 @@ unsigned char gmacfilterflag = 0;
 unsigned char gessidfilterflag = 0;
 extern unsigned int sample_infor_interval;
 extern unsigned char gWIDLOGHN;//qiuchen
-
+int wid_dbug_trap_ssid_key_conflict(unsigned int wtpid,unsigned char radio_l_id, unsigned char wlan1, unsigned char wlan2);
 
 #define CFDISK_MIN_MEM (1000)
 #define SYSTEM_MIN_MEM (300000)
@@ -2875,6 +2875,7 @@ int WID_ENABLE_WLAN(unsigned char WlanID){
 	unsigned char pcy = 0;
 	msgq msg2;
 	struct msgqlist *elem2;
+	unsigned int bind_wlan = 0;
 	
 	msgq msg4 ;
 //	struct msgqlist *elem4 = NULL; 
@@ -3418,6 +3419,14 @@ int WID_ENABLE_WLAN(unsigned char WlanID){
 				}
 	
 			//wid_syslog_debug_debug("AC_WTP[%d]->CMD->wlanid[%d]:%d	wlanCMD:%d\n",m,WlanID, AC_WTP[m]->CMD->wlanid[WlanID],AC_WTP[m]->CMD->wlanCMD);
+			}
+
+			for(bind_wlan = 0;bind_wlan < 8; bind_wlan++)
+			{
+				if(AC_WTP[m]->WTP_Radio[n]->cpe_intf[bind_wlan].vlan_count != 0)
+				{
+					wid_radio_set_cpe_channel(m,n,bind_wlan);
+				}
 			}
 		}
 	}
@@ -9918,7 +9927,9 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_VLANID(unsigned int RadioID,unsigned char Wlan
 	struct wlanid *wlan_id;
 	struct wlanid *wlan_id_next;
 	wlan_id = (struct wlanid*)WID_MALLOC(sizeof(struct wlanid));
-	
+	wlan_id->ESSID = (char *)WID_MALLOC(strlen((char *)AC_WLAN[WlanID]->ESSID)+1);
+	memset(wlan_id->ESSID,0,strlen((char *)AC_WLAN[WlanID]->ESSID)+1);
+	memcpy(wlan_id->ESSID,AC_WLAN[WlanID]->ESSID,strlen((char *)AC_WLAN[WlanID]->ESSID));
 	wlan_id->wlanid= WlanID;
 	wlan_id->next = NULL;
 	wid_syslog_debug_debug(WID_DEFAULT,"*** wtp binding wlan id  is %d*\n", wlan_id->wlanid);
@@ -9927,7 +9938,7 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_VLANID(unsigned int RadioID,unsigned char Wlan
 	{
 		
 		AC_RADIO[RadioID]->Wlan_Id = wlan_id ;
-		
+		memcpy(AC_RADIO[RadioID]->Wlan_Id->ESSID,wlan_id->ESSID,strlen((char *)wlan_id->ESSID));
 		AC_RADIO[RadioID]->isBinddingWlan = 1;
 		AC_RADIO[RadioID]->BindingWlanCount++;
 		wid_syslog_debug_debug(WID_DEFAULT,"*** wtp id:%d binding first wlan id:%d	\n",WtpID,WlanID);
@@ -9954,6 +9965,7 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_VLANID(unsigned int RadioID,unsigned char Wlan
 						}
 					}
 				}
+				WID_FREE(wlan_id->ESSID);
 				WID_FREE(wlan_id);
 				return 0;
 			}
@@ -9986,6 +9998,8 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_VLANID(unsigned int RadioID,unsigned char Wlan
                 /*zhaoruijia,初始化BSS_pkt_info数据防止随机数产生，end*/
 				AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->BSSID = (unsigned char*)WID_MALLOC(6);
 				memset(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->BSSID,0,6);
+				memset(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->SSID,0,SSID_LENGTH+1);
+				memcpy(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->SSID,wlan_id->ESSID,strlen((char *)wlan_id->ESSID));
 				AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->bss_max_allowed_sta_num= AC_WLAN[WlanID]->bss_allow_max_sta_num;//fengwenchap modify 20120323
 				AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->WlanID = WlanID;
 				AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->Radio_G_ID = RadioID;
@@ -10264,6 +10278,171 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_VLANID(unsigned int RadioID,unsigned char Wlan
 	return 0;
 
 }
+int WID_ADD_WLAN_CPE_CHANNEL_APPLY_RADIO_BASE_VLANID(unsigned int RadioID,unsigned char WlanID,unsigned int vlanid){
+
+	int WtpID = RadioID/L_RADIO_NUM;
+	int localradio_id = RadioID%L_RADIO_NUM;
+	int i = 0,is_founded = 0,j = 0,is_added = 0,wlan_founded = 0,count = 0,is_bonded = 0;
+	struct vlan_id *head = NULL, *tmp = NULL;
+		
+	if(AC_RADIO[RadioID]->BindingWlanCount >= L_BSS_NUM)
+	{
+		return WTP_OVER_MAX_BSS_NUM;
+	}
+
+
+	if(AC_WLAN[WlanID] == NULL)
+	{
+		wid_syslog_debug_debug(WID_DEFAULT,"*** you binding wlan does not exist **\n");
+		return WLAN_ID_NOT_EXIST;
+	}
+	
+	if (AC_WLAN[WlanID]->want_to_delete == 1)		/* Huangleilei add for ASXXZFI-1622 */
+	{
+		wid_syslog_err("operator want to delete wlan %d", WlanID);
+		return -1;
+	}
+
+	struct wlanid *wlan_id;
+	
+	if(AC_RADIO[RadioID]->Wlan_Id == NULL)
+	{
+		return INTERFACE_NOT_BE_BINDED;
+	}
+	else
+	{
+		wlan_id = AC_RADIO[RadioID]->Wlan_Id;
+		while(wlan_id != NULL)
+		{	
+			if(wlan_id->wlanid == WlanID)
+			{
+				is_bonded = 1;
+				break;
+			}
+			wlan_id = wlan_id->next;
+		}
+		if(is_bonded == 0)
+		{
+			return INTERFACE_NOT_BE_BINDED;
+		}
+	}
+
+	for(i = 0;i<8;i++)
+	{
+		if(AC_WTP[WtpID]->WTP_Radio[localradio_id]->cpe_intf[i].wlanid == WlanID)
+		{
+			head = AC_WTP[WtpID]->WTP_Radio[localradio_id]->cpe_intf[i].vlanid;
+			count = AC_WTP[WtpID]->WTP_Radio[localradio_id]->cpe_intf[i].vlan_count;
+			for(j = 0;j<count;j++)
+			{
+				if(head->vlanId == vlanid)
+				{
+					is_founded = 1;
+					return RADIO_ID_BE_USED;/*need add*/
+				}
+				head=head->next;
+			}
+			wlan_founded = 1;
+			break;
+		}
+	}
+
+
+	
+	if(wlan_founded == 1)
+	{
+		AC_WTP[WtpID]->WTP_Radio[localradio_id]->cpe_intf[i].wlanid = WlanID;
+		head = AC_WTP[WtpID]->WTP_Radio[localradio_id]->cpe_intf[i].vlanid;
+		tmp = (struct vlan_id*)WID_MALLOC(sizeof(struct vlan_id));
+		memset(tmp,0,sizeof(struct vlan_id));
+		tmp->vlanId = vlanid;
+		tmp->next = NULL;
+		while(head && head->next)
+		{
+			head=head->next;
+		}
+
+		head->next = tmp;
+		AC_WTP[WtpID]->WTP_Radio[localradio_id]->cpe_intf[i].vlan_count++;
+	}
+	else
+	{
+		for(i=0;i<8;i++)
+		{
+			if((AC_WTP[WtpID]->WTP_Radio[localradio_id]->cpe_intf[i].wlanid == 0))
+			{
+				head = (struct vlan_id*)WID_MALLOC(sizeof(struct vlan_id));
+				memset(head,0,sizeof(struct vlan_id));
+				head->next = NULL;
+				head->vlanId = vlanid;
+				AC_WTP[WtpID]->WTP_Radio[localradio_id]->cpe_intf[i].wlanid = WlanID;
+				AC_WTP[WtpID]->WTP_Radio[localradio_id]->cpe_intf[i].vlanid = head;
+				AC_WTP[WtpID]->WTP_Radio[localradio_id]->cpe_intf[i].vlan_count++;
+				is_added = 1;
+				break;
+			}
+
+		}
+		if(is_added == 0)
+			return VALUE_OUT_OF_RANGE;
+	}
+
+	if(AC_WLAN[WlanID]->Status == 1)
+	{
+		printf("wlan is disable,so just binging this wlan,not to send add wlan msg\n");
+		return 0;
+	}
+	msgq msg;
+//	struct msgqlist *elem;
+	//add to control list
+	if((AC_WTP[WtpID] != NULL) && (AC_WTP[WtpID]->WTPStat == 5))
+	{
+		#if 0
+		struct msgqlist *elem;
+		#endif
+		memset((char*)&msg, 0, sizeof(msg));
+		msg.mqid = WtpID%THREAD_NUM+1;
+		msg.mqinfo.WTPID = WtpID;
+		msg.mqinfo.type = CONTROL_TYPE;
+		msg.mqinfo.subtype = Radio_S_TYPE;
+		msg.mqinfo.u.RadioInfo.op = 1;//enable
+		msg.mqinfo.u.RadioInfo.Radio_Op = Radio_set_cpe_channel;
+		msg.mqinfo.u.RadioInfo.wlanid = WlanID;
+		msg.mqinfo.u.RadioInfo.vlan_id = vlanid;
+		msg.mqinfo.u.RadioInfo.Radio_L_ID = localradio_id;
+		msg.mqinfo.u.RadioInfo.Radio_G_ID = RadioID;
+		
+		
+		
+		if(AC_WTP[WtpID]->WTPStat == 5)
+		{
+			if (msgsnd(ACDBUS_MSGQ, (msgq *)&msg, sizeof(msg.mqinfo), 0) == -1)
+			{
+				wid_syslog_crit("%s msgsend %s",__func__,strerror(errno));
+				perror("msgsnd");
+			}
+		}
+		/*
+		else
+		{
+			elem = (struct msgqlist*)WID_MALLOC(sizeof(struct msgqlist));
+			if(elem == NULL)
+			{
+				wid_syslog_crit("%s malloc %s",__func__,strerror(errno));
+				perror("malloc");
+				return 0;
+			}
+			memset((char*)&(elem->mqinfo), 0, sizeof(msgqdetail));
+			elem->next = NULL;
+			memcpy((char*)&(elem->mqinfo),(char*)&(msg.mqinfo),sizeof(msg.mqinfo));
+			WID_INSERT_CONTROL_LIST(WtpID, elem);
+		}
+		*/
+	}
+	return 0;
+
+}
+
 
 //mahz add 2011.5.30
 int WID_ADD_WLAN_APPLY_RADIO_BASE_NAS_PORT_ID(unsigned int RadioID,unsigned char WlanID,char* nas_port_id){
@@ -11184,6 +11363,215 @@ int WID_ADD_WLAN_APPLY_RADIO_CLEAN_VLANID(unsigned int RadioID,unsigned char Wla
 	}
 	return 0;
 }
+
+int WID_ADD_WLAN_CPE_CHANNEL_APPLY_RADIO_CLEAN_VLANID(unsigned int RadioID,unsigned char WlanID,unsigned int vlanid){
+
+	int WtpID = RadioID/L_RADIO_NUM;
+	int localradio_id = RadioID%L_RADIO_NUM;
+	int i = 0,j=0,is_founded = 0,count = 0;
+	struct vlan_id *head = NULL,*tmp = NULL;
+	struct msgqlist *elem;
+	msgq msg;
+	
+	if(AC_WTP[WtpID] == NULL)
+	{
+		wid_syslog_debug_debug(WID_DEFAULT,"*** you binding wlan does not exist **\n");
+		return WTP_ID_NOT_EXIST;
+	}
+	if(AC_WLAN[WlanID] == NULL)
+	{
+		wid_syslog_debug_debug(WID_DEFAULT,"*** you binding wlan does not exist **\n");
+		return WLAN_ID_NOT_EXIST;
+	}
+
+
+	for(i = 0;i<8;i++)
+	{
+		if(AC_WTP[WtpID]->WTP_Radio[localradio_id]->cpe_intf[i].wlanid == WlanID)
+		{
+			if(vlanid == 0)
+			{
+				count = AC_WTP[WtpID]->WTP_Radio[localradio_id]->cpe_intf[i].vlan_count;
+				for(j=0;j<count;j++)
+				{
+					head = AC_WTP[WtpID]->WTP_Radio[localradio_id]->cpe_intf[i].vlanid;
+					if(head && (head->vlanId != 0))
+					{
+						tmp = head;
+						memset((char*)&msg, 0, sizeof(msg));
+						msg.mqid = WtpID%THREAD_NUM+1;
+						msg.mqinfo.WTPID = WtpID;
+						msg.mqinfo.type = CONTROL_TYPE;
+						msg.mqinfo.subtype = Radio_S_TYPE;
+						msg.mqinfo.u.RadioInfo.op = 0;//disable
+						msg.mqinfo.u.RadioInfo.Radio_Op = Radio_set_cpe_channel;
+						msg.mqinfo.u.RadioInfo.wlanid = WlanID;
+						msg.mqinfo.u.RadioInfo.vlan_id = AC_WTP[WtpID]->WTP_Radio[localradio_id]->cpe_intf[i].vlanid->vlanId;
+						msg.mqinfo.u.RadioInfo.Radio_L_ID = localradio_id;
+						msg.mqinfo.u.RadioInfo.Radio_G_ID = RadioID;
+						
+						
+						if(AC_WTP[WtpID]->WTPStat == 5)
+						{
+							if (msgsnd(ACDBUS_MSGQ, (msgq *)&msg, sizeof(msg.mqinfo), 0) == -1)
+							{
+								wid_syslog_crit("%s msgsend %s",__func__,strerror(errno));
+								perror("msgsnd");
+							}
+						}
+						else
+						{
+							elem = (struct msgqlist*)WID_MALLOC(sizeof(struct msgqlist));
+							if(elem == NULL)
+							{
+								wid_syslog_crit("%s malloc %s",__func__,strerror(errno));
+								perror("malloc");
+								return 0;
+							}
+							memset((char*)&(elem->mqinfo), 0, sizeof(msgqdetail));
+							elem->next = NULL;
+							memcpy((char*)&(elem->mqinfo),(char*)&(msg.mqinfo),sizeof(msg.mqinfo));
+							WID_INSERT_CONTROL_LIST(WtpID, elem);
+						}
+						
+						AC_WTP[WtpID]->WTP_Radio[localradio_id]->cpe_intf[i].vlanid=tmp->next;
+						if(NULL == tmp->next)
+						{
+							AC_WTP[WtpID]->WTP_Radio[localradio_id]->cpe_intf[i].vlanid = NULL;
+							AC_WTP[WtpID]->WTP_Radio[localradio_id]->cpe_intf[i].wlanid = 0;
+						}
+						AC_WTP[WtpID]->WTP_Radio[localradio_id]->cpe_intf[i].vlan_count--;
+						WID_FREE(head);
+						head = NULL;
+					}
+				}
+				return 0;
+			}
+			else
+			{
+				head = AC_WTP[WtpID]->WTP_Radio[localradio_id]->cpe_intf[i].vlanid;
+				tmp = head;
+				while(head && (head->vlanId != vlanid))
+				{
+					tmp = head;
+					head = head->next;
+				}
+
+				if(!head)
+				{
+					return BSS_NOT_EXIST;
+				}
+				else
+				{
+					if(tmp == head)
+					{
+						AC_WTP[WtpID]->WTP_Radio[localradio_id]->cpe_intf[i].vlanid=tmp->next;
+						if(NULL == tmp->next)
+						{
+							AC_WTP[WtpID]->WTP_Radio[localradio_id]->cpe_intf[i].vlanid = NULL;
+							AC_WTP[WtpID]->WTP_Radio[localradio_id]->cpe_intf[i].wlanid = 0;
+						}
+					}
+					else
+					{
+						tmp->next = head->next;
+					}
+					is_founded = 1;
+					AC_WTP[WtpID]->WTP_Radio[localradio_id]->cpe_intf[i].vlan_count--;
+					WID_FREE(head);
+					head = NULL;
+					break;
+				}
+			}
+		}
+	}
+	#if 0
+	for(i = 0;i<8;i++)
+	{
+		if(AC_WTP[WtpID]->WTP_Radio[localradio_id]->cpe_intf[i].wlanid == WlanID)
+		{
+			head = AC_WTP[WtpID]->WTP_Radio[localradio_id]->cpe_intf[i].vlanid;
+			tmp = head;
+			while(head && (head->vlanId != vlanid))
+			{
+				tmp = head;
+				head = head->next;
+			}
+
+			if(!head)
+			{
+				return BSS_NOT_EXIST;
+			}
+			else
+			{
+				if(tmp == head)
+				{
+					AC_WTP[WtpID]->WTP_Radio[localradio_id]->cpe_intf[i].vlanid=tmp->next;
+					if(NULL == tmp->next)
+					{
+						AC_WTP[WtpID]->WTP_Radio[localradio_id]->cpe_intf[i].vlanid = NULL;
+						AC_WTP[WtpID]->WTP_Radio[localradio_id]->cpe_intf[i].wlanid = 0;
+					}
+				}
+				else
+				{
+					tmp->next = head->next;
+				}
+				is_founded = 1;
+				AC_WTP[WtpID]->WTP_Radio[localradio_id]->cpe_intf[i].vlan_count--;
+				WID_FREE(head);
+				head = NULL;
+				break;
+			}
+		}
+	}
+	#endif
+	if(is_founded == 0)
+		return BSS_NOT_EXIST;
+	if((AC_WTP[WtpID] != NULL) && (is_founded == 1))
+	{
+		memset((char*)&msg, 0, sizeof(msg));
+		msg.mqid = WtpID%THREAD_NUM+1;
+		msg.mqinfo.WTPID = WtpID;
+		msg.mqinfo.type = CONTROL_TYPE;
+		msg.mqinfo.subtype = Radio_S_TYPE;
+		msg.mqinfo.u.RadioInfo.op = 0;//disable
+		msg.mqinfo.u.RadioInfo.Radio_Op = Radio_set_cpe_channel;
+		msg.mqinfo.u.RadioInfo.wlanid = WlanID;
+		msg.mqinfo.u.RadioInfo.vlan_id = vlanid;
+		msg.mqinfo.u.RadioInfo.Radio_L_ID = localradio_id;
+		msg.mqinfo.u.RadioInfo.Radio_G_ID = RadioID;
+		
+		
+		if(AC_WTP[WtpID]->WTPStat == 5)
+		{
+			if (msgsnd(ACDBUS_MSGQ, (msgq *)&msg, sizeof(msg.mqinfo), 0) == -1)
+			{
+				wid_syslog_crit("%s msgsend %s",__func__,strerror(errno));
+				perror("msgsnd");
+			}
+		}
+		/*
+		else
+		{
+			elem = (struct msgqlist*)WID_MALLOC(sizeof(struct msgqlist));
+			if(elem == NULL)
+			{
+				wid_syslog_crit("%s malloc %s",__func__,strerror(errno));
+				perror("malloc");
+				return 0;
+			}
+			memset((char*)&(elem->mqinfo), 0, sizeof(msgqdetail));
+			elem->next = NULL;
+			memcpy((char*)&(elem->mqinfo),(char*)&(msg.mqinfo),sizeof(msg.mqinfo));
+			WID_INSERT_CONTROL_LIST(WtpID, elem);
+		}
+		*/
+	}
+	
+	return 0;
+}
+
 
 int WID_BINDING_IF_APPLY_WTP(unsigned int WtpID, char * ifname)
 {
@@ -28946,6 +29334,94 @@ int wid_radio_set_chainmask(unsigned int RadioID, unsigned char type)
 	return 0;
 
 }
+int wid_radio_set_cpe_channel(unsigned int WTPIndex,unsigned char local_radio_id,unsigned int bind_wlan)
+{
+	
+	msgq msg;
+	struct msgqlist *elem;
+	struct vlan_id *tmp;
+
+
+	wid_syslog_debug_debug(WID_DEFAULT,"@@@@@@ cpe channel set\n");
+	if(AC_WTP[WTPIndex]->WTPStat == 5)
+	{
+		CWThreadMutexLock(&(gWTPs[WTPIndex].WTPThreadMutex));
+		if(gWTPs[WTPIndex].isNotFree && (gWTPs[WTPIndex].currentState == CW_ENTER_RUN))
+		{
+			if(AC_WTP[WTPIndex]->WTP_Radio[local_radio_id]->cpe_intf[bind_wlan].wlanid != 0)
+			{
+				tmp = AC_WTP[WTPIndex]->WTP_Radio[local_radio_id]->cpe_intf[bind_wlan].vlanid;
+				while(tmp)
+				{
+					if(tmp->vlanId != 0)
+					{
+						memset((char*)&msg, 0, sizeof(msg));
+						msg.mqid = WTPIndex%THREAD_NUM+1;
+						msg.mqinfo.WTPID = WTPIndex;
+						msg.mqinfo.type = CONTROL_TYPE;
+						msg.mqinfo.subtype = Radio_S_TYPE;
+						msg.mqinfo.u.RadioInfo.op = 1;//enable
+						msg.mqinfo.u.RadioInfo.Radio_Op = Radio_set_cpe_channel;
+						msg.mqinfo.u.RadioInfo.wlanid = AC_WTP[WTPIndex]->WTP_Radio[local_radio_id]->cpe_intf[bind_wlan].wlanid;
+						msg.mqinfo.u.RadioInfo.vlan_id = tmp->vlanId;
+						msg.mqinfo.u.RadioInfo.Radio_L_ID = local_radio_id;
+						msg.mqinfo.u.RadioInfo.Radio_G_ID = AC_WTP[WTPIndex]->WTP_Radio[local_radio_id]->Radio_G_ID;
+						if (msgsnd(ACDBUS_MSGQ, (msgq *)&msg, sizeof(msg.mqinfo), 0) == -1)
+						{
+							wid_syslog_crit("%s msgsend %s",__func__,strerror(errno));
+							perror("msgsnd");
+						}		
+		
+					}
+					tmp=tmp->next;
+				}
+			}
+		}
+		CWThreadMutexUnlock(&(gWTPs[WTPIndex].WTPThreadMutex));
+	}//delete unuseful cod
+	else if((AC_WTP[WTPIndex] != NULL) && AC_WTP[WTPIndex]->WTPStat != CW_QUIT)
+	{
+		if(AC_WTP[WTPIndex]->WTP_Radio[local_radio_id]->cpe_intf[bind_wlan].wlanid != 0)
+		{
+			tmp = AC_WTP[WTPIndex]->WTP_Radio[local_radio_id]->cpe_intf[bind_wlan].vlanid;
+			while(tmp)
+			{
+				if(tmp->vlanId != 0)
+				{
+					memset((char*)&msg, 0, sizeof(msg));
+					msg.mqid = WTPIndex%THREAD_NUM+1;
+					msg.mqinfo.WTPID = WTPIndex;
+					msg.mqinfo.type = CONTROL_TYPE;
+					msg.mqinfo.subtype = Radio_S_TYPE;
+					msg.mqinfo.u.RadioInfo.op = 1;//enable
+					msg.mqinfo.u.RadioInfo.Radio_Op = Radio_set_cpe_channel;
+					msg.mqinfo.u.RadioInfo.wlanid = AC_WTP[WTPIndex]->WTP_Radio[local_radio_id]->cpe_intf[bind_wlan].wlanid;
+					msg.mqinfo.u.RadioInfo.vlan_id = tmp->vlanId;
+					msg.mqinfo.u.RadioInfo.Radio_L_ID = local_radio_id;
+					msg.mqinfo.u.RadioInfo.Radio_G_ID = AC_WTP[WTPIndex]->WTP_Radio[local_radio_id]->Radio_G_ID;
+					elem = (struct msgqlist*)WID_MALLOC(sizeof(struct msgqlist));
+					if(elem == NULL)
+					{
+						wid_syslog_crit("%s malloc %s",__func__,strerror(errno));
+						perror("malloc");
+						return 0;
+					}
+					memset((char*)&(elem->mqinfo), 0, sizeof(msgqdetail));
+					elem->next = NULL;
+					memcpy((char*)&(elem->mqinfo),(char*)&(msg.mqinfo),sizeof(msg.mqinfo));
+					WID_INSERT_CONTROL_LIST(WTPIndex, elem);
+					elem = NULL;
+	
+				}
+				tmp=tmp->next;
+			}
+		}
+	}
+
+	return 0;
+
+}
+
 /* zhangshu add for set chainmask END */
 
 int wid_radio_set_mcs(unsigned int RadioID)

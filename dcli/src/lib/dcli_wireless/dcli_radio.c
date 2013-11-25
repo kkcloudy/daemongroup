@@ -9930,6 +9930,156 @@ DEFUN(radio_apply_wlan_base_vlan_cmd_func,
 }
 #endif
 
+/*zhangcl added for REQUIREMENT-671*/
+DEFUN(set_radio_cpe_channel_apply_wlan_base_vlan_cmd_func,
+		set_radio_cpe_channel_apply_wlan_base_vlan_cmd,
+		"radio cpe channel apply wlan ID base vlan ID",
+		"radio apply wlan id\n"
+		"cpe channel\n"
+		"cpe channel\n"
+		"radio binding information\n" 
+		"assign wlan id \n"
+		"radio apply wlan base vlan\n"
+		"radio apply wlan base vlan\n"
+		"radio apply wlan base vlan ID <1-4094>\n"
+		)
+{
+	int ret;
+	unsigned int radio_id;
+	unsigned int vlan_id;
+	unsigned char wlan_id;
+	DBusMessage *query, *reply;	
+	DBusMessageIter	 iter;
+	DBusError err;
+	
+	//radio_id = (unsigned int)vty->index;	
+
+	
+	ret = parse_char_ID((char*)argv[0], &wlan_id);
+	if (ret != WID_DBUS_SUCCESS)
+	{	
+       if(ret == WID_ILLEGAL_INPUT){
+            	vty_out(vty,"<error> illegal input:Input exceeds the maximum value of the parameter type \n");
+       }
+	   else{
+			   vty_out(vty,"<error> input parameter %s error\n",argv[0]);
+	   }
+		
+		return CMD_SUCCESS;
+	}
+	if(wlan_id >= WLAN_NUM || wlan_id == 0){
+		vty_out(vty,"<error> wlan id should be 1 to %d\n",WLAN_NUM-1);
+		return CMD_SUCCESS;
+	}
+	ret = parse_int_ID((char*)argv[1], &vlan_id);
+	if(ret != WID_DBUS_SUCCESS){
+		vty_out(vty,"<error> unknown id format\n");
+		return CMD_SUCCESS;
+	}	
+	if(vlan_id > VLANID_RANGE_MAX|| vlan_id == 0){
+		vty_out(vty,"<error> vlan id should be 1 to %d\n",VLANID_RANGE_MAX);
+		return CMD_SUCCESS;
+	}
+	
+	int index = 0;
+	int localid = 1;
+    int slot_id = HostSlotId;
+	char BUSNAME[PATH_LEN];
+	char OBJPATH[PATH_LEN];
+	char INTERFACE[PATH_LEN];
+	if(vty->node == RADIO_NODE){
+		index = 0;			
+		radio_id = (int)vty->index;
+	}else if(vty->node == HANSI_RADIO_NODE){
+		index = vty->index; 
+		localid = vty->local;
+        slot_id = vty->slotindex;
+		radio_id = (int)vty->index_sub;
+	}else if (vty->node == LOCAL_HANSI_RADIO_NODE){
+        index = vty->index;
+        localid = vty->local;
+        slot_id = vty->slotindex;
+		radio_id = (int)vty->index_sub;
+    }
+    DBusConnection *dcli_dbus_connection = NULL;
+    ReInitDbusConnection(&dcli_dbus_connection,slot_id,distributFag);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_BUSNAME,BUSNAME);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_RADIO_OBJPATH,OBJPATH);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_RADIO_INTERFACE,INTERFACE);
+	query = dbus_message_new_method_call(BUSNAME,OBJPATH,INTERFACE,WID_DBUS_RADIO_METHOD_RADIO_CPE_CHANNEL_APPLY_WLANID_BASE_VLANID);
+
+/*	query = dbus_message_new_method_call(WID_DBUS_BUSNAME,WID_DBUS_RADIO_OBJPATH,\
+						WID_DBUS_RADIO_INTERFACE,WID_DBUS_RADIO_METHOD_RADIO_APPLY_WLANID_BASE_VLANID);*/
+
+	dbus_error_init(&err);
+
+	dbus_message_append_args(query,					
+						DBUS_TYPE_UINT32,&radio_id,
+						DBUS_TYPE_BYTE,&wlan_id,	
+						DBUS_TYPE_UINT32,&vlan_id,
+						DBUS_TYPE_INVALID);
+
+	reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection,query,-1, &err);
+	dbus_message_unref(query);
+	if (NULL == reply) {
+		cli_syslog_info("<error> failed get reply.\n");
+		if (dbus_error_is_set(&err)) {
+			cli_syslog_info("%s raised: %s",err.name,err.message);
+			dbus_error_free_for_dcli(&err);
+		}
+		return CMD_SUCCESS;
+	}
+	dbus_message_iter_init(reply,&iter);
+	dbus_message_iter_get_basic(&iter,&ret);
+
+		if(ret == 0)
+			vty_out(vty,"radio %d-%d cpe channel binding wlan %d base vlanid %d successfully.\n",radio_id/L_RADIO_NUM,radio_id%L_RADIO_NUM,wlan_id,vlan_id);
+		else if (ret == INTERFACE_NOT_BE_BINDED)
+			vty_out(vty,"<error> radio should be binded to wlan first\n");
+		else if(ret == RADIO_ID_NOT_EXIST)
+			vty_out(vty,"<error> radio id does not exist\n");
+		else if(ret == WTP_ID_BE_USED)
+			vty_out(vty,"<error> wtp is in use, you should unused it first\n");
+		else if(ret == WLAN_ID_NOT_EXIST)
+			vty_out(vty,"<error> binding wlan does not exist \n");
+		else if(ret == Wlan_IF_NOT_BE_BINDED)
+			vty_out(vty,"<error> wlan does not bind interface\n");
+		else if(ret == WTP_IF_NOT_BE_BINDED)
+			vty_out(vty,"<error> wtp does not bind interface\n");
+		else if(ret == WTP_WLAN_BINDING_NOT_MATCH)
+			vty_out(vty,"<error> wlan and wtp bind interface did not match \n");
+		else if(ret == WTP_CLEAR_BINDING_WLAN_SUCCESS)
+			vty_out(vty,"clear wtp binding wlan list successfully\n");
+		else if(ret == WLAN_BE_ENABLE)
+			vty_out(vty,"<error> wlan is enable,you should disable it first\n");
+		else if(ret == WTP_OVER_MAX_BSS_NUM)
+			vty_out(vty,"<error> wtp over max bss count\n");	
+		else if(ret == BSS_BE_ENABLE)
+			vty_out(vty,"<error> bss is enable, you should disable it first\n");
+		else if(ret == WTP_WEP_NUM_OVER)
+			vty_out(vty,"<error> wtp over max wep wlan count 4 or wep index conflict\n");
+		else if(ret == SECURITYINDEX_IS_SAME)   //fengwenchao add 20110112
+			vty_out(vty,"<error> radio apply bingding securityindex is same with other\n");
+		else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+		{
+			vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+		}
+		else if(ret == VALUE_OUT_OF_RANGE)
+		{
+			vty_out(vty,"<error> radio binding more than 8 wlan\n");
+		}
+		else if (ret == RADIO_ID_BE_USED)
+		{
+			vty_out(vty,"<error > radio cpe channel interface already exists !\n");
+		}
+		else
+			vty_out(vty,"<error>  %d\n",ret);
+	dbus_message_unref(reply);
+
+	return CMD_SUCCESS;	
+
+}
+
 //mahz add 2011.5.30
 DEFUN(radio_apply_wlan_base_nas_port_id_cmd_func,
 		radio_apply_wlan_base_nas_port_id_cmd,
@@ -16476,6 +16626,264 @@ DEFUN(radio_apply_wlan_clean_vlan_cmd_func,
 
 }
 #endif
+
+DEFUN(set_radio_cpe_channel_apply_wlan_clean_vlan_id_cmd_func,
+		set_radio_cpe_channel_apply_wlan_clean_vlan_id_cmd,
+		"radio cpe channel apply wlan ID clean vlan ID",
+		CONFIG_STR
+		"cpe channel\n"
+		"cpe channel\n"
+		"radio binding information\n" 
+		"radio binding wlan information\n" 
+		"assign wlan id \n"
+		"radio apply wlan clean vlan\n"
+		"radio apply wlan clean vlan\n"
+		"vlan ID"
+		)
+{
+	int ret;
+	unsigned int radio_id;
+	unsigned char wlan_id;
+	unsigned int vlan_id;
+	DBusMessage *query, *reply;	
+	DBusMessageIter	 iter;
+	DBusError err;
+	
+	//radio_id = (unsigned int)vty->index;	
+
+	
+	ret = parse_char_ID((char*)argv[0], &wlan_id);
+	if(ret != WID_DBUS_SUCCESS){
+            if(ret == WID_ILLEGAL_INPUT){
+            	vty_out(vty,"<error> illegal input:Input exceeds the maximum value of the parameter type \n");
+            }
+			else{
+		vty_out(vty,"<error> unknown id format\n");
+			}
+		return CMD_SUCCESS;
+	}	
+	if(wlan_id >= WLAN_NUM || wlan_id == 0){
+		vty_out(vty,"<error> wlan id should be 1 to %d\n",WLAN_NUM-1);
+		return CMD_SUCCESS;
+	}
+
+	ret = parse_int_ID((char*)argv[1], &vlan_id);
+	if(ret != WID_DBUS_SUCCESS){
+		vty_out(vty,"<error> unknown id format\n");
+		return CMD_SUCCESS;
+	}	
+	if(vlan_id > VLANID_RANGE_MAX|| vlan_id == 0){
+		vty_out(vty,"<error> vlan id should be 1 to %d\n",VLANID_RANGE_MAX);
+		return CMD_SUCCESS;
+	}
+	
+	int index = 0;
+	int localid = 1;
+    int slot_id = HostSlotId;
+	char BUSNAME[PATH_LEN];
+	char OBJPATH[PATH_LEN];
+	char INTERFACE[PATH_LEN];
+	if(vty->node == RADIO_NODE){
+		index = 0;			
+		radio_id = (int)vty->index;
+	}else if(vty->node == HANSI_RADIO_NODE){
+		index = vty->index; 		
+		localid = vty->local;
+        slot_id = vty->slotindex;
+		radio_id = (int)vty->index_sub;
+	}else if (vty->node == LOCAL_HANSI_RADIO_NODE){
+        index = vty->index;
+        localid = vty->local;
+        slot_id = vty->slotindex;
+		radio_id = (int)vty->index_sub;
+    }
+    DBusConnection *dcli_dbus_connection = NULL;
+    ReInitDbusConnection(&dcli_dbus_connection,slot_id,distributFag);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_BUSNAME,BUSNAME);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_RADIO_OBJPATH,OBJPATH);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_RADIO_INTERFACE,INTERFACE);
+	query = dbus_message_new_method_call(BUSNAME,OBJPATH,INTERFACE,WID_DBUS_RADIO_METHOD_RADIO_CPE_CHANNEL_APPLY_WLANID_CLEAN_VLANID);
+	
+/*	query = dbus_message_new_method_call(WID_DBUS_BUSNAME,WID_DBUS_RADIO_OBJPATH,\
+						WID_DBUS_RADIO_INTERFACE,WID_DBUS_RADIO_METHOD_RADIO_APPLY_WLANID_CLEAN_VLANID);*/
+
+	dbus_error_init(&err);
+
+	dbus_message_append_args(query,					
+						DBUS_TYPE_UINT32,&radio_id,
+						DBUS_TYPE_BYTE,&wlan_id,
+						DBUS_TYPE_UINT32,&vlan_id,
+						DBUS_TYPE_INVALID);
+
+	reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection,query,-1, &err);
+	dbus_message_unref(query);
+	if (NULL == reply) {
+		cli_syslog_info("<error> failed get reply.\n");
+		if (dbus_error_is_set(&err)) {
+			cli_syslog_info("%s raised: %s",err.name,err.message);
+			dbus_error_free_for_dcli(&err);
+		}
+		return CMD_SUCCESS;
+	}
+	dbus_message_iter_init(reply,&iter);
+	dbus_message_iter_get_basic(&iter,&ret);
+
+		if(ret == 0)
+			vty_out(vty,"radio %d-%d cpe channel binding wlan %d clean vlanid successfully.\n",radio_id/L_RADIO_NUM,radio_id%L_RADIO_NUM,wlan_id);
+		else if(ret == WTP_ID_NOT_EXIST)
+			vty_out(vty,"<error> wtp id does not exist\n");
+		else if(ret == RADIO_ID_NOT_EXIST)
+			vty_out(vty,"<error> radio id does not exist\n");
+		else if(ret == WLAN_ID_NOT_EXIST)
+			vty_out(vty,"<error> binding wlan does not exist \n");
+		else if(ret == WTP_WLAN_BINDING_NOT_MATCH)
+			vty_out(vty,"<error> radio is not binding this wlan \n");
+		else if(ret == BSS_BE_ENABLE)
+			vty_out(vty,"<error> bss is enable, you should disable it first\n");
+		else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+		{
+			vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+		}
+		else if(ret == VALUE_OUT_OF_RANGE)
+		{
+			vty_out(vty,"<error> radio binding more than 8 wlan\n");
+		}
+		else if (ret = BSS_NOT_EXIST)
+		{
+			vty_out(vty,"<error> radio cpe intf does not exists !\n");
+		}
+		else
+			vty_out(vty,"<error>  %d\n",ret);
+	dbus_message_unref(reply);
+
+	return CMD_SUCCESS;	
+
+}
+
+
+DEFUN(set_radio_cpe_channel_apply_wlan_clean_vlan_cmd_func,
+		set_radio_cpe_channel_apply_wlan_clean_vlan_cmd,
+		"radio cpe channel apply wlan ID clean vlan",
+		CONFIG_STR
+		"cpe channel\n"
+		"cpe channel\n"
+		"radio binding information\n" 
+		"radio binding wlan information\n" 
+		"assign wlan id \n"
+		"radio apply wlan clean vlan\n"
+		"radio apply wlan clean vlan\n"
+		)
+{
+	int ret;
+	unsigned int radio_id;
+	unsigned char wlan_id;
+	unsigned int vlan_id = 0;
+	int index = 0;
+	int localid = 1;
+    int slot_id = HostSlotId;
+	char BUSNAME[PATH_LEN];
+	char OBJPATH[PATH_LEN];
+	char INTERFACE[PATH_LEN];
+	DBusMessage *query, *reply;	
+	DBusMessageIter	 iter;
+	DBusError err;
+	
+	//radio_id = (unsigned int)vty->index;	
+
+	
+	ret = parse_char_ID((char*)argv[0], &wlan_id);
+	if(ret != WID_DBUS_SUCCESS){
+            if(ret == WID_ILLEGAL_INPUT){
+            	vty_out(vty,"<error> illegal input:Input exceeds the maximum value of the parameter type \n");
+            }
+			else{
+		vty_out(vty,"<error> unknown id format\n");
+			}
+		return CMD_SUCCESS;
+	}	
+	if(wlan_id >= WLAN_NUM || wlan_id == 0){
+		vty_out(vty,"<error> wlan id should be 1 to %d\n",WLAN_NUM-1);
+		return CMD_SUCCESS;
+	}
+	
+	if(vty->node == RADIO_NODE){
+		index = 0;			
+		radio_id = (int)vty->index;
+	}else if(vty->node == HANSI_RADIO_NODE){
+		index = vty->index; 		
+		localid = vty->local;
+        slot_id = vty->slotindex;
+		radio_id = (int)vty->index_sub;
+	}else if (vty->node == LOCAL_HANSI_RADIO_NODE){
+        index = vty->index;
+        localid = vty->local;
+        slot_id = vty->slotindex;
+		radio_id = (int)vty->index_sub;
+    }
+    DBusConnection *dcli_dbus_connection = NULL;
+    ReInitDbusConnection(&dcli_dbus_connection,slot_id,distributFag);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_BUSNAME,BUSNAME);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_RADIO_OBJPATH,OBJPATH);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_RADIO_INTERFACE,INTERFACE);
+	query = dbus_message_new_method_call(BUSNAME,OBJPATH,INTERFACE,WID_DBUS_RADIO_METHOD_RADIO_CPE_CHANNEL_APPLY_WLANID_CLEAN_VLANID);
+	
+/*	query = dbus_message_new_method_call(WID_DBUS_BUSNAME,WID_DBUS_RADIO_OBJPATH,\
+						WID_DBUS_RADIO_INTERFACE,WID_DBUS_RADIO_METHOD_RADIO_APPLY_WLANID_CLEAN_VLANID);*/
+
+	dbus_error_init(&err);
+
+	dbus_message_append_args(query,					
+						DBUS_TYPE_UINT32,&radio_id,
+						DBUS_TYPE_BYTE,&wlan_id,
+						DBUS_TYPE_UINT32,&vlan_id,
+						DBUS_TYPE_INVALID);
+
+	reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection,query,-1, &err);
+	dbus_message_unref(query);
+	if (NULL == reply) {
+		cli_syslog_info("<error> failed get reply.\n");
+		if (dbus_error_is_set(&err)) {
+			cli_syslog_info("%s raised: %s",err.name,err.message);
+			dbus_error_free_for_dcli(&err);
+		}
+		return CMD_SUCCESS;
+	}
+	dbus_message_iter_init(reply,&iter);
+	dbus_message_iter_get_basic(&iter,&ret);
+
+		if(ret == 0)
+			vty_out(vty,"radio %d-%d cpe channel binding wlan %d clean vlanid successfully.\n",radio_id/L_RADIO_NUM,radio_id%L_RADIO_NUM,wlan_id);
+		else if(ret == WTP_ID_NOT_EXIST)
+			vty_out(vty,"<error> wtp id does not exist\n");
+		else if(ret == RADIO_ID_NOT_EXIST)
+			vty_out(vty,"<error> radio id does not exist\n");
+		else if(ret == WLAN_ID_NOT_EXIST)
+			vty_out(vty,"<error> binding wlan does not exist \n");
+		else if(ret == WTP_WLAN_BINDING_NOT_MATCH)
+			vty_out(vty,"<error> radio is not binding this wlan \n");
+		else if(ret == BSS_BE_ENABLE)
+			vty_out(vty,"<error> bss is enable, you should disable it first\n");
+		else if (ret == WID_WANT_TO_DELETE_WLAN)		/* Huangleilei add for ASXXZFI-1622 */
+		{
+			vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+		}
+		else if(ret == VALUE_OUT_OF_RANGE)
+		{
+			vty_out(vty,"<error> radio binding more than 8 wlan\n");
+		}
+		else if (ret = BSS_NOT_EXIST)
+		{
+			vty_out(vty,"<error> radio cpe intf does not exists !\n");
+		}
+		else
+			vty_out(vty,"<error>  %d\n",ret);
+	dbus_message_unref(reply);
+
+	return CMD_SUCCESS;	
+
+}
+
+
 DEFUN(radio_rx_data_dead_time_cmd_func,
 		radio_rx_data_dead_time_cmd,
 		"set radio receive data deadtime VALUE",
@@ -24752,6 +25160,9 @@ void dcli_radio_init(void) {
 	install_element(HANSI_RADIO_NODE,&set_radio_default_config_cmd);
 	
 	install_element(HANSI_RADIO_NODE,&show_radio_channel_change_cmd);
+	install_element(HANSI_RADIO_NODE,&set_radio_cpe_channel_apply_wlan_base_vlan_cmd);
+	install_element(HANSI_RADIO_NODE,&set_radio_cpe_channel_apply_wlan_clean_vlan_cmd);
+	install_element(HANSI_RADIO_NODE,&set_radio_cpe_channel_apply_wlan_clean_vlan_id_cmd);
 	install_element(HANSI_RADIO_NODE,&radio_apply_wlan_base_vlan_cmd);
 	install_element(HANSI_RADIO_NODE,&radio_apply_wlan_clean_vlan_cmd);
 	install_element(HANSI_RADIO_NODE,&radio_apply_wlan_base_nas_port_id_cmd);		//mahz add 2011.5.30

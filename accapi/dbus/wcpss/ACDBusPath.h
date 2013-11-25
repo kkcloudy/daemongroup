@@ -385,6 +385,9 @@ char WID_DBUS_RADIO_METHOD_SHOW_CHANNEL_CHANGE[PATH_LEN]=	"radio_show_channel_ch
 
 char WID_DBUS_RADIO_METHOD_RADIO_APPLY_WLANID_BASE_VLANID[PATH_LEN]=	"radio_apply_wlanid_base_vlanid";
 char WID_DBUS_RADIO_METHOD_RADIO_APPLY_WLANID_CLEAN_VLANID[PATH_LEN]=	"radio_apply_wlanid_clean_vlanid";
+char WID_DBUS_RADIO_METHOD_RADIO_CPE_CHANNEL_APPLY_WLANID_BASE_VLANID[PATH_LEN]=	"radio_cpe_channel_apply_wlanid_base_vlanid";
+char WID_DBUS_RADIO_METHOD_RADIO_CPE_CHANNEL_APPLY_WLANID_CLEAN_VLANID[PATH_LEN]=	"radio_cpe_channel_apply_wlanid_clean_vlanid";
+
 char WID_DBUS_RADIO_METHOD_RADIO_CHECK_RADIO_MEMBER[PATH_LEN]= "check_radio_member";
 char WID_DBUS_RADIO_METHOD_RADIO_APPLY_WLANID_BASE_NAS_PORT_ID[PATH_LEN]= "radio_apply_wlanid_base_nas_port_id";		//mahz add 2011.5.30
 char WID_DBUS_RADIO_METHOD_RADIO_APPLY_WLANID_CLEAN_NAS_PORT_ID[PATH_LEN]= "radio_apply_wlanid_clean_nas_port_id";		//mahz add 2011.5.30
