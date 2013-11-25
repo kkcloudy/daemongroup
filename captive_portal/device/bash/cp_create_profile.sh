@@ -133,9 +133,15 @@ ${IPXTABLES} -I $CP_FILTER_DEFAULT -d $CP_IP -j ACCEPT
 
 ${IPXTABLES} -t nat -N $CP_NAT_DEFAULT
 ${IPXTABLES} -t nat -I $CP_NAT_DEFAULT -j RETURN
-${IPXTABLES} -t nat -I $CP_NAT_DEFAULT -p tcp -m tcp --dport 80 -j DNAT --to-destination ${CP_IP}:${CP_PORT}
-${IPXTABLES} -t nat -I $CP_NAT_DEFAULT -p tcp -m tcp --dport 8080 -j DNAT --to-destination ${CP_IP}:${CP_PORT}
-#${IPXTABLES} -t nat -I $CP_NAT_DEFAULT -p tcp -m tcp --dport 443 -j DNAT --to-destination ${CP_IP}:${CP_PORT}
+if [ ! $? -eq 0 ] && [ $CP_FA -eq 4 ] ; then
+	${IPXTABLES} -t nat -I $CP_NAT_DEFAULT -p tcp -m tcp --dport 80 -j DNAT --to-destination ${CP_IP}:${CP_PORT}
+	${IPXTABLES} -t nat -I $CP_NAT_DEFAULT -p tcp -m tcp --dport 8080 -j DNAT --to-destination ${CP_IP}:${CP_PORT}
+	#${IPXTABLES} -t nat -I $CP_NAT_DEFAULT -p tcp -m tcp --dport 443 -j DNAT --to-destination ${CP_IP}:${CP_PORT}
+elif [ ! $? -eq 0 ] && [ $CP_FA -eq 6 ] ; then
+	${IPXTABLES} -t nat -I $CP_NAT_DEFAULT -p tcp -m tcp --dport 80 -j DNAT --to-destination [${CP_IP}]:${CP_PORT}
+	${IPXTABLES} -t nat -I $CP_NAT_DEFAULT -p tcp -m tcp --dport 8080 -j DNAT --to-destination [${CP_IP}]:${CP_PORT}
+	#${IPXTABLES} -t nat -I $CP_NAT_DEFAULT -p tcp -m tcp --dport 443 -j DNAT --to-destination [${CP_IP}]:${CP_PORT}
+fi
 ${IPXTABLES} -t nat -I $CP_NAT_DEFAULT -d $CP_IP -j ACCEPT
 
 #
