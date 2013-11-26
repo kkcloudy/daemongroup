@@ -51,13 +51,13 @@ eag_captive_set_redir_srv(eag_captive_t * cap,
 			  unsigned long srv_ip, unsigned short srv_port);
 int
 eag_captive_set_ipv6_redir_srv(eag_captive_t * cap,
-			  struct in6_addr *srv_ipv6, unsigned short srv_port);
+			  struct in6_addr *srv_ipv6);
 int
-eag_captive_is_intf_in_list(eag_captive_t * cap, uint32_t family, char *intf);
+eag_captive_is_intf_in_list(eag_captive_t * cap, char *intf);
 int
-eag_captive_add_interface(eag_captive_t * cap, uint32_t family, char *intf);
+eag_captive_add_interface(eag_captive_t * cap, char *intf);
 int
-eag_captive_del_interface(eag_captive_t * cap, uint32_t family, char *intfs);
+eag_captive_del_interface(eag_captive_t * cap, char *intfs);
 
 int eag_captive_start(eag_captive_t * cap);
 int eag_captive_stop(eag_captive_t * cap);

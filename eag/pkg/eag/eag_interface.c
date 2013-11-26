@@ -286,7 +286,7 @@ eag_set_nasip(DBusConnection *connection,
 int
 eag_set_nasipv6(DBusConnection *connection, 
 				int hansitype, int insid,
-				char *nasipv6)
+				uint32_t nasipv6[4])
 {
 	DBusMessage *query, *reply;
 	DBusError err;
@@ -300,7 +300,10 @@ eag_set_nasipv6(DBusConnection *connection,
 	dbus_error_init(&err);
 	
 	dbus_message_append_args(	query,
-								DBUS_TYPE_STRING,  &nasipv6,
+								DBUS_TYPE_UINT32,  &nasipv6[0],
+						        DBUS_TYPE_UINT32,  &nasipv6[1],
+						        DBUS_TYPE_UINT32,  &nasipv6[2],
+						        DBUS_TYPE_UINT32,  &nasipv6[3],
 								DBUS_TYPE_INVALID );
 
 	reply = dbus_connection_send_with_reply_and_block ( connection, query, -1, &err );
@@ -2943,7 +2946,7 @@ eag_get_nasportid ( DBusConnection *connection,
 int
 eag_add_captive_intf( DBusConnection *connection, 
 				int hansitype, int insid,
-				uint32_t family, char *intfs )
+				char *intfs )
 {
 	DBusMessage *query, *reply;
 	DBusError err;
@@ -2958,7 +2961,6 @@ eag_add_captive_intf( DBusConnection *connection,
 	dbus_error_init(&err);
 	
 	dbus_message_append_args(	query,
-								DBUS_TYPE_UINT32, &family,
 								DBUS_TYPE_STRING, &intfs,
 								DBUS_TYPE_INVALID );
 
@@ -2987,7 +2989,7 @@ eag_add_captive_intf( DBusConnection *connection,
 int
 eag_del_captive_intf(DBusConnection *connection, 
 				int hansitype, int insid, 
-				uint32_t family, char *intfs)
+				char *intfs)
 {
 	
 	DBusMessage *query, *reply;
@@ -3003,7 +3005,6 @@ eag_del_captive_intf(DBusConnection *connection,
 	dbus_error_init(&err);
 	
 	dbus_message_append_args(	query,
-								DBUS_TYPE_UINT32, &family,
 								DBUS_TYPE_STRING, &intfs,
 								DBUS_TYPE_INVALID );
 
@@ -3041,7 +3042,6 @@ eag_get_captive_intfs(DBusConnection *connection,
 	DBusMessageIter  iter;
 	
 	unsigned long num = 0;
-	unsigned long ipv6_num = 0;
 	char *intfs = NULL;
 		
 	if( NULL == captive_intfs ){
@@ -3086,20 +3086,6 @@ eag_get_captive_intfs(DBusConnection *connection,
 					dbus_message_iter_next(&iter);
 					dbus_message_iter_get_basic(&iter, &intfs);
 					strncpy(captive_intfs->cpif[i], intfs, MAX_IF_NAME_LEN-1);
-				}
-			}
-
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &ipv6_num);
-			if( ipv6_num > CP_MAX_INTERFACE_NUM ){
-				ipv6_num = CP_MAX_INTERFACE_NUM;
-			}
-			captive_intfs->ipv6_curr_ifnum = ipv6_num;
-			if( num > 0 ){
-				for( i=0; i<ipv6_num; i++ ){
-					dbus_message_iter_next(&iter);
-					dbus_message_iter_get_basic(&iter, &intfs);
-					strncpy(captive_intfs->ipv6_cpif[i], intfs, MAX_IF_NAME_LEN-1);
 				}
 			}
 		}
@@ -6493,7 +6479,6 @@ eag_show_user_all(DBusConnection *connection,
 	char *username = NULL;
 	int iRet = 0;
 	int i = 0;
-	uint32_t cmp[4];
 	
 	eag_dbus_path_reinit(hansitype,insid);
 	query = dbus_message_new_method_call(
@@ -6545,20 +6530,18 @@ eag_show_user_all(DBusConnection *connection,
 					dbus_message_iter_next(&iter_struct);
 					dbus_message_iter_get_basic(&iter_struct, 
 													&(user->user_ip));
-					memset(cmp, 0, sizeof(cmp));
 					dbus_message_iter_next(&iter_struct);
 					dbus_message_iter_get_basic(&iter_struct, 
-													&cmp[0]);
+													&(user->user_ipv6[0]));
 					dbus_message_iter_next(&iter_struct);
 					dbus_message_iter_get_basic(&iter_struct, 
-													&cmp[1]);
+													&(user->user_ipv6[1]));
 					dbus_message_iter_next(&iter_struct);
 					dbus_message_iter_get_basic(&iter_struct, 
-													&cmp[2]);
+													&(user->user_ipv6[2]));
 					dbus_message_iter_next(&iter_struct);
 					dbus_message_iter_get_basic(&iter_struct, 
-													&cmp[3]);
-					memcpy(&(user->user_ipv6), cmp, sizeof(cmp));
+													&(user->user_ipv6[3]));
 					dbus_message_iter_next(&iter_struct);
 					dbus_message_iter_get_basic(&iter_struct,
 													&(user->usermac[0]));
@@ -6647,7 +6630,6 @@ eag_show_user_by_username(DBusConnection *connection,
 	char *name = NULL;
 	int iRet = 0;
 	int i = 0;
-	uint32_t cmp[4];
 
 	eag_dbus_path_reinit(hansitype,insid);
 	query = dbus_message_new_method_call(
@@ -6703,20 +6685,18 @@ eag_show_user_by_username(DBusConnection *connection,
 					dbus_message_iter_next(&iter_struct);
 					dbus_message_iter_get_basic(&iter_struct, 
 													&(user->user_ip));
-					memset(cmp, 0, sizeof(cmp));
 					dbus_message_iter_next(&iter_struct);
 					dbus_message_iter_get_basic(&iter_struct, 
-													&cmp[0]);
+													&(user->user_ipv6[0]));
 					dbus_message_iter_next(&iter_struct);
 					dbus_message_iter_get_basic(&iter_struct, 
-													&cmp[1]);
+													&(user->user_ipv6[1]));
 					dbus_message_iter_next(&iter_struct);
 					dbus_message_iter_get_basic(&iter_struct, 
-													&cmp[2]);
+													&(user->user_ipv6[2]));
 					dbus_message_iter_next(&iter_struct);
 					dbus_message_iter_get_basic(&iter_struct, 
-													&cmp[3]);
-					memcpy(&(user->user_ipv6), cmp, sizeof(cmp));
+													&(user->user_ipv6[3]));
 					dbus_message_iter_next(&iter_struct);
 					dbus_message_iter_get_basic(&iter_struct,
 													&(user->usermac[0]));
@@ -6796,7 +6776,6 @@ eag_show_user_by_userip(DBusConnection *connection,
 	char *username = NULL;
 	int iRet = 0;
 	int i = 0;
-	uint32_t cmp[4];
 
 	eag_dbus_path_reinit(hansitype,insid);
 	query = dbus_message_new_method_call(
@@ -6852,20 +6831,18 @@ eag_show_user_by_userip(DBusConnection *connection,
 					dbus_message_iter_next(&iter_struct);
 					dbus_message_iter_get_basic(&iter_struct, 
 													&(user->user_ip));
-					memset(cmp, 0, sizeof(cmp));
 					dbus_message_iter_next(&iter_struct);
 					dbus_message_iter_get_basic(&iter_struct, 
-													&cmp[0]);
+													&(user->user_ipv6[0]));
 					dbus_message_iter_next(&iter_struct);
 					dbus_message_iter_get_basic(&iter_struct, 
-													&cmp[1]);
+													&(user->user_ipv6[1]));
 					dbus_message_iter_next(&iter_struct);
 					dbus_message_iter_get_basic(&iter_struct, 
-													&cmp[2]);
+													&(user->user_ipv6[2]));
 					dbus_message_iter_next(&iter_struct);
 					dbus_message_iter_get_basic(&iter_struct, 
-													&cmp[3]);
-					memcpy(&(user->user_ipv6), cmp, sizeof(cmp));
+													&(user->user_ipv6[3]));
 					dbus_message_iter_next(&iter_struct);
 					dbus_message_iter_get_basic(&iter_struct,
 													&(user->usermac[0]));
@@ -6945,7 +6922,6 @@ eag_show_user_by_usermac(DBusConnection *connection,
 	char *username = NULL;
 	int iRet = 0;
 	int i = 0;
-	uint32_t cmp[4];
 
 	eag_dbus_path_reinit(hansitype,insid);
 	query = dbus_message_new_method_call(
@@ -7006,20 +6982,18 @@ eag_show_user_by_usermac(DBusConnection *connection,
 					dbus_message_iter_next(&iter_struct);
 					dbus_message_iter_get_basic(&iter_struct, 
 													&(user->user_ip));
-					memset(cmp, 0, sizeof(cmp));
 					dbus_message_iter_next(&iter_struct);
 					dbus_message_iter_get_basic(&iter_struct, 
-													&cmp[0]);
+													&(user->user_ipv6[0]));
 					dbus_message_iter_next(&iter_struct);
 					dbus_message_iter_get_basic(&iter_struct, 
-													&cmp[1]);
+													&(user->user_ipv6[1]));
 					dbus_message_iter_next(&iter_struct);
 					dbus_message_iter_get_basic(&iter_struct, 
-													&cmp[2]);
+													&(user->user_ipv6[2]));
 					dbus_message_iter_next(&iter_struct);
 					dbus_message_iter_get_basic(&iter_struct, 
-													&cmp[3]);
-					memcpy(&(user->user_ipv6), cmp, sizeof(cmp));
+													&(user->user_ipv6[3]));
 					dbus_message_iter_next(&iter_struct);
 					dbus_message_iter_get_basic(&iter_struct,
 													&(user->usermac[0]));
@@ -7099,7 +7073,6 @@ eag_show_user_by_index(DBusConnection *connection,
 	char *username = NULL;
 	int iRet = 0;
 	int i = 0;
-	uint32_t cmp[4];
 
 	eag_dbus_path_reinit(hansitype,insid);
 	query = dbus_message_new_method_call(
@@ -7155,20 +7128,18 @@ eag_show_user_by_index(DBusConnection *connection,
 					dbus_message_iter_next(&iter_struct);
 					dbus_message_iter_get_basic(&iter_struct, 
 													&(user->user_ip));
-					memset(cmp, 0, sizeof(cmp));
 					dbus_message_iter_next(&iter_struct);
 					dbus_message_iter_get_basic(&iter_struct, 
-													&cmp[0]);
+													&(user->user_ipv6[0]));
 					dbus_message_iter_next(&iter_struct);
 					dbus_message_iter_get_basic(&iter_struct, 
-													&cmp[1]);
+													&(user->user_ipv6[1]));
 					dbus_message_iter_next(&iter_struct);
 					dbus_message_iter_get_basic(&iter_struct, 
-													&cmp[2]);
+													&(user->user_ipv6[2]));
 					dbus_message_iter_next(&iter_struct);
 					dbus_message_iter_get_basic(&iter_struct, 
-													&cmp[3]);
-					memcpy(&(user->user_ipv6), cmp, sizeof(cmp));
+													&(user->user_ipv6[3]));
 					dbus_message_iter_next(&iter_struct);
 					dbus_message_iter_get_basic(&iter_struct,
 													&(user->usermac[0]));

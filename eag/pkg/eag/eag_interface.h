@@ -153,7 +153,7 @@ struct bw_rule_t {
 	char intf[MAX_IF_NAME_LEN];
 };
 
-#define MAX_BW_RULES_NUM	256
+#define MAX_BW_RULES_NUM	128
 struct bw_rules{
 	unsigned long curr_num;
 	struct bw_rule_t rule[MAX_BW_RULES_NUM];
@@ -162,8 +162,6 @@ struct bw_rules{
 typedef struct{
 	unsigned long curr_ifnum;
 	char cpif[CP_MAX_INTERFACE_NUM][MAX_IF_NAME_LEN];
-	unsigned long ipv6_curr_ifnum;
-	char ipv6_cpif[CP_MAX_INTERFACE_NUM][MAX_IF_NAME_LEN];
 }eag_captive_intfs;
 
 struct eag_bss_stat {
@@ -439,7 +437,7 @@ struct eag_user {
 	struct list_head node;	
 	char username[USERNAMESIZE];
 	uint32_t user_ip;
-	struct in6_addr user_ipv6;
+	uint32_t user_ipv6[4];
 	uint8_t usermac[6];
 	uint32_t session_time;
 	long accurate_start_time;
@@ -470,7 +468,7 @@ eag_set_nasip(DBusConnection *connection,
 int
 eag_set_nasipv6(DBusConnection *connection, 
 				int hansitype, int insid,
-				char *nasipv6);
+				uint32_t nasipv6[4]);
 
 int
 eag_set_ipv6_server(DBusConnection *connection, 
@@ -691,12 +689,12 @@ eag_get_nasportid ( DBusConnection *connection,
 int
 eag_add_captive_intf( DBusConnection *connection, 
 				int hansitype, int insid,
-				uint32_t family, char *intfs );
+				char *intfs );
 
 int
 eag_del_captive_intf(DBusConnection *connection, 
 				int hansitype, int insid, 
-			    uint32_t family, char *intfs );
+				char *intfs);
 
 int
 eag_get_captive_intfs(DBusConnection *connection, 

@@ -1731,21 +1731,21 @@ eag_ins_start(eag_ins_t *eagins)
 					SLOT_IPV4_BASE + 100 + eagins->hansi_id,
 					EAG_REDIR_LISTEN_PORT_BASE + eagins->hansi_id);
 			if (eag_ins_get_ipv6_switch(eagins)) {
-				eag_captive_set_ipv6_redir_srv( eagins->captive, &(eagins->nasipv6), 3990);
+				eag_captive_set_ipv6_redir_srv( eagins->captive, &(eagins->nasipv6));
 			}
 		} else {
 			eag_captive_set_redir_srv( eagins->captive,
 				SLOT_IPV4_BASE + eagins->slot_id,
 				EAG_REDIR_LISTEN_PORT_BASE + MAX_HANSI_ID + eagins->hansi_id);
 			if (eag_ins_get_ipv6_switch(eagins)) {
-				eag_captive_set_ipv6_redir_srv( eagins->captive, &(eagins->nasipv6), 3990);
+				eag_captive_set_ipv6_redir_srv( eagins->captive, &(eagins->nasipv6));
 			}
 		}
 	} else {
 		eag_captive_set_redir_srv( eagins->captive, eagins->nasip,
 				EAG_REDIR_LISTEN_PORT);
 		if (eag_ins_get_ipv6_switch(eagins)) {
-			eag_captive_set_ipv6_redir_srv( eagins->captive, &(eagins->nasipv6), 3990);
+			eag_captive_set_ipv6_redir_srv( eagins->captive, &(eagins->nasipv6));
 		}
 	}
 	
@@ -2263,8 +2263,9 @@ eag_ins_get_nasipv6(eag_ins_t *eagins)
 
 int
 eag_ins_set_nasipv6(eag_ins_t *eagins,
-		char *nasipv6)
+		uint32_t nasipv6[4])
 {
+	char nasipv6_str[48] = "";
 	if (NULL == eagins || NULL == nasipv6) {
 		eag_log_err("eag_ins_set_nasipv6 input error");
 		return -1;
@@ -2275,8 +2276,9 @@ eag_ins_set_nasipv6(eag_ins_t *eagins,
 		return EAG_ERR_EAGINS_SERVICE_ALREADY_ENABLE;
 	}
 	
-	eag_log_info("eag_ins_set_nasipv6 set nasipv6 %s", nasipv6);
-	str2ipv6(&(eagins->nasipv6), nasipv6);
+	memcpy(&(eagins->nasipv6), nasipv6, sizeof(struct in6_addr));
+	ipv6tostr(&(eagins->nasipv6), nasipv6_str, sizeof(nasipv6_str));
+	eag_log_info("eag_ins_set_nasipv6 set nasipv6 %s", nasipv6_str);
 
 	return EAG_RETURN_OK;
 }
@@ -2491,8 +2493,8 @@ eag_dbus_method_set_nasipv6(
 	DBusMessageIter iter = {0};
 	DBusError err = {0};
 	int ret = -1;
-	char *nasipv6 = NULL;
-
+	uint32_t nasipv6[4];
+	
 	reply = dbus_message_new_method_return(msg);
 	if (NULL == reply) {
 		eag_log_err("eag_dbus_method_set_nasip "
@@ -2509,7 +2511,10 @@ eag_dbus_method_set_nasipv6(
 
 	dbus_error_init(&err);
 	if (!(dbus_message_get_args(msg ,&err,
-								DBUS_TYPE_STRING, &nasipv6,
+								DBUS_TYPE_UINT32, &nasipv6[0],
+						        DBUS_TYPE_UINT32, &nasipv6[1],
+						        DBUS_TYPE_UINT32, &nasipv6[2],
+						        DBUS_TYPE_UINT32, &nasipv6[3],
 								DBUS_TYPE_INVALID)))
 	{
 		eag_log_err("eag_dbus_method_set_nasip unable to get input args");
@@ -5170,8 +5175,6 @@ eag_dbus_method_add_captive_intf(
 	DBusMessageIter iter = {0};
 	DBusError		err = {0};
 	char *intfs = NULL;
-	uint32_t family = 0;
-	char *family_str = NULL;
 	int ret = -1;
 	eag_log_info("eag_dbus_method_add_captive_intfs");
 
@@ -5193,7 +5196,6 @@ eag_dbus_method_add_captive_intf(
 
 	dbus_error_init(&err);
 	if (!(dbus_message_get_args(msg ,&err,
-								DBUS_TYPE_UINT32, &family,
 								DBUS_TYPE_STRING, &intfs,
 								DBUS_TYPE_INVALID))){
 		eag_log_err("eag_dbus_method_add_captive_intfs "\
@@ -5206,22 +5208,9 @@ eag_dbus_method_add_captive_intf(
 		ret = EAG_ERR_DBUS_FAILED;
 		goto replyx;
 	}	
-	switch (family) {
-	case EAG_IPV4:
-		family_str = "ipv4";
-		break;
-	case EAG_IPV6:
-		family_str = "ipv6";
-		break;
-	case EAG_MIX:
-		family_str = "mix";
-		break;
-	default:
-		goto replyx;
-		break;
-	}
-	eag_log_info("eag add %s(%d) captive intf %s", family_str, family, intfs);
-	ret = eag_captive_add_interface( eagins->captive, family, intfs );
+
+	eag_log_info("eag add captive intf %s", intfs );
+	ret = eag_captive_add_interface( eagins->captive, intfs );
 
 replyx:
 	dbus_message_iter_init_append(reply, &iter);
@@ -5242,8 +5231,6 @@ eag_dbus_method_del_captive_intf(
 	DBusError		err = {0};
 	char *intfs = NULL;
 	int ret = -1;
-	uint32_t family = 0;
-	char *family_str = NULL;
 	eag_log_info("eag_dbus_method_del_captive_intfs");
 	reply = dbus_message_new_method_return(msg);
 	if (NULL == reply) {
@@ -5260,7 +5247,6 @@ eag_dbus_method_del_captive_intf(
 	}
 	dbus_error_init(&err);
 	if (!(dbus_message_get_args(msg ,&err,
-								DBUS_TYPE_UINT32, &family,
 								DBUS_TYPE_STRING, &intfs,
 								DBUS_TYPE_INVALID))){
 		eag_log_err("eag_dbus_method_del_captive_intfs "\
@@ -5273,22 +5259,8 @@ eag_dbus_method_del_captive_intf(
 		ret = EAG_ERR_DBUS_FAILED;
 		goto replyx;
 	}	
-	switch (family) {
-	case EAG_IPV4:
-		family_str = "ipv4";
-		break;
-	case EAG_IPV6:
-		family_str = "ipv6";
-		break;
-	case EAG_MIX:
-		family_str = "mix";
-		break;
-	default:
-		goto replyx;
-		break;
-	}
-	eag_log_info("eag del %s captive intf %s", family_str, intfs);
-	ret = eag_captive_del_interface( eagins->captive, family, intfs );
+	eag_log_info("eag del captive intf %s", intfs );
+	ret = eag_captive_del_interface( eagins->captive, intfs );
 	terminate_appconn_by_interface(eagins,intfs);
 replyx:
 	dbus_message_iter_init_append(reply, &iter);

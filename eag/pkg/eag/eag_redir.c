@@ -1277,7 +1277,7 @@ eag_redirconn_read(eag_thread_t *thread)
 				nbyte);
 		redirconn->ibuflen += nbyte;
 		redirconn->ibuf[redirconn->ibuflen] = '\0';
-		eag_log_info("eag_redirconn_read recv request = %s",
+		eag_log_debug("eag_redir", "eag_redirconn_read recv request = %s",
 				redirconn->ibuf);
 		ret = eag_redirconn_parse_request(redirconn);
 		eag_log_debug("eag_redir", 
@@ -1611,7 +1611,7 @@ eag_redir_accept(eag_thread_t *thread)
 		conn_fd = -1;
 		return EAG_ERR_SOCKET_OPT_FAILED;
 	}
-	eag_log_info("Accept ipv4 user:%s", user_ipstr);
+	eag_log_debug("eag_redir", "Accept ipv4 user:%s", user_ipstr);
 	redirconn = eag_redirconn_new(redir, &user_addr);
 	if (NULL == redirconn) {
 		eag_log_err("eag_redir_accept eag_redirconn_new failed");
@@ -1780,7 +1780,7 @@ eag_ipv6_redir_start(eag_redir_t * redir)
 		ipv6_addr.sin6_port = htons(redir->local_port);
 	} else {
 		ipv6_addr.sin6_addr = *nasipv6;
-		ipv6_addr.sin6_port = htons(redir->redir_port + 1);
+		ipv6_addr.sin6_port = htons(redir->redir_port);
 	}
 	
 #ifdef HAVE_STRUCT_SOCKADDR_IN_SIN_LEN
@@ -1865,7 +1865,7 @@ eag_ipv6_redir_accept(eag_thread_t *thread)
 	user_addr.family = EAG_IPV6;
 	user_addr.user_ipv6 = client.sin6_addr;
     ipx2str(&user_addr, user_ipstr, sizeof(user_ipstr));
-	eag_log_info("Accept ipv6 user:%s", user_ipstr);
+	eag_log_debug("eag_redir", "Accept ipv6 user:%s", user_ipstr);
 	if (0 != set_nonblocking(conn_fd)) {
 		eag_log_err("eag_ipv6_redir_accept set socket nonblocking failed, "
 			"fd(%d), userip %s", conn_fd, user_ipstr);

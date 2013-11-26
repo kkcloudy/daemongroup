@@ -87,9 +87,6 @@ struct eag_captive {
 	unsigned long curr_ifnum;
 	char cpif[CP_MAX_INTERFACE_NUM][MAX_IF_NAME_LEN];
 
-	unsigned long ipv6_curr_ifnum;
-	char ipv6_cpif[CP_MAX_INTERFACE_NUM][MAX_IF_NAME_LEN];
-
 	struct bw_rules white;
 	struct bw_rules black;
 
@@ -1506,7 +1503,7 @@ eag_captive_set_redir_srv(eag_captive_t * cap,
 
 int
 eag_captive_set_ipv6_redir_srv(eag_captive_t * cap,
-			  struct in6_addr *srv_ipv6, unsigned short srv_port)
+			  struct in6_addr *srv_ipv6)
 {
 	if (NULL == cap || NULL == srv_ipv6) {
 		eag_log_err("eag_captive_set_ipv6_redir_srv cap = NULL!");
@@ -1543,28 +1540,21 @@ eag_captive_get_rule(eag_captive_t * cap, char *intf)
 #endif
 
 int
-eag_captive_is_intf_in_list(eag_captive_t * cap, uint32_t family, char *intf)
+eag_captive_is_intf_in_list(eag_captive_t * cap, char *intf)
 {
 	int i;
-	if (EAG_IPV4 == family || EAG_MIX == family) {
-		for( i=0; i<cap->curr_ifnum; i++ ){
-			if( strcmp( intf, cap->cpif[i] ) == 0 ){
-				return EAG_TRUE;
-			}
+
+	for( i=0; i<cap->curr_ifnum; i++ ){
+		if( strcmp( intf, cap->cpif[i] ) == 0 ){
+			return EAG_TRUE;
 		}
 	}
-	if (EAG_IPV6 == family || EAG_MIX == family) {
-		for( i=0; i<cap->ipv6_curr_ifnum; i++ ){
-			if( strcmp( intf, cap->ipv6_cpif[i] ) == 0 ){
-				return EAG_TRUE;
-			}
-		}
-	}
+
 	return EAG_FALSE;
 }
 
 int
-eag_captive_add_interface(eag_captive_t * cap, uint32_t family, char *intf)
+eag_captive_add_interface(eag_captive_t * cap, char *intf)
 {
 	int ret = EAG_ERR_UNKNOWN;
 
@@ -1586,56 +1576,42 @@ eag_captive_add_interface(eag_captive_t * cap, uint32_t family, char *intf)
 		eag_log_err("eag_captive_add_interface no such interface %s\n", intf);
 		return EAG_ERR_CAPTIVE_INTERFACE_NOT_EXIST;
 	}
-	eag_log_info("family:%d, intf:%s", family, intf);
-	if (EAG_IPV6 == family || EAG_MIX == family) {
-		if( cap->ipv6_curr_ifnum >= CP_MAX_INTERFACE_NUM ){
-			eag_log_err("eag_captive_add_interface add interface num to limit!");
-			return EAG_ERR_CAPTIVE_INTERFACE_NUM_LIMIT;
-		}
+	
+	if( cap->curr_ifnum >= CP_MAX_INTERFACE_NUM ){
+		eag_log_err("eag_captive_add_interface add interface num to limit!");
+		return EAG_ERR_CAPTIVE_INTERFACE_NUM_LIMIT;
 	}
-	if (EAG_IPV4 == family || EAG_MIX == family) {
-		if( cap->curr_ifnum >= CP_MAX_INTERFACE_NUM ){
-			eag_log_err("eag_captive_add_interface add interface num to limit!");
-			return EAG_ERR_CAPTIVE_INTERFACE_NUM_LIMIT;
-		}
-	}
-	if( EAG_TRUE == eag_captive_is_intf_in_list( cap, family, intf) ){
+	
+	if( EAG_TRUE == eag_captive_is_intf_in_list( cap, intf) ){
 		eag_log_err("eag_captive_add_interface add interface aready be used!");
 		return EAG_ERR_CAPTIVE_INTERFACE_AREADY_USED;
 	}
 	
 	if ( EAG_TRUE == is_interface_valid(intf)) {
-        if (EAG_IPV4 == family || EAG_MIX == family) {
-			strncpy(cap->cpif[cap->curr_ifnum], intf, MAX_IF_NAME_LEN - 1);
-			cap->curr_ifnum++;
-			if( CAP_START == cap->status ){
-				#if EAG_SHELL_OFF
-				captive_iptables_add_intf( cap->capid, cap->instype, intf );
-				#else
-				captive_shell_add_intf( cap->capid, cap->instype, family, intf );
-				#endif
-			}
-			ret = EAG_RETURN_OK;
-		}
-		if (EAG_IPV6 == family || EAG_MIX == family) {
-			strncpy(cap->ipv6_cpif[cap->ipv6_curr_ifnum], intf, MAX_IF_NAME_LEN - 1);
-			cap->ipv6_curr_ifnum++;
-			if( CAP_START == cap->status ){
-    			#if EAG_SHELL_OFF
+		strncpy(cap->cpif[cap->curr_ifnum], intf, MAX_IF_NAME_LEN - 1);
+		cap->curr_ifnum++;
+		if( CAP_START == cap->status ){
+			#if EAG_SHELL_OFF
+			captive_iptables_add_intf( cap->capid, cap->instype, intf );
+			#else
+			captive_shell_add_intf( cap->capid, cap->instype, EAG_IPV4, intf );
+			#endif
+            if (eag_ins_get_ipv6_switch(cap->eagins)) {
+	            #if EAG_SHELL_OFF
 				captive_ip6tables_add_intf( cap->capid, cap->instype, intf );
-    			#else
-				captive_shell_add_intf( cap->capid, cap->instype, family, intf );
-    			#endif
-			}
-			ret = EAG_RETURN_OK;
+				#else
+				captive_shell_add_intf( cap->capid, cap->instype, EAG_IPV6, intf );
+				#endif
+            }
 		}
+		ret = EAG_RETURN_OK;
 	} 
 
 	return ret;
 }
 
 int
-eag_captive_del_interface(eag_captive_t * cap, uint32_t family, char *intf)
+eag_captive_del_interface(eag_captive_t * cap, char *intf)
 {
 	int ret = EAG_ERR_UNKNOWN;
 	int i;
@@ -1649,53 +1625,37 @@ eag_captive_del_interface(eag_captive_t * cap, uint32_t family, char *intf)
 		return EAG_ERR_INPUT_PARAM_ERR;
 	}
 	
-    if (EAG_IPV4 == family || EAG_MIX == family) {
-		for( i=0; i<cap->curr_ifnum; i++ ){
-			if( strcmp( intf, cap->cpif[i] ) == 0 ){
-				break;
-			}
-		}
-		if( i >= cap->curr_ifnum ){
-			eag_log_err("eag_captive_del_interface del ipv4 interface not exist!");
-			return EAG_ERR_CAPTIVE_INTERFACE_NOT_EXIST;
-		}
-		for(;i<cap->curr_ifnum;i++ ){
-			strncpy( cap->cpif[i], cap->cpif[i+1], MAX_IF_NAME_LEN-1 );
-		}
-		cap->curr_ifnum--;
-	}
-	if (EAG_IPV6 == family || EAG_MIX == family) {
-		for( i=0; i<cap->ipv6_curr_ifnum; i++ ){
-			if( strcmp( intf, cap->ipv6_cpif[i] ) == 0 ){
-				break;
-			}
-		}
-		if( i >= cap->ipv6_curr_ifnum ){
-			eag_log_err("eag_captive_del_interface del ipv6 interface not exist!");
-			return EAG_ERR_CAPTIVE_INTERFACE_NOT_EXIST;
-		}
-		for(;i<cap->ipv6_curr_ifnum;i++ ){
-			strncpy( cap->ipv6_cpif[i], cap->ipv6_cpif[i+1], MAX_IF_NAME_LEN-1 );
-		}
-		cap->ipv6_curr_ifnum--;
-	}
 
-	if( CAP_START == cap->status ){
-        if (EAG_IPV4 == family  || EAG_MIX == family) {
-			#if EAG_SHELL_OFF
-			captive_iptables_del_intf( cap->capid, cap->instype, intf );
-			#else
-			captive_shell_del_intf( cap->capid, cap->instype, family, intf );
-			#endif
+	for( i=0; i<cap->curr_ifnum; i++ ){
+		if( strcmp( intf, cap->cpif[i] ) == 0 ){
+			break;
 		}
-		if (EAG_IPV6 == family  || EAG_MIX == family) {
+	}
+	
+	if( i >= cap->curr_ifnum ){
+		eag_log_err("eag_captive_del_interface del interface not exist!");
+		return EAG_ERR_CAPTIVE_INTERFACE_NOT_EXIST;
+	}
+	
+	if( CAP_START == cap->status ){
+		#if EAG_SHELL_OFF
+		captive_iptables_del_intf( cap->capid, cap->instype, intf );
+		#else
+		captive_shell_del_intf( cap->capid, cap->instype, EAG_IPV4, intf );
+		#endif
+        if (eag_ins_get_ipv6_switch(cap->eagins)) {
 			#if EAG_SHELL_OFF
 			captive_ip6tables_del_intf( cap->capid, cap->instype, intf );
 			#else
-			captive_shell_del_intf( cap->capid, cap->instype, family, intf );
+			captive_shell_del_intf( cap->capid, cap->instype, EAG_IPV6, intf );
 			#endif
 		}
 	}
+
+	for(;i<cap->curr_ifnum;i++ ){
+		strncpy( cap->cpif[i], cap->cpif[i+1], MAX_IF_NAME_LEN-1 );
+	}
+	cap->curr_ifnum--;
 
 	ret = EAG_RETURN_OK;
 	return ret;
@@ -1726,8 +1686,9 @@ eag_captive_start(eag_captive_t *cap)
 						&(cap->redir_srv_ip), cap->redir_srv_port, EAG_IPV4 );
 	if( EAG_RETURN_OK != ret ){
 		eag_log_err("eag_captive_start captive_shell_create ipv4 failed!");
-		//return EAG_ERR_CAPTIVE_CALL_SHELL_FAILED;
+		return EAG_ERR_CAPTIVE_CALL_SHELL_FAILED;
 	}
+
 	/*shell add intf*/
 	for( i=0; i<cap->curr_ifnum; i++ ){
 		#if EAG_SHELL_OFF
@@ -1742,19 +1703,20 @@ eag_captive_start(eag_captive_t *cap)
 	
     if (eag_ins_get_ipv6_switch(cap->eagins)) {
 		ret = captive_shell_create( cap->capid, cap->instype,
-							&(cap->redir_srv_ipv6), cap->redir_srv_port + 1, EAG_IPV6 );
+							&(cap->redir_srv_ipv6), cap->redir_srv_port, EAG_IPV6 );
 		if( EAG_RETURN_OK != ret ){
 			eag_log_err("eag_captive_start captive_shell_create ipv6 failed!");
-			//return EAG_ERR_CAPTIVE_CALL_SHELL_FAILED;
+			return EAG_ERR_CAPTIVE_CALL_SHELL_FAILED;
 		}
-		for( i=0; i<cap->ipv6_curr_ifnum; i++ ){
+		
+		for( i=0; i<cap->curr_ifnum; i++ ){
 			#if EAG_SHELL_OFF
-			ret = captive_ip6tables_add_intf( cap->capid, cap->instype, cap->ipv6_cpif[i]);
+			ret = captive_ip6tables_add_intf( cap->capid, cap->instype, cap->cpif[i]);
 			#else
-			ret = captive_shell_add_intf( cap->capid, cap->instype, EAG_IPV6, cap->ipv6_cpif[i]);
+			ret = captive_shell_add_intf( cap->capid, cap->instype, EAG_IPV6, cap->cpif[i]);
 			#endif
 			if( EAG_RETURN_OK != ret ){
-				eag_log_err("eag_captive_start add ipv6 intf %s failed:%d!", cap->ipv6_cpif[i],ret);
+				eag_log_err("eag_captive_start add ipv6 intf %s failed:%d!", cap->cpif[i],ret);
 			}
 		}
 	}
@@ -1882,28 +1844,30 @@ eag_captive_stop(eag_captive_t *cap)
 		ret = captive_shell_del_intf( cap->capid, cap->instype, EAG_IPV4, cap->cpif[i]);
 		#endif
 		if( EAG_RETURN_OK != ret ){
-			eag_log_err("eag_captive_stop del intf %s failed:%d!", cap->cpif[i],ret);
+			eag_log_err("eag_captive_stop del ipv4 intf %s failed:%d!", cap->cpif[i],ret);
 		}
 	}
+
 	if( EAG_RETURN_OK != captive_shell_destroy( cap->capid, cap->instype, EAG_IPV4 ) ){
 		eag_log_err("eag_captive_stop captive_shell_destroy ipv4 failed!");
 		//return EAG_ERR_CAPTIVE_CALL_SHELL_FAILED;
 	}
 	
     if (eag_ins_get_ipv6_switch(cap->eagins)) {
-		for( i=0; i<cap->ipv6_curr_ifnum; i++ ){
-	    	#if EAG_SHELL_OFF       
-			ret = captive_ip6tables_del_intf( cap->capid, cap->instype, cap->ipv6_cpif[i]);
-	    	#else
-			ret = captive_shell_del_intf( cap->capid, cap->instype, EAG_IPV6, cap->ipv6_cpif[i]);
-	    	#endif
-			if( EAG_RETURN_OK != ret ){
-				eag_log_err("eag_captive_stop del intf %s failed:%d!", cap->ipv6_cpif[i],ret);
-			}
-		}
+        for( i=0; i<cap->curr_ifnum; i++ ){
+    		#if EAG_SHELL_OFF       
+            ret = captive_ip6tables_del_intf( cap->capid, cap->instype, cap->cpif[i]);
+    		#else
+            ret = captive_shell_del_intf( cap->capid, cap->instype, EAG_IPV6, cap->cpif[i]);
+    		#endif
+            if( EAG_RETURN_OK != ret ){
+                eag_log_err("eag_captive_stop del ipv6 intf %s failed:%d!", cap->cpif[i],ret);
+            }
+        }
+        
 		if( EAG_RETURN_OK != captive_shell_destroy( cap->capid, cap->instype, EAG_IPV6 ) ){
 			eag_log_err("eag_captive_stop captive_shell_destroy ipv6 failed!");
-			//return EAG_ERR_CAPTIVE_CALL_SHELL_FAILED;
+			return EAG_ERR_CAPTIVE_CALL_SHELL_FAILED;
 		}
 	}
 	cap->status = CAP_STOP;
@@ -3278,18 +3242,9 @@ replyx:
 										DBUS_TYPE_UINT32, &(captive->curr_ifnum));
 		
 		for(i=0; i<captive->curr_ifnum; i++){
-			intfs = captive->cpif[i];
-			dbus_message_iter_append_basic(&iter,
-											DBUS_TYPE_STRING, &intfs);
-		}
-		dbus_message_iter_init_append(reply, &iter);
+		intfs = captive->cpif[i];
 		dbus_message_iter_append_basic(&iter,
-										DBUS_TYPE_UINT32, &(captive->ipv6_curr_ifnum));
-		
-		for(i=0; i<captive->ipv6_curr_ifnum; i++){
-			intfs = captive->ipv6_cpif[i];
-			dbus_message_iter_append_basic(&iter,
-											DBUS_TYPE_STRING, &intfs);
+										DBUS_TYPE_STRING, &intfs);
 		}
 	}
 	return reply;

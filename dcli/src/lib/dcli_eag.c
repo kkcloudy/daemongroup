@@ -5080,16 +5080,10 @@ eag_captive_portal_config_show_running(struct vty* vty)
 	if (EAG_RETURN_OK == ret) {		
 		if (captive_intfs.curr_ifnum > 0) {
 			for (i = 0; i < captive_intfs.curr_ifnum; i++) {
-				snprintf(showStr, sizeof(showStr), " add captive-interface ipv4 %s", captive_intfs.cpif[i]);
+				snprintf(showStr, sizeof(showStr), " add captive-interface %s", captive_intfs.cpif[i]);
 				vtysh_add_show_string(showStr);
 			}
-		}
-		if (captive_intfs.ipv6_curr_ifnum > 0) {
-			for (i = 0; i < captive_intfs.ipv6_curr_ifnum; i++) {
-				snprintf(showStr, sizeof(showStr), " add captive-interface ipv6 %s", captive_intfs.ipv6_cpif[i]);
-				vtysh_add_show_string(showStr);
-			}
-		}	
+		}		
 	}
 
 	/* add white list */
@@ -5259,14 +5253,9 @@ eag_captive_portal_config_show_running_2(int localid, int slot_id,int index)
 	if (EAG_RETURN_OK == ret) {
 		if (captive_intfs.curr_ifnum > 0) {
 			for (i=0; i < captive_intfs.curr_ifnum; i++) {
-				totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1, " add captive-interface ipv4 %s\n", captive_intfs.cpif[i]);
+				totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1, " add captive-interface %s\n", captive_intfs.cpif[i]);
 			}
-		}
-		if (captive_intfs.ipv6_curr_ifnum > 0) {
-			for (i=0; i < captive_intfs.ipv6_curr_ifnum; i++) {
-				totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1, " add captive-interface ipv6 %s\n", captive_intfs.ipv6_cpif[i]);
-			}
-		}	
+		}		
 	}
 
 	/* add white list */
@@ -6520,8 +6509,7 @@ DEFUN(set_eag_nasipv6_func,
 )
 {
 	int ret;
-	struct in6_addr ipv6;
-	char ipv6str[48] = "";
+	uint32_t ipv6[4];
 	
 	int hansitype = HANSI_LOCAL;	
 	int slot_id = HostSlotId;   
@@ -6542,8 +6530,8 @@ DEFUN(set_eag_nasipv6_func,
 	DBusConnection *dcli_dbus_connection_curr = NULL;
 	ReInitDbusConnection(&dcli_dbus_connection_curr, slot_id, distributFag);
 
-	memset(&ipv6, 0, sizeof(ipv6));
-	ret = inet_pton(AF_INET6, argv[0], &ipv6);
+	memset(ipv6, 0, sizeof(ipv6));
+	ret = inet_pton(AF_INET6, argv[0], (struct in6_addr *)ipv6);
 	if (!ret) {
 		vty_out(vty, "%% invalid ipv6 address, please like A::B.C.D.E or A::B:C\n");
 		return CMD_WARNING;
@@ -6556,9 +6544,7 @@ DEFUN(set_eag_nasipv6_func,
 		vty_out(vty, "%% eag is running, please stop it first\n");
 		return CMD_FAILURE;
 	}
-	memset(ipv6str, 0, sizeof(ipv6str));
-	strncpy(ipv6str, argv[0], sizeof(ipv6str) - 1);
-	ret = eag_set_nasipv6(dcli_dbus_connection_curr, hansitype, insid, ipv6str);
+	ret = eag_set_nasipv6(dcli_dbus_connection_curr, hansitype, insid, ipv6);
 	if (EAG_ERR_DBUS_FAILED == ret) {
 		vty_out(vty, "%% dbus error\n");
 	}
@@ -14052,18 +14038,15 @@ DEFUN(eag_set_pdc_client_log_func,
 #endif
 DEFUN(add_captive_portal_intfs_func,
 	add_captive_portal_intfs_cmd,	
-	"add captive-interface (ipv4|ipv6) INTERFACE",
+	"add captive-interface INTERFACE",
 	SHOW_STR
 	"add captive-portal interface\n"
-	"iptables\n"
-	"ip6tables\n"
 	"add captive-portal interface\n"
 	"the interface name\n"
 )
 {
 	int ret = -1;
-	uint32_t family = 0;
-	char *intfs = (char *)argv[1];
+	char *intfs = (char *)argv[0];
 
 #if 0
 	if (!if_nametoindex(intfs)) {
@@ -14083,19 +14066,8 @@ DEFUN(add_captive_portal_intfs_func,
 		return CMD_FAILURE;
 	}
 #endif
-
-	if (0 == strcmp(argv[0], "ipv4")) {
-		family = EAG_IPV4;
-	} else if (0 == strcmp(argv[0], "ipv6")) {
-		family = EAG_IPV6;
-	} else if (0 == strcmp(argv[0], "mix")) {
-		family = EAG_MIX;
-	} else {
-		vty_out(vty,"%% input prarm error\n");
-        return CMD_FAILURE;
-	}
 	ret = eag_add_captive_intf( dcli_dbus_connection_curr,
-						hansitype,insid, family, intfs );
+						hansitype,insid, intfs );
 	
 	if (EAG_ERR_DBUS_FAILED == ret) {
 		vty_out(vty,"%% dbus error\n");
@@ -14121,17 +14093,15 @@ DEFUN(add_captive_portal_intfs_func,
 
 DEFUN(del_captive_portal_intfs_func,
 	del_captive_portal_intfs_cmd,	
-	"del captive-interface (ipv4|ipv6) INTERFACE",
-	SHOW_STR
+	"del captive-interface INTERFACE",
+	"del params!\n"
 	"del captive-portal interface\n"
-	"iptables\n"
-	"ip6tables\n"
+	"del captive-portal interface\n"
 	"the interface name\n"
 )
 {
 	int ret = -1;
-	uint32_t family = 0;
-	char *intfs = (char *)argv[1];
+	char *intfs = (char *)argv[0];
 	
 	EAG_DCLI_INIT_HANSI_INFO
 #if 0
@@ -14140,18 +14110,8 @@ DEFUN(del_captive_portal_intfs_func,
 		return CMD_FAILURE;
 	}
 #endif
-	if (strcmp(argv[0], "ipv4")) {
-		family = EAG_IPV4;
-	} else if (strcmp(argv[0], "ipv6")) {
-		family = EAG_IPV6;
-	} else if (strcmp(argv[0], "mix")) {
-		family = EAG_MIX;
-	} else {
-		vty_out(vty,"%% input prarm error\n");
-        return CMD_FAILURE;
-	}
 	ret = eag_del_captive_intf( dcli_dbus_connection_curr,
-						hansitype,insid, family, intfs );
+						hansitype,insid, intfs );
 	
 	if (EAG_ERR_DBUS_FAILED == ret) {
 		vty_out(vty,"%% dbus error\n");
@@ -14190,17 +14150,9 @@ DEFUN(show_captive_portal_intfs_func,
 	if( EAG_RETURN_OK == ret ){		
 		if( captive_intfs.curr_ifnum > 0 ){
 			vty_out(vty, "================================================\n");
-			vty_out(vty, "%-10s %s\n","Index","ipv4 Interface Name");	
+			vty_out(vty, "%-10s %s\n","Index","Interface Name");	
 			for( i=0; i < captive_intfs.curr_ifnum; i++ ){						
 				vty_out(vty, "%2d %14s\n",i+1, captive_intfs.cpif[i]);
-			}
-			vty_out(vty, "================================================\n");	
-		}
-		if( captive_intfs.ipv6_curr_ifnum > 0 ){
-			vty_out(vty, "================================================\n");
-			vty_out(vty, "%-10s %s\n","Index","ipv6 Interface Name");	
-			for( i=0; i < captive_intfs.ipv6_curr_ifnum; i++ ){						
-				vty_out(vty, "%2d %14s\n",i+1, captive_intfs.ipv6_cpif[i]);
 			}
 			vty_out(vty, "================================================\n");	
 		}
@@ -15077,7 +15029,7 @@ DEFUN(eag_show_user_list_func,
 		list_for_each_entry(user, &(userdb.head), node) {
 			i++;
 			ip2str(user->user_ip, ipstr, sizeof(ipstr));
-			ipv6tostr(&(user->user_ipv6), ipv6str, sizeof(ipv6str));
+			ipv6tostr((struct in6_addr *)(user->user_ipv6), ipv6str, sizeof(ipv6str));
 			mac2str(user->usermac, macstr, sizeof(macstr), ':');
 			mac2str(user->apmac, ap_macstr, sizeof(ap_macstr), ':');
 			hour = user->session_time/3600;
@@ -15140,7 +15092,7 @@ DEFUN(eag_show_user_by_username_func,
 		list_for_each_entry(user, &(userdb.head), node) {
 			i++;
 			ip2str(user->user_ip, ipstr, sizeof(ipstr));
-			ipv6tostr(&(user->user_ipv6), ipv6str, sizeof(ipv6str));
+			ipv6tostr((struct in6_addr *)(user->user_ipv6), ipv6str, sizeof(ipv6str));
 			mac2str(user->usermac, macstr, sizeof(macstr), ':');
 			hour = user->session_time/3600;
 			minute = (user->session_time%3600)/60;
@@ -15211,7 +15163,7 @@ DEFUN(eag_show_user_by_userip_func,
 		list_for_each_entry(user, &(userdb.head), node) {
 			i++;
 			ip2str(user->user_ip, ipstr, sizeof(ipstr));
-			ipv6tostr(&(user->user_ipv6), ipv6str, sizeof(ipv6str));
+			ipv6tostr((struct in6_addr *)(user->user_ipv6), ipv6str, sizeof(ipv6str));
 			mac2str(user->usermac, macstr, sizeof(macstr), ':');
 			hour = user->session_time/3600;
 			minute = (user->session_time%3600)/60;
@@ -15280,7 +15232,7 @@ DEFUN(eag_show_user_by_usermac_func,
 		list_for_each_entry(user, &(userdb.head), node) {
 			i++;
 			ip2str(user->user_ip, ipstr, sizeof(ipstr));
-			ipv6tostr(&(user->user_ipv6), ipv6str, sizeof(ipv6str));
+			ipv6tostr((struct in6_addr *)(user->user_ipv6), ipv6str, sizeof(ipv6str));
 			mac2str(user->usermac, macstr, sizeof(macstr), ':');
 			hour = user->session_time/3600;
 			minute = (user->session_time%3600)/60;
@@ -15345,7 +15297,7 @@ DEFUN(eag_show_user_by_index_func,
 		list_for_each_entry(user, &(userdb.head), node) {
 			i++;
 			ip2str(user->user_ip, ipstr, sizeof(ipstr));
-			ipv6tostr(&(user->user_ipv6), ipv6str, sizeof(ipv6str));
+			ipv6tostr((struct in6_addr *)(user->user_ipv6), ipv6str, sizeof(ipv6str));
 			mac2str(user->usermac, macstr, sizeof(macstr), ':');
 			hour = user->session_time/3600;
 			minute = (user->session_time%3600)/60;

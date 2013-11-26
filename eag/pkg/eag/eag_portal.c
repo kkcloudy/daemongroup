@@ -3070,7 +3070,6 @@ portal_proc_packet(eag_portal_t *portal,
 		eag_log_err("portal_proc_packet input error");
 		return -1;
 	}
-	eag_log_info("&user_addr=%p", &user_addr);
     portal_packet_init_ipx(reqpkt, &user_addr);
     ipx2str(&user_addr, user_ipstr, sizeof(user_ipstr));
 	eag_log_debug("eag_portal","Receive portal packet type=%x,userip=%#x,errcode=%u "

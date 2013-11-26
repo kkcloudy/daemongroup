@@ -543,16 +543,13 @@ radius_add_public_attr(struct radius_packet_t *packet,
 		return -1;
 	}
 	if (EAG_IPV6 == appconn->session.user_addr.family) {
-	#if 0 // to add
-		radius_addattr(packet, RADIUS_ATTR_FRAMED_IP_ADDRESS, 0, 0,
-		       appconn->session.user_ip, NULL, 0);
+		#if 0 // to add
 		radius_addattr(&packet, RADIUS_ATTR_USER_NAME, 0, 0, 0,
 			(uint8_t *)(appconn->session.user_addr.user_ipv6), sizeof(struct in6_addr));
-	#endif
-	} else {
-		radius_addattr(packet, RADIUS_ATTR_FRAMED_IP_ADDRESS, 0, 0,
-		       appconn->session.user_addr.user_ip, NULL, 0);
+		#endif
 	}
+	radius_addattr(packet, RADIUS_ATTR_FRAMED_IP_ADDRESS, 0, 0,
+	       appconn->session.user_addr.user_ip, NULL, 0);
 
 	radius_addattr(packet, RADIUS_ATTR_NAS_IDENTIFIER, 0, 0, 0,
 		       (uint8_t *)appconn->session.nasid,
