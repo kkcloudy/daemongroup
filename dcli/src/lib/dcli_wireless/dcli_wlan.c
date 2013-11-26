@@ -6341,8 +6341,8 @@ DEFUN(set_wlan_ascii_essid_func,
 	//printf("argv[0]:%s\n",argv[0]);
 	//printf("argv[0]+2:%s\n",argv[0]+2);
 	unsigned long ul;
-	ESSID = (unsigned char*)malloc(ESSID_DEFAULT_LEN);
-	memset(ESSID, 0, ESSID_DEFAULT_LEN);
+	ESSID = (unsigned char*)malloc(ESSID_DEFAULT_LEN+1);
+	memset(ESSID, 0, ESSID_DEFAULT_LEN+1);
 	for(i = 0;i < len;i=i+2)
 	{
 		memset(a,0,3);

@@ -2316,7 +2316,7 @@ int WID_DELETE_WTP(unsigned int WTPID){
 		while(wlan_id != NULL)
 		{			
 			wlan_id_next = wlan_id->next;
-		
+			CW_FREE_OBJECT_WID(wlan_id->ESSID);
 			CW_FREE_OBJECT_WID(wlan_id);
 		
 			wlan_id = wlan_id_next;

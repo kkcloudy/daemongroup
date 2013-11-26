@@ -29396,7 +29396,6 @@ DBusMessage * wid_dbus_interface_wlan_tunnel_mode(DBusConnection *conn, DBusMess
 				WID_RADIO_WLAN_TUNNEL_MODE(j,forwardmode,nodeFlag);
 			}
 		}
-		g_WLAN_TUNNEL_POLICY = forwardmode;
 		ret = WID_DBUS_SUCCESS;
 	}else{
 		g_radioid = wtpid*L_RADIO_NUM + radioid ;
@@ -29470,6 +29469,9 @@ DBusMessage * wid_dbus_interface_wlan_tunnel_mode(DBusConnection *conn, DBusMess
 			}
 		}	
 	}
+
+	if(ret == WID_DBUS_SUCCESS)
+		g_WLAN_TUNNEL_POLICY = forwardmode;
 		
 	reply = dbus_message_new_method_return(msg);
 	

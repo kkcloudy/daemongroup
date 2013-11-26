@@ -8361,8 +8361,10 @@ void dcli_vrrp_element_init(void)
 	install_element(HANSI_NODE,&vrrp_conf_failover_ip_cmd);
 	install_element(HANSI_NODE,&vrrp_conf_failover_ip_peer_cmd);
 	install_element(HANSI_NODE,&vrrp_no_failover_ip_peer_cmd);
+	#if 0
 	install_element(HANSI_NODE,&vrrp_config_gratuitous_arp_discrete_value_cmd);
 	install_element(HANSI_NODE,&vrrp_config_gratuitous_arp_continous_value_cmd);
+	#endif
 #if 1
 		  install_element (HANSI_NODE, &vtysh_ping_cmd);
 		  install_element(HANSI_NODE,&vtysh_ping_count_cmd);

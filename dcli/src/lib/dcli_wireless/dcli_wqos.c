@@ -159,8 +159,10 @@ int wid_interface_ifname_wlan(char *ptr,struct vty *vty, char *line)
 			sprintf(dcli_vty_ifname,"wlan%d-%d-%d",slotid,index,ID);
 		}
 
+		#if 0
 		if(ret == UNKNOWN_ERROR)  //fengwenchao add for AXSSZFI-1587
 			vty_out(vty,"wlan interface is already exist\n");
+		#endif
 		result = CMD_SUCCESS;
 	}
 	else 
@@ -762,7 +764,7 @@ int wid_no_interface_ifname_ebr(char *ptr,struct vty *vty)
 	DBusMessageIter  iter;
 	int ret = 0;
 	int result = 0;
-	unsigned char ID = 0;
+	unsigned int ID = 0;
 	//unsigned char policy = 0;
 	int isAdd = 0;	
 	unsigned int EBRID = 0;
@@ -780,7 +782,7 @@ int wid_no_interface_ifname_ebr(char *ptr,struct vty *vty)
 
 	memcpy(id,ptr+3,(strlen(ptr)-3));
 	
-	ret = parse_char_ID(id,&ID);
+	ret = parse_int_ID(id,&ID);
 		
 	if (ret != WID_DBUS_SUCCESS) 
 	{
