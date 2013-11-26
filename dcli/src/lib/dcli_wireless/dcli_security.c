@@ -6612,6 +6612,7 @@ DEFUN(show_asd_global_variable_cmd_func,
 	unsigned char  asd_ipset_switch = 0;
 	unsigned char asd_getip_from_dhcpsnp = 0;
 	unsigned char asd_syslog_debug = 0;
+	unsigned char asd_radius_format = 0;
 	int  index = 0;
 	int  localid = 1;
 	int  slot_id = HostSlotId;
@@ -6700,6 +6701,9 @@ DEFUN(show_asd_global_variable_cmd_func,
 		dbus_message_iter_next(&iter);	
 		dbus_message_iter_get_basic(&iter,&asd_syslog_debug);
 
+		dbus_message_iter_next(&iter);	
+		dbus_message_iter_get_basic(&iter,&asd_radius_format);		
+
 		vty_out(vty,"================================================================================\n");
 		vty_out(vty,"ASD global variable list summary\n");
 		vty_out(vty,"======================================================\n");
@@ -6722,6 +6726,7 @@ DEFUN(show_asd_global_variable_cmd_func,
 				vty_out(vty,"asd ipset switch:                        %s\n",(asd_ipset_switch == 1)?"enable":"disable");
 				vty_out(vty,"asd get ip from dhcp-snooping:           %s\n",(asd_getip_from_dhcpsnp == 1)?"enable":"disable");
 				vty_out(vty,"asd log format(bit0:hn-mobile bit1:mobile):   0x%x\n",asd_syslog_debug);
+				vty_out(vty,"asd radius format(0:default 1:indonesia):   %d\n",asd_radius_format);
 		vty_out(vty,"================================================================================\n");
 	}
 	

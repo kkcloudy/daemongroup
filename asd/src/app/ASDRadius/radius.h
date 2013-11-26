@@ -71,6 +71,11 @@ struct radius_attr_hdr {
 
 #define RADIUS_MAX_ATTR_LEN (255 - sizeof(struct radius_attr_hdr))
 
+
+enum { RADIUS_FORMAT_DEFAULT = 0,
+       RADIUS_FORMAT_INDONESIA = 1       /* format for Republik Indonesia */
+};
+
 enum { RADIUS_ATTR_USER_NAME = 1,
        RADIUS_ATTR_USER_PASSWORD = 2,
        RADIUS_ATTR_NAS_IP_ADDRESS = 4,

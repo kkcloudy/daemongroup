@@ -463,6 +463,7 @@ typedef enum{
 	HANSI_LOCAL
 } HANSI_TYPE;
 
+extern unsigned char asd_8021x_raidus_format;
 extern unsigned char gasdtrapflag;
 extern pthread_mutex_t asd_g_sta_mutex;
 extern pthread_mutex_t asd_g_wtp_mutex;

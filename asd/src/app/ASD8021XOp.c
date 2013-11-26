@@ -708,17 +708,35 @@ static void ieee802_1x_encapsulate_radius(struct asd_data *wasd,
 	}
 	pthread_mutex_unlock(&asd_g_hotspot_mutex);
 
-	//
 	wtpid = (wasd->BSSIndex)/L_BSS_NUM/L_RADIO_NUM;
-	if(ASD_WTP_AP[wtpid])
-	{		
-		os_snprintf(buf, sizeof(buf), RADIUS_802_1X_ADDR_FORMAT ":%s",
-				MAC2STR(ASD_WTP_AP[wtpid]->WTPMAC), wasd->conf->ssid.ssid);
-	}
+	/* add radius format for Indonesia, 2013-11-22 */
+    if(asd_8021x_raidus_format == RADIUS_FORMAT_INDONESIA)
+    {	
+    	if(ASD_WTP_AP[wtpid])
+    	{	
+			char * wtp_name = (char *)os_zalloc(strlen(ASD_WTP_AP[wtpid]->WTPNAME));
+			memcpy(wtp_name, ASD_WTP_AP[wtpid]->WTPNAME, strlen(ASD_WTP_AP[wtpid]->WTPNAME));
+    		asd_printf(ASD_1X,MSG_DEBUG,"wtp_name: %s,  len: %d\n",wtp_name, strlen(ASD_WTP_AP[wtpid]->WTPNAME));			
+    		os_snprintf(buf, sizeof(buf), "%s:%s", wtp_name, wasd->conf->ssid.ssid);
+    	}
+    	else
+    	{
+    		os_snprintf(buf, sizeof(buf), "%s:%s", "wtp_unkown", wasd->conf->ssid.ssid);
+    	}
+    }
 	else
 	{
-		os_snprintf(buf, sizeof(buf), RADIUS_802_1X_ADDR_FORMAT ":%s",
-				    MAC2STR(wasd->own_addr), wasd->conf->ssid.ssid);
+    	if(ASD_WTP_AP[wtpid])
+    	{		
+    		os_snprintf(buf, sizeof(buf), RADIUS_802_1X_ADDR_FORMAT ":%s",
+    				MAC2STR(ASD_WTP_AP[wtpid]->WTPMAC), wasd->conf->ssid.ssid);
+    	}
+    	else
+    	{
+    		os_snprintf(buf, sizeof(buf), RADIUS_802_1X_ADDR_FORMAT ":%s",
+    				    MAC2STR(wasd->own_addr), wasd->conf->ssid.ssid);
+    	}
+		
 	}
 	buf[sizeof(buf) - 1] = '\0';
 	if (!radius_msg_add_attr(msg, RADIUS_ATTR_CALLED_STATION_ID,

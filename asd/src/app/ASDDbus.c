@@ -24432,7 +24432,7 @@ DBusMessage *asd_dbus_show_asd_global_variable(DBusConnection *conn, DBusMessage
 	dbus_message_iter_append_basic (&iter, DBUS_TYPE_BYTE, &asd_ipset_switch);
 	dbus_message_iter_append_basic (&iter, DBUS_TYPE_BYTE, &asd_sta_getip_from_dhcpsnoop);
 	dbus_message_iter_append_basic (&iter, DBUS_TYPE_BYTE, &gASDLOGDEBUG);
-	
+	dbus_message_iter_append_basic (&iter, DBUS_TYPE_BYTE, &asd_8021x_raidus_format);	
 
 	return reply;
 }
@@ -27283,6 +27283,55 @@ DBusMessage *asd_dbus_set_asd_sta_get_ip_from_dhcpsnoop(DBusConnection *conn, DB
 }
 
 
+DBusMessage *asd_dbus_set_asd_radius_format(DBusConnection *conn, DBusMessage *msg, void *user_data)
+{
+	DBusMessage* reply; 	
+	DBusMessageIter  iter;
+	DBusError err;
+	int ret = ASD_DBUS_SUCCESS;
+	unsigned char type=0;	
+	
+	dbus_error_init(&err);
+	if (!(dbus_message_get_args ( msg, &err,
+								DBUS_TYPE_BYTE,&type,
+								DBUS_TYPE_INVALID))){
+	
+		asd_printf(ASD_DEFAULT,MSG_DEBUG,"asd_dbus_set_asd_radius_format() unable to get dbus input args\n");				
+		if (dbus_error_is_set(&err)) {
+			asd_printf(ASD_DEFAULT,MSG_DEBUG,"%s raised: %s",err.name,err.message);
+			dbus_error_free(&err);
+		}
+		return NULL;
+	}
+	asd_printf(ASD_DEFAULT,MSG_DEBUG,"now in func : %s, set radius fromat type :%d\n",__func__,type);
+	if(type == 0)
+	{
+		asd_8021x_raidus_format = RADIUS_FORMAT_DEFAULT;
+    	asd_printf(ASD_DEFAULT,MSG_DEBUG,"set radius fromat to default.\n");		
+	}
+	else if(type == 1)
+	{
+		asd_8021x_raidus_format = RADIUS_FORMAT_INDONESIA;	
+    	asd_printf(ASD_DEFAULT,MSG_DEBUG,"set radius fromat to Republik Indonesia.\n");		
+	}
+	else
+	{
+    	asd_printf(ASD_DEFAULT,MSG_DEBUG,"type:%d, do not support!\n",type);		
+	}
+		
+	ret = ASD_DBUS_SUCCESS;
+	reply = dbus_message_new_method_return(msg);
+			
+	dbus_message_iter_init_append (reply, &iter);	
+
+	dbus_message_iter_append_basic (&iter,
+									DBUS_TYPE_UINT32,
+									&ret); 
+
+	return reply;	
+}
+
+
 DBusMessage *asd_dbus_set_asd_sta_static_arp(DBusConnection *conn, DBusMessage *msg, void *user_data)
 {
 	DBusMessage* reply; 	
@@ -28121,6 +28170,17 @@ DBusMessage *asd_dbus_security_show_running_config(DBusConnection *conn, DBusMes
 				totalLen += sprintf(cursor,"set sta static fdb enable\n");
 				cursor = showStr + totalLen;
 			}
+
+			/* save config for cmd set asd radius format. 2013-11-22 */
+            if(asd_8021x_raidus_format == RADIUS_FORMAT_INDONESIA)
+            {
+				totalLen += sprintf(cursor,"set asd radius format to indonesia\n");
+				cursor = showStr + totalLen;				
+            }
+			else if(asd_8021x_raidus_format == RADIUS_FORMAT_DEFAULT)
+            {
+				/* the default config, do not save. */
+            }
 			
 			/* add to save config of moblie log format. 2013-11-01 */
             if(gASDLOGDEBUG & BIT(0))
@@ -28287,6 +28347,17 @@ DBusMessage *asd_dbus_security_show_running_config(DBusConnection *conn, DBusMes
             {
 				totalLen += sprintf(cursor,"set sta_ap syslog format mobile enable\n");
 				cursor = showStr + totalLen;				
+            }
+
+			/* save config for cmd set asd radius format. 2013-11-22 */
+            if(asd_8021x_raidus_format == RADIUS_FORMAT_INDONESIA)
+            {
+				totalLen += sprintf(cursor,"set asd radius format to indonesia\n");
+				cursor = showStr + totalLen;				
+            }
+			else if(asd_8021x_raidus_format == RADIUS_FORMAT_DEFAULT)
+            {
+				/* the default config, do not save. */
             }
 			
 			if(asd_sta_static_arp == 1){
@@ -29111,6 +29182,9 @@ static DBusHandlerResult asd_dbus_message_handler (DBusConnection *connection, D
 		else if (dbus_message_is_method_call(message,ASD_DBUS_STA_INTERFACE,ASD_DBUS_STA_METHOD_SET_ASD_STA_IP_FROM_DHCPSNOOP)) {
 			reply = asd_dbus_set_asd_sta_get_ip_from_dhcpsnoop(connection,message,user_data);
 		}
+		else if (dbus_message_is_method_call(message,ASD_DBUS_STA_INTERFACE,ASD_DBUS_STA_METHOD_SET_ASD_RADIUS_FORMAT)) {
+			reply = asd_dbus_set_asd_radius_format(connection,message,user_data);
+		}		
 		else if (dbus_message_is_method_call(message,ASD_DBUS_STA_INTERFACE,ASD_DBUS_STA_METHOD_SET_STA_ARP)) {
 			reply = asd_dbus_set_sta_arp(connection,message,user_data);
 		}

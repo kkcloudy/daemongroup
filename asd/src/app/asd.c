@@ -110,6 +110,7 @@ int glicensecount = 0;
 asd_sta_flash_disconn *ASD_FDStas;
 int G_RADIO_NUM;
 int BSS_NUM;
+unsigned char asd_8021x_raidus_format = 0;  /* 0 is the default format */
 unsigned char gasdtrapflag = 1;
 pthread_mutex_t asd_g_sta_mutex;
 pthread_mutex_t asd_g_wtp_mutex;

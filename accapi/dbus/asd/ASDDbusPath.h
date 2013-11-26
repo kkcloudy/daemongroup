@@ -296,6 +296,7 @@ char ASD_DBUS_STA_METHOD_SET_ASD_STA_IP_FROM_DHCPSNOOP[PATH_LEN]=  "set_asd_sta_
 char ASD_DBUS_STA_METHOD_SET_ASD_STA_STATIC_ARP[PATH_LEN]=	 "set_asd_sta_static_arp";
 char ASD_DBUS_STA_METHOD_SET_ASD_STA_STATIC_ARP_IF_GROUP[PATH_LEN]=	 "set_asd_sta_static_arp_if_group";
 char ASD_DBUS_STA_METHOD_SET_ASD_SWITCH[PATH_LEN]=	 "set_asd_switch";
+char ASD_DBUS_STA_METHOD_SET_ASD_RADIUS_FORMAT[PATH_LEN]=  "set_asd_8021x_radius_format";    /* this define is for asd */
 
 char ASD_DBUS_STA_METHOD_AC_ADD_MAC_LIST[PATH_LEN]=	"ac_add_MAC_list_sta";	/*nl add 2010-08-28*/
 char ASD_DBUS_STA_METHOD_AC_DEL_MAC_LIST[PATH_LEN]=	"ac_del_MAC_list_sta";	/*nl add 2010-08-28*/

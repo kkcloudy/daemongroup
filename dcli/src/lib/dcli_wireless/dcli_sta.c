@@ -20631,6 +20631,92 @@ DEFUN(show_bss_bssindex_cmd_func,
 	return CMD_SUCCESS; 
 	
 }
+
+DEFUN(set_asd_1x_radius_format_cmd_func,
+	    set_asd_1x_radius_format_cmd,
+		"set asd radius format to (default|indonesia)",
+		"set 802.1x radius format for different use\n"
+		"default 802.1x radius format\n"
+		"Indonesia 802.1x radius format\n"
+	    )
+{
+
+	DBusMessage *query, *reply;	
+	DBusMessageIter	 iter;
+	DBusError err;
+	int ret = ASD_DBUS_SUCCESS;
+	unsigned char type = 0;
+	
+	if (!strcmp(argv[0],"default"))
+	{
+		type = 0;		/* RADIUS_FORMAT_DEFAULT */
+	}
+	else if (!strcmp(argv[0],"indonesia"))
+	{
+		type = 1;		/* RADIUS_FORMAT_INDONESIA */
+	}
+	else
+	{
+		return CMD_SUCCESS;
+	}
+	
+	int localid = 1;int slot_id = HostSlotId;int index = 0;
+	char BUSNAME[PATH_LEN];
+	char OBJPATH[PATH_LEN];
+	char INTERFACE[PATH_LEN];
+	if((vty->node == CONFIG_NODE)||(vty->node == ENABLE_NODE)){
+		index = 0;
+	}else if(vty->node == HANSI_NODE){
+		index = (int)vty->index;
+		localid = vty->local;
+		slot_id = vty->slotindex;
+	}else if (vty->node == LOCAL_HANSI_NODE){
+		index = vty->index;
+		localid = vty->local;
+		slot_id = vty->slotindex;
+	}
+	DBusConnection *dcli_dbus_connection = NULL;
+	ReInitDbusConnection(&dcli_dbus_connection,slot_id,distributFag);
+	
+	ReInitDbusPath_V2(localid,index,ASD_DBUS_BUSNAME,BUSNAME);
+	ReInitDbusPath_V2(localid,index,ASD_DBUS_STA_OBJPATH,OBJPATH);
+	ReInitDbusPath_V2(localid,index,ASD_DBUS_STA_INTERFACE,INTERFACE);
+	query = dbus_message_new_method_call(BUSNAME,OBJPATH,INTERFACE,ASD_DBUS_STA_METHOD_SET_ASD_RADIUS_FORMAT);
+	
+	dbus_error_init(&err);
+
+	dbus_message_append_args(query,
+							DBUS_TYPE_BYTE,&type,
+							DBUS_TYPE_INVALID);
+
+	
+	reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection,query,-1, &err);
+	
+	dbus_message_unref(query);
+	
+	if (NULL == reply) {
+		vty_out(vty,"<error> failed get reply.\n");
+		if (dbus_error_is_set(&err)) {
+			vty_out(vty,"%s raised: %s",err.name,err.message);
+			dbus_error_free_for_dcli(&err);
+		}
+		return CMD_SUCCESS;
+	}
+	dbus_message_iter_init(reply,&iter);
+	dbus_message_iter_get_basic(&iter,&ret);
+	
+	if(ret==ASD_DBUS_SUCCESS)
+		vty_out(vty,"set asd sta 802.1x radius format successful!\n"); 
+	else
+		vty_out(vty,"set failed %d\n",ret);
+	dbus_message_unref(reply);
+
+	return CMD_SUCCESS; 
+}
+
+
+
+
 int dcli_wlan_list_show_running_config(struct vty*vty) 
 {	
 	char *showStr = NULL,*cursor = NULL,ch = 0,tmpBuf[SHOWRUN_PERLINE_SIZE] = {0};
@@ -21271,6 +21357,7 @@ void dcli_sta_init(void) {
 	install_element(HANSI_NODE,&show_roaming_sta_cmd);
 	install_element(HANSI_NODE,&show_bss_summary_cmd);
 	install_element(HANSI_NODE,&show_bss_bssindex_cmd);
+	install_element(HANSI_NODE,&set_asd_1x_radius_format_cmd);	/* add to set asd radius format */
 	/************************************************************************************/
 	/*-----------------------------------LOCAL_HANSI_NODE-----------------------------------*/
 	install_node(&local_hansi_sta_node,NULL,"LOCAL_HANSI_STA_NODE");
