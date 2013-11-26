@@ -50,6 +50,30 @@ unsigned int dhcp_dcli_set_server_routers
 	struct iaddr* routersip,
 	char* poolname
 );
+struct statistics_info {
+	unsigned int host_num;		/* total number of ip address */
+	unsigned int segment_times;	/* ip address assigned */
+	unsigned int discover_times;
+	unsigned int offer_times;
+	unsigned int requested_times;
+	unsigned int ack_times;
+};
+
+/*lease state struct */
+struct lease_state{
+	unsigned int total_lease_num;
+	unsigned int active_lease_num;
+	unsigned int free_lease_num;
+	unsigned int backup_lease_num;
+};
+/*subnet lease state*/
+struct sub_lease_state{
+	char *subnet;
+	char *mask;
+	char *poolname;
+	struct statistics_info info;
+	struct lease_state subnet_lease_state;
+};
 
 unsigned int dhcp_dcli_set_server_host
 (

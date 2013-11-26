@@ -34,6 +34,7 @@
 
 #include "dhcpd.h"
 #include "omapip/hash.h"
+#include "dhcp6_dbus.h"
 
 struct subnet *subnets;
 struct shared_network *shared_networks;
@@ -416,6 +417,129 @@ get_lease_ip_info_by_hw
 	}
 	
 	return ret;
+}
+/**********************************************************************************
+ *  get_dhcp_lease_ipv6_state_num
+ *
+ *	DESCRIPTION:
+ * 		get total lease status 
+ *
+ *	INPUT: 		
+ *		
+ *			
+ *	OUTPUT:
+ *		lease_state
+ *		sub_lease_state
+ *		sub_count
+ * 	RETURN:		
+ *		 
+ *		 0 	->  ok
+ *		 other	 ->  fail 
+ **********************************************************************************/
+int get_dhcp_lease_ipv6_state_num
+(
+	struct dbus_lease_state  *lease_state , 
+	struct dbus_sub_lease_state **sub_lease_state, 
+	unsigned int *sub_count
+)
+{	
+	int i = 0;
+	struct subnet *rv = NULL;
+	struct ipv6_pool **next = NULL;
+	struct dcli_pool* poolnode = NULL;	
+	struct dbus_sub_lease_state *tmp_sub_state = NULL;
+
+	unsigned int total_lease = 0 ,  free_lease = 0, active_lease = 0, backup_lease = 0;
+	unsigned int sub_lease_count = 0, sub_lease_free = 0, sub_lease_active = 0, sub_lease_backup = 0;  
+
+	unsigned int sub_num = 0;
+	//struct lease *tmp_lease = NULL;
+	
+	
+	if(!lease_state  || !sub_count){
+		log_error("get_dhcp_lease_state_num function input argument %s %s\n",
+				lease_state ? "":"lease_state is NULL", sub_lease_state ? "":"sub_lease_state is NULL");
+		return 1;
+	}
+	/*get subnet number*/
+	for (rv = subnets; rv; rv = rv->next_subnet){
+		++sub_num;
+	}
+
+	*sub_count = sub_num;	
+	
+	tmp_sub_state = malloc(sizeof(struct dbus_sub_lease_state) * sub_num);
+	if(NULL == tmp_sub_state){
+		log_error("get_dhcp_lease_ipv6_state_num function malloc fail in %s on %d line\n", __FILE__, __LINE__);
+		return 1;
+	}
+	memset(tmp_sub_state, 0, sizeof(struct dbus_sub_lease_state) * sub_num);
+
+
+	for (rv = subnets; rv; rv = rv->next_subnet) 
+	{
+		sub_lease_count = 0;
+		sub_lease_free = 0;
+		sub_lease_active = 0;
+		sub_lease_backup = 0;
+		
+		if ((rv->shared_network) && (rv->shared_network->ipv6_pools) && *(rv->shared_network->ipv6_pools)) 
+		{
+			next = rv->shared_network->ipv6_pools;
+			//while (*next ) 
+			{
+						
+				sub_lease_count += (*next)->lease_count;
+				//sub_lease_free  += next->free_leases;				
+				//sub_lease_backup +=  next->backup_leases;
+				sub_lease_active = (*next)->num_active;
+				/*
+				for(tmp_lease = next->active; tmp_lease ; tmp_lease = tmp_lease->next){
+					++sub_lease_active;
+				}*/
+					
+				//next = next->next;
+				
+			}
+		}	
+
+		poolnode = dhcp6_dbus_find_poolnode_by_subnet(rv);
+		if (poolnode) {
+			//sprintf(tmp_sub_state[i].poolname , "%s", poolnode->poolname);
+			memcpy(tmp_sub_state[i].poolname, poolnode->poolname, strlen(poolnode->poolname));
+		}
+		/*
+		if (poolnode = dhcp_dbus_find_poolnode_by_subnet(rv)) {
+			sprintf(tmp_sub_state[i].poolname , "%s", poolnode->poolname);
+		}*/
+		sprintf(tmp_sub_state[i].subnet , "%s", piaddr(rv->net));
+		sprintf(tmp_sub_state[i].mask, "%s", piaddr(rv->netmask));
+		tmp_sub_state[i].subnet_lease_state.total_lease_num= sub_lease_count;
+		tmp_sub_state[i].subnet_lease_state.free_lease_num= sub_lease_free;
+		tmp_sub_state[i].subnet_lease_state.active_lease_num= sub_lease_active;
+		tmp_sub_state[i].subnet_lease_state.backup_lease_num = sub_lease_backup;
+
+		//tmp_sub_state[i].info.discover_times = rv->discover_times;
+		//tmp_sub_state[i].info.offer_times= rv->offer_times;
+		//tmp_sub_state[i].info.requested_times= rv->requested_times;
+		//tmp_sub_state[i].info.ack_times= rv->response_times;
+		
+		log_debug("sub %s %s total is %d  total active %d\n", 
+			tmp_sub_state[i].subnet, tmp_sub_state[i].mask,sub_lease_count, sub_lease_active);
+
+		total_lease += sub_lease_count;
+		//free_lease  += sub_lease_free;
+		//backup_lease += sub_lease_backup;
+		active_lease += sub_lease_active;
+		++i;
+	}	
+	lease_state->total_lease_num = total_lease;
+	lease_state->free_lease_num  = free_lease;
+	lease_state->backup_lease_num = backup_lease;
+	lease_state->active_lease_num = active_lease;
+	*sub_lease_state = tmp_sub_state;
+
+	return 0;
 }
 
 struct dhcp_lease_info*

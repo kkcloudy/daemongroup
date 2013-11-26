@@ -60,5 +60,7 @@ dhcp6_dbus_find_subnet_by_ifname
 	struct dcli_subnet** subnode
 );
 
+struct dcli_pool *dhcp6_dbus_find_poolnode_by_subnet(struct subnet *subnet);
+
 #endif
 

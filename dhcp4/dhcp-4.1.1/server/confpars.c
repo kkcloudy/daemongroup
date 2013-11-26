@@ -3650,6 +3650,16 @@ parse_address_range6_no_file
 		return;
 	}*/
 }
+int 
+pow_count(int a, int n)
+{	
+	int sum = 1,i = 0;
+	for(; i< n; i++){
+		sum += (a * sum);	
+	}
+	
+	return sum;
+}
 
 int
 common_subnet_parsing_no_cfile_v6
@@ -3660,7 +3670,9 @@ common_subnet_parsing_no_cfile_v6
 ) 
 {
 	struct subnet *t, *u;
-
+	struct iaddr lo, hi;
+	int i = 0, sum = 0;
+	
 log_info("common_subnet_parsing_no_cfile run 1 \n");
 
 	enter_subnet(subnet);
@@ -3702,7 +3714,15 @@ log_info("common_subnet_parsing_no_cfile_v6 run 2 \n");
 */
 	/* Add the subnet to the list of subnets in this shared net. */
 	parse_address_range6_no_file(&(sub_conf->range_conf), subnet->group);
-	
+	lo = sub_conf->range_conf.low;
+	hi = sub_conf->range_conf.high;
+	for(i = 0; i < lo.len; i++){
+		if(lo.iabuf[i] != hi.iabuf[i])
+			{
+			sum += (hi.iabuf[i] - lo.iabuf[i]) * (pow_count(255, (11 - i))); 
+		}
+	}
+	(*(subnet->shared_network->ipv6_pools))->lease_count = sum;
 	if (share->subnets == NULL) {
 		subnet_reference(&share->subnets, subnet, MDL);
 	} else {

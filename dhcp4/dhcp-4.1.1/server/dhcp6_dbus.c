@@ -130,6 +130,12 @@ extern int get_lease_ip_info_by_hw(unsigned char *hw_addr, struct dhcp_lease_ip_
 extern struct dhcp_lease_info *get_lease_ip_info_by_ip(unsigned int ip_addr, unsigned int ip_nums);
 extern void test_for_del_subnet_pool(struct dcli_subnet *delsub);
 extern void test_for_del_subnet_interface(char* interface_name);
+extern int get_dhcp_lease_ipv6_state_num
+(
+	struct dbus_lease_state  *lease_state , 
+	struct dbus_sub_lease_state **sub_lease_state, 
+	unsigned int *sub_count
+);
 
 /* discover.c */
 struct iface_info;
@@ -2823,6 +2829,233 @@ dhcp6_dbus_show_static_host
 	}
 	return reply;
 }
+/**********************************************************************************
+ *  get_mask
+ *
+ *	DESCRIPTION:
+ * 		get mask lenth
+ *
+ *	INPUT:
+ *		i -> unsinged char format 
+ *	
+ *	OUTPUT:
+ *		NULL
+ *
+ * 	RETURN:
+ *		
+ *		total -> mask lenth
+ *		
+ **********************************************************************************/
+static int get_mask(unsigned char i)
+{
+    int total = 0;
+    while(i > 0){
+        if(i & 0x1){
+            total += 1;
+        }
+        i = i >> 1;
+    }
+	
+    return total;
+}
+
+/**********************************************************************************
+ *  compare_subnet
+ *
+ *	DESCRIPTION:
+ * 		compare subnet address
+ *
+ *	INPUT:
+ *		subnet1, mask1; subnet2, mask2 - struct subnet
+ *	
+ *	OUTPUT:
+ *		NULL
+ *
+ * 	RETURN:
+ *		
+ *		1  ->  Not equal
+ *		0  ->  Equal
+ *		
+ **********************************************************************************/
+static int compare_subnet(struct iaddr subnet1, struct iaddr net_mask1, struct iaddr subnet2, struct iaddr net_mask2)
+{
+	int i = 0;
+	int masklen1 = 0 , masklen2 = 0;
+
+	for(i = 0; i < net_mask1.len; i++){
+		masklen1 += get_mask(net_mask1.iabuf[i]);
+	}
+
+	for(i = 0; i < net_mask2.len; i++){
+		masklen2 += get_mask(net_mask2.iabuf[i]);
+	}
+/*
+	if(masklen1 != masklen2){
+		log_info("compare_subnet 444\n");
+		return 1;
+	}
+*/	
+	for (i = 0; i < subnet1.len; i++) {
+		//log_debug("check_sub->ipaddr.iabuf[i] %d, head_sub->ipaddr.iabuf[i] %d\n", subnet1.iabuf[i],  subnet2.iabuf[i]);
+
+		if (((subnet1.iabuf[i]) & ((net_mask1.iabuf[i])&(net_mask2.iabuf[i]))) != 
+			((subnet2.iabuf[i]) & ((net_mask2.iabuf[i])&( net_mask1.iabuf[i])))) {	
+			/*when break i not ++*/
+			break;
+		}
+		
+	}
+
+	if (subnet1.len == i) {
+		return 0;
+	}
+
+	return 1;
+}
+
+/**********************************************************************************
+ *  dhcp6_dbus_find_poolnode_by_subnet
+ *
+ *	DESCRIPTION:
+ * 		get pool node from subnet
+ *
+ *	INPUT:
+ *		subnet - struct subnet
+ *	
+ *	OUTPUT:
+ *		pool node
+ *
+ * 	RETURN:
+ *		NULL -> not find poolnode by subnet
+ *		!NULL -> find
+ *		
+ **********************************************************************************/
+struct dcli_pool *dhcp6_dbus_find_poolnode_by_subnet(struct subnet *subnet)
+{
+	struct dcli_pool* poolnode = NULL;
+	struct dcli_pool* tmp = NULL;
+	struct dcli_subnet* dcli_subnet = NULL;
+
+	if(!subnet) {
+		return NULL;
+	}
+
+	for(tmp = head_pool.next; tmp; tmp = tmp->next) {
+		for(dcli_subnet = tmp->headsubnet; dcli_subnet; dcli_subnet = dcli_subnet->next) {
+			if(!compare_subnet(subnet->net, subnet->netmask, dcli_subnet->lowip, dcli_subnet->mask)) {
+				poolnode = tmp;
+				return poolnode;
+		   	}			
+		}
+	}  
+
+	return NULL;	
+}
+
+DBusMessage* 
+dhcp6_dbus_show_lease_state
+(
+	DBusConnection *conn, 
+	DBusMessage *msg, 
+	void *user_data
+)
+{
+	DBusMessage*	reply = NULL;	  
+	DBusMessageIter 	iter_array;
+	DBusMessageIter 	iter;
+	DBusError			err;
+
+	int ret = 0;
+	int i  = 0;
+	struct dbus_lease_state  lease_state;
+	struct dbus_sub_lease_state *sub_lease_state = NULL;
+	unsigned int sub_count = 0;
+	char *sub_name = NULL;
+	char *sub_mask = NULL;
+	char *poolname = NULL;
+	
+	dbus_error_init(&err);
+
+	reply = dbus_message_new_method_return(msg);
+
+	
+	memset(&lease_state, 0, sizeof(struct dbus_lease_state));	
+	
+	ret = get_dhcp_lease_ipv6_state_num(&lease_state, &sub_lease_state, &sub_count);	
+
+	dbus_message_iter_init_append (reply, &iter);	
+	
+	dbus_message_iter_append_basic (&iter,DBUS_TYPE_UINT32,&(lease_state.total_lease_num));
+	dbus_message_iter_append_basic (&iter,DBUS_TYPE_UINT32,&(lease_state.active_lease_num));
+	//dbus_message_iter_append_basic (&iter,DBUS_TYPE_UINT32,&(lease_state.free_lease_num));
+	//dbus_message_iter_append_basic (&iter,DBUS_TYPE_UINT32,&(lease_state.backup_lease_num));	
+	
+	
+	dbus_message_iter_append_basic (&iter,DBUS_TYPE_UINT32,&sub_count);
+	
+	log_debug("total %d , free %d active %d\n", lease_state.total_lease_num, lease_state.free_lease_num, lease_state.active_lease_num);
+
+
+	dbus_message_iter_open_container (&iter,
+								DBUS_TYPE_ARRAY,
+								DBUS_STRUCT_BEGIN_CHAR_AS_STRING     /*begin	*/
+
+								DBUS_TYPE_STRING_AS_STRING   //subnet
+								DBUS_TYPE_STRING_AS_STRING   //netmask
+								DBUS_TYPE_STRING_AS_STRING   //poolname
+								DBUS_TYPE_UINT32_AS_STRING   //subnet_lease_count
+								DBUS_TYPE_UINT32_AS_STRING   //subnet_lease_active
+								//DBUS_TYPE_UINT32_AS_STRING   //subnet_lease_free
+								//DBUS_TYPE_UINT32_AS_STRING   //subnet_lease_backup
+								
+							
+								DBUS_STRUCT_END_CHAR_AS_STRING,     /*end*/
+								&iter_array);							
+
+
+	for(i = 0; i < sub_count; ++i){
+		DBusMessageIter iter_struct;		
+		
+		dbus_message_iter_open_container (&iter_array,
+											   DBUS_TYPE_STRUCT,
+											   NULL,
+											   &iter_struct);		
+		sub_name = sub_lease_state[i].subnet;
+		sub_mask = sub_lease_state[i].mask;
+		poolname = sub_lease_state[i].poolname;
+	
+		
+		dbus_message_iter_append_basic(&iter_struct,  
+										DBUS_TYPE_STRING,&(sub_name));		
+		
+		dbus_message_iter_append_basic(&iter_struct,  											
+										DBUS_TYPE_STRING, &(sub_mask));
+		dbus_message_iter_append_basic(&iter_struct,  											
+										DBUS_TYPE_STRING, &(poolname));
+		
+		dbus_message_iter_append_basic(&iter_struct, 											  
+										DBUS_TYPE_UINT32, &(sub_lease_state[i].subnet_lease_state.total_lease_num));
+
+		dbus_message_iter_append_basic(&iter_struct,  
+										DBUS_TYPE_UINT32, &(sub_lease_state[i].subnet_lease_state.active_lease_num));
+		
+		//dbus_message_iter_append_basic(&iter_struct,  
+		//								DBUS_TYPE_UINT32, &(sub_lease_state[i].subnet_lease_state.free_lease_num));
+
+		//dbus_message_iter_append_basic(&iter_struct,  
+		//								DBUS_TYPE_UINT32, &(sub_lease_state[i].subnet_lease_state.backup_lease_num));		
+		
+		
+		dbus_message_iter_close_container (&iter_array, &iter_struct);
+	}
+	dbus_message_iter_close_container (&iter, &iter_array);
+	if(sub_lease_state){
+		free(sub_lease_state);
+		sub_lease_state = NULL;
+	}
+	
+	return reply;
+}
 
 DBusMessage * 
 dhcp6_dbus_show_lease_by_ip
@@ -5496,6 +5729,9 @@ dhcp6_dbus_message_handler
 	}
 	if (dbus_message_is_method_call(message, DHCP6_DBUS_INTERFACE, DHCP6_DBUS_METHOD_SHOW_DHCP_LEASE_BY_IP)) {
 		reply = dhcp6_dbus_show_lease_by_ip(connection, message, user_data);
+	}
+	if (dbus_message_is_method_call(message, DHCP6_DBUS_INTERFACE, DHCP6_DBUS_METHOD_SHOW_DHCP_LEASE_STATE)) {
+		reply = dhcp6_dbus_show_lease_state(connection, message, user_data);
 	}
 	if (dbus_message_is_method_call(message, DHCP6_DBUS_INTERFACE, DHCP6_DBUS_METHOD_SHOW_DHCP_LEASE_BY_MAC)) {
 		reply = dhcp6_dbus_show_lease_by_mac(connection, message, user_data);

@@ -71,6 +71,7 @@ struct cmd_node local_hansi_poolv6_node =
 	1
 };
 
+#define MAX_SUB_NET			1024
 #define ALIAS_NAME_SIZE 		0x15
 #define MAC_ADDRESS_LEN			6
 #define MAX_IP_STRING_LEN		16
@@ -540,6 +541,180 @@ DEFUN(show_dhcp_lease_by_ipv6_diff_cmd_func,
 	dcli_show_lease_by_ipv6(ipAddrl,  vty);
 	
 	return CMD_SUCCESS;
+}
+int dcli_show_lease_ipv6_state
+(	
+	struct vty *vty,
+	struct lease_state  *total_state, 
+	struct sub_lease_state *sub_state,
+	unsigned int *subnet_num
+)
+{
+	char *cursor = NULL;
+	DBusMessage *query = NULL, *reply = NULL;
+	DBusError err;
+      int ret = 1;
+	DBusMessageIter	 iter;
+	DBusMessageIter	 iter_struct,iter_array;
+	unsigned int sub_num = 0;
+	int i = 0;
+	
+	if(!total_state || !sub_state || !subnet_num){
+		return CMD_WARNING;
+	}
+
+	int localid = 1, slot_id = HostSlotId, indextmp = 0;
+	get_slotid_index(vty, &indextmp, &slot_id, &localid);
+
+	DBusConnection *dcli_dbus_connection = NULL;
+	ReInitDbusConnection(&dcli_dbus_connection, slot_id, distributFag);	
+	
+	query = dbus_message_new_method_call(DHCP6_DBUS_BUSNAME, 
+									DHCP6_DBUS_OBJPATH, 
+									DHCP6_DBUS_INTERFACE, 
+									DHCP6_DBUS_METHOD_SHOW_DHCP_LEASE_STATE);
+	
+	dbus_error_init(&err);
+
+	reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection,query,-1, &err);
+	
+	dbus_message_unref(query);
+	if (NULL == reply) {
+		printf("DHCP show lease state failed get reply.\n");
+		if (dbus_error_is_set(&err)) {
+			printf("%s raised: %s",err.name,err.message);
+			dbus_error_free_for_dcli(&err);
+		}
+		return ret;
+	}	
+
+	dbus_message_iter_init(reply,&iter);
+	
+	dbus_message_iter_get_basic(&iter,&(total_state->total_lease_num));
+	dbus_message_iter_next(&iter);	
+	
+	dbus_message_iter_get_basic(&iter,&(total_state->active_lease_num));
+	dbus_message_iter_next(&iter);	
+
+	//dbus_message_iter_get_basic(&iter,&(total_state->free_lease_num));
+	//dbus_message_iter_next(&iter);	
+
+	//dbus_message_iter_get_basic(&iter,&(total_state->backup_lease_num));
+	//dbus_message_iter_next(&iter);		
+	
+	dbus_message_iter_get_basic(&iter,&sub_num);
+	dbus_message_iter_next(&iter);		
+
+	*subnet_num = sub_num;
+	
+
+	dbus_message_iter_recurse(&iter,&iter_array);
+
+	/*get subnet lease state*/
+	for (i = 0; i < *subnet_num; ++i) {
+
+		dbus_message_iter_recurse(&iter_array,&iter_struct);
+		
+		dbus_message_iter_get_basic(&iter_struct, &(sub_state[i].subnet));
+		dbus_message_iter_next(&iter_struct); 
+	
+		dbus_message_iter_get_basic(&iter_struct, &(sub_state[i].mask));
+		dbus_message_iter_next(&iter_struct); 
+
+		dbus_message_iter_get_basic(&iter_struct, &(sub_state[i].poolname));
+		dbus_message_iter_next(&iter_struct); 
+		
+		dbus_message_iter_get_basic(&iter_struct, &(sub_state[i].subnet_lease_state.total_lease_num));
+		dbus_message_iter_next(&iter_struct); 
+		
+		dbus_message_iter_get_basic(&iter_struct, &(sub_state[i].subnet_lease_state.active_lease_num));
+		dbus_message_iter_next(&iter_struct); 
+		
+		//dbus_message_iter_get_basic(&iter_struct, &(sub_state[i].subnet_lease_state.free_lease_num));
+		//dbus_message_iter_next(&iter_struct); 
+		
+		//dbus_message_iter_get_basic(&iter_struct, &(sub_state[i].subnet_lease_state.backup_lease_num));
+		//dbus_message_iter_next(&iter_struct); 
+
+		dbus_message_iter_next(&iter_array);
+	} 
+
+	dbus_message_unref(reply);
+
+	return ret;	
+}
+DEFUN(show_dhcp_lease_ipv6_state_cmd,
+	show_dhcp_lease_ipv6_state,
+	"show dhcp-lease-ipv6 brief",	
+	"Show config information\n"
+	"DHCPv6 lease\n"
+	"Use lease state\n"	
+)
+{	
+	int ret = 1, i = 0;
+	unsigned int lease_count = 0;
+	unsigned int lease_free = 0;
+	struct lease_state  total_state;
+	struct sub_lease_state sub_state[MAX_SUB_NET];
+	unsigned int subnet_num = 0;
+	int offset = 0;
+	char buf[128];
+	char *space8 = "        "; /* 8 space */
+
+	memset(&total_state, 0, sizeof(struct lease_state));
+
+	for(i = 0; i < MAX_SUB_NET; ++i){
+		memset(sub_state, 0, sizeof(struct sub_lease_state));
+	}
+
+	ret = dcli_show_lease_ipv6_state(vty, &total_state, sub_state, &subnet_num);	
+
+	vty_out(vty, "============================================================================\n");
+	vty_out(vty, "dhcpv6 lease state brief\n");
+	vty_out(vty, "total:%d       active:%d     ",
+				total_state.total_lease_num, total_state.active_lease_num);
+	if (0 == total_state.total_lease_num) {
+		vty_out(vty, " use percent :0 %%\n");
+	} else {
+		vty_out(vty, " use percent :%.2f %%\n",
+			(float)total_state.active_lease_num / (float)total_state.total_lease_num * 100.0);
+	}
+
+	memset(buf, 0, sizeof(buf));
+
+	sprintf(buf, "poolname%s%s%s", space8, space8, space8);
+	sprintf(buf+12, "subnet%s%s%s", space8, space8, space8);
+	//sprintf(buf + 18, "mask%s%s%s", space8, space8, space8);
+	sprintf(buf + 24, "total%s%s%s", space8, space8, space8);
+	sprintf(buf + 36, "active%s", space8, space8);
+	//sprintf(buf + 52, "free%s", space8);
+	//sprintf(buf + 60, "backup%s", space8);
+	offset = sprintf(buf + 48, "use percent");
+	
+//	buf[offset + 68] = '\0';
+	vty_out(vty, "\n%s\n", buf); 
+	for(i = 0; i < subnet_num; ++i) {
+		sprintf(buf, "%s%s%s%s", sub_state[i].poolname, space8, space8, space8);
+		sprintf(buf + 12, "%s%s%s%s", sub_state[i].subnet, space8, space8, space8);
+		//printf("sub_state[i].mask is %s\n",sub_state[i].mask);
+		//sprintf(buf + 18, "%s%s%s%s", sub_state[i].mask, space8, space8, space8);
+		sprintf(buf + 24, "%d%s%s%s", sub_state[i].subnet_lease_state.total_lease_num, space8, space8, space8);
+		sprintf(buf + 36, "%d%s%s", sub_state[i].subnet_lease_state.active_lease_num, space8, space8);
+		//sprintf(buf + 52, "%d%s", sub_state[i].subnet_lease_state.free_lease_num, space8);
+		//sprintf(buf + 60, "%d%s", sub_state[i].subnet_lease_state.backup_lease_num, space8);
+
+		if (0 == sub_state[i].subnet_lease_state.total_lease_num) {
+			offset = sprintf(buf + 48, "0 %%");
+		} else {
+			offset = sprintf(buf + 48, "%.2f %%", (float)sub_state[i].subnet_lease_state.active_lease_num 
+					/ (float)sub_state[i].subnet_lease_state.total_lease_num * 100.0);
+		}
+//		buf[buf + 68 + offset] = '\0';
+		vty_out(vty, "%s\n", buf);
+	}
+	vty_out(vty, "===========================================================================\n");	
+
+	return ret;	
 }
 
 DEFUN(show_dhcp_lease_by_ipv6_mask_cmd_func,
@@ -4047,6 +4222,7 @@ dcli_dhcp_ipv6_init
 	install_element(CONFIG_NODE, &show_ipv6_dhcp_server_cmd);
 	install_element(POOLV6_NODE, &show_ipv6_pool_cmd);
 	install_element(CONFIG_NODE, &show_ipv6_pool_cmd);
+	install_element(CONFIG_NODE, &show_dhcp_lease_ipv6_state);
 //	install_element(CONFIG_NODE, &show_ip_dhcp_static_cmd);
 	install_element(INTERFACE_NODE, &set_interface_ipv6_pool_cmd);
 	install_element(INTERFACE_NODE, &del_interface_ipv6_pool_cmd);
@@ -4093,6 +4269,7 @@ dcli_dhcp_ipv6_init
 	
 	install_element(HANSI_NODE, &save_dhcp_lease_ipv6_cmd);
 	install_element(HANSI_NODE, &show_dhcp6_lease_cmd);
+	install_element(HANSI_NODE, &show_dhcp_lease_ipv6_state);
 	install_element(HANSI_NODE, &show_ipv6_dhcp_server_cmd);
 	install_element(HANSI_POOLV6_NODE, &show_ipv6_pool_cmd);
 	install_element(HANSI_NODE, &show_ipv6_pool_cmd);

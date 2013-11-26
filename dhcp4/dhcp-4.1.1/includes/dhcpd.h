@@ -993,6 +993,31 @@ struct shared_network {
 	dhcp_failover_state_t *failover_peer;
 #endif
 };
+struct statistics_info {
+	unsigned int host_num;		/* total number of ip address */
+	unsigned int segment_times;	/* ip address assigned */
+	unsigned int discover_times;
+	unsigned int offer_times;
+	unsigned int requested_times;
+	unsigned int ack_times;
+};
+
+/*lease state struct */
+struct dbus_lease_state{
+	unsigned int total_lease_num;
+	unsigned int active_lease_num;
+	unsigned int free_lease_num;
+	unsigned int backup_lease_num;
+};
+
+/*subnet lease state*/
+struct dbus_sub_lease_state{
+	char poolname[32];
+	char  subnet[16];
+	char  mask[16];
+	struct statistics_info info;
+	struct dbus_lease_state subnet_lease_state;
+};
 
 struct subnet {
 	OMAPI_OBJECT_PREAMBLE;
@@ -1584,6 +1609,7 @@ struct ipv6_pool {
 	int num_inactive;			/* count of inactive leases */
 	isc_heap_t *inactive_timeouts;		/* timeouts for expired or 
 						   released leases */
+	int lease_count;
 	struct shared_network *shared_network;	/* shared_network for 
 						   this pool */
 	struct subnet *subnet;			/* subnet for this pool */
