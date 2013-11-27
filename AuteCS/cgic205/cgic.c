@@ -145,6 +145,7 @@ int main(int argc, char *argv[]) {
 	int result;
 	char *cgiContentLengthString;
 	char *e;
+	char *pos;
 	cgiSetupConstants();
 	cgiGetenv(&cgiServerSoftware, "SERVER_SOFTWARE");
 	cgiGetenv(&cgiServerName, "SERVER_NAME");
@@ -282,6 +283,14 @@ int main(int argc, char *argv[]) {
 			cgiFreeResources();
 			return -1;
 		}
+		if ( NULL != (pos = strchr(cgiReferrer, '?')) ) {  /* add by houyongtao */
+			if( cgiParseSuccess!=cgiParseFormInputAppend(
+						pos + 1, strlen(pos + 1)) )
+			{
+				cgiFreeResources();
+				return -1;
+			}
+		}
 	} else if (cgiStrEqNc(cgiRequestMethod, "get")) {	
 		/* The spec says this should be taken care of by
 			the server, but... it isn't */
@@ -300,6 +309,14 @@ int main(int argc, char *argv[]) {
 			fprintf(dout, "GetFormInput succeeded\n");
 			CGICDEBUGEND	
 #endif /* CGICDEBUG */
+		}
+		if ( NULL != (pos = strchr(cgiReferrer, '?')) ) {  /* add by houyongtao */
+			if( cgiParseSuccess!=cgiParseFormInputAppend(
+						pos + 1, strlen(pos + 1)) )
+			{
+				cgiFreeResources();
+				return -1;
+			}
 		}
 	}
 	result = cgiMain();

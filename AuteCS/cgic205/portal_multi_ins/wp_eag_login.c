@@ -70,18 +70,32 @@ char * replaceStrPart(char *Src, const char * sReplace)
 int CgiInformAc(char * clientIp, char * serverIp, PKG_TYPE Type, STAuthProcess * pAuthProc,UINT32 pro)
 {
 		int retErr=0;
+		struct in_addr user_ip;
+		struct in6_addr user_ipv6;
 		pAuthProc->pSendPkg= createPortalPkg(Type);
 		/*malloc STPortalPkg ready to rev data*/
 		fprintf(stderr,"CgiInformAc createPortalPkg suc Type is %d\n",Type );
 		pAuthProc->pRevPkg = (STPortalPkg * )malloc(sizeof(STPortalPkg));
 		memset(pAuthProc->pRevPkg, 0, sizeof(STPortalPkg));
-		
+		fprintf(stderr,"CgiInformAc clientIp=%s\n",clientIp );
 
 		setAuthType(pAuthProc->pSendPkg, pro);
 		
-		setPkgUserIP( pAuthProc->pSendPkg, htonl(inet_addr(clientIp)) );
-
+		memset(&user_ip, 0, sizeof(user_ip));
+		memset(&user_ipv6, 0, sizeof(user_ipv6));
+		if (1 == inet_pton(AF_INET, clientIp, &user_ip)) {
+            fprintf(stderr,"CgiInformAc clientIp4=%s\n",clientIp );
+            setPkgUserIP( pAuthProc->pSendPkg, user_ip.s_addr );
+		}
+		if (1 == inet_pton(AF_INET6, clientIp, &user_ipv6)) {
+            fprintf(stderr,"CgiInformAc clientIp6=%s\n",clientIp );
+            setPkgUserIP( pAuthProc->pSendPkg, 0 );
+            fprintf(stderr,"1\n");
+            addAttr( &(pAuthProc->pSendPkg), ATTR_USER_IPV6, &user_ipv6, sizeof(user_ipv6) );
+            fprintf(stderr,"2\n");
+		}
 		
+        fprintf(stderr,"CgiInformAc serverIp=%s\n",serverIp );
 		if(sendPortalPkg(pAuthProc->fd, 3, 2000, serverIp, pAuthProc->pSendPkg) < 0 )
 		{
 			fprintf(stderr,"CgiInformAc sendPortalPkg failed\n" );
@@ -125,6 +139,7 @@ int cgiMain()
 	unsigned char chap_ident=0;
 	STPkgAttr *tlvPkgAttr;
 	UINT8  tmp[MD5LEN+1];
+	char acIp[32] = "";
 	
 	STUserInfo userInfo;
 	memset(&userInfo, 0 ,sizeof(STUserInfo));
@@ -147,7 +162,14 @@ int cgiMain()
 	}
 		
 	
-
+	fprintf(stderr,"cgiQueryString=%s",cgiQueryString);
+	fprintf(stderr,"cgiReferrer=%s",cgiReferrer);
+	fprintf(stderr,"cgiServerName=%s",cgiServerName);
+	memset(acIp, 0, sizeof(acIp));
+	if( cgiFormNotFound == cgiFormStringNoNewlines("wlanacip", acIp, sizeof(acIp)) ) {
+		strncpy(acIp, cgiServerName, sizeof(acIp)-1);
+    }
+	fprintf(stderr,"acIp=%s",acIp);
 
 	fprintf( fpOut, "<html xmlns=\"http://www.w3.org/1999/xhtml\"> \n" );
 	fprintf( fpOut, "<head> \n" );
@@ -174,6 +196,8 @@ int cgiMain()
 	char urlPost[4096]={0};
 	char *urlNew = NULL;
 	char *replace = NULL;
+    struct in_addr user_ip;
+    struct in6_addr user_ipv6;
 	
 	fprintf(stderr,"f_name=%s--f_pass=%s--op_auth=%s--cgiRemoteAddr =%s--cgiServerName=%s\n", userInfo.usrName, userInfo.usrPass, opt, cgiRemoteAddr,cgiServerName  );
 	#if 1
@@ -218,7 +242,7 @@ int cgiMain()
  			
  			if( stAuth.protocal == AUTH_CHAP )				/*chap md5 simulation----------*/
  			{
- 				ret_challege = CgiInformAc(cgiRemoteAddr, cgiServerName, REQ_CHALLENGE, &stAuth, stAuth.protocal);
+ 				ret_challege = CgiInformAc(cgiRemoteAddr, acIp, REQ_CHALLENGE, &stAuth, stAuth.protocal);
  				fprintf(stderr,"ret_challege=%d", ret_challege);
  				if( CHALLENGE_SUCCESS == ret_challege || CHALLENGE_CONNECTED == ret_challege )/*if ret is success ,then can get attr from rev pkg*/
  				{
@@ -275,7 +299,15 @@ int cgiMain()
  			
  			setAuthType(stAuth.pSendPkg, stAuth.protocal);
  			setRequireID(stAuth.pSendPkg, reqID );
- 			setPkgUserIP( stAuth.pSendPkg, htonl(inet_addr(cgiRemoteAddr)) );
+ 			memset(&user_ip, 0, sizeof(user_ip));
+			memset(&user_ipv6, 0, sizeof(user_ipv6));
+			if (1 == inet_pton(AF_INET, cgiRemoteAddr, &user_ip)) {
+                setPkgUserIP( stAuth.pSendPkg, user_ip.s_addr );
+			}
+			if (1 == inet_pton(AF_INET6, cgiRemoteAddr, &user_ipv6)) {
+	            setPkgUserIP( stAuth.pSendPkg, 0 );
+	            addAttr( &stAuth.pSendPkg, ATTR_USER_IPV6, &user_ipv6, sizeof(user_ipv6) );
+			}
  			
  			addAttr( &stAuth.pSendPkg, ATTR_USERNAME, userInfo.usrName, strlen(userInfo.usrName) );
  		
@@ -294,7 +326,7 @@ int cgiMain()
  			
  			
  			
- 			if(sendPortalPkg(stAuth.fd, 6, 2000, cgiServerName, stAuth.pSendPkg) < 0 )
+ 			if(sendPortalPkg(stAuth.fd, 6, 2000, acIp, stAuth.pSendPkg) < 0 )
  			{
  				fprintf(stderr,"login sendPortalPkg failed\n" );
  				retLogin = -1;
@@ -321,7 +353,7 @@ int cgiMain()
  			destroyPortalPkg(stAuth.pRevPkg);
  			break;
  		case 2:/*logout*/
- 			retLogout = CgiInformAc(cgiRemoteAddr, cgiServerName, REQ_LOGOUT, &stAuth, stAuth.protocal);
+ 			retLogout = CgiInformAc(cgiRemoteAddr, acIp, REQ_LOGOUT, &stAuth, stAuth.protocal);
  			destroyPortalPkg(stAuth.pSendPkg);
  			destroyPortalPkg(stAuth.pRevPkg);
  			break;
@@ -344,7 +376,11 @@ int cgiMain()
 	{
 		switch(retLogin)
 		{
-			case PORTAL_AUTH_SUCCESS: 	urlNew = replaceStrPart(urlPost, "/auth_suc.html"); locate(fpOut, urlNew);break;
+			case PORTAL_AUTH_SUCCESS:
+				urlNew = replaceStrPart(urlPost, "/auth_suc.html?wlanacip=");
+				strcat(urlPost, acIp);
+				locate(fpOut, urlNew);
+				break;
 			case PORTAL_AUTH_REJECT: 	urlNew = replaceStrPart(urlPost, "/auth_fail.html"); locate(fpOut, urlNew);break;
 			case PORTAL_AUTH_CONNECTED: urlNew = replaceStrPart(urlPost, "/auth_suc.html"); locate(fpOut, urlNew);break;
 			case PORTAL_AUTH_ONAUTH: 	urlNew = replaceStrPart(urlPost, "/auth_fail.html"); locate(fpOut, urlNew);break;

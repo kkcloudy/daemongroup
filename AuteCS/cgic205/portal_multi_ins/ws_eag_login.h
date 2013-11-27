@@ -111,7 +111,8 @@ typedef enum{
 	ATTR_NASID=0x30,
 	ATTR_SESS_START=0x31,
 	ATTR_SESS_STOP=0x32,
-	ATTR_SESS_TIME=0x33 
+	ATTR_SESS_TIME=0x33,
+	ATTR_USER_IPV6 = 0xf1, /* add by houyongtao for ipv6 */
 }ATTR_TYPE;
 
 
