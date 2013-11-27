@@ -347,7 +347,7 @@ ipv6_connect_up(const int user_id, const int hansitype,
 	/* add the entry */
 	if	(EAG_RETURN_OK != ipv6_add_and_del_entry("filter", chain_name,
 							user_ipv6, &ipv6_any, target_name, EAG_IP6TABLES_ADD)
-		|| EAG_RETURN_OK !=  ipv6_add_and_del_entry("filter",chain_name,
+		|| EAG_RETURN_OK !=  ipv6_add_and_del_entry("filter",chain_name_in,
 							&ipv6_any, user_ipv6, target_name, EAG_IP6TABLES_ADD)
 		|| EAG_RETURN_OK !=  ipv6_add_and_del_entry("nat",chain_name_nat,
 							user_ipv6, &ipv6_any, target_name_nat, EAG_IP6TABLES_ADD))
@@ -438,7 +438,7 @@ ipv6_connect_down(const int user_id, const int hansitype,
 	/* del the entry */
 	if	(EAG_RETURN_OK != ipv6_add_and_del_entry("filter", chain_name,
 								user_ipv6, &ipv6_any, target_name, EAG_IP6TABLES_DELTE)
-		|| EAG_RETURN_OK != ipv6_add_and_del_entry("filter", chain_name,
+		|| EAG_RETURN_OK != ipv6_add_and_del_entry("filter", chain_name_in,
 								&ipv6_any, user_ipv6, target_name, EAG_IP6TABLES_DELTE)
 		|| EAG_RETURN_OK != ipv6_add_and_del_entry("nat", chain_name_nat,
 								user_ipv6, &ipv6_any, target_name_nat, EAG_IP6TABLES_DELTE))
@@ -2501,11 +2501,11 @@ eag_ip6table_del_interface_nat_commit(int insid, char ins_type, char * intf)
 	int ret = 0;
 
 #if USE_THREAD_LOCK	
-	eag_log_debug("eag_iptables","eag_ip6table_glock lock");
+	eag_log_debug("eag_ip6tables","eag_ip6table_glock lock");
 	pthread_mutex_lock( &eag_ip6tables_glock );
 #endif
 	/*use iptables lock*/
-	eag_log_debug("eag_iptables","ip6table_lock lock ");
+	eag_log_debug("eag_ip6tables","ip6table_lock lock ");
 	nmp_mutex_lock(&eag_ip6tables_lock);
 	
 	handle = ip6tc_init("nat");

@@ -686,59 +686,70 @@ int parse_iprange_portset(const char *str, iprange_portset_t *item)
 
 int parse_ipv6range_portset(const char *str, ipv6range_portset_t *item)
 {
-	const char *p1 = NULL, *p2 = NULL;
+	const char *p1 = NULL, *p2 = NULL, *p3 = NULL, *p4 = NULL;
 	char ipv6addr_begin[IPV6_ADDR_LEN], ipv6addr_end[IPV6_ADDR_LEN], portset[PORTSET_LEN]; 
 
 	memset(ipv6addr_begin, 0, sizeof(ipv6addr_begin));
 	memset(ipv6addr_end, 0, sizeof(ipv6addr_end));
 	memset(portset, 0, sizeof(portset));
 	p1 = str;
-	if ( (p2 = strchr(p1, '-')) != NULL){
-		strncpy(ipv6addr_begin, p1, p2-p1);
-		if (captive_check_ipv6_format(ipv6addr_begin) != CAPTIVE_IP_CHECK_SUCCESS)
-			return CAPTIVE_FAILURE;
-		
-		p1 = p2+1;
-		if ( (p2 = strchr( p1, ':' )) != NULL){
-			strncpy(ipv6addr_end, p1, p2-p1);
-			if (captive_check_ipv6_format(ipv6addr_end) != CAPTIVE_IP_CHECK_SUCCESS)
+	p2 = strchr(p1, '[');
+	if (NULL == p2){
+        p3 = strchr(p1, '-');
+        if (NULL == p3) {
+            if (captive_check_ipv6_format(str) != CAPTIVE_IP_CHECK_SUCCESS) {
+                return CAPTIVE_FAILURE;
+			}
+            strncpy(item->ipv6range, str, IPV6RANGE_LEN-1);
+            strncpy(item->portset, "all", PORTSET_LEN-1);
+        } else {
+			strncpy(ipv6addr_begin, p1, p3-p1);
+			if (captive_check_ipv6_format(ipv6addr_begin) != CAPTIVE_IP_CHECK_SUCCESS) {
 				return CAPTIVE_FAILURE;
-			
-			strncpy(portset, p2+1, PORTSET_LEN-1);
-			if (captive_check_portset_format(portset) != CAPTIVE_SUCCESS)
+			}
+			p3++;
+			strncpy(ipv6addr_end, p3, strlen(p3));
+			if (captive_check_ipv6_format(ipv6addr_end) != CAPTIVE_IP_CHECK_SUCCESS) {
 				return CAPTIVE_FAILURE;
-
-			snprintf(item->ipv6range, IPV6RANGE_LEN-1, "%s-%s", ipv6addr_begin, ipv6addr_end);
-			strncpy(item->portset, portset, PORTSET_LEN-1);
-		}
-		else {
-			strncpy(ipv6addr_end, p1, IPV6_ADDR_LEN-1);
-			if (captive_check_ipv6_format(ipv6addr_end) != CAPTIVE_IP_CHECK_SUCCESS)
-				return CAPTIVE_FAILURE;
-
+			}
 			snprintf(item->ipv6range, IPV6RANGE_LEN-1, "%s-%s", ipv6addr_begin, ipv6addr_end);
 			strncpy(item->portset, "all", PORTSET_LEN-1);
+        }
+	} else {
+		p4 = strchr(p1, ']');
+		if (NULL == p4) {
+            return CAPTIVE_FAILURE;
 		}
-	}
-	else {
-		if ( (p2 = strchr( p1, ':')) != NULL){
-			strncpy(ipv6addr_begin, p1, p2-p1);
-			if (captive_check_ipv6_format(ipv6addr_begin) != CAPTIVE_IP_CHECK_SUCCESS)
-				return CAPTIVE_FAILURE;
 
-			strncpy(portset, p2+1, PORTSET_LEN-1);
-			if (captive_check_portset_format(portset) != CAPTIVE_SUCCESS)
+		p1++;
+        p3 = strchr(p1, '-');
+        if (NULL == p3) {
+			strncpy(ipv6addr_begin, p1, p4-p1);
+            if (captive_check_ipv6_format(ipv6addr_begin) != CAPTIVE_IP_CHECK_SUCCESS) {
+                return CAPTIVE_FAILURE;
+			}
+            strncpy(item->ipv6range, ipv6addr_begin, IPV6RANGE_LEN-1);
+        } else {
+			strncpy(ipv6addr_begin, p1, p3-p1);
+			if (captive_check_ipv6_format(ipv6addr_begin) != CAPTIVE_IP_CHECK_SUCCESS) {
 				return CAPTIVE_FAILURE;
+			}
+			p3++;
+			strncpy(ipv6addr_end, p3, p4 - p3);
+			if (captive_check_ipv6_format(ipv6addr_end) != CAPTIVE_IP_CHECK_SUCCESS) {
+				return CAPTIVE_FAILURE;
+			}
+			snprintf(item->ipv6range, IPV6RANGE_LEN-1, "%s-%s", ipv6addr_begin, ipv6addr_end);
+        }
 
-			strncpy(item->ipv6range, ipv6addr_begin, IPV6RANGE_LEN-1);
-			strncpy(item->portset, portset, PORTSET_LEN-1);
+        if (NULL == strchr(p4 + 1, ':')) {
+            return CAPTIVE_FAILURE;
 		}
-		else {
-			if (captive_check_ipv6_format(str) != CAPTIVE_IP_CHECK_SUCCESS)
-				return CAPTIVE_FAILURE;
-			strncpy(item->ipv6range, str, IPV6RANGE_LEN-1);
-			strncpy(item->portset, "all", PORTSET_LEN-1);
+        strncpy(portset, p4 + 2, PORTSET_LEN-1);
+        if (captive_check_portset_format(portset) != CAPTIVE_SUCCESS) {
+            return CAPTIVE_FAILURE;
 		}
+        strncpy(item->portset, portset, PORTSET_LEN-1);
 	}
 
 	return CAPTIVE_SUCCESS;

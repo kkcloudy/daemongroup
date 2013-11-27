@@ -31,7 +31,7 @@ elif [ $CP_FA -eq 6 ] ; then
      MAC_PRE_IPHASH_SET="MAC_PRE_"${CP_ID_TYPE}${CP_ID}"_AUTH_IPV6_SET"
 else
      echo "FAMILY should be 4 or 6"
-     exit 6;
+     exit 4;
 fi
 
 CP_DNAT="CP_DNAT"
@@ -48,7 +48,7 @@ CP_ID_FILE="/var/run/cpp/CP_"${CP_ID_TYPE}${CP_ID}"_IPV"${CP_FA}
 
 if [ ! -e $CP_ID_FILE ] ; then 
     echo "Captive Portal Profile $CP_ID_FILE not exist!"
-    exit 4;
+    exit 5;
 fi
 
 CPS_IF=$(ls /var/run/cpp/CP_IF_INFO* 2>/dev/null)
@@ -58,7 +58,6 @@ if [ $CPS_IF ];then
         id=$(cat $file)
         if [ "x$id" == "x${CP_ID_TYPE}${CP_ID}" ]; then
             echo "${CP_ID_TYPE}${CP_ID} has $file not del! you should del it first!"
-            exit 5;
         fi
     done
 fi

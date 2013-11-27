@@ -1927,14 +1927,14 @@ int brctl_show(char *mac,char *br,char *intf)
 }
 
 int 
-eag_ipv6info_get(unsigned char *const mac, struct in6_addr *ipv6)
+eag_ipv6info_get(char * const intf, size_t n, unsigned char *const mac, struct in6_addr *ipv6)
 {
 	char ipv6_str[48] = "";
 	char mac_str[36] = "";
     char cmd[128] = "";
 	char buff[128] = "";
 	FILE *p_file = NULL;
-	char *pos = NULL;
+	char *pos1 = NULL, *pos2 = NULL;
 
 	memset(ipv6_str, 0, sizeof(ipv6_str));
     memset(mac_str, 0, sizeof(mac_str));
@@ -1957,14 +1957,21 @@ eag_ipv6info_get(unsigned char *const mac, struct in6_addr *ipv6)
 	pclose(p_file);
 	
 	eag_log_debug("eag_ipinfo", "eag_ipv6info_get %s", buff);
-	pos = strstr(buff, "lladdr ");
-	if (NULL == pos) {
+	pos1 = strstr(buff, "dev");
+	if (NULL == pos1) {
 		return -1;
 	}
-	memcpy(mac_str, pos + 7, 18);
+	pos2 = strstr(buff, "lladdr ");
+	if (NULL == pos2) {
+		return -1;
+	}
+	pos1 = pos1 + 4;
+	strncpy(intf, pos1, pos2 - pos1 - 1);
+	strncpy(mac_str, pos2 + 7, 17);
 	mac_str[17] = '\0';
-	str2mac(mac, 6, mac_str);
-	eag_log_debug("eag_ipinfo", "eag_ipv6info_get mac: %s", mac_str);
+	str2mac(mac_str, mac);
+	mac2str(mac, mac_str, sizeof(mac_str), ':');
+	eag_log_debug("eag_ipinfo", "intf: %s, mac: %s", intf, mac_str);
 
 	return EAG_RETURN_OK;
 }

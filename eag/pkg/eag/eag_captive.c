@@ -1720,7 +1720,7 @@ eag_captive_start(eag_captive_t *cap)
 			}
 		}
 	}
-	#if 0
+
 	/*shell add white list*/
 	for( i=0; i<cap->white.curr_num; i++ ){
 		if( RULE_IPADDR == cap->white.rule[i].type ){
@@ -1736,7 +1736,7 @@ eag_captive_start(eag_captive_t *cap)
 			if( EAG_RETURN_OK != ret ){
 				eag_log_err("eag_captive_start shell add white list failed:%d!", ret);
 			}
-		}else{
+		} else if ( RULE_DOMAIN == cap->white.rule[i].type ) {
 			#if EAG_SHELL_OFF
 			ret = captive_iptables_add_white_domain( cap->capid, cap->instype, &(cap->white.rule[i])); 
 			#else
@@ -1745,6 +1745,15 @@ eag_captive_start(eag_captive_t *cap)
 			if( EAG_RETURN_OK != ret ){
 				eag_log_err("eag_captive_add_white_list add white domain %s failed:%d", cap->white.rule[i].key.domain.name, ret );
 			}
+		} else if ( RULE_IPV6ADDR == cap->white.rule[i].type ) {
+			ret = captive_shell_add_white_ipv6( cap->capid, cap->instype,
+						&(cap->white.rule[i].key.ipv6.ipv6begin), &(cap->white.rule[i].key.ipv6.ipv6end),
+						cap->white.rule[i].key.ipv6.ports, cap->white.rule[i].intf );	
+			if( EAG_RETURN_OK != ret ){
+				eag_log_err("eag_captive_start shell add white list failed:%d!", ret);
+			}
+		} else if ( RULE_IPV6DOMAIN == cap->white.rule[i].type ) {
+			//TODO
 		}
 	}
 	/*shell add black list*/
@@ -1762,7 +1771,7 @@ eag_captive_start(eag_captive_t *cap)
 			if( EAG_RETURN_OK != ret ){
 				eag_log_err("eag_captive_start shell add black list failed:%d!", ret);
 			}
-		}else{
+		} else if ( RULE_DOMAIN == cap->black.rule[i].type ) {
 			#if EAG_SHELL_OFF
 			ret = captive_iptables_add_black_domain( cap->capid, cap->instype, &(cap->black.rule[i])); 
 			#else
@@ -1771,9 +1780,18 @@ eag_captive_start(eag_captive_t *cap)
 			if( EAG_RETURN_OK != ret ){
 				eag_log_err("eag_captive_add_black_list add black domain %s failed:%d", cap->black.rule[i].key.domain.name, ret );
 			}
+		} else if ( RULE_IPV6ADDR == cap->black.rule[i].type ) {
+			ret = captive_shell_add_white_ipv6( cap->capid, cap->instype,
+						&(cap->black.rule[i].key.ipv6.ipv6begin), &(cap->black.rule[i].key.ipv6.ipv6end),
+						cap->black.rule[i].key.ipv6.ports, cap->black.rule[i].intf );	
+			if( EAG_RETURN_OK != ret ){
+				eag_log_err("eag_captive_start shell add black list failed:%d!", ret);
+			}
+		} else if ( RULE_IPV6DOMAIN == cap->black.rule[i].type ) {
+			//TODO
 		}
 	}
-	#endif
+
 	cap->status = CAP_START;
 	return EAG_RETURN_OK;
 }
@@ -1789,7 +1807,6 @@ eag_captive_stop(eag_captive_t *cap)
 		return EAG_ERR_CAPTIVE_SERVICE_NOT_START;
 	}
 
-	#if 0
 	/*shell del white list*/
 	for( i=0; i<cap->white.curr_num; i++ ){
 		if( RULE_IPADDR == cap->white.rule[i].type ){
@@ -1805,11 +1822,24 @@ eag_captive_stop(eag_captive_t *cap)
 			if( EAG_RETURN_OK != ret ){
 				eag_log_err("eag_captive_stop shell del white list failed:%d!", ret);
 			}
-		}else{
+		} else if ( RULE_IPV6ADDR == cap->white.rule[i].type ) {
+			ret = captive_shell_del_white_ipv6( cap->capid, cap->instype,
+						&(cap->white.rule[i].key.ipv6.ipv6begin), &(cap->white.rule[i].key.ipv6.ipv6end),
+						cap->white.rule[i].key.ipv6.ports, cap->white.rule[i].intf );	
+			if( EAG_RETURN_OK != ret ){
+				eag_log_err("eag_captive_stop shell del white list failed:%d!", ret);
+			}
+		} else if ( RULE_DOMAIN == cap->white.rule[i].type ) {
 			#if EAG_SHELL_OFF
-			ret = captive_iptables_del_white_domain(cap->capid, cap->instype, &(cap->white.rule[i])); 	
+			ret = captive_iptables_del_white_domain( cap->capid, cap->instype, &(cap->white.rule[i])); 
+			#else
+			ret = captive_shell_del_white_domain( cap->capid, cap->instype, &(cap->white.rule[i])); 
 			#endif
-			//eag_log_warning("TODO: you should proc domain white list at here!");
+			if( EAG_RETURN_OK != ret ){
+				eag_log_err("eag_captive_stop del white domain %s failed:%d", cap->white.rule[i].key.domain.name, ret );
+			}
+		} else if ( RULE_IPV6DOMAIN == cap->white.rule[i].type ) {
+			//TODO
 		}
 	}
 
@@ -1828,14 +1858,27 @@ eag_captive_stop(eag_captive_t *cap)
 			if( EAG_RETURN_OK != ret ){
 				eag_log_err("eag_captive_stop shell del black list failed:%d!", ret);
 			}
-		}else{
+		} else if ( RULE_IPV6ADDR == cap->black.rule[i].type ) {
+			ret = captive_shell_del_white_ipv6( cap->capid, cap->instype,
+						&(cap->black.rule[i].key.ipv6.ipv6begin), &(cap->black.rule[i].key.ipv6.ipv6end),
+						cap->black.rule[i].key.ipv6.ports, cap->black.rule[i].intf );	
+			if( EAG_RETURN_OK != ret ){
+				eag_log_err("eag_captive_stop shell del black list failed:%d!", ret);
+			}
+		} else if ( RULE_DOMAIN == cap->black.rule[i].type ) {
 			#if EAG_SHELL_OFF
 			ret = captive_iptables_del_black_domain( cap->capid, cap->instype, &(cap->black.rule[i])); 
+			#else
+			ret = captive_shell_del_black_domain( cap->capid, cap->instype, &(cap->black.rule[i])); 
 			#endif
-			//eag_log_warning("TODO: you should proc domain black list at here!");
+			if( EAG_RETURN_OK != ret ){
+				eag_log_err("eag_captive_stop del black domain %s failed:%d", cap->black.rule[i].key.domain.name, ret );
+			}
+		} else if ( RULE_IPV6DOMAIN == cap->black.rule[i].type ) {
+			//TODO
 		}
 	}
-	#endif
+
 	/*shell del intf*/
 	for( i=0; i<cap->curr_ifnum; i++ ){
 		#if EAG_SHELL_OFF		
@@ -1872,23 +1915,6 @@ eag_captive_stop(eag_captive_t *cap)
 	}
 	cap->status = CAP_STOP;
 
-	#if 1 // test AC endian
-	char ipv4_str[32] = "100.1.2.48";
-	char ipv6_str[48] = "2013::100.1.2.48";
-	struct in_addr ipv4;
-	struct in6_addr ipv6;
-	uint32_t cmp[4];
-	memset(ipv6_str, 0, sizeof(ipv6_str));
-	memset(&ipv4, 0, sizeof(ipv4));
-	memset(&ipv6, 0, sizeof(ipv6));
-	memset(cmp, 0, sizeof(cmp));
-    inet_pton(AF_INET, ipv4_str, &ipv4);
-    eag_log_info("TEST n ipv4=%#x", ipv4);
-    eag_log_info("TEST h ipv4=%#x", ntohl(ipv4.s_addr));
-    inet_pton(AF_INET6, ipv6_str, &ipv6);
-    memcpy(&ipv6, cmp, sizeof(ipv6));
-    eag_log_info("TEST n ipv6=%#x %x %x %x", cmp[0], cmp[1], cmp[2], cmp[3]);
-	#endif
 	return EAG_RETURN_OK;
 }
 
@@ -2584,13 +2610,13 @@ eag_dbus_method_conf_captive_list(
 		{		
 			inet_aton(ipbegin, &ipaddr_begin);
 			inet_aton(ipend, &ipaddr_end);
-			//ret = eag_captive_add_white_list(captive, (RULE_TYPE)type, ipaddr_begin.s_addr,ipaddr_end.s_addr,port,domain,intfs);
+			ret = eag_captive_add_white_list(captive, (RULE_TYPE)type, ipaddr_begin.s_addr,ipaddr_end.s_addr,port,domain,intfs);
 		}
 		else if( (add_or_del!=NULL) && (0 == strcmp(add_or_del, CP_DEL_LIST)))
 		{
 			inet_aton(ipbegin, &ipaddr_begin);
 			inet_aton(ipend, &ipaddr_end);
-			//ret = eag_captive_del_white_list(captive, type, ipaddr_begin.s_addr,ipaddr_end.s_addr,port,domain,intfs);
+			ret = eag_captive_del_white_list(captive, type, ipaddr_begin.s_addr,ipaddr_end.s_addr,port,domain,intfs);
 		}
 	}
 	else if(strcmp(white_or_black, CP_BLACK_LIST) == 0)
@@ -2599,13 +2625,13 @@ eag_dbus_method_conf_captive_list(
 		{
 			inet_aton(ipbegin, &ipaddr_begin);
 			inet_aton(ipend, &ipaddr_end);
-			//ret = eag_captive_add_black_list(captive, (RULE_TYPE)type, ipaddr_begin.s_addr,ipaddr_end.s_addr,port,domain,intfs);
+			ret = eag_captive_add_black_list(captive, (RULE_TYPE)type, ipaddr_begin.s_addr,ipaddr_end.s_addr,port,domain,intfs);
 		}
 		else if( (add_or_del!=NULL) && (0 == strcmp(add_or_del, CP_DEL_LIST)))
 		{		
 			inet_aton(ipbegin, &ipaddr_begin);
 			inet_aton(ipend, &ipaddr_end);
-			//ret = eag_captive_del_black_list(captive, type, ipaddr_begin.s_addr,ipaddr_end.s_addr,port,domain,intfs);
+			ret = eag_captive_del_black_list(captive, type, ipaddr_begin.s_addr,ipaddr_end.s_addr,port,domain,intfs);
 		}
 	}
 	replyx:
@@ -2664,9 +2690,6 @@ eag_captive_add_white_ipv6_list(eag_captive_t * cap,
 	int ret;
 	struct bw_rule_t *wrule;
 	char *domain_name = NULL;
-	char *ip_addr_str = NULL;
-	unsigned long ip_addr = 0;
-	int ip_num = 0;
 	char ipv6begin_str[48] = "";
 	char ipv6end_str[48] = "";
 	unsigned char ipv6_null[16];
@@ -2684,7 +2707,7 @@ eag_captive_add_white_ipv6_list(eag_captive_t * cap,
 		return EAG_ERR_INPUT_PARAM_ERR;
 	}
 #endif
-	if (NULL == cap || (RULE_IPADDR != type && RULE_DOMAIN != type)) {
+	if (NULL == cap || (RULE_IPV6ADDR != type && RULE_IPV6DOMAIN != type)) {
 		eag_log_err("eag_captive_add_white_ipv6_list input err! "\
 		    	"cap=%p type=%d intf=%p intf=%s",
 			     cap, type, intf, (NULL == intf) ? "" : intf);
@@ -2719,7 +2742,7 @@ eag_captive_add_white_ipv6_list(eag_captive_t * cap,
 		strncpy(wrule->intf, intf, sizeof (wrule->intf) - 1);
 	}
 
-	if (RULE_IPADDR == type) {
+	if (RULE_IPV6ADDR == type) {
 		eag_log_debug("eag_captive",
 			      "eag_captive_add_white_ipv6_list type=ipaddr");
 		eag_log_debug("eag_captive",
@@ -2727,7 +2750,7 @@ eag_captive_add_white_ipv6_list(eag_captive_t * cap,
 			      ipv6begin_str, ipv6end_str, ports );
 		wrule->key.ipv6.ipv6begin = *ipv6begin;
 		wrule->key.ipv6.ipv6end = *ipv6end;
-		strncpy( wrule->key.ip.ports, ports, sizeof(wrule->key.ip.ports)-1 );
+		strncpy( wrule->key.ipv6.ports, ports, sizeof(wrule->key.ipv6.ports)-1 );
 		if( CAP_START == cap->status ){
 			ret = captive_shell_add_white_ipv6( cap->capid, cap->instype,
 					ipv6begin, ipv6end, ports, intf );
@@ -2800,7 +2823,7 @@ eag_captive_del_white_ipv6_list(eag_captive_t *cap,
 	char ipv6end_str[48] = "";
 	unsigned char ipv6_null[16];
 	
-	if (NULL == cap || (RULE_IPADDR != type && RULE_DOMAIN != type)) {
+	if (NULL == cap || (RULE_IPV6ADDR != type && RULE_IPV6DOMAIN != type)) {
 		eag_log_err("eag_captive_del_white_ipv6_list input err! "\
 					"cap=%p type=%d intf=%p intf=%s",
 				     cap, type, intf, (NULL == intf) ? "" : intf);
@@ -2825,7 +2848,7 @@ eag_captive_del_white_ipv6_list(eag_captive_t *cap,
 	}
 
 	/*TODO!!! del iptables */
-	if (RULE_IPADDR == type) {
+	if (RULE_IPV6ADDR == type) {
 		eag_log_debug("eag_captive",
 			      "eag_captive_del_white_ipv6_list type=ipaddr");
 		eag_log_debug("eag_captive",
@@ -2881,9 +2904,6 @@ eag_captive_add_black_ipv6_list(eag_captive_t *cap,
 	int ret;
 	struct bw_rule_t *wrule;
 	char *domain_name = NULL;
-	char *ip_addr_str = NULL;
-	unsigned long ip_addr = 0;
-	int ip_num = 0;
 	char ipv6begin_str[48] = "";
 	char ipv6end_str[48] = "";
 	unsigned char ipv6_null[16];
@@ -2901,7 +2921,7 @@ eag_captive_add_black_ipv6_list(eag_captive_t *cap,
 		return EAG_ERR_INPUT_PARAM_ERR;
 	}
 #endif
-	if (NULL == cap || (RULE_IPADDR != type && RULE_DOMAIN != type)) {
+	if (NULL == cap || (RULE_IPV6ADDR != type && RULE_IPV6DOMAIN != type)) {
 		eag_log_err("eag_captive_add_black_ipv6_list input err! "\
 				"cap=%p type=%d intf=%p intf=%s",
 				 cap, type, intf, (NULL == intf) ? "" : intf);
@@ -2938,15 +2958,15 @@ eag_captive_add_black_ipv6_list(eag_captive_t *cap,
 		strncpy(wrule->intf, intf, sizeof (wrule->intf) - 1);
 	}
 
-	if (RULE_IPADDR == type) {
+	if (RULE_IPV6ADDR == type) {
 		eag_log_debug("eag_captive",
 				  "eag_captive_add_black_ipv6_list type=ipaddr");
 		eag_log_debug("eag_captive",
 				  "ipv6begin=%s ipv6end=%s ports=%s",
-				  ipv6begin, ipv6end, ports );
+				  ipv6begin_str, ipv6end_str, ports );
 		wrule->key.ipv6.ipv6begin = *ipv6begin;
 		wrule->key.ipv6.ipv6end = *ipv6end;
-		strncpy( wrule->key.ip.ports, ports, sizeof(wrule->key.ip.ports)-1 );
+		strncpy( wrule->key.ipv6.ports, ports, sizeof(wrule->key.ipv6.ports)-1 );
 		if( CAP_START == cap->status ){
 			ret = captive_shell_add_black_ipv6( cap->capid, cap->instype,
 					ipv6begin, ipv6end, ports, intf );
@@ -3016,7 +3036,7 @@ eag_captive_del_black_ipv6_list(eag_captive_t *cap,
 	char ipv6end_str[48] = "";
 	unsigned char ipv6_null[16];
 
-	if (NULL == cap || (RULE_IPADDR != type && RULE_DOMAIN != type)) {
+	if (NULL == cap || (RULE_IPV6ADDR != type && RULE_IPV6DOMAIN != type)) {
 		eag_log_err("eag_captive_del_black_list input err! "\
 					"cap=%p type=%d intf=%p intf=%s",
 					 cap, type, intf, (NULL == intf) ? "" : intf);
@@ -3040,7 +3060,7 @@ eag_captive_del_black_ipv6_list(eag_captive_t *cap,
 	}
 
 	/*TODO!!! del iptables */
-	if (RULE_IPADDR == type) {
+	if (RULE_IPV6ADDR == type) {
 		eag_log_debug("eag_captive",
 				  "eag_captive_del_black_ipv6_list type=ipaddr");
 		eag_log_debug("eag_captive",
@@ -3110,6 +3130,9 @@ eag_dbus_method_conf_captive_ipv6_list(
 	char *ipv6_tmp = NULL;
 	struct in6_addr ipv6addr_begin;
 	struct in6_addr ipv6addr_end;
+
+	memset(ipv6begin, 0, sizeof(ipv6begin));
+	memset(ipv6end, 0, sizeof(ipv6end));
 	memset(&ipv6addr_begin, 0, sizeof(ipv6addr_begin));
 	memset(&ipv6addr_end, 0, sizeof(ipv6addr_end));
 	
@@ -3151,7 +3174,7 @@ eag_dbus_method_conf_captive_ipv6_list(
 		goto replyx;
 	}	
 	
-	if((RULE_IPADDR == (RULE_TYPE)type) && (NULL != ipv6range) && (0 != strcmp(ipv6range,"")))
+	if((RULE_IPV6ADDR == (RULE_TYPE)type) && (NULL != ipv6range) && (0 != strcmp(ipv6range,"")))
 	{
 		ipv6_tmp = strtok(ipv6range, "-");
 		if(ipv6_tmp!=NULL)
@@ -3186,7 +3209,7 @@ eag_dbus_method_conf_captive_ipv6_list(
 		{
 			inet_pton(AF_INET6, ipv6begin, &ipv6addr_begin);
 			inet_pton(AF_INET6, ipv6end, &ipv6addr_end);
-			ret = eag_captive_add_black_ipv6_list(captive, (RULE_TYPE)type, &ipv6addr_begin, &ipv6addr_end.s6_addr, port, domain, intfs);
+			ret = eag_captive_add_black_ipv6_list(captive, (RULE_TYPE)type, &ipv6addr_begin, &ipv6addr_end, port, domain, intfs);
 		}
 		else if( (add_or_del!=NULL) && (0 == strcmp(add_or_del, CP_DEL_LIST)))
 		{		

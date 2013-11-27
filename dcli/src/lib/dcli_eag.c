@@ -5092,6 +5092,8 @@ eag_captive_portal_config_show_running(struct vty* vty)
 	struct bw_rules white;
 	char ipbegin[32] = {0};
 	char ipend[32] = {0};
+	char ipv6begin[48] = {0};
+	char ipv6end[48] = {0};
 	memset(&white, 0, sizeof(white));
 	
 	ret = eag_show_white_list(dcli_dbus_connection,
@@ -5103,18 +5105,20 @@ eag_captive_portal_config_show_running(struct vty* vty)
 					type = "IP";
 				else if (white.rule[i].type == RULE_DOMAIN)
 					type = "Domain";
-
-				ip2str(white.rule[i].key.ip.ipbegin, ipbegin, sizeof(ipbegin));
-				ip2str(white.rule[i].key.ip.ipend, ipend, sizeof(ipend));
+				else if (white.rule[i].type == RULE_IPV6ADDR)
+					type = "IPV6";
 
 				type_tmp = white.rule[i].type;
 				if((RULE_TYPE)type_tmp == RULE_IPADDR)
 				{
+					ip2str(white.rule[i].key.ip.ipbegin, ipbegin, sizeof(ipbegin));
+					ip2str(white.rule[i].key.ip.ipend, ipend, sizeof(ipend));
 					if(strcmp(ipend, "0.0.0.0") == 0)
 					{
 						if(strcmp(white.rule[i].intf, "") == 0)
 						{
-							snprintf(showStr, sizeof(showStr), " add white-list ip %s:%s", ipbegin ,white.rule[i].key.ip.ports);
+							snprintf(showStr, sizeof(showStr), " add white-list ip %s:%s", 
+									ipbegin, white.rule[i].key.ip.ports);
 							vtysh_add_show_string(showStr);
 						}
 						else
@@ -5128,7 +5132,8 @@ eag_captive_portal_config_show_running(struct vty* vty)
 					{
 						if(strcmp(white.rule[i].intf, "") == 0)
 						{
-							snprintf(showStr, sizeof(showStr), " add white-list ip %s-%s:%s", ipbegin ,ipend, white.rule[i].key.ip.ports);
+							snprintf(showStr, sizeof(showStr), " add white-list ip %s-%s:%s", 
+									ipbegin, ipend, white.rule[i].key.ip.ports);
 							vtysh_add_show_string(showStr);
 						}
 						else
@@ -5155,6 +5160,41 @@ eag_captive_portal_config_show_running(struct vty* vty)
 						vtysh_add_show_string(showStr);
 					}					
 				}
+				else if((RULE_TYPE)type_tmp == RULE_IPV6ADDR)
+				{	
+					ipv6tostr(&(white.rule[i].key.ipv6.ipv6begin), ipv6begin, sizeof(ipv6begin));
+					ipv6tostr(&(white.rule[i].key.ipv6.ipv6end), ipv6end, sizeof(ipv6end));
+					if(strcmp(ipv6end, "::") == 0)
+					{
+						if(strcmp(white.rule[i].intf, "") == 0)
+						{
+							snprintf(showStr, sizeof(showStr), " add white-list ipv6 [%s]:%s", 
+									ipv6begin, white.rule[i].key.ipv6.ports);
+							vtysh_add_show_string(showStr);
+						}
+						else
+						{
+							snprintf(showStr, sizeof(showStr), " add white-list ipv6 [%s]:%s %s",
+									ipv6begin, white.rule[i].key.ipv6.ports, white.rule[i].intf);
+							vtysh_add_show_string(showStr);
+						}
+					}
+					else
+					{
+						if(strcmp(white.rule[i].intf, "") == 0)
+						{
+							snprintf(showStr, sizeof(showStr), " add white-list ipv6 [%s-%s]:%s", 
+									ipv6begin, ipv6end, white.rule[i].key.ipv6.ports);
+							vtysh_add_show_string(showStr);
+						}
+						else
+						{
+							snprintf(showStr, sizeof(showStr), " add white-list ipv6 [%s-%s]:%s %s",
+									ipv6begin, ipv6end, white.rule[i].key.ipv6.ports,white.rule[i].intf);
+							vtysh_add_show_string(showStr);
+						}
+					}
+				}
 			}
 		}
 	}
@@ -5170,18 +5210,20 @@ eag_captive_portal_config_show_running(struct vty* vty)
 					type = "IP";
 				else if (black.rule[i].type == RULE_DOMAIN)
 					type = "Domain";
-
-				ip2str(black.rule[i].key.ip.ipbegin, ipbegin, sizeof(ipbegin));
-				ip2str(black.rule[i].key.ip.ipend, ipend, sizeof(ipend));
+				else if (black.rule[i].type == RULE_IPV6ADDR)
+					type = "IPV6";
 
 				type_tmp = black.rule[i].type;
 				if((RULE_TYPE)type_tmp == RULE_IPADDR)
 				{
+					ip2str(black.rule[i].key.ip.ipbegin, ipbegin, sizeof(ipbegin));
+					ip2str(black.rule[i].key.ip.ipend, ipend, sizeof(ipend));
 					if(strcmp(ipend, "0.0.0.0") == 0)
 					{
 						if(strcmp(black.rule[i].intf, "") == 0)
 						{
-							snprintf(showStr, sizeof(showStr), " add black-list ip %s:%s", ipbegin ,black.rule[i].key.ip.ports);
+							snprintf(showStr, sizeof(showStr), " add black-list ip %s:%s", 
+									ipbegin, black.rule[i].key.ip.ports);
 							vtysh_add_show_string(showStr);
 						}
 						else
@@ -5195,7 +5237,8 @@ eag_captive_portal_config_show_running(struct vty* vty)
 					{
 						if(strcmp(black.rule[i].intf, "") == 0)
 						{
-							snprintf(showStr, sizeof(showStr), " add black-list ip %s-%s:%s", ipbegin ,ipend, black.rule[i].key.ip.ports);
+							snprintf(showStr, sizeof(showStr), " add black-list ip %s-%s:%s", 
+									ipbegin, ipend, black.rule[i].key.ip.ports);
 							vtysh_add_show_string(showStr);
 						}
 						else
@@ -5219,6 +5262,41 @@ eag_captive_portal_config_show_running(struct vty* vty)
 						snprintf(showStr, sizeof(showStr), "add black-list domain %s %s",\
 									black.rule[i].key.domain.name, black.rule[i].intf);
 						vtysh_add_show_string(showStr);
+					}					
+				}
+				else if((RULE_TYPE)type_tmp == RULE_IPV6ADDR)
+				{	
+					ipv6tostr(&(black.rule[i].key.ipv6.ipv6begin), ipv6begin, sizeof(ipv6begin));
+					ipv6tostr(&(black.rule[i].key.ipv6.ipv6end), ipv6end, sizeof(ipv6end));
+					if(strcmp(ipv6end, "::") == 0)
+					{
+						if(strcmp(black.rule[i].intf, "") == 0)
+						{
+							snprintf(showStr, sizeof(showStr), " add black-list ipv6 [%s]:%s", 
+									ipv6begin ,black.rule[i].key.ipv6.ports);
+							vtysh_add_show_string(showStr);
+						}
+						else
+						{
+							snprintf(showStr, sizeof(showStr), " add black-list ipv6 [%s]:%s %s",\
+									ipv6begin ,black.rule[i].key.ipv6.ports,black.rule[i].intf);
+							vtysh_add_show_string(showStr);
+						}
+					}
+					else
+					{
+						if(strcmp(black.rule[i].intf, "") == 0)
+						{
+							snprintf(showStr, sizeof(showStr), " add black-list ipv6 [%s-%s]:%s", 
+									ipv6begin ,ipv6end, black.rule[i].key.ipv6.ports);
+							vtysh_add_show_string(showStr);
+						}
+						else
+						{
+							snprintf(showStr, sizeof(showStr), " add black-list ipv6 [%s-%s]:%s %s",\
+									ipv6begin ,ipv6end, black.rule[i].key.ipv6.ports,black.rule[i].intf);
+							vtysh_add_show_string(showStr);
+						}
 					}					
 				}
 			}
@@ -5264,6 +5342,8 @@ eag_captive_portal_config_show_running_2(int localid, int slot_id,int index)
 	struct bw_rules white;
 	char ipbegin[32] = {0};
 	char ipend[32] = {0};
+	char ipv6begin[48] = {0};
+	char ipv6end[48] = {0};
 	memset(&white, 0, sizeof(white));
 	
 	ret = eag_show_white_list(dcli_dbus_connection_curr,
@@ -5275,35 +5355,42 @@ eag_captive_portal_config_show_running_2(int localid, int slot_id,int index)
 					type = "IP";
 				else if (white.rule[i].type == RULE_DOMAIN)
 					type = "Domain";
-
-				ip2str(white.rule[i].key.ip.ipbegin, ipbegin, sizeof(ipbegin));
-				ip2str(white.rule[i].key.ip.ipend, ipend, sizeof(ipend));
+				else if (white.rule[i].type == RULE_IPV6ADDR)
+					type = "IPV6";
 
 				type_tmp = white.rule[i].type;
 				if( (RULE_TYPE)type_tmp == RULE_IPADDR )
 				{
+                    ip2str(white.rule[i].key.ip.ipbegin, ipbegin, sizeof(ipbegin));
+                    ip2str(white.rule[i].key.ip.ipend, ipend, sizeof(ipend));
 					if(strcmp(ipend, "0.0.0.0") == 0)
 					{
 						if(strcmp(white.rule[i].intf, "") == 0)
 						{
-							totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1, " add white-list ip %s:%s\n", ipbegin ,white.rule[i].key.ip.ports);
+							totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1, 
+										" add white-list ip %s:%s\n", 
+										ipbegin ,white.rule[i].key.ip.ports);
 						}
 						else
 						{
-							totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1, " add white-list ip %s:%s %s\n",\
-									ipbegin ,white.rule[i].key.ip.ports,white.rule[i].intf);
+							totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1, 
+										" add white-list ip %s:%s %s\n",\
+										ipbegin ,white.rule[i].key.ip.ports,white.rule[i].intf);
 						}
 					}
 					else
 					{
 						if(strcmp(white.rule[i].intf, "") == 0)
 						{
-							totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1, " add white-list ip %s-%s:%s\n", ipbegin ,ipend, white.rule[i].key.ip.ports);
+							totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1, 
+										" add white-list ip %s-%s:%s\n", 
+										ipbegin ,ipend, white.rule[i].key.ip.ports);
 						}
 						else
 						{
-							totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1, " add white-list ip %s-%s:%s %s\n",\
-									ipbegin ,ipend, white.rule[i].key.ip.ports,white.rule[i].intf);
+							totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1, 
+										" add white-list ip %s-%s:%s %s\n",\
+										ipbegin ,ipend, white.rule[i].key.ip.ports,white.rule[i].intf);
 						}
 					}
 					
@@ -5312,13 +5399,50 @@ eag_captive_portal_config_show_running_2(int localid, int slot_id,int index)
 				{
 					if(strcmp(white.rule[i].intf, "") == 0)
 					{
-						totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1," add white-list domain %s\n",\
+						totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1, 
+									" add white-list domain %s\n",\
 									white.rule[i].key.domain.name);
 					}
 					else
 					{
-						totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1," add white-list domain %s %s\n",\
+						totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1, 
+									" add white-list domain %s %s\n",\
 									white.rule[i].key.domain.name, white.rule[i].intf);
+					}					
+				}
+				else if((RULE_TYPE)type_tmp == RULE_IPV6ADDR)
+				{	
+					ipv6tostr(&(white.rule[i].key.ipv6.ipv6begin), ipv6begin, sizeof(ipv6begin));
+					ipv6tostr(&(white.rule[i].key.ipv6.ipv6end), ipv6end, sizeof(ipv6end));
+					if(strcmp(ipv6end, "::") == 0)
+					{
+						if(strcmp(white.rule[i].intf, "") == 0)
+						{
+							totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1, 
+										" add white-list ipv6 [%s]:%s\n", 
+										ipv6begin, white.rule[i].key.ipv6.ports);
+						}
+						else
+						{
+							totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1, 
+										" add white-list ipv6 [%s]:%s %s\n", 
+										ipv6begin, white.rule[i].key.ipv6.ports, white.rule[i].intf);
+						}
+					}
+					else
+					{
+						if(strcmp(white.rule[i].intf, "") == 0)
+						{
+							totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1, 
+										" add white-list ipv6 [%s-%s]:%s\n", 
+										ipv6begin, ipv6end, white.rule[i].key.ipv6.ports);
+						}
+						else
+						{
+							totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1, 
+										" add white-list ipv6 [%s-%s]:%s %s\n", 
+										ipv6begin ,ipv6end, white.rule[i].key.ipv6.ports,white.rule[i].intf);
+						}
 					}					
 				}
 			}
@@ -5336,35 +5460,42 @@ eag_captive_portal_config_show_running_2(int localid, int slot_id,int index)
 					type = "IP";
 				else if (black.rule[i].type == RULE_DOMAIN)
 					type = "Domain";
-
-				ip2str( black.rule[i].key.ip.ipbegin, ipbegin,sizeof(ipbegin));
-				ip2str( black.rule[i].key.ip.ipend, ipend,sizeof(ipend));
+				else if (black.rule[i].type == RULE_IPV6ADDR)
+					type = "IPV6";
 
 				type_tmp = black.rule[i].type;
 				if( (RULE_TYPE)type_tmp == RULE_IPADDR )
 				{
+					ip2str( black.rule[i].key.ip.ipbegin, ipbegin,sizeof(ipbegin));
+					ip2str( black.rule[i].key.ip.ipend, ipend,sizeof(ipend));
 					if(strcmp(ipend, "0.0.0.0") == 0)
 					{
 						if(strcmp(black.rule[i].intf, "") == 0)
 						{
-							totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1," add black-list ip %s:%s\n", ipbegin ,black.rule[i].key.ip.ports);
+							totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1, 
+										" add black-list ip %s:%s\n", 
+										ipbegin ,black.rule[i].key.ip.ports);
 						}
 						else
 						{
-							totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1," add black-list ip %s:%s %s\n",\
-									ipbegin ,black.rule[i].key.ip.ports,black.rule[i].intf);
+							totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1, 
+										" add black-list ip %s:%s %s\n",\
+										ipbegin ,black.rule[i].key.ip.ports,black.rule[i].intf);
 						}
 					}
 					else
 					{
 						if(strcmp(black.rule[i].intf, "") == 0)
 						{
-							totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1, " add black-list ip %s-%s:%s\n", ipbegin ,ipend, black.rule[i].key.ip.ports);
+							totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1, 
+										" add black-list ip %s-%s:%s\n", 
+										ipbegin ,ipend, black.rule[i].key.ip.ports);
 						}
 						else
 						{
-							totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1, " add black-list ip %s-%s:%s %s\n",\
-									ipbegin ,ipend, black.rule[i].key.ip.ports,black.rule[i].intf);
+							totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1, 
+										" add black-list ip %s-%s:%s %s\n",\
+										ipbegin ,ipend, black.rule[i].key.ip.ports,black.rule[i].intf);
 						}
 					}
 					
@@ -5373,13 +5504,50 @@ eag_captive_portal_config_show_running_2(int localid, int slot_id,int index)
 				{
 					if(strcmp(black.rule[i].intf, "") == 0)
 					{
-						totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1, " add black-list domain %s\n",\
+						totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1, 
+									" add black-list domain %s\n",\
 									black.rule[i].key.domain.name);
 					}
 					else
 					{
-						totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1, " add black-list domain %s %s\n",\
+						totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1, 
+									" add black-list domain %s %s\n",\
 									black.rule[i].key.domain.name, black.rule[i].intf);
+					}					
+				}
+				else if((RULE_TYPE)type_tmp == RULE_IPV6ADDR)
+				{	
+					ipv6tostr(&(black.rule[i].key.ipv6.ipv6begin), ipv6begin, sizeof(ipv6begin));
+					ipv6tostr(&(black.rule[i].key.ipv6.ipv6end), ipv6end, sizeof(ipv6end));
+					if(strcmp(ipv6end, "::") == 0)
+					{
+						if(strcmp(black.rule[i].intf, "") == 0)
+						{
+							totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1, 
+										" add black-list ipv6 [%s]:%s\n", 
+										ipv6begin, black.rule[i].key.ipv6.ports);
+						}
+						else
+						{
+							totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1, 
+										" add black-list ipv6 [%s]:%s %s\n", 
+										ipv6begin, black.rule[i].key.ipv6.ports, black.rule[i].intf);
+						}
+					}
+					else
+					{
+						if(strcmp(black.rule[i].intf, "") == 0)
+						{
+							totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1, 
+										" add black-list ipv6 [%s-%s]:%s\n", 
+										ipv6begin, ipv6end, black.rule[i].key.ipv6.ports);
+						}
+						else
+						{
+							totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1, 
+										" add black-list ipv6 [%s-%s]:%s %s\n", 
+										ipv6begin ,ipv6end, black.rule[i].key.ipv6.ports,black.rule[i].intf);
+						}
 					}					
 				}
 			}
@@ -14231,12 +14399,12 @@ DEFUN(show_captive_portal_white_list_func,
 				{
 					if(strcmp(ipv6end, "::") == 0)
 					{
-						vty_out(vty, "%-7s %s:%-12s %s\n",type,ipv6begin,white.rule[i].key.ipv6.ports, 
+						vty_out(vty, "%-7s [%s]:%-12s %s\n",type,ipv6begin,white.rule[i].key.ipv6.ports, 
 								white.rule[i].intf);
 					}
 					else
 					{
-						vty_out(vty, "%-7s %s-%s:%-3s %s\n",type,ipv6begin,ipv6end,white.rule[i].key.ipv6.ports, 
+						vty_out(vty, "%-7s [%s-%s]:%-3s %s\n",type,ipv6begin,ipv6end,white.rule[i].key.ipv6.ports, 
 									white.rule[i].intf);
 					}
 					
@@ -14321,12 +14489,12 @@ DEFUN(show_captive_portal_black_list_func,
 				{
 					if(strcmp(ipv6end, "::") == 0)
 					{
-						vty_out(vty, "%-7s %s:%-12s %s\n",type,ipv6begin,black.rule[i].key.ipv6.ports, 
+						vty_out(vty, "%-7s [%s]:%-12s %s\n",type,ipv6begin,black.rule[i].key.ipv6.ports, 
 								black.rule[i].intf);
 					}
 					else
 					{
-						vty_out(vty, "%-7s %s-%s:%-3s %s\n",type,ipv6begin,ipv6end,black.rule[i].key.ipv6.ports, 
+						vty_out(vty, "%-7s [%s-%s]:%-3s %s\n",type,ipv6begin,ipv6end,black.rule[i].key.ipv6.ports, 
 									black.rule[i].intf);
 					}
 					
@@ -14484,13 +14652,13 @@ DEFUN(conf_captive_portal_black_list_with_ip_func,
 
 DEFUN(conf_captive_portal_white_list_with_ipv6_func,
 	conf_captive_portal_white_list_with_ipv6_cmd,	
-	"(add|del) white-list ipv6 IPRANGE[:PORTSET] [INTFS]",
+	"(add|del) white-list ipv6 IPRANGE:PORTSET [INTFS]",
 	"add\n"
 	"delete\n"
 	"add or delete white list\n"
 	"add or delete white list by ipv6 format\n"
-	"specifys that white list is described with ipv6range:postset format\n"
-	"ipv6 range and port set to be applied to the white list, with format A::B[-A::B][:(all|PORT[,PORT]...)]\n"
+	"specifys that white list is described with ipv6range:postset format A::B or A::B-C::D or [A::B]:PORT or [A::B-C::D]:PORT\n"
+	"ipv6 range and port set to be applied to the white list, with format A::B or A::B-C::D or [A::B]:PORT or [A::B-C::D]:PORT INTFS\n"
 )
 {
 	
@@ -14517,7 +14685,7 @@ DEFUN(conf_captive_portal_white_list_with_ipv6_func,
 	
 	ret = parse_ipv6range_portset(argv[1], &item);//test_L
 	if (0 != ret){
-		vty_out(vty, "%% error iprange-portset format\n");
+		vty_out(vty, "%% error ipv6range-portset format\n");
 		return CMD_FAILURE;
 	}
 	
@@ -14551,13 +14719,13 @@ DEFUN(conf_captive_portal_white_list_with_ipv6_func,
 
 DEFUN(conf_captive_portal_black_list_with_ipv6_func,
 	conf_captive_portal_black_list_with_ipv6_cmd,	
-	"(add|del) black-list ipv6 IPRANGE[:PORTSET] [INTFS]",
+	"(add|del) black-list ipv6 IPRANGE:PORTSET [INTFS]",
 	"add\n"
 	"delete\n"
 	"add or delete black list\n"
 	"add or delete black list by ipv6 format\n"
-	"specifys that black list is described with iprange:postset format\n"
-	"ipv6 range and port set to be applied to the black list, with format A::B[-A::B][:(all|PORT[,PORT]...)]\n"
+	"specifys that black list is described with iprange:postset format A::B or A::B-C::D or [A::B]:PORT or [A::B-C::D]:PORT\n"
+	"ipv6 range and port set to be applied to the black list, with format A::B or A::B-C::D or [A::B]:PORT or [A::B-C::D]:PORT INTFS\n"
 )
 {
 	int ret = -1;

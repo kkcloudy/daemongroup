@@ -266,12 +266,22 @@ appconn_update_ip_htable(appconn_db_t *appdb,
                         &(appconn->session.user_addr.user_ipv6),
                         sizeof(struct in6_addr),
                         &(appconn->ip_hnode));
-	} else {
+	} else if (EAG_IPV4 == appconn->session.user_addr.family) {
 		return hashtable_check_add_node(appdb->ip_htable,
 						&(appconn->session.user_addr.user_ip),
 						sizeof(struct in_addr),
 						&(appconn->ip_hnode));
+	} else if (EAG_MIX == appconn->session.user_addr.family) {
+        hashtable_check_add_node(appdb->ipv6_htable,
+                                &(appconn->session.user_addr.user_ipv6),
+                                sizeof(struct in6_addr),
+                                &(appconn->ip_hnode));
+        hashtable_check_add_node(appdb->ip_htable,
+                                &(appconn->session.user_addr.user_ip),
+                                sizeof(struct in_addr),
+                                &(appconn->ip_hnode));
 	}
+	return EAG_RETURN_OK;
 }
 
 static int
@@ -822,7 +832,7 @@ appconn_check_is_conflict(user_addr_t *user_addr, appconn_db_t *appdb, struct ap
 	memcpy(&(session->user_addr), user_addr, sizeof(user_addr_t));
 	eag_log_debug("eag_ipinfo", "eag_ipinfo_get before userip=%s", user_ipstr);
 	if (EAG_IPV6 == user_addr->family) {
-		eag_ipv6info_get(session->usermac, &(user_addr->user_ipv6));
+		eag_ipv6info_get(session->intf, sizeof(session->intf)-1, session->usermac, &(user_addr->user_ipv6));
     } else {
 		eag_ipinfo_get(session->intf, sizeof(session->intf)-1, session->usermac, user_addr->user_ip);// houyt
 	}
@@ -970,7 +980,8 @@ appconn_find_by_ip_autocreate(appconn_db_t *appdb, user_addr_t *user_addr)
 	appconn->session.nasip = eag_ins_get_nasip(appdb->eagins);
 	eag_log_debug("eag_ipinfo", "eag_ipinfo_get before userip=%s", user_ipstr);
 	if (EAG_IPV6 == user_addr->family) {
-		eag_ipv6info_get(appconn->session.usermac, &(user_addr->user_ipv6));
+		eag_ipv6info_get(appconn->session.intf, sizeof(appconn->session.intf)-1, 
+				appconn->session.usermac, &(user_addr->user_ipv6));
     } else {
 		eag_ipinfo_get(appconn->session.intf, sizeof(appconn->session.intf)-1,
 				appconn->session.usermac, user_addr->user_ip);

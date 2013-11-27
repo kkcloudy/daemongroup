@@ -288,7 +288,16 @@ portal_sess_new(eag_portal_t *portal,
         						&(user_addr->user_ipv6),
         						sizeof(struct in6_addr),
                             	&(portalsess->hnode));
-	} else {
+	} else if (EAG_IPV4 == user_addr->family) {
+        hashtable_check_add_node(portal->htable,
+                                &(user_addr->user_ip),
+                                sizeof(struct in_addr),
+                                &(portalsess->hnode));
+	} else if (EAG_MIX == user_addr->family) {
+		hashtable_check_add_node(portal->ipv6_htable,
+	    						&(user_addr->user_ipv6),
+	    						sizeof(struct in6_addr),
+	                        	&(portalsess->hnode));
         hashtable_check_add_node(portal->htable,
                                 &(user_addr->user_ip),
                                 sizeof(struct in_addr),
@@ -333,25 +342,40 @@ portal_sess_find_by_userip(eag_portal_t *portal,
 	char user_ipstr[IPX_LEN] = "";
 
     ipx2str(user_addr, user_ipstr, sizeof(user_ipstr));
-	if (EAG_IPV6 == user_addr->family) {
+	if (EAG_IPV6 == user_addr->family
+		|| EAG_MIX == user_addr->family) {
         head = hashtable_get_hash_list(portal->ipv6_htable, 
         								&(user_addr->user_ipv6), 
         								sizeof(struct in6_addr));
-	} else {
+        if (NULL == head) {
+			eag_log_err("portal_sess_find_by_userip head is null");
+			return NULL;
+		}
+	
+		hlist_for_each_entry(portalsess, node, head, hnode) {
+	        if (!memcmp_ipx(&(portalsess->user_addr), user_addr)) {
+	            eag_log_debug("eag_portal", "found portal sess by userip %s",
+					user_ipstr);
+				return portalsess;
+			}
+		}
+	}
+	if (EAG_IPV4 == user_addr->family
+		|| EAG_MIX == user_addr->family) {
 		head = hashtable_get_hash_list(portal->htable,         								
         								&(user_addr->user_ip), 
         								sizeof(struct in_addr));
-	}
-	if (NULL == head) {
-		eag_log_err("portal_sess_find_by_userip head is null");
-		return NULL;
-	}
+		if (NULL == head) {
+			eag_log_err("portal_sess_find_by_userip head is null");
+			return NULL;
+		}
 	
-	hlist_for_each_entry(portalsess, node, head, hnode) {
-        if (!memcmp_ipx(user_addr, &(portalsess->user_addr))) {
-            eag_log_debug("eag_portal", "found portal sess by userip %s",
-				user_ipstr);
-			return portalsess;
+		hlist_for_each_entry(portalsess, node, head, hnode) {
+	        if (!memcmp_ipx(&(portalsess->user_addr), user_addr)) {
+	            eag_log_debug("eag_portal", "found portal sess by userip %s",
+					user_ipstr);
+				return portalsess;
+			}
 		}
 	}
 
@@ -3072,9 +3096,9 @@ portal_proc_packet(eag_portal_t *portal,
 	}
     portal_packet_init_ipx(reqpkt, &user_addr);
     ipx2str(&user_addr, user_ipstr, sizeof(user_ipstr));
-	eag_log_debug("eag_portal","Receive portal packet type=%x,userip=%#x,errcode=%u "
+	eag_log_debug("eag_portal","Receive portal packet type=%x,userip=%s,errcode=%u "
 		" from portal server %#x:%u",
-		reqpkt->type, reqpkt->user_ip, reqpkt->err_code,
+		reqpkt->type, user_ipstr, reqpkt->err_code,
 		portal_ip, portal_port);
 	
 	switch (reqpkt->type) {

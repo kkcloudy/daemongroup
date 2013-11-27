@@ -153,7 +153,7 @@ struct bw_rule_t {
 	char intf[MAX_IF_NAME_LEN];
 };
 
-#define MAX_BW_RULES_NUM	128
+#define MAX_BW_RULES_NUM	256
 struct bw_rules{
 	unsigned long curr_num;
 	struct bw_rule_t rule[MAX_BW_RULES_NUM];

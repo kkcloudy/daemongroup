@@ -800,7 +800,11 @@ build_param( char *url_buf,
 		return -1;
 	}
 	
-	ipx2str(&(redirconn->user_addr), user_ipstr, sizeof(user_ipstr));
+	if (EAG_IPV6 == redirconn->user_addr.family) {
+		ipv6tostr(&(redirconn->user_addr.user_ipv6), user_ipstr, sizeof(user_ipstr));
+    } else {
+        ip2str(redirconn->user_addr.user_ip, user_ipstr, sizeof(user_ipstr));
+    }
 	
     memset(firsturl_str, 0, sizeof(firsturl_str));
     
@@ -975,8 +979,11 @@ eag_redirconn_build_redirurl( eag_redirconn_t *redirconn )
 	appdb = redir->appdb;
 	eagins = redir->eagins;
     memset (acip_str, 0, sizeof(acip_str));
-	ipx2str(&(redirconn->user_addr), user_ipstr, sizeof(user_ipstr));
-	
+    if (EAG_IPV6 == redirconn->user_addr.family) {
+		ipv6tostr(&(redirconn->user_addr.user_ipv6), user_ipstr, sizeof(user_ipstr));
+    } else {
+        ip2str(redirconn->user_addr.user_ip, user_ipstr, sizeof(user_ipstr));
+    }
     nasip = eag_ins_get_nasip(eagins);
     ip2str(nasip, acip_str, sizeof(acip_str));
 
@@ -1331,7 +1338,7 @@ eag_redirconn_write(eag_thread_t *thread)
 	}
 	redir = redirconn->redir;
     ipx2str(&(redirconn->user_addr), user_ipstr, sizeof(user_ipstr));
-	eag_log_info("eag_redirconn_write send resp = %s", redirconn->ibuf);
+	eag_log_debug("eag_redir", "eag_redirconn_write send resp = %s", redirconn->ibuf);
 	writen = write(redirconn->conn_fd, redirconn->ibuf, redirconn->ibuflen);
 	if (writen < 0) {
 		eag_log_debug("eag_redir_warning", "Write failed on redir conn socket %d: %s, userip %s",
@@ -1734,7 +1741,7 @@ eag_redir_accept(eag_thread_t *thread)
 		eag_redirconn_free(redirconn);
 		return -1;
 	}
-	memcpy(&(redirconn->user_addr), &(appconn->session.user_addr), sizeof(user_addr_t));
+	//memcpy(&(redirconn->user_addr), &(appconn->session.user_addr), sizeof(user_addr_t));
 	
 	eag_redirconn_start_read(redirconn);
 		
@@ -1996,7 +2003,7 @@ eag_ipv6_redir_accept(eag_thread_t *thread)
 		eag_redirconn_free(redirconn);
 		return -1;
 	}
-	memcpy(&(redirconn->user_addr), &(appconn->session.user_addr), sizeof(user_addr_t));
+	//memcpy(&(redirconn->user_addr), &(appconn->session.user_addr), sizeof(user_addr_t));
 
 	eag_redirconn_start_read(redirconn);
 		
