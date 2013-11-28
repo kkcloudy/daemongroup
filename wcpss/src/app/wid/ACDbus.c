@@ -75685,7 +75685,16 @@ DBusMessage *wid_dbus_set_wlan_tunnel_mode_state(DBusConnection *conn, DBusMessa
 		ret = WID_WANT_TO_DELETE_WLAN;
 	}
 	else
+	{
+		if(state == 0)
+		{
+			delete_radioif_from_wlan_bridge(wlanid);
+			wid_syslog_debug_debug(WID_DBUS,"delete radio intf from wlan br\n");
+		}
+		
 		ret = set_wlan_tunnel_mode(wlanid, state);
+
+	}
 
 	reply = dbus_message_new_method_return(msg);
 			
