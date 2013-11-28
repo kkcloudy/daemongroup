@@ -628,6 +628,12 @@ rc = wtpSecurityCiphers_get(rowreq_ctx, (u_long *)var->val.string );
 rc = apEndStaID_get(rowreq_ctx, (long *)var->val.string );
         break;
 
+    /* wtpStaIPV6Address(17)/InetAddressIPv6/ASN_OCTET_STR/char(char)//L/A/w/e/R/d/H */
+    case COLUMN_WTPSTAIPV6ADDRESS:
+    var->type = ASN_OCTET_STR;
+rc = wtpStaIPV6Address_get(rowreq_ctx, (char **)&var->val.string, &var->val_len );
+        break;
+
      default:
          snmp_log(LOG_ERR,"unknown column %d in _dot11WtpEndStaInfoTable_get_column\n", column);
          break;

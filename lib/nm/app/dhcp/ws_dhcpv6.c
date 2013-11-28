@@ -34,6 +34,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ***************************************************************************/
 #include "ws_dhcpv6.h"
 #include "ws_returncode.h"
+#include "ws_init_dbus.h"
+//#include "ws_dcli_dhcp.h"
 
 #define ALIAS_NAME_SIZE 		0x15
 #define MAC_ADDRESS_LEN			6
@@ -378,10 +380,12 @@ unsigned int ccgi_show_ipv6_dhcp_server
 
 }
 
-void Free_ccgi_show_ipv6_pool(struct dhcp6_pool_show_st *head)
+void Free_ccgi_show_ipv6_pool(struct dhcp6_pool_show *head)
 {
-	struct dhcp6_pool_show_st *f1,*f2;
-	struct dhcp6_sub *pf1,*pf2;
+	if(head ==NULL)
+		return;
+	struct dhcp6_pool_show *f1=NULL,*f2=NULL;
+	struct dhcp6_sub *pf1=NULL,*pf2=NULL;
 	int i = 0;
 	f1=head->next;
 	if(f1 != NULL)
@@ -389,67 +393,80 @@ void Free_ccgi_show_ipv6_pool(struct dhcp6_pool_show_st *head)
 		f2=f1->next;
 		while(f2!=NULL)
 		{
-			pf1=f1->ipv6_subnet.next;
+			if(f1->ipv6_subnet != NULL)
+			{
+				pf1=f1->ipv6_subnet->next;
+				if(pf1!=NULL)
+				{
+					pf2=pf1->next;
+					while( pf2 != NULL )
+					{
+						FREE_OBJECT(pf1->range_high_ip);
+						FREE_OBJECT(pf1->range_low_ip);
+						FREE_OBJECT(pf1);
+						pf1=pf2;
+						if(pf2!=NULL)
+							pf2=pf2->next;
+					}
+				}
+			}
+			FREE_OBJECT(f1->poolname);
+			FREE_OBJECT(f1->domain_name);
+			FREE_OBJECT(f1->interfacename);
+			for (i=0;i<8;i++)
+			{
+				FREE_OBJECT(f1->option52[i]);
+			}
+						
+			for (i=0;i<3;i++)
+			{
+				FREE_OBJECT(f1->dnsip[i]);
+			}
+			
+			FREE_OBJECT(f1);
+			f1=f2;
+			f2=f2->next;
+		}
+		
+		if(f1->ipv6_subnet)
+		{
+			pf1=f1->ipv6_subnet->next;
 			if(pf1!=NULL)
 			{
 				pf2=pf1->next;
 				while( pf2 != NULL )
 				{
-					free(pf1->range_high_ip);
-					free(pf1->range_low_ip);
-					free(pf1);
+					FREE_OBJECT(pf1->range_high_ip);
+					FREE_OBJECT(pf1->range_low_ip);
+					FREE_OBJECT(pf1);
 					pf1=pf2;
 					if(pf2!=NULL)
 						pf2=pf2->next;
 				}
-			}	
-			free(f1->poolname);
-			free(f1->domain_name);
-			for (i=0;i<8;i++)
-			{
-				free(f1->option52[i]);
-			}
-			for (i=0;i<3;i++)
-			{
-				free(f1->dnsip[i]);
-			}
-			free(f1);
-			f1=f2;
-			f2=f2->next;
-		}
-		pf1=f1->ipv6_subnet.next;
-		if(pf1!=NULL)
-		{
-			pf2=pf1->next;
-			while( pf2 != NULL )
-			{
-				free(pf1->range_high_ip);
-				free(pf1->range_low_ip);
-				free(pf1);
-				pf1=pf2;
-				if(pf2!=NULL)
-					pf2=pf2->next;
 			}
 		}
-		free(f1->poolname);
-		free(f1->domain_name);
+		FREE_OBJECT(f1->poolname);
+		FREE_OBJECT(f1->domain_name);
+		FREE_OBJECT(f1->interfacename);
 		for (i=0;i<8;i++)
 		{
-			free(f1->option52[i]);
+			FREE_OBJECT(f1->option52[i]);
 		}
+		
 		for (i=0;i<3;i++)
 		{
-			free(f1->dnsip[i]);
+			FREE_OBJECT(f1->dnsip[i]);
 		}
-		free(f1);
+		FREE_OBJECT(f1);
 	}
 }
 int ccgi_show_ipv6_pool
 (
 	unsigned int mode,
 	unsigned int index,
-	struct dhcp6_pool_show_st *head,
-	unsigned int *num
+	struct dhcp6_pool_show *head,
+	unsigned int *num,
+	DBusConnection *connection
 )
 {	
 	DBusMessage *query = NULL, *reply = NULL;
@@ -457,12 +474,12 @@ int ccgi_show_ipv6_pool
 	DBusMessageIter  iter;
 	DBusMessageIter  iter_array;
 	struct dhcp6_pool_show* pool = NULL;
-	struct dhcp6_pool_show_st *q,*tail;
-	struct dhcp6_sub *pq,*ptail;
+	struct dhcp6_pool_show *q,*tail;
+	struct dhcp6_sub *pq = NULL,*ptail = NULL;
 	head->next = NULL;
 	tail = head;
 
-	unsigned int     i = 0, j = 0,ret = 0, count=0, pool_count = 0;
+	unsigned int     i = 0, j = 0,ret = 0, count=0, pool_count = 0,h=0;
 	//char *tmpstr = NULL;
 	int retu = 0;
 
@@ -475,7 +492,7 @@ int ccgi_show_ipv6_pool
 						     DBUS_TYPE_UINT32, &mode,
 						     DBUS_TYPE_UINT32, &index,
 							 DBUS_TYPE_INVALID);
-	reply = dbus_connection_send_with_reply_and_block (ccgi_dbus_connection,query,-1, &err);
+	reply = dbus_connection_send_with_reply_and_block (connection,query,-1, &err);
 	dbus_message_unref(query);	
 	if (NULL == reply) {
 		if (dbus_error_is_set(&err)) {
@@ -487,7 +504,6 @@ int ccgi_show_ipv6_pool
 	 dbus_message_iter_init(reply,&iter); 	
 	 dbus_message_iter_get_basic(&iter,&ret);
 
-	
 	 if (!ret) {
 		dbus_message_iter_next(&iter);  
 		dbus_message_iter_get_basic(&iter, &pool_count); 
@@ -495,21 +511,24 @@ int ccgi_show_ipv6_pool
 		memset(pool, 0, sizeof(struct dhcp6_pool_show)*pool_count);
 		dbus_message_iter_next(&iter);
 		dbus_message_iter_recurse(&iter,&iter_array);
-
 		for (i = 0; i < pool_count; i++)
 		{
 			retu = 1;
-			q = (struct dhcp6_pool_show_st*)malloc(sizeof(struct dhcp6_pool_show_st));
+			q = (struct dhcp6_pool_show*)malloc(sizeof(struct dhcp6_pool_show)+1);
 			if (NULL == q)
 			{
 				return -1;
 			}
-			memset(q,0,sizeof(struct dhcp6_pool_show_st));
+			memset(q,0,sizeof(struct dhcp6_pool_show)+1);
 			q->poolname = (char *)malloc(128);
 			memset(q->poolname,0,128);
 
 			q->domain_name = (char *)malloc(128);
 			memset(q->domain_name,0,128);
+
+			
+			q->interfacename = (char *)malloc(64);
+			memset(q->interfacename,0,64);
 
 			int k = 0;			
 
@@ -576,15 +595,15 @@ int ccgi_show_ipv6_pool
 			
 			dbus_message_iter_get_basic(&iter_struct, &(pool[i].dnsip[0]));
 			dbus_message_iter_next(&iter_struct);
-			strncpy(q->dnsip[0],pool[i].dnsip[0],128);
+			strncpy(q->dnsip[0],pool[i].dnsip[0],127);
 			
 			dbus_message_iter_get_basic(&iter_struct, &(pool[i].dnsip[1]));
 			dbus_message_iter_next(&iter_struct);
-			strncpy(q->dnsip[1],pool[i].dnsip[1],128);
+			strncpy(q->dnsip[1],pool[i].dnsip[1],127);
 			
 			dbus_message_iter_get_basic(&iter_struct, &(pool[i].dnsip[2]));
 			dbus_message_iter_next(&iter_struct);
-			strncpy(q->dnsip[2],pool[i].dnsip[2],128);
+			strncpy(q->dnsip[2],pool[i].dnsip[2],127);
 			
 			dbus_message_iter_get_basic(&iter_struct, &(pool[i].dnsnum));
 			dbus_message_iter_next(&iter_struct); 
@@ -597,16 +616,20 @@ int ccgi_show_ipv6_pool
 			dbus_message_iter_get_basic(&iter_struct, &(pool[i].sub_count));
 
 			count = pool[i].sub_count;
-			dbus_message_iter_next(&iter_struct); 		  
+			dbus_message_iter_next(&iter_struct);
+			
+			dbus_message_iter_get_basic(&iter_struct, &(pool[i].interfacename));
+			dbus_message_iter_next(&iter_struct); 
+			strncpy(q->interfacename,pool[i].interfacename,64);
 			dbus_message_iter_recurse(&iter_struct,&iter_sub_array);	
 
 			pool[i].ipv6_subnet = malloc(sizeof(struct dhcp6_sub)*count);
 			memset(pool[i].ipv6_subnet, 0, sizeof(struct dhcp6_sub)*count);
 
-			ptail = &(q->ipv6_subnet);
+			//ptail = &(q->ipv6_subnet);
+			
 			for (j = 0; j < count; j++)
 			{
-
 				pq = (struct dhcp6_sub *)malloc(sizeof(struct dhcp6_sub));
 				memset(pq,0,sizeof(struct dhcp6_sub));
 				
@@ -621,26 +644,36 @@ int ccgi_show_ipv6_pool
 				
 				dbus_message_iter_get_basic(&iter_sub_struct,&(pool[i].ipv6_subnet[j].range_low_ip));		
 				dbus_message_iter_next(&iter_sub_struct);
-				strncpy(pq->range_low_ip,pool[i].ipv6_subnet[j].range_low_ip,128);
+				if(pool[i].ipv6_subnet[j].range_low_ip)
+					strncpy(pq->range_low_ip,pool[i].ipv6_subnet[j].range_low_ip,128);
 				
 				dbus_message_iter_get_basic(&iter_sub_struct,&(pool[i].ipv6_subnet[j].range_high_ip));			
 				dbus_message_iter_next(&iter_sub_struct);
-				strncpy(pq->range_high_ip,pool[i].ipv6_subnet[j].range_high_ip,128);
+				if(pool[i].ipv6_subnet[j].range_high_ip)
+					strncpy(pq->range_high_ip,pool[i].ipv6_subnet[j].range_high_ip,128);
 				
 				dbus_message_iter_get_basic(&iter_sub_struct,&(pool[i].ipv6_subnet[j].prefix_length));
 				dbus_message_iter_next(&iter_sub_struct);
 				pq->prefix_length = pool[i].ipv6_subnet[j].prefix_length;
 
 				dbus_message_iter_next(&iter_sub_array);
-				pq->next = NULL;
-				ptail->next = pq;
+				
+				pq->next = ptail;
 				ptail = pq;
-			}			  	  
+				//*ptail->next = NULL;
+				//ptail = pq;
+			}
+			FREE_OBJECT(pool[i].ipv6_subnet);
 			dbus_message_iter_next(&iter_array);
+			q->ipv6_subnet = ptail;
+			ptail = NULL;
 			q->next = NULL;
 			tail->next = q;
 			tail = q;
-		}/*for*/
+			q=NULL;
+			
+		}/*for*/		
+		FREE_OBJECT(pool);
 	}  /*if*/
 	
 	*num = pool_count;
@@ -648,22 +681,39 @@ int ccgi_show_ipv6_pool
 	dbus_message_unref(reply);
 	 return retu;		 
 }
-int ccgi_create_ipv6_pool_name
-(
-	unsigned int del,
-	char *poolName,
-	unsigned int *pindex
-)/*1:succ;0:fail;-1:poolname is null;-2:delete ip pool fail;-3:create ip pool fail----0:add,1:delete*/
+int ccgi_create_ipv6_pool_name(unsigned int add_del,char *poolName,unsigned int *pindex,int slot_id)
+								/*1:succ;0:fail;-1:poolname is null;-2:delete ip pool fail;-3:create ip pool fail----0:add,1:delete*/
 {
-	DBusMessage *query = NULL, *reply = NULL;
-	DBusError err;
 	unsigned int op_ret = 0, index = 0;
 	int retu = 0;
-	*pindex = 0;
 
-	//if (!poolName) {
-	//	return -1;
-	//}
+	DBusMessage *query = NULL, *reply = NULL;
+	DBusError err;
+	char *ptr = NULL;
+	DBusConnection *ccgi_connection = NULL;
+	*pindex = 0;
+	
+	if(NULL == poolName)
+	 	return -1;
+	ptr=poolName;
+	while (*ptr) 
+	{
+		/* allow ab..z, AB...Z, 01...9, _, -, @	 */
+		if ((*ptr >= 'a' && *ptr <= 'z') || (*ptr >= 'A' && *ptr <= 'Z')
+			|| (*ptr >= '0' && *ptr <= '9')
+			|| (*ptr == '_') || (*ptr == '-') || (*ptr == '.') || (*ptr == '@')) 
+		{
+			ptr++;
+		}
+		else 
+		{
+			return -4;
+		}
+	}
+	ccgi_ReInitDbusConnection(&ccgi_connection, slot_id, DISTRIBUTFAG);
+	if(ccgi_connection == NULL)
+	 	return -1;
+
 	query = dbus_message_new_method_call(DHCP6_DBUS_BUSNAME, 
 									DHCP6_DBUS_OBJPATH, 
 									DHCP6_DBUS_INTERFACE, 
@@ -671,18 +721,16 @@ int ccgi_create_ipv6_pool_name
 	
 	dbus_error_init(&err);
 	dbus_message_append_args(query,	
-							 DBUS_TYPE_UINT32,&del,
+							 DBUS_TYPE_UINT32,&add_del,
 							 DBUS_TYPE_STRING,&poolName, 
 							 DBUS_TYPE_INVALID);
 
-	reply = dbus_connection_send_with_reply_and_block (ccgi_dbus_connection,query,-1, &err);
+	reply = dbus_connection_send_with_reply_and_block (ccgi_connection,query,-1, &err);
 				
 	dbus_message_unref(query);
 	
 	if (NULL == reply) {
-		//vty_out(vty,"failed get reply.\n");
 		if (dbus_error_is_set(&err)) {
-			//vty_out(vty,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return 0;
@@ -694,35 +742,14 @@ int ccgi_create_ipv6_pool_name
 					DBUS_TYPE_INVALID)) {
 		*pindex = index;
 		if(!op_ret) {
-			if (del) {
-			}
-			else {
-				
-				retu = 1;
-				#if 0 
-				if(CONFIG_NODE == vty->node) {
-					pindex = index;
-					retu = 1;
-					//vty->node = POOLV6_NODE;
-					//vty->index = (void *)index;
-					/*vty_out(vty, "create pool index is %d \n", vty->index);*/
-				}
-				else {
-					//vty_out (vty, "Terminal mode change must under configure mode!\n", VTY_NEWLINE);
-					return CMD_WARNING;
-				}
-				#endif
-			}
 			dbus_message_unref(reply);
 			retu = 1;
 		}
 		else {
-			if (del) {			
-				//vty_out (vty, "delete ip pool fail \n");
+			if(add_del) {			
 				retu = -2;
 			}
 			else {
-				//vty_out (vty, "create ip pool fail \n");
 				retu = -3;
 			}
 		}
@@ -738,14 +765,20 @@ int ccgi_create_ipv6_pool_name
 	}
 	return retu;
 }
-int ccgi_config_ipv6_pool_name(char *pool_name,unsigned int *pindex)/*1:succ;0:fail*/
+int ccgi_config_ipv6_pool_name(char *pool_name,unsigned int *pindex,int slot_id)/*1:succ;0:fail*/
 {
 	DBusMessage *query = NULL, *reply = NULL;
 	DBusError err;
 	unsigned int op_ret = 0, index = 0;
 	*pindex = 0;
 	int retu = 0;
-	
+	DBusConnection *ccgi_connection = NULL;
+
+	if(NULL == pool_name)
+		 return 0;
+	ccgi_ReInitDbusConnection(&ccgi_connection, slot_id, DISTRIBUTFAG);
+	if(ccgi_connection == NULL)
+	 	return -1;
 	query = dbus_message_new_method_call(DHCP6_DBUS_BUSNAME, 
 									DHCP6_DBUS_OBJPATH, 
 									DHCP6_DBUS_INTERFACE, 
@@ -756,7 +789,7 @@ int ccgi_config_ipv6_pool_name(char *pool_name,unsigned int *pindex)/*1:succ;0:f
 							DBUS_TYPE_STRING,&pool_name, 
 							DBUS_TYPE_INVALID);
 
-	reply = dbus_connection_send_with_reply_and_block (ccgi_dbus_connection,query,-1, &err);
+	reply = dbus_connection_send_with_reply_and_block (ccgi_connection,query,-1, &err);
 				
 	dbus_message_unref(query);
 	
@@ -793,7 +826,7 @@ int ccgi_config_ipv6_pool_name(char *pool_name,unsigned int *pindex)/*1:succ;0:f
 		}
 	return retu;
 }
-int ccgi_config_dhcp_pool_ipv6_range(char *opt,char *lowip,char *highip,char *predix,unsigned int pindex)
+int ccgi_config_dhcp_pool_ipv6_range(char *opt,char *lowip,char *highip,char *predix,unsigned int pindex,int slot_id)
 {
 	struct iaddr ipAddrl, ipAddrh;
 	unsigned int ret = 0, add = 0, index = 0, prefix_length = 0;
@@ -831,7 +864,7 @@ int ccgi_config_dhcp_pool_ipv6_range(char *opt,char *lowip,char *highip,char *pr
 	}*/		
 	prefix_length = atoi((char *)predix);
 
-	ret = ccgi_add_dhcp_pool_ipv6_range(add, &ipAddrl, &ipAddrh, prefix_length,index);
+	ret = ccgi_add_dhcp_pool_ipv6_range(add, &ipAddrl, &ipAddrh, prefix_length,index,slot_id);
 	if (ret) {
 		//vty_out(vty, "%s ip range fail \n", add ? "delete" : "add");
 		retu = -2;
@@ -839,7 +872,7 @@ int ccgi_config_dhcp_pool_ipv6_range(char *opt,char *lowip,char *highip,char *pr
 	
 	return retu;
 }
-int ccgi_addordel_ipv6pool(char *opt,char *startip,char *endip,char *prefix,	unsigned int index)
+int ccgi_addordel_ipv6pool(char *opt,char *startip,char *endip,char *prefix,	unsigned int index,int slot_id)
 {
 	struct iaddr ipAddrl, ipAddrh;
 	unsigned int ret = 0, add = 0, prefix_length = 0;
@@ -869,8 +902,12 @@ int ccgi_addordel_ipv6pool(char *opt,char *startip,char *endip,char *prefix,	uns
 		return -3;
 	}
 	prefix_length = atoi((char *)prefix);
+	if((prefix_length<1)||(prefix_length>128))
+	{
+		return -4;
+	}
 
-	ret = ccgi_add_dhcp_pool_ipv6_range(add, &ipAddrl, &ipAddrh, prefix_length,index);
+	ret = ccgi_add_dhcp_pool_ipv6_range(add, &ipAddrl, &ipAddrh, prefix_length,index,slot_id);
 	if (1 == ret)
 	{
 		retu = 1;
@@ -887,7 +924,8 @@ int ccgi_add_dhcp_pool_ipv6_range
 	struct iaddr *ipaddrl, 
 	struct iaddr *ipaddrh,
 	unsigned int prefix_length,
-	unsigned int index
+	unsigned int index,
+	int slot_id
 )
 {
 	DBusMessage 	*query = NULL, *reply = NULL;
@@ -897,6 +935,12 @@ int ccgi_add_dhcp_pool_ipv6_range
 	unsigned int	op_ret = 0;
 	//ret = 0;
 	int retu = 0;
+	DBusConnection *ccgi_connection = NULL;
+	ccgi_ReInitDbusConnection(&ccgi_connection, slot_id, DISTRIBUTFAG);
+	if(NULL == ccgi_connection)
+	{
+		retu = -2;
+	}
 
 	query = dbus_message_new_method_call(DHCP6_DBUS_BUSNAME, 
 									DHCP6_DBUS_OBJPATH, 
@@ -940,7 +984,7 @@ int ccgi_add_dhcp_pool_ipv6_range
 							DBUS_TYPE_UINT32, &prefix_length,
 							DBUS_TYPE_UINT32, &index, 
 							DBUS_TYPE_INVALID);		   
-   reply = dbus_connection_send_with_reply_and_block (ccgi_dbus_connection,query,-1, &err);
+   reply = dbus_connection_send_with_reply_and_block (ccgi_connection,query,-1, &err);
 			   
    dbus_message_unref(query);
    
@@ -978,12 +1022,19 @@ int  ccgi_set_server_lease_default_ipv6
 	unsigned int lease_default,	
 	unsigned int mode,
 	unsigned int index,
-	unsigned int del
+	unsigned int del,
+	int slot_id
 )/*1:succ;0:fail*/
 {
 	DBusMessage *query = NULL, *reply = NULL;
 	DBusError err;
 	unsigned int op_ret = 0;
+	DBusConnection *ccgi_connection = NULL;
+	ccgi_ReInitDbusConnection(&ccgi_connection, slot_id, DISTRIBUTFAG);
+	if(ccgi_connection == NULL)
+	 	return -1;
+	if((lease_default<60)||(lease_default>31536000))
+		return -2;
 
 	query = dbus_message_new_method_call(DHCP6_DBUS_BUSNAME, 
 									DHCP6_DBUS_OBJPATH, 
@@ -998,7 +1049,7 @@ int  ccgi_set_server_lease_default_ipv6
 							 DBUS_TYPE_UINT32, &del,
 							 DBUS_TYPE_INVALID);
 
-	reply = dbus_connection_send_with_reply_and_block (ccgi_dbus_connection,query,-1, &err);
+	reply = dbus_connection_send_with_reply_and_block (ccgi_connection,query,-1, &err);
 				
 	dbus_message_unref(query);
 	
@@ -1274,7 +1325,8 @@ int ccgi_set_server_name_servers_ipv6
 	char *dnsstr,
 	unsigned int mode,
 	unsigned int index,
-	unsigned int del
+	unsigned int del,
+	int slot_id
 )/*1:succ;0:fail;-1:dns is null*/
 {
 
@@ -1282,7 +1334,11 @@ int ccgi_set_server_name_servers_ipv6
 	memset(ipAddr, 0, 3*sizeof(struct iaddr));
 	unsigned int ret = 0;
 	unsigned int ipNum = 0;
-	int i = 0;	
+	int i = 0;
+	void *ccgi_connection = NULL;
+	ccgi_ReInitDbusConnection(&ccgi_connection, slot_id, DISTRIBUTFAG);
+	if(ccgi_connection == NULL)
+		return -1;
 	if (1 != del)
 	{
 		if (NULL == dnsstr)
@@ -1301,12 +1357,6 @@ int ccgi_set_server_name_servers_ipv6
 		}
 		ipNum = i;
 	}
-	#if 1 
-	/*for(;i < ipnum; i++) 
-	{
-		ccgi_str2_ipv6_addr((char*)argv[i], &ipAddr[i]);
-	}*/
-
 	DBusMessage *query = NULL, *reply = NULL;
 	DBusError err;
 	unsigned int op_ret = 0;
@@ -1372,7 +1422,7 @@ int ccgi_set_server_name_servers_ipv6
 							DBUS_TYPE_UINT32, &del,
 							DBUS_TYPE_INVALID);
 
-	reply = dbus_connection_send_with_reply_and_block (ccgi_dbus_connection,query,-1, &err);
+	reply = dbus_connection_send_with_reply_and_block (ccgi_connection,query,-1, &err);
 				
 	dbus_message_unref(query);
 	
@@ -1399,7 +1449,6 @@ int ccgi_set_server_name_servers_ipv6
 		dbus_message_unref(reply);	
 		return 0;
 	}
-	#endif
 }
 int  ccgi_str2_ipv6_addr
 ( 
@@ -1542,3 +1591,100 @@ int ccgi_check_ipv6_address(char *ipv6_address)
 	}
 }
 
+
+int ccgi_show_dhcp_lease_ipv6_state(struct lease_state  *total_state, struct sub_lease_state *sub_state, unsigned int *subnet_num, int slotid)
+{
+	if((NULL == total_state) || (NULL == sub_state) || (NULL == subnet_num)){
+		return -1;
+	}
+
+	//char *net =NULL, *pool_name = NULL, *mask = NULL ;
+	unsigned int sub_num = 0, i=0;
+	DBusConnection *ccgi_connection = NULL;
+	DBusMessage *query = NULL, *reply = NULL;
+	DBusError err;
+	DBusMessageIter  iter;
+	DBusMessageIter  iter_struct,iter_array;
+	
+	ccgi_ReInitDbusConnection(&ccgi_connection, slotid, DISTRIBUTFAG);
+	if(ccgi_connection == NULL)
+	 	return -1;
+
+
+	query = dbus_message_new_method_call(DHCP6_DBUS_BUSNAME, 
+						DHCP6_DBUS_OBJPATH, 
+						DHCP6_DBUS_INTERFACE, 
+						DHCP6_DBUS_METHOD_SHOW_DHCP_LEASE_STATE);
+	
+	dbus_error_init(&err);
+
+	reply = dbus_connection_send_with_reply_and_block (ccgi_connection,query,-1, &err);
+	
+	dbus_message_unref(query);
+	if (NULL == reply) {
+		if (dbus_error_is_set(&err)) {
+			dbus_error_free(&err);
+		}
+		return 3;
+	}
+	
+	dbus_message_iter_init(reply,&iter);
+	
+	dbus_message_iter_get_basic(&iter,&(total_state->total_lease_num));
+	dbus_message_iter_next(&iter);	
+	
+	dbus_message_iter_get_basic(&iter,&(total_state->active_lease_num));
+	dbus_message_iter_next(&iter);	
+
+	//dbus_message_iter_get_basic(&iter,&(total_state->free_lease_num));
+	//dbus_message_iter_next(&iter);	
+
+	//dbus_message_iter_get_basic(&iter,&(total_state->backup_lease_num));
+	//dbus_message_iter_next(&iter);		
+	
+	dbus_message_iter_get_basic(&iter,&sub_num);
+	dbus_message_iter_next(&iter);		
+
+	*subnet_num = sub_num;	
+	dbus_message_iter_recurse(&iter,&iter_array);
+
+	/*get subnet lease state*/
+	for (i = 0; i < sub_num; ++i) {
+		char *net =NULL, *pool_name = NULL, *mask = NULL ;
+
+		dbus_message_iter_recurse(&iter_array,&iter_struct);
+		
+		dbus_message_iter_get_basic(&iter_struct, &net);
+		dbus_message_iter_next(&iter_struct); 
+	
+		dbus_message_iter_get_basic(&iter_struct, &mask);
+		dbus_message_iter_next(&iter_struct); 
+
+		dbus_message_iter_get_basic(&iter_struct, &pool_name);
+		dbus_message_iter_next(&iter_struct); 
+
+		if(net)
+			strcpy(sub_state[i].subnet,net);
+		if(mask)
+			strcpy(sub_state[i].mask,mask);
+		if(pool_name)
+			strcpy(sub_state[i].poolname,pool_name);
+		
+		dbus_message_iter_get_basic(&iter_struct, &(sub_state[i].subnet_lease_state.total_lease_num));
+		dbus_message_iter_next(&iter_struct); 
+		
+		dbus_message_iter_get_basic(&iter_struct, &(sub_state[i].subnet_lease_state.active_lease_num));
+		dbus_message_iter_next(&iter_struct); 
+		
+		//dbus_message_iter_get_basic(&iter_struct, &(sub_state[i].subnet_lease_state.free_lease_num));
+		//dbus_message_iter_next(&iter_struct); 
+		
+		//dbus_message_iter_get_basic(&iter_struct, &(sub_state[i].subnet_lease_state.backup_lease_num));
+		//dbus_message_iter_next(&iter_struct); 
+		dbus_message_iter_next(&iter_array);
+	} 
+
+	dbus_message_unref(reply);
+
+	return 0;	
+}

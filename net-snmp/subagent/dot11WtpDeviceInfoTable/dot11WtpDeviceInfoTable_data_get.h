@@ -79,6 +79,7 @@ extern "C" {
     int wtpWorkTemp_get( dot11WtpDeviceInfoTable_rowreq_ctx *rowreq_ctx, char **wtpWorkTemp_val_ptr_ptr, size_t *wtpWorkTemp_val_ptr_len_ptr );
     int wtpIP_map(u_long *mib_wtpIP_val_ptr, u_long raw_wtpIP_val);
     int wtpIP_get( dot11WtpDeviceInfoTable_rowreq_ctx *rowreq_ctx, u_long * wtpIP_val_ptr );
+    int wtpIpv6Address_get( dot11WtpDeviceInfoTable_rowreq_ctx *rowreq_ctx, char **wtpIpv6Address_val_ptr_ptr, size_t *wtpIpv6Address_val_ptr_len_ptr );
 
 
 int dot11WtpDeviceInfoTable_indexes_set_tbl_idx(dot11WtpDeviceInfoTable_mib_index *tbl_idx, char *wtpMacAddr_val_ptr,  size_t wtpMacAddr_val_ptr_len);

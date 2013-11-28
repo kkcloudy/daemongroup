@@ -735,6 +735,125 @@ CMD_END:
     return CMD_SUCCESS;
 }
 
+DEFUN(snmp_config_ipv6_collect_interface_port_func,
+	snmp_config_ipv6_collect_interface_port_cmd,
+	"snmp ipv6 (apply|delete) interface NAME udp port <1-65535>",
+	SETT_STR
+	"snmp ipv6 (apply|delete) interface\n" 
+	"snmp ipv6 apply interface\n" 
+	"snmp ipv6 delete interface\n"
+	"snmp interface\n"
+	"snmp interface name\n"
+	"snmp bind udp port\n"
+)
+{
+    
+	unsigned int snmp_port = atoi(argv[2]);
+	char inif[64] = { 0 };
+
+	unsigned int state = 0;
+	if(0 == strcmp(argv[0], "apply")) {
+		state = 1;
+	}
+	else if(0 == strcmp(argv[0], "delete")) {
+		state = 0;
+	}
+	else {
+		vty_out(vty, "Input snmp interface mode error!\n");
+		return CMD_WARNING;
+	}
+
+	memset(inif, 0, sizeof(inif));
+	if(1 == state)
+	{
+		if (!strncmp(argv[1], "ve", 2)) 
+		{
+			if (ve_interface_parse(argv[1], inif, sizeof(inif))) 
+			{
+				vty_out(vty, "input interface %s error!\n", argv[1]);
+				return CMD_WARNING;
+			}
+		} 
+		else
+		{
+			strncpy(inif, argv[1], sizeof(inif)-1);
+		}
+		
+		int ifindex = ifname2ifindex_by_ioctl(inif);
+		if(0 == ifindex){
+			vty_out(vty,"interface %s is not exist!\n",argv[1]);
+			return CMD_WARNING;
+		}	
+	}
+	else if(0 == state)
+	{
+		strncpy(inif, argv[1], sizeof(inif)-1);
+	}
+    
+	char *ifName = (char *)malloc(MAX_INTERFACE_NAME_LEN);
+	if(NULL == ifName) {
+		vty_out(vty, "malloc error !\n");                
+		return CMD_WARNING;
+	}
+	memset(ifName, 0, MAX_INTERFACE_NAME_LEN);
+	strncpy(ifName, inif, MAX_INTERFACE_NAME_LEN - 1);
+
+	int ret = AC_MANAGE_SUCCESS;    
+
+	if(SNMP_SLOT_NODE == vty->node) {	    
+		unsigned int slot_id = vty->slotindex;
+		if(dbus_connection_dcli[slot_id]->dcli_dbus_connection) {     
+			ret = ac_manage_config_snmp_pfm_requestpkts_ipv6(dbus_connection_dcli[slot_id]->dcli_dbus_connection, ifName, snmp_port, state);
+		}
+		else {
+			vty_out(vty, "The slot %d tipc dbus is not connect!!\n", slot_id);
+			goto CMD_END;
+		}
+	}
+	else if(SNMP_NODE == vty->node) {
+		if(!snmp_cllection_mode(dcli_dbus_connection)) {
+			ret = ac_manage_config_snmp_pfm_requestpkts_ipv6(dcli_dbus_connection, ifName, snmp_port, state);
+        	}   
+        	else {
+			vty_out (vty, "This mode must close snmp decentralized collect!\n");
+			goto CMD_END;
+	        }
+	}
+	else {
+		vty_out (vty, "Terminal mode change must under configure snmp mode or configure snmp slot mode!\n");
+		goto CMD_END;
+	}
+    
+	if(AC_MANAGE_SUCCESS == ret) {
+		//vty_out(vty, "snmp %s apply interface(%s) udp port(%d) success\n", argv[0], ifName, snmp_port);
+	}
+	else if(AC_MANAGE_DBUS_ERROR == ret) {
+		vty_out(vty, "<error> failed get reply.\n");
+	}
+	else if(AC_MANAGE_SERVICE_ENABLE == ret) {
+		vty_out(vty, "Snmp service is enable, please disable it first!\n");
+	}
+	else if(AC_MANAGE_CONFIG_EXIST == ret) {
+		vty_out(vty, "This interface(%s) is exist!\n", ifName);
+	}
+	else if(AC_MANAGE_CONFIG_NONEXIST == ret) {
+		vty_out(vty, "This interface(%s) is not exist!\n", ifName);
+	}    
+	else if(AC_MANAGE_INPUT_TYPE_ERROR == ret) {
+		vty_out(vty, "The input para is error!\n");
+	}
+	else if(AC_MANAGE_CONFIG_FAIL == ret) {
+		vty_out(vty, "There is exsit udp port config, please delete it frist!\n");
+	}
+	else {
+		vty_out(vty, "snmp ipv6 %s interface(%s) udp port(%d) failed!\n", argv[0],ifName, snmp_port);
+	}
+
+	CMD_END:    
+	    MANAGE_FREE(ifName);
+	    return CMD_SUCCESS;
+}
+
 
 DEFUN(set_snmp_mode_func,
 	set_snmp_mode_cmd,
@@ -982,20 +1101,24 @@ dcli_show_snmp_base_info(DBusConnection *connection, struct vty *vty) {
     if(NULL == connection || NULL == vty)
         return ;
     
-    int ret1 = AC_MANAGE_SUCCESS, ret2 = AC_MANAGE_SUCCESS, ret3 = AC_MANAGE_SUCCESS;
+    int ret1 = AC_MANAGE_SUCCESS, ret2 = AC_MANAGE_SUCCESS, ret3 = AC_MANAGE_SUCCESS,ret4=AC_MANAGE_SUCCESS;
     STSNMPSysInfo snmp_info;
     unsigned int snmp_state = 0;
 
     SNMPINTERFACE *interface_array = NULL;
     unsigned int interface_num = 0;
     
+    SNMPINTERFACE *ipv6_interface_array = NULL;
+    unsigned int ipv6_interface_num = 0;
+    
     ret1 = ac_manage_show_snmp_base_info(connection, &snmp_info);
     ret2 = ac_manage_show_snmp_state(connection, &snmp_state);
     if(AC_MANAGE_SUCCESS == ret1) {
         unsigned int port = 0;
+        unsigned int ipv6_port = 0;
         ret3 = ac_manage_show_snmp_pfm_interface(connection, &interface_array, &interface_num, &port);
+        ret4 = ac_manage_show_snmp_pfm_interface_ipv6(connection, &ipv6_interface_array, &ipv6_interface_num, &ipv6_port);
     }
-    
     if(AC_MANAGE_SUCCESS == ret1 && AC_MANAGE_SUCCESS == ret2) {
         
         vty_out(vty, "SNMP Service          : %s \n", snmp_state ? "enable" : "disable" );
@@ -1009,13 +1132,25 @@ dcli_show_snmp_base_info(DBusConnection *connection, struct vty *vty) {
         vty_out(vty, "SNMP V3 mode          : %s \n", (snmp_info.v3_status) ? "enable" : "disable");
         vty_out(vty, "-------------------------------------------------------------\n");            
         if(0 == interface_num && snmp_info.collection_mode) {
-            vty_out(vty, "Bind Port Not Set!\n");   
+            vty_out(vty, "IPV4 bind Port Not Set!\n");   
         }
         else { 
-            vty_out(vty, "Bind Port             : %d \n", snmp_info.agent_port ? snmp_info.agent_port : 161);   
+            vty_out(vty, "IPV4 bind Port             : %d \n", snmp_info.agent_port ? snmp_info.agent_port : 161);   
             int i = 0;
             for(i = 0; i < interface_num; i++) {
                 vty_out(vty, "Interface:            : %s\n", interface_array[i].ifName);   
+            }
+        }    
+        vty_out(vty, "-------------------------------------------------------------\n");     
+	
+        if(0 == ipv6_interface_num && snmp_info.collection_mode) {
+            vty_out(vty, "IPV6 bind Port Not Set!\n");   
+        }
+        else { 
+            vty_out(vty, "IPV6 bind Port             : %d \n", snmp_info.agent_port_ipv6 ? snmp_info.agent_port_ipv6 : 161);   
+            int i = 0;
+            for(i = 0; i < ipv6_interface_num; i++) {
+                vty_out(vty, "Interface:            : %s\n", ipv6_interface_array[i].ifName);   
             }
         }    
         vty_out(vty, "-------------------------------------------------------------\n");            
@@ -1240,7 +1375,7 @@ dcli_snmp_show_community_info(DBusConnection *connection, struct vty *vty) {
     
     if(AC_MANAGE_SUCCESS == ret){
         
-        vty_out(vty,"-------------------------------------------------------------------------------\n");
+        vty_out(vty,"---------------------------IPV4 community:---------------------------\n");
         vty_out(vty, "  %13s    %10s      %10s      %10s    %7s \n", "CommunityName", "IPAddr", "MASK", "AccessMode", "Status");
     
         int i = 0;
@@ -1250,20 +1385,63 @@ dcli_snmp_show_community_info(DBusConnection *connection, struct vty *vty) {
                                                     community_array[i].access_mode ? "ReadWrite" : "ReadOnly",
                                                     community_array[i].status ? "enabled" : "disabled");
         }
+        free(community_array);
+    }
+    else if(AC_MANAGE_CONFIG_NONEXIST == ret) {
+        vty_out(vty, "There is no IPV4 community config!\n");
+    }
+    else if(AC_MANAGE_DBUS_ERROR == ret){
+        vty_out(vty, "<error>IPV4 community: failed get reply.\n");
+    }
+    else if(AC_MANAGE_MALLOC_ERROR == ret) {
+        vty_out(vty, "<error>IPV4 community:  malloc error!\n");
+    }
+    else {
+        vty_out(vty, "Failed get snmp IPV4 community !\n");
+    }
+    
+    return;
+}
+
+static void
+dcli_snmp_show_community_info_ipv6(DBusConnection *connection, struct vty *vty) {
+    if(NULL == connection || NULL == vty)
+        return;
+
+    IPV6STCommunity *community_array = NULL;
+    int ret = AC_MANAGE_SUCCESS;
+    unsigned int community_num = 0;
+    
+    ret = ac_manage_show_snmp_community_ipv6(connection, 
+                                        &community_array,
+                                        &community_num);
+    
+    if(AC_MANAGE_SUCCESS == ret){
+        
+        vty_out(vty,"\n---------------------------IPV6 community:---------------------------\n");
+        vty_out(vty, "  %13s       %10s          %10s      %10s    %7s \n", "CommunityName", "IPAddr", "prefix", "AccessMode", "Status");
+    
+        int i = 0;
+        for(i = 0; i < community_num; i++) {
+            vty_out(vty, "%12s      %14s            %5d       %10s     %7s \n", community_array[i].community,
+                                                    community_array[i].ip_addr, community_array[i].prefix,
+                                                    community_array[i].access_mode ? "ReadWrite" : "ReadOnly",
+                                                    community_array[i].status ? "enabled" : "disabled");
+        }
         vty_out(vty,"-------------------------------------------------------------------------------\n");
         free(community_array);
     }
     else if(AC_MANAGE_CONFIG_NONEXIST == ret) {
-        vty_out(vty, "There is no community config!\n");
+        vty_out(vty, "There is no ipv6 community config!\n");
     }
-    else if(AC_MANAGE_MALLOC_ERROR == ret){
-        vty_out(vty, "<error> failed get reply.\n");
+    else if(AC_MANAGE_DBUS_ERROR == ret){
+        vty_out(vty, "<error>ipv6 community: failed get reply.\n");
     }
     else if(AC_MANAGE_MALLOC_ERROR == ret) {
-        vty_out(vty, "<error> malloc error!\n");
+        vty_out(vty, "<error>ipv6 community: malloc error!\n");
     }
     else {
-        vty_out(vty, "Failed get snmp community!\n");
+        vty_out(vty, "Failed get snmp ipv6 community!\n");
     }
     
     return;
@@ -1278,7 +1456,7 @@ DEFUN(show_community_info_func,
 	"configure inforamtion\n"
 )
 {
-    if(SNMP_SLOT_NODE != vty->node) {
+    if(SNMP_NODE == vty->node) {
         if(snmp_cllection_mode(dcli_dbus_connection)) {
                        
             vty_out(vty,"===============================================================================\n");
@@ -1288,27 +1466,27 @@ DEFUN(show_community_info_func,
                 if(dbus_connection_dcli[i]->dcli_dbus_connection) {
                     
                     vty_out(vty, "SNMP SLOT             : %d \n", i );  
-                    
                     dcli_snmp_show_community_info(dbus_connection_dcli[i]->dcli_dbus_connection, vty);
-
+                    dcli_snmp_show_community_info_ipv6(dbus_connection_dcli[i]->dcli_dbus_connection, vty);
                     vty_out(vty,"===============================================================================\n");
                 }
             }
         }       
         else {
-            dcli_snmp_show_community_info(dcli_dbus_connection, vty);
+            	dcli_snmp_show_community_info(dcli_dbus_connection, vty);
+	   	dcli_snmp_show_community_info_ipv6(dcli_dbus_connection, vty);
         }
     }
     else{        
         unsigned int slot_id = vty->slotindex;
         if(dbus_connection_dcli[slot_id]->dcli_dbus_connection) { 
-            dcli_snmp_show_community_info(dbus_connection_dcli[slot_id]->dcli_dbus_connection, vty);
+            	dcli_snmp_show_community_info(dbus_connection_dcli[slot_id]->dcli_dbus_connection, vty);
+		dcli_snmp_show_community_info_ipv6(dbus_connection_dcli[slot_id]->dcli_dbus_connection, vty);
         }
         else {
             vty_out(vty, "The slot %d tipc dbus is not connect!\n", slot_id);
         }
     }   
-    
 	return CMD_SUCCESS;
 }
 
@@ -1471,8 +1649,8 @@ DEFUN(set_snmp_community_func,
         vty_out(vty, "IP or MASK doesn't meet format!");
         return CMD_WARNING;
     }
-	ip_int = inet_addr((char *)argv[1]);
-	ip_int1 = inet_addr((char *)argv[2]);
+	ip_int = inet_addr((char *)argv[2]);
+	ip_int1 = inet_addr((char *)argv[3]);
 	if(ip_int & ~ip_int1)
 	{
         vty_out(vty, "(IP & ~MASK) must is 0!");
@@ -1591,7 +1769,6 @@ DEFUN(set_snmp_community_func,
 	return CMD_SUCCESS;
 }
 
-
 /*delete snmp  community  by name*/
 DEFUN(delete_snmp_community_by_name_func,
 	delete_snmp_community_by_name_cmd,
@@ -1666,6 +1843,395 @@ DEFUN(delete_snmp_community_by_name_func,
     }
     else{
         vty_out(vty, "delete snmp community failed!\n");
+    }
+    
+	return CMD_SUCCESS;
+}
+
+DEFUN(add_snmp_ipv6_community_func,
+	add_snmp_ipv6_community_cmd,
+	"add ipv6 community NAME IP/PREFIX (ro|rw) (enable|disable)",
+	"add\n"
+	"snmp ipv6 community\n"
+	"snmp ipv6 community \n"
+	"community name \n"
+	"community ipv6addr/prefix_length \n"
+	"community read-only \n"
+	"community read-write\n"
+	"community enable \n"
+	"community disable\n"
+)
+{
+   	 if(0 != dcli_check_snmp_name(argv[0], 1, vty))
+        	return CMD_WARNING;
+
+	int ret=-1;
+	struct in6_addr s;
+	char *input= argv[1];
+	char *ip=NULL;
+	char *prefix=NULL;
+	int pre_len=0;
+	IPV6STCommunity communityIPV6Node = { 0 };
+
+	ip=strtok(input,"/");
+	if(ip ==NULL)
+	{
+		vty_out(vty, "IPV6 community: IP/prefix doesn't meet format!");
+		return CMD_WARNING;
+	}
+	prefix=strtok(NULL,"/");
+	if(prefix == NULL)
+	{
+		vty_out(vty, "IPV6 community: IP/prefix doesn't meet format!");
+		return CMD_WARNING;
+	}
+
+	ret = inet_pton(AF_INET6, ip, (void *)&s);//1:表示成功;0表示格式错误;-1表示解析错误
+	if(ret !=1)
+	{
+		vty_out(vty, "IPV6 community: IP doesn't meet format!");
+		return CMD_WARNING;
+	}
+
+	ret = snmp_port_is_legal_input(prefix);
+	if(ret == 0)
+	{
+		vty_out(vty, "IPV6 community: prefix length should be 0~128!");
+		return CMD_WARNING;
+	}
+	pre_len= atoi(prefix);
+	if((pre_len<0)||(pre_len>128))
+	{
+		vty_out(vty, "IPV6 community: prefix length should be 0~128!");
+		return CMD_WARNING;
+	}
+	strncpy(communityIPV6Node.community, argv[0], sizeof(communityIPV6Node.community) - 1);
+	strncpy(communityIPV6Node.ip_addr, ip, sizeof(communityIPV6Node.ip_addr) - 1);
+	communityIPV6Node.prefix = pre_len;
+	if(0 == strcmp(argv[2], "ro")) {
+		communityIPV6Node.access_mode = 0;
+	}
+	else if(0 == strcmp(argv[2], "rw")) {
+		communityIPV6Node.access_mode = 1;
+	}
+	else {
+		vty_out(vty, "IPV6 community: Input snmp community permission type error!\n");
+		return CMD_WARNING;
+	}
+
+	if(0 == strcmp(argv[3], "disable")) {
+		communityIPV6Node.status = 0;
+	}
+	else if(0 == strcmp(argv[3], "enable")) {
+		communityIPV6Node.status = 1;
+	}
+	else {
+		vty_out(vty, "IPV6 community: Input snmp community status error!\n");
+		return CMD_WARNING;
+	}
+	ret = AC_MANAGE_SUCCESS;
+
+    	if(SNMP_NODE == vty->node) {
+	    if(snmp_cllection_mode(dcli_dbus_connection)) {
+		int i = 1;
+		for(i = 1; i < MAX_SLOT; i++) {
+		    if(dbus_connection_dcli[i]->dcli_dbus_connection) {
+			int temp_ret = AC_MANAGE_SUCCESS;
+			temp_ret = ac_manage_config_snmp_add_community_ipv6(dbus_connection_dcli[i]->dcli_dbus_connection, &communityIPV6Node);
+			if(AC_MANAGE_SUCCESS == temp_ret) {
+			}
+			else if(AC_MANAGE_DBUS_ERROR == temp_ret) {
+			    vty_out(vty, "Slot(%d) IPV6 community: <error> failed get reply.\n", i);
+			}
+			else if(AC_MANAGE_SERVICE_ENABLE == temp_ret) {
+			    vty_out(vty, "Slot(%d) IPV6 community: Snmp service is enable, please disable it first!\n", i);
+			}
+			    else if(AC_MANAGE_CONFIG_EXIST == temp_ret) {
+			    vty_out(vty, "Slot(%d) IPV6 community: This community is exist!\n", i);
+			}
+			else{
+			    vty_out(vty, "Slot(%d) IPV6 community: set snmp cacheTime failed!\n", i);
+			}
+								    
+		    }
+		}
+		return CMD_SUCCESS; 
+	    }
+	    else {  
+		ret = ac_manage_config_snmp_add_community_ipv6(dcli_dbus_connection, &communityIPV6Node);
+	    }
+	}
+	else if(SNMP_SLOT_NODE == vty->node) {
+	    
+	    unsigned int slot_id = vty->slotindex;
+	    if(dbus_connection_dcli[slot_id]->dcli_dbus_connection) {
+    
+		ret = ac_manage_config_snmp_add_community_ipv6(dbus_connection_dcli[slot_id]->dcli_dbus_connection, &communityIPV6Node);
+	    }
+	    else {
+		vty_out(vty, "IPV6 community: The slot %d tipc dbus is not connect!\n", slot_id);
+		return CMD_WARNING; 
+	    }
+	}
+	else {
+	    vty_out (vty, "IPV6 community: Terminal mode change must under config mode!\n");
+	    return CMD_WARNING; 
+	}
+	
+	if(AC_MANAGE_SUCCESS == ret) {
+	    //vty_out(vty, "add snmp community success\n");
+	}
+	else if(AC_MANAGE_DBUS_ERROR == ret) {
+	    vty_out(vty, "<error>IPV6 community:  failed get reply.\n");
+	}
+	else if(AC_MANAGE_SERVICE_ENABLE == ret) {
+	    vty_out(vty, "IPV6 community: Snmp service is enable, please disable it first!\n");
+	}
+	else if(AC_MANAGE_CONFIG_EXIST == ret) {
+	    vty_out(vty, "IPV6 community: This community is exist!\n");
+	}
+	else{
+	    vty_out(vty, "IPV6 community: add snmp community failed!\n");
+	}
+	
+	return CMD_SUCCESS; 
+}
+DEFUN(set_snmp_ipv6_community_func,
+	set_snmp_ipv6_community_cmd,
+	"set ipv6 community OLDNAME NEWNAME IP/PREFIX (ro|rw) (enable|disable)",
+	SETT_STR
+	"snmp ipv6 community\n"
+	"snmp ipv6 community\n"
+	"community old name \n"
+	"community new name \n"
+	"community new ipaddr/prefix_length \n"
+	"community read-only \n"
+	"community read-write\n"
+	"community enable \n"
+	"community disable\n"
+)
+{
+    if(0 != dcli_check_snmp_name(argv[0], 1, vty) || 0 != dcli_check_snmp_name(argv[1], 1, vty))
+        return CMD_WARNING;
+
+    int ret=-1;
+    struct in6_addr s;
+    char *input= argv[2];
+    char *ip=NULL;
+    char *prefix=NULL;
+    int pre_len=0;
+    IPV6STCommunity communityIPV6Node = { 0 };
+    
+    ip=strtok(input,"/");
+    if(ip ==NULL)
+    {
+	    vty_out(vty, "IPV6 community: IP/prefix doesn't meet format!");
+	    return CMD_WARNING;
+    }
+    prefix=strtok(NULL,"/");
+    if(prefix == NULL)
+    {
+	    vty_out(vty, "IPV6 community: IP/prefix doesn't meet format!");
+	    return CMD_WARNING;
+    }
+    
+    ret = inet_pton(AF_INET6, ip, (void *)&s);//1:表示成功;0表示格式错误;-1表示解析错误
+    if(ret !=1)
+    {
+	    vty_out(vty, "IPV6 community: IP doesn't meet format!");
+	    return CMD_WARNING;
+    }
+    ret = snmp_port_is_legal_input(prefix);
+    if(ret == 0)
+    {
+	    vty_out(vty, "IPV6 community: prefix length should be 0~128!");
+	    return CMD_WARNING;
+    }
+    pre_len= atoi(prefix);
+    if((pre_len<0)||(pre_len>128))
+    {
+	    vty_out(vty, "IPV6 community: prefix length should be 0~128!");
+	    return CMD_WARNING;
+    }
+    strncpy(communityIPV6Node.community, argv[1], sizeof(communityIPV6Node.community) - 1);
+    strncpy(communityIPV6Node.ip_addr, ip, sizeof(communityIPV6Node.ip_addr) - 1);
+    communityIPV6Node.prefix = pre_len;
+    if(0 == strcmp(argv[3], "ro")) {
+	    communityIPV6Node.access_mode = 0;
+    }
+    else if(0 == strcmp(argv[3], "rw")) {
+	    communityIPV6Node.access_mode = 1;
+    }
+    else {
+	    vty_out(vty, "IPV6 community: Input snmp community permission type error!\n");
+	    return CMD_WARNING;
+    }
+    
+    if(0 == strcmp(argv[4], "disable")) {
+	    communityIPV6Node.status = 0;
+    }
+    else if(0 == strcmp(argv[4], "enable")) {
+	    communityIPV6Node.status = 1;
+    }
+    else {
+	    vty_out(vty, "IPV6 community: Input snmp community status error!\n");
+	    return CMD_WARNING;
+    }
+    ret = AC_MANAGE_SUCCESS;
+    if(SNMP_NODE == vty->node) {
+	 if(snmp_cllection_mode(dcli_dbus_connection)) {
+		int i = 1;
+		for(i = 1; i < MAX_SLOT; i++) {
+		    if(dbus_connection_dcli[i]->dcli_dbus_connection) {
+			int temp_ret = AC_MANAGE_SUCCESS;
+			temp_ret = ac_manage_config_snmp_set_community_ipv6(dbus_connection_dcli[i]->dcli_dbus_connection, 
+									argv[0],
+									&communityIPV6Node);
+								    
+			if(AC_MANAGE_SUCCESS == temp_ret) {
+			    //vty_out(vty, "Slot(%d) :set snmp community success\n", i);
+			}
+			else if(AC_MANAGE_DBUS_ERROR == temp_ret) {
+			    vty_out(vty, "Slot(%d) IPV6 community: <error> failed get reply.\n", i);
+						    return CMD_SUCCESS;
+			}
+    //			  else if(AC_MANAGE_SERVICE_ENABLE == temp_ret) {
+    //			      vty_out(vty, "Slot(%d) :Snmp service is enable, please disable it first!\n", i);
+    //			  }
+			else if(AC_MANAGE_CONFIG_NONEXIST == temp_ret) {
+			    vty_out(vty, "Slot(%d) IPV6 community: This community is not exist!\n", i);
+						    return CMD_SUCCESS;
+			}
+			else{
+			    vty_out(vty, "Slot(%d) IPV6 community: set snmp community failed!\n", i);
+						    return CMD_SUCCESS;
+			}
+		    }
+		} 
+			    vty_out(vty, "IPV6 community: Please restart snmp service!\n");
+		return CMD_SUCCESS;
+	    }
+	    else {
+		ret = ac_manage_config_snmp_set_community_ipv6(dcli_dbus_connection, 
+							    argv[0],
+							    &communityIPV6Node);
+	    }	    
+     }    
+     else if(SNMP_SLOT_NODE == vty->node) {
+		
+	    unsigned int slot_id = vty->slotindex;
+	    if(dbus_connection_dcli[slot_id]->dcli_dbus_connection) {
+		
+		ret = ac_manage_config_snmp_set_community_ipv6(dbus_connection_dcli[slot_id]->dcli_dbus_connection, 
+							    argv[0],
+							    &communityIPV6Node);
+	    }
+	    else {
+		vty_out(vty, "IPV6 community: The slot %d tipc dbus is not connect!\n", slot_id);
+		return CMD_WARNING;
+	    }
+     }
+     else {
+	    vty_out(vty, "IPV6 community: Terminal mode change must under config mode!\n");
+	    return CMD_WARNING;
+	}
+	    
+	if(AC_MANAGE_SUCCESS == ret) {
+	    //vty_out(vty, "set snmp community success\n");
+	}
+	else if(AC_MANAGE_DBUS_ERROR == ret) {
+	    vty_out(vty, "<error>IPV6 community:  failed get reply.\n");
+		    return CMD_SUCCESS;
+	}
+    //	  else if(AC_MANAGE_SERVICE_ENABLE == ret) {
+    //	      vty_out(vty, "Snmp service is enable, please disable it first!\n");
+    //	  }
+	else if(AC_MANAGE_CONFIG_NONEXIST == ret) {
+	    vty_out(vty, "IPV6 community: This community is not exist!\n");
+		    return CMD_SUCCESS;
+	}
+	else{
+	    vty_out(vty, "IPV6 community: set snmp community failed!\n");
+		    return CMD_SUCCESS;
+	}
+	vty_out(vty, "IPV6 community: Please restart snmp service!\n");
+	    return CMD_SUCCESS;
+}
+
+DEFUN(delete_snmp_ipv6_community_by_name_func,
+	delete_snmp_ipv6_community_by_name_cmd,
+	"delete ipv6 community name NAME",
+	"delete\n"
+	"snmp ipv6 community\n"
+	"snmp ipv6 community\n"
+	"snmp community key name \n"
+	"community name \n"
+)
+{    
+    int ret = AC_MANAGE_SUCCESS;
+
+    if(SNMP_NODE == vty->node) {
+        if(snmp_cllection_mode(dcli_dbus_connection)) {
+            int i = 1;
+            for(i = 1; i < MAX_SLOT; i++) {
+                if(dbus_connection_dcli[i]->dcli_dbus_connection) {
+                    int temp_ret = AC_MANAGE_SUCCESS;
+                    temp_ret = ac_manage_config_snmp_del_community_ipv6(dbus_connection_dcli[i]->dcli_dbus_connection, argv[0]);
+                    
+                    if(AC_MANAGE_SUCCESS == temp_ret) {
+                        //vty_out(vty, "Slot(%d) :delete snmp community success\n", i);
+                    }
+                    else if(AC_MANAGE_DBUS_ERROR == temp_ret) {
+                        vty_out(vty, "Slot(%d) IPV6 community: <error>failed get reply.\n", i);
+                    }
+                    else if(AC_MANAGE_SERVICE_ENABLE == temp_ret) {
+                        vty_out(vty, "Slot(%d) IPV6 community: Snmp service is enable, please disable it first!\n", i);
+                    }
+                    else if(AC_MANAGE_CONFIG_NONEXIST == temp_ret){
+                        vty_out(vty, "Slot(%d) IPV6 community: This community is not exist!\n", i);
+                    }
+                    else{
+                        vty_out(vty, "Slot(%d) IPV6 community: delete snmp community failed!\n", i);
+                    }
+                }
+            } 
+            return CMD_SUCCESS;
+        }
+        else {
+            ret = ac_manage_config_snmp_del_community_ipv6(dcli_dbus_connection, argv[0]);
+        }                                                    
+    }
+    else if(SNMP_SLOT_NODE == vty->node) {
+        
+        unsigned int slot_id = vty->slotindex;
+        if(dbus_connection_dcli[slot_id]->dcli_dbus_connection) {
+            ret = ac_manage_config_snmp_del_community_ipv6(dbus_connection_dcli[slot_id]->dcli_dbus_connection, argv[0]);
+            
+        }
+        else {
+            vty_out(vty, "IPV6 community: The slot %d tipc dbus is not connect!\n", slot_id);            
+            return CMD_WARNING;
+        }   
+    }
+    else {
+        vty_out(vty, "IPV6 community: Terminal mode change must under config mode!\n");
+        return CMD_WARNING;
+    }
+    
+    if(AC_MANAGE_SUCCESS == ret) {
+        //vty_out(vty, "delete snmp community success\n");
+    }
+    else if(AC_MANAGE_DBUS_ERROR == ret) {
+        vty_out(vty, "<error>IPV6 community:  failed get reply.\n");
+    }
+    else if(AC_MANAGE_CONFIG_NONEXIST == ret){
+        vty_out(vty, "IPV6 community: This community is not exist!\n");
+    }
+    else if(AC_MANAGE_SERVICE_ENABLE == ret) {
+        vty_out(vty, "IPV6 community: Snmp service is enable, please disable it first!\n");
+    }
+    else{
+        vty_out(vty, "IPV6 community: delete snmp community failed!\n");
     }
     
 	return CMD_SUCCESS;
@@ -5572,12 +6138,17 @@ dcli_snmp_init(void) {
 	install_element(SNMP_NODE, &set_snmp_mode_cmd);
 	install_element(SNMP_NODE, &set_snmp_cache_time_cmd);
 	install_element(SNMP_NODE, &snmp_config_collect_interface_port_cmd);
+	install_element(SNMP_NODE, &snmp_config_ipv6_collect_interface_port_cmd);
     
 	install_element(SNMP_NODE, &show_community_info_cmd);
 	install_element(SNMP_NODE, &show_view_info_cmd);
 	install_element(SNMP_NODE, &add_snmp_community_cmd);	
 	install_element(SNMP_NODE, &set_snmp_community_cmd);
 	install_element(SNMP_NODE, &delete_snmp_community_by_name_cmd);
+	install_element(SNMP_NODE, &add_snmp_ipv6_community_cmd);	
+	install_element(SNMP_NODE, &set_snmp_ipv6_community_cmd);
+	install_element(SNMP_NODE, &delete_snmp_ipv6_community_by_name_cmd);
+
 	
 	install_element(SNMP_NODE, &show_group_info_cmd);
 	install_element(SNMP_NODE, &add_snmp_group_cmd);
@@ -5640,6 +6211,7 @@ dcli_snmp_init(void) {
 
 	install_element(SNMP_SLOT_NODE, &switch_service_cmd);
 	install_element(SNMP_SLOT_NODE, &snmp_config_collect_interface_port_cmd);	
+	install_element(SNMP_SLOT_NODE, &snmp_config_ipv6_collect_interface_port_cmd);
 	install_element(SNMP_SLOT_NODE, &set_snmp_mode_cmd);
 	install_element(SNMP_SLOT_NODE, &set_snmp_cache_time_cmd);
 
@@ -5649,6 +6221,9 @@ dcli_snmp_init(void) {
 	install_element(SNMP_SLOT_NODE, &add_snmp_community_cmd);	
 	install_element(SNMP_SLOT_NODE, &set_snmp_community_cmd);
 	install_element(SNMP_SLOT_NODE, &delete_snmp_community_by_name_cmd);
+	install_element(SNMP_SLOT_NODE, &add_snmp_ipv6_community_cmd);	
+	install_element(SNMP_SLOT_NODE, &set_snmp_ipv6_community_cmd);
+	install_element(SNMP_SLOT_NODE, &delete_snmp_ipv6_community_by_name_cmd);
 
 	install_element(SNMP_SLOT_NODE, &create_snmp_view_cmd);
 	install_element(SNMP_SLOT_NODE, &conf_snmp_view_cmd);

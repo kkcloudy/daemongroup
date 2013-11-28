@@ -149,7 +149,7 @@ void ShowDhcpdtAPage(char *m,char *n,char *ins_id,struct list *lpublic,struct li
 				fprintf(cgiOut,"<td id=td2 width=370>%s</td>",ins_id);
 				fprintf(cgiOut,"</tr>");
 								
-				cflag = ccgi_show_ipv6_pool(mode,index, &head, &count);
+				cflag = 0;//ccgi_show_ipv6_pool(mode,index, &head, &count);
 				if(cflag==1)
 				{
 				    q = head.next;

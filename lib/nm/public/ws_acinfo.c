@@ -90,7 +90,9 @@ int read_acinfo_xml(struct acbackup_st *chead,int *confnum)
 	}
 
 	struct netipbk_st *nq,*ntail;
+	struct netipbk_st *nq_ipv6,*ntail_ipv6;
 	ntail = &(chead->netipst);
+	ntail_ipv6 = &(chead->netipst_ipv6);
 	cur = cur->xmlChildrenNode;	
 	while(cur !=NULL)
 	{
@@ -141,6 +143,23 @@ int read_acinfo_xml(struct acbackup_st *chead,int *confnum)
 			ntail->next = nq;
 			ntail = nq;
 		}
+		if ((!xmlStrcmp(cur->name, BAD_CAST AC_NETIP_IPV6)))
+		{	
+			nq_ipv6=(struct netipbk_st *)malloc(sizeof(struct netipbk_st)+1);
+			memset(nq_ipv6,0,sizeof(struct netipbk_st)+1);
+			if(NULL == nq_ipv6)
+			{
+				return	-1;
+			}
+			memset(nq_ipv6->netip,0,sizeof(nq_ipv6->netip));
+			value=xmlNodeGetContent(cur);
+			strcpy(nq_ipv6->netip,(char *)value);
+			xmlFree(value);
+			
+			nq_ipv6->next = NULL;
+			ntail_ipv6->next = nq_ipv6;
+			ntail_ipv6 = nq_ipv6;
+		}
 		cur = cur->next;
 	}
     *confnum=conflag;
@@ -190,6 +209,51 @@ int get_ip_by_active_instance(char *instance,unsigned long *ip)
 	return 0;
 }
 
+int get_ipv6_by_active_instance(char *instance,char  *ipv6)
+{
+	char  ip_address[128] = {0};
+	memset(ip_address,0,sizeof(ip_address));
+	char *ins_id  = NULL;
+	ins_id = instance;
+	struct acbackup_st ahead;
+	struct netipbk_st *aq = NULL;
+	int confnum = 0;
+	int retu = 0;
+	char *p = NULL;
+	memset(&ahead,0,sizeof(struct acbackup_st));
+	retu = read_acinfo_xml(&ahead,&confnum);
+	if(0 == retu)
+	{
+		aq = ahead.netipst_ipv6.next;
+		while(aq != NULL)
+		{
+			p = strtok(aq->netip, " ");
+			if(strcmp(p,ins_id) == 0)
+			{
+				p = strtok(NULL, " "); 
+				if(p)
+				{
+					memset(ip_address,0,sizeof(ip_address));
+					strncpy(ip_address,p,sizeof(ip_address)-1);
+				}
+				break;
+			}
+			else
+			{
+				aq = aq->next;
+				p = NULL;
+			}
+		}
+	}
+	else
+	{
+		memset(ip_address,0,sizeof(ip_address));
+	}
+	strcpy(ipv6,ip_address);
+	//*ipv6=ip_address;
+	Free_read_acinfo_xml(&ahead);
+	return 0;
+}
 
 
 

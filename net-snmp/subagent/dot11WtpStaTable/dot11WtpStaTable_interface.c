@@ -733,6 +733,11 @@ rc = APTxRates_get(rowreq_ctx, (char **)&var->val.string, &var->val_len );
 rc = MAXofRateset_get(rowreq_ctx, (char **)&var->val.string, &var->val_len );
         break;
 
+    /* wtpStaIPV6Addr(30)/InetAddressIPv6/ASN_OCTET_STR/char(char)//L/A/w/e/R/d/H */
+    case COLUMN_WTPSTAIPV6ADDR:
+    var->type = ASN_OCTET_STR;
+rc = wtpStaIPV6Addr_get(rowreq_ctx, (char **)&var->val.string, &var->val_len );
+        break;
 
      default:
          snmp_log(LOG_ERR,"unknown column %d in _dot11WtpStaTable_get_column\n", column);

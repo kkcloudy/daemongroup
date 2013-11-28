@@ -204,6 +204,12 @@ size_t      APTxRates_len; /* # of char elements, not bytes */
    char   MAXofRateset[64];
 size_t      MAXofRateset_len; /* # of char elements, not bytes */
     
+        /*
+         * wtpStaIPV6Addr(30)/InetAddressIPv6/ASN_OCTET_STR/char(char)//L/A/w/e/R/d/H
+         */
+   char   wtpStaIPV6Addr[128];
+size_t      wtpStaIPV6Addr_len; /* # of char elements, not bytes */
+    
 } dot11WtpStaTable_data;
 
 

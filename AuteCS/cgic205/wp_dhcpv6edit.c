@@ -336,7 +336,7 @@ int ShowDhcpEditPage(char *encry,char *eid,struct list *lcontrol,struct list *lp
 	}
 	  /////////////////dcli_dhcp
 	 //cflag=ccgi_show_ip_pool(mode, index, &head, &count);
-	cflag = ccgi_show_ipv6_pool(mode,index, &head, &count);
+	cflag = 0;//ccgi_show_ipv6_pool(mode,index, &head, &count);
 	if(cflag==1)
 	{
 		q = head.next;
@@ -630,7 +630,7 @@ void  ConfIPAdd(struct list *lcontrol,struct list *lpublic,char *poolname)
 
 	ccgi_dbus_init();
 	/*ip pool name*/
-	ret1 = ccgi_config_ipv6_pool_name(poolname, &index);
+	ret1 = 0;//ccgi_config_ipv6_pool_name(poolname, &index);
 	if (1 == ret1)
 	{
 		/*modify ip pool range*/	
@@ -639,8 +639,8 @@ void  ConfIPAdd(struct list *lcontrol,struct list *lpublic,char *poolname)
 		}
 		else
 		{
-			ccgi_addordel_ipv6pool("delete", defsip, defeip, defprefix, index);
-			ccgi_addordel_ipv6pool("add", startip,endip, prefixstr, index);
+			//ccgi_addordel_ipv6pool("delete", defsip, defeip, defprefix, index);
+			//ccgi_addordel_ipv6pool("add", startip,endip, prefixstr, index);
 			if(ret2==1)
 			{				
 				ShowAlert(search(lcontrol,"add_suc"));
@@ -655,30 +655,30 @@ void  ConfIPAdd(struct list *lcontrol,struct list *lpublic,char *poolname)
 		int domret = 0;
 		if (strcmp(domname,"") != 0)
 		{
-			ccgi_set_server_domain_search_ipv6(domname,mode,index, ADD_OPT);		    
+			//ccgi_set_server_domain_search_ipv6(domname,mode,index, ADD_OPT);		    
 		}
 		else
 		{
-			domret = ccgi_set_server_domain_search_ipv6(domname,mode,index,DEL_OPT);
+			domret = 0;//ccgi_set_server_domain_search_ipv6(domname,mode,index,DEL_OPT);
 		}
-		ccgi_set_server_lease_default_ipv6(lease_t,mode,index,ADD_OPT);
+		//ccgi_set_server_lease_default_ipv6(lease_t,mode,index,ADD_OPT);
 
 		if (0 != strcmp(dns_ip,""))
 		{
-			ccgi_set_server_name_servers_ipv6(dns_ip,mode, index, ADD_OPT);
+			//ccgi_set_server_name_servers_ipv6(dns_ip,mode, index, ADD_OPT);
 		}
 		else
 		{
-			ccgi_set_server_name_servers_ipv6(dns_ip,mode, index, DEL_OPT);
+			//ccgi_set_server_name_servers_ipv6(dns_ip,mode, index, DEL_OPT);
 		}
 		
 		if(0 != strcmp(opt_ip,""))
 		{
-			ccgi_set_server_option52_ipv6(opt_ip, mode,index,ADD_OPT);
+			//ccgi_set_server_option52_ipv6(opt_ip, mode,index,ADD_OPT);
 		}
 		else
 		{
-			ccgi_set_server_option52_ipv6(opt_ip, mode,index,DEL_OPT);
+			//ccgi_set_server_option52_ipv6(opt_ip, mode,index,DEL_OPT);
 		}
 		if (0 == flag)
 		{
@@ -718,7 +718,7 @@ int ShowConfClearPage(char *m,char *id,struct list *lcontrol,struct list *lpubli
 
 	int ret=-1;		
 	unsigned int index = 0;
-	ret = ccgi_create_ipv6_pool_name(1,id,&index);
+	ret = 0;//ccgi_create_ipv6_pool_name(1,id,&index);
 
 	if( ret == 1 )
 	{

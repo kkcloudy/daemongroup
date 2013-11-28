@@ -47,6 +47,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <net/if_arp.h>
 #include <sys/ioctl.h>
 #include <netinet/in.h>
+#include "ws_dcli_dhcp.h"
 
 
 #define DHCP_SERVER_SUBNET 1
@@ -89,6 +90,7 @@ struct dhcp6_pool_show
 	unsigned int dnsnum;	
 	unsigned int defaulttime;
 	unsigned int sub_count;	
+	char *interfacename;
 	struct dhcp6_sub *ipv6_subnet;
 	struct dhcp6_pool_show *next;
 };
@@ -121,31 +123,30 @@ extern int ccgi_show_ipv6_pool
 (
 	unsigned int mode,
 	unsigned int index,
-	struct dhcp6_pool_show_st *head,
-	unsigned int *num
+	struct dhcp6_pool_show *head,
+	unsigned int *num,
+	DBusConnection *connection
 );
-extern void Free_ccgi_show_ipv6_pool(struct dhcp6_pool_show_st *head);
-extern int ccgi_create_ipv6_pool_name
-(
-	unsigned int del,
-	char *poolName,
-	unsigned int *pindex
-);/*1:succ;0:fail;-1:poolname is null;-2:delete ip pool fail;-3:create ip pool fail*/
-extern int ccgi_config_ipv6_pool_name(char *pool_name,unsigned int *pindex);/*1:succ;0:fail*/
+extern void Free_ccgi_show_ipv6_pool(struct dhcp6_pool_show *head);
+extern int ccgi_create_ipv6_pool_name(unsigned int add_del,char *poolName,unsigned int *pindex,int slot_id);
+						/*1:succ;0:fail;-1:poolname is null;-2:delete ip pool fail;-3:create ip pool fail*/
+extern int ccgi_config_ipv6_pool_name(char *pool_name,unsigned int *pindex,int slot_id);/*1:succ;0:fail*/
 extern int ccgi_add_dhcp_pool_ipv6_range
 (
 	unsigned int add,
 	struct iaddr *ipaddrl, 
 	struct iaddr *ipaddrh,
 	unsigned int prefix_length,
-	unsigned int index
+	unsigned int index,
+	int slot_id
 );
 extern int  ccgi_set_server_lease_default_ipv6
 (
 	unsigned int lease_default,	
 	unsigned int mode,
 	unsigned int index,
-	unsigned int del
+	unsigned int del,
+	int slot_id
 );/*1:succ;0:fail*/
 extern int ccgi_set_server_option52_ipv6
 (
@@ -166,7 +167,8 @@ extern int ccgi_set_server_name_servers_ipv6
 	char *dnsstr,
 	unsigned int mode,
 	unsigned int index,
-	unsigned int del
+	unsigned int del,
+	int slot_id
 );/*1:succ;0:fail;*/
 extern int  ccgi_str2_ipv6_addr
 ( 
@@ -179,8 +181,9 @@ extern int  ccgi_set_interface_ipv6_pool
 	char* ifname,
 	unsigned int add_info
 );
-extern int ccgi_addordel_ipv6pool(char *opt,char *startip,char *endip,char *prefix,	unsigned int index);
+extern int ccgi_addordel_ipv6pool(char *opt,char *startip,char *endip,char *prefix,	unsigned int index,int slot_id);
 extern int ccgi_check_ipv6_address(char *ipv6_address);
 extern  int ccgi_set_dhcpv6_server_enable(char *serveropt);
+int ccgi_show_dhcp_lease_ipv6_state(struct lease_state  *total_state, struct sub_lease_state *sub_state, unsigned int *subnet_num, int slotid);
 
 #endif

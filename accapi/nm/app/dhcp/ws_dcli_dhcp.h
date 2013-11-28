@@ -75,9 +75,9 @@ struct statistics_info {
 
 /*subnet lease state*/
 struct sub_lease_state{
-	char subnet[32];
-	char mask[32];
-	char poolname[32];
+	char subnet[50];
+	char mask[50];
+	char poolname[64];
 	struct statistics_info info;
 	struct lease_state subnet_lease_state;
 };

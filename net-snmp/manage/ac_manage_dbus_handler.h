@@ -25,6 +25,8 @@ DBusMessage *ac_manage_dbus_proxy_pfm_config(DBusConnection *connection, DBusMes
 
 DBusMessage *ac_manage_dbus_config_snmp_pfm_requestpkts(DBusConnection *connection, DBusMessage *message, void *user_data);
 
+DBusMessage *ac_manage_dbus_config_snmp_pfm_requestpkts_ipv6(DBusConnection *connection, DBusMessage *message, void *user_data);
+
 DBusMessage *ac_manage_dbus_config_snmp_version_mode(DBusConnection *connection, DBusMessage *message, void *user_data);
 
 DBusMessage *ac_manage_dbus_config_snmp_update_sysinfo(DBusConnection *connection, DBusMessage *message, void *user_data);
@@ -33,7 +35,11 @@ DBusMessage *ac_manage_dbus_config_snmp_cachetime(DBusConnection *connection, DB
 
 DBusMessage *ac_manage_dbus_config_snmp_add_community(DBusConnection *connection, DBusMessage *message, void *user_data);
 
+DBusMessage *ac_manage_dbus_config_snmp_add_community_ipv6(DBusConnection *connection, DBusMessage *message, void *user_data);
+
 DBusMessage *ac_manage_dbus_config_snmp_set_community(DBusConnection *connection, DBusMessage *message, void *user_data);
+
+DBusMessage *ac_manage_dbus_config_snmp_set_community_ipv6(DBusConnection *connection, DBusMessage *message, void *user_data) ;
 
 DBusMessage *ac_manage_dbus_config_snmp_del_community(DBusConnection *connection, DBusMessage *message, void *user_data);
 
@@ -61,7 +67,11 @@ DBusMessage *ac_manage_dbus_show_snmp_base_info(DBusConnection *connection, DBus
 
 DBusMessage *ac_manage_dbus_show_snmp_pfm_interface(DBusConnection *connection, DBusMessage *message, void *user_data);
 
+DBusMessage *ac_manage_dbus_show_snmp_pfm_interface_ipv6(DBusConnection *connection, DBusMessage *message, void *user_data);
+
 DBusMessage *ac_manage_dbus_show_snmp_community(DBusConnection *connection, DBusMessage *message, void *user_data);
+
+DBusMessage *ac_manage_dbus_show_snmp_community_ipv6(DBusConnection *connection, DBusMessage *message, void *user_data);
 
 DBusMessage *ac_manage_dbus_show_snmp_view(DBusConnection *connection, DBusMessage *message, void *user_data);
 

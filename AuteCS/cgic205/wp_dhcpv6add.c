@@ -540,8 +540,8 @@ void  ConfIPAdd(struct list *lcontrol,struct list *lpublic)
 	/*ip pool name*/
 	if (0 != strcmp(poolname,""))
 	{
-		ret1 = ccgi_create_ipv6_pool_name(ADD_OPT, poolname, &index);		
-		retconfig = ccgi_config_ipv6_pool_name(poolname,&bkindex);
+		ret1 = 0;//ccgi_create_ipv6_pool_name(ADD_OPT, poolname, &index);		
+		retconfig =0;// ccgi_config_ipv6_pool_name(poolname,&bkindex);
 
 		if ((1 == ret1)||(1 == retconfig))
 		{
@@ -552,7 +552,7 @@ void  ConfIPAdd(struct list *lcontrol,struct list *lpublic)
 				{
 					index = bkindex;
 				}
-				ret2 = ccgi_addordel_ipv6pool("add", startip, endip, predixstr, index);
+				ret2 = 0;//ccgi_addordel_ipv6pool("add", startip, endip, predixstr, index);
 				if (1 == ret2)
 				{
 					/*add domain name*/
@@ -566,13 +566,13 @@ void  ConfIPAdd(struct list *lcontrol,struct list *lpublic)
 						//ip_dhcp_server_dns(mode, index, dnsipstr);
 					}
 					/*add lease*/
-					ccgi_set_server_lease_default_ipv6(lease_t,mode,index,ADD_OPT);
+					//ccgi_set_server_lease_default_ipv6(lease_t,mode,index,ADD_OPT);
 					/*option 52*/
 					if (0 != strcmp(option52str,""))
 					{
 						ccgi_set_server_option52_ipv6(opt_ip,mode,index, ADD_OPT);
 					}
-					ccgi_set_server_name_servers_ipv6(dnsipstr,mode, index, ADD_OPT);
+					//ccgi_set_server_name_servers_ipv6(dnsipstr,mode, index, ADD_OPT);
 					ccgi_set_server_option52_ipv6(opt_ip, mode,index,ADD_OPT);
 
 					ShowAlert(search(lcontrol,"add_suc"));

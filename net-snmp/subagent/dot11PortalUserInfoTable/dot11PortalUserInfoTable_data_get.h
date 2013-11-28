@@ -53,6 +53,7 @@ extern "C" {
     int portalUseronline_map(u_long *mib_portalUseronline_val_ptr, u_long raw_portalUseronline_val);
     int portalUseronline_get( dot11PortalUserInfoTable_rowreq_ctx *rowreq_ctx, u_long * portalUseronline_val_ptr );
     int userAuthType_get( dot11PortalUserInfoTable_rowreq_ctx *rowreq_ctx, u_long * userAuthType_val_ptr );
+    int portalUseripv6address_get( dot11PortalUserInfoTable_rowreq_ctx *rowreq_ctx, char **portalUseripv6address_val_ptr_ptr, size_t *portalUseripv6address_val_ptr_len_ptr );
 
 int dot11PortalUserInfoTable_indexes_set_tbl_idx(dot11PortalUserInfoTable_mib_index *tbl_idx, char *wtpMacAddr_val_ptr,  size_t wtpMacAddr_val_ptr_len, char *wtpStaMacAddr_val_ptr,  size_t wtpStaMacAddr_val_ptr_len);
 int dot11PortalUserInfoTable_indexes_set(dot11PortalUserInfoTable_rowreq_ctx *rowreq_ctx, char *wtpMacAddr_val_ptr,  size_t wtpMacAddr_val_ptr_len, char *wtpStaMacAddr_val_ptr,  size_t wtpStaMacAddr_val_ptr_len);

@@ -48,11 +48,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define AC_NETIP	"netip"
 #define N_VALEE		"value"
 #define N_CONTENT	"content"
+#define AC_NETIP_IPV6	"netip_ipv6"
 
 #define IDEN_TYPE	"iden_t"
 #define MODE_TYPE	"mode_t"
 #define STATUS_TYPE "status_t"
 #define NETIP_TYPE  "netip_t"
+#define NETIP_TYPE_IPV6  "netip_t_ipv6"
 
 #define LOC_TYPE	"loc_t"
 #define CON_TYPE	"con_t"
@@ -61,7 +63,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 struct netipbk_st
 {
-	char netip[35];
+	char netip[128];
 	char slotid[10];
 	char content[50];
 	struct netipbk_st *next;
@@ -73,13 +75,14 @@ struct acbackup_st
 	char mode[20];
 	char status[20];
 	struct netipbk_st netipst;
+	struct netipbk_st netipst_ipv6;
 };
 
 struct bkacinfo_st
 {
 	char key[20];
 	char insid[10];
-	char netip[32];
+	char netip[128];
 };
 extern void Free_read_acinfo_xml(struct acbackup_st *head);
 extern int read_acinfo_xml(struct acbackup_st *chead,int *confnum);

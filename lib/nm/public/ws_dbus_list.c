@@ -664,7 +664,7 @@ void tipc_dbus_connection_maintenance(void)
             	}else{
                 	snmpd_dbus_node->connection = dbus_get_tipc_connection(snmpd_dbus_node->slot_id);
 					snmpd_dbus_node->connet_times += 1;				
-					//syslog(LOG_INFO,"####dbus_get_tipc_connection slot=%d connet_times=%d####\n",snmpd_dbus_node->slot_id,snmpd_dbus_node->connet_times);
+		syslog(LOG_ERR,"####dbus_get_tipc_connection slot=%d connet_times=%d####\n",snmpd_dbus_node->slot_id,snmpd_dbus_node->connet_times);
             	}
             }
         }

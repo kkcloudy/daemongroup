@@ -234,6 +234,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #if 1
 #define MAX_IP_ADDR_LEN		32
+#define MAX_IPv6_ADDR_LEN		128
 #else
 #define MAX_IP_ADDR_LEN		128
 #endif
@@ -387,6 +388,15 @@ typedef struct STCommunity_s{
 	struct STCommunity_s *next;
 }STCommunity;
 
+typedef struct IPV6STCommunity_s{
+	char	community[MAX_SNMP_NAME_LEN];
+	char	ip_addr[MAX_IPv6_ADDR_LEN];
+	unsigned int	prefix;
+	ACCESS_MODE	access_mode;
+	CONF_STATUS	status;
+	
+	struct IPV6STCommunity_s *next;
+}IPV6STCommunity;
 
 
 /*
@@ -443,6 +453,7 @@ typedef struct {
 	char sys_description[MAX_SYSTEM_DESCRIPTION];
 	char sys_oid[MAX_OID_LEN];
 	unsigned int agent_port;
+	unsigned int agent_port_ipv6;
 	unsigned int trap_port;
 	
 	CONF_STATUS	v1_status;

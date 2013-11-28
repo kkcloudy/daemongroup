@@ -16,9 +16,17 @@ typedef struct snmp_summary_s{
 	
 	unsigned int        interface_num;
 	SNMPINTERFACE       *interfaceHead;
+
+	
+	unsigned int        ipv6_interface_num;
+	SNMPINTERFACE       *ipv6_interfaceHead;
 	 
 	unsigned int 		community_num;	
 	STCommunity			*communityHead;
+
+	
+	unsigned int 		ipv6_community_num;	
+	IPV6STCommunity			*ipv6_communityHead;
 	
 	unsigned int		v3user_num;
 	STSNMPV3User		*v3userHead;
@@ -63,7 +71,11 @@ int snmp_show_sysinfo(STSNMPSysInfo **snmp_info);
 
 int snmp_show_pfm_interface(SNMPINTERFACE **interface_array, unsigned int *interface_num);
 
+int snmp_show_pfm_interface_ipv6(SNMPINTERFACE **interface_array, unsigned int *interface_num) ;
+
 int snmp_show_community(STCommunity **community_array, unsigned int *community_num) ;
+
+int snmp_show_community_ipv6(IPV6STCommunity **community_array, unsigned int *community_num);
 
 void free_snmp_show_view(STSNMPView **view_array, unsigned int view_num);
 
@@ -85,13 +97,24 @@ void snmp_clear_pfm_interface(void);
 
 int snmp_add_pfm_interface(char *ifName, unsigned int port);
 
+int snmp_add_pfm_interface_ipv6(char *ifName, unsigned int port);
+
 int snmp_del_pfm_interface(char *ifName, unsigned int port);
+
+int snmp_del_pfm_interface_ipv6(char *ifName, unsigned int port);
+
 
 int snmp_add_community(STCommunity pstCommunity);
 
+int snmp_add_community_ipv6(IPV6STCommunity pstCommunity) ;
+
 int snmp_del_community(char *community);
 
+int snmp_del_community_ipv6(char *community);
+
 int snmp_set_community(char *old_community, STCommunity pstCommunity);
+
+int snmp_set_community_ipv6(char *old_community, IPV6STCommunity pstCommunity) ;
 
 int snmp_create_view(char *view_name);
 

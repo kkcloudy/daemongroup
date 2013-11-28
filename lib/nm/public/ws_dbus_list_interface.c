@@ -548,6 +548,7 @@ void free_instance_parameter_list(instance_parameter **paraHead)
 
 void close_slot_dbus_connection(unsigned int slot_id)
 {
+	syslog(LOG_ERR,"####close_slot_dbus_connection slot %d####\n",slot_id);
     struct list_head *pos = NULL;
     list_for_each(pos, &snmpd_dbus_list_head) {
         netsnmp_dbus_connection *snmpd_dbus_node = dbus_node(pos);

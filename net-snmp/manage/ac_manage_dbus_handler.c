@@ -542,6 +542,89 @@ ac_manage_dbus_config_snmp_pfm_requestpkts(DBusConnection *connection, DBusMessa
     return reply;
 }
 
+DBusMessage *
+ac_manage_dbus_config_snmp_pfm_requestpkts_ipv6(DBusConnection *connection, DBusMessage *message, void *user_data) {
+
+	DBusMessage *reply = NULL;	
+	DBusError err;
+	DBusMessageIter	 iter;	
+
+	unsigned int port = 0;
+	unsigned int state = 0;
+	char *ifName = NULL;
+
+	int ret = AC_MANAGE_SUCCESS;
+	
+	dbus_error_init(&err);
+	
+	if (!(dbus_message_get_args(message, &err,
+	                            DBUS_TYPE_STRING, &ifName, 
+					DBUS_TYPE_UINT32, &port,
+					DBUS_TYPE_UINT32, &state,
+					DBUS_TYPE_INVALID))){
+
+        	manage_log(LOG_WARNING, "Unable to get input args\n");
+	    
+		if (dbus_error_is_set(&err)) {
+		
+            		manage_log(LOG_WARNING, "%s raised: %s\n", err.name, err.message);
+			dbus_error_free(&err);
+		}
+		return NULL;
+	}
+    	manage_log(LOG_DEBUG, "ac_manage_dbus_config_snmp_pfm_requestpkts_ipv6: port = %d, ifName = %s, state = %d\n", port, ifName, state);
+    	if(!port || port > 65535) {
+        	ret = AC_MANAGE_INPUT_TYPE_ERROR;
+    	}    
+    	else if(!snmp_show_service_state()) {
+		STSNMPSysInfo *snmp_info = NULL;
+		ret = snmp_show_sysinfo(&snmp_info);
+		if(AC_MANAGE_SUCCESS == ret && snmp_info) {
+			if(state) { /*add pfm interface*/
+				if(snmp_info->agent_port_ipv6){
+					if(snmp_info->agent_port_ipv6 != port) {
+						ret = AC_MANAGE_CONFIG_FAIL;
+						goto END_REPLY;
+					}    
+				}
+
+				ret = snmp_add_pfm_interface_ipv6(ifName, port);
+				if(AC_MANAGE_SUCCESS == ret) {
+					snmp_info->agent_port_ipv6 = port;                    
+					snmp_set_sysinfo(snmp_info);       
+				}
+			}  
+			else { /*delete pfm interface*/
+				if(snmp_info->agent_port_ipv6){
+					if(snmp_info->agent_port_ipv6 != port) {
+						ret = AC_MANAGE_CONFIG_FAIL;
+						goto END_REPLY;
+					}
+					else {
+						ret = snmp_del_pfm_interface_ipv6(ifName, port);
+					}        
+				}
+				else {
+					ret = AC_MANAGE_CONFIG_NONEXIST;
+					goto END_REPLY;
+				}
+			}
+		}
+    	
+		END_REPLY:
+		MANAGE_FREE(snmp_info);
+	}
+	else {
+		ret = AC_MANAGE_SERVICE_ENABLE;
+	}
+
+	reply = dbus_message_new_method_return(message);
+	            
+	dbus_message_iter_init_append (reply, &iter);   
+	dbus_message_iter_append_basic (&iter,DBUS_TYPE_UINT32,&ret); 
+
+	return reply;
+}
 
 
 DBusMessage *
@@ -758,6 +841,85 @@ ac_manage_dbus_config_snmp_add_community(DBusConnection *connection, DBusMessage
     return reply;        
 }
 
+DBusMessage *
+ac_manage_dbus_config_snmp_add_community_ipv6(DBusConnection *connection, DBusMessage *message, void *user_data)
+{
+
+	DBusMessage *reply = NULL;	
+	DBusError err;
+	DBusMessageIter  iter;	
+
+	char *community = NULL;
+	char *ip_addr = NULL;
+	unsigned int prefix = NULL;
+	unsigned int access_mode = 1;
+	unsigned int state = 1;
+    
+	int ret = AC_MANAGE_SUCCESS;
+	
+	dbus_error_init(&err);
+	
+	if (!(dbus_message_get_args(message, &err,
+				    DBUS_TYPE_STRING, &community,
+				    DBUS_TYPE_STRING, &ip_addr,   
+				    DBUS_TYPE_UINT32, &prefix,
+								DBUS_TYPE_UINT32, &access_mode,
+								DBUS_TYPE_UINT32, &state,
+								DBUS_TYPE_INVALID))){
+
+	manage_log(LOG_WARNING, "Unable to get input args\n");
+	    
+		if (dbus_error_is_set(&err)) {
+		
+	    manage_log(LOG_WARNING, "%s raised: %s\n", err.name, err.message);
+			dbus_error_free(&err);
+		}
+		return NULL;
+	}
+
+    if(!snmp_show_service_state()) {
+	
+	if(NULL == community || 0 == strcmp(community, "")){
+	    ret = AC_MANAGE_INPUT_TYPE_ERROR;
+	}
+	else {
+	    
+	    IPV6STCommunity pcommunity;
+	    memset(&pcommunity, 0, sizeof(IPV6STCommunity));
+	    
+	    strncpy(pcommunity.community, community, sizeof(pcommunity.community) - 1);
+	    strncpy(pcommunity.ip_addr, ip_addr, sizeof(pcommunity.ip_addr) - 1);
+	    pcommunity.prefix = prefix;
+			  
+	    if(access_mode) {
+		pcommunity.access_mode = ACCESS_MODE_RW; //community mode rw
+	    }
+	    else {
+		pcommunity.access_mode = ACCESS_MODE_RO; //community mode ro
+	    }
+
+	    if(state) {
+		pcommunity.status = RULE_ENABLE; // community enable
+	    }
+	    else {
+		pcommunity.status = RULE_DISABLE; // community disable
+	    }
+	    
+	    ret = snmp_add_community_ipv6(pcommunity);
+			
+	}  
+    }
+    else {
+	ret = AC_MANAGE_SERVICE_ENABLE;
+    }
+    
+    reply = dbus_message_new_method_return(message);
+		    
+    dbus_message_iter_init_append (reply, &iter);   
+    dbus_message_iter_append_basic (&iter,DBUS_TYPE_UINT32,&ret); 
+
+    return reply;	 
+}
 
 
 DBusMessage *
@@ -841,6 +1003,87 @@ ac_manage_dbus_config_snmp_set_community(DBusConnection *connection, DBusMessage
 }
 
 DBusMessage *
+ac_manage_dbus_config_snmp_set_community_ipv6(DBusConnection *connection, DBusMessage *message, void *user_data) {
+
+	DBusMessage *reply = NULL;	
+	DBusError err;
+	DBusMessageIter	 iter;	
+
+	char *old_community = NULL;
+	char *community = NULL;
+	char *ip_addr = NULL;
+	unsigned int prefix = 0;
+	unsigned int access_mode = 1;
+	unsigned int state = 1;
+    
+	int ret = AC_MANAGE_SUCCESS;
+
+	dbus_error_init(&err);
+	
+	if (!(dbus_message_get_args(message, &err,
+	                            DBUS_TYPE_STRING, &old_community,
+	                            DBUS_TYPE_STRING, &community,
+	                            DBUS_TYPE_STRING, &ip_addr,   
+	                            DBUS_TYPE_UINT32, &prefix,
+								DBUS_TYPE_UINT32, &access_mode,
+								DBUS_TYPE_UINT32, &state,
+								DBUS_TYPE_INVALID))){
+
+        manage_log(LOG_WARNING, "Unable to get input args\n");
+	    
+		if (dbus_error_is_set(&err)) {
+		
+            manage_log(LOG_WARNING, "%s raised: %s\n", err.name, err.message);
+			dbus_error_free(&err);
+		}
+		return NULL;
+	}
+    
+//    if(!snmp_show_service_state()) {
+        
+        if(NULL == old_community || 0 == strcmp(old_community, "") ||
+            NULL == community || 0 == strcmp(community, "")) {
+            ret = AC_MANAGE_INPUT_TYPE_ERROR;
+        }
+        else {
+            IPV6STCommunity pcommunity;
+            memset(&pcommunity, 0, sizeof(IPV6STCommunity));
+            
+            strncpy(pcommunity.community, community, sizeof(pcommunity.community) - 1);
+            strncpy(pcommunity.ip_addr, ip_addr, sizeof(pcommunity.ip_addr) - 1);
+            pcommunity.prefix = prefix;
+                   
+            if(access_mode) {
+                pcommunity.access_mode = ACCESS_MODE_RW; //community mode rw
+            }
+            else {
+                pcommunity.access_mode = ACCESS_MODE_RO; //community mode ro
+            }
+
+            if(state) {
+                pcommunity.status = RULE_ENABLE; // community enable
+            }
+            else {
+                pcommunity.status = RULE_DISABLE; // community disable
+            }
+            
+            ret = snmp_set_community_ipv6(old_community, pcommunity);      
+        }  
+//    }
+//    else {
+//        ret = AC_MANAGE_SERVICE_ENABLE;
+//    }
+        
+    reply = dbus_message_new_method_return(message);
+                    
+    dbus_message_iter_init_append (reply, &iter);   
+    dbus_message_iter_append_basic (&iter,DBUS_TYPE_UINT32,&ret); 
+
+    return reply;        
+}
+
+
+DBusMessage *
 ac_manage_dbus_config_snmp_del_community(DBusConnection *connection, DBusMessage *message, void *user_data) {
 
 	DBusMessage *reply = NULL;	
@@ -887,6 +1130,55 @@ ac_manage_dbus_config_snmp_del_community(DBusConnection *connection, DBusMessage
     
     return reply;        
 }
+
+DBusMessage *
+ac_manage_dbus_config_snmp_del_community_ipv6(DBusConnection *connection, DBusMessage *message, void *user_data) {
+
+	DBusMessage *reply = NULL;	
+	DBusError err;
+	DBusMessageIter	 iter;	
+
+    	char *community = NULL;
+    
+	int ret = AC_MANAGE_SUCCESS;
+
+	dbus_error_init(&err);
+
+	if (!(dbus_message_get_args(message, &err,
+	                            DBUS_TYPE_STRING, &community,
+				DBUS_TYPE_INVALID))){
+
+        manage_log(LOG_WARNING, "Unable to get input args\n");
+	    
+		if (dbus_error_is_set(&err)) {
+		
+           		 manage_log(LOG_WARNING, "%s raised: %s\n", err.name, err.message);
+			dbus_error_free(&err);
+		}
+		return NULL;
+	}
+
+    if(!snmp_show_service_state()) {
+
+        if((NULL == community) || (0 == strcmp(community, ""))){
+            ret = AC_MANAGE_INPUT_TYPE_ERROR;
+        }
+        else {
+            ret = snmp_del_community_ipv6(community);
+        }        
+    }
+    else {
+        ret = AC_MANAGE_SERVICE_ENABLE;
+    }
+        
+    reply = dbus_message_new_method_return(message);
+                    
+    dbus_message_iter_init_append (reply, &iter);   
+    dbus_message_iter_append_basic (&iter,DBUS_TYPE_UINT32,&ret); 
+    
+    return reply;        
+}
+
 
 DBusMessage *
 ac_manage_dbus_config_snmp_view(DBusConnection *connection, DBusMessage *message, void *user_data) {
@@ -1350,6 +1642,10 @@ ac_manage_dbus_show_snmp_base_info(DBusConnection *connection, DBusMessage *mess
         dbus_message_iter_append_basic(&iter,
         								 DBUS_TYPE_UINT32,
         								 &snmp_info->agent_port);
+	
+        dbus_message_iter_append_basic(&iter,
+        								 DBUS_TYPE_UINT32,
+        								 &snmp_info->agent_port_ipv6);
         								 
         dbus_message_iter_append_basic(&iter,
         								 DBUS_TYPE_UINT32,
@@ -1474,6 +1770,98 @@ ac_manage_dbus_show_snmp_pfm_interface(DBusConnection *connection, DBusMessage *
     return reply;        
 }
 
+DBusMessage *
+ac_manage_dbus_show_snmp_pfm_interface_ipv6(DBusConnection *connection, DBusMessage *message, void *user_data) {
+
+	DBusMessage *reply = NULL;	
+	DBusError err;
+	DBusMessageIter	 iter;		
+	DBusMessageIter	 iter_array;	
+	DBusMessageIter  iter_struct;
+    
+	int ret = AC_MANAGE_SUCCESS;
+
+	STSNMPSysInfo *snmp_info = NULL;
+	SNMPINTERFACE *interface_array = NULL;
+	unsigned int interface_num = 0;
+
+	char *ifName = NULL;
+	unsigned int agent_port = 0;
+    
+	ret = snmp_show_sysinfo(&snmp_info);
+	if(AC_MANAGE_SUCCESS == ret) {
+
+		agent_port = snmp_info->agent_port_ipv6;
+		manage_log(LOG_DEBUG, "after snmp_show_sysinfo, agent_port = %d\n", agent_port);
+
+		ret = snmp_show_pfm_interface_ipv6(&interface_array, &interface_num);
+		manage_log(LOG_DEBUG, "after snmp_show_pfm_interface, ret = %d, interface_num = %d\n", ret, interface_num);
+
+		ifName = (char *)malloc(MAX_INTERFACE_NAME_LEN);
+
+		if(NULL == ifName) {
+			ret = AC_MANAGE_MALLOC_ERROR;
+		}
+	}    
+    
+    
+	reply = dbus_message_new_method_return(message);
+		
+	dbus_message_iter_init_append(reply, &iter);
+		
+	dbus_message_iter_append_basic(&iter,
+					 DBUS_TYPE_UINT32,
+					 &ret);
+
+	dbus_message_iter_append_basic(&iter,
+					 DBUS_TYPE_UINT32,
+					 &agent_port); 								 
+
+	dbus_message_iter_append_basic(&iter,
+					 DBUS_TYPE_UINT32,
+					 &interface_num);
+
+    
+	dbus_message_iter_open_container(&iter,
+                                    DBUS_TYPE_ARRAY,
+                                    DBUS_STRUCT_BEGIN_CHAR_AS_STRING
+                                    
+                                        DBUS_TYPE_STRING_AS_STRING
+
+                                    DBUS_STRUCT_END_CHAR_AS_STRING,
+                                    &iter_array);
+                                    
+	if(AC_MANAGE_SUCCESS == ret) {   
+		int i = 0;
+		for(i = 0; i < interface_num; i++) {
+
+			memset(ifName, 0, MAX_INTERFACE_NAME_LEN);
+			strncpy(ifName, interface_array[i].ifName, MAX_INTERFACE_NAME_LEN - 1);
+
+
+			dbus_message_iter_open_container(&iter_array,
+						    DBUS_TYPE_STRUCT,
+							NULL,
+							&iter_struct);
+
+			dbus_message_iter_append_basic(&iter_struct,
+			                            DBUS_TYPE_STRING,
+			                            &ifName);
+
+			dbus_message_iter_close_container(&iter_array, &iter_struct);
+		}
+	}
+    
+	dbus_message_iter_close_container(&iter, &iter_array); 
+
+	MANAGE_FREE(ifName);
+	MANAGE_FREE(interface_array);
+	MANAGE_FREE(snmp_info);
+
+	return reply;        
+}
+
+
 
 DBusMessage *
 ac_manage_dbus_show_snmp_community(DBusConnection *connection, DBusMessage *message, void *user_data) {
@@ -1489,6 +1877,7 @@ ac_manage_dbus_show_snmp_community(DBusConnection *connection, DBusMessage *mess
     STCommunity *community_array = NULL;
     unsigned int community_num = 0;
     ret = snmp_show_community(&community_array, &community_num);
+    
     manage_log(LOG_DEBUG, "after snmp_show_community, ret = %d, community_num = %d\n", ret, community_num);
 
     char *community = (char *)malloc(MAX_SNMP_NAME_LEN);
@@ -1573,6 +1962,106 @@ ac_manage_dbus_show_snmp_community(DBusConnection *connection, DBusMessage *mess
     MANAGE_FREE(community);
     MANAGE_FREE(ip_addr);
     MANAGE_FREE(ip_mask);
+    MANAGE_FREE(community_array);
+    
+    return reply;        
+}
+
+DBusMessage *
+ac_manage_dbus_show_snmp_community_ipv6(DBusConnection *connection, DBusMessage *message, void *user_data)
+{
+	DBusMessage *reply = NULL;	
+	DBusError err;
+	DBusMessageIter	 iter;		
+	DBusMessageIter	 iter_array;	
+	DBusMessageIter  iter_struct;
+
+	int ret = AC_MANAGE_SUCCESS;
+
+	IPV6STCommunity *community_array = NULL;
+	unsigned int community_num = 0;
+	ret = snmp_show_community_ipv6(&community_array, &community_num);
+	manage_log(LOG_DEBUG, "after snmp_show_community, ret = %d, community_num = %d\n", ret, community_num);
+
+	char *community = (char *)malloc(MAX_SNMP_NAME_LEN);
+	char *ip_addr = (char *)malloc(MAX_IPv6_ADDR_LEN);
+	unsigned int prefix=0;
+
+	if(!community || !ip_addr) {
+	ret = AC_MANAGE_MALLOC_ERROR;
+	}
+    
+	reply = dbus_message_new_method_return(message);
+		
+	dbus_message_iter_init_append(reply, &iter);
+		
+	dbus_message_iter_append_basic(&iter,
+					 DBUS_TYPE_UINT32,
+					 &ret);
+
+	dbus_message_iter_append_basic(&iter,
+					 DBUS_TYPE_UINT32,
+					 &community_num);
+
+    
+	dbus_message_iter_open_container(&iter,
+                                    DBUS_TYPE_ARRAY,
+                                    DBUS_STRUCT_BEGIN_CHAR_AS_STRING
+                                    
+                                        DBUS_TYPE_STRING_AS_STRING
+                                        DBUS_TYPE_STRING_AS_STRING
+                                        DBUS_TYPE_UINT32_AS_STRING
+                                        DBUS_TYPE_UINT32_AS_STRING
+                                        DBUS_TYPE_UINT32_AS_STRING
+
+                                    DBUS_STRUCT_END_CHAR_AS_STRING,
+                                    &iter_array);
+                                    
+	if(AC_MANAGE_SUCCESS == ret) {   
+
+        int i = 0;
+        for(i = 0; i < community_num; i++) {
+
+		memset(community, 0, MAX_SNMP_NAME_LEN);
+		memcpy(community, community_array[i].community, MAX_SNMP_NAME_LEN);
+
+		memset(ip_addr, 0, MAX_IPv6_ADDR_LEN);
+		memcpy(ip_addr, community_array[i].ip_addr, MAX_IPv6_ADDR_LEN);
+
+
+		dbus_message_iter_open_container(&iter_array,
+						    DBUS_TYPE_STRUCT,
+							NULL,
+							&iter_struct);
+
+		dbus_message_iter_append_basic(&iter_struct,
+			                            DBUS_TYPE_STRING,
+			                            &community);
+
+		dbus_message_iter_append_basic(&iter_struct,
+			                            DBUS_TYPE_STRING,
+			                            &ip_addr);  
+
+		dbus_message_iter_append_basic(&iter_struct,
+		                            DBUS_TYPE_UINT32,
+		                            &community_array[i].prefix); 
+
+		dbus_message_iter_append_basic(&iter_struct,
+		                            DBUS_TYPE_UINT32,
+		                            &community_array[i].access_mode);  
+
+		dbus_message_iter_append_basic(&iter_struct,
+		                            DBUS_TYPE_UINT32,
+		                            &community_array[i].status);
+
+		dbus_message_iter_close_container(&iter_array, &iter_struct);
+        }
+    }
+    
+    dbus_message_iter_close_container(&iter, &iter_array);    
+
+    MANAGE_FREE(community);
+    MANAGE_FREE(ip_addr);
     MANAGE_FREE(community_array);
     
     return reply;        
@@ -7009,6 +7498,10 @@ ac_manage_dbus_set_bkacinfo_value(DBusConnection *connection, DBusMessage *messa
 		else if(0 == strcmp(status,IDEN_TYPE))
 		{
 			mod_first_xmlnode(ACBACKUPFILE, AC_IDENTITY,key);
+		}
+		else if(0 == strcmp(status,NETIP_TYPE_IPV6))
+		{
+			mod_insbk_xmlnode(ACBACKUPFILE, AC_NETIP_IPV6, insid, netip);		
 		}
 	}
 	else if(OPT_DEL == opt_type)

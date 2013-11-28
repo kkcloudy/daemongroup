@@ -131,6 +131,8 @@ init_autelanWtpGroup(void)
 	init_dot11ApInfoTableByInterface();
 	init_dot11WtpIfTeminalTable();
 	init_dot11SsidTeminalTable();
+	init_dot11DHCPIpv6PoolConfigTable();
+	init_dot11DHCPIpv6UseageTable();
 }
 
 

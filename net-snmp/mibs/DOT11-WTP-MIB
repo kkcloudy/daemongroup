@@ -21,8 +21,14 @@ IMPORTS
 	TimeTicks,
 	enterprises
        			FROM SNMPv2-SMI;
+	InetAddressIPv6 ::= TEXTUAL-CONVENTION
+	DISPLAY-HINT "2x:"
+     	STATUS       current
+     	DESCRIPTION "This data type is used to model IPv6 addresses. This is a binary string of 16 octets in networkbyte-order."
+	SYNTAX       OCTET STRING (SIZE (16))
+
 dot11WtpGroup MODULE-IDENTITY
-    LAST-UPDATED "201309170000Z"        -- Sep 17th, 2013
+    LAST-UPDATED "201311280000Z"        -- Nov 28th, 2013
     ORGANIZATION " AuteLan Network Management Working Group
                   http://www.autelan.com"
     CONTACT-INFO
@@ -51,7 +57,7 @@ dot11WtpGroup MODULE-IDENTITY
 
          This MIB module contains managed object definitions for
          the AuteLan Protocol."
-    REVISION    "201309170000Z"
+    REVISION    "201311280000Z"
     DESCRIPTION
         "Initial version published as RFC xxx,
 	wtp means ACCESS POINT(AP)."
@@ -1099,7 +1105,8 @@ Dot11WtpParaEntry ::=SEQUENCE{
 	wtpAccessTime				DisplayString,
 	wtpStartTime				DisplayString,
 	wtpImagadataTime			DisplayString,
-	wtpConfigUpdateTime			DisplayString
+	wtpConfigUpdateTime			DisplayString,
+	wtpIpv6NetPrefixLen			INTEGER
 }
 
 wtpCurBssid	 			OBJECT-TYPE
@@ -1303,9 +1310,14 @@ wtpConfigUpdateTime			OBJECT-TYPE
 					STATUS     	current
 					DESCRIPTION
 				        	"wtp configupdate time."
-					::= { dot11WtpParaEntry 20 }					
-					
-					
+					::= { dot11WtpParaEntry 20 }	
+wtpIpv6NetPrefixLen			OBJECT-TYPE
+					SYNTAX     INTEGER(1..128)
+					MAX-ACCESS read-only
+					STATUS     current
+					DESCRIPTION
+				        	"The prefix length of Ipv6 net ."
+					::= { dot11WtpParaEntry 22 }								
 					
 dot11WtpStatisticsTable OBJECT-TYPE
     SYNTAX      SEQUENCE OF Dot11WtpStatisticsEntry
@@ -2091,7 +2103,8 @@ Dot11WtpStaEntry ::=SEQUENCE{
 	wtpTerminalTxSignalStrengthPkts		OCTET STRING,	
 	APRxRates				DisplayString,
 	APTxRates				DisplayString,
-	MAXofRateset				DisplayString
+	MAXofRateset				DisplayString,
+	wtpStaIPV6Addr				InetAddressIPv6
 }
 
 wtpStaMacAddr	 		OBJECT-TYPE
@@ -2316,7 +2329,13 @@ MAXofRateset				OBJECT-TYPE
 					DESCRIPTION
 				        	"The max rate of consultation wireless rate set."
 					::= { dot11WtpStaEntry 29 }
-
+wtpStaIPV6Addr				OBJECT-TYPE
+					SYNTAX     InetAddressIPv6 
+					MAX-ACCESS read-only
+					STATUS     current
+					DESCRIPTION
+				        	"The station ipv6 address."
+					::= { dot11WtpStaEntry 30 }
 					
 
 dot11WtpWlanFaultTable 	OBJECT-TYPE
@@ -4442,7 +4461,8 @@ Dot11WtpDeviceInfoEntry ::=SEQUENCE{
 	wtpFlashRemain				INTEGER,
 	wtpWayGetIP				INTEGER,
 	wtpWorkTemp				DisplayString,
-	wtpIP					IpAddress
+	wtpIP					IpAddress,
+	wtpIpv6Address				InetAddressIPv6
 }
 wtpCPUType	 			OBJECT-TYPE
 					SYNTAX     	DisplayString 
@@ -4595,6 +4615,13 @@ wtpIP	 				OBJECT-TYPE
 					DESCRIPTION
 				        	"AP IP address."
 					::= { dot11WtpDeviceInfoEntry 18 }
+wtpIpv6Address	 			OBJECT-TYPE
+					SYNTAX     InetAddressIPv6 
+					MAX-ACCESS read-only
+					STATUS     current
+					DESCRIPTION
+				        	"AP IPv6 address."
+					::= { dot11WtpDeviceInfoEntry 19 }
 --****************************************file operation*************************************
 dot11WtpConfigFileUpdateTable OBJECT-TYPE
 	    SYNTAX      SEQUENCE OF Dot11WtpConfigFileUpdateEntry
@@ -6460,7 +6487,8 @@ Dot11WtpEndStaInfoEntry ::=SEQUENCE{
 	wtpStaSecurityCiphers	INTEGER,
         wtpAuthenModel          INTEGER,
         wtpSecurityCiphers      INTEGER,
-        apEndStaID              INTEGER
+        apEndStaID              INTEGER,
+	wtpStaIPV6Address	InetAddressIPv6
 } 
 wtpEndWMMSta		OBJECT-TYPE
 			SYNTAX     INTEGER
@@ -6598,6 +6626,14 @@ apEndStaID        OBJECT-TYPE
 			DESCRIPTION
 				"apID."
 			::= { dot11WtpEndStaInfoEntry 13}
+
+wtpStaIPV6Address			OBJECT-TYPE
+					SYNTAX     InetAddressIPv6
+					MAX-ACCESS read-only
+					STATUS     current
+					DESCRIPTION
+				        	"The Station IPV6Address."
+					::= { dot11WtpEndStaInfoEntry 17 }
 			
 --**********************************************************************************************
 dot11BssStaInfoTable OBJECT-TYPE
@@ -8524,7 +8560,8 @@ Dot11PortalUserInfoEntry ::=SEQUENCE {
 	portalUsername                   DisplayString,
 	portalUserUptime                 DisplayString,
 	portalUseronline         	 TimeTicks,
-	userAuthType			 INTEGER
+	userAuthType			 INTEGER,
+	portalUseripv6address		InetAddressIPv6
 }
 
 portalUserip				OBJECT-TYPE
@@ -8570,7 +8607,15 @@ userAuthType				OBJECT-TYPE
 					STATUS     current
 					DESCRIPTION
 				        	"The user auth typ."
-					::= { dot11PortalUserInfoEntry 5 }																			
+					::= { dot11PortalUserInfoEntry 5 }
+
+portalUseripv6address			OBJECT-TYPE
+					SYNTAX     InetAddressIPv6
+					MAX-ACCESS read-only
+					STATUS     current
+					DESCRIPTION
+				        	"The portal User ipv6address ."
+					::= { dot11PortalUserInfoEntry 7 }																			
 
 dot11WtpBssidTeminalTable    	OBJECT-TYPE
 				SYNTAX	SEQUENCE OF Dot11WtpBssidTeminalEntry

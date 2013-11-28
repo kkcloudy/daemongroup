@@ -380,7 +380,11 @@ free_snmp_view_oid_list(struct oid_list **oidHead){
 static int
 write_snmp_config(STSNMPSummary pstSummary, char *file_path ) {
 
-    char File_content[MAX_FILE_CONTENT] = { 0 };    
+    //char File_content[MAX_FILE_CONTENT] = { 0 };   
+
+    char *File_content= NULL;
+    File_content=(char *)malloc(MAX_FILE_CONTENT);
+    memset(File_content , 0,  MAX_FILE_CONTENT);
 
     char syscommand[512] = { 0 };
 
@@ -424,11 +428,30 @@ write_snmp_config(STSNMPSummary pstSummary, char *file_path ) {
     /*
         *  snmp bind udp port
         */
-    if(pstSummary.snmp_sysinfo.agent_port) {
+    if((pstSummary.snmp_sysinfo.agent_port) &&(pstSummary.snmp_sysinfo.agent_port_ipv6)){
         memset(syscommand, 0, sizeof(syscommand));
-        snprintf(syscommand, sizeof(syscommand) - 1, "agentaddress %d\n\n", pstSummary.snmp_sysinfo.agent_port);
+        snprintf(syscommand, sizeof(syscommand) - 1, "agentaddress udp:%d,udp6:%d\n\n", 
+				pstSummary.snmp_sysinfo.agent_port,pstSummary.snmp_sysinfo.agent_port_ipv6);
         strcat(File_content,syscommand);    
     }
+    else if((pstSummary.snmp_sysinfo.agent_port) &&(pstSummary.snmp_sysinfo.agent_port_ipv6 == 0)){
+        memset(syscommand, 0, sizeof(syscommand));
+        snprintf(syscommand, sizeof(syscommand) - 1, "agentaddress udp:%d,udp6:%d\n\n", 
+				pstSummary.snmp_sysinfo.agent_port, 161);
+        strcat(File_content,syscommand);    
+    }
+    else if((pstSummary.snmp_sysinfo.agent_port == 0) &&(pstSummary.snmp_sysinfo.agent_port_ipv6)){
+        memset(syscommand, 0, sizeof(syscommand));
+        snprintf(syscommand, sizeof(syscommand) - 1, "agentaddress udp:%d,udp6:%d\n\n", 
+				161 , pstSummary.snmp_sysinfo.agent_port_ipv6);
+        strcat(File_content,syscommand);    
+    }
+    else if((pstSummary.snmp_sysinfo.agent_port == 0) &&(pstSummary.snmp_sysinfo.agent_port_ipv6 == 0)){
+        memset(syscommand, 0, sizeof(syscommand));
+        snprintf(syscommand, sizeof(syscommand) - 1, "agentaddress udp:%d,udp6:%d\n\n", 161 , 161);
+        strcat(File_content,syscommand);    
+    }
+
     
     int i = 0;
     STCommunity *community_node = NULL;
@@ -479,6 +502,56 @@ write_snmp_config(STSNMPSummary pstSummary, char *file_path ) {
         }
         
     }
+
+    	i = 0;
+	IPV6STCommunity *ipv6_community_node = NULL;
+	for(i = 0, ipv6_community_node = pstSummary.ipv6_communityHead; 
+	    i < pstSummary.ipv6_community_num&& NULL != ipv6_community_node; 
+	    i++, ipv6_community_node = ipv6_community_node->next)
+	{
+    
+	    if(RULE_ENABLE == ipv6_community_node->status) {
+		 /*
+		*  com2sec6
+		*/
+		memset(sec_name, 0, sizeof(sec_name));
+		if(ACCESS_MODE_RO == ipv6_community_node->access_mode) {
+		    snprintf(sec_name, sizeof(sec_name) - 1, "%s_ReadOnly", ipv6_community_node->community);
+		}
+		else if(ACCESS_MODE_RW == ipv6_community_node->access_mode){
+		    snprintf(sec_name, sizeof(sec_name) - 1, "%s_ReadWrite", ipv6_community_node->community);
+		}
+    
+		memset(syscommand, 0, sizeof(syscommand));
+		snprintf(syscommand, sizeof(syscommand) - 1, "com2sec6 %s %s/%d %s \n", sec_name, 
+			ipv6_community_node->ip_addr, ipv6_community_node->prefix, ipv6_community_node->community);
+		strcat(File_content, syscommand);
+    
+    
+		/*
+		*  group
+		*/	  
+		memset(group_name, 0, sizeof(group_name));
+		if(ACCESS_MODE_RO == ipv6_community_node->access_mode)
+		    strcpy(group_name , "MyROGroup6");
+		else if(ACCESS_MODE_RW == ipv6_community_node->access_mode)
+		    strcpy(group_name , "MyRWGroup6");
+    
+		if(RULE_ENABLE == pstSummary.snmp_sysinfo.v1_status) {
+		    memset(syscommand, 0, sizeof(syscommand));
+		    snprintf(syscommand, sizeof(syscommand) - 1, "group %s v1 %s \n", group_name, sec_name);
+		    strcat(File_content , syscommand);
+		}
+		
+		if(RULE_ENABLE == pstSummary.snmp_sysinfo.v2c_status){
+		    memset(syscommand, 0, sizeof(syscommand));
+		    snprintf(syscommand, sizeof(syscommand) - 1, "group %s v2c %s \n", group_name, sec_name);
+		    strcat(File_content , syscommand);
+		}
+		strcat(File_content,"\n\n");
+	    }
+	}
+
 
     /*
         * 根据v3用户添加v3 group
@@ -543,7 +616,7 @@ write_snmp_config(STSNMPSummary pstSummary, char *file_path ) {
 
 
      /*
-        * v1 v2c 向安全组授权相应的视图
+        * ipv4 v1 v2c 向安全组授权相应的视图
         */   
     for(i = 0, community_node = pstSummary.communityHead;
         i < pstSummary.community_num && NULL != community_node; 
@@ -554,6 +627,22 @@ write_snmp_config(STSNMPSummary pstSummary, char *file_path ) {
                 strcat(File_content,"access  MyROGroup  \"\"  any  noauth  exact  all  none  none\n");
             else if(ACCESS_MODE_RW == community_node->access_mode)
                 strcat(File_content,"access  MyRWGroup  \"\"  any  noauth  exact  all  all  all\n");
+        }
+    }
+    strcat(File_content,"\n\n");
+
+    /*
+       * ipv6 v1 v2c 向安全组授权相应的视图
+       */   
+    for(i = 0, ipv6_community_node = pstSummary.ipv6_communityHead;
+        i < pstSummary.ipv6_community_num && NULL != ipv6_community_node; 
+        i++, ipv6_community_node = ipv6_community_node->next ) {
+    
+        if(RULE_ENABLE == ipv6_community_node->status) {
+            if(ACCESS_MODE_RO == ipv6_community_node->access_mode)
+                strcat(File_content,"access  MyROGroup6  \"\"  any  noauth  exact  all  none  none\n");
+            else if(ACCESS_MODE_RW == ipv6_community_node->access_mode)
+                strcat(File_content,"access  MyRWGroup6  \"\"  any  noauth  exact  all  all  all\n");
         }
     }
     strcat(File_content,"\n\n");
@@ -905,6 +994,39 @@ snmp_show_community(STCommunity **community_array, unsigned int *community_num) 
     return AC_MANAGE_SUCCESS;
 }
 
+int 
+snmp_show_community_ipv6(IPV6STCommunity **community_array, unsigned int *community_num) {
+    if(NULL == community_array || NULL == community_num) {
+        return AC_MANAGE_INPUT_TYPE_ERROR;
+    }
+    *community_array = NULL;
+    *community_num = 0;
+
+    if(0 == snmpSummary.ipv6_community_num) {
+        return AC_MANAGE_CONFIG_NONEXIST;
+    }
+    
+    IPV6STCommunity *temp_community = (IPV6STCommunity *)calloc(snmpSummary.ipv6_community_num, sizeof(IPV6STCommunity));
+    if(NULL == temp_community){
+        return AC_MANAGE_MALLOC_ERROR;
+    }
+
+    IPV6STCommunity *community_node = NULL;
+    int i = 0;
+    for(i = 0, community_node = snmpSummary.ipv6_communityHead; 
+        i < snmpSummary.ipv6_community_num && NULL != community_node; 
+        i++, community_node = community_node->next) {
+        
+        memcpy(&temp_community[i], community_node, sizeof(IPV6STCommunity));
+    }
+
+    *community_array = temp_community;
+    *community_num = snmpSummary.ipv6_community_num;
+    
+    return AC_MANAGE_SUCCESS;
+}
+
+
 static void
 copy_view_oid(STSNMPView *dest_view, STSNMPView *src_view) {
     if(NULL == dest_view || NULL == src_view) {
@@ -1253,6 +1375,101 @@ snmp_del_pfm_interface(char *ifName, unsigned int port) {
     return AC_MANAGE_CONFIG_NONEXIST;
 }
 
+int
+snmp_add_pfm_interface_ipv6(char *ifName, unsigned int port) {
+    syslog(LOG_DEBUG, "enter snmp_add_pfm_interface\n");
+    
+    if(NULL == ifName) {
+        syslog(LOG_WARNING, "snmp_add_pfm_interface: input para error\n");
+        return AC_MANAGE_INPUT_TYPE_ERROR;
+    }
+    
+    syslog(LOG_DEBUG, "snmp_add_pfm_interface: ifName = %s\n", ifName);
+    int i = 0;
+    struct snmp_interface *interfaceNode = NULL;
+    for(i = 0, interfaceNode = snmpSummary.ipv6_interfaceHead; 
+        i < snmpSummary.ipv6_interface_num && NULL != interfaceNode; 
+        i++, interfaceNode = interfaceNode->next) {
+
+        if(0 == strcmp(ifName, interfaceNode->ifName)) {
+            return AC_MANAGE_CONFIG_EXIST;
+        }
+    }
+
+    if(snmpSummary.ipv6_interface_num >= MAX_SNMP_PFM_INTERFACE_NUM) {
+        return AC_MANAGE_CONFIG_REACH_MAX_NUM;
+    }
+    
+    struct snmp_interface *tempNode = (struct snmp_interface *)malloc(sizeof(struct snmp_interface));
+    if(NULL == tempNode){
+        syslog(LOG_WARNING, "snmp_add_pfm_interface:malloc tempNode error\n!");
+        return AC_MANAGE_MALLOC_ERROR;
+    }
+
+    int ret = snmp_config_pfm_table_entry(ifName, port, 1);
+    if(AC_MANAGE_SUCCESS != ret) {
+        MANAGE_FREE(tempNode);
+        return ret;
+    }
+    
+    memset(tempNode, 0, sizeof(struct snmp_interface));
+    strncpy(tempNode->ifName, ifName, sizeof(tempNode->ifName) - 1);
+
+    tempNode->next = snmpSummary.ipv6_interfaceHead;
+    snmpSummary.ipv6_interfaceHead = tempNode;
+    snmpSummary.ipv6_interface_num++;
+    
+    syslog(LOG_DEBUG, "exit snmp_add_pfm_interface\n");
+    return AC_MANAGE_SUCCESS;
+}
+
+
+int
+snmp_del_pfm_interface_ipv6(char *ifName, unsigned int port) {
+    syslog(LOG_DEBUG, "enter snmp_del_pfm_interface\n");
+    
+    if(NULL == ifName) {
+        syslog(LOG_WARNING, "snmp_del_pfm_interface: input para error\n");
+        return AC_MANAGE_INPUT_TYPE_ERROR;
+    }
+
+    int i = 0;
+    struct snmp_interface *interfaceNode = NULL, *prior = NULL;
+    for(i = 0, interfaceNode = snmpSummary.ipv6_interfaceHead, prior = interfaceNode; 
+        i < snmpSummary.ipv6_interface_num && NULL != interfaceNode; 
+        i++, prior = interfaceNode, interfaceNode = interfaceNode->next) {
+
+        if(0 == strcmp(ifName, interfaceNode->ifName)) {
+                    
+            int ret = snmp_config_pfm_table_entry(ifName, port, 0);
+            if(AC_MANAGE_SUCCESS != ret) {
+                return ret;
+            }
+            
+            if(prior == interfaceNode) {
+                snmpSummary.ipv6_interfaceHead = interfaceNode->next;
+            }
+            else {
+                prior->next = interfaceNode->next;
+            }
+            MANAGE_FREE(interfaceNode);
+            snmpSummary.ipv6_interface_num--;
+            
+            if(0 == snmpSummary.ipv6_interface_num) {
+                snmpSummary.snmp_sysinfo.agent_port_ipv6 = 0;
+				write_snmp_config(snmpSummary, CONF_FILE_PATH); 
+			}
+                
+            syslog(LOG_DEBUG, "exit snmp_del_pfm_interface\n");
+            return  AC_MANAGE_SUCCESS;
+        }
+    }
+
+    syslog(LOG_DEBUG, "snmp_del_pfm_interface: can`t find interface %s port %d\n", ifName, port);
+    return AC_MANAGE_CONFIG_NONEXIST;
+}
+
+
 void
 snmp_clear_pfm_interface(void) {
     syslog(LOG_DEBUG, "enter snmp_clear_pfm_interface\n");
@@ -1266,7 +1483,18 @@ snmp_clear_pfm_interface(void) {
 
     snmpSummary.interface_num = 0;
     snmpSummary.snmp_sysinfo.agent_port = 0;
+
+
     
+    while(snmpSummary.ipv6_interfaceHead){
+        struct snmp_interface *temp = snmpSummary.ipv6_interfaceHead->next;
+        snmp_config_pfm_table_entry(snmpSummary.ipv6_interfaceHead->ifName, snmpSummary.snmp_sysinfo.agent_port_ipv6, 0);
+        MANAGE_FREE(snmpSummary.ipv6_interfaceHead);
+        snmpSummary.ipv6_interfaceHead = temp;
+    }
+
+    snmpSummary.ipv6_interface_num = 0;
+    snmpSummary.snmp_sysinfo.agent_port_ipv6 = 0;
     syslog(LOG_DEBUG, "exit snmp_clear_pfm_interface\n");
     return ;
 }
@@ -1305,6 +1533,39 @@ snmp_show_pfm_interface(SNMPINTERFACE **interface_array, unsigned int *interface
 }
 
 int 
+snmp_show_pfm_interface_ipv6(SNMPINTERFACE **interface_array, unsigned int *interface_num) {
+    if(NULL == interface_array || NULL == interface_num) {
+        return AC_MANAGE_INPUT_TYPE_ERROR;
+    }
+    
+    *interface_array = NULL;
+    *interface_num = 0;
+
+    if(0 == snmpSummary.ipv6_interface_num) {
+        return AC_MANAGE_CONFIG_NONEXIST;
+    }
+    
+    SNMPINTERFACE *temp_interface = (SNMPINTERFACE *)calloc(snmpSummary.ipv6_interface_num, sizeof(SNMPINTERFACE));
+    if(NULL == temp_interface){
+        return AC_MANAGE_MALLOC_ERROR;
+    }
+    
+    int i = 0;
+    SNMPINTERFACE *interface_node = NULL;
+    for(i = 0, interface_node = snmpSummary.ipv6_interfaceHead; 
+        i < snmpSummary.ipv6_interface_num && NULL != interface_node; 
+        i++, interface_node = interface_node->next) {
+	        memcpy(&temp_interface[i].ifName, interface_node->ifName, sizeof(interface_node->ifName));
+    }
+
+    *interface_array = temp_interface;
+    *interface_num = snmpSummary.ipv6_interface_num;
+    
+    return AC_MANAGE_SUCCESS;
+}
+
+
+int 
 snmp_add_community(STCommunity pstCommunity) {
 
     int i = 0;    
@@ -1337,6 +1598,40 @@ snmp_add_community(STCommunity pstCommunity) {
     
     return AC_MANAGE_SUCCESS;
 }
+int 
+snmp_add_community_ipv6(IPV6STCommunity pstCommunity) {
+
+    int i = 0;    
+    IPV6STCommunity *temp = NULL;
+    for(i = 0, temp = snmpSummary.ipv6_communityHead; 
+        i < snmpSummary.ipv6_community_num && NULL != temp; i++, 
+        temp = temp->next) {
+
+        if(0 == strcmp(temp->community, pstCommunity.community)) {
+            return AC_MANAGE_CONFIG_EXIST;
+        }
+    }
+
+    if(snmpSummary.ipv6_community_num >= MAX_COMMUNITY_NUM) {
+        return AC_MANAGE_CONFIG_REACH_MAX_NUM;
+    }
+
+    IPV6STCommunity *temp_node = (IPV6STCommunity *)malloc(sizeof(IPV6STCommunity));
+    if(NULL == temp_node) {
+        return AC_MANAGE_MALLOC_ERROR;
+    }
+
+    memcpy(temp_node, &pstCommunity, sizeof(IPV6STCommunity));
+
+    temp_node->next = snmpSummary.ipv6_communityHead;
+    snmpSummary.ipv6_communityHead = temp_node;
+    snmpSummary.ipv6_community_num++;
+
+    write_snmp_config(snmpSummary, CONF_FILE_PATH); 
+    
+    return AC_MANAGE_SUCCESS;
+}
+
 
 int 
 snmp_del_community(char *community) {
@@ -1371,6 +1666,39 @@ snmp_del_community(char *community) {
 }
 
 int 
+snmp_del_community_ipv6(char *community) {
+    if(NULL == community) {
+        return AC_MANAGE_INPUT_TYPE_ERROR;
+    }
+
+    int i = 0;    
+    IPV6STCommunity *temp = NULL, *prior = NULL ;
+    for(i = 0, temp = snmpSummary.ipv6_communityHead, prior = temp; 
+        i < snmpSummary.ipv6_community_num && NULL != temp; 
+        i++, prior = temp, temp = temp->next) {
+        
+        if(0 == strcmp(temp->community, community)) {
+        
+            if(prior == temp) {
+                snmpSummary.ipv6_communityHead = temp->next;
+            }
+            else {
+                prior->next = temp->next;
+            }
+            MANAGE_FREE(temp);
+            snmpSummary.ipv6_community_num--;
+            
+            write_snmp_config(snmpSummary, CONF_FILE_PATH);
+            
+            return  AC_MANAGE_SUCCESS;
+        }
+    }
+
+    return AC_MANAGE_CONFIG_NONEXIST;
+}
+
+
+int 
 snmp_set_community(char *old_community, STCommunity pstCommunity) {
     if(NULL == old_community) {
         return AC_MANAGE_INPUT_TYPE_ERROR;
@@ -1395,6 +1723,32 @@ snmp_set_community(char *old_community, STCommunity pstCommunity) {
 
     return AC_MANAGE_CONFIG_NONEXIST;
 }
+int 
+snmp_set_community_ipv6(char *old_community, IPV6STCommunity pstCommunity) {
+    if(NULL == old_community) {
+        return AC_MANAGE_INPUT_TYPE_ERROR;
+    }
+
+    int i = 0;    
+    IPV6STCommunity *temp = NULL;
+    for(i = 0, temp = snmpSummary.ipv6_communityHead; 
+        i < snmpSummary.ipv6_community_num && NULL != temp; i++, 
+        temp = temp->next) {
+
+        if(0 == strcmp(temp->community, old_community)) {
+
+            pstCommunity.next = temp->next;
+            memcpy(temp, &pstCommunity, sizeof(IPV6STCommunity));
+            
+            write_snmp_config(snmpSummary, CONF_FILE_PATH); 
+
+            return AC_MANAGE_SUCCESS;
+        }
+    }
+
+    return AC_MANAGE_CONFIG_NONEXIST;
+}
+
 
 void
 snmp_clear_community(void) {
@@ -1404,6 +1758,14 @@ snmp_clear_community(void) {
         snmpSummary.communityHead = temp;
     }
     snmpSummary.community_num = 0;
+
+    while(snmpSummary.ipv6_communityHead) {
+        IPV6STCommunity *temp_ipv6 = snmpSummary.ipv6_communityHead->next;
+        MANAGE_FREE(snmpSummary.ipv6_communityHead);
+        snmpSummary.ipv6_communityHead = temp_ipv6;
+    }
+    snmpSummary.ipv6_community_num = 0;
+    
     return ;
 }
 
@@ -2656,7 +3018,22 @@ snmp_show_running_config(struct running_config **configHead, unsigned int type) 
                         }
                     }
                 }
-                
+
+		if(snmpSummary.snmp_sysinfo.agent_port_ipv6) {
+		   int i = 0;
+		   SNMPINTERFACE *interfaceNode = NULL;
+		   for(i = 0, interfaceNode = snmpSummary.ipv6_interfaceHead; 
+		       i < snmpSummary.ipv6_interface_num && NULL != interfaceNode; 
+		       i++, interfaceNode = interfaceNode->next) {
+			struct running_config *temp_config = manage_new_running_config();
+			if(temp_config) {
+			    snprintf(temp_config->showStr, sizeof(temp_config->showStr) - 1, "%ssnmp ipv6  apply interface %s udp port %d",
+					space_str, interfaceNode->ifName, snmpSummary.snmp_sysinfo.agent_port_ipv6);
+			    manage_insert_running_config(configHead, &configEnd, temp_config);
+			}
+		    }
+		}
+
 			if(snmpSummary.snmp_sysinfo.cache_time > 0 && DEFAULT_SNMPD_CACHETIME != snmpSummary.snmp_sysinfo.cache_time) {                  
 				struct running_config *temp_config = manage_new_running_config();
 				if(temp_config) {
@@ -2680,6 +3057,28 @@ snmp_show_running_config(struct running_config **configHead, unsigned int type) 
                         if(temp_config) {
                             snprintf(temp_config->showStr, sizeof(temp_config->showStr) - 1, "%sadd community %s %s %s %s %s",
                                     space_str, community_node->community, community_node->ip_addr, community_node->ip_mask, 
+                                    ACCESS_MODE_RO == community_node->access_mode ? "ro" : "rw",
+                                    RULE_ENABLE == community_node->status ? "enable" : "disable");
+                            manage_insert_running_config(configHead, &configEnd, temp_config);
+                        }
+                        
+                    }
+                }
+		
+                /*
+                    *   snmp ipv6 community
+                    */
+                if(snmpSummary.ipv6_community_num  > 0) {
+                    int i = 0;
+                    IPV6STCommunity *community_node = NULL;
+                    for(i = 0, community_node = snmpSummary.ipv6_communityHead; 
+                        i < snmpSummary.ipv6_community_num && NULL != community_node; 
+                        i++, community_node = community_node->next) {
+                        
+                        struct running_config *temp_config = manage_new_running_config();
+                        if(temp_config) {
+                            snprintf(temp_config->showStr, sizeof(temp_config->showStr) - 1, "%sadd ipv6 community %s %s %d %s %s",
+                                    space_str, community_node->community, community_node->ip_addr, community_node->prefix, 
                                     ACCESS_MODE_RO == community_node->access_mode ? "ro" : "rw",
                                     RULE_ENABLE == community_node->status ? "enable" : "disable");
                             manage_insert_running_config(configHead, &configEnd, temp_config);

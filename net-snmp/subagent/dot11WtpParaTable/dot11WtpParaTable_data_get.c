@@ -2548,7 +2548,57 @@ wtpConfigUpdateTime_get( dot11WtpParaTable_rowreq_ctx *rowreq_ctx, char **wtpCon
     return MFD_SUCCESS;
 } /* wtpConfigUpdateTime_get */
 
+/*---------------------------------------------------------------------
+ * DOT11-WTP-MIB::dot11WtpParaEntry.wtpIpv6NetPrefixLen
+ * wtpIpv6NetPrefixLen is subid 22 of dot11WtpParaEntry.
+ * Its status is Current, and its access level is ReadOnly.
+ * OID: .1.3.6.1.4.1.31656.6.1.1.2.5.1.22
+ * Description:
+The prefix length of Ipv6 net .
+ *
+ * Attributes:
+ *   accessible 1     isscalar 0     enums  0      hasdefval 0
+ *   readable   1     iscolumn 1     ranges 1      hashint   0
+ *   settable   0
+ *
+ * Ranges:  1 - 128;
+ *
+ * Its syntax is INTEGER (based on perltype INTEGER)
+ * The net-snmp type is ASN_INTEGER. The C type decl is long (long)
+ */
+/**
+ * Extract the current value of the wtpIpv6NetPrefixLen data.
+ *
+ * Set a value using the data context for the row.
+ *
+ * @param rowreq_ctx
+ *        Pointer to the row request context.
+ * @param wtpIpv6NetPrefixLen_val_ptr
+ *        Pointer to storage for a long variable
+ *
+ * @retval MFD_SUCCESS         : success
+ * @retval MFD_SKIP            : skip this node (no value for now)
+ * @retval MFD_ERROR           : Any other error
+ */
+int
+wtpIpv6NetPrefixLen_get( dot11WtpParaTable_rowreq_ctx *rowreq_ctx, long * wtpIpv6NetPrefixLen_val_ptr )
+{
+   /** we should have a non-NULL pointer */
+   netsnmp_assert( NULL != wtpIpv6NetPrefixLen_val_ptr );
 
+
+    DEBUGMSGTL(("verbose:dot11WtpParaTable:wtpIpv6NetPrefixLen_get","called\n"));
+
+    netsnmp_assert(NULL != rowreq_ctx);
+
+/*
+ * TODO:231:o: |-> Extract the current value of the wtpIpv6NetPrefixLen data.
+ * copy (* wtpIpv6NetPrefixLen_val_ptr ) from rowreq_ctx->data
+ */
+    (* wtpIpv6NetPrefixLen_val_ptr ) = rowreq_ctx->data.wtpIpv6NetPrefixLen;
+
+    return MFD_SUCCESS;
+} /* wtpIpv6NetPrefixLen_get */
 
 
 

@@ -2145,6 +2145,91 @@ wtpIP_get( dot11WtpDeviceInfoTable_rowreq_ctx *rowreq_ctx, u_long * wtpIP_val_pt
     return MFD_SUCCESS;
 } /* wtpIP_get */
 
+/*---------------------------------------------------------------------
+ * DOT11-WTP-MIB::dot11WtpDeviceInfoEntry.wtpIpv6Address
+ * wtpIpv6Address is subid 19 of dot11WtpDeviceInfoEntry.
+ * Its status is Current, and its access level is ReadOnly.
+ * OID: .1.3.6.1.4.1.31656.6.1.1.1.2.1.19
+ * Description:
+AP IPv6 address.
+ *
+ * Attributes:
+ *   accessible 1     isscalar 0     enums  0      hasdefval 0
+ *   readable   1     iscolumn 1     ranges 1      hashint   1
+ *   settable   0
+ *   hint: 2x:
+ *
+ * Ranges:  16;
+ *
+ * Its syntax is InetAddressIPv6 (based on perltype OCTETSTR)
+ * The net-snmp type is ASN_OCTET_STR. The C type decl is char (char)
+ * This data type requires a length.  (Max 16)
+ */
+/**
+ * Extract the current value of the wtpIpv6Address data.
+ *
+ * Set a value using the data context for the row.
+ *
+ * @param rowreq_ctx
+ *        Pointer to the row request context.
+ * @param wtpIpv6Address_val_ptr_ptr
+ *        Pointer to storage for a char variable
+ * @param wtpIpv6Address_val_ptr_len_ptr
+ *        Pointer to a size_t. On entry, it will contain the size (in bytes)
+ *        pointed to by wtpIpv6Address.
+ *        On exit, this value should contain the data size (in bytes).
+ *
+ * @retval MFD_SUCCESS         : success
+ * @retval MFD_SKIP            : skip this node (no value for now)
+ * @retval MFD_ERROR           : Any other error
+*
+ * @note If you need more than (*wtpIpv6Address_val_ptr_len_ptr) bytes of memory,
+ *       allocate it using malloc() and update wtpIpv6Address_val_ptr_ptr.
+ *       <b>DO NOT</b> free the previous pointer.
+ *       The MFD helper will release the memory you allocate.
+ *
+ * @remark If you call this function yourself, you are responsible
+ *         for checking if the pointer changed, and freeing any
+ *         previously allocated memory. (Not necessary if you pass
+ *         in a pointer to static memory, obviously.)
+ */
+int
+wtpIpv6Address_get( dot11WtpDeviceInfoTable_rowreq_ctx *rowreq_ctx, char **wtpIpv6Address_val_ptr_ptr, size_t *wtpIpv6Address_val_ptr_len_ptr )
+{
+   /** we should have a non-NULL pointer and enough storage */
+   netsnmp_assert( (NULL != wtpIpv6Address_val_ptr_ptr) && (NULL != *wtpIpv6Address_val_ptr_ptr));
+   netsnmp_assert( NULL != wtpIpv6Address_val_ptr_len_ptr );
+
+
+    DEBUGMSGTL(("verbose:dot11WtpDeviceInfoTable:wtpIpv6Address_get","called\n"));
+
+    netsnmp_assert(NULL != rowreq_ctx);
+
+/*
+ * TODO:231:o: |-> Extract the current value of the wtpIpv6Address data.
+ * copy (* wtpIpv6Address_val_ptr_ptr ) data and (* wtpIpv6Address_val_ptr_len_ptr ) from rowreq_ctx->data
+ */
+    /*
+     * make sure there is enough space for wtpIpv6Address data
+     */
+    if ((NULL == (* wtpIpv6Address_val_ptr_ptr )) ||
+        ((* wtpIpv6Address_val_ptr_len_ptr ) <
+         (rowreq_ctx->data.wtpIpv6Address_len* sizeof(rowreq_ctx->data.wtpIpv6Address[0])))) {
+        /*
+         * allocate space for wtpIpv6Address data
+         */
+        (* wtpIpv6Address_val_ptr_ptr ) = malloc(rowreq_ctx->data.wtpIpv6Address_len* sizeof(rowreq_ctx->data.wtpIpv6Address[0]));
+        if(NULL == (* wtpIpv6Address_val_ptr_ptr )) {
+            snmp_log(LOG_ERR,"could not allocate memory\n");
+            return MFD_ERROR;
+        }
+    }
+    (* wtpIpv6Address_val_ptr_len_ptr ) = rowreq_ctx->data.wtpIpv6Address_len* sizeof(rowreq_ctx->data.wtpIpv6Address[0]);
+    memcpy( (* wtpIpv6Address_val_ptr_ptr ), rowreq_ctx->data.wtpIpv6Address, rowreq_ctx->data.wtpIpv6Address_len* sizeof(rowreq_ctx->data.wtpIpv6Address[0]) );
+
+    return MFD_SUCCESS;
+} /* wtpIpv6Address_get */
+
 
 
 /** @} */

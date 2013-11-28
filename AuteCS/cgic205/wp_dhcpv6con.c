@@ -234,7 +234,7 @@ int ShowDhcpconPage(struct list *lcontrol,struct list *lpublic)
 	fprintf(cgiOut,"<th width=80>&nbsp;</th>");
 	fprintf(cgiOut,"</tr>");
 	
-	cflag = ccgi_show_ipv6_pool(mode,index, &head,&count);
+	cflag = 0;//ccgi_show_ipv6_pool(mode,index, &head,&count);
 			////////////////////////////////////////////modify
 	if(cflag == 1)
 	{

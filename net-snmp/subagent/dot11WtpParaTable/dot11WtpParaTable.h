@@ -186,6 +186,10 @@ size_t      wtpImagadataTime_len; /* # of char elements, not bytes */
          */
    char   wtpConfigUpdateTime[255];
 size_t      wtpConfigUpdateTime_len; /* # of char elements, not bytes */
+        /*
+         * wtpIpv6NetPrefixLen(22)/INTEGER/ASN_INTEGER/long(long)//l/A/w/e/R/d/h
+         */
+   u_long   wtpIpv6NetPrefixLen;
     
 } dot11WtpParaTable_data;
 

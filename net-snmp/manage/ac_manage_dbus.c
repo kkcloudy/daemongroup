@@ -78,6 +78,9 @@ ac_manage_dbus_message_handler(DBusConnection *connection, DBusMessage *message,
 		else if(dbus_message_is_method_call(message, AC_MANAGE_SNMP_DBUS_INTERFACE, AC_MANAGE_DBUS_CONFIG_SNMP_PFM_REQUESTPKTS)) {
 			reply = ac_manage_dbus_config_snmp_pfm_requestpkts(connection, message, user_data);
 		} 
+		else if(dbus_message_is_method_call(message, AC_MANAGE_SNMP_DBUS_INTERFACE, AC_MANAGE_DBUS_CONFIG_SNMP_PFM_REQUESTPKTS_IPV6)) {
+			reply = ac_manage_dbus_config_snmp_pfm_requestpkts_ipv6(connection, message, user_data);
+		} 
 		else if(dbus_message_is_method_call(message, AC_MANAGE_SNMP_DBUS_INTERFACE, AC_MANAGE_DBUS_CONFIG_SNMP_VERSION_MODE)) {
 			reply = ac_manage_dbus_config_snmp_version_mode(connection, message, user_data);
 		}
@@ -87,11 +90,20 @@ ac_manage_dbus_message_handler(DBusConnection *connection, DBusMessage *message,
 		else if(dbus_message_is_method_call(message, AC_MANAGE_SNMP_DBUS_INTERFACE, AC_MANAGE_DBUS_CONFIG_SNMP_ADD_COMMUNITY)) {
 			reply = ac_manage_dbus_config_snmp_add_community(connection, message, user_data);
 		}
+		else if(dbus_message_is_method_call(message, AC_MANAGE_SNMP_DBUS_INTERFACE, AC_MANAGE_DBUS_CONFIG_SNMP_ADD_COMMUNITY_IPV6)) {
+			reply = ac_manage_dbus_config_snmp_add_community_ipv6(connection, message, user_data);
+		}
 		else if(dbus_message_is_method_call(message, AC_MANAGE_SNMP_DBUS_INTERFACE, AC_MANAGE_DBUS_CONFIG_SNMP_SET_COMMUNITY)) {
 			reply = ac_manage_dbus_config_snmp_set_community(connection, message, user_data);
 		}
+		else if(dbus_message_is_method_call(message, AC_MANAGE_SNMP_DBUS_INTERFACE, AC_MANAGE_DBUS_CONFIG_SNMP_SET_COMMUNITY_IPV6)) {
+			reply = ac_manage_dbus_config_snmp_set_community_ipv6(connection, message, user_data);
+		}
 		else if(dbus_message_is_method_call(message, AC_MANAGE_SNMP_DBUS_INTERFACE, AC_MANAGE_DBUS_CONFIG_SNMP_DEL_COMMUNITY)) {
 			reply = ac_manage_dbus_config_snmp_del_community(connection, message, user_data);
+		}
+		else if(dbus_message_is_method_call(message, AC_MANAGE_SNMP_DBUS_INTERFACE, AC_MANAGE_DBUS_CONFIG_SNMP_DEL_COMMUNITY_IPV6)) {
+			reply = ac_manage_dbus_config_snmp_del_community_ipv6(connection, message, user_data);
 		}
 		else if(dbus_message_is_method_call(message, AC_MANAGE_SNMP_DBUS_INTERFACE, AC_MANAGE_DBUS_CONFIG_SNMP_VIEW)) {
 			reply = ac_manage_dbus_config_snmp_view(connection, message, user_data);
@@ -159,11 +171,17 @@ ac_manage_dbus_message_handler(DBusConnection *connection, DBusMessage *message,
 		else if(dbus_message_is_method_call(message, AC_MANAGE_SNMP_DBUS_INTERFACE, AC_MANAGE_DBUS_SHOW_SNMP_PFM_INTERFACE)) {
 			reply = ac_manage_dbus_show_snmp_pfm_interface(connection, message, user_data);
 		}
+		else if(dbus_message_is_method_call(message, AC_MANAGE_SNMP_DBUS_INTERFACE, AC_MANAGE_DBUS_SHOW_SNMP_PFM_INTERFACE_IPV6)) {
+			reply = ac_manage_dbus_show_snmp_pfm_interface_ipv6(connection, message, user_data);
+		}
 		else if(dbus_message_is_method_call(message, AC_MANAGE_SNMP_DBUS_INTERFACE, AC_MANAGE_DBUS_SHOW_SNMP_RUNNING_CONFIG)) {
 			reply = ac_manage_dbus_show_snmp_running_config(connection, message, user_data);
 		}
 		else if(dbus_message_is_method_call(message, AC_MANAGE_SNMP_DBUS_INTERFACE, AC_MANAGE_DBUS_SHOW_SNMP_COMMUNITY)) {
 			reply = ac_manage_dbus_show_snmp_community(connection, message, user_data);
+		}
+		else if(dbus_message_is_method_call(message, AC_MANAGE_SNMP_DBUS_INTERFACE, AC_MANAGE_DBUS_SHOW_SNMP_COMMUNITY_IPV6)) {
+			reply = ac_manage_dbus_show_snmp_community_ipv6(connection, message, user_data);
 		}
 		else if(dbus_message_is_method_call(message, AC_MANAGE_SNMP_DBUS_INTERFACE, AC_MANAGE_DBUS_SHOW_SNMP_VIEW)) {
 			reply = ac_manage_dbus_show_snmp_view(connection, message, user_data);

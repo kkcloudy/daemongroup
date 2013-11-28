@@ -52,8 +52,15 @@ IMPORTS
 	TimeTicks,
 	enterprises
        			FROM SNMPv2-SMI;
+
+	InetAddressIPv6 ::= TEXTUAL-CONVENTION
+	DISPLAY-HINT "2x:"
+     	STATUS       current
+     	DESCRIPTION "This data type is used to model IPv6 addresses. This is a binary string of 16 octets in networkbyte-order."
+	SYNTAX       OCTET STRING (SIZE (16))
+
 dot11AcGroup MODULE-IDENTITY
-    LAST-UPDATED "201305020000Z"        -- May 2th, 2013
+    LAST-UPDATED "201311280000Z"        -- Nov 28th 2013
     ORGANIZATION " AuteLan Network Management Working Group
                   http://www.autelan.com"
     CONTACT-INFO
@@ -89,7 +96,7 @@ Haidian
 
          This MIB module contains managed object definitions for
          the AuteLan Protocol."
-    REVISION    "201305020000Z"
+    REVISION    "201311280000Z"
     DESCRIPTION
         "Initial version published as RFC xxx"
          ::= { 	dot11-wireless 2 }
@@ -387,7 +394,7 @@ sysBackupIdentity			OBJECT-TYPE
 				MAX-ACCESS 	read-only
 				STATUS		current
 				DESCRIPTION
-					"Show the config name and write the config(1)  "
+					"Show the AC  backup identity "
 				::={ dot11AcInfo 36 }
 				
 sysBackupMode				OBJECT-TYPE
@@ -399,7 +406,7 @@ sysBackupMode				OBJECT-TYPE
 				MAX-ACCESS 	read-only
 				STATUS		current
 				DESCRIPTION
-					"Show the config name and write the config(1)  "
+					"Show the AC  backup mode "
 				::={ dot11AcInfo 37 }
 
 sysBackupStatus				OBJECT-TYPE
@@ -411,7 +418,7 @@ sysBackupStatus				OBJECT-TYPE
 				MAX-ACCESS 	read-only
 				STATUS		current
 				DESCRIPTION
-					"Show the config name and write the config(1)  "
+					"Show the AC  backup status "
 				::={ dot11AcInfo 38 }
 
 sysBackupNetworManageIp		OBJECT-TYPE
@@ -419,7 +426,7 @@ sysBackupNetworManageIp		OBJECT-TYPE
 				MAX-ACCESS 	read-only
 				STATUS		current
 				DESCRIPTION
-					"Show the config name and write the config(1)  "
+					"Show the AC  backup networkManage IpAddress "
 				::={ dot11AcInfo 39 }
 
 sysBackupSwitchTimes         	OBJECT-TYPE
@@ -429,6 +436,14 @@ sysBackupSwitchTimes         	OBJECT-TYPE
                                 DESCRIPTION
                                         "switch times of vrrp hansi status"
                                 ::={ dot11AcInfo 40 }
+sysBackupNetworManageIpv6	OBJECT-TYPE
+				SYNTAX		InetAddressIPv6
+				MAX-ACCESS 	read-only
+				STATUS		current
+				DESCRIPTION
+					"Show the AC  backup networkManage IPV6Address "
+				::={ dot11AcInfo 41 }
+
 
 dot11AcDeviceInfo	OBJECT IDENTIFIER ::={ dot11AcGeneralInfo 2 }
 acDeviceName	  		OBJECT-TYPE
@@ -5827,7 +5842,157 @@ DHCPOffernum		        OBJECT-TYPE
 				STATUS     current
 				DESCRIPTION
 					"DHCP offer num for pool."
-				::= { dot11DHCPUseageEntry 8 }													
+				::= { dot11DHCPUseageEntry 8 }	
+
+-- **********************************************************************	
+dot11DHCPIpv6PoolConfigTable		OBJECT-TYPE
+			    	SYNTAX      SEQUENCE OF Dot11DHCPIpv6PoolConfigEntry
+			    	MAX-ACCESS  not-accessible
+			    	STATUS      current
+			    	DESCRIPTION
+			        	"This table shows DHCP IPV6 Address Pool information."
+			    	::= { dot11Service 7 }	
+
+dot11DHCPIpv6PoolConfigEntry  	OBJECT-TYPE
+			    	SYNTAX      Dot11DHCPIpv6PoolConfigEntry
+			    	MAX-ACCESS  not-accessible
+			    	STATUS      current
+			    	DESCRIPTION
+			        	"DHCP IPV6 Address Pool information."
+			    	INDEX { Ipv6DHCPID }
+			    	::= { dot11DHCPIpv6PoolConfigTable 1 }
+			   
+Dot11DHCPIpv6PoolConfigEntry	::=SEQUENCE{
+        Ipv6DHCPID              	INTEGER,
+        Ipv6DHCPPoolName		DisplayString,
+	IPv6PoolStartAddr		InetAddressIPv6,
+	IPv6PoolStopAddr		InetAddressIPv6,
+	IPv6NetPrefixLen	       	INTEGER,
+        FirDNSServerIPv6Address 	InetAddressIPv6,
+        SeconDNSServerIPv6Address 	InetAddressIPv6,
+        Ipv6LeasePeriod            	TimeTicks,
+        Ipv6DHCPRowStatus		RowStatus
+}
+Ipv6DHCPID			OBJECT-TYPE
+				SYNTAX  INTEGER
+				MAX-ACCESS read-create
+				STATUS     current
+				DESCRIPTION
+					"Create DHCPIPv6POOL ID."
+				::= { dot11DHCPIpv6PoolConfigEntry 1 }
+
+Ipv6DHCPPoolName		OBJECT-TYPE
+				SYNTAX  DisplayString
+				MAX-ACCESS read-create
+				STATUS     current
+				DESCRIPTION
+					"DHCP IPV6 pool name."
+				::= { dot11DHCPIpv6PoolConfigEntry 2 }	
+				
+IPv6PoolStartAddr 	        OBJECT-TYPE
+				SYNTAX      	InetAddressIPv6
+				MAX-ACCESS  	read-create
+				STATUS      	current
+				DESCRIPTION
+				      "IPV6 Address pool starting address."
+				::= { dot11DHCPIpv6PoolConfigEntry 3 }
+
+IPv6PoolStopAddr		OBJECT-TYPE
+				SYNTAX  InetAddressIPv6
+				MAX-ACCESS read-create
+				STATUS     current
+				DESCRIPTION
+					"IPV6 Address pool ending address."
+				::= { dot11DHCPIpv6PoolConfigEntry 4 }				
+				
+IPv6NetPrefixLen		OBJECT-TYPE
+				SYNTAX  INTEGER(1..128)
+				MAX-ACCESS read-create
+				STATUS     current
+				DESCRIPTION
+					"Prefix length."
+				::= { dot11DHCPIpv6PoolConfigEntry 5 }			
+
+FirDNSServerIPv6Address	        OBJECT-TYPE
+				SYNTAX  InetAddressIPv6
+				MAX-ACCESS read-create
+				STATUS     current
+				DESCRIPTION
+					"IP Address first DNS IP Address."
+				::= { dot11DHCPIpv6PoolConfigEntry 6 }
+			
+SeconDNSServerIPv6Address	        OBJECT-TYPE
+				SYNTAX  InetAddressIPv6
+				MAX-ACCESS read-create
+				STATUS     current
+				DESCRIPTION
+					"IP Address second DNS IP Address."
+				::= { dot11DHCPIpv6PoolConfigEntry 7 }
+
+Ipv6LeasePeriod		        OBJECT-TYPE
+				SYNTAX  TimeTicks
+				MAX-ACCESS read-create
+				STATUS     current
+				DESCRIPTION
+					"IPv6 Address Lease Periods."
+
+				::= { dot11DHCPIpv6PoolConfigEntry 8 }
+					
+Ipv6DHCPRowStatus	        OBJECT-TYPE
+			    	SYNTAX      RowStatus
+			    	MAX-ACCESS  read-create
+			    	STATUS      current
+			    	DESCRIPTION
+			        	"This variable is used to create, modify, and/or delete a row
+			        	 in this table."
+			    	::= { dot11DHCPIpv6PoolConfigEntry 9 }	
+
+dot11DHCPIpv6UseageTable		OBJECT-TYPE
+			    	SYNTAX      SEQUENCE OF Dot11DHCPIpv6UseageEntry
+			    	MAX-ACCESS  not-accessible
+			    	STATUS      current
+			    	DESCRIPTION
+			        	"This table shows DHCP IPV6 Address Pool information."
+			    	::= { dot11Service 8 }		
+			    	
+dot11DHCPIpv6UseageEntry  	OBJECT-TYPE
+			    	SYNTAX      Dot11DHCPIpv6UseageEntry
+			    	MAX-ACCESS  not-accessible
+			    	STATUS      current
+			    	DESCRIPTION
+			        	"DHCP IPV6 Address Pool information."
+			    	INDEX { Ipv6DHCPUSEID }
+			    	::= { dot11DHCPIpv6UseageTable 1 }	
+			    	
+Dot11DHCPIpv6UseageEntry	::=SEQUENCE{
+        Ipv6DHCPUSEID              	INTEGER,
+	DHCPIpv6poolName		DisplayString,
+	DHCPIpv6PoolUseage		INTEGER
+}	
+Ipv6DHCPUSEID			OBJECT-TYPE
+				SYNTAX  INTEGER
+				MAX-ACCESS read-only
+				STATUS     current
+				DESCRIPTION
+					"Create DHCPIPv6POOL ID."
+				::= { dot11DHCPIpv6UseageEntry 1 }  	
+				
+DHCPIpv6poolName		 OBJECT-TYPE
+				SYNTAX  DisplayString
+				MAX-ACCESS read-only
+				STATUS     current
+				DESCRIPTION
+					"DHCP IPV6 pool name."
+				::= { dot11DHCPIpv6UseageEntry 2 }		
+
+DHCPIpv6PoolUseage		OBJECT-TYPE
+				SYNTAX  INTEGER
+				MAX-ACCESS read-only
+				STATUS     current
+				DESCRIPTION
+					"DHCP IPV6 pool useage."
+				::= { dot11DHCPIpv6UseageEntry 3 }
+														
 -- **********************************************************************
 -- * dot11AlarmConfiguration
 -- **********************************************************************

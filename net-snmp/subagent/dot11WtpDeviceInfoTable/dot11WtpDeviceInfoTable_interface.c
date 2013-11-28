@@ -701,6 +701,11 @@ rc = wtpWorkTemp_get(rowreq_ctx, (char **)&var->val.string, &var->val_len );
 rc = wtpIP_get(rowreq_ctx, (u_long *)var->val.string );
         break;
 
+    /* wtpIpv6Address(19)/InetAddressIPv6/ASN_OCTET_STR/char(char)//L/A/w/e/R/d/H */
+    case COLUMN_WTPIPV6ADDRESS:
+    var->type = ASN_OCTET_STR;
+rc = wtpIpv6Address_get(rowreq_ctx, (char **)&var->val.string, &var->val_len );
+        break;
      default:
          snmp_log(LOG_ERR,"unknown column %d in _dot11WtpDeviceInfoTable_get_column\n", column);
          break;

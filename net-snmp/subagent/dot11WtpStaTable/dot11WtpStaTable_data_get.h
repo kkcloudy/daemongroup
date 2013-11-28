@@ -95,6 +95,7 @@ extern "C" {
     int APTxRates_get( dot11WtpStaTable_rowreq_ctx *rowreq_ctx, char **APTxRates_val_ptr_ptr, size_t *APTxRates_val_ptr_len_ptr );
 	int MAXofRateset_map(char **mib_MAXofRateset_val_ptr_ptr, size_t *mib_MAXofRateset_val_ptr_len_ptr, char *raw_MAXofRateset_val_ptr, size_t raw_MAXofRateset_val_ptr_len, int allow_realloc);
     int MAXofRateset_get( dot11WtpStaTable_rowreq_ctx *rowreq_ctx, char **MAXofRateset_val_ptr_ptr, size_t *MAXofRateset_val_ptr_len_ptr );
+    int wtpStaIPV6Addr_get( dot11WtpStaTable_rowreq_ctx *rowreq_ctx, char **wtpStaIPV6Addr_val_ptr_ptr, size_t *wtpStaIPV6Addr_val_ptr_len_ptr );
 
 
 int dot11WtpStaTable_indexes_set_tbl_idx(dot11WtpStaTable_mib_index *tbl_idx, char *wtpMacAddr_val_ptr,  size_t wtpMacAddr_val_ptr_len, char *wtpStaMacAddr_val_ptr,  size_t wtpStaMacAddr_val_ptr_len);

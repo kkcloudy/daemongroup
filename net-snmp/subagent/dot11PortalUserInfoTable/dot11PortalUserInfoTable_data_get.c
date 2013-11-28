@@ -755,5 +755,91 @@ userAuthType_get( dot11PortalUserInfoTable_rowreq_ctx *rowreq_ctx, u_long * user
     return MFD_SUCCESS;
 } 
 
+/*---------------------------------------------------------------------
+ * DOT11-WTP-MIB::dot11PortalUserInfoEntry.portalUseripv6address
+ * portalUseripv6address is subid 7 of dot11PortalUserInfoEntry.
+ * Its status is Current, and its access level is ReadOnly.
+ * OID: .1.3.6.1.4.1.31656.6.1.1.17.2.1.7
+ * Description:
+The portal User ipv6address .
+ *
+ * Attributes:
+ *   accessible 1     isscalar 0     enums  0      hasdefval 0
+ *   readable   1     iscolumn 1     ranges 1      hashint   1
+ *   settable   0
+ *   hint: 2x:
+ *
+ * Ranges:  16;
+ *
+ * Its syntax is InetAddressIPv6 (based on perltype OCTETSTR)
+ * The net-snmp type is ASN_OCTET_STR. The C type decl is char (char)
+ * This data type requires a length.  (Max 16)
+ */
+/**
+ * Extract the current value of the portalUseripv6address data.
+ *
+ * Set a value using the data context for the row.
+ *
+ * @param rowreq_ctx
+ *        Pointer to the row request context.
+ * @param portalUseripv6address_val_ptr_ptr
+ *        Pointer to storage for a char variable
+ * @param portalUseripv6address_val_ptr_len_ptr
+ *        Pointer to a size_t. On entry, it will contain the size (in bytes)
+ *        pointed to by portalUseripv6address.
+ *        On exit, this value should contain the data size (in bytes).
+ *
+ * @retval MFD_SUCCESS         : success
+ * @retval MFD_SKIP            : skip this node (no value for now)
+ * @retval MFD_ERROR           : Any other error
+*
+ * @note If you need more than (*portalUseripv6address_val_ptr_len_ptr) bytes of memory,
+ *       allocate it using malloc() and update portalUseripv6address_val_ptr_ptr.
+ *       <b>DO NOT</b> free the previous pointer.
+ *       The MFD helper will release the memory you allocate.
+ *
+ * @remark If you call this function yourself, you are responsible
+ *         for checking if the pointer changed, and freeing any
+ *         previously allocated memory. (Not necessary if you pass
+ *         in a pointer to static memory, obviously.)
+ */
+int
+portalUseripv6address_get( dot11PortalUserInfoTable_rowreq_ctx *rowreq_ctx, char **portalUseripv6address_val_ptr_ptr, size_t *portalUseripv6address_val_ptr_len_ptr )
+{
+   /** we should have a non-NULL pointer and enough storage */
+   netsnmp_assert( (NULL != portalUseripv6address_val_ptr_ptr) && (NULL != *portalUseripv6address_val_ptr_ptr));
+   netsnmp_assert( NULL != portalUseripv6address_val_ptr_len_ptr );
+
+
+    DEBUGMSGTL(("verbose:dot11PortalUserInfoTable:portalUseripv6address_get","called\n"));
+
+    netsnmp_assert(NULL != rowreq_ctx);
+
+/*
+ * TODO:231:o: |-> Extract the current value of the portalUseripv6address data.
+ * copy (* portalUseripv6address_val_ptr_ptr ) data and (* portalUseripv6address_val_ptr_len_ptr ) from rowreq_ctx->data
+ */
+    /*
+     * make sure there is enough space for portalUseripv6address data
+     */
+    if ((NULL == (* portalUseripv6address_val_ptr_ptr )) ||
+        ((* portalUseripv6address_val_ptr_len_ptr ) <
+         (rowreq_ctx->data.portalUseripv6address_len* sizeof(rowreq_ctx->data.portalUseripv6address[0])))) {
+        /*
+         * allocate space for portalUseripv6address data
+         */
+        (* portalUseripv6address_val_ptr_ptr ) = malloc(rowreq_ctx->data.portalUseripv6address_len* sizeof(rowreq_ctx->data.portalUseripv6address[0]));
+        if(NULL == (* portalUseripv6address_val_ptr_ptr )) {
+            snmp_log(LOG_ERR,"could not allocate memory\n");
+            return MFD_ERROR;
+        }
+    }
+    (* portalUseripv6address_val_ptr_len_ptr ) = rowreq_ctx->data.portalUseripv6address_len* sizeof(rowreq_ctx->data.portalUseripv6address[0]);
+    memcpy( (* portalUseripv6address_val_ptr_ptr ), rowreq_ctx->data.portalUseripv6address, rowreq_ctx->data.portalUseripv6address_len* sizeof(rowreq_ctx->data.portalUseripv6address[0]) );
+
+    return MFD_SUCCESS;
+} /* portalUseripv6address_get */
+
+
 
 /** @} */

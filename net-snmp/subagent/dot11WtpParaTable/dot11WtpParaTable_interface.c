@@ -713,6 +713,12 @@ rc = wtpImagadataTime_get(rowreq_ctx, (char **)&var->val.string, &var->val_len )
 rc = wtpConfigUpdateTime_get(rowreq_ctx, (char **)&var->val.string, &var->val_len );
         break;
 
+    /* wtpIpv6NetPrefixLen(22)/INTEGER/ASN_INTEGER/long(u_long)//l/A/w/e/R/d/h */
+    case COLUMN_WTPIPV6NETPREFIXLEN:
+    var->val_len = sizeof(u_long);
+    var->type = ASN_INTEGER;
+rc = wtpIpv6NetPrefixLen_get(rowreq_ctx, (u_long *)var->val.string );
+        break;
      default:
          snmp_log(LOG_ERR,"unknown column %d in _dot11WtpParaTable_get_column\n", column);
          break;

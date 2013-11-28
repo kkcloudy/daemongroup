@@ -469,6 +469,80 @@ DEFUN(config_backupnetip_func,
 	return CMD_SUCCESS;
 }
 
+DEFUN(config_backupnetip_ipv6_func,
+	config_backupnetip_ipv6_cmd,
+	"set redundancy backup network-manage-ipaddress (local_hansi|remote_hansi) A-B ipv6 IP",
+	SHOW_STR
+	"Config backupnetipV6 information\n"
+	"Config backupnetipV6 information\n"
+	"BackupnetipV6 information\n"
+
+)
+{
+	int ret=-1;
+	struct in6_addr s;
+	unsigned int local_id = 0;
+	unsigned int slot_id = 0;
+	unsigned int slot_num = 0;
+	unsigned int instance_id = 0;
+	char   hansi_id[10] = {0};
+	struct bkacinfo_st rule;
+		
+	if (ACINFO_NODE != vty->node) 
+	{
+		vty_out (vty, "Terminal mode change must under acinfo mode!\n");
+		return CMD_WARNING;
+	}
+
+	if(0 == strcmp(argv[0], "local_hansi")) {
+		local_id = 1;
+	}
+	else if(0 == strcmp(argv[0], "remote_hansi")) {
+		local_id = 0;
+	}
+	else {
+		vty_out(vty, "Input hansi type is error!\n");
+		return CMD_WARNING;
+	}
+
+	if(0 == sscanf(argv[1], "%d-%d", &slot_id, &instance_id)) {
+		vty_out(vty, "Input instance (%s) type is error\n", argv[1]);
+		return CMD_WARNING;
+	}
+	if(0 == slot_id || slot_id > MAX_SLOT) {
+		vty_out(vty, "Error slot id input : %s\n", argv[1]);
+		return CMD_WARNING;
+	}
+	//slot_num = slot_id;
+	if(0 == instance_id || instance_id > 16) {
+		vty_out(vty, "Error instance id input : %s\n", argv[1]);
+		return CMD_WARNING;
+	}
+	snprintf(hansi_id,sizeof(hansi_id)-1,"%d-%d-%d",slot_id,local_id,instance_id);
+
+	ret = inet_pton(AF_INET6, argv[2], (void *)&s);//1:表示成功;0表示格式错误;-1表示解析错误
+	if(ret !=1)
+	{
+		vty_out(vty, "IPv6 address doesn't meet format!");
+		return CMD_WARNING;
+	}
+
+	memset(&rule,0,sizeof(struct bkacinfo_st));
+	strncpy(rule.insid,hansi_id,sizeof(rule.insid));
+	strncpy(rule.netip,argv[2],sizeof(rule.netip));
+
+	if(dbus_connection_dcli[slot_id]->dcli_dbus_connection)
+	{
+		ac_manage_set_bkacinfo_rule(dbus_connection_dcli[slot_id]->dcli_dbus_connection, NETIP_TYPE_IPV6,&rule, OPT_ADD);
+	}
+	else
+	{
+		vty_out(vty, "no connection to slot %d \n",slot_id);
+        return CMD_WARNING;
+	}
+	return CMD_SUCCESS;
+}
+
 
 DEFUN(config_backupidentity_func,
 	config_backupidentity_cmd,
@@ -528,8 +602,8 @@ DEFUN(show_backupidentity_func,
 	vty_out(vty,"Identity :%s\n",ahead.identity);
 	vty_out(vty,"Mode :%s\n",ahead.mode);
 	vty_out(vty,"Status :%s\n",ahead.status);
-	vty_out(vty,"%-2s  %-20s\n","ID","IP");
 	vty_out(vty,"--  -----------------\n");	
+	vty_out(vty,"%-2s  %-20s\n","ID","IPV4");
 	if(0 == retu)
 	{
 		aq = ahead.netipst.next;
@@ -539,13 +613,21 @@ DEFUN(show_backupidentity_func,
 			aq = aq->next;
 		}
 	}
-	vty_out(vty,"==================================================================================\n");
+	vty_out(vty,"--  -----------------\n");	
+	vty_out(vty,"%-2s  %-20s\n","ID","IPV6");
+	if(0 == retu)
+	{
+		aq = ahead.netipst_ipv6.next;
+		while(aq != NULL)
+		{
+			vty_out(vty,"%s\n",aq->netip);
+			aq = aq->next;
+		}
+	}
+	vty_out(vty,"===========================================================================\n");
 	Free_read_acinfo_xml(&ahead);
 	return CMD_SUCCESS;
 }
-
-
-
 
 int dcli_acinfo_show_running_config(struct vty* vty)
 {
@@ -656,7 +738,18 @@ int dcli_acinfo_show_running_config(struct vty* vty)
 			memset(netip,0,sizeof(netip));
 			sscanf(aq->netip,"%s %s",sid,netip);
 			memset(cmd,0,sizeof(cmd)-1);
-			snprintf(cmd,sizeof(cmd)-1," set redundancy backup instance %s network-manage %s\n",sid,netip);
+			snprintf(cmd,sizeof(cmd)-1," set redundancy backup instance %s IPV4 network-manage %s\n",sid,netip);
+			vtysh_add_show_string(cmd );
+			aq = aq->next;
+		}
+		aq = ahead.netipst_ipv6.next;
+		while(aq != NULL)
+		{
+			memset(sid,0,sizeof(sid));
+			memset(netip,0,sizeof(netip));
+			sscanf(aq->netip,"%s %s",sid,netip);
+			memset(cmd,0,sizeof(cmd)-1);
+			snprintf(cmd,sizeof(cmd)-1," set redundancy backup instance %s IPV6 network-manage %s\n",sid,netip);
 			vtysh_add_show_string(cmd );
 			aq = aq->next;
 		}
@@ -689,8 +782,8 @@ void dcli_acinfo_init
 	install_element(ACINFO_NODE, &config_backupmode_cmd);
 	install_element(ACINFO_NODE, &show_backupidentity_cmd);
 	install_element(ACINFO_NODE, &config_backupstatus_cmd);
-	install_element(ACINFO_NODE, &config_backupnetip_cmd);	
-	
+	install_element(ACINFO_NODE, &config_backupnetip_cmd);
+	install_element(ACINFO_NODE, &config_backupnetip_ipv6_cmd);
 }
 
 ///////////////////////////////////////////

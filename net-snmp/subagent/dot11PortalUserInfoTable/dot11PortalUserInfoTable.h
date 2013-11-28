@@ -99,6 +99,12 @@ size_t      portalUserUptime_len; /* # of char elements, not bytes */
 
    u_long   userAuthType;
     
+        /*
+         * portalUseripv6address(7)/InetAddressIPv6/ASN_OCTET_STR/char(char)//L/A/w/e/R/d/H
+         */
+   char   portalUseripv6address[128];
+size_t      portalUseripv6address_len; /* # of char elements, not bytes */
+    
 } dot11PortalUserInfoTable_data;
 
 

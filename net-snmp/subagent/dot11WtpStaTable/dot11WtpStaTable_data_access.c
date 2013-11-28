@@ -697,6 +697,27 @@ dot11WtpStaTable_cache_load(netsnmp_container *container)
 	size_t MAXofRateset_len = MIN(strlen(temp), sizeof(rowreq_ctx->data.MAXofRateset) - 1);
     rowreq_ctx->data.MAXofRateset_len = MAXofRateset_len * sizeof(rowreq_ctx->data.MAXofRateset[0]);
     memcpy( rowreq_ctx->data.MAXofRateset, temp, rowreq_ctx->data.MAXofRateset_len );
+    
+    /*
+     * setup/save data for wtpStaIPV6Addr
+     * wtpStaIPV6Addr(30)/InetAddressIPv6/ASN_OCTET_STR/char(char)//L/A/w/e/R/d/H
+     */
+    /** no mapping */
+    /*
+     * make sure there is enough space for wtpStaIPV6Addr data
+     */
+	char wtpStaIPV6Address[128]={0};
+	int  wtpStaIPV6Address_len= 0;
+	memset(wtpStaIPV6Address, 0, sizeof(wtpStaIPV6Address));
+	sprintf(wtpStaIPV6Address,"%x:%x:%x:%x:%x:%x:%x:%x",StaNode->wtpStaIp6.s6_addr16[0],StaNode->wtpStaIp6.s6_addr16[1]
+							    ,StaNode->wtpStaIp6.s6_addr16[2],StaNode->wtpStaIp6.s6_addr16[3]
+							    ,StaNode->wtpStaIp6.s6_addr16[4],StaNode->wtpStaIp6.s6_addr16[5]
+							    ,StaNode->wtpStaIp6.s6_addr16[6],StaNode->wtpStaIp6.s6_addr16[7]);
+
+	wtpStaIPV6Address_len = MIN(strlen(wtpStaIPV6Address),sizeof(rowreq_ctx->data.wtpStaIPV6Addr)-1);
+	rowreq_ctx->data.wtpStaIPV6Addr_len = wtpStaIPV6Address_len* sizeof(rowreq_ctx->data.wtpStaIPV6Addr[0]);
+	memcpy( rowreq_ctx->data.wtpStaIPV6Addr, wtpStaIPV6Address, wtpStaIPV6Address_len );
+    
         /*
          * insert into table container
          */

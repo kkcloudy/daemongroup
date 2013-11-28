@@ -698,8 +698,18 @@ dot11WtpDeviceInfoTable_cache_load(netsnmp_container *container)
     }
 	
     rowreq_ctx->data.wtpIP = wtpIP;
-    
-        
+
+   int	wtpStaIPV6Address_len= 0;
+   char *p =NULL;
+   if(q->wtp_ipv6_ip)
+   {	
+   	   char *ip=q->wtp_ipv6_ip;
+   	   p= strtok(ip, "/");
+	   wtpStaIPV6Address_len = MIN(strlen(p),sizeof(rowreq_ctx->data.wtpIpv6Address)-1);
+	   rowreq_ctx->data.wtpIpv6Address_len = wtpStaIPV6Address_len* sizeof(rowreq_ctx->data.wtpIpv6Address[0]);
+	   memcpy( rowreq_ctx->data.wtpIpv6Address, p, wtpStaIPV6Address_len );
+   }
+
         /*
          * insert into table container
          */

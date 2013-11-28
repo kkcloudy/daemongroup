@@ -12,6 +12,9 @@
 /* include our parent header */
 #include "dot11PortalUserInfoTable.h"
 
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
 
 #include "dot11PortalUserInfoTable_data_access.h"
 #include "mibs_public.h"
@@ -63,6 +66,22 @@
  * @retval MFD_SUCCESS : success.
  * @retval MFD_ERROR   : unrecoverable error.
  */
+static char *
+ipv6_to_str(struct in6_addr *ipv6, char *str, size_t size)
+{
+	if (NULL == str || NULL == ipv6) {
+		return NULL;
+	}
+	
+	memset(str, 0, size);
+	if(!inet_ntop(AF_INET6, (const void *)ipv6, str, size)) {
+		return "[ipv6 error]";
+	}
+
+	return str;
+}
+
+
 int
 dot11PortalUserInfoTable_init_data(dot11PortalUserInfoTable_registration_ptr dot11PortalUserInfoTable_reg)
 {
@@ -251,6 +270,8 @@ dot11PortalUserInfoTable_cache_load(netsnmp_container *container)
 	char pUserUptime[255] = { 0 };
 	char portalUserUptime[255] = { 0 };
 	size_t portalUserUptime_len = 0;
+	char wtpStaIPV6Address[128]={0};
+	int  wtpStaIPV6Address_len= 0;
 	
 	snmp_log(LOG_DEBUG, "enter list_instance_parameter\n");
 	list_instance_parameter(&paraHead, SNMPD_INSTANCE_MASTER); 
@@ -436,7 +457,21 @@ dot11PortalUserInfoTable_cache_load(netsnmp_container *container)
 	     */
 	    rowreq_ctx->data.portalUseronline = user->session_time * 100;
 	    
-		rowreq_ctx->data.userAuthType = 1;
+	rowreq_ctx->data.userAuthType = 1;
+
+	
+	memset(wtpStaIPV6Address, 0, sizeof(wtpStaIPV6Address));
+	ipv6_to_str((struct in6_addr *)(user->user_ipv6), wtpStaIPV6Address, sizeof(wtpStaIPV6Address));
+	/*sprintf(wtpStaIPV6Address,"%x:%x:%x:%x:%x:%x:%x:%x",user->user_ipv6.s6_addr16[0],user->user_ipv6.s6_addr16[1]
+							,user->user_ipv6.s6_addr16[2],user->user_ipv6.s6_addr16[3]
+							,user->user_ipv6.s6_addr16[4],user->user_ipv6.s6_addr16[5]
+							,user->user_ipv6.s6_addr16[6],user->user_ipv6.s6_addr16[7]);*/
+	
+	wtpStaIPV6Address_len = MIN(strlen(wtpStaIPV6Address),sizeof(rowreq_ctx->data.portalUseripv6address)-1);
+	rowreq_ctx->data.portalUseripv6address_len = wtpStaIPV6Address_len* sizeof(rowreq_ctx->data.portalUseripv6address[0]);
+	memcpy( rowreq_ctx->data.portalUseripv6address, wtpStaIPV6Address, wtpStaIPV6Address_len );
+
+		
 	        /*
 	         * insert into table container
 	         */
@@ -534,6 +569,16 @@ dot11PortalUserInfoTable_cache_load(netsnmp_container *container)
 					rowreq_ctx->data.userAuthType = StaNode->security_type;
 
 				}
+		    memset(wtpStaIPV6Address, 0, sizeof(wtpStaIPV6Address));
+		    sprintf(wtpStaIPV6Address,"%x:%x:%x:%x:%x:%x:%x:%x",StaNode->wtpStaIp6.s6_addr16[0],StaNode->wtpStaIp6.s6_addr16[1]
+								    ,StaNode->wtpStaIp6.s6_addr16[2],StaNode->wtpStaIp6.s6_addr16[3]
+								    ,StaNode->wtpStaIp6.s6_addr16[4],StaNode->wtpStaIp6.s6_addr16[5]
+								    ,StaNode->wtpStaIp6.s6_addr16[6],StaNode->wtpStaIp6.s6_addr16[7]);
+		    
+		    wtpStaIPV6Address_len = MIN(strlen(wtpStaIPV6Address),sizeof(rowreq_ctx->data.portalUseripv6address)-1);
+		    rowreq_ctx->data.portalUseripv6address_len = wtpStaIPV6Address_len* sizeof(rowreq_ctx->data.portalUseripv6address[0]);
+		    memcpy( rowreq_ctx->data.portalUseripv6address, wtpStaIPV6Address, wtpStaIPV6Address_len );
+		    
 				if(CONTAINER_INSERT(container, rowreq_ctx))
 				{
 					dot11PortalUserInfoTable_release_rowreq_ctx(rowreq_ctx);

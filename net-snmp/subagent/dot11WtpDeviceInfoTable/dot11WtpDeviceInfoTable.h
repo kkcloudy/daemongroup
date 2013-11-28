@@ -177,6 +177,12 @@ size_t      wtpWorkTemp_len; /* # of char elements, not bytes */
          */
    u_long   wtpIP;
     
+        /*
+         * wtpIpv6Address(19)/InetAddressIPv6/ASN_OCTET_STR/char(char)//L/A/w/e/R/d/H
+         */
+   char   wtpIpv6Address[128];
+size_t      wtpIpv6Address_len; /* # of char elements, not bytes */
+    
 } dot11WtpDeviceInfoTable_data;
 
 

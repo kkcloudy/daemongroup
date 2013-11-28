@@ -45,15 +45,26 @@ int ac_manage_config_snmp_pfm_requestpkts(DBusConnection *connection,
                                                         unsigned int port, 
                                                         unsigned int state);
 
+int ac_manage_config_snmp_pfm_requestpkts_ipv6(DBusConnection *connection, 
+                                                    char *ifName, 
+                                                    unsigned int port,
+                                                    unsigned int state);
+
 int ac_manage_config_snmp_version_mode(DBusConnection *connection, unsigned int version, unsigned int state);
 
 int ac_manage_config_snmp_update_sysinfo(DBusConnection *connection);
 
 int ac_manage_config_snmp_add_community(DBusConnection *connection, STCommunity *community_node);
 
+int ac_manage_config_snmp_add_community_ipv6(DBusConnection *connection, IPV6STCommunity *communityIPV6Node);
+
 int ac_manage_config_snmp_set_community(DBusConnection *connection, char *communityName, STCommunity *community_node);
 
+int ac_manage_config_snmp_set_community_ipv6(DBusConnection *connection,char *communityName,IPV6STCommunity *community_node) ;
+
 int ac_manage_config_snmp_del_community(DBusConnection *connection, char *community);
+
+int ac_manage_config_snmp_del_community_ipv6(DBusConnection *connection, char *community);
 
 int ac_manage_config_snmp_view(DBusConnection *connection, char *view_name, unsigned int mode);
 
@@ -87,8 +98,14 @@ int ac_manage_show_snmp_pfm_interface(DBusConnection *connection,
                                                     unsigned int *interface_num,
                                                     unsigned int *snmp_port);
 
+int ac_manage_show_snmp_pfm_interface_ipv6(DBusConnection *connection, 
+                                                SNMPINTERFACE **interface_array,
+                                                unsigned int *interface_num,
+                                                unsigned int *snmp_port) ;
                                             
 int ac_manage_show_snmp_community(DBusConnection *connection, STCommunity **community_array, unsigned int *community_num);
+
+int ac_manage_show_snmp_community_ipv6(DBusConnection *connection, IPV6STCommunity **community_array,unsigned int *community_num);
 
 void free_ac_manage_show_snmp_view(STSNMPView **view_array, unsigned int view_num);
 

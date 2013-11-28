@@ -910,6 +910,12 @@ dot11WtpParaTable_cache_load(netsnmp_container *container)
     rowreq_ctx->data.wtpConfigUpdateTime_len = wtpConfigUpdateTime_len * sizeof(rowreq_ctx->data.wtpConfigUpdateTime[0]);
     memcpy( rowreq_ctx->data.wtpConfigUpdateTime, wtpConfigUpdateTime, rowreq_ctx->data.wtpConfigUpdateTime_len );
     
+    /*
+     * setup/save data for wtpIpv6NetPrefixLen
+     * wtpIpv6NetPrefixLen(22)/INTEGER/ASN_INTEGER/long(long)//l/A/w/e/R/d/h
+     */
+    /** no mapping */
+    rowreq_ctx->data.wtpIpv6NetPrefixLen = q->wtp_ipv6_ip_prefix;
         
         /*
          * insert into table container

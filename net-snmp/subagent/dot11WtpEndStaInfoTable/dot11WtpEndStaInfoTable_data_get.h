@@ -70,6 +70,7 @@ extern "C" {
     int wtpSecurityCiphers_get( dot11WtpEndStaInfoTable_rowreq_ctx *rowreq_ctx, u_long * wtpSecurityCiphers_val_ptr );
     int apEndStaID_map(long *mib_apEndStaID_val_ptr, long raw_apEndStaID_val);
     int apEndStaID_get( dot11WtpEndStaInfoTable_rowreq_ctx *rowreq_ctx, long * apEndStaID_val_ptr );
+    int wtpStaIPV6Address_get( dot11WtpEndStaInfoTable_rowreq_ctx *rowreq_ctx, char **wtpStaIPV6Address_val_ptr_ptr, size_t *wtpStaIPV6Address_val_ptr_len_ptr );
 
 
 int dot11WtpEndStaInfoTable_indexes_set_tbl_idx(dot11WtpEndStaInfoTable_mib_index *tbl_idx, char *wtpMacAddr_val_ptr,  size_t wtpMacAddr_val_ptr_len, char *wtpStaMacAddr_val_ptr,  size_t wtpStaMacAddr_val_ptr_len);

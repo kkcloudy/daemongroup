@@ -640,6 +640,26 @@ dot11WtpEndStaInfoTable_cache_load(netsnmp_container *container)
      */
     rowreq_ctx->data.apEndStaID = terminal_q->wtpEndStaID;
     
+    /*
+     * setup/save data for wtpStaIPV6Address
+     * wtpStaIPV6Address(17)/InetAddressIPv6/ASN_OCTET_STR/char(char)//L/A/w/e/R/d/H
+     */
+    /** no mapping */
+    /*
+     * make sure there is enough space for wtpStaIPV6Address data
+     */
+    
+	char wtpStaIPV6Address[128]={0};
+	int  wtpStaIPV6Address_len= 0;
+	memset(wtpStaIPV6Address, 0, sizeof(wtpStaIPV6Address));
+	sprintf(wtpStaIPV6Address,"%x:%x:%x:%x:%x:%x:%x:%x",terminal_q->wtpStaIP6Address.s6_addr16[0],terminal_q->wtpStaIP6Address.s6_addr16[1]
+							,terminal_q->wtpStaIP6Address.s6_addr16[2],terminal_q->wtpStaIP6Address.s6_addr16[3]
+							,terminal_q->wtpStaIP6Address.s6_addr16[4],terminal_q->wtpStaIP6Address.s6_addr16[5]
+							,terminal_q->wtpStaIP6Address.s6_addr16[6],terminal_q->wtpStaIP6Address.s6_addr16[7]);
+	
+	wtpStaIPV6Address_len = MIN(strlen(wtpStaIPV6Address),sizeof(rowreq_ctx->data.wtpStaIPV6Address)-1);
+	rowreq_ctx->data.wtpStaIPV6Address_len = wtpStaIPV6Address_len* sizeof(rowreq_ctx->data.wtpStaIPV6Address[0]);
+	memcpy( rowreq_ctx->data.wtpStaIPV6Address, wtpStaIPV6Address, wtpStaIPV6Address_len );
         
         /*
          * insert into table container

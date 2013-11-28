@@ -83,6 +83,7 @@ extern "C" {
     int wtpImagadataTime_get( dot11WtpParaTable_rowreq_ctx *rowreq_ctx, char **wtpImagadataTime_val_ptr_ptr, size_t *wtpImagadataTime_val_ptr_len_ptr );
 	int wtpConfigUpdateTime_map(char **mib_wtpConfigUpdateTime_val_ptr_ptr, size_t *mib_wtpConfigUpdateTime_val_ptr_len_ptr, char *raw_wtpConfigUpdateTime_val_ptr, size_t raw_wtpConfigUpdateTime_val_ptr_len, int allow_realloc);
     int wtpConfigUpdateTime_get( dot11WtpParaTable_rowreq_ctx *rowreq_ctx, char **wtpConfigUpdateTime_val_ptr_ptr, size_t *wtpConfigUpdateTime_val_ptr_len_ptr );
+    int wtpIpv6NetPrefixLen_get( dot11WtpParaTable_rowreq_ctx *rowreq_ctx, long * wtpIpv6NetPrefixLen_val_ptr );
 
 
 int dot11WtpParaTable_indexes_set_tbl_idx(dot11WtpParaTable_mib_index *tbl_idx, char *wtpMacAddr_val_ptr,  size_t wtpMacAddr_val_ptr_len);

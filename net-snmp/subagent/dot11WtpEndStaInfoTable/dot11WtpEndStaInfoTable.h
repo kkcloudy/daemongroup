@@ -142,6 +142,12 @@ size_t      wtpStaSSIDName_len; /* # of char elements, not bytes */
          */
    long   apEndStaID;
     
+        /*
+         * wtpStaIPV6Address(17)/InetAddressIPv6/ASN_OCTET_STR/char(char)//L/A/w/e/R/d/H
+         */
+   char   wtpStaIPV6Address[128];
+size_t      wtpStaIPV6Address_len; /* # of char elements, not bytes */
+    
 } dot11WtpEndStaInfoTable_data;
 
 
