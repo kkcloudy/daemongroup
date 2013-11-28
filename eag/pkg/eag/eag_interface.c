@@ -144,6 +144,7 @@
 #define EAG_DBUS_METHOD_SHOW_USER_ALL			"eag_dbus_method_show_user_all"
 #define EAG_DBUS_METHOD_SHOW_USER_BY_USERNAME	"eag_dbus_method_show_user_by_username"
 #define EAG_DBUS_METHOD_SHOW_USER_BY_USERIP		"eag_dbus_method_show_user_by_userip"
+#define EAG_DBUS_METHOD_SHOW_USER_BY_USERIPV6	"eag_dbus_method_show_user_by_useripv6"
 #define EAG_DBUS_METHOD_SHOW_USER_BY_USERMAC	"eag_dbus_method_show_user_by_usermac"
 #define EAG_DBUS_METHOD_SHOW_USER_BY_INDEX		"eag_dbus_method_show_user_by_index"
 #define EAG_DBUS_METHOD_KICK_USER_BY_USERNAME	"eag_dbus_method_kick_user_by_username"
@@ -6788,6 +6789,155 @@ eag_show_user_by_userip(DBusConnection *connection,
 
 	dbus_message_append_args(	query,
 								DBUS_TYPE_UINT32, &userip,
+								DBUS_TYPE_INVALID );
+	
+	reply = dbus_connection_send_with_reply_and_block (
+						connection, query, -1, &err );
+	
+	dbus_message_unref(query);
+	
+	if (NULL == reply) {
+		if (dbus_error_is_set(&err)) {
+			dbus_error_free(&err);
+		}
+		return EAG_ERR_DBUS_FAILED;
+	} else {
+		dbus_message_iter_init(reply,&iter);
+		dbus_message_iter_get_basic(&iter, &iRet);
+		
+		if (EAG_RETURN_OK == iRet) {
+			dbus_message_iter_next(&iter);
+			dbus_message_iter_get_basic(&iter, &(userdb->num));
+
+			if (userdb->num > 0) {
+				dbus_message_iter_next(&iter);
+				dbus_message_iter_recurse(&iter,&iter_array);
+
+				for (i = 0; i < userdb->num; i++) {
+					user = malloc(sizeof(*user));
+					if (NULL == user) {
+						eag_userdb_destroy(userdb);
+						dbus_message_unref(reply);
+						return EAG_ERR_MALLOC_FAILED;
+					}
+					memset(user, 0, sizeof(*user));
+					
+					dbus_message_iter_recurse(&iter_array, &iter_struct);
+					dbus_message_iter_get_basic(&iter_struct, 
+													&(username));
+					if (NULL != username) {
+						strncpy(user->username, username,
+								sizeof(user->username)-1);
+					}
+					dbus_message_iter_next(&iter_struct);
+					dbus_message_iter_get_basic(&iter_struct, 
+													&(user->user_ip));
+					dbus_message_iter_next(&iter_struct);
+					dbus_message_iter_get_basic(&iter_struct, 
+													&(user->user_ipv6[0]));
+					dbus_message_iter_next(&iter_struct);
+					dbus_message_iter_get_basic(&iter_struct, 
+													&(user->user_ipv6[1]));
+					dbus_message_iter_next(&iter_struct);
+					dbus_message_iter_get_basic(&iter_struct, 
+													&(user->user_ipv6[2]));
+					dbus_message_iter_next(&iter_struct);
+					dbus_message_iter_get_basic(&iter_struct, 
+													&(user->user_ipv6[3]));
+					dbus_message_iter_next(&iter_struct);
+					dbus_message_iter_get_basic(&iter_struct,
+													&(user->usermac[0]));
+					dbus_message_iter_next(&iter_struct);
+					dbus_message_iter_get_basic(&iter_struct, 
+													&(user->usermac[1]));
+					dbus_message_iter_next(&iter_struct);
+					dbus_message_iter_get_basic(&iter_struct, 
+													&(user->usermac[2]));
+					dbus_message_iter_next(&iter_struct);
+					dbus_message_iter_get_basic(&iter_struct, 
+													&(user->usermac[3]));
+					dbus_message_iter_next(&iter_struct);
+					dbus_message_iter_get_basic(&iter_struct, 
+													&(user->usermac[4]));
+					dbus_message_iter_next(&iter_struct);
+					dbus_message_iter_get_basic(&iter_struct, 
+													&(user->usermac[5]));
+					dbus_message_iter_next(&iter_struct);
+					dbus_message_iter_get_basic(&iter_struct, 
+													&(user->session_time));
+					dbus_message_iter_next(&iter_struct);
+					dbus_message_iter_get_basic(&iter_struct, 
+													&(user->input_octets));
+					dbus_message_iter_next(&iter_struct);
+					dbus_message_iter_get_basic(&iter_struct, 
+													&(user->output_octets));
+					dbus_message_iter_next(&iter_struct);
+					dbus_message_iter_get_basic(&iter_struct, 
+													&(user->input_packets));
+					dbus_message_iter_next(&iter_struct);
+					dbus_message_iter_get_basic(&iter_struct, 
+													&(user->output_packets));
+					dbus_message_iter_next(&iter_struct);
+					dbus_message_iter_get_basic(&iter_struct,
+													&(user->apmac[0]));
+					dbus_message_iter_next(&iter_struct);
+					dbus_message_iter_get_basic(&iter_struct, 
+													&(user->apmac[1]));
+					dbus_message_iter_next(&iter_struct);
+					dbus_message_iter_get_basic(&iter_struct, 
+													&(user->apmac[2]));
+					dbus_message_iter_next(&iter_struct);
+					dbus_message_iter_get_basic(&iter_struct, 
+													&(user->apmac[3]));
+					dbus_message_iter_next(&iter_struct);
+					dbus_message_iter_get_basic(&iter_struct, 
+													&(user->apmac[4]));
+					dbus_message_iter_next(&iter_struct);
+					dbus_message_iter_get_basic(&iter_struct, 
+													&(user->apmac[5]));
+					dbus_message_iter_next(&iter_array);
+					list_add_tail(&(user->node), &(userdb->head));
+				}
+			}
+		}
+	}
+	
+	dbus_message_unref(reply);
+	
+	return iRet;
+}
+
+int
+eag_show_user_by_useripv6(DBusConnection *connection,
+				int hansitype, int insid,
+				struct eag_userdb *userdb,
+				uint32_t user_ipv6[4])
+{
+	DBusMessage *query = NULL;
+	DBusMessage *reply = NULL;
+	DBusError err = {0};
+	DBusMessageIter iter = {0};
+	DBusMessageIter iter_array = {0};
+	DBusMessageIter iter_struct = {0};
+	struct eag_user *user = NULL;
+	char *username = NULL;
+	int iRet = 0;
+	int i = 0;
+
+	eag_dbus_path_reinit(hansitype,insid);
+	query = dbus_message_new_method_call(
+									EAG_DBUS_NAME,
+									EAG_DBUS_OBJPATH,
+									EAG_DBUS_INTERFACE,
+									EAG_DBUS_METHOD_SHOW_USER_BY_USERIPV6);
+
+	dbus_error_init(&err);
+
+	dbus_message_append_args(	query,
+								DBUS_TYPE_UINT32, &user_ipv6[0],
+						        DBUS_TYPE_UINT32, &user_ipv6[1],
+						        DBUS_TYPE_UINT32, &user_ipv6[2],
+						        DBUS_TYPE_UINT32, &user_ipv6[3],
 								DBUS_TYPE_INVALID );
 	
 	reply = dbus_connection_send_with_reply_and_block (

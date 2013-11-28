@@ -265,7 +265,7 @@ appconn_update_ip_htable(appconn_db_t *appdb,
         return hashtable_check_add_node(appdb->ipv6_htable,
                         &(appconn->session.user_addr.user_ipv6),
                         sizeof(struct in6_addr),
-                        &(appconn->ip_hnode));
+                        &(appconn->ipv6_hnode));
 	} else if (EAG_IPV4 == appconn->session.user_addr.family) {
 		return hashtable_check_add_node(appdb->ip_htable,
 						&(appconn->session.user_addr.user_ip),
@@ -275,7 +275,7 @@ appconn_update_ip_htable(appconn_db_t *appdb,
         hashtable_check_add_node(appdb->ipv6_htable,
                                 &(appconn->session.user_addr.user_ipv6),
                                 sizeof(struct in6_addr),
-                                &(appconn->ip_hnode));
+                                &(appconn->ipv6_hnode));
         hashtable_check_add_node(appdb->ip_htable,
                                 &(appconn->session.user_addr.user_ip),
                                 sizeof(struct in_addr),
@@ -337,7 +337,14 @@ appconn_del_from_db(struct app_conn_t *appconn)
 	}
 
 	list_del(&(appconn->node));
-	hlist_del(&(appconn->ip_hnode));
+	if (EAG_IPV4 == appconn->session.user_addr.family) {
+		hlist_del(&(appconn->ip_hnode));
+	} else if (EAG_IPV6 == appconn->session.user_addr.family) {
+		hlist_del(&(appconn->ipv6_hnode));
+	} else if (EAG_MIX == appconn->session.user_addr.family) {
+		hlist_del(&(appconn->ip_hnode));
+		hlist_del(&(appconn->ipv6_hnode));
+	}
 	hlist_del(&(appconn->mac_hnode));
 
 	return EAG_RETURN_OK;
@@ -355,20 +362,35 @@ appconn_find_by_userip(appconn_db_t *appdb,
     ipx2str(user_addr, user_ipstr, sizeof(user_ipstr));
 	if (EAG_IPV6 == user_addr->family) {
 		/* ipv6 single-stack user */
-		head = hashtable_get_hash_list(appdb->ipv6_htable, &(user_addr->user_ipv6), sizeof(struct in6_addr));
+		head = hashtable_get_hash_list( appdb->ipv6_htable, 
+										&(user_addr->user_ipv6), 
+										sizeof(struct in6_addr) );
+        if (NULL == head) {
+            eag_log_err("appconn_find_by_userip "
+                "hashtable_get_hash_list failed, userip %s", user_ipstr);
+            return NULL;
+        }
+        
+        hlist_for_each_entry(appconn, node, head, ipv6_hnode) {
+            if (!memcmp_ipx(user_addr, &(appconn->session.user_addr))) {
+                return appconn;
+            }
+        }
 	} else {
 		/* ipv4 single-stack user or dual-stack users */
-		head = hashtable_get_hash_list(appdb->ip_htable, &(user_addr->user_ip), sizeof(struct in_addr));
-	}
-	if (NULL == head) {
-		eag_log_err("appconn_find_by_userip "
-			"hashtable_get_hash_list failed, userip %s", user_ipstr);
-		return NULL;
-	}
+		head = hashtable_get_hash_list( appdb->ip_htable, 
+										&(user_addr->user_ip), 
+										sizeof(struct in_addr) );
+		if (NULL == head) {
+			eag_log_err("appconn_find_by_userip "
+				"hashtable_get_hash_list failed, userip %s", user_ipstr);
+			return NULL;
+		}
 
-	hlist_for_each_entry(appconn, node, head, ip_hnode) {
-        if (!memcmp_ipx(user_addr, &(appconn->session.user_addr))) {
-			return appconn;
+		hlist_for_each_entry(appconn, node, head, ip_hnode) {
+	        if (!memcmp_ipx(user_addr, &(appconn->session.user_addr))) {
+				return appconn;
+			}
 		}
 	}
 

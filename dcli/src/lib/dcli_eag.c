@@ -15356,6 +15356,75 @@ DEFUN(eag_show_user_by_userip_func,
 	return CMD_SUCCESS;
 }
 
+DEFUN(eag_show_user_by_useripv6_func,
+	eag_show_user_by_useripv6_cmd,
+	"show user ipv6 IPV6",
+	SHOW_STR
+	"eag user\n"
+	"user ipv6\n"
+	"user ipv6\n"
+)
+{
+	int ret = 0;
+	int i = 0;
+	struct eag_userdb userdb = {0};
+	struct eag_user *user = NULL;
+	char ipstr[32] = "";
+	char ipv6str[48] = "";
+	char macstr[36] = "";
+	uint32_t hour = 0;
+	uint32_t minute = 0;
+	uint32_t second = 0;
+	char timestr[32] = "";
+	uint32_t user_ipv6[4];
+
+	ret = inet_pton(AF_INET6, argv[0], (struct in6_addr *)user_ipv6);
+	if (!ret) {
+		vty_out(vty, "%% invalid ipv6 address\n");
+		return CMD_WARNING;
+	}
+
+	EAG_DCLI_INIT_HANSI_INFO
+
+	eag_userdb_init(&userdb);
+	ret = eag_show_user_by_useripv6(dcli_dbus_connection_curr,
+							hansitype, insid,
+							&userdb,
+							user_ipv6);
+	if (EAG_RETURN_OK == ret) {
+		vty_out(vty, "user num : %d\n", userdb.num);
+		vty_out(vty, "%-7s %-18s %-16s %-40s %-18s %-12s %-18s %-18s\n",
+				"ID", "UserName", "UserIP", "UserIPV6", "UserMAC", 
+				"SessionTime", "OutputFlow", "InputFlow");
+
+		list_for_each_entry(user, &(userdb.head), node) {
+			i++;
+			ip2str(user->user_ip, ipstr, sizeof(ipstr));
+			ipv6tostr((struct in6_addr *)(user->user_ipv6), ipv6str, sizeof(ipv6str));
+			mac2str(user->usermac, macstr, sizeof(macstr), ':');
+			hour = user->session_time/3600;
+			minute = (user->session_time%3600)/60;
+			second = user->session_time%60;
+			snprintf(timestr, sizeof(timestr), "%u:%02u:%02u",
+				hour, minute, second);
+			
+			vty_out(vty, "%-7d %-18s %-16s %-40s %-18s %-12s %-18llu %-18llu\n",
+				i, user->username, ipstr, ipv6str, macstr,
+				timestr, user->output_octets, user->input_octets);
+		}
+		vty_out(vty, "user num : %d\n", userdb.num);
+	}
+	else if (EAG_ERR_DBUS_FAILED == ret) {
+		vty_out(vty, "%% dbus error\n");
+	}
+	else {
+		vty_out(vty, "%% unknown error: %d\n", ret);
+	}
+	eag_userdb_destroy(&userdb);
+
+	return CMD_SUCCESS;
+}
+
 DEFUN(eag_show_user_by_usermac_func,
 	eag_show_user_by_usermac_cmd,
 	"show user mac MAC",
@@ -16700,6 +16769,10 @@ dcli_eag_init(void)
 	install_element(EAG_NODE, &eag_show_user_by_userip_cmd);
 	install_element(HANSI_EAG_NODE, &eag_show_user_by_userip_cmd);
 	install_element(LOCAL_HANSI_EAG_NODE, &eag_show_user_by_userip_cmd);
+
+	install_element(EAG_NODE, &eag_show_user_by_useripv6_cmd);
+	install_element(HANSI_EAG_NODE, &eag_show_user_by_useripv6_cmd);
+	install_element(LOCAL_HANSI_EAG_NODE, &eag_show_user_by_useripv6_cmd);
 
 	install_element(EAG_NODE, &eag_show_user_by_usermac_cmd);
 	install_element(HANSI_EAG_NODE, &eag_show_user_by_usermac_cmd);

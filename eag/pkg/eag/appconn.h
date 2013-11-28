@@ -54,6 +54,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 struct app_conn_t {
 	struct list_head node;
 	struct hlist_node ip_hnode;
+	struct hlist_node ipv6_hnode;
 	struct hlist_node mac_hnode;
 	struct hlist_node name_hnode;
 	appconn_db_t *appdb;

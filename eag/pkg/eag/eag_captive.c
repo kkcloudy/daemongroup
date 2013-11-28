@@ -1781,7 +1781,7 @@ eag_captive_start(eag_captive_t *cap)
 				eag_log_err("eag_captive_add_black_list add black domain %s failed:%d", cap->black.rule[i].key.domain.name, ret );
 			}
 		} else if ( RULE_IPV6ADDR == cap->black.rule[i].type ) {
-			ret = captive_shell_add_white_ipv6( cap->capid, cap->instype,
+			ret = captive_shell_add_black_ipv6( cap->capid, cap->instype,
 						&(cap->black.rule[i].key.ipv6.ipv6begin), &(cap->black.rule[i].key.ipv6.ipv6end),
 						cap->black.rule[i].key.ipv6.ports, cap->black.rule[i].intf );	
 			if( EAG_RETURN_OK != ret ){

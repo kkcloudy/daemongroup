@@ -10516,6 +10516,202 @@ replyx:
 }
 
 static DBusMessage *
+eag_dbus_method_show_user_by_useripv6(
+				DBusConnection *conn,
+				DBusMessage *msg,
+				void *user_data )
+{
+	appconn_db_t *appdb = NULL;
+	struct app_conn_t *appconn = NULL;
+	eag_ins_t *eagins = NULL;
+	struct list_head *head = NULL;
+	DBusMessage* reply = NULL;
+	DBusMessageIter iter = {0};
+	DBusError err = {0};
+	int ret = -1;
+	int num = 0;
+	const char *username = NULL;
+	uint32_t session_time = 0;
+	struct timeval tv = {0};
+	user_addr_t user_addr = {0};
+	uint32_t user_ipv6[4];
+	uint32_t cmp[4];
+
+	eag_time_gettimeofday(&tv, NULL);
+	reply = dbus_message_new_method_return(msg);
+	if (NULL == reply) {
+		eag_log_err("eag_dbus_method_show_user_by_useripv6 "
+					"DBUS new reply message error!");
+		return NULL;
+	}
+
+	appdb = (appconn_db_t *)user_data;
+	if (NULL == appdb) {
+		eag_log_err("eag_dbus_method_show_user_by_useripv6 user_data error!");
+		ret = EAG_ERR_UNKNOWN;
+		goto replyx;
+	}
+	eagins = appconn_db_get_eagins(appdb);
+	if (!eag_hansi_is_enable(eagins->eaghansi)
+		||eag_hansi_is_master(eagins->eaghansi)) {	
+		flush_all_appconn_flux_immediate(appdb);
+	}
+	head = appconn_db_get_head(appdb);
+	
+	dbus_error_init(&err);
+	if (!(dbus_message_get_args(msg, &err,
+								DBUS_TYPE_UINT32, &user_ipv6[0],
+						        DBUS_TYPE_UINT32, &user_ipv6[1],
+						        DBUS_TYPE_UINT32, &user_ipv6[2],
+						        DBUS_TYPE_UINT32, &user_ipv6[3],
+								DBUS_TYPE_INVALID))) {
+		eag_log_err("eag_dbus_method_show_user_by_useripv6 "
+					"unable to get input args");
+		if (dbus_error_is_set(&err)) {
+			eag_log_err("eag_dbus_method_show_user_by_useripv6 %s raised:%s",
+							err.name, err.message);
+			dbus_error_free(&err);
+		}
+		ret = EAG_ERR_DBUS_FAILED;
+		goto replyx;
+	}
+	user_addr.family = EAG_IPV6;
+	memcpy(&(user_addr.user_ipv6), user_ipv6, sizeof(struct in6_addr));
+	ret = EAG_RETURN_OK;
+
+replyx:
+	dbus_message_iter_init_append(reply, &iter);
+	dbus_message_iter_append_basic(&iter,
+									DBUS_TYPE_INT32, &ret);
+	if (EAG_RETURN_OK == ret) {
+		num = appconn_count_by_userip(appdb, &user_addr);
+		dbus_message_iter_append_basic(&iter,
+									DBUS_TYPE_UINT32, &(num));
+	}
+	if (EAG_RETURN_OK == ret && num > 0) {
+		DBusMessageIter iter_array = {0};
+		
+		dbus_message_iter_open_container (&iter,
+								DBUS_TYPE_ARRAY,
+									DBUS_STRUCT_BEGIN_CHAR_AS_STRING
+										DBUS_TYPE_STRING_AS_STRING
+							            DBUS_TYPE_UINT32_AS_STRING  //ipv4
+							            DBUS_TYPE_UINT32_AS_STRING  //ipv6[0]
+							            DBUS_TYPE_UINT32_AS_STRING  //ipv6[1]
+							            DBUS_TYPE_UINT32_AS_STRING  //ipv6[2]
+							            DBUS_TYPE_UINT32_AS_STRING  //ipv6[3]
+							            DBUS_TYPE_BYTE_AS_STRING    //mac[0]
+							            DBUS_TYPE_BYTE_AS_STRING
+							            DBUS_TYPE_BYTE_AS_STRING
+							            DBUS_TYPE_BYTE_AS_STRING
+							            DBUS_TYPE_BYTE_AS_STRING
+							            DBUS_TYPE_BYTE_AS_STRING    //mac[5]
+										DBUS_TYPE_UINT32_AS_STRING
+										DBUS_TYPE_UINT64_AS_STRING
+										DBUS_TYPE_UINT64_AS_STRING
+										DBUS_TYPE_UINT32_AS_STRING
+										DBUS_TYPE_UINT32_AS_STRING
+										DBUS_TYPE_BYTE_AS_STRING
+										DBUS_TYPE_BYTE_AS_STRING
+										DBUS_TYPE_BYTE_AS_STRING
+										DBUS_TYPE_BYTE_AS_STRING
+										DBUS_TYPE_BYTE_AS_STRING
+										DBUS_TYPE_BYTE_AS_STRING
+									DBUS_STRUCT_END_CHAR_AS_STRING,
+								&iter_array);
+
+		list_for_each_entry(appconn, head, node) {
+			if (APPCONN_STATUS_AUTHED == appconn->session.state
+				&& 0 == memcmp_ipx(&user_addr, &(appconn->session.user_addr))) {
+				DBusMessageIter iter_struct = {0};
+
+				dbus_message_iter_open_container (&iter_array,
+										DBUS_TYPE_STRUCT,
+										NULL,
+										&iter_struct);
+				username = appconn->session.username;
+				dbus_message_iter_append_basic(&iter_struct,
+									DBUS_TYPE_STRING,
+									&username);
+				dbus_message_iter_append_basic(&iter_struct,
+									DBUS_TYPE_UINT32, 
+									&(appconn->session.user_addr.user_ip));
+				memset(cmp, 0, sizeof(cmp));
+				memcpy(cmp, &(appconn->session.user_addr.user_ipv6), sizeof(cmp));
+				dbus_message_iter_append_basic(&iter_struct,
+									DBUS_TYPE_UINT32, 
+									&cmp[0]);
+				dbus_message_iter_append_basic(&iter_struct,
+									DBUS_TYPE_UINT32, 
+									&cmp[1]);
+				dbus_message_iter_append_basic(&iter_struct,
+									DBUS_TYPE_UINT32, 
+									&cmp[2]);
+				dbus_message_iter_append_basic(&iter_struct,
+									DBUS_TYPE_UINT32, 
+									&cmp[3]);
+				dbus_message_iter_append_basic (&iter_struct,
+									DBUS_TYPE_BYTE,
+									&(appconn->session.usermac[0]));
+				dbus_message_iter_append_basic (&iter_struct,
+									DBUS_TYPE_BYTE,
+									&(appconn->session.usermac[1]));
+				dbus_message_iter_append_basic (&iter_struct,
+									DBUS_TYPE_BYTE,
+									&(appconn->session.usermac[2]));
+				dbus_message_iter_append_basic (&iter_struct,
+									DBUS_TYPE_BYTE,
+									&(appconn->session.usermac[3]));
+				dbus_message_iter_append_basic (&iter_struct,
+									DBUS_TYPE_BYTE,
+									&(appconn->session.usermac[4]));
+				dbus_message_iter_append_basic (&iter_struct,
+									DBUS_TYPE_BYTE,
+									&(appconn->session.usermac[5]));
+				session_time = tv.tv_sec - appconn->session.session_start_time;
+				dbus_message_iter_append_basic (&iter_struct,
+									DBUS_TYPE_UINT32,
+									&session_time);
+				dbus_message_iter_append_basic (&iter_struct,
+									DBUS_TYPE_UINT64,
+									&(appconn->session.input_octets));
+				dbus_message_iter_append_basic (&iter_struct,
+									DBUS_TYPE_UINT64,
+									&(appconn->session.output_octets));
+				dbus_message_iter_append_basic (&iter_struct,
+									DBUS_TYPE_UINT32,
+									&(appconn->session.input_packets));
+				dbus_message_iter_append_basic (&iter_struct,
+									DBUS_TYPE_UINT32,
+									&(appconn->session.output_packets));
+				dbus_message_iter_append_basic (&iter_struct,
+									DBUS_TYPE_BYTE,
+									&(appconn->session.apmac[0]));
+				dbus_message_iter_append_basic (&iter_struct,
+									DBUS_TYPE_BYTE,
+									&(appconn->session.apmac[1]));
+				dbus_message_iter_append_basic (&iter_struct,
+									DBUS_TYPE_BYTE,
+									&(appconn->session.apmac[2]));
+				dbus_message_iter_append_basic (&iter_struct,
+									DBUS_TYPE_BYTE,
+									&(appconn->session.apmac[3]));
+				dbus_message_iter_append_basic (&iter_struct,
+									DBUS_TYPE_BYTE,
+									&(appconn->session.apmac[4]));
+				dbus_message_iter_append_basic (&iter_struct,
+									DBUS_TYPE_BYTE,
+									&(appconn->session.apmac[5]));
+				dbus_message_iter_close_container (&iter_array, &iter_struct);
+			}
+		}
+		dbus_message_iter_close_container (&iter, &iter_array);
+	}
+	
+	return reply;
+}
+
+static DBusMessage *
 eag_dbus_method_show_user_by_usermac(
 				DBusConnection *conn,
 				DBusMessage *msg,
@@ -12642,6 +12838,8 @@ eagins_register_all_dbus_method(eag_ins_t *eagins)
 		EAG_DBUS_INTERFACE, eag_dbus_method_show_user_by_username, eagins->appdb);
 	eag_dbus_register_method(eagins->eagdbus,
 		EAG_DBUS_INTERFACE, eag_dbus_method_show_user_by_userip, eagins->appdb);
+	eag_dbus_register_method(eagins->eagdbus,
+		EAG_DBUS_INTERFACE, eag_dbus_method_show_user_by_useripv6, eagins->appdb);
 	eag_dbus_register_method(eagins->eagdbus,
 		EAG_DBUS_INTERFACE, eag_dbus_method_show_user_by_usermac, eagins->appdb);
 	eag_dbus_register_method(eagins->eagdbus,
