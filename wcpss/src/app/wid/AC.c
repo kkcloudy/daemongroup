@@ -308,6 +308,8 @@ int rrm_rid = 0;
 /* For new format of syslog 2013-07-29 */
 unsigned int TUNNEL_STATISTICS_LOG_INTERVAL = 28800;
 unsigned int RADIO_STATISTICS_LOG_INTERVAL = 28800;
+unsigned char g_auto_add_radio_to_ebr = 1;//auto add radio interface to ebr switch: 1 enable 0 disable
+
 /*_________________________________________________________*/
 /*  *******************___FUNCTIONS___*******************  */
 

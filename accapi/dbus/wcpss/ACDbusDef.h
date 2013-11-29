@@ -297,6 +297,9 @@ enum wid_check_type {
 #define	WID_DBUS_CONF_METHOD_ADD_DEL_WLAN	"add_del_wlan"
 #define	WID_DBUS_CONF_METHOD_ADD_DEL_WLAN_CN	"add_del_wlan_cn"
 
+#define	WID_DBUS_CONF_METHOD_ADD_DEL_WLAN_EBR	"add_del_wlan_ebr"
+#define WID_DBUS_CONF_METHOD_AUTO_ADD_RADIO_EBR_SWITCH	"auto_add_radio_to_ebr_switch"
+#define WID_DBUS_CONF_METHOD_SHOW_AUTO_ADD_RADIO_EBR_SWITCH "show_auto_add_radio_to_ebr_switch"
 /*
  arg lists for method WID_DBUS_CONF_METHOD_ADD_DEL_WTP
   in arg list:

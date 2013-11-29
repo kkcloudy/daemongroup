@@ -129,6 +129,9 @@ char WID_DBUS_CONF_METHOD_RADIO[PATH_LEN]=		"radio";
 char	WID_DBUS_CONF_METHOD_ADD_DEL_WLAN[PATH_LEN]=	"add_del_wlan";
 char	WID_DBUS_CONF_METHOD_ADD_DEL_WLAN_CN[PATH_LEN]=		"add_del_wlan_cn";
 
+char	WID_DBUS_CONF_METHOD_ADD_DEL_WLAN_EBR[PATH_LEN]=	"add_del_wlan_ebr";
+char	WID_DBUS_CONF_METHOD_AUTO_ADD_RADIO_EBR_SWITCH[PATH_LEN]=	"auto_add_radio_to_ebr_switch";
+char 	WID_DBUS_CONF_METHOD_SHOW_AUTO_ADD_RADIO_EBR_SWITCH[PATH_LEN]= 	"show_auto_add_radio_to_ebr_switch";
 /*
  arg lists for method WID_DBUS_CONF_METHOD_ADD_DEL_WTP
   in arg list:
@@ -1009,5 +1012,5 @@ char WID_DBUS_CONF_METHOD_LIC_BAK_REQ_INTERVAL[PATH_LEN]		=	"lic_bak_req_interva
 char WID_DBUS_CONF_METHOD_BAK_CHECK_INTERVAL_SHOW[PATH_LEN]		=	"show_bak_check_interval";		/* Huang Leilei 2012-10-24 add */
 char WID_DBUS_CONF_METHOD_LIC_BAK_REQ_INTERVAL_SHOW[PATH_LEN]	=	"show_lic_bak_check_interval";	/* Huang Leilei 2012-10-25 add */
 char WID_DBUS_WLAN_METHOD_TUNNEL_NODE_SETTING[PATH_LEN] ="wlan_tunnel_mode_setting";
-
+char WID_DBUS_WLAN_METHOD_TUNNEL_NODE_SETTING_AND_ADD_TO_EBR[PATH_LEN]="wlan_tunnel_mode_setting_and_add_to_ebr";
 #endif

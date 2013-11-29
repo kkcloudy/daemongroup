@@ -6196,7 +6196,7 @@ int WID_WLAN_L3IF_POLICY_BR(unsigned char WlanID, unsigned char wlanPolicy)
 			return WLAN_CREATE_BR_FAIL;
 		}
 		if(AC_WLAN[WlanID]->wlan_if_policy == NO_INTERFACE)
-			set_wlan_tunnel_mode(WlanID, 1);
+			set_wlan_tunnel_mode(WlanID, 1, 0);
 		//search all AC_BSS to keep bss policy the same with wlan policy
 		for(i=0; i<WTP_NUM; i++)
 		{
@@ -6284,7 +6284,7 @@ int WID_WLAN_L3IF_POLICY_BR(unsigned char WlanID, unsigned char wlanPolicy)
 			return WLAN_DELETE_BR_FAIL;
 		}
 		if(AC_WLAN[WlanID]->wlan_if_policy == WLAN_INTERFACE)
-		ret = set_wlan_tunnel_mode(WlanID, 0);
+		ret = set_wlan_tunnel_mode(WlanID, 0, 0);
 		if(ret != 0)
 		{
 			return ret;
@@ -9230,7 +9230,15 @@ int WID_ADD_WLAN_APPLY_RADIO(unsigned int RadioID,unsigned char WlanID){
 						WID_DELETE_WLAN_APPLY_RADIO(RadioID,WlanID);
 						return WLAN_CREATE_L3_INTERFACE_FAIL;
 					}
-	
+					
+					if (g_auto_add_radio_to_ebr && AC_WLAN[WlanID]->ebr_id != 0) {
+						ret = add_bss_to_ebr_interface_l2(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->BSSIndex);
+						if (ret < 0) {
+							wid_syslog_err("add bssid %d wlan %d  ebr %d failed\n", AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->BSSIndex,
+								WlanID, AC_WLAN[WlanID]->ebr_id);
+							return WLAN_CREATE_L3_INTERFACE_FAIL;
+						}
+					}
 				}
 				else if(AC_WLAN[WlanID]->wlan_if_policy == WLAN_INTERFACE)
 				{
@@ -20380,6 +20388,102 @@ int wid_set_wlan_br_sameportswitch(unsigned char wlanid,unsigned char state)
 		return 0;//set success
 	}
 	
+}
+
+int add_bss_to_ebr_interface_l2(unsigned int BSSIndex) {
+	int ret = 0;
+
+	char addifcmd[WID_SYSTEM_CMD_LENTH];
+	memset(addifcmd,0,WID_SYSTEM_CMD_LENTH);
+	
+	int wtpid = 0;
+	int l_radioid = 0;
+	int wlanid = 0;
+
+	unsigned int ebr_id;
+
+	wid_syslog_err("huxf: call add_bss_to_ebr_interface_l2\n");
+	wtpid = BSSIndex/(L_BSS_NUM*L_RADIO_NUM);
+	l_radioid = AC_BSS[BSSIndex]->Radio_L_ID;
+	wlanid = AC_BSS[BSSIndex]->WlanID;
+	int G_radio_id = 0;
+	char bssifname[ETH_IF_NAME_LEN];
+	char ifcheck[WID_SYSTEM_CMD_LENTH];
+	memset(bssifname,0,ETH_IF_NAME_LEN);
+	memset(ifcheck,0,WID_SYSTEM_CMD_LENTH);
+	if (!AC_WLAN[wlanid]) {
+		wid_syslog_err("%s %d: wlan %d is not exist\n", __FUNCTION__, __LINE__, wlanid);
+		return -1;
+	}
+
+	ebr_id = AC_WLAN[wlanid]->ebr_id;
+
+	if(local)
+		sprintf(bssifname,"r%d-%d-%d.%d",vrrid,wtpid,l_radioid,wlanid);
+	else
+		sprintf(bssifname,"r%d-%d-%d-%d.%d",slotid,vrrid,wtpid,l_radioid,wlanid);
+	G_radio_id = wtpid*L_RADIO_NUM+l_radioid;
+	
+	ret = WID_SET_ETHEREAL_BRIDGE_IF_UPLINK(ebr_id, bssifname, 1, G_radio_id, wlanid);
+	if (ret != 0) {
+		wid_syslog_err("%s %d:add r%d-%d-%d.%d to ebr%d-%d-%d failed\n", __FUNCTION__, __LINE__,
+			slotid, vrrid, wtpid, l_radioid, wlanid,
+			slotid, vrrid,ebr_id);
+		return -1;
+	} else {
+		wid_syslog_debug_debug(WID_DEFAULT, "%s %d:add r%d-%d-%d.%d to ebr%d-%d-%d failed\n", __FUNCTION__, __LINE__,
+			slotid, vrrid, wtpid, l_radioid, wlanid,
+			slotid, vrrid,ebr_id);
+		return 0;
+	}
+	
+}
+int del_bss_from_ebr_interface_l2(unsigned int BSSIndex) {
+	int ret = 0;
+
+	char addifcmd[WID_SYSTEM_CMD_LENTH];
+	memset(addifcmd,0,WID_SYSTEM_CMD_LENTH);
+	
+	int wtpid = 0;
+	int l_radioid = 0;
+	int wlanid = 0;
+
+	unsigned int ebr_id;
+
+	wid_syslog_err("huxf: call del_bss_from_ebr_interface_l2\n");
+	wtpid = BSSIndex/(L_BSS_NUM*L_RADIO_NUM);
+	l_radioid = AC_BSS[BSSIndex]->Radio_L_ID;
+	wlanid = AC_BSS[BSSIndex]->WlanID;
+	int G_radio_id = 0;
+	char bssifname[ETH_IF_NAME_LEN];
+	char ifcheck[WID_SYSTEM_CMD_LENTH];
+	memset(bssifname,0,ETH_IF_NAME_LEN);
+	memset(ifcheck,0,WID_SYSTEM_CMD_LENTH);
+	if (!AC_WLAN[wlanid]) {
+		wid_syslog_err("%s %d: wlan %d is not exist\n", __FUNCTION__, __LINE__, wlanid);
+		return -1;
+	}
+
+	ebr_id = AC_WLAN[wlanid]->ebr_id;
+
+	if(local)
+		sprintf(bssifname,"r%d-%d-%d.%d",vrrid,wtpid,l_radioid,wlanid);
+	else
+		sprintf(bssifname,"r%d-%d-%d-%d.%d",slotid,vrrid,wtpid,l_radioid,wlanid);
+	G_radio_id = wtpid*L_RADIO_NUM+l_radioid;
+	
+	ret = WID_SET_ETHEREAL_BRIDGE_IF_DOWNLINK(ebr_id, bssifname, 1, G_radio_id, wlanid);
+	if (ret != 0) {
+		wid_syslog_err("%s %d:delete r%d-%d-%d.%d to ebr%d-%d-%d failed\n", __FUNCTION__, __LINE__,
+			slotid, vrrid, wtpid, l_radioid, wlanid,
+			slotid, vrrid,ebr_id);
+		return -1;
+	} else {
+		wid_syslog_debug_debug(WID_DEFAULT, "%s %d:delete r%d-%d-%d.%d to ebr%d-%d-%d failed\n", __FUNCTION__, __LINE__,
+			slotid, vrrid, wtpid, l_radioid, wlanid,
+			slotid, vrrid,ebr_id);
+		return 0;
+	}
 }
 
 //ethereal bridge area
@@ -32580,7 +32684,7 @@ int set_bakup_ac_update_license(){
 	return 0;	
 }
 
-int set_wlan_tunnel_mode(unsigned char WlanID, unsigned char state){
+int set_wlan_tunnel_mode(unsigned char WlanID, unsigned char state, unsigned char is_add_to_ebr){
 	int ret = -1;
 	int i=0;
 	int j=0;
@@ -32602,7 +32706,11 @@ int set_wlan_tunnel_mode(unsigned char WlanID, unsigned char state){
 		if(AC_WLAN[WlanID]->wlan_if_policy != NO_INTERFACE){
 			return WID_DBUS_SUCCESS;
 		}
-		AC_WLAN[WlanID]->wlan_if_policy = BSS_INTERFACE;
+		if (is_add_to_ebr)
+			AC_WLAN[WlanID]->wlan_if_policy = BSS_INTERFACE_EBR;
+		else
+			AC_WLAN[WlanID]->wlan_if_policy = BSS_INTERFACE;
+		
 		for(i=0; i<WTP_NUM; i++)
 		{
 			//if((AC_WTP[i]!=NULL)&&(AC_WTP[i]->isused == 1))
@@ -32648,6 +32756,16 @@ int set_wlan_tunnel_mode(unsigned char WlanID, unsigned char state){
 									{
 										return WID_DBUS_ERROR;
 									}
+									if (is_add_to_ebr && g_auto_add_radio_to_ebr && AC_WLAN[WlanID]->ebr_id != 0) {
+										wid_syslog_err("huxf: add radio to ebr\n");
+										for (k=0; k<if_b_info.count; k++) {
+											ret = add_bss_to_ebr_interface_l2(if_b_info.ifinfo[k].BSSIndex);
+											if (ret < 0) {
+												wid_syslog_err("%s add bss %d wlan %d ebr %d failed\n", __FUNCTION__, __LINE__,
+													if_b_info.ifinfo[k].BSSIndex, WlanID, AC_WLAN[WlanID]->ebr_id);
+											}
+										}
+									}
 									k = 0;
 									memset(&if_b_info, 0 , sizeof(if_b_info));
 								}
@@ -32671,30 +32789,41 @@ int set_wlan_tunnel_mode(unsigned char WlanID, unsigned char state){
 			{
 				return WID_DBUS_ERROR;
 			}
+			
+			if (is_add_to_ebr && g_auto_add_radio_to_ebr && AC_WLAN[WlanID]->ebr_id != 0) {
+				for (k=0; k<if_b_info.count; k++) {
+					ret = add_bss_to_ebr_interface_l2(if_b_info.ifinfo[k].BSSIndex);
+					if (ret < 0) {
+						wid_syslog_err("%s %d add bss %d wlan %d ebr %d failed\n", __FUNCTION__, __LINE__,
+							if_b_info.ifinfo[k].BSSIndex, WlanID, AC_WLAN[WlanID]->ebr_id);
+					} 
+				}
+			}
+			
 			k = 0;
 			memset(&if_b_info, 0 , sizeof(if_b_info));
 		}
-	}	else{
-	// check radio interface in ebr cannot delete
-		for(i=0; i<WTP_NUM; i++)
-		{
-			//if((AC_WTP[i]!=NULL)&&(AC_WTP[i]->isused == 1))
-			if(AC_WTP[i]!=NULL)
-			{
-				for(j=0; j<AC_WTP[i]->RadioCount; j++)
-				{
-					if(AC_WLAN[WlanID]->S_WTP_BSS_List[i][j] != 0)
-					{
-						int bssindex = AC_WLAN[WlanID]->S_WTP_BSS_List[i][j];
-						if(!check_bssid_func(bssindex)){
-							wid_syslog_err("bssindex %d not exist\n",WlanID);
-						}
-						else{
-							if(check_whether_in_ebr(vrrid,i,j,WlanID,&ebr_id))
-							{
-								wid_syslog_debug_debug(WID_DEFAULT,"%s,%d some radio in ebr\n",__func__,__LINE__);
-								return  RADIO_IN_EBR;
+	} else {
 	
+		if (is_add_to_ebr == 0) {
+			for(i=0; i<WTP_NUM; i++)
+			{
+				if(AC_WTP[i]!=NULL)
+				{
+					for(j=0; j<AC_WTP[i]->RadioCount; j++)
+					{
+						if(AC_WLAN[WlanID]->S_WTP_BSS_List[i][j] != 0)
+						{
+							int bssindex = AC_WLAN[WlanID]->S_WTP_BSS_List[i][j];
+							if(!check_bssid_func(bssindex)){
+								wid_syslog_err("bssindex %d not exist\n",WlanID);
+							}
+							else{
+								if(check_whether_in_ebr(vrrid,i,j,WlanID,&ebr_id))
+								{
+									wid_syslog_debug_debug(WID_DEFAULT,"%s,%d some radio in ebr\n",__func__,__LINE__);
+									return  RADIO_IN_EBR;
+								}
 							}
 						}
 					}
@@ -32707,7 +32836,6 @@ int set_wlan_tunnel_mode(unsigned char WlanID, unsigned char state){
 		AC_WLAN[WlanID]->wlan_if_policy = NO_INTERFACE;
 		for(i=0; i<WTP_NUM; i++)
 		{
-			//if((AC_WTP[i]!=NULL)&&(AC_WTP[i]->isused == 1))
 			if(AC_WTP[i]!=NULL)
 			{
 				for(j=0; j<AC_WTP[i]->RadioCount; j++)
@@ -32732,7 +32860,16 @@ int set_wlan_tunnel_mode(unsigned char WlanID, unsigned char state){
 								AC_BSS[bssindex]->BSS_TUNNEL_POLICY = CW_802_DOT_11_TUNNEL;
 								k++;
 								if(k == PATCH_OP_RADIO_MAX){
-									if_b_info.count = k;									
+
+									if_b_info.count = k;
+									
+									for (k=0; k<if_b_info.count; k++) {
+										ret = del_bss_from_ebr_interface_l2(if_b_info.ifinfo[k].BSSIndex);
+										if (ret < 0)
+											wid_syslog_err("%s %d delete bss %d wlan %d ebr %d\n", __FUNCTION__, __LINE__,
+												if_b_info.ifinfo[k].BSSIndex, WlanID, AC_WLAN[WlanID]->ebr_id);
+									}
+																		
 									fd = open("/dev/wifi0", O_RDWR);
 									
 									if(fd < 0)
@@ -32755,7 +32892,16 @@ int set_wlan_tunnel_mode(unsigned char WlanID, unsigned char state){
 			}
 		}
 		if(k != 0){
-			if_b_info.count = k;									
+
+			if_b_info.count = k;
+			
+			for (k=0; k<if_b_info.count; k++) {
+				ret = del_bss_from_ebr_interface_l2(if_b_info.ifinfo[k].BSSIndex);
+				if (ret < 0)
+					wid_syslog_err("%s %d delete bss %d wlan %d ebr %d\n", __FUNCTION__, __LINE__,
+						if_b_info.ifinfo[k].BSSIndex, WlanID, AC_WLAN[WlanID]->ebr_id);
+			}
+			
 			fd = open("/dev/wifi0", O_RDWR);
 			
 			if(fd < 0)

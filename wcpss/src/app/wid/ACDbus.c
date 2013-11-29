@@ -1583,6 +1583,136 @@ DBusMessage * wid_dbus_interface_set_web_report_snr_range(DBusConnection *conn, 
 
 }
 
+
+DBusMessage * wid_dbus_interface_show_radio_auto_add_to_ebr_switch(DBusConnection *conn, DBusMessage *msg, void *user_data)
+{
+	DBusMessage* reply; 
+	DBusMessageIter  iter;
+	DBusError err;
+	dbus_error_init(&err);
+		
+	int ret = WID_DBUS_SUCCESS;
+	unsigned char auto_switch = 0;
+	
+	auto_switch = g_auto_add_radio_to_ebr;
+
+	reply = dbus_message_new_method_return(msg);
+			
+	dbus_message_iter_init_append(reply, &iter);
+	dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT32, &ret);
+	dbus_message_iter_append_basic(&iter, DBUS_TYPE_BYTE, &auto_switch);
+	
+	return reply;	
+
+}
+
+DBusMessage * wid_dbus_interface_set_radio_auto_add_to_ebr_switch(DBusConnection *conn, DBusMessage *msg, void *user_data)
+{
+	DBusMessage* reply;	
+	DBusMessageIter	 iter;
+	DBusError err;
+	dbus_error_init(&err);
+		
+	int ret = WID_DBUS_SUCCESS;
+	unsigned char auto_login_switch = 0;
+
+	if (!(dbus_message_get_args ( msg, &err,
+								DBUS_TYPE_BYTE,&auto_login_switch,
+								DBUS_TYPE_INVALID))){
+
+		wid_syslog_err("Unable to get input args\n");
+				
+		if (dbus_error_is_set(&err)) {
+			wid_syslog_err("%s raised: %s",err.name,err.message);
+			dbus_error_free(&err);
+		}
+		return NULL;
+	}
+	
+	g_auto_add_radio_to_ebr = auto_login_switch;
+
+	wid_syslog_debug_debug(WID_DEFAULT, "set auto add radio to ebr switch %s successfully\n", auto_login_switch ? "enable" : "disable");
+	reply = dbus_message_new_method_return(msg);
+			
+	dbus_message_iter_init_append(reply, &iter);
+		
+	dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT32, &ret);
+	
+	
+	return reply;	
+
+}
+
+
+DBusMessage *wid_dbus_interface_wlan_ebr_add_del(DBusConnection *conn, DBusMessage *msg, void *user_data) {
+	
+	DBusMessage * reply;
+	DBusMessageIter	 iter;
+	unsigned char isAdd;
+
+	unsigned char WlanID;
+	unsigned int bridge_id;
+	unsigned int ret = WID_DBUS_SUCCESS;
+	DBusError err;
+
+	dbus_error_init(&err);
+	if (!(dbus_message_get_args ( msg, &err,
+								DBUS_TYPE_BYTE,&isAdd,								
+								DBUS_TYPE_BYTE,&WlanID,
+								DBUS_TYPE_UINT32,&bridge_id,
+								DBUS_TYPE_INVALID))){
+		wid_syslog_err("%s: Unable to get input args\n", __FUNCTION__);
+				
+		if (dbus_error_is_set(&err)) {
+			wid_syslog_err("%s raised: %s",err.name,err.message);
+			dbus_error_free(&err);
+		}
+		return NULL;
+	}
+
+	if(bridge_id >= EBR_NUM || bridge_id == 0){
+		wid_syslog_err("ebr id = %d out of range[1-%d]\n", bridge_id, EBR_NUM-1);
+		ret = VALUE_OUT_OF_RANGE;
+	} else {
+		if(isAdd){
+				if(WID_EBR[bridge_id] == NULL){
+					ret = WID_EBR_NOT_EXIST;
+				}else{
+					if (AC_WLAN[WlanID]->ebr_id == bridge_id)
+						ret =WID_DBUS_SUCCESS;
+					else {
+						#if 0
+						if (AC_WLAN[WlanID]->ebr_id != 0)
+							ret = WLAN_ID_BE_USED;
+						else {
+							AC_WLAN[WlanID]->ebr_id = bridge_id;
+							ret = WID_DBUS_SUCCESS;
+						}
+						#else
+						AC_WLAN[WlanID]->ebr_id = bridge_id;
+						ret = WID_DBUS_SUCCESS;
+						#endif
+					}
+				}
+			}else{
+
+				ret = WID_DBUS_SUCCESS;
+				AC_WLAN[WlanID]->ebr_id = 0;
+			}
+	}
+	
+	reply = dbus_message_new_method_return(msg);
+	
+	dbus_message_iter_init_append (reply, &iter);
+	
+	dbus_message_iter_append_basic (&iter,
+									 DBUS_TYPE_UINT32,
+									 &ret);
+	return reply;
+	
+}
+
+
 DBusMessage * wid_dbus_interface_wlan_add_del(DBusConnection *conn, DBusMessage *msg, void *user_data){
 	
 //	printf("wid_dbus_interface_wlan_add_del\n");
@@ -2152,51 +2282,28 @@ DBusMessage * wid_dbus_interface_show_wlanconf(DBusConnection *conn, DBusMessage
 			
 		dbus_message_iter_init_append (reply, &iter);
 			
-		dbus_message_iter_append_basic (&iter,
-											 DBUS_TYPE_UINT32,
-											 &ret);
-			// Total slot count
-		dbus_message_iter_append_basic
-						(&iter,
-						  DBUS_TYPE_UINT32,
-					  &(WLAN->balance_para));
+		dbus_message_iter_append_basic (&iter, DBUS_TYPE_UINT32, &ret);
 
-		dbus_message_iter_append_basic
-						(&iter,
-						  DBUS_TYPE_UINT32,
-					  &(WLAN->flow_balance_para));
+		dbus_message_iter_append_basic (&iter, DBUS_TYPE_UINT32, &(WLAN->balance_para));
 
-		dbus_message_iter_append_basic
-					(&iter,
-					  DBUS_TYPE_BYTE,
-					  &(WLAN->balance_switch));
+		dbus_message_iter_append_basic (&iter, DBUS_TYPE_UINT32, &(WLAN->flow_balance_para));
 
-		dbus_message_iter_append_basic
-					(&iter,
-					  DBUS_TYPE_BYTE,
-					  &(WLAN->balance_method));
+		dbus_message_iter_append_basic (&iter, DBUS_TYPE_BYTE, &(WLAN->balance_switch));
+
+		dbus_message_iter_append_basic (&iter, DBUS_TYPE_BYTE, &(WLAN->balance_method));
 		
-		dbus_message_iter_append_basic
-						(&iter,
-						  DBUS_TYPE_UINT32,
-						 &(WLAN->wlan_max_allowed_sta_num));  //xm
+		dbus_message_iter_append_basic (&iter, DBUS_TYPE_UINT32, &(WLAN->wlan_max_allowed_sta_num));  //xm
 
 		
-		dbus_message_iter_append_basic
-					(&iter,
-					  DBUS_TYPE_STRING,
-					  &(WLAN->WlanName));
+		dbus_message_iter_append_basic (&iter, DBUS_TYPE_STRING, &(WLAN->WlanName));
 			
-		dbus_message_iter_append_basic
-					(&iter,
-					  DBUS_TYPE_BYTE,
-					  &(WLAN->WlanID));
+		dbus_message_iter_append_basic (&iter, DBUS_TYPE_BYTE, &(WLAN->WlanID));
 			
-		dbus_message_iter_open_container (&iter,
-										DBUS_TYPE_ARRAY,
-										DBUS_STRUCT_BEGIN_CHAR_AS_STRING
+		dbus_message_iter_open_container (&iter, 
+											DBUS_TYPE_ARRAY, 
+											DBUS_STRUCT_BEGIN_CHAR_AS_STRING
 												DBUS_TYPE_BYTE_AS_STRING
-										DBUS_STRUCT_END_CHAR_AS_STRING,
+											DBUS_STRUCT_END_CHAR_AS_STRING,
 										&iter_array);
 
 		for(j=0;j<ESSID_DEFAULT_LEN;j++)
@@ -2205,136 +2312,49 @@ DBusMessage * wid_dbus_interface_show_wlanconf(DBusConnection *conn, DBusMessage
 												DBUS_TYPE_STRUCT,
 												NULL,
 											  &iter_struct);
-			dbus_message_iter_append_basic
-						(&iter_struct,
-						  DBUS_TYPE_BYTE,
-						  &WLAN->ESSID[j]);
+			dbus_message_iter_append_basic (&iter_struct, DBUS_TYPE_BYTE, &WLAN->ESSID[j]);
 			dbus_message_iter_close_container (&iter_array, &iter_struct);
 		}
 		dbus_message_iter_close_container (&iter, &iter_array);
 			
-		dbus_message_iter_append_basic
-					(&iter,
-					  DBUS_TYPE_BYTE,
-					  &(WLAN->Status));
+		dbus_message_iter_append_basic (&iter, DBUS_TYPE_BYTE, &(WLAN->Status));
 		
-		dbus_message_iter_append_basic
-					(&iter, 
-					DBUS_TYPE_BYTE, 
-					&(WLAN->isolation_policy));
-		dbus_message_iter_append_basic
-					(&iter, 
-					DBUS_TYPE_BYTE, 
-					&(WLAN->multicast_isolation_policy));
-		dbus_message_iter_append_basic
-					(&iter,
-					DBUS_TYPE_BYTE, 
-					&(WLAN->sameportswitch));
-		dbus_message_iter_append_basic
-					(&iter, 
-					DBUS_TYPE_BYTE, 
-					&(WLAN->bridge_ucast_solicit_stat));
-		dbus_message_iter_append_basic
-					(&iter, 
-					DBUS_TYPE_BYTE, 
-					&(WLAN->bridge_mcast_solicit_stat));
-		dbus_message_iter_append_basic
-					(&iter,
-					  DBUS_TYPE_BYTE,
-					  &(WLAN->SecurityID));
-		dbus_message_iter_append_basic
-					(&iter,
-						  DBUS_TYPE_UINT32,
-						 &(WLAN->SecurityType));
-		dbus_message_iter_append_basic
-						(&iter,
-						  DBUS_TYPE_UINT32,
-						 &(WLAN->EncryptionType));
-		dbus_message_iter_append_basic			
-					(&iter,
-					  DBUS_TYPE_STRING,
-					  &(wlankey));
-		dbus_message_iter_append_basic
-					(&iter,
-					  DBUS_TYPE_BYTE,
-					  &(WLAN->asic_hex));	
-		dbus_message_iter_append_basic
-					(&iter,
-					  DBUS_TYPE_BYTE,
-					  &(WLAN->HideESSid));	
-		dbus_message_iter_append_basic
-					(&iter,
-					  DBUS_TYPE_BYTE,
-					  &(WLAN->SecurityIndex));	
-		dbus_message_iter_append_basic
-			(&iter,
-			  DBUS_TYPE_BYTE,
-			  &(WLAN->wlan_if_policy));	
-		dbus_message_iter_append_basic
-			(&iter,
-			  DBUS_TYPE_BYTE,
-			  &(WLAN->WLAN_TUNNEL_POLICY));	
-		dbus_message_iter_append_basic
-			(&iter,
-			  DBUS_TYPE_BYTE,
-			  &(WLAN->Roaming_Policy));
-		dbus_message_iter_append_basic
-			(&iter,
-			  DBUS_TYPE_UINT32,
-			  &(WLAN->wlan_traffic_limit));
-		dbus_message_iter_append_basic
-			(&iter,
-			 DBUS_TYPE_UINT16,
-			  &(WLAN->flow_check));
-		dbus_message_iter_append_basic
-			(&iter,
-			   DBUS_TYPE_UINT32,
-			  &(WLAN->no_flow_time));
+		dbus_message_iter_append_basic (&iter, DBUS_TYPE_BYTE, &(WLAN->isolation_policy));
+		dbus_message_iter_append_basic (&iter, DBUS_TYPE_BYTE, &(WLAN->multicast_isolation_policy));
+		dbus_message_iter_append_basic (&iter, DBUS_TYPE_BYTE, &(WLAN->sameportswitch));
+		dbus_message_iter_append_basic (&iter, DBUS_TYPE_BYTE, &(WLAN->bridge_ucast_solicit_stat));
+		dbus_message_iter_append_basic (&iter, DBUS_TYPE_BYTE, &(WLAN->bridge_mcast_solicit_stat));
+		dbus_message_iter_append_basic (&iter, DBUS_TYPE_BYTE, &(WLAN->SecurityID));
+		dbus_message_iter_append_basic (&iter, DBUS_TYPE_UINT32, &(WLAN->SecurityType));
+		dbus_message_iter_append_basic (&iter, DBUS_TYPE_UINT32, &(WLAN->EncryptionType));
+		dbus_message_iter_append_basic (&iter, DBUS_TYPE_STRING, &(wlankey));
+		dbus_message_iter_append_basic (&iter, DBUS_TYPE_BYTE, &(WLAN->asic_hex));	
+		dbus_message_iter_append_basic (&iter, DBUS_TYPE_BYTE, &(WLAN->HideESSid));	
+		dbus_message_iter_append_basic (&iter, DBUS_TYPE_BYTE, &(WLAN->SecurityIndex));	
+		dbus_message_iter_append_basic (&iter, DBUS_TYPE_BYTE, &(WLAN->wlan_if_policy));	
+		dbus_message_iter_append_basic (&iter, DBUS_TYPE_BYTE, &(WLAN->WLAN_TUNNEL_POLICY));	
+		dbus_message_iter_append_basic (&iter, DBUS_TYPE_BYTE, &(WLAN->Roaming_Policy));
+		dbus_message_iter_append_basic (&iter, DBUS_TYPE_UINT32, &(WLAN->wlan_traffic_limit));
+		dbus_message_iter_append_basic (&iter, DBUS_TYPE_UINT16, &(WLAN->flow_check));
+		dbus_message_iter_append_basic (&iter, DBUS_TYPE_UINT32, &(WLAN->no_flow_time));
 		
-		dbus_message_iter_append_basic
-			(&iter,
-			  DBUS_TYPE_UINT32,
-			  &(WLAN->limit_flow));
-		dbus_message_iter_append_basic
-			(&iter,
-			  DBUS_TYPE_UINT32,
-			  &(WLAN->wlan_send_traffic_limit));
+		dbus_message_iter_append_basic (&iter, DBUS_TYPE_UINT32, &(WLAN->limit_flow));
+		dbus_message_iter_append_basic (&iter, DBUS_TYPE_UINT32, &(WLAN->wlan_send_traffic_limit));
 		
-		dbus_message_iter_append_basic
-			(&iter,
-			  DBUS_TYPE_UINT32,
-			  &(WLAN->wlan_station_average_traffic_limit));
-		dbus_message_iter_append_basic
-			(&iter,
-			  DBUS_TYPE_UINT32,
-			  &(WLAN->wlan_station_average_send_traffic_limit));
+		dbus_message_iter_append_basic (&iter, DBUS_TYPE_UINT32, &(WLAN->wlan_station_average_traffic_limit));
+		dbus_message_iter_append_basic (&iter, DBUS_TYPE_UINT32, &(WLAN->wlan_station_average_send_traffic_limit));
 
 		
-		dbus_message_iter_append_basic
-			(&iter,
-			  DBUS_TYPE_UINT32,
-			  &(WLAN->WDSStat));
-		dbus_message_iter_append_basic
-			(&iter,
-			  DBUS_TYPE_UINT32,
-			  &(WLAN->wds_mesh));
-	    /* book add for show wlan eap mac, 2011-11-15 */
-	    dbus_message_iter_append_basic
-			(&iter,
-			  DBUS_TYPE_BYTE,   /*wcl modify*/
-			  &(WLAN->eap_mac_switch));
-	    dbus_message_iter_append_basic
-			(&iter,
-			  DBUS_TYPE_STRING,
-			  &(WLAN->eap_mac));
-	    /* book add end */
-		dbus_message_iter_append_basic (&iter,
-											 DBUS_TYPE_BYTE,
-											 &num);
-		dbus_message_iter_append_basic 
-			(&iter,
-			DBUS_TYPE_UINT32,
-			 &(WLAN->hotspot_id));
+		dbus_message_iter_append_basic (&iter, DBUS_TYPE_UINT32, &(WLAN->WDSStat));
+		dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT32, &(WLAN->wds_mesh));
+
+	    dbus_message_iter_append_basic(&iter, DBUS_TYPE_BYTE, &(WLAN->eap_mac_switch));
+	    dbus_message_iter_append_basic(&iter, DBUS_TYPE_STRING, &(WLAN->eap_mac));
+
+		dbus_message_iter_append_basic (&iter, DBUS_TYPE_BYTE, &num);
+ 		dbus_message_iter_append_basic (&iter, DBUS_TYPE_UINT32, &(WLAN->hotspot_id));
+		dbus_message_iter_append_basic (&iter, DBUS_TYPE_UINT32, &(WLAN->ebr_id));
+		
 		dbus_message_iter_open_container (&iter,
 										DBUS_TYPE_ARRAY,
 										DBUS_STRUCT_BEGIN_CHAR_AS_STRING
@@ -72002,6 +72022,13 @@ DBusMessage * wid_dbus_wlan_show_running_config_start(DBusConnection *conn, DBus
 				totalLen += sprintf(cursor," set  wlan access sta limit rssi %d\n",gWLAN_LIMIT_STA_RSSI);
 				cursor = showStr + totalLen;				
 			}
+			
+			if(g_auto_add_radio_to_ebr != 1)
+			{
+				totalLen += sprintf(cursor," set  radio auto add to ebr disable\n");
+				cursor = showStr + totalLen;
+			}
+			
 			if((gWLAN_UNI_MUTI_BRO_CAST.multicast_broadcast_policy ==1)||(gWLAN_UNI_MUTI_BRO_CAST.unicast_policy == 1)
 				||(gWLAN_UNI_MUTI_BRO_CAST.rate != 10)||(gWLAN_UNI_MUTI_BRO_CAST.wifi_policy != 0))	
 			{
@@ -72058,6 +72085,11 @@ DBusMessage * wid_dbus_wlan_show_running_config_start(DBusConnection *conn, DBus
 				if((((int)WLAN[i]->SecurityID > 0)||(WLAN[i]->Wlan_Ifi != NULL)||(WLAN[i]->HideESSid !=0)) && WLAN[i]->want_to_delete != 1){	/* Huangleilei check wlan operation */
 					totalLen += sprintf(cursor," config wlan %d\n",WLAN[i]->WlanID);
 					cursor = showStr + totalLen;
+					if (WLAN[i]->ebr_id != 0) {
+						totalLen += sprintf(cursor," add ebr %d\n",WLAN[i]->ebr_id);
+						cursor = showStr + totalLen;
+					}
+					
 					if((int)WLAN[i]->SecurityID > 0){
 						totalLen += sprintf(cursor," apply securityID %d\n",WLAN[i]->SecurityID);
 						cursor = showStr + totalLen;	
@@ -72439,6 +72471,11 @@ DBusMessage * wid_dbus_wlan_show_running_config_end(DBusConnection *conn, DBusMe
 					if(WLAN[i]->wlan_if_policy == BSS_INTERFACE)
 					{
 						totalLen += sprintf(cursor," set wlan forwarding mode tunnel\n");
+						cursor = showStr + totalLen;
+					}
+					if(WLAN[i]->wlan_if_policy == BSS_INTERFACE_EBR)
+					{
+						totalLen += sprintf(cursor," set wlan forwarding mode tunnel ebr\n");
 						cursor = showStr + totalLen;
 					}
 					if(WLAN[i]->Status == 0)
@@ -75725,6 +75762,51 @@ DBusMessage * wid_dbus_interface_multicast_listen(DBusConnection *conn, DBusMess
 
 }
 
+
+DBusMessage *wid_dbus_set_wlan_tunnel_mode_state_add_to_ebr(DBusConnection *conn, DBusMessage *msg, void *user_data)
+{
+	DBusMessage* reply; 	
+	DBusMessageIter  iter;
+	DBusError err;
+	int ret = WID_DBUS_SUCCESS;
+	unsigned char wlanid =0;	
+	unsigned char state = 0;//1--enable, 0--disable
+	dbus_error_init(&err);
+	if (!(dbus_message_get_args ( msg, &err,
+								DBUS_TYPE_BYTE,&state,
+								DBUS_TYPE_BYTE,&wlanid,
+								DBUS_TYPE_INVALID))){
+	
+				
+		if (dbus_error_is_set(&err)) {
+			dbus_error_free(&err);
+		}
+		return NULL;
+	}
+
+	if(AC_WLAN[wlanid] == NULL)  //fengwenchao add 20121203 for axsszfi-1283
+	{
+		ret = WLAN_ID_NOT_EXIST;
+	}
+	else if (AC_WLAN[wlanid]->want_to_delete == 1)		/* Huangleilei add for ASXXZFI-1622 */
+	{
+		ret = WID_WANT_TO_DELETE_WLAN;
+	}
+	else
+		ret = set_wlan_tunnel_mode(wlanid, state, 1);
+
+	reply = dbus_message_new_method_return(msg);
+			
+	dbus_message_iter_init_append (reply, &iter);	
+
+	dbus_message_iter_append_basic (&iter,
+									DBUS_TYPE_UINT32,
+									&ret); 
+
+	return reply;	
+}
+
+
 DBusMessage *wid_dbus_set_wlan_tunnel_mode_state(DBusConnection *conn, DBusMessage *msg, void *user_data)
 {
 	DBusMessage* reply; 	
@@ -75762,7 +75844,7 @@ DBusMessage *wid_dbus_set_wlan_tunnel_mode_state(DBusConnection *conn, DBusMessa
 			wid_syslog_debug_debug(WID_DBUS,"delete radio intf from wlan br\n");
 		}
 		
-		ret = set_wlan_tunnel_mode(wlanid, state);
+		ret = set_wlan_tunnel_mode(wlanid, state, 0);
 
 	}
 
@@ -77916,6 +77998,15 @@ static DBusHandlerResult wid_dbus_message_handler (DBusConnection *connection, D
 //			printf("config ad wlan\n");
 			reply = wid_dbus_interface_wlan_add_del(connection,message,user_data);
 		}
+		else if (dbus_message_is_method_call(message,WID_DBUS_INTERFACE,WID_DBUS_CONF_METHOD_ADD_DEL_WLAN_EBR)) {
+			reply = wid_dbus_interface_wlan_ebr_add_del(connection,message,user_data);
+		}
+		else if (dbus_message_is_method_call(message,WID_DBUS_INTERFACE,WID_DBUS_CONF_METHOD_AUTO_ADD_RADIO_EBR_SWITCH)) {
+			reply = wid_dbus_interface_set_radio_auto_add_to_ebr_switch(connection,message,user_data);
+		}
+		else if (dbus_message_is_method_call(message,WID_DBUS_INTERFACE,WID_DBUS_CONF_METHOD_SHOW_AUTO_ADD_RADIO_EBR_SWITCH)) {
+			reply = wid_dbus_interface_show_radio_auto_add_to_ebr_switch(connection,message,user_data);
+		}
 		else if (dbus_message_is_method_call(message,WID_DBUS_INTERFACE,WID_DBUS_CONF_METHOD_ADD_DEL_WLAN_CN)) {
 			reply = wid_dbus_interface_wlan_add_del_CN(connection,message,user_data);
 		}
@@ -78860,6 +78951,8 @@ static DBusHandlerResult wid_dbus_message_handler (DBusConnection *connection, D
 			reply = wid_dbus_interface_set_whole_wlan_bss_multi_user_optimize_switch(connection,message,user_data);
 		}else if (dbus_message_is_method_call(message,WID_DBUS_WLAN_INTERFACE,WID_DBUS_WLAN_METHOD_TUNNEL_NODE_SETTING)) {
 			reply = wid_dbus_set_wlan_tunnel_mode_state(connection,message,user_data);
+		}else if (dbus_message_is_method_call(message,WID_DBUS_WLAN_INTERFACE,WID_DBUS_WLAN_METHOD_TUNNEL_NODE_SETTING_AND_ADD_TO_EBR)) {
+			reply = wid_dbus_set_wlan_tunnel_mode_state_add_to_ebr(connection,message,user_data);
 		}
 	}
 	else if	(strcmp(dbus_message_get_path(message),WID_DBUS_WTP_OBJPATH) == 0) {

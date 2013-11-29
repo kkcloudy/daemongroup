@@ -1254,6 +1254,10 @@ DEFUN(show_wlan_cmd_func,
 				vty_out(vty,"apply interface: %s (nas_id :%s)\n","NONE","NONE");
 			}
 			vty_out(vty,"HotSpotID : %d\n",WLANINFO->WLAN[0]->hotspot_id);
+			if (WLANINFO->WLAN[0]->ebr_id)
+				vty_out(vty, "auto ebr:		%d\n", WLANINFO->WLAN[0]->ebr_id);
+			else 
+				vty_out(vty, "auto ebr:		not set\n");
 			vty_out(vty,"==============================================================================\n");
 			dcli_wlan_free_fun(WID_DBUS_CONF_METHOD_SHOWWLAN,WLANINFO);
 		}else if (ret == WLAN_ID_NOT_EXIST)
@@ -2537,6 +2541,283 @@ DEFUN(delete_wlan_cmd_func,
 	free(ESSID);
 
 	return CMD_SUCCESS;	
+}
+
+DEFUN(config_radio_auto_show_to_ebr_switch_cmd_func,
+	  config_radio_auto_show_to_ebr_switch_cmd,
+	  "show radio auto add to ebr switch",
+	  "show auto add to ebr switch"
+	  "show auto add to ebr switch\n"
+	 )
+{
+	int ret;
+
+	DBusMessage *query, *reply; 
+	DBusMessageIter  iter;
+	DBusError err;
+
+	unsigned char auto_add_switch = 0;
+	
+	int localid = 1;
+	int slot_id = HostSlotId;
+	int index = 0;
+	char BUSNAME[PATH_LEN];
+	char OBJPATH[PATH_LEN];
+	char INTERFACE[PATH_LEN];
+	if(vty->node == CONFIG_NODE){
+		index = 0;
+	}else if(vty->node == HANSI_NODE){
+		index = (int)vty->index;
+		localid = vty->local;
+		slot_id = vty->slotindex;
+	}
+	else if(vty->node == LOCAL_HANSI_NODE){
+		index = (int)vty->index;
+		localid = vty->local;
+		slot_id = vty->slotindex;
+	}
+	DBusConnection *dcli_dbus_connection = NULL;
+	ReInitDbusConnection(&dcli_dbus_connection,slot_id,distributFag);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_BUSNAME,BUSNAME);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_OBJPATH,OBJPATH);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_INTERFACE,INTERFACE);
+	query = dbus_message_new_method_call(BUSNAME,OBJPATH,INTERFACE,WID_DBUS_CONF_METHOD_SHOW_AUTO_ADD_RADIO_EBR_SWITCH);
+		
+	dbus_error_init(&err);
+
+	reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection,query,-1, &err);
+	
+	dbus_message_unref(query);
+	
+	if (NULL == reply)
+	{
+		cli_syslog_info("<error> failed get reply.\n");
+		if (dbus_error_is_set(&err))
+		{
+			cli_syslog_info("%s raised: %s",err.name,err.message);
+			dbus_error_free_for_dcli(&err);
+		}
+		return CMD_SUCCESS;
+	}
+	
+	dbus_message_iter_init(reply,&iter);
+	dbus_message_iter_get_basic(&iter,&ret);
+
+	if(ret == 0)
+	{
+		dbus_message_iter_next(&iter);	
+		dbus_message_iter_get_basic(&iter,&auto_add_switch);
+		vty_out(vty, "auto add to ebr switch is %s\n", auto_add_switch ? "enable" : "disable");
+	} else {
+		vty_out(vty,"<error>  %d\n",ret);
+	}
+		
+	dbus_message_unref(reply);
+
+	return CMD_SUCCESS; 		
+}
+
+
+DEFUN(config_radio_auto_add_to_ebr_switch_cmd_func,
+	  config_radio_auto_add_to_ebr_switch_cmd,
+	  "set radio auto add to ebr (enable|disable)",
+	  "auto add to ebr switch"
+	  "Make service enable/disable\n"
+	 )
+{
+	int ret;
+
+	DBusMessage *query, *reply; 
+	DBusMessageIter  iter;
+	DBusError err;
+
+	unsigned char auto_add_switch = 0;
+
+	if (!strcmp(argv[0],"enable"))
+	{
+		auto_add_switch = 1;	
+	}
+	else if (!strcmp(argv[0],"disable"))
+	{
+		auto_add_switch = 0;	
+	}
+	else
+	{
+		vty_out(vty,"<error> input patameter should only be 'enable' or 'disable'\n");
+		return CMD_SUCCESS;
+	}
+	
+	int localid = 1;
+	int slot_id = HostSlotId;
+	int index = 0;
+	char BUSNAME[PATH_LEN];
+	char OBJPATH[PATH_LEN];
+	char INTERFACE[PATH_LEN];
+	if(vty->node == CONFIG_NODE){
+		index = 0;
+	}else if(vty->node == HANSI_NODE){
+		index = (int)vty->index;
+		localid = vty->local;
+		slot_id = vty->slotindex;
+	}
+	else if(vty->node == LOCAL_HANSI_NODE){
+		index = (int)vty->index;
+		localid = vty->local;
+		slot_id = vty->slotindex;
+	}
+	DBusConnection *dcli_dbus_connection = NULL;
+	ReInitDbusConnection(&dcli_dbus_connection,slot_id,distributFag);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_BUSNAME,BUSNAME);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_OBJPATH,OBJPATH);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_INTERFACE,INTERFACE);
+	query = dbus_message_new_method_call(BUSNAME,OBJPATH,INTERFACE,WID_DBUS_CONF_METHOD_AUTO_ADD_RADIO_EBR_SWITCH);
+		
+	dbus_error_init(&err);
+
+
+	dbus_message_append_args(query,
+							 DBUS_TYPE_BYTE,&auto_add_switch,
+							 DBUS_TYPE_INVALID);
+
+	reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection,query,-1, &err);
+	
+	dbus_message_unref(query);
+	
+	if (NULL == reply)
+	{
+		cli_syslog_info("<error> failed get reply.\n");
+		if (dbus_error_is_set(&err))
+		{
+			cli_syslog_info("%s raised: %s",err.name,err.message);
+			dbus_error_free_for_dcli(&err);
+		}
+		return CMD_SUCCESS;
+	}
+	
+	dbus_message_iter_init(reply,&iter);
+	dbus_message_iter_get_basic(&iter,&ret);
+
+	if(ret == 0)
+	{
+		vty_out(vty,"set radio auto add to ebr %s successfully\n",argv[0]);
+	} else {
+		vty_out(vty,"<error>  %d\n",ret);
+	}
+		
+	dbus_message_unref(reply);
+
+	return CMD_SUCCESS; 		
+}
+
+
+
+DEFUN(wlan_associate_bridge_cmd_func,
+	  wlan_associate_bridge_cmd,
+	  "(add|delete) ebr BRIDGEID",
+	  SERVICE_STR
+	  "security profile bind with wlan\n"
+	  "SecurityID which you bind wlan\n"
+	 )
+{	int ret;
+	unsigned char security_id;
+	unsigned char WlanID;
+	DBusMessage *query, *reply; 
+	DBusMessageIter  iter;
+	DBusError err;
+	unsigned char add_or_delete = 1; // 1for add ; 0 for delete
+	unsigned int bridge_id = 0;
+	
+	//check add or delete ebr operation
+	if(strncmp("add",argv[0],(strlen(argv[0])>3)?3:strlen(argv[0]))==0){
+		add_or_delete = 1;
+	}else if(strncmp("delete",argv[0],(strlen(argv[0])>6)?6:strlen(argv[0]))==0){
+		add_or_delete = 0;
+	}else{
+		vty_out(vty,"<error>unknown command:%s\n", argv[0]);
+		return CMD_SUCCESS;
+	}
+
+	
+	//check bridge id
+	ret = parse_int_ID((char *)argv[1], &bridge_id);
+	if (ret != WID_DBUS_SUCCESS) {
+		vty_out(vty, "<error> unknown id format\n");
+		return CMD_SUCCESS;
+	}
+	
+	if(bridge_id >= EBR_NUM || bridge_id == 0){
+		vty_out(vty,"<error> ebr id should be 1 to %d\n", EBR_NUM-1);
+		return CMD_SUCCESS;
+	}
+	
+	
+	int index = 0;
+	int localid = 1;
+	int slot_id = HostSlotId;	
+	char BUSNAME[PATH_LEN];
+	char OBJPATH[PATH_LEN];
+	char INTERFACE[PATH_LEN];
+	if(vty->node == WLAN_NODE){
+		index = 0;
+		WlanID = (int)vty->index;	
+	} else if (vty->node == HANSI_WLAN_NODE){
+		index = vty->index; 		
+		WlanID = (int)vty->index_sub;	
+		localid = vty->local;
+		slot_id = vty->slotindex;
+	} else if (vty->node == LOCAL_HANSI_WLAN_NODE) {
+		index = vty->index;
+		WlanID = (int)vty->index_sub;	
+		localid = vty->local;
+		slot_id = vty->slotindex;
+	} else {
+		vty_out(vty, "unknown node: %d\n", vty->node);
+		return CMD_SUCCESS;
+	}
+
+	
+	DBusConnection *dcli_dbus_connection = NULL;
+	ReInitDbusConnection(&dcli_dbus_connection,slot_id,distributFag); 
+	ReInitDbusPath_V2(localid,index,WID_DBUS_BUSNAME,BUSNAME);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_OBJPATH,OBJPATH);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_INTERFACE,INTERFACE);
+	query = dbus_message_new_method_call(BUSNAME,OBJPATH,INTERFACE,WID_DBUS_CONF_METHOD_ADD_DEL_WLAN_EBR);
+	
+	dbus_error_init(&err);
+	vty_out(vty, "wlan %d bridge %d\n", WlanID, bridge_id);
+	dbus_message_append_args(query,
+							 DBUS_TYPE_BYTE,&add_or_delete,
+							 DBUS_TYPE_BYTE,&WlanID,
+							 DBUS_TYPE_UINT32, &bridge_id,
+							 DBUS_TYPE_INVALID);
+
+	reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection,query,-1, &err);
+	
+	dbus_message_unref(query);
+	
+	if (NULL == reply) {
+		vty_out(vty, "<error> failed get reply.\n");
+		if (dbus_error_is_set(&err)) {
+			vty_out(vty, "%s raised: %s",err.name,err.message);
+			dbus_error_free_for_dcli(&err);
+		}
+		return CMD_SUCCESS;
+	}
+	
+	dbus_message_iter_init(reply,&iter);
+	dbus_message_iter_get_basic(&iter,&ret);
+
+		if(ret == WID_DBUS_SUCCESS)
+			vty_out(vty,"%s ebr %d %s %d success\n", add_or_delete ? "add" : "delete", bridge_id, add_or_delete ? "to" : "from", WlanID);
+		else if(ret == WID_EBR_NOT_EXIST)
+			vty_out(vty,"<error> ebr %d does not exist\n", bridge_id);
+		else if (ret == VALUE_OUT_OF_RANGE)
+			vty_out(vty, "<error> bridge out of range\n");
+		else 
+			vty_out(vty, "<error> other unknow error happend: %d\n", ret);
+
+	dbus_message_unref(reply);
+	return CMD_SUCCESS;
 }
 
 
@@ -9281,6 +9562,98 @@ DEFUN(set_wlan_bss_multi_user_optimize_cmd_func,
 	dbus_message_unref(reply);
 	return CMD_SUCCESS;
 }
+DEFUN(set_wlan_tunnel_mode_enable_add_to_ebr_cmd_func,
+	  set_wlan_tunnel_mode_enable_add_to_ebr_cmd,
+	  "set wlan forwarding mode (tunnel|local) ebr",
+	  SERVICE_STR
+	  "enable or disable"
+	 )
+{	
+	int ret = 0;
+	unsigned char wlanid = 0;
+	DBusMessage *query, *reply;	
+	DBusMessageIter	 iter;
+	DBusError err;
+	unsigned char state = 0;	
+	if(strncmp("tunnel",argv[0],strlen(argv[0])) == 0){
+		state = 1;
+	}else if(strncmp("local",argv[0],strlen(argv[0])) == 0){
+		state = 0;
+	}
+	int index = 0;
+	int localid = 1;
+	int slot_id = HostSlotId;
+	char BUSNAME[PATH_LEN];
+	char OBJPATH[PATH_LEN];
+	char INTERFACE[PATH_LEN];
+	if(vty->node == WLAN_NODE){
+		index = 0;
+		wlanid = (unsigned char)vty->index; 
+	}
+	else if(vty->node == HANSI_WLAN_NODE){
+		index = vty->index;			
+		wlanid = (int)vty->index_sub;	
+		localid = vty->local;
+		slot_id = vty->slotindex;
+	}
+	else if (vty->node == LOCAL_HANSI_WLAN_NODE)
+	{
+		index = vty->index;
+		wlanid = (int)vty->index_sub;	
+		localid = vty->local;
+		slot_id = vty->slotindex;
+	}
+	DBusConnection *dcli_dbus_connection = NULL;
+	ReInitDbusConnection(&dcli_dbus_connection,slot_id,distributFag);
+
+	ReInitDbusPath_V2(localid,index,WID_DBUS_BUSNAME,BUSNAME);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_WLAN_OBJPATH,OBJPATH);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_WLAN_INTERFACE,INTERFACE);
+	query = dbus_message_new_method_call(BUSNAME,OBJPATH,INTERFACE,WID_DBUS_WLAN_METHOD_TUNNEL_NODE_SETTING_AND_ADD_TO_EBR);
+	
+	dbus_error_init(&err);
+
+	dbus_message_append_args(query,
+							 DBUS_TYPE_BYTE,&state,
+							 DBUS_TYPE_BYTE,&wlanid,
+							 DBUS_TYPE_INVALID);
+
+	reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection,query,3000000, &err);
+	
+	dbus_message_unref(query);
+	
+	if (NULL == reply) {
+		cli_syslog_info("<error> failed get reply.\n");
+		if (dbus_error_is_set(&err)) {
+			cli_syslog_info("%s raised: %s",err.name,err.message);
+			dbus_error_free_for_dcli(&err);
+		}
+		return CMD_SUCCESS;
+	}
+	
+	dbus_message_iter_init(reply,&iter);
+	dbus_message_iter_get_basic(&iter,&ret);
+
+	if(ret == WID_DBUS_SUCCESS)
+		vty_out(vty,"set wlan tunnel mode %s successfully\n",argv[0]);
+	else if(ret == WLAN_BE_ENABLE)
+		vty_out(vty,"set wlan tunnel mode %s failed! wlan is enable,please disable it first\n",argv[0]);
+	else if(ret == WLAN_ID_NOT_EXIST)
+		vty_out(vty,"<error>wlanid is not exist\n");
+	else if (ret == WID_WANT_TO_DELETE_WLAN)
+	{
+		vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+	}
+	else if(ret == RADIO_IN_EBR)
+		vty_out(vty,"<error>some radio interface in ebr\n");
+	else
+		vty_out(vty,"set wlan tunnel mode %s failed %d\n",argv[0],ret);		
+	
+	dbus_message_unref(reply);
+	return CMD_SUCCESS;
+}
+
+
 DEFUN(set_wlan_tunnel_mode_enable_cmd_func,
 	  set_wlan_tunnel_mode_enable_cmd,
 	  "set wlan forwarding mode (tunnel|local)",
@@ -9737,6 +10110,9 @@ void dcli_wlan_init(void) {
 	install_element(HANSI_NODE,&create_wlan_cmd_cn);
 	install_element(HANSI_NODE,&delete_wlan_cmd);
 	install_element(HANSI_NODE,&config_wlan_cmd);
+	install_element(HANSI_NODE,&config_radio_auto_add_to_ebr_switch_cmd);
+	install_element(HANSI_NODE,&config_radio_auto_show_to_ebr_switch_cmd);
+	
 	/*====================for mib begin====================*/
 	install_element(HANSI_NODE,&show_all_wlan_wapi_basic_information_cmd);/*nl add 20100521*/						/*b1*/
 	install_element(HANSI_NODE,&show_all_wlan_wapi_performance_stats_information_cmd);/*nl add 20100531*/			/*b2*/
@@ -9758,6 +10134,7 @@ void dcli_wlan_init(void) {
 	install_element(HANSI_WLAN_NODE,&config_wlan_service_cmd);	
 	install_element(HANSI_WLAN_NODE,&config_wds_service_cmd); 
 	install_element(HANSI_WLAN_NODE,&wlan_apply_security_cmd);
+	install_element(HANSI_WLAN_NODE,&wlan_associate_bridge_cmd);
 	install_element(HANSI_WLAN_NODE,&wlan_apply_interface_cmd);
 	install_element(HANSI_WLAN_NODE,&wlan_delete_interface_cmd);
 	install_element(HANSI_WLAN_NODE,&wlan_hideessid_cmd);
@@ -9808,6 +10185,8 @@ void dcli_wlan_init(void) {
 	install_element(HANSI_WLAN_NODE,&clean_wlan_hotspot_id_cmd);		
 	install_element(HANSI_WLAN_NODE,&set_wlan_bss_multi_user_optimize_cmd);		
 	install_element(HANSI_WLAN_NODE,&set_wlan_tunnel_mode_enable_cmd);
+	install_element(HANSI_WLAN_NODE,&set_wlan_tunnel_mode_enable_add_to_ebr_cmd);
+	
 /*fengwenchao add 20110507*/
 /****************************************LOCAL_HANSI_NODE**********************************/
 install_node(&local_hansi_wlan_node,NULL,"LOCAL_HANSI_WLAN_NODE");
@@ -9819,6 +10198,9 @@ install_element(LOCAL_HANSI_NODE,&create_wlan_cmd);
 install_element(LOCAL_HANSI_NODE,&create_wlan_cmd_cn);
 install_element(LOCAL_HANSI_NODE,&delete_wlan_cmd);
 install_element(LOCAL_HANSI_NODE,&config_wlan_cmd);
+install_element(LOCAL_HANSI_NODE,&config_radio_auto_add_to_ebr_switch_cmd);
+install_element(LOCAL_HANSI_NODE,&config_radio_auto_show_to_ebr_switch_cmd);
+
 /*====================for mib begin====================*/
 install_element(LOCAL_HANSI_NODE,&show_all_wlan_wapi_basic_information_cmd);/*nl add 20100521*/						/*b1*/
 install_element(LOCAL_HANSI_NODE,&show_all_wlan_wapi_performance_stats_information_cmd);/*nl add 20100531*/			/*b2*/
@@ -9840,6 +10222,7 @@ install_element(LOCAL_HANSI_NODE,&set_wlan_not_response_sta_probe_request_cmd);
 install_element(LOCAL_HANSI_WLAN_NODE,&config_wlan_service_cmd);	
 install_element(LOCAL_HANSI_WLAN_NODE,&config_wds_service_cmd); 
 install_element(LOCAL_HANSI_WLAN_NODE,&wlan_apply_security_cmd);
+install_element(LOCAL_HANSI_WLAN_NODE,&wlan_associate_bridge_cmd);
 install_element(LOCAL_HANSI_WLAN_NODE,&wlan_apply_interface_cmd);
 install_element(LOCAL_HANSI_WLAN_NODE,&wlan_delete_interface_cmd);
 install_element(LOCAL_HANSI_WLAN_NODE,&wlan_hideessid_cmd);
@@ -9890,6 +10273,8 @@ install_element(LOCAL_HANSI_WLAN_NODE,&set_wlan_uni_muti_bro_cast_isolation_set_
 install_element(LOCAL_HANSI_WLAN_NODE,&set_wlan_muti_bro_cast_rate_set_cmd);
 install_element(LOCAL_HANSI_WLAN_NODE,&set_wlan_not_response_sta_probe_request_cmd);
 install_element(LOCAL_HANSI_WLAN_NODE,&set_wlan_tunnel_mode_enable_cmd);
+install_element(LOCAL_HANSI_WLAN_NODE,&set_wlan_tunnel_mode_enable_add_to_ebr_cmd);
+
 	return;
 }
 
