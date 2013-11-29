@@ -33,7 +33,7 @@ typedef struct interface_INFO
 	unsigned short	vlanid;
 	unsigned char vlanSwitch;	
 	unsigned char apname[DEFAULT_LEN];
-	unsigned char essid[ESSID_LEN];
+	unsigned char essid[ESSID_LEN+1];
 }IF_info;
 
 struct interface_basic_INFO{

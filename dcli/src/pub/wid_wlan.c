@@ -2188,8 +2188,8 @@ void *dcli_wlan_show_api_group(
 		case 1 :{
 				int j =0;
 				unsigned char* essid = NULL;
-				essid =(unsigned char*) malloc(32+1);
-				memset(essid,0,32);
+				essid =(unsigned char*) malloc(ESSID_DEFAULT_LEN+1);
+				memset(essid,0,ESSID_DEFAULT_LEN+1);
 				//	DCLI_WLAN_API_GROUP *WLANIFO = NULL;
 				//	WLANIFO->WLAN = NULL;
 				//LIST->WLAN = (WID_WLAN*)malloc(sizeof(WID_WLAN*));
@@ -2229,7 +2229,7 @@ void *dcli_wlan_show_api_group(
 					}
 						LIST->WLAN[i]->ESSID= (char*)malloc(ESSID_DEFAULT_LEN+1);
 						memset(LIST->WLAN[i]->ESSID,0,ESSID_DEFAULT_LEN+1);
-						memcpy(LIST->WLAN[i]->ESSID,essid,ESSID_DEFAULT_LEN);
+						memcpy(LIST->WLAN[i]->ESSID,essid,strlen((char *)essid));
 				
 					dbus_message_iter_next(&iter_struct);
 				
@@ -2272,8 +2272,8 @@ void *dcli_wlan_show_api_group(
 				LIST->WLAN[0]->Wlan_Ifi = NULL;
 				char* wlanname = NULL;
 				char* essid = NULL;
-				essid =(char*) malloc(32+1);
-				memset(essid,0,32);
+				essid =(char*) malloc(ESSID_DEFAULT_LEN+1);
+				memset(essid,0,ESSID_DEFAULT_LEN+1);
 				char *eap_mac = NULL;// = (char*)malloc(18);
 				char* key2 = NULL;
 				int j;
@@ -2311,7 +2311,7 @@ void *dcli_wlan_show_api_group(
 
 					LIST->WLAN[0]->ESSID= (char*)malloc(ESSID_DEFAULT_LEN+1);
 					memset(LIST->WLAN[0]->ESSID,0,ESSID_DEFAULT_LEN+1);
-					memcpy(LIST->WLAN[0]->ESSID,essid,ESSID_DEFAULT_LEN);
+					memcpy(LIST->WLAN[0]->ESSID,essid,strlen((char *)essid));
 					if(essid != NULL){
 						free(essid);
 						essid = NULL;

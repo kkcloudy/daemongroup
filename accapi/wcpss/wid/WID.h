@@ -328,7 +328,7 @@ struct interface_INFO{
 	unsigned short	vlanid;	
 	unsigned char	vlanSwitch;
 	unsigned char apname[DEFAULT_LEN];
-	unsigned char essid[ESSID_LENGTH];
+	unsigned char essid[ESSID_LENGTH+1];
 };
 typedef struct interface_INFO IF_info;
 

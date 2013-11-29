@@ -26662,8 +26662,9 @@ DBusMessage * wid_dbus_interface_set_wlan_essid(DBusConnection *conn, DBusMessag
 	DBusMessageIter  iter;
 	int ret = WID_DBUS_SUCCESS;
 
-	char *essid = NULL;
+	char *essid = NULL,*tmp_essid = NULL;
 	unsigned char wlanid = 0;
+	int i = 0,j=0;
 	
 	dbus_error_init(&err);
 		
@@ -26695,12 +26696,46 @@ DBusMessage * wid_dbus_interface_set_wlan_essid(DBusConnection *conn, DBusMessag
 	}
 	else
 	{
+		tmp_essid = (char *)malloc(strlen(AC_WLAN[wlanid]->ESSID)+1);
+		memset(tmp_essid,0,strlen(AC_WLAN[wlanid]->ESSID)+1);
+		memcpy(tmp_essid,AC_WLAN[wlanid]->ESSID,strlen(AC_WLAN[wlanid]->ESSID));
 		CW_FREE_OBJECT_WID(AC_WLAN[wlanid]->ESSID);
 		AC_WLAN[wlanid]->ESSID = (char *)WID_MALLOC(strlen(essid)+1);
 		memset(AC_WLAN[wlanid]->ESSID, 0, strlen(essid)+1);
 		memcpy(AC_WLAN[wlanid]->ESSID,essid,strlen(essid));
 
 		AsdWsm_WLANOp(wlanid,WID_MODIFY,0);
+
+		for(i = 0; i<WTP_NUM;i++)
+		{
+			if(AC_WTP[i] != NULL)
+			{
+				for(j=0;j<L_RADIO_NUM;j++)
+				{
+					if((AC_WTP[i]->WTP_Radio[j] != NULL) && (AC_WTP[i]->WTP_Radio[j]->isBinddingWlan == 1))
+					{
+						struct wlanid *wlan_id = AC_WTP[i]->WTP_Radio[j]->Wlan_Id;
+						while(wlan_id != NULL)
+						{
+							if(wlan_id->wlanid == wlanid)
+							{
+								if(strcmp(wlan_id->ESSID,tmp_essid) == 0)
+								{
+									CW_FREE_OBJECT_WID(wlan_id->ESSID);
+									wlan_id->ESSID = (char *)WID_MALLOC(strlen(essid) + 1);
+									memset(wlan_id->ESSID,0,strlen(essid)+1);
+									memcpy(wlan_id->ESSID,essid,strlen(essid));
+								}
+								break;
+							}
+							wlan_id = wlan_id->next;
+						}
+					}
+				}
+			}
+		}
+
+		CW_FREE_OBJECT_WID(tmp_essid);
 		
 		wid_syslog_debug_debug(WID_DBUS,"change wlan %d essid %s\n",wlanid,AC_WLAN[wlanid]->ESSID);
 	
@@ -26721,10 +26756,11 @@ DBusMessage * wid_dbus_interface_set_wlan_ascii_essid(DBusConnection *conn, DBus
 	DBusMessageIter  iter;
 	int ret = WID_DBUS_SUCCESS;
 
-	unsigned char ESSID[32];
-	memset(ESSID,0,ESSID_DEFAULT_LEN);
+	unsigned char ESSID[ESSID_DEFAULT_LEN+1];
+	char *tmp_essid = NULL;
+	memset(ESSID,0,ESSID_DEFAULT_LEN+1);
 	unsigned char wlanid = 0;
-	int /*i,*/j = 0;
+	int i = 0,j = 0;
 	dbus_error_init(&err);
 		
 	if (!(dbus_message_get_args ( msg, &err,
@@ -26777,7 +26813,7 @@ DBusMessage * wid_dbus_interface_set_wlan_ascii_essid(DBusConnection *conn, DBus
 		}
 		return NULL;
 	}
-	printf("ESSID = %s \n",ESSID);
+	wid_syslog_debug_debug(WID_DBUS,"ESSID = %s \n",ESSID);
 	char essid_str2[ESSID_DEFAULT_LEN+1];
 	char *s1=NULL;
 	s1 = (char*)WID_MALLOC(1+1);
@@ -26792,11 +26828,11 @@ DBusMessage * wid_dbus_interface_set_wlan_ascii_essid(DBusConnection *conn, DBus
 		}else{
 			memset(s1,0,1+1);
 			sprintf(s1,"%x",ESSID[j]);
-			printf("s1:%s\n",s1);			
+			wid_syslog_debug_debug(WID_DBUS,"s1:%s\n",s1);			
 			strncat(essid_str2,s1,strlen(s1));
 		}
 	}
-	printf("essid_str2 = %s \n",essid_str2);
+	wid_syslog_debug_debug(WID_DBUS,"essid_str2 = %s \n",essid_str2);
 	if (AC_WLAN[wlanid] == NULL)
 	{
 		ret = WLAN_ID_NOT_EXIST;
@@ -26811,6 +26847,9 @@ DBusMessage * wid_dbus_interface_set_wlan_ascii_essid(DBusConnection *conn, DBus
 	}
 	else
 	{
+		tmp_essid = (char *)malloc(strlen(AC_WLAN[wlanid]->ESSID)+1);
+		memset(tmp_essid,0,strlen(AC_WLAN[wlanid]->ESSID)+1);
+		memcpy(tmp_essid,AC_WLAN[wlanid]->ESSID,strlen(AC_WLAN[wlanid]->ESSID));
 		CW_FREE_OBJECT_WID(AC_WLAN[wlanid]->ESSID);
 		CW_FREE_OBJECT_WID(AC_WLAN[wlanid]->ESSID_CN_STR);
 		AC_WLAN[wlanid]->ESSID = (char *)WID_MALLOC(strlen((char*)ESSID)+1);
@@ -26824,6 +26863,37 @@ DBusMessage * wid_dbus_interface_set_wlan_ascii_essid(DBusConnection *conn, DBus
 		memcpy(AC_WLAN[wlanid]->ESSID_CN_STR,essid_str2,strlen(essid_str2));		
 
 		AsdWsm_WLANOp(wlanid,WID_MODIFY,0);
+
+		for(i = 0; i<WTP_NUM;i++)
+		{
+			if(AC_WTP[i] != NULL)
+			{
+				for(j=0;j<L_RADIO_NUM;j++)
+				{
+					if((AC_WTP[i]->WTP_Radio[j] != NULL) && (AC_WTP[i]->WTP_Radio[j]->isBinddingWlan == 1))
+					{
+						struct wlanid *wlan_id = AC_WTP[i]->WTP_Radio[j]->Wlan_Id;
+						while(wlan_id != NULL)
+						{
+							if(wlan_id->wlanid == wlanid)
+							{
+								if(strcmp(wlan_id->ESSID,tmp_essid) == 0)
+								{
+									CW_FREE_OBJECT_WID(wlan_id->ESSID);
+									wlan_id->ESSID = (char *)WID_MALLOC(strlen((char*)ESSID) + 1);
+									memset(wlan_id->ESSID,0,strlen((char*)ESSID)+1);
+									memcpy(wlan_id->ESSID,ESSID,strlen((char*)ESSID));
+								}
+								break;
+							}
+							wlan_id = wlan_id->next;
+						}
+					}
+				}
+			}
+		}
+
+		CW_FREE_OBJECT_WID(tmp_essid);
 		
 		wid_syslog_debug_debug(WID_DBUS,"change wlan %d essid %s\n",wlanid,AC_WLAN[wlanid]->ESSID);
 	
