@@ -7148,7 +7148,9 @@ DEFUN(wtp_apply_wlan_cmd_func,
 	else if(ret == WTP_WEP_NUM_OVER)
 		vty_out(vty,"<error> wtp over max wep wlan count or wep index conflict\n");
 	else if(ret == SECURITYINDEX_IS_SAME)
-		vty_out(vty,"<error> wep conflict, wtp binding wlan securityindex is same with others\n");	
+		vty_out(vty,"<error> wep conflict, wtp binding wlan securityindex is same with others\n");
+	else if(ret == INTERFACE_BINDED_ALREADLY)//chenjun add
+		vty_out(vty,"<warnning> you have binding this wlan id,please do not binding this again");//add end
 	else
 		vty_out(vty,"<error>  %d\n",ret);
 
