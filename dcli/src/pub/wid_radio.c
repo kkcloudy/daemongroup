@@ -2698,7 +2698,7 @@ struct WtpList * set_radio_txpower_cmd_txpower(int localid, int index,DBusConnec
 	char fail_reason = 0;
 	struct RadioList  *RadioNode = NULL;
 	struct RadioList *radio_list_head = NULL;
-	printf("struct :  txp = %d \n",txp);
+	//printf("struct :  txp = %d \n",txp);
 	ReInitDbusPath_V2(localid,index,WID_DBUS_BUSNAME,BUSNAME);
 	ReInitDbusPath_V2(localid,index,WID_DBUS_RADIO_OBJPATH,OBJPATH);
 	ReInitDbusPath_V2(localid,index,WID_DBUS_RADIO_INTERFACE,INTERFACE);
@@ -2728,7 +2728,7 @@ struct WtpList * set_radio_txpower_cmd_txpower(int localid, int index,DBusConnec
 	dbus_message_iter_get_basic(&iter,ret);
 	if(type==0)
 		{
-			printf("ZZZZZZZZZZZZZZZZZZZZZZZ\n");
+			//printf("ZZZZZZZZZZZZZZZZZZZZZZZ\n");
 			dbus_message_iter_next(&iter);
 			dbus_message_iter_get_basic(&iter,ret1);
 		}
