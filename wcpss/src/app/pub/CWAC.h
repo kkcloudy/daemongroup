@@ -286,6 +286,7 @@ extern unsigned char  g_sta_flow_tx_overflow_switch;
 extern unsigned short g_sta_flow_tx_overflow_interval;
 extern unsigned int g_sta_flow_tx_overflow_threshold;
 
+extern unsigned char g_auto_add_radio_to_ebr;
 
 extern unsigned short gINFOREPORTINTERVAL;  
 extern int gSTAINFOREPORT;

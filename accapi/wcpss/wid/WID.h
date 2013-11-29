@@ -1401,6 +1401,7 @@ struct a_sta_info{
 struct wlan{
 	char*	WlanName;
 	u_int8_t	WlanID;
+	u_int32_t	ebr_id;
 	char* 	ESSID;
 	unsigned char* 	ESSID_CN_STR;
 	u_int8_t	chinaEssid;
@@ -1572,7 +1573,8 @@ typedef enum{
 typedef enum{
 	NO_INTERFACE = 0,
 	WLAN_INTERFACE = 1,
-	BSS_INTERFACE = 2
+	BSS_INTERFACE = 2,
+	BSS_INTERFACE_EBR
 }wid_if_policy;
 
 #if 0

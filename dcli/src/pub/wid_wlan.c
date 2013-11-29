@@ -2399,6 +2399,9 @@ void *dcli_wlan_show_api_group(
 
 				dbus_message_iter_next(&iter);
 				dbus_message_iter_get_basic(&iter,&(LIST->WLAN[0]->hotspot_id));
+
+				dbus_message_iter_next(&iter);
+				dbus_message_iter_get_basic(&iter,&(LIST->WLAN[0]->ebr_id));
 				
 				dbus_message_iter_next(&iter);	
 				dbus_message_iter_recurse(&iter,&iter_array);
