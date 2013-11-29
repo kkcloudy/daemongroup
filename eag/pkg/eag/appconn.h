@@ -69,6 +69,7 @@ struct app_conn_t {
 	uint32_t bk_output_packets;
 	uint64_t bk_output_octets;
 	struct iptables_data_t iptables_data;
+	struct iptables_data_t ip6tables_data;
 	struct fastfwd_data_t fastfwd_data;
 
 	char log_prefix[64];
@@ -251,7 +252,7 @@ int
 flush_all_appconn_flux_from_wireless(appconn_db_t *appdb, int time_interval);
 
 int
-flush_all_appconn_flux_from_iptables(appconn_db_t *appdb, int time_interval);
+flush_all_appconn_flux_from_ipxtables(appconn_db_t *appdb, int time_interval);
 
 int
 appconn_init_flux_from_wireless(struct app_conn_t *appconn);

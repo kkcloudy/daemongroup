@@ -300,7 +300,14 @@ eag_fastfwd_send(eag_fastfwd_t *fastfwd,
 
 	memset(&se_data, 0, sizeof(se_interative_t));
 	strncpy(se_data.hand_cmd, hand_cmd, sizeof(se_data.hand_cmd)-1);
-	se_data.fccp_cmd.fccp_data.user_info.user_ip = user_addr->user_ip;
+	if (EAG_IPV4 == user_addr->family) {
+        se_data.fccp_cmd.fccp_data.user_info.user_ip = user_addr->user_ip;
+	} else if (EAG_IPV6 == user_addr->family) {
+        //se_data.fccp_cmd.fccp_data.user_info.user_ipv6 = user_addr->user_ipv6;
+	} else if (EAG_MIX == user_addr->family) {
+        //se_data.fccp_cmd.fccp_data.user_info.user_ip = user_addr->user_ip;
+        //se_data.fccp_cmd.fccp_data.user_info.user_ipv6 = user_addr->user_ipv6;
+	}
 	ipx2str(user_addr, user_ipstr, sizeof(user_ipstr));
 	eag_log_debug("eag_fastfwd", 
 		"eag_fastfwd_send sockfd(%d) slotid(%d), userip:%s, Op:%s",

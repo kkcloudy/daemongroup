@@ -36,6 +36,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdlib.h>
 #include <arpa/inet.h>
 #include <iptables.h>
+#include <ip6tables.h>
 
 #include "nm_list.h"
 #include "hashtable.h"
@@ -74,6 +75,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define FLUX_INTERVAL_FOR_IPTABLES_OR_WIRELESS	20
 
 extern nmp_mutex_t eag_iptables_lock;
+extern nmp_mutex_t eag_ip6tables_lock;
 
 /*data base of appconn */
 struct appconn_db {
@@ -1768,23 +1770,29 @@ set_appconn_flux(struct app_conn_t *appconn)
 	
 	switch(flux_from) {
 	case FLUX_FROM_IPTABLES:
-		appconn->session.input_octets = appconn->bk_input_octets
-			+ (appconn->iptables_data.input_octets*input_factor/1000);
-		appconn->session.input_packets = appconn->bk_input_packets + appconn->iptables_data.input_packets;
-		appconn->session.output_octets = appconn->bk_output_octets
-			+ (appconn->iptables_data.output_octets*output_factor/1000);
-		appconn->session.output_packets = appconn->bk_output_packets + appconn->iptables_data.output_packets;
+		appconn->session.input_octets = appconn->bk_input_octets + (appconn->iptables_data.input_octets*input_factor/1000)
+			+ (appconn->ip6tables_data.input_octets*input_factor/1000);
+		appconn->session.input_packets = appconn->bk_input_packets + appconn->iptables_data.input_packets
+			+ appconn->ip6tables_data.input_packets;
+		appconn->session.output_octets = appconn->bk_output_octets + (appconn->iptables_data.output_octets*output_factor/1000)
+			+ (appconn->ip6tables_data.output_octets*output_factor/1000);
+		appconn->session.output_packets = appconn->bk_output_packets + appconn->iptables_data.output_packets
+			+ appconn->ip6tables_data.output_packets;
 		break;
 	case FLUX_FROM_IPTABLES_L2:
 		appconn->iptables_data.input_octets += appconn->iptables_data.input_packets*18;
 		appconn->iptables_data.output_octets += appconn->iptables_data.output_packets*18;
+		appconn->ip6tables_data.input_octets += appconn->ip6tables_data.input_packets*18;
+		appconn->ip6tables_data.output_octets += appconn->ip6tables_data.output_packets*18;
 		
-		appconn->session.input_octets = appconn->bk_input_octets
-			+ (appconn->iptables_data.input_octets*input_factor/1000);
-		appconn->session.input_packets = appconn->bk_input_packets + appconn->iptables_data.input_packets;
-		appconn->session.output_octets = appconn->bk_output_octets
-			+ (appconn->iptables_data.output_octets*output_factor/1000);
-		appconn->session.output_packets = appconn->bk_output_packets + appconn->iptables_data.output_packets;
+		appconn->session.input_octets = appconn->bk_input_octets + (appconn->iptables_data.input_octets*input_factor/1000)
+			+ (appconn->ip6tables_data.input_octets*input_factor/1000);
+		appconn->session.input_packets = appconn->bk_input_packets + appconn->iptables_data.input_packets
+			+ appconn->ip6tables_data.input_packets;
+		appconn->session.output_octets = appconn->bk_output_octets + (appconn->iptables_data.output_octets*output_factor/1000)
+			+ (appconn->ip6tables_data.output_octets*output_factor/1000);
+		appconn->session.output_packets = appconn->bk_output_packets + appconn->iptables_data.output_packets
+			+ appconn->ip6tables_data.output_packets;
 		break;
 	case FLUX_FROM_WIRELESS:
 		if ( (0 != appconn->session.wireless_data.cur_input_octets
@@ -1841,15 +1849,19 @@ set_appconn_flux(struct app_conn_t *appconn)
 	case FLUX_FROM_FASTFWD_IPTABLES:
 		appconn->session.input_octets = appconn->bk_input_octets
 			+ appconn->iptables_data.input_octets
+			+ appconn->ip6tables_data.input_octets
 			+ appconn->fastfwd_data.input_octets;
 		appconn->session.input_packets = appconn->bk_input_packets 
 			+ appconn->iptables_data.input_packets
+			+ appconn->ip6tables_data.input_packets
 			+ appconn->fastfwd_data.input_packets;
 		appconn->session.output_octets = appconn->bk_output_octets
 			+ appconn->iptables_data.output_octets
+			+ appconn->ip6tables_data.output_octets
 			+ appconn->fastfwd_data.output_octets;
 		appconn->session.output_packets = appconn->bk_output_packets 
 			+ appconn->iptables_data.output_packets
+			+ appconn->ip6tables_data.output_packets
 			+ appconn->fastfwd_data.output_packets;
 		break;
 	default:
@@ -2063,6 +2075,134 @@ flush_all_appconn_flux_from_iptables(appconn_db_t *appdb, int time_interval)
 }
 
 int
+flush_all_appconn_flux_from_ip6tables(appconn_db_t *appdb, int time_interval)
+{
+	static time_t last_time = 0;
+	struct timeval tv = {0};
+	time_t time_now = 0;
+	struct ip6tc_handle *handle = NULL;
+	const char *chain_name = NULL;
+	const struct ip6t_entry *p_entry = NULL;
+	struct ip6t_counters *my_counter = NULL;
+	unsigned int rule_num = 0;
+	struct app_conn_t *appconn = NULL;
+	user_addr_t user_addr = {0};
+	char hansi_type = (HANSI_LOCAL == appdb->hansi_type)?'L':'R';
+	
+	eag_time_gettimeofday(&tv, NULL);
+	time_now = tv.tv_sec;
+
+	if (time_now - last_time < time_interval) {
+		eag_log_debug("appconn", "flush_all_appconn_flux_from_ip6tables not timeout,"
+			"time_now=%lu, last_time=%lu, time gap=%lu < time interval=%d",
+			time_now, last_time, time_now - last_time, time_interval);
+		return EAG_ERR_WIRELESS_NOT_TIMR_YET;
+	}
+	last_time = time_now;
+
+	eag_log_info("flush_all_appconn_flux_from_ip6tables ip6tables lock");
+	nmp_mutex_lock(&eag_ip6tables_lock);
+	handle = ip6tc_init("filter");
+	eag_log_info("flush_all_appconn_flux_from_ip6tables ip6tables unlock");
+	nmp_mutex_unlock(&eag_ip6tables_lock);
+	if (NULL == handle) {
+		eag_log_err("flush_all_appconn_flux_from_ip6tables can't init ip6tc handle");
+		return -1;
+	}
+
+	for (chain_name = ip6tc_first_chain(handle); chain_name; chain_name = ip6tc_next_chain(handle))
+	{
+		int sscanf_ret = -1;
+		char cp_type = 'R';
+		int cp_id = 0;
+		char chain_name_ifname[64] = "";
+		char chain_name_in[4] = "";
+		char ipv6_str[48] = "";
+		
+		eag_log_debug("appconn", "flush_all_appconn_flux_from_ip6tables chain_name=%s", chain_name);
+
+		sscanf_ret = sscanf(chain_name, "CP_%c%d_F_%63[^_]_%3s",
+						&cp_type, &cp_id, chain_name_ifname, chain_name_in);
+		if(cp_id != appdb->hansi_id || cp_type != hansi_type)
+		{
+			continue;
+		}
+		eag_log_debug("appconn", "flush_all_appconn_flux_from_ip6tables "
+				"sscanf_ret=%d cp_type=%c cpid=%d if=%s in=%s",
+				sscanf_ret, cp_type, cp_id, chain_name_ifname, chain_name_in);
+		if (4 == sscanf_ret)/* ret=4 means has "IN" in the last chain,this is the downflux chain */
+		{
+			rule_num = 0;
+			for (p_entry = ip6tc_first_rule(chain_name, handle);
+				p_entry;
+				p_entry = ip6tc_next_rule(p_entry, handle))
+			{
+				rule_num++;
+				eag_log_debug("appconn", "flush_all_appconn_flux_from_ip6tables dst addr = %s",
+						ipv6tostr(&(p_entry->ipv6.dst), ipv6_str, sizeof(ipv6_str)));
+				if (ipv6_compare_null(&(p_entry->ipv6.dst)) == 0)
+				{
+					continue;
+				}
+				my_counter = ip6tc_read_counter(chain_name, rule_num, handle);
+				memset(&user_addr, 0, sizeof(user_addr_t));
+				user_addr.family = EAG_IPV6;
+				user_addr.user_ipv6 = p_entry->ipv6.dst;
+				appconn = appconn_find_by_userip(appdb, &user_addr);
+				if (NULL != appconn) {
+					appconn->ip6tables_data.input_octets = my_counter->bcnt;
+					appconn->ip6tables_data.input_packets = my_counter->pcnt;
+					set_appconn_flux(appconn);
+				}
+			}
+		}
+		else if (3 == sscanf_ret)/* ret=3 means doesn't have "IN" in the last chain,this is the upflux chain */
+		{
+			rule_num = 0;
+			for (p_entry = ip6tc_first_rule(chain_name, handle);
+				p_entry;
+				p_entry = ip6tc_next_rule(p_entry, handle))
+			{
+				rule_num++;
+				eag_log_debug("appconn", "flush_all_appconn_flux_from_ip6tables src addr = %s",
+                    	ipv6tostr(&(p_entry->ipv6.src), ipv6_str, sizeof(ipv6_str)));
+				if (ipv6_compare_null(&(p_entry->ipv6.src)) == 0)
+				{
+ 					continue;
+				}
+				my_counter = ip6tc_read_counter(chain_name,rule_num, handle);
+				memset(&user_addr, 0, sizeof(user_addr_t));
+				user_addr.family = EAG_IPV6;
+				user_addr.user_ipv6 = p_entry->ipv6.src;
+				appconn = appconn_find_by_userip(appdb, &user_addr);
+				if (NULL != appconn) {
+					appconn->ip6tables_data.output_octets = my_counter->bcnt;
+					appconn->ip6tables_data.output_packets = my_counter->pcnt;
+					set_appconn_flux(appconn);
+				}	
+			}
+		}
+	}
+	
+	ip6tc_free(handle);
+	appconn_check_flux_all( appdb, time_now);
+
+	return EAG_RETURN_OK;
+}
+
+int
+flush_all_appconn_flux_from_ipxtables(appconn_db_t *appdb, int time_interval)
+{
+	if (NULL == appdb) {
+		return -1;
+	}
+    flush_all_appconn_flux_from_iptables(appdb, time_interval);
+    flush_all_appconn_flux_from_ip6tables(appdb, time_interval);
+
+	return EAG_RETURN_OK;
+}
+
+int
 appconn_init_flux_from_wireless(struct app_conn_t *appconn)
 {
 	appconn_db_t *appdb = NULL;
@@ -2151,7 +2291,7 @@ flush_all_appconn_flux_immediate(appconn_db_t *appdb)
 	if (FLUX_FROM_IPTABLES == flux_from
 		||FLUX_FROM_IPTABLES_L2 == flux_from
 		||FLUX_FROM_FASTFWD_IPTABLES == flux_from) {
-		flush_all_appconn_flux_from_iptables(appdb, flux_interval);
+		flush_all_appconn_flux_from_ipxtables(appdb, flux_interval);
 	}
 	else if (FLUX_FROM_WIRELESS == flux_from) {
 		flush_all_appconn_flux_from_wireless(appdb, flux_interval);
