@@ -322,6 +322,138 @@ snmp_port_is_legal_input(const char *str) {
 	
 	return 1;
 }
+static int
+inet_make_mask_addr(int pf, void *dst, int masklength)
+{
+
+    unsigned long   Mask = 0;
+    int             maskBit = 0x80000000L;
+    unsigned char   mask = 0;
+    unsigned char   maskbit = 0x80L;
+    int             i, j, jj;
+
+
+    switch (pf) {
+	    case PF_INET6:
+	        if (masklength < 0 || masklength > 128)
+	            return -1;
+
+	        for (i = 0; i < 16; i++) {
+	            (*(u_char *) (&((struct in6_addr *) dst)->s6_addr[i])) = 0x00;
+	        }
+
+	        j = (int) masklength / 8;
+	        jj = masklength % 8;
+
+	        for (i = 0; i < j; i++) {
+	            (*(u_char *) (&((struct in6_addr *) dst)->s6_addr[i])) = 0xff;
+	        }
+	        while (jj--) {
+	            mask |= maskbit;
+	            maskbit >>= 1;
+	        }
+
+		if (j < sizeof (((struct in6_addr *) dst)->s6_addr)){
+		    (*(u_char *) (&((struct in6_addr *) dst)->s6_addr[j])) = mask;
+		}
+
+	        break;
+	    default:
+	        return -1;              
+	    }
+    return 0;
+}
+
+static int
+inet_addr_complement(int pf, void *src, void *dst)
+{
+
+    int             i;
+
+    if (sizeof(src) != sizeof(dst))
+        return -1;
+
+    switch (pf) {
+	    case PF_INET6:
+	        for (i = 0; i < 16; i++) {
+	            (*(u_char *) (&((struct in6_addr *) dst)->s6_addr[i])) =
+	                (~(*(u_char *) (&((struct in6_addr *) src)->s6_addr[i])))
+	                & 0xff;
+	        }
+	        break;
+	    default:
+	        return -1;
+	    }
+    return 0;
+}
+
+static int
+inet_addr_and(int pf, void *src1, void *src2, void *dst)
+{
+    int             i;
+
+    if (sizeof(src1) != sizeof(src2) || sizeof(src2) != sizeof(dst))
+        return -1;
+
+    switch (pf) {
+	    case PF_INET6:
+	        for (i = 0; i < 16; i++) {
+	            (*(u_char *) (&((struct in6_addr *) dst)->s6_addr[i])) =
+	                (*(u_char *) (&((struct in6_addr *) src1)->s6_addr[i])) &
+	                (*(u_char *) (&((struct in6_addr *) src2)->s6_addr[i]));
+	        }
+	        break;
+	    default:
+	        return -1;
+	    }
+    return 0;
+}
+
+
+static int
+inet_addrs_consistence(int pf, void *net, void *mask)
+{
+    struct sockaddr_in *tmp, *dst;
+    struct sockaddr_in6 *tmp6, *dst6;
+    int             ret;
+
+    switch (pf) {
+	    case PF_INET6:
+	        tmp6 = (struct sockaddr_in6 *) malloc(sizeof(struct sockaddr_in6));
+	        if (!tmp6) {
+	            return -1;
+	        }
+	        memset(tmp6, 0, sizeof(*tmp6));
+	        tmp6->sin6_family = PF_INET6;
+	        if (inet_addr_complement
+	            (PF_INET6, (struct in6_addr *) mask, &tmp6->sin6_addr) != 0) {
+	            free(tmp6);
+	            return -1;
+	        }
+	        dst6 = (struct sockaddr_in6 *) malloc(sizeof(struct sockaddr_in6));
+	        if (!dst6) {
+	            free(tmp6);
+	            return -1;
+	        }
+	        memset(dst6, 0, sizeof(*dst6));
+	        dst6->sin6_family = PF_INET6;
+	        if (inet_addr_and
+	            (PF_INET6, (struct in6_addr *) net, &tmp6->sin6_addr,
+	             &dst6->sin6_addr)) {
+	            free(dst6);
+	            free(tmp6);
+	            return -1;
+	        }
+	        ret = (IN6_IS_ADDR_UNSPECIFIED(&dst6->sin6_addr) == 1 ? 0 : -1);
+	        free(dst6);
+	        free(tmp6);
+	        break;
+	    default:
+	        return -1;
+	    }
+    return ret;
+}
+
 
 DEFUN(snmp_manual_set_hansi_func,
 	snmp_manual_set_hansi_cmd,
@@ -1867,6 +1999,7 @@ DEFUN(add_snmp_ipv6_community_func,
 
 	int ret=-1;
 	struct in6_addr s;
+	struct in6_addr mask;
 	char *input= argv[1];
 	char *ip=NULL;
 	char *prefix=NULL;
@@ -1905,6 +2038,15 @@ DEFUN(add_snmp_ipv6_community_func,
 		vty_out(vty, "IPV6 community: prefix length should be 0~128!");
 		return CMD_WARNING;
 	}
+	if (inet_make_mask_addr(PF_INET6, (void *)&mask, pre_len) != 0) {
+		vty_out(vty, "Prefix length error: add ipv6 community failed!");
+		return CMD_WARNING;
+	}
+	if (inet_addrs_consistence(PF_INET6, (void *)&s, (void *)&mask) != 0) {
+		vty_out(vty, "source/mask mismatch");
+	    return CMD_WARNING;
+	}
+	
 	strncpy(communityIPV6Node.community, argv[0], sizeof(communityIPV6Node.community) - 1);
 	strncpy(communityIPV6Node.ip_addr, ip, sizeof(communityIPV6Node.ip_addr) - 1);
 	communityIPV6Node.prefix = pre_len;
@@ -2016,6 +2158,7 @@ DEFUN(set_snmp_ipv6_community_func,
 
     int ret=-1;
     struct in6_addr s;
+    struct in6_addr mask;
     char *input= argv[2];
     char *ip=NULL;
     char *prefix=NULL;
@@ -2053,6 +2196,16 @@ DEFUN(set_snmp_ipv6_community_func,
 	    vty_out(vty, "IPV6 community: prefix length should be 0~128!");
 	    return CMD_WARNING;
     }
+    if (inet_make_mask_addr(PF_INET6, (void *)&mask, pre_len) != 0) {
+	    vty_out(vty, "Prefix length error: add ipv6 community failed!");
+	    return CMD_WARNING;
+    }
+    if (inet_addrs_consistence(PF_INET6, (void *)&s, (void *)&mask) != 0) {
+	    vty_out(vty, "source/mask mismatch");
+	return CMD_WARNING;
+    }
+
+    
     strncpy(communityIPV6Node.community, argv[1], sizeof(communityIPV6Node.community) - 1);
     strncpy(communityIPV6Node.ip_addr, ip, sizeof(communityIPV6Node.ip_addr) - 1);
     communityIPV6Node.prefix = pre_len;
