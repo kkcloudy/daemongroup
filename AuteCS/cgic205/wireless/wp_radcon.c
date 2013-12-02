@@ -231,6 +231,43 @@ int ShowRadioconPage(char *m,char *n,char *t,char *f,char *pn,char *rt,char *txp
      		"return;"\
      	"}"\
   	 "}"\
+  	 "function disable_td()"\
+	 "{"\
+		"var s = 1;"\
+		"var obj = document.getElementsByName(\"txpower_type\");"\
+	    "for(var i=0;i<obj.length;i++)"\
+		"{"\
+	        "if(obj[i].checked)"\
+			"{"\
+				"s = i+1;"\
+	        "}"\
+	    "}"\
+					
+		"var tx_power = document.getElementById(\"tx_power\");"\
+		
+		"var rad_txpower_offset_step = document.getElementById(\"rad_txpower_offset_step\");"\
+		"var rad_txpower_offset = document.getElementById(\"rad_txpower_offset\");"\
+		"if(s == \"1\")"\
+		"{"\
+			"tx_power.disabled=false;"\
+			"tx_power.style.backgroundColor=\"#FFFFFF\";"\
+			
+			"rad_txpower_offset_step.disabled=true;"\
+			"rad_txpower_offset_step.style.backgroundColor=\"#cccccc\";"\
+			"rad_txpower_offset.disabled=true;"\
+			"rad_txpower_offset.style.backgroundColor=\"#cccccc\";"\
+		"}"\
+		"else if(s == \"2\")"\
+		"{"\
+			"tx_power.disabled=true;"\
+			"tx_power.style.backgroundColor=\"#cccccc\";"\
+			
+			"rad_txpower_offset_step.disabled=false;"\
+			"rad_txpower_offset_step.style.backgroundColor=\"#FFFFFF\";"\
+			"rad_txpower_offset.disabled=false;"\
+			"rad_txpower_offset.style.backgroundColor=\"#FFFFFF\";"\
+		"}"\
+	 "}"\
   "</script>"\
   "<body>");
   rad_id= strtoul(n,&endptr,10);    /*char转成int，10代表十进制*/
@@ -421,23 +458,24 @@ int ShowRadioconPage(char *m,char *n,char *t,char *f,char *pn,char *rt,char *txp
 					fprintf(cgiOut,"</td>"\
                   "</tr>"\
                   "<tr height=30>"\
-					"<td>%s:</td>",search(lwlan,"tx_power_offset_step"));
-					fprintf(cgiOut,"<td align=left>");
-				  	if(!((result == 1)&&(radio->wlan_num>0)))/*如果radio没有绑定wlan*/
-                    	fprintf(cgiOut,"<input type=text name=rad_txpower_offset_step size=10 style=\"background-color:#cccccc\" disabled>");
-					else
-						fprintf(cgiOut,"<input type=text name=rad_txpower_offset_step size=10 maxLength=3 onkeypress=\"return event.keyCode>=48&&event.keyCode<=57\" onpaste=\"return false\">");
+                    "<td><input type='radio' name='txpower_type' value='by_txpower' checked='checked' onclick='disable_td();'>&nbsp;%s:</td>",search(lwlan,"tx_power"));
+                    fprintf(cgiOut,"<td width=75 align=left colspan=6>");
+					  if((radio)&&(radio->RADIO[0])&&(radio->RADIO[0]->AdStat==2))   /*如果AP是run状态，且radio的管理状态是disable*/
+						fprintf(cgiOut,"<input type=text name=tx_power id=tx_power size=10 style=\"background-color:#cccccc\" disabled>");
+					  else
+						fprintf(cgiOut,"<input type=text name=tx_power id=tx_power size=10 maxLength=3 onkeypress=\"return event.keyCode>=48&&event.keyCode<=57\">");
 					fprintf(cgiOut,"</td>"\
-					"<td align=left colspan=5><font color=red>(>0)DBm</font></td>"\
                   "</tr>"\
                   "<tr height=30>"\
+					"<td><input type='radio' name='txpower_type' value='by_txpower_offset' onclick='disable_td();'>&nbsp;%s:</td>",search(lwlan,"tx_power_offset_step"));
+					fprintf(cgiOut,"<td align=left>"\
+					"<input type=text name=rad_txpower_offset_step id=rad_txpower_offset_step size=10 maxLength=3 onkeypress=\"return event.keyCode>=48&&event.keyCode<=57\" onpaste=\"return false\" style=\"background-color:#cccccc;\" disabled>"\
+					"</td>"\
+					"<td align=left><font color=red>(>0)DBm</font></td>"\
                     "<td>%s:</td>",search(lwlan,"tx_power_offset"));
-					fprintf(cgiOut,"<td colspan=6 align=left>");
-				  	if(((strcmp(wtp_sta,"run")==0)&&(radio)&&(radio->RADIO[0])&&(radio->RADIO[0]->AdStat==2))||(!((result == 1)&&(radio->wlan_num>0))))/*如果AP是run状态，且radio的管理状态是disable，或者radio没有绑定wlan*/
-                    	fprintf(cgiOut,"<input type=text name=rad_txpower_offset size=10 style=\"background-color:#cccccc\" disabled>");
-					else
-						fprintf(cgiOut,"<input type=text name=rad_txpower_offset size=10 maxLength=3 onkeypress=\"return ((event.keyCode>=48&&event.keyCode<=57)||event.keyCode==45)\" onpaste=\"return false\">");
-					fprintf(cgiOut,"</td>"\
+					fprintf(cgiOut,"<td colspan=3 align=left>"\
+					"<input type=text name=rad_txpower_offset id=rad_txpower_offset size=10 maxLength=3 onkeypress=\"return ((event.keyCode>=48&&event.keyCode<=57)||event.keyCode==45)\" onpaste=\"return false\" style=\"background-color:#cccccc;\" disabled>"\
+					"</td>"\
                   "</tr>"\
                   "<tr height=30>"\
                     "<td>%s:</td>",search(lwlan,"radio_mode"));
@@ -1210,7 +1248,75 @@ void config_radio(instance_parameter *ins_para,int id,struct list *lpublic,struc
 				}
 	  }
   }
-  
+
+  /****************config radio txpower****************/
+  memset(content,0,sizeof(content));
+  cgiFormStringNoNewlines("tx_power",content,10);
+  if((strcmp(content,"")!=0)&&(strchr(content,' ')==NULL))    /*radio channel不为空时*/  
+  {
+  	  cont = strtoul(content,&endptr,10); 
+      ret= config_radio_txpower(ins_para->parameter,ins_para->connection,id,cont);
+	  																/*返回0表示失败，返回1表示成功，返回-1表示txpower conflict with country-code，返回-2表示radio id does not exist*/
+																	/*返回-3表示radio is disable, please enable it first，返回-4表示radio mode is 11n,not allow to set txpower，返回-5表示this radio max txpower is 20*/
+																	/*返回-6表示this radio max txpower is 27，返回-7表示出错，返回-8表示Radio ID非法*/
+																	/*返回SNMPD_CONNECTION_ERROR表示connection error*/
+      switch(ret)               
+      {
+        case SNMPD_CONNECTION_ERROR:
+        case 0:{
+                 flag=0;
+                 ShowAlert(search(lwlan,"con_txp_fail"));
+                 break;
+               }
+        case 1:break;
+        case -1:{
+                  flag=0;
+                  ShowAlert(search(lwlan,"txp_conflict_country_code"));
+                  break; 
+        	    }
+        case -2:{
+                  flag=0;
+                  ShowAlert(search(lwlan,"radio_not_exist"));
+                  break; 
+        	    }
+        case -3:{
+            	  flag=0;
+                  ShowAlert(search(lwlan,"enable_radio"));
+                  break;
+        		}
+        case -4:{
+            	  flag=0;
+                  ShowAlert(search(lwlan,"11n_not_allow_set_txpower"));
+                  break;
+        		}
+        case -5:{
+            	  flag=0;
+                  ShowAlert(search(lwlan,"max_txp_20"));
+                  break;
+        		}
+        case -6:{
+            	  flag=0;
+                  ShowAlert(search(lwlan,"max_txp_27"));
+                  break;
+        		}
+        case -7:{
+                  flag=0;
+                  ShowAlert(search(lpublic,"error"));
+                  break;
+                }
+		case -8:{
+                  flag=0;
+                  memset(temp,0,sizeof(temp));
+				  strncpy(temp,search(lwlan,"radio_id_illegal1"),sizeof(temp)-1);
+				  memset(max_radio_num,0,sizeof(max_radio_num));
+				  snprintf(max_radio_num,sizeof(max_radio_num)-1,"%d",G_RADIO_NUM-1);
+				  strncat(temp,max_radio_num,sizeof(temp)-strlen(temp)-1);
+				  strncat(temp,search(lwlan,"radio_id_illegal2"),sizeof(temp)-strlen(temp)-1);
+			  	  ShowAlert(temp);
+                  break;
+            	}
+      }   
+  }
 
   /****************config radio txpower offset step****************/
   memset(rad_txpower_offset_step,0,sizeof(rad_txpower_offset_step));
