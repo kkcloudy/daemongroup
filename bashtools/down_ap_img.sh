@@ -7,7 +7,7 @@ if [ $# -eq 4 ] ; then
 	if [ -a $4 ] ; then
 		rm $4
 	fi
-	sudo wget --user=$2 --password=$3 $1
+	sudo wget --tries=3 --user=$2 --password=$3 $1
 else
 	exit -1
 fi

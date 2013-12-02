@@ -7,7 +7,7 @@ if [ $# -eq 4 ] ; then
 	if [ -a $4 ] ; then
 		rm $4
 	fi
-	wget --user=$2 --password=$3 $1
+	wget --tries=3 --user=$2 --password=$3 $1
 #       mv $4 /mnt/aw.img 1 > ~/down.log 2>&1
 #        cp $4 /mnt/aw.img 
 #	        rm $4

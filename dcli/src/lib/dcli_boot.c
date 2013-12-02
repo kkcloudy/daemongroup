@@ -3846,7 +3846,7 @@ DEFUN (download_system_func,
 /*******************zhaocg add ******/
 DEFUN (download_system_slot_func,
 	   	download_system_slot_cmd,
-	   	"download img slot <1-15> URL [USERNAME] [PASSWORD]",
+	   	"download img slot <1-15> URL USERNAME PASSWORD",
 		"Download system infomation\n"
 		"Download system img\n"
 		"Board slot for interface local mode\n"
