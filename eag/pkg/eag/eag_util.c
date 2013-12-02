@@ -169,11 +169,11 @@ ipx2str(user_addr_t *user_addr, char *str, size_t size)
         ip2str(user_addr->user_ip, str, size - 1);
 	} else if (EAG_IPV6 == user_addr->family) {
         ipv6tostr(&(user_addr->user_ipv6), cmp_v6, sizeof(cmp_v6) - 1);
-        snprintf(str, size - 1, "[ipv6:%s]", cmp_v6);
+        snprintf(str, size - 1, "[%s]", cmp_v6);
 	} else if (EAG_MIX == user_addr->family) {
         ip2str(user_addr->user_ip, cmp_v4, sizeof(cmp_v4) - 1);
         ipv6tostr(&(user_addr->user_ipv6), cmp_v6, sizeof(cmp_v6) - 1);
-        snprintf(str, size - 1, "%s[ipv6:%s]", cmp_v4, cmp_v6);
+        snprintf(str, size - 1, "%s[%s]", cmp_v4, cmp_v6);
 	}
 	
 	return str;

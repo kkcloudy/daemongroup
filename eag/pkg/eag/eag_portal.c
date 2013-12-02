@@ -1278,6 +1278,7 @@ eag_portal_challenge_proc(eag_portal_t *portal,
 	portal_sess_t *portalsess = NULL;
 	struct portal_packet_t rsppkt = {0};
 	user_addr_t user_addr = {0};
+	struct in6_addr *nasipv6 = NULL;
 	char user_ipstr[IPX_LEN] = "";
 	char user_macstr[32] = "";
 	char ap_macstr[32]= "";
@@ -1352,6 +1353,8 @@ eag_portal_challenge_proc(eag_portal_t *portal,
 	mac2str(appconn->session.usermac, user_macstr, sizeof(user_macstr)-1, '-');
 	mac2str(appconn->session.apmac, ap_macstr, sizeof(ap_macstr)-1, '-');
     appconn->session.nasip = eag_ins_get_nasip(portal->eagins);
+    nasipv6 = eag_ins_get_nasipv6(portal->eagins);
+    appconn->session.nasipv6 = *nasipv6;
 	ip2str(appconn->session.nasip, nas_ipstr, sizeof(nas_ipstr));
 	ip2str(portal_ip, portal_ipstr, sizeof(portal_ipstr));
 	log_app_filter(appconn,"PortalReqChallenge___UserIP:%s,UserMAC:%s,ApMAC:%s,SSID:%s,NasIP:%s,PortalIP:%s,Interface:%s,NasID:%s",
@@ -1548,6 +1551,7 @@ eag_portal_chapauth_proc(eag_portal_t *portal,
 	portal_sess_t *portalsess = NULL;
 	struct portal_packet_t rsppkt = {0};
 	user_addr_t user_addr = {0};
+	struct in6_addr *nasipv6 = NULL;
 	char user_ipstr[IPX_LEN] = "";
 	char user_macstr[32]= "";
 	char ap_macstr[32]= "";
@@ -1619,6 +1623,8 @@ eag_portal_chapauth_proc(eag_portal_t *portal,
 	mac2str(appconn->session.usermac, user_macstr, sizeof(user_macstr)-1, '-');
 	mac2str(appconn->session.apmac, ap_macstr, sizeof(ap_macstr)-1, '-');
     appconn->session.nasip = eag_ins_get_nasip(portal->eagins);
+    nasipv6 = eag_ins_get_nasipv6(portal->eagins);
+    appconn->session.nasipv6 = *nasipv6;
 	ip2str(appconn->session.nasip, nas_ipstr, sizeof(nas_ipstr));
 	ip2str(portal_ip, portal_ipstr, sizeof(portal_ipstr));
 	
@@ -1941,6 +1947,7 @@ eag_portal_papauth_proc(eag_portal_t *portal,
 	portal_sess_t *portalsess = NULL;
 	struct portal_packet_t rsppkt = {0};
 	user_addr_t user_addr = {0};
+	struct in6_addr *nasipv6 = NULL;
 	char user_ipstr[IPX_LEN] = "";
 	char user_macstr[32] = "";
 	char ap_macstr[32]= "";
@@ -2161,6 +2168,8 @@ eag_portal_papauth_proc(eag_portal_t *portal,
 		memcpy(appconn->session.passwd, attr->value, attr->len - 2);
 		appconn->on_auth = 1;
 		appconn->session.nasip = eag_ins_get_nasip(portal->eagins);
+		nasipv6 = eag_ins_get_nasipv6(portal->eagins);
+		appconn->session.nasipv6 = *nasipv6;
 		appconn->portal_srv.ip = portal_ip;
 		radius_auth(portal->radius, appconn, AUTH_PAP);
 		

@@ -445,6 +445,10 @@ struct eag_user {
 	uint64_t output_octets;	
 	uint32_t input_packets;
 	uint32_t output_packets;
+	uint64_t ipv6_input_octets;
+	uint64_t ipv6_output_octets;	
+	uint32_t ipv6_input_packets;
+	uint32_t ipv6_output_packets;
 	uint8_t apmac[6];
 	uint32_t vlanid;
 	int sta_state;

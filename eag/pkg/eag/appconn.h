@@ -68,6 +68,12 @@ struct app_conn_t {
 	uint64_t bk_input_octets;
 	uint32_t bk_output_packets;
 	uint64_t bk_output_octets;
+
+	uint32_t bk_ipv6_input_packets;
+	uint64_t bk_ipv6_input_octets;
+	uint32_t bk_ipv6_output_packets;
+	uint64_t bk_ipv6_output_octets;
+
 	struct iptables_data_t iptables_data;
 	struct iptables_data_t ip6tables_data;
 	struct fastfwd_data_t fastfwd_data;

@@ -834,6 +834,9 @@ radius_auth(eag_radius_t *radius,
 				appconn->session.radius_srv.auth_secret,
 				appconn->session.radius_srv.auth_secretlen);
 	}
+	
+	radius_addattr(&packet, RADIUS_ATTR_NAS_IPV6_ADDRESS, 0, 0, 0,
+			(uint8_t *)&(appconn->session.nasipv6), sizeof(struct in6_addr));
 
 	len = strlen(appconn->user_agent);
     len = (len > 253)?253:len;
@@ -872,6 +875,10 @@ radius_acct_req(eag_radius_t *radius,
 	uint64_t output_octets = 0;
 	uint32_t input_packets = 0;
 	uint32_t output_packets = 0;
+	uint64_t ipv6_input_octets = 0;
+	uint64_t ipv6_output_octets = 0;
+	uint32_t ipv6_input_packets = 0;
+	uint32_t ipv6_output_packets = 0;
 	struct timeval tv = {0};
 	time_t timenow = 0;
 	unsigned long timediff = 0;
@@ -935,6 +942,9 @@ radius_acct_req(eag_radius_t *radius,
 		}
 	}
 	radius_add_public_attr(&packet, appconn);
+	
+	radius_addattr(&packet, RADIUS_ATTR_NAS_IPV6_ADDRESS, 0, 0, 0,
+			(uint8_t *)&(appconn->session.nasipv6), sizeof(struct in6_addr));
 
 	switch (status_type) {
 	case RADIUS_STATUS_TYPE_START:
@@ -963,16 +973,24 @@ radius_acct_req(eag_radius_t *radius,
 			output_octets = appconn->session.output_octets;
 			input_packets = appconn->session.input_packets;
 			output_packets = appconn->session.output_packets;
+			ipv6_input_octets = appconn->session.ipv6_input_octets;
+			ipv6_output_octets = appconn->session.ipv6_output_octets;
+			ipv6_input_packets = appconn->session.ipv6_input_packets;
+			ipv6_output_packets = appconn->session.ipv6_output_packets;
 		} else {
 			input_octets = appconn->session.output_octets;
 			output_octets = appconn->session.input_octets;
 			input_packets = appconn->session.output_packets;
 			output_packets = appconn->session.input_packets;
+			ipv6_input_octets = appconn->session.ipv6_output_octets;
+			ipv6_output_octets = appconn->session.ipv6_input_octets;
+			ipv6_input_packets = appconn->session.ipv6_output_packets;
+			ipv6_output_packets = appconn->session.ipv6_input_packets;
 		}
 
 		/* ACCT_INPUT_OCTETS */
 		radius_addattr(&packet, RADIUS_ATTR_ACCT_INPUT_OCTETS, 0, 0,
-				(uint32_t)input_octets, NULL, 0);
+					(uint32_t)input_octets, NULL, 0);
 
 		/* ACCT_OUTPUT_OCTETS */
 		radius_addattr(&packet, RADIUS_ATTR_ACCT_OUTPUT_OCTETS, 0, 0,
@@ -994,32 +1012,80 @@ radius_acct_req(eag_radius_t *radius,
 		radius_addattr(&packet, RADIUS_ATTR_ACCT_OUTPUT_PACKETS, 0, 0,
 					output_packets, NULL, 0);
 
+		/* ACCT_IPV6_INPUT_OCTETS */
+		radius_addattr(&packet, RADIUS_ATTR_VENDOR_SPECIFIC,
+					RADIUS_VENDOR_AUTELAN, 
+					RADIUS_ATTR_AUTELAN_IPV6_INPUT_OCTETS,
+					(uint32_t)ipv6_input_octets, NULL, 0);
+
+		/* ACCT_IPV6_OUTPUT_OCTETS */
+		radius_addattr(&packet, RADIUS_ATTR_VENDOR_SPECIFIC,
+					RADIUS_VENDOR_AUTELAN, 
+					RADIUS_ATTR_AUTELAN_IPV6_OUTPUT_OCTETS,
+					(uint32_t)ipv6_output_octets, NULL, 0);
+
+		/* ACCT_IPV6_INPUT_GIGAWORDS */
+		radius_addattr(&packet, RADIUS_ATTR_VENDOR_SPECIFIC,
+					RADIUS_VENDOR_AUTELAN, 
+					RADIUS_ATTR_AUTELAN_IPV6_INPUT_GIGAWORDS,
+					(uint32_t)(ipv6_input_octets >> 32), NULL, 0);
+
+		/* ACCT_IPV6_OUTPUT_GIGAWORDS */
+		radius_addattr(&packet, RADIUS_ATTR_VENDOR_SPECIFIC,
+					RADIUS_VENDOR_AUTELAN, 
+					RADIUS_ATTR_AUTELAN_IPV6_OUTPUT_GIGAWORDS,
+					(uint32_t)(ipv6_output_octets >> 32), NULL, 0);
+
+		/* ACCT_IPV6_INPUT_PACKETS */
+		radius_addattr(&packet, RADIUS_ATTR_VENDOR_SPECIFIC,
+					RADIUS_VENDOR_AUTELAN, 
+					RADIUS_ATTR_AUTELAN_IPV6_INPUT_PACKETS,
+					ipv6_input_packets, NULL, 0);
+
+		/* ACCT_IPV6_OUTPUT_PACKETS */
+		radius_addattr(&packet, RADIUS_ATTR_VENDOR_SPECIFIC,
+					RADIUS_VENDOR_AUTELAN, 
+					RADIUS_ATTR_AUTELAN_IPV6_OUTPUT_PACKETS,
+					ipv6_output_packets, NULL, 0);
+
 		eag_log_debug("eag_radius", "radius_acct_req add attr, userip=%s, "
 			"INPUT_OCTETS=%u, OUTPUT_OCTETS=%u, "
 			"INPUT_GIGAWORDS=%u, OUTPUT_GIGAWORDS=%u, "
-			"INPUT_PACKETS=%u, OUTPUT_PACKETS=%u",
+			"INPUT_PACKETS=%u, OUTPUT_PACKETS=%u, "
+			"IPV6_INPUT_OCTETS=%u, IPV6_OUTPUT_OCTETS=%u, "
+			"IPV6_INPUT_GIGAWORDS=%u, IPV6_OUTPUT_GIGAWORDS=%u, "
+			"IPV6_INPUT_PACKETS=%u, IPV6_OUTPUT_PACKETS=%u",
 			user_ipstr, (uint32_t)input_octets, (uint32_t)output_octets,
 			(uint32_t)(input_octets >> 32), (uint32_t)(output_octets >> 32),
-			input_packets, output_packets);
+			input_packets, output_packets, (uint32_t)ipv6_input_octets, (uint32_t)ipv6_output_octets,
+			(uint32_t)(ipv6_input_octets >> 32), (uint32_t)(ipv6_output_octets >> 32),
+			ipv6_input_packets, ipv6_output_packets);
 
 		if (RADIUS_STATUS_TYPE_INTERIM_UPDATE == status_type) {
 			timediff = timenow - appconn->session.session_start_time;
 			eag_bss_message_count(radius->eagstat, appconn, BSS_ACCT_REQUEST_UPDATE_COUNT, 1);
 			admin_log_notice("RadiusAcctRequestUpdate___UserName:%s,UserIP:%s,UserMAC:%s,"
 				"Sessiontime:%lu,SSID:%s,Authtype:%s,ApMAC:%s,NasIP:%s,RadiusAcctIP:%s,Interface:%s,NasID:%s,"
-				"InputOctets:%llu,InputPackets:%u,OutputOctets:%llu,OutputPackets:%u",
+				"InputOctets:%llu,InputPackets:%u,OutputOctets:%llu,OutputPackets:%u,"
+				"IPV6InputOctets:%llu,IPV6InputPackets:%u,IPV6OutputOctets:%llu,IPV6OutputPackets:%u",
 				appconn->session.username, user_ipstr, user_macstr, timediff, appconn->session.essid,
 				(EAG_AUTH_TYPE_MAC==appconn->session.server_auth_type)?"MAC":"Portal",
-				ap_macstr, nas_ipstr, radius_acct_ipstr, appconn->session.intf, 
-				appconn->session.nasid, appconn->session.output_octets,
-				appconn->session.output_packets, appconn->session.input_octets, appconn->session.input_packets);
+				ap_macstr, nas_ipstr, radius_acct_ipstr, appconn->session.intf, appconn->session.nasid, 
+				appconn->session.output_octets, appconn->session.output_packets, 
+				appconn->session.input_octets, appconn->session.input_packets, 
+				appconn->session.ipv6_output_octets, appconn->session.ipv6_output_packets,
+				appconn->session.ipv6_input_octets, appconn->session.ipv6_input_packets);
 			log_app_filter(appconn,"RadiusAcctRequestUpdate___UserName:%s,UserIP:%s,UserMAC:%s,"
 				"Sessiontime:%lu,SSID:%s,Authtype:%s,ApMAC:%s,NasIP:%s,RadiusAcctIP:%s,Interface:%s,NasID:%s,"
-				"InputOctets:%llu,InputPackets:%u,OutputOctets:%llu,OutputPackets:%u",
+				"InputOctets:%llu,InputPackets:%u,OutputOctets:%llu,OutputPackets:%u,"
+				"IPV6InputOctets:%llu,IPV6InputPackets:%u,IPV6OutputOctets:%llu,IPV6OutputPackets:%u",
 				appconn->session.username, user_ipstr, user_macstr, timediff, appconn->session.essid,
 				(EAG_AUTH_TYPE_MAC==appconn->session.server_auth_type)?"MAC":"Portal",
-				ap_macstr, nas_ipstr, radius_acct_ipstr, appconn->session.intf, appconn->session.nasid, appconn->session.output_octets,
-				appconn->session.output_packets, appconn->session.input_octets, appconn->session.input_packets);
+				ap_macstr, nas_ipstr, radius_acct_ipstr, appconn->session.intf, appconn->session.nasid, 
+				appconn->session.output_octets, appconn->session.output_packets, 
+				appconn->session.input_octets, appconn->session.input_packets, 
+				appconn->session.ipv6_output_octets, appconn->session.ipv6_output_packets,
+				appconn->session.ipv6_input_octets, appconn->session.ipv6_input_packets);
 		} else {
 			timediff = appconn->session.session_stop_time - appconn->session.session_start_time;
 			eag_bss_message_count(radius->eagstat, appconn, BSS_ACCT_REQUEST_STOP_COUNT, 1);

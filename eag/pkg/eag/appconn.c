@@ -1733,10 +1733,11 @@ appdb_log_all_appconn(appconn_db_t *appdb)
 		if (APPCONN_STATUS_AUTHED == appconn->session.state ) {
 			authed_num++;
 			eag_log_info("appconn:ip %s mac %s from interface %s, username=%s"
-					" start=%lu last=%lu input=%llu output=%llu",
+					" start=%lu last=%lu input=%llu output=%llu ipv6_input=%llu ipv6_output=%llu",
 					user_ipstr, user_macstr, userintf, appconn->session.username,
 					appconn->session.session_start_time, appconn->session.last_flux_time,
-					appconn->session.input_octets,appconn->session.output_octets);
+					appconn->session.input_octets,appconn->session.output_octets,
+					appconn->session.ipv6_input_octets,appconn->session.ipv6_output_octets);
 		} else {
 			unauth_num++;
 			eag_log_info("appconn:ip %s mac %s from interface %s not do auth!",
@@ -1770,29 +1771,32 @@ set_appconn_flux(struct app_conn_t *appconn)
 	
 	switch(flux_from) {
 	case FLUX_FROM_IPTABLES:
-		appconn->session.input_octets = appconn->bk_input_octets + (appconn->iptables_data.input_octets*input_factor/1000)
-			+ (appconn->ip6tables_data.input_octets*input_factor/1000);
-		appconn->session.input_packets = appconn->bk_input_packets + appconn->iptables_data.input_packets
-			+ appconn->ip6tables_data.input_packets;
-		appconn->session.output_octets = appconn->bk_output_octets + (appconn->iptables_data.output_octets*output_factor/1000)
-			+ (appconn->ip6tables_data.output_octets*output_factor/1000);
-		appconn->session.output_packets = appconn->bk_output_packets + appconn->iptables_data.output_packets
-			+ appconn->ip6tables_data.output_packets;
+		appconn->session.input_octets = appconn->bk_input_octets + (appconn->iptables_data.input_octets*input_factor/1000);
+		appconn->session.input_packets = appconn->bk_input_packets + appconn->iptables_data.input_packets;
+		appconn->session.output_octets = appconn->bk_output_octets + (appconn->iptables_data.output_octets*output_factor/1000);
+		appconn->session.output_packets = appconn->bk_output_packets + appconn->iptables_data.output_packets;
+
+		appconn->session.ipv6_input_octets = appconn->bk_ipv6_input_octets + (appconn->ip6tables_data.input_octets*input_factor/1000);
+		appconn->session.ipv6_input_packets = appconn->bk_ipv6_input_packets + appconn->ip6tables_data.input_packets;
+		appconn->session.ipv6_output_octets = appconn->bk_ipv6_output_octets + (appconn->ip6tables_data.output_octets*output_factor/1000);
+		appconn->session.ipv6_output_packets = appconn->bk_ipv6_output_packets + appconn->ip6tables_data.output_packets;
 		break;
 	case FLUX_FROM_IPTABLES_L2:
 		appconn->iptables_data.input_octets += appconn->iptables_data.input_packets*18;
 		appconn->iptables_data.output_octets += appconn->iptables_data.output_packets*18;
+		
+		appconn->session.input_octets = appconn->bk_input_octets + (appconn->iptables_data.input_octets*input_factor/1000);
+		appconn->session.input_packets = appconn->bk_input_packets + appconn->iptables_data.input_packets;
+		appconn->session.output_octets = appconn->bk_output_octets + (appconn->iptables_data.output_octets*output_factor/1000);
+		appconn->session.output_packets = appconn->bk_output_packets + appconn->iptables_data.output_packets;
+
 		appconn->ip6tables_data.input_octets += appconn->ip6tables_data.input_packets*18;
 		appconn->ip6tables_data.output_octets += appconn->ip6tables_data.output_packets*18;
-		
-		appconn->session.input_octets = appconn->bk_input_octets + (appconn->iptables_data.input_octets*input_factor/1000)
-			+ (appconn->ip6tables_data.input_octets*input_factor/1000);
-		appconn->session.input_packets = appconn->bk_input_packets + appconn->iptables_data.input_packets
-			+ appconn->ip6tables_data.input_packets;
-		appconn->session.output_octets = appconn->bk_output_octets + (appconn->iptables_data.output_octets*output_factor/1000)
-			+ (appconn->ip6tables_data.output_octets*output_factor/1000);
-		appconn->session.output_packets = appconn->bk_output_packets + appconn->iptables_data.output_packets
-			+ appconn->ip6tables_data.output_packets;
+
+		appconn->session.ipv6_input_octets = appconn->bk_ipv6_input_octets + (appconn->ip6tables_data.input_octets*input_factor/1000);
+		appconn->session.ipv6_input_packets = appconn->bk_ipv6_input_packets + appconn->ip6tables_data.input_packets;
+		appconn->session.ipv6_output_octets = appconn->bk_ipv6_output_octets + (appconn->ip6tables_data.output_octets*output_factor/1000);
+		appconn->session.ipv6_output_packets = appconn->bk_ipv6_output_packets + appconn->ip6tables_data.output_packets;
 		break;
 	case FLUX_FROM_WIRELESS:
 		if ( (0 != appconn->session.wireless_data.cur_input_octets
@@ -1845,24 +1849,38 @@ set_appconn_flux(struct app_conn_t *appconn)
 		appconn->session.input_packets = appconn->bk_input_packets + appconn->fastfwd_data.input_packets;
 		appconn->session.output_octets = appconn->bk_output_octets + appconn->fastfwd_data.output_octets;
 		appconn->session.output_packets = appconn->bk_output_packets + appconn->fastfwd_data.output_packets;
+
+		appconn->session.ipv6_input_octets = appconn->bk_ipv6_input_octets + appconn->fastfwd_data.ipv6_input_octets;
+		appconn->session.ipv6_input_packets = appconn->bk_ipv6_input_packets + appconn->fastfwd_data.ipv6_input_packets;
+		appconn->session.ipv6_output_octets = appconn->bk_ipv6_output_octets + appconn->fastfwd_data.ipv6_output_octets;
+		appconn->session.ipv6_output_packets = appconn->bk_ipv6_output_packets + appconn->fastfwd_data.ipv6_output_packets;
 		break;
 	case FLUX_FROM_FASTFWD_IPTABLES:
 		appconn->session.input_octets = appconn->bk_input_octets
 			+ appconn->iptables_data.input_octets
-			+ appconn->ip6tables_data.input_octets
 			+ appconn->fastfwd_data.input_octets;
 		appconn->session.input_packets = appconn->bk_input_packets 
 			+ appconn->iptables_data.input_packets
-			+ appconn->ip6tables_data.input_packets
 			+ appconn->fastfwd_data.input_packets;
 		appconn->session.output_octets = appconn->bk_output_octets
 			+ appconn->iptables_data.output_octets
-			+ appconn->ip6tables_data.output_octets
 			+ appconn->fastfwd_data.output_octets;
 		appconn->session.output_packets = appconn->bk_output_packets 
 			+ appconn->iptables_data.output_packets
-			+ appconn->ip6tables_data.output_packets
 			+ appconn->fastfwd_data.output_packets;
+
+		appconn->session.ipv6_input_octets = appconn->bk_ipv6_input_octets
+			+ appconn->ip6tables_data.input_octets
+			+ appconn->fastfwd_data.ipv6_input_octets;
+		appconn->session.ipv6_input_packets = appconn->bk_ipv6_input_packets 
+			+ appconn->ip6tables_data.input_packets
+			+ appconn->fastfwd_data.ipv6_input_packets;
+		appconn->session.ipv6_output_octets = appconn->bk_ipv6_output_octets
+			+ appconn->ip6tables_data.output_octets
+			+ appconn->fastfwd_data.ipv6_output_octets;
+		appconn->session.ipv6_output_packets = appconn->bk_ipv6_output_packets 
+			+ appconn->ip6tables_data.output_packets
+			+ appconn->fastfwd_data.ipv6_output_packets;
 		break;
 	default:
 		break;
@@ -1877,13 +1895,13 @@ appconn_check_flux(struct app_conn_t *appconn, time_t time_now)
 	char user_ipstr[IPX_LEN] = "";
 	
 	if (APPCONN_STATUS_AUTHED == appconn->session.state
-		&& (appconn->session.output_octets - appconn->session.last_idle_check_output_octets > 0)	/*上行流量大于0*/
-		&& (appconn->session.output_octets + appconn->session.input_octets
+		&& (appconn->session.output_octets + appconn->session.ipv6_output_octets - appconn->session.last_idle_check_output_octets > 0)	/*上行流量大于0*/
+		&& (appconn->session.output_octets + appconn->session.input_octets + appconn->session.ipv6_output_octets + appconn->session.ipv6_input_octets
 			> appconn->session.last_idle_check_octets + appconn->session.idle_flow))	/*上下行流量之和大于阀值*/
 	{
 		appconn->session.last_flux_time = time_now;
-		appconn->session.last_idle_check_output_octets = appconn->session.output_octets;
-		appconn->session.last_idle_check_octets = appconn->session.output_octets + appconn->session.input_octets;
+		appconn->session.last_idle_check_output_octets = appconn->session.output_octets  + appconn->session.ipv6_output_octets;
+		appconn->session.last_idle_check_octets = appconn->session.output_octets + appconn->session.input_octets + appconn->session.ipv6_output_octets + appconn->session.ipv6_input_octets;
 		ipx2str(&(appconn->session.user_addr), user_ipstr, sizeof(user_ipstr));
 		eag_log_info("appconn_check_flux userip=%s, output_octets=%llu, total_octets=%llu",
 			user_ipstr, appconn->session.last_idle_check_output_octets,

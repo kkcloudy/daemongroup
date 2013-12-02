@@ -83,6 +83,11 @@ struct fastfwd_data_t {
 	uint64_t input_octets;
 	uint32_t output_packets;
 	uint64_t output_octets;
+
+	uint32_t ipv6_input_packets;
+	uint64_t ipv6_input_octets;
+	uint32_t ipv6_output_packets;
+	uint64_t ipv6_output_octets;
 };
 
 typedef struct user_addr {
@@ -113,6 +118,7 @@ struct appsession {
 	char intf[MAX_IF_NAME_LEN];
 	uint32_t virtual_ip;
 	uint32_t nasip;
+	struct in6_addr nasipv6;
 
 	char username[USERNAMESIZE];
 	char domain_name[MAX_RADIUS_DOMAIN_LEN];
@@ -140,6 +146,11 @@ struct appsession {
 	uint32_t input_packets;
 	uint64_t output_octets;
 	uint32_t output_packets;
+
+	uint64_t ipv6_input_octets;
+	uint32_t ipv6_input_packets;
+	uint64_t ipv6_output_octets;
+	uint32_t ipv6_output_packets;
 
 	struct wireless_data_t wireless_data;
 

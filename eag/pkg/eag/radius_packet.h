@@ -241,7 +241,12 @@ struct radius_attr_t {
 #define	RADIUS_ATTR_AUTELAN_USER_AGENT				81	/* string */
 #define	RADIUS_ATTR_AUTELAN_BANDWIDTH_MAX_UP		245	/* integer */
 #define	RADIUS_ATTR_AUTELAN_BANDWIDTH_MAX_DOWN		246	/* integer */
-
+#define RADIUS_ATTR_AUTELAN_IPV6_INPUT_OCTETS		221	/* integer */
+#define RADIUS_ATTR_AUTELAN_IPV6_OUTPUT_OCTETS		222	/* integer */
+#define RADIUS_ATTR_AUTELAN_IPV6_INPUT_PACKETS		223	/* integer */
+#define RADIUS_ATTR_AUTELAN_IPV6_OUTPUT_PACKETS		224	/* integer */
+#define RADIUS_ATTR_AUTELAN_IPV6_INPUT_GIGAWORDS	225	/* integer */
+#define RADIUS_ATTR_AUTELAN_IPV6_OUTPUT_GIGAWORDS	226	/* integer */
 
 int
 radius_packet_init(struct radius_packet_t *packet,

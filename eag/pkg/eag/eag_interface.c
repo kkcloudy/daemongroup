@@ -6581,6 +6581,18 @@ eag_show_user_all(DBusConnection *connection,
 													&(user->output_packets));
 					dbus_message_iter_next(&iter_struct);
 					dbus_message_iter_get_basic(&iter_struct,
+													&(user->ipv6_input_octets));
+					dbus_message_iter_next(&iter_struct);
+					dbus_message_iter_get_basic(&iter_struct, 
+													&(user->ipv6_output_octets));
+					dbus_message_iter_next(&iter_struct);
+					dbus_message_iter_get_basic(&iter_struct, 
+													&(user->ipv6_input_packets));
+					dbus_message_iter_next(&iter_struct);
+					dbus_message_iter_get_basic(&iter_struct, 
+													&(user->ipv6_output_packets));
+					dbus_message_iter_next(&iter_struct);
+					dbus_message_iter_get_basic(&iter_struct,
 													&(user->apmac[0]));
 					dbus_message_iter_next(&iter_struct);
 					dbus_message_iter_get_basic(&iter_struct, 
@@ -6733,6 +6745,18 @@ eag_show_user_by_username(DBusConnection *connection,
 													&(user->output_packets));
 					dbus_message_iter_next(&iter_struct);
 					dbus_message_iter_get_basic(&iter_struct,
+													&(user->ipv6_input_octets));
+					dbus_message_iter_next(&iter_struct);
+					dbus_message_iter_get_basic(&iter_struct, 
+													&(user->ipv6_output_octets));
+					dbus_message_iter_next(&iter_struct);
+					dbus_message_iter_get_basic(&iter_struct, 
+													&(user->ipv6_input_packets));
+					dbus_message_iter_next(&iter_struct);
+					dbus_message_iter_get_basic(&iter_struct, 
+													&(user->ipv6_output_packets));
+					dbus_message_iter_next(&iter_struct);
+					dbus_message_iter_get_basic(&iter_struct,
 													&(user->apmac[0]));
 					dbus_message_iter_next(&iter_struct);
 					dbus_message_iter_get_basic(&iter_struct, 
@@ -6877,6 +6901,18 @@ eag_show_user_by_userip(DBusConnection *connection,
 					dbus_message_iter_next(&iter_struct);
 					dbus_message_iter_get_basic(&iter_struct, 
 													&(user->output_packets));
+					dbus_message_iter_next(&iter_struct);
+					dbus_message_iter_get_basic(&iter_struct,
+													&(user->ipv6_input_octets));
+					dbus_message_iter_next(&iter_struct);
+					dbus_message_iter_get_basic(&iter_struct, 
+													&(user->ipv6_output_octets));
+					dbus_message_iter_next(&iter_struct);
+					dbus_message_iter_get_basic(&iter_struct, 
+													&(user->ipv6_input_packets));
+					dbus_message_iter_next(&iter_struct);
+					dbus_message_iter_get_basic(&iter_struct, 
+													&(user->ipv6_output_packets));
 					dbus_message_iter_next(&iter_struct);
 					dbus_message_iter_get_basic(&iter_struct,
 													&(user->apmac[0]));
@@ -7026,6 +7062,18 @@ eag_show_user_by_useripv6(DBusConnection *connection,
 					dbus_message_iter_next(&iter_struct);
 					dbus_message_iter_get_basic(&iter_struct, 
 													&(user->output_packets));
+					dbus_message_iter_next(&iter_struct);
+					dbus_message_iter_get_basic(&iter_struct,
+													&(user->ipv6_input_octets));
+					dbus_message_iter_next(&iter_struct);
+					dbus_message_iter_get_basic(&iter_struct, 
+													&(user->ipv6_output_octets));
+					dbus_message_iter_next(&iter_struct);
+					dbus_message_iter_get_basic(&iter_struct, 
+													&(user->ipv6_input_packets));
+					dbus_message_iter_next(&iter_struct);
+					dbus_message_iter_get_basic(&iter_struct, 
+													&(user->ipv6_output_packets));
 					dbus_message_iter_next(&iter_struct);
 					dbus_message_iter_get_basic(&iter_struct,
 													&(user->apmac[0]));
@@ -7179,6 +7227,18 @@ eag_show_user_by_usermac(DBusConnection *connection,
 													&(user->output_packets));
 					dbus_message_iter_next(&iter_struct);
 					dbus_message_iter_get_basic(&iter_struct,
+													&(user->ipv6_input_octets));
+					dbus_message_iter_next(&iter_struct);
+					dbus_message_iter_get_basic(&iter_struct, 
+													&(user->ipv6_output_octets));
+					dbus_message_iter_next(&iter_struct);
+					dbus_message_iter_get_basic(&iter_struct, 
+													&(user->ipv6_input_packets));
+					dbus_message_iter_next(&iter_struct);
+					dbus_message_iter_get_basic(&iter_struct, 
+													&(user->ipv6_output_packets));
+					dbus_message_iter_next(&iter_struct);
+					dbus_message_iter_get_basic(&iter_struct,
 													&(user->apmac[0]));
 					dbus_message_iter_next(&iter_struct);
 					dbus_message_iter_get_basic(&iter_struct, 
@@ -7323,6 +7383,18 @@ eag_show_user_by_index(DBusConnection *connection,
 					dbus_message_iter_next(&iter_struct);
 					dbus_message_iter_get_basic(&iter_struct, 
 													&(user->output_packets));
+					dbus_message_iter_next(&iter_struct);
+					dbus_message_iter_get_basic(&iter_struct,
+													&(user->ipv6_input_octets));
+					dbus_message_iter_next(&iter_struct);
+					dbus_message_iter_get_basic(&iter_struct, 
+													&(user->ipv6_output_octets));
+					dbus_message_iter_next(&iter_struct);
+					dbus_message_iter_get_basic(&iter_struct, 
+													&(user->ipv6_input_packets));
+					dbus_message_iter_next(&iter_struct);
+					dbus_message_iter_get_basic(&iter_struct, 
+													&(user->ipv6_output_packets));
 					dbus_message_iter_next(&iter_struct);
 					dbus_message_iter_get_basic(&iter_struct,
 													&(user->apmac[0]));

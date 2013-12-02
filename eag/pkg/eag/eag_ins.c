@@ -411,6 +411,10 @@ eag_ins_do_syn_user_data(void *cbp, void *data, struct timeval *cb_tv)
 		appconn->bk_input_packets = usersession->input_packets;
 		appconn->bk_output_octets = usersession->output_octets;
 		appconn->bk_output_packets = usersession->output_packets;
+		appconn->bk_ipv6_input_octets = usersession->ipv6_input_octets;
+		appconn->bk_ipv6_input_packets = usersession->ipv6_input_packets;
+		appconn->bk_ipv6_output_octets = usersession->ipv6_output_octets;
+		appconn->bk_ipv6_output_packets = usersession->ipv6_output_packets;
 		
 		ret = set_down_interface_by_virtual_ip(eagins->eaghansi,
 					appconn->session.virtual_ip, appconn->session.intf);
@@ -461,6 +465,10 @@ eag_ins_do_syn_user_data(void *cbp, void *data, struct timeval *cb_tv)
 		appconn->bk_input_packets = usersession->input_packets;
 		appconn->bk_output_octets = usersession->output_octets;
 		appconn->bk_output_packets = usersession->output_packets;
+		appconn->bk_ipv6_input_octets = usersession->ipv6_input_octets;
+		appconn->bk_ipv6_input_packets = usersession->ipv6_input_packets;
+		appconn->bk_ipv6_output_octets = usersession->ipv6_output_octets;
+		appconn->bk_ipv6_output_packets = usersession->ipv6_output_packets;
 	
 		eag_log_debug("eagins", "eag_ins_do_syn_user_data "
 				"found appconn userip %s, state %d",
@@ -2062,45 +2070,47 @@ eag_ins_session_interval(struct app_conn_t *appconn,
 		appconn->session.session_stop_time = timenow;
 	} else if (!appconn->on_ntf_logout
 		&& appconn->session.maxinputoctets > 0 
-		&& appconn->session.input_octets > 
+		&& appconn->session.input_octets + appconn->session.ipv6_input_octets> 
 					appconn->session.maxinputoctets)
 	{
 		log_app_debug(appconn,
 			"user ip %s mac %s interface %s input flux reach limit "
-			"and will offline, input_octets=%llu, maxinputoctets=%llu",
+			"and will offline, input_octets=%llu, ipv6_input_octets=%llu, maxinputoctets=%llu",
 			user_ipstr, macstr, userintf, appconn->session.input_octets,
-			appconn->session.maxinputoctets);
+			appconn->session.ipv6_input_octets, appconn->session.maxinputoctets);
 		eag_portal_notify_logout(eagins->portal, appconn,
 				  RADIUS_TERMINATE_CAUSE_SESSION_TIMEOUT);
 		appconn->on_ntf_logout = 1;
 		appconn->session.session_stop_time = timenow;
 	} else if (!appconn->on_ntf_logout
 		&& appconn->session.maxoutputoctets > 0
-		&& appconn->session.output_octets >
+		&& appconn->session.output_octets + appconn->session.ipv6_output_octets>
 		       		appconn->session.maxoutputoctets)
 	{
 		log_app_debug(appconn,
 			"user ip %s mac %s interface %s output flux reach limit "
-			"and will offline, input_octets=%llu, maxinputoctets=%llu",
+			"and will offline, output_octets=%llu, ipv6_output_octets=%llu, maxoutputoctets=%llu",
 			user_ipstr, macstr, userintf, appconn->session.output_octets,
-			appconn->session.maxoutputoctets);
+			appconn->session.ipv6_output_octets, appconn->session.maxoutputoctets);
 		eag_portal_notify_logout(eagins->portal, appconn,
 						  RADIUS_TERMINATE_CAUSE_SESSION_TIMEOUT);
 		appconn->on_ntf_logout = 1;
 		appconn->session.session_stop_time = timenow;
 	} else if (!appconn->on_ntf_logout
 		&& appconn->session.maxtotaloctets > 0
-		&& appconn->session.input_octets +
-				appconn->session.output_octets >
+		&& appconn->session.input_octets + appconn->session.ipv6_input_octets +
+				appconn->session.output_octets + appconn->session.ipv6_output_octets>
 				    appconn->session.maxtotaloctets)
 	{
 		log_app_debug(appconn,
 			"user ip %s mac %s interface %s total flux reach limit "
-			"and will offline, input_octets=%llu, input_octets=%llu,"
-			" maxinputoctets=%llu",
+			"and will offline, input_octets=%llu, output_octets=%llu,"
+			"ipv6_input_octets=%llu, ipv6_output_octets=%llu, maxinputoctets=%llu",
 			user_ipstr, macstr, userintf, 
+			appconn->session.input_octets,
 			appconn->session.output_octets,
-			appconn->session.output_octets,
+			appconn->session.ipv6_input_octets,
+			appconn->session.ipv6_output_octets,
 			appconn->session.maxtotaloctets);
 		eag_portal_notify_logout(eagins->portal, appconn,
 				  RADIUS_TERMINATE_CAUSE_SESSION_TIMEOUT);
@@ -10005,6 +10015,10 @@ replyx:
 										DBUS_TYPE_UINT64_AS_STRING
 										DBUS_TYPE_UINT32_AS_STRING
 										DBUS_TYPE_UINT32_AS_STRING
+										DBUS_TYPE_UINT64_AS_STRING
+										DBUS_TYPE_UINT64_AS_STRING
+										DBUS_TYPE_UINT32_AS_STRING
+										DBUS_TYPE_UINT32_AS_STRING
 										DBUS_TYPE_BYTE_AS_STRING
 										DBUS_TYPE_BYTE_AS_STRING
 										DBUS_TYPE_BYTE_AS_STRING
@@ -10099,6 +10113,18 @@ replyx:
 				dbus_message_iter_append_basic (&iter_struct,
 									DBUS_TYPE_UINT32,
 									&(appconn->session.output_packets));
+				dbus_message_iter_append_basic (&iter_struct,
+									DBUS_TYPE_UINT64,
+									&(appconn->session.ipv6_input_octets));
+				dbus_message_iter_append_basic (&iter_struct,
+									DBUS_TYPE_UINT64,
+									&(appconn->session.ipv6_output_octets));
+				dbus_message_iter_append_basic (&iter_struct,
+									DBUS_TYPE_UINT32,
+									&(appconn->session.ipv6_input_packets));
+				dbus_message_iter_append_basic (&iter_struct,
+									DBUS_TYPE_UINT32,
+									&(appconn->session.ipv6_output_packets));
 				dbus_message_iter_append_basic (&iter_struct,
 									DBUS_TYPE_BYTE,
 									&(appconn->session.apmac[0]));
@@ -10225,6 +10251,10 @@ replyx:
 										DBUS_TYPE_UINT64_AS_STRING
 										DBUS_TYPE_UINT32_AS_STRING
 										DBUS_TYPE_UINT32_AS_STRING
+										DBUS_TYPE_UINT64_AS_STRING
+										DBUS_TYPE_UINT64_AS_STRING
+										DBUS_TYPE_UINT32_AS_STRING
+										DBUS_TYPE_UINT32_AS_STRING
 										DBUS_TYPE_BYTE_AS_STRING
 										DBUS_TYPE_BYTE_AS_STRING
 										DBUS_TYPE_BYTE_AS_STRING
@@ -10297,6 +10327,18 @@ replyx:
 				dbus_message_iter_append_basic (&iter_struct,
 									DBUS_TYPE_UINT32,
 									&(appconn->session.output_packets));
+				dbus_message_iter_append_basic (&iter_struct,
+									DBUS_TYPE_UINT64,
+									&(appconn->session.ipv6_input_octets));
+				dbus_message_iter_append_basic (&iter_struct,
+									DBUS_TYPE_UINT64,
+									&(appconn->session.ipv6_output_octets));
+				dbus_message_iter_append_basic (&iter_struct,
+									DBUS_TYPE_UINT32,
+									&(appconn->session.ipv6_input_packets));
+				dbus_message_iter_append_basic (&iter_struct,
+									DBUS_TYPE_UINT32,
+									&(appconn->session.ipv6_output_packets));
 				dbus_message_iter_append_basic (&iter_struct,
 									DBUS_TYPE_BYTE,
 									&(appconn->session.apmac[0]));
@@ -10415,6 +10457,10 @@ replyx:
 										DBUS_TYPE_UINT64_AS_STRING
 										DBUS_TYPE_UINT32_AS_STRING
 										DBUS_TYPE_UINT32_AS_STRING
+										DBUS_TYPE_UINT64_AS_STRING
+										DBUS_TYPE_UINT64_AS_STRING
+										DBUS_TYPE_UINT32_AS_STRING
+										DBUS_TYPE_UINT32_AS_STRING
 										DBUS_TYPE_BYTE_AS_STRING
 										DBUS_TYPE_BYTE_AS_STRING
 										DBUS_TYPE_BYTE_AS_STRING
@@ -10479,6 +10525,18 @@ replyx:
 				dbus_message_iter_append_basic (&iter_struct,
 									DBUS_TYPE_UINT64,
 									&(appconn->session.input_octets));
+				dbus_message_iter_append_basic (&iter_struct,
+									DBUS_TYPE_UINT64,
+									&(appconn->session.ipv6_input_octets));
+				dbus_message_iter_append_basic (&iter_struct,
+									DBUS_TYPE_UINT64,
+									&(appconn->session.ipv6_output_octets));
+				dbus_message_iter_append_basic (&iter_struct,
+									DBUS_TYPE_UINT32,
+									&(appconn->session.ipv6_input_packets));
+				dbus_message_iter_append_basic (&iter_struct,
+									DBUS_TYPE_UINT32,
+									&(appconn->session.ipv6_output_packets));
 				dbus_message_iter_append_basic (&iter_struct,
 									DBUS_TYPE_UINT64,
 									&(appconn->session.output_octets));
@@ -10611,6 +10669,10 @@ replyx:
 										DBUS_TYPE_UINT64_AS_STRING
 										DBUS_TYPE_UINT32_AS_STRING
 										DBUS_TYPE_UINT32_AS_STRING
+										DBUS_TYPE_UINT64_AS_STRING
+										DBUS_TYPE_UINT64_AS_STRING
+										DBUS_TYPE_UINT32_AS_STRING
+										DBUS_TYPE_UINT32_AS_STRING
 										DBUS_TYPE_BYTE_AS_STRING
 										DBUS_TYPE_BYTE_AS_STRING
 										DBUS_TYPE_BYTE_AS_STRING
@@ -10684,6 +10746,18 @@ replyx:
 				dbus_message_iter_append_basic (&iter_struct,
 									DBUS_TYPE_UINT32,
 									&(appconn->session.output_packets));
+				dbus_message_iter_append_basic (&iter_struct,
+									DBUS_TYPE_UINT64,
+									&(appconn->session.ipv6_input_octets));
+				dbus_message_iter_append_basic (&iter_struct,
+									DBUS_TYPE_UINT64,
+									&(appconn->session.ipv6_output_octets));
+				dbus_message_iter_append_basic (&iter_struct,
+									DBUS_TYPE_UINT32,
+									&(appconn->session.ipv6_input_packets));
+				dbus_message_iter_append_basic (&iter_struct,
+									DBUS_TYPE_UINT32,
+									&(appconn->session.ipv6_output_packets));
 				dbus_message_iter_append_basic (&iter_struct,
 									DBUS_TYPE_BYTE,
 									&(appconn->session.apmac[0]));
@@ -10807,6 +10881,10 @@ replyx:
 										DBUS_TYPE_UINT64_AS_STRING
 										DBUS_TYPE_UINT32_AS_STRING
 										DBUS_TYPE_UINT32_AS_STRING
+										DBUS_TYPE_UINT64_AS_STRING
+										DBUS_TYPE_UINT64_AS_STRING
+										DBUS_TYPE_UINT32_AS_STRING
+										DBUS_TYPE_UINT32_AS_STRING
 										DBUS_TYPE_BYTE_AS_STRING
 										DBUS_TYPE_BYTE_AS_STRING
 										DBUS_TYPE_BYTE_AS_STRING
@@ -10880,6 +10958,18 @@ replyx:
 				dbus_message_iter_append_basic (&iter_struct,
 									DBUS_TYPE_UINT32,
 									&(appconn->session.output_packets));
+				dbus_message_iter_append_basic (&iter_struct,
+									DBUS_TYPE_UINT64,
+									&(appconn->session.ipv6_input_octets));
+				dbus_message_iter_append_basic (&iter_struct,
+									DBUS_TYPE_UINT64,
+									&(appconn->session.ipv6_output_octets));
+				dbus_message_iter_append_basic (&iter_struct,
+									DBUS_TYPE_UINT32,
+									&(appconn->session.ipv6_input_packets));
+				dbus_message_iter_append_basic (&iter_struct,
+									DBUS_TYPE_UINT32,
+									&(appconn->session.ipv6_output_packets));
 				dbus_message_iter_append_basic (&iter_struct,
 									DBUS_TYPE_BYTE,
 									&(appconn->session.apmac[0]));
@@ -11001,6 +11091,10 @@ replyx:
 										DBUS_TYPE_UINT64_AS_STRING
 										DBUS_TYPE_UINT32_AS_STRING
 										DBUS_TYPE_UINT32_AS_STRING
+										DBUS_TYPE_UINT64_AS_STRING
+										DBUS_TYPE_UINT64_AS_STRING
+										DBUS_TYPE_UINT32_AS_STRING
+										DBUS_TYPE_UINT32_AS_STRING
 										DBUS_TYPE_BYTE_AS_STRING
 										DBUS_TYPE_BYTE_AS_STRING
 										DBUS_TYPE_BYTE_AS_STRING
@@ -11075,6 +11169,18 @@ replyx:
 					dbus_message_iter_append_basic (&iter_struct,
 									DBUS_TYPE_UINT32,
 									&(appconn->session.output_packets));
+					dbus_message_iter_append_basic (&iter_struct,
+									DBUS_TYPE_UINT64,
+									&(appconn->session.ipv6_input_octets));
+					dbus_message_iter_append_basic (&iter_struct,
+									DBUS_TYPE_UINT64,
+									&(appconn->session.ipv6_output_octets));
+					dbus_message_iter_append_basic (&iter_struct,
+									DBUS_TYPE_UINT32,
+									&(appconn->session.ipv6_input_packets));
+					dbus_message_iter_append_basic (&iter_struct,
+									DBUS_TYPE_UINT32,
+									&(appconn->session.ipv6_output_packets));
 					dbus_message_iter_append_basic (&iter_struct,
 									DBUS_TYPE_BYTE,
 									&(appconn->session.apmac[0]));
