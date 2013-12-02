@@ -38,8 +38,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "ws_ec.h"
 #include <fcntl.h>
 #include <sys/wait.h>
-#include "ws_init_dbus.h"
 #include "ws_dhcpv6.h"
+#include "ws_init_dbus.h"
+#include "ws_dbus_list_interface.h"
+
 
 int ShowDhcpconPage(struct list *lcontrol,struct list *lpublic);
 void  ConfIPAdd(struct list *lcontrol,struct list *lpublic); 
@@ -51,7 +53,7 @@ int cgiMain()
 	struct list *lpublic;
 	lcontrol = get_chain_head("../htdocs/text/control.txt");
 	lpublic= get_chain_head("../htdocs/text/public.txt");
-	
+	ccgi_dbus_init();
 	ShowDhcpconPage(lcontrol,lpublic);
 	release(lcontrol);
 	release(lpublic); 
@@ -68,7 +70,28 @@ int ShowDhcpconPage(struct list *lcontrol,struct list *lpublic)
 	if(str==NULL)
 	{
 		ShowErrorPage(search(lpublic,"ill_user")); 	 /*用户非法*/
-	}	  
+	}
+	instance_parameter *paraHead2 = NULL;
+	instance_parameter *p_q = NULL;
+	int allslot_id = 0;
+	char slot_num[5]={0};
+	fprintf(stderr,"11111aaaaaaaaaaaaaaaaaaa");
+	list_instance_parameter(&paraHead2, SNMPD_SLOT_CONNECT);
+	fprintf(stderr,"bbbbbbbbbbbbbbb");
+	cgiFormStringNoNewlines("allslotid",slot_num,sizeof(slot_num));
+	fprintf(stderr,"ccccccccccccccccccc");
+	allslot_id = atoi(slot_num);
+	fprintf(stderr,"allslot_id = %d",allslot_id);
+	if(0 == allslot_id)
+	{
+		for(p_q=paraHead2;(NULL != p_q);p_q=p_q->next)
+		{
+			allslot_id = p_q->parameter.slot_id;
+			fprintf(stderr,"---------------allslot_id = %d",allslot_id);
+			break;
+		}
+	}	
+	
 	cgiHeaderContentType("text/html");
 	fprintf(cgiOut,"<html xmlns=\"http://www.w3.org/1999/xhtml\"><head>");
 	fprintf(cgiOut,"<meta http-equiv=Content-Type content=text/html; charset=gb2312>");
@@ -127,6 +150,7 @@ int ShowDhcpconPage(struct list *lcontrol,struct list *lpublic)
 		  "}\n"\
 		  "if(optionIndex!=null){\n"\
 		  "document.all.dnselect.remove(optionIndex);\n"\
+		  "break;\n"\
 		  "}\n"\
 		  "}\n"\
           "}");	
@@ -138,6 +162,7 @@ int ShowDhcpconPage(struct list *lcontrol,struct list *lpublic)
 		  "}\n"\
 		  "if(optionIndex!=null){\n"\
 		  "document.all.optselect.remove(optionIndex);\n"\
+	  	  "break;\n"\
 		  "}\n"\
 		  "}\n"\
           "}");
@@ -348,20 +373,48 @@ int ShowDhcpconPage(struct list *lcontrol,struct list *lpublic)
 	"</td>\n"\
 	"<td align=left valign=top style=\"background-color:#ffffff; border-right:1px solid #707070; padding-left:30px; padding-top:10px\">");
 
-	fprintf(cgiOut,"<table width=700 border=0 cellspacing=0 cellpadding=0>");
+	fprintf(cgiOut,"<table width=800 border=0 cellspacing=0 cellpadding=0>");
+	fprintf(stderr,"1111111111111111111111111");
+	fprintf(cgiOut,"<tr>");
+	fprintf(cgiOut,"<td align=right>%s&nbsp;&nbsp;</td>","Slot ID:");
+	fprintf(cgiOut,"<td><select name=allslot onchange=slotid_change(this) style=\"size:21px\">");
+	for(p_q=paraHead2;(NULL != p_q);p_q=p_q->next)
+	{
+		fprintf(stderr,"22222222222222222222222");
+		if(p_q->parameter.slot_id == allslot_id)
+		{
+			fprintf(cgiOut,"<option value=\"%d\" selected>%d</option>",p_q->parameter.slot_id,p_q->parameter.slot_id);
+		}
+		else
+		{
+			fprintf(cgiOut,"<option value=\"%d\">%d</option>",p_q->parameter.slot_id,p_q->parameter.slot_id);
+		}		
+	}
+	fprintf(cgiOut,"</select></td>");
+	fprintf(cgiOut,"</tr>");
+	fprintf( cgiOut,"<script type=text/javascript>\n");
+   	fprintf( cgiOut,"function slotid_change( obj )\n"\
+		   	"{\n"\
+		   	"var slotid = obj.options[obj.selectedIndex].value;\n"\
+		   	"var url = 'wp_dhcpv6add.cgi?UN=%s&allslotid='+slotid;\n"\
+		   	"window.location.href = url;\n"\
+		   	"}\n", encry);
+    	fprintf( cgiOut,"</script>\n" );	
+	free_instance_parameter_list(&paraHead2);
+	fprintf(cgiOut,"<input type=hidden name=allslotid value=\"%d\">",allslot_id);
 	////pool name 
 	fprintf(cgiOut,"<tr>\n"\
-	"<td width=100 height=40>%s:</td>","POOL");
+	"<td width=100 height=40  align=right>%s:</td>","POOL");
 	fprintf(cgiOut,"<td width=100><input type=text name=pool_name  size=21 maxLength=20/></td>\n"\
 	"<td colspan=2></td>");
 	fprintf(cgiOut,"</tr>");
 	//domain name
 	fprintf(cgiOut,"<tr>\n");
-	fprintf(cgiOut,"<td width=100 height=40 >%s:</td>","Domain");
+	fprintf(cgiOut,"<td width=100 height=40  align=right>%s:</td>","Domain");
 	fprintf(cgiOut,"<td><input type=text name=domname value=\"\" size=21 maxLength=20></td></tr>\n");
 
 	fprintf(cgiOut,"<tr>\n"\
-	"<td width=100 height=40 >%s:</td>",search(lcontrol,"lease duration"));
+	"<td width=80 height=40  align=right>%s:</td>",search(lcontrol,"lease duration"));
 	fprintf(cgiOut,"<td colspan=4 width=350 align=left><input type=text name=day onkeypress=\"return event.keyCode>=48&&event.keyCode<=57\"\
 	onpaste=\"var s=clipboardData.getData('text');   if(!/\\D/.test(s)) value=s.replace(/^0*/,'');   return   false;\"\
 	ondragenter=\"return  false;\"\
@@ -376,10 +429,10 @@ int ShowDhcpconPage(struct list *lcontrol,struct list *lpublic)
 	style=\"ime-mode:disabled\" onkeyup=\"if(/(^0+)/.test(value))value=value.replace(/^0*/,'')\" size=5/><font color=red>(%s)</font></td>",search(lcontrol,"time_min"));
 	fprintf(cgiOut,"</tr>");
 	fprintf(cgiOut,"<tr>\n"\
-	"<td width=100 height=40>%s:</td>",search(lcontrol,"dnserver"));
+	"<td width=100 height=40  align=right>%s:</td>",search(lcontrol,"dnserver"));
 
-	fprintf(cgiOut,"<td width=290>\n"\
-	"<div style=\"border-width:1;border-color:#a5acb2;border-style:solid;width:290;font-size:9pt\">");
+	fprintf(cgiOut,"<td width=300>\n"\
+	"<div style=\"border-width:1;border-color:#a5acb2;border-style:solid;width:300;font-size:9pt\">");
 	fprintf(cgiOut,"<input type=text  name=dns_ip1 value=\"\" maxlength=4 class=a3 onKeyUp=\"mask(this,%s)\" onbeforepaste=mask_c()>:",search(lpublic,"ip_error")); 
 	fprintf(cgiOut,"<input type=text  name=dns_ip2 value=\"\" maxlength=4 class=a3 onKeyUp=\"mask(this,%s)\" onbeforepaste=mask_c()>:",search(lpublic,"ip_error"));
 	fprintf(cgiOut,"<input type=text  name=dns_ip3 value=\"\" maxlength=4 class=a3 onKeyUp=\"mask(this,%s)\" onbeforepaste=mask_c()>:",search(lpublic,"ip_error"));
@@ -395,16 +448,16 @@ int ShowDhcpconPage(struct list *lcontrol,struct list *lpublic)
 
 	fprintf(cgiOut,"<tr height=60>\n"\
 	"<td>&nbsp;</td>\n"\
-	"<td width=140 colspan=2 ><select name=dnselect  valus=\"\" size=\"3\" style=\"width:290px\"></select></td>"\
+	"<td width=140 colspan=2 ><select name=dnselect  valus=\"\" size=\"3\" style=\"width:300px\"></select></td>"\
 	"<td width=50 colspan=2 valign=top><input type=button name=dns_rm id=ranges_rm onclick=rm_dns() style=\"width:50px\" value=\"%s\"></input></td>", search(lcontrol, "dhcp_rm"));
 	fprintf(cgiOut,"</tr>"); 			
 	//////////option52 				
 	fprintf(cgiOut,"<tr height=30 id=hex2>\n");
-	fprintf(cgiOut,"<td width=80>\n");
+	fprintf(cgiOut,"<td width=100  align=right>\n");
 	fprintf(cgiOut,"option52:");
 	fprintf(cgiOut,"</td>\n");
-	fprintf(cgiOut,"<td width=290>\n"\
-	"<div style=\"border-width:1;border-color:#a5acb2;border-style:solid;width:290;font-size:9pt\">");
+	fprintf(cgiOut,"<td width=300>\n"\
+	"<div style=\"border-width:1;border-color:#a5acb2;border-style:solid;width:300;font-size:9pt\">");
 	fprintf(cgiOut,"<input type=text  name=opt_ip1 value=\"\" maxlength=4 class=a3 onKeyUp=\"mask(this,%s)\" onbeforepaste=mask_c()>:",search(lpublic,"ip_error")); 
 	fprintf(cgiOut,"<input type=text  name=opt_ip2 value=\"\" maxlength=4 class=a3 onKeyUp=\"mask(this,%s)\" onbeforepaste=mask_c()>:",search(lpublic,"ip_error"));
 	fprintf(cgiOut,"<input type=text  name=opt_ip3 value=\"\" maxlength=4 class=a3 onKeyUp=\"mask(this,%s)\" onbeforepaste=mask_c()>:",search(lpublic,"ip_error"));
@@ -420,23 +473,23 @@ int ShowDhcpconPage(struct list *lcontrol,struct list *lpublic)
 
 	fprintf(cgiOut,"<tr height=60 id=hex3>\n"\
 	"<td>&nbsp;</td>\n"\
-	"<td width=140 colspan=2 ><select name=optselect  valus=\"\" size=\"8\" style=\"width:290px\"></select></td>"\
+	"<td width=140 colspan=2 ><select name=optselect  valus=\"\" size=\"8\" style=\"width:300px\"></select></td>"\
 	"<td width=50 colspan=2 valign=top><input type=button name=opt_rm id=ranges_rm onclick=rm_opt() style=\"width:50px\" value=\"%s\"></input></td>", search(lcontrol, "dhcp_rm"));
 	fprintf(cgiOut,"</tr>");
 
 
 	///dhcp router ip 
 	fprintf(cgiOut,"<tr>\n"\
-	"<td width=100 height=40>%s:</td>","DHCP prefix-length");
+	"<td width=100 height=40  align=right>%s:</td>","Prefix-Length");
 	fprintf(cgiOut,"<td colspan=4><input type=text name=prefixl value=\"\" maxLength=2><font color=red>(1-16></font></td>\n"\
 	"</tr>");
 
 	fprintf(cgiOut,"<tr>\n"\
-	"<td width=100 height=40>%s:</td>",search(lcontrol,"dhcp_pool"));
+	"<td width=100 height=40  align=right>%s:</td>",search(lcontrol,"dhcp_pool"));
 
 	//ip address pool,
-	fprintf(cgiOut,"<td width=290>\n"\
-	"<div style=\"border-width:1;border-color:#a5acb2;border-style:solid;width:290;font-size:9pt\">");
+	fprintf(cgiOut,"<td width=300>\n"\
+	"<div style=\"border-width:1;border-color:#a5acb2;border-style:solid;width:300;font-size:9pt\">");
 	fprintf(cgiOut,"<input type=text  name=beg_ip1 value=\"\" maxlength=4 class=a3 onKeyUp=\"mask(this,%s)\" onbeforepaste=mask_c()>:",search(lpublic,"ip_error")); 
 	fprintf(cgiOut,"<input type=text  name=beg_ip2 value=\"\" maxlength=4 class=a3 onKeyUp=\"mask(this,%s)\" onbeforepaste=mask_c()>:",search(lpublic,"ip_error"));
 	fprintf(cgiOut,"<input type=text  name=beg_ip3 value=\"\" maxlength=4 class=a3 onKeyUp=\"mask(this,%s)\" onbeforepaste=mask_c()>:",search(lpublic,"ip_error"));
@@ -447,8 +500,8 @@ int ShowDhcpconPage(struct list *lcontrol,struct list *lpublic)
 	fprintf(cgiOut,"<input type=text  name=beg_ip8 value=\"\" maxlength=4 class=a3 onKeyUp=\"mask(this,%s)\" onbeforepaste=mask_c()>",search(lpublic,"ip_error"));
 	fprintf(cgiOut,"</div></td>\n"\
 	"<td width=10 align=center >-</td>\n"\
-	"<td width=290>\n"\
-	"<div style=\"border-width:1;border-color:#a5acb2;border-style:solid;width:290;font-size:9pt\">");
+	"<td width=300>\n"\
+	"<div style=\"border-width:1;border-color:#a5acb2;border-style:solid;width:300;font-size:9pt\">");
 	fprintf(cgiOut,"<input type=text  name=end_ip1 value=\"\" maxlength=4 class=a3 onKeyUp=\"mask(this,%s)\" onbeforepaste=mask_c()>:",search(lpublic,"ip_error")); 
 	fprintf(cgiOut,"<input type=text  name=end_ip2 value=\"\" maxlength=4 class=a3 onKeyUp=\"mask(this,%s)\" onbeforepaste=mask_c()>:",search(lpublic,"ip_error"));
 	fprintf(cgiOut,"<input type=text  name=end_ip3 value=\"\" maxlength=4 class=a3 onKeyUp=\"mask(this,%s)\" onbeforepaste=mask_c()>:",search(lpublic,"ip_error"));
@@ -504,19 +557,22 @@ void  ConfIPAdd(struct list *lcontrol,struct list *lpublic)
 	char day[10] = {0};
 	char hour[10] = {0};
 	char min[10] = {0};
-	char dnsipstr[512] = {0};
+	char dnsipstr[150] = {0};
 	char startip[128] = {0};
 	char endip[128] = {0};
 	char domname[128] = {0};
 	char opt_ip[512] = {0};	
 	char predixstr[10] = {0};
 	char option52str[512] = {0};
+	char slot_num[5]={0};
+	int slot=0;
 	
-	int ret1=-1,mode = 1,ret2 = 0;
+	int ret1=-1,mode = 1,ret2 = 0,ret3=0;
 	int retconfig = 0;
 	unsigned int index = 0;
 	unsigned int bkindex = 0;
 	
+	cgiFormStringNoNewlines("allslotid",slot_num,sizeof(slot_num));
 	cgiFormStringNoNewlines("poolname",poolname,sizeof(poolname));
 	cgiFormStringNoNewlines("domname",domname,sizeof(domname));
 	cgiFormStringNoNewlines("day",day,sizeof(day));
@@ -528,20 +584,25 @@ void  ConfIPAdd(struct list *lcontrol,struct list *lpublic)
 	cgiFormStringNoNewlines("opt_ip", opt_ip, sizeof(opt_ip));	
 	cgiFormStringNoNewlines("prefixl", predixstr, sizeof(predixstr));
 	cgiFormStringNoNewlines("option52str", option52str, sizeof(option52str));
+	fprintf(stderr,"slot_num=%s\n,poolname=%s\n,domname=%s\n,day=%s\n,hour=%s\n,min=%s\n,dnsipstr=%s\n,startip=%s\n,endip=%s\n,opt_ip=%s\n,predixstr=%s\n,option52str=%s\n",
+			slot_num,poolname,domname,day,hour,min,dnsipstr,startip,endip,opt_ip,predixstr,option52str);
 
 	int lease_t = 0;
+	slot = atoi(slot_num);
 	int lease_d = atoi(day);
 	int lease_h = atoi(hour);
 	int lease_m = atoi(min);
 	lease_t = lease_d*24*3600+lease_h*3600+lease_m*60;
-	//sprintf(lease,"%d",lease_t);	
+	DBusConnection *ccgi_connection = NULL;
+	ccgi_ReInitDbusConnection(&ccgi_connection, slot, DISTRIBUTFAG);
 
 	ccgi_dbus_init();
 	/*ip pool name*/
 	if (0 != strcmp(poolname,""))
 	{
-		ret1 = 0;//ccgi_create_ipv6_pool_name(ADD_OPT, poolname, &index);		
-		retconfig =0;// ccgi_config_ipv6_pool_name(poolname,&bkindex);
+		ret1 = ccgi_create_ipv6_pool_name(ADD_OPT, poolname, &index,slot);		
+		retconfig = ccgi_config_ipv6_pool_name(poolname,&bkindex,slot);
+		fprintf(stderr,"ret1=%d,retconfig=%d",ret1,retconfig);
 
 		if ((1 == ret1)||(1 == retconfig))
 		{
@@ -552,28 +613,31 @@ void  ConfIPAdd(struct list *lcontrol,struct list *lpublic)
 				{
 					index = bkindex;
 				}
-				ret2 = 0;//ccgi_addordel_ipv6pool("add", startip, endip, predixstr, index);
+				ret2 = ccgi_addordel_ipv6pool("add", startip, endip, predixstr, index,slot);
+				fprintf(stderr,"ret2=%d",ret2);
 				if (1 == ret2)
 				{
 					/*add domain name*/
 					if(strcmp(domname,"")!=0)
 					{
-						ccgi_set_server_domain_search_ipv6(domname,mode, index, ADD_OPT);
+						ret3=ccgi_set_server_domain_search_ipv6(domname,mode, index, ADD_OPT, slot);
+						fprintf(stderr,"111111111111ret3=%d",ret3);
 					}
 					/*add dns*/	
 					if (0 != strcmp(dnsipstr,""))
 					{
-						//ip_dhcp_server_dns(mode, index, dnsipstr);
+						ret3=ccgi_set_server_name_servers_ipv6(dnsipstr,mode, index, ADD_OPT, slot);
+						fprintf(stderr,"2222222222222ret3=%d",ret3);
 					}
 					/*add lease*/
-					//ccgi_set_server_lease_default_ipv6(lease_t,mode,index,ADD_OPT);
+					ccgi_set_server_lease_default_ipv6(lease_t,mode,index,ADD_OPT, slot);
+					fprintf(stderr,"333333333333ret3=%d",ret3);
 					/*option 52*/
 					if (0 != strcmp(option52str,""))
 					{
-						ccgi_set_server_option52_ipv6(opt_ip,mode,index, ADD_OPT);
+						ret3=ccgi_set_server_option52_ipv6(opt_ip,mode,index, ADD_OPT, slot);
+						fprintf(stderr,"44444444444ret3=%d",ret3);
 					}
-					//ccgi_set_server_name_servers_ipv6(dnsipstr,mode, index, ADD_OPT);
-					ccgi_set_server_option52_ipv6(opt_ip, mode,index,ADD_OPT);
 
 					ShowAlert(search(lcontrol,"add_suc"));
 				}

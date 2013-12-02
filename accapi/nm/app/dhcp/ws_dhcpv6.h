@@ -153,14 +153,16 @@ extern int ccgi_set_server_option52_ipv6
 	char *optstr,	
 	unsigned int mode,
 	unsigned int index,
-	unsigned int del
+	unsigned int del,
+	int slot
 );/*1:succ;0:fai; -1:ap_via_address is null*/
 extern int ccgi_set_server_domain_search_ipv6
 (
 	char *domainName,	
 	unsigned int mode,
 	unsigned int index,
-	unsigned int del
+	unsigned int del,
+	int slot
 );/*1:succ;0:fail;-1:domainName is null*/
 extern int ccgi_set_server_name_servers_ipv6
 (

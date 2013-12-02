@@ -84,6 +84,28 @@ int ShowDhcpconPage(struct list *lcontrol,struct list *lpublic)
 	struct dhcp6_pool_show_st head,*q;
 	memset(&head,0,sizeof(struct dhcp6_pool_show_st));
 	struct dhcp6_sub *sq;
+
+	
+	instance_parameter *paraHead2 = NULL;
+	instance_parameter *p_q = NULL;
+	int allslot_id = 0;
+	char slot_num[5]={0};
+	fprintf(stderr,"11111aaaaaaaaaaaaaaaaaaa");
+	list_instance_parameter(&paraHead2, SNMPD_SLOT_CONNECT);
+	fprintf(stderr,"bbbbbbbbbbbbbbb");
+	cgiFormStringNoNewlines("allslotid",slot_num,sizeof(slot_num));
+	fprintf(stderr,"ccccccccccccccccccc");
+	allslot_id = atoi(slot_num);
+	fprintf(stderr,"allslot_id = %d",allslot_id);
+	if(0 == allslot_id)
+	{
+		for(p_q=paraHead2;(NULL != p_q);p_q=p_q->next)
+		{
+			allslot_id = p_q->parameter.slot_id;
+			fprintf(stderr,"---------------allslot_id = %d",allslot_id);
+			break;
+		}
+	}	
 	
 	cgiHeaderContentType("text/html");
 	fprintf(cgiOut,"<html xmlns=\"http://www.w3.org/1999/xhtml\"><head>");
@@ -183,17 +205,47 @@ int ShowDhcpconPage(struct list *lcontrol,struct list *lpublic)
 	int gflag = 0;
 	int gserver = 0;
 	owned_option.domainsearch = (char *)malloc(128);
-    memset(owned_option.domainsearch,0,128);
+    	memset(owned_option.domainsearch,0,128);
 	
 	char *ipv6_dns[3]= {NULL, NULL, NULL};		
+		
+	fprintf(cgiOut,"<table width=500 border=0 cellspacing=0 cellpadding=0>");
 	
-	gflag = ccgi_show_ipv6_dhcp_server(&owned_option);
+	fprintf(stderr,"1111111111111111111111111");
+	fprintf(cgiOut,"<tr>");
+	fprintf(cgiOut,"<td align=right>%s&nbsp;&nbsp;</td>","Slot ID:");
+	fprintf(cgiOut,"<td><select name=allslot onchange=slotid_change(this) style=\"size:21px\">");
+	for(p_q=paraHead2;(NULL != p_q);p_q=p_q->next)
+	{
+		fprintf(stderr,"22222222222222222222222");
+		if(p_q->parameter.slot_id == allslot_id)
+		{
+			fprintf(cgiOut,"<option value=\"%d\" selected>%d</option>",p_q->parameter.slot_id,p_q->parameter.slot_id);
+		}
+		else
+		{
+			fprintf(cgiOut,"<option value=\"%d\">%d</option>",p_q->parameter.slot_id,p_q->parameter.slot_id);
+		}		
+	}
+	fprintf(cgiOut,"</select></td>");
+	fprintf(cgiOut,"</tr>");
+	fprintf( cgiOut,"<script type=text/javascript>\n");
+   	fprintf( cgiOut,"function slotid_change( obj )\n"\
+		   	"{\n"\
+		   	"var slotid = obj.options[obj.selectedIndex].value;\n"\
+		   	"var url = 'wp_dhcpv6con.cgi?UN=%s&allslotid='+slotid;\n"\
+		   	"window.location.href = url;\n"\
+		   	"}\n", encry);
+    	fprintf( cgiOut,"</script>\n" );	
+	free_instance_parameter_list(&paraHead2);
+	fprintf(cgiOut,"<input type=hidden name=allslotid value=\"%d\">",allslot_id);
+	
+	gflag = ccgi_show_ipv6_dhcp_server(&owned_option, allslot_id);
 	if (1 == gflag)
 	{
 		gserver = owned_option.enable;
 	}	
-	
-	fprintf(cgiOut,"<table width=500 border=0 cellspacing=0 cellpadding=0>");						  
+
 	fprintf(cgiOut,"<tr>"\
 	"<td width=80>%s</td>",search(lcontrol,"dhcp_status"));
 	if( gserver == 1 )
@@ -215,7 +267,7 @@ int ShowDhcpconPage(struct list *lcontrol,struct list *lpublic)
 		"</td>");				
 	}
 			
-    free(owned_option.domainsearch);
+    	free(owned_option.domainsearch);
 	fprintf(cgiOut,"</tr>"\
 	"<tr>"\
 	"<td colspan=2 id=sec style=\"border-bottom:2px solid #53868b\">&nbsp;</td>"\

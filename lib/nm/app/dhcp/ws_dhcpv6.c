@@ -267,10 +267,7 @@ int ccgi_show_dhcp6_lease
 	dbus_message_unref(reply);	
 	return retu;
 }
-unsigned int ccgi_show_ipv6_dhcp_server
-(
-	struct dhcp6_show *owned_option	
-)
+unsigned int ccgi_show_ipv6_dhcp_server(struct dhcp6_show *owned_option, int slot)
 {
 	DBusMessage *query = NULL, *reply = NULL;
 	DBusError err;
@@ -278,7 +275,12 @@ unsigned int ccgi_show_ipv6_dhcp_server
 	struct dhcp6_show option;
 	struct iaddr ipAddr[3];
 	int retu = 0;
-	
+	DBusConnection *ccgi_connection = NULL;
+	ccgi_ReInitDbusConnection(&ccgi_connection, slot, DISTRIBUTFAG);
+	if(NULL == ccgi_connection)
+	{
+		return -1;
+	}
 	query = dbus_message_new_method_call(DHCP6_DBUS_BUSNAME, 
 									DHCP6_DBUS_OBJPATH, 
 									DHCP6_DBUS_INTERFACE, 
@@ -288,7 +290,7 @@ unsigned int ccgi_show_ipv6_dhcp_server
 							 DBUS_TYPE_UINT32, &value, 
 							 DBUS_TYPE_INVALID);
 
-	reply = dbus_connection_send_with_reply_and_block (ccgi_dbus_connection,query,-1, &err);
+	reply = dbus_connection_send_with_reply_and_block (ccgi_connection,query,-1, &err);
 				
 	dbus_message_unref(query);
 	
@@ -1086,7 +1088,8 @@ int ccgi_set_server_option52_ipv6
 	char *optstr,	
 	unsigned int mode,
 	unsigned int index,
-	unsigned int del
+	unsigned int del,
+	int slot
 )/*1:succ;0:fai; -1:ap_via_address is null*/
 {
 	char **ap_via_address = NULL;
@@ -1095,10 +1098,18 @@ int ccgi_set_server_option52_ipv6
 	int i = 0;
 	int j = 0;
 	unsigned int ipv6num = 0;
+	DBusConnection *ccgi_connection = NULL;
 	if (NULL == optstr)
 	{
 		return -1;
 	}
+	ccgi_ReInitDbusConnection(&ccgi_connection, slot, DISTRIBUTFAG);
+	if(NULL == ccgi_connection)
+	{
+		return -1;
+	}
+
+	
 	char *optionstr[8];
 	for (i = 0;i < 8; i++)
 	{
@@ -1209,7 +1220,7 @@ int ccgi_set_server_option52_ipv6
 							 DBUS_TYPE_UINT32, &del, 
 							 DBUS_TYPE_INVALID);
 
-	reply = dbus_connection_send_with_reply_and_block (ccgi_dbus_connection,query,-1, &err);
+	reply = dbus_connection_send_with_reply_and_block (ccgi_connection,query,-1, &err);
 				
 	dbus_message_unref(query);
 	
@@ -1268,16 +1279,24 @@ int ccgi_set_server_domain_search_ipv6
 	char *domainName,	
 	unsigned int mode,
 	unsigned int index,
-	unsigned int del
+	unsigned int del,
+	int slot
 )/*1:succ;0:fail;-1:domainName is null*/
 {
 	DBusMessage *query = NULL, *reply = NULL;
 	DBusError err;
 	unsigned int op_ret = 0;
+	DBusConnection *ccgi_connection = NULL;
 
 	if (!domainName) {
 		return -1;
 	}
+	ccgi_ReInitDbusConnection(&ccgi_connection, slot, DISTRIBUTFAG);
+	if(NULL == ccgi_connection)
+	{
+		return -1;
+	}
+		
 	query = dbus_message_new_method_call(DHCP6_DBUS_BUSNAME, 
 									DHCP6_DBUS_OBJPATH, 
 									DHCP6_DBUS_INTERFACE, 
@@ -1291,7 +1310,7 @@ int ccgi_set_server_domain_search_ipv6
 							 DBUS_TYPE_UINT32, &del, 
 							 DBUS_TYPE_INVALID);
 
-	reply = dbus_connection_send_with_reply_and_block (ccgi_dbus_connection,query,-1, &err);
+	reply = dbus_connection_send_with_reply_and_block (ccgi_connection,query,-1, &err);
 				
 	dbus_message_unref(query);
 	
