@@ -40,6 +40,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <sys/wait.h>
 #include "ws_dhcpv6.h"
 #include "ws_init_dbus.h"
+#include "ws_dbus_list_interface.h"
 
 
 #define IP_ADDR_PATH "/var/run/apache2/ip_addr.file"

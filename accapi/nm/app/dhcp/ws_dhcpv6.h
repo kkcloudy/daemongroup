@@ -117,7 +117,7 @@ extern int ccgi_show_dhcp6_lease
 );/*0:fail;1:succ*/
 
 extern void Free_ccgi_show_dhcp6_lease(struct dhcp6_pool_show_st *head);
-extern unsigned int ccgi_show_ipv6_dhcp_server(struct dhcp6_show *owned_option);
+extern unsigned int ccgi_show_ipv6_dhcp_server(struct dhcp6_show *owned_option,int slot);
 
 extern int ccgi_show_ipv6_pool
 (
