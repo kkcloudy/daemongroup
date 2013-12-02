@@ -3910,9 +3910,17 @@ dhcp6_dbus_show_dhcp_pool_conf
 					
 
 				prefix_len = 0;
-				for(k = 0; k < 16; ++k){
+			    i = strlen((char*)(subnetnode->mask.iabuf));
+				for(k = 0; k < i; ++k){
 				if(subnetnode->mask.iabuf[k] == 0xff){
-						++prefix_len;
+						prefix_len = prefix_len + 8;
+					}else{
+						for(j=0; j <16; j++){
+							if(((subnetnode->mask.iabuf[k])>>j)&(0x01)){
+								prefix_len++;
+							}
+							
+						}
 					}
 				}
 
@@ -4965,7 +4973,7 @@ dhcp6_dbus_add_dhcp_pool_ip_range
 	DBusMessageIter	 iter;
 	struct dcli_pool* poolNode = NULL;
 	struct dcli_subnet	*tempsub = NULL;
-	unsigned int	op_ret = 0, ret = 0, i = 0, index = 0, add = 0, prefix_length;
+	unsigned int	op_ret = 0, ret = 0, i = 0, index = 0, add = 0, prefix_length , bit_g = 0, remain_g = 0;
 	struct iaddr ipaddrl, ipaddrh;
 	DBusError err;
 
@@ -5030,17 +5038,24 @@ dhcp6_dbus_add_dhcp_pool_ip_range
 		tempsub->lowip = ipaddrl;	
 		tempsub->lowip.len = DHCP_IPV6_ADDRESS_LEN;
 		log_debug("addsubnet->lowip.iabuf %s\n", piaddr(tempsub->lowip));
-		
-		for(i = 0; i < prefix_length; i ++) {
+
+		bit_g = prefix_length/8;
+		remain_g = prefix_length%8;
+		for(i = 0; i < bit_g; i ++) {
 			tempsub->mask.iabuf[i] = 0xff;
+		}
+		for(i=0; i< remain_g; i++){
+			tempsub->mask.iabuf[bit_g] += (0x01<<(7-i));
 		}
 		tempsub->mask.len = DHCP_IPV6_ADDRESS_LEN;
 		log_debug("addsubnet->mask.iabuf %s, len is %d\n", piaddr(tempsub->mask), prefix_length);
 
-		for(i = 0; i < prefix_length; i ++) {
+		for(i = 0; i < bit_g; i ++) {
 			tempsub->ipaddr.iabuf[i] = ipaddrl.iabuf[i];
 		}
-
+		for(i=0; i< remain_g; i++){
+			tempsub->ipaddr.iabuf[bit_g] += (ipaddrl.iabuf[bit_g] & (0x01<<(7-i)));
+		}
 		tempsub->ipaddr.len = DHCP_IPV6_ADDRESS_LEN;
 		log_debug("addsubnet->ipaddr.iabuf %s\n", piaddr(tempsub->ipaddr));	
 

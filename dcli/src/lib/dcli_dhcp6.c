@@ -2825,7 +2825,7 @@ dcli_add_dhcp_pool_ipv6_range
 
 DEFUN(add_dhcp_pool_ipv6_range_cmd_func,
 	add_dhcp_pool_ipv6_range_cmd,
-	"(add|delete) rangev6 IPV6 IPV6 prefix-length <1-16>",
+	"(add|delete) rangev6 IPV6 IPV6 prefix-length <1-128>",
 	"Add|Delete dhcp ipv6 range\n"
 	"Add dhcp ipv6 range\n"
 	"Delete dhcp ipv6 range\n"

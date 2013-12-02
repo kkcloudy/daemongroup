@@ -3791,7 +3791,17 @@ void parse_subnet6_declaration_no_cfile
 		return;
 	}
 */
-	subnet->net = sub_conf->net;
+	//subnet->net = sub_conf->net;
+	if(sub_conf->net.len){
+		int i = 0;
+		subnet->net.len = sub_conf->net.len;
+		for(; i <16; i++){
+			if(i < 8)
+				subnet->net.iabuf[i] = sub_conf->net.iabuf[i];
+			else 
+				subnet->net.iabuf[i] = sub_conf->net.iabuf[i] & 0x00;
+		}
+	}
 /*
 	token = next_token(&val, NULL, cfile);
 	if (token != SLASH) {

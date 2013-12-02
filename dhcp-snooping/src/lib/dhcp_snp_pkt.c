@@ -1630,9 +1630,14 @@ int dhcpv6_snp_notify_to_protal(char* userip, uint8_t *usermac)
 #define MACAUTH_SERVER_INSTANCE		0x10000
 
 	struct dhcpv6_sta_msg {
-		char userip[16];
-		uint8_t usermac[ETH_ALEN];
+			uint8_t family;
+			uint8_t usermac[ETH_ALEN];
+			union {
+			uint32_t userip;
+			struct in6_addr user_ipv6;
+			} addr;
 	};
+
 
 	static int sock_fd = -1;
 
@@ -1660,11 +1665,12 @@ int dhcpv6_snp_notify_to_protal(char* userip, uint8_t *usermac)
 
 		/* msg */
 		memset(&msg, 0, sizeof(msg));
-		memcpy(msg.userip, userip, 16);
+		memcpy(msg.addr.user_ipv6.s6_addr, userip, 16);
 		memcpy(msg.usermac, usermac, ETH_ALEN);
+		msg.family = 6;
 
 		syslog_ax_dhcp_snp_dbg("msg %s %02x:%02x:%02x:%02x:%02x:%02x\n",
-			u128ip2str(msg.userip), 
+			u128ip2str(msg.addr.user_ipv6.s6_addr), 
 			usermac[0], usermac[1], usermac[2], usermac[3], usermac[4], usermac[5]);
 
 		size = sendto(sock_fd, &msg, sizeof(msg), MSG_DONTWAIT, 
@@ -1701,8 +1707,12 @@ int dhcp_snp_notify_to_protal(uint32_t userip, uint8_t *usermac)
 #define MACAUTH_SERVER_INSTANCE		0x10000
 
 	struct dhcp_sta_msg {
-		uint32_t userip;
-		uint8_t usermac[ETH_ALEN];
+			uint8_t family;
+			uint8_t usermac[ETH_ALEN];
+			union {
+			uint32_t userip;
+			struct in6_addr user_ipv6;
+			} addr;
 	};
 
 	static int sock_fd = -1;
@@ -1731,8 +1741,9 @@ int dhcp_snp_notify_to_protal(uint32_t userip, uint8_t *usermac)
 
 		/* msg */
 		memset(&msg, 0, sizeof(msg));
-		msg.userip = userip;
+		msg.addr.userip = userip;
 		memcpy(msg.usermac, usermac, ETH_ALEN);
+		msg.family = 4;
 
 		syslog_ax_dhcp_snp_dbg("msg %d.%d.%d.%d %02x:%02x:%02x:%02x:%02x:%02x\n",
 			(userip>>24)&0xff, (userip>>16)&0xff, (userip>>8)&0xff, (userip>>0)&0xff, 
