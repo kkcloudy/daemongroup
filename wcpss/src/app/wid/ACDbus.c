@@ -72023,9 +72023,9 @@ DBusMessage * wid_dbus_wlan_show_running_config_start(DBusConnection *conn, DBus
 				cursor = showStr + totalLen;				
 			}
 			
-			if(g_auto_add_radio_to_ebr != 1)
+			if(g_auto_add_radio_to_ebr != 0)
 			{
-				totalLen += sprintf(cursor," set  radio auto add to ebr disable\n");
+				totalLen += sprintf(cursor," set  radio auto add to ebr enable\n");
 				cursor = showStr + totalLen;
 			}
 			
