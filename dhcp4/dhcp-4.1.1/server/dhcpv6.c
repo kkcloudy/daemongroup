@@ -1861,6 +1861,7 @@ reply_process_ia_na(struct reply_state *reply, struct option_cache *ia) {
 			ia_hash_delete(ia_na_active,
 				       (unsigned char *)ia_id->data,
 				       ia_id->len, MDL);
+			(*(reply->old_ia->iasubopt))->ipv6_pool->lease_active_count--;
 			ia_dereference(&reply->old_ia, MDL);
 		}
 
@@ -1869,6 +1870,7 @@ reply_process_ia_na(struct reply_state *reply, struct option_cache *ia) {
 		ia_id = &reply->ia->iaid_duid;
 		ia_hash_add(ia_na_active, (unsigned char *)ia_id->data,
 			    ia_id->len, reply->ia, MDL);
+		(*(reply->ia->iasubopt))->ipv6_pool->lease_active_count++;
 
 		write_ia(reply->ia);
 	}

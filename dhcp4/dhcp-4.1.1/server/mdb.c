@@ -492,7 +492,7 @@ int get_dhcp_lease_ipv6_state_num
 				sub_lease_count += (*next)->lease_count;
 				//sub_lease_free  += next->free_leases;				
 				//sub_lease_backup +=  next->backup_leases;
-				sub_lease_active = (*next)->num_active;
+				sub_lease_active = (*next)->lease_active_count;
 				/*
 				for(tmp_lease = next->active; tmp_lease ; tmp_lease = tmp_lease->next){
 					++sub_lease_active;
