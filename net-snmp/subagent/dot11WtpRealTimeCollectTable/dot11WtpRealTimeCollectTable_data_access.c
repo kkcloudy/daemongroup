@@ -349,7 +349,7 @@ dot11WtpRealTimeCollectTable_cache_load(netsnmp_container *container)
         rowreq_ctx = dot11WtpRealTimeCollectTable_allocate_rowreq_ctx();
         if (NULL == rowreq_ctx) {
             snmp_log(LOG_ERR, "memory allocation failed\n");
-            free_dbus_message_list(messageHead, Free_show_all_wtp_collect_information_cmd);
+            free_dbus_message_list(&messageHead, Free_show_all_wtp_collect_information_cmd);
             return MFD_RESOURCE_UNAVAILABLE;
         }
 		
@@ -534,7 +534,7 @@ dot11WtpRealTimeCollectTable_cache_load(netsnmp_container *container)
         		}		
     		}
 		}   
-		free_dbus_message_list(messageHead, Free_show_all_wtp_collect_information_cmd);
+		free_dbus_message_list(&messageHead, Free_show_all_wtp_collect_information_cmd);
 	}
 
 

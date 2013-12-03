@@ -331,7 +331,7 @@ dot11WtpNetworkaddrTable_cache_load(netsnmp_container *container)
 	        rowreq_ctx = dot11WtpNetworkaddrTable_allocate_rowreq_ctx();
 	        if (NULL == rowreq_ctx) {
 	            snmp_log(LOG_ERR, "memory allocation failed\n");
-                free_dbus_message_list(messageHead, Free_show_all_wtp_network_info_cmd);
+                free_dbus_message_list(&messageHead, Free_show_all_wtp_network_info_cmd);
 	            return MFD_RESOURCE_UNAVAILABLE;
 	        }
 			
@@ -429,7 +429,7 @@ dot11WtpNetworkaddrTable_cache_load(netsnmp_container *container)
 	    */
 	    if(MFD_SUCCESS !=
 	       wtpSetAction_map(&rowreq_ctx->data.wtpSetAction, 1 )) {
-			free_dbus_message_list(messageHead, Free_show_all_wtp_network_info_cmd);
+			free_dbus_message_list(&messageHead, Free_show_all_wtp_network_info_cmd);
 	        return MFD_ERROR;
 	    }
 
@@ -445,7 +445,7 @@ dot11WtpNetworkaddrTable_cache_load(netsnmp_container *container)
         	    }
         	}	
 		}
-		free_dbus_message_list(messageHead, Free_show_all_wtp_network_info_cmd);
+		free_dbus_message_list(&messageHead, Free_show_all_wtp_network_info_cmd);
 	}
 
     /*
