@@ -2213,7 +2213,7 @@ dhcp6_dbus_profile_config_save
 {
 	char *cursor = NULL, *ifcursor = NULL;
 	char *showif;
-	int i = 0, totalLen = 0, ifLen = 0;
+	int i = 0, totalLen = 0, ifLen = 0, j = 0, k = 0;
 	struct dcli_pool* pool_node = NULL;
 	struct dcli_subnet* sub_node = NULL;
 	struct dcli_option* option_node = NULL;
@@ -2424,9 +2424,17 @@ dhcp6_dbus_profile_config_save
 			inet_ntop(AF_INET6, sub_node->ipaddr.iabuf, subnet_ip , INET6_ADDRSTRLEN);	
 		 	inet_ntop(AF_INET6, sub_node->lowip.iabuf, range_low_ip , INET6_ADDRSTRLEN);			
 			inet_ntop(AF_INET6, sub_node->highip.iabuf, range_high_ip , INET6_ADDRSTRLEN);				
-			for(i = 0; i < 16; ++i){
-				if(sub_node->mask.iabuf[i] == 0xff){
-					++prefix_len;
+		    i = strlen((char*)(sub_node->mask.iabuf));
+			for(k = 0; k < i; ++k){
+			if(sub_node->mask.iabuf[k] == 0xff){
+					prefix_len = prefix_len + 8;
+				}else{
+					for(j=0; j <16; j++){
+						if(((sub_node->mask.iabuf[k])>>j)&(0x01)){
+							prefix_len++;
+						}
+						
+					}
 				}
 			}			
 			totalLen += sprintf(cursor, " add rangev6 %s %s prefix-length %d\n", range_low_ip, range_high_ip, prefix_len);
