@@ -879,6 +879,10 @@ radius_acct_req(eag_radius_t *radius,
 	uint64_t ipv6_output_octets = 0;
 	uint32_t ipv6_input_packets = 0;
 	uint32_t ipv6_output_packets = 0;
+	uint32_t ipv6_input_octets_low = 0;
+	uint32_t ipv6_input_octets_high = 0;
+	uint32_t ipv6_output_octets_low = 0;
+	uint32_t ipv6_output_octets_high = 0;
 	struct timeval tv = {0};
 	time_t timenow = 0;
 	unsigned long timediff = 0;
@@ -1013,40 +1017,44 @@ radius_acct_req(eag_radius_t *radius,
 					output_packets, NULL, 0);
 
 		/* ACCT_IPV6_INPUT_OCTETS */
+		ipv6_input_octets_low = (uint32_t)ipv6_input_octets;
 		radius_addattr(&packet, RADIUS_ATTR_VENDOR_SPECIFIC,
 					RADIUS_VENDOR_AUTELAN, 
 					RADIUS_ATTR_AUTELAN_IPV6_INPUT_OCTETS,
-					(uint32_t)ipv6_input_octets, NULL, 0);
+					0, (uint8_t *)&ipv6_input_octets_low, sizeof(uint32_t));
 
 		/* ACCT_IPV6_OUTPUT_OCTETS */
+		ipv6_output_octets_low = (uint32_t)ipv6_output_octets;
 		radius_addattr(&packet, RADIUS_ATTR_VENDOR_SPECIFIC,
 					RADIUS_VENDOR_AUTELAN, 
 					RADIUS_ATTR_AUTELAN_IPV6_OUTPUT_OCTETS,
-					(uint32_t)ipv6_output_octets, NULL, 0);
+					0, (uint8_t *)&ipv6_output_octets_low, sizeof(uint32_t));
 
 		/* ACCT_IPV6_INPUT_GIGAWORDS */
+		ipv6_input_octets_high = (uint32_t)(ipv6_input_octets >> 32);
 		radius_addattr(&packet, RADIUS_ATTR_VENDOR_SPECIFIC,
 					RADIUS_VENDOR_AUTELAN, 
 					RADIUS_ATTR_AUTELAN_IPV6_INPUT_GIGAWORDS,
-					(uint32_t)(ipv6_input_octets >> 32), NULL, 0);
+					0, (uint8_t *)&ipv6_input_octets_high, sizeof(uint32_t));
 
 		/* ACCT_IPV6_OUTPUT_GIGAWORDS */
+		ipv6_output_octets_high = (uint32_t)(ipv6_output_octets >> 32);
 		radius_addattr(&packet, RADIUS_ATTR_VENDOR_SPECIFIC,
 					RADIUS_VENDOR_AUTELAN, 
 					RADIUS_ATTR_AUTELAN_IPV6_OUTPUT_GIGAWORDS,
-					(uint32_t)(ipv6_output_octets >> 32), NULL, 0);
+					0, (uint8_t *)&ipv6_output_octets_high, sizeof(uint32_t));
 
 		/* ACCT_IPV6_INPUT_PACKETS */
 		radius_addattr(&packet, RADIUS_ATTR_VENDOR_SPECIFIC,
 					RADIUS_VENDOR_AUTELAN, 
 					RADIUS_ATTR_AUTELAN_IPV6_INPUT_PACKETS,
-					ipv6_input_packets, NULL, 0);
+					0, (uint8_t *)&ipv6_input_packets, sizeof(uint32_t));
 
 		/* ACCT_IPV6_OUTPUT_PACKETS */
 		radius_addattr(&packet, RADIUS_ATTR_VENDOR_SPECIFIC,
 					RADIUS_VENDOR_AUTELAN, 
 					RADIUS_ATTR_AUTELAN_IPV6_OUTPUT_PACKETS,
-					ipv6_output_packets, NULL, 0);
+					0, (uint8_t *)&ipv6_output_packets, sizeof(uint32_t));
 
 		eag_log_debug("eag_radius", "radius_acct_req add attr, userip=%s, "
 			"INPUT_OCTETS=%u, OUTPUT_OCTETS=%u, "
