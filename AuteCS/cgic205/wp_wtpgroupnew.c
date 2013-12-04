@@ -313,7 +313,7 @@ void NewWtpgroup(instance_parameter *ins_para,struct list *lpublic,struct list *
 							ShowAlert(search(lpublic,"create_fail"));
 							break;
 						case 5:
-							ShowAlert(search(lpublic,"wtp_group_exist"));
+							ShowAlert(search(lwlan,"wtp_group_exist"));
 							break;						
 						default:
 							ShowAlert(search(lpublic,"create_fail"));

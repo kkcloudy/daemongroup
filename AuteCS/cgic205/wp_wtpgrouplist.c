@@ -120,8 +120,8 @@ void ShowWtpGroupListPage(char *m,char *t, struct list *lpublic,struct list *lwl
   fprintf(cgiOut,"<title>Wtp</title>");
   fprintf(cgiOut,"<link rel=stylesheet href=/style.css type=text/css>");
   fprintf(cgiOut,"<style>"\
-    "#div1{ width:82px; height:18px; border:1px solid #666666; background-color:#f9f8f7;}"\
-    "#div2{ width:80px; height:15px; padding-left:5px; padding-top:3px}"\
+    "#div1{ width:86px; height:18px; border:1px solid #666666; background-color:#f9f8f7;}"\
+    "#div2{ width:84px; height:15px; padding-left:5px; padding-top:3px}"\
     "#link{ text-decoration:none; font-size: 12px}"\
 "</style>"\
 "</head>"\
@@ -300,12 +300,10 @@ void ShowWtpGroupListPage(char *m,char *t, struct list *lpublic,struct list *lwl
 			       if(retu==0)  
 			       {
 				       fprintf(cgiOut,"<div id=div2 onmouseover=\"this.style.backgroundColor='#b6bdd2'\" onmouseout=\"this.style.backgroundColor='#f9f8f7'\"><a id=link href=wp_wtpgrouplist.cgi?UN=%s&groupID=%d&DeletWtp=%s&INSTANCE_ID=%s&SubmitFlag=1 target=mainFrame onclick=\"return confirm('%s')\">%s</a></div>",m,q->test_id,"true",select_insid,search(lpublic,"confirm_delete"),search(lpublic,"delete"));
-			       }
-			       fprintf(cgiOut,"<div id=div2 onmouseover=\"this.style.backgroundColor='#b6bdd2'\" onmouseout=\"this.style.backgroundColor='#f9f8f7'\"><a id=link href=wp_wtpgroupmem.cgi?UN=%s&groupID=%d&groupname=%s&INSTANCE_ID=%s target=mainFrame>%s</a></div>",m,q->test_id,q->test_name,select_insid,search(lwlan,"ap_group_mem"));
-			       if(retu==0)  
-			       {
+				       fprintf(cgiOut,"<div id=div2 onmouseover=\"this.style.backgroundColor='#b6bdd2'\" onmouseout=\"this.style.backgroundColor='#f9f8f7'\"><a id=link href=wp_wtpgroupmem.cgi?UN=%s&groupID=%d&groupname=%s&INSTANCE_ID=%s target=mainFrame>%s</a></div>",m,q->test_id,q->test_name,select_insid,search(lwlan,"ap_group_mem"));
 					fprintf(cgiOut,"<div id=div2 onmouseover=\"this.style.backgroundColor='#b6bdd2'\" onmouseout=\"this.style.backgroundColor='#f9f8f7'\"><a id=link href=wp_wtpgroupcon.cgi?UN=%s&groupID=%d&groupname=%s&INSTANCE_ID=%s target=mainFrame>%s</a></div>",m,q->test_id,q->test_name,select_insid,search(lpublic,"configure"));
 			       }
+			       fprintf(cgiOut,"<div id=div2 onmouseover=\"this.style.backgroundColor='#b6bdd2'\" onmouseout=\"this.style.backgroundColor='#f9f8f7'\"><a id=link href=wp_wtpgroupmemlist.cgi?UN=%s&groupID=%d&groupname=%s&INSTANCE_ID=%s target=mainFrame>%s</a></div>",m,q->test_id,q->test_name,select_insid,search(lwlan,"ap_group_mem_list"));
 			       fprintf(cgiOut,"</div>"\
 			       "</div>"\
 			       "</div>"\
