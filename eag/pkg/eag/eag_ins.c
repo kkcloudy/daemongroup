@@ -385,7 +385,7 @@ eag_ins_do_syn_user_data(void *cbp, void *data, struct timeval *cb_tv)
 	int ret = EAG_RETURN_OK;
 	
 	memset(&user_addr, 0, sizeof(user_addr));
-	memcpy(&user_addr, &(appconn->session.user_addr), sizeof(user_addr_t));
+	memcpy(&user_addr, &(usersession->user_addr), sizeof(user_addr_t));
 	ipx2str(&user_addr, user_ipstr, sizeof(user_ipstr));
 	appconn = appconn_find_by_userip(eagins->appdb, &user_addr);
 	if (NULL == appconn) {
