@@ -171,5 +171,14 @@ do {\
 			  else\
 			   R=0;\
 		 } while(0)
+		 
+#define DISABLE_LOCAL_INTERFACE_VE(X,R) \
+		  do {\
+			  if(judge_ve_interface(X)==VE_INTERFACE\
+			   &&judge_real_local_interface(X)==LOCAL_BOARD_INTERFACE)\
+				R=1;\
+			   else\
+				R=0;\
+		  } while(0)
 
 #endif

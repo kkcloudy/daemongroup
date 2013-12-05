@@ -3639,6 +3639,7 @@ tipc_vice_zebra_interface_state_read (int command,struct stream *s)
 	
 	unsigned int tmp_mtu;	 /* IPv4 MTU */
 	int ret = 0;
+	int ret2= 0;
 
 	
 	if (s == NULL) {
@@ -3670,6 +3671,17 @@ tipc_vice_zebra_interface_state_read (int command,struct stream *s)
   	if(tipc_server_debug)
 	 zlog_debug("%s : line %d, interface do not exist or the interface not match!\n",__func__,__LINE__);
      return NULL;
+  	}
+
+  /*gujd: 2013-12-05, am 11:08. For down VE interface missing IPv6 address when system booting.*/
+  if(command == ZEBRA_INTERFACE_UP||command == ZEBRA_INTERFACE_DOWN)
+  {
+  	 DISABLE_LOCAL_INTERFACE_VE(ifp->name,ret2);
+	 if(ret2 == 1)
+	 {
+	    zlog_info("%s: line %d, locad ve interface[%s] ignore up(down) info from other board.\n",ifp->name);
+		return ifp;
+		}
   	}
 
 /*  ifp->status = stream_getc (s);*/

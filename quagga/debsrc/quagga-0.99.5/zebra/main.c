@@ -1013,7 +1013,7 @@ main (int argc, char **argv)
   zlog_notice ("Rtmd starting: \n");
 
   while (thread_fetch (zebrad.master, &thread)){
-	  zlog_notice ("thread_call %s \n",thread.funcname);
+	/*  zlog_notice ("thread_call %s \n",thread.funcname);*/
 	thread_call (&thread);
   }
 
