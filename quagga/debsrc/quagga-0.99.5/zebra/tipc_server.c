@@ -3679,7 +3679,8 @@ tipc_vice_zebra_interface_state_read (int command,struct stream *s)
   	 DISABLE_LOCAL_INTERFACE_VE(ifp->name,ret2);
 	 if(ret2 == 1)
 	 {
-	    zlog_info("%s: line %d, locad ve interface[%s] ignore up(down) info from other board.\n",ifp->name);
+	    zlog_info("%s: line %d, locad ve interface[%s] ignore up(down) info from other board.\n",
+			                          __func__,__LINE__,ifp->name);
 		return ifp;
 		}
   	}
