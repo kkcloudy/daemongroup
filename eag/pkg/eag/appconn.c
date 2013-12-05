@@ -2215,8 +2215,9 @@ flush_all_appconn_flux_from_ipxtables(appconn_db_t *appdb, int time_interval)
 		return -1;
 	}
     flush_all_appconn_flux_from_iptables(appdb, time_interval);
-    flush_all_appconn_flux_from_ip6tables(appdb, time_interval);
-
+    if (eag_ins_get_ipv6_switch(appdb->eagins)) {
+	    flush_all_appconn_flux_from_ip6tables(appdb, time_interval);
+	}
 	return EAG_RETURN_OK;
 }
 

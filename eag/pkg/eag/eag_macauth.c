@@ -880,7 +880,9 @@ flush_all_preauth_flux_from_ipxtables (eag_macauth_t *macauth)
 		return -1;
 	}
     flush_all_preauth_flux_from_iptables (macauth);
-	flush_all_preauth_flux_from_ip6tables (macauth);
+    if (eag_ins_get_ipv6_switch(macauth->eagins)) {
+		flush_all_preauth_flux_from_ip6tables (macauth);
+	}
 
 	return EAG_RETURN_OK;
 }
