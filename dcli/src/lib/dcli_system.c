@@ -4202,10 +4202,12 @@ DEFUN(show_sys_sensitive_info_cmd_func,
 		int count = -1;
 		unsigned int haveMore = 0;
 		unsigned int ipAddr = 0;
-		unsigned char * ifName = NULL;
+	unsigned char * ifName = NULL,*dst_ifname = NULL;
 		unsigned char macAddr[MAC_ADDRESS_LEN] = {0};
 		unsigned int state = 0;
 		unsigned int ret = 0;
+		int function_type = -1;
+		char file_path[64] = {0};
 		unsigned char f_macAddr[MAC_ADDRESS_LEN] = {0};
 		unsigned char stateStr[128] = {0};
 		unsigned char * tableTitle = "IP NEIGHBOUR TABLE:\n";
@@ -4249,14 +4251,32 @@ DEFUN(show_sys_sensitive_info_cmd_func,
 			dbus_message_iter_append_basic(&iter,
 										DBUS_TYPE_BYTE, &f_macAddr[5]);
 		}
-		else if(ARP_FILTER_NONE != filterType){			
+	else if(ARP_FILTER_NONE != filterType)
+	{			
+		dbus_message_iter_append_basic(&iter,
+									DBUS_TYPE_UINT32, &filter);
+		if(ARP_FILTER_IFINDEX == filterType)
+		{
+			dst_ifname = (char *)malloc(MAX_IFNAME_LEN+1);
+			memset(dst_ifname,0,MAX_IFNAME_LEN+1);
+			if_indextoname(filter,dst_ifname);
 			dbus_message_iter_append_basic(&iter,
-										DBUS_TYPE_UINT32, &filter);
+									DBUS_TYPE_STRING, &dst_ifname);
+			free(dst_ifname);
+			dst_ifname = NULL;
 		}
+	}
 		
-     	if (is_distributed) {	
+     	if (is_distributed) 
+		{	
 			
-        	for (i = 0;i < MAX_SLOT; i++ ) {
+        	for (i = 0;i < MAX_SLOT; i++ ) 
+			{
+				sprintf(file_path,"/dbm/product/slot/slot%d/function_type", i);
+				function_type = get_product_info(file_path);
+				
+				if (function_type == SWITCH_BOARD)
+					continue;
 				
          	    if (NULL != dbus_connection_dcli[i]->dcli_dbus_connection)
            		   {

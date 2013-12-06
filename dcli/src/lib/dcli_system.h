@@ -15,6 +15,8 @@
 #define MAX_VLAN_ID 4094
 #define MIN_VLAN_ID 1
 #define NPD_ERR_SYSTEM_MAC  3
+#define MAX_IFNAME_LEN 20
+
 
 typedef struct {
 	unsigned char arEther[6];

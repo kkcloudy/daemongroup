@@ -9386,8 +9386,6 @@ void dcli_eth_port_init(void) {
 	//install_element(VIEW_NODE,&show_ethport_cn_ipg_cmd);
 	install_element(VIEW_NODE,&show_ethport_cn_stat_cmd);
 	install_element(VIEW_NODE,&clear_ethport_cn_stat_cmd);
-	install_element(VIEW_NODE,&show_ethport_arp_cn_cmd);
-	install_element(VIEW_NODE,&show_ethport_nexthop_cn_cmd);	
 	install_element(ENABLE_NODE,&show_ethport_list_cmd);
 	/* Added by Jia Lihui for show eth-port list on single slot. 2011.7.17 */
     install_element(ENABLE_NODE,&show_ethport_slotx_list_cmd);
@@ -9395,8 +9393,7 @@ void dcli_eth_port_init(void) {
 	//install_element(ENABLE_NODE,&show_ethport_cn_ipg_cmd);
 	install_element(ENABLE_NODE,&show_ethport_cn_stat_cmd);
 	install_element(ENABLE_NODE,&clear_ethport_cn_stat_cmd);
-	install_element(ENABLE_NODE,&show_ethport_arp_cn_cmd);
-	install_element(ENABLE_NODE,&show_ethport_nexthop_cn_cmd);
+	
 	install_element(ENABLE_NODE, &sync_master_eth_port_info_cmd);
 	
    /*install_element(ENABLE_NODE,&config_interface_ethport_cmd);
@@ -9412,10 +9409,7 @@ void dcli_eth_port_init(void) {
 	/* add by yinlm@autelan.com for queue wrr and sp*/
 	install_element(CONFIG_NODE,&config_buffer_mode_cmd);
 	install_element(CONFIG_NODE,&clear_ethport_arp_cn_cmd);
-	install_element(CONFIG_NODE,&show_ethport_arp_cn_cmd);
-	//install_element(CONFIG_NODE,&show_ethport_cn_ipg_cmd);
 	
-	install_element(CONFIG_NODE,&show_ethport_nexthop_cn_cmd);
 	/* add by yinlm@autelan.com for queue wrr and sp*/
 	install_element(CONFIG_NODE,&show_buffer_mode_cmd);
 	
@@ -9460,6 +9454,14 @@ void dcli_eth_port_init(void) {
 	install_element(CONFIG_NODE,&read_ethport_num_vct_cmd);
 	install_element(CONFIG_NODE, &diagnosis_read_port_rate_cmd);	
 	install_element(ENABLE_NODE, &diagnosis_read_port_rate_cmd);
+	install_element(VIEW_NODE,&show_ethport_arp_cn_cmd);
+	install_element(VIEW_NODE,&show_ethport_nexthop_cn_cmd);	
+	install_element(ENABLE_NODE,&show_ethport_arp_cn_cmd);
+	install_element(ENABLE_NODE,&show_ethport_nexthop_cn_cmd);
+	install_element(CONFIG_NODE,&show_ethport_arp_cn_cmd);
+	//install_element(CONFIG_NODE,&show_ethport_cn_ipg_cmd);
+	
+	install_element(CONFIG_NODE,&show_ethport_nexthop_cn_cmd);
 	*/
 }
 
