@@ -465,6 +465,12 @@ typedef struct
 
 typedef struct user_info_s
 {
+	struct cvm_ip6_in6_addr user_ipv6; 
+	uint64_t ipv6_forward_up_bytes;
+	uint64_t ipv6_forward_up_packet;
+	uint64_t ipv6_forward_down_bytes;
+	uint64_t ipv6_forward_down_packet;
+
 	uint64_t forward_up_bytes;
 	uint64_t forward_up_packet;
 	uint64_t forward_down_bytes;
@@ -490,6 +496,10 @@ typedef struct
     uint32_t    user_dynamic_tbl_size;
     uint32_t    s_tbl_used_rule;
     uint32_t    d_tbl_used_rule;
+    uint32_t    ipv6_user_static_tbl_size;
+    uint32_t    ipv6_user_dynamic_tbl_size;
+    uint32_t    ipv6_s_tbl_used_rule;
+    uint32_t    ipv6_d_tbl_used_rule;
 }user_stats_t;
 
 typedef struct
@@ -775,6 +785,10 @@ typedef struct se_interative_s
 #define SE_AGENT_USER_OFFLINE                           "user_offline"
 #define SE_AGENT_GET_USER_FLOWS                         "get_user_flow_statistics"
 #define SE_AGENT_SHOW_ETH_FAU64                     	"show_eth_fau64"
+//#define SE_AGENT_USER_IPV6_ONLINE                       "user_ipv6_online"
+//#define SE_AGENT_USER_IPV6_OFFLINE                      "user_ipv6_offline"
+//#define SE_AGENT_GET_USER_IPV6_FLOWS                    "get_user_ipv6_flow_statistics"
+
 #define SE_AGENT_SHOW_CAPWAP_FAU64                  	"show_capwap_fau64"
 #define SE_AGENT_SHOW_RPA_FAU64                     	"show_rpa_fau64"
 #define SE_AGENT_SHOW_PART_FAU64                        "show_part_fau64"

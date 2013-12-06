@@ -750,6 +750,61 @@ se_agent_show_running_return(struct vty* vty)
 	return CMD_SUCCESS;
 }
 
+/**********************************************************************************
+ *  dcli_ipv62uint16_t
+ *
+ *	DESCRIPTION:
+ * 		 IPV6 (A:B:C:D:E:F:G:H) to acl_pararm 
+ *
+ *	INPUT:
+ *		str - (A:B:C:D:E:F:G:H)
+ *	
+ *	OUTPUT:
+ *		ipv6 - acl_param.
+ *
+ * 	RETURN:
+ *		
+ *		CMD_FAILURE	
+ *		CMD_SUCCESS
+ *		
+ **********************************************************************************/
+int dcli_ipv62uint16_t(struct cvm_ip6_in6_addr *ipv6_addr, char *str)
+{
+	char *sep=":";
+	char *token = NULL;
+	int i = 0;
+	
+	token = strtok(str,sep);
+
+	if(NULL != token){
+	    ipv6_addr->s6_addr16[i] = strtoul(token,NULL,16);
+		i++;
+		
+	}
+
+	while((token!=NULL)&&(i<8))
+	{
+		token=strtok(NULL,sep);
+		if(NULL != token){
+		    ipv6_addr->s6_addr16[i] = strtoul(token,NULL,16);
+		}
+		else
+		{
+			return CMD_FAILURE;
+		}
+		i++;
+	}
+
+	token=strtok(NULL,sep);
+
+	if ((i != 8) || (NULL != token))
+	{
+		return CMD_FAILURE;
+	}
+	
+	return CMD_SUCCESS;
+}
+
 
 DEFUN(config_fastfwd_func,
 		config_fastfwd_cmd,
@@ -3230,6 +3285,75 @@ DEFUN(show_user_flow_func,
 	vty_out(vty,"forward down packet = %llu\n",cmd_data.fccp_cmd.fccp_data.user_info.forward_down_packet);
 	return CMD_SUCCESS;
 }
+
+DEFUN(show_user_ipv6_flow_func,
+	show_user_ipv6_flow_cmd,
+	"show user flow_statistic ipv6 IPV6",
+	SHOW_STR
+	"user \n"
+	"user flow statistic information\n"
+	"user ipv6 \n"
+	"ipv6 address A:B:C:D:E:F:G:H\n")
+{	
+	se_interative_t  cmd_data;
+	int ret = 0;
+	struct timeval overtime;
+	struct cvm_ip6_in6_addr user_ipv6;
+	
+	memset(&overtime,0,sizeof(overtime));
+	memset(&cmd_data,0,sizeof(cmd_data));
+	memset(&user_ipv6,0,sizeof(user_ipv6));
+	if(argc > 1)
+	{
+		vty_out(vty,CMD_PARAMETER_ERROR);
+		return CMD_FAILURE;
+	}
+	
+	if (CMD_FAILURE == dcli_ipv62uint16_t(&user_ipv6,(char*)argv[0]))
+	{
+		vty_out(vty,"ipv6 address format error. A:B:C:D:E:F:G:H\n");
+		return CMD_FAILURE;
+	}
+
+	cmd_data.fccp_cmd.fccp_data.user_info.user_ipv6.s6_addr64[0] = user_ipv6.s6_addr64[0];
+	cmd_data.fccp_cmd.fccp_data.user_info.user_ipv6.s6_addr64[1] = user_ipv6.s6_addr64[1];
+	//strncpy(cmd_data.hand_cmd,SE_AGENT_GET_USER_IPV6_FLOWS,strlen(SE_AGENT_GET_USER_IPV6_FLOWS));
+	strncpy(cmd_data.hand_cmd,SE_AGENT_GET_USER_FLOWS,strlen(SE_AGENT_GET_USER_FLOWS));
+
+	
+	ret=sendto_agent(dcli_sockfd,(char*)&cmd_data,sizeof(cmd_data),vty);
+
+	if(ret<=0)
+	{
+		vty_out(vty,WRITE_FAIL_STR);
+		return CMD_FAILURE;
+	}
+	memset(&cmd_data,0,sizeof(cmd_data));
+	overtime.tv_sec=10;
+	
+	ret=read_within_time(dcli_sockfd,(char*)&cmd_data,sizeof(cmd_data),&overtime);
+	
+	if(ret==READ_ERROR)
+	{
+		vty_out(vty,AGENT_NO_RESPOND_STR);
+		return CMD_FAILURE;
+	}
+	
+	if(cmd_data.cmd_result!=AGENT_RETURN_OK)
+	{
+		vty_out(vty,"%s\n",cmd_data.err_info);
+		return CMD_FAILURE;
+	}
+	
+	vty_out(vty,"forward up bytes    = %llu\n",cmd_data.fccp_cmd.fccp_data.user_info.ipv6_forward_up_bytes);
+	vty_out(vty,"forward up packet   = %llu\n",cmd_data.fccp_cmd.fccp_data.user_info.ipv6_forward_up_packet);
+	vty_out(vty,"forward down bytes  = %llu\n",cmd_data.fccp_cmd.fccp_data.user_info.ipv6_forward_down_bytes);
+	vty_out(vty,"forward down packet = %llu\n",cmd_data.fccp_cmd.fccp_data.user_info.ipv6_forward_down_packet);
+	
+	return CMD_SUCCESS;
+}
+
+
 DEFUN(config_traffic_monitor_func,
 	  config_traffic_monitor_cmd,
 	  "config traffic-monitor (enable|disable)",
@@ -3548,6 +3672,92 @@ DEFUN(config_pure_payload_acct_func,
 
 
 //#ifdef DCLI_SE_AGENT_DEBUG
+DEFUN(set_user_ipv6_online_func,
+	set_user_ipv6_online_cmd,
+	"add user ipv6 IPV6",
+	"add user\n"
+	"user \n"
+	"user ipv6\n"
+	"ipv6 address A:B:C:D:E:F:G:H\n")
+{	
+	se_interative_t  cmd_data;
+	int ret = 0;
+	struct timeval overtime;
+	struct cvm_ip6_in6_addr user_ipv6;
+	
+	memset(&overtime,0,sizeof(overtime));
+	memset(&cmd_data,0,sizeof(cmd_data));
+	memset(&user_ipv6,0,sizeof(user_ipv6));
+	
+	if(argc > 1)
+	{
+		vty_out(vty,"param wrong\n");
+		return CMD_FAILURE;
+	}
+	
+	if (CMD_FAILURE == dcli_ipv62uint16_t(&user_ipv6,(char*)argv[0]))
+	{
+		vty_out(vty,"ipv6 address format error. A:B:C:D:E:F:G:H\n");
+		return CMD_FAILURE;
+	}
+
+
+	cmd_data.fccp_cmd.fccp_data.user_info.user_ipv6.s6_addr64[0] = user_ipv6.s6_addr64[0];
+	cmd_data.fccp_cmd.fccp_data.user_info.user_ipv6.s6_addr64[1] = user_ipv6.s6_addr64[1];
+	//strncpy(cmd_data.hand_cmd,SE_AGENT_USER_IPV6_ONLINE,strlen(SE_AGENT_USER_IPV6_ONLINE));
+	strncpy(cmd_data.hand_cmd,SE_AGENT_USER_ONLINE,strlen(SE_AGENT_USER_ONLINE));
+	ret=sendto_agent(dcli_sockfd,(char*)&cmd_data,sizeof(cmd_data),vty);
+	if(ret<=0)
+	{
+		vty_out(vty," %%Write command to se_agent failed\n");
+		return CMD_FAILURE;
+	}
+	return CMD_SUCCESS;
+}
+
+DEFUN(set_user_ipv6_offline_func,
+	set_user_ipv6_offline_cmd,
+	"delete user ipv6 IPV6",
+	"delete user\n"
+	"user \n"
+	"user ipv6 \n"
+	"ipv6 address A:B:C:D:E:F:G:H\n")
+{	
+	se_interative_t  cmd_data;
+	int ret = 0;
+	struct timeval overtime;
+	struct cvm_ip6_in6_addr user_ipv6;
+	
+	memset(&overtime,0,sizeof(overtime));
+	memset(&cmd_data,0,sizeof(cmd_data));
+	memset(&user_ipv6,0,sizeof(user_ipv6));
+	
+	if(argc > 1)
+	{
+		vty_out(vty,"param wrong\n");
+		return CMD_FAILURE;
+	}
+	if (CMD_FAILURE == dcli_ipv62uint16_t(&user_ipv6,(char*)argv[0]))
+	{
+		vty_out(vty,"ipv6 address format error. A:B:C:D:E:F:G:H\n");
+		return CMD_FAILURE;
+	}
+
+
+	cmd_data.fccp_cmd.fccp_data.user_info.user_ipv6.s6_addr64[0] = user_ipv6.s6_addr64[0];
+	cmd_data.fccp_cmd.fccp_data.user_info.user_ipv6.s6_addr64[1] = user_ipv6.s6_addr64[1];
+	//strncpy(cmd_data.hand_cmd,SE_AGENT_USER_IPV6_OFFLINE,strlen(SE_AGENT_USER_IPV6_OFFLINE));
+	strncpy(cmd_data.hand_cmd,SE_AGENT_USER_OFFLINE,strlen(SE_AGENT_USER_OFFLINE));
+	ret=sendto_agent(dcli_sockfd,(char*)&cmd_data,sizeof(cmd_data),vty);
+	if(ret<=0)
+	{
+		vty_out(vty," %%Write command to se_agent failed\n");
+		return CMD_FAILURE;
+	}
+	return CMD_SUCCESS;
+}
+
+
 DEFUN(set_user_online_func,
 	set_user_online_cmd,
 	"add user ip A.B.C.D",
@@ -3705,60 +3915,7 @@ DEFUN(show_fast_forward_info,
 	return CMD_SUCCESS;
 }
 
-/**********************************************************************************
- *  dcli_ipv62uint16_t
- *
- *	DESCRIPTION:
- * 		 IPV6 (A:B:C:D:E:F:G:H) to acl_pararm 
- *
- *	INPUT:
- *		str - (A:B:C:D:E:F:G:H)
- *	
- *	OUTPUT:
- *		ipv6 - acl_param.
- *
- * 	RETURN:
- *		
- *		CMD_FAILURE	
- *		CMD_SUCCESS
- *		
- **********************************************************************************/
-int dcli_ipv62uint16_t(struct cvm_ip6_in6_addr *ipv6_addr, char *str)
-{
-	char *sep=":";
-	char *token = NULL;
-	int i = 0;
-	
-	token = strtok(str,sep);
 
-	if(NULL != token){
-	    ipv6_addr->s6_addr16[i] = strtoul(token,NULL,16);
-		i++;
-		
-	}
-
-	while((token!=NULL)&&(i<8))
-	{
-		token=strtok(NULL,sep);
-		if(NULL != token){
-		    ipv6_addr->s6_addr16[i] = strtoul(token,NULL,16);
-		}
-		else
-		{
-			return CMD_FAILURE;
-		}
-		i++;
-	}
-
-	token=strtok(NULL,sep);
-
-	if ((i != 8) || (NULL != token))
-	{
-		return CMD_FAILURE;
-	}
-	
-	return CMD_SUCCESS;
-}
 
 
 /*wangjian 2012.07.09 add ip */
@@ -4519,6 +4676,23 @@ DEFUN(show_user_statistic_func,
 	vty_out(vty,"  use rate: %02f%%\n", (float)cmd_data.fccp_cmd.fccp_data.user_stats.d_tbl_used_rule/ \
 		                                   (float)cmd_data.fccp_cmd.fccp_data.user_stats.user_dynamic_tbl_size *100);
 	vty_out(vty,"==============================================\n");
+	vty_out(vty,"user_ipv6_bucket_tbl count:\n");
+	vty_out(vty,"  entry num: %u\n", cmd_data.fccp_cmd.fccp_data.user_stats.ipv6_user_static_tbl_size);
+	vty_out(vty,"  free num: %u\n", (cmd_data.fccp_cmd.fccp_data.user_stats.ipv6_user_static_tbl_size - \
+		                               cmd_data.fccp_cmd.fccp_data.user_stats.ipv6_s_tbl_used_rule));
+	vty_out(vty,"  used num: %u\n", cmd_data.fccp_cmd.fccp_data.user_stats.ipv6_s_tbl_used_rule);
+	vty_out(vty,"  use rate: %02f%%\n", (float)cmd_data.fccp_cmd.fccp_data.user_stats.ipv6_s_tbl_used_rule/ \
+		                                   (float)cmd_data.fccp_cmd.fccp_data.user_stats.ipv6_user_static_tbl_size *100);
+	vty_out(vty,"==============================================\n");
+    vty_out(vty,"user_ipv6_dynamic_tbl count:\n");
+	vty_out(vty,"  entry num: %u\n", cmd_data.fccp_cmd.fccp_data.user_stats.ipv6_user_dynamic_tbl_size);
+	vty_out(vty,"  free num: %u\n", (cmd_data.fccp_cmd.fccp_data.user_stats.ipv6_user_dynamic_tbl_size - \
+		                               cmd_data.fccp_cmd.fccp_data.user_stats.ipv6_d_tbl_used_rule));
+	vty_out(vty,"  used num: %u\n", cmd_data.fccp_cmd.fccp_data.user_stats.ipv6_d_tbl_used_rule);
+	vty_out(vty,"  use rate: %02f%%\n", (float)cmd_data.fccp_cmd.fccp_data.user_stats.ipv6_d_tbl_used_rule/ \
+		                                   (float)cmd_data.fccp_cmd.fccp_data.user_stats.ipv6_user_dynamic_tbl_size *100);
+	vty_out(vty,"==============================================\n");
+
 
 	return CMD_SUCCESS;
 }
@@ -4806,6 +4980,7 @@ void dcli_se_agent_init(void)
 	install_element(FAST_FWD_NODE,&show_traffic_monitor_cmd);
 	install_element(FAST_FWD_NODE,&config_pure_payload_acct_cmd);
 	install_element(FAST_FWD_NODE,&show_user_flow_cmd);
+	install_element(FAST_FWD_NODE,&show_user_ipv6_flow_cmd);
 	install_element(FAST_FWD_NODE,&clear_rule_ip_cmd);          /*wangjian clear  */
 	install_element(FAST_FWD_NODE,&show_fast_forward_info_cmd);     /*wangjian 2012.07.09 add fwd info */
 	install_element(FAST_FWD_NODE,&show_rule_by_ip_cmd);         	/*wangjian 2012.07.09 add ip */
@@ -4858,6 +5033,7 @@ void dcli_se_agent_init(void)
 	install_element(HANSI_FAST_FWD_NODE,&show_traffic_monitor_cmd);
 	install_element(HANSI_FAST_FWD_NODE,&config_pure_payload_acct_cmd);
 	install_element(HANSI_FAST_FWD_NODE,&show_user_flow_cmd);
+	install_element(HANSI_FAST_FWD_NODE,&show_user_ipv6_flow_cmd);
 	install_element(HANSI_FAST_FWD_NODE,&clear_rule_ip_cmd); //wangjian
 	install_element(HANSI_FAST_FWD_NODE,&show_fast_forward_info_cmd);     /*wangjian 2012.07.09 add fwd info */
 	install_element(HANSI_FAST_FWD_NODE,&show_rule_by_ip_cmd);         /*wangjian 2012.07.09 add ip */	
@@ -4911,6 +5087,7 @@ void dcli_se_agent_init(void)
 	install_element(LOCAL_HANSI_FAST_FWD_NODE,&show_traffic_monitor_cmd);
 	install_element(LOCAL_HANSI_FAST_FWD_NODE,&config_pure_payload_acct_cmd);
 	install_element(LOCAL_HANSI_FAST_FWD_NODE,&show_user_flow_cmd);
+	install_element(LOCAL_HANSI_FAST_FWD_NODE,&show_user_ipv6_flow_cmd);
 	install_element(LOCAL_HANSI_FAST_FWD_NODE,&clear_rule_ip_cmd); //wangjian
 	install_element(LOCAL_HANSI_FAST_FWD_NODE,&show_fast_forward_info_cmd);     /*wangjian 2012.07.09 add fwd info */
 	install_element(LOCAL_HANSI_FAST_FWD_NODE,&show_rule_by_ip_cmd);         /*wangjian 2012.07.09 add ip */
@@ -4929,6 +5106,8 @@ void dcli_se_agent_init(void)
 //#ifdef DCLI_SE_AGENT_DEBUG
 	install_element(FAST_FWD_NODE,&set_user_offline_cmd);
 	install_element(FAST_FWD_NODE,&set_user_online_cmd);
+	install_element(FAST_FWD_NODE,&set_user_ipv6_offline_cmd);
+	install_element(FAST_FWD_NODE,&set_user_ipv6_online_cmd);
 //#endif
 
 	install_element(HIDDENDEBUG_NODE,&config_fwd_debug_log_enable_cmd);  /* fast-fwd group add for  logsave */
