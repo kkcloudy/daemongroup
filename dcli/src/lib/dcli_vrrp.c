@@ -5971,13 +5971,14 @@ DEFUN(show_vrrp_runconfig_cmd_func,
 	unsigned int slotid[MAX_SLOT_NUM] = {0};
 	int i = 0;
 	unsigned char insID = 0;
-	int flag = 0;
+	int flag = 0,in_hansi_node = 0;;
     for(i = 0; i < MAX_SLOT_NUM; i++){
         slotid[i] = -1;
     }
 	if (HANSI_NODE == vty->node) {
 		profile = (unsigned int)(vty->index);
 		slot_id = vty->slotindex;
+		in_hansi_node= 1;
 	}
     
 	if (1 == argc) {
@@ -6067,7 +6068,7 @@ DEFUN(show_vrrp_runconfig_cmd_func,
 	}
 	
 	/* in config node or hansi node, show special instance */
-	if (1 == argc)
+	if ((1 == argc) || (in_hansi_node == 1))
 	{
 	    //vty_out(vty,"bbbb\n");
 		op_ret = dcli_vrrp_show_hansi_running_cfg(vty, profile, slot_id);

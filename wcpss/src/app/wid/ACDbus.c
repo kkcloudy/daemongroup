@@ -80013,7 +80013,57 @@ int wid_dbus_reinit(void)
 	
 	i = dbus_bus_request_name (wid_dbus_connection, WID_DBUS_BUSNAME,
 			       0, &dbus_error);
-		
+	i = dbus_bus_request_name (wid_dbus_connection2, "aw.widtrap",
+			       0, &dbus_error);
+	
+	i = dbus_bus_request_name (wid_dbus_connection_t[0], "aw.widtrap0",
+			       0, &dbus_error);
+	
+	i = dbus_bus_request_name (wid_dbus_connection_t[1], "aw.widtrap1",
+			       0, &dbus_error);
+	
+	i = dbus_bus_request_name (wid_dbus_connection_t[2], "aw.widtrap2",
+			       0, &dbus_error);
+	
+	i = dbus_bus_request_name (wid_dbus_connection_t[3], "aw.widtrap3",
+			       0, &dbus_error);
+	
+	i = dbus_bus_request_name (wid_dbus_connection_t[4], "aw.widtrap4",
+			       0, &dbus_error);
+	
+	i = dbus_bus_request_name (wid_dbus_connection_t[5], "aw.widtrap5",
+			       0, &dbus_error);
+	
+	i = dbus_bus_request_name (wid_dbus_connection_t[6], "aw.widtrap6",
+			       0, &dbus_error);
+	
+	i = dbus_bus_request_name (wid_dbus_connection_t[7], "aw.widtrap7",
+			       0, &dbus_error);
+	
+	i = dbus_bus_request_name (wid_dbus_connection_t[8], "aw.widtrap8",
+			       0, &dbus_error);
+	
+	i = dbus_bus_request_name (wid_dbus_connection_t[9], "aw.widtrap9",
+			       0, &dbus_error);
+	
+	i = dbus_bus_request_name (wid_dbus_connection_t[10], "aw.widtrap10",
+			       0, &dbus_error);
+	
+	i = dbus_bus_request_name (wid_dbus_connection_t[11], "aw.widtrap11",
+			       0, &dbus_error);
+	
+	i = dbus_bus_request_name (wid_dbus_connection_t[12], "aw.widtrap12",
+			       0, &dbus_error);
+	
+	i = dbus_bus_request_name (wid_dbus_connection_t[13], "aw.widtrap13",
+			       0, &dbus_error);
+	
+	i = dbus_bus_request_name (wid_dbus_connection_t[14], "aw.widtrap14",
+			       0, &dbus_error);
+	
+	i = dbus_bus_request_name (wid_dbus_connection_t[15], "aw.widtrap15",
+			       0, &dbus_error);
+	
 	wid_syslog_debug_debug(WID_DBUS,"dbus_bus_request_name:%d",i);
 	
 	if (dbus_error_is_set (&dbus_error)) {

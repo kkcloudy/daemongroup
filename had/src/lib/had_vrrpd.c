@@ -541,9 +541,10 @@ struct sock_s* had_LIST_UPDATE
 )
 {
 	struct sock_s* sock_fd = NULL, *tmp = NULL;
-	int i = 0;
+	int i = 0,is_find = 0;
 
-	if (!vsrv) {
+	if (!vsrv) 
+	{
 		vrrp_syslog_error("update socket list faild, null parameter error\n");
 		return NULL;
 	}
@@ -551,13 +552,19 @@ struct sock_s* had_LIST_UPDATE
 	/* find the socket fd which vrid is special vrid. */
 	for (sock_fd = sock_list->sock_fd; sock_fd; sock_fd = sock_fd->next)
 	{
-		if (sock_fd->vrid == vsrv->vrid) {
+		if (sock_fd->vrid == vsrv->vrid) 
+		{
+			is_find = 1;
 			break;
 		}
 	}
-
 	/* not found, add new one. */
-	if (NULL == sock_fd) {
+	#if 0
+	if (NULL == sock_fd)
+	#endif
+	/*zhangcl modified for dead lock*/
+	if(is_find == 0)
+	{
 		return had_LIST_ADD(vsrv);
 	}
 
@@ -10446,8 +10453,9 @@ int had_open_sock
 			}
 		}
 	}	
+	/*zhangcl modified for dead lock*/
+	had_LIST_UPDATE(vsrv,vsrv->vrid);
 	
-	had_LIST_ADD(vsrv);
 	return 0;
 }
 
