@@ -487,6 +487,7 @@ int get_dhcp_lease_ipv6_state_num
 		{
 			next = rv->shared_network->ipv6_pools;
 			//while (*next ) 
+			if(*next)
 			{
 						
 				sub_lease_count += (*next)->lease_count;

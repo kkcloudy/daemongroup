@@ -1450,7 +1450,7 @@ cleanup_old_expired(struct ipv6_pool *pool) {
 			    (ia_active == ia)) {
 				ia_hash_delete(ia_na_active, tmpd, 
 					       ia->iaid_duid.len, MDL);
-				(*(ia->iasubopt))->ipv6_pool->lease_active_count--;
+				//(*(ia->iasubopt))->ipv6_pool->lease_active_count--;
 			}
 			if ((ia->ia_type == D6O_IA_TA) &&
 			    (ia->num_iasubopt <= 0) &&
