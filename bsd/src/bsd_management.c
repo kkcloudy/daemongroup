@@ -290,7 +290,7 @@ void * bsdTipcManagement()
     bsd_syslog_debug_debug(BSD_DEFAULT, "%s  %d: %s\n",__FILE__, __LINE__, __func__);
 	bsd_pid_write_v2("BSDTipcManagement",HOST_SLOT_NO);
 	int fd = -1;
-	FILE *fp = NULL;
+	FILE *fp1 = NULL;
 	struct sockaddr_tipc addr;
 	socklen_t alen = sizeof(addr);
 	unsigned short last_event_id = 0; /* current & last loop event id */
@@ -314,6 +314,8 @@ void * bsdTipcManagement()
 	char temp_buf[100] = {0};
 	char temp_buf2[100] = {0};	
 	int product_type = 0;
+	char temp_file_name[64] = {0};
+	unsigned char *p = NULL;
 	while(1) {
 		if (0 >= recvfrom(fd, buf, sizeof(buf), 0, (struct sockaddr *)&addr, &alen)){
 			perror("Server: unexpected message");
@@ -425,8 +427,8 @@ void * bsdTipcManagement()
 		
 		memset(temp_buf2,0,sizeof(temp_buf2));		//get active_master_slot_id by houxx 2013819
 		strcpy(temp_buf,"/dbm/local_board/is_active_master");
-		fp = fopen(temp_buf, "r");
-		if (fp == NULL){
+		fp1 = fopen(temp_buf, "r");
+		if (fp1 == NULL){
 			bsd_syslog_err("###    Failed to open file\n");
 			free(fileData);
 			fileData = NULL;
@@ -435,7 +437,7 @@ void * bsdTipcManagement()
 			BSDSendNotify(slotid, BSD_FILE_FAILURE, last_event_id, md5Value);
 			continue;
 		}
-		if(EOF == fscanf(fp, "%d", &active_master_slot_id)) {
+		if(EOF == fscanf(fp1, "%d", &active_master_slot_id)) {
 			bsd_syslog_err("###    Failed to get file\n");
 			free(fileData);
 			fileData = NULL;
@@ -444,12 +446,12 @@ void * bsdTipcManagement()
 			BSDSendNotify(slotid, BSD_FILE_FAILURE, last_event_id, md5Value);
 			continue;
 		}
-		fclose(fp);
-		
+		fclose(fp1);
+		fp1 = NULL;
 		memset(temp_buf2,0,sizeof(temp_buf2));	//get slot_id by houxx 2013819
 		strcpy(temp_buf2,"/dbm/local_board/slot_id");
-		fp = fopen(temp_buf2, "r");
-		if (fp == NULL){
+		fp1 = fopen(temp_buf2, "r");
+		if (fp1 == NULL){
 			bsd_syslog_err("###    Failed to open file\n");
 			free(fileData);
 			fileData = NULL;
@@ -458,7 +460,7 @@ void * bsdTipcManagement()
 			BSDSendNotify(slotid, BSD_FILE_FAILURE, last_event_id, md5Value);
 			continue;
 		}
-		if(EOF == fscanf(fp, "%d", &slot_id)) {
+		if(EOF == fscanf(fp1, "%d", &slot_id)) {
 			bsd_syslog_err("###    Failed to get file\n");
 			free(fileData);
 			fileData = NULL;
@@ -467,12 +469,13 @@ void * bsdTipcManagement()
 			BSDSendNotify(slotid, BSD_FILE_FAILURE, last_event_id, md5Value);
 			continue;
 		}
-		fclose(fp);
+		fclose(fp1);
+		fp1 = NULL;
 
 		memset(temp_buf2,0,sizeof(temp_buf2));	//get product_type by houxx 2013819
 		strcpy(temp_buf2,"/dbm/product/product_type");
-		fp = fopen(temp_buf2, "r");
-		if (fp == NULL){
+		fp1 = fopen(temp_buf2, "r");
+		if (fp1 == NULL){
 			bsd_syslog_err("###    Failed to open file\n");
 			free(fileData);
 			fileData = NULL;
@@ -481,7 +484,7 @@ void * bsdTipcManagement()
 			BSDSendNotify(slotid, BSD_FILE_FAILURE, last_event_id, md5Value);
 			continue;
 		}
-		if(EOF == fscanf(fp, "%d", &product_type)) {
+		if(EOF == fscanf(fp1, "%d", &product_type)) {
 			bsd_syslog_err("###    Failed to get product_type\n");
 			free(fileData);
 			fileData = NULL;
@@ -490,8 +493,8 @@ void * bsdTipcManagement()
 			BSDSendNotify(slotid, BSD_FILE_FAILURE, last_event_id, md5Value);
 			continue;
 		}
-		fclose(fp);
-		
+		fclose(fp1);
+		fp1 = NULL;
 		bsd_syslog_err("###    in func %s,line %d,slot_id is %d,active_master_slot_id is %d back is %d\n",__func__,__LINE__,slot_id,active_master_slot_id,bak_config_flag);
 		if(fileInfo->file_head.file_state == BSD_FILE_LAST) {
 		    blk_flag = 0;
@@ -582,12 +585,21 @@ void * bsdTipcManagement()
 				bsdHandleFileState(fileInfo->file_head.file_type, (const char *)fileInfo->file_head.uchFileName);
 				BSDSendNotify(slotid, BSD_FILE_FINISH, last_event_id, md5Value);
 				system("sudo umount /blk");
-				if(product_type == 4 || product_type == 5 || product_type == 7 || product_type == 6)
+				if(product_type == 4 || product_type == 5 || product_type == 7 || product_type == 6 ||product_type == 1)
 				{
 					if(bak_config_flag == 1 && active_master_slot_id == 1)
 					{
-						bsd_syslog_err("###    in func %s,line %d\n",__func__,__LINE__);
-						bsd_get_hansiprofile_notity_hmd(fileInfo);
+						bsd_syslog_err("###    in func %s,line %d file name is %s\n",__func__,__LINE__,fileInfo->file_head.uchFileName);
+/*						system("cp /var/run/config_bak/ /var/run/config/ -rf"); */
+/*						bsd_get_hansiprofile_notity_hmd(fileInfo);	*/
+						p = fileInfo->file_head.uchFileName;
+						p= p + strlen("/var/run/config_bak/");
+						strcpy(temp_file_name,(char*)p);
+
+						result = config_file_parse(temp_file_name);
+						bsd_syslog_debug_debug(BSD_DEFAULT, "%s  %d: %s result is %d\n",__FILE__, __LINE__, __func__,result);
+						p = NULL;
+						
 					}
 				}
             }

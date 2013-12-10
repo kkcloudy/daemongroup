@@ -681,8 +681,82 @@ DBusMessage * bsd_set_daemonlog_level(DBusConnection *conn, DBusMessage *msg, vo
 	return reply;	
     
 }
+char HMD_DBUS_BUSNAME[PATH_LEN]=	"aw.hmd";
+char HMD_DBUS_OBJPATH[PATH_LEN]=	"/aw/hmd";
+char HMD_DBUS_INTERFACE[PATH_LEN]="aw.hmd";
+char HMD_DBUS_METHOD_SYNC_WCPSS_CFG[PATH_LEN] = "hmd_sync_wcpss_cfg";
 
 
+/* notice hmd restart hansi profile's asd/wid/wsm */
+int bsd_notify_to_hmd_restart
+(
+	DBusConnection *connection,
+	int slotid,
+	int hansi_profile,
+	int islocal
+)
+{
+	DBusMessage *query = NULL;
+	DBusMessage *reply = NULL;	
+	//DBusMessageIter iter;
+	DBusError err;
+
+	int ret = BSD_RETURN_CODE_SUCCESS;	
+
+	bsd_syslog_debug_debug(BSD_DEFAULT,"notify to hmd slotid %d, hansi %d, islocal %s\n",
+								slotid, hansi_profile, islocal ? "yes" : "no");
+								
+	query = dbus_message_new_method_call(HMD_DBUS_BUSNAME,
+										 HMD_DBUS_OBJPATH,
+										 HMD_DBUS_INTERFACE,
+										 HMD_DBUS_METHOD_SYNC_WCPSS_CFG);
+	
+	dbus_error_init(&err);
+
+	dbus_message_append_args(query,
+							 DBUS_TYPE_UINT32, &slotid,
+							 DBUS_TYPE_UINT32, &hansi_profile,
+							 DBUS_TYPE_UINT32, &islocal,
+							 DBUS_TYPE_INVALID);
+	
+	reply = dbus_connection_send_with_reply_and_block(connection, query, 300000, &err);
+	
+	dbus_message_unref(query);
+	
+	if (NULL == reply)
+	{
+		bsd_syslog_err("<error> failed get reply.\n");
+		if (dbus_error_is_set(&err))
+		{
+			bsd_syslog_err("%s raised: %s",err.name,err.message);
+			dbus_error_free(&err);
+		}
+		
+		return BSD_RETURN_CODE_ERR;
+	}
+
+#if 0
+	dbus_message_iter_init(reply, &iter);
+	
+	dbus_message_iter_get_basic(&iter, &ret);
+
+	dbus_message_unref(reply);
+#endif
+
+	dbus_message_get_args(reply, &err,
+								DBUS_TYPE_UINT32, &ret,
+								DBUS_TYPE_INVALID);
+
+	dbus_message_unref(reply);
+
+	if (0 != ret)
+	{
+		bsd_syslog_err("notify to hmd restart fail\n");
+		ret = BSD_RETURN_CODE_ERR;
+	}
+
+	return ret;
+}
 
 static DBusHandlerResult bsd_dbus_message_handler (DBusConnection *connection, DBusMessage *message, void *user_data){
 
@@ -857,6 +931,38 @@ int bsd_dbus_init(void)
 //	printf("init finished\n");
 	return TRUE;
   
+}
+
+int bsd_dbus_init_notify_connect
+(
+	void
+)
+{
+	DBusError dbus_error;
+
+	dbus_error_init(&dbus_error);
+
+	bsd_dbus_notify_connection = dbus_bus_get_private(DBUS_BUS_SYSTEM, &dbus_error);
+	if (bsd_dbus_notify_connection == NULL)
+	{
+		bsd_syslog_err("bsd get dbus for notify error:%s\n", dbus_error.message);
+		return BSD_FALSE;
+	}
+	
+	dbus_bus_request_name(bsd_dbus_notify_connection, BSD_DBUS_NOTIFY_BUSNAME,
+																0, &dbus_error);
+	
+	if (dbus_error_is_set(&dbus_error))
+	{
+		bsd_syslog_err("bsd dbus for notify request name failed:%s\n",
+															dbus_error.message);
+		return BSD_FALSE;
+	}
+	
+	bsd_syslog_debug_debug(BSD_DEFAULT,"bsd dbus(%s) for notify connected.\n",
+														BSD_DBUS_NOTIFY_BUSNAME);
+
+	return BSD_TRUE;
 }
 
 void *bsdDbus()

@@ -35,15 +35,12 @@ source vtysh_start.sh
 vtysh -c "show running"	> /var/run/config/temp_showrun
 rm $CONFIG_PATH -rf >/dev/null
 mkdir $CONFIG_PATH >/dev/null
-cp /var/run/config/Instconfig* $CONFIG_PATH >/dev/null
+cp /var/run/config/Instconfig$1-0-$2 $CONFIG_PATH >/dev/null
 
 filelist=`ls /var/run/config_bak`
 for file in $filelist
 do
 		CONFIG_FILE=$CONFIG_PATH$file
 		sed -i '/^\s*ip\s\+address\s\+\([0-9]\{1,3\}\.\)\{3\}[0-9]\{1,3\}\/[0-9]\{1,2\}\s*$/d' $CONFIG_FILE
-		sed -i '/config heartbeatlink/d' $CONFIG_FILE
-		sed -i '/config uplink/d' $CONFIG_FILE
-		sed -i '/config downlink/d' $CONFIG_FILE
 done
 

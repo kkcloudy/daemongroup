@@ -658,6 +658,12 @@ void BsdInit()
 	ret = BsdCreateThread(&BSDDBUS, bsdDbus, NULL, 0);
 	if(ret != 1)
 		exit(2);
+	
+	if (!bsd_dbus_init_notify_connect())
+	{
+		bsd_syslog_err("init dbus notify connection failed\n");
+		exit(2);		
+	}
 	/* create bsd tcp thread */
     ret = BsdCreateThread(&BSDTCP, bsdTcpManagement, NULL, 0);
     if(ret != 1)

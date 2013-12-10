@@ -2868,12 +2868,11 @@ DEFUN(show_hmd_bak_forever_cmd_func,
 	}
 DEFUN(vrrp_sync_config_func,
 	  vrrp_sync_config_cmd,
-	  "sync config form SLOT to A.B.C.D",
+	  "sync config PARAMETER to A.B.C.D",
 	  "Sync config info\n"
 	  "Config Information\n"
-	  "Form slot to another\n"
+	  "Profile ID"
 	  "Slot num\n"
-	  "To another slot\n"
 	  "Remote heartbeat ip\n"
 )
 {
@@ -2885,38 +2884,37 @@ DEFUN(vrrp_sync_config_func,
 	DBusMessage *query = NULL;
 	DBusMessage  *reply = NULL;	
 	DBusMessageIter	 iter;
-	DBusError err;
-	
-	ret = parse_int_ID((char *)argv[0], &des_slotid);
-	if (CMD_WARNING == ret)
-	{
-		vty_out(vty, "%% Bad parameter %s\n", argv[0]);
-		return CMD_WARNING;
-	}
+	DBusError err;	
+	unsigned int insID;
 
-	status = system("del_ip.sh");
+	ret = parse_slot_hansi_id((char*)argv[0],&des_slotid,&insID);
+	
+	sprintf(cmdstr,"del_ip.sh %d %d",des_slotid,insID);
+	status = system(cmdstr);
 	ret = WEXITSTATUS(status);	
 	if (0 != ret)
     {
-    	vty_out(vty, "12 exec script failed.\n");
+    	vty_out(vty, "config sync failed.\n");
        	return CMD_WARNING;
     }
-	
-	sprintf(cmdstr,"copy %d /var/run/config_bak to %d /var/run/",active_master_slot,des_slotid);
-	sprintf(buf2,"/opt/bin/vtysh -c \"configure terminal\n %s\"\n",cmdstr);
-	status = system(buf2);
-	ret = WEXITSTATUS(status);
-	if (0 != ret)
-    {
-    	vty_out(vty, "12 cp file failed.\n");
-       	return CMD_WARNING;
-    }
-	
+	if(active_master_slot != des_slotid)
+	{
+		memset(cmdstr,0,sizeof(cmdstr));
+		sprintf(cmdstr,"copy %d /var/run/config_bak to %d /var/run/",active_master_slot,des_slotid);
+		sprintf(buf2,"/opt/bin/vtysh -c \"configure terminal\n %s\" >/dev/null\n",cmdstr);
+		status = system(buf2);
+		ret = WEXITSTATUS(status);
+		if (0 != ret)
+	    {
+	    	vty_out(vty, "12 cp file failed.\n");
+	       	return CMD_WARNING;
+	    }
+	}
+
 	query = dbus_message_new_method_call(HMD_DBUS_BUSNAME,	\
 										HMD_DBUS_OBJPATH , \
 										HMD_DBUS_INTERFACE ,	\
 										HMD_DBUS_CONF_SYNC_TO_VRRP_BAKUP);
-	
 	dbus_error_init(&err);
 	dbus_message_append_args(query,
 							 DBUS_TYPE_STRING,&ipAddr,
@@ -2929,10 +2927,9 @@ DEFUN(vrrp_sync_config_func,
     }
 	else
 	{
-        reply = dbus_connection_send_with_reply_and_block (dbus_connection_dcli[des_slotid]->dcli_dbus_connection,query,-1, &err);				
+        reply = dbus_connection_send_with_reply_and_block (dbus_connection_dcli[des_slotid]->dcli_dbus_connection,query,60000, &err);				
 	}
 	dbus_message_unref(query);
-	
 	if (NULL == reply)
 	{
 	    vty_out(vty,"failed get reply.\n");
@@ -2943,7 +2940,20 @@ DEFUN(vrrp_sync_config_func,
 	    }
 	    return CMD_WARNING;
 	}
-	return CMD_SUCCESS;
+	else
+	{
+		dbus_message_iter_init(reply,&iter);
+		dbus_message_iter_get_basic(&iter,&ret);
+		if(ret == 0)
+		{
+			vty_out(vty,"copy file success!\n");
+			return CMD_SUCCESS;
+		}else
+		{
+			vty_out(vty,"copy file error!\n");
+			return CMD_WARNING;
+		}		
+	}
 }
 
 

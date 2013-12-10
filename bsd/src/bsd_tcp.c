@@ -409,28 +409,204 @@ static int bsdHandleMemeryQuery(unsigned int uFileSize, char * pFilePath)
     return iReturnValue;
 }
 
+int config_file_parse(char *filename)
+{
+	FILE *fp_old= NULL,*fp_new=NULL,*fp_bak=NULL;
+	int find = 0,intf_len =0;
+	char buf[512] = {0},buf_old[512] = {0};
+	char old_filename[64] = {0};
+	char bak_filename[64] = {0};
+	char new_filename[64] = {0};
+	char cmd[128] = {0};
+	int ret = 0 ,status = 0 ;
 
+	sprintf(old_filename,"/var/run/config/%s",filename);
+	sprintf(bak_filename,"/var/run/config_bak/%s",filename);
+	sprintf(new_filename,"/var/run/config_bak/%s_bak",filename);
+	
+	fp_old = fopen(old_filename,"r");
+	fp_bak = fopen(bak_filename,"r");
+	fp_new = fopen(new_filename,"w");
+	if(fp_old == NULL)
+	{
+		if(fp_bak)
+			fclose(fp_bak);
+		if(fp_new)
+			fclose(fp_new);
+		return 1;
+	}
+	else if(fp_bak == NULL)
+	{
+		fclose(fp_old);
+		if(fp_new)
+			fclose(fp_new);
+		return 1;
+	}
+	else if(fp_new == NULL)
+	{
+		fclose(fp_old);
+		fclose(fp_bak);
+		return 1;
+	}
+	else
+	{
+		while(fgets(buf,512,fp_bak)) // get string from bak_file
+		{
+			intf_len = strlen("interface");
+
+			if(!strncmp(buf,"interface",intf_len))	//if get interface config,catch the config from old file
+			{
+				fseek(fp_old,0,0);
+				while(fgets(buf_old,512,fp_old))	//get string from old file for compare 
+				{
+					if(strcmp(buf_old,buf))			
+					{
+						continue;
+					}
+					else
+					{
+						find = 1; 	//find the config from old file
+						fprintf(fp_new,buf_old);
+						while(fgets(buf_old,512,fp_old))
+						{
+							if(!strncmp(buf_old," exit",strlen(" exit")))
+							{
+								fprintf(fp_new,buf_old);
+								break;
+							}
+							else
+							{
+								fprintf(fp_new,buf_old);
+							}
+						}
+						break;
+					}
+
+				}
+
+				if(1 == find)
+				{
+					while(fgets(buf,512,fp_bak))
+					{
+						if(!strncmp(buf," exit",strlen(" exit")))
+						{
+							break;
+						}
+						else
+						{
+							continue;
+						}
+					}
+
+				}
+				else
+				{
+					fprintf(fp_new,buf);
+					while(fgets(buf,512,fp_bak))
+					{
+						if(!strncmp(buf," exit",strlen(" exit")))
+						{
+							fprintf(fp_new,buf);
+							break;
+						}
+						else
+						{
+							fprintf(fp_new,buf);
+							continue;
+						}
+					}
+				}
+				
+			}
+			else if(  (!strncmp(buf," config heartbeatlink",strlen(" config heartbeatlink")))
+					||(!strncmp(buf," config uplink",strlen(" config uplink")))
+					||(!strncmp(buf," config downlink",strlen(" config downlink"))))
+			{
+				fseek(fp_old,0,0);
+				while(fgets(buf_old,512,fp_old))
+				{
+					if(!strncmp(buf_old,buf,14)) //14 represent the minimum of the three.
+					{
+						fprintf(fp_new,buf_old);
+						break;
+					}
+				}
+			}
+			else
+			{
+				fprintf(fp_new,buf);
+			}
+
+		}
+
+	}
+	bsd_syslog_err("###    in func %s,line %d\n",__func__,__LINE__);
+
+	fclose(fp_new);
+	fclose(fp_old);
+	fclose(fp_bak);
+	sprintf(cmd,"rm /var/run/config/%s -rf > /dev/null",filename);
+	status = system(cmd);
+	ret = WEXITSTATUS(status);
+	bsd_syslog_debug_debug(BSD_DEFAULT,"func %s line %d ret is %d cmd is %s\n",__func__,__LINE__,ret,cmd);
+	memset(cmd,0,sizeof(cmd));
+	sprintf(cmd,"cp /var/run/config_bak/%s_bak /var/run/config/%s > /dev/null",filename,filename);
+	status = system(cmd);
+	ret = WEXITSTATUS(status);
+	bsd_syslog_debug_debug(BSD_DEFAULT,"func %s line %d ret is %d cmd is %s\n",__func__,__LINE__,ret,cmd);
+
+	status = system("rm /var/run/config_bak -rf > /dev/null");
+	ret = WEXITSTATUS(status);
+	bsd_syslog_debug_debug(BSD_DEFAULT,"func %s line %d ret is %d cmd is %s\n",__func__,__LINE__,ret,cmd);
+	return 0;
+}
 int bsd_get_hansiprofile_notity_hmd
 (
 	bsd_file_info_t *recv_file_info
 )
 {
 	int ret = 0;
+	int i = 0;
 	bsd_syslog_debug_debug(BSD_DEFAULT,"recv file name %s\n", 
 						recv_file_info->file_head.uchFileName);
 	
-	ret = system("reloadconfig.sh");
+	int hansi_profile = 0;
+	char hansi_profile_str[3] = {0};
+
 	
-	ret = WEXITSTATUS(ret);
-	bsd_syslog_debug_debug(BSD_DEFAULT,"reload ret is %d\n",ret);
+	for (i = 0; i < 2; i++)
+	{
+		/* 
+		 * /var/run/config/Instconfig%d-%d-%d
+		 */
+		if (recv_file_info->file_head.uchFileName[strlen("/var/run/config_bak/Instconfig") + 2 + 2 + i] != '.')
+		{
+			hansi_profile_str[i] =
+					recv_file_info->file_head.uchFileName[strlen("/var/run/config_bak/Instconfig") + 2 + 2 + i];
+		}
+	}
+	
+	bsd_syslog_debug_debug(BSD_DEFAULT,"hansi id %s\n", hansi_profile_str);
 
-	ret = system("rm -rf /var/run/config_bak > /dev/null");
-	ret = WEXITSTATUS(ret);
-	bsd_syslog_debug_debug(BSD_DEFAULT,"rm ret is %d\n",ret);
-
-	ret = system("sudo /opt/bin/vtysh -c  \"write\n\"");	
-	ret = WEXITSTATUS(ret);
-	bsd_syslog_debug_debug(BSD_DEFAULT,"write ret is %d\n",ret);
+	hansi_profile = strtoul(hansi_profile_str, NULL, 0);
+	if (hansi_profile > 0
+		&& hansi_profile <= 16)
+	{
+		bsd_syslog_debug_debug(BSD_DEFAULT,"hansi_profile id %d\n", hansi_profile);
+		ret = bsd_notify_to_hmd_restart(bsd_dbus_notify_connection, 0, hansi_profile,0);
+		if (BSD_RETURN_CODE_SUCCESS != ret)
+		{
+			bsd_syslog_err("notify hmd restart hansi %d faild\n", hansi_profile);
+			return ret;
+		}
+		bsd_syslog_debug_debug(BSD_DEFAULT,"notify hmd restart hansi %d success\n", hansi_profile);
+		return ret;
+	}
+	else
+	{
+		bsd_syslog_err("hansi id not [1-16], not notify hmd restart\n");
+		return BSD_RETURN_CODE_ERR;
+	}
 	return 0;
 
 }
@@ -459,6 +635,8 @@ static int bsdParseTcpMessage(struct STcpSocketNode *clientNode, bsd_file_info_t
 	char buf2[512] = {0};
 	FILE *fp = NULL;
 	int ret = 0 ,status = 0 ;
+	unsigned char *p = NULL;
+	char temp_file_name[64] = {0};
 	
     memset(&sendFileInfo, 0, sizeof(bsd_file_info_t));
     bsd_syslog_debug_debug(BSD_DEFAULT, "file state = %d\n", iFileState);
@@ -539,16 +717,34 @@ static int bsdParseTcpMessage(struct STcpSocketNode *clientNode, bsd_file_info_t
 	                    iReturnValue = BSD_MALLOC_MEMERY_ERROR;
 					}
 					fclose(fp);	
-					bsd_syslog_debug_debug(BSD_DEFAULT,"bsdParseTcpMessage line %d\n",__LINE__);
-					sprintf(cmdstr,"copy %d /var/run/config_bak to %d /var/run/config_bak",slot_id,active_master_slot_id);
-					sprintf(buf2,"/opt/bin/vtysh -c \"configure terminal\n %s\"\n",cmdstr);
-					status = system(buf2);
-					ret = WEXITSTATUS(status);
-					bsd_syslog_debug_debug(BSD_DEFAULT,"bsdParseTcpMessage line %d ret is %d\n",__LINE__,ret);
-					
-					status = system("rm -rf /var/run/config_bak > /dev/null");
-					ret = WEXITSTATUS(status);
-					bsd_syslog_debug_debug(BSD_DEFAULT,"hmd_dbus_conf_sync_to_vrrp_backup ret is %d\n",ret);
+					p = pRecvFileInfo->file_head.uchFileName;
+					p = p + strlen("/var/run/config_bak/");
+					strcpy(temp_file_name,(char*)p);
+					p = NULL;
+					if(slot_id != active_master_slot_id)
+					{
+						
+						bsd_syslog_debug_debug(BSD_DEFAULT,"bsdParseTcpMessage line %d\n",__LINE__);
+						sprintf(cmdstr,"copy %d /var/run/config_bak/%s to %d /var/run/config_bak/%s",slot_id,temp_file_name,active_master_slot_id,temp_file_name);
+						sprintf(buf2,"/opt/bin/vtysh -c \"configure terminal\n %s\"\n",cmdstr);
+						status = system(buf2);
+						ret = WEXITSTATUS(status);
+						bsd_syslog_debug_debug(BSD_DEFAULT,"bsdParseTcpMessage line %d ret is %d\n",__LINE__,ret);
+						
+						status = system("rm -rf /var/run/config_bak > /dev/null");
+						ret = WEXITSTATUS(status);
+						bsd_syslog_debug_debug(BSD_DEFAULT,"hmd_dbus_conf_sync_to_vrrp_backup ret is %d\n",ret);
+						bsd_get_hansiprofile_notity_hmd(pRecvFileInfo);
+						status = system("rm /var/run/config_bak -rf > /dev/null");						
+						ret = WEXITSTATUS(status);
+						bsd_syslog_debug_debug(BSD_DEFAULT,"func %s line %d ret is %d\n",__func__,__LINE__,ret);
+					}
+					else
+					{
+						ret = config_file_parse(temp_file_name);
+						bsd_syslog_debug_debug(BSD_DEFAULT, "%s  %d: %s result is %d\n",__FILE__, __LINE__, __func__,ret);
+						bsd_get_hansiprofile_notity_hmd(pRecvFileInfo);
+					}
 	            }
 				/*bsd_get_hansiprofile_notity_hmd(pRecvFileInfo);*/
             }

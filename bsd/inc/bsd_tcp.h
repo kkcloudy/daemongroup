@@ -69,10 +69,16 @@ int bsd_notify_to_hmd_restart
 	int hansi_profile,
 	int islocal
 );
+int bsd_dbus_init_notify_connect
+(
+	void
+);
+
 int bsd_get_hansiprofile_notity_hmd
 (
 	bsd_file_info_t *recv_file_info
 );
+int config_file_parse(char *filename);
 
 #endif
 

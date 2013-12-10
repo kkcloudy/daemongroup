@@ -1336,6 +1336,41 @@ int dhcp_to_start(){
 	return 0;
 }
 int take_snapshot_timer_id;
+int hmd_wcpss_reload(int vrrid,int islocal)
+{
+	char buf[128] = {0};
+	char defaultPath[] = "/var/run/config/Instconfig";
+	hmd_syslog_info("###%s hmd begin vrrid is %d islocal is %d line %d###\n",__func__,vrrid,islocal,__LINE__);
+
+	if(HOST_BOARD->Hmd_Inst[vrrid] != NULL){
+		notice_vrrp_config_service_change_state(vrrid, 0);
+		hmd_syslog_info("###%s hmd begin vrrid is %d islocal is %d line %d###\n",__func__,vrrid,islocal,__LINE__);
+		sprintf(buf,"sudo /etc/init.d/wcpss stop %d %d",islocal, vrrid);
+		system(buf);			
+		memset(buf, 0, 128);
+		sprintf(buf,"sudo /etc/init.d/wcpss start %d %d",islocal, vrrid);
+		system(buf);
+		memset(buf, 0, 128);
+		sprintf(buf,"sudo /etc/init.d/had start %d", vrrid);
+		system(buf);
+		hmd_syslog_info("###%s hmd begin vrrid is %d islocal is %d line %d###\n",__func__,vrrid,islocal,__LINE__);
+ 
+		if(HOST_SLOT_NO != MASTER_SLOT_NO)
+		{
+			hmd_syslog_info("###%s hmd begin vrrid is %d islocal is %d line %d###\n",__func__,vrrid,islocal,__LINE__);
+			notice_hmd_server_state_change(vrrid, islocal, HMD_RESTART, 0);
+		}
+		HOST_BOARD->Hmd_Inst[vrrid]->RestartTimes += 1;
+		if(HOST_SLOT_NO == MASTER_SLOT_NO){
+			hmd_syslog_info("###%s hmd begin vrrid is %d islocal is %d line %d###\n",__func__,vrrid,islocal,__LINE__);			
+			memset(buf, 0, 128);
+			sprintf(buf,"/opt/bin/vtysh -f %s%d-0-%d -b &",defaultPath,HOST_BOARD->slot_no,vrrid);
+			system(buf);
+		}
+	}
+   
+	return 0;
+}
 int hansi_state_check(int InstID, int islocaled){
 	char buf[128] = {0};
 	char defaultPath[] = "/var/run/config/Instconfig";
