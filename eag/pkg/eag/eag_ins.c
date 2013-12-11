@@ -11354,6 +11354,7 @@ eag_dbus_method_kick_user_by_userip(
 		goto replyx;
 	}
 	
+	user_addr.family = EAG_IPV4;
 	appdb = eagins->appdb;
 	if (NULL == appdb) {
 		eag_log_err("eag_dbus_method_kick_user_by_userip appdb null");
