@@ -542,12 +542,6 @@ radius_add_public_attr(struct radius_packet_t *packet,
 		eag_log_err("radius_add_public_attr input error");
 		return -1;
 	}
-	if (EAG_IPV6 == appconn->session.user_addr.family) {
-		#if 0 // to add
-		radius_addattr(&packet, RADIUS_ATTR_USER_NAME, 0, 0, 0,
-			(uint8_t *)(appconn->session.user_addr.user_ipv6), sizeof(struct in6_addr));
-		#endif
-	}
 	radius_addattr(packet, RADIUS_ATTR_FRAMED_IP_ADDRESS, 0, 0,
 	       appconn->session.user_addr.user_ip, NULL, 0);
 
@@ -838,6 +832,11 @@ radius_auth(eag_radius_t *radius,
 	radius_addattr(&packet, RADIUS_ATTR_NAS_IPV6_ADDRESS, 0, 0, 0,
 			(uint8_t *)&(appconn->session.nasipv6), sizeof(struct in6_addr));
 
+	radius_addattr(&packet, RADIUS_ATTR_VENDOR_SPECIFIC,
+			RADIUS_VENDOR_DTT,
+			RADIUS_ATTR_DTT_FRAMED_IPV6_ADDRESS,
+			0, (uint8_t *)&(appconn->session.user_addr.user_ipv6), sizeof(struct in6_addr));
+
 	len = strlen(appconn->user_agent);
     len = (len > 253)?253:len;
 	if (0 < len) {
@@ -893,6 +892,7 @@ radius_acct_req(eag_radius_t *radius,
 	char radius_acct_ipstr[32]= "";
 	struct radius_srv_t *acct_srv_t = NULL;
 	const char *terminate_cause_str = "";
+	char *user_type = "";
 	
 	if (NULL == radius || NULL == appconn) {
 		eag_log_err("radius_acct_req input error");
@@ -949,6 +949,25 @@ radius_acct_req(eag_radius_t *radius,
 	
 	radius_addattr(&packet, RADIUS_ATTR_NAS_IPV6_ADDRESS, 0, 0, 0,
 			(uint8_t *)&(appconn->session.nasipv6), sizeof(struct in6_addr));
+
+	radius_addattr(&packet, RADIUS_ATTR_VENDOR_SPECIFIC,
+			RADIUS_VENDOR_DTT,
+			RADIUS_ATTR_DTT_FRAMED_IPV6_ADDRESS,
+			0, (uint8_t *)&(appconn->session.user_addr.user_ipv6), sizeof(struct in6_addr));
+
+	if (EAG_IPV4 == appconn->session.user_addr.family) {
+		user_type = "v4-only";
+	} else if (EAG_IPV6 == appconn->session.user_addr.family) {
+		user_type = "v6-only";
+	} else if (EAG_MIX == appconn->session.user_addr.family) {
+		user_type = "dual-stack";
+	} else {
+		user_type = "";
+	}
+	radius_addattr(&packet, RADIUS_ATTR_VENDOR_SPECIFIC,
+			RADIUS_VENDOR_DTT,
+			RADIUS_ATTR_DTT_USER_TYPE,
+			0, (uint8_t *)user_type, strlen(user_type));
 
 	switch (status_type) {
 	case RADIUS_STATUS_TYPE_START:
@@ -1019,42 +1038,42 @@ radius_acct_req(eag_radius_t *radius,
 		/* ACCT_IPV6_INPUT_OCTETS */
 		ipv6_input_octets_low = (uint32_t)ipv6_input_octets;
 		radius_addattr(&packet, RADIUS_ATTR_VENDOR_SPECIFIC,
-					RADIUS_VENDOR_AUTELAN, 
-					RADIUS_ATTR_AUTELAN_IPV6_INPUT_OCTETS,
+					RADIUS_VENDOR_DTT, 
+					RADIUS_ATTR_DTT_ACCT_IPV6_INPUT_OCTETS,
 					0, (uint8_t *)&ipv6_input_octets_low, sizeof(uint32_t));
 
 		/* ACCT_IPV6_OUTPUT_OCTETS */
 		ipv6_output_octets_low = (uint32_t)ipv6_output_octets;
 		radius_addattr(&packet, RADIUS_ATTR_VENDOR_SPECIFIC,
-					RADIUS_VENDOR_AUTELAN, 
-					RADIUS_ATTR_AUTELAN_IPV6_OUTPUT_OCTETS,
+					RADIUS_VENDOR_DTT, 
+					RADIUS_ATTR_DTT_ACCT_IPV6_OUTPUT_OCTETS,
 					0, (uint8_t *)&ipv6_output_octets_low, sizeof(uint32_t));
+
+		/* ACCT_IPV6_INPUT_PACKETS */
+		radius_addattr(&packet, RADIUS_ATTR_VENDOR_SPECIFIC,
+					RADIUS_VENDOR_DTT, 
+					RADIUS_ATTR_DTT_ACCT_IPV6_INPUT_PACKETS,
+					0, (uint8_t *)&ipv6_input_packets, sizeof(uint32_t));
+
+		/* ACCT_IPV6_OUTPUT_PACKETS */
+		radius_addattr(&packet, RADIUS_ATTR_VENDOR_SPECIFIC,
+					RADIUS_VENDOR_DTT, 
+					RADIUS_ATTR_DTT_ACCT_IPV6_OUTPUT_PACKETS,
+					0, (uint8_t *)&ipv6_output_packets, sizeof(uint32_t));
 
 		/* ACCT_IPV6_INPUT_GIGAWORDS */
 		ipv6_input_octets_high = (uint32_t)(ipv6_input_octets >> 32);
 		radius_addattr(&packet, RADIUS_ATTR_VENDOR_SPECIFIC,
-					RADIUS_VENDOR_AUTELAN, 
-					RADIUS_ATTR_AUTELAN_IPV6_INPUT_GIGAWORDS,
+					RADIUS_VENDOR_DTT, 
+					RADIUS_ATTR_DTT_ACCT_IPV6_INPUT_GIGAWORDS,
 					0, (uint8_t *)&ipv6_input_octets_high, sizeof(uint32_t));
 
 		/* ACCT_IPV6_OUTPUT_GIGAWORDS */
 		ipv6_output_octets_high = (uint32_t)(ipv6_output_octets >> 32);
 		radius_addattr(&packet, RADIUS_ATTR_VENDOR_SPECIFIC,
-					RADIUS_VENDOR_AUTELAN, 
-					RADIUS_ATTR_AUTELAN_IPV6_OUTPUT_GIGAWORDS,
+					RADIUS_VENDOR_DTT, 
+					RADIUS_ATTR_DTT_ACCT_IPV6_OUTPUT_GIGAWORDS,
 					0, (uint8_t *)&ipv6_output_octets_high, sizeof(uint32_t));
-
-		/* ACCT_IPV6_INPUT_PACKETS */
-		radius_addattr(&packet, RADIUS_ATTR_VENDOR_SPECIFIC,
-					RADIUS_VENDOR_AUTELAN, 
-					RADIUS_ATTR_AUTELAN_IPV6_INPUT_PACKETS,
-					0, (uint8_t *)&ipv6_input_packets, sizeof(uint32_t));
-
-		/* ACCT_IPV6_OUTPUT_PACKETS */
-		radius_addattr(&packet, RADIUS_ATTR_VENDOR_SPECIFIC,
-					RADIUS_VENDOR_AUTELAN, 
-					RADIUS_ATTR_AUTELAN_IPV6_OUTPUT_PACKETS,
-					0, (uint8_t *)&ipv6_output_packets, sizeof(uint32_t));
 
 		eag_log_debug("eag_radius", "radius_acct_req add attr, userip=%s, "
 			"INPUT_OCTETS=%u, OUTPUT_OCTETS=%u, "

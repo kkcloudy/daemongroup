@@ -247,9 +247,20 @@ eag_fastfwd_receive(eag_thread_t *thread)
 		return -1;
 	}
 	memset(&user_addr, 0, sizeof(user_addr));
-	user_addr.family = EAG_IPV4;
-	user_addr.user_ip = se_data.fccp_cmd.fccp_data.user_info.user_ip;
-	//memcpy(&user_addr, &(appconn->session.user_addr), sizeof(user_addr_t));
+	if (0 != se_data.fccp_cmd.fccp_data.user_info.user_ip
+		&& 0 == ipv6_compare_null((struct in6_addr *)&(se_data.fccp_cmd.fccp_data.user_info.user_ipv6))) {
+		user_addr.family = EAG_IPV4;
+        user_addr.user_ip = se_data.fccp_cmd.fccp_data.user_info.user_ip;
+	} else if (0 == se_data.fccp_cmd.fccp_data.user_info.user_ip
+		&& 0 != ipv6_compare_null((struct in6_addr *)&(se_data.fccp_cmd.fccp_data.user_info.user_ipv6))) {
+		user_addr.family = EAG_IPV6;
+        memcpy(&(user_addr.user_ipv6), &(se_data.fccp_cmd.fccp_data.user_info.user_ipv6), sizeof(struct in6_addr));
+	} else if (0 != se_data.fccp_cmd.fccp_data.user_info.user_ip
+		&& 0 != ipv6_compare_null((struct in6_addr *)&(se_data.fccp_cmd.fccp_data.user_info.user_ipv6))) {
+		user_addr.family = EAG_MIX;
+        user_addr.user_ip = se_data.fccp_cmd.fccp_data.user_info.user_ip;
+        memcpy(&(user_addr.user_ipv6), &(se_data.fccp_cmd.fccp_data.user_info.user_ipv6), sizeof(struct in6_addr));
+	}
 	ipx2str(&user_addr, user_ipstr, sizeof(user_ipstr));
 	
 	eag_log_debug("eag_fastfwd", 
@@ -263,10 +274,18 @@ eag_fastfwd_receive(eag_thread_t *thread)
 
 	appconn = appconn_find_by_userip(fastfwd->appdb, &user_addr);
 	if (NULL != appconn && APPCONN_STATUS_AUTHED == appconn->session.state) {
-		appconn->fastfwd_data.input_octets = se_data.fccp_cmd.fccp_data.user_info.forward_down_bytes;
-		appconn->fastfwd_data.input_packets = se_data.fccp_cmd.fccp_data.user_info.forward_down_packet;
-		appconn->fastfwd_data.output_octets = se_data.fccp_cmd.fccp_data.user_info.forward_up_bytes;
-		appconn->fastfwd_data.output_packets = se_data.fccp_cmd.fccp_data.user_info.forward_up_packet;
+		if (appconn->session.user_addr.user_ip == user_addr.user_ip) {
+			appconn->fastfwd_data.input_octets = se_data.fccp_cmd.fccp_data.user_info.forward_down_bytes;
+			appconn->fastfwd_data.input_packets = se_data.fccp_cmd.fccp_data.user_info.forward_down_packet;
+			appconn->fastfwd_data.output_octets = se_data.fccp_cmd.fccp_data.user_info.forward_up_bytes;
+			appconn->fastfwd_data.output_packets = se_data.fccp_cmd.fccp_data.user_info.forward_up_packet;
+		}
+		if (0 == memcmp(&(appconn->session.user_addr.user_ipv6), &(user_addr.user_ipv6), sizeof(struct in6_addr))) {
+			appconn->fastfwd_data.ipv6_input_octets = se_data.fccp_cmd.fccp_data.user_info.ipv6_forward_down_bytes;
+			appconn->fastfwd_data.ipv6_input_packets = se_data.fccp_cmd.fccp_data.user_info.ipv6_forward_down_packet;
+			appconn->fastfwd_data.ipv6_output_octets = se_data.fccp_cmd.fccp_data.user_info.ipv6_forward_up_bytes;
+			appconn->fastfwd_data.ipv6_output_packets = se_data.fccp_cmd.fccp_data.user_info.ipv6_forward_up_packet;
+		}
 		set_appconn_flux(appconn);
 		appconn_check_flux(appconn, time_now);
 	}
@@ -302,11 +321,13 @@ eag_fastfwd_send(eag_fastfwd_t *fastfwd,
 	strncpy(se_data.hand_cmd, hand_cmd, sizeof(se_data.hand_cmd)-1);
 	if (EAG_IPV4 == user_addr->family) {
         se_data.fccp_cmd.fccp_data.user_info.user_ip = user_addr->user_ip;
+        memset(&(se_data.fccp_cmd.fccp_data.user_info.user_ipv6), 0, sizeof(struct in6_addr));
 	} else if (EAG_IPV6 == user_addr->family) {
-        //se_data.fccp_cmd.fccp_data.user_info.user_ipv6 = user_addr->user_ipv6;
+		se_data.fccp_cmd.fccp_data.user_info.user_ip = 0;
+        memcpy(&(se_data.fccp_cmd.fccp_data.user_info.user_ipv6), &(user_addr->user_ipv6), sizeof(struct in6_addr));
 	} else if (EAG_MIX == user_addr->family) {
-        //se_data.fccp_cmd.fccp_data.user_info.user_ip = user_addr->user_ip;
-        //se_data.fccp_cmd.fccp_data.user_info.user_ipv6 = user_addr->user_ipv6;
+        se_data.fccp_cmd.fccp_data.user_info.user_ip = user_addr->user_ip;
+        memcpy(&(se_data.fccp_cmd.fccp_data.user_info.user_ipv6), &(user_addr->user_ipv6), sizeof(struct in6_addr));
 	}
 	ipx2str(user_addr, user_ipstr, sizeof(user_ipstr));
 	eag_log_debug("eag_fastfwd", 

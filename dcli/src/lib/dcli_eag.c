@@ -15190,10 +15190,11 @@ DEFUN(eag_show_user_list_func,
 							&userdb);
 	if (EAG_RETURN_OK == ret) {
 		vty_out(vty, "user num : %d\n", userdb.num);
+		#if 0
 		vty_out(vty, "%-7s %-18s %-16s %-40s %-18s %-12s %-18s %-18s %-18s %-18s %-18s %-12s\n",
 				"ID", "UserName", "UserIP", "UserIPV6", "UserMAC", 
-				"SessionTime", "OutputFlow", "InputFlow", "IPV6OutputFlow", "IPV6InputFlow","ApMAC","VLANID");
-
+				"SessionTime", "OutputFlow", "InputFlow", "IPV6OutputFlow", "IPV6InputFlow","ApMAC","VLANID"); */
+		#endif
 		list_for_each_entry(user, &(userdb.head), node) {
 			i++;
 			ip2str(user->user_ip, ipstr, sizeof(ipstr));
@@ -15206,10 +15207,24 @@ DEFUN(eag_show_user_list_func,
 			snprintf(timestr, sizeof(timestr), "%u:%02u:%02u",
 				hour, minute, second);
 			
+			vty_out(vty, "ID               :%d\n", i);
+        	vty_out(vty, "UserName         :%s\n", user->username);
+        	vty_out(vty, "UserIP           :%s\n", ipstr);
+        	vty_out(vty, "UserIPV6         :%s\n", ipv6str);
+        	vty_out(vty, "UserMAC          :%s\n", macstr);
+        	vty_out(vty, "SessionTime      :%s\n", timestr);
+        	vty_out(vty, "OutputFlow       :%llu\n", user->output_octets);
+        	vty_out(vty, "InputFlow        :%llu\n", user->input_octets);
+        	vty_out(vty, "IPV6OutputFlow   :%llu\n", user->ipv6_output_octets);
+        	vty_out(vty, "IPV6InputFlow    :%llu\n", user->ipv6_input_octets);
+        	vty_out(vty, "ApMAC            :%s\n", ap_macstr);
+			#if 0
+        	vty_out(vty, "VLANID           :%lu\n", user->vlanid);
 			vty_out(vty, "%-7d %-18s %-16s %-40s %-18s %-12s %-18llu %-18llu %-18llu %-18llu %-18s %-12lu\n",
 				i, user->username, ipstr, ipv6str, macstr, timestr, 
 				user->output_octets, user->input_octets, user->ipv6_output_octets, user->ipv6_input_octets, 
 				ap_macstr,user->vlanid);
+			#endif
 		}
 		vty_out(vty, "user num : %d\n", userdb.num);
 	}
@@ -15254,9 +15269,6 @@ DEFUN(eag_show_user_by_username_func,
 							argv[0]);
 	if (EAG_RETURN_OK == ret) {
 		vty_out(vty, "user num : %d\n", userdb.num);
-		vty_out(vty, "%-7s %-18s %-16s %-40s %-18s %-12s %-18s %-18s %-18s %-18s\n",
-				"ID", "UserName", "UserIP", "UserIPV6", "UserIPV6", "UserMAC", 
-				"SessionTime", "OutputFlow", "InputFlow", "IPV6OutputFlow", "IPV6InputFlow");
 
 		list_for_each_entry(user, &(userdb.head), node) {
 			i++;
@@ -15269,10 +15281,16 @@ DEFUN(eag_show_user_by_username_func,
 			snprintf(timestr, sizeof(timestr), "%u:%02u:%02u",
 				hour, minute, second);
 			
-			vty_out(vty, "%-7d %-18s %-16s %-40s %-18s %-12s %-18llu %-18llu %-18llu %-18llu\n",
-				i, user->username, ipstr, ipv6str, macstr,
-				timestr, user->output_octets, user->input_octets, 
-				user->ipv6_output_octets, user->ipv6_input_octets);
+			vty_out(vty, "ID               :%d\n", i);
+        	vty_out(vty, "UserName         :%s\n", user->username);
+        	vty_out(vty, "UserIP           :%s\n", ipstr);
+        	vty_out(vty, "UserIPV6         :%s\n", ipv6str);
+        	vty_out(vty, "UserMAC          :%s\n", macstr);
+        	vty_out(vty, "SessionTime      :%s\n", timestr);
+        	vty_out(vty, "OutputFlow       :%llu\n", user->output_octets);
+        	vty_out(vty, "InputFlow        :%llu\n", user->input_octets);
+        	vty_out(vty, "IPV6OutputFlow   :%llu\n", user->ipv6_output_octets);
+        	vty_out(vty, "IPV6InputFlow    :%llu\n", user->ipv6_input_octets);
 		}
 		vty_out(vty, "user num : %d\n", userdb.num);
 	}
@@ -15326,9 +15344,6 @@ DEFUN(eag_show_user_by_userip_func,
 							userip);
 	if (EAG_RETURN_OK == ret) {
 		vty_out(vty, "user num : %d\n", userdb.num);
-		vty_out(vty, "%-7s %-18s %-16s %-40s %-18s %-12s %-18s %-18s %-18s %-18s\n",
-				"ID", "UserName", "UserIP", "UserIPV6", "UserMAC", 
-				"SessionTime", "OutputFlow", "InputFlow", "IPV6OutputFlow", "IPV6InputFlow");
 
 		list_for_each_entry(user, &(userdb.head), node) {
 			i++;
@@ -15341,10 +15356,16 @@ DEFUN(eag_show_user_by_userip_func,
 			snprintf(timestr, sizeof(timestr), "%u:%02u:%02u",
 				hour, minute, second);
 			
-			vty_out(vty, "%-7d %-18s %-16s %-40s %-18s %-12s %-18llu %-18llu %-18llu %-18llu\n",
-				i, user->username, ipstr, ipv6str, macstr,
-				timestr, user->output_octets, user->input_octets,
-				user->ipv6_output_octets, user->ipv6_input_octets);
+			vty_out(vty, "ID               :%d\n", i);
+        	vty_out(vty, "UserName         :%s\n", user->username);
+        	vty_out(vty, "UserIP           :%s\n", ipstr);
+        	vty_out(vty, "UserIPV6         :%s\n", ipv6str);
+        	vty_out(vty, "UserMAC          :%s\n", macstr);
+        	vty_out(vty, "SessionTime      :%s\n", timestr);
+        	vty_out(vty, "OutputFlow       :%llu\n", user->output_octets);
+        	vty_out(vty, "InputFlow        :%llu\n", user->input_octets);
+        	vty_out(vty, "IPV6OutputFlow   :%llu\n", user->ipv6_output_octets);
+        	vty_out(vty, "IPV6InputFlow    :%llu\n", user->ipv6_input_octets);
 		}
 		vty_out(vty, "user num : %d\n", userdb.num);
 	}
@@ -15396,9 +15417,6 @@ DEFUN(eag_show_user_by_useripv6_func,
 							user_ipv6);
 	if (EAG_RETURN_OK == ret) {
 		vty_out(vty, "user num : %d\n", userdb.num);
-		vty_out(vty, "%-7s %-18s %-16s %-40s %-18s %-12s %-18s %-18s %-18s %-18s\n",
-				"ID", "UserName", "UserIP", "UserIPV6", "UserMAC", 
-				"SessionTime", "OutputFlow", "InputFlow", "IPV6OutputFlow", "IPV6InputFlow");
 
 		list_for_each_entry(user, &(userdb.head), node) {
 			i++;
@@ -15410,11 +15428,17 @@ DEFUN(eag_show_user_by_useripv6_func,
 			second = user->session_time%60;
 			snprintf(timestr, sizeof(timestr), "%u:%02u:%02u",
 				hour, minute, second);
-			
-			vty_out(vty, "%-7d %-18s %-16s %-40s %-18s %-12s %-18llu %-18llu %-18llu %-18llu\n",
-				i, user->username, ipstr, ipv6str, macstr,
-				timestr, user->output_octets, user->input_octets,
-				user->ipv6_output_octets, user->ipv6_input_octets);
+
+			vty_out(vty, "ID               :%d\n", i);
+        	vty_out(vty, "UserName         :%s\n", user->username);
+        	vty_out(vty, "UserIP           :%s\n", ipstr);
+        	vty_out(vty, "UserIPV6         :%s\n", ipv6str);
+        	vty_out(vty, "UserMAC          :%s\n", macstr);
+        	vty_out(vty, "SessionTime      :%s\n", timestr);
+        	vty_out(vty, "OutputFlow       :%llu\n", user->output_octets);
+        	vty_out(vty, "InputFlow        :%llu\n", user->input_octets);
+        	vty_out(vty, "IPV6OutputFlow   :%llu\n", user->ipv6_output_octets);
+        	vty_out(vty, "IPV6InputFlow    :%llu\n", user->ipv6_input_octets);
 		}
 		vty_out(vty, "user num : %d\n", userdb.num);
 	}
@@ -15466,9 +15490,6 @@ DEFUN(eag_show_user_by_usermac_func,
 							usermac);
 	if (EAG_RETURN_OK == ret) {
 		vty_out(vty, "user num : %d\n", userdb.num);
-		vty_out(vty, "%-7s %-18s %-16s %-40s %-18s %-12s %-18s %-18s %-18s %-18s\n",
-				"ID", "UserName", "UserIP", "UserIPV6", "UserMAC", 
-				"SessionTime", "OutputFlow", "InputFlow", "IPV6OutputFlow", "IPV6InputFlow");
 
 		list_for_each_entry(user, &(userdb.head), node) {
 			i++;
@@ -15481,10 +15502,16 @@ DEFUN(eag_show_user_by_usermac_func,
 			snprintf(timestr, sizeof(timestr), "%u:%02u:%02u",
 				hour, minute, second);
 			
-			vty_out(vty, "%-7d %-18s %-16s %-40s %-18s %-12s %-18llu %-18llu %-18llu %-18llu\n",
-				i, user->username, ipstr, ipv6str, macstr,
-				timestr, user->output_octets, user->input_octets,
-				user->ipv6_output_octets, user->ipv6_input_octets);
+			vty_out(vty, "ID               :%d\n", i);
+        	vty_out(vty, "UserName         :%s\n", user->username);
+        	vty_out(vty, "UserIP           :%s\n", ipstr);
+        	vty_out(vty, "UserIPV6         :%s\n", ipv6str);
+        	vty_out(vty, "UserMAC          :%s\n", macstr);
+        	vty_out(vty, "SessionTime      :%s\n", timestr);
+        	vty_out(vty, "OutputFlow       :%llu\n", user->output_octets);
+        	vty_out(vty, "InputFlow        :%llu\n", user->input_octets);
+        	vty_out(vty, "IPV6OutputFlow   :%llu\n", user->ipv6_output_octets);
+        	vty_out(vty, "IPV6InputFlow    :%llu\n", user->ipv6_input_octets);
 		}
 		vty_out(vty, "user num : %d\n", userdb.num);
 	}
@@ -15532,9 +15559,6 @@ DEFUN(eag_show_user_by_index_func,
 							index);
 	if (EAG_RETURN_OK == ret) {
 		vty_out(vty, "user num : %d\n", userdb.num);
-		vty_out(vty, "%-7s %-18s %-16s %-40s %-18s %-12s %-18s %-18s %-18s %-18s\n",
-				"ID", "UserName", "UserIP", "UserIPV6", "UserMAC", 
-				"SessionTime", "OutputFlow", "InputFlow", "IPV6OutputFlow", "IPV6InputFlow");
 
 		list_for_each_entry(user, &(userdb.head), node) {
 			i++;
@@ -15547,10 +15571,16 @@ DEFUN(eag_show_user_by_index_func,
 			snprintf(timestr, sizeof(timestr), "%u:%02u:%02u",
 				hour, minute, second);
 			
-			vty_out(vty, "%-7d %-18s %-16s %-40s %-18s %-12s %-18llu %-18llu %-18llu %-18llu\n",
-				i, user->username, ipstr, ipv6str, macstr,
-				timestr, user->output_octets, user->input_octets,
-				user->ipv6_output_octets, user->ipv6_input_octets);
+			vty_out(vty, "ID               :%d\n", i);
+        	vty_out(vty, "UserName         :%s\n", user->username);
+        	vty_out(vty, "UserIP           :%s\n", ipstr);
+        	vty_out(vty, "UserIPV6         :%s\n", ipv6str);
+        	vty_out(vty, "UserMAC          :%s\n", macstr);
+        	vty_out(vty, "SessionTime      :%s\n", timestr);
+        	vty_out(vty, "OutputFlow       :%llu\n", user->output_octets);
+        	vty_out(vty, "InputFlow        :%llu\n", user->input_octets);
+        	vty_out(vty, "IPV6OutputFlow   :%llu\n", user->ipv6_output_octets);
+        	vty_out(vty, "IPV6InputFlow    :%llu\n", user->ipv6_input_octets);
 		}
 		vty_out(vty, "user num : %d\n", userdb.num);
 	}

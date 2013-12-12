@@ -248,6 +248,17 @@ struct radius_attr_t {
 #define RADIUS_ATTR_AUTELAN_IPV6_INPUT_GIGAWORDS	225	/* integer */
 #define RADIUS_ATTR_AUTELAN_IPV6_OUTPUT_GIGAWORDS	226	/* integer */
 
+/* vendor  attr - DATANG TELECOM */
+#define RADIUS_VENDOR_DTT							5333
+#define RADIUS_ATTR_DTT_USER_TYPE					10	/* string */
+#define RADIUS_ATTR_DTT_FRAMED_IPV6_ADDRESS			11	/* octets (IPv6) */
+#define RADIUS_ATTR_DTT_ACCT_IPV6_INPUT_OCTETS		12	/* integer */
+#define RADIUS_ATTR_DTT_ACCT_IPV6_OUTPUT_OCTETS		13	/* integer */
+#define RADIUS_ATTR_DTT_ACCT_IPV6_INPUT_PACKETS		14	/* integer */
+#define RADIUS_ATTR_DTT_ACCT_IPV6_OUTPUT_PACKETS	15	/* integer */
+#define RADIUS_ATTR_DTT_ACCT_IPV6_INPUT_GIGAWORDS	16	/* integer */
+#define RADIUS_ATTR_DTT_ACCT_IPV6_OUTPUT_GIGAWORDS	17	/* integer */
+
 int
 radius_packet_init(struct radius_packet_t *packet,
 		uint8_t code);
