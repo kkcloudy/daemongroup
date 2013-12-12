@@ -2638,8 +2638,8 @@ void  asd_wlan_radius_free(unsigned int wlanid)
 	if(ASD_WLAN[wlanid]->radius){
 		radius_client_deinit(ASD_WLAN[wlanid]->radius);
 		ASD_WLAN[wlanid]->radius = NULL;
+   	asd_printf(ASD_DEFAULT,MSG_DEBUG,"radius_client_deinit() ok!\n");
 	}
-	asd_printf(ASD_DEFAULT,MSG_DEBUG,"radius deinit over!\n");
 	
 	if(ASD_WLAN[wlanid]->radius_server)
 	{
@@ -2688,7 +2688,7 @@ int asd_wlan_radius_init(unsigned int wlanid,unsigned char SID)
 		return ASD_SECURITY_NOT_EXIST;
 	}	
 	asd_wlan_radius_free(wlanid);
-	asd_printf(ASD_DEFAULT,MSG_DEBUG,"wlan free over!\n");
+	asd_printf(ASD_DEFAULT,MSG_DEBUG,"asd_wlan_radius_free(%d) Ok!\n",wlanid);
 	if(!((ASD_SECURITY[SID]->securityType == IEEE8021X)||(ASD_SECURITY[SID]->securityType == WPA_E)||(ASD_SECURITY[SID]->securityType == WPA2_E)||(ASD_SECURITY[SID]->securityType == MD5)||((ASD_SECURITY[SID]->securityType == WAPI_AUTH) && (ASD_SECURITY[SID]->wapi_radius_auth == 1))||(ASD_SECURITY[SID]->extensible_auth == 1)))
 	{
 		asd_printf(ASD_DEFAULT,MSG_DEBUG,"security type is no need to create radius server!\n");
@@ -2846,6 +2846,7 @@ int asd_wlan_radius_init(unsigned int wlanid,unsigned char SID)
 			return -1;
 		}
 	}
+	asd_printf(ASD_DEFAULT,MSG_DEBUG,"asd_wlan_radius_init for wlan %d OK.\n",wlanid);	
 	return ASD_DBUS_SUCCESS;
 }
 //qiuchen add it for master_bak radius server

@@ -2120,7 +2120,8 @@ int AsdStaInfoToWID(struct asd_data *wasd, const u8 *addr, Operate op){
 	STA.u.STA.wlanId = wasd->WlanID;
 	memcpy(STA.u.STA.STAMAC, addr, ETH_ALEN);
 	sta = ap_get_sta(wasd,addr);
-	if((op == WID_ADD) && (sta != NULL)) {
+	if((op == WID_ADD) && (sta != NULL)) {	
+		asd_printf(ASD_80211,MSG_DEBUG,"AsdStaInfoToWID (op = WID_ADD) & (sta != NULL). \n");	
 		if((static_sta = asd_get_static_sta(addr)) != NULL){
 			tmp_sta = static_sta;
 			while(tmp_sta != NULL){//the priority is higher is sta->wlanid is not 0
@@ -2172,8 +2173,8 @@ int AsdStaInfoToWID(struct asd_data *wasd, const u8 *addr, Operate op){
 			STA.u.STA.vlan_id = sta->vlan_id;
 	}
 	len = sizeof(STA);
-	asd_printf(ASD_80211,MSG_DEBUG,"AsdStaInfoToWID1\n");	
 	if(op == WID_ADD){
+		asd_printf(ASD_80211,MSG_DEBUG,"AsdStaInfoToWID (op = WID_ADD).\n");			
 		ASD_WTP_ST *WTP = ASD_WTP_AP[STA.u.STA.WTPID];
 		if(WTP){
 			unsigned char *ip = (unsigned char*)&(WTP->WTPIP);
@@ -2186,13 +2187,14 @@ int AsdStaInfoToWID(struct asd_data *wasd, const u8 *addr, Operate op){
 		asd_printf(ASD_DEFAULT,MSG_DEBUG,"sta num %d\n",STA.u.STA.sta_num);	
 		
 	}else if(STA.Op==WID_DEL){
+		asd_printf(ASD_80211,MSG_DEBUG,"AsdStaInfoToWID (op = WID_DEL).\n");				
 		ASD_WTP_ST *WTP = ASD_WTP_AP[STA.u.STA.WTPID];
 		if(WTP){
 			unsigned char *ip = (unsigned char*)&(WTP->WTPIP);
 			syslog(LOG_INFO|LOG_LOCAL7, "[%d-%d]STA :"MACSTR" leave WTP %d,WTP MAC:"MACSTR",WTP IP:%d.%d.%d.%d,Leave Time:%s\n",slotid,vrrid,
 				MAC2STR(STA.u.STA.STAMAC),STA.u.STA.WTPID,MAC2STR(WTP->WTPMAC),ip[0],ip[1],ip[2],ip[3],ctime(&now));
 		}
-		asd_printf(ASD_80211,MSG_INFO,"STA :"MACSTR" leave WTP %d\n",MAC2STR(addr),STA.u.STA.WTPID);
+		asd_printf(ASD_80211,MSG_INFO,"STA :"MACSTR" delete form WTP %d\n",MAC2STR(addr),STA.u.STA.WTPID);
 	}
 	else if(RADIUS_STA_UPDATE == STA.Op && sta != NULL)
 	{
@@ -2202,13 +2204,13 @@ int AsdStaInfoToWID(struct asd_data *wasd, const u8 *addr, Operate op){
 	else 
 		asd_printf(ASD_80211,MSG_INFO,"WTP %d ""has operation %d to STA:"MACSTR"\n",STA.u.STA.WTPID,STA.Op,MAC2STR(addr));
 	if(sendto(TableSend, &STA, len, 0, (struct sockaddr *) &toWID.addr, toWID.addrlen) < 0){
-		asd_printf(ASD_80211,MSG_CRIT,"%s sendto %s\n",__func__,strerror(errno));
+		asd_printf(ASD_80211,MSG_CRIT,"%s sendto error = %s\n",__func__,strerror(errno));
 		perror("send(wASDSocket)");
-		asd_printf(ASD_80211,MSG_DEBUG,"AsdStaInfoToWID2\n");
+		asd_printf(ASD_80211,MSG_DEBUG,"AsdStaInfoToWID sendto WID error.\n");
 //		close(sock);
 		return -1;
 	}
-	asd_printf(ASD_DEFAULT,MSG_DEBUG,"AsdStaInfoToWID3\n");
+	asd_printf(ASD_DEFAULT,MSG_DEBUG,"AsdStaInfoToWID OK.\n");
 	return 0;
 }
 //weichao add 

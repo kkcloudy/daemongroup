@@ -2491,12 +2491,12 @@ void WLAN_OP(TableMsg *msg){
 				//Qc
 				int ret = 0;
 				if(ASD_WLAN[msg->u.WLAN.WlanID]->Status == 0 && msg->u.WLAN.WlanState == 1){
-					asd_printf(ASD_DEFAULT,MSG_DEBUG,"*******1111WID_MODIFY**********\n");
+					asd_printf(ASD_DEFAULT,MSG_DEBUG,"WID_MODIFY: set wlan %d to disable.\n",msg->u.WLAN.WlanID);
 					asd_wlan_all_bss_free(msg->u.WLAN.WlanID);
 					asd_wlan_radius_free(msg->u.WLAN.WlanID);
 				}
 				else if((ASD_WLAN[msg->u.WLAN.WlanID]->Status == 1 && msg->u.WLAN.WlanState == 0)){
-					asd_printf(ASD_DEFAULT,MSG_DEBUG,"*******2222WID_MODIFY**********\n");
+					asd_printf(ASD_DEFAULT,MSG_DEBUG,"WID_MODIFY: set wlan %d to enable.\n",msg->u.WLAN.WlanID);
 					SecurityID = ASD_WLAN[msg->u.WLAN.WlanID]->SecurityID;
 					ret = asd_wlan_radius_init(msg->u.WLAN.WlanID,SecurityID);
 					if(ret){

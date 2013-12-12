@@ -915,6 +915,7 @@ struct dcli_security {
 	unsigned int slot_value;				//mahz add 2011.11.18
 	unsigned int inst_value;
 	unsigned int  mac_auth;
+    unsigned int  distribute_off;
 	
 	unsigned char 	wapi_ucast_rekey_method;
 	unsigned int 	wapi_ucast_rekey_para_t;

@@ -21019,6 +21019,7 @@ DBusMessage *asd_dbus_show_security(DBusConnection *conn, DBusMessage *msg, void
 								 DBUS_TYPE_UINT32,&var,	//	xm0701
 								 DBUS_TYPE_STRING,&ip,
 								 DBUS_TYPE_BYTE,&ch,
+                                 DBUS_TYPE_UINT32,&var, /* distributed off */								 
 								 DBUS_TYPE_STRING,&ip,
 								 DBUS_TYPE_UINT32,&var,
 					   			 DBUS_TYPE_STRING,&ip,
@@ -21088,6 +21089,7 @@ DBusMessage *asd_dbus_show_security(DBusConnection *conn, DBusMessage *msg, void
 								 
 								 DBUS_TYPE_STRING,0,
 								 DBUS_TYPE_BYTE,0,
+								 DBUS_TYPE_UINT32,0,    /* distributed off */								 
 								 DBUS_TYPE_STRING,0,
 								 DBUS_TYPE_UINT32,0,
 					   			 DBUS_TYPE_STRING,0,
@@ -21216,6 +21218,8 @@ DBusMessage *asd_dbus_show_security(DBusConnection *conn, DBusMessage *msg, void
 								
 								 DBUS_TYPE_STRING,&(ASD_SECURITY[SecurityID]->name),
 								 DBUS_TYPE_BYTE,&(ASD_SECURITY[SecurityID]->SecurityID),
+			 					 DBUS_TYPE_UINT32,&(ASD_SECURITY[SecurityID]->distribute_off),			 					 
+								 
 								 DBUS_TYPE_STRING,&(ASD_SECURITY[SecurityID]->host_ip),
 			 					 DBUS_TYPE_UINT32,&(ASD_SECURITY[SecurityID]->auth.auth_port),			 					 
 								 DBUS_TYPE_STRING,&(ASD_SECURITY[SecurityID]->auth.auth_ip),
@@ -23975,7 +23979,7 @@ DBusMessage *asd_dbus_set_asd_distribute_on(DBusConnection *conn, DBusMessage *m
 				security_type = ASD_SECURITY[security_id]->securityType;		//mahz modified 2011.3.21
 				if((ASD_SECURITY[security_id]->securityType == IEEE8021X)||(ASD_SECURITY[security_id]->securityType == WPA_E)||(ASD_SECURITY[security_id]->securityType == WPA2_E)||(ASD_SECURITY[security_id]->securityType == MD5)||(ASD_SECURITY[security_id]->extensible_auth == 1)||(ASD_SECURITY[security_id]->wapi_radius_auth == 1)){
 					ASD_SECURITY[security_id]->distribute_off = state;
-					asd_printf(ASD_DBUS,MSG_DEBUG,"ASD_SECURITY[security_id]->accounting_on_disable %d",ASD_SECURITY[security_id]->accounting_on_disable);
+					asd_printf(ASD_DBUS,MSG_DEBUG,"ASD_SECURITY[security_id]->distribute_off %d",ASD_SECURITY[security_id]->distribute_off);
 				}
 				else
 					ret = ASD_SECURITY_TYPE_WITHOUT_8021X;

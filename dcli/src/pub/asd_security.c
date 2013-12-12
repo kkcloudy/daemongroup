@@ -803,6 +803,8 @@ struct dcli_security* show_security_id(DBusConnection *dcli_dbus_connection,int 
 					
 					DBUS_TYPE_STRING,&(name),
 					DBUS_TYPE_BYTE,&(tmp->SecurityID),
+    				DBUS_TYPE_UINT32,&(tmp->distribute_off),
+    				
 					DBUS_TYPE_STRING,&(host_ip),
 					DBUS_TYPE_UINT32,&(tmp->auth.auth_port),
 					DBUS_TYPE_STRING,&auth_ip,

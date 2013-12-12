@@ -693,7 +693,7 @@ int accounting_init(const int  wlanid)
 		}
 
 	}
-
+	asd_printf(ASD_1X,MSG_DEBUG,"accounting_init() for wlan %d OK.\n",wlanid);
 //	if((wasd->radius) && (!wasd->radius->accounting_on_disable))
 //		accounting_report_state(wasd, 1);
 

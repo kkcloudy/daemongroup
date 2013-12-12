@@ -2401,6 +2401,7 @@ radius_client_init(void *ctx, struct asd_radius_servers *conf)
 				       radius_retry_primary_timer, radius,
 				       NULL);*/
 
+	asd_printf(ASD_1X,MSG_DEBUG,"radius_client_init() is OK.\n");
 	return radius;
 }
 

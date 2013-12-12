@@ -2842,7 +2842,8 @@ DEFUN(show_security_cmd_func,
 				vty_out(vty,"AUTH IP : %s:%d\n",sec->auth.auth_ip,sec->auth.auth_port);			
 				vty_out(vty,"AUTH SHARED SECRET: %s\n",sec->auth.auth_shared_secret);
 				vty_out(vty,"ACCT IP : %s:%d\n",sec->acct.acct_ip,sec->acct.acct_port);
-				vty_out(vty,"ACCT SHARED SECRET : %s\n\n",sec->acct.acct_shared_secret);
+				vty_out(vty,"ACCT SHARED SECRET : %s\n",sec->acct.acct_shared_secret);
+				vty_out(vty,"ASD  Security distributed : %s\n\n",(sec->distribute_off == 0)?"enable":"disable");
 
 				vty_out(vty,"SECONDARY AUTH IP : %s:%d\n",sec->auth.secondary_auth_ip,sec->auth.secondary_auth_port);	
 				vty_out(vty,"SECONDARY AUTH SHARED SECRET: %s\n",sec->auth.secondary_auth_shared_secret);
