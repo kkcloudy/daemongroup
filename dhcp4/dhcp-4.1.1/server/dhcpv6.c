@@ -1861,6 +1861,8 @@ reply_process_ia_na(struct reply_state *reply, struct option_cache *ia) {
 			ia_hash_delete(ia_na_active,
 				       (unsigned char *)ia_id->data,
 				       ia_id->len, MDL);
+			if(((*(reply->old_ia->iasubopt)) != NULL) && ((*(reply->old_ia->iasubopt))->ipv6_pool !=NULL))
+			(*(reply->old_ia->iasubopt))->ipv6_pool->lease_active_count--;
 			ia_dereference(&reply->old_ia, MDL);
 		}
 
