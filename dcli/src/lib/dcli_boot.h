@@ -83,7 +83,8 @@ extern int is_active_master;
 #define PERMIT_EXEC 3
 
 
-#define BOARD_81SMU_PATH "/dbm/local_board/board_code"
+#define BOARD_CODE_PATH "/dbm/local_board/board_code"
 #define AX81SMU 0
+#define AX81SMUE 7
 
 #endif /*__DCLI_BOOT_H__*/

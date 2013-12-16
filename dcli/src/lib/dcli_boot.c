@@ -3487,7 +3487,7 @@ DEFUN (download_system_func,
 	char temp_buf[100];
 	int temp;
 	char src[100]={0};
-	int profuct_type = get_product_info(BOARD_81SMU_PATH);
+	int profuct_type = get_product_info(BOARD_CODE_PATH);
 	if((usbp = strstr(argv[0],"usb:")) != NULL){
 		if(argc !=1){
 			vty_out(vty,"please cheack input parameter \n");
@@ -3503,7 +3503,7 @@ DEFUN (download_system_func,
 	
     if((tm = strstr(argv[0],"usb:")) != NULL)
     {				
-        if(profuct_type == AX81SMU)
+        if(profuct_type == AX81SMU || profuct_type == AX81SMUE)
     	{
             imgname  = tm + 4;					
             if(strncasecmp((imgname + strlen(imgname)-4),".IMG",4))

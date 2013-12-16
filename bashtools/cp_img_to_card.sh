@@ -23,10 +23,22 @@ if ! `mkdir /home/usb`;then
 	fi
 fi
 
+device_rel="sdb1"
+if [ -b "/dev/sdb1" ];then
+	device_rel="sdb1"
+elif [ -b "/dev/sdb2" ];then
+	device_rel="sdb2"
+elif [ -b "/dev/sdb3" ];then
+	device_rel="sdb3"
+elif [ -b "/dev/sdb4" ];then
+	device_rel="sdb4"
+fi
+echo "find USB $device_rel"
+
 if ! `sudo mount /dev/$device /home/usb/`;then
-    echo " if usb device have partition,will mount sdb1 partition"
-    if [ -b "/dev/sdb1" ];then
-	if ! `sudo mount /dev/sdb1 /home/usb/`;then
+    echo " if usb device have partition,will mount $device_rel partition"
+    if [ -b "/dev/$device_rel" ];then
+	if ! `sudo mount /dev/$device_rel /home/usb/`;then
 
    		 if [-d "/home/usb"];then
 			sudo umount /home/usb
@@ -39,7 +51,7 @@ if ! `sudo mount /dev/$device /home/usb/`;then
 		fi
 	  fi
     else 
-	echo "not find usb device"
+	echo "not find usb device $device_rel"
 	exit 1
     fi
 fi
