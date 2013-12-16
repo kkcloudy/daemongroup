@@ -294,10 +294,10 @@ portal_sess_new(eag_portal_t *portal,
                                 sizeof(struct in_addr),
                                 &(portalsess->hnode));
 	} else if (EAG_MIX == user_addr->family) {
-		hashtable_check_add_node(portal->ipv6_htable,
+		/*hashtable_check_add_node(portal->ipv6_htable,
 	    						&(user_addr->user_ipv6),
 	    						sizeof(struct in6_addr),
-	                        	&(portalsess->hnode));
+	                        	&(portalsess->hnode));*/
         hashtable_check_add_node(portal->htable,
                                 &(user_addr->user_ip),
                                 sizeof(struct in_addr),
