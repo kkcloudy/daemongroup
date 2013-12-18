@@ -683,30 +683,30 @@ DEFUN(show_dhcp_lease_ipv6_state_cmd,
 	memset(buf, 0, sizeof(buf));
 
 	sprintf(buf, "poolname%s%s%s", space8, space8, space8);
-	sprintf(buf+12, "subnet%s%s%s", space8, space8, space8);
+	//sprintf(buf+21, "subnet%s%s%s", space8, space8, space8);
 	//sprintf(buf + 18, "mask%s%s%s", space8, space8, space8);
-	sprintf(buf + 24, "total%s%s%s", space8, space8, space8);
-	sprintf(buf + 36, "active%s", space8, space8);
+	sprintf(buf + 21, "total%s%s%s", space8, space8, space8);
+	sprintf(buf + 33, "active%s", space8, space8);
 	//sprintf(buf + 52, "free%s", space8);
 	//sprintf(buf + 60, "backup%s", space8);
-	offset = sprintf(buf + 48, "use percent");
+	offset = sprintf(buf + 45, "use percent");
 	
 //	buf[offset + 68] = '\0';
 	vty_out(vty, "\n%s\n", buf); 
 	for(i = 0; i < subnet_num; ++i) {
 		sprintf(buf, "%s%s%s%s", sub_state[i].poolname, space8, space8, space8);
-		sprintf(buf + 12, "%s%s%s%s", sub_state[i].subnet, space8, space8, space8);
+		//sprintf(buf + 21, "%s%s%s%s", sub_state[i].subnet, space8, space8, space8);
 		//printf("sub_state[i].mask is %s\n",sub_state[i].mask);
 		//sprintf(buf + 18, "%s%s%s%s", sub_state[i].mask, space8, space8, space8);
-		sprintf(buf + 24, "%d%s%s%s", sub_state[i].subnet_lease_state.total_lease_num, space8, space8, space8);
-		sprintf(buf + 36, "%d%s%s", sub_state[i].subnet_lease_state.active_lease_num, space8, space8);
+		sprintf(buf + 21, "%d%s%s%s", sub_state[i].subnet_lease_state.total_lease_num, space8, space8, space8);
+		sprintf(buf + 33, "%d%s%s", sub_state[i].subnet_lease_state.active_lease_num, space8, space8);
 		//sprintf(buf + 52, "%d%s", sub_state[i].subnet_lease_state.free_lease_num, space8);
 		//sprintf(buf + 60, "%d%s", sub_state[i].subnet_lease_state.backup_lease_num, space8);
 
 		if (0 == sub_state[i].subnet_lease_state.total_lease_num) {
-			offset = sprintf(buf + 48, "0 %%");
+			offset = sprintf(buf + 45, "0 %%");
 		} else {
-			offset = sprintf(buf + 48, "%.2f %%", (float)sub_state[i].subnet_lease_state.active_lease_num 
+			offset = sprintf(buf + 45, "%.2f %%", (float)sub_state[i].subnet_lease_state.active_lease_num 
 					/ (float)sub_state[i].subnet_lease_state.total_lease_num * 100.0);
 		}
 //		buf[buf + 68 + offset] = '\0';
