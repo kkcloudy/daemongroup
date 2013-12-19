@@ -1805,6 +1805,7 @@ int WID_CREATE_NEW_WTP(char *WTPNAME, unsigned int WTPID, unsigned char* WTPSN, 
 		{
 			num = pnode->radio_num;
 			AC_WTP[WTPID]->apifinfo.eth_num = pnode->eth_num;    //fengwenchao add 20110407
+			AC_WTP[WTPID]->apifinfo.wifi_num =  pnode->radio_num;//12.17
 			AC_WTP[WTPID]->apcodeflag = 0;
 
 			if(code != NULL)
@@ -17842,7 +17843,7 @@ int wid_radio_set_ip_gateway(int wtpid,unsigned int ip,unsigned int gateway,unsi
 	AC_WTP[wtpid]->ap_ipadd = ip;
 	AC_WTP[wtpid]->ap_gateway = gateway;
 	AC_WTP[wtpid]->resetflag = 1;
-	AC_WTP[wtpid]->ap_mask = mask;
+	AC_WTP[wtpid]->ap_mask_new= mask;
 	
 	if((AC_WTP[wtpid] != NULL)&&(AC_WTP[wtpid]->WTPStat == 5))
 	{
@@ -23452,7 +23453,7 @@ void wid_init_wtp_info_in_create(unsigned int WTPID)
 		AC_WTP[WTPID]->apifinfo.report_switch = gINFOREPORTSWITCH; /*wcl modify  for globle variable*/
 		AC_WTP[WTPID]->apifinfo.report_interval = gINFOREPORTINTERVAL;//sz change 1 to 3 0630 /*wcl modify for globle variable*/
 		//AC_WTP[WTPID]->apifinfo.eth_num = 1;    //fengwenchao modify 20110325
-		AC_WTP[WTPID]->apifinfo.wifi_num = 1;
+		//AC_WTP[WTPID]->apifinfo.wifi_num = 1; //12.17
 		memset(AC_WTP[WTPID]->apifinfo.eth,0,AP_ETH_IF_NUM);
 		memset(AC_WTP[WTPID]->apifinfo.wifi,0,AP_WIFI_IF_NUM);
 		unsigned char jj=0;

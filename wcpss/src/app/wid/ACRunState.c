@@ -2138,7 +2138,8 @@ CWBool CWAssembleConfigurationUpdateRequest_WTP(CWProtocolMessage **messagesPtr,
 			//printf("## wtp id = %d config ap ip \n",WTPIndex);
 			MsgElemCount = 1;
 			CW_CREATE_PROTOCOL_MSG_ARRAY_ERR(msgElems, MsgElemCount, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
-			if (!(CWAssembleStaticAPIP(&(msgElems[++k]),WTPIndex))) 
+			/*if (!(CWAssembleStaticAPIP(&(msgElems[++k]),WTPIndex)))//12.17*/ 
+			if (!(CWAssembleStaticAPIPDNS(&(msgElems[++k]),WTPIndex)))
 			{
 				int i;
 				for(i = 0; i <= k; i++) { CW_FREE_PROTOCOL_MESSAGE(msgElems[i]);}

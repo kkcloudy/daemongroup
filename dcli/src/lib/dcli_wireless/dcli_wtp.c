@@ -11907,11 +11907,13 @@ DEFUN(set_ap_ipaddr_command_func,
 	DBusError err;
 
     unsigned int ip;
-	unsigned char mask;
+	unsigned int mask;//12.17
 	unsigned int gateway;
 	unsigned int wtp_id = 0;
-	unsigned char myipBuf[WTP_IP_BUFF_LEN] = {0};	
+	unsigned char myipBuf[WTP_IP_BUFF_LEN] = {0};
+	unsigned char mygatewayBuf[WTP_IP_BUFF_LEN] = {0};//12.17
 	unsigned char *myipPtr = myipBuf;
+	unsigned char *mygatewayPtr = mygatewayBuf;//12.17
 
 	
 //	wtp_id = (unsigned int)vty->index;
@@ -11927,7 +11929,7 @@ DEFUN(set_ap_ipaddr_command_func,
 
 	/*//printf("ipstr:%s ipint:%d ipintstr:%s\n",argv[0],ip,myipPtr);*/
 
-	ret1 = parse_char_ID((char*)argv[1], &mask);
+	/*ret1 = parse_char_ID((char*)argv[1], &mask); //12.17
 	if(ret1 != WID_DBUS_SUCCESS){
             if(ret1 == WID_ILLEGAL_INPUT){
             	vty_out(vty,"<error> illegal input:Input exceeds the maximum value of the parameter type \n");
@@ -11937,11 +11939,19 @@ DEFUN(set_ap_ipaddr_command_func,
 			}
 		return CMD_SUCCESS;
 	}
+
 	if(mask != 8 && mask != 16 &&mask !=24){
-		vty_out(vty,"<error> unknown mask parameters\n");
+		vty_out(vty,"<error> unknown Smask parameters\n");
+		return CMD_SUCCESS;
+	}*/
+	/*//printf("2\n");*/
+	ret1 = WID_Check_Mask_Format((char*)argv[1]);
+	if(ret1 != WID_DBUS_SUCCESS){
+		vty_out(vty,"<error> unknown mask format\n");
 		return CMD_SUCCESS;
 	}
-	/*//printf("2\n");*/
+
+	mask = dcli_ip2ulong((char*)argv[1]);
 
 	ret2 = WID_Check_IP_Format((char*)argv[2]);
 	if(ret2 != WID_DBUS_SUCCESS){
@@ -11950,6 +11960,7 @@ DEFUN(set_ap_ipaddr_command_func,
 	}
 	
 	gateway = dcli_ip2ulong((char*)argv[2]);
+	ret2=  ip_long2str(gateway,&mygatewayPtr);//12.17
 	int localid = 1;
 	int slot_id = HostSlotId;
 	int index = 0;
@@ -11987,7 +11998,7 @@ DEFUN(set_ap_ipaddr_command_func,
 	dbus_message_append_args(query,
 							 DBUS_TYPE_UINT32,&wtp_id,
 							 DBUS_TYPE_UINT32,&ip,
-							 DBUS_TYPE_BYTE,&mask,
+							 DBUS_TYPE_UINT32,&mask,
 							 DBUS_TYPE_UINT32,&gateway,
 							 DBUS_TYPE_INVALID);
 
@@ -12006,13 +12017,12 @@ DEFUN(set_ap_ipaddr_command_func,
 
 		return CMD_SUCCESS;
 	}
-	
 	dbus_message_iter_init(reply,&iter);
 	dbus_message_iter_get_basic(&iter,&ret);
 
 	if(ret == 0)
 	{
-		vty_out(vty,"set ap ip %s gateway %s successfully\n",argv[0],argv[1]);
+		vty_out(vty,"set ap ip %s gateway %s successfully\n",myipPtr,mygatewayPtr);//12.17
 	}
 	else if(ret == WTP_ID_NOT_EXIST)
 		vty_out(vty,"<error> wtp id does not exist\n");

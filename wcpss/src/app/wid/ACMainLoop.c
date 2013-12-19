@@ -2975,7 +2975,7 @@ void wid_wtp_param_init(int WTPIndex, unsigned char flag)//xiaodawei add flag, 0
 		{
 			//AC_WTP[WTPIndex]->apifinfo.report_switch = 0;
 			AC_WTP[WTPIndex]->apifinfo.eth_num = 1;
-			AC_WTP[WTPIndex]->apifinfo.wifi_num = 1;
+			//AC_WTP[WTPIndex]->apifinfo.wifi_num = 1;//12.17
 			time_t t;
 			time(&t);
 			//for(i=0;i<2;i++)
@@ -2996,7 +2996,7 @@ void wid_wtp_param_init(int WTPIndex, unsigned char flag)//xiaodawei add flag, 0
 		if(AC_WTP[WTPIndex])
 		{
 			AC_WTP[WTPIndex]->apifinfo.eth_num = 1;
-			AC_WTP[WTPIndex]->apifinfo.wifi_num = 1;
+			//AC_WTP[WTPIndex]->apifinfo.wifi_num = 1;//12.17
 			time_t t;
 			time(&t);
 			AC_WTP[WTPIndex]->apifinfo.eth[0].type = 0;

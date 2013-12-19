@@ -47959,14 +47959,16 @@ DBusMessage * wid_dbus_interface_set_ap_ip_gateway(DBusConnection *conn, DBusMes
 	DBusMessageIter	 iter;
 	unsigned int ip,gateway;
 	unsigned int wtpid;
-	unsigned char mask;
+	unsigned int mask;
+	unsigned int fstdns;//12.17
+	unsigned int snddns = 0;//12.17
 	DBusError err;
 	int ret = WID_DBUS_SUCCESS;
 	dbus_error_init(&err);
 	if (!(dbus_message_get_args ( msg, &err,
 								DBUS_TYPE_UINT32,&wtpid,
 								DBUS_TYPE_UINT32,&ip,
-								DBUS_TYPE_BYTE,&mask,
+								DBUS_TYPE_UINT32,&mask,
 								DBUS_TYPE_UINT32,&gateway,
 								DBUS_TYPE_INVALID))){
 
@@ -47978,11 +47980,14 @@ DBusMessage * wid_dbus_interface_set_ap_ip_gateway(DBusConnection *conn, DBusMes
 		}
 		return NULL;
 	}
+	fstdns = gateway;//12.17
+	snddns = gateway;//12.17
 	printf("ip %d gateway %d mask %d\n",ip,gateway,mask);
 	//process the parameter
 	if(AC_WTP[wtpid] != NULL)
 	{
-		ret = wid_radio_set_ip_gateway(wtpid,ip,gateway,mask);
+		/*ret = wid_radio_set_ip_gateway(wtpid,ip,gateway,mask);//12.17*/
+		ret = wid_radio_set_ip_gateway_dns(wtpid,ip,gateway,mask,fstdns,snddns);//12.17
 	}
 	else
 	{
