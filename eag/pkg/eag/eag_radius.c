@@ -836,7 +836,7 @@ radius_auth(eag_radius_t *radius,
 			RADIUS_VENDOR_DTT,
 			RADIUS_ATTR_DTT_FRAMED_IPV6_ADDRESS,
 			0, (uint8_t *)&(appconn->session.user_addr.user_ipv6), sizeof(struct in6_addr));
-
+	#if 0 /* del for ipv6 */
 	len = strlen(appconn->user_agent);
     len = (len > 253)?253:len;
 	if (0 < len) {
@@ -845,7 +845,7 @@ radius_auth(eag_radius_t *radius,
 			RADIUS_ATTR_AUTELAN_USER_AGENT,
 			0, (uint8_t *)appconn->user_agent, len);
 	}
-
+	#endif
 	admin_log_notice("RadiusAccessRequest___UserName:%s,UserIP:%s,UserMAC:%s,ApMAC:%s,SSID:%s,NasIP:%s,PortalIP:%s,RadiusAuthIP:%s,Interface:%s,NasID:%s,Authtype:%s",
 		appconn->session.username, user_ipstr, user_macstr, ap_macstr, appconn->session.essid, 
 		nas_ipstr, portal_ipstr, radius_auth_ipstr, appconn->session.intf, appconn->session.nasid,
