@@ -1765,6 +1765,7 @@ ieee802_1x_receive_auth(struct radius_msg *msg, struct radius_msg *req,
 
 	switch (msg->hdr->code) {
 	case RADIUS_CODE_ACCESS_ACCEPT:
+    	asd_printf(ASD_1X,MSG_DEBUG,"func: %s ,recieve msg RADIUS_CODE_ACCESS_ACCEPT:\n",__func__);
 		//qiuchen add it for Henan Mobile
 		if(gASDLOGDEBUG & BIT(0)){
 			if(sta->rflag && !(sta->logflag&BIT(0))){
@@ -1870,6 +1871,7 @@ ieee802_1x_receive_auth(struct radius_msg *msg, struct radius_msg *req,
 		}
 		break;
 	case RADIUS_CODE_ACCESS_REJECT:
+    	asd_printf(ASD_1X,MSG_DEBUG,"func: %s ,recieve msg RADIUS_CODE_ACCESS_REJECT:\n",__func__);		
 		if(gASDLOGDEBUG & BIT(1)){
 			char error_str[6] = {0};
 			if(sta->reauthflag)
@@ -1903,6 +1905,7 @@ ieee802_1x_receive_auth(struct radius_msg *msg, struct radius_msg *req,
 		}
 		break;
 	case RADIUS_CODE_ACCESS_CHALLENGE:
+    	asd_printf(ASD_1X,MSG_DEBUG,"func: %s ,recieve msg RADIUS_CODE_ACCESS_CHALLENGE:\n",__func__);		
 		//qiuchen add it for Guang Zhou mobile to count the number of radius response (SIM/PEAP)
 		if (ASD_AUTH_TYPE_EAP((unsigned char)ASD_WLAN[wasd->WlanID]->SecurityID) && ASD_EAP_TYPE_SIM_PEAP(sta->eapol_sm))
 			wasd->u.eap_auth.autoauth.auth_resp_cnt++;
