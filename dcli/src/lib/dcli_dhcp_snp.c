@@ -911,7 +911,8 @@ unsigned int dcli_dhcpv6_snp_show_wan_bind_table
 	unsigned int   ifindex = DCLI_DHCP_SNP_INIT_0;
 	//char ifname[IF_NAMESIZE];
 	char *ifname_ep=NULL;
-	char pbuf[16] = {0};
+	static char
+		pbuf[sizeof("ffff:ffff:ffff:ffff:ffff:ffff:255.255.255.255")];
 	DBusConnection *dcli_dbus_connection = NULL;
 	dhcp_snp_reinitDbusConnection(&dcli_dbus_connection, vty);
 	query = dbus_message_new_method_call(
@@ -940,7 +941,7 @@ unsigned int dcli_dhcpv6_snp_show_wan_bind_table
 		vty_out(vty, "DHCP-Snooping is enabled.\n");
 		vty_out(vty, "Type : D--Dynamic , S--Static\n");
 		vty_out(vty, "===============================================================\n");
-		vty_out(vty, "%-4s %-16s %-17s %-8s %-5s %-9s\n",
+		vty_out(vty, "%-4s %-25s %-17s %-8s %-5s %-9s\n",
 					 "Type", "IPv6 Address", "MAC Address", "Lease", "Vlan", "Interface");
 		vty_out(vty, "==== =============== ================= ======== ===== =========\n");
 		vty_out(vty,"total %d\n",record_count);
@@ -1009,7 +1010,7 @@ unsigned int dcli_dhcpv6_snp_show_wan_bind_table
 			dbus_message_iter_get_basic(&iter_struct, &ifname_ep);
 			dbus_message_iter_next(&iter_array);
 			vty_out(vty, "%-4s ", bind_type ? " S" : " D");
-			vty_out(vty, "%-16s ", inet_ntop(AF_INET6, ip_addr, pbuf, sizeof(pbuf)));
+			vty_out(vty, "%-25s ", inet_ntop(AF_INET6, ip_addr, pbuf, sizeof(pbuf)));
 			vty_out(vty, "%02x:%02x:%02x:%02x:%02x:%02x ",
 						macaddr[0], macaddr[1], macaddr[2], macaddr[3], macaddr[4], macaddr[5]);
 			if (0 == bind_type) {	/* dynamic item */

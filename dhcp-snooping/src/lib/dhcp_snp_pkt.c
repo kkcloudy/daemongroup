@@ -126,7 +126,7 @@ unsigned int dhcpv6_snp_get_item_from_pkt
 {
     unsigned char *temp = NULL;
 	int status_g = 0;
-	NPD_DHCPv6_SNP_USER_ITEM_T *item = NULL;
+	NPD_DHCPv6_SNP_TBL_ITEM_T *item = NULL;	
     if ((packet == NULL) || (user == NULL)) {
 		syslog_ax_dhcp_snp_err("dhcp snp get item from pkt error, parameter is null\n");
 		return DHCP_SNP_RETURN_CODE_PARAM_NULL;
@@ -158,6 +158,7 @@ unsigned int dhcpv6_snp_get_item_from_pkt
 				log_debug("DHCPv6 REPLY for CONFIRM : not success");
 			item = (NPD_DHCPv6_SNP_TBL_ITEM_T *)dhcpv6_snp_tbl_item_find(user);
 			if(item){
+				memset(user->ipv6_addr, 0 , 16);
 				memcpy(user->ipv6_addr, item ->ipv6_addr, 16);
 				user->lease_time = item ->lease_time;
 			}
@@ -1669,7 +1670,7 @@ int dhcpv6_snp_notify_to_protal(char* userip, uint8_t *usermac)
 		memcpy(msg.usermac, usermac, ETH_ALEN);
 		msg.family = 6;
 
-		syslog_ax_dhcp_snp_dbg("msg %s %02x:%02x:%02x:%02x:%02x:%02x\n",
+		syslog_ax_dhcp_snp_dbg("msg notify to protal %s %02x:%02x:%02x:%02x:%02x:%02x\n",
 			u128ip2str(msg.addr.user_ipv6.s6_addr), 
 			usermac[0], usermac[1], usermac[2], usermac[3], usermac[4], usermac[5]);
 
@@ -1810,7 +1811,9 @@ int dhcp_snp_u32ip_check
  *********************************************************/
 int check_ipv6_address(char *ipv6_address)
 {
-	char addrptr[16] = {0};
+	//char addrptr[16] = {0};
+	static char
+		addrptr[sizeof("ffff:ffff:ffff:ffff:ffff:ffff:255.255.255.255")];
 	if(NULL == ipv6_address)
 	{
 		return -1;

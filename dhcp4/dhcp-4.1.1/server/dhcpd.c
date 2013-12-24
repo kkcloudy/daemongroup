@@ -1312,7 +1312,7 @@ int dhcpd_interface_setup_hook (struct interface_info *ip, struct iaddr *ia)
 		share = subnet -> shared_network;
 		if (ip -> shared_network &&
 		    ip -> shared_network != share) {
-			log_fatal ("Interface %s matches multiple shared %s",
+			log_error ("Interface %s matches multiple shared %s",
 				   ip -> name, "networks");
 		} else {
 			if (!ip -> shared_network)
