@@ -152,15 +152,17 @@ unsigned int dhcpv6_snp_get_item_from_pkt
 				status_g = 1;
 		}
 		if(temp && status_g){
-			if(0 == temp[1])
+			if(0 == temp[1]){
 				log_debug("DHCPv6 REPLY for :success\n");
-			else
-				log_debug("DHCPv6 REPLY for CONFIRM : not success");
-			item = (NPD_DHCPv6_SNP_TBL_ITEM_T *)dhcpv6_snp_tbl_item_find(user);
-			if(item){
+				item = (NPD_DHCPv6_SNP_TBL_ITEM_T *)dhcpv6_snp_tbl_item_find(user);
+				if(item){
 				memset(user->ipv6_addr, 0 , 16);
 				memcpy(user->ipv6_addr, item ->ipv6_addr, 16);
 				user->lease_time = item ->lease_time;
+				}
+			}else{
+				log_debug("DHCPv6 REPLY for CONFIRM : not success");
+				return DHCP_SNP_RETURN_CODE_ERROR;
 			}
 			return DHCP_SNP_RETURN_CODE_OK;
 		}else if(temp){
@@ -1670,7 +1672,7 @@ int dhcpv6_snp_notify_to_protal(char* userip, uint8_t *usermac)
 		memcpy(msg.usermac, usermac, ETH_ALEN);
 		msg.family = 6;
 
-		syslog_ax_dhcp_snp_dbg("msg notify to protal %s %02x:%02x:%02x:%02x:%02x:%02x\n",
+		syslog_ax_dhcp_snp_dbg("msg notify to protal(ipv6) %s %02x:%02x:%02x:%02x:%02x:%02x\n",
 			u128ip2str(msg.addr.user_ipv6.s6_addr), 
 			usermac[0], usermac[1], usermac[2], usermac[3], usermac[4], usermac[5]);
 
@@ -1746,7 +1748,7 @@ int dhcp_snp_notify_to_protal(uint32_t userip, uint8_t *usermac)
 		memcpy(msg.usermac, usermac, ETH_ALEN);
 		msg.family = 4;
 
-		syslog_ax_dhcp_snp_dbg("msg %d.%d.%d.%d %02x:%02x:%02x:%02x:%02x:%02x\n",
+		syslog_ax_dhcp_snp_dbg("msg to potal(ipv4) %d.%d.%d.%d %02x:%02x:%02x:%02x:%02x:%02x\n",
 			(userip>>24)&0xff, (userip>>16)&0xff, (userip>>8)&0xff, (userip>>0)&0xff, 
 			usermac[0], usermac[1], usermac[2], usermac[3], usermac[4], usermac[5]);
 

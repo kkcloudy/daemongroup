@@ -2682,7 +2682,7 @@ int dhcpv6_snp_add_unresolved_node(struct unresolved_ipv6_table *table)
 		return -1;
 	}
 
-	log_info("add table: bssindex %d vrrid %d %s %s\n", 
+	log_info("add table_ipv6: bssindex %d vrrid %d %s %s\n", 
 		table->bssindex, table->vrrpid,
 		mac2str(table->chaddr), u128ip2str(table->ipv6_addr));
 
@@ -2879,6 +2879,64 @@ int dhcp_snp_del_unresolved_node(struct unresolved_table *table)
 	}
 	return -1;	
 }
+
+
+/******************************************************************************
+ *	dhcp_snp_del_unresolved_ipv6_node()
+ *
+ *	DESCRIPTION:
+ *		delete node from unresolved table.
+ *
+ *	INPUTS:
+ *
+ *	OUTPUTS:
+ *		NULL
+ *
+ *	RETURN VALUE:
+ *		0 - success
+ *		-1 - failed
+ *		
+ *****************************************************************************/
+int dhcpv6_snp_del_unresolved_node(struct unresolved_ipv6_table *table)
+{
+	unsigned int key = 0;
+	struct unresolved_ipv6_table *tmp = NULL;
+	struct unresolved_ipv6_table *deltbl = NULL;		/* delet table */
+
+	if (!table) {
+		log_error("%s: parameter null.\n", __func__);		
+		return -1;
+	}
+	log_info("delete table_ipv6(to asd): bss index %d vrrid %d %s %s %s\n", 
+		table->bssindex, table->vrrpid,
+		(table->local_flag ? "local hansi" : "remote hansi"),
+		mac2str(table->chaddr),	u128ip2str(table->ipv6_addr));
+		
+	key = dhcp_snp_tbl_hash(table->chaddr);
+
+	tmp = g_dhcpv6_snp_unresolved_hash[key];
+	if (!tmp) {
+		return 0;
+	}
+
+	if (!(memcmp(tmp->chaddr, table->chaddr, NPD_DHCP_SNP_MAC_ADD_LEN))) {
+		g_dhcpv6_snp_unresolved_hash[key] = g_dhcpv6_snp_unresolved_hash[key]->next;
+		free(tmp);
+		return 0;
+	}
+
+	while (tmp && tmp->next) {
+		if (!(memcmp(tmp->next->chaddr, table->chaddr, NPD_DHCP_SNP_MAC_ADD_LEN))) {
+			deltbl = tmp->next;
+			tmp->next = deltbl->next;
+			free(deltbl);
+			return 0;
+		}
+		tmp = tmp->next;
+	}
+	return -1;	
+}
+
 
 /******************************************************************************
  *	dhcpv6_snp_asd_table_aging_mechanism()
@@ -3092,7 +3150,7 @@ int dhcpv6_snp_notify_asd(struct unresolved_ipv6_table *table)
 
 	__fill_tablemsg_ipv6(&msg, table);	
 	
-	log_info("msg to asd: bssindex %d vrrid %d %s %s %s\n",
+	log_info("msg to asd(ipv6): bssindex %d vrrid %d %s %s %s\n",
 		table->bssindex, table->vrrpid,
 		(table->local_flag ? "local hansi" : "remote hansi"),
 		mac2str(table->chaddr), u128ip2str(table->ipv6_addr));
@@ -3113,7 +3171,7 @@ int dhcpv6_snp_notify_asd(struct unresolved_ipv6_table *table)
 		return -1;
 	}
 
-	dhcp_snp_del_unresolved_node(table);
+	dhcpv6_snp_del_unresolved_node(table);
 
 	return 0;
 }
@@ -3136,7 +3194,7 @@ int dhcp_snp_notify_asd(struct unresolved_table *table)
 
 	__fill_tablemsg(&msg, table);	
 	
-	log_info("msg to asd: bssindex %d vrrid %d %s %s %s\n",
+	log_info("msg to asd(ipv4): bssindex %d vrrid %d %s %s %s\n",
 		table->bssindex, table->vrrpid,
 		(table->local_flag ? "local hansi" : "remote hansi"),
 		mac2str(table->chaddr), u32ip2str(table->ipaddr));
