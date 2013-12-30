@@ -1537,6 +1537,11 @@ DEFUN(show_packet_statistic_func,
 	  vty_out(vty,"IP packets with SKIP addr = %llu\r\n",  fau64_info.fau_ip_skip_addr);
 	  vty_out(vty,"ICMP packets = %llu\r\n",  fau64_info.fau_ip_icmp);
 	  vty_out(vty,"Capwap ICMP packets = %llu\r\n",  fau64_info.fau_capwap_icmp);
+	  vty_out(vty,"IPV6 packets = %llu\r\n",  fau64_info.fau_ipv6);   												/*add for ipv6*/
+	  vty_out(vty,"Capwap IPV6 packets = %llu\r\n",  fau64_info.fau_capwap_ipv6);   								/*add for ipv6*/
+	  vty_out(vty,"IPV6 not tcpudp packets = %llu\r\n",  fau64_info.fau_ipv6_not_tcpudp);   						/*add for ipv6*/
+	  vty_out(vty,"Capwap IPV6 not tcpudp packets = %llu\r\n",  fau64_info.fau_capwap_ipv6_not_tcpudp);   			/*add for ipv6*/
+	  vty_out(vty,"IPV6 mcast packets = %llu\r\n",  fau64_info.fau_ipv6_mcast);   									/*add for ipv6*/
 	  vty_out(vty,"ip packets with proto error = %llu\r\n",  fau64_info.fau_ip_proto_error);
 	  vty_out(vty,"special tcp hearder = %llu\r\n", fau64_info.fau_spe_tcp_hdr);
 	  vty_out(vty,"special tcp hearder over capwap = %llu\r\n", fau64_info.fau_cw_spe_tcp_hdr);
@@ -1551,9 +1556,12 @@ DEFUN(show_packet_statistic_func,
 	  vty_out(vty,"total capwap 802.11 decap error = %llu\r\n", fau64_info.fau_cw802_11_decap_err);
 	  vty_out(vty,"total capwap 802.3 decap error = %llu\r\n", fau64_info.fau_cw802_3_decap_err);
 	  vty_out(vty,"===========================================================================\n");
-	  vty_out(vty,"ACL HIT packets number = %llu\r\n",  fau64_info.fau_flowtable_hit_packets);
-	  vty_out(vty,"total acl lookup counter = %llu\r\n", fau64_info.fau_acl_lookup);
-	  vty_out(vty,"total acl setup and regist packets counter = %llu\r\n", fau64_info.fau_acl_reg);
+	  vty_out(vty,"ACL HIT packets number(V4 + V6) = %llu\r\n",  fau64_info.fau_flowtable_hit_packets);
+	  vty_out(vty,"total acl lookup counter(V4 + V6) = %llu\r\n", fau64_info.fau_acl_lookup);
+	  vty_out(vty,"total acl setup and register packets counter(V4 + V6) = %llu\r\n", fau64_info.fau_acl_reg);
+	  vty_out(vty,"IPV6 ACL HIT packets number = %llu\r\n",  fau64_info.fau_ipv6_flowtable_hit_packets);  			/*add for ipv6*/
+	  vty_out(vty,"IPV6 total acl lookup counter = %llu\r\n", fau64_info.fau_ipv6_acl_lookup);            			/*add for ipv6*/
+	  vty_out(vty,"IPV6 total acl setup and register packets counter = %llu\r\n", fau64_info.fau_ipv6_acl_reg);   	/*add for ipv6*/
 	  vty_out(vty,"===========================================================================\n");
 	  vty_out(vty,"total ethernet to linux packets = %llu\r\n", fau64_info.fau_enet_to_linux_packets);
 	  vty_out(vty,"total ethernet to linux bytes = %llu\r\n", fau64_info.fau_enet_to_linux_bytes);
