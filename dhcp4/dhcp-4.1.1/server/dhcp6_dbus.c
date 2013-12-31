@@ -4069,9 +4069,15 @@ dhcp6_dbus_set_interface_pool
 				op_ret = 2;
 				log_error("pool has already binded interface\n");
 			}
-			else {	
+			else if(poolNode->headsubnet 
+			&& poolNode->headsubnet->ifhead 
+			&& (!strcmp(ifname, poolNode->headsubnet->ifhead->interface_name))){
 				dhcp6_dbus_interface_unbind_pool(subNode, ifname);
 				poolNode->refcount--;
+			}
+			else {	
+				log_error("interface bounded by pool %s and interface %s don't match\n", poolName, ifname);
+				op_ret = 2;
 			}
 		}
 		else {
