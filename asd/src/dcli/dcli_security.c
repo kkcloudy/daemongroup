@@ -1,4 +1,9 @@
 #ifdef _D_WCPSS_
+
+#ifndef HAVE_SOCKLEN_T
+#define HAVE_SOCKLEN_T
+#endif
+
 #include <string.h>
 #include <stdlib.h>
 #include <sys/types.h>
@@ -13,7 +18,8 @@
 
 #include "command.h"
 
-#include "../dcli_main.h"
+//#include "../dcli_main.h" wangchao changed
+#include "dcli_main.h"
 #include "dcli_wlan.h"
 #include "wcpss/waw.h"
 #include "wcpss/wid/WID.h"
@@ -11274,7 +11280,7 @@ int dcli_security_show_running_config(struct vty* vty) {
 
 }
 
-
+#if 0  /**wangchao moved to dcli_wireless_main.c****/
 char *dcli_hansi_security_show_running_config(int localid, int slot_id,int index) {	
 	char *showStr = NULL,*cursor = NULL,ch = 0,tmpBuf[SHOWRUN_PERLINE_SIZE] = {0};
 	DBusMessage *query, *reply;
@@ -11333,6 +11339,10 @@ char *dcli_hansi_security_show_running_config(int localid, int slot_id,int index
 	}
 
 }
+
+#endif
+
+#if 0
 //qiuchen
 char *dcli_auth_type_to_text(unsigned int type)
 {
@@ -11350,7 +11360,7 @@ char *dcli_auth_type_to_text(unsigned int type)
 			return "UNKOWN AUTH TYPE";
 	}
 }
-
+#endif
 
 void dcli_security_init(void) {
 	install_element(VIEW_NODE,&show_security_cmd);

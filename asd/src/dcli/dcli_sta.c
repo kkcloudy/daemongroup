@@ -1,4 +1,9 @@
 #ifdef _D_WCPSS_
+
+#ifndef HAVE_SOCKLEN_T
+#define HAVE_SOCKLEN_T
+#endif
+
 #include <string.h>
 #include <zebra.h>
 #include <dbus/dbus.h>
@@ -8,7 +13,8 @@
 #include "command.h"
 #include "dcli_ac.h"
 #include "dcli_acl.h"
-#include "../dcli_main.h"
+//#include "../dcli_main.h" wangchao changed
+#include "dcli_main.h"
 #include "dcli_wlan.h"
 #include "dcli_sta.h"
 
@@ -20716,7 +20722,7 @@ DEFUN(set_asd_1x_radius_format_cmd_func,
 
 
 
-
+#if 0 /*****wangchao moved those to dcli_wireless_main.c*****/
 int dcli_wlan_list_show_running_config(struct vty*vty) 
 {	
 	char *showStr = NULL,*cursor = NULL,ch = 0,tmpBuf[SHOWRUN_PERLINE_SIZE] = {0};
@@ -20780,7 +20786,10 @@ int dcli_wlan_list_show_running_config(struct vty*vty)
 		return 1;	
 	}
 }
+#endif
 
+
+#if 0
 int dcli_wtp_list_show_running_config(struct vty*vty) 
 {	
 	char *showStr = NULL,*cursor = NULL,ch = 0,tmpBuf[SHOWRUN_PERLINE_SIZE] = {0};
@@ -20848,7 +20857,9 @@ int dcli_wtp_list_show_running_config(struct vty*vty)
 	}
 
 }
+#endif
 
+#if 0
 int dcli_bss_list_show_running_config(struct vty*vty) 
 {	
 	char *showStr = NULL,*cursor = NULL,ch = 0,tmpBuf[SHOWRUN_PERLINE_SIZE] = {0};
@@ -20913,7 +20924,9 @@ int dcli_bss_list_show_running_config(struct vty*vty)
 	}
 
 }
+#endif
 
+#if 0
 
 char* dcli_hansi_wlan_list_show_running_config(int localid, int slot_id,int index) 
 {	
@@ -20973,6 +20986,9 @@ char* dcli_hansi_wlan_list_show_running_config(int localid, int slot_id,int inde
 	}
 }
 
+#endif
+
+#if 0
 char* dcli_hansi_wtp_list_show_running_config(int localid, int slot_id,int index) 
 {	
 	char *showStr = NULL,*cursor = NULL,ch = 0,tmpBuf[SHOWRUN_PERLINE_SIZE] = {0};
@@ -21034,7 +21050,9 @@ char* dcli_hansi_wtp_list_show_running_config(int localid, int slot_id,int index
 	}
 
 }
+#endif
 
+#if 0
 char *dcli_hansi_bss_list_show_running_config(int localid, int slot_id, int index) 
 {	
 	char *showStr = NULL,*cursor = NULL,ch = 0,tmpBuf[SHOWRUN_PERLINE_SIZE] = {0};
@@ -21093,7 +21111,7 @@ char *dcli_hansi_bss_list_show_running_config(int localid, int slot_id, int inde
 	}
 
 }
-
+#endif
 
 void dcli_sta_init(void) {
 	install_element(VIEW_NODE,&show_sta_cmd);

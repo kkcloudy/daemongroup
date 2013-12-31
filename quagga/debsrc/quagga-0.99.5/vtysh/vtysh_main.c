@@ -213,6 +213,8 @@ vtysh_rl_gets ()
 void *dcli_dl_handle;
 void *dcli_dl_handle_sem;
 void *dcli_dl_handle_npd;
+void *dcli_dl_handle_asd;
+void *dcli_dl_handle_wid;
 
 void (*dcli_send_dbus_signal_func)(const char* name,const char* str);
 void (*dcli_sync_file)(const char* file, int syn_to_blk) = NULL;
@@ -241,6 +243,13 @@ int dl_dcli_init(boot_flag)
   void (*dcli_igmp_snp_element_init_func)(void);
   void (*dcli_mld_snp_element_init_func)(void);
   void (*dcli_mirror_init_func)(void);
+  /*************asd****************/
+  void (*dcli_sta_init_func)(void);
+  void (*dcli_security_init_func)(void);
+  /************wid******************/
+  void (*dcli_wtp_init_func)(void);
+  void (*dcli_radio_init_func)(void);
+  void (*dcli_ac_init_func)(void);
 
   char *error;
   int temp=boot_flag;
@@ -462,6 +471,85 @@ int dl_dcli_init(boot_flag)
   }
 #endif
 
+/*******************dcli_asd****************************/
+
+  if (dcli_dl_handle_asd = dlopen("libdcli_asd.so",RTLD_NOW)){
+  
+  	  dcli_sta_init_func = dlsym(dcli_dl_handle_asd,"dcli_sta_init");
+      if ((error = dlerror()) != NULL) {
+           printf(" Run without dcli_sta_init be called.\n");
+           fputs(error,stderr);
+          //EXIT(1);
+      } 
+      else 
+      {
+           (*dcli_sta_init_func)(); 
+      }
+
+	  
+  	  dcli_security_init_func = dlsym(dcli_dl_handle_asd,"dcli_security_init");
+      if ((error = dlerror()) != NULL) {
+           printf(" Run without dcli_security_init be called.\n");
+           fputs(error,stderr);
+          //EXIT(1);
+      } 
+      else 
+      {
+           (*dcli_security_init_func)(); 
+      }
+  	
+  }
+  else 
+  {
+    fputs (dlerror(),stderr);
+    printf(" Run without /opt/lib/libdcli_sta.so\n");
+  }
+
+
+/*******************dcli_wid************************************/
+
+   if (dcli_dl_handle_wid = dlopen("libdcli_wid.so",RTLD_NOW)){
+   
+   	  dcli_wtp_init_func = dlsym(dcli_dl_handle_wid,"dcli_wtp_init");
+     if ((error = dlerror()) != NULL) {
+          printf(" Run without dcli_wtp_init be called.\n");
+          fputs(error,stderr);
+         //EXIT(1);
+     } 
+     else 
+     {
+          (*dcli_wtp_init_func)(); 
+     }
+   
+   
+     dcli_radio_init_func = dlsym(dcli_dl_handle_wid,"dcli_radio_init");
+     if ((error = dlerror()) != NULL) {
+          printf(" Run without dcli_radio_init be called.\n");
+          fputs(error,stderr);
+         //EXIT(1);
+     } 
+     else 
+     {
+          (*dcli_radio_init_func)(); 
+     }
+
+     dcli_ac_init_func = dlsym(dcli_dl_handle_wid,"dcli_ac_init");
+     if ((error = dlerror()) != NULL) {
+          printf(" Run without dcli_ac_init be called.\n");
+          fputs(error,stderr);
+         //EXIT(1);
+     } 
+     else 
+     {
+          (*dcli_ac_init_func)(); 
+     }
+   	
+   }
+   else 
+   {
+      fputs (dlerror(),stderr);
+      printf(" Run without /opt/lib/libdcli_wid.so\n");
+   }
 
   vtysh_send_dbus_signal_init();
   

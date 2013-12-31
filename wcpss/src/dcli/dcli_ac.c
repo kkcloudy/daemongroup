@@ -33,6 +33,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *  			
 *******************************************************************************/
 
+#ifndef HAVE_SOCKLEN_T
+#define HAVE_SOCKLEN_T
+#endif
+
 #ifdef _D_WCPSS_
 #include <string.h>
 #include <zebra.h>
@@ -43,8 +47,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "vtysh/vtysh.h"
 #include <sys/wait.h>
 
-#include "../dcli_main.h"
-#include "../dcli_dhcp.h"
+#include "dcli_main.h"
+#include "dcli_dhcp.h"
 #include "wcpss/waw.h"
 #include "wcpss/wid/WID.h"
 #include "dbus/wcpss/ACDbusDef1.h"

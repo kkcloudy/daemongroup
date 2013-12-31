@@ -5,7 +5,7 @@
 #include <dbus/dbus.h>
 #include "command.h"
 
-#include "../dcli_main.h"
+#include "dcli_main.h"/**wangchao changed**/
 
 #include "dcli_radio.h"
 #include "wcpss/waw.h"
@@ -36,6 +36,8 @@ typedef enum{
 #define MCS_LIST_SPLIT_COMMA  ','	
 #define MCS_LIST_SPLIT_BAR 	  '-'	
 /*fengwenchao copy end*/
+/***wangchao moved to dcli_wireless_main.c****/
+#if 0
 struct cmd_node radio_node =
 {
 	RADIO_NODE,
@@ -53,7 +55,7 @@ struct cmd_node local_hansi_radio_node =
 	"%s(local-hansi-radio %d-%d-%d-%d)# ",
 	1
 };
-
+#endif
 /*zhaoruijia,20100908, 给解析函数增加 最大数值判断和非法输入报错 ,start*/
 
 int parse_short_ID(char* str,unsigned short* ID){
@@ -25117,8 +25119,10 @@ void dcli_radio_init(void) {
 
 
 /********************************************************************************/
+#if 0 /**wangchao moved to dcli_wireless_main.c**/
 	install_node(&hansi_radio_node,NULL,"HANSI_RADIO_NODE");
 	install_default(HANSI_RADIO_NODE);
+#endif	
 	/*------------------------------HANSI_NODE-----------------------------*/
 	install_element(HANSI_NODE,&show_radio_cmd);	
 	install_element(HANSI_NODE,&show_radio_list_cmd);
@@ -25229,8 +25233,11 @@ void dcli_radio_init(void) {
 	install_element(HANSI_RADIO_NODE, &set_wsm_sta_info_reportswitch_cmd);
 	install_element(HANSI_RADIO_NODE, &set_wsm_sta_info_reportinterval_cmd);
     /********************************************************************************/
+/****wangchao moved to dcli_wireless.c****/
+#if 0
 	install_node(&local_hansi_radio_node,NULL,"LOCAL_HANSI_RADIO_NODE");
 	install_default(LOCAL_HANSI_RADIO_NODE);
+#endif	
 	/*------------------------------HANSI_NODE-----------------------------*/
 	install_element(LOCAL_HANSI_NODE,&show_radio_cmd);	
 	install_element(LOCAL_HANSI_NODE,&show_radio_list_cmd);

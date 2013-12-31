@@ -1,4 +1,9 @@
 #ifdef _D_WCPSS_
+
+#ifndef HAVE_SOCKLEN_T
+#define HAVE_SOCKLEN_T
+#endif
+
 #include <string.h>
 #include <zebra.h>
 #include <dbus/dbus.h>
@@ -9,7 +14,7 @@
 #include "command.h"
 #include "vtysh/vtysh.h"
 #include "memory.h"
-#include "../dcli_main.h"
+#include "dcli_main.h"
 #include "wcpss/waw.h"
 #include "wcpss/wid/WID.h"
 #include "wid_ac.h"
@@ -95,6 +100,7 @@ extern int boot_flag;
  *		NULL
  *		
  **********************************************************************************/
+ #if 0 /**wangchao moved to dcli_wireless_main.c**/
 void ReInitDbusConnection(DBusConnection **dcli_dbus_connection,int slot_id,int distributFag){
 	//DBusConnection *dcli_dbus_connection = NULL;
 	if((distributFag)&&(dbus_connection_dcli[slot_id])&&(NULL != dbus_connection_dcli[slot_id]->dcli_dbus_connection))
@@ -105,7 +111,7 @@ void ReInitDbusConnection(DBusConnection **dcli_dbus_connection,int slot_id,int 
 		vty_out(vty,"the slot %d has not connected\n", slot_id);
 	}
 }
-
+#endif
 void dcli_wtp_trace_script_exec
 (
 	char * ipAddr,
@@ -476,6 +482,7 @@ void DcliWInit(){
 	return;
 }
 
+#if 0 /**wangchao moved to dcli_wireless_main.c**/
 struct cmd_node wtp_node =
 {
 	WTP_NODE,
@@ -494,6 +501,7 @@ struct cmd_node local_hansi_wtp_node =
 	"%s(local_hansi-wtp %d-%d-%d)# ",
 	1
 };
+#endif
 
 struct cmd_node wtp_node1 =
 {
@@ -41881,8 +41889,8 @@ int dcli_wtp_show_running_config_start(struct vty*vty) {
 	return res1||res2;	
 }
 
-
-#if 1
+/********wangchao removed*********/
+#if 0
 int dcli_wtp_show_running_config_end(struct vty*vty) {	
 	char *showStr = NULL,*cursor = NULL,ch = 0,tmpBuf[SHOWRUN_PERLINE_SIZE] = {0};
 	DBusMessage *query, *reply;
@@ -41958,6 +41966,8 @@ int dcli_wtp_show_running_config_end(struct vty*vty) {
 }
 #endif
 
+/***wangchao delete**/
+#if 0
 char* dcli_hansi_wtp_show_running_config_start(int localid ,int slot_id,int index) {	
 	char *showStr = NULL,*cursor = NULL,ch = 0,tmpBuf[SHOWRUN_PERLINE_SIZE] = {0};
 	DBusMessage *query, *reply;
@@ -42018,7 +42028,10 @@ char* dcli_hansi_wtp_show_running_config_start(int localid ,int slot_id,int inde
 	
 	return NULL;	
 }
+#endif
 
+
+#if 0 /*wangchao delete*/
 char* dcli_hansi_wtp_show_running_config_end(int localid, int slot_id,int index) {	
 	char *showStr = NULL,*cursor = NULL,ch = 0,tmpBuf[SHOWRUN_PERLINE_SIZE] = {0};
 	DBusMessage *query, *reply;
@@ -42079,7 +42092,7 @@ char* dcli_hansi_wtp_show_running_config_end(int localid, int slot_id,int index)
 
 }
 
-
+#endif
 
 void dcli_wtp_init(void) {
 #if 0
@@ -42604,11 +42617,13 @@ void dcli_wtp_init(void) {
   
 	
 	/************************************************HANSI_NODE**************************************************/
+/***wangchao delete,and moved to dcli_wireless_main.c***/
+#if 0
 			install_node(&hansi_wtp_node,NULL,"HANSI_WTP_NODE");
 			install_default(HANSI_WTP_NODE);
 			install_node(&local_hansi_wtp_node,NULL,"LOCAL_HANSI_WTP_NODE");
 			install_default(LOCAL_HANSI_WTP_NODE);
-			
+#endif		
 			install_element(HANSI_NODE,&show_wtp_model_infor_cmd);
 			install_element(HANSI_NODE,&show_wtp_cmd);
 			install_element(HANSI_NODE,&show_wtp_list_cmd);

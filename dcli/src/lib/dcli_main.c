@@ -76,10 +76,11 @@ extern "C"
 #include "wid_ac.h"
 #include "wid_wtp.h"
 #include "dcli_wireless/dcli_wlan.h"
-#include "dcli_wireless/dcli_radio.h"
-#include "dcli_wireless/dcli_sta.h"
+/**wangchao changed***/
+//#include "dcli_wireless/dcli_radio.h"
+//#include "dcli_wireless/dcli_sta.h" wangchao delete
 #include "dcli_wireless/dcli_wsm.h"
-#include "dcli_wireless/dcli_security.h"
+//#include "dcli_wireless/dcli_security.h"
 #include "dcli_wireless/dcli_license.h"
 #include "dcli_iu.h"
 #include "dcli_hnb.h"
@@ -633,11 +634,12 @@ void dcli_init(void)
 #endif	
 #endif
 #if (defined _D_WCPSS_ || defined _D_CC_)
-	dcli_wtp_init();
-	dcli_radio_init();
-	dcli_security_init();
-	dcli_sta_init();
-	dcli_ac_init();
+    dcli_wireless_init();
+	//dcli_wtp_init();
+	//dcli_radio_init();
+	//dcli_security_init();
+	//dcli_sta_init();
+	//dcli_ac_init();
 	dcli_wsm_init();
 	dcli_wqos_init();
 	dcli_ebr_init();
