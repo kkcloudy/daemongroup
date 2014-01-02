@@ -14288,10 +14288,27 @@ DBusMessage *asd_dbus_show_sta_v2(DBusConnection *conn, DBusMessage *msg, void *
 												 DBUS_TYPE_UINT32,
 												 &(stainfo->sta->ip_addr));	
 			for(i = 0;i<4;i++)
-				dbus_message_iter_append_basic (&iter,
-													 DBUS_TYPE_UINT32,
-													 &(stainfo->sta->ip6_addr.s6_addr32[i]));
+			{	
+				dbus_message_iter_append_basic (&iter, DBUS_TYPE_UINT32, &(stainfo->sta->ip6_addr.s6_addr32[i]));
+			}
 
+           	/* add for ipv6 radius rfc3162, 2013-12-31 */
+			for(i = 0;i<4;i++)
+			{	
+				dbus_message_iter_append_basic (&iter, DBUS_TYPE_UINT32, &(stainfo->sta->Framed_IPv6_Prefix.s6_addr32[i]));
+			}
+
+			for(i = 0;i<4;i++)
+			{	
+				dbus_message_iter_append_basic (&iter, DBUS_TYPE_UINT32, &(stainfo->sta->Login_IPv6_Host.s6_addr32[i]));
+			}
+
+			dbus_message_iter_append_basic (&iter,
+												 DBUS_TYPE_UINT64,
+												 &(stainfo->sta->Framed_Interface_Id));	
+			dbus_message_iter_append_basic (&iter,
+												 DBUS_TYPE_BYTE,
+												 &(stainfo->sta->IPv6_Prefix_length));	
 
 		}else{
 			ret = ASD_STA_NOT_EXIST;

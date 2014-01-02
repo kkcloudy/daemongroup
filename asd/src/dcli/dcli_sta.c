@@ -8403,6 +8403,35 @@ DEFUN(show_sta_v2_cmd_func,
 		    }
     	}
 
+		vty_out(vty,"Framed_IPv6_Prefix: ");
+		for (m = 0; m < 8; m++)
+    	{   
+			if(m==7)
+			{
+                vty_out(vty,"%x/%d\n",sta->Framed_IPv6_Prefix.s6_addr16[m],sta->IPv6_Prefix_length);
+			}
+		    else
+		    {
+                vty_out(vty,"%x:",sta->Framed_IPv6_Prefix.s6_addr16[m]);
+		    }
+    	}
+		
+		vty_out(vty,"Login_IPv6_Host: ");
+		for (m = 0; m < 8; m++)
+    	{   
+			if(m==7)
+			{
+                vty_out(vty,"%x\n",sta->Login_IPv6_Host.s6_addr16[m]);
+			}
+		    else
+		    {
+                vty_out(vty,"%x:",sta->Login_IPv6_Host.s6_addr16[m]);
+		    }
+    	}
+		
+		vty_out(vty,"Framed_Interface_Id: ");
+        vty_out(vty,"%llu\n",sta->Framed_Interface_Id);
+
 		vty_out(vty,"==============================================================================\n");
 		dcli_free_sta_v2(sta);
 	}else if (ret == ASD_STA_NOT_EXIST)

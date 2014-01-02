@@ -4286,7 +4286,13 @@ void STA_OP(TableMsg *msg){
                             asd_print_ipv6(sta->ip6_addr);
         					memcpy(sta->arpifname,msg->u.STA.arpifname,sizeof(msg->u.STA.arpifname));
         					asd_printf(ASD_DEFAULT,MSG_DEBUG,"sta->arpifname: %s\n",sta->arpifname);
-
+							
+                        	/* add for ipv6 radius rfc3162, 2013-12-31 */
+                            sta->Framed_IPv6_Prefix = msg->u.STA.Framed_IPv6_Prefix;
+                            sta->Login_IPv6_Host = msg->u.STA.Login_IPv6_Host;
+                            sta->Framed_Interface_Id = msg->u.STA.Framed_Interface_Id;
+                            sta->IPv6_Prefix_length = msg->u.STA.IPv6_Prefix_length;
+							
         					if(is_secondary == 0)
         						bak_update_sta_ip_info(wasd, sta);
         					

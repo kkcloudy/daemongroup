@@ -457,7 +457,11 @@ struct dcli_sta_info_v2
 	int essidlen;
 	int wtp_name_len;
 	struct in_addr ip_addr;     /* add sta ip info for ipv6 protal */
-	struct in6_addr ip6_addr;	
+	struct in6_addr ip6_addr;
+	struct in6_addr Framed_IPv6_Prefix;     /* add for ipv6 radius rfc3162, 2013-12-31 */
+    struct in6_addr Login_IPv6_Host;		
+    unsigned long long Framed_Interface_Id;
+	unsigned char IPv6_Prefix_length;	
 };
 
 struct dcli_sta_base_info

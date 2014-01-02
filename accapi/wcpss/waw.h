@@ -417,6 +417,11 @@ typedef struct {
   	  unsigned int vrrid;
 	  unsigned int local;
 	struct in6_addr ipv6Address;
+	struct in6_addr Framed_IPv6_Prefix;     /* add for ipv6 radius rfc3162, 2013-12-31 */
+    struct in6_addr Login_IPv6_Host;		
+    unsigned long long Framed_Interface_Id;
+	unsigned char IPv6_Prefix_length;
+	
 	unsigned int delay;
 	unsigned char sta_reason;
 	unsigned short   sub_reason;

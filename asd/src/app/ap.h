@@ -75,6 +75,11 @@ struct sta_info {
 	char *in_addr;	//ht add,081025
 	struct in_addr ip_addr;
 	struct in6_addr ip6_addr;
+	struct in6_addr Framed_IPv6_Prefix;     /* add for ipv6 radius rfc3162, 2013-12-31 */
+    struct in6_addr Login_IPv6_Host;		
+    u64 Framed_Interface_Id;
+	u8 IPv6_Prefix_length;
+	
 	u64 rxbytes;
 	u64 txbytes;
 	u64 pre_rxbytes;
