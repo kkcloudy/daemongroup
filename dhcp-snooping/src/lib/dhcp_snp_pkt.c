@@ -156,12 +156,12 @@ unsigned int dhcpv6_snp_get_item_from_pkt
 				log_debug("DHCPv6 REPLY for :success\n");
 				item = (NPD_DHCPv6_SNP_TBL_ITEM_T *)dhcpv6_snp_tbl_item_find(user);
 				if(item){
-				memset(user->ipv6_addr, 0 , 16);
-				memcpy(user->ipv6_addr, item ->ipv6_addr, 16);
-				user->lease_time = item ->lease_time;
+					memset(user->ipv6_addr, 0 , 16);
+					memcpy(user->ipv6_addr, item ->ipv6_addr, 16);
+					user->lease_time = item ->lease_time;
 				}
 			}else{
-				log_debug("DHCPv6 REPLY for CONFIRM : not success");
+				log_debug("DHCPv6 REPLY for status code : %d\n",temp[1]);
 				return DHCP_SNP_RETURN_CODE_ERROR;
 			}
 			return DHCP_SNP_RETURN_CODE_OK;
@@ -175,7 +175,7 @@ unsigned int dhcpv6_snp_get_item_from_pkt
 			return DHCP_SNP_RETURN_CODE_ERROR;
 		}
     }
-	else if(NPD_DHCPv6_TYPE_CONFIRM == type) {
+	else if(NPD_DHCPv6_TYPE_CONFIRM == type || NPD_DHCPv6_TYPE_RELEASE == type) {
 		temp = (unsigned char *)dhcpv6_snp_get_option(packet, DHCPv6_IANA);
 		memcpy(user->ipv6_addr, temp+16 ,16);
 		user->lease_time = NPD_DHCP_SNP_REQUEST_TIMEOUT; 
