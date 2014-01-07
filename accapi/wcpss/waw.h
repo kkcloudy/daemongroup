@@ -610,7 +610,12 @@ typedef struct{
 }Check_Sta;
 typedef struct {
   	unsigned int ipaddr;
-	struct in6_addr ip6_addr;	
+	struct in6_addr ip6_addr;
+	struct in6_addr Framed_IPv6_Prefix;     /* add for ipv6 radius rfc3162, 2013-12-31 */
+    struct in6_addr Login_IPv6_Host;		
+    unsigned long long Framed_Interface_Id;
+	unsigned char IPv6_Prefix_length;
+	
 	unsigned char addr[MAC_LEN];
 	unsigned char wtp_mac[MAC_LEN];
 	unsigned char wtp_name[WTP_NAME_LEN];

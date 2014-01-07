@@ -3067,6 +3067,12 @@ int AsdStaInfoToEAG(struct asd_data *wasd, struct sta_info *sta, Operate op){
 	msg.STA.radio_id = wasd->Radio_G_ID;
 	msg.STA.ipaddr = sta->ipaddr;
 	msg.STA.ip6_addr = sta->ip6_addr;	/* add ipv6 add of sta */
+                        	
+    msg.STA.Login_IPv6_Host = sta->Login_IPv6_Host; /* add for ipv6 radius rfc3162, 2013-12-31 */
+    msg.STA.Framed_Interface_Id = sta->Framed_Interface_Id;							
+    msg.STA.Framed_IPv6_Prefix = sta->Framed_IPv6_Prefix;
+    msg.STA.IPv6_Prefix_length = sta->IPv6_Prefix_length;
+	
 	msg.STA.wlan_id = wasd->WlanID;
 	msg.STA.auth_type = sta->security_type;
 	msg.STA.reason = sta->acct_terminate_cause;
