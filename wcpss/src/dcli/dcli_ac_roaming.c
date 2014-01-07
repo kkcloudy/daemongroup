@@ -5,7 +5,7 @@
 
 #include "command.h"
 
-#include "../dcli_main.h"
+#include "dcli_main.h"
 #include "dcli_wlan.h"
 #include "wcpss/waw.h"
 #include "wcpss/wid/WID.h"

@@ -28,6 +28,8 @@ struct cmd_node ebr_node =
 	EBR_NODE,
 	"%s(config-ebr %d)# "
 };
+
+#if 0
 struct cmd_node hansi_ebr_node =
 {
 	HANSI_EBR_NODE,
@@ -40,6 +42,8 @@ struct cmd_node local_hansi_ebr_node =
 	"%s(local-hansi-ebr %d-%d-%d)# ",
 	1
 };
+#endif
+
 struct cmd_node ebr_node1 =
 {
 	EBR_NODE1,
@@ -2709,7 +2713,7 @@ int dcli_ebr_show_running_config_end(struct vty* vty) {
 	}
 
 }
-
+#if 0 /**wangchao moved to dcli_wireless_main.c****/
 char* dcli_hansi_ebr_show_running_config_start(int localid, int slot_id ,int index) {	
 	char *showStr = NULL,*cursor = NULL,ch = 0,tmpBuf[SHOWRUN_PERLINE_SIZE] = {0};
 	DBusMessage *query, *reply;
@@ -2825,7 +2829,7 @@ char *dcli_hansi_ebr_show_running_config_end(int localid,int slot_id,int index) 
 	}
 
 }
-
+#endif
 
 void dcli_ebr_init(void) {
 	install_element(VIEW_NODE,&wid_show_ethereal_bridge_cmd);												/*a2*/
@@ -2860,12 +2864,13 @@ void dcli_ebr_init(void) {
 	install_element(EBR_NODE,&ebr_set_multicast_fdb_learn_cmd);
 #endif
 	/********************************************************************************/
+#if 0 /**wangchao moved to dcli_wireless_main.c**/
 		install_node(&hansi_ebr_node,NULL,"HANSI_EBR_NODE");		
 		install_default(HANSI_EBR_NODE);
 
 		install_node(&local_hansi_ebr_node,NULL,"LOCAL_HANSI_EBR_NODE");		
 		install_default(LOCAL_HANSI_EBR_NODE);
-		
+#endif 		
 		/*------------------------------HANSI_NODE-----------------------------*/
 		install_element(HANSI_NODE,&wid_show_ethereal_bridge_list_cmd);	
 		install_element(HANSI_NODE,&wid_show_ethereal_bridge_cmd); 

@@ -7,8 +7,8 @@
 #include "vtysh/vtysh.h"
 #include <sys/wait.h>
 
-#include "../dcli_main.h"
-#include "../dcli_vrrp.h"
+#include "dcli_main.h"
+#include "dcli_vrrp.h"
 #include "wcpss/waw.h"
 #include "dbus/wcpss/ACDbusDef1.h"
 #include "wbmd/wbmdpub.h"

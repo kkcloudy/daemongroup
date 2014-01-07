@@ -5,7 +5,7 @@
 
 #include "command.h"
 
-#include "../dcli_main.h"
+#include "dcli_main.h"
 #include "dcli_ac_ip_list.h"
 #include "wcpss/waw.h"
 #include "wcpss/wid/WID.h"
@@ -1798,6 +1798,8 @@ int dcli_ac_ip_list_show_running_config(struct vty*vty) {
 	return 0;	
 }
 
+/**wangchao move to dcli_wireless_main.c***/
+#if 0
 char* dcli_hansi_ac_ip_list_show_running_config(int localid, int slot_id, int index) {	
 	char *showStr = NULL,*cursor = NULL,ch = 0,tmpBuf[SHOWRUN_PERLINE_SIZE] = {0};
 	DBusMessage *query, *reply;
@@ -1855,6 +1857,7 @@ char* dcli_hansi_ac_ip_list_show_running_config(int localid, int slot_id, int in
 	return NULL;	
 }
 
+#endif
 
 void dcli_aciplist_init(void) {
 	install_element(VIEW_NODE,&show_ac_ip_list_one_cmd);

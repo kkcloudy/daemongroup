@@ -51,7 +51,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "dcli_user.h"
 #include "image.h"
 #include "dcli_apache.h"
-#include "dcli_wireless/dcli_bsd.h"
+//#include "dcli_wireless/dcli_bsd.h"//wangchao changed
+#include "dcli_bsd.h"
 #include "bsd/bsdpub.h"
 #include <pwd.h>
 #include <grp.h>

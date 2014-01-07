@@ -89,11 +89,9 @@ EX_OBJ = $(CGI_PATH)ws_usrinfo.o
 #EX_OBJ = $(SNMP_PATH)ws_snmpd_engine.o $(SNMP_PATH)ws_snmpd_trap_common.o $(EAG_PATH)ws_user_manage.o $(CGI_PATH)ws_public.o $(EAG_PATH)ws_eag_conf.o \
 #	$(CGI_PATH)ws_log_conf.o $(EAG_PATH)ws_conf_engine.o $(CGI_PATH)ws_firewall.o $(CGI_PATH)ws_tcrule.o  
 
-DCLI_WIRELESS_OBJS =$(DCLI_WIRELESS_PATH)dcli_ac_ip_list.o $(DCLI_WIRELESS_PATH)dcli_ap_group.o $(DCLI_WIRELESS_PATH)dcli_ebr.o $(DCLI_WIRELESS_PATH)dcli_license.o \
-			    $(DCLI_WIRELESS_PATH)dcli_wlan.o $(DCLI_WIRELESS_PATH)dcli_wqos.o \
-				$(DCLI_WIRELESS_PATH)dcli_wsm.o  $(DCLI_WIRELESS_PATH)dcli_ac_roaming.o\
-				$(DCLI_WIRELESS_PATH)dcli_local_hansi.o $(DCLI_WIRELESS_PATH)dcli_bsd.o $(DCLI_WIRELESS_PATH)dcli_wbridge.o $(DCLI_WIRELESS_PATH)dcli_wireless_main.o
-# $(DCLI_WIRELESS_PATH)dcli_ac.o $(DCLI_WIRELESS_PATH)dcli_sta.o $(DCLI_WIRELESS_PATH)dcli_security.o $(DCLI_WIRELESS_PATH)dcli_wtp.o $(DCLI_WIRELESS_PATH)dcli_radio.o
+DCLI_WIRELESS_OBJS = $(DCLI_WIRELESS_PATH)dcli_wqos.o  $(DCLI_WIRELESS_PATH)dcli_wsm.o  \
+				$(DCLI_WIRELESS_PATH)dcli_local_hansi.o   $(DCLI_WIRELESS_PATH)dcli_wireless_main.o
+# $(DCLI_WIRELESS_PATH)dcli_wbridge.o $(DCLI_WIRELESS_PATH)dcli_license.o $(DCLI_WIRELESS_PATH)dcli_bsd.o \ $(DCLI_WIRELESS_PATH)dcli_ap_group.o $(DCLI_WIRELESS_PATH)dcli_ac_roaming.o $(DCLI_WIRELESS_PATH)dcli_ac_ip_list.o\ $(DCLI_WIRELESS_PATH)dcli_wlan.o $(DCLI_WIRELESS_PATH)dcli_ebr.o $(DCLI_WIRELESS_PATH)dcli_ac.o $(DCLI_WIRELESS_PATH)dcli_sta.o\ $(DCLI_WIRELESS_PATH)dcli_security.o $(DCLI_WIRELESS_PATH)dcli_wtp.o $(DCLI_WIRELESS_PATH)dcli_radio.o
 
 
 #DCLI_OBJS = dcli_main.o dcli_acl.o dcli_qos.o dcli_stp.o dcli_vlan.o dcli_trunk.o dcli_dynamic_trunk.o \

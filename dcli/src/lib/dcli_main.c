@@ -75,17 +75,17 @@ extern "C"
 #include "dbus/hmd/HmdDbusPath.h"
 #include "wid_ac.h"
 #include "wid_wtp.h"
-#include "dcli_wireless/dcli_wlan.h"
+//#include "dcli_wireless/dcli_wlan.h"
 /**wangchao changed***/
 //#include "dcli_wireless/dcli_radio.h"
 //#include "dcli_wireless/dcli_sta.h" wangchao delete
 #include "dcli_wireless/dcli_wsm.h"
 //#include "dcli_wireless/dcli_security.h"
-#include "dcli_wireless/dcli_license.h"
+//#include "dcli_wireless/dcli_license.h"
 #include "dcli_iu.h"
 #include "dcli_hnb.h"
 //#include "dcli_sem.h"
-#include "dcli_wireless/dcli_bsd.h"
+//#include "dcli_wireless/dcli_bsd.h"
 #include "dcli_strict_access.h"
 #include "dcli_pppoe.h"
 
@@ -618,12 +618,12 @@ void dcli_init(void)
 
 #if 1
 #ifdef _D_WCPSS_
-	dcli_ap_group_init();
+	//dcli_ap_group_init();
 #endif	
 #if (defined _D_WCPSS_ || defined _D_CC_)
 	/*DcliWInit();*/
-	dcli_license_init();
-	dcli_wlan_init();
+	//dcli_license_init();
+	//dcli_wlan_init();
 #endif	
 #endif
 #if 0
@@ -642,11 +642,11 @@ void dcli_init(void)
 	//dcli_ac_init();
 	dcli_wsm_init();
 	dcli_wqos_init();
-	dcli_ebr_init();
-	dcli_aciplist_init();
+	//dcli_ebr_init();
+	//dcli_aciplist_init();
 #endif	
 #ifdef _D_WCPSS_
-	dcli_ac_group_init();
+	//dcli_ac_group_init();
 #endif
 #if 0
     dcli_global_ethports_init();
@@ -676,7 +676,7 @@ void dcli_init(void)
 	dcli_user_init(); 
 	dcli_boot_init();
 	dcli_sys_manage_init();
-	dcli_bsd_init();
+	//dcli_bsd_init();
 	dcli_dnscache_init();
 	dcli_dhcp_snp_element_init();
 	dcli_captive_init();

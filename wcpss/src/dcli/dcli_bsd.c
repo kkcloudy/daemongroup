@@ -9,7 +9,7 @@
 #include "bsd/bsdpub.h"
 #include "dbus/bsd/BsdDbusPath.h"
 #include "dbus/bsd/BsdDbusDef.h"
-#include "../dcli_main.h"
+#include "dcli_main.h"
 #include "dcli_bsd.h"
 #include "bsd_bsd.h"
 
@@ -44,7 +44,7 @@ static int parse_int_ID(char* str,unsigned int* ID){
 }
 
 
-
+#if 0/**wangchao moved to dcli_wireless_main.c***/
 /** 
   * @brief  generate return string with return value
   * @param  iReturnValue   
@@ -118,7 +118,7 @@ char * dcli_bsd_get_return_string(int iReturnValue, char pReturnStr[BSD_COMMAND_
     }
     return (char*)pReturnStr;
 }
-
+#endif
 
 /** 
   * @brief  seperate ip address & file path from full path

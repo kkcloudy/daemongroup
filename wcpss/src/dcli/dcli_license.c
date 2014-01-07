@@ -4,7 +4,7 @@
 #include <dbus/dbus.h>
 #include <sys/wait.h>
 #include "command.h"
-#include "../dcli_main.h"
+#include "dcli_main.h"
 #include "wcpss/waw.h"
 #include "wcpss/wid/WID.h"
 #include "dbus/wcpss/ACDbusDef1.h"
@@ -12,7 +12,7 @@
 #include "dbus/hmd/HmdDbusDef.h"
 #include "wid_ac.h"
 #include "dcli_wtp.h"
-#include "../dcli_vrrp.h"
+#include "dcli_vrrp.h"
 #include "hmd/hmdpub.h"
 
 struct LicenseData{

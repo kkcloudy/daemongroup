@@ -219,348 +219,446 @@ void *dcli_dl_handle_wid;
 void (*dcli_send_dbus_signal_func)(const char* name,const char* str);
 void (*dcli_sync_file)(const char* file, int syn_to_blk) = NULL;
 int (*dcli_get_rpa_broadcast_mask)(struct vty *vty, int slot_id, unsigned int *mask, int *is_default_mask) = NULL;
+
+
 #ifdef DISTRIBUT
 int dl_dcli_init(boot_flag)
 {
-	
-  void (*dcli_init_func)(int); /*dcli_main*/
-/***************sem*************/ 
-  void (*dcli_sem_init_func)(void);
-  void (*dcli_fpga_init_func)(void);
-/***************npd*************/
-  void (*dcli_diag_init_func)(void);
-  void (*dcli_vlan_init_func)(void);
-  void (*dcli_trunk_init_func)(void);
-  void (*dcli_dynamic_trunk_init_func)(void);
-  void (*dcli_fdb_init_func)(void);
-  void (*dcli_qos_init_func)(void);
-  void (*dcli_acl_init_func)(void);
-  void (*dcli_stp_element_init_func)(void);
-  void (*dcli_drv_routesyn_init_func)(void);
-  void (*dcli_tunnel_init_func)(void);
-  void (*dcli_pvlan_init_func)(void);
-  void (*dcli_prot_vlan_element_init_func)(void);
-  void (*dcli_igmp_snp_element_init_func)(void);
-  void (*dcli_mld_snp_element_init_func)(void);
-  void (*dcli_mirror_init_func)(void);
-  /*************asd****************/
-  void (*dcli_sta_init_func)(void);
-  void (*dcli_security_init_func)(void);
-  /************wid******************/
-  void (*dcli_wtp_init_func)(void);
-  void (*dcli_radio_init_func)(void);
-  void (*dcli_ac_init_func)(void);
 
-  char *error;
-  int temp=boot_flag;
+	void (*dcli_init_func)(int); /*dcli_main*/
+	/***************sem*************/ 
+	void (*dcli_sem_init_func)(void);
+	void (*dcli_fpga_init_func)(void);
+	/***************npd*************/
+	void (*dcli_diag_init_func)(void);
+	void (*dcli_vlan_init_func)(void);
+	void (*dcli_trunk_init_func)(void);
+	void (*dcli_dynamic_trunk_init_func)(void);
+	void (*dcli_fdb_init_func)(void);
+	void (*dcli_qos_init_func)(void);
+	void (*dcli_acl_init_func)(void);
+	void (*dcli_stp_element_init_func)(void);
+	void (*dcli_drv_routesyn_init_func)(void);
+	void (*dcli_tunnel_init_func)(void);
+	void (*dcli_pvlan_init_func)(void);
+	void (*dcli_prot_vlan_element_init_func)(void);
+	void (*dcli_igmp_snp_element_init_func)(void);
+	void (*dcli_mld_snp_element_init_func)(void);
+	void (*dcli_mirror_init_func)(void);
+	/*************asd****************/
+	void (*dcli_sta_init_func)(void);
+	void (*dcli_security_init_func)(void);
+	/************wid******************/
+	void (*dcli_wtp_init_func)(void);
+	void (*dcli_radio_init_func)(void);
+	void (*dcli_ac_init_func)(void);
+	void (*dcli_wlan_init_func)(void);
+	void (*dcli_ebr_init_func)(void); 
+	void (*dcli_aciplist_init_func)(void);
+	void (*dcli_ac_group_init_func)(void);
+    void (*dcli_ap_group_init_func)(void);
+	void (*dcli_bsd_init_func)(void);
+	void (*dcli_license_init_func)(void);
+	void (*dcli_wbridge_init_func)(void);
 
-/*****dcli_main*************/
-  dcli_dl_handle = dlopen("libdcli.so.0",RTLD_NOW);
-  if (!dcli_dl_handle) {
-      fputs (dlerror(),stderr);
-      printf(" Run without /opt/lib/libdcli.so.0\n");
-      EXIT(1);
-      
-  }
-  dcli_init_func = dlsym(dcli_dl_handle,"dcli_init");
-  if ((error = dlerror()) != NULL) {
-      printf(" Run without dcli_init be called.\n");
-      fputs(error,stderr);
-      EXIT(1);
-  }
-  (*dcli_init_func)(temp);
+	char *error;
+	int temp=boot_flag;
+
+/***********************dcli_main********************/
+	dcli_dl_handle = dlopen("libdcli.so.0",RTLD_NOW);
+	if (!dcli_dl_handle) {
+		fputs (dlerror(),stderr);
+		printf(" Run without /opt/lib/libdcli.so.0\n");
+		EXIT(1);
+
+	}
+	dcli_init_func = dlsym(dcli_dl_handle,"dcli_init");
+	if ((error = dlerror()) != NULL) {
+		printf(" Run without dcli_init be called.\n");
+		fputs(error,stderr);
+		EXIT(1);
+	}
+	(*dcli_init_func)(temp);
 
 
-/*******dcli_sem: wangchao add************/
+/***********************dcli_sem**********************/
 
-   if (dcli_dl_handle_sem = dlopen("libdcli_sem.so",RTLD_NOW)){
+	if (dcli_dl_handle_sem = dlopen("libdcli_sem.so",RTLD_NOW)){
 
 		dcli_sem_init_func = dlsym(dcli_dl_handle_sem,"dcli_sem_init");
-        if ((error = dlerror()) != NULL) {
-             printf(" Run without dcli_sem_init be called.\n");
-             fputs(error,stderr);
-            //EXIT(1);
-        } 
+		if ((error = dlerror()) != NULL) {
+			printf(" Run without dcli_sem_init be called.\n");
+			fputs(error,stderr);
+			//EXIT(1);
+		} 
 		else 
-        {
-             (*dcli_sem_init_func)(); 
+		{
+			(*dcli_sem_init_func)(); 
 		}
 
-        dcli_fpga_init_func = dlsym(dcli_dl_handle_sem,"dcli_fpga_init");
-        if ((error = dlerror()) != NULL) {
-            printf(" Run without dcli_fpga_init be called.\n");
-            fputs(error,stderr);
-            //EXIT(1);
-        } 
-        else 
-        {
-            (*dcli_fpga_init_func)(); 
-        }
-		
-  }
-  else 
-  {
-      fputs (dlerror(),stderr);
-      printf(" Run without /opt/lib/libdcli_sem.so\n");
-  }
+		dcli_fpga_init_func = dlsym(dcli_dl_handle_sem,"dcli_fpga_init");
+		if ((error = dlerror()) != NULL) {
+			printf(" Run without dcli_fpga_init be called.\n");
+			fputs(error,stderr);
+			//EXIT(1);
+		} 
+		else 
+		{
+			(*dcli_fpga_init_func)(); 
+		}
+
+	}
+	else 
+	{
+		fputs (dlerror(),stderr);
+		printf(" Run without /opt/lib/libdcli_sem.so\n");
+	}
 #ifndef _D_NANOCELL_
 /*******************dcli_npd****************************/
-   if (dcli_dl_handle_npd = dlopen("libdcli_npd.so",RTLD_NOW)){
+	if (dcli_dl_handle_npd = dlopen("libdcli_npd.so",RTLD_NOW)){
 
 		dcli_diag_init_func = dlsym(dcli_dl_handle_npd,"dcli_diag_init");
-        if ((error = dlerror()) != NULL) 
+		if ((error = dlerror()) != NULL) 
 		{
-             printf(" Run without dcli_diag_init be called.\n");
-             fputs(error,stderr);
-        } 
+			printf(" Run without dcli_diag_init be called.\n");
+			fputs(error,stderr);
+		} 
 		else 
-        {
-             (*dcli_diag_init_func)(); 
+		{
+			(*dcli_diag_init_func)(); 
 		}
 
-		
-        dcli_vlan_init_func = dlsym(dcli_dl_handle_npd,"dcli_vlan_init");
-        if ((error = dlerror()) != NULL) {
-            printf(" Run without dcli_vlan_init be called.\n");
-            fputs(error,stderr);
-        } 
-        else 
-        {
-            (*dcli_vlan_init_func)(); 
-        }
+
+		dcli_vlan_init_func = dlsym(dcli_dl_handle_npd,"dcli_vlan_init");
+		if ((error = dlerror()) != NULL) {
+			printf(" Run without dcli_vlan_init be called.\n");
+			fputs(error,stderr);
+		} 
+		else 
+		{
+			(*dcli_vlan_init_func)(); 
+		}
 
 
-        dcli_trunk_init_func = dlsym(dcli_dl_handle_npd,"dcli_trunk_init");
-        if ((error = dlerror()) != NULL) {
-            printf(" Run without dcli_trunk_init be called.\n");
-            fputs(error,stderr);
-        } 
-        else 
-        {
-            (*dcli_trunk_init_func)(); 
-        }
+		dcli_trunk_init_func = dlsym(dcli_dl_handle_npd,"dcli_trunk_init");
+		if ((error = dlerror()) != NULL) {
+			printf(" Run without dcli_trunk_init be called.\n");
+			fputs(error,stderr);
+		} 
+		else 
+		{
+			(*dcli_trunk_init_func)(); 
+		}
 
 
-        dcli_dynamic_trunk_init_func = dlsym(dcli_dl_handle_npd,"dcli_dynamic_trunk_init");
-        if ((error = dlerror()) != NULL) {
-            printf(" Run without dcli_dynamic_trunk_init be called.\n");
-            fputs(error,stderr);
-        } 
-        else 
-        {
-            (*dcli_dynamic_trunk_init_func)(); 
-        }
+		dcli_dynamic_trunk_init_func = dlsym(dcli_dl_handle_npd,"dcli_dynamic_trunk_init");
+		if ((error = dlerror()) != NULL) {
+			printf(" Run without dcli_dynamic_trunk_init be called.\n");
+			fputs(error,stderr);
+		} 
+		else 
+		{
+			(*dcli_dynamic_trunk_init_func)(); 
+		}
 
-        dcli_fdb_init_func = dlsym(dcli_dl_handle_npd,"dcli_fdb_init");
-        if ((error = dlerror()) != NULL) {
-            printf(" Run without dcli_fdb_init be called.\n");
-            fputs(error,stderr);
-        } 
-        else 
-        {
-            (*dcli_fdb_init_func)(); 
-        }
+		dcli_fdb_init_func = dlsym(dcli_dl_handle_npd,"dcli_fdb_init");
+		if ((error = dlerror()) != NULL) {
+			printf(" Run without dcli_fdb_init be called.\n");
+			fputs(error,stderr);
+		} 
+		else 
+		{
+			(*dcli_fdb_init_func)(); 
+		}
 
-        dcli_qos_init_func = dlsym(dcli_dl_handle_npd,"dcli_qos_init");
-        if ((error = dlerror()) != NULL) {
-            printf(" Run without dcli_qos_init be called.\n");
-            fputs(error,stderr);
-        } 
-        else 
-        {
-            (*dcli_qos_init_func)(); 
-        }
+		dcli_qos_init_func = dlsym(dcli_dl_handle_npd,"dcli_qos_init");
+		if ((error = dlerror()) != NULL) {
+			printf(" Run without dcli_qos_init be called.\n");
+			fputs(error,stderr);
+		} 
+		else 
+		{
+			(*dcli_qos_init_func)(); 
+		}
 
-        dcli_acl_init_func = dlsym(dcli_dl_handle_npd,"dcli_acl_init");
-        if ((error = dlerror()) != NULL) {
-            printf(" Run without dcli_acl_init be called.\n");
-            fputs(error,stderr);
-        } 
-        else 
-        {
-            (*dcli_acl_init_func)(); 
-        }
+		dcli_acl_init_func = dlsym(dcli_dl_handle_npd,"dcli_acl_init");
+		if ((error = dlerror()) != NULL) {
+			printf(" Run without dcli_acl_init be called.\n");
+			fputs(error,stderr);
+		} 
+		else 
+		{
+			(*dcli_acl_init_func)(); 
+		}
 
-        dcli_stp_element_init_func = dlsym(dcli_dl_handle_npd,"dcli_stp_element_init");
-        if ((error = dlerror()) != NULL) {
-            printf(" Run without dcli_stp_element_init be called.\n");
-            fputs(error,stderr);
-        } 
-        else 
-        {
-            (*dcli_stp_element_init_func)(); 
-        }
+		dcli_stp_element_init_func = dlsym(dcli_dl_handle_npd,"dcli_stp_element_init");
+		if ((error = dlerror()) != NULL) {
+			printf(" Run without dcli_stp_element_init be called.\n");
+			fputs(error,stderr);
+		} 
+		else 
+		{
+			(*dcli_stp_element_init_func)(); 
+		}
 
-        dcli_drv_routesyn_init_func = dlsym(dcli_dl_handle_npd,"dcli_drv_routesyn_init");
-        if ((error = dlerror()) != NULL) {
-            printf(" Run without dcli_drv_routesyn_init_func be called.\n");
-            fputs(error,stderr);
-        } 
-        else 
-        {
-            (*dcli_drv_routesyn_init_func)(); 
-        }
+		dcli_drv_routesyn_init_func = dlsym(dcli_dl_handle_npd,"dcli_drv_routesyn_init");
+		if ((error = dlerror()) != NULL) {
+			printf(" Run without dcli_drv_routesyn_init_func be called.\n");
+			fputs(error,stderr);
+		} 
+		else 
+		{
+			(*dcli_drv_routesyn_init_func)(); 
+		}
 
 		dcli_tunnel_init_func = dlsym(dcli_dl_handle_npd,"dcli_tunnel_init");
-        if ((error = dlerror()) != NULL) {
-            printf(" Run without dcli_tunnel_init_func be called.\n");
-            fputs(error,stderr);
-        } 
-        else 
-        {
-            (*dcli_tunnel_init_func)(); 
-        }
+		if ((error = dlerror()) != NULL) {
+			printf(" Run without dcli_tunnel_init_func be called.\n");
+			fputs(error,stderr);
+		} 
+		else 
+		{
+			(*dcli_tunnel_init_func)(); 
+		}
 
 		dcli_pvlan_init_func = dlsym(dcli_dl_handle_npd,"dcli_pvlan_init");
-        if ((error = dlerror()) != NULL) {
-            printf(" Run without dcli_pvlan_init_func be called.\n");
-            fputs(error,stderr);
-        } 
-        else 
-        {
-            (*dcli_pvlan_init_func)(); 
-        }
+		if ((error = dlerror()) != NULL) {
+			printf(" Run without dcli_pvlan_init_func be called.\n");
+			fputs(error,stderr);
+		} 
+		else 
+		{
+			(*dcli_pvlan_init_func)(); 
+		}
 
 		dcli_prot_vlan_element_init_func = dlsym(dcli_dl_handle_npd,"dcli_prot_vlan_element_init");
-        if ((error = dlerror()) != NULL) {
-            printf(" Run without dcli_prot_vlan_element_init_func be called.\n");
-            fputs(error,stderr);
-        } 
-        else 
-        {
-            (*dcli_prot_vlan_element_init_func)(); 
-        }	
+		if ((error = dlerror()) != NULL) {
+			printf(" Run without dcli_prot_vlan_element_init_func be called.\n");
+			fputs(error,stderr);
+		} 
+		else 
+		{
+			(*dcli_prot_vlan_element_init_func)(); 
+		}	
 
 		dcli_igmp_snp_element_init_func = dlsym(dcli_dl_handle_npd,"dcli_igmp_snp_element_init");
-        if ((error = dlerror()) != NULL) {
-            printf(" Run without dcli_igmp_snp_element_init_func be called.\n");
-            fputs(error,stderr);
-        } 
-        else 
-        {
-            (*dcli_igmp_snp_element_init_func)(); 
-        }	
+		if ((error = dlerror()) != NULL) {
+			printf(" Run without dcli_igmp_snp_element_init_func be called.\n");
+			fputs(error,stderr);
+		} 
+		else 
+		{
+			(*dcli_igmp_snp_element_init_func)(); 
+		}	
 
 
 		dcli_mld_snp_element_init_func = dlsym(dcli_dl_handle_npd,"dcli_mld_snp_element_init");
-        if ((error = dlerror()) != NULL) {
-            printf(" Run without dcli_mld_snp_element_init_func be called.\n");
-            fputs(error,stderr);
-        } 
-        else 
-        {
-            (*dcli_mld_snp_element_init_func)(); 
-        }	
+		if ((error = dlerror()) != NULL) {
+			printf(" Run without dcli_mld_snp_element_init_func be called.\n");
+			fputs(error,stderr);
+		} 
+		else 
+		{
+			(*dcli_mld_snp_element_init_func)(); 
+		}	
 
 		dcli_mirror_init_func = dlsym(dcli_dl_handle_npd,"dcli_mirror_init");
-        if ((error = dlerror()) != NULL) {
-            printf(" Run without dcli_mirror_init_func be called.\n");
-            fputs(error,stderr);
-        } 
-        else 
-        {
-            (*dcli_mirror_init_func)(); 
-        }
-		
-        	
-  }
-  else 
-  {
-      fputs (dlerror(),stderr);
-      printf(" Run without /opt/lib/libdcli_npd.so\n");
-  }
+		if ((error = dlerror()) != NULL) {
+			printf(" Run without dcli_mirror_init_func be called.\n");
+			fputs(error,stderr);
+		} 
+		else 
+		{
+			(*dcli_mirror_init_func)(); 
+		}
+
+
+	}
+	else 
+	{
+		fputs (dlerror(),stderr);
+		printf(" Run without /opt/lib/libdcli_npd.so\n");
+	}
 #endif
 
 /*******************dcli_asd****************************/
 
-  if (dcli_dl_handle_asd = dlopen("libdcli_asd.so",RTLD_NOW)){
-  
-  	  dcli_sta_init_func = dlsym(dcli_dl_handle_asd,"dcli_sta_init");
-      if ((error = dlerror()) != NULL) {
-           printf(" Run without dcli_sta_init be called.\n");
-           fputs(error,stderr);
-          //EXIT(1);
-      } 
-      else 
-      {
-           (*dcli_sta_init_func)(); 
-      }
+	if (dcli_dl_handle_asd = dlopen("libdcli_asd.so",RTLD_NOW)){
 
-	  
-  	  dcli_security_init_func = dlsym(dcli_dl_handle_asd,"dcli_security_init");
-      if ((error = dlerror()) != NULL) {
-           printf(" Run without dcli_security_init be called.\n");
-           fputs(error,stderr);
-          //EXIT(1);
-      } 
-      else 
-      {
-           (*dcli_security_init_func)(); 
-      }
-  	
-  }
-  else 
-  {
-    fputs (dlerror(),stderr);
-    printf(" Run without /opt/lib/libdcli_sta.so\n");
-  }
+		dcli_sta_init_func = dlsym(dcli_dl_handle_asd,"dcli_sta_init");
+		if ((error = dlerror()) != NULL) {
+			printf(" Run without dcli_sta_init be called.\n");
+			fputs(error,stderr);
+			//EXIT(1);
+		} 
+		else 
+		{
+			(*dcli_sta_init_func)(); 
+		}
+
+
+		dcli_security_init_func = dlsym(dcli_dl_handle_asd,"dcli_security_init");
+		if ((error = dlerror()) != NULL) {
+			printf(" Run without dcli_security_init be called.\n");
+			fputs(error,stderr);
+			//EXIT(1);
+		} 
+		else 
+		{
+			(*dcli_security_init_func)(); 
+		}
+
+	}
+	else 
+	{
+		fputs (dlerror(),stderr);
+		printf(" Run without /opt/lib/libdcli_sta.so\n");
+	}
 
 
 /*******************dcli_wid************************************/
 
-   if (dcli_dl_handle_wid = dlopen("libdcli_wid.so",RTLD_NOW)){
-   
-   	  dcli_wtp_init_func = dlsym(dcli_dl_handle_wid,"dcli_wtp_init");
-     if ((error = dlerror()) != NULL) {
-          printf(" Run without dcli_wtp_init be called.\n");
-          fputs(error,stderr);
-         //EXIT(1);
-     } 
-     else 
-     {
-          (*dcli_wtp_init_func)(); 
-     }
-   
-   
-     dcli_radio_init_func = dlsym(dcli_dl_handle_wid,"dcli_radio_init");
-     if ((error = dlerror()) != NULL) {
-          printf(" Run without dcli_radio_init be called.\n");
-          fputs(error,stderr);
-         //EXIT(1);
-     } 
-     else 
-     {
-          (*dcli_radio_init_func)(); 
-     }
+	if (dcli_dl_handle_wid = dlopen("libdcli_wid.so",RTLD_NOW)){
 
-     dcli_ac_init_func = dlsym(dcli_dl_handle_wid,"dcli_ac_init");
-     if ((error = dlerror()) != NULL) {
-          printf(" Run without dcli_ac_init be called.\n");
-          fputs(error,stderr);
-         //EXIT(1);
-     } 
-     else 
-     {
-          (*dcli_ac_init_func)(); 
-     }
-   	
-   }
-   else 
-   {
-      fputs (dlerror(),stderr);
-      printf(" Run without /opt/lib/libdcli_wid.so\n");
-   }
+		dcli_wtp_init_func = dlsym(dcli_dl_handle_wid,"dcli_wtp_init");
+		if ((error = dlerror()) != NULL) {
+			printf(" Run without dcli_wtp_init be called.\n");
+			fputs(error,stderr);
+		} 
+		else 
+		{
+			(*dcli_wtp_init_func)(); 
+		}
 
-  vtysh_send_dbus_signal_init();
-  
-  vtysh_sync_file_init();
 
-  vtysh_get_rpa_broadcast_mask_init();
+		dcli_radio_init_func = dlsym(dcli_dl_handle_wid,"dcli_radio_init");
+		if ((error = dlerror()) != NULL) {
+			printf(" Run without dcli_radio_init be called.\n");
+			fputs(error,stderr);
+		} 
+		else 
+		{
+			(*dcli_radio_init_func)(); 
+		}
 
-  /*
-   * The handle should not be closed before we do not use libdcli any more.
-   */
-  return 1;
+		dcli_ac_init_func = dlsym(dcli_dl_handle_wid,"dcli_ac_init");
+		if ((error = dlerror()) != NULL) {
+			printf(" Run without dcli_ac_init be called.\n");
+			fputs(error,stderr);
+		} 
+		else 
+		{
+			(*dcli_ac_init_func)(); 
+		}
+
+
+		dcli_wlan_init_func = dlsym(dcli_dl_handle_wid,"dcli_wlan_init");
+		if ((error = dlerror()) != NULL) {
+			printf(" Run without dcli_wlan_init be called.\n");
+			fputs(error,stderr);
+		} 
+		else 
+		{
+			(*dcli_wlan_init_func)(); 
+		}
+
+		dcli_ebr_init_func = dlsym(dcli_dl_handle_wid,"dcli_ebr_init");
+		if ((error = dlerror()) != NULL) {
+			printf(" Run without dcli_ebr_init be called.\n");
+			fputs(error,stderr);
+		} 
+		else 
+		{
+			(*dcli_ebr_init_func)(); 
+		}
+
+		dcli_aciplist_init_func = dlsym(dcli_dl_handle_wid,"dcli_aciplist_init");
+		if ((error = dlerror()) != NULL) {
+			printf(" Run without dcli_aciplist_init be called.\n");
+			fputs(error,stderr);
+		} 
+		else 
+		{
+			(*dcli_aciplist_init_func)(); 
+		}
+
+		dcli_ac_group_init_func = dlsym(dcli_dl_handle_wid,"dcli_ac_group_init");
+		if ((error = dlerror()) != NULL) {
+			printf(" Run without dcli_ac_group_init be called.\n");
+			fputs(error,stderr);
+		} 
+		else 
+		{
+			(*dcli_ac_group_init_func)(); 
+		}
+
+		dcli_ap_group_init_func = dlsym(dcli_dl_handle_wid,"dcli_ap_group_init");
+		if ((error = dlerror()) != NULL) {
+			printf(" Run without dcli_ap_group_init be called.\n");
+			fputs(error,stderr);
+		} 
+		else 
+		{
+			(*dcli_ap_group_init_func)(); 
+		}
+
+		dcli_ebr_init_func = dlsym(dcli_dl_handle_wid,"dcli_ebr_init");
+		if ((error = dlerror()) != NULL) {
+			printf(" Run without dcli_ebr_init be called.\n");
+			fputs(error,stderr);
+		} 
+		else 
+		{
+			(*dcli_ebr_init_func)(); 
+		}
+		
+		dcli_bsd_init_func = dlsym(dcli_dl_handle_wid,"dcli_bsd_init");
+		if ((error = dlerror()) != NULL) {
+			printf(" Run without dcli_bsd_init be called.\n");
+			fputs(error,stderr);
+		} 
+		else 
+		{
+			(*dcli_bsd_init_func)(); 
+		}		
+
+		dcli_license_init_func = dlsym(dcli_dl_handle_wid,"dcli_license_init");
+		if ((error = dlerror()) != NULL) {
+			printf(" Run without dcli_license_init be called.\n");
+			fputs(error,stderr);
+		} 
+		else 
+		{
+			(*dcli_license_init_func)(); 
+		}	
+
+		dcli_wbridge_init_func = dlsym(dcli_dl_handle_wid,"dcli_wbridge_init");
+		if ((error = dlerror()) != NULL) {
+			printf(" Run without dcli_wbridge_init be called.\n");
+			fputs(error,stderr);
+		} 
+		else 
+		{
+			(*dcli_wbridge_init_func)(); 
+		}	
+				
+
+	}
+	else 
+	{
+		fputs (dlerror(),stderr);
+		printf(" Run without /opt/lib/libdcli_wid.so\n");
+	}
+	vtysh_send_dbus_signal_init();
+
+	vtysh_sync_file_init();
+
+	vtysh_get_rpa_broadcast_mask_init();
+
+	/*
+	 * The handle should not be closed before we do not use libdcli any more.
+	 */
+	return 1;
 
 }
 #else

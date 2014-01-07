@@ -5,7 +5,7 @@
 
 #include "command.h"
 
-#include "../dcli_main.h"
+#include "dcli_main.h"
 #include "dcli_ap_group.h"
 #include "wcpss/waw.h"
 #include "wcpss/wid/WID.h"
@@ -17,6 +17,8 @@ struct cmd_node ap_group_node =
 	AP_GROUP_NODE,
 	"%s(ap-group %d)# "
 };
+
+#if 0 /**wangchao moved to dcli_wireless_main.c**/
 struct cmd_node hansi_ap_group_node =
 {
 	HANSI_AP_GROUP_NODE,
@@ -29,11 +31,7 @@ struct cmd_node local_hansi_ap_group_node =
 	"%s(local-hansi-ap-group %d-%d-%d)# ",
 	1
 };
-struct cmd_node ap_group_wtp_node =
-{
-	AP_GROUP_WTP_NODE,
-	"%s(ap-group-wtp %d)# "
-};
+
 struct cmd_node hansi_ap_group_wtp_node =
 {
 	HANSI_AP_GROUP_WTP_NODE,
@@ -46,11 +44,7 @@ struct cmd_node local_hansi_ap_group_wtp_node =
 	"%s(local-hansi-ap-group-wtp %d-%d-%d)# ",
 	1
 };
-struct cmd_node ap_group_radio_node =
-{
-	AP_GROUP_RADIO_NODE,
-	"%s(ap-group-radio %d)# "
-};
+
 struct cmd_node hansi_ap_group_radio_node =
 {
 	HANSI_AP_GROUP_RADIO_NODE,
@@ -62,6 +56,19 @@ struct cmd_node local_hansi_ap_group_radio_node =
 	LOCAL_HANSI_AP_GROUP_RADIO_NODE,
 	"%s(local-hansi-ap-group-radio %d-%d-%d)# ",
 	1
+};
+#endif
+
+struct cmd_node ap_group_wtp_node =
+{
+	AP_GROUP_WTP_NODE,
+	"%s(ap-group-wtp %d)# "
+};
+
+struct cmd_node ap_group_radio_node =
+{
+	AP_GROUP_RADIO_NODE,
+	"%s(ap-group-radio %d)# "
 };
 
 
@@ -742,6 +749,8 @@ void dcli_ap_group_init(void) {
 	//printf("222222GGGG####\n");
 //	install_default(AP_GROUP_NODE);	
 
+
+#if 0 /**wangchao moved to dcli_wireless_main.c****/
 	install_node(&hansi_ap_group_node,NULL,"HANSI_AP_GROUP_NODE");
 	install_default(HANSI_AP_GROUP_NODE);
 
@@ -765,6 +774,8 @@ void dcli_ap_group_init(void) {
 
 	install_node(&local_hansi_ap_group_radio_node,NULL,"LOCAL_HANSI_AP_GROUP_RADIO_NODE");
 	install_default(LOCAL_HANSI_AP_GROUP_RADIO_NODE);
+#endif
+	
 #if 0	
 	install_element(CONFIG_NODE,&create_ap_group_cmd);	
 	install_element(CONFIG_NODE,&del_ap_group_cmd);

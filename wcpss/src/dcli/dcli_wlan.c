@@ -6,8 +6,8 @@
 
 #include "command.h"
 
-#include "../dcli_main.h"
-#include "../dcli_dhcp.h"
+#include "dcli_main.h"
+#include "dcli_dhcp.h"
 #include "dcli_wlan.h"
 #include "wid_wlan.h"
 #include "wcpss/waw.h"
@@ -24,6 +24,7 @@ struct cmd_node wlan_node =
 	1
 };
 
+#if 0
 struct cmd_node hansi_wlan_node =
 {
 	HANSI_WLAN_NODE,
@@ -37,6 +38,7 @@ struct cmd_node local_hansi_wlan_node =
 	"%s(local-hansi-wlan %d-%d-%d)# ",
 	1
 };
+#endif
 /*fengwenchao add end*/
 struct cmd_node wlan_node1 =
 {
@@ -9874,7 +9876,7 @@ int dcli_wlan_show_running_config_end(struct vty*vty) {
   return 0;
 }
 
-
+#if 0/***wangchao moved to dcli_wireledss_main.c****/
 char* dcli_hansi_wlan_show_running_config_start(int localid ,int slot_id,int index) {	
 	char *showStr = NULL,*cursor = NULL,ch = 0,tmpBuf[SHOWRUN_PERLINE_SIZE] = {0};
 	DBusMessage *query, *reply;
@@ -9996,7 +9998,7 @@ int dcli_hansi_wlan_show_running_config_end(int localid, int slot_id,int index) 
   return NULL;
 }
 
-
+#endif 
 
 void dcli_wlan_init(void) {
 	install_element(VIEW_NODE,&show_wlan_cmd);
@@ -10101,9 +10103,10 @@ void dcli_wlan_init(void) {
 	
 	
 	/*****************************************HANSI_NODE****************************************************/
-	install_node(&hansi_wlan_node,NULL,"HANSI_WLAN_NODE");
+#if 0 /**wangchao moved***/
+    install_node(&hansi_wlan_node,NULL,"HANSI_WLAN_NODE");
 	install_default(HANSI_WLAN_NODE);
-		
+#endif		
 	install_element(HANSI_NODE,&show_wlan_cmd);	
 	install_element(HANSI_NODE,&show_wlan_list_cmd);
 	install_element(HANSI_NODE,&create_wlan_cmd);	
@@ -10189,9 +10192,10 @@ void dcli_wlan_init(void) {
 	
 /*fengwenchao add 20110507*/
 /****************************************LOCAL_HANSI_NODE**********************************/
+#if 0 /**wangchao moved**/
 install_node(&local_hansi_wlan_node,NULL,"LOCAL_HANSI_WLAN_NODE");
 install_default(LOCAL_HANSI_WLAN_NODE);
-	
+#endif	
 install_element(LOCAL_HANSI_NODE,&show_wlan_cmd); 
 install_element(LOCAL_HANSI_NODE,&show_wlan_list_cmd);
 install_element(LOCAL_HANSI_NODE,&create_wlan_cmd);	
