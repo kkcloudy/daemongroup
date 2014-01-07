@@ -184,7 +184,14 @@ reget:
 		session->user_addr.user_ip = sta->ip_addr.s_addr;
 		session->user_addr.family = EAG_MIX;
 	}
-	
+
+	session->framed_interface_id = sta->Framed_Interface_Id;
+	session->framed_ipv6_prefix[0] = 0;
+	session->framed_ipv6_prefix[1] = sta->IPv6_Prefix_length;
+	memcpy((uint8_t *)&(session->framed_ipv6_prefix[2]), 
+			(uint8_t *)&(sta->Framed_IPv6_Prefix), sizeof(struct in6_addr));
+	session->login_ipv6_host = sta->Login_IPv6_Host;
+
 	mac2str(session->apmac, str_wtp_mac, sizeof(str_wtp_mac), '-');
 	ip2str(session->user_addr.user_ip, ipstr, sizeof(ipstr));
 	ipv6tostr(&(session->user_addr.user_ipv6), ipv6str, sizeof(ipv6str));

@@ -152,6 +152,11 @@ struct appsession {
 	uint64_t ipv6_output_octets;
 	uint32_t ipv6_output_packets;
 
+    /* add for ipv6 radius rfc3162, 2013-1-7 */
+	uint64_t framed_interface_id;
+	uint8_t framed_ipv6_prefix[MAX_FRAMED_IPV6_PREFIX_LEN];
+	struct in6_addr login_ipv6_host;
+
 	struct wireless_data_t wireless_data;
 
 	unsigned long sessionterminatetime;

@@ -257,6 +257,13 @@ stamsg_proc(eag_stamsg_t *stamsg, uint8_t usermac[6],
 		tmpsession.vlanid = sta_msg->STA.vlan_id;
 		security_type = sta_msg->STA.auth_type;
 
+        tmpsession.framed_interface_id = sta_msg->STA.Framed_Interface_Id;
+        tmpsession.framed_ipv6_prefix[0] = 0;
+        tmpsession.framed_ipv6_prefix[1] = sta_msg->STA.IPv6_Prefix_length;
+        memcpy((uint8_t *)&(tmpsession.framed_ipv6_prefix[2]), 
+                (uint8_t *)&(sta_msg->STA.Framed_IPv6_Prefix), sizeof(struct in6_addr));
+        tmpsession.login_ipv6_host = sta_msg->STA.Login_IPv6_Host;
+
 		mac2str(tmpsession.apmac, new_apmacstr, sizeof(new_apmacstr), ':');
 
 		eag_log_info("Receive WID_ADD msg usermac:%s, userip:%s, status:%s,"
@@ -302,6 +309,10 @@ stamsg_proc(eag_stamsg_t *stamsg, uint8_t usermac[6],
 			memcpy(appconn->session.apmac, tmpsession.apmac, 
 							sizeof(appconn->session.apmac));
 			appconn->session.vlanid = tmpsession.vlanid;
+
+            appconn->session.framed_interface_id = tmpsession.framed_interface_id;
+            memcpy(appconn->session.framed_ipv6_prefix, tmpsession.framed_ipv6_prefix, MAX_FRAMED_IPV6_PREFIX_LEN);
+            appconn->session.login_ipv6_host = tmpsession.login_ipv6_host;
 
 			appconn_set_nasid(appconn, stamsg->nasidconf);
 			appconn_set_nasportid(appconn, stamsg->nasportidconf);
