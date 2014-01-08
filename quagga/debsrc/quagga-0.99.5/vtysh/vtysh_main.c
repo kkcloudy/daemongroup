@@ -602,16 +602,7 @@ int dl_dcli_init(boot_flag)
 			(*dcli_ap_group_init_func)(); 
 		}
 
-		dcli_ebr_init_func = dlsym(dcli_dl_handle_wid,"dcli_ebr_init");
-		if ((error = dlerror()) != NULL) {
-			printf(" Run without dcli_ebr_init be called.\n");
-			fputs(error,stderr);
-		} 
-		else 
-		{
-			(*dcli_ebr_init_func)(); 
-		}
-		
+	
 		dcli_bsd_init_func = dlsym(dcli_dl_handle_wid,"dcli_bsd_init");
 		if ((error = dlerror()) != NULL) {
 			printf(" Run without dcli_bsd_init be called.\n");
