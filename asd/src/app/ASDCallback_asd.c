@@ -3586,7 +3586,7 @@ void STA_OP(TableMsg *msg){
 	time_t *timec;
 	time_t times;//qiuchen add it
 	unsigned int WTPID = msg->u.STA.WTPID;
-	unsigned int num = 0, i = 0, j = 0;
+	unsigned int num = 0, i = 0, j = 0, k=0;
 	unsigned int count = 0;
 	unsigned int authorize_num = 0;
 	unsigned char ret;	
@@ -4282,16 +4282,23 @@ void STA_OP(TableMsg *msg){
 						if(asd_check_ipv6(msg->u.STA.ipv6Address) != 0)
 						{
     		                sta->ip6_addr = msg->u.STA.ipv6Address;
-							asd_printf(ASD_DEFAULT,MSG_DEBUG,"get ipv6 form dhcp, sta->ip6_addr:");							
+							asd_printf(ASD_DEFAULT,MSG_DEBUG,"get ipv6 form dhcp6snp, sta->ip6_addr:");							
                             asd_print_ipv6(sta->ip6_addr);
         					memcpy(sta->arpifname,msg->u.STA.arpifname,sizeof(msg->u.STA.arpifname));
         					asd_printf(ASD_DEFAULT,MSG_DEBUG,"sta->arpifname: %s\n",sta->arpifname);
 							
-                        	/* add for ipv6 radius rfc3162, 2013-12-31 */
-                            sta->Login_IPv6_Host = msg->u.STA.Login_IPv6_Host;
-                            sta->Framed_Interface_Id = msg->u.STA.Framed_Interface_Id;							
-                            sta->Framed_IPv6_Prefix = msg->u.STA.Framed_IPv6_Prefix;
-                            sta->IPv6_Prefix_length = msg->u.STA.IPv6_Prefix_length;
+                        	/* add for ipv6 radius rfc3162, 2013-12-31 */				
+                            sta->Login_IPv6_Host = msg->u.STA.ipv6Address;
+							sta->Framed_IPv6_Prefix = msg->u.STA.ipv6Address;
+							sta->Framed_IPv6_Prefix.s6_addr32[2] = 0; 
+							sta->Framed_IPv6_Prefix.s6_addr32[3] = 0; 
+
+							for(k=0;k<8;k++)
+							{
+							    sta->Framed_Interface_Id |= ((u64)msg->u.STA.ipv6Address.s6_addr[8+k])<<(8*(7-k)); 	
+		       					asd_printf(ASD_DEFAULT,MSG_DEBUG,"k= %d: 0x%llx\n",k,((u64)msg->u.STA.ipv6Address.s6_addr[8+k])<<(8*(7-k)));					
+							}
+                            sta->IPv6_Prefix_length = 64;
 							
         					if(is_secondary == 0)
         						bak_update_sta_ip_info(wasd, sta);

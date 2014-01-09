@@ -8430,7 +8430,7 @@ DEFUN(show_sta_v2_cmd_func,
     	}
 		
 		vty_out(vty,"Framed_Interface_Id: ");
-        vty_out(vty,"%llu\n",sta->Framed_Interface_Id);
+        vty_out(vty,"0x%llx\n",sta->Framed_Interface_Id);
 
 		vty_out(vty,"==============================================================================\n");
 		dcli_free_sta_v2(sta);

@@ -1371,7 +1371,26 @@ struct dcli_sta_info_v2* get_sta_info_by_mac_v2(DBusConnection *dcli_dbus_connec
 			for(i=0;i<4;i++){
 				dbus_message_iter_next(&iter);	
 				dbus_message_iter_get_basic(&iter,&(sta->ip6_addr.s6_addr32[i]));	
-			}	
+			}
+
+           	/* add for ipv6 radius rfc3162, 2013-12-31 */
+			for(i=0;i<4;i++){
+				dbus_message_iter_next(&iter);	
+				dbus_message_iter_get_basic(&iter,&(sta->Framed_IPv6_Prefix.s6_addr32[i]));	
+			}
+
+			for(i=0;i<4;i++){
+				dbus_message_iter_next(&iter);	
+				dbus_message_iter_get_basic(&iter,&(sta->Login_IPv6_Host.s6_addr32[i]));	
+			}
+
+			dbus_message_iter_next(&iter);	
+			dbus_message_iter_get_basic(&iter,&(sta->Framed_Interface_Id));	
+
+				
+			dbus_message_iter_next(&iter);	
+			dbus_message_iter_get_basic(&iter,&(sta->IPv6_Prefix_length));	
+			
 			sta->essid = (char *)malloc(sta->essidlen+1);
 			memset(sta->essid, 0, sta->essidlen+1);
 			memcpy(sta->essid, essid,sta->essidlen);
