@@ -40851,7 +40851,7 @@ DBusMessage * wid_dbus_interface_radio_set_ampdu_limit(DBusConnection *conn, DBu
         							AC_RADIO[ID]->Amsdu.Op = Amsdu_op;
         							AC_RADIO[ID]->Amsdu.L_RadioID = ID%L_RADIO_NUM;
         							AC_RADIO[ID]->Amsdu.WlanID= AC_RADIO[ID]->Wlan_Id->wlanid;
-        							AC_RADIO[ID]->Ampdu.AmpduLimit= ampdulimit;
+        							AC_RADIO[ID]->Amsdu.AmsduLimit= ampdulimit;
         							if(AC_RADIO[ID]->Amsdu.Able == 1)
         								{
         		    						ret = wid_radio_set_ampdu_limit(ID, type);
