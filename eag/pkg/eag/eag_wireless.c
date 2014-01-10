@@ -99,6 +99,8 @@ eag_get_sta_info_by_mac_v2( eag_dbus_t *eag_dbus,
 	uint8_t zero_mac[6] = {0};
 	char ipstr[32] = "";
 	char ipv6str[48] = "";
+	char login_ipv6_host_str[48] = "";
+	char framed_ipv6_prefix_str[48] = "";
 	DBusConnection * conn = eag_dbus_get_dbus_conn(eag_dbus);
 	
 	if (NULL == eag_dbus || NULL == sta_mac || NULL == session || NULL == handle) {
@@ -195,6 +197,9 @@ reget:
 	mac2str(session->apmac, str_wtp_mac, sizeof(str_wtp_mac), '-');
 	ip2str(session->user_addr.user_ip, ipstr, sizeof(ipstr));
 	ipv6tostr(&(session->user_addr.user_ipv6), ipv6str, sizeof(ipv6str));
+	ipv6tostr(&(session->login_ipv6_host), login_ipv6_host_str, sizeof(login_ipv6_host_str));
+	ipv6tostr((struct in6_addr *)&(session->framed_ipv6_prefix[2]),
+			framed_ipv6_prefix_str, sizeof(framed_ipv6_prefix_str));
 	eag_log_info("eag_get_sta_info_by_mac_v2 success, "
 			"sta_mac=%s, sta_ip=%s, sta_ipv6=%s, radio_id=%d, wlan_id=%d, wtp_id=%d, "
 			"essid=%s, wtp_mac=%s, wtp_name=%s, vlanid=%d, idle_check=%u, "
@@ -202,7 +207,8 @@ reget:
 			str_sta_mac, ipstr, ipv6str, session->radioid, session->wlanid, session->wtpid,
 			session->essid, str_wtp_mac, session->apname, session->vlanid, session->idle_check,
 			session->idle_timeout, session->idle_flow, *security_type);
-	
+	eag_log_info("framed_interface_id=%lld, login_ipv6_host=%s, framed_ipv6_prefix=%s, ipv6_prefix_length=%hhu",
+			session->framed_interface_id, login_ipv6_host_str, framed_ipv6_prefix_str, session->framed_ipv6_prefix[1]);
 end:
 	if( NULL != sta && NULL != dl_dcli_free_sta_v2)
 	{

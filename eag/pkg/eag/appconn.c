@@ -1161,6 +1161,10 @@ appconn_create_by_sta_v2(appconn_db_t * appdb, struct appsession *session)
 			sizeof(appconn->session.apmac));
 	appconn->session.vlanid = session->vlanid;
 
+    appconn->session.framed_interface_id = session->framed_interface_id;
+    memcpy(appconn->session.framed_ipv6_prefix, 
+    		session->framed_ipv6_prefix, MAX_FRAMED_IPV6_PREFIX_LEN);
+    appconn->session.login_ipv6_host = session->login_ipv6_host;
 
 	appconn_set_debug_prefix(appconn);
 	appconn_set_filter_prefix(appconn, appdb->hansi_type, appdb->hansi_id); /* for debug-filter,add by zhangwl */
