@@ -1051,7 +1051,7 @@ DBusMessage * wid_dbus_interface_del_essid(DBusConnection *conn, DBusMessage *ms
 
 	//printf("legal essid:\t%s\n",essid);
 
-	wid_del_legal_essid(essid);
+	ret = wid_del_legal_essid(essid);
 
 	reply = dbus_message_new_method_return(msg);
 		

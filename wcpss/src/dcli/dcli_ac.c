@@ -1204,7 +1204,11 @@ DEFUN(del_legal_essid_func,
 	if(ret == 0)
 	{
 		vty_out(vty," del legal essid %s successfully\n",argv[0]);
-	}				
+	}
+	else if (ret == ESSID_NOT_EXIT)
+	{
+		vty_out(vty," essid not exist\n");
+	}
 	else
 	{
 		vty_out(vty,"<error>  %d\n",ret);

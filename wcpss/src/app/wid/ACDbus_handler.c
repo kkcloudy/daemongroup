@@ -19871,9 +19871,9 @@ int wid_del_legal_essid(char *essid){
 		WID_FREE(cr);
 		cr=NULL;
 		g_essid_list.list_len--;
-	}else
-		return 0;
-	return 0;
+	}/*else
+		return 0;*/
+	return ret;
 }
 
 int wid_del_attack_ap_mac(unsigned char mac[]){
