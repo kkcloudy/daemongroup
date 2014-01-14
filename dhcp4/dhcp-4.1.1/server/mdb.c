@@ -443,9 +443,9 @@ int get_dhcp_lease_ipv6_state_num
 	unsigned int *sub_count
 )
 {	
-	int i = 0;
+	int i = 0, j = 0 ,start_pool = 0;
 	struct subnet *rv = NULL;
-	struct ipv6_pool **next = NULL;
+	struct ipv6_pool *next = NULL;
 	struct dcli_pool* poolnode = NULL;	
 	struct dbus_sub_lease_state *tmp_sub_state = NULL;
 
@@ -485,23 +485,31 @@ int get_dhcp_lease_ipv6_state_num
 		
 		if ((rv->shared_network) && (rv->shared_network->ipv6_pools) && *(rv->shared_network->ipv6_pools)) 
 		{
-			next = rv->shared_network->ipv6_pools;
+			start_pool = rv->shared_network->last_ipv6_pool;
+			j = start_pool;
 			//while (*next ) 
-			if(*next)
-			{
+			do{
+				next = rv->shared_network->ipv6_pools[j];
+				if(next)
+				{
+							
+					sub_lease_count += next->lease_count;
+					//sub_lease_free  += next->free_leases;				
+					//sub_lease_backup +=  next->backup_leases;
+					sub_lease_active += next->num_active;
+					/*
+					for(tmp_lease = next->active; tmp_lease ; tmp_lease = tmp_lease->next){
+						++sub_lease_active;
+					}*/
 						
-				sub_lease_count += (*next)->lease_count;
-				//sub_lease_free  += next->free_leases;				
-				//sub_lease_backup +=  next->backup_leases;
-				sub_lease_active = (*next)->lease_active_count;
-				/*
-				for(tmp_lease = next->active; tmp_lease ; tmp_lease = tmp_lease->next){
-					++sub_lease_active;
-				}*/
+					//next = next->next;
 					
-				//next = next->next;
-				
-			}
+				}
+				j++;
+				if (next == NULL) {
+					j = 0;
+				}
+			}while(j != start_pool);
 		}	
 
 		poolnode = dhcp6_dbus_find_poolnode_by_subnet(rv);

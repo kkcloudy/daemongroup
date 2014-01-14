@@ -1610,7 +1610,6 @@ struct ipv6_pool {
 	isc_heap_t *inactive_timeouts;		/* timeouts for expired or 
 						   released leases */
 	int lease_count;
-	int lease_active_count;
 	struct shared_network *shared_network;	/* shared_network for 
 						   this pool */
 	struct subnet *subnet;			/* subnet for this pool */

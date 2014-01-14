@@ -1055,7 +1055,6 @@ move_lease_to_inactive(struct ipv6_pool *pool, struct iasubopt *lease,
 				     &lease->addr, sizeof(lease->addr), MDL);
 		isc_heap_delete(pool->active_timeouts, old_heap_index);
 		lease->state = state;
-		pool->lease_active_count--;
 		pool->num_active--;
 		pool->num_inactive++;
 	}
@@ -1450,8 +1449,6 @@ cleanup_old_expired(struct ipv6_pool *pool) {
 			    (ia_active == ia)) {
 				ia_hash_delete(ia_na_active, tmpd, 
 					       ia->iaid_duid.len, MDL);
-				if(((*(ia->iasubopt)) != NULL) && ((*(ia->iasubopt))->ipv6_pool) != NULL)
-				(*(ia->iasubopt))->ipv6_pool->lease_active_count--;
 			}
 			if ((ia->ia_type == D6O_IA_TA) &&
 			    (ia->num_iasubopt <= 0) &&
