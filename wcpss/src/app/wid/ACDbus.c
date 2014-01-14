@@ -2831,6 +2831,34 @@ DBusMessage * wid_dbus_interface_show_wtplist_byversion(DBusConnection *conn, DB
 	return reply;	
 }
 //fengwenchao add end
+
+unsigned char get_rand_percent_val(unsigned char max_value, unsigned char step_len, unsigned current_percent) {
+	unsigned char rand_value = rand()%max_value;
+	unsigned char remainder;
+
+	if (step_len == 0) {
+		wid_syslog_err("step_len is zero\n");
+		return 0;
+	}
+	
+	remainder = current_percent%step_len;
+
+	if (current_percent == 100) {
+		return 0;
+	}
+	
+	if (remainder == (step_len-1)) {
+		return 0;
+	}
+	
+	while ((remainder+rand_value) >= step_len) {
+		rand_value -= 1;
+	}
+
+	return rand_value;
+}
+
+
 DBusMessage * wid_dbus_interface_show_wtplist_new(DBusConnection *conn, DBusMessage *msg, void *user_data){
 	
 	DBusMessage* reply;	
@@ -2888,7 +2916,8 @@ DBusMessage * wid_dbus_interface_show_wtplist_new(DBusConnection *conn, DBusMess
 											DBUS_TYPE_BYTE_AS_STRING
 											DBUS_TYPE_STRING_AS_STRING
 											DBUS_TYPE_STRING_AS_STRING
-											DBUS_TYPE_STRING_AS_STRING //wtpsn   fengwenchao add 20110530 
+											DBUS_TYPE_STRING_AS_STRING
+											DBUS_TYPE_BYTE_AS_STRING
 									DBUS_STRUCT_END_CHAR_AS_STRING,
 									&iter_array);
 
@@ -2934,6 +2963,19 @@ DBusMessage * wid_dbus_interface_show_wtplist_new(DBusConnection *conn, DBusMess
 		{
 			dbus_message_iter_append_basic(&iter_struct,DBUS_TYPE_STRING,&(WTP[i]->location));
 		}/*zhangcl addef for wtp location*/
+		
+		if (WTP[i]->image_data_result == 0) {
+			wid_syslog_debug_debug(WID_DBUS,"imagedata_percent_d: image data normal\n");
+			if (WTP[i]->WTPStat == CW_ENTER_IMAGE_DATA || WTP[i]->WTPStat == CW_ENTER_RESET) {
+				WTP[i]->image_data_percent = WTP[i]->image_data_percent + get_rand_percent_val(6, WTP[i]->image_data_step, WTP[i]->image_data_percent);
+				AC_WTP[WTP[i]->WTPID]->image_data_percent = WTP[i]->image_data_percent;
+			}
+			dbus_message_iter_append_basic(&iter_struct,DBUS_TYPE_BYTE,&(WTP[i]->image_data_percent));
+		} else {
+			wid_syslog_debug_debug(WID_DBUS,"imagedata_percent_d: image data error\n");
+			unsigned char err_code = 100 + WTP[i]->image_data_result;
+			dbus_message_iter_append_basic(&iter_struct,DBUS_TYPE_BYTE,&err_code);
+		}
 		
 		dbus_message_iter_close_container (&iter_array, &iter_struct);
 
@@ -14928,6 +14970,7 @@ DBusMessage * wid_dbus_interface_update_wtp_img_version(DBusConnection *conn, DB
 
 
 	if (!(dbus_message_get_args ( msg, &err,
+				DBUS_TYPE_UINT32,&type,
 				DBUS_TYPE_UINT32,&ID,
 				DBUS_TYPE_STRING,&vs,
 				DBUS_TYPE_STRING,&pt,
@@ -15084,6 +15127,7 @@ DBusMessage * wid_dbus_interface_update_wtp_img_version(DBusConnection *conn, DB
 
 
 	if (!(dbus_message_get_args ( msg, &err,
+				DBUS_TYPE_UINT32,&type,
 				DBUS_TYPE_UINT32,&wtpid,
 				DBUS_TYPE_STRING,&vs,
 				DBUS_TYPE_STRING,&pt,
@@ -30300,6 +30344,9 @@ DBusMessage * wid_dbus_interface_check_wtp_sta(DBusConnection *conn, DBusMessage
 	DBusMessage* reply;
 	DBusError err;
 	DBusMessageIter  iter;
+	DBusMessageIter iter_struct;
+	DBusMessageIter	 iter_array;
+	
 	int i =0;
 	int ret = WID_DBUS_SUCCESS;
 	unsigned int ID = 0;
@@ -30310,8 +30357,6 @@ DBusMessage * wid_dbus_interface_check_wtp_sta(DBusConnection *conn, DBusMessage
 	struct Wtp_List * wtp_head =NULL;
 	struct WTP_GROUP_MEMBER *tmp = NULL;
 		
-	printf("check wtp sta\n");
-		
 	dbus_error_init(&err);
 			
 	if (!(dbus_message_get_args ( msg, &err,
@@ -30319,86 +30364,82 @@ DBusMessage * wid_dbus_interface_check_wtp_sta(DBusConnection *conn, DBusMessage
 								DBUS_TYPE_UINT32,&ID,
 								DBUS_TYPE_INVALID))){
 		
-		printf("Unable to get input args\n");
+		wid_syslog_err("Unable to get input args\n");
 						
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_err("%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
 	}
-	printf("!!!!!!!!!!!!!\n");
- if(type==0)
- {
-		
-	if(AC_WTP[ID]!=NULL)
+	
+	 if(type==0)
+	 {
+			
+		if(AC_WTP[ID]!=NULL)
 		{	
 		    wtp_head = (struct Wtp_List *)WID_MALLOC(sizeof(struct Wtp_List));
 			wtp_head->WtpId = ID;
-			printf("asd id %d\n",ID);
+			wid_syslog_debug_debug(WID_DEFAULT, "asd id %d\n",ID);
 		}
-	ret= WID_DBUS_SUCCESS;
-	printf("lalal asd id %d\n",ID);
-	printf("type000\n");
- }
+		ret= WID_DBUS_SUCCESS;
+	 }
 
 		
- if (type == 1)
+ 	if (type == 1)
 	{
-	   if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL))
-	   	{
+		if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL))
+		{
 			tmp = WTP_GROUP[ID]->WTP_M;
 			wtp_head = (struct Wtp_List *)WID_MALLOC(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
 				
 			while(tmp)
+			{
+				ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
+				if(ret_check == WID_DBUS_SUCCESS)
 				{
-					ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
-					if(ret_check == WID_DBUS_SUCCESS)
-						{
-                        	wtp_head[num].WtpId = tmp->WTPID;
-						
-							num++;
-					
-						
-					    }
-					tmp = tmp->next;
-				}
-			
-		}
-			
+	            	wtp_head[num].WtpId = tmp->WTPID;
+				
+					num++;
+			    }
+				tmp = tmp->next;
+			}
+
+		}		
 		ret = WID_DBUS_SUCCESS;
 	}
 			
 		reply = dbus_message_new_method_return(msg);
 							
 		dbus_message_iter_init_append (reply, &iter);	
-		dbus_message_iter_append_basic (&iter,
-										DBUS_TYPE_UINT32,
-										&ret); 
-		printf("0000000000000\n");
+		dbus_message_iter_append_basic (&iter, DBUS_TYPE_UINT32, &ret); 
+
 		if(type == 0)
-			{
-			   dbus_message_iter_append_basic (&iter,
-											   DBUS_TYPE_UINT32,
-												 &num);
-			   dbus_message_iter_append_basic (&iter,
-											   DBUS_TYPE_UINT32,
-											   &(wtp_head->WtpId));
-			}
+		{
+		   dbus_message_iter_append_basic (&iter, DBUS_TYPE_UINT32, &num);
+		   dbus_message_iter_append_basic (&iter, DBUS_TYPE_UINT32, &(wtp_head->WtpId));
+		}
 			
 		if(type == 1)
-			{
-			  dbus_message_iter_append_basic (&iter,
-												 DBUS_TYPE_UINT32,
-												 &num);
+		{
 		
-			  for(i = 0; i < num; i++)
-			  	{
-				 dbus_message_iter_append_basic (&iter,
-													 DBUS_TYPE_UINT32,
-													 &(wtp_head[i].WtpId ));	
-			    }	
+			dbus_message_iter_append_basic (&iter, DBUS_TYPE_UINT32, &num);
+
+			dbus_message_iter_open_container (&iter,
+									DBUS_TYPE_ARRAY,
+									DBUS_STRUCT_BEGIN_CHAR_AS_STRING
+											DBUS_TYPE_UINT32_AS_STRING
+									DBUS_STRUCT_END_CHAR_AS_STRING,
+									&iter_array);
+			
+			for(i = 0; i < num; i++)
+		  	{
+		  		dbus_message_iter_open_container(&iter_array,DBUS_TYPE_STRUCT,NULL,&iter_struct);
+				dbus_message_iter_append_basic (&iter_struct, DBUS_TYPE_UINT32, &(wtp_head[i].WtpId ));
+				dbus_message_iter_close_container (&iter_array, &iter_struct);
 		    }
+			dbus_message_iter_close_container (&iter, &iter_array);
+	    }
 		
 		if(wtp_head!=NULL){
 			WID_FREE(wtp_head);
@@ -31297,6 +31338,8 @@ DBusMessage * wid_dbus_interface_wtp_apply_wlanid(DBusConnection *conn, DBusMess
 	//unsigned int *wtp_list = NULL;
 	struct Wtp_List * wtp_head =NULL;
 	struct WTP_GROUP_MEMBER *tmp = NULL;
+	DBusMessageIter	 iter_array;
+	DBusMessageIter iter_struct;
 	
 	dbus_error_init(&err);
 	if (!(dbus_message_get_args ( msg, &err,
@@ -31306,22 +31349,19 @@ DBusMessage * wid_dbus_interface_wtp_apply_wlanid(DBusConnection *conn, DBusMess
 								DBUS_TYPE_INVALID)))
 	{
 
-		printf("Unable to get input args\n");
+		wid_syslog_err("Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err))
 		{
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_err("%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
 		
 	}
-
-	//printf get values
-	//printf("***** Input wtp id is %d\n",wtpid);
-	//printf("***** Input wtp id binding wlan id is %d\n",wlanid);
-	wid_syslog_debug_debug(WID_DBUS,"***** Input wtp id is %d",ID);
-	wid_syslog_debug_debug(WID_DBUS,"***** Input wtp id binding wlan id is %d",wlanid);	
+	
+	wid_syslog_debug_debug(WID_DEFAULT, "***** Input wtp id is %d",ID);
+	wid_syslog_debug_debug(WID_DEFAULT, "***** Input wtp id binding wlan id is %d",wlanid);	
 	
 	if(type == 0){
 		if(AC_WTP[ID] == NULL){
@@ -31330,16 +31370,27 @@ DBusMessage * wid_dbus_interface_wtp_apply_wlanid(DBusConnection *conn, DBusMess
 		else{
 			ret = WID_BINDING_WLAN_APPLY_WTP(ID,wlanid);
 		}
-	}	
+	} else if (type == 1) {
+		wid_syslog_debug_debug(WID_DEFAULT, "ID = %d wlanid = %d\n", ID, wlanid);
 
-	else if(type == 1){
-		printf("##### type == 1 #####\n");
+		if (ID == 0 || ID >= WTP_GROUP_NUM || wlanid == 0 || wlanid >= WLAN_NUM) {
+			num = 0;
+			ret = VALUE_OUT_OF_RANGE;
+			goto return_to_dcli;
+		}
+
+		if (WTP_GROUP[ID] == NULL || AC_WLAN[wlanid] == NULL) {
+			num = 0;
+			ret = WID_COMMON_NOT_EXIST;
+			goto return_to_dcli;
+		}
+		
 		if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M)){
 			tmp = WTP_GROUP[ID]->WTP_M;
 			wtp_head = (struct Wtp_List *)WID_MALLOC(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List )));
 			while(tmp){
 				ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
-				printf("ret %d   \n",ret);
+				wid_syslog_debug_debug(WID_DEFAULT, "ret %d   \n",ret);
 
 				if(ret_check == WID_DBUS_SUCCESS){
 					ret2 = WID_BINDING_WLAN_APPLY_WTP(tmp->WTPID,wlanid);
@@ -31359,7 +31410,8 @@ DBusMessage * wid_dbus_interface_wtp_apply_wlanid(DBusConnection *conn, DBusMess
 			ret = GROUP_ID_NOT_EXIST;
 		}
 	}
-	
+
+return_to_dcli:	
 	reply = dbus_message_new_method_return(msg);
 	
 	dbus_message_iter_init_append (reply, &iter);
@@ -31367,18 +31419,24 @@ DBusMessage * wid_dbus_interface_wtp_apply_wlanid(DBusConnection *conn, DBusMess
 	dbus_message_iter_append_basic (&iter, DBUS_TYPE_UINT32, &ret);
 	
 	if(type == 1){
-		dbus_message_iter_append_basic (&iter,
-											 DBUS_TYPE_UINT32,
-											 &num);
+		dbus_message_iter_append_basic (&iter, DBUS_TYPE_UINT32, &num);
+
+		dbus_message_iter_open_container (&iter,
+									DBUS_TYPE_ARRAY,
+									DBUS_STRUCT_BEGIN_CHAR_AS_STRING
+											DBUS_TYPE_UINT32_AS_STRING
+											DBUS_TYPE_BYTE_AS_STRING
+									DBUS_STRUCT_END_CHAR_AS_STRING,
+									&iter_array);
 		
 		for(i = 0; i < num; i++){
-			dbus_message_iter_append_basic (&iter,
-												 DBUS_TYPE_UINT32,
-												 &(wtp_head[i].WtpId));
-			dbus_message_iter_append_basic (&iter,
-												 DBUS_TYPE_BYTE,
-												 &(wtp_head[i].FailReason));
-		}	
+			dbus_message_iter_open_container(&iter_array,DBUS_TYPE_STRUCT,NULL,&iter_struct);
+			dbus_message_iter_append_basic (&iter_struct, DBUS_TYPE_UINT32, &(wtp_head[i].WtpId));
+			dbus_message_iter_append_basic (&iter_struct, DBUS_TYPE_BYTE, &(wtp_head[i].FailReason));
+			dbus_message_iter_close_container (&iter_array, &iter_struct);
+		}
+		
+		dbus_message_iter_close_container (&iter, &iter_array);
 		
 		if(wtp_head!=NULL){
 			WID_FREE(wtp_head);
@@ -35067,13 +35125,15 @@ DBusMessage * wid_dbus_interface_radio_apply_wlan(DBusConnection *conn, DBusMess
 	DBusMessage* reply;
 	DBusError err;
 	DBusMessageIter	 iter;
-//	DBusMessageIter	 iter_array;
-
-	//unsigned char wlan_count;
+	DBusMessageIter	 iter_array;
+	DBusMessageIter  iter_struct;
+	
 	int i = 0;
 	int num =0 ;
 	int radionum = 0;
-	unsigned int ID = 0;
+	unsigned int g_radio_id = 0;
+	unsigned int g_id;
+	unsigned int l_radio_id;
 	unsigned int type = 0;
 	unsigned char WlanID = 0;
 
@@ -35084,103 +35144,116 @@ DBusMessage * wid_dbus_interface_radio_apply_wlan(DBusConnection *conn, DBusMess
 	struct Radio_List  *radio_head = NULL;
 	struct WTP_GROUP_MEMBER *tmp = NULL;
 	struct WTP_GROUP_MEMBER *radiotmp = NULL;
-	//int i=0;
 
-	/*
-	if (NULL == msg) {
-		printf("failed get msg.\n");
-		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
-			dbus_error_free(&err);
-		}
-	}*/
-	////////////////
 	dbus_error_init(&err);
 	if (!(dbus_message_get_args ( msg, &err,
 								DBUS_TYPE_UINT32,&type,
-								DBUS_TYPE_UINT32,&ID,
+								DBUS_TYPE_UINT32,&g_radio_id,
+								DBUS_TYPE_UINT32,&g_id,
+								DBUS_TYPE_UINT32,&l_radio_id,
 								DBUS_TYPE_BYTE,&WlanID,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_err("Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_err("%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
 	}
-//	printf("receive radioid %d wlanid %d\n",RadioID,WlanID);		
+		
 	if(type==0)
+	{
+		if(AC_RADIO[g_radio_id] == NULL)
 		{
-			if(AC_RADIO[ID] == NULL)
-				{
-					ret = RADIO_ID_NOT_EXIST;
-				}
-			else if(AC_WLAN[WlanID] == NULL)
-				{
-					ret = WLAN_ID_NOT_EXIST;
-				}
-			else
-				{
-					ret = WID_ADD_WLAN_APPLY_RADIO(ID,WlanID);
-				}
+			ret = RADIO_ID_NOT_EXIST;
+			wid_syslog_err("g_radio_id %d is not exist\n", g_radio_id);
+			goto check_parm_failed_ret;
 		}
-	else if(type == 1)
+
+		if(AC_WLAN[WlanID] == NULL)
 		{
-			printf("******** type == 1 *****\n");
-			if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL))
-				{
-					tmp = WTP_GROUP[ID]->WTP_M;
-					radiotmp = WTP_GROUP[ID]->WTP_M;
-					while(radiotmp)
-						{
-							radionum +=AC_WTP[radiotmp->WTPID]->RadioCount;
-							radiotmp = radiotmp->next;
-						}
-					radio_head = (struct Radio_List *)WID_MALLOC(radionum*(sizeof(struct Radio_List)));
-					while(tmp)
-						{
-							ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
+			wid_syslog_err("wlan %d is not exist\n", WlanID);
+			ret = WLAN_ID_NOT_EXIST;
+			goto check_parm_failed_ret;
+		}
 
-							if(ret_check == WID_DBUS_SUCCESS)
-								{								
-									for(i=0;i<AC_WTP[tmp->WTPID]->RadioCount;i++)
-									{
-										if(AC_WTP[tmp->WTPID]->WTP_Radio[i]==NULL)
-											{
-												ret2 = RADIO_ID_NOT_EXIST;	
-												wid_syslog_debug_debug(WID_DEFAULT,"WTP%d radio%d is NOT exist\n",tmp->WTPID,AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
-											}
-										else if(AC_WLAN[WlanID] == NULL)
-											{
-												ret2 = WLAN_ID_NOT_EXIST;
-												wid_syslog_debug_debug(WID_DEFAULT,"WLAN %d is NOT exist\n",WlanID);
-											}	
-										else
-											{
-												ret2 = WID_ADD_WLAN_APPLY_RADIO(AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID,WlanID);
-												wid_syslog_debug_debug(WID_DEFAULT,"WTP%d RADIO%d access into add wlan apply radio\n",tmp->WTPID,AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
-											}	
-
-										if(ret2 != WID_DBUS_SUCCESS)
-											{
-												radio_head[num].RadioId = AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID;
-												radio_head[num].FailReason = ret2;
-												num++;
-											}
-									}
-								}
-							tmp = tmp->next;
-						}
-					ret = WID_DBUS_SUCCESS;
-				}	
-			else
-				{
-					ret = GROUP_ID_NOT_EXIST;
-				}
+		ret = WID_ADD_WLAN_APPLY_RADIO(g_radio_id,WlanID);
+	}
+	else if(type == 1)
+	{
+		wid_syslog_debug_debug(WID_DEFAULT, "******** type == 1 *****\n");
+		if (g_id >= WTP_GROUP_NUM || g_id == 0) {
+			wid_syslog_err("ap-group id %d larger than %d\n", g_id, WTP_GROUP_NUM-1);
+			ret = VALUE_OUT_OF_RANGE;
+			goto check_parm_failed_ret;
+		}
+		if (WlanID >= WLAN_NUM || WlanID == 0) {
+			wid_syslog_err("wlan id %d is out of range \n", WlanID, WLAN_NUM-1);
+			ret = VALUE_OUT_OF_RANGE;
+		    goto check_parm_failed_ret;
 		}
 		
+		if (AC_WLAN[WlanID] == NULL) {
+			ret = WLAN_ID_NOT_EXIST;
+			wid_syslog_err("WLAN %d is NOT exist\n",WlanID);
+			goto check_parm_failed_ret;
+		}
+
+		if (WTP_GROUP[g_id] == NULL) {
+			ret = GROUP_ID_NOT_EXIST;
+			wid_syslog_err("ap-group %d is not exist\n", g_id);
+			goto check_parm_failed_ret;
+		}
+
+		if (WTP_GROUP[g_id]->WTP_M ==NULL) {
+			ret = WID_DBUS_SUCCESS;
+			wid_syslog_debug_debug(WID_DEFAULT, "ap-group has no wtp members, return success\n");
+			goto check_parm_failed_ret;
+		}
+		
+		tmp = WTP_GROUP[g_id]->WTP_M;
+		radiotmp = WTP_GROUP[g_id]->WTP_M;
+		while(radiotmp)
+		{
+			radionum +=AC_WTP[radiotmp->WTPID]->RadioCount;
+			radiotmp = radiotmp->next;
+		}
+		radio_head = (struct Radio_List *)WID_MALLOC(radionum*(sizeof(struct Radio_List)));
+		while(tmp)
+		{
+			ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
+
+			if(ret_check == WID_DBUS_SUCCESS)
+			{
+				if (l_radio_id < AC_WTP[tmp->WTPID]->RadioCount) {
+
+					if(AC_WTP[tmp->WTPID]->WTP_Radio[l_radio_id]==NULL)
+					{
+						ret2 = RADIO_ID_NOT_EXIST;	
+						wid_syslog_debug_debug(WID_DEFAULT,"WTP%d radio%d is NOT exist\n",tmp->WTPID, l_radio_id);
+					}
+					else
+					{
+						ret2 = WID_ADD_WLAN_APPLY_RADIO(AC_WTP[tmp->WTPID]->WTP_Radio[l_radio_id]->Radio_G_ID, WlanID);
+						wid_syslog_debug_debug(WID_DEFAULT,"WTP%d RADIO%d access into add wlan apply radio\n",tmp->WTPID, l_radio_id);
+					}	
+
+					if(ret2 != WID_DBUS_SUCCESS)
+					{
+						radio_head[num].RadioId = AC_WTP[tmp->WTPID]->WTP_Radio[l_radio_id]->Radio_G_ID;
+						radio_head[num].FailReason = ret2;
+						num++;
+					}
+				}
+			}
+			tmp = tmp->next;
+		}
+		ret = WID_DBUS_SUCCESS;
+	}
+
+check_parm_failed_ret:		
 		reply = dbus_message_new_method_return(msg);
 		
 		dbus_message_iter_init_append(reply, &iter);
@@ -35188,27 +35261,33 @@ DBusMessage * wid_dbus_interface_radio_apply_wlan(DBusConnection *conn, DBusMess
 		dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT32, &ret);
 			
 		if((type == 1)&&(ret == WID_DBUS_SUCCESS))
+		{
+			dbus_message_iter_append_basic (&iter, DBUS_TYPE_UINT32, &num);
+			wid_syslog_debug_debug(WID_DEFAULT, "num = %d\n",num);		
+
+			dbus_message_iter_open_container (&iter,
+									DBUS_TYPE_ARRAY,
+									DBUS_STRUCT_BEGIN_CHAR_AS_STRING
+											DBUS_TYPE_UINT32_AS_STRING
+											DBUS_TYPE_BYTE_AS_STRING
+									DBUS_STRUCT_END_CHAR_AS_STRING,
+									&iter_array);
+			
+			for(i = 0; i < num; i++)
 			{
-				dbus_message_iter_append_basic (&iter,
-													 DBUS_TYPE_UINT32,
-											 &num);
-				printf("num = %d\n",num);		
-				for(i = 0; i < num; i++)
-					{
-						dbus_message_iter_append_basic (&iter,
-															 DBUS_TYPE_UINT32,
-															 &(radio_head[i].RadioId));
-						dbus_message_iter_append_basic (&iter,
-															 DBUS_TYPE_BYTE,
-															 &(radio_head[i].FailReason));
-					}	
-				
-				if(radio_head!=NULL)
-					{
-						WID_FREE(radio_head);
-						radio_head = NULL;	
-					}
+				dbus_message_iter_open_container(&iter_array,DBUS_TYPE_STRUCT,NULL,&iter_struct);
+				dbus_message_iter_append_basic (&iter_struct, DBUS_TYPE_UINT32, &(radio_head[i].RadioId));
+				dbus_message_iter_append_basic (&iter_struct, DBUS_TYPE_BYTE, &(radio_head[i].FailReason));
+				dbus_message_iter_close_container (&iter_array, &iter_struct);
+			}	
+			dbus_message_iter_close_container (&iter, &iter_array);
+			
+			if(radio_head!=NULL)
+			{
+				WID_FREE(radio_head);
+				radio_head = NULL;	
 			}
+		}
 			return reply;	
 
 }
@@ -36581,7 +36660,9 @@ DBusMessage * wid_dbus_interface_radio_delete_wlan(DBusConnection *conn, DBusMes
 	int i = 0;
 	int num =0 ;
 	int radionum = 0;
-	unsigned int ID = 0;
+	unsigned int g_radio_id = 0;
+	unsigned int g_id;
+	unsigned int l_radio_id;
 	unsigned int type = 0;
 	unsigned char WlanID = 0;		
 	int ret = WID_DBUS_SUCCESS;
@@ -36595,93 +36676,117 @@ DBusMessage * wid_dbus_interface_radio_delete_wlan(DBusConnection *conn, DBusMes
 	dbus_error_init(&err);
 	if (!(dbus_message_get_args ( msg, &err,
 								DBUS_TYPE_UINT32,&type,
-								DBUS_TYPE_UINT32,&ID,
+								DBUS_TYPE_UINT32,&g_radio_id,
+								DBUS_TYPE_UINT32, &g_id,
+								DBUS_TYPE_UINT32, &l_radio_id,
 								DBUS_TYPE_BYTE,&WlanID,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_err("Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_err("%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
 	}
 	if(type==0)
 	{
-		if(AC_RADIO[ID] == NULL)
+		if(AC_RADIO[g_radio_id] == NULL)
 		{
+			wid_syslog_err("g_radio_id %d is not exist\n", g_radio_id);
 			ret = RADIO_ID_NOT_EXIST;
+			goto check_parm_failed_ret;
 		}
-		else if(AC_WLAN[WlanID] == NULL)
+		
+		if(AC_WLAN[WlanID] == NULL)
 		{
+			wid_syslog_err("wlan %d is not exist\n", WlanID);
 			ret = WLAN_ID_NOT_EXIST;
+			goto check_parm_failed_ret;
 		}
-		else
-		{
-			ret = WID_DELETE_WLAN_APPLY_RADIO(ID,WlanID);
+		
+		ret = WID_DELETE_WLAN_APPLY_RADIO(g_radio_id,WlanID);
 
-			if(ret == WID_DBUS_SUCCESS)
-			{
-				 WID_ADD_WLAN_CPE_CHANNEL_APPLY_RADIO_CLEAN_VLANID(ID,WlanID,0);   
-			}
+		if(ret == WID_DBUS_SUCCESS)
+		{
+			 WID_ADD_WLAN_CPE_CHANNEL_APPLY_RADIO_CLEAN_VLANID(g_radio_id,WlanID,0);   
 		}
 	}
 	else if(type == 1)
-		{
-			printf("******** type == 1 *****\n");
-			if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL))
-				{
-					tmp = WTP_GROUP[ID]->WTP_M;
-					radiotmp = WTP_GROUP[ID]->WTP_M;
-					while(radiotmp)
-						{
-							radionum +=AC_WTP[radiotmp->WTPID]->RadioCount;
-							radiotmp = radiotmp->next;
-						}
-					radio_head = (struct Radio_List *)WID_MALLOC(radionum*(sizeof(struct Radio_List)));
-					while(tmp)
-						{
-							ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
-
-							if(ret_check == WID_DBUS_SUCCESS)
-								{								
-									for(i=0;i<AC_WTP[tmp->WTPID]->RadioCount;i++)
-									{
-										if(AC_WTP[tmp->WTPID]->WTP_Radio[i]==NULL)
-											{
-												ret2 = RADIO_ID_NOT_EXIST;	
-												wid_syslog_debug_debug(WID_DEFAULT,"WTP%d radio%d is NOT exist\n",tmp->WTPID,AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
-											}
-										else if(AC_WLAN[WlanID] == NULL)
-											{
-												ret2 = WLAN_ID_NOT_EXIST;
-												wid_syslog_debug_debug(WID_DEFAULT,"WLAN %d is NOT exist\n",WlanID);
-											}	
-										else
-											{
-												ret2 = WID_DELETE_WLAN_APPLY_RADIO(AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID,WlanID);
-												wid_syslog_debug_debug(WID_DEFAULT,"WTP%d RADIO%d access into delete wlan apply radio\n",tmp->WTPID,AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
-											}
-
-										if(ret2 != WID_DBUS_SUCCESS)
-											{
-												radio_head[num].RadioId = AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID;
-												radio_head[num].FailReason = ret2;
-												num++;
-											}
-									}
-								}
-							tmp = tmp->next;
-						}
-					ret = WID_DBUS_SUCCESS;
-				}	
-			else
-				{
-					ret = GROUP_ID_NOT_EXIST;
-				}
+	{
+		wid_syslog_debug_debug(WID_DEFAULT, "******** type == 1 *****\n");
+		if (g_id >= WTP_GROUP_NUM || g_id == 0) {
+			wid_syslog_err("ap-group id %d larger than %d\n", g_id, WTP_GROUP_NUM-1);
+			ret = VALUE_OUT_OF_RANGE;
+			goto check_parm_failed_ret;
+		}
+		if (WlanID >= WLAN_NUM || WlanID == 0) {
+			wid_syslog_err("wlan id %d is out of range \n", WlanID, WLAN_NUM-1);
+			ret = VALUE_OUT_OF_RANGE;
+		    goto check_parm_failed_ret;
 		}
 		
+		if (AC_WLAN[WlanID] == NULL) {
+			ret = WLAN_ID_NOT_EXIST;
+			wid_syslog_err("WLAN %d is NOT exist\n",WlanID);
+			goto check_parm_failed_ret;
+		}
+
+		if (WTP_GROUP[g_id] == NULL) {
+			ret = GROUP_ID_NOT_EXIST;
+			wid_syslog_err("ap-group %d is not exist\n", g_id);
+			goto check_parm_failed_ret;
+		}
+
+		if (WTP_GROUP[g_id]->WTP_M ==NULL) {
+			ret = WID_DBUS_SUCCESS;
+			wid_syslog_debug_debug(WID_DEFAULT, "ap-group has no wtp members, return success\n");
+			goto check_parm_failed_ret;
+		}
+
+		tmp = WTP_GROUP[g_id]->WTP_M;
+		radiotmp = WTP_GROUP[g_id]->WTP_M;
+		while(radiotmp)
+		{
+			radionum +=AC_WTP[radiotmp->WTPID]->RadioCount;
+			radiotmp = radiotmp->next;
+		}
+		radio_head = (struct Radio_List *)WID_MALLOC(radionum*(sizeof(struct Radio_List)));
+		while(tmp)
+		{
+			ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
+
+			if(ret_check == WID_DBUS_SUCCESS)
+			{								
+				if (l_radio_id < AC_WTP[tmp->WTPID]->RadioCount) {
+					
+					if(AC_WTP[tmp->WTPID]->WTP_Radio[l_radio_id]==NULL)
+					{
+						ret2 = RADIO_ID_NOT_EXIST;	
+						wid_syslog_debug_debug(WID_DEFAULT,"WTP%d radio%d is NOT exist\n",tmp->WTPID, l_radio_id);
+					}	
+					else
+					{
+						ret2 = WID_DELETE_WLAN_APPLY_RADIO(AC_WTP[tmp->WTPID]->WTP_Radio[l_radio_id]->Radio_G_ID,WlanID);
+						wid_syslog_debug_debug(WID_DEFAULT,"WTP%d RADIO%d access into delete wlan apply radio\n",tmp->WTPID, l_radio_id);
+					}
+
+					if(ret2 != WID_DBUS_SUCCESS)
+					{
+						radio_head[num].RadioId = AC_WTP[tmp->WTPID]->WTP_Radio[l_radio_id]->Radio_G_ID;
+						radio_head[num].FailReason = ret2;
+						num++;
+					}
+				}
+			}
+			tmp = tmp->next;
+		}
+		ret = WID_DBUS_SUCCESS;
+	}
+
+check_parm_failed_ret:
+	
 		reply = dbus_message_new_method_return(msg);
 		
 		dbus_message_iter_init_append(reply, &iter);
@@ -36690,10 +36795,8 @@ DBusMessage * wid_dbus_interface_radio_delete_wlan(DBusConnection *conn, DBusMes
 			
 		if((type == 1)&&(ret == WID_DBUS_SUCCESS))
 			{
-				dbus_message_iter_append_basic (&iter,
-													 DBUS_TYPE_UINT32,
-											 &num);
-				printf("num = %d\n",num);		
+ 				dbus_message_iter_append_basic (&iter, DBUS_TYPE_UINT32, &num);
+				wid_syslog_debug_debug(WID_DEFAULT, "num = %d\n",num);		
 				for(i = 0; i < num; i++)
 					{
 						dbus_message_iter_append_basic (&iter,
@@ -39466,6 +39569,95 @@ DBusMessage * wid_dbus_interface_radio_set_mode(DBusConnection *conn, DBusMessag
 	return reply;	
 }
 #endif
+
+DBusMessage * wid_dbus_interface_radio_set_mgmt_frame_rate_base_wlanid(DBusConnection *conn, DBusMessage *msg, void *user_data){
+	DBusMessage * reply;	
+	DBusMessageIter	 iter;
+	unsigned int RadioID = 0;	
+	unsigned int type = 0,rate = 0,wlanid = 0;
+	DBusError err;
+	int ret = WID_DBUS_SUCCESS;
+	dbus_error_init(&err);
+	if (!(dbus_message_get_args ( msg, &err,
+								DBUS_TYPE_UINT32,&RadioID,
+								DBUS_TYPE_UINT32,&type,
+								DBUS_TYPE_UINT32,&rate,
+								DBUS_TYPE_UINT32,&wlanid,
+								DBUS_TYPE_INVALID)))
+	{
+
+		printf("Unable to get input args\n");
+				
+		if (dbus_error_is_set(&err)) 
+		{
+			printf("%s raised: %s",err.name,err.message);
+			dbus_error_free(&err);
+		}
+		return NULL;
+	}
+	if(AC_RADIO[RadioID] == NULL)
+	{
+		ret = RADIO_ID_NOT_EXIST;
+	}
+	else
+	{
+		ret = WID_RADIO_SET_MGMT_RATE_BASE_WLAN(RadioID,type,rate,wlanid);		
+	}
+	
+	reply = dbus_message_new_method_return(msg);
+	
+	dbus_message_iter_init_append (reply, &iter);
+	
+	dbus_message_iter_append_basic (&iter,
+									 DBUS_TYPE_UINT32,
+									 &ret);
+	return reply;	
+}
+
+DBusMessage * wid_dbus_interface_radio_clear_rate_for_wlanid(DBusConnection *conn, DBusMessage *msg, void *user_data){
+	DBusMessage * reply;	
+	DBusMessageIter	 iter;
+	unsigned int RadioID = 0;	
+	unsigned int wlanid = 0;
+	DBusError err;
+	int ret = WID_DBUS_SUCCESS;
+	dbus_error_init(&err);
+	if (!(dbus_message_get_args ( msg, &err,
+								DBUS_TYPE_UINT32,&RadioID,
+								DBUS_TYPE_UINT32,&wlanid,
+								DBUS_TYPE_INVALID)))
+	{
+
+		printf("Unable to get input args\n");
+				
+		if (dbus_error_is_set(&err)) 
+		{
+			printf("%s raised: %s",err.name,err.message);
+			dbus_error_free(&err);
+		}
+		return NULL;
+	}
+	if(AC_RADIO[RadioID] == NULL)
+	{
+		ret = RADIO_ID_NOT_EXIST;
+	}
+	else
+	{
+		ret = WID_RADIO_CLEAR_RATE_FOR_WLAN(RadioID,wlanid);		
+	}
+	
+	reply = dbus_message_new_method_return(msg);
+	
+	dbus_message_iter_init_append (reply, &iter);
+	
+	dbus_message_iter_append_basic (&iter,
+									 DBUS_TYPE_UINT32,
+									 &ret);
+	return reply;	
+}
+
+
+
 #if _GROUP_POLICY
 
 //added end
@@ -47959,9 +48151,9 @@ DBusMessage * wid_dbus_interface_set_ap_ip_gateway(DBusConnection *conn, DBusMes
 	DBusMessageIter	 iter;
 	unsigned int ip,gateway;
 	unsigned int wtpid;
-	unsigned int mask;
-	unsigned int fstdns;//12.17
-	unsigned int snddns = 0;//12.17
+	unsigned int fstdns;//12.17chenjun
+	unsigned int snddns = 0;//12.17chenjun
+	unsigned int mask;//12.17chenjun
 	DBusError err;
 	int ret = WID_DBUS_SUCCESS;
 	dbus_error_init(&err);
@@ -47980,14 +48172,14 @@ DBusMessage * wid_dbus_interface_set_ap_ip_gateway(DBusConnection *conn, DBusMes
 		}
 		return NULL;
 	}
-	fstdns = gateway;//12.17
-	snddns = gateway;//12.17
 	printf("ip %d gateway %d mask %d\n",ip,gateway,mask);
+	fstdns = gateway;//12.17chenjun
+	snddns = gateway;//12.17chenjun
 	//process the parameter
 	if(AC_WTP[wtpid] != NULL)
 	{
-		/*ret = wid_radio_set_ip_gateway(wtpid,ip,gateway,mask);//12.17*/
-		ret = wid_radio_set_ip_gateway_dns(wtpid,ip,gateway,mask,fstdns,snddns);//12.17
+		/*ret = wid_radio_set_ip_gateway(wtpid,ip,gateway,mask);//12.17chenjun*/
+		ret = wid_radio_set_ip_gateway_dns(wtpid,ip,gateway,mask,fstdns,snddns);//12.17chenjun
 	}
 	else
 	{
@@ -71157,6 +71349,9 @@ DBusMessage *wid_dbus_show_ap_group_members_all(DBusConnection *conn, DBusMessag
 	int i; 
 	struct WTP_GROUP_MEMBER *temp;
 	DBusMessageIter	 iter_array;
+	DBusMessageIter	 iter_sub_array;
+	DBusMessageIter iter_struct;
+	DBusMessageIter iter_sub_struct;
 	dbus_error_init(&err);
 	
 	dbus_message_iter_init(msg,&iter);	
@@ -71166,6 +71361,8 @@ DBusMessage *wid_dbus_show_ap_group_members_all(DBusConnection *conn, DBusMessag
 			count++;
 		}
 	}
+
+	wid_syslog_debug_debug(WID_DEFAULT, "find %d ap-group is created\n", count);
 	
 	reply = dbus_message_new_method_return(msg);
 		
@@ -71175,33 +71372,318 @@ DBusMessage *wid_dbus_show_ap_group_members_all(DBusConnection *conn, DBusMessag
 
 	dbus_message_iter_append_basic (&iter, DBUS_TYPE_UINT32, &count);
 
+	dbus_message_iter_open_container (&iter,
+										DBUS_TYPE_ARRAY,
+										DBUS_STRUCT_BEGIN_CHAR_AS_STRING
+											DBUS_TYPE_UINT32_AS_STRING
+											DBUS_TYPE_STRING_AS_STRING
+											DBUS_TYPE_UINT32_AS_STRING
+											DBUS_TYPE_ARRAY_AS_STRING
+												DBUS_STRUCT_BEGIN_CHAR_AS_STRING
+													DBUS_TYPE_UINT32_AS_STRING
+												DBUS_STRUCT_END_CHAR_AS_STRING
+										DBUS_STRUCT_END_CHAR_AS_STRING,
+										&iter_array);
 	for (i=0; i<WTP_GROUP_NUM; i++) {
 		if (WTP_GROUP[i] != NULL) {
-			dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT32, &WTP_GROUP[i]->GID);
-			dbus_message_iter_append_basic(&iter, DBUS_TYPE_STRING, &WTP_GROUP[i]->GNAME);
-			dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT32, &WTP_GROUP[i]->WTP_COUNT);
-
-			dbus_message_iter_open_container (&iter,
+			dbus_message_iter_open_container (&iter_array,DBUS_TYPE_STRUCT,NULL,&iter_struct);
+			
+			wid_syslog_debug_debug(WID_DEFAULT, "for ap-group %d\n", WTP_GROUP[i]->GID);
+			dbus_message_iter_append_basic(&iter_struct, DBUS_TYPE_UINT32, &WTP_GROUP[i]->GID);
+			dbus_message_iter_append_basic(&iter_struct, DBUS_TYPE_STRING, &WTP_GROUP[i]->GNAME);
+			dbus_message_iter_append_basic(&iter_struct, DBUS_TYPE_UINT32, &WTP_GROUP[i]->WTP_COUNT);
+			
+			wid_syslog_debug_debug(WID_DEFAULT, "ap-gourp %d name is %s wtpcount= %d\n", 
+							WTP_GROUP[i]->GID, WTP_GROUP[i]->GNAME, WTP_GROUP[i]->WTP_COUNT);
+			
+			dbus_message_iter_open_container (&iter_struct,
 									DBUS_TYPE_ARRAY,
 									DBUS_STRUCT_BEGIN_CHAR_AS_STRING
 											DBUS_TYPE_UINT32_AS_STRING
 									DBUS_STRUCT_END_CHAR_AS_STRING,
-									&iter_array);
+									&iter_sub_array);
+			
+			wid_syslog_debug_debug(WID_DEFAULT, "add wtp member\n");
 			
 			temp = WTP_GROUP[i]->WTP_M;
 			while (temp) {
-				DBusMessageIter iter_struct;
-				dbus_message_iter_open_container(&iter_array,DBUS_TYPE_STRUCT,NULL,&iter_struct);
- 				dbus_message_iter_append_basic(&iter_struct, DBUS_TYPE_UINT32, &temp->WTPID);
-				dbus_message_iter_close_container (&iter_array, &iter_struct);
+				wid_syslog_debug_debug(WID_DEFAULT, "add wtp %d to arry\n", temp->WTPID);
+				dbus_message_iter_open_container(&iter_sub_array,DBUS_TYPE_STRUCT,NULL,&iter_sub_struct);
+ 				dbus_message_iter_append_basic(&iter_sub_struct, DBUS_TYPE_UINT32, &temp->WTPID);
+				dbus_message_iter_close_container (&iter_sub_array, &iter_sub_struct);
 				temp = temp->next;
 			}
+			dbus_message_iter_close_container(&iter_struct, &iter_sub_array);
+			dbus_message_iter_close_container(&iter_array, &iter_struct);
+			
+			wid_syslog_debug_debug(WID_DEFAULT, "add wtp member done\n");
+		} else {
+			wid_syslog_debug_debug(WID_DEFAULT, "ap-group %d is not created\n", i);
 		}
-		dbus_message_iter_close_container (&iter, &iter_array);
 	}
-
+	
+	dbus_message_iter_close_container (&iter, &iter_array);
 	return reply;	
 }
+
+DBusMessage * wid_dbus_show_ap_group_X_summary(DBusConnection *conn, DBusMessage *msg, void *user_data) {
+	
+	DBusMessage* reply;	
+	DBusMessageIter	 iter;
+	DBusMessageIter	 iter_array;
+	DBusMessageIter iter_sub_array;
+	DBusMessageIter iter_struct;
+	DBusMessageIter iter_sub_struct;
+	unsigned int num=0;
+	DBusError err;
+	int ret = WID_DBUS_SUCCESS;
+	dbus_error_init(&err);
+	int i=0;
+	unsigned int g_num = 0;
+	WID_WTP **WTP[WTP_GROUP_NUM];
+	unsigned int wtp_counter[WTP_GROUP_NUM];
+	unsigned int g_id[WTP_GROUP_NUM];
+	char *wtp_location = NULL;
+	unsigned int ap_group_id;
+	
+	if (!(dbus_message_get_args ( msg, &err,
+								DBUS_TYPE_UINT32,&ap_group_id,
+								DBUS_TYPE_INVALID))){
+
+		wid_syslog_err("Unable to get input args\n");
+				
+		if (dbus_error_is_set(&err)) {
+			wid_syslog_err("%s raised: %s",err.name,err.message);
+			dbus_error_free(&err);
+		}
+		return NULL;
+	}
+
+	//for all ap-groups
+	if (ap_group_id == 0) {
+		wid_syslog_debug_debug(WID_DEFAULT, "show all ap_group members\n");
+		g_num = 0;
+		for (i=1; i<WTP_GROUP_NUM; i++) {
+			if (WTP_GROUP[i] != NULL && WTP_GROUP[i]->WTP_M != NULL) {
+				wid_syslog_debug_debug(WID_DEFAULT, "ap-group %d\n", i);
+				int counter = 0;
+				WTP[g_num] = WID_MALLOC(WTP_GROUP[i]->WTP_COUNT*sizeof(WID_WTP *));
+				struct WTP_GROUP_MEMBER *ptemp = WTP_GROUP[i]->WTP_M;
+				while (ptemp != NULL && counter <= WTP_GROUP[i]->WTP_COUNT) {
+					WTP[g_num][counter] = AC_WTP[ptemp->WTPID];
+					counter++;
+					ptemp = ptemp->next;
+				}
+				wtp_counter[g_num] = counter;
+				g_id[g_num] = i;
+				g_num++;
+				wid_syslog_debug_debug(WID_DEFAULT, "counter=%d g_num=%d g_id=%d\n", counter, g_num, i);
+			}
+		}
+		wid_syslog_debug_debug(WID_DEFAULT, "g_num=%d\n", g_num);
+	} else {
+		//for only one ap-group
+		if (ap_group_id >= WTP_GROUP_NUM) {
+			wid_syslog_err("ap_group_id %d is out of range \n", ap_group_id);
+			ret = VALUE_OUT_OF_RANGE;
+			num = 0;
+			reply = NULL;
+			g_num = 0;
+			goto return_to_dcli;
+		}
+		
+		if (WTP_GROUP[ap_group_id] == NULL) {
+			wid_syslog_debug_debug(WID_DEFAULT, "ap_group_id %d is NULL\n", ap_group_id);
+			ret = GROUP_ID_NOT_EXIST;
+			num = 0;
+			g_num = 0;
+			goto return_to_dcli;
+		}
+
+		if (WTP_GROUP[ap_group_id]->WTP_M == NULL) {
+			wid_syslog_debug_debug(WID_DEFAULT, " ap-group %d has no member\n", ap_group_id);
+			ret = GROUP_IS_EMPTY;
+			num = 0;
+			g_num = 0;
+		}
+		
+		WTP[0] = WID_MALLOC(WTP_GROUP[ap_group_id]->WTP_COUNT*sizeof(WID_WTP *));
+		num = 0;
+		struct WTP_GROUP_MEMBER *ptemp = WTP_GROUP[ap_group_id]->WTP_M;
+		while (ptemp != NULL && num <= WTP_GROUP[ap_group_id]->WTP_COUNT) {
+			WTP[0][num] = AC_WTP[ptemp->WTPID];
+			num++;
+			ptemp = ptemp->next;
+		}
+		wid_syslog_debug_debug(WID_DEFAULT, "num=%d \n", num);
+	}
+
+	/*store sn&mac of ap*/
+	unsigned char *mac = NULL;
+	mac = (unsigned char *)WID_MALLOC(MAC_LEN+1);		
+	wtp_location = (char *)WID_MALLOC(strlen("Location not setted")+1);
+	memset(wtp_location,0,strlen("Location not setted")+1);
+	memcpy(wtp_location,"Location not setted",strlen("Location not setted"));
+
+return_to_dcli:	
+	reply = dbus_message_new_method_return(msg);
+		
+	dbus_message_iter_init_append (reply, &iter);
+		
+	dbus_message_iter_append_basic (&iter,DBUS_TYPE_UINT32,&ret);
+	
+	//only one ap-group
+	if (ap_group_id != 0) {
+		if (num != 0) {
+			g_num = 1;
+			dbus_message_iter_append_basic (&iter,DBUS_TYPE_UINT32,&g_num);
+			dbus_message_iter_append_basic (&iter,DBUS_TYPE_UINT32, &ap_group_id);
+			dbus_message_iter_append_basic (&iter,DBUS_TYPE_UINT32, &num);
+			dbus_message_iter_open_container(&iter,
+				DBUS_TYPE_ARRAY,
+					DBUS_STRUCT_BEGIN_CHAR_AS_STRING
+						DBUS_TYPE_UINT32_AS_STRING
+						DBUS_TYPE_BYTE_AS_STRING
+						DBUS_TYPE_BYTE_AS_STRING
+						DBUS_TYPE_BYTE_AS_STRING
+						DBUS_TYPE_BYTE_AS_STRING
+						DBUS_TYPE_BYTE_AS_STRING
+						DBUS_TYPE_BYTE_AS_STRING
+						DBUS_TYPE_STRING_AS_STRING
+						DBUS_TYPE_STRING_AS_STRING
+						DBUS_TYPE_BYTE_AS_STRING
+						DBUS_TYPE_BYTE_AS_STRING
+						DBUS_TYPE_STRING_AS_STRING
+						DBUS_TYPE_STRING_AS_STRING
+						DBUS_TYPE_STRING_AS_STRING
+					DBUS_STRUCT_END_CHAR_AS_STRING,
+				&iter_array);
+			
+			for (i=0; i<num; i++) {
+				dbus_message_iter_open_container (&iter_array,DBUS_TYPE_STRUCT,NULL,&iter_struct);
+				dbus_message_iter_append_basic(&iter_struct,DBUS_TYPE_UINT32,&(WTP[0][i]->WTPID));
+				memset(mac,0,MAC_LEN+1);
+				memcpy(mac,WTP[0][i]->WTPMAC,MAC_LEN);
+				dbus_message_iter_append_basic(&iter_struct,DBUS_TYPE_BYTE,&(mac[0]));
+				dbus_message_iter_append_basic(&iter_struct,DBUS_TYPE_BYTE,&(mac[1]));
+				dbus_message_iter_append_basic(&iter_struct,DBUS_TYPE_BYTE,&(mac[2]));
+				dbus_message_iter_append_basic(&iter_struct,DBUS_TYPE_BYTE,&(mac[3]));
+				dbus_message_iter_append_basic(&iter_struct,DBUS_TYPE_BYTE,&(mac[4]));
+				dbus_message_iter_append_basic(&iter_struct,DBUS_TYPE_BYTE,&(mac[5]));
+				dbus_message_iter_append_basic(&iter_struct,DBUS_TYPE_STRING,&(WTP[0][i]->WTPIP));
+				
+				dbus_message_iter_append_basic(&iter_struct,DBUS_TYPE_STRING,&(WTP[0][i]->WTPModel));
+				dbus_message_iter_append_basic(&iter_struct,DBUS_TYPE_BYTE,&(WTP[0][i]->WTPStat));
+				dbus_message_iter_append_basic(&iter_struct,DBUS_TYPE_BYTE,&(WTP[0][i]->isused));
+				dbus_message_iter_append_basic(&iter_struct,DBUS_TYPE_STRING,&(WTP[0][i]->WTPNAME));
+				dbus_message_iter_append_basic(&iter_struct,DBUS_TYPE_STRING,&(WTP[0][i]->WTPSN));
+				if(WTP[0][i]->location == NULL) {
+					dbus_message_iter_append_basic(&iter_struct,DBUS_TYPE_STRING,&wtp_location); 
+				} else {
+					dbus_message_iter_append_basic(&iter_struct,DBUS_TYPE_STRING,&(WTP[0][i]->location));
+				}
+				dbus_message_iter_close_container (&iter_array, &iter_struct);
+			}
+			dbus_message_iter_close_container (&iter, &iter_array);
+		} else {
+			#if 0
+			g_num = 0;
+			dbus_message_iter_append_basic (&iter,DBUS_TYPE_UINT32,&g_num);
+			#endif
+		}
+		if (WTP[0]) 
+			WID_FREE(WTP[0]);
+	} else {
+		/*all ap-groups*/
+		dbus_message_iter_append_basic (&iter,DBUS_TYPE_UINT32,&g_num);
+		if (g_num != 0 ) {
+			dbus_message_iter_open_container(&iter,
+				DBUS_TYPE_ARRAY,
+					DBUS_STRUCT_BEGIN_CHAR_AS_STRING
+						DBUS_TYPE_UINT32_AS_STRING
+						DBUS_TYPE_UINT32_AS_STRING
+						DBUS_TYPE_ARRAY_AS_STRING
+							DBUS_STRUCT_BEGIN_CHAR_AS_STRING
+								DBUS_TYPE_UINT32_AS_STRING
+								DBUS_TYPE_BYTE_AS_STRING
+								DBUS_TYPE_BYTE_AS_STRING
+								DBUS_TYPE_BYTE_AS_STRING
+								DBUS_TYPE_BYTE_AS_STRING
+								DBUS_TYPE_BYTE_AS_STRING
+								DBUS_TYPE_BYTE_AS_STRING
+								DBUS_TYPE_STRING_AS_STRING
+								DBUS_TYPE_STRING_AS_STRING
+								DBUS_TYPE_BYTE_AS_STRING
+								DBUS_TYPE_BYTE_AS_STRING
+								DBUS_TYPE_STRING_AS_STRING
+								DBUS_TYPE_STRING_AS_STRING
+								DBUS_TYPE_STRING_AS_STRING
+							DBUS_STRUCT_END_CHAR_AS_STRING
+					DBUS_STRUCT_END_CHAR_AS_STRING,
+				&iter_array);
+			for (i=0; i<g_num; i++) {
+				dbus_message_iter_open_container (&iter_array,DBUS_TYPE_STRUCT,NULL,&iter_struct);
+				dbus_message_iter_append_basic (&iter_struct,DBUS_TYPE_UINT32,&g_id[i]);
+				dbus_message_iter_append_basic (&iter_struct,DBUS_TYPE_UINT32,&wtp_counter[i]);
+				dbus_message_iter_open_container (&iter_struct,
+					DBUS_TYPE_ARRAY,
+						DBUS_STRUCT_BEGIN_CHAR_AS_STRING
+							DBUS_TYPE_UINT32_AS_STRING
+							DBUS_TYPE_BYTE_AS_STRING
+							DBUS_TYPE_BYTE_AS_STRING
+							DBUS_TYPE_BYTE_AS_STRING
+							DBUS_TYPE_BYTE_AS_STRING
+							DBUS_TYPE_BYTE_AS_STRING
+							DBUS_TYPE_BYTE_AS_STRING
+							DBUS_TYPE_STRING_AS_STRING
+							DBUS_TYPE_STRING_AS_STRING
+							DBUS_TYPE_BYTE_AS_STRING
+							DBUS_TYPE_BYTE_AS_STRING
+							DBUS_TYPE_STRING_AS_STRING
+							DBUS_TYPE_STRING_AS_STRING
+							DBUS_TYPE_STRING_AS_STRING
+						DBUS_STRUCT_END_CHAR_AS_STRING,
+					&iter_sub_array);
+				for (num=0; num<wtp_counter[i]; num++) {
+					dbus_message_iter_open_container (&iter_sub_array,
+	    											   DBUS_TYPE_STRUCT,
+	    											   NULL,
+	    											   &iter_sub_struct);
+					dbus_message_iter_append_basic(&iter_sub_struct,DBUS_TYPE_UINT32,&(WTP[i][num]->WTPID));
+					memset(mac,0,MAC_LEN+1);
+					memcpy(mac,WTP[i][num]->WTPMAC,MAC_LEN);
+					dbus_message_iter_append_basic(&iter_sub_struct,DBUS_TYPE_BYTE,&(mac[0]));
+					dbus_message_iter_append_basic(&iter_sub_struct,DBUS_TYPE_BYTE,&(mac[1]));
+					dbus_message_iter_append_basic(&iter_sub_struct,DBUS_TYPE_BYTE,&(mac[2]));
+					dbus_message_iter_append_basic(&iter_sub_struct,DBUS_TYPE_BYTE,&(mac[3]));
+					dbus_message_iter_append_basic(&iter_sub_struct,DBUS_TYPE_BYTE,&(mac[4]));
+					dbus_message_iter_append_basic(&iter_sub_struct,DBUS_TYPE_BYTE,&(mac[5]));
+					dbus_message_iter_append_basic(&iter_sub_struct,DBUS_TYPE_STRING,&(WTP[i][num]->WTPIP));
+					dbus_message_iter_append_basic(&iter_sub_struct,DBUS_TYPE_STRING,&(WTP[i][num]->WTPModel));
+					dbus_message_iter_append_basic(&iter_sub_struct,DBUS_TYPE_BYTE,&(WTP[i][num]->WTPStat));
+					dbus_message_iter_append_basic(&iter_sub_struct,DBUS_TYPE_BYTE,&(WTP[i][num]->isused));
+					dbus_message_iter_append_basic(&iter_sub_struct,DBUS_TYPE_STRING,&(WTP[i][num]->WTPNAME));
+					dbus_message_iter_append_basic(&iter_sub_struct,DBUS_TYPE_STRING,&(WTP[i][num]->WTPSN));
+					if(WTP[i][num]->location == NULL) {
+						dbus_message_iter_append_basic(&iter_sub_struct,DBUS_TYPE_STRING,&wtp_location); 
+					} else {
+						dbus_message_iter_append_basic(&iter_sub_struct,DBUS_TYPE_STRING,&(WTP[i][num]->location));
+					}
+					dbus_message_iter_close_container (&iter_sub_array, &iter_sub_struct);
+				}
+				WID_FREE(WTP[i]);
+				dbus_message_iter_close_container (&iter_struct, &iter_sub_array);
+				dbus_message_iter_close_container (&iter_array, &iter_struct);
+			}
+			dbus_message_iter_close_container (&iter, &iter_array);
+		}
+	}
+
+	WID_FREE(mac);
+	WID_FREE(wtp_location);
+	return reply;	
+}
+
 
 /* add by zhangshu  2010-09-16 */
 DBusMessage *wid_dbus_show_ap_group_member(DBusConnection *conn, DBusMessage *msg, void *user_data)
@@ -71299,6 +71781,7 @@ DBusMessage *wid_dbus_add_del_ap_group_member(DBusConnection *conn, DBusMessage 
 	unsigned int count = 0;
 	unsigned int *wtp_list;
 	DBusMessageIter  iter_array;
+	DBusMessageIter iter_struct;
 	
 	dbus_error_init(&err);
 	
@@ -71314,12 +71797,14 @@ DBusMessage *wid_dbus_add_del_ap_group_member(DBusConnection *conn, DBusMessage 
 	
 	wid_syslog_debug_debug(WID_DEFAULT, "wtpnum =%d(0 for all)\n", num);
 
+	//operate wtp list
 	if (num > 0) {
 		wtp_list = WID_MALLOC(num*sizeof(unsigned int));
 		if (!wtp_list) {
 			ret = WID_DBUS_ERROR;
 			wid_syslog_err("%s for ap-group %d malloc failed\n", isadd ? "add" : "delete", groupid);
-			return reply;
+			count = 0;
+			goto return_to_dcli;
 		}
 		memset(wtp_list, 0, num*sizeof(unsigned int));
 
@@ -71333,36 +71818,100 @@ DBusMessage *wid_dbus_add_del_ap_group_member(DBusConnection *conn, DBusMessage 
 			dbus_message_iter_next(&iter_array);
 			wid_syslog_debug_debug(WID_DEFAULT, "wtpid %d\n",wtpid);
 
-			if((isadd)&&(AC_WTP[wtpid]!=NULL)&&(AC_WTP[wtpid]->APGroupID == 0)){
-				ret1 = add_ap_group_member(groupid,wtpid);
-				wid_syslog_debug_debug(WID_DEFAULT, "ret1 %d for adding wtp %d to ap-group %d\n", ret1, wtpid, groupid);
-				if (ret1 == WTP_BE_USING) {
-					wid_syslog_debug_debug(WID_DEFAULT, "wtp %d at ap-group %d\n", wtpid, AC_WTP[wtpid]->APGroupID);
+			//check wtpid 
+			if (wtpid == 0 || wtpid >= WTP_NUM) {
+				wtp_list[count] = wtpid;
+				count++;
+				wid_syslog_err("wtpid = %d is out of range\n", wtpid);
+				continue;
+			}
+
+			//check group id
+			if (groupid == 0 || groupid >= WTP_GROUP_NUM) {
+				ret = WID_DBUS_ERROR;
+				wid_syslog_err("groupid is out of range [1,%d)\n", groupid, WTP_GROUP_NUM);
+				count = 0;
+				goto return_to_dcli;
+			}
+
+			
+			//is wtp created or not
+			if (AC_WTP[wtpid] == NULL) {
+				wtp_list[count] = wtpid;
+				count++;
+				wid_syslog_err("wtpid=%d is not exist\n", wtpid);
+				continue;
+			}
+			
+			if(isadd){
+				//add wtp to ap-group
+				if (AC_WTP[wtpid]->APGroupID == 0) {
+					//the wtp has not add to any ap-group
+					ret1 = add_ap_group_member(groupid,wtpid);
+					wid_syslog_debug_debug(WID_DEFAULT, "ret1 %d for adding wtp %d to ap-group %d\n", ret1, wtpid, groupid);
+
+					if (ret1 == WID_DBUS_SUCCESS) {
+						wid_syslog_debug_debug(WID_DEFAULT, "add wtp %d to ap-group %d success\n", wtpid, groupid);
+					} else if (ret1 == GROUP_ID_NOT_EXIST) {
+						wtp_list[count] = wtpid;
+						count++;
+						wid_syslog_err("ap-group %d is not exit for wtp %d add to\n", groupid, wtpid);
+					} else if (ret1 == WTP_ID_NOT_EXIST) {
+						wid_syslog_debug_debug(WID_DEFAULT, "wtp %d not exist\n", wtpid);
+						wtp_list[count] = wtpid;
+						count++;
+					} else if (ret1 == WTP_BE_USING) {
+						wtp_list[count] = wtpid;
+						count++;
+						wid_syslog_debug_debug(WID_DEFAULT, "wtp %d already at another ap-group %d\n", wtpid, AC_WTP[wtpid]->APGroupID);
+					} else if (ret1 == WID_COMMON_EXIST) {
+						wtp_list[count] = wtpid;
+						count++;
+						wid_syslog_debug_debug(WID_DEFAULT, "wtp %d already at this ap-group\n", wtpid);
+					} else if (ret1 == WID_DBUS_ERROR) {
+						wtp_list[count] = wtpid;
+						count++;
+						wid_syslog_err("add ap-group %d for wtp %d malloc failed\n", groupid, wtpid);
+					} else {
+						wid_syslog_err("add for wtp %d to ap-group %d known ret %d\n", wtpid, groupid, ret);
+					}
+				} else {
+					//the wtp has allready to an ap-group
+					wtp_list[count] = wtpid;
+					count++;
+					wid_syslog_err("wtp %d already in ap-group %d\n", wtpid, AC_WTP[wtpid]->APGroupID);
 				}
-				if (ret1 == WTP_ID_NOT_EXIST) {
-					wid_syslog_debug_debug(WID_DEFAULT, "wtp %d not exist\n", wtpid);
-				}
-				if (ret1 == WID_DBUS_ERROR) {
-					wid_syslog_debug_debug(WID_DEFAULT, "add ap-group %d for wtp %d malloc failed\n", groupid, wtpid);
-				}
-				if(ret1 == WTP_ID_NOT_EXIST || ret1 == WTP_BE_USING || ret1 == WID_DBUS_ERROR){
+			} else {
+				//delete wtp from ap-group
+
+				ret1 = del_ap_group_member(groupid,wtpid);
+				if (ret1 == GROUP_ID_NOT_EXIST) {
+					wid_syslog_err("ap-group %d is not exist, and clear the wtp's groupid\n", groupid);
+					AC_WTP[wtpid]->APGroupID = 0;
+					wtp_list[count] = wtpid;
+					count++;
+				} else if (ret1 == WID_COMMON_NOT_EXIST) {
+					wid_syslog_debug_debug(WID_DEFAULT, "wtp %d is not at this ap-group, belongs to ap-group %d\n", wtpid, AC_WTP[wtpid]->APGroupID);
+					wtp_list[count] = wtpid;
+					count++;
+				} else if (ret1 == WID_COMMON_NOT_FOUND) {
+					wid_syslog_err("not found wtp %d at ap-group %d\n", wtpid, groupid);
+					wtp_list[count] = wtpid;
+					count++;
+				} else if (ret1 == WID_DBUS_SUCCESS) {
+					wid_syslog_debug_debug(WID_DEFAULT, "delete wtp %d from ap-group %d success\n", wtpid, groupid);
+				} else {
+					wid_syslog_err("delete wtp %d from ap-group %d failed ret=%d\n", wtpid, groupid, ret1);
 					wtp_list[count] = wtpid;
 					count++;
 				}
-			}else if((isadd == 0) && (AC_WTP[wtpid]!=NULL)){
-				if (AC_WTP[wtpid]->APGroupID == groupid) {
-					ret1 = del_ap_group_member(groupid,wtpid);
-					//wid_syslog_debug_debug(WID_DEFAULT, "ret1111 %d for deleting wtp %d from ap-group %d\n", ret1, wtpid, groupid);
-				} else {
-					wid_syslog_debug_debug(WID_DEFAULT, "wtp %d not at ap-group %d", wtpid, groupid);
-				}
-			}else{
-				wid_syslog_err("unknow operate for wtp %d\n", wtpid);
-				wtp_list[count] = wtpid;
-				count++;
+
 			}
 		}
 	} else {
+
+		//operate all the wtp list
+		
 		wid_syslog_debug_debug(WID_DEFAULT, "%s for ap-group %d all\n", isadd ? "add" : "delete", groupid);
 		count = 0;
 		
@@ -71370,53 +71919,110 @@ DBusMessage *wid_dbus_add_del_ap_group_member(DBusConnection *conn, DBusMessage 
 		if (WTP_GROUP[groupid] == NULL) {
 			wid_syslog_err("ap-group %d is not exist\n", groupid);
 			ret = WID_DBUS_ERROR;
+			count = 0;
+			goto return_to_dcli;
 		} else {
 			wtp_list = WID_MALLOC(WTP_NUM*sizeof(unsigned int));
 			//is malloc for result success
 			if (!wtp_list) {
 				ret = WID_DBUS_ERROR;
 				wid_syslog_err("%s for ap-group %d malloc failed\n", isadd ? "add" : "delete", groupid);
+				count = 0;
+				goto return_to_dcli;
 			} else {
 				memset(wtp_list, 0, WTP_NUM*sizeof(unsigned int));
 				if (isadd) {
 					for (i=1; i<WTP_NUM; i++) {
 						if (AC_WTP[i] != NULL && AC_WTP[i]->APGroupID == 0) {
-							ret1 = add_ap_group_member(groupid, i);
-							if (ret1 != 0) {
+							ret1 = add_ap_group_member(groupid,i);
+							wid_syslog_debug_debug(WID_DEFAULT, "ret1 %d for adding wtp %d to ap-group %d\n", ret1, i, groupid);
+
+							if (ret1 == WID_DBUS_SUCCESS) {
+								wid_syslog_debug_debug(WID_DEFAULT, "add wtp %d to ap-group %d success\n", i, groupid);
+							} else if (ret1 == GROUP_ID_NOT_EXIST) {
 								wtp_list[count] = i;
 								count++;
+								wid_syslog_err("ap-group %d is not exit for wtp %d add to\n", groupid, i);
+							} else if (ret1 == WTP_ID_NOT_EXIST) {
+								wid_syslog_debug_debug(WID_DEFAULT, "wtp %d not exist\n", i);
+								wtp_list[count] = i;
+								count++;
+							} else if (ret1 == WTP_BE_USING) {
+								wtp_list[count] = i;
+								count++;
+								wid_syslog_debug_debug(WID_DEFAULT, "wtp %d already at another ap-group %d\n", i, AC_WTP[i]->APGroupID);
+							} else if (ret1 == WID_COMMON_EXIST) {
+								wtp_list[count] = i;
+								count++;
+								wid_syslog_debug_debug(WID_DEFAULT, "wtp %d already at this ap-group\n", i);
+							} else if (ret1 == WID_DBUS_ERROR) {
+								wtp_list[count] = i;
+								count++;
+								wid_syslog_err("add ap-group %d for wtp %d malloc failed\n", groupid, i);
+							} else {
+								wid_syslog_err("add for wtp %d to ap-group %d known ret %d\n", i, groupid, ret);
 							}
 						}
 					}
 				} else {
 					for (i=1; i<WTP_NUM; i++) {
 						if (AC_WTP[i] != NULL && AC_WTP[i]->APGroupID == groupid)
-							ret1 = del_ap_group_member(groupid, i);
+							ret1 = del_ap_group_member(groupid,i);
+							if (ret1 == GROUP_ID_NOT_EXIST) {
+								wid_syslog_err("ap-group %d is not exist, and clear the wtp's groupid\n", groupid);
+								AC_WTP[i]->APGroupID = 0;
+								wtp_list[count] = i;
+								count++;
+							} else if (ret1 == WID_COMMON_NOT_EXIST) {
+								wid_syslog_debug_debug(WID_DEFAULT, "wtp %d is not at this ap-group, belongs to ap-group %d\n", i, AC_WTP[i]->APGroupID);
+								wtp_list[count] = i;
+								count++;
+							} else if (ret1 == WID_COMMON_NOT_FOUND) {
+								wid_syslog_err("not found wtp %d at ap-group %d\n", i, groupid);
+								wtp_list[count] = i;
+								count++;
+							} else if (ret1 == WID_DBUS_SUCCESS) {
+								wid_syslog_debug_debug(WID_DEFAULT, "delete wtp %d from ap-group %d success\n", i, groupid);
+							} else {
+								wid_syslog_err("delete wtp %d from ap-group %d failed ret=%d\n", i, groupid, ret1);
+								wtp_list[count] = i;
+								count++;
+							}
 					}
 				}
 			}
 		}
 	}
-		
+
+return_to_dcli:	
 	reply = dbus_message_new_method_return(msg);
 		
 	dbus_message_iter_init_append(reply, &iter1);
 		
 	dbus_message_iter_append_basic(&iter1, DBUS_TYPE_UINT32, &ret);
 	
-	dbus_message_iter_append_basic (&iter1,
-										 DBUS_TYPE_UINT32,
-										 &count);
+	dbus_message_iter_append_basic (&iter1, DBUS_TYPE_UINT32, &count);
+	
 	wid_syslog_debug_debug(WID_DEFAULT, "count %d\n",count);
+
+	dbus_message_iter_open_container (&iter1,
+									DBUS_TYPE_ARRAY,
+									DBUS_STRUCT_BEGIN_CHAR_AS_STRING
+											DBUS_TYPE_UINT32_AS_STRING
+									DBUS_STRUCT_END_CHAR_AS_STRING,
+									&iter_array);
+	
 	for(i = 0; i < count; i++){
-		
-		dbus_message_iter_append_basic (&iter1,
-											 DBUS_TYPE_UINT32,
-											 &(wtp_list[i]));
+		dbus_message_iter_open_container(&iter_array,DBUS_TYPE_STRUCT,NULL,&iter_struct);
+		dbus_message_iter_append_basic (&iter_struct, DBUS_TYPE_UINT32,&(wtp_list[i]));
+		dbus_message_iter_close_container (&iter_array, &iter_struct);
 		wid_syslog_debug_debug(WID_DEFAULT, "wtp_list[i] %d\n",wtp_list[i]);
-	}	
-	WID_FREE(wtp_list);
-	wtp_list = NULL;
+	}
+	dbus_message_iter_close_container (&iter1, &iter_array);
+	
+	if (wtp_list)
+		WID_FREE(wtp_list);
+
 	return reply;	
 }
 
@@ -71694,6 +72300,159 @@ DBusMessage * wid_dbus_interface_wtp_5g_switch(DBusConnection *conn, DBusMessage
 	return reply;	
 
 }
+
+DBusMessage * wid_dbus_interface_set_wtp_timing_upgrade_timer(DBusConnection *conn, DBusMessage *msg1, void *user_data)
+{
+	DBusMessage * reply;
+	DBusMessageIter  iter;
+	DBusMessageIter  iter1;
+	DBusError err;	
+	int ret = WID_DBUS_SUCCESS;
+
+	unsigned int time;
+	unsigned int wtp_id;
+
+	dbus_error_init(&err);
+	
+	dbus_message_iter_init(msg1,&iter);
+	dbus_message_iter_get_basic(&iter,&wtp_id);
+
+	dbus_message_iter_next(&iter);	
+	dbus_message_iter_get_basic(&iter,&time);
+
+	wid_syslog_debug_debug(WID_DEFAULT, "wid_timing_upgrade_ap_d:wpt %d time %d \n", wtp_id, time);
+	
+	if(AC_WTP[wtp_id] != NULL){
+		if(AC_WTP[wtp_id]->ap_timing_upgrade_info.TimerState == 0){
+			memset(&(AC_WTP[wtp_id]->ap_timing_upgrade_info), 0, sizeof(WID_WSC));
+			AC_WTP[wtp_id]->ap_timing_upgrade_info.times = time;
+		}else{
+			ret = WID_WTP_TIMING_UPGRADE_SWITCH_ON;
+		}
+	} else{
+		ret = WTP_ID_NOT_EXIST;
+	}
+	reply = dbus_message_new_method_return(msg1);
+		
+	dbus_message_iter_init_append(reply, &iter1);
+		
+	dbus_message_iter_append_basic(&iter1, DBUS_TYPE_UINT32, &ret);
+
+	return reply;	
+}	
+
+DBusMessage * wid_dbus_interface_set_wtp_timing_upgrade_switch(DBusConnection *conn, DBusMessage *msg1, void *user_data)
+{
+	DBusMessage * reply;
+	DBusMessageIter  iter;
+	DBusMessageIter  iter1;
+	DBusError err;	
+	int ret = WID_DBUS_SUCCESS;
+
+	unsigned int wtp_id;
+	unsigned char policy;
+	time_t timep;  
+	struct tm *p; 
+	int times;	   
+	int timer;
+	dbus_error_init(&err);
+	
+	dbus_message_iter_init(msg1,&iter);
+	dbus_message_iter_get_basic(&iter,&wtp_id);
+
+	dbus_message_iter_next(&iter);	
+	dbus_message_iter_get_basic(&iter,&policy);
+	
+	wid_syslog_debug_debug(WID_DEFAULT, "wid_timing_upgrade_ap_d: for wtp %d auto upgrade %s\n", wtp_id, policy ? "enable" : "disable");
+
+	if(AC_WTP[wtp_id]->ap_timing_upgrade_info.TimerState != policy){
+		if(policy == 1){
+			wid_syslog_debug_debug(WID_DEFAULT, "wid_timing_upgrade_ap_d:enable the timer\n");
+			AC_WTP[wtp_id]->ap_timing_upgrade_info.TimerState = policy;
+			
+			time(&timep);  
+			p=localtime(&timep);
+			
+			wid_syslog_debug_debug(WID_DEFAULT, "wid_timing_upgrade_ap_d:start time %d:%d:%d\n",p->tm_hour,p->tm_min,p->tm_sec);
+			times = p->tm_hour*3600 + p->tm_min*60 + p->tm_sec;
+			if(times < AC_WTP[wtp_id]->ap_timing_upgrade_info.times){
+				timer = AC_WTP[wtp_id]->ap_timing_upgrade_info.times - times; 
+			}else{
+				timer = 24*3600 - times + AC_WTP[wtp_id]->ap_timing_upgrade_info.times;
+			}
+
+			wid_syslog_debug_debug(WID_DEFAULT, "wid_timing_upgrade_ap_d:times %d timer=%d\n",times, timer);
+			wid_syslog_debug_debug(WID_DEFAULT, "wid_timing_upgrade_ap_d:AC_WTP[wtp_id]->ap_timing_upgrade_info.times %d\n", 
+				AC_WTP[wtp_id]->ap_timing_upgrade_info.times);
+
+			if(!(CWTimerRequest(timer, NULL, &(AC_WTP[wtp_id]->ap_timing_upgrade_info.TimerID), 912,wtp_id))) {
+				ret = WID_DBUS_ERROR;
+			}	
+			
+			wid_syslog_debug_debug(WID_DEFAULT, "wid_timing_upgrade_ap_d:AC_WTP[wtp_id]->ap_timing_upgrade_info.TimerID %d\n",
+				AC_WTP[wtp_id]->ap_timing_upgrade_info.TimerID);
+
+		} else {
+			wid_syslog_debug_debug(WID_DEFAULT, "wid_timing_upgrade_ap_d:disable the timer %d\n", __LINE__);
+			AC_WTP[wtp_id]->ap_timing_upgrade_info.TimerState = policy;
+			wid_syslog_debug_debug(WID_DEFAULT, "wid_timing_upgrade_ap_d:AC_WTP[wtp_id]->ap_timing_upgrade_info.TimerID %d\n",
+				AC_WTP[wtp_id]->ap_timing_upgrade_info.TimerID);
+			if(!CWTimerCancel(&(AC_WTP[wtp_id]->ap_timing_upgrade_info.TimerID),1)) {
+				ret = WID_DBUS_ERROR;
+			}
+		}
+	} else {
+		wid_syslog_debug_debug(WID_DEFAULT, "wid_timing_upgrade_ap_d:suggest:disable the switch and re-enable the switch\n");
+	}
+	
+	reply = dbus_message_new_method_return(msg1);
+		
+	dbus_message_iter_init_append(reply, &iter1);
+		
+	dbus_message_iter_append_basic(&iter1, DBUS_TYPE_UINT32, &ret);
+
+	return reply;	
+}
+
+
+DBusMessage * wid_dbus_interface_show_wtp_timing_upgrade_info(DBusConnection *conn, DBusMessage *msg, void *user_data)
+{
+	DBusMessage * reply = NULL;
+	DBusMessageIter  iter;
+	DBusError err;	
+	int ret = WID_DBUS_SUCCESS;
+
+	unsigned int wtp_id;
+	wid_syslog_debug_debug(WID_DEFAULT, "wid_timing_upgrade_ap_d:1111111111111111\n");
+	if (!(dbus_message_get_args (msg, &err,
+								DBUS_TYPE_UINT32,&wtp_id,
+								DBUS_TYPE_INVALID))){
+
+		wid_syslog_err("wid_timing_upgrade_ap_d:Unable to get input args\n");
+				
+		if (dbus_error_is_set(&err)) {
+			wid_syslog_err("wid_timing_upgrade_ap_d:%s raised: %s",err.name,err.message);
+			dbus_error_free(&err);
+		}
+		return NULL;
+	}
+
+	
+	wid_syslog_debug_debug(WID_DEFAULT, "wid_timing_upgrade_ap_d: show info for wtp %d\n", wtp_id);
+	
+	
+	reply = dbus_message_new_method_return(msg);
+		
+	dbus_message_iter_init_append(reply, &iter);
+		
+	dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT32, &ret);
+	dbus_message_iter_append_basic(&iter, DBUS_TYPE_INT32, &AC_WTP[wtp_id]->ap_timing_upgrade_info.TimerState);
+	if (AC_WTP[wtp_id]->ap_timing_upgrade_info.TimerState == 1) {
+		dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT32, &AC_WTP[wtp_id]->ap_timing_upgrade_info.times);
+	}
+	return reply;	
+}
+
 
 DBusMessage * wid_dbus_interface_set_whole_wlan_bss_multi_user_optimize_switch(DBusConnection *conn, DBusMessage *msg, void *user_data)
 {
@@ -76000,6 +76759,54 @@ DBusMessage * wid_dbus_interface_set_wsm_sta_info_reportswitch(DBusConnection *c
 	return reply;		
 }
 
+/*chenjun12.23*/
+DBusMessage * 	wid_dbus_show_is_secondary(DBusConnection *conn, DBusMessage *msg, void *user_data){
+       
+	DBusMessage* reply = NULL;	
+	DBusMessageIter iter;
+	DBusError err;
+
+	unsigned int ret = is_secondary;
+	dbus_error_init(&err);
+	wid_syslog_debug_debug(WID_DEFAULT,"%s,%d\n",__func__,__LINE__);
+	reply = dbus_message_new_method_return(msg);
+	dbus_message_iter_init_append(reply, &iter);
+	dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT32, &ret);
+	return reply;
+	}
+/*chenjun12.23*/
+DBusMessage * 	wid_dbus_set_is_secondary(DBusConnection *conn, DBusMessage *msg, void *user_data){
+       
+	DBusMessage* reply = NULL;	
+	DBusMessageIter iter;
+	DBusError err;
+	int ret = WID_DBUS_SUCCESS;
+	unsigned char type;
+	dbus_error_init(&err);
+	wid_syslog_debug_debug(WID_DEFAULT,"%s,%d\n",__func__,__LINE__);
+	if (!(dbus_message_get_args ( msg, &err,
+								DBUS_TYPE_BYTE,&type,
+								DBUS_TYPE_INVALID))){
+
+				
+		if (dbus_error_is_set(&err)) {
+			dbus_error_free(&err);
+		}
+		return NULL;
+	}
+	if (is_secondary != type)
+	{
+		is_secondary = type;
+	}
+	wid_syslog_debug_debug(WID_DEFAULT,"%s,%d,%d\n",__func__,__LINE__,is_secondary);
+	reply = dbus_message_new_method_return(msg);
+	dbus_message_iter_init_append(reply, &iter);
+	dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT32, &ret);
+	return reply;
+	}
+
+
+
 
 int show_running_config_wtp(WID_WTP **WTP,int i,char *cursor,char **showStr2,char *showStr_new,int *totalLen_T,int *str_len_T){
 	char radio_type[ACDBUS_RADOI_TYPE_LEN];	
@@ -77253,6 +78060,168 @@ int show_running_config_wtp(WID_WTP **WTP,int i,char *cursor,char **showStr2,cha
 								//totalLen += sprintf(cursor,"rate %d\n",WTP[i]->WTP_Radio[j]->Radio_Rate);
 								//cursor = showStr + totalLen;
 							}
+						}
+
+						if (WTP[i]->WTP_Radio[j]->Type_Rate!= 0)
+						{
+							int m = 0;
+							unsigned int type1 = 0;
+														
+							if(vrrid != 0){
+								totalLen += sprintf(cursor," ");
+								cursor = showStr + totalLen;
+							}
+							totalLen += sprintf(cursor," set wlan %d",WTP[i]->WTP_Radio[j]->wlanid);
+							cursor = showStr + totalLen;
+							if(vrrid != 0){
+								totalLen += sprintf(cursor," ");
+								cursor = showStr + totalLen;
+							}
+							type1 = (WTP[i]->WTP_Radio[j]->Type_Rate) & 0xfff;
+							
+							if ((type1 >> 11) == 1)
+							{
+								totalLen += sprintf(cursor,"rate 54");
+								
+							}
+							else if ((type1 >> 10) == 1)
+							{
+								totalLen += sprintf(cursor,"rate 48");
+								
+							}
+							else if ((type1 >> 9) == 1)
+							{
+								totalLen += sprintf(cursor,"rate 36");
+								
+							}
+							else if ((type1 >> 8) == 1)
+							{
+								totalLen += sprintf(cursor,"rate 24");
+								
+							}
+							else if ((type1 >> 7) == 1)
+							{
+								totalLen += sprintf(cursor,"rate 18");
+								
+							}
+							else if ((type1 >> 6) == 1)
+							{
+								totalLen += sprintf(cursor,"rate 12");
+								
+							}
+							else if ((type1 >> 5) == 1)
+							{
+								totalLen += sprintf(cursor,"rate 9");
+								
+							}
+							else if ((type1 >> 4) == 1)
+							{
+								totalLen += sprintf(cursor,"rate 6");
+								
+							}
+							else if ((type1 >> 3) == 1)
+							{
+								totalLen += sprintf(cursor,"rate 11");
+								
+							}
+							else if ((type1 >> 2) == 1)
+							{
+								totalLen += sprintf(cursor,"rate 5.5");
+								
+							}
+							else if ((type1 >> 1) == 1)
+							{
+								totalLen += sprintf(cursor,"rate 2");
+								
+							}
+							else if ((type1 >> 0) == 1)
+							{
+								totalLen += sprintf(cursor,"rate 1");
+								
+							}
+							cursor = showStr + totalLen;
+							if(vrrid != 0){
+								totalLen += sprintf(cursor," ");
+								cursor = showStr + totalLen;
+								
+							}
+							totalLen += sprintf(cursor,"for type");
+							cursor = showStr + totalLen;
+							type1 = WTP[i]->WTP_Radio[j]->Type_Rate ;
+							type1 = type1 >> 23;
+							for (m = 0; m < 9; m++ )
+							{
+								if (vrrid != 0){
+								totalLen += sprintf(cursor," ");
+								cursor = showStr + totalLen;
+								}
+								if  (type1 == 0x100)
+								{
+									totalLen += sprintf(cursor,"all");
+							                    cursor = showStr + totalLen;
+									break;
+								}
+								else if  ((type1 >> 7) == 1)
+								{
+									type1 = type1 & 0x7f;
+									totalLen += sprintf(cursor,"beacon");
+							                    cursor = showStr + totalLen;
+									continue;
+								}
+								else if  ((type1 >> 6) == 1)
+								{
+									type1 = type1 & 0x3f;
+									totalLen += sprintf(cursor,"probe_request");
+							                    cursor = showStr + totalLen;
+									continue;
+								}
+								else if  (( type1 >> 5) == 1)
+								{
+								         type1 = type1 & 0x1f;
+									totalLen += sprintf(cursor,"probe_response");
+							                    cursor = showStr + totalLen;
+									continue;
+								}
+								else if  (( type1 >> 4) == 1)
+								{
+								         type1 = type1 &0x0f;
+									totalLen += sprintf(cursor,"auth");
+							                    cursor = showStr + totalLen;
+									continue;
+								}
+								else if  (( type1 >> 3) == 1)
+								{
+									type1 = type1 & 0x07;
+									totalLen += sprintf(cursor,"assoc_request");
+							                    cursor = showStr + totalLen;
+									continue;
+								}	
+								else if  (( type1 >> 2) == 1)
+								{
+								         type1 = type1 & 0x03;
+									totalLen += sprintf(cursor,"assoc_response");
+							                    cursor = showStr + totalLen;
+									continue;
+								}	
+								else if  ((type1 >> 1) == 1)
+								{
+								 	type1 = type1 & 0x01;
+									totalLen += sprintf(cursor,"deauth");
+							                    cursor = showStr + totalLen;
+									continue;
+								}
+								else if (type1 == 1)
+								{
+									type1 = type1 & 0x00;
+									totalLen += sprintf(cursor,"disassoc");
+							                    cursor = showStr + totalLen;
+									continue;
+								}
+								
+							}
+							totalLen += sprintf(cursor,"\n");
+							 cursor = showStr + totalLen;
+							
 						}
 						if((WTP[i]->WTP_Radio[j]->Radio_Chan != 0)&&(WTP[i]->WTP_Radio[j]->auto_channel_cont != 0)){//sz1121 change 1 to 0
 							if(vrrid != 0){
@@ -78772,6 +79741,19 @@ static DBusHandlerResult wid_dbus_message_handler (DBusConnection *connection, D
 		{
 			reply = wid_dbus_interface_show_lic_bak_req_interval(connection, message, user_data);
 		}
+		/*chenjun12.23*/
+		else if(dbus_message_is_method_call(message,WID_DBUS_INTERFACE,WID_DBUS_CONF_METHOD_IS_SECONDARY_SHOW))
+		{
+			
+			reply = wid_dbus_show_is_secondary(connection,message,user_data);/*chenjun12.23*/
+			
+		}
+		else if(dbus_message_is_method_call(message,WID_DBUS_INTERFACE,WID_DBUS_CONF_METHOD_SET_IS_SECONDARY))
+		{
+			
+			reply = wid_dbus_set_is_secondary(connection,message,user_data);/*chenjun12.23*/
+			
+		}
 	}	
 	else if	(strcmp(dbus_message_get_path(message),WID_DBUS_WLAN_OBJPATH) == 0) {
 //		printf("wid obj path: %s", WID_DBUS_WLAN_OBJPATH);
@@ -79330,6 +80312,18 @@ static DBusHandlerResult wid_dbus_message_handler (DBusConnection *connection, D
 		{
 			reply = wid_dbus_interface_wtp_5g_switch(connection,message,user_data);
 		}
+		else if (dbus_message_is_method_call(message,WID_DBUS_WTP_INTERFACE,WID_DBUS_SET_WTP_TIMING_UPGRADE_SWITCH)) 
+		{
+			reply = wid_dbus_interface_set_wtp_timing_upgrade_switch(connection,message,user_data);
+		}
+		else if (dbus_message_is_method_call(message,WID_DBUS_WTP_INTERFACE,WID_DBUS_SET_WTP_TIMING_UPGRADE_TIMER)) 
+		{
+			reply = wid_dbus_interface_set_wtp_timing_upgrade_timer(connection,message,user_data);
+		}
+		else if (dbus_message_is_method_call(message,WID_DBUS_WTP_INTERFACE,WID_DBUS_SHOW_WTP_TIMING_UPGRADE_INFO)) 
+		{
+			reply = wid_dbus_interface_show_wtp_timing_upgrade_info(connection,message,user_data);
+		}
 	}
 	else if	(strcmp(dbus_message_get_path(message),WID_DBUS_RADIO_OBJPATH) == 0) {
 //		printf("wid obj path: %s", WID_DBUS_RADIO_OBJPATH);
@@ -79399,6 +80393,12 @@ static DBusHandlerResult wid_dbus_message_handler (DBusConnection *connection, D
 		/////
 		else if (dbus_message_is_method_call(message,WID_DBUS_RADIO_INTERFACE,WID_DBUS_RADIO_METHOD_SET_MODE)) {
 			reply = wid_dbus_interface_radio_set_mode(connection,message,user_data);
+		}
+		else if (dbus_message_is_method_call(message,WID_DBUS_RADIO_INTERFACE,WID_DBUS_RADIO_METHOD_SET_MGMT_RATE_BASE_WLAN)) {
+			reply = wid_dbus_interface_radio_set_mgmt_frame_rate_base_wlanid(connection,message,user_data);
+		}
+		else if (dbus_message_is_method_call(message,WID_DBUS_RADIO_INTERFACE,WID_DBUS_RADIO_METHOD_CLAER_RATE_FOR_WLAN)) {
+			reply = wid_dbus_interface_radio_clear_rate_for_wlanid(connection,message,user_data);
 		}
 		else if (dbus_message_is_method_call(message,WID_DBUS_RADIO_INTERFACE,WID_DBUS_RADIO_METHOD_SET_BEACON)) 
 		{
@@ -79920,6 +80920,9 @@ static DBusHandlerResult wid_dbus_message_handler (DBusConnection *connection, D
 		else if (dbus_message_is_method_call(message,WID_DBUS_AP_GROUP_INTERFACE,WID_DBUS_AP_GROUP_METHOD_SHOW_ALL_AP_GROUP_MEMBERS)){
 			reply = wid_dbus_show_ap_group_members_all(connection,message,user_data);
 		}
+		else if (dbus_message_is_method_call(message,WID_DBUS_AP_GROUP_INTERFACE,WID_DBUS_AP_GROUP_METHOD_SHOW_AP_GROUP_X_SUMMARY)){
+			reply = wid_dbus_show_ap_group_X_summary(connection,message,user_data);
+		}
 		else if (dbus_message_is_method_call(message,WID_DBUS_AP_GROUP_INTERFACE,WID_DBUS_AP_GROUP_METHOD_ADD_DEL_MEMBER)) {
 			reply = wid_dbus_add_del_ap_group_member(connection,message,user_data);
 		}	
@@ -80275,6 +81278,80 @@ int wid_dbus_trap_wtp_channel_change(unsigned char chan_past,unsigned char chan_
 	CW_FREE_OBJECT_WID(netid);
 	return 0;
 }
+
+int wid_dbus_trap_wtp_imagedata_error(int wtpindex, unsigned char err_code)
+{
+	DBusMessage *query;	
+	DBusError err;
+	unsigned int TID = wtpindex%THREAD_NUM;
+	wid_syslog_debug_debug(WID_DBUS,"wid_dbus_trap_wtp_imagedata_error tid %d\n",TID);
+
+	/*store sn&mac of ap*/
+	unsigned char *mac = NULL;
+	mac = (unsigned char *)WID_MALLOC(MAC_LEN+1);
+	memset(mac,0,MAC_LEN+1);
+	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->WTPMAC != NULL))
+	{
+		memcpy(mac,AC_WTP[wtpindex]->WTPMAC,MAC_LEN);
+	}
+
+	char *sn = NULL;
+	sn = (char *)WID_MALLOC(NAS_IDENTIFIER_NAME);
+	memset(sn,0,NAS_IDENTIFIER_NAME);
+	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->WTPSN != NULL))
+	{
+		memcpy(sn,AC_WTP[wtpindex]->WTPSN,strlen(AC_WTP[wtpindex]->WTPSN));
+	}
+
+    char *netid = NULL;
+    
+	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->netid != NULL))
+	{
+	    netid = (char *)WID_MALLOC(strlen(AC_WTP[wtpindex]->netid)+1);
+	    memset(netid,0,(strlen(AC_WTP[wtpindex]->netid)+1));
+		memcpy(netid,AC_WTP[wtpindex]->netid,strlen(AC_WTP[wtpindex]->netid));
+	}
+	else
+	{
+	    netid = (char *)WID_MALLOC(sizeof(char)*12);
+	    memset(netid,0,12);
+		memcpy(netid,"defaultcode",11);
+	}
+	unsigned int local_id = local;
+	unsigned int vrrp_id = vrrid;
+	
+	query = dbus_message_new_signal(WID_TRAP_OBJPATH,\
+				WID_TRAP_INTERFACE,WID_DBUS_TRAP_WID_WTP_IMAGEDATA_ERROR);
+	
+	dbus_error_init(&err);
+
+	dbus_message_append_args(query,
+						DBUS_TYPE_UINT32,&wtpindex,	 
+						DBUS_TYPE_STRING,&sn,
+						DBUS_TYPE_BYTE,&err_code,
+						DBUS_TYPE_BYTE,&mac[0],
+						DBUS_TYPE_BYTE,&mac[1],
+						DBUS_TYPE_BYTE,&mac[2],
+						DBUS_TYPE_BYTE,&mac[3],
+						DBUS_TYPE_BYTE,&mac[4],
+						DBUS_TYPE_BYTE,&mac[5],
+						DBUS_TYPE_STRING,&netid,
+						DBUS_TYPE_UINT32,&vrrp_id,
+						DBUS_TYPE_UINT32,&local_id,
+						DBUS_TYPE_INVALID);
+
+	dbus_connection_send(wid_dbus_connection_t[TID],query,NULL);
+	
+	dbus_message_unref(query);
+	CW_FREE_OBJECT_WID(sn);
+	CW_FREE_OBJECT_WID(mac);
+	CW_FREE_OBJECT_WID(netid);
+	return 0;
+}
+
+
+
+
 //when a wtp enter imagedata state,send this trap
 int wid_dbus_trap_wtp_enter_imagedata_state(int wtpindex)
 {

@@ -56,7 +56,7 @@ void *wid_malloc(unsigned int len, const char* func_name, unsigned int line) {
 		return temp;
 	} else {
 		if (wid_memory_trace_switch)
-			wid_syslog_err("wid_memory_trace:%s %d malloc %d Bytes failed\n");
+			wid_syslog_err("wid_memory_trace:%s %d malloc %d Bytes failed\n",func_name, line, len);
 		return NULL;
 	}
 }

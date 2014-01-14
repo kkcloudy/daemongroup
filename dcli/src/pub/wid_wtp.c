@@ -165,6 +165,45 @@ unsigned long wid_ip2ulong(char *str)
 	return ip;
 }
 
+void CheckWTPStatePercent(char *state, unsigned char WTPstate, unsigned char percent){
+	
+	switch(WTPstate){
+
+		case 2 :
+			strcpy(state, "join");
+			break;
+			
+		case 3 :
+			strcpy(state, "configure");
+			break;
+		
+		case 4 :
+			strcpy(state, "datacheck");
+			break;
+
+		case 5 :
+			strcpy(state, "run");
+			break;
+			
+		case 7 :
+			strcpy(state, "quit");
+			break;				
+		case 6 :
+		case 8 :
+			if (percent > 100) {
+				sprintf(state, "image-mismatch");
+			} else {
+				sprintf(state, "image-%u%%", percent);
+			}
+			//strcpy(state, "imagedata");
+			break;
+		case 9 :
+			strcpy(state, "bak_run");
+			break;			
+		
+	}
+
+}
 
 void CheckWTPState(char *state, unsigned char WTPstate){
 	
@@ -1778,6 +1817,8 @@ void* dcli_wtp_show_api_group_one(
 			dbus_message_iter_next(&iter_struct);
 			dbus_message_iter_get_basic(&iter_struct,&wtp_location);
 
+			dbus_message_iter_next(&iter_struct);
+			dbus_message_iter_get_basic(&iter_struct,&(WTP[i]->image_data_percent));
 			WTP[i]->location=(char*)malloc(strlen(wtp_location)+1);
 			memset(WTP[i]->location,0,strlen(wtp_location)+1);
 			memcpy(WTP[i]->location,wtp_location,strlen(wtp_location));
@@ -5748,7 +5789,7 @@ void dcli_free_WtpList(struct WtpList *WtpNode)
 	
 	if(WtpNode == NULL)
 		return ;
-	
+
 	if(WtpNode->WtpList_last != NULL) {
 		WtpNode->WtpList_last = NULL;
 	}
@@ -5758,11 +5799,15 @@ void dcli_free_WtpList(struct WtpList *WtpNode)
 		WtpNode->WtpList_list = tmp->next;
 		tmp->next = NULL;
 		//DCLI_FORMIB_FREE_OBJECT(tmp->wtpMacAddr);
-		free(tmp);
+
+		if (tmp)
+			free(tmp);
 		tmp = NULL;
 	}
-	
-	free(WtpNode);
+
+	if (WtpNode)
+		free(WtpNode);
+
 	WtpNode = NULL;
 	return ;
 }
@@ -14302,7 +14347,9 @@ struct WtpList * wtp_apply_wlan_cmd_wtp_apply_wlan_id(int index,int localid,
 	DBusMessageIter  iter;
 	DBusMessage *reply =NULL; 
 	DBusMessage *query = NULL;
-
+	DBusMessageIter  iter_array;
+	DBusMessageIter iter_struct;
+	
 	char BUSNAME[PATH_LEN];
 	char OBJPATH[PATH_LEN];
 	char INTERFACE[PATH_LEN];
@@ -14341,7 +14388,7 @@ struct WtpList * wtp_apply_wlan_cmd_wtp_apply_wlan_id(int index,int localid,
 	if(type == 1){
 		dbus_message_iter_next(&iter);	
 		dbus_message_iter_get_basic(&iter,count);
-		//printf("## count : %d\n",(*count));
+
 		if((*count) != 0){
 			if((wtp_list_head = (struct WtpList*)malloc(sizeof(struct WtpList))) == NULL){
 				*ret = MALLOC_ERROR;
@@ -14353,6 +14400,9 @@ struct WtpList * wtp_apply_wlan_cmd_wtp_apply_wlan_id(int index,int localid,
 			wtp_list_head->WtpList_list = NULL;
 			wtp_list_head->WtpList_last = NULL;
 		}
+
+		dbus_message_iter_next(&iter);
+		dbus_message_iter_recurse(&iter,&iter_array);
 		
 		for(i=0; i < (*count); i++){
 			if((WtpNode = (struct WtpList*)malloc(sizeof(struct WtpList))) == NULL){
@@ -14374,15 +14424,16 @@ struct WtpList * wtp_apply_wlan_cmd_wtp_apply_wlan_id(int index,int localid,
 			}
 			
 			wtp_list_head->WtpList_last = WtpNode;
-			
-			dbus_message_iter_next(&iter);	
-			dbus_message_iter_get_basic(&iter,&wtpid);
 
-			dbus_message_iter_next(&iter);	
-			dbus_message_iter_get_basic(&iter,&fail_reason);
+			dbus_message_iter_recurse(&iter_array,&iter_struct);
+			dbus_message_iter_get_basic(&iter_struct,&wtpid);
+
+			dbus_message_iter_next(&iter_struct);	
+			dbus_message_iter_get_basic(&iter_struct,&fail_reason);
 			
 			WtpNode->WtpId = wtpid;
 			WtpNode->FailReason =fail_reason;
+			dbus_message_iter_next(&iter_array);
 		}
 	}
 
@@ -15036,6 +15087,9 @@ struct WtpList * wtp_max_sta_cmd_set_wtp_max_sta_num(int index,int localid,
 {
 	DBusError err;
 	DBusMessageIter  iter;
+	DBusMessageIter	 iter_array;
+	DBusMessageIter iter_struct;
+	
 	DBusMessage *reply =NULL; 
 	DBusMessage *query = NULL;
 	//printf("access struct \n");
@@ -15072,7 +15126,7 @@ struct WtpList * wtp_max_sta_cmd_set_wtp_max_sta_num(int index,int localid,
 										DBUS_TYPE_INVALID);
 
 	reply = dbus_connection_send_with_reply_and_block (dbus_connection,query,-1, &err);
-	//printf("3333333333\n");
+
 	dbus_message_unref(query);
 	
 	if (NULL == reply) {
@@ -15083,297 +15137,199 @@ struct WtpList * wtp_max_sta_cmd_set_wtp_max_sta_num(int index,int localid,
 	
 	dbus_message_iter_init(reply,&iter);
 	dbus_message_iter_get_basic(&iter,ret);
-	//printf("44444444444\n");
+
 	if((type==0)&&(*ret == WID_DBUS_SUCCESS))
-		{	//printf("access type0 wtp max sta\n");
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter,count);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter,&wtpid);
-			dbus_message_unref(reply);
-			//printf("#########\n");
-			*stanum = wtp_check_sta_num_asd(index,localid,dbus_connection,wtpid);
-			if(*stanum>wtp_max_sta)
-				{
-					*ret1 = -1;
-					//printf("ret1 = %d\n",*ret1);
-				}
-			else
-				{
-				  	memset(BUSNAME,0,PATH_LEN);
-					memset(OBJPATH,0,PATH_LEN);
-					memset(INTERFACE,0,PATH_LEN);
-					//printf("@@@@@@@\n");
-					ReInitDbusPath_V2(localid,index,WID_DBUS_BUSNAME,BUSNAME);
-					ReInitDbusPath_V2(localid,index,WID_DBUS_WTP_OBJPATH,OBJPATH);
-					ReInitDbusPath_V2(localid,index,WID_DBUS_WTP_INTERFACE,INTERFACE);
-		
-					query = dbus_message_new_method_call(BUSNAME,OBJPATH,INTERFACE,WID_DBUS_WTP_METHOD_APPAY_WTP_MAX_STA);
-					dbus_error_init(&err);
+	{	
+		dbus_message_iter_next(&iter);
+		dbus_message_iter_get_basic(&iter,count);
+		dbus_message_iter_next(&iter);
+		dbus_message_iter_get_basic(&iter,&wtpid);
+		dbus_message_unref(reply);
 
-					dbus_message_append_args(query,
-				   							DBUS_TYPE_UINT32,&wtp_max_sta,
-											DBUS_TYPE_UINT32,&wtpid, 					 
-											DBUS_TYPE_INVALID);
-
-					reply = dbus_connection_send_with_reply_and_block (dbus_connection,query,-1, &err);
-	
-					dbus_message_unref(query);
-	
-					if (NULL == reply)
-						{
-						dbus_error_free_for_dcli(&err);
-
-							return NULL;
-						}	
-					dbus_message_iter_init(reply,&iter);
-					dbus_message_iter_get_basic(&iter,ret1);
-					dbus_message_unref(reply);
-					//printf("ret1 = %d\n",*ret1);
-				}
-		}
-		
-	
-	if((type == 1)&&(*ret == WID_DBUS_SUCCESS))
+		*stanum = wtp_check_sta_num_asd(index,localid,dbus_connection,wtpid);
+		if(*stanum>wtp_max_sta)
 		{
-			//printf("access type1 wtp max sta\n");
-			dbus_message_iter_next(&iter);	
-			dbus_message_iter_get_basic(&iter,count);
-			//printf("count = %d\n",*count);
-			if(*count != 0)
-				{
-					if((wtp_list_head = (struct WtpList*)malloc(sizeof(struct WtpList))) == NULL)
-						{
-							*ret = MALLOC_ERROR;
-							dbus_message_unref(reply);
-							return NULL;
-						}
-				
-					memset(wtp_list_head,0,sizeof(struct WtpList));
-					wtp_list_head->WtpList_list = NULL;
-					wtp_list_head->WtpList_last = NULL;
-				}
-		
-			for(i=0; i < (*count); i++)
-				{
-					if((WtpNode = (struct WtpList*)malloc(sizeof(struct WtpList))) == NULL)
-						{
-							dcli_free_WtpList(wtp_list_head);
-							*ret = MALLOC_ERROR;
-							dbus_message_unref(reply);
-							return NULL;
-						}
-			
-					memset(WtpNode,0,sizeof(struct WtpList));
-					WtpNode->next = NULL;
-
-					if(wtp_list_head->WtpList_list == NULL)
-						{
-							wtp_list_head->WtpList_list = WtpNode;
-							wtp_list_head->next = WtpNode;
-						}
-					else
-						{
-							wtp_list_head->WtpList_last->next = WtpNode;
-						}
-			
-					wtp_list_head->WtpList_last = WtpNode;
-			
-					dbus_message_iter_next(&iter);	
-					dbus_message_iter_get_basic(&iter,&wtpid);
-			
-					WtpNode->WtpId = wtpid;
-					//printf("wtpid = %d\n",wtpid);
-				}
-	
-	   		dbus_message_unref(reply);
-			accesswtp = (struct WtpList *)malloc(*count *(sizeof(struct WtpList)));
-			memset(accesswtp,0,*count *(sizeof(struct WtpList)));
-			//failwtp =  (struct WtpList *)malloc(*count *(sizeof(struct WtpList)));
-			//access_then_fail = (struct WtpList *)malloc(*count *(sizeof(struct WtpList)));
-			//count_wtp = (struct WtpList *)malloc(*count *(sizeof(struct WtpList)));
-			final_wtp = (struct WtpList *)malloc(*count *(sizeof(struct WtpList)));
-			memset(final_wtp,0,*count *(sizeof(struct WtpList)));
-			for(i=0; i<*count; i++)
-			{
-				 if(wtp_show_node == NULL)
-				 wtp_show_node = wtp_list_head->WtpList_list;
-			 	else 
-			 	wtp_show_node = wtp_show_node->next;
-
-				 if(wtp_show_node == NULL)
-				 	break;
-			 
-				//printf("QQQQQQQQQQQ \n");		
-				*stanum = wtp_check_sta_num_asd(index,localid,dbus_connection,wtp_show_node->WtpId);
-			
-
-			
-				if(*stanum>wtp_max_sta)
-					{
-						//failwtp[i].WtpId = wtp_show_node->WtpId;
-						//failnum++;
-						//failwtp[i].WtpStaNum = *stanum;
-						
-						final_wtp[i].WtpId = wtp_show_node->WtpId;
-						final_wtp[i].FailReason = 'f';
-						final_wtp[i].WtpStaNum = *stanum;
-						//*finalnum++;
-						j++;
-						//printf("j = %d\n",j);
-						//printf("final_wtp[%d].WtpStaNum = %d\n",i,final_wtp[i].WtpStaNum);
-						//printf("failwtp[%d].wtpid = %d\n",i,failwtp[i].WtpId);
-						//printf("failwtp[%d].WtpStaNum = %d\n",i,failwtp[i].WtpStaNum);
-					}
-				else
-					{
-						accesswtp[i].WtpId = wtp_show_node->WtpId;
-						accessnum++;
-						//printf("wtp_show_node->WtpId = %d\n",wtp_show_node->WtpId);
-						//printf("accesswtp[i].WtpId = %d\n",accesswtp[i].WtpId);
-
-						//printf("WWWWWWWWWWW\n");
-						memset(BUSNAME,0,PATH_LEN);
-						memset(OBJPATH,0,PATH_LEN);
-						memset(INTERFACE,0,PATH_LEN);
-
-						ReInitDbusPath_V2(localid,index,WID_DBUS_BUSNAME,BUSNAME);
-						ReInitDbusPath_V2(localid,index,WID_DBUS_WTP_OBJPATH,OBJPATH);
-						ReInitDbusPath_V2(localid,index,WID_DBUS_WTP_INTERFACE,INTERFACE);
-		
-						query = dbus_message_new_method_call(BUSNAME,OBJPATH,INTERFACE,WID_DBUS_WTP_METHOD_APPAY_WTP_MAX_STA);
-						dbus_error_init(&err);
-						//printf("accessnum = %d\n",accessnum);
-
-						dbus_message_append_args(query,
-				   						DBUS_TYPE_UINT32,&wtp_max_sta,
-										DBUS_TYPE_UINT32,&accesswtp[i].WtpId, 					 
-										DBUS_TYPE_INVALID);
-						//printf("accesswtp.wtpid =  %d\n",accesswtp[i].WtpId);
-						reply = dbus_connection_send_with_reply_and_block (dbus_connection,query,-1, &err);
-	
-						dbus_message_unref(query);
-	
-						if (NULL == reply)
-						{
-							dbus_error_free_for_dcli(&err);
-
-							return NULL;
-						}	
-						dbus_message_iter_init(reply,&iter);
-						dbus_message_iter_get_basic(&iter,ret1);
-
-						if(*ret1 == 0)
-							{
-					
-							}
-						else
-							{
-								//access_then_fail[i].WtpId = accesswtp[i].WtpId;
-								//access_then_failnum++;
-								final_wtp[i].WtpId = accesswtp[i].WtpId;
-								//*finalnum++;
-								j++;
-								//printf("access_then_failnum\n",access_then_failnum);
-							}
-								
-				
-						/*if(count_wtp[i].WtpId == failwtp[i].WtpId)
-							{
-								final_wtp[i].WtpId = failwtp[i].WtpId;
-								final_wtp[i].FailReason = 'f';
-								final_wtp[i].WtpStaNum = failwtp[i].WtpStaNum;
-								//*finalnum++;
-								j++;
-							}*/
-						/*else if(count_wtp[i].WtpId == access_then_fail[i].WtpId)
-							{
-								final_wtp[i].WtpId = access_then_fail[i].WtpId;
-								//*finalnum++;
-								j++;
-							}*/
-
-						//printf("access_then_failnum = %d\n",access_then_failnum);
-						//printf("j =%d\n",j);
-					}
-						
-				}
-				//printf("j = %d\n",j);
-				*finalnum = j;
-				//printf("finalnum = %d\n",*finalnum);
-				dcli_free_WtpList(accesswtp);
-				dcli_free_WtpList(wtp_list_head);
-				//dcli_free_WtpList(failwtp);
-				//dcli_free_WtpList(access_then_fail);
-				//dcli_free_WtpList(count_wtp);
-			}
-			/*printf("WWWWWWWWWWW\n");
-			memset(BUSNAME,0,PATH_LEN);
+			*ret1 = -1;
+		}
+		else
+		{
+		  	memset(BUSNAME,0,PATH_LEN);
 			memset(OBJPATH,0,PATH_LEN);
 			memset(INTERFACE,0,PATH_LEN);
 
 			ReInitDbusPath_V2(localid,index,WID_DBUS_BUSNAME,BUSNAME);
 			ReInitDbusPath_V2(localid,index,WID_DBUS_WTP_OBJPATH,OBJPATH);
 			ReInitDbusPath_V2(localid,index,WID_DBUS_WTP_INTERFACE,INTERFACE);
-		
+
 			query = dbus_message_new_method_call(BUSNAME,OBJPATH,INTERFACE,WID_DBUS_WTP_METHOD_APPAY_WTP_MAX_STA);
 			dbus_error_init(&err);
-			printf("accessnum = %d\n",accessnum);
-			for(i=0;i<accessnum;i++)
+
+			dbus_message_append_args(query,
+		   							DBUS_TYPE_UINT32,&wtp_max_sta,
+									DBUS_TYPE_UINT32,&wtpid, 					 
+									DBUS_TYPE_INVALID);
+
+			reply = dbus_connection_send_with_reply_and_block (dbus_connection,query,-1, &err);
+
+			dbus_message_unref(query);
+
+			if (NULL == reply)
 			{
+				dbus_error_free_for_dcli(&err);
+				return NULL;
+			}	
+			dbus_message_iter_init(reply,&iter);
+			dbus_message_iter_get_basic(&iter,ret1);
+			dbus_message_unref(reply);
+		}
+	}
+		
+	
+	if((type == 1)&&(*ret == WID_DBUS_SUCCESS))
+	{
+		dbus_message_iter_next(&iter);	
+		dbus_message_iter_get_basic(&iter,count);
+
+		if (*count == 0) {
+			*ret = WID_FAKE_SUCCESS;
+			return NULL;
+		}
+		
+		//printf("count = %d\n", *count);
+		if(*count != 0)
+		{
+			if((wtp_list_head = (struct WtpList*)malloc(sizeof(struct WtpList))) == NULL)
+			{
+				*ret = MALLOC_ERROR;
+				dbus_message_unref(reply);
+				return NULL;
+			}
+		
+			memset(wtp_list_head,0,sizeof(struct WtpList));
+			wtp_list_head->WtpList_list = NULL;
+			wtp_list_head->WtpList_last = NULL;
+		}
+
+
+		dbus_message_iter_next(&iter);	
+		dbus_message_iter_recurse(&iter,&iter_array);
+
+		for(i=0; i < (*count); i++)
+		{
+			if((WtpNode = (struct WtpList*)malloc(sizeof(struct WtpList))) == NULL)
+			{
+				dcli_free_WtpList(wtp_list_head);
+				*ret = MALLOC_ERROR;
+				dbus_message_unref(reply);
+				return NULL;
+			}
+	
+			memset(WtpNode,0,sizeof(struct WtpList));
+			WtpNode->next = NULL;
+
+			if(wtp_list_head->WtpList_list == NULL)
+			{
+				wtp_list_head->WtpList_list = WtpNode;
+				wtp_list_head->next = WtpNode;
+			}
+			else
+			{
+				wtp_list_head->WtpList_last->next = WtpNode;
+			}
+	
+			wtp_list_head->WtpList_last = WtpNode;
+	
+			dbus_message_iter_recurse(&iter_array,&iter_struct);	
+			dbus_message_iter_get_basic(&iter_struct,&wtpid);
+			dbus_message_iter_next(&iter_array);
+	
+			WtpNode->WtpId = wtpid;
+		}
+
+   		dbus_message_unref(reply);
+		accesswtp = (struct WtpList *)malloc(*count *(sizeof(struct WtpList)));
+		memset(accesswtp,0,*count *(sizeof(struct WtpList)));
+
+		final_wtp = (struct WtpList *)malloc(*count *(sizeof(struct WtpList)));
+		memset(final_wtp,0,*count *(sizeof(struct WtpList)));
+
+		for(i=0; i<*count; i++)
+		{
+			if(wtp_show_node == NULL)
+				wtp_show_node = wtp_list_head->WtpList_list;
+			else 
+				wtp_show_node = wtp_show_node->next;
+
+			if(wtp_show_node == NULL)
+				break;
+		 	
+			*stanum = wtp_check_sta_num_asd(index,localid,dbus_connection,wtp_show_node->WtpId);
+
+			if(*stanum>wtp_max_sta)
+			{
+				final_wtp[i].WtpId = wtp_show_node->WtpId;
+				final_wtp[i].FailReason = 'f';
+				final_wtp[i].WtpStaNum = *stanum;
+				j++;
+			}
+			else
+			{
+				accesswtp[i].WtpId = wtp_show_node->WtpId;
+				accessnum++;
+
+				memset(BUSNAME,0,PATH_LEN);
+				memset(OBJPATH,0,PATH_LEN);
+				memset(INTERFACE,0,PATH_LEN);
+
+				ReInitDbusPath_V2(localid,index,WID_DBUS_BUSNAME,BUSNAME);
+				ReInitDbusPath_V2(localid,index,WID_DBUS_WTP_OBJPATH,OBJPATH);
+				ReInitDbusPath_V2(localid,index,WID_DBUS_WTP_INTERFACE,INTERFACE);
+
+				query = dbus_message_new_method_call(BUSNAME,OBJPATH,INTERFACE,WID_DBUS_WTP_METHOD_APPAY_WTP_MAX_STA);
+				dbus_error_init(&err);
+
 				dbus_message_append_args(query,
-				   						DBUS_TYPE_UINT32,&wtp_max_sta,
-										DBUS_TYPE_UINT32,&accesswtp[i].WtpId, 					 
-										DBUS_TYPE_INVALID);
-				printf("accesswtp.wtpid =  %d\n",accesswtp[i].WtpId);
+		   						DBUS_TYPE_UINT32,&wtp_max_sta,
+								DBUS_TYPE_UINT32,&accesswtp[i].WtpId, 					 
+								DBUS_TYPE_INVALID);
+
 				reply = dbus_connection_send_with_reply_and_block (dbus_connection,query,-1, &err);
-	
+
 				dbus_message_unref(query);
-	
+
 				if (NULL == reply)
-					{
-						if (dbus_error_is_set(&err))
-							{
-								dbus_error_free(&err);
-							}
-						return NULL;
-					}	
+				{
+					dbus_error_free_for_dcli(&err);
+
+					return NULL;
+				}	
 				dbus_message_iter_init(reply,&iter);
 				dbus_message_iter_get_basic(&iter,ret1);
 
 				if(*ret1 == 0)
-					{
-					
-					}
-				else
-					{
-						access_then_fail[i].WtpId = accesswtp[i].WtpId;
-						access_then_failnum++;
-					}
-			}*/
-			/*for(i=0;i<*count;i++)
 				{
-					if(count_wtp[i].WtpId == failwtp[i].WtpId)
-						{
-							final_wtp[i].WtpId = failwtp[i].WtpId;
-							final_wtp[i].FailReason = 'f';
-							final_wtp[i].WtpStaNum = failwtp[i].WtpStaNum;
-							*finalnum++;
-						}
-					else if(count_wtp[i].WtpId == access_then_fail[i].WtpId)
-						{
-							final_wtp[i].WtpId = access_then_fail[i].WtpId;
-							*finalnum++;
-						}
-				}*/
+		
+				}
+				else
+				{
+					final_wtp[i].WtpId = accesswtp[i].WtpId;
+					j++;
+				}
+			}
+					
+		}
 
-				/*dcli_free_WtpList(accesswtp);
-				dcli_free_WtpList(failwtp);
-				dcli_free_WtpList(access_then_fail);
-				dcli_free_WtpList(count_wtp);*/
+		*finalnum = j;
+
+		if (accesswtp)
+			dcli_free_WtpList(accesswtp);
 		
 
-		return final_wtp;
+		if (wtp_list_head)
+			dcli_free_WtpList(wtp_list_head);
+	}
+
+	return final_wtp;
 }
 
 /*nl add for group 20100913*/

@@ -3084,7 +3084,7 @@ DEFUN(show_wtp_list_new_cmd_func,
 		vty_out(vty,"%d WTP Bak_run state\n",(ret == 0)?WTPINFO->bak_run_num:0);
 		vty_out(vty,"%d WTP Quit state\n",(ret == 0)?WTPINFO->quit_num:0);
 	    vty_out(vty,"==============================================================================\n");
-		vty_out(vty,"%-5s %-17s %-21s %-10s %-7s\n","WTPID","WTPMAC","WTPIP","RunState","State");
+		vty_out(vty,"%-5s %-17s %-21s %-14s %-7s\n","WTPID","WTPMAC","WTPIP","RunState","State");
 		if(ret == -1){
 			cli_syslog_info("<error> failed get reply.\n");
 		}
@@ -3095,11 +3095,11 @@ DEFUN(show_wtp_list_new_cmd_func,
 					head = WTPINFO->WTP_INFO->WTP_LIST;
 					for (i = 0; i < WTPINFO->WTP_INFO->list_len; i++) {
 						
-						CheckWTPState(state,head->WTPStat);
+						CheckWTPStatePercent(state,head->WTPStat, head->image_data_percent);
 						result = wtp_check_wtp_ip_addr(ip,head->WTPIP);
 						if(result != 1)
 						{
-							vty_out(vty,"%-5d %02X:%02X:%02X:%02X:%02X:%02X %-21s %-10s %-7s\n",
+							vty_out(vty,"%-5d %02X:%02X:%02X:%02X:%02X:%02X %-21s %-14s %-7s\n",
 								head->WTPID,
 								head->WTPMAC[0],head->WTPMAC[1],head->WTPMAC[2],head->WTPMAC[3],head->WTPMAC[4],head->WTPMAC[5],
 								head->WTPIP,
@@ -3108,7 +3108,7 @@ DEFUN(show_wtp_list_new_cmd_func,
 						}
 						else
 						{
-							vty_out(vty,"%-5d %02X:%02X:%02X:%02X:%02X:%02X %-21s %-10s %-7s\n",
+							vty_out(vty,"%-5d %02X:%02X:%02X:%02X:%02X:%02X %-21s %-14s %-7s\n",
 								head->WTPID,
 								head->WTPMAC[0],head->WTPMAC[1],head->WTPMAC[2],head->WTPMAC[3],head->WTPMAC[4],head->WTPMAC[5],
 								ip,
@@ -7112,7 +7112,7 @@ DEFUN(wtp_apply_wlan_cmd_func,
 	ReInitDbusConnection(&dcli_dbus_connection,slot_id,distributFag);
 	WtpList_Head = wtp_apply_wlan_cmd_wtp_apply_wlan_id(index,localid,dcli_dbus_connection,type,id,wlan_id,&count,&ret);
 	
-	if(ret == 0){
+	if(ret == WID_DBUS_SUCCESS){
 		if (count == 0)
 			vty_out(vty,"wtp apply wlan  %s successfully.\n",argv[0]);
 		
@@ -7127,7 +7127,7 @@ DEFUN(wtp_apply_wlan_cmd_func,
 				if(Wtp_Show_Node == NULL)
 					break;
 				
-				vty_out(vty,"%d \n",Wtp_Show_Node->WtpId);					
+				vty_out(vty,"%d ",Wtp_Show_Node->WtpId);					
 			}
 			
 			vty_out(vty," failed.\n");
@@ -7159,6 +7159,10 @@ DEFUN(wtp_apply_wlan_cmd_func,
 		vty_out(vty,"<error> wep conflict, wtp binding wlan securityindex is same with others\n");
 	else if(ret == INTERFACE_BINDED_ALREADLY)//chenjun add
 		vty_out(vty,"<warnning> you have binding this wlan id,please do not binding this again");//add end
+	else if(ret == VALUE_OUT_OF_RANGE)
+		vty_out(vty, "<warnning> group id or wlan id is out of range,please check\n");
+	else if(ret == WID_COMMON_NOT_EXIST)
+		vty_out(vty, "<warnning> ap-group or wlan is not exist,please check\n");
 	else
 		vty_out(vty,"<error>  %d\n",ret);
 
@@ -8589,7 +8593,7 @@ DEFUN(set_ap_echotimer_cmd_func,
 		return CMD_SUCCESS;
 	}	
 	//echotimer = atoi(argv[0]);
-	if((echotimer < 3)||(echotimer > 30))
+	if((echotimer < 1)||(echotimer > 30))
 	{
 		vty_out(vty,"<error> input echotimer should be 3~30.\n");
 		return CMD_SUCCESS;
@@ -9987,65 +9991,51 @@ DEFUN(wtp_max_sta_cmd_func,
 		&finalnum,&ret,&ret1);
 
 	if(type == 0)
-		{	
-			if((ret == 0)&&(ret1 == 0))
-				vty_out(vty,"wtp %d set max sta num %d successfully\n",id,wtp_max_sta);
-			else if(ret == WTP_ID_NOT_EXIST)
-				vty_out(vty,"<error> wtp id does not exist\n");
-			else if(ret1 == -1)
-				vty_out(vty,"<error> %d sta(s) has accessed before you set max sta num %d\n",stanum,wtp_max_sta);
-			else
-				vty_out(vty,"<error>  %d\n",ret);
-		}
-
-	else if(type == 1){
+	{	
 		if((ret == 0)&&(ret1 == 0))
-			{
-				vty_out(vty,"group %d wtp set max sta num %d successfully\n",id,wtp_max_sta);
-				if(( finalnum!= 0)&&(type == 1)&&(WtpList_Head!=NULL)){
-					vty_out(vty,"wtp ");
-					//vty_out(vty,"finalnum = %d \n",finalnum);
-					for(i=0; i<finalnum; i++)
-						{
-							/*if(Wtp_Show_Node == NULL)
-								Wtp_Show_Node = WtpList_Head->WtpList_list;
-							else 
-								Wtp_Show_Node = Wtp_Show_Node->next;
+			vty_out(vty,"wtp %d set max sta num %d successfully\n",id,wtp_max_sta);
+		else if(ret == WTP_ID_NOT_EXIST)
+			vty_out(vty,"<error> wtp id does not exist\n");
+		else if(ret1 == -1)
+			vty_out(vty,"<error> %d sta(s) has accessed before you set max sta num %d\n",stanum,wtp_max_sta);
+		else
+			vty_out(vty,"<error>  %d\n",ret);
+	} else {
+		if((ret == 0)&&(ret1 == 0))
+		{
+			vty_out(vty,"group %d wtp set max sta num %d successfully\n",id,wtp_max_sta);
+			if(( finalnum!= 0)&&(type == 1)&&(WtpList_Head!=NULL)){
+				vty_out(vty,"wtp ");
 
-							if(Wtp_Show_Node == NULL)
-							break;*/
-							vty_out(vty,"%d \n",WtpList_Head[i].WtpId);
-							//vty_out(vty,"%d \n",Wtp_Show_Node->WtpId);	
-							/*if(Wtp_Show_Node->FailReason == 'f')
-								{
-									vty_out(vty,"<error> %d sta(s) has accessed before you set max sta num %d\n",Wtp_Show_Node->WtpStaNum,wtp_max_sta);
-								}
-							else
-								{
-									vty_out(vty,"fail\n");
-								}*/
-							 if(WtpList_Head[i].FailReason == 'f')
-								{
-									vty_out(vty,"<error> %d sta(s) has accessed before you set max sta num %d\n",WtpList_Head[i].WtpStaNum,wtp_max_sta);
-								}
-							else
-								{
-									vty_out(vty,"fail\n");
-								}
-						}
-				
-					if(WtpList_Head != NULL)
-						{
-							free(WtpList_Head);
-							WtpList_Head == NULL;
-						}
-					//dcli_free_WtpList(WtpList_Head);
+				for(i=0; i<finalnum; i++)
+				{
+					vty_out(vty,"%d \n",WtpList_Head[i].WtpId);
+					if(WtpList_Head[i].FailReason == 'f')
+					{
+						vty_out(vty,"<error> %d sta(s) has accessed before you set max sta num %d\n",WtpList_Head[i].WtpStaNum,wtp_max_sta);
+					}
+					else
+					{
+						vty_out(vty,"fail\n");
+					}
+				}
+			
+				if(WtpList_Head != NULL)
+				{
+					free(WtpList_Head);
+					WtpList_Head == NULL;
 				}
 			}
+		}
 		else if (ret == GROUP_ID_NOT_EXIST)
 		 	vty_out(vty,"<error> group id does not exist\n");
+		else if (ret == WID_FAKE_SUCCESS)
+			vty_out(vty, "set success\n");
+		else 
+		{
+			vty_out(vty, "<error> unknown error %d \n", ret);	
+		}
 	}
-
 
 	
 	return CMD_SUCCESS;
@@ -11915,14 +11905,13 @@ DEFUN(set_ap_ipaddr_command_func,
 	DBusError err;
 
     unsigned int ip;
-	unsigned int mask;//12.17
+	unsigned int mask;//12.17chenjun
 	unsigned int gateway;
 	unsigned int wtp_id = 0;
-	unsigned char myipBuf[WTP_IP_BUFF_LEN] = {0};
-	unsigned char mygatewayBuf[WTP_IP_BUFF_LEN] = {0};//12.17
+	unsigned char myipBuf[WTP_IP_BUFF_LEN] = {0};	
+	unsigned char mygatewayBuf[WTP_IP_BUFF_LEN] = {0};//12.17chenjun
 	unsigned char *myipPtr = myipBuf;
-	unsigned char *mygatewayPtr = mygatewayBuf;//12.17
-
+	unsigned char *mygatewayPtr = mygatewayBuf;//12.17chenjun
 	
 //	wtp_id = (unsigned int)vty->index;
 	
@@ -11937,7 +11926,7 @@ DEFUN(set_ap_ipaddr_command_func,
 
 	/*//printf("ipstr:%s ipint:%d ipintstr:%s\n",argv[0],ip,myipPtr);*/
 
-	/*ret1 = parse_char_ID((char*)argv[1], &mask); //12.17
+	/*ret1 = parse_char_ID((char*)argv[1], &mask);
 	if(ret1 != WID_DBUS_SUCCESS){
             if(ret1 == WID_ILLEGAL_INPUT){
             	vty_out(vty,"<error> illegal input:Input exceeds the maximum value of the parameter type \n");
@@ -11947,12 +11936,12 @@ DEFUN(set_ap_ipaddr_command_func,
 			}
 		return CMD_SUCCESS;
 	}
-
 	if(mask != 8 && mask != 16 &&mask !=24){
-		vty_out(vty,"<error> unknown Smask parameters\n");
+		vty_out(vty,"<error> unknown mask parameters\n");
 		return CMD_SUCCESS;
 	}*/
 	/*//printf("2\n");*/
+	/*12.17chenjun*/
 	ret1 = WID_Check_Mask_Format((char*)argv[1]);
 	if(ret1 != WID_DBUS_SUCCESS){
 		vty_out(vty,"<error> unknown mask format\n");
@@ -11968,7 +11957,7 @@ DEFUN(set_ap_ipaddr_command_func,
 	}
 	
 	gateway = dcli_ip2ulong((char*)argv[2]);
-	ret2=  ip_long2str(gateway,&mygatewayPtr);//12.17
+	ret2=  ip_long2str(gateway,&mygatewayPtr);//12.17chenjun
 	int localid = 1;
 	int slot_id = HostSlotId;
 	int index = 0;
@@ -12025,12 +12014,13 @@ DEFUN(set_ap_ipaddr_command_func,
 
 		return CMD_SUCCESS;
 	}
+	
 	dbus_message_iter_init(reply,&iter);
 	dbus_message_iter_get_basic(&iter,&ret);
 
 	if(ret == 0)
 	{
-		vty_out(vty,"set ap ip %s gateway %s successfully\n",myipPtr,mygatewayPtr);//12.17
+		vty_out(vty,"set ap ip %s gateway %s successfully\n",myipPtr,mygatewayPtr);//12.17chenjun
 	}
 	else if(ret == WTP_ID_NOT_EXIST)
 		vty_out(vty,"<error> wtp id does not exist\n");
@@ -41688,6 +41678,252 @@ DEFUN(set_wtp_5g_able_cmd_func,
 	return CMD_SUCCESS;
 }
 
+
+DEFUN(set_ap_timing_upgrade_timer_cmd_func,
+		  set_ap_timing_upgrade_timer_cmd,
+		  "set ap timing upgrade at TIME",
+		  "set ap upgrade time\n"
+		  "set ap upgrade time\n"
+		  "time like 21:12:32 \n"
+		  "eg: set upgrade at 21:12:34 sat"
+	 )
+{	
+	int ret;
+	unsigned int wtp_id = 0;
+	unsigned int i = 0;
+	unsigned int time;
+	int index = 0;
+	int localid = 1;
+	int slot_id = HostSlotId;
+	int num = 0;
+
+	DBusMessage *query, *reply; 
+	DBusMessageIter  iter;
+	DBusError err;
+	
+	time = Check_Time_Format(argv[0]);
+	if(time == 0){
+		vty_out(vty,"<error> input patameter format should be 12:32:56\n");
+		return CMD_SUCCESS;
+	}
+
+	if(vty->node == HANSI_WTP_NODE){
+		index = vty->index; 
+		localid = vty->local;
+		slot_id = vty->slotindex;
+		wtp_id = (int)vty->index_sub;
+	}else{
+		vty_out(vty, "command not support at this node\n");
+		return CMD_SUCCESS;
+    }
+
+	
+	DBusConnection *dcli_dbus_connection = NULL;
+	ReInitDbusConnection(&dcli_dbus_connection,slot_id,distributFag);
+
+	dbus_error_init(&err);
+
+	char BUSNAME[PATH_LEN];
+	char OBJPATH[PATH_LEN];
+	char INTERFACE[PATH_LEN];
+
+	ReInitDbusPath_V2(localid,index,WID_DBUS_BUSNAME,BUSNAME);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_WTP_OBJPATH,OBJPATH);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_WTP_INTERFACE,INTERFACE);
+	query = dbus_message_new_method_call(BUSNAME,OBJPATH,INTERFACE, WID_DBUS_SET_WTP_TIMING_UPGRADE_TIMER);
+
+	dbus_message_iter_init_append (query, &iter);
+
+	dbus_message_iter_append_basic (&iter, DBUS_TYPE_UINT32, &wtp_id);
+	dbus_message_iter_append_basic (&iter, DBUS_TYPE_UINT32, &time);
+
+	reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection,query,-1, &err);
+
+	dbus_message_unref(query);
+
+
+	if (NULL == reply) {
+		dbus_error_free_for_dcli(&err);
+
+		return -1;
+	}
+	dbus_message_iter_init(reply,&iter);
+	dbus_message_iter_get_basic(&iter,&ret);
+
+	dbus_message_unref(reply);
+	
+	if(ret == 0)
+		vty_out(vty,"set wtp upgarde time successfully\n");
+	else
+		vty_out(vty,"<error>  %d\n",ret);
+	
+	return CMD_SUCCESS; 
+
+}
+
+
+DEFUN(set_ap_timing_upgrade_switch_cmd_func,
+		set_ap_timing_upgrade_switch_cmd,
+		"set ap timing upgrade switch (enable|disable)",
+		"Set command\n"
+		"set wtp upgrade\n"
+		"switch\n"
+		"default disable"
+)
+{
+	int ret = 0 ; 
+	DBusMessage *query,*reply;
+	DBusError err;
+	DBusMessageIter iter;
+	unsigned int wtpid = 0 ; 
+	unsigned char policy = 0 ; 
+	
+	if(!strcmp(argv[0],"enable"))
+	{
+		policy = 1; 
+	}
+	else if(!strcmp(argv[0],"disable"))
+	{
+		policy = 0 ; 
+	}
+	dbus_error_init(&err);
+	
+	int index = 0;
+	int localid = 1;
+   	int slot_id = HostSlotId;
+	
+	if(vty->node == HANSI_WTP_NODE){
+		index = vty->index; 
+		localid = vty->local;
+		slot_id = vty->slotindex;
+		wtpid = (int)vty->index_sub;
+	}else{
+		vty_out(vty, "command not support at this node\n");
+		return CMD_SUCCESS;
+    }
+	DBusConnection *dcli_dbus_connection = NULL;
+	ReInitDbusConnection(&dcli_dbus_connection,slot_id,distributFag);
+	char BUSNAME[PATH_LEN];
+	char OBJPATH[PATH_LEN];
+	char INTERFACE[PATH_LEN];
+	ReInitDbusPath_V2(localid,index,WID_DBUS_BUSNAME,BUSNAME);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_WTP_OBJPATH,OBJPATH);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_WTP_INTERFACE,INTERFACE);
+	query = dbus_message_new_method_call(BUSNAME,OBJPATH,INTERFACE,WID_DBUS_SET_WTP_TIMING_UPGRADE_SWITCH);
+	dbus_message_append_args(query,
+					DBUS_TYPE_UINT32,&wtpid,
+					DBUS_TYPE_BYTE,&policy,
+					DBUS_TYPE_INVALID);
+	reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection,query,-1, &err);
+		
+	dbus_message_unref(query);
+	
+	if (NULL == reply) {
+		vty_out(vty,"<error> failed get reply.\n");
+		if (dbus_error_is_set(&err)) {
+			vty_out(vty,"%s raised: %s",err.name,err.message);
+			dbus_error_free_for_dcli(&err);
+		}
+		return CMD_SUCCESS;
+	}
+	
+	dbus_message_iter_init(reply,&iter);
+	dbus_message_iter_get_basic(&iter,&ret);
+	if(WID_DBUS_SUCCESS == ret )
+		vty_out(vty,"set wtp(%d) timing upgrade switch %s successfully!\n",wtpid,argv[0]);
+	else if(ret==WID_DBUS_ERROR)
+		vty_out(vty,"operation fail! .\n");
+	else if(ret == WTP_ID_NOT_EXIST)	  
+		vty_out(vty,"WTP %d is not exsit.\n",wtpid);
+	else
+		vty_out(vty,"<error>%d\n",ret);
+	dbus_message_unref(reply);
+	return CMD_SUCCESS;
+}	
+
+DEFUN(show_ap_timing_upgrade_info_cmd_func,
+		show_ap_timing_upgrade_info_cmd,
+		"show ap timing upgrade info",
+		"show command\n"
+		"show ap upgrade info\n"
+)
+{
+	DBusMessage *query, *reply;
+	DBusError err;
+	DBusMessageIter	 iter;
+
+	int ret = 0 ; 
+	int index = 0;
+	int localid = 1;
+   	int slot_id = HostSlotId;
+	unsigned int wtpid = 0 ; 
+	int policy = 0 ;
+	unsigned int time = 0;
+
+	if(vty->node == HANSI_WTP_NODE){
+		index = vty->index; 
+		localid = vty->local;
+		slot_id = vty->slotindex;
+		wtpid = (int)vty->index_sub;
+	}else{
+		vty_out(vty, "command not support at this node\n");
+		return CMD_SUCCESS;
+    }
+
+	DBusConnection *dcli_dbus_connection = NULL;
+	ReInitDbusConnection(&dcli_dbus_connection,slot_id,distributFag);
+	char BUSNAME[PATH_LEN];
+	char OBJPATH[PATH_LEN];
+	char INTERFACE[PATH_LEN];
+	ReInitDbusPath_V2(localid,index,WID_DBUS_BUSNAME,BUSNAME);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_WTP_OBJPATH,OBJPATH);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_WTP_INTERFACE,INTERFACE);
+
+	query = dbus_message_new_method_call(BUSNAME,OBJPATH,INTERFACE,WID_DBUS_SHOW_WTP_TIMING_UPGRADE_INFO);
+	dbus_error_init(&err);
+
+	dbus_message_append_args(query,	
+							DBUS_TYPE_UINT32,&wtpid, 
+							DBUS_TYPE_INVALID);
+
+	reply = dbus_connection_send_with_reply_and_block(dcli_dbus_connection,query,-1, &err);
+
+	dbus_message_unref(query);
+	
+	if (NULL == reply) {
+		vty_out(vty,"<error> failed get reply.\n");
+		if (dbus_error_is_set(&err)) {
+			vty_out(vty,"%s raised: %s",err.name,err.message);
+			dbus_error_free_for_dcli(&err);
+		}
+		return CMD_SUCCESS;
+	}
+
+	dbus_message_iter_init(reply,&iter);
+	dbus_message_iter_get_basic(&iter,&ret);
+
+	dbus_message_iter_next(&iter);
+	dbus_message_iter_get_basic(&iter, &policy);
+
+	if (policy == 1) {
+		dbus_message_iter_next(&iter);
+		dbus_message_iter_get_basic(&iter, &time);
+	}
+
+	if(WID_DBUS_SUCCESS == ret ) {
+		vty_out(vty, "switch:	%s\n", policy ? "on" : "off");
+		vty_out(vty, "time:		%u\n", time);
+	}
+	else
+		vty_out(vty,"<error>%d\n",ret);
+	dbus_message_unref(reply);
+
+	return CMD_SUCCESS;
+	
+}
+
+
+
 /* Huangleilei copy from 1.3.18, 20130610 */
 DEFUN(wtp_set_web_report_ap_snr_range_cmd_func,
 	  wtp_set_web_report_ap_snr_range_cmd,
@@ -42841,6 +43077,9 @@ void dcli_wtp_init(void) {
 			install_element(HANSI_WTP_NODE,&set_wtp_trap_neighbor_same_channelrssithreshold_cmd); //fengwenchao add 20110923
 			install_element(HANSI_WTP_NODE,&set_ap_username_password_cmd);
 			install_element(HANSI_WTP_NODE,&set_wtp_5g_able_cmd);
+			install_element(HANSI_WTP_NODE, &set_ap_timing_upgrade_switch_cmd);
+			install_element(HANSI_WTP_NODE, &set_ap_timing_upgrade_timer_cmd);
+			install_element(HANSI_WTP_NODE, &show_ap_timing_upgrade_info_cmd);
 			
 			install_element(HANSI_WTP_NODE,&set_ap_longitude_latitude_cmd);
 			install_element(HANSI_WTP_NODE, &set_ap_unauthorized_mac_switch_cmd);

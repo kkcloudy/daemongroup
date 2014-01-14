@@ -4319,6 +4319,342 @@ DEFUN(set_radio_mode_cmd_func,
 
 }
 #endif
+
+DEFUN(set_radio_management_frame_rate_cmd_func,
+	  set_radio_management_frame_rate_cmd,
+	  "set wlan WLANID  rate (54|48|36|24|18|12|9|6|11|5.5|2|1) for type .TYPES",
+	    SERVICE_STR
+	   "Set radio management frame rate\n"
+	   "base wlan\n"
+	   "applyed wlan ID\n"
+	   "you can set 54|48|36|24|18|12|9|6|11|5.5|2|1 M/s\n"
+	   "rate\n"   "rate\n"   "rate\n"   "rate\n"   "rate\n"   "rate\n"   "rate\n"   "rate\n"   "rate\n"   "rate\n"   "rate\n"   "rate\n"  
+	   "Set radio management frame rate\n"
+	   "Set radio management frame rate\n"
+	   "massage type"
+	   "you can set (all beacon probe_request probe_response auth assoc_request assoc_response reassoc_request reassoc_response deauth disassoc)\n"
+	 )
+{
+	unsigned int radio_id,wlanid,type = 0,rate = 0; 
+	int ret,num = 0;
+	unsigned int i;
+	DBusMessage *query, *reply;	
+	DBusMessageIter	 iter;
+	DBusError err;	
+	
+	num = argc -2;
+	if(num <=  0){
+		vty_out(vty,"<error> type  you want (like  all  beacon  probe_request  probe_response  auth  assoc_request  assoc_response   reassoc_request  reassoc_response  deauth  disassoc)\n");
+		return CMD_SUCCESS;		
+	}
+	for (i = 2; i < argc; i++)
+	{
+		if(!strcmp(argv[i],"all"))
+		{
+			type  = 0x100;
+			break;
+		}
+		else if(!strcmp(argv[i],"beacon"))
+		{
+			type |=  0x80;
+			
+		}
+		else if(!strcmp(argv[i],"probe_request"))
+		{
+			type |= 0x40;
+			
+		}
+		else if(!strcmp(argv[i],"probe_response"))
+		{
+			type |=0x20;
+			
+		}
+		else if(!strcmp(argv[i],"auth"))
+		{
+			type |= 0x10;
+		}
+		else if((!strcmp(argv[i],"assoc_request")) || (!strcmp(argv[i],"reassoc_request")))
+		{
+			type |= 0x08;
+			
+		}
+		else if((!strcmp(argv[i],"assoc_response")) || (!strcmp(argv[i],"reassoc_response")))
+		{
+			type |= 0x04;
+			
+		}	
+		else if(!strcmp(argv[i],"deauth"))
+		{
+			type |= 0x02;
+			
+		}	
+		else if(!strcmp(argv[i],"disassoc"))
+		{
+			type |= 0x01;
+			
+		}
+		else
+		{
+		
+			vty_out(vty,"<error> parameter %s error\n",argv[i]);
+			return CMD_SUCCESS;
+		}
+
+	}
+	if(!strcmp(argv[1],"54"))
+	{
+		rate = MGMT_RATE_54M;	
+	}
+	else if(!strcmp(argv[1],"48"))
+	{
+		rate = MGMT_RATE_48M;
+	}
+	else if(!strcmp(argv[1],"36"))
+	{
+		rate = MGMT_RATE_36M;
+	}
+	else if(!strcmp(argv[1],"24"))
+	{
+		rate = MGMT_RATE_24M;
+	}
+	else if(!strcmp(argv[1],"18"))
+	{
+		rate = MGMT_RATE_18M;
+	}
+	else if(!strcmp(argv[1],"12"))
+	{
+		rate = MGMT_RATE_12M;
+	}
+	else if(!strcmp(argv[1],"9")) 
+	{
+		rate = MGMT_RATE_9M;
+	}
+	else if(!strcmp(argv[1],"6"))
+	{
+		rate = MGMT_RATE_6M;
+	}
+	else if(!strcmp(argv[1],"11"))
+	{
+		rate = MGMT_RATE_11M;
+	}	
+	else if(!strcmp(argv[1],"5.5"))
+	{
+		rate = MGMT_RATE_5_5M;
+	}	
+	else if(!strcmp(argv[1],"2"))
+	{
+		rate = MGMT_RATE_2M;
+	}
+	else if(!strcmp(argv[1],"1"))
+	{
+		rate = MGMT_RATE_1M;
+	}
+	else
+	{
+		
+		vty_out(vty,"<error> parameter %s error\n",argv[1]);
+		return CMD_SUCCESS;
+	}
+	
+	ret = parse_int_ID((char *)argv[0],&wlanid);    
+	
+	if (ret != WID_DBUS_SUCCESS)
+	{	
+		vty_out(vty,"<error> input parameter %s error\n",argv[0]);
+		return CMD_SUCCESS;
+	}
+	
+	int index = 0;
+	int localid = 1;
+          int slot_id = HostSlotId;
+	char BUSNAME[PATH_LEN];
+	char OBJPATH[PATH_LEN];
+	char INTERFACE[PATH_LEN];
+	if(vty->node == RADIO_NODE)
+	{
+		index = 0;			
+		radio_id = (int)vty->index;
+	}
+	else if(vty->node == HANSI_RADIO_NODE)
+	{
+		index = vty->index; 
+		localid = vty->local;
+        slot_id = vty->slotindex;
+		radio_id = (int)vty->index_sub;
+	}
+	else if (vty->node == LOCAL_HANSI_RADIO_NODE)
+	{
+        index = vty->index;
+        localid = vty->local;
+        slot_id = vty->slotindex;
+		radio_id = (int)vty->index_sub;
+    }
+    DBusConnection *dcli_dbus_connection = NULL;
+    ReInitDbusConnection(&dcli_dbus_connection,slot_id,distributFag);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_BUSNAME,BUSNAME);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_RADIO_OBJPATH,OBJPATH);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_RADIO_INTERFACE,INTERFACE);
+	query = dbus_message_new_method_call(BUSNAME,OBJPATH,INTERFACE,WID_DBUS_RADIO_METHOD_SET_MGMT_RATE_BASE_WLAN);
+		
+
+/*	query = dbus_message_new_method_call(WID_DBUS_BUSNAME,WID_DBUS_RADIO_OBJPATH,\
+						WID_DBUS_RADIO_INTERFACE,WID_DBUS_RADIO_METHOD_SET_MODE);*/
+	
+	dbus_error_init(&err);
+	dbus_message_append_args(query,
+							 DBUS_TYPE_UINT32,&radio_id,
+							 DBUS_TYPE_UINT32,&type,
+							 DBUS_TYPE_UINT32,&rate,
+							 DBUS_TYPE_UINT32,&wlanid,
+							 DBUS_TYPE_INVALID);
+
+	reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection,query,-1, &err);
+	
+	dbus_message_unref(query);
+	
+	if (NULL == reply) 
+	{
+		cli_syslog_info("<error> failed get reply.\n");
+		if (dbus_error_is_set(&err)) 
+		{
+			cli_syslog_info("%s raised: %s",err.name,err.message);
+			dbus_error_free_for_dcli(&err);
+		}
+		return CMD_SUCCESS;
+	}
+	
+	dbus_message_iter_init(reply,&iter);
+	dbus_message_iter_get_basic(&iter,&ret);
+
+	if(ret == 0)
+	{
+		vty_out(vty,"set radio %d-%d mode successfully\n",radio_id/L_RADIO_NUM,radio_id%L_RADIO_NUM);
+
+	}
+	else if(ret == WTP_NO_SURPORT_Rate)
+	{
+		vty_out(vty,"<error> not support this rate!\n");
+	}
+	else if(ret == WTP_IF_NOT_BE_BINDED)
+	{
+		vty_out(vty,"radio show bind this wlan first !\n");
+	}
+	else if(ret == WTP_NO_SURPORT_Mode)
+	{
+		vty_out(vty,"wtp no  support  the mode\n");
+	}
+	else
+		vty_out(vty,"<error>  %d\n",ret);
+	dbus_message_unref(reply);
+	return CMD_SUCCESS;
+
+}
+
+DEFUN( radio_clear_rate_for_wlan__cmd_func,
+	  radio_clear_rate_for_wlan_cmd,
+	  "clear rate for wlan WLANID",
+	    SERVICE_STR
+	   "clear all rate"
+	   "clear all rate"
+	   "apply wlan"
+	   " apply wlan ID"
+	   )
+{
+	unsigned int radio_id,wlanid; 
+	int ret;
+	unsigned int i;
+	DBusMessage *query, *reply;	
+	DBusMessageIter	 iter;
+	DBusError err;	
+		
+	ret = parse_int_ID((char *)argv[0],&wlanid);    
+	
+	if (ret != WID_DBUS_SUCCESS)
+	{	
+		vty_out(vty,"<error> input parameter %s error\n",argv[0]);
+		return CMD_SUCCESS;
+	}
+	
+	int index = 0;
+	int localid = 1;
+          int slot_id = HostSlotId;
+	char BUSNAME[PATH_LEN];
+	char OBJPATH[PATH_LEN];
+	char INTERFACE[PATH_LEN];
+	if(vty->node == RADIO_NODE)
+	{
+		index = 0;			
+		radio_id = (int)vty->index;
+	}
+	else if(vty->node == HANSI_RADIO_NODE)
+	{
+		index = vty->index; 
+		localid = vty->local;
+        slot_id = vty->slotindex;
+		radio_id = (int)vty->index_sub;
+	}
+	else if (vty->node == LOCAL_HANSI_RADIO_NODE)
+	{
+        index = vty->index;
+        localid = vty->local;
+        slot_id = vty->slotindex;
+      radio_id = (int)vty->index_sub;
+    }
+	
+    DBusConnection *dcli_dbus_connection = NULL;
+    ReInitDbusConnection(&dcli_dbus_connection,slot_id,distributFag);
+    ReInitDbusPath_V2(localid,index,WID_DBUS_BUSNAME,BUSNAME);
+   ReInitDbusPath_V2(localid,index,WID_DBUS_RADIO_OBJPATH,OBJPATH);
+   ReInitDbusPath_V2(localid,index,WID_DBUS_RADIO_INTERFACE,INTERFACE);
+query = dbus_message_new_method_call(BUSNAME,OBJPATH,INTERFACE,WID_DBUS_RADIO_METHOD_CLAER_RATE_FOR_WLAN);
+		
+
+/*	query = dbus_message_new_method_call(WID_DBUS_BUSNAME,WID_DBUS_RADIO_OBJPATH,\
+						WID_DBUS_RADIO_INTERFACE,WID_DBUS_RADIO_METHOD_SET_MODE);*/
+	
+	dbus_error_init(&err);
+	dbus_message_append_args(query,
+							 DBUS_TYPE_UINT32,&radio_id,
+							 DBUS_TYPE_UINT32,&wlanid,
+							 DBUS_TYPE_INVALID);
+
+	reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection,query,-1, &err);
+	
+	dbus_message_unref(query);
+	
+	if (NULL == reply) 
+	{
+		cli_syslog_info("<error> failed get reply.\n");
+		if (dbus_error_is_set(&err)) 
+		{
+			cli_syslog_info("%s raised: %s",err.name,err.message);
+			dbus_error_free_for_dcli(&err);
+		}
+		return CMD_SUCCESS;
+	}
+	
+	dbus_message_iter_init(reply,&iter);
+	dbus_message_iter_get_basic(&iter,&ret);
+
+	if(ret == 0)
+	{
+		vty_out(vty,"clear rate successfully\n");
+
+	}
+
+	else if(ret == WTP_IF_NOT_BE_BINDED)
+	{
+		vty_out(vty,"radio show bind this wlan first !\n");
+	}
+	
+	else
+		vty_out(vty,"<error>  %d\n",ret);
+	dbus_message_unref(reply);
+	return CMD_SUCCESS;
+
+}
+
+
 #if _GROUP_POLICY
 
 /*added end*/
@@ -7120,7 +7456,9 @@ DEFUN(set_radio_apply_wlan_cmd_func,
 	int index = 0;
 	int localid = 1;
     int slot_id = HostSlotId;
-	unsigned int id = 0;
+	unsigned int g_radio_id = 0;
+	unsigned int g_id = 0;
+	unsigned int l_radio_id = 0;
 	unsigned int type = 0;
 	unsigned char wlanid = 0;
 
@@ -7150,96 +7488,103 @@ DEFUN(set_radio_apply_wlan_cmd_func,
 
 	if(vty->node == RADIO_NODE){
 		index = 0;			
-		id = (unsigned)vty->index;
+		g_radio_id = (unsigned)vty->index;
 	}else if(vty->node == HANSI_RADIO_NODE){
 		index = vty->index; 	
 		localid = vty->local;
         slot_id = vty->slotindex;
-		id = (unsigned)vty->index_sub;
+		g_radio_id = (unsigned)vty->index_sub;
 	}else if (vty->node == LOCAL_HANSI_RADIO_NODE){
         index = vty->index;
         localid = vty->local;
         slot_id = vty->slotindex;
-		id = (unsigned)vty->index_sub;
-    }else if(vty->node == AP_GROUP_RADIO_NODE){
-		index = 0;			
-		id = (unsigned)vty->index;
-		type = 1;
-		vty_out(vty,"*******type == 1*** AP_GROUP_WTP_NODE*****\n");
-	}else if(vty->node == HANSI_AP_GROUP_RADIO_NODE){
+		g_radio_id = (unsigned)vty->index_sub;
+    }else if(vty->node == HANSI_AP_GROUP_RADIO_NODE){
 		index = vty->index; 
 		localid = vty->local;
         slot_id = vty->slotindex;
-		id = (unsigned)vty->index_sub;
+		g_id = (unsigned int) vty->index_sub;
+		l_radio_id = (unsigned int) vty->index_sub_sub;
 		type= 1;
 	}else if (vty->node == LOCAL_HANSI_AP_GROUP_RADIO_NODE){
         index = vty->index;
         localid = vty->local;
         slot_id = vty->slotindex;
-        id = (unsigned)vty->index_sub;
+        g_id = (unsigned)vty->index_sub;
+		l_radio_id = (unsigned int) vty->index_sub_sub;
 		type= 1;
     } 
     DBusConnection *dcli_dbus_connection = NULL;
     ReInitDbusConnection(&dcli_dbus_connection,slot_id,distributFag);
-
-	RadioList_Head = set_radio_apply_wlan_cmd_radio_apply_wlan(localid,index,dcli_dbus_connection,type,id,wlanid,
+	if (type == 0)
+		RadioList_Head = set_radio_apply_wlan_cmd_radio_apply_wlan(localid,index,dcli_dbus_connection,type,g_radio_id,0, 0, wlanid,
 	&count,&ret);
+	else if (type == 1) {
+		RadioList_Head = set_radio_apply_wlan_cmd_radio_apply_wlan(localid,index,dcli_dbus_connection,type,0, g_id, l_radio_id, wlanid,
+	&count,&ret);
+	} else {
+		vty_out(vty, "error type %d\n", type);
+	}
 
 	if(type==0)
+	{
+		if(ret == 0)
+			vty_out(vty,"radio %d-%d apply wlan %s successfully\n",g_radio_id/L_RADIO_NUM,g_radio_id%L_RADIO_NUM,argv[0]);
+		else if(ret==RADIO_ID_NOT_EXIST)
+			vty_out(vty,"<error> radio %d-%d not exist\n",g_radio_id/L_RADIO_NUM,g_radio_id%L_RADIO_NUM);
+		else if(ret==WLAN_ID_NOT_EXIST)
+			vty_out(vty,"<error> wlan %d not exist\n",wlanid);
+		else if(ret==WTP_OVER_MAX_BSS_NUM)
+			vty_out(vty,"<error> bss num is already %d\n",L_BSS_NUM);
+		else if(ret==WTP_WLAN_BINDING_NOT_MATCH)
+			vty_out(vty,"<error> wtp wlan binding interface not match\n");
+		else if(ret==WTP_IF_NOT_BE_BINDED)
+			vty_out(vty,"<error> wtp not bind interface\n");
+		else if(ret==Wlan_IF_NOT_BE_BINDED)
+			vty_out(vty,"<error> wlan not bind interface\n");
+		else if(ret==WLAN_CREATE_L3_INTERFACE_FAIL)
+			vty_out(vty,"<error> wlan crete wlan bridge fail\n");
+		else if(ret==BSS_L3_INTERFACE_ADD_BR_FAIL)
+			vty_out(vty,"<error> add bss if to wlan bridge fail\n");
+		else if(ret == WTP_WEP_NUM_OVER)
+			vty_out(vty,"<error> wtp over max wep wlan count 4 or wep index conflict\n");
+		else if(ret == INTERFACE_BINDED_ALREADLY)
 		{
-			if(ret == 0)
-				vty_out(vty,"radio %d-%d apply wlan %s successfully\n",id/L_RADIO_NUM,id%L_RADIO_NUM,argv[0]);
-			else if(ret==RADIO_ID_NOT_EXIST)
-				vty_out(vty,"<error> radio %d-%d not exist\n",id/L_RADIO_NUM,id%L_RADIO_NUM);
-			else if(ret==WLAN_ID_NOT_EXIST)
-				vty_out(vty,"<error> wlan %d not exist\n",wlanid);
-			else if(ret==WTP_OVER_MAX_BSS_NUM)
-				vty_out(vty,"<error> bss num is already %d\n",L_BSS_NUM);
-			else if(ret==WTP_WLAN_BINDING_NOT_MATCH)
-				vty_out(vty,"<error> wtp wlan binding interface not match\n");
-			else if(ret==WTP_IF_NOT_BE_BINDED)
-				vty_out(vty,"<error> wtp not bind interface\n");
-			else if(ret==Wlan_IF_NOT_BE_BINDED)
-				vty_out(vty,"<error> wlan not bind interface\n");
-			else if(ret==WLAN_CREATE_L3_INTERFACE_FAIL)
-				vty_out(vty,"<error> wlan crete wlan bridge fail\n");
-			else if(ret==BSS_L3_INTERFACE_ADD_BR_FAIL)
-				vty_out(vty,"<error> add bss if to wlan bridge fail\n");
-			else if(ret == WTP_WEP_NUM_OVER)
-				vty_out(vty,"<error> wtp over max wep wlan count 4 or wep index conflict\n");
-			else if(ret == INTERFACE_BINDED_ALREADLY)
-			{
-				vty_out(vty,"<warning> radio has been binded this wlan already ,if you want use other ESSID,please unbind it first!\n");
-			}
-			else 
-				vty_out(vty,"<error> radio %d-%d apply wlan %s fail\n",id/L_RADIO_NUM,id%L_RADIO_NUM,argv[0]);
+			vty_out(vty,"<warning> radio has been binded this wlan already ,if you want use other ESSID,please unbind it first!\n");
 		}
+		else 
+			vty_out(vty,"<error> radio %d-%d apply wlan %s fail\n",g_radio_id/L_RADIO_NUM,g_radio_id%L_RADIO_NUM,argv[0]);
+	}
 	else if(type==1)
-		{
-			if(ret == 0)
+	{
+		if(ret == WID_DBUS_SUCCESS) {
+			vty_out(vty,"group %d radio %d apply wlan %s successfully\n", g_id, l_radio_id, argv[0]);
+			if((count != 0)&&(type == 1)&&(RadioList_Head!=NULL))
+			{
+				vty_out(vty,"radio ");					
+				for(i=0; i<count; i++)
 				{
-					vty_out(vty,"group %d radio apply wlan %s successfully\n",id,argv[0]);
-					if((count != 0)&&(type == 1)&&(RadioList_Head!=NULL))
-						{
-							vty_out(vty,"radio ");					
-							for(i=0; i<count; i++)
-								{
-									if(Radio_Show_Node == NULL)
-										Radio_Show_Node = RadioList_Head->RadioList_list;
-									else 
-										Radio_Show_Node = Radio_Show_Node->next;
-									if(Radio_Show_Node == NULL)
-										break;
-									vty_out(vty,"%d ",Radio_Show_Node->RadioId);					
-								}
-							vty_out(vty," failed.\n");
-							dcli_free_RadioList(RadioList_Head);
-						}
+					if(Radio_Show_Node == NULL)
+						Radio_Show_Node = RadioList_Head->RadioList_list;
+					else 
+						Radio_Show_Node = Radio_Show_Node->next;
+					if(Radio_Show_Node == NULL)
+						break;
+					vty_out(vty,"%d ",Radio_Show_Node->RadioId);					
 				}
-			else if (ret == GROUP_ID_NOT_EXIST)
-			  		vty_out(vty,"<error> group id does not exist\n");
-		
+				vty_out(vty," failed.\n");
+				dcli_free_RadioList(RadioList_Head);
+			}
+		} else if (ret == GROUP_ID_NOT_EXIST) {
+	  		vty_out(vty,"<error> group id does not exist\n");
+		} else if (ret == WLAN_ID_NOT_EXIST) {
+			vty_out(vty, "<error> wlan %d is not exist\n", wlanid);
 		}
+		
+	
+	} else {
+		vty_out(vty, "<error> unknown type %d\n", type);
+	}
 	return CMD_SUCCESS;
 
 }
@@ -8454,7 +8799,9 @@ DEFUN(set_radio_delete_wlan_cmd_func,
 	int index = 0;
 	int localid = 1;
     int slot_id = HostSlotId;
-	unsigned int id = 0;
+	unsigned int g_radio_id = 0;
+	unsigned int g_id;
+	unsigned int l_radio_id;
 	unsigned int type = 0; 
 	unsigned char wlanid = 0;
 	
@@ -8484,89 +8831,97 @@ DEFUN(set_radio_delete_wlan_cmd_func,
 
 	if(vty->node == RADIO_NODE){
 		index = 0;			
-		id = (unsigned)vty->index;
+		g_radio_id = (unsigned)vty->index;
 	}else if(vty->node == HANSI_RADIO_NODE){
 		index = vty->index; 		
 		localid = vty->local;
         slot_id = vty->slotindex;
-		id = (unsigned)vty->index_sub;
+		g_radio_id = (unsigned)vty->index_sub;
 	}else if (vty->node == LOCAL_HANSI_RADIO_NODE){
         index = vty->index;
         localid = vty->local;
         slot_id = vty->slotindex;
-		id = (unsigned)vty->index_sub;
-    }else if(vty->node == AP_GROUP_RADIO_NODE){
-		index = 0;			
-		id = (unsigned)vty->index;
-		type = 1;
-		vty_out(vty,"*******type == 1*** AP_GROUP_WTP_NODE*****\n");
-	}else if(vty->node == HANSI_AP_GROUP_RADIO_NODE){
+		g_radio_id = (unsigned)vty->index_sub;
+    }else if(vty->node == HANSI_AP_GROUP_RADIO_NODE){
 		index = vty->index; 		
 		localid = vty->local;
         slot_id = vty->slotindex;
-		id = (unsigned)vty->index_sub;
+		g_id = (unsigned)vty->index_sub;
+		l_radio_id = (unsigned int)vty->index_sub_sub;
 		type= 1;
 	}else if (vty->node == LOCAL_HANSI_AP_GROUP_RADIO_NODE){
         index = vty->index;
         localid = vty->local;
         slot_id = vty->slotindex;
-        id = (unsigned)vty->index_sub;
+        g_id = (unsigned)vty->index_sub;
+		l_radio_id = (unsigned int)vty->index_sub_sub;
 		type= 1;
     } 
     DBusConnection *dcli_dbus_connection = NULL;
     ReInitDbusConnection(&dcli_dbus_connection,slot_id,distributFag);
 
-	RadioList_Head = set_radio_delete_wlan_cmd_radio_delete_wlan(localid,index,dcli_dbus_connection,type,id,wlanid,
-	&count,&ret);
+	if (type == 0)
+		RadioList_Head = set_radio_delete_wlan_cmd_radio_delete_wlan(localid,index,dcli_dbus_connection,type, g_radio_id, 0, 0, wlanid,
+		&count,&ret);
+	else if (type == 1)
+		RadioList_Head = set_radio_delete_wlan_cmd_radio_delete_wlan(localid,index,dcli_dbus_connection,type,0, g_id, l_radio_id, wlanid,
+		&count,&ret);
+	else 
+		vty_out(vty, "unknown type\n");
+	
 	if(type==0)
+	{
+		if(ret == 0)
+			vty_out(vty,"radio %d-%d delete wlan %s successfully\n",g_radio_id/L_RADIO_NUM,g_radio_id%L_RADIO_NUM,argv[0]);
+		else if(ret==RADIO_ID_NOT_EXIST)
+			vty_out(vty,"<error> radio %d-%d not exist\n",g_radio_id/L_RADIO_NUM,g_radio_id%L_RADIO_NUM);
+		else if(ret==WLAN_ID_NOT_EXIST)
+			vty_out(vty,"<error> wlan %d not exist\n",wlanid);
+		else if (ret == INTERFACE_BINDED_OTHER_ESSID)
 		{
-			if(ret == 0)
-				vty_out(vty,"radio %d-%d delete wlan %s successfully\n",id/L_RADIO_NUM,id%L_RADIO_NUM,argv[0]);
-			else if(ret==RADIO_ID_NOT_EXIST)
-				vty_out(vty,"<error> radio %d-%d not exist\n",id/L_RADIO_NUM,id%L_RADIO_NUM);
-			else if(ret==WLAN_ID_NOT_EXIST)
-				vty_out(vty,"<error> wlan %d not exist\n",wlanid);
-			else if (ret == INTERFACE_BINDED_OTHER_ESSID)
-			{
-				vty_out(vty,"<error> radio interface is binded to this wlan used other ESSID\n");
-			}
-			else if (ret == BSS_BE_ENABLE)
-			{
-				vty_out(vty,"<error> please disable wlan service first !\n");
-			}
-			else if (ret == RADIO_IN_EBR)
-			{
-				vty_out(vty,"<error> please delete radio interface from ebr first !\n");
-			}
-			else 
-				vty_out(vty,"<error> radio %d-%d delete wlan %s fail\n",id/L_RADIO_NUM,id%L_RADIO_NUM,argv[0]);
+			vty_out(vty,"<error> radio interface is binded to this wlan used other ESSID\n");
 		}
-	else if(type==1)
+		else if (ret == BSS_BE_ENABLE)
 		{
-			if(ret == 0)
+			vty_out(vty,"<error> please disable wlan service first !\n");
+		}
+		else if (ret == RADIO_IN_EBR)
+		{
+			vty_out(vty,"<error> please delete radio interface from ebr first !\n");
+		}
+		else 
+			vty_out(vty,"<error> radio %d-%d delete wlan %s fail\n",g_radio_id/L_RADIO_NUM,g_radio_id%L_RADIO_NUM,argv[0]);
+	}
+	else if(type==1)
+	{
+		if(ret == 0)
+		{
+			vty_out(vty,"group %d radio %d delete wlan %s successfully\n",g_id, l_radio_id, argv[0]);
+			if((count != 0)&&(type == 1)&&(RadioList_Head!=NULL))
+			{
+				vty_out(vty,"radio ");					
+				for(i=0; i<count; i++)
 				{
-					vty_out(vty,"group %d radio delete wlan %s successfully\n",id,argv[0]);
-					if((count != 0)&&(type == 1)&&(RadioList_Head!=NULL))
-						{
-							vty_out(vty,"radio ");					
-							for(i=0; i<count; i++)
-								{
-									if(Radio_Show_Node == NULL)
-										Radio_Show_Node = RadioList_Head->RadioList_list;
-									else 
-										Radio_Show_Node = Radio_Show_Node->next;
-									if(Radio_Show_Node == NULL)
-										break;
-									vty_out(vty,"%d ",Radio_Show_Node->RadioId);					
-								}
-							vty_out(vty," failed.\n");
-							dcli_free_RadioList(RadioList_Head);
-						}
+					if(Radio_Show_Node == NULL)
+						Radio_Show_Node = RadioList_Head->RadioList_list;
+					else 
+						Radio_Show_Node = Radio_Show_Node->next;
+					if(Radio_Show_Node == NULL)
+						break;
+					vty_out(vty,"%d ",Radio_Show_Node->RadioId);					
 				}
-			else if (ret == GROUP_ID_NOT_EXIST)
-			  		vty_out(vty,"<error> group id does not exist\n");
-		
-		}	
+				vty_out(vty," failed.\n");
+				dcli_free_RadioList(RadioList_Head);
+			}
+		} else if (ret == GROUP_ID_NOT_EXIST) {
+			vty_out(vty,"<error> group id does not exist\n");
+		} else if (ret == WLAN_ID_NOT_EXIST) {
+			vty_out(vty, "<error> wlan %d is not exist\n", wlanid);
+		}
+	
+	} else {
+		vty_out(vty, "<error> unknown type %d\n", type);
+	}
 	return CMD_SUCCESS;
 
 }
@@ -24276,7 +24631,7 @@ DEFUN(set_radio_servive_timer_func,
 		return CMD_SUCCESS;
 	}
 	time = Check_Time_Format(argv[1]);
-	if(time == -1){
+	if(time == 0){
 		vty_out(vty,"<error> input patameter format should be 12:32:56\n");
 		return CMD_SUCCESS;
 	}
@@ -25138,6 +25493,8 @@ void dcli_radio_init(void) {
 	install_element(HANSI_RADIO_NODE,&set_radio_txpowerof_cmd);	/*	wuwl add  0928*/
 /*	install_element(RADIO_NODE,&set_radio_rate_cmd);	*/
 	install_element(HANSI_RADIO_NODE,&set_radio_mode_cmd);
+    install_element(HANSI_RADIO_NODE,&set_radio_management_frame_rate_cmd);
+	install_element(HANSI_RADIO_NODE,&radio_clear_rate_for_wlan_cmd);	  
 	install_element(HANSI_RADIO_NODE,&set_radio_ratelist_cmd);
 	install_element(HANSI_RADIO_NODE,&set_radio_max_rate_cmd);
 	install_element(HANSI_RADIO_NODE,&set_radio_beaconinterval_cmd);	

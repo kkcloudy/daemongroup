@@ -125,7 +125,8 @@ typedef enum{
 	Radio_UNI_MUTIBRO_CAST_ISO_SW,
 	Radio_UNI_MUTIBRO_CAST_TATE,
 	Radio_Countrycode  ,/*wcl add for OSDEVTDPB-31*/
-	Radio_set_cpe_channel
+	Radio_set_cpe_channel,
+	Radio_set_MGMT_rate
 }RadioOP;
 
 typedef struct{
@@ -138,6 +139,7 @@ typedef struct{
 	unsigned char id_char;
 	unsigned short vlan_id;
 	unsigned char op;
+	unsigned int rate;
 }MQ_Radio;
 
 typedef enum{

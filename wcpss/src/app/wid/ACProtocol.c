@@ -810,6 +810,31 @@ CWBool CWAssembleMsgElemAPSetCPEChannelIntf(CWProtocolMessage *msgPtr, unsigned 
 
 }
 
+CWBool CWAssembleMsgElemRadiosetMGMTratebasewlan(CWProtocolMessage *msgPtr, unsigned char radioId,unsigned char wlanId,unsigned int rate)
+{
+	
+	unsigned char length = 8;
+	unsigned short type = 0;
+	if (msgPtr == NULL) 
+		return CWErrorRaise(CW_ERROR_WRONG_ARG, NULL);
+
+	CW_CREATE_PROTOCOL_MESSAGE(*msgPtr, length, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
+	 
+	CWProtocolStore8(msgPtr, radioId);
+	CWProtocolStore8(msgPtr, wlanId);
+	CWProtocolStore16(msgPtr, type); 
+	CWProtocolStore32(msgPtr, rate);  
+	
+	wid_syslog_debug_debug(WID_DEFAULT,"radioId = %d\n",radioId);
+	wid_syslog_debug_debug(WID_DEFAULT,"length = %d\n",(length-4));
+	wid_syslog_debug_debug(WID_DEFAULT,"wlanId = %d\n",wlanId);
+	wid_syslog_debug_debug(WID_DEFAULT,"type = %d\n",type);
+	wid_syslog_debug_debug(WID_DEFAULT,"rate = %d\n",rate);
+		
+	return CWAssembleMsgElem(msgPtr, CW_MSG_ELEMENT_MGMT_RATE_TYPE);
+
+}
+
 
 
 CWBool CWAssembleMsgElemAPPasswd(CWProtocolMessage *msgPtr,char *username,char*password)

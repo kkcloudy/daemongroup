@@ -6162,7 +6162,7 @@ vtysh_prompt (void)
 	  case    HANSI_CWTUNNEL_NODE:
 	  case	  HANSI_AP_GROUP_NODE:	  
 	  case 	  HANSI_AP_GROUP_WTP_NODE:
-	  case	  HANSI_AP_GROUP_RADIO_NODE:
+	  //case	  HANSI_AP_GROUP_RADIO_NODE:
 	  case	  HANSI_POOL_NODE:	
 	  case	  HANSI_POOLV6_NODE:	
 	  case	  HANSI_AC_GROUP_NODE:		/*wireless ac_group_node*/
@@ -6174,7 +6174,9 @@ vtysh_prompt (void)
 	  	  rindex =(int) vty->index_sub;/*gujd: 2012-02-23, pm 5:49. In order to decrease the warning when make img .*/
 		  snprintf (buf, sizeof buf, cmd_prompt (vty->node), hostname, vty->slotindex,vty->index,rindex/4,rindex%4);		
 		  break;
-	
+	case	HANSI_AP_GROUP_RADIO_NODE:
+			snprintf(buf, sizeof buf, cmd_prompt (vty->node), hostname, vty->slotindex,vty->index, vty->index_sub, vty->index_sub_sub);
+			break;
  	case	LOCAL_HANSI_SECURITY_NODE:
  	case	LOCAL_HANSI_ACIPLIST_NODE:
  	case	LOCAL_HANSI_WLAN_NODE:			/* WLAN node */

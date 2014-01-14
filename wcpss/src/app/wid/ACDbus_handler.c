@@ -382,7 +382,8 @@ int wid_update_bss_to_wifi(unsigned int bssindex,unsigned int WTPIndex,unsigned 
 		}
 		ifinfo.wsmswitch = wsmswitch;
 		ifinfo.vlanSwitch = vlanSwitch;
-		if((AC_BSS[bssindex]->BSS_IF_POLICY == BSS_INTERFACE)||(AC_BSS[bssindex]->BSS_IF_POLICY == WLAN_INTERFACE))
+		if((AC_BSS[bssindex]->BSS_IF_POLICY == BSS_INTERFACE)||(AC_BSS[bssindex]->BSS_IF_POLICY == WLAN_INTERFACE)||
+			(AC_BSS[bssindex]->BSS_IF_POLICY == BSS_INTERFACE_EBR))
 			ifinfo.if_policy = 1;
 		else
 			ifinfo.if_policy = 0;
@@ -1685,6 +1686,10 @@ int WID_CREATE_NEW_WTP(char *WTPNAME, unsigned int WTPID, unsigned char* WTPSN, 
 	AC_WTP[WTPID]->sta_flow_overflow_rx_threshold = STA_FLOW_OVERFLOW_RX_THRESHOLD;	//kB
 	AC_WTP[WTPID]->sta_flow_overflow_tx_reportswitch = STA_FLOW_OVERFLOW_TRAP_TX_SWITCH_DISABLE;
 	AC_WTP[WTPID]->sta_flow_overflow_tx_threshold = STA_FLOW_OVERFLOW_TX_THRESHOLD;	//kB
+
+	AC_WTP[WTPID]->image_data_percent = 0;
+	AC_WTP[WTPID]->image_data_step = 0;
+	AC_WTP[WTPID]->image_data_result = 0;
 	
 	for(j = 0;j < L_RADIO_NUM; j++)
 	{
@@ -1805,7 +1810,7 @@ int WID_CREATE_NEW_WTP(char *WTPNAME, unsigned int WTPID, unsigned char* WTPSN, 
 		{
 			num = pnode->radio_num;
 			AC_WTP[WTPID]->apifinfo.eth_num = pnode->eth_num;    //fengwenchao add 20110407
-			AC_WTP[WTPID]->apifinfo.wifi_num =  pnode->radio_num;//12.17
+			AC_WTP[WTPID]->apifinfo.wifi_num =  pnode->radio_num;//12.17chenjun
 			AC_WTP[WTPID]->apcodeflag = 0;
 
 			if(code != NULL)
@@ -2248,7 +2253,7 @@ int WID_DELETE_WTP(unsigned int WTPID){
 			if(AC_RADIO[RID]->BSS[k] != NULL)
 			{
 				wlanid = AC_RADIO[RID]->BSS[k]->WlanID;
-				if(AC_RADIO[RID]->BSS[k]->BSS_IF_POLICY == BSS_INTERFACE)
+				if(AC_RADIO[RID]->BSS[k]->BSS_IF_POLICY == BSS_INTERFACE || (AC_RADIO[RID]->BSS[k]->BSS_IF_POLICY == BSS_INTERFACE_EBR))
 				{
 					//should added delete l3 interface
 					Delete_BSS_L3_Interface(AC_RADIO[RID]->BSS[k]->BSSIndex);
@@ -2356,6 +2361,9 @@ int WID_DELETE_WTP(unsigned int WTPID){
 	AC_WTP[WTPID]->sta_flow_overflow_rx_threshold = STA_FLOW_OVERFLOW_RX_THRESHOLD;	//kB
 	AC_WTP[WTPID]->sta_flow_overflow_tx_reportswitch = STA_FLOW_OVERFLOW_TRAP_TX_SWITCH_DISABLE;
 	AC_WTP[WTPID]->sta_flow_overflow_tx_threshold = STA_FLOW_OVERFLOW_TX_THRESHOLD;	//kB
+	AC_WTP[WTPID]->image_data_percent = 0;
+	AC_WTP[WTPID]->image_data_step = 0;
+	AC_WTP[WTPID]->image_data_result = 0;
 	
 	WID_FREE(AC_WTP[WTPID]->WTPIP);
 	AC_WTP[WTPID]->WTPIP = NULL;
@@ -2917,7 +2925,7 @@ int WID_ENABLE_WLAN(unsigned char WlanID){
 				return L3_INTERFACE_ERROR;
 			}
 		}
-		else if(AC_WLAN[WlanID]->wlan_if_policy == BSS_INTERFACE)
+		else if(AC_WLAN[WlanID]->wlan_if_policy == BSS_INTERFACE || AC_WLAN[WlanID]->wlan_if_policy == BSS_INTERFACE_EBR)
 		{
 			for(i=0; i<WTP_NUM; i++)
 			{
@@ -3500,7 +3508,7 @@ int WID_USED_WTP(unsigned int WtpID)
 				}
 				//if((check1 != 0)&&(check2 != 0))
 					//return IF_POLICY_CONFLICT;
-				if(AC_WTP[WtpID]->WTP_Radio[j]->BSS[k]->BSS_IF_POLICY == BSS_INTERFACE)
+				if(AC_WTP[WtpID]->WTP_Radio[j]->BSS[k]->BSS_IF_POLICY == BSS_INTERFACE || AC_WTP[WtpID]->WTP_Radio[j]->BSS[k]->BSS_IF_POLICY == BSS_INTERFACE_EBR)
 				{
 					//assemble radio1-0.1
 					memset(ifiname,0,ETH_IF_NAME_LEN-1);
@@ -6011,7 +6019,7 @@ int WID_WLAN_L3IF_POLICY(unsigned char WlanID, unsigned char wlanPolicy)
 			}*///now allow split&local modes both work , so close this
 		
 	}
-	else if((AC_WLAN[WlanID]->wlan_if_policy == NO_INTERFACE)&&(wlanPolicy == BSS_INTERFACE))
+	else if((AC_WLAN[WlanID]->wlan_if_policy == NO_INTERFACE)&&(wlanPolicy == BSS_INTERFACE || wlanPolicy == BSS_INTERFACE_EBR))
 	{	
 		/*for(i=0; i<WTP_NUM; i++)
 		{
@@ -6086,7 +6094,7 @@ int WID_WLAN_L3IF_POLICY(unsigned char WlanID, unsigned char wlanPolicy)
 				}
 			}*/
 	}
-	else if((AC_WLAN[WlanID]->wlan_if_policy == WLAN_INTERFACE)&&(wlanPolicy == BSS_INTERFACE))
+	else if((AC_WLAN[WlanID]->wlan_if_policy == WLAN_INTERFACE)&&(wlanPolicy == BSS_INTERFACE || wlanPolicy == BSS_INTERFACE_EBR))
 	{
 		ret = Delete_Wlan_L3_Interface(WlanID);
 		AC_WLAN[WlanID]->wlan_if_policy = NO_INTERFACE;
@@ -6121,7 +6129,7 @@ int WID_WLAN_L3IF_POLICY(unsigned char WlanID, unsigned char wlanPolicy)
 			}*/
 		
 	}
-	else if((AC_WLAN[WlanID]->wlan_if_policy == BSS_INTERFACE)&&(wlanPolicy == NO_INTERFACE))
+	else if((AC_WLAN[WlanID]->wlan_if_policy == BSS_INTERFACE || AC_WLAN[WlanID]->wlan_if_policy == BSS_INTERFACE_EBR)&&(wlanPolicy == NO_INTERFACE))
 	{
 	/*	for(i=0; i<WTP_NUM; i++)
 		{
@@ -6140,7 +6148,7 @@ int WID_WLAN_L3IF_POLICY(unsigned char WlanID, unsigned char wlanPolicy)
 		}*/
 		
 	}
-	else if((AC_WLAN[WlanID]->wlan_if_policy == BSS_INTERFACE)&&(wlanPolicy == WLAN_INTERFACE))
+	else if((AC_WLAN[WlanID]->wlan_if_policy == BSS_INTERFACE || AC_WLAN[WlanID]->wlan_if_policy == BSS_INTERFACE_EBR)&&(wlanPolicy == WLAN_INTERFACE))
 	{
 	/*	for(i=0; i<WTP_NUM; i++)
 		{			
@@ -6230,7 +6238,7 @@ int WID_WLAN_L3IF_POLICY_BR(unsigned char WlanID, unsigned char wlanPolicy)
 								AC_BSS[bssindex]->BSS_IF_POLICY = WLAN_INTERFACE;
 								AC_BSS[bssindex]->BSS_TUNNEL_POLICY = CW_802_DOT_11_TUNNEL;
 							}
-							else if(AC_BSS[bssindex]->BSS_IF_POLICY == BSS_INTERFACE)
+							else if(AC_BSS[bssindex]->BSS_IF_POLICY == BSS_INTERFACE || AC_BSS[bssindex]->BSS_IF_POLICY == BSS_INTERFACE_EBR)
 							{
 								wid_syslog_debug_debug(WID_DEFAULT,"bssindex %d already bss l3 interface\n",bssindex);
 								ret = ADD_BSS_L3_Interface_BR_V2(bssindex);
@@ -6348,7 +6356,7 @@ int WID_BSS_L3IF_POLICY(unsigned int WlanID,unsigned int wtpID,unsigned int radi
 		}
 	}
 
-	if((AC_WLAN[WlanID]->wlan_if_policy == 0) || (AC_WLAN[WlanID]->wlan_if_policy == BSS_INTERFACE))//no_interface,bss interface can be no_interface or bss_interface
+	if((AC_WLAN[WlanID]->wlan_if_policy == NO_INTERFACE) || (AC_WLAN[WlanID]->wlan_if_policy == BSS_INTERFACE) || (AC_WLAN[WlanID]->wlan_if_policy == BSS_INTERFACE_EBR))//no_interface,bss interface can be no_interface or bss_interface
 	{	//printf("state 0 \n");
 		if(bssPolicy == 1)//no wlan_interface now
 		{
@@ -6360,7 +6368,7 @@ int WID_BSS_L3IF_POLICY(unsigned int WlanID,unsigned int wtpID,unsigned int radi
 			return 0;
 		}
 		//no_interface to bss_interface
-		if((AC_WTP[wtpID]->WTP_Radio[radioID]->BSS[BSSID]->BSS_IF_POLICY == NO_INTERFACE)&&(bssPolicy == BSS_INTERFACE))
+		if((AC_WTP[wtpID]->WTP_Radio[radioID]->BSS[BSSID]->BSS_IF_POLICY == NO_INTERFACE)&&(bssPolicy == BSS_INTERFACE || bssPolicy == BSS_INTERFACE_EBR))
 		{
 //			printf("state 0 f 0 t b\n");
 			ret = Create_BSS_L3_Interface(BSSindex);
@@ -6371,7 +6379,7 @@ int WID_BSS_L3IF_POLICY(unsigned int WlanID,unsigned int wtpID,unsigned int radi
 			}
 		}
 		//bss_interface to no_interface
-		else if((AC_WTP[wtpID]->WTP_Radio[radioID]->BSS[BSSID]->BSS_IF_POLICY == BSS_INTERFACE)&&(bssPolicy == NO_INTERFACE))
+		else if((AC_WTP[wtpID]->WTP_Radio[radioID]->BSS[BSSID]->BSS_IF_POLICY == BSS_INTERFACE || AC_WTP[wtpID]->WTP_Radio[radioID]->BSS[BSSID]->BSS_IF_POLICY == BSS_INTERFACE_EBR)&&(bssPolicy == NO_INTERFACE))
 		{	//printf("state 0 f b t 0\n");
 			if(check_whether_in_ebr(vrrid,wtpID,radioID,WlanID,&ebr_id))
 			{
@@ -6385,7 +6393,7 @@ int WID_BSS_L3IF_POLICY(unsigned int WlanID,unsigned int wtpID,unsigned int radi
 			}
 		}
 		//wlan_interface to bss_interface //use interface radio1-0.1
-		else if((AC_WTP[wtpID]->WTP_Radio[radioID]->BSS[BSSID]->BSS_IF_POLICY == WLAN_INTERFACE)&&(bssPolicy == BSS_INTERFACE))
+		else if((AC_WTP[wtpID]->WTP_Radio[radioID]->BSS[BSSID]->BSS_IF_POLICY == WLAN_INTERFACE)&&(bssPolicy == BSS_INTERFACE || bssPolicy == BSS_INTERFACE_EBR))
 		{//	printf("state 0 f w t b\n");
 			//whether to delete the wlan l3 interface???
 			/*ret = Delete_Wlan_L3_Interface(WlanID);	
@@ -6402,7 +6410,7 @@ int WID_BSS_L3IF_POLICY(unsigned int WlanID,unsigned int wtpID,unsigned int radi
 			}
 		}
 		//bss_interface to wlan_interface //use no interface radio1-0.1
-		else if((AC_WTP[wtpID]->WTP_Radio[radioID]->BSS[BSSID]->BSS_IF_POLICY == BSS_INTERFACE)&&(bssPolicy == WLAN_INTERFACE))
+		else if((AC_WTP[wtpID]->WTP_Radio[radioID]->BSS[BSSID]->BSS_IF_POLICY == BSS_INTERFACE || AC_WTP[wtpID]->WTP_Radio[radioID]->BSS[BSSID]->BSS_IF_POLICY == BSS_INTERFACE_EBR)&&(bssPolicy == WLAN_INTERFACE))
 		{	//printf("state 0 f b t w\n");
 			//first check wlan interface
 			memset(ifiname,0,ETH_IF_NAME_LEN-1);
@@ -6451,7 +6459,7 @@ int WID_BSS_L3IF_POLICY(unsigned int WlanID,unsigned int wtpID,unsigned int radi
 			return 0;
 		}
 		//no_interface to bss_interface
-		if((AC_WTP[wtpID]->WTP_Radio[radioID]->BSS[BSSID]->BSS_IF_POLICY == NO_INTERFACE)&&(bssPolicy == BSS_INTERFACE))
+		if((AC_WTP[wtpID]->WTP_Radio[radioID]->BSS[BSSID]->BSS_IF_POLICY == NO_INTERFACE)&&(bssPolicy == BSS_INTERFACE || bssPolicy == BSS_INTERFACE_EBR))
 		{
 	//		printf("state 0 f 0 t b\n");
 			ret = Create_BSS_L3_Interface(BSSindex);
@@ -6463,7 +6471,7 @@ int WID_BSS_L3IF_POLICY(unsigned int WlanID,unsigned int wtpID,unsigned int radi
 		}
 		
 		//bss_interface to no_interface
-		else if((AC_WTP[wtpID]->WTP_Radio[radioID]->BSS[BSSID]->BSS_IF_POLICY == BSS_INTERFACE)&&(bssPolicy == NO_INTERFACE))
+		else if((AC_WTP[wtpID]->WTP_Radio[radioID]->BSS[BSSID]->BSS_IF_POLICY == BSS_INTERFACE || AC_WTP[wtpID]->WTP_Radio[radioID]->BSS[BSSID]->BSS_IF_POLICY == BSS_INTERFACE_EBR)&&(bssPolicy == NO_INTERFACE))
 		{//	printf("state 0 f b t 0\n");
 			if(check_whether_in_ebr(vrrid,wtpID,radioID,WlanID,&ebr_id))
 			{
@@ -6484,7 +6492,7 @@ int WID_BSS_L3IF_POLICY(unsigned int WlanID,unsigned int wtpID,unsigned int radi
 			}*/
 		}
 		//wlan_interface to bss_interface //use interface radio1-0.1//remove bss if from wlan br
-		else if((AC_WTP[wtpID]->WTP_Radio[radioID]->BSS[BSSID]->BSS_IF_POLICY == WLAN_INTERFACE)&&(bssPolicy == BSS_INTERFACE))
+		else if((AC_WTP[wtpID]->WTP_Radio[radioID]->BSS[BSSID]->BSS_IF_POLICY == WLAN_INTERFACE)&&(bssPolicy == BSS_INTERFACE || bssPolicy == BSS_INTERFACE_EBR))
 		{//	printf("state 0 f w t b\n");
 			// remove bss if from wlan br
 			ret = Del_BSS_L3_Interface_BR(BSSindex);
@@ -6519,7 +6527,7 @@ int WID_BSS_L3IF_POLICY(unsigned int WlanID,unsigned int wtpID,unsigned int radi
 			
 		}
 		//bss_interface to wlan_interface //use no interface radio1-0.1
-		else if((AC_WTP[wtpID]->WTP_Radio[radioID]->BSS[BSSID]->BSS_IF_POLICY == BSS_INTERFACE)&&(bssPolicy == WLAN_INTERFACE))
+		else if((AC_WTP[wtpID]->WTP_Radio[radioID]->BSS[BSSID]->BSS_IF_POLICY == BSS_INTERFACE || AC_WTP[wtpID]->WTP_Radio[radioID]->BSS[BSSID]->BSS_IF_POLICY == BSS_INTERFACE_EBR)&&(bssPolicy == WLAN_INTERFACE))
 		{//	printf("state 0 f b t w\n");
 			//first check wlan interface
 			memset(ifiname,0,ETH_IF_NAME_LEN-1);
@@ -6641,7 +6649,7 @@ int WID_RADIO_BSS_L3IF_POLICY(unsigned char WlanID,unsigned int wtpID,unsigned c
 			return 0;
 		}
 		//no_interface to bss_interface //use interface radio1-0.1
-		if((AC_WTP[wtpID]->WTP_Radio[radioID]->BSS[BSSID]->BSS_IF_POLICY == NO_INTERFACE)&&(bssPolicy == BSS_INTERFACE))
+		if((AC_WTP[wtpID]->WTP_Radio[radioID]->BSS[BSSID]->BSS_IF_POLICY == NO_INTERFACE)&&(bssPolicy == BSS_INTERFACE || bssPolicy == BSS_INTERFACE_EBR))
 		{
 //			printf("state 0 f 0 t b\n");
 			ret = Create_BSS_L3_Interface(BSSindex);
@@ -6676,7 +6684,7 @@ int WID_RADIO_BSS_L3IF_POLICY(unsigned char WlanID,unsigned int wtpID,unsigned c
 			}
 		}
 		//bss_interface to no_interface
-		else if((AC_WTP[wtpID]->WTP_Radio[radioID]->BSS[BSSID]->BSS_IF_POLICY == BSS_INTERFACE)&&(bssPolicy == NO_INTERFACE))
+		else if((AC_WTP[wtpID]->WTP_Radio[radioID]->BSS[BSSID]->BSS_IF_POLICY == BSS_INTERFACE || AC_WTP[wtpID]->WTP_Radio[radioID]->BSS[BSSID]->BSS_IF_POLICY == BSS_INTERFACE_EBR)&&(bssPolicy == NO_INTERFACE))
 		{	//printf("state 0 f b t 0\n");
 			//first check wlan interface
 			memset(ifiname,0,ETH_IF_NAME_LEN-1);
@@ -6712,7 +6720,7 @@ int WID_RADIO_BSS_L3IF_POLICY(unsigned char WlanID,unsigned int wtpID,unsigned c
 			
 		}
 		//wlan_interface to bss_interface //use interface radio1-0.1
-		else if((AC_WTP[wtpID]->WTP_Radio[radioID]->BSS[BSSID]->BSS_IF_POLICY == WLAN_INTERFACE)&&(bssPolicy == BSS_INTERFACE))
+		else if((AC_WTP[wtpID]->WTP_Radio[radioID]->BSS[BSSID]->BSS_IF_POLICY == WLAN_INTERFACE)&&(bssPolicy == BSS_INTERFACE || bssPolicy == BSS_INTERFACE_EBR))
 		{	//printf("state 0 f w t b\n");
 			//whether to delete the wlan l3 interface???
 			/*ret = Delete_Wlan_L3_Interface(WlanID);	
@@ -6729,7 +6737,7 @@ int WID_RADIO_BSS_L3IF_POLICY(unsigned char WlanID,unsigned int wtpID,unsigned c
 			}
 		}
 		//bss_interface to wlan_interface //use no interface radio1-0.1
-		else if((AC_WTP[wtpID]->WTP_Radio[radioID]->BSS[BSSID]->BSS_IF_POLICY == BSS_INTERFACE)&&(bssPolicy == WLAN_INTERFACE))
+		else if((AC_WTP[wtpID]->WTP_Radio[radioID]->BSS[BSSID]->BSS_IF_POLICY == BSS_INTERFACE || AC_WTP[wtpID]->WTP_Radio[radioID]->BSS[BSSID]->BSS_IF_POLICY == BSS_INTERFACE_EBR)&&(bssPolicy == WLAN_INTERFACE))
 		{	//printf("state 0 f b t w\n");
 			return UNKNOWN_ERROR;
 			//first check wlan interface
@@ -6863,7 +6871,7 @@ int WID_RADIO_BSS_L3IF_POLICY_BR(unsigned char WlanID,unsigned int wtpID,unsigne
 	}
 
 	//from wlan to bss
-	else if ((AC_BSS[BSSindex]->BSS_IF_POLICY == WLAN_INTERFACE) && (bssPolicy == BSS_INTERFACE))
+	else if ((AC_BSS[BSSindex]->BSS_IF_POLICY == WLAN_INTERFACE) && (bssPolicy == BSS_INTERFACE || bssPolicy == BSS_INTERFACE_EBR))
 	{
 		// remove bss if from wlan br
 		ret = Del_BSS_L3_Interface_BR(BSSindex);
@@ -6877,7 +6885,7 @@ int WID_RADIO_BSS_L3IF_POLICY_BR(unsigned char WlanID,unsigned int wtpID,unsigne
 	}
 
 	//from bss to wlan
-	else if ((AC_BSS[BSSindex]->BSS_IF_POLICY == BSS_INTERFACE) && (bssPolicy == WLAN_INTERFACE))
+	else if ((AC_BSS[BSSindex]->BSS_IF_POLICY == BSS_INTERFACE || AC_BSS[BSSindex]->BSS_IF_POLICY == BSS_INTERFACE_EBR) && (bssPolicy == WLAN_INTERFACE))
 	{
 		// check br
 		memset(ifname,0,ETH_IF_NAME_LEN);
@@ -6905,7 +6913,7 @@ int WID_RADIO_BSS_L3IF_POLICY_BR(unsigned char WlanID,unsigned int wtpID,unsigne
 	}
 
 	//from bss to no
-	else if ((AC_BSS[BSSindex]->BSS_IF_POLICY == BSS_INTERFACE) && (bssPolicy == NO_INTERFACE))
+	else if ((AC_BSS[BSSindex]->BSS_IF_POLICY == BSS_INTERFACE || AC_BSS[BSSindex]->BSS_IF_POLICY == BSS_INTERFACE_EBR) && (bssPolicy == NO_INTERFACE))
 	{
 		//deletele bss interface
 		ret = Delete_BSS_L3_Interface(BSSindex);
@@ -6919,7 +6927,7 @@ int WID_RADIO_BSS_L3IF_POLICY_BR(unsigned char WlanID,unsigned int wtpID,unsigne
 	}
 
 	//from no to bss
-	else if ((AC_BSS[BSSindex]->BSS_IF_POLICY == NO_INTERFACE) && (bssPolicy == BSS_INTERFACE))
+	else if ((AC_BSS[BSSindex]->BSS_IF_POLICY == NO_INTERFACE) && (bssPolicy == BSS_INTERFACE || bssPolicy == BSS_INTERFACE_EBR))
 	{
 		//create bss interface
 		ret = Create_BSS_L3_Interface(BSSindex);
@@ -6974,7 +6982,7 @@ int WID_RADIO_BSS_FORWARD_MODE(unsigned char WlanID,unsigned int wtpID,unsigned 
 	}
 
 	
-	if((AC_BSS[BSSindex]->BSS_IF_POLICY == BSS_INTERFACE) && (bssPolicy == WLAN_INTERFACE))
+	if((AC_BSS[BSSindex]->BSS_IF_POLICY == BSS_INTERFACE || AC_BSS[BSSindex]->BSS_IF_POLICY == BSS_INTERFACE_EBR) && (bssPolicy == WLAN_INTERFACE))
 	{
 		memset(ifname,0,ETH_IF_NAME_LEN);
 		if(local)
@@ -6999,7 +7007,7 @@ int WID_RADIO_BSS_FORWARD_MODE(unsigned char WlanID,unsigned int wtpID,unsigned 
 		AC_BSS[BSSindex]->BSS_IF_POLICY = WLAN_INTERFACE;
 		AC_BSS[BSSindex]->BSS_TUNNEL_POLICY = CW_802_DOT_11_TUNNEL;
 	}
-	else if((AC_BSS[BSSindex]->BSS_IF_POLICY == WLAN_INTERFACE) && (bssPolicy == BSS_INTERFACE))
+	else if((AC_BSS[BSSindex]->BSS_IF_POLICY == WLAN_INTERFACE) && (bssPolicy == BSS_INTERFACE || bssPolicy == BSS_INTERFACE_EBR))
 	{
 		// remove bss if from wlan br
 		ret = Del_BSS_L3_Interface_BR(BSSindex);
@@ -7108,7 +7116,7 @@ int WID_RADIO_WLAN_TUNNEL_MODE(unsigned char WlanID,unsigned char Policy,char no
 
 	}
 	if(Policy != CW_802_DOT_11_TUNNEL){
-		if((AC_WLAN[WlanID]->wlan_if_policy != WLAN_INTERFACE)&&(AC_WLAN[WlanID]->wlan_if_policy != BSS_INTERFACE)){
+		if((AC_WLAN[WlanID]->wlan_if_policy != WLAN_INTERFACE)&&(AC_WLAN[WlanID]->wlan_if_policy != BSS_INTERFACE && AC_WLAN[WlanID]->wlan_if_policy != BSS_INTERFACE_EBR)){
 			wid_syslog_err("%s WlanID %d not interface\n",__func__,WlanID);
 			return INTERFACE_NOT_L3_IF;
 		}
@@ -7317,7 +7325,7 @@ int WID_RADIO_SET_CHAN(unsigned int RadioID, unsigned char RadioChan){
 			AC_RADIO[RadioID]->auto_channel_cont= 0;			
 		}
 		else  */
-			AC_RADIO[RadioID]->auto_channel_cont= 1;
+			/*AC_RADIO[RadioID]->auto_channel_cont= 1;*/
 		return 0;
 	}
 	msgq msg;
@@ -7366,7 +7374,9 @@ int WID_RADIO_SET_CHAN(unsigned int RadioID, unsigned char RadioChan){
 	if(RadioChan == 0){
 		AC_RADIO[RadioID]->auto_channel_cont= 0;			
 	}
-	else AC_RADIO[RadioID]->auto_channel_cont= 1;
+	else {
+		AC_RADIO[RadioID]->auto_channel_cont= 1;
+	}
 
 	return 0;
 }
@@ -8570,6 +8580,199 @@ int WID_RADIO_SET_MODE(unsigned int RadioID, unsigned int RadioMode)
 
 }
 
+int WID_RADIO_SET_MGMT_RATE_BASE_WLAN(unsigned char RadioID, unsigned int type,unsigned int rate,unsigned char wlanid)
+{
+	int binded = 0;
+	int WtpID = RadioID/L_RADIO_NUM;
+	int localradio_id = RadioID%L_RADIO_NUM;
+	msgq msg;
+	struct wlanid	*wlan_id = NULL;
+	if((gWTPs[AC_RADIO[RadioID]->WTPID].currentState == CW_ENTER_RUN)&&(AC_RADIO[RadioID]->AdStat == 2))
+	{
+		return RADIO_IS_DISABLE;
+	}
+
+
+	wlan_id = AC_RADIO[RadioID]->Wlan_Id;
+
+	while(wlan_id != NULL)
+	{
+		if(wlan_id->wlanid == wlanid)
+		{
+			binded = 1;
+			break;
+		}
+		wlan_id = wlan_id->next;
+	}
+
+	if(binded == 0)
+		return WTP_IF_NOT_BE_BINDED;
+	
+	if(AC_RADIO[RadioID]->Radio_Type == IEEE80211_11B)
+	{
+		if((rate != MGMT_RATE_11M) && (rate != MGMT_RATE_5_5M) && (rate != MGMT_RATE_2M) \
+			&& (rate != MGMT_RATE_1M))
+		{
+			return WTP_NO_SURPORT_Rate;
+		}
+	}
+	else if ((AC_RADIO[RadioID]->Radio_Type == IEEE80211_11A) || (AC_RADIO[RadioID]->Radio_Type == IEEE80211_11G))
+	{
+		if((rate == MGMT_RATE_11M) || (rate == MGMT_RATE_5_5M) || (rate == MGMT_RATE_2M) \
+			|| (rate == MGMT_RATE_1M))
+		{
+			return WTP_NO_SURPORT_Rate;
+		}
+	}
+	else if(AC_RADIO[RadioID]->Radio_Type == IEEE80211_11N)
+	{
+		return WTP_NO_SURPORT_Mode;
+	}
+	else if(AC_RADIO[RadioID]->Radio_Type == IEEE80211_11AN)
+	{
+		return WTP_NO_SURPORT_Mode;
+	}
+	else if(AC_RADIO[RadioID]->Radio_Type == IEEE80211_11GN)
+	{
+		return WTP_NO_SURPORT_Mode;
+	}
+
+	wid_syslog_debug_debug(WID_DEFAULT,"##################chenjun###########");
+	wid_syslog_debug_debug(WID_DEFAULT,"radio %d,type 0x%x,wlanid %d,rate %d\n",RadioID,type,wlanid,rate);
+	type = type <<  23;		
+	if(rate == MGMT_RATE_1M)
+	{
+		type |=0x01;
+	}
+	else if(rate == MGMT_RATE_2M)
+	{
+		type |=0x02;
+	}
+	else if(rate == MGMT_RATE_5_5M)
+	{
+		type |=0x04;
+	}
+	else if(rate == MGMT_RATE_11M)
+	{
+		type |=0x08;
+	}else if(rate == MGMT_RATE_6M)
+	{
+		type |=0x10;
+	}else if(rate == MGMT_RATE_9M)
+	{
+		type |=0x20;
+	}
+	else if(rate == MGMT_RATE_12M)
+	{
+		type |=0x40;
+	}
+	else if(rate == MGMT_RATE_18M)
+	{
+		type |=0x80;
+	}
+	else if(rate == MGMT_RATE_24M)
+	{
+		type |=0x100;
+	}
+	else if(rate == MGMT_RATE_36M)
+	{
+		type |=0x200;
+	}
+	else if(rate == MGMT_RATE_48M)
+	{
+		type |=0x400;
+	}
+	else if(rate == MGMT_RATE_54M)
+	{
+		type |=0x800;
+	}
+	AC_RADIO[RadioID]->Type_Rate = type;
+	AC_RADIO[RadioID]->wlanid = wlanid;
+	wid_syslog_debug_debug(WID_DEFAULT,"radio %d,type 0x%x,wlanid %d,rate %d\n",RadioID,type,wlanid,rate);
+	if((AC_WTP[WtpID] != NULL) && (AC_WTP[WtpID]->WTPStat == 5))
+	{
+		
+		memset((char*)&msg, 0, sizeof(msg));
+		msg.mqid = WtpID%THREAD_NUM+1;
+		msg.mqinfo.WTPID = WtpID;
+		msg.mqinfo.type = CONTROL_TYPE;
+		msg.mqinfo.subtype = Radio_S_TYPE;
+		msg.mqinfo.u.RadioInfo.op = 1;//enable
+		msg.mqinfo.u.RadioInfo.Radio_Op = Radio_set_MGMT_rate;
+		msg.mqinfo.u.RadioInfo.wlanid = wlanid;
+		msg.mqinfo.u.RadioInfo.rate = type;
+		msg.mqinfo.u.RadioInfo.Radio_L_ID = localradio_id;
+		msg.mqinfo.u.RadioInfo.Radio_G_ID = RadioID;
+		
+		if (msgsnd(ACDBUS_MSGQ, (msgq *)&msg, sizeof(msg.mqinfo), 0) == -1)
+		{
+			wid_syslog_crit("%s msgsend %s",__func__,strerror(errno));
+			perror("msgsnd");
+		}
+	}
+	
+	return 0;
+
+}
+
+int WID_RADIO_CLEAR_RATE_FOR_WLAN(unsigned char RadioID, unsigned char wlanid)
+{
+	int binded = 0;
+	int WtpID = RadioID/L_RADIO_NUM;
+	int localradio_id = RadioID%L_RADIO_NUM;
+	msgq msg;
+	struct wlanid	*wlan_id = NULL;
+	if((gWTPs[AC_RADIO[RadioID]->WTPID].currentState == CW_ENTER_RUN)&&(AC_RADIO[RadioID]->AdStat == 2))
+	{
+		return RADIO_IS_DISABLE;
+	}
+
+
+	wlan_id = AC_RADIO[RadioID]->Wlan_Id;
+
+	while(wlan_id != NULL)
+	{
+		if(wlan_id->wlanid == wlanid)
+		{
+			binded = 1;
+			break;
+		}
+		wlan_id = wlan_id->next;
+	}
+
+	if(binded == 0)
+		return WTP_IF_NOT_BE_BINDED;
+		
+	AC_RADIO[RadioID]->Type_Rate = 0;
+	AC_RADIO[RadioID]->wlanid = wlanid;
+	
+	if((AC_WTP[WtpID] != NULL) && (AC_WTP[WtpID]->WTPStat == 5))
+	{
+		
+		memset((char*)&msg, 0, sizeof(msg));
+		msg.mqid = WtpID%THREAD_NUM+1;
+		msg.mqinfo.WTPID = WtpID;
+		msg.mqinfo.type = CONTROL_TYPE;
+		msg.mqinfo.subtype = Radio_S_TYPE;
+		msg.mqinfo.u.RadioInfo.op = 1;//enable
+		msg.mqinfo.u.RadioInfo.Radio_Op = Radio_set_MGMT_rate;
+		msg.mqinfo.u.RadioInfo.wlanid = wlanid;
+		msg.mqinfo.u.RadioInfo.rate = 0;
+		msg.mqinfo.u.RadioInfo.Radio_L_ID = localradio_id;
+		msg.mqinfo.u.RadioInfo.Radio_G_ID = RadioID;
+		
+		if (msgsnd(ACDBUS_MSGQ, (msgq *)&msg, sizeof(msg.mqinfo), 0) == -1)
+		{
+			wid_syslog_crit("%s msgsend %s",__func__,strerror(errno));
+			perror("msgsnd");
+		}
+	}
+	
+	return 0;
+
+}
+
+
 //added by weiay
 int WID_RADIO_SET_BEACON(unsigned int RadioID, unsigned short beaconinterval)
 {
@@ -9220,7 +9423,7 @@ int WID_ADD_WLAN_APPLY_RADIO(unsigned int RadioID,unsigned char WlanID){
 					//fengwenchao change end
 				}
 				
-				if(AC_WLAN[WlanID]->wlan_if_policy == BSS_INTERFACE)
+				if(AC_WLAN[WlanID]->wlan_if_policy == BSS_INTERFACE || AC_WLAN[WlanID]->wlan_if_policy == BSS_INTERFACE_EBR)
 				{		
 				
 					ret = Create_BSS_L3_Interface(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->BSSIndex);
@@ -9672,7 +9875,7 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_ESSID(unsigned int RadioID,unsigned char WlanI
 				}
 			}
 			
-			if(AC_WLAN[WlanID]->wlan_if_policy == BSS_INTERFACE)
+			if(AC_WLAN[WlanID]->wlan_if_policy == BSS_INTERFACE || AC_WLAN[WlanID]->wlan_if_policy == BSS_INTERFACE_EBR)
 			{		
 			
 				ret = Create_BSS_L3_Interface(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->BSSIndex);
@@ -10126,7 +10329,7 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_VLANID(unsigned int RadioID,unsigned char Wlan
 					//修改后代码结束
 					//fengwenchao change end
 				}
-				if(AC_WLAN[WlanID]->wlan_if_policy == BSS_INTERFACE)
+				if(AC_WLAN[WlanID]->wlan_if_policy == BSS_INTERFACE || AC_WLAN[WlanID]->wlan_if_policy == BSS_INTERFACE_EBR)
 				{		
 				
 					ret = Create_BSS_L3_Interface(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->BSSIndex);
@@ -10702,7 +10905,7 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_NAS_PORT_ID(unsigned int RadioID,unsigned char
 					//修改后代码结束
 					//fengwenchao change end
 				}
-				if(AC_WLAN[WlanID]->wlan_if_policy == BSS_INTERFACE)
+				if(AC_WLAN[WlanID]->wlan_if_policy == BSS_INTERFACE || AC_WLAN[WlanID]->wlan_if_policy == BSS_INTERFACE_EBR)
 				{		
 				
 					ret = Create_BSS_L3_Interface(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->BSSIndex);
@@ -11136,7 +11339,7 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_HOTSPOT_ID(unsigned int RadioID,unsigned char 
 					//修改后代码结束
 					//fengwenchao change end
 				}
-				if(AC_WLAN[WlanID]->wlan_if_policy == BSS_INTERFACE)
+				if(AC_WLAN[WlanID]->wlan_if_policy == BSS_INTERFACE || AC_WLAN[WlanID]->wlan_if_policy == BSS_INTERFACE_EBR)
 				{		
 				
 					ret = Create_BSS_L3_Interface(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->BSSIndex);
@@ -12888,7 +13091,7 @@ int WID_ENABLE_WLAN_APPLY_RADIO(unsigned int RadioId, unsigned char WlanId)
 			return VALUE_IS_NONEED_TO_CHANGE;
 		}
 
-		if((check_bssid_func(bssindex))&&(AC_BSS[bssindex]->BSS_IF_POLICY == BSS_INTERFACE))
+		if((check_bssid_func(bssindex))&&(AC_BSS[bssindex]->BSS_IF_POLICY == BSS_INTERFACE || AC_BSS[bssindex]->BSS_IF_POLICY == BSS_INTERFACE_EBR))
 		{
 			memset(ifiname,0,ETH_IF_NAME_LEN-1);
 			if(local)
@@ -13469,7 +13672,7 @@ int WID_ENABLE_WLAN_APPLY_WTP(unsigned int WtpID, unsigned char WlanId)
 			//continue;
 		//if(((AC_BSS[bssindex]->BSS_IF_POLICY != NO_INTERFACE)&&(AC_WTP[WtpID]->tunnel_mode == CW_LOCAL_BRIDGING))||((AC_BSS[bssindex]->BSS_IF_POLICY == NO_INTERFACE)&&(AC_WTP[WtpID]->tunnel_mode != CW_LOCAL_BRIDGING)))
 		//	return IF_POLICY_CONFLICT;
-		if(AC_BSS[bssindex]->BSS_IF_POLICY == BSS_INTERFACE){
+		if(AC_BSS[bssindex]->BSS_IF_POLICY == BSS_INTERFACE || AC_BSS[bssindex]->BSS_IF_POLICY == BSS_INTERFACE_EBR){
 			memset(ifiname,0,ETH_IF_NAME_LEN-1);
 			//snprintf(ifiname,ETH_IF_NAME_LEN,"BSS%d",AC_WLAN[WlanId]->S_WTP_BSS_List[WtpID][j]);
 			if(local)
@@ -13604,7 +13807,7 @@ int delete_wlan_bss(unsigned int WtpID, unsigned char WlanId)
 				AC_WLAN[WlanId]->S_WTP_BSS_List[WtpID][RadioID] = 0;
 				AC_WTP[WtpID]->CMD->radiowlanid[0][WlanId] = 0;
 
-				if(AC_BSS[BSSIndex]->BSS_IF_POLICY == BSS_INTERFACE)
+				if(AC_BSS[BSSIndex]->BSS_IF_POLICY == BSS_INTERFACE || AC_BSS[BSSIndex]->BSS_IF_POLICY == BSS_INTERFACE_EBR)
 				{
 					//should added delete l3 interface
 					Delete_BSS_L3_Interface(BSSIndex);
@@ -13699,7 +13902,7 @@ int delete_wlan_bss_by_radioId(unsigned int RadioId, unsigned char WlanId)
 		
 		//AC_RADIO[RadioId]->CMD_radio->wlanid[WlanId] = 0;
 
-		if(AC_BSS[BSSIndex]->BSS_IF_POLICY == BSS_INTERFACE)
+		if(AC_BSS[BSSIndex]->BSS_IF_POLICY == BSS_INTERFACE || AC_BSS[BSSIndex]->BSS_IF_POLICY == BSS_INTERFACE_EBR)
 		{
 			//should added delete l3 interface
 			Delete_BSS_L3_Interface(BSSIndex);
@@ -13802,7 +14005,7 @@ int delete_wlan_all_bss(unsigned int WtpID)
 		{
 			if(AC_RADIO[RID]->BSS[k] != NULL)
 			{
-				if(AC_RADIO[RID]->BSS[k]->BSS_IF_POLICY == BSS_INTERFACE)
+				if(AC_RADIO[RID]->BSS[k]->BSS_IF_POLICY == BSS_INTERFACE || AC_RADIO[RID]->BSS[k]->BSS_IF_POLICY == BSS_INTERFACE_EBR)
 				{
 					//should added delete l3 interface
 					Delete_BSS_L3_Interface(AC_RADIO[RID]->BSS[k]->BSSIndex);
@@ -17843,7 +18046,7 @@ int wid_radio_set_ip_gateway(int wtpid,unsigned int ip,unsigned int gateway,unsi
 	AC_WTP[wtpid]->ap_ipadd = ip;
 	AC_WTP[wtpid]->ap_gateway = gateway;
 	AC_WTP[wtpid]->resetflag = 1;
-	AC_WTP[wtpid]->ap_mask_new= mask;
+	AC_WTP[wtpid]->ap_mask = mask;
 	
 	if((AC_WTP[wtpid] != NULL)&&(AC_WTP[wtpid]->WTPStat == 5))
 	{
@@ -19396,7 +19599,7 @@ int CHECK_AND_UPDATE_IF_POLICY(char* ifname,int *wtpid1,int *radioid1,int *wlani
 				AC_BSS[bssindex]->BSS_IF_POLICY = WLAN_INTERFACE;
 				AC_BSS[bssindex]->BSS_TUNNEL_POLICY = CW_802_DOT_11_TUNNEL;
 			}
-			else if(AC_BSS[bssindex]->BSS_IF_POLICY == BSS_INTERFACE)
+			else if(AC_BSS[bssindex]->BSS_IF_POLICY == BSS_INTERFACE || AC_BSS[bssindex]->BSS_IF_POLICY == BSS_INTERFACE_EBR)
 			{
 				wid_syslog_debug_debug(WID_DEFAULT,"bss %d policy is BSS_INTERFACE->WLAN_INTERFACE\n",bssindex);
 				AC_BSS[bssindex]->BSS_IF_POLICY = WLAN_INTERFACE;
@@ -23453,7 +23656,7 @@ void wid_init_wtp_info_in_create(unsigned int WTPID)
 		AC_WTP[WTPID]->apifinfo.report_switch = gINFOREPORTSWITCH; /*wcl modify  for globle variable*/
 		AC_WTP[WTPID]->apifinfo.report_interval = gINFOREPORTINTERVAL;//sz change 1 to 3 0630 /*wcl modify for globle variable*/
 		//AC_WTP[WTPID]->apifinfo.eth_num = 1;    //fengwenchao modify 20110325
-		//AC_WTP[WTPID]->apifinfo.wifi_num = 1; //12.17
+		//AC_WTP[WTPID]->apifinfo.wifi_num = 1;   //12.17chenjun
 		memset(AC_WTP[WTPID]->apifinfo.eth,0,AP_ETH_IF_NUM);
 		memset(AC_WTP[WTPID]->apifinfo.wifi,0,AP_WIFI_IF_NUM);
 		unsigned char jj=0;
@@ -31239,9 +31442,11 @@ int add_ap_group_member(unsigned int GID,unsigned int WTPID){
 	}else if(AC_WTP[WTPID]->APGroupID != 0){
 		return WTP_BE_USING;
 	}
+	
+	//check is this wtp already at this ap-group
 	tmp = wtp_group_get_ap(WTP_GROUP[GID],WTPID);
 	if(tmp){
-		return WID_DBUS_SUCCESS;
+		return WID_COMMON_EXIST;
 	}
 	tmp = (struct WTP_GROUP_MEMBER *)WID_MALLOC(sizeof(struct WTP_GROUP_MEMBER));
 	if (!tmp) {
@@ -31264,11 +31469,11 @@ int del_ap_group_member(unsigned int GID,unsigned int WTPID){
 		return GROUP_ID_NOT_EXIST;
 	}
 	if((AC_WTP[WTPID] != NULL)&&(AC_WTP[WTPID]->APGroupID != GID)){
-		return WID_DBUS_SUCCESS;
+		return WID_COMMON_NOT_EXIST;
 	}
 	tmp = wtp_group_get_ap(WTP_GROUP[GID],WTPID);
 	if(tmp == NULL){
-		return WID_DBUS_SUCCESS;
+		return WID_COMMON_NOT_FOUND;
 	}
 
 	if(AC_WTP[WTPID] != NULL && AC_WTP[WTPID]->APGroupID == GID){
@@ -32478,9 +32683,9 @@ void set_wtp_5g_switch(unsigned int wtpid,unsigned char type)
 
 	char command[WID_SYSTEM_CMD_LENTH] = {0};
 	if(1 == type){
-		sprintf(command,"echo 1 > /proc/sys/dev/wifi0/ join5g_enable");
+		sprintf(command,"echo 1 > /proc/sys/dev/wifi0/join5g_enable");
 	}else{
-		sprintf(command,"echo 0 > /proc/sys/dev/wifi0/ join5g_enable");
+		sprintf(command,"echo 0 > /proc/sys/dev/wifi0/join5g_enable");
 	}
 	if(AC_WTP[wtpid] != NULL) 
 	{

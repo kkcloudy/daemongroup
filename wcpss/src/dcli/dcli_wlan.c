@@ -137,6 +137,9 @@ void CheckWIDIfPolicy(char *whichinterface, unsigned char wlan_if_policy){
 		case 2 :
 			strcpy(whichinterface, "BSS_IF");
 			break;
+		case 3 :
+			strcpy(whichinterface, "BSS_IF");
+			break;
 		}
 }
 
@@ -146,38 +149,38 @@ int Check_Time_Format(char* str){
 	int endptr1 = 0;
 	char c;
 	int h,m,s,i;
-	int time;
+	unsigned int time;
 	c = str[0];
 	if (c>='0'&&c<='9'){
 		h= strtoul(str,&endptr,10);
 		if(h < 0||h > 23)
-			return -1;
+			return 0;
 		if(endptr[0] == '\0'||endptr[0] != ':')
-			return -1;
+			return 0;
 		else{
 			endptr1 = &endptr[1];
 			m= strtoul(&endptr[1],&endptr,10);				
 			if(m < 0||m > 59)
-				return -1;				
+				return 0;				
 		}
 		
 		if(endptr[0] == '\0'||endptr[0] != ':')
-			return -1;
+			return 0;
 		else{
 			endptr1 = &endptr[1];
 			s = strtoul(&endptr[1],&endptr,10);				
 			if(s < 0||s > 59)
-				return -1;				
+				return 0;				
 		}
 		if(endptr[0] == '\0'){
 			time = h*3600 + m*60 + s;
 			return time;
 		}
 		else
-			return -1;
+			return 0;
 	}
 	else
-		return -1;
+		return 0;
 
 }
 
@@ -7320,7 +7323,7 @@ DEFUN(set_wlan_servive_timer_func,
 		return CMD_SUCCESS;
 	}
 	time = Check_Time_Format(argv[1]);
-	if(time == -1){
+	if(time == 0){
 		vty_out(vty,"<error> input patameter format should be 12:32:56\n");
 		return CMD_SUCCESS;
 	}

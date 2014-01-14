@@ -1100,6 +1100,15 @@ CWBool CWBindingAssembleConfigurationUpdateRequest2(CWProtocolMessage **msgElems
 				return CW_FALSE; 
 			}
 			break;
+		case Radio_set_MGMT_rate:
+			if (!(CWAssembleMsgElemRadiosetMGMTratebasewlan(&(*msgElems[++k]),elem->mqinfo.u.RadioInfo.Radio_L_ID,elem->mqinfo.u.RadioInfo.wlanid,elem->mqinfo.u.RadioInfo.rate))) 
+			{													
+				int i;
+				for(i = 0; i <= k; i++) { CW_FREE_PROTOCOL_MESSAGE(*msgElems[i]);}
+				CW_FREE_OBJECT_WID(*msgElems);
+				return CW_FALSE; 
+			}
+			break;
 		default:
 			return CW_TRUE;
 	}

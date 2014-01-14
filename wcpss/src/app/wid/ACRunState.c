@@ -725,7 +725,7 @@ CWBool ACEnterRun(int WTPIndex, CWProtocolMessage *msgPtr, CWBool dataFlag)
 									}
 									ifinfo.wsmswitch = wsmswitch;
 									ifinfo.vlanSwitch = vlanSwitch;
-									if((AC_BSS[bssindex]->BSS_IF_POLICY == BSS_INTERFACE)||(AC_BSS[bssindex]->BSS_IF_POLICY == WLAN_INTERFACE))
+									if((AC_BSS[bssindex]->BSS_IF_POLICY == BSS_INTERFACE)|| (AC_BSS[bssindex]->BSS_IF_POLICY == BSS_INTERFACE_EBR) || (AC_BSS[bssindex]->BSS_IF_POLICY == WLAN_INTERFACE))
 										ifinfo.if_policy = 1;
 									else
 										ifinfo.if_policy = 0;
@@ -2138,7 +2138,7 @@ CWBool CWAssembleConfigurationUpdateRequest_WTP(CWProtocolMessage **messagesPtr,
 			//printf("## wtp id = %d config ap ip \n",WTPIndex);
 			MsgElemCount = 1;
 			CW_CREATE_PROTOCOL_MSG_ARRAY_ERR(msgElems, MsgElemCount, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
-			/*if (!(CWAssembleStaticAPIP(&(msgElems[++k]),WTPIndex)))//12.17*/ 
+			/*if (!(CWAssembleStaticAPIP(&(msgElems[++k]),WTPIndex)))//12.17chenjun*/ 
 			if (!(CWAssembleStaticAPIPDNS(&(msgElems[++k]),WTPIndex)))
 			{
 				int i;

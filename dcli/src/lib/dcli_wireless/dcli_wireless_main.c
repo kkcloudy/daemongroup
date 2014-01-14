@@ -1114,7 +1114,7 @@ struct cmd_node local_hansi_ap_group_wtp_node =
 struct cmd_node hansi_ap_group_radio_node =
 {
 	HANSI_AP_GROUP_RADIO_NODE,
-	"%s(hansi-ap-group-radio %d-%d-%d)# ",
+	"%s(hansi-ap-group-radio %d-%d-%d-%d)# ",
 	1
 };
 

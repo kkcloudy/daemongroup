@@ -365,6 +365,8 @@ char WID_DBUS_RADIO_METHOD_SET_CHAN[PATH_LEN]=	"radio_set_channel";
 
 char WID_DBUS_RADIO_METHOD_SET_RATE[PATH_LEN]=	"radio_set_rate";
 char WID_DBUS_RADIO_METHOD_SET_MODE[PATH_LEN]=	"radio_set_mode";
+char WID_DBUS_RADIO_METHOD_SET_MGMT_RATE_BASE_WLAN[PATH_LEN]=	"radio_set_mgmt_rate_base_wlan";
+char WID_DBUS_RADIO_METHOD_CLAER_RATE_FOR_WLAN[PATH_LEN]=	"radio_clear_rate_for_wlan";
 char WID_DBUS_RADIO_METHOD_SET_FRAGMENTATION[PATH_LEN]=	"radio_set_fragmentation";
 char WID_DBUS_RADIO_METHOD_SET_BEACON[PATH_LEN]=	"radio_set_beacon";
 char WID_DBUS_RADIO_METHOD_SET_RTSTHROLD[PATH_LEN]=	"radio_set_hidessic";
@@ -610,6 +612,8 @@ char WID_TRAP_OBJPATH[PATH_LEN]=	"/aw/trap";
 char WID_TRAP_INTERFACE[PATH_LEN]=	"aw.trap";
 
 char WID_DBUS_TRAP_WID_WTP_ENTER_IMAGEDATA_STATE[PATH_LEN]=		"wid_wtp_enter_imagedata_state";
+char WID_DBUS_TRAP_WID_WTP_IMAGEDATA_ERROR[PATH_LEN]=		"wid_wtp_enter_imagedata_error";
+
 char WID_DBUS_TRAP_WID_WTP_CHANNEL_CHANGE[PATH_LEN]=		"wid_wtp_channel_change";
 char WID_DBUS_TRAP_WID_WLAN_ENCRYPTION_TYPE_CHANGE[PATH_LEN]=		"wid_wlan_encryption_type_change";
 char WID_DBUS_TRAP_WID_WLAN_PRESHARED_KEY_CHANGE[PATH_LEN]=		"wid_wlan_preshared_key_change";
@@ -936,6 +940,9 @@ char	WID_DBUS_ACIPLIST_METHOD_SET_AC_IP_DIFF_BANLANCE[PATH_LEN] =	"set_ac_ip_lis
 
 char WID_DBUS_RADIO_METHOD_MOLTI_USER_OPTIMIZE_SWITH[PATH_LEN] =  "radio_multi_user_optimize_switch";
 char WID_DBUS_WTP_METHOD_5G_SWITH[PATH_LEN] = "radio_5g_switch";
+char WID_DBUS_SHOW_WTP_TIMING_UPGRADE_INFO[PATH_LEN] = "show_ap_timing_upgrade_info";
+char WID_DBUS_SET_WTP_TIMING_UPGRADE_SWITCH[PATH_LEN] = "set_wtp_timing_upgrade_switch";
+char WID_DBUS_SET_WTP_TIMING_UPGRADE_TIMER[PATH_LEN] = "set_wtp_timing_upgrade_timer";
 
 char WID_DBUS_RADIO_METHOD_WSM_STA_INFO_REPORTSWITCH[PATH_LEN]  =	"wsm_sta_info_reportswitch";
 char  WID_DBUS_RADIO_METHOD_WSM_STA_INFO_REPORTINTERVAL[PATH_LEN] =	"wsm_sta_info_reportinterval" ;
@@ -964,6 +971,7 @@ char WID_DBUS_AP_GROUP_METHOD_CREATE[PATH_LEN]=	"create_ap_group";
 char WID_DBUS_AP_GROUP_METHOD_DEL[PATH_LEN]=	"delete_ap_group";
 char WID_DBUS_AP_GROUP_METHOD_SHOW_ALL[PATH_LEN]= 	"show_all_ap_group";
 char WID_DBUS_AP_GROUP_METHOD_SHOW_ALL_AP_GROUP_MEMBERS[PATH_LEN]=	"show_all_ap_group_members";
+char WID_DBUS_AP_GROUP_METHOD_SHOW_AP_GROUP_X_SUMMARY[PATH_LEN]=	"show_ap_group_X_summary";
 
 char WID_DBUS_AP_GROUP_METHOD_ADD_DEL_MEMBER[PATH_LEN]=	"add_delete_ap_group_member";
 char WID_DBUS_AP_GROUP_METHOD_SHOW_MEMBER[PATH_LEN]= "show_ap_group_member";
@@ -1013,4 +1021,6 @@ char WID_DBUS_CONF_METHOD_BAK_CHECK_INTERVAL_SHOW[PATH_LEN]		=	"show_bak_check_i
 char WID_DBUS_CONF_METHOD_LIC_BAK_REQ_INTERVAL_SHOW[PATH_LEN]	=	"show_lic_bak_check_interval";	/* Huang Leilei 2012-10-25 add */
 char WID_DBUS_WLAN_METHOD_TUNNEL_NODE_SETTING[PATH_LEN] ="wlan_tunnel_mode_setting";
 char WID_DBUS_WLAN_METHOD_TUNNEL_NODE_SETTING_AND_ADD_TO_EBR[PATH_LEN]="wlan_tunnel_mode_setting_and_add_to_ebr";
+char WID_DBUS_CONF_METHOD_IS_SECONDARY_SHOW[PATH_LEN]	= "show_is_secondary"; /*chenjun12.23*/
+char WID_DBUS_CONF_METHOD_SET_IS_SECONDARY[PATH_LEN] = "set_is_secondary";/*chenjun12.23*/
 #endif

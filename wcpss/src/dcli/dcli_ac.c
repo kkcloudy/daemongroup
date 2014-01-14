@@ -1205,10 +1205,10 @@ DEFUN(del_legal_essid_func,
 	{
 		vty_out(vty," del legal essid %s successfully\n",argv[0]);
 	}
-	else if (ret == ESSID_NOT_EXIT)
+	else if(ret == ESSID_NOT_EXIT)
 	{
 		vty_out(vty," essid not exist\n");
-	}
+	}	
 	else
 	{
 		vty_out(vty,"<error>  %d\n",ret);
@@ -14779,7 +14779,7 @@ DEFUN(set_neighbordead_interval_cmd_func,
 	
 	neighbordead_interval = atoi(argv[0]);
 	
-	if (neighbordead_interval < 20 || neighbordead_interval > 2000)
+	if (neighbordead_interval < 1 || neighbordead_interval > 2000)
 	{	
 		vty_out(vty,"<error> input patameter should be 20 to 2000\n");
 		return CMD_SUCCESS;
@@ -22721,6 +22721,171 @@ DEFUN(set_log_statistics_interval_cmd_func,
 	}
 	return CMD_SUCCESS; 		
 }
+/*chenjun12.23*/
+DEFUN(show_is_secondary_cmd_func,
+		  show_is_secondary_cmd,
+	 	  "show is_secondary",
+		  "show is secondary\n"
+		  "show is  secondary\n"
+	 )
+{
+	DBusMessage *query, *reply;	
+	DBusMessageIter  iter;
+	DBusError err;
+	char BUSNAME[PATH_LEN];
+	char OBJPATH[PATH_LEN];
+	char INTERFACE[PATH_LEN];
+
+	int ret = 0;
+	int localid = 1;
+	int slot_id = HostSlotId;
+	int index = 0;
+	
+	if(vty->node == CONFIG_NODE){
+		index = 0;
+	}else if(vty->node == HANSI_NODE){
+		index = (int)vty->index;
+		localid = vty->local;
+		slot_id = vty->slotindex;
+	}
+	else if(vty->node == LOCAL_HANSI_NODE){
+		index = (int)vty->index;
+		localid = vty->local;
+		slot_id = vty->slotindex;
+	}
+	
+	DBusConnection *dcli_dbus_connection = NULL;
+	ReInitDbusConnection(&dcli_dbus_connection,slot_id,distributFag);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_BUSNAME,BUSNAME);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_OBJPATH,OBJPATH);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_INTERFACE,INTERFACE);
+	
+	query = dbus_message_new_method_call(BUSNAME,OBJPATH,INTERFACE,WID_DBUS_CONF_METHOD_IS_SECONDARY_SHOW);
+	dbus_error_init(&err);
+	reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection,query,-1, &err);
+	dbus_message_unref(query);
+
+	if (reply == NULL) 
+	{
+		cli_syslog_info("<error> failed get reply.\n");
+		if (dbus_error_is_set(&err))
+		{
+			cli_syslog_info("%s raised: %s", err.name, err.message);
+			dbus_error_free_for_dcli(&err);
+		}
+		
+		return CMD_SUCCESS;
+	}
+	
+	dbus_message_iter_init(reply, &iter);
+	dbus_message_iter_get_basic(&iter, &ret);
+	
+	if(ret == 0){
+		vty_out(vty,"show is secondary master \n");
+	}
+	else if(ret == 1){	
+		vty_out(vty,"show is secondary bak\n");
+	}
+	else  if(ret == 2){
+		vty_out(vty,"show is secondary disable \n");
+	}
+	else
+	        vty_out(vty,"<error>  %d\n",ret);
+
+	
+	return CMD_SUCCESS;	
+
+	
+}
+/*chenjun12.23*/
+DEFUN(set_is_secondary_func,
+	  set_is_secondary_cmd,
+	  "set is_secondary (master |bak |disable)",
+	  "set is secondary"
+	  "set ac secondary state"
+	  "master or bak or disable "
+	 )
+{
+	int ret;
+	unsigned char type=0;
+
+	DBusMessage *query, *reply; 
+	DBusMessageIter  iter;
+	DBusError err;
+	int index = 0;
+
+	dbus_error_init(&err);
+	
+	if (!strncmp(argv[0],"master",strlen(argv[0]))){
+		type = 0;
+	}
+	else if (!strncmp(argv[0],"bak",strlen(argv[0]))){
+		type = 1;
+	} 
+	else if (!strncmp(argv[0],"disable",strlen(argv[0]))){
+		type = 2;
+	} 
+	else 
+	{
+		vty_out(vty, "Please input master or bak or disable.\n");
+		return CMD_FAILURE;
+	}
+	
+	int localid = 1;
+	int slot_id = HostSlotId;
+	char BUSNAME[PATH_LEN];
+	char OBJPATH[PATH_LEN];
+	char INTERFACE[PATH_LEN];
+	if(vty->node == CONFIG_NODE){
+		index = 0;
+	}else if(vty->node == HANSI_NODE){
+		index = (int)vty->index;
+		localid = vty->local;
+		slot_id = vty->slotindex;
+	}
+	else if(vty->node == LOCAL_HANSI_NODE){
+		index = (int)vty->index;
+		localid = vty->local;
+		slot_id = vty->slotindex;
+	}
+	DBusConnection *dcli_dbus_connection = NULL;
+	ReInitDbusConnection(&dcli_dbus_connection,slot_id,distributFag);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_BUSNAME,BUSNAME);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_OBJPATH,OBJPATH);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_INTERFACE,INTERFACE);
+	query = dbus_message_new_method_call(BUSNAME,OBJPATH,INTERFACE, WID_DBUS_CONF_METHOD_SET_IS_SECONDARY);
+
+	dbus_message_append_args(query,
+							 DBUS_TYPE_BYTE,&type,
+							 DBUS_TYPE_INVALID);
+
+	reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection,query,-1, &err);
+	
+	dbus_message_unref(query);
+	
+	if (NULL == reply)
+	{
+		cli_syslog_info("<error> failed get reply.\n");
+		if (dbus_error_is_set(&err))
+		{
+			cli_syslog_info("%s raised: %s",err.name,err.message);
+			dbus_error_free_for_dcli(&err);
+		}
+		return CMD_SUCCESS;
+	}
+	
+	dbus_message_iter_init(reply,&iter);
+	dbus_message_iter_get_basic(&iter,&ret);
+
+	if(ret == 0)
+		vty_out(vty,"set is secondary %s successfully.\n",argv[0]);
+	else
+		vty_out(vty,"<error>  %d\n",ret);
+	
+	dbus_message_unref(reply);
+	return CMD_SUCCESS;
+}
+
 int check_logX_interval(unsigned int base,unsigned int interval,int ebase)
 {
 	/*Fuction:check if interval == base*ebase^N (N=0,1,2,...)*/
@@ -23436,7 +23601,10 @@ void dcli_ac_init(void)
 
 	install_element(LOCAL_HANSI_NODE,&set_ac_master_ipaddr_cmd); 
 	install_element(HANSI_NODE,&set_ac_master_ipaddr_cmd); 
-	
+	install_element(LOCAL_HANSI_NODE,&show_is_secondary_cmd); /*chenjun12.23*/
+	install_element(HANSI_NODE,&show_is_secondary_cmd); 
+	install_element(LOCAL_HANSI_NODE,&set_is_secondary_cmd); /*chenjun12.23*/
+	install_element(HANSI_NODE,&set_is_secondary_cmd); 
 	return;
 }
 

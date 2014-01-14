@@ -19,6 +19,8 @@
 #include "wcpss/waw.h"
 #include "ACMsgq.h"
 #include <linux/tipc.h>
+
+
 #ifndef _WID_TYPE_DEF
 #define _WID_TYPE_DEF
 typedef unsigned char 		u_int8_t;
@@ -918,7 +920,7 @@ struct wlan_service_control{
 	int TimerID;
 	int TimerState;
 	int wday[7];
-	int times;
+	unsigned int times;
 	int is_once;
 };
 struct vlan_id{
@@ -1004,6 +1006,7 @@ struct radio{
 	u_int32_t	Support_Rate_Count;
 	struct Support_Rate_List *Radio_Rate;/*sz*/
 	int **RadioRate;
+	u_int32_t  Type_Rate;
 	u_int8_t	Radio_Chan;/*Channel*/
 	u_int16_t	Radio_TXP;/*TX power*/
 	u_int16_t	Radio_TXPOF;/*TX  power offset*/
@@ -1072,6 +1075,7 @@ struct radio{
 /*A8 end*/	
 	struct wlanid	*Wlan_Id; /*binding wlan id*/
 	unsigned char	*WlanId; /*binding wlan id*/
+	unsigned char  wlanid;
 	unsigned short     txpowerstep;//zhaoruijia,20100917,add radio txpower step
 	char br_ifname[WLAN_NUM][IF_NAME_MAX];
 	u_int32_t	wep_flag[WTP_WEP_NUM];/*which bss binding a wlan use wep*/
@@ -1319,6 +1323,14 @@ struct wtp{
 
 	unsigned char sta_online_full_reportswitch;
 	unsigned short sta_online_full_reportinterval;
+
+	unsigned char image_data_percent;
+	unsigned char image_data_step;
+	unsigned char image_data_result;
+
+	//for timing upgrade ap
+	WID_WSC ap_timing_upgrade_info;
+	
 };
 typedef struct wtp WID_WTP;
 

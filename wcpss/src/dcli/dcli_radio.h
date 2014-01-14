@@ -36,6 +36,21 @@ typedef enum{
 	check_success_,
 	check_radioid
 }radio_id_state;
+typedef enum{
+	MGMT_RATE_54M=540,
+	MGMT_RATE_48M=480,
+	MGMT_RATE_36M=360,
+	MGMT_RATE_24M=240,
+	MGMT_RATE_18M=180,
+	MGMT_RATE_12M=120,
+	MGMT_RATE_9M=90,
+	MGMT_RATE_6M=60,
+	MGMT_RATE_11M=110,
+	MGMT_RATE_5_5M=55,
+	MGMT_RATE_2M=20,
+	MGMT_RATE_1M=10
+}mgmt_rate_list;
+
 
 #define PARSE_RADIO_IFNAME_SUB_ '-'
 

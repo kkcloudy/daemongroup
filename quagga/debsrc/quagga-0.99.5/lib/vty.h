@@ -75,6 +75,7 @@ struct vty
   /* For multiple level index treatment such as key chain and key. */
   void *index_sub;
 
+  void *index_sub_sub;
   /* For escape character. */
   unsigned char escape;
 

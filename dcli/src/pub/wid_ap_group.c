@@ -22,6 +22,8 @@ int dcli_ap_group_add_del_member(int localid,int index,unsigned int groupid,int 
 	int ret;
 	unsigned int wtpid = 0;
 	DBusMessageIter	 iter_array;
+	DBusMessageIter iter_struct;
+	
 	dbus_error_init(&err);
 
 	char BUSNAME[PATH_LEN];
@@ -85,10 +87,15 @@ int dcli_ap_group_add_del_member(int localid,int index,unsigned int groupid,int 
 	if(count != 0){
 		(*wtp_list) = (unsigned int *)malloc(count*(sizeof(unsigned int)));
 	}
+
+	dbus_message_iter_next(&iter);
+	dbus_message_iter_recurse(&iter,&iter_array);
+	
 	for(i=0; i < count; i++){
-		dbus_message_iter_next(&iter);	
-		dbus_message_iter_get_basic(&iter,&wtpid);
+		dbus_message_iter_recurse(&iter_array,&iter_struct);	
+		dbus_message_iter_get_basic(&iter_struct,&wtpid);
 		(*wtp_list)[i] = wtpid;
+		dbus_message_iter_next(&iter_array);
 	}
 	dbus_message_unref(reply);	
 

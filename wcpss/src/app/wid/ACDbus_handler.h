@@ -19,6 +19,21 @@ int istrybindipv6addr;
 #define WTP_ID_HASH(ID) (ID%256)
 extern int ACDBUS_MSGQ;
 extern unsigned int isNoCheck;
+typedef enum{
+	MGMT_RATE_54M=540,
+	MGMT_RATE_48M=480,
+	MGMT_RATE_36M=360,
+	MGMT_RATE_24M=240,
+	MGMT_RATE_18M=180,
+	MGMT_RATE_12M=120,
+	MGMT_RATE_9M=90,
+	MGMT_RATE_6M=60,
+	MGMT_RATE_11M=110,
+	MGMT_RATE_5_5M=55,
+	MGMT_RATE_2M=20,
+	MGMT_RATE_1M=10
+}mgmt_rate_lis;
+
 int set_balance_probe_extension_command(int wtpid, char * command);
 
 int balance_probe_extend_command(unsigned char wlanid,unsigned char state);
@@ -42,6 +57,8 @@ int WID_ADD_WLAN_APPLY_RADIO(unsigned int RadioID,unsigned char WlanID);
 int WID_RADIO_SET_SUPPORT_RATE(unsigned int RadioID,int RadioRate [ ],int flag,int num);
 int WID_RADIO_SET_MODE(unsigned int RadioID, unsigned int RadioMode);
 //added end
+int WID_RADIO_SET_MGMT_RATE_BASE_WLAN(unsigned char RadioID, unsigned int type,unsigned int rate,unsigned char wlanid);
+int WID_RADIO_CLEAR_RATE_FOR_WLAN(unsigned char RadioID,unsigned char wlanid);
 int WID_RADIO_SET_BEACON(unsigned int RadioID, unsigned short beaconinterval);
 int WID_RADIO_SET_FRAGMENTATION(unsigned int RadioID, unsigned short fragmentation);
 int WID_RADIO_SET_DTIM(unsigned int RadioID, unsigned char dtim);

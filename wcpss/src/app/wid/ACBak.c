@@ -451,7 +451,7 @@ int send_all_tunnel_interface_arp(){
 			for(j = 0; j < AC_WTP[i]->RadioCount; j++){
 				for(k = 0;k < L_BSS_NUM;k++ ){
 					if((AC_WTP[i]->WTP_Radio[j]->BSS[k] != NULL)){
-						if((AC_WTP[i]->WTP_Radio[j]->BSS[k]->BSS_IF_POLICY == BSS_INTERFACE)){
+						if((AC_WTP[i]->WTP_Radio[j]->BSS[k]->BSS_IF_POLICY == BSS_INTERFACE || AC_WTP[i]->WTP_Radio[j]->BSS[k]->BSS_IF_POLICY == BSS_INTERFACE_EBR)){
 							memset(name,0,ETH_IF_NAME_LEN);
 							if(local)
 								sprintf(name,"r%d-%d-%d.%d",vrrid,i,j,AC_WTP[i]->WTP_Radio[j]->BSS[k]->WlanID);
@@ -967,7 +967,8 @@ void B_BSS_ADD_OP(B_Msg *msg){
 				else
 					ifinfo.protect_type = 1;
 				
-				if((AC_BSS[BSSIndex]->BSS_IF_POLICY == BSS_INTERFACE)||(AC_BSS[BSSIndex]->BSS_IF_POLICY == WLAN_INTERFACE))
+				if((AC_BSS[BSSIndex]->BSS_IF_POLICY == BSS_INTERFACE)||(AC_BSS[BSSIndex]->BSS_IF_POLICY == WLAN_INTERFACE)||
+					(AC_BSS[BSSIndex]->BSS_IF_POLICY == BSS_INTERFACE_EBR))
 					ifinfo.if_policy = 1;
 				else
 					ifinfo.if_policy = 0;

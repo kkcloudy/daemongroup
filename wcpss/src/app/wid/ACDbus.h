@@ -60,6 +60,7 @@ typedef struct
 	double datagramloss;		//datagram loss, % percent, e.g. 2.2%
 };*/
 int wid_dbus_trap_wtp_enter_imagedata_state(int wtpindex);
+int wid_dbus_trap_wtp_imagedata_error(int wtpindex, unsigned char err_code);
 int wid_dbus_trap_wtp_channel_change(unsigned char chan_past,unsigned char chan_curr,unsigned int radioid);
 int wid_dbus_trap_wtp_code_start(int wtpindex);
 int wid_dbus_trap_wtp_electrify_register_circle(int wtpindex, int registertimer);

@@ -44,7 +44,8 @@
 #define G_AC_NUM	16
 #define GROUP_NUM	4
 #define STA_HASH_SIZE 256
-#define WTP_GROUP_NUM		16
+#define WTP_GROUP_NUM		65
+#define	GRADIO_ID_MAX		4
 #define WTP_AP_GROUP_NAME_MAX_LEN	64
 #define WTP_NAME_LEN 256
 

@@ -48,7 +48,7 @@ struct cmd_node local_hansi_ap_group_wtp_node =
 struct cmd_node hansi_ap_group_radio_node =
 {
 	HANSI_AP_GROUP_RADIO_NODE,
-	"%s(hansi-ap-group-radio %d-%d-%d)# ",
+	"%s(hansi-ap-group-radio %d-%d-%d-%d)# ",
 	1
 };
 struct cmd_node local_hansi_ap_group_radio_node =
@@ -181,18 +181,29 @@ DEFUN(config_ap_group_wtp_cmd_func,
 
 DEFUN(config_ap_group_radio_cmd_func,
 	  config_ap_group_radio_cmd,
-	  "config ap-group-radio",
+	  "config gradio RADIO_ID",
 	  CONFIG_STR
 	  "Wireless LAN information\n"
 	 )
 {	
-	if(vty->node == AP_GROUP_NODE){
-		vty->node = AP_GROUP_RADIO_NODE;
-	}else if(vty->node == HANSI_AP_GROUP_NODE){
+	unsigned int gradio_id = 0;
+	int ret;
+	ret = parse_int_ID((char *)argv[0], &gradio_id);
+	if (ret != WID_DBUS_SUCCESS) {
+		vty_out(vty, "<error> unknown gradio id format\n");
+		return CMD_SUCCESS;
+	}
+
+	if (gradio_id >= GRADIO_ID_MAX) {
+		vty_out(vty, "<error> gradio id max support %d\n", GRADIO_ID_MAX-1);
+		return CMD_SUCCESS;
+	}
+	
+	if(vty->node == HANSI_AP_GROUP_NODE){
 		vty->node = HANSI_AP_GROUP_RADIO_NODE;
-	}else if(vty->node == LOCAL_HANSI_AP_GROUP_NODE){
-		vty->node = LOCAL_HANSI_AP_GROUP_RADIO_NODE;
-	}	
+		vty->index_sub_sub = (void *)gradio_id;
+	} else {
+	}
 	return CMD_SUCCESS;
 }
 
@@ -486,6 +497,9 @@ DEFUN(show_ap_group_members_all_func,
 	unsigned char *test_name;
 	unsigned int wtp_count, wtp_id;
 	DBusMessageIter  iter_array;
+	DBusMessageIter  iter_sub_array;
+	DBusMessageIter iter_struct;
+	DBusMessageIter iter_sub_struct;
 	
 	if(vty->node == HANSI_NODE){
 		index = vty->index;
@@ -527,28 +541,31 @@ DEFUN(show_ap_group_members_all_func,
 	dbus_message_iter_get_basic(&iter,&ap_group_count);
 
 	vty_out(vty,"ap-group-count:%d\n", ap_group_count);
-	
+
+	dbus_message_iter_next(&iter);
+	dbus_message_iter_recurse(&iter,&iter_array);
+		
 	for(i=0; i < ap_group_count; i++){
-		dbus_message_iter_next(&iter);	
-		dbus_message_iter_get_basic(&iter,&test_id);
-		dbus_message_iter_next(&iter);	
-		dbus_message_iter_get_basic(&iter,&test_name);
+		dbus_message_iter_recurse(&iter_array,&iter_struct);	
+		dbus_message_iter_get_basic(&iter_struct,&test_id);
+		
+		dbus_message_iter_next(&iter_struct);	
+		dbus_message_iter_get_basic(&iter_struct,&test_name);
+		
 		vty_out(vty,"ap_group:%u\t\t\t\t%s\n", test_id, test_name);
-		dbus_message_iter_next(&iter);	
-		dbus_message_iter_get_basic(&iter,&wtp_count);
+		
+		dbus_message_iter_next(&iter_struct);	
+		dbus_message_iter_get_basic(&iter_struct,&wtp_count);
+		
 		vty_out(vty,"member count:%d\n", wtp_count);
-		dbus_message_iter_next(&iter);
-		dbus_message_iter_recurse(&iter,&iter_array);
+		
+		dbus_message_iter_next(&iter_struct);
+		dbus_message_iter_recurse(&iter_struct,&iter_sub_array);
+		
 		for (ii=0; ii<wtp_count; ii++) {
-			#if 0
-			if (ii==0 || ii % 10 == 0) {
-				vty_out(vty, "\t");
-			}
-			#endif
-			DBusMessageIter iter_struct;
-			dbus_message_iter_recurse(&iter_array,&iter_struct);
-			dbus_message_iter_get_basic(&iter_struct,&wtp_id);
-			dbus_message_iter_next(&iter_array);
+			dbus_message_iter_recurse(&iter_sub_array,&iter_sub_struct);
+			dbus_message_iter_get_basic(&iter_sub_struct,&wtp_id);
+			dbus_message_iter_next(&iter_sub_array);
 
 			if (ii!=0 && ii % 10 == 0) {
 				vty_out(vty, "\n");
@@ -557,6 +574,7 @@ DEFUN(show_ap_group_members_all_func,
 			
 		}
 		vty_out(vty, "\n");
+		dbus_message_iter_next(&iter_array);
 	}
 	dbus_message_unref(reply);
 
@@ -742,6 +760,457 @@ DEFUN(show_group_member_func,
 	return CMD_SUCCESS;	
 }
 
+#define WTP_WTP_IP_LEN 21
+
+DEFUN(show_ap_group_X_summary_func,
+	show_ap_group_X_summary_cmd,
+	"show ap-group (APGROUPID|all) summary",
+	"show ap group summary\n"
+	"show ap group summary\n"
+)
+{
+	int ret;
+	unsigned int i = 0, ii = 0;
+	unsigned int ap_group_id = 0;
+	int index = 0;
+	int localid = 1;
+	int slot_id = HostSlotId;
+	char BUSNAME[PATH_LEN];
+	char OBJPATH[PATH_LEN];
+	char INTERFACE[PATH_LEN];
+	DBusMessage *query, *reply; 
+	DBusMessageIter  iter;
+	DBusError err;
+	unsigned int test_id;
+	unsigned char *test_name;
+	unsigned int wtp_count, wtp_id;
+	DBusMessageIter  iter_array;
+	DBusMessageIter iter_struct;
+	DBusMessageIter iter_sub_array;
+	DBusMessageIter iter_sub_struct;
+	unsigned int wtp_counter = 0;
+	unsigned int g_id = 0;
+	unsigned int ap_group_count = 0;
+
+	char on[] = "used";
+	char off[] = "unused";
+	char state[20];
+	char ip[WTP_WTP_IP_LEN+1];
+	unsigned int result = 0;
+	if (strcmp(argv[0], "all") == 0) {
+		ap_group_id = 0;
+	} else {
+		ret = parse_int_ID((char *)argv[0], &ap_group_id);
+		if(ret != WID_DBUS_SUCCESS){
+			vty_out(vty,"<error> unknown id format\n");
+			return CMD_SUCCESS;
+		}
+
+		if(ap_group_id >= WTP_GROUP_NUM || ap_group_id == 0){
+			vty_out(vty,"<error> id should be 1 to %d or all\n",WTP_GROUP_NUM-1);
+			return CMD_SUCCESS;
+		}
+	}
+	if(vty->node == HANSI_NODE){
+		index = vty->index;
+		localid = vty->local;
+		slot_id = vty->slotindex;
+	}
+	else if (vty->node == LOCAL_HANSI_NODE){
+		index = vty->index;
+		localid = vty->local;
+		slot_id = vty->slotindex;
+	}
+	
+	DBusConnection *dcli_dbus_connection = NULL;
+	ReInitDbusConnection(&dcli_dbus_connection,slot_id,distributFag);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_BUSNAME,BUSNAME);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_AP_GROUP_OBJPATH,OBJPATH);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_AP_GROUP_INTERFACE,INTERFACE);
+	query = dbus_message_new_method_call(BUSNAME,OBJPATH,INTERFACE, WID_DBUS_AP_GROUP_METHOD_SHOW_AP_GROUP_X_SUMMARY);
+	dbus_error_init(&err);
+	dbus_message_append_args(query, DBUS_TYPE_UINT32, 
+									&ap_group_id,
+									DBUS_TYPE_INVALID);
+	
+	reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection,query,-1, &err);
+
+	dbus_message_unref(query);
+
+	if (NULL == reply) {
+		vty_out(vty, "<error> failed get reply.\n");
+		if (dbus_error_is_set(&err)) {
+			dbus_error_free_for_dcli(&err);
+		}
+		return CMD_FAILURE;
+	}
+
+	dbus_message_iter_init(reply,&iter);
+	dbus_message_iter_get_basic(&iter,&ret);
+
+	if (ret == WID_DBUS_SUCCESS) {
+		if (ap_group_id == 0) {
+			//for all ap-groups
+			
+			dbus_message_iter_next(&iter);	
+			dbus_message_iter_get_basic(&iter, &ap_group_count);
+
+			//no ap-group to show
+			if (ap_group_count == 0) {
+				vty_out(vty, "all the ap-groups are empty\n");
+			
+				dbus_message_unref(reply);
+				return CMD_SUCCESS; 
+			}
+			
+			dbus_message_iter_next(&iter);	
+			dbus_message_iter_recurse(&iter,&iter_array);
+			
+			for (i=0; i<ap_group_count; i++) {
+				dbus_message_iter_recurse(&iter_array,&iter_struct);
+				dbus_message_iter_get_basic(&iter_struct,&g_id);
+				
+				dbus_message_iter_next(&iter_struct);
+				dbus_message_iter_get_basic(&iter_struct,&wtp_counter);
+				
+				unsigned int *wtp_id = (unsigned int *)malloc(wtp_counter*(sizeof(unsigned int)));
+				char **wtp_ip = (char *)malloc(wtp_counter*(sizeof(char *)));
+				char **wtp_sn = (char *)malloc(wtp_counter*(sizeof(char *)));
+				char **wtp_name = (char *)malloc(wtp_counter*(sizeof(char *)));
+				char **wtp_model = (char *)malloc(wtp_counter*(sizeof(char *)));
+				char **wtp_location =  (char *)malloc(wtp_counter*(sizeof(char *)));
+				unsigned char *wtp_mac = (unsigned char *)malloc(wtp_counter*MAC_LEN);
+				unsigned char *wtp_isused = (char *)malloc(wtp_counter*(sizeof(char *)));
+				unsigned char *wtp_stat = (char *)malloc(wtp_counter*(sizeof(char *)));
+
+				unsigned int join_num = 0;
+				unsigned int configure_num = 0;
+				unsigned int datacheck_num = 0;
+				unsigned int run_num = 0;
+				unsigned int quit_num = 0;
+				unsigned int imagedata_num = 0;
+				unsigned int bak_run_num = 0;
+				unsigned int TotalNum = 0;
+
+				dbus_message_iter_next(&iter_struct);
+				dbus_message_iter_recurse(&iter_struct,&iter_sub_array);
+				
+				unsigned char *temp_mac;	
+				for (ii=0; ii<wtp_counter; ii++) {	
+					dbus_message_iter_recurse(&iter_sub_array,&iter_sub_struct);
+					dbus_message_iter_get_basic(&iter_sub_struct,&wtp_id[ii]);
+
+					dbus_message_iter_next(&iter_sub_struct);
+					temp_mac = wtp_mac+ii*6+0;
+					dbus_message_iter_get_basic(&iter_sub_struct, temp_mac);
+
+					dbus_message_iter_next(&iter_sub_struct);
+					temp_mac = wtp_mac+ii*6+1;
+					dbus_message_iter_get_basic(&iter_sub_struct, temp_mac);
+					
+					dbus_message_iter_next(&iter_sub_struct);
+					temp_mac = wtp_mac+ii*6+2;
+					dbus_message_iter_get_basic(&iter_sub_struct, temp_mac);
+					
+					dbus_message_iter_next(&iter_sub_struct);
+					temp_mac = wtp_mac+ii*6+3;
+					dbus_message_iter_get_basic(&iter_sub_struct, temp_mac);
+					
+					dbus_message_iter_next(&iter_sub_struct);
+					temp_mac = wtp_mac+ii*6+4;
+					dbus_message_iter_get_basic(&iter_sub_struct, temp_mac);
+					
+					dbus_message_iter_next(&iter_sub_struct);
+					temp_mac = wtp_mac+ii*6+5;
+					dbus_message_iter_get_basic(&iter_sub_struct, temp_mac);
+
+					dbus_message_iter_next(&iter_sub_struct);
+					dbus_message_iter_get_basic(&iter_sub_struct,&wtp_ip[ii]);
+
+					dbus_message_iter_next(&iter_sub_struct);
+					dbus_message_iter_get_basic(&iter_sub_struct,&wtp_model[ii]);
+
+					dbus_message_iter_next(&iter_sub_struct);
+					dbus_message_iter_get_basic(&iter_sub_struct,&wtp_stat[ii]);
+
+					dbus_message_iter_next(&iter_sub_struct);
+					dbus_message_iter_get_basic(&iter_sub_struct,&wtp_isused[ii]);
+
+					dbus_message_iter_next(&iter_sub_struct);
+					dbus_message_iter_get_basic(&iter_sub_struct,&wtp_name[ii]);
+
+					dbus_message_iter_next(&iter_sub_struct);
+					dbus_message_iter_get_basic(&iter_sub_struct,&wtp_sn[ii]);
+
+					dbus_message_iter_next(&iter_sub_struct);
+					dbus_message_iter_get_basic(&iter_sub_struct,&wtp_location[ii]);
+
+					if (wtp_stat[ii] == 5)
+						TotalNum++;
+					
+					switch (wtp_stat[ii]) {
+						case 2 :
+							join_num++;
+							break;
+						case 3 :
+							configure_num++;
+							break;
+						case 4 :
+							datacheck_num++;
+							break;
+						case 5 :
+							run_num++;
+							break;	
+						case 7 :
+							quit_num++;
+							break;
+						case 8 :
+							imagedata_num++;
+							break;
+						case 9 :
+							bak_run_num++;
+							break;
+						default	:
+							break;
+					}
+					dbus_message_iter_next(&iter_sub_array);
+				}
+				//show this group
+
+				vty_out(vty, "ap-group %d wtp list summary:\n", g_id);
+				vty_out(vty, "%d WTPs Online\n", TotalNum);
+				vty_out(vty,"----------------------------------------------------------------------\n");
+				vty_out(vty,"%d WTP Join state\n", join_num);
+				vty_out(vty,"%d WTP Configure state\n", configure_num);
+				vty_out(vty,"%d WTP Datacheck state\n", datacheck_num);
+				vty_out(vty,"%d WTP Run state\n", run_num);
+				vty_out(vty,"%d WTP Imagedata state\n", imagedata_num);
+				vty_out(vty,"%d WTP Bak_run state\n", bak_run_num);
+				vty_out(vty,"%d WTP Quit state\n", quit_num);
+
+				vty_out(vty,"==============================================================================\n");
+				vty_out(vty,"%-5s %-17s %-21s %-10s %-7s %-30s\n","WTPID","WTPMAC","WTPIP","RunState","State","Location");
+				for (ii=0; ii<wtp_counter; ii++) {
+					CheckWTPState(state,wtp_stat[ii]);
+					result = wtp_check_wtp_ip_addr(ip,wtp_ip[ii]);
+					if(result != 1)
+					{
+						vty_out(vty,"%-5d %02X:%02X:%02X:%02X:%02X:%02X %-21s %-10s %-7s %-30s\n",
+							wtp_id[ii],
+							*(wtp_mac+ii*6+0),*(wtp_mac+ii*6+1),*(wtp_mac+ii*6+2),*(wtp_mac+ii*6+3),*(wtp_mac+ii*6+4),*(wtp_mac+ii*6+5),
+							wtp_ip[ii],
+							state,
+							(wtp_isused[ii] == 1)?on:off, wtp_location[ii]);
+					} else {
+						vty_out(vty,"%-5d %02X:%02X:%02X:%02X:%02X:%02X %-21s %-10s %-7s %-30s\n",
+							wtp_id[ii],
+							*(wtp_mac+ii*6+0),*(wtp_mac+ii*6+1),*(wtp_mac+ii*6+2),*(wtp_mac+ii*6+3),*(wtp_mac+ii*6+4),*(wtp_mac+ii*6+5),
+							ip,
+							state,
+							(wtp_isused[ii] == 1)?on:off, wtp_location[ii]);
+					}
+				}
+				vty_out(vty,"==============================================================================\n\n\n");
+
+				free(wtp_id);
+				free(wtp_ip);
+				free(wtp_sn);
+				free(wtp_name);
+				free(wtp_model);
+				free(wtp_location);
+				free(wtp_mac);
+				free(wtp_isused);
+				free(wtp_stat);
+				dbus_message_iter_next(&iter_array);
+			}
+		} else {		//only for sigle ap-group
+			dbus_message_iter_next(&iter);	
+			dbus_message_iter_get_basic(&iter, &ap_group_count);
+			if (ap_group_count != 0) {
+				dbus_message_iter_next(&iter);	
+				dbus_message_iter_get_basic(&iter, &g_id);
+				dbus_message_iter_next(&iter);	
+				dbus_message_iter_get_basic(&iter, &wtp_counter);
+				dbus_message_iter_next(&iter);	
+				dbus_message_iter_recurse(&iter,&iter_array);
+				
+				unsigned int *wtp_id = (unsigned int *)malloc(wtp_counter*(sizeof(unsigned int)));
+				memset(wtp_id, 0, (wtp_counter*(sizeof(unsigned int))));
+				char **wtp_ip = (char *)malloc(wtp_counter*(sizeof(char *)));
+				memset(wtp_ip, 0, (wtp_counter*(sizeof(char *))));
+				char **wtp_sn = (char *)malloc(wtp_counter*(sizeof(char *)));
+				memset(wtp_sn, 0, (wtp_counter*(sizeof(char *))));
+				char **wtp_name = (char *)malloc(wtp_counter*(sizeof(char *)));
+				memset(wtp_name, 0, (wtp_counter*(sizeof(char *))));
+				char **wtp_model = (char *)malloc(wtp_counter*(sizeof(char *)));
+				memset(wtp_model, 0, (wtp_counter*(sizeof(char *))));
+				char **wtp_location =  (char *)malloc(wtp_counter*(sizeof(char *)));
+				memset(wtp_location, 0, (wtp_counter*(sizeof(char *))));
+				unsigned char *wtp_mac = (unsigned char *)malloc(wtp_counter*MAC_LEN);
+				memset(wtp_mac, 0, (wtp_counter*MAC_LEN));
+				
+				unsigned char *wtp_isused = (char *)malloc(wtp_counter*(sizeof(char *)));
+				memset(wtp_isused, 0, (wtp_counter*(sizeof(char *))));
+				unsigned char *wtp_stat = (char *)malloc(wtp_counter*(sizeof(char *)));
+				memset(wtp_stat, 0, (wtp_counter*(sizeof(char *))));
+
+				unsigned int join_num = 0;
+				unsigned int configure_num = 0;
+				unsigned int datacheck_num = 0;
+				unsigned int run_num = 0;
+				unsigned int quit_num = 0;
+				unsigned int imagedata_num = 0;
+				unsigned int bak_run_num = 0;
+				unsigned int TotalNum = 0;
+				unsigned char *temp_mac;
+				for (i=0; i<wtp_counter; i++) {
+					dbus_message_iter_recurse(&iter_array,&iter_struct);
+					dbus_message_iter_get_basic(&iter_struct, &wtp_id[i]);
+					
+					dbus_message_iter_next(&iter_struct);
+					temp_mac = wtp_mac+i*6+0;
+					dbus_message_iter_get_basic(&iter_struct, temp_mac);
+
+					dbus_message_iter_next(&iter_struct);
+					temp_mac = wtp_mac+i*6+1;
+					dbus_message_iter_get_basic(&iter_struct, temp_mac);
+					
+					dbus_message_iter_next(&iter_struct);
+					temp_mac = wtp_mac+i*6+2;
+					dbus_message_iter_get_basic(&iter_struct, temp_mac);
+					
+					dbus_message_iter_next(&iter_struct);
+					temp_mac = wtp_mac+i*6+3;
+					dbus_message_iter_get_basic(&iter_struct, temp_mac);
+					
+					dbus_message_iter_next(&iter_struct);
+					temp_mac = wtp_mac+i*6+4;
+					dbus_message_iter_get_basic(&iter_struct, temp_mac);
+					
+					dbus_message_iter_next(&iter_struct);
+					temp_mac = wtp_mac+i*6+5;
+					dbus_message_iter_get_basic(&iter_struct, temp_mac);
+
+					
+					dbus_message_iter_next(&iter_struct);
+					dbus_message_iter_get_basic(&iter_struct,&wtp_ip[i]);
+
+					dbus_message_iter_next(&iter_struct);
+					dbus_message_iter_get_basic(&iter_struct,&wtp_model[i]);
+
+					dbus_message_iter_next(&iter_struct);
+					dbus_message_iter_get_basic(&iter_struct,&wtp_stat[i]);
+
+					dbus_message_iter_next(&iter_struct);
+					dbus_message_iter_get_basic(&iter_struct,&wtp_isused[i]);
+
+					dbus_message_iter_next(&iter_struct);
+					dbus_message_iter_get_basic(&iter_struct,&wtp_name[i]);
+
+					dbus_message_iter_next(&iter_struct);
+					dbus_message_iter_get_basic(&iter_struct,&wtp_sn[i]);
+
+					dbus_message_iter_next(&iter_struct);
+					dbus_message_iter_get_basic(&iter_struct, &wtp_location[i]);
+					if (wtp_stat[i] == 5)
+						TotalNum++;
+					
+					switch (wtp_stat[i]) {
+						case 2 :
+							join_num++;
+							break;
+						case 3 :
+							configure_num++;
+							break;
+						case 4 :
+							datacheck_num++;
+							break;
+						case 5 :
+							run_num++;
+							break;	
+						case 7 :
+							quit_num++;
+							break;
+						case 8 :
+							imagedata_num++;
+							break;
+						case 9 :
+							bak_run_num++;
+							break;
+						default	:
+							break;
+					}
+					
+					dbus_message_iter_next(&iter_array);
+				}
+				
+				vty_out(vty, "ap-group %d wtp list summary:\n", g_id);
+				vty_out(vty, "%d WTPs Online\n", TotalNum);
+				vty_out(vty,"----------------------------------------------------------------------\n");
+				vty_out(vty,"%d WTP Join state\n", join_num);
+				vty_out(vty,"%d WTP Configure state\n", configure_num);
+				vty_out(vty,"%d WTP Datacheck state\n", datacheck_num);
+				vty_out(vty,"%d WTP Run state\n", run_num);
+				vty_out(vty,"%d WTP Imagedata state\n", imagedata_num);
+				vty_out(vty,"%d WTP Bak_run state\n", bak_run_num);
+				vty_out(vty,"%d WTP Quit state\n", quit_num);
+
+				vty_out(vty,"==============================================================================\n");
+				vty_out(vty,"%-5s %-17s %-21s %-10s %-7s %-30s\n","WTPID","WTPMAC","WTPIP","RunState","State","Location");
+
+				for (ii=0; ii<wtp_counter; ii++) {
+					CheckWTPState(state,wtp_stat[ii]);
+					result = wtp_check_wtp_ip_addr(ip,wtp_ip[ii]);
+					if(result != 1)
+					{
+						vty_out(vty,"%-5d %02X:%02X:%02X:%02X:%02X:%02X %-21s %-10s %-7s %-30s\n",
+							wtp_id[ii],
+							*(wtp_mac+ii*6+0),*(wtp_mac+ii*6+1),*(wtp_mac+ii*6+2),*(wtp_mac+ii*6+3),*(wtp_mac+ii*6+4),*(wtp_mac+ii*6+5),
+							wtp_ip[ii],
+							state,
+							(wtp_isused[ii] == 1)?on:off, wtp_location[ii]);
+					} else {
+						vty_out(vty,"%-5d %02X:%02X:%02X:%02X:%02X:%02X %-21s %-10s %-7s %-30s\n",
+							wtp_id[ii],
+							*(wtp_mac+ii*6+0),*(wtp_mac+ii*6+1),*(wtp_mac+ii*6+2),*(wtp_mac+ii*6+3),*(wtp_mac+ii*6+4),*(wtp_mac+ii*6+5),
+							ip,
+							state,
+							(wtp_isused[ii] == 1)?on:off, wtp_location[ii]);
+					}
+				}
+				vty_out(vty,"==============================================================================\n\n\n");
+
+				free(wtp_id);
+				free(wtp_ip);
+				free(wtp_sn);
+				free(wtp_name);
+				free(wtp_model);
+				free(wtp_location);
+				free(wtp_mac);
+				free(wtp_isused);
+				free(wtp_stat);
+			} else {
+				vty_out(vty, "ap-group has no member\n");
+			}
+		}
+	} else if (ret == VALUE_OUT_OF_RANGE) {
+		vty_out(vty, "<error> ap_group_id is out of range \n");
+		return CMD_SUCCESS;
+	} else if (ret == GROUP_ID_NOT_EXIST) {
+		vty_out(vty, "<error> ap group is not exist\n");
+		return CMD_SUCCESS;
+	} else if (ret == GROUP_IS_EMPTY) {
+		vty_out(vty, "<error> ap group has no member\n");
+		return CMD_SUCCESS;
+	} else {
+		vty_out(vty, "<error> unknown error type %d\n", ret);
+		return CMD_SUCCESS;
+	}
+	
+	dbus_message_unref(reply);
+	return CMD_SUCCESS; 
+}
+
 
 void dcli_ap_group_init(void) {
 	//printf("11111111111H####1111111\n");
@@ -792,12 +1261,13 @@ void dcli_ap_group_init(void) {
 	install_element(HANSI_NODE,&del_ap_group_cmd);
 	install_element(HANSI_NODE,&show_ap_group_cmd);
 	install_element(HANSI_NODE,&show_ap_group_members_all_cmd);
-	install_element(HANSI_NODE,&config_ap_group_cmd);	
+	install_element(HANSI_NODE,&config_ap_group_cmd);
+	install_element(HANSI_NODE,&show_ap_group_X_summary_cmd);
 	
 	install_element(HANSI_AP_GROUP_NODE,&show_group_member_cmd);
 	install_element(HANSI_AP_GROUP_NODE,&add_del_ap_group_member_cmd);
 	install_element(HANSI_AP_GROUP_NODE,&config_ap_group_wtp_cmd);
-	//install_element(HANSI_AP_GROUP_NODE,&config_ap_group_radio_cmd);
+	install_element(HANSI_AP_GROUP_NODE,&config_ap_group_radio_cmd);
 
 	install_element(LOCAL_HANSI_NODE,&create_ap_group_cmd);	
 	install_element(LOCAL_HANSI_NODE,&del_ap_group_cmd);

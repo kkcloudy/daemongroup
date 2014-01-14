@@ -305,4 +305,6 @@ CWBool CWParaseWTPTerminalStatistics(
 				struct WID_WTP_TERMINAL_STATISTICS *wtp_terminal_statistics, 
 				int wtpindex);
 CWBool CWAssembleMsgElemAPSetCPEChannelIntf(CWProtocolMessage *msgPtr, unsigned char op, unsigned short vlanId,unsigned char radioId,unsigned char wlanId);
+CWBool CWAssembleMsgElemRadiosetMGMTratebasewlan(CWProtocolMessage *msgPtr, unsigned char radioId,unsigned char wlanId,unsigned int rate);
+
 #endif

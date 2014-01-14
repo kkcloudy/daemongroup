@@ -139,8 +139,13 @@ CWBool CWParseMsgElemImageIdentifier(CWProtocolMessage *msgPtr, int len, CWImage
 }
 
 
-CWBool CWParseImageDataRequestMessage(CWProtocolMessage* msgPtr, int len, CWImageDataRequest *valuesPtr){
+CWBool CWParseImageDataRequestMessage(CWProtocolMessage* msgPtr, int len, CWImageDataRequest *valuesPtr, int WTPIndex){
 	int offsetTillMessages;
+	unsigned char total_phase = 0;
+	unsigned char current_phase = 0;
+	unsigned char state = 0;//0 means start ; 1 means end
+	unsigned char result = 0; //0 for success; other for failure
+				
 	if(msgPtr == NULL || valuesPtr==NULL) return CWErrorRaise(CW_ERROR_WRONG_ARG, NULL);
 	if((msgPtr->msg) == NULL) return CWErrorRaise(CW_ERROR_WRONG_ARG, NULL);
 	
@@ -162,7 +167,65 @@ CWBool CWParseImageDataRequestMessage(CWProtocolMessage* msgPtr, int len, CWImag
 					wid_syslog_debug_debug(WID_WTPINFO,"wrong in CWParseMsgElemImageIdentifier\n");
 					return CW_FALSE;
 				}
-				break;	
+				break;
+			case CW_MSG_ELEMENT_WTP_IMAGE_STATE_REPORT:
+				
+				total_phase = CWProtocolRetrieve8(msgPtr);
+				current_phase = CWProtocolRetrieve8(msgPtr);
+				state = CWProtocolRetrieve8(msgPtr);
+				result = CWProtocolRetrieve8(msgPtr);
+				
+				if (total_phase == 0) {
+					wid_syslog_err("imagedata_percent_d:error total phase:0 for wtp %d\n", WTPIndex);
+					return CW_RETURN_DIRECTLY;
+				} else {
+					AC_WTP[WTPIndex]->image_data_step = 100/total_phase;
+					wid_syslog_debug_debug(WID_DEFAULT, "total_phase=%d\n", total_phase);
+				}
+
+				if (result != 0) {
+					wid_syslog_err("imagedata_percent_d:wtp %d imagedata phase %d faild for reason:%d\n", WTPIndex, current_phase, result);
+
+					AC_WTP[WTPIndex]->image_data_result = result;
+					
+					#if 0
+					//trap to snmp
+					if(gtrapflag>=1){
+						wid_dbus_trap_wtp_imagedata_error(WTPIndex, result);
+					}
+					#endif
+					
+					return CW_RETURN_DIRECTLY;
+				}
+				
+				if (state == 0) {
+					
+					wid_syslog_debug_debug(WID_DEFAULT, "imagedata_percent_d:stage %d start\n", current_phase);
+					if (current_phase == total_phase) {
+						wid_syslog_debug_debug(WID_DEFAULT, "imagedata_percent_d:the last state start treat as done\n");
+						AC_WTP[WTPIndex]->image_data_percent = 100;
+					} else {
+						wid_syslog_debug_debug(WID_DEFAULT, "imagedata_percent_d:not the last state start\n");
+						AC_WTP[WTPIndex]->image_data_percent = 
+							((current_phase-1)*100/total_phase+3) < AC_WTP[WTPIndex]->image_data_percent ? AC_WTP[WTPIndex]->image_data_percent : ((current_phase-1)*100/total_phase+3);
+					}
+				} else {
+					wid_syslog_debug_debug(WID_DEFAULT, "imagedata_percent_d:stage %d done\n", current_phase);
+					if (current_phase == total_phase) {
+						wid_syslog_debug_debug(WID_DEFAULT, "imagedata_percent_d:the last state done\n");
+						AC_WTP[WTPIndex]->image_data_percent = 100;
+					} else {
+						wid_syslog_debug_debug(WID_DEFAULT, "imagedata_percent_d:not the last state done\n");
+						AC_WTP[WTPIndex]->image_data_percent = current_phase*100/total_phase;
+						
+						if (current_phase == (total_phase-1)) {
+							AC_WTP[WTPIndex]->image_data_percent = AC_WTP[WTPIndex]->image_data_percent + 3;
+						}
+					}
+				}
+				wid_syslog_debug_debug(WID_DEFAULT, "imagedata_percent_d:AC_WTP[WTPIndex]->image_data_percent=%d\n", AC_WTP[WTPIndex]->image_data_percent);	
+				return CW_RETURN_DIRECTLY;
+				break;
 			default:				
 				wid_syslog_debug_debug(WID_WTPINFO,"wrong in default\n");
 				return CWErrorRaise(CW_ERROR_INVALID_FORMAT, "Unrecognized Message Element in Image data request");
@@ -265,7 +328,7 @@ CWBool CWParseImageDataResponseMessage(CWProtocolMessage* msgPtr, int len, CWPro
 
 CWBool ACEnterImageData(int WTPIndex, CWProtocolMessage *msgPtr)
 {
-	int i=0,result=0;
+	int i=0,result=0, ret;
 	//printf("\n");
 	//printf("######### Image Data State #########\n");	
 	wid_syslog_debug_debug(WID_WTPINFO,"######### WTP %d Enter Image Data State #########\n",WTPIndex);
@@ -291,13 +354,18 @@ CWBool ACEnterImageData(int WTPIndex, CWProtocolMessage *msgPtr)
 		case CW_MSG_TYPE_VALUE_IMAGE_DATA_REQUEST:{
 			CWImageDataRequest valuesPtr;
 			CWImageIdentifier resPtr;
-			if(!(CWParseImageDataRequestMessage(msgPtr, controlVal.msgElemsLen, &valuesPtr))){
-				//printf("wrong in CWParseImageDataRequestMessage\n");
+			
+			ret = CWParseImageDataRequestMessage(msgPtr, controlVal.msgElemsLen, &valuesPtr, WTPIndex);
+			
+			if(ret == CW_FALSE){
 				wid_syslog_warning("wrong in CWParseImageDataRequestMessage");
 				return CW_FALSE;		
 			}
 
-
+			if (ret == CW_RETURN_DIRECTLY) {
+				wid_syslog_debug_debug(WID_DEFAULT, "updating percent calculating, without response\n");
+				return CW_TRUE;
+			}
 			
 		
 			if(gtrapflag>=1){

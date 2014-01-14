@@ -4525,13 +4525,14 @@ struct WtpList * set_radio_bss_l3_policy_cmd_bss_no_wlan_bss_interface(int local
 }
 
 struct WtpList * set_radio_apply_wlan_cmd_radio_apply_wlan(int localid,  int index,DBusConnection *dbus_connection,
-	unsigned int type,unsigned int id,unsigned char wlanid,int *count,unsigned int *ret)
+	unsigned int type,unsigned int g_radio_id,unsigned int g_id, unsigned int l_radio_id, unsigned char wlanid,int *count,unsigned int *ret)
 {
 	DBusError err;
 	DBusMessageIter  iter;
 	DBusMessage *reply =NULL; 
 	DBusMessage *query = NULL;
-
+	DBusMessageIter iter_struct;
+	DBusMessageIter	 iter_array;
 	char BUSNAME[PATH_LEN];
 	char OBJPATH[PATH_LEN];
 	char INTERFACE[PATH_LEN];
@@ -4553,7 +4554,9 @@ struct WtpList * set_radio_apply_wlan_cmd_radio_apply_wlan(int localid,  int ind
 
 	dbus_message_append_args(query,
 									DBUS_TYPE_UINT32,&type,
-									DBUS_TYPE_UINT32,&id,
+									DBUS_TYPE_UINT32,&g_radio_id,
+									DBUS_TYPE_UINT32,&g_id,
+									DBUS_TYPE_UINT32,&l_radio_id,
 									DBUS_TYPE_BYTE,&wlanid,
 									DBUS_TYPE_INVALID);
 
@@ -4569,8 +4572,10 @@ struct WtpList * set_radio_apply_wlan_cmd_radio_apply_wlan(int localid,  int ind
 	
 	dbus_message_iter_init(reply,&iter);
 	dbus_message_iter_get_basic(&iter,ret);
-	
-	if(type == 1){
+
+	*count = 0;
+	if(type == 1 && ret == WID_DBUS_SUCCESS){
+
 		dbus_message_iter_next(&iter);	
 		dbus_message_iter_get_basic(&iter,count);
 		if(*count != 0){
@@ -4584,7 +4589,10 @@ struct WtpList * set_radio_apply_wlan_cmd_radio_apply_wlan(int localid,  int ind
 			radio_list_head->RadioList_list = NULL;
 			radio_list_head->RadioList_last = NULL;
 		}
-		
+
+		dbus_message_iter_next(&iter);
+		dbus_message_iter_recurse(&iter,&iter_array);
+	
 		for(i=0; i < (*count); i++){
 			if((RadioNode = (struct RadioList*)malloc(sizeof(struct RadioList))) == NULL){
 					dcli_free_RadioList(radio_list_head);
@@ -4605,12 +4613,14 @@ struct WtpList * set_radio_apply_wlan_cmd_radio_apply_wlan(int localid,  int ind
 			}
 			
 			radio_list_head->RadioList_last = RadioNode;
-			
-			dbus_message_iter_next(&iter);	
-			dbus_message_iter_get_basic(&iter,&radioid);
 
-			dbus_message_iter_next(&iter);	
-			dbus_message_iter_get_basic(&iter,&fail_reason);
+			dbus_message_iter_recurse(&iter_array,&iter_struct);
+			dbus_message_iter_get_basic(&iter_struct,&radioid);
+
+			dbus_message_iter_next(&iter_struct);	
+			dbus_message_iter_get_basic(&iter_struct,&fail_reason);
+
+			dbus_message_iter_next(&iter_array);
 			
 			RadioNode->FailReason = fail_reason;
 			RadioNode->RadioId = radioid;
@@ -4914,7 +4924,7 @@ struct WtpList * set_radio_bss_max_throughput_cmd_set_bss_max_throughput(int loc
 }
 
 struct WtpList * set_radio_delete_wlan_cmd_radio_delete_wlan(int localid,  int index,DBusConnection *dbus_connection,
-	unsigned int type,unsigned int id,unsigned char wlanid,int *count,unsigned int *ret)
+	unsigned int type,unsigned int g_radio_id, unsigned int g_id, unsigned int l_radio_id, unsigned char wlanid,int *count,unsigned int *ret)
 {
 	DBusError err;
 	DBusMessageIter  iter;
@@ -4942,7 +4952,9 @@ struct WtpList * set_radio_delete_wlan_cmd_radio_delete_wlan(int localid,  int i
 
 	dbus_message_append_args(query,
 									DBUS_TYPE_UINT32,&type,
-									DBUS_TYPE_UINT32,&id,
+									DBUS_TYPE_UINT32,&g_radio_id,
+									DBUS_TYPE_UINT32, &g_id,
+									DBUS_TYPE_UINT32, &l_radio_id,
 									DBUS_TYPE_BYTE,&wlanid,
 									DBUS_TYPE_INVALID);
 
@@ -4958,8 +4970,8 @@ struct WtpList * set_radio_delete_wlan_cmd_radio_delete_wlan(int localid,  int i
 	
 	dbus_message_iter_init(reply,&iter);
 	dbus_message_iter_get_basic(&iter,ret);
-	
-	if(type == 1){
+	*count = 0;
+	if(type == 1 && ret == WID_DBUS_SUCCESS){
 		dbus_message_iter_next(&iter);	
 		dbus_message_iter_get_basic(&iter,count);
 		if(*count != 0){

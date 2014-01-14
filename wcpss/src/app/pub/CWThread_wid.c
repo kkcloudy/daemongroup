@@ -469,6 +469,17 @@ void CWHandleTimer(CWTimerArg arg) {
 			}
 		}
 		
+	} else if (signalToRaise == 912) {
+		wid_syslog_debug_debug(WID_DEFAULT, "wid_timing_upgrade_ap_d:912 enable for wtp %d\n", WTPID);
+				
+		if((AC_WTP[WTPID]!= NULL)){
+			if(AC_WTP[WTPID]->ap_timing_upgrade_info.TimerState == 1){
+				//offline the wtp
+				wid_syslog_debug_debug(WID_DEFAULT, "wid_timing_upgrade_ap_d: offline wtp %d\n", WTPID);
+				memset(&AC_WTP[WTPID]->ap_timing_upgrade_info, 0, sizeof(WID_WSC));
+				_CWCloseThread(WTPID);
+			}
+		}
 	}
 	/*fengwenchao add end*/
  //	CWDebugLog("Timer Expired, Sent Signal(%d) to Thread: %d", signalToRaise, requestedThreadPtr);
