@@ -63,7 +63,7 @@ start()
 	if [ $1 = "rtmd" ] ; then
 		$D_PATH/$1 -k -f /mnt/rtsuit/$1.conf 1> /dev/null 2>&1 &
 	else
-		$D_PATH/$1 -f /mnt/rtsuit/$1.comf 1> /dev/null 2>&1 &	
+		$D_PATH/$1 -f /mnt/rtsuit/$1.conf 1> /dev/null 2>&1 &	
 	fi
 }
 

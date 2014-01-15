@@ -4181,7 +4181,7 @@ DEFUN (vtysh_write_memory,
 			#endif
 				ret = system (cmd);
 				ret = WEXITSTATUS(ret);
-				vty_out(vty,"DONE(%d)\n",ret);
+			/*	vty_out(vty,"DONE(%d)\n",ret);*/
 			#if VTYSH_WRITE_WITHOUT_CONF_EXECUTE
 				free(configfile_name);
 			#endif
