@@ -7548,16 +7548,17 @@ DEFUN (moniter_port_func,
 */
 DEFUN (tcpdump_save_func, 
        tcpdump_save_func_cmd,
-       "tcpdump save INTERFACE .[LINE]",
+       "tcpdump save INTERFACE FILENAME .[LINE]",
 	   TCPDUMP_STR
 		"Save data into file\n"
 		"The interface you want \n"
+	    "Save file name\n"
         "The options of tcpdump: [ -AbdDefIKlLNOpqRStuUvxX ] [ -B buffer_size ] [ -c count ][ -C file_size ] \
         [ -G rotate_seconds ] [ -F file ] [ -m module ] [ -M secret ][ -r file ] [ -s snaplen ] [ -T type ] \
         [ -w file ][ -E spi@ipaddr algo:secret,...	][ -y datalinktype ] [ -z postrotate-command ] [ -Z user ][ expression ]\n")
 {
 	char cmd[256] = {0};
-	char file_name[64] = {0};
+	/*char file_name[128] = {0};*/
 	time_t timep;
 	struct tm *p = NULL;
 	int ret;
@@ -7571,7 +7572,15 @@ DEFUN (tcpdump_save_func,
 		return CMD_WARNING;
 	}
 	
-	location = argv_concat(argv,argc, 1);
+	if ((strlen(argv[1])) > FILE_NAMESIZ)
+	{
+		vty_out(vty, "%% File name %s is invalid: length exceeds "
+				"%d characters%s",
+				argv[1], FILE_NAMESIZ, VTY_NEWLINE);
+		return CMD_WARNING;
+	}
+
+	location = argv_concat(argv,argc, 2);
 	
 	memset(cmd,0,256);
 
@@ -7582,19 +7591,20 @@ DEFUN (tcpdump_save_func,
 		XFREE(MTYPE_TMP,location);
 		return CMD_WARNING;
 	}
-
+#if 0
 	time(&timep);
 	p=gmtime(&timep);
 	sprintf(file_name,"%d%d%d%d%d%d",(1900+p->tm_year),(1+p->tm_mon),p->tm_mday,p->tm_hour,p->tm_min,p->tm_sec);
-	
+#endif
+
 	if(NULL==location)
 	{
-		sprintf(cmd,"sudo tcpdump -w /opt/debugdown/%s -i %s -n",file_name,argv[0]);
+		sprintf(cmd,"sudo tcpdump -w /opt/debugdown/%s -i %s -n",argv[1],argv[0]);
 		//vty_out(vty,"%s\n",cmd);
 	}
 	else
 	{
-		sprintf(cmd,"sudo tcpdump %s -w /opt/debugdown/%s -i %s -n",location,file_name,argv[0]);
+		sprintf(cmd,"sudo tcpdump %s -w /opt/debugdown/%s -i %s -n",location,argv[1],argv[0]);
 		//vty_out(vty,"%s\n",cmd);
 	}
 	
@@ -7611,10 +7621,11 @@ DEFUN (tcpdump_save_func,
 
 ALIAS(tcpdump_save_func,
 	tcpdump_save2_func_cmd,
-	"tcpdump save INTERFACE",
+	"tcpdump save INTERFACE FILENAME",
 	TCPDUMP_STR
 	"Save data into file\n"
 	"The interface you want \n"
+	"Save file name\n"
 	);
 
 
