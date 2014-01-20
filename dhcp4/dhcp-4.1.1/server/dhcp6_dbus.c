@@ -531,6 +531,32 @@ dhcp6_dbus_profile_config_interface_save
 
 }
 #endif
+/*****************************************************************************
+ *	u128ip2str
+ * 
+ *	IPv4 address to string (EXP: 0x0a01010a -> 10:1::1:10)
+ *
+ *  INPUT:
+ *		u128_ipaddr - IPv6 address 
+ *  
+ *  OUTPUT:
+ * 	 NULL
+ *
+ *  RETURN:
+ * 	 char * - ipv6 address string
+ * 	 NULL - failed
+ *
+ ****************************************************************************/
+const char *u128ip2str(unsigned char* u128_ipaddr)
+{
+	static char
+		pbuf[sizeof("ffff:ffff:ffff:ffff:ffff:ffff:255.255.255.255")];
+	
+	return inet_ntop(AF_INET6, u128_ipaddr, pbuf, sizeof(pbuf));
+	log_fatal(" u128ip2str ->   piaddr():error.");
+		/* quell compiler warnings */
+	return NULL;
+}
 
 unsigned int
 dhcp_dbus_four_char_to_int
@@ -552,6 +578,38 @@ dhcp_dbus_four_char_to_int
 	return 0;
 }
 
+unsigned int
+dhcp6_dbus_four_char_to_int
+(
+	unsigned char* in_char,
+	unsigned char *out_char
+)
+{
+	if (!in_char) {
+		return 1;
+	}
+	unsigned char *tmpchar = in_char;
+	memcpy(out_char , tmpchar , 16);
+
+	return 0;
+}
+unsigned char *
+dhcp6_dbus_ip_mask_to_net
+(
+	unsigned char* ip,
+	unsigned char* mask
+)
+{
+	int i = 0 ;
+	if(!ip || !mask)
+		return NULL;
+
+	for(;i < 16; i++){
+		ip[i] = ip[i] & mask[i];
+	}
+
+	return ip;
+}
 unsigned int 
 dcli_dhcp_int_to_four_char
 (
@@ -714,29 +772,150 @@ dhcp6_dbus_pool_interface_state
 	return 1;
 }
 
+
+/**********************************************************************************
+ *  dhcp6_dbus_whether_same_subnet
+ *
+ *	DESCRIPTION:
+ * 		whether the same subnet
+ *
+ *	INPUT:
+ *		check_sub -> the check subnet
+ *		pool_sub  -> pool node subnet
+ *	
+ *	OUTPUT:
+ *		NULL
+ *
+ * 	RETURN:
+ *		
+ *		1 -> same subnet
+ *		0 -> not same subnet
+ *		
+ **********************************************************************************/
+unsigned int dhcp6_dbus_whether_same_subnet
+(
+	struct dcli_subnet *check_sub,
+	struct dcli_subnet *pool_sub
+)
+{
+	unsigned char check_ip[16] = {0}, check_mask[16] = {0};
+	unsigned char ip[16] = {0}, mask[16] = {0};
+
+	if ((NULL == check_sub) || (NULL == pool_sub)) {
+		return 1;
+	}	
+	dhcp6_dbus_four_char_to_int(check_sub->ipaddr.iabuf, check_ip);
+	dhcp6_dbus_four_char_to_int(check_sub->mask.iabuf, check_mask);
+
+	dhcp6_dbus_four_char_to_int(pool_sub->ipaddr.iabuf, ip);
+	dhcp6_dbus_four_char_to_int(pool_sub->mask.iabuf, mask);
+	dhcp6_dbus_ip_mask_to_net(check_ip,check_mask);
+	dhcp6_dbus_ip_mask_to_net( ip, mask);
+	
+	if (memcmp(check_mask , mask ,16) || memcmp(check_ip , ip , 16)) {
+		log_info("pool subnet %s, check subnet %s\n", piaddr(pool_sub->ipaddr), piaddr(check_sub->ipaddr));
+		return 0;
+	} else {
+		//return 1;  not suport devided net type for temporarily
+		return 0;
+		
+	}
+}
+
+/**********************************************************************************
+ *  dhcp6_debus_is_same_subnet_exist
+ *
+ *	DESCRIPTION:
+ * 		whether the same subnet is exist
+ *
+ *	INPUT:
+ *		check_sub -> the add subnet
+ *		poolname  -> pool name
+ *	
+ *	OUTPUT:
+ *		NULL
+ *
+ * 	RETURN:
+ *		
+ *		1 -> same subnet exists
+ *		0 -> same subnet not exists
+ *		
+ **********************************************************************************/
+unsigned int dhcp6_debus_is_same_subnet_exist
+(
+	struct dcli_subnet *check_sub,
+	char *poolname
+)
+{
+	struct dcli_pool* head = head_pool.next;
+	unsigned char check_sub_ip[16] = {0}, check_sub_mask[16] = {0};
+	unsigned char headsub_ip[16] = {0}, headsub_mask[16] = {0};
+	unsigned char* mask = {0};
+
+	if ((NULL == check_sub) || (NULL == poolname)) {
+		return 0;
+	}
+		
+	dhcp6_dbus_four_char_to_int(check_sub->ipaddr.iabuf, check_sub_ip);
+	dhcp6_dbus_four_char_to_int(check_sub->mask.iabuf, check_sub_mask);				
+    for (; head; head = head->next) {
+		if (head->headsubnet && strcmp(head->poolname, poolname)) {	
+
+			dhcp6_dbus_four_char_to_int(head->headsubnet->ipaddr.iabuf, headsub_ip);
+			dhcp6_dbus_four_char_to_int(head->headsubnet->mask.iabuf, headsub_mask);
+			mask = dhcp6_dbus_ip_mask_to_net(check_sub_mask , headsub_mask);
+		
+			dhcp6_dbus_ip_mask_to_net(check_sub_ip, mask);
+		
+			dhcp6_dbus_ip_mask_to_net(headsub_ip, mask);
+			log_debug("check ip subnet %s, mask %s <--> old ip subnet %s, mask %s, mask %s\n", 
+					u128ip2str(check_sub_ip), u128ip2str(check_sub_mask), u128ip2str(headsub_ip), u128ip2str(headsub_mask), u128ip2str(mask));
+			if (!memcmp(check_sub_ip , headsub_ip ,16)) {
+			    log_error("same subnet %s already exist\n", piaddr(head->headsubnet->ipaddr));
+				return 1;
+			}
+		}
+	}
+	return 0;
+}
+
 unsigned int
 dhcp6_dbus_check_pool_ip
 (
-	struct dcli_subnet *check_sub
+	struct dcli_subnet *check_sub,
+	char *poolname
 )
 {
-	int i = 0;
 	struct dcli_subnet *head_sub = NULL;
 	struct dcli_pool* head = head_pool.next;
-/**/
-    for (; head; head = head->next) {
-		if (head->headsubnet) {
+	unsigned char check_sub_low_ip[16] = {0}, check_sub_high_ip[16] = {0}, check_sub_mask[16] = {0};
+	unsigned char headsub_low_ip[16] = {0}, headsub_high_ip[16] = {0}, headsub_mask[16] = {0};
+	int check_ipv6_h = 0 ,check_ipv6_l = 0 , headsub_ipv6_h = 0, headsub_ipv6_l = 0;
+
+
+	dhcp6_dbus_four_char_to_int(check_sub->lowip.iabuf, check_sub_low_ip);
+	dhcp6_dbus_four_char_to_int(check_sub->highip.iabuf, check_sub_high_ip);
+	dhcp6_dbus_four_char_to_int(check_sub->mask.iabuf, check_sub_mask);
+	
+	for (; head; head = head->next) {
+		if (head->headsubnet && !strcmp(head->poolname, poolname)) { 		
 			for (head_sub = head->headsubnet; head_sub; head_sub = head_sub->next) {
-				for (i = 0; i < check_sub->ipaddr.len; i++) {
-					//log_debug("check_sub->ipaddr.iabuf[i] %d, head_sub->ipaddr.iabuf[i] %d\n", 
-					//	check_sub->ipaddr.iabuf[i], head_sub->ipaddr.iabuf[i]);
-					if (((check_sub->ipaddr.iabuf[i]) & ((head_sub->mask.iabuf[i])&(check_sub->mask.iabuf[i]))) != 
-						((head_sub->ipaddr.iabuf[i]) & ((head_sub->mask.iabuf[i])&(check_sub->mask.iabuf[i])))) {			
-						/*when break i not ++*/
-						break;
-					}
-				}
-				if (check_sub->ipaddr.len == i) {
+
+				dhcp6_dbus_four_char_to_int(head_sub->lowip.iabuf, headsub_low_ip);
+				dhcp6_dbus_four_char_to_int(head_sub->highip.iabuf, headsub_high_ip);
+				dhcp6_dbus_four_char_to_int(head_sub->mask.iabuf, headsub_mask);
+
+				log_debug("check low ip  %s, check high ip %s <--> old low ip %s, old high ip %s\n", 
+						u128ip2str(check_sub_low_ip), u128ip2str(check_sub_high_ip), u128ip2str(headsub_low_ip), u128ip2str(headsub_high_ip));
+
+				/*check add range is exist*/
+				check_ipv6_l = ((check_sub_low_ip[12]<<24)|(check_sub_low_ip[13]<<16)|(check_sub_low_ip[14]<<8)|(check_sub_low_ip[15]));
+				check_ipv6_h = ((check_sub_high_ip[12]<<24)|(check_sub_high_ip[13]<<16)|(check_sub_high_ip[14]<<8)|(check_sub_high_ip[15]));
+				headsub_ipv6_l = ((headsub_low_ip[12]<<24)|(headsub_low_ip[13]<<16)|(headsub_low_ip[14]<<8)|(headsub_low_ip[15]));
+				headsub_ipv6_h = ((headsub_high_ip[12]<<24)|(headsub_high_ip[13]<<16)|(headsub_high_ip[14]<<8)|(headsub_high_ip[15]));
+				if ((check_ipv6_l >= headsub_ipv6_l && check_ipv6_l <= headsub_ipv6_h) ||
+					(check_ipv6_h >= headsub_ipv6_l && check_ipv6_h <= headsub_ipv6_h)) {
+					log_error("add range Duplicate old subnet\n");
 					return 0;
 				}
 			}
@@ -4988,6 +5167,7 @@ dhcp6_dbus_add_dhcp_pool_ip_range
 	struct dcli_pool* poolNode = NULL;
 	struct dcli_subnet	*tempsub = NULL;
 	unsigned int	op_ret = 0, ret = 0, i = 0, index = 0, add = 0, prefix_length , bit_g = 0, remain_g = 0;
+	int ipv6_h = 0, ipv6_l = 0;
 	struct iaddr ipaddrl, ipaddrh;
 	DBusError err;
 
@@ -5072,10 +5252,29 @@ dhcp6_dbus_add_dhcp_pool_ip_range
 		}
 		tempsub->ipaddr.len = DHCP_IPV6_ADDRESS_LEN;
 		log_debug("addsubnet->ipaddr.iabuf %s\n", piaddr(tempsub->ipaddr));	
-
+		ipv6_h = ((ipaddrh.iabuf[12]<<24)|(ipaddrh.iabuf[13]<<16)|(ipaddrh.iabuf[14]<<8)|(ipaddrh.iabuf[15]));
+		ipv6_l = ((ipaddrl.iabuf[12]<<24)|(ipaddrl.iabuf[13]<<16)|(ipaddrl.iabuf[14]<<8)|(ipaddrl.iabuf[15]));
 		if (!add) {
 			log_debug(" add subnet \n");
-			ret	= dhcp6_dbus_check_pool_ip(tempsub); 
+			if(ipv6_h < ipv6_l){
+				free(tempsub);
+				op_ret = 3;
+				goto dbus_return;
+			}
+			ret = dhcp6_debus_is_same_subnet_exist(tempsub, poolNode->poolname);
+			if (1 == ret) {
+				free(tempsub);
+				op_ret = 3;
+				goto dbus_return;					
+			}
+			/* whether same subnet */
+			ret = dhcp6_dbus_whether_same_subnet(tempsub, poolNode->headsubnet);
+			if (0 == ret) {
+				free(tempsub);
+				op_ret = 3;
+				goto dbus_return;					
+			}
+			//ret	= dhcp6_dbus_check_pool_ip(tempsub ,poolNode->poolname); 
 			if (ret) {
 				/*
 				ret = dhcp_dbus_check_interface(&tempsub->lowip, &tempsub->mask, &ifname, &ifnum);
@@ -5132,6 +5331,7 @@ dhcp6_dbus_add_dhcp_pool_ip_range
 		log_debug("not find headpool node!\n");
 		op_ret = 1;      
 	}
+	dbus_return:
 
 	reply = dbus_message_new_method_return(msg);
 	
