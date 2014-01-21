@@ -2349,7 +2349,7 @@ dhcp6_syn_kernelRT
 void *
 dhcp6_receive_netlink
 (
-	void
+	void *arg
 )
 {
 	int fd = -1;
@@ -6190,14 +6190,14 @@ dhcp6_dbus_start
     if (0 != ret) {
 	   log_error ("start dhcp6 dbus pthread fail\n");
 	}
-/*
+
 	dhcp6_netlink_thread = (pthread_t *)malloc(sizeof(pthread_t));
 	pthread_attr_init(&dhcp6_netlink_thread_attr);
-	ret = pthread_create(dhcp6_netlink_thread, &dhcp6_netlink_thread_attr, dhcp_receive_netlink, NULL);
+	ret = pthread_create(dhcp6_netlink_thread, &dhcp6_netlink_thread_attr, dhcp6_receive_netlink, NULL);
 	if (0 != ret) {
 	   log_error ("start dhcp6 netlink pthread fail\n");
 	}
-	*/
+	
 }
 #ifdef __cplusplus
 }
