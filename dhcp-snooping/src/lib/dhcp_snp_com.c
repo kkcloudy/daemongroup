@@ -5613,9 +5613,7 @@ DBusMessage *dhcp_snp_dbus_show_wan_ipv6_bind_table
 		if(!if_indextoname(show_items[i].ifindex, ifname)) {
 			syslog_ax_dhcp_snp_err("no intf found as idx %d netlink error !\n", \
 									show_items[i].ifindex);
-			free(show_items);
-			show_items=NULL;
-			return NULL;
+			memcpy(ifname, "null", 4);
 		}
 		//memset(tmp_caddr, 0, 6);
 		DBusMessageIter iter_struct;
