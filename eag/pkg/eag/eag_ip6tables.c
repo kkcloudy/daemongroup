@@ -652,6 +652,8 @@ ipv6_add_and_del_entry(const char *table_name,const char *chain_name,
 	char source_ipv6_str[48] = "";
 	struct in6_addr ipv6_any;
 	inet_pton(AF_INET6, "::", &ipv6_any);
+	struct in6_addr ipv6_only;
+	inet_pton(AF_INET6, "ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff", &ipv6_only);
 
 #if USE_THREAD_LOCK	
 	eag_log_debug("ip6tables","add_and_del_entry lock");
@@ -733,29 +735,25 @@ ipv6_add_and_del_entry(const char *table_name,const char *chain_name,
 	/* Set tha Entry part of the entry */
 	/* Set source and destination IP address */
 	p_entry->ipv6.src = *source_ipv6;
-    p_entry->ipv6.smsk = ipv6_any;
 	p_entry->ipv6.dst = *dest_ipv6;
-    p_entry->ipv6.dmsk = ipv6_any;
-	#if 0
-	if (0 == source_ipv6)
-	{
-		p_entry->user_ipv6.smsk = 0x0;
-	}
-	else
-	{
-		p_entry->user_ipv6.smsk = -1;
-		//e->ip.smsk.s_addr = 0xffffffff;
-	}
-	if(0 == dest_ipv6)
-	{
-		p_entry->user_ipv6.dmsk = 0x0;
-	}
-	else
-	{
-		p_entry->user_ipv6.dmsk = -1;
-		//e->ip.smsk.s_addr = 0xffffffff;
-	}
-	#endif
+
+    if (0 == ipv6_compare_null(source_ipv6))
+    {
+        p_entry->ipv6.smsk = ipv6_any;
+    }
+    else
+    {
+        p_entry->ipv6.smsk = ipv6_only;
+    }
+    if(0 == ipv6_compare_null(dest_ipv6))
+    {
+        p_entry->ipv6.dmsk = ipv6_any;
+    }
+    else
+    {
+        p_entry->ipv6.dmsk = ipv6_only;
+    }
+
 	/* Set the interface */
 	#if 0
 	if(strcmp(interface_name,"0"))
