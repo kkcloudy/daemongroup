@@ -1648,6 +1648,143 @@ DEFUN(config_pfm_icmp_func,
 	
 }
 
+#if 1
+int 
+dcli_communicate_pfm_by_dbus_deal_ssh_telnet(char *service, 
+                            int slot,
+                            char *operation)
+
+{
+	DBusMessage *query, *reply;
+	DBusError err;
+	unsigned int op_ret;
+
+	if(slot == -1)
+	{
+		return -1;
+	}
+	query = dbus_message_new_method_call(
+								PFM_DBUS_BUSNAME,			\
+								PFM_DBUS_OBJPATH,		\
+								PFM_DBUS_INTERFACE,	\
+								PFM_DBUS_METHOD_PFM_DEAL_SERVICE);
+	
+	dbus_error_init(&err);
+
+	dbus_message_append_args(query,
+							DBUS_TYPE_STRING, &service,
+							DBUS_TYPE_INT32,  &slot,
+							DBUS_TYPE_STRING, &operation,
+							DBUS_TYPE_INVALID);
+    if (1)
+	{
+	
+		if(NULL != dbus_connection_dcli[slot] -> dcli_dbus_connection)
+		{
+			
+			reply = dbus_connection_send_with_reply_and_block (dbus_connection_dcli[slot] -> dcli_dbus_connection,query,-1, &err);
+			if (NULL == reply){
+				fprintf(stderr,"failed get args. \n");
+				if (dbus_error_is_set(&err)){
+					fprintf(stderr,"%s raised: %s\n",err.name,err.message);
+					dbus_message_unref(query);
+					dbus_error_free_for_dcli(&err);
+					return -1;
+				}
+			}
+			
+			dbus_message_unref(query);
+		}else{
+			fprintf(stderr,"connection of board %d is not exist\n",slot);
+			return -1;
+		}
+	
+	if (dbus_message_get_args ( reply, &err,
+								DBUS_TYPE_UINT32,&op_ret,
+								DBUS_TYPE_INVALID)) 
+	{
+		vty_out(vty,"Operation %s\n",op_ret == 0?"Success":"Failed");
+		if(op_ret == 2)
+		 vty_out(vty,"SSH can not be shut down because someone has logged into the system using it. If you want, please use the 'kick user' command to kick the user off first !\n");
+		 	
+	} 
+	else {
+		fprintf(stderr,"Failed get args.\n");
+		if (dbus_error_is_set(&err)) {
+			fprintf(stderr,"%s raised: %s",err.name,err.message);
+			dbus_error_free_for_dcli(&err);
+		}
+	}
+	
+	dbus_message_unref(reply);
+
+	}
+	
+	return op_ret == 0? 0:1;/*success 0, failed 1*/
+
+}
+
+
+DEFUN(config_slot_ssh_telnet_cmd_func,
+	config_slot_ssh_telnet_cmd,
+	"service (ssh|telnet) slot SLOT (enable|disable)",
+	"service for Distribute System\n"
+	"support ssh forwrd for Distribute System\n"
+	"support telent forwrd for Distribute System\n"
+	"one slot\n"
+	"the slot number\n"
+	"make service enable\n "
+	"make service enable\n "
+	)
+
+{
+   int slot = -1;
+   int opt = -1, ret = -1;
+   char cmd_str[128] = {0};
+   
+   
+   if((is_distributed == 1) && (is_active_master == 0))
+   {
+	   vty_out(vty,"only active master can enable/disable ssh/telnet\n");
+	   return CMD_WARNING;
+   }
+
+   slot = atoi(argv[1]);
+   
+   sprintf(cmd_str,"%s slot %d",argv[0],slot);
+   if(strncmp(argv[2],"enable",6)==0)
+   	opt = 0;
+   else
+   	opt = 1;
+   
+   /*check pfm exist setup*/
+   ret = check_pfm_setup_exist(cmd_str, opt);
+   if(ret != 0)
+   {
+	   vty_out(vty,"The configuration has been.\n");
+	   return CMD_WARNING;
+   }
+   
+   /*fprintf(stderr,"CLI: %s %d %s .\n",argv[0],slot,argv[2]);*/
+   ret = dcli_communicate_pfm_by_dbus_deal_ssh_telnet(argv[0], slot,argv[2]);
+   if(ret!=0)
+   {
+      return CMD_WARNING;
+   	}
+   
+   /*when pfm set success , write the setup to a file  that used for show running.*/
+   ret = pfm_setup_show_running_config(cmd_str, opt);
+   if(ret != 0)
+   {
+	   return CMD_WARNING;
+   }
+   
+   return CMD_SUCCESS;
+}
+
+#endif
+
+
 DEFUN(config_pfm_cmd_func,
 	config_pfm_cmd,
 	"service (ssh|telnet) IFNAME (IP|all) (enable|disable)",
@@ -6521,6 +6658,8 @@ void dcli_sys_manage_init()
 	install_element (HIDDENDEBUG_NODE, &service_pfm_log_func_cmd);	
 	install_element (HIDDENDEBUG_NODE, &service_pfm_func_cmd);
 	install_element (HIDDENDEBUG_NODE, &config_pfm_cmd_general);
+
+	install_element (CONFIG_NODE, &config_slot_ssh_telnet_cmd); 
 	
 	install_element (HIDDENDEBUG_NODE, &show_pfm_table_func_cmd);
 	install_element (ENABLE_NODE, &system_reset_all_cmd);

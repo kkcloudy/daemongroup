@@ -60,6 +60,7 @@ extern DBusConnection *dcli_dbus_connection;
 #define PFM_DBUS_OBJPATH				"/pfm/daemon"
 #define PFM_DBUS_INTERFACE				"pfm.daemon"
 #define PFM_DBUS_METHOD_PFM_TABLE 	"pfm_maintain_table"
+#define PFM_DBUS_METHOD_PFM_DEAL_SERVICE 	"pfm_deal_service"
 
 #define PFM_SETUP_FILE 			"/var/run/pfm_setup"
 #define PFM_SETUP_TMP_FILE 		"/var/run/pfm_setup_tmp"
