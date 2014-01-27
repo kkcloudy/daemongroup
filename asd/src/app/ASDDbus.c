@@ -16783,6 +16783,8 @@ DBusMessage *asd_dbus_ac_use_mac_list(DBusConnection *conn, DBusMessage *msg, vo
 	}
 
 	else {
+		pthread_mutex_lock(&asd_g_wtp_mutex); /*yjl add 2014-1-24*/
+	    pthread_mutex_lock(&asd_g_bss_mutex); /*yjl add 2014-1-24*/
 		conf = &ac_acl_conf;
 		if(change_maclist_security(conf,list_type) != 0)
 			asd_printf(ASD_DEFAULT,MSG_DEBUG,"change mac list failed\n");
@@ -16827,6 +16829,8 @@ DBusMessage *asd_dbus_ac_use_mac_list(DBusConnection *conn, DBusMessage *msg, vo
 				}
 			}
 		}
+		pthread_mutex_unlock(&asd_g_bss_mutex);	/*yjl add 2014-1-24*/			
+	    pthread_mutex_unlock(&asd_g_wtp_mutex);	/*yjl add 2014-1-24*/
 	}
 
 	reply = dbus_message_new_method_return(msg);
