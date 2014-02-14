@@ -206,4 +206,53 @@ enum {
 #define	SLOT_PORT_ANALYSIS_SLOT(combination, slot) 	(slot = (((combination)>>6) & 0x1f) + 1)
 #define	SLOT_PORT_COMBINATION(slot, port)	(((((slot) & 0x1f) - 1)<<6) + ((port) - 1))
 
+/***************wangchao_add*************/
+#define SEM_DBUS_SUCCESS 	1
+#define SEM_DBUS_ERROR	   -1
+#define SEM_DBUS_NO_CONN	2
+
+#define SEM_DBUS_MAX_BOARD_NUM				14
+#define SEM_DBUS_MAX_BOARD_NAME 			32	
+
+#define SEM_DBUS_MAX_MASTER_SLOT_NUM      	2
+#define SEM_DBUS_MAX_PRODUCT_NAME_LEN		30
+
+
+//#define bool char
+
+typedef struct
+{
+	int board_code;
+	int board_type;
+	int slot_id;
+	char *name;
+	int is_master;
+	int is_active_master;
+	int is_use_default_master;
+	unsigned int function_type;
+	int board_state;
+	unsigned int asic_start_no;
+	unsigned int asic_port_num;
+	unsigned int board_ap_counter;
+	unsigned int port_num_on_panel;
+	unsigned int obc_port_num;
+	unsigned int cscd_port_num;
+		
+}sem_interface_board_info_t;
+
+typedef struct
+{
+	int product_serial;
+	int product_type;
+	char *name;
+	int slotcount;
+	int master_slot_count;
+	int master_slot_id[SEM_DBUS_MAX_MASTER_SLOT_NUM];
+	int default_master_slot_id;
+	int more_than_one_master_board_on;
+	int is_distributed;
+	int fan_num;
+	unsigned int board_on_mask;
+}sem_interface_product_info_t;	
+
 #endif
