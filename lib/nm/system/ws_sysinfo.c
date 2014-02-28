@@ -1290,6 +1290,79 @@ ret_err:
 }
 
 
+
+int ccgi_show_ip_dns_func_cmd(int *num,char *dns_str[])
+						//-1:malloc error;-2:Can't get system dns seting;
+						//-3:Get system dns seting error;-4:DNS server is not set
+						//
+{
+	fprintf(stderr,"ccgi_show_ip_dns_func_cmd\n");
+	char *dnsstr[3];
+	int ret,i;
+	for(i=0;i<3;i++)
+	{
+		dnsstr[i] = malloc(128);
+		if(dnsstr[i] == NULL)
+			return -1;
+		memset(dnsstr[i],0,128);
+	}	
+	for(i=0;i<3;i++)
+	{
+		dns_str[i] = malloc(128);
+		memset(dns_str[i],0,128);
+		fprintf(stderr,"dns_str[i]=%p\n",dns_str[i]);
+	}	
+
+	ret = get_dns_str(&dnsstr);
+	*num = ret;
+	if(ret<0)
+	{
+		for(i=0;i<3;i++)
+		{
+			if(dnsstr[i])
+				free(dnsstr[i]);
+		}	
+		return -2;
+	}
+	else if(ret > 3)
+	{
+		for(i=0;i<3;i++)
+		{
+			if(dnsstr[i])
+				free(dnsstr[i]);
+		}	
+		return -3;
+	}
+	else
+	{
+		if(ret == 0)
+		{
+			for(i=0;i<3;i++)
+			{
+				if(dnsstr[i])
+					free(dnsstr[i]);
+			}	
+			return -4;
+		}
+		else
+		{
+			for(i=0;i<ret;i++)
+			{	
+				strcpy(dns_str[i],dnsstr[i]);
+				fprintf(stderr,"aaaaaaaadnsstr[i]=%p\n",dnsstr[i]);
+				fprintf(stderr,"dns_str[i]=%s\n",dns_str[i]);
+				//fprintf(stderr,"aaaaaaaadnsstr[i]=%s\n",dnsstr[i]);
+			}
+			for(i=0;i<3;i++)
+			{
+				if(dnsstr[i])
+					free(dnsstr[i]);
+			}	
+			return 0;
+		}		
+	}
+}
+
 #ifdef __cplusplus
 }
 #endif

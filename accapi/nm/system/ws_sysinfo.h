@@ -189,5 +189,7 @@ extern int delete_ip_dns_func_cmd(char *ip_dns);  /*返回0表示失败，返回1表示成功
 													   /*返回-3表示error*/
 													   /*返回SNMPD_CONNECTION_ERROR表示connection error*/
 
+extern int ccgi_show_ip_dns_func_cmd(int *num,char *dnsstr[]);
+
 #endif
 

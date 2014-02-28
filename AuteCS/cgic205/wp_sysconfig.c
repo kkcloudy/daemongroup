@@ -279,7 +279,7 @@ int ShowSystemconPage(char *m,struct list *lpublic,struct list *lsystem)
 				"<tr height=30>"\
 					"<td>%s:</td>",search(lsystem,"dns"));
 					fprintf(cgiOut,"<td>"\
-						 "<div style=\"border-width:1;border-color:#a5acb2;border-style:solid;width:140;font-size:9pt\">"\
+						 "<div style=\"border-width:1;border-color:#a5acb2;border-style:solid;width:150;font-size:9pt\">"\
 						 "<input type=text name='dns_ip1' maxlength=3 class=a3 onKeyUp=\"mask(this,%s)\" onbeforepaste=mask_c()>.",search(lpublic,"ip_error"));
 						 fprintf(cgiOut,"<input type=text name='dns_ip2' maxlength=3 class=a3 onKeyUp=\"mask(this,%s)\" onbeforepaste=mask_c()>.",search(lpublic,"ip_error"));
 						 fprintf(cgiOut,"<input type=text name='dns_ip3' maxlength=3 class=a3 onKeyUp=\"mask(this,%s)\" onbeforepaste=mask_c()>.",search(lpublic,"ip_error"));
@@ -287,8 +287,35 @@ int ShowSystemconPage(char *m,struct list *lpublic,struct list *lsystem)
 						 fprintf(cgiOut,"</div>"\
 					"</td>"\
 					"<td align=left style=padding-left:10px><input type=submit style=width:100px; height:36px border=0 name=no_ip_dns style=background-image:url(/images/SubBackGif.gif) value=\"%sDNS%s\"></td>",search(lsystem,"cancel"),search(lpublic,"l_name"));
-				fprintf(cgiOut,"</tr>"
-				"<tr valign=top style=\"padding-top:10px\">"\
+				fprintf(cgiOut,"</tr>");
+				char *dns[3];
+				int dns_num=0;
+				int jjj=0;
+				ret=ccgi_show_ip_dns_func_cmd(&dns_num,&dns);
+				
+				fprintf(cgiOut,"<tr height=30>"\
+				"<td>IP DNS:</td>");
+				fprintf(cgiOut,"<td clospan=2>"\
+					"<textarea cols='20' rows='3' readonly='readonly'>");
+				if((ret==0)&&(dns_num<4)&&(dns_num>0))
+				{
+					for(jjj=0;jjj<dns_num;jjj++)
+					{
+						fprintf(cgiOut,"%s",dns[jjj]);
+					}
+				}
+				else if(ret== -4)
+				{
+					fprintf(cgiOut,"DNS server is not set");
+				}
+				else if(ret== -2)
+				{
+					fprintf(cgiOut,"Can't get system dns seting");
+				}
+				fprintf(cgiOut,"</textarea>"\
+				"</td>");
+				fprintf(cgiOut,"</tr>");
+				fprintf(cgiOut,"<tr valign=top style=\"padding-top:10px\">"\
 					"<td colspan=3>"\
 						"<fieldset align=left>"\
 						  "<legend><font color=Navy>%s</font></legend>",search(lsystem,"dns_cache"));
@@ -300,7 +327,7 @@ int ShowSystemconPage(char *m,struct list *lpublic,struct list *lsystem)
 						    "<tr height=30>"\
 					   		  "<td>IP:</td>"\
 							  "<td>"\
-							     "<div style=\"border-width:1;border-color:#a5acb2;border-style:solid;width:140;font-size:9pt\">"\
+							     "<div style=\"border-width:1;border-color:#a5acb2;border-style:solid;width:150;font-size:9pt\">"\
 								 "<input type=text name='cache_ip1' maxlength=3 class=a3 onKeyUp=\"mask(this,%s)\" onbeforepaste=mask_c()>.",search(lpublic,"ip_error"));
 								 fprintf(cgiOut,"<input type=text name='cache_ip2' maxlength=3 class=a3 onKeyUp=\"mask(this,%s)\" onbeforepaste=mask_c()>.",search(lpublic,"ip_error"));
 								 fprintf(cgiOut,"<input type=text name='cache_ip3' maxlength=3 class=a3 onKeyUp=\"mask(this,%s)\" onbeforepaste=mask_c()>.",search(lpublic,"ip_error"));
