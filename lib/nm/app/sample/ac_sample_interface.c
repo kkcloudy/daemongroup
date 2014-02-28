@@ -425,7 +425,7 @@ sample_get_board_state(void) {
 
 //rtmd provide ac interface flow
 
- #define INTERFACE_NAMSIZ		20
+ #define INTERFACE_NAMSIZ		32
  
 struct rtmd_if_stats {
 	unsigned long long rx_packets;   /* total packets received       */
@@ -457,6 +457,7 @@ struct rtmd_if_stats {
 };
 
 struct if_flow_stats {
+	int tap;
 	int length;
 	int process_name;
 	int cmd;
@@ -536,34 +537,55 @@ int sample_rtmd_init_socket(struct sample_rtmd_info *info, int process, int cmd,
 }
 
 ssize_t
-readn(int fd, const void *vptr, size_t n)
+readn(int fd, struct if_flow_stats *vptr, size_t n,struct sample_rtmd_info *info)
 {
 	size_t nleft = 0;
 	ssize_t nread = 0;
-	void *ptr = NULL;
+	struct if_flow_stats *ptr = NULL;
+
+	struct timeval timeout = {0};
+	fd_set set;
+	int nready;
 
 	if (fd < 0 || NULL == vptr || n <= 0) {
 		return -1;
 	}
 
-	ptr = vptr;
+	timeout.tv_sec = info->timeout/1000;
+	timeout.tv_usec = (info->timeout%1000)*1000;
+	ptr = (struct if_flow_stats *)vptr;
 	nleft = n;	
 	while (nleft > 0) {
-		if ((nread = read(fd, ptr, nleft)) < 0) {
-			syslog(LOG_WARNING, "read error nread=%d:%s", nread, strerror(errno));
-			if (errno == EINTR) {
-				nread = 0;
-			} else if (errno == EAGAIN) {
-				break;
-			} else {
-				return -1;
-			}
-		} else if (nread == 0) {
-			break;
+		FD_ZERO(&set);
+		FD_SET(info->sockfd, &set);
+		if (nready=select(info->sockfd+1, &set, NULL, NULL, &timeout) <= 0) {
+			syslog(LOG_WARNING, "sample_rtmd_get_interface_flow timeout\n");
+			return AS_RTN_SOCKET_SET_ERR;
 		}
-		nleft -= nread;
-		ptr += nread;
-	} 
+		else if(FD_ISSET(info->sockfd, &set)){
+			if ((nread = read(fd, ptr, sizeof(*vptr))) <= 0) {
+				syslog(LOG_WARNING, "read error nread=%d:%s", nread, strerror(errno));
+				if (errno == EINTR) {
+					nread = 0;
+				} else if (errno == EAGAIN) {
+					continue;
+				} else if(nread == 0){
+					break;
+				} else {
+					return -1;
+				}
+			}
+			else if (ptr->tap == 0) {
+				nleft -=nread;
+				return (n - nleft);
+			}
+			else {
+				nleft -=nread;
+				ptr++;
+				continue;
+			}
+		}		
+	}
 	return (n - nleft);
 }
 
@@ -598,10 +620,10 @@ writen(int fd, const void *vptr, size_t n)
 int sample_rtmd_get_interface_flow(struct sample_rtmd_info *info, int *ifnum, struct if_stats_list **data)
 {
 	struct if_stats_list *pos = NULL;
-	struct if_flow_stats buf[250] = {{0}};
-	struct timeval timeout = {0};
+	struct if_flow_stats buf[251] = {{0}};
 	
-	fd_set set;
+	
+	
 	int nbyte = 0;
 	int length = sizeof(struct if_flow_stats);
 	int i = 0;
@@ -623,18 +645,7 @@ int sample_rtmd_get_interface_flow(struct sample_rtmd_info *info, int *ifnum, st
 		sample_rtmd_init_socket(info, info->process, info->cmd, info->timeout);
 		return AS_RTN_SOCKET_WRITE_ERR;
 	}
-
-	timeout.tv_sec = info->timeout/1000;
-	timeout.tv_usec = (info->timeout%1000)*1000;
-
-	FD_ZERO(&set);
-	FD_SET(info->sockfd, &set);
-
-	if (select(info->sockfd+1, &set, NULL, NULL, &timeout) <= 0) {
-		syslog(LOG_WARNING, "sample_rtmd_get_interface_flow timeout\n");
-		return AS_RTN_SOCKET_SET_ERR;
-	}
-	nbyte = readn(info->sockfd, buf, sizeof(buf));
+	nbyte = readn(info->sockfd, buf, sizeof(buf),info);
 	syslog(LOG_DEBUG, "sample_rtmd_get_interface_flow readn nbyte=%d, size=%d\n", nbyte, sizeof(buf));
 	if (nbyte < 0) {
 		sample_rtmd_close_socket(info);

@@ -24811,8 +24811,6 @@ void Free_show_all_wtp_wlan_data_pkts_information_cmd_wlannode_v2(struct WlanDat
 		{
 			FREE_OBJECT(p1->wtpNetWiredRxWrongPktsRate);
 			FREE_OBJECT(p1->wtpNetWiredTxWrongPktsRate);
-			FREE_OBJECT(p1->wtpStaDwlinkMaxRate);
-			FREE_OBJECT(p1->wtpStaUplinkMaxRate);
 			FREE_OBJECT(p1->wtpWirelessWrongPktsRate);
 			free(p1);
 			p1=p2;
@@ -24820,8 +24818,6 @@ void Free_show_all_wtp_wlan_data_pkts_information_cmd_wlannode_v2(struct WlanDat
 		}
 		FREE_OBJECT(p1->wtpNetWiredRxWrongPktsRate);
 		FREE_OBJECT(p1->wtpNetWiredTxWrongPktsRate);
-		FREE_OBJECT(p1->wtpStaDwlinkMaxRate);
-		FREE_OBJECT(p1->wtpStaUplinkMaxRate);
 		FREE_OBJECT(p1->wtpWirelessWrongPktsRate);
 		free(p1);
 	}
@@ -24853,7 +24849,8 @@ void Free_show_all_wtp_wlan_data_pkts_information_cmd_v2(struct WtpWlanDataPktsI
 		FREE_OBJECT(p1->wlan_list);
 		free(p1);
 	}
-
+	free(WtpHead_v2);
+	WtpHead_v2 = NULL;
 }
 int show_all_wtp_wlan_data_pkts_information_cmd_v2(dbus_parameter parameter, DBusConnection *connection,struct WtpWlanDataPktsInfo **WtpHead_v2)
 {
@@ -25614,6 +25611,7 @@ void Free_show_all_wlan_ssid_stats_information_cmd_v2(struct SSIDStatsInfo_v2 *W
 		free(f1);
 	}
 	free(WtpHead_v2);
+	WtpHead_v2 = NULL;
 }
 
 /*返回1时，调用Free_show_all_wlan_ssid_stats_information_cmd_v2()释放空间*/
