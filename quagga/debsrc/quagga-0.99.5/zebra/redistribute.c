@@ -557,8 +557,15 @@ zebra_interface_up_update (struct interface *ifp)
     zlog_debug ("MESSAGE: ZEBRA_INTERFACE_UP %s", ifp->name);
   
   if(judge_obc_interface(ifp->name)!=OBC_INTERFACE)
-   for (ALL_LIST_ELEMENTS (zebrad.client_list, node, nnode, client))
-    zsend_interface_update (ZEBRA_INTERFACE_UP, client, ifp);
+  {
+	  for (ALL_LIST_ELEMENTS (zebrad.client_list, node, nnode, client))
+	   zsend_interface_update (ZEBRA_INTERFACE_UP, client, ifp);
+
+  }
+  else
+  {
+		return ;
+  }
 
  
   if (product ==NULL){
@@ -786,11 +793,15 @@ zebra_interface_add_update (struct interface *ifp)
     zlog_debug ("MESSAGE: ZEBRA_INTERFACE_ADD %s", ifp->name);
     
 	
-   if(judge_obc_interface(ifp->name)!=OBC_INTERFACE)
-  	for (ALL_LIST_ELEMENTS (zebrad.client_list, node, nnode, client))
-    	if (client->ifinfo)
-      		zsend_interface_add (client, ifp);
-
+   if(judge_obc_interface(ifp->name)!=OBC_INTERFACE){
+  		for (ALL_LIST_ELEMENTS (zebrad.client_list, node, nnode, client))
+    		if (client->ifinfo)
+      			zsend_interface_add (client, ifp);
+   	}
+   else
+   {
+		return;
+   }
 	
 
     if (product ==NULL){
@@ -872,9 +883,16 @@ zebra_interface_delete_update (struct interface *ifp)
       zlog_debug ("MESSAGE: ZEBRA_INTERFACE_DELETE %s", ifp->name);
   
   if(judge_obc_interface(ifp->name)!=OBC_INTERFACE)
-    for (ALL_LIST_ELEMENTS (zebrad.client_list, node, nnode, client))
-      if (client->ifinfo)
-        zsend_interface_delete (client, ifp);
+  {
+	  for (ALL_LIST_ELEMENTS (zebrad.client_list, node, nnode, client))
+		if (client->ifinfo)
+		  zsend_interface_delete (client, ifp);
+
+  }
+  else
+  {
+	return ;
+  }
   
     if (product ==NULL){
   		return;
@@ -1007,9 +1025,16 @@ zebra_interface_address_add_update (struct interface *ifp,
   router_id_add_address(ifc);
 
   if(judge_obc_interface(ifp->name)!=OBC_INTERFACE)
-   for (ALL_LIST_ELEMENTS (zebrad.client_list, node, nnode, client))
-    if (client->ifinfo && CHECK_FLAG (ifc->conf, ZEBRA_IFC_REAL))
-      zsend_interface_address (ZEBRA_INTERFACE_ADDRESS_ADD, client, ifp, ifc);
+  {
+	  for (ALL_LIST_ELEMENTS (zebrad.client_list, node, nnode, client))
+	   if (client->ifinfo && CHECK_FLAG (ifc->conf, ZEBRA_IFC_REAL))
+		 zsend_interface_address (ZEBRA_INTERFACE_ADDRESS_ADD, client, ifp, ifc);
+
+  }
+  else
+  {
+	return;
+  }
 
 
 skip:
@@ -1117,10 +1142,16 @@ zebra_interface_address_delete_update (struct interface *ifp,
 
   router_id_del_address(ifc);
 
-  if(judge_obc_interface(ifp->name)!=OBC_INTERFACE)
-   for (ALL_LIST_ELEMENTS (zebrad.client_list, node, nnode, client))
-    if (client->ifinfo && CHECK_FLAG (ifc->conf, ZEBRA_IFC_REAL))
-      zsend_interface_address (ZEBRA_INTERFACE_ADDRESS_DELETE, client, ifp, ifc);
+  if(judge_obc_interface(ifp->name)!=OBC_INTERFACE){
+	  for (ALL_LIST_ELEMENTS (zebrad.client_list, node, nnode, client))
+	   if (client->ifinfo && CHECK_FLAG (ifc->conf, ZEBRA_IFC_REAL))
+		 zsend_interface_address (ZEBRA_INTERFACE_ADDRESS_DELETE, client, ifp, ifc);
+
+  	}
+  else
+  	{
+		return;
+  	}
 
 skip:
   if (product ==NULL){

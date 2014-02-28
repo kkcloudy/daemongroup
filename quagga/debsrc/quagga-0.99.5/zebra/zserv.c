@@ -157,6 +157,8 @@ zsend_interface_add (struct zserv *client, struct interface *ifp)
 {
   struct stream *s;
 
+  if(judge_obc_interface(ifp->name)==OBC_INTERFACE)
+	  return 0;
   /* Check this client need interface information. */
   if (! client->ifinfo)
     return 0;
@@ -195,6 +197,9 @@ int
 zsend_interface_delete (struct zserv *client, struct interface *ifp)
 {
   struct stream *s;
+
+  if(judge_obc_interface(ifp->name)==OBC_INTERFACE)
+  	return 0;
 
   /* Check this client need interface information. */
   if (! client->ifinfo)
@@ -267,6 +272,9 @@ zsend_interface_address (int cmd, struct zserv *client,
   struct stream *s;
   struct prefix *p;
 
+  if(judge_obc_interface(ifp->name)==OBC_INTERFACE)
+  	return 0;
+
   /* Check this client need interface information. */
   if (! client->ifinfo)
     return 0;
@@ -321,6 +329,8 @@ zsend_interface_update (int cmd, struct zserv *client, struct interface *ifp)
 {
   struct stream *s;
 
+  if(judge_obc_interface(ifp->name)==OBC_INTERFACE)
+  	return 0;
   /* Check this client need interface information. */
   if (! client->ifinfo)
     return 0;
@@ -435,6 +445,11 @@ zsend_route_multipath (int cmd, struct zserv *client, struct prefix *p,
 
           switch(nexthop->type) 
             {
+            
+			  case NEXTHOP_TYPE_IFINDEX:/**for directly connected route when know ifindex**/
+				  ifname = ifindex_to_ifname(nexthop->ifindex);
+				  if(judge_obc_interface(ifname)==OBC_INTERFACE)
+				  	return 0;
               case NEXTHOP_TYPE_IPV4:
               case NEXTHOP_TYPE_IPV4_IFINDEX:
 			  	/*gujd: 2013-02-26, pm 4:08. Check nexthop is obc interface.
@@ -751,6 +766,8 @@ zread_interface_add (struct zserv *client, u_short length)
 
   for (ALL_LIST_ELEMENTS (iflist, ifnode, ifnnode, ifp))
     {
+	  if(judge_obc_interface(ifp->name)==OBC_INTERFACE)
+		  continue;
       /* Skip pseudo interface. */
       if (! CHECK_FLAG (ifp->status, ZEBRA_INTERFACE_ACTIVE))
 	continue;

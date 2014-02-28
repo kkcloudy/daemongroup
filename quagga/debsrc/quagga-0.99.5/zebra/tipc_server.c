@@ -2980,12 +2980,20 @@ vice_redistribute_interface_add (struct interface *ifp)
   tipc_server  *vice_board;
   int ret;
   
+#if 1
   /*send message to router deamon*/
+  if(judge_obc_interface(ifp->name)==OBC_INTERFACE)
+	  return;;
+
   if(ifp->if_types != VIRTUAL_INTERFACE && ifp->ifindex != IFINDEX_INTERNAL )/*make susre ifindex effective, and redistribute */
-   for (ALL_LIST_ELEMENTS (zebrad.client_list, node, nnode, client)) {
-    if (client->ifinfo)
-      zsend_interface_add (client, ifp);
-   }
+	{
+	  for (ALL_LIST_ELEMENTS (zebrad.client_list, node, nnode, client)) {
+		  if (client->ifinfo)
+			zsend_interface_add (client, ifp);
+		}
+
+	}  
+#endif
 
 }
 

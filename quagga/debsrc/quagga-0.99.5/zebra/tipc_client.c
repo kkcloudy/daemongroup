@@ -1115,7 +1115,7 @@ master_redistribute_interface_up(struct interface *ifp)
   int ret;
 
 #if 1
-if(ifp->if_types != VIRTUAL_INTERFACE && ifp->ifindex != IFINDEX_INTERNAL )/*make susre ifindex effective, and redistribute */
+if(ifp->if_types != VIRTUAL_INTERFACE && ifp->ifindex != IFINDEX_INTERNAL && judge_obc_interface(ifp->name)!=OBC_INTERFACE )/*make susre ifindex effective, and redistribute */
   for (ALL_LIST_ELEMENTS (zebrad.client_list, node, nnode, client))
   {
       zsend_interface_update (ZEBRA_INTERFACE_UP, client, ifp);
