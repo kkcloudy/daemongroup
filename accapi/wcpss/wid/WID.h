@@ -46,6 +46,10 @@ typedef unsigned int		u_int32_t;
 #define WIFI_IOC_DEL_STA		_IOWR(243, 12, struct asd_to_wifi_sta)
 #define WIFI_IOC_BATCH_IF_CREATE  _IOWR(243, 13, struct interface_batch_INFO)
 #define WIFI_IOC_BATCH_IF_DELETE  _IOWR(243, 14, struct interface_batch_INFO)
+#ifdef __ASD_STA_ACL
+#define WIFI_IOC_SET_NFMARK 	_IOWR(243, 15, struct wifi_nf_info) // caojia add for sta acl function 
+#define WIFI_IOC_GET_NFMARK 	_IOWR(243, 16, struct wifi_nf_info) // caojia add for sta acl function 
+#endif
 
 #define TEST_SWITCH_WAY  1 /*zhanglei change*/
 #define WID_SYSTEM_CMD_LENTH 256
@@ -1531,6 +1535,9 @@ struct wlan{
 	struct asd_radius_servers *radius_server;
 	unsigned int sta_roaming_times;
 	unsigned int sta_roaming_suc_times;
+#ifdef __ASD_STA_ACL
+	unsigned int sta_default_aclid;
+#endif
 };
 typedef struct wlan WID_WLAN;
 
@@ -2449,5 +2456,14 @@ typedef struct{
 	struct Listenning_IF *interface;
 }Listen_IF; 
 
+#ifdef __ASD_STA_ACL
+/* caojia add for sta acl function */
+struct wifi_nf_info
+{
+	unsigned char STAMAC[MAC_LEN];
+//	unsigned char BSSID[MAC_LEN];
+	unsigned int nfmark;
+};
+#endif
 
 #endif/*_WID_DEFINE_H*/

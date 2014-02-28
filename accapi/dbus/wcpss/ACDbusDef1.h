@@ -213,6 +213,7 @@ enum wid_dbus_result_no_e {
 	//for ap timing upgrade 
 	WID_WTP_TIMING_UPGRADE_SWITCH_ON,
 	MIN_LARGER_THAN_MAX,				/* Huangleilei copy from 1.3.18 */
+	WID_FILE_NOT_EXIST,
 	WTP_NO_SURPORT_Mode
 };
 
@@ -1243,4 +1244,9 @@ extern char WID_DBUS_CONF_METHOD_LIC_BAK_REQ_INTERVAL[PATH_LEN];		/* Huang Leile
 extern char WID_DBUS_CONF_METHOD_LIC_BAK_REQ_INTERVAL_SHOW[PATH_LEN];	/* Huang Leilei 2012-10-25 add */
 extern char WID_DBUS_WLAN_METHOD_TUNNEL_NODE_SETTING[PATH_LEN];
 extern char WID_DBUS_WLAN_METHOD_TUNNEL_NODE_SETTING_AND_ADD_TO_EBR[PATH_LEN];
+
+/* caojia add for sta acl */
+extern char WID_DBUS_STA_METHOD_SET_WLAN_STA_DEFAULT_ACL[PATH_LEN];
+extern char WID_DBUS_STA_METHOD_SHOW_WLAN_STA_DEFAULT_ACL[PATH_LEN];
+
 #endif

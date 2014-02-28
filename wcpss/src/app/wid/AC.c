@@ -360,7 +360,7 @@ void license_binding_init(char *string){
 	strlength = strlen(string);
 	/*process license type list*/
 	//licenselist = (int *)malloc((glicensecount+1)*sizeof(int));
-	CW_CREATE_ARRAY_ERR(licenselist, (glicensecount+1), int, ;);
+	CW_CREATE_ARRAY_ERR(licenselist, (glicensecount+1), int, {wid_syslog_err("%s,%d,malloc fail.\n",__func__,__LINE__);return ;});
 	for(i=0,j=0; i<strlength;i++){
 		if(string[i]!=','){
 			licenselist[j] = string[i]-'0';
@@ -376,7 +376,7 @@ void license_binding_init(char *string){
 		for(flag=1; flag<glicensecount+1; flag++){
 			if(g_wtp_binding_count[flag]==NULL){
 				//g_wtp_binding_count[flag] = malloc(sizeof(LICENSE_TYPE));
-				CW_CREATE_OBJECT_ERR_WID(g_wtp_binding_count[flag], LICENSE_TYPE, );
+				CW_CREATE_OBJECT_ERR_WID(g_wtp_binding_count[flag], LICENSE_TYPE,{wid_syslog_err("%s,%d,malloc fail.\n",__func__,__LINE__);return ;} );
 				break;
 			}
 		}
@@ -411,6 +411,10 @@ void license_binding_Reinit(char *string){
 	strlength = strlen(string);
 	/*process license type list*/
 	licenselist = (int *)WID_MALLOC((glicensecount+1)*sizeof(int));
+	if (NULL == licenselist)
+	{
+		return;
+	}
 	for(i=0,j=0; i<strlength;i++){
 		if(string[i]!=','){
 			licenselist[j] = string[i]-'0';
@@ -709,6 +713,10 @@ void CWWIDInit(){
 
 	/*xiaodawei add, 20101104, initialization for g_wtp_binding_count*/
 	g_wtp_binding_count = WID_MALLOC((glicensecount+1)*sizeof(LICENSE_TYPE *));
+	if (!g_wtp_binding_count)
+	{
+		return ;
+	}
 	for(i=0; i<glicensecount+1; i++){
 		g_wtp_binding_count[i] = NULL;
 	}
@@ -717,7 +725,18 @@ void CWWIDInit(){
 	{
 		/*xiaodawei modify, 20101029*/
 		g_wtp_count = WID_MALLOC(sizeof(LICENSE_TYPE *));
+		if (!g_wtp_count)
+		{
+			CW_FREE_OBJECT_WID(g_wtp_binding_count);
+			return;
+		}
 		g_wtp_count[0] = WID_MALLOC(sizeof(LICENSE_TYPE));
+		if (!g_wtp_count[0])
+		{
+			CW_FREE_OBJECT_WID(g_wtp_count);
+			CW_FREE_OBJECT_WID(g_wtp_binding_count);
+			return;
+		}
 		g_wtp_count[0]->gcurrent_wtp_count = 0;
 		g_wtp_count[0]->gmax_wtp_count = WTP_DEFAULT_NUM_AUTELAN;
 		g_wtp_count[0]->gmax_wtp_count_assign = WTP_DEFAULT_NUM_AUTELAN;
@@ -729,10 +748,28 @@ void CWWIDInit(){
 	{
 		/*xiaodawei modify, 20101029*/
 		g_wtp_count = WID_MALLOC(glicensecount*(sizeof(LICENSE_TYPE *)));
+		if (!g_wtp_count)
+		{
+			CW_FREE_OBJECT_WID(g_wtp_binding_count);
+			return ;
+		}
 		
 		for(i=0; i<glicensecount; i++)
 		{
 			g_wtp_count[i] = WID_MALLOC(sizeof(LICENSE_TYPE));
+			if (!g_wtp_count[i])
+			{
+				i --;
+				while (i >= 0)
+				{
+					CW_FREE_OBJECT_WID(g_wtp_count[i]);
+					 i--;
+				}
+				CW_FREE_OBJECT_WID(g_wtp_count);
+				CW_FREE_OBJECT_WID(g_wtp_binding_count);
+				return ;
+			}
+			
 			g_wtp_count[i]->gcurrent_wtp_count = 0;
 			g_wtp_count[i]->gmax_wtp_count_assign = 0;
 			g_wtp_count[i]->gmax_wtp_count = 0;
@@ -781,6 +818,29 @@ void CWWIDInit(){
 	AC_WTP_ACC = WID_MALLOC(sizeof(WID_ACCESS));
 	memset(AC_WTP_ACC, 0, sizeof(WID_ACCESS));
 	memset(AC_WTP_ACC->wtp_list_hash, 0, 256*sizeof(struct wtp_access_info *));
+	if ((!AC_WTP) || (!AC_RADIO) || (!AC_BSS) ||(!AC_ATTACH) || (!gWTPs) || (!AC_WTP_ACC))
+	{
+		if (AC_WTP)
+			CW_FREE_OBJECT_WID(AC_WTP);
+		if (AC_RADIO)
+			CW_FREE_OBJECT_WID(AC_RADIO);
+		if (AC_BSS)
+			CW_FREE_OBJECT_WID(AC_BSS);
+		if (AC_ATTACH)
+			CW_FREE_OBJECT_WID(AC_ATTACH);
+		if (gWTPs)
+			CW_FREE_OBJECT_WID(gWTPs);
+		if (AC_WTP_ACC)
+			CW_FREE_OBJECT_WID(AC_WTP_ACC);
+		while (i)
+		{
+			 i--;
+			CW_FREE_OBJECT_WID(g_wtp_count[i]);
+		}
+		CW_FREE_OBJECT_WID(g_wtp_count);
+		CW_FREE_OBJECT_WID(g_wtp_binding_count);
+		return ;
+	}
 	/*fengwenchao add for read gMaxWTPs from /dbm/local_board/board_ap_max_counter begin*/
 	unsigned int count =0;
 	if((read_board_ap_max_counter(&count)) != 1)
@@ -1676,9 +1736,8 @@ CWBool AsdWsm_BSSOp(unsigned int BSSIndex, Operate op, int both){
 			
 			if(elem1 == NULL){
 			
-				perror("malloc");
-			
-				return 0;
+				wid_syslog_err("%s,%d malloc fail\n",__func__,__LINE__);
+				return CW_FALSE;
 			
 			}
 			
@@ -3024,6 +3083,10 @@ struct conflict_wtp_info* wid_add_wtp(struct wtp_con_info * con_info){
 		return tmp;
 	}
 	tmp =(struct conflict_wtp_info*)WID_MALLOC(sizeof(struct conflict_wtp_info));
+	if (!tmp)
+	{
+		return CW_FALSE;
+	}
 	memset(tmp, 0, sizeof(struct conflict_wtp_info));
 	tmp->next = allif.wtp_list;
 	allif.wtp_list = tmp;
@@ -3032,12 +3095,23 @@ struct conflict_wtp_info* wid_add_wtp(struct wtp_con_info * con_info){
 	if(tmp->wtpindexInfo == NULL){
 		
 		node1 = WID_MALLOC(sizeof(struct ConflictWtp));
+		if (!node1)
+		{
+			CW_FREE_OBJECT_WID(tmp);
+			return CW_FALSE;
+		}
 		memset(node1,0,sizeof(struct ConflictWtp));
 		tmp->wtpindexInfo = node1;
 		node1->wtpindex = con_info->wtpindex;
 		tmp->conf_num ++;
 		if((con_info->wtpindex != con_info->wtpindex2)&&(con_info->wtpindex > 0)&&(con_info->wtpindex2 > 0)){
 			node2 = WID_MALLOC(sizeof(struct ConflictWtp));
+			if (!node2)
+			{
+				CW_FREE_OBJECT_WID(tmp);
+				CW_FREE_OBJECT_WID(node1);
+				return CW_FALSE;
+			}
 			memset(node2,0,sizeof(struct ConflictWtp));
 			node2->next = tmp->wtpindexInfo;
 			tmp->wtpindexInfo = node2;

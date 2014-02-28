@@ -40,6 +40,10 @@ CWBool insert_uptfail_wtp_list(int id)
 	struct tag_wtpid *wtp_id;
 	struct tag_wtpid *wtp_id_next;
 	wtp_id = (struct tag_wtpid*)WID_MALLOC(sizeof(struct tag_wtpid));
+	if (NULL == wtp_id)
+	{
+		return CW_FALSE;
+	}
 	
 	wtp_id->wtpid = id;
 	wtp_id->next = NULL;
@@ -48,6 +52,11 @@ CWBool insert_uptfail_wtp_list(int id)
 	if(updatefailwtplist == NULL)
 	{
 		updatefailwtplist = (struct tag_wtpid_list*)WID_MALLOC(sizeof(struct tag_wtpid_list));
+		if (NULL == updatefailwtplist)
+		{
+			CW_FREE_OBJECT_WID(wtp_id);
+			return CW_FALSE;
+		}
 		updatefailwtplist->wtpidlist = wtp_id ;		
 		updatefailwtplist->count = 1;
 		//printf("*** wtp id:%d insert first  \n",id);

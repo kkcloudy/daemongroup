@@ -524,6 +524,11 @@ CWBool CWAssembleMsgElemAP_NTP_Set(CWProtocolMessage *msgPtr,unsigned wtpid)
 	memcpy(ifname,AC_WTP[wtpid]->BindingIFName,strlen(AC_WTP[wtpid]->BindingIFName));
 
 	struct ifi_info *ifi = (struct ifi_info*)calloc(1, sizeof(struct ifi_info));
+	if (NULL == ifi)
+	{
+		CW_FREE_OBJECT_WID(ifname);
+		return 0;
+	}
 	memset(ifi,0,sizeof(struct ifi_info));
 	memset(ifi->ifi_name,0,sizeof(ifi->ifi_name));
 	strncpy(ifi->ifi_name,ifname,sizeof(ifi->ifi_name));
@@ -2227,6 +2232,30 @@ CWBool CWParseWTPBoardData (CWProtocolMessage *msgPtr, int len, CWWTPVendorInfos
 			}
 			SN_t = (CWProtocolRetrieveRawBytes(msgPtr, (valPtr->vendorInfos)[i].length));	
 			(valPtr->vendorInfos)[i].SN = (unsigned char *)WID_MALLOC(((valPtr->vendorInfos)[i].length)+1);
+			if (NULL == (valPtr->vendorInfos)[i].SN)
+			{
+				while (i)
+				{
+					i--;
+					if ((valPtr->vendorInfos)[i].SN)
+					{
+						CW_FREE_OBJECT_WID((valPtr->vendorInfos)[i].SN);
+					}
+					else if ((valPtr->vendorInfos)[i].model)
+					{
+						CW_FREE_OBJECT_WID((valPtr->vendorInfos)[i].model);
+					}
+					else if ((valPtr->vendorInfos)[i].Rmodel)
+					{
+						CW_FREE_OBJECT_WID((valPtr->vendorInfos)[i].Rmodel);
+					}
+					else if ((valPtr->vendorInfos)[i].codever)
+					{
+						CW_FREE_OBJECT_WID((valPtr->vendorInfos)[i].codever);
+
+					}
+				}
+			}
 			memset((valPtr->vendorInfos)[i].SN,0,(((valPtr->vendorInfos)[i].length)+1));
 			if(wid_illegal_character_check(SN_t, strlen(SN_t),0) == 1){
 				memcpy((valPtr->vendorInfos)[i].SN,SN_t,(valPtr->vendorInfos)[i].length);
@@ -2267,6 +2296,30 @@ CWBool CWParseWTPBoardData (CWProtocolMessage *msgPtr, int len, CWWTPVendorInfos
 			strmodel = (CWProtocolRetrieveRawBytes(msgPtr, (valPtr->vendorInfos)[i].length));	
 
 			(valPtr->vendorInfos)[i].model = (unsigned char *)WID_MALLOC(((valPtr->vendorInfos)[i].length)+1);
+			if (NULL == (valPtr->vendorInfos)[i].model)
+			{
+				while (i)
+				{
+					i--;
+					if ((valPtr->vendorInfos)[i].SN)
+					{
+						CW_FREE_OBJECT_WID((valPtr->vendorInfos)[i].SN);
+					}
+					else if ((valPtr->vendorInfos)[i].model)
+					{
+						CW_FREE_OBJECT_WID((valPtr->vendorInfos)[i].model);
+					}
+					else if ((valPtr->vendorInfos)[i].Rmodel)
+					{
+						CW_FREE_OBJECT_WID((valPtr->vendorInfos)[i].Rmodel);
+					}
+					else if ((valPtr->vendorInfos)[i].codever)
+					{
+						CW_FREE_OBJECT_WID((valPtr->vendorInfos)[i].codever);
+
+					}
+				}
+			}
 			memset((valPtr->vendorInfos)[i].model,0,(((valPtr->vendorInfos)[i].length)+1));
 			if(wid_illegal_character_check(strmodel, strlen(strmodel),0) == 1){
 				memcpy((valPtr->vendorInfos)[i].model,strmodel,(((valPtr->vendorInfos)[i].length)));
@@ -2298,6 +2351,30 @@ CWBool CWParseWTPBoardData (CWProtocolMessage *msgPtr, int len, CWWTPVendorInfos
 			strmodel = (CWProtocolRetrieveRawBytes(msgPtr, (valPtr->vendorInfos)[i].length));	
 
 			(valPtr->vendorInfos)[i].Rmodel = (unsigned char *)WID_MALLOC(((valPtr->vendorInfos)[i].length)+1);
+			if (NULL == (valPtr->vendorInfos)[i].Rmodel)
+			{
+			while (i)
+				{
+					i--;
+					if ((valPtr->vendorInfos)[i].SN)
+					{
+						CW_FREE_OBJECT_WID((valPtr->vendorInfos)[i].SN);
+					}
+					else if ((valPtr->vendorInfos)[i].model)
+					{
+						CW_FREE_OBJECT_WID((valPtr->vendorInfos)[i].model);
+					}
+					else if ((valPtr->vendorInfos)[i].Rmodel)
+					{
+						CW_FREE_OBJECT_WID((valPtr->vendorInfos)[i].Rmodel);
+					}
+					else if ((valPtr->vendorInfos)[i].codever)
+					{
+						CW_FREE_OBJECT_WID((valPtr->vendorInfos)[i].codever);
+
+					}
+				}
+			}
 			memset((valPtr->vendorInfos)[i].Rmodel,0,(((valPtr->vendorInfos)[i].length)+1));
 			if(wid_illegal_character_check(strmodel, strlen(strmodel),0) == 1){
 				memcpy((valPtr->vendorInfos)[i].Rmodel,strmodel,(((valPtr->vendorInfos)[i].length)));
@@ -2328,6 +2405,30 @@ CWBool CWParseWTPBoardData (CWProtocolMessage *msgPtr, int len, CWWTPVendorInfos
 			codever = (CWProtocolRetrieveRawBytes(msgPtr, (valPtr->vendorInfos)[i].length));	
 
 			(valPtr->vendorInfos)[i].codever = (unsigned char *)WID_MALLOC(((valPtr->vendorInfos)[i].length)+1);
+			if (NULL == (valPtr->vendorInfos)[i].codever)
+			{
+				while (i)
+				{
+					i--;
+					if ((valPtr->vendorInfos)[i].SN)
+					{
+						CW_FREE_OBJECT_WID((valPtr->vendorInfos)[i].SN);
+					}
+					else if ((valPtr->vendorInfos)[i].model)
+					{
+						CW_FREE_OBJECT_WID((valPtr->vendorInfos)[i].model);
+					}
+					else if ((valPtr->vendorInfos)[i].Rmodel)
+					{
+						CW_FREE_OBJECT_WID((valPtr->vendorInfos)[i].Rmodel);
+					}
+					else if ((valPtr->vendorInfos)[i].codever)
+					{
+						CW_FREE_OBJECT_WID((valPtr->vendorInfos)[i].codever);
+
+					}
+				}
+			}
 			memset((valPtr->vendorInfos)[i].codever,0,(((valPtr->vendorInfos)[i].length)+1));
 			if(wid_illegal_character_check(codever, strlen(codever),0) == 1){
 				memcpy((valPtr->vendorInfos)[i].codever,codever,(((valPtr->vendorInfos)[i].length)));
@@ -2416,6 +2517,11 @@ CWBool CWCheckWTPBoardData(int WTPIndex, CWWTPVendorInfos *valPtr){
 						savesn = NULL;
 					}
 					savesn = (char*)WID_MALLOC((valPtr->vendorInfos)[i].length +1);
+					if (NULL == savesn)
+					{
+						wid_syslog_err("func %s, line %d, malloc fail\n",__func__,__LINE__);
+						continue;
+					}
 					memset(savesn, 0, (valPtr->vendorInfos)[i].length+1);
 					/*??*/
 					if((valPtr->vendorInfos)[i].length > NAS_IDENTIFIER_NAME){
@@ -2626,6 +2732,15 @@ CWBool CWDisCheckWTPBoardData(int bindingSystemIndex,CWNetworkLev4Address *addrP
 					//printf("one attach\n");
 					wid_syslog_debug_debug(WID_WTPINFO,"one attach");
 						AC_ATTACH[j] = (CWWTPAttach*)WID_MALLOC(sizeof(CWWTPAttach));
+						if (NULL == AC_ATTACH[j])
+						{
+							while (j)
+							{
+								j--;
+								CW_FREE_OBJECT_WID(AC_ATTACH[j]);
+							}
+							return CW_FALSE;
+						}
 						AC_ATTACH[j]->WTPID = i;						
 						CW_COPY_NET_ADDR_PTR(&(AC_ATTACH[j]->address), addrPtr);
 						*WTPID = i;
@@ -2665,6 +2780,15 @@ CWBool CWAddAC_ATTACH_For_Auto(CWNetworkLev4Address *addrPtr, unsigned int WTPID
 		while(j<WTP_NUM){
 			if(AC_ATTACH[j] == NULL){						
 				AC_ATTACH[j] = (CWWTPAttach*)WID_MALLOC(sizeof(CWWTPAttach));
+				if (NULL == AC_ATTACH[j])
+				{
+					while (j)
+					{
+						j--;
+						CW_FREE_OBJECT_WID(AC_ATTACH[j]);
+					}
+					return CW_FALSE;
+				}
 				AC_ATTACH[j]->WTPID = WTPID;						
 				CW_COPY_NET_ADDR_PTR(&(AC_ATTACH[j]->address), addrPtr);	
 				return CW_TRUE;
@@ -2752,6 +2876,21 @@ CWBool CWParseWTPDescriptor(CWProtocolMessage *msgPtr, int len, CWWTPDescriptor 
 			strversion = (CWProtocolRetrieveRawBytes(msgPtr, (valPtr->vendorInfos.vendorInfos)[i].length));	
 
 			(valPtr->vendorInfos.vendorInfos)[i].sysver = (unsigned char *)WID_MALLOC(((valPtr->vendorInfos.vendorInfos)[i].length)+1);
+			if (NULL == (valPtr->vendorInfos.vendorInfos)[i].sysver)
+			{
+				while (i)
+				{
+					i--;
+					if ((valPtr->vendorInfos.vendorInfos)[i].sysver)
+					{
+						CW_FREE_OBJECT_WID( (valPtr->vendorInfos.vendorInfos)[i].sysver);
+					}
+					else if ((valPtr->vendorInfos.vendorInfos)[i].ver)
+					{
+						CW_FREE_OBJECT_WID( (valPtr->vendorInfos.vendorInfos)[i].ver);
+					}
+				}
+			}
 			memset((valPtr->vendorInfos.vendorInfos)[i].sysver,0,(((valPtr->vendorInfos.vendorInfos)[i].length)+1));
 			memcpy((valPtr->vendorInfos.vendorInfos)[i].sysver,strversion,(((valPtr->vendorInfos.vendorInfos)[i].length)));
 			WID_FREE(strversion);
@@ -2765,6 +2904,21 @@ CWBool CWParseWTPDescriptor(CWProtocolMessage *msgPtr, int len, CWWTPDescriptor 
 			strversion = (CWProtocolRetrieveRawBytes(msgPtr, (valPtr->vendorInfos.vendorInfos)[i].length));	
 
 			(valPtr->vendorInfos.vendorInfos)[i].ver = (unsigned char *)WID_MALLOC(((valPtr->vendorInfos.vendorInfos)[i].length)+1);
+			if (NULL == (valPtr->vendorInfos.vendorInfos)[i].ver)
+			{
+					while (i)
+				{
+					i--;
+					if ((valPtr->vendorInfos.vendorInfos)[i].sysver)
+					{
+						CW_FREE_OBJECT_WID( (valPtr->vendorInfos.vendorInfos)[i].sysver);
+					}
+					else if ((valPtr->vendorInfos.vendorInfos)[i].ver)
+					{
+						CW_FREE_OBJECT_WID( (valPtr->vendorInfos.vendorInfos)[i].ver);
+					}
+				}
+			}
 			memset((valPtr->vendorInfos.vendorInfos)[i].ver,0,(((valPtr->vendorInfos.vendorInfos)[i].length)+1));
 			memcpy((valPtr->vendorInfos.vendorInfos)[i].ver,strversion,(((valPtr->vendorInfos.vendorInfos)[i].length)));
 			WID_FREE(strversion);

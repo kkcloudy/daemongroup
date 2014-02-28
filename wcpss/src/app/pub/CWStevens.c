@@ -255,6 +255,10 @@ struct ifi_info* get_ifi_info(int family, int doaliases)
 	len = 100 * sizeof(struct ifreq);	/* initial buffer size guess */
 	for ( ; ; ) {
 		buf = (char*)WID_MALLOC(len);
+		if (NULL == buf)
+		{
+			return NULL;
+		}
 		ifc.ifc_len = len;
 		ifc.ifc_buf = buf;
 		if (ioctl(sockfd, SIOCGIFCONF, &ifc) >= 0) {
@@ -319,6 +323,10 @@ struct ifi_info* get_ifi_info(int family, int doaliases)
 			continue;	/* ignore if interface not up */
 
 		ifi = (struct ifi_info*)calloc(1, sizeof(struct ifi_info));
+		if (NULL == ifi)
+		{
+			return NULL;
+		}
 		*ifipnext = ifi;			/* prev points to this new one */
 		ifipnext = &ifi->ifi_next;	/* pointer to next one goes here */
 
@@ -345,6 +353,13 @@ struct ifi_info* get_ifi_info(int family, int doaliases)
 		case AF_INET:
 			sinptr = (struct sockaddr_in *) &ifr->ifr_addr;
 			ifi->ifi_addr = (struct sockaddr*)calloc(1, sizeof(struct sockaddr_in));
+			if (NULL == ifi->ifi_addr)
+			{
+				CW_FREE_OBJECT_WID(ifi);
+				CW_FREE_OBJECT_WID(buf);
+				close(sockfd);
+				return NULL;
+			}
 			memcpy(ifi->ifi_addr, sinptr, sizeof(struct sockaddr_in));
 
 #ifdef	SIOCGIFBRDADDR
@@ -352,6 +367,14 @@ struct ifi_info* get_ifi_info(int family, int doaliases)
 				ioctl(sockfd, SIOCGIFBRDADDR, &ifrcopy);
 				sinptr = (struct sockaddr_in *) &ifrcopy.ifr_broadaddr;
 				ifi->ifi_brdaddr = (struct sockaddr*)calloc(1, sizeof(struct sockaddr_in));
+				if (NULL == ifi->ifi_brdaddr)
+				{
+					CW_FREE_OBJECT_WID(ifi->ifi_addr);
+					CW_FREE_OBJECT_WID(ifi);
+					CW_FREE_OBJECT_WID(buf);
+					close(sockfd);
+					return NULL;
+				}
 				memcpy(ifi->ifi_brdaddr, sinptr, sizeof(struct sockaddr_in));
 			}
 #endif
@@ -359,6 +382,13 @@ struct ifi_info* get_ifi_info(int family, int doaliases)
 		case AF_INET6:
 			sin6ptr = (struct sockaddr_in6 *) &ifr->ifr_addr;
 			ifi->ifi_addr = (struct sockaddr*)calloc(1, sizeof(struct sockaddr_in6));
+			if (NULL == ifi->ifi_addr)
+			{
+				CW_FREE_OBJECT_WID(ifi);
+				CW_FREE_OBJECT_WID(buf);
+				close(sockfd);
+				return NULL;
+			}
 			memcpy(ifi->ifi_addr, sin6ptr, sizeof(struct sockaddr_in6));
 
 			break;

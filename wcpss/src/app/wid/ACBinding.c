@@ -222,6 +222,10 @@ CWBool CWAssembleWTPRadioConfiguration(CWProtocolMessage *msgPtr, BindingRadioCo
 	/////country code area
 	char *countrycode;
 	countrycode = (char *)WID_MALLOC(sizeof(char)*4);
+	if (NULL == countrycode)
+	{
+          	return CW_FALSE;
+	}
 	memset(countrycode,0,4);
 	
 	switch(stRadioConfiguration.CountryCode) /*wcl modify for OSDEVTDPB-31*/

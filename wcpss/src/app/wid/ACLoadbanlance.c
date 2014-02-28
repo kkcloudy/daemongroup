@@ -36,6 +36,10 @@ int get_ipv4addr_by_ifname(unsigned char ID)
 {
 	int ret = 0;
 	struct ifi_info *ifi = (struct ifi_info*)calloc(1, sizeof(struct ifi_info));
+	if (NULL == ifi)
+	{
+		return -1;
+	}
 	memset(ifi->ifi_name,0,sizeof(ifi->ifi_name));
 	strncpy((char*)ifi->ifi_name,(char*)AC_IP_GROUP[ID]->ifname,sizeof(ifi->ifi_name));
 	ret = Get_Interface_Info((char*)AC_IP_GROUP[ID]->ifname,ifi);

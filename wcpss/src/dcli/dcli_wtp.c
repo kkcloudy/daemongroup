@@ -24305,7 +24305,7 @@ DEFUN(	bind_ap_model_with_file_config_cmd_func,
 			"MODEL is the model of ap which is going to be upgraded\n" 
 			"TAR_FILE is the file to be binded with\n"
 			"model like: AQ2010\n"
-			"bind model AQ2010 version_file AQ2010.tar.bz2 together\n"
+			"bind model AQ2010 version_file AQ2010.tar together\n"
 	 )
 {
 	int ret;
@@ -24315,7 +24315,6 @@ DEFUN(	bind_ap_model_with_file_config_cmd_func,
 
 	char *buf_model;
 	char *buf_name;
-	int fd;
 
 	buf_model = (char*)malloc(strlen(argv[0])+1);
 	if(buf_model == NULL){		
@@ -24338,20 +24337,6 @@ DEFUN(	bind_ap_model_with_file_config_cmd_func,
 	memset(buf_name, 0, strlen(argv[1])+1);
 	memcpy(buf_name, argv[1], strlen(argv[1]));
 
-	char syscmd[WID_SYSTEM_CMD_LENTH];
-	memset(syscmd,0,WID_SYSTEM_CMD_LENTH);
-	sprintf(syscmd,"/mnt/wtp/%s",buf_name);
-
-	fd = open(syscmd, O_RDONLY);
-	if(fd < 0){
-		vty_out(vty, "bind failed due to system cann't find file %s\n",buf_name);
-		free(buf_model);
-		free(buf_name);
-		return CMD_WARNING;
-	}
-	else{
-		close(fd);
-	}
 
 	dbus_error_init(&err);
 	
@@ -24412,6 +24397,8 @@ DEFUN(	bind_ap_model_with_file_config_cmd_func,
 		vty_out(vty,"<error> free memory is not enough\n");
 	else if(ret == MODEL_BIND_EVER)
 		vty_out(vty,"<error> this model has been bound ever,please delete the bind relationship first\n");
+	else if(ret == WID_FILE_NOT_EXIST)
+		vty_out(vty, "<error> file %s not exist\n", buf_name);
 	else
 		vty_out(vty,"<error>  %d\n",ret);
 	

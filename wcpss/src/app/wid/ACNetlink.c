@@ -355,10 +355,24 @@ int netlink_interface_addr(struct sockaddr_nl *snl, struct nlmsghdr *h)
 	unsigned char *ipaddr;
 	struct ifi *tmp;
 	struct ifi_info *ifi_tmp = (struct ifi_info*)calloc(1, sizeof(struct ifi_info));	
+	if (NULL == ifi_tmp)
+	{
+		return -1;
+	}
 	if(ifa->ifa_family == AF_INET)
 		ifi_tmp->ifi_addr = (struct sockaddr*)calloc(1, sizeof(struct sockaddr_in));
+		if (NULL == ifi_tmp->ifi_addr)
+		{
+			CW_FREE_OBJECT_WID(ifi_tmp);
+			return -1;
+		}
 	else
 		ifi_tmp->ifi_addr6 = (struct sockaddr*)calloc(1, sizeof(struct sockaddr_in6));
+		if (NULL == ifi_tmp->ifi_addr6)
+		{
+			CW_FREE_OBJECT_WID(ifi_tmp);
+			return -1;
+		}
 	if (ifa->ifa_family != AF_INET
 #ifdef HAVE_IPV6
 	    && ifa->ifa_family != AF_INET6

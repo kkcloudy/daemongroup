@@ -155,6 +155,10 @@ CWBool CWConfigFileInitLib1() {
 			
 			len = strlen(Hw_version_name);
 			gConfigValues[0].value.str_value = (char*)WID_MALLOC(len+1);
+			if (NULL == gConfigValues[0].value.str_value)
+			{
+				goto label_gconfigvalues;
+			}
 			memset(gConfigValues[0].value.str_value,0,len+1);
 			memcpy(gConfigValues[0].value.str_value,Hw_version_name,len);
 		}
@@ -183,6 +187,10 @@ CWBool CWConfigFileInitLib1() {
 			
 			len = strlen(Sw_version_name);
 			gConfigValues[1].value.str_value = (char*)WID_MALLOC(len+1);
+			if (NULL == gConfigValues[1].value.str_value)
+			{
+				goto lable_gconfigvalues_str_value;
+			}
 			memset(gConfigValues[1].value.str_value,0,len+1);
 			memcpy(gConfigValues[1].value.str_value,Sw_version_name,len);
 		}
@@ -213,6 +221,10 @@ CWBool CWConfigFileInitLib1() {
 
 			len = strlen(wtp_count);
 			wtpnum_char = (char*)WID_MALLOC(len+1);
+			if (NULL == wtpnum_char)
+			{
+				goto label_wtpnum_char;
+			}
 			memset(wtpnum_char,0,len+1);
 			memcpy(wtpnum_char,wtp_count,len);
 
@@ -234,6 +246,10 @@ CWBool CWConfigFileInitLib1() {
 	gConfigValues[4].code = "</AC_SECURITY> ";
 	len = strlen("X509_CERTIFICATE");
 	gConfigValues[4].value.str_value = (char*)WID_MALLOC(len+1);
+	if (NULL == gConfigValues[4].value.str_value)
+	{
+		goto label_wtpnum_char;
+	}
 	memset(gConfigValues[4].value.str_value,0,len+1);
 	memcpy(gConfigValues[4].value.str_value,"X509_CERTIFICATE",len);
 
@@ -249,6 +265,10 @@ CWBool CWConfigFileInitLib1() {
 			gConfigValues[5].code = "</AC_NAME> ";
 			len = strlen("Autelan AC");
 			gConfigValues[5].value.str_value = (char*)WID_MALLOC(len+1);
+			if (NULL == gConfigValues[5].value.str_value)
+			{
+				goto label_configvalues5_str_value;
+			}
 			memset(gConfigValues[5].value.str_value,0,len+1);
 			memcpy(gConfigValues[5].value.str_value,"Autelan AC",len);
 		}
@@ -260,6 +280,10 @@ CWBool CWConfigFileInitLib1() {
 			
 			len = strlen(ac_name);
 			gConfigValues[5].value.str_value = (char*)WID_MALLOC(len+1);
+			if (NULL == gConfigValues[5].value.str_value)
+			{
+				goto label_configvalues5_str_value;
+			}
 			memset(gConfigValues[5].value.str_value,0,len+1);
 			memcpy(gConfigValues[5].value.str_value,ac_name,len);
 		}
@@ -287,6 +311,10 @@ CWBool CWConfigFileInitLib1() {
 	//gConfigValues[8].value.str_value = NULL;	
 	len = strlen(ACPROTOCOL);
 	gConfigValues[8].value.str_value = (char*)WID_MALLOC(len+1);
+	if (NULL == gConfigValues[8].value.str_value)
+	{
+		goto label_configvalues8_str_value;
+	}
 	memset(gConfigValues[8].value.str_value,0,len+1);
 	memcpy(gConfigValues[8].value.str_value,ACPROTOCOL,len);
 
@@ -299,6 +327,18 @@ CWBool CWConfigFileInitLib1() {
 	gConfigValues[10].value.int_value = DEFAULT_LOG_SIZE;
 	
 	return CW_TRUE;
+label_configvalues8_str_value:
+	CW_FREE_OBJECT_WID(gConfigValues[5].value.str_value );
+label_configvalues5_str_value:
+	CW_FREE_OBJECT_WID(gConfigValues[4].value.str_value);
+label_wtpnum_char:
+	CW_FREE_OBJECT_WID(gConfigValues[1].value.str_value);
+lable_gconfigvalues_str_value:
+	if (gConfigValues[0].value.str_value)
+	CW_FREE_OBJECT_WID(gConfigValues[0].value.str_value);
+label_gconfigvalues:
+	CW_FREE_OBJECT_WID(gConfigValues);
+	return CW_FALSE;
 }
 
 CWBool CWParseConfigFile1() {
@@ -900,6 +940,10 @@ CWBool CWConfigFileDestroyLib() {
 	{
 		len = strlen(gConfigValues[0].value.str_value);
 		gACHWVersion_char = (char *)WID_MALLOC(len+1);
+		if (NULL == gACHWVersion_char)
+		{
+			return CW_FALSE;
+		}
 		memset(gACHWVersion_char,0,len+1);
 		memcpy(gACHWVersion_char,gConfigValues[0].value.str_value,len);
 	}
@@ -913,6 +957,11 @@ CWBool CWConfigFileDestroyLib() {
 	{
 		len = strlen(gConfigValues[1].value.str_value);
 		gACSWVersion_char = (char *)WID_MALLOC(len+1);
+		if (NULL == gACSWVersion_char)
+		{
+			CW_FREE_OBJECT_WID(gACHWVersion_char);
+			return CW_FALSE;
+		}
 		memset(gACSWVersion_char,0,len+1);
 		memcpy(gACSWVersion_char,gConfigValues[1].value.str_value,len);
 	}

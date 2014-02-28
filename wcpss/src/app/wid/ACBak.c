@@ -107,7 +107,13 @@ int Get_Tunnel_Interface_Info(char * ifname, struct ifi_info *ifi){
 		return -1;
 	}
 	sinptr = (struct sockaddr_in *) &ifr.ifr_addr;
-	ifi->ifi_addr = (struct sockaddr*)calloc(1, sizeof(struct sockaddr_in));
+	ifi->ifi_addr = (struct sockaddr*)WID_MALLOC(sizeof(struct sockaddr_in));
+	if (NULL == ifi->ifi_addr)
+	{
+		close(sockfd);
+		return -1;
+	}
+	memset(ifi->ifi_addr,0, sizeof(struct sockaddr_in));
 	memcpy(ifi->ifi_addr, sinptr, sizeof(struct sockaddr_in));
 //	memcpy(&(ifi->addr[0]),&(((struct sockaddr_in *) ifi->ifi_addr)->sin_addr.s_addr),sizeof(int));
 	ifi->addr[0] = ((struct sockaddr_in *) ifi->ifi_addr)->sin_addr.s_addr;
@@ -1191,6 +1197,11 @@ void *wid_master_thread()
 		CWThreadMutexLock(&MasterBak);
 		if(bak_list == NULL){
 			bsock = (struct bak_sock*)WID_MALLOC(sizeof(struct bak_sock));
+			if (NULL == bsock)
+			{
+			    close(new_sock);
+				return NULL;
+			}
 			memset(bsock,0,sizeof(struct bak_sock));
 			bsock->sock = new_sock;
 			//memcpy(&(bsock->ip),&(ac_addr.sin_addr.s_addr),sizeof(int));
@@ -1211,6 +1222,11 @@ void *wid_master_thread()
 			}
 			if(tmp == NULL){
 				bsock = (struct bak_sock*)WID_MALLOC(sizeof(struct bak_sock));
+				if (NULL == bsock)
+				{
+					close(tmp->sock);
+					return NULL;
+				}
 				memset(bsock,0,sizeof(struct bak_sock));
 				bsock->sock = new_sock;
 				//memcpy(&(bsock->ip),&(ac_addr.sin_addr.s_addr),sizeof(int));
@@ -1645,6 +1661,10 @@ void *wid_master_thread()
 			CWThreadMutexLock(&MasterBak);
 			if(bak_list == NULL){
 				bsock = (struct bak_sock*)WID_MALLOC(sizeof(struct bak_sock));
+				if (NULL == bsock)
+				{
+					return NULL;
+				}
 				memset(bsock,0,sizeof(struct bak_sock));
 				bsock->sock = wid_sock;
 				//memcpy(&(bsock->ip),&(ac_addr.sin_addr.s_addr),sizeof(int));

@@ -758,7 +758,12 @@ void Modify_WLAN_WTP_SETTING(int index){
 		memcpy(ifname, AC_WTP[index]->BindingIFName, IFI_NAME);
 	}
 	int ret = 0;
-	struct ifi_info *ifi = (struct ifi_info*)calloc(1, sizeof(struct ifi_info));
+	struct ifi_info *ifi = (struct ifi_info*)WID_MALLOC(sizeof(struct ifi_info));
+	if (NULL == ifi)
+	{
+		return ;
+	}
+	memset(ifi->ifi_name,0,sizeof(ifi->ifi_name));
 	strncpy(ifi->ifi_name,ifname,sizeof(ifi->ifi_name));
 	//struct CWMultiHomedInterface *p = NULL,*pbr = NULL; 
 	ret = Get_Interface_Info(ifname,ifi);

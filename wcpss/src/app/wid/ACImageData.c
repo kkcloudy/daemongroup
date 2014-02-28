@@ -490,6 +490,13 @@ CWBool ACEnterImageData(int WTPIndex, CWProtocolMessage *msgPtr)
 			}
 			//fengwenchao add 20110216   save ap report version  for ap updata successful or fail
 			AC_WTP[WTPIndex]->ApReportVer = WID_MALLOC(strlen(valuesPtr.ImageRequest->Ver)+1);
+			if (NULL == AC_WTP[WTPIndex]->ApReportVer)
+			{
+				CW_FREE_OBJECT_WID(valuesPtr.ImageRequest->model);
+				CW_FREE_OBJECT_WID(valuesPtr.ImageRequest->Ver);
+				CW_FREE_OBJECT_WID(valuesPtr.ImageRequest);
+				return  CW_FALSE;
+			}
 			memset(AC_WTP[WTPIndex]->ApReportVer,0,strlen(valuesPtr.ImageRequest->Ver)+1);
 			memcpy(AC_WTP[WTPIndex]->ApReportVer,valuesPtr.ImageRequest->Ver,strlen(valuesPtr.ImageRequest->Ver));
 			//AC_WTP[WTPIndex]->ApReportVerLen = 	valuesPtr.ImageRequest->VerLen;

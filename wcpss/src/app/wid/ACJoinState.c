@@ -51,34 +51,27 @@ CWBool ACEnterJoin(int WTPIndex, CWProtocolMessage *msgPtr)
 	CWList msgElemList = NULL;
 	int ret = 0;
 	wid_syslog_debug_debug(WID_WTPINFO,"######### WTP %d Enter Join State #########",WTPIndex);	
-	if(msgPtr == NULL) return CWErrorRaise(CW_ERROR_WRONG_ARG, NULL);
+	if(msgPtr == NULL) {
+		wid_syslog_err("wtp %d join msgPtr is NULL\n", WTPIndex);
+		return CWErrorRaise(CW_ERROR_WRONG_ARG, NULL);
+	}
 	
 	if(!(CWParseJoinRequestMessage(msgPtr->msg, msgPtr->offset, &seqNum, &joinRequest, WTPIndex))) {
-		return CW_FALSE;
-		// note: we can kill our thread in case of out-of-memory error to free some space/
-		// we can see this just calling CWErrorGetLastErrorCode()
-	}
-#if 0
-	if(*gcurrent_wtp_count[gWTPs[WTPIndex].oemoption] > *gmax_wtp_count[gWTPs[WTPIndex].oemoption])
-	{
-		printf("###can not access ap type %d access count over type count\n",gWTPs[WTPIndex].oemoption);
-		wid_syslog_debug_debug(WID_WTPINFO,"###can not access ap type %d access count over type count",gWTPs[WTPIndex].oemoption);	
+		wid_syslog_err("parse wtp %d jion request failed\n", WTPIndex);
 		return CW_FALSE;
 	}
-#endif
-	// cancel waitJoin timer
+
 	if(!CWTimerCancel(&(gWTPs[WTPIndex].currentTimer),1))
 	{
 		return CW_FALSE;
 	}
+	
 	if((find_in_wtp_list(WTPIndex) == CW_TRUE))
 	{
-//		printf("CWTimerCancel\n");	
+		wid_syslog_debug_debug(WID_DEFAULT, "find wtp %d update info in updatelist\n", WTPIndex);
 		if(!CWTimerCancel(&(gWTPs[WTPIndex].updateTimer),1))
 		{
-			printf("CWTimerCancel error\n");
 			wid_syslog_info("CWTimerCancel error\n");
-			
 			return CW_FALSE;
 		}
 	}
@@ -110,21 +103,21 @@ CWBool ACEnterJoin(int WTPIndex, CWProtocolMessage *msgPtr)
 	CWMsgElemData *auxData;
 	if(ACIpv4List) {
 		CW_CREATE_OBJECT_ERR_WID(auxData, CWMsgElemData, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
-                auxData->type = CW_MSG_ELEMENT_AC_IPV4_LIST_CW_TYPE;
+		auxData->type = CW_MSG_ELEMENT_AC_IPV4_LIST_CW_TYPE;
 		auxData->value = 0;
 		CWAddElementToList(&msgElemList,auxData);
 	}
 	if(ACIpv6List){
 		CW_CREATE_OBJECT_ERR_WID(auxData, CWMsgElemData, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
-                auxData->type = CW_MSG_ELEMENT_AC_IPV6_LIST_CW_TYPE;
-                auxData->value = 0;
-                CWAddElementToList(&msgElemList,auxData);
+        auxData->type = CW_MSG_ELEMENT_AC_IPV6_LIST_CW_TYPE;
+        auxData->value = 0;
+        CWAddElementToList(&msgElemList,auxData);
 	}
 	if(resultCode){
 		CW_CREATE_OBJECT_ERR_WID(auxData, CWMsgElemData, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
-                auxData->type =  CW_MSG_ELEMENT_RESULT_CODE_CW_TYPE;
-                auxData->value = resultCodeValue;
-                CWAddElementToList(&msgElemList,auxData);
+        auxData->type =  CW_MSG_ELEMENT_RESULT_CODE_CW_TYPE;
+        auxData->value = resultCodeValue;
+        CWAddElementToList(&msgElemList,auxData);
 	}
 // 	if(sessionID){
 // 		CW_CREATE_OBJECT_ERR(auxData, CWMsgElemData, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
@@ -171,6 +164,9 @@ CWBool ACEnterJoin(int WTPIndex, CWProtocolMessage *msgPtr)
 		{
 			AC_WTP[WTPIndex]->codever = (char*)(vendorPtr->vendorInfos)[i].codever;
 			len = (vendorPtr->vendorInfos)[i].length;
+		} else {
+			wid_syslog_debug_debug(WID_WTPINFO, "unsupported type %d for wtp %d\n", 
+				(vendorPtr->vendorInfos)[i].type, WTPIndex);
 		}
 	}
 
@@ -208,10 +204,7 @@ CWBool ACEnterJoin(int WTPIndex, CWProtocolMessage *msgPtr)
 				AC_WTP[WTPIndex]->sysver = NULL;
 				wid_syslog_info("WTP %d HD version %s something wrong\n",WTPIndex,sysver);
 			}
-		}
-
-		if((valPtr->vendorInfos.vendorInfos)[i].type == 1)//CW_WTP_SOFTWARE_VERSION = 1
-		{
+		} else if((valPtr->vendorInfos.vendorInfos)[i].type == 1) {
 			ret = wid_illegal_character_check((char *)(valPtr->vendorInfos.vendorInfos)[i].ver,(valPtr->vendorInfos.vendorInfos)[i].length, 0);
 			if(ret == 1){
 				AC_WTP[WTPIndex]->ver = (char *)(valPtr->vendorInfos.vendorInfos)[i].ver;
@@ -223,212 +216,290 @@ CWBool ACEnterJoin(int WTPIndex, CWProtocolMessage *msgPtr)
 				wid_syslog_info("WTP %d SW version %s something wrong\n",WTPIndex,str_ac_version);
 			}
 			break;
+		} else {
+			wid_syslog_debug_debug(WID_WTPINFO, "unsuported (valPtr->vendorInfos.vendorInfos)[%d].type=%d for wtp %d\n", 
+				i, (valPtr->vendorInfos.vendorInfos)[i].type, WTPIndex);
 		}
 	}
-
-	wid_syslog_debug_debug(WID_WTPINFO,"** start version match **\n");
+	
 	wid_syslog_debug_debug(WID_WTPINFO,"** wtp version:%s **\n",AC_WTP[WTPIndex]->ver);
 	if(AC_WTP[WTPIndex]->codever != NULL)
 	{
 		wid_syslog_debug_debug(WID_WTPINFO,"** wtp code version:%s **\n",AC_WTP[WTPIndex]->codever);
 	}
-	wid_syslog_debug_debug(WID_WTPINFO,"** wtp model:%s **\n",str_wtp_model);
 
-	//printf("ACEnterJoin\n");
+	//force upgrade mode
 	if((AC_WTP[WTPIndex]->updateversion != NULL)&&(AC_WTP[WTPIndex]->updatepath != NULL))
 	{
+		wid_syslog_debug_debug(WID_WTPINFO, "wtp_upgrade: updateversion=%s updatepath=%s\n", 
+			AC_WTP[WTPIndex]->updateversion, AC_WTP[WTPIndex]->updatepath);
+		
 		str_ac_version = AC_WTP[WTPIndex]->updateversion;
 
 		if(AC_WTP[WTPIndex]->codever == NULL){
-			if((strlen(AC_WTP[WTPIndex]->updateversion) == verlen)&&(strncasecmp(AC_WTP[WTPIndex]->ver,AC_WTP[WTPIndex]->updateversion,verlen) == 0))
-			{
+			if((strlen(AC_WTP[WTPIndex]->updateversion) == verlen)&&(strncasecmp(AC_WTP[WTPIndex]->ver,AC_WTP[WTPIndex]->updateversion,verlen) == 0)) {
 				bMatchVersion = CW_TRUE;
-			}		
-		}
-		else if((AC_WTP[WTPIndex]->codever != NULL)&&(strlen(AC_WTP[WTPIndex]->updateversion) == len)&&(strncasecmp(AC_WTP[WTPIndex]->codever,AC_WTP[WTPIndex]->updateversion,len) == 0))
-		{
-			str_ac_version = AC_WTP[WTPIndex]->ver;//zhanglei add for ap bug,cao
+				wid_syslog_debug_debug(WID_WTPINFO, "wtp_upgrade: force upgrade match\n");
+			} else {
+				wid_syslog_debug_debug(WID_WTPINFO, "wtp_upgrade: force upgrade not match\n");
+			}
+		} else if((AC_WTP[WTPIndex]->codever != NULL)&&(strlen(AC_WTP[WTPIndex]->updateversion) == len)&&(strncasecmp(AC_WTP[WTPIndex]->codever,AC_WTP[WTPIndex]->updateversion,len) == 0)) {
+			str_ac_version = AC_WTP[WTPIndex]->ver;
 			bMatchVersion = CW_TRUE;
-		}		
-	}
-	else
-	{
+			wid_syslog_debug_debug(WID_WTPINFO, "wtp_upgrade: force upgrade match brunch B\n");
+		} else {
+			wid_syslog_debug_debug(WID_WTPINFO, "wtp_upgrade: force upgrade not match brunch C\n");
+		}
+	} else {
+		//muilty models and versions auto upgrade and batchlly upgrade
 
+		//batchlly upgrade
 		if((find_in_wtp_list(WTPIndex) == CW_TRUE))
 		{
-			wid_syslog_debug_debug(WID_WTPINFO,"*** enter bacth upgrade ***\n");	//for test
+			//batchlly upgrade brunch
+			wid_syslog_debug_debug(WID_WTPINFO, "wtp_upgrade: batchlly upgrade for wtp %d\n", WTPIndex);
 			for(i=0;i<BATCH_UPGRADE_AP_NUM;i++){
 				CWConfigVersionInfo *update_node = gConfigVersionUpdateInfo[i];
-				if((update_node != NULL)&&(update_node->str_ap_model != NULL)&&(strcmp(update_node->str_ap_model,AC_WTP[WTPIndex]->WTPModel) == 0)){
+				wid_syslog_debug_debug(WID_WTPINFO, "wtp_upgrade: search model %s from gConfigVersionUpdateInfo[%d]\n", 
+					AC_WTP[WTPIndex]->WTPModel, i);
+				
+				if((update_node != NULL)&&(update_node->str_ap_model != NULL))
+					wid_syslog_debug_debug(WID_WTPINFO, "wtp_upgrade: update_node->str_ap_model=%s\n", update_node->str_ap_model);
+				else {
+					wid_syslog_debug_debug(WID_WTPINFO, "wtp_upgrade: update_node is NULL or update_node->str_ap_model is NULL\n");
+					continue;
+				}
+				
+				if(strcmp(update_node->str_ap_model,AC_WTP[WTPIndex]->WTPModel) == 0) {
 					while(update_node != NULL){
-						wid_syslog_debug_debug(WID_WTPINFO,"*** upgrade node is not null***\n");	//for test
-						wid_syslog_debug_debug(WID_WTPINFO,"** ap code: %s **\n",AC_WTP[WTPIndex]->APCode);	//for test
-						wid_syslog_debug_debug(WID_WTPINFO,"** upgrade node code: %s **\n",update_node->str_ap_code);	//for test
-						wid_syslog_debug_debug(WID_WTPINFO,"** upgrade node name: %s **\n",update_node->str_ap_version_name);	//for test
-						wid_syslog_debug_debug(WID_WTPINFO,"** upgrade node path: %s **\n",update_node->str_ap_version_path);	//for test
-						if((update_node->str_ap_code != NULL)&&(strcmp(update_node->str_ap_code,AC_WTP[WTPIndex]->APCode) == 0)){
-							wid_syslog_debug_debug(WID_WTPINFO,"*** code is same***\n");	//for test
+						
+						if (update_node->str_ap_code != NULL) {
+							wid_syslog_debug_debug(WID_WTPINFO, "wtp_upgrade: update_node->str_ap_code=%s AC_WTP[%d]->APCode=%s\n", 
+								update_node->str_ap_code, WTPIndex, AC_WTP[WTPIndex]->APCode);
+						} else {
+							wid_syslog_debug_debug(WID_WTPINFO, "wtp_upgrade: update_node->str_ap_code is NULL\n");
+							update_node = update_node->next;
+							continue;
+						}
+
+						if(strcmp(update_node->str_ap_code,AC_WTP[WTPIndex]->APCode) == 0){
+
+							wid_syslog_debug_debug(WID_WTPINFO, "wtp_upgrade: apcode match update_node->str_ap_version_name=%s AC_WTP[%d]->ver=%s\n", 
+								update_node->str_ap_version_name, WTPIndex, AC_WTP[WTPIndex]->ver);
+							
 							str_ac_version = update_node->str_ap_version_name;
-							//printf("ac update version:%s\n",str_ac_version);
+							
 							if(AC_WTP[WTPIndex]->codever == NULL){
 								if((strlen(update_node->str_ap_version_name) == verlen)&&(strncasecmp(AC_WTP[WTPIndex]->ver,update_node->str_ap_version_name,verlen) == 0))
 								{
+									wid_syslog_debug_debug(WID_WTPINFO, "wtp_upgrade: wtp %d match! bMatchVersion is TRUE.no need upgrade\n", WTPIndex);
 									bMatchVersion = CW_TRUE;
+								} else {
+									wid_syslog_debug_debug(WID_WTPINFO, "wtp_upgrade: not match for wtp %d, need upgrade\n", WTPIndex);
 								}
 							}
-							else if((AC_WTP[WTPIndex]->codever != NULL)&&(strlen(update_node->str_ap_version_name) == len)&&(strncasecmp(AC_WTP[WTPIndex]->codever,update_node->str_ap_version_name,len) == 0))
+							else if((strlen(update_node->str_ap_version_name) == len)&&(strncasecmp(AC_WTP[WTPIndex]->codever,update_node->str_ap_version_name,len) == 0))
 							{
-								str_ac_version = AC_WTP[WTPIndex]->ver;//zhanglei add for ap bug,cao
+								wid_syslog_debug_debug(WID_WTPINFO, "wtp_upgrade: str_ac_version=%s AC_WTP[%d]->codever=%s bMatchVersion is TRUE\n", 
+									AC_WTP[WTPIndex]->ver, WTPIndex, AC_WTP[WTPIndex]->codever);
+								str_ac_version = AC_WTP[WTPIndex]->ver;
 								bMatchVersion = CW_TRUE;
+							} else {
+								wid_syslog_debug_debug(WID_WTPINFO, "wtp_upgrade: update_node->str_ap_code=%s AC_WTP[%d]->APCode=%s, not match\n", 
+									update_node->str_ap_code, WTPIndex, AC_WTP[WTPIndex]->APCode);
 							}
 							result = 1;
 							break;
+						} else {
+							wid_syslog_debug_debug(WID_WTPINFO, "wtp_upgrade: update_node->str_ap_code=%s AC_WTP[%d]->APCode=%s\n", 
+								update_node->str_ap_code, WTPIndex, AC_WTP[WTPIndex]->APCode);	
 						}
 						update_node = update_node->next;
 					}
+
+					#if 0
+					if (result == 1) {
+						wid_syslog_debug_debug(WID_WTPINFO, "wtp_upgrade: gConfigVersionUpdateInfo search done\n");
+						break;
+					}
+					#endif
+					
 					if(update_node == NULL){
+						wid_syslog_debug_debug(WID_WTPINFO, "wtp_upgrade: str_ac_version for wtp %d is %s bMatchVersion is TRUE, no need to upgrade\n",
+							WTPIndex, AC_WTP[WTPIndex]->ver);
 						str_ac_version = AC_WTP[WTPIndex]->ver;
 						bMatchVersion = CW_TRUE;
+					} else {
+						wid_syslog_debug_debug(WID_WTPINFO, "wtp_upgrade: update_node is not NULL str_ac_version for wtp %d is %s bMatchVersion is %s\n",
+							WTPIndex, str_ac_version, bMatchVersion == CW_TRUE ? "CW_TRUE" : "CW_FALSE");
 					}
+					wid_syslog_debug_debug(WID_WTPINFO, "wtp_upgrade: search gConfigVersionUpdateInfo done i=%d\n", i);
 					break;
+				} else {
+					wid_syslog_debug_debug(WID_WTPINFO, "wtp_upgrade: %d update_node->str_ap_model=%s AC_WTP[%d]->WTPModel=%s\n", 
+						i, update_node->str_ap_model, WTPIndex, AC_WTP[WTPIndex]->WTPModel);
 				}
 			}
-		}
-		else
-		{
+		} else {
+			//auto upgrade brunch
 			int do_check = 0;
-			wid_syslog_debug_debug(WID_WTPINFO,"**** ap model is %s ****\n",AC_WTP[WTPIndex]->WTPModel);	//for test
-			
-//			CWThreadMutexLock(&(gAllThreadMutex));
+
 			pVersionNode = gConfigVersionInfo;
 			tmpnode = gConfigVerInfo;
 			
-			if(img_now == 0){
-				wid_syslog_debug_debug(WID_WTPINFO,"ap model match 111\n"); 	//for test
+			if(img_now == 0) {
+				wid_syslog_debug_debug(WID_WTPINFO, "wtp_upgrade: auto upgrade not start str_ac_version=%s bMatchVersion == CW_TRUE\n", 
+					AC_WTP[WTPIndex]->ver);
 				str_ac_version = AC_WTP[WTPIndex]->ver;
 				bMatchVersion = CW_TRUE;
-			}
-			else while(pVersionNode != NULL)
-			{
-				str_ac_version = AC_WTP[WTPIndex]->ver;
-				if(strcmp(pVersionNode->str_ap_model,AC_WTP[WTPIndex]->WTPModel) == 0){	
-					wid_syslog_debug_debug(WID_WTPINFO,"**** find model in wtpcompatible.xml ****\n");	//for test
+			} else {
+				wid_syslog_debug_debug(WID_WTPINFO, "wtp_upgrade: auto upgrade started, search gConfigVersionInfo for wtp %d\n", WTPIndex);
+
+				while(pVersionNode != NULL) {
+					str_ac_version = AC_WTP[WTPIndex]->ver;
+					if (pVersionNode->str_ap_model != NULL)
+						wid_syslog_debug_debug(WID_WTPINFO, "wtp_upgrade: pVersionNode->str_ap_model=%s AC_WTP[%d]->WTPModel=%s\n", 
+							pVersionNode->str_ap_model, WTPIndex, AC_WTP[WTPIndex]->WTPModel);
+					else {
+						wid_syslog_debug_debug(WID_WTPINFO, "wtp_upgrade: pVersionNode->str_ap_model is NULL\n");
+						pVersionNode = pVersionNode->next;
+						continue;
+					}
 					
-					/*use while here to match the right information*/
-					while(tmpnode != NULL){
-						if(strcmp(tmpnode->str_ap_model,AC_WTP[WTPIndex]->WTPModel) == 0){
-							wid_syslog_debug_debug(WID_WTPINFO,"**** find model in apimg.xml ****\n");	//for test
-							CWCodeInfo *codenode = tmpnode->code_info;
-							while(codenode != NULL){
-								wid_syslog_debug_debug(WID_WTPINFO,"**** match code operation ****\n");	//for test
-								if(strcmp(codenode->str_ap_version_code,AC_WTP[WTPIndex]->APCode) == 0){
-									do_check = 1;
-									str_ac_version = codenode->str_ap_version_name;
-									aclen = strlen(codenode->str_ap_version_name);
-									wid_syslog_debug_debug(WID_WTPINFO,"ac surport version:%s\n",str_ac_version);
-									wid_syslog_debug_debug(WID_WTPINFO,"** AC version name len:%d   WTP version name len:%d **\n",aclen,len);
-									
-									if((AC_WTP[WTPIndex]->codever == NULL)){						
-										if((strlen(codenode->str_ap_version_name) == verlen)&&(strncasecmp(AC_WTP[WTPIndex]->ver,codenode->str_ap_version_name,verlen) == 0))
-										{
-											wid_syslog_debug_debug(WID_WTPINFO,"ap model match 222\n"); 	//for test
-											bMatchVersion = CW_TRUE;
-											break;
-										}
-									}
-									else if((aclen == len)&&(AC_WTP[WTPIndex]->codever != NULL)&&(strncasecmp(AC_WTP[WTPIndex]->codever,codenode->str_ap_version_name,len) == 0))
-									{
-										wid_syslog_debug_debug(WID_WTPINFO,"ap model match 333\n"); 	//for test
-										bMatchVersion = CW_TRUE;
-										str_ac_version = AC_WTP[WTPIndex]->ver;//zhanglei add for ap bug,cao
-										break;
-									}
-									break;
-								}
-								codenode = codenode->next;
+					if(strcmp(pVersionNode->str_ap_model,AC_WTP[WTPIndex]->WTPModel) == 0){	
+
+						wid_syslog_debug_debug(WID_WTPINFO, "wtp_upgrade: match model for wtp %d \n", WTPIndex);
+							
+						while(tmpnode != NULL) {
+							if (tmpnode->str_ap_model != NULL)
+								wid_syslog_debug_debug(WID_WTPINFO, "wtp_upgrade: tmpnode->str_ap_model=%s AC_WTP[%d]->WTPModel=%s\n", 
+									tmpnode->str_ap_model, WTPIndex, AC_WTP[WTPIndex]->WTPModel);
+							else {
+								wid_syslog_debug_debug(WID_WTPINFO, "wtp_upgrade: tmpnode->str_ap_model is NULL\n");
+								tmpnode = tmpnode->next;
+								continue;
 							}
+
+							//model match
+							if(strcmp(tmpnode->str_ap_model,AC_WTP[WTPIndex]->WTPModel) == 0){
+								wid_syslog_debug_debug(WID_WTPINFO, "wtp_upgrade: match model for wtp %d\n", WTPIndex);
+								CWCodeInfo *codenode = tmpnode->code_info;
+								
+								while(codenode != NULL) {
+									
+									if (codenode->str_ap_version_code) 
+										wid_syslog_debug_debug(WID_WTPINFO, "wtp_upgrade: codenode->str_ap_version_code=%s AC_WTP[%d]->APCode=%s\n", 
+											codenode->str_ap_version_code, WTPIndex, AC_WTP[WTPIndex]->APCode);
+									else {
+										wid_syslog_debug_debug(WID_WTPINFO, "wtp_upgrade: codenode->str_ap_version_code is NULL\n");
+										codenode = codenode->next;
+										continue;
+									}
+
+									//code match
+									if(strcmp(codenode->str_ap_version_code,AC_WTP[WTPIndex]->APCode) == 0) {
+										do_check = 1;
+										str_ac_version = codenode->str_ap_version_name;
+										aclen = strlen(codenode->str_ap_version_name);
+										
+										wid_syslog_debug_debug(WID_WTPINFO, "wtp_upgrade: code match:aclen=%d len=%d\n", 
+											aclen, len);
+										
+										if((AC_WTP[WTPIndex]->codever == NULL)){
+											if((strlen(codenode->str_ap_version_name) == verlen)&&(strncasecmp(AC_WTP[WTPIndex]->ver,codenode->str_ap_version_name,verlen) == 0))
+											{
+												wid_syslog_debug_debug(WID_WTPINFO, "wtp_upgrade: match AC_WTP[WTPIndex]->ver=%s, codenode->str_ap_version_name=%s, match\n", 
+													AC_WTP[WTPIndex]->ver, codenode->str_ap_version_name);
+												bMatchVersion = CW_TRUE;
+												break;
+											} else {
+												wid_syslog_debug_debug(WID_WTPINFO, "wtp_upgrade: not match AC_WTP[WTPIndex]->ver=%s, codenode->str_ap_version_name=%s, not match\n", 
+													AC_WTP[WTPIndex]->ver, codenode->str_ap_version_name);
+											}
+										} else if((aclen == len)&&(strncasecmp(AC_WTP[WTPIndex]->codever,codenode->str_ap_version_name,len) == 0)) {
+											bMatchVersion = CW_TRUE;
+											str_ac_version = AC_WTP[WTPIndex]->ver;
+											wid_syslog_debug_debug(WID_WTPINFO, "wtp_upgrade: B2 wtp %d str_ac_version=%s match\n", 
+												WTPIndex, str_ac_version);
+											break;
+										} else {
+											wid_syslog_debug_debug(WID_WTPINFO, "wtp_upgrade: match is %s\n", 
+												bMatchVersion == CW_TRUE ? "CW_TRUE" : "CW_FALSE");
+										}
+										break;
+									} else {
+										wid_syslog_debug_debug(WID_WTPINFO, "wtp_upgrade: mismatch is %s\n", 
+												bMatchVersion == CW_TRUE ? "CW_TRUE" : "CW_FALSE");
+									}
+									codenode = codenode->next;
+								}
+							}
+							
+							if(do_check == 1)
+								break;
+							tmpnode = tmpnode->next;
 						}
-						if(do_check == 1)
-							break;
-						tmpnode = tmpnode->next;
+						
+						if(do_check == 0){
+							bMatchVersion = CW_TRUE;
+							str_ac_version = AC_WTP[WTPIndex]->ver; 		
+							wid_syslog_debug_debug(WID_WTPINFO, "wtp_upgrade: A wtp %d str_ac_version=%s bMatchVersion == CW_TRUE\n", WTPIndex, str_ac_version);
+						} else {
+							wid_syslog_debug_debug(WID_WTPINFO, "wtp_upgrade: wtp %d bMatchVersion=%s\n", 
+								WTPIndex, bMatchVersion == CW_TRUE ? "CW_TRUE" : "CW_FALSE");
+						}
+						break;
+					} else {
+						wid_syslog_debug_debug(WID_WTPINFO, "wtp_upgrade: pVersionNode->str_ap_model=%s AC_WTP[%d]->WTPModel=%s not match\n", 
+							pVersionNode->str_ap_model, WTPIndex, AC_WTP[WTPIndex]->WTPModel);
 					}
-					if(do_check == 0){
-						bMatchVersion = CW_TRUE;
-						str_ac_version = AC_WTP[WTPIndex]->ver; 		
-					}
-					break;
+					pVersionNode = pVersionNode->next;
 				}
-				pVersionNode = pVersionNode->next;
+				
+				if (pVersionNode) {
+					wid_syslog_debug_debug(WID_WTPINFO, "wtp_upgrade: search gConfigVersionInfo for wtp %d done and found the match ap model\n", 
+						WTPIndex);
+				} else {
+					wid_syslog_debug_debug(WID_WTPINFO, "wtp_upgrade: search gConfigVersionInfo for wtp %d done and not found the match ap model\n", 
+						WTPIndex);
+				}
 			}
+			
 			if (do_check == 0){
 				bMatchVersion = CW_TRUE;
-				str_ac_version = AC_WTP[WTPIndex]->ver; 		
+				str_ac_version = AC_WTP[WTPIndex]->ver;
+				wid_syslog_debug_debug(WID_WTPINFO, "wtp_upgrade: B wtp %d str_ac_version=%s bMatchVersion == CW_TRUE\n", WTPIndex, str_ac_version);
+			} else {
+				wid_syslog_debug_debug(WID_WTPINFO, "wtp_upgrade: B do_check==1 for wtp %d\n", WTPIndex);
 			}
-			//			CWThreadMutexUnlock(&(gAllThreadMutex));		
-#if 0
-			    if(pVersionNode->str_ap_code != NULL)//book add, 2011-11-15
-			    {
-				aclenmodel = strlen(pVersionNode->str_ap_code);
-				wid_syslog_debug_debug(WID_WTPINFO,"** AC surport model:%s **\n",pVersionNode->str_ap_code);
-				wid_syslog_debug_debug(WID_WTPINFO,"** AC version model len:%d WTP model len:%d **\n",aclenmodel,lenmodel);
-				
-				if((((aclenmodel == lenmodel)&&(strncasecmp((char*)str_wtp_model,pVersionNode->str_ap_code,lenmodel) == 0))||
-					((strlen(pVersionNode->str_ap_model) == lenmodel)&&(strncasecmp((char*)str_wtp_model,pVersionNode->str_ap_model,lenmodel) == 0)))
-					//&&((strlen(pVersionNode->str_ap_model) == strlen(AC_WTP[WTPIndex]->WTPModel))&&(strncasecmp(AC_WTP[WTPIndex]->WTPModel,pVersionNode->str_ap_model,strlen(AC_WTP[WTPIndex]->WTPModel)) == 0))
-					)
-				{	
-					do_check = 1;
-					str_ac_version = pVersionNode->str_ap_version_name;
-					wid_syslog_debug_debug(WID_WTPINFO,"ac surport version:%s\n",str_ac_version);
-					aclen = strlen(pVersionNode->str_ap_version_name);
-					wid_syslog_debug_debug(WID_WTPINFO,"** AC surport version:%s **\n",pVersionNode->str_ap_version_name);
-					wid_syslog_debug_debug(WID_WTPINFO,"** AC version name len:%d WTP version name len:%d **\n",aclen,len);
-					
-					if((AC_WTP[WTPIndex]->codever == NULL)&&(img_now == 0)){
-						str_ac_version = AC_WTP[WTPIndex]->ver;
-						bMatchVersion = CW_TRUE;
-						break;						
-					}else if((AC_WTP[WTPIndex]->codever == NULL)){						
-						if((strlen(pVersionNode->str_ap_version_name) == verlen)&&(strncasecmp(AC_WTP[WTPIndex]->ver,pVersionNode->str_ap_version_name,verlen) == 0))
-						{
-							bMatchVersion = CW_TRUE;
-							break;
-						}
-					}
-					else if((img_now == 0)||((aclen == len)&&(AC_WTP[WTPIndex]->codever != NULL)&&(strncasecmp(AC_WTP[WTPIndex]->codever,pVersionNode->str_ap_version_name,len) == 0)))
-					{
-						bMatchVersion = CW_TRUE;
-						str_ac_version = AC_WTP[WTPIndex]->ver;//zhanglei add for ap bug,cao
-						break;
-					}
-				}
-    			}
-#endif
 		}
 	}
 
-	//inter_image_date:
-
-		
-	//printf("##### version = %s######\n",str_ac_version);	
+	//response for join request
 	if(bMatchVersion){
+		wid_syslog_debug_debug(WID_WTPINFO, "wtp_upgrade: A wtp %d str_ac_version=%s, no need to upgrade\n", 
+			WTPIndex, str_ac_version);
 		if(!(CWAssembleJoinResponse(&(gWTPs[WTPIndex].messages), &(gWTPs[WTPIndex].messagesCount), gWTPs[WTPIndex].pathMTU, seqNum, msgElemList,str_ac_version))){ // random session ID
 			CWDeleteList(&msgElemList, CWProtocolDestroyMsgElemData);
+			wid_syslog_err("wtp_upgrade: exception return %s %d\n", __FUNCTION__, __LINE__);
 			return CW_FALSE;
 		}
 	}else{
 		char ac_version[DEFAULT_LEN] = {" "};
 		memset(ac_version,0,DEFAULT_LEN);
-		sprintf(ac_version,"%s1",str_ac_version);
-		wid_syslog_info("WTP[%d] after:%s",WTPIndex,ac_version);
+		sprintf(ac_version,"%s",str_ac_version);
+		wid_syslog_debug_debug(WID_WTPINFO, "wtp_upgrade: B wtp %d ac_version=%s, need to upgrade\n", 
+			WTPIndex, ac_version);
 		if(!(CWAssembleJoinResponse(&(gWTPs[WTPIndex].messages), &(gWTPs[WTPIndex].messagesCount), gWTPs[WTPIndex].pathMTU, seqNum, msgElemList,ac_version))){ // random session ID
 			CWDeleteList(&msgElemList, CWProtocolDestroyMsgElemData);
+			wid_syslog_err("wtp_upgrade: exception return %s %d\n", __FUNCTION__, __LINE__);
 			return CW_FALSE;
 		}
 	}
 	CWDeleteList(&msgElemList, CWProtocolDestroyMsgElemData);
 	
 	if(!CWACSendFragments(WTPIndex)) {
+		wid_syslog_err("wtp_upgrade: exception return %s %d\n", __FUNCTION__, __LINE__);
 		return CW_FALSE;
  	}
 	for(i = 0; i < gWTPs[WTPIndex].messagesCount; i++) {
@@ -437,11 +508,14 @@ CWBool ACEnterJoin(int WTPIndex, CWProtocolMessage *msgPtr)
 	
 	CW_FREE_OBJECT_WID(gWTPs[WTPIndex].messages);
 	if(!CWErr(CWTimerRequest(CW_JOIN_INTERVAL_DEFAULT, &(gWTPs[WTPIndex].thread), &(gWTPs[WTPIndex].currentTimer), CW_CRITICAL_TIMER_EXPIRED_SIGNAL,WTPIndex))) { // start Change State Pending timer
+		wid_syslog_err("wtp_upgrade: quit wtp %d %s %d\n", WTPIndex, __FUNCTION__, __LINE__);
 		_CWCloseThread(WTPIndex);
 	}
 
 	if(bMatchVersion)
 	{
+		wid_syslog_debug_debug(WID_WTPINFO, "wtp_upgrade: no need to upgrade for wtp %d,enter into configure state\n", 
+			WTPIndex);
 		gWTPs[WTPIndex].currentState = CW_ENTER_CONFIGURE;	
 		AC_WTP[WTPIndex]->WTPStat = 3;
 	}
@@ -452,18 +526,24 @@ CWBool ACEnterJoin(int WTPIndex, CWProtocolMessage *msgPtr)
 		{
 			if(updatewtplist->count >= gupdateCountOneTime)
 			{
+				wid_syslog_debug_debug(WID_WTPINFO, "wtp_upgrade: wtp %d need to upgrade,but updatewtplist->count=%d is not lower than gupdateCountOneTime=%d,so enter into quite state\n", 
+					WTPIndex, updatewtplist->count, gupdateCountOneTime);
 				gWTPs[WTPIndex].currentState = CW_QUIT; 
 				AC_WTP[WTPIndex]->WTPStat = 7;	
 				_CWCloseThread(WTPIndex);
 			}
 			else
 			{
+				wid_syslog_debug_debug(WID_WTPINFO, "wtp_upgrade: A wtp %d need to upgrade enter into image data state \n", 
+					WTPIndex);
 				gWTPs[WTPIndex].currentState = CW_ENTER_IMAGE_DATA; 
 				AC_WTP[WTPIndex]->WTPStat = 8;
 			}
 		}
 		else
 		{
+			wid_syslog_debug_debug(WID_WTPINFO, "wtp_upgrade: B wtp %d need to upgrade enter into image data state \n", 
+					WTPIndex);
 			gWTPs[WTPIndex].currentState = CW_ENTER_IMAGE_DATA; 
 			AC_WTP[WTPIndex]->WTPStat = 8;
 		}

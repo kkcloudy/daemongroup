@@ -42,9 +42,16 @@ FILE *gCWConfigFile = NULL;
 CWConfigValue *gConfigValues;
 int gConfigValuesCount;
 int gModelCount;
+//for auto upgrade
 CWConfigVersionInfo *gConfigVersionInfo;
-struct n_rate_table g11nRateTable[NRATE_TABLE_LEN];  //book add, 2011-10-20
+CWConfigVersionInfo_new *gConfigVerInfo = NULL;
+
+struct n_rate_table g11nRateTable[NRATE_TABLE_LEN];
+
+//for batchlly upgrade
 CWConfigVersionInfo *gConfigVersionUpdateInfo[BATCH_UPGRADE_AP_NUM];
+
+
 CWOUIInfo                 *gBlackOuiInfoList = NULL;
 CWOUIInfo                 *gWhiteOuiInfoList = NULL;
 int                        gblackOuiNum = 0;
@@ -54,7 +61,7 @@ unsigned char gupdateCountOneTime = 5;
 unsigned char gupdateControl = 0;
 
 int ApimgModelCount;
-CWConfigVersionInfo_new *gConfigVerInfo = NULL;
+
 
 // replacement for std fgets which seems to dislike windows return character
 char *CWFgets(char *buf, int bufSize, FILE *f) {

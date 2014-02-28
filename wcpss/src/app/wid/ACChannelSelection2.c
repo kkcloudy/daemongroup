@@ -291,7 +291,7 @@ CW_THREAD_RETURN_TYPE CWDynamicChannelSelection2(void * arg)
 {
 	int ret;
 	int i;	
-	int num = WTP_NUM;
+	/*int num = WTP_NUM;*/
 	WTP_RRM_INFO **WTP;
 	//gCOUNTRYCODE = 2;
 	WTP = WID_MALLOC(WTP_NUM*sizeof(WTP_RRM_INFO *));
@@ -309,12 +309,16 @@ CW_THREAD_RETURN_TYPE CWDynamicChannelSelection2(void * arg)
 		CWWaitThreadCondition(&gACChannelWait2, &gACChannelMutex2);
 		CWThreadMutexUnlock(&gACChannelMutex2);
 		//CWThreadMutexLock(&(gACChannelMutex));		
-		if(num < WTP_NUM){
+		/*if(num < WTP_NUM){
 			WTP = realloc(WTP,WTP_NUM*(sizeof(WTP_RRM_INFO *)));
+			if (NULL == WTP)
+			{
+				return NULL;
+			}
 			for(i=num;i<WTP_NUM;i++)
 				WTP[i] = NULL;
 			num = WTP_NUM;
-		}
+		}*//* 无效代码，不会执行*/
 		//printf("2\n");
 		if(channel_state){
 			gCOUNTRYCODE = 2;

@@ -191,12 +191,11 @@ void WID_WLAN_CONFIG_SAVE(unsigned int WTPIndex,unsigned int local_radio)
 								/*xm addd 09.5.13*/
 								if((AC_WLAN[wlan_id->wlanid]!=NULL)&&(AC_WLAN[wlan_id->wlanid]->balance_switch==1)){
 
-									char *command=NULL;
-									command = (char *)WID_MALLOC(sizeof(char)*50);
+									char command[50];
 									memset(command,0,50);
 									strncpy(command,"echo 1 > /proc/sys/dev/wifi0/traffic_balance",44);
 									set_balance_probe_extension_command(WTPIndex,command);
-									WID_FREE(command);
+									
 								}
 								//wds state 
 								if((check_bssid_func(AC_WLAN[k]->S_WTP_BSS_List[WTPIndex][local_radio]))
@@ -213,6 +212,7 @@ void WID_WLAN_CONFIG_SAVE(unsigned int WTPIndex,unsigned int local_radio)
 									elem2 = (struct msgqlist*)WID_MALLOC(sizeof(struct msgqlist));
 									if(elem2 == NULL){
 										perror("malloc");
+										CW_FREE_OBJECT_WID(elem);
 										return;
 									}
 									memset((char*)&(elem2->mqinfo), 0, sizeof(msgqdetail));
@@ -338,6 +338,7 @@ void WID_WLAN_CONFIG_SAVE(unsigned int WTPIndex,unsigned int local_radio)
 								if(elem3 == NULL){			
 									wid_syslog_crit("%s malloc %s",__func__,strerror(errno));
 									perror("malloc");
+									CW_FREE_OBJECT_WID(elem);
 									return ;
 								}
 								

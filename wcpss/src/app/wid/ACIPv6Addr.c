@@ -436,6 +436,10 @@ struct tag_ipv6_addr_list * get_ipv6_addr_list(char * ifname)
 	i = addr.addr_cnt;
 
 	ipv6list = (struct tag_ipv6_addr_list *)WID_MALLOC(sizeof(struct tag_ipv6_addr_list));
+	if (NULL == ipv6list)
+	{
+		goto out;
+	}
 	ipv6list->ifindex = addr.ifindex;
 	ipv6list->ipv6list = NULL;
 	ipv6list->ipv6num = 0;
@@ -449,6 +453,7 @@ struct tag_ipv6_addr_list * get_ipv6_addr_list(char * ifname)
 			struct tag_ipv6_addr *ipv6addr = (struct tag_ipv6_addr *)WID_MALLOC(sizeof(struct tag_ipv6_addr));
 			if(ipv6addr == NULL)
 			{
+				CW_FREE_OBJECT_WID(ipv6list);
 				 goto out;
 			}
 			ipv6addr->next = NULL;	

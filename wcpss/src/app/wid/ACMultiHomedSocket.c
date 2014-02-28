@@ -555,6 +555,11 @@ CWBool CWNetworkInitSocketServerMultiHomed(CWMultiHomedSocket *sockPtr, int port
 			
 			
 			inf = (struct CWMultiHomedInterface *)WID_MALLOC(sizeof(struct CWMultiHomedInterface));
+			if (NULL == inf)
+			{
+				wid_syslog_err("func %s,line %d,malloc fail\n",__func__,__LINE__);
+				continue;				
+			}
 			
 	//		inf->wlaninfo = (struct wlan_inf*)malloc(sizeof(struct wlan_inf));
 			

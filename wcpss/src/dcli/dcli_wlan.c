@@ -4,6 +4,8 @@
 #include "vtysh/vtysh.h"
 #include <dbus/dbus.h>
 
+#include "config/wireless_config.h"
+
 #include "command.h"
 
 #include "dcli_main.h"
@@ -9750,6 +9752,154 @@ DEFUN(set_wlan_tunnel_mode_enable_cmd_func,
 	return CMD_SUCCESS;
 }
 
+#ifdef __ASD_STA_ACL
+/* caojia add for sta acl */
+DEFUN(set_wlan_sta_default_acl_cmd_func,
+		set_wlan_sta_default_acl_cmd,
+		"set wlan sta default acl <0-2048>",
+		"Config wlan\n"
+		"Wlan\n"
+		"Station\n"
+		"Default ACL policy on this Wlan\n"
+		"ACL policy on this Wlan\n"
+		"STA ACL policy ID <0-2048>\n"		
+	 )
+{	
+	DBusConnection *dcli_dbus_connection = NULL;
+	int localid = 1;
+	int slot_id = HostSlotId;
+	unsigned int index = 0;
+	unsigned int ret = ASD_DBUS_SUCCESS;
+	unsigned int acl_id = 0;
+	unsigned char WlanID;
+	
+    acl_id = strtoul(argv[0], NULL, 10);
+	if (acl_id < 0 || acl_id > 2048) {
+		vty_out(vty, "ACL ID [%d] out of range <0-2048>\n", acl_id);
+		return CMD_SUCCESS;
+	}
+
+	if(vty->node == WLAN_NODE){
+		index = 0;
+		WlanID = (int)vty->index;	
+	}else if(vty->node == HANSI_WLAN_NODE){
+		index = vty->index;			
+		WlanID = (int)vty->index_sub;	
+		localid = vty->local;   //fengwenchao add 20110507
+		slot_id = vty->slotindex; //fengwenchao add 20110507
+	}
+	/*fengwenchao add 20110507*/
+	else if (vty->node == LOCAL_HANSI_WLAN_NODE)
+	{
+		index = vty->index;
+		WlanID = (int)vty->index_sub;	
+		localid = vty->local;
+		slot_id = vty->slotindex;
+	}
+	ReInitDbusConnection(&dcli_dbus_connection,slot_id,distributFag);
+
+	ret = dcli_wid_set_wlan_sta_default_acl(dcli_dbus_connection, index, localid, WlanID, acl_id);
+	if (WLAN_ID_NOT_EXIST == ret) {
+		vty_out(vty, "<error> wlan[%d] not exist.\n", WlanID);
+		return CMD_WARNING;
+	}
+	else if (WLAN_BE_ENABLE == ret) {
+		vty_out(vty, "<error> wlan[%d] is enable,you should disable it first\n", WlanID);
+		return CMD_WARNING;
+	}
+	else if (WID_DBUS_SUCCESS != ret)
+	{
+		vty_out(vty,"<error> set wlan sta default acl failed %d.\n", ret);
+		return CMD_WARNING;
+	}
+	
+	ret = dcli_asd_set_wlan_sta_default_acl(dcli_dbus_connection, index, localid, WlanID, acl_id);
+	if (ASD_WLAN_NOT_EXIST == ret) {
+		vty_out(vty, "<error> wlan[%d] not exist.\n", WlanID);
+	}
+	else if (ASD_SECURITY_WLAN_SHOULD_BE_DISABLE == ret) {
+		vty_out(vty, "<error> wlan[%d] is enable,you should disable it first\n", WlanID);
+	}
+	else if (ASD_DBUS_SUCCESS != ret)
+	{
+		vty_out(vty,"<error> set wlan sta default acl failed %d.\n", ret);
+		return CMD_WARNING;
+	}
+
+	return CMD_SUCCESS;
+}
+
+/* caojia add for sta acl */
+DEFUN(show_wlan_sta_default_acl_cmd_func,
+	show_wlan_sta_default_acl_cmd,
+	"show wlan sta default acl",
+	CONFIG_STR
+	"Wlan\n"
+	"Station\n"
+	"Default ACL policy on this Wlan\n"
+	"Station default ACL policy on this Wlan\n")
+{
+	DBusConnection *dcli_dbus_connection = NULL;
+	int localid = 1;
+	int slot_id = HostSlotId;
+	unsigned int index = 0;
+	unsigned int ret = ASD_DBUS_SUCCESS;
+	unsigned int AclID = 0;
+	unsigned int WidAclID = 0;
+	unsigned char WlanID;
+
+	if(vty->node == WLAN_NODE){
+		index = 0;
+		WlanID = (int)vty->index;	
+	}else if(vty->node == HANSI_WLAN_NODE){
+		index = vty->index;			
+		WlanID = (int)vty->index_sub;	
+		localid = vty->local;   //fengwenchao add 20110507
+		slot_id = vty->slotindex; //fengwenchao add 20110507
+	}
+	/*fengwenchao add 20110507*/
+	else if (vty->node == LOCAL_HANSI_WLAN_NODE)
+	{
+		index = vty->index;
+		WlanID = (int)vty->index_sub;	
+		localid = vty->local;
+		slot_id = vty->slotindex;
+	}
+	ReInitDbusConnection(&dcli_dbus_connection,slot_id,distributFag);
+
+	ret = dcli_wid_show_wlan_sta_default_acl(dcli_dbus_connection, index, localid, WlanID, &WidAclID);
+
+	if (WID_DBUS_SUCCESS == ret)
+	{
+		vty_out(vty," WLAN STA DEFAULT ACL policy ID (WID): %-4d\n", WidAclID);
+	}
+	else if (WLAN_ID_NOT_EXIST == ret) {
+		vty_out(vty, "<error> wlan[%d] not exist.\n", WlanID);
+	}
+	else
+	{
+		vty_out(vty,"<error> show wlan sta default acl failed %d.\n", ret);
+	}
+	
+	ret = dcli_asd_show_wlan_sta_default_acl(dcli_dbus_connection, index, localid, WlanID, &AclID);
+
+	if (ASD_DBUS_SUCCESS == ret)
+	{
+		vty_out(vty," WLAN STA DEFAULT ACL policy ID (ASD): %-4d\n", AclID);
+	}
+	else if (ASD_WLAN_NOT_EXIST == ret) {
+		vty_out(vty, "<error> wlan[%d] not exist.\n", WlanID);
+	}
+	else
+	{
+		vty_out(vty,"<error> show wlan sta default acl failed %d.\n", ret);
+	}
+	
+	return CMD_SUCCESS;
+	
+}
+#endif
+
 int dcli_wlan_show_running_config_start(struct vty*vty) {	
 	char *showStr = NULL,*cursor = NULL,ch = 0,tmpBuf[SHOWRUN_PERLINE_SIZE] = {0};
 	DBusMessage *query, *reply;
@@ -10192,6 +10342,13 @@ void dcli_wlan_init(void) {
 	install_element(HANSI_WLAN_NODE,&set_wlan_bss_multi_user_optimize_cmd);		
 	install_element(HANSI_WLAN_NODE,&set_wlan_tunnel_mode_enable_cmd);
 	install_element(HANSI_WLAN_NODE,&set_wlan_tunnel_mode_enable_add_to_ebr_cmd);
+
+#ifdef __ASD_STA_ACL
+	/* caojia add for sta acl function */
+	install_element(HANSI_WLAN_NODE, &set_wlan_sta_default_acl_cmd);
+	install_element(HANSI_WLAN_NODE, &show_wlan_sta_default_acl_cmd);
+#endif
+
 	
 /*fengwenchao add 20110507*/
 /****************************************LOCAL_HANSI_NODE**********************************/

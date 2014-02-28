@@ -159,7 +159,12 @@ CWBool ACEnterDataCheck (int WTPIndex, CWProtocolMessage *msgPtr)
 	if(AC_WTP[WTPIndex]->add_time == NULL)
 	{
 		AC_WTP[WTPIndex]->add_time = (time_t *)WID_MALLOC(sizeof(time_t));
-		time(AC_WTP[WTPIndex]->add_time);
+		if (NULL == AC_WTP[WTPIndex]->add_time)
+		{
+			wid_syslog_err("data check status add ap run time malloc fail\n");
+		}
+		else
+			time(AC_WTP[WTPIndex]->add_time);
 		//printf("%s\n",ctime(AC_WTP[WTPIndex]->add_time));
 	}
 	else

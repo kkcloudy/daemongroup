@@ -1023,4 +1023,8 @@ char WID_DBUS_WLAN_METHOD_TUNNEL_NODE_SETTING[PATH_LEN] ="wlan_tunnel_mode_setti
 char WID_DBUS_WLAN_METHOD_TUNNEL_NODE_SETTING_AND_ADD_TO_EBR[PATH_LEN]="wlan_tunnel_mode_setting_and_add_to_ebr";
 char WID_DBUS_CONF_METHOD_IS_SECONDARY_SHOW[PATH_LEN]	= "show_is_secondary"; /*chenjun12.23*/
 char WID_DBUS_CONF_METHOD_SET_IS_SECONDARY[PATH_LEN] = "set_is_secondary";/*chenjun12.23*/
+
+/* caojia add for sta acl */
+char WID_DBUS_STA_METHOD_SET_WLAN_STA_DEFAULT_ACL[PATH_LEN] = "set_wlan_sta_default_acl";
+char WID_DBUS_STA_METHOD_SHOW_WLAN_STA_DEFAULT_ACL[PATH_LEN] = "show_wlan_sta_default_acl";
 #endif

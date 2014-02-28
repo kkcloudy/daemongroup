@@ -133,12 +133,20 @@ struct wtp_access_info * ap_add(WID_ACCESS *AC, struct sockaddr_in * sa, CWWTPVe
 			if((valPtr->vendorInfos)[i].type == CW_WTP_MODEL_NUMBER){
 				WID_FREE(wtp->apcode);				
 				wtp->apcode= ( char *)WID_MALLOC((valPtr->vendorInfos)[i].length + 1);	
+				if (!(wtp->apcode))
+				{
+					return NULL;
+				}
 				memset(wtp->apcode,0,(valPtr->vendorInfos)[i].length + 1);
 				memcpy(wtp->apcode, (valPtr->vendorInfos)[i].model, (valPtr->vendorInfos)[i].length);
 			}
 			else if((valPtr->vendorInfos)[i].type == CW_WTP_SERIAL_NUMBER){
 				WID_FREE(wtp->sn);
 				wtp->sn = ( char *)WID_MALLOC((valPtr->vendorInfos)[i].length + 1);
+				if (!(wtp->sn))
+				{
+					return NULL;
+				}
 				memset(wtp->sn,0,(valPtr->vendorInfos)[i].length + 1);
 				if(wid_illegal_character_check((char*)(valPtr->vendorInfos)[i].SN,(valPtr->vendorInfos)[i].length,1) > 0){
 					memcpy(wtp->sn, (valPtr->vendorInfos)[i].SN, (valPtr->vendorInfos)[i].length);
@@ -152,6 +160,10 @@ struct wtp_access_info * ap_add(WID_ACCESS *AC, struct sockaddr_in * sa, CWWTPVe
 			else if((valPtr->vendorInfos)[i].type == CW_WTP_REAL_MODEL_NUMBER){ 
 				WID_FREE(wtp->model);
 				wtp->model= ( char *)WID_MALLOC((valPtr->vendorInfos)[i].length + 1);
+				if (!(wtp->model))
+				{
+					return NULL;
+				}
 				memset(wtp->model,0,(valPtr->vendorInfos)[i].length + 1);
 				memcpy(wtp->model, (valPtr->vendorInfos)[i].Rmodel, (valPtr->vendorInfos)[i].length);			
 			}
@@ -159,6 +171,10 @@ struct wtp_access_info * ap_add(WID_ACCESS *AC, struct sockaddr_in * sa, CWWTPVe
 			{
 				WID_FREE(wtp->codever);
 				wtp->codever = ( char *)WID_MALLOC((valPtr->vendorInfos)[i].length + 1);
+				if (!(wtp->codever))
+				{
+					return NULL;
+				}
 				memset(wtp->codever,0,(valPtr->vendorInfos)[i].length + 1);
 				if(wid_illegal_character_check((char*)(valPtr->vendorInfos)[i].codever,(valPtr->vendorInfos)[i].length,1) > 0){
 					memcpy(wtp->codever, (valPtr->vendorInfos)[i].codever, (valPtr->vendorInfos)[i].length);	
@@ -174,6 +190,10 @@ struct wtp_access_info * ap_add(WID_ACCESS *AC, struct sockaddr_in * sa, CWWTPVe
 			if((valPtr1->vendorInfos.vendorInfos)[i].type == CW_WTP_SOFTWARE_VERSION){
 				WID_FREE(wtp->version);
 				wtp->version = (char *)WID_MALLOC((valPtr1->vendorInfos.vendorInfos)[i].length+1);
+				if (!(wtp->version))
+				{
+					return NULL;
+				}
 				memset(wtp->version, 0,(valPtr1->vendorInfos.vendorInfos)[i].length+1);
 				memcpy(wtp->version, (valPtr1->vendorInfos.vendorInfos)[i].ver, (valPtr1->vendorInfos.vendorInfos)[i].length);
 			}
@@ -188,34 +208,70 @@ struct wtp_access_info * ap_add(WID_ACCESS *AC, struct sockaddr_in * sa, CWWTPVe
 	
 	wtp = WID_MALLOC(sizeof(struct wtp_access_info));
 	if (wtp == NULL) {
-		return NULL;
+		goto label1;
 	}
 	memset(wtp, 0, sizeof(struct wtp_access_info));	
 	wtp->WTPMAC = (unsigned char *)WID_MALLOC(MAC_LEN+1);
+	if (NULL == wtp->WTPMAC)
+	{
+		goto label2;
+	}
 	memset(wtp->WTPMAC,0,6);
-	wtp->model= ( char *)WID_MALLOC(1);
+	/*wtp->model= ( char *)WID_MALLOC(1);
+	if (NULL == wtp->model)
+	{
+		goto label3;
+	}
 	memset(wtp->model,0,1);
 	wtp->apcode= ( char *)WID_MALLOC(1);	
+	if (NULL == wtp->apcode)
+	{
+		goto label4;
+	}
 	memset(wtp->apcode,0,1);
 	wtp->sn = ( char *)WID_MALLOC(1);
+	if (NULL == wtp->sn)
+	{
+		goto label5;
+	}
 	memset(wtp->sn,0,1);
 	wtp->version = ( char *)WID_MALLOC(1);
+	if (NULL == wtp->version)
+	{
+		goto label6;
+	}
 	memset(wtp->version,0,1);
 	wtp->codever = ( char *)WID_MALLOC(1);
-	memset(wtp->codever,0,1);
+	if (NULL == wtp->codever)
+	{
+		goto label7;
+	}
+	memset(wtp->codever,0,1);*/
 	wtp->ifname = ( char *)WID_MALLOC(16);
+	if (NULL == wtp->ifname)
+	{
+		goto label3;
+	}
 	memset(wtp->ifname,0,16);
 
 	for(i = 0; i < valPtr->vendorInfosCount; i++){
 		if((valPtr->vendorInfos)[i].type == CW_WTP_MODEL_NUMBER){	
 			WID_FREE(wtp->apcode);
 			wtp->apcode= ( char *)WID_MALLOC((valPtr->vendorInfos)[i].length + 1);	
+			if (NULL == wtp->apcode)
+			{
+				goto label4;
+			}
 			memset(wtp->apcode,0,(valPtr->vendorInfos)[i].length + 1);
 			memcpy(wtp->apcode, (valPtr->vendorInfos)[i].model, (valPtr->vendorInfos)[i].length);
 		}
 		else if((valPtr->vendorInfos)[i].type == CW_WTP_SERIAL_NUMBER){
 			WID_FREE(wtp->sn);
 			wtp->sn = ( char *)WID_MALLOC((valPtr->vendorInfos)[i].length + 1);
+			if (NULL == wtp->sn)
+			{
+				goto label5;
+			}
 			memset(wtp->sn,0,(valPtr->vendorInfos)[i].length + 1);
 			memcpy(wtp->sn, (valPtr->vendorInfos)[i].SN, (valPtr->vendorInfos)[i].length);
 		}
@@ -226,6 +282,10 @@ struct wtp_access_info * ap_add(WID_ACCESS *AC, struct sockaddr_in * sa, CWWTPVe
 		else if((valPtr->vendorInfos)[i].type == CW_WTP_REAL_MODEL_NUMBER){
 			WID_FREE(wtp->model);
 			wtp->model= ( char *)WID_MALLOC((valPtr->vendorInfos)[i].length + 1);
+			if (NULL == wtp->model)
+			{
+				goto label6;
+			}
 			memset(wtp->model,0,(valPtr->vendorInfos)[i].length + 1);
 			memcpy(wtp->model, (valPtr->vendorInfos)[i].Rmodel, (valPtr->vendorInfos)[i].length);			
 		}
@@ -233,6 +293,10 @@ struct wtp_access_info * ap_add(WID_ACCESS *AC, struct sockaddr_in * sa, CWWTPVe
 		{
 			WID_FREE(wtp->codever);
 			wtp->codever = ( char *)WID_MALLOC((valPtr->vendorInfos)[i].length + 1);
+			if (NULL == wtp->codever)
+			{
+				goto label7;
+			}
 			memset(wtp->codever,0,(valPtr->vendorInfos)[i].length + 1);		
 			if(wid_illegal_character_check((char*)(valPtr->vendorInfos)[i].codever,(valPtr->vendorInfos)[i].length,1) > 0){
 				memcpy(wtp->codever, (valPtr->vendorInfos)[i].codever, (valPtr->vendorInfos)[i].length);	
@@ -248,6 +312,10 @@ struct wtp_access_info * ap_add(WID_ACCESS *AC, struct sockaddr_in * sa, CWWTPVe
 		if((valPtr1->vendorInfos.vendorInfos)[i].type == CW_WTP_SOFTWARE_VERSION){
 			WID_FREE(wtp->version);
 			wtp->version = (char *)WID_MALLOC((valPtr1->vendorInfos.vendorInfos)[i].length+1);
+			if (NULL == wtp->version)
+			{
+				goto label8;
+			}
 			memset(wtp->version, 0,(valPtr1->vendorInfos.vendorInfos)[i].length+1);
 			memcpy(wtp->version, (valPtr1->vendorInfos.vendorInfos)[i].ver, (valPtr1->vendorInfos.vendorInfos)[i].length);
 		}
@@ -275,6 +343,27 @@ struct wtp_access_info * ap_add(WID_ACCESS *AC, struct sockaddr_in * sa, CWWTPVe
 				wtp->ifname);
 //	printf("SN:%s\n",wtp->sn);
 	return wtp;
+
+label8: 
+	if (wtp->codever)
+	 	CW_FREE_OBJECT_WID(wtp->codever);
+label7:
+	if (wtp->model)
+		CW_FREE_OBJECT_WID(wtp->model);
+label6:
+	if (wtp->sn)
+		CW_FREE_OBJECT_WID(wtp->sn);
+label5:
+	if (wtp->apcode)
+		CW_FREE_OBJECT_WID(wtp->apcode);
+label4:
+	CW_FREE_OBJECT_WID(wtp->ifname);
+label3:
+	CW_FREE_OBJECT_WID(wtp->WTPMAC);
+label2:
+	CW_FREE_OBJECT_WID(wtp);
+label1:
+	return NULL;
 	
 }
 

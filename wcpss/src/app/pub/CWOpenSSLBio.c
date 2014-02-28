@@ -97,6 +97,10 @@ static int memory_new(BIO *bi)
 	bi->num = 0;
 	bi->flags = 0;
 	bi->ptr = (char*)WID_MALLOC(sizeof(BIO_memory_data));
+	if (NULL == bi->ptr)
+	{
+		return -1;
+	}
 
 	return 1;
 }
