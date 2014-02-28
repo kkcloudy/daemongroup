@@ -58,7 +58,7 @@ typedef unsigned int		u_int32_t;
 #define INSTANCE_CREATED		(1)		/* instance have created.		*/
 #define INSTANCE_NO_CREATED	(0)		/* instance have not created.	*/
 
-#define WIFI_IOC_MAGIC 244
+#define WIFI_IOC_MAGIC 243
 #define WIFI_IOC_IP_ADD   _IOWR(WIFI_IOC_MAGIC, 4, ex_ip_info)
 #define WIFI_IOC_IP_DEL   _IOWR(WIFI_IOC_MAGIC, 5, ex_ip_info)
 
