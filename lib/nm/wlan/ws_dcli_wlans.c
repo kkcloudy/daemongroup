@@ -47792,6 +47792,7 @@ int set_radio_txpowerstep_cmd_group(dbus_parameter parameter, DBusConnection *co
 										/*返回-2表示unknown id format，返回-3表示RADIO ID非法*/			
 										/*返回-4表示radio id does not exist，返回-5表示this radio is not binding wlan,binding wlan first*/
 										/*返回-6表示Group ID非法，返回-7表示partial failure，返回-8表示group id does not exist*/
+										/*返回-9表示txpowerstep should > 0*/
 										/*返回SNMPD_CONNECTION_ERROR表示connection error*/
 {
 	if(NULL == connection)
@@ -47811,6 +47812,10 @@ int set_radio_txpowerstep_cmd_group(dbus_parameter parameter, DBusConnection *co
 	int retu = 0;
 
 	ret = parse_short_ID((char *)txp_step,&txpowerstep);
+	if(txpowerstep == 0)
+	{
+		return -9;
+	}
 	if(ret != WID_DBUS_SUCCESS){
 	    if(ret == WID_ILLEGAL_INPUT){
 			retu = -1;

@@ -6212,7 +6212,7 @@ int show_asd_global_variable_cmd(dbus_parameter parameter, DBusConnection *conne
 				vty_out(vty,"asd bak sta update time:                 %dmin\n",asd_bak_sta_update_time);
 				vty_out(vty,"asd ipset switch:                        %s\n",(asd_ipset_switch == 1)?"enable":"disable");
 				vty_out(vty,"asd get ip from dhcp-snooping:           %s\n",(asd_getip_from_dhcpsnp == 1)?"enable":"disable");
-				vty_out(vty,"asd syslog debug:                        %d\n",asd_syslog_debug);
+				vty_out(vty,"asd log format(bit0:hn-mobile bit1:mobile):   0x%x\n",asd_syslog_debug);
 		vty_out(vty,"================================================================================\n");*/
 		info->asd_notice_sta_info_to_portal_timer = asd_notice_sta_info_to_portal_timer;
 		info->asd_notice_sta_info_to_portal = asd_notice_sta_info_to_portal;

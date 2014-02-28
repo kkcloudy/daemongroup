@@ -48,7 +48,7 @@ extern "C"
 int ccgi_create_ap_group_cmd(dbus_parameter  parameter, DBusConnection *connection, char *ap_g_id, char *ap_g_name)
 								/*返回1表示失败，返回0表示成功，返回2表示unknown id format*/
 								/*返回3表示ap_g_id should be 1 to WTP_GROUP_NUM-1，返回4表示name is too long,out of the limit of 64*/
-								/*返回5表示id exist，返回6表示error*/
+								/*返回5表示ap-group id exist，返回6表示error*/
 {
 	if((NULL == ap_g_id)||(NULL == ap_g_name))
 		return 1;
@@ -118,7 +118,7 @@ int ccgi_create_ap_group_cmd(dbus_parameter  parameter, DBusConnection *connecti
 	{
 		retu = 0;
 	}
-	else if(ret == WLAN_ID_BE_USED)
+	else if(ret == GROUP_ID_EXIST)
 	{
 		retu = 5;
 	}
@@ -135,7 +135,7 @@ int ccgi_create_ap_group_cmd(dbus_parameter  parameter, DBusConnection *connecti
 int ccgi_del_ap_group_cmd(dbus_parameter  parameter, DBusConnection *connection, char *ap_g_id)
 										/*返回0表示成功，返回-1表示失败，返回-2表示unknown id format*/
 										/*返回-3表示ap_g_id should be 1 to WTP_GROUP_NUM-1，返回-4表示(NULL == reply)*/
-										/*返回-5表示WLAN_ID_NOT_EXIST，返回-6表示error*/
+										/*返回-5表示ap group id does not exist，返回-6表示error*/
 {
 	if((NULL == ap_g_id)||(NULL == connection))
 		return -1;
@@ -187,7 +187,7 @@ int ccgi_del_ap_group_cmd(dbus_parameter  parameter, DBusConnection *connection,
 	{
 		retu = -0;
 	}
-	else if(ret == WLAN_ID_NOT_EXIST)
+	else if(ret == GROUP_ID_NOT_EXIST)
 	{
 		retu = -5;
 	}
