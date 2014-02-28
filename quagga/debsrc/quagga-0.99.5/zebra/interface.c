@@ -4060,7 +4060,7 @@ DEFUN (show_interface, show_interface_cmd,
 
   /*INTERFACE_FLOW_STATISTICS_SAMPLING_INTEGRATED_RTM*/
   if( product && product->board_type == BOARD_IS_ACTIVE_MASTER)
-   rtm_deal_interface_flow_stats_sampling_integrated(INTERFACE_FLOW_STATISTICS_SAMPLING_INTEGRATED_RTM, NULL, PROCESS_NAME_SNMP);
+   rtm_deal_interface_flow_stats_sampling_for_show_interface(INTERFACE_FLOW_STATISTICS_SAMPLING_INTEGRATED_RTM, NULL);
 
   /* Specified interface print. */
   if (argc != 0)

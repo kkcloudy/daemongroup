@@ -3406,8 +3406,9 @@ tipc_master_interface_packets_statistics (int command, tipc_client* master_board
 	  zlog_debug("%s: line %d, command[%d](%s).\n",__func__,__LINE__,if_flow_command,
 			  zserv_command_string(if_flow_command));
   /*send to snmp for integrate sampling.*/
+#if 0
   rtm_if_flow_stats_update_for_sampling_integrated(ifp,if_flow_command);/*one by one. Or we can use all update finish, then send*/
-
+#endif
   return 0;
 }
 

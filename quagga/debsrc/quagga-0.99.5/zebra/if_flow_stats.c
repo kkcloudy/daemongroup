@@ -74,8 +74,15 @@ extern struct zebra_t zebrad;
 extern product_inf *product ;
 
 process_info *process_se_agent = NULL;
+
+/*
 process_info *process_snmp = NULL;
 process_info *process_acsample = NULL;
+
+*/
+
+#define INTF_MAX 250
+unsigned int se_agent_interval = 60 ;
 
 struct timeval current_time;
 //struct timeval last_time;
@@ -84,18 +91,18 @@ struct timeval current_time;
 
 
 void
-rtm_if_flow_packet_create_header (struct stream *s, int process_name, int cmd)
+rtm_if_flow_packet_create_header (struct stream *s, int process_name, int cmd,int tap)
 {
   /* length placeholder, caller can update */
+  
+  stream_putl(s, tap);
   stream_putl(s, IF_FLOW_STATS_HEADER_SIZE);
   stream_putl (s, process_name);
   stream_putl (s, cmd);
 }
 
-
-/*At prsent , only for snmp.(active master)*/
 int
-rtm_deal_interface_flow_stats_sampling_integrated(int command,process_info* process_information, int process_name)
+rtm_deal_interface_flow_stats_sampling_for_show_interface(int command,process_info* process_information)
 {
 	/*First rtmd send tipc interface flow stats to other board, can use ZEBRA_INTERFACE_PACKETS_REQUEST_ALL.
 	Then return. When active master recv ZEBRA_INTERFACE_PACKETS_REQUEST_ALL, do add between linux system data
@@ -112,6 +119,50 @@ rtm_deal_interface_flow_stats_sampling_integrated(int command,process_info* proc
 	 quagga_gettimeofday_only(&current_time);
 	 zlog_debug("%s:line %d, Time[%u:%u].\n",__func__,__LINE__,current_time.tv_sec,current_time.tv_usec);
 	}
+	
+	master_board_request_interface_packets_statistics(command);
+	
+	if(rtm_debug_if_flow)
+	{
+	  quagga_gettimeofday_only(&current_time);
+	  zlog_debug("%s:line %d, Time[%u:%u].\n",__func__,__LINE__,current_time.tv_sec,current_time.tv_usec);
+	}
+	/*send to active master local board se_agent*/
+	rtm_send_message_by_tipc(process_se_agent,command);
+
+	
+	return 0;
+		
+}
+
+/*At prsent , only for snmp.(active master)*/
+int
+rtm_deal_interface_flow_stats_sampling_integrated(int command,process_info* process_information, int process_name)
+{
+	struct listnode *node = NULL;
+	struct listnode *nnode = NULL;
+	struct listnode *ifnode = NULL;
+	struct listnode *ifnnode = NULL;
+	struct interface *ifp = NULL;
+	tipc_server * vice_board = NULL;
+	
+	int integ_cnt = 0;
+	/*First rtmd send tipc interface flow stats to other board, can use ZEBRA_INTERFACE_PACKETS_REQUEST_ALL.
+	Then return. When active master recv ZEBRA_INTERFACE_PACKETS_REQUEST_ALL, do add between linux system data
+	and se_agent data, and send to by unix.*/
+	/*Here only do send tipc info to other boards.*/
+	if( product->board_type != BOARD_IS_ACTIVE_MASTER)
+	{
+		zlog_warn("%s: err command[%d] parement.\n",__func__,command);
+		return -1;
+		}
+	
+	if(rtm_debug_if_flow)
+	{
+	 quagga_gettimeofday_only(&current_time);
+	 zlog_debug("%s:line %d, Time[%u:%u].\n",__func__,__LINE__,current_time.tv_sec,current_time.tv_usec);
+	}
+	#if 0
 	if(process_name == PROCESS_NAME_SNMP||process_name == PROCESS_NAME_ACSAMPLE)
 	{
 		master_board_request_interface_packets_statistics(command);
@@ -129,7 +180,52 @@ rtm_deal_interface_flow_stats_sampling_integrated(int command,process_info* proc
 	}
 	/*send to active master local board se_agent*/
 	rtm_send_message_by_tipc(process_se_agent,command);
+	#endif
 	
+	if(!iflist)
+	{
+		zlog_warn("At preset iflist is NULL .\n");
+		return ;
+	}
+    for (ALL_LIST_ELEMENTS (iflist, ifnode, ifnnode, ifp))
+	{
+		
+		if((memcmp(ifp->name,"r",1) == 0)/*include radio*/
+			||(memcmp(ifp->name,"sit0",4) == 0)
+			||(memcmp(ifp->name,"obc0",4) == 0)
+			||(memcmp(ifp->name,"obc1",4) == 0)
+			||(memcmp(ifp->name,"pimreg",6) == 0)
+			||(memcmp(ifp->name,"ppp",3) == 0)
+			||(memcmp(ifp->name,"oct",3) == 0)
+			||(memcmp(ifp->name,"lo",2) == 0)
+			/*||(judge_ve_interface(ifp->name)==VE_INTERFACE)*/
+			||(judge_eth_debug_interface(ifp->name)==ETH_DEBUG_INTERFACE)
+			/*||(memcmp(ifp->name,"mng",3) == 0)*/
+			)
+			continue;
+			if(integ_cnt >= INTF_MAX)
+			{
+				if(rtm_debug_if_flow)
+					zlog_warn("iflist is count = %d.\n",integ_cnt);
+				
+				rtm_if_flow_stats_data_packet(process_information,ifp,0);
+				/*end sysbmol*/
+				return;
+			}
+			
+			rtm_if_flow_stats_data_packet(process_information,ifp,1);
+	
+			integ_cnt++;
+		
+	}
+	if(ifnode == NULL)
+	{
+		/*end sysbmol*/
+		if(rtm_debug_if_flow)
+			zlog_warn("ifnode == NULL iflist is count = %d.\n",integ_cnt);
+		rtm_if_flow_stats_data_packet(process_information,ifp,0);
+	} 
+
 	if(rtm_debug_if_flow)
 	{
 	  quagga_gettimeofday_only(&current_time);
@@ -143,6 +239,14 @@ rtm_deal_interface_flow_stats_sampling_integrated(int command,process_info* proc
 int
 rtm_deal_interface_flow_stats_sampling_divided(int command, process_info* process_information, uint16_t process_name)
 {
+	struct listnode *node = NULL;
+	struct listnode *nnode =NULL;
+	struct listnode *ifnode = NULL;
+	struct listnode *ifnnode = NULL;
+	struct interface *ifp = NULL;
+	tipc_server * vice_board = NULL;
+	int divi_cnt = 0;
+#if 0
 	/* First send to se_agent. When recv se_agent , fetch the linux system data, then ADD*/
 	/*Here do send se_agent.*/
 	if(process_name == PROCESS_NAME_SNMP||process_name == PROCESS_NAME_ACSAMPLE)
@@ -155,13 +259,67 @@ rtm_deal_interface_flow_stats_sampling_divided(int command, process_info* proces
 	{
 		zlog_warn("Rtm recv unkown process message!\n");
 		return -1;
-	 }
+	}
+	 
+#endif
+	
+	if(!iflist)
+	{
+		zlog_warn("At preset iflist is NULL .\n");
+		return ;
+	}
+	for (ALL_LIST_ELEMENTS (iflist, ifnode, ifnnode, ifp))
+	{
+		if((memcmp(ifp->name,"r",1) == 0)/*include radio*/
+			||(memcmp(ifp->name,"sit0",4) == 0)
+			||(memcmp(ifp->name,"obc0",4) == 0)
+			||(memcmp(ifp->name,"obc1",4) == 0)
+			||(memcmp(ifp->name,"pimreg",6) == 0)
+			||(memcmp(ifp->name,"ppp",3) == 0)
+			||(memcmp(ifp->name,"oct",3) == 0)
+			||(memcmp(ifp->name,"lo",2) == 0)
+			/*||(judge_ve_interface(ifp->name)==VE_INTERFACE)*/
+			||(judge_eth_debug_interface(ifp->name)==ETH_DEBUG_INTERFACE)
+			/*||(memcmp(ifp->name,"mng",3) == 0)*/
+			)
+			continue;
+		if(judge_real_local_interface(ifp->name) == LOCAL_BOARD_INTERFACE)/*check uplink interface do add, other only linux system*/
+		{
+			if(rtm_debug_if_flow)
+				zlog_debug("%s: line %d, command[%d](%s).\n",__func__,__LINE__,command,
+						zserv_command_string(command));
+			if(divi_cnt >= INTF_MAX)
+			{
+				if(rtm_debug_if_flow)
+					zlog_warn("divi iflist is count = %d.\n",divi_cnt);
+				/*end sysbmol*/
+				
+				rtm_if_flow_stats_data_packet(process_information,ifp,0);
+				return;
+			}
+			rtm_if_flow_stats_data_packet(process_information,ifp,1);
+			divi_cnt++;
+
+		}
+		else
+			continue;
+		
+	}
+	if(ifnode == NULL)
+	{
+		/*end sysbmol*/
+		
+		if(rtm_debug_if_flow)
+			zlog_warn("ifnode == NULL divi iflist is count = %d.\n",divi_cnt);
+		
+		rtm_if_flow_stats_data_packet(process_information,ifp,0);
+	} 
 	return 0;
 }
 
 /*Rtmd send to snmp or acsample.*/
 void
-rtm_if_flow_stats_data_packet(process_info *process_information, struct interface *ifp)
+rtm_if_flow_stats_data_packet(process_info *process_information, struct interface *ifp,int tap)
 {
   struct stream *s;
   
@@ -191,12 +349,15 @@ rtm_if_flow_stats_data_packet(process_info *process_information, struct interfac
   stream_reset (s);
 
   /* Message type. */
-  rtm_if_flow_packet_create_header(s, process_information->name_type,INTERFACE_FLOW_STATISTICS_DATA);/////////////////
+  rtm_if_flow_packet_create_header(s, process_information->name_type,INTERFACE_FLOW_STATISTICS_DATA,tap);/////////////////
  // stream_putl(s, INTERFACE_FLOW_STATISTICS_DATA);
 
   /* Interface information. */
-  stream_put (s, ifp->name, INTERFACE_NAMSIZ);
+
+  //stream_put (s, ifp->name, INTERFACE_NAMSIZ);
   
+  stream_put (s, ifp->name, 32);
+ 
   stream_putq (s, ifp->stats.rx_packets);
   stream_putq (s, ifp->stats.tx_packets);
   stream_putq (s, ifp->stats.rx_bytes);
@@ -220,9 +381,10 @@ rtm_if_flow_stats_data_packet(process_info *process_information, struct interfac
   stream_putq (s, ifp->stats.tx_fifo_errors);
   stream_putq (s, ifp->stats.tx_heartbeat_errors);
   stream_putq (s, ifp->stats.tx_window_errors);
-  
+
   /* Write packet size. */
-  stream_putw_at (s, 0, stream_get_endp (s));
+  stream_putw_at (s, 4, stream_get_endp (s));
+ 	
   if(rtm_debug_if_flow)
   	{
 		/* Statistics print out using proc file system. */
@@ -279,6 +441,11 @@ rtm_if_flow_client_unix_close (process_info **_process_information)
 		thread_cancel (process_information->t_write);
 		process_information->t_write=NULL;
 	}
+	if (process_information->t_timer)
+	{
+		thread_cancel (process_information->t_timer);
+		process_information->t_timer=NULL;
+	}
 	if (process_information->t_suicide)
 	{
 		thread_cancel (process_information->t_suicide);
@@ -309,11 +476,12 @@ rtm_if_flow_client_unix_close (process_info **_process_information)
 	/* Close file descriptor. */	
 	close(process_information->sock);
 	process_information->sock=-1;
+	#if 0
 	if(process_information->name_type == PROCESS_NAME_SNMP)
 			process_snmp = NULL;
 	if(process_information->name_type == PROCESS_NAME_ACSAMPLE)
 			process_acsample = NULL;
-
+	#endif
 	XFREE(MTYPE_PROCESS_INFO,process_information);
 	*_process_information = NULL;
 	return 0;
@@ -546,7 +714,7 @@ rtm_get_if_flow_stats_from_linx_system(void)
 #endif /* HAVE_NET_RT_IFLIST */
 		  
 }
-
+#if 0
 void
 rtm_if_flow_stats_update_for_sampling_integrated(struct interface *ifp,int if_flow_command)
 
@@ -614,7 +782,7 @@ rtm_if_flow_stats_update_for_sampling_integrated(struct interface *ifp,int if_fl
 	return;
 	  
 }
-
+#endif
 void
 rtm_if_flow_stats_data_add(struct interface *ifp,if_flow_stats_se_agent *if_flow_data )
 {
@@ -638,12 +806,49 @@ rtm_if_flow_stats_data_add(struct interface *ifp,if_flow_stats_se_agent *if_flow
 void
 rtm_if_flow_stats_data_deal_for_active_master_board(if_flow_stats_se_agent *if_flow_data,int command)
 {
-	
+#if 1
+		struct listnode *node =NULL;
+		struct listnode *nnode = NULL;
+		struct listnode *ifnode =NULL;
+		struct listnode *ifnnode=NULL;
+		struct interface *ifp =NULL;
+		tipc_server * vice_board = NULL;
+		if(!iflist)
+		{
+			zlog_warn("At preset iflist is NULL .\n");
+			return ;
+		}
+		for (ALL_LIST_ELEMENTS (iflist, ifnode, ifnnode, ifp))
+		{
+			if((memcmp(ifp->name,"r",1) == 0)/*include radio*/
+				||(memcmp(ifp->name,"sit0",4) == 0)
+				||(memcmp(ifp->name,"obc0",4) == 0)
+				||(memcmp(ifp->name,"obc1",4) == 0)
+				||(memcmp(ifp->name,"pimreg",6) == 0)
+				||(memcmp(ifp->name,"ppp",3) == 0)
+				||(memcmp(ifp->name,"oct",3) == 0)
+				||(memcmp(ifp->name,"lo",2) == 0)
+				/*||(judge_ve_interface(ifp->name)==VE_INTERFACE)*/
+				||(judge_eth_debug_interface(ifp->name)==ETH_DEBUG_INTERFACE)
+				/*||(memcmp(ifp->name,"mng",3) == 0)*/
+				)
+				continue;
+			if(judge_real_local_interface(ifp->name) == LOCAL_BOARD_INTERFACE)/*check uplink interface do add, other only linux system*/
+			{		
+				if(CHECK_FLAG(ifp->uplink_flag,INTERFACE_SET_UPLINK))
+				{
+					/*do add se_agent if flow stats.*/
+					rtm_if_flow_stats_data_add(ifp,if_flow_data);
+				}		
+			}
+		
+			
+		}
+#else 
 	struct listnode *node, *nnode;
 	struct listnode *ifnode, *ifnnode;
 	struct interface *ifp;
 	tipc_server * vice_board = NULL;
-	  
 	if(!iflist)
 	{
 		zlog_warn("At preset iflist is NULL .\n");
@@ -705,7 +910,7 @@ rtm_if_flow_stats_data_deal_for_active_master_board(if_flow_stats_se_agent *if_f
 			continue;
 		
 	}
-	  
+#endif
 }
 
 
@@ -713,7 +918,66 @@ rtm_if_flow_stats_data_deal_for_active_master_board(if_flow_stats_se_agent *if_f
 void
 rtm_if_flow_stats_data_deal_for_other_board(if_flow_stats_se_agent *if_flow_data,int command)
 {
-	
+
+#if 1
+	struct listnode *node = NULL;
+	struct listnode *nnode = NULL;
+	struct listnode *ifnode=NULL;
+	struct listnode *ifnnode= NULL;
+	struct interface *ifp =NULL;
+	tipc_server * vice_board = NULL;
+	  
+	if(!iflist)
+	{
+		zlog_warn("At preset iflist is NULL .\n");
+		return ;
+	}
+	for (ALL_LIST_ELEMENTS (iflist, ifnode, ifnnode, ifp))
+	{
+		/*dierent from active master.*/
+		if((memcmp(ifp->name,"r",1) == 0)
+			||(memcmp(ifp->name,"sit0",4) == 0)
+			||(memcmp(ifp->name,"obc0",4) == 0)
+			||(memcmp(ifp->name,"obc1",4) == 0)
+			||(memcmp(ifp->name,"pimreg",6) == 0)
+			||(memcmp(ifp->name,"ppp",3) == 0)
+			||(memcmp(ifp->name,"oct",3) == 0)
+			||(memcmp(ifp->name,"lo",2) == 0)
+			/*||(judge_ve_interface(ifp->name)==VE_INTERFACE)*/
+			||(judge_eth_debug_interface(ifp->name)==ETH_DEBUG_INTERFACE)
+			||(memcmp(ifp->name,"mng",3) == 0))
+			continue;
+		if(judge_real_local_interface(ifp->name) == LOCAL_BOARD_INTERFACE)/*check uplink interface do add, other only linux system*/
+		{
+		   	if(CHECK_FLAG(ifp->uplink_flag,INTERFACE_SET_UPLINK))
+		    {
+		    	/*do add se_agent if flow stats.*/
+				rtm_if_flow_stats_data_add(ifp,if_flow_data);
+		    }
+			
+			if(rtm_debug_if_flow)
+				zlog_debug("%s: line %d, command[%d](%s).\n",__func__,__LINE__,command,
+						zserv_command_string(command));
+			
+			/*send to activ master rtmd.*/
+			
+				
+				/*sned to active master board rtmd. Then active master rtmd send to snmp .*/
+			if(zebrad.master_board_list)
+			for (ALL_LIST_ELEMENTS (zebrad.master_board_list, node, nnode, vice_board))
+			{
+			   vice_send_interface_packets_statistics(vice_board, ifp,command);
+			  /* usleep(fetch_rand_time_interval());*//*need , avoid to block master.*/
+					
+			}	
+		}
+		else
+			continue;
+		
+	}
+
+	return;
+#else 
 	struct listnode *node, *nnode;
 	struct listnode *ifnode, *ifnnode;
 	struct interface *ifp;
@@ -788,7 +1052,7 @@ rtm_if_flow_stats_data_deal_for_other_board(if_flow_stats_se_agent *if_flow_data
 	}
 
 	return;
-	  
+#endif	  
 }
 
 
@@ -823,6 +1087,45 @@ rtm_if_flow_stats_update(if_flow_stats_se_agent *if_flow_data, int command)
 	rtm_if_flow_stats_data_deal(if_flow_data,command);
 		
 }
+
+int master_board_request_interface_packets_statistics_se_agent(struct thread *thread)
+{
+
+	int ret;
+	int command = INTERFACE_FLOW_STATISTICS_SAMPLING_INTEGRATED_SNMP;
+	process_info *process_information = NULL;
+
+
+	if (rtm_debug_if_flow)
+		zlog_debug ("enter %s ......\n", __func__);
+
+	process_information = THREAD_ARG(thread);
+	
+	if(NULL == process_information)
+		return -1;
+	process_information->t_timer = NULL;
+	rtm_if_flow_event(IF_FLOW_TIPC_CLIENT_TIMER,process_information->sock,process_information);
+
+	master_board_request_interface_packets_statistics(command);
+	
+	if(rtm_debug_if_flow)
+	{
+	  quagga_gettimeofday_only(&current_time);
+	  zlog_debug("%s:line %d, Time[%u:%u].\n",__func__,__LINE__,current_time.tv_sec,current_time.tv_usec);
+	}
+	/*send to active master local board se_agent*/
+	rtm_send_message_by_tipc(process_information,command);
+	
+	/* Register read thread. */
+	stream_reset(process_information->ibuf);
+
+	if(rtm_debug_if_flow)
+		zlog_debug("leave func %s...\n",__func__);
+
+	return 0;
+
+}
+
 
 
 int
@@ -912,6 +1215,7 @@ rtm_recv_message_from_snmp(struct thread * thread)
 	process_info *process_information = NULL;
 	size_t already;
 	int length, process_name;
+	int tap;
 	int command;
 
 	/* Get thread data.  Reset reading thread because I'm running. */
@@ -949,6 +1253,8 @@ rtm_recv_message_from_snmp(struct thread * thread)
 	stream_set_getp(process_information->ibuf, 0);
 
 	/* Fetch header values */
+	
+	tap = stream_getl (process_information->ibuf);
 	length = stream_getl (process_information->ibuf);
 	process_name = stream_getl (process_information->ibuf);
 	command = stream_getl (process_information->ibuf);
@@ -1006,21 +1312,21 @@ rtm_recv_message_from_snmp(struct thread * thread)
 	switch (command) 
 	{
 		case INTERFACE_FLOW_STATISTICS_SAMPLING_INTEGRATED_SNMP:
-			process_snmp = process_information;
+			/*process_snmp = process_information;*/
 			rtm_deal_interface_flow_stats_sampling_integrated(command, process_information,process_name);
 			break;			
 				
 		case INTERFACE_FLOW_STATISTICS_SAMPLING_INTEGRATED_ACSAMPLE:
-			process_acsample = process_information;
+			/*process_acsample = process_information;*/
 			rtm_deal_interface_flow_stats_sampling_integrated(command, process_information,process_name);
 			break;
 			
 		case INTERFACE_FLOW_STATISTICS_SAMPLING_DIVIDED_ACSAMPLE:
-			process_acsample = process_information;
+			/*process_acsample = process_information;*/
 			rtm_deal_interface_flow_stats_sampling_divided(command, process_information,process_name);
 			break;
 		case INTERFACE_FLOW_STATISTICS_SAMPLING_DIVIDED_SNMP:
-			process_snmp = process_information;
+			/*process_snmp = process_information;*/
 			rtm_deal_interface_flow_stats_sampling_divided(command, process_information,process_name);
 		  	break;
 
@@ -1189,6 +1495,9 @@ rtm_creat_tipc_client_for_se_agent(struct thread *thread)
 	if (rtm_debug_if_flow)
 		zlog_debug (" Rtm creat tipc client socket[%d] for Se_agent sucess .\n", 
 					process_information->sock);
+	
+	if(product->board_type == BOARD_IS_ACTIVE_MASTER)
+		rtm_if_flow_event(IF_FLOW_TIPC_CLIENT_TIMER,process_information->sock,process_information);
 	rtm_if_flow_event(IF_FLOW_TIPC_CLIENT_READ,process_information->sock,process_information);
 
 	return 0;
@@ -1216,6 +1525,8 @@ rtm_if_flow_event (enum if_flow_events event, int sock, process_info *process_in
 				  	thread_cancel (process_information->t_write);
 				if (process_information->t_suicide)
 				  	thread_cancel (process_information->t_suicide);
+				if (process_information->t_timer)
+				  	thread_cancel (process_information->t_timer);
 				close(sock);
 				process_information->sock = -1;
 				
@@ -1239,6 +1550,13 @@ rtm_if_flow_event (enum if_flow_events event, int sock, process_info *process_in
 		  		zlog_debug ("%s: line %d, set rtmd go to read from se_agent.....\n", __func__,__LINE__);
 		   	process_information->t_read = 
 		   	thread_add_read (zebrad.master, rtm_recv_message_from_se_agent, process_information, process_information->sock);
+		  	break;
+
+		case IF_FLOW_TIPC_CLIENT_TIMER:
+		  	if(rtm_debug_if_flow)
+		  		zlog_debug ("%s: line %d, set rtmd go to timer from se_agent.....\n", __func__,__LINE__); 
+		  		process_information->t_timer = 
+			thread_add_timer(zebrad.master,master_board_request_interface_packets_statistics_se_agent,process_information,se_agent_interval);	
 		  	break;
 		/*******************/
 		case IF_FLOW_UNIX_SERVER_ACCEPT_SNMP:
@@ -1287,6 +1605,8 @@ rtm_communication_to_se_agent(void)
 	process_se_agent->t_read = NULL;
 	process_se_agent->t_suicide = NULL;
 	process_se_agent->t_write = NULL;
+	
+	process_se_agent->t_timer = NULL;
 
 	/*event to set read.*/
 	rtm_if_flow_event(IF_FLOW_TIPC_CLIENT_SCHEDULE,process_se_agent->sock,process_se_agent);

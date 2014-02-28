@@ -27,6 +27,9 @@ typedef struct process_info
 
   /* Thread to write buffered data to zebra. */
   struct thread *t_write;
+  
+  /* Thread to timer event to zebra. zhaocg add*/
+  struct thread *t_timer;
 
 }process_info;
 
@@ -34,6 +37,7 @@ enum if_flow_events
 { 
 	IF_FLOW_TIPC_CLIENT_SCHEDULE,  /*for se_agent*/
 	IF_FLOW_TIPC_CLIENT_READ,      /*for se_agent*/
+	IF_FLOW_TIPC_CLIENT_TIMER,	   /*for se_agent zhaocg add*/
 	IF_FLOW_UNIX_SERVER_ACCEPT_SNMP,    /*for snmp or acsample*/
 /*	IF_FLOW_UNIX_SERVER_ACCEPT_ACSAMPLE,*/	/*for snmp or acsample*/
 /*	IF_FLOW_UNIX_SERVER_ACCEPT,*/
@@ -53,6 +57,7 @@ enum if_flow_events
 
 typedef struct if_flow_stats
 {
+	int tap;
 	int length;
 	int process_name;
 	int cmd;
@@ -74,7 +79,9 @@ typedef struct if_flow_stats
 #define PROCESS_NAME_ACSAMPLE				0x3
 #define PROCESS_NAME_RTM					0x4
 
-#define IF_FLOW_STATS_HEADER_SIZE             12
+//#define IF_FLOW_STATS_HEADER_SIZE             12
+#define IF_FLOW_STATS_HEADER_SIZE             16
+
 
 typedef struct 
 {

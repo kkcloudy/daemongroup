@@ -29,6 +29,7 @@
 #include "rib.h"
 #include "zebra/zserv.h"
 #include "string.h"
+extern unsigned int se_agent_interval;
 
 /* General fucntion for static route. */
 static unsigned int
@@ -2529,12 +2530,41 @@ static_config_ipv6 (struct vty *vty)
   return write;
 }
 #endif /* HAVE_IPV6 */
+/*update if_flow_stats timer interval ,zhaocg add*/
+DEFUN (if_flow_stats_update_interval_fun,
+       if_flow_stats_update_interval_cmd,
+       "set interface_flow updata interval <1-600>",
+       "set system configuration\n"
+       "Interface flow statistics information\n"
+       "updata statistics information\n"
+       "Time interval,unit: s \n")
+{
+  unsigned int interval;
+  interval = atoi(argv[0]);
+  se_agent_interval = interval;
+  return CMD_SUCCESS;
+}
+
+DEFUN (show_if_flow_stats_interval_fun,
+       show_if_flow_stats_interval_cmd,
+       "show interface_flow updata interval",
+       SHOW_STR
+       "Interface flow statistics information\n"
+       "updata statistics information\n"
+       "Time interval,unit: s \n")
+{
+  
+  vty_out (vty, "interface_flow updata interval %d s\n", se_agent_interval);
+   
+  return CMD_SUCCESS;
+}
 
 /* Static ip route configuration write function. */
 static int
 zebra_ip_config (struct vty *vty)
 {
   int write = 0;
+  vty_out(vty, "set interface_flow updata interval %d\n", se_agent_interval);
 
   write += static_config_ipv4 (vty);
 #ifdef HAVE_IPV6
@@ -2652,6 +2682,11 @@ install_element (CONFIG_NODE, &show_ipv6_route_addr_cmd);
 install_element (CONFIG_NODE, &show_ipv6_route_prefix_cmd);
 install_element (CONFIG_NODE, &show_ipv6_route_prefix_longer_cmd);
 install_element (INTERFACE_NODE, &show_ipv6_route_cmd);
+
+install_element (ENABLE_NODE, &show_if_flow_stats_interval_cmd);
+install_element (ENABLE_NODE, &if_flow_stats_update_interval_cmd);
+install_element (CONFIG_NODE, &if_flow_stats_update_interval_cmd);
+
 
 /*move to dcli*/
 #if 0
