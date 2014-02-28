@@ -28,6 +28,7 @@
 #define SEM_TRAP_INTERFACE					"aw.trap"
 #define SEM_TRAP_SYSTEM_STATE				"sem_trap_system_state"
 #define SEM_TRAP_BOARD_STATE				"sem_trap_board_state"
+#define SEM_TRAP_PORT_STATE				"sem_trap_port_state"
 #define SEM_DBUS_TRAP_POWER_STATE_CHANGE	"wid_dbus_trap_power_state_change"
 #define SEM_DBUS_TRAP_FAN_STATE_CHANGE		"wid_dbus_trap_fan_state_change"
 
@@ -183,6 +184,20 @@ enum {
 	SEM_OPERATE_NOT_SUPPORT,
 	SEM_COMMAND_NOT_SUPPORT,
 	SEM_COMMAND_NOT_PERMIT
+};
+
+/* caojia add for board trap */
+enum
+{
+	SEM_BOARD_DOWN_TRAP,
+	SEM_BOARD_UP_TRAP
+};
+
+/* caojia add for port trap */
+enum
+{
+	SEM_PORT_DOWN_TRAP,
+	SEM_PORT_UP_TRAP
 };
 
 
