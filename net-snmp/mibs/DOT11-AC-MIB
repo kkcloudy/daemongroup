@@ -7868,6 +7868,42 @@ InterfaceChangeState		OBJECT-TYPE
 			"An acAPACTimeSynchroFailureTrapClear Trap signifies that there has been an signal of AC-AP-CLOCK-SYNC-FAILED_CLEAR "
 	::= { acInnerTrap 22 }
 	
+	acBoardExtractTrap NOTIFICATION-TYPE
+		OBJECTS {
+				acNumAPInAC
+			}
+		STATUS		current
+		DESCRIPTION
+			"An acBoardExtractTrap Trap signifies that the board have pulled out "
+	::= { acInnerTrap 24 }
+	
+	acBoardInsertTrap NOTIFICATION-TYPE
+		OBJECTS {
+				acNumAPInAC
+			}
+		STATUS		current
+		DESCRIPTION
+			"An acBoardInsertTrap Trap signifies that the board have pushed in  "
+	::= { acInnerTrap 25 }
+	
+	acPortDownTrap NOTIFICATION-TYPE
+		OBJECTS {
+				acNumAPInAC
+			}
+		STATUS		current
+		DESCRIPTION
+			"An acPortDownTrap Trap signifies that there has port down "
+	::= { acInnerTrap 27 }
+	
+	acPortUpTrap NOTIFICATION-TYPE
+		OBJECTS {
+				acNumAPInAC
+			}
+		STATUS		current
+		DESCRIPTION
+			"An acPortUpTrap Trap signifies that  the port up "
+	::= { acInnerTrap 26 }
+	
 	acRadiusAuthenticationServerNotReachTrap NOTIFICATION-TYPE
 		OBJECTS {
 				acNumAPInAC
@@ -7913,13 +7949,13 @@ InterfaceChangeState		OBJECT-TYPE
 			"An acChangedIPTrap Trap signifies that there has been an signal of AC-CHANGE-IP "
 	::= { acInnerTrap 3 }
 	
-	acTurntoBackupDeviceTrap NOTIFICATION-TYPE
+	acTurntoMasterDeviceTrap NOTIFICATION-TYPE
 		OBJECTS {
 				acNumAPInAC
 			}
 		STATUS		current
 		DESCRIPTION
-			"An acTurntoBackupDeviceTrap Trap signifies that there has been an signal of AC-SWITCH-MAIN-BACK "
+			"An acTurntoMasterDeviceTrap Trap signifies that there has been an signal of AC-SWITCH-MAIN-BACK "
 	::= { acInnerTrap 4 }
 	
 	acCPUUtilizationOverThresholdTrap NOTIFICATION-TYPE

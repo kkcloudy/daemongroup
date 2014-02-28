@@ -164,8 +164,12 @@ TRAP_DETAIL_CONFIG ALL_TRAP[] = {
 	{wtpStationOffLineAbnormalTrap, 			"station 异常断开通告", 		"station leave abnormal",					0},
 	{wtpUserLogoffAbnormalTrap,             	"用户异常下线通告",         	"user logoff abnormal",           			0},
 	{wtpConfigurationErrorTrap, 				"ap 配置文件错误告警", 			"ap configuration error", 					0},
-	{wtpUserTrafficOverloadTrap,             	"用户收发流量超限告警",         "users to send and receive traffic overload",           			0},
-	{wtpUnauthorizedStaMacTrap,             	"未授权station mac告警",        "Unauthorized Station Mac",           			0}
+	{wtpUserTrafficOverloadTrap,             	"用户收发流量超限告警",         "users to send and receive traffic overload",0},
+	{wtpUnauthorizedStaMacTrap,             	"未授权station mac告警",        "Unauthorized Station Mac",           		0},
+	{acBoardExtractTrap,						"板卡拔出告警",					"ac board pull out",						0},
+	{acBoardInsertTrap,							"板卡插入告警",					"ac board insert",							0},
+	{acPortDownTrap,							"端口down告警",					"ac port down",								0},
+	{acPortUpTrap,								"端口up告警",					"ac port up",								0}
 };
 
 

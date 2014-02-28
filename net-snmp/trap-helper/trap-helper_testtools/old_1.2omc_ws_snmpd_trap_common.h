@@ -93,6 +93,12 @@
 
 #define acAPACTimeSynchroFailureTrapClear   "acAPACTimeSynchroFailureTrapClear"		//0.22
 
+#define acBoardExtractTrap					"acBoardExtractTrap"					//0.24
+#define acBoardInsertTrap					"acBoardInsertTrap"						//0.25
+#define acPortDownTrap						"acPortDownTrap"						//0.26
+#define acPortUpTrap						"acPortUpTrap"							//0.27
+
+
 //ac app 
 #define acDiscoveryDangerAPTrap				"WIDSDetectRogueTrap"				//1.1
 #define acRadiusAuthenticationServerNotReachTrap		"RadiusAuthServerUnavailableTrap"	//1.2

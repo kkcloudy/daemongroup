@@ -189,6 +189,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #define acAPACTimeSynchroFailureTrapClear   "acAPACTimeSynchroFailureTrapClear"		//0.22
 
+#define acBoardExtractTrap					"acBoardExtractTrap"					//0.24
+#define acBoardInsertTrap					"acBoardInsertTrap"						//0.25
+#define acPortDownTrap						"acPortDownTrap"						//0.26
+#define acPortUpTrap						"acPortUpTrap"							//0.27
+
+
+
 //ac app 
 #define acDiscoveryDangerAPTrap				"acDiscoveryDangerAPTrap"				//1.1
 #define acRadiusAuthenticationServerNotReachTrap		"acRadiusAuthenticationServerNotReachTrap"	//1.2
@@ -374,6 +381,8 @@ enum {
 	ACTEMPERTOOHIGH,					/*21*/
 	ACFINDATTACK,						/*22*/
 	ACHEARTTIMEPACKAGE,					/*23*/
+	ACBOARDPULLOUT,						/*24*/
+	ACPORTDOWN,							/*25*/
 	MAXACTRAPNUM
 };
 

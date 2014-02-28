@@ -6717,7 +6717,197 @@ int ac_system_start_func(DBusMessage *message)
 
 	return TRAP_SIGNAL_HANDLE_SEND_TRAP_OK;
 }
+/*dongt*/
+int ac_insert_extract_func(DBusMessage *message)
+{
+	cmd_test_out(acBoardExtractTrap);
 
+	unsigned int is_active_master = 0;
+	
+	if(VALID_DBM_FLAG == get_dbm_effective_flag())
+	{
+		is_active_master = get_product_info(DISTRIBUTED_ACTIVE_MASTER_FILE);
+	}
+
+	if(IS_NOT_ACTIVE_MASTER == is_active_master)
+	{
+		trap_syslog(LOG_INFO, "return TRAP_SIGNAL_HANDLE_AC_IS_NOT_ACTIVE_MASTER in ac_insert_extract_func fail\n");
+		return TRAP_SIGNAL_HANDLE_AC_IS_NOT_ACTIVE_MASTER;
+	}
+
+	if(1 == ac_trap_get_flag("/var/run/ac_restart_trap_flag"))
+	{
+		trap_syslog(LOG_INFO,"ac_insert_extract_func\n");
+		return -1;
+	}
+
+	unsigned int board_id=0;
+	unsigned int slot_state=0;
+
+	char str_reason[50];
+	memset(str_reason,0, sizeof(str_reason));
+
+	DBusError error;
+	dbus_error_init(&error);
+	if (!(dbus_message_get_args(message, &error,
+								DBUS_TYPE_UINT32,&slot_state,//°å¿¨×´Ì¬0--extract, 1--insert
+								DBUS_TYPE_UINT32, &board_id,//²ÛºÅ
+								DBUS_TYPE_INVALID))) 
+	{
+		trap_syslog(LOG_WARNING, "Get args failed, %s, %s\n", dbus_message_get_member(message), error.message);
+		dbus_error_free(&error);
+		return TRAP_SIGNAL_HANDLE_GET_ARGS_ERROR;
+	}
+	trap_syslog(LOG_INFO, "Handling signal %s, slot_state = %d\n", dbus_message_get_member(message), slot_state);
+	
+	if (!trap_is_ac_trap_enabled(&gInsVrrpState)){
+		return TRAP_SIGNAL_HANDLE_AC_IS_BACKUP;
+	}
+	
+	TrapDescr *tDescr = NULL;
+	if ( 0 == slot_state )
+	{
+		tDescr = trap_descr_list_get_item(global.gDescrList_hash, acBoardExtractTrap);
+		sprintf(str_reason,"slot_%d_is_pulled_out\n",board_id);
+	}
+	else if ( 1 == slot_state )
+	{
+		tDescr = trap_descr_list_get_item(global.gDescrList_hash, acBoardInsertTrap);
+		sprintf(str_reason,"slot_%d_is_pushed_in\n",board_id);
+	}
+	if((tDescr == NULL) || 0 == tDescr->switch_status)
+		return TRAP_SIGNAL_HANDLE_DESCR_SWITCH_OFF;
+	
+	INCREASE_TIMES(tDescr);
+	TRAP_SIGNAL_AC_RESEND_UPPER_MACRO(tDescr);
+
+	int i = 0,j = 0;
+	for(i = 0; i < VRRP_TYPE_NUM; i++)
+		for(j = 0; j < INSTANCE_NUM && gInsVrrpState.instance_master[i][j]; j++)
+		{
+			TrapData *tData = trap_data_new_from_descr(tDescr);
+			if(NULL == tData)
+			{
+				trap_syslog(LOG_INFO, "ac_insert_extract_func: trap_data_new_from_descr malloc tData error!\n");
+				continue;
+			}
+			
+			char mac_str[MAC_STR_LEN]={0};
+        	get_ac_mac_str(mac_str, sizeof(mac_str), gSysInfo.ac_mac);
+        	
+        	char mac_oid[MAX_MAC_OID];
+        	get_ac_mac_oid(mac_oid, sizeof(mac_oid), mac_str);
+
+
+			trap_data_append_param_str(tData, "%s s %s", EI_AC_MAC_TRAP_DES, mac_str);
+        	trap_data_append_param_str(tData, "%s%s s %s", AC_NET_ELEMENT_CODE_OID, mac_oid, gSysInfo.hostname);
+			trap_data_append_param_str(tData, "%s%s s %s", TRAP_AC_OID, TRAP_TITLE_OID, str_reason);
+			
+        	trap_data_append_common_param(tData, tDescr);
+			
+            trap_send(gInsVrrpState.instance[i][gInsVrrpState.instance_master[i][j]].receivelist, &gV3UserList, tData);
+            TRAP_SIGNAL_AC_RESEND_LOWER_MACRO(tDescr, tData, i, gInsVrrpState.instance_master[i][j]); 
+
+			break;
+		}
+	return TRAP_SIGNAL_HANDLE_SEND_TRAP_OK;
+}
+int ac_port_down_func(DBusMessage *message)
+{
+
+	cmd_test_out(acPortDownTrap);
+
+	unsigned int is_active_master = 0;
+	if(VALID_DBM_FLAG == get_dbm_effective_flag())
+	{
+		is_active_master = get_product_info(DISTRIBUTED_ACTIVE_MASTER_FILE);
+	}
+
+	if(IS_NOT_ACTIVE_MASTER == is_active_master)
+	{
+		trap_syslog(LOG_INFO, "return TRAP_SIGNAL_HANDLE_AC_IS_NOT_ACTIVE_MASTER in ac_port_down_func fail\n");
+		return TRAP_SIGNAL_HANDLE_AC_IS_NOT_ACTIVE_MASTER;
+	}
+
+	if(1 == ac_trap_get_flag("/var/run/ac_restart_trap_flag"))
+	{
+		trap_syslog(LOG_INFO,"ac_port_down_func\n");
+		return -1;
+	}
+
+	char str_reason[50];
+	memset(str_reason,0, sizeof(str_reason));
+
+	
+	unsigned int port_state;
+	unsigned int board_id;
+	unsigned int port_id;
+	DBusError error;
+	dbus_error_init(&error);
+	if (!(dbus_message_get_args(message, &error,
+								DBUS_TYPE_UINT32,&port_state,//0--down,1--up
+								DBUS_TYPE_UINT32, &board_id,
+								DBUS_TYPE_UINT32, &port_id,
+								
+								DBUS_TYPE_INVALID))) 
+	{
+		trap_syslog(LOG_WARNING, "Get args failed, %s, %s\n", dbus_message_get_member(message), error.message);
+		dbus_error_free(&error);
+		return TRAP_SIGNAL_HANDLE_GET_ARGS_ERROR;
+	}
+	trap_syslog(LOG_INFO, "Handling signal %s, port_state = %d\n", dbus_message_get_member(message), port_state);
+	
+	if (!trap_is_ac_trap_enabled(&gInsVrrpState)){
+		return TRAP_SIGNAL_HANDLE_AC_IS_BACKUP;
+	}
+	
+	TrapDescr *tDescr = NULL;
+	if ( 0 == port_state)
+	{
+		tDescr = trap_descr_list_get_item(global.gDescrList_hash, acPortDownTrap);
+		sprintf(str_reason,"port:%d-%d_is_down\n",board_id,port_id);
+	}	
+	else if ( 1 == port_state )
+	{
+		tDescr = trap_descr_list_get_item(global.gDescrList_hash, acPortUpTrap);
+		sprintf(str_reason,"port:%d-%d_is_up\n",board_id,port_id);
+	}
+
+	INCREASE_TIMES(tDescr);
+	TRAP_SIGNAL_AC_RESEND_UPPER_MACRO(tDescr);
+
+	int i = 0,j = 0;
+	for(i = 0; i < VRRP_TYPE_NUM; i++)
+		for(j = 0; j < INSTANCE_NUM && gInsVrrpState.instance_master[i][j]; j++)
+		{
+			TrapData *tData = trap_data_new_from_descr(tDescr);
+			if(NULL == tData)
+			{
+				trap_syslog(LOG_INFO, "ac_port_down_func: trap_data_new_from_descr malloc tData error!\n");
+				continue;
+			}
+			
+			char mac_str[MAC_STR_LEN]={0};
+        	get_ac_mac_str(mac_str, sizeof(mac_str), gSysInfo.ac_mac);
+        	
+        	char mac_oid[MAX_MAC_OID];
+        	get_ac_mac_oid(mac_oid, sizeof(mac_oid), mac_str);
+
+
+			trap_data_append_param_str(tData, "%s s %s", EI_AC_MAC_TRAP_DES, mac_str);
+        	trap_data_append_param_str(tData, "%s%s s %s", AC_NET_ELEMENT_CODE_OID, mac_oid, gSysInfo.hostname);
+			trap_data_append_param_str(tData, "%s%s s %s", TRAP_AC_OID, TRAP_TITLE_OID, str_reason);
+
+        	trap_data_append_common_param(tData, tDescr);
+			
+            trap_send(gInsVrrpState.instance[i][gInsVrrpState.instance_master[i][j]].receivelist, &gV3UserList, tData);
+            TRAP_SIGNAL_AC_RESEND_LOWER_MACRO(tDescr, tData, i, gInsVrrpState.instance_master[i][j]); 
+
+			break;
+		}
+
+	return TRAP_SIGNAL_HANDLE_SEND_TRAP_OK;
+}
 void trap_signal_register_all(TrapList *list, hashtable *ht)
 {
 	TRAP_TRACE_LOG(LOG_DEBUG,"entry.\n");
@@ -6939,6 +7129,12 @@ void trap_signal_register_all(TrapList *list, hashtable *ht)
 	INIT_SIGNAL_HASH_LIST(tSignal_tmp,ht);
 
 	tSignal_tmp=trap_signal_list_register(list, SEM_TRAP_SYSTEM_STATE,							ac_system_start_func);
+	INIT_SIGNAL_HASH_LIST(tSignal_tmp,ht);
+	
+	tSignal_tmp=trap_signal_list_register(list, SEM_TRAP_BOARD_STATE,							ac_insert_extract_func);
+	INIT_SIGNAL_HASH_LIST(tSignal_tmp,ht);
+
+	tSignal_tmp=trap_signal_list_register(list, SEM_TRAP_PORT_STATE,							ac_port_down_func);
 	INIT_SIGNAL_HASH_LIST(tSignal_tmp,ht);
 
 	TRAP_SHOW_HASHTABLE(ht, tSignal_tmp, signal_hash_node ,signal_name);
@@ -7302,6 +7498,22 @@ void trap_descr_register_all(TrapList *list, hashtable *ht)
 	descr_tmp=trap_descr_list_register(list, ACAPTIMESYNCHROFAIL, acAPACTimeSynchroFailureTrapClear, TRAP_SRC_AC, ".0.22", 	TRAP_TYPE_DEVICE, 
 									TRAP_LEVEL_MAJOR, "wtp_ap_actimesynchrofailure_clear", "wtp_ap_actimesynchrofailure_clear");
 	INIT_DESCR_HASH_LIST( descr_tmp , ht );
+	
+	descr_tmp=trap_descr_list_register(list, ACBOARDPULLOUT, acBoardExtractTrap, TRAP_SRC_AC, ".0.24", 	TRAP_TYPE_DEVICE, 
+									TRAP_LEVEL_MAJOR, "ac_board_extract", "ac_board_extract");
+	INIT_DESCR_HASH_LIST( descr_tmp , ht );	
+
+	descr_tmp=trap_descr_list_register(list, ACBOARDPULLOUT, acBoardInsertTrap, TRAP_SRC_AC, ".0.25", 	TRAP_TYPE_DEVICE, 
+									TRAP_LEVEL_MAJOR, "ac_board_insert", "ac_board_insert");
+	INIT_DESCR_HASH_LIST( descr_tmp , ht );	
+	
+	descr_tmp=trap_descr_list_register(list, ACPORTDOWN, acPortUpTrap, TRAP_SRC_AC, ".0.26", 	TRAP_TYPE_DEVICE, 
+									TRAP_LEVEL_MAJOR, "ac_port_up", "ac_port_up");
+	INIT_DESCR_HASH_LIST( descr_tmp , ht );	
+	
+	descr_tmp=trap_descr_list_register(list, ACPORTDOWN, acPortDownTrap, TRAP_SRC_AC, ".0.27", 	TRAP_TYPE_DEVICE, 
+									TRAP_LEVEL_MAJOR, "ac_port_down", "ac_port_down");
+	INIT_DESCR_HASH_LIST( descr_tmp , ht );	
 	
 // ac app
 //1.1
