@@ -3781,14 +3781,17 @@ zebra_if = ifp->info;
 				{
 				  vty_out (vty, "%% %s : line %d ,Can't set interface IP address: %s.%s", 
 					   __func__,__LINE__,safe_strerror(errno), VTY_NEWLINE);
-	//			  return CMD_WARNING;
+				/*  return CMD_WARNING;*/
 				}
 		      connected_down_ipv6 (ifp, ifc);
+			  
+			  if (CHECK_FLAG (ifc->ipv6_config, RTMD_IPV6_ADDR_CONFIG))
+				UNSET_FLAG (ifc->ipv6_config, RTMD_IPV6_ADDR_CONFIG);
 
 		      zebra_interface_address_delete_update (ifp, ifc);
 
 		      UNSET_FLAG (ifc->conf, ZEBRA_IFC_REAL);
-
+#if 0
 		      if (CHECK_FLAG (ifc->conf, ZEBRA_IFC_CONFIGURED))
 			last = node;
 		      else
@@ -3799,6 +3802,20 @@ zebra_if = ifp->info;
 			  listnode_delete (ifp->connected, ifc);
 			  connected_free (ifc);
 			}
+#else
+if (CHECK_FLAG (ifc->conf, ZEBRA_IFC_CONFIGURED))
+			last = node;
+		    /*  else*/
+			{
+			
+				router_id_del_address(ifc);
+			/*zlog_debug("%s : line %d ,##########ipv6 2###############\n",__func__,__LINE__);*/
+			  listnode_delete (ifp->connected, ifc);
+			  connected_free (ifc);
+			}
+
+
+#endif
 		    }
 #endif /* HAVE_IPV6 */
 
@@ -5274,7 +5291,8 @@ ipv6_address_install (struct vty *vty, struct interface *ifp,
   struct connected *ifc2;
   int count = 0;
   int ret;
-  int ifc_new = 0;
+  int ifc_new = 0; 
+  int ip_have_set = 0;
 
   ret = str2prefix_ipv6 (addr_str, &cp);
   if (ret <= 0)
@@ -5352,6 +5370,11 @@ ipv6_address_install (struct vty *vty, struct interface *ifp,
       /* Add to linked list. */
       listnode_add (ifp->connected, ifc);
     }
+  else
+  {
+	  zlog_info("this ip is set so avoid to set again.\n");
+	  ip_have_set = 1;
+  }
 
   /* This address is configured from zebra. */
   if (! CHECK_FLAG (ifc->conf, ZEBRA_IFC_CONFIGURED))
@@ -5377,24 +5400,56 @@ ipv6_address_install (struct vty *vty, struct interface *ifp,
 				||(judge_eth_interface(ifp->name)==ETH_INTERFACE)
 				||(strncmp(ifp->name,"mng",3)== 0))
 	  {
+		if(CHECK_FLAG(ifp->if_scope, INTERFACE_LOCAL))
 		{
-	      ret = if_prefix_add_ipv6 (ifp, ifc);
+			if(ip_have_set == 1)
+			{
+				zlog_info("the interface is set local and this ip is set .\n");
+				
+				return CMD_SUCCESS;
+			}
+			
+		  	int slot_num = 0;
 
+			slot_num = get_slot_num(ifp->name);
+			zlog_debug("The interface %s set local .\n",ifp->name);
+			/*goto skip;*/
+			if(slot_num == product->board_id)/* local interface : install to kernel.*/
+			{
+				ret = if_prefix_add_ipv6 (ifp, ifc);
+ 				 if (ret < 0)
+				{
+				  vty_out (vty, "%Can't set interface IP address: %s.%s", safe_strerror(errno), VTY_NEWLINE);		
+				  return CMD_WARNING;
+				}
+				zlog_debug("The interface %s set local and ip install kernel sucess .\n",ifp->name);
+			}
+			
+			if(slot_num == product->board_id)/* local real interface*/
+			  SET_FLAG (ifc->conf, ZEBRA_IFC_REAL);
+			
+			zebra_interface_address_add_update (ifp, ifc);
+			if (if_is_operative(ifp))
+			 connected_up_ipv6(ifp, ifc);
+			
+			 return CMD_SUCCESS;
+						
+		}
+	     ret = if_prefix_add_ipv6 (ifp, ifc);
          if(ret < 0)
 		  {
 			
 			if(errno == EEXIST)
 			 {
-				zlog_info("%s:line %d,IP address is exist already.\n",__func__,__LINE__);
+				zlog_info("%s:line %d,IPv6 address is exist already.\n",__func__,__LINE__);
 			  }
 			else
 			{
-			  vty_out (vty, "%% Can't set interface IP address: %s.%s", 
+			  vty_out (vty, "%% Can't set interface IPv6 address: %s.%s", 
 				   safe_strerror(errno), VTY_NEWLINE);
 			  return CMD_WARNING;
 			  }
 			}
-		 }
 
       /* IP address propery set. */
       SET_FLAG (ifc->conf, ZEBRA_IFC_REAL);
@@ -5413,7 +5468,77 @@ ipv6_address_install (struct vty *vty, struct interface *ifp,
 	if(product != NULL)/*rpa interface*/
 	 {
 	   if(strncmp(ifp->name,"ve",2)!=0 && strncmp(ifp->name,"eth",3)!=0)
-	   	{
+	   {
+   	 	if(((strncmp(ifp->name,"wlan",4)==0)||(strncmp(ifp->name,"ebr",3)==0))
+  			&& (CHECK_FLAG(ifp->if_scope, INTERFACE_LOCAL)))
+  		 {
+   	    	/*is rpa interface already or real interface*/
+   	    	if((ifp->if_types == RPA_INTERFACE)
+				|| ((ifp->if_types == REAL_INTERFACE || ifp->if_types == 0)&&(ifp->ifindex != IFINDEX_INTERNAL)))
+	   	      {
+				  	int slot_num = 0;
+
+					slot_num = get_slot_num(ifp->name);
+					zlog_debug("The interface %s set local .\n",ifp->name);
+					/*goto skip;*/
+					if(slot_num == product->board_id)
+					{
+						ret = if_prefix_add_ipv6 (ifp, ifc);
+	     				 if (ret < 0)
+						{
+						  vty_out (vty, "Can't set interface IP address: %s.%s", safe_strerror(errno), VTY_NEWLINE);		
+						  return CMD_WARNING;
+						}
+						zlog_debug("The interface %s set local and ip install kernel sucess .\n",ifp->name);
+					}
+					
+					if(slot_num == product->board_id)
+					  SET_FLAG (ifc->conf, ZEBRA_IFC_REAL);
+					
+					zebra_interface_address_add_update (ifp, ifc);
+					if (if_is_operative(ifp))
+					 connected_up_ipv6(ifp, ifc);
+					
+					 return CMD_SUCCESS;
+					
+	   	 		}
+			else if(ifp->if_types == VIRTUAL_INTERFACE)/*virtual interface */
+			 {   
+			   /*create_rpa_interface();*/
+			   ret = create_rpa_interface(ifp);
+				if(ret < 0)
+				 {
+				   zlog_debug("%s : line %d, creat rpa interface(%s) failed : %s \n ",__func__,__LINE__,safe_strerror(errno),ifp->name);
+		   		  /*return NULL;*/
+				 }
+				 else
+				 { 
+				   /*virtual interface ==> RPA interface*/
+				   ifp->if_types = RPA_INTERFACE;
+				   zlog_debug("%s : line %d, creat rpa interface(%s) sucess, so virtual turn to rpa interface...\n",__func__,__LINE__,ifp->name);
+				 }
+
+				sleep(1);
+				
+				ifp->ifindex = if_get_index_by_ioctl(ifp);
+
+				if(ifp->ifindex <= 0)
+				 {
+				   zlog_warn("get rpa(%s) ifindex by ioctl failed : %s ..\n",ifp->name,safe_strerror(errno));
+				   return CMD_WARNING;
+				 }
+				zlog_debug("get rpa(%s) ifindex by ioctl sucess is %d .....",ifp->name,ifp->ifindex);
+
+				/*gujd : 2012-08-01, Add for ospf , rip update the interface index when create rpa .*/
+				zebra_interface_add_update(ifp);
+				zebra_interface_address_add_update (ifp, ifc);
+				if (if_is_operative(ifp))
+				  connected_up_ipv6 (ifp, ifc);
+
+				return CMD_SUCCESS;
+				
+	   		 }
+		  }
 	   	  int count_ip = 0;
 		 /* count_ip = ip_address_count(ifp);*/
 		 
@@ -5530,19 +5655,30 @@ ipv6_address_uninstall (struct vty *vty, struct interface *ifp,
   /* if (! CHECK_FLAG (ifc->conf, ZEBRA_IFC_CONFIGURED))
          return CMD_WARNING;*/
 
+  if (CHECK_FLAG (ifc->ipv6_config, RTMD_IPV6_ADDR_CONFIG))
+    UNSET_FLAG (ifc->ipv6_config, RTMD_IPV6_ADDR_CONFIG);
+  
+  if(CHECK_FLAG(ifp->if_scope, INTERFACE_LOCAL)&&product)
+  	{
+		int slot_num = 0;
+		slot_num = get_slot_num(ifp->name);
+		if(slot_num != product->board_id)
+		{
+		  interface_local_del_ip_address(ifc);
+		  return CMD_SUCCESS;
+		}
+  	}
+
   /* This is not real address or interface is not active. */
   if (! CHECK_FLAG (ifc->conf, ZEBRA_IFC_REAL)
       || ! CHECK_FLAG (ifp->status, ZEBRA_INTERFACE_ACTIVE))
     {
-		router_id_del_address(ifc);
+	  router_id_del_address(ifc);
       listnode_delete (ifp->connected, ifc);
       connected_free (ifc);
       return CMD_WARNING;
     }
   
-  if (CHECK_FLAG (ifc->ipv6_config, RTMD_IPV6_ADDR_CONFIG))
-    UNSET_FLAG (ifc->ipv6_config, RTMD_IPV6_ADDR_CONFIG);
-
   /* This is real route. */
   ret = if_prefix_delete_ipv6 (ifp, ifc);
   #if 1

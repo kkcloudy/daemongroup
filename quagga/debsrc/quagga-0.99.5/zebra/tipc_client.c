@@ -409,6 +409,8 @@ tipc_server_packet_route_multipath (int cmd, tipc_client *master_board, struct p
 						if(tipc_client_debug)
 						  zlog_debug("%s : line %d, nexthop->type = NEXTHOP_TYPE_IPV6 or IFINDEX..\n",__func__,__LINE__);
 						ifname = ifindex_to_ifname (nexthop->ifindex);
+						if(tipc_client_debug)
+						  zlog_debug("%s : line %d, packet ifname[%s],index[%d].\n",__func__,__LINE__,ifname,nexthop->ifindex);
 						stream_putc(s,nexthop->type);/*ipv6*/
 						stream_write (s, (u_char *) &nexthop->gate.ipv6, 16);/*packet ipv6 gate, 16 byte*/
 			//			stream_putc(s,strlen(ifname));

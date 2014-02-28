@@ -465,9 +465,16 @@ connected_up_ipv6 (struct interface *ifp, struct connected *ifc)
   struct prefix_ipv6 *addr;
   struct prefix_ipv6 *dest;
 
+  
+  if(product != NULL && product->board_type != BOARD_IS_ACTIVE_MASTER)
+  	goto skip;
+  if(product != NULL && product->board_type == BOARD_IS_ACTIVE_MASTER &&CHECK_FLAG(ifp->if_scope, INTERFACE_LOCAL))
+  	goto skip;/*local interface , skip the check the ifc->conf, because the ip address not install in the kernel .*/
+
   if (! CHECK_FLAG (ifc->conf, ZEBRA_IFC_REAL))
     return;
 
+skip:
   addr = (struct prefix_ipv6 *) ifc->address;
   dest = (struct prefix_ipv6 *) ifc->destination;
 
@@ -546,9 +553,16 @@ connected_down_ipv6 (struct interface *ifp, struct connected *ifc)
   struct prefix_ipv6 *addr;
   struct prefix_ipv6 *dest;
 
+  if(product != NULL && product->board_type != BOARD_IS_ACTIVE_MASTER)
+   goto skip;
+  
+  if(product != NULL && product->board_type == BOARD_IS_ACTIVE_MASTER &&CHECK_FLAG(ifp->if_scope, INTERFACE_LOCAL))
+   goto skip;/*local interface , skip the check the ifc->conf, because the ip address not install in the kernel .*/
+
   if (! CHECK_FLAG (ifc->conf, ZEBRA_IFC_REAL))
     return;
-
+  
+skip:
   addr = (struct prefix_ipv6 *) ifc->address;
   dest = (struct prefix_ipv6 *) ifc->destination;
 

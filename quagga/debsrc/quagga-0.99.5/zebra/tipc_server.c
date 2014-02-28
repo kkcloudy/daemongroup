@@ -2182,6 +2182,9 @@ tipc_client_route_multipath (int cmd, tipc_server *vice_board, u_short length)
 					stream_get (ipv6_gate ,s,16);/*get  ipv6 gate, 16 byte*/
 					memset (ifname, 0, 16);
 					stream_get(ifname,s,(size_t)INTERFACE_NAMSIZ);
+					if(tipc_server_debug)
+					 zlog_debug("%s : line %d, fetch nexthop ifname[%s].\n",__func__,__LINE__,ifname);
+					
 					/*gujd : 2013-01-10, pm 4:34 . Add for interface local used in route.*/
 					ret = check_interface_belong_to_local_board_set_local_mode(ifname);
 					if(ret == 1&&(cmd == ZEBRA_IPV4_ROUTE_ADD ||cmd == ZEBRA_IPV6_ROUTE_ADD))/*change*/
@@ -5059,6 +5062,7 @@ if (! CHECK_FLAG (ifc->conf, ZEBRA_IFC_CONFIGURED))
 	}
 	else if(ifc->address->family == AF_INET6)
 	 {
+		SET_FLAG (ifc->conf, ZEBRA_IFC_REAL); 
 		 if (if_is_operative(ifc->ifp))
 		 {
 	        if(tipc_server_debug)

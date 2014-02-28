@@ -34,6 +34,7 @@
 #include "zebra/interface.h"
 
 extern struct zebra_privs_t zserv_privs;
+extern product_inf *product ;
 
 /* clear and set interface name string */
 void
@@ -542,6 +543,18 @@ if_prefix_add_ipv6 (struct interface *ifp, struct connected *ifc)
   int ret = 0;/*add init 0*/
   struct prefix_ipv6 *p;
   struct in6_ifreq ifreq;
+
+  
+  if(CHECK_FLAG(ifp->if_scope, INTERFACE_LOCAL))
+  {
+    int slot_num = 0;
+	slot_num = get_slot_num(ifp->name);
+	if(slot_num != product->board_id)/* local interface : install to kernel.*/
+	{
+		zlog_debug("The interface [%s] is set local and not local board , so don't install to kernel .\n",ifp->name);
+		return -1;
+	 }
+   }
 
   p = (struct prefix_ipv6 *) ifc->address;
 

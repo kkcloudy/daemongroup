@@ -1803,9 +1803,9 @@ static_ipv6_func (struct vty *vty, int add_cmd, const char *dest_str,
     }
 
   if (add_cmd)
-    ret=static_add_ipv6 (&p, type, gate, ifname, flag, distance, table);
+    ret=static_add_ipv6_by_vtysh(&p, type, gate, ifname, flag, distance, table);
   else
-    ret=static_delete_ipv6 (&p, type, gate, ifname, distance, table);
+    ret=static_delete_ipv6_by_vtysh(&p, type, gate, ifname, distance, table);
 
   return CMD_SUCCESS;
 }

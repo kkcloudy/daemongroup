@@ -3416,6 +3416,201 @@ static_delete_ipv4_equal (struct prefix *p, struct in_addr *gate, const char *if
 #endif
 
 #ifdef HAVE_IPV6
+
+
+/* formation the rib info used to send to other board. */
+static void
+packet_static_ipv6_route (struct prefix *p, struct static_ipv6 *si,int slot,struct nexthop *nexthop,int ifindex,int cmd)
+{
+  struct rib *rib;
+  struct route_node *rn;
+  struct route_table *table;
+
+  /* This is new static route. */
+  rib = XCALLOC (MTYPE_RIB, sizeof (struct rib));
+  
+  rib->type = ZEBRA_ROUTE_STATIC;
+  rib->distance = si->distance;
+  rib->metric = 0;
+  rib->nexthop_num = 0;
+
+  switch (si->type)
+   {
+		case STATIC_IPV6_GATEWAY:
+		//  nexthop_ipv6_add (rib, &si->ipv6);
+		nexthop_ipv6_ifindex_add(rib, &si->ipv6,ifindex);
+		  break;
+		case STATIC_IPV6_IFNAME:
+		  nexthop_ifname_add (rib, si->ifname);
+		  break;
+		case STATIC_IPV6_GATEWAY_IFNAME:
+		  nexthop_ipv6_ifname_add (rib, &si->ipv6, si->ifname);
+		  break;
+	}
+
+  /* Save the flags of this static routes (reject, blackhole) */
+  rib->flags = si->flags;
+  
+  /*send by tipc to other board*/
+  active_master_packet_route_info_to_send(p,rib,slot,cmd);/*add*/
+  
+  /*free this temp rib.*/
+  XFREE(MTYPE_RIB,rib);
+  
+
+
+}
+
+
+static int
+rib_search_route_ipv6 (struct route_node *rn, struct rib *rib, struct prefix *p, struct static_ipv6 *target,int cmd)
+{
+  struct nexthop *nexthop;
+  int len = 0;
+  char buf[BUFSIZ];
+  char *ifname = NULL;
+  struct prefix_ipv6 gate_ipv6;
+  
+  memset(&gate_ipv6, 0, sizeof(struct prefix_ipv6));
+  gate_ipv6.family = AF_INET6;
+  gate_ipv6.prefixlen = IPV6_MAX_PREFIXLEN;
+  gate_ipv6.prefix = target->ipv6;
+
+  /* Nexthop information. */
+  for (nexthop = rib->nexthop; nexthop; nexthop = nexthop->next)
+  {
+	if(rib->type == ZEBRA_ROUTE_CONNECT)
+	{	
+	   int slot_num = 0;
+	   struct interface *ifp = NULL;
+	   int ifindex = 0;
+	   
+	   if (IS_ZEBRA_DEBUG_RIB)
+		{
+		    char buf1[BUFSIZ];
+		    char buf2[BUFSIZ];
+		    char buf3[BUFSIZ];
+			
+			memset(buf1,0,BUFSIZ);
+			memset(buf2,0,BUFSIZ);
+			memset(buf3,0,BUFSIZ);
+			inet_ntop (AF_INET6, &p->u.prefix, buf1, BUFSIZ);/*cp ip address from u.prefix to buf1*/
+			 zlog_debug("%s: line %d , p ..[%s]..\n",__func__,__LINE__,buf1);
+			inet_ntop (AF_INET6, &rn->p.u.prefix, buf2, BUFSIZ);
+			 zlog_debug("%s: line %d , rn->p ..[%s]..\n",__func__,__LINE__,buf2);
+			inet_ntop (AF_INET6, &gate_ipv6.prefix, buf3, BUFSIZ);
+			 zlog_debug("%s: line %d , gate_ipve ..[%s]..\n",__func__,__LINE__,buf3);
+		  }	
+		
+	   if(prefix_match(&rn->p,(struct prefix*)&gate_ipv6))	/*bingo*/
+	   {
+		 if (IS_ZEBRA_DEBUG_RIB)
+		 	zlog_debug("%s: line %d .nexthop type[%d].\n",__func__,__LINE__,nexthop->type);
+		 switch(nexthop->type)
+		 {
+		 	case NEXTHOP_TYPE_IFINDEX:
+				
+				ifname = ifindex_to_ifname(nexthop->ifindex);
+				ifp = if_lookup_by_name(ifname);
+				if(ifp && CHECK_FLAG(ifp->if_scope, INTERFACE_LOCAL))/*only local*/
+				{
+				/*	target->gate.ifname = ifp->name;*/
+					slot_num = get_slot_num(ifp->name);
+					if(slot_num != product->board_id)/* send to other board.*/
+					{
+						/*make a new func */
+						zlog_debug("%s: line %d , static route for [Other] board interface(%s)when set local.\n",__func__,__LINE__,ifp->name);
+						packet_static_ipv6_route(p,target, slot_num,nexthop,nexthop->ifindex,cmd);
+						
+					}
+					else/*local board normal deal with.*/
+					{
+						zlog_debug("%s: line %d , static route for [Local] board interface(%s)when set local.\n",__func__,__LINE__,ifp->name);
+					/*	static_install_ipv4(p,target);*/
+					}
+				}
+				/*global interface normal deal with.*/
+	  			break;
+				
+			case NEXTHOP_TYPE_IFNAME:
+				
+				ifp = if_lookup_by_name(nexthop->ifname);
+				if(ifp && CHECK_FLAG(ifp->if_scope, INTERFACE_LOCAL))/*only local*/
+				{
+					ifindex = ifname2ifindex(ifp->name);
+				/*	target->gate.ifname = ifp->name;*/
+					
+					slot_num = get_slot_num(ifp->name);
+					if(slot_num != product->board_id)/* send to other board.*/
+					{						
+						zlog_debug("%s: line %d , static route for [Other] board interface(%s)when set local.\n",__func__,__LINE__,ifp->name);
+						packet_static_ipv6_route(p,target, slot_num,nexthop,ifindex,cmd);
+						
+					}
+					else/*local board normal deal with.*/
+					{
+						zlog_debug("%s: line %d , static route for [Local] board interface(%s)when set local.\n",__func__,__LINE__,ifp->name);
+					  /* static_install_ipv4(p,target);*/
+					}
+				}
+				/*global interface normal deal with.*/
+	  			break;
+				
+			default:
+
+					break;
+				
+			}
+		}
+		
+	}
+	else
+	{
+		/*other route, do not care.*/
+		return 0;
+		}
+
+  }
+  if (IS_ZEBRA_DEBUG_RIB)
+	zlog_debug("Leave fun %s .\n",__func__);
+
+return 0;/*nomarl or deal (for loop ) over.*/
+
+}
+
+int
+rib_lookup_ipv6_connected_route (struct prefix *p, struct static_ipv6 *target,int cmd)
+{
+  struct route_table *table;
+  struct route_node *rn;
+  struct rib *rib;
+  struct nexthop *nexthop;
+  
+  if (IS_ZEBRA_DEBUG_RIB)
+	zlog_debug("Enter fun %s .\n",__func__);
+
+  /* Lookup table.  */
+  table = vrf_table (AFI_IP6, SAFI_UNICAST, 0);
+  if (! table)
+    return 0;
+  
+  if (IS_ZEBRA_DEBUG_RIB)
+	 zlog_debug("%s: line %d begin to search connect route .\n",__func__,__LINE__);
+
+  for (rn = route_top (table); rn; rn = route_next (rn))
+  {
+    for (rib = rn->info; rib; rib = rib->next)
+    {
+		rib_search_route_ipv6(rn, rib, p,target,cmd);
+	  }
+  	}
+ 
+ if (IS_ZEBRA_DEBUG_RIB)
+   zlog_debug("Leave fun %s .\n",__func__);
+ return 0;
+ 
+}
+
 int
 rib_bogus_ipv6 (int type, struct prefix_ipv6 *p,
 		struct in6_addr *gate, unsigned int ifindex, int table)
@@ -3806,6 +4001,112 @@ static_uninstall_ipv6 (struct prefix *p, struct static_ipv6 *si)
   /* Unlock node. */
   route_unlock_node (rn);
 }
+ 
+ /* Add static route into static route configuration. */
+ int
+ static_add_ipv6_by_vtysh (struct prefix *p, u_char type, struct in6_addr *gate,
+		  const char *ifname, u_char flags, u_char distance,
+		  u_int32_t vrf_id)
+ {
+   struct route_node *rn;
+   struct static_ipv6 *si;
+   struct static_ipv6 *pp;
+   struct static_ipv6 *cp;
+   struct route_table *stable;
+ 
+   int ret = 0;
+   
+   /* Lookup table.  */
+   stable = vrf_static_table (AFI_IP6, SAFI_UNICAST, vrf_id);
+   if (! stable)
+	 return -1;
+	 
+   if (!gate &&(type == STATIC_IPV6_GATEWAY || type == STATIC_IPV6_GATEWAY_IFNAME))
+	 return -1;
+   
+   if (!ifname && (type == STATIC_IPV6_GATEWAY_IFNAME || type == STATIC_IPV6_IFNAME))
+	 return -1;
+ 
+   /* Lookup static route prefix. */
+   rn = route_node_get (stable, p);
+ 
+   /* Do nothing if there is a same static route.  */
+   for (si = rn->info; si; si = si->next)
+	 {
+	   if (distance == si->distance 
+	   && type == si->type
+	   && (! gate || IPV6_ADDR_SAME (gate, &si->ipv6))
+	   && (! ifname || strcmp (ifname, si->ifname) == 0))
+	 {
+	   route_unlock_node (rn);
+	   return 0;
+	 }
+	 }
+ 
+   /* Make new static route structure. */
+   si = XMALLOC (MTYPE_STATIC_IPV6, sizeof (struct static_ipv6));
+   memset (si, 0, sizeof (struct static_ipv6));
+ 
+   si->type = type;
+   si->distance = distance;
+   si->flags = flags;
+ 
+   switch (type)
+	 {
+	 case STATIC_IPV6_GATEWAY:
+	   si->ipv6 = *gate;
+	   break;
+	 case STATIC_IPV6_IFNAME:
+	   si->ifname = XSTRDUP (0, ifname);
+	   break;
+	 case STATIC_IPV6_GATEWAY_IFNAME:
+	   si->ipv6 = *gate;
+	   si->ifname = XSTRDUP (0, ifname);
+	   break;
+	 }
+ 
+   /* Add new static route information to the tree with sort by
+	  distance value and gateway address. */
+   for (pp = NULL, cp = rn->info; cp; pp = cp, cp = cp->next)
+	 {
+	   if (si->distance < cp->distance)
+				 break;
+	   if (si->distance > cp->distance)
+				 continue;
+	 }
+ 
+   /* Make linked list. */
+   if (pp)
+	 pp->next = si;
+   else
+	 rn->info = si;
+   if (cp)
+	 cp->prev = si;
+   si->prev = pp;
+   si->next = cp;
+   
+   /*Only distribute system do this. research rib to find connected route*/
+   if(product)
+   {
+	 if (IS_ZEBRA_DEBUG_RIB)
+	   zlog_debug("%s: line %d, Add route by vtysh begin to search.\n",__func__,__LINE__);
+	 
+	 ret = rib_lookup_ipv6_connected_route(p,si,ZEBRA_IPV6_ROUTE_ADD);/*ret = 0, noraml deal ,go on */
+	 /*
+	 if(ret > 0)
+	 {
+	   zlog_debug("%s: line %d, Add route by vtysh search the interface loacl route.\n",__func__,__LINE__);
+	   return 1;
+	  }
+	 */
+	}
+	 
+ 
+   /* Install into rib. */
+   return static_install_ipv6 (p, si);
+ 
+   return 1;
+ }
 
 /* Add static route into static route configuration. */
 int
@@ -3892,6 +4193,65 @@ static_add_ipv6 (struct prefix *p, u_char type, struct in6_addr *gate,
 
   /* Install into rib. */
   return static_install_ipv6 (p, si);
+
+  return 1;
+}
+
+/* Delete static route from static route configuration. */
+int
+static_delete_ipv6_by_vtysh (struct prefix *p, u_char type, struct in6_addr *gate,
+		    const char *ifname, u_char distance, u_int32_t vrf_id)
+{
+  struct route_node *rn;
+  struct static_ipv6 *si;
+  struct route_table *stable;
+
+  /* Lookup table.  */
+  stable = vrf_static_table (AFI_IP6, SAFI_UNICAST, vrf_id);
+  if (! stable)
+    return -1;
+
+  /* Lookup static route prefix. */
+  rn = route_node_lookup (stable, p);
+  if (! rn)
+    return 0;
+
+  /* Find same static route is the tree */
+  for (si = rn->info; si; si = si->next)
+    if (distance == si->distance 
+	&& type == si->type
+	&& (! gate || IPV6_ADDR_SAME (gate, &si->ipv6))
+	&& (! ifname || strcmp (ifname, si->ifname) == 0))
+      break;
+
+  /* Can't find static route. */
+  if (! si)
+    {
+      route_unlock_node (rn);
+      return 0;
+    }
+  if(product)
+  {
+	if (IS_ZEBRA_DEBUG_RIB)
+	  zlog_debug("%s: line %d, Delete route by vtysh begin to search.\n",__func__,__LINE__);
+  	rib_lookup_ipv6_connected_route(p,si,ZEBRA_IPV6_ROUTE_DELETE);
+   }
+
+  /* Install into rib. */
+  static_uninstall_ipv6 (p, si);
+
+  /* Unlink static route from linked list. */
+  if (si->prev)
+    si->prev->next = si->next;
+  else
+    rn->info = si->next;
+  if (si->next)
+    si->next->prev = si->prev;
+  
+  /* Free static route configuration. */
+  if (ifname)
+    XFREE (0, si->ifname);
+  XFREE (MTYPE_STATIC_IPV6, si);
 
   return 1;
 }
