@@ -22,6 +22,7 @@
  */
 
 #include <config.h>
+#include <syslog.h>
 #include "dbus-internals.h"
 #include "dbus-marshal-validate.h"
 #include "dbus-marshal-recursive.h"
@@ -338,7 +339,11 @@ validate_body_helper (DBusTypeReader       *reader,
           while (p != a)
             {
               if (*p != '\0')
+              {
+              
+			  	syslog (LOG_INFO,"Func %s DBUS_TYPE_DOUBLE NOT_NUL\n",__func__);
                 return DBUS_INVALID_ALIGNMENT_PADDING_NOT_NUL;
+              }
               ++p;
             }
           
@@ -365,7 +370,10 @@ validate_body_helper (DBusTypeReader       *reader,
             while (p != a)
               {
                 if (*p != '\0')
-                  return DBUS_INVALID_ALIGNMENT_PADDING_NOT_NUL;
+                {
+			  	syslog (LOG_INFO,"Func %s DBUS_TYPE_STRING DBUS_TYPE_ARRAY NOT_NUL\n",__func__);
+				return DBUS_INVALID_ALIGNMENT_PADDING_NOT_NUL;
+                }
                 ++p;
               }
 
@@ -395,7 +403,11 @@ validate_body_helper (DBusTypeReader       *reader,
                 while (p != a)
                   {
                     if (*p != '\0')
-                      return DBUS_INVALID_ALIGNMENT_PADDING_NOT_NUL;
+                    {
+                    	
+						syslog (LOG_INFO,"Func %s  DBUS_TYPE_ARRAY NOT_NUL\n",__func__);
+						return DBUS_INVALID_ALIGNMENT_PADDING_NOT_NUL;
+                    }
                     ++p;
                   }
               }
@@ -586,7 +598,10 @@ validate_body_helper (DBusTypeReader       *reader,
             while (p != a)
               {
                 if (*p != '\0')
-                  return DBUS_INVALID_ALIGNMENT_PADDING_NOT_NUL;
+                {
+					syslog (LOG_INFO,"Func %s  DBUS_TYPE_VARIANT NOT_NUL\n",__func__);
+					return DBUS_INVALID_ALIGNMENT_PADDING_NOT_NUL;
+                }
                 ++p;
               }
 
@@ -617,7 +632,10 @@ validate_body_helper (DBusTypeReader       *reader,
             while (p != a)
               {
                 if (*p != '\0')
-                  return DBUS_INVALID_ALIGNMENT_PADDING_NOT_NUL;
+                {
+					syslog (LOG_INFO,"Func %s  DBUS_TYPE_STRUCT DBUS_TYPE_DICT_ENTRY NOT_NUL\n",__func__);
+					return DBUS_INVALID_ALIGNMENT_PADDING_NOT_NUL;
+                }
                 ++p;
               }
 

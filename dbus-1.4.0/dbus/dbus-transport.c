@@ -23,6 +23,8 @@
 #define DBUD_TIPC 1
 #include <stdio.h>
 #include <config.h>
+#include <syslog.h>
+
 #include "dbus-transport-protected.h"
 #include "dbus-transport-unix.h"
 
@@ -1166,6 +1168,8 @@ _dbus_transport_queue_messages (DBusTransport *transport)
   if (_dbus_message_loader_get_is_corrupted (transport->loader))
     {
       _dbus_verbose ("Corrupted message stream, disconnecting\n");
+     
+	 syslog (LOG_INFO,"Func %s Corrupted message stream, disconnecting\n",__func__);
       _dbus_transport_disconnect (transport);
     }
 

@@ -847,6 +847,7 @@ do_reading (DBusTransport *transport)
       if (_dbus_get_is_errno_enomem ())
         {
           _dbus_verbose ("Out of memory in read()/do_reading()\n");
+          syslog (LOG_INFO,"Func %s Out of memory in read()/do_reading()\n",__func__);
           oom = TRUE;
           goto out;
         }
@@ -856,6 +857,8 @@ do_reading (DBusTransport *transport)
         {
           _dbus_verbose ("Error reading from remote app: %s\n",
                          _dbus_strerror_from_errno ());
+                         
+		syslog (LOG_INFO,"Func %s Error reading from remote app: %s\n",__func__,_dbus_strerror_from_errno ());
           do_io_error (transport);
           goto out;
         }
@@ -863,6 +866,8 @@ do_reading (DBusTransport *transport)
   else if (bytes_read == 0)
     {
       _dbus_verbose ("Disconnected from remote app\n");
+      
+	  syslog (LOG_INFO,"Func %s Disconnected from remote app\n",__func__);
       do_io_error (transport);
       goto out;
     }

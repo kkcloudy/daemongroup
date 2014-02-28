@@ -40,6 +40,7 @@
 #endif
 
 #include <string.h>
+#include <syslog.h>
 
 static void dbus_message_finalize (DBusMessage *message);
 
@@ -3954,6 +3955,7 @@ load_message (DBusMessageLoader *loader,
         oom = TRUE;
       else
         {
+        	syslog (LOG_INFO,"Func %s validity != DBUS_VALID\n",__func__);
           loader->corrupted = TRUE;
           loader->corruption_reason = validity;
         }
@@ -3982,6 +3984,7 @@ load_message (DBusMessageLoader *loader,
       if (validity != DBUS_VALID)
         {
           _dbus_verbose ("Failed to validate message body code %d\n", validity);
+		  syslog (LOG_INFO,"Func %s Failed to validate message body code %d\n",__func__,validity);
 
           loader->corrupted = TRUE;
           loader->corruption_reason = validity;
@@ -4002,6 +4005,7 @@ load_message (DBusMessageLoader *loader,
     {
       _dbus_verbose("Message contains references to more unix fds than were sent %u != %u\n",
                     n_unix_fds, loader->n_unix_fds);
+	  syslog (LOG_INFO,"Func %s Message contains references to more unix fds than were sent %u != %u\n",__func__,n_unix_fds, loader->n_unix_fds);
 
       loader->corrupted = TRUE;
       loader->corruption_reason = DBUS_INVALID_MISSING_UNIX_FDS;
@@ -4035,6 +4039,7 @@ load_message (DBusMessageLoader *loader,
     {
       _dbus_verbose ("Hmm, message claims to come with file descriptors "
                      "but that's not supported on our platform, disconnecting.\n");
+	  syslog (LOG_INFO,"Func %s Hmm, message claims to come with file descriptors \n",__func__);
 
       loader->corrupted = TRUE;
       loader->corruption_reason = DBUS_INVALID_MISSING_UNIX_FDS;
