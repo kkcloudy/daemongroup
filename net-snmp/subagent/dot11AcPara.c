@@ -533,24 +533,26 @@ handle_acConPortalURL(netsnmp_mib_handler *handler,
 	{
 		instance_parameter *paraHead = NULL;
 		int ret = -1;
-		struct portal_conf portalconf;
-		memset( &portalconf, 0, sizeof(struct portal_conf) );
+		struct portal_conf *portalconf = (struct portal_conf*)malloc(sizeof(struct portal_conf));
+		memset( portalconf, 0, sizeof(struct portal_conf) );
 		char content[DEFAULT_LEN] = { 0 };
 		memset(content,0,sizeof(content));
 
 		list_instance_parameter(&paraHead, SNMPD_INSTANCE_MASTER); 
 		if(paraHead)
 		{
+		
 			memcpy(&dot11AcPara_parameter,&(paraHead->parameter),sizeof(dot11AcPara_parameter));
 			
-			ret = eag_get_portal_conf( paraHead->connection, paraHead->parameter.local_id,paraHead->parameter.instance_id, &portalconf );
+			ret = eag_get_portal_conf( paraHead->connection, paraHead->parameter.local_id,paraHead->parameter.instance_id, portalconf );
 			if( EAG_RETURN_OK == ret )
 			{		
-				strncpy(content,portalconf.portal_srv[0].portal_url,sizeof(content)-1);
+				strncpy(content,portalconf->portal_srv[0].portal_url,sizeof(content)-1);
 			}
 		}
 		free_instance_parameter_list(&paraHead);
 		
+		free(portalconf);
 		snmp_set_var_typed_value(requests->requestvb, ASN_OCTET_STR,
 									(u_char *) content,
 									strlen(content));
@@ -705,8 +707,8 @@ handle_acPortalServerPort (netsnmp_mib_handler *handler,
 		{
 			instance_parameter *paraHead = NULL;
 			int ret = -1;
-			struct portal_conf portalconf;
-			memset( &portalconf, 0, sizeof(struct portal_conf) );
+			struct portal_conf *portalconf = (struct portal_conf*)malloc(sizeof(struct portal_conf));
+			memset( portalconf, 0, sizeof(struct portal_conf) );
 			int port = 0;
 
 			list_instance_parameter(&paraHead, SNMPD_INSTANCE_MASTER); 
@@ -714,14 +716,15 @@ handle_acPortalServerPort (netsnmp_mib_handler *handler,
 			{
 				memcpy(&dot11AcPara_parameter,&(paraHead->parameter),sizeof(dot11AcPara_parameter));
 				
-				ret = eag_get_portal_conf( paraHead->connection, paraHead->parameter.local_id,paraHead->parameter.instance_id, &portalconf );
+				ret = eag_get_portal_conf( paraHead->connection, paraHead->parameter.local_id,paraHead->parameter.instance_id, portalconf );
 				if( EAG_RETURN_OK == ret )
 				{		
-					port = portalconf.portal_srv[0].ntf_port;
+					port = portalconf->portal_srv[0].ntf_port;
 				}
 			}
 			free_instance_parameter_list(&paraHead);
-			
+
+			free(portalconf);
 			snmp_set_var_typed_value(requests->requestvb, ASN_INTEGER,
 										(u_char *)&port,
 										sizeof(port));			
