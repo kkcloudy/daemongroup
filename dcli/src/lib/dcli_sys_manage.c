@@ -6490,7 +6490,28 @@ DEFUN (config_dns_server_func,
   vty->node = DNS_SER_NODE;
   return CMD_SUCCESS;
 }
+/*zhaocg modify for dns 2013-12-18*/
+int check_dns_enable()
+{
+	int ret;
+	char str[128]={0};
+	char cmd[256]={0};
+	FILE *fp =	NULL;
 
+	sprintf(cmd,"ps -ef | grep named | grep -v \"grep named\" | wc -l ");
+
+	fp = popen(cmd,"r");
+	if(fp == NULL)
+	{
+		return -1;
+	}
+	fgets(str,128,fp);
+	ret = atoi(str);
+	pclose(fp);
+	return ret;
+}
+
+#if 0
 DEFUN (service_dns_func,
 	 service_dns_cmd,
 	 "service dns (enable|disable)",
@@ -6576,10 +6597,675 @@ DEFUN (service_dns_func,
   	free(cmd);
   return CMD_SUCCESS;
 }
+#else
+DEFUN (service_dns_func,
+	 service_dns_cmd,
+	 "service dns (enable|disable)",
+	 "System service\n"
+	 "Dns server\n"
+	 "Dns server enable\n"
+	 "Dns server disable")
+{
+	
+	int ret;
+	int i;
+	int opt;
+	if((is_distributed == 1) && (is_active_master == 0))
+	{
+		vty_out(vty,"only active master can enable/disable\n");
+		return CMD_WARNING;
+	}
+	
+	if(strncmp("enable",argv[0],strlen(argv[0]))== 0)
+		opt = 0;
+	else
+		opt = 1;
 
+	if(0 == opt)
+	{
+		if(check_dns_enable() > 0)
+		{
+			vty_out(vty,"Dns daemon have enable\n"); 		
+			return CMD_WARNING;		
+			
+		}
+		ret=system("sudo /etc/init.d/bind9 start");
+  
+ 	   if (WIFEXITED(ret))  
+ 	   {  
+		   switch (WEXITSTATUS(ret))
+		   { 	
+				case 0: 		 
+					   break;	
+				default:			
+					vty_out(vty,"Dns daemon start error\n");			
+					return CMD_WARNING;		
+			}	
+	   }  
+ 	   else  
+ 	   {  
+ 		   vty_out(vty,"exit status = [%d]\n", WEXITSTATUS(ret));
+ 		   return CMD_WARNING;
+	   }  
+   
+		for(i = 0;i < 16 ; i++)
+		{
+			if((NULL != (dbus_connection_dcli[i] -> dcli_dbus_connection)) && i != HostSlotId)
+			{
+				ret = dcli_communicate_pfm_by_dbus(opt, 0, 17, "all", 53,0, HostSlotId,
+													"all", "all",i);/*use dbus send message to pfm*/
+				if(ret != 0)
+				{
+					vty_out(vty,"warning:pfm send error,slot %d\n",i);
+					return CMD_WARNING;
+				}
+				ret = dcli_communicate_pfm_by_dbus(opt, 0, 17, "all", 0,53, HostSlotId,
+													"all", "all",i);/*use dbus send message to pfm*/
+				if(ret != 0)
+				{
+					vty_out(vty,"warning:pfm send error,slot %d\n",i);
+					return CMD_WARNING;
+				}
+			}
+		}
+		
+	}
+	else
+	{
+		if(check_dns_enable()== 0)
+		{
+			vty_out(vty,"Dns daemon have disable\n"); 		
+			return CMD_WARNING;		
+			
+		}
+		ret=system("sudo /etc/init.d/bind9 stop");
+  
+ 	   if (WIFEXITED(ret))  
+ 	   {  
+		   switch (WEXITSTATUS(ret))
+		   { 	
+				case 0: 		 
+					   break;	
+				default:			
+					vty_out(vty,"Dns daemon stop error\n");			
+					break;		
+			}	
+	   }  
+ 	   else  
+ 	   {  
+ 		   vty_out(vty,"exit status = [%d]\n", WEXITSTATUS(ret));  
+	   }  
+   
+		for(i = 0;i < 16 ; i++)
+		{
+			if((NULL != (dbus_connection_dcli[i] -> dcli_dbus_connection)) && i != HostSlotId)
+			{
+				ret = dcli_communicate_pfm_by_dbus(opt, 0, 17, "all", 53,0, HostSlotId,
+													"all", "all",i);/*use dbus send message to pfm*/
+				if(ret != 0)
+				{
+					vty_out(vty,"warning:pfm send error,slot %d\n",i);
+					return CMD_WARNING;
+				}
+				ret = dcli_communicate_pfm_by_dbus(opt, 0, 17, "all", 0,53, HostSlotId,
+													"all", "all",i);/*use dbus send message to pfm*/
+				if(ret != 0)
+				{
+					vty_out(vty,"warning:pfm send error,slot %d\n",i);
+					return CMD_WARNING;
+				}
+			}
+		}
+		
+	}
+	return CMD_SUCCESS;
 
+ }
 
+#endif
 
+DEFUN (service_dns_add_rr_func,
+	 service_dns_add_rr_cmd,
+	 "dns add_rr IP DOMAIN SLDOMAIN",
+	 "Dns server\n"
+	 "Add dns A resource record\n"
+	 "IP address:192.168.0.1\n"
+	 "domain name:www.test.com\n"
+	 "Second-Level Domains : test.com\n"
+	 )
+{
+	char cmd[256] = {0};
+	char *p = NULL;
+	int ret = 0;
+	char * domain_str = argv[1];
+	char * sec_lev_domain = argv[2];
+	char * ip = argv[0];
+	if( 0 != strcmp("0.0.0.0",ip))
+	{
+	   ret=parse_ip_check(ip);
+	  if(CMD_SUCCESS != ret)
+	  {
+		  vty_out(vty, "%% Bad parameter : %s !\n", ip);
+		  return CMD_WARNING;
+	  }   
+	}
+	else
+	{
+		  vty_out(vty, "%% Bad parameter : %s !\n", ip);
+		  return CMD_WARNING;
+	}
+	p = strstr(domain_str,sec_lev_domain);
+	if(p==NULL)
+	{
+		vty_out(vty,"Domain is not in the Second-Level Domains !\n");
+		return CMD_WARNING;
+	}
+	domain_str[p-domain_str-1]='\0';
+	if(strlen(domain_str)+strlen(sec_lev_domain) > 200)
+	{
+		vty_out(vty,"Domain name is too long !\n");
+		return CMD_WARNING;
+	}
+	sprintf(cmd,"named_conf.sh add %s %s %s" ,ip,domain_str,sec_lev_domain);  
+	ret=system(cmd);
+	if (WIFEXITED(ret))  
+	{	
+		 switch (WEXITSTATUS(ret))
+		 {	  
+			  case 0:		   
+					 break;   
+			  default:			  
+				  vty_out(vty,"Dns add error\n");		  
+				  return CMD_WARNING;	  
+		  }   
+	 }	
+	 else  
+	 {	
+		 vty_out(vty,"exit status = [%d]\n", WEXITSTATUS(ret)); 
+		 return CMD_WARNING;
+	 }
+	 
+	 if((ret=check_dns_enable()) > 0)
+	 {	 	
+		ret=system("sudo rndc -c /etc/bind/rndc.conf reload");
+		if (WIFEXITED(ret))  
+		{	 
+		  switch (WEXITSTATUS(ret))
+		  {    
+			   case 0:			
+					  break;   
+			   default: 		   
+				   vty_out(vty,"Dns daemon reload error\n");		   
+				   return CMD_WARNING;	   
+		   }   
+		}  
+		else	
+		{  
+		  vty_out(vty,"exit status = [%d]\n", WEXITSTATUS(ret));
+		  return CMD_WARNING;
+		}  
+	 }
+	 
+	return CMD_SUCCESS;
+}
+DEFUN (service_dns_del_rr_func,
+	 service_dns_del_rr_cmd,
+	 "dns del_rr DOMAIN SLDOMAIN",
+	 "Dns server\n"
+	 "Delete dns A resource record\n"
+	 "domain name:www.test.com\n"
+	 "Second-Level Domains : test.com\n"
+	 )
+{
+	char cmd[256] = {0};
+	char *p=NULL;
+	int ret=0;
+	char * domain_str = argv[0];
+	char * sec_lev_domain = argv[1];
+	p = strstr(domain_str,sec_lev_domain);
+	if(p==NULL)
+	{
+		vty_out(vty,"Domain is not in the Second-Level Domains !\n");
+		return CMD_WARNING;
+	}
+	domain_str[p-domain_str-1]='\0';
+	if(strlen(domain_str)+strlen(sec_lev_domain) > 200)
+	{
+		vty_out(vty,"Domain name is too long !\n");
+		return CMD_WARNING;
+	}
+
+	sprintf(cmd,"named_conf.sh delete %s %s %s" ,"127.0.0.1",domain_str,sec_lev_domain);  
+	ret=system(cmd);
+	if (WIFEXITED(ret))  
+	{	
+		 switch (WEXITSTATUS(ret))
+		 {	  
+			  case 0:		   
+					 break;   
+			  default:			  
+				  vty_out(vty,"Dns delete error\n");		  
+				  return CMD_WARNING;	  
+		  }   
+	 }	
+	 else  
+	 {	
+		 vty_out(vty,"exit status = [%d]\n", WEXITSTATUS(ret));
+		 return CMD_WARNING;
+	 }
+	 if((ret=check_dns_enable()) > 0)
+	 {
+	 	
+		ret=system("sudo rndc -c /etc/bind/rndc.conf reload");
+		 if (WIFEXITED(ret))  
+		 {	 
+			  switch (WEXITSTATUS(ret))
+			  {    
+				   case 0:			
+						  break;   
+				   default: 		   
+					   vty_out(vty,"Dns daemon reload error\n");		   
+					   return CMD_WARNING;
+			   }   
+		  }  
+		  else	
+		  {  
+			  vty_out(vty,"exit status = [%d]\n", WEXITSTATUS(ret));
+			  return CMD_WARNING;
+		  }  
+	 }
+	 
+	return CMD_SUCCESS;
+}
+DEFUN (service_dns_del_sld_func,
+	 service_dns_del_sld_cmd,
+	 "dns del_sld SLDOMAIN",
+	 "Dns server\n"
+	 "Delete dns Second-Level Domains : test.com\n"
+	 "Second-Level Domains : test.com\n"
+	 )
+{
+	char cmd[256] = {0};
+	char *p=NULL;
+	int ret=0;
+	char * sec_lev_domain = argv[0];
+	if(strlen(sec_lev_domain) > 200)
+	{
+		vty_out(vty,"Domain name is too long !\n");
+		return CMD_WARNING;
+	}
+	sprintf(cmd,"named_conf.sh del_domain %s %s %s" ,"127.0.0.1","www",sec_lev_domain);  
+	ret=system(cmd);
+	if (WIFEXITED(ret))  
+	{	
+		 switch (WEXITSTATUS(ret))
+		 {	  
+			  case 0:		   
+					 break;   
+			  default:			  
+				  vty_out(vty,"Dns delete error\n");		  
+				  return CMD_WARNING;	  
+		  }   
+	 }	
+	 else  
+	 {	
+		 vty_out(vty,"exit status = [%d]\n", WEXITSTATUS(ret));
+		 return CMD_WARNING;
+	 }
+	 if((ret=check_dns_enable()) > 0)
+	 {
+	 	
+		ret=system("sudo rndc -c /etc/bind/rndc.conf reload");
+		 if (WIFEXITED(ret))  
+		 {	 
+			  switch (WEXITSTATUS(ret))
+			  {    
+				   case 0:			
+						  break;   
+				   default: 		   
+					   vty_out(vty,"Dns daemon reload error\n");		   
+					   return CMD_WARNING;
+			   }   
+		  }  
+		  else	
+		  {  
+			  vty_out(vty,"exit status = [%d]\n", WEXITSTATUS(ret));
+			  return CMD_WARNING;
+		  }  
+	 }
+	 
+	return CMD_SUCCESS;
+}
+
+DEFUN (service_dns_forward_func,
+	 service_dns_forward_cmd,
+	 "dns forward (IP|none)",
+	 "Dns server\n"
+	 "Forward dns request\n"
+	 "IP address:192.168.0.1\n"
+	 )
+{
+	char cmd[256] = {0};
+	char *p=NULL;
+	int ret=0;
+	char * ip = argv[0];
+	
+	if( 0 == strncmp("none",ip,strlen(ip)))
+	{
+		sprintf(cmd,"named_conf.sh forward_del %s %s %s" ,"127.0.0.1","www","test.com");  
+		ret=system(cmd);
+		if (WIFEXITED(ret))  
+		{	
+			switch (WEXITSTATUS(ret))
+			{	  
+			  case 0:		   
+					 break;   
+			  default:			  
+				  vty_out(vty,"Dns forward error\n");		  
+				  return CMD_WARNING;
+			}   
+		}	
+		else  
+		{	
+		 	vty_out(vty,"exit status = [%d]\n", WEXITSTATUS(ret)); 
+			return CMD_WARNING;
+		}
+		if((ret=check_dns_enable()) > 0)
+		{
+			ret=system("sudo rndc -c /etc/bind/rndc.conf reload");
+			if (WIFEXITED(ret))  
+			{   
+			switch (WEXITSTATUS(ret))
+			{	
+				case 0: 		 
+					   break;	
+				default:			
+					vty_out(vty,"Dns daemon reload error\n"); 		
+					return CMD_WARNING;							
+			}	
+			}  
+			else  
+			{  
+				vty_out(vty,"exit status = [%d]\n", WEXITSTATUS(ret));  
+				return CMD_WARNING;
+			}  
+		}
+		return CMD_SUCCESS;
+
+	}
+	
+	if( 0 != strcmp("0.0.0.0",ip))
+	{
+	   ret=parse_ip_check(ip);
+	  if(CMD_SUCCESS != ret)
+	  {
+		  vty_out(vty, "%% Bad parameter : %s !\n",ip);
+		  return CMD_WARNING;
+	  }   
+	}
+	else
+	{
+		vty_out(vty, "%% Bad parameter : %s !\n",ip);
+		return CMD_WARNING;	
+	}
+	
+	sprintf(cmd,"named_conf.sh forward_del %s %s %s" ,ip,"www","test.com");  
+	ret=system(cmd);
+	if (WIFEXITED(ret))  
+	{	
+		 switch (WEXITSTATUS(ret))
+		 {	  
+			  case 0:		   
+					 break;   
+			  default:			  
+				  vty_out(vty,"Dns daemon forward error\n");		  
+				  break;	  
+		  }   
+	}	
+	else  
+	{	
+		 vty_out(vty,"exit status = [%d]\n", WEXITSTATUS(ret));  
+	}	
+	 
+	sprintf(cmd,"named_conf.sh forward %s %s %s" ,ip,"www","test.com");  
+	ret=system(cmd);
+	if (WIFEXITED(ret))  
+	{	 
+	  switch (WEXITSTATUS(ret))
+	  {    
+		   case 0:			
+				  break;   
+		   default: 		   
+			   vty_out(vty,"Dns daemon forward error\n");		     
+			   return CMD_WARNING; 
+			   	   
+	   }   
+	}  
+	else	
+	{  
+	  vty_out(vty,"exit status = [%d]\n", WEXITSTATUS(ret)); 
+	  return CMD_WARNING;
+	}  
+	if((ret=check_dns_enable()) > 0)
+	{
+		ret=system("sudo rndc -c /etc/bind/rndc.conf reload");
+		if (WIFEXITED(ret))  
+		{   
+		   switch (WEXITSTATUS(ret))
+		   {	
+				case 0: 		 
+					   break;	
+				default:			
+					vty_out(vty,"Dns daemon reload error\n"); 		
+					return CMD_WARNING;		
+			}	
+		}  
+		else  
+		{  
+		   vty_out(vty,"exit status = [%d]\n", WEXITSTATUS(ret));
+		   return CMD_WARNING;
+		}  
+	}
+	return CMD_SUCCESS;
+}
+DEFUN (show_dns_forward_func,
+	 show_dns_forward_cmd,
+	 "show dns forward ip",
+	 SHOW_STR
+	 "Dns server\n"
+	 "Forward dns request\n"
+	 "IP address:192.168.0.1\n"
+	 )
+{
+	int ret;
+	char str[128]={0};
+	char cmd[256]={0};
+	FILE *fp =	NULL;
+
+	sprintf(cmd,"sudo namedshowzone.sh forward");
+
+	fp = popen(cmd,"r");
+	if(fp == NULL)
+	{
+		return CMD_WARNING;
+	}
+	while(fgets(str,128,fp))
+	{
+		vty_out(vty,"%s",str); 
+	}
+	pclose(fp);
+	return CMD_SUCCESS;
+}
+
+DEFUN (show_dns_sldomain_func,
+	 show_dns_sldomain_cmd,
+	 "show dns sldomain",
+	 SHOW_STR
+	 "Dns server\n"
+	 "Second-Level Domains : test.com\n"
+	 )
+{
+	int ret;
+	char str[128]={0};
+	char cmd[256]={0};
+	FILE *fp =	NULL;
+
+	sprintf(cmd,"sudo namedshowzone.sh sec_domain");
+
+	fp = popen(cmd,"r");
+	if(fp == NULL)
+	{
+		return CMD_WARNING;
+	}
+	while(fgets(str,128,fp))
+	{
+		vty_out(vty,"%s",str); 
+	}
+	pclose(fp);
+	return CMD_SUCCESS;
+}
+
+DEFUN (show_dns_domain_func,
+	 show_dns_domain_cmd,
+	 "show dns domain",
+	 SHOW_STR
+	 "Dns server\n"
+	 "Domain name:www.test.com\n"
+	 )
+{
+	int ret;
+	char str[256]={0};
+	char cmd[256]={0};
+	char ip[32]={0};
+	char domain[128]={0};
+	char sec_domain[128]={0};
+	FILE *fp =	NULL;
+
+	sprintf(cmd,"sudo namedshowzone.sh domain");
+	fp = popen(cmd,"r");
+	if(fp == NULL)
+	{
+		vty_out(vty,"show dns domain error!\n"); 
+		return CMD_WARNING;
+	}
+	
+	
+	while(fscanf(fp,"%s%s%s",ip,domain,sec_domain)!=-1)
+	{
+		vty_out(vty,"%-16s %-s \t%-s\n",ip,domain,sec_domain); 
+	}
+	pclose(fp);
+	return CMD_SUCCESS;
+}
+DEFUN (debug_dns_log_func,
+	 debug_dns_log_cmd,
+	 "debug dns log all",
+	 "debug log information\n"
+	 "debugDns server log\n"
+	 "debugDns server log\n"
+	 "debugDns server log\n"
+	 )
+{
+	char cmd[256] = {0};
+	int ret=0;
+	
+	sprintf(cmd,"named_conf.sh log %s %s %s" ,"127.0.0.1","www","test.com");  
+	ret=system(cmd);
+	if (WIFEXITED(ret))  
+	{	
+		switch (WEXITSTATUS(ret))
+		{	  
+		  case 0:		   
+				 break;   
+		  default:			  
+			  vty_out(vty,"Dns log error\n");		  
+			  return CMD_WARNING;
+		}	
+	}	
+	else  
+	{	
+		vty_out(vty,"exit status = [%d]\n", WEXITSTATUS(ret)); 
+		return CMD_WARNING;
+	}
+	if((ret=check_dns_enable()) > 0)
+	{
+		ret=system("sudo rndc -c /etc/bind/rndc.conf reload");
+		if (WIFEXITED(ret))  
+		{   
+		   switch (WEXITSTATUS(ret))
+		   {	
+				case 0: 		 
+					   break;	
+				default:			
+					vty_out(vty,"Dns daemon reload error\n"); 		
+					return CMD_WARNING;		
+			}	
+		}  
+		else  
+		{  
+		   vty_out(vty,"exit status = [%d]\n", WEXITSTATUS(ret));
+		   return CMD_WARNING;
+		}  
+	}
+	return CMD_SUCCESS;
+
+}
+
+DEFUN (no_debug_dns_log_func,
+	 no_debug_dns_log_cmd,
+	 "no debug dns log ",
+	 "debug log information\n"
+	 "debugDns server log\n"
+	 "debugDns server log\n"
+	 "debugDns server log\n"
+	 )
+{
+	char cmd[256] = {0};
+	int ret=0;
+	
+	sprintf(cmd,"named_conf.sh log_def %s %s %s" ,"127.0.0.1","www","test.com");  
+	ret=system(cmd);
+	if (WIFEXITED(ret))  
+	{	
+		switch (WEXITSTATUS(ret))
+		{	  
+		  case 0:		   
+				 break;   
+		  default:			  
+			  vty_out(vty,"Dns log error\n");		  
+			  return CMD_WARNING;
+		}	
+	}	
+	else  
+	{	
+		vty_out(vty,"exit status = [%d]\n", WEXITSTATUS(ret)); 
+		return CMD_WARNING;
+	}
+	if((ret=check_dns_enable()) > 0)
+	{
+		ret=system("sudo rndc -c /etc/bind/rndc.conf reload");
+		if (WIFEXITED(ret))  
+		{   
+		   switch (WEXITSTATUS(ret))
+		   {	
+				case 0: 		 
+					   break;	
+				default:			
+					vty_out(vty,"Dns daemon reload error\n"); 		
+					return CMD_WARNING;		
+			}	
+		}  
+		else  
+		{  
+		   vty_out(vty,"exit status = [%d]\n", WEXITSTATUS(ret));
+		   return CMD_WARNING;
+		}  
+	}
+	return CMD_SUCCESS;
+
+}	
+
+#if 0
 int dcli_dns_server_write (struct vty *vty)
 {
 	int ret;
@@ -6607,7 +7293,59 @@ int dcli_dns_server_write (struct vty *vty)
 		pclose(fp);
 	return 0;
 }
+#else
+int dcli_dns_server_write (struct vty *vty)
+{
+	int ret;
+	char cmd[256]={0};
+	char str[128]={0};
+	char show_str[256]={0};
+	char ip[32]={0};
+	char domain[128]={0};
+	char sec_domain[128]={0};
+	FILE *fp =	NULL;
 
+	
+	if((ret=check_dns_enable()) > 0)
+	{
+		   
+		sprintf(show_str,"config dns server\n service dns enable\n");
+		vtysh_add_show_string(show_str);
+		sprintf(cmd,"sudo namedshowzone.sh forward");
+		fp = popen(cmd,"r");
+		if(fp == NULL)
+		{
+			vty_out(vty,"show dns domain error!\n"); 
+			return CMD_WARNING;
+		}
+		while(fscanf(fp,"%s%s",str,ip)!=-1)
+		{
+			sprintf(show_str," dns forward %s\n",ip); 
+			vtysh_add_show_string(show_str);			 
+		}
+		pclose(fp);
+		
+		sprintf(cmd,"sudo namedshowzone.sh domain");
+		fp = popen(cmd,"r");
+		if(fp == NULL)
+		{
+			vty_out(vty,"show dns domain error!\n"); 
+			return CMD_WARNING;
+		}
+		while(fscanf(fp,"%s%s%s",ip,domain,sec_domain)!=-1)
+		{
+			sprintf(show_str," dns add_rr %s %s %s\n",ip,domain,sec_domain); 
+			vtysh_add_show_string(show_str);
+		}
+		pclose(fp);	
+		   	 
+		sprintf(show_str," exit\n");
+		vtysh_add_show_string(show_str); 
+	}
+	return 0;
+}
+
+#endif
 void dcli_sys_manage_init()
 {
 
@@ -6716,31 +7454,44 @@ void dcli_sys_manage_init()
 	install_element (CONFIG_NODE, &no_terminal_monitor_module_func_cmd); 
 */
 
-/*add by zhaocg 2012-10-11 pm 15:30*/
-  install_element (VIEW_NODE, &show_memory_kernel_cmd);
-  install_element (VIEW_NODE, &show_memory_ramfilesystem_cmd);
-  install_element (VIEW_NODE, &show_memory_process_cmd);
-  install_element (VIEW_NODE, &show_memory_storagecard_cmd);
-  install_element (ENABLE_NODE, &show_memory_kernel_cmd);
-  install_element (ENABLE_NODE, &show_memory_ramfilesystem_cmd);
-  install_element (ENABLE_NODE, &show_memory_process_cmd);
-  install_element (ENABLE_NODE, &show_memory_storagecard_cmd);
-  
-  install_element (SYSTEM_DEBUG_NODE, &show_memory_kernel_cmd);
-  install_element (SYSTEM_DEBUG_NODE, &show_memory_ramfilesystem_cmd);
-  install_element (SYSTEM_DEBUG_NODE, &show_memory_process_cmd);
-  install_element (SYSTEM_DEBUG_NODE, &show_memory_storagecard_cmd);
-  
-  install_element (VIEW_NODE, &show_memory_stat_cmd);
-  install_element (ENABLE_NODE, &show_memory_stat_cmd);
-  install_element (SYSTEM_DEBUG_NODE, &show_memory_stat_cmd);
+	/*add by zhaocg 2012-10-11 pm 15:30*/
+	install_element (VIEW_NODE, &show_memory_kernel_cmd);
+	install_element (VIEW_NODE, &show_memory_ramfilesystem_cmd);
+	install_element (VIEW_NODE, &show_memory_process_cmd);
+	install_element (VIEW_NODE, &show_memory_storagecard_cmd);
+	install_element (ENABLE_NODE, &show_memory_kernel_cmd);
+	install_element (ENABLE_NODE, &show_memory_ramfilesystem_cmd);
+	install_element (ENABLE_NODE, &show_memory_process_cmd);
+	install_element (ENABLE_NODE, &show_memory_storagecard_cmd);
 
- /*end by zhaocg 2012-10-12 pm 18:30*/
- install_element (CONFIG_NODE, &config_dns_server_cmd);
- install_element (DNS_SER_NODE, &service_dns_cmd);
+	install_element (SYSTEM_DEBUG_NODE, &show_memory_kernel_cmd);
+	install_element (SYSTEM_DEBUG_NODE, &show_memory_ramfilesystem_cmd);
+	install_element (SYSTEM_DEBUG_NODE, &show_memory_process_cmd);
+	install_element (SYSTEM_DEBUG_NODE, &show_memory_storagecard_cmd);
 
-install_element (CONFIG_NODE, &no_set_smux_debug_cmd);
-install_element (CONFIG_NODE, &set_smux_debug_cmd);
+	install_element (VIEW_NODE, &show_memory_stat_cmd);
+	install_element (ENABLE_NODE, &show_memory_stat_cmd);
+	install_element (SYSTEM_DEBUG_NODE, &show_memory_stat_cmd);
+
+	/*end by zhaocg 2012-10-12 pm 18:30*/
+	install_element (CONFIG_NODE, &config_dns_server_cmd);
+	install_element (DNS_SER_NODE, &service_dns_cmd);
+	install_element (DNS_SER_NODE, &service_dns_add_rr_cmd);
+	install_element (DNS_SER_NODE, &service_dns_forward_cmd);
+	install_element (DNS_SER_NODE, &service_dns_del_rr_cmd);
+	install_element (DNS_SER_NODE, &service_dns_del_sld_cmd);
+		
+	install_element (ENABLE_NODE, &show_dns_forward_cmd);
+	install_element (ENABLE_NODE, &show_dns_sldomain_cmd);
+	install_element (ENABLE_NODE, &show_dns_domain_cmd);
+	install_element (DNS_SER_NODE, &show_dns_forward_cmd);
+	install_element (DNS_SER_NODE, &show_dns_sldomain_cmd);
+	install_element (DNS_SER_NODE, &show_dns_domain_cmd);
+	install_element (DNS_SER_NODE, &no_debug_dns_log_cmd);
+	install_element (DNS_SER_NODE, &debug_dns_log_cmd);
+
+	install_element (CONFIG_NODE, &no_set_smux_debug_cmd);
+	install_element (CONFIG_NODE, &set_smux_debug_cmd);
 }
 
 
