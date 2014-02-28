@@ -34171,9 +34171,9 @@ void Free_radio_apply_wlan_group(struct RadioList *RadioList_Head)
 /*返回-16时，调用Free_radio_apply_wlan_group()释放空间*/
 /*group_type为1，表示组配置*/
 /*group_type为0，表示单独配置*/
-int radio_apply_wlan_group(dbus_parameter parameter, DBusConnection *connection,int group_type,int group_id,char *wlan_id,struct RadioList **RadioList_Head)  
+int radio_apply_wlan_group(dbus_parameter parameter, DBusConnection *connection,int group_type,int apgroupid, int radio_id,char *wlan_id,struct RadioList **RadioList_Head)  
 											/*返回0表示失败，返回1表示成功，返回-1表示input parameter error*/
-                                            /*返回-2表示WLAN ID非法，返回-3表示radio is not exist，返回-4表示WLAN is not exist*/
+					                                            /*返回-2表示WLAN ID非法，返回-3表示radio is not exist，返回-4表示WLAN is not exist*/
 											/*返回-5表示bss num is already L_BSS_NUM，返回-6表示wtp wlan binding interface not match*/
 											/*返回-7表示wtp not bind interface，返回-8表示wlan not bind interface*/
 											/*返回-9表示wlan create wlan bridge fail，返回-10表示add bss if to wlan bridge fail*/
@@ -34184,85 +34184,111 @@ int radio_apply_wlan_group(dbus_parameter parameter, DBusConnection *connection,
 											/*返回-17表示group id does not exist*/
 											/*返回-18表示radio has been binded this wlan already ,if you want use other ESSID,please unbind it first!*/
 {
-    if(NULL == connection)
-        return 0;
-        
-	if(NULL == wlan_id)
-	{
-		*RadioList_Head = NULL;
+	if((NULL == connection)||(NULL == wlan_id))
 		return 0;
-	}
-	
+
+	int retu = 0;
 	int ret = 0;
 	int count = 0;
-	unsigned int id = 0;
-	unsigned int type = 0;
+	int ap_group_id = 0;
+	unsigned int g_radio_id = 0;
+	unsigned int g_id = 0;
+	unsigned int l_radio_id = 0;
+	unsigned int type = group_type;
 	unsigned char wlanid = 0;
-	int retu = 0;
-	
+
 	ret = parse_char_ID((char *)wlan_id,&wlanid);
-	
 	if (ret != WID_DBUS_SUCCESS)
 	{	
-       if(ret == WID_ILLEGAL_INPUT){
+	       if(ret == WID_ILLEGAL_INPUT){
 	   		retu = -13;
-       }
-	   else{
+       		}
+	  	 else{
 	   		retu = -1;
-	   }
+		}
 		return retu;
 	}
-	
 	if((wlanid < 1)||(wlanid >(WLAN_NUM-1)))
 	{
 		return -2;
 	}
 
-	id = group_id;
-	type = group_type;
 	if(type == 0)
 	{
-		if(id > G_RADIO_NUM || id == 0){
-			syslog(LOG_DEBUG,"radio id in radio_apply_wlan_group is %d\n",id);
+		g_radio_id = radio_id;
+		if(g_radio_id > G_RADIO_NUM || g_radio_id == 0){
+			syslog(LOG_DEBUG,"radio id in radio_apply_wlan_group is %d\n",g_radio_id);
 			return -12;
 		}
 	}
 	else if(type == 1)
 	{
-		if(id >= WTP_GROUP_NUM || id == 0){
-			syslog(LOG_DEBUG,"group id in radio_apply_wlan_group is %d\n",id);
+		g_radio_id = radio_id;
+		ap_group_id = apgroupid;
+		if((g_radio_id >3)  || (g_radio_id < 0)){
+			syslog(LOG_DEBUG," g_radio_id should be 0-3\n");
 			return -15;
 		}
+		if(ap_group_id >= WTP_GROUP_NUM || ap_group_id == 0){
+			syslog(LOG_DEBUG,"ap_group_id %d is error\n",ap_group_id);
+			return -20;
+		}
+	}
+	else 
+	{
+		return -19;
 	}
 
 	void *(*dcli_init_func)(
-								int ,
-								int ,
-								DBusConnection *,
-								unsigned int ,
-								unsigned int ,
-								unsigned char ,
-								int *,
-								unsigned int *
-							);
+					int ,
+					int ,
+					DBusConnection *,
+					unsigned int ,
+					unsigned int ,
+					unsigned int ,
+					unsigned int ,
+					unsigned char ,
+					int *,
+					unsigned int *
+				);
 
-	*RadioList_Head = NULL;
 	if(NULL != ccgi_dl_handle)
 	{
 		dcli_init_func = dlsym(ccgi_dl_handle,"set_radio_apply_wlan_cmd_radio_apply_wlan");
 		if(NULL != dcli_init_func)
 		{
-			*RadioList_Head =(*dcli_init_func)
-							  (
-								 parameter.local_id,
-								 parameter.instance_id,
-								 connection,
-								 type,
-								 id,
-								 wlanid,
-								 &count,
-								 &ret
-							  );
+			if(type == 0)
+			{
+				*RadioList_Head =(*dcli_init_func)
+								  (
+									 parameter.local_id,
+									 parameter.instance_id,
+									 connection,
+									 type,
+									 g_radio_id,
+									 0,
+									 0,
+									 wlanid,
+									 &count,
+									 &ret
+								  );
+			}
+			else
+			{
+				*RadioList_Head =(*dcli_init_func)
+								  (
+									 parameter.local_id,
+									 parameter.instance_id,
+									 connection,
+									 type,
+									 0,
+									 ap_group_id,
+									 g_radio_id,
+									 wlanid,
+									 &count,
+									 &ret
+								  );
+			}
 		}
 		else
 		{
@@ -34273,7 +34299,6 @@ int radio_apply_wlan_group(dbus_parameter parameter, DBusConnection *connection,
 	{
 		return 0;
 	}
-
 	if(type==0)
 	{
 		if(ret == 0)
@@ -34300,8 +34325,9 @@ int radio_apply_wlan_group(dbus_parameter parameter, DBusConnection *connection,
 			retu = -18;
 		else 
 			retu = 0;
+		
 	}
-	else if(type==1)
+	else
 	{
 		if(ret == 0)
 		{
@@ -34309,25 +34335,12 @@ int radio_apply_wlan_group(dbus_parameter parameter, DBusConnection *connection,
 			if((count != 0)&&(type == 1)&&(*RadioList_Head!=NULL))
 			{
 				retu = -16;
-				/*vty_out(vty,"radio ");					
-				for(i=0; i<count; i++)
-				{
-					if(Radio_Show_Node == NULL)
-						Radio_Show_Node = RadioList_Head->RadioList_list;
-					else 
-						Radio_Show_Node = Radio_Show_Node->next;
-					if(Radio_Show_Node == NULL)
-						break;
-					vty_out(vty,"%d ",Radio_Show_Node->RadioId);					
-				}
-				vty_out(vty," failed.\n");*/
 			}
 		}
 		else if (ret == GROUP_ID_NOT_EXIST)
 			retu = -17;
 	}
 	return retu;
-
 }
 
 #endif
@@ -34344,23 +34357,22 @@ int radio_apply_wlan(dbus_parameter parameter, DBusConnection *connection,int ri
 																/*返回-18表示radio has been binded this wlan already ,if you want use other ESSID,please unbind it first!*/
 																/*返回SNMPD_CONNECTION_ERROR表示connection error*/
 {
-    if(NULL == connection)
+    if((NULL == connection)||(NULL == wlan_id))
         return 0;
 	
-	if(NULL == wlan_id)
-		return 0;
 	
 #if _GROUP_POLICY
 	int retu = 0;
 	struct RadioList *RadioList_Head = NULL;
 
-	retu = radio_apply_wlan_group(parameter, connection,0,rid,wlan_id,&RadioList_Head);
+	retu = radio_apply_wlan_group(parameter, connection,0,0,rid,wlan_id,&RadioList_Head);
 	if(retu == -16)
 	{
 		Free_radio_apply_wlan_group(RadioList_Head);
 	}
 	return retu;
 #else
+
    	int ret=0,retu;
    	DBusMessage *query, *reply;
    	DBusError err;
@@ -34386,16 +34398,15 @@ int radio_apply_wlan(dbus_parameter parameter, DBusConnection *connection,int ri
    	{
    		return -2;
    	}	
+	radio_id = rid;
+	if((radio_id > G_RADIO_NUM) || (radio_id == 0)){
+		return -12;
+	}
 
 	char BUSNAME[PATH_LEN];
 	char OBJPATH[PATH_LEN];
 	char INTERFACE[PATH_LEN];
 
-	radio_id = rid;
-	if(radio_id > G_RADIO_NUM || radio_id == 0){
-		syslog(LOG_DEBUG,"radio id in radio_apply_wlan is %d\n",radio_id);
-		return -12;
-	}
 	
 	ccgi_ReInitDbusPath_v2(parameter.local_id, parameter.instance_id,WID_DBUS_BUSNAME,BUSNAME);
 	ccgi_ReInitDbusPath_v2(parameter.local_id, parameter.instance_id,WID_DBUS_RADIO_OBJPATH,OBJPATH);
@@ -35333,7 +35344,7 @@ void Free_set_radio_delete_wlan_cmd_group(struct RadioList *RadioList_Head)
 /*返回-9时，调用Free_set_radio_delete_wlan_cmd_group()释放空间*/
 /*group_type为1，表示组配置*/
 /*group_type为0，表示单独配置*/
-int set_radio_delete_wlan_cmd_group(dbus_parameter parameter, DBusConnection *connection,int group_type,int group_id,char *wlan_id,struct RadioList **RadioList_Head)   
+int set_radio_delete_wlan_cmd_group(dbus_parameter parameter, DBusConnection *connection,int group_type,int ap_groupid,int radio_id,char *wlan_id,struct RadioList **RadioList_Head)   
 												/*返回0表示失败，返回1表示成功，返回-1表示input parameter error*/
 												/*返回-2表示input parameter should be 1 to WLAN_NUM-1，返回-3表示radio not exist*/
 												/*返回-4表示wlan not exist，返回-5表示radio delete wlan fail，返回-6表示Radio ID非法*/
@@ -35343,32 +35354,29 @@ int set_radio_delete_wlan_cmd_group(dbus_parameter parameter, DBusConnection *co
 												/*返回-14表示radio interface is binded to this wlan used other ESSID，返回-15表示please disable wlan service first*/
 {
 
-    if(NULL == connection)
-        return 0;
-        
-	if(NULL == wlan_id)
-	{
-		*RadioList_Head = NULL;
+	if((NULL == connection)||(NULL == wlan_id))
 		return 0;
-	}
-	
+        	
+	int retu = 0;
 	int ret = 0;
 	int count = 0;
-	unsigned int id = 0;
-	unsigned int type = 0; 
+	int ap_group_id = 0;
+	unsigned int g_radio_id = 0;
+	unsigned int g_id = 0;
+	unsigned int l_radio_id = 0;
+	unsigned int type = group_type;
 	unsigned char wlanid = 0;
-	int retu = 0;
 	
 	ret = parse_char_ID((char *)wlan_id,&wlanid);
 	
 	if (ret != WID_DBUS_SUCCESS)
 	{	
-       if(ret == WID_ILLEGAL_INPUT){
-	   		retu = -7;
-       }
-	   else{
-	   		retu = -1;
-	   }
+		if(ret == WID_ILLEGAL_INPUT){
+			retu = -7;
+		}
+		else{
+			retu = -1;
+		}
 		return retu;
 	}
 	
@@ -35377,33 +35385,42 @@ int set_radio_delete_wlan_cmd_group(dbus_parameter parameter, DBusConnection *co
 		return -2;
 	}
 
-	id = group_id;
-	type = group_type;
 	if(type == 0)
-	{
-		if(id > G_RADIO_NUM || id == 0){
-			syslog(LOG_DEBUG,"radio id in set_radio_delete_wlan_cmd_group is %d\n",id);
+	{	
+		g_radio_id = radio_id;
+		if(g_radio_id > G_RADIO_NUM || g_radio_id == 0){
+			syslog(LOG_DEBUG,"radio id in set_radio_delete_wlan_cmd_group is %d\n",g_radio_id);
 			return -6;
 		}
 	}
 	else if(type == 1)
 	{
-		if(id >= WTP_GROUP_NUM || id == 0){
-			syslog(LOG_DEBUG,"group id in set_radio_delete_wlan_cmd_group is %d\n",id);
-			return -8;
-		}
+			g_radio_id = radio_id;
+			ap_group_id = ap_groupid;
+			if((g_radio_id >3)  || (g_radio_id < 0)){
+				syslog(LOG_DEBUG," g_radio_id should be 0-3\n");
+				return -15;
+			}
+			if(ap_group_id >= WTP_GROUP_NUM || ap_group_id == 0){
+				syslog(LOG_DEBUG,"ap_group_id %d is error\n",ap_group_id);
+				return -16;
+			}
 	}
+	else
+		return -17;
 
 	void *(*dcli_init_func)(
-								int ,
-								int ,
-								DBusConnection *,
-								unsigned int ,
-								unsigned int ,
-								unsigned char ,
-								int *,
-								unsigned int *
-							);
+					int ,
+					int ,
+					DBusConnection *,
+					unsigned int ,
+					unsigned int ,
+					 unsigned int ,
+					 unsigned int ,
+					unsigned char ,
+					int *,
+					unsigned int *
+				);
 
 	*RadioList_Head = NULL;
 	if(NULL != ccgi_dl_handle)
@@ -35411,17 +35428,38 @@ int set_radio_delete_wlan_cmd_group(dbus_parameter parameter, DBusConnection *co
 		dcli_init_func = dlsym(ccgi_dl_handle,"set_radio_delete_wlan_cmd_radio_delete_wlan");
 		if(NULL != dcli_init_func)
 		{
-			*RadioList_Head =(*dcli_init_func)
-							  (
-								 parameter.local_id,
-								 parameter.instance_id,
-								 connection,
-								 type,
-								 id,
-								 wlanid,
-								 &count,
-								 &ret
-							  );
+			if(type==0)
+			{
+				*RadioList_Head =(*dcli_init_func)
+								  (
+									 parameter.local_id,
+									 parameter.instance_id,
+									 connection,
+									 type,
+									 g_radio_id,
+									 0,
+									 0,
+									 wlanid,
+									 &count,
+									 &ret
+								  );
+			}
+			else
+			{
+				*RadioList_Head =(*dcli_init_func)
+								  (
+									 parameter.local_id,
+									 parameter.instance_id,
+									 connection,
+									 type,
+									 0,
+									 ap_group_id,
+									 g_radio_id,
+									 wlanid,
+									 &count,
+									 &ret
+								  );
+			}
 		}
 		else
 		{
@@ -35458,18 +35496,6 @@ int set_radio_delete_wlan_cmd_group(dbus_parameter parameter, DBusConnection *co
 			if((count != 0)&&(type == 1)&&(*RadioList_Head!=NULL))
 			{
 				retu = -9;
-				/*vty_out(vty,"radio ");					
-				for(i=0; i<count; i++)
-				{
-					if(Radio_Show_Node == NULL)
-						Radio_Show_Node = RadioList_Head->RadioList_list;
-					else 
-						Radio_Show_Node = Radio_Show_Node->next;
-					if(Radio_Show_Node == NULL)
-						break;
-					vty_out(vty,"%d ",Radio_Show_Node->RadioId);					
-				}
-				vty_out(vty," failed.\n");*/
 			}
 		}
 		else if (ret == GROUP_ID_NOT_EXIST)
@@ -35500,7 +35526,7 @@ int set_radio_delete_wlan_cmd(dbus_parameter parameter, DBusConnection *connecti
 	int retu = 0;
 	struct RadioList *RadioList_Head = NULL;
 
-	retu = set_radio_delete_wlan_cmd_group(parameter, connection,0,RID,wlan_id,&RadioList_Head);
+	retu = set_radio_delete_wlan_cmd_group(parameter, connection,0,0,RID,wlan_id,&RadioList_Head);
 	if(retu == -9)
 	{
 		Free_set_radio_delete_wlan_cmd_group(RadioList_Head);

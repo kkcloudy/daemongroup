@@ -3109,7 +3109,7 @@ radioBindWlan				OBJECT-TYPE
 					MAX-ACCESS read-write
 					STATUS     current
 					DESCRIPTION
-				        	"Bind wlan."
+				        	"When radio bound wlan, should bind one by one."
 					::= { dot11ConfigRadioEntry 15 }
 					
 radioDelbindWlan			OBJECT-TYPE
@@ -3117,7 +3117,7 @@ radioDelbindWlan			OBJECT-TYPE
 					MAX-ACCESS read-write
 					STATUS     current
 					DESCRIPTION
-				        	"Delete Binded wlan."
+				        	"When radio unbound wlan, should unbind one by one."
 					::= { dot11ConfigRadioEntry 16 }
 radioBindQos				OBJECT-TYPE
 					SYNTAX     DisplayString 

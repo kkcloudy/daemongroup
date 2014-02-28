@@ -141,7 +141,7 @@ dot11SSIDBindTable_validate_index( dot11SSIDBindTable_registration_ptr dot11SSID
     /*
      * TODO:430:M: |-> Validate potential dot11SSIDBindTable index.
      */
-    if(1) {
+    if(0) {
         snmp_log(LOG_WARNING,"invalid index for a new row in the "
                  "dot11SSIDBindTable table.\n");
         /*
@@ -282,7 +282,7 @@ dot11SSIDBindTable_commit( dot11SSIDBindTable_rowreq_ctx *rowreq_ctx)
        /*
         * TODO:482:o: |-> commit column BssIDBindRowStatus.
         */
-       rc = -1;
+       rc = 0;
        if(-1 == rc) {
            snmp_log(LOG_ERR,"dot11SSIDBindTable column BssIDBindRowStatus commit failed\n");
        }

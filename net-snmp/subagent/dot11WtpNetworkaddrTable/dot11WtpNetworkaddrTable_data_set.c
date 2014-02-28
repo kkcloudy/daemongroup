@@ -1478,20 +1478,27 @@ wtpSetAction_set( dot11WtpNetworkaddrTable_rowreq_ctx *rowreq_ctx, u_long wtpSet
 	get_dhcp_node_attr(APNETWORKADDR_XMLPATH,"APNetworkaddr","AP","1","wtpFirstDNSServer",ap_dns1);
 	get_dhcp_node_attr(APNETWORKADDR_XMLPATH,"APNetworkaddr","AP","1","wtpSeconDNSServer",ap_dns2);
 
-	ret = set_ap_networkaddr_command_cmd(rowreq_ctx->data.parameter, connection,rowreq_ctx->data.wtpCurrID,ap_ip,ap_mask,ap_gateway,ap_dns1,ap_dns2);
-	if(ret == 1)
-	{		
-		rowreq_ctx->data.wtpSetAction = wtpSetAction_val;
-		rc = MFD_SUCCESS;
-	}	
+	if(strlen(ap_ip)&&strlen(ap_mask)&&strlen(ap_gateway)&&strlen(ap_dns1)&&strlen(ap_dns2))
+	{
+		ret = set_ap_networkaddr_command_cmd(rowreq_ctx->data.parameter, connection,rowreq_ctx->data.wtpCurrID,ap_ip,ap_mask,ap_gateway,ap_dns1,ap_dns2);
+		if(ret == 1)
+		{		
+			rowreq_ctx->data.wtpSetAction = wtpSetAction_val;
+			rc = MFD_SUCCESS;
+		}	
+		else
+		{	
+		    if(SNMPD_CONNECTION_ERROR == ret) {
+		    close_slot_dbus_connection(rowreq_ctx->data.parameter.slot_id);
+		    }
+			rc = MFD_ERROR;
+		}
+		system("rm /var/run/apnetworkaddr.xml");
+	}
 	else
-	{	
-	    if(SNMPD_CONNECTION_ERROR == ret) {
-            close_slot_dbus_connection(rowreq_ctx->data.parameter.slot_id);
-	    }
+	{
 		rc = MFD_ERROR;
-	}			
-
+	}
     return rc;
 } /* wtpSetAction_set */
 

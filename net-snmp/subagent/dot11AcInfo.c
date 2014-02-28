@@ -116,6 +116,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define		SYSBACKNETIP					"2.1.1.39"
 #define		SYSBACKSWITCHTIME 				"2.1.1.40"
 #define		SYSBACKNETIPV6 				        "2.1.1.41"
+#define		ACSLOTINFO				"2.1.1.42"
 
 
 static char acSoftwareName[50] = { 0 };
@@ -138,6 +139,10 @@ static unsigned long ipaddr = 0;
 static char ipv6address[128] = { 0 };
 static long update_time_show_backupidentity_information = 0;
 static void update_data_for_show_backupidentity_information();
+
+static char acslotinfo[35] = { 0 };
+static void ac_slot_information();
+
 void
 init_dot11AcInfo(void)
 {
@@ -179,6 +184,7 @@ init_dot11AcInfo(void)
     static oid sysBackupNetworManageIp_oid[128] =  {0};
     static oid sysBackupSwitchTimes_oid[128]  =  {0};
     static oid sysBackupNetworManageIpv6_oid[128] = { 0};
+	static oid acslotinfo_oid[128] = {0};
 
 	
 	size_t public_oid_len   = 0;
@@ -221,6 +227,7 @@ init_dot11AcInfo(void)
 	mad_dev_oid(sysBackupNetworManageIp_oid,SYSBACKNETIP,&public_oid_len,enterprise_pvivate_oid);
 	mad_dev_oid(sysBackupSwitchTimes_oid,SYSBACKSWITCHTIME,&public_oid_len,enterprise_pvivate_oid);
 	mad_dev_oid(sysBackupNetworManageIpv6_oid,SYSBACKNETIPV6,&public_oid_len,enterprise_pvivate_oid);
+	mad_dev_oid(acslotinfo_oid,ACSLOTINFO,&public_oid_len,enterprise_pvivate_oid);
 	
   DEBUGMSGTL(("dot11AcInfo", "Initializing\n"));
 
@@ -418,6 +425,11 @@ init_dot11AcInfo(void)
     netsnmp_register_scalar(
         netsnmp_create_handler_registration("sysBackupNetworManageIpv6", handle_sysBackupNetworManageIpv6,
                                sysBackupNetworManageIpv6_oid, public_oid_len,
+                               HANDLER_CAN_RONLY
+        ));
+	netsnmp_register_scalar(
+        netsnmp_create_handler_registration("acslotinfo", handle_acslotinfo,
+                               acslotinfo_oid, public_oid_len,
                                HANDLER_CAN_RONLY
         ));
 }
@@ -3799,6 +3811,38 @@ handle_sysBackupNetworManageIpv6(netsnmp_mib_handler *handler,
 
     return SNMP_ERR_NOERROR;
 }
+
+int
+handle_acslotinfo(netsnmp_mib_handler *handler,
+                          netsnmp_handler_registration *reginfo,
+                          netsnmp_agent_request_info   *reqinfo,
+                          netsnmp_request_info         *requests)
+{
+    /* We are never called for a GETNEXT if it's registered as a
+       "instance", as it's "magically" handled for us.  */
+
+    /* a instance handler also only hands us one request at a time, so
+       we don't need to loop over a list of requests; we'll only get one. */
+    
+    switch(reqinfo->mode) {
+
+        case MODE_GET:
+		ac_slot_information();
+            snmp_set_var_typed_value(requests->requestvb, ASN_OCTET_STR,
+                                     (u_char *) acslotinfo,
+                                     strlen(acslotinfo));
+            break;
+
+
+        default:
+            /* we should never get here, so this is a really bad error */
+            snmp_log(LOG_ERR, "unknown mode (%d) in handle_acslotinfo\n", reqinfo->mode );
+            return SNMP_ERR_GENERR;
+    }
+
+    return SNMP_ERR_NOERROR;
+}
+
 static void update_data_for_show_sys_ver()
 {
 	struct sysinfo info;
@@ -3989,6 +4033,86 @@ static void update_data_for_show_backupidentity_information()
 	update_time_show_backupidentity_information = info.uptime;
 
 	snmp_log(LOG_DEBUG, "exit update data for update_data_for_show_backupidentity_information\n");
+
+
+}
+
+static void ac_slot_information()
+{
+
+	struct sysinfo info;
+	FILE *fd_count = NULL;
+	FILE *fd = NULL;
+	int slot_int=0;
+	int slot_count=0;
+	char up[35]={0};
+	char down[35]={0};
+	if(0 != update_time_show_backupidentity_information)
+	{
+		sysinfo(&info); 	
+		if(info.uptime - update_time_show_backupidentity_information < cache_time)
+		{
+			return;
+		}
+	}
+	snmp_log(LOG_DEBUG, "enter ac_slot_information\n");
+
+	memset(acslotinfo,0,sizeof(acslotinfo))	;
+	if(VALID_DBM_FLAG == get_dbm_effective_flag())
+	{
+		fd = fopen("/dbm/product/board_on_mask", "r");
+		fd_count = fopen("/dbm/product/slotcount", "r");
+	}
+	if ((fd == NULL)||(fd_count == NULL))
+	{
+		snmp_log(LOG_DEBUG,"Get production information [2] error\n");
+	}
+	if((fd)&&(fd_count))
+	{
+		int i=1;
+		int j=1;
+		int h=0;
+		char tmp[6]={0};
+		fscanf(fd, "%d", &slot_int);
+		fclose(fd);
+		fscanf(fd_count, "%d", &slot_count);
+		fclose(fd_count);
+		for(i=1;i<(slot_count+1);i++)
+		{
+			if(slot_int&j)
+			{
+				if(h==0)
+				{
+					sprintf(tmp,"%d",i);
+				}
+				else
+				{
+					sprintf(tmp,",%d",i);
+
+				}
+				strcat(up,tmp);
+				h=h+1;
+			}
+			else
+			{
+				sprintf(tmp,",%d",i);
+				strcat(down,tmp);
+			}
+			j=j<<1;
+		}
+		strcat(acslotinfo,up);
+		strcat(acslotinfo," is up  ");
+		if(strlen(down)!=0)
+		{
+			strcat(acslotinfo,down);
+			strcat(acslotinfo," is down");
+		}
+	}
+
+	sysinfo(&info); 		
+	update_time_show_backupidentity_information = info.uptime;
+
+	snmp_log(LOG_DEBUG, "exit  ac_slot_information\n");
 
 
 }

@@ -444,6 +444,13 @@ sysBackupNetworManageIpv6	OBJECT-TYPE
 					"Show the AC  backup networkManage IPV6Address "
 				::={ dot11AcInfo 41 }
 
+acslotinfo			OBJECT-TYPE
+				SYNTAX		DisplayString
+				MAX-ACCESS 	read-only
+				STATUS		current
+				DESCRIPTION
+					"Show the ac slot info  "
+				::={ dot11AcInfo 42 }
 
 dot11AcDeviceInfo	OBJECT IDENTIFIER ::={ dot11AcGeneralInfo 2 }
 acDeviceName	  		OBJECT-TYPE

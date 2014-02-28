@@ -11,9 +11,11 @@
 #include <net-snmp/agent/net-snmp-agent-includes.h>
 
 /* include our parent header */
+#include "ws_dcli_wlans.h"
 #include "wcpss/wid/WID.h"
 #include "dbus/wcpss/ACDbusDef1.h"
 #include "dot11ConfigRadioTable.h"
+
 
 
 /** @defgroup data_set data_set: Routines to set data
@@ -3677,12 +3679,12 @@ radioBindWlan_set( dot11ConfigRadioTable_rowreq_ctx *rowreq_ctx, char *radioBind
      * set radioBindWlan value in rowreq_ctx->data
      */
     void *connection = NULL;
-    if(SNMPD_DBUS_ERROR == get_instance_dbus_connection(rowreq_ctx->data.parameter, &connection, SNMPD_INSTANCE_MASTER_V3))
-        return MFD_ERROR;
+    //if(SNMPD_DBUS_ERROR == get_instance_dbus_connection(rowreq_ctx->data.parameter, &connection, SNMPD_INSTANCE_MASTER_V3))
+    if(SNMPD_DBUS_ERROR == get_slot_dbus_connection(rowreq_ctx->data.parameter.slot_id, &connection, SNMPD_INSTANCE_MASTER_V3))
+   	 return MFD_ERROR;
         
     int rc = MFD_ERROR;
 	int ret = 0;
-	
 	ret = radio_apply_wlan(rowreq_ctx->data.parameter, connection,rowreq_ctx->data.setwtpRadCurrID,radioBindWlan_val_ptr);	
 	if(ret == 1)
 	{
@@ -3882,25 +3884,75 @@ radioDelbindWlan_set( dot11ConfigRadioTable_rowreq_ctx *rowreq_ctx, char *radioD
     if(SNMPD_DBUS_ERROR == get_instance_dbus_connection(rowreq_ctx->data.parameter, &connection, SNMPD_INSTANCE_MASTER_V3))
         return MFD_ERROR;
         
-    int rc = MFD_ERROR;
-	int ret = 0;
-	
-	ret = set_radio_delete_wlan_cmd(rowreq_ctx->data.parameter, connection,rowreq_ctx->data.setwtpRadCurrID,radioDelbindWlan_val_ptr);	
-	if(ret == 1)
-	{
-		memcpy( rowreq_ctx->data.radioDelbindWlan, radioDelbindWlan_val_ptr, radioDelbindWlan_val_ptr_len );
-	    rowreq_ctx->data.radioDelbindWlan_len = radioDelbindWlan_val_ptr_len / sizeof(radioDelbindWlan_val_ptr[0]);
-		rc = MFD_SUCCESS;
-	}
-	else
-	{
-	    if(SNMPD_CONNECTION_ERROR == ret) {
-            close_slot_dbus_connection(rowreq_ctx->data.parameter.slot_id);
-	    }
-		rc = MFD_ERROR;
-	}	
+    	int rc = MFD_ERROR;
+	int ret = 0, ret1=0,ret2=0;
+	unsigned char wlanid=0;
+	int len=strlen(radioDelbindWlan_val_ptr);
+	DCLI_WLAN_API_GROUP *WLANINFO = NULL;
+	char *wlan_id=(char *)malloc(len+1);
+	memset(wlan_id,0,sizeof(wlan_id));
+	strcpy(wlan_id,radioDelbindWlan_val_ptr);
 
-    return MFD_SUCCESS;
+	
+	ret2 = parse_char_ID((char *)wlan_id,&wlanid);
+	if (ret2 != WID_DBUS_SUCCESS)
+	{
+		return MFD_ERROR;
+	}
+	ret1 = show_wlan_one(rowreq_ctx->data.parameter, connection, wlanid, &WLANINFO);
+	if(1 == ret1)
+	{
+		if((WLANINFO->WLAN[0]->Status) != 1)/*wlan is enable*/
+		{
+			snmp_log(LOG_DEBUG,"STA----------------------------\n");
+			ret2 = config_wlan_service(rowreq_ctx->data.parameter, connection, wlanid, "disable");
+			snmp_log(LOG_DEBUG,"STA--------------------ret2=%d-----\n",ret2);
+			if(1 != ret2)
+			{
+				if(SNMPD_CONNECTION_ERROR == ret2)
+				{
+					close_slot_dbus_connection(rowreq_ctx->data.parameter.slot_id);
+				}
+				Free_one_wlan_head(WLANINFO);
+				return MFD_ERROR;
+			}
+		}
+		
+		ret = set_radio_delete_wlan_cmd(rowreq_ctx->data.parameter, connection,rowreq_ctx->data.setwtpRadCurrID,radioDelbindWlan_val_ptr);	
+		if(ret == 1)
+		{
+			memcpy( rowreq_ctx->data.radioDelbindWlan, radioDelbindWlan_val_ptr, radioDelbindWlan_val_ptr_len );
+			 rowreq_ctx->data.radioDelbindWlan_len = radioDelbindWlan_val_ptr_len / sizeof(radioDelbindWlan_val_ptr[0]);
+			rc = MFD_SUCCESS;
+		}
+		else
+		{
+			if(SNMPD_CONNECTION_ERROR == ret) {
+				close_slot_dbus_connection(rowreq_ctx->data.parameter.slot_id);
+			}
+			rc = MFD_ERROR;
+		}
+
+		
+		if((WLANINFO->WLAN[0]->Status) != 1)/*wlan is enable*/
+		{
+			ret2 = config_wlan_service(rowreq_ctx->data.parameter, connection, wlanid, "enable");
+			if(1 != ret2)
+			{
+				if(SNMPD_CONNECTION_ERROR == ret2)
+				{
+					close_slot_dbus_connection(rowreq_ctx->data.parameter.slot_id);
+				}
+				Free_one_wlan_head(WLANINFO);
+			}
+		}
+		Free_one_wlan_head(WLANINFO);
+		
+	}	
+	else
+		rc = MFD_ERROR;
+
+    return rc;
 } /* radioDelbindWlan_set */
 
 /**

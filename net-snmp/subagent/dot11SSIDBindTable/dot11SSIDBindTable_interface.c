@@ -30,6 +30,7 @@
 #include <net-snmp/net-snmp-config.h>
 #include <net-snmp/net-snmp-includes.h>
 #include <net-snmp/agent/net-snmp-agent-includes.h>
+#include "netsnmp_private_interface.h"
 
 /* include our parent header */
 #include "dot11SSIDBindTable.h"
@@ -88,6 +89,9 @@ NETSNMP_STATIC_INLINE int _dot11SSIDBindTable_undo_column( dot11SSIDBindTable_ro
 NETSNMP_STATIC_INLINE int _dot11SSIDBindTable_check_indexes(dot11SSIDBindTable_rowreq_ctx * rowreq_ctx);
 
 dot11SSIDBindTable_data *dot11SSIDBindTable_allocate_data(void);
+
+static netsnmp_item_register *dot11SSIDBindTable_register = NULL;    /*register create item*/
+
 
 /**
  * @internal
@@ -1311,6 +1315,10 @@ _cache_load(netsnmp_cache *cache, void *vmagic)
     /*
      * call user code
      */
+	     
+	    netsnmp_container_load_item_register((netsnmp_container*)cache->magic, 
+					      &dot11SSIDBindTable_register, 
+					      dot11SSIDBindTable_release_rowreq_ctx);
     return dot11SSIDBindTable_cache_load((netsnmp_container*)cache->magic);
 } /* _cache_load */
 
@@ -1324,8 +1332,14 @@ _cache_item_free(dot11SSIDBindTable_rowreq_ctx *rowreq_ctx, void *context)
 
     if(NULL == rowreq_ctx)
         return;
+    
+    /*create item not need free*/    
+	
+    if(RS_ACTIVE == rowreq_ctx->data.BssIDBindRowStatus)
+	    dot11SSIDBindTable_release_rowreq_ctx(rowreq_ctx);
+    else 
+        netsnmp_register_item(&dot11SSIDBindTable_register, rowreq_ctx);
 
-    dot11SSIDBindTable_release_rowreq_ctx(rowreq_ctx);
 } /* _cache_item_free */
 
 /**

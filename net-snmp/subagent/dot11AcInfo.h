@@ -72,5 +72,6 @@ Netsnmp_Node_Handler handle_sysBackupStatus;
 Netsnmp_Node_Handler handle_sysBackupNetworManageIp;
 Netsnmp_Node_Handler handle_sysBackupSwitchTimes;
 Netsnmp_Node_Handler handle_sysBackupNetworManageIpv6;
+Netsnmp_Node_Handler handle_acslotinfo;
 
 #endif /* DOT11ACINFO_H */

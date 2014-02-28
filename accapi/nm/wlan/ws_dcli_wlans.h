@@ -2680,7 +2680,7 @@ extern void Free_radio_apply_wlan_group(struct RadioList *RadioList_Head);
 /*返回-16时，调用Free_radio_apply_wlan_group()释放空间*/
 /*group_type为1，表示组配置*/
 /*group_type为0，表示单独配置*/
-extern int radio_apply_wlan_group(dbus_parameter parameter, DBusConnection *connection,int group_type,int group_id,char *wlan_id,struct RadioList **RadioList_Head);
+extern int radio_apply_wlan_group(dbus_parameter parameter, DBusConnection *connection,int group_type,int apgroupid, int radio_id,char *wlan_id,struct RadioList **RadioList_Head);
 										   /*返回0表示失败，返回1表示成功，返回-1表示input parameter error*/
 										   /*返回-2表示WLAN ID非法，返回-3表示radio is not exist，返回-4表示WLAN is not exist*/
 										   /*返回-5表示bss num is already L_BSS_NUM，返回-6表示wtp wlan binding interface not match*/
@@ -2788,7 +2788,7 @@ extern void Free_set_radio_delete_wlan_cmd_group(struct RadioList *RadioList_Hea
 /*返回-9时，调用Free_set_radio_delete_wlan_cmd_group()释放空间*/
 /*group_type为1，表示组配置*/
 /*group_type为0，表示单独配置*/
-extern int set_radio_delete_wlan_cmd_group(dbus_parameter parameter, DBusConnection *connection,int group_type,int group_id,char *wlan_id,struct RadioList **RadioList_Head);
+extern int set_radio_delete_wlan_cmd_group(dbus_parameter parameter, DBusConnection *connection,int group_type,int ap_groupid,int radio_id,char *wlan_id,struct RadioList **RadioList_Head);
 											 /*返回0表示失败，返回1表示成功，返回-1表示input parameter error*/
 											 /*返回-2表示input parameter should be 1 to WLAN_NUM-1，返回-3表示radio not exist*/
 											 /*返回-4表示wlan not exist，返回-5表示radio delete wlan fail，返回-6表示Radio ID非法*/
