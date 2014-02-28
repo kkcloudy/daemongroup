@@ -8257,6 +8257,35 @@ void had_state_leave_master
 		
 		had_notify_to_dhcp_failover(vsrv,VRRP_STATE_DISABLE);
 		#endif
+	} else if (uplink_iph == NULL && downlink_iph == NULL) {
+
+		vsrv->backup_switch_times++;
+	    vsrv->state = VRRP_STATE_DISABLE;
+		hansi_write_hansi_state_to_file(vsrv->profile, VRRP_STATE_DESCRIPTION(vsrv->state));	
+		had_vrrp_vif_drop_pck(vsrv);
+		/*trace log*/
+		vrrp_state_trace(vsrv->profile,vsrv->state,"DISABLE SET","set disable state");
+	
+	    vrrp_syslog_dbg("vrrp %d goto disable state!\n",vsrv->vrid);	
+		delay	= global_ms_down_packet_count*vsrv->adver_int + VRRP_TIMER_SKEW(vsrv);
+		/*reset both uplink and downlink master down timer*/
+		VRRP_TIMER_SET( vsrv->uplink_ms_down_timer, delay );			
+		VRRP_TIMER_SET( vsrv->downlink_ms_down_timer, delay );
+		VRRP_TIMER_CLR( vsrv->uplink_adver_timer );
+		VRRP_TIMER_CLR( vsrv->downlink_adver_timer); 		
+
+		/*nofity to wtp*/
+		had_notify_to_wid(vsrv, VRRP_STATE_DISABLE);
+		if (global_protal) {
+		   had_notify_to_protal(vsrv,VRRP_STATE_DISABLE);
+		}
+	#ifndef _VERSION_18SP7_	
+		if (global_pppoe) {
+		   had_notify_to_pppoe(vsrv,VRRP_STATE_DISABLE);
+		}
+	#endif	
+		had_notify_to_hmd(vsrv,VRRP_STATE_DISABLE);
+		had_notify_to_dhcp_failover(vsrv,VRRP_STATE_DISABLE);
 	}
 	else{/*set to back state*/
 back:
