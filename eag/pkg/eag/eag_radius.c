@@ -802,6 +802,10 @@ radius_auth(eag_radius_t *radius,
 	radius_addattr(&packet, RADIUS_ATTR_USER_NAME, 0, 0, 0,
 			(uint8_t *)appconn->session.username, len);
 	
+	len = strlen(appconn->session.sessionid);
+	radius_addattr(&packet, RADIUS_ATTR_ACCT_SESSION_ID, 0, 0, 0,
+			(uint8_t *)appconn->session.sessionid, len);
+
 	radius_addattr(&packet, RADIUS_ATTR_NAS_IP_ADDRESS, 0, 0,
 			appconn->session.nasip, NULL, 0);
 	
