@@ -617,6 +617,10 @@ static int nl_parse_info ( int ( *filter ) ( struct sockaddr_nl *, struct nlmsgh
     int ret = 0;  
     int error;  
   	if3 *p = NULL,*tail = NULL;
+	if(iflist_t == NULL)
+	{
+		return -1;  
+	}
 	if(iflist_t)
 	{
 		iflist_t->if_num = 0;
@@ -775,6 +779,10 @@ int get_all_if_info( if_list_p *iflist_t )
 	//char *p = NULL;  
 	struct nl_if_info if_info = { -1, " " };  
 
+	if(iflist_t == NULL)
+	{
+		return -1;  
+	}
 	ret = nl_socket ( &net_cmd, 0 );
 	if ( ret < 0 ) 
 	{  
