@@ -66,7 +66,8 @@ extern "C"
 #include "dbus/npd/npd_dbus_def.h"
 #include "dbus/dhcp/dhcp_dbus_def.h"
 #include "dbus/asd/ASDDbusDef.h"
-#include "dbus/wcpss/ACDbusDef.h"
+#include "dbus/wcpss/ACDbusDef1.h"
+#include "dbus/wcpss/ACDBusPath.h"
 #include "dbus/hmd/HmdDbusPath.h"
 
 

@@ -32,7 +32,7 @@
 #include "ws_dcli_wlans.h"
 #include "ac_sample_dbus.h"
 #include "ac_sample_def.h"
-#include "dbus/wcpss/ACDbusDef.h"
+#include "dbus/wcpss/ACDbusDef1.h"
 #include "dbus/asd/ASDDbusDef.h"
 #include "nm/app/eag/eag_trap.h"
 #include "nm/app/manage/ac_manage_def.h"
