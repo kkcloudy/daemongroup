@@ -585,7 +585,7 @@ void * bsdTipcManagement()
 				bsdHandleFileState(fileInfo->file_head.file_type, (const char *)fileInfo->file_head.uchFileName);
 				BSDSendNotify(slotid, BSD_FILE_FINISH, last_event_id, md5Value);
 				system("sudo umount /blk");
-				if(product_type == 4 || product_type == 5 || product_type == 7 || product_type == 6 ||product_type == 1)
+				if(product_type == 4 || product_type == 5 || product_type == 7 || product_type == 6 || product_type == 1)
 				{
 					if(bak_config_flag == 1 && active_master_slot_id == 1)
 					{
