@@ -215,6 +215,11 @@ int ShowWtpGroupconPage(char *m,char *n,struct list *lpublic,struct list *lwlan)
 				"<tr><td align=center style=\"padding-left:20px\">");
 		fprintf(cgiOut,"<table width=720 border=0 cellspacing=0 cellpadding=0>");
 		fprintf(cgiOut,"<tr height=30>");
+		fprintf(cgiOut,"<td width=150>group %s:</td>",search(lpublic,"name"));				 
+                fprintf(cgiOut,"<td width=100 align=left>%s</td>",groupname);
+
+		
+		fprintf(cgiOut,"<tr height=30>");
 		   fprintf(cgiOut,"<td width=150>%s:</td>",search(lwlan,"bind_interface"));				 
                  fprintf(cgiOut,"<td width=100 align=left>");
 		 status = system("bind_inter.sh"); 

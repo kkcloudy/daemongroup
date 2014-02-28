@@ -276,13 +276,41 @@ void ShowWtpGroupListPage(char *m,char *t, struct list *lpublic,struct list *lwl
 	fprintf(cgiOut,"<tr align=left>"\
 			      "<th width=160><font id=%s>%s ID</font></th>",search(lpublic,"menu_thead"),search(lwlan,"ap_group"));
 		fprintf(cgiOut,"<th width=160><font id=%s>%s</font></th>",search(lpublic,"menu_thead"),search(lpublic,"name"));
+		fprintf(cgiOut,"<th width=160><font id=%s>AP %s</font></th>",search(lpublic,"menu_thead"),search(lpublic,"count"));
+		fprintf(cgiOut,"<th width=160><font id=%s>run %s</font></th>",search(lpublic,"menu_thead"),search(lpublic,"count"));
+		fprintf(cgiOut,"<th width=160><font id=%s>quit %s</font></th>",search(lpublic,"menu_thead"),search(lpublic,"count"));
 		fprintf(cgiOut,"<th  width=160>&nbsp;&nbsp;</th>");
 
-	if(result == 0)
+	if((result == 0)&&(paraHead1))
 	{
 		  i=0;
 		  for(q=head.next; NULL != q; q= q->next)
 		  {
+		  	 int r_num=0,for_num=0,result_one=1,run_num=0,quit_num=0;
+		  	 int apgroupid=q->test_id;
+			 unsigned int apcount=0;
+			 unsigned int *wtp_list = NULL;
+			 DCLI_WTP_API_GROUP_ONE *wtp_one = NULL;
+			 r_num=ccgi_show_group_member_cmd(paraHead1->parameter,paraHead1->connection,apgroupid,&wtp_list,&apcount);
+			  if((r_num == 0)&&(apcount > 0))
+			  {
+				  for(for_num=0;for_num<apcount;for_num++)
+				  {
+					  int apid=0;
+					  wtp_one = NULL;
+					  apid=wtp_list[for_num];
+					  result_one=show_wtp_one(paraHead1->parameter,paraHead1->connection,apid,&wtp_one);
+					  if((wtp_one)&&(wtp_one->WTP[0]))
+					  {
+					  	if(wtp_one->WTP[0]->WTPStat == 5)
+					  	{
+							run_num++;
+						}
+					  }
+				  }
+				  quit_num = apcount - run_num;
+			  }
+		  
 		  	  i=i+1;
 			  memset(menu,0,sizeof(menu));
 			  strncat(menu,"menuLists",sizeof(menu)-strlen(menu)-1);
@@ -292,6 +320,9 @@ void ShowWtpGroupListPage(char *m,char *t, struct list *lpublic,struct list *lwl
 			  fprintf(cgiOut,"<td  width=160>%d</td>",q->test_id);
 			  if(q->test_name)
 			  	fprintf(cgiOut,"<td>%s</td>",q->test_name);
+			  fprintf(cgiOut,"<td>%d</td>",apcount);
+			  fprintf(cgiOut,"<td>%d</td>",run_num);
+			  fprintf(cgiOut,"<td>%d</td>",quit_num);
 			  fprintf(cgiOut,"<td  width=160>"\
 					      "<div style=\"position:relative; z-index:%d\" onmouseover=\"popMenu('%s');\" onmouseout=\"popMenu('%s');\">",(25-i),menu,menu);
 			       fprintf(cgiOut,"<img src=/images/detail.gif>"\
@@ -303,7 +334,7 @@ void ShowWtpGroupListPage(char *m,char *t, struct list *lpublic,struct list *lwl
 				       fprintf(cgiOut,"<div id=div2 onmouseover=\"this.style.backgroundColor='#b6bdd2'\" onmouseout=\"this.style.backgroundColor='#f9f8f7'\"><a id=link href=wp_wtpgroupmem.cgi?UN=%s&groupID=%d&groupname=%s&INSTANCE_ID=%s target=mainFrame>%s</a></div>",m,q->test_id,q->test_name,select_insid,search(lwlan,"ap_group_mem"));
 					fprintf(cgiOut,"<div id=div2 onmouseover=\"this.style.backgroundColor='#b6bdd2'\" onmouseout=\"this.style.backgroundColor='#f9f8f7'\"><a id=link href=wp_wtpgroupcon.cgi?UN=%s&groupID=%d&groupname=%s&INSTANCE_ID=%s target=mainFrame>%s</a></div>",m,q->test_id,q->test_name,select_insid,search(lpublic,"configure"));
 			       }
-			       fprintf(cgiOut,"<div id=div2 onmouseover=\"this.style.backgroundColor='#b6bdd2'\" onmouseout=\"this.style.backgroundColor='#f9f8f7'\"><a id=link href=wp_wtpgroupmemlist.cgi?UN=%s&groupID=%d&groupname=%s&INSTANCE_ID=%s target=mainFrame>%s</a></div>",m,q->test_id,q->test_name,select_insid,search(lwlan,"ap_group_mem_list"));
+			       fprintf(cgiOut,"<div id=div2 onmouseover=\"this.style.backgroundColor='#b6bdd2'\" onmouseout=\"this.style.backgroundColor='#f9f8f7'\"><a id=link href=wp_wtpgroupmemlist.cgi?UN=%s&groupID=%d&groupname=%s&INSTANCE_ID=%s&SUM_COUNT=%d&RUN_COUNT=%d target=mainFrame>%s</a></div>",m,q->test_id,q->test_name,select_insid,apcount,run_num,search(lwlan,"ap_group_mem_list"));
 			       fprintf(cgiOut,"</div>"\
 			       "</div>"\
 			       "</div>"\

@@ -247,7 +247,11 @@ void ShowWtpGroupMemPage(char *m,char *t, struct list *lpublic,struct list *lwla
 	   	 	"<td width=110 style=\"font-size:14px; font-weight:bold;\">%s ID:%s",search(lpublic,"instance"),select_insid);
 	fprintf(cgiOut,"</td>"\
 		"</tr></table></td></tr>");
-	fprintf(cgiOut,"<tr><td><table><tr><td id=thead5 align=left>%s ID:%s</td></tr></table></td></tr>",search(lwlan,"ap_group"),groupID);
+	fprintf(cgiOut,"<tr><td><table>"\
+			"<tr><td id=thead5 align=left>%s ID:%s</td>"\
+			"<td id=thead5 align=left>group %s:%s</td></tr>"\
+			"<td width=160>&nbsp;&nbsp;&nbsp;&nbsp;</td></tr>"\
+			"</table></td></tr>",search(lwlan,"ap_group"),groupID,search(lpublic,"name"),groupname);
 	
 	if(retu==0)  /*π‹¿Ì‘±*/
 	{

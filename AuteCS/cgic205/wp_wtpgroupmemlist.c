@@ -79,12 +79,16 @@ int cgiMain()
 void ShowWtpGroupMemPage(char *m,char *t, struct list *lpublic,struct list *lwlan)
 {  
 	char *endptr = NULL;	
-	int i = 0,result = 1,retu = 1,cl = 1; 
+	int run_num=0,quit_num=0,sum_num=0;
+	int i = 0,result = 1,retu = 1,cl = 1,result_one=0; 
 	char select_insid[10] = { 0 };
 	char groupID[5] = { 0 };
+	char run_count[5] = { 0 };
+	char sum_count[5] = { 0 };
 	char page_no[5] = { 0 }; 
 	int n=0;
 	int apgroupid=0;
+	char wtp_sta[WTP_ARRAY_NAME_LEN] = { 0 };  
 	char groupname[WTP_AP_GROUP_NAME_MAX_LEN+5] = { 0 };
 	char add_del[10] = { 0 };
 	dbus_parameter ins_para;
@@ -100,12 +104,19 @@ void ShowWtpGroupMemPage(char *m,char *t, struct list *lpublic,struct list *lwla
 	cgiFormStringNoNewlines("INSTANCE_ID", select_insid, 10);
 	cgiFormStringNoNewlines("groupID", groupID, 5);
 	cgiFormStringNoNewlines("groupname", groupname, WTP_AP_GROUP_NAME_MAX_LEN+5);
+	cgiFormStringNoNewlines("SUM_COUNT", sum_count, 5);
+	cgiFormStringNoNewlines("RUN_COUNT", run_count, 5);
+	sum_num = strtoul(sum_count,&endptr,10); 
+	run_num = strtoul(run_count,&endptr,10); 
+	quit_num = sum_num - run_num;
 	if(cgiFormStringNoNewlines("PN", page_no, 5)!=cgiFormNotFound )
 	{
-		n= strtoul(page_no,&endptr,10);    
+		n= strtoul(page_no,&endptr,10);  
 	}
 	else
+	{
 		n=0;
+	}
 	get_slotID_localID_instanceID(select_insid,&ins_para);	
 	get_instance_dbus_connection(ins_para, &paraHead1, INSTANCE_STATE_WEB);
 	
@@ -137,9 +148,9 @@ void ShowWtpGroupMemPage(char *m,char *t, struct list *lpublic,struct list *lwla
 	fprintf(cgiOut,"function page_change(obj)"\
 	     "{"\
 	  	 "var page_num = obj.options[obj.selectedIndex].value;"\
-	       "var url = 'wp_wtpgroupmemlist.cgi?UN=%s&groupID=%s&groupname=%s&PN='+page_num+'&INSTANCE_ID=%s';"\
+	       "var url = 'wp_wtpgroupmemlist.cgi?UN=%s&groupID=%s&groupname=%s&SUM_COUNT=%d&RUN_COUNT=%d&PN='+page_num+'&INSTANCE_ID=%s';"\
 	       "window.location.href = url;"\
-	      "}", m ,groupID,groupname, select_insid);
+	      "}", m ,groupID,groupname, sum_num, run_num, select_insid);
 	  fprintf(cgiOut,"</script>"\
 	  "<script src=/instanceid_onchange.js>"\
 	  "</script>"\
@@ -254,25 +265,31 @@ void ShowWtpGroupMemPage(char *m,char *t, struct list *lpublic,struct list *lwla
   			fprintf(cgiOut,"<tr height=25>"\
                       		"<td id=tdleft>&nbsp;</td>"\
                    		 "</tr>");
-	        }
+	        }		
 		  
                 fprintf(cgiOut,"</table>"\
               "</td>"\
               "<td align=left valign=top style=\"background-color:#ffffff; border-right:1px solid #707070; padding-left:10px; padding-top:10px\">"\
    "<table width=773 border=0 bgcolor=#ffffff cellspacing=0 cellpadding=0>");
 
+	fprintf(cgiOut,"<tr><td colspan=5><table>");
+	fprintf(cgiOut,"<tr >"\
+			   "<td width=220 align=left id=thead5>%s ID:%s</td>",search(lwlan,"ap_group"),groupID);
+	fprintf(cgiOut,"<td width=220  align=left id=thead5>group %s:%s</td>",search(lpublic,"name"),groupname);
+	fprintf(cgiOut,"<td width=220  align=left id=thead5>%s ID:%s</td>",search(lpublic,"instance"),select_insid);
+	fprintf(cgiOut,"</tr>");
+
 	
 	fprintf(cgiOut,"<tr >"\
-			   "<td width=140 align=left id=thead5>%s ID:%s</td>",search(lwlan,"ap_group"),groupID);
-	fprintf(cgiOut,"<td width=50>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>");
-	fprintf(cgiOut,"<td width=70>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>");
-	fprintf(cgiOut,"<td width=70>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>");
-	fprintf(cgiOut,"<td width=200  align=right id=thead5>%s ID:%s</td>",search(lpublic,"instance"),select_insid);
+			   "<td width=220 align=left id=thead5>AP %s:%d</td>",search(lpublic,"count"),sum_num);
+	fprintf(cgiOut,"<td width=220  align=left id=thead5>run %s:%d</td>",search(lpublic,"count"),run_num);
+	fprintf(cgiOut,"<td width=220  align=left id=thead5>quit %s:%d</td>",search(lpublic,"count"),quit_num);
 	fprintf(cgiOut,"</tr>");
 	
 	fprintf(cgiOut,"<tr height=20>");
-	fprintf(cgiOut,"<td width=160>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>");
+	fprintf(cgiOut,"<td >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>");
 	fprintf(cgiOut,"</tr>");
+	fprintf(cgiOut,"</table></td></tr>");
 		
 	fprintf(cgiOut,"<tr align=left>"\
 			   "<th width=140><font id=%s>AP%s</font></th>",search(lpublic,"menu_thead"),search(lpublic,"name"));
@@ -284,7 +301,6 @@ void ShowWtpGroupMemPage(char *m,char *t, struct list *lpublic,struct list *lwla
 
 	if((result == 0)&&(apcount > 0)&&(NULL !=paraHead1))
 	{
-		char wtp_sta[WTP_ARRAY_NAME_LEN] = { 0 };  
 		for(i=start_wtpno;i<end_wtpno;i++)
 		{
 			int apid=0;
@@ -322,7 +338,7 @@ void ShowWtpGroupMemPage(char *m,char *t, struct list *lpublic,struct list *lwla
 	{
 		fprintf(cgiOut,"<tr style=\"padding-top:20px\">");
 		if(n!=0)
-	        	fprintf(cgiOut,"<td align=left width=140><a href=wp_wtpgroupmemlist.cgi?UN=%s&groupID=%s&groupname=%s&PN=%d&INSTANCE_ID=%s target=mainFrame>%s</a></td>",m,groupID,groupname,n-1,select_insid,search(lpublic,"up_page"));
+	        	fprintf(cgiOut,"<td align=left width=140><a href=wp_wtpgroupmemlist.cgi?UN=%s&groupID=%s&groupname=%s&PN=%d&INSTANCE_ID=%s&SUM_COUNT=%d&RUN_COUNT=%d target=mainFrame>%s</a></td>",m,groupID,groupname,n-1,select_insid,sum_num,run_num,search(lpublic,"up_page"));
 		else
 		  	fprintf(cgiOut,"<td width=140>&nbsp;</td>");
 		
@@ -339,7 +355,7 @@ void ShowWtpGroupMemPage(char *m,char *t, struct list *lpublic,struct list *lwla
 			 fprintf(cgiOut,"</select>"\
 			 "%s</td>",search(lpublic,"jump_to_page2"));
 		if(n!=((apcount-1)/MAX_PAGE_NUM))
-	      fprintf(cgiOut,"<td align=right width=100><a href=wp_wtpgroupmemlist.cgi?UN=%s&groupID=%s&groupname=%s&PN=%d&INSTANCE_ID=%s target=mainFrame>%s</a></td>",m,groupID,groupname,n+1,select_insid,search(lpublic,"down_page"));
+	      fprintf(cgiOut,"<td align=right width=100><a href=wp_wtpgroupmemlist.cgi?UN=%s&groupID=%s&groupname=%s&PN=%d&INSTANCE_ID=%s&SUM_COUNT=%d&RUN_COUNT=%d target=mainFrame>%s</a></td>",m,groupID,groupname,n+1,select_insid,sum_num,run_num,search(lpublic,"down_page"));
 		else
 		  fprintf(cgiOut,"<td width=100>&nbsp;</td>");
 	    fprintf(cgiOut,"</tr>");
