@@ -250,7 +250,7 @@ dot11WtpWlanDataPktsTable_cache_load(netsnmp_container *container)
 		    {
 		        struct WtpWlanDataPktsInfo *q = NULL;
 		        
-        		for(q = WtpHead; q != NULL; q = q->next)
+        		for(q = WtpHead->next; q != NULL; q = q->next)
         		{
         			memset(wtpMacAddr,0,sizeof(wtpMacAddr));
 					if(q->wtpMacAddr)

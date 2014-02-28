@@ -67,7 +67,7 @@ init_autelanWtpGroup(void)
     init_dot11WtpStaTable();
     init_dot11WtpEndStaInfoTable();
     init_dot11WtpWlanFaultTable();
-    init_dot11WtpWlanDataPktsTable();
+   // init_dot11WtpWlanDataPktsTable();
     init_dot11WtpWlanStatsTable();  	 
     init_dot11SSIDStatsTable();
     init_dot11RadioParaTable();  	 
