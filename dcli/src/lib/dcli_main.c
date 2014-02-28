@@ -733,7 +733,8 @@ void dcli_init(void)
 	dcli_bsd_init();
 #endif
 	/*radius*/
-	dcli_radius_init();
+	//2013-10-29 lipengcheng note radius
+	//dcli_radius_init();
 
 	dcli_webservice_init();
 	//dcli_sem_init();
