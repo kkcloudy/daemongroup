@@ -153,6 +153,11 @@ router_id_add_address (struct connected *ifc)
   struct prefix after;
   struct zserv *client;
 
+  
+  if((ifc && ifc->ifp)&& 
+  	 (judge_obc_interface(ifc->ifp->name)==OBC_INTERFACE))
+  	 return;
+
   if (router_id_bad_address (ifc))
     return;
 
@@ -191,6 +196,10 @@ router_id_del_address (struct connected *ifc)
   struct prefix before;
   struct listnode *node;
   struct zserv *client;
+
+  if((ifc && ifc->ifp)&& 
+  	 (judge_obc_interface(ifc->ifp->name)==OBC_INTERFACE))
+  	 return;
 
   if (router_id_bad_address (ifc))
     return;
