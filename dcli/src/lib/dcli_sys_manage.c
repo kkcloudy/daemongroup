@@ -2337,6 +2337,7 @@ DEFUN (service_pfm_func,
 
 }
 
+#if 0
 DEFUN (show_pfm_table_func, 
        show_pfm_table_func_cmd,
        "show pfm table",
@@ -2358,8 +2359,161 @@ DEFUN (show_pfm_table_func,
 	return CMD_SUCCESS;
 
 }
+#else
+DEFUN (show_pfm_table_func, 
+       show_pfm_table_func_cmd,
+       "show pfm table",
+		"show pfm table"
+		"show pfm table"
+		"show pfm table")
+{
+	DBusMessage *query ;
+	DBusMessage*reply;
+	DBusError err;
+	DBusMessageIter iter;
+	DBusMessageIter iter_array;
+	DBusMessageIter iter_struct;
+	int opt =0;
+	int opt_para=0;
+	unsigned int src_port=0;
+	unsigned int dest_port=0;
+	unsigned short	 protocol=0;
+	
+	unsigned int	 proto=0;
+	unsigned int ifindex=0;
+	unsigned int src_ipaddr=0;
+	unsigned int dest_ipaddr=0;
+	unsigned int forward_opt=0;
+	unsigned int forward_slot=0;
+	unsigned int src_ipmask=0;
+	unsigned int dest_ipmask=0;
+	
+	unsigned char * pnt = NULL;
+	int slot = 0;;
+	int i;
+	int record_num;
+	char * ifname = "all";
+	char * s_ipaddr = "all";
+	char * d_ipaddr = "all";
+	opt = 5;
+	query = dbus_message_new_method_call(
+								PFM_DBUS_BUSNAME,			\
+								PFM_DBUS_OBJPATH,		\
+								PFM_DBUS_INTERFACE, \
+								PFM_DBUS_METHOD_PFM_TABLE);
+
+	dbus_error_init(&err);
+	
+	dbus_message_append_args(query,
+							DBUS_TYPE_INT32, &opt,
+							DBUS_TYPE_INT32, &opt_para,
+							DBUS_TYPE_UINT16, &protocol,
+							DBUS_TYPE_STRING, &ifname,
+							DBUS_TYPE_UINT32, &src_port,
+							DBUS_TYPE_UINT32, &dest_port,
+							DBUS_TYPE_STRING,  &s_ipaddr,
+							DBUS_TYPE_STRING,  &d_ipaddr,	
+							DBUS_TYPE_INT32,  &slot,
+							DBUS_TYPE_INVALID);
+
+	reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection,query,-1, &err);
+	dbus_message_unref(query);
+	if (NULL == reply) 
+	{
+		vty_out(vty,"failed get args.\n");
+		if (dbus_error_is_set(&err)) {
+			vty_out(vty,"%s raised: %s\n",err.name,err.message);
+			dbus_error_free_for_dcli(&err);
+			return -1;
+		}
+	}
+
+	dbus_message_iter_init(reply,&iter);
+	dbus_message_iter_get_basic(&iter,&record_num);
+	if(record_num < 0)
+	{
+		vty_out(vty,"pfm table err\n");
+		dbus_message_unref(reply);
+		return CMD_WARNING;
+	}
+	dbus_message_iter_next(&iter);	
+	dbus_message_iter_recurse(&iter,&iter_array);	
+
+	for(i=0;i< record_num;i++)
+	{
+
+		dbus_message_iter_recurse(&iter_array,&iter_struct);
+		dbus_message_iter_get_basic(&iter_struct,&opt);
+
+		dbus_message_iter_next(&iter_struct);
+		dbus_message_iter_get_basic(&iter_struct,&opt_para);
+
+		
+		dbus_message_iter_next(&iter_struct);	
+		dbus_message_iter_get_basic(&iter_struct,&src_port);
+
+		
+		dbus_message_iter_next(&iter_struct);	
+		dbus_message_iter_get_basic(&iter_struct,&dest_port); 	
+
+		
+		dbus_message_iter_next(&iter_struct);	
+		dbus_message_iter_get_basic(&iter_struct,&proto);
+
+		
+		dbus_message_iter_next(&iter_struct);	
+		dbus_message_iter_get_basic(&iter_struct,&ifindex);
+
+		
+		dbus_message_iter_next(&iter_struct);	
+		dbus_message_iter_get_basic(&iter_struct,&src_ipaddr);
+
+		
+		dbus_message_iter_next(&iter_struct);	
+		dbus_message_iter_get_basic(&iter_struct,&dest_ipaddr);
 
 
+		dbus_message_iter_next(&iter_struct);	
+		dbus_message_iter_get_basic(&iter_struct,&forward_opt);
+
+
+		dbus_message_iter_next(&iter_struct);	
+		dbus_message_iter_get_basic(&iter_struct,&forward_slot);
+
+
+		dbus_message_iter_next(&iter_struct);	
+		dbus_message_iter_get_basic(&iter_struct,&src_ipmask);
+
+
+		dbus_message_iter_next(&iter_struct);	
+		dbus_message_iter_get_basic(&iter_struct,&dest_ipmask);	
+		
+		dbus_message_iter_next(&iter_array);
+		
+		vty_out(vty,"+++++++++++++++++++proto is %d ++++++++++++++++++\n",opt);
+		vty_out(vty,"opt is \t\t\t :%d\n",opt_para);
+		vty_out(vty,"slot is \t\t :%d\n",forward_slot);
+	/*	vty_out(vty,"proto is \t\t :%d\n",proto);*/
+		vty_out(vty,"ifindex is \t\t :%d\n",ifindex);
+		vty_out(vty,"d_port is \t\t :%d\n",dest_port);
+		vty_out(vty,"s_port is \t\t :%d\n",src_port);
+		pnt = (unsigned char *)&dest_ipaddr;
+		vty_out(vty,"d_addr is\t%d.%d.%d.%d\n",pnt[0],pnt[1],pnt[2],pnt[3]);
+		
+	/*	vty_out(vty,"d_addr is \t\t :%u\n",dest_ipaddr);*/
+		vty_out(vty,"d_mask is \t\t :%d\n",dest_ipmask);
+		pnt = (unsigned char *)&src_ipaddr;
+		vty_out(vty,"s_addr is\t%d.%d.%d.%d\n",pnt[0],pnt[1],pnt[2],pnt[3]);
+	/*	vty_out(vty,"s_addr is \t\t :%u\n",src_ipaddr);*/
+		vty_out(vty,"s_mask is \t\t :%d\n",src_ipmask);
+		vty_out(vty,"count is \t\t :%d\n",forward_opt);
+	
+	}
+	
+	dbus_message_unref(reply);
+	return CMD_SUCCESS;
+}
+#endif
 DEFUN (system_reset_all,
        system_reset_all_cmd,
        "reset (fast|normal) (all|SLOT_ID)",
