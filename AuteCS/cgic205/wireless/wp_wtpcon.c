@@ -135,6 +135,43 @@ int ShowWtpconPage(char *m,char *n,char *pn,char *ins_id,instance_parameter *ins
   fprintf(cgiOut,"<title>Wtp</title>");
   fprintf(cgiOut,"<link rel=stylesheet href=/style.css type=text/css>"\
   "</head>");     
+  fprintf(cgiOut,"<script type=\"text/javascript\">"\
+	  "function isTime(str)"\
+			  "{"\
+				  "if(str!=null&&str!=\"\")"\
+				  "{"\
+					  "var a = str.match(/^(\\d{1,2})(:)?(\\d{1,2})\\2(\\d{1,2})$/);"\
+					  "if (a == null)"\
+					  "{"\
+						  "alert(\"%s\");",search(lpublic,"timewrong"));
+						  fprintf(cgiOut,"document.all.retime.value = \"\";"\
+						  "document.all.retime.focus();"\
+					  "}"\
+					  "if (a[1]>24 || a[3]>60 || a[4]>60)"\
+					  "{"\
+						  "alert(\"%s\");"\
+						  "document.all.retime.value = \"\";"\
+						  "document.all.retime.focus();"\
+					  "}"\
+					  "return true;"\
+				  "}"\
+		  "}",search(lpublic,"timewrong"));
+	  fprintf(cgiOut,"function showtimeupdate(obj)"\
+	"{"\
+		"var tb = obj.value;"\
+	    	"if(tb == \"later\")"\
+	    	"{"\
+	    		"document.getElementById(\"hex1\").style.display = 'block';\n"\
+	  		"document.getElementById(\"hex2\").style.display = 'block';\n"\
+	    	"}"\
+	    	"else"
+	    	"{"\
+			  "document.getElementById(\"hex1\").style.display = 'none';\n"\
+			  "document.getElementById(\"hex2\").style.display = 'none';\n"\
+	    	"}"\
+	"}");
+  fprintf(cgiOut,"</script>");
+  
   memset(IsSubmit,0,sizeof(IsSubmit));  
   cgiFormStringNoNewlines("SubmitFlag", IsSubmit, 5);
   if((cgiFormSubmitClicked("wtpcon_apply") == cgiFormSuccess)&&(strcmp(IsSubmit,"")))
@@ -425,14 +462,28 @@ int ShowWtpconPage(char *m,char *n,char *pn,char *ins_id,instance_parameter *ins
 						  fprintf(cgiOut,"<td><input name=version size=15 maxLength=63 value=\"\"></td>"\
 						"</tr>"\
 						"<tr height=30>"\
-				   		  "<td>&nbsp;</td>"\
-						  "<td><select name=time id=time style=width:100px>"\
+				   		  "<td>%s:</td>"\
+						  "<td><select name=time id=time style=width:100px   onchange=\"showtimeupdate(this);\">"\
 						  		"<option value=>"\
 			  				    "<option value=now>now"\
 			  				    "<option value=later>later"\
 				          "</select></td>"\
-						"</tr>"\
-					  "</table>"\
+						"</tr>",search(lpublic,"type"));
+						  
+					  fprintf(cgiOut,"<tr height=30 id=hex1 style=\"display:none;\">"\
+						   "<td>%s:</td>"\
+						   "<td><input name=update_time size=15 maxLength=8 onkeypress=\"return event.keyCode>=48&&event.keyCode<=58\" value=\"\" onblur=\"isTime(this.value);\"><font color=red>(HH:MM:SS)</font></td>"\
+						 "</tr>",search(lpublic,"upgrade_time"));
+					  
+					 fprintf(cgiOut,"<tr height=30 id=hex2 style=\"display:none;\">"\
+				   		  "<td>%s:</td>"\
+						  "<td><select name=time_switch id=time_switch style=width:100px>"\
+						  		"<option value=>"\
+			  				    "<option value=enable>enable"\
+			  				    "<option value=disable>disable"\
+				          "</select></td>"\
+						"</tr>",search(lpublic,"time_switch"));
+					  fprintf(cgiOut,"</table>"\
 					"</fieldset>"); /*框下边*/
 				  fprintf(cgiOut,"</td>");
 				    if(strcmp(search(lpublic,"filename"),"Filename")==0)
@@ -515,6 +566,8 @@ void config_wtp(instance_parameter *ins_para,int id,struct list *lpublic,struct 
   char version[64] = { 0 };
   char time[10] = { 0 };
   char *ap_location=NULL;
+  char time_t[12]={0};
+  char up_switch[10]={0};
   
   memset(state,0,sizeof(state));
   cgiFormStringNoNewlines("wtp_use",state,20);	
@@ -1208,6 +1261,12 @@ void config_wtp(instance_parameter *ins_para,int id,struct list *lpublic,struct 
   cgiFormStringNoNewlines("version",version,64);
   memset(time,0,sizeof(time));
   cgiFormStringNoNewlines("time",time,10);
+  
+  memset(time_t,0,sizeof(time_t));
+  cgiFormStringNoNewlines("update_time",time_t,12);
+  memset(up_switch,0,sizeof(up_switch));
+  cgiFormStringNoNewlines("time_switch",up_switch,10);
+  
   if((strcmp(file_name,""))&&(strcmp(version,""))&&(strcmp(time,"")))
   {
     ret7=update_wtp_img_cmd_func(ins_para->parameter,ins_para->connection,id,file_name,version,time);   /*返回0表示失败，返回1表示成功*/
@@ -1239,6 +1298,48 @@ void config_wtp(instance_parameter *ins_para,int id,struct list *lpublic,struct 
 		        break;  
     	      }
     }
+  }
+  int ret_time=0;
+  if((strcmp(time,"later") == 0)&&(strcmp(time_t,"")))
+  {
+	  ret_time=0;
+	  ret_time=ccgi_set_ap_timing_upgrade_timer_cmd(ins_para->parameter,ins_para->connection,id,time_t);
+	  switch(ret_time)
+	      {
+		case 0:break;
+		case -2:{
+      			flag1==0;
+			  ShowAlert(search(lpublic,"timewrong"));			 
+			  hidden = 0;
+			  break;  
+			}
+		case -1:
+		case -3:
+		case -4:{
+      			flag1==0;
+			  ShowAlert(search(lpublic,"time_update_failed"));			 
+			  hidden = 0;
+			  break;  
+			}
+	      }
+  }
+  if((strcmp(up_switch,""))&&(strcmp(time,"later") == 0))
+  {
+  	ret_time=0;
+	ret_time=ccgi_set_ap_timing_upgrade_switch_cmd(ins_para->parameter,ins_para->connection,id,up_switch);
+	switch(ret_time)
+	    {
+	      case 0:break;
+	      case -1:
+	      case -2:
+	      case -3:
+	      case -4:{	
+      			flag1==0;
+		        ShowAlert(search(lpublic,"time_switch_failed"));                    
+	 	        hidden = 0;
+		        break;  
+	    	      }
+	    }
   }
   
   if((hidden==1)&&(flag1==1)&&(flag2==1))

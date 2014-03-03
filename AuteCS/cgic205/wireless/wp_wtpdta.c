@@ -509,6 +509,20 @@ void ShowWtpdtaPage(char *m,char *n,char *t,char *ins_id,struct list *lpublic,st
 			      fprintf(cgiOut,"</tr>");
 			    }
 			  }
+			int show_ret=0;
+			int type = 0;
+			unsigned int time_int=0;
+			  show_ret=show_ap_timing_upgrade_info_cmd(paraHead1->parameter,paraHead1->connection,wtp_id,&type, &time_int);
+
+			  fprintf(cgiOut,"<tr align=left>"\
+				"<td id=td1>%s</td>",search(lpublic,"time_switch")); 			  
+			    fprintf(cgiOut,"<td id=td2>%s</td>",(type ? "enable" : "disable"));
+			  fprintf(cgiOut,"</tr>");
+			  fprintf(cgiOut,"<tr align=left>"\
+				"<td id=td1>%s</td>",search(lpublic,"upgrade_time")); 			  
+			    fprintf(cgiOut,"<td id=td2>%u</td>",time_int);
+			  fprintf(cgiOut,"</tr>");
+			  
 			  fprintf(cgiOut,"<tr align=left>"\
 				"<td id=td1>%s</td>",search(lwlan,"ap_extension_info_switch"));			  
 				fprintf(cgiOut,"<td id=td2>%s</td>",((1 == ret1)?"enable":"disable"));

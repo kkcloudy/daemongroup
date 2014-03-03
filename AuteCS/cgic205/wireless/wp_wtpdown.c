@@ -280,21 +280,38 @@ return 0;
 }
 void down_wtp_ver(struct list * lpublic,struct list *lwlan,struct list *lsystem)
 {
-	char url[100] = { 0 };
+	char *ptr_s=NULL;
+	char *url=NULL;
+	
+	char url_path[512] = { 0 };
 	char usrname[50] = { 0 };
 	char passwd[50] = { 0 };
 	char temp[100] = { 0 };
-	memset(url,0,sizeof(url));
+	memset(url_path,0,sizeof(url_path));
 	memset(usrname,0,sizeof(usrname));
 	memset(passwd,0,sizeof(passwd));
 	memset(temp,0,sizeof(temp));
 
 	DcliWInit();
 	ccgi_dbus_init();
-	cgiFormStringNoNewlines("url",url,100);  
+	cgiFormStringNoNewlines("url",url_path,512);  
 	cgiFormStringNoNewlines("usr",usrname,50);
 	cgiFormStringNoNewlines("pawd",passwd,50);
 	
+	ptr_s=strrchr(url_path,'/');		
+	if(ptr_s==NULL)
+	{
+		url = url_path;
+	}
+	else if((ptr_s+1)==NULL)
+	{
+		ShowAlert(search(lpublic,"lupload_fail"));
+		return ; 
+	}
+	else
+	{
+		url = ptr_s+1;
+	}
 	char *version_name[9]={".bin",".tar",".img",".BIN",".TAR",".IMG",".gni",".GNI",".tar.bz2"};
 	char *tmpz = NULL;
 	int i=0,flag=-1;	
@@ -378,21 +395,41 @@ int getFileNamewtp(char *fpath)        /*返回0表示失败，返回1表示成功*/
 
 int upfilewtp()        /*成功 返回1，否则返回0，返回-1表示没有文件上传，返回-3表示文件类型不符合要求*/
 {
-	char name[1024] = { 0 };    /*存放本地路径名*/ 	
+	char v_name[512] = { 0 };    /*存放本地路径名*/ 	
 	cgiFilePtr file;
 	
-	if (cgiFormFileName("myFile", name, sizeof(name)) != cgiFormSuccess) 
+	if (cgiFormFileName("myFile", v_name, sizeof(v_name)) != cgiFormSuccess) 
 		return -1; 
 
 	if (cgiFormFileOpen("myFile", &file) != cgiFormSuccess) 
 	{
 		fprintf(stderr, "Could not open the file.<p>\n");
 		return 0;
-	}  
+	} 
 	
+	fprintf(stderr,"upfilewtp--------v_name:%s\n",v_name);		
+	
+	char *ptr_s=NULL;
+	char *name=NULL;
+	char c='\\';	
 	char *version_name[9]={".bin",".tar",".img",".BIN",".TAR",".IMG",".gni",".GNI",".tar.bz2"};
 	char *tmpz = NULL;
 	int i=0,flag=-1;
+
+	ptr_s = strrchr(v_name, c);
+	if(ptr_s==NULL)
+	{
+		name = v_name;
+	}
+	else if((ptr_s+1)==NULL)
+	{
+		return -1; 
+	}
+	else
+	{
+		name = ptr_s+1;
+	}
+	fprintf(stderr,"upfilewtp--------name:%s\n",name);		
 
 	for(i=0;i<9;i++)
 	{ 

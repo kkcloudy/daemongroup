@@ -20987,14 +20987,28 @@ int set_update_img_file_name(dbus_parameter parameter, DBusConnection *connectio
 
 		return SNMPD_CONNECTION_ERROR;
 	}
+	unsigned int fail_num = 0;        
+	int fail_wtp = 0;                         
 	dbus_message_iter_init(reply,&iter);
 	dbus_message_iter_get_basic(&iter,&ret);
+	dbus_message_iter_next(&iter);                                  
+	dbus_message_iter_get_basic(&iter,&fail_num);
 
 	if(ret == 0)
 		retu=1;
 	else
 		retu=-4;
-	
+	dbus_message_iter_next(&iter);	
+	dbus_message_iter_recurse(&iter, &iter_array_fail);
+	if((fail_num != 0)&&(ret != WTP_ID_NOT_EXIST))
+	{
+		for(i = 0; i < fail_num; i++){
+			DBusMessageIter iter_struct;
+			dbus_message_iter_recurse(&iter_array_fail, &iter_struct);
+			dbus_message_iter_get_basic(&iter_struct, &fail_wtp);
+			dbus_message_iter_next(&iter_array_fail);
+		}
+	}
 	dbus_message_unref(reply);	
 
 	FREE_OBJECT(buf_path);
@@ -24821,7 +24835,6 @@ void Free_show_all_wtp_wlan_data_pkts_information_cmd_wlannode_v2(struct WlanDat
 		FREE_OBJECT(p1->wtpWirelessWrongPktsRate);
 		free(p1);
 	}
-
 }
 void Free_show_all_wtp_wlan_data_pkts_information_cmd_v2(struct WtpWlanDataPktsInfo* WtpHead_v2)
 {
@@ -48321,6 +48334,205 @@ int set_bss_multi_user_optimize_cmd(dbus_parameter parameter, DBusConnection *co
 	dbus_message_unref(reply);
 	return retu;
 }
+
+
+int ccgi_set_ap_timing_upgrade_switch_cmd(dbus_parameter parameter, DBusConnection *connection,int id,char *status)
+										//0:set wtp(%d) timing upgrade switch %s successfully;-2:NULL == reply;
+										//-3operation fail!;-4:WTP %d is not exsit.-5:error
+{
+	if((status==NULL)||(connection == NULL))
+	{
+		return -1;
+	}
+	
+	int ret = 0 ,retu=0; 
+	DBusMessage *query,*reply;
+	DBusError err;
+	DBusMessageIter iter;
+	unsigned int wtpid = id ; 
+	unsigned char policy = 0 ; 
+	
+	if(!strcmp(status,"enable"))
+	{
+		policy = 1; 
+	}
+	else if(!strcmp(status,"disable"))
+	{
+		policy = 0 ; 
+	}
+	
+	dbus_error_init(&err);
+	
+	char BUSNAME[PATH_LEN];
+	char OBJPATH[PATH_LEN];
+	char INTERFACE[PATH_LEN];
+	ccgi_ReInitDbusPath_v2(parameter.local_id, parameter.instance_id,WID_DBUS_BUSNAME,BUSNAME);
+	ccgi_ReInitDbusPath_v2(parameter.local_id, parameter.instance_id,WID_DBUS_WTP_OBJPATH,OBJPATH);
+	ccgi_ReInitDbusPath_v2(parameter.local_id, parameter.instance_id,WID_DBUS_WTP_INTERFACE,INTERFACE);
+	query = dbus_message_new_method_call(BUSNAME,OBJPATH,INTERFACE,WID_DBUS_SET_WTP_TIMING_UPGRADE_SWITCH);
+	
+	dbus_message_append_args(query,
+					DBUS_TYPE_UINT32,&wtpid,
+					DBUS_TYPE_BYTE,&policy,
+					DBUS_TYPE_INVALID);
+	reply = dbus_connection_send_with_reply_and_block (connection,query,-1, &err);
+		
+	dbus_message_unref(query);
+	
+	if (NULL == reply) {
+		if (dbus_error_is_set(&err)) {
+			dbus_error_free(&err);
+		}
+		return -2;
+	}
+	dbus_message_iter_init(reply,&iter);
+	dbus_message_iter_get_basic(&iter,&ret);
+	if(WID_DBUS_SUCCESS == ret )
+	{
+		retu = 0;
+		fprintf(stderr,"set ccgi_set_ap_timing_upgrade_switch_cmd successfully");
+	}
+	else if(ret==WID_DBUS_ERROR)
+		retu=-3;
+	else if(ret == WTP_ID_NOT_EXIST)	  
+		retu=-4;
+	else
+		retu=-5;
+	dbus_message_unref(reply);
+	return retu;
+}
+
+int ccgi_set_ap_timing_upgrade_timer_cmd(dbus_parameter parameter, DBusConnection *connection,int id,char *time_str)
+								// 0:set wtp upgarde time successfully;-1:;-2:input patameter format should be 12:32:56;
+								//-3:NULL == reply;-4:error;
+{	
+	if((time_str==NULL)||(connection == NULL))
+	{
+		return -1;
+	}
+	int ret=0, retu=0;
+	unsigned int wtp_id = id;
+	unsigned int i = 0;
+	unsigned int time;
+	int index = 0;
+	int localid = 1;
+	int num = 0;
+
+	DBusMessage *query, *reply; 
+	DBusMessageIter  iter;
+	DBusError err;
+	time = Check_Time_Format(time_str);
+	if(time == 0){
+		return -2;
+	}
+
+	dbus_error_init(&err);
+	char BUSNAME[PATH_LEN];
+	char OBJPATH[PATH_LEN];
+	char INTERFACE[PATH_LEN];
+	
+	ccgi_ReInitDbusPath_v2(parameter.local_id, parameter.instance_id,WID_DBUS_BUSNAME,BUSNAME);
+	ccgi_ReInitDbusPath_v2(parameter.local_id, parameter.instance_id,WID_DBUS_WTP_OBJPATH,OBJPATH);
+	ccgi_ReInitDbusPath_v2(parameter.local_id, parameter.instance_id,WID_DBUS_WTP_INTERFACE,INTERFACE);
+
+	query = dbus_message_new_method_call(BUSNAME,OBJPATH,INTERFACE, WID_DBUS_SET_WTP_TIMING_UPGRADE_TIMER);
+
+	dbus_message_iter_init_append (query, &iter);
+
+	dbus_message_iter_append_basic (&iter, DBUS_TYPE_UINT32, &wtp_id);
+	dbus_message_iter_append_basic (&iter, DBUS_TYPE_UINT32, &time);
+
+	reply = dbus_connection_send_with_reply_and_block (connection,query,-1, &err);
+
+	dbus_message_unref(query);
+
+
+	if (NULL == reply) {
+		if (dbus_error_is_set(&err)) {
+			dbus_error_free(&err);
+		}
+		return -3;
+	}
+	dbus_message_iter_init(reply,&iter);
+	dbus_message_iter_get_basic(&iter,&ret);
+
+	dbus_message_unref(reply);
+	
+	if(ret == 0)
+	{
+		retu = 0;
+		fprintf(stderr,"set ccgi_set_ap_timing_upgrade_timer_cmd successfully");
+	}
+	else
+		retu = -4;
+	
+	return retu; 
+}	
+int show_ap_timing_upgrade_info_cmd(dbus_parameter parameter, DBusConnection *connection,int id,int *type, unsigned int *time_int)
+{
+	if(connection == NULL)
+	{
+		return -1;
+	}
+	DBusMessage *query, *reply;
+	DBusError err;
+	DBusMessageIter	 iter;
+
+	int ret = 0 ; 
+	unsigned int wtpid = id ; 
+	int policy = 0 ;
+	unsigned int time = 0;
+
+
+	dbus_error_init(&err);
+	char BUSNAME[PATH_LEN];
+	char OBJPATH[PATH_LEN];
+	char INTERFACE[PATH_LEN];
+	
+	ccgi_ReInitDbusPath_v2(parameter.local_id, parameter.instance_id,WID_DBUS_BUSNAME,BUSNAME);
+	ccgi_ReInitDbusPath_v2(parameter.local_id, parameter.instance_id,WID_DBUS_WTP_OBJPATH,OBJPATH);
+	ccgi_ReInitDbusPath_v2(parameter.local_id, parameter.instance_id,WID_DBUS_WTP_INTERFACE,INTERFACE);
+
+	query = dbus_message_new_method_call(BUSNAME,OBJPATH,INTERFACE,WID_DBUS_SHOW_WTP_TIMING_UPGRADE_INFO);
+
+	dbus_message_append_args(query,	
+							DBUS_TYPE_UINT32,&wtpid, 
+							DBUS_TYPE_INVALID);
+
+	reply = dbus_connection_send_with_reply_and_block(connection,query,-1, &err);
+
+	dbus_message_unref(query);
+	
+	if (NULL == reply) {
+		if (dbus_error_is_set(&err)) {
+			dbus_error_free(&err);
+		}
+		return -2;
+	}
+
+	dbus_message_iter_init(reply,&iter);
+	dbus_message_iter_get_basic(&iter,&ret);
+
+	dbus_message_iter_next(&iter);
+	dbus_message_iter_get_basic(&iter, &policy);
+
+	if (policy == 1) {
+		dbus_message_iter_next(&iter);
+		dbus_message_iter_get_basic(&iter, &time);
+	}
+
+	if(WID_DBUS_SUCCESS == ret ) {
+		*type = policy;
+		*time_int = time;
+		return 0;
+	}
+	else
+		return -3;
+	dbus_message_unref(reply);
+
+	return CMD_SUCCESS;
+	
+}	
 
 #ifdef __cplusplus
 }
