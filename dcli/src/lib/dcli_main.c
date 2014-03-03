@@ -682,7 +682,8 @@ void dcli_init(void)
 	dcli_captive_init();
 	dcli_eag_init();
 	dcli_pdc_init();
-	dcli_rdc_init();	
+	dcli_rdc_init();
+	dcli_facl_init();
 	//add for femto iuh & iu
 	dcli_hnb_init();
 	dcli_iu_init();

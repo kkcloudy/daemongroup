@@ -42,6 +42,7 @@ INCLUDES += -I $(ACCAPIPATH)/nm/public/
 INCLUDES += -I $(ACCAPIPATH)/nm/switch/             
 INCLUDES += -I $(ACCAPIPATH)/nm/system/             
 INCLUDES += -I $(ACCAPIPATH)/nm/wlan/ 
+INCLUDES += -I $(ACCAPIPATH)/facl/
 INCLUDES += -I../../../net-snmp/engine/include
 INCLUDES += -I../../../AuteCS/cgic205/
 INCLUDES += -I $(BUILD_DIR)/src/sem/src/dcli/  #wangchao add
@@ -69,6 +70,7 @@ DRPLIB_PATH = -L$(LIB_EXPORT_DIR)
 DRPLIB_FLAGS = -ldrpintf
 EAGLIB_PATH = -L$(LIB_EXPORT_DIR)
 EAGLIB_FLAGS = -leagintf
+FACLLIB_FLAGS = -lfaclintf -lfacl
 PUB1_PATH = -L$(IBUS_PATH)/cli
 PUB1_FLAGS = -ldcliiuhcli
 PUB2_PATH = -L$(IBUS_PATH)/mapi
@@ -100,7 +102,8 @@ DCLI_WIRELESS_OBJS = $(DCLI_WIRELESS_PATH)dcli_wqos.o  $(DCLI_WIRELESS_PATH)dcli
 		dcli_common_igmp_snp.o dcli_user.o dcli_pvlan.o dcli_mirror.o dcli_boot.o \
 		dcli_sys_manage.o dcli_diag.o dcli_tunnel.o dcli_dldp.o dcli_common_dldp.o  \
 		dcli_vrrp.o dcli_dhcp_snp.o dcli_hbip.o dcli_iptunnel.o dcli_dhcp.o \
-		dcli_pim.o dcli_domain.o dcli_captive.o dcli_acsample.o dcli_snmp.o dcli_eag.o dcli_pdc.o dcli_rdc.o dcli_route_policy.o dcli_syslog.o dcli_firewall.o dcli_tc.o \
+		dcli_pim.o dcli_domain.o dcli_captive.o dcli_acsample.o dcli_snmp.o dcli_eag.o dcli_pdc.o dcli_rdc.o dcli_facl.o \
+		dcli_route_policy.o dcli_syslog.o dcli_firewall.o dcli_tc.o \
         dcli_dhcp6_conf.o dcli_mld_snp.o dcli_common_mld_snp.o dcli_prot_vlan.o dcli_spacial.o dcli_dhcp6.o dcli_radius.o dcli_debug.o dcli_sem.o  dcli_apache.o dcli_se_agent.o\
 				dcli_ntp.o dcli_timezone.o dcli_pppoe.o dcli_cavium_ratelimit.o
                 
@@ -112,7 +115,7 @@ DCLI_OBJS = dcli_main.o dcli_user.o dcli_sys_manage.o dcli_boot.o dcli_vrrp.o dc
 
 # npdsuit needed
 DCLI_OBJS += dcli_intf.o dcli_eth_port.o dcli_npd_main.o dcli_system.o dcli_common_dldp.o dcli_debug.o \
-			 dcli_dhcp_snp.o dcli_dhcp6.o dcli_ntp.o dcli_timezone.o dcli_syslog.o dcli_pppoe_snp.o dcli_pppoe.o dcli_radius.o dcli_acinfo.o
+			 dcli_dhcp_snp.o dcli_dhcp6.o dcli_ntp.o dcli_timezone.o dcli_syslog.o dcli_pppoe_snp.o dcli_pppoe.o dcli_radius.o dcli_acinfo.o dcli_facl.o
 #dcli_mirror.o dcli_common_mld_snp.o  dcli_common_igmp_snp.o dcli_mld_snp.o dcli_igmp_snp.o dcli_prot_vlan.o dcli_pvlan.o dcli_tunnel.o dcli_routesyn.o dcli_fdb.o dcli_diag.o   dcli_common_stp.o dcli_vlan.o dcli_trunk.o dcli_dynamic_trunk.o dcli_qos.o dcli_acl.o dcli_stp.o
 			 
 #error: dcli_dhcp_snp.o undefined symbol: ReInitDbusConnection
@@ -142,7 +145,7 @@ cleaniuh_mapi:
 
 $(DCLI_SHLIB_REALNAME): $(DCLI_OBJS) 
 	$(RM) $(LIB_EXPORT_DIR)/$(DCLI_SHLIB_REALNAME) $(LIB_EXPORT_DIR)/$(DCLI_SHLIB_SONAME) $(LIB_EXPORT_DIR)/$(DCLI_SHLIB_LINKERNAME)
-	$(CC) ${LDFLAGS} $(LD_PATH) -o $@ $^ $(DBUS_LIBS) $(CCFLAGS) $(PUB_PATH) $(PUB_FLAGS) $(EAGLIB_PATH) $(EAGLIB_FLAGS) $(DRPLIB_PATH) $(DRPLIB_FLAGS) $(PUB1_PATH) $(PUB1_FLAGS) $(PUB2_PATH) $(PUB2_FLAGS) $(SNMPFLAGS) $(EAGFLAGS) $(COMFLAGS) $(XML_LIBS) $(XMLFLAGS)  $(CGIFLAGS)
+	$(CC) ${LDFLAGS} $(LD_PATH) -o $@ $^ $(DBUS_LIBS) $(CCFLAGS) $(PUB_PATH) $(PUB_FLAGS) $(EAGLIB_PATH) $(EAGLIB_FLAGS) $(FACLLIB_FLAGS) $(DRPLIB_PATH) $(DRPLIB_FLAGS) $(PUB1_PATH) $(PUB1_FLAGS) $(PUB2_PATH) $(PUB2_FLAGS) $(SNMPFLAGS) $(EAGFLAGS) $(COMFLAGS) $(XML_LIBS) $(XMLFLAGS)  $(CGIFLAGS)
 	mv $(DCLI_SHLIB_REALNAME) $(LIB_EXPORT_DIR)/
 	ln -sf $(DCLI_SHLIB_REALNAME) $(LIB_EXPORT_DIR)/$(DCLI_SHLIB_SONAME) 
 	ln -sf $(DCLI_SHLIB_SONAME) $(LIB_EXPORT_DIR)/$(DCLI_SHLIB_LINKERNAME) 

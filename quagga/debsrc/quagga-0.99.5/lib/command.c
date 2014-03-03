@@ -2498,6 +2498,7 @@ DEFUN (config_exit,
     case  WEBSERVICE_NODE:
 	case RADIUS_NODE:
 	case FIREWALL_NODE:
+	case FACL_NODE:
 	case TC_NODE:
 	case STRICT_ACCESS_NODE:
 	case SPACIAL_CONFIG_NODE:
@@ -2852,6 +2853,7 @@ DEFUN (config_end,
 	case LOCAL_HANSI_PPPOE_DEVICE_NODE:		/*add by lixiang , for new pppoe config */
 	case WEBSERVICE_NODE:
 	case FIREWALL_NODE:
+	case FACL_NODE:
 	case TC_NODE:
 	case STRICT_ACCESS_NODE:
 	case SPACIAL_CONFIG_NODE:
@@ -3993,6 +3995,7 @@ install_default (enum node_type node)
 	||node == HANSI_PPPOE_DEVICE_NODE				/*add by lixiang , for new pppoe config */
 	||node == LOCAL_HANSI_PPPOE_DEVICE_NODE			/*add by lixiang , for new pppoe config */
 	||node == FIREWALL_NODE
+	||node == FACL_NODE
 	||node == TC_NODE
 	||node == STRICT_ACCESS_NODE
 	||node == CAPTIVE_NODE

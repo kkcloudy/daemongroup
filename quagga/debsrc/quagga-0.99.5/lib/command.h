@@ -217,6 +217,7 @@ enum node_type
   ROUTE_POLICY_NODE,
   /*add for autecs   by  shaojunwu  2010-01-28*/
   FIREWALL_NODE,   /* add by chensheng 2010-03-24 */
+  FACL_NODE,	/* add for flow acl policy 2013-03-01 */
 /*  DNSCACHE_NODE,*/
   TC_NODE,
   STRICT_ACCESS_NODE,
