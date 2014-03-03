@@ -1132,7 +1132,7 @@ int dcli_dhcp6_show_running_cfg(struct vty *vty)
                 totalLen += sprintf(cursor, " ip6 dhcp server lease-max %d\n", subnet[i].maxtime/(60*60*24));
                 cursor = showStr + totalLen;
             }
-            totalLen += sprintf(cursor, "exit \n\n");
+            totalLen += sprintf(cursor, " exit \n\n");
             cursor = showStr + totalLen;
         }
 

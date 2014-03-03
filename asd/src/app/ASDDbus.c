@@ -28314,7 +28314,7 @@ DBusMessage *asd_dbus_show_ac_group_running_config(DBusConnection *conn, DBusMes
 						cursor = showStr + totalLen;
 					}
 				}
-				totalLen += sprintf(cursor,"exit\n");
+				totalLen += sprintf(cursor," exit\n");
 				cursor = showStr + totalLen;
 			}
 		}
@@ -28981,7 +28981,7 @@ DBusMessage *asd_dbus_security_show_running_config(DBusConnection *conn, DBusMes
 						cursor = showStr + totalLen;
 					}
 				}
-				totalLen += sprintf(cursor,"exit \n");
+				totalLen += sprintf(cursor," exit \n");
 				cursor = showStr + totalLen;
 			}
 			

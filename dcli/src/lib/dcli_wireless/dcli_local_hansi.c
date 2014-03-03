@@ -694,7 +694,7 @@ int dcli_local_hansi_show_running_config(struct vty *vty)
 			/*end*/
 		}
 		
-		totalLen += sprintf(cursor, "exit\n");
+		totalLen += sprintf(cursor, " exit\n");
 				cursor = showRunningCfg_str + totalLen;
 		/* dhcp config section */
 		tmp = dcli_dhcp_show_running_hansi_cfg(slot_id,profile,localid);
