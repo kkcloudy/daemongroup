@@ -1093,4 +1093,12 @@ struct dcli_bss_indexinfo{
 	unsigned int traffic_limit;
 	unsigned int send_traffic_limit;
 };
+
+#ifdef __ASD_STA_ACL
+	struct dcli_asd_acl
+	{
+		unsigned int id;		/* ASD STA ACL ID */
+		unsigned int id_wifi;	/* WIFI STA ACL ID */
+	};
+#endif
 #endif

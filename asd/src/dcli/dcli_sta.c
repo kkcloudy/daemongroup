@@ -10,6 +10,7 @@
 #include <time.h>     /*xm add*/
 #include <sys/time.h> /*xm add*/
 
+#include "config/wireless_config.h"
 #include "command.h"
 #include "dcli_ac.h"
 #include "dcli_acl.h"
@@ -8585,6 +8586,121 @@ DEFUN(show_sta_v2_cmd_func,
 	return CMD_SUCCESS;
 }
 #endif
+
+#if DCLI_NEW
+#ifdef __ASD_STA_ACL
+/* caojia add for sta acl */
+DEFUN(set_sta_acl_cmd_func,
+		set_sta_acl_cmd,
+		"set sta MAC acl <0-2048>",
+		"Config STA\n"
+		"STA information\n"
+		"STA MAC\n"
+		"STA ACL policy\n"
+		"STA ACL policy ID <0-2048>\n"		
+	 )
+{	
+	DBusConnection *dcli_dbus_connection = NULL;
+	int localid = 1;
+	int slot_id = HostSlotId;
+	unsigned int index = 0;
+	unsigned int ret = ASD_DBUS_SUCCESS;
+	unsigned int acl_id = 0;
+	MACADDR haddr;
+
+	memset(&haddr, 0, sizeof(haddr));
+	if (parse_mac_addr(argv[0], &haddr))
+	{
+		vty_out(vty,"%% Invalid MAC %s\n", argv[0]);
+		return CMD_SUCCESS;		
+	}
+    acl_id = strtoul(argv[1], NULL, 10);
+	if (acl_id < 0 || acl_id > 2048) {
+		vty_out(vty, "ACL ID [%d] out of range <0-2048>\n", acl_id);
+	}
+
+	if((vty->node == CONFIG_NODE)||(vty->node == ENABLE_NODE)){
+		index = 0;
+	}else if(vty->node == HANSI_NODE){
+		index = (int)vty->index;
+		localid = vty->local;
+		slot_id = vty->slotindex;
+	}else if (vty->node == LOCAL_HANSI_NODE){
+		index = vty->index;
+		localid = vty->local;
+		slot_id = vty->slotindex;
+	}
+	ReInitDbusConnection(&dcli_dbus_connection,slot_id,distributFag);
+	
+	ret = dcli_asd_set_sta_acl(dcli_dbus_connection, index, localid, &haddr.arEther[0], acl_id);
+	if (ASD_STA_NOT_EXIST == ret) {
+		vty_out(vty, "<error> STA %02x:%02x:%02x:%02x:%02x:%02x not exist.\n", 
+			haddr.arEther[0], haddr.arEther[1], haddr.arEther[2], 
+			haddr.arEther[3], haddr.arEther[4], haddr.arEther[5]);
+	}
+	else if (ASD_DBUS_SUCCESS != ret)
+	{
+		vty_out(vty,"<error> set sta acl failed %d.\n", ret);
+	}
+
+	return CMD_SUCCESS;
+}
+
+/* caojia add for sta acl */
+DEFUN(show_sta_acl_cmd_func,
+	show_sta_acl_cmd,
+	"show sta MAC acl",
+	CONFIG_STR
+	"Station\n"
+	"Station MAC\n"
+	"Station ACL policy \n")
+{
+	DBusConnection *dcli_dbus_connection = NULL;
+	int localid = 1;
+	int slot_id = HostSlotId;
+	unsigned int index = 0;
+	unsigned int ret = ASD_DBUS_SUCCESS;
+	MACADDR haddr;
+	struct dcli_asd_acl acl;
+
+	memset(&haddr, 0, sizeof(haddr));
+	if (parse_mac_addr(argv[0], &haddr))
+	{
+		vty_out(vty,"%% Invalid MAC %s\n", argv[0]);
+		return CMD_SUCCESS; 	
+	}
+
+	if((vty->node == CONFIG_NODE)||(vty->node == ENABLE_NODE)){
+		index = 0;
+	}else if(vty->node == HANSI_NODE){
+		index = (int)vty->index;
+		localid = vty->local;
+		slot_id = vty->slotindex;
+	}else if (vty->node == LOCAL_HANSI_NODE){
+		index = vty->index;
+		localid = vty->local;
+		slot_id = vty->slotindex;
+	}
+	ReInitDbusConnection(&dcli_dbus_connection,slot_id,distributFag);
+	
+	memset(&acl, 0, sizeof(acl));
+	
+	ret = dcli_asd_show_sta_acl(dcli_dbus_connection, index, localid, &haddr.arEther[0], &acl);
+	if (ASD_DBUS_SUCCESS != ret)
+	{
+		vty_out(vty,"<error> show sta acl failed retval %d.\n", ret);
+	}
+	else
+	{
+		vty_out(vty," ASD STA ACL policy ID : %-4d\n", acl.id);
+		vty_out(vty,"WIFI STA ACL policy ID : %-4d\n", acl.id_wifi);
+	}
+	return CMD_SUCCESS;
+	
+}
+#endif
+#endif
+
 #if DCLI_NEW
 DEFUN(show_sta_summary_cmd_func,
 	  show_sta_summary_cmd,
@@ -21405,6 +21521,12 @@ void dcli_sta_init(void) {
 	install_element(HANSI_NODE,&show_bss_summary_cmd);
 	install_element(HANSI_NODE,&show_bss_bssindex_cmd);
 	install_element(HANSI_NODE,&set_asd_1x_radius_format_cmd);	/* add to set asd radius format */
+
+#ifdef __ASD_STA_ACL
+	/* caojia add for sta acl function */
+	install_element(HANSI_NODE,&set_sta_acl_cmd);	
+	install_element(HANSI_NODE,&show_sta_acl_cmd);
+#endif
 	/************************************************************************************/
 	/*-----------------------------------LOCAL_HANSI_NODE-----------------------------------*/
 	install_node(&local_hansi_sta_node,NULL,"LOCAL_HANSI_STA_NODE");

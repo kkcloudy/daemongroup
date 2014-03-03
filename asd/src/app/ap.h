@@ -53,6 +53,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define WLAN_STA_HT BIT(11)
 #define WLAN_STA_WPS BIT(12)
 #define WLAN_STA_MAYBE_WPS BIT(13)
+#define WLAN_STA_ROAMOUT BIT(14)
+#define WLAN_STA_ROAMING_L2 BIT(16)	/* L2 ROAM */  
+#define WLAN_STA_ROAMING_L3 BIT(17) /* L3 ROAM */
 #define WLAN_STA_DEL BIT(27)  /*ht add,set when ap told sta is leave,011027*/
 #define WLAN_STA_FREE BIT(29)  //ht add,090219
 #define WLAN_STA_AUTH_ACK BIT(30)  //ht add,090219
@@ -64,6 +67,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * Supported Rates IEs). */
 #define WLAN_SUPP_RATES_MAX 32
 
+/* caojia add for sta acl function */
+struct acl_policy
+{
+	unsigned int id;
+	unsigned int prev_id;
+};
+typedef struct acl_policy acl_policy_t;
 
 struct sta_info {
 	struct sta_info *next; /* next entry in sta list */
@@ -199,6 +209,9 @@ struct sta_info {
 	 unsigned char reauthflag;
 	 struct asd_data *wasd;
 	 unsigned char BSSID[MAC_LEN];
+#ifdef __ASD_STA_ACL
+	acl_policy_t acl; // caojia add for sta acl function
+#endif
 };
 struct sta_acct_info{	
 	u8 acct_id[ACCT_ID_LEN+1];

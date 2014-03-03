@@ -85,6 +85,9 @@ int ASD_GET_CNUM(struct r_sta_wlan_info *r_sta_wlan,unsigned char type);
 int ASD_GET_BSS_BYRADIO(struct asd_bss_summary_info *bss_summary,int id,int *circlenum);
 int ASD_GET_BSS_BYWLAN(struct asd_bss_summary_info *bss_summary,int id,int *circlenum);
 int ASD_GET_BSS_BYWTP(struct asd_bss_summary_info *bss_summary,int id,int *circlenum);
-
+#ifdef __ASD_STA_ACL
+int set_sta_acl(struct asd_data *wasd, struct sta_info *sta, unsigned int acl_id);
+unsigned int get_sta_acl_wifi(struct asd_data *wasd, struct sta_info *sta);
+#endif
 
 #endif

@@ -672,7 +672,14 @@ int wifi_kernel_rx(struct sk_buff *skb){
 		if(wifi_ko_dhcp_option82_hook)
 			wifi_ko_dhcp_option82_hook(skb,&(priv->res));
 	}
-	
+
+#if WIFI_STA_ACL_SUPPORT
+	/* caojia add for sta acl function */
+	if(sta ||(SMAC && (sta = wifi_sta_tbl_get(SMAC))))
+	{
+		skb->mark = sta->nfmark;
+	}
+#endif
 
 	netif_rx(skb);	
 	if(wifi_eth_debug >= WIFI_DEBUG)

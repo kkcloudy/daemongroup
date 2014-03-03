@@ -121,6 +121,10 @@ int wifi_ioctl(struct inode *inode, struct file *filp, unsigned int cmd, unsigne
 	struct interface_basic_INFO if_basic_info;
 	struct interface_batch_INFO if_batch_info;
 	struct HANSI_INFO HInfo;
+#if WIFI_STA_ACL_SUPPORT
+	struct wifi_nf_info wifi_nf; //caojia add for sta acl function
+	unsigned int old_nfmark = 0; //caojia add for sta acl function
+#endif
 
 	sh_mem_t sh_mem;
 	dev_ipv6_addr_t ipv6_addr;
@@ -139,6 +143,9 @@ int wifi_ioctl(struct inode *inode, struct file *filp, unsigned int cmd, unsigne
 	memset(&if_basic_info,0,sizeof(if_basic_info));
 	memset(&if_batch_info,0,sizeof(if_batch_info));
 	memset(&HInfo,0,sizeof(HInfo));
+#if WIFI_STA_ACL_SUPPORT
+	memset(&wifi_nf, 0, sizeof(struct wifi_nf_info)); //caojia add for sta acl function
+#endif
 	switch (cmd)
 	{
 		case WIFI_IOC_REG_IF: 
@@ -244,6 +251,17 @@ int wifi_ioctl(struct inode *inode, struct file *filp, unsigned int cmd, unsigne
 			memcpy(sta->BSSID_Before,stainfo.BSSID_Before,MAC_LEN);
 			memcpy(sta->BSSID,stainfo.BSSID,MAC_LEN);
 			sta->roaming_flag = stainfo.roaming_flag;
+#if WIFI_STA_ACL_SUPPORT
+			/* caojia add for sta acl function */
+			//sta->nfmark = stainfo.nfmark;
+			if(wifi_eth_debug >= WIFI_DEBUG)
+			{
+				printk("add sta %p mac %02x:%02x:%02x:%02x:%02x:%02x nfmark %d\n",\
+					sta, stainfo.STAMAC[0], stainfo.STAMAC[1], stainfo.STAMAC[2], \
+					stainfo.STAMAC[3], stainfo.STAMAC[4], stainfo.STAMAC[5], stainfo.nfmark);
+			}
+#endif
+
 			break;
 		case WIFI_IOC_DEL_STA:
 			op_ret = copy_from_user(&stainfo,(struct asd_to_wifi_sta*)arg,sizeof( struct asd_to_wifi_sta));
@@ -271,6 +289,42 @@ int wifi_ioctl(struct inode *inode, struct file *filp, unsigned int cmd, unsigne
 			for(i = 0;i < if_batch_info.count && i < PATCH_OP_RADIO_MAX; i++)
 				retval = dynamic_unregiste_if(&(if_batch_info.ifinfo[i]));
 			break;
+#if WIFI_STA_ACL_SUPPORT
+		/* caojia add for sta acl function */
+		case WIFI_IOC_SET_NFMARK:		
+			op_ret = copy_from_user(&wifi_nf,(struct wifi_nf_info*)arg, sizeof( struct wifi_nf_info));
+
+			sta = wifi_sta_tbl_get( wifi_nf.STAMAC);
+			if(sta)
+			{
+				old_nfmark = sta->nfmark;
+				sta->nfmark = wifi_nf.nfmark;
+				wifi_nf.nfmark = old_nfmark;
+			}
+			else
+			{
+				wifi_nf.nfmark = 0;
+				retval = -1;
+			}
+			copy_to_user(arg, &wifi_nf, sizeof( struct wifi_nf_info));
+			break;
+		case WIFI_IOC_GET_NFMARK:		
+			op_ret = copy_from_user(&wifi_nf,(struct wifi_nf_info*)arg, sizeof( struct wifi_nf_info));
+
+			sta = wifi_sta_tbl_get( wifi_nf.STAMAC);
+			if(sta)
+			{
+				old_nfmark = sta->nfmark;
+				wifi_nf.nfmark = old_nfmark;
+			}
+			else
+			{
+				wifi_nf.nfmark = 0;
+				retval = -1;
+			}
+			copy_to_user(arg, &wifi_nf, sizeof( struct wifi_nf_info));
+			break;
+#endif
 		default:
 			printk("wifi_ioctl break\n");
 			retval = -1;

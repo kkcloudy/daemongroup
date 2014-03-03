@@ -47,6 +47,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <fcntl.h>
 #include <net/if.h>
 
+#include "config/wireless_config.h"
 #include "circle.h"
 #include "asd.h"
 #include "ap.h"
@@ -20903,6 +20904,235 @@ DBusMessage *asd_dbus_set_sta_arp(DBusConnection *conn, DBusMessage *msg, void *
 
 }
 
+#ifdef __ASD_STA_ACL
+/* caojia add for sta acl function */
+DBusMessage *asd_dbus_set_sta_acl(DBusConnection *conn, DBusMessage *msg, void *user_data)
+{
+	DBusMessage *reply = NULL;
+	DBusMessageIter iter;
+	DBusError err;
+	unsigned int ret = ASD_DBUS_SUCCESS;
+	struct asd_stainfo *stainfo = NULL;
+	unsigned int acl_id = 0;
+	unsigned char mac[MAC_LEN] = {0};
+		
+	dbus_error_init(&err);
+	if (!(dbus_message_get_args(msg, &err,
+								DBUS_TYPE_UINT32,&acl_id,		
+								DBUS_TYPE_BYTE,&mac[0],
+								DBUS_TYPE_BYTE,&mac[1],
+								DBUS_TYPE_BYTE,&mac[2],
+								DBUS_TYPE_BYTE,&mac[3],
+								DBUS_TYPE_BYTE,&mac[4],
+								DBUS_TYPE_BYTE,&mac[5],
+								DBUS_TYPE_INVALID)))
+	{
+		asd_printf(ASD_DBUS,MSG_DEBUG,"Unable to get input args\n");
+		if (dbus_error_is_set(&err)) 
+		{
+			asd_printf(ASD_DBUS,MSG_DEBUG,"%s raised: %s", err.name, err.message);
+			dbus_error_free(&err);
+		}
+		return NULL;
+	}
+	
+	stainfo = ASD_SEARCH_STA(mac);
+	if (NULL != stainfo)
+	{
+		if (0 == set_sta_acl(stainfo->bss, stainfo->sta, acl_id))
+		{
+			stainfo->sta->acl.id = acl_id;
+			asd_printf(ASD_DEFAULT,MSG_INFO,"%s: sta %s acl id %d\n", __func__, mac2str(mac), acl_id);
+			#if 0
+			/* TO FASTFWD for delete sta flow table */
+			if (0 != stainfo->sta->ip_addr.s_addr)
+			{
+				notify_fastfwd_clear_flowtbl(stainfo->sta->ip_addr.s_addr);
+					
+			}
+			#endif
+		}
+		else
+		{
+			ret = ASD_DBUS_ERROR;
+		}
+	}
+	else
+	{
+		ret = ASD_STA_NOT_EXIST;
+	}
+				
+	reply = dbus_message_new_method_return(msg);
+	dbus_message_iter_init_append (reply, &iter);
+	
+	dbus_message_iter_append_basic (&iter, DBUS_TYPE_UINT32, &ret); 		
+	if (NULL != stainfo)
+	{
+		free(stainfo);
+		stainfo = NULL;
+	}
+	
+	return reply;	
+	
+}
+
+DBusMessage *asd_dbus_show_sta_acl(DBusConnection *conn, DBusMessage *msg, void *user_data)
+{
+	DBusMessage *reply = NULL;
+	DBusMessageIter iter;
+	DBusError err;
+	unsigned int ret = ASD_DBUS_SUCCESS;
+	struct asd_stainfo *stainfo = NULL;
+	unsigned int acl_id = 0;
+	unsigned int acl_id_wifi = 0;
+	unsigned char mac[MAC_LEN] = {0};
+		
+	dbus_error_init(&err);
+	if (!(dbus_message_get_args(msg, &err,
+								DBUS_TYPE_BYTE,&mac[0],
+								DBUS_TYPE_BYTE,&mac[1],
+								DBUS_TYPE_BYTE,&mac[2],
+								DBUS_TYPE_BYTE,&mac[3],
+								DBUS_TYPE_BYTE,&mac[4],
+								DBUS_TYPE_BYTE,&mac[5],
+								DBUS_TYPE_INVALID)))
+	{
+		asd_printf(ASD_DBUS,MSG_DEBUG,"Unable to get input args\n");
+		if (dbus_error_is_set(&err)) 
+		{
+			asd_printf(ASD_DBUS,MSG_DEBUG,"%s raised: %s", err.name, err.message);
+			dbus_error_free(&err);
+		}
+		return NULL;
+	}
+
+	stainfo = ASD_SEARCH_STA(mac);
+	if (NULL != stainfo)
+	{
+		acl_id = stainfo->sta->acl.id;
+
+		/* get sta ACL ID form WIFI */
+		acl_id_wifi = get_sta_acl_wifi(stainfo->bss, stainfo->sta);
+	
+		asd_printf(ASD_DEFAULT,MSG_INFO,"%s: sta %s acl %d wifi acl %d\n",
+			__func__, mac2str(mac), acl_id, acl_id_wifi);
+	}
+	else
+	{
+		ret = ASD_STA_NOT_EXIST;
+	}
+				
+	reply = dbus_message_new_method_return(msg);
+	dbus_message_iter_init_append (reply, &iter);
+	
+	dbus_message_iter_append_basic (&iter,DBUS_TYPE_UINT32,&ret);
+		
+	dbus_message_iter_append_basic (&iter,DBUS_TYPE_UINT32,&acl_id);
+	
+	dbus_message_iter_append_basic (&iter,DBUS_TYPE_UINT32,&acl_id_wifi);
+	
+	if (NULL != stainfo)
+	{
+		free(stainfo);
+		stainfo = NULL;
+	}
+	
+	return reply;	
+}
+
+/* caojia add for sta acl function */
+DBusMessage *asd_dbus_set_wlan_sta_default_acl(DBusConnection *conn, DBusMessage *msg, void *user_data)
+{
+	DBusMessage *reply = NULL;
+	DBusMessageIter iter;
+	DBusError err;
+	unsigned int ret = ASD_DBUS_SUCCESS;
+	unsigned int acl_id = 0;
+	unsigned char wlan_id = 0;
+		
+	dbus_error_init(&err);
+	if (!(dbus_message_get_args(msg, &err,
+								DBUS_TYPE_UINT32,&acl_id,		
+								DBUS_TYPE_BYTE,&wlan_id,
+								DBUS_TYPE_INVALID)))
+	{
+		asd_printf(ASD_DBUS,MSG_DEBUG,"Unable to get input args\n");
+		if (dbus_error_is_set(&err)) 
+		{
+			asd_printf(ASD_DBUS,MSG_DEBUG,"%s raised: %s", err.name, err.message);
+			dbus_error_free(&err);
+		}
+		return NULL;
+	}
+
+	if (acl_id < 0 && acl_id > 2048) {
+		asd_printf(ASD_DBUS,MSG_DEBUG, "%s acl_id[%d] not valid.\n", __func__, acl_id);
+		ret = ASD_UNKNOWN_ID;
+	}
+	else if (ASD_WLAN[wlan_id] == NULL){
+		asd_printf(ASD_DBUS,MSG_DEBUG, "%s can not find wlan[%d].\n", __func__, wlan_id);
+		ret = ASD_WLAN_NOT_EXIST;
+	}
+	else if (ASD_WLAN[wlan_id]->Status == 0) {
+		asd_printf(ASD_DBUS,MSG_DEBUG, "%s wlan[%d] should be disable.\n", __func__, wlan_id);
+		ret = ASD_SECURITY_WLAN_SHOULD_BE_DISABLE;
+	}
+
+	if (ASD_DBUS_SUCCESS == ret) {
+		ASD_WLAN[wlan_id]->sta_default_aclid = acl_id;
+	}
+				
+	reply = dbus_message_new_method_return(msg);
+	dbus_message_iter_init_append (reply, &iter);
+	
+	dbus_message_iter_append_basic (&iter, DBUS_TYPE_UINT32, &ret); 		
+	
+	return reply;	
+	
+}
+
+DBusMessage *asd_dbus_show_wlan_sta_default_acl(DBusConnection *conn, DBusMessage *msg, void *user_data)
+{
+	DBusMessage *reply = NULL;
+	DBusMessageIter iter;
+	DBusError err;
+	unsigned int ret = ASD_DBUS_SUCCESS;
+	unsigned int acl_id = 0;
+	unsigned char wlan_id;
+		
+	dbus_error_init(&err);
+	if (!(dbus_message_get_args(msg, &err,
+								DBUS_TYPE_BYTE,&wlan_id,
+								DBUS_TYPE_INVALID)))
+	{
+		asd_printf(ASD_DBUS,MSG_DEBUG,"Unable to get input args\n");
+		if (dbus_error_is_set(&err)) 
+		{
+			asd_printf(ASD_DBUS,MSG_DEBUG,"%s raised: %s", err.name, err.message);
+			dbus_error_free(&err);
+		}
+		return NULL;
+	}
+
+	if (ASD_WLAN[wlan_id] == NULL){
+		asd_printf(ASD_DBUS,MSG_DEBUG, "%s can not find wlan[%d].\n", __func__, wlan_id);
+		ret = ASD_WLAN_NOT_EXIST;
+	}
+	else {
+		acl_id = ASD_WLAN[wlan_id]->sta_default_aclid;
+	}
+				
+	reply = dbus_message_new_method_return(msg);
+	dbus_message_iter_init_append (reply, &iter);
+	
+	dbus_message_iter_append_basic (&iter,DBUS_TYPE_UINT32,&ret);
+		
+	dbus_message_iter_append_basic (&iter,DBUS_TYPE_UINT32,&acl_id);
+	
+	return reply;	
+}
+
+#endif
 
 DBusMessage *asd_dbus_show_security_list(DBusConnection *conn, DBusMessage *msg, void *user_data){
 	DBusMessage* reply;	
@@ -29243,6 +29473,20 @@ static DBusHandlerResult asd_dbus_message_handler (DBusConnection *connection, D
 		else if(dbus_message_is_method_call(message,ASD_DBUS_STA_INTERFACE,ASD_DBUS_CONF_METHOD_QUIT)){
 			reply = asd_dbus_method_quit(connection,message,user_data);
 		}
+#ifdef __ASD_STA_ACL
+		else if (dbus_message_is_method_call(message,ASD_DBUS_STA_INTERFACE,ASD_DBUS_STA_METHOD_SET_STA_ACL)) {
+			reply = asd_dbus_set_sta_acl(connection,message,user_data);
+		}
+		else if (dbus_message_is_method_call(message,ASD_DBUS_STA_INTERFACE,ASD_DBUS_STA_METHOD_SHOW_STA_ACL)) {
+			reply = asd_dbus_show_sta_acl(connection,message,user_data);
+		}
+		else if (dbus_message_is_method_call(message,ASD_DBUS_STA_INTERFACE,ASD_DBUS_STA_METHOD_SET_WLAN_STA_DEFAULT_ACL)) {
+			reply = asd_dbus_set_wlan_sta_default_acl(connection,message,user_data);
+		}
+		else if (dbus_message_is_method_call(message,ASD_DBUS_STA_INTERFACE,ASD_DBUS_STA_METHOD_SHOW_WLAN_STA_DEFAULT_ACL)) {
+			reply = asd_dbus_show_wlan_sta_default_acl(connection,message,user_data);
+		}
+#endif
 	}
 	else if (strcmp(dbus_message_get_path(message),ASD_DBUS_SECURITY_OBJPATH) == 0){
 		

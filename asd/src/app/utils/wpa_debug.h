@@ -67,6 +67,8 @@ void asd_syslog_notice(char *format,...);
 void asd_syslog_warning(char *format,...);
 void asd_syslog_h(int level,char *iden,char *fmt,...);//qiuchen
 
+char *mac2str(unsigned char *haddr);
+
 /**
  * wpa_debug_printf_timestamp - Print timestamp for debug output
  *
@@ -246,5 +248,16 @@ enum asd_logger_level {
 #else
 #define WPA_ASSERT(a) do { } while (0)
 #endif
+
+/* check pointer with return value ret */
+#define ASD_CHECK_POINTER_RET(ptr, ret)	\
+	do {	\
+		if (NULL == (ptr))	\
+		{	\
+			asd_printf(ASD_DEFAULT,MSG_ERROR,"%s:%d parameter NULL\n", __func__, __LINE__); \
+			return (ret); \
+		}	\
+	} while (0);
+
 
 #endif /* WPA_DEBUG_H */

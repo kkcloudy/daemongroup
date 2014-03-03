@@ -47,6 +47,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "includes.h"
 
+#include "config/wireless_config.h"
 #include "asd.h"
 #include "ASDStaInfo.h"
 #include "circle.h"
@@ -94,6 +95,55 @@ static void asd_sta_hash_del(struct sta_info *sta);
 static int ap_sta_in_other_bss(struct asd_data *wasd,
 			       struct sta_info *sta, u32 flags);
 static void ap_handle_session_timer(void *circle_ctx, void *timeout_ctx);
+
+/**********************************************************************
+ * bssindex2wasd
+ * 
+ * 	get wasd(bss) by bssindex
+ *
+ *	INPUT:
+ *		bssindex - bssindex
+ *	
+ *	OUTPUT:
+ *
+ * 	RETURN:
+ *		NULL - no bss
+ *		wasd  - the bss
+ *		
+ **********************************************************************/
+struct asd_data *bssindex2wasd(unsigned int bssindex)
+{
+	unsigned int bss = 0;
+	unsigned int g_radio_id = 0;
+	struct asd_data *wasd = NULL;
+	struct wasd_interfaces *interfaces = (struct wasd_interfaces*) circle.user_data;
+
+	bss = bssindex % L_BSS_NUM;
+	g_radio_id = bssindex / L_BSS_NUM;
+
+	if (NULL == interfaces)
+	{
+		return NULL;
+	}
+
+	if (g_radio_id >= interfaces->count)
+	{
+		return NULL;
+	}
+	
+	if ((NULL != interfaces->iface[g_radio_id])
+		&& (NULL != interfaces->iface[g_radio_id]->bss[bss]))
+	{
+		wasd = interfaces->iface[g_radio_id]->bss[bss];
+	}
+	else
+	{
+		wasd = NULL;
+	}
+
+	return wasd;
+}
+
 struct asd_data * 
 get_kick_sta_wasd(unsigned int WTPID,unsigned char wlanid){
 	struct wasd_interfaces *interfaces = (struct wasd_interfaces*) circle.user_data;
@@ -3108,6 +3158,90 @@ int AsdStaInfoToEAG(struct asd_data *wasd, struct sta_info *sta, Operate op){
 	asd_printf(ASD_DEFAULT,MSG_DEBUG,"wtpid : %d, wtp_name: %s\n",wtpid,msg.STA.wtp_name);
 	return 0;
 }
+
+#ifdef __ASD_STA_ACL
+/* caojia add for sta acl function */
+int stainfo2wifi(struct asd_to_wifi_sta *sta, Operate op)
+{
+	int ret = 0;
+	static int fd = -1;
+
+	if (NULL == sta)
+	{
+		return -1;
+	}
+
+	if (fd < 0)
+	{
+		if (-1 == (fd = open("/dev/wifi0", O_RDWR)))
+		{
+			asd_printf(ASD_DEFAULT, MSG_ERROR, "%s open file failed :%s\n",
+					   __func__, strerror(errno));
+			return -1;
+		}
+	}
+
+	if (WID_ADD == op)
+	{
+		ret = ioctl(fd, WIFI_IOC_ADD_STA, sta);
+	}
+	else if (WID_DEL == op)
+	{
+		ret = ioctl(fd, WIFI_IOC_DEL_STA, sta);
+	}
+
+	return 0;
+}
+
+int AsdStaInfo2Wifi(struct asd_data *wasd, struct sta_info *sta, Operate op)
+{
+	struct asd_to_wifi_sta stainfo;
+	struct asd_data *prev_wasd = NULL;
+	char buf[32] = {0};
+	
+	ASD_CHECK_POINTER_RET(wasd, -1);
+	ASD_CHECK_POINTER_RET(sta, -1);
+
+	memset(&stainfo, 0, sizeof(stainfo));
+	memcpy(stainfo.STAMAC, sta->addr, MAC_LEN);
+	memcpy(stainfo.BSSID, wasd->own_addr, MAC_LEN);
+
+	//stainfo.vlanid = sta->vlan_id2;
+
+	if (WLAN_STA_ROAMING_L3 & sta->flags)
+	{
+		prev_wasd = bssindex2wasd(sta->PreBssIndex);
+		if (prev_wasd)
+		{
+			memcpy(stainfo.BSSID_Before, prev_wasd->own_addr, MAC_LEN);
+			stainfo.roaming_flag = STA_ROAM_TYPE_L3;
+			snprintf(buf, sizeof(buf), "L3 roam");
+		}
+	}
+	else if (WLAN_STA_ROAMING_L2 & sta->flags)
+	{
+		memcpy(stainfo.BSSID_Before, wasd->own_addr, MAC_LEN);
+		stainfo.roaming_flag = 0;
+		snprintf(buf, sizeof(buf), "L2 roam");
+	}
+	else
+	{
+		memcpy(stainfo.BSSID_Before, wasd->own_addr, MAC_LEN);
+		stainfo.roaming_flag = 0;
+	}
+
+	asd_printf(ASD_DEFAULT,MSG_DEBUG,"%s: %s sta %s radio %d-%d wlan %d bssindex %d vlan %d %s\n",
+		__func__, ((WID_ADD == op) ? "add" : "del"),
+		mac2str(sta->addr),
+		wasd->Radio_G_ID / L_RADIO_NUM, wasd->Radio_L_ID, wasd->WlanID, wasd->BSSIndex, 
+		sta->vlan_id, buf);
+	
+	stainfo2wifi(&stainfo, op);
+
+	return 0;
+}
+#endif
+
 void asd_sta_roaming_management(struct sta_info *new_sta)
 {
 	struct sta_info *old_sta = NULL;

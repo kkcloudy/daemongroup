@@ -40,6 +40,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdlib.h>
 #include <sys/socket.h> 
 
+#include "config/wireless_config.h"
 #include "asd.h"
 #include "ASDCallback.h"
 #include "ASD8021XOp.h"
@@ -2628,3 +2629,84 @@ out:
 	}
 	return;
 }
+
+#ifdef __ASD_STA_ACL
+/* caojia add for sta acl function */
+int set_sta_acl(struct asd_data *wasd, struct sta_info *sta, unsigned int acl_id)
+{
+	static int fd = -1;
+	struct wifi_nf_info info;			
+
+	ASD_CHECK_POINTER_RET(wasd,-1);
+	ASD_CHECK_POINTER_RET(sta,-1);
+	
+	if (fd < 0)
+	{
+		if (-1 == (fd = open("/dev/wifi0", O_RDWR)))
+		{
+			asd_printf(ASD_DEFAULT, MSG_ERROR, "%s open file failed :%s\n",
+					   __func__, strerror(errno));
+			return -1;
+		}
+	}
+	memset(&info, 0, sizeof(info));
+//	memcpy(info.BSSID, wasd->own_addr, MAC_LEN);
+	memcpy(info.STAMAC, sta->addr, MAC_LEN);
+
+	/* get prev ACL policy ID */
+	if (ioctl(fd, WIFI_IOC_GET_NFMARK, &info) < 0)
+	{
+		close(fd);
+		fd = -1;
+		return -1;
+	}
+	sta->acl.prev_id = info.nfmark;
+
+	/* set prev ACL policy ID */
+	info.nfmark = acl_id;
+	if (ioctl(fd, WIFI_IOC_SET_NFMARK, &info) < 0)
+	{
+		close(fd);
+		fd = -1;
+		return -1;
+	}
+	sta->acl.id = acl_id;
+
+	return 0;
+}
+
+unsigned int get_sta_acl_wifi(struct asd_data *wasd, struct sta_info *sta)
+{
+	int fd = -1;
+	struct wifi_nf_info info;			
+
+	ASD_CHECK_POINTER_RET(wasd,-1);
+	ASD_CHECK_POINTER_RET(sta,-1);
+	
+	if (-1 == (fd = open("/dev/wifi0", O_RDWR)))
+	{
+		asd_printf(ASD_DEFAULT, MSG_ERROR, "%s open file failed :%s\n",
+				   __func__, strerror(errno));
+		return 0;
+	}
+	
+	memset(&info, 0, sizeof(info));
+//	memcpy(info.BSSID, wasd->own_addr, MAC_LEN);
+	memcpy(info.STAMAC, sta->addr, MAC_LEN);
+
+	/* get prev ACL policy ID */
+	if (ioctl(fd, WIFI_IOC_GET_NFMARK, &info) < 0)
+	{	
+		asd_printf(ASD_DEFAULT, MSG_ERROR, "%s get acl id failed :%s\n",
+				   __func__, strerror(errno));
+		close(fd);
+		fd = -1;
+		return 0;
+	}
+	
+	close(fd);
+
+	return info.nfmark;
+}
+#endif
+

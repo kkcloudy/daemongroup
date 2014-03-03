@@ -47,7 +47,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <openssl/err.h>
 #include <openssl/evp.h>
 
-
+#include "config/wireless_config.h"
 #include "circle.h"
 #include "asd.h"
 #include "ASD8021XOp.h"
@@ -2120,8 +2120,19 @@ int AsdStaInfoToWID(struct asd_data *wasd, const u8 *addr, Operate op){
 	STA.u.STA.wlanId = wasd->WlanID;
 	memcpy(STA.u.STA.STAMAC, addr, ETH_ALEN);
 	sta = ap_get_sta(wasd,addr);
-	if((op == WID_ADD) && (sta != NULL)) {	
-		asd_printf(ASD_80211,MSG_DEBUG,"AsdStaInfoToWID (op = WID_ADD) & (sta != NULL). \n");	
+	if((op == WID_ADD) && (sta != NULL)) {
+#ifdef __ASD_STA_ACL
+		/* caojia add for sta acl function */
+		AsdStaInfo2Wifi(wasd, sta, WID_ADD);
+
+		if (ASD_WLAN[wasd->WlanID] != NULL) {
+			set_sta_acl(wasd, sta, ASD_WLAN[wasd->WlanID]->sta_default_aclid);
+		}
+		else {
+			set_sta_acl(wasd, sta, sta->acl.id);
+		}
+#endif
+
 		if((static_sta = asd_get_static_sta(addr)) != NULL){
 			tmp_sta = static_sta;
 			while(tmp_sta != NULL){//the priority is higher is sta->wlanid is not 0
@@ -2187,7 +2198,12 @@ int AsdStaInfoToWID(struct asd_data *wasd, const u8 *addr, Operate op){
 		asd_printf(ASD_DEFAULT,MSG_DEBUG,"sta num %d\n",STA.u.STA.sta_num);	
 		
 	}else if(STA.Op==WID_DEL){
-		asd_printf(ASD_80211,MSG_DEBUG,"AsdStaInfoToWID (op = WID_DEL).\n");				
+		asd_printf(ASD_80211,MSG_DEBUG,"AsdStaInfoToWID (op = WID_DEL).\n");
+#ifdef __ASD_STA_ACL
+		/* caojia add for sta acl function */
+		AsdStaInfo2Wifi(wasd, sta, WID_DEL);
+#endif
+
 		ASD_WTP_ST *WTP = ASD_WTP_AP[STA.u.STA.WTPID];
 		if(WTP){
 			unsigned char *ip = (unsigned char*)&(WTP->WTPIP);

@@ -8,6 +8,8 @@
 #define WIFI_WARNING  5
 #define WIFI_ERROR    1
 
+#define WIFI_STA_ACL_SUPPORT 0
+
 #define VRID_MAX 35
 
 #define WTP_MAX_NR				(4096+1)
@@ -55,6 +57,11 @@ typedef enum{
 #define WIFI_IOC_DEL_STA		_IOWR(WIFI_IOC_MAGIC, 12, struct asd_to_wifi_sta)
 #define WIFI_IOC_BATCH_REG_IF	_IOWR(WIFI_IOC_MAGIC, 13, struct interface_batch_INFO) // read values
 #define WIFI_IOC_BATCH_UNREG_IF	_IOWR(WIFI_IOC_MAGIC, 14, struct interface_batch_INFO) // read values
+#if WIFI_STA_ACL_SUPPORT
+#define WIFI_IOC_SET_NFMARK 	_IOWR(243, 15, struct wifi_nf_info) // caojia add for sta acl function 
+#define WIFI_IOC_GET_NFMARK 	_IOWR(243, 16, struct wifi_nf_info) // caojia add for sta acl function 
+#endif
+
 
 /* #define kthread_16 */
 
@@ -144,13 +151,30 @@ struct wifi_sta_tbl{
 	unsigned char BSSID_Before[MAC_LEN];
 	unsigned char BSSID[MAC_LEN];
 	unsigned char roaming_flag;
+#if WIFI_STA_ACL_SUPPORT
+	unsigned int nfmark; // caojia add for sta acl function
+#endif
 };
 struct asd_to_wifi_sta{
 	unsigned char STAMAC[MAC_LEN];
 	unsigned char BSSID_Before[MAC_LEN];
 	unsigned char BSSID[MAC_LEN];
 	unsigned char roaming_flag;
+#if WIFI_STA_ACL_SUPPORT
+	unsigned int nfmark; // caojia add for sta acl function
+#endif
 };
+
+#if WIFI_STA_ACL_SUPPORT
+/* caojia add for sta acl function */
+struct wifi_nf_info
+{
+	unsigned char STAMAC[MAC_LEN];
+	//unsigned char BSSID[MAC_LEN];
+	unsigned int nfmark;
+};
+#endif
+
 
 extern struct wifi_bss_tbl *wifi_bss_hash[BSS_HASH_SIZE];
 extern struct wifi_sta_tbl *wifi_sta_hash[STA_HASH_SIZE];

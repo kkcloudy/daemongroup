@@ -106,6 +106,11 @@ char ASD_DBUS_STA_METHOD_ALL_WLAN_STALIST[PATH_LEN]=  "show_wlan_sta_of_all";  /
 char ASD_DBUS_STA_METHOD_WTP_STALIST[PATH_LEN]=	"show_wtp_sta_list";
 char ASD_DBUS_STA_METHOD_EXTEND_WTP_STALIST[PATH_LEN]=	"extend_show_wtp_sta_list";
 
+/* caojia add for sta acl */
+char ASD_DBUS_STA_METHOD_SET_STA_ACL[PATH_LEN]= "set_sta_acl";
+char ASD_DBUS_STA_METHOD_SHOW_STA_ACL[PATH_LEN]= "show_sta_acl";
+char ASD_DBUS_STA_METHOD_SET_WLAN_STA_DEFAULT_ACL[PATH_LEN]= "set_wlan_sta_default_acl";
+char ASD_DBUS_STA_METHOD_SHOW_WLAN_STA_DEFAULT_ACL[PATH_LEN]= "show_wlan_sta_default_acl";
 
 char ASD_DBUS_STA_METHOD_ADD_DEL_STA[PATH_LEN]=	"add_del_sta";
 char ASD_DBUS_STA_METHOD_STA_TRAFFIC_LIMIT[PATH_LEN]=	"set_sta_traffic_limit";

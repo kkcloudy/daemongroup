@@ -616,3 +616,47 @@ void asd_logger(void *ctx, const u8 *addr, unsigned int module, int level,
 	os_free(buf);
 }
 #endif /* ASD_NO_asd_LOGGER */
+
+/*****************************************************************************
+ *	mac2str
+ * 
+ *	mac to strig
+ *
+ *  INPUT:
+ *		haddr - mac address 
+ *  
+ *  OUTPUT:
+ * 	 NULL
+ *
+ *  RETURN:
+ * 	 static_buferr - mac string
+ * 	 NULL
+ *
+ ****************************************************************************/
+
+char *mac2str(unsigned char *haddr)
+{
+	static int count = 0;
+	static unsigned char buf[16][32];
+	int len = 32;	
+	unsigned char *tmp = NULL;
+
+	count++;
+	if (count >= 16)
+	{
+		count = 0;
+	}
+	
+	tmp = (unsigned char *)&(buf[count][0]);
+	
+	memset(tmp, 0, len);
+	if (NULL != haddr)
+	{
+		snprintf((char *)tmp, 32, "%02X:%02X:%02X:%02X:%02X:%02X",
+				 haddr[0], haddr[1], haddr[2],
+				 haddr[3], haddr[4], haddr[5]);
+	}
+	
+	return (char *)tmp;
+}	
+

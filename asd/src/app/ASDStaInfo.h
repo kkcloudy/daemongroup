@@ -38,6 +38,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define BRCTL_ADD_SFDB 20
 #define BRCTL_DEL_SFDB 21
 
+#define STA_ROAM_TYPE_NONE		(0)
+#define STA_ROAM_TYPE_L2		(1)
+#define STA_ROAM_TYPE_L3		(2)
+
 int kick_sta_mac(unsigned char mac[]);
 
 int ap_for_each_sta(struct asd_data *wasd,
@@ -97,4 +101,8 @@ struct sta_info * asd_sta_hash_get(const u8 *sta);
 void asd_sta_hash_add(struct sta_info *sta);
 int AsdStaInfoToEAG(struct asd_data *wasd, struct sta_info *sta, Operate op);
 void asd_sta_roaming_management(struct sta_info *new_sta);
+#ifdef __ASD_STA_ACL
+/* caojia add for sta acl function */
+int AsdStaInfo2Wifi(struct asd_data *wasd, struct sta_info *sta, Operate op);
+#endif
 #endif /* STA_INFO_H */

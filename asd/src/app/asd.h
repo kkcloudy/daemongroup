@@ -363,6 +363,9 @@ struct asd_to_wifi_sta{
 	unsigned char BSSID_Before[MAC_LEN];
 	unsigned char BSSID[MAC_LEN];
 	unsigned char roaming_flag;
+#ifdef __ASD_STA_ACL
+	unsigned int nfmark; // caojia add for sta acl function
+#endif
 };
 
 
