@@ -1860,7 +1860,8 @@ discover_interfaces_test(int state, char *name) {
 	static int setup_fallback = 0;
 
 	if (!begin_iface_scan(&ifaces)) {
-		log_fatal("Can't get list of interfaces.");
+		log_error("Can't get list of interfaces.");
+		return 1;
 	}
 
 	/* If we already have a list of interfaces, and we're running as
@@ -2302,7 +2303,8 @@ discover_interfaces(int state) {
 	static int setup_fallback = 0;
 
 	if (!begin_iface_scan(&ifaces)) {
-		log_fatal("Can't get list of interfaces.");
+		log_error("Can't get list of interfaces.");
+		return;
 	}
 
 	/* If we already have a list of interfaces, and we're running as
