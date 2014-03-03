@@ -97,9 +97,11 @@ void ShowWtpListPage(char *m,int n,char *t,struct list *lpublic,struct list *lwl
 {  
   char IsDeleete[10] = { 0 };
   char IsSubmit[5] = { 0 };
+  char stri[8]={0};
   DCLI_WTP_API_GROUP_ONE *head = NULL;
   WID_WTP *q = NULL;
   char wtp_state[20] = { 0 };
+  char update_id[10]={0};
   int ret_ip = 0;
   char ip[WTP_WTP_IP_LEN+1] = { 0 };
   int wnum = 0;            
@@ -116,6 +118,9 @@ void ShowWtpListPage(char *m,int n,char *t,struct list *lpublic,struct list *lwl
 
   memset(select_insid,0,sizeof(select_insid));
   cgiFormStringNoNewlines( "INSTANCE_ID", select_insid, 10 );
+
+
+  
   if(strcmp(select_insid,"")==0)
   { 
 	list_instance_parameter(&paraHead1, INSTANCE_STATE_WEB); 
@@ -139,8 +144,10 @@ void ShowWtpListPage(char *m,int n,char *t,struct list *lpublic,struct list *lwl
     "#div2{ width:80px; height:15px; padding-left:5px; padding-top:3px}"\
     "#link{ text-decoration:none; font-size: 12px}"\
 "</style>"\
-"</head>"\
-	  "<script type=\"text/javascript\">"\
+"</head>");
+  fprintf(cgiOut,"<script type=\"text/javascript\" src=/jquery-1.8.3.min.js></script>");
+  
+	  fprintf(cgiOut, "<script type=\"text/javascript\">"\
 	   "function popMenu(objId)"\
 	   "{"\
 		  "var obj = document.getElementById(objId);"\
@@ -159,10 +166,31 @@ void ShowWtpListPage(char *m,int n,char *t,struct list *lpublic,struct list *lwl
 	   	 "var url = 'wp_wtplis.cgi?UN=%s&PN='+page_num+'&INSTANCE_ID=%s';"\
 	   	 "window.location.href = url;"\
 	   	"}", m , select_insid);
+
+	  fprintf(cgiOut,"function sender()"\
+	    "{"\
+	    	  "var start_wtpno = document.getElementById('startnum').value;"\
+	    	  "var end_wtpno = document.getElementById('endtnum').value;"\
+	    	  "var select_insid = document.getElementById('slothansi').value;"\
+		  "var i = 0;"\
+		  "var j = 0;"\
+		      "$.post(\"wp_ajax.cgi\",{start_global:start_wtpno,end_global:end_wtpno,select_insid:select_insid},function(result){"\
+	  			"var mycars=new Array();"\
+		  		"mycars=result.split(\"^\");"\
+				  "for(i=0,j=start_wtpno;i<mycars.length,j<end_wtpno;i++,j++){"\
+				  	 "var obj=\"up\";"\
+					  "obj +=j;"\
+					 "document.getElementById(obj).innerHTML = mycars[i];"\
+				   "}"\
+		      "});"\
+		      "setTimeout(\"sender()\",3000);"
+	    "}");
+
+	  
 	  fprintf(cgiOut,"</script>"\
 	  "<script src=/instanceid_onchange.js>"\
 	  "</script>"\
-  "<body>");	  
+  "<body onload='sender()'>");	  
   memset(IsDeleete,0,sizeof(IsDeleete));
   cgiFormStringNoNewlines("DeletWtp", IsDeleete, 10);
   memset(IsSubmit,0,sizeof(IsSubmit));  
@@ -290,6 +318,9 @@ void ShowWtpListPage(char *m,int n,char *t,struct list *lpublic,struct list *lwl
                       "<td id=tdleft>&nbsp;</td>"\
                     "</tr>");
 	              }
+		  fprintf(cgiOut,"<input type=hidden name=startnum id=startnum value=%d>",start_wtpno);
+		  fprintf(cgiOut,"<input type=hidden name=endtnum id=endtnum value=%d>",end_wtpno);
+		  fprintf(cgiOut,"<input type=hidden name=slothansi id=slothansi value=%s>",select_insid);
                 fprintf(cgiOut,"</table>"\
               "</td>"\
               "<td align=left valign=top style=\"background-color:#ffffff; border-right:1px solid #707070; padding-left:30px; padding-top:10px\">"\
@@ -342,8 +373,9 @@ void ShowWtpListPage(char *m,int n,char *t,struct list *lpublic,struct list *lwl
 						q=q->next;
 					}
 				}
+				
 		        for(i=start_wtpno;i<end_wtpno;i++)
-		        {		          
+		        {	
 				  memset(menu,0,sizeof(menu));
 				  strncat(menu,"menuLists",sizeof(menu)-strlen(menu)-1);
 		          snprintf(menu_id,sizeof(menu_id)-1,"%d",i+1); 
@@ -379,7 +411,12 @@ void ShowWtpListPage(char *m,int n,char *t,struct list *lpublic,struct list *lwl
 				  {
 					  CheckWTPState(wtp_state,q->WTPStat);
 				  }
-				  fprintf(cgiOut,"<td>%s</td>",wtp_state);
+				  memset(stri,0,sizeof(stri));
+				  memset(update_id,0,sizeof(update_id));
+				  sprintf(stri, "%d", i);
+				  strcat(update_id,"up");
+				  strcat(update_id,stri);
+				  fprintf(cgiOut,"<td id=%s>%s</td>",update_id,wtp_state);
 				  if((q)&&(q->isused==1))
 				    fprintf(cgiOut,"<td>used</td>");
 				  else
@@ -419,7 +456,14 @@ void ShowWtpListPage(char *m,int n,char *t,struct list *lpublic,struct list *lwl
 				 {
 					 q=q->next;
 				 }
-		        }		
+		        }	
+
+				  /*fprintf(cgiOut,"<tr height=30>"\
+						  "<td>get time:</td>");
+				  fprintf(cgiOut,"<td id=\"current_time\"></td>"\
+					 "<td><input type=\"button\" value=\"Ìá½»\" onclick=\"sender();\" /></td></tr>");*/
+
+			
 				  fprintf(cgiOut,"</table>");
 	          }
 	          else				 /*no wlan exist*/
