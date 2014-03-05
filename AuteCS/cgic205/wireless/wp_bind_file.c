@@ -54,6 +54,7 @@ int ShowBindFilePage(char *m,char *n,char *pn,char *ins_id,instance_parameter *i
 void bind_file(instance_parameter *ins_para,struct list *lpublic,struct list *lwlan);
 
 #define TEMP_FILE_BIND "/mnt/wtp/version_bind.txt"
+#define BUF_LENZ 128
 
 int cgiMain()
 {
@@ -209,26 +210,39 @@ int ShowBindFilePage(char *m,char *n,char *pn,char *ins_id,instance_parameter *i
 				"<tr height=30>"\
 				  "<td>%s:</td>",search(lpublic,"version_file"));
 				  fprintf(cgiOut,"<td align=left><select name=version_file id=version_file style=width:480px>");
-				  memset(cmd,0,sizeof(cmd));
-				  snprintf(cmd,sizeof(cmd)-1,"sudo rm %s",TEMP_FILE_BIND);
-				  system(cmd);
-				  memset(tmp,0,sizeof(tmp));
-				  snprintf(tmp,sizeof(tmp)-1,"ls /mnt/wtp |grep -i '%s$'  >> %s\n",".tar.bz2",TEMP_FILE_BIND);
-				  system(tmp);
+				  fprintf(cgiOut,"<option value=none></option>");
+				  char *version_name[5]={".bin",".tar",".img",".gni",".tar.bz2"};
+				  char tempz[512] = { 0 };
+				  char tz[BUF_LENZ]  = { 0 };
+				  memset(tempz,0,sizeof(tempz));
+				      for(i=0;i<5;i++)
+				      {
+					  memset(tz,0,sizeof(tz));
+					      snprintf(tz,sizeof(tz)-1,"ls  /mnt/wtp |grep -i '%s$'  >> %s\n",version_name[i],TEMP_FILE_BIND);
+					      strncat(tempz,tz,sizeof(tempz)-strlen(tempz)-1);
+				      }
+				      system(tempz);
+
 				  memset(cmd,0,sizeof(cmd));
 				  snprintf(cmd,sizeof(cmd)-1,"cat %s",TEMP_FILE_BIND);
 				  pp=popen(cmd,"r");
 				  if(pp)
 				  {
-					memset(buff,0,sizeof(buff));
-					fgets( buff, sizeof(buff), pp );
-					while(strcmp(buff,""))
-					{
+				  memset(buff,0,sizeof(buff));
+				fgets( buff, sizeof(buff), pp );						 
+				do
+				{										   
+					if(strcmp(buff,"")!=0){
 						fprintf(cgiOut,"<option value=%s>%s",buff,buff);
-						memset(buff,0,sizeof(buff));
-						fgets( buff, sizeof(buff), pp );
-					}
-					pclose(pp); 
+					}					
+					memset(buff,0,sizeof(buff));
+					fgets( buff, sizeof(buff), pp ); 	
+				}while( !feof(pp) );
+				
+				pclose(pp); 
+				memset(cmd,0,sizeof(cmd));
+				snprintf(cmd,sizeof(cmd)-1,"sudo rm %s",TEMP_FILE_BIND);
+				system(cmd);
 				  }
 	              fprintf(cgiOut,"</select></td>"\
                 "</tr>"\

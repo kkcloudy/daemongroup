@@ -19805,10 +19805,7 @@ int update_wtp_img_cmd_func_group(dbus_parameter parameter, DBusConnection *conn
 																			/*返回-5表示Group ID非法，返回-6表示partial failure*/
 																			/*返回-7表示group id does not exist*/
 {	
-    if(NULL == connection)
-        return 0;
-        
-	if((NULL == filename)||(NULL == version)||(NULL == time))
+	if((NULL == filename)||(NULL == version)||(NULL == time)||(NULL == connection))
 	{
 		*WtpList_Head = NULL;
 		return 0;
@@ -19941,7 +19938,10 @@ int update_wtp_img_cmd_func_group(dbus_parameter parameter, DBusConnection *conn
 	if(type==0)
 	{
 		if(ret == 0)
+		{
 			retu = 1;
+			fprintf(stderr,"set wtp update version image path successfully");
+		}
 		else
 			retu = -3;
 	
