@@ -45,6 +45,8 @@ extern "C" {
     int AcInterfaceName_get( dot11AcInterfaceTable_rowreq_ctx *rowreq_ctx, char **AcInterfaceName_val_ptr_ptr, size_t *AcInterfaceName_val_ptr_len_ptr );
     int AcInterfaceIP_get( dot11AcInterfaceTable_rowreq_ctx *rowreq_ctx, u_long * AcInterfaceIP_val_ptr );
     int AcInterfaceNetMask_get( dot11AcInterfaceTable_rowreq_ctx *rowreq_ctx, u_long * AcInterfaceNetMask_val_ptr );
+    int AcInterfaceIPV6_get( dot11AcInterfaceTable_rowreq_ctx *rowreq_ctx, char **AcInterfaceIPV6_val_ptr_ptr, size_t *AcInterfaceIPV6_val_ptr_len_ptr );
+    int AcInterfaceIPV6prefix_get( dot11AcInterfaceTable_rowreq_ctx *rowreq_ctx, long * AcInterfaceIPV6prefix_val_ptr );
 
 
 int dot11AcInterfaceTable_indexes_set_tbl_idx(dot11AcInterfaceTable_mib_index *tbl_idx, long ifIndex_val);

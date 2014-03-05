@@ -57,7 +57,7 @@ IMPORTS
 	DISPLAY-HINT "2x:"
      	STATUS       current
      	DESCRIPTION "This data type is used to model IPv6 addresses. This is a binary string of 16 octets in networkbyte-order."
-	SYNTAX       OCTET STRING (SIZE (16))
+	SYNTAX       OCTET STRING (SIZE (50))
 
 dot11AcGroup MODULE-IDENTITY
     LAST-UPDATED "201311280000Z"        -- Nov 28th 2013
@@ -1790,7 +1790,9 @@ dot11AcInterfaceEntry  OBJECT-TYPE
 Dot11AcInterfaceEntry ::=SEQUENCE{
 					AcInterfaceName		DisplayString,
 					AcInterfaceIP		IpAddress,
-					AcInterfaceNetMask	IpAddress
+					AcInterfaceNetMask	IpAddress,
+					AcInterfaceIPV6		InetAddressIPv6,
+					AcInterfaceIPV6prefix	INTEGER
 				}
 
 AcInterfaceName	 			OBJECT-TYPE
@@ -1816,6 +1818,22 @@ AcInterfaceNetMask 			OBJECT-TYPE
 					DESCRIPTION
 					      "AC Interface NetMask."
 					::= { dot11AcInterfaceEntry 3 }
+
+AcInterfaceIPV6 				OBJECT-TYPE
+					SYNTAX      	InetAddressIPv6
+					MAX-ACCESS  	read-write
+					STATUS      	current
+					DESCRIPTION
+					      "AC Interface IPV6 address."
+					::= { dot11AcInterfaceEntry 4 }
+					
+AcInterfaceIPV6prefix 			OBJECT-TYPE
+					SYNTAX      	INTEGER
+					MAX-ACCESS  	read-write
+					STATUS      	current
+					DESCRIPTION
+					      "AC Interface IPV6 Prefix."
+					::= { dot11AcInterfaceEntry 5 }
 
 
 acPhyPortNum     	OBJECT-TYPE

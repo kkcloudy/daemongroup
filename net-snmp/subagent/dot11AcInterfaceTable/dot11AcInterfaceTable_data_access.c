@@ -19,6 +19,30 @@
 #include "dot11AcInterfaceTable_data_access.h"
 
 
+
+unsigned int
+mask2binary(unsigned int mask){
+	unsigned int mask_ret = 0xffffffff;
+	if (0 == mask)
+	 {
+	    return 0;
+	}
+	mask_ret = (mask_ret << (32 - mask));
+	return mask_ret;
+}
+
+static char * 
+ip2str(uint32_t ip, char *str, size_t size)
+{
+	if (NULL != str)
+	{
+		snprintf(str, size, "%u.%u.%u.%u", 
+			(ip>>24)&0xff, (ip>>16)&0xff, (ip>>8)&0xff, ip&0xff);
+	}
+
+	return str;
+}
+
 /** @ingroup interface
  * @addtogroup data_access data_access: Routines to access data
  *
@@ -219,7 +243,7 @@ dot11AcInterfaceTable_container_load(netsnmp_container *container)
          * ifIndex(1)/INTEGER/ASN_INTEGER/long(long)//l/A/w/e/r/d/h
          */
 
-    infi if_head = { 0 }, *if_node = NULL; 
+   /* infi if_head = { 0 }, *if_node = NULL; 
     
     interface_list_ioctl(0, &if_head);
 
@@ -229,7 +253,6 @@ dot11AcInterfaceTable_container_load(netsnmp_container *container)
         unsigned long AcInterfaceIP         = 0;
         unsigned long AcInterfaceNetMask    = 0;
 
-        snmp_log(LOG_DEBUG, "dot11AcInterfaceTable_container_load: if_node->if_name = %s\n",if_node->if_name);
    
         if(0 == strncmp(if_node->if_name, "r", 1)
             || 0 == strncmp(if_node->if_name, "pimreg", 6)
@@ -275,9 +298,84 @@ dot11AcInterfaceTable_container_load(netsnmp_container *container)
         }
         ++count;
     }
+    free_inf(&if_head);*/
 
-    free_inf(&if_head);
-    
+	if_list_p iflist_t;
+	int ret=0,i=0;
+	if3 *q = NULL;
+	ret=get_all_if_info(&iflist_t);
+	
+	if((ret == 0)&&(iflist_t.if_head))
+	{
+	      for(i = 0,q = iflist_t.if_head->next;
+		      ((i<iflist_t.if_num)&&(NULL != q));
+		      i++,q = q->next)
+	      {
+		        
+			unsigned int mask=0;
+			char ip_mask[32]={0};
+		        unsigned long ifIndex               = 0;
+		        unsigned long AcInterfaceIP         = 0;
+		        unsigned long AcInterfaceNetMask    = 0;
+
+		   
+		        if(0 == strncmp(q->ifname, "r", 1)
+		            || 0 == strncmp(q->ifname, "pimreg", 6)
+		            || 0 == strncmp(q->ifname, "sit0", 4)){
+				    snmp_log(LOG_DEBUG, "dot11AcInterfaceTable_container_load: the interface %s not match\n", q->ifname);
+		            continue;
+		        }
+		        
+				if(0 != get_if_index(q->ifname, &ifIndex)) {
+				    snmp_log(LOG_WARNING, "dot11AcInterfaceTable_container_load: get interface %s index error\n", q->ifname);
+		            continue;
+		        }    
+		        
+		    
+		        rowreq_ctx = dot11AcInterfaceTable_allocate_rowreq_ctx(NULL);
+		        if (NULL == rowreq_ctx) {
+		            Free_get_all_if_info(&iflist_t);
+		            snmp_log(LOG_ERR, "memory allocation failed\n");
+		            return MFD_RESOURCE_UNAVAILABLE;
+		        }
+		        if(MFD_SUCCESS != dot11AcInterfaceTable_indexes_set(rowreq_ctx
+		                               , ifIndex
+		               )) {
+		            snmp_log(LOG_ERR,"error setting index while loading "
+		                     "dot11AcInterfaceTable data.\n");
+		            dot11AcInterfaceTable_release_rowreq_ctx(rowreq_ctx);
+		            continue;
+		        }
+		        
+		        unsigned long AcInterfaceName_len = 0;
+		        AcInterfaceName_len = MIN(strlen(q->ifname), sizeof(rowreq_ctx->data.AcInterfaceName) - 1);
+		        rowreq_ctx->data.AcInterfaceName_len = AcInterfaceName_len* sizeof(rowreq_ctx->data.AcInterfaceName[0]);
+		        memcpy( rowreq_ctx->data.AcInterfaceName, q->ifname, AcInterfaceName_len* sizeof(rowreq_ctx->data.AcInterfaceName[0]) );
+
+		        INET_ATON(AcInterfaceIP, q->ipaddr);    
+		        rowreq_ctx->data.AcInterfaceIP = AcInterfaceIP;
+		        
+			mask=mask2binary(q->mask);
+			ip2str(mask, ip_mask, sizeof(ip_mask));
+		        INET_ATON(AcInterfaceNetMask, ip_mask);    
+		        rowreq_ctx->data.AcInterfaceNetMask = AcInterfaceNetMask;
+
+			
+		        unsigned long ipv6_len = 0;
+		        ipv6_len = MIN(strlen(q->ipaddr_ipv6), sizeof(rowreq_ctx->data.AcInterfaceIPV6) - 1);
+		        rowreq_ctx->data.AcInterfaceIPV6_len = ipv6_len* sizeof(rowreq_ctx->data.AcInterfaceIPV6[0]);
+		        memcpy( rowreq_ctx->data.AcInterfaceIPV6, q->ipaddr_ipv6, ipv6_len* sizeof(rowreq_ctx->data.AcInterfaceIPV6[0]) );
+
+			rowreq_ctx->data.AcInterfaceIPV6prefix=q->prefix;
+			
+		        if(CONTAINER_INSERT(container, rowreq_ctx)) {
+		            dot11AcInterfaceTable_release_rowreq_ctx(rowreq_ctx);
+		        }
+		        ++count;
+		    }
+		Free_get_all_if_info(&iflist_t);      
+	}
+
     snmp_log(LOG_DEBUG, "exit dot11AcInterfaceTable_container_load\n");
     DEBUGMSGT(("verbose:dot11AcInterfaceTable:dot11AcInterfaceTable_container_load",
                "inserted %d records\n", count));

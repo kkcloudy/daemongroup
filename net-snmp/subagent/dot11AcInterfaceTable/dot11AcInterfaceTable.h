@@ -93,6 +93,17 @@ size_t      AcInterfaceName_len; /* # of char elements, not bytes */
          */
    u_long   AcInterfaceNetMask;
     
+        /*
+         * AcInterfaceIPV6(4)/InetAddressIPv6/ASN_OCTET_STR/char(char)//L/A/W/e/R/d/H
+         */
+   char   AcInterfaceIPV6[50];
+size_t      AcInterfaceIPV6_len; /* # of char elements, not bytes */
+    
+        /*
+         * AcInterfaceIPV6prefix(5)/INTEGER/ASN_INTEGER/long(long)//l/A/W/e/r/d/h
+         */
+   u_long   AcInterfaceIPV6prefix;
+    
 } dot11AcInterfaceTable_data;
 
 

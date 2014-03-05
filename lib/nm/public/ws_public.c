@@ -556,11 +556,12 @@ static int nl_get_if_addr ( struct sockaddr_nl *snl, struct nlmsghdr *h, void *a
     //void *broad = NULL;  
     //u_char flags = 0;  
     //char *label = NULL;  
-    uint32_t ifa_addr, ifa_local;  
-    char ifa_label[MAX_IF_IFNAME_LEN + 1];  
+    uint32_t ifa_addr, ifa_local; 
+    char prefix=0;
+    char ifa_label[MAX_IF_IFNAME_LEN + 1]={0};  
    
     ifa = NLMSG_DATA ( h );  
-    if ( ifa->ifa_family != AF_INET ){  
+    if (( ifa->ifa_family != AF_INET )&&( ifa->ifa_family != AF_INET6 )){  
 		 FREE_OBJECT(if_node);
     	 return -1;  
     }
@@ -580,31 +581,65 @@ static int nl_get_if_addr ( struct sockaddr_nl *snl, struct nlmsghdr *h, void *a
     if (tb[IFA_ADDRESS] == NULL){  
     	tb[IFA_ADDRESS] = tb[IFA_LOCAL];  
     }
-    if ( tb[IFA_ADDRESS] ){  
-    	 ifa_addr = *(uint32_t *) RTA_DATA ( tb[IFA_ADDRESS] );  
+    if( ifa->ifa_family == AF_INET )
+    {
+	    if ( tb[IFA_ADDRESS] ){  
+		 ifa_addr = *(uint32_t *) RTA_DATA ( tb[IFA_ADDRESS] );  
+	    }
+	    if ( tb[IFA_LOCAL] ){  
+		 ifa_local = *(uint32_t *) RTA_DATA ( tb[IFA_LOCAL] );	
+	    }
+	    if ( tb[IFA_LABEL] ){  
+		strncpy( ifa_label, RTA_DATA ( tb[IFA_LABEL] ), MAX_IF_IFNAME_LEN );   
+	    }
+	    struct in_addr if_addr;
+	    struct in_addr if_mask;
+	     
+	    memcpy(&if_addr, &ifa_addr, 4);
+	    memcpy(&if_mask, &ifa_local, 4);
+	     
+		if(if_node)
+		{
+			memset(if_node->ipaddr_ipv6,0,sizeof(if_node->ipaddr_ipv6));
+			if_node->prefix=0;
+			memset(if_node->ifname,0,sizeof(if_node->ifname));
+			strncpy(if_node->ifname,ifa_label,sizeof(if_node->ifname)-1);
+			memset(if_node->ipaddr,0,sizeof(if_node->ipaddr));
+			strncpy(if_node->ipaddr,inet_ntoa(if_addr),sizeof(if_node->ipaddr)-1);
+			if_node->mask = ifa->ifa_prefixlen;
+		}
     }
-    if ( tb[IFA_LOCAL] ){  
-    	 ifa_local = *(uint32_t *) RTA_DATA ( tb[IFA_LOCAL] );  
+    else if( ifa->ifa_family == AF_INET6 )
+    {
+	    char *ifname_index = NULL;
+	    char IPdotdec[50] = { 0 };
+	    memset(IPdotdec,0,50);
+	    struct in6_addr ipv6;
+	    
+	    if ( tb[IFA_ADDRESS] ){  
+	    	
+//		 ifa_addr = *(uint32_t *) RTA_DATA ( tb[IFA_ADDRESS] );  
+//		 memcpy(&ipv6,&ifa_addr,16);
+		 inet_ntop(AF_INET6, RTA_DATA ( tb[IFA_ADDRESS] ), IPdotdec, sizeof(IPdotdec));
+	    }
+	    /*if ( tb[IFA_LABEL] ){  
+		strncpy( ifa_label, RTA_DATA ( tb[IFA_LABEL] ), MAX_IF_IFNAME_LEN );   
+	    }*/
+
+	    if(0 == get_if_name(ifa->ifa_index, &ifname_index))
+	    {
+		    if(if_node)
+		    {	    
+			    memset(if_node->ifname,0,sizeof(if_node->ifname));
+			    strncpy(if_node->ifname,ifname_index,sizeof(if_node->ifname)-1);
+			    memset(if_node->ipaddr_ipv6,0,sizeof(if_node->ipaddr_ipv6));
+			    strncpy(if_node->ipaddr_ipv6,IPdotdec,sizeof(if_node->ipaddr_ipv6)-1);
+			    if_node->prefix = ifa->ifa_prefixlen;
+		    }
+	    }
+	   
     }
-    if ( tb[IFA_LABEL] ){  
-     	strncpy( ifa_label, RTA_DATA ( tb[IFA_LABEL] ), MAX_IF_IFNAME_LEN );   
-    }
-  
     // 储存所有地址信息   
-    struct in_addr if_addr;
-    struct in_addr if_mask;
-     
-    memcpy(&if_addr, &ifa_addr, 4);
-    memcpy(&if_mask, &ifa_local, 4);
-     
-	if(if_node)
-	{
-		memset(if_node->ifname,0,sizeof(if_node->ifname));
-		strncpy(if_node->ifname,ifa_label,sizeof(if_node->ifname)-1);
-		memset(if_node->ipaddr,0,sizeof(if_node->ipaddr));
-		strncpy(if_node->ipaddr,inet_ntoa(if_addr),sizeof(if_node->ipaddr)-1);
-		if_node->mask = ifa->ifa_prefixlen;
-	}
 	return 0;  
 }  
 
@@ -714,26 +749,199 @@ static int nl_parse_info ( int ( *filter ) ( struct sockaddr_nl *, struct nlmsgh
                 fprintf ( stderr, "%s filter function error/n", nl->name );  
                 ret = error;  
             }  
-			else if( error == 0 )
+	else if( error == 0 )
+	{
+		char i=0,flag_add=0;
+		if3 *qlist = NULL;
+		if(p)
+		{
+			for(i = 0,qlist = iflist_t->if_head->next;
+			((i<iflist_t->if_num)&&(NULL != qlist));
+			i++,qlist = qlist->next)
 			{
-				if(p)
+				if(strcmp(qlist->ifname,p->ifname)==0)
 				{
-					p->next = NULL;
-					if(tail)
-					{
-						tail->next = p;
-						tail = p;					
-						if(iflist_t)
-						{
-							iflist_t->if_num++;
-						}
-					}
-					else
-					{
-						FREE_OBJECT(p);	
-					}
+					flag_add =1;
+					break;
 				}
 			}
+			if(flag_add ==0)
+			{
+				p->next = NULL;
+				if(tail)
+				{
+					tail->next = p;
+					tail = p;					
+					if(iflist_t)
+					{
+						iflist_t->if_num++;
+					}
+				}
+				else
+				{
+					FREE_OBJECT(p); 
+				}
+			}
+		}
+	}
+			
+        }  
+  
+        /* After error care. */  
+        if ( msg.msg_flags & MSG_TRUNC ) {  
+            fprintf ( stderr, "%s error: message truncated", nl->name );  
+            continue;  
+        }  
+        if ( status ) {  
+            fprintf ( stderr, "%s error: data remnant size %d", nl->name,  
+                    status );  
+            return -1;  
+        }  
+    }  
+    return ret;  
+}   
+static int nl_parse_info_ipv6 ( int ( *filter ) ( struct sockaddr_nl *, struct nlmsghdr *, void *, if3 * ),  
+        struct nlsock *nl, void *arg, if_list_p *iflist_t)  
+{  
+	int status;  
+	int ret = 0;  
+	int error;
+	char i=0; 
+	if3 *qlist_tail = NULL;
+	if3 *p = NULL,*tail = NULL;
+	
+	if(iflist_t == NULL)
+	{
+		return -1;  
+	}
+	for(i = 0,qlist_tail = iflist_t->if_head->next;
+	((i<iflist_t->if_num)&&(NULL != qlist_tail));
+	i++,qlist_tail = qlist_tail->next)
+	{
+		tail = qlist_tail;
+	}
+	
+    while ( 1 ) {  
+        char buf[4096];  
+        struct iovec iov = { buf, sizeof buf };  
+        struct sockaddr_nl snl;  
+        struct msghdr msg = { ( void* ) &snl, sizeof snl, &iov, 1, NULL, 0, 0};  
+        struct nlmsghdr *h;  
+  
+        status = recvmsg ( nl->sock, &msg, 0 );  
+  
+        if ( status < 0 ) {  
+            if ( errno == EINTR )  
+                continue;  
+            if ( errno == EWOULDBLOCK || errno == EAGAIN )  
+                break;  
+            fprintf ( stderr, "%s recvmsg overrun", nl->name );  
+            continue;  
+        }  
+  
+        if ( snl.nl_pid != 0 ) {  
+            fprintf ( stderr, "Ignoring non kernel message from pid %u",  
+                    snl.nl_pid );  
+            continue;  
+        }  
+  
+        if ( status == 0 ) {  
+            fprintf ( stderr, "%s EOF", nl->name );  
+            return -1;  
+        }  
+  
+        if ( msg.msg_namelen != sizeof snl ) {  
+            fprintf ( stderr, "%s sender address length error: length %d",  
+                    nl->name, msg.msg_namelen );  
+            return -1;  
+        }  
+  
+        for ( h = ( struct nlmsghdr * ) buf; NLMSG_OK ( h, status );  
+                h = NLMSG_NEXT ( h, status ) ) {  
+            /* Finish of reading. */  
+            if ( h->nlmsg_type == NLMSG_DONE )  
+                return ret;  
+  
+            /* Error handling. */  
+            if ( h->nlmsg_type == NLMSG_ERROR ) {  
+                struct nlmsgerr *err = ( struct nlmsgerr * ) NLMSG_DATA ( h );  
+  
+                /* If the error field is zero, then this is an ACK */  
+                if ( err->error == 0 ) {  
+                    /* return if not a multipart message, otherwise continue */  
+                    if ( ! ( h->nlmsg_flags & NLM_F_MULTI ) ) {  
+                        return 0;  
+                    }  
+                    continue;  
+                }  
+  
+                if ( h->nlmsg_len < NLMSG_LENGTH ( sizeof ( struct nlmsgerr ) ) ) {  
+                    fprintf ( stderr, "%s error: message truncated",  
+                            nl->name );  
+                    return -1;  
+                }  
+                fprintf ( stderr, "%s error: %s, type=%u, seq=%u, pid=%d",  
+                        nl->name, strerror ( -err->error ),  
+                        err->msg.nlmsg_type, err->msg.nlmsg_seq,  
+                        err->msg.nlmsg_pid );  
+                /* 
+                ret = -1; 
+                continue; 
+                */  
+                return -1;  
+            }  
+  
+  
+            /* skip unsolicited messages originating from command socket */  
+            if ( nl != &net_cmd && h->nlmsg_pid == net_cmd.snl.nl_pid ) {  
+                continue;  
+            }  
+
+		p = (if3 *)malloc(sizeof(if3));			
+		memset(p,0,sizeof(if3));
+            error = ( *filter ) ( &snl, h, arg, p);  
+            if ( error < 0 ) {  
+                fprintf ( stderr, "%s filter function error/n", nl->name );  
+                ret = error;  
+            }  
+	else if( error == 0 )
+	{
+		char flag_add=0;
+		if3 *qlist = NULL;
+		if(p)
+		{
+			for(i = 0,qlist = iflist_t->if_head->next;
+			((i<iflist_t->if_num)&&(NULL != qlist));
+			i++,qlist = qlist->next)
+			{
+				if(strcmp(qlist->ifname,p->ifname)==0)
+				{
+					memset(qlist->ipaddr_ipv6,0,sizeof(qlist->ipaddr_ipv6));
+					strcpy(qlist->ipaddr_ipv6,p->ipaddr_ipv6);
+					qlist->prefix=p->prefix;
+					flag_add =1;
+					break;
+				}
+			}
+			if(flag_add ==0)
+			{
+				p->next = NULL;
+				if(tail)
+				{
+					tail->next = p;
+					tail = p;					
+					if(iflist_t)
+					{
+						iflist_t->if_num++;
+					}
+				}
+				else
+				{
+					FREE_OBJECT(p); 
+				}
+			}
+		}
+	}
 			
         }  
   
@@ -798,6 +1006,18 @@ int get_all_if_info( if_list_p *iflist_t )
 		nl_socket_close(&net_cmd);
 		return ret;  
 	}
+
+	ret = nl_request ( AF_INET6, RTM_GETADDR, &net_cmd ); 
+	if ( ret < 0 ) {  
+		nl_socket_close(&net_cmd);
+		return ret;  
+	}
+	ret = nl_parse_info_ipv6 ( nl_get_if_addr, &net_cmd, &if_info, iflist_t); 
+	if ( ret < 0 ) {  
+		nl_socket_close(&net_cmd);
+		return ret;  
+	}
+	
 	nl_socket_close(&net_cmd);
 	return 0;
 }

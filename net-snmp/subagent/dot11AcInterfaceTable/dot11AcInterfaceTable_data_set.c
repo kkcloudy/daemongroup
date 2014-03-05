@@ -140,7 +140,7 @@ dot11AcInterfaceTable_undo_setup( dot11AcInterfaceTable_rowreq_ctx *rowreq_ctx)
     /*
      * TODO:451:M: |-> Setup dot11AcInterfaceTable undo.
      * set up dot11AcInterfaceTable undo information, in preparation for a set.
-     * Undo storage is in (* AcInterfaceNetMask_val_ptr )*
+     * Undo storage is in (* AcInterfaceIPV6prefix_val_ptr )*
      */
 
     return rc;
@@ -179,7 +179,7 @@ dot11AcInterfaceTable_undo( dot11AcInterfaceTable_rowreq_ctx *rowreq_ctx)
     /*
      * TODO:451:M: |-> dot11AcInterfaceTable undo.
      * dot11AcInterfaceTable undo information, in response to a failed set.
-     * Undo storage is in (* AcInterfaceNetMask_val_ptr )*
+     * Undo storage is in (* AcInterfaceIPV6prefix_val_ptr )*
      */
 
     return rc;
@@ -214,7 +214,7 @@ dot11AcInterfaceTable_undo_cleanup( dot11AcInterfaceTable_rowreq_ctx *rowreq_ctx
 
     /*
      * TODO:452:M: |-> Cleanup dot11AcInterfaceTable undo.
-     * Undo storage is in (* AcInterfaceNetMask_val_ptr )*
+     * Undo storage is in (* AcInterfaceIPV6prefix_val_ptr )*
      */
 
     return rc;
@@ -293,6 +293,40 @@ dot11AcInterfaceTable_commit( dot11AcInterfaceTable_rowreq_ctx *rowreq_ctx)
              * set flag, in case we need to undo AcInterfaceNetMask
              */
             rowreq_ctx->column_set_flags |= COLUMN_ACINTERFACENETMASK_FLAG;
+       }
+    }
+
+    if (save_flags & COLUMN_ACINTERFACEIPV6_FLAG) {
+       save_flags &= ~COLUMN_ACINTERFACEIPV6_FLAG; /* clear AcInterfaceIPV6 */
+       /*
+        * TODO:482:o: |-> commit column AcInterfaceIPV6.
+        */
+       //rc = -1;
+       if(-1 == rc) {
+           snmp_log(LOG_ERR,"dot11AcInterfaceTable column AcInterfaceIPV6 commit failed\n");
+       }
+       else {
+            /*
+             * set flag, in case we need to undo AcInterfaceIPV6
+             */
+            rowreq_ctx->column_set_flags |= COLUMN_ACINTERFACEIPV6_FLAG;
+       }
+    }
+
+    if (save_flags & COLUMN_ACINTERFACEIPV6PREFIX_FLAG) {
+       save_flags &= ~COLUMN_ACINTERFACEIPV6PREFIX_FLAG; /* clear AcInterfaceIPV6prefix */
+       /*
+        * TODO:482:o: |-> commit column AcInterfaceIPV6prefix.
+        */
+       //rc = -1;
+       if(-1 == rc) {
+           snmp_log(LOG_ERR,"dot11AcInterfaceTable column AcInterfaceIPV6prefix commit failed\n");
+       }
+       else {
+            /*
+             * set flag, in case we need to undo AcInterfaceIPV6prefix
+             */
+            rowreq_ctx->column_set_flags |= COLUMN_ACINTERFACEIPV6PREFIX_FLAG;
        }
     }
 
@@ -767,6 +801,426 @@ AcInterfaceNetMask_undo( dot11AcInterfaceTable_rowreq_ctx *rowreq_ctx)
     
     return MFD_SUCCESS;
 } /* AcInterfaceNetMask_undo */
+
+/*---------------------------------------------------------------------
+ * DOT11-AC-MIB::dot11AcInterfaceEntry.AcInterfaceIPV6
+ * AcInterfaceIPV6 is subid 4 of dot11AcInterfaceEntry.
+ * Its status is Current, and its access level is ReadWrite.
+ * OID: .1.3.6.1.4.1.31656.6.1.2.4.4.1.4
+ * Description:
+AC Interface IPV6 address.
+ *
+ * Attributes:
+ *   accessible 1     isscalar 0     enums  0      hasdefval 0
+ *   readable   1     iscolumn 1     ranges 1      hashint   1
+ *   settable   1
+ *   hint: 2x:
+ *
+ * Ranges:  50;
+ *
+ * Its syntax is InetAddressIPv6 (based on perltype OCTETSTR)
+ * The net-snmp type is ASN_OCTET_STR. The C type decl is char (char)
+ * This data type requires a length.  (Max 50)
+ */
+/**
+ * Check that the proposed new value is potentially valid.
+ *
+ * @param rowreq_ctx
+ *        Pointer to the row request context.
+ * @param AcInterfaceIPV6_val_ptr
+ *        A char containing the new value.
+ * @param AcInterfaceIPV6_val_ptr_len
+ *        The size (in bytes) of the data pointed to by AcInterfaceIPV6_val_ptr
+ *
+ * @retval MFD_SUCCESS        : incoming value is legal
+ * @retval MFD_NOT_VALID_NOW  : incoming value is not valid now
+ * @retval MFD_NOT_VALID_EVER : incoming value is never valid
+ *
+ * This is the place to check for requirements that are not
+ * expressed in the mib syntax (for example, a requirement that
+ * is detailed in the description for an object).
+ *
+ * You should check that the requested change between the undo value and the
+ * new value is legal (ie, the transistion from one value to another
+ * is legal).
+ *      
+ *@note
+ * This check is only to determine if the new value
+ * is \b potentially valid. This is the first check of many, and
+ * is one of the simplest ones.
+ * 
+ *@note
+ * this is not the place to do any checks for values
+ * which depend on some other value in the mib. Those
+ * types of checks should be done in the
+ * dot11AcInterfaceTable_check_dependencies() function.
+ *
+ * The following checks have already been done for you:
+ *    The syntax is ASN_OCTET_STR
+ *    The length is < sizeof(rowreq_ctx->data.AcInterfaceIPV6).
+ *    The length is in (one of) the range set(s):  50
+ *
+ * If there a no other checks you need to do, simply return MFD_SUCCESS.
+ *
+ */
+int
+AcInterfaceIPV6_check_value( dot11AcInterfaceTable_rowreq_ctx *rowreq_ctx, char *AcInterfaceIPV6_val_ptr,  size_t AcInterfaceIPV6_val_ptr_len)
+{
+    DEBUGMSGTL(("verbose:dot11AcInterfaceTable:AcInterfaceIPV6_check_value","called\n"));
+
+    /** should never get a NULL pointer */
+    netsnmp_assert(NULL != rowreq_ctx);
+    netsnmp_assert(NULL != AcInterfaceIPV6_val_ptr);
+
+    /*
+     * TODO:441:o: |-> Check for valid AcInterfaceIPV6 value.
+     */
+
+    return MFD_SUCCESS; /* AcInterfaceIPV6 value not illegal */
+} /* AcInterfaceIPV6_check_value */
+
+/**
+ * Save old value information
+ *
+ * @param rowreq_ctx
+ *        Pointer to the table context (dot11AcInterfaceTable_rowreq_ctx)
+ *
+ * @retval MFD_SUCCESS : success
+ * @retval MFD_ERROR   : error. set will fail.
+ *
+ * This function will be called after the table level undo setup function
+ * dot11AcInterfaceTable_undo_setup has been called.
+ *
+ *@note
+ * this function will only be called if a new value is set for this column.
+ *
+ * If there is any setup specific to a particular column (e.g. allocating
+ * memory for a string), you should do that setup in this function, so it
+ * won't be done unless it is necessary.
+ */
+int
+AcInterfaceIPV6_undo_setup( dot11AcInterfaceTable_rowreq_ctx *rowreq_ctx)
+{
+    DEBUGMSGTL(("verbose:dot11AcInterfaceTable:AcInterfaceIPV6_undo_setup","called\n"));
+
+    /** should never get a NULL pointer */
+    netsnmp_assert(NULL != rowreq_ctx);
+
+    /*
+     * TODO:455:o: |-> Setup AcInterfaceIPV6 undo.
+     */
+    /*
+     * copy AcInterfaceIPV6 and AcInterfaceIPV6_len data
+     * set rowreq_ctx->undo->AcInterfaceIPV6 from rowreq_ctx->data.AcInterfaceIPV6
+     */
+    memcpy( rowreq_ctx->undo->AcInterfaceIPV6, rowreq_ctx->data.AcInterfaceIPV6,
+            (rowreq_ctx->data.AcInterfaceIPV6_len * sizeof(rowreq_ctx->undo->AcInterfaceIPV6[0])));
+    rowreq_ctx->undo->AcInterfaceIPV6_len = rowreq_ctx->data.AcInterfaceIPV6_len;
+
+
+    return MFD_SUCCESS;
+} /* AcInterfaceIPV6_undo_setup */
+
+/**
+ * Set the new value.
+ *
+ * @param rowreq_ctx
+ *        Pointer to the users context. You should know how to
+ *        manipulate the value from this object.
+ * @param AcInterfaceIPV6_val_ptr
+ *        A char containing the new value.
+ * @param AcInterfaceIPV6_val_ptr_len
+ *        The size (in bytes) of the data pointed to by AcInterfaceIPV6_val_ptr
+ */
+int
+AcInterfaceIPV6_set( dot11AcInterfaceTable_rowreq_ctx *rowreq_ctx, char *AcInterfaceIPV6_val_ptr,  size_t AcInterfaceIPV6_val_ptr_len )
+{
+
+    DEBUGMSGTL(("verbose:dot11AcInterfaceTable:AcInterfaceIPV6_set","called\n"));
+
+    /** should never get a NULL pointer */
+    netsnmp_assert(NULL != rowreq_ctx);
+    netsnmp_assert(NULL != AcInterfaceIPV6_val_ptr);
+
+    /*
+     * TODO:461:M: |-> Set AcInterfaceIPV6 value.
+     * set AcInterfaceIPV6 value in rowreq_ctx->data
+     */
+    char command[150]   = { 0 };
+    char oldip[50]      = { 0 };
+    unsigned int prefix = 0;
+    char newip[50]      = { 0 };
+    
+    strcpy(oldip, rowreq_ctx->data.AcInterfaceIPV6);
+    prefix = rowreq_ctx->data.AcInterfaceIPV6prefix;
+    strncpy(newip, AcInterfaceIPV6_val_ptr, 49);
+    
+    int ret = -1;    
+    int status = 0;
+    
+    memset(command, 0, sizeof(command));
+    snprintf(command, sizeof(command) - 1, "sudo del_intf_ipv6.sh %s %s/%d 1>/dev/null 2>/dev/null", 
+             rowreq_ctx->data.AcInterfaceName, oldip, prefix);
+             
+    status = system(command);
+    ret = WEXITSTATUS(status);
+    if(0 != ret) {
+        snmp_log(LOG_WARNING, "delete old ipv6addr %s/%d fail\n", oldip, prefix);
+        return MFD_ERROR;
+    }
+
+    ret = -1;
+    status = 0;
+    
+    memset(command, 0, sizeof(command));
+    snprintf(command, sizeof(command) - 1, "sudo /usr/bin/set_intf_ipv6.sh %s %s/%d > /dev/null 2>&1",
+                rowreq_ctx->data.AcInterfaceName,newip,prefix);
+                
+    status = system(command);
+    ret = WEXITSTATUS(status);
+    if(0 == ret) {
+	    memcpy( rowreq_ctx->data.AcInterfaceIPV6, AcInterfaceIPV6_val_ptr, AcInterfaceIPV6_val_ptr_len );
+	    /** convert bytes to number of char */
+	    rowreq_ctx->data.AcInterfaceIPV6_len = AcInterfaceIPV6_val_ptr_len / sizeof(AcInterfaceIPV6_val_ptr[0]);
+            return MFD_SUCCESS;
+    }
+    else
+    {
+	    return MFD_ERROR;
+    }
+} /* AcInterfaceIPV6_set */
+
+/**
+ * undo the previous set.
+ *
+ * @param rowreq_ctx
+ *        Pointer to the users context.
+ */
+int
+AcInterfaceIPV6_undo( dot11AcInterfaceTable_rowreq_ctx *rowreq_ctx)
+{
+
+    DEBUGMSGTL(("verbose:dot11AcInterfaceTable:AcInterfaceIPV6_undo","called\n"));
+
+    netsnmp_assert(NULL != rowreq_ctx);
+
+    /*
+     * TODO:456:o: |-> Clean up AcInterfaceIPV6 undo.
+     */
+    /*
+     * copy AcInterfaceIPV6 and AcInterfaceIPV6_len data
+     * set rowreq_ctx->data.AcInterfaceIPV6 from rowreq_ctx->undo->AcInterfaceIPV6
+     */
+    memcpy( rowreq_ctx->data.AcInterfaceIPV6, rowreq_ctx->undo->AcInterfaceIPV6,
+            (rowreq_ctx->undo->AcInterfaceIPV6_len * sizeof(rowreq_ctx->data.AcInterfaceIPV6[0])));
+    rowreq_ctx->data.AcInterfaceIPV6_len = rowreq_ctx->undo->AcInterfaceIPV6_len;
+
+    
+    return MFD_SUCCESS;
+} /* AcInterfaceIPV6_undo */
+
+/*---------------------------------------------------------------------
+ * DOT11-AC-MIB::dot11AcInterfaceEntry.AcInterfaceIPV6prefix
+ * AcInterfaceIPV6prefix is subid 5 of dot11AcInterfaceEntry.
+ * Its status is Current, and its access level is ReadWrite.
+ * OID: .1.3.6.1.4.1.31656.6.1.2.4.4.1.5
+ * Description:
+AC Interface IPV6 Prefix.
+ *
+ * Attributes:
+ *   accessible 1     isscalar 0     enums  0      hasdefval 0
+ *   readable   1     iscolumn 1     ranges 0      hashint   0
+ *   settable   1
+ *
+ *
+ * Its syntax is INTEGER (based on perltype INTEGER)
+ * The net-snmp type is ASN_INTEGER. The C type decl is long (long)
+ */
+/**
+ * Check that the proposed new value is potentially valid.
+ *
+ * @param rowreq_ctx
+ *        Pointer to the row request context.
+ * @param AcInterfaceIPV6prefix_val
+ *        A long containing the new value.
+ *
+ * @retval MFD_SUCCESS        : incoming value is legal
+ * @retval MFD_NOT_VALID_NOW  : incoming value is not valid now
+ * @retval MFD_NOT_VALID_EVER : incoming value is never valid
+ *
+ * This is the place to check for requirements that are not
+ * expressed in the mib syntax (for example, a requirement that
+ * is detailed in the description for an object).
+ *
+ * You should check that the requested change between the undo value and the
+ * new value is legal (ie, the transistion from one value to another
+ * is legal).
+ *      
+ *@note
+ * This check is only to determine if the new value
+ * is \b potentially valid. This is the first check of many, and
+ * is one of the simplest ones.
+ * 
+ *@note
+ * this is not the place to do any checks for values
+ * which depend on some other value in the mib. Those
+ * types of checks should be done in the
+ * dot11AcInterfaceTable_check_dependencies() function.
+ *
+ * The following checks have already been done for you:
+ *    The syntax is ASN_INTEGER
+ *
+ * If there a no other checks you need to do, simply return MFD_SUCCESS.
+ *
+ */
+int
+AcInterfaceIPV6prefix_check_value( dot11AcInterfaceTable_rowreq_ctx *rowreq_ctx, long AcInterfaceIPV6prefix_val)
+{
+    DEBUGMSGTL(("verbose:dot11AcInterfaceTable:AcInterfaceIPV6prefix_check_value","called\n"));
+
+    /** should never get a NULL pointer */
+    netsnmp_assert(NULL != rowreq_ctx);
+
+    /*
+     * TODO:441:o: |-> Check for valid AcInterfaceIPV6prefix value.
+     */
+
+    return MFD_SUCCESS; /* AcInterfaceIPV6prefix value not illegal */
+} /* AcInterfaceIPV6prefix_check_value */
+
+/**
+ * Save old value information
+ *
+ * @param rowreq_ctx
+ *        Pointer to the table context (dot11AcInterfaceTable_rowreq_ctx)
+ *
+ * @retval MFD_SUCCESS : success
+ * @retval MFD_ERROR   : error. set will fail.
+ *
+ * This function will be called after the table level undo setup function
+ * dot11AcInterfaceTable_undo_setup has been called.
+ *
+ *@note
+ * this function will only be called if a new value is set for this column.
+ *
+ * If there is any setup specific to a particular column (e.g. allocating
+ * memory for a string), you should do that setup in this function, so it
+ * won't be done unless it is necessary.
+ */
+int
+AcInterfaceIPV6prefix_undo_setup( dot11AcInterfaceTable_rowreq_ctx *rowreq_ctx)
+{
+    DEBUGMSGTL(("verbose:dot11AcInterfaceTable:AcInterfaceIPV6prefix_undo_setup","called\n"));
+
+    /** should never get a NULL pointer */
+    netsnmp_assert(NULL != rowreq_ctx);
+
+    /*
+     * TODO:455:o: |-> Setup AcInterfaceIPV6prefix undo.
+     */
+    /*
+     * copy AcInterfaceIPV6prefix data
+     * set rowreq_ctx->undo->AcInterfaceIPV6prefix from rowreq_ctx->data.AcInterfaceIPV6prefix
+     */
+    rowreq_ctx->undo->AcInterfaceIPV6prefix = rowreq_ctx->data.AcInterfaceIPV6prefix;
+
+
+    return MFD_SUCCESS;
+} /* AcInterfaceIPV6prefix_undo_setup */
+
+/**
+ * Set the new value.
+ *
+ * @param rowreq_ctx
+ *        Pointer to the users context. You should know how to
+ *        manipulate the value from this object.
+ * @param AcInterfaceIPV6prefix_val
+ *        A long containing the new value.
+ */
+int
+AcInterfaceIPV6prefix_set( dot11AcInterfaceTable_rowreq_ctx *rowreq_ctx, long AcInterfaceIPV6prefix_val )
+{
+
+    DEBUGMSGTL(("verbose:dot11AcInterfaceTable:AcInterfaceIPV6prefix_set","called\n"));
+
+    /** should never get a NULL pointer */
+    netsnmp_assert(NULL != rowreq_ctx);
+
+    /*
+     * TODO:461:M: |-> Set AcInterfaceIPV6prefix value.
+     * set AcInterfaceIPV6prefix value in rowreq_ctx->data
+     */
+    char command[150]   = { 0 };
+    unsigned int new_prefix = 0;
+    unsigned int old_prefix = 0;
+    char ip[50]         = { 0 };
+    
+    strcpy(ip, rowreq_ctx->data.AcInterfaceIPV6);
+    old_prefix = rowreq_ctx->data.AcInterfaceIPV6prefix;
+    new_prefix = AcInterfaceIPV6prefix_val;
+
+    int ret = -1;    
+    int status = 0;
+    
+    //delete old info
+    memset(command, 0, sizeof(command));
+    snprintf(command, sizeof(command) - 1, "sudo del_intf_ipv6.sh %s %s/%d 1>/dev/null 2>/dev/null",
+                rowreq_ctx->data.AcInterfaceName, ip, old_prefix);
+                
+    status = system(command);
+    ret = WEXITSTATUS(status);
+    if(0 != ret) {
+        snmp_log(LOG_WARNING, "delete old mask %s/%d fail\n", ip, old_prefix);
+        return MFD_ERROR;
+    }
+
+
+    ret = -1;    
+    status = 0;
+    
+    //add new info
+    memset(command, 0, sizeof(command));
+    snprintf(command, sizeof(command) - 1, "sudo /usr/bin/set_intf_ipv6.sh %s %s/%d > /dev/null 2>&1",
+                rowreq_ctx->data.AcInterfaceName, ip ,new_prefix);
+                
+    ret  = system(command);
+    if(ret == 0) {
+	    rowreq_ctx->data.AcInterfaceIPV6prefix = AcInterfaceIPV6prefix_val;
+        return  MFD_SUCCESS;
+    }
+    else
+    {
+	    return MFD_ERROR;
+
+    }
+} /* AcInterfaceIPV6prefix_set */
+
+/**
+ * undo the previous set.
+ *
+ * @param rowreq_ctx
+ *        Pointer to the users context.
+ */
+int
+AcInterfaceIPV6prefix_undo( dot11AcInterfaceTable_rowreq_ctx *rowreq_ctx)
+{
+
+    DEBUGMSGTL(("verbose:dot11AcInterfaceTable:AcInterfaceIPV6prefix_undo","called\n"));
+
+    netsnmp_assert(NULL != rowreq_ctx);
+
+    /*
+     * TODO:456:o: |-> Clean up AcInterfaceIPV6prefix undo.
+     */
+    /*
+     * copy AcInterfaceIPV6prefix data
+     * set rowreq_ctx->data.AcInterfaceIPV6prefix from rowreq_ctx->undo->AcInterfaceIPV6prefix
+     */
+    rowreq_ctx->data.AcInterfaceIPV6prefix = rowreq_ctx->undo->AcInterfaceIPV6prefix;
+
+    
+    return MFD_SUCCESS;
+} /* AcInterfaceIPV6prefix_undo */
 
 /**
  * check dependencies

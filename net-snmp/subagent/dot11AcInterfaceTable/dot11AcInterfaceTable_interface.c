@@ -769,6 +769,19 @@ rc = AcInterfaceIP_get(rowreq_ctx, (u_long *)var->val.string );
 rc = AcInterfaceNetMask_get(rowreq_ctx, (u_long *)var->val.string );
         break;
 
+    /* AcInterfaceIPV6(4)/InetAddressIPv6/ASN_OCTET_STR/char(char)//L/A/W/e/R/d/H */
+    case COLUMN_ACINTERFACEIPV6:
+    var->type = ASN_OCTET_STR;
+rc = AcInterfaceIPV6_get(rowreq_ctx, (char **)&var->val.string, &var->val_len );
+        break;
+
+    /* AcInterfaceIPV6prefix(5)/INTEGER/ASN_INTEGER/long(long)//l/A/W/e/r/d/h */
+    case COLUMN_ACINTERFACEIPV6PREFIX:
+    var->val_len = sizeof(long);
+    var->type = ASN_INTEGER;
+rc = AcInterfaceIPV6prefix_get(rowreq_ctx, (long *)var->val.string );
+        break;
+
      default:
         if (DOT11ACINTERFACETABLE_MIN_COL <= column && column <= DOT11ACINTERFACETABLE_MAX_COL) {
             DEBUGMSGTL(("internal:dot11AcInterfaceTable:_mfd_dot11AcInterfaceTable_get_column",
@@ -899,6 +912,8 @@ _dot11AcInterfaceTable_check_column( dot11AcInterfaceTable_rowreq_ctx *rowreq_ct
                          netsnmp_variable_list *var, int column )
 {
     int rc = SNMPERR_SUCCESS;
+    struct in6_addr s;
+    int ret=-1;
     
     DEBUGMSGTL(("internal:dot11AcInterfaceTable:_dot11AcInterfaceTable_check_column",
                 "called for %d\n", column));
@@ -943,6 +958,58 @@ _dot11AcInterfaceTable_check_column( dot11AcInterfaceTable_rowreq_ctx *rowreq_ct
         if((MFD_SUCCESS != rc) && (MFD_NOT_VALID_EVER != rc) &&
            (MFD_NOT_VALID_NOW != rc)) {
             snmp_log(LOG_ERR, "bad rc %d from AcInterfaceNetMask_check_value\n", rc);
+            rc = SNMP_ERR_GENERR;
+        }
+    }
+        break;
+
+    /* AcInterfaceIPV6(4)/InetAddressIPv6/ASN_OCTET_STR/char(char)//L/A/W/e/R/d/H */
+    case COLUMN_ACINTERFACEIPV6:
+    rc = netsnmp_check_vb_type_and_max_size( var, ASN_OCTET_STR,
+        sizeof( rowreq_ctx->data.AcInterfaceIPV6 ) );
+    /* check defined range(s). */
+    if( (SNMPERR_SUCCESS == rc)
+       && (var->val_len >50)
+     ) {
+        rc = SNMP_ERR_WRONGLENGTH;
+    }
+    
+    ret=inet_pton(AF_INET6, (char *)var->val.string, (void *)&s);
+    if(ret != 1)
+    {
+	    rc = SNMP_ERR_WRONGVALUE;
+    }
+    if(SNMPERR_SUCCESS != rc) {
+        DEBUGMSGTL(("dot11AcInterfaceTable:_dot11AcInterfaceTable_check_column:AcInterfaceIPV6",
+                    "varbind validation failed (eg bad type or size)\n"));
+    }
+    else {
+        rc = AcInterfaceIPV6_check_value( rowreq_ctx, (char *)var->val.string, var->val_len );
+        if((MFD_SUCCESS != rc) && (MFD_NOT_VALID_EVER != rc) &&
+           (MFD_NOT_VALID_NOW != rc)) {
+            snmp_log(LOG_ERR, "bad rc %d from AcInterfaceIPV6_check_value\n", rc);
+            rc = SNMP_ERR_GENERR;
+        }
+    }
+        break;
+
+    /* AcInterfaceIPV6prefix(5)/INTEGER/ASN_INTEGER/long(long)//l/A/W/e/r/d/h */
+    case COLUMN_ACINTERFACEIPV6PREFIX:
+    rc = netsnmp_check_vb_type_and_size( var, ASN_INTEGER,
+        sizeof( rowreq_ctx->data.AcInterfaceIPV6prefix ) );
+    
+    if((*((u_long *)var->val.string )<0) || (*((u_long *)var->val.string )>128)){
+        rc = SNMP_ERR_WRONGVALUE;
+    }
+    if(SNMPERR_SUCCESS != rc) {
+        DEBUGMSGTL(("dot11AcInterfaceTable:_dot11AcInterfaceTable_check_column:AcInterfaceIPV6prefix",
+                    "varbind validation failed (eg bad type or size)\n"));
+    }
+    else {
+        rc = AcInterfaceIPV6prefix_check_value( rowreq_ctx, *((long *)var->val.string) );
+        if((MFD_SUCCESS != rc) && (MFD_NOT_VALID_EVER != rc) &&
+           (MFD_NOT_VALID_NOW != rc)) {
+            snmp_log(LOG_ERR, "bad rc %d from AcInterfaceIPV6prefix_check_value\n", rc);
             rc = SNMP_ERR_GENERR;
         }
     }
@@ -1055,6 +1122,18 @@ _dot11AcInterfaceTable_undo_setup_column( dot11AcInterfaceTable_rowreq_ctx *rowr
     case COLUMN_ACINTERFACENETMASK:
         rowreq_ctx->column_set_flags |= COLUMN_ACINTERFACENETMASK_FLAG;
         rc = AcInterfaceNetMask_undo_setup(rowreq_ctx );
+        break;
+
+    /* AcInterfaceIPV6(4)/InetAddressIPv6/ASN_OCTET_STR/char(char)//L/A/W/e/R/d/H */
+    case COLUMN_ACINTERFACEIPV6:
+        rowreq_ctx->column_set_flags |= COLUMN_ACINTERFACEIPV6_FLAG;
+        rc = AcInterfaceIPV6_undo_setup(rowreq_ctx );
+        break;
+
+    /* AcInterfaceIPV6prefix(5)/INTEGER/ASN_INTEGER/long(long)//l/A/W/e/r/d/h */
+    case COLUMN_ACINTERFACEIPV6PREFIX:
+        rowreq_ctx->column_set_flags |= COLUMN_ACINTERFACEIPV6PREFIX_FLAG;
+        rc = AcInterfaceIPV6prefix_undo_setup(rowreq_ctx );
         break;
 
      default:
@@ -1207,6 +1286,18 @@ _dot11AcInterfaceTable_set_column( dot11AcInterfaceTable_rowreq_ctx *rowreq_ctx,
     case COLUMN_ACINTERFACENETMASK:
         rowreq_ctx->column_set_flags |= COLUMN_ACINTERFACENETMASK_FLAG;
         rc = AcInterfaceNetMask_set(rowreq_ctx, *((u_long *)var->val.string) );
+        break;
+
+    /* AcInterfaceIPV6(4)/InetAddressIPv6/ASN_OCTET_STR/char(char)//L/A/W/e/R/d/H */
+    case COLUMN_ACINTERFACEIPV6:
+        rowreq_ctx->column_set_flags |= COLUMN_ACINTERFACEIPV6_FLAG;
+        rc = AcInterfaceIPV6_set(rowreq_ctx, (char *)var->val.string, var->val_len );
+        break;
+
+    /* AcInterfaceIPV6prefix(5)/INTEGER/ASN_INTEGER/long(long)//l/A/W/e/r/d/h */
+    case COLUMN_ACINTERFACEIPV6PREFIX:
+        rowreq_ctx->column_set_flags |= COLUMN_ACINTERFACEIPV6PREFIX_FLAG;
+        rc = AcInterfaceIPV6prefix_set(rowreq_ctx, *((long *)var->val.string) );
         break;
 
      default:
@@ -1365,6 +1456,16 @@ _dot11AcInterfaceTable_undo_column( dot11AcInterfaceTable_rowreq_ctx *rowreq_ctx
     /* AcInterfaceNetMask(3)/IPADDR/ASN_IPADDRESS/u_long(u_long)//l/A/W/e/r/d/h */
     case COLUMN_ACINTERFACENETMASK:
         rc = AcInterfaceNetMask_undo(rowreq_ctx);
+        break;
+
+    /* AcInterfaceIPV6(4)/InetAddressIPv6/ASN_OCTET_STR/char(char)//L/A/W/e/R/d/H */
+    case COLUMN_ACINTERFACEIPV6:
+        rc = AcInterfaceIPV6_undo(rowreq_ctx);
+        break;
+
+    /* AcInterfaceIPV6prefix(5)/INTEGER/ASN_INTEGER/long(long)//l/A/W/e/r/d/h */
+    case COLUMN_ACINTERFACEIPV6PREFIX:
+        rc = AcInterfaceIPV6prefix_undo(rowreq_ctx);
         break;
 
      default:
@@ -1720,6 +1821,8 @@ _dot11AcInterfaceTable_container_row_save(
 #define MAX_ROW_SIZE (sizeof(row_token) + 1 +  \
         ( 12 ) + /* ASN_IPADDRESS AcInterfaceIP */ \
         ( 12 ) + /* ASN_IPADDRESS AcInterfaceNetMask */ \
+        ( ( 2 * sizeof(rowreq_ctx->data.AcInterfaceIPV6) ) + 3 ) + /* ASN_OCTET_STR */ \
+        ( 12 ) + /* ASN_INTEGER AcInterfaceIPV6prefix */ \
         ( DOT11ACINTERFACETABLE_MAX_COL * 12 ) + /* column num prefix + : */ \
     2 /* LINE_TERM_CHAR + \n */ )
 
@@ -1929,6 +2032,15 @@ _dot11AcInterfaceTable_container_col_save(
             buf += sprintf(buf,"%lu",rowreq_ctx->data.AcInterfaceNetMask);
         break;
     
+        case COLUMN_ACINTERFACEIPV6: /** InetAddressIPv6 = ASN_OCTET_STR */
+            buf = read_config_save_octet_string(buf, rowreq_ctx->data.AcInterfaceIPV6,
+                                                rowreq_ctx->data.AcInterfaceIPV6_len );
+        break;
+    
+        case COLUMN_ACINTERFACEIPV6PREFIX: /** INTEGER = ASN_INTEGER */
+            buf += sprintf(buf,"%ld",rowreq_ctx->data.AcInterfaceIPV6prefix);
+        break;
+    
     default: /** We shouldn't get here */
         snmp_log(LOG_ERR, "unknown column %d in "
                  "_dot11AcInterfaceTable_container_col_save\n", col);
@@ -1979,6 +2091,20 @@ _dot11AcInterfaceTable_container_col_restore(
             len = sizeof(rowreq_ctx->data.AcInterfaceNetMask);
             buf = read_config_read_memory(ASN_IPADDRESS, buf,
                                           (char*)&rowreq_ctx->data.AcInterfaceNetMask,
+                                          &len);
+        break;
+    
+        case COLUMN_ACINTERFACEIPV6: /** InetAddressIPv6 = ASN_OCTET_STR */
+            rowreq_ctx->data.AcInterfaceIPV6_len = sizeof(rowreq_ctx->data.AcInterfaceIPV6);
+            buf = read_config_read_memory(ASN_OCTET_STR,buf,
+                                          (char*)&rowreq_ctx->data.AcInterfaceIPV6,
+                                          (size_t*)&rowreq_ctx->data.AcInterfaceIPV6_len );
+        break;
+    
+        case COLUMN_ACINTERFACEIPV6PREFIX: /** INTEGER = ASN_INTEGER */
+            len = sizeof(rowreq_ctx->data.AcInterfaceIPV6prefix);
+            buf = read_config_read_memory(ASN_INTEGER, buf,
+                                          (char*)&rowreq_ctx->data.AcInterfaceIPV6prefix,
                                           &len);
         break;
     

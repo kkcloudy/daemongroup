@@ -118,6 +118,8 @@ typedef struct inf
 typedef struct if_t {
 	char ifname[MAX_IF_IFNAME_LEN];
 	char ipaddr[32];
+	char ipaddr_ipv6[50];
+	unsigned int prefix;
 	unsigned int mask;
 	struct if_t *next;
 } if3;

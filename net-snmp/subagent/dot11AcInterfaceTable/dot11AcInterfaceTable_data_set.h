@@ -54,6 +54,16 @@ int AcInterfaceNetMask_undo_setup( dot11AcInterfaceTable_rowreq_ctx *rowreq_ctx 
 int AcInterfaceNetMask_set( dot11AcInterfaceTable_rowreq_ctx *rowreq_ctx, u_long AcInterfaceNetMask_val );
 int AcInterfaceNetMask_undo( dot11AcInterfaceTable_rowreq_ctx *rowreq_ctx );
 
+int AcInterfaceIPV6_check_value( dot11AcInterfaceTable_rowreq_ctx *rowreq_ctx, char *AcInterfaceIPV6_val_ptr,  size_t AcInterfaceIPV6_val_ptr_len);
+int AcInterfaceIPV6_undo_setup( dot11AcInterfaceTable_rowreq_ctx *rowreq_ctx );
+int AcInterfaceIPV6_set( dot11AcInterfaceTable_rowreq_ctx *rowreq_ctx, char *AcInterfaceIPV6_val_ptr,  size_t AcInterfaceIPV6_val_ptr_len );
+int AcInterfaceIPV6_undo( dot11AcInterfaceTable_rowreq_ctx *rowreq_ctx );
+
+int AcInterfaceIPV6prefix_check_value( dot11AcInterfaceTable_rowreq_ctx *rowreq_ctx, long AcInterfaceIPV6prefix_val);
+int AcInterfaceIPV6prefix_undo_setup( dot11AcInterfaceTable_rowreq_ctx *rowreq_ctx );
+int AcInterfaceIPV6prefix_set( dot11AcInterfaceTable_rowreq_ctx *rowreq_ctx, long AcInterfaceIPV6prefix_val );
+int AcInterfaceIPV6prefix_undo( dot11AcInterfaceTable_rowreq_ctx *rowreq_ctx );
+
 
 int dot11AcInterfaceTable_check_dependencies(dot11AcInterfaceTable_rowreq_ctx *ctx);
 

@@ -291,6 +291,142 @@ AcInterfaceNetMask_get( dot11AcInterfaceTable_rowreq_ctx *rowreq_ctx, u_long * A
     return MFD_SUCCESS;
 } /* AcInterfaceNetMask_get */
 
+/*---------------------------------------------------------------------
+ * DOT11-AC-MIB::dot11AcInterfaceEntry.AcInterfaceIPV6
+ * AcInterfaceIPV6 is subid 4 of dot11AcInterfaceEntry.
+ * Its status is Current, and its access level is ReadWrite.
+ * OID: .1.3.6.1.4.1.31656.6.1.2.4.4.1.4
+ * Description:
+AC Interface IPV6 address.
+ *
+ * Attributes:
+ *   accessible 1     isscalar 0     enums  0      hasdefval 0
+ *   readable   1     iscolumn 1     ranges 1      hashint   1
+ *   settable   1
+ *   hint: 2x:
+ *
+ * Ranges:  50;
+ *
+ * Its syntax is InetAddressIPv6 (based on perltype OCTETSTR)
+ * The net-snmp type is ASN_OCTET_STR. The C type decl is char (char)
+ * This data type requires a length.  (Max 50)
+ */
+/**
+ * Extract the current value of the AcInterfaceIPV6 data.
+ *
+ * Set a value using the data context for the row.
+ *
+ * @param rowreq_ctx
+ *        Pointer to the row request context.
+ * @param AcInterfaceIPV6_val_ptr_ptr
+ *        Pointer to storage for a char variable
+ * @param AcInterfaceIPV6_val_ptr_len_ptr
+ *        Pointer to a size_t. On entry, it will contain the size (in bytes)
+ *        pointed to by AcInterfaceIPV6.
+ *        On exit, this value should contain the data size (in bytes).
+ *
+ * @retval MFD_SUCCESS         : success
+ * @retval MFD_SKIP            : skip this node (no value for now)
+ * @retval MFD_ERROR           : Any other error
+*
+ * @note If you need more than (*AcInterfaceIPV6_val_ptr_len_ptr) bytes of memory,
+ *       allocate it using malloc() and update AcInterfaceIPV6_val_ptr_ptr.
+ *       <b>DO NOT</b> free the previous pointer.
+ *       The MFD helper will release the memory you allocate.
+ *
+ * @remark If you call this function yourself, you are responsible
+ *         for checking if the pointer changed, and freeing any
+ *         previously allocated memory. (Not necessary if you pass
+ *         in a pointer to static memory, obviously.)
+ */
+int
+AcInterfaceIPV6_get( dot11AcInterfaceTable_rowreq_ctx *rowreq_ctx, char **AcInterfaceIPV6_val_ptr_ptr, size_t *AcInterfaceIPV6_val_ptr_len_ptr )
+{
+   /** we should have a non-NULL pointer and enough storage */
+   netsnmp_assert( (NULL != AcInterfaceIPV6_val_ptr_ptr) && (NULL != *AcInterfaceIPV6_val_ptr_ptr));
+   netsnmp_assert( NULL != AcInterfaceIPV6_val_ptr_len_ptr );
+
+
+    DEBUGMSGTL(("verbose:dot11AcInterfaceTable:AcInterfaceIPV6_get","called\n"));
+
+    netsnmp_assert(NULL != rowreq_ctx);
+
+/*
+ * TODO:231:o: |-> Extract the current value of the AcInterfaceIPV6 data.
+ * copy (* AcInterfaceIPV6_val_ptr_ptr ) data and (* AcInterfaceIPV6_val_ptr_len_ptr ) from rowreq_ctx->data
+ */
+    /*
+     * make sure there is enough space for AcInterfaceIPV6 data
+     */
+    if ((NULL == (* AcInterfaceIPV6_val_ptr_ptr )) ||
+        ((* AcInterfaceIPV6_val_ptr_len_ptr ) <
+         (rowreq_ctx->data.AcInterfaceIPV6_len* sizeof(rowreq_ctx->data.AcInterfaceIPV6[0])))) {
+        /*
+         * allocate space for AcInterfaceIPV6 data
+         */
+        (* AcInterfaceIPV6_val_ptr_ptr ) = malloc(rowreq_ctx->data.AcInterfaceIPV6_len* sizeof(rowreq_ctx->data.AcInterfaceIPV6[0]));
+        if(NULL == (* AcInterfaceIPV6_val_ptr_ptr )) {
+            snmp_log(LOG_ERR,"could not allocate memory\n");
+            return MFD_ERROR;
+        }
+    }
+    (* AcInterfaceIPV6_val_ptr_len_ptr ) = rowreq_ctx->data.AcInterfaceIPV6_len* sizeof(rowreq_ctx->data.AcInterfaceIPV6[0]);
+    memcpy( (* AcInterfaceIPV6_val_ptr_ptr ), rowreq_ctx->data.AcInterfaceIPV6, rowreq_ctx->data.AcInterfaceIPV6_len* sizeof(rowreq_ctx->data.AcInterfaceIPV6[0]) );
+
+    return MFD_SUCCESS;
+} /* AcInterfaceIPV6_get */
+
+/*---------------------------------------------------------------------
+ * DOT11-AC-MIB::dot11AcInterfaceEntry.AcInterfaceIPV6prefix
+ * AcInterfaceIPV6prefix is subid 5 of dot11AcInterfaceEntry.
+ * Its status is Current, and its access level is ReadWrite.
+ * OID: .1.3.6.1.4.1.31656.6.1.2.4.4.1.5
+ * Description:
+AC Interface IPV6 Prefix.
+ *
+ * Attributes:
+ *   accessible 1     isscalar 0     enums  0      hasdefval 0
+ *   readable   1     iscolumn 1     ranges 0      hashint   0
+ *   settable   1
+ *
+ *
+ * Its syntax is INTEGER (based on perltype INTEGER)
+ * The net-snmp type is ASN_INTEGER. The C type decl is long (long)
+ */
+/**
+ * Extract the current value of the AcInterfaceIPV6prefix data.
+ *
+ * Set a value using the data context for the row.
+ *
+ * @param rowreq_ctx
+ *        Pointer to the row request context.
+ * @param AcInterfaceIPV6prefix_val_ptr
+ *        Pointer to storage for a long variable
+ *
+ * @retval MFD_SUCCESS         : success
+ * @retval MFD_SKIP            : skip this node (no value for now)
+ * @retval MFD_ERROR           : Any other error
+ */
+int
+AcInterfaceIPV6prefix_get( dot11AcInterfaceTable_rowreq_ctx *rowreq_ctx, long * AcInterfaceIPV6prefix_val_ptr )
+{
+   /** we should have a non-NULL pointer */
+   netsnmp_assert( NULL != AcInterfaceIPV6prefix_val_ptr );
+
+
+    DEBUGMSGTL(("verbose:dot11AcInterfaceTable:AcInterfaceIPV6prefix_get","called\n"));
+
+    netsnmp_assert(NULL != rowreq_ctx);
+
+/*
+ * TODO:231:o: |-> Extract the current value of the AcInterfaceIPV6prefix data.
+ * copy (* AcInterfaceIPV6prefix_val_ptr ) from rowreq_ctx->data
+ */
+    (* AcInterfaceIPV6prefix_val_ptr ) = rowreq_ctx->data.AcInterfaceIPV6prefix;
+
+    return MFD_SUCCESS;
+} /* AcInterfaceIPV6prefix_get */
+
 
 
 /** @} */
