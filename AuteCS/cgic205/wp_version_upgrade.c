@@ -50,6 +50,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "bsd/bsdpub.h"
 #include "dbus/bsd/BsdDbusPath.h"
 
+#define UPLOAD_FILE_PATH	"/var/run/upload.txt"
+
 int ShowVersionUpgradePage(char *m,struct list *lpublic,struct list *lsystem);
 void Local_Upgrade(char *local_url,struct list *lpublic,struct list *lsystem);
 void Web_Upgrade(char *web_url,char *usrname,char *passwd,struct list *lpublic,struct list *lsystem);
@@ -100,8 +102,10 @@ int ShowVersionUpgradePage(char *m,struct list *lpublic,struct list *lsystem)
   fprintf(cgiOut,"<meta http-equiv=Content-Type content=text/html; charset=gb2312>");
   fprintf(cgiOut,"<title>VersionUpgrade</title>");
   fprintf(cgiOut,"<link rel=stylesheet href=/style.css type=text/css>"\
-  "</head>"\
-  "<script src=/probar.js>"\
+  "</head>");
+  
+  fprintf(cgiOut,"<script type=\"text/javascript\" src=/jquery-1.8.3.min.js></script>");
+  fprintf(cgiOut,"<script src=/probar.js>"\
   "</script>"\
   "<script type=text/javascript>"\
      "function check_sysinfo_div_pos()"\
@@ -129,14 +133,52 @@ int ShowVersionUpgradePage(char *m,struct list *lpublic,struct list *lsystem)
 
   if((cgiFormSubmitClicked("local_upload") == cgiFormSuccess)&&(strcmp(IsSubmit,"")))
   {
-	  memset(local_url,0,sizeof(local_url));
-	  if(cgiFormFileName("myFile", local_url, sizeof(local_url)) == cgiFormSuccess) 
+	  fprintf(stderr,"local_url:%s\n",local_url);	
+	  char cmdcc[100]={0};
+	  FILE *fp = NULL;
+	  int upload_flag=0;
+	  if(access(UPLOAD_FILE_PATH,0) != 0)
 	  {
-		  Local_Upgrade(local_url,lpublic,lsystem);
+		  fprintf(stderr,"access(UPLOAD_FILE_PATH,0)\n"); 
+		  memset(cmdcc,0,sizeof(cmdcc));
+		  snprintf(cmdcc, sizeof(cmdcc) - 1, "sudo touch %s >/dev/null 2>&1", UPLOAD_FILE_PATH);
+		  system(cmdcc);
+		  memset(cmdcc,0,sizeof(cmdcc));
+		  snprintf(cmdcc, sizeof(cmdcc) - 1, "sudo chmod 666 %s >/dev/null 2>&1", UPLOAD_FILE_PATH);
+		  system(cmdcc);
+	  }
+	  fp = fopen(UPLOAD_FILE_PATH ,"w+");
+	  if(NULL == fp)
+	  {
+		  fprintf(stderr,"(NULL == fp)\n"); 
+		  ShowAlert(search(lpublic,"lupload_fail"));
+		  upload_flag = 1;
 	  }
 	  else
 	  {
-	  	  ShowAlert(search(lpublic,"url_not_empty"));
+		  fprintf(stderr,"f---puts(1, fp)\n"); 
+		  fputs("1", fp);
+		  fclose(fp);
+		  memset(cmdcc,0,sizeof(cmdcc));
+		  snprintf(cmdcc, sizeof(cmdcc) - 1, "sudo chmod 666 %s >/dev/null 2>&1", UPLOAD_FILE_PATH);
+		  system(cmdcc);
+	  }
+
+	  if(upload_flag == 0)
+	  {
+		  memset(local_url,0,sizeof(local_url));
+		   if(cgiFormFileName("myFile", local_url, sizeof(local_url)) == cgiFormSuccess) 
+		   {
+			   
+			   Local_Upgrade(local_url,lpublic,lsystem);
+		   }
+		   else
+		   {
+			   memset(cmdcc,0,sizeof(cmdcc));
+			   snprintf(cmdcc, sizeof(cmdcc) - 1, "sudo rm %s >/dev/null 2>&1", UPLOAD_FILE_PATH);
+			   system(cmdcc);
+			   ShowAlert(search(lpublic,"url_not_empty"));
+		   }
 	  }
   }
 
@@ -145,21 +187,59 @@ int ShowVersionUpgradePage(char *m,struct list *lpublic,struct list *lsystem)
   memset(passwd,0,sizeof(passwd));
   if((cgiFormSubmitClicked("web_upload") == cgiFormSuccess)&&(strcmp(IsSubmit,"")))
   {
-	  cgiFormStringNoNewlines("url",web_url,128);
-	  cgiFormStringNoNewlines("usrname",usrname,30);
-	  cgiFormStringNoNewlines("passwd",passwd,30);
-	  if((strcmp(web_url,""))&&(strcmp(usrname,""))&&(strcmp(passwd,"")))
+	  char cmdcc[100]={0};
+	  FILE *fp = NULL;
+	  int upload_flag=0;
+	  if(access(UPLOAD_FILE_PATH,0) != 0)
 	  {
-		  Web_Upgrade(web_url,usrname,passwd,lpublic,lsystem);
+		  fprintf(stderr,"access(UPLOAD_FILE_PATH,0)\n"); 
+		  memset(cmdcc,0,sizeof(cmdcc));
+		  snprintf(cmdcc, sizeof(cmdcc) - 1, "sudo touch %s >/dev/null 2>&1", UPLOAD_FILE_PATH);
+		  system(cmdcc);
+		  memset(cmdcc,0,sizeof(cmdcc));
+		  snprintf(cmdcc, sizeof(cmdcc) - 1, "sudo chmod 666 %s >/dev/null 2>&1", UPLOAD_FILE_PATH);
+		  system(cmdcc);
+	  }
+	  fp = fopen(UPLOAD_FILE_PATH ,"w+");
+	  if(NULL == fp)
+	  {
+		  fprintf(stderr,"(NULL == fp)\n"); 
+		  ShowAlert(search(lpublic,"lupload_fail"));
+		  upload_flag = 1;
 	  }
 	  else
 	  {
-	  	  if(strcmp(web_url,"")==0)
-		  	  ShowAlert(search(lpublic,"url_not_empty"));
-		  else if(strcmp(usrname,"")==0)
-		   	  ShowAlert(search(lsystem,"userna_err"));
-		  else if(strcmp(passwd,"")==0)
-		   	  ShowAlert(search(lsystem,"pass_err"));
+		  fprintf(stderr,"f---puts(1, fp)\n"); 
+		  fputs("1", fp);
+		  fclose(fp);
+		  memset(cmdcc,0,sizeof(cmdcc));
+		  snprintf(cmdcc, sizeof(cmdcc) - 1, "sudo chmod 666 %s >/dev/null 2>&1", UPLOAD_FILE_PATH);
+		  system(cmdcc);
+	  }
+
+	  if(upload_flag == 0)
+	  {
+
+		  cgiFormStringNoNewlines("url",web_url,128);
+		  cgiFormStringNoNewlines("usrname",usrname,30);
+		  cgiFormStringNoNewlines("passwd",passwd,30);
+		  if((strcmp(web_url,""))&&(strcmp(usrname,""))&&(strcmp(passwd,"")))
+		  {
+			  Web_Upgrade(web_url,usrname,passwd,lpublic,lsystem);
+		  }
+		  else
+		  {
+			  memset(cmdcc,0,sizeof(cmdcc));
+			  snprintf(cmdcc, sizeof(cmdcc) - 1, "sudo rm %s >/dev/null 2>&1", UPLOAD_FILE_PATH);
+			  system(cmdcc);
+			  
+			  if(strcmp(web_url,"")==0)
+				  ShowAlert(search(lpublic,"url_not_empty"));
+			  else if(strcmp(usrname,"")==0)
+				  ShowAlert(search(lsystem,"userna_err"));
+			  else if(strcmp(passwd,"")==0)
+				  ShowAlert(search(lsystem,"pass_err"));
+		  }
 	  }
   }
   
@@ -265,13 +345,13 @@ int ShowVersionUpgradePage(char *m,struct list *lpublic,struct list *lsystem)
 				  fprintf(cgiOut,"<input type=text size=\"32\" name=txtFakeText value=\"\" disabled/>");
 				fprintf(cgiOut,"<input type=button style=\"width:70px;height:22px;\" name=fakeButton onmouseover=\"HandleFileButtonClick(document.frmUpload.myFile);\" value=\"%s\">",search(lpublic,"browse"));
 			fprintf(cgiOut,"</td>"\
-		    "<td width=100><input type=submit name=local_upload value=\"%s\" onclick=\"test('%s')\"></td>",search(lpublic,"local_upload"),search(lpublic,"locup_warn"));
+		    "<td width=100><input type=submit name=local_upload value=\"%s\" onclick=\"test('%s','%s','%s','%s','%s')\"></td>",search(lpublic,"local_upload"),search(lpublic,"locup_warn"),search(lpublic,"locup_stag_first"),search(lpublic,"locup_stag_sec"),search(lpublic,"locup_stag_third"),search(lpublic,"locup_stag_fourth"));
 		  fprintf(cgiOut,"</tr>"\
 
 		  "<tr height=30>"\
 		  	"<td align=left>%s:</td>",search(lpublic,"web_source"));
 	  		  fprintf(cgiOut,"<td><input type=text size=\"40\" name=url value=\"%s\"></td>",web_url);	
-		    fprintf(cgiOut,"<td><input type=submit name=web_upload value=\"%s\" onclick=\"test('%s')\"></td>",search(lpublic,"web_up"),search(lpublic,"webup_warn")); 
+		    fprintf(cgiOut,"<td><input type=submit name=web_upload value=\"%s\" onclick=\"test('%s','%s','%s','%s','%s')\"></td>",search(lpublic,"web_up"),search(lpublic,"webup_warn"),search(lpublic,"webup_stag_first"),search(lpublic,"webup_stag_sec"),search(lpublic,"webup_stag_third"),search(lpublic,"webup_stag_fourth")); 
 		  fprintf(cgiOut,"</tr>"\
 		  "<tr height=30>"\
 			"<td align=left>%s:</td>",search(lsystem,"user_na"));
@@ -415,11 +495,52 @@ static int ccgi_dcli_bsd_copy_file_to_board(DBusConnection *connection, const in
 
 void Local_Upgrade(char *local_url,struct list *lpublic,struct list *lsystem)
 {
-	cgiFilePtr file;	
+	cgiFilePtr file;
+	FILE *fp = NULL;
+	char cmdcc[100]={0};
 
+	char *ptr_s=NULL;
+	char *ptr=NULL;
+	char c='\\';
+	fp = fopen(UPLOAD_FILE_PATH ,"w+");
+	if(NULL == fp)
+	{ 
+		memset(cmdcc,0,sizeof(cmdcc));
+		snprintf(cmdcc, sizeof(cmdcc) - 1, "sudo rm %s >/dev/null 2>&1", UPLOAD_FILE_PATH);
+		system(cmdcc);
+		ShowAlert(search(lpublic,"lupload_fail"));
+		return; 
+	}
+	fprintf(stderr,"-----------------------------fp--uts(2, fp)\n"); 
+	fputs("2", fp);
+	fclose(fp);
+	memset(cmdcc,0,sizeof(cmdcc));
+	snprintf(cmdcc, sizeof(cmdcc) - 1, "sudo chmod 666 %s >/dev/null 2>&1", UPLOAD_FILE_PATH);
+	system(cmdcc);
+	sleep(10);
+	
+	ptr_s = strrchr(local_url, c);
+	if(ptr_s==NULL)
+	{
+		ptr = local_url;
+	}
+	else if((ptr_s+1)==NULL)
+	{
+		memset(cmdcc,0,sizeof(cmdcc));
+		snprintf(cmdcc, sizeof(cmdcc) - 1, "sudo rm %s >/dev/null 2>&1", UPLOAD_FILE_PATH);
+		system(cmdcc);
+		ShowAlert(search(lpublic,"lupload_fail"));
+		return; 
+	}
+	else
+	{
+		ptr = ptr_s+1;
+	}
 	if (cgiFormFileOpen("myFile", &file) != cgiFormSuccess) 
 	{
-		fprintf(stderr, "Could not open the file.<p>\n");
+		memset(cmdcc,0,sizeof(cmdcc));
+		snprintf(cmdcc, sizeof(cmdcc) - 1, "sudo rm %s >/dev/null 2>&1", UPLOAD_FILE_PATH);
+		system(cmdcc);
 		ShowAlert(search(lpublic,"lupload_fail"));
 		return;
 	}  
@@ -429,7 +550,7 @@ void Local_Upgrade(char *local_url,struct list *lpublic,struct list *lsystem)
 	int i=0,flag=-1;
 	for(i=0;i<2;i++)
 	{ 
-	  tmpz = strstr(local_url,version_name[i]);
+	  tmpz = strstr(ptr,version_name[i]);
 	  if(tmpz)
 	  {
 		flag = 0;
@@ -438,13 +559,16 @@ void Local_Upgrade(char *local_url,struct list *lpublic,struct list *lsystem)
 	}
 	if(flag != 0)
 	{
+		memset(cmdcc,0,sizeof(cmdcc));
+		snprintf(cmdcc, sizeof(cmdcc) - 1, "sudo rm %s >/dev/null 2>&1", UPLOAD_FILE_PATH);
+		system(cmdcc);
 		ShowAlert(search(lpublic,"wtp_typez"));
 	  	return;
 	}	
 
 	char path_conf[128] = { 0 };
 	memset(path_conf,0,sizeof(path_conf));	
-	snprintf(path_conf,sizeof(path_conf)-1,"/mnt/%s",local_url); 
+	snprintf(path_conf,sizeof(path_conf)-1,"/mnt/%s",ptr); 
 
 	int status=0,tt_ret=-1;
 	int targetFile = 0; 
@@ -456,7 +580,9 @@ void Local_Upgrade(char *local_url,struct list *lpublic,struct list *lsystem)
 	targetFile=open(path_conf,O_RDWR|O_CREAT|O_TRUNC|O_APPEND,mode); 
 	if(targetFile == -1)
 	{ 
-		fprintf(stderr,"could not create the new file,%s\n",local_url); 
+		memset(cmdcc,0,sizeof(cmdcc));
+		snprintf(cmdcc, sizeof(cmdcc) - 1, "sudo rm %s >/dev/null 2>&1", UPLOAD_FILE_PATH);
+		system(cmdcc);
 		ShowAlert(search(lpublic,"lupload_fail"));
 		return; 
 	} 
@@ -464,14 +590,33 @@ void Local_Upgrade(char *local_url,struct list *lpublic,struct list *lsystem)
 	while (cgiFormFileRead(file, buffer, 1024, &got) ==cgiFormSuccess)
 	{ 
 		if(got>0) 
-		write(targetFile,buffer,got);	/*将本地文件的内容写入服务器端文件*/
+		write(targetFile,buffer,got);
 	} 
 
 	cgiFormFileClose(file); 
-	close(targetFile);	
+	close(targetFile);
+
+
+	fp = fopen(UPLOAD_FILE_PATH ,"w+");
+	if(NULL == fp)
+	{ 
+		memset(cmdcc,0,sizeof(cmdcc));
+		snprintf(cmdcc, sizeof(cmdcc) - 1, "sudo rm %s >/dev/null 2>&1", UPLOAD_FILE_PATH);
+		system(cmdcc);
+		ShowAlert(search(lpublic,"lupload_fail"));
+		return; 
+	}
+	fprintf(stderr,"-----------------------------fp--uts(3, fp)\n"); 
+	fputs("3", fp);
+	fclose(fp);
+	memset(cmdcc,0,sizeof(cmdcc));
+	snprintf(cmdcc, sizeof(cmdcc) - 1, "sudo chmod 666 %s >/dev/null 2>&1", UPLOAD_FILE_PATH);
+	system(cmdcc);
+
+	
 	char tempf[128] = { 0 };
 	memset(tempf,0,sizeof(tempf));
-	snprintf(tempf,sizeof(tempf)-1,"sudo sor.sh cp %s %d > /dev/null 2>&1",local_url,300);
+	snprintf(tempf,sizeof(tempf)-1,"sudo sor.sh cp %s %d > /dev/null 2>&1",ptr,300);
 	status = system(tempf);
 	tt_ret = WEXITSTATUS(status);	
 	if(tt_ret==0)
@@ -483,17 +628,25 @@ void Local_Upgrade(char *local_url,struct list *lpublic,struct list *lsystem)
 		sprintf(sys_cmd,	
 				"source vtysh_start.sh >/dev/null 2>&1\n"
 				"vtysh -c \"show boot_img\" |grep '^%s$' >/dev/null"
-				,local_url);
+				,ptr);
 
 		status = 0;
 		status = system(sys_cmd);
 		ret = WEXITSTATUS(status);	
-		if (ret == 0)
-		{		
+		fp = fopen(UPLOAD_FILE_PATH ,"w+");
+		if ((ret == 0)||(NULL == fp))
+		{	
+			fprintf(stderr,"-----------------------------fp--uts(4, fp)\n"); 
+			 fputs("4", fp);
+			 fclose(fp);
+			 memset(cmdcc,0,sizeof(cmdcc));
+			 snprintf(cmdcc, sizeof(cmdcc) - 1, "sudo chmod 666 %s >/dev/null 2>&1", UPLOAD_FILE_PATH);
+			 system(cmdcc);
+
 			char src_path[PATH_LEN] = {0};
 			char des_path[PATH_LEN] = {0};
-			sprintf(src_path, "/blk/%s", local_url);
-			sprintf(des_path, "/blk/%s", local_url);
+			sprintf(src_path, "/blk/%s", ptr);
+			sprintf(des_path, "/blk/%s", ptr);
    			int ID[MAX_SLOT_NUM] = {0};
 			int board_count = -1;
 		 	board_count =ccgi_dcli_bsd_get_slot_ids(ccgi_dbus_connection,ID,BSD_TYPE_BOOT_IMG);
@@ -503,7 +656,7 @@ void Local_Upgrade(char *local_url,struct list *lpublic,struct list *lsystem)
 			}
 
 			memset(sys_cmd,0,128);
-			sprintf(sys_cmd,"sudo boot.sh %s >/dev/null 2>&1",local_url);
+			sprintf(sys_cmd,"sudo boot.sh %s >/dev/null 2>&1",ptr);
 			system(sys_cmd);
 
 			ShowAlert(search(lpublic,"lupload_succ"));
@@ -511,21 +664,29 @@ void Local_Upgrade(char *local_url,struct list *lpublic,struct list *lsystem)
 		else
 		{
 			memset(sys_cmd,0,128);
-			sprintf(sys_cmd,"sudo sor.sh rm %s %d > /dev/null 2>&1",local_url,SHORT_SORT);
+			sprintf(sys_cmd,"sudo sor.sh rm %s %d > /dev/null 2>&1",ptr,SHORT_SORT);
 			system(sys_cmd);
 			
 			ShowAlert(search(lpublic,"lupload_fail"));			
 		}
 	}
 	memset(tempf,0,sizeof(tempf));
-	snprintf(tempf,sizeof(tempf)-1,"sudo rm /mnt/%s > /dev/null 2>&1",local_url);
+	snprintf(tempf,sizeof(tempf)-1,"sudo rm /mnt/%s > /dev/null 2>&1",ptr);
 	system(tempf);
+	
+	memset(cmdcc,0,sizeof(cmdcc));
+	snprintf(cmdcc, sizeof(cmdcc) - 1, "sudo rm %s >/dev/null 2>&1", UPLOAD_FILE_PATH);
+	system(cmdcc);
 	return;
 }
 
 
 void Web_Upgrade(char *web_url,char *usrname,char *passwd,struct list *lpublic,struct list *lsystem)
 {
+	FILE *fp = NULL;
+	char cmdcc[100]={0};
+	sleep(6);
+
 	char *filename=strrchr(web_url,'/');		
 	if(filename)
 	{
@@ -546,15 +707,39 @@ void Web_Upgrade(char *web_url,char *usrname,char *passwd,struct list *lpublic,s
 			ShowAlert(search(lpublic,"wtp_typez"));
 			return;
 		}	
+
+		fp = fopen(UPLOAD_FILE_PATH ,"w+");
+		if(NULL == fp)
+		{ 
+			memset(cmdcc,0,sizeof(cmdcc));
+			snprintf(cmdcc, sizeof(cmdcc) - 1, "sudo rm %s >/dev/null 2>&1", UPLOAD_FILE_PATH);
+			system(cmdcc);
+			ShowAlert(search(lpublic,"lupload_fail"));
+			return; 
+		}
+		fprintf(stderr,"-----------------------------fp--uts(2, fp)\n"); 
+		fputs("2", fp);
+		fclose(fp);
+		memset(cmdcc,0,sizeof(cmdcc));
+		snprintf(cmdcc, sizeof(cmdcc) - 1, "sudo chmod 666 %s >/dev/null 2>&1", UPLOAD_FILE_PATH);
+		system(cmdcc);
 		
 		int ret = -1;	
 		char cmd[128] = { 0 };
-		
 		memset(cmd,0,sizeof(cmd));
 		sprintf(cmd,"wget -N -P /mnt --user=%s --password=%s %s > /dev/null",usrname,passwd,web_url);	//下载到指定目录，并保持最新版本
 		ret=system(cmd);
-		if(ret==0)
-		{
+		fp = fopen(UPLOAD_FILE_PATH ,"w+");
+		if((ret==0)||(NULL == fp))
+		{			
+			fprintf(stderr,"-----------------------------fp--uts(3, fp)\n"); 
+			fputs("3", fp);
+			fclose(fp);
+			memset(cmdcc,0,sizeof(cmdcc));
+			snprintf(cmdcc, sizeof(cmdcc) - 1, "sudo chmod 666 %s >/dev/null 2>&1", UPLOAD_FILE_PATH);
+			system(cmdcc);
+
+			
 			char tempf[128] = { 0 };
 			int op_ret = -1,status = -1;
 	
@@ -575,8 +760,16 @@ void Web_Upgrade(char *web_url,char *usrname,char *passwd,struct list *lpublic,s
 					,filename+1);
 				status = system(sys_cmd);
 				ret = WEXITSTATUS(status);
-				if(ret==0)					
+				fp = fopen(UPLOAD_FILE_PATH ,"w+");
+				if((ret==0)||(NULL == fp))
 				{
+					fprintf(stderr,"-----------------------------fp--uts(4, fp)\n"); 
+					 fputs("4", fp);
+					 fclose(fp);
+					 memset(cmdcc,0,sizeof(cmdcc));
+					 snprintf(cmdcc, sizeof(cmdcc) - 1, "sudo chmod 666 %s >/dev/null 2>&1", UPLOAD_FILE_PATH);
+					 system(cmdcc);
+
 					char src_path[PATH_LEN] = {0};
 					char des_path[PATH_LEN] = {0};
 					sprintf(src_path, "/blk/%s", filename+1);

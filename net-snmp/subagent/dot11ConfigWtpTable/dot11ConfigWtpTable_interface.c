@@ -1010,6 +1010,12 @@ _dot11ConfigWtpTable_undo_setup_column( dot11ConfigWtpTable_rowreq_ctx *rowreq_c
         rc = wtpLoadBalanceTrigerBaseFlow_undo_setup(rowreq_ctx );
         break;
 
+    /* wtpRadioPrioritySelect(7)/INTEGER/ASN_INTEGER/long(u_long)//l/A/W/E/r/d/h */
+    case COLUMN_WTPRADIOPRIORITYSELECT:
+        rowreq_ctx->column_set_flags |= COLUMN_WTPRADIOPRIORITYSELECT_FLAG;
+        rc = wtpRadioPrioritySelect_undo_setup(rowreq_ctx );
+        break;
+
      default:
          snmp_log(LOG_ERR,"unknown column %d in _dot11ConfigWtpTable_undo_setup_column\n", column);
          break;
@@ -1211,6 +1217,12 @@ _dot11ConfigWtpTable_set_column( dot11ConfigWtpTable_rowreq_ctx *rowreq_ctx,
         rc = wtpLoadBalanceTrigerBaseFlow_set(rowreq_ctx, *((long *)var->val.string) );
         break;
 
+    /* wtpRadioPrioritySelect(7)/INTEGER/ASN_INTEGER/long(u_long)//l/A/W/E/r/d/h */
+    case COLUMN_WTPRADIOPRIORITYSELECT:
+        rowreq_ctx->column_set_flags |= COLUMN_WTPRADIOPRIORITYSELECT_FLAG;
+        rc = wtpRadioPrioritySelect_set(rowreq_ctx, *((u_long *)var->val.string) );
+        break;
+
      default:
          snmp_log(LOG_ERR,"unknown column %d in _dot11ConfigWtpTable_set_column\n", column);
          break;
@@ -1358,6 +1370,11 @@ _dot11ConfigWtpTable_undo_column( dot11ConfigWtpTable_rowreq_ctx *rowreq_ctx,
     /* wtpLoadBalanceTrigerBaseFlow(6)/INTEGER/ASN_INTEGER/long(long)//l/A/W/e/R/d/h */
     case COLUMN_WTPLOADBALANCETRIGERBASEFLOW:
         rc = wtpLoadBalanceTrigerBaseFlow_undo(rowreq_ctx);
+        break;
+
+    /* wtpRadioPrioritySelect(7)/INTEGER/ASN_INTEGER/long(u_long)//l/A/W/E/r/d/h */
+    case COLUMN_WTPRADIOPRIORITYSELECT:
+        rc = wtpRadioPrioritySelect_undo(rowreq_ctx);
         break;
 
      default:
