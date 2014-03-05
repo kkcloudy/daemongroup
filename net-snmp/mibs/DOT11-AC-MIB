@@ -7425,7 +7425,7 @@ dot11HansiEntry  OBJECT-TYPE
    
 Dot11HansiEntry ::=SEQUENCE{
 	VrrpID			INTEGER,
-	HansiState		DisplayString,
+	HansiState		INTEGER,
 	HansiUplinkIP          DisplayString,
 	HansiDownlinkIP          DisplayString,
 	HansiHblinkIP          DisplayString
@@ -7439,13 +7439,16 @@ VrrpID			OBJECT-TYPE
 				"HANSI  ID."
 			::= { dot11HansiEntry 1 }
 
-HansiState		OBJECT-TYPE
-			SYNTAX  DisplayString
-			MAX-ACCESS read-only
-			STATUS     current
-			DESCRIPTION
-				"HANSI config."
-			::= { dot11HansiEntry 2 }
+HansiState			 	OBJECT-TYPE
+					SYNTAX     INTEGER{
+                                                        Back(0),
+							Master(1)
+							} 
+					MAX-ACCESS read-write
+					STATUS     current
+					DESCRIPTION
+				        	"HANSI config."
+					::= { dot11HansiEntry 2 }
 			
 HansiUplinkIP		OBJECT-TYPE
 			SYNTAX  DisplayString
