@@ -55,6 +55,7 @@ extern "C" {
     int wtpLoadBalanceTrigerBaseUsr_get( dot11ConfigWtpTable_rowreq_ctx *rowreq_ctx, long * wtpLoadBalanceTrigerBaseUsr_val_ptr );
     int wtpLoadBalanceTrigerBaseFlow_map(long *mib_wtpLoadBalanceTrigerBaseFlow_val_ptr, long raw_wtpLoadBalanceTrigerBaseFlow_val);
     int wtpLoadBalanceTrigerBaseFlow_get( dot11ConfigWtpTable_rowreq_ctx *rowreq_ctx, long * wtpLoadBalanceTrigerBaseFlow_val_ptr );
+    int wtpRadioPrioritySelect_get( dot11ConfigWtpTable_rowreq_ctx *rowreq_ctx, u_long * wtpRadioPrioritySelect_val_ptr );
 
 
 int dot11ConfigWtpTable_indexes_set_tbl_idx(dot11ConfigWtpTable_mib_index *tbl_idx, long wtpID_val);

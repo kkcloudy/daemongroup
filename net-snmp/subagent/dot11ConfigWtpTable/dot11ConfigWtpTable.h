@@ -110,6 +110,11 @@ size_t      wtpBindWlan_len; /* # of char elements, not bytes */
          */
    long   wtpLoadBalanceTrigerBaseFlow;
     
+        /*
+         * wtpRadioPrioritySelect(7)/INTEGER/ASN_INTEGER/long(u_long)//l/A/W/E/r/d/h
+         */
+   u_long   wtpRadioPrioritySelect;
+    
 } dot11ConfigWtpTable_data;
 
 

@@ -797,6 +797,58 @@ wtpLoadBalanceTrigerBaseFlow_get( dot11ConfigWtpTable_rowreq_ctx *rowreq_ctx, lo
     return MFD_SUCCESS;
 } /* wtpLoadBalanceTrigerBaseFlow_get */
 
+/*---------------------------------------------------------------------
+ * DOT11-AC-MIB::dot11ConfigWtpEntry.wtpRadioPrioritySelect
+ * wtpRadioPrioritySelect is subid 7 of dot11ConfigWtpEntry.
+ * Its status is Current, and its access level is ReadWrite.
+ * OID: .1.3.6.1.4.1.31656.6.1.2.12.2.1.7
+ * Description:
+Set ap rate threshold.
+ *
+ * Attributes:
+ *   accessible 1     isscalar 0     enums  1      hasdefval 0
+ *   readable   1     iscolumn 1     ranges 0      hashint   0
+ *   settable   1
+ *
+ * Enum range: 2/8. Values:  24g(0), 58g(1)
+ *
+ * Its syntax is INTEGER (based on perltype INTEGER)
+ * The net-snmp type is ASN_INTEGER. The C type decl is long (u_long)
+ */
+/**
+ * Extract the current value of the wtpRadioPrioritySelect data.
+ *
+ * Set a value using the data context for the row.
+ *
+ * @param rowreq_ctx
+ *        Pointer to the row request context.
+ * @param wtpRadioPrioritySelect_val_ptr
+ *        Pointer to storage for a long variable
+ *
+ * @retval MFD_SUCCESS         : success
+ * @retval MFD_SKIP            : skip this node (no value for now)
+ * @retval MFD_ERROR           : Any other error
+ */
+int
+wtpRadioPrioritySelect_get( dot11ConfigWtpTable_rowreq_ctx *rowreq_ctx, u_long * wtpRadioPrioritySelect_val_ptr )
+{
+   /** we should have a non-NULL pointer */
+   netsnmp_assert( NULL != wtpRadioPrioritySelect_val_ptr );
+
+
+    DEBUGMSGTL(("verbose:dot11ConfigWtpTable:wtpRadioPrioritySelect_get","called\n"));
+
+    netsnmp_assert(NULL != rowreq_ctx);
+
+/*
+ * TODO:231:o: |-> Extract the current value of the wtpRadioPrioritySelect data.
+ * copy (* wtpRadioPrioritySelect_val_ptr ) from rowreq_ctx->data
+ */
+    (* wtpRadioPrioritySelect_val_ptr ) = rowreq_ctx->data.wtpRadioPrioritySelect;
+
+    return MFD_SUCCESS;
+} /* wtpRadioPrioritySelect_get */
+
 
 
 /** @} */

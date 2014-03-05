@@ -439,6 +439,12 @@ dot11ConfigWtpTable_cache_load(netsnmp_container *container)
 	     */
 	    rowreq_ctx->data.wtpLoadBalanceTrigerBaseFlow = WTPconfig_show->wtpLoadBalanceTrigerBaseFlow;
 	    
+    /*
+     * setup/save data for wtpRadioPrioritySelect
+     * wtpRadioPrioritySelect(7)/INTEGER/ASN_INTEGER/long(u_long)//l/A/W/E/r/d/h
+     */
+    /** no mapping */
+    rowreq_ctx->data.wtpRadioPrioritySelect = 0;
 	        
 	        /*
 	         * insert into table container

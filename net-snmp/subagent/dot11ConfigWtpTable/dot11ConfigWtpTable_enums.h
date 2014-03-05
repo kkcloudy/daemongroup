@@ -54,6 +54,8 @@ extern "C" {
 #define INTERNAL_WTPUSED_UNUSED  0 
 #define INTERNAL_WTPUSED_USED  1 
 
+#define WTPRADIOPRIORITYSELECT_24G  0 
+#define WTPRADIOPRIORITYSELECT_58G  1 
 
 
 #ifdef __cplusplus

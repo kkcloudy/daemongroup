@@ -614,6 +614,13 @@ rc = wtpLoadBalanceTrigerBaseUsr_get(rowreq_ctx, (long *)var->val.string );
 rc = wtpLoadBalanceTrigerBaseFlow_get(rowreq_ctx, (long *)var->val.string );
         break;
 
+    /* wtpRadioPrioritySelect(7)/INTEGER/ASN_INTEGER/long(u_long)//l/A/W/E/r/d/h */
+    case COLUMN_WTPRADIOPRIORITYSELECT:
+    var->val_len = sizeof(u_long);
+    var->type = ASN_INTEGER;
+rc = wtpRadioPrioritySelect_get(rowreq_ctx, (u_long *)var->val.string );
+        break;
+
      default:
          snmp_log(LOG_ERR,"unknown column %d in _dot11ConfigWtpTable_get_column\n", column);
          break;
@@ -852,6 +859,30 @@ _dot11ConfigWtpTable_check_column( dot11ConfigWtpTable_rowreq_ctx *rowreq_ctx,
     }
         break;
 
+    /* wtpRadioPrioritySelect(7)/INTEGER/ASN_INTEGER/long(u_long)//l/A/W/E/r/d/h */
+    case COLUMN_WTPRADIOPRIORITYSELECT:
+    rc = netsnmp_check_vb_type_and_size( var, ASN_INTEGER,
+        sizeof( rowreq_ctx->data.wtpRadioPrioritySelect ) );
+    /* check that the value is one of defined enums */
+    if( (SNMPERR_SUCCESS == rc)
+ && ( *var->val.integer != WTPRADIOPRIORITYSELECT_24G )
+ && ( *var->val.integer != WTPRADIOPRIORITYSELECT_58G )
+        ) {
+        rc = SNMP_ERR_WRONGVALUE;
+        }
+    if(SNMPERR_SUCCESS != rc) {
+        DEBUGMSGTL(("dot11ConfigWtpTable:_dot11ConfigWtpTable_check_column:wtpRadioPrioritySelect",
+                    "varbind validation failed (eg bad type or size)\n"));
+    }
+    else {
+        rc = wtpRadioPrioritySelect_check_value( rowreq_ctx, *((u_long *)var->val.string) );
+        if((MFD_SUCCESS != rc) && (MFD_NOT_VALID_EVER != rc) &&
+           (MFD_NOT_VALID_NOW != rc)) {
+            snmp_log(LOG_ERR, "bad rc %d from wtpRadioPrioritySelect_check_value\n", rc);
+            rc = SNMP_ERR_GENERR;
+        }
+    }
+        break;
         default: /** We shouldn't get here */
             rc = SNMP_ERR_GENERR;
             snmp_log(LOG_ERR, "unknown column %d in _dot11ConfigWtpTable_check_column\n", column);

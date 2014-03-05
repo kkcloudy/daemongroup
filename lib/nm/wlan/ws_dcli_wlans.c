@@ -48335,6 +48335,69 @@ int set_bss_multi_user_optimize_cmd(dbus_parameter parameter, DBusConnection *co
 	return retu;
 }
 
+int ccgi_set_wtp_5g_able_cmd(dbus_parameter parameter, DBusConnection *connection, char *state,unsigned int wtp_id)
+{
+	int ret = 0 ,retu=0; 
+	unsigned int wtpid = wtp_id; 
+	unsigned char type = 0 ; 
+	unsigned char wlanid = 0 ;
+	
+	if(!strcmp(state,"enable"))
+	{
+		type = 1; 
+	}
+	else if(!strcmp(state,"disable"))
+	{
+		type = 0 ; 
+	}
+	
+	DBusMessage *query,*reply;
+	DBusError err;
+	DBusMessageIter iter;
+	dbus_error_init(&err);
+	
+	int index = 0;
+	char BUSNAME[PATH_LEN];
+	char OBJPATH[PATH_LEN];
+	char INTERFACE[PATH_LEN];
+	ccgi_ReInitDbusPath_v2(parameter.local_id, parameter.instance_id, WID_DBUS_BUSNAME,BUSNAME);
+	ccgi_ReInitDbusPath_v2(parameter.local_id, parameter.instance_id, WID_DBUS_WTP_OBJPATH,OBJPATH);
+	ccgi_ReInitDbusPath_v2(parameter.local_id, parameter.instance_id, WID_DBUS_WTP_INTERFACE,INTERFACE);
+	
+	query = dbus_message_new_method_call(BUSNAME,OBJPATH,INTERFACE,WID_DBUS_WTP_METHOD_5G_SWITH);
+
+	
+	dbus_message_append_args(query,
+					DBUS_TYPE_BYTE,&wlanid,
+					DBUS_TYPE_UINT32,&wtpid,
+					DBUS_TYPE_BYTE,&type,
+					DBUS_TYPE_INVALID);
+	reply = dbus_connection_send_with_reply_and_block (connection,query,-1, &err);
+		
+	dbus_message_unref(query);
+	
+	if (NULL == reply) {
+		if (dbus_error_is_set(&err)) {
+			dbus_error_free(&err);
+		}
+		return 0;
+	}
+	
+	dbus_message_iter_init(reply,&iter);
+	dbus_message_iter_get_basic(&iter,&ret);
+	if(WID_DBUS_SUCCESS == ret )
+		retu = 1;
+	else if(ret==WID_DBUS_ERROR)
+		retu = -1;
+	else if(ret == WTP_ID_NOT_EXIST)	  
+		retu = -2;
+	else if(ret == WID_SINGLE_RADIO)
+		retu = -3;
+	else
+		retu = -4;
+	dbus_message_unref(reply);
+	return retu;
+}	
 
 int ccgi_set_ap_timing_upgrade_switch_cmd(dbus_parameter parameter, DBusConnection *connection,int id,char *status)
 										//0:set wtp(%d) timing upgrade switch %s successfully;-2:NULL == reply;

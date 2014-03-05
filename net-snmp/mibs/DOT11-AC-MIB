@@ -3140,7 +3140,8 @@ Dot11ConfigWtpEntry ::=SEQUENCE{
 	wtpUsed				INTEGER,
 	wtpMaxStaNum			INTEGER,
 	wtpLoadBalanceTrigerBaseUsr	INTEGER,
-	wtpLoadBalanceTrigerBaseFlow	INTEGER
+	wtpLoadBalanceTrigerBaseFlow	INTEGER,
+	wtpRadioPrioritySelect		INTEGER
 }
 wtpBindPort		OBJECT-TYPE
 			SYNTAX  DisplayString
@@ -3192,6 +3193,17 @@ wtpLoadBalanceTrigerBaseFlow	OBJECT-TYPE
 			DESCRIPTION
 				"Load balance base on user."
 			::= { dot11ConfigWtpEntry 6 }
+
+wtpRadioPrioritySelect	OBJECT-TYPE
+			SYNTAX  INTEGER{
+                                       Low(0),
+                                       High(1)
+					} 
+			MAX-ACCESS read-write
+			STATUS     current
+			DESCRIPTION
+				"Select Radio Priority,low is 2.4G,and high is 5.8G."
+			::= { dot11ConfigWtpEntry 7 }
 
 dot11SSIDVlanTable OBJECT-TYPE
 	    SYNTAX      SEQUENCE OF Dot11SSIDVlanEntry

@@ -300,6 +300,30 @@ dot11ConfigWtpTable_commit( dot11ConfigWtpTable_rowreq_ctx *rowreq_ctx)
        }
     }
 
+    if (save_flags & COLUMN_WTPRADIOPRIORITYSELECT_FLAG) {
+       save_flags &= ~COLUMN_WTPRADIOPRIORITYSELECT_FLAG; /* clear wtpRadioPrioritySelect */
+       /*
+        * TODO:482:o: |-> commit column wtpRadioPrioritySelect.
+        */
+       //rc = -1;
+       if(-1 == rc) {
+           snmp_log(LOG_ERR,"dot11ConfigWtpTable column wtpRadioPrioritySelect commit failed\n");
+       }
+       else {
+            /*
+             * set flag, in case we need to undo wtpRadioPrioritySelect
+             */
+            rowreq_ctx->column_set_flags |= COLUMN_WTPRADIOPRIORITYSELECT_FLAG;
+       }
+    }
+
+    /*
+     * if we successfully commited this row, set the dirty flag.
+     */
+    if (MFD_SUCCESS == rc) {
+        rowreq_ctx->rowreq_flags |= MFD_ROW_DIRTY;
+    }
+
     if (save_flags) {
        snmp_log(LOG_ERR, "unhandled columns (0x%x) in commit\n", save_flags);
        return MFD_ERROR;
@@ -1359,6 +1383,201 @@ wtpLoadBalanceTrigerBaseFlow_undo( dot11ConfigWtpTable_rowreq_ctx *rowreq_ctx)
     
     return MFD_SUCCESS;
 } /* wtpLoadBalanceTrigerBaseFlow_undo */
+
+/*---------------------------------------------------------------------
+ * DOT11-AC-MIB::dot11ConfigWtpEntry.wtpRadioPrioritySelect
+ * wtpRadioPrioritySelect is subid 7 of dot11ConfigWtpEntry.
+ * Its status is Current, and its access level is ReadWrite.
+ * OID: .1.3.6.1.4.1.31656.6.1.2.12.2.1.7
+ * Description:
+Set ap rate threshold.
+ *
+ * Attributes:
+ *   accessible 1     isscalar 0     enums  1      hasdefval 0
+ *   readable   1     iscolumn 1     ranges 0      hashint   0
+ *   settable   1
+ *
+ * Enum range: 2/8. Values:  24g(0), 58g(1)
+ *
+ * Its syntax is INTEGER (based on perltype INTEGER)
+ * The net-snmp type is ASN_INTEGER. The C type decl is long (u_long)
+ */
+/**
+ * Check that the proposed new value is potentially valid.
+ *
+ * @param rowreq_ctx
+ *        Pointer to the row request context.
+ * @param wtpRadioPrioritySelect_val
+ *        A long containing the new value.
+ *
+ * @retval MFD_SUCCESS        : incoming value is legal
+ * @retval MFD_NOT_VALID_NOW  : incoming value is not valid now
+ * @retval MFD_NOT_VALID_EVER : incoming value is never valid
+ *
+ * This is the place to check for requirements that are not
+ * expressed in the mib syntax (for example, a requirement that
+ * is detailed in the description for an object).
+ *
+ * You should check that the requested change between the undo value and the
+ * new value is legal (ie, the transistion from one value to another
+ * is legal).
+ *      
+ *@note
+ * This check is only to determine if the new value
+ * is \b potentially valid. This is the first check of many, and
+ * is one of the simplest ones.
+ * 
+ *@note
+ * this is not the place to do any checks for values
+ * which depend on some other value in the mib. Those
+ * types of checks should be done in the
+ * dot11ConfigWtpTable_check_dependencies() function.
+ *
+ * The following checks have already been done for you:
+ *    The syntax is ASN_INTEGER
+ *    The value is one of  24g(0), 58g(1)
+ *
+ * If there a no other checks you need to do, simply return MFD_SUCCESS.
+ *
+ */
+int
+wtpRadioPrioritySelect_check_value( dot11ConfigWtpTable_rowreq_ctx *rowreq_ctx, u_long wtpRadioPrioritySelect_val)
+{
+    DEBUGMSGTL(("verbose:dot11ConfigWtpTable:wtpRadioPrioritySelect_check_value","called\n"));
+
+    /** should never get a NULL pointer */
+    netsnmp_assert(NULL != rowreq_ctx);
+
+    /*
+     * TODO:441:o: |-> Check for valid wtpRadioPrioritySelect value.
+     */
+
+    return MFD_SUCCESS; /* wtpRadioPrioritySelect value not illegal */
+} /* wtpRadioPrioritySelect_check_value */
+
+/**
+ * Save old value information
+ *
+ * @param rowreq_ctx
+ *        Pointer to the table context (dot11ConfigWtpTable_rowreq_ctx)
+ *
+ * @retval MFD_SUCCESS : success
+ * @retval MFD_ERROR   : error. set will fail.
+ *
+ * This function will be called after the table level undo setup function
+ * dot11ConfigWtpTable_undo_setup has been called.
+ *
+ *@note
+ * this function will only be called if a new value is set for this column.
+ *
+ * If there is any setup specific to a particular column (e.g. allocating
+ * memory for a string), you should do that setup in this function, so it
+ * won't be done unless it is necessary.
+ */
+int
+wtpRadioPrioritySelect_undo_setup( dot11ConfigWtpTable_rowreq_ctx *rowreq_ctx)
+{
+    DEBUGMSGTL(("verbose:dot11ConfigWtpTable:wtpRadioPrioritySelect_undo_setup","called\n"));
+
+    /** should never get a NULL pointer */
+    netsnmp_assert(NULL != rowreq_ctx);
+
+    /*
+     * TODO:455:o: |-> Setup wtpRadioPrioritySelect undo.
+     */
+    /*
+     * copy wtpRadioPrioritySelect data
+     * set rowreq_ctx->undo->wtpRadioPrioritySelect from rowreq_ctx->data.wtpRadioPrioritySelect
+     */
+    rowreq_ctx->undo->wtpRadioPrioritySelect = rowreq_ctx->data.wtpRadioPrioritySelect;
+
+
+    return MFD_SUCCESS;
+} /* wtpRadioPrioritySelect_undo_setup */
+
+/**
+ * Set the new value.
+ *
+ * @param rowreq_ctx
+ *        Pointer to the users context. You should know how to
+ *        manipulate the value from this object.
+ * @param wtpRadioPrioritySelect_val
+ *        A long containing the new value.
+ */
+int
+wtpRadioPrioritySelect_set( dot11ConfigWtpTable_rowreq_ctx *rowreq_ctx, u_long wtpRadioPrioritySelect_val )
+{
+
+    DEBUGMSGTL(("verbose:dot11ConfigWtpTable:wtpRadioPrioritySelect_set","called\n"));
+
+    /** should never get a NULL pointer */
+    netsnmp_assert(NULL != rowreq_ctx);
+    int ret=0;
+	char state[10]={0}; 
+	void *connection = NULL;
+	
+	if(rowreq_ctx->data.wtpRadioPrioritySelect == wtpRadioPrioritySelect_val)
+	{
+		rowreq_ctx->data.wtpRadioPrioritySelect = wtpRadioPrioritySelect_val;
+		return MFD_SUCCESS;
+	}
+
+	if(wtpRadioPrioritySelect_val == WTPRADIOPRIORITYSELECT_24G)
+	{
+		strcpy(state,"disable");
+	}
+	else if(wtpRadioPrioritySelect_val == WTPRADIOPRIORITYSELECT_58G)
+	{
+		strcpy(state,"enable");
+	}
+	else
+	{
+		return MFD_ERROR;
+	}
+	if(SNMPD_DBUS_ERROR == get_slot_dbus_connection(rowreq_ctx->data.parameter.slot_id, &connection, SNMPD_INSTANCE_MASTER_V3))
+	{
+		return MFD_ERROR;
+	}
+	ret = ccgi_set_wtp_5g_able_cmd(rowreq_ctx->data.parameter,connection,state,rowreq_ctx->data.localwtpID);
+	snmp_log(LOG_DEBUG,"wtpRadioPrioritySelect_set  -----RET=%d\n",ret);
+	if(ret==1)
+	{
+		rowreq_ctx->data.wtpRadioPrioritySelect = wtpRadioPrioritySelect_val;
+		return MFD_SUCCESS;
+	}
+	else
+	{
+		return MFD_ERROR;
+	}
+
+} /* wtpRadioPrioritySelect_set */
+
+/**
+ * undo the previous set.
+ *
+ * @param rowreq_ctx
+ *        Pointer to the users context.
+ */
+int
+wtpRadioPrioritySelect_undo( dot11ConfigWtpTable_rowreq_ctx *rowreq_ctx)
+{
+
+    DEBUGMSGTL(("verbose:dot11ConfigWtpTable:wtpRadioPrioritySelect_undo","called\n"));
+
+    netsnmp_assert(NULL != rowreq_ctx);
+
+    /*
+     * TODO:456:o: |-> Clean up wtpRadioPrioritySelect undo.
+     */
+    /*
+     * copy wtpRadioPrioritySelect data
+     * set rowreq_ctx->data.wtpRadioPrioritySelect from rowreq_ctx->undo->wtpRadioPrioritySelect
+     */
+    rowreq_ctx->data.wtpRadioPrioritySelect = rowreq_ctx->undo->wtpRadioPrioritySelect;
+
+    
+    return MFD_SUCCESS;
+} /* wtpRadioPrioritySelect_undo */
 
 /**
  * check dependencies

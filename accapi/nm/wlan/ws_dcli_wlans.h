@@ -3944,6 +3944,7 @@ extern int set_bss_multi_user_optimize_cmd(dbus_parameter parameter, DBusConnect
 																				   /*返回-5表示operation fail，返回-6表示wlan is not binded radio*/
 																				   /*返回-7表示error*/
 
+extern  int ccgi_set_wtp_5g_able_cmd(dbus_parameter parameter, DBusConnection *connection, char *state,unsigned int wtp_id);
 extern int ccgi_set_ap_timing_upgrade_switch_cmd(dbus_parameter parameter, DBusConnection *connection,int id,char *status);
 									   //0:set wtp(%d) timing upgrade switch %s successfully;-2:NULL == reply;
 									   //-3operation fail!;-4:WTP %d is not exsit.-5:error

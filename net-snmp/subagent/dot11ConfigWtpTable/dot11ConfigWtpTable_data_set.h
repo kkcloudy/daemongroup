@@ -69,6 +69,10 @@ int wtpLoadBalanceTrigerBaseFlow_undo_setup( dot11ConfigWtpTable_rowreq_ctx *row
 int wtpLoadBalanceTrigerBaseFlow_set( dot11ConfigWtpTable_rowreq_ctx *rowreq_ctx, long wtpLoadBalanceTrigerBaseFlow_val );
 int wtpLoadBalanceTrigerBaseFlow_undo( dot11ConfigWtpTable_rowreq_ctx *rowreq_ctx );
 
+int wtpRadioPrioritySelect_check_value( dot11ConfigWtpTable_rowreq_ctx *rowreq_ctx, u_long wtpRadioPrioritySelect_val);
+int wtpRadioPrioritySelect_undo_setup( dot11ConfigWtpTable_rowreq_ctx *rowreq_ctx );
+int wtpRadioPrioritySelect_set( dot11ConfigWtpTable_rowreq_ctx *rowreq_ctx, u_long wtpRadioPrioritySelect_val );
+int wtpRadioPrioritySelect_undo( dot11ConfigWtpTable_rowreq_ctx *rowreq_ctx );
 
 int dot11ConfigWtpTable_check_dependencies(dot11ConfigWtpTable_rowreq_ctx *ctx);
 
