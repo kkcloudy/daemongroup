@@ -204,55 +204,6 @@ struct SSIDStatsInfo_v2 {
     struct SSIDStatsInfo_v2 *next;
 };
 
-#if 0
-/*dt 2013.11.6*/
-struct WlanDataPktsInfo_v2{
-		
-	long  wlanCurrID;			//Wlan当前ID
-	unsigned long long wtpSsidSendTermAllByte;		//指定SSID AP发送到终端的字节数
-	unsigned long wtpSsidRecvTermAllPack;		//指定SSID AP从终端接收的包数
-	unsigned long long wtpSsidRecvTermAllByte;		//指定SSID AP从终端接收的字节数	
-	unsigned long long wtpSsidWirelessMacRecvDataRightByte;	/*xiaodawei modify,20101116, 指定SSID MAC层接收的正确的数据字节数*/
-	unsigned long long wtpSsidWirelessMacSendDataRightByte;	/*xiaodawei modify,20101116, 指定SSID MAC层发送的正确的数据字节数*/
-	unsigned long wtpSsidWiredMacRecvDataWrongPack;	//指定SSID MAC层接收的错误的数据包数
-	unsigned long wtpNetWiredRecvPack;		//指定SSID 网络测（有线侧）接收的包数
-	unsigned long wtpUsrWirelessMacRecvDataPack;/*xiaodawei modify,20101116, 无线侧MAC层收到的数据包数*/
-	unsigned long wtpUsrWirelessMacSendDataPack;/*xiaodawei modify,20101116, 无线侧MAC层发送的数据包数*/
-	unsigned long wtpNetWiredSendPack;		//指定SSID 网络侧（有线侧）发送的包数
-	unsigned long WtpWirelessSendFailPkts;		//指定SSID 无线侧发送失败的包数
-	unsigned long wtpWirelessResendPkts; 	//指定SSID 无线侧总的重传包数
-	char *wtpWirelessWrongPktsRate; 	//指定SSID 无线侧错包率
-	unsigned long wtpWirelessSendBroadcastMsgNum;	//指定SSID 无线侧发送的广播包数
-	unsigned long wtpStaUplinkMaxRate;		//指定SSID station上行最大速率
-	unsigned long wtpStaDwlinkMaxRate;		//指定SSID station下行最大速率
-	unsigned long wtpNetWiredRecvErrPack;		//指定SSID 网络侧（有线侧）接收的错包数
-	unsigned long wtpNetWiredRecvRightPack;		//指定SSID 网络侧（有线侧）接收的正确包数
-	unsigned long long wtpNetWiredRecvByte;		//指定SSID 网络侧（有线侧）接收的字节数
-	unsigned long long wtpNetWiredSendByte;		//指定SSID 网络侧（有线侧）发送的字节数
-	unsigned long wtpNetWiredSendErrPack;		//指定SSID 网络侧（有线侧）发送的错包数
-	unsigned long wtpNetWiredSendRightPack;		//指定SSID 网络侧（有线侧）发送的正确包数
-	unsigned long wtpSsidSendDataAllPack;		//制定SSID 网络侧（有线侧）发送的所有包数
-	char *wtpNetWiredRxWrongPktsRate;	//指定SSID 网络侧（有线侧）接收的错误包百分比
-	char *wtpNetWiredTxWrongPktsRate;	//指定SSID 网络侧（有线侧）发送的错误包百分比
-	unsigned int wtpSsidTxDataDropPkts;
-	unsigned int wtpSsidRxDataDropPkts;
-	
-	struct WlanDataPktsInfo_v2 *next;
-};
-struct WtpWlanDataPktsInfo_v2 {
-	long  wtpCurrID;			//AP当前ID
-	char *wtpMacAddr;           //AP的MAC地址
-	unsigned int wlan_num;    //numbers of entries in wlan_list
-	struct WlanDataPktsInfo_v2* wlan_list;
-	
-	struct WtpWlanDataPktsInfo_v2* next;
-};
-
-#endif
-
-
-
-
 struct ap_num_by_interface
 {
 	char if_name[255];
