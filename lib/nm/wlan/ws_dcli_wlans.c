@@ -280,38 +280,38 @@ int Check_Time_Format(char* str){
 	int endptr1 = 0;
 	char c;
 	int h,m,s;
-	int time;
+	unsigned int time;
 	c = str[0];
 	if (c>='0'&&c<='9'){
 		h= strtoul(str,&endptr,10);
 		if(h < 0||h > 23)
-			return -1;
+			return 0;
 		if(endptr[0] == '\0'||endptr[0] != ':')
-			return -1;
+			return 0;
 		else{
 			endptr1 = &endptr[1];
 			m= strtoul(&endptr[1],&endptr,10);				
 			if(m < 0||m > 59)
-				return -1;				
+				return 0;				
 		}
 		
 		if(endptr[0] == '\0'||endptr[0] != ':')
-			return -1;
+			return 0;
 		else{
 			endptr1 = &endptr[1];
 			s = strtoul(&endptr[1],&endptr,10);				
 			if(s < 0||s > 59)
-				return -1;				
+				return 0;				
 		}
 		if(endptr[0] == '\0'){
 			time = h*3600 + m*60 + s;
 			return time;
 		}
 		else
-			return -1;
+			return 0;
 	}
 	else
-		return -1;
+		return 0;
 
 }
 
@@ -4572,7 +4572,7 @@ int set_wlan_servive_timer_func_cmd(dbus_parameter parameter, DBusConnection *co
 		return -1;
 	}
 	time = Check_Time_Format(Time);
-	if(time == -1){
+	if(time == 0){
 		return -2;
 	}
 
@@ -7391,9 +7391,9 @@ int delete_model(dbus_parameter parameter, DBusConnection *connection,char*model
 
 }
 
-/*echotime的范围是3-30*/
+/*echotime的范围是1-30*/
 /*wtp_id为0时，表示全局配置*/
-int set_ap_echotimer(dbus_parameter parameter, DBusConnection *connection,int wtp_id,int echotime)/*返回0表示失败，返回1表示成功，返回-1表示error，返回-2表示WTP ID非法，返回-3表示input echotimer should be 3~30*/
+int set_ap_echotimer(dbus_parameter parameter, DBusConnection *connection,int wtp_id,int echotime)/*返回0表示失败，返回1表示成功，返回-1表示error，返回-2表示WTP ID非法，返回-3表示input echotimer should be 1~30*/
 																									 /*返回SNMPD_CONNECTION_ERROR表示connection error*/
 {
     if(NULL == connection)
@@ -7430,7 +7430,7 @@ int set_ap_echotimer(dbus_parameter parameter, DBusConnection *connection,int wt
 	}*/
 	//echotimer = atoi(argv[0]);
 	echotimer = echotime;
-	if((echotimer < 3)||(echotimer > 30))
+	if((echotimer < 1)||(echotimer > 30))
 	{
 		return -3;
 	}
@@ -11057,12 +11057,13 @@ int set_ap_ip_address(dbus_parameter parameter, DBusConnection *connection,int i
 	DBusError err;
 
     unsigned int ip;
-	unsigned char mask;
+	unsigned int mask;
 	unsigned int gateway;
 	unsigned int wtp_id = 0;
 	unsigned char myipBuf[WTP_IP_BUFF_LEN] = {0};	
+	unsigned char mygatewayBuf[WTP_IP_BUFF_LEN] = {0};
 	unsigned char *myipPtr = myipBuf;
-
+	unsigned char *mygatewayPtr = mygatewayBuf;
 	
 	//wtp_id = (unsigned int)id;
 	
@@ -11075,7 +11076,7 @@ int set_ap_ip_address(dbus_parameter parameter, DBusConnection *connection,int i
 	ret = ip_long2str(ip,&myipPtr);
 
 
-	ret1 = parse_char_ID((char*)MASK, &mask);
+	/*ret1 = parse_char_ID((char*)MASK, &mask);
 	if(ret1 != WID_DBUS_SUCCESS){
         if(ret1 == WID_ILLEGAL_INPUT){
 			retu = -7;
@@ -11087,8 +11088,13 @@ int set_ap_ip_address(dbus_parameter parameter, DBusConnection *connection,int i
 	}
 	if(mask != 8 && mask != 16 &&mask !=24){
 		return -3;
+	}*/
+	ret1 = WID_Check_Mask_Format((char*)MASK);
+	if(ret1 != WID_DBUS_SUCCESS){
+		return -3;
 	}
 
+	mask = dcli_ip2ulong((char*)MASK);
 
 	ret2 = WID_Check_IP_Format((char*)GATEWAY);
 	if(ret2 != WID_DBUS_SUCCESS){
@@ -11096,6 +11102,7 @@ int set_ap_ip_address(dbus_parameter parameter, DBusConnection *connection,int i
 	}
 	
 	gateway = dcli_ip2ulong((char*)GATEWAY);
+	ret2=  ip_long2str(gateway,&mygatewayPtr);
 
 	char BUSNAME[PATH_LEN];
 	char OBJPATH[PATH_LEN];
@@ -11121,7 +11128,7 @@ int set_ap_ip_address(dbus_parameter parameter, DBusConnection *connection,int i
 	dbus_message_append_args(query,
 							 DBUS_TYPE_UINT32,&wtp_id,
 							 DBUS_TYPE_UINT32,&ip,
-							 DBUS_TYPE_BYTE,&mask,
+							 DBUS_TYPE_UINT32,&mask,
 							 DBUS_TYPE_UINT32,&gateway,
 							 DBUS_TYPE_INVALID);
 

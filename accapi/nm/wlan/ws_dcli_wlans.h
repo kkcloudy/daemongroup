@@ -888,9 +888,9 @@ extern  int delete_model(dbus_parameter parameter, DBusConnection *connection,ch
 extern  int set_ap_model(dbus_parameter parameter, DBusConnection *connection,char*model,char*ver,char*path,char* radio,char *bss);  /*返回0表示失败，返回1表示成功，返回-1表示wireless-control does not surport this model，返回-2表示error*/
 													   																					/*返回SNMPD_CONNECTION_ERROR表示connection error*/
 
-/*echotime的范围是3-30*/
+/*echotime的范围是1-30*/
 /*wtp_id为0时，表示全局配置*/
-extern  int set_ap_echotimer(dbus_parameter parameter, DBusConnection *connection,int wtp_id,int echotime); /*返回0表示失败，返回1表示成功，返回-1表示error，返回-2表示WTP ID非法，返回-3表示input echotimer should be 3~30*/
+extern  int set_ap_echotimer(dbus_parameter parameter, DBusConnection *connection,int wtp_id,int echotime); /*返回0表示失败，返回1表示成功，返回-1表示error，返回-2表示WTP ID非法，返回-3表示input echotimer should be 1~30*/
 																											   /*返回SNMPD_CONNECTION_ERROR表示connection error*/
 
 extern void free_show_ap_echotimer(DCLI_WTP_API_GROUP_THREE *WTPINFO);

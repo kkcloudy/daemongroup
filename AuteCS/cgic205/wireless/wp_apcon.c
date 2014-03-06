@@ -223,7 +223,7 @@ int ShowAPconPage(char *m,struct list *lpublic,struct list *lwcontrol,struct lis
   				"<tr height=30>"\
     			  "<td width=100>%s:</td>",search(lwcontrol,"echotimer"));
 				  fprintf(cgiOut,"<td width=150 align=left><input type=text name=echotimer value=%d maxLength=2 onkeypress=\"return event.keyCode>=48&&event.keyCode<=57\"></td>",ech);
-    			  fprintf(cgiOut,"<td width=100><font color=red>(3--30)</font></td>"\
+    			  fprintf(cgiOut,"<td width=100><font color=red>(1--30)</font></td>"\
   				"</tr>"\
 				"<tr height=30>"\
     			  "<td>%s:</td>",search(lwcontrol,"update_img_timer"));
@@ -317,7 +317,7 @@ void AP_Config(instance_parameter *ins_para,struct list *lpublic,struct list *lw
     if(strcmp(echotimer,"")!=0)
   	{
   		echot= strtoul(echotimer,&endptr,10);
-		if((echot<3)||(echot>30))
+		if((echot<1)||(echot>30))
 		{
 			flag = 0;
 			ShowAlert(search(lwcontrol,"set_ap_echotimer_err"));

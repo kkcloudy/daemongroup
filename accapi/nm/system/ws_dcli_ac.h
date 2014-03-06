@@ -481,7 +481,7 @@ extern int clear_wids_statistics_list_cmd_func(dbus_parameter parameter, DBusCon
 																						  
 extern int set_neighbordead_interval_cmd_func(dbus_parameter parameter, DBusConnection *connection,char *value);
 																				  /*返回0表示失败，返回1表示成功*/
-																				  /*返回-1表示input patameter should be 20 to 2000，返回-2表示error*/
+																				  /*返回-1表示input patameter should be 1 to 2000，返回-2表示error*/
 																				  /*返回SNMPD_CONNECTION_ERROR表示connection error*/
 
 extern void Free_neighbordead_interval(DCLI_AC_API_GROUP_FIVE *interval);

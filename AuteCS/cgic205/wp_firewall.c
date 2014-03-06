@@ -116,13 +116,41 @@ int portflow_fill_summary( STPubInfoForItem *p_pubinfo, STSndrItem *p_item )
 
 	return 0;
 }
+
+int facl_fill_summary( STPubInfoForItem *p_pubinfo, STSndrItem *p_item )
+{
+  
+	p_item->fp=cgiOut;
+	if( NULL == p_item )
+	{
+		return -1;	
+	}
+	char temp_url[128];
+	memset(temp_url,0,128);
+	int ret;
+	char num[10];
+	memset(num,0,10);
+	
+	SI_set_label_name( p_item, "FACL"); 
+	SI_set_label_img( p_item,"/images/ACLMan.jpg");
+	sprintf(temp_url,"wp_facl_list.cgi?UN=%s",p_pubinfo->encry);
+	SI_set_label_url(p_item,temp_url);
+	SI_set_label_font(p_item, search(p_pubinfo->public,"menu_er"));  
+	
+	return 0;
+}
+
 STSCCreateHelper pstControlSCCreateHelper[] = {
 	#if SNDR_FIREWALL_ITEM
 	{firewall_fill_summary},
 	#endif
 
 	#if SNDR_TRAFFIC_ITEM
-	{portflow_fill_summary}
+	{portflow_fill_summary},
+	#endif
+
+	#if SNDR_FACL_ITEM
+	{facl_fill_summary}
 	#endif
 };
 

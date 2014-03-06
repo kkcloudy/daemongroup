@@ -6121,6 +6121,7 @@ int show_asd_global_variable_cmd(dbus_parameter parameter, DBusConnection *conne
 	unsigned char  asd_ipset_switch = 0;
 	unsigned char asd_getip_from_dhcpsnp = 0;
 	unsigned char asd_syslog_debug = 0;
+	unsigned char asd_radius_format = 0;
 	char BUSNAME[PATH_LEN];
 	char OBJPATH[PATH_LEN];
 	char INTERFACE[PATH_LEN];
@@ -6191,6 +6192,9 @@ int show_asd_global_variable_cmd(dbus_parameter parameter, DBusConnection *conne
 		dbus_message_iter_next(&iter);	
 		dbus_message_iter_get_basic(&iter,&asd_syslog_debug);
 
+		dbus_message_iter_next(&iter);	
+		dbus_message_iter_get_basic(&iter,&asd_radius_format);	
+
 		/*vty_out(vty,"================================================================================\n");
 		vty_out(vty,"ASD global variable list summary\n");
 		vty_out(vty,"======================================================\n");
@@ -6228,6 +6232,7 @@ int show_asd_global_variable_cmd(dbus_parameter parameter, DBusConnection *conne
 		info->asd_ipset_switch = asd_ipset_switch;
 		info->asd_getip_from_dhcpsnp = asd_getip_from_dhcpsnp;
 		info->asd_syslog_debug = asd_syslog_debug;
+		info->asd_radius_format = asd_radius_format;
 		retu = 1;
 	}	
 	else

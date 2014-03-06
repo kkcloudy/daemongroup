@@ -409,7 +409,7 @@ void ShowWtpListPage(char *m,int n,char *t,struct list *lpublic,struct list *lwl
 				  memset(wtp_state,0,sizeof(wtp_state));
 				  if(q)
 				  {
-					  CheckWTPState(wtp_state,q->WTPStat);
+					  CheckWTPStatePercent(wtp_state, q->WTPStat, q->image_data_percent);
 				  }
 				  memset(stri,0,sizeof(stri));
 				  memset(update_id,0,sizeof(update_id));

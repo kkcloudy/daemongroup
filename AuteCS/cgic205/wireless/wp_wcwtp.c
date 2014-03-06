@@ -311,7 +311,7 @@ int ShowACconPage(char *m,struct list *lpublic,struct list *lwcontrol,struct lis
 		"<tr height=30>"\
 				 "<td width=150>%s:</td>",search(lwcontrol,"neidead_inter"));
 		fprintf(cgiOut,"<td width=150 align=left><input type=text name=neidead_inter maxLength=4 onkeypress=\"return event.keyCode>=48&&event.keyCode<=57\"></td>"\
-				 "<td width=150><font color=red>(20--2000)%s</font></td>",search(lpublic,"second"));
+				 "<td width=150><font color=red>(1--2000)%s</font></td>",search(lpublic,"second"));
 		fprintf(cgiOut,"</tr>"\
 		"<tr height=30>"\
 		    "<td width=150>%s:</td>",search(lwcontrol,"asd_arp_listen_switch"));
