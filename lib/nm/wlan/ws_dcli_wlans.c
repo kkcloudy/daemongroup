@@ -25052,7 +25052,7 @@ int show_all_wtp_wlan_data_pkts_information_cmd_v2(dbus_parameter parameter, DBu
 						WlanShowNode_v2->wtpWirelessResendPkts += temp_wlan_node->wtpWirelessResendPkts;
 						WlanShowNode_v2->wtpWirelessSendBroadcastMsgNum += temp_wlan_node->wtpWirelessSendBroadcastMsgNum;
 						WlanShowNode_v2->WtpWirelessSendFailPkts += temp_wlan_node->WtpWirelessSendFailPkts;
-
+						WlanShowNode_v2->wtpSsidSendTermAllByte +=  temp_wlan_node->wtpSsidSendTermAllByte;
 
 
 					}
