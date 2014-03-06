@@ -4,6 +4,7 @@
 //#include "vtysh/vtysh.h"
 #include <dbus/dbus.h>
 
+#include "config/wireless_config.h"
 //#include "command.h"
 
 //#include "dcli_main.h"
@@ -2725,4 +2726,97 @@ void *create_wlan_CN(int index,int localid,int policy,unsigned char wlan_id,unsi
 
 	return ret;	
 }
+
+#ifdef __ASD_STA_ACL
+/* caojia add for asd sta acl function */
+unsigned int dcli_wid_set_wlan_sta_default_acl(DBusConnection *dcli_dbus_connection, unsigned int index, 
+					int localid, unsigned char wlanid, unsigned int acl_id)
+{
+	DBusMessage *query = NULL, *reply = NULL;
+	DBusMessageIter iter;
+	DBusError err;
+	unsigned int ret = 0;
+
+	char BUSNAME[PATH_LEN] = {0};
+	char OBJPATH[PATH_LEN] = {0};
+	char INTERFACE[PATH_LEN] = {0};
+
+	ReInitDbusPath_V2(localid,index,WID_DBUS_BUSNAME,BUSNAME);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_WLAN_OBJPATH,OBJPATH);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_WLAN_INTERFACE,INTERFACE);
+
+	query = dbus_message_new_method_call(BUSNAME,OBJPATH,INTERFACE,WID_DBUS_STA_METHOD_SET_WLAN_STA_DEFAULT_ACL);
+	
+	dbus_error_init(&err);
+
+	dbus_message_append_args(query,
+							 DBUS_TYPE_UINT32, &acl_id,
+							 DBUS_TYPE_BYTE, &wlanid,
+							 DBUS_TYPE_INVALID);
+
+	reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection, query, -1, &err);
+	
+	dbus_message_unref(query);
+	if (NULL == reply) 
+	{
+		if (dbus_error_is_set(&err)) 
+		{
+			dbus_error_free(&err);
+		}
+		return WID_DBUS_ERROR;
+	}
+	dbus_message_iter_init(reply,&iter);
+	dbus_message_iter_get_basic(&iter, &ret);
+
+	dbus_message_unref(reply);
+	
+	return ret;
+}
+
+unsigned int dcli_wid_show_wlan_sta_default_acl(DBusConnection *dcli_dbus_connection, unsigned int index, 
+					int localid, unsigned char wlanid, unsigned int *aclid)
+{
+	DBusMessage *query = NULL, *reply = NULL;
+	DBusMessageIter iter;
+	DBusError err;
+	unsigned int ret = 0;
+
+	char BUSNAME[PATH_LEN] = {0};
+	char OBJPATH[PATH_LEN] = {0};
+	char INTERFACE[PATH_LEN] = {0};
+
+	ReInitDbusPath_V2(localid,index,WID_DBUS_BUSNAME,BUSNAME);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_WLAN_OBJPATH,OBJPATH);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_WLAN_INTERFACE,INTERFACE);
+
+	query = dbus_message_new_method_call(BUSNAME,OBJPATH,INTERFACE,WID_DBUS_STA_METHOD_SHOW_WLAN_STA_DEFAULT_ACL);
+	
+	dbus_error_init(&err);
+
+	dbus_message_append_args(query,
+							 DBUS_TYPE_BYTE, &wlanid,
+							 DBUS_TYPE_INVALID);
+
+	reply = dbus_connection_send_with_reply_and_block(dcli_dbus_connection, query, -1, &err);
+	
+	dbus_message_unref(query);
+	if (NULL == reply) 
+	{
+		if (dbus_error_is_set(&err)) 
+		{
+			dbus_error_free(&err);
+		}
+		return WID_DBUS_ERROR;
+	}
+	dbus_message_iter_init(reply,&iter);
+	dbus_message_iter_get_basic(&iter, &ret);
+
+	dbus_message_iter_next(&iter);	
+	dbus_message_iter_get_basic(&iter, aclid);	
+
+	dbus_message_unref(reply);
+	
+	return ret;
+}
+#endif
 #endif
