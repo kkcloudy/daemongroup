@@ -522,7 +522,7 @@ int ShowWlanconPage(char *m,char *n,char *t,char *pn,char *ins_id,instance_param
 				  if((result1 == 1)&&(whead)&&(whead->WLAN[0])&&(whead->WLAN[0]->Status!=1))   /*如果WLAN状态为enable，修改ESSID的文本框不可用*/
 				    fprintf(cgiOut,"<td><input name=new_essid size=15 maxLength=32 value=\"\" style=\"background-color:#cccccc\" disabled></td>");
 				  else
-				  	fprintf(cgiOut,"<td><input name=new_essid size=15 maxLength=32 value=\"\" onkeypress=\"return event.keyCode!=32\"></td>");
+				  	fprintf(cgiOut,"<td><input name=new_essid size=15 maxLength=32 value=\"\" ></td>");
 				  fprintf(cgiOut,"<td align=left><font color=red>(%s ESSID)</font></td>",search(lpublic,"log_mod"));
 				fprintf(cgiOut,"</tr>"\
 				"<tr height=30>"\

@@ -97,7 +97,8 @@ void ShowWtpGroupListPage(char *m,char *t, struct list *lpublic,struct list *lwl
   char menu_id[10] = { 0 };
   char IsDeleete[10] = { 0 };
   char IsSubmit[5] = { 0 };
-  char wtpgroup_id[5] = { 0 };  
+  char wtpgroup_id[5] = { 0 }; 
+  unsigned int ap_count_ptr=0;
 
   memset(select_insid,0,sizeof(select_insid));
   cgiFormStringNoNewlines( "INSTANCE_ID", select_insid, 10 );
@@ -271,7 +272,7 @@ void ShowWtpGroupListPage(char *m,char *t, struct list *lpublic,struct list *lwl
 
 	if(paraHead1)
 	{
-		result=ccgi_show_ap_group_cmd(paraHead1->parameter,paraHead1->connection,&head);
+		result=ccgi_show_ap_group_cmd(paraHead1->parameter,paraHead1->connection,&head,&ap_count_ptr);
 	} 
 	fprintf(cgiOut,"<tr align=left>"\
 			      "<th width=160><font id=%s>%s ID</font></th>",search(lpublic,"menu_thead"),search(lwlan,"ap_group"));

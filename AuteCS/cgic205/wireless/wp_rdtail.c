@@ -334,6 +334,9 @@ void ShowRdtailPage(char *m,char *rid,char *n,char *wtp_id,char *flag,char *ins_
 					  fprintf(cgiOut,"</tr>");
 				  	}
 			      }				  
+			      fprintf(cgiOut,"<tr height=25>"\
+						       "<td align=left id=tdleft><a href=wp_group_radiolis.cgi?UN=%s target=mainFrame class=top><font id=%s>%s</font></a></td>",m,search(lpublic,"menu_san"),search(lwlan,"ap_group_radio_list"));			 
+			       fprintf(cgiOut,"</tr>");
 				  
 				  ret=0;
 				  if(ins_para)

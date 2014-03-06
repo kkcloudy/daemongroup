@@ -247,6 +247,9 @@ void ShowRadioWhitePage(char *m,char *n,char *t,char *b,char *flag,char *ins_id,
 					  fprintf(cgiOut,"</tr>");
 				  	}
 				  }
+			fprintf(cgiOut,"<tr height=25>"\
+  					    "<td align=left id=tdleft><a href=wp_group_radiolis.cgi?UN=%s target=mainFrame class=top><font id=%s>%s</font></a></td>",m,search(lpublic,"menu_san"),search(lwlan,"ap_group_radio_list"));                       
+                    	fprintf(cgiOut,"</tr>");
 				  radio_id= atoi(t);	/*char转成int，10代表十进制*/	  
 				  wlan_id= atoi(b);	/*char转成int，10代表十进制*/
 				  

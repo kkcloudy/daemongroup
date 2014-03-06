@@ -81,6 +81,7 @@ typedef struct dot11CreateWlanTable_data_s {
    unsigned int localWlanID;
    
    dbus_parameter parameter;
+   int is_modify;/*1:modify,0:add*/
         /*
          * wlanName(1)/DisplayString/ASN_OCTET_STR/char(char)//L/A/W/e/R/d/H
          */

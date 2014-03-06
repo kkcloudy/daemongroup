@@ -334,12 +334,14 @@ dot11CreateWlanTable_commit( dot11CreateWlanTable_rowreq_ctx *rowreq_ctx)
                         ret = create_wlan(rowreq_ctx->data.parameter, connection,id, rowreq_ctx->data.wlanName, rowreq_ctx->data.wlanESSID);
                         snmp_log(LOG_DEBUG, "dot11CreateWlanTable_commit: create_wlan: ret = %d\n", ret);
                         if(1 == ret) 
-						{
-                            rc = MFD_SUCCESS;
-                            break;
+			{
+				rowreq_ctx->data.is_modify = 1;
+                                rc = MFD_SUCCESS;
+                                break;
                         }
                         else if(SNMPD_CONNECTION_ERROR == ret) 
-						{
+			{
+				rowreq_ctx->data.is_modify = 0;
                             close_slot_dbus_connection(rowreq_ctx->data.parameter.slot_id);
                         }        
                     }
@@ -714,7 +716,7 @@ wlanESSID_check_value( dot11CreateWlanTable_rowreq_ctx *rowreq_ctx, char *wlanES
      * TODO:441:o: |-> Check for valid wlanESSID value.
      */
 
-    if(RS_NOTINSERVICE == rowreq_ctx->data.wlanRowStatus || RS_NOTREADY == rowreq_ctx->data.wlanRowStatus)
+    if(RS_NOTINSERVICE == rowreq_ctx->data.wlanRowStatus || RS_NOTREADY == rowreq_ctx->data.wlanRowStatus || RS_ACTIVE == rowreq_ctx->data.wlanRowStatus)
     	return MFD_SUCCESS;
 	else     
         return MFD_ERROR; /* wlanESSID value not illegal */
@@ -787,11 +789,82 @@ wlanESSID_set( dot11CreateWlanTable_rowreq_ctx *rowreq_ctx, char *wlanESSID_val_
      * TODO:461:M: |-> Set wlanESSID value.
      * set wlanESSID value in rowreq_ctx->data
      */
-    memcpy( rowreq_ctx->data.wlanESSID, wlanESSID_val_ptr, wlanESSID_val_ptr_len );
-    /** convert bytes to number of char */
-    rowreq_ctx->data.wlanESSID_len = wlanESSID_val_ptr_len / sizeof(wlanESSID_val_ptr[0]);
+     if((rowreq_ctx->data.is_modify == 1)&&(rowreq_ctx->data.wlanRowStatus == RS_ACTIVE))
+     {
+	     int rc = MFD_ERROR;
+	     int ret = 0,ret1=0, ret2=0, ret4=0;
+	     void *connection = NULL;
+	     DCLI_WLAN_API_GROUP *WLANINFO = NULL;
+	     
+	     if(SNMPD_DBUS_ERROR == get_instance_dbus_connection(rowreq_ctx->data.parameter, &connection, SNMPD_INSTANCE_MASTER_V3))
+		     return MFD_ERROR;
 
-    return MFD_SUCCESS;
+	     ret1 = show_wlan_one(rowreq_ctx->data.parameter, connection, rowreq_ctx->data.localWlanID, &WLANINFO);
+	     if(1 == ret1)
+	     {
+		     if((WLANINFO->WLAN[0]->Status) != 1)/*wlan is enable*/
+		     {
+			     ret2 = config_wlan_service(rowreq_ctx->data.parameter, connection, rowreq_ctx->data.localWlanID, "disable");
+			     if(1 != ret2)
+			     {
+				     if(SNMPD_CONNECTION_ERROR == ret2)
+				     {
+					     close_slot_dbus_connection(rowreq_ctx->data.parameter.slot_id);
+				     }
+				     Free_one_wlan_head(WLANINFO);
+				     return MFD_ERROR;
+			     }
+		     }
+
+		     ret=set_wlan_essid_func(rowreq_ctx->data.parameter,connection,rowreq_ctx->data.localWlanID,wlanESSID_val_ptr);
+		     if(ret == 1)
+		     {
+		     
+			     memcpy( rowreq_ctx->data.wlanESSID, wlanESSID_val_ptr, wlanESSID_val_ptr_len );
+			     rowreq_ctx->data.wlanESSID_len = wlanESSID_val_ptr_len / sizeof(wlanESSID_val_ptr[0]);
+			     rc = MFD_SUCCESS;
+		     }
+		     else
+		     {
+			     if(SNMPD_CONNECTION_ERROR == ret) {
+				     close_slot_dbus_connection(rowreq_ctx->data.parameter.slot_id);
+			     }
+			     rc = MFD_ERROR;
+		     }
+
+		     if((WLANINFO->WLAN[0]->Status) != 1)/*wlan is enable*/
+		     {
+			     ret4 = config_wlan_service(rowreq_ctx->data.parameter, connection, rowreq_ctx->data.localWlanID, "enable");
+			     if(1 != ret4)
+			     {
+				     if(SNMPD_CONNECTION_ERROR == ret4)
+				     {
+					     close_slot_dbus_connection(rowreq_ctx->data.parameter.slot_id);
+				     }
+				     Free_one_wlan_head(WLANINFO);
+				     return MFD_ERROR;
+			     }
+		     }
+		     Free_one_wlan_head(WLANINFO);
+		     return rc;
+	     }
+	     else
+	     {
+		     if(SNMPD_CONNECTION_ERROR == ret1)
+		     {
+			     close_slot_dbus_connection(rowreq_ctx->data.parameter.slot_id);
+		     }
+		     return MFD_ERROR;
+	     }
+     }
+     else
+     {
+	     memcpy( rowreq_ctx->data.wlanESSID, wlanESSID_val_ptr, wlanESSID_val_ptr_len );
+	     /** convert bytes to number of char */
+	     rowreq_ctx->data.wlanESSID_len = wlanESSID_val_ptr_len / sizeof(wlanESSID_val_ptr[0]);
+	     return MFD_SUCCESS;
+     }
+
 } /* wlanESSID_set */
 
 /**

@@ -83,7 +83,7 @@ extern void Free_show_group_member_cmd(unsigned int *wtp_list);
 /*只要调用函数，就调用Free_show_group_member_cmd()释放空间*/
 extern int ccgi_show_group_member_cmd(dbus_parameter  parameter, DBusConnection *connection,unsigned int id,unsigned int **wtp_list,unsigned int *count);
 								   /*返回0表示失败，返回1表示成功，返回-1表示ap group id非法*/
-extern int ccgi_show_ap_group_cmd(dbus_parameter  parameter, DBusConnection *connection, struct ap_group_list *head);
+extern int ccgi_show_ap_group_cmd(dbus_parameter  parameter, DBusConnection *connection, struct ap_group_list *head, unsigned int *ap_count_ptr);
 									/*返回-2表示ap group id does not exist，返回-3表示error*/
 
 

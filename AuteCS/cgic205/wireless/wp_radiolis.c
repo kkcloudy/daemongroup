@@ -199,6 +199,10 @@ void ShowRadioListPage(char *m,int n,char *t,struct list *lpublic,struct list *l
 				    fprintf(cgiOut,"<tr height=25>"\
   					    "<td align=left id=tdleft><a href=wp_bssbw.cgi?UN=%s target=mainFrame class=top><font id=yingwen_san>MAC </font><font id=%s>%s</font></a></td>",m,search(lpublic,"menu_san"),search(lwlan,"mac_filter"));                       
                     fprintf(cgiOut,"</tr>");
+		    
+				    fprintf(cgiOut,"<tr height=25>"\
+  					    "<td align=left id=tdleft><a href=wp_group_radiolis.cgi?UN=%s target=mainFrame class=top><font id=%s>%s</font></a></td>",m,search(lpublic,"menu_san"),search(lwlan,"ap_group_radio_list"));                       
+                    fprintf(cgiOut,"</tr>");
 				  }
 				  if(paraHead1)
 				  {

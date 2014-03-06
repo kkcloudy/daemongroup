@@ -397,7 +397,7 @@ void Free_ccgi_show_ap_group_cmd(struct ap_group_list *head)
 }
 
 /*只要调用函数，就调用Free_ccgi_show_ap_group_cmd()释放空间*/
-int ccgi_show_ap_group_cmd(dbus_parameter  parameter, DBusConnection *connection, struct ap_group_list *head)
+int ccgi_show_ap_group_cmd(dbus_parameter  parameter, DBusConnection *connection, struct ap_group_list *head, unsigned int *ap_count_ptr)
 											/*返回-1表示失败，返回0表示成功，返回-2表示(NULL == reply)*/
 {
 	if((NULL == connection)||(NULL == head))
@@ -440,7 +440,7 @@ int ccgi_show_ap_group_cmd(dbus_parameter  parameter, DBusConnection *connection
 
 	dbus_message_iter_next(&iter);	
 	dbus_message_iter_get_basic(&iter,&ap_group_count);
-	
+	*ap_count_ptr = ap_group_count;
 	head->next = NULL;
 	tail=head;
 	for(i=0; i < ap_group_count; i++){

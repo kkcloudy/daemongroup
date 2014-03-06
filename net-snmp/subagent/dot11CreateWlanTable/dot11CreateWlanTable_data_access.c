@@ -390,6 +390,7 @@ dot11CreateWlanTable_container_load(netsnmp_container *container)
 				    /** no mapping */
 				    rowreq_ctx->data.wlanRowStatus = RS_ACTIVE;
 				    
+				    rowreq_ctx->data.is_modify = 1;
 				        
 				        /*
 				         * insert into table container

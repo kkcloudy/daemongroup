@@ -190,7 +190,11 @@ int ShowBssMacPage(char *m,char *rid,char *Wid,char *n,struct list *lpublic,stru
                   fprintf(cgiOut,"</tr>");
 				  fprintf(cgiOut,"<tr height=26>"\
                     "<td align=left id=tdleft background=/images/bottom_bg.gif style=\"border-right:0\"><font id=yingwen_san>MAC </font><font id=%s>%s</font></td>",search(lpublic,"menu_san"),search(lwlan,"mac_filter"));   /*Õª≥ˆœ‘ æ*/
-                  fprintf(cgiOut,"</tr>");  
+                  fprintf(cgiOut,"</tr>");
+		  
+		  fprintf(cgiOut,"<tr height=25>"\
+					  "<td align=left id=tdleft><a href=wp_group_radiolis.cgi?UN=%s target=mainFrame class=top><font id=%s>%s</font></a></td>",m,search(lpublic,"menu_san"),search(lwlan,"ap_group_radio_list"));			    
+		  fprintf(cgiOut,"</tr>");
                   for(i=0;i<4;i++)
 	              {
   				    fprintf(cgiOut,"<tr height=25>"\
