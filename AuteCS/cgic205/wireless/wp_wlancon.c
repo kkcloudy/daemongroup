@@ -1048,7 +1048,7 @@ void ConWlan(instance_parameter *ins_para,int id,int inter_num,int security_flag
 	cgiFormStringNoNewlines("new_essid",new_essid,35); 
 	if(strcmp(new_essid,""))
 	{
-		if(strchr(new_essid,' ')==NULL)/*不包含空格*/
+		if(new_essid[0]  != ' ')/*不包含空格*/
 		{
 			ret=set_wlan_ascii_essid_cmd(ins_para->parameter,ins_para->connection,id,(unsigned char *)new_essid); 
 			switch(ret)
@@ -1076,7 +1076,7 @@ void ConWlan(instance_parameter *ins_para,int id,int inter_num,int security_flag
 		else
 		{
 			flag=0;
-			ShowAlert(search(lpublic,"input_para_dont_contain_spaces"));
+			ShowAlert(search(lwlan,"set_essid_fail"));
 		}
 	}
 
