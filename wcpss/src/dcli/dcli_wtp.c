@@ -25032,6 +25032,75 @@ DEFUN(	wtp_set_ap_update_control_config_cmd_func,
 	return CMD_SUCCESS; 
 }
 
+DEFUN(	wtp_show_ap_update_control_state_cmd_func,
+			wtp_show_ap_update_control_state,
+			"show ap update batchlly state",
+			"show ap update batchlly state\n"
+	 )
+{
+	int ret;
+	DBusMessage *query, *reply;	
+	DBusMessageIter  iter;
+	DBusError err;
+
+	dbus_error_init(&err);
+	
+	int index = 0;
+	int localid = 1;
+	int slot_id = HostSlotId;
+	char BUSNAME[PATH_LEN];
+	char OBJPATH[PATH_LEN];
+	char INTERFACE[PATH_LEN];
+	if(vty->node == CONFIG_NODE){
+		index = 0;
+	}else if(vty->node == HANSI_NODE){
+		index = vty->index;
+		localid = vty->local;
+		slot_id = vty->slotindex;
+	}else if(vty->node == LOCAL_HANSI_NODE){
+		index = vty->index;
+		localid = vty->local;
+		slot_id = vty->slotindex;
+	}
+	DBusConnection *dcli_dbus_connection = NULL;
+	ReInitDbusConnection(&dcli_dbus_connection,slot_id,distributFag);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_BUSNAME,BUSNAME);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_WTP_OBJPATH,OBJPATH);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_WTP_INTERFACE,INTERFACE);
+	query = dbus_message_new_method_call(BUSNAME,OBJPATH,INTERFACE,WID_DBUS_WTP_METHOD_SHOW_AP_UPDATE_STATE);
+	
+	dbus_message_append_args(query,
+						DBUS_TYPE_INT32,&index,
+						DBUS_TYPE_INVALID);
+	
+	reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection,query,-1, &err);
+
+	dbus_message_unref(query);
+
+	if (NULL == reply) {
+		cli_syslog_info("<error> failed get reply.\n");
+		if (dbus_error_is_set(&err)) {
+			cli_syslog_info("%s raised: %s",err.name,err.message);
+			dbus_error_free_for_dcli(&err);
+		}
+		return CMD_SUCCESS;
+	}
+	dbus_message_iter_init(reply,&iter);
+	dbus_message_iter_get_basic(&iter,&ret);
+
+	if(ret == 1)
+		vty_out(vty,"show ap update batchlly state: start\n");
+	else if(ret == 2)
+		vty_out(vty,"show ap update batchlly state: stop\n");
+	else
+		vty_out(vty,"<error>  %d\n",ret);
+	
+	dbus_message_unref(reply);	
+
+	return CMD_SUCCESS; 
+}
+
+
 DEFUN(	show_ap_upgrade_result_info_cmd_func,
 			show_ap_upgrade_result_info,
 			"show ap upgrade batchlly info",
@@ -42922,6 +42991,7 @@ void dcli_wtp_init(void) {
 			install_element(HANSI_NODE,&show_detail_model_tar_file_bind_info);
 			install_element(HANSI_NODE,&wtp_set_ap_update_count_config);
 			install_element(HANSI_NODE,&wtp_set_ap_update_control_config);
+			install_element(HANSI_NODE,&wtp_show_ap_update_control_state);
 			install_element(HANSI_NODE,&show_ap_upgrade_result_info);
 			
 			install_element(HANSI_NODE,&show_all_wlan_ssid_stats_information_of_all_radio_cmd);  //fengwenchao add 20110112
@@ -43217,6 +43287,7 @@ void dcli_wtp_init(void) {
 			install_element(LOCAL_HANSI_NODE,&show_detail_model_tar_file_bind_info);
 			install_element(LOCAL_HANSI_NODE,&wtp_set_ap_update_count_config);
 			install_element(LOCAL_HANSI_NODE,&wtp_set_ap_update_control_config);
+			install_element(LOCAL_HANSI_NODE,&wtp_show_ap_update_control_state);
 			install_element(LOCAL_HANSI_NODE,&show_ap_upgrade_result_info);
 
 			/**************for sample value begin*******************/

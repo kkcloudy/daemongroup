@@ -843,6 +843,8 @@ char WID_DBUS_CONF_METHOD_CLEAR_ONE_MODEL_UPDATE_CONFIG[PATH_LEN]=	"clear_one_mo
 char WID_DBUS_WTP_METHOD_SHOW_DETAIL_MODEL_BIND_INFO[PATH_LEN]= "show_model_detail_bind_info";
 char WID_DBUS_WTP_METHOD_SET_AP_UPDATE_COUNT_ONETIME[PATH_LEN]= "wtp_set_ap_update_count_onetime";
 char WID_DBUS_WTP_METHOD_SET_AP_UPDATE_CONTROL[PATH_LEN]= "wtp_set_ap_update_control";
+char WID_DBUS_WTP_METHOD_SHOW_AP_UPDATE_STATE[PATH_LEN]= "wtp_show_ap_update_state";
+
 char WID_DBUS_WTP_METHOD_SHOW_AP_UPGRADE_RESULT_INFO[PATH_LEN]= "show_ap_upgrade_result_info";
 
 char WID_DBUS_CONF_METHOD_UPDATE_WTPCOMPATIBLE[PATH_LEN]= "update_wtpcompatible";

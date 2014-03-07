@@ -33503,6 +33503,42 @@ DBusMessage * wid_dbus_interface_wtp_set_ap_update_control(DBusConnection *conn,
 	return reply;	
 }
 
+DBusMessage * wid_dbus_interface_wtp_show_ap_update_state(DBusConnection *conn, DBusMessage *msg, void *user_data)
+{
+	DBusMessage * reply;
+	DBusMessageIter  iter;
+	DBusError err;	
+	int ret = 0;
+	int index;
+
+	dbus_error_init(&err);
+
+	if (!(dbus_message_get_args ( msg, &err,
+				DBUS_TYPE_INT32,&index,
+				DBUS_TYPE_INVALID)))
+	{
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
+				
+		if (dbus_error_is_set(&err))
+		{
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
+			dbus_error_free(&err);
+		}
+		return NULL;
+	}
+	
+	ret = gupdateControl;
+	
+	reply = dbus_message_new_method_return(msg);
+		
+	dbus_message_iter_init_append(reply, &iter);
+		
+	dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT32, &ret);
+
+	return reply;	
+}
+
+
 DBusMessage * wid_dbus_interface_wtp_clear_ap_one_model_update_path(DBusConnection *conn, DBusMessage *msg, void *user_data)
 {
 	DBusMessage * reply;
@@ -82153,7 +82189,10 @@ static DBusHandlerResult wid_dbus_message_handler (DBusConnection *connection, D
 	  } 		  
 	  else if(dbus_message_is_method_call(message,WID_DBUS_WTP_INTERFACE,WID_DBUS_WTP_METHOD_SET_AP_UPDATE_CONTROL)) {
 		reply = wid_dbus_interface_wtp_set_ap_update_control(connection,message,user_data);
-	  } 		  
+	  } 
+	  else if(dbus_message_is_method_call(message,WID_DBUS_WTP_INTERFACE,WID_DBUS_WTP_METHOD_SHOW_AP_UPDATE_STATE)) {
+		reply = wid_dbus_interface_wtp_show_ap_update_state(connection,message,user_data);
+	  } 
 	  else if(dbus_message_is_method_call(message,WID_DBUS_WTP_INTERFACE,WID_DBUS_WTP_METHOD_SHOW_AP_UPGRADE_RESULT_INFO)) {
 		reply = wid_dbus_interface_wtp_show_ap_upgrade_result(connection,message,user_data);
 	  } 		  
