@@ -426,7 +426,7 @@ int wid_update_bss_to_wifi(unsigned int bssindex,unsigned int WTPIndex,unsigned 
 		memset(__str,0,128);
 		char *str = "lo";	//fengwenchao modify 20110525
 		str = sock_ntop_r(((struct sockaddr*)&(gInterfaces[gWTPs[WTPIndex].interfaceIndex].addr)), __str);
-		wid_syslog_info("WTP %d on Interface %s (%d)\n",WTPIndex, str, gWTPs[WTPIndex].interfaceIndex);
+		wid_syslog_info("WTP %d on Interface4 %s (%d)\n",WTPIndex, str, gWTPs[WTPIndex].interfaceIndex);
 		if(sa->sa_family != AF_INET6){										
 			ifinfo.isIPv6 = 0;
 			ifinfo.apip = ((struct sockaddr_in *)sa)->sin_addr.s_addr;

@@ -3210,7 +3210,7 @@ DBusMessage * wid_dbus_interface_show_wtplist_byinterface(DBusConnection *conn, 
 			wid_syslog_err("gWTPs[%d].interfaceIndex = %d , is not legal \n",WTP[i]->WTPID,gWTPs[WTP[i]->WTPID].interfaceIndex);
 		}
 		/*fengwenchao modify end*/
-		wid_syslog_info("WTP %d on Interface %s (%d)\n",WTP[i]->WTPID, str, gWTPs[WTP[i]->WTPID].interfaceIndex);
+		wid_syslog_info("WTP %d on Interface3 %s (%d)\n",WTP[i]->WTPID, str, gWTPs[WTP[i]->WTPID].interfaceIndex);
 		printf("WTP %d on Interface %s (%d)\n",WTP[i]->WTPID, str, gWTPs[WTP[i]->WTPID].interfaceIndex);
 
 		dbus_message_iter_append_basic(&iter_struct,DBUS_TYPE_STRING,&(str));

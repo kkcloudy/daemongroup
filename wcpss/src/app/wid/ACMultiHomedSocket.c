@@ -697,8 +697,16 @@ CWBool CWNetworkUnsafeMultiHomed(CWMultiHomedSocket *sockPtr, void (*CWManageInc
 			);
  			return CW_FALSE;
 		}
-			CWManageIncomingPacket(inf->sock, buf, readBytes,
-					CWNetworkGetInterfaceIndexFromSystemIndex(sockPtr, inf->systemIndex,inf->sock),inf->systemIndex, &addr, inf->ifname);
+			#if 1
+			int temp_ret = CWNetworkGetInterfaceIndexFromSystemIndex(sockPtr, inf->systemIndex,inf->sock);
+			if (temp_ret == -1) {
+				wid_syslog_err("%s %d temp_ret=-1\n", __FUNCTION__, __LINE__);
+				break;
+			}
+			CWManageIncomingPacket(inf->sock, buf, readBytes, temp_ret,inf->systemIndex, &addr, inf->ifname);
+			#else
+			CWManageIncomingPacket(inf->sock, buf, readBytes, CWNetworkGetInterfaceIndexFromSystemIndex(sockPtr, inf->systemIndex,inf->sock),inf->systemIndex, &addr, inf->ifname);
+			#endif
 		}
 		if(inf->if_next == NULL)
 			break;

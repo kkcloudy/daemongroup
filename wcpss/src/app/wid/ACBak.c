@@ -681,7 +681,7 @@ void bak_add_del_bss(int sockfd,BakOperate Op,unsigned int BSSIndex){
 	msg.Bu.BSS.WLANID = AC_BSS[BSSIndex]->WlanID;
 	//msg.Bu.BSS.WTPID = BSSIndex/L_BSS_NUM/L_RADIO_NUM;
 	str = sock_ntop_r(((struct sockaddr*)&(gInterfaces[gWTPs[WTPIndex].interfaceIndex].addr)), __str);
-	wid_syslog_info("WTP %d on Interface %s (%d)\n",WTPIndex, str, gWTPs[WTPIndex].interfaceIndex);
+	wid_syslog_info("WTP %d on Interface1 %s (%d)\n",WTPIndex, str, gWTPs[WTPIndex].interfaceIndex);
 	struct sockaddr_in	*sin = (struct sockaddr_in *) &(gInterfaces[gWTPs[WTPIndex].interfaceIndex].addr);
 	unsigned int v_ip = sin->sin_addr.s_addr;
 	wid_syslog_info("v_ip %d.%d.%d.%d.\n", \
@@ -1010,7 +1010,7 @@ void B_BSS_ADD_OP(B_Msg *msg){
 				memset(__str,0,128);
 				char *str = "lo";	//fengwenchao modify 20110525
 				str = sock_ntop_r(((struct sockaddr*)&(gInterfaces[gWTPs[WtpID].interfaceIndex].addr)), __str);
-				wid_syslog_info("WTP %d on Interface %s (%d)\n",WtpID, str, gWTPs[WtpID].interfaceIndex);
+				wid_syslog_info("WTP %d on Interface2 %s (%d)\n",WtpID, str, gWTPs[WtpID].interfaceIndex);
 				if(sa->sa_family != AF_INET6){										
 					ifinfo.isIPv6 = 0;
 					ifinfo.apip = ((struct sockaddr_in *)sa)->sin_addr.s_addr;

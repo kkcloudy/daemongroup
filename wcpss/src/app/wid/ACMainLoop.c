@@ -1071,6 +1071,7 @@ void CWACManageIncomingPacket(CWSocket sock, char *buf, int readBytes, int incom
 		printf("wtp %d change ifindex%d\n",WTPID,incomingInterfaceIndex);
 		wtpPtr->interfaceIndex = incomingInterfaceIndex;	
 		for(j = 0; (AC_WTP[WTPID])&&(j < AC_WTP[WTPID]->RadioCount); j++){
+			gWTPs[WTPID].interfaceIndex = incomingInterfaceIndex;
 			if((AC_WTP[WTPID])&&(AC_WTP[WTPID]->WTP_Radio[j])){
 				for(k = 0;k < L_BSS_NUM;k++ ){
 					if((AC_WTP[WTPID])&&(AC_WTP[WTPID]->WTP_Radio[j])&&(AC_WTP[WTPID]->WTP_Radio[j]->BSS[k] != NULL)){
