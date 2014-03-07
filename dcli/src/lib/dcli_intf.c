@@ -5097,6 +5097,9 @@ DEFUN(no_interface_static_arp_cmd_func,
       unsigned int isAdd = FALSE;
 	  int ifnameType = 0;
 
+	  unsigned char cpu_no = 0, cpu_port_no = 0;
+
+
 
       memset(&macAddr,0,sizeof(ETHERADDR));
       
@@ -5136,11 +5139,18 @@ DEFUN(no_interface_static_arp_cmd_func,
               return CMD_WARNING;
 		   }
 	  }
-	  else if (0 == strncmp (vlan_eth_port_ifname, "ve",2)) {
+	  else if (0 == strncmp (vlan_eth_port_ifname, "ve",2)) 
+	  {
 	  		isVlanIntf = IS_VE_INTERFACE;
-	  		ret = parse_slot_tag_no(vlan_eth_port_ifname ,&slot, &tag1, &tag2);		
+			ret = parse_ve_slot_cpu_tag_no(vlan_eth_port_ifname, &slot, &cpu_no, &cpu_port_no, &tag1, &tag2);
 			vlanId = (unsigned short)tag1;
-	  }
+			port = cpu_no;
+			port = ((port << 4) | cpu_port_no);	
+			if(COMMON_SUCCESS != ret){
+              vty_out(vty,"%% Bad parameter: ifname %s\n",vlan_eth_port_ifname);
+              return CMD_WARNING;
+          	}
+	  }  
 	  else if(0 == strncmp(vlan_eth_port_ifname,"ebr",3) )/*ebr*/
       {
       
