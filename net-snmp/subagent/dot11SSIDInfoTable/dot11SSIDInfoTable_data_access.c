@@ -272,35 +272,31 @@ dot11SSIDInfoTable_cache_load(netsnmp_container *container)
 				snprintf(tmp_mac,sizeof(tmp_mac)-1,"%02X:%02X:%02X:%02X:%02X:%02X",WtpShowNode->wtpMacAddr[0],WtpShowNode->wtpMacAddr[1],WtpShowNode->wtpMacAddr[2],
 																WtpShowNode->wtpMacAddr[3],WtpShowNode->wtpMacAddr[4],WtpShowNode->wtpMacAddr[5]);
 			}
-			wtpMacAddr_len = strlen(tmp_mac);
-
-			for(i=0; i<WtpShowNode->wtpBwlanRadioNum; i++)
+			
+			struct SSIDStatsInfo_sub_wlan_v2 *sub_wlan = NULL;
+			for(sub_wlan=WtpShowNode->SSIDStatsInfo_sub_wlan_head->next;sub_wlan!=NULL;sub_wlan=sub_wlan->next)
 			{
-				struct SSIDStatsInfo_sub_wlan_v2 *sub_wlan = NULL;
-				if(WtpShowNode->SSIDStatsInfo_sub_wlan_head != NULL)
-				{
-					for(sub_wlan = WtpShowNode->SSIDStatsInfo_sub_wlan_head->next; sub_wlan != NULL; sub_wlan = sub_wlan->next)
-					{
-						wlanCurrID = local_to_global_ID(messageNode->parameter, sub_wlan->wlanCurrID, WIRELESS_MAX_NUM);
-					
-				        rowreq_ctx = dot11SSIDInfoTable_allocate_rowreq_ctx();
-				        if (NULL == rowreq_ctx) {
-				            snmp_log(LOG_ERR, "memory allocation failed\n");
-	                        free_dbus_message_list(&messageHead, Free_show_all_wlan_ssid_stats_information_cmd_v2);
-				            return MFD_RESOURCE_UNAVAILABLE;
-				        }
-				        if(MFD_SUCCESS != dot11SSIDInfoTable_indexes_set(rowreq_ctx
-				                               , tmp_mac, wtpMacAddr_len
-				                               , wlanCurrID
-				               )) {
-				            snmp_log(LOG_ERR,"error setting index while loading "
-				                     "dot11SSIDInfoTable cache.\n");
-				            dot11SSIDInfoTable_release_rowreq_ctx(rowreq_ctx);
-				            continue;
-				        }
-						rowreq_ctx->data.radioid = WtpShowNode->wtpSupportRadioId[i];
-						rowreq_ctx->data.localwlanCurrID = sub_wlan->wlanCurrID;
-				        memcpy(&rowreq_ctx->data.parameter, &messageNode->parameter, sizeof(dbus_parameter));
+			
+					wlanCurrID = local_to_global_ID(messageNode->parameter, sub_wlan->wlanCurrID, WIRELESS_MAX_NUM);
+					wtpMacAddr_len = strlen(tmp_mac);
+			        rowreq_ctx = dot11SSIDInfoTable_allocate_rowreq_ctx();
+			        if (NULL == rowreq_ctx) {
+			            snmp_log(LOG_ERR, "memory allocation failed\n");
+	                       free_dbus_message_list(&messageHead, Free_show_all_wlan_ssid_stats_information_cmd_v2);
+			            return MFD_RESOURCE_UNAVAILABLE;
+			        }
+			        if(MFD_SUCCESS != dot11SSIDInfoTable_indexes_set(rowreq_ctx
+			                               , tmp_mac, wtpMacAddr_len
+			                               , wlanCurrID
+			               )) {
+			            snmp_log(LOG_ERR,"error setting index while loading "
+			                     "dot11SSIDInfoTable cache.\n");
+			            dot11SSIDInfoTable_release_rowreq_ctx(rowreq_ctx);
+			            continue;
+			        }
+					rowreq_ctx->data.radioid = WtpShowNode->wtpSupportRadioId[i];
+					rowreq_ctx->data.localwlanCurrID = sub_wlan->wlanCurrID;
+			        memcpy(&rowreq_ctx->data.parameter, &messageNode->parameter, sizeof(dbus_parameter));
 				        /*
 				         * TODO:352:r: |   |-> populate dot11SSIDInfoTable data context.
 				         * Populate data context here. (optionally, delay until row prep)
@@ -425,13 +421,11 @@ dot11SSIDInfoTable_cache_load(netsnmp_container *container)
 				        /*
 				         * insert into table container
 				         */
-	        			        if(CONTAINER_INSERT(container, rowreq_ctx))
-	        			        {
-	        						dot11SSIDInfoTable_release_rowreq_ctx(rowreq_ctx);
-	        			        }
-	        			        ++count;
-	        				}
-	        			}		
+	        		        if(CONTAINER_INSERT(container, rowreq_ctx))
+	        		        {
+	        					dot11SSIDInfoTable_release_rowreq_ctx(rowreq_ctx);
+	        		        }
+	        			        ++count;		
 					}			
         		}
             }
