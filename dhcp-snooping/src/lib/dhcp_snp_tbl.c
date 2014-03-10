@@ -645,7 +645,7 @@ void *dhcp_snp_tbl_item_find_by_ip
 	tempItem = g_DHCP_Snp_Hash_Table_ip[key];
 	while (tempItem) {
 		if (tempItem->ip_addr == ipaddr) {
-			syslog_ax_dhcp_snp_dbg("find item by ip %u.%u.%u.%u %02x:%02x:%02x:%02x:%02x:%02x\n", 
+			syslog_ax_dhcp_snp_dbg("found item by ip %u.%u.%u.%u %02x:%02x:%02x:%02x:%02x:%02x\n", 
 				(tempItem->ip_addr>>24)&0xff, (tempItem->ip_addr>>16)&0xff,
 				(tempItem->ip_addr>>8)&0xff, (tempItem->ip_addr>>0)&0xff,
 				tempItem->chaddr[0], tempItem->chaddr[1], tempItem->chaddr[2], 
@@ -1752,7 +1752,26 @@ unsigned int dhcp_snp_tbl_refresh_bind
 
 	if (user->ip_addr) {
 		while (tmp = dhcp_snp_tbl_item_find_by_ip(user->ip_addr)) {
-			dhcp_snp_tbl_item_delete_iphash(tmp);
+			if(memcmp(tmp->chaddr,user->chaddr, 6))
+				{
+				if (node->add_router) {  //delete router to host,next jump is the interface opening dhcp-snooping
+					if((0xFFFF == item->vlanId)&&(NPD_DHCP_SNP_BIND_STATE_BOUND == item->state)) {
+						
+						if(!if_indextoname(item->ifindex, ifname)) {
+							syslog_ax_dhcp_snp_err("no intf found as idx %d netlink error !\n", item->ifindex);
+							return DHCP_SNP_RETURN_CODE_ERROR;
+						}
+						dhcp_snp_netlink_add_static_route(DHCPSNP_RTNL_STATIC_ROUTE_DEL_E,  \
+																item->ifindex, item->ip_addr);
+						//sprintf(command,"sudo route del -host %u.%u.%u.%u dev %s",(item->ip_addr>>24)&0xff,\
+						//	(item->ip_addr>>16)&0xff,(item->ip_addr>>8)&0xff,(item->ip_addr>>0)&0xff,ifname);
+						//system(command);
+					}
+				}
+				dhcp_snp_tbl_item_delete(tmp);
+			}
+			else
+				dhcp_snp_tbl_item_delete_iphash(tmp);
 		}
 	}
 
