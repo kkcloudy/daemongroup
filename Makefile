@@ -1,7 +1,7 @@
 # 
 # This file intends to git commit the changing of buildno 
 
-BUILDNO_FILE=../aw2.0.18sp7_pb/buildno_v2.0
+BUILDNO_FILE=../aw2.0.18sp8_pb/buildno_v2.0
 BUILDNO_FILE_L=./accapi/buildno_v2.0
 
 updatebuildno:
