@@ -174,7 +174,7 @@ int parse_radio_ifname(char* ptr,int *wtpid,int *radioid,int *wlanid)
 			
 			*wtpid = strtoul(str,&str,10);
 			
-			if(*wtpid > 0 && *wtpid < 4095){
+			if(*wtpid > 0 && *wtpid <= 4096){
         		state=check_sub;
 			}
 			else state=check_fail;
@@ -273,7 +273,7 @@ int parse_radio_ifname_v2(char* ptr,int *wtpid,int *radioid,int *wlanid,unsigned
 			break;
 		case check_wtpid: 
 			*wtpid = strtoul((char *)&str[1],&str,10);
-			if(*wtpid > 0 && *wtpid < 4095){
+			if(*wtpid > 0 && *wtpid <= 4096){
         		state=check_sub2;
 			}
 			else state=check_fail;
