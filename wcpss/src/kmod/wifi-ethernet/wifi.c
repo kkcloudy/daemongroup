@@ -148,13 +148,13 @@ int wifi_ioctl(struct inode *inode, struct file *filp, unsigned int cmd, unsigne
 #endif
 	switch (cmd)
 	{
-		case WIFI_IOC_REG_IF: 
+		case WIFI_IOC_IF_CREATE: 
 			op_ret = copy_from_user(&if_basic_info, (struct interface_basic_INFO *)arg, sizeof(struct interface_basic_INFO));
 			printk("file-%s,funtion-%s,line-%d\n",__FILE__,__FUNCTION__,__LINE__);
 			retval = dynamic_registe_if(&if_basic_info);
 			break;
 			
-		case WIFI_IOC_UNREG_IF: 
+		case WIFI_IOC_IF_DELETE : 
 			op_ret = copy_from_user(&if_basic_info, (struct interface_basic_INFO *)arg, sizeof(struct interface_basic_INFO));
 			printk("file-%s,funtion-%s,line-%d\n",__FILE__,__FUNCTION__,__LINE__);
 			retval = dynamic_unregiste_if(&if_basic_info);
@@ -184,7 +184,7 @@ int wifi_ioctl(struct inode *inode, struct file *filp, unsigned int cmd, unsigne
 			op_ret = copy_to_user((dev_ipv6_addr_t*)arg, &ipv6_addr, sizeof(dev_ipv6_addr_t));
 			
 			break;
-		case WIFI_IOC_UPDATE_IF:
+		case WIFI_IOC_IF_UPDATE :
 			op_ret = copy_from_user(&if_info, (struct interface_INFO *)arg, sizeof(struct interface_INFO));
 			if(wifi_eth_debug >= WIFI_DEBUG)
 			printk("file-%s,funtion-%s,line-%d\n",__FILE__,__FUNCTION__,__LINE__);
@@ -277,13 +277,13 @@ int wifi_ioctl(struct inode *inode, struct file *filp, unsigned int cmd, unsigne
 					printk("in case : WIFI_IOC_DEL_STA, del sta error!\n");
 			}
 			break;
-		case WIFI_IOC_BATCH_REG_IF:			
+		case WIFI_IOC_BATCH_IF_CREATE  :			
 			op_ret = copy_from_user(&if_batch_info, (struct interface_batch_INFO *)arg, sizeof(struct interface_batch_INFO));
 			printk("file-%s,funtion-%s,line-%d\n",__FILE__,__FUNCTION__,__LINE__);
 			for(i = 0;i < if_batch_info.count && i < PATCH_OP_RADIO_MAX; i++)
 				retval = dynamic_registe_if(&(if_batch_info.ifinfo[i]));
 			break;
-		case WIFI_IOC_BATCH_UNREG_IF: 		
+		case WIFI_IOC_BATCH_IF_DELETE: 		
 			op_ret = copy_from_user(&if_batch_info, (struct interface_batch_INFO *)arg, sizeof(struct interface_batch_INFO));
 			printk("file-%s,funtion-%s,line-%d\n",__FILE__,__FUNCTION__,__LINE__);
 			for(i = 0;i < if_batch_info.count && i < PATCH_OP_RADIO_MAX; i++)

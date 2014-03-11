@@ -43,20 +43,20 @@ typedef enum{
 #define WIFI_IOC_MAGIC 243
 #define WIFI_IOC_MAXNR 0x16
 
-#define WIFI_IOC_REG_IF		_IOWR(WIFI_IOC_MAGIC, 1, struct interface_basic_INFO) // read values
-#define WIFI_IOC_UNREG_IF   _IOWR(WIFI_IOC_MAGIC, 2, struct interface_basic_INFO) // read values
+#define WIFI_IOC_IF_CREATE		_IOWR(WIFI_IOC_MAGIC, 1, struct interface_basic_INFO) // read values
+#define WIFI_IOC_IF_DELETE    _IOWR(WIFI_IOC_MAGIC, 2, struct interface_basic_INFO) // read values
 #define WIFI_IOC_MMAP  		_IOWR(WIFI_IOC_MAGIC, 3, uint64_t) // read values
 #define WIFI_IOC_VRRP_MMAP _IOWR(WIFI_IOC_MAGIC, 4, sh_mem_t)
 #define WIFI_IOC_GET_V6ADDR  _IOWR(WIFI_IOC_MAGIC, 5, dev_ipv6_addr_t)
-#define WIFI_IOC_UPDATE_IF		_IOWR(WIFI_IOC_MAGIC, 6, struct interface_INFO)//update ip port bssid
+#define WIFI_IOC_IF_UPDATE 	_IOWR(WIFI_IOC_MAGIC, 6, struct interface_INFO)//update ip port bssid
 #define WIFI_IOC_WSM_SWITCH		_IOWR(WIFI_IOC_MAGIC, 7, unsigned int)//update ip port bssid
 #define WIFI_IOC_ASD_SWITCH 	_IOWR(WIFI_IOC_MAGIC, 8, unsigned int) /*ht add for wifi and asd communicate switch,110308*/
 #define WIFI_IOC_HANSISTATE_UPDATE 	_IOWR(WIFI_IOC_MAGIC, 9, unsigned int) /*wuwl add control data packet*/
 #define WIFI_IOC_ASD_THRED_ID 	_IOWR(WIFI_IOC_MAGIC, 10, unsigned int) /*wuwl add asd pid notice to wifi for netlink*/
 #define WIFI_IOC_ADD_STA		_IOWR(WIFI_IOC_MAGIC, 11, struct asd_to_wifi_sta) 
 #define WIFI_IOC_DEL_STA		_IOWR(WIFI_IOC_MAGIC, 12, struct asd_to_wifi_sta)
-#define WIFI_IOC_BATCH_REG_IF	_IOWR(WIFI_IOC_MAGIC, 13, struct interface_batch_INFO) // read values
-#define WIFI_IOC_BATCH_UNREG_IF	_IOWR(WIFI_IOC_MAGIC, 14, struct interface_batch_INFO) // read values
+#define WIFI_IOC_BATCH_IF_CREATE  	_IOWR(WIFI_IOC_MAGIC, 13, struct interface_batch_INFO) // read values
+#define WIFI_IOC_BATCH_IF_DELETE	_IOWR(WIFI_IOC_MAGIC, 14, struct interface_batch_INFO) // read values
 #if WIFI_STA_ACL_SUPPORT
 #define WIFI_IOC_SET_NFMARK 	_IOWR(243, 15, struct wifi_nf_info) // caojia add for sta acl function 
 #define WIFI_IOC_GET_NFMARK 	_IOWR(243, 16, struct wifi_nf_info) // caojia add for sta acl function 
