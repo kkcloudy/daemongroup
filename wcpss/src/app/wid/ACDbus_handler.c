@@ -2358,8 +2358,8 @@ int WID_DELETE_WTP(unsigned int WTPID){
 
 	if(AC_WTP[WTPID]->isused == 1)
 	{
-		printf("*** error this WTP is used and active, you can not delete this ***\n");
-		printf("*** if you want to delete please unused it first ***\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"*** error this WTP is used and active, you can not delete this ***\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"*** if you want to delete please unused it first ***\n");
 		return WTP_ID_BE_USED;
 	}
 
@@ -2610,7 +2610,7 @@ int WID_DELETE_WTP(unsigned int WTPID){
 			WID_FREE(tmp);
 			tmp = NULL;
 			AC_WTP[WTPID]->apcminfo.ap_snr_info_length--;
-			printf("ap_snr_info_length:%d",AC_WTP[WTPID]->apcminfo.ap_snr_info_length);
+			wid_syslog_debug_debug(WID_DEFAULT,"ap_snr_info_length:%d",AC_WTP[WTPID]->apcminfo.ap_snr_info_length);
 		}
 	}
 	/*fengwenchao add 20111118 for GM-3*/
@@ -2627,7 +2627,7 @@ int WID_DELETE_WTP(unsigned int WTPID){
 			WID_FREE(tmp);
 			tmp = NULL;
 			AC_WTP[WTPID]->heart_time.heart_time_value_length--;
-			printf("heart_time_value_length:%d",AC_WTP[WTPID]->heart_time.heart_time_value_length);
+			wid_syslog_debug_debug(WID_DEFAULT,"heart_time_value_length:%d",AC_WTP[WTPID]->heart_time.heart_time_value_length);
 		}
 	}
 	/*fengwenchao add end*/
@@ -3946,7 +3946,7 @@ int Check_Interface_Config(char * ifname,WTPQUITREASON *quitreason)
 	strncpy(ifr.ifr_name,ifname, sizeof(ifr.ifr_name));	
 	
 	if(ioctl(sockfd, SIOCGIFINDEX, &ifr) == -1){//bind to a interface 
-		printf("SIOCGIFINDEX error\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"SIOCGIFINDEX error\n");
 		*quitreason = IF_NOINDEX;
 		wid_syslog_debug_debug(WID_DEFAULT,"wtp quit reason is IF_NOINDEX error");
 		close(sockfd);
@@ -4883,7 +4883,7 @@ int Bind_BroadAddr_For_WID(struct ifi_info *ifi, int port){
 		}
 		
 		CWUseSockNtop(ifi->ifi_brdaddr,
-			printf("bound %s (%d, %s)", str, ifi->ifi_index, ifi->ifi_name);
+			wid_syslog_debug_debug(WID_DEFAULT,"bound %s (%d, %s)", str, ifi->ifi_index, ifi->ifi_name);
 		);
 		
 		// store socket inside multihomed socket
@@ -4892,7 +4892,7 @@ int Bind_BroadAddr_For_WID(struct ifi_info *ifi, int port){
 		memset(p->ifname, 0, IFI_NAME);
 		strncpy(p->ifname, ifi->ifi_name, IFI_NAME);
 		p->sock = sock; 		
-		printf("pbr->sock %d\n",p->sock);
+		wid_syslog_debug_debug(WID_DEFAULT,"pbr->sock %d\n",p->sock);
 		p->kind = CW_BROADCAST_OR_ALIAS;
 		p->systemIndex = ifi->ifi_index;
 		p->systemIndexbinding = ifi->ifi_index_binding;
@@ -5888,7 +5888,7 @@ int WID_ADD_IF_APPLY_WLAN_ipv6(unsigned char WlanID, char * ifname){
 	{
 		WID_FREE(ifi_tmp);
 		ifi_tmp = NULL;
-		return BINDING_IPV6_ADDRE_RROR;
+		return MALLOC_ERROR;
 	}
 	ipv6list->ifindex = 0;
 	ipv6list->ipv6list = NULL;
@@ -5968,7 +5968,7 @@ int WID_ADD_IF_APPLY_WLAN_ipv6(unsigned char WlanID, char * ifname){
 			memcpy(tmp->ifi_name,ifname,strlen(ifname));
 			
 			tmp->ifi_index = isystemindex;
-			printf("tmp->ifi_index = %d\n",tmp->ifi_index);
+			wid_syslog_debug_debug(WID_DEFAULT,"tmp->ifi_index = %d\n",tmp->ifi_index);
 			tmp->isipv6addr = 1;
 			WID_IF_V6 = tmp;
 		}
@@ -6065,7 +6065,7 @@ int WID_ADD_IF_APPLY_WLAN_ipv6(unsigned char WlanID, char * ifname){
 	memset(wif->ifi_name,0,ETH_IF_NAME_LEN);
 	memcpy(wif->ifi_name,ifname,strlen(ifname));
 	wif->ifi_index = ifr.ifr_ifindex;
-	printf("wif->ifi_index = %d\n",wif->ifi_index);
+	wid_syslog_debug_debug(WID_DEFAULT,"wif->ifi_index = %d\n",wif->ifi_index);
 	wif->nas_id_len = 0;//zhanglei add
 	memset(wif->nas_id,0,NAS_IDENTIFIER_NAME);//zhanglei add
 	wif->ifi_next = NULL;
@@ -6993,7 +6993,8 @@ int WID_RADIO_BSS_L3IF_POLICY(unsigned char WlanID,unsigned int wtpID,unsigned c
 		{
 			//whether to delete the wlan l3 interface???
 			//ret = Delete_Wlan_L3_Interface(WlanID);	
-			printf("state 0 f w t 0\n");
+			//printf("state 0 f w t 0\n");
+			wid_syslog_debug_debug(WID_DEFAULT,"func %s,line %d\n",__func__,__LINE__);
 			
 		}
 		//wlan_interface to bss_interface //use interface radio1-0.1
@@ -7052,7 +7053,7 @@ int WID_RADIO_BSS_L3IF_POLICY(unsigned char WlanID,unsigned int wtpID,unsigned c
 		
 	}
 	
-	printf("*** BSS l3 interface policy is:%d***\n",bssPolicy);
+	//printf("*** BSS l3 interface policy is:%d***\n",bssPolicy);
 	wid_syslog_debug_debug(WID_DEFAULT,"*** BSS l3 interface policy is:%d***\n",bssPolicy);
 	
 	
@@ -8167,7 +8168,7 @@ int wid_set_country_code_a8()
 				sprintf(apcmd,"set regdmn RoW");	
 			}
 			
-			printf("set regdmn :%s",apcmd);
+			//printf("set regdmn :%s",apcmd);
 			wid_syslog_debug_debug(WID_DEFAULT,"set regdmn :%s",apcmd);
 			for(i=0;i<WTP_NUM;i++){
 				if(AC_WTP[i] != NULL){
@@ -9801,7 +9802,7 @@ int WID_ADD_WLAN_APPLY_RADIO(unsigned int RadioID,unsigned char WlanID){
 	}
 	if(AC_WLAN[WlanID]->Status == 1)
 	{
-		printf("wlan is disable,so just binging this wlan,not to send add wlan msg\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"wlan is disable,so just binging this wlan,not to send add wlan msg\n");
 		return 0;
 	}
 	msgq msg;
@@ -10298,7 +10299,7 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_ESSID(unsigned int RadioID,unsigned char WlanI
 	wid_syslog_debug_debug(WID_DEFAULT,"11111111111111111111111111111\n");
 	if(AC_WLAN[WlanID]->Status == 1)
 	{
-		printf("wlan is disable,so just binging this wlan,not to send add wlan msg\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"wlan is disable,so just binging this wlan,not to send add wlan msg\n");
 		return 0;
 	}
 	wid_syslog_debug_debug(WID_DEFAULT,"2222222222222222222222222222222\n");
@@ -10798,7 +10799,7 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_VLANID(unsigned int RadioID,unsigned char Wlan
 	}	
 	if(AC_WLAN[WlanID]->Status == 1)
 	{
-		printf("wlan is disable,so just binging this wlan,not to send add wlan msg\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"wlan is disable,so just binging this wlan,not to send add wlan msg\n");
 		return 0;
 	}
 	msgq msg;
@@ -11035,7 +11036,7 @@ int WID_ADD_WLAN_CPE_CHANNEL_APPLY_RADIO_BASE_VLANID(unsigned int RadioID,unsign
 
 	if(AC_WLAN[WlanID]->Status == 1)
 	{
-		printf("wlan is disable,so just binging this wlan,not to send add wlan msg\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"wlan is disable,so just binging this wlan,not to send add wlan msg\n");
 		return 0;
 	}
 	msgq msg;
@@ -11894,7 +11895,7 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_HOTSPOT_ID(unsigned int RadioID,unsigned char 
 	}	
 	if(AC_WLAN[WlanID]->Status == 1)
 	{
-		printf("wlan is disable,so just binging this wlan,not to send add wlan msg\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"wlan is disable,so just binging this wlan,not to send add wlan msg\n");
 		return 0;
 	}
 	msgq msg;
@@ -12468,7 +12469,7 @@ int WID_BINDING_IF_APPLY_WTP_ipv6(unsigned int WtpID, char * ifname)
 		tmp = WID_IF_V6;
 		while(tmp != NULL)
 		{
-			printf("ifname = %s name = %s\n",tmp->ifi_name,ifname);
+			wid_syslog_debug_debug(WID_DEFAULT,"ifname = %s name = %s\n",tmp->ifi_name,ifname);
 			if(( strlen(ifname) ==  strlen(tmp->ifi_name))&&(strcmp(tmp->ifi_name,ifname)==0))
 			{	
 				WID_FREE(ifi_tmp->ifi_addr6);
@@ -12481,7 +12482,7 @@ int WID_BINDING_IF_APPLY_WTP_ipv6(unsigned int WtpID, char * ifname)
 				{
 					
 					AC_WTP[WtpID]->BindingSystemIndex= tmp->ifi_index;
-					printf("AC_WTP[WtpID]->BindingSystemIndex = %d\n",AC_WTP[WtpID]->BindingSystemIndex);
+					wid_syslog_debug_debug(WID_DEFAULT,"AC_WTP[WtpID]->BindingSystemIndex = %d\n",AC_WTP[WtpID]->BindingSystemIndex);
 					AC_WTP[WtpID]->isipv6addr = 1;
 					memset(AC_WTP[WtpID]->BindingIFName, 0, ETH_IF_NAME_LEN);
 					memcpy(AC_WTP[WtpID]->BindingIFName,ifname, strlen(ifname));
@@ -13402,11 +13403,12 @@ int WID_DISABLE_WLAN_APPLY_RADIO(unsigned int RadioId, unsigned char WlanId)
 	{
 		return WTP_WLAN_BINDING_NOT_MATCH;
 	}
-	printf("*** ///////////// **\n");
+	//printf("*** ///////////// **\n");
 
 	if((AC_WLAN[WlanId]->S_WTP_BSS_List[WtpID][local_radioid] != 0)&&(check_bssid_func(AC_WLAN[WlanId]->S_WTP_BSS_List[WtpID][local_radioid]))&&(AC_BSS[AC_WLAN[WlanId]->S_WTP_BSS_List[WtpID][local_radioid]] != NULL))
 	{		
-		printf("*** 2222222222222 **\n");
+		//printf("*** 2222222222222 **\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"func %s,line %d\n",__func__,__LINE__);
 		int BSSIndex = AC_WLAN[WlanId]->S_WTP_BSS_List[WtpID][local_radioid];
 		if(!check_bssid_func(BSSIndex)){
 			wid_syslog_err("<error>%s\n",__func__);
@@ -15284,7 +15286,7 @@ void display_ap_info_list(Neighbor_AP_INFOS *paplist)
 	//printf("#####0007777777777777####\n");
 	if((paplist == NULL)||(paplist->neighborapInfos == NULL)||(paplist->neighborapInfosCount == 0))
 	{
-		printf("display_ap_info_list parameter error\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"display_ap_info_list parameter error\n");
 		return;
 	}
 	
@@ -15293,32 +15295,32 @@ void display_ap_info_list(Neighbor_AP_INFOS *paplist)
 	//printf("######0000888888888####\n");
 	struct Neighbor_AP_ELE *phead = paplist->neighborapInfos;
 		
-	printf("## display The ap info list total count is = %d: ##\n",paplist->neighborapInfosCount);
+	wid_syslog_debug_debug(WID_DEFAULT,"## display The ap info list total count is = %d: ##\n",paplist->neighborapInfosCount);
 	for(i=0; i<paplist->neighborapInfosCount; i++)
 	{
-		printf("## the count i = %d##\n",i);
-		printf("mac = ");
+		wid_syslog_debug_debug(WID_DEFAULT,"## the count i = %d##\n",i);
+		wid_syslog_debug_debug(WID_DEFAULT,"mac = ");
 		for(j=0; j<6; j++)
 		{
-			printf("%02x", phead->BSSID[j]);
+			wid_syslog_debug_debug(WID_DEFAULT,"%02x", phead->BSSID[j]);
 		}
-		printf("\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"\n");
 
-		printf("rate = %d\n", phead->Rate);
-		printf("Channel = %d\n", phead->Channel);
-		printf("RSSI = %d\n", phead->RSSI);
-		printf("NOISE = %d\n", phead->NOISE);
+		wid_syslog_debug_debug(WID_DEFAULT,"rate = %d\n", phead->Rate);
+		wid_syslog_debug_debug(WID_DEFAULT,"Channel = %d\n", phead->Channel);
+		wid_syslog_debug_debug(WID_DEFAULT,"RSSI = %d\n", phead->RSSI);
+		wid_syslog_debug_debug(WID_DEFAULT,"NOISE = %d\n", phead->NOISE);
 		
-		printf("BEACON_INT = %d\n", phead->BEACON_INT);
-		printf("status = %d\n", phead->status);
-		printf("opstatus = %d\n", phead->opstatus);
-		printf("capabilityinfo = %d\n", phead->capabilityinfo);
+		wid_syslog_debug_debug(WID_DEFAULT,"BEACON_INT = %d\n", phead->BEACON_INT);
+		wid_syslog_debug_debug(WID_DEFAULT,"status = %d\n", phead->status);
+		wid_syslog_debug_debug(WID_DEFAULT,"opstatus = %d\n", phead->opstatus);
+		wid_syslog_debug_debug(WID_DEFAULT,"capabilityinfo = %d\n", phead->capabilityinfo);
 		
-		printf("ESSID = %s\n", phead->ESSID);
-		printf("IEs_INFO = %s\n", phead->IEs_INFO);
+		wid_syslog_debug_debug(WID_DEFAULT,"ESSID = %s\n", phead->ESSID);
+		wid_syslog_debug_debug(WID_DEFAULT,"IEs_INFO = %s\n", phead->IEs_INFO);
 
 		phead = phead->next;
-		printf("info #################################\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"info #################################\n");
 	}
 }
 
@@ -15710,7 +15712,7 @@ int wid_count_rogue_ap(Neighbor_AP_INFOS *paplist,int wtpid)
 	//printf("here is in wid_count_rogue_ap 5555555555555\n");
 	//printf("count is %d \n",count);
 	wid_syslog_debug_debug(WID_DEFAULT,"***this is in wid_count_rogue_ap***cur rogue ap count is %d \n",count);
-	printf("***cur rogue ap count is %d \n",count);
+	wid_syslog_debug_debug(WID_DEFAULT,"***cur rogue ap count is %d \n",count);
 	if(count>=neighborrogueapcount){
 		wid_syslog_debug_debug(WID_DEFAULT,"***wid_count_rogue_ap***gtrapflag is %d \n",gtrapflag);
 		//printf("count>neighborrogueapcount ,and neighborrogueapcount is %d \n",neighborrogueapcount);
@@ -16703,7 +16705,7 @@ void display_mac_info_list(white_mac_list *pmaclist)
 {
 	if((pmaclist == NULL)||(pmaclist->list_mac == NULL)||(pmaclist->imaccount == 0))
 	{
-		printf("display_mac_info_list parameter error\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"display_mac_info_list parameter error\n");
 		return;
 	}
 	
@@ -16712,16 +16714,16 @@ void display_mac_info_list(white_mac_list *pmaclist)
 	
 	struct white_mac *phead = pmaclist->list_mac;
 		
-	printf("## display The mac info list total count is = %d: ##\n",pmaclist->imaccount);
+	wid_syslog_debug_debug(WID_DEFAULT,"## display The mac info list total count is = %d: ##\n",pmaclist->imaccount);
 	for(i=0; i<pmaclist->imaccount; i++)
 	{
-		printf("## the count i = %d##\n",i);
-		printf("mac = ");
+		wid_syslog_debug_debug(WID_DEFAULT,"## the count i = %d##\n",i);
+		wid_syslog_debug_debug(WID_DEFAULT,"mac = ");
 		for(j=0; j<6; j++)
 		{
-			printf("%02x", phead->elem_mac[j]);
+			wid_syslog_debug_debug(WID_DEFAULT,"%02x", phead->elem_mac[j]);
 		}
-		printf("\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"\n");
 
 		phead = phead->next;
 	}
@@ -16844,14 +16846,14 @@ void display_support_rate_list(struct Support_Rate_List *ratelist)
 {
 	if(ratelist == NULL)
 	{
-		printf("the list is empty\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"the list is empty\n");
 		return;
 	}
 
 	
 	 while(ratelist != NULL) 
 	 {
-		  printf("support rate: %d\n",ratelist->Rate);
+		  wid_syslog_debug_debug(WID_DEFAULT,"support rate: %d\n",ratelist->Rate);
 		  ratelist = ratelist->next;
 	 }
 	 
@@ -17551,18 +17553,18 @@ void calc_transmit_power_control(unsigned int wtpid, Neighbor_AP_INFOS *paplist,
 
 void display_power_control_info(transmit_power_control power_control_info)
 {
-	printf("### display power control information start ###\n");
+	wid_syslog_debug_debug(WID_DEFAULT,"### display power control information start ###\n");
 
-	//printf("$$$ wtpid = %d $$$\n",power_control_info.wtpid);
+	//wid_syslog_debug_debug(WID_DEFAULT,"$$$ wtpid = %d $$$\n",power_control_info.wtpid);
 
 	int i = 0;
-	printf("$$$ wtp cnt = %d $$$\n",power_control_info.wtp_cnt);
+	wid_syslog_debug_debug(WID_DEFAULT,"$$$ wtp cnt = %d $$$\n",power_control_info.wtp_cnt);
 	for(i=0; i<4; i++)
 	{
-		printf("$$$ RSSI[%d] = %d $$$\n",i,power_control_info.neighbor_rssi[i]);
+		wid_syslog_debug_debug(WID_DEFAULT,"$$$ RSSI[%d] = %d $$$\n",i,power_control_info.neighbor_rssi[i]);
 	}
 	
-	printf("### display power control information end ###\n");
+	wid_syslog_debug_debug(WID_DEFAULT,"### display power control information end ###\n");
 		
 }
 
@@ -21993,7 +21995,7 @@ int WID_SET_ETHEREAL_BRIDGE_IF_UPLINK(unsigned int ID,char *ifname,int is_radio,
 			}else if((!is_radio)&&(WID_EBR[ID]->r_num > 0)){
 				memset(syscmd,0,WID_SYSTEM_CMD_LENTH);				
 				sprintf(syscmd,"ifconfig %s mtu 1416",ifname);
-				printf("%s %s\n",__func__,syscmd);
+				wid_syslog_debug_debug(WID_DEFAULT,"%s %d %s\n",__func__,__LINE__,syscmd);
 				system(syscmd);
 			}
 			
@@ -22006,7 +22008,7 @@ int WID_SET_ETHEREAL_BRIDGE_IF_UPLINK(unsigned int ID,char *ifname,int is_radio,
 					if(strncasecmp(wifnext->ifname,"r",1)){ 											
 						memset(syscmd,0,WID_SYSTEM_CMD_LENTH);				
 						sprintf(syscmd,"ifconfig %s mtu 1416",wifnext->ifname);
-						printf("%s2 %s\n",__func__,syscmd);
+						wid_syslog_debug_debug(WID_DEFAULT,"%s %d %s\n",__func__,__LINE__,syscmd);
 						system(syscmd);
 					}
 				}
@@ -22017,7 +22019,7 @@ int WID_SET_ETHEREAL_BRIDGE_IF_UPLINK(unsigned int ID,char *ifname,int is_radio,
 				if(strncasecmp(wifnext->ifname,"r",1)){ 	
 					memset(syscmd,0,WID_SYSTEM_CMD_LENTH);				
 					sprintf(syscmd,"ifconfig %s mtu 1416",wifnext->ifname);
-					printf("%s2 %s\n",__func__,syscmd);
+					wid_syslog_debug_debug(WID_DEFAULT,"%s %d %s\n",__func__,__LINE__,syscmd);
 					system(syscmd);
 				}
 			}
@@ -22091,7 +22093,7 @@ int WID_SET_ETHEREAL_BRIDGE_IF_DOWNLINK(unsigned int ID,char *ifname,int is_radi
 			}else if((!is_radio)&&(WID_EBR[ID]->r_num > 0)){
 				memset(syscmd,0,WID_SYSTEM_CMD_LENTH);				
 				sprintf(syscmd,"ifconfig %s mtu 1500",ifname);				
-				printf("%s %s\n",__func__,syscmd);
+				wid_syslog_debug_debug(WID_DEFAULT,"%s %d %s\n",__func__,__LINE__,syscmd);
 				system(syscmd);
 			}
 
@@ -22110,7 +22112,7 @@ int WID_SET_ETHEREAL_BRIDGE_IF_DOWNLINK(unsigned int ID,char *ifname,int is_radi
 						if(strncasecmp(wifnext->ifname,"r",1)){ 
 							memset(syscmd,0,WID_SYSTEM_CMD_LENTH);				
 							sprintf(syscmd,"ifconfig %s mtu 1500",wifnext->ifname);							
-							printf("%s2 %s\n",__func__,syscmd);
+							wid_syslog_debug_debug(WID_DEFAULT,"%s %d %s\n",__func__,__LINE__,syscmd);
 							system(syscmd);
 						}
 						wifnext = wifnext->ifnext;
@@ -22150,7 +22152,7 @@ int WID_SET_ETHEREAL_BRIDGE_IF_DOWNLINK(unsigned int ID,char *ifname,int is_radi
 						if(strncasecmp(wifnext->ifname,"r",1)){ 	
 							memset(syscmd,0,WID_SYSTEM_CMD_LENTH);				
 							sprintf(syscmd,"ifconfig %s mtu 1500",wifnext->ifname);							
-							printf("%s3 %s\n",__func__,syscmd);
+							wid_syslog_debug_debug(WID_DEFAULT,"%s %d %s\n",__func__,__LINE__,syscmd);
 							system(syscmd);
 						}
 					}
@@ -22161,7 +22163,7 @@ int WID_SET_ETHEREAL_BRIDGE_IF_DOWNLINK(unsigned int ID,char *ifname,int is_radi
 					if(strncasecmp(wifnext->ifname,"r",1)){
 						memset(syscmd,0,WID_SYSTEM_CMD_LENTH);				
 						sprintf(syscmd,"ifconfig %s mtu 1500",wifnext->ifname);						
-						printf("%s4 %s\n",__func__,syscmd);
+						wid_syslog_debug_debug(WID_DEFAULT,"%s %d %s\n",__func__,__LINE__,syscmd);
 						system(syscmd);
 					}
 				}
@@ -23247,7 +23249,7 @@ int  wtp_set_sta_info_report(unsigned int wtpid,int policy)
 //	struct msgqlist *elem;
 	if((AC_WTP[wtpid] != NULL)&&(AC_WTP[wtpid]->sta_ip_report != policy))
 	{
-		printf("%s AC_WTP[%d]->sta_ip_report %d\n",__func__,wtpid,AC_WTP[wtpid]->sta_ip_report);
+		wid_syslog_debug_debug(WID_DEFAULT,"%s AC_WTP[%d]->sta_ip_report %d\n",__func__,wtpid,AC_WTP[wtpid]->sta_ip_report);
 		AC_WTP[wtpid]->sta_ip_report = policy;
 		
 		if((AC_WTP[wtpid] != NULL)&&(AC_WTP[wtpid]->WTPStat == 5))
@@ -23301,7 +23303,7 @@ int  wtp_set_wtp_dhcp_snooping(unsigned int wtpid,int policy)
 //	struct msgqlist *elem;
 	if((AC_WTP[wtpid] != NULL)&&(AC_WTP[wtpid]->dhcp_snooping != policy))
 	{
-		printf("%s AC_WTP[%d]->dhcp_snooping %d\n",__func__,wtpid,AC_WTP[wtpid]->dhcp_snooping);
+		wid_syslog_debug_debug(WID_DEFAULT,"%s AC_WTP[%d]->dhcp_snooping %d\n",__func__,wtpid,AC_WTP[wtpid]->dhcp_snooping);
 		AC_WTP[wtpid]->dhcp_snooping = policy;
 		
 		if((AC_WTP[wtpid] != NULL)&&(AC_WTP[wtpid]->WTPStat == 5))
@@ -24917,7 +24919,7 @@ void display_wids_info_list(wid_wids_device *paplist)
 
 	if((paplist == NULL)||(paplist->wids_device_info== NULL)||(paplist->count== 0))
 	{
-		printf("display_ap_info_list parameter error\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"display_ap_info_list parameter error\n");
 		return;
 	}
 	
@@ -24926,16 +24928,16 @@ void display_wids_info_list(wid_wids_device *paplist)
 
 	struct tag_wids_device_ele *phead = paplist->wids_device_info;
 		
-	printf("## display_wids_info_list count is = %d: ##\n",paplist->count);
+	wid_syslog_debug_debug(WID_DEFAULT,"## display_wids_info_list count is = %d: ##\n",paplist->count);
 	for(i=0; i<paplist->count; i++)
 	{
-		printf("## the count i = %d##\n",i);
-		printf("mac = ");
+		wid_syslog_debug_debug(WID_DEFAULT,"## the count i = %d##\n",i);
+		wid_syslog_debug_debug(WID_DEFAULT,"mac = ");
 		for(j=0; j<6; j++)
 		{
-			printf("%02x", phead->bssid[j]);
+			wid_syslog_debug_debug(WID_DEFAULT,"%02x", phead->bssid[j]);
 		}
-		printf("\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"\n");
 
 		phead = phead->next;
 	}
@@ -25729,7 +25731,7 @@ int wid_radio_set_inter_vap_forwarding_able(unsigned int wtpid,unsigned int l_ra
 	//sprintf(apcmd,"set interVF policy %d",policy);
 	
 	wid_syslog_debug_debug(WID_DEFAULT,"set_inter_VAP_forwarding: %s\n",apcmd);
-	printf("set_inter_VAP_forwarding: %s\n",apcmd);
+	//printf("set_inter_VAP_forwarding: %s\n",apcmd);
 	
 	ret = wid_radio_set_extension_command(wtpid,apcmd);
 	return 0;
@@ -26239,7 +26241,7 @@ int wid_set_sta_ip_mac_binding(unsigned int wtpid,	unsigned int l_radioid,unsign
 	{
 		wid_syslog_info("wid_set_sta_ip_mac_binding error\n");
 	}
-	printf("wid_set_sta_ip_mac_binding apcmd %s\n",apcmd);
+	wid_syslog_debug_debug(WID_DEFAULT,"wid_set_sta_ip_mac_binding apcmd %s\n",apcmd);
 	wid_syslog_debug_debug(WID_DEFAULT,"wid_set_sta_ip_mac_binding apcmd %s\n",apcmd);
 
 	ret = wid_radio_set_extension_command(wtpid,apcmd);
@@ -26402,7 +26404,7 @@ int wid_set_radio_sector_tx_power_value(unsigned int wtpid,	unsigned int l_radio
 			sprintf(apcmd,"set power %s %d",Sector,value);
 			wid_radio_set_extension_command(wtpid,apcmd);
 
-			printf("wid_set_sector apcmd %s\n",apcmd);
+			//printf("wid_set_sector apcmd %s\n",apcmd);
 			wid_syslog_debug_debug(WID_DEFAULT,"wid_set_sector apcmd %s\n",apcmd);
 		}
 	}
@@ -26470,7 +26472,7 @@ int wid_set_radio_netgear_supper_g_technology_state(unsigned int wtpid,	unsigned
 		wid_syslog_info("set (bursting|fastFrame|compression) (enable|disable) error\n");
 	}
 	
-	printf("set (bursting|fastFrame|compression) (enable|disable) apcmd %s\n",apcmd);
+	//printf("set (bursting|fastFrame|compression) (enable|disable) apcmd %s\n",apcmd);
 	wid_syslog_debug_debug(WID_DEFAULT,"set (bursting|fastFrame|compression) (enable|disable) apcmd %s\n",apcmd);
 	ret = wid_radio_set_extension_command(wtpid,apcmd);
 	return ret;
@@ -26491,7 +26493,7 @@ int wid_set_dhcp_before_autherized(unsigned int wtpid,	unsigned int l_radioid,un
 	{
 		wid_syslog_info("wid_set_dhcp_before_autherized error\n");
 	}
-	printf("wid_set_dhcp_before_autherized apcmd %s\n",apcmd);
+	//printf("wid_set_dhcp_before_autherized apcmd %s\n",apcmd);
 	wid_syslog_debug_debug(WID_DEFAULT,"wid_set_dhcp_before_autherized apcmd %s\n",apcmd);
 
 	ret = wid_radio_set_extension_command(wtpid,apcmd);
@@ -26514,7 +26516,7 @@ int wid_set_sta_vlan_id(unsigned int wtpid,	unsigned int l_radioid,unsigned char
 	{
 		wid_syslog_info("wid_set_sta_vlan_id error\n");
 	}
-	printf("wid_set_sta_vlan_id apcmd %s\n",apcmd);
+	//printf("wid_set_sta_vlan_id apcmd %s\n",apcmd);
 	wid_syslog_debug_debug(WID_DEFAULT,"wid_set_sta_vlan_id apcmd %s\n",apcmd);
 
 	ret = wid_radio_set_extension_command(wtpid,apcmd);
@@ -26935,12 +26937,13 @@ int delete_ac_ip_list_group(unsigned char ID){
 int add_ac_ip(unsigned char ID, char * ip, unsigned char priority){
 	struct wid_ac_ip *tmp;
 	struct wid_ac_ip *tmp1;
-	printf("1\n");
+	wid_syslog_debug_debug(WID_DEFAULT,"%s, %d \n",__func__,__LINE__);
 	if(AC_IP_GROUP[ID] == NULL)
 		return WLAN_ID_NOT_EXIST;
-	printf("2\n");
+	//printf("2\n");
 	if(AC_IP_GROUP[ID]->ip_list == NULL){
-		printf("3\n");
+		//printf("3\n");
+		wid_syslog_debug_debug(WID_DEFAULT," ip list is NULL\n");
 		tmp = (struct wid_ac_ip *)WID_MALLOC(sizeof(struct wid_ac_ip));
 		if (NULL == tmp)
 		{
@@ -26963,7 +26966,7 @@ int add_ac_ip(unsigned char ID, char * ip, unsigned char priority){
 		AC_IP_GROUP[ID]->ipnum += 1;
 		return WID_DBUS_SUCCESS;
 	}else{
-		printf("4\n");
+		wid_syslog_debug_debug(WID_DEFAULT," ip list is not NULL\n");
 		tmp1 = AC_IP_GROUP[ID]->ip_list;
 		while(tmp1 != NULL){
 			if((strcmp(tmp1->ip, ip)==0)){
@@ -26973,7 +26976,8 @@ int add_ac_ip(unsigned char ID, char * ip, unsigned char priority){
 		}		
 		tmp1 = AC_IP_GROUP[ID]->ip_list;
 		if((tmp1->priority < priority)){
-			printf("5\n");
+			//printf("5\n");
+			wid_syslog_debug_debug(WID_DEFAULT," %s, %d\n",__func__,__LINE__);
 			tmp = (struct wid_ac_ip *)WID_MALLOC(sizeof(struct wid_ac_ip));
 			if (NULL == tmp)
 			{
@@ -26998,9 +27002,9 @@ int add_ac_ip(unsigned char ID, char * ip, unsigned char priority){
 			return WID_DBUS_SUCCESS;
 		}
 		while(tmp1->next != NULL){
-			printf("6\n");
+			//printf("6\n");
 			if((tmp1->next->priority < priority)){
-				printf("8\n");
+				//printf("8\n");
 				tmp = (struct wid_ac_ip *)WID_MALLOC(sizeof(struct wid_ac_ip));
 				if (NULL == tmp)
 				{
@@ -27027,7 +27031,7 @@ int add_ac_ip(unsigned char ID, char * ip, unsigned char priority){
 			tmp1 = tmp1->next;
 			tmp = NULL;
 		}
-		printf("9\n");
+		//printf("9\n");
 		tmp = (struct wid_ac_ip *)WID_MALLOC(sizeof(struct wid_ac_ip));
 		if (NULL == tmp)
 		{
@@ -27099,7 +27103,7 @@ int set_ac_ip_priority(unsigned char ID, char * ip, unsigned char priority){
 	struct wid_ac_ip *tmp;
 	struct wid_ac_ip *tmp1;
 	struct wid_ac_ip *node = NULL;
-	printf("1\n");
+	wid_syslog_debug_debug(WID_DEFAULT," %s , %d\n",__func__,__LINE__);
 	if(AC_IP_GROUP[ID] == NULL)
 		return WLAN_ID_NOT_EXIST;
 	
@@ -27133,13 +27137,13 @@ int set_ac_ip_priority(unsigned char ID, char * ip, unsigned char priority){
 	if(node == NULL){
 		return AC_IP_NOT_EXIST;
 	}
-	printf("2\n");
+	//printf("2\n");
 	if(AC_IP_GROUP[ID]->ip_list == NULL){
-		printf("3\n");
+		wid_syslog_debug_debug(WID_DEFAULT," ip list is NULL\n");
 		AC_IP_GROUP[ID]->ip_list = node;
 		return WID_DBUS_SUCCESS;
 	}else{
-		printf("4\n");
+		wid_syslog_debug_debug(WID_DEFAULT," ip list is not NULL\n");
 		tmp1 = AC_IP_GROUP[ID]->ip_list;
 		while(tmp1 != NULL){
 			if((strcmp(tmp1->ip, ip)==0)){
@@ -27149,15 +27153,15 @@ int set_ac_ip_priority(unsigned char ID, char * ip, unsigned char priority){
 		}		
 		tmp1 = AC_IP_GROUP[ID]->ip_list;
 		if((tmp1->priority < priority)){
-			printf("5\n");
+			wid_syslog_debug_debug(WID_DEFAULT," %s , %d\n",__func__,__LINE__);
 			node->next = AC_IP_GROUP[ID]->ip_list;
 			AC_IP_GROUP[ID]->ip_list = node;			
 			return WID_DBUS_SUCCESS;
 		}
 		while(tmp1->next != NULL){
-			printf("6\n");
+			//printf("6\n");
 			if((tmp1->next->priority < priority)){
-				printf("8\n");
+				//printf("8\n");
 				node->next = tmp1->next;
 				tmp1->next = node;				
 				return WID_DBUS_SUCCESS;				
@@ -27165,7 +27169,7 @@ int set_ac_ip_priority(unsigned char ID, char * ip, unsigned char priority){
 			tmp1 = tmp1->next;
 			tmp = NULL;
 		}
-		printf("9\n");
+		wid_syslog_debug_debug(WID_DEFAULT," %s , %d\n",__func__,__LINE__);
 		tmp1->next = node;				
 		return WID_DBUS_SUCCESS;				
 		
@@ -30874,7 +30878,7 @@ int WID_BINDING_IF_APPLY_WTP_ipv6_ioctl(unsigned int WtpID, char * ifname)
 		tmp = WID_IF_V6;
 		while(tmp != NULL)
 		{
-			printf("ifname = %s name = %s\n",tmp->ifi_name,ifname);
+			wid_syslog_debug_debug(WID_DEFAULT,"ifname = %s name = %s\n",tmp->ifi_name,ifname);
 			if(( strlen(ifname) ==	strlen(tmp->ifi_name))&&(strcmp(tmp->ifi_name,ifname)==0))
 			{	
 				WID_FREE(ifi_tmp->ifi_addr6);
@@ -31068,7 +31072,7 @@ int WID_ADD_IF_APPLY_WLAN_ipv6_ioctl(unsigned char WlanID, char * ifname)
 			
 			tmp->ifi_index = ipv6list->ifindex;
 			ifi_tmp->ifi_index  = ipv6list->ifindex;
-			printf("tmp->ifi_index = %d\n",tmp->ifi_index);
+			wid_syslog_debug_debug(WID_DEFAULT,"tmp->ifi_index = %d\n",tmp->ifi_index);
 			tmp->isipv6addr = 1;
 			WID_IF_V6 = tmp;
 
@@ -31211,7 +31215,7 @@ int WID_ADD_IF_APPLY_WLAN_ipv6_ioctl(unsigned char WlanID, char * ifname)
 	memset(wif->ifi_name,0,ETH_IF_NAME_LEN);
 	memcpy(wif->ifi_name,ifname,strlen(ifname));
 	wif->ifi_index = ifr.ifr_ifindex;
-	printf("wif->ifi_index = %d\n",wif->ifi_index);
+	wid_syslog_debug_debug(WID_DEFAULT,"wif->ifi_index = %d\n",wif->ifi_index);
 	wif->nas_id_len = 0;//zhanglei add
 	memset(wif->nas_id,0,NAS_IDENTIFIER_NAME);//zhanglei add
 	wif->ifi_next = NULL;
@@ -31840,14 +31844,14 @@ int br_read_fdb(const char *bridge, struct fdb_entry *fdbs,
 	f = fopen(path, "r");
 	
 	if (f) {
-		printf("open file %s succuss\n",path);
+		wid_syslog_debug_debug(WID_DEFAULT,"open file %s succuss\n",path);
 		fseek(f, offset*sizeof(struct __fdb_entry), SEEK_SET);
 		n = fread(fe, sizeof(struct __fdb_entry), num, f);
 		fclose(f);
 	}
 	else{
 		n = -1;
-		printf("open file %s failed\n",path);
+		wid_syslog_debug_debug(WID_DEFAULT,"open file %s failed\n",path);
 		return n;
 		}
 	for (i = 0; i < n; i++) 
@@ -31883,7 +31887,7 @@ void wtp_group_list_del(WID_WTP_GROUP *group, struct WTP_GROUP_MEMBER *wtp)
 	while (tmp != NULL && tmp->next != wtp)
 		tmp = tmp->next;
 	if (tmp == NULL) {
-		printf("tmp == NULL\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"tmp == NULL\n");
 	} else
 		tmp->next = wtp->next;
 }
@@ -32394,7 +32398,7 @@ CWBool check_radio_bind_wlan(unsigned int wtpid,unsigned char radio_l_id,unsigne
 	while(wlan_id != NULL)
 		{	
 		   
-            printf("AC_WTP[%d]->WTP_Radio[%d]->Wlan_Id; = %d\n",wtpid,radio_l_id,wlan_id->wlanid);
+            wid_syslog_debug_debug(WID_DEFAULT,"AC_WTP[%d]->WTP_Radio[%d]->Wlan_Id; = %d\n",wtpid,radio_l_id,wlan_id->wlanid);
 
 			if(wlan_id->wlanid == wlanId)
 			{
@@ -32767,7 +32771,7 @@ int check_channel(int check_channel){
 									if(check_channel >= 14)
 									{
 										ret1 = COUNTRY_EUROPE_EU;
-										printf("33\n");
+										//printf("33\n");
 									}
 									break;
 			case COUNTRY_USA_US : 
@@ -33625,7 +33629,7 @@ int init_wid_lic_socket(){
 	int rcvbuf = 65525;
 	struct sockaddr_in my_addr;
 	if ((sock = socket(PF_INET, SOCK_DGRAM, 0)) ==-1)
-	{	printf("udp socket create failed\n");		
+	{	wid_syslog_debug_debug(WID_DEFAULT,"udp socket create failed\n");		
 		exit(1);	
 	}
 	setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes));

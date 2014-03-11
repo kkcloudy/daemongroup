@@ -96,12 +96,12 @@ void get_neighbor_wtps_info2(WTP_RRM_INFO * WTP){
 			if((ap1->wtpid != 0)&&(ap1->wtpid < WTP_NUM)){
 				WTP->WTPID_List[i][0] = ap1->wtpid;
 				WTP->WTPID_List[i][1] = 0;
-				printf("WTP->WTPID_List[i][0] %d\n",WTP->WTPID_List[i][0]);
+				wid_syslog_debug_debug(WID_DEFAULT,"WTP->WTPID_List[i][0] %d\n",WTP->WTPID_List[i][0]);
 			}else{
 				WTP->WTPID_List[i][0] = 0;
 				channel_check = Neighbor_AP_Channel_Check2(ap1->Channel);
 				WTP->WTPID_List[i][1] = channel_check;
-				printf("WTP->WTPID_List[i][1] %d\n",WTP->WTPID_List[i][1]);
+				wid_syslog_debug_debug(WID_DEFAULT,"WTP->WTPID_List[i][1] %d\n",WTP->WTPID_List[i][1]);
 			}
 		//	printf("ap1->WTPID %d\n",ap1->WTPID);
 			if(ap2 == NULL)
@@ -164,13 +164,13 @@ unsigned char WTP_GET_CHANNEL2(WTP_RRM_INFO ** WTP,int WTPID)
 	if((WTP[WTPID] != NULL)&&(WTP[WTPID]->flags == 1))
 		return WTP[WTPID]->channel;
 	for(i = 0; i < 4; i++){
-		printf("WTPID %d\n",WTPID);
+		wid_syslog_debug_debug(WID_DEFAULT,"WTPID %d\n",WTPID);
 		ID = WTP[WTPID]->WTPID_List[i][0];
 		channel_nap = WTP[WTPID]->WTPID_List[i][1];
 		if(ID > WTP_NUM)
 			ID = 0;
 		if((WTP[ID] != NULL)&&(WTP[ID]->flags == 1)){
-			printf("WTP[%d]->channel %d\n",ID,WTP[ID]->channel);
+			wid_syslog_debug_debug(WID_DEFAULT,"WTP[%d]->channel %d\n",ID,WTP[ID]->channel);
 			for(j = 0; j < 5; j++){
 				if(WTP[WTPID]->H_channel_list[j] == WTP[ID]->channel){
 					WTP[WTPID]->H_channel_list[j] = 0;
@@ -180,7 +180,7 @@ unsigned char WTP_GET_CHANNEL2(WTP_RRM_INFO ** WTP,int WTPID)
 				}
 			}
 		}else if(channel_nap != 0){
-			printf("channel_nap %d\n",channel_nap);
+			wid_syslog_debug_debug(WID_DEFAULT,"channel_nap %d\n",channel_nap);
 			for(j = 0; j < 5; j++){
 				if(WTP[WTPID]->H_channel_list[j] == channel_nap){
 					WTP[WTPID]->H_channel_list[j] = 0;
@@ -193,7 +193,7 @@ unsigned char WTP_GET_CHANNEL2(WTP_RRM_INFO ** WTP,int WTPID)
 	}
 	for(i = 0; i < 5; i++){
 		if(WTP[WTPID]->H_channel_list[i] != 0){
-			printf("WTP[%d]->H_channel_list[%d] %d \n",WTPID,i,WTP[WTPID]->H_channel_list[i]);
+			wid_syslog_debug_debug(WID_DEFAULT,"WTP[%d]->H_channel_list[%d] %d \n",WTPID,i,WTP[WTPID]->H_channel_list[i]);
 			//return WTP[WTPID]->H_channel_list[i];
 			for(j = 0; j < 5; j++){
 				if(WTP[WTPID]->H_channel_list[i] == WTP[WTPID]->N_channel_list[j])
@@ -246,7 +246,7 @@ int Check_WTP_and_Neighbor_Channel2(WTP_RRM_INFO ** WTP,unsigned int WTPID){
 	ID = WTPID;
 	memcpy(WTP[ID]->H_channel_list, channel_list, 5);
 	channel = WTP_GET_CHANNEL2(WTP,ID);
-	printf("host WTP %d,channel %d\n",ID,channel);
+	wid_syslog_debug_debug(WID_DEFAULT,"host WTP %d,channel %d\n",ID,channel);
 	if(channel)
 		WTP[ID]->channel = channel;
 	WTP[ID]->flags = 1;
@@ -259,7 +259,7 @@ int Check_WTP_and_Neighbor_Channel2(WTP_RRM_INFO ** WTP,unsigned int WTPID){
 			memcpy(WTP[ID]->N_channel_list, channel_list_N, 5);
 			channel = WTP_GET_CHANNEL2(WTP,ID);
 			channel_list_N[i+1] = channel;
-			printf("neighbor WTP %d,channel %d\n",ID,channel);
+			wid_syslog_debug_debug(WID_DEFAULT,"neighbor WTP %d,channel %d\n",ID,channel);
 			if(channel){
 				WTP[ID]->channel = channel;				
 			}			
@@ -337,7 +337,7 @@ CW_THREAD_RETURN_TYPE CWDynamicChannelSelection2(void * arg)
 				WID_RADIO_SET_CHAN(AC_WTP[i]->WFR_Index+1, WTP[i]->channel);
 				//CWThreadMutexUnlock(&gACChannelMutex);					
 				wid_syslog_info("%s WTP %d Channel %d\n",__func__,i,WTP[i]->channel);
-				printf("WTP %d Channel %d\n",i,WTP[i]->channel);
+				//printf("WTP %d Channel %d\n",i,WTP[i]->channel);
 				memset(WTP[i],0,sizeof(WTP_RRM_INFO));
 				//wid_syslog_debug_debug(WID_DEFAULT,"%s,%d\n",__func__,__LINE__);
 				WID_FREE(WTP[i]);

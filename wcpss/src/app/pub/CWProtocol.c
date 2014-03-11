@@ -737,7 +737,7 @@ CWBool CWProtocolParseFragment_GetCAPWAPheadInfo(char *buf, int readBytes, CWLis
 		reassembledMsg->msg = (char *)WID_MALLOC((readBytes-msg.offset+20));
 		if( NULL == reassembledMsg->msg )
 			{
-				printf("malloc memory failure");
+				wid_syslog_debug_debug(WID_DEFAULT,"malloc memory failure");
 				return CW_FALSE;
 			}
 		bzero(reassembledMsg->msg, (readBytes-msg.offset+20));
@@ -850,7 +850,7 @@ CWBool CWProtocolParseFragment_GetCAPWAPheadInfo(char *buf, int readBytes, CWLis
 			reassembledMsg->msg = (char *)WID_MALLOC((totalSize+20));
 			if( NULL == reassembledMsg->msg )
 				{
-					printf("malloc memory failure");
+					wid_syslog_debug_debug(WID_DEFAULT,"malloc memory failure");
 					return CW_FALSE;
 				}
 			bzero(reassembledMsg->msg, (totalSize+20));

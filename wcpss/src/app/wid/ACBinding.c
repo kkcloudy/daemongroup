@@ -384,11 +384,11 @@ CWBool CWAssembleWTPRadio11nMixedGreenfield(CWProtocolMessage *msgPtr, Binding11
 	CWProtocolStore16(msgPtr, reserved);
 	//CWProtocolStore32(msgPtr, 0);
 
-	printf("#####Type is :%d\n",RadioMixedGreenfield.Type);
-	printf("#####Op is :%d\n",RadioMixedGreenfield.Op);
-	printf("#####RadioID is :%d\n",RadioMixedGreenfield.RadioID);
-	printf("#####WlanID is :%d\n",RadioMixedGreenfield.WlanID);
-	printf("#####Mixed_Greenfield is :%d\n",RadioMixedGreenfield.Mixed_Greenfield);
+	wid_syslog_debug_debug(WID_DEFAULT,"#####Type is :%d\n",RadioMixedGreenfield.Type);
+	wid_syslog_debug_debug(WID_DEFAULT,"#####Op is :%d\n",RadioMixedGreenfield.Op);
+	wid_syslog_debug_debug(WID_DEFAULT,"#####RadioID is :%d\n",RadioMixedGreenfield.RadioID);
+	wid_syslog_debug_debug(WID_DEFAULT,"#####WlanID is :%d\n",RadioMixedGreenfield.WlanID);
+	wid_syslog_debug_debug(WID_DEFAULT,"#####Mixed_Greenfield is :%d\n",RadioMixedGreenfield.Mixed_Greenfield);
 	
 	return CWAssembleMsgElem(msgPtr, BINDING_MSG_ELEMENT_TYPE_WTP_RADIO_SET);
 }
@@ -407,9 +407,9 @@ CWBool CWAssembleWTPRadio11nChannelExtOffset(CWProtocolMessage *msgPtr,  unsigne
 	CWProtocolStore16(msgPtr, reserved);
 	//CWProtocolStore32(msgPtr, 0);
 
-	printf("#####Type is :%d\n",RADIO);
-	printf("#####Op is :%d\n",Channel_Extoffset);
-	printf("#####channel_offset is :%d\n",AC_RADIO[RadioID]->channel_offset);
+	wid_syslog_debug_debug(WID_DEFAULT,"#####Type is :%d\n",RADIO);
+	wid_syslog_debug_debug(WID_DEFAULT,"#####Op is :%d\n",Channel_Extoffset);
+	wid_syslog_debug_debug(WID_DEFAULT,"#####channel_offset is :%d\n",AC_RADIO[RadioID]->channel_offset);
 	
 	return CWAssembleMsgElem(msgPtr, BINDING_MSG_ELEMENT_TYPE_WTP_RADIO_SET);
 }
@@ -429,11 +429,11 @@ CWBool CWAssembleWTPRadio11nTxChainmask(CWProtocolMessage *msgPtr, unsigned int 
 	CWProtocolStore16(msgPtr, reserved);
 	//CWProtocolStore32(msgPtr, 0);
 
-	printf("#####Type is :%d\n",RADIO);
-	printf("#####Op is :%d\n",Tx_chainmask);
+	wid_syslog_debug_debug(WID_DEFAULT,"#####Type is :%d\n",RADIO);
+	wid_syslog_debug_debug(WID_DEFAULT,"#####Op is :%d\n",Tx_chainmask);
 	//printf("#####RadioID is :%d\n",RadioMixedGreenfield.RadioID);
 	//printf("#####WlanID is :%d\n",RadioMixedGreenfield.WlanID);
-	printf("#####tx_chainmask_state_value is :%d\n",AC_RADIO[RadioID]->tx_chainmask_state_value);
+	wid_syslog_debug_debug(WID_DEFAULT,"#####tx_chainmask_state_value is :%d\n",AC_RADIO[RadioID]->tx_chainmask_state_value);
 	
 	return CWAssembleMsgElem(msgPtr, BINDING_MSG_ELEMENT_TYPE_WTP_RADIO_SET);
 }

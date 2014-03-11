@@ -228,7 +228,7 @@ void WID_WLAN_CONFIG_SAVE(unsigned int WTPIndex,unsigned int local_radio)
 										while(wds != NULL){
 											memset(buf,0,DEFAULT_LEN);
 											sprintf(buf,"/usr/sbin/wds_add ath.%d-%d %02X:%02X:%02X:%02X:%02X:%02X\n",AC_BSS[bssindex]->Radio_L_ID,k,wds->BSSID[0],wds->BSSID[1],wds->BSSID[2],wds->BSSID[3],wds->BSSID[4],wds->BSSID[5]);
-											printf("/usr/sbin/wds_add ath.%d-%d %02X:%02X:%02X:%02X:%02X:%02X\n",AC_BSS[bssindex]->Radio_L_ID,k,wds->BSSID[0],wds->BSSID[1],wds->BSSID[2],wds->BSSID[3],wds->BSSID[4],wds->BSSID[5]);
+											wid_syslog_debug_debug(WID_DEFAULT,"/usr/sbin/wds_add ath.%d-%d %02X:%02X:%02X:%02X:%02X:%02X\n",AC_BSS[bssindex]->Radio_L_ID,k,wds->BSSID[0],wds->BSSID[1],wds->BSSID[2],wds->BSSID[3],wds->BSSID[4],wds->BSSID[5]);
 											wid_radio_set_extension_command(WTPIndex,buf);
 											wds = wds->next;
 										}

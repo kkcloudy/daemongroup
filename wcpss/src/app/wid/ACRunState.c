@@ -421,7 +421,7 @@ CWBool ACEnterRun(int WTPIndex, CWProtocolMessage *msgPtr, CWBool dataFlag)
 						}else{
 							scanningWTPs1++;
 							if(scanningWTPs1 >= gActiveWTPs){	
-								printf("notice channel gActiveWTPs %d scanningWTPs1 %d\n",gActiveWTPs,scanningWTPs1);
+								wid_syslog_debug_debug(WID_DEFAULT,"notice channel gActiveWTPs %d scanningWTPs1 %d\n",gActiveWTPs,scanningWTPs1);
 								CWThreadMutexLock(&(gACChannelMutex2));
 									CWSignalThreadCondition(&gACChannelWait2);
 								CWThreadMutexUnlock(&gACChannelMutex2);
@@ -542,7 +542,7 @@ CWBool ACEnterRun(int WTPIndex, CWProtocolMessage *msgPtr, CWBool dataFlag)
 						}else{
 							scanningWTPs1++;
 							
-							printf("notice channel 2 gActiveWTPs %d scanningWTPs1 %d\n",gActiveWTPs,scanningWTPs1);
+							wid_syslog_debug_debug(WID_DEFAULT,"notice channel 2 gActiveWTPs %d scanningWTPs1 %d\n",gActiveWTPs,scanningWTPs1);
 							if(scanningWTPs1 >= gActiveWTPs){						
 								CWThreadMutexLock(&(gACChannelMutex2));
 									CWSignalThreadCondition(&gACChannelWait2);
@@ -2803,7 +2803,7 @@ CWBool CWAssembleMsgElemAddWlan(CWProtocolMessage *msgPtr, int WTPIndex, unsigne
 		//CWProtocolStore8(msgPtr, l_bss_id);
 		if(AC_BSS[BSSIndex] == NULL)
 		{
-			printf("bssindex %d\n",BSSIndex);
+			wid_syslog_debug_debug(WID_DEFAULT,"bssindex %d\n",BSSIndex);
 			CWProtocolStore8(msgPtr,0);
 		}
 		else

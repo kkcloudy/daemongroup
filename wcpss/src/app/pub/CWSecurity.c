@@ -317,7 +317,7 @@ CWBool CWSecurityInitContext(CWSecurityContext *ctxPtr, const char *caList, cons
 		// 4. Not implemented in OpenSSL (TLS_DH_RSA_WITH_3DES_EDE_CBC_SHA) CAPWAP says: SHOULD be supported
 		SSL_CTX_set_cipher_list( (*ctxPtr), "AES128-SHA:DES-CBC3-SHA:DH-RSA-AES128-SHA"); // set the ciphers supported by CAPWAP
 	} else { // pre-shared keys
-		printf("OpenSSL PrivateSharedKey not ready\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"OpenSSL PrivateSharedKey not ready\n");
 		exit(0);
 		/*
 		useCertificate = CW_FALSE;
@@ -493,14 +493,14 @@ int psk_key2bn(const char *psk_key, unsigned char *psk, unsigned int max_psk_len
     ret = BN_hex2bn(&bn, psk_key);
     if (!ret)
         {
-        printf("Could not convert PSK key '%s' to BIGNUM\n", psk_key);
+        wid_syslog_debug_debug(WID_DEFAULT,"Could not convert PSK key '%s' to BIGNUM\n", psk_key);
         if (bn)
             BN_free(bn);
         return 0;
         }
     if (BN_num_bytes(bn) > max_psk_len)
         {
-        printf("psk buffer of callback is too small (%d) for key (%d)\n",
+        wid_syslog_debug_debug(WID_DEFAULT,"psk buffer of callback is too small (%d) for key (%d)\n",
             max_psk_len, BN_num_bytes(bn));
         BN_free(bn);
         return 0;

@@ -140,7 +140,7 @@ int set_wid_src_mac()
 	 fd = open("/dev/bm0",0);
 	 if(fd == -1)
 	  {
-	   printf("open error!");
+	   wid_syslog_debug_debug(WID_DEFAULT,"open error!");
 	  }
 	 ret = ioctl(fd,BM_IOC_GET_MAC,&mac_add);
 
@@ -387,7 +387,7 @@ int hwaddr_set( char *ifname, char *addr, int addrlen )
 	ret = ioctl(fd, SIOCSIFFLAGS, (char *)&ifr);
 	if( ret )	goto end;
 end:;
-if( ret )	printf("error errno=%d\n",errno);
+if( ret )	wid_syslog_debug_debug(WID_DEFAULT,"error errno=%d\n",errno);
 
 	close(fd);
 	return ret;
@@ -527,19 +527,19 @@ int init_wid_bak_socket(){
 		sock = socket(AF_TIPC, SOCK_RDM, 0);
 		if (0 != bind(sock, (struct sockaddr *)&server_addr, sizeof(server_addr)))
 		{
-			printf("Server: failed to bind port name\n");
+			wid_syslog_debug_debug(WID_DEFAULT,"Server: failed to bind port name\n");
 			//exit(1);
 		}
 	}else{
 		struct sockaddr_in my_addr;
 #ifndef _AC_BAK_UDP_ 
 		if ((sock = socket(PF_INET, SOCK_STREAM, IPPROTO_SCTP)) ==-1)
-		{	printf("udp socket create failed\n");		
+		{	wid_syslog_debug_debug(WID_DEFAULT,"udp socket create failed\n");		
 			exit(1);	
 		}
 #else
 		if ((sock = socket(PF_INET, SOCK_DGRAM, 0)) ==-1)
-		{	printf("udp socket create failed\n");		
+		{	wid_syslog_debug_debug(WID_DEFAULT,"udp socket create failed\n");		
 			exit(1);	
 		}
 #endif
@@ -852,7 +852,7 @@ void B_WTP_ADD_OP(B_Msg *msg){
 			CWThreadMutexLock(&ACLicense);
 			if(g_wtp_count[gWTPs[WTPID].oemoption]->flag==0){
 				if(g_wtp_count[gWTPs[WTPID].oemoption]->gcurrent_wtp_count >= g_wtp_count[gWTPs[WTPID].oemoption]->gmax_wtp_count){
-					printf("###can not access ap type %d access count over type count\n",gWTPs[WTPID].oemoption);
+					//printf("###can not access ap type %d access count over type count\n",gWTPs[WTPID].oemoption);
 					wid_syslog_debug_debug(WID_WTPINFO,"B_WTP_ADD_OP wtp %d ###can not access ap type %d access count over type count",WTPID,gWTPs[WTPID].oemoption);	
 					CWThreadMutexUnlock(&ACLicense);
 					return ;
@@ -861,7 +861,7 @@ void B_WTP_ADD_OP(B_Msg *msg){
 			else{
 				flag = g_wtp_count[gWTPs[WTPID].oemoption]->flag;
 				if(g_wtp_binding_count[flag]->gcurrent_wtp_count >= g_wtp_binding_count[flag]->gmax_wtp_count){
-					printf("###can not access ap type %d access count over type count\n",gWTPs[WTPID].oemoption);
+					//printf("###can not access ap type %d access count over type count\n",gWTPs[WTPID].oemoption);
 					wid_syslog_debug_debug(WID_WTPINFO,"B_WTP_ADD_OP wtp %d ###can not access ap type %d access count over type count",WTPID,gWTPs[WTPID].oemoption);	
 					CWThreadMutexUnlock(&ACLicense);
 					return ;

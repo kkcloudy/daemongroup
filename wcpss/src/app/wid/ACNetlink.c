@@ -155,17 +155,17 @@ netlink_parse_info(int (*filter) (struct sockaddr_nl *, struct nlmsghdr *),
 			if (save_errno == EWOULDBLOCK
 			    || save_errno == EAGAIN)
 				break;
-			printf( "%s recvmsg overrun: %s",
+			wid_syslog_debug_debug(WID_DEFAULT, "%s recvmsg overrun: %s",
 			     nl->name, safe_strerror(save_errno));
 			continue;
 		}
 
 		if (status == 0) {
-			printf( "%s EOF", nl->name);
+			wid_syslog_debug_debug(WID_DEFAULT, "%s EOF", nl->name);
 			return -1;
 		}
 		if (msg.msg_namelen != sizeof snl) {
-			printf(
+			wid_syslog_debug_debug(WID_DEFAULT,
 			     "%s sender address length error: length %d",
 			     nl->name, msg.msg_namelen);
 			return -1;
@@ -206,7 +206,7 @@ netlink_parse_info(int (*filter) (struct sockaddr_nl *, struct nlmsghdr *),
 				if (h->nlmsg_len <
 				    NLMSG_LENGTH(sizeof(struct nlmsgerr)))
 				{
-					printf(
+					wid_syslog_debug_debug(WID_DEFAULT,
 					     "%s error: message truncated",
 					     nl->name);
 					return -1;
@@ -243,8 +243,7 @@ netlink_parse_info(int (*filter) (struct sockaddr_nl *, struct nlmsghdr *),
 			if (nl != &netlink_cmd
 			    && h->nlmsg_pid == netlink_cmd.snl.nl_pid) {
 				 
-					printf
-					    ("netlink_parse_info: %s packet comes from %s",
+					wid_syslog_debug_debug(WID_DEFAULT,"netlink_parse_info: %s packet comes from %s",
 					     netlink_cmd.name, nl->name);
 				continue;
 			}
@@ -252,8 +251,7 @@ netlink_parse_info(int (*filter) (struct sockaddr_nl *, struct nlmsghdr *),
 			error = (*filter) (&snl, h);
 			if (error < 0) {
 				 
-					printf
-					    ("%s filter function error",
+					wid_syslog_debug_debug(WID_DEFAULT,"%s filter function error",
 					     nl->name);
 				ret = error;
 			}
@@ -261,12 +259,12 @@ netlink_parse_info(int (*filter) (struct sockaddr_nl *, struct nlmsghdr *),
 
 		/* After error care. */
 		if (msg.msg_flags & MSG_TRUNC) {
-			printf( "%s error: message truncated",
+			wid_syslog_debug_debug(WID_DEFAULT, "%s error: message truncated",
 			     nl->name);
 			continue;
 		}
 		if (status) {
-			printf(
+			wid_syslog_debug_debug(WID_DEFAULT,
 			     "%s error: data remnant size %d", nl->name,
 			     status);
 			return -1;
@@ -295,7 +293,7 @@ int netlink_link_change(struct sockaddr_nl *snl, struct nlmsghdr *h)
 	    (h->nlmsg_type == RTM_NEWLINK
 	     || h->nlmsg_type == RTM_DELLINK)) {
 		/* If this is not link add/delete message so print warning. */
-		printf("netlink_link_change: wrong kernel message %d\n",
+		wid_syslog_debug_debug(WID_DEFAULT,"netlink_link_change: wrong kernel message %d\n",
 			  h->nlmsg_type);
 		return 0;
 	}
@@ -327,13 +325,13 @@ int netlink_link_change(struct sockaddr_nl *snl, struct nlmsghdr *h)
 	if(tmp != NULL){
 		if (h->nlmsg_type == RTM_NEWLINK) {	
 			Check_WLAN_WTP_IF_Index(&ifi_tmp,name);
-			printf("add name %s\n",name);
+			wid_syslog_debug_debug(WID_DEFAULT,"add name %s\n",name);
 		} else {
 			Delete_Interface(name, ifi_tmp.ifi_index);
-			printf("del name %s\n",name);
+			wid_syslog_debug_debug(WID_DEFAULT,"del name %s\n",name);
 		}
 	}
-	printf("link name %s\n",name);
+	wid_syslog_debug_debug(WID_DEFAULT,"link name %s\n",name);
 	return 0;
 }
 
@@ -418,7 +416,7 @@ int netlink_interface_addr(struct sockaddr_nl *snl, struct nlmsghdr *h)
 	ifi_tmp->ifi_index = ifa->ifa_index;
 	char buf[BUFSIZ];
 	if (tb[IFA_LOCAL]){
-		printf("  IFA_LOCAL     %s/%d\n",
+		wid_syslog_debug_debug(WID_DEFAULT,"  IFA_LOCAL     %s/%d\n",
 			   inet_ntop(ifa->ifa_family,
 				     RTA_DATA(tb[IFA_LOCAL]), buf,
 				     BUFSIZ), ifa->ifa_prefixlen);
@@ -437,7 +435,7 @@ int netlink_interface_addr(struct sockaddr_nl *snl, struct nlmsghdr *h)
 			//memcpy(&((struct sockaddr_in *) ifi_tmp->ifi_addr)->sin_addr,&ip,sizeof(struct in_addr));
 			((struct sockaddr_in *) ifi_tmp->ifi_addr)->sin_addr.s_addr = ip;
 			((struct sockaddr *) ifi_tmp->ifi_addr)->sa_family = AF_INET;
-			printf("  IFA_ADDRESS   %s/%d\n",
+			wid_syslog_debug_debug(WID_DEFAULT,"  IFA_ADDRESS   %s/%d\n",
 				   inet_ntop(ifa->ifa_family,
 					     RTA_DATA(tb[IFA_ADDRESS]),
 					     buf, BUFSIZ),
@@ -450,7 +448,7 @@ int netlink_interface_addr(struct sockaddr_nl *snl, struct nlmsghdr *h)
 			inet_pton(AF_INET6, inet_ntop(ifa->ifa_family,
 					     RTA_DATA(tb[IFA_ADDRESS]),
 					     buf, BUFSIZ), &(((struct sockaddr_in6*)ifi_tmp->ifi_addr6)->sin6_addr));
-				printf("  IFA_ADDRESS   %s/%d\n",
+				wid_syslog_debug_debug(WID_DEFAULT,"  IFA_ADDRESS   %s/%d\n",
 		   inet_ntop(ifa->ifa_family,
 			     RTA_DATA(tb[IFA_ADDRESS]),
 			     buf, BUFSIZ),
@@ -460,7 +458,7 @@ int netlink_interface_addr(struct sockaddr_nl *snl, struct nlmsghdr *h)
 	}
 	if (tb[IFA_BROADCAST])
 	{
-		printf("  IFA_BROADCAST %s/%d\n",
+		wid_syslog_debug_debug(WID_DEFAULT,"  IFA_BROADCAST %s/%d\n",
 			   inet_ntop(ifa->ifa_family,
 				     RTA_DATA(tb[IFA_BROADCAST]),
 				     buf, BUFSIZ),
@@ -470,13 +468,13 @@ int netlink_interface_addr(struct sockaddr_nl *snl, struct nlmsghdr *h)
 	{
 		name = (char *) RTA_DATA(tb[IFA_LABEL]);
 		memcpy(ifi_tmp->ifi_name, name, strlen(name));
-		printf("  IFA_LABEL     %s\n",
+		wid_syslog_debug_debug(WID_DEFAULT,"  IFA_LABEL     %s\n",
 			   (char *) RTA_DATA(tb[IFA_LABEL]));
 	}
 	if (tb[IFA_CACHEINFO]) {
 		struct ifa_cacheinfo *ci =
 		    RTA_DATA(tb[IFA_CACHEINFO]);
-		printf("  IFA_CACHEINFO pref %d, valid %d\n",
+		wid_syslog_debug_debug(WID_DEFAULT,"  IFA_CACHEINFO pref %d, valid %d\n",
 			   ci->ifa_prefered, ci->ifa_valid);
 	}
 	
@@ -610,7 +608,7 @@ int kernel_read()
 			ret = netlink_parse_info(netlink_information_fetch, &netlink);
 		}
 	}
-	printf("kernel netlink exit\n");
+	wid_syslog_debug_debug(WID_DEFAULT,"kernel netlink exit\n");
 	return 0;
 }
 
@@ -626,14 +624,14 @@ static int netlink_socket(struct nlsock *nl, unsigned long groups)
 	u_int32_t nl_rcvbufsize = 0;
 	sock = socket(AF_NETLINK, SOCK_RAW, NETLINK_ROUTE);
 	if (sock < 0) {
-		printf("Can't open %s socket: %s", nl->name,
+		wid_syslog_debug_debug(WID_DEFAULT,"Can't open %s socket: %s", nl->name,
 		     safe_strerror(errno));
 		return -1;
 	}
 
 	ret = fcntl(sock, F_SETFL, O_NONBLOCK);
 	if (ret < 0) {
-		printf("Can't set %s socket flags: %s",
+		wid_syslog_debug_debug(WID_DEFAULT,"Can't set %s socket flags: %s",
 		     nl->name, safe_strerror(errno));
 		close(sock);
 		return -1;
@@ -652,7 +650,7 @@ static int netlink_socket(struct nlsock *nl, unsigned long groups)
 		    getsockopt(sock, SOL_SOCKET, SO_RCVBUF, &oldsize,
 			       &oldlen);
 		if (ret < 0) {
-			printf(
+			wid_syslog_debug_debug(WID_DEFAULT,
 			     "Can't get %s receive buffer size: %s\n",
 			     nl->name, safe_strerror(errno));
 			close(sock);
@@ -663,7 +661,7 @@ static int netlink_socket(struct nlsock *nl, unsigned long groups)
 		    setsockopt(sock, SOL_SOCKET, SO_RCVBUF, &nl_rcvbufsize,
 			       sizeof(nl_rcvbufsize));
 		if (ret < 0) {
-			printf(
+			wid_syslog_debug_debug(WID_DEFAULT,
 			     "Can't set %s receive buffer size: %s\n",
 			     nl->name, safe_strerror(errno));
 			close(sock);
@@ -674,14 +672,14 @@ static int netlink_socket(struct nlsock *nl, unsigned long groups)
 		    getsockopt(sock, SOL_SOCKET, SO_RCVBUF, &newsize,
 			       &newlen);
 		if (ret < 0) {
-			printf(
+			wid_syslog_debug_debug(WID_DEFAULT,
 			     "Can't get %s receive buffer size: %s\n",
 			     nl->name, safe_strerror(errno));
 			close(sock);
 			return -1;
 		}
 
-		printf(
+		wid_syslog_debug_debug(WID_DEFAULT,
 		     "Setting netlink socket receive buffer size: %u -> %u\n",
 		     oldsize, newsize);
 	}
@@ -694,7 +692,7 @@ static int netlink_socket(struct nlsock *nl, unsigned long groups)
 	ret = bind(sock, (struct sockaddr *) &snl, sizeof snl);
 	save_errno = errno;
 	if (ret < 0) {
-		printf(
+		wid_syslog_debug_debug(WID_DEFAULT,
 		     "Can't bind %s socket to group 0x%x: %s", nl->name,
 		     snl.nl_groups, safe_strerror(save_errno));
 		close(sock);
@@ -706,7 +704,7 @@ static int netlink_socket(struct nlsock *nl, unsigned long groups)
 	    getsockname(sock, (struct sockaddr *) &snl,
 			(socklen_t *) & namelen);
 	if (ret < 0 || namelen != sizeof snl) {
-		printf("Can't get %s socket name: %s",
+		wid_syslog_debug_debug(WID_DEFAULT,"Can't get %s socket name: %s",
 		     nl->name, safe_strerror(errno));
 		close(sock);
 		return -1;

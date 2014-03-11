@@ -81,7 +81,7 @@ int get_ipv4addr_by_ifname(unsigned char ID)
 	}
 	memset(AC_IP_GROUP[ID]->ipaddr,0,ETH_IF_NAME_LEN+1);
 	sprintf((char*)AC_IP_GROUP[ID]->ipaddr,"%s",inet_ntoa(((struct sockaddr_in*)(ifi->ifi_addr))->sin_addr));
-	printf("get_ipv4addr_by_ifname = %s \n",AC_IP_GROUP[ID]->ipaddr);
+	wid_syslog_debug_debug(WID_DEFAULT,"get_ipv4addr_by_ifname = %s \n",AC_IP_GROUP[ID]->ipaddr);
 
 	if(ifi->ifi_addr != NULL){
 		WID_FREE(ifi->ifi_addr);
@@ -105,11 +105,11 @@ int init_client_socket()
 	if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) == -1)
 	{
 		perror("socket error\n");
-		printf("init_client_socket error\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"init_client_socket error\n");
 		return -1;
 	}
 	
-	printf("init_client_socket = %d\n",sockfd);
+	wid_syslog_debug_debug(WID_DEFAULT,"init_client_socket = %d\n",sockfd);
 	
 	return sockfd;
 	
@@ -121,23 +121,23 @@ void SendActiveWTPCount(int inum)
 	int i;
 	struct wid_ac_ip *tmp;
 	struct sockaddr_in servaddr;
-	printf("3333333333333333333333333\n"); 
+	//printf("3333333333333333333333333\n"); 
 	
 	for(i = 1; i < ACIPLIST_NUM; i++)
 	{
 		if((AC_IP_GROUP[i] != NULL)&&(AC_IP_GROUP[i]->load_banlance == 1))
 		{
-			printf("44444444444444444444444444 %d \n",i); 
+			//rintf("44444444444444444444444444 %d \n",i); 
 			tmp = AC_IP_GROUP[i]->ip_list;	
 			while(tmp != NULL)
 			{
 				//send date
-				printf("5555555555555555555555555555 %d sock = %d\n",i,AC_IP_GROUP[i]->isock); 
+				wid_syslog_debug_debug(WID_DEFAULT,"i =  %d sock = %d\n",i,AC_IP_GROUP[i]->isock); 
 				if((strcmp((char*)AC_IP_GROUP[i]->ipaddr,tmp->ip)==0))
 				{
 					tmp->wtpcount = gActiveWTPs;
 					make_link_sequence_by_wtpcount(i);
-					printf("change our active wtp count %d \n",gActiveWTPs); 
+					wid_syslog_debug_debug(WID_DEFAULT,"change our active wtp count %d \n",gActiveWTPs); 
 				}
 				else
 				{
@@ -148,10 +148,10 @@ void SendActiveWTPCount(int inum)
 					if(sendto(AC_IP_GROUP[i]->isock,&count,4,0,(struct sockaddr*)&servaddr,sizeof(servaddr)) != 4)
 					{
 						perror("sendto error"); 
-						printf("sendto error\n"); 
+						wid_syslog_debug_debug(WID_DEFAULT,"sendto error\n"); 
 						continue;
 					}	
-					printf("sendto SendActiveWTPCount ok\n"); 
+					wid_syslog_debug_debug(WID_DEFAULT,"sendto SendActiveWTPCount ok\n"); 
 				}
 				
 						
@@ -277,7 +277,7 @@ CW_THREAD_RETURN_TYPE CWLoadbanlanceThread(void * arg)
 	while(1)
 	{
 		n = recvfrom(sockfd, (char*)&count, 4, 0, ( struct sockaddr *)&remote_addr, &len);
-		printf("received a connection from %s count is %d\n", inet_ntoa(remote_addr.sin_addr),count);
+		wid_syslog_debug_debug(WID_DEFAULT,"received a connection from %s count is %d\n", inet_ntoa(remote_addr.sin_addr),count);
 
 		
 		//
@@ -288,7 +288,7 @@ CW_THREAD_RETURN_TYPE CWLoadbanlanceThread(void * arg)
 		{
 			if((AC_IP_GROUP[i] != NULL)&&(AC_IP_GROUP[i]->load_banlance == 1))
 			{
-				printf("kkkkkkkkkkkkkkkkkkkkkkkk %d \n",i); 
+				wid_syslog_debug_debug(WID_DEFAULT,"i =  %d \n",i); 
 				tmp = AC_IP_GROUP[i]->ip_list;	
 				while(tmp != NULL)
 				{
@@ -298,7 +298,7 @@ CW_THREAD_RETURN_TYPE CWLoadbanlanceThread(void * arg)
 						tmp->wtpcount = count;
 						wtpcountchange = 1;
 						
-						printf("change remote active wtp count %d \n",count); 
+						wid_syslog_debug_debug(WID_DEFAULT,"change remote active wtp count %d \n",count); 
 						break;
 					}					
 							

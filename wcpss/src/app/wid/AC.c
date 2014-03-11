@@ -314,12 +314,12 @@ unsigned char g_auto_add_radio_to_ebr = 0;//auto add radio interface to ebr swit
 /*  *******************___FUNCTIONS___*******************  */
 
 int main (int argc, const char * argv[]) {
-	printf("argc %d\n",argc);
+	wid_syslog_debug_debug(WID_DEFAULT,"argc %d\n",argc);
 	if(argc > 2){
 		local =  atoi(argv[1]);
 		vrrid =  atoi(argv[2]);
 	}else if(argc != 1){
-		printf("argc %d, something wrong\n",argc);
+		wid_syslog_debug_debug(WID_DEFAULT,"argc %d, something wrong\n",argc);
 		return 0;
 	}
 	wid_pid_write(vrrid);
@@ -509,7 +509,7 @@ void CWACInit() {
     }
     
 	wid_sock = init_wid_bak_socket();
-	printf("wid_sock %d\n",wid_sock);
+	wid_syslog_debug_debug(WID_DEFAULT,"wid_sock %d\n",wid_sock);
 	CWCreateThreadCondition(&gACInterfaceWait);
 	CWCreateThreadCondition(&gInterfaceComplete);	
 	CWCreateThreadCondition(&gSTARoamingWait);
@@ -790,7 +790,7 @@ void CWWIDInit(){
 				}
 			}
 			g_wtp_count[i]->gmax_wtp_count_assign = g_wtp_count[i]->gmax_wtp_count;
-			printf("################ maxwtp[%d] = %d\n",i,g_wtp_count[i]->gmax_wtp_count);
+			//printf("################ maxwtp[%d] = %d\n",i,g_wtp_count[i]->gmax_wtp_count);
 			wid_syslog_info("################ maxwtp[%d] = %d\n",i,g_wtp_count[i]->gmax_wtp_count);
 		}
 		
@@ -801,7 +801,7 @@ void CWWIDInit(){
 		WTP_NUM += g_wtp_count[i]->gmax_wtp_count;
 	}
 */	
-	printf("################ maxwtp = %d\n",WTP_NUM);
+	wid_syslog_debug_debug(WID_DEFAULT,"################ maxwtp = %d\n",WTP_NUM);
 	WTP_NUM += 1;
 	G_RADIO_NUM = WTP_NUM*L_RADIO_NUM;
 	BSS_NUM = G_RADIO_NUM*L_BSS_NUM;
@@ -1144,10 +1144,10 @@ CWBool AsdWsm_bytes_info(unsigned int WTPID, Operate op)
 }
 int copymixwtpip(struct mixwtpip *wtpip, const struct sockaddr *sa2)
 {
-	printf("enter copymixwtpip \n");
+	wid_syslog_debug_debug(WID_DEFAULT,"enter copymixwtpip \n");
 	switch (sa2->sa_family) {
 	case AF_INET: {
-		printf("enter copymixwtpip ipv4\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"enter copymixwtpip ipv4\n");
 		 wtpip->addr_family = AF_INET;
 		 #if 0
 		(memcpy(wtpip->addr,
@@ -1161,7 +1161,7 @@ int copymixwtpip(struct mixwtpip *wtpip, const struct sockaddr *sa2)
 
 #ifdef	IPV6
 	case AF_INET6: {
-		printf("enter copymixwtpip ipv6\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"enter copymixwtpip ipv6\n");
 		 wtpip->addr_family = AF_INET6;
 		(memcpy( wtpip->m_v6addr,
 					   &((struct sockaddr_in6 *) sa2)->sin6_addr,
@@ -1172,7 +1172,7 @@ int copymixwtpip(struct mixwtpip *wtpip, const struct sockaddr *sa2)
 #endif
 	default:
 	   wtpip->addr_family = 0;
-	   printf("default %d\n",sa2->sa_family);
+	   wid_syslog_debug_debug(WID_DEFAULT,"default %d\n",sa2->sa_family);
 
 	}
 	return 0;
@@ -2787,46 +2787,46 @@ void CWCaptrue(int n ,unsigned char *buffer){
 		while((n-t)>=16)
 		{
 			int i;
-			printf("[");
+			wid_syslog_debug_debug(WID_DEFAULT,"[");
 			for(i=0;i<16;i++)
-				printf("%02x ",buffer[t+i]);
-			printf("]\t[");
+				wid_syslog_debug_debug(WID_DEFAULT,"%02x ",buffer[t+i]);
+			wid_syslog_debug_debug(WID_DEFAULT,"]\t[");
 			for(i=0;i<16;i++)
 			{
 				char ch=buffer[t+i];
 				if(isalnum(ch))
-					printf("%c",ch);
+					wid_syslog_debug_debug(WID_DEFAULT,"%c",ch);
 				else
-					printf(".");
+					wid_syslog_debug_debug(WID_DEFAULT,".");
 			}
-			printf("]\n");
+			wid_syslog_debug_debug(WID_DEFAULT,"]\n");
 			t+=16;
 		}
 
 		if(n>t)
 		{
 			int i=t;
-			printf("[");
+			wid_syslog_debug_debug(WID_DEFAULT,"[");
 			while(i<n)
-				printf("%02x ",buffer[i++]);
-			printf("]");
+				wid_syslog_debug_debug(WID_DEFAULT,"%02x ",buffer[i++]);
+			wid_syslog_debug_debug(WID_DEFAULT,"]");
 			i=n-t;
 			i=16-i;
 			while(i--)
-				printf("   ");
-			printf("\t[");
+				wid_syslog_debug_debug(WID_DEFAULT,"   ");
+			wid_syslog_debug_debug(WID_DEFAULT,"\t[");
 			i=t;
 			while(i<n)
 			{
 				char ch=buffer[i++];
 				if(isalnum(ch))
-					printf("%c",ch);
+					wid_syslog_debug_debug(WID_DEFAULT,"%c",ch);
 				else
-					printf(".");
+					wid_syslog_debug_debug(WID_DEFAULT,".");
 			}
-			printf("]\n");
+			wid_syslog_debug_debug(WID_DEFAULT,"]\n");
 		}
-		printf("\n\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"\n\n");
 }
 
 
@@ -2896,7 +2896,7 @@ int get_dir_wild_file_count(char *dir, char *wildfile)
 			wildfilecount++;
 		}
 	}
-	printf("last count = %d\n",wildfilecount);
+	wid_syslog_debug_debug(WID_DEFAULT,"last count = %d\n",wildfilecount);
 	closedir(dp);
 	return wildfilecount;
 }

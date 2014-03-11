@@ -49,7 +49,7 @@ CWBool ACEnterDataCheck (int WTPIndex, CWProtocolMessage *msgPtr)
 
 	if(gloadbanlance == 1)
 	{
-		printf("ap run send active wtp count is %d \n",gActiveWTPs);
+		wid_syslog_debug_debug(WID_DEFAULT,"ap run send active wtp count is %d \n",gActiveWTPs);
 		CWThreadMutexLock(&ACIPLISTMutex);
 		SendActiveWTPCount(gActiveWTPs);
 		CWThreadMutexUnlock(&ACIPLISTMutex);

@@ -180,7 +180,7 @@ int ipv6_bind_interface_for_wid(struct ifi_info *ifi, int port)
 		printf("ipv6_bind_interface_for_wid socket error");
 		return BINDING_IPV6_ADDRE_RROR;
 	}
-	printf("ipv6 fd= %d\n",sockfd);
+	wid_syslog_debug_debug(WID_DEFAULT,"ipv6 fd= %d\n",sockfd);
 	
 	setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes));
 
@@ -362,7 +362,7 @@ void display_ginterface_list()
 		if(gInterfaces[i].enable == 1)
 		{
 			paddr = sock_ntop_r(((struct sockaddr*)&(gInterfaces[i].addr)), ipaddr);
-			printf("the %d addr is:%s\n",i,paddr);
+			wid_syslog_debug_debug(WID_DEFAULT,"the %d addr is:%s\n",i,paddr);
 			
 		}
 	}
@@ -376,16 +376,16 @@ void display_gmlltisock_list(CWMultiHomedSocket *sockPtr)
 	struct CWMultiHomedInterface *inf;
 	if(sockPtr == NULL || sockPtr->interfaces == NULL) 
 	{
-		printf("binding sock is null\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"binding sock is null\n");
 		return;
 	}
 	
 	inf = sockPtr->interfaces;
-	printf("all multi sock is %d\n",sockPtr->count);
+	wid_syslog_debug_debug(WID_DEFAULT,"all multi sock is %d\n",sockPtr->count);
 	for(i = 0; (i < sockPtr->count)&&(inf != NULL); i++) {
 		
 		paddr = sock_ntop_r(((struct sockaddr*)&(gInterfaces[i].addr)), ipaddr);
-		printf("ifname=%s addr=%s sock=%d sysindex=%d bindingindex=%d gindex=%d\n",\
+		wid_syslog_debug_debug(WID_DEFAULT,"ifname=%s addr=%s sock=%d sysindex=%d bindingindex=%d gindex=%d\n",\
 			inf->ifname,paddr,inf->sock,inf->systemIndex,inf->systemIndexbinding,inf->gIf_Index);
 		
 		if(inf->if_next == NULL)
@@ -402,12 +402,12 @@ void display_ipv6_addr_list(struct tag_ipv6_addr_list *ipv6list)
 
 	struct tag_ipv6_addr *ipv6addr = ipv6list->ipv6list;
 	int i=0;
-	printf("interface index is %d\n",ipv6list->ifindex);
-	printf("interface ipv6 addr count is %d\n",ipv6list->ipv6num);
+	wid_syslog_debug_debug(WID_DEFAULT,"interface index is %d\n",ipv6list->ifindex);
+	wid_syslog_debug_debug(WID_DEFAULT,"interface ipv6 addr count is %d\n",ipv6list->ipv6num);
 
 	for(i=0; i<ipv6list->ipv6num; i++)
 	{
-		printf("the %d ipv6addr is %s\n",i,ipv6addr->ipv6addr);
+		wid_syslog_debug_debug(WID_DEFAULT,"the %d ipv6addr is %s\n",i,ipv6addr->ipv6addr);
 		ipv6addr = ipv6addr->next;
 	}	
 }

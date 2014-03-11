@@ -350,10 +350,10 @@ CWBool CWSaveConfigureRequestMessage (CWProtocolConfigureRequestValues *configur
 	(WTPProtocolManager->radioAdminInfo).radiosCount = configureRequest->radioAdminInfoCount;
 	(WTPProtocolManager->radioAdminInfo).radios = configureRequest->radioAdminInfo;
 
-	printf("radioAdminInfoCount %d\n",configureRequest->radioAdminInfoCount);
+	wid_syslog_debug_debug(WID_DEFAULT,"radioAdminInfoCount %d\n",configureRequest->radioAdminInfoCount);
 	for(i=0;i<configureRequest->radioAdminInfoCount;i++)
 	{
-		printf("id %d state %d\n",configureRequest->radioAdminInfo[i].ID,configureRequest->radioAdminInfo[i].state);
+		wid_syslog_debug_debug(WID_DEFAULT,"id %d state %d\n",configureRequest->radioAdminInfo[i].ID,configureRequest->radioAdminInfo[i].state);
 		l_radio_id = configureRequest->radioAdminInfo[i].ID;
 		if(AC_WTP[wtpindex]->WTP_Radio[l_radio_id] != NULL)
 		{
@@ -363,7 +363,7 @@ CWBool CWSaveConfigureRequestMessage (CWProtocolConfigureRequestValues *configur
 				AC_WTP[wtpindex]->wifi_extension_info.wifi_state[l_radio_id] = 3;
 				if(gtrapflag == 1)
 					wid_dbus_trap_ap_wifi_if_error(wtpindex,l_radio_id,1);
-				printf("wtpid %d radioid %d send wifi error trap\n",wtpindex,l_radio_id);
+				wid_syslog_debug_debug(WID_DEFAULT,"wtpid %d radioid %d send wifi error trap\n",wtpindex,l_radio_id);
 			}
 		}
 	}

@@ -1031,8 +1031,8 @@ CWBool  CWAssembleWtpEthMtu(CWProtocolMessage *msgPtr,int wtpid,unsigned char et
 	CWProtocolStore32(msgPtr, mtu);
 	CWProtocolStore32(msgPtr, reseved);
 
-	printf("value %d eth_index %d mtu %d\n",value,eth_index,mtu);
-	printf("value %d eth0 mtu %d eth1 mtu %d\n",value,AC_WTP[wtpid]->apifinfo.eth[0].eth_mtu,AC_WTP[wtpid]->apifinfo.eth[1].eth_mtu);
+	wid_syslog_debug_debug(WID_DEFAULT,"value %d eth_index %d mtu %d\n",value,eth_index,mtu);
+	wid_syslog_debug_debug(WID_DEFAULT,"value %d eth0 mtu %d eth1 mtu %d\n",value,AC_WTP[wtpid]->apifinfo.eth[0].eth_mtu,AC_WTP[wtpid]->apifinfo.eth[1].eth_mtu);
 
 	return CWAssembleMsgElem(msgPtr, CW_MSG_ELEMENT_ETH_SET_CW_TYPE);
 
@@ -1158,7 +1158,7 @@ CWBool  CWAssembleWtpStaWapiInfoReport(CWProtocolMessage *msgPtr,int wtpid)
 	if(msgPtr == NULL) return CWErrorRaise(CW_ERROR_WRONG_ARG, NULL);
 
 	// create message
-	printf("value %d flag %d interval %d\n",value,flag,interval);
+	wid_syslog_debug_debug(WID_DEFAULT,"value %d flag %d interval %d\n",value,flag,interval);
 	CW_CREATE_PROTOCOL_MESSAGE(*msgPtr, valuelen, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
 	
 	CWProtocolStore8(msgPtr, value);
@@ -1411,19 +1411,19 @@ CWBool CWParseMsgElemCWWtpStaIpMacReportInfo(CWProtocolMessage *msgPtr, int len,
 	valPtr->ipv4Address = 0;
 	
 	valPtr->op=   CWProtocolRetrieve8(msgPtr);
-	printf("##staIpMac##op :%d\n",valPtr->op);
+	wid_syslog_debug_debug(WID_DEFAULT,"##staIpMac##op :%d\n",valPtr->op);
 
 	valPtr->radioId= CWProtocolRetrieve8(msgPtr);
-	printf("##staIpMac##radioId :%d\n",valPtr->radioId);
+	wid_syslog_debug_debug(WID_DEFAULT,"##staIpMac##radioId :%d\n",valPtr->radioId);
 	//valPtr->mac_length = CWProtocolRetrieve8(msgPtr);
 
 	valPtr->wlanId= CWProtocolRetrieve8(msgPtr);
-	printf("##staIpMac##wlanId :%d\n",valPtr->wlanId);
+	wid_syslog_debug_debug(WID_DEFAULT,"##staIpMac##wlanId :%d\n",valPtr->wlanId);
 	valPtr->vlanId= CWProtocolRetrieve32(msgPtr);
-	printf("##staIpMac##vlanId :%d\n",valPtr->vlanId);
+	wid_syslog_debug_debug(WID_DEFAULT,"##staIpMac##vlanId :%d\n",valPtr->vlanId);
 
 	unsigned char* mac = (unsigned char*)CWProtocolRetrieveStr(msgPtr,6);
-	printf("##staIpMac##mac :%s\n",mac);
+	wid_syslog_debug_debug(WID_DEFAULT,"##staIpMac##mac :%s\n",mac);
 	
 	memcpy(valPtr->mac, mac, 6);
 	WID_FREE(mac);
@@ -1431,7 +1431,7 @@ CWBool CWParseMsgElemCWWtpStaIpMacReportInfo(CWProtocolMessage *msgPtr, int len,
 
 	//valPtr->mac =  CWProtocolRetrieveStr(msgPtr,valPtr->mac_length);
 	valPtr->length = CWProtocolRetrieve8(msgPtr);
-	printf("##staIpMac##lenth :%d\n",valPtr->length);
+	wid_syslog_debug_debug(WID_DEFAULT,"##staIpMac##lenth :%d\n",valPtr->length);
 
 	if(valPtr->length == 16){
 
@@ -1443,13 +1443,13 @@ CWBool CWParseMsgElemCWWtpStaIpMacReportInfo(CWProtocolMessage *msgPtr, int len,
 				WID_FREE(aux);
 				aux = NULL;
 			}
-			printf("##staIpMac##ipv6Address :%d",(valPtr->ipv6Address).s6_addr[i]);
+			wid_syslog_debug_debug(WID_DEFAULT,"##staIpMac##ipv6Address :%d",(valPtr->ipv6Address).s6_addr[i]);
 		}
-		printf("\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"\n");
 	}else {
 		valPtr->ipv4Address =  CWProtocolRetrieve32(msgPtr);
 		ip = (unsigned char *)&valPtr->ipv4Address;
-		printf("##staIpMac##ipv4Address :%d.%d.%d.%d\n",ip[0],ip[1],ip[2],ip[3]);
+		wid_syslog_debug_debug(WID_DEFAULT,"##staIpMac##ipv4Address :%d.%d.%d.%d\n",ip[0],ip[1],ip[2],ip[3]);
 	}
 	//printf("*** radio id:%d mac length:%d mac value:%s ***\n",valPtr->radio_id,valPtr->mac_length,valPtr->mac_addr);
 	//printf("mac value = ");
@@ -2156,7 +2156,7 @@ CWBool CWParseMsgElemAPStaWapiInfos(CWProtocolMessage *msgPtr, int len, WIDStaWa
 		valPtr->StaWapiInfo[i].WPIReplayCounters= CWProtocolRetrieve32(msgPtr); 
 		valPtr->StaWapiInfo[i].WPIDecryptableErrors = CWProtocolRetrieve32(msgPtr); 
 		valPtr->StaWapiInfo[i].WPIMICErrors = CWProtocolRetrieve32(msgPtr); 	
-		printf("wtpid %d,radioid %d,wlanid %d\nsta mac %02X:%02X:%02X:%02X:%02X:%02X\nversion %d,controlStatus %d,cipher %02X-%02X-%02X-%02X, replay %d,decryerror %d,micerror %d",
+		wid_syslog_debug_debug(WID_DEFAULT,"wtpid %d,radioid %d,wlanid %d\nsta mac %02X:%02X:%02X:%02X:%02X:%02X\nversion %d,controlStatus %d,cipher %02X-%02X-%02X-%02X, replay %d,decryerror %d,micerror %d",
 			wtpindex,valPtr->StaWapiInfo[i].RadioId,valPtr->StaWapiInfo[i].WlanId,valPtr->StaWapiInfo[i].mac[0],valPtr->StaWapiInfo[i].mac[1],valPtr->StaWapiInfo[i].mac[2],valPtr->StaWapiInfo[i].mac[3],valPtr->StaWapiInfo[i].mac[4],valPtr->StaWapiInfo[i].mac[5],
 		valPtr->StaWapiInfo[i].WAPIVersion,valPtr->StaWapiInfo[i].ControlledPortStatus,valPtr->StaWapiInfo[i].SelectedUnicastCipher[0],valPtr->StaWapiInfo[i].SelectedUnicastCipher[1],valPtr->StaWapiInfo[i].SelectedUnicastCipher[2],valPtr->StaWapiInfo[i].SelectedUnicastCipher[3],
 		valPtr->StaWapiInfo[i].WPIReplayCounters,valPtr->StaWapiInfo[i].WPIDecryptableErrors,valPtr->StaWapiInfo[i].WPIMICErrors);
@@ -2439,7 +2439,7 @@ CWBool CWParseWTPBoardData (CWProtocolMessage *msgPtr, int len, CWWTPVendorInfos
 			codever = NULL;
 			if((valPtr->vendorInfos)[i].codever == NULL) return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL);
 			
-			printf("codever :%s\n",(valPtr->vendorInfos)[i].codever);			
+			wid_syslog_debug_debug(WID_DEFAULT,"codever :%s\n",(valPtr->vendorInfos)[i].codever);			
 			wid_syslog_debug_debug(WID_WTPINFO,"codever :%s\n",(valPtr->vendorInfos)[i].codever);			
 		}
 		else if((valPtr->vendorInfos)[i].type == CW_WTP_MANUFACTURE_OPTION)
@@ -3064,40 +3064,40 @@ CWBool CWParseWTPOperationalStatistics(CWProtocolMessage *msgPtr, int len, WTPOp
 		valPtr->ipdnsfirst = CWProtocolRetrieve32(msgPtr);
 		valPtr->ipdnssecend = CWProtocolRetrieve32(msgPtr);
 
-		printf("%u %u %u %u\n",valPtr->ipmask,valPtr->ipgateway,valPtr->ipdnsfirst,valPtr->ipdnssecend);
+		wid_syslog_debug_debug(WID_DEFAULT,"%u %u %u %u\n",valPtr->ipmask,valPtr->ipgateway,valPtr->ipdnsfirst,valPtr->ipdnssecend);
 	}
 	if(len > 23)
 	{
 	
 		unsigned char* cpuType = (unsigned char*)CWProtocolRetrieveStr(msgPtr,32);
 		memcpy(valPtr->cpuType, cpuType, 32);
-		printf("cpuType %s\n",cpuType);
+		wid_syslog_debug_debug(WID_DEFAULT,"cpuType %s\n",cpuType);
 		WID_FREE(cpuType);
 		cpuType = NULL;
-		printf("cpuType %s\n",valPtr->cpuType);
+		wid_syslog_debug_debug(WID_DEFAULT,"cpuType %s\n",valPtr->cpuType);
 
 		unsigned char* flashType = (unsigned char*)CWProtocolRetrieveStr(msgPtr,32);
 		memcpy(valPtr->flashType, flashType, 32);
-		printf("flashType  %s\n",flashType);
+		wid_syslog_debug_debug(WID_DEFAULT,"flashType  %s\n",flashType);
 		WID_FREE(flashType);
 		flashType = NULL;
-		printf("flashType  %s\n",valPtr->flashType);
+		wid_syslog_debug_debug(WID_DEFAULT,"flashType  %s\n",valPtr->flashType);
 
 		//valPtr->flashSize = CWProtocolRetrieve16(msgPtr);
 
 		unsigned char* memType = (unsigned char*)CWProtocolRetrieveStr(msgPtr,32);
 		memcpy(valPtr->memType, memType, 32);
-		printf("memType %s\n",memType);
+		wid_syslog_debug_debug(WID_DEFAULT,"memType %s\n",memType);
 		WID_FREE(memType);
 		memType = NULL;
 		//valPtr->memSize = CWProtocolRetrieve16(msgPtr);
-		printf("memType %s\n",valPtr->memType);
+		wid_syslog_debug_debug(WID_DEFAULT,"memType %s\n",valPtr->memType);
 	}
 	if(len > 35)
 	{
 		//valPtr->eth_count = 1;
 		valPtr->eth_count = CWProtocolRetrieve8(msgPtr);
-		printf("eth_count %d\n",valPtr->eth_count);
+		wid_syslog_debug_debug(WID_DEFAULT,"eth_count %d\n",valPtr->eth_count);
 		/*fengwenchao add 20120330 for autelan-2882*/
 		if(valPtr->eth_count > AP_ETH_IF_NUM)
 		{
@@ -3108,7 +3108,7 @@ CWBool CWParseWTPOperationalStatistics(CWProtocolMessage *msgPtr, int len, WTPOp
 		/*fengwenchao add end*/
 		//valPtr->eth_rate = 100;
 		valPtr->eth_rate  = CWProtocolRetrieve32(msgPtr);
-		printf("eth_rate %d\n",valPtr->eth_rate);
+		wid_syslog_debug_debug(WID_DEFAULT,"eth_rate %d\n",valPtr->eth_rate);
 	}
 	//wid_syslog_debug_debug("WTPOperationalStatistics of radio \"%d\": %d - %d", valPtr->radioID, valPtr->TxQueueLevel, valPtr->wirelessLinkFramesPerSec);
 
@@ -3607,10 +3607,10 @@ CWBool CWParseAP_Ntp_resultcode(CWProtocolMessage *msgPtr, int len,char *valPtr,
 	resultcode = CWProtocolRetrieve8(msgPtr);
 	reserve = CWProtocolRetrieve8(msgPtr);
 	reserve = CWProtocolRetrieve8(msgPtr);
-	printf("resultcode=%d\n",resultcode);
+	wid_syslog_debug_debug(WID_DEFAULT,"resultcode=%d\n",resultcode);
 	if(resultcode != 0){
 		if(gtrapflag>=4){//trap
-			printf("resultcode=%d,gtrapflag=%d\n",resultcode,gtrapflag);
+			wid_syslog_debug_debug(WID_DEFAULT,"resultcode=%d,gtrapflag=%d\n",resultcode,gtrapflag);
 			wid_dbus_trap_wtp_ap_ACTimeSynchroFailure(WTPIndex,0);
 			AC_WTP[WTPIndex]->ntp_trap_flag = 1;
 		}
@@ -4102,7 +4102,7 @@ CWBool CWParseWtp_Sta_Terminal_Disturb_Report(CWProtocolMessage *msgPtr, int len
         sta_mac = (unsigned char*)CWProtocolRetrieveStr(msgPtr,6);
         
         wid_syslog_debug_debug(WID_DEFAULT,"i=%d,sta_mac:%02X:%02X:%02X:%02X:%02X:%02X \n",i,sta_mac[0],sta_mac[1],sta_mac[2],sta_mac[3],sta_mac[4],sta_mac[5]); 
-	    wid_syslog_debug_debug(WID_DEFAULT,"i=%d,gtrapflag=%d\n",i,gtrapflag);
+        wid_syslog_debug_debug(WID_DEFAULT,"i=%d,gtrapflag=%d\n",i,gtrapflag);
 	    
         if(gtrapflag>=24)
         {
@@ -4110,7 +4110,7 @@ CWBool CWParseWtp_Sta_Terminal_Disturb_Report(CWProtocolMessage *msgPtr, int len
 			{
 				if(AC_WTP[WTPIndex]->wid_trap.rogue_terminal_trap_flag == 0)  //fengwenchao add 20110221
 					{
-			    		printf("111111111 Call trap func 111111111\n");
+			    		wid_syslog_debug_debug(WID_DEFAULT,"Call trap func \n");
 						wid_dbus_trap_wtp_channel_terminal_interference(WTPIndex, radio_id, currentchannel, sta_mac);
 						AC_WTP[WTPIndex]->wid_trap.rogue_terminal_trap_flag = 1;   //fengwenchao add 20110221
 					}
@@ -4119,7 +4119,7 @@ CWBool CWParseWtp_Sta_Terminal_Disturb_Report(CWProtocolMessage *msgPtr, int len
 			{
 				if(AC_WTP[WTPIndex]->wid_trap.rogue_terminal_trap_flag == 1)    //fengwenchao add 20110221
 					{
-			    		printf("222222222 Call trap clear func 222222222\n");
+			    		wid_syslog_debug_debug(WID_DEFAULT,"Call trap clear func \n");
 			    		wid_dbus_trap_wtp_channel_terminal_interference_clear(WTPIndex, radio_id, currentchannel, sta_mac);
 						AC_WTP[WTPIndex]->wid_trap.rogue_terminal_trap_flag = 0;   //fengwenchao add 20110221
 					}
@@ -4218,7 +4218,7 @@ CWBool  CWAssembleTerminalDisturbInfoReport(CWProtocolMessage *msgPtr,int wtpid)
 	int jump = 0;
 	if(msgPtr == NULL) return CWErrorRaise(CW_ERROR_WRONG_ARG, NULL);
 
-    wid_syslog_debug_debug(WID_DEFAULT,"1111111 Send Terminal Disturb info to ap 111111\n");
+          wid_syslog_debug_debug(WID_DEFAULT,"Send Terminal Disturb info to ap\n");
 	wid_syslog_debug_debug(WID_DEFAULT,"value = %d\n",value);
 	wid_syslog_debug_debug(WID_DEFAULT,"flag = %d\n",flag);
 	wid_syslog_debug_debug(WID_DEFAULT,"sta_count = %d\n",sta_count);

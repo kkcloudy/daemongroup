@@ -350,7 +350,7 @@ void KEY_OP(TableMsg *msg){
 		msginfo.mqinfo.u.StaInfo.cipher = msg->u.KEY.cipher;
 		msginfo.mqinfo.u.StaInfo.keylen = msg->u.KEY.key_len;
 		msginfo.mqinfo.u.StaInfo.keyidx = msg->u.KEY.key_idx;
-		printf("key len %d\n",msg->u.KEY.key_len);
+		wid_syslog_debug_debug(WID_DEFAULT,"key len %d\n",msg->u.KEY.key_len);
 		memcpy((msginfo.mqinfo.u.StaInfo.STAMAC),(msg->u.KEY.StaAddr),6);
 		memcpy((msginfo.mqinfo.u.StaInfo.key),(msg->u.KEY.key),msg->u.KEY.key_len);
 		
@@ -1068,7 +1068,7 @@ void CWACManageIncomingPacket(CWSocket sock, char *buf, int readBytes, int incom
 	}
 	/*fengwenchao add end*/
 	if((wtpPtr != NULL)&&(wtpPtr->BAK_FLAG == 2)){
-		printf("wtp %d change ifindex%d\n",WTPID,incomingInterfaceIndex);
+		wid_syslog_debug_debug(WID_DEFAULT,"wtp %d change ifindex%d\n",WTPID,incomingInterfaceIndex);
 		wtpPtr->interfaceIndex = incomingInterfaceIndex;	
 		for(j = 0; (AC_WTP[WTPID])&&(j < AC_WTP[WTPID]->RadioCount); j++){
 			gWTPs[WTPID].interfaceIndex = incomingInterfaceIndex;
@@ -1207,14 +1207,14 @@ void CWACManageIncomingPacket(CWSocket sock, char *buf, int readBytes, int incom
 							wid_syslog_debug_debug(WID_WTPINFO,"wtp %d ##wtp oem option %d unknown",WTPID,gWTPs[WTPID].oemoption); 
 							gWTPs[WTPID].oemoption = 0;							
 						}
-						printf("#### save oemoption %d\n",gWTPs[WTPID].oemoption);
+						wid_syslog_debug_debug(WID_DEFAULT,"#### save oemoption %d\n",gWTPs[WTPID].oemoption);
 					}
 				}
 				/*xiaodawei modify, 20101108*/
 				CWThreadMutexLock(&ACLicense);
 				if(g_wtp_count[gWTPs[WTPID].oemoption]->flag==0){
 					if(g_wtp_count[gWTPs[WTPID].oemoption]->gcurrent_wtp_count >= g_wtp_count[gWTPs[WTPID].oemoption]->gmax_wtp_count){
-						printf("###can not access ap type %d access count over type count\n",gWTPs[WTPID].oemoption);
+						wid_syslog_debug_debug(WID_DEFAULT,"###can not access ap type %d access count over type count\n",gWTPs[WTPID].oemoption);
 						wid_syslog_debug_debug(WID_WTPINFO,"wtp %d ###can not access ap type %d access count over type count",WTPID,gWTPs[WTPID].oemoption);	
 						CWDestroyDiscoveryRequestValues(&values);
 						CWThreadMutexUnlock(&ACLicense);
@@ -1224,7 +1224,7 @@ void CWACManageIncomingPacket(CWSocket sock, char *buf, int readBytes, int incom
 				else{
 					flag = g_wtp_count[gWTPs[WTPID].oemoption]->flag;
 					if(g_wtp_binding_count[flag]->gcurrent_wtp_count >= g_wtp_binding_count[flag]->gmax_wtp_count){
-						printf("###can not access ap type %d access count over type count\n",gWTPs[WTPID].oemoption);
+						wid_syslog_debug_debug(WID_DEFAULT,"###can not access ap type %d access count over type count\n",gWTPs[WTPID].oemoption);
 						wid_syslog_debug_debug(WID_WTPINFO,"wtp %d ###can not access ap type %d access count over type count",WTPID,gWTPs[WTPID].oemoption);	
 						CWDestroyDiscoveryRequestValues(&values);
 						CWThreadMutexUnlock(&ACLicense);
@@ -1293,14 +1293,14 @@ void CWACManageIncomingPacket(CWSocket sock, char *buf, int readBytes, int incom
 								wid_syslog_debug_debug(WID_WTPINFO,"auto wtp##wtp oem option %d unknown",oemoption); 
 								oemoption = 0; 						
 							}
-							printf("#### save oemoption %d\n",oemoption);
+							wid_syslog_debug_debug(WID_DEFAULT,"#### save oemoption %d\n",oemoption);
 						}
 					}
 					/*xiaodawei modify, 20101109*/
 					CWThreadMutexLock(&ACLicense);
 					if(g_wtp_count[oemoption]->flag==0){
 						if(g_wtp_count[oemoption]->gcurrent_wtp_count >= g_wtp_count[oemoption]->gmax_wtp_count){
-							printf("###can not access ap type %d access count over type count\n",oemoption);
+							wid_syslog_debug_debug(WID_DEFAULT,"###can not access ap type %d access count over type count\n",oemoption);
 							wid_syslog_debug_debug(WID_WTPINFO,"auto wtp ###can not access ap type %d access count over type count",oemoption);	
 							CWDestroyDiscoveryRequestValues(&values);
 							WidDestroyAutoApLoginInfo(auto_ap_info);
@@ -1311,7 +1311,7 @@ void CWACManageIncomingPacket(CWSocket sock, char *buf, int readBytes, int incom
 					else{
 						flag = g_wtp_count[oemoption]->flag;
 						if(g_wtp_binding_count[flag]->gcurrent_wtp_count >=g_wtp_binding_count[flag]->gmax_wtp_count){
-							printf("###can not access ap type %d access count over type count\n",oemoption);
+							wid_syslog_debug_debug(WID_DEFAULT,"###can not access ap type %d access count over type count\n",oemoption);
 							wid_syslog_debug_debug(WID_WTPINFO,"auto wtp ###can not access ap type %d access count over type count",oemoption);	
 							CWDestroyDiscoveryRequestValues(&values);
 							WidDestroyAutoApLoginInfo(auto_ap_info);
@@ -1659,7 +1659,7 @@ void CWACManageIncomingPacket(CWSocket sock, char *buf, int readBytes, int incom
 											{
 												gWTPs[wtp_index].oemoption = 0;
 											}
-											printf("#### save oemoption %d\n",gWTPs[wtp_index].oemoption);
+											wid_syslog_debug_debug(WID_DEFAULT,"#### save oemoption %d\n",gWTPs[wtp_index].oemoption);
 										}
 									}
 								}
@@ -1715,7 +1715,7 @@ __inline__ CWWTPManager *CWWTPByAddress(CWNetworkLev4Address *addressPtr, CWSock
 						!sock_cmp_addr((struct sockaddr*)addressPtr, (struct sockaddr*)&(gWTPs[i].address), sizeof(CWNetworkLev4Address)) //&&
 						/*gWTPs[i].socket == sock*/) { // we treat a WTP that sends packet to a different AC's interface as a new WTP
 					if(gWTPs[i].BAK_FLAG == 1){
-						printf("change wtp %d sock %d\n",i,sock);
+						wid_syslog_debug_debug(WID_DEFAULT,"change wtp %d sock %d\n",i,sock);
 						gWTPs[i].socket = sock;
 						gWTPs[i].BAK_FLAG = 2;
 					}else if(gWTPs[i].socket != sock){
@@ -1829,7 +1829,7 @@ CW_THREAD_RETURN_TYPE CWManageWTP(void *arg) {
 			}
 			else if(WTPMsgq.mqinfo.type == CONTROL_TYPE){
 				
-				printf("control msg %d\n",++total);
+				wid_syslog_debug_debug(WID_DEFAULT,"control msg %d\n",++total);
 				i = WTPMsgq.mqinfo.WTPID; 
 				if(!check_wtpid_func(i)){
 					wid_syslog_err("%s\n",__func__);
@@ -1839,7 +1839,7 @@ CW_THREAD_RETURN_TYPE CWManageWTP(void *arg) {
 				if((WTPMsgq.mqinfo.subtype == WTP_S_TYPE)&&(WTPMsgq.mqinfo.u.WtpInfo.Wtp_Op == WTP_REBOOT)){					
 					if ((gWTPs[i].currentState != CW_QUIT)&&(gWTPs[i].isRequestClose))
 					{
-						printf("2\n");
+						//printf("2\n");
 						
 						/*if(is_secondary == 1){
 							if(AC_WTP[i]->isused == 1){							
@@ -1877,7 +1877,7 @@ CW_THREAD_RETURN_TYPE CWManageWTP(void *arg) {
 				}
 			}
 			else{
-				printf("something wronge\n");
+				wid_syslog_debug_debug(WID_DEFAULT,"something wronge\n");
 				continue;
 			}
 			//
@@ -2247,7 +2247,7 @@ CW_THREAD_RETURN_TYPE CWManageWTP(void *arg) {
 			if (bResult){
 				CWThreadMutexLock(&(gWTPs[i].WTPThreadControllistMutex));
 				if((AC_WTP[i])&&(AC_WTP[i]->ControlWait != NULL)){
-					printf("WLAN op something wrong (subtype)%d\n",AC_WTP[i]->ControlWait->mqinfo.subtype);
+					wid_syslog_debug_debug(WID_DEFAULT,"WLAN op something wrong (subtype)%d\n",AC_WTP[i]->ControlWait->mqinfo.subtype);
 					WID_FREE(AC_WTP[i]->ControlWait);
 					AC_WTP[i]->ControlWait = NULL;
 				}
@@ -2294,7 +2294,7 @@ CW_THREAD_RETURN_TYPE CWManageWTP(void *arg) {
 					if (bResult){
 						CWThreadMutexLock(&(gWTPs[i].WTPThreadControllistMutex));
 						if((AC_WTP[i])&&(AC_WTP[i]->ControlWait != NULL)){
-							printf("radio op something wrong (subtype)%d\n",AC_WTP[i]->ControlWait->mqinfo.subtype);
+							wid_syslog_debug_debug(WID_DEFAULT,"radio op something wrong (subtype)%d\n",AC_WTP[i]->ControlWait->mqinfo.subtype);
 							WID_FREE(AC_WTP[i]->ControlWait);
 							AC_WTP[i]->ControlWait = NULL;
 						}
@@ -2341,7 +2341,7 @@ CW_THREAD_RETURN_TYPE CWManageWTP(void *arg) {
 					CWThreadMutexLock(&(gWTPs[i].WTPThreadControllistMutex));
 					wid_syslog_debug_debug(WID_DEFAULT," sta op successful\n");
 					if((AC_WTP[i])&&(AC_WTP[i]->ControlWait != NULL)){
-						printf("sta op something wrong (subtype)%d\n",AC_WTP[i]->ControlWait->mqinfo.subtype);
+						wid_syslog_debug_debug(WID_DEFAULT,"sta op something wrong (subtype)%d\n",AC_WTP[i]->ControlWait->mqinfo.subtype);
 						WID_FREE(AC_WTP[i]->ControlWait);
 						AC_WTP[i]->ControlWait = NULL;
 					}
@@ -2556,7 +2556,7 @@ void _CWCloseThread(int i) {
 		//gWTPs[i].oemoption = 0;
 		if(gloadbanlance >= 1)
 		{
-			printf("ap quit send active wtp count is %d \n",gActiveWTPs);
+			wid_syslog_debug_debug(WID_DEFAULT,"ap quit send active wtp count is %d \n",gActiveWTPs);
 			CWThreadMutexLock(&ACIPLISTMutex);
 			SendActiveWTPCount(gActiveWTPs);
 			CWThreadMutexUnlock(&ACIPLISTMutex);
@@ -3320,7 +3320,7 @@ int parse_dynamic_wtp_name(char *name)
 	unsigned int wtpid = 0;
 	int ret = 0;
 	ret = parse_int_ID(name, &wtpid);
-	printf("name %s wtpid %d\n",name,wtpid);
+	wid_syslog_debug_debug(WID_DEFAULT,"name %s wtpid %d\n",name,wtpid);
 	if(ret == 0)
 	{
 		if(wtpid == 0)
@@ -3650,7 +3650,7 @@ int wid_auto_ap_binding(int wtpid,int ifindex)
 			{
 				if(wlan[i] == 0)
 				{
-					printf("expect not happen\n");
+					wid_syslog_debug_debug(WID_DEFAULT,"expect not happen\n");
 					continue;
 				}
 				ret1 = WID_ADD_WLAN_APPLY_RADIO(radioid,wlan[i]);

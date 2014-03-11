@@ -84,7 +84,7 @@ void CWHandleTimer(CWTimerArg arg) {
 		{
 			AC_WTP[WTPID]->neighbordeatimes++;
 		}
-		printf("AC_WTP[%d]->neighbordeatimes %d \n",WTPID,AC_WTP[WTPID]->neighbordeatimes);
+		wid_syslog_debug_debug(WID_DEFAULT,"AC_WTP[%d]->neighbordeatimes %d \n",WTPID,AC_WTP[WTPID]->neighbordeatimes);
 		if((AC_WTP[WTPID])&&(AC_WTP[WTPID]->neighbordeatimes == 3)){
 			AC_WTP[WTPID]->neighbordeatimes = 0;
 			gWTPs[WTPID].isRequestClose = CW_TRUE;	
@@ -111,41 +111,41 @@ void CWHandleTimer(CWTimerArg arg) {
 
 				sprintf(command,"echo \"********************************************************************************\" >>/home/WTP%d_tracerout &",WTPID);
 				system(command);
-				printf("%s\n",command);
+				wid_syslog_debug_debug(WID_DEFAULT,"%s\n",command);
 				memset(command, 0, 128);
 
 				sprintf(command,"echo \"WTP IP : %s\" >>/home/WTP%d_tracerout &",IP,WTPID);
 				system(command);
-				printf("%s\n",command);
+				wid_syslog_debug_debug(WID_DEFAULT,"%s\n",command);
 				memset(command, 0, 128);
 
 				sprintf(command,"date >>/home/WTP%d_tracerout &",WTPID);
 				system(command);
-				printf("%s\n",command);
+				wid_syslog_debug_debug(WID_DEFAULT,"%s\n",command);
 				memset(command, 0, 128);
 				sprintf(command,"traceroute -n -I -m 3 %s >>/home/WTP%d_tracerout &",IP,WTPID);
 				system(command);
-				printf("%s\n",command);
+				wid_syslog_debug_debug(WID_DEFAULT,"%s\n",command);
 				memset(command, 0, 128);
 
 				sprintf(command,"echo \"********************************************************************************\" >>/home/WTP%d_iperf &",WTPID);
 				system(command);
-				printf("%s\n",command);
+				wid_syslog_debug_debug(WID_DEFAULT,"%s\n",command);
 				memset(command, 0, 128);
 
 				sprintf(command,"echo \"WTP IP : %s\" >>/home/WTP%d_iperf &",IP,WTPID);
 				system(command);
-				printf("%s\n",command);
+				wid_syslog_debug_debug(WID_DEFAULT,"%s\n",command);
 				memset(command, 0, 128);
 
 				sprintf(command,"date >>/home/WTP%d_iperf &",WTPID);
 				system(command);
-				printf("%s\n",command);
+				wid_syslog_debug_debug(WID_DEFAULT,"%s\n",command);
 				memset(command, 0, 128);
 
 				sprintf(command,"iperf -u -c %s 2 >>/home/WTP%d_iperf &",IP,WTPID);
 				system(command);
-				printf("%s\n",command);
+				wid_syslog_debug_debug(WID_DEFAULT,"%s\n",command);
 				memset(command, 0, 128);
 
 				/*sprintf(command,"/usr/bin/trace_wtp2.sh -ht %d %s /home/WTP%d_trace &", WTPID, AC_WTP[WTPID]->WTPIP,WTPID);
@@ -235,10 +235,10 @@ void CWHandleTimer(CWTimerArg arg) {
 		}		
 	}
 	else if(signalToRaise == 501){		
-		printf("501 enable\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"501 enable\n");
 		time(&timep);  
 		p=localtime(&timep);
-		printf("time %d:%d:%d\n",p->tm_hour,p->tm_min,p->tm_sec);
+		wid_syslog_debug_debug(WID_DEFAULT,"time %d:%d:%d\n",p->tm_hour,p->tm_min,p->tm_sec);
 		if((AC_WLAN[WLANID]!= NULL)){
 			if(AC_WLAN[WLANID]->StartService.TimerState == 1){
 				if((AC_WLAN[WLANID]->StartService.wday[p->tm_wday] == 1)&&(AC_WLAN[WLANID]->Status == 1)){
@@ -256,7 +256,7 @@ void CWHandleTimer(CWTimerArg arg) {
 					&&(AC_WLAN[WLANID]->StartService.wday[6]==0)
 				){
 					AC_WLAN[WLANID]->StartService.TimerState = 0;
-					printf("501 end\n");
+					wid_syslog_debug_debug(WID_DEFAULT,"501 end\n");
 				}else{
 					time(&timep);  
 					p=localtime(&timep);
@@ -270,18 +270,18 @@ void CWHandleTimer(CWTimerArg arg) {
 						CW_FREE_OBJECT_WID(a);
 						return ;
 					}					
-					printf("AC_WLAN[wlanid]->StartService.TimerID33333333 %d\n",AC_WLAN[WLANID]->StartService.TimerID);
+					wid_syslog_debug_debug(WID_DEFAULT,"AC_WLAN[wlanid]->StartService.TimerID33333333 %d\n",AC_WLAN[WLANID]->StartService.TimerID);
 				}
 			}
 		}
 		
 	}
 	else if(signalToRaise == 502){		
-		printf("502 disable\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"502 disable\n");
 		
 		time(&timep);  
 		p=localtime(&timep);
-		printf("time %d:%d:%d\n",p->tm_hour,p->tm_min,p->tm_sec);
+		wid_syslog_debug_debug(WID_DEFAULT,"time %d:%d:%d\n",p->tm_hour,p->tm_min,p->tm_sec);
 
 		if((AC_WLAN[WLANID]!= NULL)){
 			if(AC_WLAN[WLANID]->StopService.TimerState == 1){
@@ -300,7 +300,7 @@ void CWHandleTimer(CWTimerArg arg) {
 					&&(AC_WLAN[WLANID]->StopService.wday[6]==0)
 				){
 					AC_WLAN[WLANID]->StopService.TimerState = 0;
-					printf("502 end\n");
+					wid_syslog_debug_debug(WID_DEFAULT,"502 end\n");
 				}else{
 					time(&timep);  
 					p=localtime(&timep);
@@ -315,16 +315,16 @@ void CWHandleTimer(CWTimerArg arg) {
 						return ;
 					}	
 					
-					printf("AC_WLAN[wlanid]->StopService.TimerID3333333 %d\n",AC_WLAN[WLANID]->StopService.TimerID);
+					wid_syslog_debug_debug(WID_DEFAULT,"AC_WLAN[wlanid]->StopService.TimerID3333333 %d\n",AC_WLAN[WLANID]->StopService.TimerID);
 				}
 			}
 		}
 	}
 	else if(signalToRaise == 503){		
-		printf("503 enable\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"503 enable\n");
 		time(&timep);  
 		p=localtime(&timep);
-		printf("time %d:%d:%d\n",p->tm_hour,p->tm_min,p->tm_sec);
+		wid_syslog_debug_debug(WID_DEFAULT,"time %d:%d:%d\n",p->tm_hour,p->tm_min,p->tm_sec);
 		if((AC_RADIO[RADIOID] != NULL)){
 			if(AC_RADIO[RADIOID]->StartService.TimerState == 1){
 				if((AC_RADIO[RADIOID]->StartService.wday[p->tm_wday] == 1)&&(AC_RADIO[RADIOID]->AdStat == 2)){
@@ -342,7 +342,7 @@ void CWHandleTimer(CWTimerArg arg) {
 					&&(AC_RADIO[RADIOID]->StartService.wday[6]==0)
 				){
 					AC_RADIO[RADIOID]->StartService.TimerState = 0;
-					printf("503 end\n");
+					wid_syslog_debug_debug(WID_DEFAULT,"503 end\n");
 				}else{
 					time(&timep);  
 					p=localtime(&timep);
@@ -356,18 +356,18 @@ void CWHandleTimer(CWTimerArg arg) {
 						CW_FREE_OBJECT_WID(a);
 						return ;
 					}					
-					printf("AC_WLAN[wlanid]->StartService.TimerID33333333 %d\n",AC_RADIO[RADIOID]->StartService.TimerID);
+					wid_syslog_debug_debug(WID_DEFAULT,"AC_WLAN[wlanid]->StartService.TimerID33333333 %d\n",AC_RADIO[RADIOID]->StartService.TimerID);
 				}
 			}
 		}
 		
 	}
 	else if(signalToRaise == 504){		
-		printf("504 disable\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"504 disable\n");
 		
 		time(&timep);  
 		p=localtime(&timep);
-		printf("time %d:%d:%d\n",p->tm_hour,p->tm_min,p->tm_sec);
+		wid_syslog_debug_debug(WID_DEFAULT,"time %d:%d:%d\n",p->tm_hour,p->tm_min,p->tm_sec);
 
 		if((AC_RADIO[RADIOID]!= NULL)){
 			if(AC_RADIO[RADIOID]->StopService.TimerState == 1){
@@ -386,7 +386,7 @@ void CWHandleTimer(CWTimerArg arg) {
 					&&(AC_RADIO[RADIOID]->StopService.wday[6]==0)
 				){
 					AC_RADIO[RADIOID]->StopService.TimerState = 0;
-					printf("504 end\n");
+					wid_syslog_debug_debug(WID_DEFAULT,"504 end\n");
 				}else{
 					time(&timep);  
 					p=localtime(&timep);
@@ -401,7 +401,7 @@ void CWHandleTimer(CWTimerArg arg) {
 						return ;
 					}	
 					
-					printf("AC_WLAN[wlanid]->StopService.TimerID3333333 %d\n",AC_RADIO[RADIOID]->StopService.TimerID);
+					wid_syslog_debug_debug(WID_DEFAULT,"AC_WLAN[wlanid]->StopService.TimerID3333333 %d\n",AC_RADIO[RADIOID]->StopService.TimerID);
 				}
 			}
 		}

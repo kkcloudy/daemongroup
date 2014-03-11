@@ -323,9 +323,9 @@ struct wtp_access_info * ap_add(WID_ACCESS *AC, struct sockaddr_in * sa, CWWTPVe
 			continue;
 	}
 
-	printf("wtp->ifname:%s,name:%s,len:%d\n",wtp->ifname,name,strlen(name));
+	wid_syslog_debug_debug(WID_DEFAULT,"wtp->ifname:%s,name:%s,len:%d\n",wtp->ifname,name,strlen(name));
 	memcpy(wtp->ifname, name, strlen(name));
-	printf("wtp->ifname:%s,len:%d,name:%s,len:%d\n",wtp->ifname,strlen(wtp->ifname),name,strlen(name));
+	wid_syslog_debug_debug(WID_DEFAULT,"wtp->ifname:%s,len:%d,name:%s,len:%d\n",wtp->ifname,strlen(wtp->ifname),name,strlen(name));
 //	memcpy(&(wtp->ip),&(sa->sin_addr.s_addr),sizeof(int));
 	wtp->ip = sa->sin_addr.s_addr;
 	wtp->next = AC->wtp_list;
@@ -334,7 +334,7 @@ struct wtp_access_info * ap_add(WID_ACCESS *AC, struct sockaddr_in * sa, CWWTPVe
 	ap_hash_add(AC, wtp);
 	unsigned char *ip = (unsigned char*)&(wtp->ip);
 //	printf("num %d\n",AC->num);
-	printf("%02X:%02X:%02X:%02X:%02X:%02X %d.%d.%d.%d %-12s %-10s %-7s %s\n",
+	wid_syslog_debug_debug(WID_DEFAULT,"%02X:%02X:%02X:%02X:%02X:%02X %d.%d.%d.%d %-12s %-10s %-7s %s\n",
 				wtp->WTPMAC[0],wtp->WTPMAC[1],wtp->WTPMAC[2],wtp->WTPMAC[3],wtp->WTPMAC[4],wtp->WTPMAC[5],
 				ip[0],ip[1],ip[2],ip[3],
 				wtp->model,

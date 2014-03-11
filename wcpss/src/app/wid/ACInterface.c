@@ -68,17 +68,17 @@ int CWActiveWTPsMenu(int* selection, int* err)
 	
 		if(numActiveWTPs>0)
 		{
-			printf("\n\t\t------ WTP ------\n\n");
+			wid_syslog_debug_debug(WID_DEFAULT,"\n\t\t------ WTP ------\n\n");
 			if (*err)
 			{
-				printf("ERROR: Wrong number or the selected WTP has closed the connection.\n");
-				printf("Select another WTP or -1 to refresh.\n\n");
+				wid_syslog_debug_debug(WID_DEFAULT,"ERROR: Wrong number or the selected WTP has closed the connection.\n");
+				wid_syslog_debug_debug(WID_DEFAULT,"Select another WTP or -1 to refresh.\n\n");
 			}
 			*err=0;
-			printf("There are %d active WTP:\n\n", numActiveWTPs);
-			printf("-3 - Exit\n\n");
-			printf("-2 - Start Test\n\n");
-			printf("-1 - Refresh list\n\n");
+			wid_syslog_debug_debug(WID_DEFAULT,"There are %d active WTP:\n\n", numActiveWTPs);
+			wid_syslog_debug_debug(WID_DEFAULT,"-3 - Exit\n\n");
+			wid_syslog_debug_debug(WID_DEFAULT,"-2 - Start Test\n\n");
+			wid_syslog_debug_debug(WID_DEFAULT,"-1 - Refresh list\n\n");
 			if(!CWErr(CWThreadMutexLock(&gWTPsMutex))) 
 			{
 				wid_syslog_crit("Error locking the mutex");
@@ -87,10 +87,10 @@ int CWActiveWTPsMenu(int* selection, int* err)
 				for(i=0; i<WTP_NUM; i++)
 				{
 					if(gWTPs[i].isNotFree)
-						printf("%d - %s \n", i, gWTPs[i].WTPProtocolManager.name);
+						wid_syslog_debug_debug(WID_DEFAULT,"%d - %s \n", i, gWTPs[i].WTPProtocolManager.name);
 				}
 			CWThreadMutexUnlock(&gWTPsMutex);
-			printf("\nSelect a WTP: ");
+			wid_syslog_debug_debug(WID_DEFAULT,"\nSelect a WTP: ");
 			scanf("%d", selection);
 			if(*selection == -1) {return 0;}
 			if(*selection == -2) {return 6;}
@@ -100,7 +100,7 @@ int CWActiveWTPsMenu(int* selection, int* err)
 		}
 		else {
 			if(firstTime) {
-				printf("There aren't active WTPs in Run State. Please wait... \n");
+				wid_syslog_debug_debug(WID_DEFAULT,"There aren't active WTPs in Run State. Please wait... \n");
 				firstTime = CW_FALSE;
 			}
 			sleep(1);
@@ -115,19 +115,19 @@ int CWParameterMenu(int selection, int* parameter, int confirm, int* err)
 {
 	if(gWTPs[selection].isNotFree)
 	{
-		printf("\n\t\t------ PARAMETERS ------\n\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"\n\t\t------ PARAMETERS ------\n\n");
 		if(*err ==1){
-		printf("ERROR: Wrong selection for parameter.\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"ERROR: Wrong selection for parameter.\n");
 		}
 
 		*err = 0;
 
-		printf("Select a parameter to set for the WTP \"%s\":\n\n", gWTPs[selection].WTPProtocolManager.name);
-		printf("1 - Set CWMin\n");
-		printf("2 - Set CWMax\n");
-		printf("3 - Set AIFS\n");
-		if (confirm!=1){printf("0 - Back\n");}
-		printf("\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Select a parameter to set for the WTP \"%s\":\n\n", gWTPs[selection].WTPProtocolManager.name);
+		wid_syslog_debug_debug(WID_DEFAULT,"1 - Set CWMin\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"2 - Set CWMax\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"3 - Set AIFS\n");
+		if (confirm!=1){wid_syslog_debug_debug(WID_DEFAULT,"0 - Back\n");}
+		wid_syslog_debug_debug(WID_DEFAULT,"\n");
 		scanf("%d", parameter);
 		if (*parameter==0) {return 0;}
 		if(*parameter<0 || *parameter>3){
@@ -145,18 +145,18 @@ int CWParameterMenu(int selection, int* parameter, int confirm, int* err)
 
 int CWQueueMenu(int selection, int* queue, int* err)
 {
-	printf("\n\t\t------ QUEUES ------\n\n");
+	wid_syslog_debug_debug(WID_DEFAULT,"\n\t\t------ QUEUES ------\n\n");
 	if(*err==1){
-		printf("ERROR: Wrong selection for queue.\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"ERROR: Wrong selection for queue.\n");
 	}
 	*err=0;
-	printf("Select the Queue to set for the WTP \"%s\":\n\n", gWTPs[selection].WTPProtocolManager.name);
-	printf("1 - Set Queue Voice\n");
-	printf("2 - Set Queue Video\n");
-	printf("3 - Set Queue Best Effort\n");
-	printf("4 - Set Queue Background\n");
-	printf("0 - Back\n");
-	printf("\n");
+	wid_syslog_debug_debug(WID_DEFAULT,"Select the Queue to set for the WTP \"%s\":\n\n", gWTPs[selection].WTPProtocolManager.name);
+	wid_syslog_debug_debug(WID_DEFAULT,"1 - Set Queue Voice\n");
+	wid_syslog_debug_debug(WID_DEFAULT,"2 - Set Queue Video\n");
+	wid_syslog_debug_debug(WID_DEFAULT,"3 - Set Queue Best Effort\n");
+	wid_syslog_debug_debug(WID_DEFAULT,"4 - Set Queue Background\n");
+	wid_syslog_debug_debug(WID_DEFAULT,"0 - Back\n");
+	wid_syslog_debug_debug(WID_DEFAULT,"\n");
 	scanf("%d", queue);
 	if (*queue==0) {return 1;}
 	if(*queue<0 || *queue>4){*err=1;return 2;}
@@ -166,9 +166,9 @@ int CWQueueMenu(int selection, int* queue, int* err)
 
 int CWGetValueMenu(int* value)
 {
-	printf("\n\t\t------ VALUE ------\n\n");
-	printf("0 - Back\n\n");
-	printf("Insert the value:");
+	wid_syslog_debug_debug(WID_DEFAULT,"\n\t\t------ VALUE ------\n\n");
+	wid_syslog_debug_debug(WID_DEFAULT,"0 - Back\n\n");
+	wid_syslog_debug_debug(WID_DEFAULT,"Insert the value:");
 	scanf("%d", value);
 	if (*value==0) {return 2;}
 	return 4;	
@@ -177,36 +177,36 @@ int CWGetValueMenu(int* value)
 void CWSummary(WTPQosValues* qosValues){
 	int i;
 
-	printf("\n\t------ SUMMARY ------\n");
+	wid_syslog_debug_debug(WID_DEFAULT,"\n\t------ SUMMARY ------\n");
 	
-	printf("\n---------------------------------------\n");
-	printf("\t\tCWMIN\tCWMAX\tAIFS\t\n");
-	printf("---------------------------------------\n");
+	wid_syslog_debug_debug(WID_DEFAULT,"\n---------------------------------------\n");
+	wid_syslog_debug_debug(WID_DEFAULT,"\t\tCWMIN\tCWMAX\tAIFS\t\n");
+	wid_syslog_debug_debug(WID_DEFAULT,"---------------------------------------\n");
 	
 	for(i=0; i<NUM_QOS_PROFILES; i++){
-		if(i==0) printf(" VOICE\t\t");
-		if(i==1) printf(" VIDEO\t\t");
-		if(i==2) printf(" BEST EFFORT\t");
-		if(i==3) printf(" BACKGROUND\t");
-		if(qosValues[i].cwMin != UNUSED_QOS_VALUE) printf("  %d",qosValues[i].cwMin);
-		else printf(" ");
-		if(qosValues[i].cwMax != UNUSED_QOS_VALUE) printf("\t  %d",qosValues[i].cwMax);
-		else printf("\t");
-		if(qosValues[i].AIFS != UNUSED_QOS_VALUE) printf("\t %d",qosValues[i].AIFS);
-		else printf("\t");
-		printf("\t\n");
+		if(i==0) wid_syslog_debug_debug(WID_DEFAULT," VOICE\t\t");
+		if(i==1) wid_syslog_debug_debug(WID_DEFAULT," VIDEO\t\t");
+		if(i==2) wid_syslog_debug_debug(WID_DEFAULT," BEST EFFORT\t");
+		if(i==3) wid_syslog_debug_debug(WID_DEFAULT," BACKGROUND\t");
+		if(qosValues[i].cwMin != UNUSED_QOS_VALUE) wid_syslog_debug_debug(WID_DEFAULT,"  %d",qosValues[i].cwMin);
+		else wid_syslog_debug_debug(WID_DEFAULT," ");
+		if(qosValues[i].cwMax != UNUSED_QOS_VALUE) wid_syslog_debug_debug(WID_DEFAULT,"\t  %d",qosValues[i].cwMax);
+		else wid_syslog_debug_debug(WID_DEFAULT,"\t");
+		if(qosValues[i].AIFS != UNUSED_QOS_VALUE) wid_syslog_debug_debug(WID_DEFAULT,"\t %d",qosValues[i].AIFS);
+		else wid_syslog_debug_debug(WID_DEFAULT,"\t");
+		wid_syslog_debug_debug(WID_DEFAULT,"\t\n");
 	}
 	
-	printf("---------------------------------------\n");
+	wid_syslog_debug_debug(WID_DEFAULT,"---------------------------------------\n");
 	return;
 }
 
 int CWConfirm(int *confirm)
 {
-	printf("\n\t\t------ CONFIRM ------\n\n");
-	printf("1 - Set another parameter\n");
-	printf("2 - Send settings\n");
-	printf("0 - Back\n");
+	wid_syslog_debug_debug(WID_DEFAULT,"\n\t\t------ CONFIRM ------\n\n");
+	wid_syslog_debug_debug(WID_DEFAULT,"1 - Set another parameter\n");
+	wid_syslog_debug_debug(WID_DEFAULT,"2 - Send settings\n");
+	wid_syslog_debug_debug(WID_DEFAULT,"0 - Back\n");
 	scanf("%d", confirm);
 	if (*confirm==0) {return 3;}
 	if ((*confirm!=1) && (*confirm!=2)) {return 4;}
@@ -226,7 +226,7 @@ int CWSetValues(int selection, int parameter, int queue, int value, int confirm,
 	if(confirm==1) {return 1;}
 	if(confirm==2) 
 	{
-		printf("\nSetting requested parameters. Please wait...\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"\nSetting requested parameters. Please wait...\n");
 
 #ifdef DMALLOC
 		dmalloc_log_stats();
@@ -517,12 +517,12 @@ CW_THREAD_RETURN_TYPE CWThreadWD(void * arg){
 		}
 		memset(buff, 0, 128);
 		sprintf(buff, "%s %s %s %s", filename,"any","255.255.255.255",filename1);
-		printf("buff %s\n",buff);		
+		wid_syslog_debug_debug(WID_DEFAULT,"buff %s\n",buff);		
 
 		stat = system(buff);		
 		cnt = WEXITSTATUS(stat);	
-		printf("cnt %d\n",cnt);
-		printf("ifname any count %d\n",G_LocalHost_num);		
+		wid_syslog_debug_debug(WID_DEFAULT,"cnt %d\n",cnt);
+		wid_syslog_debug_debug(WID_DEFAULT,"ifname any count %d\n",G_LocalHost_num);		
 		if (cnt != 0)
 		{
 			if(G_LocalHost_num == 0){
@@ -542,11 +542,11 @@ CW_THREAD_RETURN_TYPE CWThreadWD(void * arg){
 				continue;
 			memset(buff, 0, 128);
 			sprintf(buff, "%s %s %s %s", filename,gInterfaces[i].ifname,gInterfaces[i].ip,filename1);	
-			printf("buff2222 %s\n",buff);		
+			wid_syslog_debug_debug(WID_DEFAULT,"buff  %s\n",buff);		
 			stat = system(buff);		
 			cnt = WEXITSTATUS(stat);				
-			printf("cnt %d\n",cnt);
-			printf("ifname %s count %d\n",gInterfaces[i].ifname,gInterfaces[i].datacount);		
+			wid_syslog_debug_debug(WID_DEFAULT,"cnt %d\n",cnt);
+			wid_syslog_debug_debug(WID_DEFAULT,"ifname %s count %d\n",gInterfaces[i].ifname,gInterfaces[i].datacount);		
 			if (cnt != 0)
 			{
 				if(gInterfaces[i].datacount== 0){

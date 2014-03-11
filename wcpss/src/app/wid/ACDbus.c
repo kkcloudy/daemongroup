@@ -656,7 +656,7 @@ DBusMessage * wid_dbus_interface_update_wtp_count(DBusConnection *conn, DBusMess
 								DBUS_TYPE_INVALID))){
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -759,7 +759,7 @@ DBusMessage * wid_dbus_interface_del_attack_ap_mac(DBusConnection *conn, DBusMes
 								DBUS_TYPE_INVALID))){
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -802,7 +802,7 @@ DBusMessage * wid_dbus_interface_add_attack_ap_mac(DBusConnection *conn, DBusMes
 								DBUS_TYPE_INVALID))){
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -845,7 +845,7 @@ DBusMessage * wid_dbus_interface_add_wids_mac(DBusConnection *conn, DBusMessage 
 								DBUS_TYPE_INVALID))){
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -887,7 +887,7 @@ DBusMessage * wid_dbus_interface_del_wids_mac(DBusConnection *conn, DBusMessage 
 								DBUS_TYPE_INVALID))){
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -923,7 +923,7 @@ DBusMessage * wid_dbus_interface_add_essid(DBusConnection *conn, DBusMessage *ms
 								DBUS_TYPE_INVALID))){
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -963,14 +963,14 @@ DBusMessage * wid_dbus_interface_modify_essid(DBusConnection *conn, DBusMessage 
 								DBUS_TYPE_INVALID))){
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
 	}
 
-	printf("legal essid:\t%s\n",essid);
-	printf("legal essid_new:\t%s\n",essid_new);
+	wid_syslog_debug_debug(WID_DEFAULT,"legal essid:\t%s\n",essid);
+	wid_syslog_debug_debug(WID_DEFAULT,"legal essid_new:\t%s\n",essid_new);
 	ret = wid_modify_legal_essid(essid,essid_new);
 
 	reply = dbus_message_new_method_return(msg);
@@ -1004,7 +1004,7 @@ DBusMessage * wid_dbus_interface_add_oui(DBusConnection *conn, DBusMessage *msg,
 								DBUS_TYPE_INVALID))){
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -1044,7 +1044,7 @@ DBusMessage * wid_dbus_interface_del_essid(DBusConnection *conn, DBusMessage *ms
 								DBUS_TYPE_INVALID))){
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -1227,10 +1227,10 @@ DBusMessage * wid_dbus_interface_wtp_add_del_by_mac(DBusConnection *conn, DBusMe
 								DBUS_TYPE_STRING,&WTPModel,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -1325,10 +1325,10 @@ DBusMessage * wid_dbus_interface_wtp_add_del(DBusConnection *conn, DBusMessage *
 								DBUS_TYPE_UINT32,&apcodeflag,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -1432,10 +1432,10 @@ DBusMessage * wid_dbus_interface_wtp_add_del_by_mac(DBusConnection *conn, DBusMe
 								DBUS_TYPE_UINT32,&bootflag,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -1753,10 +1753,10 @@ DBusMessage * wid_dbus_interface_wlan_add_del(DBusConnection *conn, DBusMessage 
 								DBUS_TYPE_STRING,&ESSID,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -1858,16 +1858,16 @@ DBusMessage * wid_dbus_interface_wlan_add_del_CN(DBusConnection *conn, DBusMessa
 	
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
 	}
 	
-	printf("###wlan##essid###%s,[%s]\n",WlanName,ESSID);
+	wid_syslog_debug_debug(WID_DEFAULT,"###wlan##essid###%s,[%s]\n",WlanName,ESSID);
 	unsigned char essid_str2[ESSID_DEFAULT_LEN+1];
 	//essid_str2 = (char*)WID_MALLOC(ESSID_DEFAULT_LEN+1);
 	char *s1=NULL;
@@ -1886,7 +1886,7 @@ DBusMessage * wid_dbus_interface_wlan_add_del_CN(DBusConnection *conn, DBusMessa
 		}else{
 			memset(s1,0,1+1);
 			sprintf(s1,"%x",ESSID[j]);
-			printf("s1:%s\n",s1);
+			wid_syslog_debug_debug(WID_DEFAULT,"s1:%s\n",s1);
 			
 			strncat((char*)essid_str2,s1,strlen(s1));
 			
@@ -1897,7 +1897,7 @@ DBusMessage * wid_dbus_interface_wlan_add_del_CN(DBusConnection *conn, DBusMessa
 
 		}
 	}
-	printf("##essid_str:%s\n",essid_str2);
+	wid_syslog_debug_debug(WID_DEFAULT,"##essid_str:%s\n",essid_str2);
 	if(isAdd){
 		if(AC_WLAN[WlanID] == NULL){
 			ret = WID_CREATE_NEW_WLAN(WlanName,WlanID,ESSID,essid_str2,cnFlag);
@@ -1936,10 +1936,10 @@ DBusMessage * wid_dbus_interface_wlan(DBusConnection *conn, DBusMessage *msg, vo
 								DBUS_TYPE_BYTE,&WlanID,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -1973,10 +1973,10 @@ DBusMessage * wid_dbus_interface_wtp(DBusConnection *conn, DBusMessage *msg, voi
 								DBUS_TYPE_UINT32,&WTPID,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -2007,10 +2007,10 @@ DBusMessage * wid_dbus_interface_radio(DBusConnection *conn, DBusMessage *msg, v
 								DBUS_TYPE_UINT32,&RadioId,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -2062,9 +2062,9 @@ DBusMessage * wid_dbus_interface_show_wlanconf_of_all(DBusConnection *conn, DBus
 	}
 	if(wlan_num == 0)
 		ret = WLAN_ID_NOT_EXIST;	
-	printf("ret = %d \n",ret);
+	wid_syslog_debug_debug(WID_DEFAULT,"ret = %d \n",ret);
 
-	printf("wlan_num = %d \n",wlan_num);
+	wid_syslog_debug_debug(WID_DEFAULT,"wlan_num = %d \n",wlan_num);
 	reply = dbus_message_new_method_return(msg);
 		
 	dbus_message_iter_init_append (reply, &iter);
@@ -2123,63 +2123,63 @@ DBusMessage * wid_dbus_interface_show_wlanconf_of_all(DBusConnection *conn, DBus
 
 		dbus_message_iter_append_basic(&iter_struct,DBUS_TYPE_BYTE,&(WLAN[i]->WlanID));
 
-		printf("WLAN[i]->WlanID = %d \n",WLAN[i]->WlanID);
+		wid_syslog_debug_debug(WID_DEFAULT,"WLAN[i]->WlanID = %d \n",WLAN[i]->WlanID);
 										
 		dbus_message_iter_append_basic(&iter_struct,DBUS_TYPE_UINT32,&(WLAN[i]->balance_para));
 
-		printf("WLAN[i]->balance_para = %d \n",WLAN[i]->balance_para);
+		wid_syslog_debug_debug(WID_DEFAULT,"WLAN[i]->balance_para = %d \n",WLAN[i]->balance_para);
 						
 		dbus_message_iter_append_basic(&iter_struct,DBUS_TYPE_UINT32,&(WLAN[i]->flow_balance_para));
 
-		printf("WLAN[i]->flow_balance_para = %d \n",WLAN[i]->flow_balance_para);
+		wid_syslog_debug_debug(WID_DEFAULT,"WLAN[i]->flow_balance_para = %d \n",WLAN[i]->flow_balance_para);
 
 		dbus_message_iter_append_basic(&iter_struct,DBUS_TYPE_BYTE,&(WLAN[i]->balance_switch));
 
-		printf("WLAN[i]->balance_switch = %d \n",WLAN[i]->balance_switch);
+		wid_syslog_debug_debug(WID_DEFAULT,"WLAN[i]->balance_switch = %d \n",WLAN[i]->balance_switch);
 					  
 		dbus_message_iter_append_basic(&iter_struct,DBUS_TYPE_BYTE, &(WLAN[i]->balance_method));
 
-		printf("WLAN[i]->balance_method = %d \n",WLAN[i]->balance_method);
+		wid_syslog_debug_debug(WID_DEFAULT,"WLAN[i]->balance_method = %d \n",WLAN[i]->balance_method);
 
 		dbus_message_iter_append_basic(&iter_struct,DBUS_TYPE_UINT32,&(WLAN[i]->wlan_max_allowed_sta_num)); 
 
-		printf("WLAN[i]->wlan_max_allowed_sta_num = %d \n",WLAN[i]->wlan_max_allowed_sta_num);
+		wid_syslog_debug_debug(WID_DEFAULT,"WLAN[i]->wlan_max_allowed_sta_num = %d \n",WLAN[i]->wlan_max_allowed_sta_num);
 						
 		dbus_message_iter_append_basic(&iter_struct,DBUS_TYPE_BYTE,&(WLAN[i]->Status));
 
-		printf("WLAN[i]->Status = %d \n",WLAN[i]->Status);
+		wid_syslog_debug_debug(WID_DEFAULT,"WLAN[i]->Status = %d \n",WLAN[i]->Status);
 										  					
 		dbus_message_iter_append_basic(&iter_struct,DBUS_TYPE_BYTE,&(WLAN[i]->SecurityID));
 
-		printf("WLAN[i]->SecurityID = %d \n",WLAN[i]->SecurityID);
+		wid_syslog_debug_debug(WID_DEFAULT,"WLAN[i]->SecurityID = %d \n",WLAN[i]->SecurityID);
 														  
 		dbus_message_iter_append_basic(&iter_struct,DBUS_TYPE_UINT32,&(WLAN[i]->SecurityType));
 
-		printf("WLAN[i]->SecurityType = %d \n",WLAN[i]->SecurityType);
+		wid_syslog_debug_debug(WID_DEFAULT,"WLAN[i]->SecurityType = %d \n",WLAN[i]->SecurityType);
 																	
 		dbus_message_iter_append_basic(&iter_struct,DBUS_TYPE_UINT32,&(WLAN[i]->EncryptionType));
 
-		printf("WLAN[i]->EncryptionType = %d \n",WLAN[i]->EncryptionType);
+		wid_syslog_debug_debug(WID_DEFAULT,"WLAN[i]->EncryptionType = %d \n",WLAN[i]->EncryptionType);
 						
 		dbus_message_iter_append_basic(&iter_struct,DBUS_TYPE_BYTE,&(WLAN[i]->HideESSid));
 
-		printf("WLAN[i]->HideESSid = %d \n",WLAN[i]->HideESSid);
+		wid_syslog_debug_debug(WID_DEFAULT,"WLAN[i]->HideESSid = %d \n",WLAN[i]->HideESSid);
 					
 		dbus_message_iter_append_basic (&iter_struct,DBUS_TYPE_BYTE,&bif_num);
 
-		printf("bif_num = %d \n",bif_num);
+		wid_syslog_debug_debug(WID_DEFAULT,"bif_num = %d \n",bif_num);
 		/*fengwenchao add 20110401*/
 		dbus_message_iter_append_basic (&iter_struct,DBUS_TYPE_UINT32,&tx_pkt);
 
-		printf("tx_pkt = %d \n",tx_pkt);
+		wid_syslog_debug_debug(WID_DEFAULT,"tx_pkt = %d \n",tx_pkt);
 		
 		dbus_message_iter_append_basic (&iter_struct,DBUS_TYPE_UINT64,&rx_bts);
 
-		printf("rx_bts = %llu \n",rx_bts);
+		wid_syslog_debug_debug(WID_DEFAULT,"rx_bts = %llu \n",rx_bts);
 
 		dbus_message_iter_append_basic (&iter_struct,DBUS_TYPE_UINT64,&tx_bts);
 
-		printf("tx_bts = %llu\n",tx_bts);
+		wid_syslog_debug_debug(WID_DEFAULT,"tx_bts = %llu\n",tx_bts);
 		
 		/*fengwenchao add 20110401*/
 													
@@ -2214,7 +2214,7 @@ DBusMessage * wid_dbus_interface_show_wlanconf_of_all(DBusConnection *conn, DBus
 			dbus_message_iter_append_basic (&iter_sub_struct,
 											 DBUS_TYPE_STRING,
 											 &(name));
-			printf("name = %s \n",name);
+			wid_syslog_debug_debug(WID_DEFAULT,"name = %s \n",name);
 						 
 			ifi = ifi->ifi_next;
 			dbus_message_iter_close_container (&iter_sub_array, &iter_sub_struct);				
@@ -2253,10 +2253,10 @@ DBusMessage * wid_dbus_interface_show_wlanconf(DBusConnection *conn, DBusMessage
 								DBUS_TYPE_BYTE,&WlanID,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -2512,7 +2512,7 @@ DBusMessage * wid_dbus_interface_show_wlanlist(DBusConnection *conn, DBusMessage
 										&iter_struct);
 		if(NULL == WLAN[i]->WlanName){
 			return NULL;
-			printf("happen error\n");
+			wid_syslog_debug_debug(WID_DEFAULT,"happen error\n");
 		}
 		else{
 			wlan_name = (char *)WID_MALLOC(strlen(WLAN[i]->WlanName) + 1);
@@ -2709,39 +2709,39 @@ DBusMessage *wid_dbus_interface_show_wtplist_bymodel(DBusConnection *conn, DBusM
 		if(WTP[i]->APCode == NULL)
 		{
 			dbus_message_iter_append_basic (&iter_struct,DBUS_TYPE_STRING,&(no_info));
-			printf("no_info = %s \n",no_info);
+			wid_syslog_debug_debug(WID_DEFAULT,"no_info = %s \n",no_info);
 		}
 		else
 		{
 			dbus_message_iter_append_basic (&iter_struct,DBUS_TYPE_STRING,&(WTP[i]->APCode));
 			
-			printf("WTP[i]->APCode = %s \n",WTP[i]->APCode);
+			wid_syslog_debug_debug(WID_DEFAULT,"WTP[i]->APCode = %s \n",WTP[i]->APCode);
 		}
 		
 		if(WTP[i]->ver == NULL)
 		{
 			dbus_message_iter_append_basic (&iter_struct,DBUS_TYPE_STRING,&(no_info));
 			
-			printf("no_info = %s \n",no_info);
+			wid_syslog_debug_debug(WID_DEFAULT,"no_info = %s \n",no_info);
 		}
 		else
 		{
 			dbus_message_iter_append_basic (&iter_struct,DBUS_TYPE_STRING,&(WTP[i]->ver));
 			
-			printf("WTP[i]->ver = %s \n",WTP[i]->ver);
+			wid_syslog_debug_debug(WID_DEFAULT,"WTP[i]->ver = %s \n",WTP[i]->ver);
 		}
 		
 		if(WTP[i]->codever == NULL)
 		{
 			dbus_message_iter_append_basic (&iter_struct,DBUS_TYPE_STRING,&(no_info));
 			
-			printf("no_info = %s \n",no_info);
+			wid_syslog_debug_debug(WID_DEFAULT,"no_info = %s \n",no_info);
 		}
 		else
 		{
 			dbus_message_iter_append_basic (&iter_struct,DBUS_TYPE_STRING,&(WTP[i]->codever));
 			
-			printf("WTP[i]->codever = %s \n",WTP[i]->codever);
+			wid_syslog_debug_debug(WID_DEFAULT,"WTP[i]->codever = %s \n",WTP[i]->codever);
 		}
 
 		
@@ -2854,39 +2854,39 @@ DBusMessage * wid_dbus_interface_show_wtplist_byversion(DBusConnection *conn, DB
 		if(WTP[i]->APCode == NULL)
 		{
 			dbus_message_iter_append_basic (&iter_struct,DBUS_TYPE_STRING,&(no_info));
-			printf("no_info = %s \n",no_info);
+			wid_syslog_debug_debug(WID_DEFAULT,"no_info = %s \n",no_info);
 		}
 		else
 		{
 			dbus_message_iter_append_basic (&iter_struct,DBUS_TYPE_STRING,&(WTP[i]->APCode));
 			
-			printf("WTP[i]->APCode = %s \n",WTP[i]->APCode);
+			wid_syslog_debug_debug(WID_DEFAULT,"WTP[i]->APCode = %s \n",WTP[i]->APCode);
 		}
 		
 		if(WTP[i]->ver == NULL)
 		{
 			dbus_message_iter_append_basic (&iter_struct,DBUS_TYPE_STRING,&(no_info));
 			
-			printf("no_info = %s \n",no_info);
+			wid_syslog_debug_debug(WID_DEFAULT,"no_info = %s \n",no_info);
 		}
 		else
 		{
 			dbus_message_iter_append_basic (&iter_struct,DBUS_TYPE_STRING,&(WTP[i]->ver));
 			
-			printf("WTP[i]->ver = %s \n",WTP[i]->ver);
+			wid_syslog_debug_debug(WID_DEFAULT,"WTP[i]->ver = %s \n",WTP[i]->ver);
 		}
 		
 		if(WTP[i]->codever == NULL)
 		{
 			dbus_message_iter_append_basic (&iter_struct,DBUS_TYPE_STRING,&(no_info));
 			
-			printf("no_info = %s \n",no_info);
+			wid_syslog_debug_debug(WID_DEFAULT,"no_info = %s \n",no_info);
 		}
 		else
 		{
 			dbus_message_iter_append_basic (&iter_struct,DBUS_TYPE_STRING,&(WTP[i]->codever));
 			
-			printf("WTP[i]->codever = %s \n",WTP[i]->codever);
+			wid_syslog_debug_debug(WID_DEFAULT,"WTP[i]->codever = %s \n",WTP[i]->codever);
 		}
 
 		
@@ -3211,7 +3211,7 @@ DBusMessage * wid_dbus_interface_show_wtplist_byinterface(DBusConnection *conn, 
 		}
 		/*fengwenchao modify end*/
 		wid_syslog_info("WTP %d on Interface3 %s (%d)\n",WTP[i]->WTPID, str, gWTPs[WTP[i]->WTPID].interfaceIndex);
-		printf("WTP %d on Interface %s (%d)\n",WTP[i]->WTPID, str, gWTPs[WTP[i]->WTPID].interfaceIndex);
+		wid_syslog_debug_debug(WID_DEFAULT,"WTP %d on Interface %s (%d)\n",WTP[i]->WTPID, str, gWTPs[WTP[i]->WTPID].interfaceIndex);
 
 		dbus_message_iter_append_basic(&iter_struct,DBUS_TYPE_STRING,&(str));
 
@@ -8151,15 +8151,15 @@ DBusMessage * wid_dbus_interface_show_wlan_stats_information(DBusConnection *con
 				/*fengwenchao add end*/				
 				dbus_message_iter_append_basic (&iter_sub_struct,DBUS_TYPE_UINT32,&tx_pkt);
 
-				printf("tx_pkt = %d \n",tx_pkt);
+				wid_syslog_debug_debug(WID_DEFAULT,"tx_pkt = %d \n",tx_pkt);
 				
 				dbus_message_iter_append_basic (&iter_sub_struct,DBUS_TYPE_UINT64,&rx_bts);
 
-				printf("rx_bts = %llu \n",rx_bts);
+				wid_syslog_debug_debug(WID_DEFAULT,"rx_bts = %llu \n",rx_bts);
 
 				dbus_message_iter_append_basic (&iter_sub_struct,DBUS_TYPE_UINT64,&tx_bts);
 
-				printf("tx_bts = %llu\n",tx_bts);				
+				wid_syslog_debug_debug(WID_DEFAULT,"tx_bts = %llu\n",tx_bts);				
 				/*fengwenchao add end*/
     				dbus_message_iter_close_container (&iter_sub_array, &iter_sub_struct);
 				CW_FREE_OBJECT_WID(wlan_essid);
@@ -8583,10 +8583,10 @@ DBusMessage *wid_dbus_interface_show_info_bywtpid(DBusConnection *conn, DBusMess
 									 DBUS_TYPE_UINT32, &wtpid,
 									 DBUS_TYPE_INVALID))){
 
-			printf("Unable to get input args\n");
+			wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 					
 			if (dbus_error_is_set(&err)) {
-				printf("%s raised: %s",err.name,err.message);
+				wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 				dbus_error_free(&err);
 			}
 			return NULL;
@@ -8652,7 +8652,7 @@ DBusMessage *wid_dbus_interface_show_info_bywtpid(DBusConnection *conn, DBusMess
 			dbus_message_iter_append_basic (&iter,
 											 DBUS_TYPE_UINT32,
 											 &bss_num);
-			printf("  bss_num  =  %d  \n",bss_num);
+			wid_syslog_debug_debug(WID_DEFAULT,"  bss_num  =  %d  \n",bss_num);
 			
 			
 			dbus_message_iter_open_container (&iter,
@@ -8683,9 +8683,9 @@ DBusMessage *wid_dbus_interface_show_info_bywtpid(DBusConnection *conn, DBusMess
 					}
 				}
 				dbus_message_iter_append_basic (&iter_struct,DBUS_TYPE_UINT32,&(bss_rx_pkt_data));
-				printf("  bss_rx_pkt_data  =  %d  \n",bss_rx_pkt_data);
+				wid_syslog_debug_debug(WID_DEFAULT,"  bss_rx_pkt_data  =  %d  \n",bss_rx_pkt_data);
 				dbus_message_iter_append_basic (&iter_struct,DBUS_TYPE_UINT32,&(bss_tx_pkt_data));
-				printf("  bss_tx_pkt_data =  %d  \n",bss_tx_pkt_data);
+				wid_syslog_debug_debug(WID_DEFAULT,"  bss_tx_pkt_data =  %d  \n",bss_tx_pkt_data);
 				dbus_message_iter_close_container (&iter_array, &iter_struct);
 			}
 			dbus_message_iter_close_container (&iter, &iter_array);
@@ -8854,10 +8854,10 @@ DBusMessage *wid_dbus_interface_show_info_bywlanid(DBusConnection *conn, DBusMes
 								 DBUS_TYPE_BYTE,  &wlanid,
 								 DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -8981,9 +8981,9 @@ DBusMessage * wid_dbus_interface_show_conjunction_info_of_all_wtp(DBusConnection
 		dbus_message_iter_append_basic (&iter_struct,DBUS_TYPE_UINT32,&wtpid);	
 											   
 		dbus_message_iter_append_basic (&iter_struct,DBUS_TYPE_UINT32,&rx_data_pkts);	
-		printf("rx_data_pkts   =  %d  ,  wtpid = %d\n",rx_data_pkts,wtpid);										
+		wid_syslog_debug_debug(WID_DEFAULT,"rx_data_pkts   =  %d  ,  wtpid = %d\n",rx_data_pkts,wtpid);										
 		dbus_message_iter_append_basic (&iter_struct,DBUS_TYPE_UINT32,&tx_data_pkts);												 										 
-		printf("tx_data_pkts   =  %d  ,  wtpid = %d\n",tx_data_pkts,wtpid);											   
+		wid_syslog_debug_debug(WID_DEFAULT,"tx_data_pkts   =  %d  ,  wtpid = %d\n",tx_data_pkts,wtpid);											   
 
 		dbus_message_iter_close_container (&iter_array, &iter_struct);
 	}
@@ -13396,10 +13396,10 @@ DBusMessage * wid_dbus_interface_set_hide_quit_wtp_infor_showwing(DBusConnection
 								DBUS_TYPE_UINT32,&hide_switch,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -13442,10 +13442,10 @@ DBusMessage * set_wtp_trap_ignore_percent(DBusConnection *conn, DBusMessage *msg
                                 DBUS_TYPE_UINT32,&trap_percent,
                                 DBUS_TYPE_INVALID))){
 
-        printf("Unable to get input args\n");
+        wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
                 
         if (dbus_error_is_set(&err)) {
-            printf("%s raised: %s",err.name,err.message);
+            wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
             dbus_error_free(&err);
         }
         return NULL;
@@ -13637,10 +13637,10 @@ DBusMessage * wid_dbus_interface_old_ap_img(DBusConnection *conn, DBusMessage *m
 								DBUS_TYPE_UINT32,&stat,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -14370,10 +14370,10 @@ DBusMessage * wid_dbus_interface_show_model(DBusConnection *conn, DBusMessage *m
 								DBUS_TYPE_STRING,&model,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -14580,10 +14580,10 @@ DBusMessage * wid_dbus_interface_set_model(DBusConnection *conn, DBusMessage *ms
 								DBUS_TYPE_STRING,&newmodel,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -14701,10 +14701,10 @@ DBusMessage * wid_dbus_interface_set_ap_cm_threshold(DBusConnection *conn, DBusM
 								DBUS_TYPE_UINT32,&value,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -14759,10 +14759,10 @@ DBusMessage * wid_dbus_interface_set_wtp_rogueap_rogue_terminal_cpu_mem_trap_thr
 								DBUS_TYPE_UINT32,&value,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -14846,9 +14846,9 @@ DBusMessage * wid_dbus_interface_set_wtp_trap_collect_time(DBusConnection *conn,
 								DBUS_TYPE_UINT32,&policy,
 								DBUS_TYPE_UINT32,&value,
 								DBUS_TYPE_INVALID))){
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -14884,9 +14884,9 @@ DBusMessage *wid_dbus_interface_set_wid_rogue_danger_unsafe_attack_trap_state(DB
 								DBUS_TYPE_UINT32,&wtpid,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");				
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -14969,10 +14969,10 @@ DBusMessage * wid_dbus_interface_set_wtp_trap_switch(DBusConnection *conn, DBusM
 								DBUS_TYPE_UINT32,&policy,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -14997,7 +14997,7 @@ if(type==0)
 }
 
 else if (type == 1){
-	printf("******** type == 1 *****\n");
+	wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
  
 	 if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL)){
 		tmp = WTP_GROUP[ID]->WTP_M;
@@ -15093,10 +15093,10 @@ DBusMessage * wid_dbus_interface_set_wtp_trap_switch(DBusConnection *conn, DBusM
 								DBUS_TYPE_UINT32,&policy,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -15157,10 +15157,10 @@ DBusMessage * wid_dbus_interface_set_wtp_seqnum_switch(DBusConnection *conn, DBu
 								DBUS_TYPE_UINT32,&policy,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -15185,7 +15185,7 @@ if(type==0)
 }
 
 else if (type == 1){
-	printf("******** type == 1 *****\n");
+	wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
  
 	 if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL)){
 		tmp = WTP_GROUP[ID]->WTP_M;
@@ -15281,10 +15281,10 @@ DBusMessage * wid_dbus_interface_set_wtp_seqnum_switch(DBusConnection *conn, DBu
 								DBUS_TYPE_UINT32,&policy,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -15343,10 +15343,10 @@ DBusMessage * wid_dbus_interface_show_wtp_rogueap_terminal_cpu_mem_trap_threshol
 								DBUS_TYPE_UINT32,&wtpid,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -15450,10 +15450,10 @@ DBusMessage * wid_dbus_interface_show_wtp_model_code_version(DBusConnection *con
 								DBUS_TYPE_UINT32,&wtpid,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -15543,11 +15543,11 @@ DBusMessage * wid_dbus_interface_update_wtp_img_version(DBusConnection *conn, DB
 				DBUS_TYPE_INVALID)))
 	{
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err))
 		{
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -15594,7 +15594,7 @@ if(type==0)
 }
 
 else if (type == 1){
-	printf("******** type == 1 *****\n");
+	wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
  
 	 if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL)){
 		tmp = WTP_GROUP[ID]->WTP_M;
@@ -15723,11 +15723,11 @@ DBusMessage * wid_dbus_interface_update_wtp_img_version(DBusConnection *conn, DB
 				DBUS_TYPE_INVALID)))
 	{
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err))
 		{
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -15806,11 +15806,11 @@ DBusMessage * wid_dbus_interface_clear_update_wtp_img_version(DBusConnection *co
 				DBUS_TYPE_INVALID)))
 	{
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err))
 		{
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -15834,7 +15834,7 @@ if(type==0)
 }
 
 	else if (type == 1){
-		printf("******** type == 1 *****\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 	 
 		 if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL)){
 			tmp = WTP_GROUP[ID]->WTP_M;
@@ -15929,11 +15929,11 @@ DBusMessage * wid_dbus_interface_clear_update_wtp_img_version(DBusConnection *co
 				DBUS_TYPE_INVALID)))
 	{
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err))
 		{
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -16514,10 +16514,10 @@ DBusMessage * wid_dbus_interface_show_wtpconf(DBusConnection *conn, DBusMessage 
 								DBUS_TYPE_UINT32,&WTPID,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -16892,10 +16892,10 @@ DBusMessage * wid_dbus_interface_show_wtpconf_bywlanid(DBusConnection *conn, DBu
 								DBUS_TYPE_UINT32,&wlanid,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -17231,10 +17231,10 @@ DBusMessage * wid_dbus_interface_set_wid_name(DBusConnection *conn, DBusMessage 
 								DBUS_TYPE_STRING,&acname,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -17271,10 +17271,10 @@ DBusMessage * wid_dbus_interface_set_wid_sw_version(DBusConnection *conn, DBusMe
 								DBUS_TYPE_STRING,&swversion,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -17312,10 +17312,10 @@ DBusMessage * wid_dbus_interface_set_wid_hw_version(DBusConnection *conn, DBusMe
 								DBUS_TYPE_STRING,&hwversion,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -17353,10 +17353,10 @@ DBusMessage * wid_dbus_interface_set_wid_security_type(DBusConnection *conn, DBu
 								DBUS_TYPE_BYTE,&securitytype,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -17398,10 +17398,10 @@ DBusMessage * wid_dbus_interface_set_wid_lev3_protocol(DBusConnection *conn, DBu
 								DBUS_TYPE_BYTE,&lev3protocol,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -17444,10 +17444,10 @@ DBusMessage * wid_dbus_interface_set_wid_max_wtp(DBusConnection *conn, DBusMessa
 								DBUS_TYPE_UINT32,&maxwtp,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -17489,10 +17489,10 @@ DBusMessage * wid_dbus_interface_set_wid_max_mtu(DBusConnection *conn, DBusMessa
 								DBUS_TYPE_UINT32,&maxmtu,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -17536,10 +17536,10 @@ DBusMessage * wid_dbus_interface_set_wid_log_switch(DBusConnection *conn, DBusMe
 								DBUS_TYPE_BYTE,&logswitch,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -17582,10 +17582,10 @@ DBusMessage * wid_dbus_interface_set_wid_log_size(DBusConnection *conn, DBusMess
 								DBUS_TYPE_UINT32,&logsize,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -17621,10 +17621,10 @@ DBusMessage * wid_dbus_interface_set_wid_syslog_debug_level(DBusConnection *conn
 								DBUS_TYPE_UINT32,&widloglevel,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -17681,10 +17681,10 @@ DBusMessage * wid_dbus_interface_set_wid_daemonlog_level(DBusConnection *conn, D
 								DBUS_TYPE_UINT32,&daemonloglevel,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -17845,10 +17845,10 @@ DBusMessage * wid_dbus_interface_set_wid_trap_debug(DBusConnection *conn, DBusMe
 								DBUS_TYPE_BYTE,&trapflag,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -17898,10 +17898,10 @@ DBusMessage * wid_dbus_interface_set_wid_trap_switch_able(DBusConnection *conn, 
 								DBUS_TYPE_UINT32,&trap_policy,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -18162,10 +18162,10 @@ DBusMessage * wid_dbus_interface_set_ap_scanning(DBusConnection *conn, DBusMessa
 								DBUS_TYPE_UINT32,&policy,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -18241,10 +18241,10 @@ DBusMessage * wid_dbus_interface_set_wid_mac_whitelist_switch(DBusConnection *co
 								DBUS_TYPE_BYTE,&macfilterflag,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -18281,10 +18281,10 @@ DBusMessage * wid_dbus_interface_set_wid_essid_whitelist_switch(DBusConnection *
 								DBUS_TYPE_BYTE,&essidfilterflag,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -18320,10 +18320,10 @@ DBusMessage * wid_dbus_interface_set_ap_scanning_report_interval(DBusConnection 
 								DBUS_TYPE_UINT32,&time,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -18370,10 +18370,10 @@ DBusMessage * wid_dbus_interface_set_ap_countermeasures(DBusConnection *conn, DB
 								DBUS_TYPE_UINT32,&policy,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -18451,10 +18451,10 @@ DBusMessage * wid_dbus_interface_set_ap_countermeasures_mode(DBusConnection *con
 								DBUS_TYPE_UINT32,&policy,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -18491,10 +18491,10 @@ DBusMessage * wid_dbus_interface_update_ap_scanning_info(DBusConnection *conn, D
 								DBUS_TYPE_UINT32,&state,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -18537,10 +18537,10 @@ DBusMessage * wid_dbus_interface_set_wireless_control_whitelist(DBusConnection *
 								 DBUS_TYPE_BYTE,  &macaddr.macaddr[5],
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -18592,10 +18592,10 @@ DBusMessage * wid_dbus_interface_change_wireless_control_whitelist(DBusConnectio
 								 DBUS_TYPE_BYTE,  &macaddrdest.macaddr[5],								 
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -18645,10 +18645,10 @@ DBusMessage * wid_dbus_interface_change_wireless_control_blacklist(DBusConnectio
 								 DBUS_TYPE_BYTE,  &macaddrdest.macaddr[5],								 
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -18690,10 +18690,10 @@ DBusMessage * wid_dbus_interface_set_wireless_control_blacklist(DBusConnection *
 								 DBUS_TYPE_BYTE,  &macaddr.macaddr[5],
 								 DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -18738,10 +18738,10 @@ DBusMessage * wid_dbus_interface_delete_wireless_control_whitelist(DBusConnectio
 								 DBUS_TYPE_BYTE,  &macaddr.macaddr[5],
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -18782,10 +18782,10 @@ DBusMessage * wid_dbus_interface_delete_wireless_control_blacklist(DBusConnectio
 								 DBUS_TYPE_BYTE,  &macaddr.macaddr[5],
 								 DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -18828,10 +18828,10 @@ DBusMessage * wid_dbus_interface_show_wireless_control_blacklist(DBusConnection 
 								DBUS_TYPE_UINT32,&state,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -18938,16 +18938,16 @@ DBusMessage * wid_dbus_interface_set_wids_judge_policy(DBusConnection *conn, DBu
 								 DBUS_TYPE_UINT32,&policy,	
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
 	}
 
 	//save parameter
-	printf("set wids judge mode = %d policy = %d \n",mode,policy);
+	wid_syslog_debug_debug(WID_DEFAULT,"set wids judge mode = %d policy = %d \n",mode,policy);
 	//if(policy == 1)
 	{
 		wids_judge_policy = mode;
@@ -18971,7 +18971,7 @@ DBusMessage * wid_dbus_interface_set_wids_judge_policy(DBusConnection *conn, DBu
 	}
 	*/
 
-	printf("set wids judge policy = %d \n",wids_judge_policy);
+	wid_syslog_debug_debug(WID_DEFAULT,"set wids judge policy = %d \n",wids_judge_policy);
 
 	reply = dbus_message_new_method_return(msg);
 		
@@ -18997,9 +18997,9 @@ DBusMessage * wid_dbus_interface_show_wids_judge_policy(DBusConnection *conn, DB
 								 DBUS_TYPE_UINT32,&mode,	
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -19013,7 +19013,7 @@ DBusMessage * wid_dbus_interface_show_wids_judge_policy(DBusConnection *conn, DB
 	dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT32, &ret);
 	dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT32, &wids_judge_policy);
 
-	printf("show wids judge policy = %d \n",wids_judge_policy);
+	wid_syslog_debug_debug(WID_DEFAULT,"show wids judge policy = %d \n",wids_judge_policy);
 	
 	wid_syslog_debug_debug(WID_DEFAULT,"show wids judge policy successfully\n");
 	return reply;	
@@ -19036,9 +19036,9 @@ DBusMessage * wid_dbus_interface_set_wids_monitor_mode(DBusConnection *conn, DBu
 								 DBUS_TYPE_UINT32,&wtpid,    
 								 DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -19296,9 +19296,9 @@ DBusMessage * wid_dbus_interface_set_wids_mode(DBusConnection *conn, DBusMessage
 							   	DBUS_TYPE_UINT32,&wtpid,
 							 	DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -19441,32 +19441,33 @@ DBusMessage * wid_dbus_interface_show_wids_mode_channel(DBusConnection *conn, DB
 								 DBUS_TYPE_UINT32,&wtpid,   
 								 DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
 	}
-	printf("dbus:wtpid: %d\n",wtpid);
+	wid_syslog_debug_debug(WID_DEFAULT,"dbus:wtpid: %d\n",wtpid);
 	if(state == 0){
 		ret = WID_DBUS_SUCCESS;
 	}
 	reply = dbus_message_new_method_return(msg);
-	printf("dbus:111111\n");
+	//printf("dbus:111111\n");
 	dbus_message_iter_init_append(reply, &iter);
-	printf("dbus:2222wtpid: %d\n",wtpid);
+	//printf("dbus:2222wtpid: %d\n",wtpid);
 	if(wtpid == 0){
+		wid_syslog_debug_debug(WID_DEFAULT,"wtpid = 0\n");
 		dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT32, &ret);
 		dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT32, &INFO.num);
 		dbus_message_iter_append_basic(&iter, DBUS_TYPE_BYTE, &INFO.monitorMode);
 		dbus_message_iter_append_basic(&iter, DBUS_TYPE_BYTE, &INFO.scanningMode);
-		printf("dbus:333333333wtpid: %d\n",wtpid);
+		wid_syslog_debug_debug(WID_DEFAULT,"func %s,line %d,INFO.scanningMode: %d\n",__func__,__LINE__,INFO.scanningMode);
 		
 		if(INFO.scanningMode == 3){
-			printf("dbus:44444wtpid: %d\n",wtpid);
+			//printf("dbus:44444wtpid: %d\n",wtpid);
 			for(i =0;(i<INFO.num)&&(i<SCANNING_CHANNEL_NUM);i++){
-				printf("dbus:555555wtpid: %d\n",wtpid);
+				wid_syslog_debug_debug(WID_DEFAULT,"INFO.channel[i]  = %d\n",INFO.channel[i]);
 				dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT32, &INFO.channel[i]);
 			}
 		}
@@ -19475,17 +19476,20 @@ DBusMessage * wid_dbus_interface_show_wids_mode_channel(DBusConnection *conn, DB
 		dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT32, &AC_WTP[wtpid]->WIDS.num);
 		dbus_message_iter_append_basic(&iter, DBUS_TYPE_BYTE, &AC_WTP[wtpid]->WIDS.monitorMode);
 		dbus_message_iter_append_basic(&iter, DBUS_TYPE_BYTE, &AC_WTP[wtpid]->WIDS.scanningMode);
-		printf("dbus:333333333wtpid: %d\n",wtpid);
-		
+		//printf("dbus:333333333wtpid: %d\n",wtpid);
+		wid_syslog_debug_debug(WID_DEFAULT,"ret  = %d\n",ret);
+		wid_syslog_debug_debug(WID_DEFAULT,"AC_WTP[wtpid]->WIDS.num  = %d\n",AC_WTP[wtpid]->WIDS.num);
+		wid_syslog_debug_debug(WID_DEFAULT,"AC_WTP[wtpid]->WIDS.monitorMode =  %d\n",AC_WTP[wtpid]->WIDS.monitorMode);
+		wid_syslog_debug_debug(WID_DEFAULT,"AC_WTP[wtpid]->WIDS.scanningMode =  %d\n",AC_WTP[wtpid]->WIDS.scanningMode);
 		if(AC_WTP[wtpid]->WIDS.scanningMode == 3){
-			printf("dbus:44444wtpid: %d\n",wtpid);
+			//printf("dbus:44444wtpid: %d\n",wtpid);
 			for(i =0;(i<AC_WTP[wtpid]->WIDS.num)&&(i<SCANNING_CHANNEL_NUM);i++){
-				printf("dbus:555555wtpid: %d\n",wtpid);
+				wid_syslog_debug_debug(WID_DEFAULT,"AC_WTP[wtpid]->WIDS.channel[i]  = %d\n",AC_WTP[wtpid]->WIDS.channel[i]);
 				dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT32, &AC_WTP[wtpid]->WIDS.channel[i]);
 			}
 		}
 	}
-	printf("dbus:66666666wtpid: %d\n",wtpid);
+	//printf("dbus:66666666wtpid: %d\n",wtpid);
 	wid_syslog_debug_debug(WID_DEFAULT,"show wids scanning mode channel\n");
 	
 	return reply;	
@@ -19510,9 +19514,9 @@ DBusMessage * wid_dbus_interface_show_access_wtpvendor_count(DBusConnection *con
 	if (!(dbus_message_get_args ( msg, &err,
 								 DBUS_TYPE_UINT32,&state,								 
 								DBUS_TYPE_INVALID))){
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -19639,9 +19643,9 @@ DBusMessage * wid_dbus_interface_set_license_bind(DBusConnection *conn, DBusMess
 								DBUS_TYPE_BYTE,&type,
 								DBUS_TYPE_STRING,&string,								 
 								DBUS_TYPE_INVALID))){
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -19954,10 +19958,10 @@ DBusMessage * wid_dbus_interface_iperf_wtpip(DBusConnection *conn, DBusMessage *
 								DBUS_TYPE_STRING,&wtp_ip,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -20009,10 +20013,10 @@ DBusMessage * wid_dbus_interface_show_essid_list(DBusConnection *conn, DBusMessa
 								DBUS_TYPE_UINT32,&state,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -20094,10 +20098,10 @@ DBusMessage * wid_dbus_interface_show_oui_list(DBusConnection *conn, DBusMessage
 								DBUS_TYPE_UINT32,&state,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -20189,10 +20193,10 @@ DBusMessage * wid_dbus_interface_show_attack_mac_list(DBusConnection *conn, DBus
 								DBUS_TYPE_UINT32,&state,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -20301,10 +20305,10 @@ DBusMessage * wid_dbus_interface_show_wids_mac_list(DBusConnection *conn, DBusMe
 								DBUS_TYPE_UINT32,&state,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -20413,10 +20417,10 @@ DBusMessage * wid_dbus_interface_show_wireless_control_whitelist(DBusConnection 
 								DBUS_TYPE_UINT32,&state,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -20526,10 +20530,10 @@ DBusMessage * wid_dbus_interface_show_rogue_ap_list(DBusConnection *conn, DBusMe
 								DBUS_TYPE_UINT32,&state,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -20741,20 +20745,20 @@ DBusMessage * wid_dbus_interface_show_rogue_ap_threshold(DBusConnection *conn, D
 //	int i = 0;
 //	struct Neighbor_AP_ELE *phead;
 	int rouge_ap_count = 0;
-	printf("11111 here is in show_rogue_ap_threshold.\n");
+	wid_syslog_debug_debug(WID_DEFAULT,"here is in show_rogue_ap_threshold start.\n");
 	if (!(dbus_message_get_args ( msg, &err,
 								DBUS_TYPE_UINT32,&state,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
 	}
-	printf("22222 here is in show_rogue_ap_threshold.\n");
+	wid_syslog_debug_debug(WID_DEFAULT," here is in show_rogue_ap_threshold end.\n");
 	reply = dbus_message_new_method_return(msg);
 		
 	dbus_message_iter_init_append(reply, &iter);
@@ -20826,10 +20830,10 @@ DBusMessage * wid_dbus_interface_show_rogue_ap_list_v1(DBusConnection *conn, DBu
 								DBUS_TYPE_UINT32,&state,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		if(WTP)
@@ -21131,10 +21135,10 @@ DBusMessage * wid_dbus_interface_show_rogue_ap_list_bywtpid(DBusConnection *conn
 								DBUS_TYPE_UINT32,&state,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -21415,10 +21419,10 @@ DBusMessage * wid_dbus_interface_show_neighbor_ap_list(DBusConnection *conn, DBu
 								DBUS_TYPE_UINT32,&state,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		CW_FREE_OBJECT_WID(WTP);
@@ -21851,10 +21855,10 @@ DBusMessage * wid_dbus_interface_show_neighbor_ap_list_bywtpid(DBusConnection *c
 								DBUS_TYPE_UINT32,&state,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -22090,10 +22094,10 @@ DBusMessage * wid_dbus_interface_show_neighbor_ap_list_bywtpid2(DBusConnection *
 								DBUS_TYPE_UINT32,&state,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -22325,10 +22329,10 @@ DBusMessage * wid_dbus_interface_show_wids_statistics_list_bywtpid(DBusConnectio
 								DBUS_TYPE_UINT32,&state,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -22391,10 +22395,10 @@ DBusMessage * wid_dbus_interface_clear_wids_statistics_list_bywtpid(DBusConnecti
 								DBUS_TYPE_UINT32,&state,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -22449,10 +22453,10 @@ DBusMessage * wid_dbus_interface_show_wids_statistics_list(DBusConnection *conn,
 								DBUS_TYPE_UINT32,&state,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -22515,10 +22519,10 @@ DBusMessage * wid_dbus_interface_clear_wids_statistics_list(DBusConnection *conn
 								DBUS_TYPE_UINT32,&state,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -22565,10 +22569,10 @@ DBusMessage * wid_dbus_interface_clear_wids_device_list_bywtpid(DBusConnection *
 								DBUS_TYPE_UINT32,&state,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -22626,10 +22630,10 @@ DBusMessage * wid_dbus_interface_clear_wids_device_list(DBusConnection *conn, DB
 								DBUS_TYPE_UINT32,&state,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -22678,10 +22682,10 @@ DBusMessage * wid_dbus_interface_show_wids_device_list_bywtpid(DBusConnection *c
 								DBUS_TYPE_UINT32,&state,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -22846,10 +22850,10 @@ DBusMessage * wid_dbus_interface_show_wids_device_of_all(DBusConnection *conn, D
 								DBUS_TYPE_UINT32,&state,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -23034,10 +23038,10 @@ DBusMessage * wid_dbus_interface_show_wids_device_list(DBusConnection *conn, DBu
 								DBUS_TYPE_UINT32,&state,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -23247,10 +23251,10 @@ DBusMessage * wid_dbus_interface_set_country_code(DBusConnection *conn, DBusMess
 								DBUS_TYPE_UINT32,&radioid,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -23387,10 +23391,10 @@ DBusMessage * wid_dbus_interface_undo_country_code(DBusConnection *conn, DBusMes
 								DBUS_TYPE_UINT32,&country_code,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -23450,10 +23454,10 @@ DBusMessage * wid_dbus_interface_set_wid_auto_ap_login_switch(DBusConnection *co
 								DBUS_TYPE_UINT32,&dynamic_ap_login_switch,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -23550,10 +23554,10 @@ DBusMessage * wid_dbus_interface_set_wid_auto_ap_login_binding_l3_interface(DBus
 								DBUS_TYPE_UINT32,&nocheck,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -23637,10 +23641,10 @@ DBusMessage * wid_dbus_interface_set_wid_listen_l3_interface(DBusConnection *con
 								DBUS_TYPE_UINT32,&nocheck,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -23736,10 +23740,10 @@ DBusMessage * wid_dbus_interface_set_wid_listen_ip(DBusConnection *conn, DBusMes
 								DBUS_TYPE_UINT32,&ip,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -23888,10 +23892,10 @@ DBusMessage * wid_dbus_interface_set_wid_auto_ap_login_binding_wlan(DBusConnecti
 								DBUS_TYPE_STRING,&ifname,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -24039,10 +24043,10 @@ DBusMessage * wid_dbus_interface_del_wid_auto_ap_login_binding_wlan(DBusConnecti
 								DBUS_TYPE_STRING,&ifname,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -24176,10 +24180,10 @@ DBusMessage * wid_dbus_interface_set_wid_auto_ap_login_save_config_switch(DBusCo
 								DBUS_TYPE_UINT32,&save_config_switch,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -24388,10 +24392,10 @@ DBusMessage * wid_dbus_interface_set_ap_data_exclude_multicast(DBusConnection *c
 								DBUS_TYPE_BYTE,&policy,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -24438,10 +24442,10 @@ DBusMessage * wid_dbus_interface_set_ap_statistics(DBusConnection *conn, DBusMes
 								DBUS_TYPE_UINT32,&policy,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -24489,10 +24493,10 @@ DBusMessage * wid_dbus_interface_set_ap_statistics_interval(DBusConnection *conn
 								DBUS_TYPE_UINT32,&interval,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -24558,9 +24562,9 @@ wid_dbus_interface_set_bak_check_interval(DBusConnection *conn, DBusMessage *msg
 	if (!(dbus_message_get_args ( msg, &err,
 								DBUS_TYPE_INT32, &interval,
 								DBUS_TYPE_INVALID))){
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -24644,9 +24648,9 @@ wid_dbus_interface_set_lic_bak_req_interval(DBusConnection *conn, DBusMessage *m
 	if (!(dbus_message_get_args ( msg, &err,
 								DBUS_TYPE_INT32, &interval,
 								DBUS_TYPE_INVALID))){
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -24712,10 +24716,10 @@ DBusMessage * wid_dbus_interface_set_ap_hotreboot(DBusConnection *conn, DBusMess
 								DBUS_TYPE_UINT32,&policy,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -24760,10 +24764,10 @@ DBusMessage * wid_dbus_interface_show_ap_statistics(DBusConnection *conn, DBusMe
 								DBUS_TYPE_UINT32,&wtpid,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -25153,10 +25157,10 @@ DBusMessage * wid_dbus_interface_show_ap_ipaddr(DBusConnection *conn, DBusMessag
 								DBUS_TYPE_UINT32,&wtpid,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -25211,10 +25215,10 @@ DBusMessage * wid_dbus_interface_show_ap_network(DBusConnection *conn, DBusMessa
 								DBUS_TYPE_UINT32,&wtpid,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -25280,10 +25284,10 @@ DBusMessage * wid_dbus_interface_ac_load_balance(DBusConnection *conn, DBusMessa
 								DBUS_TYPE_BYTE,&method,
 								DBUS_TYPE_INVALID))){
 	
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 					
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -25342,16 +25346,16 @@ DBusMessage * wid_dbus_interface_set_ac_load_balance_para(DBusConnection *conn, 
 								DBUS_TYPE_UINT32,&balance_para,
 								DBUS_TYPE_INVALID))){
 	
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 					
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
 	}
 	
-	printf("method :%d para :%d\n",method,balance_para);
+	wid_syslog_debug_debug(WID_DEFAULT,"method :%d para :%d\n",method,balance_para);
 	if(method == 1) {
 		ac_flow_num_balance_flag.num_balance_para = balance_para;
 		for(wlanid = 1; wlanid < WLAN_NUM; wlanid++){
@@ -25378,7 +25382,7 @@ DBusMessage * wid_dbus_interface_set_ac_load_balance_para(DBusConnection *conn, 
 	dbus_message_iter_append_basic (&iter,
 									DBUS_TYPE_UINT32,
 									&ret); 
-	printf("%s ret = %d\n",__func__,ret);
+	wid_syslog_debug_debug(WID_DEFAULT,"%s ret = %d\n",__func__,ret);
 	return reply;
 
 }
@@ -25427,10 +25431,10 @@ DBusMessage * wid_dbus_interface_set_ac_extension_infomation_enable(DBusConnecti
 								DBUS_TYPE_UINT32,&policy,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -25483,16 +25487,16 @@ DBusMessage * wid_dbus_interface_set_ap_timestamp(DBusConnection *conn, DBusMess
 								DBUS_TYPE_UINT32,&timestamp,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
 	}
 
-	printf("received timestamp is:%d\n",timestamp);
+	wid_syslog_debug_debug(WID_DEFAULT,"received timestamp is:%d\n",timestamp);
 	
 
 	ret = wid_set_ap_timestamp(timestamp);
@@ -25531,10 +25535,10 @@ DBusMessage * wid_dbus_interface_radio_set_bss_max_sta(DBusConnection *conn, DBu
 								DBUS_TYPE_UINT32,&bss_max,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -25774,10 +25778,10 @@ DBusMessage * wid_dbus_interface_show_radioconf(DBusConnection *conn, DBusMessag
 								DBUS_TYPE_UINT32,&radioID,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -26174,10 +26178,10 @@ DBusMessage * wid_dbus_interface_dynamic_channel_selection(DBusConnection *conn,
 									DBUS_TYPE_UINT32,&policy,
 									DBUS_TYPE_INVALID))){
 	
-			printf("Unable to get input args\n");
+			wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 					
 			if (dbus_error_is_set(&err)) {
-				printf("%s raised: %s",err.name,err.message);
+				wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 				dbus_error_free(&err);
 			}
 			return NULL;
@@ -26270,11 +26274,11 @@ DBusMessage * wid_dbus_interface_set_nas_id(DBusConnection *conn, DBusMessage *m
 								DBUS_TYPE_INVALID)))
 	{
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err))
 		{
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -26342,11 +26346,11 @@ DBusMessage * wid_dbus_interface_remove_nas_id(DBusConnection *conn, DBusMessage
 								DBUS_TYPE_INVALID)))
 	{
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err))
 		{
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -26455,10 +26459,10 @@ DBusMessage * wid_dbus_interface_set_roaming_policy(DBusConnection *conn, DBusMe
 								DBUS_TYPE_BYTE,&state,
 								DBUS_TYPE_INVALID))){
 	
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 					
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -26511,10 +26515,10 @@ DBusMessage * wid_dbus_interface_set_wlan_br_isolation(DBusConnection *conn, DBu
 								DBUS_TYPE_BYTE,&state,
 								DBUS_TYPE_INVALID))){
 	
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 					
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -26572,10 +26576,10 @@ DBusMessage * wid_dbus_interface_set_wlan_br_multicast_isolation(DBusConnection 
 								DBUS_TYPE_BYTE,&state,
 								DBUS_TYPE_INVALID))){
 	
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 					
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -26661,11 +26665,11 @@ wid_dbus_interface_set_wlan_ebr_br_ucast_solicit(DBusConnection *conn, DBusMessa
 								DBUS_TYPE_BYTE, &Wlan_Ebr_flag,
 								DBUS_TYPE_INVALID)))
 	{
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 					
 		if (dbus_error_is_set(&err)) 
 		{
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -26795,11 +26799,11 @@ wid_dbus_interface_set_wlan_ebr_br_mcast_solicit(DBusConnection *conn, DBusMessa
 								DBUS_TYPE_BYTE, &Wlan_Ebr_flag,
 								DBUS_TYPE_INVALID)))
 	{
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 					
 		if (dbus_error_is_set(&err)) 
 		{
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -26930,10 +26934,10 @@ DBusMessage * wid_dbus_interface_set_wlan_br_sameportswitch(DBusConnection *conn
 								DBUS_TYPE_BYTE,&state,
 								DBUS_TYPE_INVALID))){
 	
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 					
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -26992,10 +26996,10 @@ DBusMessage * wid_dbus_interface_show_wlan_br_isolation_info(DBusConnection *con
 								DBUS_TYPE_BYTE,&wlanid,
 								DBUS_TYPE_INVALID))){
 	
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 					
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -27046,10 +27050,10 @@ DBusMessage * wid_dbus_interface_set_tunnel_wlan_vlan(DBusConnection *conn, DBus
 								DBUS_TYPE_STRING,&name,
 								DBUS_TYPE_INVALID))){
 	
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 					
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -27151,10 +27155,10 @@ DBusMessage * wid_dbus_interface_show_tunnel_wlan_vlan(DBusConnection *conn, DBu
 								DBUS_TYPE_BYTE,&wlanid,
 								DBUS_TYPE_INVALID))){
 	
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 					
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -27243,10 +27247,10 @@ DBusMessage * wid_dbus_interface_set_wlan_vlanid(DBusConnection *conn, DBusMessa
 								DBUS_TYPE_UINT32,&vlanid,
 								DBUS_TYPE_INVALID))){
 	
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 					
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -27444,10 +27448,10 @@ DBusMessage * wid_dbus_interface_set_wlan_essid(DBusConnection *conn, DBusMessag
 								DBUS_TYPE_STRING,&essid,
 								DBUS_TYPE_INVALID))){
 	
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 					
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -27591,10 +27595,10 @@ DBusMessage * wid_dbus_interface_set_wlan_ascii_essid(DBusConnection *conn, DBus
 								DBUS_TYPE_BYTE,&ESSID[31],
 								DBUS_TYPE_INVALID))){
 	
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 					
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -27740,10 +27744,10 @@ DBusMessage * wid_dbus_interface_undo_wlan_vlanid(DBusConnection *conn, DBusMess
 								DBUS_TYPE_BYTE,&wlanid,
 								DBUS_TYPE_INVALID))){
 	
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 					
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -27801,10 +27805,10 @@ DBusMessage * wid_dbus_interface_set_wlan_vlan_priority(DBusConnection *conn, DB
 								DBUS_TYPE_UINT32,&priority,
 								DBUS_TYPE_INVALID))){
 	
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 					
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -27860,10 +27864,10 @@ DBusMessage * wid_dbus_interface_show_wlan_vlan_info(DBusConnection *conn, DBusM
 								DBUS_TYPE_BYTE,&wlanid,
 								DBUS_TYPE_INVALID))){
 	
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 					
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -27915,10 +27919,10 @@ DBusMessage * wid_dbus_interface_show_wtp_wlan_vlan_infomation(DBusConnection *c
 								DBUS_TYPE_UINT32,&wtpid,
 								DBUS_TYPE_INVALID))){
 	
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 					
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -28023,10 +28027,10 @@ DBusMessage * wid_dbus_interface_show_wtp_eth_if_infomation(DBusConnection *conn
 								DBUS_TYPE_UINT32,&wtpid,
 								DBUS_TYPE_INVALID))){
 	
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 					
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -28126,10 +28130,10 @@ DBusMessage * wid_dbus_interface_transmit_power_control(DBusConnection *conn, DB
 								DBUS_TYPE_UINT32,&policy,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -28184,10 +28188,10 @@ DBusMessage * wid_dbus_interface_txpower_threshold(DBusConnection *conn, DBusMes
 								DBUS_TYPE_UINT32,&txpower_thre,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -28222,10 +28226,10 @@ DBusMessage * wid_dbus_interface_rogue_ap_trap_threshold(DBusConnection *conn, D
 								DBUS_TYPE_UINT32,&rogue_ap_trap_thre,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -28263,10 +28267,10 @@ DBusMessage * wid_dbus_interface_coverage_threshold(DBusConnection *conn, DBusMe
 								DBUS_TYPE_UINT32,&coverage_thre,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -28303,10 +28307,10 @@ DBusMessage * wid_dbus_interface_control_scope(DBusConnection *conn, DBusMessage
 								DBUS_TYPE_BYTE,&scope,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -28343,10 +28347,10 @@ DBusMessage * wid_dbus_interface_show_neighbor_rssi(DBusConnection *conn, DBusMe
 								DBUS_TYPE_UINT32,&wtpid,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -28436,10 +28440,10 @@ DBusMessage * wid_dbus_interface_wlan_enable(DBusConnection *conn, DBusMessage *
 								DBUS_TYPE_BYTE,&DisWlan,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -28490,10 +28494,10 @@ DBusMessage * wid_dbus_interface_wds_enable(DBusConnection *conn, DBusMessage *m
 								DBUS_TYPE_BYTE,&wds_mesh,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -28540,9 +28544,9 @@ DBusMessage * wid_dbus_interface_wlan_apply_if (DBusConnection *conn, DBusMessag
 	unsigned char if_count;
 	int i,ret = WID_DBUS_SUCCESS;
 	if (NULL == msg) {
-		printf("failed get msg.\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"failed get msg.\n");
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 	}
@@ -28599,11 +28603,11 @@ DBusMessage * wid_dbus_interface_wlan_apply_ifname (DBusConnection *conn, DBusMe
 								DBUS_TYPE_INVALID)))
 	{
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err))
 		{
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -28690,11 +28694,11 @@ DBusMessage * wid_dbus_interface_wlan_apply_ifname_ipv6(DBusConnection *conn, DB
 								DBUS_TYPE_INVALID)))
 	{
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err))
 		{
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -28780,10 +28784,10 @@ DBusMessage * wid_dbus_interface_wlan_set_eap_mac(DBusConnection *conn, DBusMess
                                 DBUS_TYPE_STRING,&eap_mac,
                                 DBUS_TYPE_INVALID))){
     
-        printf("Unable to get input args\n");
+        wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
                     
         if (dbus_error_is_set(&err)) {
-            printf("%s raised: %s",err.name,err.message);
+            wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
             dbus_error_free(&err);
         }
 		CW_FREE_OBJECT_WID(WTP);						  
@@ -28907,10 +28911,10 @@ DBusMessage * wid_dbus_interface_wlan_balance_switch(DBusConnection *conn, DBusM
 								DBUS_TYPE_BYTE,&method,
 								DBUS_TYPE_INVALID))){
 	
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 					
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -28972,10 +28976,10 @@ DBusMessage * wid_dbus_interface_wlan_flow_balance_para(DBusConnection *conn, DB
 								DBUS_TYPE_UINT32,&para,
 								DBUS_TYPE_INVALID))){
 	
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 					
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -29026,10 +29030,10 @@ DBusMessage *wid_dbus_interface_wlan_flow_check(DBusConnection *conn, DBusMessag
 								DBUS_TYPE_UINT16,&state,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -29079,10 +29083,10 @@ DBusMessage *wid_dbus_interface_wlan_no_flow_time(DBusConnection *conn, DBusMess
 								DBUS_TYPE_UINT32,&flow_time,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -29137,10 +29141,10 @@ DBusMessage *wid_dbus_interface_wlan_limit_min_flow(DBusConnection *conn, DBusMe
 								DBUS_TYPE_UINT32,&limit_flow,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -29197,10 +29201,10 @@ DBusMessage * wid_dbus_interface_wlan_balance_para(DBusConnection *conn, DBusMes
 								DBUS_TYPE_UINT32,&para,
 								DBUS_TYPE_INVALID))){
 	
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 					
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -29254,10 +29258,10 @@ DBusMessage * wid_dbus_interface_wlan_access_sta_limit_rssi(DBusConnection *conn
 								DBUS_TYPE_BYTE,&rssi,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -29364,10 +29368,10 @@ DBusMessage * wid_dbus_interface_wlan_sta_static_arp(DBusConnection *conn, DBusM
 								DBUS_TYPE_STRING,&ifname,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -29515,10 +29519,10 @@ DBusMessage * wid_dbus_interface_wlan_l2_isolation_new(DBusConnection *conn, DBu
 								DBUS_TYPE_UINT32,&able,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -29732,10 +29736,10 @@ DBusMessage * wid_dbus_interface_wlan_max_sta(DBusConnection *conn, DBusMessage 
 								DBUS_TYPE_UINT32,&wlan_max,
 								DBUS_TYPE_INVALID))){
 	
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 					
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -29801,11 +29805,11 @@ DBusMessage * wid_dbus_interface_wlan_delete_ifname (DBusConnection *conn, DBusM
 								DBUS_TYPE_INVALID)))
 	{
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err))
 		{
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -29869,11 +29873,11 @@ DBusMessage * wid_dbus_interface_wlan_hide_essid (DBusConnection *conn, DBusMess
 								DBUS_TYPE_INVALID)))
 	{
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err))
 		{
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -29920,11 +29924,11 @@ DBusMessage * wid_dbus_interface_wlan_l3if_policy(DBusConnection *conn, DBusMess
 								DBUS_TYPE_INVALID)))
 	{
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err))
 		{
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -29977,11 +29981,11 @@ DBusMessage * wid_dbus_interface_wlan_l3if_policy2(DBusConnection *conn, DBusMes
 								DBUS_TYPE_INVALID)))
 	{
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err))
 		{
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -30111,11 +30115,11 @@ DBusMessage * wid_dbus_interface_wlan_l3if_policy_br(DBusConnection *conn, DBusM
 								DBUS_TYPE_INVALID)))
 	{
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err))
 		{
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -30168,11 +30172,11 @@ DBusMessage * wid_dbus_interface_wlan_l3if_policy2_br(DBusConnection *conn, DBus
 								DBUS_TYPE_INVALID)))
 	{
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err))
 		{
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -30281,11 +30285,11 @@ DBusMessage * wid_dbus_interface_wlan_tunnel_mode(DBusConnection *conn, DBusMess
 								DBUS_TYPE_INVALID)))
 	{
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err))
 		{
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -30407,11 +30411,11 @@ DBusMessage * wid_dbus_interface_wlan_forward_mode(DBusConnection *conn, DBusMes
 								DBUS_TYPE_INVALID)))
 	{
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err))
 		{
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -30498,10 +30502,10 @@ DBusMessage * wid_dbus_interface_set_whole_wlan_traffic_limit_value(DBusConnecti
 								DBUS_TYPE_UINT32,&value,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -30545,10 +30549,10 @@ DBusMessage * wid_dbus_interface_set_whole_wlan_send_traffic_limit_value(DBusCon
 								DBUS_TYPE_UINT32,&value,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -30593,10 +30597,10 @@ DBusMessage * wid_dbus_interface_set_whole_wlan_station_average_traffic_limit_va
 								DBUS_TYPE_UINT32,&value,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -30640,10 +30644,10 @@ DBusMessage * wid_dbus_interface_set_whole_wlan_station_average_send_traffic_lim
 								DBUS_TYPE_UINT32,&value,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -30701,10 +30705,10 @@ DBusMessage * wid_dbus_interface_wtp_flow_triger(DBusConnection *conn, DBusMessa
 								DBUS_TYPE_UINT32,&triger,
 								DBUS_TYPE_INVALID))){
 		
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 						
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -30740,7 +30744,7 @@ DBusMessage * wid_dbus_interface_wtp_flow_triger(DBusConnection *conn, DBusMessa
 	}
 	
 	else if (type == 1){
-		printf("******** type == 1 *****\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 		if(triger>1024){
 			ret = APPLY_IF_FAIL;
 		}
@@ -30831,10 +30835,10 @@ DBusMessage * wid_dbus_interface_wtp_flow_triger(DBusConnection *conn, DBusMessa
 								DBUS_TYPE_UINT32,&triger,
 								DBUS_TYPE_INVALID))){
 		
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 						
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -30905,10 +30909,10 @@ DBusMessage * wid_dbus_interface_wtp_triger(DBusConnection *conn, DBusMessage *m
 								DBUS_TYPE_UINT32,&triger,
 								DBUS_TYPE_INVALID))){
 		
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 						
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -30929,7 +30933,7 @@ DBusMessage * wid_dbus_interface_wtp_triger(DBusConnection *conn, DBusMessage *m
 	}
 
 	else if (type == 1){
-		printf("******** type == 1 *****\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 		
 		if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL)){
 			tmp = WTP_GROUP[ID]->WTP_M;
@@ -31021,10 +31025,10 @@ DBusMessage * wid_dbus_interface_wtp_triger(DBusConnection *conn, DBusMessage *m
 								DBUS_TYPE_UINT32,&triger,
 								DBUS_TYPE_INVALID))){
 		
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 						
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -31075,10 +31079,10 @@ DBusMessage * wid_dbus_interface_wtp_check_wlanid(DBusConnection *conn, DBusMess
 								DBUS_TYPE_BYTE,&uplinkState,
 								DBUS_TYPE_INVALID))){
 		
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 						
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -31252,7 +31256,7 @@ DBusMessage * wid_dbus_interface_wtp_max_sta(DBusConnection *conn, DBusMessage *
 	//struct Wtp_List * wtp_head =NULL;
 	//struct WTP_GROUP_MEMBER *tmp = NULL;
 		
-	printf("access set wtp max sta\n");
+	wid_syslog_debug_debug(WID_DEFAULT,"access set wtp max sta\n");
 		
 	dbus_error_init(&err);
 			
@@ -31261,10 +31265,10 @@ DBusMessage * wid_dbus_interface_wtp_max_sta(DBusConnection *conn, DBusMessage *
 								DBUS_TYPE_UINT32,&ID,
 								DBUS_TYPE_INVALID))){
 		
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 						
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -31323,10 +31327,10 @@ DBusMessage * wid_dbus_interface_wtp_max_sta(DBusConnection *conn, DBusMessage *
 								DBUS_TYPE_UINT32,&wtp_max,
 								DBUS_TYPE_INVALID))){
 		
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 						
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -31490,11 +31494,11 @@ DBusMessage * wid_dbus_interface_wtp_apply_ifname(DBusConnection *conn, DBusMess
 								DBUS_TYPE_STRING,&if_name,
 								DBUS_TYPE_INVALID)))
 	{
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err))
 		{
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -31627,11 +31631,11 @@ DBusMessage * wid_dbus_interface_wtp_apply_ifname(DBusConnection *conn, DBusMess
 								DBUS_TYPE_INVALID)))
 	{
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err))
 		{
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -31708,11 +31712,11 @@ DBusMessage * wid_dbus_interface_wtp_apply_ifname_ipv6(DBusConnection *conn, DBu
 								DBUS_TYPE_INVALID)))
 	{
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err))
 		{
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -31777,11 +31781,11 @@ DBusMessage * wid_dbus_interface_wtp_delete_wlanid(DBusConnection *conn, DBusMes
 								DBUS_TYPE_INVALID)))
 	{
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err))
 		{
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -31837,11 +31841,11 @@ DBusMessage * wid_dbus_interface_wtp_disable_wlanid(DBusConnection *conn, DBusMe
 								DBUS_TYPE_BYTE,&wlanid,
 								DBUS_TYPE_INVALID)))
 	{
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err))
 		{
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -31857,7 +31861,7 @@ DBusMessage * wid_dbus_interface_wtp_disable_wlanid(DBusConnection *conn, DBusMe
 		}
 	}
 	else if (type == 1){
-		printf("******** type == 1 *****\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 		if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL)){
 			tmp = WTP_GROUP[ID]->WTP_M;
 			wtp_head = (struct Wtp_List *)WID_MALLOC(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
@@ -31936,11 +31940,11 @@ DBusMessage * wid_dbus_interface_wtp_disable_wlanid(DBusConnection *conn, DBusMe
 								DBUS_TYPE_INVALID)))
 	{
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err))
 		{
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -31994,11 +31998,11 @@ DBusMessage * wid_dbus_interface_wtp_enable_wlanid(DBusConnection *conn, DBusMes
 								DBUS_TYPE_BYTE,&wlanid,
 								DBUS_TYPE_INVALID)))
 	{
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err))
 		{
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -32015,7 +32019,7 @@ DBusMessage * wid_dbus_interface_wtp_enable_wlanid(DBusConnection *conn, DBusMes
 	}
 
 	else if (type == 1){
-		printf("******** type == 1 *****\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 		if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL)){
 			tmp = WTP_GROUP[ID]->WTP_M;
 			wtp_head = (struct Wtp_List *)WID_MALLOC(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
@@ -32093,11 +32097,11 @@ DBusMessage * wid_dbus_interface_wtp_enable_wlanid(DBusConnection *conn, DBusMes
 								DBUS_TYPE_INVALID)))
 	{
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err))
 		{
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -32279,11 +32283,11 @@ DBusMessage * wid_dbus_interface_wtp_apply_wlanid(DBusConnection *conn, DBusMess
 								DBUS_TYPE_INVALID)))
 	{
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err))
 		{
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -32317,7 +32321,7 @@ DBusMessage * wid_dbus_interface_wtp_apply_wlanid(DBusConnection *conn, DBusMess
 
 #if _GROUP_POLICY
 DBusMessage * wid_dbus_interface_wtp_used(DBusConnection *conn, DBusMessage *msg, void *user_data){
-	printf("******** wid_dbus_interface_wtp_used *****\n");
+	wid_syslog_debug_debug(WID_DEFAULT,"******** wid_dbus_interface_wtp_used *****\n");
 	
 	DBusError err;	
 	DBusMessageIter	 iter;
@@ -32342,10 +32346,10 @@ DBusMessage * wid_dbus_interface_wtp_used(DBusConnection *conn, DBusMessage *msg
 								DBUS_TYPE_UINT32,&DisWtp,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -32362,7 +32366,7 @@ DBusMessage * wid_dbus_interface_wtp_used(DBusConnection *conn, DBusMessage *msg
 		}
 	}
 	else if(type == 1){
-		printf("******** type == 1 *****\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 		if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL)){
 			tmp = WTP_GROUP[ID]->WTP_M;
 			wtp_head = (struct Wtp_List *)WID_MALLOC(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
@@ -32442,10 +32446,10 @@ DBusMessage * wid_dbus_interface_wtp_used(DBusConnection *conn, DBusMessage *msg
 								DBUS_TYPE_UINT32,&DisWtp,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -32498,11 +32502,11 @@ DBusMessage * wid_dbus_interface_wtp_set_ap_version_path(DBusConnection *conn, D
 				DBUS_TYPE_INVALID)))
 	{
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err))
 		{
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -32704,7 +32708,7 @@ DBusMessage * wid_dbus_interface_wtp_bind_model_with_file(DBusConnection *conn, 
 	{
 		if (dbus_error_is_set(&err))
 		{
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -32908,7 +32912,7 @@ DBusMessage * wid_dbus_interface_wtp_set_ap_update_base_model(DBusConnection *co
 	{
 		if (dbus_error_is_set(&err))
 		{
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -33198,7 +33202,7 @@ DBusMessage * wid_dbus_interface_delete_model_bind_info(DBusConnection *conn, DB
 	{
 		if (dbus_error_is_set(&err))
 		{
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -33412,11 +33416,11 @@ DBusMessage * wid_dbus_interface_wtp_set_ap_update_count_onetime(DBusConnection 
 				DBUS_TYPE_BYTE,&count_onetime,
 				DBUS_TYPE_INVALID)))
 	{
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err))
 		{
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -33457,11 +33461,11 @@ DBusMessage * wid_dbus_interface_wtp_set_ap_update_control(DBusConnection *conn,
 				DBUS_TYPE_BYTE,&policy,
 				DBUS_TYPE_INVALID)))
 	{
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err))
 		{
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -33557,7 +33561,7 @@ DBusMessage * wid_dbus_interface_wtp_clear_ap_one_model_update_path(DBusConnecti
 	{
 		if (dbus_error_is_set(&err))
 		{
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -34443,11 +34447,11 @@ DBusMessage * wid_dbus_interface_wtp_delete_ap_model(DBusConnection *conn, DBusM
 				DBUS_TYPE_INVALID)))
 	{
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err))
 		{
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -34550,11 +34554,11 @@ DBusMessage * wid_dbus_interface_wtp_set_ap_echotimer(DBusConnection *conn, DBus
 				DBUS_TYPE_INVALID)))
 	{
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err))
 		{
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -34600,11 +34604,11 @@ DBusMessage * wid_dbus_interface_wtp_set_ap_checktimer(DBusConnection *conn, DBu
 				DBUS_TYPE_INVALID)))
 	{
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err))
 		{
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -34640,9 +34644,9 @@ DBusMessage * wid_dbus_interface_wtp_set_ap_collect_time(DBusConnection *conn, D
 				DBUS_TYPE_UINT32,&collect_time,
 				DBUS_TYPE_INVALID))){
 				
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 		if (dbus_error_is_set(&err)){
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -34701,10 +34705,10 @@ DBusMessage * wid_dbus_interface_radio_set_txp(DBusConnection *conn, DBusMessage
 								DBUS_TYPE_UINT16,&RadioTxp,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -34761,7 +34765,7 @@ DBusMessage * wid_dbus_interface_radio_set_txp(DBusConnection *conn, DBusMessage
 		}
 	else if(type == 1)
 		{
-			printf("******** type == 1 *****\n");
+			wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 			if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL))
 				{
 					tmp = WTP_GROUP[ID]->WTP_M;
@@ -34810,7 +34814,7 @@ DBusMessage * wid_dbus_interface_radio_set_txp(DBusConnection *conn, DBusMessage
 														AC_WTP[tmp->WTPID]->WTP_Radio[i]->radio_countermeasures_flag = 0;   //AP压制功率标志位清零fengwenchao add 20110325
 													}
 											}
-										printf("111111111111\n");
+										//printf("111111111111\n");
 										if(ret2 != WID_DBUS_SUCCESS)
 											{
 												radio_head[num].RadioId = AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID;
@@ -34831,7 +34835,7 @@ DBusMessage * wid_dbus_interface_radio_set_txp(DBusConnection *conn, DBusMessage
 												radio_head[num].FailReason=ret1;
 												num++;
 											}
-										printf("ret2 = %d\n",ret2);
+										wid_syslog_debug_debug(WID_DEFAULT,"ret2 = %d\n",ret2);
 
 									}
 
@@ -34857,7 +34861,7 @@ DBusMessage * wid_dbus_interface_radio_set_txp(DBusConnection *conn, DBusMessage
 				dbus_message_iter_append_basic (&iter,
 													 DBUS_TYPE_UINT32,
 											 &num);
-				printf("num = %d\n",num);		
+				wid_syslog_debug_debug(WID_DEFAULT,"num = %d\n",num);		
 				for(i = 0; i < num; i++)
 					{
 						dbus_message_iter_append_basic (&iter,
@@ -34897,10 +34901,10 @@ DBusMessage * wid_dbus_interface_radio_set_txp(DBusConnection *conn, DBusMessage
 								DBUS_TYPE_UINT16,&RadioTxp,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -34985,15 +34989,15 @@ DBusMessage * wid_dbus_interface_radio_set_txpof(DBusConnection *conn, DBusMessa
 								DBUS_TYPE_UINT16,&t_RadioTxpof,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
 	}
-	printf("12121211111122\n");
+	wid_syslog_debug_debug(WID_DEFAULT,"type = %d",type);
 	if(type==0)
 		{
 			if(AC_RADIO[ID] == NULL)
@@ -35023,10 +35027,10 @@ DBusMessage * wid_dbus_interface_radio_set_txpof(DBusConnection *conn, DBusMessa
 						if(RadioTxpof>19)
 							ret = TXPOWEROFF_LARGER_THAN_MAX;
 					}
-					printf("t_RadioTxpof = %d \n",t_RadioTxpof);
-					printf("AC_RADIO[ID]->txpowerstep = %d \n",AC_RADIO[ID]->txpowerstep);
+					wid_syslog_debug_debug(WID_DEFAULT,"t_RadioTxpof = %d \n",t_RadioTxpof);
+					wid_syslog_debug_debug(WID_DEFAULT,"AC_RADIO[ID]->txpowerstep = %d \n",AC_RADIO[ID]->txpowerstep);
 					//append to country code ,decide txpower
-					printf("RadioTxpof = %d \n",RadioTxpof);
+					wid_syslog_debug_debug(WID_DEFAULT,"RadioTxpof = %d \n",RadioTxpof);
 				//	if((gCOUNTRYCODE == COUNTRY_FRANCE_FR)||(gCOUNTRYCODE == COUNTRY_SPAIN_ES))
 				// huxf
 					if((AC_RADIO[ID]->Radio_country_code == COUNTRY_FRANCE_FR)||(AC_RADIO[ID]->Radio_country_code == COUNTRY_SPAIN_ES))/*wcl modify for OSDEVTDPB-31*/
@@ -35054,8 +35058,8 @@ DBusMessage * wid_dbus_interface_radio_set_txpof(DBusConnection *conn, DBusMessa
 					//printf("33333333333333333333333333333333333\n");
 					if(ret != TXPOWEROFF_LARGER_THAN_MAX)
 						ret = WID_RADIO_SET_TXP(ID,t_RadioTxpof,CW_TRUE);
-				printf("ret = %d\n",ret);
-				printf("ret1 = %d\n",ret1);
+				wid_syslog_debug_debug(WID_DEFAULT,"ret = %d\n",ret);
+				wid_syslog_debug_debug(WID_DEFAULT,"ret1 = %d\n",ret1);
 				}
 	
 				reply = dbus_message_new_method_return(msg);
@@ -35072,7 +35076,7 @@ DBusMessage * wid_dbus_interface_radio_set_txpof(DBusConnection *conn, DBusMessa
 		}
 	else if(type == 1)
 		{
-			printf("******** type == 1 *****\n");
+			wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 			if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL))
 				{
 					tmp = WTP_GROUP[ID]->WTP_M;
@@ -35088,11 +35092,11 @@ DBusMessage * wid_dbus_interface_radio_set_txpof(DBusConnection *conn, DBusMessa
 						return NULL;
 					}
 					//radio_country_fail = (struct Radio_List *)malloc(radionum*(sizeof(struct Radio_List)));
-					printf("@@@@@@@@@@@@@@@@@@@\n");
+					//printf("@@@@@@@@@@@@@@@@@@@\n");
 					while(tmp)
 						{
 							ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
-								printf("!!!!!!!!!!!!!!\n");
+							wid_syslog_debug_debug(WID_DEFAULT,"ret_check =  %d",ret_check);
 							if(ret_check == WID_DBUS_SUCCESS)
 								{								
 									for(i=0;i<AC_WTP[tmp->WTPID]->RadioCount;i++)
@@ -35105,7 +35109,7 @@ DBusMessage * wid_dbus_interface_radio_set_txpof(DBusConnection *conn, DBusMessa
 										else if(AC_WTP[tmp->WTPID]->WTP_Radio[i]->isBinddingWlan==0)
 											{
 												ret2 = RADIO_NO_BINDING_WLAN;
-												printf("#################\n");
+												wid_syslog_debug_debug(WID_DEFAULT,"ret2=  %d",ret2);
 												wid_syslog_debug_debug(WID_DEFAULT,"WTP%d radio%d is not bind wlan\n",tmp->WTPID,AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
 											}
 										else
@@ -35130,7 +35134,7 @@ DBusMessage * wid_dbus_interface_radio_set_txpof(DBusConnection *conn, DBusMessa
 															{
 																ret1 = COUNTRY_CODE_ERROR;
 															}
-														printf("QQQQQQQQQQQQQQQQQQQQQQ\n");
+														wid_syslog_debug_debug(WID_DEFAULT,"ret1 =  %d,RadioTxpof = %d",ret1,RadioTxpof);
 													}
 										
 												if(ret1 == COUNTRY_CODE_SUCCESS)
@@ -35138,13 +35142,13 @@ DBusMessage * wid_dbus_interface_radio_set_txpof(DBusConnection *conn, DBusMessa
 														if(ret3!=TXPOWEROFF_LARGER_THAN_MAX)
 														{
 															ret3 = WID_RADIO_SET_TXP(AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID,RadioTxpof,CW_TRUE);
-															printf("WWWWWWWWWWWWWWWWWWWWWWWWWWWWW\n");
+															wid_syslog_debug_debug(WID_DEFAULT,"ret3 =  %d",ret3);
 															wid_syslog_debug_debug(WID_DEFAULT,"WTP%d radio%d access into set txp\n",tmp->WTPID,AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
 														}
 
 													}
 											}
-										printf("111111111111\n");
+										//printf("111111111111\n");
 										if(ret2 != WID_DBUS_SUCCESS)
 											{
 												radio_head[num].RadioId = AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID;
@@ -35166,7 +35170,7 @@ DBusMessage * wid_dbus_interface_radio_set_txpof(DBusConnection *conn, DBusMessa
 												num++;
 												//country_error_num++;
 											}
-										printf("ret2 = %d\n",ret2);
+										wid_syslog_debug_debug(WID_DEFAULT,"ret2 = %d\n",ret2);
 
 									}
 
@@ -35192,7 +35196,7 @@ DBusMessage * wid_dbus_interface_radio_set_txpof(DBusConnection *conn, DBusMessa
 				dbus_message_iter_append_basic (&iter,
 													 DBUS_TYPE_UINT32,
 											 &num);
-				printf("num = %d\n",num);		
+				wid_syslog_debug_debug(WID_DEFAULT,"num = %d\n",num);		
 				for(i = 0; i < num; i++)
 					{
 						dbus_message_iter_append_basic (&iter,
@@ -35234,10 +35238,10 @@ DBusMessage * wid_dbus_interface_radio_set_txpof(DBusConnection *conn, DBusMessa
 								DBUS_TYPE_UINT16,&t_RadioTxpof,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -35336,10 +35340,10 @@ DBusMessage * wid_dbus_interface_radio_set_txpower_step(DBusConnection *conn, DB
 								DBUS_TYPE_UINT16,&RadioTxpwstp,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -35363,7 +35367,7 @@ DBusMessage * wid_dbus_interface_radio_set_txpower_step(DBusConnection *conn, DB
 	
 	else if(type == 1)
 		{
-			printf("******** type == 1 *****\n");
+			wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 			if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL))
 				{
 					tmp = WTP_GROUP[ID]->WTP_M;
@@ -35432,7 +35436,7 @@ DBusMessage * wid_dbus_interface_radio_set_txpower_step(DBusConnection *conn, DB
 				dbus_message_iter_append_basic (&iter,
 													 DBUS_TYPE_UINT32,
 											 &num);
-				printf("num = %d\n",num);		
+				wid_syslog_debug_debug(WID_DEFAULT,"num = %d\n",num);		
 				for(i = 0; i < num; i++)
 					{
 						dbus_message_iter_append_basic (&iter,
@@ -35467,10 +35471,10 @@ DBusMessage * wid_dbus_interface_radio_set_txpower_step(DBusConnection *conn, DB
 								DBUS_TYPE_UINT16,&RadioTxpwstp,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -35532,10 +35536,10 @@ DBusMessage *wid_dbus_interface_radio_set_radio_wlan_limit_rssi_access_sta(DBusC
 							DBUS_TYPE_BYTE,&rssi,
 							DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 			
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -35629,10 +35633,10 @@ DBusMessage * wid_dbus_interface_radio_set_chan(DBusConnection *conn, DBusMessag
 								DBUS_TYPE_BYTE,&RadioChan,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -35812,7 +35816,7 @@ DBusMessage * wid_dbus_interface_radio_set_chan(DBusConnection *conn, DBusMessag
 		}
 	else if(type == 1)
 		{
-			printf("******** type == 1 *****\n");
+			wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 			if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL))
 				{
 					tmp = WTP_GROUP[ID]->WTP_M;
@@ -36016,7 +36020,7 @@ DBusMessage * wid_dbus_interface_radio_set_chan(DBusConnection *conn, DBusMessag
 												radio_head[num].FailReason = ret2;
 												num++;												
 											}
-										printf("ret1 = %d,ret2 = %d,ret3 =%d\n",ret1,ret2,ret3);
+										wid_syslog_debug_debug(WID_DEFAULT,"ret1 = %d,ret2 = %d,ret3 =%d\n",ret1,ret2,ret3);
 										
 									}
 								}
@@ -36041,7 +36045,7 @@ DBusMessage * wid_dbus_interface_radio_set_chan(DBusConnection *conn, DBusMessag
 				dbus_message_iter_append_basic (&iter,
 													 DBUS_TYPE_UINT32,
 											 &num);
-				printf("num = %d\n",num);		
+				wid_syslog_debug_debug(WID_DEFAULT,"num = %d\n",num);		
 				for(i = 0; i < num; i++)
 					{
 						dbus_message_iter_append_basic (&iter,
@@ -36084,10 +36088,10 @@ DBusMessage * wid_dbus_interface_radio_set_chan(DBusConnection *conn, DBusMessag
 								DBUS_TYPE_BYTE,&RadioChan,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -36451,10 +36455,10 @@ DBusMessage * wid_dbus_interface_radio_apply_wlan(DBusConnection *conn, DBusMess
 								DBUS_TYPE_BYTE,&WlanID,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -36549,10 +36553,10 @@ DBusMessage * wid_dbus_interface_radio_apply_wlan_base_essid(DBusConnection *con
 								DBUS_TYPE_STRING,&ESSID,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -36652,10 +36656,10 @@ DBusMessage * wid_dbus_interface_radio_apply_wlanid_base_vlanid(DBusConnection *
 								DBUS_TYPE_UINT32,&vlanid,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -36699,7 +36703,7 @@ DBusMessage * wid_dbus_interface_radio_apply_wlanid_base_vlanid(DBusConnection *
 	else if(type == 1)
 		{
 			int k1 = 0;
-			printf("******** type == 1 *****\n");
+			wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 			if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL))
 				{
 					tmp = WTP_GROUP[ID]->WTP_M;
@@ -36785,7 +36789,7 @@ DBusMessage * wid_dbus_interface_radio_apply_wlanid_base_vlanid(DBusConnection *
 				dbus_message_iter_append_basic (&iter,
 													 DBUS_TYPE_UINT32,
 											 &num);
-				printf("num = %d\n",num);		
+				wid_syslog_debug_debug(WID_DEFAULT,"num = %d\n",num);		
 				for(i = 0; i < num; i++)
 					{
 						dbus_message_iter_append_basic (&iter,
@@ -36825,10 +36829,10 @@ DBusMessage * wid_dbus_interface_radio_apply_wlanid_base_vlanid(DBusConnection *
 								DBUS_TYPE_UINT32,&vlanid,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -36905,10 +36909,10 @@ DBusMessage * wid_dbus_interface_radio_cpe_channel_apply_wlanid_base_vlanid(DBus
 								DBUS_TYPE_UINT32,&vlanid,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -36963,10 +36967,10 @@ DBusMessage * wid_dbus_interface_radio_cpe_channel_apply_wlanid_clean_vlanid(DBu
 								DBUS_TYPE_UINT32,&vlan_id,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -37030,10 +37034,10 @@ DBusMessage * wid_dbus_interface_radio_apply_wlanid_clean_vlanid(DBusConnection 
 								DBUS_TYPE_BYTE,&WlanID,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -37077,7 +37081,7 @@ DBusMessage * wid_dbus_interface_radio_apply_wlanid_clean_vlanid(DBusConnection 
 	else if(type == 1)
 		{
 			int k1 = 0;
-			printf("******** type == 1 *****\n");
+			wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 			if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL))
 				{
 					tmp = WTP_GROUP[ID]->WTP_M;
@@ -37161,7 +37165,7 @@ DBusMessage * wid_dbus_interface_radio_apply_wlanid_clean_vlanid(DBusConnection 
 				dbus_message_iter_append_basic (&iter,
 													 DBUS_TYPE_UINT32,
 											 &num);
-				printf("num = %d\n",num);		
+				wid_syslog_debug_debug(WID_DEFAULT,"num = %d\n",num);		
 				for(i = 0; i < num; i++)
 					{
 						dbus_message_iter_append_basic (&iter,
@@ -37198,10 +37202,10 @@ DBusMessage * wid_dbus_interface_radio_apply_wlanid_clean_vlanid(DBusConnection 
 								DBUS_TYPE_BYTE,&WlanID,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -37277,10 +37281,10 @@ DBusMessage * wid_dbus_interface_radio_apply_wlanid_base_nas_port_id(DBusConnect
 								DBUS_TYPE_STRING,&nas_port_id,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -37344,10 +37348,10 @@ DBusMessage * wid_dbus_interface_radio_apply_wlanid_clean_nas_port_id(DBusConnec
 								DBUS_TYPE_BYTE,&WlanID,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -37421,10 +37425,10 @@ DBusMessage * wid_dbus_interface_radio_apply_wlanid_base_hotspotid(DBusConnectio
 								DBUS_TYPE_UINT32,&hotspotid,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -37496,10 +37500,10 @@ DBusMessage * wid_dbus_interface_radio_apply_wlanid_clean_hotspotid(DBusConnecti
 								DBUS_TYPE_BYTE,&WlanID,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -37575,10 +37579,10 @@ DBusMessage * wid_dbus_interface_radio_receive_data_dead_time(DBusConnection *co
 								DBUS_TYPE_UINT32,&deadtime,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -37623,10 +37627,10 @@ DBusMessage * wid_dbus_interface_radio_receive_data_dead_time_show(DBusConnectio
 								DBUS_TYPE_UINT32,&RadioID,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -37666,7 +37670,8 @@ DBusMessage *  wid_dbus_interface_check_radio_member(DBusConnection *conn, DBusM
 	int radionum = 0;
 	unsigned int ID = 0;
 	unsigned int type = 0;
-	printf("@@@@@@@@@@@@@@@@@@@@@@@@@\n");	
+	//printf("@@@@@@@@@@@@@@@@@@@@@@@@@\n");	
+	wid_syslog_debug_debug(WID_DEFAULT,"func %s,line %d \n",__func__,__LINE__);
 	int ret = WID_DBUS_SUCCESS;
 //	int ret2 = WID_DBUS_SUCCESS;
 	int ret_check = WID_DBUS_SUCCESS;
@@ -37681,17 +37686,18 @@ DBusMessage *  wid_dbus_interface_check_radio_member(DBusConnection *conn, DBusM
 								DBUS_TYPE_UINT32,&ID,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
 	}
 	if(type==0)
 		{
-		printf("#############\n");
+		//printf("#############\n");
+			wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 			if(AC_RADIO[ID] != NULL)
 				{
 					radio_head = (struct Radio_List *)WID_MALLOC(sizeof(struct Radio_List));
@@ -37706,11 +37712,11 @@ DBusMessage *  wid_dbus_interface_check_radio_member(DBusConnection *conn, DBusM
 				{
 					ret =RADIO_ID_NOT_EXIST;
 				}
-		printf("ret = %d\n",ret);
+		wid_syslog_debug_debug(WID_DEFAULT,"ret = %d\n",ret);
 		}
 	else if(type == 1)
 		{
-			printf("******** type == 1 *****\n");
+			wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 			if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL))
 				{
 					tmp = WTP_GROUP[ID]->WTP_M;
@@ -37763,13 +37769,13 @@ DBusMessage *  wid_dbus_interface_check_radio_member(DBusConnection *conn, DBusM
 			
 		dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT32, &ret);
 
-		printf("$$$$$$$$$$$$$$$$$$$$$$$\n");
+		//printf("$$$$$$$$$$$$$$$$$$$$$$$\n");
 		if((type == 0)&&(ret == WID_DBUS_SUCCESS))
 			{
 				dbus_message_iter_append_basic (&iter,
 												DBUS_TYPE_UINT32,
 											 	&(radio_head->RadioId));
-				printf("radio_head->RadioId = %d\n",radio_head->RadioId);
+				wid_syslog_debug_debug(WID_DEFAULT,"radio_head->RadioId = %d\n",radio_head->RadioId);
 				if(radio_head!=NULL)
 					{
 						WID_FREE(radio_head);
@@ -37783,7 +37789,7 @@ DBusMessage *  wid_dbus_interface_check_radio_member(DBusConnection *conn, DBusM
 				dbus_message_iter_append_basic (&iter,
 													 DBUS_TYPE_UINT32,
 											 &num);
-				printf("group wtp num = %d\n",num);		
+				wid_syslog_debug_debug(WID_DEFAULT,"group wtp num = %d\n",num);		
 				for(i = 0; i < num; i++)
 					{
 						dbus_message_iter_append_basic (&iter,
@@ -37987,10 +37993,10 @@ DBusMessage * wid_dbus_interface_radio_delete_wlan(DBusConnection *conn, DBusMes
 								DBUS_TYPE_BYTE,&WlanID,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -38048,10 +38054,10 @@ DBusMessage * wid_dbus_interface_radio_delete_wlan_base_essid(DBusConnection *co
 								DBUS_TYPE_STRING,&ESSID,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -38113,10 +38119,10 @@ DBusMessage * wid_dbus_interface_radio_enable_wlan(DBusConnection *conn, DBusMes
 								DBUS_TYPE_BYTE,&WlanID,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -38139,7 +38145,7 @@ DBusMessage * wid_dbus_interface_radio_enable_wlan(DBusConnection *conn, DBusMes
 		}
 	else if(type == 1)
 		{
-			printf("******** type == 1 *****\n");
+			wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 			if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL))
 				{
 					tmp = WTP_GROUP[ID]->WTP_M;
@@ -38207,7 +38213,7 @@ DBusMessage * wid_dbus_interface_radio_enable_wlan(DBusConnection *conn, DBusMes
 				dbus_message_iter_append_basic (&iter,
 													 DBUS_TYPE_UINT32,
 											 &num);
-				printf("num = %d\n",num);		
+				wid_syslog_debug_debug(WID_DEFAULT,"num = %d\n",num);		
 				for(i = 0; i < num; i++)
 					{
 						dbus_message_iter_append_basic (&iter,
@@ -38246,10 +38252,10 @@ DBusMessage * wid_dbus_interface_radio_enable_wlan(DBusConnection *conn, DBusMes
 								DBUS_TYPE_BYTE,&WlanID,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -38312,10 +38318,10 @@ DBusMessage * wid_dbus_interface_radio_disable_wlan(DBusConnection *conn, DBusMe
 								DBUS_TYPE_BYTE,&WlanID,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -38338,7 +38344,7 @@ DBusMessage * wid_dbus_interface_radio_disable_wlan(DBusConnection *conn, DBusMe
 		}
 	else if(type == 1)
 		{
-			printf("******** type == 1 *****\n");
+			wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 			if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL))
 				{
 					tmp = WTP_GROUP[ID]->WTP_M;
@@ -38407,7 +38413,7 @@ DBusMessage * wid_dbus_interface_radio_disable_wlan(DBusConnection *conn, DBusMe
 				dbus_message_iter_append_basic (&iter,
 													 DBUS_TYPE_UINT32,
 											 &num);
-				printf("num = %d\n",num);		
+				wid_syslog_debug_debug(WID_DEFAULT,"num = %d\n",num);		
 				for(i = 0; i < num; i++)
 					{
 						dbus_message_iter_append_basic (&iter,
@@ -38446,10 +38452,10 @@ DBusMessage * wid_dbus_interface_radio_disable_wlan(DBusConnection *conn, DBusMe
 								DBUS_TYPE_BYTE,&WlanID,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -38512,10 +38518,10 @@ DBusMessage * wid_dbus_interface_radio_recover_default_config(DBusConnection *co
 								DBUS_TYPE_BYTE,&reserved,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -38555,7 +38561,7 @@ DBusMessage * wid_dbus_interface_radio_recover_default_config(DBusConnection *co
 		}
 	else if(type == 1)
 		{
-			printf("******** type == 1 *****\n");
+			wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 			if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL))
 				{
 					tmp = WTP_GROUP[ID]->WTP_M;
@@ -38638,7 +38644,7 @@ DBusMessage * wid_dbus_interface_radio_recover_default_config(DBusConnection *co
 				dbus_message_iter_append_basic (&iter,
 													 DBUS_TYPE_UINT32,
 											 &num);
-				printf("num = %d\n",num);		
+				wid_syslog_debug_debug(WID_DEFAULT,"num = %d\n",num);		
 				for(i = 0; i < num; i++)
 					{
 						dbus_message_iter_append_basic (&iter,
@@ -38676,10 +38682,10 @@ DBusMessage * wid_dbus_interface_radio_recover_default_config(DBusConnection *co
 								DBUS_TYPE_BYTE,&reserved,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -38799,8 +38805,8 @@ DBusMessage * wid_dbus_interface_radio_set_support_ratelist(DBusConnection *conn
 	struct WTP_GROUP_MEMBER *radiotmp = NULL;	
 	struct Support_Rate_List *ptr = NULL;
 
-	printf("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
-	
+	//printf("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
+	wid_syslog_debug_debug(WID_DEFAULT,"func %s,line %d\n",__func__,__LINE__);
 	dbus_error_init(&err);
 		
 	dbus_message_iter_init(msg,&iter);
@@ -38812,8 +38818,8 @@ DBusMessage * wid_dbus_interface_radio_set_support_ratelist(DBusConnection *conn
 	dbus_message_iter_next(&iter);
 	dbus_message_iter_get_basic(&iter,&NUM);
 
-	printf("ID = %d\n",ID);
-	printf("NUM = %d\n",NUM);
+	wid_syslog_debug_debug(WID_DEFAULT,"ID = %d\n",ID);
+	wid_syslog_debug_debug(WID_DEFAULT,"NUM = %d\n",NUM);
 	
 	memset(Radiorate,0,NUM);
 	
@@ -38829,7 +38835,7 @@ DBusMessage * wid_dbus_interface_radio_set_support_ratelist(DBusConnection *conn
 			if(i != NUM-1)
 				dbus_message_iter_next(&iter);	
 
-			printf("Radiorate[%d] = %d\n",i,Radiorate[i]);
+			wid_syslog_debug_debug(WID_DEFAULT,"Radiorate[%d] = %d\n",i,Radiorate[i]);
 		
 		}
 		
@@ -38887,8 +38893,8 @@ DBusMessage * wid_dbus_interface_radio_set_support_ratelist(DBusConnection *conn
 										 &ret);
 		dbus_message_iter_append_basic (&iter,DBUS_TYPE_UINT32,&AC_RADIO[ID]->Radio_Type);
 
-		printf("ret = %d\n",ret);
-		printf("AC_RADIO[ID]->Radio_Type= %d\n",AC_RADIO[ID]->Radio_Type);
+		wid_syslog_debug_debug(WID_DEFAULT,"ret = %d\n",ret);
+		wid_syslog_debug_debug(WID_DEFAULT,"AC_RADIO[ID]->Radio_Type= %d\n",AC_RADIO[ID]->Radio_Type);
 		if (ret == 0)
 			{
 				NUM = length_of_rate_list(AC_RADIO[ID]->Radio_Rate);
@@ -38900,7 +38906,7 @@ DBusMessage * wid_dbus_interface_radio_set_support_ratelist(DBusConnection *conn
 				for(i = 0; i < NUM; i++)
 				{
 					dbus_message_iter_append_basic (&iter,DBUS_TYPE_UINT32,&ptr->Rate);
-					printf("%d rate %d\n",i,ptr->Rate);
+					wid_syslog_debug_debug(WID_DEFAULT,"%d rate %d\n",i,ptr->Rate);
 					ptr = ptr->next;
 					if(ptr == NULL)
 						{
@@ -38912,7 +38918,7 @@ DBusMessage * wid_dbus_interface_radio_set_support_ratelist(DBusConnection *conn
 		}
 	else if(type == 1)
 		{
-			printf("******** type == 1 *****\n");
+			wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 			if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL))
 				{
 					tmp = WTP_GROUP[ID]->WTP_M;
@@ -38997,7 +39003,7 @@ DBusMessage * wid_dbus_interface_radio_set_support_ratelist(DBusConnection *conn
 				dbus_message_iter_append_basic (&iter,
 													 DBUS_TYPE_UINT32,
 											 &num);
-				printf("num = %d\n",num);		
+				wid_syslog_debug_debug(WID_DEFAULT,"num = %d\n",num);		
 				for(i = 0; i < num; i++)
 					{
 						dbus_message_iter_append_basic (&iter,
@@ -39169,10 +39175,10 @@ DBusMessage * wid_dbus_interface_radio_set_11n_rate_paras(DBusConnection *conn, 
                                 DBUS_TYPE_BYTE,&channel,
                                 DBUS_TYPE_INVALID))){
 
-        printf("Unable to get input args\n");
+        wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
                 
         if (dbus_error_is_set(&err)) {
-            printf("%s raised: %s",err.name,err.message);
+            wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
             dbus_error_free(&err);
         }
         return NULL;
@@ -39234,15 +39240,15 @@ DBusMessage * wid_dbus_interface_radio_set_max_rate(DBusConnection *conn, DBusMe
 								DBUS_TYPE_UINT32,&Radiorate[0],
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
 	}
-	printf("receive radioid %d rate %d\n",ID,Radiorate[0]);
+	wid_syslog_debug_debug(WID_DEFAULT,"receive radioid %d rate %d\n",ID,Radiorate[0]);
 	if(type==0)
 		{
 			if(AC_RADIO[ID] == NULL)
@@ -39269,18 +39275,18 @@ DBusMessage * wid_dbus_interface_radio_set_max_rate(DBusConnection *conn, DBusMe
 											 DBUS_TYPE_UINT32,
 											 &AC_RADIO[ID]->Radio_Type);
 
-			printf("ret = %d\n",ret);
+			wid_syslog_debug_debug(WID_DEFAULT,"ret = %d\n",ret);
 			if (ret == 0)
 				{
 					NUM = length_of_rate_list(AC_RADIO[ID]->Radio_Rate);
-					printf("NUM =  %d\n",NUM);
+					wid_syslog_debug_debug(WID_DEFAULT,"NUM =  %d\n",NUM);
 					dbus_message_iter_append_basic (&iter,DBUS_TYPE_UINT32,&NUM);			
 					ptr = AC_RADIO[ID]->Radio_Rate;
 		
 					for(i = 0; i < NUM; i++)
 						{
 							dbus_message_iter_append_basic (&iter,DBUS_TYPE_UINT32,&ptr->Rate);
-							printf("ptr->Rate  =  %d\n",ptr->Rate);
+							wid_syslog_debug_debug(WID_DEFAULT,"ptr->Rate  =  %d\n",ptr->Rate);
 							ptr = ptr->next;
 							if(ptr == NULL)
 								{
@@ -39292,7 +39298,7 @@ DBusMessage * wid_dbus_interface_radio_set_max_rate(DBusConnection *conn, DBusMe
 		}
 	else if(type == 1)
 		{
-			printf("******** type == 1 *****\n");
+			wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 			if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL))
 				{
 					tmp = WTP_GROUP[ID]->WTP_M;
@@ -39360,7 +39366,7 @@ DBusMessage * wid_dbus_interface_radio_set_max_rate(DBusConnection *conn, DBusMe
 				dbus_message_iter_append_basic (&iter,
 													 DBUS_TYPE_UINT32,
 											 &num);
-				printf("num = %d\n",num);		
+				wid_syslog_debug_debug(WID_DEFAULT,"num = %d\n",num);		
 				for(i = 0; i < num; i++)
 					{
 						dbus_message_iter_append_basic (&iter,
@@ -39411,10 +39417,10 @@ DBusMessage * wid_dbus_interface_radio_set_max_rate(DBusConnection *conn, DBusMe
 								DBUS_TYPE_UINT32,&wflag,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -39557,10 +39563,10 @@ DBusMessage * wid_dbus_interface_radio_set_bss_l3_policy(DBusConnection *conn, D
 								DBUS_TYPE_UINT32,&bsspolicy,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -39606,7 +39612,7 @@ DBusMessage * wid_dbus_interface_radio_set_bss_l3_policy(DBusConnection *conn, D
 		}
 	else if(type == 1)
 		{
-			printf("******** type == 1 *****\n");
+			wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 			if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL))
 				{
 					tmp = WTP_GROUP[ID]->WTP_M;
@@ -39629,8 +39635,8 @@ DBusMessage * wid_dbus_interface_radio_set_bss_l3_policy(DBusConnection *conn, D
 								{								
 									for(i=0;i<AC_WTP[tmp->WTPID]->RadioCount;i++)
 									{
-										printf("wtpid = %d\n",tmp->WTPID);
-										printf("radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
+										wid_syslog_debug_debug(WID_DEFAULT,"wtpid = %d\n",tmp->WTPID);
+										wid_syslog_debug_debug(WID_DEFAULT,"radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
 
 										if(AC_WTP[tmp->WTPID] == NULL)
 											{
@@ -39700,7 +39706,7 @@ DBusMessage * wid_dbus_interface_radio_set_bss_l3_policy(DBusConnection *conn, D
 				dbus_message_iter_append_basic (&iter,
 													 DBUS_TYPE_UINT32,
 											 &num);
-				printf("num = %d\n",num);		
+				wid_syslog_debug_debug(WID_DEFAULT,"num = %d\n",num);		
 				for(i = 0; i < num; i++)
 					{
 						dbus_message_iter_append_basic (&iter,
@@ -39743,10 +39749,10 @@ DBusMessage * wid_dbus_interface_radio_set_bss_l3_policy(DBusConnection *conn, D
 								DBUS_TYPE_UINT32,&bsspolicy,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -39901,10 +39907,10 @@ DBusMessage * wid_dbus_interface_radio_set_bss_max_throughput(DBusConnection *co
 								DBUS_TYPE_UINT32,&throughput,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -39958,7 +39964,7 @@ DBusMessage * wid_dbus_interface_radio_set_bss_max_throughput(DBusConnection *co
 	else if(type == 1)
 		{
 			//unsigned int l_bss_id = bss_id-1;     //fengwenchao comment 20110512
-			printf("******** type == 1 *****\n");
+			wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 			if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL))
 				{
 					tmp = WTP_GROUP[ID]->WTP_M;
@@ -39981,8 +39987,8 @@ DBusMessage * wid_dbus_interface_radio_set_bss_max_throughput(DBusConnection *co
 								{								
 									for(i=0;i<AC_WTP[tmp->WTPID]->RadioCount;i++)
 									{
-										printf("wtpid = %d\n",tmp->WTPID);
-										printf("radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
+										wid_syslog_debug_debug(WID_DEFAULT,"wtpid = %d\n",tmp->WTPID);
+										wid_syslog_debug_debug(WID_DEFAULT,"radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
 
 										if(AC_WTP[tmp->WTPID] == NULL)
 											{
@@ -40057,7 +40063,7 @@ DBusMessage * wid_dbus_interface_radio_set_bss_max_throughput(DBusConnection *co
 				dbus_message_iter_append_basic (&iter,
 													 DBUS_TYPE_UINT32,
 											 &num);
-				printf("num = %d\n",num);		
+				wid_syslog_debug_debug(WID_DEFAULT,"num = %d\n",num);		
 				for(i = 0; i < num; i++)
 					{
 						dbus_message_iter_append_basic (&iter,
@@ -40098,10 +40104,10 @@ DBusMessage * wid_dbus_interface_radio_set_bss_max_throughput(DBusConnection *co
 								DBUS_TYPE_UINT32,&throughput,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -40178,10 +40184,10 @@ DBusMessage * wid_dbus_interface_radio_show_bss_max_throughput(DBusConnection *c
 								DBUS_TYPE_UINT32,&radio_id,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -40192,7 +40198,7 @@ DBusMessage * wid_dbus_interface_radio_show_bss_max_throughput(DBusConnection *c
 
 	if(ret != WID_DBUS_SUCCESS)
 	{
-		printf("radio id not correct. \n");
+		wid_syslog_debug_debug(WID_DEFAULT,"radio id not correct. \n");
 	}
 	else if(AC_WTP[wtp_id] == NULL)
 	{
@@ -40302,10 +40308,10 @@ DBusMessage * wid_dbus_interface_radio_show_bss_list(DBusConnection *conn, DBusM
 								DBUS_TYPE_UINT32,&radio_id,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		CW_FREE_OBJECT_WID(nas_id);
@@ -40318,7 +40324,7 @@ DBusMessage * wid_dbus_interface_radio_show_bss_list(DBusConnection *conn, DBusM
 	
 	if(ret != WID_DBUS_SUCCESS)
 	{
-		printf("radio id not correct. \n");
+		wid_syslog_debug_debug(WID_DEFAULT,"radio id not correct. \n");
 	}
 	else if(AC_WTP[wtp_id] == NULL)
 	{
@@ -40474,10 +40480,10 @@ DBusMessage * wid_dbus_interface_radio_show_channel_change_info(DBusConnection *
 								DBUS_TYPE_UINT32,&radio_id,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -40488,7 +40494,7 @@ DBusMessage * wid_dbus_interface_radio_show_channel_change_info(DBusConnection *
 	
 	if(ret != WID_DBUS_SUCCESS)
 	{
-		printf("radio id not correct. \n");
+		wid_syslog_debug_debug(WID_DEFAULT,"radio id not correct. \n");
 	}
 	else if(AC_WTP[wtp_id] == NULL)
 	{
@@ -40551,10 +40557,10 @@ DBusMessage * wid_dbus_interface_radio_set_mode(DBusConnection *conn, DBusMessag
 								DBUS_TYPE_UINT32,&Radiomode,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -40578,7 +40584,7 @@ DBusMessage * wid_dbus_interface_radio_set_mode(DBusConnection *conn, DBusMessag
 				{
 					Ratenum = length_of_rate_list(AC_RADIO[ID]->Radio_Rate);
 					//printf("set mode send %d ratenum\n",num);
-					printf("Ratenum = %d\n",Ratenum);
+					wid_syslog_debug_debug(WID_DEFAULT,"Ratenum = %d\n",Ratenum);
 					dbus_message_iter_append_basic (&iter,DBUS_TYPE_UINT32,&Ratenum);			
 					ptr = AC_RADIO[ID]->Radio_Rate;		
 					for(i = 0; i < Ratenum; i++)
@@ -40595,7 +40601,7 @@ DBusMessage * wid_dbus_interface_radio_set_mode(DBusConnection *conn, DBusMessag
 		}
 	else if(type == 1)
 		{
-			printf("******** type == 1 *****\n");
+			wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 			if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL))
 				{
 					tmp = WTP_GROUP[ID]->WTP_M;
@@ -40620,8 +40626,8 @@ DBusMessage * wid_dbus_interface_radio_set_mode(DBusConnection *conn, DBusMessag
 								{								
 									for(i=0;i<AC_WTP[tmp->WTPID]->RadioCount;i++)
 									{
-										printf("wtpid = %d\n",tmp->WTPID);
-										printf("radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
+										wid_syslog_debug_debug(WID_DEFAULT,"wtpid = %d\n",tmp->WTPID);
+										wid_syslog_debug_debug(WID_DEFAULT,"radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
 
 										if(AC_WTP[tmp->WTPID]->WTP_Radio[i]== NULL)
 											{
@@ -40640,7 +40646,7 @@ DBusMessage * wid_dbus_interface_radio_set_mode(DBusConnection *conn, DBusMessag
 												radio_head[num].RadioId = AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID;
 												radio_head[num].FailReason = ret2;
 												num++;
-												printf("ret2 = %d\n",ret2);
+												wid_syslog_debug_debug(WID_DEFAULT,"ret2 = %d\n",ret2);
 											}
 									}
 								}
@@ -40664,7 +40670,7 @@ DBusMessage * wid_dbus_interface_radio_set_mode(DBusConnection *conn, DBusMessag
 				dbus_message_iter_append_basic (&iter,
 													 DBUS_TYPE_UINT32,
 											 		 &num);
-				printf("num = %d\n",num);		
+				wid_syslog_debug_debug(WID_DEFAULT,"num = %d\n",num);		
 				for(i = 0; i < num; i++)
 					{
 						dbus_message_iter_append_basic (&iter,
@@ -40682,7 +40688,7 @@ DBusMessage * wid_dbus_interface_radio_set_mode(DBusConnection *conn, DBusMessag
 					}
 
 			}
-		printf("****************\n");
+		//printf("****************\n");
 		return reply;
 		} else {
 			return reply;
@@ -40706,10 +40712,10 @@ DBusMessage * wid_dbus_interface_radio_set_mode(DBusConnection *conn, DBusMessag
 								DBUS_TYPE_UINT32,&Radiomode,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -40771,11 +40777,11 @@ DBusMessage * wid_dbus_interface_radio_set_mgmt_frame_rate_base_wlanid(DBusConne
 								DBUS_TYPE_INVALID)))
 	{
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) 
 		{
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -40813,11 +40819,11 @@ DBusMessage * wid_dbus_interface_radio_clear_rate_for_wlanid(DBusConnection *con
 								DBUS_TYPE_INVALID)))
 	{
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) 
 		{
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -40874,10 +40880,10 @@ DBusMessage * wid_dbus_interface_radio_set_beacon(DBusConnection *conn, DBusMess
 								DBUS_TYPE_UINT16,&beaconinterval,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -40895,7 +40901,7 @@ DBusMessage * wid_dbus_interface_radio_set_beacon(DBusConnection *conn, DBusMess
 		}
 	else if(type == 1)
 		{
-			printf("******** type == 1 *****\n");
+			wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 			if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL))
 				{
 					tmp = WTP_GROUP[ID]->WTP_M;
@@ -40918,8 +40924,8 @@ DBusMessage * wid_dbus_interface_radio_set_beacon(DBusConnection *conn, DBusMess
 								{								
 									for(i=0;i<AC_WTP[tmp->WTPID]->RadioCount;i++)
 									{
-										printf("wtpid = %d\n",tmp->WTPID);
-										printf("radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
+										wid_syslog_debug_debug(WID_DEFAULT,"wtpid = %d\n",tmp->WTPID);
+										wid_syslog_debug_debug(WID_DEFAULT,"radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
 
 										if(AC_WTP[tmp->WTPID]->WTP_Radio[i]== NULL)
 											{
@@ -40961,7 +40967,7 @@ DBusMessage * wid_dbus_interface_radio_set_beacon(DBusConnection *conn, DBusMess
 				dbus_message_iter_append_basic (&iter,
 													 DBUS_TYPE_UINT32,
 											 &num);
-				printf("num = %d\n",num);		
+				wid_syslog_debug_debug(WID_DEFAULT,"num = %d\n",num);		
 				for(i = 0; i < num; i++)
 					{
 						dbus_message_iter_append_basic (&iter,
@@ -41000,10 +41006,10 @@ DBusMessage * wid_dbus_interface_radio_set_beacon(DBusConnection *conn, DBusMess
 								DBUS_TYPE_UINT16,&beaconinterval,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -41055,10 +41061,10 @@ DBusMessage * wid_dbus_interface_radio_set_fragmentation(DBusConnection *conn, D
 								DBUS_TYPE_UINT16,&fragmentation,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -41076,7 +41082,7 @@ DBusMessage * wid_dbus_interface_radio_set_fragmentation(DBusConnection *conn, D
 		}
 	else if(type == 1)
 		{
-			printf("******** type == 1 *****\n");
+			wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 			if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL))
 				{
 					tmp = WTP_GROUP[ID]->WTP_M;
@@ -41099,8 +41105,8 @@ DBusMessage * wid_dbus_interface_radio_set_fragmentation(DBusConnection *conn, D
 								{								
 									for(i=0;i<AC_WTP[tmp->WTPID]->RadioCount;i++)
 									{
-										printf("wtpid = %d\n",tmp->WTPID);
-										printf("radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
+										wid_syslog_debug_debug(WID_DEFAULT,"wtpid = %d\n",tmp->WTPID);
+										wid_syslog_debug_debug(WID_DEFAULT,"radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
 
 										if(AC_WTP[tmp->WTPID]->WTP_Radio[i]== NULL)
 											{
@@ -41142,7 +41148,7 @@ DBusMessage * wid_dbus_interface_radio_set_fragmentation(DBusConnection *conn, D
 				dbus_message_iter_append_basic (&iter,
 													 DBUS_TYPE_UINT32,
 											 &num);
-				printf("num = %d\n",num);		
+				wid_syslog_debug_debug(WID_DEFAULT,"num = %d\n",num);		
 				for(i = 0; i < num; i++)
 					{
 						dbus_message_iter_append_basic (&iter,
@@ -41178,10 +41184,10 @@ DBusMessage * wid_dbus_interface_radio_set_fragmentation(DBusConnection *conn, D
 								DBUS_TYPE_UINT16,&fragmentation,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -41233,10 +41239,10 @@ DBusMessage * wid_dbus_interface_radio_set_dtim(DBusConnection *conn, DBusMessag
 								DBUS_TYPE_BYTE,&dtim,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -41254,7 +41260,7 @@ DBusMessage * wid_dbus_interface_radio_set_dtim(DBusConnection *conn, DBusMessag
 		}
 	else if(type == 1)
 		{
-			printf("******** type == 1 *****\n");
+			wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 			if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL))
 				{
 					tmp = WTP_GROUP[ID]->WTP_M;
@@ -41277,8 +41283,8 @@ DBusMessage * wid_dbus_interface_radio_set_dtim(DBusConnection *conn, DBusMessag
 								{								
 									for(i=0;i<AC_WTP[tmp->WTPID]->RadioCount;i++)
 									{
-										printf("wtpid = %d\n",tmp->WTPID);
-										printf("radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
+										wid_syslog_debug_debug(WID_DEFAULT,"wtpid = %d\n",tmp->WTPID);
+										wid_syslog_debug_debug(WID_DEFAULT,"radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
 
 										if(AC_WTP[tmp->WTPID]->WTP_Radio[i]== NULL)
 											{
@@ -41320,7 +41326,7 @@ DBusMessage * wid_dbus_interface_radio_set_dtim(DBusConnection *conn, DBusMessag
 				dbus_message_iter_append_basic (&iter,
 													 DBUS_TYPE_UINT32,
 											 &num);
-				printf("num = %d\n",num);		
+				wid_syslog_debug_debug(WID_DEFAULT,"num = %d\n",num);		
 				for(i = 0; i < num; i++)
 					{
 						dbus_message_iter_append_basic (&iter,
@@ -41356,10 +41362,10 @@ DBusMessage * wid_dbus_interface_radio_set_dtim(DBusConnection *conn, DBusMessag
 								DBUS_TYPE_BYTE,&dtim,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -41411,10 +41417,10 @@ DBusMessage * wid_dbus_interface_radio_set_rtsthreshold(DBusConnection *conn, DB
 								DBUS_TYPE_UINT16,&rtsthre,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -41432,7 +41438,7 @@ DBusMessage * wid_dbus_interface_radio_set_rtsthreshold(DBusConnection *conn, DB
 		}
 	else if(type == 1)
 		{
-			printf("******** type == 1 *****\n");
+			wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 			if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL))
 				{
 					tmp = WTP_GROUP[ID]->WTP_M;
@@ -41455,8 +41461,8 @@ DBusMessage * wid_dbus_interface_radio_set_rtsthreshold(DBusConnection *conn, DB
 								{								
 									for(i=0;i<AC_WTP[tmp->WTPID]->RadioCount;i++)
 									{
-										printf("wtpid = %d\n",tmp->WTPID);
-										printf("radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
+										wid_syslog_debug_debug(WID_DEFAULT,"wtpid = %d\n",tmp->WTPID);
+										wid_syslog_debug_debug(WID_DEFAULT,"radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
 
 										if(AC_WTP[tmp->WTPID]->WTP_Radio[i]== NULL)
 											{
@@ -41498,7 +41504,7 @@ DBusMessage * wid_dbus_interface_radio_set_rtsthreshold(DBusConnection *conn, DB
 				dbus_message_iter_append_basic (&iter,
 													 DBUS_TYPE_UINT32,
 											 &num);
-				printf("num = %d\n",num);		
+				wid_syslog_debug_debug(WID_DEFAULT,"num = %d\n",num);		
 				for(i = 0; i < num; i++)
 					{
 						dbus_message_iter_append_basic (&iter,
@@ -41533,10 +41539,10 @@ DBusMessage * wid_dbus_interface_radio_set_rtsthreshold(DBusConnection *conn, DB
 								DBUS_TYPE_UINT16,&rtsthre,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -41574,10 +41580,10 @@ DBusMessage * wid_dbus_interface_radio_set_acktimeout_distance(DBusConnection *c
 								DBUS_TYPE_UINT32,&distance,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -41640,10 +41646,10 @@ DBusMessage * wid_dbus_interface_radio_set_guardinterval(DBusConnection *conn, D
 								DBUS_TYPE_UINT16,&guardinterval,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -41675,7 +41681,7 @@ DBusMessage * wid_dbus_interface_radio_set_guardinterval(DBusConnection *conn, D
 
 	else if(type == 1)
 		{
-			printf("******** type == 1 *****\n");
+			wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 			if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL))
 				{
 					tmp = WTP_GROUP[ID]->WTP_M;
@@ -41698,8 +41704,8 @@ DBusMessage * wid_dbus_interface_radio_set_guardinterval(DBusConnection *conn, D
 								{								
 									for(i=0;i<AC_WTP[tmp->WTPID]->RadioCount;i++)
 									{
-										printf("wtpid = %d\n",tmp->WTPID);
-										printf("radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
+										wid_syslog_debug_debug(WID_DEFAULT,"wtpid = %d\n",tmp->WTPID);
+										wid_syslog_debug_debug(WID_DEFAULT,"radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
 
 										if(AC_WTP[tmp->WTPID]->WTP_Radio[i]== NULL)
 											{
@@ -41756,7 +41762,7 @@ DBusMessage * wid_dbus_interface_radio_set_guardinterval(DBusConnection *conn, D
 				dbus_message_iter_append_basic (&iter,
 													 DBUS_TYPE_UINT32,
 											 &num);
-				printf("num = %d\n",num);		
+				wid_syslog_debug_debug(WID_DEFAULT,"num = %d\n",num);		
 				for(i = 0; i < num; i++)
 					{
 						dbus_message_iter_append_basic (&iter,
@@ -41792,10 +41798,10 @@ DBusMessage * wid_dbus_interface_radio_set_guardinterval(DBusConnection *conn, D
 								DBUS_TYPE_UINT16,&guardinterval,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -41860,10 +41866,10 @@ DBusMessage * wid_dbus_interface_radio_set_ampdu_able(DBusConnection *conn, DBus
 								DBUS_TYPE_BYTE,&type,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -41930,7 +41936,7 @@ DBusMessage * wid_dbus_interface_radio_set_ampdu_able(DBusConnection *conn, DBus
 		}
 	else if(TYPE == 1)
 		{
-			printf("******** type == 1 *****\n");
+			wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 			if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL))
 				{
 					tmp = WTP_GROUP[ID]->WTP_M;
@@ -41953,8 +41959,8 @@ DBusMessage * wid_dbus_interface_radio_set_ampdu_able(DBusConnection *conn, DBus
 								{								
 									for(i=0;i<AC_WTP[tmp->WTPID]->RadioCount;i++)
 									{
-										printf("wtpid = %d\n",tmp->WTPID);
-										printf("radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
+										wid_syslog_debug_debug(WID_DEFAULT,"wtpid = %d\n",tmp->WTPID);
+										wid_syslog_debug_debug(WID_DEFAULT,"radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
 
 										if(AC_WTP[tmp->WTPID]->WTP_Radio[i]== NULL)
 											{
@@ -41990,7 +41996,7 @@ DBusMessage * wid_dbus_interface_radio_set_ampdu_able(DBusConnection *conn, DBus
         														AC_WTP[tmp->WTPID]->WTP_Radio[i]->Ampdu.Op = Ampdu_op;
         														AC_WTP[tmp->WTPID]->WTP_Radio[i]->Ampdu.L_RadioID = AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_L_ID;
         														AC_WTP[tmp->WTPID]->WTP_Radio[i]->Ampdu.WlanID= AC_WTP[tmp->WTPID]->WTP_Radio[i]->Wlan_Id->wlanid;
-																printf("AC_WTP[tmp->WTPID]->WTP_Radio[i]->Wlan_Id->wlanid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Wlan_Id->wlanid);
+																wid_syslog_debug_debug(WID_DEFAULT,"AC_WTP[tmp->WTPID]->WTP_Radio[i]->Wlan_Id->wlanid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Wlan_Id->wlanid);
         														AC_WTP[tmp->WTPID]->WTP_Radio[i]->Ampdu.Able= able;
         										
         		    											ret2 = wid_radio_set_ampdu_able(AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID, type);
@@ -42015,7 +42021,7 @@ DBusMessage * wid_dbus_interface_radio_set_ampdu_able(DBusConnection *conn, DBus
         														AC_WTP[tmp->WTPID]->WTP_Radio[i]->Amsdu.Op = Amsdu_op;
         														AC_WTP[tmp->WTPID]->WTP_Radio[i]->Amsdu.L_RadioID = AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_L_ID;
         														AC_WTP[tmp->WTPID]->WTP_Radio[i]->Amsdu.WlanID= AC_WTP[tmp->WTPID]->WTP_Radio[i]->Wlan_Id->wlanid;
-																printf("AC_WTP[tmp->WTPID]->WTP_Radio[i]->Wlan_Id->wlanid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Wlan_Id->wlanid);
+																wid_syslog_debug_debug(WID_DEFAULT,"AC_WTP[tmp->WTPID]->WTP_Radio[i]->Wlan_Id->wlanid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Wlan_Id->wlanid);
         														AC_WTP[tmp->WTPID]->WTP_Radio[i]->Ampdu.AmpduLimit= able;
         														
         		    											ret2 = wid_radio_set_ampdu_able(AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID, type);
@@ -42052,7 +42058,7 @@ DBusMessage * wid_dbus_interface_radio_set_ampdu_able(DBusConnection *conn, DBus
 				dbus_message_iter_append_basic (&iter,
 													 DBUS_TYPE_UINT32,
 											 &num);
-				printf("num = %d\n",num);		
+				wid_syslog_debug_debug(WID_DEFAULT,"num = %d\n",num);		
 				for(i = 0; i < num; i++)
 					{
 						dbus_message_iter_append_basic (&iter,
@@ -42090,10 +42096,10 @@ DBusMessage * wid_dbus_interface_radio_set_ampdu_able(DBusConnection *conn, DBus
 								DBUS_TYPE_BYTE,&type,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -42197,10 +42203,10 @@ DBusMessage * wid_dbus_interface_radio_set_ampdu_limit(DBusConnection *conn, DBu
 								DBUS_TYPE_BYTE,&type,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -42263,7 +42269,7 @@ DBusMessage * wid_dbus_interface_radio_set_ampdu_limit(DBusConnection *conn, DBu
 		}
 	else if(TYPE == 1)
 		{
-			printf("******** type == 1 *****\n");
+			wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 			if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL))
 				{
 					tmp = WTP_GROUP[ID]->WTP_M;
@@ -42286,8 +42292,8 @@ DBusMessage * wid_dbus_interface_radio_set_ampdu_limit(DBusConnection *conn, DBu
 								{								
 									for(i=0;i<AC_WTP[tmp->WTPID]->RadioCount;i++)
 									{
-										printf("wtpid = %d\n",tmp->WTPID);
-										printf("radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
+										wid_syslog_debug_debug(WID_DEFAULT,"wtpid = %d\n",tmp->WTPID);
+										wid_syslog_debug_debug(WID_DEFAULT,"radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
 
 										if(AC_WTP[tmp->WTPID]->WTP_Radio[i]== NULL)
 											{
@@ -42319,7 +42325,7 @@ DBusMessage * wid_dbus_interface_radio_set_ampdu_limit(DBusConnection *conn, DBu
         														AC_WTP[tmp->WTPID]->WTP_Radio[i]->Ampdu.Op = Ampdu_op;
         														AC_WTP[tmp->WTPID]->WTP_Radio[i]->Ampdu.L_RadioID = AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_L_ID;
         														AC_WTP[tmp->WTPID]->WTP_Radio[i]->Ampdu.WlanID= AC_WTP[tmp->WTPID]->WTP_Radio[i]->Wlan_Id->wlanid;
-																printf("AC_WTP[tmp->WTPID]->WTP_Radio[i]->Wlan_Id->wlanid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Wlan_Id->wlanid);
+																wid_syslog_debug_debug(WID_DEFAULT,"AC_WTP[tmp->WTPID]->WTP_Radio[i]->Wlan_Id->wlanid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Wlan_Id->wlanid);
         														AC_WTP[tmp->WTPID]->WTP_Radio[i]->Ampdu.AmpduLimit= ampdulimit;
         														if(AC_WTP[tmp->WTPID]->WTP_Radio[i]->Ampdu.Able == 1)
         															{
@@ -42341,7 +42347,7 @@ DBusMessage * wid_dbus_interface_radio_set_ampdu_limit(DBusConnection *conn, DBu
         														AC_WTP[tmp->WTPID]->WTP_Radio[i]->Amsdu.Op = Amsdu_op;
         														AC_WTP[tmp->WTPID]->WTP_Radio[i]->Amsdu.L_RadioID = AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_L_ID;
         														AC_WTP[tmp->WTPID]->WTP_Radio[i]->Amsdu.WlanID= AC_WTP[tmp->WTPID]->WTP_Radio[i]->Wlan_Id->wlanid;
-																printf("AC_WTP[tmp->WTPID]->WTP_Radio[i]->Wlan_Id->wlanid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Wlan_Id->wlanid);
+																wid_syslog_debug_debug(WID_DEFAULT,"AC_WTP[tmp->WTPID]->WTP_Radio[i]->Wlan_Id->wlanid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Wlan_Id->wlanid);
         														AC_WTP[tmp->WTPID]->WTP_Radio[i]->Ampdu.AmpduLimit= ampdulimit;
         														if(AC_WTP[tmp->WTPID]->WTP_Radio[i]->Amsdu.Able == 1)
         															{
@@ -42380,7 +42386,7 @@ DBusMessage * wid_dbus_interface_radio_set_ampdu_limit(DBusConnection *conn, DBu
 				dbus_message_iter_append_basic (&iter,
 													 DBUS_TYPE_UINT32,
 											 &num);
-				printf("num = %d\n",num);		
+				wid_syslog_debug_debug(WID_DEFAULT,"num = %d\n",num);		
 				for(i = 0; i < num; i++)
 					{
 						dbus_message_iter_append_basic (&iter,
@@ -42418,10 +42424,10 @@ DBusMessage * wid_dbus_interface_radio_set_ampdu_limit(DBusConnection *conn, DBu
 								DBUS_TYPE_BYTE,&type,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -42521,10 +42527,10 @@ DBusMessage * wid_dbus_interface_radio_set_ampdu_subframe(DBusConnection *conn, 
 								DBUS_TYPE_BYTE,&type,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -42587,7 +42593,7 @@ DBusMessage * wid_dbus_interface_radio_set_ampdu_subframe(DBusConnection *conn, 
 		}
 	else if(TYPE == 1)
 		{
-			printf("******** type == 1 *****\n");
+			wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 			if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL))
 				{
 					tmp = WTP_GROUP[ID]->WTP_M;
@@ -42610,8 +42616,8 @@ DBusMessage * wid_dbus_interface_radio_set_ampdu_subframe(DBusConnection *conn, 
 								{								
 									for(i=0;i<AC_WTP[tmp->WTPID]->RadioCount;i++)
 									{
-										printf("wtpid = %d\n",tmp->WTPID);
-										printf("radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
+										wid_syslog_debug_debug(WID_DEFAULT,"wtpid = %d\n",tmp->WTPID);
+										wid_syslog_debug_debug(WID_DEFAULT,"radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
 
 										if(AC_WTP[tmp->WTPID]->WTP_Radio[i]== NULL)
 											{
@@ -42643,7 +42649,7 @@ DBusMessage * wid_dbus_interface_radio_set_ampdu_subframe(DBusConnection *conn, 
         														AC_WTP[tmp->WTPID]->WTP_Radio[i]->Ampdu.Op = Ampdu_op;
         														AC_WTP[tmp->WTPID]->WTP_Radio[i]->Ampdu.L_RadioID = AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_L_ID;
         														AC_WTP[tmp->WTPID]->WTP_Radio[i]->Ampdu.WlanID= AC_WTP[tmp->WTPID]->WTP_Radio[i]->Wlan_Id->wlanid;
-																printf("AC_WTP[tmp->WTPID]->WTP_Radio[i]->Wlan_Id->wlanid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Wlan_Id->wlanid);
+																wid_syslog_debug_debug(WID_DEFAULT,"AC_WTP[tmp->WTPID]->WTP_Radio[i]->Wlan_Id->wlanid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Wlan_Id->wlanid);
         														AC_WTP[tmp->WTPID]->WTP_Radio[i]->Ampdu.subframe= subframe;
         														if(AC_WTP[tmp->WTPID]->WTP_Radio[i]->Ampdu.Able == 1)
         															{
@@ -42665,7 +42671,7 @@ DBusMessage * wid_dbus_interface_radio_set_ampdu_subframe(DBusConnection *conn, 
         														AC_WTP[tmp->WTPID]->WTP_Radio[i]->Amsdu.Op = Amsdu_op;
         														AC_WTP[tmp->WTPID]->WTP_Radio[i]->Amsdu.L_RadioID = AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_L_ID;
         														AC_WTP[tmp->WTPID]->WTP_Radio[i]->Amsdu.WlanID= AC_WTP[tmp->WTPID]->WTP_Radio[i]->Wlan_Id->wlanid;
-																printf("AC_WTP[tmp->WTPID]->WTP_Radio[i]->Wlan_Id->wlanid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Wlan_Id->wlanid);
+																wid_syslog_debug_debug(WID_DEFAULT,"AC_WTP[tmp->WTPID]->WTP_Radio[i]->Wlan_Id->wlanid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Wlan_Id->wlanid);
         														AC_WTP[tmp->WTPID]->WTP_Radio[i]->Amsdu.subframe= subframe;
         														if(AC_WTP[tmp->WTPID]->WTP_Radio[i]->Amsdu.Able == 1)
         															{
@@ -42704,7 +42710,7 @@ DBusMessage * wid_dbus_interface_radio_set_ampdu_subframe(DBusConnection *conn, 
 				dbus_message_iter_append_basic (&iter,
 													 DBUS_TYPE_UINT32,
 											 &num);
-				printf("num = %d\n",num);		
+				wid_syslog_debug_debug(WID_DEFAULT,"num = %d\n",num);		
 				for(i = 0; i < num; i++)
 					{
 						dbus_message_iter_append_basic (&iter,
@@ -42743,10 +42749,10 @@ DBusMessage * wid_dbus_interface_radio_set_ampdu_subframe(DBusConnection *conn, 
 								DBUS_TYPE_BYTE,&type,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -42846,10 +42852,10 @@ DBusMessage * wid_dbus_interface_radio_set_mixed_puren_switch(DBusConnection *co
 								DBUS_TYPE_BYTE,&wlan_id,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -42924,7 +42930,7 @@ DBusMessage * wid_dbus_interface_radio_set_mixed_puren_switch(DBusConnection *co
 		}
 	else if(type == 1)
 		{
-			printf("******** type == 1 *****\n");
+			wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 			if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL))
 				{
 					tmp = WTP_GROUP[ID]->WTP_M;
@@ -42947,8 +42953,8 @@ DBusMessage * wid_dbus_interface_radio_set_mixed_puren_switch(DBusConnection *co
 								{								
 									for(i=0;i<AC_WTP[tmp->WTPID]->RadioCount;i++)
 									{
-										printf("wtpid = %d\n",tmp->WTPID);
-										printf("radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
+										wid_syslog_debug_debug(WID_DEFAULT,"wtpid = %d\n",tmp->WTPID);
+										wid_syslog_debug_debug(WID_DEFAULT,"radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
 
 										if(AC_WTP[tmp->WTPID]->WTP_Radio[i]== NULL)
 											{
@@ -43031,7 +43037,7 @@ DBusMessage * wid_dbus_interface_radio_set_mixed_puren_switch(DBusConnection *co
 				dbus_message_iter_append_basic (&iter,
 													 DBUS_TYPE_UINT32,
 											 &num);
-				printf("num = %d\n",num);		
+				wid_syslog_debug_debug(WID_DEFAULT,"num = %d\n",num);		
 				for(i = 0; i < num; i++)
 					{
 						dbus_message_iter_append_basic (&iter,
@@ -43070,10 +43076,10 @@ DBusMessage * wid_dbus_interface_radio_set_mixed_puren_switch(DBusConnection *co
 								DBUS_TYPE_BYTE,&mixed_puren_switch,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -43191,10 +43197,10 @@ DBusMessage * wid_dbus_interface_radio_set_channel_offset(DBusConnection *conn, 
 								DBUS_TYPE_BYTE,&policy,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -43254,7 +43260,7 @@ DBusMessage * wid_dbus_interface_radio_set_channel_offset(DBusConnection *conn, 
 		}
 	else if(type == 1)
 		{
-			printf("******** type == 1 *****\n");
+			wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 			if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL))
 				{
 					tmp = WTP_GROUP[ID]->WTP_M;
@@ -43277,8 +43283,8 @@ DBusMessage * wid_dbus_interface_radio_set_channel_offset(DBusConnection *conn, 
 								{								
 									for(i=0;i<AC_WTP[tmp->WTPID]->RadioCount;i++)
 									{
-										printf("wtpid = %d\n",tmp->WTPID);
-										printf("radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
+										wid_syslog_debug_debug(WID_DEFAULT,"wtpid = %d\n",tmp->WTPID);
+										wid_syslog_debug_debug(WID_DEFAULT,"radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
 										
 										wid_check_radio_max_min_channel(AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID,&max_channel,&min_channel);  //fengwenchao add 20110421
 
@@ -43360,7 +43366,7 @@ DBusMessage * wid_dbus_interface_radio_set_channel_offset(DBusConnection *conn, 
 				dbus_message_iter_append_basic (&iter,
 													 DBUS_TYPE_UINT32,
 											 &num);
-				printf("num = %d\n",num);		
+				wid_syslog_debug_debug(WID_DEFAULT,"num = %d\n",num);		
 				for(i = 0; i < num; i++)
 					{
 						dbus_message_iter_append_basic (&iter,
@@ -43399,10 +43405,10 @@ DBusMessage * wid_dbus_interface_radio_set_channel_offset(DBusConnection *conn, 
 								DBUS_TYPE_BYTE,&policy,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -43588,7 +43594,7 @@ DBusMessage * wid_dbus_interface_radio_set_mcs(DBusConnection *conn, DBusMessage
 		}
 	else if(type == 1)
 		{
-			printf("******** type == 1 *****\n");
+			wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 			if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL))
 				{
 					tmp = WTP_GROUP[ID]->WTP_M;
@@ -43611,8 +43617,8 @@ DBusMessage * wid_dbus_interface_radio_set_mcs(DBusConnection *conn, DBusMessage
 								{								
 									for(i=0;i<AC_WTP[tmp->WTPID]->RadioCount;i++)
 									{
-										printf("wtpid = %d\n",tmp->WTPID);
-										printf("radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
+										wid_syslog_debug_debug(WID_DEFAULT,"wtpid = %d\n",tmp->WTPID);
+										wid_syslog_debug_debug(WID_DEFAULT,"radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
 							//	struct tag_mcsid *temp = mcs->mcsidlist;
 										for(j=0;j<mcs_count;j++){
 											if(AC_WTP[tmp->WTPID]->WTP_Radio[i]== NULL)
@@ -43701,7 +43707,7 @@ DBusMessage * wid_dbus_interface_radio_set_mcs(DBusConnection *conn, DBusMessage
 				dbus_message_iter_append_basic (&iter,
 													 DBUS_TYPE_UINT32,
 											 &num);
-				printf("num = %d\n",num);		
+				wid_syslog_debug_debug(WID_DEFAULT,"num = %d\n",num);		
 				for(i = 0; i < num; i++)
 					{
 						dbus_message_iter_append_basic (&iter,
@@ -43812,10 +43818,10 @@ DBusMessage * wid_dbus_interface_radio_set_cmmode(DBusConnection *conn, DBusMess
 								DBUS_TYPE_UINT16,&cwmode,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -43914,7 +43920,7 @@ DBusMessage * wid_dbus_interface_radio_set_cmmode(DBusConnection *conn, DBusMess
 		}
 	else if(type == 1)
 		{
-			printf("******** type == 1 *****\n");
+			wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 			if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL))
 				{
 					tmp = WTP_GROUP[ID]->WTP_M;
@@ -43937,8 +43943,8 @@ DBusMessage * wid_dbus_interface_radio_set_cmmode(DBusConnection *conn, DBusMess
 								{								
 									for(i=0;i<AC_WTP[tmp->WTPID]->RadioCount;i++)
 									{
-										printf("wtpid = %d\n",tmp->WTPID);
-										printf("radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
+										wid_syslog_debug_debug(WID_DEFAULT,"wtpid = %d\n",tmp->WTPID);
+										wid_syslog_debug_debug(WID_DEFAULT,"radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
 
 										wid_check_radio_max_min_channel(AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID,&max_channel,&min_channel);  //fengwenchao add 20110421
 										
@@ -44032,7 +44038,7 @@ DBusMessage * wid_dbus_interface_radio_set_cmmode(DBusConnection *conn, DBusMess
 				dbus_message_iter_append_basic (&iter,
 													 DBUS_TYPE_UINT32,
 											 &num);
-				printf("num = %d\n",num);		
+				wid_syslog_debug_debug(WID_DEFAULT,"num = %d\n",num);		
 				for(i = 0; i < num; i++)
 					{
 						dbus_message_iter_append_basic (&iter,
@@ -44071,10 +44077,10 @@ DBusMessage * wid_dbus_interface_radio_set_cmmode(DBusConnection *conn, DBusMess
 								DBUS_TYPE_UINT16,&cwmode,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -44181,10 +44187,10 @@ DBusMessage * wid_dbus_interface_radio_set_wds_distance(DBusConnection *conn, DB
 								DBUS_TYPE_UINT32,&distance,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -44207,7 +44213,7 @@ DBusMessage * wid_dbus_interface_radio_set_wds_distance(DBusConnection *conn, DB
 							AC_RADIO[ID]->distance = distance;
 							//memset(command, 0, 80);
 							sprintf(command,"set wbeDistance %d",distance);
-							printf("%s\n",command);
+							wid_syslog_debug_debug(WID_DEFAULT,"%s\n",command);
 							wid_radio_set_extension_command(ID/L_RADIO_NUM,command);
 						}
 				}
@@ -44215,7 +44221,7 @@ DBusMessage * wid_dbus_interface_radio_set_wds_distance(DBusConnection *conn, DB
 		}
 	else if(type == 1)
 		{
-			printf("******** type == 1 *****\n");
+			wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 			if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL))
 				{
 					tmp = WTP_GROUP[ID]->WTP_M;
@@ -44238,8 +44244,8 @@ DBusMessage * wid_dbus_interface_radio_set_wds_distance(DBusConnection *conn, DB
 								{								
 									for(i=0;i<AC_WTP[tmp->WTPID]->RadioCount;i++)
 									{
-										printf("wtpid = %d\n",tmp->WTPID);
-										printf("radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
+										wid_syslog_debug_debug(WID_DEFAULT,"wtpid = %d\n",tmp->WTPID);
+										wid_syslog_debug_debug(WID_DEFAULT,"radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
 
 										if(AC_WTP[tmp->WTPID]->WTP_Radio[i]== NULL)
 											{
@@ -44257,7 +44263,7 @@ DBusMessage * wid_dbus_interface_radio_set_wds_distance(DBusConnection *conn, DB
 														AC_WTP[tmp->WTPID]->WTP_Radio[i]->distance = distance;
 														//memset(command, 0, 80);
 														sprintf(command,"set wbeDistance %d",distance);
-														printf("%s\n",command);
+														wid_syslog_debug_debug(WID_DEFAULT,"%s\n",command);
 														wid_radio_set_extension_command(tmp->WTPID,command);
 														wid_syslog_debug_debug(WID_DEFAULT,"WTP%d radio%d set wds distance successful\n",tmp->WTPID,AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
 													}
@@ -44292,7 +44298,7 @@ DBusMessage * wid_dbus_interface_radio_set_wds_distance(DBusConnection *conn, DB
 				dbus_message_iter_append_basic (&iter,
 													 DBUS_TYPE_UINT32,
 											 &num);
-				printf("num = %d\n",num);		
+				wid_syslog_debug_debug(WID_DEFAULT,"num = %d\n",num);		
 				for(i = 0; i < num; i++)
 					{
 						dbus_message_iter_append_basic (&iter,
@@ -44330,10 +44336,10 @@ DBusMessage * wid_dbus_interface_radio_set_wds_distance(DBusConnection *conn, DB
 								DBUS_TYPE_UINT32,&distance,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -44347,7 +44353,7 @@ DBusMessage * wid_dbus_interface_radio_set_wds_distance(DBusConnection *conn, DB
 			AC_RADIO[RadioID]->distance = distance;
 			memset(command, 0, 80);
 			sprintf(command,"set wbeDistance %d",distance);
-			printf("%s\n",command);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s\n",command);
 			wid_radio_set_extension_command(RadioID/L_RADIO_NUM,command);
 		}
 	}
@@ -44400,10 +44406,10 @@ DBusMessage * wid_dbus_interface_radio_set_wds_remote_brmac(DBusConnection *conn
 								DBUS_TYPE_BYTE,&mac[5],
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -44422,12 +44428,12 @@ DBusMessage * wid_dbus_interface_radio_set_wds_remote_brmac(DBusConnection *conn
 			else
 				{
 					ret = wid_wds_remote_bridge_mac_op(ID, is_add, mac);
-					printf("radioid %d\n",ID);
+					wid_syslog_debug_debug(WID_DEFAULT,"radioid %d\n",ID);
 					if(ret == 0)
 						{
 							//memset(command, 0, 80);
 							sprintf(command,"%s remoteWbr %02x:%02x:%02x:%02x:%02x:%02x",is_add?"add":"del",mac[0],mac[1],mac[2],mac[3],mac[4],mac[5]);
-							printf("%s\n",command);
+							wid_syslog_debug_debug(WID_DEFAULT,"%s\n",command);
 							wid_radio_set_extension_command(ID/L_RADIO_NUM,command);
 						}
 				}		
@@ -44435,7 +44441,7 @@ DBusMessage * wid_dbus_interface_radio_set_wds_remote_brmac(DBusConnection *conn
 
 	else if(type == 1)
 		{
-			printf("******** type == 1 *****\n");
+			wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 			if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL))
 				{
 					tmp = WTP_GROUP[ID]->WTP_M;
@@ -44458,8 +44464,8 @@ DBusMessage * wid_dbus_interface_radio_set_wds_remote_brmac(DBusConnection *conn
 								{								
 									for(i=0;i<AC_WTP[tmp->WTPID]->RadioCount;i++)
 									{
-										printf("wtpid = %d\n",tmp->WTPID);
-										printf("radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
+										wid_syslog_debug_debug(WID_DEFAULT,"wtpid = %d\n",tmp->WTPID);
+										wid_syslog_debug_debug(WID_DEFAULT,"radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
 
 										if(AC_WTP[tmp->WTPID]->WTP_Radio[i]== NULL)
 											{
@@ -44478,7 +44484,7 @@ DBusMessage * wid_dbus_interface_radio_set_wds_remote_brmac(DBusConnection *conn
 												{
 													//memset(command, 0, 80);
 													sprintf(command,"%s remoteWbr %02x:%02x:%02x:%02x:%02x:%02x",is_add?"add":"del",mac[0],mac[1],mac[2],mac[3],mac[4],mac[5]);
-													printf("%s\n",command);
+													wid_syslog_debug_debug(WID_DEFAULT,"%s\n",command);
 													wid_radio_set_extension_command(tmp->WTPID,command);
 													wid_syslog_debug_debug(WID_DEFAULT,"WTP%d radio%d set remote brmac successful\n",tmp->WTPID,AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
 												}
@@ -44513,7 +44519,7 @@ DBusMessage * wid_dbus_interface_radio_set_wds_remote_brmac(DBusConnection *conn
 				dbus_message_iter_append_basic (&iter,
 													 DBUS_TYPE_UINT32,
 											 &num);
-				printf("num = %d\n",num);		
+				wid_syslog_debug_debug(WID_DEFAULT,"num = %d\n",num);		
 				for(i = 0; i < num; i++)
 					{
 						dbus_message_iter_append_basic (&iter,
@@ -44558,26 +44564,26 @@ DBusMessage * wid_dbus_interface_radio_set_wds_remote_brmac(DBusConnection *conn
 								DBUS_TYPE_BYTE,&mac[5],
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
 	}
-	printf("radioid %d\n",RadioID);
+	wid_syslog_debug_debug(WID_DEFAULT,"radioid %d\n",RadioID);
 	if(AC_RADIO[RadioID] == NULL){
 		ret = RADIO_ID_NOT_EXIST;
 	}else if(AC_RADIO[RadioID]->REFlag == 0){
 		ret = RADIO_NOT_SUPPORT_COMMAND;
 	}else{
 		ret = wid_wds_remote_bridge_mac_op(RadioID, is_add, mac);
-		printf("radioid %d\n",RadioID);
+		wid_syslog_debug_debug(WID_DEFAULT,"radioid %d\n",RadioID);
 		if(ret == 0){
 			memset(command, 0, 80);
 			sprintf(command,"%s remoteWbr %02x:%02x:%02x:%02x:%02x:%02x",is_add?"add":"del",mac[0],mac[1],mac[2],mac[3],mac[4],mac[5]);
-			printf("%s\n",command);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s\n",command);
 			wid_radio_set_extension_command(RadioID/L_RADIO_NUM,command);
 		}
 	}
@@ -44624,10 +44630,10 @@ DBusMessage * wid_dbus_interface_radio_set_wds_wep_key(DBusConnection *conn, DBu
 								DBUS_TYPE_STRING,&key,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -44644,7 +44650,7 @@ DBusMessage * wid_dbus_interface_radio_set_wds_wep_key(DBusConnection *conn, DBu
 					ret = RADIO_NOT_SUPPORT_COMMAND;
 				}
 			else{
-					printf("AC_RADIO[ID]->cipherType %d\n",AC_RADIO[ID]->cipherType);
+					wid_syslog_debug_debug(WID_DEFAULT,"AC_RADIO[ID]->cipherType %d\n",AC_RADIO[ID]->cipherType);
 					if(AC_RADIO[ID]->cipherType == 1)
 						{
 							memset(AC_RADIO[ID]->wepkey, 0, 32);
@@ -44660,7 +44666,7 @@ DBusMessage * wid_dbus_interface_radio_set_wds_wep_key(DBusConnection *conn, DBu
 									len = 104;
 								}
 							sprintf(command,"set key 1 %d %s",len,key); 		
-							printf("%s\n",command);
+							wid_syslog_debug_debug(WID_DEFAULT,"%s\n",command);
 							wid_radio_set_extension_command(ID/L_RADIO_NUM,command);
 						}
 					else
@@ -44669,7 +44675,7 @@ DBusMessage * wid_dbus_interface_radio_set_wds_wep_key(DBusConnection *conn, DBu
 		}
 	else if(type == 1)
 		{
-			printf("******** type == 1 *****\n");
+			wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 			if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL))
 				{
 					tmp = WTP_GROUP[ID]->WTP_M;
@@ -44692,8 +44698,8 @@ DBusMessage * wid_dbus_interface_radio_set_wds_wep_key(DBusConnection *conn, DBu
 								{								
 									for(i=0;i<AC_WTP[tmp->WTPID]->RadioCount;i++)
 									{
-										printf("wtpid = %d\n",tmp->WTPID);
-										printf("radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
+										wid_syslog_debug_debug(WID_DEFAULT,"wtpid = %d\n",tmp->WTPID);
+										wid_syslog_debug_debug(WID_DEFAULT,"radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
 
 										if(AC_WTP[tmp->WTPID]->WTP_Radio[i]== NULL)
 											{
@@ -44706,7 +44712,7 @@ DBusMessage * wid_dbus_interface_radio_set_wds_wep_key(DBusConnection *conn, DBu
 												wid_syslog_debug_debug(WID_DEFAULT,"WTP%d radio%d is NOT support command\n",tmp->WTPID,AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
 											}
 										else{
-												printf("AC_WTP[tmp->WTPID]->WTP_Radio[i]->cipherType %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->cipherType);
+												wid_syslog_debug_debug(WID_DEFAULT,"AC_WTP[tmp->WTPID]->WTP_Radio[i]->cipherType %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->cipherType);
 												if(AC_WTP[tmp->WTPID]->WTP_Radio[i]->cipherType == 1)
 													{
 														memset(AC_WTP[tmp->WTPID]->WTP_Radio[i]->wepkey, 0, 32);
@@ -44722,7 +44728,7 @@ DBusMessage * wid_dbus_interface_radio_set_wds_wep_key(DBusConnection *conn, DBu
 																len = 104;
 															}
 														sprintf(command,"set key 1 %d %s",len,key); 		
-														printf("%s\n",command);
+														wid_syslog_debug_debug(WID_DEFAULT,"%s\n",command);
 														ret2 = wid_radio_set_extension_command(tmp->WTPID,command);
 														wid_syslog_debug_debug(WID_DEFAULT,"WTP%d radio%d set wds wep key successful\n",tmp->WTPID,AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
 													}
@@ -44759,7 +44765,7 @@ DBusMessage * wid_dbus_interface_radio_set_wds_wep_key(DBusConnection *conn, DBu
 				dbus_message_iter_append_basic (&iter,
 													 DBUS_TYPE_UINT32,
 											 &num);
-				printf("num = %d\n",num);		
+				wid_syslog_debug_debug(WID_DEFAULT,"num = %d\n",num);		
 				for(i = 0; i < num; i++)
 					{
 						dbus_message_iter_append_basic (&iter,
@@ -44798,10 +44804,10 @@ DBusMessage * wid_dbus_interface_radio_set_wds_wep_key(DBusConnection *conn, DBu
 								DBUS_TYPE_STRING,&key,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -44811,7 +44817,7 @@ DBusMessage * wid_dbus_interface_radio_set_wds_wep_key(DBusConnection *conn, DBu
 	}else if(AC_RADIO[RadioID]->REFlag == 0){
 		ret = RADIO_NOT_SUPPORT_COMMAND;
 	}else{
-		printf("AC_RADIO[RadioID]->cipherType %d\n",AC_RADIO[RadioID]->cipherType);
+		wid_syslog_debug_debug(WID_DEFAULT,"AC_RADIO[RadioID]->cipherType %d\n",AC_RADIO[RadioID]->cipherType);
 		if(AC_RADIO[RadioID]->cipherType == 1){
 			memset(AC_RADIO[RadioID]->wepkey, 0, 32);
 			memcpy(AC_RADIO[RadioID]->wepkey, key,strlen((char*)key));
@@ -44824,7 +44830,7 @@ DBusMessage * wid_dbus_interface_radio_set_wds_wep_key(DBusConnection *conn, DBu
 				len = 104;
 			}
 			sprintf(command,"set key 1 %d %s",len,key);			
-			printf("%s\n",command);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s\n",command);
 			wid_radio_set_extension_command(RadioID/L_RADIO_NUM,command);
 		}else
 			ret = RADIO_ENCRYPTION_NO_MATCH;
@@ -44871,10 +44877,10 @@ DBusMessage * wid_dbus_interface_radio_set_wds_encryption_type(DBusConnection *c
 								DBUS_TYPE_UINT32,&type,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -44908,14 +44914,14 @@ DBusMessage * wid_dbus_interface_radio_set_wds_encryption_type(DBusConnection *c
 								}
 							//memset(command, 0, 80);
 							sprintf(command,"set cipher %s",buf);
-							printf("%s\n",command);
+							wid_syslog_debug_debug(WID_DEFAULT,"%s\n",command);
 							wid_radio_set_extension_command(ID/L_RADIO_NUM,command);
 						}
 				}
 		}
 	else if(TYPE == 1)
 		{
-			printf("******** type == 1 *****\n");
+			wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 			if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL))
 				{
 					tmp = WTP_GROUP[ID]->WTP_M;
@@ -44938,8 +44944,8 @@ DBusMessage * wid_dbus_interface_radio_set_wds_encryption_type(DBusConnection *c
 								{								
 									for(i=0;i<AC_WTP[tmp->WTPID]->RadioCount;i++)
 									{
-										printf("wtpid = %d\n",tmp->WTPID);
-										printf("radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
+										wid_syslog_debug_debug(WID_DEFAULT,"wtpid = %d\n",tmp->WTPID);
+										wid_syslog_debug_debug(WID_DEFAULT,"radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
 
 										if(AC_WTP[tmp->WTPID]->WTP_Radio[i]== NULL)
 											{
@@ -44969,7 +44975,7 @@ DBusMessage * wid_dbus_interface_radio_set_wds_encryption_type(DBusConnection *c
 															}
 														//memset(command, 0, 80);
 														sprintf(command,"set cipher %s",buf);
-														printf("%s\n",command);
+														wid_syslog_debug_debug(WID_DEFAULT,"%s\n",command);
 														wid_radio_set_extension_command(tmp->WTPID,command);
 														wid_syslog_debug_debug(WID_DEFAULT,"WTP%d radio%d set wds encryption type successful\n",tmp->WTPID,AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
 													}
@@ -45005,7 +45011,7 @@ DBusMessage * wid_dbus_interface_radio_set_wds_encryption_type(DBusConnection *c
 				dbus_message_iter_append_basic (&iter,
 													 DBUS_TYPE_UINT32,
 											 &num);
-				printf("num = %d\n",num);		
+				wid_syslog_debug_debug(WID_DEFAULT,"num = %d\n",num);		
 				for(i = 0; i < num; i++)
 					{
 						dbus_message_iter_append_basic (&iter,
@@ -45047,10 +45053,10 @@ DBusMessage * wid_dbus_interface_radio_set_wds_encryption_type(DBusConnection *c
 								DBUS_TYPE_UINT32,&type,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -45073,7 +45079,7 @@ DBusMessage * wid_dbus_interface_radio_set_wds_encryption_type(DBusConnection *c
 			}
 			memset(command, 0, 80);
 			sprintf(command,"set cipher %s",buf);
-			printf("%s\n",command);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s\n",command);
 			wid_radio_set_extension_command(RadioID/L_RADIO_NUM,command);
 		}
 	}
@@ -45125,10 +45131,10 @@ DBusMessage * wid_dbus_interface_radio_set_wds_aes_key(DBusConnection *conn, DBu
 								DBUS_TYPE_BYTE,&mac[5],
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -45150,14 +45156,14 @@ DBusMessage * wid_dbus_interface_radio_set_wds_aes_key(DBusConnection *conn, DBu
 						{
 							memset(command, 0, 80);
 							sprintf(command,"set bridgekey %02x:%02x:%02x:%02x:%02x:%02x %s",mac[0],mac[1],mac[2],mac[3],mac[4],mac[5], key);
-							printf("%s\n",command);
+							wid_syslog_debug_debug(WID_DEFAULT,"%s\n",command);
 							wid_radio_set_extension_command(ID/L_RADIO_NUM,command);
 						}
 				}
 		}
 	else if(type == 1)
 		{
-			printf("******** type == 1 *****\n");
+			wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 			if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL))
 				{
 					tmp = WTP_GROUP[ID]->WTP_M;
@@ -45180,8 +45186,8 @@ DBusMessage * wid_dbus_interface_radio_set_wds_aes_key(DBusConnection *conn, DBu
 								{								
 									for(i=0;i<AC_WTP[tmp->WTPID]->RadioCount;i++)
 									{
-										printf("wtpid = %d\n",tmp->WTPID);
-										printf("radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
+										wid_syslog_debug_debug(WID_DEFAULT,"wtpid = %d\n",tmp->WTPID);
+										wid_syslog_debug_debug(WID_DEFAULT,"radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
 
 										if(AC_WTP[tmp->WTPID]->WTP_Radio[i]== NULL)
 											{
@@ -45199,7 +45205,7 @@ DBusMessage * wid_dbus_interface_radio_set_wds_aes_key(DBusConnection *conn, DBu
 													{
 														memset(command, 0, 80);
 														sprintf(command,"set bridgekey %02x:%02x:%02x:%02x:%02x:%02x %s",mac[0],mac[1],mac[2],mac[3],mac[4],mac[5], key);
-														printf("%s\n",command);
+														wid_syslog_debug_debug(WID_DEFAULT,"%s\n",command);
 														wid_radio_set_extension_command(tmp->WTPID,command);
 														wid_syslog_debug_debug(WID_DEFAULT,"WTP%d radio%d set wds aes key successful\n",tmp->WTPID,AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
 														ret2 = 0;
@@ -45235,7 +45241,7 @@ DBusMessage * wid_dbus_interface_radio_set_wds_aes_key(DBusConnection *conn, DBu
 				dbus_message_iter_append_basic (&iter,
 													 DBUS_TYPE_UINT32,
 											 &num);
-				printf("num = %d\n",num);		
+				wid_syslog_debug_debug(WID_DEFAULT,"num = %d\n",num);		
 				for(i = 0; i < num; i++)
 					{
 						dbus_message_iter_append_basic (&iter,
@@ -45279,10 +45285,10 @@ DBusMessage * wid_dbus_interface_radio_set_wds_aes_key(DBusConnection *conn, DBu
 								DBUS_TYPE_BYTE,&mac[5],
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -45296,7 +45302,7 @@ DBusMessage * wid_dbus_interface_radio_set_wds_aes_key(DBusConnection *conn, DBu
 		if(ret == 0){
 			memset(command, 0, 80);
 			sprintf(command,"set bridgekey %02x:%02x:%02x:%02x:%02x:%02x %s",mac[0],mac[1],mac[2],mac[3],mac[4],mac[5], key);
-			printf("%s\n",command);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s\n",command);
 			wid_radio_set_extension_command(RadioID/L_RADIO_NUM,command);
 		}
 	}
@@ -45343,10 +45349,10 @@ DBusMessage * wid_dbus_interface_radio_set_status(DBusConnection *conn, DBusMess
 								DBUS_TYPE_BYTE,&status,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -45364,7 +45370,7 @@ DBusMessage * wid_dbus_interface_radio_set_status(DBusConnection *conn, DBusMess
 		}
 	else if(type == 1)
 		{
-			printf("******** type == 1 *****\n");
+			wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 			if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL))
 				{
 					tmp = WTP_GROUP[ID]->WTP_M;
@@ -45387,8 +45393,8 @@ DBusMessage * wid_dbus_interface_radio_set_status(DBusConnection *conn, DBusMess
 								{								
 									for(i=0;i<AC_WTP[tmp->WTPID]->RadioCount;i++)
 									{
-										printf("wtpid = %d\n",tmp->WTPID);
-										printf("radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
+										wid_syslog_debug_debug(WID_DEFAULT,"wtpid = %d\n",tmp->WTPID);
+										wid_syslog_debug_debug(WID_DEFAULT,"radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
 
 										if(AC_WTP[tmp->WTPID]->WTP_Radio[i] == NULL)
 											{
@@ -45431,7 +45437,7 @@ DBusMessage * wid_dbus_interface_radio_set_status(DBusConnection *conn, DBusMess
 				dbus_message_iter_append_basic (&iter,
 													 DBUS_TYPE_UINT32,
 											 &num);
-				printf("num = %d\n",num);		
+				wid_syslog_debug_debug(WID_DEFAULT,"num = %d\n",num);		
 				for(i = 0; i < num; i++)
 					{
 						dbus_message_iter_append_basic (&iter,
@@ -45468,10 +45474,10 @@ DBusMessage * wid_dbus_interface_radio_set_status(DBusConnection *conn, DBusMess
 								DBUS_TYPE_BYTE,&status,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -45525,10 +45531,10 @@ DBusMessage * wid_dbus_interface_radio_set_wds_status(DBusConnection *conn, DBus
 								DBUS_TYPE_BYTE,&status,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -45546,7 +45552,7 @@ DBusMessage * wid_dbus_interface_radio_set_wds_status(DBusConnection *conn, DBus
 		}
 	else if(type == 1)
 		{
-			printf("******** type == 1 *****\n");
+			wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 			if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL))
 				{
 					tmp = WTP_GROUP[ID]->WTP_M;
@@ -45569,8 +45575,8 @@ DBusMessage * wid_dbus_interface_radio_set_wds_status(DBusConnection *conn, DBus
 								{								
 									for(i=0;i<AC_WTP[tmp->WTPID]->RadioCount;i++)
 									{
-										printf("wtpid = %d\n",tmp->WTPID);
-										printf("radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
+										wid_syslog_debug_debug(WID_DEFAULT,"wtpid = %d\n",tmp->WTPID);
+										wid_syslog_debug_debug(WID_DEFAULT,"radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
 
 										if(AC_WTP[tmp->WTPID]->WTP_Radio[i] == NULL)
 											{
@@ -45613,7 +45619,7 @@ DBusMessage * wid_dbus_interface_radio_set_wds_status(DBusConnection *conn, DBus
 				dbus_message_iter_append_basic (&iter,
 													 DBUS_TYPE_UINT32,
 											 &num);
-				printf("num = %d\n",num);		
+				wid_syslog_debug_debug(WID_DEFAULT,"num = %d\n",num);		
 				for(i = 0; i < num; i++)
 					{
 						dbus_message_iter_append_basic (&iter,
@@ -45650,10 +45656,10 @@ DBusMessage * wid_dbus_interface_radio_set_wds_status(DBusConnection *conn, DBus
 								DBUS_TYPE_BYTE,&status,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -45706,10 +45712,10 @@ DBusMessage * wid_dbus_interface_radio_set_preamble(DBusConnection *conn, DBusMe
 								DBUS_TYPE_BYTE,&preamble,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -45727,7 +45733,7 @@ DBusMessage * wid_dbus_interface_radio_set_preamble(DBusConnection *conn, DBusMe
 		}
 	else if(type == 1)
 		{
-			printf("******** type == 1 *****\n");
+			wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 			if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL))
 				{
 					tmp = WTP_GROUP[ID]->WTP_M;
@@ -45750,8 +45756,8 @@ DBusMessage * wid_dbus_interface_radio_set_preamble(DBusConnection *conn, DBusMe
 								{								
 									for(i=0;i<AC_WTP[tmp->WTPID]->RadioCount;i++)
 									{
-										printf("wtpid = %d\n",tmp->WTPID);
-										printf("radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
+										wid_syslog_debug_debug(WID_DEFAULT,"wtpid = %d\n",tmp->WTPID);
+										wid_syslog_debug_debug(WID_DEFAULT,"radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
 
 										if(AC_WTP[tmp->WTPID]->WTP_Radio[i] == NULL)
 											{
@@ -45794,7 +45800,7 @@ DBusMessage * wid_dbus_interface_radio_set_preamble(DBusConnection *conn, DBusMe
 				dbus_message_iter_append_basic (&iter,
 													 DBUS_TYPE_UINT32,
 											 &num);
-				printf("num = %d\n",num);		
+				wid_syslog_debug_debug(WID_DEFAULT,"num = %d\n",num);		
 				for(i = 0; i < num; i++)
 					{
 						dbus_message_iter_append_basic (&iter,
@@ -45828,10 +45834,10 @@ DBusMessage * wid_dbus_interface_radio_set_preamble(DBusConnection *conn, DBusMe
 								DBUS_TYPE_BYTE,&preamble,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -45884,10 +45890,10 @@ DBusMessage * wid_dbus_interface_radio_set_shortretry(DBusConnection *conn, DBus
 								DBUS_TYPE_BYTE,&shortretry,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -45906,7 +45912,7 @@ DBusMessage * wid_dbus_interface_radio_set_shortretry(DBusConnection *conn, DBus
 		}
 	else if(type == 1)
 		{
-			printf("******** type == 1 *****\n");
+			wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 			if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL))
 				{
 					tmp = WTP_GROUP[ID]->WTP_M;
@@ -45929,8 +45935,8 @@ DBusMessage * wid_dbus_interface_radio_set_shortretry(DBusConnection *conn, DBus
 								{								
 									for(i=0;i<AC_WTP[tmp->WTPID]->RadioCount;i++)
 									{
-										printf("wtpid = %d\n",tmp->WTPID);
-										printf("radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
+										wid_syslog_debug_debug(WID_DEFAULT,"wtpid = %d\n",tmp->WTPID);
+										wid_syslog_debug_debug(WID_DEFAULT,"radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
 
 										if(AC_WTP[tmp->WTPID]->WTP_Radio[i] == NULL)
 											{
@@ -45973,7 +45979,7 @@ DBusMessage * wid_dbus_interface_radio_set_shortretry(DBusConnection *conn, DBus
 				dbus_message_iter_append_basic (&iter,
 													 DBUS_TYPE_UINT32,
 											 &num);
-				printf("num = %d\n",num);		
+				wid_syslog_debug_debug(WID_DEFAULT,"num = %d\n",num);		
 				for(i = 0; i < num; i++)
 					{
 						dbus_message_iter_append_basic (&iter,
@@ -46008,10 +46014,10 @@ DBusMessage * wid_dbus_interface_radio_set_shortretry(DBusConnection *conn, DBus
 								DBUS_TYPE_BYTE,&shortretry,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -46063,10 +46069,10 @@ DBusMessage * wid_dbus_interface_radio_set_longretry(DBusConnection *conn, DBusM
 								DBUS_TYPE_BYTE,&longretry,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -46084,7 +46090,7 @@ DBusMessage * wid_dbus_interface_radio_set_longretry(DBusConnection *conn, DBusM
 		}
 	else if(type == 1)
 		{
-			printf("******** type == 1 *****\n");
+			wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 			if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL))
 				{
 					tmp = WTP_GROUP[ID]->WTP_M;
@@ -46107,8 +46113,8 @@ DBusMessage * wid_dbus_interface_radio_set_longretry(DBusConnection *conn, DBusM
 								{								
 									for(i=0;i<AC_WTP[tmp->WTPID]->RadioCount;i++)
 									{
-										printf("wtpid = %d\n",tmp->WTPID);
-										printf("radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
+										wid_syslog_debug_debug(WID_DEFAULT,"wtpid = %d\n",tmp->WTPID);
+										wid_syslog_debug_debug(WID_DEFAULT,"radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
 
 										if(AC_WTP[tmp->WTPID]->WTP_Radio[i] == NULL)
 											{
@@ -46151,7 +46157,7 @@ DBusMessage * wid_dbus_interface_radio_set_longretry(DBusConnection *conn, DBusM
 				dbus_message_iter_append_basic (&iter,
 													 DBUS_TYPE_UINT32,
 											 &num);
-				printf("num = %d\n",num);		
+				wid_syslog_debug_debug(WID_DEFAULT,"num = %d\n",num);		
 				for(i = 0; i < num; i++)
 					{
 						dbus_message_iter_append_basic (&iter,
@@ -46190,10 +46196,10 @@ DBusMessage * wid_dbus_interface_radio_set_longretry(DBusConnection *conn, DBusM
 								DBUS_TYPE_BYTE,&longretry,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -46278,7 +46284,7 @@ DBusMessage *wid_dbus_radio_wlan_wds_mac_op(DBusConnection *conn, DBusMessage *m
 		}
 	else if(type == 1)
 		{
-			printf("******** type == 1 *****\n");
+			wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 			if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL))
 				{
 					tmp = WTP_GROUP[ID]->WTP_M;
@@ -46302,8 +46308,8 @@ DBusMessage *wid_dbus_radio_wlan_wds_mac_op(DBusConnection *conn, DBusMessage *m
 								{								
 									for(i=0;i<AC_WTP[tmp->WTPID]->RadioCount;i++)
 									{
-										printf("wtpid = %d\n",tmp->WTPID);
-										printf("radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
+										wid_syslog_debug_debug(WID_DEFAULT,"wtpid = %d\n",tmp->WTPID);
+										wid_syslog_debug_debug(WID_DEFAULT,"radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
 
 										if(AC_WLAN[wlanid] == NULL)
 											{
@@ -46345,7 +46351,7 @@ DBusMessage *wid_dbus_radio_wlan_wds_mac_op(DBusConnection *conn, DBusMessage *m
 				dbus_message_iter_append_basic (&iter,
 													 DBUS_TYPE_UINT32,
 											 &num);
-				printf("num = %d\n",num);		
+				wid_syslog_debug_debug(WID_DEFAULT,"num = %d\n",num);		
 				for(i = 0; i < num; i++)
 					{
 						dbus_message_iter_append_basic (&iter,
@@ -46455,10 +46461,10 @@ DBusMessage * wid_dbus_interface_show_wds_bssid_list(DBusConnection *conn, DBusM
 								DBUS_TYPE_UINT32,&RadioID,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		CW_FREE_OBJECT_WID(bssid);
@@ -46490,7 +46496,7 @@ DBusMessage * wid_dbus_interface_show_wds_bssid_list(DBusConnection *conn, DBusM
 			num++;
 			wds = wds->next;
 		}
-		printf("wds bssid num %d\n",num);
+		wid_syslog_debug_debug(WID_DEFAULT,"wds bssid num %d\n",num);
 		reply = dbus_message_new_method_return(msg);
 			
 		dbus_message_iter_init_append (reply, &iter);
@@ -46572,10 +46578,10 @@ DBusMessage *wid_dbus_interface_qos_add_del_qos(DBusConnection *conn, DBusMessag
 								DBUS_TYPE_STRING,&QosName,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -46688,10 +46694,10 @@ DBusMessage *wid_dbus_interface_delete_radio_with_qos_profile(DBusConnection *co
 								DBUS_TYPE_UINT32,&QosID,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -46742,10 +46748,10 @@ DBusMessage * wid_dbus_interface_qos_show_qos(DBusConnection *conn, DBusMessage 
 								DBUS_TYPE_UINT32,&QOSID,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -46923,10 +46929,10 @@ DBusMessage * wid_dbus_interface_show_radio_apply_qos(DBusConnection *conn, DBus
 								DBUS_TYPE_UINT32,&L_RADIOID,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -46934,7 +46940,7 @@ DBusMessage * wid_dbus_interface_show_radio_apply_qos(DBusConnection *conn, DBus
 	RadioID = WTPID*4+L_RADIOID;
 	if((AC_RADIO[RadioID] != NULL)&&(AC_RADIO[RadioID]->QOSID != 0)){
 		qosID = AC_RADIO[RadioID]->QOSID;
-printf("qosID is %d,\n",qosID);
+wid_syslog_debug_debug(WID_DEFAULT,"qosID is %d,\n",qosID);
 	}
 	
 	if(AC_WTP[WTPID] == NULL){
@@ -47057,10 +47063,10 @@ DBusMessage * wid_dbus_interface_qos(DBusConnection *conn, DBusMessage *msg, voi
 								DBUS_TYPE_UINT32,&qosID,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -47100,10 +47106,10 @@ DBusMessage * wid_dbus_interface_qos_set_qos_info(DBusConnection *conn, DBusMess
 								DBUS_TYPE_UINT16,&txoplimit,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -47152,10 +47158,10 @@ DBusMessage * wid_dbus_interface_qos_set_qos_info_client(DBusConnection *conn, D
 								DBUS_TYPE_UINT16,&txoplimit,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -47210,10 +47216,10 @@ DBusMessage * wid_dbus_interface_radio_apply_qos(DBusConnection *conn, DBusMessa
 								DBUS_TYPE_UINT32,&qosID,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -47239,7 +47245,7 @@ DBusMessage * wid_dbus_interface_radio_apply_qos(DBusConnection *conn, DBusMessa
 		}
 	else if(type == 1)
 		{
-			printf("******** type == 1 *****\n");
+			wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 			if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL))
 				{
 					tmp = WTP_GROUP[ID]->WTP_M;
@@ -47262,8 +47268,8 @@ DBusMessage * wid_dbus_interface_radio_apply_qos(DBusConnection *conn, DBusMessa
 								{								
 									for(i=0;i<AC_WTP[tmp->WTPID]->RadioCount;i++)
 									{
-										printf("wtpid = %d\n",tmp->WTPID);
-										printf("radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
+										wid_syslog_debug_debug(WID_DEFAULT,"wtpid = %d\n",tmp->WTPID);
+										wid_syslog_debug_debug(WID_DEFAULT,"radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
 
 										if(AC_WTP[tmp->WTPID]->WTP_Radio[i] == NULL)
 											{
@@ -47314,7 +47320,7 @@ DBusMessage * wid_dbus_interface_radio_apply_qos(DBusConnection *conn, DBusMessa
 				dbus_message_iter_append_basic (&iter,
 													 DBUS_TYPE_UINT32,
 											 &num);
-				printf("num = %d\n",num);		
+				wid_syslog_debug_debug(WID_DEFAULT,"num = %d\n",num);		
 				for(i = 0; i < num; i++)
 					{
 						dbus_message_iter_append_basic (&iter,
@@ -47351,10 +47357,10 @@ DBusMessage * wid_dbus_interface_radio_apply_qos(DBusConnection *conn, DBusMessa
 								DBUS_TYPE_UINT32,&qosID,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -47419,10 +47425,10 @@ DBusMessage * wid_dbus_interface_radio_delete_qos(DBusConnection *conn, DBusMess
 								DBUS_TYPE_UINT32,&qosID,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -47460,7 +47466,7 @@ DBusMessage * wid_dbus_interface_radio_delete_qos(DBusConnection *conn, DBusMess
 		}
 	else if(type == 1)
 		{
-			printf("******** type == 1 *****\n");
+			wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 			if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL))
 				{
 					tmp = WTP_GROUP[ID]->WTP_M;
@@ -47483,8 +47489,8 @@ DBusMessage * wid_dbus_interface_radio_delete_qos(DBusConnection *conn, DBusMess
 								{								
 									for(i=0;i<AC_WTP[tmp->WTPID]->RadioCount;i++)
 									{
-										printf("wtpid = %d\n",tmp->WTPID);
-										printf("radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
+										wid_syslog_debug_debug(WID_DEFAULT,"wtpid = %d\n",tmp->WTPID);
+										wid_syslog_debug_debug(WID_DEFAULT,"radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
 
 										if(AC_WTP[tmp->WTPID]->WTP_Radio[i] == NULL)
 											{
@@ -47549,7 +47555,7 @@ DBusMessage * wid_dbus_interface_radio_delete_qos(DBusConnection *conn, DBusMess
 				dbus_message_iter_append_basic (&iter,
 													 DBUS_TYPE_UINT32,
 											 &num);
-				printf("num = %d\n",num);		
+				wid_syslog_debug_debug(WID_DEFAULT,"num = %d\n",num);		
 				for(i = 0; i < num; i++)
 					{
 						dbus_message_iter_append_basic (&iter,
@@ -47588,10 +47594,10 @@ DBusMessage * wid_dbus_interface_radio_delete_qos(DBusConnection *conn, DBusMess
 								DBUS_TYPE_UINT32,&qosID,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -47656,10 +47662,10 @@ DBusMessage * wid_dbus_interface_qos_set_qos_map(DBusConnection *conn, DBusMessa
 								DBUS_TYPE_UINT32,&able,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -47718,10 +47724,10 @@ DBusMessage * wid_dbus_interface_qos_set_qos_wmm_map_dot1p(DBusConnection *conn,
 								DBUS_TYPE_BYTE,&dot1p,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -47872,10 +47878,10 @@ DBusMessage * wid_dbus_interface_qos_show_qos_extension_info(DBusConnection *con
 								DBUS_TYPE_UINT32,&QOSID,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		CW_FREE_OBJECT_WID(manage_name);
@@ -48051,10 +48057,10 @@ DBusMessage * wid_dbus_interface_set_qos_total_bandwidth(DBusConnection *conn, D
 								DBUS_TYPE_BYTE,&bandwidth,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -48096,10 +48102,10 @@ DBusMessage * wid_dbus_interface_set_qos_flow_parameter_value(DBusConnection *co
 								DBUS_TYPE_UINT32,&value,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -48141,10 +48147,10 @@ DBusMessage * wid_dbus_interface_set_qos_flow_parameter_value_v2(DBusConnection 
 								DBUS_TYPE_UINT32,&value,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -48187,10 +48193,10 @@ DBusMessage * wid_dbus_interface_set_qos_flow_able_value(DBusConnection *conn, D
 								DBUS_TYPE_UINT32,&type,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -48236,10 +48242,10 @@ DBusMessage * wid_dbus_interface_set_qos_flow_able_value_v2(DBusConnection *conn
 								//DBUS_TYPE_UINT32,&value,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -48280,10 +48286,10 @@ DBusMessage * wid_dbus_interface_set_qos_parameter_value(DBusConnection *conn, D
 								DBUS_TYPE_UINT32,&value,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -48323,10 +48329,10 @@ DBusMessage * wid_dbus_interface_set_qos_policy_used(DBusConnection *conn, DBusM
 								DBUS_TYPE_BYTE,&used,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -48379,10 +48385,10 @@ DBusMessage * wid_dbus_interface_set_qos_policy_name(DBusConnection *conn, DBusM
 								DBUS_TYPE_STRING,&name,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -48433,10 +48439,10 @@ DBusMessage * 	wid_dbus_interface_set_qos_manage_arithmetic_name(DBusConnection 
 								DBUS_TYPE_STRING,&name,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -48492,10 +48498,10 @@ DBusMessage * wid_dbus_interface_radio_set_max_throughout(DBusConnection *conn, 
 								DBUS_TYPE_BYTE,&bandwidth,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -48514,7 +48520,7 @@ DBusMessage * wid_dbus_interface_radio_set_max_throughout(DBusConnection *conn, 
 		}
 	else if(type == 1)
 		{
-			printf("******** type == 1 *****\n");
+			wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 			if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL))
 				{
 					tmp = WTP_GROUP[ID]->WTP_M;
@@ -48537,8 +48543,8 @@ DBusMessage * wid_dbus_interface_radio_set_max_throughout(DBusConnection *conn, 
 								{								
 									for(i=0;i<AC_WTP[tmp->WTPID]->RadioCount;i++)
 									{
-										printf("wtpid = %d\n",tmp->WTPID);
-										printf("radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
+										wid_syslog_debug_debug(WID_DEFAULT,"wtpid = %d\n",tmp->WTPID);
+										wid_syslog_debug_debug(WID_DEFAULT,"radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
 
 										if(AC_WTP[tmp->WTPID]->WTP_Radio[i]!= NULL)
 											{
@@ -48580,7 +48586,7 @@ DBusMessage * wid_dbus_interface_radio_set_max_throughout(DBusConnection *conn, 
 				dbus_message_iter_append_basic (&iter,
 													 DBUS_TYPE_UINT32,
 											 &num);
-				printf("num = %d\n",num);		
+				wid_syslog_debug_debug(WID_DEFAULT,"num = %d\n",num);		
 				for(i = 0; i < num; i++)
 					{
 						dbus_message_iter_append_basic (&iter,
@@ -48617,10 +48623,10 @@ DBusMessage * wid_dbus_interface_radio_set_max_throughout(DBusConnection *conn, 
 								DBUS_TYPE_BYTE,&bandwidth,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -48673,10 +48679,10 @@ DBusMessage * wid_dbus_interface_set_ap_max_throughout(DBusConnection *conn, DBu
 								DBUS_TYPE_BYTE,&bandwidth,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -48703,7 +48709,7 @@ DBusMessage * wid_dbus_interface_set_ap_max_throughout(DBusConnection *conn, DBu
 	}
 
 	else if (type == 1){
-		printf("******** type == 1 *****\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 		if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL)){
 			tmp = WTP_GROUP[ID]->WTP_M;
 			wtp_head = (struct Wtp_List *)WID_MALLOC(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
@@ -48782,10 +48788,10 @@ DBusMessage * wid_dbus_interface_set_ap_max_throughout(DBusConnection *conn, DBu
 								DBUS_TYPE_BYTE,&bandwidth,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -48840,10 +48846,10 @@ DBusMessage * wid_dbus_interface_set_ap_extension_command(DBusConnection *conn, 
 								DBUS_TYPE_STRING,&command,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -48862,7 +48868,7 @@ DBusMessage * wid_dbus_interface_set_ap_extension_command(DBusConnection *conn, 
 			}
 		}
 	else if (type == 1){
-		printf("******** type == 1 *****\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 		if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL)){
 			tmp = WTP_GROUP[ID]->WTP_M;
 			wtp_head = (struct Wtp_List *)WID_MALLOC(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
@@ -48998,10 +49004,10 @@ DBusMessage * wid_dbus_interface_set_ap_extension_command(DBusConnection *conn, 
 								DBUS_TYPE_STRING,&command,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -49042,10 +49048,10 @@ DBusMessage * wid_dbus_interface_set_ap_option60_parameter(DBusConnection *conn,
 								DBUS_TYPE_STRING,&parameter,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -49096,7 +49102,7 @@ DBusMessage * wid_dbus_tcpdump_command(DBusConnection *conn, DBusMessage *msg, v
 	int ret = WID_DBUS_SUCCESS;
 	int ret2 = WID_DBUS_SUCCESS;
 	int ret_check = WID_DBUS_SUCCESS;
-	printf("dfdfdfdfdfdfdf\n");
+	wid_syslog_debug_debug(WID_DEFAULT,"dfdfdfdfdfdfdf\n");
 	struct Wtp_List * wtp_head =NULL;
 	struct WTP_GROUP_MEMBER *tmp = NULL;
 	sockfd = socket(AF_INET, SOCK_DGRAM, 0);
@@ -49108,10 +49114,10 @@ DBusMessage * wid_dbus_tcpdump_command(DBusConnection *conn, DBusMessage *msg, v
 								DBUS_TYPE_STRING,&command,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -49120,7 +49126,7 @@ DBusMessage * wid_dbus_tcpdump_command(DBusConnection *conn, DBusMessage *msg, v
 	//len = strlen(command)+1;
 	//memset(tmpcommand,0,len);
 	//memcpy(tmpcommand,command,len-1);
-	printf("command = %s\n",command);
+	wid_syslog_debug_debug(WID_DEFAULT,"command = %s\n",command);
 	
 if(type==0)
   {
@@ -49139,7 +49145,7 @@ if(type==0)
 	//command=strcat(buffer1,strcat(command,buffer));
 	buffer1command=strcat(buffer1,strcat(buffercommand,buffer));
 	if(strlen(buffer1command) > 256){
-			printf("access type0\n");
+			wid_syslog_debug_debug(WID_DEFAULT,"access type0\n");
 			ret = WID_ILLEGAL_INPUT;
 			reply = dbus_message_new_method_return(msg);
 			dbus_message_iter_init_append(reply, &iter);
@@ -49184,7 +49190,7 @@ if(type==0)
 else if (type == 1)
 	{
 	
-		printf("******** type == 1 *****\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 		if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL))
 			{
 				tmp = WTP_GROUP[ID]->WTP_M;
@@ -49193,8 +49199,8 @@ else if (type == 1)
 				{
 					return NULL;
 				}
-				printf("access type1\n");
-				printf("strlen:%d\n",(strlen(command)+1));
+				wid_syslog_debug_debug(WID_DEFAULT,"access type1\n");
+				wid_syslog_debug_debug(WID_DEFAULT,"strlen:%d\n",(strlen(command)+1));
 
 		while(tmp)
 			{
@@ -49208,16 +49214,16 @@ else if (type == 1)
 				//buffercommand = command;
 				//buffercommand = (char *)WID_MALLOC(strlen(command)+1);
 				//if(buffercommand == NULL){
-				//	printf("buffercommand:%p\n",buffercommand);
+				//	wid_syslog_debug_debug(WID_DEFAULT,"buffercommand:%p\n",buffercommand);
 				//}
 				memset(buffercommand,0,strlen(command)+1);
 				memcpy(buffercommand,command,strlen(command));
-				printf("command =%s \n",command);
-				printf("buffercommand = %s \n",buffercommand);
+				wid_syslog_debug_debug(WID_DEFAULT,"command =%s \n",command);
+				wid_syslog_debug_debug(WID_DEFAULT,"buffercommand = %s \n",buffercommand);
 				ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
-				printf("tmp->WTPID = %d\n",tmp->WTPID);
+				wid_syslog_debug_debug(WID_DEFAULT,"tmp->WTPID = %d\n",tmp->WTPID);
 
-				printf("retcheck = %d\n",ret_check);
+				wid_syslog_debug_debug(WID_DEFAULT,"retcheck = %d\n",ret_check);
 			
 				if(ret_check == WID_DBUS_SUCCESS)
 					{
@@ -49231,11 +49237,11 @@ else if (type == 1)
 							}
 						sprintf(buffer," -w /tmp/wtp%d.pcap && cd /tmp && tftp -pl wtp%d.pcap %s&",tmp->WTPID,tmp->WTPID,inet_ntoa(((struct sockaddr_in*)(&ifr.ifr_addr))->sin_addr));
 						sprintf(buffer1,"tcpdump ");
-						printf("buffer = %s\n",buffer);
-						printf("buffer1 = %s\n",buffer1);
+						wid_syslog_debug_debug(WID_DEFAULT,"buffer = %s\n",buffer);
+						wid_syslog_debug_debug(WID_DEFAULT,"buffer1 = %s\n",buffer1);
 						buffer1command=strcat(buffer1,strcat(buffercommand,buffer));
-						printf("buffer1command = %s\n",buffer1command);
-						printf("buffercommand = %s\n",buffercommand);
+						wid_syslog_debug_debug(WID_DEFAULT,"buffer1command = %s\n",buffer1command);
+						wid_syslog_debug_debug(WID_DEFAULT,"buffercommand = %s\n",buffercommand);
 						if(strlen(buffer1command) > 256)
 							{
 								ret = WID_ILLEGAL_INPUT;
@@ -49249,12 +49255,12 @@ else if (type == 1)
 							{	
 								//memset(buffer2,0,256);
 		    					sprintf(buffer2, "cd /mnt/wtp/&&touch wtp%d.pcap&&chmod 666 wtp%d.pcap",tmp->WTPID,tmp->WTPID);
-								printf("buffer2 = %s\n",buffer2);
+								wid_syslog_debug_debug(WID_DEFAULT,"buffer2 = %s\n",buffer2);
 		    					sysState = system(buffer2);
-								printf("after system\n");
+								wid_syslog_debug_debug(WID_DEFAULT,"after system\n");
 				
     							sysErrorCode = WEXITSTATUS(sysState);
-								printf("after WEXITSTATUS,sysErrorCode=%d\n",sysErrorCode);
+								wid_syslog_debug_debug(WID_DEFAULT,"after WEXITSTATUS,sysErrorCode=%d\n",sysErrorCode);
 								if(0==sysErrorCode)
 									{
 										if(AC_WTP[tmp->WTPID] != NULL)
@@ -49380,10 +49386,10 @@ DBusMessage * wid_dbus_tcpdump_command(DBusConnection *conn, DBusMessage *msg, v
 								DBUS_TYPE_STRING,&command,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -49486,15 +49492,15 @@ DBusMessage * wid_dbus_interface_set_ap_ip_gateway(DBusConnection *conn, DBusMes
 								DBUS_TYPE_UINT32,&gateway,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
 	}
-	printf("ip %d gateway %d mask %d\n",ip,gateway,mask);
+	wid_syslog_debug_debug(WID_DEFAULT,"ip %d gateway %d mask %d\n",ip,gateway,mask);
 	fstdns = gateway;//12.17chenjun
 	snddns = gateway;//12.17chenjun
 	//process the parameter
@@ -49548,10 +49554,10 @@ DBusMessage * wid_dbus_interface_set_ap_ip_gateway_dns(DBusConnection *conn, DBu
 								DBUS_TYPE_UINT32,&snddns,								
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -49571,7 +49577,7 @@ DBusMessage * wid_dbus_interface_set_ap_ip_gateway_dns(DBusConnection *conn, DBu
 		}
 	
 	else if (type == 1){
-		printf("******** type == 1 *****\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 		if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL)){
 			tmp = WTP_GROUP[ID]->WTP_M;
 			wtp_head = (struct Wtp_List *)WID_MALLOC(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
@@ -49665,10 +49671,10 @@ DBusMessage * wid_dbus_interface_set_ap_ip_gateway_dns(DBusConnection *conn, DBu
 								DBUS_TYPE_UINT32,&snddns,								
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -49718,10 +49724,10 @@ DBusMessage * wid_dbus_interface_update_ap_config(DBusConnection *conn, DBusMess
 								DBUS_TYPE_STRING,&ip,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -49740,7 +49746,7 @@ if(type==0)
 }
 
 else if (type == 1){
-	printf("******** type == 1 *****\n");
+	wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 	if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL)){
 		tmp = WTP_GROUP[ID]->WTP_M;
 		wtp_head = (struct Wtp_List *)WID_MALLOC(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
@@ -49779,7 +49785,7 @@ else if (type == 1){
 		ret = GROUP_ID_NOT_EXIST;
 	}
 }
-printf("num =  %d\n",num);
+wid_syslog_debug_debug(WID_DEFAULT,"num =  %d\n",num);
 reply = dbus_message_new_method_return(msg);
 
 dbus_message_iter_init_append(reply, &iter);
@@ -49831,10 +49837,10 @@ DBusMessage * wid_dbus_interface_update_ap_config(DBusConnection *conn, DBusMess
 								DBUS_TYPE_STRING,&ip,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -49874,10 +49880,10 @@ DBusMessage * wid_dbus_interface_show_wtp_runtime(DBusConnection *conn, DBusMess
 								DBUS_TYPE_UINT32,&wtpid,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -49888,7 +49894,7 @@ DBusMessage * wid_dbus_interface_show_wtp_runtime(DBusConnection *conn, DBusMess
 	
 	if(ret != WID_DBUS_SUCCESS)
 	{
-		printf("WTP_ID_LARGE_THAN_MAX \n");
+		wid_syslog_debug_debug(WID_DEFAULT,"WTP_ID_LARGE_THAN_MAX \n");
 	}
 	else if(AC_WTP[wtpid] == NULL)
 	{
@@ -50025,10 +50031,10 @@ DBusMessage * wid_dbus_interface_set_wtp_location(DBusConnection *conn, DBusMess
 								DBUS_TYPE_STRING,&location,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -50064,7 +50070,7 @@ DBusMessage * wid_dbus_interface_set_wtp_location(DBusConnection *conn, DBusMess
 		}
 
 	else if (type == 1){
-		printf("******** type == 1 *****\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 		if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL)){
 			tmp = WTP_GROUP[ID]->WTP_M;
 			wtp_head = (struct Wtp_List *)WID_MALLOC(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
@@ -50129,7 +50135,7 @@ DBusMessage * wid_dbus_interface_set_wtp_location(DBusConnection *conn, DBusMess
 			ret = GROUP_ID_NOT_EXIST;
 		}
 	}
-	printf("num =  %d\n",num);
+	wid_syslog_debug_debug(WID_DEFAULT,"num =  %d\n",num);
 	reply = dbus_message_new_method_return(msg);
 	
 	dbus_message_iter_init_append(reply, &iter);
@@ -50178,10 +50184,10 @@ DBusMessage * wid_dbus_interface_set_wtp_location(DBusConnection *conn, DBusMess
 								DBUS_TYPE_STRING,&location,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -50234,10 +50240,10 @@ DBusMessage * wid_dbus_interface_show_wtp_location(DBusConnection *conn, DBusMes
 								DBUS_TYPE_UINT32,&wtpid,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -50248,7 +50254,7 @@ DBusMessage * wid_dbus_interface_show_wtp_location(DBusConnection *conn, DBusMes
 	
 	if(ret != WID_DBUS_SUCCESS)
 	{
-		printf("WTP id not correct \n");
+		wid_syslog_debug_debug(WID_DEFAULT,"WTP id not correct \n");
 	}
 	else if(AC_WTP[wtpid] == NULL)
 	{
@@ -50302,10 +50308,10 @@ DBusMessage * wid_dbus_interface_set_wtpname(DBusConnection *conn, DBusMessage *
 								DBUS_TYPE_STRING,&name,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -50351,7 +50357,7 @@ DBusMessage * wid_dbus_interface_set_wtpname(DBusConnection *conn, DBusMessage *
 		}
 
 	else if (type == 1){
-		printf("******** type == 1 *****\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 		if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL)){
 			tmp = WTP_GROUP[ID]->WTP_M;
 			wtp_head = (struct Wtp_List *)WID_MALLOC(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
@@ -50425,7 +50431,7 @@ DBusMessage * wid_dbus_interface_set_wtpname(DBusConnection *conn, DBusMessage *
 			ret = GROUP_ID_NOT_EXIST;
 		}
 	}
-	printf("num =  %d\n",num);
+	wid_syslog_debug_debug(WID_DEFAULT,"num =  %d\n",num);
 	reply = dbus_message_new_method_return(msg);
 	
 	dbus_message_iter_init_append(reply, &iter);
@@ -50474,10 +50480,10 @@ DBusMessage * wid_dbus_interface_set_wtpname(DBusConnection *conn, DBusMessage *
 								DBUS_TYPE_STRING,&name,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -50555,10 +50561,10 @@ DBusMessage * wid_dbus_interface_set_wtpsn(DBusConnection *conn, DBusMessage *ms
 								DBUS_TYPE_STRING,&name,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -50583,7 +50589,7 @@ DBusMessage * wid_dbus_interface_set_wtpsn(DBusConnection *conn, DBusMessage *ms
 	}
 
 	else if (type == 1){
-		printf("******** type == 1 *****\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 		if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL)){
 			tmp = WTP_GROUP[ID]->WTP_M;
 			wtp_head = (struct Wtp_List *)WID_MALLOC(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
@@ -50629,7 +50635,7 @@ DBusMessage * wid_dbus_interface_set_wtpsn(DBusConnection *conn, DBusMessage *ms
 			ret = GROUP_ID_NOT_EXIST;
 		}
 	}
-	printf("num =  %d\n",num);
+	wid_syslog_debug_debug(WID_DEFAULT,"num =  %d\n",num);
 	reply = dbus_message_new_method_return(msg);
 	
 	dbus_message_iter_init_append(reply, &iter);
@@ -50679,10 +50685,10 @@ DBusMessage * wid_dbus_interface_set_wtpsn(DBusConnection *conn, DBusMessage *ms
 								DBUS_TYPE_STRING,&name,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -50736,10 +50742,10 @@ DBusMessage * wid_dbus_interface_set_wtp_netid(DBusConnection *conn, DBusMessage
 								DBUS_TYPE_STRING,&netid,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -50777,7 +50783,7 @@ DBusMessage * wid_dbus_interface_set_wtp_netid(DBusConnection *conn, DBusMessage
 		}
 
 	else if (type == 1){
-		printf("******** type == 1 *****\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 		if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL)){
 			tmp = WTP_GROUP[ID]->WTP_M;
 			wtp_head = (struct Wtp_List *)WID_MALLOC(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
@@ -50840,7 +50846,7 @@ DBusMessage * wid_dbus_interface_set_wtp_netid(DBusConnection *conn, DBusMessage
 			ret = GROUP_ID_NOT_EXIST;
 		}
 	}
-	printf("num =  %d\n",num);
+	wid_syslog_debug_debug(WID_DEFAULT,"num =  %d\n",num);
 	reply = dbus_message_new_method_return(msg);
 	
 	dbus_message_iter_init_append(reply, &iter);
@@ -50888,10 +50894,10 @@ DBusMessage * wid_dbus_interface_set_wtp_netid(DBusConnection *conn, DBusMessage
 								DBUS_TYPE_STRING,&netid,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -50947,10 +50953,10 @@ DBusMessage * wid_dbus_interface_show_wtp_netid(DBusConnection *conn, DBusMessag
 								DBUS_TYPE_UINT32,&wtpid,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		wid_syslog_debug_debug(WID_DEFAULT,"error\n");
@@ -51013,10 +51019,10 @@ DBusMessage * wid_dbus_interface_set_wid_monitor_time(DBusConnection *conn, DBus
 								DBUS_TYPE_UINT32,&time,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -51045,10 +51051,10 @@ DBusMessage * wid_dbus_interface_set_wid_sample_time(DBusConnection *conn, DBusM
 								DBUS_TYPE_UINT32,&time,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -51076,10 +51082,10 @@ DBusMessage * wid_dbus_interface_set_wid_monitor_enable(DBusConnection *conn, DB
 								DBUS_TYPE_UINT32,&able,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -51108,10 +51114,10 @@ DBusMessage * wid_dbus_interface_set_wid_ipfwd(DBusConnection *conn, DBusMessage
 								DBUS_TYPE_UINT32,&able,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -51181,10 +51187,10 @@ DBusMessage * wid_dbus_interface_set_wid_sample_enable(DBusConnection *conn, DBu
 								DBUS_TYPE_UINT32,&able,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -51344,10 +51350,10 @@ DBusMessage * wid_dbus_interface_set_receiver_signal_level(DBusConnection *conn,
 								DBUS_TYPE_UINT32,&level,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -51603,10 +51609,10 @@ DBusMessage * wid_dbus_interface_show_wtp_extension_infomation_v3(DBusConnection
 								DBUS_TYPE_UINT32,&wtpid,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -51738,10 +51744,10 @@ DBusMessage * wid_dbus_interface_show_wtp_extension_infomation_v4(DBusConnection
 								DBUS_TYPE_UINT32,&wtpid,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -51896,15 +51902,15 @@ DBusMessage * wid_dbus_interface_set_ap_heart_statistics_switch(DBusConnection *
 								DBUS_TYPE_BYTE,&policy,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
 	}
-	printf("policy =  %d \n",policy);
+	wid_syslog_debug_debug(WID_DEFAULT,"policy =  %d \n",policy);
 	if(AC_WTP[wtpid] == NULL)
 	{
 		ret = WTP_ID_NOT_EXIST;
@@ -51969,10 +51975,10 @@ DBusMessage *wid_dbus_interface_set_ap_heart_statistics_collect_time(DBusConnect
 								DBUS_TYPE_UINT32,&collect_time,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -52022,10 +52028,10 @@ DBusMessage * wid_dbus_interface_set_ap_username_password(DBusConnection *conn, 
 								DBUS_TYPE_STRING,&passwd,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -52071,10 +52077,10 @@ DBusMessage * wid_dbus_interface_set_wtp_extension_infomation_enable(DBusConnect
 								DBUS_TYPE_UINT32,&policy,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -52099,7 +52105,7 @@ DBusMessage * wid_dbus_interface_set_wtp_extension_infomation_enable(DBusConnect
 
 	else if(type==1)
 			{
-				printf("******** type == 1 *****\n");
+				wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 				if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL)){
 					tmp = WTP_GROUP[ID]->WTP_M;
 					wtp_head = (struct Wtp_List *)WID_MALLOC(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
@@ -52109,7 +52115,7 @@ DBusMessage * wid_dbus_interface_set_wtp_extension_infomation_enable(DBusConnect
 					}
 					while(tmp){
 						ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
-						printf("ret_check = %d\n",ret_check);
+						wid_syslog_debug_debug(WID_DEFAULT,"ret_check = %d\n",ret_check);
 						if(ret_check == WID_DBUS_SUCCESS){
 
 									if(AC_WTP[tmp->WTPID] == NULL)
@@ -52156,7 +52162,7 @@ DBusMessage * wid_dbus_interface_set_wtp_extension_infomation_enable(DBusConnect
 		dbus_message_iter_init_append(reply, &iter);
 			
 		dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT32, &ret);
-		printf("num= %d\n",num);
+		wid_syslog_debug_debug(WID_DEFAULT,"num= %d\n",num);
 			if((type == 1)&&(ret == WID_DBUS_SUCCESS)){
 				dbus_message_iter_append_basic (&iter,
 													 DBUS_TYPE_UINT32,
@@ -52196,10 +52202,10 @@ DBusMessage * wid_dbus_interface_set_wtp_extension_infomation_enable(DBusConnect
 								DBUS_TYPE_UINT32,&policy,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -52257,11 +52263,11 @@ DBusMessage * wid_dbus_interface_set_wtp_terminal_disturb_info_switch(DBusConnec
 								DBUS_TYPE_UINT32,&policy,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) 
 		{
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -52308,7 +52314,7 @@ DBusMessage * wid_dbus_interface_set_wtp_terminal_disturb_info_switch(DBusConnec
 
 	else if(type==1)
 			{
-				printf("******** type == 1 *****\n");
+				wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 				if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL)){
 					tmp = WTP_GROUP[ID]->WTP_M;
 					wtp_head = (struct Wtp_List *)WID_MALLOC(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
@@ -52318,7 +52324,7 @@ DBusMessage * wid_dbus_interface_set_wtp_terminal_disturb_info_switch(DBusConnec
 					}
 					while(tmp){
 						ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
-						printf("ret_check = %d\n",ret_check);
+						wid_syslog_debug_debug(WID_DEFAULT,"ret_check = %d\n",ret_check);
 						if(ret_check == WID_DBUS_SUCCESS){
 							if((tmp->WTPID>0)&&(tmp->WTPID<=(WTP_NUM-1)))
 								{
@@ -52367,7 +52373,7 @@ DBusMessage * wid_dbus_interface_set_wtp_terminal_disturb_info_switch(DBusConnec
 			dbus_message_iter_init_append(reply, &iter);
 			
 			dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT32, &ret);
-			printf("num= %d\n",num);
+			wid_syslog_debug_debug(WID_DEFAULT,"num= %d\n",num);
 			if((type == 1)&&(ret == WID_DBUS_SUCCESS)){
 				dbus_message_iter_append_basic (&iter,
 													 DBUS_TYPE_UINT32,
@@ -52409,11 +52415,11 @@ DBusMessage * wid_dbus_interface_set_wtp_terminal_disturb_info_switch(DBusConnec
 								DBUS_TYPE_UINT32,&policy,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) 
 		{
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -52497,10 +52503,10 @@ DBusMessage * wid_dbus_interface_set_sta_deauth_message_report_enable(DBusConnec
 								DBUS_TYPE_UINT32,&policy,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -52559,10 +52565,10 @@ DBusMessage * wid_dbus_interface_set_sta_all_flow_information_report_enable(DBus
 								DBUS_TYPE_UINT32,&policy,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -52632,11 +52638,11 @@ DBusMessage * wid_dbus_interface_set_wtp_terminal_disturb_info_pkt(DBusConnectio
 								DBUS_TYPE_INVALID)))
 	{
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) 
 		{
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -52687,7 +52693,7 @@ if(type==0)
 }
 else if(type==1)
 		{
-			printf("******** type == 1 *****\n");
+			wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 			if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL)){
 				tmp = WTP_GROUP[ID]->WTP_M;
 				wtp_head = (struct Wtp_List *)WID_MALLOC(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
@@ -52697,7 +52703,7 @@ else if(type==1)
 				}
 				while(tmp){
 					ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
-					printf("ret_check = %d\n",ret_check);
+					wid_syslog_debug_debug(WID_DEFAULT,"ret_check = %d\n",ret_check);
 					if(ret_check == WID_DBUS_SUCCESS){
 						if((tmp->WTPID>0)&&(tmp->WTPID<=(WTP_NUM-1)))
 							{
@@ -52748,7 +52754,7 @@ else if(type==1)
 		dbus_message_iter_init_append(reply, &iter);
 		
 		dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT32, &ret);
-		printf("num= %d\n",num);
+		wid_syslog_debug_debug(WID_DEFAULT,"num= %d\n",num);
 		if((type == 1)&&(ret == WID_DBUS_SUCCESS)){
 			dbus_message_iter_append_basic (&iter,
 												 DBUS_TYPE_UINT32,
@@ -52791,11 +52797,11 @@ DBusMessage * wid_dbus_interface_set_wtp_terminal_disturb_info_pkt(DBusConnectio
 								DBUS_TYPE_INVALID)))
 	{
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) 
 		{
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -52897,11 +52903,11 @@ DBusMessage * wid_dbus_interface_set_wtp_terminal_disturb_info_sta_num(DBusConne
 								DBUS_TYPE_INVALID)))
 	{
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) 
 		{
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -52958,7 +52964,7 @@ if(type==0)
 
 else if(type==1)
 		{
-			printf("******** type == 1 *****\n");
+			wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 			if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL)){
 				tmp = WTP_GROUP[ID]->WTP_M;
 				wtp_head = (struct Wtp_List *)WID_MALLOC(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
@@ -52968,7 +52974,7 @@ else if(type==1)
 				}
 				while(tmp){
 					ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
-					printf("ret_check = %d\n",ret_check);
+					wid_syslog_debug_debug(WID_DEFAULT,"ret_check = %d\n",ret_check);
 					if(ret_check == WID_DBUS_SUCCESS){
 						if((tmp->WTPID>0)&&(tmp->WTPID<=(WTP_NUM-1)))
 							{
@@ -53019,7 +53025,7 @@ else if(type==1)
 		dbus_message_iter_init_append(reply, &iter);
 		
 		dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT32, &ret);
-		printf("num= %d\n",num);
+		wid_syslog_debug_debug(WID_DEFAULT,"num= %d\n",num);
 		if((type == 1)&&(ret == WID_DBUS_SUCCESS)){
 			dbus_message_iter_append_basic (&iter,
 												 DBUS_TYPE_UINT32,
@@ -53064,11 +53070,11 @@ DBusMessage * wid_dbus_interface_set_wtp_terminal_disturb_info_sta_num(DBusConne
 								DBUS_TYPE_INVALID)))
 	{
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) 
 		{
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -53169,11 +53175,11 @@ DBusMessage * wid_dbus_interface_set_wtp_no_response_to_sta_proble_request(DBusC
 								DBUS_TYPE_INVALID)))
 	{
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) 
 		{
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -53289,11 +53295,11 @@ DBusMessage * wid_dbus_interface_set_wtp_uni_muti_bro_cast_isolation_sw_and_rate
 								DBUS_TYPE_INVALID)))
 	{
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) 
 		{
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -53550,11 +53556,11 @@ DBusMessage * wid_dbus_interface_set_wtp_muti_bro_cast_rate_set(DBusConnection *
 								DBUS_TYPE_INVALID)))
 	{
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) 
 		{
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -53669,11 +53675,11 @@ DBusMessage * wid_dbus_interface_set_wlan_no_response_to_sta_proble_request(DBus
 								DBUS_TYPE_INVALID)))
 	{
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) 
 		{
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -53801,11 +53807,11 @@ DBusMessage * wid_dbus_interface_set_wlan_uni_muti_bro_cast_isolation_sw_and_rat
 								DBUS_TYPE_INVALID)))
 	{
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) 
 		{
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -54131,11 +54137,11 @@ DBusMessage * wid_dbus_interface_set_wlan_muti_bro_cast_rate_set(DBusConnection 
 								DBUS_TYPE_INVALID)))
 	{
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) 
 		{
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -54281,10 +54287,10 @@ DBusMessage * wid_dbus_interface_set_wtp_extension_infomation_interval(DBusConne
 								DBUS_TYPE_UINT32,&interval,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -54328,7 +54334,7 @@ DBusMessage * wid_dbus_interface_set_wtp_extension_infomation_interval(DBusConne
 	
 	else if(type==1)
 		{
-			printf("******** type == 1 *****\n");
+			wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 			if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL)){
 				tmp = WTP_GROUP[ID]->WTP_M;
 				wtp_head = (struct Wtp_List *)WID_MALLOC(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
@@ -54338,7 +54344,7 @@ DBusMessage * wid_dbus_interface_set_wtp_extension_infomation_interval(DBusConne
 				}
 				while(tmp){
 					ret_check = WID_CHECK_ID(WID_WTP_CHECK,tmp->WTPID);
-					printf("ret_check = %d\n",ret_check);
+					wid_syslog_debug_debug(WID_DEFAULT,"ret_check = %d\n",ret_check);
 					if(ret_check == WID_DBUS_SUCCESS){
 						 if(AC_WTP[tmp->WTPID]->wifi_extension_reportinterval==(unsigned short)interval)
 							{
@@ -54380,7 +54386,7 @@ DBusMessage * wid_dbus_interface_set_wtp_extension_infomation_interval(DBusConne
 		dbus_message_iter_init_append(reply, &iter);
 		
 		dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT32, &ret);
-		printf("num= %d\n",num);
+		wid_syslog_debug_debug(WID_DEFAULT,"num= %d\n",num);
 		if((type == 1)&&(ret == WID_DBUS_SUCCESS)){
 			dbus_message_iter_append_basic (&iter,
 												 DBUS_TYPE_UINT32,
@@ -55386,10 +55392,10 @@ DBusMessage * wid_dbus_interface_set_wtp_extension_infomation_interval(DBusConne
 								DBUS_TYPE_UINT32,&interval,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -55453,10 +55459,10 @@ DBusMessage * wid_dbus_interface_set_wtp_sample_infomation_interval(DBusConnecti
 								DBUS_TYPE_UINT32,&interval,
 								DBUS_TYPE_INVALID))){
 								
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -55493,10 +55499,10 @@ DBusMessage * wid_dbus_interface_set_wtp_moment_infomation_interval(DBusConnecti
 								DBUS_TYPE_UINT32,&interval,
 								DBUS_TYPE_INVALID))){
 								
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -55533,10 +55539,10 @@ DBusMessage * wid_dbus_interface_set_wtp_routine_infomation_interval(DBusConnect
 								DBUS_TYPE_UINT32,&interval,
 								DBUS_TYPE_INVALID))){
 								
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -55587,10 +55593,10 @@ DBusMessage * wid_dbus_interface_set_wtp_moment_infomation_enable(DBusConnection
 								DBUS_TYPE_UINT32,&wtpid,
 								DBUS_TYPE_UINT32,&policy,
 								DBUS_TYPE_INVALID))){
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		CW_FREE_OBJECT_WID(WTP);
@@ -55721,10 +55727,10 @@ DBusMessage * wid_dbus_interface_set_wtp_sta_infomation_enable(DBusConnection *c
 								DBUS_TYPE_UINT32,&policy,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -55765,7 +55771,7 @@ DBusMessage * wid_dbus_interface_set_wtp_sta_infomation_enable(DBusConnection *c
 
 	else if(type==1)
 			{
-				printf("******** type == 1 *****\n");
+				wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 			if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL)){
 				//printf("1111111111111111\n");
 				tmp = WTP_GROUP[ID]->WTP_M;
@@ -55821,7 +55827,7 @@ DBusMessage * wid_dbus_interface_set_wtp_sta_infomation_enable(DBusConnection *c
 		dbus_message_iter_init_append(reply, &iter);
 		
 		dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT32, &ret);
-		printf("num= %d\n",num);
+		wid_syslog_debug_debug(WID_DEFAULT,"num= %d\n",num);
 		if((type == 1)&&(ret == WID_DBUS_SUCCESS)){
 			dbus_message_iter_append_basic (&iter,
 												 DBUS_TYPE_UINT32,
@@ -55861,10 +55867,10 @@ DBusMessage * wid_dbus_interface_set_wtp_sta_infomation_enable(DBusConnection *c
 								DBUS_TYPE_UINT32,&policy,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -55936,10 +55942,10 @@ DBusMessage * wid_dbus_interface_set_wtp_sta_infomation_interval(DBusConnection 
 								DBUS_TYPE_UINT32,&interval,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -55974,7 +55980,7 @@ DBusMessage * wid_dbus_interface_set_wtp_sta_infomation_interval(DBusConnection 
 
 	else if(type==1)
 		{
-			printf("******** type == 1 *****\n");
+			wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 		if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL)){
 			tmp = WTP_GROUP[ID]->WTP_M;
 			wtp_head = (struct Wtp_List *)WID_MALLOC(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
@@ -56023,7 +56029,7 @@ DBusMessage * wid_dbus_interface_set_wtp_sta_infomation_interval(DBusConnection 
 		dbus_message_iter_append_basic (&iter,
 											 DBUS_TYPE_UINT32,
 											 &num);
-		printf("num= %d\n",num);
+		wid_syslog_debug_debug(WID_DEFAULT,"num= %d\n",num);
 		for(i = 0; i < num; i++){
 			dbus_message_iter_append_basic (&iter,
 												 DBUS_TYPE_UINT32,
@@ -56058,10 +56064,10 @@ DBusMessage * wid_dbus_interface_set_wtp_sta_infomation_interval(DBusConnection 
 								DBUS_TYPE_UINT32,&interval,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -56128,10 +56134,10 @@ DBusMessage * wid_dbus_interface_set_wtp_sta_wapi_info_enable(DBusConnection *co
 								DBUS_TYPE_UINT32,&policy,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -56174,7 +56180,7 @@ DBusMessage * wid_dbus_interface_set_wtp_sta_wapi_info_enable(DBusConnection *co
 
 	else if(type == 1)
 		{
-			printf("******** type == 1 *****\n");
+			wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 			if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL))
 				{
 					tmp = WTP_GROUP[ID]->WTP_M;
@@ -56268,10 +56274,10 @@ DBusMessage * wid_dbus_interface_set_wtp_sta_wapi_info_enable(DBusConnection *co
 								DBUS_TYPE_UINT32,&policy,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -56346,10 +56352,10 @@ DBusMessage * wid_dbus_interface_set_wtp_sta_wapi_info_interval(DBusConnection *
 								DBUS_TYPE_INVALID))){
 
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -56391,7 +56397,7 @@ DBusMessage * wid_dbus_interface_set_wtp_sta_wapi_info_interval(DBusConnection *
 	
 		
 	else if(type == 1){
-				printf("******** type == 1 *****\n");
+				wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 				if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL)){
 					tmp = WTP_GROUP[ID]->WTP_M;
 					wtp_head = (struct Wtp_List *)WID_MALLOC(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
@@ -56481,10 +56487,10 @@ DBusMessage * wid_dbus_interface_set_wtp_sta_wapi_info_interval(DBusConnection *
 								DBUS_TYPE_INVALID))){
 
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -56564,10 +56570,10 @@ DBusMessage * wid_dbus_interface_set_wtp_if_info_report_enable(DBusConnection *c
 								DBUS_TYPE_UINT32,&policy,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -56598,7 +56604,7 @@ DBusMessage * wid_dbus_interface_set_wtp_if_info_report_enable(DBusConnection *c
 	}
 
 	else if(type == 1){
-		printf("******** type == 1 *****\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 		if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL)){
 			tmp = WTP_GROUP[ID]->WTP_M;
 			wtp_head = (struct Wtp_List *)WID_MALLOC(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
@@ -56672,10 +56678,10 @@ DBusMessage * wid_dbus_interface_set_wtp_if_info_report_enable(DBusConnection *c
 								DBUS_TYPE_UINT32,&policy,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -56755,10 +56761,10 @@ DBusMessage * wid_dbus_interface_set_wtp_if_info_report_interval(DBusConnection 
 								DBUS_TYPE_UINT32,&interval,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -56789,7 +56795,7 @@ DBusMessage * wid_dbus_interface_set_wtp_if_info_report_interval(DBusConnection 
 	}
 
 	else if(type == 1){
-		printf("******** type == 1 *****\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 		if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL)){
 			tmp = WTP_GROUP[ID]->WTP_M;
 			wtp_head = (struct Wtp_List *)WID_MALLOC(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
@@ -56812,7 +56818,7 @@ DBusMessage * wid_dbus_interface_set_wtp_if_info_report_interval(DBusConnection 
 						AC_WTP[tmp->WTPID]->apifinfo.report_interval = interval;
 					}
 
-					printf("ret = %d",ret);
+					wid_syslog_debug_debug(WID_DEFAULT,"ret = %d",ret);
 					tmp = tmp->next;
 				}
 				ret = WID_DBUS_SUCCESS;
@@ -56868,10 +56874,10 @@ DBusMessage * wid_dbus_interface_set_wtp_if_info_report_interval(DBusConnection 
 								DBUS_TYPE_UINT32,&interval,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -56926,10 +56932,10 @@ DBusMessage * wid_dbus_interface_set_dhcp_flooding_status(DBusConnection *conn, 
 								DBUS_TYPE_BYTE,&status,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -56992,10 +56998,10 @@ DBusMessage * wid_dbus_interface_show_wtp_wids_item(DBusConnection *conn, DBusMe
 								DBUS_TYPE_UINT32,&wtpid,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -57057,10 +57063,10 @@ DBusMessage * wid_dbus_interface_set_wtp_wids_item(DBusConnection *conn, DBusMes
 								DBUS_TYPE_BYTE,&wids.weakiv,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -57114,10 +57120,10 @@ DBusMessage * wid_dbus_interface_set_wtp_wids_interval(DBusConnection *conn, DBu
 								DBUS_TYPE_BYTE,&interval,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -57155,10 +57161,10 @@ DBusMessage * wid_dbus_interface_set_wtp_wids_policy(DBusConnection *conn, DBusM
 								DBUS_TYPE_BYTE,&policy,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -57198,10 +57204,10 @@ DBusMessage * wid_dbus_interface_set_wtp_wids_threshold(DBusConnection *conn, DB
 								DBUS_TYPE_BYTE,&threshold,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -57245,10 +57251,10 @@ DBusMessage * wid_dbus_interface_set_wtp_wids_lasttime_in_black(DBusConnection *
 								DBUS_TYPE_UINT32,&time,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -57279,10 +57285,10 @@ DBusMessage * wid_dbus_interface_set_ac_master_bak_correct_wtp_state_timer(DBusC
 								DBUS_TYPE_UINT32,&interval,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -57321,10 +57327,10 @@ DBusMessage * wid_dbus_interface_set_ac_state_ip(DBusConnection *conn, DBusMessa
 								DBUS_TYPE_UINT32,&ip,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -57477,10 +57483,10 @@ DBusMessage * wid_dbus_interface_set_neighbordead_interval(DBusConnection *conn,
 								DBUS_TYPE_UINT32,&neighbordead_interval,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -57520,10 +57526,10 @@ DBusMessage * wid_dbus_interface_set_ap_update_timer(DBusConnection *conn, DBusM
 								DBUS_TYPE_UINT32,&timer,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -57561,10 +57567,10 @@ DBusMessage * wid_dbus_interface_set_ap_update_fail_count(DBusConnection *conn, 
 								DBUS_TYPE_BYTE,&count,  //fengwenchao change int to char,20111215 for AXSSZFI-646
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -57660,10 +57666,10 @@ DBusMessage * wid_dbus_interface_set_ap_if_updown(DBusConnection *conn, DBusMess
 								DBUS_TYPE_BYTE,&policy,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -57686,7 +57692,7 @@ DBusMessage * wid_dbus_interface_set_ap_if_updown(DBusConnection *conn, DBusMess
 
 	if(type1==1)
 		{
-			printf("******** type == 1 *****\n");
+			wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 			if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL))
 				{
 					tmp = WTP_GROUP[ID]->WTP_M;
@@ -57730,7 +57736,7 @@ DBusMessage * wid_dbus_interface_set_ap_if_updown(DBusConnection *conn, DBusMess
 				ret = GROUP_ID_NOT_EXIST;
 			}
 		}
-	printf("num = %d  \n",num);
+	wid_syslog_debug_debug(WID_DEFAULT,"num = %d  \n",num);
 	reply = dbus_message_new_method_return(msg);
 
 	dbus_message_iter_init_append(reply, &iter);
@@ -57779,10 +57785,10 @@ DBusMessage * wid_dbus_interface_set_ap_if_updown(DBusConnection *conn, DBusMess
 								DBUS_TYPE_BYTE,&policy,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -57837,10 +57843,10 @@ DBusMessage * wid_dbus_interface_set_ap_if_eth_rate(DBusConnection *conn, DBusMe
 								DBUS_TYPE_UINT32,&rate,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -57907,7 +57913,7 @@ DBusMessage * wid_dbus_interface_set_ap_if_eth_rate(DBusConnection *conn, DBusMe
 
 	if(type==1)
 		{
-			printf("******** type == 1 *****\n");
+			wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 			if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL))
 				{
 					tmp = WTP_GROUP[ID]->WTP_M;
@@ -57967,7 +57973,7 @@ DBusMessage * wid_dbus_interface_set_ap_if_eth_rate(DBusConnection *conn, DBusMe
 				ret = GROUP_ID_NOT_EXIST;
 			}
 		}
-		printf("num = %d  \n",num);
+		wid_syslog_debug_debug(WID_DEFAULT,"num = %d  \n",num);
 		reply = dbus_message_new_method_return(msg);
 
 		dbus_message_iter_init_append(reply, &iter);
@@ -58019,10 +58025,10 @@ DBusMessage * wid_dbus_interface_set_ap_if_eth_rate(DBusConnection *conn, DBusMe
 								DBUS_TYPE_UINT32,&rate,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -58104,10 +58110,10 @@ DBusMessage * wid_dbus_interface_show_ap_if_info(DBusConnection *conn, DBusMessa
 								DBUS_TYPE_UINT32,&wtpid,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -58116,7 +58122,7 @@ DBusMessage * wid_dbus_interface_show_ap_if_info(DBusConnection *conn, DBusMessa
 	
 	if(ret != WID_DBUS_SUCCESS)
 	{
-		printf("wtp id not correct \n");
+		wid_syslog_debug_debug(WID_DEFAULT,"wtp id not correct \n");
 	}
 	else if(AC_WTP[wtpid] == NULL)
 	{
@@ -58207,10 +58213,10 @@ DBusMessage * wid_dbus_interface_set_wtp_ntp(DBusConnection *conn, DBusMessage *
 								DBUS_TYPE_UINT32,&ntpinterval,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -58252,7 +58258,7 @@ if(type==0)
 }
 if(type==1)
 	{
-		printf("******** type == 1 *****\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 		if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL))
 			{
 				tmp = WTP_GROUP[ID]->WTP_M;
@@ -58287,7 +58293,7 @@ if(type==1)
 											AC_WTP[tmp->WTPID]->ntp_interval = ntpinterval;
 										}
 									ret2 = wid_set_wtp_ntp(tmp->WTPID);
-									printf("22222222\n");
+									wid_syslog_debug_debug(WID_DEFAULT,"*ret2 = %d\n",ret2);
 								}
 
 								if(ret2 != WID_DBUS_SUCCESS)
@@ -58307,7 +58313,7 @@ if(type==1)
 			ret = GROUP_ID_NOT_EXIST;
 		}
 	}
-	printf("num = %d  \n",num);
+	wid_syslog_debug_debug(WID_DEFAULT,"num = %d  \n",num);
 	reply = dbus_message_new_method_return(msg);
 
 	dbus_message_iter_init_append(reply, &iter);
@@ -58359,10 +58365,10 @@ DBusMessage * wid_dbus_interface_set_wtp_ntp(DBusConnection *conn, DBusMessage *
 								DBUS_TYPE_UINT32,&ntpinterval,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -58432,10 +58438,10 @@ DBusMessage * wid_dbus_interface_set_ap_reboot(DBusConnection *conn, DBusMessage
 								DBUS_TYPE_UINT32,&ID,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -58458,7 +58464,7 @@ if(type==0)
 
 if(type==1)
 	{
-		printf("******** type == 1 *****\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 		if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL))
 			{
 				tmp = WTP_GROUP[ID]->WTP_M;
@@ -58505,7 +58511,7 @@ if(type==1)
 			ret = GROUP_ID_NOT_EXIST;
 		}
 	}
-	printf("num = %d  \n",num);
+	wid_syslog_debug_debug(WID_DEFAULT,"num = %d  \n",num);
 	reply = dbus_message_new_method_return(msg);
 
 	dbus_message_iter_init_append(reply, &iter);
@@ -58551,10 +58557,10 @@ DBusMessage * wid_dbus_interface_set_ap_reboot(DBusConnection *conn, DBusMessage
 								DBUS_TYPE_UINT32,&wtpid,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -58623,10 +58629,10 @@ DBusMessage * wid_dbus_interface_set_ap_reboot_by_wlanid(DBusConnection *conn, D
 								DBUS_TYPE_UINT32,&wlanid,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -58699,10 +58705,10 @@ DBusMessage * wid_dbus_interface_set_ap_reboot_by_interface(DBusConnection *conn
 								DBUS_TYPE_STRING,&ifname,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -58785,10 +58791,10 @@ DBusMessage * wid_dbus_interface_set_ap_reboot_by_model(DBusConnection *conn, DB
 								DBUS_TYPE_STRING,&model,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -58931,10 +58937,10 @@ DBusMessage * wid_dbus_interface_get_wtp_bss_pkt_info(DBusConnection *conn, DBus
 								DBUS_TYPE_UINT32,&ID,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -58962,7 +58968,7 @@ if(type==0)
 }
 if(type==1)
 	{
-		printf("******** type == 1 *****\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 		if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL))
 			{
 				tmp = WTP_GROUP[ID]->WTP_M;
@@ -59013,7 +59019,7 @@ if(type==1)
 			ret = GROUP_ID_NOT_EXIST;
 		}
 	}
-	printf("num = %d  \n",num);
+	wid_syslog_debug_debug(WID_DEFAULT,"num = %d  \n",num);
 	reply = dbus_message_new_method_return(msg);
 
 	dbus_message_iter_init_append(reply, &iter);
@@ -59060,10 +59066,10 @@ DBusMessage * wid_dbus_interface_get_wtp_bss_pkt_info(DBusConnection *conn, DBus
 								DBUS_TYPE_UINT32,&wtpid,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -59112,10 +59118,10 @@ DBusMessage * wid_dbus_interface_show_wtp_bss_pkt_info(DBusConnection *conn, DBu
 								DBUS_TYPE_UINT32,&wtpid,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -59248,10 +59254,10 @@ DBusMessage * wid_dbus_interface_show_wtp_radio_pkt_info(DBusConnection *conn, D
 								DBUS_TYPE_UINT32,&wtpid,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -59260,7 +59266,7 @@ DBusMessage * wid_dbus_interface_show_wtp_radio_pkt_info(DBusConnection *conn, D
 	
 	if(ret != WID_DBUS_SUCCESS)
 	{
-		printf("wtp id is not correct. \n");
+		wid_syslog_debug_debug(WID_DEFAULT,"wtp id is not correct. \n");
 	}
 	else if(AC_WTP[wtpid] == NULL)
 	{
@@ -59384,10 +59390,10 @@ DBusMessage * wid_dbus_interface_show_wtp_radio_pkt_info_tunnel(DBusConnection *
 								DBUS_TYPE_UINT32,&wtpid,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -59397,7 +59403,7 @@ DBusMessage * wid_dbus_interface_show_wtp_radio_pkt_info_tunnel(DBusConnection *
 	
 	if(ret != WID_DBUS_SUCCESS)
 	{
-		printf("wtp id not correct \n");
+		wid_syslog_debug_debug(WID_DEFAULT,"wtp id not correct \n");
 	}
 	else if(AC_WTP[wtpid] == NULL)
 	{
@@ -59536,10 +59542,10 @@ DBusMessage * wid_dbus_interface_show_wtp_eth_pkt_info(DBusConnection *conn, DBu
 								DBUS_TYPE_UINT32,&wtpid,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -59548,7 +59554,7 @@ DBusMessage * wid_dbus_interface_show_wtp_eth_pkt_info(DBusConnection *conn, DBu
 	
 	if(ret != WID_DBUS_SUCCESS)
 	{
-		printf("wtp id not correct. \n");
+		wid_syslog_debug_debug(WID_DEFAULT,"wtp id not correct. \n");
 	}
 	else if(AC_WTP[wtpid] == NULL)
 	{
@@ -59635,10 +59641,10 @@ DBusMessage * wid_dbus_interface_show_wtp_sample_throughput_infomation(DBusConne
 								DBUS_TYPE_UINT32,&wtpid,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -59647,7 +59653,7 @@ DBusMessage * wid_dbus_interface_show_wtp_sample_throughput_infomation(DBusConne
 	
 	if(ret != WID_DBUS_SUCCESS)
 	{
-		printf("wtp id not correct. \n");
+		wid_syslog_debug_debug(WID_DEFAULT,"wtp id not correct. \n");
 	}
 	else if(AC_WTP[wtpid] == NULL)
 	{
@@ -59749,10 +59755,10 @@ DBusMessage * wid_dbus_interface_show_ap_model_infomation(DBusConnection *conn, 
 								DBUS_TYPE_UINT32,&model,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		CW_FREE_OBJECT_WID(model_info->sw_name);
@@ -60110,10 +60116,10 @@ DBusMessage * wid_dbus_interface_set_radio_11n_cwmmode(DBusConnection *conn, DBu
 								DBUS_TYPE_BYTE,&able,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -60173,7 +60179,7 @@ DBusMessage * wid_dbus_interface_set_radio_11n_cwmmode(DBusConnection *conn, DBu
 		}
 	else if(type == 1)
 		{
-			printf("******** type == 1 *****\n");
+			wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 			if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL))
 				{
 					tmp = WTP_GROUP[ID]->WTP_M;
@@ -60196,8 +60202,8 @@ DBusMessage * wid_dbus_interface_set_radio_11n_cwmmode(DBusConnection *conn, DBu
 								{								
 									for(i=0;i<AC_WTP[tmp->WTPID]->RadioCount;i++)
 									{
-										printf("wtpid = %d\n",tmp->WTPID);
-										printf("radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
+										wid_syslog_debug_debug(WID_DEFAULT,"wtpid = %d\n",tmp->WTPID);
+										wid_syslog_debug_debug(WID_DEFAULT,"radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
 										if(AC_WTP[tmp->WTPID] == NULL)
 											{
 												ret2 = WTP_ID_NOT_EXIST;
@@ -60279,7 +60285,7 @@ DBusMessage * wid_dbus_interface_set_radio_11n_cwmmode(DBusConnection *conn, DBu
 				dbus_message_iter_append_basic (&iter,
 													 DBUS_TYPE_UINT32,
 											 &num);
-				printf("num = %d\n",num);		
+				wid_syslog_debug_debug(WID_DEFAULT,"num = %d\n",num);		
 				for(i = 0; i < num; i++)
 					{
 						dbus_message_iter_append_basic (&iter,
@@ -60318,10 +60324,10 @@ DBusMessage * wid_dbus_interface_set_radio_11n_cwmmode(DBusConnection *conn, DBu
 								DBUS_TYPE_BYTE,&able,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -60414,10 +60420,10 @@ DBusMessage * wid_dbus_interface_show_ap_model_code_infomation(DBusConnection *c
 								DBUS_TYPE_STRING,&model,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -60729,10 +60735,10 @@ DBusMessage * wid_dbus_interface_wtp_channel_disturb_trap(DBusConnection *conn, 
 								DBUS_TYPE_UINT32,&policy,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -60761,7 +60767,7 @@ DBusMessage * wid_dbus_interface_wtp_channel_disturb_trap(DBusConnection *conn, 
 
 	if(type==1)
 	{
-		printf("******** type == 1 *****\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 		if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL))
 			{
 				tmp = WTP_GROUP[ID]->WTP_M;
@@ -60814,7 +60820,7 @@ DBusMessage * wid_dbus_interface_wtp_channel_disturb_trap(DBusConnection *conn, 
 			ret = GROUP_ID_NOT_EXIST;
 		}
 	}
-	printf("num = %d  \n",num);
+	wid_syslog_debug_debug(WID_DEFAULT,"num = %d  \n",num);
 	reply = dbus_message_new_method_return(msg);
 
 	dbus_message_iter_init_append(reply, &iter);
@@ -60858,10 +60864,10 @@ DBusMessage * wid_dbus_interface_wtp_channel_disturb_trap(DBusConnection *conn, 
 								DBUS_TYPE_UINT32,&able,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -60923,10 +60929,10 @@ DBusMessage * wid_dbus_interface_set_ap_l2_siolation(DBusConnection *conn, DBusM
 								
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -60993,7 +60999,7 @@ DBusMessage * wid_dbus_interface_set_ap_l2_siolation(DBusConnection *conn, DBusM
 		}
 	
 	else if(type == 1){
-			printf("******** type == 1 *****\n");
+			wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 			if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL)){
 				tmp = WTP_GROUP[ID]->WTP_M;
 				wtp_head = (struct Wtp_List *)WID_MALLOC(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
@@ -61086,7 +61092,7 @@ DBusMessage * wid_dbus_interface_set_ap_l2_siolation(DBusConnection *conn, DBusM
 			dbus_message_iter_append_basic (&iter,
 												 DBUS_TYPE_UINT32,
 												 &num);
-			printf("num= %d",num);
+			wid_syslog_debug_debug(WID_DEFAULT,"num= %d",num);
 			for(i = 0; i < num; i++){
 				dbus_message_iter_append_basic (&iter,
 													 DBUS_TYPE_UINT32,
@@ -61130,10 +61136,10 @@ DBusMessage * wid_dbus_interface_set_ap_l2_siolation(DBusConnection *conn, DBusM
 								DBUS_TYPE_UINT32,&able,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -61238,10 +61244,10 @@ DBusMessage * wid_dbus_interface_set_radio_l2_siolation(DBusConnection *conn, DB
 								DBUS_TYPE_UINT32,&able,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -61306,7 +61312,7 @@ DBusMessage * wid_dbus_interface_set_radio_l2_siolation(DBusConnection *conn, DB
 		}
 	else if(type == 1)
 		{
-			printf("******** type == 1 *****\n");
+			wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 			if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL))
 				{
 					tmp = WTP_GROUP[ID]->WTP_M;
@@ -61329,8 +61335,8 @@ DBusMessage * wid_dbus_interface_set_radio_l2_siolation(DBusConnection *conn, DB
 								{								
 									for(i=0;i<AC_WTP[tmp->WTPID]->RadioCount;i++)
 									{
-										printf("wtpid = %d\n",tmp->WTPID);
-										printf("radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
+										wid_syslog_debug_debug(WID_DEFAULT,"wtpid = %d\n",tmp->WTPID);
+										wid_syslog_debug_debug(WID_DEFAULT,"radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
 										if(AC_WTP[tmp->WTPID] == NULL)
 											{
 												ret2 = WTP_ID_NOT_EXIST;
@@ -61417,7 +61423,7 @@ DBusMessage * wid_dbus_interface_set_radio_l2_siolation(DBusConnection *conn, DB
 				dbus_message_iter_append_basic (&iter,
 													 DBUS_TYPE_UINT32,
 											 &num);
-				printf("num = %d\n",num);		
+				wid_syslog_debug_debug(WID_DEFAULT,"num = %d\n",num);		
 				for(i = 0; i < num; i++)
 					{
 						dbus_message_iter_append_basic (&iter,
@@ -61455,10 +61461,10 @@ DBusMessage * wid_dbus_interface_set_radio_l2_siolation(DBusConnection *conn, DB
 								DBUS_TYPE_UINT32,&able,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -61566,10 +61572,10 @@ DBusMessage * wid_dbus_interface_set_radio_auto_channel_able(DBusConnection *con
 								DBUS_TYPE_UINT32,&able,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -61593,7 +61599,7 @@ DBusMessage * wid_dbus_interface_set_radio_auto_channel_able(DBusConnection *con
 		}
 	else if(type == 1)
 		{
-			printf("******** type == 1 *****\n");
+			wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 			if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL))
 				{
 					tmp = WTP_GROUP[ID]->WTP_M;
@@ -61616,8 +61622,8 @@ DBusMessage * wid_dbus_interface_set_radio_auto_channel_able(DBusConnection *con
 								{								
 									for(i=0;i<AC_WTP[tmp->WTPID]->RadioCount;i++)
 									{
-										printf("wtpid = %d\n",tmp->WTPID);
-										printf("radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
+										wid_syslog_debug_debug(WID_DEFAULT,"wtpid = %d\n",tmp->WTPID);
+										wid_syslog_debug_debug(WID_DEFAULT,"radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
 										if(AC_WTP[tmp->WTPID] == NULL)
 											{
 												ret2 = WTP_ID_NOT_EXIST;
@@ -61663,7 +61669,7 @@ DBusMessage * wid_dbus_interface_set_radio_auto_channel_able(DBusConnection *con
 				dbus_message_iter_append_basic (&iter,
 													 DBUS_TYPE_UINT32,
 											 &num);
-				printf("num = %d\n",num);		
+				wid_syslog_debug_debug(WID_DEFAULT,"num = %d\n",num);		
 				for(i = 0; i < num; i++)
 					{
 						dbus_message_iter_append_basic (&iter,
@@ -61700,10 +61706,10 @@ DBusMessage * wid_dbus_interface_set_radio_auto_channel_able(DBusConnection *con
 								DBUS_TYPE_UINT32,&able,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -61764,10 +61770,10 @@ DBusMessage * wid_dbus_interface_set_radio_auto_channel_cont_able(DBusConnection
 								DBUS_TYPE_UINT32,&able,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -61784,32 +61790,35 @@ DBusMessage * wid_dbus_interface_set_radio_auto_channel_cont_able(DBusConnection
 				{
 					ret = WTP_ID_NOT_EXIST;
 				}
-			printf("set radio auto en_dis  1111\n");
+			wid_syslog_debug_debug(WID_DEFAULT,"set radio auto en_dis \n");
 			if(ret==WID_DBUS_SUCCESS)
 				{			
-					printf("set radio auto en_dis  2222\n");
+					//printf("set radio auto en_dis  2222\n");
+					wid_syslog_debug_debug(WID_DEFAULT,"able =  %d\n",able);
 					if(able == 0)
 						{
 							RadioChan = 0;					
-							printf("set radio auto en_dis  3333  radio id %d\n",ID);
+							wid_syslog_debug_debug(WID_DEFAULT,"set radio auto en_dis   radio channel %d\n",RadioChan);
 							ret = WID_RADIO_SET_CHAN(ID,RadioChan);				
 							AC_WTP[wtpid]->WTP_Radio[l_radioid]->auto_channel_cont = able;
-							printf("set radio auto en_dis  4444  radio id %d\n",ID);
+							printf("set radio auto en_dis   radio id %d\n",ID);
 						}
 					else 
 						{
-							printf("set radio auto en_dis  5555  radio id %d\n",ID);
+							//printf("set radio auto en_dis  5555  radio id %d\n",ID);
 							RadioChan = AC_WTP[wtpid]->WTP_Radio[l_radioid]->Radio_Chan;
+							wid_syslog_debug_debug(WID_DEFAULT,"set radio auto en_dis   radio channel %d\n",RadioChan);
 							ret = WID_RADIO_SET_CHAN(ID,RadioChan);				
-							printf("set radio auto en_dis  6666  radio id %d\n",ID);
+							wid_syslog_debug_debug(WID_DEFAULT,"set radio auto en_dis   radio id %d\n",ID);
 							AC_WTP[wtpid]->WTP_Radio[l_radioid]->auto_channel_cont = able;
 						}
 				}	
-			printf("set radio auto en_dis  7777  radio id %d\n",ID);
+			//printf("set radio auto en_dis  7777  radio id %d\n",ID);
+			wid_syslog_debug_debug(WID_DEFAULT,"AC_WTP[%d]->WTP_Radio[%d]->auto_channel_cont = %d\n",wtpid,l_radioid,AC_WTP[wtpid]->WTP_Radio[l_radioid]->auto_channel_cont);
 		}
 	else if(type == 1)
 		{
-			printf("******** type == 1 *****\n");
+			wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 			if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL))
 				{
 					tmp = WTP_GROUP[ID]->WTP_M;
@@ -61832,8 +61841,8 @@ DBusMessage * wid_dbus_interface_set_radio_auto_channel_cont_able(DBusConnection
 								{								
 									for(i=0;i<AC_WTP[tmp->WTPID]->RadioCount;i++)
 									{
-										printf("wtpid = %d\n",tmp->WTPID);
-										printf("radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
+										wid_syslog_debug_debug(WID_DEFAULT,"wtpid = %d\n",tmp->WTPID);
+										wid_syslog_debug_debug(WID_DEFAULT,"radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
 										if(AC_WTP[tmp->WTPID] == NULL)
 											{
 												ret2 = WTP_ID_NOT_EXIST;
@@ -61846,28 +61855,29 @@ DBusMessage * wid_dbus_interface_set_radio_auto_channel_cont_able(DBusConnection
 											}
 										if(ret2==WID_DBUS_SUCCESS)
 											{			
-												printf("set radio auto en_dis  2222\n");
+												//printf("set radio auto en_dis  2222\n");
+												wid_syslog_debug_debug(WID_DEFAULT,"able =  %d\n",able);
 												if(able == 0)
 													{
 														RadioChan = 0;					
-														printf("set radio auto en_dis  3333  radio id %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
+														wid_syslog_debug_debug(WID_DEFAULT,"set radio auto en_dis   radio channel %d\n",RadioChan);
 														ret2 = WID_RADIO_SET_CHAN(AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID,RadioChan); 			
 														AC_WTP[tmp->WTPID]->WTP_Radio[i]->auto_channel_cont = able;
-														printf("set radio auto en_dis  4444  radio id %d\n",ID);
+														//printf("set radio auto en_dis  4444  radio id %d\n",ID);
 														wid_syslog_debug_debug(WID_DEFAULT,"WTP%d RADIO%d access into set chan and save the able\n",tmp->WTPID,AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
 													}
 												else 
 													{
-														printf("set radio auto en_dis  5555  radio id %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
+														//printf("set radio auto en_dis  5555  radio id %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
 														RadioChan = AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_Chan;
+														wid_syslog_debug_debug(WID_DEFAULT,"set radio auto en_dis   radio channel %d\n",RadioChan);
 														ret2 = WID_RADIO_SET_CHAN(AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID,RadioChan); 			
-														printf("set radio auto en_dis  6666  radio id %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
+														//printf("set radio auto en_dis  6666  radio id %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
 														AC_WTP[tmp->WTPID]->WTP_Radio[i]->auto_channel_cont = able;
 														wid_syslog_debug_debug(WID_DEFAULT,"WTP%d RADIO%d access into set chan and save the able\n",tmp->WTPID,AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
 													}
 											}	
-										printf("set radio auto en_dis  7777  radio id %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
-
+										wid_syslog_debug_debug(WID_DEFAULT,"AC_WTP[tmp->WTPID]->WTP_Radio[i]->auto_channel_cont  = %d\n",tmp->WTPID,i,AC_WTP[tmp->WTPID]->WTP_Radio[i]->auto_channel_cont );
 
 										if(ret2 != WID_DBUS_SUCCESS)
 											{
@@ -61898,7 +61908,7 @@ DBusMessage * wid_dbus_interface_set_radio_auto_channel_cont_able(DBusConnection
 				dbus_message_iter_append_basic (&iter,
 													 DBUS_TYPE_UINT32,
 											 &num);
-				printf("num = %d\n",num);		
+				wid_syslog_debug_debug(WID_DEFAULT,"num = %d\n",num);		
 				for(i = 0; i < num; i++)
 					{
 						dbus_message_iter_append_basic (&iter,
@@ -61937,10 +61947,10 @@ DBusMessage * wid_dbus_interface_set_radio_auto_channel_cont_able(DBusConnection
 								DBUS_TYPE_UINT32,&able,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -61956,24 +61966,25 @@ DBusMessage * wid_dbus_interface_set_radio_auto_channel_cont_able(DBusConnection
 	{
 		ret = WTP_ID_NOT_EXIST;
 	}
-	printf("set radio auto en_dis  1111\n");
+	wid_syslog_debug_debug(WID_DEFAULT,"ret =  %d\n",ret);
 	if(ret==WID_DBUS_SUCCESS){			
-		printf("set radio auto en_dis  2222\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"able =  %d\n",able);
 		if(able == 0){
 				RadioChan = 0;					
-				printf("set radio auto en_dis  3333  radio id %d\n",radioid);
+				//printf("set radio auto en_dis  3333  radio id %d\n",radioid);
 				ret = WID_RADIO_SET_CHAN(radioid,RadioChan);				
 				AC_WTP[wtpid]->WTP_Radio[l_radioid]->auto_channel_cont = able;
-				printf("set radio auto en_dis  4444  radio id %d\n",radioid);
+				//printf("set radio auto en_dis  4444  radio id %d\n",radioid);
 		}else {
-				printf("set radio auto en_dis  5555  radio id %d\n",radioid);
+				//printf("set radio auto en_dis  5555  radio id %d\n",radioid);
 				RadioChan = AC_WTP[wtpid]->WTP_Radio[l_radioid]->Radio_Chan;
 				ret = WID_RADIO_SET_CHAN(radioid,RadioChan);				
-				printf("set radio auto en_dis  6666  radio id %d\n",radioid);
+				//printf("set radio auto en_dis  6666  radio id %d\n",radioid);
 				AC_WTP[wtpid]->WTP_Radio[l_radioid]->auto_channel_cont = able;
 		}
 	}
-	printf("set radio auto en_dis  7777  radio id %d\n",radioid);
+	wid_syslog_debug_debug(WID_DEFAULT,"AC_WTP[%d]->WTP_Radio[%d]->auto_channel_cont = %d\n",wtpid,l_radioid,AC_WTP[wtpid]->WTP_Radio[l_radioid]->auto_channel_cont);
+			}
 	reply = dbus_message_new_method_return(msg);
 	
 	dbus_message_iter_init_append (reply, &iter);
@@ -62013,10 +62024,10 @@ DBusMessage * wid_dbus_interface_set_radio_diversity_able(DBusConnection *conn, 
 								DBUS_TYPE_UINT32,&able,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -62061,7 +62072,7 @@ DBusMessage * wid_dbus_interface_set_radio_diversity_able(DBusConnection *conn, 
 		}
 	else if(type == 1)
 		{
-			printf("******** type == 1 *****\n");
+			wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 			if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL))
 				{
 					tmp = WTP_GROUP[ID]->WTP_M;
@@ -62084,8 +62095,8 @@ DBusMessage * wid_dbus_interface_set_radio_diversity_able(DBusConnection *conn, 
 								{								
 									for(i=0;i<AC_WTP[tmp->WTPID]->RadioCount;i++)
 									{
-										printf("wtpid = %d\n",tmp->WTPID);
-										printf("radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
+										wid_syslog_debug_debug(WID_DEFAULT,"wtpid = %d\n",tmp->WTPID);
+										wid_syslog_debug_debug(WID_DEFAULT,"radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
 										if(AC_WTP[tmp->WTPID] == NULL)
 											{
 												ret2 = WTP_ID_NOT_EXIST;
@@ -62153,7 +62164,7 @@ DBusMessage * wid_dbus_interface_set_radio_diversity_able(DBusConnection *conn, 
 				dbus_message_iter_append_basic (&iter,
 													 DBUS_TYPE_UINT32,
 											 &num);
-				printf("num = %d\n",num);		
+				wid_syslog_debug_debug(WID_DEFAULT,"num = %d\n",num);		
 				for(i = 0; i < num; i++)
 					{
 						dbus_message_iter_append_basic (&iter,
@@ -62190,10 +62201,10 @@ DBusMessage * wid_dbus_interface_set_radio_diversity_able(DBusConnection *conn, 
 								DBUS_TYPE_UINT32,&able,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -62279,10 +62290,10 @@ DBusMessage * wid_dbus_interface_set_radio_txantenna_able(DBusConnection *conn, 
 								DBUS_TYPE_UINT32,&able,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -62368,7 +62379,7 @@ DBusMessage * wid_dbus_interface_set_radio_txantenna_able(DBusConnection *conn, 
 		}
 	else if(type == 1)
 		{
-			printf("******** type == 1 *****\n");
+			wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 			if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL))
 				{
 					tmp = WTP_GROUP[ID]->WTP_M;
@@ -62391,8 +62402,8 @@ DBusMessage * wid_dbus_interface_set_radio_txantenna_able(DBusConnection *conn, 
 								{								
 									for(i=0;i<AC_WTP[tmp->WTPID]->RadioCount;i++)
 									{
-										printf("wtpid = %d\n",tmp->WTPID);
-										printf("radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
+										wid_syslog_debug_debug(WID_DEFAULT,"wtpid = %d\n",tmp->WTPID);
+										wid_syslog_debug_debug(WID_DEFAULT,"radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
 										if(AC_WTP[tmp->WTPID] == NULL)
 											{
 												ret2 = WTP_ID_NOT_EXIST;
@@ -62498,7 +62509,7 @@ DBusMessage * wid_dbus_interface_set_radio_txantenna_able(DBusConnection *conn, 
 				dbus_message_iter_append_basic (&iter,
 													 DBUS_TYPE_UINT32,
 											 &num);
-				printf("num = %d\n",num);		
+				wid_syslog_debug_debug(WID_DEFAULT,"num = %d\n",num);		
 				for(i = 0; i < num; i++)
 					{
 						dbus_message_iter_append_basic (&iter,
@@ -62535,10 +62546,10 @@ DBusMessage * wid_dbus_interface_set_radio_txantenna_able(DBusConnection *conn, 
 								DBUS_TYPE_UINT32,&able,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -62659,10 +62670,10 @@ DBusMessage * wid_dbus_interface_set_radio_inter_vap_forwarding_able(DBusConnect
 								DBUS_TYPE_BYTE,&policy,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -62699,7 +62710,7 @@ DBusMessage * wid_dbus_interface_set_radio_inter_vap_forwarding_able(DBusConnect
 		}
 	else if(type == 1)
 		{
-			printf("******** type == 1 *****\n");
+			wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 			if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL))
 				{
 					tmp = WTP_GROUP[ID]->WTP_M;
@@ -62722,8 +62733,8 @@ DBusMessage * wid_dbus_interface_set_radio_inter_vap_forwarding_able(DBusConnect
 								{								
 									for(i=0;i<AC_WTP[tmp->WTPID]->RadioCount;i++)
 									{
-										printf("wtpid = %d\n",tmp->WTPID);
-										printf("radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
+										wid_syslog_debug_debug(WID_DEFAULT,"wtpid = %d\n",tmp->WTPID);
+										wid_syslog_debug_debug(WID_DEFAULT,"radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
 										if(AC_WTP[tmp->WTPID] == NULL)
 											{
 												ret2 = WTP_ID_NOT_EXIST;
@@ -62785,7 +62796,7 @@ DBusMessage * wid_dbus_interface_set_radio_inter_vap_forwarding_able(DBusConnect
 				dbus_message_iter_append_basic (&iter,
 													 DBUS_TYPE_UINT32,
 											 &num);
-				printf("num = %d\n",num);		
+				wid_syslog_debug_debug(WID_DEFAULT,"num = %d\n",num);		
 				for(i = 0; i < num; i++)
 					{
 						dbus_message_iter_append_basic (&iter,
@@ -62825,10 +62836,10 @@ DBusMessage * wid_dbus_interface_set_radio_inter_vap_forwarding_able(DBusConnect
 								DBUS_TYPE_BYTE,&policy,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -62899,10 +62910,10 @@ DBusMessage * wid_dbus_interface_set_radio_intra_vap_forwarding_able(DBusConnect
 								DBUS_TYPE_BYTE,&policy,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -62940,7 +62951,7 @@ DBusMessage * wid_dbus_interface_set_radio_intra_vap_forwarding_able(DBusConnect
 		}
 	else if(type == 1)
 		{
-			printf("******** type == 1 *****\n");
+			wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 			if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL))
 				{
 					tmp = WTP_GROUP[ID]->WTP_M;
@@ -62963,8 +62974,8 @@ DBusMessage * wid_dbus_interface_set_radio_intra_vap_forwarding_able(DBusConnect
 								{								
 									for(i=0;i<AC_WTP[tmp->WTPID]->RadioCount;i++)
 									{
-										printf("wtpid = %d\n",tmp->WTPID);
-										printf("radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
+										wid_syslog_debug_debug(WID_DEFAULT,"wtpid = %d\n",tmp->WTPID);
+										wid_syslog_debug_debug(WID_DEFAULT,"radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
 										if(AC_WTP[tmp->WTPID] == NULL)
 											{
 												ret2 = WTP_ID_NOT_EXIST;
@@ -63026,7 +63037,7 @@ DBusMessage * wid_dbus_interface_set_radio_intra_vap_forwarding_able(DBusConnect
 				dbus_message_iter_append_basic (&iter,
 													 DBUS_TYPE_UINT32,
 											 &num);
-				printf("num = %d\n",num);		
+				wid_syslog_debug_debug(WID_DEFAULT,"num = %d\n",num);		
 				for(i = 0; i < num; i++)
 					{
 						dbus_message_iter_append_basic (&iter,
@@ -63067,10 +63078,10 @@ DBusMessage * wid_dbus_interface_set_radio_intra_vap_forwarding_able(DBusConnect
 								DBUS_TYPE_BYTE,&policy,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -63142,10 +63153,10 @@ DBusMessage * wid_dbus_interface_set_radio_keep_alive_period_value(DBusConnectio
 								DBUS_TYPE_UINT32,&period,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -63184,7 +63195,7 @@ DBusMessage * wid_dbus_interface_set_radio_keep_alive_period_value(DBusConnectio
 		}
 	else if(type == 1)
 		{
-			printf("******** type == 1 *****\n");
+			wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 			if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL))
 				{
 					tmp = WTP_GROUP[ID]->WTP_M;
@@ -63207,8 +63218,8 @@ DBusMessage * wid_dbus_interface_set_radio_keep_alive_period_value(DBusConnectio
 								{								
 									for(i=0;i<AC_WTP[tmp->WTPID]->RadioCount;i++)
 									{
-										printf("wtpid = %d\n",tmp->WTPID);
-										printf("radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
+										wid_syslog_debug_debug(WID_DEFAULT,"wtpid = %d\n",tmp->WTPID);
+										wid_syslog_debug_debug(WID_DEFAULT,"radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
 										if(AC_WTP[tmp->WTPID] == NULL)
 											{
 												ret2 = WTP_ID_NOT_EXIST;
@@ -63270,7 +63281,7 @@ DBusMessage * wid_dbus_interface_set_radio_keep_alive_period_value(DBusConnectio
 				dbus_message_iter_append_basic (&iter,
 													 DBUS_TYPE_UINT32,
 											 &num);
-				printf("num = %d\n",num);		
+				wid_syslog_debug_debug(WID_DEFAULT,"num = %d\n",num);		
 				for(i = 0; i < num; i++)
 					{
 						dbus_message_iter_append_basic (&iter,
@@ -63310,10 +63321,10 @@ DBusMessage * wid_dbus_interface_set_radio_keep_alive_period_value(DBusConnectio
 								DBUS_TYPE_UINT32,&period,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -63386,10 +63397,10 @@ DBusMessage * wid_dbus_interface_set_radio_keep_alive_idle_time_value(DBusConnec
 								DBUS_TYPE_UINT32,&idle_time,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -63427,7 +63438,7 @@ DBusMessage * wid_dbus_interface_set_radio_keep_alive_idle_time_value(DBusConnec
 		}
 	else if(type == 1)
 		{
-			printf("******** type == 1 *****\n");
+			wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 			if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL))
 				{
 					tmp = WTP_GROUP[ID]->WTP_M;
@@ -63450,8 +63461,8 @@ DBusMessage * wid_dbus_interface_set_radio_keep_alive_idle_time_value(DBusConnec
 								{								
 									for(i=0;i<AC_WTP[tmp->WTPID]->RadioCount;i++)
 									{
-										printf("wtpid = %d\n",tmp->WTPID);
-										printf("radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
+										wid_syslog_debug_debug(WID_DEFAULT,"wtpid = %d\n",tmp->WTPID);
+										wid_syslog_debug_debug(WID_DEFAULT,"radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
 										if(AC_WTP[tmp->WTPID] == NULL)
 											{
 												ret2 = WTP_ID_NOT_EXIST;
@@ -63513,7 +63524,7 @@ DBusMessage * wid_dbus_interface_set_radio_keep_alive_idle_time_value(DBusConnec
 				dbus_message_iter_append_basic (&iter,
 													 DBUS_TYPE_UINT32,
 											 &num);
-				printf("num = %d\n",num);		
+				wid_syslog_debug_debug(WID_DEFAULT,"num = %d\n",num);		
 				for(i = 0; i < num; i++)
 					{
 						dbus_message_iter_append_basic (&iter,
@@ -63553,10 +63564,10 @@ DBusMessage * wid_dbus_interface_set_radio_keep_alive_idle_time_value(DBusConnec
 								DBUS_TYPE_UINT32,&idle_time,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -63627,10 +63638,10 @@ DBusMessage * wid_dbus_interface_set_radio_congestion_avoid_state(DBusConnection
 								DBUS_TYPE_UINT32,&congestion_avoidance,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -63668,7 +63679,7 @@ DBusMessage * wid_dbus_interface_set_radio_congestion_avoid_state(DBusConnection
 		}
 	else if(type == 1)
 		{
-			printf("******** type == 1 *****\n");
+			wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 			if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL))
 				{
 					tmp = WTP_GROUP[ID]->WTP_M;
@@ -63691,8 +63702,8 @@ DBusMessage * wid_dbus_interface_set_radio_congestion_avoid_state(DBusConnection
 								{								
 									for(i=0;i<AC_WTP[tmp->WTPID]->RadioCount;i++)
 									{
-										printf("wtpid = %d\n",tmp->WTPID);
-										printf("radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
+										wid_syslog_debug_debug(WID_DEFAULT,"wtpid = %d\n",tmp->WTPID);
+										wid_syslog_debug_debug(WID_DEFAULT,"radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
 										if(AC_WTP[tmp->WTPID] == NULL)
 											{
 												ret2 = WTP_ID_NOT_EXIST;
@@ -63754,7 +63765,7 @@ DBusMessage * wid_dbus_interface_set_radio_congestion_avoid_state(DBusConnection
 				dbus_message_iter_append_basic (&iter,
 													 DBUS_TYPE_UINT32,
 											 &num);
-				printf("num = %d\n",num);		
+				wid_syslog_debug_debug(WID_DEFAULT,"num = %d\n",num);		
 				for(i = 0; i < num; i++)
 					{
 						dbus_message_iter_append_basic (&iter,
@@ -63793,10 +63804,10 @@ DBusMessage * wid_dbus_interface_set_radio_congestion_avoid_state(DBusConnection
 								DBUS_TYPE_UINT32,&congestion_avoidance,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -63869,10 +63880,10 @@ DBusMessage * wid_dbus_interface_set_radio_wlan_traffic_limit_able(DBusConnectio
 								DBUS_TYPE_BYTE,&policy,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -63921,7 +63932,7 @@ DBusMessage * wid_dbus_interface_set_radio_wlan_traffic_limit_able(DBusConnectio
 		}
 	else if(type == 1)
 		{
-			printf("******** type == 1 *****\n");
+			wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 			if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL))
 				{
 					tmp = WTP_GROUP[ID]->WTP_M;
@@ -63944,8 +63955,8 @@ DBusMessage * wid_dbus_interface_set_radio_wlan_traffic_limit_able(DBusConnectio
 								{								
 									for(i=0;i<AC_WTP[tmp->WTPID]->RadioCount;i++)
 									{
-										printf("wtpid = %d\n",tmp->WTPID);
-										printf("radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
+										wid_syslog_debug_debug(WID_DEFAULT,"wtpid = %d\n",tmp->WTPID);
+										wid_syslog_debug_debug(WID_DEFAULT,"radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
 										if(AC_WTP[tmp->WTPID] == NULL)
 											{
 												ret2 = WTP_ID_NOT_EXIST;
@@ -64021,7 +64032,7 @@ DBusMessage * wid_dbus_interface_set_radio_wlan_traffic_limit_able(DBusConnectio
 				dbus_message_iter_append_basic (&iter,
 													 DBUS_TYPE_UINT32,
 											 &num);
-				printf("num = %d\n",num);		
+				wid_syslog_debug_debug(WID_DEFAULT,"num = %d\n",num);		
 				for(i = 0; i < num; i++)
 					{
 						dbus_message_iter_append_basic (&iter,
@@ -64060,10 +64071,10 @@ DBusMessage * wid_dbus_interface_set_radio_wlan_traffic_limit_able(DBusConnectio
 								DBUS_TYPE_BYTE,&policy,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -64154,10 +64165,10 @@ DBusMessage * wid_dbus_interface_set_radio_wlan_traffic_limit_value(DBusConnecti
 								DBUS_TYPE_UINT32,&value,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -64207,7 +64218,7 @@ DBusMessage * wid_dbus_interface_set_radio_wlan_traffic_limit_value(DBusConnecti
 		}
 	else if(type == 1)
 		{
-			printf("******** type == 1 *****\n");
+			wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 			if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL))
 				{
 					tmp = WTP_GROUP[ID]->WTP_M;
@@ -64230,8 +64241,8 @@ DBusMessage * wid_dbus_interface_set_radio_wlan_traffic_limit_value(DBusConnecti
 								{								
 									for(i=0;i<AC_WTP[tmp->WTPID]->RadioCount;i++)
 									{
-										printf("wtpid = %d\n",tmp->WTPID);
-										printf("radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
+										wid_syslog_debug_debug(WID_DEFAULT,"wtpid = %d\n",tmp->WTPID);
+										wid_syslog_debug_debug(WID_DEFAULT,"radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
 										if(AC_WTP[tmp->WTPID] == NULL)
 											{
 												ret2 = WTP_ID_NOT_EXIST;
@@ -64307,7 +64318,7 @@ DBusMessage * wid_dbus_interface_set_radio_wlan_traffic_limit_value(DBusConnecti
 				dbus_message_iter_append_basic (&iter,
 													 DBUS_TYPE_UINT32,
 											 &num);
-				printf("num = %d\n",num);		
+				wid_syslog_debug_debug(WID_DEFAULT,"num = %d\n",num);		
 				for(i = 0; i < num; i++)
 					{
 						dbus_message_iter_append_basic (&iter,
@@ -64347,10 +64358,10 @@ DBusMessage * wid_dbus_interface_set_radio_wlan_traffic_limit_value(DBusConnecti
 								DBUS_TYPE_UINT32,&value,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -64441,10 +64452,10 @@ DBusMessage * wid_dbus_interface_set_radio_wlan_traffic_limit_average_value(DBus
 								DBUS_TYPE_UINT32,&value,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -64495,7 +64506,7 @@ DBusMessage * wid_dbus_interface_set_radio_wlan_traffic_limit_average_value(DBus
 		}
 	else if(type == 1)
 		{
-			printf("******** type == 1 *****\n");
+			wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 			if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL))
 				{
 					tmp = WTP_GROUP[ID]->WTP_M;
@@ -64518,8 +64529,8 @@ DBusMessage * wid_dbus_interface_set_radio_wlan_traffic_limit_average_value(DBus
 								{								
 									for(i=0;i<AC_WTP[tmp->WTPID]->RadioCount;i++)
 									{
-										printf("wtpid = %d\n",tmp->WTPID);
-										printf("radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
+										wid_syslog_debug_debug(WID_DEFAULT,"wtpid = %d\n",tmp->WTPID);
+										wid_syslog_debug_debug(WID_DEFAULT,"radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
 										if(AC_WTP[tmp->WTPID] == NULL)
 											{
 												ret2 = WTP_ID_NOT_EXIST;
@@ -64595,7 +64606,7 @@ DBusMessage * wid_dbus_interface_set_radio_wlan_traffic_limit_average_value(DBus
 				dbus_message_iter_append_basic (&iter,
 													 DBUS_TYPE_UINT32,
 											 &num);
-				printf("num = %d\n",num);		
+				wid_syslog_debug_debug(WID_DEFAULT,"num = %d\n",num);		
 				for(i = 0; i < num; i++)
 					{
 						dbus_message_iter_append_basic (&iter,
@@ -64635,10 +64646,10 @@ DBusMessage * wid_dbus_interface_set_radio_wlan_traffic_limit_average_value(DBus
 								DBUS_TYPE_UINT32,&value,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -64715,10 +64726,10 @@ DBusMessage * wid_dbus_interface_set_radio_wlan_traffic_limit_cancel_average_sen
 								DBUS_TYPE_BYTE,&wlanid,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -64791,10 +64802,10 @@ DBusMessage * wid_dbus_interface_set_radio_wlan_traffic_limit_cancel_average_val
 								DBUS_TYPE_BYTE,&wlanid,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -64874,10 +64885,10 @@ DBusMessage * wid_dbus_interface_set_radio_wlan_traffic_limit_sta_value(DBusConn
 								DBUS_TYPE_BYTE,&mac[5],
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -64956,10 +64967,10 @@ DBusMessage * wid_dbus_interface_set_radio_wlan_traffic_limit_cancel_sta_value(D
 								DBUS_TYPE_BYTE,&mac[5],
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -65048,10 +65059,10 @@ DBusMessage * wid_dbus_interface_set_radio_wlan_traffic_limit_send_value(DBusCon
 								DBUS_TYPE_UINT32,&value,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -65102,7 +65113,7 @@ DBusMessage * wid_dbus_interface_set_radio_wlan_traffic_limit_send_value(DBusCon
 		}
 	else if(type == 1)
 		{
-			printf("******** type == 1 *****\n");
+			wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 			if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL))
 				{
 					tmp = WTP_GROUP[ID]->WTP_M;
@@ -65125,8 +65136,8 @@ DBusMessage * wid_dbus_interface_set_radio_wlan_traffic_limit_send_value(DBusCon
 								{								
 									for(i=0;i<AC_WTP[tmp->WTPID]->RadioCount;i++)
 									{
-										printf("wtpid = %d\n",tmp->WTPID);
-										printf("radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
+										wid_syslog_debug_debug(WID_DEFAULT,"wtpid = %d\n",tmp->WTPID);
+										wid_syslog_debug_debug(WID_DEFAULT,"radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
 										if(AC_WTP[tmp->WTPID] == NULL)
 											{
 												ret2 = WTP_ID_NOT_EXIST;
@@ -65202,7 +65213,7 @@ DBusMessage * wid_dbus_interface_set_radio_wlan_traffic_limit_send_value(DBusCon
 				dbus_message_iter_append_basic (&iter,
 													 DBUS_TYPE_UINT32,
 											 &num);
-				printf("num = %d\n",num);		
+				wid_syslog_debug_debug(WID_DEFAULT,"num = %d\n",num);		
 				for(i = 0; i < num; i++)
 					{
 						dbus_message_iter_append_basic (&iter,
@@ -65241,10 +65252,10 @@ DBusMessage * wid_dbus_interface_set_radio_wlan_traffic_limit_send_value(DBusCon
 								DBUS_TYPE_UINT32,&value,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -65335,10 +65346,10 @@ DBusMessage * wid_dbus_interface_set_radio_wlan_traffic_limit_average_send_value
 								DBUS_TYPE_UINT32,&value,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -65390,7 +65401,7 @@ DBusMessage * wid_dbus_interface_set_radio_wlan_traffic_limit_average_send_value
 		}
 	else if(type == 1)
 		{
-			printf("******** type == 1 *****\n");
+			wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 			if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL))
 				{
 					tmp = WTP_GROUP[ID]->WTP_M;
@@ -65413,8 +65424,8 @@ DBusMessage * wid_dbus_interface_set_radio_wlan_traffic_limit_average_send_value
 								{								
 									for(i=0;i<AC_WTP[tmp->WTPID]->RadioCount;i++)
 									{
-										printf("wtpid = %d\n",tmp->WTPID);
-										printf("radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
+										wid_syslog_debug_debug(WID_DEFAULT,"wtpid = %d\n",tmp->WTPID);
+										wid_syslog_debug_debug(WID_DEFAULT,"radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
 										if(AC_WTP[tmp->WTPID] == NULL)
 											{
 												ret2 = WTP_ID_NOT_EXIST;
@@ -65492,7 +65503,7 @@ DBusMessage * wid_dbus_interface_set_radio_wlan_traffic_limit_average_send_value
 				dbus_message_iter_append_basic (&iter,
 													 DBUS_TYPE_UINT32,
 											 &num);
-				printf("num = %d\n",num);		
+				wid_syslog_debug_debug(WID_DEFAULT,"num = %d\n",num);		
 				for(i = 0; i < num; i++)
 					{
 						dbus_message_iter_append_basic (&iter,
@@ -65532,10 +65543,10 @@ DBusMessage * wid_dbus_interface_set_radio_wlan_traffic_limit_average_send_value
 								DBUS_TYPE_UINT32,&value,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -65619,10 +65630,10 @@ DBusMessage * wid_dbus_interface_set_radio_wlan_traffic_limit_sta_send_value(DBu
 								DBUS_TYPE_BYTE,&mac[5],
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -65701,10 +65712,10 @@ DBusMessage * wid_dbus_interface_set_radio_wlan_traffic_limit_cancel_sta_send_va
 								DBUS_TYPE_BYTE,&mac[5],
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -65791,7 +65802,7 @@ DBusMessage * wid_dbus_interface_set_radio_wlan_sta_vlanid(DBusConnection *conn,
 								DBUS_TYPE_INVALID))){
 
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -65837,7 +65848,7 @@ DBusMessage * wid_dbus_interface_set_radio_wlan_sta_dhcp_before_autherized(DBusC
 	int ret = WID_DBUS_SUCCESS;
 	int ret2 = WID_DBUS_SUCCESS;
 	int ret_check = WID_DBUS_SUCCESS;
-	printf("!!!!!!!!!!!\n");
+	wid_syslog_debug_debug(WID_DEFAULT,"!!!!!!!!!!!\n");
 	struct Radio_List  *radio_head = NULL;
 	struct WTP_GROUP_MEMBER *tmp = NULL;
 	struct WTP_GROUP_MEMBER *radiotmp = NULL;	
@@ -65850,15 +65861,15 @@ DBusMessage * wid_dbus_interface_set_radio_wlan_sta_dhcp_before_autherized(DBusC
 								DBUS_TYPE_UINT32,&able,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
 	}
-	printf("type= %d,ID= %d,wlanid = %d,able= %d\n",type,ID,wlanid,able);
+	wid_syslog_debug_debug(WID_DEFAULT,"type= %d,ID= %d,wlanid = %d,able= %d\n",type,ID,wlanid,able);
 	if(type==0)
 		{
 			int wtpid = ID/L_RADIO_NUM;
@@ -65890,7 +65901,7 @@ DBusMessage * wid_dbus_interface_set_radio_wlan_sta_dhcp_before_autherized(DBusC
 		}
 	else if(type == 1)
 		{
-			printf("******** type == 1 *****\n");
+			wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 			if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL))
 				{
 					tmp = WTP_GROUP[ID]->WTP_M;
@@ -65913,8 +65924,8 @@ DBusMessage * wid_dbus_interface_set_radio_wlan_sta_dhcp_before_autherized(DBusC
 								{								
 									for(i=0;i<AC_WTP[tmp->WTPID]->RadioCount;i++)
 									{
-										printf("wtpid = %d\n",tmp->WTPID);
-										printf("radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
+										wid_syslog_debug_debug(WID_DEFAULT,"wtpid = %d\n",tmp->WTPID);
+										wid_syslog_debug_debug(WID_DEFAULT,"radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
 										if(AC_WTP[tmp->WTPID] == NULL)
 											{
 												ret2 = WTP_ID_NOT_EXIST;
@@ -65976,7 +65987,7 @@ DBusMessage * wid_dbus_interface_set_radio_wlan_sta_dhcp_before_autherized(DBusC
 				dbus_message_iter_append_basic (&iter,
 													 DBUS_TYPE_UINT32,
 											 &num);
-				printf("num = %d\n",num);		
+				wid_syslog_debug_debug(WID_DEFAULT,"num = %d\n",num);		
 				for(i = 0; i < num; i++)
 					{
 						dbus_message_iter_append_basic (&iter,
@@ -66015,10 +66026,10 @@ DBusMessage * wid_dbus_interface_set_radio_wlan_sta_dhcp_before_autherized(DBusC
 								DBUS_TYPE_UINT32,&able,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -66095,10 +66106,10 @@ DBusMessage * wid_dbus_interface_set_radio_wlan_sta_ip_mac_binding(DBusConnectio
 								DBUS_TYPE_UINT32,&able,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -66131,7 +66142,7 @@ DBusMessage * wid_dbus_interface_set_radio_wlan_sta_ip_mac_binding(DBusConnectio
 		}
 	else if(type == 1)
 		{
-			printf("******** type == 1 *****\n");
+			wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 			if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL))
 				{
 					tmp = WTP_GROUP[ID]->WTP_M;
@@ -66154,8 +66165,8 @@ DBusMessage * wid_dbus_interface_set_radio_wlan_sta_ip_mac_binding(DBusConnectio
 								{								
 									for(i=0;i<AC_WTP[tmp->WTPID]->RadioCount;i++)
 									{
-										printf("wtpid = %d\n",tmp->WTPID);
-										printf("radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
+										wid_syslog_debug_debug(WID_DEFAULT,"wtpid = %d\n",tmp->WTPID);
+										wid_syslog_debug_debug(WID_DEFAULT,"radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
 										if(AC_WTP[tmp->WTPID] == NULL)
 											{
 												ret2 = WTP_ID_NOT_EXIST;
@@ -66212,7 +66223,7 @@ DBusMessage * wid_dbus_interface_set_radio_wlan_sta_ip_mac_binding(DBusConnectio
 				dbus_message_iter_append_basic (&iter,
 													 DBUS_TYPE_UINT32,
 											 &num);
-				printf("num = %d\n",num);		
+				wid_syslog_debug_debug(WID_DEFAULT,"num = %d\n",num);		
 				for(i = 0; i < num; i++)
 					{
 						dbus_message_iter_append_basic (&iter,
@@ -66253,10 +66264,10 @@ DBusMessage * wid_dbus_interface_set_radio_wlan_sta_ip_mac_binding(DBusConnectio
 								DBUS_TYPE_UINT32,&able,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -66329,10 +66340,10 @@ DBusMessage * wid_dbus_interface_set_radio_sector_value(DBusConnection *conn, DB
 								DBUS_TYPE_UINT32,&policy,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -66361,7 +66372,7 @@ DBusMessage * wid_dbus_interface_set_radio_sector_value(DBusConnection *conn, DB
 		}
 	else if(type == 1)
 		{
-			printf("******** type == 1 *****\n");
+			wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 			if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL))
 				{
 					tmp = WTP_GROUP[ID]->WTP_M;
@@ -66384,8 +66395,8 @@ DBusMessage * wid_dbus_interface_set_radio_sector_value(DBusConnection *conn, DB
 								{								
 									for(i=0;i<AC_WTP[tmp->WTPID]->RadioCount;i++)
 									{
-										printf("wtpid = %d\n",tmp->WTPID);
-										printf("radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
+										wid_syslog_debug_debug(WID_DEFAULT,"wtpid = %d\n",tmp->WTPID);
+										wid_syslog_debug_debug(WID_DEFAULT,"radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
 										if(AC_WTP[tmp->WTPID] == NULL)
 											{
 												ret2 = WTP_ID_NOT_EXIST;
@@ -66436,7 +66447,7 @@ DBusMessage * wid_dbus_interface_set_radio_sector_value(DBusConnection *conn, DB
 				dbus_message_iter_append_basic (&iter,
 													 DBUS_TYPE_UINT32,
 											 &num);
-				printf("num = %d\n",num);		
+				wid_syslog_debug_debug(WID_DEFAULT,"num = %d\n",num);		
 				for(i = 0; i < num; i++)
 					{
 						dbus_message_iter_append_basic (&iter,
@@ -66477,17 +66488,17 @@ DBusMessage * wid_dbus_interface_set_radio_sector_value(DBusConnection *conn, DB
 								DBUS_TYPE_UINT32,&policy,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
 	}
 	int wtpid = radioid/L_RADIO_NUM;
 	int l_radioid = radioid%L_RADIO_NUM;
-	//printf("wtp id is %d;radio id is %d;g_radio id is %d.\n",wtpid,l_radioid,radioid);
+	//wid_syslog_debug_debug(WID_DEFAULT,"wtp id is %d;radio id is %d;g_radio id is %d.\n",wtpid,l_radioid,radioid);
 	//printf("sectorid111 is %d.\n",sectorid);
 	if(AC_WTP[wtpid] == NULL)
 	{
@@ -66545,10 +66556,10 @@ DBusMessage * wid_dbus_interface_set_radio_tx_chainmask_value(DBusConnection *co
 								DBUS_TYPE_UINT32,&policy,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -66575,7 +66586,7 @@ DBusMessage * wid_dbus_interface_set_radio_tx_chainmask_value(DBusConnection *co
 
 	else if(type == 1)
 		{
-			printf("******** type == 1 *****\n");
+			wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 			if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL))
 				{
 					tmp = WTP_GROUP[ID]->WTP_M;
@@ -66598,8 +66609,8 @@ DBusMessage * wid_dbus_interface_set_radio_tx_chainmask_value(DBusConnection *co
 								{								
 									for(i=0;i<AC_WTP[tmp->WTPID]->RadioCount;i++)
 									{
-										printf("wtpid = %d\n",tmp->WTPID);
-										printf("radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
+										wid_syslog_debug_debug(WID_DEFAULT,"wtpid = %d\n",tmp->WTPID);
+										wid_syslog_debug_debug(WID_DEFAULT,"radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
 										if(AC_WTP[tmp->WTPID] == NULL)
 											{
 												ret2 = WTP_ID_NOT_EXIST;
@@ -66646,7 +66657,7 @@ DBusMessage * wid_dbus_interface_set_radio_tx_chainmask_value(DBusConnection *co
 				dbus_message_iter_append_basic (&iter,
 													 DBUS_TYPE_UINT32,
 											 &num);
-				printf("num = %d\n",num);		
+				wid_syslog_debug_debug(WID_DEFAULT,"num = %d\n",num);		
 				for(i = 0; i < num; i++)
 					{
 						dbus_message_iter_append_basic (&iter,
@@ -66687,10 +66698,10 @@ DBusMessage * wid_dbus_interface_set_radio_tx_chainmask_value(DBusConnection *co
 								DBUS_TYPE_UINT32,&policy,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -66821,10 +66832,10 @@ DBusMessage * wid_dbus_interface_set_radio_chainmask_value(DBusConnection *conn,
 								DBUS_TYPE_BYTE,&type,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -66867,7 +66878,7 @@ DBusMessage * wid_dbus_interface_set_radio_chainmask_value(DBusConnection *conn,
 		}
 	else if(TYPE == 1)
 		{
-			printf("******** type == 1 *****\n");
+			wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 			if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL))
 				{
 					tmp = WTP_GROUP[ID]->WTP_M;
@@ -66969,7 +66980,7 @@ DBusMessage * wid_dbus_interface_set_radio_chainmask_value(DBusConnection *conn,
 				dbus_message_iter_append_basic (&iter,
 													 DBUS_TYPE_UINT32,
 											 &num);
-				printf("num = %d\n",num);		
+				wid_syslog_debug_debug(WID_DEFAULT,"num = %d\n",num);		
 				for(i = 0; i < num; i++)
 					{
 						dbus_message_iter_append_basic (&iter,
@@ -67008,10 +67019,10 @@ DBusMessage * wid_dbus_interface_set_radio_chainmask_value(DBusConnection *conn,
 								DBUS_TYPE_BYTE,&type,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -67095,10 +67106,10 @@ DBusMessage * wid_dbus_interface_set_radio_tx_power_sector_value(DBusConnection 
 								DBUS_TYPE_UINT32,&sectorvalue,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -67141,7 +67152,7 @@ DBusMessage * wid_dbus_interface_set_radio_tx_power_sector_value(DBusConnection 
 
 	else if(type == 1)
 		{
-			printf("******** type == 1 *****\n");
+			wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 			if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL))
 				{
 					tmp = WTP_GROUP[ID]->WTP_M;
@@ -67246,7 +67257,7 @@ DBusMessage * wid_dbus_interface_set_radio_tx_power_sector_value(DBusConnection 
 				dbus_message_iter_append_basic (&iter,
 													 DBUS_TYPE_UINT32,
 											 &num);
-				printf("num = %d\n",num);		
+				wid_syslog_debug_debug(WID_DEFAULT,"num = %d\n",num);		
 				for(i = 0; i < num; i++)
 					{
 						dbus_message_iter_append_basic (&iter,
@@ -67288,10 +67299,10 @@ DBusMessage * wid_dbus_interface_set_radio_tx_power_sector_value(DBusConnection 
 								DBUS_TYPE_UINT32,&sectorvalue,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -67363,10 +67374,10 @@ DBusMessage * wid_dbus_interface_set_radio_supper_g_type_state(DBusConnection *c
 								DBUS_TYPE_UINT32,&super_g_state,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -67376,7 +67387,7 @@ DBusMessage * wid_dbus_interface_set_radio_supper_g_type_state(DBusConnection *c
 		{
 			int wtpid = ID/L_RADIO_NUM;
 			int l_radioid = ID%L_RADIO_NUM;
-			printf("wtp id is %d;radio id is %d;g_radio id is %d.\n",wtpid,l_radioid,ID);
+			wid_syslog_debug_debug(WID_DEFAULT,"wtp id is %d;radio id is %d;g_radio id is %d.\n",wtpid,l_radioid,ID);
 
 			if(AC_WTP[wtpid] == NULL)
 				{
@@ -67398,7 +67409,7 @@ DBusMessage * wid_dbus_interface_set_radio_supper_g_type_state(DBusConnection *c
 		}
 	else if(type == 1)
 		{
-			printf("******** type == 1 *****\n");
+			wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 			if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL))
 				{
 					tmp = WTP_GROUP[ID]->WTP_M;
@@ -67421,8 +67432,8 @@ DBusMessage * wid_dbus_interface_set_radio_supper_g_type_state(DBusConnection *c
 								{								
 									for(i=0;i<AC_WTP[tmp->WTPID]->RadioCount;i++)
 									{
-										printf("wtpid = %d\n",tmp->WTPID);
-										printf("radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
+										wid_syslog_debug_debug(WID_DEFAULT,"wtpid = %d\n",tmp->WTPID);
+										wid_syslog_debug_debug(WID_DEFAULT,"radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
 										if(AC_WTP[tmp->WTPID] == NULL)
 											{
 												ret2 = WTP_ID_NOT_EXIST;
@@ -67474,7 +67485,7 @@ DBusMessage * wid_dbus_interface_set_radio_supper_g_type_state(DBusConnection *c
 				dbus_message_iter_append_basic (&iter,
 													 DBUS_TYPE_UINT32,
 											 &num);
-				printf("num = %d\n",num);		
+				wid_syslog_debug_debug(WID_DEFAULT,"num = %d\n",num);		
 				for(i = 0; i < num; i++)
 					{
 						dbus_message_iter_append_basic (&iter,
@@ -67516,17 +67527,17 @@ DBusMessage * wid_dbus_interface_set_radio_supper_g_type_state(DBusConnection *c
 								DBUS_TYPE_UINT32,&super_g_state,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
 	}
 	int wtpid = radioid/L_RADIO_NUM;
 	int l_radioid = radioid%L_RADIO_NUM;
-	printf("wtp id is %d;radio id is %d;g_radio id is %d.\n",wtpid,l_radioid,radioid);
+	wid_syslog_debug_debug(WID_DEFAULT,"wtp id is %d;radio id is %d;g_radio id is %d.\n",wtpid,l_radioid,radioid);
 //	printf("sectorvalue is %d.\n",sectorvalue);
 	if(AC_WTP[wtpid] == NULL)
 	{
@@ -67577,10 +67588,10 @@ DBusMessage * wid_dbus_interface_set_ap_dos_def(DBusConnection *conn, DBusMessag
 								DBUS_TYPE_UINT32,&able,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -67611,7 +67622,7 @@ DBusMessage * wid_dbus_interface_set_ap_dos_def(DBusConnection *conn, DBusMessag
 		}
 
 	else if(type == 1){
-			printf("******** type == 1 *****\n");
+			wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 			if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL)){
 				tmp = WTP_GROUP[ID]->WTP_M;
 				wtp_head = (struct Wtp_List *)WID_MALLOC(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
@@ -67667,7 +67678,7 @@ DBusMessage * wid_dbus_interface_set_ap_dos_def(DBusConnection *conn, DBusMessag
 			dbus_message_iter_append_basic (&iter,
 												 DBUS_TYPE_UINT32,
 												 &num);
-			printf("num= %d",num);
+			wid_syslog_debug_debug(WID_DEFAULT,"num= %d",num);
 			for(i = 0; i < num; i++){
 				dbus_message_iter_append_basic (&iter,
 													 DBUS_TYPE_UINT32,
@@ -67701,10 +67712,10 @@ DBusMessage * wid_dbus_interface_set_ap_dos_def(DBusConnection *conn, DBusMessag
 								DBUS_TYPE_UINT32,&able,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -67766,10 +67777,10 @@ DBusMessage * wid_dbus_interface_set_ap_igmp_snoop(DBusConnection *conn, DBusMes
 								DBUS_TYPE_UINT32,&able,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -67801,7 +67812,7 @@ DBusMessage * wid_dbus_interface_set_ap_igmp_snoop(DBusConnection *conn, DBusMes
 		}
 	
 	else if(type == 1){
-		printf("******** type == 1 *****\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 		if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL)){
 			tmp = WTP_GROUP[ID]->WTP_M;
 			wtp_head = (struct Wtp_List *)WID_MALLOC(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
@@ -67857,7 +67868,7 @@ DBusMessage * wid_dbus_interface_set_ap_igmp_snoop(DBusConnection *conn, DBusMes
 		dbus_message_iter_append_basic (&iter,
 											 DBUS_TYPE_UINT32,
 											 &num);
-		printf("num= %d",num);
+		wid_syslog_debug_debug(WID_DEFAULT,"num= %d",num);
 		for(i = 0; i < num; i++){
 			dbus_message_iter_append_basic (&iter,
 												 DBUS_TYPE_UINT32,
@@ -67891,10 +67902,10 @@ DBusMessage * wid_dbus_interface_set_ap_igmp_snoop(DBusConnection *conn, DBusMes
 								DBUS_TYPE_UINT32,&able,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -67947,10 +67958,10 @@ DBusMessage * wid_dbus_interface_show_ap_mib_info(DBusConnection *conn, DBusMess
 								DBUS_TYPE_UINT32,&wtpid,
 								DBUS_TYPE_INVALID))){
 	
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 					
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -68033,10 +68044,10 @@ DBusMessage * wid_dbus_interface_show_ap_cm_statistics(DBusConnection *conn, DBu
 								DBUS_TYPE_UINT32,&wtpid,
 								DBUS_TYPE_INVALID))){
 	
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 					
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		WID_FREE(cpu_type);
@@ -68052,7 +68063,7 @@ DBusMessage * wid_dbus_interface_show_ap_cm_statistics(DBusConnection *conn, DBu
 		
 	if(ret != WID_DBUS_SUCCESS)
 	{
-		printf("wtp id not correct. \n");
+		wid_syslog_debug_debug(WID_DEFAULT,"wtp id not correct. \n");
 	}
 	else if (AC_WTP[wtpid] == NULL)
 	{
@@ -68110,10 +68121,10 @@ DBusMessage * wid_dbus_interface_show_wtp_wifi_snr_info(DBusConnection *conn, DB
 								DBUS_TYPE_UINT32,&wtpid,
 								DBUS_TYPE_INVALID))){
 	
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 					
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -68123,7 +68134,7 @@ DBusMessage * wid_dbus_interface_show_wtp_wifi_snr_info(DBusConnection *conn, DB
 	
 	if(ret != WID_DBUS_SUCCESS)
 	{
-		printf("wtp id not correct. \n");
+		wid_syslog_debug_debug(WID_DEFAULT,"wtp id not correct. \n");
 	}
 	else if (AC_WTP[wtpid] == NULL)
 	{
@@ -68167,10 +68178,10 @@ DBusMessage * wid_dbus_interface_show_ap_max_txpower(DBusConnection *conn, DBusM
 								DBUS_TYPE_UINT32,&wtpid,
 								DBUS_TYPE_INVALID))){
 	
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 					
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -68180,7 +68191,7 @@ DBusMessage * wid_dbus_interface_show_ap_max_txpower(DBusConnection *conn, DBusM
 	
 	if(ret != WID_DBUS_SUCCESS)
 	{
-		printf("wtp id not correct  \n");
+		wid_syslog_debug_debug(WID_DEFAULT,"wtp id not correct  \n");
 	}
 	else if (AC_WTP[wtpid] == NULL)
 	{
@@ -68236,10 +68247,10 @@ DBusMessage *wid_dbus_interface_ebr_add_del_ebr(DBusConnection *conn, DBusMessag
 								DBUS_TYPE_STRING,&EBRName,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -68297,10 +68308,10 @@ DBusMessage * wid_dbus_interface_ebr_show_ebr(DBusConnection *conn, DBusMessage 
 								DBUS_TYPE_UINT32,&EBRID,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -68561,10 +68572,10 @@ DBusMessage * wid_dbus_interface_ebr(DBusConnection *conn, DBusMessage *msg, voi
 								DBUS_TYPE_UINT32,&EBRID,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -68595,10 +68606,10 @@ DBusMessage * wid_dbus_interface_set_ebr_enable(DBusConnection *conn, DBusMessag
 								DBUS_TYPE_BYTE,&state,
 								DBUS_TYPE_INVALID))){
 	
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 					
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -68647,10 +68658,10 @@ DBusMessage * wid_dbus_interface_set_ebr_isolation(DBusConnection *conn, DBusMes
 								DBUS_TYPE_BYTE,&state,
 								DBUS_TYPE_INVALID))){
 	
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 					
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -68699,10 +68710,10 @@ DBusMessage * wid_dbus_interface_set_ebr_multicast_isolation(DBusConnection *con
 								DBUS_TYPE_BYTE,&state,
 								DBUS_TYPE_INVALID))){
 	
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 					
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -68751,10 +68762,10 @@ DBusMessage * wid_dbus_interface_set_ebr_sameportswitch(DBusConnection *conn, DB
 								DBUS_TYPE_BYTE,&state,
 								DBUS_TYPE_INVALID))){
 	
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 					
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -68801,10 +68812,10 @@ DBusMessage * wid_dbus_interface_ebr_check_interface(DBusConnection *conn, DBusM
 								DBUS_TYPE_UINT32,&ebrid,
 								DBUS_TYPE_INVALID))){
 	
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 					
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -68868,10 +68879,10 @@ DBusMessage * wid_dbus_interface_set_ebr_add_del_if(DBusConnection *conn, DBusMe
 								DBUS_TYPE_STRING,&ifname,
 								DBUS_TYPE_INVALID))){
 	
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 					
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -69003,10 +69014,10 @@ DBusMessage * wid_dbus_interface_set_ebr_multicast_fdb_learn(DBusConnection *con
 								DBUS_TYPE_BYTE,&state,
 								DBUS_TYPE_INVALID))){
 	
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 					
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -69203,7 +69214,7 @@ DBusMessage *wid_dbus_interface_show_conflict_wtp_list(DBusConnection *conn, DBu
 												DBUS_TYPE_UINT32_AS_STRING
 											DBUS_STRUCT_END_CHAR_AS_STRING,
 											&iter_sub_array);
-			printf("%s,%d.\n",__func__,__LINE__);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s,%d.\n",__func__,__LINE__);
 			wid_syslog_debug_debug(WID_DBUS,"%s,%d.\n",__func__,__LINE__);
 			//for(j = 0; j < conflict_wtp_num; j++){	
 			
@@ -69215,12 +69226,12 @@ DBusMessage *wid_dbus_interface_show_conflict_wtp_list(DBusConnection *conn, DBu
 												DBUS_TYPE_STRUCT,
 												NULL,
 												&iter_sub_struct);
-				printf("%s,%d,tmp_node=%p.\n",__func__,__LINE__,tmp_node);
+				wid_syslog_debug_debug(WID_DEFAULT,"%s,%d,tmp_node=%p.\n",__func__,__LINE__,tmp_node);
 				wid_syslog_debug_debug(WID_DBUS,"%s,%d.\n",__func__,__LINE__);
 				dbus_message_iter_append_basic (&iter_sub_struct,
 												 DBUS_TYPE_UINT32,
 												 &(wtpid));
-				printf("%s,%d,%d.\n",__func__,__LINE__,wtpid);
+				wid_syslog_debug_debug(WID_DEFAULT,"%s,%d,%d.\n",__func__,__LINE__,wtpid);
 				wid_syslog_debug_debug(WID_DBUS,"%s,%d.\n",__func__,__LINE__);
 				wid_syslog_debug_debug(WID_DBUS,"%s,%d,wtpid %d.\n",__func__,__LINE__,wtpid);
 				tmp_node = tmp_node->next;
@@ -69262,10 +69273,10 @@ DBusMessage * wid_dbus_interface_show_fdb_summary_detail(DBusConnection *conn, D
 								DBUS_TYPE_UINT32,&is_detail,
 								DBUS_TYPE_INVALID))){
 	
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 					
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -69301,15 +69312,16 @@ DBusMessage * wid_dbus_interface_show_fdb_summary_detail(DBusConnection *conn, D
 		return NULL;
 	}
 
-	printf("222\n");
+	wid_syslog_debug_debug(WID_DEFAULT,"func %s,line %d\n",__func__,__LINE__);
 	for(;;) {
-		printf("realloc\n");
+		//printf("realloc\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"func %s,line %d\n",__func__,__LINE__);
 		fdb=new_fdb;
 		if (!fdb) {
 			fprintf(stderr, "Out of memory\n");
 			break ;
 		}
-		printf("reading~~\n");
+		wid_syslog_debug_debug(WID_DEFAULT," reading~~\n");
 		
 		n = br_read_fdb(ebrname, fdb+offset, offset, CHUNK);
 		if (n == 0)
@@ -69403,10 +69415,10 @@ DBusMessage * wid_dbus_interface_set_ebr_add_del_uplink(DBusConnection *conn, DB
 								DBUS_TYPE_STRING,&ifname,
 								DBUS_TYPE_INVALID))){
 	
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 					
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -70707,10 +70719,10 @@ DBusMessage *wid_dbus_add_ac_ip_list_group(DBusConnection *conn, DBusMessage *ms
 								DBUS_TYPE_STRING,&IFName,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -70763,10 +70775,10 @@ DBusMessage *wid_dbus_del_ac_ip_list_group(DBusConnection *conn, DBusMessage *ms
 								DBUS_TYPE_BYTE,&ID,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -70807,11 +70819,11 @@ DBusMessage *wid_dbus_add_ac_ip(DBusConnection *conn, DBusMessage *msg, void *us
 								DBUS_TYPE_INVALID)))
 	{
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err))
 		{
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -70857,11 +70869,11 @@ DBusMessage *wid_dbus_del_ac_ip(DBusConnection *conn, DBusMessage *msg, void *us
 								DBUS_TYPE_INVALID)))
 	{
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err))
 		{
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -70904,11 +70916,11 @@ DBusMessage *wid_dbus_set_ac_ip_priority(DBusConnection *conn, DBusMessage *msg,
 								DBUS_TYPE_INVALID)))
 	{
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err))
 		{
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -70955,11 +70967,11 @@ DBusMessage *wid_dbus_set_ac_ip_load_banlance(DBusConnection *conn, DBusMessage 
 								DBUS_TYPE_INVALID)))
 	{
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err))
 		{
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -71000,11 +71012,11 @@ DBusMessage *wid_dbus_set_ac_ip_diff_banlance(DBusConnection *conn, DBusMessage 
 								DBUS_TYPE_INVALID)))
 	{
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err))
 		{
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -71047,11 +71059,11 @@ DBusMessage *wid_dbus_set_ac_ip_threshold(DBusConnection *conn, DBusMessage *msg
 								DBUS_TYPE_INVALID)))
 	{
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err))
 		{
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -71092,10 +71104,10 @@ DBusMessage * wid_dbus_interface_show_ac_ip_list_one(DBusConnection *conn, DBusM
 								DBUS_TYPE_BYTE,&ID,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -71303,10 +71315,10 @@ DBusMessage *wid_dbus_ac_ip_list_group_config(DBusConnection *conn, DBusMessage 
 								DBUS_TYPE_BYTE,&ID,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -71338,10 +71350,10 @@ DBusMessage * wid_dbus_interface_set_wid_watch_dog(DBusConnection *conn, DBusMes
 								DBUS_TYPE_BYTE,&open,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -71445,10 +71457,10 @@ DBusMessage * wid_dbus_interface_set_ap_access_through_nat(DBusConnection *conn,
 								DBUS_TYPE_UINT32,&policy,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -71496,11 +71508,11 @@ DBusMessage * wid_dbus_interface_wtp_list_dhcp_snooping(DBusConnection *conn, DB
 	
 	dbus_message_iter_init(msg1,&iter);
 	dbus_message_iter_get_basic(&iter,&policy);
-	printf("%s policy %d\n",__func__,policy);
+	wid_syslog_debug_debug(WID_DEFAULT,"%s policy %d\n",__func__,policy);
 
 	dbus_message_iter_next(&iter);	
 	dbus_message_iter_get_basic(&iter,&num);
-	printf("%s num %d\n",__func__,num);
+	wid_syslog_debug_debug(WID_DEFAULT,"%s num %d\n",__func__,num);
 	
 	dbus_message_iter_next(&iter);	
 	dbus_message_iter_recurse(&iter, &iter_array);
@@ -71515,7 +71527,7 @@ DBusMessage * wid_dbus_interface_wtp_list_dhcp_snooping(DBusConnection *conn, DB
 		WTPIndex = wtpid;
 		if((AC_WTP[wtpid] != NULL)&&(AC_WTP[wtpid]->dhcp_snooping != policy))
 		{
-			printf("%s AC_WTP[wtpid]->dhcp_snooping %d\n",__func__,AC_WTP[wtpid]->dhcp_snooping);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s AC_WTP[wtpid]->dhcp_snooping %d\n",__func__,AC_WTP[wtpid]->dhcp_snooping);
 
 			AC_WTP[wtpid]->dhcp_snooping = policy;
 			
@@ -71706,10 +71718,10 @@ DBusMessage * wid_dbus_interface_wtp_dhcp_snooping(DBusConnection *conn, DBusMes
 								DBUS_TYPE_UINT32,&policy,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -71747,7 +71759,7 @@ DBusMessage * wid_dbus_interface_wtp_dhcp_snooping(DBusConnection *conn, DBusMes
 		}
 	
 	else if(type == 1){
-		printf("******** type == 1 *****\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 		if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL)){
 			tmp = WTP_GROUP[ID]->WTP_M;
 			wtp_head = (struct Wtp_List *)WID_MALLOC(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
@@ -71803,7 +71815,7 @@ DBusMessage * wid_dbus_interface_wtp_dhcp_snooping(DBusConnection *conn, DBusMes
 		dbus_message_iter_append_basic (&iter,
 											 DBUS_TYPE_UINT32,
 											 &num);
-		printf("num= %d",num);
+		wid_syslog_debug_debug(WID_DEFAULT,"num= %d",num);
 		for(i = 0; i < num; i++){
 			dbus_message_iter_append_basic (&iter,
 												 DBUS_TYPE_UINT32,
@@ -71841,7 +71853,7 @@ DBusMessage * wid_dbus_interface_wtp_dhcp_snooping(DBusConnection *conn, DBusMes
 
 	dbus_message_iter_next(&iter);	
 	dbus_message_iter_get_basic(&iter,&wtpid);
-	printf("%s wtpid %d\n",__func__,wtpid);
+	wid_syslog_debug_debug(WID_DEFAULT,"%s wtpid %d\n",__func__,wtpid);
 /*	WTPIndex = wtpid;
 	if((AC_WTP[wtpid] != NULL)&&(AC_WTP[wtpid]->dhcp_snooping != policy))
 	{
@@ -71963,7 +71975,7 @@ DBusMessage * wid_dbus_interface_wtp_list_sta_info_report(DBusConnection *conn, 
 		WTPIndex = wtpid;
 		if((AC_WTP[wtpid] != NULL)&&(AC_WTP[wtpid]->sta_ip_report!= policy))
 		{
-			printf("%s AC_WTP[wtpid]->sta_ip_report %d\n",__func__,AC_WTP[wtpid]->sta_ip_report);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s AC_WTP[wtpid]->sta_ip_report %d\n",__func__,AC_WTP[wtpid]->sta_ip_report);
 			AC_WTP[wtpid]->sta_ip_report = policy;
 			
 			if((AC_WTP[wtpid] != NULL)&&(AC_WTP[wtpid]->WTPStat == 5))
@@ -72151,10 +72163,10 @@ DBusMessage * wid_dbus_interface_wtp_sta_info_report(DBusConnection *conn, DBusM
 								DBUS_TYPE_UINT32,&policy,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -72187,7 +72199,7 @@ DBusMessage * wid_dbus_interface_wtp_sta_info_report(DBusConnection *conn, DBusM
 		}
 	
 	else if(type == 1){
-		printf("******** type == 1 *****\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 		if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL)){
 			tmp = WTP_GROUP[ID]->WTP_M;
 			wtp_head = (struct Wtp_List *)WID_MALLOC(WTP_GROUP[ID]->WTP_COUNT *(sizeof(struct Wtp_List)));
@@ -72243,7 +72255,7 @@ DBusMessage * wid_dbus_interface_wtp_sta_info_report(DBusConnection *conn, DBusM
 		dbus_message_iter_append_basic (&iter,
 											 DBUS_TYPE_UINT32,
 											 &num);
-		printf("num= %d",num);
+		wid_syslog_debug_debug(WID_DEFAULT,"num= %d",num);
 		for(i = 0; i < num; i++){
 			dbus_message_iter_append_basic (&iter,
 												 DBUS_TYPE_UINT32,
@@ -72448,45 +72460,46 @@ DBusMessage * wid_dbus_interface_wlan_timer_able(DBusConnection *conn, DBusMessa
 
 	dbus_message_iter_next(&iter);	
 	dbus_message_iter_get_basic(&iter,&wlanid);
-printf("1\n");
+	wid_syslog_debug_debug(WID_DEFAULT,"timerflag = %d\n",timerflag);
 	if(timerflag == 1){
 		
-		printf("2\n");
+		//printf("2\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"func %s,line %d\n",__func__,__LINE__);
 		if(AC_WLAN[wlanid] != NULL && (AC_WLAN[wlanid]->want_to_delete !=  1)){		/* Huangleilei add for ASXXZFI-1622 */
-			printf("3\n");
+			//printf("3\n");
 
 			if(AC_WLAN[wlanid]->StartService.TimerState != policy){
-				printf("4\n");
+				wid_syslog_debug_debug(WID_DEFAULT,"policy = %d\n",policy);
 
 				if(policy == 1){
-					printf("5\n");
+					//printf("5\n");
 
 					AC_WLAN[wlanid]->StartService.TimerState = policy;
 					time(&timep);  
 					p=localtime(&timep);
 					
-					printf("start time %d:%d:%d\n",p->tm_hour,p->tm_min,p->tm_sec);
+					wid_syslog_debug_debug(WID_DEFAULT,"start time %d:%d:%d\n",p->tm_hour,p->tm_min,p->tm_sec);
 					times = p->tm_hour*3600 + p->tm_min*60 + p->tm_sec;
 					if(times < AC_WLAN[wlanid]->StartService.times){
 						timer = AC_WLAN[wlanid]->StartService.times - times; 
 					}else{
 						timer = 24*3600 - times + AC_WLAN[wlanid]->StartService.times;
 					}
-					printf("6\n");
-					printf("times %d\n",times);
-					printf(" AC_WLAN[wlanid]->StartService.times %d\n", AC_WLAN[wlanid]->StartService.times);
-					printf("timer %d \n",timer);
+					//printf("6\n");
+					wid_syslog_debug_debug(WID_DEFAULT,"times %d\n",times);
+					wid_syslog_debug_debug(WID_DEFAULT," AC_WLAN[wlanid]->StartService.times %d\n", AC_WLAN[wlanid]->StartService.times);
+					wid_syslog_debug_debug(WID_DEFAULT,"timer %d \n",timer);
 
 					if(!(CWTimerRequest(timer, NULL, &(AC_WLAN[wlanid]->StartService.TimerID), 501,wlanid))) {
 						ret = WID_DBUS_ERROR;
 					}	
 					
-					printf("AC_WLAN[wlanid]->StartService.TimerID11111111 %d\n",AC_WLAN[wlanid]->StartService.TimerID);
-					printf("7\n");
+					wid_syslog_debug_debug(WID_DEFAULT,"AC_WLAN[wlanid]->StartService.TimerID %d\n",AC_WLAN[wlanid]->StartService.TimerID);
+					//printf("7\n");
 
 				}else{
 					AC_WLAN[wlanid]->StartService.TimerState = policy;
-					printf("AC_WLAN[wlanid]->StartService.TimerID22222222 %d\n",AC_WLAN[wlanid]->StartService.TimerID);
+					wid_syslog_debug_debug(WID_DEFAULT,"AC_WLAN[wlanid]->StartService.TimerID %d\n",AC_WLAN[wlanid]->StartService.TimerID);
 					if(!CWTimerCancel(&(AC_WLAN[wlanid]->StartService.TimerID),1)) {
 						ret = WID_DBUS_ERROR;
 					}
@@ -72501,23 +72514,23 @@ printf("1\n");
 					AC_WLAN[wlanid]->StopService.TimerState = policy;
 					time(&timep);  
 					p=localtime(&timep);
-					printf("stop time %d:%d:%d\n",p->tm_hour,p->tm_min,p->tm_sec);
+					wid_syslog_debug_debug(WID_DEFAULT,"stop time %d:%d:%d\n",p->tm_hour,p->tm_min,p->tm_sec);
 					times = p->tm_hour*3600 + p->tm_min*60 + p->tm_sec;
 					if(times < AC_WLAN[wlanid]->StopService.times){
 						timer = AC_WLAN[wlanid]->StopService.times -times; 
 					}else{
 						timer = 24*3600 - times + AC_WLAN[wlanid]->StopService.times;
 					}
-					printf("times %d\n",times);
-					printf(" AC_WLAN[wlanid]->StopService.times %d\n", AC_WLAN[wlanid]->StopService.times);
-					printf("timer %d \n",timer);
+					wid_syslog_debug_debug(WID_DEFAULT,"times %d\n",times);
+					wid_syslog_debug_debug(WID_DEFAULT," AC_WLAN[wlanid]->StopService.times %d\n", AC_WLAN[wlanid]->StopService.times);
+					wid_syslog_debug_debug(WID_DEFAULT,"timer %d \n",timer);
 					if(!(CWTimerRequest(timer, NULL, &(AC_WLAN[wlanid]->StopService.TimerID), 502,wlanid))) {
 						ret = WID_DBUS_ERROR;
 					}		
-					printf("AC_WLAN[wlanid]->StopService.TimerID11111111 %d\n",AC_WLAN[wlanid]->StopService.TimerID);
+					wid_syslog_debug_debug(WID_DEFAULT,"AC_WLAN[wlanid]->StopService.TimerID11111111 %d\n",AC_WLAN[wlanid]->StopService.TimerID);
 				}else{
 					AC_WLAN[wlanid]->StopService.TimerState = policy;
-					printf("AC_WLAN[wlanid]->StopService.TimerID22222222 %d\n",AC_WLAN[wlanid]->StopService.TimerID);
+					wid_syslog_debug_debug(WID_DEFAULT,"AC_WLAN[wlanid]->StopService.TimerID22222222 %d\n",AC_WLAN[wlanid]->StopService.TimerID);
 					if(!CWTimerCancel(&(AC_WLAN[wlanid]->StopService.TimerID),1)) {
 						ret = WID_DBUS_ERROR;
 					}
@@ -72657,10 +72670,10 @@ DBusMessage * wid_dbus_interface_wlan_wtp_sta_static_arp(DBusConnection *conn, D
 								DBUS_TYPE_STRING,&ifname,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -72699,7 +72712,7 @@ DBusMessage * wid_dbus_interface_wlan_wtp_sta_static_arp(DBusConnection *conn, D
 		}
 	else if(type == 1)
 		{
-			printf("******** type == 1 *****\n");
+			wid_syslog_debug_debug(WID_DEFAULT,"******** type == 1 *****\n");
 			if((WTP_GROUP[ID] != NULL)&&(WTP_GROUP[ID]->WTP_M!=NULL))
 				{
 					tmp = WTP_GROUP[ID]->WTP_M;
@@ -72722,10 +72735,10 @@ DBusMessage * wid_dbus_interface_wlan_wtp_sta_static_arp(DBusConnection *conn, D
 								{								
 									for(i=0;i<AC_WTP[tmp->WTPID]->RadioCount;i++)
 									{
-										printf("wtpid = %d\n",tmp->WTPID);
-										printf("radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
-										printf("local radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_L_ID);
-										printf("i = %d \n",i);
+										wid_syslog_debug_debug(WID_DEFAULT,"wtpid = %d\n",tmp->WTPID);
+										wid_syslog_debug_debug(WID_DEFAULT,"radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
+										wid_syslog_debug_debug(WID_DEFAULT,"local radioid = %d\n",AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_L_ID);
+										wid_syslog_debug_debug(WID_DEFAULT,"i = %d \n",i);
 										if(AC_WLAN[wlanid] != NULL)
 											{
 												BSSIndex = AC_WLAN[wlanid]->S_WTP_BSS_List[tmp->WTPID][i];
@@ -72736,12 +72749,12 @@ DBusMessage * wid_dbus_interface_wlan_wtp_sta_static_arp(DBusConnection *conn, D
 															{
 																memset(AC_BSS[BSSIndex]->arp_ifname,0,ETH_IF_NAME_LEN);
 																memcpy(AC_BSS[BSSIndex]->arp_ifname,ifname, strlen(ifname));
-																printf("save ifname\n");
+																wid_syslog_debug_debug(WID_DEFAULT,"save ifname\n");
 															}
 														else
 															{
 																AC_BSS[BSSIndex]->sta_static_arp_policy = 0;
-																printf("sta static arp policy = 0");
+																wid_syslog_debug_debug(WID_DEFAULT,"sta static arp policy = 0");
 															}
 														if(AC_BSS[BSSIndex]->State == 1)
 															{
@@ -72784,7 +72797,7 @@ DBusMessage * wid_dbus_interface_wlan_wtp_sta_static_arp(DBusConnection *conn, D
 				dbus_message_iter_append_basic (&iter,
 													 DBUS_TYPE_UINT32,
 											 &num);
-				printf("num = %d\n",num);		
+				wid_syslog_debug_debug(WID_DEFAULT,"num = %d\n",num);		
 				for(i = 0; i < num; i++)
 					{
 						dbus_message_iter_append_basic (&iter,
@@ -72997,10 +73010,10 @@ DBusMessage *wid_dbus_set_wireless_interface_vmac(DBusConnection *conn, DBusMess
 								DBUS_TYPE_UINT32,&policy,
 								DBUS_TYPE_INVALID))){
 	
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 					
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -74053,45 +74066,45 @@ DBusMessage * wid_dbus_interface_radio_timer_able(DBusConnection *conn, DBusMess
 
 	dbus_message_iter_next(&iter);	
 	dbus_message_iter_get_basic(&iter,&radioid);
-printf("1\n");
+	wid_syslog_debug_debug(WID_DEFAULT,"timerflag = %d\n",timerflag);
 	if(timerflag == 1){
 		
-		printf("2\n");
+		//printf("2\n");
 		if(AC_RADIO[radioid] != NULL){
-			printf("3\n");
-
+			//printf("3\n");
+			wid_syslog_debug_debug(WID_DEFAULT,"func  %s,line %d\n",__func__,__LINE__);
 			if(AC_RADIO[radioid]->StartService.TimerState != policy){
-				printf("4\n");
+				wid_syslog_debug_debug(WID_DEFAULT,"policy = %d\n",policy);
 
 				if(policy == 1){
-					printf("5\n");
+					//printf("5\n");
 
 					AC_RADIO[radioid]->StartService.TimerState = policy;
 					time(&timep);  
 					p=localtime(&timep);
 					
-					printf("start time %d:%d:%d\n",p->tm_hour,p->tm_min,p->tm_sec);
+					wid_syslog_debug_debug(WID_DEFAULT,"start time %d:%d:%d\n",p->tm_hour,p->tm_min,p->tm_sec);
 					times = p->tm_hour*3600 + p->tm_min*60 + p->tm_sec;
 					if(times < AC_RADIO[radioid]->StartService.times){
 						timer = AC_RADIO[radioid]->StartService.times - times; 
 					}else{
 						timer = 24*3600 - times + AC_RADIO[radioid]->StartService.times;
 					}
-					printf("6\n");
-					printf("times %d\n",times);
-					printf(" AC_WLAN[wlanid]->StartService.times %d\n", AC_RADIO[radioid]->StartService.times);
-					printf("timer %d \n",timer);
+					//printf("6\n");
+					wid_syslog_debug_debug(WID_DEFAULT,"times %d\n",times);
+					wid_syslog_debug_debug(WID_DEFAULT," AC_WLAN[wlanid]->StartService.times %d\n", AC_RADIO[radioid]->StartService.times);
+					wid_syslog_debug_debug(WID_DEFAULT,"timer %d \n",timer);
 
 					if(!(CWTimerRequest(timer, NULL, &(AC_RADIO[radioid]->StartService.TimerID), 503,radioid))) {
 						ret = WID_DBUS_ERROR;
 					}	
 					
-					printf("AC_WLAN[wlanid]->StartService.TimerID11111111 %d\n",AC_RADIO[radioid]->StartService.TimerID);
-					printf("7\n");
+					wid_syslog_debug_debug(WID_DEFAULT,"AC_WLAN[wlanid]->StartService.TimerID11111111 %d\n",AC_RADIO[radioid]->StartService.TimerID);
+					//printf("7\n");
 
 				}else{
 					AC_RADIO[radioid]->StartService.TimerState = policy;
-					printf("AC_WLAN[wlanid]->StartService.TimerID22222222 %d\n",AC_RADIO[radioid]->StartService.TimerID);
+					wid_syslog_debug_debug(WID_DEFAULT,"AC_WLAN[wlanid]->StartService.TimerID22222222 %d\n",AC_RADIO[radioid]->StartService.TimerID);
 					if(!CWTimerCancel(&(AC_RADIO[radioid]->StartService.TimerID),1)) {
 						ret = WID_DBUS_ERROR;
 					}
@@ -74106,23 +74119,23 @@ printf("1\n");
 					AC_RADIO[radioid]->StopService.TimerState = policy;
 					time(&timep);  
 					p=localtime(&timep);
-					printf("stop time %d:%d:%d\n",p->tm_hour,p->tm_min,p->tm_sec);
+					wid_syslog_debug_debug(WID_DEFAULT,"stop time %d:%d:%d\n",p->tm_hour,p->tm_min,p->tm_sec);
 					times = p->tm_hour*3600 + p->tm_min*60 + p->tm_sec;
 					if(times < AC_RADIO[radioid]->StopService.times){
 						timer = AC_RADIO[radioid]->StopService.times -times; 
 					}else{
 						timer = 24*3600 - times + AC_RADIO[radioid]->StopService.times;
 					}
-					printf("times %d\n",times);
-					printf(" AC_WLAN[wlanid]->StopService.times %d\n", AC_RADIO[radioid]->StopService.times);
-					printf("timer %d \n",timer);
+					wid_syslog_debug_debug(WID_DEFAULT,"times %d\n",times);
+					wid_syslog_debug_debug(WID_DEFAULT," AC_WLAN[wlanid]->StopService.times %d\n", AC_RADIO[radioid]->StopService.times);
+					wid_syslog_debug_debug(WID_DEFAULT,"timer %d \n",timer);
 					if(!(CWTimerRequest(timer, NULL, &(AC_RADIO[radioid]->StopService.TimerID), 504,radioid))) {
 						ret = WID_DBUS_ERROR;
 					}		
-					printf("AC_WLAN[wlanid]->StopService.TimerID11111111 %d\n",AC_RADIO[radioid]->StopService.TimerID);
+					wid_syslog_debug_debug(WID_DEFAULT,"AC_WLAN[wlanid]->StopService.TimerID11111111 %d\n",AC_RADIO[radioid]->StopService.TimerID);
 				}else{
 					AC_RADIO[radioid]->StopService.TimerState = policy;
-					printf("AC_WLAN[wlanid]->StopService.TimerID22222222 %d\n",AC_RADIO[radioid]->StopService.TimerID);
+					wid_syslog_debug_debug(WID_DEFAULT,"AC_WLAN[wlanid]->StopService.TimerID22222222 %d\n",AC_RADIO[radioid]->StopService.TimerID);
 					if(!CWTimerCancel(&(AC_RADIO[radioid]->StopService.TimerID),1)) {
 						ret = WID_DBUS_ERROR;
 					}
@@ -74156,9 +74169,9 @@ DBusMessage * wid_dbus_interface_radio_multi_user_optimize_switch(DBusConnection
 						DBUS_TYPE_UINT32,&radioid,
 						DBUS_TYPE_BYTE,&type,
 						DBUS_TYPE_INVALID))){
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -74222,9 +74235,9 @@ DBusMessage * wid_dbus_interface_wtp_5g_switch(DBusConnection *conn, DBusMessage
 						DBUS_TYPE_UINT32,&wtpid,
 						DBUS_TYPE_BYTE,&type,
 						DBUS_TYPE_INVALID))){
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -74434,9 +74447,9 @@ DBusMessage * wid_dbus_interface_set_whole_wlan_bss_multi_user_optimize_switch(D
 						DBUS_TYPE_BYTE,&wlanid,
 						DBUS_TYPE_BYTE,&type,
 						DBUS_TYPE_INVALID))){
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -74871,7 +74884,7 @@ DBusMessage * wid_dbus_wlan_show_running_config_start(DBusConnection *conn, DBus
 									nas_id = WID_MALLOC(NAS_IDENTIFIER_NAME+1);
 									if(nas_id == NULL)
 									{
-										printf("malloc error!\n");
+										wid_syslog_debug_debug(WID_DEFAULT,"malloc error!\n");
 										if(showStr){
 											WID_FREE(showStr);
 											showStr = NULL;
@@ -75286,9 +75299,9 @@ DBusMessage * wid_dbus_show_wtp_config(DBusConnection *conn, DBusMessage *msg, v
 	if (!(dbus_message_get_args ( msg, &err,
 								DBUS_TYPE_UINT32,&wtpid,
 								DBUS_TYPE_INVALID))){
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -75299,7 +75312,7 @@ DBusMessage * wid_dbus_show_wtp_config(DBusConnection *conn, DBusMessage *msg, v
 			{
 				WTP[wtpid] = AC_WTP[wtpid];
 				num++;
-				printf("while ,2num:%d  \n",num);
+				wid_syslog_debug_debug(WID_DEFAULT,"while ,2num:%d  \n",num);
 			}
 		//	i++;
 		//}
@@ -75377,10 +75390,10 @@ DBusMessage * wid_dbus_interface_set_ap_if_eth_mtu(DBusConnection *conn, DBusMes
 								DBUS_TYPE_UINT32,&mtu,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -77555,10 +77568,10 @@ DBusMessage * wid_dbus_interface_show_wlan_pkt_infomation(DBusConnection *conn, 
 								DBUS_TYPE_BYTE,&wlanid,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -77653,10 +77666,10 @@ DBusMessage * wid_dbus_service_tftp_state(DBusConnection *conn, DBusMessage *msg
 								DBUS_TYPE_UINT32,&ap_auto_update_service_tftp,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -77740,10 +77753,10 @@ DBusMessage * wid_dbus_service_ftp_state(DBusConnection *conn, DBusMessage *msg,
 								DBUS_TYPE_UINT32,&service_ftp_state,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -77850,9 +77863,9 @@ DBusMessage *wid_dbus_set_neighbor_same_channelrssi_threshold(DBusConnection *co
 								DBUS_TYPE_UINT32,&policy,
 								DBUS_TYPE_UINT32,&value,
 								DBUS_TYPE_INVALID))){
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -77921,10 +77934,10 @@ DBusMessage * wid_dbus_set_wid_error_handle_state(DBusConnection *conn, DBusMess
 								DBUS_TYPE_UINT32,&wid_wsm_error_handle_state,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -78353,8 +78366,8 @@ int check_dbus_uname(char * sender){
 	for(i = 0; i < DBUS_COUNT_NUM; i++){
 		for(j = 0; j < dbus_count[i].num; j++){
 			if(dbus_count[i].uname != NULL){
-				printf("dbus_count[i].uname[j] %s\n",&(dbus_count[i].uname[j*SENDER_LEN]));
-				printf("sender %s\n",sender);
+				wid_syslog_debug_debug(WID_DEFAULT,"dbus_count[i].uname[j] %s\n",&(dbus_count[i].uname[j*SENDER_LEN]));
+				wid_syslog_debug_debug(WID_DEFAULT,"sender %s\n",sender);
 				if(strcmp(&(dbus_count[i].uname[j*SENDER_LEN]),sender) == 0){
 					dbus_count[i].count++;
 					return 1;
@@ -78534,10 +78547,10 @@ DBusMessage * wid_dbus_interface_multicast_listen(DBusConnection *conn, DBusMess
 								DBUS_TYPE_UINT32,&state,
 								DBUS_TYPE_INVALID))){
 
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -78673,9 +78686,9 @@ DBusMessage * wid_dbus_interface_set_wsm_sta_info_reportinterval(DBusConnection 
 								DBUS_TYPE_BYTE,&wlanid,
 								DBUS_TYPE_UINT16,&interval,
 								DBUS_TYPE_INVALID))){
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -78738,9 +78751,9 @@ DBusMessage * wid_dbus_interface_set_wsm_sta_info_reportswitch(DBusConnection *c
 								DBUS_TYPE_BYTE,&wlanid,
 								DBUS_TYPE_BYTE,&policy,
 								DBUS_TYPE_INVALID))){
-		printf("Unable to get input args\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		wid_syslog_info("%s,%d\n",__func__,__LINE__);
@@ -78748,9 +78761,9 @@ DBusMessage * wid_dbus_interface_set_wsm_sta_info_reportswitch(DBusConnection *c
 	}
 	wtpid = radioid/L_RADIO_NUM;
 	l_radioid = radioid%L_RADIO_NUM;
-	printf("policy =  %d\n",policy);
-	printf("wtpid =  %d\n",wtpid);
-	printf("l_radioid =  %d\n",l_radioid);
+	wid_syslog_debug_debug(WID_DEFAULT,"policy =  %d\n",policy);
+	wid_syslog_debug_debug(WID_DEFAULT,"wtpid =  %d\n",wtpid);
+	wid_syslog_debug_debug(WID_DEFAULT,"l_radioid =  %d\n",l_radioid);
 	if(AC_WTP[wtpid] == NULL)
 	{
 		ret = WTP_ID_NOT_EXIST;
@@ -78774,15 +78787,16 @@ DBusMessage * wid_dbus_interface_set_wsm_sta_info_reportswitch(DBusConnection *c
 	if(ret == WID_DBUS_SUCCESS)
 	{
 		int bssindex = AC_WLAN[wlanid]->S_WTP_BSS_List[wtpid][l_radioid];
-			printf("bssindex =  %d\n",bssindex);
+			wid_syslog_debug_debug(WID_DEFAULT,"bssindex =  %d\n",bssindex);
 		if((AC_BSS[bssindex] != NULL)&&(AC_BSS[bssindex]->WlanID == wlanid))
 		{		
-			printf("AC_BSS[%d]->wsm_sta_info_reportswitch  =%d \n",bssindex,AC_BSS[bssindex]->wsm_sta_info_reportswitch);
-			printf("policy =  %d\n",policy);
+			wid_syslog_debug_debug(WID_DEFAULT,"AC_BSS[%d]->wsm_sta_info_reportswitch  =%d \n",bssindex,AC_BSS[bssindex]->wsm_sta_info_reportswitch);
+			wid_syslog_debug_debug(WID_DEFAULT,"policy =  %d\n",policy);
 			if(AC_BSS[bssindex]->wsm_sta_info_reportswitch != policy)
 			{
-				printf("222222222 \n");
+				//printf("222222222 \n");
 				AC_BSS[bssindex]->wsm_sta_info_reportswitch = policy;
+				wid_syslog_debug_debug(WID_DEFAULT,"AC_BSS[%d]->wsm_sta_info_reportswitch  =%d \n",bssindex,AC_BSS[bssindex]->wsm_sta_info_reportswitch);
 				ret = wid_radio_wsm_sta_info_report(wtpid,l_radioid,radioid,bssindex);
 			}
 		}
@@ -82995,7 +83009,7 @@ static DBusHandlerResult wid_dbus_message_handler (DBusConnection *connection, D
 		}
 	}
 	else if(strcmp(dbus_message_get_path(message),WID_BAK_OBJPATH) == 0){
-		printf("WID_BAK_OBJPATH\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"WID_BAK_OBJPATH\n");
 		if (dbus_message_is_method_call(message,WID_BAK_INTERFACE,WID_DBUS_WTP_METHOD_MASTER_BAK_SET)) {
 			reply = wid_dbus_set_ac_as_secondary(connection,message,user_data);
 		}		
@@ -83025,7 +83039,7 @@ static DBusHandlerResult wid_dbus_message_handler (DBusConnection *connection, D
 		}		
 	}
 	else if(strcmp(dbus_message_get_path(message),WID_DBUS_ACIPLIST_OBJPATH) == 0){
-		printf("WID_DBUS_ACIPLIST_OBJPATH\n");
+		wid_syslog_debug_debug(WID_DEFAULT,"WID_DBUS_ACIPLIST_OBJPATH\n");
 		if (dbus_message_is_method_call(message,WID_DBUS_ACIPLIST_INTERFACE,WID_DBUS_ACIPLIST_METHOD_ADD_AC_IP_LIST_GROUP)) {
 			reply = wid_dbus_add_ac_ip_list_group(connection,message,user_data);
 		}		
