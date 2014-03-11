@@ -122,13 +122,13 @@ struct wtp_access_info * ap_add(WID_ACCESS *AC, struct sockaddr_in * sa, CWWTPVe
 	wtp = get_ap(AC, sa->sin_addr.s_addr);
 	
 	if (wtp){
-		memset(wtp->WTPMAC,0,6);		
+		/*memset(wtp->WTPMAC,0,6);		
 		memset(wtp->model,0,strlen(wtp->model));
 		memset(wtp->apcode,0,strlen(wtp->model));
 		memset(wtp->sn,0,strlen(wtp->sn));
 		memset(wtp->version,0,strlen(wtp->version));
 		memset(wtp->codever,0,strlen(wtp->codever));
-		memset(wtp->ifname,0,16);
+		memset(wtp->ifname,0,16);*/
 		for(i = 0; i < valPtr->vendorInfosCount; i++){
 			if((valPtr->vendorInfos)[i].type == CW_WTP_MODEL_NUMBER){
 				WID_FREE(wtp->apcode);				
