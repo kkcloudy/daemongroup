@@ -1755,14 +1755,14 @@ unsigned int dhcp_snp_tbl_refresh_bind
 			if(memcmp(tmp->chaddr,user->chaddr, 6))
 				{
 				if (node->add_router) {  //delete router to host,next jump is the interface opening dhcp-snooping
-					if((0xFFFF == item->vlanId)&&(NPD_DHCP_SNP_BIND_STATE_BOUND == item->state)) {
+					if((0xFFFF == tmp->vlanId)&&(NPD_DHCP_SNP_BIND_STATE_BOUND == tmp->state)) {
 						
-						if(!if_indextoname(item->ifindex, ifname)) {
-							syslog_ax_dhcp_snp_err("no intf found as idx %d netlink error !\n", item->ifindex);
+						if(!if_indextoname(tmp->ifindex, ifname)) {
+							syslog_ax_dhcp_snp_err("no intf found as idx %d netlink error !\n", tmp->ifindex);
 							return DHCP_SNP_RETURN_CODE_ERROR;
 						}
 						dhcp_snp_netlink_add_static_route(DHCPSNP_RTNL_STATIC_ROUTE_DEL_E,  \
-																item->ifindex, item->ip_addr);
+																tmp->ifindex, tmp->ip_addr);
 						//sprintf(command,"sudo route del -host %u.%u.%u.%u dev %s",(item->ip_addr>>24)&0xff,\
 						//	(item->ip_addr>>16)&0xff,(item->ip_addr>>8)&0xff,(item->ip_addr>>0)&0xff,ifname);
 						//system(command);
