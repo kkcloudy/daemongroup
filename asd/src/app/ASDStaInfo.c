@@ -3253,7 +3253,7 @@ void asd_sta_roaming_management(struct sta_info *new_sta)
 	unsigned char SID = 0;
 	asd_printf(ASD_DEFAULT,MSG_DEBUG,"func:%s \n",__func__);			
 	if(owasd->WlanID != nwasd->WlanID){
-		asd_printf(ASD_DEFAULT,MSG_INFO,"func:%s (owasd->WlanID != nwasd->WlanID),old_sta->addr: %s\n",__func__,old_sta->addr);		
+		asd_printf(ASD_DEFAULT,MSG_INFO,"func:%s (owasd->WlanID != nwasd->WlanID),old_sta->addr: "MACSTR"\n",__func__, MAC2STR(old_sta->addr));		
 	    ap_free_sta(owasd,old_sta,0);
         //asd_sta_hash_del(old_sta);
 		return;
