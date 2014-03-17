@@ -14285,6 +14285,7 @@ DBusMessage * wid_dbus_interface_show_model_list(DBusConnection *conn, DBusMessa
 		if(str_ap_version_path == NULL)
 		{
 			str_ap_version_path = (char*)WID_MALLOC(2);
+			if (NULL == str_ap_version_path)
 			{
 				CW_FREE_OBJECT_WID(str_ap_model);
 				if (NULL != str_ap_version_name)
