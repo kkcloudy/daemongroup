@@ -8889,6 +8889,8 @@ DEFUN(set_radio_delete_wlan_cmd_func,
 		{
 			vty_out(vty,"<error> please delete radio interface from ebr first !\n");
 		}
+		else if(ret == INTERFACE_NOT_BE_BINDED)
+			vty_out(vty,"<error>radio not binding wlan\n");
 		else 
 			vty_out(vty,"<error> radio %d-%d delete wlan %s fail\n",g_radio_id/L_RADIO_NUM,g_radio_id%L_RADIO_NUM,argv[0]);
 	}
