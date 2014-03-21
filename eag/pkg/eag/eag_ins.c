@@ -93,6 +93,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define EAG_BSS_STAT_DB_HASHSIZE		2011
 
 #define SLOT_ID_FILE			"/dbm/local_board/slot_id"
+#define VENDOR_ID_FILE			"/devinfo/enterprise_snmp_oid"
 
 #define CM_TEST_NOTICE_ASD		"/var/run/eag_notice_asd"
 #define CM_TEST_NOTICE_PDC		"/var/run/eag_notice_pdc"
@@ -1711,6 +1712,7 @@ int
 eag_ins_start(eag_ins_t *eagins)
 {
 	int ret = 0;
+	char buf[64] = "";
 	
 	if (NULL == eagins) {
 		eag_log_err("eag_ins_start input error");
@@ -1839,7 +1841,11 @@ eag_ins_start(eag_ins_t *eagins)
 	}
 
 	eagins_read_file_switch();
-	
+
+	read_file(VENDOR_ID_FILE, buf, sizeof(buf));
+    eag_log_info("eag_ins_start vendor_id: %s\n", buf);
+	eag_radius_set_radius_vendor_id(eagins->radius, atoi(buf));
+
 	eagins->status = 1;
 	if (l2super_vlan_switch_t) {
     	eag_set_l2super_vlan(eagins, l2super_vlan_switch_t);

@@ -103,6 +103,10 @@ eag_radius_set_thread_master(eag_radius_t *radius,
 		eag_thread_master_t *master);
 
 int
+eag_radius_set_radius_vendor_id(eag_radius_t *radius,
+		uint32_t vendor_id);
+
+int
 eag_radius_set_radius_conf(eag_radius_t *radius,
 		struct radius_conf *radiusconf);
 
