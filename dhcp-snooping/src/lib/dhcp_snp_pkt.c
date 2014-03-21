@@ -177,7 +177,8 @@ unsigned int dhcpv6_snp_get_item_from_pkt
     }
 	else if(NPD_DHCPv6_TYPE_CONFIRM == type || NPD_DHCPv6_TYPE_RELEASE == type) {
 		temp = (unsigned char *)dhcpv6_snp_get_option(packet, DHCPv6_IANA);
-		memcpy(user->ipv6_addr, temp+16 ,16);
+		if(temp)
+			memcpy(user->ipv6_addr, temp+16 ,16);
 		user->lease_time = NPD_DHCP_SNP_REQUEST_TIMEOUT; 
 	}
 	else {
