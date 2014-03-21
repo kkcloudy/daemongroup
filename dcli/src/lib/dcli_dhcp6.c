@@ -643,6 +643,74 @@ int dcli_show_lease_ipv6_state
 
 	return ret;	
 }
+DEFUN(show_dhcpv6_statistic_info_cmd_func,
+	show_dhcpv6_statistic_info_cmd,
+	"show dhcpv6 statistic-information",	
+	"Show config information\n"
+	"DHCPv6 infomation\n"
+	"Use lease infomation\n"	
+)
+{
+	DBusMessage *query = NULL, *reply = NULL;
+	DBusError err;
+	int ret = 1;
+	struct dhcpv6_statistics_info info;
+
+	int localid = 1, slot_id = HostSlotId, index = 0;
+	get_slotid_index(vty, &index, &slot_id, &localid);
+
+	DBusConnection *dcli_dbus_connection = NULL;
+	ReInitDbusConnection(&dcli_dbus_connection, slot_id, distributFag);
+
+	query = dbus_message_new_method_call(DHCP6_DBUS_BUSNAME, 
+									DHCP6_DBUS_OBJPATH, 
+									DHCP6_DBUS_INTERFACE, 
+									DHCP6_DBUS_METHOD_GET_STATISTICS_INFO);
+	dbus_error_init(&err);
+
+	reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection, query, -1, &err);
+
+	dbus_message_unref(query);
+	if (NULL == reply) {
+		vty_out(vty, "DHCP show statistics info failed get reply.\n");
+		if (dbus_error_is_set(&err)) {
+			vty_out(vty, "%s raised: %s", err.name, err.message);
+			dbus_error_free_for_dcli(&err);
+		}
+		return ret;
+	}
+
+	if (dbus_message_get_args ( reply, &err,
+					DBUS_TYPE_UINT32, &(info.dhcpv6_solicit_times),
+					DBUS_TYPE_UINT32, &(info.dhcpv6_advertise_times),
+					DBUS_TYPE_UINT32, &(info.dhcpv6_request_times),
+					DBUS_TYPE_UINT32, &(info.dhcpv6_renew_times),
+					DBUS_TYPE_UINT32, &(info.dhcpv6_reply_times),
+					//DBUS_TYPE_UINT32, &(info.ack_times),
+					DBUS_TYPE_INVALID)) {		
+		ret = 0;
+	} 
+	else {
+		vty_out(vty, "Failed get args.\n");
+		if (dbus_error_is_set(&err)) {
+			vty_out(vty, "%s raised: %s", err.name, err.message);
+			dbus_error_free_for_dcli(&err);
+		}
+	}
+	vty_out(vty, "===================================================\n");
+	vty_out(vty, "total SOLICIT packet:	%d\n", info.dhcpv6_solicit_times);
+	vty_out(vty, "total ADVERTISE packet: %d\n", info.dhcpv6_advertise_times);
+	vty_out(vty, "total REQUESET packet:%d\n", info.dhcpv6_request_times);	
+	vty_out(vty, "total RENEW packet:	%d\n", info.dhcpv6_renew_times);
+	vty_out(vty, "total REPLY packet: %d\n", info.dhcpv6_reply_times);
+	//vty_out(vty, "total ACK packet: 	%d\n", info.ack_times);
+	vty_out(vty, "===================================================\n");
+
+	dbus_message_unref(reply);
+	return ret; 
+}
+
+
 DEFUN(show_dhcp_lease_ipv6_state_cmd,
 	show_dhcp_lease_ipv6_state,
 	"show dhcp-lease-ipv6 brief",	
@@ -4223,6 +4291,7 @@ dcli_dhcp_ipv6_init
 	install_element(POOLV6_NODE, &show_ipv6_pool_cmd);
 	install_element(CONFIG_NODE, &show_ipv6_pool_cmd);
 	install_element(CONFIG_NODE, &show_dhcp_lease_ipv6_state);
+	install_element(CONFIG_NODE, &show_dhcpv6_statistic_info_cmd);
 //	install_element(CONFIG_NODE, &show_ip_dhcp_static_cmd);
 	install_element(INTERFACE_NODE, &set_interface_ipv6_pool_cmd);
 	install_element(INTERFACE_NODE, &del_interface_ipv6_pool_cmd);
@@ -4270,6 +4339,7 @@ dcli_dhcp_ipv6_init
 	install_element(HANSI_NODE, &save_dhcp_lease_ipv6_cmd);
 	install_element(HANSI_NODE, &show_dhcp6_lease_cmd);
 	install_element(HANSI_NODE, &show_dhcp_lease_ipv6_state);
+	install_element(HANSI_NODE, &show_dhcpv6_statistic_info_cmd);
 	install_element(HANSI_NODE, &show_ipv6_dhcp_server_cmd);
 	install_element(HANSI_POOLV6_NODE, &show_ipv6_pool_cmd);
 	install_element(HANSI_NODE, &show_ipv6_pool_cmd);

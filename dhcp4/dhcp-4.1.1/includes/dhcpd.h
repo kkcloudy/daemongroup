@@ -1001,6 +1001,15 @@ struct statistics_info {
 	unsigned int requested_times;
 	unsigned int ack_times;
 };
+struct dhcpv6_statistics_info {
+	//unsigned int host_num;		/* total number of ip address */
+	//unsigned int segment_times;	/* ip address assigned */
+	unsigned int dhcpv6_solicit_times;
+	unsigned int dhcpv6_advertise_times;
+	unsigned int dhcpv6_request_times;
+	unsigned int dhcpv6_renew_times;
+	unsigned int dhcpv6_reply_times;
+};
 
 /*lease state struct */
 struct dbus_lease_state{

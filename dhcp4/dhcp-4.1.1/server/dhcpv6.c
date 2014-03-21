@@ -86,6 +86,11 @@ struct reply_state {
 		struct dhcpv6_packet reply;
 	} buf;
 };
+unsigned int dhcpv6_solicit_count = 0 ;/*total dhcpv6_solicit number*/
+unsigned int dhcpv6_advertise_count = 0 ;/*total dhcpv6_advertise number*/
+unsigned int dhcpv6_request_count = 0 ;/*total dhcpv6_request number*/
+unsigned int dhcpv6_renew_count = 0 ;/*total dhcpv6_renew number*/
+unsigned int dhcpv6_reply_count = 0 ;/*total dhcpv6_reply number*/
 
 /* 
  * Prototypes local to this file.
@@ -4083,7 +4088,8 @@ prefix_compare(struct reply_state *reply,
 static void
 dhcpv6_solicit(struct data_string *reply_ret, struct packet *packet) {
 	struct data_string client_id;
-
+	dhcpv6_solicit_count++;/* count dhcpv6_solicit packet number*/
+	log_debug("dhcpv6 receive solicit total number %d\n",dhcpv6_solicit_count);
 	/* 
 	 * Validate our input.
 	 */
@@ -4111,6 +4117,8 @@ dhcpv6_request(struct data_string *reply_ret, struct packet *packet) {
 	struct data_string client_id;
 	struct data_string server_id;
 
+	dhcpv6_request_count++;/* count dhcpv6_request packet number*/
+	log_debug("dhcpv6 receive request total number %d\n",dhcpv6_request_count);
 	/*
 	 * Validate our input.
 	 */
@@ -4426,6 +4434,8 @@ dhcpv6_renew(struct data_string *reply, struct packet *packet) {
 	struct data_string client_id;
 	struct data_string server_id;
 
+	dhcpv6_renew_count++;/* count dhcpv6_renew packet number*/
+	log_debug("dhcpv6 receive renew total number %d\n",dhcpv6_renew_count);
 	/* 
 	 * Validate the request.
 	 */
@@ -5842,7 +5852,13 @@ dhcpv6(struct packet *packet) {
 			 dhcpv6_type_names[reply.data[0]],
 			 piaddr(packet->client_addr),
 			 ntohs(to_addr.sin6_port));
-
+		if(DHCPV6_ADVERTISE == reply.data[0]){
+			dhcpv6_advertise_count++;
+			log_debug("dhcpv6 server send advertise total times %d\n",dhcpv6_advertise_count);
+		}else if(DHCPV6_REPLY == reply.data[0]){
+			dhcpv6_reply_count++;
+			log_debug("dhcpv6 server send reply total times %d\n",dhcpv6_reply_count);
+		}
 		send_ret = send_packet6(packet->interface, 
 					reply.data, reply.len, &to_addr);
 		if (send_ret != reply.len) {

@@ -96,6 +96,8 @@ struct dcli_option global_server_option;
 
 
 void dhcp6_tell_whoami(char * myName,	int isLast);
+void dhcp6_get_statistics_info(struct dhcpv6_statistics_info *info);
+
 
 
 extern int test_for_add_dhcp_file(void);
@@ -3138,6 +3140,37 @@ struct dcli_pool *dhcp6_dbus_find_poolnode_by_subnet(struct subnet *subnet)
 
 	return NULL;	
 }
+DBusMessage* 
+dhcp6_dbus_show_statistics_info
+(
+	DBusConnection *conn, 
+	DBusMessage *msg, 
+	void *user_data
+)
+
+{
+	DBusMessage *reply = NULL;	  
+	DBusMessageIter iter;
+	DBusError err;   		
+	struct dhcpv6_statistics_info info;
+
+	memset(&info, 0, sizeof(info));
+	dhcp6_get_statistics_info(&info);
+
+	dbus_error_init(&err);
+
+	reply = dbus_message_new_method_return(msg);
+	dbus_message_iter_init_append (reply, &iter);	
+
+	dbus_message_iter_append_basic (&iter, DBUS_TYPE_UINT32, &(info.dhcpv6_solicit_times));
+	dbus_message_iter_append_basic (&iter, DBUS_TYPE_UINT32, &(info.dhcpv6_advertise_times));
+	dbus_message_iter_append_basic (&iter, DBUS_TYPE_UINT32, &(info.dhcpv6_request_times));
+	dbus_message_iter_append_basic (&iter, DBUS_TYPE_UINT32, &(info.dhcpv6_renew_times));	
+	dbus_message_iter_append_basic (&iter, DBUS_TYPE_UINT32, &(info.dhcpv6_reply_times));
+	//dbus_message_iter_append_basic (&iter, DBUS_TYPE_UINT32, &(info.ack_times));
+
+	return reply;
+}
 
 DBusMessage* 
 dhcp6_dbus_show_lease_state
@@ -5961,6 +5994,9 @@ dhcp6_dbus_message_handler
 	}
 	if (dbus_message_is_method_call(message, DHCP6_DBUS_INTERFACE, DHCP6_DBUS_METHOD_SHOW_DHCP_LEASE_STATE)) {
 		reply = dhcp6_dbus_show_lease_state(connection, message, user_data);
+	}
+	if (dbus_message_is_method_call(message, DHCP6_DBUS_INTERFACE, DHCP6_DBUS_METHOD_GET_STATISTICS_INFO)) {
+		reply = dhcp6_dbus_show_statistics_info(connection, message, user_data);
 	}
 	if (dbus_message_is_method_call(message, DHCP6_DBUS_INTERFACE, DHCP6_DBUS_METHOD_SHOW_DHCP_LEASE_BY_MAC)) {
 		reply = dhcp6_dbus_show_lease_by_mac(connection, message, user_data);

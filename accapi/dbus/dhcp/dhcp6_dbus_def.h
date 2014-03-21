@@ -41,6 +41,7 @@
 #define DHCP6_DBUS_METHOD_SHOW_DHCP_LEASE				"dhcp6_show_lease"
 #define DHCP6_DBUS_METHOD_SHOW_DHCP_LEASE_BY_IP			"dhcp6_show_lease_by_ip"
 #define DHCP6_DBUS_METHOD_SHOW_DHCP_LEASE_STATE			"dhcp6_show_lease_state"
+#define DHCP6_DBUS_METHOD_GET_STATISTICS_INFO			"dhcp6_show_dhcpv6_static_infomation"
 #define DHCP6_DBUS_METHOD_SHOW_DHCP_LEASE_BY_MAC			"dhcp6_show_lease_by_mac"
 #define DHCP6_DBUS_METHOD_SHOW_DHCP_GLOBAL_CONF			"dhcp6_show_global_conf"
 #define DHCP6_DBUS_METHOD_SHOW_IP_POOL_CONF				"dhcp6_show_ip_pool_conf"

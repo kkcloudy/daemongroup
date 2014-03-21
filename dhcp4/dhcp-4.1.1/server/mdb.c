@@ -45,6 +45,11 @@ lease_id_hash_t *lease_uid_hash;
 lease_ip_hash_t *lease_ip_addr_hash;
 lease_id_hash_t *lease_hw_addr_hash;
 extern struct subnet_config sub_conf;
+extern unsigned int dhcpv6_solicit_count;
+extern unsigned int dhcpv6_request_count;
+extern unsigned int dhcpv6_advertise_count;
+extern unsigned int dhcpv6_renew_count;
+extern unsigned int dhcpv6_reply_count;
 
 #ifndef __AX_PLATFORM__
 /*address used rate file*/
@@ -418,6 +423,31 @@ get_lease_ip_info_by_hw
 	
 	return ret;
 }
+void dhcp6_get_statistics_info(struct dhcpv6_statistics_info *info)
+{
+	if (!info) {
+		return;
+	}
+
+	//lease_file = fopen("/var/run/apache2/dhcp_lease", "w+b");
+	//pthread_mutex_lock(&DhcpHashMutex);
+	//info->segment_times = hash_foreach(lease_hw_addr_hash, save_lease_hw_info_file);	
+	//pthread_mutex_unlock(&DhcpHashMutex);
+	//fclose(lease_file);
+	
+	//info->host_num = hash_foreach(lease_ip_addr_hash, save_lease_ip_info_file);
+
+	info->dhcpv6_solicit_times = dhcpv6_solicit_count;
+	info->dhcpv6_advertise_times = dhcpv6_advertise_count;
+	info->dhcpv6_request_times = dhcpv6_request_count;
+	info->dhcpv6_renew_times = dhcpv6_renew_count;
+	info->dhcpv6_reply_times = dhcpv6_reply_count;
+	log_debug("total dhcpv6_solicit times %d, dhcpv6_advertise times %d, dhcpv6_requested times %d,dhcpv6_reply times %d\n",
+		info->dhcpv6_solicit_times, info->dhcpv6_advertise_times, info->dhcpv6_request_times, info->dhcpv6_reply_times);
+
+	return;
+}
+
 /**********************************************************************************
  *  get_dhcp_lease_ipv6_state_num
  *

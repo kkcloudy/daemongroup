@@ -16,7 +16,15 @@ enum dhcpv6_debug_type {
 	DEBUG_TYPE_ALL   = 7
 	
 };
-
+struct dhcpv6_statistics_info {
+	//unsigned int host_num;		/* total number of ip address */
+	//unsigned int segment_times;	/* ip address assigned */
+	unsigned int dhcpv6_solicit_times;
+	unsigned int dhcpv6_advertise_times;
+	unsigned int dhcpv6_request_times;
+	unsigned int dhcpv6_renew_times;
+	unsigned int dhcpv6_reply_times;
+};
 
 /* distrubuted */
 #define INTERFACE_BIND_POOL			(1)
