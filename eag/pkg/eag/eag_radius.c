@@ -2460,6 +2460,8 @@ eag_radius_set_radius_vendor_id(eag_radius_t *radius,
 
 	if (0 == vendor_id) {
         radius->vendor_id = RADIUS_VENDOR_AUTELAN;
+	} else {
+        radius->vendor_id = vendor_id;
 	}
     radius_specific_attr = &(radius->radius_specific_attr);
 

@@ -15966,7 +15966,7 @@ DEFUN(config_eag_debug_cmd_func,
 	MODULE_DEBUG_LEVEL_STR(eag, notice)
 	MODULE_DEBUG_LEVEL_STR(eag, info)
 	MODULE_DEBUG_LEVEL_STR(eag, debug)
-	"hansi type, 0: local; 1: remote\n"
+	"hansi type, 1: local; 0: remote\n"
 	"hansi id\n"
 )
 {
@@ -16020,7 +16020,7 @@ DEFUN(config_eag_no_debug_cmd_func,
 	MODULE_DEBUG_LEVEL_STR(eag, notice)
 	MODULE_DEBUG_LEVEL_STR(eag, info)
 	MODULE_DEBUG_LEVEL_STR(eag, debug)
-	"hansi type, 0: local, 1:remote\n"
+	"hansi type, 1: local, 0: remote\n"
 	"hansi id\n"
 )
 {
@@ -16071,7 +16071,7 @@ DEFUN(debug_eag_pkt_info,
 	MODULE_DEBUG_LEVEL_STR(packet, all)
 	MODULE_DEBUG_LEVEL_STR(packet, receive)
 	MODULE_DEBUG_LEVEL_STR(packet, send)
-	"hansi type, 0: local, 1:remote\n"
+	"hansi type, 1: local, 0: remote\n"
 	"hansi id\n"
 )
 {
@@ -16111,7 +16111,7 @@ DEFUN(no_debug_eag_pkt_info,
 	MODULE_DEBUG_LEVEL_STR(packet, all)
 	MODULE_DEBUG_LEVEL_STR(packet, receive)
 	MODULE_DEBUG_LEVEL_STR(packet, send)
-	"hansi type, 0: local, 1:remote\n"
+	"hansi type, 1: local, 0: remote\n"
 	"hansi id\n"
 )
 {	
