@@ -237,7 +237,14 @@ mac_preauth_free(struct mac_preauth_t *preauth)
 			user_ipstr);
 	
 	list_del(&(preauth->node));
-	hlist_del(&(preauth->hnode));
+	if (EAG_IPV4 == preauth->user_addr.family) {
+        hlist_del(&(preauth->hnode));
+	} else if (EAG_IPV6 == preauth->user_addr.family) {
+        hlist_del(&(preauth->ipv6_hnode));
+	} else if (EAG_MIX == preauth->user_addr.family) {
+        hlist_del(&(preauth->hnode));
+        hlist_del(&(preauth->ipv6_hnode));
+	}
 	hlist_del(&(preauth->mac_hnode));
 	eag_blkmem_free_item(macauth->blkmem, preauth);
 	
