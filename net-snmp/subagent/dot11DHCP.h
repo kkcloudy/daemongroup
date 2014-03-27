@@ -42,4 +42,8 @@ Netsnmp_Node_Handler handle_DHCPPeakUsage;
 Netsnmp_Node_Handler handle_DHCPIpNum;
 Netsnmp_Node_Handler handle_DHCPDiscoverTimes;
 Netsnmp_Node_Handler handle_DHCPOfferTimes;
+/**wangchao add**/
+Netsnmp_Node_Handler handle_Ipv6DHCPReqTimes;
+Netsnmp_Node_Handler handle_Ipv6DHCPReqSucTimes;
+
 #endif /* DOT11DHCP_H */

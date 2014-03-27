@@ -5599,6 +5599,28 @@ DHCPOfferTimes			OBJECT-TYPE
 				DESCRIPTION
 					"DHCP offer times."
 				::= { dot11DHCP 8 }
+				
+
+Ipv6DHCPReqTimes			OBJECT-TYPE
+				SYNTAX  Counter32
+				MAX-ACCESS read-only
+				STATUS     current
+				DESCRIPTION
+					"Ipv6 DHCP request times."
+				::= { dot11DHCP 9 }
+
+Ipv6DHCPReqSucTimes			OBJECT-TYPE
+				SYNTAX  Counter32
+				MAX-ACCESS read-only
+				STATUS     current
+				DESCRIPTION
+					"Ipv6 DHCP request successful times."
+				::= { dot11DHCP 10 }
+
+
+				
+				
+				
 
 -- **********************************************************************
 -- * dot11DHCPIpAddressPoolTable

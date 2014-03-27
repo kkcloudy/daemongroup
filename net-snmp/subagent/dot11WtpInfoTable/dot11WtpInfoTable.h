@@ -88,7 +88,7 @@ size_t      wtpDevName_len; /* # of char elements, not bytes */
         /*
          * wtpPosInfo(3)/DisplayString/ASN_OCTET_STR/char(char)//L/A/W/e/R/d/H
          */
-   char   wtpPosInfo[33];	//lixiang edit at 2011-11-24
+   char   wtpPosInfo[255];	//lixiang edit at 2011-11-24  wangchao change to 255
 size_t      wtpPosInfo_len; /* # of char elements, not bytes */
     
         /*

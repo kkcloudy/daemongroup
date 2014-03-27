@@ -154,7 +154,7 @@ wtpDevName	 			OBJECT-TYPE
 					::= { dot11WtpInfoEntry 2 }
 
 wtpPosInfo	 			OBJECT-TYPE
-					SYNTAX     DisplayString(SIZE(1..15))
+					SYNTAX     DisplayString(SIZE(1..255))
 					MAX-ACCESS read-write
 					STATUS     current
 					DESCRIPTION

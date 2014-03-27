@@ -39,6 +39,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <dbus/dbus.h>
 #include "dbus/npd/npd_dbus_def.h"
 #include "dbus/dhcp/dhcp_dbus_def.h" 
+/**wangchao add**/
+#include "dbus/dhcp/dhcp6_dbus_def.h"
 #include "sysdef/npd_sysdef.h"
 #include "util/npd_list.h"
 #include "npd/nam/npd_amapi.h"
@@ -72,6 +74,19 @@ struct statistics_info {
 	unsigned int requested_times;
 	unsigned int ack_times;
 };
+
+/*****wangchao add*****/
+struct dhcpv6_statistics_info {
+	//unsigned int host_num;		/* total number of ip address */
+	//unsigned int segment_times;	/* ip address assigned */
+	unsigned int dhcpv6_solicit_times;
+	unsigned int dhcpv6_advertise_times;
+	unsigned int dhcpv6_request_times;
+	unsigned int dhcpv6_renew_times;
+	unsigned int dhcpv6_reply_times;
+};
+
+
 
 /*subnet lease state*/
 struct sub_lease_state{

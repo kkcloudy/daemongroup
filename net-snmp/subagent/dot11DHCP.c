@@ -50,6 +50,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define DHCPIPNUM			"2.6.3.6"
 #define DHCPDISCOVERTIMES	"2.6.3.7"
 #define DHCPOFFERTIMES		"2.6.3.8"
+#define Ipv6DHCPREQTIMES	"2.6.3.9"   /*wangchao add*/
+#define Ipv6DHCPREQSUCTIMES		"2.6.3.10" /*wangchao add*/
 
 #define DHCP_WHOLE				 "/var/run/apache2/dhcp_whole"
 #define DHCP_SEGMENT 			 "/var/run/apache2/dhcp_segment"
@@ -62,6 +64,13 @@ static unsigned int DHCPReqSucTimes = 0;
 static unsigned int DHCPIpNum = 0;
 static unsigned int DHCPDiscoverTimes = 0;
 static unsigned int DHCPOfferTimes = 0;
+/**wangchao add**/
+static unsigned int DHCPv6ReqTimes = 0;
+static unsigned int DHCPv6ReplyTimes = 0;
+static long update_time_ccgi_show_dhcpv6_statistic_info = 0;
+static void update_data_for_ccgi_show_dhcpv6_statistic_info();
+
+
 static long update_time_ccgi_show_dhcp_statistic_info = 0;
 static void update_data_for_ccgi_show_dhcp_statistic_info();
 
@@ -108,6 +117,9 @@ init_dot11DHCP(void)
 	static oid DHCPIpNum_oid[128]					= {0};
 	static oid DHCPDiscoverTimes_oid[128] 				= {0};
 	static oid DHCPOfferTimes_oid[128] 			= {0};
+	/*wangchao add*/
+	static oid Ipv6DHCPReqTimes_oid[128] 				= {0};
+	static oid Ipv6DHCPReqSucTimes_oid[128] 			= {0};	
 	
 	size_t	public_oid_len = 0;
 	mad_dev_oid(DHCPIPPoolUsage_oid,DHCPIPPOOLUSAGE,&public_oid_len,enterprise_pvivate_oid);
@@ -118,6 +130,9 @@ init_dot11DHCP(void)
 	mad_dev_oid(DHCPIpNum_oid,DHCPIPNUM,&public_oid_len,enterprise_pvivate_oid);
 	mad_dev_oid(DHCPDiscoverTimes_oid,DHCPDISCOVERTIMES,&public_oid_len,enterprise_pvivate_oid);
 	mad_dev_oid(DHCPOfferTimes_oid,DHCPOFFERTIMES,&public_oid_len,enterprise_pvivate_oid);
+	/*wangchao add*/
+	mad_dev_oid(Ipv6DHCPReqTimes_oid,Ipv6DHCPREQTIMES,&public_oid_len,enterprise_pvivate_oid);
+	mad_dev_oid(Ipv6DHCPReqSucTimes_oid,Ipv6DHCPREQSUCTIMES,&public_oid_len,enterprise_pvivate_oid);	
 	
   DEBUGMSGTL(("dot11DHCP", "Initializing\n"));
 
@@ -162,6 +177,18 @@ init_dot11DHCP(void)
                                DHCPOfferTimes_oid,public_oid_len,
                                HANDLER_CAN_RONLY
         ));
+/*******wangchao add*****/		
+    netsnmp_register_scalar(
+        netsnmp_create_handler_registration("Ipv6DHCPReqTimes", handle_Ipv6DHCPReqTimes,
+                               Ipv6DHCPReqTimes_oid, public_oid_len,
+                               HANDLER_CAN_RONLY
+        ));
+    netsnmp_register_scalar(
+        netsnmp_create_handler_registration("Ipv6DHCPReqSucTimes", handle_Ipv6DHCPReqSucTimes,
+                               Ipv6DHCPReqSucTimes_oid, public_oid_len,
+                               HANDLER_CAN_RONLY
+        ));		
+		
 }
 
 int
@@ -788,4 +815,129 @@ static void update_data_for_ccgi_show_dhcp_statistic_info()
 
 	snmp_log(LOG_DEBUG, "exit update data for ccgi_show_dhcp_statistic_info\n");
 }
+
+
+/***wangchao add****/
+#define DHCP_MAX_SLOT_NUM 16
+static void update_data_for_ccgi_show_dhcpv6_statistic_info()
+{
+	struct sysinfo info;
+	if(0 != update_time_ccgi_show_dhcpv6_statistic_info)
+	{
+		sysinfo(&info);		
+		if(info.uptime - update_time_ccgi_show_dhcpv6_statistic_info < cache_time)
+		{
+			return;
+		}
+	}
+	
+	/*update cache data*/
+	instance_parameter *paraHead = NULL, *paraNode = NULL;
+	int ret = 0;
+	struct dhcpv6_statistics_info statistic_info[DHCP_MAX_SLOT_NUM] = {0};
+	int i = 0;
+	
+	DHCPv6ReqTimes = 0;
+	DHCPv6ReplyTimes = 0;
+
+	snmp_log(LOG_DEBUG, "enter list_instance_parameter\n");
+    list_instance_parameter(&paraHead, SNMPD_SLOT_CONNECT);
+	snmp_log(LOG_DEBUG, "exit list_instance_parameter,paraHead=%p\n",paraHead);
+    for(paraNode = paraHead; paraNode; paraNode = paraNode->next) 
+	{
+        ret = 0;
+        ret = ccgi_show_dhcpv6_pool_statistics(paraNode->parameter.slot_id, statistic_info);
+        if(1 == ret) 
+		{	           
+			 //snmp_log(LOG_DEBUG, "dhcpv6_request_times = %d\n",statistic_info[paraNode->parameter.slot_id].dhcpv6_request_times);
+			 //snmp_log(LOG_DEBUG, "dhcpv6_reply_times = %d\n",statistic_info[paraNode->parameter.slot_id].dhcpv6_reply_times);
+			 
+
+             DHCPv6ReqTimes += statistic_info[paraNode->parameter.slot_id].dhcpv6_request_times;		            
+		     DHCPv6ReplyTimes += statistic_info[paraNode->parameter.slot_id].dhcpv6_reply_times;
+			 
+		}
+	}		
+    free_instance_parameter_list(&paraHead);
+	
+	sysinfo(&info); 		
+	update_time_ccgi_show_dhcpv6_statistic_info = info.uptime;
+
+	snmp_log(LOG_DEBUG, "exit update data for ccgi_show_dhcp_statistic_info\n");
+}
+
+
+/***wangchao add***/
+int
+handle_Ipv6DHCPReqTimes(netsnmp_mib_handler *handler,
+                          netsnmp_handler_registration *reginfo,
+                          netsnmp_agent_request_info   *reqinfo,
+                          netsnmp_request_info         *requests)
+{
+    /* We are never called for a GETNEXT if it's registered as a
+       "instance", as it's "magically" handled for us.  */
+
+    /* a instance handler also only hands us one request at a time, so
+       we don't need to loop over a list of requests; we'll only get one. */
+
+	snmp_log(LOG_DEBUG, "enter handle_Ipv6DHCPReqTimes\n");
+	
+    switch(reqinfo->mode) {
+
+        case MODE_GET:
+		{
+			
+		 	update_data_for_ccgi_show_dhcpv6_statistic_info();
+	        snmp_set_var_typed_value(requests->requestvb, ASN_COUNTER,
+	                                     (u_char *)&DHCPv6ReqTimes,
+	                                     sizeof(DHCPv6ReqTimes));
+	    }
+	    break;
+
+	    default:
+	        /* we should never get here, so this is a really bad error */
+	        snmp_log(LOG_DEBUG, "unknown mode (%d) in handle_DHCPReqTimes\n", reqinfo->mode );
+	        return SNMP_ERR_GENERR;
+    }
+
+	snmp_log(LOG_DEBUG, "exit handle_DHCPReqTimes\n");
+    return SNMP_ERR_NOERROR;
+}
+
+/***wangchao add****/
+int
+handle_Ipv6DHCPReqSucTimes(netsnmp_mib_handler *handler,
+                          netsnmp_handler_registration *reginfo,
+                          netsnmp_agent_request_info   *reqinfo,
+                          netsnmp_request_info         *requests)
+{
+    /* We are never called for a GETNEXT if it's registered as a
+       "instance", as it's "magically" handled for us.  */
+
+    /* a instance handler also only hands us one request at a time, so
+       we don't need to loop over a list of requests; we'll only get one. */
+
+	snmp_log(LOG_DEBUG, "enter handle_DHCPReqSucTimes\n");
+
+    switch(reqinfo->mode) {
+
+        case MODE_GET:
+		{
+			update_data_for_ccgi_show_dhcpv6_statistic_info();
+			snmp_set_var_typed_value(requests->requestvb, ASN_COUNTER,
+	                                     (u_char *)&DHCPv6ReplyTimes,
+	                                     sizeof(DHCPv6ReplyTimes));
+        }
+        break;
+
+        default:
+            /* we should never get here, so this is a really bad error */
+            snmp_log(LOG_DEBUG, "unknown mode (%d) in handle_DHCPReqSucTimes\n", reqinfo->mode );
+            return SNMP_ERR_GENERR;
+    }
+
+	snmp_log(LOG_DEBUG, "exit handle_DHCPReqSucTimes\n");
+    return SNMP_ERR_NOERROR;
+}
+
 
