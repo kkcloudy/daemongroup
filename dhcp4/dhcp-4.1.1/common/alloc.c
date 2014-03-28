@@ -729,6 +729,37 @@ int buffer_reference (ptr, bp, file, line)
 	rc_register (file, line, ptr, bp, bp -> refcnt, 0, RC_MISC);
 	return 1;
 }
+int buffer_dereference_before (ptr,file, line)
+	struct buffer **ptr;
+	//int i;
+	const char *file;
+	int line;
+{
+	if (!ptr) {
+		log_error ("%s(%d): null pointer", file, line);
+#if defined (POINTER_DEBUG)
+		abort ();
+#else
+		return 0;
+#endif
+	}
+
+	if (!*ptr) {
+		log_error ("%s(%d): null pointer", file, line);
+#if defined (POINTER_DEBUG)
+		abort ();
+#else
+		return 0;
+#endif
+	}
+	//if((*ptr) -> refcnt > i)
+	//for(;(*ptr) -> refcnt != i ;){
+		(*ptr) -> refcnt--;
+		log_info("for rcft %d\n",(*ptr) -> refcnt);
+	rc_register (file, line, ptr, *ptr, (*ptr) -> refcnt, 1, RC_MISC);
+	//	}
+	return 1;
+}
 
 int buffer_dereference (ptr, file, line)
 	struct buffer **ptr;

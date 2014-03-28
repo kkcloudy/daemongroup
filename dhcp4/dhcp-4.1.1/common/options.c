@@ -266,6 +266,9 @@ int parse_option_buffer (options, buffer, length, universe)
 		option_dereference(&option, MDL);
 		offset += len;
 	}
+		 if(bp->refcnt != 2){
+			buffer_dereference_before (&bp, MDL);
+		 }
 	buffer_dereference (&bp, MDL);
 	return 1;
 }
@@ -2323,6 +2326,7 @@ prepare_option_buffer(struct universe *universe, struct buffer *bp,
 			status = 0;
 			goto cleanup;
 		}
+		buffer_dereference_before(&lbp ,MDL);
 		memcpy (lbp -> data, buffer, length + terminatep);
 		bp = lbp;
 		buffer = &bp -> data [0]; /* Refer to saved buffer. */

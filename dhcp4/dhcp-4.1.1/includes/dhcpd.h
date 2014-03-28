@@ -2298,6 +2298,8 @@ int dns_host_entry_reference PROTO ((struct dns_host_entry **,
 				     const char *, int));
 int dns_host_entry_dereference PROTO ((struct dns_host_entry **,
 				       const char *, int));
+int buffer_dereference_before PROTO ((struct buffer **, const char *, int));
+
 int option_state_allocate PROTO ((struct option_state **, const char *, int));
 int option_state_reference PROTO ((struct option_state **,
 				   struct option_state *, const char *, int));
