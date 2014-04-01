@@ -1085,7 +1085,7 @@ DBusMessage * wid_dbus_interface_del_oui(DBusConnection *conn, DBusMessage *msg,
 								DBUS_TYPE_INVALID))){
 				
 		if (dbus_error_is_set(&err)) {
-			printf("%s raised: %s",err.name,err.message);
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
 			dbus_error_free(&err);
 		}
 		return NULL;
@@ -14013,6 +14013,7 @@ DBusMessage * wid_dbus_interface_show_acversion(DBusConnection *conn, DBusMessag
 			str_ap_model = (char*)WID_MALLOC(strlen(pnode->str_ap_model)+1);
 			if (NULL == str_ap_model)
 			{
+				CWThreadMutexUnlock(&(gAllThreadMutex));
 				return NULL;
 			}
 			memset(str_ap_model,0,strlen(pnode->str_ap_model)+1);
@@ -14021,6 +14022,7 @@ DBusMessage * wid_dbus_interface_show_acversion(DBusConnection *conn, DBusMessag
 			str_ap_model = (char*)WID_MALLOC(2);
 			if (NULL == str_ap_model)
 			{
+				CWThreadMutexUnlock(&(gAllThreadMutex));
 				return NULL;
 			}
 			memset(str_ap_model,0,2);
@@ -14042,6 +14044,7 @@ DBusMessage * wid_dbus_interface_show_acversion(DBusConnection *conn, DBusMessag
 							{
 								CW_FREE_OBJECT_WID(str_ap_version_path);
 							}
+							CWThreadMutexUnlock(&(gAllThreadMutex));
 							return NULL;
 						}
 						memset(str_oem_version,0,strlen(vesionname)+1);
@@ -14058,6 +14061,7 @@ DBusMessage * wid_dbus_interface_show_acversion(DBusConnection *conn, DBusMessag
 							{
 								CW_FREE_OBJECT_WID(str_oem_version);
 							}
+							CWThreadMutexUnlock(&(gAllThreadMutex));
 							return NULL;
 						}
 						memset(str_ap_version_path,0,strlen(vesionpath)+1);
@@ -14079,6 +14083,7 @@ DBusMessage * wid_dbus_interface_show_acversion(DBusConnection *conn, DBusMessag
 				{
 					CW_FREE_OBJECT_WID(str_ap_version_path);
 				}
+				CWThreadMutexUnlock(&(gAllThreadMutex));
 				return NULL;
 			}
 			memset(str_oem_version,0,2);
@@ -14095,6 +14100,7 @@ DBusMessage * wid_dbus_interface_show_acversion(DBusConnection *conn, DBusMessag
 				{
 					CW_FREE_OBJECT_WID(str_oem_version);
 				}
+				CWThreadMutexUnlock(&(gAllThreadMutex));
 				return NULL;
 			}
 			memset(str_ap_version_path,0,2);
@@ -14211,6 +14217,7 @@ DBusMessage * wid_dbus_interface_show_model_list(DBusConnection *conn, DBusMessa
 			str_ap_model = (char*)WID_MALLOC(strlen(pnode->str_ap_model)+1);
 			if (NULL == str_ap_model)
 			{
+				CWThreadMutexUnlock(&(gAllThreadMutex));
 				return NULL;
 			}
 			memset(str_ap_model,0,strlen(pnode->str_ap_model)+1);
@@ -14219,6 +14226,7 @@ DBusMessage * wid_dbus_interface_show_model_list(DBusConnection *conn, DBusMessa
 			str_ap_model = (char*)WID_MALLOC(2);
 			if (NULL == str_ap_model)
 			{
+				CWThreadMutexUnlock(&(gAllThreadMutex));
 				return NULL;
 			}
 			memset(str_ap_model,0,2);
@@ -14239,6 +14247,7 @@ DBusMessage * wid_dbus_interface_show_model_list(DBusConnection *conn, DBusMessa
 							{
 								CW_FREE_OBJECT_WID(str_ap_version_path);
 							}
+							CWThreadMutexUnlock(&(gAllThreadMutex));
 							return NULL;
 						}
 						memset(str_ap_version_name,0,strlen(vesionname)+1);
@@ -14255,6 +14264,7 @@ DBusMessage * wid_dbus_interface_show_model_list(DBusConnection *conn, DBusMessa
 							{
 								CW_FREE_OBJECT_WID(str_ap_version_name);
 							}
+							CWThreadMutexUnlock(&(gAllThreadMutex));
 							return NULL;
 						}
 						memset(str_ap_version_path,0,strlen(vesionpath)+1);
@@ -14276,6 +14286,7 @@ DBusMessage * wid_dbus_interface_show_model_list(DBusConnection *conn, DBusMessa
 				{
 					CW_FREE_OBJECT_WID(str_ap_version_path);
 				}
+				CWThreadMutexUnlock(&(gAllThreadMutex));
 				return NULL;
 			}
 			memset(str_ap_version_name,0,2);
@@ -14292,6 +14303,7 @@ DBusMessage * wid_dbus_interface_show_model_list(DBusConnection *conn, DBusMessa
 				{
 					CW_FREE_OBJECT_WID(str_ap_version_name);
 				}
+				CWThreadMutexUnlock(&(gAllThreadMutex));
 				return NULL;
 			}
 			memset(str_ap_version_path,0,2);
@@ -14423,6 +14435,7 @@ DBusMessage * wid_dbus_interface_show_model(DBusConnection *conn, DBusMessage *m
 			str_ap_model = (char*)WID_MALLOC(strlen(pnode->str_ap_model)+1);
 			if (NULL == str_ap_model)
 			{
+				CWThreadMutexUnlock(&(gAllThreadMutex));
 				return NULL;
 			}
 			memset(str_ap_model,0,strlen(pnode->str_ap_model)+1);
@@ -14431,6 +14444,7 @@ DBusMessage * wid_dbus_interface_show_model(DBusConnection *conn, DBusMessage *m
 			str_ap_model = (char*)WID_MALLOC(2);
 			if (NULL == str_ap_model)
 			{
+				CWThreadMutexUnlock(&(gAllThreadMutex));
 				return NULL;
 			}
 			memset(str_ap_model,0,2);
@@ -14443,6 +14457,7 @@ DBusMessage * wid_dbus_interface_show_model(DBusConnection *conn, DBusMessage *m
 			if (NULL == str_ap_version_name)
 			{
 				CW_FREE_OBJECT_WID(str_ap_model);
+				CWThreadMutexUnlock(&(gAllThreadMutex));
 				return NULL;
 			}
 			memset(str_ap_version_name,0,strlen(pnode_new->code_info->str_ap_version_name)+1);
@@ -14452,6 +14467,7 @@ DBusMessage * wid_dbus_interface_show_model(DBusConnection *conn, DBusMessage *m
 			if (NULL == str_ap_version_name)
 			{
 				CW_FREE_OBJECT_WID(str_ap_model);
+				CWThreadMutexUnlock(&(gAllThreadMutex));
 				return NULL;
 			}
 			memset(str_ap_version_name,0,2);
@@ -14465,6 +14481,7 @@ DBusMessage * wid_dbus_interface_show_model(DBusConnection *conn, DBusMessage *m
 			{
 				CW_FREE_OBJECT_WID(str_ap_model);
 				CW_FREE_OBJECT_WID(str_ap_version_name);
+				CWThreadMutexUnlock(&(gAllThreadMutex));
 				return NULL;
 			}
 			memset(str_ap_version_path,0,strlen(pnode_new->code_info->str_ap_version_path)+1);
@@ -14475,6 +14492,7 @@ DBusMessage * wid_dbus_interface_show_model(DBusConnection *conn, DBusMessage *m
 			{
 				CW_FREE_OBJECT_WID(str_ap_model);
 				CW_FREE_OBJECT_WID(str_ap_version_name);
+				CWThreadMutexUnlock(&(gAllThreadMutex));
 				return NULL;
 			}
 			memset(str_ap_version_path,0,2);
@@ -14626,6 +14644,7 @@ DBusMessage * wid_dbus_interface_set_model(DBusConnection *conn, DBusMessage *ms
 				pnode->str_ap_model= (char*)WID_MALLOC(strlen(newmodel)+1);
 				if (NULL == pnode->str_ap_model)
 				{
+					CWThreadMutexUnlock(&(gAllThreadMutex));
 					return NULL;
 				}
 				memset(pnode->str_ap_model, 0, strlen(newmodel)+1);
@@ -32951,7 +32970,7 @@ DBusMessage * wid_dbus_interface_wtp_set_ap_update_base_model(DBusConnection *co
 						while(code_node != NULL){
 							wid_syslog_debug_debug(WID_DBUS, "wtp_upgrade: malloc for update_node and set the update_node\n");
 							CWConfigVersionInfo *update_node = NULL;
-							CW_CREATE_OBJECT_ERR_WID(update_node, CWConfigVersionInfo, return NULL;);	
+							CW_CREATE_OBJECT_ERR_WID(update_node, CWConfigVersionInfo, CWThreadMutexUnlock(&(gAllThreadMutex)); return NULL;);	
 							memset(update_node,0,sizeof(CWConfigVersionInfo));
 							update_node->next = NULL;
 
@@ -33131,6 +33150,7 @@ DBusMessage * wid_dbus_interface_show_model_bind_info(DBusConnection *conn, DBus
 			str_ap_model = (char*)WID_MALLOC(strlen(pnode->str_ap_model)+1);
 			if (NULL == str_ap_model)
 			{
+				CWThreadMutexUnlock(&(gAllThreadMutex));
 				return NULL;
 			}
 			memset(str_ap_model,0,strlen(pnode->str_ap_model)+1);
@@ -33139,6 +33159,7 @@ DBusMessage * wid_dbus_interface_show_model_bind_info(DBusConnection *conn, DBus
 			str_ap_model = (char*)WID_MALLOC(2);
 			if (NULL == str_ap_model)
 			{
+				CWThreadMutexUnlock(&(gAllThreadMutex));
 				return NULL;
 			}
 			memset(str_ap_model,0,2);
@@ -33151,6 +33172,7 @@ DBusMessage * wid_dbus_interface_show_model_bind_info(DBusConnection *conn, DBus
 			if (NULL == file_name)
 			{
 				CW_FREE_OBJECT_WID(str_ap_model);
+				CWThreadMutexUnlock(&(gAllThreadMutex));
 				return NULL;
 			}
 			memset(file_name,0,strlen(pnode->tar_file_name)+1);
@@ -33160,6 +33182,7 @@ DBusMessage * wid_dbus_interface_show_model_bind_info(DBusConnection *conn, DBus
 			if (NULL == file_name)
 			{
 				CW_FREE_OBJECT_WID(str_ap_model);
+				CWThreadMutexUnlock(&(gAllThreadMutex));
 				return NULL;
 			}
 			memset(file_name,0,2);
@@ -33673,6 +33696,7 @@ DBusMessage * wid_dbus_interface_show_model_detail_bind_info(DBusConnection *con
 			str_ap_model = (char*)WID_MALLOC(strlen(pnode->str_ap_model)+1);
 			if (NULL == str_ap_model)
 			{
+				CWThreadMutexUnlock(&(gAllThreadMutex));
 				return NULL;
 			}
 			memset(str_ap_model,0,strlen(pnode->str_ap_model)+1);
@@ -33681,6 +33705,7 @@ DBusMessage * wid_dbus_interface_show_model_detail_bind_info(DBusConnection *con
 			str_ap_model = (char*)WID_MALLOC(2);
 			if (NULL == str_ap_model)
 			{
+				CWThreadMutexUnlock(&(gAllThreadMutex));
 				return NULL;
 			}
 			memset(str_ap_model,0,2);
@@ -33718,6 +33743,7 @@ DBusMessage * wid_dbus_interface_show_model_detail_bind_info(DBusConnection *con
 				if (str_ap_version_name)
 				{
 					CW_FREE_OBJECT_WID(str_ap_model);
+					CWThreadMutexUnlock(&(gAllThreadMutex));
 					return NULL;
 				}
 				memset(str_ap_version_name,0,strlen(codenode->str_ap_version_name)+1);
@@ -33727,6 +33753,7 @@ DBusMessage * wid_dbus_interface_show_model_detail_bind_info(DBusConnection *con
 				if (str_ap_version_name)
 				{
 					CW_FREE_OBJECT_WID(str_ap_model);
+					CWThreadMutexUnlock(&(gAllThreadMutex));
 					return NULL;
 				}
 				memset(str_ap_version_name,0,2);
@@ -33740,6 +33767,7 @@ DBusMessage * wid_dbus_interface_show_model_detail_bind_info(DBusConnection *con
 				{
 					CW_FREE_OBJECT_WID(str_ap_model);
 					CW_FREE_OBJECT_WID(str_ap_version_name);
+					CWThreadMutexUnlock(&(gAllThreadMutex));
 					return NULL;
 				}
 				memset(str_ap_version_path,0,strlen(codenode->str_ap_version_path)+1);
@@ -33750,6 +33778,7 @@ DBusMessage * wid_dbus_interface_show_model_detail_bind_info(DBusConnection *con
 				{
 					CW_FREE_OBJECT_WID(str_ap_model);
 					CW_FREE_OBJECT_WID(str_ap_version_name);
+					CWThreadMutexUnlock(&(gAllThreadMutex));
 					return NULL;
 				}
 				memset(str_ap_version_path,0,2);
@@ -33764,6 +33793,7 @@ DBusMessage * wid_dbus_interface_show_model_detail_bind_info(DBusConnection *con
 					CW_FREE_OBJECT_WID(str_ap_model);
 					CW_FREE_OBJECT_WID(str_ap_version_name);
 					CW_FREE_OBJECT_WID(str_ap_version_path);
+					CWThreadMutexUnlock(&(gAllThreadMutex));
 					return NULL;
 				}
 				memset(str_ap_version_code,0,strlen(codenode->str_ap_version_code)+1);
@@ -33775,6 +33805,7 @@ DBusMessage * wid_dbus_interface_show_model_detail_bind_info(DBusConnection *con
 					CW_FREE_OBJECT_WID(str_ap_model);
 					CW_FREE_OBJECT_WID(str_ap_version_name);
 					CW_FREE_OBJECT_WID(str_ap_version_path);
+					CWThreadMutexUnlock(&(gAllThreadMutex));
 					return NULL;
 				}
 				memset(str_ap_version_code,0,2);
@@ -33976,6 +34007,7 @@ DBusMessage * wid_dbus_interface_wtp_show_ap_upgrade_result(DBusConnection *conn
 				CW_FREE_OBJECT_WID(WTP_SUCC);
 				CW_FREE_OBJECT_WID(WTP_FAIL);
 				CW_FREE_OBJECT_WID(WTP_OTHE);
+				CWThreadMutexUnlock(&(gAllThreadMutex));
 				return NULL;
 			}
 			memset(wtp_ip,0,strlen(WTP_SUCC[i]->WTPIP)+1);
@@ -33988,6 +34020,7 @@ DBusMessage * wid_dbus_interface_wtp_show_ap_upgrade_result(DBusConnection *conn
 				CW_FREE_OBJECT_WID(WTP_SUCC);
 				CW_FREE_OBJECT_WID(WTP_FAIL);
 				CW_FREE_OBJECT_WID(WTP_OTHE);
+				CWThreadMutexUnlock(&(gAllThreadMutex));
 				return NULL;
 			}
 			memset(wtp_ip,0,2);
@@ -34004,6 +34037,7 @@ DBusMessage * wid_dbus_interface_wtp_show_ap_upgrade_result(DBusConnection *conn
 				CW_FREE_OBJECT_WID(WTP_FAIL);
 				CW_FREE_OBJECT_WID(WTP_OTHE);
 				CW_FREE_OBJECT_WID(wtp_ip);
+				CWThreadMutexUnlock(&(gAllThreadMutex));
 				return NULL;
 			}
 			memset(wtp_model,0,strlen(WTP_SUCC[i]->WTPModel)+1);
@@ -34017,6 +34051,7 @@ DBusMessage * wid_dbus_interface_wtp_show_ap_upgrade_result(DBusConnection *conn
 				CW_FREE_OBJECT_WID(WTP_FAIL);
 				CW_FREE_OBJECT_WID(WTP_OTHE);
 				CW_FREE_OBJECT_WID(wtp_ip);
+				CWThreadMutexUnlock(&(gAllThreadMutex));
 				return NULL;
 			}
 			memset(wtp_model,0,2);
@@ -34065,6 +34100,7 @@ DBusMessage * wid_dbus_interface_wtp_show_ap_upgrade_result(DBusConnection *conn
 				CW_FREE_OBJECT_WID(WTP_SUCC);
 				CW_FREE_OBJECT_WID(WTP_FAIL);
 				CW_FREE_OBJECT_WID(WTP_OTHE);
+				CWThreadMutexUnlock(&(gAllThreadMutex));
 				return NULL;
 			}
 			memset(wtp_ip,0,strlen(WTP_FAIL[i]->WTPIP)+1);
@@ -34077,6 +34113,7 @@ DBusMessage * wid_dbus_interface_wtp_show_ap_upgrade_result(DBusConnection *conn
 				CW_FREE_OBJECT_WID(WTP_SUCC);
 				CW_FREE_OBJECT_WID(WTP_FAIL);
 				CW_FREE_OBJECT_WID(WTP_OTHE);
+				CWThreadMutexUnlock(&(gAllThreadMutex));
 				return NULL;
 			}
 			memset(wtp_ip,0,2);
@@ -34093,6 +34130,7 @@ DBusMessage * wid_dbus_interface_wtp_show_ap_upgrade_result(DBusConnection *conn
 				CW_FREE_OBJECT_WID(WTP_FAIL);
 				CW_FREE_OBJECT_WID(WTP_OTHE);
 				CW_FREE_OBJECT_WID(wtp_ip);
+				CWThreadMutexUnlock(&(gAllThreadMutex));
 				return NULL;
 			}
 			memset(wtp_model,0,strlen(WTP_FAIL[i]->WTPModel)+1);
@@ -34106,6 +34144,7 @@ DBusMessage * wid_dbus_interface_wtp_show_ap_upgrade_result(DBusConnection *conn
 				CW_FREE_OBJECT_WID(WTP_FAIL);
 				CW_FREE_OBJECT_WID(WTP_OTHE);
 				CW_FREE_OBJECT_WID(wtp_ip);
+				CWThreadMutexUnlock(&(gAllThreadMutex));
 				return NULL;
 			}
 			memset(wtp_model,0,2);
@@ -34154,6 +34193,7 @@ DBusMessage * wid_dbus_interface_wtp_show_ap_upgrade_result(DBusConnection *conn
 				CW_FREE_OBJECT_WID(WTP_SUCC);
 				CW_FREE_OBJECT_WID(WTP_FAIL);
 				CW_FREE_OBJECT_WID(WTP_OTHE);
+				CWThreadMutexUnlock(&(gAllThreadMutex));
 				return NULL;
 			}
 			memset(wtp_ip,0,strlen(WTP_OTHE[i]->WTPIP)+1);
@@ -34166,6 +34206,7 @@ DBusMessage * wid_dbus_interface_wtp_show_ap_upgrade_result(DBusConnection *conn
 				CW_FREE_OBJECT_WID(WTP_SUCC);
 				CW_FREE_OBJECT_WID(WTP_FAIL);
 				CW_FREE_OBJECT_WID(WTP_OTHE);
+				CWThreadMutexUnlock(&(gAllThreadMutex));
 				return NULL;
 			}
 			memset(wtp_ip,0,2);
@@ -34182,6 +34223,7 @@ DBusMessage * wid_dbus_interface_wtp_show_ap_upgrade_result(DBusConnection *conn
 				CW_FREE_OBJECT_WID(WTP_FAIL);
 				CW_FREE_OBJECT_WID(WTP_OTHE);
 				CW_FREE_OBJECT_WID(wtp_ip);
+				CWThreadMutexUnlock(&(gAllThreadMutex));
 				return NULL;
 			}
 			memset(wtp_model,0,strlen(WTP_OTHE[i]->WTPModel)+1);
@@ -34195,6 +34237,7 @@ DBusMessage * wid_dbus_interface_wtp_show_ap_upgrade_result(DBusConnection *conn
 				CW_FREE_OBJECT_WID(WTP_FAIL);
 				CW_FREE_OBJECT_WID(WTP_OTHE);
 				CW_FREE_OBJECT_WID(wtp_ip);
+				CWThreadMutexUnlock(&(gAllThreadMutex));
 				return NULL;
 			}
 			memset(wtp_model,0,2);

@@ -148,7 +148,7 @@ int had_SocketInit2()
 	int sockfd = 0;
 	int ret = 0;
 	/* open the socket */
-	sockfd = socket(PF_PACKET, SOCK_RAW, htons(ETH_P_IP));
+	sockfd = socket(PF_PACKET, SOCK_RAW|O_NONBLOCK, htons(ETH_P_IP));
 	if( sockfd < 0 ){
 		vrrp_syslog_error("cannot open raw socket. error %s. (try to run it as root)\n"
 						, strerror(errno));
@@ -2393,12 +2393,10 @@ void vrrp_timer_thread_main(void){
 								vrrp_syslog_error("inst%d timer thread check %d times in boot stage error %d\n", \
 													profile, count[profile] ,result);
 							}
-							pthread_mutex_unlock(&StateMutex);
 							continue;
 						}
 						else if(1 == result) { /* in boot stage */
 							vrrp_syslog_info("inst%d timer thread wait %d times in boot stage!\n", profile, count[profile]);
-							pthread_mutex_unlock(&StateMutex);
 							continue;
 						}
 					}
