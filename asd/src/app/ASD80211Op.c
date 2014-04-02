@@ -2491,6 +2491,10 @@ static void handle_assoc(struct asd_data *wasd,
 		if((sta->acct_session_started)&&(sta->acct_terminate_cause == 0))
 			sta->acct_terminate_cause = RADIUS_ACCT_TERMINATE_CAUSE_USER_REQUEST;
 		accounting_sta_stop(wasd, sta);
+		/* caojia add for eap radius auth packet with acct_session_id, 2014/4/1 */
+		if (ASD_SECURITY[SID]->eap_auth_to_radius_acct_session_id_enable == 1) {
+			accounting_get_session_id(sta);
+		}
 		if (reassoc)
 			mlme_reassociate_indication(wasd, sta);
 		else

@@ -170,6 +170,7 @@ struct security {
  unsigned char radius_both;
  struct heart_test_radius_data *radius_conf;
  //end 
+ unsigned int eap_auth_to_radius_acct_session_id_enable;
  struct security *next;
 };
 typedef struct security security_profile;

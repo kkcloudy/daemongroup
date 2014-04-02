@@ -35,7 +35,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 void accounting_sta_start(struct asd_data *wasd, struct sta_info *sta);
 void accounting_sta_interim(struct asd_data *wasd, struct sta_info *sta);
 void accounting_sta_stop(struct asd_data *wasd, struct sta_info *sta);
-void accounting_get_session_id(struct radius_client_info *client_info, struct sta_info *sta);
+void accounting_get_session_id(struct sta_info *sta);
 void accounting_sta_get_id(struct asd_data *wasd, struct sta_info *sta);
 int accounting_init(const int  wlanid);
 void accounting_deinit(struct asd_data *wasd);

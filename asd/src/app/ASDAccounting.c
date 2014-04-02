@@ -452,7 +452,11 @@ void accounting_sta_start(struct asd_data *wasd, struct sta_info *sta)
 		interval = ACCT_DEFAULT_UPDATE_INTERVAL;
 	circle_register_timeout(interval, 0, accounting_interim_update,
 			       wasd, sta);
-	accounting_get_session_id(client_info, sta);
+	/* caojia add for eap radius auth packet with acct_session_id, 2014/4/1 */
+	if (ASD_SECURITY[wasd->SecurityID]->eap_auth_to_radius_acct_session_id_enable == 0) {
+		accounting_get_session_id(sta);
+	}
+	/* end */
 	sta->acct_session_started = 1;
 	sta_acct_info_add(sta);
 	//qiuchen change it
@@ -610,7 +614,7 @@ void accounting_sta_stop(struct asd_data *wasd, struct sta_info *sta)
 }
 
 
-void accounting_get_session_id(struct radius_client_info *client_info, struct sta_info *sta)
+void accounting_get_session_id(struct sta_info *sta)
 {
 	sta->acct_session_id_lo = ACCT_SESSION_ID_LO++;
 	if (ACCT_SESSION_ID_LO == 0) {

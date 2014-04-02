@@ -596,6 +596,21 @@ static void ieee802_1x_encapsulate_radius(struct asd_data *wasd,
 		}
 		
 		radius_msg_make_authenticator(msg, (u8 *) sta, sizeof(*sta));
+
+		/* caojia add for eap radius auth packet with acct_session_id, 2014/4/1 */
+		if((ASD_SECURITY[SID] != NULL) &&
+			((ASD_SECURITY[SID]->securityType == IEEE8021X)||(ASD_SECURITY[SID]->securityType == WPA_E)||
+			(ASD_SECURITY[SID]->securityType == WPA2_E)||(ASD_SECURITY[SID]->securityType == MD5)) && 
+			(ASD_SECURITY[SID]->eap_auth_to_radius_acct_session_id_enable == 1)){
+			os_snprintf(buf, sizeof(buf), "%08X-%08X",
+			    	sta->acct_session_id_hi, sta->acct_session_id_lo);
+			if (!radius_msg_add_attr(msg, RADIUS_ATTR_ACCT_SESSION_ID,
+					 	(u8 *) buf, os_strlen(buf))) {
+				asd_printf(ASD_1X,MSG_DEBUG,"Could not add Acct-Session-Id\n");
+				goto fail;
+			}
+		}
+		/* end */
 		
 		if (sm->identity &&
 			!radius_msg_add_attr(msg, RADIUS_ATTR_USER_NAME,

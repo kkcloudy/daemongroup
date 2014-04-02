@@ -22949,6 +22949,82 @@ DBusMessage *asd_dbus_eap_alive_period(DBusConnection *conn, DBusMessage *msg, v
 
 }
 
+DBusMessage *asd_dbus_set_eap_auth_to_radius_acct_session_id_enanle_disable(DBusConnection *conn, DBusMessage *msg, void *user_data)
+{
+	DBusMessage * reply;
+	DBusMessageIter  iter;
+	unsigned char security_id;
+	unsigned int security_type;
+	unsigned int ret = ASD_DBUS_SUCCESS;
+	DBusError err;
+
+	unsigned char AcctSessionIDEnable;
+		
+	dbus_error_init(&err);
+	if (!(dbus_message_get_args ( msg, &err,
+								DBUS_TYPE_BYTE,&security_id,
+								DBUS_TYPE_BYTE,&AcctSessionIDEnable,
+								DBUS_TYPE_INVALID))){
+	
+		asd_printf(ASD_DBUS,MSG_DEBUG,"Unable to get input args\n");
+					
+		if (dbus_error_is_set(&err)) {
+			asd_printf(ASD_DBUS,MSG_DEBUG,"%s raised: %s",err.name,err.message);
+			dbus_error_free(&err);
+		}
+		return NULL;
+	}
+	
+	asd_printf(ASD_DBUS,MSG_DEBUG,"Set eap auth to radius Acct-Session-ID %s\n", AcctSessionIDEnable ? "enable":"disable");
+	if((ASD_SECURITY[security_id] != NULL))
+	{		
+		int i =0, isApply = 0;
+		pthread_mutex_lock(&asd_g_wlan_mutex);
+		for(i = 0; i < WLAN_NUM; i++)
+		{
+			if((ASD_WLAN[i]!=NULL)&&(ASD_WLAN[i]->Status == 0)&&(ASD_WLAN[i]->SecurityID == security_id))
+			{
+				ret = ASD_SECURITY_WLAN_SHOULD_BE_DISABLE;
+				break;
+			}
+			else if((ASD_WLAN[i]!=NULL)&&(ASD_WLAN[i]->SecurityID == security_id))
+			{
+				isApply = 1;
+				continue;
+			}
+	    }
+
+		if(ret == 0)
+		{
+			if(isApply == 1)
+				Clear_WLAN_APPLY(security_id);
+				
+			security_type = ASD_SECURITY[security_id]->securityType;
+			if((security_type == IEEE8021X)||(security_type == WPA_E)||(security_type == WPA2_E)||(security_type == MD5))
+			{ 			
+				ASD_SECURITY[security_id]->eap_auth_to_radius_acct_session_id_enable = AcctSessionIDEnable;
+			}
+			else
+				ret = ASD_SECURITY_TYPE_NOT_MATCH_ENCRYPTION_TYPE;
+		}
+		pthread_mutex_unlock(&asd_g_wlan_mutex);
+	}
+	else
+		ret = ASD_SECURITY_NOT_EXIST;
+		
+		
+	reply = dbus_message_new_method_return(msg);
+		
+	dbus_message_iter_init_append (reply, &iter);
+		
+	dbus_message_iter_append_basic (&iter,
+									 DBUS_TYPE_UINT32,
+									 &ret);
+	return reply;
+
+}
+
+
 //weichao add 2011 .12.01
 DBusMessage *asd_dbus_account_after_authorize(DBusConnection *conn, DBusMessage *msg, void *user_data)
 {
@@ -28919,6 +28995,10 @@ DBusMessage *asd_dbus_security_show_running_config(DBusConnection *conn, DBusMes
 						totalLen += sprintf(cursor," set radius heart test on\n");
 						cursor = showStr + totalLen;
 					}
+					if(SECURITY[i]->eap_auth_to_radius_acct_session_id_enable == 1){	//	xm0701
+						totalLen += sprintf(cursor," set eap-auth-to-radius acct-session-id enable\n");
+						cursor = showStr + totalLen;
+					}
 				}	
 				
 				if(SECURITY[i]->securityType == WAPI_AUTH){
@@ -29854,6 +29934,11 @@ static DBusHandlerResult asd_dbus_message_handler (DBusConnection *connection, D
 			reply = asd_dbus_set_radius_heart_test_on_off(connection,message,user_data);
 		}
 		//end
+		/* caojia add for eap radius auth packet with acct_session_id, 2014/4/1 */
+		else if (dbus_message_is_method_call(message,ASD_DBUS_SECURITY_INTERFACE,ASD_DBUS_SECURITY_METHOD_SET_EAP_AUTH_TO_RADIUS_ACCT_SESSION_ID_ENABLE_DISABLE)){
+			reply = asd_dbus_set_eap_auth_to_radius_acct_session_id_enanle_disable(connection,message,user_data);
+		}
+		/* end */
 	}
 	else if(strcmp(dbus_message_get_path(message),ASD_DBUS_AC_GROUP_OBJPATH) == 0){
 		
