@@ -3655,7 +3655,7 @@ pow_count(int a, int n)
 {	
 	int sum = 1,i = 0;
 	for(; i< n; i++){
-		sum += (a * sum);	
+		sum = (a * sum);	
 	}
 	
 	return sum;
@@ -3671,7 +3671,7 @@ common_subnet_parsing_no_cfile_v6
 {
 	struct subnet *t, *u;
 	struct iaddr lo, hi;
-	int i = 0, sum = 0;
+	int i = 0, sum_h = 0 ,sum_l = 0 ;
 	
 log_info("common_subnet_parsing_no_cfile run 1 \n");
 
@@ -3716,23 +3716,32 @@ log_info("common_subnet_parsing_no_cfile_v6 run 2 \n");
 	parse_address_range6_no_file(&(sub_conf->range_conf), subnet->group);
 	lo = sub_conf->range_conf.low;
 	hi = sub_conf->range_conf.high;
-	int flag = 0;
+	//int flag = 0;
 	for(i = 0; i < lo.len; i++){
 		if(lo.iabuf[i] != hi.iabuf[i])
-			{
+			break;
+		/*{
+			log_info("long int de zijie shu:%d \n",sizeof(long int));
+			log_info("int de zijie shu:%d \n",sizeof(int));
+			
+			
 			if(15 == i){
 				if(1 == flag)
 					sum += (hi.iabuf[i] + 255 + 1 - lo.iabuf[i] + 1);
 				else
 					sum += (hi.iabuf[i] - lo.iabuf[i] + 1);}
 			else if(flag == 0)
-					sum += (hi.iabuf[i] - lo.iabuf[i] -1) * (pow_count(255, (15 - i))); 
+					sum += (hi.iabuf[i] - lo.iabuf[i] -1) * (pow_count(256, (15 - i))); 
 			    else
-					sum +=	(255 + (hi.iabuf[i] - lo.iabuf[i]))* (pow_count(255, (15 - i)));
+					sum +=	(255 + (hi.iabuf[i] - lo.iabuf[i]))* (pow_count(256, (15 - i)));
 				flag = 1;
-		}
+		}*/
 	}
-	(*(subnet->shared_network->ipv6_pools))->lease_count = sum;
+	for(;i < lo.len; i++){
+		sum_h += (hi.iabuf[i]) * pow_count(256 , 15 - i);
+		sum_l += (lo.iabuf[i]) * pow_count(256 , 15 - i);
+	}
+	(*(subnet->shared_network->ipv6_pools))->lease_count = sum_h - sum_l + 1;
 	if (share->subnets == NULL) {
 		subnet_reference(&share->subnets, subnet, MDL);
 	} else {
