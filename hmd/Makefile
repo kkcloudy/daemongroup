@@ -36,10 +36,13 @@ all: $(HMD_APP)
 
 $(HMD_APP): $(HMD_OBJS) 
 	$(CC) $(HMD_OBJS) $(LDFLAGS) $(LDLIBS)  $(DBUS_LIBS) $(LIBS) -o $(HMD_APP) 
+	$(CC) clear_radio_if.c -o clear_radio_if
+
 %.o: %.c
 	$(CC) -c $(CFLAGS) $(DBUS_INCLUDE) $(INCLUDES) -o $*.o $<
 clean: 
 	$(RM) $(HMD_APP) $(HMD_OBJS) $(HMD_DEPS) 
+	$(RM) clear_radio_if.o clear_radio_if
 
 clean_deps:
 	$(HMD_DEPS) 

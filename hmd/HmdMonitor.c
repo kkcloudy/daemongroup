@@ -1383,6 +1383,24 @@ int hansi_state_check(int InstID, int islocaled){
 			memset(buf, 0, 128);
 			sprintf(buf,"sudo /etc/init.d/wcpss start %d %d",islocaled, InstID);
 			system(buf);
+
+			hmd_syslog_info("ready to delbr for inst %d\n", InstID);
+			//delete ebr or wlan for this inst from bridge
+			memset(buf, 0, 128);
+			sprintf(buf,"clear_ebr.sh ebr%d-%d-", HOST_BOARD->slot_no, InstID);
+			system(buf);
+			memset(buf, 0, 128);
+			sprintf(buf,"clear_ebr.sh wlan%d-%d-", HOST_BOARD->slot_no, InstID);
+			system(buf);
+			hmd_syslog_info("delbr done \n");
+			
+			//unregist radio if for this Inst from kernel
+			hmd_syslog_info("ready to unregist radio if. refer to dmesg\n");
+			memset(buf, 0, 128);
+			sprintf(buf,"clear_radio_if %d", InstID);
+			system(buf);
+			hmd_syslog_info("unregist radio if done\n");
+			
 			hmd_syslog_info("###%s line %d hmd begin load takesnapshot.sh g_loable_takesnapshot_flag is %d###\n",__func__,__LINE__,g_loable_takesnapshot_flag);
 			if(g_loable_takesnapshot_flag == 0)
 			{
@@ -1428,6 +1446,24 @@ int hansi_state_check(int InstID, int islocaled){
 			memset(buf, 0, 128);
 			sprintf(buf,"sudo /etc/init.d/had start %d", InstID);
 			system(buf);
+
+			hmd_syslog_info("ready to delbr for inst %d\n", InstID);
+			//delete ebr or wlan for this inst from bridge
+			memset(buf, 0, 128);
+			sprintf(buf,"clear_ebr.sh ebr%d-%d-", HOST_BOARD->slot_no, InstID);
+			system(buf);
+			memset(buf, 0, 128);
+			sprintf(buf,"clear_ebr.sh wlan%d-%d-", HOST_BOARD->slot_no, InstID);
+			system(buf);
+			hmd_syslog_info("delbr done \n");
+				
+			//unregist radio if for this Inst from kernel
+			hmd_syslog_info("ready to unregist radio if. refer to dmesg\n");
+			memset(buf, 0, 128);
+			sprintf(buf,"clear_radio_if %d", InstID);
+			system(buf);
+			hmd_syslog_info("unregist radio if done\n");
+			
 			hmd_syslog_info("###%s hmd begin load takesnapshot.sh ###\n",__func__);
 			if(g_loable_takesnapshot_flag == 0)
 			{
