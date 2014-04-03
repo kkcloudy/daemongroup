@@ -193,6 +193,12 @@ reget:
 	memcpy((uint8_t *)&(session->framed_ipv6_prefix[2]), 
 			(uint8_t *)&(sta->Framed_IPv6_Prefix), sizeof(struct in6_addr));
 	session->login_ipv6_host = sta->Login_IPv6_Host;
+	strncpy(session->framed_ipv6_route, 
+			"2003:4:1::/64 2014:4:1::1988:923 1", MAX_FRAMED_IPV6_ATTR_LEN - 1);
+	strncpy(session->framed_ipv6_pool, 
+			"2003:4:1::/64", MAX_FRAMED_IPV6_ATTR_LEN - 1);
+	memcpy(session->delegated_ipv6_prefix, 
+			session->framed_ipv6_prefix, MAX_FRAMED_IPV6_PREFIX_LEN);
 
 	mac2str(session->apmac, str_wtp_mac, sizeof(str_wtp_mac), '-');
 	ip2str(session->user_addr.user_ip, ipstr, sizeof(ipstr));

@@ -156,6 +156,9 @@ struct appsession {
 	uint64_t framed_interface_id;
 	uint8_t framed_ipv6_prefix[MAX_FRAMED_IPV6_PREFIX_LEN];
 	struct in6_addr login_ipv6_host;
+	char framed_ipv6_route[MAX_FRAMED_IPV6_ATTR_LEN];
+	char framed_ipv6_pool[MAX_FRAMED_IPV6_ATTR_LEN];
+	uint8_t delegated_ipv6_prefix[MAX_FRAMED_IPV6_PREFIX_LEN];
 
 	struct wireless_data_t wireless_data;
 

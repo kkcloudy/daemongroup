@@ -170,6 +170,7 @@ struct radius_attr_t {
 #define RADIUS_ATTR_FRAMED_IPV6_ROUTE			99	/* string */
 #define RADIUS_ATTR_FRAMED_IPV6_POOL			100	/* string */
 #define RADIUS_ATTR_ERROR_CAUSE					101	/* integer */
+#define RADIUS_ATTR_DELEGATED_IPV6_PREFIX		123 /* octets ??? */
 #define RADIUS_ATTR_DIGEST_RESPONSE				206	/* string */
 #define RADIUS_ATTR_DIGEST_ATTRIBUTES			207	/* octets  ??? */
 

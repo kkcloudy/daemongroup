@@ -1165,6 +1165,12 @@ appconn_create_by_sta_v2(appconn_db_t * appdb, struct appsession *session)
     memcpy(appconn->session.framed_ipv6_prefix, 
     		session->framed_ipv6_prefix, MAX_FRAMED_IPV6_PREFIX_LEN);
     appconn->session.login_ipv6_host = session->login_ipv6_host;
+    strncpy(appconn->session.framed_ipv6_route, 
+    		session->framed_ipv6_route, MAX_FRAMED_IPV6_ATTR_LEN - 1);
+    strncpy(appconn->session.framed_ipv6_pool, 
+    		session->framed_ipv6_pool, MAX_FRAMED_IPV6_ATTR_LEN - 1);
+    memcpy(appconn->session.delegated_ipv6_prefix, 
+    		session->delegated_ipv6_prefix, MAX_FRAMED_IPV6_PREFIX_LEN);
 
 	appconn_set_debug_prefix(appconn);
 	appconn_set_filter_prefix(appconn, appdb->hansi_type, appdb->hansi_id); /* for debug-filter,add by zhangwl */

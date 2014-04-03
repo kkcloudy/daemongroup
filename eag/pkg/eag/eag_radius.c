@@ -862,6 +862,10 @@ radius_auth(eag_radius_t *radius,
 
 		radius_addattr(&packet, RADIUS_ATTR_LOGIN_IPV6_HOST, 0, 0, 0,
 				(uint8_t *)&(appconn->session.login_ipv6_host), sizeof(struct in6_addr));
+
+		radius_addattr(&packet, RADIUS_ATTR_DELEGATED_IPV6_PREFIX, 0, 0, 0,
+				appconn->session.delegated_ipv6_prefix, MAX_FRAMED_IPV6_PREFIX_LEN);
+
 		if (radius->vendor_id && radius->radius_specific_attr.framed_ipv6_address) {
 			radius_addattr(&packet, RADIUS_ATTR_VENDOR_SPECIFIC,
 					radius->vendor_id,
@@ -999,6 +1003,18 @@ radius_acct_req(eag_radius_t *radius,
 
 		radius_addattr(&packet, RADIUS_ATTR_LOGIN_IPV6_HOST, 0, 0, 0,
 				(uint8_t *)&(appconn->session.login_ipv6_host), sizeof(struct in6_addr));
+
+		radius_addattr(&packet, RADIUS_ATTR_DELEGATED_IPV6_PREFIX, 0, 0, 0,
+				appconn->session.delegated_ipv6_prefix, MAX_FRAMED_IPV6_PREFIX_LEN);
+
+		len = strlen(appconn->session.framed_ipv6_route);
+		radius_addattr(&packet, RADIUS_ATTR_FRAMED_IPV6_ROUTE, 0, 0, 0,
+				(uint8_t *)appconn->session.framed_ipv6_route, len);
+
+    	len = strlen(appconn->session.framed_ipv6_pool);
+		radius_addattr(&packet, RADIUS_ATTR_FRAMED_IPV6_POOL, 0, 0, 0,
+            	(uint8_t *)appconn->session.framed_ipv6_pool, len);
+
 	}
 
 	if (EAG_IPV4 == appconn->session.user_addr.family) {

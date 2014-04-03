@@ -263,6 +263,12 @@ stamsg_proc(eag_stamsg_t *stamsg, uint8_t usermac[6],
         memcpy((uint8_t *)&(tmpsession.framed_ipv6_prefix[2]), 
                 (uint8_t *)&(sta_msg->STA.Framed_IPv6_Prefix), sizeof(struct in6_addr));
         tmpsession.login_ipv6_host = sta_msg->STA.Login_IPv6_Host;
+        strncpy(tmpsession.framed_ipv6_route, 
+                "2003:4:1::/64 2014:4:1::1988:923 1", MAX_FRAMED_IPV6_ATTR_LEN - 1);
+        strncpy(tmpsession.framed_ipv6_pool, 
+                "2003:4:1::/64", MAX_FRAMED_IPV6_ATTR_LEN - 1);
+        memcpy(tmpsession.delegated_ipv6_prefix, 
+                tmpsession.framed_ipv6_prefix, MAX_FRAMED_IPV6_PREFIX_LEN);
 
 		mac2str(tmpsession.apmac, new_apmacstr, sizeof(new_apmacstr), ':');
 
@@ -311,8 +317,15 @@ stamsg_proc(eag_stamsg_t *stamsg, uint8_t usermac[6],
 			appconn->session.vlanid = tmpsession.vlanid;
 
             appconn->session.framed_interface_id = tmpsession.framed_interface_id;
-            memcpy(appconn->session.framed_ipv6_prefix, tmpsession.framed_ipv6_prefix, MAX_FRAMED_IPV6_PREFIX_LEN);
+            memcpy(appconn->session.framed_ipv6_prefix, 
+            		tmpsession.framed_ipv6_prefix, MAX_FRAMED_IPV6_PREFIX_LEN);
             appconn->session.login_ipv6_host = tmpsession.login_ipv6_host;
+            strncpy(appconn->session.framed_ipv6_route, 
+            		tmpsession.framed_ipv6_route, MAX_FRAMED_IPV6_ATTR_LEN - 1);
+            strncpy(appconn->session.framed_ipv6_pool, 
+            		tmpsession.framed_ipv6_pool, MAX_FRAMED_IPV6_ATTR_LEN - 1);
+            memcpy(appconn->session.delegated_ipv6_prefix, 
+            		tmpsession.delegated_ipv6_prefix, MAX_FRAMED_IPV6_PREFIX_LEN);
 
 			appconn_set_nasid(appconn, stamsg->nasidconf);
 			appconn_set_nasportid(appconn, stamsg->nasportidconf);
