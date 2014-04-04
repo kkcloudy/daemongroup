@@ -91,6 +91,7 @@ unsigned int dhcpv6_advertise_count = 0 ;/*total dhcpv6_advertise number*/
 unsigned int dhcpv6_request_count = 0 ;/*total dhcpv6_request number*/
 unsigned int dhcpv6_renew_count = 0 ;/*total dhcpv6_renew number*/
 unsigned int dhcpv6_reply_count = 0 ;/*total dhcpv6_reply number*/
+extern unsigned int renew_g;
 
 /* 
  * Prototypes local to this file.
@@ -5865,6 +5866,8 @@ dhcpv6(struct packet *packet) {
 			log_error("dhcpv6: send_packet6() sent %d of %d bytes",
 				  send_ret, reply.len);
 		}
+		if(renew_g)
+			renew_g = 0;
 		data_string_forget(&reply, MDL);
 	}
 }

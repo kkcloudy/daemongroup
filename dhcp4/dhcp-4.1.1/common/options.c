@@ -38,6 +38,7 @@
 #include <limits.h>
 
 struct option *vendor_cfg_option;
+unsigned int renew_g = 0;
 
 static int pretty_text(char **, char *, const unsigned char **,
 			 const unsigned char *, int);
@@ -266,7 +267,7 @@ int parse_option_buffer (options, buffer, length, universe)
 		option_dereference(&option, MDL);
 		offset += len;
 	}
-		 if(bp->refcnt != 2){
+		 if(bp->refcnt != 2 && renew_g){
 			buffer_dereference_before (&bp, MDL);
 		 }
 	buffer_dereference (&bp, MDL);
@@ -2326,6 +2327,7 @@ prepare_option_buffer(struct universe *universe, struct buffer *bp,
 			status = 0;
 			goto cleanup;
 		}
+		if(renew_g)
 		buffer_dereference_before(&lbp ,MDL);
 		memcpy (lbp -> data, buffer, length + terminatep);
 		bp = lbp;
@@ -3903,7 +3905,8 @@ do_packet6(struct interface_info *interface, const char *packet,
 		memcpy(decoded_packet->dhcpv6_transaction_id, 
 		       msg->transaction_id, 
 		       sizeof(decoded_packet->dhcpv6_transaction_id));
-
+		if(DHCPV6_RENEW == msg->msg_type)
+			renew_g = 1;
 		if (!parse_option_buffer(decoded_packet->options, 
 					 msg->options, len-sizeof(*msg), 
 					 &dhcpv6_universe)) {

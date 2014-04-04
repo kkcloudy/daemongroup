@@ -755,7 +755,7 @@ int buffer_dereference_before (ptr,file, line)
 	//if((*ptr) -> refcnt > i)
 	//for(;(*ptr) -> refcnt != i ;){
 		(*ptr) -> refcnt--;
-		log_info("for rcft %d\n",(*ptr) -> refcnt);
+		//log_info("for rcft %d\n",(*ptr) -> refcnt);
 	rc_register (file, line, ptr, *ptr, (*ptr) -> refcnt, 1, RC_MISC);
 	//	}
 	return 1;
