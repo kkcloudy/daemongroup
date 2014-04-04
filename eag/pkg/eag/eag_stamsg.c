@@ -214,6 +214,7 @@ stamsg_proc(eag_stamsg_t *stamsg, uint8_t usermac[6],
 	char new_apmacstr[32] = "";
 	unsigned int security_type = 0;
 	int macauth_switch = 0;
+	char framed_ipv6_prefix_str[48] = "";
 	int notice_to_asd = 0;
 	
 	eag_time_gettimeofday(&tv,NULL);
