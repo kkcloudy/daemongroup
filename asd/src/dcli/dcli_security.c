@@ -51,6 +51,164 @@ struct cmd_node local_hansi_security_node =
 	"%s(local-hansi-security %d-%d-%d)# "
 };
 
+/*yjl copy from aw3.1.2 for local forwarding.2014-2-28*/
+#if 1
+char *dcli_asd_opcode2string(unsigned int opcode)
+{
+	switch (opcode) 
+	{
+		case ASD_DBUS_ERROR:							/* 1*/
+			return "%%failed get reply";
+		case ASD_STA_NOT_EXIST:							/* 2 */
+			return "%% Station does not exist";
+		case ASD_WLAN_NOT_EXIST:						/* 3 */
+			return "%% wlan not exist";
+		case ASD_WAPI_WLAN_NOT_EXIST:					/* 4 */
+			return "%% ";
+		case ASD_WTP_NOT_EXIST: 						/* 5 */
+			return "%% ";
+			
+		case ASD_SECURITY_NOT_EXIST:					/* 6 */
+			return "%% security profile does not exist";
+		case ASD_RADIO_NOT_EXIST:						/* 7 */
+			return "%%  ";
+		case ASD_SECURITY_BE_USED:						/* 8 */
+			return "%% ";
+		case ASD_SECURITY_ACCT_NOT_EXIST:				/* 9 */
+			return "%% ";
+		case ASD_SECURITY_ACCT_BE_USED: 				/* 10 */
+			return "%% changing radius info is not permited";
+
+		case ASD_SECURITY_AUTH_NOT_EXIST:				/* 11 */
+			return "%% please use radius auth/acct ip port shared_secret first";
+		case ASD_SECURITY_AUTH_BE_USED:					/* 12 */
+			return "%% changing radius info is not permited\n";
+		case ASD_SECURITY_TYPE_NOT_MATCH_ENCRYPTION_TYPE:/* 13 */
+			return "%% encryption type does not match security type";
+		case ASD_SECURITY_TYPE_WITHOUT_8021X:			/* 14 */
+			return "%% security type which you chose does not support 802.1X";
+		case ASD_SECURITY_TYPE_WITHOUT_WAPI_AUTH: 		/* 15 */
+			return "%% ";
+
+		case ASD_SECURITY_PROFILE_NOT_INTEGRITY:		/* 16 */
+			return "%% ";
+		case ASD_SECURITY_PROFILE_NOT_BIND_WLAN:		/* 17 */
+			return "%% ";
+		case ASD_WLAN_HAS_BEEN_BINDED:					/* 18 */
+			return "%% ";
+		case ASD_SECURITY_KEY_NOT_PERMIT:				/* 19 */
+			return "%% ";
+		case ASD_SECURITY_KEY_LEN_NOT_PERMIT: 			/* 20 */
+			return "%% ";
+
+		case ASD_SECURITY_KEY_LEN_NOT_PERMIT_HEX:		/* 21 */
+			return "%% ";
+		case ASD_SECURITY_KEY_HEX_FORMAT:				/* 22 */
+			return "%% ";
+		case ASD_SECURITY_KEY_HAS_BEEN_SET:				/* 23 */
+			return "%% ";
+		case ASD_SECURITY_WLAN_SHOULD_BE_DISABLE:		/* 24 */
+			return "%% this security profile is used by some wlans,please disable them first";
+		case ASD_BSS_NOT_EXIST: 						/* 25 */
+			return "%% ";
+
+		case ASD_BSS_VALUE_INVALIDE:					/* 26 */
+			return "%% ";
+		case ASD_WLAN_VALUE_INVALIDE:					/* 27 */
+			return "%% ";
+		case ASD_UNKNOWN_ID:							/* 28 */
+			return "%% ";
+		case ASD_EXTENSIBLE_AUTH_NOT_SUPPORT:			/* 29 */
+			return "%% ";
+		case ASD_PRE_AUTH_NOT_SUPPORT: 					/* 30 */
+			return "%% ";
+
+		case ASD_UPDATE_ERROR:							/* 31 */
+			return "%% ";
+		case ASD_WTP_ID_LARGE_THAN_MAX:					/* 32 */
+			return "%% ";
+		case ASD_WLAN_ID_LARGE_THAN_MAX:				/* 33 */
+			return "%% ";
+		case ASD_RADIO_ID_LARGE_THAN_MAX:				/* 34 */
+			return "%% ";
+		case ASD_SECURITY_LARGE_THAN_MAX: 				/* 35 */
+			return "%% ";
+
+		case ASD_BSS_ID_LARGE_THAN_MAX:					/* 36 */
+			return "%% ";
+		case ASD_WIDS_OPEN:								/* 37 */
+			return "%% ";
+		case ASD_MAC_ADD_ALREADY:						/* 38 */
+			return "%% ";
+		case ASD_SECURITY_TYPE_HAS_CHANGED:				/* 39 */
+			return "%% ";
+		case ASD_DBUS_MALLOC_FAIL: 						/* 40 */
+			return "%% ";
+
+		case ASD_DBUS_SET_ERROR:						/* 41 */
+			return "%% ";
+		case ASD_AC_GROUP_ID_USED:						/* 42 */
+			return "%% ";
+		case ASD_AC_GROUP_ID_NOT_EXIST:					/* 43 */
+			return "%% ";
+		case ASD_AC_GROUP_ESSID_NOT_EXIST:				/* 44 */
+			return "%% ";
+		case ASD_AC_GROUP_MEMBER_EXIST:					/* 45 */
+			return "%% ";
+			
+		case ASD_AC_GROUP_MEMBER_NOT_EXIST:				/* 46 */
+			return "%% ";
+		case ASD_IFNAME_NOT_EXIST:						/* 47 */
+			return "%% ";
+		case ASD_ARP_GROUP_EXIST:						/* 48 */
+			return "%% ";
+		case ASD_NEED_REBOOT:							/* 49 */
+			return "%% ";
+		case ASD_DHCP_ENABLE: 							/* 50 */
+			return "%% sta vir-dhcp is enable, please disable first";
+
+		case ASD_DHCP_POOL_EXIST:						/* 51 */
+			return "%% sta vir-dhcp has exist";
+		case ASD_WLAN_BE_ENABLE:						/* 52 */
+			return "%% ";
+		case ASD_DHCP_POOL_NOT_EXIST:					/* 53 */
+			return "%% sta vir-dhcp not exist";
+		case ASD_SOCK_NOT_EXIST:						/* 54 */
+			return "%% ";
+		case ASD_ACCOUNT_AFTER_AUTHORIZE:				/* 55 */
+			return "%% ";
+
+		case ASD_MAC_AUTH_NOT_SUPPORT:					/* 56 */
+			return "%% ";
+		/*
+		case ASD_SECURITY_INVALID_AUTH_POLICY:			//57 
+			return "%% Invalid auth policy";
+		case ASD_MAC_AUTH_DOMIAN_TOO_LONG:				// 58 
+			return "%% MAC auth domain too long";
+		case ASD_SECURITY_SHARED_SECRET_TOO_LONG:       //59 	
+			return "%% shared secret shoudle be less than 256";
+		*/
+		case ASD_DHCP_POOL_RANGE_NOT_MATCH:				/* 60 */	
+			return "%% Vir DHCP range not match";
+
+		case ASD_INVALID_IPADDR: 						/* 61 */	
+			return "%% Invalid IP address";
+		/*	
+		case ASD_QOS_BE_USED:									//62
+			return "% dynamics qos id  exist";
+		case ASD_QOS_NOT_EXIT:								//63
+			return "% dynamics qos id does not exist";
+		*/	
+		default :
+			return "%% failed";
+
+	}
+
+	/* never get here */
+	return "";
+}
+#endif
+/*end*************************yjl copy from aw3.1.2 for local forwarding.2014-2-28*/
 
 /*xm0701*/
 DEFUN(set_wapi_rekey_para_cmd_func,

@@ -76,6 +76,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 extern nmp_mutex_t eag_iptables_lock;
 extern nmp_mutex_t eag_ip6tables_lock;
+extern char ac_mac[6];
 
 /*data base of appconn */
 struct appconn_db {
@@ -931,7 +932,8 @@ appconn_create_no_arp(appconn_db_t * appdb, struct appsession *session)
 	}
 
 	ret = eag_get_sta_info_by_mac_v2(appdb->eagdbus, appdb->hansi_type, appdb->hansi_id,
-				appconn->session.usermac, &(appconn->session), &security_type);
+				appconn->session.usermac, &(appconn->session), &security_type, 
+				eag_ins_get_notice_to_asd(appdb->eagins));
 	if (0 != ret && appdb->force_wireless) {
 		eag_log_err("appconn_create_no_arp "
 			"eag_get_sta_info_by_mac_v2 failed, userip=%s, usermac=%s, ret=%d",
@@ -1049,7 +1051,8 @@ appconn_find_by_ip_autocreate(appconn_db_t *appdb, user_addr_t *user_addr)
 	appconn_set_filter_prefix(appconn, appdb->hansi_type, appdb->hansi_id); /* for debug-filter,add by zhangwl */
 		
 	ret = eag_get_sta_info_by_mac_v2(appdb->eagdbus, appdb->hansi_type, appdb->hansi_id,
-				appconn->session.usermac, &(appconn->session), &security_type);
+				appconn->session.usermac, &(appconn->session), &security_type,
+				eag_ins_get_notice_to_asd(appdb->eagins));
 	if (0 != ret && appdb->force_wireless) {
 		eag_log_err("appconn_find_by_ip_autocreate "
 			"eag_get_sta_info_by_mac_v2 failed, userip=%s, usermac=%s, ret=%d",
@@ -1153,6 +1156,7 @@ appconn_create_by_sta_v2(appconn_db_t * appdb, struct appsession *session)
 	appconn->session.g_radioid = session->g_radioid;
 	appconn->session.radioid = session->radioid;
 	appconn->session.wtpid = session->wtpid;	
+	appconn->session.audit_ip= session->audit_ip;
 	strncpy(appconn->session.essid, session->essid, 
 			sizeof(appconn->session.essid)-1);
 	strncpy(appconn->session.apname, session->apname, 
@@ -1264,6 +1268,8 @@ appconn_config_portalsrv(struct app_conn_t *appconn,
 {
 	struct portal_srv_t *portal_srv = NULL;
 	int i = 0;
+	char ipstr[32] = "";
+	char macstr[32] = "";
 
 	if (0 == portalconf->current_num) {
 		eag_log_err("appconn_config_portalsrv portal_srv num = 0");
@@ -1292,6 +1298,13 @@ appconn_config_portalsrv(struct app_conn_t *appconn,
 	strncpy(appconn->session.domain_name, portal_srv->domain,
 			sizeof(appconn->session.domain_name)-1);
 	
+	appconn->session.inv_portal_ip = portal_srv->portal_ip;
+	memcpy(appconn->session.inv_portal_mac, ac_mac, sizeof(appconn->session.inv_portal_mac));
+
+	ip2str(appconn->session.inv_portal_ip, ipstr, sizeof(ipstr));
+	mac2str(appconn->session.inv_portal_mac, macstr, sizeof(macstr), ':');
+	eag_log_debug("notice_to_asd", "appconn_config_portalsrv interval portal ip=%s, mac=%s", ipstr, macstr);	
+
 	return EAG_RETURN_OK;
 }
 

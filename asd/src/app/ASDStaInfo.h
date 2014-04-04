@@ -105,4 +105,38 @@ void asd_sta_roaming_management(struct sta_info *new_sta);
 /* caojia add for sta acl function */
 int AsdStaInfo2Wifi(struct asd_data *wasd, struct sta_info *sta, Operate op);
 #endif
+
+/*yjl copy from aw3.1.2 for local forwarding.2014-2-28*/
+#if 0
+typedef struct sta_hash_info
+{
+	struct hlist_node hw_hlist;			/* haddr hlist */
+#if 0
+	struct hlist_node ip_hlist;			/* ip addr hlist */
+	struct hlist_node id_hlist;			/* name hlist */
+#endif
+
+	unsigned int bssindex, first_bssindex;
+	unsigned int wlanid, first_wlanid;
+	unsigned int wtpid, first_wtpid;
+	unsigned int g_radioid, first_g_radioid;
+	unsigned int l_radioid, first_l_radioid;
+
+	unsigned char BSSID[MAC_LEN];			/* cur BSSID sta access */
+	unsigned char first_BSSID[MAC_LEN];
+
+	/* if sta roam, save roam out bssindex, then free roam sta info at right time and clean "last_bssindex" */
+	unsigned int last_bssindex;
+	
+	unsigned char haddr[MAC_LEN];			/* STA haddr */
+	unsigned flag;
+	unsigned short vlanid;
+}sta_hash_t;
+#endif
+
+int b_virdhcp_handle(struct asd_data *wasd, struct sta_info *sta, unsigned int viripaddr, unsigned int addflag);
+int asd_virdhcp_handle(struct asd_data *wasd, struct sta_info *sta, unsigned int addflag);
+extern struct ip_info* dhcp_assign_ip(struct vir_dhcp * vdhcp);
+extern struct ip_info* dhcp_release_ip(struct vir_dhcp * vdhcp, int ip);
+/*end**************************************************/
 #endif /* STA_INFO_H */

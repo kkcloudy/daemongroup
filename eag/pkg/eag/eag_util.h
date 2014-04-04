@@ -38,7 +38,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #define MIN(a,b) ((a)>(b))?(b):(a)
 #define MAX(a,b) ((a)>(b))?(a):(b)
-
+#define IS_HEX(c) (((c) >= '0' && (c) <= '9') || ((c) >= 'a' && (c) <= 'f') || ((c) >= 'A' && (c) <= 'F'))
 #define IPX_LEN 80
 
 int
@@ -119,6 +119,8 @@ hex2str( unsigned char *hex, unsigned int hex_len,
 			unsigned char *output, unsigned int outputlen );
 int
 str2hex( unsigned char *str, unsigned char *output, unsigned int outputlen );
+int 
+char_to_hex(int c);
 
 uint64_t ntohl64(uint64_t arg64);
 

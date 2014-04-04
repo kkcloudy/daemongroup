@@ -50,6 +50,12 @@ typedef struct {
 	unsigned char rflag;
 	unsigned int PreApID;
 	struct in6_addr ip6_addr;
+
+	/*yjl copy from aw3.1.2 for local forwarding.2014-2-28*/
+	unsigned int vir_ip;		/* TL MODE sta virtual ipaddr */
+	unsigned int realip;		/* TL MODE sta real ipaddr */
+	unsigned int portal_ipaddr;	/* TL portal server ipaddr */
+	/*end**************************************************/
 }B_UPDATE_STA;
 
 typedef struct {

@@ -996,6 +996,7 @@ typedef struct {
 	unsigned char wsm_sta_info_reportswitch;
 	unsigned short wsm_sta_info_reportinterval;
 	unsigned char enable_wlan_flag;		/* wlan apply flag. Huangleilei add it for AXSSZFI-1622 */
+	unsigned char SSIDSetFlag;/* yjl 2014-2-28 */
 }WID_BSS;
 
 
@@ -1409,6 +1410,31 @@ struct wlan_service_control{
 };
 typedef struct wlan_service_control WID_WSC;
 #endif
+
+/*yjl copy from aw3.1.2 for local forwarding.2014-2-28*/
+struct ip_info{
+	struct ip_info * next;
+	struct ip_info * hnext;
+	unsigned int ip;
+	char mac[MAC_LEN];
+};
+#define VIR_DHCP_HASH_SIZE     (1024)
+struct vir_pool{
+	struct ip_info *ip_list;
+	struct ip_info *ip_hash[VIR_DHCP_HASH_SIZE];
+	int ipnum;
+	struct ip_info *last;	/* list last node pointer */
+};
+struct vir_dhcp{
+	char ifname[ETH_IF_NAME_LEN];
+	char ifmac[MAC_LEN];
+	unsigned int low;
+	unsigned int high;
+	struct vir_pool dhcpfree;
+	struct vir_pool dhcplease;
+};
+/*end**************************************************/	
+
 struct a_sta_info{
 	struct a_sta_info *next;
 	struct a_sta_info *hnext;
@@ -1538,6 +1564,9 @@ struct wlan{
 #ifdef __ASD_STA_ACL
 	unsigned int sta_default_aclid;
 #endif
+	struct vir_dhcp *wlan_dhcp; /* yjl 2014-2-28 */
+	int wlan_dhcp_state;        /* yjl 2014-2-28 */
+	int wlan_tunnel_switch;     /* yjl 2014-2-28 */
 };
 typedef struct wlan WID_WLAN;
 
@@ -2465,5 +2494,8 @@ struct wifi_nf_info
 	unsigned int nfmark;
 };
 #endif
+
+/* AP EXTERNTION COMMAND MACRO */       /*yjl copy from aw3.1.2 .2014-2-28 */
+#define AP_EXT_CMD_NOTIFY_STA_PORTAL_AUTH "autelan tunnel_ctl ath.%d-%d setniflag %02X:%02X:%02X:%02X:%02X:%02X %d %u %u %u %u"
 
 #endif/*_WID_DEFINE_H*/

@@ -864,6 +864,8 @@ struct WtpStaInfo {
 	char 		 *wtpMacAddr;				//AP的MAC地址	
 	char 		 *wtpTerminalMacAddr;			//端站的MAC地址
 	long 		  wtpStaIp;					//端站的IP
+	long 		  wtp_sta_realip;	//real ip (in Centralized authentication local forwarding)/* yjl 2014-2-28 */
+	unsigned char forward_mode;    //0:local 1:tunnel 2 tunnel auth, local forward            /* yjl 2014-2-28 */
 	struct in6_addr wtpStaIp6;					//端站的IP6地址	
 	unsigned long wtpWirelessClientSNR;		//无线端站的信噪比
 	unsigned long long wtpSendTerminalPackMount;		//发送到端站的总包数//xiaodawei modify, change 32bits to 64bits, 20110309

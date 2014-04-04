@@ -30025,6 +30025,8 @@ DEFUN(show_all_wtp_station_information_func,
 	int slot_id = HostSlotId;
 	int index=0;
 	int m = 0;
+	unsigned char * realip;/* yjl 2014-2-28 */
+	
 	if(vty->node == CONFIG_NODE){
 		index = 0;
 	}else if(vty->node == HANSI_NODE){
@@ -30050,6 +30052,7 @@ DEFUN(show_all_wtp_station_information_func,
 		while(StaNode){
 			int m,mcs_idx;
 			ip = &(StaNode->wtpStaIp);
+			realip = &(StaNode->wtp_sta_realip);/* yjl 2014-2-28 */
 			/*//qiuchen add it 2012.10.31
 			time_t now,now_sysrun,wtp_access_time;
 			time(&now);
@@ -30061,6 +30064,15 @@ DEFUN(show_all_wtp_station_information_func,
 			vty_out(vty,"wtpMacAddr :		 			%-5s  \n",StaNode->wtpMacAddr);
 			vty_out(vty,"wtpTerminalMacAddr :				%s  \n",StaNode->wtpTerminalMacAddr);
 			vty_out(vty,"wtpStaIp :					%d.%d.%d.%d \n",ip[0],ip[1],ip[2],ip[3]);
+
+			/*yjl copy from aw3.1.2 for local forwarding.2014-2-28*/
+			if(StaNode->forward_mode == 2)
+			{
+				vty_out(vty,"wtpStaRealIp :					%d.%d.%d.%d \n",realip[0],realip[1],realip[2],realip[3]);
+			}
+			vty_out(vty,"wtpStaForwardmode :				%s\n",((2 == StaNode->forward_mode) ? "TL" : ((1 == StaNode->forward_mode) ? "T" : "L")));
+            /*end**************************************************/
+
 			vty_out(vty,"wtpStaIp6 :					");     /* print ipv6 address */
     		for (m = 0; m < 8; m++)
         	{   

@@ -78713,6 +78713,113 @@ DBusMessage *wid_dbus_set_wlan_tunnel_mode_state(DBusConnection *conn, DBusMessa
 
 	return reply;	
 }
+
+/*yjl copy from aw3.1.2 for local forwarding.2014-2-28**********************************************************/
+DBusMessage *wid_dbus_set_wlan_tunnel_switch_state(DBusConnection *conn, DBusMessage *msg, void *user_data)
+{
+	DBusMessage* reply; 	
+	DBusMessageIter  iter;
+	DBusError err;
+	int ret = WID_DBUS_SUCCESS;
+	
+	unsigned char ID=0;	//1--enable, 0--disable
+	unsigned int is_enable = 0;
+	
+	dbus_error_init(&err);
+	if (!(dbus_message_get_args ( msg, &err,
+								DBUS_TYPE_UINT32,&is_enable,
+								DBUS_TYPE_BYTE,&ID,
+								DBUS_TYPE_INVALID))){
+	
+				
+		if (dbus_error_is_set(&err)) {
+			dbus_error_free(&err);
+		}
+		return NULL;
+	}
+	if(NULL != AC_WLAN[ID])
+	{
+		if(1 == AC_WLAN[ID]->Status)
+		{
+			if(AC_WLAN[ID]->wlan_tunnel_switch != is_enable)
+			{
+				AC_WLAN[ID]->wlan_tunnel_switch = is_enable;
+			}
+		}
+		else
+		{
+			ret = WLAN_ID_BE_USED;
+		}
+	}
+	else
+	{
+		ret = WLAN_ID_NOT_EXIST;
+	}
+	
+	reply = dbus_message_new_method_return(msg);
+			
+	dbus_message_iter_init_append (reply, &iter);	
+
+	dbus_message_iter_append_basic (&iter,
+									DBUS_TYPE_UINT32,
+									&ret); 
+	return reply;	
+}
+
+DBusMessage *wid_dbus_set_wlan_sta_state(DBusConnection *conn, DBusMessage *msg, void *user_data)
+{
+	DBusMessage* reply; 	
+	DBusMessageIter  iter;
+	DBusError err;
+	int ret = WID_DBUS_SUCCESS;
+	
+	unsigned char ID=0;	//1--enable, 0--disable
+	unsigned int is_enable = 0;
+
+	unsigned int wtpid = 0;
+	unsigned char mac[MAC_LEN];
+	dbus_error_init(&err);
+	if (!(dbus_message_get_args ( msg, &err,
+								DBUS_TYPE_BYTE,&(mac[0]),
+								DBUS_TYPE_BYTE,&(mac[1]),
+								DBUS_TYPE_BYTE,&(mac[2]),
+								DBUS_TYPE_BYTE,&(mac[3]),
+								DBUS_TYPE_BYTE,&(mac[4]),
+								DBUS_TYPE_BYTE,&(mac[5]),
+								DBUS_TYPE_UINT32,&is_enable,
+								DBUS_TYPE_BYTE,&ID,
+								DBUS_TYPE_UINT32,&wtpid,
+								DBUS_TYPE_INVALID))){
+	
+				
+		if (dbus_error_is_set(&err)) {
+			dbus_error_free(&err);
+		}
+		return NULL;
+	}
+	if(AC_WLAN[ID] != NULL){
+		if(AC_WLAN[ID]->Status == 0){
+			char cmd[128] = {0};
+			sprintf(cmd,"autelan tunnel_ctl ath.0-%d setniflag %02X:%02X:%02X:%02X:%02X:%02X %d",ID,mac[0],mac[1],mac[2],mac[3],mac[4],mac[5],is_enable);
+			wid_radio_set_extension_command(wtpid, cmd);
+		}else{
+			ret = WID_DBUS_ERROR;
+		}
+	}else
+		ret = WLAN_ID_NOT_EXIST;
+
+	reply = dbus_message_new_method_return(msg);
+			
+	dbus_message_iter_init_append (reply, &iter);	
+
+	dbus_message_iter_append_basic (&iter,
+									DBUS_TYPE_UINT32,
+									&ret); 
+
+	return reply;	
+}
+/*end***********************************************************yjl copy from aw3.1.2 for local forwarding.2014-2-28*/
+
 DBusMessage * wid_dbus_interface_set_wsm_sta_info_reportinterval(DBusConnection *conn, DBusMessage *msg, void *user_data)
 {
 	DBusMessage * reply = NULL;
@@ -82151,6 +82258,15 @@ static DBusHandlerResult wid_dbus_message_handler (DBusConnection *connection, D
 			reply = wid_dbus_show_wlan_sta_default_acl(connection,message,user_data);
 		}
 #endif
+        else if (dbus_message_is_method_call(message,WID_DBUS_WLAN_INTERFACE,WID_DBUS_CONF_METHOD_SET_WLAN_STA_TUNNEL_SWITCH_STATE))
+		{   
+			wid_syslog_err("%s %d.*******yjl add for test*************\n",__func__,__LINE__);
+			reply = wid_dbus_set_wlan_tunnel_switch_state(connection,message,user_data);/* yjl 2014-2-28 */
+		}
+		else if (dbus_message_is_method_call(message,WID_DBUS_WLAN_INTERFACE,WID_DBUS_CONF_METHOD_SET_WLAN_STA_STATE))
+		{
+			reply = wid_dbus_set_wlan_sta_state(connection,message,user_data);/* yjl 2014-2-28 */
+		}
 
 	}
 	else if	(strcmp(dbus_message_get_path(message),WID_DBUS_WTP_OBJPATH) == 0) {

@@ -51,6 +51,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "eag_time.h"
 #include "eag_util.h"
 
+#include "wcpss/waw.h"
 #include "radius_packet.h"
 #include "eag_redir.h"
 #include "eag_portal.h"
@@ -93,6 +94,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define EAG_BSS_STAT_DB_HASHSIZE		2011
 
 #define SLOT_ID_FILE			"/dbm/local_board/slot_id"
+#define MAC_FILE				"/dbm/local_board/mac"
 #define VENDOR_ID_FILE			"/devinfo/enterprise_snmp_oid"
 
 #define CM_TEST_NOTICE_ASD		"/var/run/eag_notice_asd"
@@ -144,6 +146,7 @@ struct eag_ins {
 	int ipv6_switch;
 	int flux_from;
 	int flux_interval;
+	int notice_to_asd;
 
 	backup_type_t *syn_user;
 	backup_type_t *ack_user;
@@ -161,6 +164,8 @@ struct eag_ins {
 char EAG_DBUS_NAME[MAX_DBUS_BUSNAME_LEN]="";
 char EAG_DBUS_OBJPATH[MAX_DBUS_BUSNAME_LEN]="";
 char EAG_DBUS_INTERFACE[MAX_DBUS_BUSNAME_LEN]="";
+
+unsigned char ac_mac[6] = {0};
 
 static void
 eagins_register_all_dbus_method(eag_ins_t *eagins);
@@ -789,12 +794,12 @@ terminate_appconn(struct app_conn_t *appconn,
 	if (appconn->session.wlanid > 0
 		&& EAG_AUTH_TYPE_MAC == appconn->session.server_auth_type)
 	{
-		eag_stamsg_send(eagins->stamsg, &(appconn->session), EAG_MAC_DEL_AUTH);
+		eag_stamsg_send(eagins->stamsg, &(appconn->session), EAG_MAC_DEL_AUTH, eagins->notice_to_asd);
 	}
 	else if (appconn->session.wlanid > 0 
 		&& EAG_AUTH_TYPE_PORTAL == appconn->session.server_auth_type)
 	{
-		eag_stamsg_send(eagins->stamsg, &(appconn->session), EAG_DEL_AUTH);
+		eag_stamsg_send(eagins->stamsg, &(appconn->session), EAG_DEL_AUTH, eagins->notice_to_asd);
 	}
 	if (FLUX_FROM_FASTFWD == eagins->flux_from
 		||FLUX_FROM_FASTFWD_IPTABLES == eagins->flux_from)
@@ -919,12 +924,12 @@ terminate_appconn_nowait(struct app_conn_t *appconn,
 	if (appconn->session.wlanid > 0
 		&& EAG_AUTH_TYPE_MAC == appconn->session.server_auth_type)
 	{
-		eag_stamsg_send(eagins->stamsg, &(appconn->session), EAG_MAC_DEL_AUTH);
+		eag_stamsg_send(eagins->stamsg, &(appconn->session), EAG_MAC_DEL_AUTH, eagins->notice_to_asd);
 	}
 	else if (appconn->session.wlanid > 0 
 		&& EAG_AUTH_TYPE_PORTAL == appconn->session.server_auth_type)
 	{
-		eag_stamsg_send(eagins->stamsg, &(appconn->session), EAG_DEL_AUTH);
+		eag_stamsg_send(eagins->stamsg, &(appconn->session), EAG_DEL_AUTH, eagins->notice_to_asd);
 	}
 	if (FLUX_FROM_FASTFWD == eagins->flux_from
 		||FLUX_FROM_FASTFWD_IPTABLES == eagins->flux_from)
@@ -974,7 +979,7 @@ terminate_appconn_without_ntf(struct app_conn_t *appconn,
 	eag_captive_deauthorize(eagins->captive, &(appconn->session));
 	if (appconn->session.wlanid > 0)
 	{
-		eag_stamsg_send(eagins->stamsg, &(appconn->session), EAG_DEL_AUTH);
+		eag_stamsg_send(eagins->stamsg, &(appconn->session), EAG_DEL_AUTH, eagins->notice_to_asd);
 	}
 	if ((FLUX_FROM_FASTFWD == eagins->flux_from)
 		||FLUX_FROM_FASTFWD_IPTABLES == eagins->flux_from)
@@ -1076,12 +1081,12 @@ terminate_appconn_without_backup(struct app_conn_t *appconn,
 	if (appconn->session.wlanid > 0
 		&& EAG_AUTH_TYPE_MAC == appconn->session.server_auth_type)
 	{
-		eag_stamsg_send(eagins->stamsg, &(appconn->session), EAG_MAC_DEL_AUTH);
+		eag_stamsg_send(eagins->stamsg, &(appconn->session), EAG_MAC_DEL_AUTH, eagins->notice_to_asd);
 	}
 	else if (appconn->session.wlanid > 0 
 		&& EAG_AUTH_TYPE_PORTAL == appconn->session.server_auth_type)
 	{
-		eag_stamsg_send(eagins->stamsg, &(appconn->session), EAG_DEL_AUTH);
+		eag_stamsg_send(eagins->stamsg, &(appconn->session), EAG_DEL_AUTH, eagins->notice_to_asd);
 	}
 	if ((FLUX_FROM_FASTFWD == eagins->flux_from)
 		||FLUX_FROM_FASTFWD_IPTABLES == eagins->flux_from)
@@ -1327,6 +1332,44 @@ failed_0:
 	return ret;
 }
 
+int
+eag_ins_get_ac_mac(unsigned char *mac, int len)
+{
+	FILE *fp = NULL;
+	char buf[32] = {0};
+	char *p = NULL;
+	int i = 0;
+	char macstr[32] = {0};
+	
+	memset(mac, 0, len);
+	
+	if((fp = fopen(MAC_FILE, "r")) == NULL) {
+		eag_log_err("eag_ins_get_ac_mac %s is not exist", MAC_FILE);
+		return -1;
+	}
+	if (fgets(buf, sizeof(buf), fp) == NULL) {
+		fclose(fp);
+		return -1;
+	}
+	fclose(fp);
+	
+	for (p = buf; (' ' == *p) || ('\t' == *p); p++);
+
+	for (i = 0; i < 12; i++) {
+		if (!IS_HEX(p[i]))
+			return -1;
+	}
+
+	for (i = 0; i < 6; i++)
+		mac[i] = char_to_hex(p[i*2]) * 16 + char_to_hex(p[i*2+1]);
+
+	mac2str(mac, macstr, sizeof(macstr), ':');
+
+	eag_log_info("eag_ins_get_ac_mac ac mac is %s", macstr);
+
+	return 0;
+}
+
 eag_ins_t *
 eag_ins_new(uint8_t hansitype, uint8_t insid)
 {
@@ -1435,6 +1478,7 @@ eag_ins_new(uint8_t hansitype, uint8_t insid)
 	eagins->hansi_id = insid;
 	eagins->flux_interval = DEFAULT_FLUX_INTERVAL;
 	eagins->flux_from = FLUX_FROM_FASTFWD;
+	eagins->notice_to_asd = 0;
 	eagins->threshold_onlineusernum=EAG_DEFAULT_ONLINEUSERNUM_THRESHOLD;
 	
 	/* hansi */
@@ -1840,6 +1884,7 @@ eag_ins_start(eag_ins_t *eagins)
 		}
 	}
 
+	eag_ins_get_ac_mac(ac_mac, sizeof(ac_mac));
 	eagins_read_file_switch();
 
 	read_file(VENDOR_ID_FILE, buf, sizeof(buf));
@@ -2433,6 +2478,12 @@ int
 eag_ins_get_flux_from(eag_ins_t *eagins)
 {
 	return eagins->flux_from;
+}
+
+int
+eag_ins_get_notice_to_asd(eag_ins_t *eagins)
+{
+	return eagins->notice_to_asd;
 }
 
 int
@@ -4059,6 +4110,8 @@ replyx:
 		notice_bindserver = notice_to_bindserver;
 		dbus_message_iter_append_basic(&iter, 
 								DBUS_TYPE_INT32, &notice_bindserver);
+		dbus_message_iter_append_basic(&iter,
+								DBUS_TYPE_INT32, &(eagins->notice_to_asd));
 		autelan_log = autelan_log_switch;
 		dbus_message_iter_append_basic(&iter, 
 								DBUS_TYPE_INT32, &autelan_log);
@@ -10033,6 +10086,7 @@ replyx:
 										DBUS_TYPE_BYTE_AS_STRING
 										DBUS_TYPE_UINT32_AS_STRING
 										DBUS_TYPE_INT32_AS_STRING
+										DBUS_TYPE_UINT32_AS_STRING
 									DBUS_STRUCT_END_CHAR_AS_STRING,
 								&iter_array);
 
@@ -10155,6 +10209,9 @@ replyx:
 				dbus_message_iter_append_basic (&iter_struct,
 									DBUS_TYPE_INT32,
 									&(appconn->session.sta_state));
+				dbus_message_iter_append_basic (&iter_struct,
+									DBUS_TYPE_UINT32,
+									&(appconn->session.audit_ip));
 				dbus_message_iter_close_container (&iter_array, &iter_struct);
 			}
 		}
@@ -10267,6 +10324,7 @@ replyx:
 										DBUS_TYPE_BYTE_AS_STRING
 										DBUS_TYPE_BYTE_AS_STRING
 										DBUS_TYPE_BYTE_AS_STRING
+										DBUS_TYPE_UINT32_AS_STRING
 									DBUS_STRUCT_END_CHAR_AS_STRING,
 								&iter_array);
 
@@ -10363,6 +10421,9 @@ replyx:
 				dbus_message_iter_append_basic (&iter_struct,
 									DBUS_TYPE_BYTE,
 									&(appconn->session.apmac[5]));
+				dbus_message_iter_append_basic (&iter_struct,
+									DBUS_TYPE_UINT32,
+									&(appconn->session.audit_ip));
 				dbus_message_iter_close_container (&iter_array, &iter_struct);
 			}
 		}
@@ -10473,6 +10534,7 @@ replyx:
 										DBUS_TYPE_BYTE_AS_STRING
 										DBUS_TYPE_BYTE_AS_STRING
 										DBUS_TYPE_BYTE_AS_STRING
+										DBUS_TYPE_UINT32_AS_STRING
 									DBUS_STRUCT_END_CHAR_AS_STRING,
 								&iter_array);
 
@@ -10570,6 +10632,9 @@ replyx:
 				dbus_message_iter_append_basic (&iter_struct,
 									DBUS_TYPE_BYTE,
 									&(appconn->session.apmac[5]));
+				dbus_message_iter_append_basic (&iter_struct,
+									DBUS_TYPE_UINT32,
+									&(appconn->session.audit_ip));
 				dbus_message_iter_close_container (&iter_array, &iter_struct);
 			}
 		}
@@ -10685,6 +10750,7 @@ replyx:
 										DBUS_TYPE_BYTE_AS_STRING
 										DBUS_TYPE_BYTE_AS_STRING
 										DBUS_TYPE_BYTE_AS_STRING
+										DBUS_TYPE_UINT32_AS_STRING
 									DBUS_STRUCT_END_CHAR_AS_STRING,
 								&iter_array);
 
@@ -10782,6 +10848,9 @@ replyx:
 				dbus_message_iter_append_basic (&iter_struct,
 									DBUS_TYPE_BYTE,
 									&(appconn->session.apmac[5]));
+				dbus_message_iter_append_basic (&iter_struct,
+									DBUS_TYPE_UINT32,
+									&(appconn->session.audit_ip));
 				dbus_message_iter_close_container (&iter_array, &iter_struct);
 			}
 		}
@@ -10897,6 +10966,7 @@ replyx:
 										DBUS_TYPE_BYTE_AS_STRING
 										DBUS_TYPE_BYTE_AS_STRING
 										DBUS_TYPE_BYTE_AS_STRING
+										DBUS_TYPE_UINT32_AS_STRING
 									DBUS_STRUCT_END_CHAR_AS_STRING,
 								&iter_array);
 
@@ -10994,6 +11064,9 @@ replyx:
 				dbus_message_iter_append_basic (&iter_struct,
 									DBUS_TYPE_BYTE,
 									&(appconn->session.apmac[5]));
+				dbus_message_iter_append_basic (&iter_struct,
+									DBUS_TYPE_UINT32,
+									&(appconn->session.audit_ip));
 				dbus_message_iter_close_container (&iter_array, &iter_struct);
 			}
 		}
@@ -11107,6 +11180,7 @@ replyx:
 										DBUS_TYPE_BYTE_AS_STRING
 										DBUS_TYPE_BYTE_AS_STRING
 										DBUS_TYPE_BYTE_AS_STRING
+										DBUS_TYPE_UINT32_AS_STRING
 									DBUS_STRUCT_END_CHAR_AS_STRING,
 								&iter_array);
 
@@ -11205,6 +11279,9 @@ replyx:
 					dbus_message_iter_append_basic (&iter_struct,
 									DBUS_TYPE_BYTE,
 									&(appconn->session.apmac[5]));
+					dbus_message_iter_append_basic (&iter_struct,
+									DBUS_TYPE_UINT32,
+									&(appconn->session.audit_ip));
 					dbus_message_iter_close_container (&iter_array, &iter_struct);
 					break;
 				}
@@ -11897,6 +11974,57 @@ replyx:
 	dbus_message_iter_init_append(reply, &iter);
 	dbus_message_iter_append_basic(&iter,
 								DBUS_TYPE_INT32, &ret);
+	return reply;
+}
+
+DBusMessage *
+eag_dbus_method_set_notice_to_asd(
+				DBusConnection *conn, 
+				DBusMessage *msg, 
+				void *user_data )
+{
+	eag_ins_t *eagins = NULL;
+	DBusMessage* reply = NULL;
+	DBusMessageIter iter = {0};
+	DBusError		err = {0};
+	int ret = EAG_RETURN_OK;
+	int notice_to_asd = 0;
+	reply = dbus_message_new_method_return(msg);
+	
+	if (NULL == reply) {
+		eag_log_err("eag_dbus_method_set_notice_to_asd "\
+					"DBUS new reply message error!\n");
+		return NULL;
+	}
+
+	eagins = (eag_ins_t *)user_data;
+	if ( NULL == eagins ){
+		eag_log_err("eag_dbus_method_set_notice_to_asd user_data eagins error!");
+		ret = EAG_ERR_UNKNOWN;
+		goto replyx;
+	}
+	dbus_error_init(&err);
+	if (!(dbus_message_get_args(msg ,&err,
+								DBUS_TYPE_INT32, &notice_to_asd,		
+								DBUS_TYPE_INVALID)))
+	{							
+		eag_log_err("eag_dbus_method_set_notice_to_asd "\
+					"unable to get input args\n");
+		if (dbus_error_is_set(&err)) {
+			eag_log_err("eag_dbus_method_set_notice_to_asd %s raised:%s\n",
+							err.name, err.message);
+			dbus_error_free(&err);
+		}
+		ret = EAG_ERR_DBUS_FAILED;
+		goto replyx;
+	}
+
+	eagins->notice_to_asd = notice_to_asd;
+
+replyx:
+	dbus_message_iter_init_append(reply, &iter);
+	dbus_message_iter_append_basic(&iter,
+							DBUS_TYPE_INT32, &ret);
 	return reply;
 }
 
@@ -12831,6 +12959,8 @@ eagins_register_all_dbus_method(eag_ins_t *eagins)
 		EAG_DBUS_INTERFACE, eag_dbus_method_set_macauth_flux_interval, eagins->macauth);
 	eag_dbus_register_method(eagins->eagdbus,
 		EAG_DBUS_INTERFACE, eag_dbus_method_set_macauth_flux_threshold, eagins->macauth);
+	eag_dbus_register_method(eagins->eagdbus,
+		EAG_DBUS_INTERFACE, eag_dbus_method_set_notice_to_asd, eagins);
 	eag_dbus_register_method(eagins->eagdbus,
 		EAG_DBUS_INTERFACE, eag_dbus_method_set_macauth_notice_bindserver, eagins->macauth);
 	/* nasid */

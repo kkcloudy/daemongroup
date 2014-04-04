@@ -6496,6 +6496,12 @@ struct WtpStaInfo* show_sta_info_of_all_wtp(int index,int localid,DBusConnection
 				dbus_message_iter_get_basic(&iter_sta,&sta_mac);
 				dbus_message_iter_next(&iter_sta);
 				dbus_message_iter_get_basic(&iter_sta,&StaNode->wtpStaIp);
+				
+				/*yjl copy from aw3.1.2 for TL.2014-2-28 */
+				dbus_message_iter_next(&iter_sta);
+				dbus_message_iter_get_basic(&iter_sta,&StaNode->wtp_sta_realip);
+				dbus_message_iter_next(&iter_sta);
+				dbus_message_iter_get_basic(&iter_sta,&StaNode->forward_mode);
                 /* get ipv6 address of sta */
 				dbus_message_iter_next(&iter_sta);
 				dbus_message_iter_get_basic(&iter_sta,&StaNode->wtpStaIp6.s6_addr32[0]);

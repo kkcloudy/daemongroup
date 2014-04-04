@@ -874,6 +874,12 @@ radius_auth(eag_radius_t *radius,
 		}
 	}
 
+	eag_log_info("radius_auth, appconn->session.audit_ip=%x", appconn->session.audit_ip);
+	radius_addattr(&packet, RADIUS_ATTR_VENDOR_SPECIFIC,
+			RADIUS_VENDOR_AUTELAN, 
+			RADIUS_ATTR_AUTELAN_AUDIT_IP,
+			0, (uint8_t *)&(appconn->session.audit_ip), 4);
+
     if (radius->vendor_id && radius->radius_specific_attr.user_agent) {
 		len = strlen(appconn->user_agent);
 	    len = (len > 253)?253:len;
@@ -975,6 +981,11 @@ radius_acct_req(eag_radius_t *radius,
 	
 	radius_addattr(&packet, RADIUS_ATTR_NAS_IP_ADDRESS, 0, 0,
 			appconn->session.nasip, NULL, 0);
+
+	radius_addattr(&packet, RADIUS_ATTR_VENDOR_SPECIFIC,
+			RADIUS_VENDOR_AUTELAN, 
+			RADIUS_ATTR_AUTELAN_AUDIT_IP,
+			0, (uint8_t *)&(appconn->session.audit_ip), 4);
 	
 	if (0 == appconn->session.radius_srv.class_to_bandwidth) {
 		if (appconn->session.class_attr_len > 0) {
@@ -989,6 +1000,7 @@ radius_acct_req(eag_radius_t *radius,
 			(uint8_t *)&(appconn->session.nasipv6), sizeof(struct in6_addr));
 
 	if (EAG_IPV4 != appconn->session.user_addr.family) {
+		
 	    if (radius->vendor_id && radius->radius_specific_attr.framed_ipv6_address) {
 				radius_addattr(&packet, RADIUS_ATTR_VENDOR_SPECIFIC,
 						radius->vendor_id,

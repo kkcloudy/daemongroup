@@ -214,6 +214,7 @@ stamsg_proc(eag_stamsg_t *stamsg, uint8_t usermac[6],
 	char new_apmacstr[32] = "";
 	unsigned int security_type = 0;
 	int macauth_switch = 0;
+	int notice_to_asd = 0;
 	
 	eag_time_gettimeofday(&tv,NULL);
 	timenow = tv.tv_sec;
@@ -243,6 +244,9 @@ stamsg_proc(eag_stamsg_t *stamsg, uint8_t usermac[6],
 			return 0;
 		}		
 		appconn->session.sta_state = SESSION_STA_STATUS_CONNECT;
+
+		tmpsession.idle_check = 1;
+		appconn_db_get_idle_params(appconn->appdb, &(tmpsession.idle_timeout), &(tmpsession.idle_flow));
 
 		mac2str(appconn->session.apmac, ap_macstr, sizeof(ap_macstr), ':');
 		ipx2str(&(appconn->session.user_addr), user_ipstr, sizeof(user_ipstr));
@@ -337,6 +341,12 @@ stamsg_proc(eag_stamsg_t *stamsg, uint8_t usermac[6],
 			}
 
 			if (APPCONN_STATUS_AUTHED == appconn->session.state) {
+				notice_to_asd = eag_ins_get_notice_to_asd(stamsg->eagins);
+				eag_log_info("stamsg_proc, appconn authed wlanid=%d, notice_to_asd switch %s", 
+				appconn->session.wlanid, (1 == notice_to_asd)?"on":"off");
+				if (appconn->session.wlanid > 0) {      
+					eag_stamsg_send(stamsg, &(appconn->session), EAG_AUTH, notice_to_asd);
+				}
 				eag_ins_syn_user(stamsg->eagins, appconn);
 			}
 		}
@@ -431,8 +441,11 @@ stamsg_proc(eag_stamsg_t *stamsg, uint8_t usermac[6],
 		mac2str(appconn->session.apmac, ap_macstr, sizeof(ap_macstr), ':');
 		ipx2str(&(appconn->session.user_addr), user_ipstr, sizeof(user_ipstr));
 		
+		tmpsession.idle_check = 1;
+		appconn_db_get_idle_params(appconn->appdb, &(tmpsession.idle_timeout), &(tmpsession.idle_flow));
 		ret = eag_get_sta_info_by_mac_v2(stamsg->eagdbus, stamsg->hansi_type,
-					stamsg->hansi_id, usermac, &tmpsession, &security_type);
+					stamsg->hansi_id, usermac, &tmpsession, &security_type,
+					eag_ins_get_notice_to_asd(stamsg->eagins));
 		if (0 != ret) {
 			eag_log_err("stamsg_proc, get_sta_info_by_mac_v2 failed,"
 				" usermac:%s ret=%d", user_macstr, ret);
@@ -582,7 +595,7 @@ stamsg_receive(eag_thread_t *thread)
 int
 eag_stamsg_send(eag_stamsg_t *stamsg,
 		struct appsession *session,
-		Operate Op)
+		Operate Op, int notice_to_asd)
 {
 	EagMsg sta_msg = {0};
 	struct sockaddr_un addr = {0};
@@ -604,6 +617,10 @@ eag_stamsg_send(eag_stamsg_t *stamsg,
 	sta_msg.STA.ip6_addr = session->user_addr.user_ipv6;
 	memcpy(sta_msg.STA.addr, session->usermac, sizeof(sta_msg.STA.addr));
 	strncpy(sta_msg.STA.arpifname, session->intf, sizeof(sta_msg.STA.arpifname)-1);
+	/* for REQUIREMENTS-524 */
+	sta_msg.STA.portal_info_switch = notice_to_asd;
+	sta_msg.STA.portal_info.portal_ip = session->inv_portal_ip;
+	memcpy(sta_msg.STA.portal_info.portal_mac, session->inv_portal_mac, sizeof(sta_msg.STA.portal_info.portal_mac));
 
 	memset(&addr, 0, sizeof(struct sockaddr_un));
 	addr.sun_family = AF_UNIX;
@@ -617,6 +634,11 @@ eag_stamsg_send(eag_stamsg_t *stamsg,
 	ipx2str(&(session->user_addr), user_ipstr, sizeof(user_ipstr));
 	eag_log_info("stamsg send sockpath:%s, userip:%s, usermac:%s, Op:%d",
 			addr.sun_path, user_ipstr, macstr, Op);
+	if (notice_to_asd) {
+		ip2str(session->inv_portal_ip, user_ipstr, sizeof(user_ipstr));
+		mac2str(session->inv_portal_mac, macstr, sizeof(macstr), ':');
+		eag_log_info("stamsg send inv_portal_ip:%s, inv_portal_mac:%s", user_ipstr, macstr);
+	}
 	nbyte = sendto(stamsg->sockfd, &sta_msg, sizeof(EagMsg), MSG_DONTWAIT,
 					(struct sockaddr *)(&addr), len);
 	if (nbyte < 0) {

@@ -106,6 +106,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "se_agent/se_agent_def.h" // for fastfwd
 #include "ASDEAPMethod/eap_defs.h"	/* eap method */
 #include "ASDEAPAuth.h"
+#include "ASDCallback_asd.h"/* yjl 2014-2-28 */
+
 
 extern int wpa_debug_level;
 extern unsigned char gASDLOGDEBUG;//qiuchen
@@ -1699,7 +1701,7 @@ void ASD_BSS_DEFAULT_INIT(struct asd_data * wasd){
 }
 
 int ASD_BSS_INIT(struct asd_data * wasd){
-	unsigned char SID;
+	unsigned char SID = 0;
 	int pairwise = 0;
 	unsigned BSSIndex = wasd->BSSIndex;
 	struct asd_bss_config *bss;
@@ -1712,7 +1714,8 @@ int ASD_BSS_INIT(struct asd_data * wasd){
 	bss = wasd->conf;
 	memset(bss->ssid.ssid, 0, asd_MAX_SSID_LEN + 1);
 	/* Add ssid for bss, instead of essid. init wasd with ASD_BSS[]. */
-	if(ASD_BSS[BSSIndex]!=NULL)		
+	if ((NULL != ASD_BSS[BSSIndex])
+		&& (ASD_BSS[BSSIndex]->SSIDSetFlag))/* yjl 2014-2-28 */
 	{
     	memcpy(bss->ssid.ssid, ASD_BSS[BSSIndex]->SSID, asd_MAX_SSID_LEN);
     	bss->ssid.ssid_len = strlen((char *)ASD_BSS[BSSIndex]->SSID);
@@ -2895,7 +2898,8 @@ void BSS_OP(TableMsg *msg, struct wasd_interfaces *interfaces){
 				/* Add SSID for BSS, instead of essid */
 				memset(ASD_BSS[msg->u.BSS.BSSIndex]->SSID,0,ESSID_DEFAULT_LEN+1);
 				memcpy(ASD_BSS[msg->u.BSS.BSSIndex]->SSID,msg->u.BSS.SSID,strlen((char *)msg->u.BSS.SSID));
-				asd_printf(ASD_DBUS,MSG_DEBUG,"ASD_BSS[msg->u.BSS.BSSIndex]->SSID : %s\n",ASD_BSS[msg->u.BSS.BSSIndex]->SSID);
+				ASD_BSS[msg->u.BSS.BSSIndex]->SSIDSetFlag = msg->u.BSS.SSIDSetFlag;/* yjl 2014-2-28 */
+				asd_printf(ASD_DBUS,MSG_DEBUG,"ASD_BSS[msg->u.BSS.BSSIndex]->SSID : %s,SSIDSetFlag : %d\n",ASD_BSS[msg->u.BSS.BSSIndex]->SSID, ASD_BSS[msg->u.BSS.BSSIndex]->SSIDSetFlag);
 
 				
 				ASD_BSS[msg->u.BSS.BSSIndex]->BSSID = (unsigned char*)os_zalloc(7);
@@ -3153,6 +3157,14 @@ void BSS_OP(TableMsg *msg, struct wasd_interfaces *interfaces){
 				ASD_BSS[msg->u.BSS.BSSIndex]->sta_static_arp_policy = msg->u.BSS.sta_static_arp_policy;
 				memcpy(ASD_BSS[msg->u.BSS.BSSIndex]->arp_ifname, msg->u.BSS.arp_ifname,ETH_IF_NAME_LEN);
 
+				/*yjl copy from aw3.1.2 for local forwarding.2014-2-28*/
+				/* Add SSID for BSS, instead of essid */
+				memset(ASD_BSS[msg->u.BSS.BSSIndex]->SSID,0,ESSID_DEFAULT_LEN+1);
+				memcpy(ASD_BSS[msg->u.BSS.BSSIndex]->SSID,msg->u.BSS.SSID,strlen((char *)msg->u.BSS.SSID));
+				ASD_BSS[msg->u.BSS.BSSIndex]->SSIDSetFlag = msg->u.BSS.SSIDSetFlag;
+				asd_printf(ASD_DBUS,MSG_DEBUG,"ASD_BSS[msg->u.BSS.BSSIndex]->SSID : %s,SSIDSetFlag : %d\n",ASD_BSS[msg->u.BSS.BSSIndex]->SSID, ASD_BSS[msg->u.BSS.BSSIndex]->SSIDSetFlag);
+                /*end**************************************************/
+				
 				asd_printf(ASD_DEFAULT,MSG_INFO,"%d,%d,%d,%d,%02x:%02x:%02x:%02x:%02x:%02x\n",ASD_BSS[msg->u.BSS.BSSIndex]->BSSIndex,ASD_BSS[msg->u.BSS.BSSIndex]->WlanID,ASD_BSS[msg->u.BSS.BSSIndex]->Radio_G_ID,ASD_BSS[msg->u.BSS.BSSIndex]->Radio_L_ID,
 					ASD_BSS[msg->u.BSS.BSSIndex]->BSSID[0],ASD_BSS[msg->u.BSS.BSSIndex]->BSSID[1],ASD_BSS[msg->u.BSS.BSSIndex]->BSSID[2],ASD_BSS[msg->u.BSS.BSSIndex]->BSSID[3],ASD_BSS[msg->u.BSS.BSSIndex]->BSSID[4],ASD_BSS[msg->u.BSS.BSSIndex]->BSSID[5]);
 				if((msg->u.BSS.BSSIndex / L_BSS_NUM) == msg->u.BSS.Radio_G_ID){
@@ -3703,8 +3715,10 @@ void STA_OP(TableMsg *msg){
 							asd_syslog_auteview(LOG_INFO,DOT1X_USER_OFFLINE,NULL,bss[i],sta,999,"Unknown");
 					}
 					
-					if(ASD_NOTICE_STA_INFO_TO_PORTAL)
+					if(ASD_NOTICE_STA_INFO_TO_PORTAL){
+						sta->initiative_leave = 0;/* yjl 2014-2-28 */
 						AsdStaInfoToEAG(bss[i],sta,WID_DEL);
+					}
 					if(ASD_WLAN[bss[i]->WlanID]!=NULL&&ASD_WLAN[bss[i]->WlanID]->balance_switch == 1&&ASD_WLAN[bss[i]->WlanID]->balance_method==1){
 						ap_free_sta(bss[i], sta, 1);
 					}
@@ -4519,8 +4533,15 @@ void STA_OP(TableMsg *msg){
 							}
 							else							
 								wasd->normal_st_down_num ++;
-							if(ASD_NOTICE_STA_INFO_TO_PORTAL)
+							if(ASD_NOTICE_STA_INFO_TO_PORTAL){
+								/*yjl copy from aw3.1.2 for local forwarding.2014-2-28*/
+								if((reason != AP_STA_DEAUTH) && (reason != AP_STA_DISASSOC))
+									sta->initiative_leave = 0;
+								if((AP_STA_DEAUTH == reason) || (AP_STA_DISASSOC == reason))
+									sta->initiative_leave = 1;
+								/*end**************************************************/
 								AsdStaInfoToEAG(wasd,sta,WID_DEL);
+							}
 							if(ASD_WLAN[wasd->WlanID]!=NULL&&ASD_WLAN[wasd->WlanID]->balance_switch == 1&&ASD_WLAN[wasd->WlanID]->balance_method==1){
 								ap_free_sta(wasd, sta, 1);
 							}
@@ -5092,6 +5113,8 @@ void STA_IP_ARP_OP(TableMsg *msg){
 		case EAG_NTF_ASD_STA_INFO:
 		case STA_CHECK_DEL:
 		case STA_WTP_TERMINAL_STATISTICS:
+		case STA_PORTAL_AUTH :/* yjl 2014-2-28 */
+		case STA_PORTAL_DEAUTH :/* yjl 2014-2-28 */
 		default:
 			break;
 	}
@@ -5113,7 +5136,7 @@ void EAG_OP(EagMsg *msg)
 		case  EAG_MAC_AUTH:
 			ret = AsdCheckWTPID(wtpid);
 			if(ret == 0)
-				return;
+				return ;
 			num = ASD_SEARCH_WTP_STA(wtpid, bss);
 			for(i = 0; i < num; i++){
 #ifdef ASD_USE_PERBSS_LOCK
@@ -5131,6 +5154,19 @@ void EAG_OP(EagMsg *msg)
 					else if(ASD_SECURITY[SID]&&(ASD_SECURITY[SID]->hybrid_auth == 1)&&(ASD_SECURITY[SID]->extensible_auth == 0)){
 						asd_printf(ASD_DEFAULT,MSG_DEBUG,"receive EAG_AUTH msg in MAC AUTH\n");
 					}
+
+					/*yjl copy from aw3.1.2 for local forwarding.2014-2-28*/
+					if (msg->STA.portal_info_switch == 1)
+			        {
+				        sta->portal_server.portal_ip = msg->STA.portal_info.portal_ip;
+				        memcpy(sta->portal_server.portal_mac, msg->STA.portal_info.portal_mac, ETH_ALEN);
+
+				        AsdStaInfoToWID(bss[i], msg->STA.addr, STA_PORTAL_AUTH);
+
+						/* update portal server info to bak */
+			            bak_update_sta_ip_info(bss[i], sta);
+					}
+					/*end**************************************************/
 				}
 				
 #ifdef ASD_USE_PERBSS_LOCK
@@ -5146,7 +5182,7 @@ void EAG_OP(EagMsg *msg)
 			asd_printf(ASD_DEFAULT,MSG_DEBUG,"receive EAG_AUTH msg\n");
 			ret = AsdCheckWTPID(wtpid);
 			if(ret == 0)
-				return;
+				return ;
 			num = ASD_SEARCH_WTP_STA(wtpid, bss);
 			for(i = 0; i < num; i++){
 #ifdef ASD_USE_PERBSS_LOCK
@@ -5159,6 +5195,19 @@ void EAG_OP(EagMsg *msg)
 					
 					asd_printf(ASD_DEFAULT,MSG_DEBUG,"sta->portal_auth_suc = %d\n",sta->portal_auth_success);
 
+					/*yjl copy from aw3.1.2 for local forwarding.2014-2-28*/
+					if (msg->STA.portal_info_switch == 1)
+			        {
+				        sta->portal_server.portal_ip = msg->STA.portal_info.portal_ip;
+				        memcpy(sta->portal_server.portal_mac, msg->STA.portal_info.portal_mac, ETH_ALEN);
+
+				        AsdStaInfoToWID(bss[i], msg->STA.addr, STA_PORTAL_AUTH);
+
+						/* update portal server info to bak */
+			            bak_update_sta_ip_info(bss[i], sta);
+					}
+					/*end**************************************************/
+
 				}
 #ifdef ASD_USE_PERBSS_LOCK
 				pthread_mutex_unlock(&(bss[i]->asd_sta_mutex));
@@ -5169,7 +5218,7 @@ void EAG_OP(EagMsg *msg)
 			asd_printf(ASD_DEFAULT,MSG_DEBUG,"receive EAG_DEL_AUTH msg\n");
 				ret = AsdCheckWTPID(wtpid);
 				if(ret == 0)
-					return;
+					return ;
 				num = ASD_SEARCH_WTP_STA(wtpid, bss);
 				for(i = 0; i < num; i++){
 #ifdef ASD_USE_PERBSS_LOCK
@@ -5179,6 +5228,21 @@ void EAG_OP(EagMsg *msg)
 					if(sta != NULL){
 						asd_printf(ASD_DEFAULT,MSG_DEBUG,"EAG_DEL_AUTH,del sta "MACSTR"\n",MAC2STR(sta->addr));
 						sta->portal_auth_success = 0;
+
+						/*yjl copy from aw3.1.2 for local forwarding.2014-2-28*/
+						if (msg->STA.portal_info_switch == 1)
+			            {
+				            sta->portal_server.portal_ip = msg->STA.portal_info.portal_ip;
+				            memcpy(sta->portal_server.portal_mac, msg->STA.portal_info.portal_mac, ETH_ALEN);
+
+				            AsdStaInfoToWID(bss[i], msg->STA.addr, STA_PORTAL_DEAUTH);
+			            }
+			            sta->portal_server.portal_ip = 0;
+			            memset(sta->portal_server.portal_mac, 0, MAC_LEN);
+			
+			            /* update portal server info to bak */
+			            bak_update_sta_ip_info(bss[i], sta);
+					    /*end**************************************************/
 
 					}
 #ifdef ASD_USE_PERBSS_LOCK
@@ -5191,7 +5255,7 @@ void EAG_OP(EagMsg *msg)
 			asd_printf(ASD_DEFAULT,MSG_DEBUG,"receive EAG_NTF_ASD_STA_INFO msg\n");
 			ret = AsdCheckWTPID(wtpid);
 			if(ret == 0)
-				return;
+				return ;
 			num = ASD_SEARCH_WTP_STA(wtpid, bss);
 			for(i = 0; i < num; i++){
 #ifdef ASD_USE_PERBSS_LOCK

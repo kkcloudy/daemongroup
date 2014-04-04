@@ -82,6 +82,7 @@ struct eag_base_conf {
 	int macauth_flux_threshold;
 	int macauth_check_interval;
 	int macauth_notice_bindserver;
+	int notice_to_asd;
 	int autelan_log;
 	int henan_log;
 	int l2super_vlan;
@@ -452,6 +453,7 @@ struct eag_user {
 	uint8_t apmac[6];
 	uint32_t vlanid;
 	int sta_state;
+	uint32_t audit_ip;
 };
 
 struct eag_userdb {
@@ -637,6 +639,11 @@ int
 eag_set_macauth_notice_bindserver(DBusConnection *connection,
 				int hansitype, int insid,
 				int notice_bindserver);
+
+int
+eag_set_notice_to_asd(DBusConnection *connection, 
+				int hansitype, int insid,
+				int notice_to_asd);
 
 int
 eag_get_base_conf( DBusConnection *connection, 

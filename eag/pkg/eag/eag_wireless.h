@@ -49,7 +49,8 @@ eag_get_sta_info_by_mac_v2( eag_dbus_t *eag_dbus,
 					int localid, int inst_id,
 					uint8_t *sta_mac,
 					struct appsession *session,
-					unsigned int *security_type);
+					unsigned int *security_type,
+					int notice_to_asd);
 
 struct WtpStaInfo *
 eag_show_sta_info_of_all_wtp(int ins_id,

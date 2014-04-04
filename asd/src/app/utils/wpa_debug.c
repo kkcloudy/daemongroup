@@ -617,6 +617,146 @@ void asd_logger(void *ctx, const u8 *addr, unsigned int module, int level,
 }
 #endif /* ASD_NO_asd_LOGGER */
 
+/*yjl copy from aw3.1.2 for local forwarding.2014-2-28**********************************************************/
+/****************************************************************************
+ * asd_op2str
+ * 
+ * 	operate code to string
+ *
+ *	INPUT:
+ *		opcode	- operate code
+ *	
+ *	OUTPUT:
+ *
+ * 	RETURN:
+ *		char *  - operate string
+ *
+ *		
+ ****************************************************************************/
+char *asd_op2str(unsigned int opcode)
+{
+	static char buf[64] = {0};
+	
+	switch (opcode) 
+	{
+		case WID_ADD:				/* 0 */
+			return "WID_ADD";
+		case WID_DEL:				/* 1 */
+			return "WID_DEL";
+		case WID_MODIFY:			/* 2 */
+			return "WID_MODIFY";
+		case STA_INFO:				/* 3 */
+			return "STA_INFO";
+		case RADIO_INFO:			/* 4 */
+			return "RADIO_INFO";
+		case WTP_DENEY_STA:			/* 5 */
+			return "WTP_DENEY_STA";
+		case STA_COME:				/* 6 */
+			return "STA_COME";
+		case STA_LEAVE:				/* 7 */
+			return "STA_LEAVE";
+		case VERIFY_INFO:			/* 8 */
+			return "VERIFY_INFO";
+		case VERIFY_FAIL_INFO:		/* 9 */
+			return "VERIFY_FAIL_INFO";
+		case WTP_DE_DENEY_STA:		/* 10 */
+			return "WTP_DE_DENEY_STA";
+			
+		case BSS_INFO:				/* 11 */
+			return "BSS_INFO";
+		case ASSOC_FAIL_INFO:		/* 12 */
+			return "ASSOC_FAIL_INFO";
+		case JIANQUAN_FAIL_INFO:	/* 13 */
+			return "JIANQUAN_FAIL_INFO";
+		case CHANNEL_CHANGE_INFO:	/* 14 */
+			return "CHANNEL_CHANGE_INFO";
+		case WID_UPDATE:			/* 15 */
+			return "WID_UPDATE";
+		case WID_CONFLICT:			/* 16 */
+			return "WID_CONFLICT";
+		case WID_ONE_UPDATE:		/* 17 */
+			return "WID_ONE_UPDATE";
+		case TRAFFIC_LIMIT:			/* 18 */
+			return "TRAFFIC_LIMIT";
+		case WIDS_INFO:				/* 19 */
+			return "WIDS_INFO";
+		case WIDS_SET:				/* 20 */
+			return "WIDS_SET";
+
+		case WAPI_INVALID_CERT:		/* 21 */
+			return "WAPI_INVALID_CERT";
+		case WAPI_CHALLENGE_REPLAY:	/* 22 */
+			return "WAPI_CHALLENGE_REPLAY";
+		case WAPI_MIC_JUGGLE:		/* 23 */
+			return "WAPI_MIC_JUGGLE";
+		case WAPI_LOW_SAFE_LEVEL:	/* 24 */
+			return "WAPI_LOW_SAFE_LEVEL";
+		case WAPI_ADDR_REDIRECTION:	/* 25 */
+			return "WAPI_ADDR_REDIRECTION";
+		case OPEN_ROAM:				/* 26 */
+			return "OPEN_ROAM";
+		case VRRP_IF:				/* 27 */
+			return "VRRP_IF";
+		case STA_WAPI_INFO:			/* 28 */
+			return "STA_WAPI_INFO";
+		case CANCEL_TRAFFIC_LIMIT:	/* 29 */
+			return "CANCEL_TRAFFIC_LIMIT";
+		case WTP_STA_CHECK:			/* 30 */
+			return "WTP_STA_CHECK";
+
+		case WID_WIFI_INFO:			/* 31 */
+			return "WID_WIFI_INFO";
+		case ASD_AUTH:				/* 32 */
+			return "ASD_AUTH";
+		case ASD_DEL_AUTH:			/* 33 */
+			return "ASD_DEL_AUTH";
+		case EAG_AUTH:				/* 34 */
+			return "EAG_AUTH";
+		case EAG_DEL_AUTH:			/* 35 */
+			return "EAG_DEL_AUTH";
+		case BSS_UPDATE:			/* 36 */
+			return "BSS_UPDATE";
+		case EAG_MAC_AUTH:			/* 37 */
+			return "EAG_MAC_AUTH";
+		case EAG_MAC_DEL_AUTH:		/* 38 */
+			return "EAG_DEL_MAC_AUTH";
+		case ASD_MAC_AUTH:			/* 39 */
+			return "ASD_MAC_AUTH";
+		case ASD_MAC_DEL_AUTH:		/* 40 */
+			return "ASD_MAC_DEL_AUTH";
+
+		case STA_FLOW_CHECK:		/* 41 */
+			return "STA_FLOW_CHECK";
+		case DHCP_IP:				/* 42 */
+			return "DHCP_IP";
+		case IDLE_STA_DEL:			/* 43 */
+			return "IDLE_STA_DEL";
+		case MAC_LIST_ADD:			/* 44 */
+			return "MAC_LIST_ADD";
+		case STA_LEAVE_REPORT:		/* 45 */
+			return "STA_LEAVE_REPORT";
+		case EAG_NTF_ASD_STA_INFO:	/* 46 */
+			return "EAG_NTF_ASD_STA_INFO";			
+		case STA_PORTAL_AUTH:		/* 47 */
+			return "STA_PORTAL_AUTH";			
+		case STA_PORTAL_DEAUTH:		/* 48 */
+			return "STA_PORTAL_DEAUTH";
+			/*
+		case WPA_PMK:				//49 
+			return "WPA_PMK";			
+		case KEY_NEGOTI: 			// 50 
+			return "KEY_NEGOTI";
+			*/
+
+		default:
+			memset(buf, 0, sizeof(buf));
+			snprintf(buf, sizeof(buf)-1, "unkown operate %d", opcode);
+			
+			return buf;
+	}
+	/* never get here */
+}
+
 /*****************************************************************************
  *	mac2str
  * 
@@ -637,22 +777,30 @@ void asd_logger(void *ctx, const u8 *addr, unsigned int module, int level,
 char *mac2str(unsigned char *haddr)
 {
 	static int count = 0;
-	static unsigned char buf[16][32];
-	int len = 32;	
+	static unsigned char buffer[STATIC_BUFFER_SIZE][MAX_MAC_STRING_LEN];
+	memset(buffer,0,sizeof(buffer));
+	int len = sizeof("00:11:22:33:44:55\0");	
 	unsigned char *tmp = NULL;
 
+	if (NULL == haddr) 
+	{
+		return NULL;
+	}
+
+	/* Coverity: CID: 16462 Error-Type: Out-of-bounds read */
 	count++;
-	if (count >= 16)
+
+	if (count >= STATIC_BUFFER_SIZE)
 	{
 		count = 0;
 	}
 	
-	tmp = (unsigned char *)&(buf[count][0]);
+	tmp = (unsigned char *)&(buffer[count][0]);
 	
 	memset(tmp, 0, len);
 	if (NULL != haddr)
 	{
-		snprintf((char *)tmp, 32, "%02X:%02X:%02X:%02X:%02X:%02X",
+		snprintf((char *)tmp, MAX_MAC_STRING_LEN, "%02X:%02X:%02X:%02X:%02X:%02X",
 				 haddr[0], haddr[1], haddr[2],
 				 haddr[3], haddr[4], haddr[5]);
 	}
@@ -660,3 +808,42 @@ char *mac2str(unsigned char *haddr)
 	return (char *)tmp;
 }	
 
+/**********************************************************************
+ *	u32ip2str
+ * 
+ *	IPv4 address to string (EXP: 0x0a01010a -> 10.1.1.10)
+ *
+ *  INPUT:
+ *		u32_ipaddr - IPv4 address 
+ *  
+ *  OUTPUT:
+ * 	 NULL
+ *
+ *  RETURN:
+ * 	 char * - ipv4 address string
+ * 	 NULL - failed
+ *
+ **********************************************************************/
+char *u32ip2str(unsigned int u32_ipaddr)
+{	
+#if 1
+	struct in_addr inaddr;
+
+	memset(&inaddr, 0, sizeof(struct in_addr));
+
+	inaddr.s_addr = u32_ipaddr;
+
+	return inet_ntoa(inaddr);
+#else
+	int len = sizeof("255.255.255.255\0");
+	
+	memset(static_buffer, 0, len);
+	snprintf(static_buffer, sizeof(static_buffer), "%u.%u:%u.%u", 
+		((u32_ipaddr >> 24) & 0xff), ((u32_ipaddr >> 16) & 0xff),
+		((u32_ipaddr >> 8) & 0xff), ((u32_ipaddr >> 0) & 0xff));
+	
+	return static_buffer;
+
+#endif
+}
+/*end******************************************yjl copy from aw3.1.2 for local forwarding.2014-2-28*/

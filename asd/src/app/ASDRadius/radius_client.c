@@ -2028,7 +2028,7 @@ int radius_client_init_auth(void *circle_ctx, void *timeout_ctx)
 	//int yes = 1;
 	radius->auth_serv_sock = socket(PF_INET, SOCK_DGRAM, 0);
 	if (radius->auth_serv_sock < 0)
-		perror("socket[PF_INET,SOCK_DGRAM]");
+		asd_printf(ASD_DBUS,MSG_ERROR,"%s socket create failed: %s\n",__func__, strerror(errno));/* yjl 2014-2-28 */
 	else
 		ok++;
 

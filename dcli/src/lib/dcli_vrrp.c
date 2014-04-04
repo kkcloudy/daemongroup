@@ -7004,6 +7004,22 @@ int dcli_vrrp_show_running_cfg(struct vty *vty)
 				free(showRunningCfg_str);
 				return 1;
 			}
+
+			/*yjl copy from aw3.1.2 for local forwarding.2014-2-28*/
+			tmp = dcli_hansi_vir_dhcp_show_running_config(localid, slot_id,profile);
+			if(tmp != NULL){
+				if (0 != strlen(tmp)) {
+					totalLen += sprintf(cursor, "%s\n",tmp);
+					cursor = showRunningCfg_str + totalLen;
+				}
+				free(tmp);
+				tmp = NULL;
+			}else{
+				free(showRunningCfg_str);
+				return 1;
+			}
+			/*end**************************************************/
+			
 			tmp = dcli_hansi_wtp_show_running_config_start(localid, slot_id,profile);
 			if(tmp != NULL){
 				if (0 != strlen(tmp)) {
@@ -7629,6 +7645,25 @@ int dcli_vrrp_show_running_cfg(struct vty *vty)
 				free(showRunningCfg_str);
 				return 1;
 			}
+			
+/*yjl copy from aw3.1.2 for local forwarding.2014-2-28*/
+#ifdef DISTRIBUT
+			tmp = dcli_hansi_vir_dhcp_show_running_config(localid, slot_id,profile);
+#else
+			tmp = dcli_hansi_vir_dhcp_show_running_config(profile);
+#endif			
+			if(tmp != NULL){
+				if (0 != strlen(tmp)) {
+					totalLen += sprintf(cursor, "%s\n",tmp);
+					cursor = showRunningCfg_str + totalLen;
+				}
+				free(tmp);
+				tmp = NULL;
+			}else{
+				free(showRunningCfg_str);
+				return 1;
+			}
+/*end**************************************************/
 #ifdef DISTRIBUT
 			tmp = dcli_hansi_wtp_show_running_config_start(localid, slot_id,profile);
 #else

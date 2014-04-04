@@ -216,7 +216,7 @@ CWBool WID_WTP_INIT(void *arg){
 void STA_OP(TableMsg *msg){
 	int WTPIndex = msg->u.STA.WTPID;
 	int BSSIndex = msg->u.STA.BSSIndex;
-
+    int auth_flag = 0;/* yjl 2014-2-28 */
 	unsigned char WLANID = 0;
 	msgq msginfo;
 	if((AC_WTP[WTPIndex] != NULL)&&(AC_WTP[WTPIndex]->WTPStat == 5)){
@@ -242,6 +242,37 @@ void STA_OP(TableMsg *msg){
 			wid_cancel_bss_traffic_limit_sta_value(WTPIndex,L_Radio_ID,WLANID,mac[0],mac[1],mac[2],mac[3],mac[4],mac[5],0,2,0);
 			return ;
 		}
+
+		/*yjl copy from aw3.1.2 for local forwarding.2014-2-28*/
+		else if(STA_PORTAL_AUTH == msg->Op)
+		{
+			char cmd[WID_SYSTEM_CMD_LENTH] = {0};
+			unsigned char eag_ip[4] = {0};
+			
+			memcpy(eag_ip, &(msg->u.STA.portal_info.portal_ip), sizeof(eag_ip));
+			auth_flag = 1;
+			sprintf(cmd, AP_EXT_CMD_NOTIFY_STA_PORTAL_AUTH,	((msg->u.STA.BSSIndex)/L_BSS_NUM)%L_RADIO_NUM,
+							msg->u.STA.wlanId, msg->u.STA.STAMAC[0], msg->u.STA.STAMAC[1], msg->u.STA.STAMAC[2],
+							msg->u.STA.STAMAC[3], msg->u.STA.STAMAC[4], msg->u.STA.STAMAC[5], auth_flag, eag_ip[0], eag_ip[1], eag_ip[2],eag_ip[3]);
+			wid_syslog_debug_debug(WID_DEFAULT, "wtp %d extension command: %s\n", msg->u.STA.WTPID, cmd);
+			wid_radio_set_extension_command(msg->u.STA.WTPID, cmd);
+			return ;
+		}
+		else if(msg->Op == STA_PORTAL_DEAUTH)
+		{
+			char cmd[WID_SYSTEM_CMD_LENTH] = {0};
+			char eag_ip[4] = {0};
+			auth_flag = 0;
+			
+			sprintf(cmd, AP_EXT_CMD_NOTIFY_STA_PORTAL_AUTH,	((msg->u.STA.BSSIndex)/L_BSS_NUM)%L_RADIO_NUM,
+							msg->u.STA.wlanId, msg->u.STA.STAMAC[0], msg->u.STA.STAMAC[1], msg->u.STA.STAMAC[2],
+							msg->u.STA.STAMAC[3], msg->u.STA.STAMAC[4], msg->u.STA.STAMAC[5], auth_flag, eag_ip[0], eag_ip[1], eag_ip[2],eag_ip[3]);
+			wid_syslog_debug_debug(WID_DEFAULT, "wtp %d extension command: %s\n", msg->u.STA.WTPID, cmd);
+			wid_radio_set_extension_command(msg->u.STA.WTPID, cmd);
+			return ;
+		}
+		/*end**************************************************/
+		
 		memset((char*)&msginfo, 0, sizeof(msginfo));
 		msginfo.mqid = WTPIndex%THREAD_NUM+1;		
 		msginfo.mqinfo.WTPID = WTPIndex;

@@ -537,7 +537,8 @@ macauth_proc(eag_macauth_t *macauth,
 	
 	//dbus_conn = eag_dbus_get_dbus_conn(macauth->eagdbus);
 	ret = eag_get_sta_info_by_mac_v2(macauth->eagdbus, macauth->hansi_type,
-				macauth->hansi_id, usermac, &session, &security_type);
+				macauth->hansi_id, usermac, &session, &security_type,
+				eag_ins_get_notice_to_asd(macauth->eagins));
 	if (0 != ret) {
 		eag_log_warning("macauth_proc usermac %s not belong to hansi %u:%u, ret=%d",
 			user_macstr, macauth->hansi_type, macauth->hansi_id, ret);
@@ -997,7 +998,8 @@ if (!cmtest_no_arp_learn)
 	#endif
 	//dbus_conn = eag_dbus_get_dbus_conn(macauth->eagdbus);
 	ret = eag_get_sta_info_by_mac_v2(macauth->eagdbus, macauth->hansi_type, macauth->hansi_id,
-				preauth->usermac, &session, &security_type);
+				preauth->usermac, &session, &security_type,
+				eag_ins_get_notice_to_asd(macauth->eagins));
 	if (0 != ret || SECURITY_MAC_AUTH != security_type) {
 		return -1;
 	}

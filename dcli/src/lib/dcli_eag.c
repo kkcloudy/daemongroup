@@ -6065,6 +6065,10 @@ eag_base_config_show_running(struct vty* vty)
 			snprintf(showStr, sizeof(showStr), " set mac-auth notice-to-bindserver disable");
 			vtysh_add_show_string(showStr);		
 		}
+		if (1 == baseconf.notice_to_asd) {
+			snprintf(showStr, sizeof(showStr), " set notice-to-asd enable");
+			vtysh_add_show_string(showStr);		
+		}
 		if (0 == baseconf.autelan_log) {
 			snprintf(showStr, sizeof(showStr), " set log-format autelan off");
 			vtysh_add_show_string(showStr);		
@@ -6246,6 +6250,9 @@ eag_base_config_show_running_2(int localid, int slot_id,int index)
 		}
 		if (0 == baseconf.macauth_notice_bindserver) {
 			totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1, " set mac-auth notice-to-bindserver disable\n");
+		}
+		if (1 == baseconf.notice_to_asd) {
+			totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1, " set notice-to-asd enable\n");
 		}
 		if (0 == baseconf.autelan_log) {
 			totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1, " set log-format autelan off\n");
@@ -6437,6 +6444,9 @@ eag_has_config(void)
 			return 1;
 		}
 		if (PORTAL_PROTOCOL_MOBILE != baseconf.portal_protocol) {
+			return 1;		
+		}
+		if (0 != baseconf.notice_to_asd) {
 			return 1;		
 		}
 		if (0 == baseconf.autelan_log) {
@@ -8189,6 +8199,44 @@ DEFUN(set_eag_mac_auth_notice_bindserver_func,
 	return CMD_SUCCESS; 
 }
 
+DEFUN(set_notice_to_asd_func,
+	set_notice_to_asd_cmd,
+	"set notice-to-asd (enable|disable)",
+	SETT_STR
+	"notice to asd \n"
+	"Enable\n"
+	"Disable\n"
+)
+{
+	int notice_to_asd = 0;
+	int ret = -1;
+	
+	if (strncmp(argv[0], "enable", strlen(argv[0])) == 0) {
+		notice_to_asd = 1;
+	} 
+	else if (strncmp(argv[0], "disable", strlen(argv[0])) == 0) {
+		notice_to_asd = 0;
+	}
+	else {
+		vty_out(vty,"%% bad command parameter\n");
+		return CMD_WARNING;
+	}
+	
+	EAG_DCLI_INIT_HANSI_INFO
+
+	ret = eag_set_notice_to_asd(dcli_dbus_connection_curr,
+					hansitype, insid, 
+					notice_to_asd);	
+
+	if (EAG_ERR_DBUS_FAILED == ret) {
+		vty_out(vty, "%% dbus error\n");
+	}
+	else if (EAG_RETURN_OK != ret) {
+		vty_out(vty, "%% unknown error: %d\n", ret);
+	}
+	return CMD_SUCCESS; 
+}
+
 DEFUN(eag_service_status_func,
 	eag_service_status_cmd,
 	"service (enable|disable)",
@@ -8344,6 +8392,7 @@ DEFUN(show_eag_base_conf_func,
 		vty_out(vty, "mac-auth flux-threshold      :%d\n", baseconf.macauth_flux_threshold);
 		vty_out(vty, "mac-auth check-interval      :%d\n", baseconf.macauth_check_interval);
 		vty_out(vty, "mac-auth notice-to-bindserver:%s\n", (1 == baseconf.macauth_notice_bindserver)?"enable":"disable");
+		vty_out(vty, "notice-to-asd                :%s\n", (1 == baseconf.notice_to_asd)?"enable":"disable");
 		vty_out(vty, "log-format autelan           :%s\n", (1 == baseconf.autelan_log)?"on":"off");
 		vty_out(vty, "log-format henan             :%s\n", (1 == baseconf.henan_log)?"on":"off");
 		vty_out(vty, "l2super-vlan                 :%s\n", (1 == baseconf.l2super_vlan)?"enable":"disable");
@@ -15210,6 +15259,8 @@ DEFUN(eag_show_user_list_func,
 			vty_out(vty, "ID               :%d\n", i);
         	vty_out(vty, "UserName         :%s\n", user->username);
         	vty_out(vty, "UserIP           :%s\n", ipstr);
+			ip2str(user->audit_ip, ipstr, sizeof(ipstr));
+			vty_out(vty, "AuditIP          :%s\n", ipstr);
         	vty_out(vty, "UserIPV6         :%s\n", ipv6str);
         	vty_out(vty, "UserMAC          :%s\n", macstr);
         	vty_out(vty, "SessionTime      :%s\n", timestr);
@@ -15284,6 +15335,8 @@ DEFUN(eag_show_user_by_username_func,
 			vty_out(vty, "ID               :%d\n", i);
         	vty_out(vty, "UserName         :%s\n", user->username);
         	vty_out(vty, "UserIP           :%s\n", ipstr);
+			ip2str(user->audit_ip, ipstr, sizeof(ipstr));
+        	vty_out(vty, "AuditIP          :%s\n", ipstr);
         	vty_out(vty, "UserIPV6         :%s\n", ipv6str);
         	vty_out(vty, "UserMAC          :%s\n", macstr);
         	vty_out(vty, "SessionTime      :%s\n", timestr);
@@ -15359,6 +15412,8 @@ DEFUN(eag_show_user_by_userip_func,
 			vty_out(vty, "ID               :%d\n", i);
         	vty_out(vty, "UserName         :%s\n", user->username);
         	vty_out(vty, "UserIP           :%s\n", ipstr);
+			ip2str(user->audit_ip, ipstr, sizeof(ipstr));
+        	vty_out(vty, "AuditIP          :%s\n", ipstr);
         	vty_out(vty, "UserIPV6         :%s\n", ipv6str);
         	vty_out(vty, "UserMAC          :%s\n", macstr);
         	vty_out(vty, "SessionTime      :%s\n", timestr);
@@ -15432,6 +15487,8 @@ DEFUN(eag_show_user_by_useripv6_func,
 			vty_out(vty, "ID               :%d\n", i);
         	vty_out(vty, "UserName         :%s\n", user->username);
         	vty_out(vty, "UserIP           :%s\n", ipstr);
+			ip2str(user->audit_ip, ipstr, sizeof(ipstr));
+        	vty_out(vty, "AuditIP          :%s\n", ipstr);
         	vty_out(vty, "UserIPV6         :%s\n", ipv6str);
         	vty_out(vty, "UserMAC          :%s\n", macstr);
         	vty_out(vty, "SessionTime      :%s\n", timestr);
@@ -15505,6 +15562,8 @@ DEFUN(eag_show_user_by_usermac_func,
 			vty_out(vty, "ID               :%d\n", i);
         	vty_out(vty, "UserName         :%s\n", user->username);
         	vty_out(vty, "UserIP           :%s\n", ipstr);
+			ip2str(user->audit_ip, ipstr, sizeof(ipstr));
+			vty_out(vty, "AuditIP          :%s\n", ipstr);
         	vty_out(vty, "UserIPV6         :%s\n", ipv6str);
         	vty_out(vty, "UserMAC          :%s\n", macstr);
         	vty_out(vty, "SessionTime      :%s\n", timestr);
@@ -15574,6 +15633,8 @@ DEFUN(eag_show_user_by_index_func,
 			vty_out(vty, "ID               :%d\n", i);
         	vty_out(vty, "UserName         :%s\n", user->username);
         	vty_out(vty, "UserIP           :%s\n", ipstr);
+			ip2str(user->audit_ip, ipstr, sizeof(ipstr));
+        	vty_out(vty, "AuditIP          :%s\n", ipstr);
         	vty_out(vty, "UserIPV6         :%s\n", ipv6str);
         	vty_out(vty, "UserMAC          :%s\n", macstr);
         	vty_out(vty, "SessionTime      :%s\n", timestr);
@@ -16444,6 +16505,10 @@ dcli_eag_init(void)
 	install_element(EAG_NODE, &set_eag_mac_auth_notice_bindserver_cmd);
 	install_element(HANSI_EAG_NODE, &set_eag_mac_auth_notice_bindserver_cmd);
 	install_element(LOCAL_HANSI_EAG_NODE, &set_eag_mac_auth_notice_bindserver_cmd);
+
+	install_element(EAG_NODE, &set_notice_to_asd_cmd);
+	install_element(HANSI_EAG_NODE, &set_notice_to_asd_cmd);
+	install_element(LOCAL_HANSI_EAG_NODE, &set_notice_to_asd_cmd);
 
 	install_element(EAG_NODE, &eag_service_status_cmd);
 	install_element(HANSI_EAG_NODE, &eag_service_status_cmd);

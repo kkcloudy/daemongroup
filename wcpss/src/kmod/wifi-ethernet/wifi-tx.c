@@ -78,6 +78,8 @@ module_param(wifi_mtu,int,0644);
 int wifi_tx_nonlinear = 0;
 module_param(wifi_tx_nonlinear,int,0644);
 
+/*wangchao add */
+int (*aat_ko_tx_hook)(struct sk_buff *) = NULL;
 
 extern cvmx_bootinfo_t *octeon_bootinfo;
 
@@ -1318,8 +1320,12 @@ int wifi_xmit(struct sk_buff *skb, struct net_device *dev)
 				}
 				else
 				{
-					skb2 = skb;
+    				skb2 = skb;
 				}	
+   			    /*wangchao add */
+				if(aat_ko_tx_hook){
+					aat_ko_tx_hook(skb2);
+				}
 				
 //				printk("%s1111 skb %d\n",__func__,skb_headroom(skb2));
 				if(priv->f802_3 == 1){
@@ -1419,4 +1425,6 @@ int wifi_xmit(struct sk_buff *skb, struct net_device *dev)
 	return 0;
 }
 
+/*wangchao add */
+EXPORT_SYMBOL(aat_ko_tx_hook);
 

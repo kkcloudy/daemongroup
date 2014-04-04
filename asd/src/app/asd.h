@@ -596,4 +596,179 @@ struct ap_statistic{
 };
 typedef struct ap_statistic ap_statistics;
 
+/*yjl copy from aw3.1.2 for local forwarding.2014-2-28**********************************/
+/********************************
+	  * add for REQUIREMENTS-524
+	  * Internal  portal server IP	and mac 
+  	  * external portal server is 0
+	  *******************************/
+	PORTAL_INFO portal_info;
+
+#define AAT_IOC_MAGIC 249
+
+#define AAT_IOC_ADD_STA		_IOWR(AAT_IOC_MAGIC, 1, struct io_info) // read values
+#define AAT_IOC_DEL_STA		_IOWR(AAT_IOC_MAGIC, 2, struct io_info) // read values
+#define AAT_IOC_GET_STA_IP	_IOWR(AAT_IOC_MAGIC, 3, struct io_info)
+
+struct io_info
+{
+	unsigned char stamac[MAC_LEN];
+	unsigned char acmac[MAC_LEN];
+	unsigned char ifname[ETH_IF_NAME_LEN];	
+	unsigned char in_ifname[ETH_IF_NAME_LEN];
+	unsigned int staip;
+	unsigned int vrrid;
+};
+
+
+/* malloc failed log error */
+#define ASD_MALLOC_FAILED_LOG_ERROR()	\
+	do {	\
+			asd_printf(ASD_DEFAULT,MSG_ERROR,"%s:%d malloc failed: %s\n", __func__, __LINE__, strerror(errno));	\
+	} while (0);
+
+
+#define ASD_FREE_POINTER(ptr)	\
+	do{	\
+		if(ptr)	\
+		{	\
+			free(ptr);	\
+			ptr = NULL;	\
+		}	\
+	}while(0);
+/* check pointer without return value */
+#define ASD_CHECK_POINTER(ptr)	\
+	do {	\
+		if (NULL == (ptr))	\
+		{	\
+			asd_printf(ASD_DEFAULT,MSG_ERROR,"%s:%d parameter NULL\n", __func__, __LINE__);	\
+			return;	\
+		}	\
+	} while (0);
+/* check pointer with return value ret */
+#define ASD_CHECK_POINTER_RET(ptr, ret)	\
+	do {	\
+		if (NULL == (ptr))	\
+		{	\
+			asd_printf(ASD_DEFAULT,MSG_ERROR,"%s:%d parameter NULL\n", __func__, __LINE__); \
+			return (ret); \
+		}	\
+	} while (0);
+
+
+/* check wlan standard without return value */
+#define ASD_CHECK_WLAN_STANDARD(wlanid)	\
+	do {	\
+		if (((wlanid) >= WLAN_NUM) || ((wlanid) <= 0))	\
+		{	\
+			asd_printf(ASD_DEFAULT,MSG_ERROR,"%s: max wlan id %d, wlanid %d\n", __func__, (WLAN_NUM - 1), (wlanid));	\
+			return;	\
+		}	\
+	} while (0);
+/* check wlan standard with return value ret */
+#define ASD_CHECK_WLAN_STANDARD_RET(wlanid, ret)	\
+	do {	\
+		if (((wlanid) >= WLAN_NUM) || ((wlanid) <= 0))	\
+		{	\
+			asd_printf(ASD_DEFAULT,MSG_ERROR,"%s: max wlan id %d, wlanid %d\n", __func__, (WLAN_NUM - 1), (wlanid));	\
+			return (ret);	\
+		}	\
+	} while (0);
+
+/* check wlan exist; without return value */
+#define ASD_CHECK_WLAN_EXIST(wlanid)	\
+	do {	\
+		if (((wlanid) >= WLAN_NUM) || ((wlanid) <= 0) || (NULL == ASD_WLAN[(wlanid)]))	\
+		{	\
+			asd_printf(ASD_DEFAULT,MSG_ERROR,"%s: no wlan %d\n", __func__, wlanid);	\
+			return;	\
+		}	\
+	} while (0);
+/* check wlan exist; with return value */
+#define ASD_CHECK_WLAN_EXIST_RET(wlanid, ret)	\
+	do {	\
+		if (((wlanid) >= WLAN_NUM) || ((wlanid) <= 0) || (NULL == ASD_WLAN[(wlanid)]))	\
+		{	\
+			asd_printf(ASD_DEFAULT,MSG_ERROR,"%s: no wlan %d\n", __func__, (wlanid));	\
+			return (ret);	\
+		}	\
+	} while (0);
+
+
+/* check security standard without return value */
+#define ASD_CHECK_SECURITY_STANDARD(security_id)	\
+	do {	\
+		if (((security_id) >= WLAN_NUM) || ((security_id) <= 0))	\
+		{	\
+			asd_printf(ASD_DEFAULT,MSG_ERROR,"%s: max security id %d, security id %d\n", __func__, (WLAN_NUM - 1), security_id);	\
+			return;	\
+		}	\
+	} while (0);
+/* check security standard with return value */
+#define ASD_CHECK_SECURITY_STANDARD_RET(security_id, ret)	\
+	do {	\
+		if (((security_id) >= WLAN_NUM) || ((security_id) <= 0))	\
+		{	\
+			asd_printf(ASD_DEFAULT,MSG_ERROR,"%s: max security id %d, security id %d\n", __func__, (WLAN_NUM - 1), security_id);	\
+			return (ret);	\
+		}	\
+	} while (0);
+
+
+/* check security exist; without return value */
+#define ASD_CHECK_SECURITY_EXIST(security_id)	\
+	do {	\
+		if ((((security_id) >= WLAN_NUM) || ((security_id) <= 0))	\
+			|| (NULL == ASD_SECURITY[(security_id)]))	\
+		{	\
+			asd_printf(ASD_DEFAULT,MSG_ERROR,"%s: no security %d\n", __func__, security_id);	\
+			return;	\
+		}	\
+	} while (0);
+/* check security exist; with return value */
+#define ASD_CHECK_SECURITY_EXIST_RET(security_id, ret)	\
+	do {	\
+		if ((((security_id) >= WLAN_NUM) || ((security_id) <= 0))	\
+			|| (NULL == ASD_SECURITY[(security_id)]))	\
+		{	\
+			asd_printf(ASD_DEFAULT,MSG_ERROR,"%s: no security %d\n", __func__, (security_id));	\
+			return (ret);	\
+		}	\
+	} while (0);
+
+
+/* check WTP standard without return value */
+#define ASD_CHECK_WTP_STANDARD(wtp_id)	\
+	do {	\
+		if (((wtp_id) >= WTP_NUM) || ((wtp_id) <= 0))	\
+		{	\
+			asd_printf(ASD_DEFAULT,MSG_ERROR,"%s: max wtpid %d, cur wtpid %d\n", __func__, (WTP_NUM - 1), (wtp_id));	\
+			return;	\
+		}	\
+	} while (0);
+/* check WTP standard with return value */
+#define ASD_CHECK_WTP_STANDARD_RET(wtp_id, ret)	\
+	do {	\
+		if (((wtp_id) >= WTP_NUM) || ((wtp_id) <= 0))	\
+		{	\
+			asd_printf(ASD_DEFAULT,MSG_ERROR,"%s: max wtpid %d, cur wtpid %d\n", __func__, (WTP_NUM - 1), (wtp_id));	\
+			return (ret); \
+		}	\
+	} while (0);
+#define ASD_BSSINDEX_TO_WTPID(_bssindex_)	((_bssindex_) / (L_BSS_NUM * L_RADIO_NUM))
+/* WEP/PSK associate auth  (SHARE:WEP) */
+#define ASD_AUTH_TYEP_WEP_PSK(security_id)	\
+		(NULL != ASD_SECURITY[(security_id)]		\
+			&& (SHARED == ASD_SECURITY[(security_id)]->securityType))
+
+/* EAP auth  (wpa_e:, wpa2_e:) */
+#define ASD_AUTH_TYEP_EAP(security_id)	\
+		(NULL != ASD_SECURITY[(security_id)]		\
+			&& ((WPA_E == ASD_SECURITY[(security_id)]->securityType)	\
+				|| (WPA2_E == ASD_SECURITY[(security_id)]->securityType)))
+
+void notice_aat_mod(char *stamac, unsigned int ip,char *acmac, char *ifname, char *in_ifname, int is_add);
+unsigned asd_get_sta_realip(unsigned char *haddr);
+/*end**************************************************yjl copy from aw3.1.2 for local forwarding.2014-2-28*/
+
 #endif /* asd_H */

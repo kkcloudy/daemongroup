@@ -190,7 +190,67 @@ radius_srv_set_backacct(struct radius_srv_t *radius_srv,
 }
 
 /*portal srv */
+uint32_t
+portal_get_ip_by_url(char *url)
+{
+	unsigned int ip_part_value = -1;
+	int ip_part_num = -1;
+	int i = 0;
+	uint32_t ip = 0;
+	char *p_url = NULL;	
+	p_url = url;
+		
+	if (NULL == url) {
+		return 0;
+	}
 
+	if (0 == strncmp(p_url, "http://", strlen("http://"))) {
+		p_url += strlen("http://");
+	} else if(0 == strncmp(p_url, "https://", strlen("https://"))) {
+		p_url += strlen("https://");
+	} else {
+		return 0;
+	}
+		
+	/* get ip */
+	ip_part_num = 1;
+		
+	for (i = 0; i < 17; i++) {
+		if ('\0' == *p_url) {
+			return 0;
+		} else if ('/' == *p_url || ':' == *p_url) {
+			if (0 <= ip_part_value && 255 >= ip_part_value && 4 == ip_part_num) {
+				ip += ip_part_value;
+				break;
+			} else {
+				return 0;
+			}
+		} else if ('.' == *p_url) {
+			if (((1 == ip_part_num && 0 < ip_part_value)
+				|| (1 < ip_part_num && 0 <= ip_part_value))
+				&& 255 >= ip_part_value && 4 > ip_part_num)
+			{	/* legal */
+				ip += ip_part_value << ((4 - ip_part_num) * 8);
+				ip_part_value = -1;
+				ip_part_num++;
+			} else {
+				return 0;
+			}
+		} else if ('0' <= *p_url || '9' >= *p_url) {
+			if (-1 == ip_part_value) {
+				ip_part_value = 0;
+			} else {
+				ip_part_value *= 10;
+			}
+			ip_part_value += (*p_url - '0');
+		} else {
+			return 0;
+		}
+		p_url++;
+	}	
+	
+	return ip;
+}
 
 int
 portal_conf_add_srv( struct portal_conf *portalconf,
@@ -253,6 +313,8 @@ portal_conf_add_srv( struct portal_conf *portalconf,
 		strncpy(portal_srv->domain, domain, sizeof(portal_srv->domain)-1);
 	portal_srv->mac_server_ip = mac_server_ip;
 	portal_srv->mac_server_port = mac_server_port;
+	portal_srv->portal_ip = portal_get_ip_by_url(portal_url);
+	
 	portalconf->current_num++;
 
 	return EAG_RETURN_OK;
@@ -419,6 +481,7 @@ portal_conf_modify_srv( struct portal_conf *portalconf,
 				memset(portal_srv->domain, 0 ,MAX_RADIUS_DOMAIN_LEN);
 			portal_srv->mac_server_ip = mac_server_ip;
 			portal_srv->mac_server_port = mac_server_port;
+			portal_srv->portal_ip = portal_get_ip_by_url(portal_url);
 
 			return 0;
 		}

@@ -184,6 +184,13 @@ void ieee802_1x_set_sta_authorized(struct asd_data *wasd,
 		}
 		if((1 ==asd_sta_getip_from_dhcpsnoop)&&(0 == sta->ipaddr))
 			asd_notice_to_dhcp(wasd,sta->addr,DHCP_IP);
+
+		/*yjl copy from aw3.1.2 for local forwarding.2014-2-28*/
+		if (ASD_NOTICE_STA_INFO_TO_PORTAL)
+		{
+			AsdStaInfoToEAG(wasd, sta, WID_ADD);
+		}
+		/*end**************************************************/
 		unsigned char mac[6];
 		int i=0;
 		for(i=0;i<6;i++)
@@ -959,6 +966,16 @@ static void handle_eap(struct asd_data *wasd, struct sta_info *sta,
 		return;
 	case EAP_CODE_RESPONSE:
 		asd_printf(ASD_1X,MSG_DEBUG, " (response)");
+
+		/*yjl copy from aw3.1.2 for local forwarding.2014-2-28*/
+		asd_printf(ASD_1X, MSG_DEBUG, "response state %d alive_flag %d\n",
+					   sta->flags & WLAN_STA_AUTHORIZED, sta->alive_flag);
+		if (WLAN_STA_AUTHORIZED == (sta->flags & WLAN_STA_AUTHORIZED)
+				&& sta->alive_flag)
+		{
+			sta->alive_total = 0;
+		}
+		/*end**************************************************/
 		handle_eap_response(wasd, sta, eap, eap_len);
 		break;
 	case EAP_CODE_SUCCESS:
@@ -1132,8 +1149,10 @@ void ieee802_1x_receive(struct asd_data *wasd, const u8 *sa, const u8 *buf,
 			ieee802_1x_notify_port_enabled(sta->eapol_sm, 0);
 		}
 		ieee802_11_send_deauth(wasd, sta->addr, 3);
-		if(ASD_NOTICE_STA_INFO_TO_PORTAL)
+		if(ASD_NOTICE_STA_INFO_TO_PORTAL){
+			sta->initiative_leave = 1;/* yjl 2014-2-28 */
 			AsdStaInfoToEAG(wasd,sta,WID_DEL);
+		}
 		AsdStaInfoToWID(wasd,sta->addr,WID_DEL);
 		if(ASD_WLAN[wasd->WlanID]!=NULL&&ASD_WLAN[wasd->WlanID]->balance_switch == 1&&ASD_WLAN[wasd->WlanID]->balance_method==1){
 			ap_free_sta(wasd, sta, 1);
@@ -1222,7 +1241,9 @@ void ieee802_1x_new_station(struct asd_data *wasd, struct sta_info *sta)
 	if((ASD_SECURITY[SID])&&(ASD_SECURITY[SID]->fast_auth == 0)){
 		pmksa = NULL;
 	}
-	//
+
+	ieee802_1x_free_alive(sta, &ASD_SECURITY[SID]->eap_alive_period);/* yjl 2014-2-28 */
+	
 	if (pmksa) {
 		int old_vlanid;
 

@@ -54,7 +54,8 @@ extern int kthread_should_stop(void);
 extern void msleep(unsigned int msecs);
 extern __be16 eth_type_trans(struct sk_buff *skb, struct net_device *dev);
 void wifi_tasklet_rx(void);
-
+/*wangchao add*/
+int (*aat_ko_rx_hook)(struct sk_buff *) = NULL;
 int (*wifi_ko_dhcp_option82_hook)(struct sk_buff *skb, struct dba_result *res) = NULL;
 EXPORT_SYMBOL(wifi_ko_dhcp_option82_hook);
 
@@ -645,6 +646,17 @@ int wifi_kernel_rx(struct sk_buff *skb){
 		//CWCaptrue_wifi(skb->len,skb->data);/*only printk data*/
 		return 2;				
 	}
+/*wangchao add */
+	skb->dev = dev;
+
+	if (wifi_eth_debug >= WIFI_DEBUG)
+	{
+		printk(KERN_DEBUG "aat_ko_rx_hook %p ifname %s \n", aat_ko_rx_hook,skb->dev->name);
+	}
+	if(aat_ko_rx_hook){
+		aat_ko_rx_hook(skb);
+	}
+/***************************/
 	if(NULL == dev){
 		if(wifi_eth_debug >= WIFI_ERROR){
 			printk("<warning>%s,%d,dev=%p.",__func__,__LINE__,dev);
@@ -687,6 +699,6 @@ int wifi_kernel_rx(struct sk_buff *skb){
 	return 0;
 }
 EXPORT_SYMBOL(wifi_kernel_rx);
-
-
+/*wangchao add */
+EXPORT_SYMBOL(aat_ko_rx_hook);
 

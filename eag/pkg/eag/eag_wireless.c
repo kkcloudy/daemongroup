@@ -85,7 +85,8 @@ eag_get_sta_info_by_mac_v2( eag_dbus_t *eag_dbus,
 					int localid, int inst_id,
 					uint8_t *sta_mac,
 					struct appsession *session,
-					unsigned int *security_type)
+					unsigned int *security_type,
+					int notice_to_asd)
 {
 	int return_ret = EAG_RETURN_OK;
 	unsigned int ret = 0;
@@ -162,6 +163,11 @@ reget:
 	session->g_radioid = sta->radio_g_id;
 	session->radioid = sta->radio_g_id%L_RADIO_NUM;
 	session->wtpid= sta->radio_g_id/L_RADIO_NUM;
+	if (notice_to_asd) {
+		session->audit_ip = sta->realip;
+	} else {
+		session->audit_ip = session->user_addr.user_ip;
+	}
 #if 0/*add by shaojunwu for 2.1*/
 	session->idle_check = sta->flow_check;
 	session->idle_timeout = sta->no_flow_time;	
@@ -209,10 +215,10 @@ reget:
 	eag_log_info("eag_get_sta_info_by_mac_v2 success, "
 			"sta_mac=%s, sta_ip=%s, sta_ipv6=%s, radio_id=%d, wlan_id=%d, wtp_id=%d, "
 			"essid=%s, wtp_mac=%s, wtp_name=%s, vlanid=%d, idle_check=%u, "
-			"idle_timeout=%lu, idle_flow=%llu, security_type=%d",
+			"idle_timeout=%lu, idle_flow=%llu, security_type=%d,audit_ip=%x",
 			str_sta_mac, ipstr, ipv6str, session->radioid, session->wlanid, session->wtpid,
 			session->essid, str_wtp_mac, session->apname, session->vlanid, session->idle_check,
-			session->idle_timeout, session->idle_flow, *security_type);
+			session->idle_timeout, session->idle_flow, *security_type, session->audit_ip);
 	eag_log_info("framed_interface_id=%lld, login_ipv6_host=%s, framed_ipv6_prefix=%s, ipv6_prefix_length=%hhu",
 			session->framed_interface_id, login_ipv6_host_str, framed_ipv6_prefix_str, session->framed_ipv6_prefix[1]);
 end:

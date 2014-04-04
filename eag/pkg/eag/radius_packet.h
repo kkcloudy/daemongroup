@@ -240,6 +240,7 @@ struct radius_attr_t {
 #define	RADIUS_ATTR_AUTELAN_INPUT_AVERAGE_RATE		62	/* integer */
 #define	RADIUS_ATTR_AUTELAN_OUTPUT_AVERAGE_RATE		65	/* integer */
 #define	RADIUS_ATTR_AUTELAN_USER_AGENT				81	/* string */
+#define	RADIUS_ATTR_AUTELAN_AUDIT_IP				201	/* ipaddr */
 #define	RADIUS_ATTR_AUTELAN_BANDWIDTH_MAX_UP		245	/* integer */
 #define	RADIUS_ATTR_AUTELAN_BANDWIDTH_MAX_DOWN		246	/* integer */
 #define RADIUS_ATTR_AUTELAN_IPV6_INPUT_OCTETS		221	/* integer */

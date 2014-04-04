@@ -326,4 +326,11 @@ char ASD_DBUS_CONF_METHOD_QUIT[PATH_LEN] = "asd_quit";
 
 char ASD_DBUS_BSS_METHOD_SHOW_BSS_SUMMARY[PATH_LEN] = "asd_show_bss_summary";
 char ASD_DBUS_BSS_METHOD_SHOW_BSS_BSSINDEX[PATH_LEN] = "asd_show_bss_bssindex";
+
+/*yjl copy from aw3.1.2 for local forwarding.2014-2-28*/
+char ASD_DBUS_STA_METHOD_SET_ASD_STA_VIR_DHCP[PATH_LEN]=	 "set_asd_sta_vir_dhcp";
+char ASD_DBUS_STA_METHOD_SET_ASD_STA_VIR_DHCP_STATE[PATH_LEN]=	 "set_asd_sta_vir_dhcp_state";
+char ASD_DBUS_STA_METHOD_SET_ASD_STA_TUNNEL_SWITCH_STATE[PATH_LEN]=	 "set_asd_sta_tunnel_switch_state";
+char ASD_DBUS_STA_METHOD_VIR_DHCP_SHOW_RUNNING_CONFIG[PATH_LEN]= 	"vir_dhcp_show_running_config";
+/*end**************************************************/
 #endif

@@ -520,6 +520,115 @@ int dcli_bss_list_show_running_config(struct vty*vty)
 
 }
 
+/*yjl copy from aw3.1.2 for local forwarding.2014-2-28**********************************/
+int dcli_vir_dhcp_show_running_config(struct vty*vty) 
+{	
+	char *showStr = NULL,*cursor = NULL,ch = 0,tmpBuf[SHOWRUN_PERLINE_SIZE] = {0};
+	DBusMessage *query, *reply;
+	DBusError err;
+	
+	int localid = 1;int slot_id = HostSlotId;int index = 0;
+	char BUSNAME[PATH_LEN];
+	char OBJPATH[PATH_LEN];
+	char INTERFACE[PATH_LEN];
+	DBusConnection *dcli_dbus_connection = NULL;
+	ReInitDbusConnection(&dcli_dbus_connection,slot_id,distributFag);
+	
+	ReInitDbusPath_V2(localid,index,ASD_DBUS_BUSNAME,BUSNAME);
+	ReInitDbusPath_V2(localid,index,ASD_DBUS_STA_OBJPATH,OBJPATH);
+	ReInitDbusPath_V2(localid,index,ASD_DBUS_STA_INTERFACE,INTERFACE);
+	query = dbus_message_new_method_call(BUSNAME,OBJPATH,INTERFACE,ASD_DBUS_STA_METHOD_VIR_DHCP_SHOW_RUNNING_CONFIG);
+
+	dbus_error_init(&err);
+
+	reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection,query,300000, &err); //fengwenchao change "-1" to 300000 for TESTBED-7,20111213
+
+	dbus_message_unref(query);
+	if (NULL == reply) {
+		printf("show bss list config failed get reply.\n");
+		if (dbus_error_is_set(&err)) {
+			printf("%s raised: %s",err.name,err.message);
+			dbus_error_free(&err);
+		}
+		return 1;
+	}
+
+	if (dbus_message_get_args ( reply, &err,
+					DBUS_TYPE_STRING, &showStr,
+					DBUS_TYPE_INVALID)) {
+		char _tmpstr[64];
+		memset(_tmpstr,0,64);
+		sprintf(_tmpstr,BUILDING_MOUDLE,"VIR DHCP");
+		vtysh_add_show_string(_tmpstr);					
+		vtysh_add_show_string(showStr);
+
+		dbus_message_unref(reply);
+		return 0;	
+	} else 	{
+		printf("Failed get args.\n");
+		if (dbus_error_is_set(&err)) 	{
+			printf("%s raised: %s",err.name,err.message);
+			dbus_error_free(&err);
+
+			dbus_message_unref(reply);
+			return 1;	
+		}
+	}
+
+}
+
+/*yjl copy from aw3.1.2 for local forwarding.2014-2-28*/
+char *dcli_hansi_vir_dhcp_show_running_config(int localid, int slot_id,int index) 
+{	
+	char *showStr = NULL,*cursor = NULL,ch = 0,tmpBuf[SHOWRUN_PERLINE_SIZE] = {0};
+	DBusMessage *query, *reply;
+	DBusError err;
+	char *tmp;
+	char BUSNAME[PATH_LEN];
+	char OBJPATH[PATH_LEN];
+	char INTERFACE[PATH_LEN];
+	DBusConnection *dcli_dbus_connection = NULL;
+	ReInitDbusConnection(&dcli_dbus_connection,slot_id,distributFag);
+	ReInitDbusPath_V2(localid,index,ASD_DBUS_BUSNAME,BUSNAME);
+	ReInitDbusPath_V2(localid,index,ASD_DBUS_STA_OBJPATH,OBJPATH);
+	ReInitDbusPath_V2(localid,index,ASD_DBUS_STA_INTERFACE,INTERFACE);
+	query = dbus_message_new_method_call(BUSNAME,OBJPATH,INTERFACE,ASD_DBUS_STA_METHOD_VIR_DHCP_SHOW_RUNNING_CONFIG);
+
+	dbus_error_init(&err);
+
+	reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection,query,300000, &err); //fengwenchao change "-1" to 300000 for TESTBED-7,20111213
+
+	dbus_message_unref(query);
+	if (NULL == reply) {
+		printf("show bss list config failed get reply.\n");
+		if (dbus_error_is_set(&err)) {
+			printf("%s raised: %s",err.name,err.message);
+			dbus_error_free(&err);
+		}
+		return NULL;
+	}
+
+	if (dbus_message_get_args ( reply, &err,
+					DBUS_TYPE_STRING, &showStr,
+					DBUS_TYPE_INVALID)) {
+		tmp = (char *)malloc(strlen(showStr)+1);
+		memset(tmp, 0, strlen(showStr)+1);
+		memcpy(tmp,showStr,strlen(showStr));	
+		dbus_message_unref(reply);
+		return tmp;	
+	} else 	{
+		printf("Failed get args.\n");
+		if (dbus_error_is_set(&err)) 	{
+			printf("%s raised: %s",err.name,err.message);
+			dbus_error_free(&err);
+
+			dbus_message_unref(reply);
+			return NULL;	
+		}
+	}
+
+}
+/*yjl copy from aw3.1.2 end. ****************************************************************/
 
 char* dcli_hansi_wlan_list_show_running_config(int localid, int slot_id,int index) 
 {	

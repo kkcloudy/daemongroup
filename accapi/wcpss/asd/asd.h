@@ -1,6 +1,7 @@
 #ifndef _ASD_H_
 #define	_ASD_H_
 #include "wcpss/waw.h"
+#define DEVINFO_LOCAL_MAC "/devinfo/local_mac"  /* yjl 2014-2-28 */
 typedef struct {
 	unsigned int ACIP;
 	unsigned char ACID;
@@ -434,6 +435,8 @@ struct dcli_sta_info
 	time_t sta_online_time;//qiuchen add it
 	time_t sta_access_time;
 	time_t sta_online_time_new;
+
+	unsigned int realip;/* yjl 2014-2-28 */
 };
 
 
@@ -455,6 +458,9 @@ struct dcli_sta_info_v2
 	u_int32_t   no_flow_time;
 	u_int32_t   limit_flow;
 	unsigned int	auth_type;		//weichao add
+
+	unsigned int realip;	/* TUNNEL AUTH LOCAL FORWAD  STA real IP addr */ /* yjl 2014-2-28 */
+	
 	int essidlen;
 	int wtp_name_len;
 	struct in_addr ip_addr;     /* add sta ip info for ipv6 protal */
@@ -611,7 +617,7 @@ struct dcli_bss_info {
 	unsigned char	AuthenticationSuite;			/*	选择的AKM套件*/
 	unsigned char	AuthSuiteSelected;				/*	选择的AKM*/
 
-
+    unsigned char if_policy;/* yjl 2014-2-28 */
 };
 
 struct dcli_base_bss_info {
@@ -1094,6 +1100,11 @@ struct dcli_bss_indexinfo{
 	unsigned int traffic_limit;
 	unsigned int send_traffic_limit;
 };
+
+/* yjl copy from aw3.1.2 for local forwarding.2014-2-28 */
+#define ASD_MAC_TYPE_LOCAL			(0)		/* local */
+#define ASD_MAC_TYPE_TUNNEL			(1)		/* tunnel */
+#define ASD_MAC_TYPE_TL				(2)		/* tunnel auth, local forward */
 
 #ifdef __ASD_STA_ACL
 	struct dcli_asd_acl

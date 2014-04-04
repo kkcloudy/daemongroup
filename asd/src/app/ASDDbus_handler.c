@@ -39,6 +39,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/socket.h> 
+#include <net/if.h> /* yjl 2014-2-28 */
+#include <fcntl.h>  /* yjl 2014-2-28 */
 
 #include "config/wireless_config.h"
 #include "asd.h"
@@ -2182,8 +2184,10 @@ int bss_kick_sta(struct asd_data *bss, struct sta_info *sta)
 	asd_printf(ASD_DBUS,MSG_DEBUG,"bss_kick_sta3\n");
 //	close(sock);
 
-	if(ASD_NOTICE_STA_INFO_TO_PORTAL)
+	if(ASD_NOTICE_STA_INFO_TO_PORTAL){
+		sta->initiative_leave = 0;/* yjl 2014-2-28 */
 		AsdStaInfoToEAG(bss,sta,WID_DEL);
+	}
 	if(ASD_WLAN[bss->WlanID]!=NULL&&ASD_WLAN[bss->WlanID]->balance_switch==1&&ASD_WLAN[bss->WlanID]->balance_method==1){
 		ap_free_sta(bss, sta, 1);
 	}else{
@@ -2629,6 +2633,67 @@ out:
 	}
 	return;
 }
+
+/*yjl copy from aw3.1.2 for local forwarding.2014-2-28*/
+int asd_get_Interface_mac(char * ifname, char *mac)
+{
+	int sockfd;
+	struct ifreq	ifr;
+	/*
+	struct ifreq	ifr, ifrcopy;
+	struct sockaddr_in	*sinptr;
+	struct sockaddr_in6	*sin6ptr;
+	*/
+	sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+	if(sockfd < 0)
+	{
+		return ASD_DBUS_ERROR;
+	}
+	strncpy(ifr.ifr_name,ifname, sizeof(ifr.ifr_name));			
+	if (ioctl(sockfd, SIOCGIFINDEX, &ifr) == -1){//bind to a interface 
+		close(sockfd);
+		return ASD_IFNAME_NOT_EXIST;
+	 }
+	if(ioctl(sockfd, SIOCGIFHWADDR, &ifr) == -1){
+		 close(sockfd);
+		 return ASD_DBUS_ERROR;
+	 }
+	memset(mac, 0, MAC_LEN);
+	memcpy(mac,ifr.ifr_hwaddr.sa_data,MAC_LEN);
+	close(sockfd);
+	return ASD_DBUS_SUCCESS;
+}
+
+/*yjl copy from aw3.1.2 for local forwarding.2014-2-28*/
+int get_file_string_mac(char *FILENAME,unsigned char* mac)
+{
+	char buff[256];
+	char buff2[256];
+	int len,fd,j;
+	
+	fd = open(FILENAME,O_RDONLY);
+	if (fd < 0) {
+		return 1;
+	}	
+	len = read(fd,buff,256);	
+	if (len < 0) {
+		close(fd);
+		return 1;
+	}
+	memcpy(buff2,buff,len);
+	unsigned char temp_2char[3] = {0x00, 0x00, 0x00};
+
+	for (j=0; j<12; j+=2)
+	{
+		memcpy(temp_2char, buff2+j, 2);
+		mac[j/2] = (unsigned char)strtoul((char *)temp_2char, 0, 16);
+		//asd_printf(ASD_DBUS,MSG_INFO,"%02x:",mac[j/2]);
+	}
+	asd_printf(ASD_DBUS,MSG_INFO,"len=%d,mac:%02x:%02x:%02x:%02x:%02x:%02x.",len,mac[0],mac[1],mac[2],mac[3],mac[4],mac[5]);
+	close(fd);
+	return 0;
+}
+/*end**************************************************/
 
 #ifdef __ASD_STA_ACL
 /* caojia add for sta acl function */

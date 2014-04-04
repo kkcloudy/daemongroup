@@ -107,6 +107,9 @@ int
 eag_ins_get_flux_from(eag_ins_t *eagins);
 
 int
+eag_ins_get_notice_to_asd(eag_ins_t *eagins);
+
+int
 eag_ins_syn_user(eag_ins_t *eagins,
 		struct app_conn_t *appconn);
 

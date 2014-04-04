@@ -12,6 +12,12 @@
 #define STA_DEFAULT_TRAFFIC_LIMIT 80000
 #define READ_IFNET_INFO_COUNT 5
 
+/*yjl copy from aw3.1.2 for TL.2014-2-28 */
+#define TUNNEL_SWITCH_CMD  "echo 3 > /proc/sys/net/ath.%d-%d/vap_splitmac"
+#define AP_OPEN_IPFORWARD  "echo 1 > /proc/sys/net/ipv4/ip_forward"
+#define AP_SPFAST_DOWM 	   "echo 1 > /proc/sys/net/capwap/spfast_down"
+#define AP_SPFAST_UP       "echo 1 > /proc/sys/net/capwap/spfast_up"
+
 int istryreadipv6addr;
 int istrybindipv6addr;
 #define COUNTERMEASURE_DEFAULT_COUNT 6

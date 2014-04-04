@@ -29,7 +29,9 @@ eag_stamsg_stop(eag_stamsg_t *stamsg);
 
 int
 eag_stamsg_send(eag_stamsg_t *stamsg,
-		struct appsession *session, Operate Op);
+		struct appsession *session, 
+		Operate Op, 
+		int notice_to_asd);
 
 int
 eag_stamsg_set_thread_master(eag_stamsg_t *stamsg,

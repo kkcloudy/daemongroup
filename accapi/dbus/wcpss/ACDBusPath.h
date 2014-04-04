@@ -1029,4 +1029,7 @@ char WID_DBUS_CONF_METHOD_SET_IS_SECONDARY[PATH_LEN] = "set_is_secondary";/*chen
 /* caojia add for sta acl */
 char WID_DBUS_STA_METHOD_SET_WLAN_STA_DEFAULT_ACL[PATH_LEN] = "set_wlan_sta_default_acl";
 char WID_DBUS_STA_METHOD_SHOW_WLAN_STA_DEFAULT_ACL[PATH_LEN] = "show_wlan_sta_default_acl";
+
+char WID_DBUS_CONF_METHOD_SET_WLAN_STA_TUNNEL_SWITCH_STATE[PATH_LEN] = "set_wlan_tunnel_switch_state";/*yjl 2014-2-28*/
+char WID_DBUS_CONF_METHOD_SET_WLAN_STA_STATE[PATH_LEN] = "set_wlan_sta_state";/*yjl 2014-2-28*/
 #endif

@@ -244,6 +244,8 @@ struct portal_srv_t {
 	int nasid_to_url;
 	char url_suffix[MAX_PORTAL_URL_SUFFIX_LEN];	
 
+	uint32_t portal_ip;
+
 	int	wlanparameter;//url param  usermac  des encrypt.
 	char deskey[MAX_DES_KEY_LEN+2];
 

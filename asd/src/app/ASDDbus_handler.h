@@ -90,4 +90,6 @@ int set_sta_acl(struct asd_data *wasd, struct sta_info *sta, unsigned int acl_id
 unsigned int get_sta_acl_wifi(struct asd_data *wasd, struct sta_info *sta);
 #endif
 
+int get_file_string_mac(char *FILENAME,unsigned char* mac);/* yjl 2014-2-28 */
+int asd_get_Interface_mac(char * ifname, char *mac);/* yjl 2014-2-28 */
 #endif

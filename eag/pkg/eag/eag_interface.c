@@ -68,6 +68,7 @@
 #define EAG_DBUS_METHOD_SET_MACAUTH_FLUX_INTERVAL	"eag_dbus_method_set_macauth_flux_interval"
 #define EAG_DBUS_METHOD_SET_MACAUTH_FLUX_THRESHOLD	"eag_dbus_method_set_macauth_flux_threshold"
 #define EAG_DBUS_METHOD_SET_MACAUTH_NOTICE_BINDSERVER "eag_dbus_method_set_macauth_notice_bindserver"
+#define EAG_DBUS_METHOD_SET_NOTICE_TO_ASD			"eag_dbus_method_set_notice_to_asd"
 
 /*nasid*/
 #define EAG_DBUS_METHOD_ADD_NASID				"eag_dbus_method_add_nasid"
@@ -1745,6 +1746,48 @@ eag_set_trap_switch_abnormal_logoff(DBusConnection *connection,
 }
 
 int
+eag_set_notice_to_asd(DBusConnection *connection, 
+				int hansitype, int insid,
+				int notice_to_asd)
+{
+	DBusMessage *query, *reply;
+	DBusError err;
+	int iRet=EAG_ERR_UNKNOWN;
+	eag_dbus_path_reinit(hansitype,insid);
+	query = dbus_message_new_method_call(
+									EAG_DBUS_NAME,
+									EAG_DBUS_OBJPATH,
+									EAG_DBUS_INTERFACE, 
+									EAG_DBUS_METHOD_SET_NOTICE_TO_ASD);
+	dbus_error_init(&err);
+	
+	dbus_message_append_args(	query,
+								DBUS_TYPE_INT32,  &notice_to_asd,
+								DBUS_TYPE_INVALID );
+
+	reply = dbus_connection_send_with_reply_and_block ( connection, query, -1, &err );
+
+	dbus_message_unref(query);
+	
+	if ( NULL == reply ){	
+		if (dbus_error_is_set(&err)){
+			dbus_error_free(&err);
+		}
+		return EAG_ERR_DBUS_FAILED;
+	}else{
+		dbus_message_get_args(	reply,
+								&err,
+								DBUS_TYPE_INT32, &iRet,
+								DBUS_TYPE_INVALID );
+	}
+
+	
+	dbus_message_unref(reply);
+	
+	return iRet;
+}
+
+int
 eag_set_services_status( DBusConnection *connection, 
 				int hansitype, int insid,
 				int status)
@@ -1913,6 +1956,8 @@ eag_get_base_conf( DBusConnection *connection,
 			dbus_message_iter_get_basic(&iter,&(baseconf->macauth_check_interval));
 			dbus_message_iter_next(&iter);
 			dbus_message_iter_get_basic(&iter,&(baseconf->macauth_notice_bindserver));
+			dbus_message_iter_next(&iter);
+			dbus_message_iter_get_basic(&iter,&(baseconf->notice_to_asd));
 			dbus_message_iter_next(&iter);
 			dbus_message_iter_get_basic(&iter,&(baseconf->autelan_log));
 			dbus_message_iter_next(&iter);
@@ -6615,6 +6660,9 @@ eag_show_user_all(DBusConnection *connection,
 					dbus_message_iter_next(&iter_struct);
 					dbus_message_iter_get_basic(&iter_struct, 
 													&(user->sta_state));
+					dbus_message_iter_next(&iter_struct);
+					dbus_message_iter_get_basic(&iter_struct, 
+													&(user->audit_ip));
 					dbus_message_iter_next(&iter_array);
 					list_add_tail(&(user->node), &(userdb->head));
 				}
@@ -6773,6 +6821,9 @@ eag_show_user_by_username(DBusConnection *connection,
 					dbus_message_iter_next(&iter_struct);
 					dbus_message_iter_get_basic(&iter_struct, 
 													&(user->apmac[5]));
+					dbus_message_iter_next(&iter_struct);
+					dbus_message_iter_get_basic(&iter_struct, 
+													&(user->audit_ip));
 					dbus_message_iter_next(&iter_array);
 					list_add_tail(&(user->node), &(userdb->head));
 				}
@@ -6931,6 +6982,9 @@ eag_show_user_by_userip(DBusConnection *connection,
 					dbus_message_iter_next(&iter_struct);
 					dbus_message_iter_get_basic(&iter_struct, 
 													&(user->apmac[5]));
+					dbus_message_iter_next(&iter_struct);
+					dbus_message_iter_get_basic(&iter_struct, 
+													&(user->audit_ip));
 					dbus_message_iter_next(&iter_array);
 					list_add_tail(&(user->node), &(userdb->head));
 				}
@@ -7092,6 +7146,9 @@ eag_show_user_by_useripv6(DBusConnection *connection,
 					dbus_message_iter_next(&iter_struct);
 					dbus_message_iter_get_basic(&iter_struct, 
 													&(user->apmac[5]));
+					dbus_message_iter_next(&iter_struct);
+					dbus_message_iter_get_basic(&iter_struct, 
+													&(user->audit_ip));
 					dbus_message_iter_next(&iter_array);
 					list_add_tail(&(user->node), &(userdb->head));
 				}
@@ -7255,6 +7312,9 @@ eag_show_user_by_usermac(DBusConnection *connection,
 					dbus_message_iter_next(&iter_struct);
 					dbus_message_iter_get_basic(&iter_struct, 
 													&(user->apmac[5]));
+					dbus_message_iter_next(&iter_struct);
+					dbus_message_iter_get_basic(&iter_struct, 
+													&(user->audit_ip));
 					dbus_message_iter_next(&iter_array);
 					list_add_tail(&(user->node), &(userdb->head));
 				}
@@ -7413,6 +7473,9 @@ eag_show_user_by_index(DBusConnection *connection,
 					dbus_message_iter_next(&iter_struct);
 					dbus_message_iter_get_basic(&iter_struct, 
 													&(user->apmac[5]));
+					dbus_message_iter_next(&iter_struct);
+					dbus_message_iter_get_basic(&iter_struct, 
+													&(user->audit_ip));
 					dbus_message_iter_next(&iter_array);
 					list_add_tail(&(user->node), &(userdb->head));
 				}

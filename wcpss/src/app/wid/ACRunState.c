@@ -2745,6 +2745,7 @@ CWBool CWAssembleMsgElemAddWlan(CWProtocolMessage *msgPtr, int WTPIndex, unsigne
 		int k1;
 		unsigned char policy = 0;
 		unsigned char tunnel = 0;
+		unsigned int wlan_tunnel_switch = AC_WLAN[i]->wlan_tunnel_switch;/* yjl 2014-2-28 */
 		//printf("MsgElemAddWlan:001\n");
 		for(k1=0;k1<L_BSS_NUM;k1++){
 		/*	if(AC_WTP[WTPIndex]->WTP_Radio[RadioID]->BSS[k1] == NULL){
@@ -2845,7 +2846,7 @@ CWBool CWAssembleMsgElemAddWlan(CWProtocolMessage *msgPtr, int WTPIndex, unsigne
 		CWProtocolStore16(msgPtr, 0);
 		CWProtocolStore8(msgPtr, 0);
 		CWProtocolStore8(msgPtr, 0);
-		if(policy == NO_INTERFACE){
+		if((policy == NO_INTERFACE) || (wlan_tunnel_switch == 1)){/* yjl 2014-2-28 */
 			CWProtocolStore8(msgPtr, CW_LOCAL_MAC);	
 			CWProtocolStore8(msgPtr, CW_LOCAL_BRIDGING);
 		}else{
@@ -2963,7 +2964,8 @@ CWBool CWAssembleMsgElemWlanVlanPriority(CWProtocolMessage *msgPtr, int WTPIndex
 			if(AC_WTP[WTPIndex]->WTP_Radio[RadioID]->BSS[i]->WlanID == id)
 			{
 				if(AC_WTP[WTPIndex]->WTP_Radio[RadioID]->BSS[i]->BSS_IF_POLICY != NO_INTERFACE){
-					break;
+					if((AC_WLAN[id] != NULL)&&(AC_WLAN[id]->wlan_tunnel_switch ==0))/* yjl 2014-2-28 */
+					    break;
 				}
 				if(AC_WTP[WTPIndex]->WTP_Radio[RadioID]->BSS[i]->vlanid != 0)
 				{

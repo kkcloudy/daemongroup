@@ -44,6 +44,9 @@ extern int gASDDEBUG;
 extern int gasdPRINT;
 extern int wpa_debug_level;
 
+#define STATIC_BUFFER_SIZE			(16) /* yjl 2014-2-28 */
+#define MAX_MAC_STRING_LEN			(32) /* yjl 2014-2-28 */
+
 #ifdef ASD_NO_STDOUT_DEBUG
 
 #define wpa_debug_print_timestamp() do { } while (0)
@@ -248,6 +251,12 @@ enum asd_logger_level {
 #else
 #define WPA_ASSERT(a) do { } while (0)
 #endif
+
+/*yjl copy from aw3.1.2 for local forwarding.2014-2-28*/
+char *mac2str(unsigned char *haddr);
+char *u32ip2str(unsigned int u32_ipaddr);
+char *asd_op2str(unsigned int opcode);
+/*end**************************************************/
 
 /* check pointer with return value ret */
 #define ASD_CHECK_POINTER_RET(ptr, ret)	\

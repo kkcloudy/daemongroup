@@ -1611,15 +1611,16 @@ sta_wapi_init(unsigned int *wk_txiv)
 static void handle_assoc(struct asd_data *wasd,
 			 struct ieee80211_mgmt *mgmt, size_t len, int reassoc)
 {
-	u16 capab_info, listen_interval;
+	u16 capab_info = 0, listen_interval = 0;
 	u16 resp = WLAN_STATUS_SUCCESS;
-	u8 *pos, *wpa_ie = NULL, *wapi_ie = NULL;
+	u8 *pos = NULL, *wpa_ie = NULL, *wapi_ie = NULL;
 	size_t wpa_ie_len = 0, wapi_ie_len = 0;
-	int send_deauth = 0, send_len, left, i;
+	int send_deauth = 0, send_len = 0, left = 0, i = 0;
 	struct sta_info *sta = NULL;
 	struct ieee802_11_elems elems;
 	u8 buf[sizeof(struct ieee80211_mgmt) + 512];
-	struct ieee80211_mgmt *reply;
+	struct ieee80211_mgmt *reply = NULL;
+	
 	int new_assoc = 1;	
 	unsigned char SID = 0;//qiuchen
 	unsigned int securitytype = 0;
@@ -1628,6 +1629,9 @@ static void handle_assoc(struct asd_data *wasd,
 	unsigned int wtpid = 0;
 	char reas[256] = {0};
 	char *SSID = NULL;
+	//yjl copy from aw3.1.2 for local forwarding.2014-2-28
+	char ssid_info[ESSID_LENGTH] = { 0 };
+	WID_BSS *bss = NULL;
 	
 	if(NULL == wasd || NULL == mgmt)
 	{
@@ -1831,21 +1835,43 @@ static void handle_assoc(struct asd_data *wasd,
 		goto fail;
 	}
 
-
-	if (elems.ssid_len != wasd->conf->ssid.ssid_len ||
-	    os_memcmp(elems.ssid, wasd->conf->ssid.ssid, elems.ssid_len) != 0)
+    /*yjl copy from aw3.1.2 for local forwarding.2014-2-28*/
+    bss = ASD_BSS[wasd->BSSIndex];
+	ieee802_11_print_ssid(ssid_info, elems.ssid, elems.ssid_len);
+	if (bss && bss->SSIDSetFlag)
 	{
-		char ssid_txt[33];
-		ieee802_11_print_ssid(ssid_txt, elems.ssid, elems.ssid_len);
-		asd_printf(ASD_80211,MSG_DEBUG,"Station " MACSTR " tried to associate with "
-		       "unknown SSID '%s'\n", MAC2STR(sta->addr), ssid_txt);
-		if(gASDLOGDEBUG & BIT(0)){
-			log_parse_reason(UNKNOWN_SSID,reas);
-			asd_syslog_h(LOG_WARNING,"WSTA","Station Association Fail:StaMac:"MACSTR" Radio id %d SSIDName:%s Cause %d Desc:%s APID:%d\n",MAC2STR(mgmt->sa),wasd->Radio_L_ID,SSID,FLOW_BANLANCE,reas,wtpid);
+
+		if ((elems.ssid_len != strlen(bss->SSID))
+			|| os_memcmp(elems.ssid, bss->SSID, elems.ssid_len))
+		{
+			char ssid_txt[asd_MAX_SSID_LEN + 1] = {0};
+			ieee802_11_print_ssid(ssid_txt, elems.ssid, elems.ssid_len);
+			asd_printf(ASD_80211,MSG_DEBUG,"check SSID: Station " MACSTR " tried to associate with "
+			       "unknown SSID '%s'\n", MAC2STR(sta->addr), ssid_info);
+			resp = WLAN_STATUS_UNSPECIFIED_FAILURE;
+			Rcode = UNKNOWN_SSID;
+			goto fail;
 		}
-		resp = WLAN_STATUS_UNSPECIFIED_FAILURE;
-		Rcode = UNKNOWN_SSID;
-		goto fail;
+	}
+	/*end *********************************************/
+	else
+	{
+		
+	    if (elems.ssid_len != wasd->conf->ssid.ssid_len ||
+	        os_memcmp(elems.ssid, wasd->conf->ssid.ssid, elems.ssid_len) != 0)
+	    {
+		    char ssid_txt[asd_MAX_SSID_LEN + 1] = {0};
+		    ieee802_11_print_ssid(ssid_txt, elems.ssid, elems.ssid_len);
+		    asd_printf(ASD_80211,MSG_DEBUG,"Station " MACSTR " tried to associate with "
+		         "unknown SSID '%s'\n", MAC2STR(sta->addr), ssid_info);
+		    if(gASDLOGDEBUG & BIT(0)){
+			    log_parse_reason(UNKNOWN_SSID,reas);
+			    asd_syslog_h(LOG_WARNING,"WSTA","Station Association Fail:StaMac:"MACSTR" Radio id %d SSIDName:%s Cause %d Desc:%s APID:%d\n",MAC2STR(mgmt->sa),wasd->Radio_L_ID,SSID,FLOW_BANLANCE,reas,wtpid);
+		    }
+		    resp = WLAN_STATUS_UNSPECIFIED_FAILURE;
+		    Rcode = UNKNOWN_SSID;
+		    goto fail;
+	    }
 	}
 
 
@@ -2440,6 +2466,14 @@ static void handle_assoc(struct asd_data *wasd,
 		if (asd_send_mgmt_frame(wasd, &msg, msglen, 0) < 0)
 			perror("handle_assoc: send");
 	}
+
+    /*yjl copy from aw3.1.2 for local forwarding.2014-2-28*/
+	if (resp == 0)
+	{
+		asd_virdhcp_handle(wasd, sta, 1);
+	}
+	/*end*************************************************/
+	
 	asd_printf(ASD_80211,MSG_DEBUG,"StaInfoToWID\n");
 	//if(ASD_WLAN[wasd->WlanID])
 		//SID = (unsigned char)ASD_WLAN[wasd->WlanID]->SecurityID;qiuchen
@@ -2519,7 +2553,13 @@ static void handle_assoc(struct asd_data *wasd,
 	//mahz add 2011.2.18
 	if((ASD_SECURITY[SID])&&(ASD_SECURITY[SID]->hybrid_auth == 1)&&(ASD_SECURITY[SID]->extensible_auth == 1)&&(resp == 0)){
 	
-		AsdStaInfoToWID(wasd, sta->addr, WID_ADD);	
+		AsdStaInfoToWID(wasd, sta->addr, WID_ADD);
+        /*yjl copy from aw3.1.2 for local forwarding.2014-2-28*/
+		if (ASD_NOTICE_STA_INFO_TO_PORTAL)
+		{
+			AsdStaInfoToEAG(wasd, sta, WID_ADD);
+		}
+		/*end*************************************************/
 
 		if(is_secondary == 0)
 			bak_add_sta(wasd,sta);
@@ -2734,8 +2774,11 @@ static void handle_disassoc(struct asd_data *wasd,
 	if(ASD_SECURITY[wasd->SecurityID])
 		ieee802_1x_free_alive(sta,&ASD_SECURITY[wasd->SecurityID]->eap_alive_period);
 	ieee802_1x_free_station(sta);
-	if(ASD_NOTICE_STA_INFO_TO_PORTAL)
+	if(ASD_NOTICE_STA_INFO_TO_PORTAL){
+		sta->initiative_leave = 1;/* yjl 2014-2-28 */
 		AsdStaInfoToEAG(wasd,sta,WID_DEL);
+	}
+
 //		flashdisconn_sta_add(ASD_FDStas, sta->addr,wasd->BSSIndex,wasd->WlanID);
 	//since the fuction 'asd_sta_remove' is called in ap_free_sta,so it's not necessary to call it here
 	//asd_sta_remove(wasd, sta->addr);
@@ -2886,8 +2929,10 @@ static void handle_deauth(struct asd_data *wasd,
 		if(r_sta != NULL)
 			roaming_free_sta(ASD_WLAN[wasd->WlanID],r_sta);
 	}	
-	if(ASD_NOTICE_STA_INFO_TO_PORTAL)
+	if(ASD_NOTICE_STA_INFO_TO_PORTAL){
+		sta->initiative_leave = 1;/* yjl 2014-2-28 */
 		AsdStaInfoToEAG(wasd,sta,WID_DEL);
+	}
 	//UpdateStaInfoToWSM(wasd, sta->addr, WID_DEL);	
 	if(ASD_WLAN[wasd->WlanID]!=NULL&&ASD_WLAN[wasd->WlanID]->balance_switch == 1&&ASD_WLAN[wasd->WlanID]->balance_method==1){
 		//flashdisconn_sta_add(ASD_FDStas, sta->addr,wasd->BSSIndex,wasd->WlanID);

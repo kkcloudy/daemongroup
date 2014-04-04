@@ -85,6 +85,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "ASDPMKSta.h"
 #include "roaming_sta.h"
 #include "syslog.h"
+#include "ASDDhcp.h"/* yjl 2014-2-28 */
+#include "utils/wpa_debug.h"/* yjl 2014-2-28 */
 int ASD_NOTICE_STA_INFO_TO_PORTAL_TIMER=10;
 
 unsigned char	asd_get_sta_info_able = 0;
@@ -422,6 +424,280 @@ int UpdateStaInfoToFASTFWD(uint32_t ip,char *hand_cmd)
 	return 1;
 }
 
+/*yjl copy from aw3.1.2 for local forwarding.2014-2-28******************************************************/
+int asd_virdhcp_handle(struct asd_data *wasd, struct sta_info *sta, unsigned int addflag)
+{
+	unsigned char mac[32] = {0};
+	unsigned char staip[32] = {0};
+	unsigned char in_ifname[ETH_IF_NAME_LEN] = {0};
+	unsigned char *ip = NULL;
+	struct ip_info *tmp = NULL;
+	// *yjl* struct sta_hash_info *s = NULL;
+	// *yjl* struct asd_data *prev_wasd = NULL;
+	char *ifname = NULL;
+
+	ASD_CHECK_POINTER_RET(wasd, -1);
+	ASD_CHECK_POINTER_RET(sta, -1);
+	ASD_CHECK_WLAN_EXIST_RET(wasd->WlanID, -1);
+	ASD_CHECK_WLAN_STANDARD_RET(wasd->WlanID, -1);
+
+	if (0 == ASD_WLAN[wasd->WlanID]->wlan_dhcp_state)
+	{
+		return 0;
+	}
+
+	if (NULL == ASD_WLAN[wasd->WlanID]->wlan_dhcp)
+	{
+		asd_printf(ASD_DEFAULT,MSG_ERROR,"%s wlan %d vir dhcp NULL\n", 
+					__func__, wasd->WlanID);
+		return -1;
+	}
+	
+	ifname = wasd->br_ifname;
+    /*yjl*
+	if (sta->flags & WLAN_STA_ROAMING_L3)
+	{
+		s = sta_get_by_hw(sta->addr);
+		if ((NULL != s) && (0 != s->last_bssindex))
+		{
+			prev_wasd = (struct asd_data *)bssindex2wasd(s->last_bssindex);
+
+			if (prev_wasd)
+			{
+				if(local)
+					snprintf((char *)in_ifname, ETH_IF_NAME_LEN, "r%d-%d-%d.%d", vrrid, prev_wasd->Radio_G_ID / L_RADIO_NUM, prev_wasd->Radio_L_ID, prev_wasd->WlanID);	
+				else
+					snprintf((char *)in_ifname, ETH_IF_NAME_LEN,"r%d-%d-%d-%d.%d",slotid, vrrid, prev_wasd->Radio_G_ID / L_RADIO_NUM, prev_wasd->Radio_L_ID, prev_wasd->WlanID);
+			}
+		}
+	}
+	else
+	{
+		if(local)
+			snprintf((char *)in_ifname, ETH_IF_NAME_LEN, "r%d-%d-%d.%d", vrrid, wasd->Radio_G_ID / L_RADIO_NUM, wasd->Radio_L_ID, wasd->WlanID);	
+		else
+			snprintf((char *)in_ifname, ETH_IF_NAME_LEN,"r%d-%d-%d-%d.%d",slotid, vrrid, wasd->Radio_G_ID / L_RADIO_NUM, wasd->Radio_L_ID, wasd->WlanID);
+	}*/
+    
+	if (addflag)
+	{  /*yjl*
+		if (WLAN_STA_ROAMING == (sta->flags & WLAN_STA_ROAMING))
+		{
+			return 0;
+		}*/
+	
+		if (sta->vir_ip)
+		{
+			asd_printf(ASD_DEFAULT,MSG_ERROR,"%s sta "MACSTR" prev vir ip %x\n",
+				__func__,MAC2STR(sta->addr),  sta->vir_ip); 			
+			dhcp_release_ip(ASD_WLAN[wasd->WlanID]->wlan_dhcp, sta->vir_ip);
+		}
+		
+		tmp = dhcp_assign_ip(ASD_WLAN[wasd->WlanID]->wlan_dhcp);				
+		if (NULL == tmp)
+		{
+			asd_printf(ASD_DEFAULT,MSG_ERROR,"%s: wlan %d vir-dhcp no free ip. sta "MACSTR"\n",
+				__func__, wasd->WlanID, MAC2STR(sta->addr)); 			
+			return -1;
+		}
+
+		sta->vir_ip = tmp->ip;
+		memcpy(tmp->mac, sta->addr, MAC_LEN);										
+		ip = (unsigned char*)&(tmp->ip);
+		sprintf((char*)mac,"%02X:%02X:%02X:%02X:%02X:%02X",MAC2STR(sta->addr));
+		sprintf((char*)staip,"%u.%u.%u.%u",ip[0],ip[1],ip[2],ip[3]);
+
+		asd_printf(ASD_DEFAULT,MSG_INFO,"%s sta %s %s interface %s add arp\n", 
+			__func__, mac, staip, ifname);
+		
+		int ret_ipneigh = 0;
+		ret_ipneigh = ipneigh_modify(RTM_DELNEIGH, 0, (char*)staip, NULL, ifname);
+		asd_printf(ASD_DEFAULT,MSG_DEBUG,"delete arp sta %s %s interface %s ret %d\n", 
+								mac,  staip,  ifname, ret_ipneigh);
+		
+		ret_ipneigh = ipneigh_modify(RTM_NEWNEIGH, NLM_F_CREATE|NLM_F_REPLACE,(char*)staip,(char*) mac, ifname);
+		asd_printf(ASD_DEFAULT,MSG_DEBUG,"add arp sta %s %s interface %s ret %d \n",  
+								mac,  staip,  ifname, ret_ipneigh);
+		
+		notice_aat_mod((char *)sta->addr,tmp->ip,ASD_WLAN[wasd->WlanID]->wlan_dhcp->ifmac, ifname, (char *)in_ifname, 1);
+		
+		asd_printf(ASD_DEFAULT,MSG_INFO,"%s sta "MACSTR" assign vir ip %u.%u.%u.%u\n",
+			__func__,MAC2STR(sta->addr),  
+			sta->vir_ip>>24 & 0xff, sta->vir_ip>>16 & 0xff, sta->vir_ip>>8 & 0xff, sta->vir_ip & 0xff);
+	}
+	else
+	{
+#if 0	
+		if (WLAN_STA_ROAMOUT == (sta->flags & WLAN_STA_ROAMOUT))
+		{
+			return 0;
+		}
+#endif		
+		
+		tmp = dhcp_release_ip(ASD_WLAN[wasd->WlanID]->wlan_dhcp, sta->vir_ip);	
+
+		asd_printf(ASD_DEFAULT,MSG_INFO,"%s sta "MACSTR" release vir ip %u.%u.%u.%u\n",
+			__func__,MAC2STR(sta->addr),  
+			sta->vir_ip>>24 & 0xff, sta->vir_ip>>16 & 0xff, sta->vir_ip>>8 & 0xff, sta->vir_ip & 0xff);
+
+		if (tmp != NULL)
+		{
+			ip = (unsigned char*)&(tmp->ip);
+			sprintf((char*)mac,"%02X:%02X:%02X:%02X:%02X:%02X",MAC2STR(sta->addr));
+			sprintf((char*)staip,"%u.%u.%u.%u",ip[0],ip[1],ip[2],ip[3]);
+			asd_printf(ASD_DEFAULT,MSG_INFO,"%s sta %s %s interface %s delete arp\n", 
+				__func__, mac, staip, ASD_WLAN[wasd->WlanID]->wlan_dhcp->ifname);
+			
+			int ret_ipneigh = 0;
+			ret_ipneigh= ipneigh_modify(RTM_DELNEIGH, 0,(char*)staip,(char*)mac, ifname);
+			asd_printf(ASD_DEFAULT,MSG_DEBUG,"delete arp sta %s %s interface %s ret %d\n", 
+								mac,  staip,  ifname, ret_ipneigh);
+			
+			notice_aat_mod((char *)sta->addr,tmp->ip,ASD_WLAN[wasd->WlanID]->wlan_dhcp->ifmac, ifname, (char *)in_ifname, 0);
+			sta->vir_ip = 0;
+		}
+	}
+	
+	return 0;
+}
+
+int b_virdhcp_handle
+(
+	struct asd_data *wasd, 
+	struct sta_info *sta, 
+	unsigned int viripaddr,
+	unsigned int addflag
+)
+{
+	unsigned char mac[32] = {0};
+	unsigned char staip[32] = {0};
+	unsigned char in_ifname[ETH_IF_NAME_LEN] = {0};
+	unsigned char *ip = NULL;
+	struct ip_info *tmp = NULL;
+	// *yjl*struct sta_hash_info *s = NULL;
+	// *yjl*struct asd_data *prev_wasd = NULL;
+	char *ifname = NULL;
+
+	ASD_CHECK_POINTER_RET(wasd, -1);
+	ASD_CHECK_POINTER_RET(sta, -1);
+	ASD_CHECK_WLAN_EXIST_RET(wasd->WlanID, -1);
+	ASD_CHECK_WLAN_STANDARD_RET(wasd->WlanID, -1);
+
+	if (0 == ASD_WLAN[wasd->WlanID]->wlan_dhcp_state)
+	{
+		return 0;
+	}
+
+	if (NULL == ASD_WLAN[wasd->WlanID]->wlan_dhcp)
+	{
+		asd_printf(ASD_DEFAULT,MSG_ERROR,"%s wlan %d vir dhcp NULL\n", 
+					__func__, wasd->WlanID);
+		return -1;
+	}
+	
+	ifname = wasd->br_ifname;
+    /*yjl*
+	if (sta->flags & WLAN_STA_ROAMING_L3)
+	{
+		s = sta_get_by_hw(sta->addr);
+		if ((NULL != s) && (0 != s->last_bssindex))
+		{
+			prev_wasd = (struct asd_data *)bssindex2wasd(s->last_bssindex);
+			if (prev_wasd)
+			{
+				if(local)
+					snprintf((char *)in_ifname, ETH_IF_NAME_LEN, "r%d-%d-%d.%d", vrrid, prev_wasd->Radio_G_ID / L_RADIO_NUM, prev_wasd->Radio_L_ID, prev_wasd->WlanID);	
+				else
+					snprintf((char *)in_ifname, ETH_IF_NAME_LEN,"r%d-%d-%d-%d.%d",slotid, vrrid, prev_wasd->Radio_G_ID / L_RADIO_NUM, prev_wasd->Radio_L_ID, prev_wasd->WlanID);
+			}
+		}
+	}
+	else
+	{
+		if(local)
+			snprintf((char *)in_ifname, ETH_IF_NAME_LEN, "r%d-%d-%d.%d", vrrid, wasd->Radio_G_ID / L_RADIO_NUM, wasd->Radio_L_ID, wasd->WlanID);	
+		else
+			snprintf((char *)in_ifname, ETH_IF_NAME_LEN,"r%d-%d-%d-%d.%d",slotid, vrrid, wasd->Radio_G_ID / L_RADIO_NUM, wasd->Radio_L_ID, wasd->WlanID);
+	}*/
+	
+	if (addflag)
+	{
+		if (WLAN_STA_ROAMING == (sta->flags & WLAN_STA_ROAMING))
+		{
+		    asd_printf(ASD_DEFAULT,MSG_INFO,"%s sta %s roaming no need assign vir ip\n", 
+						__func__, mac2str(sta->addr));
+            
+			//return 0;
+		}
+
+		if (0 == viripaddr)
+		{
+			return 0;
+		}
+		
+		if (sta->vir_ip)
+		{
+			asd_printf(ASD_DEFAULT,MSG_ERROR,"%s sta "MACSTR" prev vir ip %x\n",
+				__func__,MAC2STR(sta->addr),  sta->vir_ip); 			
+			dhcp_release_ip(ASD_WLAN[wasd->WlanID]->wlan_dhcp, sta->vir_ip);
+		}
+		
+		tmp = b_dhcp_assign_ip(ASD_WLAN[wasd->WlanID]->wlan_dhcp, viripaddr);				
+		if (NULL == tmp)
+		{
+			asd_printf(ASD_DEFAULT,MSG_ERROR,"%s: wlan %d vir-dhcp no free ip. sta "MACSTR"\n",
+				__func__, wasd->WlanID, MAC2STR(sta->addr)); 			
+			return -1;
+		}
+
+		sta->vir_ip = tmp->ip;
+		memcpy(tmp->mac, sta->addr, MAC_LEN);										
+		ip = (unsigned char*)&(tmp->ip);
+		sprintf((char*)mac,"%02X:%02X:%02X:%02X:%02X:%02X",MAC2STR(sta->addr));
+		sprintf((char*)staip,"%u.%u.%u.%u",ip[0],ip[1],ip[2],ip[3]);
+
+		asd_printf(ASD_DEFAULT,MSG_INFO,"%s sta %s %s interface %s add arp\n", 
+			__func__, mac, staip, ifname);
+
+		ipneigh_modify(RTM_DELNEIGH, 0, (char*)staip, NULL, ifname);
+		ipneigh_modify(RTM_NEWNEIGH, NLM_F_CREATE|NLM_F_REPLACE,(char*)staip,(char*) mac, ifname);
+		notice_aat_mod((char *)sta->addr,tmp->ip,ASD_WLAN[wasd->WlanID]->wlan_dhcp->ifmac, ifname, (char *)in_ifname, 1);
+		
+		asd_printf(ASD_DEFAULT,MSG_INFO,"%s sta "MACSTR" assign vir ip %u.%u.%u.%u\n",
+			__func__,MAC2STR(sta->addr),  
+			sta->vir_ip>>24 & 0xff, sta->vir_ip>>16 & 0xff, sta->vir_ip>>8 & 0xff, sta->vir_ip & 0xff);
+	}
+	else
+	{
+#if 0	
+		if (WLAN_STA_ROAMOUT == (sta->flags & WLAN_STA_ROAMOUT))
+		{
+			return 0;
+		}
+#endif		
+		tmp = dhcp_release_ip(ASD_WLAN[wasd->WlanID]->wlan_dhcp, sta->vir_ip);	
+
+		asd_printf(ASD_DEFAULT,MSG_INFO,"%s sta "MACSTR" release vir ip %u.%u.%u.%u\n",
+			__func__,MAC2STR(sta->addr),  
+			sta->vir_ip>>24 & 0xff, sta->vir_ip>>16 & 0xff, sta->vir_ip>>8 & 0xff, sta->vir_ip & 0xff);
+
+		if (tmp != NULL)
+		{
+			ip = (unsigned char*)&(tmp->ip);
+			sprintf((char*)mac,"%02X:%02X:%02X:%02X:%02X:%02X",MAC2STR(sta->addr));
+			sprintf((char*)staip,"%u.%u.%u.%u",ip[0],ip[1],ip[2],ip[3]);
+			asd_printf(ASD_DEFAULT,MSG_INFO,"%s sta %s %s interface %s delete arp\n", 
+				__func__, mac, staip, ASD_WLAN[wasd->WlanID]->wlan_dhcp->ifname);
+			
+			ipneigh_modify(RTM_DELNEIGH, 0,(char*)staip, (char*)mac, ifname);
+			notice_aat_mod((char *)sta->addr,tmp->ip,ASD_WLAN[wasd->WlanID]->wlan_dhcp->ifmac, ifname, (char *)in_ifname, 0);
+			sta->vir_ip = 0;
+		}
+	}
+	
+	return 0;
+}
+/*end***************************************************yjl copy from aw3.1.2 for local forwarding.2014-2-28*/
 
 int ap_for_each_sta(struct asd_data *wasd,
 		    int (*cb)(struct asd_data *wasd, struct sta_info *sta,
@@ -437,7 +713,6 @@ int ap_for_each_sta(struct asd_data *wasd,
 
 	return 0;
 }
-
 
 struct sta_info * ap_get_sta(struct asd_data *wasd, const u8 *sta)
 {
@@ -972,6 +1247,9 @@ void ap_free_sta_without_wsm(struct asd_data *wasd, struct sta_info *sta, unsign
 		//radius_client_flush_auth(wasd->radius, sta->addr);
 		}
 		UpdateStaInfoToFASTFWD(sta->ipaddr,SE_AGENT_CLEAR_RULE_IP);
+
+		asd_virdhcp_handle(wasd, sta, 0);/*yjl copy from aw3.1.2 .2014-2-28 */
+		
 		os_free(sta->last_assoc_req);
 		sta->last_assoc_req=NULL;
 		os_free(sta->in_addr);
@@ -1243,8 +1521,10 @@ void ap_free_sta(struct asd_data *wasd, struct sta_info *sta, unsigned int state
 		{
 			if(asd_ipset_switch)
 				eap_connect_down(sta->ipaddr);
-			else
+			else{
+				sta->initiative_leave = 0;/* yjl 2014-2-28 */
 				AsdStaInfoToEAG(wasd,sta,ASD_DEL_AUTH);
+			}
 		}
 		if(ASD_SECURITY[SID]&&(ASD_SECURITY[SID]->securityType == OPEN)){
 			wasd->no_auth_downline_time += (now_t - (sta->add_time_sysruntime)+sta->sta_online_time);//qiuchen change it
@@ -1309,6 +1589,9 @@ void ap_free_sta(struct asd_data *wasd, struct sta_info *sta, unsigned int state
 		printf("sta->in_addr %s mac %s sta->arpifname %s\n",sta->in_addr, mac,sta->arpifname);
 		ipneigh_modify(RTM_DELNEIGH, 0,sta->in_addr, mac,sta->arpifname);		
 	}
+
+	asd_virdhcp_handle(wasd, sta, 0);/*yjl 2014-2-28 */
+	
 	os_free(sta->last_assoc_req);
 	sta->last_assoc_req=NULL;
 	os_free(sta->in_addr);
@@ -1361,6 +1644,14 @@ void ap_free_sta(struct asd_data *wasd, struct sta_info *sta, unsigned int state
 	if(ASD_WTP_AP[wasd->Radio_G_ID/L_RADIO_NUM]!=NULL)							//mahz add 2011.4.8
 		ASD_WTP_AP[wasd->Radio_G_ID/L_RADIO_NUM]->ap_accessed_sta_num--;		//mahz add 2011.4.8
 
+	/*yjl copy from aw3.1.2 for local forwarding.2014-2-28*/
+    if(ASD_NOTICE_STA_INFO_TO_PORTAL)
+	{
+		sta->initiative_leave = 0;
+		AsdStaInfoToEAG(wasd, sta, WID_DEL);
+	}
+	/*end**************************************************/
+	
 	os_free(sta);
 
 	asd_printf(ASD_DEFAULT,MSG_DEBUG,"os_free(sta), func:%s \n",__func__);
@@ -1394,8 +1685,10 @@ void asd_free_stas(struct asd_data *wasd)
 		asd_printf(ASD_DEFAULT,MSG_DEBUG, "Removing station " MACSTR,
 			   MAC2STR(prev->addr));
 		
-		if(ASD_NOTICE_STA_INFO_TO_PORTAL)
+		if(ASD_NOTICE_STA_INFO_TO_PORTAL){
+			prev->initiative_leave = 0;/* yjl 2014-2-28 */
 			AsdStaInfoToEAG(wasd,prev,WID_DEL);
+		}
 		is_notice = 0;
 		ap_free_sta(wasd, prev,0);
 		is_notice = 1;
@@ -2572,6 +2865,9 @@ void ap_free_sta_for_pmk(struct asd_data *wasd, struct sta_info *sta)
 #endif
 			add_and_del_static_br_fdb(wasd->br_ifname,ifname, sta->addr,0) ;
 		}
+
+        asd_virdhcp_handle(wasd, sta, 0);/*yjl copy from aw3.1.2 for TL.2014-2-28 */
+		
 		asd_printf(ASD_DEFAULT,MSG_INFO,"free sta in ap_free_sta_for_pmk\n");
 		os_free(sta->last_assoc_req);
 		sta->last_assoc_req=NULL;
@@ -2735,8 +3031,10 @@ void ap_sta_idle_timeout(void *circle_ctx,void *timeout_ctx)
 		ieee802_1x_notify_port_enabled(sta->eapol_sm, 0);
 	}
 	
-	if(ASD_NOTICE_STA_INFO_TO_PORTAL)
+	if(ASD_NOTICE_STA_INFO_TO_PORTAL){
+		sta->initiative_leave = 0;/* yjl 2014-2-28 */
 		AsdStaInfoToEAG(wasd,sta,WID_DEL);
+	}
 	/*if(ASD_NOTICE_STA_INFO_TO_PORTAL)
 		flashdisconn_sta_add(ASD_FDStas, sta->addr,wasd->BSSIndex,wasd->WlanID);	*/
 	if(ASD_WLAN[wasd->WlanID]!=NULL&&ASD_WLAN[wasd->WlanID]->balance_switch == 1&&ASD_WLAN[wasd->WlanID]->balance_method==1){
@@ -2855,8 +3153,10 @@ int ap_kick_eap_sta(struct sta_info *sta)
 	//notice to ap
 	ieee802_11_send_deauth(wasd, sta->addr, 3);
 	AsdStaInfoToWID(wasd,sta->addr,WID_DEL);
-	if(ASD_NOTICE_STA_INFO_TO_PORTAL)
+	if(ASD_NOTICE_STA_INFO_TO_PORTAL){
+		sta->initiative_leave = 0;/* yjl 2014-2-28 */
 		AsdStaInfoToEAG(wasd,sta,WID_DEL);
+	}
 	if(ASD_WLAN[wasd->WlanID]!=NULL&&ASD_WLAN[wasd->WlanID]->balance_switch == 1&&ASD_WLAN[wasd->WlanID]->balance_method==1){
 		ap_free_sta(wasd, sta, 1);
 	}
@@ -3140,8 +3440,14 @@ int AsdStaInfoToEAG(struct asd_data *wasd, struct sta_info *sta, Operate op){
 	msg.STA.tx_data_bytes = sta->txbytes;
 	msg.STA.rx_data_bytes =sta->rxbytes;
 	msg.STA.tx_frames = (unsigned long)sta->txpackets;
-	msg.STA.rx_frames = (unsigned long)sta->rxpackets;	
-
+	msg.STA.rx_frames = (unsigned long)sta->rxpackets;
+	
+    /*yjl add for TL. 2014-2-28*/
+	if (WID_DEL == op)
+	{
+		msg.STA.initiative_leave = sta->initiative_leave;
+	}
+	
 	len = sizeof(msg);
 	
 	asd_printf(ASD_DEFAULT,MSG_DEBUG,"AsdStaInfoToEAG \n");

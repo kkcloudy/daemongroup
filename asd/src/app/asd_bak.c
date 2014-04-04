@@ -216,6 +216,15 @@ int bak_update_sta_ip_info(struct asd_data *wasd, struct sta_info *sta){
 	/* add for ipv6 addr */
 	msg.Bu.U_STA.ip6_addr = sta->ip6_addr;	
 	msg.Bu.U_STA.gifindex = sta->gifidx;
+
+	/*yjl copy from aw3.1.2 for local forwarding.2014-2-28*/
+	msg.Bu.U_STA.portal_ipaddr = sta->portal_server.portal_ip;
+	if (ASD_WLAN[wasd->WlanID]->wlan_tunnel_switch)
+	{
+		msg.Bu.U_STA.realip = asd_get_sta_realip(sta->addr);
+	}
+	/*end**************************************************/
+	
 	len = sizeof(msg);
 	asd_printf(ASD_DEFAULT,MSG_DEBUG,"len %d\n",len);
 #ifndef _AC_BAK_UDP_
@@ -303,6 +312,11 @@ int bak_batch_add_sta(struct asd_data **bss, unsigned int num){
 				memcpy(msg->U_STA[k].PreBSSID,sta->PreBSSID,MAC_LEN);
 				msg->U_STA[k].rflag = sta->rflag;
 				msg->U_STA[k].PreApID = sta->preAPID;//AXSSZFI-1789
+				
+                /*yjl copy from aw3.1.2 for local forwarding.2014-2-28*/
+				msg->U_STA[k].vir_ip = sta->vir_ip;
+				msg->U_STA[k].portal_ipaddr = sta->portal_server.portal_ip;	
+				
 				unsigned char SID = 0;
 				if(ASD_WLAN[bss[i]->WlanID])
 					SID = (unsigned char)ASD_WLAN[bss[i]->WlanID]->SecurityID;
@@ -534,6 +548,11 @@ int bak_add_sta(struct asd_data *wasd, struct sta_info *sta){
 		msg.Bu.U_STA.ipaddr = sta->ipaddr;
 		msg.Bu.U_STA.ip6_addr = sta->ip6_addr;      /* add to support ipv6 address */
 		msg.Bu.U_STA.gifindex = sta->gifidx;
+
+		/*yjl copy from aw3.1.2 for local forwarding.2014-2-28*/
+		msg.Bu.U_STA.vir_ip = sta->vir_ip;
+	    msg.Bu.U_STA.portal_ipaddr = sta->portal_server.portal_ip;
+		
 		/*Qiuchen add it to synchronize the sta's roaming infomation
 		because of the master AC will send a msg to the bak to delete the sta info in the old bss when it's roaming
 		so the bak AC will not realize the sta is roaming because of there is no this sta's info in the globle HASH
@@ -1176,6 +1195,14 @@ void B_STA_OP(B_Msg *msg){
 						accounting_sta_start(wasd,sta);
 				}
 			}
+
+			/*yjl copy from aw3.1.2 for local forwarding.2014-2-28*/
+			if (msg->Bu.U_STA.portal_ipaddr)
+			{
+				sta->portal_server.portal_ip = msg->Bu.U_STA.portal_ipaddr;	
+			}
+			b_virdhcp_handle(wasd, sta, msg->Bu.U_STA.vir_ip, 1);
+			/*end**************************************************/
 			
 			break;
 		case B_DEL:
@@ -1222,6 +1249,10 @@ void B_STA_OP(B_Msg *msg){
 				wasd = interfaces->iface[Radio_ID]->bss[i];
 				sta = ap_get_sta(wasd, msg->Bu.U_STA.STAMAC);
 				if(sta != NULL){
+                    /*yjl copy from aw3.1.2 for local forwarding.2014-2-28*/
+					sta->portal_server.portal_ip = msg->Bu.U_STA.portal_ipaddr;
+					sta->realip = msg->Bu.U_STA.realip;
+					
 					if(sta->ipaddr != msg->Bu.U_STA.ipaddr)
 					{   						
 						char mac[20];

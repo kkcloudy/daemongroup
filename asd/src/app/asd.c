@@ -88,6 +88,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "ASDCallback_asd.h"
 #include "time.h"//qiuchen add it
 #include "ASDStaManage.h"
+#include <sys/ioctl.h> //yjl 2014-2-28
+
 WID_WLAN	*ASD_WLAN[WLAN_NUM];
 WID_WTP		**ASD_WTP;
 WID_WTP_RADIO	**ASD_RADIO;
@@ -2120,6 +2122,21 @@ int AsdStaInfoToWID(struct asd_data *wasd, const u8 *addr, Operate op){
 	STA.u.STA.wlanId = wasd->WlanID;
 	memcpy(STA.u.STA.STAMAC, addr, ETH_ALEN);
 	sta = ap_get_sta(wasd,addr);
+
+	/*yjl copy from aw3.1.2 for local forwarding.2014-2-28*/
+	if (NULL != sta)
+	{
+		if (0 != sta->portal_server.portal_ip)
+		{
+			STA.u.STA.portal_info.portal_ip = sta->portal_server.portal_ip;	
+			memcpy(STA.u.STA.portal_info.portal_mac, sta->portal_server.portal_mac, ETH_ALEN);
+			asd_printf(ASD_DEFAULT,MSG_DEBUG,"%s sta %s %s portal server %s %s\n", 
+					__func__,
+					mac2str(STA.u.STA.STAMAC), u32ip2str(STA.u.STA.ipv4Address),
+					mac2str(STA.u.STA.portal_info.portal_mac), u32ip2str(STA.u.STA.portal_info.portal_ip));
+		}	
+	}
+	
 	if((op == WID_ADD) && (sta != NULL)) {
 #ifdef __ASD_STA_ACL
 		/* caojia add for sta acl function */
@@ -2169,7 +2186,12 @@ int AsdStaInfoToWID(struct asd_data *wasd, const u8 *addr, Operate op){
 					sta->vlan_id= tmp_sta->vlan_id;
 			}
 		}
-		asd_delete_sta_arp(sta);
+
+		if((wasd->WlanID < WLAN_NUM) 
+				&& (ASD_WLAN[wasd->WlanID] != NULL) 
+				&& (ASD_WLAN[wasd->WlanID]->wlan_dhcp_state != 1))/* yjl 2014-2-28 */
+		    asd_delete_sta_arp(sta);
+		
 		if(0 == check_sta_authorized(wasd,sta))
 			wasd->authorized_sta_num++;
 		asd_printf(ASD_80211,MSG_DEBUG,"%s Add STA "MACSTR" \n",__func__,MAC2STR(addr));				
@@ -2530,6 +2552,78 @@ void CWDestroyThreadMutex(pthread_mutex_t *theMutex)  {
 	if(theMutex == NULL) return;
 	pthread_mutex_destroy( theMutex );
 }
+
+/*yjl copy from aw3.1.2 for local forwarding.2014-2-28**********************************/
+unsigned asd_get_sta_realip(unsigned char *haddr)
+{
+	struct io_info tmp;	
+	static int fd = -1;
+
+	if (fd < 0)
+	{
+		if ((fd = open("/dev/aat0", O_RDWR)) < 0)
+		{		
+			asd_printf(ASD_DEFAULT,MSG_ERROR,"%s: open failed:%s\n", __func__, strerror(errno));
+			return 0;
+		}
+	}
+	memset(&tmp, 0, sizeof(struct io_info));
+	memcpy(tmp.stamac, haddr, MAC_LEN);
+
+	tmp.vrrid = vrrid;
+
+	if (ioctl(fd, AAT_IOC_GET_STA_IP, &tmp) < 0)
+	{
+		asd_printf(ASD_DEFAULT,MSG_ERROR,"%s: get sta %s real ip failed:%s\n", 
+			__func__, mac2str(haddr), strerror(errno));
+
+		close(fd);
+		fd = -1;
+		
+		return 0;
+	}
+
+	asd_printf(ASD_DEFAULT,MSG_DEBUG,"%s:sta real ip %u.%u.%u.%u\n", __func__, ((tmp.staip & 0xff000000) >> 24),
+									                                            ((tmp.staip & 0xff0000) >> 16),
+									                                            ((tmp.staip & 0xff00) >> 8),
+									                                            (tmp.staip & 0xff));
+
+	return tmp.staip;
+}
+void notice_aat_mod(char *stamac, unsigned int ip,char *acmac, char *ifname, char *in_ifname, int is_add)
+{
+	struct io_info tmp;
+	int ret = 0;	
+	static int fd = -1;
+	if (fd < 0)
+	{
+		if ((fd = open("/dev/aat0", O_RDWR)) < 0)
+		{		
+			asd_printf(ASD_DEFAULT,MSG_ERROR,"%s: open failed:%s\n", __func__, strerror(errno));
+			return;
+		}
+	}
+	memset(&tmp, 0, sizeof(struct io_info));
+	memcpy(tmp.stamac,stamac,MAC_LEN);
+	memcpy(tmp.acmac,acmac,MAC_LEN);
+	memcpy(tmp.ifname,ifname,strlen(ifname));
+	memcpy(tmp.in_ifname,in_ifname,strlen(in_ifname));
+	tmp.staip = ip;
+	tmp.vrrid = vrrid;
+	if(is_add)
+		ret = ioctl(fd, AAT_IOC_ADD_STA, &tmp);
+	else
+		ret = ioctl(fd, AAT_IOC_DEL_STA, &tmp);
+    asd_printf(ASD_DEFAULT,MSG_DEBUG,"%s:stamac "MACSTR" acmac "MACSTR" ifname %s staip %u.%u.%u.%u ret %d\n", __func__, 
+		                                 MAC2STR(tmp.stamac), MAC2STR(tmp.acmac), tmp.ifname, 
+		                                 ((tmp.staip & 0xff000000) >> 24),
+									     ((tmp.staip & 0xff0000) >> 16),
+									     ((tmp.staip & 0xff00) >> 8),
+									     (tmp.staip & 0xff), ret);
+	
+}
+/*end*******************************************************************************/
+
 void asd_pid_write()
 {
 	char pidBuf[128] = {0}, pidPath[128] = {0};

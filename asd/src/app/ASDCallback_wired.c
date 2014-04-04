@@ -260,6 +260,8 @@ void WIRED_STA_OP(WIRED_TableMsg *msg){
 		case EAG_NTF_ASD_STA_INFO:
 		case STA_CHECK_DEL:
 		case STA_WTP_TERMINAL_STATISTICS:
+		case STA_PORTAL_AUTH :  /* yjl 2014-2-28 */
+		case STA_PORTAL_DEAUTH :/* yjl 2014-2-28 */
         default:
 			break;
 	}
@@ -392,6 +394,8 @@ void WIRED_PORT_OP(WIRED_TableMsg *msg){
 		case EAG_NTF_ASD_STA_INFO:
 		case STA_CHECK_DEL:
 		case STA_WTP_TERMINAL_STATISTICS:
+		case STA_PORTAL_AUTH :  /* yjl 2014-2-28 */
+		case STA_PORTAL_DEAUTH :/* yjl 2014-2-28 */
         default:
 			break;
 	}
@@ -522,6 +526,8 @@ void WIRED_VLAN_OP(WIRED_TableMsg *msg){
 		case EAG_NTF_ASD_STA_INFO:
 		case STA_CHECK_DEL:
 		case STA_WTP_TERMINAL_STATISTICS:
+		case STA_PORTAL_AUTH :  /* yjl 2014-2-28 */
+		case STA_PORTAL_DEAUTH :/* yjl 2014-2-28 */
 		default:
 			break;	
 	}

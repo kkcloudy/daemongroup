@@ -64,6 +64,29 @@ struct cmd_node local_hansi_sta_node =
 	"%s(local-hansi-sta)# "
 };
 
+/*yjl copy from aw3.1.2 for local forwarding.2014-2-28*/
+char *dcli_u32ip2str(unsigned int u32_ipaddr)
+{	
+#if 1
+	struct in_addr inaddr;
+
+	inaddr.s_addr = u32_ipaddr;
+
+	return inet_ntoa(inaddr);
+#else
+	int len = sizeof("255.255.255.255\0");
+	
+	memset(static_buffer, 0, len);
+	snprintf(static_buffer, sizeof(static_buffer), "%u.%u:%u.%u", 
+		((u32_ipaddr >> 24) & 0xff), ((u32_ipaddr >> 16) & 0xff),
+		((u32_ipaddr >> 8) & 0xff), ((u32_ipaddr >> 0) & 0xff));
+	
+	return static_buffer;
+
+#endif
+}
+
+
 #if 0
 struct dcli_ac_info* show_sta_list(DBusConnection *dcli_dbus_connection,int index, unsigned int *ret)
 {
@@ -8388,6 +8411,8 @@ DEFUN(show_sta_v2_cmd_func,
 		else
 			vty_out(vty,"STA flow check : disable\n");
 
+		vty_out(vty,"Real IP: %s\n", dcli_u32ip2str(sta->realip));/* yjl 2014-2-28 */
+
 		/* add sta ip info for ipv6 protal */
 		vty_out(vty,"ipv4 address: ");
         vty_out(vty,"%d.%d.%d.%d\n",(sta->ip_addr.s_addr & 0xFF000000)>>24,(sta->ip_addr.s_addr&0xFF0000)>>16,(sta->ip_addr.s_addr&0xFF00)>>8,(sta->ip_addr.s_addr&0xFF));
@@ -9350,6 +9375,12 @@ DEFUN(show_sta_list_cmd_func,
                             vty_out(vty,"%x:",sta->ip6_addr.s6_addr16[m]);
 					    }
                 	}
+					
+					/*yjl copy from aw3.1.2 for local forwarding.2014-2-28*/
+					if (ASD_MAC_TYPE_TL == bss->if_policy)
+					{
+						vty_out(vty,"                  %-15s(REAL IP)\n",dcli_u32ip2str(sta->realip)); 			
+					}
 				}
 			}
 			
@@ -9382,6 +9413,12 @@ DEFUN(show_sta_list_cmd_func,
 					vty_out(vty,"%-5d   ",bss->PortID);
 					vty_out(vty,"%-5d   ",bss->VlanID);		
 					vty_out(vty,"%-5d\n",bss->SecurityID);
+
+					/*yjl copy from aw3.1.2 for local forwarding.2014-2-28*/
+					if (ASD_MAC_TYPE_TL == bss->if_policy)
+					{
+						vty_out(vty,"                  %-15s(REAL IP)\n",dcli_u32ip2str(sta->realip)); 			
+					}
 				}
 			}
 			vty_out(vty,"==============================================================================\n");
@@ -9443,6 +9480,12 @@ DEFUN(show_sta_list_cmd_func,
 							vty_out(vty,"%-5d     ",bss->BSSIndex);
 							vty_out(vty,"%-5d   ",bss->WlanID);
 							vty_out(vty,"%-5d\n",bss->SecurityID);
+
+							/*yjl copy from aw3.1.2 for local forwarding.2014-2-28*/
+					        if (ASD_MAC_TYPE_TL == bss->if_policy)
+					        {
+						        vty_out(vty,"                  %-15s(REAL IP)\n",dcli_u32ip2str(sta->realip)); 			
+					        }
 						}
 					}
 					
@@ -9542,6 +9585,12 @@ DEFUN(show_sta_list_cmd_func,
 						vty_out(vty,"%-5d     ",bss->BSSIndex);
 						vty_out(vty,"%-5d   ",bss->WlanID);
 						vty_out(vty,"%-5d\n",bss->SecurityID);
+
+						/*yjl copy from aw3.1.2 for local forwarding.2014-2-28*/
+					    if (ASD_MAC_TYPE_TL == bss->if_policy)
+					    {
+						    vty_out(vty,"                  %-15s(REAL IP)\n",dcli_u32ip2str(sta->realip)); 			
+					    }
 					}
 				}
 				
@@ -20865,7 +20914,551 @@ DEFUN(set_asd_1x_radius_format_cmd_func,
 	return CMD_SUCCESS; 
 }
 
+/*yjl copy from aw3.1.2 for local forwarding.2014-2-28***************************************************/
+DEFUN(delete_sta_vir_dhcp_pool_ip_range_cmd_func,
+	delete_sta_vir_dhcp_pool_ip_range_cmd,
+	"delete sta vir-dhcp range A.B.C.D A.B.C.D base wlan ID",
+	"delete dhcp ip range\n"
+	"ASD station information\n"
+	"Vir-DHCP\n"
+	"sta vir-dhcp ip range\n"
+	"Low ip A.B.C.D\n"
+	"High ip A.B.C.D\n"
+	"WLAN ID"
+)
+{
+	unsigned int ipAddrl = 0, ipAddrh = 0, ip_Nums = 0;
+	unsigned int ret = 0;
+	wlan_t wlanid = 0;
+	unsigned int add_flag = 0;
+	int index = 0;
+	int localid = 1;int slot_id = HostSlotId;
+	DBusConnection *dcli_dbus_connection = NULL;
+	
+	if (dcli_check_ipaddr(argv[0], &ipAddrl))
+	{
+		vty_out(vty, "%% invalid ip address : %s\n", argv[0]);
+		return CMD_WARNING;
+	}
 
+	if (dcli_check_ipaddr(argv[1], &ipAddrh))
+	{
+		vty_out(vty, "%% invalid ip address : %s\n", argv[1]);
+		return CMD_WARNING;
+	}
+
+	ret = parse_char_ID((char*)argv[2], &wlanid);
+	if(ret != WID_DBUS_SUCCESS)
+	{
+		if(ret == WID_ILLEGAL_INPUT)
+		{
+			vty_out(vty,"%% illegal input:Input exceeds the maximum value of the parameter type \n");
+		}
+		else
+		{
+			vty_out(vty,"%% unknown id format\n");
+		}
+		return CMD_SUCCESS;
+	}	
+	if(wlanid >= WLAN_NUM || wlanid == 0)
+	{
+		vty_out(vty,"%% wlan id should be 1 to %d\n", WLAN_NUM-1);
+		return CMD_SUCCESS;
+	}
+	
+	if (ipAddrl > ipAddrh) 
+	{	
+		vty_out(vty, "%% illegal ip range\n");
+		return CMD_WARNING;
+	}		
+
+	ip_Nums = ipAddrh - ipAddrl;
+	if ((ip_Nums > 0xffff))
+	{
+		vty_out(vty, "set ip range fail \n");
+		return CMD_WARNING;
+	}
+
+	if((vty->node == CONFIG_NODE)||(vty->node == ENABLE_NODE)){
+		index = 0;
+	}else if(vty->node == HANSI_NODE){
+		index = (int)vty->index;
+		localid = vty->local;
+		slot_id = vty->slotindex;
+	}else if (vty->node == LOCAL_HANSI_NODE){
+		index = vty->index;
+		localid = vty->local;
+		slot_id = vty->slotindex;
+	}
+	ReInitDbusConnection(&dcli_dbus_connection,slot_id,distributFag);
+    vty_out(vty,"localid: %d,slot_id: %d ,**********yjl add for test ****11111111111111*******\n",localid, slot_id);
+	ret = dcli_set_sta_virdchp_range(dcli_dbus_connection, index, localid, ipAddrl, ipAddrh, add_flag, wlanid);
+	if (ASD_DBUS_SUCCESS != ret)
+	{
+		vty_out(vty,"%s\n", dcli_asd_opcode2string(ret));
+		//vty_out(vty,"%d\n", ret);
+	}
+
+	return CMD_SUCCESS;
+}
+
+DEFUN(set_sta_vir_dhcp_pool_ip_range_cmd_func,
+	set_sta_vir_dhcp_pool_ip_range_cmd,
+	"set sta vir-dhcp range A.B.C.D A.B.C.D base wlan ID",
+	"set dhcp ip range\n"
+	"sta vir-dhcp ip range\n"
+	"Range ip\n"
+	"Low ip A.B.C.D\n"
+	"High ip A.B.C.D\n"
+	"WLAN ID info"
+)
+{
+	unsigned int ipAddrl = 0, ipAddrh = 0, ip_Nums = 0;
+	unsigned int ret = 0;
+	wlan_t wlanid = 0;
+	unsigned int add_flag = 1;
+
+	if (dcli_check_ipaddr(argv[0], &ipAddrl))
+	{
+		vty_out(vty, "%% invalid ip address : %s\n", argv[0]);
+		return CMD_WARNING;
+	}
+
+	if (dcli_check_ipaddr(argv[1], &ipAddrh))
+	{
+		vty_out(vty, "%% invalid ip address : %s\n", argv[1]);
+		return CMD_WARNING;
+	}
+
+	ret = parse_char_ID((char*)argv[2], &wlanid);
+	if(ret != WID_DBUS_SUCCESS)
+	{
+		if(ret == WID_ILLEGAL_INPUT)
+		{
+			vty_out(vty,"%% illegal input:Input exceeds the maximum value of the parameter type \n");
+		}
+		else
+		{
+			vty_out(vty,"%% unknown id format\n");
+		}
+		return CMD_SUCCESS;
+	}	
+	if(wlanid >= WLAN_NUM || wlanid == 0)
+	{
+		vty_out(vty,"%% wlan id should be 1 to %d\n", WLAN_NUM-1);
+		return CMD_SUCCESS;
+	}
+	
+	if (ipAddrl > ipAddrh) 
+	{	
+		vty_out(vty, "%% illegal ip range\n");
+		return CMD_WARNING;
+	}		
+
+	ip_Nums = ipAddrh - ipAddrl;
+	if ((ip_Nums > 0xffff))
+	{
+		vty_out(vty, "set ip range fail \n");
+		return CMD_WARNING;
+	}	
+
+	int index = 0;
+	int localid = 1;int slot_id = HostSlotId;
+	DBusConnection *dcli_dbus_connection = NULL;
+	if((vty->node == CONFIG_NODE)||(vty->node == ENABLE_NODE)){
+		index = 0;
+	}else if(vty->node == HANSI_NODE){
+		index = (int)vty->index;
+		localid = vty->local;
+		slot_id = vty->slotindex;
+	}else if (vty->node == LOCAL_HANSI_NODE){
+		index = vty->index;
+		localid = vty->local;
+		slot_id = vty->slotindex;
+	}
+	ReInitDbusConnection(&dcli_dbus_connection,slot_id,distributFag);
+    vty_out(vty,"localid: %d,slot_id: %d ,**********yjl add for test ****11111111111111*******\n",localid, slot_id);
+	ret = dcli_set_sta_virdchp_range(dcli_dbus_connection, index, localid, ipAddrl, ipAddrh, add_flag, wlanid);
+	if (ASD_DBUS_SUCCESS != ret)
+	{
+		vty_out(vty,"%s\n", dcli_asd_opcode2string(ret));
+	}
+
+	return CMD_SUCCESS;
+}
+
+DEFUN(set_sta_vir_dhcp_state_cmd_func,
+	set_sta_vir_dhcp_pool_state_cmd,
+	"set sta vir-dhcp (enable|disable) base wlan ID",
+	"set dhcp service\n"
+	"sta vir-dhcp service enable or disable\n"
+	"WLAN ID info"
+)
+{
+	DBusMessage *query, *reply;	
+	DBusMessageIter	 iter;
+	DBusError err;
+	int ret = 0;
+	char wlan_id = 0;
+	int is_enable = 0;
+	if (!strcmp(argv[0],"enable")||(tolower(argv[0][0]) == 'e'))
+	{
+		is_enable = 1;	
+	
+	}		
+	else if (!strcmp(argv[0],"disable")||(tolower(argv[0][0]) == 'd'))
+	{
+		is_enable = 0;
+	}
+
+	ret = parse_char_ID((char*)argv[1], &wlan_id);
+	if(ret != WID_DBUS_SUCCESS){
+            if(ret == WID_ILLEGAL_INPUT){
+            	vty_out(vty,"<error> illegal input:Input exceeds the maximum value of the parameter type \n");
+            }
+			else{
+		vty_out(vty,"<error> unknown id format\n");
+			}
+		return CMD_SUCCESS;
+	}	
+	if(wlan_id >= WLAN_NUM || wlan_id == 0){
+		vty_out(vty,"<error> wlan id should be 1 to %d\n",WLAN_NUM-1);
+		return CMD_SUCCESS;
+	}	
+	int index = 0;
+	char BUSNAME[PATH_LEN];
+	char OBJPATH[PATH_LEN];
+	char INTERFACE[PATH_LEN];
+	int localid = 1;int slot_id = HostSlotId;
+	
+	DBusConnection *dcli_dbus_connection = NULL;
+	if((vty->node == CONFIG_NODE)||(vty->node == ENABLE_NODE)){
+		index = 0;
+	}else if(vty->node == HANSI_NODE){
+		index = (int)vty->index;
+		localid = vty->local;
+		slot_id = vty->slotindex;
+	}else if (vty->node == LOCAL_HANSI_NODE){
+		index = vty->index;
+		localid = vty->local;
+		slot_id = vty->slotindex;
+	}
+	vty_out(vty,"localid: %d,slot_id: %d ,**********yjl add for test ****11111111111111*******\n",localid, slot_id);
+
+	ReInitDbusConnection(&dcli_dbus_connection,slot_id,distributFag);
+	
+	ReInitDbusPath_V2(localid,index,ASD_DBUS_BUSNAME,BUSNAME);
+	ReInitDbusPath_V2(localid,index,ASD_DBUS_STA_OBJPATH,OBJPATH);
+	ReInitDbusPath_V2(localid,index,ASD_DBUS_STA_INTERFACE,INTERFACE);
+	query = dbus_message_new_method_call(BUSNAME,OBJPATH,INTERFACE,ASD_DBUS_STA_METHOD_SET_ASD_STA_VIR_DHCP_STATE);
+	
+	dbus_error_init(&err);
+
+	dbus_message_append_args(query,
+							DBUS_TYPE_UINT32,&is_enable,
+							DBUS_TYPE_BYTE,&wlan_id,
+							DBUS_TYPE_INVALID);
+
+	
+	reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection, query, -1, &err);
+	
+	dbus_message_unref(query);
+	
+	if (NULL == reply) {
+		vty_out(vty,"<error> failed get reply.\n");
+		if (dbus_error_is_set(&err)) {
+			vty_out(vty,"%s raised: %s",err.name,err.message);
+			dbus_error_free(&err);
+		}
+		return CMD_SUCCESS;
+	}
+	dbus_message_iter_init(reply,&iter);
+	dbus_message_iter_get_basic(&iter,&ret);
+	if(ret==0)
+		vty_out(vty,"set sta vir-dhcp successful!\n"); 
+	else if(ret == ASD_DHCP_POOL_NOT_EXIST){
+		vty_out(vty,"sta vir-dhcp poll not exsit!\n"); 
+	}
+	else if(ret == ASD_WLAN_BE_ENABLE){
+		vty_out(vty,"Please disable wlan first!\n"); 
+	}
+	else if(ret == ASD_WLAN_NOT_EXIST){
+		vty_out(vty,"wlan %d not exsit!\n",wlan_id); 
+	}
+	else
+		vty_out(vty,"error %d\n",ret);
+	dbus_message_unref(reply);
+
+	return CMD_SUCCESS;
+}
+
+DEFUN(set_sta_tunnel_switch_state_cmd_func,
+	set_sta_tunnel_switch_state_cmd,
+	"set sta tunnel switch (enable|disable) base wlan ID",
+	"set sta tunnel switch service\n"
+	"sta sta tunnel switch service enable or disable\n"
+	"WLAN ID info"
+)
+{
+	DBusMessage *query, *reply;	
+	DBusMessageIter	 iter;
+	DBusError err;
+	int ret = 0;
+	char wlan_id = 0;
+	int is_enable = 0;
+	if (!strcmp(argv[0],"enable")||(tolower(argv[0][0]) == 'e'))
+	{
+		is_enable = 1;	
+	
+	}		
+	else if (!strcmp(argv[0],"disable")||(tolower(argv[0][0]) == 'd'))
+	{
+		is_enable = 0;
+	}
+
+	ret = parse_char_ID((char*)argv[1], &wlan_id);
+	if(ret != WID_DBUS_SUCCESS){
+            if(ret == WID_ILLEGAL_INPUT){
+            	vty_out(vty,"<error> illegal input:Input exceeds the maximum value of the parameter type \n");
+            }
+			else{
+		vty_out(vty,"<error> unknown id format\n");
+			}
+		return CMD_SUCCESS;
+	}	
+	if(wlan_id >= WLAN_NUM || wlan_id == 0){
+		vty_out(vty,"<error> wlan id should be 1 to %d\n",WLAN_NUM-1);
+		return CMD_SUCCESS;
+	}	
+	int index = 0;
+	char BUSNAME[PATH_LEN];
+	char OBJPATH[PATH_LEN];
+	char INTERFACE[PATH_LEN];
+	int localid = 1;int slot_id = HostSlotId;
+	
+	DBusConnection *dcli_dbus_connection = NULL;
+	if((vty->node == CONFIG_NODE)||(vty->node == ENABLE_NODE)){
+		index = 0;
+	}else if(vty->node == HANSI_NODE){
+		index = (int)vty->index;
+		localid = vty->local;
+		slot_id = vty->slotindex;
+	}else if (vty->node == LOCAL_HANSI_NODE){
+		index = vty->index;
+		localid = vty->local;
+		slot_id = vty->slotindex;
+	}
+	ReInitDbusConnection(&dcli_dbus_connection,slot_id,distributFag);
+	vty_out(vty,"localid: %d,slot_id: %d ,**********yjl add for test ****11111111111111*******\n",localid, slot_id);
+
+	ReInitDbusPath_V2(localid,index,ASD_DBUS_BUSNAME,BUSNAME);
+	ReInitDbusPath_V2(localid,index,ASD_DBUS_STA_OBJPATH,OBJPATH);
+	ReInitDbusPath_V2(localid,index,ASD_DBUS_STA_INTERFACE,INTERFACE);
+	query = dbus_message_new_method_call(BUSNAME,OBJPATH,INTERFACE,ASD_DBUS_STA_METHOD_SET_ASD_STA_TUNNEL_SWITCH_STATE);
+	
+	dbus_error_init(&err);
+
+	dbus_message_append_args(query,
+							DBUS_TYPE_UINT32,&is_enable,
+							DBUS_TYPE_BYTE,&wlan_id,
+							DBUS_TYPE_INVALID);
+
+	
+	reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection, query, -1, &err);
+	
+	dbus_message_unref(query);
+	
+	if (NULL == reply) {
+		vty_out(vty,"<error> failed get reply.\n");
+		if (dbus_error_is_set(&err)) {
+			vty_out(vty,"%s raised: %s",err.name,err.message);
+			dbus_error_free(&err);
+		}
+		return CMD_SUCCESS;
+	}
+	dbus_message_iter_init(reply,&iter);
+	dbus_message_iter_get_basic(&iter,&ret);
+	if(ret==0){
+		index = 0;
+	    localid = 1; slot_id = HostSlotId;
+		dcli_dbus_connection = NULL;
+		if((vty->node == CONFIG_NODE)||(vty->node == ENABLE_NODE)){
+			index = 0;
+		}else if(vty->node == HANSI_NODE){
+			index = (int)vty->index;
+			localid = vty->local;
+			slot_id = vty->slotindex;
+		}else if (vty->node == LOCAL_HANSI_NODE){
+			index = vty->index;
+			localid = vty->local;
+			slot_id = vty->slotindex;
+		}
+		ReInitDbusConnection(&dcli_dbus_connection,slot_id,distributFag);
+		memset(BUSNAME,0,PATH_LEN);	
+	    memset(OBJPATH,0,PATH_LEN);
+	    memset(INTERFACE,0,PATH_LEN);
+		ReInitDbusPath_V2(localid, index,WID_DBUS_BUSNAME,BUSNAME);
+		ReInitDbusPath_V2(localid, index,WID_DBUS_WLAN_OBJPATH,OBJPATH);
+		ReInitDbusPath_V2(localid, index,WID_DBUS_WLAN_INTERFACE,INTERFACE);
+		vty_out(vty,"BUSNAME: %s,OBJPATH: %s INTERFACE: %s,**********yjl add for test ****9999999999*******\n", BUSNAME, OBJPATH, INTERFACE);
+		query = dbus_message_new_method_call(BUSNAME,OBJPATH,INTERFACE,WID_DBUS_CONF_METHOD_SET_WLAN_STA_TUNNEL_SWITCH_STATE);
+		vty_out(vty,"BUSNAME: %s,OBJPATH: %s INTERFACE: %s,: %p**********yjl add for test ****121221212*******\n", BUSNAME, OBJPATH, INTERFACE, query);
+		dbus_error_init(&err);
+		
+		dbus_message_append_args(query,
+								DBUS_TYPE_UINT32,&is_enable,
+								DBUS_TYPE_BYTE,&wlan_id,
+								DBUS_TYPE_INVALID);
+		
+		
+		reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection,query,-1, &err);
+		
+		dbus_message_unref(query);
+		
+		if (NULL == reply) {
+			vty_out(vty,"<error> failed get reply.\n");
+			if (dbus_error_is_set(&err)) {
+				vty_out(vty,"%s raised: %s",err.name,err.message);
+				dbus_error_free(&err);
+			}
+			return CMD_SUCCESS;
+		}
+		dbus_message_iter_init(reply,&iter);
+		dbus_message_iter_get_basic(&iter,&ret);
+		if(ret == 0){
+			vty_out(vty,"set sta tunnel switch successfully\n");
+		}else{
+			vty_out(vty,"error %d\n",ret);
+		}
+	}
+	else if(ret == ASD_DHCP_POOL_NOT_EXIST){
+		vty_out(vty,"sta vir-dhcp poll not exsit!\n"); 
+	}
+	else if(ret == ASD_WLAN_BE_ENABLE){
+		vty_out(vty,"Please disable wlan first!\n"); 
+	}
+	else if(ret == ASD_WLAN_NOT_EXIST){
+		vty_out(vty,"wlan %d not exsit!\n",wlan_id); 
+	}
+	else
+		vty_out(vty,"error %d\n",ret);
+	dbus_message_unref(reply);
+
+	return CMD_SUCCESS;
+}
+
+DEFUN(set_sta_state_cmd_func,
+	set_sta_state_cmd,
+	"set sta MAC (auth|deauth) base wlan ID wtp WTPID",
+	"sta mac\n"
+	"sta sta auth or deauth\n"
+	"WLAN ID info"
+)
+{
+	DBusMessage *query, *reply;	
+	DBusMessageIter	 iter;
+	DBusError err;
+	int ret = 0;
+	char wlan_id = 0;
+	int is_enable = 0;
+	char mac1[MAC_LEN];
+	int mac[MAC_LEN];
+	int wtpid = 0;
+	memset(mac,0,MAC_LEN);
+	sscanf(argv[0],"%X:%X:%X:%X:%X:%X",&mac[0],&mac[1],&mac[2],&mac[3],&mac[4],&mac[5]);
+	mac1[0] = (unsigned char)mac[0];
+	mac1[1] = (unsigned char)mac[1];	
+	mac1[2] = (unsigned char)mac[2];	
+	mac1[3] = (unsigned char)mac[3];	
+	mac1[4] = (unsigned char)mac[4];	
+	mac1[5] = (unsigned char)mac[5];
+	if (!strcmp(argv[1],"auth")||(tolower(argv[1][0]) == 'a'))
+	{
+		is_enable = 1;	
+	
+	}		
+	else if (!strcmp(argv[1],"deauth")||(tolower(argv[1][0]) == 'd'))
+	{
+		is_enable = 0;
+	}
+
+	ret = parse_char_ID((char*)argv[2], &wlan_id);
+	if(ret != WID_DBUS_SUCCESS){
+            if(ret == WID_ILLEGAL_INPUT){
+            	vty_out(vty,"<error> illegal input:Input exceeds the maximum value of the parameter type \n");
+            }
+			else{
+		vty_out(vty,"<error> unknown id format\n");
+			}
+		return CMD_SUCCESS;
+	}	
+	if(wlan_id >= WLAN_NUM || wlan_id == 0){
+		vty_out(vty,"<error> wlan id should be 1 to %d\n",WLAN_NUM-1);
+		return CMD_SUCCESS;
+	}		
+	ret = parse_int_ID((char*)argv[3], &wtpid);
+	int index = 0;
+	char BUSNAME[PATH_LEN];
+	char OBJPATH[PATH_LEN];
+	char INTERFACE[PATH_LEN];
+	int localid = 1;int slot_id = HostSlotId;
+	DBusConnection *dcli_dbus_connection = NULL;
+	if((vty->node == CONFIG_NODE)||(vty->node == ENABLE_NODE)){
+		index = 0;
+	}else if(vty->node == HANSI_NODE){
+		index = (int)vty->index;
+		localid = vty->local;
+		slot_id = vty->slotindex;
+	}else if (vty->node == LOCAL_HANSI_NODE){
+		index = vty->index;
+		localid = vty->local;
+		slot_id = vty->slotindex;
+	}
+	ReInitDbusConnection(&dcli_dbus_connection,slot_id,distributFag);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_BUSNAME,BUSNAME);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_WLAN_OBJPATH,OBJPATH);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_WLAN_INTERFACE,INTERFACE);
+	query = dbus_message_new_method_call(BUSNAME,OBJPATH,INTERFACE,WID_DBUS_CONF_METHOD_SET_WLAN_STA_STATE);
+	
+	dbus_error_init(&err);
+	
+	dbus_message_append_args(query,
+							DBUS_TYPE_BYTE,&(mac1[0]),
+							DBUS_TYPE_BYTE,&(mac1[1]),
+							DBUS_TYPE_BYTE,&(mac1[2]),
+							DBUS_TYPE_BYTE,&(mac1[3]),
+							DBUS_TYPE_BYTE,&(mac1[4]),
+							DBUS_TYPE_BYTE,&(mac1[5]),
+							DBUS_TYPE_UINT32,&is_enable,
+							DBUS_TYPE_BYTE,&wlan_id,
+							DBUS_TYPE_UINT32,&wtpid,
+							DBUS_TYPE_INVALID);
+	
+	
+	reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection,query,-1, &err);
+	
+	dbus_message_unref(query);
+	
+	if (NULL == reply) {
+		vty_out(vty,"<error> failed get reply.\n");
+		if (dbus_error_is_set(&err)) {
+			vty_out(vty,"%s raised: %s",err.name,err.message);
+			dbus_error_free(&err);
+		}
+		return CMD_SUCCESS;
+	}
+	dbus_message_iter_init(reply,&iter);
+	dbus_message_iter_get_basic(&iter,&ret);
+	if(ret == 0){
+		vty_out(vty,"set sta successfully\n");
+	}else{
+		vty_out(vty,"error %d\n",ret);
+	}
+	dbus_message_unref(reply);
+
+	return CMD_SUCCESS;
+}
+/*****end***********************yjl copy from aw3.1.2 for local forwarding.2014-2-28*********************/
 
 #if 0 /*****wangchao moved those to dcli_wireless_main.c*****/
 int dcli_wlan_list_show_running_config(struct vty*vty) 
@@ -21437,6 +22030,13 @@ void dcli_sta_init(void) {
 	install_element(CONFIG_NODE,&ac_add_MAC_list_cmd);
 	install_element(CONFIG_NODE,&ac_use_MAC_list_cmd);
 	install_element(CONFIG_NODE,&show_ac_MAC_list_cmd);
+	
+    /*yjl copy from aw3.1.2 for local forwarding.2014-2-28*/
+	install_element(CONFIG_NODE,&set_sta_vir_dhcp_pool_ip_range_cmd);
+	install_element(CONFIG_NODE,&delete_sta_vir_dhcp_pool_ip_range_cmd);
+	install_element(CONFIG_NODE,&set_sta_vir_dhcp_pool_state_cmd);
+	install_element(CONFIG_NODE,&set_sta_tunnel_switch_state_cmd);
+	install_element(CONFIG_NODE,&set_sta_state_cmd);
 #endif
 	/*================================================================*/
 /************************************************************************************/
@@ -21510,6 +22110,13 @@ void dcli_sta_init(void) {
 	install_element(HANSI_NODE,&set_asd_sta_idle_time_switch_cmd);
 //	install_element(HANSI_NODE,&set_asd_ipset_switch_cmd);
 	install_element(HANSI_NODE,&set_asd_bak_sta_update_value_cmd);
+
+    /*yjl copy from aw3.1.2 for local forwarding.2014-2-28*/
+	install_element(HANSI_NODE,&set_sta_vir_dhcp_pool_ip_range_cmd);
+	install_element(HANSI_NODE,&delete_sta_vir_dhcp_pool_ip_range_cmd);
+	install_element(HANSI_NODE,&set_sta_vir_dhcp_pool_state_cmd);
+	install_element(HANSI_NODE,&set_sta_tunnel_switch_state_cmd);
+	install_element(HANSI_NODE,&set_sta_state_cmd);
 	/*add for black name list by nl  2010-08-28*/
 	/*================================================================*/
 	install_element(HANSI_NODE,&ac_del_MAC_list_cmd);

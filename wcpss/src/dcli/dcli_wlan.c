@@ -9961,7 +9961,8 @@ int dcli_wlan_show_running_config_start(struct vty*vty) {
 		return 1;
 	}
 	
-	res = dcli_wlan_list_show_running_config(vty); 
+	res = dcli_wlan_list_show_running_config(vty);
+	res = dcli_vir_dhcp_show_running_config(vty);/* yjl 2014-2-28 */
 
 	return res;	
 }

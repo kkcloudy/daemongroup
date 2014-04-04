@@ -115,10 +115,16 @@ struct appsession {
 	uint32_t wtpid;
 	uint32_t vlanid;
 	
+	uint32_t audit_ip;	/* TUNNEL AUTH LOCAL FORWAD  STA real IP addr */
 	char intf[MAX_IF_NAME_LEN];
 	uint32_t virtual_ip;
 	uint32_t nasip;
 	struct in6_addr nasipv6;
+	/* Internal  portal server IP and mac 
+	 * external portal server is 0 
+	 */
+	uint32_t inv_portal_ip;
+	uint8_t inv_portal_mac[PKT_ETH_ALEN];
 
 	char username[USERNAMESIZE];
 	char domain_name[MAX_RADIUS_DOMAIN_LEN];

@@ -1654,7 +1654,8 @@ eag_redir_accept(eag_thread_t *thread)
 		mac2str(tmpsession.usermac, macstr, sizeof(macstr), ':');
 		
 		ret = eag_get_sta_info_by_mac_v2(redir->eagdbus, redir->hansi_type, redir->hansi_id,
-					tmpsession.usermac, &tmpsession, &security_type);
+					tmpsession.usermac, &tmpsession, &security_type,
+					eag_ins_get_notice_to_asd(redir->eagins));
 		
 		force_wireless = appconn_db_get_force_wireless(redir->appdb);
 		if (0 == ret && NO_NEED_AUTH == security_type) {
@@ -1689,7 +1690,7 @@ eag_redir_accept(eag_thread_t *thread)
                 eag_redirconn_free(redirconn);
 				return -1;
 			}
-			eag_stamsg_send(redir->stamsg, &tmpsession, EAG_NTF_ASD_STA_INFO);
+			eag_stamsg_send(redir->stamsg, &tmpsession, EAG_NTF_ASD_STA_INFO, 0);
 			//redirconn->asd_auth = 1;
 			//eag_redirconn_start_read(redirconn);
 			eag_redirconn_free(redirconn);
@@ -1916,7 +1917,8 @@ eag_ipv6_redir_accept(eag_thread_t *thread)
 		mac2str(tmpsession.usermac, macstr, sizeof(macstr), ':');
 		
 		ret = eag_get_sta_info_by_mac_v2(redir->eagdbus, redir->hansi_type, redir->hansi_id,
-					tmpsession.usermac, &tmpsession, &security_type);
+					tmpsession.usermac, &tmpsession, &security_type,
+					eag_ins_get_notice_to_asd(redir->eagins));
 		
 		force_wireless = appconn_db_get_force_wireless(redir->appdb);
 		if (0 == ret && NO_NEED_AUTH == security_type) {
@@ -1951,7 +1953,7 @@ eag_ipv6_redir_accept(eag_thread_t *thread)
                 eag_redirconn_free(redirconn);
 				return -1;
 			}
-			eag_stamsg_send(redir->stamsg, &tmpsession, EAG_NTF_ASD_STA_INFO);
+			eag_stamsg_send(redir->stamsg, &tmpsession, EAG_NTF_ASD_STA_INFO, 0);
 			//redirconn->asd_auth = 1;
 			//eag_redirconn_start_read(redirconn);
 			eag_redirconn_free(redirconn);

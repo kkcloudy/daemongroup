@@ -79,6 +79,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "dbus/hmd/HmdDbusPath.h"
 #include "ASDEAPAuth.h"
 #include "syslog.h"
+#include "ASDDhcp.h" /* yjl 2014-2-28 */
 
 static DBusConnection * asd_dbus_connection = NULL;
 static DBusConnection * asd_dbus_connection2 = NULL;
@@ -9022,6 +9023,9 @@ DBusMessage *asd_dbus_show_sta_info_of_all_wtp(DBusConnection *conn, DBusMessage
 	char * sta_mac_p=sta_mac;
 	unsigned char *identity = NULL;	/* sta name *///qiuchen
 	char tmp[16] = {0};	/* keep it NULL */
+
+	unsigned char if_policy = 0;/* yjl 2014-2-28 */
+	unsigned int realip = 0;/* yjl 2014-2-28 */
 	
 	ASD_WTP_ST **WTP=malloc(WTP_NUM*(sizeof(ASD_WTP_ST *)));
 	if( WTP == NULL){
@@ -9058,6 +9062,8 @@ DBusMessage *asd_dbus_show_sta_info_of_all_wtp(DBusConnection *conn, DBusMessage
 									DBUS_STRUCT_BEGIN_CHAR_AS_STRING
 										DBUS_TYPE_STRING_AS_STRING	//sta_mac_p
 										DBUS_TYPE_UINT32_AS_STRING	//sta_ip
+										DBUS_TYPE_UINT32_AS_STRING	//sta_realip  /* yjl 2014-2-28 */
+										DBUS_TYPE_BYTE_AS_STRING	//local or tummel or local and tunnel /* yjl 2014-2-28 */
 										DBUS_TYPE_UINT32_AS_STRING //ipv6 address in6_addr[0]
 										DBUS_TYPE_UINT32_AS_STRING //in6_addr[1]
 										DBUS_TYPE_UINT32_AS_STRING //in6_addr[2]
@@ -9245,6 +9251,8 @@ DBusMessage *asd_dbus_show_sta_info_of_all_wtp(DBusConnection *conn, DBusMessage
 									DBUS_STRUCT_BEGIN_CHAR_AS_STRING
 										DBUS_TYPE_STRING_AS_STRING	//sta_mac_p
 										DBUS_TYPE_UINT32_AS_STRING	//sta_ip
+										DBUS_TYPE_UINT32_AS_STRING	//sta_realip  /* yjl 2014-2-28 */
+										DBUS_TYPE_BYTE_AS_STRING	//local or tummel or local and tunnel /* yjl 2014-2-28 */
 										DBUS_TYPE_UINT32_AS_STRING //ipv6 address in6_addr[0]
 										DBUS_TYPE_UINT32_AS_STRING //in6_addr[1]
 										DBUS_TYPE_UINT32_AS_STRING //in6_addr[2]
@@ -9459,9 +9467,42 @@ DBusMessage *asd_dbus_show_sta_info_of_all_wtp(DBusConnection *conn, DBusMessage
                 if(WTP[i] != NULL){
 				 os_memcpy(wtp_name,WTP[i]->WTPNAME,strlen(WTP[i]->WTPNAME));
                	}
+
+				/*yjl copy from aw3.1.2 for local forwarding.2014-2-28*/
+				/*add for sta real-ip and tunnel/local*/
+				if ((ASD_WLAN[bss[j]->WlanID]!=NULL)
+					&&(ASD_WLAN[bss[j]->WlanID]->wlan_tunnel_switch !=0))
+					
+				{
+					if_policy = ASD_MAC_TYPE_TL;
+				}
+				else
+				{
+					if_policy = bss[j]->bss_iface_type;
+				}
+
+				if ((ASD_MAC_TYPE_TL == if_policy))
+				{
+					if (0 == sta->realip)
+					{
+						realip = asd_get_sta_realip(sta->addr);
+						if (0 != realip)
+						{
+							sta->realip = realip;
+						}
+					}
+					else
+					{
+						realip = sta->realip;
+					}
+				}
+				/*end**************************************************/
+				
 				dbus_message_iter_open_container(&iter_sta_array,DBUS_TYPE_STRUCT,NULL,&iter_sta);
 				dbus_message_iter_append_basic(&iter_sta,DBUS_TYPE_STRING,&sta_mac_p); 
 				dbus_message_iter_append_basic(&iter_sta,DBUS_TYPE_UINT32,&sta_ip);
+				dbus_message_iter_append_basic(&iter_sta,DBUS_TYPE_UINT32,&realip);/* yjl 2014-2-28 */
+				dbus_message_iter_append_basic(&iter_sta,DBUS_TYPE_BYTE,&if_policy);/* yjl 2014-2-28 */
 				
 			    dbus_message_iter_append_basic(&iter_sta,DBUS_TYPE_UINT32,&(sta->ip6_addr.s6_addr32[0]));
 			    dbus_message_iter_append_basic(&iter_sta,DBUS_TYPE_UINT32,&(sta->ip6_addr.s6_addr32[1]));
@@ -14148,6 +14189,7 @@ DBusMessage *asd_dbus_show_sta_v2(DBusConnection *conn, DBusMessage *msg, void *
 		int WTPID = 0;
 		int wtp_name_len = 0;
 		char wtp_name[WTP_NAME_LEN] = {0};
+		unsigned int ipaddr = 0;/* yjl 2014-2-28 */
 		
 		DBusError err;
 		int ret = ASD_DBUS_SUCCESS;
@@ -14278,7 +14320,14 @@ DBusMessage *asd_dbus_show_sta_v2(DBusConnection *conn, DBusMessage *msg, void *
 													 &(ASD_WLAN[wlanid]->limit_flow));	
 				dbus_message_iter_append_basic (&iter,
 													DBUS_TYPE_UINT32,
-													 &auth_type);	
+													 &auth_type);
+				
+                /*yjl copy from aw3.1.2 for local forwarding.2014-2-28*/
+				ipaddr = asd_get_sta_realip(stainfo->sta->addr);
+			    dbus_message_iter_append_basic (&iter, DBUS_TYPE_UINT32, &ipaddr);			
+			    asd_printf(ASD_DBUS,MSG_DEBUG,"sta %s real ip %s\n", mac2str(stainfo->sta->addr), u32ip2str(ipaddr));
+				/*end**************************************************/
+				
 				asd_printf(ASD_DBUS,MSG_DEBUG,"flow_check = %d\n",ASD_WLAN[wlanid]->flow_check);
 				asd_printf(ASD_DBUS,MSG_DEBUG,"no_flow_time = %d\n",ASD_WLAN[wlanid]->no_flow_time);
 				asd_printf(ASD_DBUS,MSG_DEBUG,"limit_flow = %d\n",ASD_WLAN[wlanid]->limit_flow);
@@ -18722,6 +18771,7 @@ DBusMessage *asd_dbus_show_stalist_by_group(DBusConnection *conn, DBusMessage *m
 	unsigned char SecurityID;
 	char *in_addr = NULL;
 	unsigned char eap_type = 0;
+	unsigned char if_policy = 0;/* yjl 2014-2-28 */
 	unsigned char *identify; 
 	struct asd_data **bss = NULL;
 	bss = os_zalloc(BSS_NUM*sizeof(struct asd_data *));
@@ -18821,6 +18871,7 @@ DBusMessage *asd_dbus_show_stalist_by_group(DBusConnection *conn, DBusMessage *m
 													DBUS_TYPE_UINT32_AS_STRING
 													DBUS_TYPE_UINT32_AS_STRING
 													DBUS_TYPE_BYTE_AS_STRING
+													DBUS_TYPE_BYTE_AS_STRING        /* yjl 2014-2-28 */
 													DBUS_TYPE_UINT32_AS_STRING		//ht add,090213
 													DBUS_TYPE_UINT32_AS_STRING
 													DBUS_TYPE_UINT32_AS_STRING
@@ -18850,6 +18901,7 @@ DBusMessage *asd_dbus_show_stalist_by_group(DBusConnection *conn, DBusMessage *m
 															DBUS_TYPE_UINT64_AS_STRING
 															DBUS_TYPE_UINT64_AS_STRING//ht add,081025
 															DBUS_TYPE_UINT32_AS_STRING
+															DBUS_TYPE_UINT32_AS_STRING/* yjl 2014-2-28 */
 															DBUS_TYPE_BYTE_AS_STRING
 															DBUS_TYPE_STRING_AS_STRING
 															DBUS_TYPE_UINT32_AS_STRING//sta_access_time
@@ -18906,7 +18958,18 @@ DBusMessage *asd_dbus_show_stalist_by_group(DBusConnection *conn, DBusMessage *m
 						(&iter_struct,
 						  DBUS_TYPE_BYTE,
 					  	&(SecurityID));
-			
+
+            /*yjl copy from aw3.1.2 for local forwarding.2014-2-28*/
+			if (ASD_WLAN[bss[i]->WlanID]->wlan_tunnel_switch)
+			{
+				if_policy = ASD_MAC_TYPE_TL;
+			}
+			else
+			{
+				if_policy = bss[i]->bss_iface_type;
+			}
+			dbus_message_iter_append_basic(&iter_struct, DBUS_TYPE_BYTE, &(if_policy));
+			/*end********************************************/
 			dbus_message_iter_append_basic			//ht add,090213
 						(&iter_struct,
 						  DBUS_TYPE_UINT32,
@@ -18955,6 +19018,7 @@ DBusMessage *asd_dbus_show_stalist_by_group(DBusConnection *conn, DBusMessage *m
 													   DBUS_TYPE_UINT32_AS_STRING													   
 													   DBUS_TYPE_UINT64_AS_STRING
 													   DBUS_TYPE_UINT64_AS_STRING//ht add,081025
+													   DBUS_TYPE_UINT32_AS_STRING/* yjl 2014-2-28 */
 													   //DBUS_TYPE_STRING_AS_STRING
 													   DBUS_TYPE_UINT32_AS_STRING
 													   DBUS_TYPE_BYTE_AS_STRING
@@ -18967,6 +19031,7 @@ DBusMessage *asd_dbus_show_stalist_by_group(DBusConnection *conn, DBusMessage *m
 			int j = 0;			
 			struct sta_info *sta;
 			time_t sta_time;
+			unsigned int realip = 0;/* yjl 2014-2-28 */
 			sta = bss[i]->sta_list;
 			for(j = 0; (j < bss[i]->num_sta)&&(sta!=NULL); j++){
 				
@@ -19095,6 +19160,23 @@ DBusMessage *asd_dbus_show_stalist_by_group(DBusConnection *conn, DBusMessage *m
 						(&iter_sub_struct,
 			  			DBUS_TYPE_UINT64,
 		 	 			 &(sta->txbytes));	//ht add,081025
+
+            /*yjl copy from aw3.1.2 for local forwarding.2014-2-28*/
+		    if ((ASD_MAC_TYPE_TL == if_policy))
+			{
+				realip = asd_get_sta_realip(sta->addr);
+				if (0 != realip)
+				{
+					sta->realip = realip;
+				}
+				if ((0 == realip) && (WAW_VRRP_STATE_SECONDARY == is_secondary))
+				{
+					realip = sta->realip;
+				}				
+			}
+
+			dbus_message_iter_append_basic(&iter_sub_struct, DBUS_TYPE_UINT32, &realip);	
+			/*end************************************************/	
 
 				if(sta->security_type != NO_NEED_AUTH)
 					dbus_message_iter_append_basic
@@ -28261,6 +28343,296 @@ DBusMessage *asd_dbus_method_quit(DBusConnection *conn, DBusMessage *msg, void *
 	return reply;	
 }
 
+/*yjl copy from aw3.1.2 for local forwarding.2014-2-28*/
+DBusMessage *asd_dbus_set_asd_sta_vir_dhcp(DBusConnection *conn, DBusMessage *msg, void *user_data)
+{
+	DBusMessage *reply = NULL;
+	DBusMessageIter iter;
+	DBusError err;
+	unsigned int ret = ASD_DBUS_SUCCESS;
+	wlan_t wlanid =0;
+	unsigned int lowip = 0;
+	unsigned int highip = 0;
+	unsigned int add_flag = 0;
+	int i = 0;
+	int j = 0;
+	struct vir_dhcp *pool = NULL;
+	/*
+	struct vir_dhcp *prev = NULL, *next = NULL;
+	*/
+	asd_printf(ASD_DEFAULT,MSG_DEBUG,"**************yjl add for test****111111111****\n");
+	dbus_error_init(&err);
+	if (!(dbus_message_get_args(msg, &err,
+								DBUS_TYPE_UINT32, &lowip,
+								DBUS_TYPE_UINT32, &highip,
+								DBUS_TYPE_UINT32, &add_flag,
+								DBUS_TYPE_BYTE, &wlanid,
+	                            DBUS_TYPE_INVALID)))
+	{
+		asd_printf(ASD_DEFAULT,MSG_DEBUG,"Unable to get input args\n");
+				
+		if (dbus_error_is_set(&err))
+		{
+			asd_printf(ASD_DEFAULT, MSG_DEBUG, "%s raised: %s", err.name, err.message);
+			dbus_error_free(&err);
+		}
+		return NULL;
+	}
+	
+	if ((IPADDR_INVALID(lowip)) || (IPADDR_INVALID(highip)))
+	{
+		asd_printf(ASD_DEFAULT,MSG_ERROR,"%s: invalid ipaddr low %s high %s\n",
+			__func__, u32ip2str(lowip), u32ip2str(highip));
+		ret = ASD_INVALID_IPADDR;
+		goto out;
+	}
+	
+	/* check arg wlanid */
+	if (((wlanid) >= WLAN_NUM) || ((wlanid) <= 0) ||  (NULL == ASD_WLAN[wlanid]))
+	{
+		asd_printf(ASD_DEFAULT,MSG_ERROR,"%s: max wlan id %d, wlanid %d\n",
+			__func__, (WLAN_NUM - 1), (wlanid));
+		ret = ASD_WLAN_NOT_EXIST;
+		goto out;
+	}
+
+	
+	if (add_flag)
+	{
+		if (0 != ASD_WLAN[wlanid]->wlan_dhcp_state)
+		{
+			ret = ASD_DHCP_ENABLE;
+			goto out;
+		}
+		if (NULL != ASD_WLAN[wlanid]->wlan_dhcp)
+		{
+			ret = ASD_DHCP_POOL_EXIST;
+			goto out;
+		}
+
+		/* delete by jinpc
+		ASD_WLAN[wlanid]->wlan_dhcp = (struct vir_dhcp *)malloc(sizeof(struct vir_dhcp));
+		*/
+		pool = (struct vir_dhcp *)malloc(sizeof(struct vir_dhcp));
+		if (NULL == pool)
+		{
+			asd_printf(ASD_DEFAULT,MSG_ERROR,"%s:%d malloc failed: %s\n", __func__, __LINE__, strerror(errno));
+			ret = ASD_DBUS_ERROR;
+			goto out;
+		}
+		memset(pool, 0, sizeof(struct vir_dhcp));
+
+		/* init vir-dhcp pool */
+		pool->dhcpfree.ip_list = NULL;
+		for (j = 0; j < VIR_DHCP_HASH_SIZE; j++)
+		{
+			pool->dhcpfree.ip_hash[j] = NULL;
+		}
+		pool->dhcpfree.ipnum = 0;
+		pool->dhcpfree.last = NULL;
+
+		
+		pool->dhcplease.ip_list = NULL;
+		for (j = 0; j < VIR_DHCP_HASH_SIZE; j++)
+		{
+			pool->dhcplease.ip_hash[j] = NULL;
+		}
+		pool->dhcplease.ipnum = 0;
+		pool->dhcplease.last = NULL;
+		
+		sprintf(pool->ifname, "wlan%d-%d", vrrid, wlanid);
+		pool->low = lowip;
+		pool->high = highip;
+				
+		for (i = lowip; i <= highip; i++)
+		{
+			if ((0 == (i & 0x000000ff)) || ((0x000000ff == (i & 0x000000ff))))
+			{
+				continue;
+			}
+			dhcp_add_ip(&(pool->dhcpfree), i);
+		}
+
+		/* add vir-dhcp pool to ASD_WLAN */
+		ASD_WLAN[wlanid]->wlan_dhcp = pool;
+		
+	}
+	else	/* delete */
+	{
+		if (0 != ASD_WLAN[wlanid]->wlan_dhcp_state)
+		{
+			ret = ASD_DHCP_ENABLE;
+			goto out;
+		}
+		if (NULL == ASD_WLAN[wlanid]->wlan_dhcp)
+		{
+			ret = ASD_DHCP_POOL_NOT_EXIST;
+			goto out;
+		}
+
+		
+		pool = ASD_WLAN[wlanid]->wlan_dhcp;
+		if (pool && ((pool->low != lowip) || (pool->high != highip)))
+		{
+			ret = ASD_DHCP_POOL_RANGE_NOT_MATCH;
+			goto out;
+		}
+
+		if (NULL != pool)
+		{
+		ret = dhcp_free_pool(&(pool->dhcpfree));
+		ret = dhcp_free_pool(&(pool->dhcplease));
+		// TODO: notice aat delete items
+			free(pool);
+		}
+		
+		ASD_WLAN[wlanid]->wlan_dhcp = NULL;
+
+		ret = ASD_DBUS_SUCCESS;
+	}
+
+out:
+	reply = dbus_message_new_method_return(msg);
+			
+	dbus_message_iter_init_append (reply, &iter);	
+
+	dbus_message_iter_append_basic (&iter,
+									DBUS_TYPE_UINT32,
+									&ret); 
+    asd_printf(ASD_DEFAULT,MSG_DEBUG,"reply %p **************yjl add for test********\n",reply);
+	return reply;	
+}
+
+/*yjl copy from aw3.1.2 for local forwarding.2014-2-28*/
+DBusMessage *asd_dbus_set_asd_sta_vir_dhcp_state(DBusConnection *conn, DBusMessage *msg, void *user_data)
+{
+	DBusMessage *reply = NULL; 	
+	DBusMessageIter iter;
+	DBusError err;
+	int ret = ASD_DBUS_SUCCESS;
+	unsigned int is_enable = 0;
+	unsigned char ID = 0;	
+
+	asd_printf(ASD_DEFAULT,MSG_DEBUG,"**************yjl add for test********\n");
+	dbus_error_init(&err);
+	if (!(dbus_message_get_args(msg, &err,
+								DBUS_TYPE_UINT32, &is_enable,
+								DBUS_TYPE_BYTE, &ID,
+								DBUS_TYPE_INVALID)))
+	{
+		asd_printf(ASD_DEFAULT,MSG_DEBUG,"Unable to get input args\n");
+				
+		if (dbus_error_is_set(&err)) 
+		{
+			asd_printf(ASD_DEFAULT,MSG_DEBUG,"%s raised: %s",err.name, err.message);
+			dbus_error_free(&err);
+		}
+		return NULL;
+	}
+	if (NULL != ASD_WLAN[ID])
+	{
+		if (1 == ASD_WLAN[ID]->Status)
+		{
+			if (ASD_WLAN[ID]->wlan_dhcp_state != is_enable)
+			{
+				if (NULL != ASD_WLAN[ID]->wlan_dhcp)
+				{
+					get_file_string_mac(DEVINFO_LOCAL_MAC,(unsigned char*)ASD_WLAN[ID]->wlan_dhcp->ifmac);
+					asd_printf(ASD_DEFAULT,MSG_INFO,"%s mac:%2X:%2X:%2X:%2X:%2X:%2X.", __func__,
+						ASD_WLAN[ID]->wlan_dhcp->ifmac[0], ASD_WLAN[ID]->wlan_dhcp->ifmac[1],
+						ASD_WLAN[ID]->wlan_dhcp->ifmac[2], ASD_WLAN[ID]->wlan_dhcp->ifmac[3],
+						ASD_WLAN[ID]->wlan_dhcp->ifmac[4], ASD_WLAN[ID]->wlan_dhcp->ifmac[5]);
+					ASD_WLAN[ID]->wlan_dhcp_state = is_enable;	
+				}
+				else
+				{
+					ret = ASD_DHCP_POOL_NOT_EXIST;
+				}
+			}
+		}
+		else
+		{
+			ret = ASD_WLAN_BE_ENABLE;
+		}
+	}
+	else
+	{
+		ret = ASD_WLAN_NOT_EXIST;
+	}
+
+	reply = dbus_message_new_method_return(msg);
+			
+	dbus_message_iter_init_append (reply, &iter);	
+
+	dbus_message_iter_append_basic (&iter,
+									DBUS_TYPE_UINT32,
+									&ret); 
+
+	return reply;	
+}
+
+/*yjl copy from aw3.1.2 for local forwarding.2014-2-28*/
+DBusMessage *asd_dbus_set_asd_sta_tunnel_switch_state(DBusConnection *conn, DBusMessage *msg, void *user_data)
+{
+	DBusMessage *reply = NULL; 	
+	DBusMessageIter iter;
+	DBusError err;
+	int ret = ASD_DBUS_SUCCESS;
+	unsigned int is_enable = 0;
+	unsigned char ID = 0;
+    asd_printf(ASD_DEFAULT,MSG_DEBUG,"**************yjl add for test********\n");
+	dbus_error_init(&err);
+	if (!(dbus_message_get_args(msg, &err,
+								DBUS_TYPE_UINT32, &is_enable,
+								DBUS_TYPE_BYTE, &ID,
+								DBUS_TYPE_INVALID)))
+	{
+		asd_printf(ASD_DEFAULT,MSG_DEBUG,"Unable to get input args\n");
+				
+		if (dbus_error_is_set(&err))
+		{
+			asd_printf(ASD_DEFAULT,MSG_DEBUG,"%s raised: %s", err.name, err.message);
+			dbus_error_free(&err);
+		}
+		return NULL;
+	}
+	if (NULL != ASD_WLAN[ID])
+	{
+		if (1 == ASD_WLAN[ID]->Status)
+		{
+			if (ASD_WLAN[ID]->wlan_tunnel_switch != is_enable)
+			{
+				if(0 == ASD_WLAN[ID]->wlan_tunnel_switch)
+				{
+					ASD_WLAN[ID]->wlan_tunnel_switch = 1;	
+				}
+				else
+				{
+					ASD_WLAN[ID]->wlan_tunnel_switch = 0;
+				}
+			}
+		}
+		else
+		{
+			ret = ASD_WLAN_BE_ENABLE;
+		}
+	}
+	else
+	{
+		ret = ASD_WLAN_NOT_EXIST;
+	}
+
+	reply = dbus_message_new_method_return(msg);
+			
+	dbus_message_iter_init_append(reply, &iter);	
+
+	dbus_message_iter_append_basic(&iter,
+									DBUS_TYPE_UINT32,
+									&ret); 
+
+	return reply;	
+}
+/*yjl copy from aw3.1.2 for local forwarding.  ************************** end */
 
 DBusMessage *asd_dbus_show_static_sta_running_config(DBusConnection *conn, DBusMessage *msg, void *user_data)
 {
@@ -29084,6 +29456,73 @@ DBusMessage *asd_dbus_security_show_running_config(DBusConnection *conn, DBusMes
 
 }
 
+/*yjl copy from aw3.1.2 for local forwarding.2014-2-28*/
+DBusMessage *asd_dbus_vir_dhcp_running_config(DBusConnection *conn, DBusMessage *msg, void *user_data)
+{
+	DBusMessage* reply = NULL;
+	DBusMessageIter  iter;
+	DBusError err;
+	char *showStr = NULL;
+	char *cursor = NULL;
+	int num = 0;
+	int i=0;
+	WID_WLAN *WLAN[WLAN_NUM];
+	int totalLen = 0;
+	unsigned char *lip = NULL;
+	unsigned char *hip = NULL;
+	while (i<WLAN_NUM)
+	{
+		if(ASD_WLAN[i] != NULL)
+		{
+			WLAN[num] = ASD_WLAN[i];
+			num++;
+		}
+		i++;
+	}
+	dbus_error_init(&err);
+	if (num == 0)
+	{ 
+		showStr = (char*)malloc(1);
+		memset(showStr, 0, 1);
+	}else
+	{
+		showStr = (char*)malloc(num*1024);
+		memset(showStr, 0, num*1024);		
+		cursor = showStr;			
+		for(i = 0; i < num; i++)
+		{
+			if(WLAN[i]->wlan_dhcp != NULL)
+			{
+				lip = (unsigned char *)&(WLAN[i]->wlan_dhcp->low);
+				hip = (unsigned char *)&(WLAN[i]->wlan_dhcp->high);
+				totalLen += sprintf(cursor,"set sta vir-dhcp range %d.%d.%d.%d %d.%d.%d.%d base wlan %d\n",lip[0],lip[1],lip[2],lip[3],hip[0],hip[1],hip[2],hip[3],WLAN[i]->WlanID);
+				cursor = showStr + totalLen;
+				if(WLAN[i]->wlan_dhcp_state == 1)
+				{
+					totalLen += sprintf(cursor,"set sta vir-dhcp enable base wlan %d\n",WLAN[i]->WlanID);
+					cursor = showStr + totalLen;
+				}
+			}
+			if(WLAN[i]->wlan_tunnel_switch == 1)
+			{
+				totalLen += sprintf(cursor,"set sta tunnel switch enable base wlan %d\n",WLAN[i]->WlanID);
+				cursor = showStr + totalLen;
+			}
+		}
+	}
+
+	reply = dbus_message_new_method_return(msg);
+		
+	dbus_message_iter_init_append (reply, &iter);
+		
+	dbus_message_iter_append_basic (&iter,
+									DBUS_TYPE_STRING,
+									&showStr); 
+	free(showStr);
+	showStr = NULL;
+	return reply;
+}
+
 int check_dbus_uname(char * sender){
 	int i = 0;
 	int j = 0; 
@@ -29553,6 +29992,22 @@ static DBusHandlerResult asd_dbus_message_handler (DBusConnection *connection, D
 		else if(dbus_message_is_method_call(message,ASD_DBUS_STA_INTERFACE,ASD_DBUS_CONF_METHOD_QUIT)){
 			reply = asd_dbus_method_quit(connection,message,user_data);
 		}
+		/*yjl copy from aw3.1.2 for local forwarding.2014-2-28*/
+		else if (dbus_message_is_method_call(message,ASD_DBUS_STA_INTERFACE,ASD_DBUS_STA_METHOD_SET_ASD_STA_VIR_DHCP)) {
+            asd_printf(ASD_DEFAULT,MSG_DEBUG,"**************yjl add for test****3333333****\n");         
+			reply = asd_dbus_set_asd_sta_vir_dhcp(connection,message,user_data);
+		}
+		else if (dbus_message_is_method_call(message,ASD_DBUS_STA_INTERFACE,ASD_DBUS_STA_METHOD_SET_ASD_STA_VIR_DHCP_STATE)) {
+			reply = asd_dbus_set_asd_sta_vir_dhcp_state(connection,message,user_data);
+		}
+		else if (dbus_message_is_method_call(message,ASD_DBUS_STA_INTERFACE,ASD_DBUS_STA_METHOD_SET_ASD_STA_TUNNEL_SWITCH_STATE)) {
+			reply = asd_dbus_set_asd_sta_tunnel_switch_state(connection,message,user_data);
+		}
+		else if (dbus_message_is_method_call(message,ASD_DBUS_STA_INTERFACE,ASD_DBUS_STA_METHOD_VIR_DHCP_SHOW_RUNNING_CONFIG)) {
+			reply = asd_dbus_vir_dhcp_running_config(connection,message,user_data);
+		}
+		/*end**************************************************/
+
 #ifdef __ASD_STA_ACL
 		else if (dbus_message_is_method_call(message,ASD_DBUS_STA_INTERFACE,ASD_DBUS_STA_METHOD_SET_STA_ACL)) {
 			reply = asd_dbus_set_sta_acl(connection,message,user_data);

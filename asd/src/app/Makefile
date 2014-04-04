@@ -57,7 +57,7 @@ OBJS =	asd.o ASD8021XOp.o ASDEapolSM.o \
 	none_cert.o pack.o proc.o raw_socket.o wai_sta.o x509_cert.o \
 	alg_comm.o ecc_crypt.o debug.o ASDDbusPathInit.o\
 	Inter_AC_Roaming.o ASDNetlinkArpOp.o ASDPkcs12.o ASDPkcs12App.o StaFlashDisconnOp.o\
-        ASDStaManage.o ASDEAPAuth.o
+        ASDStaManage.o ASDEAPAuth.o ASDDhcp.o
       
 
 

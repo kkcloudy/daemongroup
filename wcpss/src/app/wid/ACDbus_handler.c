@@ -3526,6 +3526,17 @@ int WID_ENABLE_WLAN(unsigned char WlanID){
                             	wid_radio_set_extension_command(m,apcmd);
                             	/* end */
 
+                                /*yjl copy from aw3.1.2 for local forwarding.2014-2-28*/
+								memset(apcmd,0,WID_SYSTEM_CMD_LENTH);
+
+                            	if((AC_WLAN[WlanID] != NULL) &&AC_WLAN[WlanID]->wlan_tunnel_switch == 1)
+                            	{
+                        		    //sprintf(apcmd,"echo 3 > /proc/sys/net/ath.%d-%d/vap_splitmac",n,WlanID);
+									sprintf(apcmd,TUNNEL_SWITCH_CMD";"AP_OPEN_IPFORWARD";"AP_SPFAST_DOWM";"AP_SPFAST_UP,n,WlanID);
+									wid_radio_set_extension_command(m,apcmd);
+                        		}
+								/*end**************************************************/
+
                             	/* zhangshu add , 2011-1-7 */
                             	if((check_bssid_func(AC_WLAN[WlanID]->S_WTP_BSS_List[m][n]))&&(AC_BSS[(AC_WLAN[WlanID]->S_WTP_BSS_List[m][n])] != NULL))
                             	{
@@ -9890,6 +9901,16 @@ int WID_ADD_WLAN_APPLY_RADIO(unsigned int RadioID,unsigned char WlanID){
 	wid_radio_set_extension_command(WtpID,apcmd);
 	/* end */
 
+	/*yjl copy from aw3.1.2 for local forwarding.2014-2-28*/
+    memset(apcmd, 0, WID_SYSTEM_CMD_LENTH);
+	if ((AC_WLAN[WlanID] != NULL) && (AC_WLAN[WlanID]->wlan_tunnel_switch == 1))
+	{
+		//sprintf(apcmd, "echo 3 > /proc/sys/net/ath.%d-%d/vap_splitmac",AC_RADIO[RadioID]->Radio_L_ID, WlanID);
+		sprintf(apcmd,TUNNEL_SWITCH_CMD";"AP_OPEN_IPFORWARD";"AP_SPFAST_DOWM";"AP_SPFAST_UP,AC_RADIO[RadioID]->Radio_L_ID,WlanID);
+		wid_radio_set_extension_command(WtpID, apcmd);
+	}
+	/*end**************************************************/
+	
     /* zhangshu add , 2011-1-7 */
 	if((check_bssid_func(AC_WLAN[WlanID]->S_WTP_BSS_List[WtpID][localradio_id]))&&(AC_BSS[(AC_WLAN[WlanID]->S_WTP_BSS_List[WtpID][localradio_id])] != NULL))
 	{                                                                                        
@@ -10385,7 +10406,7 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_ESSID(unsigned int RadioID,unsigned char WlanI
 
 	/* send eap switch & mac to ap,zhangshu add 2010-10-22 */
 	int bssindex = AC_WLAN[WlanID]->S_WTP_BSS_List[WtpID][localradio_id];
-	char apcmd[WID_SYSTEM_CMD_LENTH];
+	char apcmd[WID_SYSTEM_CMD_LENTH] = {0};
 	memset(apcmd,0,WID_SYSTEM_CMD_LENTH);
 	if((AC_WLAN[WlanID]->eap_mac_switch==1)&&(AC_WLAN[WlanID]->wlan_if_policy==NO_INTERFACE)&&(AC_BSS[bssindex]!=NULL)&&(AC_BSS[bssindex]->BSS_IF_POLICY == NO_INTERFACE))
 	{
@@ -10441,6 +10462,18 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_ESSID(unsigned int RadioID,unsigned char WlanI
 			WID_INSERT_CONTROL_LIST(WtpID, elem);
 		}*/
 	}	
+
+	/*yjl copy from aw3.1.2 for local forwarding.2014-2-28*/
+	memset(apcmd,0,WID_SYSTEM_CMD_LENTH);
+	
+	if((AC_WLAN[WlanID]!=NULL)&&(AC_WLAN[WlanID]->wlan_tunnel_switch == 1))
+	{
+		//sprintf(apcmd,"echo 3 > /proc/sys/net/ath.%d-%d/vap_splitmac",AC_RADIO[RadioID]->Radio_L_ID,WlanID);
+		sprintf(apcmd,TUNNEL_SWITCH_CMD";"AP_OPEN_IPFORWARD";"AP_SPFAST_DOWM";"AP_SPFAST_UP,AC_RADIO[RadioID]->Radio_L_ID,WlanID);
+		wid_radio_set_extension_command(WtpID,apcmd);
+	}
+    /*end**************************************************/
+	
 	if((AC_BSS[bssindex])&&(AC_BSS[bssindex]->multi_user_optimize_switch == 1))
 	{
 		char wlanid =AC_BSS[bssindex]->WlanID;
@@ -10459,6 +10492,7 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_VLANID(unsigned int RadioID,unsigned char Wlan
 	unsigned int nas_id_len = 0;//zhanglei add
 	int WtpID = RadioID/L_RADIO_NUM;
 	int localradio_id = RadioID%L_RADIO_NUM;
+	char apcmd[WID_SYSTEM_CMD_LENTH] = {0};/* yjl 2014-2-28 */
 		
 	if(AC_RADIO[RadioID]->BindingWlanCount >= L_BSS_NUM)
 	{
@@ -10903,6 +10937,18 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_VLANID(unsigned int RadioID,unsigned char Wlan
 			WID_INSERT_CONTROL_LIST(WtpID, elem);
 		}*/
 	}
+	
+    /*yjl copy from aw3.1.2 for local forwarding.2014-2-28*/
+	memset(apcmd,0,WID_SYSTEM_CMD_LENTH);
+	
+	if((AC_WLAN[WlanID]!=NULL)&&(AC_WLAN[WlanID]->wlan_tunnel_switch == 1))
+	{
+		//sprintf(apcmd,"echo 3 > /proc/sys/net/ath.%d-%d/vap_splitmac",AC_RADIO[RadioID]->Radio_L_ID,WlanID);
+		sprintf(apcmd,TUNNEL_SWITCH_CMD";"AP_OPEN_IPFORWARD";"AP_SPFAST_DOWM";"AP_SPFAST_UP,AC_RADIO[RadioID]->Radio_L_ID,WlanID);
+		wid_radio_set_extension_command(WtpID,apcmd);
+	}
+    /*end**************************************************/
+	
 	if(AC_WTP[WtpID]!=NULL){
 		if((AC_WLAN[WlanID])&&(AC_WLAN[WlanID]->Status == 0))
 			WLAN_FLOW_CHECK(WlanID);
@@ -11101,6 +11147,7 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_NAS_PORT_ID(unsigned int RadioID,unsigned char
 	unsigned int nas_id_len = 0;//zhanglei add
 	int WtpID = RadioID/L_RADIO_NUM;
 	int localradio_id = RadioID%L_RADIO_NUM;
+	char apcmd[WID_SYSTEM_CMD_LENTH] = {0};/* yjl 2014-2-28 */
 		
 	if(AC_RADIO[RadioID]->BindingWlanCount >= L_BSS_NUM){
 		return WTP_OVER_MAX_BSS_NUM;
@@ -11531,6 +11578,17 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_NAS_PORT_ID(unsigned int RadioID,unsigned char
 			WID_INSERT_CONTROL_LIST(WtpID, elem);
 		}*/
 	}
+
+    /*yjl copy from aw3.1.2 for local forwarding.2014-2-28*/
+	memset(apcmd,0,WID_SYSTEM_CMD_LENTH);
+	if((AC_WLAN[WlanID]!=NULL)&&(AC_WLAN[WlanID]->wlan_tunnel_switch == 1))
+	{
+		//sprintf(apcmd,"echo 3 > /proc/sys/net/ath.%d-%d/vap_splitmac",AC_RADIO[RadioID]->Radio_L_ID,WlanID);
+		sprintf(apcmd,TUNNEL_SWITCH_CMD";"AP_OPEN_IPFORWARD";"AP_SPFAST_DOWM";"AP_SPFAST_UP,AC_RADIO[RadioID]->Radio_L_ID,WlanID);
+		wid_radio_set_extension_command(WtpID,apcmd);
+	}
+	/*end**************************************************/
+	
 	if((AC_RADIO[RadioID]->BSS[k1])&&(AC_RADIO[RadioID]->BSS[k1]->multi_user_optimize_switch == 1))
 	{
 		char wlanid =WlanID;
@@ -11588,6 +11646,7 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_HOTSPOT_ID(unsigned int RadioID,unsigned char 
 	unsigned int nas_id_len = 0;//zhanglei add
 	int WtpID = RadioID/L_RADIO_NUM;
 	int localradio_id = RadioID%L_RADIO_NUM;
+	char apcmd[WID_SYSTEM_CMD_LENTH] = {0};/* yjl 2014-2-28 */
 		
 	if(AC_RADIO[RadioID]->BindingWlanCount >= L_BSS_NUM){
 		return WTP_OVER_MAX_BSS_NUM;
@@ -12003,6 +12062,17 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_HOTSPOT_ID(unsigned int RadioID,unsigned char 
 			WID_INSERT_CONTROL_LIST(WtpID, elem);
 		}*/
 	}	
+
+	/*yjl copy from aw3.1.2 for local forwarding.2014-2-28*/
+	memset(apcmd,0,WID_SYSTEM_CMD_LENTH);
+	if((AC_WLAN[WlanID]!=NULL)&&(AC_WLAN[WlanID]->wlan_tunnel_switch == 1))
+	{
+		//sprintf(apcmd,"echo 3 > /proc/sys/net/ath.%d-%d/vap_splitmac",AC_RADIO[RadioID]->Radio_L_ID,WlanID);
+		sprintf(apcmd,TUNNEL_SWITCH_CMD";"AP_OPEN_IPFORWARD";"AP_SPFAST_DOWM";"AP_SPFAST_UP,AC_RADIO[RadioID]->Radio_L_ID,WlanID);
+		wid_radio_set_extension_command(WtpID,apcmd);
+	}
+	/*end**************************************************/
+	
 	if((AC_RADIO[RadioID]->BSS[k1])&&(AC_RADIO[RadioID]->BSS[k1]->multi_user_optimize_switch == 1))
 	{
 		char wlanid =AC_RADIO[RadioID]->BSS[k1]->WlanID;
@@ -13912,6 +13982,16 @@ int WID_ENABLE_WLAN_APPLY_RADIO(unsigned int RadioId, unsigned char WlanId)
 		setWtpUniMutiBroCastRate(WtpID,local_radioid,WlanId,AC_BSS[(AC_WLAN[WlanId]->S_WTP_BSS_List[WtpID][local_radioid])]->muti_rate);
 		wid_syslog_debug_debug(WID_DBUS,"%s,%d,radio %d-%d wlan:%d,bssindex=%d.config save.\n",__func__,__LINE__,WtpID,local_radioid,WlanId,(AC_WLAN[WlanId]->S_WTP_BSS_List[WtpID][local_radioid]));
 	}
+
+	/*yjl copy from aw3.1.2 for local forwarding.2014-2-28*/
+	memset(apcmd,0,WID_SYSTEM_CMD_LENTH);
+	if((AC_WLAN[WlanId]!=NULL)&&(AC_WLAN[WlanId]->wlan_tunnel_switch == 1))
+	{
+		//sprintf(apcmd,"echo 3 > /proc/sys/net/ath.%d-%d/vap_splitmac",AC_RADIO[RadioId]->Radio_L_ID,WlanId);
+		sprintf(apcmd,TUNNEL_SWITCH_CMD";"AP_OPEN_IPFORWARD";"AP_SPFAST_DOWM";"AP_SPFAST_UP,AC_RADIO[RadioId]->Radio_L_ID,WlanId);
+		wid_radio_set_extension_command(WtpID,apcmd);
+	}
+	/*end**************************************************/
 	
 	return 0;		
 

@@ -3,6 +3,27 @@
 #include <netinet/in.h>
 
 #define	_WID_ASD_WSM_H
+/*yjl copy from aw3.1.2 for local forwarding.2014-2-28*********************/
+typedef unsigned char wlan_t;		/* WLAN ID type */
+
+/* 127.0.0.0 */
+#define WAW_LOOPBACK(x)	(((x) & htonl(0xff000000)) == htonl(0x7f000000))
+/* 224.x.x.x - 239.255.255.255 */
+#define WAW_MULTICAST(x)	(((x) & htonl(0xf0000000)) == htonl(0xe0000000))
+/* 240.x.x.x */
+#define WAW_BADCLASS(x)	(((x) & htonl(0xf0000000)) == htonl(0xf0000000))
+/* 0.x.x.x */
+#define WAW_ZERONET(x)	(((x) & htonl(0xff000000)) == htonl(0x00000000))
+/* 169.254.x.x */
+#define WAW_PRIVATE_NET(x)	(((x) & htonl(0xFFFF0000)) == htonl(0xA9FE0000))
+
+#define IPADDR_INVALID(ipaddr)	\
+		(WAW_LOOPBACK(htonl((ipaddr)))	\
+		|| WAW_MULTICAST(htonl((ipaddr)))	\
+		|| WAW_BADCLASS(htonl((ipaddr))) \
+		|| WAW_ZERONET(htonl((ipaddr))) \
+		|| WAW_PRIVATE_NET(htonl((ipaddr))))
+/*end*********************************************************************/
 
 #define _GROUP_POLICY 1  //fengwenchao add 
 #define IPv4_LEN	4
@@ -327,6 +348,7 @@ typedef struct{
 	unsigned int   macaddr_acl;
 	unsigned int hotspot_id;
 	char master_to_disable;//qiuchen add it for AXSSZFI-1191
+	unsigned char SSIDSetFlag;/* yjl 2014-2-28 */
 }wAW_BSS;	/*WID update BSS information to ASD and WSM*/
 
 
@@ -371,6 +393,14 @@ typedef enum{
 	RETRANSMIT_TOO_MORE =2,
 	IDLE_TIME_OUT =3
 }STA_SUB_RESON3;
+/*yjl copy from aw3.1.2 for local forwarding.2014-2-28*/
+typedef struct {
+	
+	unsigned int portal_ip;
+	unsigned char portal_mac[MAC_LEN];
+
+}PORTAL_INFO;
+
 typedef struct {
 	unsigned char StaState;
 	unsigned char RoamingTag;
@@ -428,6 +458,7 @@ typedef struct {
 	unsigned short   sub_reason;
 	unsigned int authorize_failed;
 	unsigned int sta_num;	//sta has authorized
+	PORTAL_INFO portal_info;/* yjl 2014-2-28 */
 }aWSM_STA;	/*ASD update STA information to WSM*/
 
 typedef struct {
@@ -506,6 +537,8 @@ typedef enum{
 	STA_LEAVE_REPORT = 47,
 	STA_CHECK_DEL = 48,
 	STA_WTP_TERMINAL_STATISTICS = 49,
+	STA_PORTAL_AUTH = 50,    /* yjl 2014-2-28 */
+	STA_PORTAL_DEAUTH = 51,  /* yjl 2014-2-28 */
 	DHCP_IPv6 = 50
 }Operate;
 
@@ -628,7 +661,10 @@ typedef struct {
 	unsigned int reason;
 	unsigned int wtp_id;
 	char	arpifname[16];
-
+	
+    unsigned int initiative_leave; /*1-sta initiative_leave 0-others*/ /* yjl 2014-2-28 */
+	unsigned int portal_info_switch;/* yjl 2014-2-28 */
+	PORTAL_INFO portal_info;/* yjl 2014-2-28 */
     	unsigned long long  rx_data_bytes;        //新加64bit，值还是上面的rx_bytes
     	unsigned long long tx_data_bytes;        //新加64bit，值还是上面的tx_bytes
     	unsigned long long rx_frames;                  //新加   （AP收到用户的总帧数）
@@ -876,5 +912,12 @@ enum{
 	ALL_STATISTICS
 };
 /* end for log system */
+
+/*yjl copy from aw3.1.2 for local forwarding.2014-2-28*/
+typedef enum {
+	WAW_VRRP_STATE_MASTER = 0,		/* master */
+	WAW_VRRP_STATE_SECONDARY = 1,	/* secondary */
+	WAW_VRRP_STATE_NONE = 2			/* disable or none */
+}waw_vrrp_state;
 
 #endif

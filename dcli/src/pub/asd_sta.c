@@ -76,6 +76,28 @@ int parse2_int_ID(char* str,unsigned int* ID)
 	
 }
 
+/*yjl copy from aw3.1.2 for local forwarding.2014-2-28*/
+int dcli_check_ipaddr(char *ipstr, unsigned int *ipaddr)
+{
+	if (NULL == ipaddr)
+	{
+		return 1;
+	}
+
+	if (1 != inet_pton (AF_INET, ipstr, ipaddr)) 
+	{
+		return 1;
+	}
+	
+	if (IPADDR_INVALID(*ipaddr))
+	{
+		return 1;	
+	}
+	   
+	return 0;
+}
+/*end**************************************************/
+
 void asd_state_check(unsigned char *ieee80211_state, unsigned int sta_flags, unsigned char *PAE, unsigned int pae_state, unsigned char *BACKEND, unsigned int backend_state){
 	if((sta_flags&1) != 0){
 		if((sta_flags&2) != 0){
@@ -1365,6 +1387,10 @@ struct dcli_sta_info_v2* get_sta_info_by_mac_v2(DBusConnection *dcli_dbus_connec
 			dbus_message_iter_next(&iter);	
 			dbus_message_iter_get_basic(&iter,&(sta->auth_type)); 
 
+			/*yjl copy from aw3.1.2 for TL.2014-2-28 */
+			dbus_message_iter_next(&iter);	
+			dbus_message_iter_get_basic(&iter,&(sta->realip));
+			
             /* add sta ip info for ipv6 protal */
 			dbus_message_iter_next(&iter);	
 			dbus_message_iter_get_basic(&iter,&(sta->ip_addr)); 
@@ -1762,7 +1788,11 @@ struct dcli_ac_info* show_sta_list(DBusConnection *dcli_dbus_connection,int inde
 			dbus_message_iter_get_basic(&iter_struct,&(bss->BSSIndex));	
 			
 			dbus_message_iter_next(&iter_struct);	
-			dbus_message_iter_get_basic(&iter_struct,&(bss->SecurityID));	
+			dbus_message_iter_get_basic(&iter_struct,&(bss->SecurityID));
+
+			/*yjl copy from aw3.1.2 for local forwarding.2014-2-28*/
+			dbus_message_iter_next(&iter_struct);	
+			dbus_message_iter_get_basic(&iter_struct,&(bss->if_policy));
 			
 			dbus_message_iter_next(&iter_struct);	
 			dbus_message_iter_get_basic(&iter_struct,&(bss->num_assoc));	
@@ -1871,6 +1901,10 @@ struct dcli_ac_info* show_sta_list(DBusConnection *dcli_dbus_connection,int inde
 
 				dbus_message_iter_next(&iter_sub_struct);	
 				dbus_message_iter_get_basic(&iter_sub_struct,&(sta->txbytes));
+
+                /*yjl copy from aw3.1.2 for local forwarding.2014-2-28*/
+				dbus_message_iter_next(&iter_sub_struct);	
+				dbus_message_iter_get_basic(&iter_sub_struct,&(sta->realip));
 				
 				dbus_message_iter_next(&iter_sub_struct);	
 				dbus_message_iter_get_basic(&iter_sub_struct,&(sta->security_type)); 
@@ -7138,5 +7172,54 @@ unsigned int dcli_asd_show_wlan_sta_default_acl(DBusConnection *dcli_dbus_connec
 	return ret;
 }
 #endif
+
+/*yjl copy from aw3.1.2 for local forwarding.2014-2-28*/
+unsigned int dcli_set_sta_virdchp_range(DBusConnection *dcli_dbus_connection, unsigned int index, int localid,
+					unsigned int lowip, unsigned int highip, unsigned int add_flag, wlan_t wlanid)
+{
+	DBusMessage *query = NULL, *reply = NULL;
+	DBusMessageIter iter;
+	DBusError err;
+	unsigned int ret = 0;
+
+	char BUSNAME[PATH_LEN] = {0};
+	char OBJPATH[PATH_LEN] = {0};
+	char INTERFACE[PATH_LEN] = {0};
+
+	ReInitDbusPath_V2(localid,index,ASD_DBUS_BUSNAME,BUSNAME);
+	ReInitDbusPath_V2(localid,index,ASD_DBUS_STA_OBJPATH,OBJPATH);
+	ReInitDbusPath_V2(localid,index,ASD_DBUS_STA_INTERFACE,INTERFACE);
+	
+	query = dbus_message_new_method_call(BUSNAME,OBJPATH,INTERFACE,ASD_DBUS_STA_METHOD_SET_ASD_STA_VIR_DHCP);
+	
+	dbus_error_init(&err);
+
+	dbus_message_append_args(query,
+							DBUS_TYPE_UINT32,&lowip,
+							DBUS_TYPE_UINT32,&highip,
+							DBUS_TYPE_UINT32,&add_flag,
+							DBUS_TYPE_BYTE,&wlanid,
+							DBUS_TYPE_INVALID);
+	
+	reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection, query, -1, &err);
+	
+	dbus_message_unref(query);
+	
+	if (NULL == reply) 
+	{
+		if (dbus_error_is_set(&err)) 
+		{
+			dbus_error_free(&err);
+		}
+		return ASD_DBUS_ERROR;
+	}
+	dbus_message_iter_init(reply,&iter);
+	dbus_message_iter_get_basic(&iter,&ret);
+
+	dbus_message_unref(reply);
+
+	return ret;
+}
+
 #endif
 

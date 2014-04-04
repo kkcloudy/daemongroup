@@ -67,6 +67,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * Supported Rates IEs). */
 #define WLAN_SUPP_RATES_MAX 32
 
+#define STA_INFO_INADDR_LEN		(16)	/* length of sta_info->in_addr */ /* yjl 2014-2-28 */
+
 /* caojia add for sta acl function */
 struct acl_policy
 {
@@ -158,7 +160,8 @@ struct sta_info {
 	struct asd_ssid *ssid_probe; /* SSID selection based on ProbeReq */
 	int alive_flag;						//weichao add 2011.09.23
 	int alive_total;						//weichao add 2011.09.23
-
+    unsigned int initiative_leave; /*1-sta initiative_leave 0-others*/ /* yjl 2014-2-28 */
+   
 	int vlan_id;
 	unsigned int	security_type;		//mahz add 2011.3.1
 	unsigned char	sta_assoc_auth_flag;
@@ -195,6 +198,10 @@ struct sta_info {
 	char	arpifname[16];
 	 time_t add_time_sysruntime;//qiuchen add it
 	 time_t sta_online_time;//qiuchen add it
+
+	 unsigned int vir_ip;/* yjl 2014-2-28 */
+	 unsigned int realip;/* yjl 2014-2-28 */
+	 PORTAL_INFO portal_server;/* yjl 2014-2-28 */
 	 
 	 unsigned int MAXofRateset;	 /* 终端与AP刚关联时根据双方能力而协商的无线速率集中的最高速率 */
 	 struct WID_WTP_STA_INFO wtp_sta_statistics_info;
