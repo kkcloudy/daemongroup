@@ -267,10 +267,13 @@ stamsg_proc(eag_stamsg_t *stamsg, uint8_t usermac[6],
         memcpy((uint8_t *)&(tmpsession.framed_ipv6_prefix[2]), 
                 (uint8_t *)&(sta_msg->STA.Framed_IPv6_Prefix), sizeof(struct in6_addr));
         tmpsession.login_ipv6_host = sta_msg->STA.Login_IPv6_Host;
-        strncpy(tmpsession.framed_ipv6_route, 
-                "2003:4:1::/64 2014:4:1::1988:923 1", MAX_FRAMED_IPV6_ATTR_LEN - 1);
-        strncpy(tmpsession.framed_ipv6_pool, 
-                "2003:4:1::/64", MAX_FRAMED_IPV6_ATTR_LEN - 1);
+
+        ipv6tostr((struct in6_addr *)&(tmpsession.framed_ipv6_prefix[2]),
+                framed_ipv6_prefix_str, sizeof(framed_ipv6_prefix_str));
+        snprintf(tmpsession.framed_ipv6_pool, MAX_FRAMED_IPV6_ATTR_LEN - 1, 
+                "%s/%hhu", framed_ipv6_prefix_str, tmpsession.framed_ipv6_prefix[1]);
+        snprintf(tmpsession.framed_ipv6_route, MAX_FRAMED_IPV6_ATTR_LEN - 1,
+                "%s %s1 1", tmpsession.framed_ipv6_pool, framed_ipv6_prefix_str);
         memcpy(tmpsession.delegated_ipv6_prefix, 
                 tmpsession.framed_ipv6_prefix, MAX_FRAMED_IPV6_PREFIX_LEN);
 

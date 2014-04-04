@@ -199,10 +199,6 @@ reget:
 	memcpy((uint8_t *)&(session->framed_ipv6_prefix[2]), 
 			(uint8_t *)&(sta->Framed_IPv6_Prefix), sizeof(struct in6_addr));
 	session->login_ipv6_host = sta->Login_IPv6_Host;
-	strncpy(session->framed_ipv6_route, 
-			"2003:4:1::/64 2014:4:1::1988:923 1", MAX_FRAMED_IPV6_ATTR_LEN - 1);
-	strncpy(session->framed_ipv6_pool, 
-			"2003:4:1::/64", MAX_FRAMED_IPV6_ATTR_LEN - 1);
 	memcpy(session->delegated_ipv6_prefix, 
 			session->framed_ipv6_prefix, MAX_FRAMED_IPV6_PREFIX_LEN);
 
@@ -212,6 +208,11 @@ reget:
 	ipv6tostr(&(session->login_ipv6_host), login_ipv6_host_str, sizeof(login_ipv6_host_str));
 	ipv6tostr((struct in6_addr *)&(session->framed_ipv6_prefix[2]),
 			framed_ipv6_prefix_str, sizeof(framed_ipv6_prefix_str));
+	snprintf(session->framed_ipv6_pool, MAX_FRAMED_IPV6_ATTR_LEN - 1, 
+			"%s/%hhu", framed_ipv6_prefix_str, session->framed_ipv6_prefix[1]);
+	snprintf(session->framed_ipv6_route, MAX_FRAMED_IPV6_ATTR_LEN - 1,
+			"%s %s1 1", session->framed_ipv6_pool, framed_ipv6_prefix_str);
+
 	eag_log_info("eag_get_sta_info_by_mac_v2 success, "
 			"sta_mac=%s, sta_ip=%s, sta_ipv6=%s, radio_id=%d, wlan_id=%d, wtp_id=%d, "
 			"essid=%s, wtp_mac=%s, wtp_name=%s, vlanid=%d, idle_check=%u, "
