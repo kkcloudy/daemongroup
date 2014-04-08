@@ -4598,6 +4598,7 @@ iterate_over_ia_na(struct data_string *reply_ret,
 	int i;
 	struct data_string key;
 	u_int32_t iaid;
+	unsigned char iaid_duid[19] = {0};
 
 	/*
 	 * Initialize to empty values, in case we have to exit early.
@@ -4799,8 +4800,13 @@ iterate_over_ia_na(struct data_string *reply_ret,
 
 			data_string_forget(&key, MDL);
 		}
+		memcpy(iaid_duid, &iaid, sizeof(iaid));
+		memcpy(iaid_duid+sizeof(iaid) ,(char *)client_id->data, client_id->len);
 
 		if ((host != NULL) || (lease != NULL)) {
+			ia_hash_delete(ia_na_active,
+				       iaid_duid,
+				       18, MDL);
 			ia_na_match(client_id, &iaaddr, lease);
 		} else {
 			ia_na_nomatch(client_id, &iaaddr, 
