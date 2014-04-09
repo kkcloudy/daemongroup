@@ -745,6 +745,7 @@ void dcli_init(void)
 	dcli_pppoe_snp_init();
 	dcli_se_agent_init();
 	dcli_cvm_ratelimit_element_init();
+	dcli_distributed_system_route_policy_init();
 
 }   
 

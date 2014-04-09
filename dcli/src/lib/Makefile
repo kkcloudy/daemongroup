@@ -108,7 +108,7 @@ DCLI_WIRELESS_OBJS = $(DCLI_WIRELESS_PATH)dcli_wqos.o  $(DCLI_WIRELESS_PATH)dcli
 				dcli_ntp.o dcli_timezone.o dcli_pppoe.o dcli_cavium_ratelimit.o
                 
 DCLI_OBJS = dcli_main.o dcli_user.o dcli_sys_manage.o dcli_boot.o dcli_vrrp.o dcli_dhcp.o dcli_captive.o dcli_se_agent.o\
-						dcli_eag.o dcli_pdc.o dcli_rdc.o dcli_domain.o dcli_rpa.o dcli_snmp.o dcli_acsample.o dcli_tc.o dcli_firewall.o dcli_strict_access.o dcli_apache.o dcli_md5.o dcli_cavium_ratelimit.o	
+						dcli_eag.o dcli_pdc.o dcli_rdc.o dcli_domain.o dcli_rpa.o dcli_snmp.o dcli_acsample.o dcli_tc.o dcli_firewall.o dcli_strict_access.o dcli_apache.o dcli_md5.o dcli_cavium_ratelimit.o	dcli_sync_route_policy.o
 
 #DCLI_OBJS = dcli_main.o dcli_user.o dcli_sys_manage.o dcli_boot.o dcli_sem.o dcli_fpga.o dcli_vrrp.o dcli_dhcp.o dcli_captive.o dcli_se_agent.o\
 #						dcli_eag.o dcli_pdc.o dcli_rdc.o dcli_domain.o dcli_rpa.o dcli_snmp.o dcli_acsample.o dcli_tc.o dcli_firewall.o dcli_strict_access.o dcli_apache.o dcli_md5.o dcli_cavium_ratelimit.o						

@@ -170,6 +170,19 @@ xufujun
 #define SEM_DBUS_FLASH_ERASE_PARTITIO  "flash_erase_partition"
 #define WRITE_BOOT_TO_FLASH		"write_boot_to_flash"
 
+/*gujd: 2014-02-27, pm 4:57. Add route policy for distributed system.*/
+#define SEM_DBUS_SET_ROUTE_POLICY        "sem_dbus_set_route_policy"
+#define SEM_DBUS_DEL_ROUTE_POLICY        "sem_dbus_del_route_policy"
+#define SEM_DBUS_IP_ROUTE_POLICY         "sem_dbus_ip_route_policy"
+#define SEM_DBUS_NO_IP_ROUTE_POLICY      "sem_dbus_no_ip_route_policy"
+#define SEM_DBUS_ROUTE_POLICY_IP         "sem_dbus_ip_route_policy_ip"
+#define SEM_DBUS_ROUTE_POLICY_TOS        "sem_dbus_ip_route_policy_tos"
+#define SEM_DBUS_ROUTE_POLICY_INTERFACE  "sem_dbus_ip_route_policy_interface"
+#define SEM_DBUS_SHOW_ROUTE_POLICY       "sem_dbus_show_route_policy"
+#define SEM_DBUS_SHOW_ROUTE_POLICY_ALL   "sem_dbus_show_route_policy_all"
+#define SEM_DBUS_SHOW_IP_ROUTE_POLICY    "sem_dbus_show_ip_route_policy"
+#define SEM_DBUS_ROUTE_POLICY_SHOW_RUNNING    "sem_dbus_route_policy_show_running"
+
 
 #define SEM_MAC_LEN 6
  
