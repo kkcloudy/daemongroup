@@ -1965,8 +1965,21 @@ int WID_CREATE_NEW_WTP(char *WTPNAME, unsigned int WTPID, unsigned char* WTPSN, 
 	gwtpid = WTPID*L_RADIO_NUM;
 	AC_WTP[WTPID]->RadioCount = num;
   //AC_WTP[WTPID]->channelsendtimes = 1;   /*wuwl add for send channel_cont only one time at the beginning of the wtp access*/
+		for(i=0; i < 2; i++){	
+		AC_RADIO[gwtpid + i] = (WID_WTP_RADIO*)WID_MALLOC(sizeof(WID_WTP_RADIO));
+		if (NULL == AC_RADIO[gwtpid + i] )
+		{	
+			while(i)
+			{			
+				CW_FREE_OBJECT_WID(AC_RADIO[gwtpid +i]);
+				i--;				
+			}
+			goto label_radio;
+		}
+		memset(AC_RADIO[gwtpid+i], 0, sizeof(WID_WTP_RADIO));
+	}
 	for(i=0; ((i<num)&&(i<L_RADIO_NUM)); i++){	
-		AC_RADIO[gwtpid] = (WID_WTP_RADIO*)WID_MALLOC(sizeof(WID_WTP_RADIO));
+		/*AC_RADIO[gwtpid] = (WID_WTP_RADIO*)WID_MALLOC(sizeof(WID_WTP_RADIO));
 		if (NULL == AC_RADIO[gwtpid] )
 		{
 			while(i)
@@ -1977,7 +1990,7 @@ int WID_CREATE_NEW_WTP(char *WTPNAME, unsigned int WTPID, unsigned char* WTPSN, 
 			}
 			goto label_radio;
 		}
-		memset(AC_RADIO[gwtpid], 0, sizeof(WID_WTP_RADIO));
+		memset(AC_RADIO[gwtpid], 0, sizeof(WID_WTP_RADIO));*/
 		AC_RADIO[gwtpid]->WTPID = WTPID;
 		AC_RADIO[gwtpid]->Radio_G_ID = gwtpid;
 		AC_RADIO[gwtpid]->Radio_L_ID = i;
@@ -2510,10 +2523,16 @@ int WID_DELETE_WTP(unsigned int WTPID){
 			}
 		}
 		
-		WID_FREE(AC_RADIO[RID]);
-		AC_RADIO[RID] = NULL;
+		/*WID_FREE(AC_RADIO[RID]);
+		AC_RADIO[RID] = NULL;*/
 		
 		RID++;
+	}
+	RID = RID -num;
+	for (i = 0; i < 2; i++)
+	{
+		WID_FREE(AC_RADIO[RID]);
+		AC_RADIO[RID] = NULL;
 	}
 	memset(AC_WTP[WTPID]->longitude, '\0', LONGITUDE_LATITUDE_MAX_LEN);
 	memset(AC_WTP[WTPID]->latitude, '\0', LONGITUDE_LATITUDE_MAX_LEN);

@@ -2017,7 +2017,7 @@ DBusMessage * wid_dbus_interface_radio(DBusConnection *conn, DBusMessage *msg, v
 	}
 	if(RadioId >= G_RADIO_NUM)
 		ret = RADIO_ID_LARGE_THAN_MAX;
-	else if(AC_RADIO[RadioId]== NULL)
+	else if((AC_RADIO[RadioId]== NULL) ||(AC_RADIO[RadioId]->WTPID== 0))
 		ret = RADIO_ID_NOT_EXIST;
 	
 	reply = dbus_message_new_method_return(msg);
@@ -25810,7 +25810,7 @@ DBusMessage * wid_dbus_interface_show_radioconf(DBusConnection *conn, DBusMessag
 	if(radioID >= G_RADIO_NUM){
 		ret = RADIO_ID_LARGE_THAN_MAX;
 	}
-	else if(AC_RADIO[radioID] == NULL){
+	else if((AC_RADIO[radioID] == NULL) ||( AC_RADIO[radioID]->WTPID == 0)){
 		wid_syslog_debug_debug(WID_DBUS,"AC_RADIO[%d] id empty!!!\n",radioID);
 		ret = RADIO_ID_NOT_EXIST;
 		num = 0;
