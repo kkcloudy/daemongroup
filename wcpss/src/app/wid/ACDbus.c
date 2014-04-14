@@ -82265,7 +82265,6 @@ static DBusHandlerResult wid_dbus_message_handler (DBusConnection *connection, D
 #endif
         else if (dbus_message_is_method_call(message,WID_DBUS_WLAN_INTERFACE,WID_DBUS_CONF_METHOD_SET_WLAN_STA_TUNNEL_SWITCH_STATE))
 		{   
-			wid_syslog_err("%s %d.*******yjl add for test*************\n",__func__,__LINE__);
 			reply = wid_dbus_set_wlan_tunnel_switch_state(connection,message,user_data);/* yjl 2014-2-28 */
 		}
 		else if (dbus_message_is_method_call(message,WID_DBUS_WLAN_INTERFACE,WID_DBUS_CONF_METHOD_SET_WLAN_STA_STATE))

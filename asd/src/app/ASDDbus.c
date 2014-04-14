@@ -28360,7 +28360,6 @@ DBusMessage *asd_dbus_set_asd_sta_vir_dhcp(DBusConnection *conn, DBusMessage *ms
 	/*
 	struct vir_dhcp *prev = NULL, *next = NULL;
 	*/
-	asd_printf(ASD_DEFAULT,MSG_DEBUG,"**************yjl add for test****111111111****\n");
 	dbus_error_init(&err);
 	if (!(dbus_message_get_args(msg, &err,
 								DBUS_TYPE_UINT32, &lowip,
@@ -28499,7 +28498,6 @@ out:
 	dbus_message_iter_append_basic (&iter,
 									DBUS_TYPE_UINT32,
 									&ret); 
-    asd_printf(ASD_DEFAULT,MSG_DEBUG,"reply %p **************yjl add for test********\n",reply);
 	return reply;	
 }
 
@@ -28513,7 +28511,6 @@ DBusMessage *asd_dbus_set_asd_sta_vir_dhcp_state(DBusConnection *conn, DBusMessa
 	unsigned int is_enable = 0;
 	unsigned char ID = 0;	
 
-	asd_printf(ASD_DEFAULT,MSG_DEBUG,"**************yjl add for test********\n");
 	dbus_error_init(&err);
 	if (!(dbus_message_get_args(msg, &err,
 								DBUS_TYPE_UINT32, &is_enable,
@@ -28580,7 +28577,6 @@ DBusMessage *asd_dbus_set_asd_sta_tunnel_switch_state(DBusConnection *conn, DBus
 	int ret = ASD_DBUS_SUCCESS;
 	unsigned int is_enable = 0;
 	unsigned char ID = 0;
-    asd_printf(ASD_DEFAULT,MSG_DEBUG,"**************yjl add for test********\n");
 	dbus_error_init(&err);
 	if (!(dbus_message_get_args(msg, &err,
 								DBUS_TYPE_UINT32, &is_enable,
@@ -29994,7 +29990,6 @@ static DBusHandlerResult asd_dbus_message_handler (DBusConnection *connection, D
 		}
 		/*yjl copy from aw3.1.2 for local forwarding.2014-2-28*/
 		else if (dbus_message_is_method_call(message,ASD_DBUS_STA_INTERFACE,ASD_DBUS_STA_METHOD_SET_ASD_STA_VIR_DHCP)) {
-            asd_printf(ASD_DEFAULT,MSG_DEBUG,"**************yjl add for test****3333333****\n");         
 			reply = asd_dbus_set_asd_sta_vir_dhcp(connection,message,user_data);
 		}
 		else if (dbus_message_is_method_call(message,ASD_DBUS_STA_INTERFACE,ASD_DBUS_STA_METHOD_SET_ASD_STA_VIR_DHCP_STATE)) {

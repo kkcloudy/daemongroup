@@ -20991,7 +20991,6 @@ DEFUN(delete_sta_vir_dhcp_pool_ip_range_cmd_func,
 		slot_id = vty->slotindex;
 	}
 	ReInitDbusConnection(&dcli_dbus_connection,slot_id,distributFag);
-    vty_out(vty,"localid: %d,slot_id: %d ,**********yjl add for test ****11111111111111*******\n",localid, slot_id);
 	ret = dcli_set_sta_virdchp_range(dcli_dbus_connection, index, localid, ipAddrl, ipAddrh, add_flag, wlanid);
 	if (ASD_DBUS_SUCCESS != ret)
 	{
@@ -21077,7 +21076,6 @@ DEFUN(set_sta_vir_dhcp_pool_ip_range_cmd_func,
 		slot_id = vty->slotindex;
 	}
 	ReInitDbusConnection(&dcli_dbus_connection,slot_id,distributFag);
-    vty_out(vty,"localid: %d,slot_id: %d ,**********yjl add for test ****11111111111111*******\n",localid, slot_id);
 	ret = dcli_set_sta_virdchp_range(dcli_dbus_connection, index, localid, ipAddrl, ipAddrh, add_flag, wlanid);
 	if (ASD_DBUS_SUCCESS != ret)
 	{
@@ -21143,7 +21141,6 @@ DEFUN(set_sta_vir_dhcp_state_cmd_func,
 		localid = vty->local;
 		slot_id = vty->slotindex;
 	}
-	vty_out(vty,"localid: %d,slot_id: %d ,**********yjl add for test ****11111111111111*******\n",localid, slot_id);
 
 	ReInitDbusConnection(&dcli_dbus_connection,slot_id,distributFag);
 	
@@ -21249,7 +21246,6 @@ DEFUN(set_sta_tunnel_switch_state_cmd_func,
 		slot_id = vty->slotindex;
 	}
 	ReInitDbusConnection(&dcli_dbus_connection,slot_id,distributFag);
-	vty_out(vty,"localid: %d,slot_id: %d ,**********yjl add for test ****11111111111111*******\n",localid, slot_id);
 
 	ReInitDbusPath_V2(localid,index,ASD_DBUS_BUSNAME,BUSNAME);
 	ReInitDbusPath_V2(localid,index,ASD_DBUS_STA_OBJPATH,OBJPATH);
@@ -21300,9 +21296,7 @@ DEFUN(set_sta_tunnel_switch_state_cmd_func,
 		ReInitDbusPath_V2(localid, index,WID_DBUS_BUSNAME,BUSNAME);
 		ReInitDbusPath_V2(localid, index,WID_DBUS_WLAN_OBJPATH,OBJPATH);
 		ReInitDbusPath_V2(localid, index,WID_DBUS_WLAN_INTERFACE,INTERFACE);
-		vty_out(vty,"BUSNAME: %s,OBJPATH: %s INTERFACE: %s,**********yjl add for test ****9999999999*******\n", BUSNAME, OBJPATH, INTERFACE);
 		query = dbus_message_new_method_call(BUSNAME,OBJPATH,INTERFACE,WID_DBUS_CONF_METHOD_SET_WLAN_STA_TUNNEL_SWITCH_STATE);
-		vty_out(vty,"BUSNAME: %s,OBJPATH: %s INTERFACE: %s,: %p**********yjl add for test ****121221212*******\n", BUSNAME, OBJPATH, INTERFACE, query);
 		dbus_error_init(&err);
 		
 		dbus_message_append_args(query,

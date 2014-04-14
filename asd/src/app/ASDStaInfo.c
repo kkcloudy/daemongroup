@@ -509,6 +509,11 @@ int asd_virdhcp_handle(struct asd_data *wasd, struct sta_info *sta, unsigned int
 
 		asd_printf(ASD_DEFAULT,MSG_INFO,"%s sta %s %s interface %s add arp\n", 
 			__func__, mac, staip, ifname);
+
+		/*yjl add 2014-4-11*/
+		memset(sta->in_addr, 0, 16);
+		strcpy(sta->in_addr, (char*)staip);
+		inet_aton(sta->in_addr,&sta->ip_addr);
 		
 		int ret_ipneigh = 0;
 		ret_ipneigh = ipneigh_modify(RTM_DELNEIGH, 0, (char*)staip, NULL, ifname);
@@ -655,6 +660,9 @@ int b_virdhcp_handle
 		ip = (unsigned char*)&(tmp->ip);
 		sprintf((char*)mac,"%02X:%02X:%02X:%02X:%02X:%02X",MAC2STR(sta->addr));
 		sprintf((char*)staip,"%u.%u.%u.%u",ip[0],ip[1],ip[2],ip[3]);
+		memset(sta->in_addr, 0, 16);
+		strcpy(sta->in_addr, (char*)staip);
+		inet_aton(sta->in_addr,&sta->ip_addr);
 
 		asd_printf(ASD_DEFAULT,MSG_INFO,"%s sta %s %s interface %s add arp\n", 
 			__func__, mac, staip, ifname);

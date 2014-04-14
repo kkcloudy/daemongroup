@@ -2130,9 +2130,9 @@ int AsdStaInfoToWID(struct asd_data *wasd, const u8 *addr, Operate op){
 		{
 			STA.u.STA.portal_info.portal_ip = sta->portal_server.portal_ip;	
 			memcpy(STA.u.STA.portal_info.portal_mac, sta->portal_server.portal_mac, ETH_ALEN);
-			asd_printf(ASD_DEFAULT,MSG_DEBUG,"%s sta %s %s portal server %s %s\n", 
+			asd_printf(ASD_DEFAULT,MSG_DEBUG,"%s sta "MACSTR" %s portal server %s %s\n", 
 					__func__,
-					mac2str(STA.u.STA.STAMAC), u32ip2str(STA.u.STA.ipv4Address),
+					MAC2STR(STA.u.STA.STAMAC), u32ip2str(STA.u.STA.ipv4Address),
 					mac2str(STA.u.STA.portal_info.portal_mac), u32ip2str(STA.u.STA.portal_info.portal_ip));
 		}	
 	}
