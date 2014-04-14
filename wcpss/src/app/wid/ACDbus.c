@@ -80273,167 +80273,172 @@ int show_running_config_wtp(WID_WTP **WTP,int i,char *cursor,char **showStr2,cha
 								//cursor = showStr + totalLen;
 							}
 						}
-
-						if (WTP[i]->WTP_Radio[j]->Type_Rate!= 0)
+						int  num;
+						for ( num = 0;num < 32;num++)
 						{
-							int m = 0;
-							unsigned int type1 = 0;
+							if (WTP[i]->WTP_Radio[j]->Type_Rate[num]  != 0)
+							{
+								int m = 0;
+								unsigned int type1 = 0;
 														
-							if(vrrid != 0){
-								totalLen += sprintf(cursor," ");
+								if(vrrid != 0){
+									totalLen += sprintf(cursor," ");
+									cursor = showStr + totalLen;
+								}
+								totalLen += sprintf(cursor," set wlan %d",WTP[i]->WTP_Radio[j]->wlanid[num]);
 								cursor = showStr + totalLen;
-							}
-							totalLen += sprintf(cursor," set wlan %d",WTP[i]->WTP_Radio[j]->wlanid);
-							cursor = showStr + totalLen;
-							if(vrrid != 0){
-								totalLen += sprintf(cursor," ");
-								cursor = showStr + totalLen;
-							}
-							type1 = (WTP[i]->WTP_Radio[j]->Type_Rate) & 0xfff;
+								if(vrrid != 0){
+									totalLen += sprintf(cursor," ");
+									cursor = showStr + totalLen;
+								}
+								type1 = (WTP[i]->WTP_Radio[j]->Type_Rate[num]) & 0xfff;
 							
-							if ((type1 >> 11) == 1)
-							{
-								totalLen += sprintf(cursor,"rate 54");
+								if ((type1 >> 11) == 1)
+								{
+									totalLen += sprintf(cursor,"rate 54");
 								
-							}
-							else if ((type1 >> 10) == 1)
-							{
-								totalLen += sprintf(cursor,"rate 48");
+								}
+								else if ((type1 >> 10) == 1)
+								{
+									totalLen += sprintf(cursor,"rate 48");
 								
-							}
-							else if ((type1 >> 9) == 1)
-							{
-								totalLen += sprintf(cursor,"rate 36");
+								}
+								else if ((type1 >> 9) == 1)
+								{
+									totalLen += sprintf(cursor,"rate 36");
 								
-							}
-							else if ((type1 >> 8) == 1)
-							{
-								totalLen += sprintf(cursor,"rate 24");
+								}
+								else if ((type1 >> 8) == 1)
+								{
+									totalLen += sprintf(cursor,"rate 24");
 								
-							}
-							else if ((type1 >> 7) == 1)
-							{
+								}
+								else if ((type1 >> 7) == 1)
+								{
 								totalLen += sprintf(cursor,"rate 18");
 								
-							}
-							else if ((type1 >> 6) == 1)
-							{
-								totalLen += sprintf(cursor,"rate 12");
+								}
+								else if ((type1 >> 6) == 1)
+								{
+									totalLen += sprintf(cursor,"rate 12");
 								
-							}
-							else if ((type1 >> 5) == 1)
-							{
-								totalLen += sprintf(cursor,"rate 9");
+								}
+								else if ((type1 >> 5) == 1)
+								{
+									totalLen += sprintf(cursor,"rate 9");
 								
-							}
-							else if ((type1 >> 4) == 1)
-							{
-								totalLen += sprintf(cursor,"rate 6");
+								}
+								else if ((type1 >> 4) == 1)
+								{
+									totalLen += sprintf(cursor,"rate 6");
 								
-							}
-							else if ((type1 >> 3) == 1)
-							{
-								totalLen += sprintf(cursor,"rate 11");
+								}
+								else if ((type1 >> 3) == 1)
+								{
+									totalLen += sprintf(cursor,"rate 11");
 								
-							}
-							else if ((type1 >> 2) == 1)
-							{
-								totalLen += sprintf(cursor,"rate 5.5");
+								}
+								else if ((type1 >> 2) == 1)
+								{
+									totalLen += sprintf(cursor,"rate 5.5");
 								
-							}
-							else if ((type1 >> 1) == 1)
-							{
-								totalLen += sprintf(cursor,"rate 2");
+								}
+								else if ((type1 >> 1) == 1)
+								{
+									totalLen += sprintf(cursor,"rate 2");
 								
-							}
-							else if ((type1 >> 0) == 1)
-							{
-								totalLen += sprintf(cursor,"rate 1");
+								}
+								else if ((type1 >> 0) == 1)
+								{
+									totalLen += sprintf(cursor,"rate 1");
 								
-							}
-							cursor = showStr + totalLen;
-							if(vrrid != 0){
-								totalLen += sprintf(cursor," ");
+								}
 								cursor = showStr + totalLen;
+								if(vrrid != 0){
+									totalLen += sprintf(cursor," ");
+									cursor = showStr + totalLen;
 								
-							}
-							totalLen += sprintf(cursor,"for type");
-							cursor = showStr + totalLen;
-							type1 = WTP[i]->WTP_Radio[j]->Type_Rate ;
-							type1 = type1 >> 23;
-							for (m = 0; m < 9; m++ )
-							{
+								}
+								totalLen += sprintf(cursor,"for type");
+								cursor = showStr + totalLen;
+								type1 = WTP[i]->WTP_Radio[j]->Type_Rate[num] ;
+								type1 = type1 >> 23;
+								for (m = 0; m < 9; m++ )
+								{
 								if (vrrid != 0){
-								totalLen += sprintf(cursor," ");
-								cursor = showStr + totalLen;
-								}
-								if  (type1 == 0x100)
-								{
-									totalLen += sprintf(cursor,"all");
-							                    cursor = showStr + totalLen;
-									break;
-								}
-								else if  ((type1 >> 7) == 1)
-								{
-									type1 = type1 & 0x7f;
-									totalLen += sprintf(cursor,"beacon");
-							                    cursor = showStr + totalLen;
-									continue;
-								}
-								else if  ((type1 >> 6) == 1)
-								{
-									type1 = type1 & 0x3f;
-									totalLen += sprintf(cursor,"probe_request");
-							                    cursor = showStr + totalLen;
-									continue;
-								}
-								else if  (( type1 >> 5) == 1)
-								{
-								         type1 = type1 & 0x1f;
-									totalLen += sprintf(cursor,"probe_response");
-							                    cursor = showStr + totalLen;
-									continue;
-								}
-								else if  (( type1 >> 4) == 1)
-								{
-								         type1 = type1 &0x0f;
-									totalLen += sprintf(cursor,"auth");
-							                    cursor = showStr + totalLen;
-									continue;
-								}
-								else if  (( type1 >> 3) == 1)
-								{
-									type1 = type1 & 0x07;
-									totalLen += sprintf(cursor,"assoc_request");
-							                    cursor = showStr + totalLen;
-									continue;
-								}	
-								else if  (( type1 >> 2) == 1)
-								{
-								         type1 = type1 & 0x03;
-									totalLen += sprintf(cursor,"assoc_response");
-							                    cursor = showStr + totalLen;
-									continue;
-								}	
-								else if  ((type1 >> 1) == 1)
-								{
-								 	type1 = type1 & 0x01;
-									totalLen += sprintf(cursor,"deauth");
-							                    cursor = showStr + totalLen;
-									continue;
-								}
-								else if (type1 == 1)
-								{
-									type1 = type1 & 0x00;
-									totalLen += sprintf(cursor,"disassoc");
-							                    cursor = showStr + totalLen;
-									continue;
-								}
+									totalLen += sprintf(cursor," ");
+									cursor = showStr + totalLen;
+									}
+									if  (type1 == 0x100)
+									{
+										totalLen += sprintf(cursor,"all");
+							              	      cursor = showStr + totalLen;
+										break;
+									}
+									else if  ((type1 >> 7) == 1)
+									{
+										type1 = type1 & 0x7f;
+										totalLen += sprintf(cursor,"beacon");
+							             	       cursor = showStr + totalLen;
+										continue;
+									}
+									else if  ((type1 >> 6) == 1)
+									{
+										type1 = type1 & 0x3f;
+										totalLen += sprintf(cursor,"probe_request");
+							             	       cursor = showStr + totalLen;
+										continue;
+									}
+									else if  (( type1 >> 5) == 1)
+									{
+								  	       type1 = type1 & 0x1f;
+									       totalLen += sprintf(cursor,"probe_response");
+							        	                  cursor = showStr + totalLen;
+										continue;
+									}
+									else if  (( type1 >> 4) == 1)
+									{
+								      	   	type1 = type1 &0x0f;
+										totalLen += sprintf(cursor,"auth");
+							                  		  cursor = showStr + totalLen;
+										continue;
+									}
+									else if  (( type1 >> 3) == 1)
+									{
+										type1 = type1 & 0x07;
+										totalLen += sprintf(cursor,"assoc_request");
+							                    	cursor = showStr + totalLen;
+										continue;
+									}	
+									else if  (( type1 >> 2) == 1)
+									{
+								         		type1 = type1 & 0x03;
+										totalLen += sprintf(cursor,"assoc_response");
+							                   		 cursor = showStr + totalLen;
+										continue;
+									}	
+									else if  ((type1 >> 1) == 1)
+									{
+								 		type1 = type1 & 0x01;
+										totalLen += sprintf(cursor,"deauth");
+							                    	cursor = showStr + totalLen;
+										continue;
+									}
+									else if (type1 == 1)
+									{
+										type1 = type1 & 0x00;
+										totalLen += sprintf(cursor,"disassoc");
+							                   		 cursor = showStr + totalLen;
+										continue;
+									}
 								
-							}
-							totalLen += sprintf(cursor,"\n");
-							 cursor = showStr + totalLen;
+								}
+								totalLen += sprintf(cursor,"\n");
+								 cursor = showStr + totalLen;
 							
+							}
+							else
+								break;
 						}
 						if((WTP[i]->WTP_Radio[j]->Radio_Chan != 0)&&(WTP[i]->WTP_Radio[j]->auto_channel_cont != 0)){//sz1121 change 1 to 0
 							if(vrrid != 0){

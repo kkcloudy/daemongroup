@@ -8994,8 +8994,16 @@ int WID_RADIO_SET_MGMT_RATE_BASE_WLAN(unsigned char RadioID, unsigned int type,u
 	{
 		type |=0x800;
 	}
-	AC_RADIO[RadioID]->Type_Rate = type;
-	AC_RADIO[RadioID]->wlanid = wlanid;
+	int i ;
+	for (i =0;i < 32;i++)
+	{
+		if ((AC_RADIO[RadioID]->wlanid[i] == wlanid) ||(AC_RADIO[RadioID]->wlanid[i] == 0))
+		{	
+			AC_RADIO[RadioID]->Type_Rate[i] = type;
+			AC_RADIO[RadioID]->wlanid[i] = wlanid;
+			break;
+		}
+	}
 	wid_syslog_debug_debug(WID_DEFAULT,"radio %d,type 0x%x,wlanid %d,rate %d\n",RadioID,type,wlanid,rate);
 	if((AC_WTP[WtpID] != NULL) && (AC_WTP[WtpID]->WTPStat == 5))
 	{
@@ -9030,6 +9038,7 @@ int WID_RADIO_CLEAR_RATE_FOR_WLAN(unsigned char RadioID, unsigned char wlanid)
 	int localradio_id = RadioID%L_RADIO_NUM;
 	msgq msg;
 	struct wlanid	*wlan_id = NULL;
+	int i;
 	if((gWTPs[AC_RADIO[RadioID]->WTPID].currentState == CW_ENTER_RUN)&&(AC_RADIO[RadioID]->AdStat == 2))
 	{
 		return RADIO_IS_DISABLE;
@@ -9050,9 +9059,14 @@ int WID_RADIO_CLEAR_RATE_FOR_WLAN(unsigned char RadioID, unsigned char wlanid)
 
 	if(binded == 0)
 		return WTP_IF_NOT_BE_BINDED;
-		
-	AC_RADIO[RadioID]->Type_Rate = 0;
-	AC_RADIO[RadioID]->wlanid = wlanid;
+	for (i = 0; i < 32; i++)
+	{
+		if (AC_RADIO[RadioID]->Type_Rate[i] != 0)
+		{
+			AC_RADIO[RadioID]->Type_Rate[i] = 0;
+			AC_RADIO[RadioID]->wlanid [i]= 0;
+		}
+	}
 	
 	if((AC_WTP[WtpID] != NULL) && (AC_WTP[WtpID]->WTPStat == 5))
 	{

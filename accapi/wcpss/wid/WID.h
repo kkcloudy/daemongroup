@@ -1011,7 +1011,7 @@ struct radio{
 	u_int32_t	Support_Rate_Count;
 	struct Support_Rate_List *Radio_Rate;/*sz*/
 	int **RadioRate;
-	u_int32_t  Type_Rate;
+	u_int32_t  Type_Rate[32];
 	u_int8_t	Radio_Chan;/*Channel*/
 	u_int16_t	Radio_TXP;/*TX power*/
 	u_int16_t	Radio_TXPOF;/*TX  power offset*/
@@ -1080,7 +1080,7 @@ struct radio{
 /*A8 end*/	
 	struct wlanid	*Wlan_Id; /*binding wlan id*/
 	unsigned char	*WlanId; /*binding wlan id*/
-	unsigned char  wlanid;
+	unsigned char  wlanid[32];
 	unsigned short     txpowerstep;//zhaoruijia,20100917,add radio txpower step
 	char br_ifname[WLAN_NUM][IF_NAME_MAX];
 	u_int32_t	wep_flag[WTP_WEP_NUM];/*which bss binding a wlan use wep*/

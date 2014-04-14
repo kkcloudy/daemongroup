@@ -474,6 +474,7 @@ void WID_CONFIG_SAVE(unsigned int WTPIndex){
 	msgq msg;
 	struct msgqlist *elem;	
 	int bind_wlan = 0;
+	int num;
 
 	for(i=0; i<AC_WTP[WTPIndex]->RadioCount; i++){		
 
@@ -557,7 +558,38 @@ void WID_CONFIG_SAVE(unsigned int WTPIndex){
 			}
 			/*fengwenchao add end*/
 			
-        } 		
+        } 	
+		for (num = 0; num < 32; num ++ )
+		{
+			if (AC_WTP[WTPIndex]->WTP_Radio[i]->Type_Rate[num] != 0)
+			{
+				memset((char*)&msg, 0, sizeof(msg));
+				msg.mqid = WTPIndex%THREAD_NUM+1;
+				msg.mqinfo.WTPID = WTPIndex;
+				msg.mqinfo.type = CONTROL_TYPE;
+				msg.mqinfo.subtype = Radio_S_TYPE;
+				msg.mqinfo.u.RadioInfo.op = 1;//enable
+				msg.mqinfo.u.RadioInfo.Radio_Op = Radio_set_MGMT_rate;
+				msg.mqinfo.u.RadioInfo.wlanid= AC_WTP[WTPIndex]->WTP_Radio[i]->wlanid[num];
+				msg.mqinfo.u.RadioInfo.rate = AC_WTP[WTPIndex]->WTP_Radio[i]->Type_Rate[num];
+				msg.mqinfo.u.RadioInfo.Radio_L_ID = i;
+				msg.mqinfo.u.RadioInfo.Radio_G_ID = AC_WTP[WTPIndex]->WTP_Radio[i]->Radio_G_ID;
+		
+				elem = (struct msgqlist*)WID_MALLOC(sizeof(struct msgqlist));
+				if(elem == NULL){
+					wid_syslog_crit("%s malloc %s",__func__,strerror(errno));
+					perror("malloc");
+					return ;
+				}
+				memset((char*)&(elem->mqinfo), 0, sizeof(msgqdetail));
+				elem->next = NULL;
+				memcpy((char*)&(elem->mqinfo),(char*)&(msg.mqinfo),sizeof(msg.mqinfo));
+				WID_INSERT_CONTROL_LIST(WTPIndex, elem);
+				elem = NULL;
+			}
+			else
+				break;
+		}
 		if(AC_WTP[WTPIndex]->WTP_Radio[i]->ack.distance != 0){
 				wid_radio_set_acktimeout_distance(AC_WTP[WTPIndex]->WTP_Radio[i]->Radio_G_ID);
 		}/*wcl add for RDIR-33*/
