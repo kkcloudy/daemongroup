@@ -4057,13 +4057,19 @@ int write_ntp_conf( NTPALL_ST *ntpall, char *file_path)
 	while(upcq!=NULL)
 	{
 		memset(des_name,0,50);
-		if(0 == strncmp(upcq->ifper,"on",2))
-		{
-			sprintf(des_name , "server %s %s\n",upcq->clitipz,"prefer");
-		}
-		else
+		/*for 4.2.7p424 version  and 4.2.6p3 version config synchronization
+		  *old version "server 127.127.1.0 " == new version "server 127.127.1.0 prefer"*/
+		if(!strcmp(upcq->clitipz, "127.127.1.0") && !strcmp(upcq->ifper,"prefer"))
 		{
 			sprintf(des_name , "server %s\n",upcq->clitipz);
+		}
+		else if (!strcmp(upcq->clitipz, "127.127.1.0") && strcmp(upcq->ifper,"prefer"))
+		{
+			sprintf(des_name , "server %s %s\n",upcq->clitipz,"prefer");
+		}	
+		else
+		{
+			sprintf(des_name , "server %s %s\n",upcq->clitipz,upcq->ifper);
 		}
 		strcat(File_content,des_name);	
 
@@ -4078,13 +4084,19 @@ int write_ntp_conf( NTPALL_ST *ntpall, char *file_path)
 	while(cq!=NULL)
 	{
 		memset(des_name,0,50);
-		if(0 == strncmp(cq->ifper,"on",2))
-		{
-			sprintf(des_name , "server %s %s\n",cq->clitipz,"prefer");
-		}
-		else
+		/*for 4.2.7p424 version  and 4.2.6p3 version config synchronization
+		  *old version "server 127.127.1.0 " == new version "server 127.127.1.0 prefer"*/
+		if(!strcmp(cq->clitipz, "127.127.1.0") && !strcmp(cq->ifper,"prefer"))
 		{
 			sprintf(des_name , "server %s\n",cq->clitipz);
+		}
+		else if (!strcmp(cq->clitipz, "127.127.1.0") && strcmp(cq->ifper,"prefer"))
+		{
+			sprintf(des_name , "server %s %s\n",cq->clitipz,"prefer");
+		}	
+		else
+		{
+			sprintf(des_name , "server %s %s\n",cq->clitipz,cq->ifper);
 		}
 		strcat(File_content,des_name);	
 
