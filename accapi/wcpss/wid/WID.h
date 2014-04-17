@@ -1335,7 +1335,9 @@ struct wtp{
 
 	//for timing upgrade ap
 	WID_WSC ap_timing_upgrade_info;
-	
+
+	//for let-fi
+	unsigned char lte_fi_quit_reason;
 };
 typedef struct wtp WID_WTP;
 

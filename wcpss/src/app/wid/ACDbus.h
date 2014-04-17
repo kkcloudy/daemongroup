@@ -109,6 +109,7 @@ int wid_dbus_trap_wtp_channel_count_minor_clear(int wtpindex);
 int wid_dbus_trap_wtp_ac_discovery_cover_hole_clear(unsigned int wtpindex);
 int wid_dbus_trap_ap_rrm_state_change(unsigned int wtpindex,unsigned char state);
 int wid_dbus_trap_ap_run_quit(unsigned int wtpindex,unsigned char state);
+int wid_dbus_trap_let_fi_run_quit(unsigned int wtpindex,unsigned char quit_reason);
 int read_ac_info(char *FILENAME,char *buff);
 int parse_int_ID(char* str,unsigned int* ID);
 int wid_dbus_trap_wtp_find_unsafe_essid(unsigned int wtpindex,char * name);

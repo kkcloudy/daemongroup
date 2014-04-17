@@ -3184,6 +3184,13 @@ void CWDownWTP(unsigned int WTPIndex){
 	time(&now);
 	syslog(LOG_INFO|LOG_LOCAL7, "WTP %d down,WTP MAC:"MACSTR",WTP IP:%s,Down Time:%s\n",
 		WTPIndex,MAC2STR(AC_WTP[WTPIndex]->WTPMAC),AC_WTP[WTPIndex]->WTPIP,ctime(&now));
+
+	//for let-fi
+	if (gtrapflag >= 1 && AC_WTP[WTPIndex]->lte_fi_quit_reason) {
+		wid_dbus_trap_let_fi_run_quit(WTPIndex, AC_WTP[WTPIndex]->lte_fi_quit_reason);
+		wid_syslog_err("trap lte-fi quit reason to snmp\n");
+		AC_WTP[WTPIndex]->lte_fi_quit_reason = 0;
+	}
 	
 	unsigned int rand_num = rand() * now % 100;
 	

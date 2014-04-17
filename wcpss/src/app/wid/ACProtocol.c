@@ -3901,6 +3901,36 @@ CWBool CWParseWTPTrapInfo(CWProtocolMessage *msgPtr, int len, int wtpindex) {
 	CWParseMessageElementEnd();
 }
 
+CWBool CWParseLTEFITrapInfo(CWProtocolMessage *msgPtr, int len, int wtpindex) {
+	unsigned char subtype;
+	int oldOffset;
+	unsigned char quit_reason;
+	oldOffset = msgPtr->offset;
+	//get subtype
+	subtype = CWProtocolRetrieve8(msgPtr);
+	wid_syslog_debug_debug(WID_DEFAULT, "hxf sub type is %u\n", subtype);
+	switch (subtype) {
+		case 1:
+			quit_reason = CWProtocolRetrieve8(msgPtr);
+			if (quit_reason == 0) {
+				wid_syslog_info("lte-fi error quit reason, cann't trap quit reason\n");
+			} else {
+				wid_syslog_debug_debug(WID_DEFAULT, "quit reason is %u\n", quit_reason);
+			}
+			
+			AC_WTP[wtpindex]->lte_fi_quit_reason = quit_reason;
+			_CWCloseThread(wtpindex);
+			break;
+		case 2:
+			
+			break;
+		default:
+			wid_syslog_info("unknown subtype:%u\n", subtype);
+			break;
+	}
+	CWParseMessageElementEnd();
+}
+
 CWBool CWParseWTPEtendinfo(CWProtocolMessage *msgPtr, int len, CWWtpExtendinfo *valPtr, int wtpindex)
 {
 	unsigned char temp_var, i;

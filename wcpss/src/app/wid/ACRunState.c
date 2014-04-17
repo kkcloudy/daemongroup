@@ -1637,9 +1637,13 @@ CWBool CWParseWTPEventRequestMessage(CWProtocolMessage *msgPtr, int len, CWProto
 					} else {
 						wid_syslog_debug_debug(WID_DEFAULT, "trap message parse for wtp %d success\n", wtpindex);
 					}
-				}
-				else if (0 == vendorvalue || 0x80 == vendorvalue  /*|f|*/)
-				{
+				} else if (vendorvalue == 18) {
+					wid_syslog_info("parse lte-fi message\n");
+					if (!CWParseLTEFITrapInfo(msgPtr, (elemLen-1), wtpindex)) {
+						wid_syslog_err("parse lte-fi message failed\n");
+					}
+					//_CWCloseThread();
+				} else if (0 == vendorvalue || 0x80 == vendorvalue  /*|f|*/) {
 					vendorvalue <<= 8;
 					vendorvalue |= CWProtocolRetrieve8(msgPtr);
 					vendorvalue <<= 8;
@@ -1667,6 +1671,8 @@ CWBool CWParseWTPEventRequestMessage(CWProtocolMessage *msgPtr, int len, CWProto
 								break;
 						}
 					}
+				} else {
+					wid_syslog_info("unknown vendorvalue:%d\n", vendorvalue);
 				}
 			 	break;
 			case BINDING_MSG_ELEMENT_TYPE_WTP_SNOOPING:

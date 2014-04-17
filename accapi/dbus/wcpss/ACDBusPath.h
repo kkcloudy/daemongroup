@@ -697,7 +697,7 @@ char WID_DBUS_TRAP_WID_AP_WIFI_IF_ERROR[PATH_LEN]=		"wid_dbus_trap_ap_wifi_if_er
 char WID_DBUS_TRAP_WID_AP_ATH_ERROR[PATH_LEN]=		"wid_dbus_trap_ap_ath_error";
 char WID_DBUS_TRAP_WID_AP_RRM_STATE_CHANGE[PATH_LEN]=		"wid_dbus_trap_ap_rrm_state_change";
 char WID_DBUS_TRAP_WID_AP_RUN_QUIT[PATH_LEN]=		"wid_dbus_trap_ap_run_quit";
-
+char WID_DBUS_TRAP_WID_LTE_FI_RUN_QUIT[PATH_LEN]=		"wid_dbus_trap_lte_fi_run_quit"; 
 char WID_DBUS_CONF_METHOD_SHOW_WID_WTP_SAMPLE_THROUGHPUT_INFO[PATH_LEN]=		"wid_dbus_show_sample_throughput_info";
 char WID_DBUS_CONF_METHOD_SHOW_WID_WTP_WLAN_VLAN_INFO[PATH_LEN]=		"wid_dbus_show_wlan_vlan_info";
 char WID_DBUS_CONF_METHOD_SHOW_WID_WTP_ETH_IF_INFO[PATH_LEN]=		"wid_dbus_show_eth_if_info";

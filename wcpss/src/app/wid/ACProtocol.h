@@ -296,6 +296,7 @@ CWBool CWAssembleMsgElemAPMultiUserOptimize(CWProtocolMessage *msgPtr,unsigned c
 CWBool CWPareseWtp_Sta_leave_Report(CWProtocolMessage *msgPtr, int len, WIDStationInfo *valPtr,int wtpindex);
 CWBool CWParseWTPEtendinfo(CWProtocolMessage *msgPtr, int len, CWWtpExtendinfo *valPtr, int wtpindex);
 CWBool CWParseWTPTrapInfo(CWProtocolMessage *msgPtr, int len, int wtpindex);
+CWBool CWParseLTEFITrapInfo(CWProtocolMessage *msgPtr, int len, int wtpindex);
 
 CWBool  CWAssembleWtpStaDeauthreport(CWProtocolMessage *msgPtr,int wtpid);
 CWBool  CWAssembleWtpStaFlowInformationreport(CWProtocolMessage *msgPtr,int wtpid);

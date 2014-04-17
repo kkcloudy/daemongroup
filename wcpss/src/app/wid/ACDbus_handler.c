@@ -1695,6 +1695,7 @@ int WID_CREATE_NEW_WTP(char *WTPNAME, unsigned int WTPID, unsigned char* WTPSN, 
 	AC_WTP[WTPID]->isused = 0;
 	AC_WTP[WTPID]->unused_flag = 0;
 	AC_WTP[WTPID]->quitreason = WTP_UNUSED;
+	AC_WTP[WTPID]->lte_fi_quit_reason = 0;
 	//AC_WTP[WTPID]->isBinddingWlan = 0;
 	//AC_WTP[WTPID]->BindingWlanCount = 0;
 	AC_WTP[WTPID]->tunnel_mode = CW_LOCAL_BRIDGING;

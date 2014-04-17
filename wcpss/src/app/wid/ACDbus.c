@@ -87222,6 +87222,99 @@ int wid_dbus_trap_ap_run_quit(unsigned int wtpindex,unsigned char state)
 
 }
 
+int wid_dbus_trap_let_fi_run_quit(unsigned int wtpindex,unsigned char quit_reason)
+{
+	DBusMessage *query;	
+	DBusError err;
+	unsigned int TID = wtpindex%THREAD_NUM;
+	wid_syslog_debug_debug(WID_DBUS,"wid_dbus_trap_ap_run_quit tid %d\n",TID);
+
+	/*store sn&mac of ap*/
+	unsigned char *mac = NULL;
+	mac = (unsigned char *)WID_MALLOC(MAC_LEN+1);
+	if (NULL == mac)
+	{
+		return -1;
+	}
+	memset(mac,0,MAC_LEN+1);
+	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->WTPMAC != NULL))
+	{
+		memcpy(mac,AC_WTP[wtpindex]->WTPMAC,MAC_LEN);
+	}
+
+	char *sn = NULL;
+	sn = (char *)WID_MALLOC(NAS_IDENTIFIER_NAME);
+	if (NULL == sn)
+	{
+		CW_FREE_OBJECT_WID(mac);
+		return -1;
+	}
+	memset(sn,0,NAS_IDENTIFIER_NAME);
+	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->WTPSN != NULL))
+	{
+		memcpy(sn,AC_WTP[wtpindex]->WTPSN,strlen(AC_WTP[wtpindex]->WTPSN));
+	}
+	/* zhangshu add for netid & vrrpid, 2010-10-13 */
+    char *netid = NULL;
+    
+	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->netid != NULL))
+	{
+	    netid = (char *)WID_MALLOC(strlen(AC_WTP[wtpindex]->netid)+1);
+		if (NULL == netid)
+		{
+			CW_FREE_OBJECT_WID(mac);
+			CW_FREE_OBJECT_WID(sn);
+			return -1;
+		}
+	    memset(netid,0,(strlen(AC_WTP[wtpindex]->netid)+1));
+		memcpy(netid,AC_WTP[wtpindex]->netid,strlen(AC_WTP[wtpindex]->netid));
+	}
+	else
+	{
+	    netid = (char *)WID_MALLOC(sizeof(char)*12);
+		if (NULL == netid)
+		{
+			CW_FREE_OBJECT_WID(mac);
+			CW_FREE_OBJECT_WID(sn);
+			return -1;
+		}
+	    memset(netid,0,12);
+		memcpy(netid,"defaultcode",11);
+	}
+	unsigned int local_id = local;
+	unsigned int vrrp_id = vrrid;
+
+	query = dbus_message_new_signal(WID_TRAP_OBJPATH,\
+				WID_TRAP_INTERFACE,WID_DBUS_TRAP_WID_LTE_FI_RUN_QUIT);
+	
+	dbus_error_init(&err);
+	
+	dbus_message_append_args(query,
+						DBUS_TYPE_UINT32,&wtpindex,
+						DBUS_TYPE_STRING,&sn,
+						DBUS_TYPE_BYTE,&quit_reason,
+						DBUS_TYPE_BYTE,&mac[0],
+						DBUS_TYPE_BYTE,&mac[1],
+						DBUS_TYPE_BYTE,&mac[2],
+						DBUS_TYPE_BYTE,&mac[3],
+						DBUS_TYPE_BYTE,&mac[4],
+						DBUS_TYPE_BYTE,&mac[5],
+						DBUS_TYPE_STRING,&netid,
+						DBUS_TYPE_UINT32,&vrrp_id,
+						DBUS_TYPE_UINT32,&local_id,
+						DBUS_TYPE_INVALID);
+
+	dbus_connection_send(wid_dbus_connection_t[TID],query,NULL);
+	wid_syslog_debug_debug(WID_DBUS,"wtp %d  wid_dbus_trap_let_fi_run_quit quit reason:%u\n",wtpindex,quit_reason);
+	
+	dbus_message_unref(query);
+	CW_FREE_OBJECT_WID(sn);
+	CW_FREE_OBJECT_WID(mac);
+	CW_FREE_OBJECT_WID(netid);
+	return 0;
+
+}
+
 /*
 int signal_sta_leave(unsigned char mac[6],unsigned int wtpid,unsigned int g_bssindex,unsigned char wlanid){
 
