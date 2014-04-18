@@ -102,12 +102,11 @@ void WID_WLAN_CONFIG_SAVE(unsigned int WTPIndex,unsigned int local_radio)
 
 	for(k = 0;k < WLAN_NUM; k++)
 	{
-		{
 		AC_WTP[WTPIndex]->CMD->radiowlanid[local_radio][k] = 0;
 		if((AC_WLAN[k] != NULL)&&(AC_WLAN[k]->Status == 0) && (AC_WLAN[k]->want_to_delete == 0))	// Huangleilei add it for AXSSZFI-1622
 		{
 			wid_syslog_debug_debug(WID_DEFAULT,"***wtp index is %d\n",AC_WTP[WTPIndex]->BindingSystemIndex);
-			{
+			
 	#ifdef _CheckBindingIf_
 			if(AC_WLAN[k]->Wlan_Ifi != NULL)
 			{
@@ -128,8 +127,6 @@ void WID_WLAN_CONFIG_SAVE(unsigned int WTPIndex,unsigned int local_radio)
 					continue;
 				}
 				else
-	#else
-				{
 	#endif	
 					{
 						if((AC_WTP[WTPIndex])&&(AC_WTP[WTPIndex]->WTP_Radio[local_radio])
@@ -412,6 +409,16 @@ void WID_WLAN_CONFIG_SAVE(unsigned int WTPIndex,unsigned int local_radio)
 								   // sprintf(apcmd,"set_eap_mac ath.%d-%d 0",m,k);
 								}
 
+								/*set ap model for TL. yjl add 2014-4-17*/
+	                            memset(apcmd,0,WID_SYSTEM_CMD_LENTH);
+	                            if((AC_WLAN[k]!=NULL)&&(AC_WLAN[k]->wlan_tunnel_switch == 1))
+	                            {
+		                            //sprintf(apcmd,"echo 3 > /proc/sys/net/ath.%d-%d/vap_splitmac",AC_RADIO[RadioId]->Radio_L_ID,WlanId);
+		                            sprintf(apcmd,TUNNEL_SWITCH_CMD";"AP_OPEN_IPFORWARD";"AP_SPFAST_DOWM";"AP_SPFAST_UP,local_radio,k);
+									wid_syslog_debug_debug(WID_DEFAULT,"Enable Wlan: set ap model cmd %s\n",apcmd);
+		                            wid_radio_set_extension_command(WTPIndex,apcmd);
+	                            }
+								
 								int bssindex = AC_WLAN[k]->S_WTP_BSS_List[WTPIndex][local_radio];
 								if((AC_BSS[bssindex])&&(AC_BSS[bssindex]->BSS_IF_POLICY != NO_INTERFACE)
 									&&(AC_BSS[bssindex]->BSS_TUNNEL_POLICY != CW_802_DOT_11_TUNNEL)){
@@ -457,11 +464,10 @@ void WID_WLAN_CONFIG_SAVE(unsigned int WTPIndex,unsigned int local_radio)
 							continue;
 						}
 					}
+		#ifdef _CheckBindingIf_
 				}
-			}
+		#endif
 		}
-	}
-		
 	}
 	  
 }

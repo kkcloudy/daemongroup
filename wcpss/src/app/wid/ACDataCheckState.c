@@ -192,7 +192,7 @@ CWBool ACEnterDataCheck (int WTPIndex, CWProtocolMessage *msgPtr)
 			wid_syslog_err("before clean and save config,wtpid %d is NULL \n",i);
 	
 		gWTPs[WTPIndex].currentState = CW_ENTER_RUN;	
-		AC_WTP[WTPIndex]->WTPStat = 5;
+		AC_WTP[WTPIndex]->WTPStat = WID_RUN;
 		gWTPs[WTPIndex].subState = CW_WAITING_REQUEST;
 		AsdWsm_WTPOp(WTPIndex,WID_MODIFY);
 	if(!CWErr(CWTimerRequest(gCWNeighborDeadInterval, &(gWTPs[WTPIndex].thread), &(gWTPs[WTPIndex].currentTimer), CW_CRITICAL_TIMER_EXPIRED_SIGNAL,WTPIndex))) {
