@@ -4473,21 +4473,21 @@ DEFUN(set_radio_management_frame_rate_cmd_func,
 	if(vty->node == RADIO_NODE)
 	{
 		index = 0;			
-		radio_id = (int)vty->index;
+		radio_id = (unsigned int)vty->index;
 	}
 	else if(vty->node == HANSI_RADIO_NODE)
 	{
 		index = vty->index; 
 		localid = vty->local;
         slot_id = vty->slotindex;
-		radio_id = (int)vty->index_sub;
+		radio_id = (unsigned int)vty->index_sub;
 	}
 	else if (vty->node == LOCAL_HANSI_RADIO_NODE)
 	{
         index = vty->index;
         localid = vty->local;
         slot_id = vty->slotindex;
-		radio_id = (int)vty->index_sub;
+		radio_id = (unsigned int)vty->index_sub;
     }
     DBusConnection *dcli_dbus_connection = NULL;
     ReInitDbusConnection(&dcli_dbus_connection,slot_id,distributFag);
@@ -4537,7 +4537,7 @@ DEFUN(set_radio_management_frame_rate_cmd_func,
 	}
 	else if(ret == WTP_IF_NOT_BE_BINDED)
 	{
-		vty_out(vty,"radio show bind this wlan first !\n");
+		vty_out(vty,"<failed> radio should bind this wlan first !\n");
 	}
 	else if(ret == WTP_NO_SURPORT_Mode)
 	{

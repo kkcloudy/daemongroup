@@ -63,8 +63,8 @@ int WID_ADD_WLAN_APPLY_RADIO(unsigned int RadioID,unsigned char WlanID);
 int WID_RADIO_SET_SUPPORT_RATE(unsigned int RadioID,int RadioRate [ ],int flag,int num);
 int WID_RADIO_SET_MODE(unsigned int RadioID, unsigned int RadioMode);
 //added end
-int WID_RADIO_SET_MGMT_RATE_BASE_WLAN(unsigned char RadioID, unsigned int type,unsigned int rate,unsigned char wlanid);
-int WID_RADIO_CLEAR_RATE_FOR_WLAN(unsigned char RadioID,unsigned char wlanid);
+int WID_RADIO_SET_MGMT_RATE_BASE_WLAN(unsigned int RadioID, unsigned int type,unsigned int rate,unsigned int wlanid);
+int WID_RADIO_CLEAR_RATE_FOR_WLAN(unsigned int RadioID,unsigned int wlanid);
 int WID_RADIO_SET_BEACON(unsigned int RadioID, unsigned short beaconinterval);
 int WID_RADIO_SET_FRAGMENTATION(unsigned int RadioID, unsigned short fragmentation);
 int WID_RADIO_SET_DTIM(unsigned int RadioID, unsigned char dtim);

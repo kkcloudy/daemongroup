@@ -8889,7 +8889,7 @@ int WID_RADIO_SET_MODE(unsigned int RadioID, unsigned int RadioMode)
 
 }
 
-int WID_RADIO_SET_MGMT_RATE_BASE_WLAN(unsigned char RadioID, unsigned int type,unsigned int rate,unsigned char wlanid)
+int WID_RADIO_SET_MGMT_RATE_BASE_WLAN(unsigned int RadioID, unsigned int type,unsigned int rate,unsigned int wlanid)
 {
 	int binded = 0;
 	int WtpID = RadioID/L_RADIO_NUM;
@@ -9032,7 +9032,7 @@ int WID_RADIO_SET_MGMT_RATE_BASE_WLAN(unsigned char RadioID, unsigned int type,u
 
 }
 
-int WID_RADIO_CLEAR_RATE_FOR_WLAN(unsigned char RadioID, unsigned char wlanid)
+int WID_RADIO_CLEAR_RATE_FOR_WLAN(unsigned int RadioID, unsigned int wlanid)
 {
 	int binded = 0;
 	int WtpID = RadioID/L_RADIO_NUM;
@@ -9053,6 +9053,15 @@ int WID_RADIO_CLEAR_RATE_FOR_WLAN(unsigned char RadioID, unsigned char wlanid)
 		if(wlan_id->wlanid == wlanid)
 		{
 			binded = 1;
+			for (i = 0; i < 32; i++)
+			{
+				if (AC_RADIO[RadioID]->Type_Rate[i] != 0 && AC_RADIO[RadioID]->wlanid[i] == wlanid)
+				{
+					AC_RADIO[RadioID]->Type_Rate[i] = 0;
+					AC_RADIO[RadioID]->wlanid [i]= 0;
+					break;
+				}
+			}
 			break;
 		}
 		wlan_id = wlan_id->next;
@@ -9060,34 +9069,27 @@ int WID_RADIO_CLEAR_RATE_FOR_WLAN(unsigned char RadioID, unsigned char wlanid)
 
 	if(binded == 0)
 		return WTP_IF_NOT_BE_BINDED;
-	for (i = 0; i < 32; i++)
-	{
-		if (AC_RADIO[RadioID]->Type_Rate[i] != 0)
+	else {
+		if((AC_WTP[WtpID] != NULL) && (AC_WTP[WtpID]->WTPStat == 5))
 		{
-			AC_RADIO[RadioID]->Type_Rate[i] = 0;
-			AC_RADIO[RadioID]->wlanid [i]= 0;
-		}
-	}
-	
-	if((AC_WTP[WtpID] != NULL) && (AC_WTP[WtpID]->WTPStat == 5))
-	{
-		
-		memset((char*)&msg, 0, sizeof(msg));
-		msg.mqid = WtpID%THREAD_NUM+1;
-		msg.mqinfo.WTPID = WtpID;
-		msg.mqinfo.type = CONTROL_TYPE;
-		msg.mqinfo.subtype = Radio_S_TYPE;
-		msg.mqinfo.u.RadioInfo.op = 1;//enable
-		msg.mqinfo.u.RadioInfo.Radio_Op = Radio_set_MGMT_rate;
-		msg.mqinfo.u.RadioInfo.wlanid = wlanid;
-		msg.mqinfo.u.RadioInfo.rate = 0;
-		msg.mqinfo.u.RadioInfo.Radio_L_ID = localradio_id;
-		msg.mqinfo.u.RadioInfo.Radio_G_ID = RadioID;
-		
-		if (msgsnd(ACDBUS_MSGQ, (msgq *)&msg, sizeof(msg.mqinfo), 0) == -1)
-		{
-			wid_syslog_crit("%s msgsend %s",__func__,strerror(errno));
-			perror("msgsnd");
+			
+			memset((char*)&msg, 0, sizeof(msg));
+			msg.mqid = WtpID%THREAD_NUM+1;
+			msg.mqinfo.WTPID = WtpID;
+			msg.mqinfo.type = CONTROL_TYPE;
+			msg.mqinfo.subtype = Radio_S_TYPE;
+			msg.mqinfo.u.RadioInfo.op = 1;//enable
+			msg.mqinfo.u.RadioInfo.Radio_Op = Radio_set_MGMT_rate;
+			msg.mqinfo.u.RadioInfo.wlanid = wlanid;
+			msg.mqinfo.u.RadioInfo.rate = 0;
+			msg.mqinfo.u.RadioInfo.Radio_L_ID = localradio_id;
+			msg.mqinfo.u.RadioInfo.Radio_G_ID = RadioID;
+			
+			if (msgsnd(ACDBUS_MSGQ, (msgq *)&msg, sizeof(msg.mqinfo), 0) == -1)
+			{
+				wid_syslog_crit("%s msgsend %s",__func__,strerror(errno));
+				perror("msgsnd");
+			}
 		}
 	}
 	
@@ -11244,7 +11246,15 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_NAS_PORT_ID(unsigned int RadioID,unsigned char
 	{
 		return MALLOC_ERROR;
 	}
+	wlan_id->ESSID = (char *)WID_MALLOC(strlen(AC_WLAN[WlanID]->ESSID)+1);
+	if (wlan_id->ESSID == NULL) {
+		WID_FREE(wlan_id);
+		return MALLOC_ERROR;
+	}
+
+	memset(wlan_id->ESSID, 0, strlen(AC_WLAN[WlanID]->ESSID)+1);
 	
+	strncpy(wlan_id->ESSID, AC_WLAN[WlanID]->ESSID, strlen(AC_WLAN[WlanID]->ESSID));
 	wlan_id->wlanid= WlanID;
 	wlan_id->next = NULL;
 	wid_syslog_debug_debug(WID_DEFAULT,"*** wtp binding wlan id  is %d*\n", wlan_id->wlanid);
@@ -11740,7 +11750,14 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_HOTSPOT_ID(unsigned int RadioID,unsigned char 
 	{
 		return MALLOC_ERROR;
 	}
+	wlan_id->ESSID = (char *)WID_MALLOC(strlen(AC_WLAN[WlanID]->ESSID)+1);
+	if (wlan_id->ESSID == NULL) {
+		WID_FREE(wlan_id);
+		return MALLOC_ERROR;
+	}
 	wlan_id->wlanid= WlanID;
+	memset(wlan_id->ESSID, 0, strlen(AC_WLAN[WlanID]->ESSID)+1);
+	strncpy(wlan_id->ESSID, AC_WLAN[WlanID]->ESSID, strlen(AC_WLAN[WlanID]->ESSID));
 	wlan_id->next = NULL;
 	wid_syslog_debug_debug(WID_DEFAULT,"*** wtp binding wlan id  is %d*\n", wlan_id->wlanid);
 	
@@ -12952,6 +12969,7 @@ int DELETE_WLAN_CHECK_APPLY_RADIO(unsigned int RadioId, unsigned char WlanId)
 		}
 		wlan_id = wlan_id->next;	
 	}	
+	WID_RADIO_CLEAR_RATE_FOR_WLAN(RadioId, WlanId);
 	return 0;
 }
 
@@ -13205,6 +13223,7 @@ int WID_DELETE_WLAN_APPLY_RADIO(unsigned int RadioId, unsigned char WlanId)
 		{
 			return BSS_NOT_EXIST;
 		}
+		WID_RADIO_CLEAR_RATE_FOR_WLAN(RadioId, WlanId);
 		AC_RADIO[RadioId]->Wlan_Id = wlan_id_next->next;
 		free(wlan_id_next->ESSID);
 		free(wlan_id_next);
@@ -13237,6 +13256,7 @@ int WID_DELETE_WLAN_APPLY_RADIO(unsigned int RadioId, unsigned char WlanId)
 				{
 					return BSS_NOT_EXIST;
 				}				
+				WID_RADIO_CLEAR_RATE_FOR_WLAN(RadioId, WlanId);
 				wlan_id = wlan_id_next->next;
 				wlan_id_next->next = wlan_id_next->next->next;
 				free(wlan_id->ESSID);

@@ -80437,8 +80437,7 @@ int show_running_config_wtp(WID_WTP **WTP,int i,char *cursor,char **showStr2,cha
 								 cursor = showStr + totalLen;
 							
 							}
-							else
-								break;
+
 						}
 						if((WTP[i]->WTP_Radio[j]->Radio_Chan != 0)&&(WTP[i]->WTP_Radio[j]->auto_channel_cont != 0)){//sz1121 change 1 to 0
 							if(vrrid != 0){
