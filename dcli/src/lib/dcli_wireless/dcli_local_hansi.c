@@ -858,6 +858,46 @@ int dcli_license_show_running_config(struct vty *vty){
 	return 1;
 }
 
+int Check_Sync_Time(char* str){
+	if (str == NULL)
+	{
+		return 0;
+	}
+	char *endptr = NULL;
+	int endptr1 = 0;
+	char c;
+	int h = 0,m = 0,i;
+	unsigned int time;
+
+	c = str[0];
+	if (c>'0'&&c<='9'){
+		h= strtoul(str,&endptr,10);
+		if(endptr[0] == '\0' && h <= 30*24 && h >= 1){
+		
+			return h;
+		}
+		if(endptr[0] != '*')
+			return 0;
+		else{
+			endptr1 = &endptr[1];
+			m= strtoul(&endptr[1],&endptr,10);				
+					
+		}
+		
+		if(endptr[0] == '\0'){
+			time = h*m;
+			if (time <= 30*24 && time >= 1)
+				return time;
+		}
+		else
+			return 0;
+	}
+	else
+		
+		return 0;
+}
+
+
 DEFUN(config_local_hansi_cmd_func,
 	  config_local_hansi_cmd,
 	  "config local-hansi PARAMETER",
@@ -2957,6 +2997,306 @@ DEFUN(vrrp_sync_config_func,
 }
 
 
+DEFUN(sync_config_ip_func,
+		 sync_config_ip_cmd,
+		  "set auto-sync config ip A.B.C.D",
+		  "Remote heartbeat ip\n"
+		  "Remote heartbeat ip\n"
+	 )
+{
+	int ret;
+	DBusMessage *query, *reply;	
+	DBusMessageIter	 iter;
+	DBusError err;
+	int policy = 0;
+	char *ipAddr = argv[0]; 
+	ret = WID_Check_IP_Format((char*)argv[0]);
+	if(ret != WID_DBUS_SUCCESS){
+		vty_out(vty,"<error> unknown ip format\n");
+		return CMD_SUCCESS;
+	}
+	
+	
+	query = dbus_message_new_method_call(HMD_DBUS_BUSNAME,	\
+										HMD_DBUS_OBJPATH , \
+										HMD_DBUS_INTERFACE ,	\
+										HMD_DBUS_CONF_SET_AUTO_SYNC_CONFIG_IP);
+	dbus_error_init(&err);
+
+
+	dbus_message_append_args(query,
+							 DBUS_TYPE_STRING,&ipAddr,
+							 DBUS_TYPE_INVALID);
+
+	reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection,query,-1, &err);
+	
+	dbus_message_unref(query);
+	
+	if (NULL == reply)
+	{
+		cli_syslog_info("<error> failed get reply.\n");
+		if (dbus_error_is_set(&err))
+		{
+			cli_syslog_info("%s raised: %s",err.name,err.message);
+			dbus_error_free_for_dcli(&err);
+		}
+		
+
+		return CMD_SUCCESS;
+	}
+	
+	dbus_message_iter_init(reply,&iter);
+	dbus_message_iter_get_basic(&iter,&ret);
+
+	if(ret == 0)
+	{
+		vty_out(vty," set auto-sync config file ip %s successfully\n",argv[0]);
+	}
+	else if (ret = 1)
+	{
+		vty_out(vty,"please disable it first\n");
+	}
+	else
+	{
+		vty_out(vty,"<error>  %d\n",ret);
+	}
+		
+	dbus_message_unref(reply);
+
+	
+	return CMD_SUCCESS;			
+}
+
+
+DEFUN(set_sync_config_time_func,
+		 set_sync_config_time_cmd,
+		  "set auto-sync config time TIME",
+		  "set sync config time\n"
+		  "set sync config time\n"
+	 )
+{
+	int ret;
+	DBusMessage *query, *reply;	
+	DBusMessageIter	 iter;
+	DBusError err;
+	 int timer = 0;
+	
+	timer = Check_Sync_Time(argv[0]);
+	if(timer == 0){
+		vty_out(vty,"<error> input patameter format should be 12*3\n");
+		return CMD_SUCCESS;
+	}
+	
+	query = dbus_message_new_method_call(HMD_DBUS_BUSNAME,	\
+										HMD_DBUS_OBJPATH , \
+										HMD_DBUS_INTERFACE ,	\
+										HMD_DBUS_CONF_SET_AUTO_SYNC_CONFIG_TIME);
+	dbus_error_init(&err);
+
+
+	dbus_message_append_args(query,
+							 DBUS_TYPE_UINT32,&timer,
+							 DBUS_TYPE_INVALID);
+
+	reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection,query,-1, &err);
+	
+	dbus_message_unref(query);
+	
+	if (NULL == reply)
+	{
+		cli_syslog_info("<error> failed get reply.\n");
+		if (dbus_error_is_set(&err))
+		{
+			cli_syslog_info("%s raised: %s",err.name,err.message);
+			dbus_error_free_for_dcli(&err);
+		}
+		
+
+		return CMD_SUCCESS;
+	}
+	
+	dbus_message_iter_init(reply,&iter);
+	dbus_message_iter_get_basic(&iter,&ret);
+
+	if(ret == 0)
+	{
+		vty_out(vty,"set auto-sync config file time %s successfully\n",argv[0]);
+	}
+	else if (ret = 1)
+	{
+		vty_out(vty,"please disable it first\n");
+	}
+	else
+	{
+		vty_out(vty,"<error>  %d\n",ret);
+	}
+		
+	dbus_message_unref(reply);
+
+	
+	return CMD_SUCCESS;			
+}
+
+DEFUN(set_sync_config_switch_func,
+		 set_sync_config_switch_cmd,
+		  "set auto-sync config switch (enable|disable)",
+		  "set sync config switch\n"
+		  "set sync config switch\n"
+	 )
+{
+	int ret;
+	DBusMessage *query, *reply;	
+	DBusMessageIter	 iter;
+	DBusError err;
+	 int policy= 0;
+	
+	
+	if (!strcmp(argv[0],"enable"))
+	{
+		policy = 1;	
+	}
+	else if (!strcmp(argv[0],"disable"))
+	{
+		policy = 0;	
+	}
+		
+	query = dbus_message_new_method_call(HMD_DBUS_BUSNAME,	\
+										HMD_DBUS_OBJPATH , \
+										HMD_DBUS_INTERFACE ,	\
+										HMD_DBUS_CONF_SET_AUTO_SYNC_CONFIG_SWITCH);
+	dbus_error_init(&err);
+
+
+	dbus_message_append_args(query,
+							 DBUS_TYPE_UINT32,&policy,
+							 DBUS_TYPE_INVALID);
+
+	reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection,query,-1, &err);
+	
+	dbus_message_unref(query);
+	
+	if (NULL == reply)
+	{
+		cli_syslog_info("<error> failed get reply.\n");
+		if (dbus_error_is_set(&err))
+		{
+			cli_syslog_info("%s raised: %s",err.name,err.message);
+			dbus_error_free_for_dcli(&err);
+		}
+		
+
+		return CMD_SUCCESS;
+	}
+	
+	dbus_message_iter_init(reply,&iter);
+	dbus_message_iter_get_basic(&iter,&ret);
+
+	if(ret == 0)
+	{
+		vty_out(vty," set auto-sync config switch %s successfully\n",argv[0]);
+	}				
+	else
+	{
+		vty_out(vty,"<error>  %d\n",ret);
+	}
+		
+	dbus_message_unref(reply);
+
+	
+	return CMD_SUCCESS;			
+}
+
+
+DEFUN(show_sync_config_state_func,
+		 show_sync_config_state_cmd,
+		  "show auto-sync config state",
+		  "show sync config state\n"
+		  "show sync config state\n"
+	 )
+{
+	int ret;
+	DBusMessage *query, *reply;	
+	DBusMessageIter	 iter;
+	DBusError err;
+	 int policy= 0;
+	 int time,state;
+	 char *ip = NULL;
+	
+	
+	query = dbus_message_new_method_call(HMD_DBUS_BUSNAME,	\
+										HMD_DBUS_OBJPATH , \
+										HMD_DBUS_INTERFACE ,	\
+										HMD_DBUS_CONF_SHOW_AUTO_SYNC_CONFIG_STATE);
+	dbus_error_init(&err);
+
+
+	dbus_message_append_args(query,
+							 DBUS_TYPE_UINT32,&policy,
+							 DBUS_TYPE_INVALID);
+
+	reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection,query,-1, &err);
+	
+	dbus_message_unref(query);
+	
+	if (NULL == reply)
+	{
+		cli_syslog_info("<error> failed get reply.\n");
+		if (dbus_error_is_set(&err))
+		{
+			cli_syslog_info("%s raised: %s",err.name,err.message);
+			dbus_error_free_for_dcli(&err);
+		}
+		
+
+		return CMD_SUCCESS;
+	}
+	
+	dbus_message_iter_init(reply,&iter);
+	dbus_message_iter_get_basic(&iter,&ret);
+	dbus_message_iter_init(reply,&iter);
+	dbus_message_iter_get_basic(&iter,&ret);
+	dbus_message_iter_get_basic(&iter,&ret);
+	dbus_message_iter_next(&iter);
+	dbus_message_iter_get_basic(&iter,&time);
+	dbus_message_iter_next(&iter);
+	dbus_message_iter_get_basic(&iter,&state);
+	dbus_message_iter_next(&iter);
+	dbus_message_iter_get_basic(&iter,&ip);
+
+	if(time != 0)
+	{
+		vty_out(vty," set auto-sync config time: %dh\n",time);
+	}				
+	else
+	{
+		vty_out(vty," don't set auto-sync config time \n",ret);
+	}
+	if(ip)
+	{
+		vty_out(vty," set auto-sync config ip: %s\n",ip);
+	}				
+	else
+	{
+		vty_out(vty," don't set auto-sync config ip \n");
+	}
+	if(state == 1)
+	{
+		vty_out(vty," set auto-sync config state: enable\n");
+	}				
+	else
+	{
+		vty_out(vty," set auto-sync config state:disable\n");
+	}
+		
+
+		
+	dbus_message_unref(reply);
+
+	
+	return CMD_SUCCESS;			
+}
+
+
 void dcli_local_hansi_init(void) {	
 	
 	install_node (&local_hansi_node, dcli_local_hansi_show_running_config, "LOCAL_HANSI_NODE");
@@ -2997,6 +3337,18 @@ void dcli_local_hansi_init(void) {
 	install_element(LOCAL_HANSI_NODE,&set_hmd_timer_config_save_time_cmd);  //fengwenchao add 20130415 for hmd timer config save
 	install_element(LOCAL_HANSI_NODE,&set_hmd_timer_config_save_cmd);//fengwenchao add 20130415 for hmd timer config save	
 	install_element(CONFIG_NODE,&vrrp_sync_config_cmd);
+	install_element(CONFIG_NODE,&sync_config_ip_cmd);
+	install_element(CONFIG_NODE,&set_sync_config_time_cmd);
+	install_element(CONFIG_NODE,&set_sync_config_switch_cmd);
+	install_element(CONFIG_NODE,& show_sync_config_state_cmd);
+	install_element(HANSI_NODE,&sync_config_ip_cmd);
+	install_element(HANSI_NODE,&set_sync_config_time_cmd);
+	install_element(HANSI_NODE,&set_sync_config_switch_cmd);
+	install_element(HANSI_NODE,& show_sync_config_state_cmd);
+	install_element(LOCAL_HANSI_NODE,&sync_config_ip_cmd);
+	install_element(LOCAL_HANSI_NODE,&set_sync_config_time_cmd);
+	install_element(LOCAL_HANSI_NODE,&set_sync_config_switch_cmd);
+	install_element(LOCAL_HANSI_NODE,& show_sync_config_state_cmd);
 	return;
 }
 

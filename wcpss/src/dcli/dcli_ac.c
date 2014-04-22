@@ -3681,6 +3681,286 @@ DEFUN(set_ap_scanning_func,
 	return CMD_SUCCESS;			
 }
 
+DEFUN(set_ap_auto_scanning_time_func,
+		 set_ap_auto_scanning_time_cmd,
+		  "set channel auto scanning time TIME",
+		  "auto scanning time\n"
+		  " auto scanning time\n"
+	 )
+{
+	int ret;
+
+	DBusMessage *query, *reply;	
+	DBusMessageIter	 iter;
+	DBusError err;
+	int time = 0;
+   	time = Check_Time_Format(argv[0]);
+	if(time == 0){
+		vty_out(vty,"<error> input patameter format should be 12:32:56\n");
+		return CMD_SUCCESS;
+	}
+	
+	int localid = 1;
+	int slot_id = HostSlotId;
+	int index = 0;
+	char BUSNAME[PATH_LEN];
+	char OBJPATH[PATH_LEN];
+	char INTERFACE[PATH_LEN];
+	if(vty->node == CONFIG_NODE){
+		index = 0;
+	}else if(vty->node == HANSI_NODE){
+		index = (int)vty->index;
+		localid = vty->local;
+		slot_id = vty->slotindex;
+	}
+	else if(vty->node == LOCAL_HANSI_NODE){
+		index = (int)vty->index;
+		localid = vty->local;
+		slot_id = vty->slotindex;
+	}
+	DBusConnection *dcli_dbus_connection = NULL;
+	ReInitDbusConnection(&dcli_dbus_connection,slot_id,distributFag);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_BUSNAME,BUSNAME);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_OBJPATH,OBJPATH);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_INTERFACE,INTERFACE);
+	query = dbus_message_new_method_call(BUSNAME,OBJPATH,INTERFACE, WID_DBUS_CONF_METHOD_AP_AUTO_SCANNING_TIME);
+
+/*	query = dbus_message_new_method_call(WID_DBUS_BUSNAME,WID_DBUS_OBJPATH,\
+						WID_DBUS_INTERFACE,WID_DBUS_CONF_METHOD_AP_SCANNING);*/
+	dbus_error_init(&err);
+
+
+	dbus_message_append_args(query,
+							 DBUS_TYPE_UINT32,&time,
+							 DBUS_TYPE_INVALID);
+
+	reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection,query,-1, &err);
+	
+	dbus_message_unref(query);
+	
+	if (NULL == reply)
+	{
+		cli_syslog_info("<error> failed get reply.\n");
+		if (dbus_error_is_set(&err))
+		{
+			cli_syslog_info("%s raised: %s",err.name,err.message);
+			dbus_error_free_for_dcli(&err);
+		}
+		
+
+		return CMD_SUCCESS;
+	}
+	
+	dbus_message_iter_init(reply,&iter);
+	dbus_message_iter_get_basic(&iter,&ret);
+
+	if(ret == 0)
+	{
+		vty_out(vty," set ap auto scanning time %s successfully\n",argv[0]);
+	}
+	else if(ret == 1)
+	{
+		vty_out(vty," please disable it first\n");
+	}
+	else
+	{
+		vty_out(vty,"<error>  %d\n",ret);
+	}
+		
+	dbus_message_unref(reply);
+
+	
+	return CMD_SUCCESS;			
+}
+
+DEFUN(set_ap_auto_scanning_switch_func,
+		 set_ap_auto_scanning_switch_cmd,
+		  "set channel auto scanning switch (enable|disable)",
+		  "auto scanning switch\n"
+		  " auto scanning switch\n"
+	 )
+{
+	int ret;
+	DBusMessage *query, *reply;	
+	DBusMessageIter	 iter;
+	DBusError err;
+	int policy = 0;
+   	if (!strcmp(argv[0],"enable"))
+	{
+		policy = 1;	
+	}
+	else if (!strcmp(argv[0],"disable"))
+	{
+		policy = 0;	
+	}
+	int localid = 1;
+	int slot_id = HostSlotId;
+	int index = 0;
+	char BUSNAME[PATH_LEN];
+	char OBJPATH[PATH_LEN];
+	char INTERFACE[PATH_LEN];
+	if(vty->node == CONFIG_NODE){
+		index = 0;
+	}else if(vty->node == HANSI_NODE){
+		index = (int)vty->index;
+		localid = vty->local;
+		slot_id = vty->slotindex;
+	}
+	else if(vty->node == LOCAL_HANSI_NODE){
+		index = (int)vty->index;
+		localid = vty->local;
+		slot_id = vty->slotindex;
+	}
+	DBusConnection *dcli_dbus_connection = NULL;
+	ReInitDbusConnection(&dcli_dbus_connection,slot_id,distributFag);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_BUSNAME,BUSNAME);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_OBJPATH,OBJPATH);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_INTERFACE,INTERFACE);
+	query = dbus_message_new_method_call(BUSNAME,OBJPATH,INTERFACE, WID_DBUS_CONF_METHOD_AP_AUTO_SCANNING_SWITCH);
+
+/*	query = dbus_message_new_method_call(WID_DBUS_BUSNAME,WID_DBUS_OBJPATH,\
+						WID_DBUS_INTERFACE,WID_DBUS_CONF_METHOD_AP_SCANNING);*/
+	dbus_error_init(&err);
+
+
+	dbus_message_append_args(query,
+							 DBUS_TYPE_UINT32,&policy,
+							 DBUS_TYPE_INVALID);
+
+	reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection,query,-1, &err);
+	
+	dbus_message_unref(query);
+	
+	if (NULL == reply)
+	{
+		cli_syslog_info("<error> failed get reply.\n");
+		if (dbus_error_is_set(&err))
+		{
+			cli_syslog_info("%s raised: %s",err.name,err.message);
+			dbus_error_free_for_dcli(&err);
+		}
+		
+
+		return CMD_SUCCESS;
+	}
+	
+	dbus_message_iter_init(reply,&iter);
+	dbus_message_iter_get_basic(&iter,&ret);
+
+	if(ret == 0)
+	{
+		vty_out(vty," set ap auto scanning switch %s successfully\n",argv[0]);
+	}				
+	else
+	{
+		vty_out(vty,"<error>  %d\n",ret);
+	}
+		
+	dbus_message_unref(reply);
+
+	
+	return CMD_SUCCESS;			
+}
+
+DEFUN(show_ap_auto_scanning_state_func,
+		 show_ap_auto_scanning_state_cmd,
+		  "show ap auto scanning state",
+		  "show ap auto scanning state\n"
+		  " show ap auto scanning state\n"
+	 )
+{
+	int ret;
+	int auto_time;
+	int auto_switch;
+	DBusMessage *query, *reply;	
+	DBusMessageIter	 iter;
+	DBusError err;
+	int policy = 0;
+   
+	int localid = 1;
+	int slot_id = HostSlotId;
+	int index = 0;
+	char BUSNAME[PATH_LEN];
+	char OBJPATH[PATH_LEN];
+	char INTERFACE[PATH_LEN];
+	if(vty->node == CONFIG_NODE){
+		index = 0;
+	}else if(vty->node == HANSI_NODE){
+		index = (int)vty->index;
+		localid = vty->local;
+		slot_id = vty->slotindex;
+	}
+	else if(vty->node == LOCAL_HANSI_NODE){
+		index = (int)vty->index;
+		localid = vty->local;
+		slot_id = vty->slotindex;
+	}
+	DBusConnection *dcli_dbus_connection = NULL;
+	ReInitDbusConnection(&dcli_dbus_connection,slot_id,distributFag);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_BUSNAME,BUSNAME);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_OBJPATH,OBJPATH);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_INTERFACE,INTERFACE);
+	query = dbus_message_new_method_call(BUSNAME,OBJPATH,INTERFACE, WID_DBUS_CONF_METHOD_AP_AUTO_SCANNING_STATE);
+
+/*	query = dbus_message_new_method_call(WID_DBUS_BUSNAME,WID_DBUS_OBJPATH,\
+						WID_DBUS_INTERFACE,WID_DBUS_CONF_METHOD_AP_SCANNING);*/
+	dbus_error_init(&err);
+
+
+	dbus_message_append_args(query,
+							 DBUS_TYPE_UINT32,&policy,
+							 DBUS_TYPE_INVALID);
+
+	reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection,query,-1, &err);
+	
+	dbus_message_unref(query);
+	
+	if (NULL == reply)
+	{
+		cli_syslog_info("<error> failed get reply.\n");
+		if (dbus_error_is_set(&err))
+		{
+			cli_syslog_info("%s raised: %s",err.name,err.message);
+			dbus_error_free_for_dcli(&err);
+		}
+		
+
+		return CMD_SUCCESS;
+	}
+	dbus_message_iter_init(reply,&iter);
+	dbus_message_iter_get_basic(&iter,&ret);
+	dbus_message_iter_next(&iter);
+	dbus_message_iter_get_basic(&iter,&auto_time);
+	dbus_message_iter_next(&iter);
+	dbus_message_iter_get_basic(&iter,&auto_switch);
+	int h,m,s;
+	h = auto_time/3600;
+	m = (auto_time- h*3600)/60;
+	s = (auto_time- h*3600)%60;
+	if(auto_time != 0)
+	{
+		vty_out(vty," set ap auto scanning time %d:%d:%d \n",h,m,s);
+	}				
+	else
+	{
+		vty_out(vty,"don't set ap auto scanning time \n",ret);
+	}
+	if(auto_switch ==1)
+	{
+		vty_out(vty," set ap auto scanning switch enable \n");
+	}				
+	else
+	{
+		vty_out(vty," set ap auto scanning switch disable\n");
+	}
+		
+	dbus_message_unref(reply);
+
+	
+	return CMD_SUCCESS;			
+}
+
+
 DEFUN(set_ap_scanning_report_interval_func,
 		  set_ap_scanning_report_interval_cmd,
 	 	  "set radio resource management report interval TIME",
@@ -23211,7 +23491,8 @@ void dcli_ac_init(void)
 	install_element(CONFIG_NODE,&show_wireless_listen_if_cmd);
 #endif
 	install_element(CONFIG_NODE,&batch_config_cmd);	
-
+	
+	
 /***************************************************************************/
 	/*
 	install_element(ENABLE_NODE,&set_wid_hw_version_cmd);	
@@ -23269,7 +23550,11 @@ void dcli_ac_init(void)
 	install_element(CONFIG_NODE,&set_wid_auth_security_cmd);
 	install_element(CONFIG_NODE,&set_wid_name_cmd);
 	*/
+	
 	install_element(HANSI_NODE,&set_ap_scanning_cmd);
+	install_element(HANSI_NODE,&set_ap_auto_scanning_time_cmd);
+	install_element(HANSI_NODE,&set_ap_auto_scanning_switch_cmd);
+	install_element(HANSI_NODE,&show_ap_auto_scanning_state_cmd);
 	install_element(HANSI_NODE,&set_ap_scanning_report_interval_cmd);
 	/*install_element(CONFIG_NODE,&update_ap_scanning_info_cmd);*/
 	install_element(HANSI_NODE,&set_wirelesscontrol_whitelist_cmd);
@@ -23460,6 +23745,9 @@ void dcli_ac_init(void)
 	install_element(CONFIG_NODE,&set_wid_name_cmd);
 	*/
 	install_element(LOCAL_HANSI_NODE,&set_ap_scanning_cmd);
+	install_element(LOCAL_HANSI_NODE,&set_ap_auto_scanning_time_cmd);
+	install_element(LOCAL_HANSI_NODE,&show_ap_auto_scanning_state_cmd);
+	install_element(LOCAL_HANSI_NODE,&set_ap_auto_scanning_switch_cmd);
 	install_element(LOCAL_HANSI_NODE,&set_ap_scanning_report_interval_cmd);
 	/*install_element(CONFIG_NODE,&update_ap_scanning_info_cmd);*/
 	install_element(LOCAL_HANSI_NODE,&set_wirelesscontrol_whitelist_cmd);

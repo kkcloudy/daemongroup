@@ -406,6 +406,77 @@ void CWHandleTimer(CWTimerArg arg) {
 			}
 		}
 	}
+	else if(signalToRaise == 505){		
+		wid_syslog_debug_debug(WID_DEFAULT,"505 disable\n");
+		timer = 300;
+		if (auto_channel_scanning_switch == 1)
+		{
+			gapscanset.opstate = 1;
+			gapscanset.flag = 1;
+			if(gapscanset.reportinterval == 0)
+			{
+				gapscanset.reportinterval = ROGUE_AP_REPORT_INT;
+			}
+			int ret = wid_set_ap_scanning(gapscanset);
+			if (ret == 0)
+			{
+				if(!(CWTimerRequest(timer, NULL, &rrm_switch_timerID, 506,0)))
+				{
+					CW_FREE_OBJECT_WID(a);
+					return ;
+				}
+			}
+			else
+			{
+				wid_syslog_err("set auto channel scanning rrm switch fail \n");
+				return ;
+			}
+		}
+			
+		wid_syslog_debug_debug(WID_DEFAULT,"rrm_switch_timerID %d\n",rrm_switch_timerID);
+			
+	}
+	else if(signalToRaise == 506){		
+		wid_syslog_debug_debug(WID_DEFAULT,"506 disable\n");
+		
+		time(&timep);  
+		p=localtime(&timep);
+		wid_syslog_debug_debug(WID_DEFAULT,"time %d:%d:%d\n",p->tm_hour,p->tm_min,p->tm_sec);
+		times = p->tm_hour*3600 + p->tm_min*60 + p->tm_sec;
+		if(times < auto_channel_scanning_time)
+		{
+			timer = auto_channel_scanning_time - times; 
+		}
+		else
+		{
+			timer = 24*3600 - times + auto_channel_scanning_time;
+		}
+		gapscanset.opstate = 0;
+		gapscanset.flag = 1;
+		if(gapscanset.reportinterval == 0)
+		{
+			gapscanset.reportinterval = ROGUE_AP_REPORT_INT;
+		}
+		int ret = wid_set_ap_scanning(gapscanset);
+		if (ret == 0)
+		{
+			if(!(CWTimerRequest(timer, NULL, &auto_channel_scanning_timerID, 505,WLANID))) 
+			{
+				CW_FREE_OBJECT_WID(a);
+				return ;
+			}	
+		}
+		else
+		{
+			wid_syslog_err("set auto channel scanning rrm switch fail \n");
+			return ;
+		}
+		
+					
+		wid_syslog_debug_debug(WID_DEFAULT,"auto_channel_scanning_timerID3333333 %d\n",auto_channel_scanning_timerID);
+			
+	}
+	
 	else if(signalToRaise == 900)
 	{
 		if(is_secondary == 1){

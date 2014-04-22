@@ -18247,6 +18247,151 @@ DBusMessage * wid_dbus_interface_set_ap_scanning(DBusConnection *conn, DBusMessa
 
 }
 
+DBusMessage * wid_dbus_interface_set_ap_auto_scanning_time(DBusConnection *conn, DBusMessage *msg, void *user_data)
+{
+	DBusMessage* reply;	
+	DBusMessageIter	 iter;
+	DBusError err;
+	dbus_error_init(&err);	
+	int ret = WID_DBUS_SUCCESS;
+	int time = 0;
+	if (!(dbus_message_get_args ( msg, &err,
+								DBUS_TYPE_UINT32,&time,
+								DBUS_TYPE_INVALID))){
+
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
+				
+		if (dbus_error_is_set(&err)) {
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
+			dbus_error_free(&err);
+		}
+		return NULL;
+	}
+	if (auto_channel_scanning_switch == 0)
+	{
+		auto_channel_scanning_time = time;
+	}
+	else
+	{
+		ret = 1;
+	}
+	reply = dbus_message_new_method_return(msg);
+		
+	dbus_message_iter_init_append(reply, &iter);
+		
+	dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT32, &ret);
+	
+	wid_syslog_debug_debug(WID_DBUS,"set ap auto scanning time %d successfully\n",time);
+	
+	return reply;	
+
+}
+
+DBusMessage * wid_dbus_interface_set_ap_auto_scanning_switch(DBusConnection *conn, DBusMessage *msg, void *user_data)
+{
+	DBusMessage* reply;	
+	DBusMessageIter	 iter;
+	DBusError err;
+	time_t timep;  
+	struct tm *p; 
+	int times;	
+	int timer;
+	dbus_error_init(&err);	
+	int ret = WID_DBUS_SUCCESS;
+	int policy = 0;
+	if (!(dbus_message_get_args ( msg, &err,
+								DBUS_TYPE_UINT32,&policy,
+								DBUS_TYPE_INVALID))){
+
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
+				
+		if (dbus_error_is_set(&err)) {
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
+			dbus_error_free(&err);
+		}
+		return NULL;
+	}
+	auto_channel_scanning_switch = policy;
+	if (policy == 1)
+	{
+		time(&timep);  
+		p=localtime(&timep);
+		wid_syslog_debug_debug(WID_DEFAULT,"stop time %d:%d:%d\n",p->tm_hour,p->tm_min,p->tm_sec);
+		times = p->tm_hour*3600 + p->tm_min*60 + p->tm_sec;
+		if(times < auto_channel_scanning_time)
+		{
+			timer = auto_channel_scanning_time -times; 
+		}
+		else
+		{
+			timer = 24*3600 - times + auto_channel_scanning_time;
+		}
+		wid_syslog_debug_debug(WID_DEFAULT,"times %d\n",times);
+		wid_syslog_debug_debug(WID_DEFAULT," auto_channel_scanning_time %d\n", auto_channel_scanning_time);
+		wid_syslog_debug_debug(WID_DEFAULT,"timer %d \n",timer);
+		if(!(CWTimerRequest(timer, NULL, &auto_channel_scanning_timerID, 505,0)))
+		{
+			ret = WID_DBUS_ERROR;
+		}		
+		
+	}
+	else
+	{
+		if(!CWTimerCancel(&auto_channel_scanning_timerID,1))
+		{
+				ret = WID_DBUS_ERROR;
+		}
+	}
+	reply = dbus_message_new_method_return(msg);
+		
+	dbus_message_iter_init_append(reply, &iter);
+		
+	dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT32, &ret);
+	
+	wid_syslog_debug_debug(WID_DBUS,"set ap auto scanning switch %d successfully\n",policy);
+	
+	return reply;	
+
+}
+
+DBusMessage * wid_dbus_interface_show_ap_auto_scanning_state(DBusConnection *conn, DBusMessage *msg, void *user_data)
+{
+	DBusMessage* reply;	
+	DBusMessageIter	 iter;
+	DBusError err;
+	int auto_timer = 0;
+	int auto_switch = 0;
+	dbus_error_init(&err);	
+	int ret = WID_DBUS_SUCCESS;
+	int policy = 0;
+	if (!(dbus_message_get_args ( msg, &err,
+								DBUS_TYPE_UINT32,&policy,
+								DBUS_TYPE_INVALID))){
+
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
+				
+		if (dbus_error_is_set(&err)) {
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
+			dbus_error_free(&err);
+		}
+		return NULL;
+	}
+	auto_timer = auto_channel_scanning_time;
+	auto_switch = auto_channel_scanning_switch;
+	reply = dbus_message_new_method_return(msg);
+		
+	dbus_message_iter_init_append(reply, &iter);
+		
+	dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT32, &ret);
+	dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT32, &auto_timer);
+	dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT32, &auto_switch);
+	
+	wid_syslog_debug_debug(WID_DBUS,"show ap auto scanning state  successfully\n");
+	
+	return reply;	
+
+}
+
 DBusMessage * wid_dbus_interface_set_wid_mac_whitelist_switch(DBusConnection *conn, DBusMessage *msg, void *user_data)
 {
 	DBusMessage* reply;	
@@ -76691,6 +76836,23 @@ DBusMessage * wid_dbus_wtp_show_running_config_start(DBusConnection *conn, DBusM
 		totalLen += sprintf(cursor,"set neighbordead interval %d\n",gCWNeighborDeadInterval);
 		cursor = showStr + totalLen; 
 	}
+	if (auto_channel_scanning_time != 0)
+	{
+		
+		int h,m,s;
+		h = auto_channel_scanning_time/3600;
+		m = (auto_channel_scanning_time - h*3600)/60;
+		s = (auto_channel_scanning_time - h*3600)%60;
+
+		totalLen += sprintf(cursor,"set channel auto scanning time  %d:%d:%d\n",h,m,s);
+		cursor = showStr + totalLen; 
+	}
+	if (auto_channel_scanning_switch != 0)
+	{
+		
+		totalLen += sprintf(cursor,"set channel auto scanning switch enable\n");
+		cursor = showStr + totalLen; 
+	}
 	/*zhaoruijia,20100916,ap auto service tftp*/
 	if(g_ap_auto_update_service_tftp != 0)
 	{
@@ -81391,6 +81553,15 @@ static DBusHandlerResult wid_dbus_message_handler (DBusConnection *connection, D
 		}
 		else if (dbus_message_is_method_call(message,WID_DBUS_INTERFACE,WID_DBUS_CONF_METHOD_AP_SCANNING_REPORT_INTERVAL)) {
 			reply = wid_dbus_interface_set_ap_scanning_report_interval(connection,message,user_data);
+		}
+		else if (dbus_message_is_method_call(message,WID_DBUS_INTERFACE,WID_DBUS_CONF_METHOD_AP_AUTO_SCANNING_TIME)) {
+			reply = wid_dbus_interface_set_ap_auto_scanning_time(connection,message,user_data);
+		}
+		else if (dbus_message_is_method_call(message,WID_DBUS_INTERFACE,WID_DBUS_CONF_METHOD_AP_AUTO_SCANNING_SWITCH)) {
+			reply = wid_dbus_interface_set_ap_auto_scanning_switch(connection,message,user_data);
+		}
+		else if (dbus_message_is_method_call(message,WID_DBUS_INTERFACE,WID_DBUS_CONF_METHOD_AP_AUTO_SCANNING_STATE)) {
+			reply = wid_dbus_interface_show_ap_auto_scanning_state(connection,message,user_data);
 		}
 		else if (dbus_message_is_method_call(message,WID_DBUS_INTERFACE,WID_DBUS_CONF_METHOD_AP_COUNTERMEASURES)) {
 			reply = wid_dbus_interface_set_ap_countermeasures(connection,message,user_data);

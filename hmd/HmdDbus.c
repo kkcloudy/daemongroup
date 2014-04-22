@@ -472,6 +472,21 @@ DBusMessage * hmd_dbus_hansi_show_running(DBusConnection *conn, DBusMessage *msg
 			/*fengwenchao add end*/
 		}
 	}
+	if (auto_sync_config_time != 0)
+	{
+		totalLen += sprintf(cursor," set auto-sync config time %d\n",auto_sync_config_time);
+					cursor = showStr + totalLen; 
+	}
+	if (strlen(auto_sync_config_ip) > 7)
+	{
+		totalLen += sprintf(cursor," set auto-sync config ip %s\n",auto_sync_config_ip);
+					cursor = showStr + totalLen; 
+	}
+	if (auto_sync_config_switch  == 1)
+	{
+		totalLen += sprintf(cursor," set auto-sync config switch enable\n");
+					cursor = showStr + totalLen; 
+	}
 	if((num == 0)&&(num2 == 0)){
 		hmd_syslog_info("%s,line=%d.\n",__func__,__LINE__);
 		totalLen += sprintf(cursor,"          \n");
@@ -4983,6 +4998,166 @@ DBusMessage *hmd_dbus_conf_sync_to_vrrp_backup(DBusConnection *conn, DBusMessage
 	return reply;
 }
 
+DBusMessage * hmd_dbus_interface_set_sync_config_ip(DBusConnection *conn, DBusMessage *msg, void *user_data)
+{
+	DBusMessage* reply;	
+	DBusMessageIter	 iter;
+	DBusError err;
+	dbus_error_init(&err);	
+	char *ipAddr = NULL;
+	int ret = HMD_DBUS_SUCCESS;
+	if (!(dbus_message_get_args ( msg, &err,
+								DBUS_TYPE_STRING,&ipAddr,
+								DBUS_TYPE_INVALID))){
+
+		hmd_syslog_err("Unable to get input args\n");
+				
+		if (dbus_error_is_set(&err)) {
+			hmd_syslog_err("%s raised: %s",err.name,err.message);
+			dbus_error_free(&err);
+		}
+		return NULL;
+	}
+	if (auto_sync_config_switch == 0 ) 
+	{
+		memcpy(auto_sync_config_ip,ipAddr,strlen(ipAddr));
+		hmd_syslog_info("#########ip lenth :%d\n",strlen(ipAddr));
+	}
+	else
+	{
+		ret = 1;
+	}
+	
+	reply = dbus_message_new_method_return(msg);	
+	dbus_message_iter_init_append(reply, &iter);
+	dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT32, &ret);
+	
+	hmd_syslog_info("set auto-sync config time %s  successfully\n",ipAddr);
+	
+	return reply;	
+
+}
+
+
+DBusMessage * hmd_dbus_interface_set_sync_config_time(DBusConnection *conn, DBusMessage *msg, void *user_data)
+{
+	DBusMessage* reply;	
+	DBusMessageIter	 iter;
+	DBusError err;
+	dbus_error_init(&err);	
+	int time;
+	int ret = HMD_DBUS_SUCCESS;
+	if (!(dbus_message_get_args ( msg, &err,
+								DBUS_TYPE_UINT32,&time,
+								DBUS_TYPE_INVALID))){
+
+		hmd_syslog_err("Unable to get input args\n");
+				
+		if (dbus_error_is_set(&err)) {
+			hmd_syslog_err("%s raised: %s",err.name,err.message);
+			dbus_error_free(&err);
+		}
+		return NULL;
+	}
+	if (auto_sync_config_switch == 0 ) 
+	{
+		auto_sync_config_time = time;
+	}
+	else
+	{
+		ret = 1;
+	}
+	reply = dbus_message_new_method_return(msg);
+	dbus_message_iter_init_append(reply, &iter);
+	dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT32, &ret);
+	
+	hmd_syslog_info("set auto-sync config time %dh  end\n",time);
+	
+	return reply;	
+
+}
+
+DBusMessage * hmd_dbus_interface_set_sync_config_switch(DBusConnection *conn, DBusMessage *msg, void *user_data)
+{
+	DBusMessage* reply;	
+	DBusMessageIter	 iter;
+	DBusError err;
+	dbus_error_init(&err);	
+	int policy;
+	int ret = HMD_DBUS_SUCCESS;
+	if (!(dbus_message_get_args ( msg, &err,
+								DBUS_TYPE_UINT32,&policy,
+								DBUS_TYPE_INVALID))){
+
+		hmd_syslog_err("Unable to get input args\n");
+				
+		if (dbus_error_is_set(&err)) {
+			hmd_syslog_err("%s raised: %s",err.name,err.message);
+			dbus_error_free(&err);
+		}
+		return NULL;
+	}
+	auto_sync_config_switch = policy;
+	if (policy == 1)
+	{
+		HMDTimerRequest(auto_sync_config_time*3600,&auto_sync_config_timerID,HMD_AUTO_SYNC_CONFIG,0,0);
+	
+	}
+	else
+	{	
+		HmdTimerCancel(&auto_sync_config_timerID,1);
+	}
+	reply = dbus_message_new_method_return(msg);
+	dbus_message_iter_init_append(reply, &iter);
+	dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT32, &ret);
+	
+	hmd_syslog_info("set auto-sync config switch %d end\n",policy);
+	
+	return reply;	
+
+}
+
+DBusMessage * hmd_dbus_interface_show_sync_config_state(DBusConnection *conn, DBusMessage *msg, void *user_data)
+{
+	DBusMessage* reply;	
+	DBusMessageIter	 iter;
+	DBusError err;
+	dbus_error_init(&err);	
+	int policy;
+	int time;
+	int state;
+	char *ip = NULL;
+	int ret = HMD_DBUS_SUCCESS;
+	if (!(dbus_message_get_args ( msg, &err,
+								DBUS_TYPE_UINT32,&policy,
+								DBUS_TYPE_INVALID))){
+
+		hmd_syslog_err("Unable to get input args\n");
+				
+		if (dbus_error_is_set(&err)) {
+			hmd_syslog_err("%s raised: %s",err.name,err.message);
+			dbus_error_free(&err);
+		}
+		return NULL;
+	}
+	time = auto_sync_config_time;
+	state = auto_sync_config_switch;
+	ip =  auto_sync_config_ip;
+	reply = dbus_message_new_method_return(msg);
+	dbus_message_iter_init_append(reply, &iter);
+	dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT32, &ret);
+	dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT32, &time);
+	dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT32, &state);
+	dbus_message_iter_append_basic(&iter, DBUS_TYPE_STRING, &ip);
+	
+	hmd_syslog_info("show auto-sync config state end\n");
+	
+	return reply;	
+
+}
+
+
+
 static DBusHandlerResult hmd_dbus_message_handler (DBusConnection *connection, DBusMessage *message, void *user_data){
 
 	DBusMessage		*reply = NULL;
@@ -5087,6 +5262,18 @@ static DBusHandlerResult hmd_dbus_message_handler (DBusConnection *connection, D
 		}		
 		else if (dbus_message_is_method_call(message,HMD_DBUS_INTERFACE,HMD_DBUS_METHOD_SYNC_WCPSS_CFG)){
 		reply = hmd_dbus_sync_wcpss_cfg(connection, message, user_data);
+		}
+		else if (dbus_message_is_method_call(message,HMD_DBUS_INTERFACE,HMD_DBUS_CONF_SET_AUTO_SYNC_CONFIG_IP)){
+		reply = hmd_dbus_interface_set_sync_config_ip(connection, message, user_data);
+		}
+		else if (dbus_message_is_method_call(message,HMD_DBUS_INTERFACE,HMD_DBUS_CONF_SET_AUTO_SYNC_CONFIG_TIME)){
+		reply = hmd_dbus_interface_set_sync_config_time(connection, message, user_data);
+		}
+		else if (dbus_message_is_method_call(message,HMD_DBUS_INTERFACE,HMD_DBUS_CONF_SET_AUTO_SYNC_CONFIG_SWITCH)){
+		reply = hmd_dbus_interface_set_sync_config_switch(connection, message, user_data);
+		}
+		else if (dbus_message_is_method_call(message,HMD_DBUS_INTERFACE,HMD_DBUS_CONF_SHOW_AUTO_SYNC_CONFIG_STATE)){
+		reply = hmd_dbus_interface_show_sync_config_state(connection, message, user_data);
 		}
 	}
 	if (reply) {

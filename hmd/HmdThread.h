@@ -32,7 +32,8 @@ enum TimerInfo{
 	HMD_CHECKING_UPDATE = 502,
 	HMD_TIMER_CONFIG_SAVE = 503, //fengwenchao add 20130412 for hmd timer config save
 	HMD_CHECK_FOR_DHCP = 504,  //supf add for dhcp auto restart
-	HMD_TIMER_TAKESNAPSHOT = 505 //houxx add for takesnapshot
+	HMD_TIMER_TAKESNAPSHOT = 505, //houxx add for takesnapshot
+	HMD_AUTO_SYNC_CONFIG = 506
 };
 
 typedef struct {

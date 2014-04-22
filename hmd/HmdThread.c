@@ -695,6 +695,37 @@ void HmdHandleTimer(void* arg) {
 		ret = takesnapshotfun();
 		hmd_syslog_info("%s line %d ret:%d(0 success)\n",__func__,__LINE__,ret);
 	}
+	else if (HMD_AUTO_SYNC_CONFIG == TimerType)
+	{
+		int i= 0;
+		int j = 0;
+		int status = -1,ret = 0;
+		hmd_syslog_info("hmd timer request 506 \n");
+		for (i= 0; i< MAX_SLOT_NUM; i++ )
+		{
+			if (auto_sync_config_switch == 1)
+			if (HMD_BOARD[i] != NULL)
+			{
+				for (j = 0; j < MAX_INSTANCE; j++ )
+				{		hmd_syslog_info("hmd timer num %d \n",j);
+					if ((HMD_BOARD[i]->Hmd_Inst[j] != NULL) && (HMD_BOARD[i]->Hmd_Inst[j]->slot_no== i) && (HMD_BOARD[i]->Hmd_Inst[j]->Inst_ID == j))
+					{
+						sprintf(cmd,"sudo /opt/bin/vtysh -c \"en\n configure terminal\n  sync config %d-%d to %s\n\"" ,i,j,auto_sync_config_ip);
+						hmd_syslog_info("hmd cmd: %s \n",cmd);
+						status = system(cmd);
+						ret = WEXITSTATUS(status);
+						if (ret != 0)
+						{
+							hmd_syslog_err("auto-sync hasi-porfile %d-%d config file fail \n",i,j);
+						}
+					}
+				}
+			}
+	
+		}
+		HMDTimerRequest(auto_sync_config_time*3600, &auto_sync_config_timerID,HMD_AUTO_SYNC_CONFIG,0,0);
+
+	}
 	HMD_FREE_OBJECT(a);
 
 	return;

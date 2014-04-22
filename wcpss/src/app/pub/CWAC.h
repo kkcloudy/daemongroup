@@ -287,6 +287,10 @@ extern unsigned short g_sta_flow_tx_overflow_interval;
 extern unsigned int g_sta_flow_tx_overflow_threshold;
 
 extern unsigned char g_auto_add_radio_to_ebr;
+extern int auto_channel_scanning_time;
+extern int auto_channel_scanning_switch;
+extern int auto_channel_scanning_timerID;
+extern int rrm_switch_timerID;
 
 extern unsigned short gINFOREPORTINTERVAL;  
 extern int gSTAINFOREPORT;
@@ -491,6 +495,7 @@ void update_complete_check();
 int WID_ENABLE_WLAN(unsigned char WlanID);
 int WID_DISABLE_WLAN(unsigned char WlanID);
 int WID_RADIO_SET_STATUS(unsigned int RadioID, unsigned char status);
+int wid_set_ap_scanning(APScanningSetting scansetting);
 int bak_check_req(int sockfd);
 CWBool WidAsd_StationInfoUpdate1(unsigned int WTPID,WIDStationInfo*valuesPtr);
 CWBool AsdWsm_StationOpNew(unsigned int WTPID,char *mac, Operate op,unsigned short reason);

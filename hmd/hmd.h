@@ -50,6 +50,11 @@ extern int  HANSI_TIMER;//fengwenchao add 20130412 for hmd timer config save
 extern int MASTER_BACKUP_SLOT_NO;
 extern unsigned int service_tftp_state;//service tftp (0--disable;1--enable)
 extern unsigned int service_ftp_state;//service ftp  (0--disable;1--enable)
+extern char auto_sync_config_ip[20] ;
+extern int auto_sync_config_time ;
+extern int auto_sync_config_switch;
+extern int auto_sync_config_timerID ;
+
 extern int vrrp_global_switch_hansi[16];
 extern int vrrp_global_switch_endis;
 

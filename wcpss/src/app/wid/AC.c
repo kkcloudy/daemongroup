@@ -309,6 +309,11 @@ int rrm_rid = 0;
 unsigned int TUNNEL_STATISTICS_LOG_INTERVAL = 28800;
 unsigned int RADIO_STATISTICS_LOG_INTERVAL = 28800;
 unsigned char g_auto_add_radio_to_ebr = 0;//auto add radio interface to ebr switch: 1 enable 0 disable
+int auto_channel_scanning_time = 0;
+int auto_channel_scanning_switch = 0;
+int auto_channel_scanning_timerID = 0;
+int rrm_switch_timerID = 0;
+
 
 /*_________________________________________________________*/
 /*  *******************___FUNCTIONS___*******************  */
