@@ -477,7 +477,7 @@ DBusMessage * hmd_dbus_hansi_show_running(DBusConnection *conn, DBusMessage *msg
 		totalLen += sprintf(cursor," set auto-sync config time %d\n",auto_sync_config_time);
 					cursor = showStr + totalLen; 
 	}
-	if (strlen(auto_sync_config_ip) > 7)
+	if (strlen(auto_sync_config_ip) > 6)
 	{
 		totalLen += sprintf(cursor," set auto-sync config ip %s\n",auto_sync_config_ip);
 					cursor = showStr + totalLen; 
