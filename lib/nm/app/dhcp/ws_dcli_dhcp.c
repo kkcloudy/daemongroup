@@ -4124,3 +4124,60 @@ int ccgi_show_dhcp_pool_statistics(int slot_id, struct all_lease_state_p *head)
 
 	return ret;	
 }
+/**wangchao add**/
+int ccgi_show_dhcpv6_pool_statistics(int slot_id, struct dhcpv6_statistics_info* info)
+{
+	DBusMessage *query = NULL, *reply = NULL;
+	DBusError err;
+	int ret = 1;
+//	struct dhcpv6_statistics_info info;
+
+	//int localid = 1, index = 0;
+	//get_slotid_index(vty, &index, &slot_id, &localid);
+
+	DBusConnection  *ccgi_connection = NULL;
+	ccgi_ReInitDbusConnection(&ccgi_connection, slot_id, DISTRIBUTFAG);	
+	
+
+	query = dbus_message_new_method_call(DHCP6_DBUS_BUSNAME, 
+									DHCP6_DBUS_OBJPATH, 
+									DHCP6_DBUS_INTERFACE, 
+									DHCP6_DBUS_METHOD_GET_STATISTICS_INFO);
+	dbus_error_init(&err);
+
+	reply = dbus_connection_send_with_reply_and_block (ccgi_connection, query, -1, &err);
+
+	dbus_message_unref(query);
+	if (NULL == reply) {
+		if (dbus_error_is_set(&err)) {
+			dbus_error_free_for_dcli(&err);
+		}
+		return 0;
+	}
+
+	dbus_message_get_args ( reply, &err,
+					DBUS_TYPE_UINT32, &(info[slot_id].dhcpv6_solicit_times),
+					DBUS_TYPE_UINT32, &(info[slot_id].dhcpv6_advertise_times),
+					DBUS_TYPE_UINT32, &(info[slot_id].dhcpv6_request_times),
+					DBUS_TYPE_UINT32, &(info[slot_id].dhcpv6_renew_times),
+					DBUS_TYPE_UINT32, &(info[slot_id].dhcpv6_reply_times),
+					//DBUS_TYPE_UINT32, &(info.ack_times),
+					DBUS_TYPE_INVALID); 		
+
+#if 0
+	printf("===================================================\n");
+	printf("total SOLICIT packet:	%d\n", info.dhcpv6_solicit_times);
+	printf("total ADVERTISE packet: %d\n", info.dhcpv6_advertise_times);
+	printf("total REQUESET packet:%d\n", info.dhcpv6_request_times);	
+	printf("total RENEW packet:	%d\n", info.dhcpv6_renew_times);
+	printf("total REPLY packet: %d\n", info.dhcpv6_reply_times);
+	//vty_out(vty, "total ACK packet: 	%d\n", info.ack_times);
+	printf("===================================================\n");
+#endif
+	dbus_message_unref(reply);
+	return ret; 
+}
+
+
+
+
