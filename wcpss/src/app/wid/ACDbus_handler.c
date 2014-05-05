@@ -387,10 +387,34 @@ int wid_update_bss_to_wifi(unsigned int bssindex,unsigned int WTPIndex,unsigned 
 			ifinfo.if_policy = 1;
 		else
 			ifinfo.if_policy = 0;
-		memcpy(ifinfo.apmac, AC_WTP[WTPIndex]->WTPMAC, MAC_LEN);
-		memcpy(ifinfo.bssid,  AC_BSS[bssindex]->BSSID, MAC_LEN);
-		memcpy(ifinfo.ifname, AC_WTP[WTPIndex]->BindingIFName,strlen(AC_WTP[WTPIndex]->BindingIFName));
-		memcpy(ifinfo.apname,AC_WTP[WTPIndex]->WTPNAME,strlen(AC_WTP[WTPIndex]->WTPNAME));		
+		if( AC_WTP[WTPIndex]->WTPMAC != NULL){
+			memcpy(ifinfo.apmac, AC_WTP[WTPIndex]->WTPMAC, MAC_LEN);
+			}
+		else
+			{
+			wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+			}
+		if( AC_BSS[bssindex]->BSSID != NULL){
+			memcpy(ifinfo.bssid,  AC_BSS[bssindex]->BSSID, MAC_LEN);
+			}
+		else
+			{
+			wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+			}
+		if(AC_WTP[WTPIndex]->BindingIFName != NULL){
+			memcpy(ifinfo.ifname, AC_WTP[WTPIndex]->BindingIFName,strlen(AC_WTP[WTPIndex]->BindingIFName));
+			}
+		else
+			{
+			wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+			}
+		if(AC_WTP[WTPIndex]->WTPNAME != NULL){
+			memcpy(ifinfo.apname,AC_WTP[WTPIndex]->WTPNAME,strlen(AC_WTP[WTPIndex]->WTPNAME));		
+			}
+		else
+			{
+			wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+			}
 		if(AC_WLAN[wlan_id] != NULL && AC_WLAN[wlan_id]->want_to_delete != 1)  //fengwenchao add 20111220
 		{
 			Wlan_id=AC_WTP[WTPIndex]->Wlan_Id;
@@ -406,15 +430,33 @@ int wid_update_bss_to_wifi(unsigned int bssindex,unsigned int WTPIndex,unsigned 
 			}
 			if(find_wlan == 1)
 			{
-				memcpy(ifinfo.essid ,Wlan_id->ESSID ,strlen(Wlan_id->ESSID));
+				if( Wlan_id->ESSID != NULL){
+					memcpy(ifinfo.essid ,Wlan_id->ESSID ,strlen(Wlan_id->ESSID));
+					}
+				else
+					{
+					wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+					}
 			}
 			else
 			{
-				memcpy(ifinfo.essid ,AC_WLAN[wlan_id]->ESSID ,strlen(AC_WLAN[wlan_id]->ESSID));
+				if( AC_WLAN[wlan_id]->ESSID != NULL){
+					memcpy(ifinfo.essid ,AC_WLAN[wlan_id]->ESSID ,strlen(AC_WLAN[wlan_id]->ESSID));
+					}
+				else
+					{
+					wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+					}
 			}
 			ifinfo.Eap1XServerSwitch = AC_WLAN[wlan_id]->eap_mac_switch;
 			memset(ifinfo.Eap1XServerMac,0,MAC_LEN);
-			memcpy(ifinfo.Eap1XServerMac,AC_WLAN[wlan_id]->eap_mac2,MAC_LEN);
+			if( AC_WLAN[wlan_id]->eap_mac2 != NULL){
+				memcpy(ifinfo.Eap1XServerMac,AC_WLAN[wlan_id]->eap_mac2,MAC_LEN);
+				}
+			else
+				{
+				wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+				}
 		}
 		else
 		{
@@ -438,9 +480,21 @@ int wid_update_bss_to_wifi(unsigned int bssindex,unsigned int WTPIndex,unsigned 
 			ifinfo.acip = v_ip;
 		}else{
 			ifinfo.isIPv6 = 1;
-			memcpy(ifinfo.apipv6,&((struct sockaddr_in6 *) sa)->sin6_addr,sizeof(struct in6_addr));
+			if((&((struct sockaddr_in6 *) sa)->sin6_addr) != NULL){
+				memcpy(ifinfo.apipv6,&((struct sockaddr_in6 *) sa)->sin6_addr,sizeof(struct in6_addr));
+				}
+			else
+				{
+				wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+				}
 			ifinfo.apport = ((struct sockaddr_in6 *)sa)->sin6_port +1;
-			memcpy(ifinfo.acipv6,&((struct sockaddr_in6 *) sa2)->sin6_addr,sizeof(struct in6_addr));
+			if(&((struct sockaddr_in6 *) sa2)->sin6_addr != NULL){
+				memcpy(ifinfo.acipv6,&((struct sockaddr_in6 *) sa2)->sin6_addr,sizeof(struct in6_addr));
+				}
+			else
+				{
+				wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+				}
 		}
 		
 		ret = ioctl(fd, WIFI_IOC_IF_UPDATE, &ifinfo);
@@ -566,7 +620,13 @@ int set_balance_probe_extension_command(int wtpid, char * command)
 	msg.mqinfo.type = CONTROL_TYPE;
 	msg.mqinfo.subtype = WTP_S_TYPE;
 	msg.mqinfo.u.WtpInfo.Wtp_Op = WTP_EXTEND_CMD;
-	memcpy(msg.mqinfo.u.WtpInfo.value, command, strlen(command));
+	if(msg.mqinfo.u.WtpInfo.value && command){
+		memcpy(msg.mqinfo.u.WtpInfo.value, command, strlen(command));
+		}
+	else
+		{
+		wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+		}
 
 	if(AC_WTP[wtpid]->WTPStat == 5){	
 		if (msgsnd(ACDBUS_MSGQ, (msgq *)&msg, sizeof(msg.mqinfo), 0) == -1){			
@@ -668,7 +728,13 @@ int WID_CREATE_NEW_WLAN(char *WlanName, unsigned char WlanID,unsigned char *ESSI
 			return MALLOC_ERROR;
 		}
 		memset(AC_WLAN[WlanID]->ESSID,0,essid_len + 1);
-		memcpy(AC_WLAN[WlanID]->ESSID,ESSID,essid_len);
+		if(ESSID != NULL){
+			memcpy(AC_WLAN[WlanID]->ESSID,ESSID,essid_len);
+			}
+		else
+			{
+			wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+			}
 	}
 	else{
 		AC_WLAN[WlanID]->ESSID = (char*)WID_MALLOC(ESSID_LENGTH);	
@@ -679,7 +745,13 @@ int WID_CREATE_NEW_WLAN(char *WlanName, unsigned char WlanID,unsigned char *ESSI
 			return MALLOC_ERROR;
 		}
 		memset(AC_WLAN[WlanID]->ESSID,0,ESSID_LENGTH);
-		memcpy(AC_WLAN[WlanID]->ESSID,ESSID,(ESSID_LENGTH-1));
+		if( ESSID != NULL){
+			memcpy(AC_WLAN[WlanID]->ESSID,ESSID,strlen((char *)ESSID)-1);
+			}
+		else
+			{
+			wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+			}
 	}
 	AC_WLAN[WlanID]->chinaEssid = cnFlag;
 	if(cnFlag == 1){
@@ -693,7 +765,13 @@ int WID_CREATE_NEW_WLAN(char *WlanName, unsigned char WlanID,unsigned char *ESSI
 				return MALLOC_ERROR;
 			}
 			memset(AC_WLAN[WlanID]->ESSID_CN_STR,0,ESSID_DEFAULT_LEN);
-			memcpy(AC_WLAN[WlanID]->ESSID_CN_STR,ESSID_STR,strlen((char *)ESSID_STR));
+			if(ESSID_STR != NULL){
+				memcpy(AC_WLAN[WlanID]->ESSID_CN_STR,ESSID_STR,strlen((char *)ESSID_STR));
+				}
+			else
+				{
+				wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+				}
 		}else{
 			AC_WLAN[WlanID]->ESSID_CN_STR = (unsigned char*)WID_MALLOC(strlen((char *)ESSID_STR)+1);	
 			if (NULL == AC_WLAN[WlanID]->ESSID_CN_STR)
@@ -704,7 +782,13 @@ int WID_CREATE_NEW_WLAN(char *WlanName, unsigned char WlanID,unsigned char *ESSI
 				return MALLOC_ERROR;
 			}
 			memset(AC_WLAN[WlanID]->ESSID_CN_STR,0,strlen((char *)ESSID_STR)+1);
-			memcpy(AC_WLAN[WlanID]->ESSID_CN_STR,ESSID_STR,strlen((char *)ESSID_STR));
+			if(ESSID_STR != NULL){
+				memcpy(AC_WLAN[WlanID]->ESSID_CN_STR,ESSID_STR,strlen((char *)ESSID_STR));
+				}
+			else
+				{
+				wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+				}
 		}
 	}
 	AC_WLAN[WlanID]->WlanID = WlanID;
@@ -1650,7 +1734,13 @@ int WID_CREATE_NEW_WTP(char *WTPNAME, unsigned int WTPID, unsigned char* WTPSN, 
 		memset(AC_WTP[WTPID]->WTPSN, 0, NAS_IDENTIFIER_NAME);
 		//AC_WTP[WTPID]->WTPSN = (char*)malloc(strlen(WTPSN)+1);
 		//memset(AC_WTP[WTPID]->WTPSN, 0, strlen(WTPSN)+1);
-		memcpy(AC_WTP[WTPID]->WTPSN, WTPSN, strlen((char *)WTPSN));
+		if(WTPSN != NULL){
+			memcpy(AC_WTP[WTPID]->WTPSN, WTPSN, strlen((char *)WTPSN));
+			}
+		else
+			{
+			wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+			}
 	}
 	else
 	{
@@ -1661,7 +1751,13 @@ int WID_CREATE_NEW_WTP(char *WTPNAME, unsigned int WTPID, unsigned char* WTPSN, 
 		*/
 		AC_WTP[WTPID]->WTPSN = (char*)WID_MALLOC(NAS_IDENTIFIER_NAME);
 		memset(AC_WTP[WTPID]->WTPSN, 0, NAS_IDENTIFIER_NAME);
-		memcpy(AC_WTP[WTPID]->WTPSN, gdefaultsn, 20);
+		if(gdefaultsn != NULL){
+			memcpy(AC_WTP[WTPID]->WTPSN, gdefaultsn, strlen(gdefaultsn));
+			}
+		else
+			{
+			wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+			}
 		/*used to test ,avoid the point of sn error*/
 		AC_WTP[WTPID]->WTPMAC = (unsigned char*)WID_MALLOC(MAC_LEN+1);
 		if (NULL == AC_WTP[WTPID]->WTPMAC)
@@ -1669,14 +1765,26 @@ int WID_CREATE_NEW_WTP(char *WTPNAME, unsigned int WTPID, unsigned char* WTPSN, 
 			goto label_wtpmac;
 		}
 		memset(AC_WTP[WTPID]->WTPMAC,0,(MAC_LEN+1));
-		memcpy(AC_WTP[WTPID]->WTPMAC,(unsigned char *)WTPSN,MAC_LEN);
+		if((unsigned char *)WTPSN != NULL){
+			memcpy(AC_WTP[WTPID]->WTPMAC,(unsigned char *)WTPSN,strlen((char *)(unsigned char *)WTPSN));
+			}
+		else
+			{
+			wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+			}
 		AC_WTP[WTPID]->WTPSN = (char*)WID_MALLOC(NAS_IDENTIFIER_NAME);
 		if (NULL == AC_WTP[WTPID]->WTPSN)
 		{
 			goto label_wtpsn;
 		}
 		memset(AC_WTP[WTPID]->WTPSN, 0, NAS_IDENTIFIER_NAME);
-		memcpy(AC_WTP[WTPID]->WTPSN, gdefaultsn, 20);
+		if(gdefaultsn != NULL){
+			memcpy(AC_WTP[WTPID]->WTPSN, gdefaultsn, strlen(gdefaultsn));
+			}
+		else
+			{
+			wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+			}
 	}	
 	
 	AC_WTP[WTPID]->WTPModel = (char*)WID_MALLOC(strlen(WTPModel)+1);
@@ -1759,13 +1867,37 @@ int WID_CREATE_NEW_WTP(char *WTPNAME, unsigned int WTPID, unsigned char* WTPSN, 
 		goto label_netid;
 	}
 	memset(AC_WTP[WTPID]->netid, 0, 12);
-	memcpy(AC_WTP[WTPID]->netid, "defaultcode", 11);
+	if(AC_WTP[WTPID]->netid != NULL){
+		memcpy(AC_WTP[WTPID]->netid, "defaultcode", strlen("defaultcode"));
+		}
+	else
+		{
+		wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+		}
 	memset(AC_WTP[WTPID]->cpuType,0,WTP_TYPE_DEFAULT_LEN);
-	memcpy(AC_WTP[WTPID]->cpuType,"soc",3);
+	if(AC_WTP[WTPID]->cpuType != NULL){
+		memcpy(AC_WTP[WTPID]->cpuType,"soc",strlen("soc"));
+		}
+	else
+		{
+		wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+		}
 	memset(AC_WTP[WTPID]->memType,0,WTP_TYPE_DEFAULT_LEN);
-	memcpy(AC_WTP[WTPID]->memType,"flash",5);
+	if(AC_WTP[WTPID]->memType != NULL){
+		memcpy(AC_WTP[WTPID]->memType,"flash",strlen("flash"));
+		}
+	else
+		{
+		wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+		}
 	memset(AC_WTP[WTPID]->flashType,0,WTP_TYPE_DEFAULT_LEN);
-	memcpy(AC_WTP[WTPID]->flashType,"flash",5);/*wuwl add.when wtp didn't into run ,display this*/
+	if(AC_WTP[WTPID]->flashType != NULL){
+		memcpy(AC_WTP[WTPID]->flashType,"flash",strlen("flash"));/*wuwl add.when wtp didn't into run ,display this*/
+		}
+	else
+		{
+		wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+		}
 
 	memset(AC_WTP[WTPID]->longitude, '\0', LONGITUDE_LATITUDE_MAX_LEN);
 	memset(AC_WTP[WTPID]->latitude, '\0', LONGITUDE_LATITUDE_MAX_LEN);
@@ -3354,7 +3486,13 @@ int WID_ENABLE_WLAN(unsigned char WlanID){
 
 								msg.mqinfo.u.WlanInfo.HideESSid = AC_WLAN[WlanID]->HideESSid;
 								memset(msg.mqinfo.u.WlanInfo.WlanKey,0,DEFAULT_LEN);
-								memcpy(msg.mqinfo.u.WlanInfo.WlanKey,AC_WLAN[WlanID]->WlanKey,DEFAULT_LEN);
+								if(msg.mqinfo.u.WlanInfo.WlanKey && AC_WLAN[WlanID]->WlanKey){
+									memcpy(msg.mqinfo.u.WlanInfo.WlanKey,AC_WLAN[WlanID]->WlanKey,strlen(AC_WLAN[WlanID]->WlanKey));
+									}
+								else
+									{
+									wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+									}
 								msg.mqinfo.u.WlanInfo.KeyLen = AC_WLAN[WlanID]->KeyLen;
 								msg.mqinfo.u.WlanInfo.SecurityType = AC_WLAN[WlanID]->SecurityType;
 								msg.mqinfo.u.WlanInfo.SecurityIndex = AC_WLAN[WlanID]->SecurityIndex;
@@ -3364,11 +3502,23 @@ int WID_ENABLE_WLAN(unsigned char WlanID){
 								//memcpy(msg.mqinfo.u.WlanInfo.WlanEssid,AC_WLAN[WlanID]->ESSID,ESSID_LENGTH);
 								if(wlan_id->ESSID)
 								{
-									memcpy(msg.mqinfo.u.WlanInfo.WlanEssid,wlan_id->ESSID,strlen(wlan_id->ESSID));
+									if(msg.mqinfo.u.WlanInfo.WlanEssid && wlan_id->ESSID){
+										memcpy(msg.mqinfo.u.WlanInfo.WlanEssid,wlan_id->ESSID,strlen(wlan_id->ESSID));
+										}
+									else
+										{
+										wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+										}
 								}
 								else
 								{
-									memcpy(msg.mqinfo.u.WlanInfo.WlanEssid,AC_WLAN[WlanID]->ESSID,strlen(AC_WLAN[WlanID]->ESSID));
+									if(msg.mqinfo.u.WlanInfo.WlanEssid && AC_WLAN[WlanID]->ESSID){
+										memcpy(msg.mqinfo.u.WlanInfo.WlanEssid,AC_WLAN[WlanID]->ESSID,strlen(AC_WLAN[WlanID]->ESSID));
+										}
+									else
+										{
+										wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+										}
 								}
 								msg.mqinfo.u.WlanInfo.bssindex = AC_WLAN[WlanID]->S_WTP_BSS_List[m][n];
 								
@@ -3451,7 +3601,13 @@ int WID_ENABLE_WLAN(unsigned char WlanID){
 							
 								sprintf(ath_str,"ath.%d-%d",n,WlanID);
 								sprintf(command,"ifconfig %s down;iwpriv %s inact %u;ifconfig %s up",ath_str,ath_str,AC_WLAN[WlanID]->ap_max_inactivity,ath_str);
-								memcpy(msg4.mqinfo.u.WtpInfo.value, command, strlen(command));
+								if(msg4.mqinfo.u.WtpInfo.value && command){
+									memcpy(msg4.mqinfo.u.WtpInfo.value, command, strlen(command));
+									}
+								else
+									{
+									wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+									}
 								wid_syslog_debug_debug(WID_DEFAULT,"the command is : %s\n",command);
 								
 								if(AC_WTP[m]->WTPStat == 5){	
@@ -4121,7 +4277,13 @@ int Get_Interface_Info(char * ifname, struct ifi_info *ifi){
 				return MALLOC_ERROR;
 			}
 			memset(ifi->ifi_addr, 0, sizeof(struct sockaddr_in));
-			memcpy(ifi->ifi_addr, sinptr, sizeof(struct sockaddr_in));
+			if(ifi->ifi_addr && sinptr){
+				memcpy(ifi->ifi_addr, sinptr, sizeof(struct sockaddr_in));
+				}
+			else
+				{
+				wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+				}
 	
 #ifdef	SIOCGIFBRDADDR
 			ifrcopy = ifr;
@@ -4136,7 +4298,13 @@ int Get_Interface_Info(char * ifname, struct ifi_info *ifi){
 					return MALLOC_ERROR;
 				}
 				memset(ifi->ifi_brdaddr, 0, sizeof(struct sockaddr_in));
-				memcpy(ifi->ifi_brdaddr, sinptr, sizeof(struct sockaddr_in));				
+				if(ifi->ifi_brdaddr && sinptr){
+					memcpy(ifi->ifi_brdaddr, sinptr, sizeof(struct sockaddr_in));				
+					}
+				else
+					{
+					wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+					}
 				wid_syslog_debug_debug(WID_DEFAULT,"addr %s",inet_ntoa(((struct sockaddr_in*)(ifi->ifi_brdaddr))->sin_addr));
 			}
 #endif
@@ -4151,7 +4319,13 @@ int Get_Interface_Info(char * ifname, struct ifi_info *ifi){
 					return MALLOC_ERROR;
 				}
 				memset(ifi->ifi_addr, 0, sizeof(struct sockaddr_in6));
-				memcpy(ifi->ifi_addr, sin6ptr, sizeof(struct sockaddr_in6));
+				if(ifi->ifi_addr && sin6ptr){
+					memcpy(ifi->ifi_addr, sin6ptr, sizeof(struct sockaddr_in6));
+					}
+				else
+					{
+					wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+					}
 	
 				break;
 	
@@ -4210,7 +4384,13 @@ int Get_Ipaddr_Info(struct ifi_info *ifi){
 				return MALLOC_ERROR;
 			}
 			memset(ifi->ifi_addr, 0, sizeof(struct sockaddr_in));
-			memcpy(ifi->ifi_addr, sinptr, sizeof(struct sockaddr_in));
+			if(ifi->ifi_addr && sinptr){
+				memcpy(ifi->ifi_addr, sinptr, sizeof(struct sockaddr_in));
+				}
+			else
+				{
+				wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+				}
 	
 #ifdef	SIOCGIFBRDADDR
 			wid_syslog_debug_debug(WID_DEFAULT,"%s,%d.",__func__,__LINE__);
@@ -4226,7 +4406,13 @@ int Get_Ipaddr_Info(struct ifi_info *ifi){
 					return MALLOC_ERROR;
 				}
 				memset(ifi->ifi_brdaddr, 0, sizeof(struct sockaddr_in));	
-				memcpy(ifi->ifi_brdaddr, sinptr, sizeof(struct sockaddr_in));				
+				if(ifi->ifi_brdaddr && sinptr){
+					memcpy(ifi->ifi_brdaddr, sinptr, sizeof(struct sockaddr_in));				
+					}
+				else
+					{
+					wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+					}
 				wid_syslog_debug_debug(WID_DEFAULT,"addr %s",inet_ntoa(((struct sockaddr_in*)(ifi->ifi_brdaddr))->sin_addr));
 			}
 #endif
@@ -4240,7 +4426,13 @@ int Get_Ipaddr_Info(struct ifi_info *ifi){
 					close(sockfd);
 					return MALLOC_ERROR;
 				}
-				memcpy(ifi->ifi_addr, sin6ptr, sizeof(struct sockaddr_in6));
+				if(ifi->ifi_addr && sin6ptr){
+					memcpy(ifi->ifi_addr, sin6ptr, sizeof(struct sockaddr_in6));
+					}
+				else
+					{
+					wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+					}
 	
 				break;
 	
@@ -4997,11 +5189,23 @@ int Check_Listenning_Ip(char *ifname,unsigned int addr,LISTEN_FLAG flag,char nl_
 				wid_syslog_debug_debug(WID_DEFAULT,"%s,p_next->ifname=%s,is NULL.\n",__func__,p_next->ifname);
 			}else{
 				memset(p_next->ifname,0,IFI_NAME);
-				memcpy(p_next->ifname,ifname,IFI_NAME);
+				if(ifname != NULL){
+					memcpy(p_next->ifname,ifname,strlen(ifname));
+					}
+				else
+					{
+					wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+					}
 			}
 			if(nl_flag == 1){
 				memset(p_next->ifname,0,IFI_NAME);
-				memcpy(p_next->ifname,ifname,IFI_NAME);
+				if(p_next->ifname && ifname){
+					memcpy(p_next->ifname,ifname,strlen(ifname));
+					}
+				else
+					{
+					wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+					}
 			}
 			wid_syslog_debug_debug(WID_DEFAULT,"%s,22m=%d,n=%d,ifname=%s,p_next->ifname=%s,nl_flag=%d.\n",__func__,m,n,ifname,p_next->ifname,nl_flag);
 			//ptr = p_next;
@@ -5026,7 +5230,13 @@ int Add_Listenning_IF(char * ifname){
 	
 	memset(ptr,0,sizeof(struct CWMultiHomedInterface));
 	memset(ptr->ifname,0,IFI_NAME);
-	memcpy(ptr->ifname,ifname,strlen(ifname));
+	if(ptr->ifname && ifname){
+		memcpy(ptr->ifname,ifname,strlen(ifname));
+		}
+	else
+		{
+		wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+		}
 	ptr->if_next = NULL;
 	ptr->lic_flag = DOWN_LINK_IF_TYPE;
 	wid_syslog_debug_debug(WID_DEFAULT,"%s,gListenningIF.count=%d,gListenningIF.interfaces=%p.\n",__func__,gListenningIF.count,gListenningIF.interfaces);
@@ -5065,7 +5275,13 @@ int Add_Listenning_IP(char * ifname,unsigned int addr,LISTEN_FLAG flag){
 	
 	memset(ptr,0,sizeof(struct CWMultiHomedInterface));
 	memset(ptr->ifname,0,IFI_NAME);
-	memcpy(ptr->ifname,ifname,strlen(ifname));
+	if(ptr->ifname && ifname){
+		memcpy(ptr->ifname,ifname,strlen(ifname));
+		}
+	else
+		{
+		wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+		}
 	ptr->lic_flag = flag;
 	((struct sockaddr_in *)&(ptr->addr))->sin_addr.s_addr = addr;
 	ptr->if_next = NULL;
@@ -5486,7 +5702,13 @@ int Check_And_Bind_Interface_For_WID(char * ifname){
 			return MALLOC_ERROR;
 		}
 		memset(tmp,0,sizeof(struct ifi));
-		memcpy(tmp->ifi_name,ifi_tmp->ifi_name,IFI_NAME);
+		if(tmp->ifi_name && ifi_tmp->ifi_name){
+			memcpy(tmp->ifi_name,ifi_tmp->ifi_name,strlen(ifi_tmp->ifi_name));
+			}
+		else
+			{
+			wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+			}
 		tmp->lic_flag = DOWN_LINK_IF_TYPE;
 		WID_IF = tmp;
 		Set_Interface_binding_Info(ifi_tmp->ifi_name,1);//fengwenchao copy from 1318 for AXSSZFI-839
@@ -5543,7 +5765,13 @@ int Check_And_Bind_Interface_For_WID(char * ifname){
 			return MALLOC_ERROR;
 		}
 		memset(tmp,0,sizeof(struct ifi));
-		memcpy(tmp->ifi_name,ifi_tmp->ifi_name,IFI_NAME);
+		if(tmp->ifi_name && ifi_tmp->ifi_name){
+			memcpy(tmp->ifi_name,ifi_tmp->ifi_name,strlen(ifi_tmp->ifi_name));
+			}
+		else
+			{
+			wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+			}
 		tmp2 = WID_IF;		
 		tmp->lic_flag = DOWN_LINK_IF_TYPE;
 		WID_IF = tmp;
@@ -5564,7 +5792,13 @@ int Check_And_Bind_Interface_For_WID(char * ifname){
 	{		
 		if(ifi_tmp->addr[i] == 0)
 			continue;
-		memcpy(&((struct sockaddr_in *) ifi_tmp->ifi_addr)->sin_addr,&(ifi_tmp->addr[i]),sizeof(struct in_addr));
+		if(&((struct sockaddr_in *) ifi_tmp->ifi_addr)->sin_addr && (&(ifi_tmp->addr[i]))){
+			memcpy(&((struct sockaddr_in *) ifi_tmp->ifi_addr)->sin_addr,&(ifi_tmp->addr[i]),sizeof(struct in_addr));
+			}
+		else
+			{
+			wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+			}
 		{
 			wid_syslog_debug_debug(WID_DBUS,"%s,%d,CW_CONTROL_PORT.\n",__func__,__LINE__);
 			ret = Bind_Interface_For_WID(ifi_tmp,CW_CONTROL_PORT,DOWN_LINK_IF_TYPE);
@@ -5667,7 +5901,13 @@ int Check_And_Bind_Ipaddr_For_WID(unsigned int ipaddr,LISTEN_FLAG flag){
 		}
 		memset(tmp,0,sizeof(struct ifi));
 		memset(tmp->ifi_name,0,IFI_NAME);
-		memcpy(tmp->ifi_name,ifi_tmp->ifi_name,IFI_NAME);
+		if(tmp->ifi_name && ifi_tmp->ifi_name){
+			memcpy(tmp->ifi_name,ifi_tmp->ifi_name,strlen(ifi_tmp->ifi_name));
+			}
+		else
+			{
+			wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+			}
 		tmp->ifi_next = NULL;
 		tmp->addr = ifi_tmp->addr[0];
 		tmp->lic_flag = flag;
@@ -5705,7 +5945,13 @@ int Check_And_Bind_Ipaddr_For_WID(unsigned int ipaddr,LISTEN_FLAG flag){
 		}
 		memset(tmp,0,sizeof(struct ifi));
 		memset(tmp->ifi_name,0,IFI_NAME);
-		memcpy(tmp->ifi_name,ifi_tmp->ifi_name,IFI_NAME);
+		if(tmp->ifi_name && ifi_tmp->ifi_name){
+			memcpy(tmp->ifi_name,ifi_tmp->ifi_name,strlen(ifi_tmp->ifi_name));
+			}
+		else
+			{
+			wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+			}
 		tmp->addr = ifi_tmp->addr[0];
 		tmp->lic_flag = flag;
 		tmp->ifi_next = NULL;
@@ -5721,7 +5967,13 @@ int Check_And_Bind_Ipaddr_For_WID(unsigned int ipaddr,LISTEN_FLAG flag){
 	{		
 		if(ifi_tmp->addr[i] == 0)
 			continue;
-		memcpy(&((struct sockaddr_in *) ifi_tmp->ifi_addr)->sin_addr,&(ifi_tmp->addr[i]),sizeof(struct in_addr));
+		if(&((struct sockaddr_in *) ifi_tmp->ifi_addr)->sin_addr && (&(ifi_tmp->addr[i]))){
+			memcpy(&((struct sockaddr_in *) ifi_tmp->ifi_addr)->sin_addr,&(ifi_tmp->addr[i]),sizeof(struct in_addr));
+			}
+		else
+			{
+			wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+			}
 		//if(Lic_ip.lic_active_ac_ip == ((struct sockaddr_in *) ifi_tmp->ifi_addr)->sin_addr.s_addr)
 		if(flag == LIC_TYPE){
 			ret = Bind_Interface_For_WID(ifi_tmp,WID_LIC_AC_PORT,LIC_TYPE);	 
@@ -5797,7 +6049,13 @@ int WID_ADD_IF_APPLY_WLAN(unsigned char WlanID, char * ifname){
 		return MALLOC_ERROR;
 	}
 	memset(wif->ifi_name,0,ETH_IF_NAME_LEN);
-	memcpy(wif->ifi_name,ifname,strlen(ifname));
+	if( ifname != NULL){
+		memcpy(wif->ifi_name,ifname,strlen(ifname));
+		}
+	else
+		{
+		wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+		}
 	wif->ifi_index = ifr.ifr_ifindex;
 	wif->nas_id_len = 0;//zhanglei add
 	memset(wif->nas_id,0,NAS_IDENTIFIER_NAME);//zhanglei add
@@ -5996,7 +6254,13 @@ int WID_ADD_IF_APPLY_WLAN_ipv6(unsigned char WlanID, char * ifname){
 				return MALLOC_ERROR;
 			}
 			memset(tmp,0,sizeof(struct ifi));
-			memcpy(tmp->ifi_name,ifname,strlen(ifname));
+			if(tmp->ifi_name && ifname){
+				memcpy(tmp->ifi_name,ifname,strlen(ifname));
+				}
+			else
+				{
+				wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+				}
 			
 			tmp->ifi_index = isystemindex;
 			wid_syslog_debug_debug(WID_DEFAULT,"tmp->ifi_index = %d\n",tmp->ifi_index);
@@ -6050,7 +6314,13 @@ int WID_ADD_IF_APPLY_WLAN_ipv6(unsigned char WlanID, char * ifname){
 					return MALLOC_ERROR;
 				}
 				memset(tmp,0,sizeof(struct ifi));
-				memcpy(tmp->ifi_name,ifname,strlen(ifname));
+				if(tmp->ifi_name && ifname){
+					memcpy(tmp->ifi_name,ifname,strlen(ifname));
+					}
+				else
+					{
+					wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+					}
 				tmp->ifi_index = isystemindex;
 				tmp->isipv6addr = 1;
 				tmp2 = WID_IF_V6;
@@ -6094,7 +6364,13 @@ int WID_ADD_IF_APPLY_WLAN_ipv6(unsigned char WlanID, char * ifname){
 		return MALLOC_ERROR;
 	}
 	memset(wif->ifi_name,0,ETH_IF_NAME_LEN);
-	memcpy(wif->ifi_name,ifname,strlen(ifname));
+	if(ifname != NULL){
+		memcpy(wif->ifi_name,ifname,strlen(ifname));
+		}
+	else
+		{
+		wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+		}
 	wif->ifi_index = ifr.ifr_ifindex;
 	wid_syslog_debug_debug(WID_DEFAULT,"wif->ifi_index = %d\n",wif->ifi_index);
 	wif->nas_id_len = 0;//zhanglei add
@@ -9521,7 +9797,13 @@ int WID_ADD_WLAN_APPLY_RADIO(unsigned int RadioID,unsigned char WlanID){
 					if(wlan_ifi->nas_id_len > 0)
 					{
 						nas_id_len = wlan_ifi->nas_id_len;//zhanglei add
-						memcpy(nas_id,wlan_ifi->nas_id,NAS_IDENTIFIER_NAME);//zhanglei add
+						if(nas_id && wlan_ifi->nas_id){
+							memcpy(nas_id,wlan_ifi->nas_id,strlen(wlan_ifi->nas_id));//zhanglei add
+							}
+						else
+							{
+							wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+							}
 					}
 					break;
 				}
@@ -9565,7 +9847,13 @@ int WID_ADD_WLAN_APPLY_RADIO(unsigned int RadioID,unsigned char WlanID){
 		return MALLOC_ERROR;
 	}
 	memset(wlan_id->ESSID,0,essid_len+1);
-	memcpy(wlan_id->ESSID,AC_WLAN[WlanID]->ESSID,essid_len);
+	if( AC_WLAN[WlanID]->ESSID != NULL){
+		memcpy(wlan_id->ESSID,AC_WLAN[WlanID]->ESSID,essid_len);
+		}
+	else
+		{
+		wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+		}
 
 	wid_syslog_debug_debug(WID_DEFAULT,"@@@wlan_id->ESSID is  %s\n",wlan_id->ESSID);
 	wlan_id->wlanid= WlanID;
@@ -9658,7 +9946,13 @@ int WID_ADD_WLAN_APPLY_RADIO(unsigned int RadioID,unsigned char WlanID){
 				}
 				memset(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->BSSID,0,6);
 				memset(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->SSID,0,SSID_LENGTH+1);
-				memcpy(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->SSID,wlan_id->ESSID,strlen((char *)wlan_id->ESSID));
+				if(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->SSID && wlan_id->ESSID){
+					memcpy(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->SSID,wlan_id->ESSID,strlen((char *)wlan_id->ESSID));
+					}
+				else
+					{
+					wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+					}
 				AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->bss_max_allowed_sta_num= AC_WLAN[WlanID]->bss_allow_max_sta_num;//fengwenchap modify 20120323
 				AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->WlanID = WlanID;
 				AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->Radio_G_ID = RadioID;
@@ -9691,7 +9985,9 @@ int WID_ADD_WLAN_APPLY_RADIO(unsigned int RadioID,unsigned char WlanID){
 				AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->nas_id_len = 0;//zhanglei add
 				if(nas_id_len > 0){
 					AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->nas_id_len = nas_id_len;//zhanglei add
-					memcpy(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->nas_id, nas_id, NAS_IDENTIFIER_NAME);//zhanglei add
+					
+					memcpy(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->nas_id, nas_id, strlen(nas_id));//zhanglei add
+						
 				}
 				memset(&(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->BSS_pkt_info),0,sizeof(BSSStatistics));
 				AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->acl_conf = (struct acl_config *)WID_MALLOC(sizeof(struct acl_config));
@@ -9725,7 +10021,9 @@ int WID_ADD_WLAN_APPLY_RADIO(unsigned int RadioID,unsigned char WlanID){
 				memset(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->arp_ifname,0,ETH_IF_NAME_LEN);      //fengwenchao  add				       
 				AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->sta_static_arp_policy = AC_WLAN[WlanID]->wlan_sta_static_arp_policy;      //fengwenchao   modify 20120323				
 				memset(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->nas_port_id,0,NAS_PORT_ID_LEN);		       
-				memcpy(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->nas_port_id,AC_WLAN[WlanID]->nas_port_id,NAS_PORT_ID_LEN);
+				
+				memcpy(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->nas_port_id,AC_WLAN[WlanID]->nas_port_id,strlen(AC_WLAN[WlanID]->nas_port_id));
+					
 
 				AC_BSS[AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->BSSIndex] = AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1];
 				AC_RADIO[RadioID]->BSS[k1] = AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1];
@@ -9867,7 +10165,13 @@ int WID_ADD_WLAN_APPLY_RADIO(unsigned int RadioID,unsigned char WlanID){
 		msg.mqinfo.u.WlanInfo.Radio_L_ID = localradio_id;
 		msg.mqinfo.u.WlanInfo.HideESSid = AC_WLAN[WlanID]->HideESSid;
 		memset(msg.mqinfo.u.WlanInfo.WlanKey,0,DEFAULT_LEN);
-		memcpy(msg.mqinfo.u.WlanInfo.WlanKey,AC_WLAN[WlanID]->WlanKey,DEFAULT_LEN);
+		if(msg.mqinfo.u.WlanInfo.WlanKey && AC_WLAN[WlanID]->WlanKey){
+			memcpy(msg.mqinfo.u.WlanInfo.WlanKey,AC_WLAN[WlanID]->WlanKey,strlen(AC_WLAN[WlanID]->WlanKey));
+			}
+		else
+			{
+			wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+			}
 		msg.mqinfo.u.WlanInfo.KeyLen = AC_WLAN[WlanID]->KeyLen;
 		msg.mqinfo.u.WlanInfo.SecurityType = AC_WLAN[WlanID]->SecurityType;
 		msg.mqinfo.u.WlanInfo.SecurityIndex = AC_WLAN[WlanID]->SecurityIndex;
@@ -9875,7 +10179,13 @@ int WID_ADD_WLAN_APPLY_RADIO(unsigned int RadioID,unsigned char WlanID){
 		msg.mqinfo.u.WlanInfo.Roaming_Policy = AC_WLAN[WlanID]->Roaming_Policy;			/*Roaming (1 enable /0 disable)*/
 		memset(msg.mqinfo.u.WlanInfo.WlanEssid,0,ESSID_LENGTH);
 		//memcpy(msg.mqinfo.u.WlanInfo.WlanEssid,AC_WLAN[WlanID]->ESSID,ESSID_LENGTH);
-		memcpy(msg.mqinfo.u.WlanInfo.WlanEssid,AC_WLAN[WlanID]->ESSID,strlen(AC_WLAN[WlanID]->ESSID));
+		if(msg.mqinfo.u.WlanInfo.WlanEssid && AC_WLAN[WlanID]->ESSID){
+			memcpy(msg.mqinfo.u.WlanInfo.WlanEssid,AC_WLAN[WlanID]->ESSID,strlen(AC_WLAN[WlanID]->ESSID));
+			}
+		else
+			{
+			wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+			}
 		msg.mqinfo.u.WlanInfo.bssindex = AC_WLAN[WlanID]->S_WTP_BSS_List[WtpID][localradio_id];
 
 		if (msgsnd(ACDBUS_MSGQ, (msgq *)&msg, sizeof(msg.mqinfo), 0) == -1){
@@ -10041,7 +10351,9 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_ESSID(unsigned int RadioID,unsigned char WlanI
 					if(wlan_ifi->nas_id_len > 0)
 					{
 						nas_id_len = wlan_ifi->nas_id_len;//zhanglei add
-						memcpy(nas_id,wlan_ifi->nas_id,NAS_IDENTIFIER_NAME);//zhanglei add
+						
+						memcpy(nas_id,wlan_ifi->nas_id,strlen(wlan_ifi->nas_id));//zhanglei add
+							
 					}
 					break;
 				}
@@ -10089,7 +10401,13 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_ESSID(unsigned int RadioID,unsigned char WlanI
 			return MALLOC_ERROR;
 		}
 		memset(wlan_id->ESSID,0,essid_len+1);
-		memcpy(wlan_id->ESSID,ESSID,essid_len);
+		if( ESSID != NULL){
+			memcpy(wlan_id->ESSID,ESSID,essid_len);
+			}
+		else
+			{
+			wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+			}
 	}
 	else
 	{
@@ -10100,7 +10418,13 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_ESSID(unsigned int RadioID,unsigned char WlanI
 			return MALLOC_ERROR;
 		}
 		memset(wlan_id->ESSID,0,ESSID_LENGTH);
-		memcpy(wlan_id->ESSID,ESSID,ESSID_LENGTH-1);
+		if( ESSID != NULL){
+			memcpy(wlan_id->ESSID,ESSID,ESSID_LENGTH-1);
+			}
+		else
+			{
+			wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+			}
 	}
 	wlan_id->next = NULL;
 	wid_syslog_debug_debug(WID_DEFAULT,"*** wtp binding wlan id  is %d*\n", wlan_id->wlanid);
@@ -10198,7 +10522,13 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_ESSID(unsigned int RadioID,unsigned char WlanI
 			}
 			memset(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->BSSID,0,6);
 			memset(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->SSID,0,SSID_LENGTH+1);
-			memcpy(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->SSID,wlan_id->ESSID,strlen((char *)wlan_id->ESSID));
+			if( wlan_id->ESSID != NULL){
+				memcpy(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->SSID,wlan_id->ESSID,strlen((char *)wlan_id->ESSID));
+				}
+			else
+				{
+				wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+				}
 			AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->bss_max_allowed_sta_num= AC_WLAN[WlanID]->bss_allow_max_sta_num;//fengwenchap modify 20120323
 			AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->WlanID = WlanID;
 			AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->Radio_G_ID = RadioID;
@@ -10232,7 +10562,9 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_ESSID(unsigned int RadioID,unsigned char WlanI
 			if(nas_id_len > 0)
 			{
 				AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->nas_id_len = nas_id_len;//zhanglei add
-				memcpy(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->nas_id, nas_id, NAS_IDENTIFIER_NAME);//zhanglei add
+				
+				memcpy(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->nas_id, nas_id, strlen(nas_id));//zhanglei add
+					
 			}
 			memset(&(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->BSS_pkt_info),0,sizeof(BSSStatistics));
 			AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->acl_conf = (struct acl_config *)WID_MALLOC(sizeof(struct acl_config));
@@ -10264,7 +10596,9 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_ESSID(unsigned int RadioID,unsigned char WlanI
 			memset(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->arp_ifname,0,ETH_IF_NAME_LEN);      //fengwenchao  add				       
 			AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->sta_static_arp_policy = AC_WLAN[WlanID]->wlan_sta_static_arp_policy;      //fengwenchao   modify 20120323				
 			memset(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->nas_port_id,0,NAS_PORT_ID_LEN);		       
-			memcpy(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->nas_port_id,AC_WLAN[WlanID]->nas_port_id,NAS_PORT_ID_LEN);
+		
+			memcpy(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->nas_port_id,AC_WLAN[WlanID]->nas_port_id,strlen(AC_WLAN[WlanID]->nas_port_id));
+			
 
 			AC_BSS[AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->BSSIndex] = AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1];
 			AC_RADIO[RadioID]->BSS[k1] = AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1];
@@ -10376,7 +10710,9 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_ESSID(unsigned int RadioID,unsigned char WlanI
 		msg.mqinfo.u.WlanInfo.Radio_L_ID = localradio_id;
 		msg.mqinfo.u.WlanInfo.HideESSid = AC_WLAN[WlanID]->HideESSid;
 		memset(msg.mqinfo.u.WlanInfo.WlanKey,0,DEFAULT_LEN);
-		memcpy(msg.mqinfo.u.WlanInfo.WlanKey,AC_WLAN[WlanID]->WlanKey,DEFAULT_LEN);
+		
+		memcpy(msg.mqinfo.u.WlanInfo.WlanKey,AC_WLAN[WlanID]->WlanKey,strlen(AC_WLAN[WlanID]->WlanKey));
+			
 		msg.mqinfo.u.WlanInfo.KeyLen = AC_WLAN[WlanID]->KeyLen;
 		msg.mqinfo.u.WlanInfo.SecurityType = AC_WLAN[WlanID]->SecurityType;
 		msg.mqinfo.u.WlanInfo.SecurityIndex = AC_WLAN[WlanID]->SecurityIndex;
@@ -10387,7 +10723,13 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_ESSID(unsigned int RadioID,unsigned char WlanI
 		#if 0
 		memcpy(msg.mqinfo.u.WlanInfo.WlanEssid,AC_WLAN[WlanID]->ESSID,strlen(AC_WLAN[WlanID]->ESSID));
 		#endif
-		memcpy(msg.mqinfo.u.WlanInfo.WlanEssid,wlan_id->ESSID,strlen(wlan_id->ESSID));
+		if(msg.mqinfo.u.WlanInfo.WlanEssid && wlan_id->ESSID){
+			memcpy(msg.mqinfo.u.WlanInfo.WlanEssid,wlan_id->ESSID,strlen(wlan_id->ESSID));
+			}
+		else
+			{
+			wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+			}
 		wid_syslog_debug_debug(WID_DEFAULT,"!!!!!!!!!msg.mqinfo.u.WlanInfo.WlanEssid = %s\n",msg.mqinfo.u.WlanInfo.WlanEssid);
 		msg.mqinfo.u.WlanInfo.bssindex = AC_WLAN[WlanID]->S_WTP_BSS_List[WtpID][localradio_id];
 
@@ -10559,7 +10901,9 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_VLANID(unsigned int RadioID,unsigned char Wlan
 					if(wlan_ifi->nas_id_len > 0)
 					{
 						nas_id_len = wlan_ifi->nas_id_len;//zhanglei add
-						memcpy(nas_id,wlan_ifi->nas_id,NAS_IDENTIFIER_NAME);//zhanglei add
+						
+						memcpy(nas_id,wlan_ifi->nas_id,strlen(wlan_ifi->nas_id));//zhanglei add
+							
 					}
 					break;
 				}
@@ -10601,7 +10945,13 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_VLANID(unsigned int RadioID,unsigned char Wlan
 		return MALLOC_ERROR;
 	}
 	memset(wlan_id->ESSID,0,strlen((char *)AC_WLAN[WlanID]->ESSID)+1);
-	memcpy(wlan_id->ESSID,AC_WLAN[WlanID]->ESSID,strlen((char *)AC_WLAN[WlanID]->ESSID));
+	if(wlan_id->ESSID && AC_WLAN[WlanID]->ESSID){
+		memcpy(wlan_id->ESSID,AC_WLAN[WlanID]->ESSID,strlen((char *)AC_WLAN[WlanID]->ESSID));
+		}
+	else
+		{
+		wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+		}
 	wlan_id->wlanid= WlanID;
 	wlan_id->next = NULL;
 	wid_syslog_debug_debug(WID_DEFAULT,"*** wtp binding wlan id  is %d*\n", wlan_id->wlanid);
@@ -10610,7 +10960,13 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_VLANID(unsigned int RadioID,unsigned char Wlan
 	{
 		
 		AC_RADIO[RadioID]->Wlan_Id = wlan_id ;
-		memcpy(AC_RADIO[RadioID]->Wlan_Id->ESSID,wlan_id->ESSID,strlen((char *)wlan_id->ESSID));
+		if(AC_RADIO[RadioID]->Wlan_Id->ESSID && wlan_id->ESSID){
+			memcpy(AC_RADIO[RadioID]->Wlan_Id->ESSID,wlan_id->ESSID,strlen((char *)wlan_id->ESSID));
+			}
+		else
+			{
+			wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+			}
 		AC_RADIO[RadioID]->isBinddingWlan = 1;
 		AC_RADIO[RadioID]->BindingWlanCount++;
 		wid_syslog_debug_debug(WID_DEFAULT,"*** wtp id:%d binding first wlan id:%d	\n",WtpID,WlanID);
@@ -10694,7 +11050,13 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_VLANID(unsigned int RadioID,unsigned char Wlan
 				}
 				memset(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->BSSID,0,6);
 				memset(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->SSID,0,SSID_LENGTH+1);
-				memcpy(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->SSID,wlan_id->ESSID,strlen((char *)wlan_id->ESSID));
+				if(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->SSID && wlan_id->ESSID){
+					memcpy(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->SSID,wlan_id->ESSID,strlen((char *)wlan_id->ESSID));
+					}
+				else
+					{
+					wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+					}
 				AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->bss_max_allowed_sta_num= AC_WLAN[WlanID]->bss_allow_max_sta_num;//fengwenchap modify 20120323
 				AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->WlanID = WlanID;
 				AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->Radio_G_ID = RadioID;
@@ -10725,7 +11087,9 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_VLANID(unsigned int RadioID,unsigned char Wlan
 				AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->nas_id_len = 0;//zhanglei add
 				if(nas_id_len > 0){
 					AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->nas_id_len = nas_id_len;//zhanglei add
-					memcpy(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->nas_id, nas_id, NAS_IDENTIFIER_NAME);//zhanglei add
+					
+						memcpy(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->nas_id, nas_id, strlen(nas_id));//zhanglei add
+						
 				}
 				AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->hotspot_id = AC_WLAN[WlanID]->hotspot_id;
 				AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->multi_user_optimize_switch = AC_WLAN[WlanID]->multi_user_optimize_switch;//weichao add 
@@ -10753,7 +11117,13 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_VLANID(unsigned int RadioID,unsigned char Wlan
 
 				AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->wlan_vlanid = AC_WLAN[WlanID]->vlanid;
 				memset(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->nas_port_id,0,NAS_PORT_ID_LEN);		       
-				memcpy(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->nas_port_id,AC_WLAN[WlanID]->nas_port_id,NAS_PORT_ID_LEN);
+				if(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->nas_port_id && AC_WLAN[WlanID]->nas_port_id){
+					memcpy(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->nas_port_id,AC_WLAN[WlanID]->nas_port_id,strlen(AC_WLAN[WlanID]->nas_port_id));
+					}
+				else
+					{
+					wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+					}
 				//put vlan to bss
 				AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->vlanid = vlan_id;
 				AC_BSS[AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->BSSIndex] = AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1];
@@ -10888,7 +11258,13 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_VLANID(unsigned int RadioID,unsigned char Wlan
 
 		msg.mqinfo.u.WlanInfo.HideESSid = AC_WLAN[WlanID]->HideESSid;
 		memset(msg.mqinfo.u.WlanInfo.WlanKey,0,DEFAULT_LEN);
-		memcpy(msg.mqinfo.u.WlanInfo.WlanKey,AC_WLAN[WlanID]->WlanKey,DEFAULT_LEN);
+		if(msg.mqinfo.u.WlanInfo.WlanKey && AC_WLAN[WlanID]->WlanKey){
+			memcpy(msg.mqinfo.u.WlanInfo.WlanKey,AC_WLAN[WlanID]->WlanKey,strlen(AC_WLAN[WlanID]->WlanKey));
+			}
+		else
+			{
+			wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+			}
 		msg.mqinfo.u.WlanInfo.KeyLen = AC_WLAN[WlanID]->KeyLen;
 		msg.mqinfo.u.WlanInfo.SecurityType = AC_WLAN[WlanID]->SecurityType;
 		msg.mqinfo.u.WlanInfo.SecurityIndex = AC_WLAN[WlanID]->SecurityIndex;
@@ -10896,7 +11272,13 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_VLANID(unsigned int RadioID,unsigned char Wlan
 		msg.mqinfo.u.WlanInfo.Roaming_Policy = AC_WLAN[WlanID]->Roaming_Policy;			/*Roaming (1 enable /0 disable)*/
 		memset(msg.mqinfo.u.WlanInfo.WlanEssid,0,ESSID_LENGTH);
 		//memcpy(msg.mqinfo.u.WlanInfo.WlanEssid,AC_WLAN[WlanID]->ESSID,ESSID_LENGTH);
-		memcpy(msg.mqinfo.u.WlanInfo.WlanEssid,AC_WLAN[WlanID]->ESSID,strlen(AC_WLAN[WlanID]->ESSID));
+		if(msg.mqinfo.u.WlanInfo.WlanEssid && AC_WLAN[WlanID]->ESSID){
+			memcpy(msg.mqinfo.u.WlanInfo.WlanEssid,AC_WLAN[WlanID]->ESSID,strlen(AC_WLAN[WlanID]->ESSID));
+			}
+		else
+			{
+			wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+			}
 		msg.mqinfo.u.WlanInfo.bssindex = AC_WLAN[WlanID]->S_WTP_BSS_List[WtpID][localradio_id];
 		
 		if (msgsnd(ACDBUS_MSGQ, (msgq *)&msg, sizeof(msg.mqinfo), 0) == -1){
@@ -11211,7 +11593,9 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_NAS_PORT_ID(unsigned int RadioID,unsigned char
 					if(wlan_ifi->nas_id_len > 0)
 					{
 						nas_id_len = wlan_ifi->nas_id_len;//zhanglei add
-						memcpy(nas_id,wlan_ifi->nas_id,NAS_IDENTIFIER_NAME);//zhanglei add
+						
+						memcpy(nas_id,wlan_ifi->nas_id,strlen(wlan_ifi->nas_id));//zhanglei add
+							
 					}
 					break;
 				}
@@ -11280,7 +11664,13 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_NAS_PORT_ID(unsigned int RadioID,unsigned char
 						if(AC_RADIO[RadioID]->BSS[i]->WlanID == WlanID)
 						{
 							memset(AC_RADIO[RadioID]->BSS[i]->nas_port_id,0,NAS_PORT_ID_LEN);
-							memcpy(AC_RADIO[RadioID]->BSS[i]->nas_port_id,nas_port_id,strlen(nas_port_id));
+							if(AC_RADIO[RadioID]->BSS[i]->nas_port_id && nas_port_id){
+								memcpy(AC_RADIO[RadioID]->BSS[i]->nas_port_id,nas_port_id,strlen(nas_port_id));
+								}
+							else
+								{
+								wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+								}
 							break;
 						}
 					}
@@ -11368,7 +11758,9 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_NAS_PORT_ID(unsigned int RadioID,unsigned char
 				AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->nas_id_len = 0;//zhanglei add
 				if(nas_id_len > 0){
 					AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->nas_id_len = nas_id_len;//zhanglei add
-					memcpy(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->nas_id, nas_id, NAS_IDENTIFIER_NAME);//zhanglei add
+				
+					memcpy(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->nas_id, nas_id, strlen(nas_id));//zhanglei add
+					
 				}
 				AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->acl_conf = (struct acl_config *)WID_MALLOC(sizeof(struct acl_config));
 				if (NULL == AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->acl_conf)
@@ -11409,7 +11801,13 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_NAS_PORT_ID(unsigned int RadioID,unsigned char
 				//mahz add 2011.5.26
 				unsigned int BSSIndex = AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->BSSIndex;
 				memset(AC_BSS[BSSIndex]->nas_port_id,0,NAS_PORT_ID_LEN);
-				memcpy(AC_BSS[BSSIndex]->nas_port_id,nas_port_id,strlen(nas_port_id));
+				if(nas_port_id != NULL){
+					memcpy(AC_BSS[BSSIndex]->nas_port_id,nas_port_id,strlen(nas_port_id));
+					}
+				else
+					{
+					wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+					}
 				wid_syslog_debug_info("AC_BSS->nas_port_id : %s\n",AC_BSS[BSSIndex]->nas_port_id); 	//for test
 
 				//radio apply wep wlan
@@ -11533,7 +11931,13 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_NAS_PORT_ID(unsigned int RadioID,unsigned char
 
 		msg.mqinfo.u.WlanInfo.HideESSid = AC_WLAN[WlanID]->HideESSid;
 		memset(msg.mqinfo.u.WlanInfo.WlanKey,0,DEFAULT_LEN);
-		memcpy(msg.mqinfo.u.WlanInfo.WlanKey,AC_WLAN[WlanID]->WlanKey,DEFAULT_LEN);
+		if(msg.mqinfo.u.WlanInfo.WlanKey && AC_WLAN[WlanID]->WlanKey){
+			memcpy(msg.mqinfo.u.WlanInfo.WlanKey,AC_WLAN[WlanID]->WlanKey,strlen(AC_WLAN[WlanID]->WlanKey));
+			}
+		else
+			{
+			wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+			}
 		msg.mqinfo.u.WlanInfo.KeyLen = AC_WLAN[WlanID]->KeyLen;
 		msg.mqinfo.u.WlanInfo.SecurityType = AC_WLAN[WlanID]->SecurityType;
 		msg.mqinfo.u.WlanInfo.SecurityIndex = AC_WLAN[WlanID]->SecurityIndex;
@@ -11541,7 +11945,13 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_NAS_PORT_ID(unsigned int RadioID,unsigned char
 		msg.mqinfo.u.WlanInfo.Roaming_Policy = AC_WLAN[WlanID]->Roaming_Policy;			/*Roaming (1 enable /0 disable)*/
 		memset(msg.mqinfo.u.WlanInfo.WlanEssid,0,ESSID_LENGTH);
 		//memcpy(msg.mqinfo.u.WlanInfo.WlanEssid,AC_WLAN[WlanID]->ESSID,ESSID_LENGTH);
-		memcpy(msg.mqinfo.u.WlanInfo.WlanEssid,AC_WLAN[WlanID]->ESSID,strlen(AC_WLAN[WlanID]->ESSID));
+		if(msg.mqinfo.u.WlanInfo.WlanEssid && AC_WLAN[WlanID]->ESSID){
+			memcpy(msg.mqinfo.u.WlanInfo.WlanEssid,AC_WLAN[WlanID]->ESSID,strlen(AC_WLAN[WlanID]->ESSID));
+			}
+		else
+			{
+			wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+			}
 		msg.mqinfo.u.WlanInfo.bssindex = AC_WLAN[WlanID]->S_WTP_BSS_List[WtpID][localradio_id];
 		
 		if (msgsnd(ACDBUS_MSGQ, (msgq *)&msg, sizeof(msg.mqinfo), 0) == -1){
@@ -11717,7 +12127,9 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_HOTSPOT_ID(unsigned int RadioID,unsigned char 
 					if(wlan_ifi->nas_id_len > 0)
 					{
 						nas_id_len = wlan_ifi->nas_id_len;//zhanglei add
-						memcpy(nas_id,wlan_ifi->nas_id,NAS_IDENTIFIER_NAME);//zhanglei add
+						
+						memcpy(nas_id,wlan_ifi->nas_id,strlen(wlan_ifi->nas_id));//zhanglei add
+							
 					}
 					break;
 				}
@@ -11862,7 +12274,9 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_HOTSPOT_ID(unsigned int RadioID,unsigned char 
 				AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->nas_id_len = 0;//zhanglei add
 				if(nas_id_len > 0){
 					AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->nas_id_len = nas_id_len;//zhanglei add
-					memcpy(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->nas_id, nas_id, NAS_IDENTIFIER_NAME);//zhanglei add
+				
+						memcpy(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->nas_id, nas_id, strlen(nas_id));//zhanglei add
+					
 				}
 				AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->acl_conf = (struct acl_config *)WID_MALLOC(sizeof(struct acl_config));
 				if (NULL == AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->BSSID)
@@ -11900,7 +12314,9 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_HOTSPOT_ID(unsigned int RadioID,unsigned char 
 				AC_RADIO[RadioID]->BSS[k1]->unicast_sw = AC_WLAN[WlanID]->wlan_unicast_sw;
 				AC_RADIO[RadioID]->BSS[k1]->wifi_sw = AC_WLAN[WlanID]->wlan_wifi_sw;
 				memset(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->nas_port_id,0,NAS_PORT_ID_LEN);		       
-				memcpy(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->nas_port_id,AC_WLAN[WlanID]->nas_port_id,NAS_PORT_ID_LEN);
+			
+					memcpy(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->nas_port_id,AC_WLAN[WlanID]->nas_port_id,strlen(AC_WLAN[WlanID]->nas_port_id));
+				
 
 				AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->wsm_sta_info_reportswitch = 0;
 				AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->wsm_sta_info_reportinterval = 1800;
@@ -12024,7 +12440,13 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_HOTSPOT_ID(unsigned int RadioID,unsigned char 
 
 		msg.mqinfo.u.WlanInfo.HideESSid = AC_WLAN[WlanID]->HideESSid;
 		memset(msg.mqinfo.u.WlanInfo.WlanKey,0,DEFAULT_LEN);
-		memcpy(msg.mqinfo.u.WlanInfo.WlanKey,AC_WLAN[WlanID]->WlanKey,DEFAULT_LEN);
+		if(msg.mqinfo.u.WlanInfo.WlanKey && AC_WLAN[WlanID]->WlanKey){
+			memcpy(msg.mqinfo.u.WlanInfo.WlanKey,AC_WLAN[WlanID]->WlanKey,strlen(AC_WLAN[WlanID]->WlanKey));
+			}
+		else
+			{
+			wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+			}
 		msg.mqinfo.u.WlanInfo.KeyLen = AC_WLAN[WlanID]->KeyLen;
 		msg.mqinfo.u.WlanInfo.SecurityType = AC_WLAN[WlanID]->SecurityType;
 		msg.mqinfo.u.WlanInfo.SecurityIndex = AC_WLAN[WlanID]->SecurityIndex;
@@ -12032,7 +12454,13 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_HOTSPOT_ID(unsigned int RadioID,unsigned char 
 		msg.mqinfo.u.WlanInfo.Roaming_Policy = AC_WLAN[WlanID]->Roaming_Policy;			/*Roaming (1 enable /0 disable)*/
 		memset(msg.mqinfo.u.WlanInfo.WlanEssid,0,ESSID_LENGTH);
 		//memcpy(msg.mqinfo.u.WlanInfo.WlanEssid,AC_WLAN[WlanID]->ESSID,ESSID_LENGTH);
-		memcpy(msg.mqinfo.u.WlanInfo.WlanEssid,AC_WLAN[WlanID]->ESSID,strlen(AC_WLAN[WlanID]->ESSID));
+		if(msg.mqinfo.u.WlanInfo.WlanEssid && AC_WLAN[WlanID]->ESSID){
+			memcpy(msg.mqinfo.u.WlanInfo.WlanEssid,AC_WLAN[WlanID]->ESSID,strlen(AC_WLAN[WlanID]->ESSID));
+			}
+		else
+			{
+			wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+			}
 		msg.mqinfo.u.WlanInfo.bssindex = AC_WLAN[WlanID]->S_WTP_BSS_List[WtpID][localradio_id];
 		
 		if (msgsnd(ACDBUS_MSGQ, (msgq *)&msg, sizeof(msg.mqinfo), 0) == -1){
@@ -12479,7 +12907,13 @@ int WID_BINDING_IF_APPLY_WTP(unsigned int WtpID, char * ifname)
 		
 		AC_WTP[WtpID]->BindingSystemIndex= isystemindex;
 		memset(AC_WTP[WtpID]->BindingIFName, 0, ETH_IF_NAME_LEN);
-		memcpy(AC_WTP[WtpID]->BindingIFName,ifname, strlen(ifname));
+		if(AC_WTP[WtpID]->BindingIFName && ifname){
+			memcpy(AC_WTP[WtpID]->BindingIFName,ifname, strlen(ifname));
+			}
+		else
+			{
+			wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+			}
 		
 		wid_syslog_debug_debug(WID_DEFAULT,"*** binding iterface name to wtp success ***\n");
 		return 0;
@@ -12570,7 +13004,13 @@ int WID_BINDING_IF_APPLY_WTP_ipv6(unsigned int WtpID, char * ifname)
 				return MALLOC_ERROR;
 			}
 			memset(tmp,0,sizeof(struct ifi));
-			memcpy(tmp->ifi_name,ifname,strlen(ifname));
+			if(tmp->ifi_name && ifname){
+				memcpy(tmp->ifi_name,ifname,strlen(ifname));
+				}
+			else
+				{
+				wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+				}
 			tmp->ifi_index = isystemindex;
 			WID_IF_V6 = tmp;
 		}
@@ -12606,7 +13046,13 @@ int WID_BINDING_IF_APPLY_WTP_ipv6(unsigned int WtpID, char * ifname)
 					wid_syslog_debug_debug(WID_DEFAULT,"AC_WTP[WtpID]->BindingSystemIndex = %d\n",AC_WTP[WtpID]->BindingSystemIndex);
 					AC_WTP[WtpID]->isipv6addr = 1;
 					memset(AC_WTP[WtpID]->BindingIFName, 0, ETH_IF_NAME_LEN);
-					memcpy(AC_WTP[WtpID]->BindingIFName,ifname, strlen(ifname));
+					if(AC_WTP[WtpID]->BindingIFName && ifname){
+						memcpy(AC_WTP[WtpID]->BindingIFName,ifname, strlen(ifname));
+						}
+					else
+						{
+						wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+						}
 					
 					wid_syslog_debug_debug(WID_DEFAULT,"*** binding iterface name to wtp success ***\n");
 					return 0;
@@ -12642,7 +13088,13 @@ int WID_BINDING_IF_APPLY_WTP_ipv6(unsigned int WtpID, char * ifname)
 				return MALLOC_ERROR;
 			}
 			memset(tmp,0,sizeof(struct ifi));
-			memcpy(tmp->ifi_name,ifname,strlen(ifname));
+			if(tmp->ifi_name && ifname){
+				memcpy(tmp->ifi_name,ifname,strlen(ifname));
+				}
+			else
+				{
+				wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+				}
 			tmp->ifi_index = isystemindex;
 			tmp2 = WID_IF_V6;
 			WID_IF_V6 = tmp;
@@ -12679,7 +13131,13 @@ int WID_BINDING_IF_APPLY_WTP_ipv6(unsigned int WtpID, char * ifname)
 		AC_WTP[WtpID]->BindingSystemIndex= isystemindex;
 		AC_WTP[WtpID]->isipv6addr = 1;
 		memset(AC_WTP[WtpID]->BindingIFName, 0, ETH_IF_NAME_LEN);
-		memcpy(AC_WTP[WtpID]->BindingIFName,ifname, strlen(ifname));
+		if(AC_WTP[WtpID]->BindingIFName && ifname){
+			memcpy(AC_WTP[WtpID]->BindingIFName,ifname, strlen(ifname));
+			}
+		else
+			{
+			wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+			}
 		
 		wid_syslog_debug_debug(WID_DEFAULT,"*** binding iterface name to wtp success ***\n");
 		return 0;
@@ -13826,7 +14284,13 @@ int WID_ENABLE_WLAN_APPLY_RADIO(unsigned int RadioId, unsigned char WlanId)
 
 	msg.mqinfo.u.WlanInfo.HideESSid = AC_WLAN[WlanId]->HideESSid;
 	memset(msg.mqinfo.u.WlanInfo.WlanKey,0,DEFAULT_LEN);
-	memcpy(msg.mqinfo.u.WlanInfo.WlanKey,AC_WLAN[WlanId]->WlanKey,DEFAULT_LEN);
+	if(msg.mqinfo.u.WlanInfo.WlanKey && AC_WLAN[WlanId]->WlanKey){
+		memcpy(msg.mqinfo.u.WlanInfo.WlanKey,AC_WLAN[WlanId]->WlanKey,strlen(AC_WLAN[WlanId]->WlanKey));
+		}
+	else
+		{
+		wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+		}
 	msg.mqinfo.u.WlanInfo.KeyLen = AC_WLAN[WlanId]->KeyLen;
 	msg.mqinfo.u.WlanInfo.SecurityType = AC_WLAN[WlanId]->SecurityType;
 	msg.mqinfo.u.WlanInfo.SecurityIndex = AC_WLAN[WlanId]->SecurityIndex;
@@ -13834,7 +14298,13 @@ int WID_ENABLE_WLAN_APPLY_RADIO(unsigned int RadioId, unsigned char WlanId)
 	msg.mqinfo.u.WlanInfo.Roaming_Policy = AC_WLAN[WlanId]->Roaming_Policy; 		/*Roaming (1 enable /0 disable)*/
 	memset(msg.mqinfo.u.WlanInfo.WlanEssid,0,ESSID_LENGTH);
 	//memcpy(msg.mqinfo.u.WlanInfo.WlanEssid,AC_WLAN[WlanId]->ESSID,ESSID_LENGTH);
-	memcpy(msg.mqinfo.u.WlanInfo.WlanEssid,AC_WLAN[WlanId]->ESSID,strlen(AC_WLAN[WlanId]->ESSID));
+	if(msg.mqinfo.u.WlanInfo.WlanEssid && AC_WLAN[WlanId]->ESSID){
+		memcpy(msg.mqinfo.u.WlanInfo.WlanEssid,AC_WLAN[WlanId]->ESSID,strlen(AC_WLAN[WlanId]->ESSID));
+		}
+	else
+		{
+		wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+		}
 	msg.mqinfo.u.WlanInfo.bssindex = AC_WLAN[WlanId]->S_WTP_BSS_List[WtpID][local_radioid];
 	
 	if (msgsnd(ACDBUS_MSGQ, (msgq *)&msg, sizeof(msg.mqinfo), 0) == -1){
@@ -14373,7 +14843,9 @@ int WID_ENABLE_WLAN_APPLY_WTP(unsigned int WtpID, unsigned char WlanId)
 
 		msg.mqinfo.u.WlanInfo.HideESSid = AC_WLAN[WlanId]->HideESSid;
 		memset(msg.mqinfo.u.WlanInfo.WlanKey,0,DEFAULT_LEN);
-		memcpy(msg.mqinfo.u.WlanInfo.WlanKey,AC_WLAN[WlanId]->WlanKey,DEFAULT_LEN);
+		
+		memcpy(msg.mqinfo.u.WlanInfo.WlanKey,AC_WLAN[WlanId]->WlanKey,strlen(AC_WLAN[WlanId]->WlanKey));
+			
 		msg.mqinfo.u.WlanInfo.KeyLen = AC_WLAN[WlanId]->KeyLen;
 		msg.mqinfo.u.WlanInfo.SecurityType = AC_WLAN[WlanId]->SecurityType;
 		msg.mqinfo.u.WlanInfo.SecurityIndex = AC_WLAN[WlanId]->SecurityIndex;
@@ -14381,7 +14853,13 @@ int WID_ENABLE_WLAN_APPLY_WTP(unsigned int WtpID, unsigned char WlanId)
 		msg.mqinfo.u.WlanInfo.Roaming_Policy = AC_WLAN[WlanId]->Roaming_Policy; 		/*Roaming (1 enable /0 disable)*/
 		memset(msg.mqinfo.u.WlanInfo.WlanEssid,0,ESSID_LENGTH);
 		//memcpy(msg.mqinfo.u.WlanInfo.WlanEssid,AC_WLAN[WlanId]->ESSID,ESSID_LENGTH);
-		memcpy(msg.mqinfo.u.WlanInfo.WlanEssid,AC_WLAN[WlanId]->ESSID,strlen(AC_WLAN[WlanId]->ESSID));
+		if(AC_WLAN[WlanId]->ESSID != NULL){
+			memcpy(msg.mqinfo.u.WlanInfo.WlanEssid,AC_WLAN[WlanId]->ESSID,strlen(AC_WLAN[WlanId]->ESSID));
+			}
+		else
+			{
+			wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+			}
 		msg.mqinfo.u.WlanInfo.bssindex = AC_WLAN[WlanId]->S_WTP_BSS_List[WtpID][j];
 		
 		if (msgsnd(ACDBUS_MSGQ, (msgq *)&msg, sizeof(msg.mqinfo), 0) == -1){
@@ -15513,7 +15991,9 @@ Neighbor_AP_INFOS * create_ap_info_list(int count)
 	{
 		neighborapelem += i;
 		char str[3][6] = {{"111111"},{"222222"},{"333333"}};
-		memcpy(neighborapelem->BSSID ,str[i], 6);
+		
+		memcpy(neighborapelem->BSSID ,str[i], strlen(str[i]));
+			
 		
 		neighborapelem->Rate = 110;
 
@@ -15694,7 +16174,13 @@ Neighbor_AP_INFOS * wid_check_rogue_ap_mac(int wtpid)
 				charlen = 32;
 			//neighborapelem->ESSID = (char *)malloc(charlen+1);
 			memset(neighborapelem->ESSID, 0, charlen+1);
-			memcpy(neighborapelem->ESSID, phead->ESSID, charlen);
+			if(neighborapelem->ESSID && phead->ESSID){
+				memcpy(neighborapelem->ESSID, phead->ESSID, strlen((char *)phead->ESSID));
+				}
+			else
+				{
+				wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+				}
 
 
 			charlen = strlen(phead->IEs_INFO);
@@ -15705,7 +16191,13 @@ Neighbor_AP_INFOS * wid_check_rogue_ap_mac(int wtpid)
 				return NULL;
 			}
 			memset(neighborapelem->IEs_INFO, 0, charlen+1);
-			memcpy(neighborapelem->IEs_INFO, phead->IEs_INFO, charlen);
+			if(neighborapelem->IEs_INFO && phead->IEs_INFO){
+				memcpy(neighborapelem->IEs_INFO, phead->IEs_INFO, strlen( phead->IEs_INFO));
+				}
+			else
+				{
+				wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+				}
 				
 			neighborapelem->next = NULL;
 
@@ -16302,7 +16794,13 @@ struct Neighbor_AP_ELE * create_mac_elem(char *mac)
 	struct Neighbor_AP_ELE *neighborapelem = NULL;
 	CW_CREATE_OBJECT_SIZE_ERR(neighborapelem, sizeof(struct Neighbor_AP_ELE), return NULL;);		
 
-	memcpy(neighborapelem->BSSID ,mac, 6);
+	if(neighborapelem->BSSID && mac){
+		memcpy(neighborapelem->BSSID ,mac, 6);
+		}
+	else
+		{
+		wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+		}
 	
 	neighborapelem->Rate = 110;
 	
@@ -16457,7 +16955,9 @@ white_mac_list * wid_check_white_mac()
 						{
 							CW_CREATE_OBJECT_SIZE_ERR(pmac,sizeof(struct white_mac),  WID_FREE(maclist); return NULL;);
 
-							memcpy(pmac->elem_mac, AC_WTP[i]->WTP_Radio[j]->BSS[k]->BSSID, 6);
+						
+							memcpy(pmac->elem_mac, AC_WTP[i]->WTP_Radio[j]->BSS[k]->BSSID, strlen((char *)AC_WTP[i]->WTP_Radio[j]->BSS[k]->BSSID));
+								
 							pmac->next = NULL;
 
 							if(maclist->list_mac == NULL)
@@ -16931,7 +17431,9 @@ struct Neighbor_AP_ELE * create_ap_elem(struct Neighbor_AP_ELE *apelem)
 
 
 	
-	memcpy(neighborapelem->BSSID ,apelem->BSSID, 6);
+	
+	memcpy(neighborapelem->BSSID ,apelem->BSSID,strlen((char *)apelem->BSSID));
+		
 	
 	neighborapelem->Rate = apelem->Rate;
 
@@ -16948,7 +17450,13 @@ struct Neighbor_AP_ELE * create_ap_elem(struct Neighbor_AP_ELE *apelem)
 	memcpy(neighborapelem->ESSID, apelem->ESSID, strlen((char*)apelem->ESSID));
 
 	memset(neighborapelem->IEs_INFO, 0, strlen(apelem->IEs_INFO)+1);
-	memcpy(neighborapelem->IEs_INFO, apelem->IEs_INFO, strlen(apelem->IEs_INFO));
+	if(neighborapelem->IEs_INFO && apelem->IEs_INFO){
+		memcpy(neighborapelem->IEs_INFO, apelem->IEs_INFO, strlen(apelem->IEs_INFO));
+		}
+	else
+		{
+		wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+		}
 
 	neighborapelem->fst_dtc_tm = apelem->fst_dtc_tm;
 	time(&neighborapelem->lst_dtc_tm);
@@ -17232,7 +17740,13 @@ int   length_of_rate_list(struct Support_Rate_List *ratelist)
 		struct white_mac *pnewnode = NULL;
 		CW_CREATE_OBJECT_SIZE_ERR(pnewnode,sizeof(struct white_mac),return CW_FALSE;);
 
-	 	memcpy(pnewnode->elem_mac,pmac, 6);
+	 	if(pnewnode->elem_mac && pmac){
+			memcpy(pnewnode->elem_mac,pmac, 6);
+	 		}
+		else
+			{
+			wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+			}
 		pnewnode->next = NULL;
 
 		if(pnode == NULL)
@@ -17277,7 +17791,13 @@ CWBool wid_add_mac_whitelist(unsigned char * pmac)
 		struct white_mac *pnewnode = NULL;
 		CW_CREATE_OBJECT_SIZE_ERR(pnewnode,sizeof(struct white_mac),return CW_FALSE;);
 
-	 	memcpy(pnewnode->elem_mac,pmac, 6);
+	 	if(pnewnode->elem_mac && pmac){
+			memcpy(pnewnode->elem_mac,pmac, 6);
+	 		}
+		else
+			{
+			wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+			}
 		pnewnode->next = NULL;
 
 		if(pnode == NULL)
@@ -17421,7 +17941,13 @@ CWBool wid_change_mac_whitelist(unsigned char * pmac,unsigned char *pmacdest)
 	{
 		if(memcmp((phead->elem_mac),pmac,6) == 0)
 		{
-			memcpy(phead->elem_mac,pmacdest, 6);
+			if(phead->elem_mac && pmacdest){
+				memcpy(phead->elem_mac,pmacdest, 6);
+				}
+			else
+				{
+				wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+				}
 			break;
 		}
 		
@@ -17476,7 +18002,13 @@ CWBool wid_change_mac_blacklist(unsigned char * pmac,unsigned char *pmacdest)
 	{
 		if(memcmp((phead->elem_mac),pmac,6) == 0)
 		{
-			memcpy(phead->elem_mac,pmacdest, 6);
+			if(phead->elem_mac && pmacdest){
+				memcpy(phead->elem_mac,pmacdest, 6);
+				}
+			else
+				{
+				wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+				}
 			break;
 		}
 		
@@ -17937,7 +18469,13 @@ void WID_CHECK_WLAN_APPLY_WTP_BSS_NAS_ID(unsigned char WlanID,unsigned short ifi
 					if((check_bssid_func(BSSIndex))&&(AC_BSS[BSSIndex]!=NULL)){
 						memset(AC_BSS[BSSIndex]->nas_id, 0, NAS_IDENTIFIER_NAME);
 						AC_BSS[BSSIndex]->nas_id_len = nas_id_len;
-						memcpy(AC_BSS[BSSIndex]->nas_id, nas_id, NAS_IDENTIFIER_NAME);
+						if(AC_BSS[BSSIndex]->nas_id && nas_id){
+							memcpy(AC_BSS[BSSIndex]->nas_id, nas_id, strlen(nas_id));
+							}
+						else
+							{
+							wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+							}
 					}
 				}
 			}
@@ -18001,11 +18539,23 @@ int WID_INTERFACE_SET_NASID(unsigned char WlanID,char* ifname,char* nas_id)
 		return MALLOC_ERROR;
 	}
 	memset(wif->ifi_name,0,ETH_IF_NAME_LEN);
-	memcpy(wif->ifi_name,ifname,strlen(ifname));
+	if( ifname != NULL){
+		memcpy(wif->ifi_name,ifname,strlen(ifname));
+		}
+	else
+		{
+		wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+		}
 	wif->ifi_index = ifr.ifr_ifindex;
 	wif->nas_id_len = strlen(nas_id);
 	memset(wif->nas_id,0,NAS_IDENTIFIER_NAME);
-	memcpy(wif->nas_id,nas_id,strlen(nas_id));
+	if( nas_id != NULL){
+		memcpy(wif->nas_id,nas_id,strlen(nas_id));
+		}
+	else
+		{
+		wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+		}
 	wif->ifi_next = NULL;
 	
 	if(AC_WLAN[WlanID]->Wlan_Ifi == NULL){
@@ -18022,7 +18572,13 @@ int WID_INTERFACE_SET_NASID(unsigned char WlanID,char* ifname,char* nas_id)
 			{
 				wifnext->nas_id_len = strlen(nas_id);
 				memset(wifnext->nas_id,0,NAS_IDENTIFIER_NAME);
-				memcpy(wifnext->nas_id,nas_id,strlen(nas_id));
+				if( nas_id != NULL){
+					memcpy(wifnext->nas_id,nas_id,strlen(nas_id));
+					}
+				else
+					{
+					wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+					}
 				//printf("warnning you have binding this wlan eth ,please do not binding this again");
 				wid_syslog_debug_debug(WID_DEFAULT,"warnning you have binding this wlan eth ,please do not binding this again");
 				WID_CHECK_WLAN_APPLY_WTP_BSS_NAS_ID(WlanID, wif->ifi_index, wifnext->nas_id_len, nas_id);
@@ -18238,7 +18794,13 @@ int WID_ADD_QOS_PROFILE(char *name,int ID){
 		return MALLOC_ERROR;
 	}
 	memset(WID_QOS[ID]->name, 0, strlen(name)+1);
-	memcpy(WID_QOS[ID]->name, name, strlen(name));
+	if( name != NULL){
+		memcpy(WID_QOS[ID]->name, name, strlen(name));
+		}
+	else
+		{
+		wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+		}
 
 	//set wireless qos info for mib
 	WID_QOS[ID]->qos_total_bandwidth = 25;
@@ -18249,11 +18811,17 @@ int WID_ADD_QOS_PROFILE(char *name,int ID){
 	WID_QOS[ID]->qos_use_res_shove = 0;
 	
 	memset(WID_QOS[ID]->qos_manage_arithmetic, 0, WID_QOS_ARITHMETIC_NAME_LEN);
-	memcpy(WID_QOS[ID]->qos_manage_arithmetic, "ManagePolicy",12);
+	
+	memcpy(WID_QOS[ID]->qos_manage_arithmetic, "ManagePolicy",strlen("ManagePolicy"));
+		
 	memset(WID_QOS[ID]->qos_res_grab_arithmetic, 0, WID_QOS_ARITHMETIC_NAME_LEN);
-	memcpy(WID_QOS[ID]->qos_res_grab_arithmetic, "GrabPolicy",10);
+	
+	memcpy(WID_QOS[ID]->qos_res_grab_arithmetic, "GrabPolicy",strlen("GrabPolicy"));
+		
 	memset(WID_QOS[ID]->qos_res_shove_arithmetic, 0, WID_QOS_ARITHMETIC_NAME_LEN);
-	memcpy(WID_QOS[ID]->qos_res_shove_arithmetic, "ShovePolicy",11);
+	
+	memcpy(WID_QOS[ID]->qos_res_shove_arithmetic, "ShovePolicy",strlen("ShovePolicy"));
+		
 	for(i=0;i<4;i++)
 	{
 		WID_QOS[ID]->radio_qos[i] = (qos_profile*)WID_MALLOC(sizeof(qos_profile));
@@ -18906,7 +19474,13 @@ int wid_radio_set_extension_command(int wtpid, char * command)
 		return MALLOC_ERROR;
 	}
 	memset(AC_WTP[wtpid]->WTP_Radio[0]->excommand, 0, strlen(command)+1);
-	memcpy(AC_WTP[wtpid]->WTP_Radio[0]->excommand, command, strlen(command));
+	if( command != NULL){
+		memcpy(AC_WTP[wtpid]->WTP_Radio[0]->excommand, command, strlen(command));
+		}
+	else
+		{
+		wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+		}
 
 	if((strlen(command) == 8)&&(strcmp(command, "poweroff") == 0))
 	{
@@ -18936,7 +19510,13 @@ int wid_radio_set_extension_command(int wtpid, char * command)
 			msg.mqinfo.type = CONTROL_TYPE;
 			msg.mqinfo.subtype = WTP_S_TYPE;
 			msg.mqinfo.u.WtpInfo.Wtp_Op = WTP_EXTEND_CMD;
-			memcpy(msg.mqinfo.u.WtpInfo.value, command, strlen(command));
+			if(command != NULL){
+				memcpy(msg.mqinfo.u.WtpInfo.value, command, strlen(command));
+				}
+			else
+				{
+				wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+				}
 			if (msgsnd(ACDBUS_MSGQ, (msgq *)&msg, sizeof(msg.mqinfo), 0) == -1){
 				wid_syslog_crit("%s msgsend %s",__func__,strerror(errno));
 				perror("msgsnd");
@@ -18951,7 +19531,13 @@ int wid_radio_set_extension_command(int wtpid, char * command)
 		msg.mqinfo.type = CONTROL_TYPE;
 		msg.mqinfo.subtype = WTP_S_TYPE;
 		msg.mqinfo.u.WtpInfo.Wtp_Op = WTP_EXTEND_CMD;
-		memcpy(msg.mqinfo.u.WtpInfo.value, command, strlen(command));
+		if( command != NULL){
+			memcpy(msg.mqinfo.u.WtpInfo.value, command, strlen(command));
+			}
+		else
+			{
+			wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+			}
 
 		elem = (struct msgqlist*)WID_MALLOC(sizeof(struct msgqlist));
 		if(elem == NULL){
@@ -18982,7 +19568,13 @@ int wid_radio_set_option60_parameter(int wtpid, char * parameter)
 		return MALLOC_ERROR;
 	}
 	memset(AC_WTP[WTPIndex]->option60_param,0,(strlen(parameter)+1));
-	memcpy(AC_WTP[WTPIndex]->option60_param,parameter,strlen(parameter));
+	if(parameter != NULL){
+		memcpy(AC_WTP[WTPIndex]->option60_param,parameter,strlen(parameter));
+		}
+	else
+		{
+		wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+		}
 	
 	if((AC_WTP[WTPIndex] != NULL)&&(AC_WTP[WTPIndex]->WTPStat == 5))
 	{
@@ -18995,7 +19587,13 @@ int wid_radio_set_option60_parameter(int wtpid, char * parameter)
 			msg.mqinfo.type = CONTROL_TYPE;
 			msg.mqinfo.subtype = WTP_S_TYPE;
 			msg.mqinfo.u.WtpInfo.Wtp_Op = WTP_OPTION60_PARAM;
-			memcpy(msg.mqinfo.u.WtpInfo.value, parameter, strlen(parameter));
+			if( parameter != NULL){
+				memcpy(msg.mqinfo.u.WtpInfo.value, parameter, strlen(parameter));
+				}
+			else
+				{
+				wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+				}
 			if (msgsnd(ACDBUS_MSGQ, (msgq *)&msg, sizeof(msg.mqinfo), 0) == -1){
 				wid_syslog_crit("%s msgsend %s",__func__,strerror(errno));
 				perror("msgsnd");
@@ -19010,7 +19608,13 @@ int wid_radio_set_option60_parameter(int wtpid, char * parameter)
 		msg.mqinfo.type = CONTROL_TYPE;
 		msg.mqinfo.subtype = WTP_S_TYPE;
 		msg.mqinfo.u.WtpInfo.Wtp_Op = WTP_OPTION60_PARAM;
-		memcpy(msg.mqinfo.u.WtpInfo.value, parameter, strlen(parameter));
+		if( parameter != NULL){
+			memcpy(msg.mqinfo.u.WtpInfo.value, parameter, strlen(parameter));
+			}
+		else
+			{
+			wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+			}
 
 		elem = (struct msgqlist*)WID_MALLOC(sizeof(struct msgqlist));
 		if(elem == NULL){
@@ -20376,7 +20980,13 @@ int CHECK_AND_UPDATE_IF_POLICY(char* ifname,int *wtpid1,int *radioid1,int *wlani
 			wid_syslog_err("WID_MALLOC error,%s",__func__);
 			return MALLOC_ERROR;
 		}
-		memcpy(id,ifname+1,(strlen(ifname)-1));
+		if((ifname+1) != NULL){
+			memcpy(id,ifname+1,(strlen(ifname)-1));
+			}
+		else
+			{
+			wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+			}
 		if(parse_radio_ifname(id,&wtpid,&radioid,&wlanid)==0)
 		{
 			wid_syslog_debug_debug(WID_DBUS,"ifname %s,wtpid %d,radioid %d wlanid2 %d",ifname,wtpid,radioid,wlanid);
@@ -20491,7 +21101,13 @@ int wid_set_tunnel_wlan_vlan(unsigned char wlanid,char * ifname)
 			return MALLOC_ERROR;
 		}
 		memset(wif->ifname,0,ETH_IF_NAME_LEN);
-		memcpy(wif->ifname,ifname,strlen(ifname));
+		if(ifname != NULL){
+			memcpy(wif->ifname,ifname,strlen(ifname));
+			}
+		else
+			{
+			wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+			}
 		wif->ifnext = NULL;
 		
 		if(AC_WLAN[wlanid]->tunnel_wlan_vlan == NULL)
@@ -20813,7 +21429,13 @@ int wid_modify_legal_essid(char *essid,char *essid_new){
 	
 		if(0==ret){
 				memset(cr->essid,0,strlen(essid_new)+1);
-				memcpy(cr->essid,essid_new,strlen(essid_new));
+				if(cr->essid && essid_new){
+					memcpy(cr->essid,essid_new,strlen(essid_new));
+					}
+				else
+					{
+					wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+					}
 		}else
 			return ret;
 		return 0;
@@ -21666,7 +22288,13 @@ int WID_ADD_ETHEREAL_BRIDGE(char *name,unsigned int ID)
 		return MALLOC_ERROR;
 	}
 	memset(WID_EBR[ID]->name, 0, strlen(name)+1);
-	memcpy(WID_EBR[ID]->name, name, strlen(name));
+	if(name != NULL){
+		memcpy(WID_EBR[ID]->name, name, strlen(name));
+		}
+	else
+		{
+		wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+		}
 	WID_EBR[ID]->state = 0;
 	WID_EBR[ID]->isolation_policy = 1;/*sz change default value from 0 to 1 090723*/
 	WID_EBR[ID]->multicast_isolation_policy = 1;/*sz change default value from 0 to 1 090723*/
@@ -22099,7 +22727,13 @@ int WID_SET_ETHEREAL_BRIDGE_IF_UPLINK(unsigned int ID,char *ifname,int is_radio,
 			return MALLOC_ERROR;
 		}
 		memset(wif->ifname,0,ETH_IF_NAME_LEN);
-		memcpy(wif->ifname,ifname,strlen(ifname));
+		if( ifname != NULL){
+			memcpy(wif->ifname,ifname,strlen(ifname));
+			}
+		else
+			{
+			wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+			}
 		wif->ifnext = NULL;
 		
 		if(WID_EBR[ID]->iflist == NULL)
@@ -23826,7 +24460,13 @@ int wid_auto_ap_login_insert_iflist(char *ifname)
 	wif->wlannum = 0;
 	memset(wif->wlanid,0,L_BSS_NUM);
 	memset(wif->ifname,0,ETH_IF_NAME_LEN);
-	memcpy(wif->ifname,ifname,strlen(ifname));
+	if(ifname != NULL){
+		memcpy(wif->ifname,ifname,strlen(ifname));
+		}
+	else
+		{
+		wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+		}
 	wif->ifnext = NULL;
 	
 	if(g_auto_ap_login.auto_ap_if == NULL)
@@ -23981,7 +24621,13 @@ int WID_WDS_BSSID_OP(unsigned int RadioID, unsigned char WlanID, unsigned char *
 					return MALLOC_ERROR;
 				}
 				memset(wds, 0, sizeof(struct wds_bssid));
-				memcpy(wds->BSSID, MAC, MAC_LEN);
+				if( MAC != NULL){
+					memcpy(wds->BSSID, MAC, MAC_LEN);
+					}
+				else
+					{
+					wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+					}
 				wds->next = NULL;
 				BSS->wds_bss_list = wds;
 				if((OP&0x04) == 0){
@@ -24008,7 +24654,13 @@ int WID_WDS_BSSID_OP(unsigned int RadioID, unsigned char WlanID, unsigned char *
 					return MALLOC_ERROR;
 				}
 				memset(wds, 0, sizeof(struct wds_bssid));
-				memcpy(wds->BSSID, MAC, MAC_LEN);
+				if( MAC != NULL){
+					memcpy(wds->BSSID, MAC, MAC_LEN);
+					}
+				else
+					{
+					wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+					}
 				wds->next = NULL;
 				wds->next = BSS->wds_bss_list;
 				BSS->wds_bss_list = wds;
@@ -25104,7 +25756,13 @@ int add_ipip_tunnel(unsigned int BSSIndex)
 		snprintf((char*)iptunnelinfo.if_name,ETH_IF_NAME_LEN,"r%d-%d-%d.%d",vrrid,wtpid,l_radioid,wlanid);
 	else
 		snprintf((char*)iptunnelinfo.if_name,ETH_IF_NAME_LEN,"r%d-%d-%d-%d.%d",slotid,vrrid,wtpid,l_radioid,wlanid);
-	memcpy(iptunnelinfo.wtpmac, AC_WTP[wtpid]->WTPMAC, MAC_LEN);
+	if(AC_WTP[wtpid]->WTPMAC != NULL){
+		memcpy(iptunnelinfo.wtpmac, AC_WTP[wtpid]->WTPMAC, MAC_LEN);
+		}
+	else
+		{
+		wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+		}
 	
 	//make sip and dip
 	/*fengwenchao modify begin 20110525*/
@@ -25184,7 +25842,13 @@ int delete_ipip_tunnel(unsigned int BSSIndex)
 		snprintf((char*)iptunnelinfo.if_name,ETH_IF_NAME_LEN,"r%d-%d-%d.%d",vrrid,wtpid,l_radioid,wlanid);
 	else
 		snprintf((char*)iptunnelinfo.if_name,ETH_IF_NAME_LEN,"r%d-%d-%d-%d.%d",slotid,vrrid,wtpid,l_radioid,wlanid);
-	memcpy(iptunnelinfo.wtpmac, AC_WTP[wtpid]->WTPMAC, MAC_LEN);
+	if(AC_WTP[wtpid]->WTPMAC != NULL){
+		memcpy(iptunnelinfo.wtpmac, AC_WTP[wtpid]->WTPMAC, MAC_LEN);
+		}
+	else
+		{
+		wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+		}
 	
 	//make sip and dip
 	/*fengwenchao modify begin 20110525*/
@@ -26478,23 +27142,53 @@ int radio_sectorid_parse_func(unsigned short int sectorid,char* str){
 //	str = NULL;
 	if (sectorid == 0)
 	{
-		memcpy(str, "0",1);
+		if(str != NULL){
+			memcpy(str, "0",1);
+			}
+		else
+			{
+			wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+			}
 	}		
 	else if (sectorid == 1)
 	{
-		memcpy(str, "1",1);
+		if(str != NULL){
+			memcpy(str, "1",1);
+			}
+		else
+			{
+			wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+			}
 	}
 	else if (sectorid == 2)
 	{
-		memcpy(str, "2",1);
+		if(str != NULL){
+			memcpy(str, "2",1);
+			}
+		else
+			{
+			wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+			}
 	}
 	else if (sectorid == 3)
 	{
-		memcpy(str, "3",1);
+		if(str != NULL){
+			memcpy(str, "3",1);
+			}
+		else
+			{
+			wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+			}
 	}
 	else if (sectorid == 4)
 	{
-		memcpy(str, "all",3);
+		if(str != NULL){
+			memcpy(str, "all",3);
+			}
+		else
+			{
+			wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+			}
 	}
 	else
 	{
@@ -27022,7 +27716,13 @@ int create_ac_ip_list_group(unsigned char ID,char *IFNAME){
 		return MALLOC_ERROR;
 	}
 	memset(AC_IP_GROUP[ID]->ifname, 0, strlen(IFNAME)+1);
-	memcpy(AC_IP_GROUP[ID]->ifname, IFNAME, strlen(IFNAME));
+	if(IFNAME != NULL){
+		memcpy(AC_IP_GROUP[ID]->ifname, IFNAME, strlen(IFNAME));
+		}
+	else
+		{
+		wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+		}
 
 	AC_IP_GROUP[ID]->isock = init_client_socket();
 	
@@ -30958,7 +31658,13 @@ int WID_BINDING_IF_APPLY_WTP_ipv6_ioctl(unsigned int WtpID, char * ifname)
 				return MALLOC_ERROR;
 			}
 			memset(tmp,0,sizeof(struct ifi));
-			memcpy(tmp->ifi_name,ifname,strlen(ifname));
+			if( ifname != NULL){
+				memcpy(tmp->ifi_name,ifname,strlen(ifname));
+				}
+			else
+				{
+				wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+				}
 			tmp->ifi_index = ipv6list->ifindex;
 			ifi_tmp->ifi_index = ipv6list->ifindex; 
 			WID_IF_V6 = tmp;
@@ -31028,7 +31734,13 @@ int WID_BINDING_IF_APPLY_WTP_ipv6_ioctl(unsigned int WtpID, char * ifname)
 					//printf("AC_WTP[WtpID]->BindingSystemIndex = %d\n",AC_WTP[WtpID]->BindingSystemIndex);
 					AC_WTP[WtpID]->isipv6addr = 1;
 					memset(AC_WTP[WtpID]->BindingIFName, 0, ETH_IF_NAME_LEN);
-					memcpy(AC_WTP[WtpID]->BindingIFName,ifname, strlen(ifname));
+					if( ifname != NULL){
+						memcpy(AC_WTP[WtpID]->BindingIFName,ifname, strlen(ifname));
+						}
+					else
+						{
+						wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+						}
 					
 					wid_syslog_debug_debug(WID_DEFAULT,"*** binding iterface name to wtp success ***\n");
 					return 0;
@@ -31059,7 +31771,13 @@ int WID_BINDING_IF_APPLY_WTP_ipv6_ioctl(unsigned int WtpID, char * ifname)
 				return MALLOC_ERROR;
 			}
 			memset(tmp,0,sizeof(struct ifi));
-			memcpy(tmp->ifi_name,ifname,strlen(ifname));
+			if(ifname != NULL){
+				memcpy(tmp->ifi_name,ifname,strlen(ifname));
+				}
+			else
+				{
+				wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+				}
 			tmp->ifi_index = ipv6list->ifindex;
 			ifi_tmp->ifi_index = ipv6list->ifindex;
 			tmp2 = WID_IF_V6;
@@ -31133,7 +31851,13 @@ int WID_BINDING_IF_APPLY_WTP_ipv6_ioctl(unsigned int WtpID, char * ifname)
 		AC_WTP[WtpID]->BindingSystemIndex= isystemindex;
 		AC_WTP[WtpID]->isipv6addr = 1;
 		memset(AC_WTP[WtpID]->BindingIFName, 0, ETH_IF_NAME_LEN);
-		memcpy(AC_WTP[WtpID]->BindingIFName,ifname, strlen(ifname));
+		if( ifname != NULL){
+			memcpy(AC_WTP[WtpID]->BindingIFName,ifname, strlen(ifname));
+			}
+		else
+			{
+			wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+			}
 		
 		wid_syslog_debug_debug(WID_DEFAULT,"*** binding iterface name to wtp success ***\n");
 		return 0;
@@ -31202,7 +31926,13 @@ int WID_ADD_IF_APPLY_WLAN_ipv6_ioctl(unsigned char WlanID, char * ifname)
 				return MALLOC_ERROR;
 			}
 			memset(tmp,0,sizeof(struct ifi));
-			memcpy(tmp->ifi_name,ifname,strlen(ifname));
+			if( ifname != NULL){
+				memcpy(tmp->ifi_name,ifname,strlen(ifname));
+				}
+			else
+				{
+				wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+				}
 			
 			tmp->ifi_index = ipv6list->ifindex;
 			ifi_tmp->ifi_index  = ipv6list->ifindex;
@@ -31278,7 +32008,13 @@ int WID_ADD_IF_APPLY_WLAN_ipv6_ioctl(unsigned char WlanID, char * ifname)
 					return MALLOC_ERROR;
 				}
 				memset(tmp,0,sizeof(struct ifi));
-				memcpy(tmp->ifi_name,ifname,strlen(ifname));
+				if(ifname != NULL){
+					memcpy(tmp->ifi_name,ifname,strlen(ifname));
+					}
+				else
+					{
+					wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+					}
 				tmp->ifi_index = ipv6list->ifindex;
 				ifi_tmp->ifi_index = ipv6list->ifindex;
 				tmp->isipv6addr = 1;
@@ -31347,7 +32083,13 @@ int WID_ADD_IF_APPLY_WLAN_ipv6_ioctl(unsigned char WlanID, char * ifname)
 		return MALLOC_ERROR;
 	}
 	memset(wif->ifi_name,0,ETH_IF_NAME_LEN);
-	memcpy(wif->ifi_name,ifname,strlen(ifname));
+	if(ifname != NULL){
+		memcpy(wif->ifi_name,ifname,strlen(ifname));
+		}
+	else
+		{
+		wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+		}
 	wif->ifi_index = ifr.ifr_ifindex;
 	wid_syslog_debug_debug(WID_DEFAULT,"wif->ifi_index = %d\n",wif->ifi_index);
 	wif->nas_id_len = 0;//zhanglei add
@@ -31552,7 +32294,13 @@ int wid_set_ethereal_bridge_add_uplink(unsigned int ID,char *ifname)
 			return MALLOC_ERROR;
 		}
 		memset(wif->ifname,0,ETH_IF_NAME_LEN);
-		memcpy(wif->ifname,ifname,strlen(ifname));
+		if( ifname != NULL){
+			memcpy(wif->ifname,ifname,strlen(ifname));
+			}
+		else
+			{
+			wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+			}
 		wif->ifnext = NULL;
 		
 		if(WID_EBR[ID]->uplinklist== NULL)
@@ -31704,7 +32452,13 @@ int wid_wds_remote_bridge_mac_op(int RadioID, int is_add, unsigned char *mac)
 				return MALLOC_ERROR;
 			}
 			memset(tmp,0,sizeof(struct wds_rbmac));
-			memcpy(tmp->mac,mac,MAC_LEN);
+			if(mac != NULL){
+				memcpy(tmp->mac,mac,MAC_LEN);
+				}
+			else
+				{
+				wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+				}
 			AC_RADIO[RadioID]->rbmac_list = tmp;
 			AC_RADIO[RadioID]->rbmacNum++;
 			tmp = NULL;
@@ -31721,7 +32475,13 @@ int wid_wds_remote_bridge_mac_op(int RadioID, int is_add, unsigned char *mac)
 				return MALLOC_ERROR;
 			}
 			memset(tmp1,0,sizeof(struct wds_rbmac));
-			memcpy(tmp1->mac,mac,MAC_LEN);
+			if( mac != NULL){
+				memcpy(tmp1->mac,mac,MAC_LEN);
+				}
+			else
+				{
+				wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+				}
 			tmp->next = tmp1;
 			AC_RADIO[RadioID]->rbmacNum++;
 		}
@@ -31767,7 +32527,13 @@ int wid_wds_remote_bridge_mac_set_aes_key(int RadioID, unsigned char *mac, char 
 		while((tmp != NULL)){
 			if(memcmp(tmp->mac,mac,MAC_LEN)==0){
 				memset(tmp->key, 0, 32);
-				memcpy(tmp->key, key, 32);
+				if(key != NULL){
+					memcpy(tmp->key, key, strlen(key));
+					}
+				else
+					{
+					wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+					}
 				return 0;
 			}
 			tmp = tmp->next;
@@ -31958,7 +32724,9 @@ static inline void __jiffies_to_tv(struct timeval *tv, unsigned long jiffies)
 static inline void __copy_fdb(struct fdb_entry *ent, 
 			      const struct __fdb_entry *f)
 {
-	memcpy(ent->mac_addr, f->mac_addr, 6);
+	
+	memcpy(ent->mac_addr, f->mac_addr, strlen((char *)f->mac_addr));
+		
 	ent->port_no = f->port_no;
 	ent->is_local = f->is_local;
 	__jiffies_to_tv(&ent->ageing_timer_value, f->ageing_timer_value);
@@ -32074,7 +32842,13 @@ int create_ap_group(unsigned int ID,char *NAME){
 		return MALLOC_ERROR;
 	}
 	memset(WTP_GROUP[ID]->GNAME, 0, strlen(NAME)+1);
-	memcpy(WTP_GROUP[ID]->GNAME, NAME, strlen(NAME));
+	if( NAME != NULL){
+		memcpy(WTP_GROUP[ID]->GNAME, NAME, strlen(NAME));
+		}
+	else
+		{
+		wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+		}
 	WTP_GROUP[ID]->WTP_M = NULL;
 	for (i=0; i<256; i++)
 		WTP_GROUP[ID]->WTP_HASH[i] = NULL;
@@ -33012,7 +33786,13 @@ success:
 	
 	CW_CREATE_OBJECT_ERR_WID(p, struct CWMultiHomedInterface, close(sock); return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
 	memset(p->ifname, 0, IFI_NAME);
-	memcpy(p->ifname,"LocalHost",9);
+	if(p->ifname != NULL){
+		memcpy(p->ifname,"LocalHost",9);
+		}
+	else
+		{
+		wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+		}
 	p->sock = sock;
 	p->kind = CW_BROADCAST_OR_ALIAS;
 	p->systemIndex = -1; // make sure this can't be confused with an interface
@@ -33211,7 +33991,13 @@ int add_mac_in_maclist(struct acl_config **conf, unsigned char *addr, char type)
 		return MALLOC_ERROR;
 	}else {
 		memset(tmp,0,sizeof(*tmp));
-		memcpy(tmp->addr, addr, ETH_ALEN);
+		if(tmp->addr && addr){
+			memcpy(tmp->addr, addr, ETH_ALEN);
+			}
+		else
+			{
+			wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+			}
 		tmp->next = NULL;
 	}
 
@@ -33402,8 +34188,20 @@ int wid_set_ap_longitude_latitude(unsigned int wtpid, unsigned char *longitude, 
 								memcpy(msg.mqinfo.u.WtpInfo.username, (char *)AC_WTP[wtpid]->longitude, strlen((char *)AC_WTP[wtpid]->longitude));
 							}
 						} else {
-							memcpy(msg.mqinfo.u.WtpInfo.username, (char *)longitude, strlen((char *)longitude));
-							memcpy((char *)AC_WTP[wtpid]->longitude, (char *)longitude, strlen((char*)longitude));
+							if( (char *)longitude != NULL){
+								memcpy(msg.mqinfo.u.WtpInfo.username, (char *)longitude, strlen((char *)longitude));
+								}
+							else
+								{
+								wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+								}
+							if( (char *)longitude != NULL){
+								memcpy((char *)AC_WTP[wtpid]->longitude, (char *)longitude, strlen((char*)longitude));
+								}
+							else
+								{
+								wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+								}
 						}
 						
 						
@@ -33415,8 +34213,20 @@ int wid_set_ap_longitude_latitude(unsigned int wtpid, unsigned char *longitude, 
 								memcpy(msg.mqinfo.u.WtpInfo.passwd, (char *)AC_WTP[wtpid]->latitude, strlen((char *)AC_WTP[wtpid]->latitude));
 							}
 						} else {
-							memcpy(msg.mqinfo.u.WtpInfo.passwd, (char *)latitude, strlen((char *)latitude));
-							memcpy((char *)AC_WTP[wtpid]->latitude, (char *)latitude, strlen((char*)latitude));
+							if( (char *)latitude != NULL){
+								memcpy(msg.mqinfo.u.WtpInfo.passwd, (char *)latitude, strlen((char *)latitude));
+								}
+							else
+								{
+								wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+								}
+							if( (char *)latitude != NULL){
+								memcpy((char *)AC_WTP[wtpid]->latitude, (char *)latitude, strlen((char*)latitude));
+								}
+							else
+								{
+								wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+								}
 						}
 						
 						
@@ -33439,11 +34249,29 @@ int wid_set_ap_longitude_latitude(unsigned int wtpid, unsigned char *longitude, 
 						if (strlen((char *)AC_WTP[wtpid]->longitude) == 0) {
 							memcpy(msg.mqinfo.u.WtpInfo.username, "unknown", strlen("unknown"));
 						} else {
-							memcpy(msg.mqinfo.u.WtpInfo.username, (char *)longitude, strlen((char *)longitude));
+							if( (char *)longitude != NULL){
+								memcpy(msg.mqinfo.u.WtpInfo.username, (char *)longitude, strlen((char *)longitude));
+								}
+							else
+								{
+								wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+								}
 						}
 					} else {
-						memcpy(msg.mqinfo.u.WtpInfo.username, (char *)longitude, strlen((char *)longitude));
-						memcpy((char *)AC_WTP[wtpid]->longitude, (char *)longitude, strlen((char*)longitude));
+						if( (char *)longitude != NULL){
+							memcpy(msg.mqinfo.u.WtpInfo.username, (char *)longitude, strlen((char *)longitude));
+							}
+						else
+							{
+							wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+							}
+						if((char *)longitude != NULL){
+							memcpy((char *)AC_WTP[wtpid]->longitude, (char *)longitude, strlen((char*)longitude));
+							}
+						else
+							{
+							wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+							}
 					}
 					
 					
@@ -33452,11 +34280,29 @@ int wid_set_ap_longitude_latitude(unsigned int wtpid, unsigned char *longitude, 
 						if (strlen((char *)AC_WTP[wtpid]->latitude) == 0) {
 							memcpy(msg.mqinfo.u.WtpInfo.passwd, "unknown", strlen("unknown"));
 						} else {
-							memcpy(msg.mqinfo.u.WtpInfo.passwd, (char *)latitude, strlen((char *)latitude));
+							if( (char *)latitude != NULL){
+								memcpy(msg.mqinfo.u.WtpInfo.passwd, (char *)latitude, strlen((char *)latitude));
+								}
+							else
+								{
+								wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+								}
 						}
 					} else {
-						memcpy(msg.mqinfo.u.WtpInfo.passwd, (char *)latitude, strlen((char *)latitude));
-						memcpy((char *)AC_WTP[wtpid]->latitude, (char *)latitude, strlen((char*)latitude));
+						if( (char *)latitude != NULL){
+							memcpy(msg.mqinfo.u.WtpInfo.passwd, (char *)latitude, strlen((char *)latitude));
+							}
+						else
+							{
+							wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+							}
+						if( (char *)latitude != NULL){
+							memcpy((char *)AC_WTP[wtpid]->latitude, (char *)latitude, strlen((char*)latitude));
+							}
+						else
+							{
+							wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+							}
 					}
 					
 					elem = (struct msgqlist*)WID_MALLOC(sizeof(struct msgqlist));
@@ -33493,8 +34339,20 @@ int wid_set_ap_longitude_latitude(unsigned int wtpid, unsigned char *longitude, 
 						memcpy(msg.mqinfo.u.WtpInfo.username, (char *)AC_WTP[wtpid]->longitude, strlen((char *)AC_WTP[wtpid]->longitude));
 					}
 				} else {
-					memcpy(msg.mqinfo.u.WtpInfo.username, (char *)longitude, strlen((char *)longitude));
-					memcpy((char *)AC_WTP[wtpid]->longitude, (char *)longitude, strlen((char*)longitude));
+					if( (char *)longitude != NULL){
+						memcpy(msg.mqinfo.u.WtpInfo.username, (char *)longitude, strlen((char *)longitude));
+						}
+					else
+						{
+						wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+						}
+					if( (char *)longitude != NULL){
+						memcpy((char *)AC_WTP[wtpid]->longitude, (char *)longitude, strlen((char*)longitude));
+						}
+					else
+						{
+						wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+						}
 				}
 				
 				
@@ -33506,8 +34364,20 @@ int wid_set_ap_longitude_latitude(unsigned int wtpid, unsigned char *longitude, 
 						memcpy(msg.mqinfo.u.WtpInfo.passwd, (char *)AC_WTP[wtpid]->latitude, strlen((char *)AC_WTP[wtpid]->latitude));
 					}
 				} else {
-					memcpy(msg.mqinfo.u.WtpInfo.passwd, (char *)latitude, strlen((char *)latitude));
-					memcpy((char *)AC_WTP[wtpid]->latitude, (char *)latitude, strlen((char*)latitude));
+					if( (char *)latitude != NULL){
+						memcpy(msg.mqinfo.u.WtpInfo.passwd, (char *)latitude, strlen((char *)latitude));
+						}
+					else
+						{
+						wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+						}
+					if( (char *)latitude != NULL){
+						memcpy((char *)AC_WTP[wtpid]->latitude, (char *)latitude, strlen((char*)latitude));
+						}
+					else
+						{
+						wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+						}
 				}
 				
 				if (msgsnd(ACDBUS_MSGQ, (msgq *)&msg, sizeof(msg.mqinfo), 0) == -1){
@@ -33529,11 +34399,29 @@ int wid_set_ap_longitude_latitude(unsigned int wtpid, unsigned char *longitude, 
 				if (strlen((char *)AC_WTP[wtpid]->longitude) == 0) {
 					memcpy(msg.mqinfo.u.WtpInfo.username, "unknown", strlen("unknown"));
 				} else {
-					memcpy(msg.mqinfo.u.WtpInfo.username, (char *)longitude, strlen((char *)longitude));
+					if( (char *)longitude != NULL){
+						memcpy(msg.mqinfo.u.WtpInfo.username, (char *)longitude, strlen((char *)longitude));
+						}
+					else
+						{
+						wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+						}
 				}
 			} else {
-				memcpy(msg.mqinfo.u.WtpInfo.username, (char *)longitude, strlen((char *)longitude));
-				memcpy((char *)AC_WTP[wtpid]->longitude, (char *)longitude, strlen((char*)longitude));
+				if( (char *)longitude != NULL){
+					memcpy(msg.mqinfo.u.WtpInfo.username, (char *)longitude, strlen((char *)longitude));
+					}
+				else
+					{
+					wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+					}
+				if( (char *)longitude != NULL){
+					memcpy((char *)AC_WTP[wtpid]->longitude, (char *)longitude, strlen((char*)longitude));
+					}
+				else
+					{
+					wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+					}
 			}
 			
 			
@@ -33542,11 +34430,29 @@ int wid_set_ap_longitude_latitude(unsigned int wtpid, unsigned char *longitude, 
 				if (strlen((char *)AC_WTP[wtpid]->latitude) == 0) {
 					memcpy(msg.mqinfo.u.WtpInfo.passwd, "unknown", strlen("unknown"));
 				} else {
-					memcpy(msg.mqinfo.u.WtpInfo.passwd, (char *)latitude, strlen((char *)latitude));
+					if( (char *)latitude != NULL){
+						memcpy(msg.mqinfo.u.WtpInfo.passwd, (char *)latitude, strlen((char *)latitude));
+						}
+					else
+						{
+						wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+						}
 				}
 			} else {
-				memcpy(msg.mqinfo.u.WtpInfo.passwd, (char *)latitude, strlen((char *)latitude));
-				memcpy((char *)AC_WTP[wtpid]->latitude, (char *)latitude, strlen((char*)latitude));
+				if((char *)latitude != NULL){
+					memcpy(msg.mqinfo.u.WtpInfo.passwd, (char *)latitude, strlen((char *)latitude));
+					}
+				else
+					{
+					wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+					}
+				if((char *)latitude != NULL){
+					memcpy((char *)AC_WTP[wtpid]->latitude, (char *)latitude, strlen((char*)latitude));
+					}
+				else
+					{
+					wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+					}
 			}
 				
 			elem = (struct msgqlist*)WID_MALLOC(sizeof(struct msgqlist));
@@ -33594,8 +34500,20 @@ int wid_set_ap_username_password(unsigned int wtpid,char *username,char *passwd)
 						msg.mqinfo.type = CONTROL_TYPE;
 						msg.mqinfo.subtype = WTP_S_TYPE;
 						msg.mqinfo.u.WtpInfo.Wtp_Op = WTP_SET_NAME_PASSWD;
-						memcpy(msg.mqinfo.u.WtpInfo.username,username,strlen(username));
-						memcpy(msg.mqinfo.u.WtpInfo.passwd,passwd,strlen(passwd));
+						if(username != NULL){
+							memcpy(msg.mqinfo.u.WtpInfo.username,username,strlen(username));
+							}
+						else
+							{
+							wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+							}
+						if(passwd != NULL){
+							memcpy(msg.mqinfo.u.WtpInfo.passwd,passwd,strlen(passwd));
+							}
+						else
+							{
+							wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+							}
 						
 						if (msgsnd(ACDBUS_MSGQ, (msgq *)&msg, sizeof(msg.mqinfo), 0) == -1){
 							wid_syslog_crit("%s msgsend %s",__func__,strerror(errno));
@@ -33640,8 +34558,20 @@ int wid_set_ap_username_password(unsigned int wtpid,char *username,char *passwd)
 					msg.mqinfo.type = CONTROL_TYPE;
 					msg.mqinfo.subtype = WTP_S_TYPE;
 					msg.mqinfo.u.WtpInfo.Wtp_Op = WTP_SET_NAME_PASSWD;
-					memcpy(msg.mqinfo.u.WtpInfo.username,username,strlen(username));
-					memcpy(msg.mqinfo.u.WtpInfo.passwd,passwd,strlen(passwd));
+					if(username != NULL){
+						memcpy(msg.mqinfo.u.WtpInfo.username,username,strlen(username));
+						}
+					else
+						{
+						wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+						}
+					if(passwd != NULL){
+						memcpy(msg.mqinfo.u.WtpInfo.passwd,passwd,strlen(passwd));
+						}
+					else
+						{
+						wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+						}
 					
 					if (msgsnd(ACDBUS_MSGQ, (msgq *)&msg, sizeof(msg.mqinfo), 0) == -1){
 						wid_syslog_crit("%s msgsend %s",__func__,strerror(errno));
@@ -34251,7 +35181,9 @@ void wtp_get_ifindex_check_nas_id(u_int32_t WTPID){
 								if((wlan_ifi->nas_id_len > 0)&&(AC_WTP[WTPID]->WTP_Radio[localradio_id]->BSS[k1]->nas_id_len == 0))
 								{
 									AC_WTP[WTPID]->WTP_Radio[localradio_id]->BSS[k1]->nas_id_len= wlan_ifi->nas_id_len;
-									memcpy(AC_WTP[WTPID]->WTP_Radio[localradio_id]->BSS[k1]->nas_id,wlan_ifi->nas_id,NAS_IDENTIFIER_NAME);
+									
+									memcpy(AC_WTP[WTPID]->WTP_Radio[localradio_id]->BSS[k1]->nas_id,wlan_ifi->nas_id,strlen(wlan_ifi->nas_id));
+										
 								}
 								break;
 							}

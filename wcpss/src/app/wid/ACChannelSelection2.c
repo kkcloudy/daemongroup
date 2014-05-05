@@ -143,7 +143,13 @@ int get_wtps_info2(WTP_RRM_INFO ** WTP){
 			WTP[i]->channel = AC_WTP[i]->WTP_Radio[1]->Radio_Chan;
 			WTP[i]->flags = 0;
 			WTP[i]->txpower = AC_WTP[i]->WTP_Radio[1]->Radio_TXP;
-			memcpy(WTP[i]->H_channel_list, channel_list, 5);
+			if(WTP[i]->H_channel_list != NULL){
+				memcpy(WTP[i]->H_channel_list, channel_list, 5);
+				}
+			else
+				{
+				wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+				}
 			get_neighbor_wtps_info2(WTP[i]);
 			CWThreadMutexUnlock(&(gWTPs[i].RRMThreadMutex));
 			//printf("%d,%d,%d\n",WTP[i]->WTPID_List[0],WTP[i]->WTPID_List[1],WTP[i]->WTPID_List[2]);
@@ -244,7 +250,13 @@ int Check_WTP_and_Neighbor_Channel2(WTP_RRM_INFO ** WTP,unsigned int WTPID){
 	unsigned char channel_list[5];
 	memcpy(channel_list, channel_list_1, 5);
 	ID = WTPID;
-	memcpy(WTP[ID]->H_channel_list, channel_list, 5);
+	if(WTP[ID]->H_channel_list != NULL){
+		memcpy(WTP[ID]->H_channel_list, channel_list, 5);
+		}
+	else
+		{
+		wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+		}
 	channel = WTP_GET_CHANNEL2(WTP,ID);
 	wid_syslog_debug_debug(WID_DEFAULT,"host WTP %d,channel %d\n",ID,channel);
 	if(channel)
@@ -255,8 +267,20 @@ int Check_WTP_and_Neighbor_Channel2(WTP_RRM_INFO ** WTP,unsigned int WTPID){
 	for(i = 0; i < 4; i++){
 		ID = WTP[WTPID]->WTPID_List[i][0];
 		if((WTP[ID] != NULL)&&(WTP[ID]->flags == 0)){			
-			memcpy(WTP[ID]->H_channel_list, channel_list, 5);
-			memcpy(WTP[ID]->N_channel_list, channel_list_N, 5);
+			if(WTP[ID]->H_channel_list != NULL){
+				memcpy(WTP[ID]->H_channel_list, channel_list, 5);
+				}
+			else
+				{
+				wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+				}
+			if(WTP[ID]->N_channel_list != NULL){
+				memcpy(WTP[ID]->N_channel_list, channel_list_N, 5);
+				}
+			else
+				{
+				wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+				}
 			channel = WTP_GET_CHANNEL2(WTP,ID);
 			channel_list_N[i+1] = channel;
 			wid_syslog_debug_debug(WID_DEFAULT,"neighbor WTP %d,channel %d\n",ID,channel);

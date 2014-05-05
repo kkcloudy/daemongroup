@@ -102,7 +102,13 @@ CWBool CWParseMsgElemImageIdentifier(CWProtocolMessage *msgPtr, int len, CWImage
 			
 			CW_CREATE_STRING_ERR_WID(valPtr->model, 4, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
 			memset(valPtr->model,0, 5);
-			memcpy(valPtr->model,"2010",4);
+			if(valPtr->model != NULL){
+				memcpy(valPtr->model,"2010",4);
+				}
+			else
+				{
+				wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+				}
 			valPtr->modelLEN = 4;
 			wid_syslog_debug_debug(WID_WTPINFO,"2010\n");
 			valPtr->Ver = CWProtocolRetrieveRawBytes(msgPtr, valPtr->VerLen);
@@ -110,7 +116,13 @@ CWBool CWParseMsgElemImageIdentifier(CWProtocolMessage *msgPtr, int len, CWImage
 		case 2000:
 			CW_CREATE_STRING_ERR_WID(valPtr->model, 5, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
 			memset(valPtr->model,0, 6);
-			memcpy(valPtr->model,"1110T",5);
+			if(valPtr->model != NULL){
+				memcpy(valPtr->model,"1110T",5);
+				}
+			else
+				{
+				wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+				}
 			valPtr->modelLEN = 5;
 			wid_syslog_debug_debug(WID_WTPINFO,"1110T\n");
 			valPtr->Ver = CWProtocolRetrieveRawBytes(msgPtr, valPtr->VerLen);
@@ -125,7 +137,13 @@ CWBool CWParseMsgElemImageIdentifier(CWProtocolMessage *msgPtr, int len, CWImage
 		default:
 			CW_CREATE_STRING_ERR_WID(valPtr->model, 4, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
 			memset(valPtr->model,0, 5);
-			memcpy(valPtr->model,"1000",4);
+			if(valPtr->model != NULL){
+				memcpy(valPtr->model,"1000",4);
+				}
+			else
+				{
+				wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+				}
 			valPtr->modelLEN = 4;
 			wid_syslog_debug_debug(WID_WTPINFO,"1000\n");
 			valPtr->Ver = CWProtocolRetrieveRawBytes(msgPtr, valPtr->VerLen);
@@ -498,7 +516,13 @@ CWBool ACEnterImageData(int WTPIndex, CWProtocolMessage *msgPtr)
 				return  CW_FALSE;
 			}
 			memset(AC_WTP[WTPIndex]->ApReportVer,0,strlen(valuesPtr.ImageRequest->Ver)+1);
-			memcpy(AC_WTP[WTPIndex]->ApReportVer,valuesPtr.ImageRequest->Ver,strlen(valuesPtr.ImageRequest->Ver));
+			if(AC_WTP[WTPIndex]->ApReportVer && valuesPtr.ImageRequest->Ver){
+				memcpy(AC_WTP[WTPIndex]->ApReportVer,valuesPtr.ImageRequest->Ver,strlen(valuesPtr.ImageRequest->Ver));
+				}
+			else
+				{
+				wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+				}
 			//AC_WTP[WTPIndex]->ApReportVerLen = 	valuesPtr.ImageRequest->VerLen;
 			//wid_syslog_debug_debug(WID_WTPINFO,"valuesPtr.ImageRequest->Ver = %s\n",valuesPtr.ImageRequest->Ver);
 			//wid_syslog_debug_debug(WID_WTPINFO,"AC_WTP[WTPIndex]->ApReportVer = %s\n",AC_WTP[WTPIndex]->ApReportVer);

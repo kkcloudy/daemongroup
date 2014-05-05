@@ -107,7 +107,13 @@ void CWHandleTimer(CWTimerArg arg) {
 		}else{
 			if((AC_WTP[WTPID])&&(AC_WTP[WTPID]->neighbordeatimes == 2)&&(wtp_link_detect == 1)){
 				str = strchr(AC_WTP[WTPID]->WTPIP,':');
-				memcpy(IP,AC_WTP[WTPID]->WTPIP,str-AC_WTP[WTPID]->WTPIP);
+				if( AC_WTP[WTPID]->WTPIP != NULL){
+					memcpy(IP,AC_WTP[WTPID]->WTPIP,str-AC_WTP[WTPID]->WTPIP);
+					}
+				else
+					{
+					wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+					}
 
 				sprintf(command,"echo \"********************************************************************************\" >>/home/WTP%d_tracerout &",WTPID);
 				system(command);

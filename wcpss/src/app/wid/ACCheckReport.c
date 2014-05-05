@@ -970,7 +970,13 @@ void get_ap_stats_v2(unsigned int wtpid)
 	if(0 == memcmp(&AC_WTP[wtpid]->pre_web_manager_stats, &web_report_tmp, sizeof(web_manager_stats_t)))
 	{
 		/* ap first report, no check */
-		memcpy(&(AC_WTP[wtpid]->pre_web_manager_stats), &(AC_WTP[wtpid]->web_manager_stats), sizeof(web_manager_stats_t));
+		if(&(AC_WTP[wtpid]->pre_web_manager_stats) && (&(AC_WTP[wtpid]->web_manager_stats))){
+			memcpy(&(AC_WTP[wtpid]->pre_web_manager_stats), &(AC_WTP[wtpid]->web_manager_stats), sizeof(web_manager_stats_t));
+			}
+		else
+			{
+			wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+			}
 		pthread_mutex_unlock(&(AC_WTP[wtpid]->mutex_web_report));
 		return;
 
@@ -988,7 +994,13 @@ void get_ap_stats_v2(unsigned int wtpid)
 	if(0 > wireless_bytes_interval && 0 > wireless_pkts_interval)
 	{
 		wid_syslog_info("%s %d:WTP[%d] ERR RETURN pre_sub_rx_packets %lu,sub_rx_packets %lu\n",__func__,__LINE__,wtpid,AC_WTP[wtpid]->pre_web_manager_stats.sub_rx_packets_ath,AC_WTP[wtpid]->web_manager_stats.sub_rx_packets_ath);	
-		memcpy(&(AC_WTP[wtpid]->pre_web_manager_stats), &(AC_WTP[wtpid]->web_manager_stats), sizeof(web_manager_stats_t));
+		if(&(AC_WTP[wtpid]->pre_web_manager_stats) && (&(AC_WTP[wtpid]->web_manager_stats))){
+			memcpy(&(AC_WTP[wtpid]->pre_web_manager_stats), &(AC_WTP[wtpid]->web_manager_stats), sizeof(web_manager_stats_t));
+			}
+		else
+			{
+			wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+			}
 		pthread_mutex_unlock(&(AC_WTP[wtpid]->mutex_web_report));		
 		return;
 	}
@@ -1017,7 +1029,13 @@ void get_ap_stats_v2(unsigned int wtpid)
 	wireless_bytes_interval = AC_WTP[wtpid]->web_manager_stats.sub_rx_bytes_ath - AC_WTP[wtpid]->pre_web_manager_stats.sub_rx_bytes_ath;
 	if(0 > wireless_bytes_interval)
 	{
-		memcpy(&(AC_WTP[wtpid]->pre_web_manager_stats), &(AC_WTP[wtpid]->web_manager_stats), sizeof(web_manager_stats_t));
+		if(&(AC_WTP[wtpid]->pre_web_manager_stats) && (&(AC_WTP[wtpid]->web_manager_stats))){
+			memcpy(&(AC_WTP[wtpid]->pre_web_manager_stats), &(AC_WTP[wtpid]->web_manager_stats), sizeof(web_manager_stats_t));
+			}
+		else
+			{
+			wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+			}
 		pthread_mutex_unlock(&(AC_WTP[wtpid]->mutex_web_report));
 		wid_syslog_info("%s %d:WTP[%d] ERR RETURN pre_sub_rx_bytes %llu,sub_rx_bytes %llu\n",__func__,__LINE__,wtpid,AC_WTP[wtpid]->pre_web_manager_stats.sub_rx_bytes_ath,AC_WTP[wtpid]->web_manager_stats.sub_rx_bytes_ath);
 		return;		
@@ -1054,7 +1072,13 @@ void get_ap_stats_v2(unsigned int wtpid)
 
 	if( 0 > wireless_pkts_interval && 0 > wireless_bytes_interval )
 	{
-		memcpy(&(AC_WTP[wtpid]->pre_web_manager_stats), &(AC_WTP[wtpid]->web_manager_stats), sizeof(web_manager_stats_t));
+		if(&(AC_WTP[wtpid]->pre_web_manager_stats) && (&(AC_WTP[wtpid]->web_manager_stats))){
+			memcpy(&(AC_WTP[wtpid]->pre_web_manager_stats), &(AC_WTP[wtpid]->web_manager_stats), sizeof(web_manager_stats_t));
+			}
+		else
+			{
+			wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+			}
 		pthread_mutex_unlock(&(AC_WTP[wtpid]->mutex_web_report));
 		wid_syslog_info("%s %d:WTP[%d] ERR RETURN pre_sub_tx_packets %lu,sub_tx_packets %lu\n",__func__,__LINE__,wtpid,AC_WTP[wtpid]->pre_web_manager_stats.sub_tx_packets_ath,AC_WTP[wtpid]->web_manager_stats.sub_tx_packets_ath);
 		return;		
@@ -1084,7 +1108,15 @@ void get_ap_stats_v2(unsigned int wtpid)
 	wireless_bytes_interval = AC_WTP[wtpid]->web_manager_stats.sub_tx_bytes_ath - AC_WTP[wtpid]->pre_web_manager_stats.sub_tx_bytes_ath;
 	if(0 > wireless_bytes_interval)
 	{
-		memcpy(&(AC_WTP[wtpid]->pre_web_manager_stats), &(AC_WTP[wtpid]->web_manager_stats), sizeof(web_manager_stats_t));
+		if(&(AC_WTP[wtpid]->pre_web_manager_stats) && (&(AC_WTP[wtpid]->web_manager_stats))){
+			memcpy(&(AC_WTP[wtpid]->pre_web_manager_stats), &(AC_WTP[wtpid]->web_manager_stats), sizeof(web_manager_stats_t));
+			}
+		else
+			{
+			wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+			}
+		
+		
 		pthread_mutex_unlock(&(AC_WTP[wtpid]->mutex_web_report));
 		wid_syslog_info("%s %d:WTP[%d] ERR RETURN pre_sub_tx_bytes %llu,sub_tx_bytes %llu\n",__func__,__LINE__,wtpid,AC_WTP[wtpid]->pre_web_manager_stats.sub_tx_bytes_ath,AC_WTP[wtpid]->web_manager_stats.sub_tx_bytes_ath);
 		return;		
@@ -1121,7 +1153,13 @@ void get_ap_stats_v2(unsigned int wtpid)
 	wireless_bytes_interval = AC_WTP[wtpid]->web_manager_stats.sub_total_rx_bytes_ath - AC_WTP[wtpid]->pre_web_manager_stats.sub_total_rx_bytes_ath;
 	if(0 > wireless_pkts_interval && 0 > wireless_bytes_interval)
 	{
-		memcpy(&(AC_WTP[wtpid]->pre_web_manager_stats), &(AC_WTP[wtpid]->web_manager_stats), sizeof(web_manager_stats_t));
+		if(&(AC_WTP[wtpid]->pre_web_manager_stats) && (&(AC_WTP[wtpid]->web_manager_stats))){
+			memcpy(&(AC_WTP[wtpid]->pre_web_manager_stats), &(AC_WTP[wtpid]->web_manager_stats), sizeof(web_manager_stats_t));
+			}
+		else
+			{
+			wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+			}
 		pthread_mutex_unlock(&(AC_WTP[wtpid]->mutex_web_report));
 		wid_syslog_info("%s %d:WTP[%d] ERR RETURN pre_sub_total_rx_pkt %lu,sub_total_rx_pkt %lu\n",__func__,__LINE__,wtpid,AC_WTP[wtpid]->pre_web_manager_stats.sub_total_rx_pkt_ath,AC_WTP[wtpid]->web_manager_stats.sub_total_rx_pkt_ath);
 		return;		
@@ -1152,7 +1190,13 @@ void get_ap_stats_v2(unsigned int wtpid)
 	wireless_bytes_interval = AC_WTP[wtpid]->web_manager_stats.sub_total_rx_bytes_ath - AC_WTP[wtpid]->pre_web_manager_stats.sub_total_rx_bytes_ath;
 	if(0 > wireless_bytes_interval)
 	{
-		memcpy(&(AC_WTP[wtpid]->pre_web_manager_stats), &(AC_WTP[wtpid]->web_manager_stats), sizeof(web_manager_stats_t));
+		if(&(AC_WTP[wtpid]->pre_web_manager_stats) && (&(AC_WTP[wtpid]->web_manager_stats))){
+			memcpy(&(AC_WTP[wtpid]->pre_web_manager_stats), &(AC_WTP[wtpid]->web_manager_stats), sizeof(web_manager_stats_t));
+			}
+		else
+			{
+			wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+			}
 		pthread_mutex_unlock(&(AC_WTP[wtpid]->mutex_web_report));
 		wid_syslog_info("%s %d:WTP[%d] ERR RETURN pre_sub_total_rx_bytes %llu,sub_total_rx_bytes %llu\n",__func__,__LINE__,wtpid,AC_WTP[wtpid]->pre_web_manager_stats.sub_total_rx_bytes_ath,AC_WTP[wtpid]->web_manager_stats.sub_total_rx_bytes_ath);
 		return;		
@@ -1189,7 +1233,13 @@ void get_ap_stats_v2(unsigned int wtpid)
 
 	if(0 > wireless_pkts_interval && 0 > wireless_bytes_interval)
 	{
-		memcpy(&(AC_WTP[wtpid]->pre_web_manager_stats), &(AC_WTP[wtpid]->web_manager_stats), sizeof(web_manager_stats_t));
+		if(&(AC_WTP[wtpid]->pre_web_manager_stats) && (&(AC_WTP[wtpid]->web_manager_stats))){
+			memcpy(&(AC_WTP[wtpid]->pre_web_manager_stats), &(AC_WTP[wtpid]->web_manager_stats), sizeof(web_manager_stats_t));
+			}
+		else
+			{
+			wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+			}
 		pthread_mutex_unlock(&(AC_WTP[wtpid]->mutex_web_report));
 		wid_syslog_info("%s %d:WTP[%d] ERR RETURN pre_sub_total_tx_pkt %lu,sub_total_tx_pkt %lu\n",__func__,__LINE__,wtpid,AC_WTP[wtpid]->pre_web_manager_stats.sub_total_tx_pkt_ath,AC_WTP[wtpid]->web_manager_stats.sub_total_tx_pkt_ath);
 		return;		
@@ -1221,7 +1271,13 @@ void get_ap_stats_v2(unsigned int wtpid)
 	wireless_bytes_interval = AC_WTP[wtpid]->web_manager_stats.sub_total_tx_bytes_ath - AC_WTP[wtpid]->pre_web_manager_stats.sub_total_tx_bytes_ath;
 	if(0 > wireless_bytes_interval)
 	{
-		memcpy(&(AC_WTP[wtpid]->pre_web_manager_stats), &(AC_WTP[wtpid]->web_manager_stats), sizeof(web_manager_stats_t));
+		if(&(AC_WTP[wtpid]->pre_web_manager_stats) && (&(AC_WTP[wtpid]->web_manager_stats))){
+			memcpy(&(AC_WTP[wtpid]->pre_web_manager_stats), &(AC_WTP[wtpid]->web_manager_stats), sizeof(web_manager_stats_t));
+			}
+		else
+			{
+			wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+			}
 		pthread_mutex_unlock(&(AC_WTP[wtpid]->mutex_web_report));
 		wid_syslog_info("%s %d:WTP[%d] ERR RETURN pre_sub_total_tx_bytes %llu,sub_total_tx_bytes %llu\n",__func__,__LINE__,wtpid,AC_WTP[wtpid]->pre_web_manager_stats.sub_total_tx_bytes_ath,AC_WTP[wtpid]->web_manager_stats.sub_total_tx_bytes_ath);
 		return;		
@@ -1258,7 +1314,13 @@ void get_ap_stats_v2(unsigned int wtpid)
 	wired_bytes_interval = AC_WTP[wtpid]->web_manager_stats.rx_bytes_eth - AC_WTP[wtpid]->pre_web_manager_stats.rx_bytes_eth;
 	if(0 > wired_bytes_interval)
 	{
-		memcpy(&(AC_WTP[wtpid]->pre_web_manager_stats), &(AC_WTP[wtpid]->web_manager_stats), sizeof(web_manager_stats_t));
+		if(&(AC_WTP[wtpid]->pre_web_manager_stats) && (&(AC_WTP[wtpid]->web_manager_stats))){
+			memcpy(&(AC_WTP[wtpid]->pre_web_manager_stats), &(AC_WTP[wtpid]->web_manager_stats), sizeof(web_manager_stats_t));
+			}
+		else
+			{
+			wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+			}
 		pthread_mutex_unlock(&(AC_WTP[wtpid]->mutex_web_report));
 		wid_syslog_info("%s %d:WTP[%d] ERR RETURN pre_rx_bytes %llu,rx_bytes %llu\n",__func__,__LINE__,wtpid,AC_WTP[wtpid]->pre_web_manager_stats.rx_bytes_eth,AC_WTP[wtpid]->web_manager_stats.rx_bytes_eth);
 		return;		
@@ -1295,7 +1357,13 @@ void get_ap_stats_v2(unsigned int wtpid)
 	wired_sum_bytes_interval = AC_WTP[wtpid]->web_manager_stats.rx_sum_bytes_eth - AC_WTP[wtpid]->pre_web_manager_stats.rx_sum_bytes_eth;
 	if(0 > wired_sum_bytes_interval)
 	{
-		memcpy(&(AC_WTP[wtpid]->pre_web_manager_stats), &(AC_WTP[wtpid]->web_manager_stats), sizeof(web_manager_stats_t));
+		if(&(AC_WTP[wtpid]->pre_web_manager_stats) && (&(AC_WTP[wtpid]->web_manager_stats))){
+			memcpy(&(AC_WTP[wtpid]->pre_web_manager_stats), &(AC_WTP[wtpid]->web_manager_stats), sizeof(web_manager_stats_t));
+			}
+		else
+			{
+			wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+			}
 		pthread_mutex_unlock(&(AC_WTP[wtpid]->mutex_web_report));
 		wid_syslog_info("%s %d:WTP[%d] ERR RETURN pre_rx_sum_bytes %llu,rx_sum_bytes %llu\n",__func__,__LINE__,wtpid,AC_WTP[wtpid]->pre_web_manager_stats.rx_sum_bytes_eth,AC_WTP[wtpid]->web_manager_stats.rx_sum_bytes_eth);
 		return;		
@@ -1318,7 +1386,13 @@ void get_ap_stats_v2(unsigned int wtpid)
 	wired_sum_bytes_interval = AC_WTP[wtpid]->web_manager_stats.rx_sum_bytes_eth - AC_WTP[wtpid]->pre_web_manager_stats.rx_sum_bytes_eth;
 	if(0 > wired_pkts_interval && 0 > wired_sum_bytes_interval)
 	{
-		memcpy(&(AC_WTP[wtpid]->pre_web_manager_stats), &(AC_WTP[wtpid]->web_manager_stats), sizeof(web_manager_stats_t));
+		if(&(AC_WTP[wtpid]->pre_web_manager_stats) && &(AC_WTP[wtpid]->web_manager_stats)){
+			memcpy(&(AC_WTP[wtpid]->pre_web_manager_stats), &(AC_WTP[wtpid]->web_manager_stats), sizeof(web_manager_stats_t));
+			}
+		else
+			{
+			wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+			}
 		pthread_mutex_unlock(&(AC_WTP[wtpid]->mutex_web_report));
 		wid_syslog_info("%s %d:WTP[%d] ERR RETURN pre_rx_packets %lu,rx_packets %lu\n",__func__,__LINE__,wtpid,AC_WTP[wtpid]->pre_web_manager_stats.rx_packets_eth,AC_WTP[wtpid]->web_manager_stats.rx_packets_eth);
 		return;		
@@ -1357,7 +1431,13 @@ void get_ap_stats_v2(unsigned int wtpid)
 	wired_bytes_interval = AC_WTP[wtpid]->web_manager_stats.tx_bytes_eth - AC_WTP[wtpid]->pre_web_manager_stats.tx_bytes_eth;
 	if(0 > wired_bytes_interval)
 	{
-		memcpy(&(AC_WTP[wtpid]->pre_web_manager_stats), &(AC_WTP[wtpid]->web_manager_stats), sizeof(web_manager_stats_t));
+		if(&(AC_WTP[wtpid]->pre_web_manager_stats) && (&(AC_WTP[wtpid]->web_manager_stats))){
+			memcpy(&(AC_WTP[wtpid]->pre_web_manager_stats), &(AC_WTP[wtpid]->web_manager_stats), sizeof(web_manager_stats_t));
+			}
+		else
+			{
+			wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+			}
 		pthread_mutex_unlock(&(AC_WTP[wtpid]->mutex_web_report));
 		wid_syslog_info("%s %d:WTP[%d] ERR RETURN pre_tx_bytes %llu,tx_bytes %llu\n",__func__,__LINE__,wtpid,AC_WTP[wtpid]->pre_web_manager_stats.tx_bytes_eth,AC_WTP[wtpid]->web_manager_stats.tx_bytes_eth);
 		return;		
@@ -1394,7 +1474,13 @@ void get_ap_stats_v2(unsigned int wtpid)
 	wired_sum_bytes_interval = AC_WTP[wtpid]->web_manager_stats.tx_sum_bytes_eth - AC_WTP[wtpid]->pre_web_manager_stats.tx_sum_bytes_eth;
 	if(0 > wired_bytes_interval)
 	{
-		memcpy(&(AC_WTP[wtpid]->pre_web_manager_stats), &(AC_WTP[wtpid]->web_manager_stats), sizeof(web_manager_stats_t));
+		if(&(AC_WTP[wtpid]->pre_web_manager_stats) && (&(AC_WTP[wtpid]->web_manager_stats))){
+			memcpy(&(AC_WTP[wtpid]->pre_web_manager_stats), &(AC_WTP[wtpid]->web_manager_stats), sizeof(web_manager_stats_t));
+			}
+		else
+			{
+			wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+			}
 		pthread_mutex_unlock(&(AC_WTP[wtpid]->mutex_web_report));
 		wid_syslog_info("%s %d:WTP[%d] ERR RETURN pre_tx_sum_bytes %llu,tx_sum_bytes %llu\n",__func__,__LINE__,wtpid,AC_WTP[wtpid]->pre_web_manager_stats.tx_sum_bytes_eth,AC_WTP[wtpid]->web_manager_stats.tx_sum_bytes_eth);
 		return;		
@@ -1417,7 +1503,13 @@ void get_ap_stats_v2(unsigned int wtpid)
 	wired_sum_bytes_interval = AC_WTP[wtpid]->web_manager_stats.tx_sum_bytes_eth - AC_WTP[wtpid]->pre_web_manager_stats.tx_sum_bytes_eth;
 	if(0 > wired_pkts_interval && 0 > wired_sum_bytes_interval)
 	{
-		memcpy(&(AC_WTP[wtpid]->pre_web_manager_stats), &(AC_WTP[wtpid]->web_manager_stats), sizeof(web_manager_stats_t));
+		if(&(AC_WTP[wtpid]->pre_web_manager_stats) && (&(AC_WTP[wtpid]->web_manager_stats))){
+			memcpy(&(AC_WTP[wtpid]->pre_web_manager_stats), &(AC_WTP[wtpid]->web_manager_stats), sizeof(web_manager_stats_t));
+			}
+		else
+			{
+			wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+			}
 		pthread_mutex_unlock(&(AC_WTP[wtpid]->mutex_web_report));
 		wid_syslog_info("%s %d:WTP[%d] ERR RETURN pre_tx_packets %lu,tx_packets %lu\n",__func__,__LINE__,wtpid,AC_WTP[wtpid]->pre_web_manager_stats.tx_packets_eth,AC_WTP[wtpid]->web_manager_stats.tx_packets_eth);
 		return;		
@@ -1470,7 +1562,12 @@ void get_ap_stats_v2(unsigned int wtpid)
 	wid_syslog_debug_debug(WID_DEFAULT, "%s:WTP[%d]web_manager_stats.tx_sum_bytes_eth %llu\n", __func__, wtpid, AC_WTP[wtpid]->web_manager_stats.tx_sum_bytes_eth);
 	
 
-	memcpy(&(AC_WTP[wtpid]->pre_web_manager_stats), &(AC_WTP[wtpid]->web_manager_stats), sizeof(web_manager_stats_t));
+	if(&(AC_WTP[wtpid]->pre_web_manager_stats) && (&(AC_WTP[wtpid]->web_manager_stats))){
+		memcpy(&(AC_WTP[wtpid]->pre_web_manager_stats), &(AC_WTP[wtpid]->web_manager_stats), sizeof(web_manager_stats_t));
+		}
+	else
+		{
+		wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);}
 	pthread_mutex_unlock(&(AC_WTP[wtpid]->mutex_web_report));
 	return;
 }

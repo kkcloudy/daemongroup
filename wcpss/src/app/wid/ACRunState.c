@@ -356,9 +356,27 @@ CWBool ACEnterRun(int WTPIndex, CWProtocolMessage *msgPtr, CWBool dataFlag)
 					AC_WTP[WTPIndex]->ap_gateway = valuesPtr.WTPOperationalStatistics[0].ipgateway;
 					AC_WTP[WTPIndex]->ap_dnsfirst = valuesPtr.WTPOperationalStatistics[0].ipdnsfirst;
 					AC_WTP[WTPIndex]->ap_dnssecend = valuesPtr.WTPOperationalStatistics[0].ipdnssecend;
-				 	memcpy(AC_WTP[WTPIndex]->cpuType,valuesPtr.WTPOperationalStatistics[0].cpuType,WTP_TYPE_DEFAULT_LEN);
-				 	memcpy(AC_WTP[WTPIndex]->flashType,valuesPtr.WTPOperationalStatistics[0].flashType,WTP_TYPE_DEFAULT_LEN);
-				 	memcpy(AC_WTP[WTPIndex]->memType,valuesPtr.WTPOperationalStatistics[0].memType,WTP_TYPE_DEFAULT_LEN);
+				 	if(AC_WTP[WTPIndex]->cpuType && valuesPtr.WTPOperationalStatistics[0].cpuType){
+						memcpy(AC_WTP[WTPIndex]->cpuType,valuesPtr.WTPOperationalStatistics[0].cpuType,strlen((char *)valuesPtr.WTPOperationalStatistics[0].cpuType));
+				 		}
+					else
+						{
+						wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+						}
+				 	if(AC_WTP[WTPIndex]->flashType && valuesPtr.WTPOperationalStatistics[0].flashType){
+						memcpy(AC_WTP[WTPIndex]->flashType,valuesPtr.WTPOperationalStatistics[0].flashType,strlen((char *)valuesPtr.WTPOperationalStatistics[0].flashType));
+				 		}
+					else
+						{
+						wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+						}
+				 	if(AC_WTP[WTPIndex]->memType && valuesPtr.WTPOperationalStatistics[0].memType){
+						memcpy(AC_WTP[WTPIndex]->memType,valuesPtr.WTPOperationalStatistics[0].memType,strlen((char *)valuesPtr.WTPOperationalStatistics[0].memType));
+				 		}
+					else
+						{
+						wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+						}
 					for(eth_num=0;eth_num<valuesPtr.WTPOperationalStatistics[0].eth_count;eth_num++){
 						AC_WTP[WTPIndex]->apifinfo.eth[eth_num].eth_rate = valuesPtr.WTPOperationalStatistics[0].eth_rate;
 					}
@@ -737,12 +755,38 @@ CWBool ACEnterRun(int WTPIndex, CWProtocolMessage *msgPtr, CWBool dataFlag)
 									}else{
 										ifinfo.vlanid = 0;
 									}
-									memcpy(ifinfo.apmac, AC_WTP[WTPIndex]->WTPMAC, MAC_LEN);
-									memcpy(ifinfo.bssid,  AC_BSS[bssindex]->BSSID, MAC_LEN);
-									memcpy(ifinfo.ifname, AC_WTP[WTPIndex]->BindingIFName,strlen(AC_WTP[WTPIndex]->BindingIFName));
-									memcpy(ifinfo.apname,AC_WTP[WTPIndex]->WTPNAME,strlen(AC_WTP[WTPIndex]->WTPNAME));
+									if(AC_WTP[WTPIndex]->WTPMAC != NULL){
+										memcpy(ifinfo.apmac, AC_WTP[WTPIndex]->WTPMAC, MAC_LEN);
+										}
+									else
+										{
+										wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+										}
+									if( AC_BSS[bssindex]->BSSID != NULL){
+										memcpy(ifinfo.bssid,  AC_BSS[bssindex]->BSSID, MAC_LEN);
+										}
+									else
+										{
+										wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+										}
+									
+										memcpy(ifinfo.ifname, AC_WTP[WTPIndex]->BindingIFName,strlen(AC_WTP[WTPIndex]->BindingIFName));
+										
+									if(AC_WTP[WTPIndex]->WTPNAME != NULL){
+										memcpy(ifinfo.apname,AC_WTP[WTPIndex]->WTPNAME,strlen(AC_WTP[WTPIndex]->WTPNAME));
+										}
+									else
+										{
+										wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+										}
 									if(AC_WLAN[wlan_id] != NULL){
-										memcpy(ifinfo.essid ,AC_WLAN[wlan_id]->ESSID ,strlen(AC_WLAN[wlan_id]->ESSID));
+										if(AC_WLAN[wlan_id]->ESSID != NULL){
+											memcpy(ifinfo.essid ,AC_WLAN[wlan_id]->ESSID ,strlen(AC_WLAN[wlan_id]->ESSID));
+											}
+										else
+											{
+											wid_syslog_err("%s %d pointe is NULL\n",__FUNCTION__,__LINE__);
+											}
 										ifinfo.Eap1XServerSwitch = AC_WLAN[wlan_id]->eap_mac_switch;
 										memset(ifinfo.Eap1XServerMac,0,MAC_LEN);
 										memcpy(ifinfo.Eap1XServerMac,AC_WLAN[wlan_id]->eap_mac2,MAC_LEN);
@@ -764,9 +808,21 @@ CWBool ACEnterRun(int WTPIndex, CWProtocolMessage *msgPtr, CWBool dataFlag)
 										ifinfo.acip = v_ip;
 									}else{
 										ifinfo.isIPv6 = 1;
-										memcpy(ifinfo.apipv6,&((struct sockaddr_in6 *) sa)->sin6_addr,sizeof(struct in6_addr));
+										if( &((struct sockaddr_in6 *) sa)->sin6_addr != NULL ){
+											memcpy(ifinfo.apipv6,&((struct sockaddr_in6 *) sa)->sin6_addr,sizeof(struct in6_addr));
+											}
+										else
+											{
+											wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+											}
 										ifinfo.apport = ((struct sockaddr_in6 *)sa)->sin6_port +1;
-										memcpy(ifinfo.acipv6,&((struct sockaddr_in6 *) sa2)->sin6_addr,sizeof(struct in6_addr));
+										if(&((struct sockaddr_in6 *) sa2)->sin6_addr != NULL){
+											memcpy(ifinfo.acipv6,&((struct sockaddr_in6 *) sa2)->sin6_addr,sizeof(struct in6_addr));
+											}
+										else
+											{
+											wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+											}
 									}
 
 									ret = ioctl(fd, WIFI_IOC_IF_UPDATE, &ifinfo);
@@ -2700,7 +2756,13 @@ CWBool CWAssembleMsgElemAddWlan(CWProtocolMessage *msgPtr, int WTPIndex, unsigne
 		return CW_FALSE;
 	}
 	memset(wlaninfo,0,sizeof(MQ_WLAN));
-	memcpy(wlaninfo,&(elem->mqinfo.u.WlanInfo),sizeof(MQ_WLAN));
+	if(&(elem->mqinfo.u.WlanInfo) != NULL){
+		memcpy(wlaninfo,&(elem->mqinfo.u.WlanInfo),sizeof(MQ_WLAN));
+		}
+	else
+		{
+		wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+		}
 	wid_syslog_debug_debug(WID_WTPINFO,"elem->mqinfo.u.WlanInfo->bssindex=%d.\n",elem->mqinfo.u.WlanInfo.bssindex);
 	wid_syslog_debug_debug(WID_WTPINFO,"wlaninfo->bssindex=%d.\n",wlaninfo->bssindex);
 	wid_syslog_debug_debug(WID_WTPINFO,"elem->l_radio:%d\n",elem->mqinfo.u.WlanInfo.Radio_L_ID);

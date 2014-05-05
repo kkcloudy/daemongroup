@@ -750,7 +750,13 @@ void wid_pid_write_v2(char *name,int id,unsigned int vrrid)
 void wid_syslog_hn(int level,char *iden,char *fmt,...)
 {
 	char ident[256] = {0};
-	memcpy(ident,iden,strlen(iden));
+	if(iden != NULL){
+		memcpy(ident,iden,strlen(iden));
+		}
+	else
+		{
+		wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+		}
 	/*va_list pptr;
 	va_start(pptr,iden);
 	vsprintf(ident,iden,pptr);

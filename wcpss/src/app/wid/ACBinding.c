@@ -939,7 +939,13 @@ CWBool CWBindingAssembleConfigurationUpdateRequest2(CWProtocolMessage **msgElems
 			dot11nset.RadioID = i;
 			dot11nset.mcs_count = AC_WTP[WTPIndex]->WTP_Radio[i]->mcs_count;
 			memset(dot11nset.mcs_list,0,32);
-			memcpy(dot11nset.mcs_list,AC_WTP[WTPIndex]->WTP_Radio[i]->mcs_list,dot11nset.mcs_count);
+			if(dot11nset.mcs_list && AC_WTP[WTPIndex]->WTP_Radio[i]->mcs_list){
+				memcpy(dot11nset.mcs_list,AC_WTP[WTPIndex]->WTP_Radio[i]->mcs_list,dot11nset.mcs_count);
+				}
+			else
+				{
+				wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+				}
 			if (!(CWAssembleWTPRadio11nMcsList(&(*msgElems[++k]), dot11nset)))
 			{
 				int i1;

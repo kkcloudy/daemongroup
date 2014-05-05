@@ -314,7 +314,9 @@ struct ifi_info* get_ifi_info(int family, int doaliases)
 			if (doaliases == 0)
 				continue;	/* already processed this interface */
 		}
-		memcpy(lastname, ifr->ifr_name, IFNAMSIZ);
+		
+		memcpy(lastname, ifr->ifr_name, strlen(ifr->ifr_name));
+			
 
 		ifrcopy = *ifr;
 		ioctl(sockfd, SIOCGIFFLAGS, &ifrcopy);
@@ -360,7 +362,13 @@ struct ifi_info* get_ifi_info(int family, int doaliases)
 				close(sockfd);
 				return NULL;
 			}
-			memcpy(ifi->ifi_addr, sinptr, sizeof(struct sockaddr_in));
+			if(ifi->ifi_addr && sinptr){
+				memcpy(ifi->ifi_addr, sinptr, sizeof(struct sockaddr_in));
+				}
+			else
+				{
+				wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+				}
 
 #ifdef	SIOCGIFBRDADDR
 			if (flags & IFF_BROADCAST) {
@@ -375,7 +383,13 @@ struct ifi_info* get_ifi_info(int family, int doaliases)
 					close(sockfd);
 					return NULL;
 				}
-				memcpy(ifi->ifi_brdaddr, sinptr, sizeof(struct sockaddr_in));
+				if(ifi->ifi_brdaddr && sinptr){
+					memcpy(ifi->ifi_brdaddr, sinptr, sizeof(struct sockaddr_in));
+					}
+				else
+					{
+					wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+					}
 			}
 #endif
 
@@ -389,7 +403,13 @@ struct ifi_info* get_ifi_info(int family, int doaliases)
 				close(sockfd);
 				return NULL;
 			}
-			memcpy(ifi->ifi_addr, sin6ptr, sizeof(struct sockaddr_in6));
+			if(ifi->ifi_addr && sin6ptr){
+				memcpy(ifi->ifi_addr, sin6ptr, sizeof(struct sockaddr_in6));
+				}
+			else
+				{
+				wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+				}
 
 			break;
 

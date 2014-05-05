@@ -156,7 +156,13 @@ void WID_WLAN_CONFIG_SAVE(unsigned int WTPIndex,unsigned int local_radio)
 
 								msg.mqinfo.u.WlanInfo.HideESSid = AC_WLAN[k]->HideESSid;
 								memset(msg.mqinfo.u.WlanInfo.WlanKey,0,DEFAULT_LEN);
-								memcpy(msg.mqinfo.u.WlanInfo.WlanKey,AC_WLAN[k]->WlanKey,DEFAULT_LEN);
+								if(msg.mqinfo.u.WlanInfo.WlanKey && AC_WLAN[k]->WlanKey){
+									memcpy(msg.mqinfo.u.WlanInfo.WlanKey,AC_WLAN[k]->WlanKey,strlen(AC_WLAN[k]->WlanKey));
+									}
+								else
+									{
+									wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+									}
 								msg.mqinfo.u.WlanInfo.KeyLen = AC_WLAN[k]->KeyLen;
 								msg.mqinfo.u.WlanInfo.SecurityType = AC_WLAN[k]->SecurityType;
 								msg.mqinfo.u.WlanInfo.SecurityIndex = AC_WLAN[k]->SecurityIndex;
@@ -168,11 +174,23 @@ void WID_WLAN_CONFIG_SAVE(unsigned int WTPIndex,unsigned int local_radio)
 								{
 									wid_syslog_debug_debug(WID_DEFAULT,"$$$$$$$$$$ wtp online !\n");
 									wid_syslog_debug_debug(WID_DEFAULT,"ESSID = %s\n",wlan_id->ESSID);
-									memcpy(msg.mqinfo.u.WlanInfo.WlanEssid,wlan_id->ESSID,strlen(wlan_id->ESSID));
+									if(msg.mqinfo.u.WlanInfo.WlanEssid && wlan_id->ESSID){
+										memcpy(msg.mqinfo.u.WlanInfo.WlanEssid,wlan_id->ESSID,strlen(wlan_id->ESSID));
+										}
+									else
+										{
+										wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+										}
 								}
 								else
 								{
-									memcpy(msg.mqinfo.u.WlanInfo.WlanEssid,AC_WLAN[k]->ESSID,strlen(AC_WLAN[k]->ESSID));
+									if(msg.mqinfo.u.WlanInfo.WlanEssid && AC_WLAN[k]->ESSID){
+										memcpy(msg.mqinfo.u.WlanInfo.WlanEssid,AC_WLAN[k]->ESSID,strlen(AC_WLAN[k]->ESSID));
+										}
+									else
+										{
+										wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+										}
 								}
 								msg.mqinfo.u.WlanInfo.bssindex = AC_WLAN[k]->S_WTP_BSS_List[WTPIndex][local_radio];
 								
@@ -884,7 +902,13 @@ void WID_CONFIG_SAVE(unsigned int WTPIndex){
 		msg.mqinfo.type = CONTROL_TYPE;
 		msg.mqinfo.subtype = WTP_S_TYPE;
 		msg.mqinfo.u.WtpInfo.Wtp_Op = WTP_OPTION60_PARAM;
-		memcpy(msg.mqinfo.u.WtpInfo.value, AC_WTP[WTPIndex]->option60_param, strlen(AC_WTP[WTPIndex]->option60_param));
+		if(msg.mqinfo.u.WtpInfo.value && AC_WTP[WTPIndex]->option60_param){
+			memcpy(msg.mqinfo.u.WtpInfo.value, AC_WTP[WTPIndex]->option60_param, strlen(AC_WTP[WTPIndex]->option60_param));
+			}
+		else
+			{
+			wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+			}
 		elem = (struct msgqlist*)WID_MALLOC(sizeof(struct msgqlist));
 		if(elem == NULL){
 			wid_syslog_info("%s malloc %s",__func__,strerror(errno));

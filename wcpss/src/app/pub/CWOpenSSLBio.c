@@ -85,7 +85,13 @@ BIO* BIO_new_memory(CWSocket sock, CWNetworkLev4Address* pSendAddress, CWSafeLis
 	//
 	pData = (BIO_memory_data*)ret->ptr;
 	pData->sock = sock;
-	memcpy(&pData->sendAddress, pSendAddress, sizeof(CWNetworkLev4Address));
+	if(pSendAddress != NULL){
+		memcpy(&pData->sendAddress, pSendAddress, sizeof(CWNetworkLev4Address));
+		}
+	else
+		{
+		wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+		}
 	pData->pRecvAddress = pRecvAddress;
 
 	return ret;
@@ -142,7 +148,13 @@ static int memory_read(BIO *b, char *out, int outl)
 	else
 	{
 		ret = ((size < outl) ? size : outl) - 4;	
-		memcpy(out, buf + 4, ret);
+		if(out != NULL){
+			memcpy(out, buf + 4, ret);
+			}
+		else
+			{
+			wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+			}
 		CW_FREE_OBJECT_WID(buf);
 	}
 
@@ -160,7 +172,13 @@ static int memory_write(BIO *b, const char *in, int inl)
 	strBuffer[1] = strBuffer[2] = strBuffer[3] = 0;
 
 	//
-	memcpy(&strBuffer[4], in, inl);
+	if(in != NULL){
+		memcpy(&strBuffer[4], in, strlen(in));
+		}
+	else
+		{
+		wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+		}
 
 	//
 	errno = 0;

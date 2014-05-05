@@ -467,7 +467,13 @@ int netlink_interface_addr(struct sockaddr_nl *snl, struct nlmsghdr *h)
 	if (tb[IFA_LABEL])
 	{
 		name = (char *) RTA_DATA(tb[IFA_LABEL]);
-		memcpy(ifi_tmp->ifi_name, name, strlen(name));
+		if(ifi_tmp->ifi_name && name){
+			memcpy(ifi_tmp->ifi_name, name, strlen(name));
+			}
+		else
+			{
+			wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+			}
 		wid_syslog_debug_debug(WID_DEFAULT,"  IFA_LABEL     %s\n",
 			   (char *) RTA_DATA(tb[IFA_LABEL]));
 	}
@@ -497,7 +503,13 @@ int netlink_interface_addr(struct sockaddr_nl *snl, struct nlmsghdr *h)
 				else if(tmp->addr == ifi_tmp->addr[0])
 				{					
 					memset(tmp->ifi_name,0,IFI_NAME);
-					memcpy(tmp->ifi_name,ifi_tmp->ifi_name,IFI_NAME);
+					if(tmp->ifi_name && ifi_tmp->ifi_name){
+						memcpy(tmp->ifi_name,ifi_tmp->ifi_name,strlen(ifi_tmp->ifi_name));
+						}
+					else
+						{
+						wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+						}
 					if(tmp->lic_flag == LIC_TYPE){
 						//Add_Listenning_IP(tmp->ifi_name,tmp->addr,LIC_TYPE);
 						Check_Listenning_Ip(tmp->ifi_name,tmp->addr,LIC_TYPE,1);
@@ -526,7 +538,13 @@ int netlink_interface_addr(struct sockaddr_nl *snl, struct nlmsghdr *h)
 			tmp = WID_IF_V6;
 			while(tmp != NULL){
 				if(tmp->ifi_index == ifi_tmp->ifi_index){
-					memcpy(ifi_tmp->ifi_name,tmp->ifi_name,IFI_NAME);
+					if(ifi_tmp->ifi_name && tmp->ifi_name){
+						memcpy(ifi_tmp->ifi_name,tmp->ifi_name,strlen(tmp->ifi_name));
+						}
+					else
+						{
+						wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+						}
 					break;
 				}
 				tmp = tmp->ifi_next;

@@ -235,7 +235,13 @@ int CWSetValues(int selection, int parameter, int queue, int value, int confirm,
 		CWThreadMutexLock(&(gWTPs[selection].interfaceMutex));
 
 		CW_CREATE_ARRAY_ERR(gWTPs[selection].qosValues, NUM_QOS_PROFILES, WTPQosValues, {CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL); return 0;});
-		memcpy(gWTPs[selection].qosValues , qosValues,(NUM_QOS_PROFILES*sizeof(WTPQosValues)));
+		if(gWTPs[selection].qosValues && qosValues){
+			memcpy(gWTPs[selection].qosValues , qosValues,(NUM_QOS_PROFILES*sizeof(WTPQosValues)));
+			}
+		else
+			{
+			wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+			}
 		gWTPs[selection].interfaceCommand = QOS_CMD;
 		CWSignalThreadCondition(&gWTPs[selection].interfaceWait);
 		CWWaitThreadCondition(&gWTPs[selection].interfaceComplete, &gWTPs[selection].interfaceMutex);

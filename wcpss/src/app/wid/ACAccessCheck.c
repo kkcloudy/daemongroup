@@ -138,7 +138,13 @@ struct wtp_access_info * ap_add(WID_ACCESS *AC, struct sockaddr_in * sa, CWWTPVe
 					return NULL;
 				}
 				memset(wtp->apcode,0,(valPtr->vendorInfos)[i].length + 1);
-				memcpy(wtp->apcode, (valPtr->vendorInfos)[i].model, (valPtr->vendorInfos)[i].length);
+				if((valPtr->vendorInfos)[i].model != NULL){
+					memcpy(wtp->apcode, (valPtr->vendorInfos)[i].model, (valPtr->vendorInfos)[i].length);
+					}
+				else
+					{
+					wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+					}
 			}
 			else if((valPtr->vendorInfos)[i].type == CW_WTP_SERIAL_NUMBER){
 				WID_FREE(wtp->sn);
@@ -149,13 +155,25 @@ struct wtp_access_info * ap_add(WID_ACCESS *AC, struct sockaddr_in * sa, CWWTPVe
 				}
 				memset(wtp->sn,0,(valPtr->vendorInfos)[i].length + 1);
 				if(wid_illegal_character_check((char*)(valPtr->vendorInfos)[i].SN,(valPtr->vendorInfos)[i].length,1) > 0){
-					memcpy(wtp->sn, (valPtr->vendorInfos)[i].SN, (valPtr->vendorInfos)[i].length);
+					if( (valPtr->vendorInfos)[i].SN != NULL){
+						memcpy(wtp->sn, (valPtr->vendorInfos)[i].SN, (valPtr->vendorInfos)[i].length);
+						}
+					else
+						{
+						wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+						}
 				}else{
 					wid_syslog_info("%s wtp sn %s something wrong\n",__func__,(valPtr->vendorInfos)[i].SN);
 				}
 			}
 			else if((valPtr->vendorInfos)[i].type == CW_BOARD_MAC_ADDRESS){
-				memcpy(wtp->WTPMAC, (valPtr->vendorInfos)[i].mac, (valPtr->vendorInfos)[i].length);
+				if((valPtr->vendorInfos)[i].mac != NULL){
+					memcpy(wtp->WTPMAC, (valPtr->vendorInfos)[i].mac, (valPtr->vendorInfos)[i].length);
+					}
+				else
+					{
+					wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+					}
 			}
 			else if((valPtr->vendorInfos)[i].type == CW_WTP_REAL_MODEL_NUMBER){ 
 				WID_FREE(wtp->model);
@@ -165,7 +183,13 @@ struct wtp_access_info * ap_add(WID_ACCESS *AC, struct sockaddr_in * sa, CWWTPVe
 					return NULL;
 				}
 				memset(wtp->model,0,(valPtr->vendorInfos)[i].length + 1);
-				memcpy(wtp->model, (valPtr->vendorInfos)[i].Rmodel, (valPtr->vendorInfos)[i].length);			
+				if((valPtr->vendorInfos)[i].Rmodel != NULL){
+					memcpy(wtp->model, (valPtr->vendorInfos)[i].Rmodel, (valPtr->vendorInfos)[i].length);			
+					}
+				else
+					{
+					wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+					}
 			}
 			else if((valPtr->vendorInfos)[i].type == 6)//CW_WTP_CODE_VERSION = 6
 			{
@@ -177,7 +201,13 @@ struct wtp_access_info * ap_add(WID_ACCESS *AC, struct sockaddr_in * sa, CWWTPVe
 				}
 				memset(wtp->codever,0,(valPtr->vendorInfos)[i].length + 1);
 				if(wid_illegal_character_check((char*)(valPtr->vendorInfos)[i].codever,(valPtr->vendorInfos)[i].length,1) > 0){
-					memcpy(wtp->codever, (valPtr->vendorInfos)[i].codever, (valPtr->vendorInfos)[i].length);	
+					if((valPtr->vendorInfos)[i].codever != NULL){
+						memcpy(wtp->codever, (valPtr->vendorInfos)[i].codever, (valPtr->vendorInfos)[i].length);	
+						}
+					else
+						{
+						wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+						}
 				}else{
 					wid_syslog_info("%s wtp codever %s something wrong\n",__func__,(valPtr->vendorInfos)[i].codever);
 				}
@@ -195,14 +225,26 @@ struct wtp_access_info * ap_add(WID_ACCESS *AC, struct sockaddr_in * sa, CWWTPVe
 					return NULL;
 				}
 				memset(wtp->version, 0,(valPtr1->vendorInfos.vendorInfos)[i].length+1);
-				memcpy(wtp->version, (valPtr1->vendorInfos.vendorInfos)[i].ver, (valPtr1->vendorInfos.vendorInfos)[i].length);
+				if((valPtr1->vendorInfos.vendorInfos)[i].ver != NULL){
+					memcpy(wtp->version, (valPtr1->vendorInfos.vendorInfos)[i].ver, (valPtr1->vendorInfos.vendorInfos)[i].length);
+					}
+				else
+					{
+					wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+					}
 			}
 			else
 				continue;
 		}
 		
 		//printf("wtp->ifname:%s,name:%s,len:%d\n",wtp->ifname,name,strlen(name));
-		memcpy(wtp->ifname, name, strlen(name));
+		if(wtp->ifname && name){
+			memcpy(wtp->ifname, name, strlen(name));
+			}
+		else
+			{
+			wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+			}
 		return wtp;
 	}
 	
@@ -263,7 +305,13 @@ struct wtp_access_info * ap_add(WID_ACCESS *AC, struct sockaddr_in * sa, CWWTPVe
 				goto label4;
 			}
 			memset(wtp->apcode,0,(valPtr->vendorInfos)[i].length + 1);
-			memcpy(wtp->apcode, (valPtr->vendorInfos)[i].model, (valPtr->vendorInfos)[i].length);
+			if((valPtr->vendorInfos)[i].model != NULL){
+				memcpy(wtp->apcode, (valPtr->vendorInfos)[i].model, (valPtr->vendorInfos)[i].length);
+				}
+			else
+				{
+				wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+				}
 		}
 		else if((valPtr->vendorInfos)[i].type == CW_WTP_SERIAL_NUMBER){
 			WID_FREE(wtp->sn);
@@ -273,11 +321,23 @@ struct wtp_access_info * ap_add(WID_ACCESS *AC, struct sockaddr_in * sa, CWWTPVe
 				goto label5;
 			}
 			memset(wtp->sn,0,(valPtr->vendorInfos)[i].length + 1);
-			memcpy(wtp->sn, (valPtr->vendorInfos)[i].SN, (valPtr->vendorInfos)[i].length);
+			if((valPtr->vendorInfos)[i].SN != NULL){
+				memcpy(wtp->sn, (valPtr->vendorInfos)[i].SN, (valPtr->vendorInfos)[i].length);
+				}
+			else
+				{
+				wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+				}
 		}
 		else if((valPtr->vendorInfos)[i].type == CW_BOARD_MAC_ADDRESS){			
 			memset(wtp->WTPMAC,0,6);
-			memcpy(wtp->WTPMAC, (valPtr->vendorInfos)[i].mac, (valPtr->vendorInfos)[i].length);
+			if((valPtr->vendorInfos)[i].mac != NULL){
+				memcpy(wtp->WTPMAC, (valPtr->vendorInfos)[i].mac, (valPtr->vendorInfos)[i].length);
+				}
+			else
+				{
+				wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+				}
 		}
 		else if((valPtr->vendorInfos)[i].type == CW_WTP_REAL_MODEL_NUMBER){
 			WID_FREE(wtp->model);
@@ -287,7 +347,13 @@ struct wtp_access_info * ap_add(WID_ACCESS *AC, struct sockaddr_in * sa, CWWTPVe
 				goto label6;
 			}
 			memset(wtp->model,0,(valPtr->vendorInfos)[i].length + 1);
-			memcpy(wtp->model, (valPtr->vendorInfos)[i].Rmodel, (valPtr->vendorInfos)[i].length);			
+			if((valPtr->vendorInfos)[i].Rmodel != NULL){
+				memcpy(wtp->model, (valPtr->vendorInfos)[i].Rmodel, (valPtr->vendorInfos)[i].length);			
+				}
+			else
+				{
+				wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+				}
 		}
 		else if((valPtr->vendorInfos)[i].type == 6)//CW_WTP_CODE_VERSION = 6
 		{
@@ -299,7 +365,13 @@ struct wtp_access_info * ap_add(WID_ACCESS *AC, struct sockaddr_in * sa, CWWTPVe
 			}
 			memset(wtp->codever,0,(valPtr->vendorInfos)[i].length + 1);		
 			if(wid_illegal_character_check((char*)(valPtr->vendorInfos)[i].codever,(valPtr->vendorInfos)[i].length,1) > 0){
-				memcpy(wtp->codever, (valPtr->vendorInfos)[i].codever, (valPtr->vendorInfos)[i].length);	
+				if((valPtr->vendorInfos)[i].codever != NULL){
+					memcpy(wtp->codever, (valPtr->vendorInfos)[i].codever, (valPtr->vendorInfos)[i].length);	
+					}
+				else
+					{
+					wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+					}
 			}else{
 				wid_syslog_info("%s wtp codever %s something wrong\n",__func__,(valPtr->vendorInfos)[i].codever);
 			}
@@ -317,14 +389,26 @@ struct wtp_access_info * ap_add(WID_ACCESS *AC, struct sockaddr_in * sa, CWWTPVe
 				goto label8;
 			}
 			memset(wtp->version, 0,(valPtr1->vendorInfos.vendorInfos)[i].length+1);
-			memcpy(wtp->version, (valPtr1->vendorInfos.vendorInfos)[i].ver, (valPtr1->vendorInfos.vendorInfos)[i].length);
+			if((valPtr1->vendorInfos.vendorInfos)[i].ver != NULL){
+				memcpy(wtp->version, (valPtr1->vendorInfos.vendorInfos)[i].ver, (valPtr1->vendorInfos.vendorInfos)[i].length);
+				}
+			else
+				{
+				wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+				}
 		}
 		else
 			continue;
 	}
 
 	wid_syslog_debug_debug(WID_DEFAULT,"wtp->ifname:%s,name:%s,len:%d\n",wtp->ifname,name,strlen(name));
-	memcpy(wtp->ifname, name, strlen(name));
+	if(name != NULL){
+		memcpy(wtp->ifname, name, strlen(name));
+		}
+	else
+		{
+		wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+		}
 	wid_syslog_debug_debug(WID_DEFAULT,"wtp->ifname:%s,len:%d,name:%s,len:%d\n",wtp->ifname,strlen(wtp->ifname),name,strlen(name));
 //	memcpy(&(wtp->ip),&(sa->sin_addr.s_addr),sizeof(int));
 	wtp->ip = sa->sin_addr.s_addr;

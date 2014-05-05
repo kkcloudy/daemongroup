@@ -1425,7 +1425,13 @@ CWBool CWParseMsgElemCWWtpStaIpMacReportInfo(CWProtocolMessage *msgPtr, int len,
 	unsigned char* mac = (unsigned char*)CWProtocolRetrieveStr(msgPtr,6);
 	wid_syslog_debug_debug(WID_DEFAULT,"##staIpMac##mac :%s\n",mac);
 	
-	memcpy(valPtr->mac, mac, 6);
+	if(valPtr->mac && mac){
+		memcpy(valPtr->mac, mac, 6);
+		}
+	else
+		{
+		wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+		}
 	WID_FREE(mac);
 	mac = NULL;
 
@@ -1500,7 +1506,13 @@ CWBool CWParseMsgElemAPNeighborAPInfos(CWProtocolMessage *msgPtr, int len, Neigh
 		CW_CREATE_OBJECT_SIZE_ERR(neighborapelem, sizeof(struct Neighbor_AP_ELE), return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););		
 		memset(neighborapelem, 0, sizeof(struct Neighbor_AP_ELE));		
 		char * str = CWProtocolRetrieveStr(msgPtr,6);
-		memcpy(neighborapelem->BSSID ,str, 6);
+		if(neighborapelem->BSSID && str){
+			memcpy(neighborapelem->BSSID ,str, strlen(str));
+			}
+		else
+			{
+			wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+			}
 		WID_FREE(str);
 		str = NULL;
 		
@@ -1535,13 +1547,25 @@ CWBool CWParseMsgElemAPNeighborAPInfos(CWProtocolMessage *msgPtr, int len, Neigh
 			CW_FREE_OBJECT_WID(essid);
 			//CW_CREATE_OBJECT_SIZE_ERR(neighborapelem->ESSID, ESSID_DEFAULT_LEN, return CW_FALSE;);
 			memset(neighborapelem->ESSID, 0, 5);
-			memcpy(neighborapelem->ESSID, "none", 4);
+			if(neighborapelem->ESSID != NULL){
+				memcpy(neighborapelem->ESSID, "none", strlen("none"));
+				}
+			else
+				{
+				wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+				}
 			//neighborapelem->ESSID[0] = '\0';
 		}
 		else
 		{
 			memset(neighborapelem->ESSID, 0, strlen(essid)+1);
-			memcpy(neighborapelem->ESSID,  essid, strlen(essid));
+			if(neighborapelem->ESSID &&  essid){
+				memcpy(neighborapelem->ESSID,  essid, strlen(essid));
+				}
+			else
+				{
+				wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+				}
 			CW_FREE_OBJECT_WID(essid);
 		}
 		
@@ -1668,12 +1692,24 @@ CWBool CWParseMsgElemAPWidsInfos(CWProtocolMessage *msgPtr, int len, wid_wids_de
 		}
 		//printf("03333 %d %d %d\n",AC_WTP[wtpindex]->wids_statist.floodingcount,AC_WTP[wtpindex]->wids_statist.sproofcount,AC_WTP[wtpindex]->wids_statist.weakivcount);
 		str = (unsigned char*)CWProtocolRetrieveStr(msgPtr,6);
-		memcpy(wids_device_ele->bssid,str, 6);
+		if(wids_device_ele->bssid && str){
+			memcpy(wids_device_ele->bssid,str, strlen((char *)str));
+			}
+		else
+			{
+			wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+			}
 		WID_FREE(str);
 		str = NULL;
 
 		str = (unsigned char*)CWProtocolRetrieveStr(msgPtr,6);
-		memcpy(wids_device_ele->vapbssid,str, 6);
+		if(wids_device_ele->vapbssid && str){
+			memcpy(wids_device_ele->vapbssid,str, strlen((char *)str));
+			}
+		else
+			{
+			wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+			}
 		WID_FREE(str);
 		str = NULL;
 						
@@ -2146,12 +2182,24 @@ CWBool CWParseMsgElemAPStaWapiInfos(CWProtocolMessage *msgPtr, int len, WIDStaWa
 		valPtr->StaWapiInfo[i].RadioId = CWProtocolRetrieve8(msgPtr);		
 		valPtr->StaWapiInfo[i].WlanId = CWProtocolRetrieve8(msgPtr);		
 		char * str = CWProtocolRetrieveStr(msgPtr,6);
-		memcpy(valPtr->StaWapiInfo[i].mac,str, 6);
+		if(valPtr->StaWapiInfo[i].mac && str){
+			memcpy(valPtr->StaWapiInfo[i].mac,str, 6);
+			}
+		else
+			{
+			wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+			}
 		WID_FREE(str);
 		valPtr->StaWapiInfo[i].WAPIVersion = CWProtocolRetrieve32(msgPtr); 
 		valPtr->StaWapiInfo[i].ControlledPortStatus = CWProtocolRetrieve8(msgPtr);		
 		str =  CWProtocolRetrieveStr(msgPtr,4);
-		memcpy(valPtr->StaWapiInfo[i].SelectedUnicastCipher,str, 4);
+		if(valPtr->StaWapiInfo[i].SelectedUnicastCipher && str){
+			memcpy(valPtr->StaWapiInfo[i].SelectedUnicastCipher,str, strlen(str));
+			}
+		else
+			{
+			wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+			}
 		WID_FREE(str);		
 		valPtr->StaWapiInfo[i].WPIReplayCounters= CWProtocolRetrieve32(msgPtr); 
 		valPtr->StaWapiInfo[i].WPIDecryptableErrors = CWProtocolRetrieve32(msgPtr); 
@@ -2258,7 +2306,13 @@ CWBool CWParseWTPBoardData (CWProtocolMessage *msgPtr, int len, CWWTPVendorInfos
 			}
 			memset((valPtr->vendorInfos)[i].SN,0,(((valPtr->vendorInfos)[i].length)+1));
 			if(wid_illegal_character_check(SN_t, strlen(SN_t),0) == 1){
-				memcpy((valPtr->vendorInfos)[i].SN,SN_t,(valPtr->vendorInfos)[i].length);
+				if((valPtr->vendorInfos)[i].SN && SN_t){
+					memcpy((valPtr->vendorInfos)[i].SN,SN_t,(valPtr->vendorInfos)[i].length);
+					}
+				else
+					{
+					wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+					}
 			}else{
 				wid_syslog_info("%s CW_WTP_SERIAL_NUMBER %s something wrong\n",__func__,SN_t);
 			}
@@ -2322,7 +2376,13 @@ CWBool CWParseWTPBoardData (CWProtocolMessage *msgPtr, int len, CWWTPVendorInfos
 			}
 			memset((valPtr->vendorInfos)[i].model,0,(((valPtr->vendorInfos)[i].length)+1));
 			if(wid_illegal_character_check(strmodel, strlen(strmodel),0) == 1){
-				memcpy((valPtr->vendorInfos)[i].model,strmodel,(((valPtr->vendorInfos)[i].length)));
+				if((valPtr->vendorInfos)[i].model && strmodel){
+					memcpy((valPtr->vendorInfos)[i].model,strmodel,(((valPtr->vendorInfos)[i].length)));
+					}
+				else
+					{
+					wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+					}
 			}else{
 				wid_syslog_info("%s CW_WTP_MODEL_NUMBER %s something wrong\n",__func__,strmodel);
 			}
@@ -2377,7 +2437,13 @@ CWBool CWParseWTPBoardData (CWProtocolMessage *msgPtr, int len, CWWTPVendorInfos
 			}
 			memset((valPtr->vendorInfos)[i].Rmodel,0,(((valPtr->vendorInfos)[i].length)+1));
 			if(wid_illegal_character_check(strmodel, strlen(strmodel),0) == 1){
-				memcpy((valPtr->vendorInfos)[i].Rmodel,strmodel,(((valPtr->vendorInfos)[i].length)));
+				if((valPtr->vendorInfos)[i].Rmodel && strmodel){
+					memcpy((valPtr->vendorInfos)[i].Rmodel,strmodel,(((valPtr->vendorInfos)[i].length)));
+					}
+				else
+					{
+					wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+					}
 			}else{
 				wid_syslog_info("%s CW_WTP_REAL_MODEL_NUMBER %s something wrong\n",__func__,strmodel);
 			}
@@ -2431,7 +2497,13 @@ CWBool CWParseWTPBoardData (CWProtocolMessage *msgPtr, int len, CWWTPVendorInfos
 			}
 			memset((valPtr->vendorInfos)[i].codever,0,(((valPtr->vendorInfos)[i].length)+1));
 			if(wid_illegal_character_check(codever, strlen(codever),0) == 1){
-				memcpy((valPtr->vendorInfos)[i].codever,codever,(((valPtr->vendorInfos)[i].length)));
+				if((valPtr->vendorInfos)[i].codever && codever){
+					memcpy((valPtr->vendorInfos)[i].codever,codever,(((valPtr->vendorInfos)[i].length)));
+					}
+				else
+					{
+					wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+					}
 			}else{
 				wid_syslog_info("%s CW_WTP_CODE_VERSION %s something wrong\n",__func__,codever);
 			}
@@ -2526,9 +2598,21 @@ CWBool CWCheckWTPBoardData(int WTPIndex, CWWTPVendorInfos *valPtr){
 					/*??*/
 					if((valPtr->vendorInfos)[i].length > NAS_IDENTIFIER_NAME){
 						wid_syslog_info("SN length %d\n",(valPtr->vendorInfos)[i].length);
-						memcpy(savesn, (valPtr->vendorInfos)[i].SN, NAS_IDENTIFIER_NAME);
+						if((valPtr->vendorInfos)[i].SN != NULL){
+							memcpy(savesn, (valPtr->vendorInfos)[i].SN, strlen((char *)(valPtr->vendorInfos)[i].SN));
+							}
+						else
+							{
+							wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+							}
 					}else
-						memcpy(savesn, (valPtr->vendorInfos)[i].SN, (valPtr->vendorInfos)[i].length);
+						if(savesn && (valPtr->vendorInfos)[i].SN){
+							memcpy(savesn, (valPtr->vendorInfos)[i].SN, (valPtr->vendorInfos)[i].length);
+							}
+						else
+							{
+							wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+							}
 					isbasemac = 1;
 					continue;
 				}
@@ -2542,9 +2626,21 @@ CWBool CWCheckWTPBoardData(int WTPIndex, CWWTPVendorInfos *valPtr){
 					memset(savesn, 0, (valPtr->vendorInfos)[i].length+1);
 					if((valPtr->vendorInfos)[i].length > NAS_IDENTIFIER_NAME){
 						wid_syslog_info("SN length %d\n",(valPtr->vendorInfos)[i].length);
-						memcpy(savesn, (valPtr->vendorInfos)[i].SN, NAS_IDENTIFIER_NAME);
+						if((valPtr->vendorInfos)[i].SN != NULL){
+							memcpy(savesn, (valPtr->vendorInfos)[i].SN, strlen((char *)(valPtr->vendorInfos)[i].SN));
+							}
+						else
+							{
+							wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+							}
 					}else
-						memcpy(savesn, (valPtr->vendorInfos)[i].SN, (valPtr->vendorInfos)[i].length);
+						if((valPtr->vendorInfos)[i].SN != NULL){
+							memcpy(savesn, (valPtr->vendorInfos)[i].SN, (valPtr->vendorInfos)[i].length);
+							}
+						else
+							{
+							wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+							}
 					isbasemac = 1;
 					continue;
 					//return CW_FALSE;
@@ -2581,7 +2677,13 @@ CWBool CWCheckWTPBoardData(int WTPIndex, CWWTPVendorInfos *valPtr){
 						if(AC_WTP[WTPIndex]->WTPSN != NULL)      //fengwenchao modify 20110427
 						{
 							memset(AC_WTP[WTPIndex]->WTPSN, 0, NAS_IDENTIFIER_NAME);
-							memcpy(AC_WTP[WTPIndex]->WTPSN, savesn, strlen(savesn));							
+							if(AC_WTP[WTPIndex]->WTPSN != NULL ){
+								memcpy(AC_WTP[WTPIndex]->WTPSN, savesn, strlen(savesn));							
+								}
+							else
+								{
+								wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+								}
 						}
 					}else{
 						wid_syslog_info("%s wtp %d sn %s something wrong\n",__func__,WTPIndex,savesn);
@@ -2602,7 +2704,13 @@ CWBool CWCheckWTPBoardData(int WTPIndex, CWWTPVendorInfos *valPtr){
 			}
 			else
 			{
-				memcpy(AC_WTP[WTPIndex]->WTPMAC, (valPtr->vendorInfos)[i].mac, 6);
+				if(AC_WTP[WTPIndex]->WTPMAC && (valPtr->vendorInfos)[i].mac){
+					memcpy(AC_WTP[WTPIndex]->WTPMAC, (valPtr->vendorInfos)[i].mac, 6);
+					}
+				else
+					{
+					wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+					}
 				wid_syslog_debug_debug(WID_WTPINFO,"WTP %d MAC:%X %X %X %X %X %X",WTPIndex,AC_WTP[WTPIndex]->WTPMAC[0],AC_WTP[WTPIndex]->WTPMAC[1],AC_WTP[WTPIndex]->WTPMAC[2],AC_WTP[WTPIndex]->WTPMAC[3],AC_WTP[WTPIndex]->WTPMAC[4],AC_WTP[WTPIndex]->WTPMAC[5]);
 				continue;
 			}
@@ -2892,7 +3000,13 @@ CWBool CWParseWTPDescriptor(CWProtocolMessage *msgPtr, int len, CWWTPDescriptor 
 				}
 			}
 			memset((valPtr->vendorInfos.vendorInfos)[i].sysver,0,(((valPtr->vendorInfos.vendorInfos)[i].length)+1));
-			memcpy((valPtr->vendorInfos.vendorInfos)[i].sysver,strversion,(((valPtr->vendorInfos.vendorInfos)[i].length)));
+			if((valPtr->vendorInfos.vendorInfos)[i].sysver && strversion){
+				memcpy((valPtr->vendorInfos.vendorInfos)[i].sysver,strversion,(((valPtr->vendorInfos.vendorInfos)[i].length)));
+				}
+			else
+				{
+				wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+				}
 			WID_FREE(strversion);
 			strversion = NULL;
 			wid_syslog_debug_debug(WID_WTPINFO,"*** id is:%d sys_version is:%s ***",i,(valPtr->vendorInfos.vendorInfos)[i].sysver);
@@ -2920,7 +3034,13 @@ CWBool CWParseWTPDescriptor(CWProtocolMessage *msgPtr, int len, CWWTPDescriptor 
 				}
 			}
 			memset((valPtr->vendorInfos.vendorInfos)[i].ver,0,(((valPtr->vendorInfos.vendorInfos)[i].length)+1));
-			memcpy((valPtr->vendorInfos.vendorInfos)[i].ver,strversion,(((valPtr->vendorInfos.vendorInfos)[i].length)));
+			if((valPtr->vendorInfos.vendorInfos)[i].ver && strversion){
+				memcpy((valPtr->vendorInfos.vendorInfos)[i].ver,strversion,(((valPtr->vendorInfos.vendorInfos)[i].length)));
+				}
+			else
+				{
+				wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+				}
 			WID_FREE(strversion);
 			strversion = NULL;
 
@@ -3045,11 +3165,29 @@ CWBool CWParseWTPOperationalStatistics(CWProtocolMessage *msgPtr, int len, WTPOp
 	valPtr->eth_rate = 100;
 	
 	memset(valPtr->cpuType,0,WTP_TYPE_DEFAULT_LEN);
-	memcpy(valPtr->cpuType,"soc",3);
+	if(valPtr->cpuType != NULL){
+		memcpy(valPtr->cpuType,"soc",strlen("soc"));
+		}
+	else
+		{
+		wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+		}
 	memset(valPtr->memType,0,WTP_TYPE_DEFAULT_LEN);
-	memcpy(valPtr->memType,"flash",5);
+	if(valPtr->memType != NULL){
+		memcpy(valPtr->memType,"flash",strlen("flash"));
+		}
+	else
+		{
+		wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+		}
 	memset(valPtr->flashType,0,WTP_TYPE_DEFAULT_LEN);
-	memcpy(valPtr->flashType,"flash",5);/*wuwl add.when wtp into run ,but ap(old ap) didn't support report cpu,mem,flash type ,display this*/
+	if(valPtr->flashType != NULL){
+		memcpy(valPtr->flashType,"flash",strlen("flash"));/*wuwl add.when wtp into run ,but ap(old ap) didn't support report cpu,mem,flash type ,display this*/
+		}
+	else
+		{
+		wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+		}
 
 	valPtr->radioID = CWProtocolRetrieve8(msgPtr);
 	valPtr->TxQueueLevel = CWProtocolRetrieve8(msgPtr);
@@ -3070,14 +3208,26 @@ CWBool CWParseWTPOperationalStatistics(CWProtocolMessage *msgPtr, int len, WTPOp
 	{
 	
 		unsigned char* cpuType = (unsigned char*)CWProtocolRetrieveStr(msgPtr,32);
-		memcpy(valPtr->cpuType, cpuType, 32);
+		if(valPtr->cpuType && cpuType){
+			memcpy(valPtr->cpuType, cpuType, 32);
+			}
+		else
+			{
+			wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+			}
 		wid_syslog_debug_debug(WID_DEFAULT,"cpuType %s\n",cpuType);
 		WID_FREE(cpuType);
 		cpuType = NULL;
 		wid_syslog_debug_debug(WID_DEFAULT,"cpuType %s\n",valPtr->cpuType);
 
 		unsigned char* flashType = (unsigned char*)CWProtocolRetrieveStr(msgPtr,32);
-		memcpy(valPtr->flashType, flashType, 32);
+		if(valPtr->flashType && flashType){
+			memcpy(valPtr->flashType, flashType, 32);
+			}
+		else
+			{
+			wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+			}
 		wid_syslog_debug_debug(WID_DEFAULT,"flashType  %s\n",flashType);
 		WID_FREE(flashType);
 		flashType = NULL;
@@ -3086,7 +3236,13 @@ CWBool CWParseWTPOperationalStatistics(CWProtocolMessage *msgPtr, int len, WTPOp
 		//valPtr->flashSize = CWProtocolRetrieve16(msgPtr);
 
 		unsigned char* memType = (unsigned char*)CWProtocolRetrieveStr(msgPtr,32);
-		memcpy(valPtr->memType, memType, 32);
+		if(valPtr->memType && memType){
+			memcpy(valPtr->memType, memType, 32);
+			}
+		else
+			{
+			wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+			}
 		wid_syslog_debug_debug(WID_DEFAULT,"memType %s\n",memType);
 		WID_FREE(memType);
 		memType = NULL;
@@ -3216,7 +3372,13 @@ CWBool CWParseAPStatisInfo(CWProtocolMessage *msgPtr, int len, int WTPIndex)
 		AC_WTP[WTPIndex]->apstatsinfo[i].wlanId = CWProtocolRetrieve8(msgPtr);
 		
 		unsigned char* mac = (unsigned char*)CWProtocolRetrieveStr(msgPtr,6);
-		memcpy(AC_WTP[WTPIndex]->apstatsinfo[i].mac, mac, 6);
+		if(AC_WTP[WTPIndex]->apstatsinfo[i].mac && mac){
+			memcpy(AC_WTP[WTPIndex]->apstatsinfo[i].mac, mac, 6);
+			}
+		else
+			{
+			wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+			}
 		WID_FREE(mac);
 		mac = NULL;
 
@@ -3391,7 +3553,13 @@ CWBool CWParseAPStatisInfo_v2(CWProtocolMessage *msgPtr, int len,char *valPtr, i
 		AC_WTP[WTPIndex]->apstatsinfo[i].wlanId = CWProtocolRetrieve8(msgPtr);
 		
 		unsigned char* mac = (unsigned char*)CWProtocolRetrieveStr(msgPtr,6);
-		memcpy(AC_WTP[WTPIndex]->apstatsinfo[i].mac, mac, 6);
+		if(AC_WTP[WTPIndex]->apstatsinfo[i].mac && mac){
+			memcpy(AC_WTP[WTPIndex]->apstatsinfo[i].mac, mac, 6);
+			}
+		else
+			{
+			wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+			}
 		WID_FREE(mac);
 		mac = NULL;
 
@@ -3671,7 +3839,13 @@ CWBool CWParseAttack_addr_Redirect(CWProtocolMessage *msgPtr, int len, int WTPIn
 		valPtr->StaWapiInfo[i].RadioId = radio_id;
 		valPtr->StaWapiInfo[i].WlanId = wlan_id;
 		memset(valPtr->StaWapiInfo[i].mac,0,6);
-		memcpy(valPtr->StaWapiInfo[i].mac,stamac,6);
+		if(valPtr->StaWapiInfo[i].mac && stamac){
+			memcpy(valPtr->StaWapiInfo[i].mac,stamac,strlen((char *)stamac));
+			}
+		else
+			{
+			wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+			}
 		WID_FREE(stamac);
 		stamac = NULL;
 	}
@@ -3728,7 +3902,13 @@ CWBool CWParseAP_challenge_replay(CWProtocolMessage *msgPtr, int len, int WTPInd
 		valPtr->StaWapiInfo[i].RadioId = radio_id;
 		valPtr->StaWapiInfo[i].WlanId = wlan_id;
 		memset(valPtr->StaWapiInfo[i].mac,0,6);
-		memcpy(valPtr->StaWapiInfo[i].mac,stamac,6);
+		if(valPtr->StaWapiInfo[i].mac && stamac){
+			memcpy(valPtr->StaWapiInfo[i].mac,stamac,strlen((char *)stamac));
+			}
+		else
+			{
+			wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+			}
 		if(stamac){
 			WID_FREE(stamac);
 			stamac = NULL;
@@ -3755,7 +3935,13 @@ CWBool CWPareseWtp_Sta_Flow_Check_Report(CWProtocolMessage *msgPtr, int len, WID
 	reserved = CWProtocolRetrieve8(msgPtr);
 	
 	unsigned char* mac = (unsigned char*)CWProtocolRetrieveStr(msgPtr,6);
-	memcpy(valPtr->mac, mac, 6);
+	if(valPtr->mac && mac){
+		memcpy(valPtr->mac, mac, 6);
+		}
+	else
+		{
+		wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+		}
 	WID_FREE(mac);
 	mac = NULL;
 	
@@ -3820,7 +4006,13 @@ CWBool CWPareseWtp_Sta_leave_Report(CWProtocolMessage *msgPtr, int len, WIDStati
 			valPtr1[i].sta_reason = sta_reason;
 			valPtr1[i].sub_reason = sub_reason;
 			mac = (unsigned char*)CWProtocolRetrieveStr(msgPtr,6);
-			memcpy(valPtr1[i].mac, mac, 6);
+			if(valPtr1[i].mac && mac){
+				memcpy(valPtr1[i].mac, mac, 6);
+				}
+			else
+				{
+				wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+				}
 			if(mac){
 				WID_FREE(mac);
 				mac = NULL;
@@ -4027,7 +4219,13 @@ CWBool CWParaseWTPTerminalStatistics(
 	for (i = 0; i < sta_count; i++)
 	{
 		sta_mac = CWProtocolRetrieveStr(msgPtr, 6);
-		memcpy(&(valPtr1[i].mac), sta_mac, 6);
+		if(&(valPtr1[i].mac) && sta_mac){
+			memcpy(&(valPtr1[i].mac), sta_mac, 6);
+			}
+		else
+			{
+			wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+			}
 		wid_syslog_debug_debug(WID_DEFAULT, "------ %s %d [%d]mac: %x:%x:%x:%x:%x:%x ------\n", __func__, __LINE__, i, (char *)sta_mac, (char *)(sta_mac + 1), (char *)(sta_mac + 2), (char *)(sta_mac + 3), (char *)(sta_mac + 4), (char *)(sta_mac + 5));
 		for (j = 0; j < WTP_SUPPORT_RATE_NUM; j ++)
 		{
