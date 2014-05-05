@@ -538,7 +538,7 @@ get_dhcp_pool_info(void)
 	{
 		return;
 	}
-	
+	pthread_mutex_lock(&DhcpHashMutex);
 	for (rv = subnets; rv; rv = rv->next_subnet) 
 	{
 		leasenum = 0;
@@ -556,6 +556,7 @@ get_dhcp_pool_info(void)
 											rv->discover_times, rv->offer_times,
 											rv->requested_times,rv->response_times);
 	}	
+	pthread_mutex_unlock(&DhcpHashMutex);
 	fclose(fp);	
 }
 
@@ -708,6 +709,7 @@ get_lease_ip_info_by_hw
 	if (!hw_addr || !lease_ip) {
 		return 0;
 	}
+	pthread_mutex_lock(&DhcpHashMutex);
 
 	for (rv = subnets; rv; rv = rv->next_subnet) {
 		
@@ -725,6 +727,7 @@ get_lease_ip_info_by_hw
 						/*hardware_addr.hbuf [0] is hardware type */
 						memcpy(lease_ip->hw_addr, &tmp_active->hardware_addr.hbuf[1], 6);
 
+						pthread_mutex_unlock(&DhcpHashMutex);
 						return 1;
 					}
 				}					
@@ -732,6 +735,7 @@ get_lease_ip_info_by_hw
 			}
 		}		
 	}
+	pthread_mutex_unlock(&DhcpHashMutex);
 
 	return 0;
 }
@@ -781,6 +785,7 @@ int get_dhcp_lease_state_num
 		return 1;
 	}
 	/*get subnet number*/
+	pthread_mutex_lock(&DhcpHashMutex);
 	for (rv = subnets; rv; rv = rv->next_subnet){
 		++sub_num;
 	}
@@ -790,6 +795,7 @@ int get_dhcp_lease_state_num
 	tmp_sub_state = malloc(sizeof(struct dbus_sub_lease_state) * sub_num);
 	if(NULL == tmp_sub_state){
 		log_error("get_dhcp_lease_state_num function malloc fail in %s on %d line\n", __FILE__, __LINE__);
+		pthread_mutex_unlock(&DhcpHashMutex);
 		return 1;
 	}
 	memset(tmp_sub_state, 0, sizeof(struct dbus_sub_lease_state) * sub_num);
@@ -853,6 +859,7 @@ int get_dhcp_lease_state_num
 		++i;
 		
 	}	
+	pthread_mutex_unlock(&DhcpHashMutex);
 	
 	lease_state->total_lease_num = total_lease;
 	lease_state->free_lease_num  = free_lease;
@@ -1340,6 +1347,7 @@ test_for_del_subnet_pool
 	
 	struct iaddr iaddr = delsub->lowip;
 
+	pthread_mutex_lock(&DhcpHashMutex);
 	prev = rv = subnets;
 	while (rv) {
 	
@@ -1362,6 +1370,7 @@ test_for_del_subnet_pool
 						log_error("&& find lease by ip addr failed pool null\n");
 					}
 				}
+				pthread_mutex_unlock(&DhcpHashMutex);
 				return;
 			}
 
@@ -1436,6 +1445,7 @@ test_for_del_subnet_pool
 		prev = rv;
 		rv = rv->next_subnet;
 	}
+	pthread_mutex_unlock(&DhcpHashMutex);
 }
 
 

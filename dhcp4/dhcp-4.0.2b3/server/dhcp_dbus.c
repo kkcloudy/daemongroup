@@ -1729,7 +1729,9 @@ dhcp_dbus_set_option
 		addr.len = addsubnet->ipaddr.len;
 		memset(&addr, 0, sizeof(struct iaddr));
 		memcpy(&addr, &(addsubnet->ipaddr), sizeof(struct iaddr));
+		pthread_mutex_lock(&DhcpDbusEventMutex);
 		ret = find_subnet(&subnetop, addr, MDL);
+		pthread_mutex_unlock(&DhcpDbusEventMutex);
 		if (ret) {
 			addgroup = subnetop->group;
 			/*
@@ -2232,7 +2234,7 @@ dhcp_dbus_set_subnet
 		log_error("bad range, high address  not in subnet  netmask \n");
 		return 1;
 	}
-
+	pthread_mutex_lock(&DhcpDbusEventMutex);
 	if (find_subnet (&old_subnet, sub_conf.net, MDL)) {
 		parse_pool_statement_no_file(&(sub_conf.range_conf), old_subnet->group, SUBNET_DECL);
 		
@@ -2243,6 +2245,7 @@ dhcp_dbus_set_subnet
 	memset(&addr, 0, sizeof(struct iaddr));
 	memcpy(&addr, &(addsubnet->ipaddr), sizeof(struct iaddr));
 	ret = find_subnet(&sub, addr, MDL);
+	pthread_mutex_unlock(&DhcpDbusEventMutex);
 	if (!ret|| !sub->shared_network) {
 		log_error("can not find the subnet for the ip address\n");
 		return 1;
