@@ -3115,6 +3115,9 @@ DEFUN(set_interface_ip_pool_cmd_func,
 			vty_out(vty, "Failed because pool has no subnet\n");
 		}else if (DHCP_NOT_FOUND_POOL == ret){
 			vty_out(vty, "Failed because not found pool\n");
+		}else if(DHCP_FAILOVER_STATE_RECOVER_FAIL_TO_BIND == ret){
+			vty_out(vty, "Failed because dhcp failover state :recover\n");
+
 		}else{
 			vty_out(vty, "Interface bind the pool failed\n");
 		}
@@ -3194,6 +3197,8 @@ DEFUN(del_interface_ip_pool_cmd_func,
 			vty_out(vty, "Failed because pool has no subnet\n");
 		}else if (DHCP_NOT_FOUND_POOL == ret){
 			vty_out(vty, "Failed because not found pool\n");
+		}else if(DHCP_FAILOVER_STATE_RECOVER_FAIL_TO_BIND == ret){
+			vty_out(vty, "Failed because dhcp failover state :recover\n");
 		}else{
 			vty_out(vty, "Interface unbind the pool failed\n");
 		}

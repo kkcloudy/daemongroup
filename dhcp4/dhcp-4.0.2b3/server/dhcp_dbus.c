@@ -222,7 +222,7 @@ extern unsigned int dhcp_optimize_enable;
    The local system administrator may choose to manually release network
    addresses assigned to BOOTP clients.
 */
-extern int dhcp_bootp_enable;		/* bootp support. 0 : disabel, !0 enable */
+extern int dhcp_bootp_enable;		/* bootp support. 0 : disabel, !0 enable */;
 
 /*return 0 means interface is exist */
 
@@ -670,6 +670,50 @@ static int check_mask(char *mask)
 	}
 }
 #endif
+const char *dcli_dhcp_failover_state_print (enum failover_state state)
+{
+	switch (state) {
+	      default:
+	      case unknown_state:
+		return "unknown-state";
+
+	      case partner_down:
+		return "partner-down";
+
+	      case normal:
+		return "normal";
+
+	      case conflict_done:
+		return "conflict-done";
+
+	      case communications_interrupted:
+		return "communications-interrupted";
+
+	      case resolution_interrupted:
+		return "resolution-interrupted";
+
+	      case potential_conflict:
+		return "potential-conflict";
+
+	      case recover:
+		return "recover";
+
+	      case recover_done:
+		return "recover-done";
+
+	      case recover_wait:
+		return "recover-wait";
+
+	      case shut_down:
+		return "shutdown";
+
+	      case paused:
+		return "paused";
+
+	      case startup:
+		return "startup";
+	}
+}
 
 
 /**********************************************************************************
@@ -721,7 +765,27 @@ int check_interfaces_ip_address(char *name)
 
 	return 0;
 }
+int check_dhcp_failover_state(char *ifname)
+{
+	dhcp_failover_state_t *state = NULL;
+	unsigned int local_failover_state = 0,peer_failover_state = 0;
+	//int i = 0;
+	
+	//backup = failover_backup_list_head.next;
+	for (state = failover_states; state; state = state->next){
+		if (strcmp(state->name, ifname)) {
+			continue;
+		}
+		local_failover_state = state->me.state;
+		peer_failover_state = state->partner.state;
+		log_debug("ip pool subnode state ,local: %s,peer: %s\n",dcli_dhcp_failover_state_print(local_failover_state)
+			,dcli_dhcp_failover_state_print(peer_failover_state));
+		if((recover == local_failover_state)&&(recover == peer_failover_state))
+			return 0;	
+	}
 
+	return 1;
+}
 int dhcp_dbus_parse_ifname(struct distributed_iface_info *iface_info, char *ifname)
 {
 	int slotid = 0, vrrpid = 0, ifnameid = 0;
@@ -5827,7 +5891,17 @@ dhcp_dbus_set_interface_pool
 		log_error("pool %s has no subnet, set interface %s pool failed.\n", poolName, ifname);
 		goto out;
 	}
-
+	if (poolnode->headsubnet) {
+		subnode = poolnode->headsubnet;						
+		if(subnode->owned_failover.name){
+			//memcpy(subnode->owned_failover.name, "jbjb",strlen("jbjb"));
+			if(0 == check_dhcp_failover_state(subnode->owned_failover.name)){
+				log_error("dhcp failover state : recover ,can not bind or unbind ip pool\n");
+				op_ret = DHCP_FAILOVER_STATE_RECOVER_FAIL_TO_BIND;
+				goto out;
+			}
+		}
+	}
 	/* interface bind pool */
 	if (SET_INTERFACE_IP_POOL == add) {
 		/*check pool bind state */
