@@ -1338,6 +1338,11 @@ struct wtp{
 
 	//for let-fi
 	unsigned char lte_fi_quit_reason;
+    char * lte_switch_date;
+	char * lte_mac;
+	unsigned short band;
+	char * cell_id;
+	char * lte_uplink_mode;
 };
 typedef struct wtp WID_WTP;
 

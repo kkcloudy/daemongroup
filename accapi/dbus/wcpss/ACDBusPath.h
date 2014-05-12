@@ -617,7 +617,7 @@ char WID_TRAP_INTERFACE[PATH_LEN]=	"aw.trap";
 
 char WID_DBUS_TRAP_WID_WTP_ENTER_IMAGEDATA_STATE[PATH_LEN]=		"wid_wtp_enter_imagedata_state";
 char WID_DBUS_TRAP_WID_WTP_IMAGEDATA_ERROR[PATH_LEN]=		"wid_wtp_enter_imagedata_error";
-
+char WID_DBUS_TRAP_WID_LTE_FI_UPLINK_SWITCH[PATH_LEN]=      "wid_dbus_trap_lte_fi_uplink_switch";
 char WID_DBUS_TRAP_WID_WTP_CHANNEL_CHANGE[PATH_LEN]=		"wid_wtp_channel_change";
 char WID_DBUS_TRAP_WID_WLAN_ENCRYPTION_TYPE_CHANGE[PATH_LEN]=		"wid_wlan_encryption_type_change";
 char WID_DBUS_TRAP_WID_WLAN_PRESHARED_KEY_CHANGE[PATH_LEN]=		"wid_wlan_preshared_key_change";
