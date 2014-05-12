@@ -29,7 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *
 *******************************************************************************/
 #include "wcpss/waw.h"
-
+#include <string.h>
 #include "wcpss/wid/WID.h"
 #include "CWAC.h"
 #include "ACDbus_handler.h"
@@ -4097,6 +4097,11 @@ CWBool CWParseLTEFITrapInfo(CWProtocolMessage *msgPtr, int len, int wtpindex) {
 	unsigned char subtype;
 	int oldOffset;
 	unsigned char quit_reason;
+	char * switch_date;
+	char * LTE_mac;
+	unsigned short band;
+	char * lte_id;
+	char * MODE;
 	oldOffset = msgPtr->offset;
 	//get subtype
 	subtype = CWProtocolRetrieve8(msgPtr);
@@ -4114,7 +4119,38 @@ CWBool CWParseLTEFITrapInfo(CWProtocolMessage *msgPtr, int len, int wtpindex) {
 			_CWCloseThread(wtpindex);
 			break;
 		case 2:
-			
+			 
+			 switch_date = CWProtocolRetrieveStr(msgPtr,LTE_UPLINK_DATE_LEN);
+			 wid_syslog_debug_debug(WID_DEFAULT, "switch_date is %s\n", *switch_date);
+			 AC_WTP[wtpindex]->lte_switch_date = switch_date;
+
+			 
+			 LTE_mac = CWProtocolRetrieveStr(msgPtr,LTE_UPLINK_MAC_LEN);
+			 wid_syslog_debug_debug(WID_DEFAULT, "LTE_mac is %s\n", *LTE_mac);
+			 AC_WTP[wtpindex]->lte_mac = LTE_mac;
+
+			 
+			 band = CWProtocolRetrieve16(msgPtr);
+			 wid_syslog_debug_debug(WID_DEFAULT, "band is %d\n", band);
+             AC_WTP[wtpindex]->band = band;
+
+			 
+			 lte_id = CWProtocolRetrieveStr(msgPtr,LTE_ID_LEN);	
+			 wid_syslog_debug_debug(WID_DEFAULT, "ID is %s\n", *lte_id);
+			 AC_WTP[wtpindex]->cell_id = lte_id;
+
+			 
+			 MODE = CWProtocolRetrieveStr(msgPtr,LTE_UPLINK_MODE_LEN);
+			 wid_syslog_debug_debug(WID_DEFAULT, "MODE is %s\n", *MODE);
+			 AC_WTP[wtpindex]->lte_uplink_mode = MODE;
+			 
+			 wid_dbus_trap_wid_lte_fi_uplink_switch(wtpindex);
+			 
+			 CW_FREE_OBJECT_WID(MODE);
+			 CW_FREE_OBJECT_WID(lte_id);
+			 CW_FREE_OBJECT_WID(LTE_mac);
+			 CW_FREE_OBJECT_WID(switch_date);
+			 
 			break;
 		default:
 			wid_syslog_info("unknown subtype:%u\n", subtype);

@@ -3331,6 +3331,12 @@ void CWDownWTP(unsigned int WTPIndex){
 		wid_syslog_err("trap lte-fi quit reason to snmp\n");
 		AC_WTP[WTPIndex]->lte_fi_quit_reason = 0;
 	}
+
+	if (gtrapflag >= 1 && AC_WTP[WTPIndex]->lte_switch_date) {
+		wid_dbus_trap_wid_lte_fi_uplink_switch(WTPIndex);
+		wid_syslog_err("trap lte-fi sys-switch to snmp\n");
+		AC_WTP[WTPIndex]->lte_switch_date = NULL;
+	}
 	
 	unsigned int rand_num = rand() * now % 100;
 	

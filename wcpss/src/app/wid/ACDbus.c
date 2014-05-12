@@ -83997,6 +83997,184 @@ int wid_dbus_init(void)
 	return TRUE;
   
 }
+int wid_dbus_trap_wid_lte_fi_uplink_switch(unsigned int wtpindex)
+{
+	DBusMessage *query;	
+	DBusError err;
+	unsigned int TID = wtpindex%THREAD_NUM;
+	wid_syslog_debug_debug(WID_DBUS,"wid_dbus_trap_wid_lte_fi_uplink_switch tid %d\n",TID);
+	/*store sn&mac of ap*/
+	unsigned char *mac = NULL;
+	mac = (unsigned char *)WID_MALLOC(MAC_LEN+1);
+	if (NULL == mac)
+	{
+		return -1;
+	}
+	memset(mac,0,MAC_LEN+1);
+	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->WTPMAC != NULL))
+	{
+		memcpy(mac,AC_WTP[wtpindex]->WTPMAC,MAC_LEN);
+	}
+
+	char *sn = NULL;
+	sn = (char *)WID_MALLOC(NAS_IDENTIFIER_NAME);
+	if (NULL == sn)
+	{
+		CW_FREE_OBJECT_WID(mac);
+		return -1;
+	}
+	memset(sn,0,NAS_IDENTIFIER_NAME);
+	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->WTPSN != NULL))
+	{
+		memcpy(sn,AC_WTP[wtpindex]->WTPSN,strlen(AC_WTP[wtpindex]->WTPSN));
+	}
+
+	
+	char *date = NULL;
+	date = (char *)WID_MALLOC(sizeof(char)*LTE_UPLINK_DATE_LEN);
+	if (NULL == date)
+	{
+		CW_FREE_OBJECT_WID(mac);
+		CW_FREE_OBJECT_WID(sn);
+		return -1;
+	}
+	memset(date,0,LTE_UPLINK_DATE_LEN);
+	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->lte_switch_date!= NULL))
+	{
+		memcpy(date,AC_WTP[wtpindex]->lte_switch_date,LTE_UPLINK_DATE_LEN);
+    }
+
+	
+	char *lte_mac = NULL;
+	lte_mac = (char *)WID_MALLOC(sizeof(char)*LTE_UPLINK_MAC_LEN);
+	if (NULL == lte_mac)
+	{
+		CW_FREE_OBJECT_WID(mac);
+		CW_FREE_OBJECT_WID(sn);
+        CW_FREE_OBJECT_WID(date);
+		return -1;
+	}
+	memset(lte_mac,0,LTE_UPLINK_MAC_LEN);
+	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->lte_mac != NULL))
+	{
+		memcpy(lte_mac,AC_WTP[wtpindex]->lte_mac,LTE_UPLINK_MAC_LEN);
+	}
+
+	
+	unsigned short band;
+	if(AC_WTP[wtpindex] != NULL)
+	{
+		band = AC_WTP[wtpindex]->band;
+	}
+
+	
+	char *ID = NULL;
+	ID = (char *)WID_MALLOC(sizeof(char)*LTE_ID_LEN);
+	if(NULL == ID)
+	{
+		CW_FREE_OBJECT_WID(mac);
+		CW_FREE_OBJECT_WID(sn);
+        CW_FREE_OBJECT_WID(date);
+		CW_FREE_OBJECT_WID(lte_mac);
+		return -1;
+	}
+	memset(ID,0,LTE_ID_LEN);
+	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->cell_id!= NULL))
+	{
+		memcpy(ID,AC_WTP[wtpindex]->cell_id,LTE_ID_LEN);
+	}
+
+	
+	char *MODE = NULL;
+	MODE = (char *)WID_MALLOC(sizeof(char)*LTE_UPLINK_MODE_LEN);
+	if(NULL == MODE)
+	{
+		CW_FREE_OBJECT_WID(mac);
+		CW_FREE_OBJECT_WID(sn);
+        CW_FREE_OBJECT_WID(date);
+		CW_FREE_OBJECT_WID(lte_mac);
+		CW_FREE_OBJECT_WID(ID);
+		return -1;
+	}
+	memset(MODE,0,LTE_UPLINK_MODE_LEN);
+	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->lte_uplink_mode != NULL))
+	{
+		memcpy(MODE,AC_WTP[wtpindex]->lte_uplink_mode,LTE_UPLINK_MODE_LEN);
+	}
+	/* zhangshu add for netid & vrrpid, 2010-10-13 */
+    char *netid = NULL;
+    
+	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->netid != NULL))
+	{
+	    netid = (char *)WID_MALLOC(strlen(AC_WTP[wtpindex]->netid)+1);
+		if (NULL == netid)
+		{
+			CW_FREE_OBJECT_WID(mac);
+			CW_FREE_OBJECT_WID(sn);
+            CW_FREE_OBJECT_WID(date);
+			CW_FREE_OBJECT_WID(lte_mac);
+			CW_FREE_OBJECT_WID(ID);
+			CW_FREE_OBJECT_WID(MODE);
+			return -1;
+		}
+	    memset(netid,0,(strlen(AC_WTP[wtpindex]->netid)+1));
+		memcpy(netid,AC_WTP[wtpindex]->netid,strlen(AC_WTP[wtpindex]->netid));
+	}
+	else
+	{
+	    netid = (char *)WID_MALLOC(sizeof(char)*12);
+		if (NULL == netid)
+		{
+			CW_FREE_OBJECT_WID(mac);
+			CW_FREE_OBJECT_WID(sn);
+			CW_FREE_OBJECT_WID(date);
+			CW_FREE_OBJECT_WID(lte_mac);
+			CW_FREE_OBJECT_WID(ID);
+			CW_FREE_OBJECT_WID(MODE);
+			return -1;
+		}
+	    memset(netid,0,12);
+		memcpy(netid,"defaultcode",strlen("defaultcode"));
+	}
+	unsigned int local_id = local;
+	unsigned int vrrp_id = vrrid;
+	/* zhangshu add end */
+	
+	query = dbus_message_new_signal(WID_TRAP_OBJPATH,\
+				WID_TRAP_INTERFACE,WID_DBUS_TRAP_WID_LTE_FI_UPLINK_SWITCH);
+	
+	dbus_error_init(&err);
+
+	dbus_message_append_args(query,
+						DBUS_TYPE_UINT32,&wtpindex,
+						DBUS_TYPE_STRING,&sn,
+						DBUS_TYPE_BYTE,&mac[0],
+						DBUS_TYPE_BYTE,&mac[1],
+						DBUS_TYPE_BYTE,&mac[2],
+						DBUS_TYPE_BYTE,&mac[3],
+						DBUS_TYPE_BYTE,&mac[4],
+						DBUS_TYPE_BYTE,&mac[5],
+						DBUS_TYPE_STRING,&date,
+						DBUS_TYPE_STRING,&lte_mac, 
+						DBUS_TYPE_UINT16,&band, 
+						DBUS_TYPE_STRING,&ID,
+						DBUS_TYPE_STRING,&MODE,
+						DBUS_TYPE_STRING,&netid, //zhangshu add 2010-10-13
+						DBUS_TYPE_UINT32,&vrrp_id, //zhangshu add 2010-10-13
+						DBUS_TYPE_UINT32,&local_id,
+						DBUS_TYPE_INVALID);
+	dbus_connection_send (wid_dbus_connection_t[TID],query,NULL);
+	
+	dbus_message_unref(query);
+	CW_FREE_OBJECT_WID(sn);
+	CW_FREE_OBJECT_WID(mac);
+	CW_FREE_OBJECT_WID(date);
+	CW_FREE_OBJECT_WID(lte_mac);
+	CW_FREE_OBJECT_WID(ID);
+	CW_FREE_OBJECT_WID(MODE);
+	CW_FREE_OBJECT_WID(netid);
+	return 0;
+}
 //when channel of a radio changed,send this trap
 int wid_dbus_trap_wtp_channel_change(unsigned char chan_past,unsigned char chan_curr,unsigned int radioid)
 {

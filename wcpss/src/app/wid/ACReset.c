@@ -141,6 +141,11 @@ CWBool ACEnterReset(int WTPIndex, CWProtocolMessage *msgPtr)
 			AC_WTP[WTPIndex]->image_data_step = 0;
 			AC_WTP[WTPIndex]->image_data_result = 0;
 			AC_WTP[WTPIndex]->lte_fi_quit_reason = 0;
+			AC_WTP[WTPIndex]->lte_switch_date = NULL;
+			AC_WTP[WTPIndex]->lte_mac = NULL;
+			AC_WTP[WTPIndex]->band = 0;
+			AC_WTP[WTPIndex]->cell_id = NULL;
+			AC_WTP[WTPIndex]->lte_uplink_mode = NULL;
 			syslog_wtp_log(WTPIndex, 0, "for update", 0);
 			if(gWIDLOGHN & 0x01)
 				syslog_wtp_log_hn(WTPIndex,0,0);

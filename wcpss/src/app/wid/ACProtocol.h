@@ -37,6 +37,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef __CAPWAP_ACProtocol_HEADER__
 #define __CAPWAP_ACProtocol_HEADER__
 
+#define LTE_UPLINK_DATE_LEN 24
+#define LTE_UPLINK_MAC_LEN 6
+#define LTE_ID_LEN 10
+#define LTE_UPLINK_MODE_LEN 8
+
 //#define UNUSED_RADIO_ID 	1000
  #define WTP_TYPE_DEFAULT_LEN 32
  typedef struct{
@@ -282,7 +287,7 @@ CWBool  CWAssembleIpMacReport(CWProtocolMessage *msgPtr,int wtpid);
 CWBool	CWAssembleTerminalDisturbInfoReport(CWProtocolMessage *msgPtr,int wtpid);
 CWBool  CWAssembleWtpEthMtu(CWProtocolMessage *msgPtr,int wtpid,unsigned char eth_index);
 void CWProtocolRetrieve64(CWProtocolMessage *msgPtr,unsigned long long *val) ;
-
+extern int wid_dbus_trap_wid_lte_fi_uplink_switch(unsigned int wtpindex);
 extern int wid_dbus_trap_wtp_ap_ACTimeSynchroFailure(int wtpindex,unsigned char flag);
 extern int wid_dbus_trap_wtp_channel_terminal_interference(int wtpindex,unsigned char radio_id, char chchannel,unsigned char mac[6]);
 extern int wid_dbus_trap_wtp_channel_terminal_interference_clear(int wtpindex,unsigned char radio_id, char chchannel,unsigned char mac[6]);
