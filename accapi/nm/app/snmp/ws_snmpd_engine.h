@@ -122,6 +122,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define wtpSoftWareUpdateSucceed			"wtpSoftWareUpdateSucceed"		//0.25
 #define wtpSoftWareUpdateFailed				"wtpSoftWareUpdateFailed"				//0.29
 #define wtpConfigurationErrorTrap			"wtpConfigurationErrorTrap"				//0.30
+/*wangchao add*/
+#define wtpLteOnlineTrap					"ApLteOnlineTrap"					//0.31
+#define wtpLteOfflineTrap					"ApLteOfflineTrap"					//0.32
 
 
 //ap app
@@ -353,8 +356,9 @@ enum {
 	WTPUSERLOGOOFFABNORMAL = 45,		/*45*/
 	WTPCONFIGERROR=51,				/*51*/
 	WTPUSERTAFFICOVERLOAD,				/*52*/
-	WTPUNAUTHORIZEDSTAMACTRAP,				/*53*/
-	MAXAPTRAPNUM,
+	WTPUNAUTHORIZEDSTAMACTRAP,			/*53*/
+	MAXAPTRAPNUM,						/*54*/
+	WTPLTEONLINEOFFLINE					/*55 wangchao*/
 };
 
 enum {

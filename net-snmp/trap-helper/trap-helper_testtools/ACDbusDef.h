@@ -742,6 +742,8 @@ Wid config infomation
 #define WID_DBUS_TRAP_WID_AP_ATH_ERROR		"wid_dbus_trap_ap_ath_error"
 #define WID_DBUS_TRAP_WID_AP_RRM_STATE_CHANGE		"wid_dbus_trap_ap_rrm_state_change"
 #define WID_DBUS_TRAP_WID_AP_RUN_QUIT		"wid_dbus_trap_ap_run_quit"
+/*wangchao*/
+#define WID_DBUS_TRAP_WID_LTE_FI_RUN_QUIT		 "wid_dbus_trap_lte_fi_run_quit"
 
 #define WID_DBUS_CONF_METHOD_SHOW_WID_WTP_SAMPLE_THROUGHPUT_INFO		"wid_dbus_show_sample_throughput_info"
 #define WID_DBUS_CONF_METHOD_SHOW_WID_WTP_WLAN_VLAN_INFO		"wid_dbus_show_wlan_vlan_info"

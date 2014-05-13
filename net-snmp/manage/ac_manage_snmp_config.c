@@ -169,7 +169,11 @@ TRAP_DETAIL_CONFIG ALL_TRAP[] = {
 	{acBoardExtractTrap,						"板卡拔出告警",					"ac board pull out",						0},
 	{acBoardInsertTrap,							"板卡插入告警",					"ac board insert",							0},
 	{acPortDownTrap,							"端口down告警",					"ac port down",								0},
-	{acPortUpTrap,								"端口up告警",					"ac port up",								0}
+	{acPortUpTrap,								"端口up告警",					"ac port up",								0},
+	
+		//0.31	wangchao	
+	{wtpLteOnlineTrap,							"AP_LTE上线告警",				"AP Lte status is running",		0},
+	{wtpLteOfflineTrap,							"AP_LTE下线告警",				"AP Lte status is quit",		0}	
 };
 
 

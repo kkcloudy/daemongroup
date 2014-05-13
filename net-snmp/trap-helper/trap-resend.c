@@ -465,6 +465,41 @@ void trap_ap_offline_clear_aptrap_items (hashtable *ht, ApTrap *aptrap)
 	return ;
 }
 
+/*wangchao add*/
+void trap_ap_lte_offline_clear_aptrap_items (hashtable *ht, ApTrap *aptrap)
+{
+	TRAP_TRACE_LOG(LOG_DEBUG,"entry.\n", ht , aptrap);
+	int trap_index=0;
+	int i=0;
+	TrapDescr *tDescr = NULL;
+
+	if (NULL == ht || NULL == aptrap)
+		return ;
+
+	tDescr = trap_descr_list_get_item(ht, wtpLteOfflineTrap);
+	trap_index = tDescr->trap_index;
+	
+	for (i=0 ; i <= aptrap->num ; i++){
+		
+		if (NULL != aptrap->aptrap_item[i].Descr){
+
+			if (trap_index == i)
+				continue;
+
+			aptrap->aptrap_item[i].Descr=NULL;
+		}
+
+		if (NULL != aptrap->aptrap_item[i].resend_node){
+			
+			trap_resend_remove_node(aptrap->aptrap_item[i].resend_node);
+			trap_resend_free_node(&(aptrap->aptrap_item[i].resend_node));
+		}
+	}
+
+	return ;
+}
+
+
 void trap_clear_aptrap_items ( ApTrap *ap )
 {
 	TRAP_TRACE_LOG(LOG_DEBUG,"entry.\n");

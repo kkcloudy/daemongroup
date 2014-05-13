@@ -4877,6 +4877,103 @@ int ap_run_quit_state(DBusMessage *message)
 	return TRAP_SIGNAL_HANDLE_SEND_TRAP_OK;
 }
 
+
+/*wangchao add*/
+int ap_lte_run_quit_state(DBusMessage * message)
+{
+	cmd_test_out(wtpLteOnlineTrap);
+
+	DBusError error;
+	unsigned int wtpindex;
+	unsigned char quit_reason= 2;
+	char *wtpsn;
+	unsigned char wtpmac[MAC_LEN];
+	char *netid = "";
+	unsigned int local_id = 0;
+	unsigned int instance_id = 0;
+
+	
+	dbus_error_init(&error);
+	if (!(dbus_message_get_args(message, &error,
+							DBUS_TYPE_UINT32, &wtpindex,
+							DBUS_TYPE_STRING, &wtpsn,
+							DBUS_TYPE_BYTE, &quit_reason,// 0-quit /1-run
+							DBUS_TYPE_BYTE, &wtpmac[0],
+							DBUS_TYPE_BYTE, &wtpmac[1],
+							DBUS_TYPE_BYTE, &wtpmac[2],
+							DBUS_TYPE_BYTE, &wtpmac[3],
+							DBUS_TYPE_BYTE, &wtpmac[4],
+							DBUS_TYPE_BYTE, &wtpmac[5],
+							DBUS_TYPE_STRING,&netid,
+							DBUS_TYPE_UINT32,&instance_id,
+							DBUS_TYPE_UINT32,&local_id,
+							DBUS_TYPE_INVALID)))
+	{
+		trap_syslog(LOG_WARNING, "Get args failed, %s, %s\n", dbus_message_get_member(message), error.message);
+		dbus_error_free(&error);
+		return TRAP_SIGNAL_HANDLE_GET_ARGS_ERROR;
+	}
+	trap_syslog(LOG_INFO, "Handling signal %s, wtpindex=%d, wtpsn=%s, netid=%s, local_id = %d, instance_id=%d,quit_reason=%d, wtpmac=%02X-%02X-%02X-%02X-%02X-%02X\n",
+				dbus_message_get_member(message), wtpindex, wtpsn,netid, local_id, instance_id, quit_reason,
+				wtpmac[0], wtpmac[1], wtpmac[2], wtpmac[3], wtpmac[4], wtpmac[5]);
+
+	
+	if( !trap_is_ap_trap_enabled(&gInsVrrpState, local_id, instance_id) ) //add 2010-10-20
+		return TRAP_SIGNAL_HANDLE_HANSI_BACKUP;
+
+	TrapDescr *tDescr = NULL;
+	TrapData *tData = NULL;
+
+	if (1==quit_reason)
+	{	
+		tDescr = trap_descr_list_get_item(global.gDescrList_hash, wtpLteOnlineTrap);
+	}
+	else if ( 0==quit_reason )
+	{
+		tDescr = trap_descr_list_get_item(global.gDescrList_hash, wtpLteOfflineTrap);
+		if ( NULL!=global.wtp[local_id][instance_id] && NULL!=global.wtp[local_id][instance_id]->ap && NULL!=global.wtp[local_id][instance_id]->ap[wtpindex] )
+		{
+			trap_ap_lte_offline_clear_aptrap_items(global.gDescrList_hash, global.wtp[local_id][instance_id]->ap[wtpindex]);
+		}
+	}
+
+	if (NULL == tDescr || 0==tDescr->switch_status)
+		return TRAP_SIGNAL_HANDLE_DESCR_SWITCH_OFF;
+
+	INCREASE_TIMES(tDescr);
+	
+
+	TRAP_SIGNAL_AP_RESEND_UPPER_MACRO(wtpindex, tDescr, local_id, instance_id);
+
+	tData = trap_data_new_from_descr(tDescr);
+	
+	char mac_str[MAC_STR_LEN];
+	get_ap_mac_str(mac_str, sizeof(mac_str), wtpmac);
+	
+	char mac_oid[MAX_MAC_OID];
+	get_ap_mac_oid(mac_oid, sizeof(mac_oid), mac_str);
+	
+	
+	trap_data_append_param_str(tData, "%s s %s",	EI_MAC_TRAP_DES,			mac_str);
+	trap_data_append_param_str(tData, "%s%s s %s",	EI_SN_TRAP_DES, 			mac_oid, wtpsn);
+	trap_data_append_param_str(tData, "%s%s s %s",	WTP_NET_ELEMENT_CODE_OID,	mac_oid, netid);
+
+	trap_syslog(LOG_INFO,"mac_str == %s, wtpsn == %s, netid == %s\n", mac_str,wtpsn,netid);
+	
+	trap_data_append_common_param(tData, tDescr);
+
+	
+	trap_send(gInsVrrpState.instance[local_id][instance_id].receivelist, &gV3UserList, tData);
+
+	TRAP_SIGNAL_AP_RESEND_LOWER_MACRO(wtpindex , tDescr, tData, local_id, instance_id);
+
+//	trap_data_destroy(tData);
+	
+	return TRAP_SIGNAL_HANDLE_SEND_TRAP_OK;
+}
+
+
+
 int ap_find_unsafe_essid(DBusMessage *message)
 {
 //WID_DBUS_TRAP_WID_WTP_FIND_UNSAFE_ESSID
@@ -7088,6 +7185,10 @@ void trap_signal_register_all(TrapList *list, hashtable *ht)
 	tSignal_tmp=trap_signal_list_register(list, WID_DBUS_TRAP_WID_WTP_UPDATE_FAIL, wtp_software_update_failed_func);
 	INIT_SIGNAL_HASH_LIST(tSignal_tmp,ht);
 
+	/*wangchao add*/
+	tSignal_tmp=trap_signal_list_register(list, WID_DBUS_TRAP_WID_LTE_FI_RUN_QUIT, ap_lte_run_quit_state);
+	INIT_SIGNAL_HASH_LIST(tSignal_tmp,ht);	
+
 /*ac*/	
 	tSignal_tmp=trap_signal_list_register(list, AC_SAMPLE_OVER_THRESHOLD_SIGNAL_CPU, 			ac_cpu_over_threshold_and_clear_func);
 	INIT_SIGNAL_HASH_LIST(tSignal_tmp,ht);
@@ -7318,7 +7419,15 @@ void trap_descr_register_all(TrapList *list, hashtable *ht)
 	descr_tmp=trap_descr_list_register(list, WTPCONFIGERROR, wtpConfigurationErrorTrap, TRAP_SRC_AP, ".0.30", TRAP_TYPE_ENVIRO, 
 									TRAP_LEVEL_MAJOR, "wtp_configuration_error", "wtp_configuration_error");
 	INIT_DESCR_HASH_LIST( descr_tmp , ht );
-	
+
+	/*wangchao*/
+	descr_tmp=trap_descr_list_register(list, WTPLTEONLINEOFFLINE, wtpLteOnlineTrap, TRAP_SRC_AP, ".0.31", TRAP_TYPE_ENVIRO, 
+									TRAP_LEVEL_CRITIC, "wtp_LTE_is_running", "wtp_LTE_is_running");
+	INIT_DESCR_HASH_LIST( descr_tmp , ht );
+
+	descr_tmp=trap_descr_list_register(list, WTPLTEONLINEOFFLINE, wtpLteOfflineTrap, TRAP_SRC_AP, ".0.32", TRAP_TYPE_ENVIRO, 
+									TRAP_LEVEL_CRITIC, "wtp_LTE_is_quit", "wtp_LTE_is_quit");
+	INIT_DESCR_HASH_LIST( descr_tmp , ht );	
 //ap app
 //1.1
 	descr_tmp=trap_descr_list_register( list, WTPCHANNELOBSTRUCT, wtpChannelObstructionTrap, TRAP_SRC_AP, ".1.1", TRAP_TYPE_ENVIRO, 
