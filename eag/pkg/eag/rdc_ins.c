@@ -1022,6 +1022,50 @@ replyx:
 	return reply;
 }
 
+DBusMessage *
+rdc_dbus_method_check_status(
+				DBusConnection *conn, 
+				DBusMessage *msg, 
+				void *user_data )
+{
+	rdc_ins_t *rdcins = NULL;
+	DBusMessage *reply = NULL;
+	DBusMessageIter iter = {0};
+	DBusError err = {0};
+	int ret = -1;
+	//int status = 0;
+	
+	reply = dbus_message_new_method_return(msg);
+	if (NULL == reply) {
+		eag_log_err("rdc_dbus_method_check_status "
+					"DBUS new reply message error");
+		return NULL;
+	}
+
+	rdcins = (rdc_ins_t *)user_data;
+	if (NULL == rdcins) {
+		eag_log_err("rdc_dbus_method_check_status user_data error");
+		ret = EAG_ERR_UNKNOWN;
+		goto replyx;
+	}
+	
+	dbus_error_init(&err);
+	//status = rdcins->status;
+	ret = EAG_RETURN_OK;
+
+replyx:
+	dbus_message_iter_init_append(reply, &iter);
+	dbus_message_iter_append_basic(&iter,
+								DBUS_TYPE_UINT32, &ret);
+	/*
+	if (EAG_RETURN_OK == ret) {
+		dbus_message_iter_append_basic(&iter,
+									DBUS_TYPE_INT32, &status);
+	}
+	*/
+	return reply;
+}
+
 static DBusMessage *
 rdc_dbus_method_get_base_conf(
 				DBusConnection *conn,
@@ -1372,6 +1416,8 @@ rdc_register_all_dbus_method(rdc_ins_t *rdcins)
 		RDC_DBUS_INTERFACE, rdc_dbus_method_get_radius_conf, rdcins);
 	eag_dbus_register_method(rdcins->eagdbus,
 		RDC_DBUS_INTERFACE, rdc_dbus_method_set_status, rdcins);
+	eag_dbus_register_method(rdcins->eagdbus,
+		RDC_DBUS_INTERFACE, rdc_dbus_method_check_status, rdcins);
 	eag_dbus_register_method(rdcins->eagdbus,
 		RDC_DBUS_INTERFACE, rdc_dbus_method_get_base_conf, rdcins);
 	eag_dbus_register_method(rdcins->eagdbus,

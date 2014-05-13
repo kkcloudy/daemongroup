@@ -130,11 +130,17 @@ struct Hmd_Inst_Mgmt{
 	int asd_check;
 	int wsm_check;
 	int delete_flag;//init 0,is deleting 1
+	int eag_check;
+	int rdc_check;
+	int pdc_check;
 	unsigned int iuh_service_switch;
 	unsigned int iu_service_switch;
 	int wid_check_timeout;
 	int asd_check_timeout;
 	int wsm_check_timeout;
+	int eag_check_timeout;
+	int rdc_check_timeout;
+	int pdc_check_timeout;
 };
 struct Hmd_L_Inst_Mgmt_Summary{
 	int Inst_ID;
@@ -180,11 +186,17 @@ struct Hmd_L_Inst_Mgmt{
 	int asd_check;
 	int wsm_check;
 	int delete_flag;/*1 is deleting,0 other*/
+	int eag_check;
+	int rdc_check;
+	int pdc_check;
 	unsigned int iuh_service_switch;
 	unsigned int iu_service_switch;
 	int wid_check_timeout;
 	int asd_check_timeout;
 	int wsm_check_timeout;
+	int eag_check_timeout;
+	int rdc_check_timeout;
+	int pdc_check_timeout;
 };
 
 
@@ -262,7 +274,10 @@ typedef enum{
 	HMD_DHCP_TO_START,
 	HMD_DHCP_CHECKING,
 	HMD_NOTICE_VRRP_STATE_CHANGE_MASTER,
-	HMD_NOTICE_VRRP_STATE_CHANGE_BAK
+	HMD_NOTICE_VRRP_STATE_CHANGE_BAK,
+	HMD_RELOAD_CONFIG_FOR_EAG,
+	HMD_RELOAD_CONFIG_FOR_PDC,
+	HMD_RELOAD_CONFIG_FOR_RDC
 }HmdOP;
 
 typedef enum{
@@ -355,6 +370,28 @@ struct LicenseMgmt{
 };
 
 
+enum hmd_reload_type
+{
+	HMD_RELOAD_MOD_NONE = 0,
+	HMD_RELOAD_MOD_WCPSS = 1,	/* wcpss need restart */
+	HMD_RELOAD_MOD_EAG = 2,
+	HMD_RELOAD_MOD_DHCP = 3,
+	HMD_RELOAD_MOD_RDC = 4,
+	HMD_RELOAD_MOD_PDC = 5,
+};
+
+#define SEM_PATHNAME_HMD	"/opt/bin"
+#define SEM_PROJ_ID_HMD		0x02
+
+/* semaphore = vrrid * HMD_SEM_LOCK_MAX + LOCK_TYPE */
+enum hmd_lock_type
+{
+	HMD_SEM_LOCK_WCPSS = 0,
+	HMD_SEM_LOCK_EAG = 1,
+	HMD_SEM_LOCK_DHCP = 2,
+	HMD_SEM_LOCK_RDC = 3,
+	HMD_SEM_LOCK_MAX = 4,
+};
 extern struct Hmd_Board_Info *HOST_BOARD;
 extern struct Hmd_Board_Info *HMD_BOARD[MAX_SLOT_NUM];
 extern struct Hmd_L_Inst_Mgmt_Summary *HMD_L_HANSI[MAX_INSTANCE];

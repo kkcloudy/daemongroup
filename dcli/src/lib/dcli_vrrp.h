@@ -47,7 +47,7 @@ typedef enum continous_discrete_type{
 												 */
 #define DCLI_VRRP_OBJPATH_LEN		(64)		/* vrrp obj path length of special vrrp instance */
 #define DCLI_VRRP_DBUSNAME_LEN		(64)		/* vrrp dbus name length of special vrrp instance */
-#define DCLI_VRRP_SYS_COMMAND_LEN	(64)		/* vrrp used shell command length */
+#define DCLI_VRRP_SYS_COMMAND_LEN	(128)		/* vrrp used shell command length */
 
 #define DCLI_VRRP_INSTANCE_CHECK_FAILED	(-1)
 #define DCLI_VRRP_INSTANCE_CREATED		(1)		/* VRRP instance have created.		*/

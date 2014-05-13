@@ -1477,6 +1477,79 @@ int dcli_vrrp_check_service_started
 	return ret;
 }
 
+
+int dcli_vrrp_check_portal_service_started
+(
+	struct vty* vty,
+	char *service_name,
+	unsigned int profileId,
+	int is_local
+)
+{
+	int ret = 0;
+	int fd = -1;
+	int iCnt = 0;	
+	char commandBuf[DCLI_VRRP_SYS_COMMAND_LEN] = {0};
+	char readBuf[4] = {0};
+
+	if (!vty || !service_name) {
+		return DCLI_VRRP_INSTANCE_CHECK_FAILED;
+	}
+
+	/* check if hansi is running or not 
+	 * with following shell command:
+	 *	'ps -ef | grep \"%s %d$\" | wc -l'
+	 *	if count result gt 1, running, else not running.
+	 */
+	sprintf(commandBuf, "sudo ps auxww | grep \"%s %d %d$\" | grep -v grep | wc -l > /var/run/%s%d_%d.boot",
+						service_name, is_local, profileId, service_name,is_local, profileId);
+	ret = system(commandBuf);
+	if (ret) {
+		vty_out(vty, "%% Check %s instance %d failed!\n", service_name, profileId);
+		return DCLI_VRRP_INSTANCE_CHECK_FAILED;
+	}
+
+	/* get the process # */
+	memset(commandBuf, 0, DCLI_VRRP_SYS_COMMAND_LEN);
+	sprintf(commandBuf, "/var/run/%s%d_%d.boot", service_name, is_local, profileId);
+	if ((fd = open(commandBuf, O_RDONLY))< 0) {
+		vty_out(vty, "%% Check %s instance %d count failed!\n", service_name, profileId);
+		return DCLI_VRRP_INSTANCE_CHECK_FAILED;
+	}
+
+	memset(readBuf, 0, 4);
+	read(fd, readBuf, 4);
+	iCnt = strtoul(readBuf, NULL, 10);
+	//vty_out(vty, "%s %d thread count %d\n", service_name, profileId, iCnt);
+
+	if (!strncmp(service_name, "had", 3)) {
+		if (DCLI_VRRP_THREADS_CNT == iCnt) {
+			ret = DCLI_VRRP_INSTANCE_CREATED;
+		}
+		else {
+			ret = DCLI_VRRP_INSTANCE_NO_CREATED;
+		}
+	}else {
+		/* for wcpss, include wid/asd/wsm process */
+		if (1 <= iCnt) {
+			ret = DCLI_VRRP_INSTANCE_CREATED;
+		}
+		else {
+			ret = DCLI_VRRP_INSTANCE_NO_CREATED;
+		}
+	}	
+	
+	/* release file resources */
+	close(fd);
+
+	memset(commandBuf, 0, DCLI_VRRP_SYS_COMMAND_LEN);
+	sprintf(commandBuf, "sudo rm /var/run/%s%d_%d.boot", service_name,is_local, profileId);
+	system(commandBuf);
+
+	return ret;
+}
+
+
 /*
  *******************************************************************************
  *dcli_vrrp_config_service_disable()

@@ -1486,6 +1486,27 @@ void * HMDManagementS(){
 					hmd_syslog_info("global switch --> Master board end dealing with vrrp change information\n");
 				}
 				break;
+			case HMD_RELOAD_CONFIG_FOR_EAG:
+				SlotID = tmsg->S_SlotID;
+				InstID = tmsg->InstID;
+				hmd_syslog_info("reload config for eag:slot %d inst %d\n", SlotID, InstID);
+				hmd_eag_reload(SlotID, 0, InstID);
+				hmd_syslog_info("reload config for eag done\n");
+				break;
+			case HMD_RELOAD_CONFIG_FOR_PDC:
+				SlotID = tmsg->S_SlotID;
+				InstID = tmsg->InstID;
+				hmd_syslog_info("reload config for pdc:slot %d inst %d\n", SlotID, InstID);
+				hmd_pdc_reload(SlotID, 0, InstID);
+				hmd_syslog_info("reload config for pdc done\n");
+				break;
+			case HMD_RELOAD_CONFIG_FOR_RDC:
+				SlotID = tmsg->S_SlotID;
+				InstID = tmsg->InstID;
+				hmd_syslog_info("reload config for rdc:slot %d inst %d\n", SlotID, InstID);
+				hmd_rdc_reload(SlotID, 0, InstID);
+				hmd_syslog_info("reload config for rdc done\n");
+				break;
 			default :
 				break;
 		}

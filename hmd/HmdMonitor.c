@@ -377,7 +377,7 @@ HMDBool hansi_wireless_checking(int InstID, int islocaled){
 	}
 	if((NULL == wid_check)||(NULL == asd_check)||(NULL == wsm_check)){
 		hmd_syslog_err("%s,%d,connection is NULL.\n",__func__,__LINE__);
-		return HMD_FALSE;
+		return HMD_RELOAD_MOD_WCPSS;
 	}
 	HMDReInitDbusPath(InstID,WID_DBUS_BUSNAME,BUSNAME,islocaled);
 	HMDReInitDbusPath(InstID,WID_DBUS_OBJPATH,OBJPATH,islocaled);
@@ -406,7 +406,7 @@ HMDBool hansi_wireless_checking(int InstID, int islocaled){
 			*asd_check_timeout = 0;
 			*wsm_check_timeout = 0;
 			hmd_syslog_crit("%s  InstID %d islocaled %d wid maybe wrong",__func__,InstID,islocaled);
-			return HMD_FALSE;
+			return HMD_RELOAD_MOD_WCPSS;
 		}
 		hmd_syslog_info("%s  InstID %d islocaled %d  wid_check %d,asd_check %d,wsm_check %d",__func__,InstID,islocaled,*wid_check,*asd_check,*wsm_check);
 		hmd_syslog_info("%s  InstID %d islocaled %d  wid_check_timeout %d,asd_check_timeout %d,wsm_check_timeout %d",__func__,InstID,islocaled,*wid_check_timeout,*asd_check_timeout,*wsm_check_timeout);
@@ -444,7 +444,7 @@ HMDBool hansi_wireless_checking(int InstID, int islocaled){
 				*asd_check_timeout = 0;
 				*wsm_check_timeout = 0;
 				hmd_syslog_crit("%s  InstID %d islocaled %d asd maybe wrong",__func__,InstID,islocaled);
-				return HMD_FALSE;
+				return HMD_RELOAD_MOD_WCPSS;
 			}
 			hmd_syslog_info("%s  InstID %d islocaled %d wid_check %d,asd_check %d,wsm_check %d",__func__,InstID,islocaled,*wid_check,*asd_check,*wsm_check);
 			hmd_syslog_info("%s  InstID %d islocaled %d  wid_check_timeout %d,asd_check_timeout %d,wsm_check_timeout %d",__func__,InstID,islocaled,*wid_check_timeout,*asd_check_timeout,*wsm_check_timeout);
@@ -484,7 +484,7 @@ HMDBool hansi_wireless_checking(int InstID, int islocaled){
 					*asd_check_timeout = 0;
 					*wsm_check_timeout = 0;
 					hmd_syslog_crit("%s  InstID %d islocaled %d wsm maybe wrong",__func__,InstID,islocaled);
-					return HMD_FALSE;
+					return HMD_RELOAD_MOD_WCPSS;
 				}
 				hmd_syslog_info("%s  InstID %d islocaled %d wid_check %d,asd_check %d,wsm_check %d",__func__,InstID,islocaled,*wid_check,*asd_check,*wsm_check);
 				hmd_syslog_info("%s  InstID %d islocaled %d  wid_check_timeout %d,asd_check_timeout %d,wsm_check_timeout %d",__func__,InstID,islocaled,*wid_check_timeout,*asd_check_timeout,*wsm_check_timeout);
@@ -498,7 +498,7 @@ HMDBool hansi_wireless_checking(int InstID, int islocaled){
 				*wid_check_timeout = 0;
 				*asd_check_timeout = 0;
 				*wsm_check_timeout = 0;
-				return HMD_TRUE;
+				return HMD_RELOAD_MOD_NONE;
 			}else{
 				if (dbus_error_is_set(&err))
 				{
@@ -518,12 +518,12 @@ HMDBool hansi_wireless_checking(int InstID, int islocaled){
 					*asd_check_timeout = 0;
 					*wsm_check_timeout = 0;
 					hmd_syslog_crit("%s 2 InstID %d islocaled %d wsm maybe wrong",__func__,InstID,islocaled);
-					return HMD_FALSE;
+					return HMD_RELOAD_MOD_WCPSS;
 				}
 				hmd_syslog_info("%s 2 InstID %d islocaled %d wid_check %d,asd_check %d,wsm_check %d",__func__,InstID,islocaled,*wid_check,*asd_check,*wsm_check);
 				hmd_syslog_info("%s  InstID %d islocaled %d  wid_check_timeout %d,asd_check_timeout %d,wsm_check_timeout %d",__func__,InstID,islocaled,*wid_check_timeout,*asd_check_timeout,*wsm_check_timeout);
 			}
-			return HMD_TRUE;
+			return HMD_RELOAD_MOD_NONE;
 		}else{
 			if (dbus_error_is_set(&err))
 			{
@@ -543,12 +543,12 @@ HMDBool hansi_wireless_checking(int InstID, int islocaled){
 				*asd_check_timeout = 0;
 				*wsm_check_timeout = 0;
 				hmd_syslog_crit("%s 2 InstID %d islocaled %d wsm maybe wrong",__func__,InstID,islocaled);
-				return HMD_FALSE;
+				return HMD_RELOAD_MOD_WCPSS;
 			}
 			hmd_syslog_info("%s 2 InstID %d islocaled %d wid_check %d,asd_check %d,wsm_check %d",__func__,InstID,islocaled,*wid_check,*asd_check,*wsm_check);
 			hmd_syslog_info("%s 2  InstID %d islocaled %d  wid_check_timeout %d,asd_check_timeout %d,wsm_check_timeout %d",__func__,InstID,islocaled,*wid_check_timeout,*asd_check_timeout,*wsm_check_timeout);
 		}
-		return HMD_TRUE;
+		return HMD_RELOAD_MOD_NONE;
 	}else{
 		if (dbus_error_is_set(&err))
 		{
@@ -568,12 +568,376 @@ HMDBool hansi_wireless_checking(int InstID, int islocaled){
 			*asd_check_timeout = 0;
 			*wsm_check_timeout = 0;
 			hmd_syslog_crit("%s 2 InstID %d islocaled %d wsm maybe wrong",__func__,InstID,islocaled);
-			return HMD_FALSE;
+			return HMD_RELOAD_MOD_WCPSS;
 		}
 		hmd_syslog_info("%s 2 InstID %d islocaled %d wid_check %d,asd_check %d,wsm_check %d",__func__,InstID,islocaled,*wid_check,*asd_check,*wsm_check);
 		hmd_syslog_info("%s  InstID %d islocaled %d  wid_check_timeout %d,asd_check_timeout %d,wsm_check_timeout %d",__func__,InstID,islocaled,*wid_check_timeout,*asd_check_timeout,*wsm_check_timeout);
 	}
-	return HMD_TRUE;
+	return HMD_RELOAD_MOD_NONE;
+}
+enum hmd_reload_type hansi_eag_checking(int InstID, int islocaled)
+{
+	DBusMessage *query, *reply;
+	DBusError err;
+	DBusConnection * connection = NULL;
+	int ret = 0;
+	int *eag_check = NULL;
+	int *eag_check_timeout = NULL;
+	if(islocaled)
+	{
+		if(HOST_BOARD->Hmd_Local_Inst[InstID])
+		{
+			connection = HOST_BOARD->Hmd_Local_Inst[InstID]->connection;
+			eag_check = &(HOST_BOARD->Hmd_Local_Inst[InstID]->eag_check);
+			eag_check_timeout = &(HOST_BOARD->Hmd_Local_Inst[InstID]->eag_check_timeout);
+		}
+	}
+	else
+	{
+		if(HOST_BOARD->Hmd_Inst[InstID])
+		{
+			connection = HOST_BOARD->Hmd_Inst[InstID]->connection;
+			eag_check = &(HOST_BOARD->Hmd_Inst[InstID]->eag_check);
+			eag_check_timeout = &(HOST_BOARD->Hmd_Inst[InstID]->eag_check_timeout);
+		}
+	}
+	if(connection == NULL)
+	{
+		hmd_syslog_info("%s InstID %d islocaled %d connection == NULL", __func__, InstID, islocaled);
+		hmd_dbus_connection_init(InstID, islocaled);
+	}
+	if(NULL == eag_check)
+	{
+		hmd_syslog_err("%s,%d,connection is NULL.\n", __func__, __LINE__);
+		return HMD_RELOAD_MOD_EAG;
+	}
+
+	#define EAG_DBUS_NAME_FMT		"aw.eag_%s_%d"
+	#define EAG_DBUS_OBJPATH_FMT	"/aw/eag_%s_%d"
+	#define EAG_DBUS_INTERFACE_FMT	"aw.eag_%s_%d"
+	#define EAG_DBUS_CHECK_STATUS	"eag_dbus_method_check_status"
+
+	char EAG_DBUS_NAME[64];
+	char EAG_DBUS_OBJPATH[64];
+	char EAG_DBUS_INTERFACE[64];
+	if (InstID > 0) {
+		snprintf(EAG_DBUS_NAME, sizeof(EAG_DBUS_NAME) - 1,	EAG_DBUS_NAME_FMT, "r", InstID );
+		snprintf(EAG_DBUS_OBJPATH, sizeof(EAG_DBUS_NAME) - 1, EAG_DBUS_OBJPATH_FMT, "r", InstID );
+		snprintf(EAG_DBUS_INTERFACE, sizeof(EAG_DBUS_NAME) - 1, EAG_DBUS_INTERFACE_FMT, "r", InstID );
+	}
+	else
+	{
+		snprintf(EAG_DBUS_NAME, sizeof(EAG_DBUS_NAME) - 1,	EAG_DBUS_NAME_FMT, "l", InstID );
+		snprintf(EAG_DBUS_OBJPATH, sizeof(EAG_DBUS_NAME) - 1, EAG_DBUS_OBJPATH_FMT, "l", InstID );
+		snprintf(EAG_DBUS_INTERFACE, sizeof(EAG_DBUS_NAME) - 1, EAG_DBUS_INTERFACE_FMT, "l", InstID );
+	}
+	query = dbus_message_new_method_call(EAG_DBUS_NAME,
+	                                     EAG_DBUS_OBJPATH,
+	                                     EAG_DBUS_INTERFACE,
+	                                     EAG_DBUS_CHECK_STATUS);
+	dbus_error_init(&err);
+	reply = dbus_connection_send_with_reply_and_block (connection, query, 3000, &err);
+	dbus_message_unref(query);
+	if (NULL == reply)
+	{
+		if (dbus_error_is_set(&err))
+		{
+			if(!memcmp(err.name, DBUS_ERROR_NO_REPLY, strlen(DBUS_ERROR_NO_REPLY)) && !memcmp(err.message, "Did not receive a reply.", strlen("Did not receive a reply.")))
+				*eag_check_timeout += 1;
+			else
+				*eag_check += 1;
+			dbus_error_free(&err);
+		}
+		else
+			*eag_check += 1;
+		if(*eag_check >= 3 || *eag_check_timeout >= 5)
+		{
+			*eag_check = 0;
+			*eag_check_timeout = 0;
+			hmd_syslog_crit("%s:%d	InstID %d islocaled %d eag maybe wrong", 
+					__func__, __LINE__, InstID, islocaled);
+			return HMD_RELOAD_MOD_EAG;
+		}
+		hmd_syslog_info("%s  InstID %d islocaled %d  eag_check %d", __func__, InstID, islocaled, *eag_check);
+		hmd_syslog_info("%s  InstID %d islocaled %d  eag_check_timeout %d", __func__, InstID, islocaled, *eag_check_timeout);
+	}
+	else if (dbus_message_get_args ( reply, &err,
+											DBUS_TYPE_UINT32, &ret,
+											DBUS_TYPE_INVALID))
+	{
+			dbus_message_unref(reply);
+			*eag_check = 0;
+			*eag_check_timeout = 0;
+			return HMD_RELOAD_MOD_NONE;
+	}
+	else
+	{
+		if (dbus_error_is_set(&err))
+		{
+			if(!memcmp(err.name, DBUS_ERROR_NO_REPLY, strlen(DBUS_ERROR_NO_REPLY)) && !memcmp(err.message, "Did not receive a reply.", strlen("Did not receive a reply.")))
+				*eag_check_timeout += 1;
+			else
+				*eag_check += 1;
+			dbus_error_free(&err);
+		}
+		else
+			*eag_check += 1;
+		if(*eag_check >= 3 || *eag_check_timeout >= 5)
+		{
+			*eag_check = 0;
+			*eag_check_timeout = 0;
+			hmd_syslog_crit("%s:%d InstID %d islocaled %d eag maybe wrong",
+								__func__, __LINE__, InstID, islocaled);
+			return HMD_RELOAD_MOD_EAG;
+		}
+		hmd_syslog_info("%s 2 InstID %d islocaled %d eag_check %d", __func__, InstID, islocaled, *eag_check);
+		hmd_syslog_info("%s  InstID %d islocaled %d  eag_check_timeout %d", __func__, InstID, islocaled, *eag_check_timeout);
+	}
+
+	return HMD_RELOAD_MOD_NONE;
+}
+enum hmd_reload_type hansi_rdc_checking(int InstID, int islocaled)
+{
+	DBusMessage *query, *reply;
+	DBusError err;
+	DBusConnection * connection = NULL;
+	int ret = 0;
+	int *rdc_check = NULL;
+	int *rdc_check_timeout = NULL;
+	if(islocaled)
+	{
+		if(HOST_BOARD->Hmd_Local_Inst[InstID])
+		{
+			connection = HOST_BOARD->Hmd_Local_Inst[InstID]->connection;
+			rdc_check = &(HOST_BOARD->Hmd_Local_Inst[InstID]->rdc_check);
+			rdc_check_timeout = &(HOST_BOARD->Hmd_Local_Inst[InstID]->rdc_check_timeout);
+		}
+	}
+	else
+	{
+		if(HOST_BOARD->Hmd_Inst[InstID])
+		{
+			connection = HOST_BOARD->Hmd_Inst[InstID]->connection;
+			rdc_check = &(HOST_BOARD->Hmd_Inst[InstID]->rdc_check);
+			rdc_check_timeout = &(HOST_BOARD->Hmd_Inst[InstID]->rdc_check_timeout);
+		}
+	}
+	if(connection == NULL)
+	{
+		hmd_syslog_info("%s InstID %d islocaled %d connection == NULL", __func__, InstID, islocaled);
+		hmd_dbus_connection_init(InstID, islocaled);
+	}
+	if(NULL == rdc_check)
+	{
+		hmd_syslog_err("%s,%d,connection is NULL.\n", __func__, __LINE__);
+		return HMD_RELOAD_MOD_RDC;
+	}
+
+	#define RDC_DBUS_NAME_FMT		"aw.rdc_%s_%d"
+	#define RDC_DBUS_OBJPATH_FMT	"/aw/rdc_%s_%d"
+	#define RDC_DBUS_INTERFACE_FMT	"aw.rdc_%s_%d"
+	#define RDC_DBUS_CHECK_STATUS	"rdc_dbus_method_check_status"
+
+	char RDC_DBUS_NAME[64];
+	char RDC_DBUS_OBJPATH[64];
+	char RDC_DBUS_INTERFACE[64];
+	if (InstID > 0) {
+		snprintf(RDC_DBUS_NAME, sizeof(RDC_DBUS_NAME) - 1,	RDC_DBUS_NAME_FMT, "r", InstID );
+		snprintf(RDC_DBUS_OBJPATH, sizeof(RDC_DBUS_NAME) - 1, RDC_DBUS_OBJPATH_FMT, "r", InstID );
+		snprintf(RDC_DBUS_INTERFACE, sizeof(RDC_DBUS_NAME) - 1, RDC_DBUS_INTERFACE_FMT, "r", InstID );
+	}
+	else
+	{
+		snprintf(RDC_DBUS_NAME, sizeof(RDC_DBUS_NAME) - 1,	RDC_DBUS_NAME_FMT, "l", InstID );
+		snprintf(RDC_DBUS_OBJPATH, sizeof(RDC_DBUS_NAME) - 1, RDC_DBUS_OBJPATH_FMT, "l", InstID );
+		snprintf(RDC_DBUS_INTERFACE, sizeof(RDC_DBUS_NAME) - 1, RDC_DBUS_INTERFACE_FMT, "l", InstID );
+	}
+	query = dbus_message_new_method_call(RDC_DBUS_NAME,
+	                                     RDC_DBUS_OBJPATH,
+	                                     RDC_DBUS_INTERFACE,
+	                                     RDC_DBUS_CHECK_STATUS);
+	dbus_error_init(&err);
+	reply = dbus_connection_send_with_reply_and_block (connection, query, 3000, &err);
+	dbus_message_unref(query);
+	if (NULL == reply)
+	{
+		if (dbus_error_is_set(&err))
+		{
+			if(!memcmp(err.name, DBUS_ERROR_NO_REPLY, strlen(DBUS_ERROR_NO_REPLY)) && !memcmp(err.message, "Did not receive a reply.", strlen("Did not receive a reply.")))
+				*rdc_check_timeout += 1;
+			else
+				*rdc_check += 1;
+			dbus_error_free(&err);
+		}
+		else
+			*rdc_check += 1;
+		if(*rdc_check >= 5 || *rdc_check_timeout >= 10)
+		{
+			*rdc_check = 0;
+			*rdc_check_timeout = 0;
+			hmd_syslog_crit("%s:%d	InstID %d islocaled %d rdc maybe wrong", 
+					__func__, __LINE__, InstID, islocaled);
+			return HMD_RELOAD_MOD_RDC;
+		}
+		hmd_syslog_info("%s  InstID %d islocaled %d  rdc_check %d", __func__, InstID, islocaled, *rdc_check);
+		hmd_syslog_info("%s  InstID %d islocaled %d  rdc_check_timeout %d", __func__, InstID, islocaled, *rdc_check_timeout);
+	}
+	else if (dbus_message_get_args ( reply, &err,
+											DBUS_TYPE_UINT32, &ret,
+											DBUS_TYPE_INVALID))
+	{
+			dbus_message_unref(reply);
+			*rdc_check = 0;
+			*rdc_check_timeout = 0;
+			return HMD_RELOAD_MOD_NONE;
+	}
+	else
+	{
+		if (dbus_error_is_set(&err))
+		{
+			if(!memcmp(err.name, DBUS_ERROR_NO_REPLY, strlen(DBUS_ERROR_NO_REPLY)) && !memcmp(err.message, "Did not receive a reply.", strlen("Did not receive a reply.")))
+				*rdc_check_timeout += 1;
+			else
+				*rdc_check += 1;
+			dbus_error_free(&err);
+		}
+		else
+			*rdc_check += 1;
+		if(*rdc_check >= 5 || *rdc_check_timeout >= 10)
+		{
+			*rdc_check = 0;
+			*rdc_check_timeout = 0;
+			hmd_syslog_crit("%s:%d InstID %d islocaled %d rdc maybe wrong",
+								__func__, __LINE__, InstID, islocaled);
+			return HMD_RELOAD_MOD_RDC;
+		}
+		hmd_syslog_info("%s 2 InstID %d islocaled %d rdc_check %d", __func__, InstID, islocaled, *rdc_check);
+		hmd_syslog_info("%s  InstID %d islocaled %d  rdc_check_timeout %d", __func__, InstID, islocaled, *rdc_check_timeout);
+	}
+
+	return HMD_RELOAD_MOD_NONE;
+}
+
+enum hmd_reload_type hansi_pdc_checking(int InstID, int islocaled)
+{
+	DBusMessage *query, *reply;
+	DBusError err;
+	DBusConnection * connection = NULL;
+	int ret = 0;
+	int *pdc_check = NULL;
+	int *pdc_check_timeout = NULL;
+	if(islocaled)
+	{
+		if(HOST_BOARD->Hmd_Local_Inst[InstID])
+		{
+			connection = HOST_BOARD->Hmd_Local_Inst[InstID]->connection;
+			pdc_check = &(HOST_BOARD->Hmd_Local_Inst[InstID]->pdc_check);
+			pdc_check_timeout = &(HOST_BOARD->Hmd_Local_Inst[InstID]->pdc_check_timeout);
+		}
+	}
+	else
+	{
+		if(HOST_BOARD->Hmd_Inst[InstID])
+		{
+			connection = HOST_BOARD->Hmd_Inst[InstID]->connection;
+			pdc_check = &(HOST_BOARD->Hmd_Inst[InstID]->pdc_check);
+			pdc_check_timeout = &(HOST_BOARD->Hmd_Inst[InstID]->pdc_check_timeout);
+		}
+	}
+	if(connection == NULL)
+	{
+		hmd_syslog_info("%s InstID %d islocaled %d connection == NULL", __func__, InstID, islocaled);
+		hmd_dbus_connection_init(InstID, islocaled);
+	}
+	if(NULL == pdc_check)
+	{
+		hmd_syslog_err("%s,%d,connection is NULL.\n", __func__, __LINE__);
+		return HMD_RELOAD_MOD_PDC;
+	}
+
+	#define PDC_DBUS_NAME_FMT		"aw.pdc_%s_%d"
+	#define PDC_DBUS_OBJPATH_FMT	"/aw/pdc_%s_%d"
+	#define PDC_DBUS_INTERFACE_FMT	"aw.pdc_%s_%d"
+	#define PDC_DBUS_CHECK_STATUS	"pdc_dbus_method_check_status"
+
+	char PDC_DBUS_NAME[64];
+	char PDC_DBUS_OBJPATH[64];
+	char PDC_DBUS_INTERFACE[64];
+	if (InstID > 0) {
+		snprintf(PDC_DBUS_NAME, sizeof(PDC_DBUS_NAME) - 1,	PDC_DBUS_NAME_FMT, "r", InstID );
+		snprintf(PDC_DBUS_OBJPATH, sizeof(PDC_DBUS_NAME) - 1, PDC_DBUS_OBJPATH_FMT, "r", InstID );
+		snprintf(PDC_DBUS_INTERFACE, sizeof(PDC_DBUS_NAME) - 1, PDC_DBUS_INTERFACE_FMT, "r", InstID );
+	}
+	else
+	{
+		snprintf(PDC_DBUS_NAME, sizeof(PDC_DBUS_NAME) - 1,	PDC_DBUS_NAME_FMT, "l", InstID );
+		snprintf(PDC_DBUS_OBJPATH, sizeof(PDC_DBUS_NAME) - 1, PDC_DBUS_OBJPATH_FMT, "l", InstID );
+		snprintf(PDC_DBUS_INTERFACE, sizeof(PDC_DBUS_NAME) - 1, PDC_DBUS_INTERFACE_FMT, "l", InstID );
+	}
+	query = dbus_message_new_method_call(PDC_DBUS_NAME,
+	                                     PDC_DBUS_OBJPATH,
+	                                     PDC_DBUS_INTERFACE,
+	                                     PDC_DBUS_CHECK_STATUS);
+	dbus_error_init(&err);
+	reply = dbus_connection_send_with_reply_and_block (connection, query, 3000, &err);
+	dbus_message_unref(query);
+	if (NULL == reply)
+	{
+		if (dbus_error_is_set(&err))
+		{
+			if(!memcmp(err.name, DBUS_ERROR_NO_REPLY, strlen(DBUS_ERROR_NO_REPLY)) && !memcmp(err.message, "Did not receive a reply.", strlen("Did not receive a reply.")))
+				*pdc_check_timeout += 1;
+			else
+				*pdc_check += 1;
+			dbus_error_free(&err);
+		}
+		else
+			*pdc_check += 1;
+		if(*pdc_check >= 5 || *pdc_check_timeout >= 10)
+		{
+			*pdc_check = 0;
+			*pdc_check_timeout = 0;
+			hmd_syslog_crit("%s:%d	InstID %d islocaled %d pdc maybe wrong", 
+					__func__, __LINE__, InstID, islocaled);
+			return HMD_RELOAD_MOD_PDC;
+		}
+		hmd_syslog_info("%s  InstID %d islocaled %d  pdc_check %d", __func__, InstID, islocaled, *pdc_check);
+		hmd_syslog_info("%s  InstID %d islocaled %d  pdc_check_timeout %d", __func__, InstID, islocaled, *pdc_check_timeout);
+	}
+	else if (dbus_message_get_args ( reply, &err,
+											DBUS_TYPE_UINT32, &ret,
+											DBUS_TYPE_INVALID))
+	{
+			dbus_message_unref(reply);
+			*pdc_check = 0;
+			*pdc_check_timeout = 0;
+			return HMD_RELOAD_MOD_NONE;
+	}
+	else
+	{
+		if (dbus_error_is_set(&err))
+		{
+			if(!memcmp(err.name, DBUS_ERROR_NO_REPLY, strlen(DBUS_ERROR_NO_REPLY)) && !memcmp(err.message, "Did not receive a reply.", strlen("Did not receive a reply.")))
+				*pdc_check_timeout += 1;
+			else
+				*pdc_check += 1;
+			dbus_error_free(&err);
+		}
+		else
+			*pdc_check += 1;
+		if(*pdc_check >= 5 || *pdc_check_timeout >= 10)
+		{
+			*pdc_check = 0;
+			*pdc_check_timeout = 0;
+			hmd_syslog_crit("%s:%d InstID %d islocaled %d rdc maybe wrong",
+								__func__, __LINE__, InstID, islocaled);
+			return HMD_RELOAD_MOD_PDC;
+		}
+		hmd_syslog_info("%s 2 InstID %d islocaled %d rdc_check %d", __func__, InstID, islocaled, *pdc_check);
+		hmd_syslog_info("%s  InstID %d islocaled %d  rdc_check_timeout %d", __func__, InstID, islocaled, *pdc_check_timeout);
+	}
+
+	return HMD_RELOAD_MOD_NONE;
 }
 
 
@@ -1307,6 +1671,56 @@ int notice_hmd_server_delete_hansi(int InstID, int islocaled, HmdOP op){
 	}
 	return 0;
 }
+
+int hmd_load_config(char *ConfigPath)
+{
+	char cmd[128] = {0};
+
+	if (NULL == ConfigPath)
+	{
+		hmd_syslog_err("%s:%d parameter null\n", __func__, __LINE__);
+		return -1;
+	}
+
+	hmd_syslog_info("load config %s...\n", ConfigPath);
+
+	memset(cmd, 0, sizeof(cmd));
+	snprintf(cmd, sizeof(cmd), "/opt/bin/vtysh -f %s -b", ConfigPath);
+	system(cmd);
+
+	return 0;
+}
+
+
+void hmd_eag_restart(unsigned islocal, unsigned int vrrid)
+{
+	char cmd[128];
+	
+	if (0 == vrrid) {
+		islocal = 1;
+	}
+	snprintf(cmd, sizeof(cmd), "sudo /etc/init.d/eag stop %d %d", islocal, vrrid);
+	system(cmd);
+	snprintf(cmd, sizeof(cmd), "sudo /etc/init.d/eag start %d %d", islocal, vrrid);
+	system(cmd);
+
+	return;
+}
+
+void hmd_rdc_restart(unsigned islocal, unsigned int vrrid)
+{
+	char cmd[128];
+	
+	if (0 == vrrid) {
+		islocal = 1;
+	}
+	snprintf(cmd, sizeof(cmd), "sudo /etc/init.d/rdc stop %d %d", islocal, vrrid);
+	system(cmd);
+	snprintf(cmd, sizeof(cmd), "sudo /etc/init.d/rdc start %d %d", islocal, vrrid);
+	system(cmd);
+
+	return;
+}
 int dhcp_to_start(){
 	char buf[128] = {0};
 	int ret = 0;
@@ -1335,6 +1749,112 @@ int dhcp_to_start(){
 
 	return 0;
 }
+
+int hmd_eag_reload(unsigned slotid, unsigned int islocal, unsigned int vrrid)
+{
+	char path[128] = {0};
+	
+	snprintf(path, sizeof(path), "%s/slot%d/hansi_eag%d", DEFAULT_CONFIG_DIR, slotid, vrrid);
+	hmd_syslog_info("path=%s\n", path);
+	hmd_syslog_info("%s cfg hansi %d lock type %d\n", __func__, vrrid, HMD_RELOAD_MOD_EAG);
+	//HMD_CFG_LOCK(vrrid, HMD_RELOAD_MOD_EAG);
+	
+
+	hmd_syslog_info("wait hansi %d restart eag thread\n", vrrid);
+	
+	if(HOST_SLOT_NO == MASTER_SLOT_NO)
+	{
+		if (slotid == HOST_SLOT_NO) {
+			hmd_syslog_info("starta eag %d for slot %d\n", vrrid, slotid);
+			hmd_eag_restart(islocal, vrrid);
+		}
+		sleep(5);
+		hmd_load_config(path);
+	}
+	else
+	{	/* active master rcv msg will reload InstID config */
+		hmd_syslog_info("startb eag %d for slot %d\n", vrrid, slotid);
+		hmd_eag_restart(islocal, vrrid);
+		notice_hmd_server_state_change(vrrid, islocal, HMD_RELOAD_CONFIG_FOR_EAG, 0);
+	}
+		
+	//HMD_CFG_UNLOCK(vrrid, HMD_RELOAD_MOD_EAG);
+	hmd_syslog_info("%s cfg hansi %d unlock type %d\n", __func__, vrrid, HMD_RELOAD_MOD_EAG);
+	
+	//hmd_set_hot_restart_flag(HMD_CLR_FLAG, HOST_SLOT_NO, islocal, vrrid);
+
+	return 0;
+}
+
+int hmd_rdc_reload(unsigned slotid, unsigned int islocal, unsigned int vrrid)
+{
+	char path[128] = {0};
+	
+	//hmd_set_hot_restart_flag(HMD_SET_FLAG, HOST_SLOT_NO, islocal, vrrid);
+	
+	snprintf(path, sizeof(path), "%s%s%d-%d-%d.conf", DEFAULT_CONFIG_PATH, "RDC", slotid, 0, vrrid);
+	
+	hmd_syslog_info("%s cfg hansi %d lock type %d\n", __func__, vrrid, HMD_RELOAD_MOD_RDC);
+	//HMD_CFG_LOCK(vrrid, HMD_RELOAD_MOD_RDC);
+	
+	hmd_rdc_restart(islocal, vrrid);
+
+	hmd_syslog_info("wait hansi %d restart eag thread\n", vrrid);
+	sleep(5);
+	
+	if(HOST_SLOT_NO == MASTER_SLOT_NO)
+	{
+		hmd_load_config(path);
+	}
+	else
+	{	/* active master rcv msg will reload InstID config */
+		//notice_hmd_server_state_change(vrrid, islocal, HMD_RESTART, 0);
+	}
+		
+	//HMD_CFG_UNLOCK(vrrid, HMD_RELOAD_MOD_RDC);
+	hmd_syslog_info("%s cfg hansi %d unlock type %d\n", __func__, vrrid, HMD_RELOAD_MOD_RDC);
+
+	//hmd_set_hot_restart_flag(HMD_CLR_FLAG, HOST_SLOT_NO, islocal, vrrid);
+
+	return 0;
+}
+
+int hmd_pdc_reload(unsigned slotid, unsigned int islocal, unsigned int vrrid)
+{
+	char path[128] = {0};
+	
+	//hmd_set_hot_restart_flag(HMD_SET_FLAG, HOST_SLOT_NO, islocal, vrrid);
+	
+	snprintf(path, sizeof(path), "%s%s%d-%d-%d.conf", DEFAULT_CONFIG_PATH, "PDC", slotid, 0, vrrid);
+	
+	hmd_syslog_info("%s cfg hansi %d lock type %d\n", __func__, vrrid, HMD_RELOAD_MOD_PDC);
+	//HMD_CFG_LOCK(vrrid, HMD_RELOAD_MOD_RDC);
+	
+	hmd_rdc_restart(islocal, vrrid);
+
+	hmd_syslog_info("wait hansi %d restart eag thread\n", vrrid);
+	sleep(5);
+	
+	if(HOST_SLOT_NO == MASTER_SLOT_NO)
+	{
+		hmd_load_config(path);
+	}
+	else
+	{	/* active master rcv msg will reload InstID config */
+		//notice_hmd_server_state_change(vrrid, islocal, HMD_RESTART, 0);
+	}
+		
+	//HMD_CFG_UNLOCK(vrrid, HMD_RELOAD_MOD_RDC);
+	hmd_syslog_info("%s cfg hansi %d unlock type %d\n", __func__, vrrid, HMD_RELOAD_MOD_RDC);
+
+	//hmd_set_hot_restart_flag(HMD_CLR_FLAG, HOST_SLOT_NO, islocal, vrrid);
+
+	return 0;
+}
+
+
+
+
 int take_snapshot_timer_id;
 int hmd_wcpss_reload(int vrrid,int islocal)
 {
@@ -1371,7 +1891,25 @@ int hmd_wcpss_reload(int vrrid,int islocal)
    
 	return 0;
 }
-int hansi_state_check(int InstID, int islocaled){
+
+int flush_hansi_rule(int islocaled, int insid)
+{
+	int ret = 0;
+	char cmd[256] = "";
+	//extern nmp_mutex_t eag_iptables_lock;
+
+	//nmp_mutex_lock(&eag_iptables_lock);
+	snprintf( cmd, sizeof(cmd)-1, 
+			"sudo /usr/bin/cp_flush_hansi_rule.sh %d %d", islocaled, insid);
+	ret = system(cmd);
+	ret = WEXITSTATUS(ret);
+	//nmp_mutex_unlock(&eag_iptables_lock);
+	hmd_syslog_info("flush_hansi_rule cmd=%s ret=%d", cmd, ret);
+	return ret;
+}
+
+
+int hansi_state_check(int InstID, int islocaled, enum hmd_reload_type type){
 	char buf[128] = {0};
 	char defaultPath[] = "/var/run/config/Instconfig";
 	int ret = 0;	
@@ -1437,63 +1975,79 @@ int hansi_state_check(int InstID, int islocaled){
 		}
 	}else{
 		if(HOST_BOARD->Hmd_Inst[InstID] != NULL){
-			notice_vrrp_config_service_change_state(InstID, 0);
-			sprintf(buf,"sudo /etc/init.d/wcpss stop %d %d",islocaled, InstID);
-			system(buf);			
-			memset(buf, 0, 128);
-			sprintf(buf,"sudo /etc/init.d/wcpss start %d %d",islocaled, InstID);
-			system(buf);
-			memset(buf, 0, 128);
-			sprintf(buf,"sudo /etc/init.d/had start %d", InstID);
-			system(buf);
-
-			hmd_syslog_info("ready to delbr for inst %d\n", InstID);
-			//delete ebr or wlan for this inst from bridge
-			memset(buf, 0, 128);
-			sprintf(buf,"clear_ebr.sh ebr%d-%d-", HOST_BOARD->slot_no, InstID);
-			system(buf);
-			memset(buf, 0, 128);
-			sprintf(buf,"clear_ebr.sh wlan%d-%d-", HOST_BOARD->slot_no, InstID);
-			system(buf);
-			hmd_syslog_info("delbr done \n");
-				
-			//unregist radio if for this Inst from kernel
-			hmd_syslog_info("ready to unregist radio if. refer to dmesg\n");
-			memset(buf, 0, 128);
-			sprintf(buf,"clear_radio_if %d", InstID);
-			system(buf);
-			hmd_syslog_info("unregist radio if done\n");
-			
-			hmd_syslog_info("###%s hmd begin load takesnapshot.sh ###\n",__func__);
-			if(g_loable_takesnapshot_flag == 0)
-			{
-				g_loable_takesnapshot_flag = 1;
-				hmd_syslog_info("###takesnapshotfun %s %d ###\n",__func__,__LINE__);
-				HMDTimerRequest(600,&take_snapshot_timer_id, HMD_TIMER_TAKESNAPSHOT, 0, 0);
-				ret = system("takesnapshot.sh 1 3&");
-				ret = WEXITSTATUS(ret);
-				hmd_syslog_info("###takesnapshotfun %s %d ret is %d###\n",__func__,__LINE__,ret);
-
+			if (HMD_RELOAD_MOD_EAG == type) {
+				hmd_syslog_warning("reload eag %s %d\n", __FUNCTION__, __LINE__);
+				flush_hansi_rule(islocaled, InstID);
+				hmd_eag_reload(HOST_SLOT_NO, islocaled, InstID);
 			}
-			if(HOST_SLOT_NO != MASTER_SLOT_NO)
-				notice_hmd_server_state_change(InstID, islocaled, HMD_RESTART, 0);
-			
-			HOST_BOARD->Hmd_Inst[InstID]->RestartTimes += 1;
-			if(HOST_SLOT_NO == MASTER_SLOT_NO){
-				#if 0
+			else if (HMD_RELOAD_MOD_RDC == type) {
+				hmd_syslog_warning("reload rdc %s %d\n", __FUNCTION__, __LINE__);
+				hmd_rdc_reload(HOST_SLOT_NO, islocaled, InstID);
+			} else if (HMD_RELOAD_MOD_PDC == type){
+				hmd_syslog_warning("reload pdc %s %d\n", __FUNCTION__, __LINE__);
+				hmd_rdc_reload(HOST_SLOT_NO, islocaled, InstID);
+			} else if (HMD_RELOAD_MOD_WCPSS == type) {
+				
+				notice_vrrp_config_service_change_state(InstID, 0);
+				sprintf(buf,"sudo /etc/init.d/wcpss stop %d %d",islocaled, InstID);
+				system(buf);			
 				memset(buf, 0, 128);
-				sprintf(buf,"mv /mnt/cli.conf /mnt/cli.conf_bak");
-				system(buf);				
-				sprintf(newpath,"cp %s%d-0-%d /mnt/cli.conf",defaultPath,HOST_BOARD->slot_no,InstID);
-				system(newpath);
-				sleep(1);
-				#endif
-				memset(buf, 0, 128);
-				sprintf(buf,"/opt/bin/vtysh -f %s%d-0-%d -b &",defaultPath,HOST_BOARD->slot_no,InstID);
+				sprintf(buf,"sudo /etc/init.d/wcpss start %d %d",islocaled, InstID);
 				system(buf);
-//				memset(buf, 0, 128);
-//				sprintf(buf,"mv /mnt/cli.conf_bak /mnt/cli.conf");
-//				system(buf);				
+				memset(buf, 0, 128);
+				sprintf(buf,"sudo /etc/init.d/had start %d", InstID);
+				system(buf);
+
+				hmd_syslog_info("ready to delbr for inst %d\n", InstID);
+				//delete ebr or wlan for this inst from bridge
+				memset(buf, 0, 128);
+				sprintf(buf,"clear_ebr.sh ebr%d-%d-", HOST_BOARD->slot_no, InstID);
+				system(buf);
+				memset(buf, 0, 128);
+				sprintf(buf,"clear_ebr.sh wlan%d-%d-", HOST_BOARD->slot_no, InstID);
+				system(buf);
+				hmd_syslog_info("delbr done \n");
+					
+				//unregist radio if for this Inst from kernel
+				hmd_syslog_info("ready to unregist radio if. refer to dmesg\n");
+				memset(buf, 0, 128);
+				sprintf(buf,"clear_radio_if %d", InstID);
+				system(buf);
+				hmd_syslog_info("unregist radio if done\n");
+				
+				hmd_syslog_info("###%s hmd begin load takesnapshot.sh ###\n",__func__);
+				if(g_loable_takesnapshot_flag == 0)
+				{
+					g_loable_takesnapshot_flag = 1;
+					hmd_syslog_info("###takesnapshotfun %s %d ###\n",__func__,__LINE__);
+					HMDTimerRequest(600,&take_snapshot_timer_id, HMD_TIMER_TAKESNAPSHOT, 0, 0);
+					ret = system("takesnapshot.sh 1 3&");
+					ret = WEXITSTATUS(ret);
+					hmd_syslog_info("###takesnapshotfun %s %d ret is %d###\n",__func__,__LINE__,ret);
+
+				}
+				if(HOST_SLOT_NO != MASTER_SLOT_NO)
+					notice_hmd_server_state_change(InstID, islocaled, HMD_RESTART, 0);
+				
+				HOST_BOARD->Hmd_Inst[InstID]->RestartTimes += 1;
+				if(HOST_SLOT_NO == MASTER_SLOT_NO){
+					#if 0
+					memset(buf, 0, 128);
+					sprintf(buf,"mv /mnt/cli.conf /mnt/cli.conf_bak");
+					system(buf);				
+					sprintf(newpath,"cp %s%d-0-%d /mnt/cli.conf",defaultPath,HOST_BOARD->slot_no,InstID);
+					system(newpath);
+					sleep(1);
+					#endif
+					memset(buf, 0, 128);
+					sprintf(buf,"/opt/bin/vtysh -f %s%d-0-%d -b &",defaultPath,HOST_BOARD->slot_no,InstID);
+					system(buf);
+	//				memset(buf, 0, 128);
+	//				sprintf(buf,"mv /mnt/cli.conf_bak /mnt/cli.conf");
+	//				system(buf);				
+				}
+			} else {
+				hmd_syslog_warning("unknown type %d\n", type);
 			}
 		}
 	}
@@ -1515,18 +2069,45 @@ void DHCP_CHECK(){
 
 
 void HANSI_CHECKING(int InstID, int islocaled){
-	int ret = HMD_TRUE;
+	//int ret = HMD_TRUE;
 	int i =0;
 	char * ifname = NULL;
 	char * mac = NULL;
 	int vip;
 	int mask;
+	enum hmd_reload_type type = 0;
+
+	hmd_syslog_warning("HANSI_CHECKING\n");
 	if(HANSI_CHECK_OP){
-		ret = hansi_wireless_checking(InstID, islocaled);
-		if(ret == HMD_FALSE){
+		hmd_syslog_warning("checking wcpss\n");
+		type = hansi_wireless_checking(InstID, islocaled);
+		if (HMD_RELOAD_MOD_NONE != type) {
 			hmd_syslog_warning("check wireless false,need restart wcpss.\n");
-			hansi_state_check(InstID, islocaled);
+			hansi_state_check(InstID, islocaled, type);
 		}
+		hmd_syslog_warning("checking eag\n");
+		type = hansi_eag_checking(InstID, islocaled);
+		if (HMD_RELOAD_MOD_NONE != type)
+		{
+			hmd_syslog_warning("check eag fail ,need restart type %d.\n", type);
+			hansi_state_check(InstID, islocaled, type);
+		}
+		hmd_syslog_warning("checking rdc\n");
+		type = hansi_rdc_checking(InstID, islocaled);
+		if (HMD_RELOAD_MOD_NONE != type)
+		{
+			hmd_syslog_warning("check rdc fail ,need restart type %d.\n", type);
+			hansi_state_check(InstID, islocaled, type);
+		}
+
+		hmd_syslog_warning("checking pdc\n");
+		type = hansi_pdc_checking(InstID, islocaled);
+		if (HMD_RELOAD_MOD_NONE != type)
+		{
+			hmd_syslog_warning("check pdc fail ,need restart type %d.\n", type);
+			hansi_state_check(InstID, islocaled, type);
+		}
+		
 		if(islocaled){
 			if((HOST_BOARD->Hmd_Local_Inst[InstID])&&(HOST_BOARD->Hmd_Local_Inst[InstID]->isActive == INST_ACTIVE)){
 				for(i = 0; i <	HOST_BOARD->Hmd_Local_Inst[InstID]->Inst_DNum; i++){
