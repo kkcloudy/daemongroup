@@ -77163,6 +77163,21 @@ DBusMessage * wid_dbus_wtp_show_running_config_start(DBusConnection *conn, DBusM
 		struct CWMultiHomedInterface *p = gListenningIF.interfaces;
 		while((p != NULL)&&(count > 0)){
 			//totalLen += sprintf(cursor,"set wireless-control listen interface add %s\n",p->ifname);
+			if ((str_len - totalLen) <=   100)
+			{
+				str_len += 1024;
+				showStr_new = (char*)realloc(showStr,str_len);
+				if(showStr_new == NULL){
+					wid_syslog_info("show running realloc failed\n");
+					goto fail;
+				}else {
+					showStr = showStr_new;
+					memset(showStr+(str_len -1024),0,1024);
+					showStr_new = NULL;
+					wid_syslog_debug_debug(WID_DBUS,"show running totalLen %d realloc strlen %d\n",totalLen,str_len);
+					}
+			}
+			cursor = showStr + totalLen;
 			ip = ((struct sockaddr_in *)&(p->addr))->sin_addr.s_addr;
 			if((p->lic_flag == DOWN_LINK_IP_TYPE)&&(ip != 0)){
 				totalLen += sprintf(cursor," set wireless-control listen ip add %d.%d.%d.%d \n",(ip>>24)&0xFF,(ip>>16)&0xFF,(ip>>8)&0xFF,(ip)&0xFF);
