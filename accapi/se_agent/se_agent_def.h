@@ -140,6 +140,9 @@
 
 #define IPV6_CMP(a, b) ((a.s6_addr64[0] == b.s6_addr64[0]) && (a.s6_addr64[1] == b.s6_addr64[1]))
 
+#define NAT_FLAG		(0x01)
+#define AAT_FLAG		(0x02)
+#define AAT_NAT_FLAG	(0x03)
 
 /* ethernet headers*/
 typedef struct eth_hdr_s 
@@ -767,6 +770,7 @@ typedef struct se_interative_s
 #define SE_AGENT_CLEAR_FAU64							"clear_fau64"
 #define SE_AGENT_ICMP_ENABLE                            "config_icmp_enable"
 #define SE_AGENT_PPPOE_ENABLE                           "config_pppoe_enable"
+#define SE_AGENT_AAT_ENABLE								"config_aat_enable"
 #define SE_AGENT_PURE_IP_ENABLE                         "config_pure_ip_enable"
 #define SE_AGENT_SHOW_PURE_IP_ENABLE				    "show_pure_ip_enable"
 #define SE_AGENT_PURE_IPV6_ENABLE                       "config_pure_ipv6_enable"

@@ -1825,6 +1825,64 @@ DEFUN(fastfwd_learned_pppoe_enable_func,
 	return CMD_SUCCESS;
 }
 
+DEFUN(fastfwd_learned_aat_enable_func,
+	  fastfwd_learned_aat_enable_cmd,
+	  "config  fast-aat (enable|disable)",
+	  CONFIG_STR
+	  "fast aat  feature\n"
+	  "fast_forward learned aat packet enable\n"
+	  "fast_forward learned aat packet disable\n"
+)
+{
+	
+	char *enable=(char *)argv[0];
+	int flag = FUNC_DISABLE;
+	se_interative_t  cmd_data;
+	int ret = -1,i = 0;
+	struct timeval overtime;
+	memset(&overtime,0,sizeof(overtime));
+	memset(&cmd_data,0,sizeof(cmd_data));
+	if(argc > 1) 
+	{
+		vty_out(vty,CMD_PARAMETER_NUM_ERROR);
+		return CMD_WARNING;
+	}
+	if(0==strncmp(enable,"disable",strlen(enable)))
+	{
+		flag=FUNC_DISABLE;
+	}
+	else if(0==strncmp(enable,"enable",strlen(enable)))
+	{
+		flag=FUNC_ENABLE;
+	}
+	else
+	{
+		vty_out(vty,CMD_PARAMETER_ERROR);
+		return CMD_FAILURE;
+	}
+	cmd_data.fccp_cmd.fccp_data.module_enable=flag;
+	strncpy(cmd_data.hand_cmd,SE_AGENT_AAT_ENABLE,strlen(SE_AGENT_AAT_ENABLE));
+	ret=sendto_agent(dcli_sockfd,(char*)&cmd_data,sizeof(cmd_data),vty);
+	if(ret<=0)
+	{
+		vty_out(vty,WRITE_FAIL_STR);
+		return CMD_FAILURE;
+	}
+	overtime.tv_sec=DCLI_WAIT_TIME;
+	ret=read_within_time(dcli_sockfd,(char*)&cmd_data,sizeof(cmd_data),&overtime);
+	if(ret==READ_ERROR)
+	{
+		vty_out(vty,AGENT_NO_RESPOND_STR);
+		return CMD_FAILURE;
+	}
+	if(cmd_data.cmd_result!=AGENT_RETURN_OK)
+	{
+		vty_out(vty,"%s\n",cmd_data.err_info);
+		return CMD_FAILURE;
+	}
+	return CMD_SUCCESS;
+}
+
 
 DEFUN(fastfwd_pure_ip_enable_func,
 	  fastfwd_pure_ip_enable_cmd,
@@ -2980,9 +3038,22 @@ void dcli_show_fastfwd_rule(se_interative_t  *cmd_data,struct vty *vty)
 		vty_out(vty,"    action mask = 0x%x\n", cmd_data->fccp_cmd.fccp_data.acl_info.acl_param.action_mask);
 
 		/*wangjian add for slave cpu ip is 0 20121214 */
-		if (cmd_data->fccp_cmd.fccp_data.acl_info.acl_param.nat_flag == 1)
+		if (cmd_data->fccp_cmd.fccp_data.acl_info.acl_param.nat_flag != 0)
 		{
-			vty_out(vty,"nat_info:    %u.%u.%u.%u:%u  ==> %u.%u.%u.%u:%u \n",
+			if (NAT_FLAG == cmd_data->fccp_cmd.fccp_data.acl_info.acl_param.nat_flag)
+			{
+				vty_out(vty,"    nat_info:    ");	
+			}
+			else if (AAT_FLAG == cmd_data->fccp_cmd.fccp_data.acl_info.acl_param.nat_flag)
+			{
+				vty_out(vty,"    aat_info:    ");	
+			}
+			else if (AAT_NAT_FLAG == cmd_data->fccp_cmd.fccp_data.acl_info.acl_param.nat_flag)
+			{
+				vty_out(vty,"    nat_aat_info:    ");	
+			}
+			
+			vty_out(vty,"%u.%u.%u.%u:%u  ==> %u.%u.%u.%u:%u \n",
 			IP_FMT(cmd_data->fccp_cmd.fccp_data.acl_info.acl_param.nat_sip),
 			cmd_data->fccp_cmd.fccp_data.acl_info.acl_param.nat_sport,
 			IP_FMT(cmd_data->fccp_cmd.fccp_data.acl_info.acl_param.nat_dip),
@@ -4310,7 +4381,29 @@ display_loop:
                         cmd_data.fccp_cmd.fccp_data.acl_info.acl_param.in_ether_type, 
                         cmd_data.fccp_cmd.fccp_data.acl_info.acl_param.in_tag);
                 vty_out(vty,"    action mask = 0x%x\n", cmd_data.fccp_cmd.fccp_data.acl_info.acl_param.action_mask);
-
+				
+				if (cmd_data.fccp_cmd.fccp_data.acl_info.acl_param.nat_flag != 0)
+				{
+					if (NAT_FLAG == cmd_data.fccp_cmd.fccp_data.acl_info.acl_param.nat_flag)
+					{
+						vty_out(vty,"    nat_info:	  ");	
+					}
+					else if (AAT_FLAG == cmd_data.fccp_cmd.fccp_data.acl_info.acl_param.nat_flag)
+					{
+						vty_out(vty,"    aat_info:	  ");	
+					}
+					else if (AAT_NAT_FLAG == cmd_data.fccp_cmd.fccp_data.acl_info.acl_param.nat_flag)
+					{
+						vty_out(vty,"    nat_aat_info:	  ");	
+					}
+					
+					vty_out(vty,"%u.%u.%u.%u:%u  ==> %u.%u.%u.%u:%u \n",
+					IP_FMT(cmd_data.fccp_cmd.fccp_data.acl_info.acl_param.nat_sip),
+					cmd_data.fccp_cmd.fccp_data.acl_info.acl_param.nat_sport,
+					IP_FMT(cmd_data.fccp_cmd.fccp_data.acl_info.acl_param.nat_dip),
+					cmd_data.fccp_cmd.fccp_data.acl_info.acl_param.nat_dport);
+				}
+				
 				/*add by wangjian for support pppoe 2013-3-15*/
 				if (cmd_data.fccp_cmd.fccp_data.acl_info.acl_param.pppoe_flag == 1)
 				{
@@ -4964,6 +5057,7 @@ void dcli_se_agent_init(void)
 	install_element(FAST_FWD_NODE,&debug_ipfwd_learn_cmd);
 	install_element(FAST_FWD_NODE,&fastfwd_learned_icmp_enable_cmd);
 	install_element(FAST_FWD_NODE,&fastfwd_learned_pppoe_enable_cmd);
+	install_element(FAST_FWD_NODE,&fastfwd_learned_aat_enable_cmd);
 	install_element(FAST_FWD_NODE,&fastfwd_pure_ip_enable_cmd);
 	install_element(FAST_FWD_NODE,&show_fwd_pure_ip_enable_cmd);
 	install_element(FAST_FWD_NODE,&fastfwd_pure_ipv6_enable_cmd);
@@ -5013,6 +5107,7 @@ void dcli_se_agent_init(void)
 	//install_element(HANSI_NODE,&clear_part_packet_statistic_cmd);
 	install_element(HANSI_FAST_FWD_NODE,&fastfwd_learned_icmp_enable_cmd);
 	install_element(HANSI_FAST_FWD_NODE,&fastfwd_learned_pppoe_enable_cmd);
+	install_element(HANSI_FAST_FWD_NODE,&fastfwd_learned_aat_enable_cmd);
 	install_element(HANSI_FAST_FWD_NODE,&fastfwd_pure_ip_enable_cmd);
 	install_element(HANSI_FAST_FWD_NODE,&show_fwd_pure_ip_enable_cmd);
 	install_element(HANSI_FAST_FWD_NODE,&fastfwd_pure_ipv6_enable_cmd);
@@ -5067,6 +5162,7 @@ void dcli_se_agent_init(void)
 	//install_element(LOCAL_HANSI_FAST_FWD_NODE,&clear_part_packet_statistic_cmd);
 	install_element(LOCAL_HANSI_FAST_FWD_NODE,&fastfwd_learned_icmp_enable_cmd);
 	install_element(LOCAL_HANSI_FAST_FWD_NODE,&fastfwd_learned_pppoe_enable_cmd);
+	install_element(LOCAL_HANSI_FAST_FWD_NODE,&fastfwd_learned_aat_enable_cmd);
 	install_element(LOCAL_HANSI_FAST_FWD_NODE,&fastfwd_pure_ip_enable_cmd);
 	install_element(LOCAL_HANSI_FAST_FWD_NODE,&show_fwd_pure_ip_enable_cmd);
 	install_element(LOCAL_HANSI_FAST_FWD_NODE,&fastfwd_pure_ipv6_enable_cmd);
