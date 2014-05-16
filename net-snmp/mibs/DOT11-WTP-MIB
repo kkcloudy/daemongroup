@@ -10087,6 +10087,43 @@ VerifyModeTrapDescription	 			OBJECT-TYPE
 			"An wtpConfigurationErrorTrap Trap signifies that there has been an signal of AP-Configuration-Error "
 	::= { wtpInnerTrap 30 }
 	
+	ReservedReasonTrap NOTIFICATION-TYPE
+		OBJECTS {
+				wtpMacAddr
+			}
+		STATUS		current
+		DESCRIPTION
+			"Reserved of LTE FI quit reason "
+	::= { wtpInnerTrap 31 }
+
+	ACCTimeoutTrap NOTIFICATION-TYPE
+		OBJECTS {
+				wtpMacAddr
+			}
+		STATUS		current
+		DESCRIPTION
+			"ACCTimeout resulted in Lte Fi quit "
+	::= { wtpInnerTrap 32 }
+
+	ExtendReasonTrap NOTIFICATION-TYPE
+		OBJECTS {
+				wtpMacAddr
+			}
+		STATUS		current
+		DESCRIPTION
+			"extend reason of Lte Fi quit "
+	::= { wtpInnerTrap 33 }	
+	
+	LteFiUplinkSwitchTrap NOTIFICATION-TYPE
+		OBJECTS {
+				wtpMacAddr
+			}
+		STATUS		current
+		DESCRIPTION
+			"extend reason of Lte Fi quit "
+	::= { LTE uplink mode switch 34 }		
+	
+	
 	APAddUserFailClearTrap NOTIFICATION-TYPE
 		OBJECTS {
 				wtpMacAddr
