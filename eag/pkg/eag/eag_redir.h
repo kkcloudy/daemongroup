@@ -62,6 +62,10 @@ eag_redir_set_local_addr(eag_redir_t *redir,
 							uint16_t local_port);
 
 int
+eag_redir_set_local_ipv6_addr(eag_redir_t *redir,
+							struct in6_addr *local_ipv6);
+
+int
 eag_redir_set_thread_master(eag_redir_t *redir,
 						eag_thread_master_t *master);
 

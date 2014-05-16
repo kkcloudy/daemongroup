@@ -1784,7 +1784,7 @@ eag_ipv6_redir_start(eag_redir_t * redir)
 	memset(&ipv6_addr, 0, sizeof (struct sockaddr_in6));	
 	ipv6_addr.sin6_family = AF_INET6;
 	if (1 == pdc_distributed) {
-		//ipv6_addr.sin6_addr = htonl(redir->local_ip);
+		ipv6_addr.sin6_addr = redir->local_ipv6;
 		ipv6_addr.sin6_port = htons(redir->local_port);
 	} else {
 		ipv6_addr.sin6_addr = *nasipv6;
@@ -1816,13 +1816,14 @@ eag_ipv6_redir_start(eag_redir_t * redir)
 	}
 
 	eag_redir_event(EAG_IPV6_REDIR_SERV, redir);
-	ipv6tostr(nasipv6, redir_ipv6str, sizeof(redir_ipv6str));
 	if (1 == pdc_distributed) {
+		ipv6tostr(&(redir->local_ipv6), redir_ipv6str, sizeof(redir_ipv6str));
 		eag_log_info("ipv6 redir(%s:%u) fd(%d) start ok", 
 			redir_ipv6str,
 			redir->local_port,
 			redir->ipv6_listen_fd);
 	} else {
+		ipv6tostr(nasipv6, redir_ipv6str, sizeof(redir_ipv6str));
 		eag_log_info("ipv6 redir(%s:%u) fd(%d) start ok", 
 			redir_ipv6str,
 			redir->redir_port,
@@ -2026,6 +2027,20 @@ eag_redir_set_local_addr(eag_redir_t *redir,
 	redir->local_ip = local_ip;
 	redir->local_port = local_port;
 	
+	return 0;
+}
+
+int
+eag_redir_set_local_ipv6_addr(eag_redir_t *redir,
+							struct in6_addr *local_ipv6)
+{
+	if (NULL == redir) {
+		eag_log_err("eag_redir_set_local_ipv6_addr input error");
+		return -1;
+	}
+
+	redir->local_ipv6 = *local_ipv6;
+
 	return 0;
 }
 

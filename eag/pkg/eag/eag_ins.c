@@ -1375,6 +1375,8 @@ eag_ins_new(uint8_t hansitype, uint8_t insid)
 {
 	eag_ins_t *eagins = NULL;
 	char buf[64] = "";
+	char ipv6str[64] = "";
+	struct in6_addr local_ipv6 = {0};
 	uint32_t local_ip = 0;
 	int ret = EAG_RETURN_OK;
 
@@ -1597,6 +1599,10 @@ eag_ins_new(uint8_t hansitype, uint8_t insid)
 					EAG_RADIUS_COA_PORT_BASE + insid);
 		rdc_client_init(EAG_RADIUS_COA_PORT_BASE + insid, eagins->slot_id,
 				eagins->hansi_type, eagins->hansi_id, RDC_EAG, NULL);
+
+		snprintf(ipv6str, sizeof(ipv6str) - 1, "fe00::169.254.2.%d", 100 + insid);
+		inet_pton(AF_INET6, ipv6str, (struct in6_addr *)&local_ipv6);
+		eag_redir_set_local_ipv6_addr(eagins->redir, &local_ipv6);
 	}
 	else {
 		local_ip = SLOT_IPV4_BASE + eagins->slot_id;
@@ -1608,6 +1614,10 @@ eag_ins_new(uint8_t hansitype, uint8_t insid)
 				EAG_RADIUS_COA_PORT_BASE + MAX_HANSI_ID + insid);
 		rdc_client_init(EAG_RADIUS_COA_PORT_BASE + MAX_HANSI_ID + insid,
 			eagins->slot_id, eagins->hansi_type, eagins->hansi_id, RDC_EAG, NULL);
+
+		snprintf(ipv6str, sizeof(ipv6str) - 1, "fe00::169.254.2.%d", eagins->slot_id);
+		inet_pton(AF_INET6, ipv6str, (struct in6_addr *)&local_ipv6);
+		eag_redir_set_local_ipv6_addr(eagins->redir, &local_ipv6);
 	}
 	eag_radius_set_local_ip(eagins->radius, local_ip);
 	pdc_client_init(eagins->slot_id ,eagins->hansi_type,
@@ -1757,6 +1767,8 @@ eag_ins_start(eag_ins_t *eagins)
 {
 	int ret = 0;
 	char buf[64] = "";
+	char ipv6str[64] = "";
+	struct in6_addr ipv6_addr = {0};
 	
 	if (NULL == eagins) {
 		eag_log_err("eag_ins_start input error");
@@ -1784,21 +1796,26 @@ eag_ins_start(eag_ins_t *eagins)
 			eag_captive_set_redir_srv(eagins->captive,
 					SLOT_IPV4_BASE + 100 + eagins->hansi_id,
 					EAG_REDIR_LISTEN_PORT_BASE + eagins->hansi_id);
-			if (eag_ins_get_ipv6_switch(eagins)) {
-				eag_captive_set_ipv6_redir_srv( eagins->captive, &(eagins->nasipv6));
-			}
 		} else {
 			eag_captive_set_redir_srv( eagins->captive,
 				SLOT_IPV4_BASE + eagins->slot_id,
 				EAG_REDIR_LISTEN_PORT_BASE + MAX_HANSI_ID + eagins->hansi_id);
-			if (eag_ins_get_ipv6_switch(eagins)) {
-				eag_captive_set_ipv6_redir_srv( eagins->captive, &(eagins->nasipv6));
-			}
 		}
 	} else {
 		eag_captive_set_redir_srv( eagins->captive, eagins->nasip,
 				EAG_REDIR_LISTEN_PORT);
-		if (eag_ins_get_ipv6_switch(eagins)) {
+	}
+
+    if (eag_ins_get_ipv6_switch(eagins)) {
+		if (1 == eagins->pdc_distributed) {	
+			if (HANSI_LOCAL == eagins->hansi_type) {
+				snprintf(ipv6str, sizeof(ipv6str) - 1, "fe00::169.254.2.%d", 100 + eagins->hansi_id);
+			} else {
+				snprintf(ipv6str, sizeof(ipv6str) - 1, "fe00::169.254.2.%d", eagins->slot_id);
+			}
+            inet_pton(AF_INET6, ipv6str, (struct in6_addr *)&ipv6_addr);
+            eag_captive_set_ipv6_redir_srv( eagins->captive, &ipv6_addr);
+		} else {
 			eag_captive_set_ipv6_redir_srv( eagins->captive, &(eagins->nasipv6));
 		}
 	}

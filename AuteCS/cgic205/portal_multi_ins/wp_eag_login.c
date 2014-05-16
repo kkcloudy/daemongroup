@@ -90,9 +90,7 @@ int CgiInformAc(char * clientIp, char * serverIp, PKG_TYPE Type, STAuthProcess *
 		if (1 == inet_pton(AF_INET6, clientIp, &user_ipv6)) {
             fprintf(stderr,"CgiInformAc clientIp6=%s\n",clientIp );
             setPkgUserIP( pAuthProc->pSendPkg, 0 );
-            fprintf(stderr,"1\n");
             addAttr( &(pAuthProc->pSendPkg), ATTR_USER_IPV6, &user_ipv6, sizeof(user_ipv6) );
-            fprintf(stderr,"2\n");
 		}
 		
         fprintf(stderr,"CgiInformAc serverIp=%s\n",serverIp );
@@ -140,6 +138,7 @@ int cgiMain()
 	STPkgAttr *tlvPkgAttr;
 	UINT8  tmp[MD5LEN+1];
 	char acIp[32] = "";
+	char userIp[32] = "";
 	
 	STUserInfo userInfo;
 	memset(&userInfo, 0 ,sizeof(STUserInfo));
@@ -162,14 +161,16 @@ int cgiMain()
 	}
 		
 	
-	fprintf(stderr,"cgiQueryString=%s",cgiQueryString);
-	fprintf(stderr,"cgiReferrer=%s",cgiReferrer);
-	fprintf(stderr,"cgiServerName=%s",cgiServerName);
+	//fprintf(stderr,"cgiQueryString=%s",cgiQueryString);
+	//fprintf(stderr,"cgiReferrer=%s",cgiReferrer);
+	//fprintf(stderr,"cgiServerName=%s",cgiServerName);
 	memset(acIp, 0, sizeof(acIp));
 	if( cgiFormNotFound == cgiFormStringNoNewlines("wlanacip", acIp, sizeof(acIp)) ) {
 		strncpy(acIp, cgiServerName, sizeof(acIp)-1);
     }
-	fprintf(stderr,"acIp=%s",acIp);
+	if( cgiFormNotFound == cgiFormStringNoNewlines("wlanuserip", userIp, sizeof(userIp)) ) {
+		strncpy(userIp, cgiRemoteAddr, sizeof(userIp)-1);
+    }
 
 	fprintf( fpOut, "<html xmlns=\"http://www.w3.org/1999/xhtml\"> \n" );
 	fprintf( fpOut, "<head> \n" );
@@ -196,10 +197,12 @@ int cgiMain()
 	char urlPost[4096]={0};
 	char *urlNew = NULL;
 	char *replace = NULL;
+	char urlParam[128] = "";
     struct in_addr user_ip;
     struct in6_addr user_ipv6;
 	
-	fprintf(stderr,"f_name=%s--f_pass=%s--op_auth=%s--cgiRemoteAddr =%s--cgiServerName=%s\n", userInfo.usrName, userInfo.usrPass, opt, cgiRemoteAddr,cgiServerName  );
+	fprintf(stderr, "a_name=%s, a_pass=%s, op_auth=%s, userIp=%s, acIp=%s, cgiRemoteAddr=%s, cgiServerName=%s\n",
+			userInfo.usrName, userInfo.usrPass, opt, userIp, acIp, cgiRemoteAddr, cgiServerName);
 	#if 1
 
 	fprintf(stderr,"cgiReferrer=%s\n", cgiReferrer  );
@@ -242,7 +245,7 @@ int cgiMain()
  			
  			if( stAuth.protocal == AUTH_CHAP )				/*chap md5 simulation----------*/
  			{
- 				ret_challege = CgiInformAc(cgiRemoteAddr, acIp, REQ_CHALLENGE, &stAuth, stAuth.protocal);
+ 				ret_challege = CgiInformAc(userIp, acIp, REQ_CHALLENGE, &stAuth, stAuth.protocal);
  				fprintf(stderr,"ret_challege=%d", ret_challege);
  				if( CHALLENGE_SUCCESS == ret_challege || CHALLENGE_CONNECTED == ret_challege )/*if ret is success ,then can get attr from rev pkg*/
  				{
@@ -301,10 +304,10 @@ int cgiMain()
  			setRequireID(stAuth.pSendPkg, reqID );
  			memset(&user_ip, 0, sizeof(user_ip));
 			memset(&user_ipv6, 0, sizeof(user_ipv6));
-			if (1 == inet_pton(AF_INET, cgiRemoteAddr, &user_ip)) {
+			if (1 == inet_pton(AF_INET, userIp, &user_ip)) {
                 setPkgUserIP( stAuth.pSendPkg, user_ip.s_addr );
 			}
-			if (1 == inet_pton(AF_INET6, cgiRemoteAddr, &user_ipv6)) {
+			if (1 == inet_pton(AF_INET6, userIp, &user_ipv6)) {
 	            setPkgUserIP( stAuth.pSendPkg, 0 );
 	            addAttr( &stAuth.pSendPkg, ATTR_USER_IPV6, &user_ipv6, sizeof(user_ipv6) );
 			}
@@ -353,7 +356,7 @@ int cgiMain()
  			destroyPortalPkg(stAuth.pRevPkg);
  			break;
  		case 2:/*logout*/
- 			retLogout = CgiInformAc(cgiRemoteAddr, acIp, REQ_LOGOUT, &stAuth, stAuth.protocal);
+ 			retLogout = CgiInformAc(userIp, acIp, REQ_LOGOUT, &stAuth, stAuth.protocal);
  			destroyPortalPkg(stAuth.pSendPkg);
  			destroyPortalPkg(stAuth.pRevPkg);
  			break;
@@ -377,8 +380,8 @@ int cgiMain()
 		switch(retLogin)
 		{
 			case PORTAL_AUTH_SUCCESS:
-				urlNew = replaceStrPart(urlPost, "/auth_suc.html?wlanacip=");
-				strcat(urlPost, acIp);
+				snprintf(urlParam, sizeof(urlParam)-1, "/auth_suc.html?wlanacip=%s&wlanuserip=%s", acIp, userIp);
+				urlNew = replaceStrPart(urlPost, urlParam);
 				locate(fpOut, urlNew);
 				break;
 			case PORTAL_AUTH_REJECT: 	urlNew = replaceStrPart(urlPost, "/auth_fail.html"); locate(fpOut, urlNew);break;
