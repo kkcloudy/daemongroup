@@ -123,9 +123,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define wtpSoftWareUpdateFailed				"wtpSoftWareUpdateFailed"				//0.29
 #define wtpConfigurationErrorTrap			"wtpConfigurationErrorTrap"				//0.30
 /*wangchao add*/
-#define wtpLteOnlineTrap					"ApLteOnlineTrap"					//0.31
-#define wtpLteOfflineTrap					"ApLteOfflineTrap"					//0.32
-
+#define ReservedReason						"ReservedReason"				//0.31
+#define ACCTimeout							"ACCTimeout"					//0.32
+#define ExtendReason						"ExtendReason"					//0.32
+#define LteFiUplinkSwitch					"LteFiUplinkSwitch"				//0.34
 
 //ap app
 #define wtpChannelObstructionTrap			"wtpChannelObstructionTrap"				//1.1
@@ -358,7 +359,8 @@ enum {
 	WTPUSERTAFFICOVERLOAD,				/*52*/
 	WTPUNAUTHORIZEDSTAMACTRAP,			/*53*/
 	MAXAPTRAPNUM,						/*54*/
-	WTPLTEONLINEOFFLINE					/*55 wangchao*/
+	LTEFIQUITREASON	,				/*55 wangchao*/
+	LTEUPLINKSWITCH						/*56*/	
 };
 
 enum {

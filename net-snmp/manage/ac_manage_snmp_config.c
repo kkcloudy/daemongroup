@@ -172,8 +172,10 @@ TRAP_DETAIL_CONFIG ALL_TRAP[] = {
 	{acPortUpTrap,								"端口up告警",					"ac port up",								0},
 	
 		//0.31	wangchao	
-	{wtpLteOnlineTrap,							"AP_LTE上线告警",				"AP Lte status is running",		0},
-	{wtpLteOfflineTrap,							"AP_LTE下线告警",				"AP Lte status is quit",		0}	
+	{ReservedReason,							"预留的LTE FI下线原因",			"reserved reason of Lte Fi quit",			0},
+	{ACCTimeout,								"ACC超时导致LTE FI下线",		"ACCTimeout resulted in Lte Fi quit",		0},
+	{ExtendReason,								"拓展的LTE FI下线原因",			"extend reason of Lte Fi quit",				0},		
+	{LteFiUplinkSwitch, 						"LTE 模式切换",					"LTE uplink mode switch",			 		0}
 };
 
 

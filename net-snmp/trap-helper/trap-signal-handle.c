@@ -4878,6 +4878,13 @@ int ap_run_quit_state(DBusMessage *message)
 }
 
 
+/*
+enum LTEFIQuitResaon {
+	0,            //for reserved
+	ACC_LEAVE=1,  //ACC超时导致AP断电离线
+	2,            //for extend
+};
+*/
 /*wangchao add*/
 int ap_lte_run_quit_state(DBusMessage * message)
 {
@@ -4924,10 +4931,19 @@ int ap_lte_run_quit_state(DBusMessage * message)
 	TrapDescr *tDescr = NULL;
 	TrapData *tData = NULL;
 
-	if (1==quit_reason)
+    if (0 == quit_reason)
+    {
+    	tDescr = trap_descr_list_get_item(global.gDescrList_hash, ReservedReason);
+    }
+	else if (1==quit_reason)
 	{	
-		tDescr = trap_descr_list_get_item(global.gDescrList_hash, wtpLteOnlineTrap);
+		tDescr = trap_descr_list_get_item(global.gDescrList_hash, ACCTimeout);
 	}
+	else if (2 == quit_reason) 
+	{
+		tDescr = trap_descr_list_get_item(global.gDescrList_hash, ExtendReason);
+	}
+	/*
 	else if ( 0==quit_reason )
 	{
 		tDescr = trap_descr_list_get_item(global.gDescrList_hash, wtpLteOfflineTrap);
@@ -4936,7 +4952,7 @@ int ap_lte_run_quit_state(DBusMessage * message)
 			trap_ap_lte_offline_clear_aptrap_items(global.gDescrList_hash, global.wtp[local_id][instance_id]->ap[wtpindex]);
 		}
 	}
-
+*/
 	if (NULL == tDescr || 0==tDescr->switch_status)
 		return TRAP_SIGNAL_HANDLE_DESCR_SWITCH_OFF;
 
@@ -4971,6 +4987,100 @@ int ap_lte_run_quit_state(DBusMessage * message)
 	
 	return TRAP_SIGNAL_HANDLE_SEND_TRAP_OK;
 }
+
+
+
+/*wangchao add*/
+int wid_dbus_trap_wid_lte_fi_uplink_switch(DBusMessage * message)
+{
+	cmd_test_out(LteFiUplinkSwitch);
+
+	DBusError error;
+	unsigned int wtpindex;
+	char *wtpsn;
+	unsigned char wtpmac[MAC_LEN];
+	char *netid = "";
+	unsigned int local_id = 0;
+	unsigned int instance_id = 0;
+	char *lte_switch_data = "";
+	unsigned short band = 0;
+	char *ID = "";
+	char *MODE = "";
+
+	
+	dbus_error_init(&error);
+	if (!(dbus_message_get_args(message, &error,
+							DBUS_TYPE_UINT32, &wtpindex,
+							DBUS_TYPE_STRING, &wtpsn,
+							DBUS_TYPE_BYTE, &wtpmac[0],
+							DBUS_TYPE_BYTE, &wtpmac[1],
+							DBUS_TYPE_BYTE, &wtpmac[2],
+							DBUS_TYPE_BYTE, &wtpmac[3],
+							DBUS_TYPE_BYTE, &wtpmac[4],
+							DBUS_TYPE_BYTE, &wtpmac[5],
+							DBUS_TYPE_STRING,&lte_switch_data,
+							DBUS_TYPE_STRING,&wtpmac, 
+							DBUS_TYPE_UINT16,&band, 
+							DBUS_TYPE_STRING,&ID,
+							DBUS_TYPE_STRING,&MODE,							
+							DBUS_TYPE_STRING,&netid,
+							DBUS_TYPE_UINT32,&instance_id,
+							DBUS_TYPE_UINT32,&local_id,
+							DBUS_TYPE_INVALID)))
+	{
+		trap_syslog(LOG_WARNING, "Get args failed, %s, %s\n", dbus_message_get_member(message), error.message);
+		dbus_error_free(&error);
+		return TRAP_SIGNAL_HANDLE_GET_ARGS_ERROR;
+	}
+	trap_syslog(LOG_INFO, "Handling signal %s, wtpindex=%d, wtpsn=%s, netid=%s, local_id = %d, instance_id=%d,lte_switch_date=%s, wtpmac=%02X-%02X-%02X-%02X-%02X-%02X,\
+						 band = %d, ID = %s ,MOD = %s\n",
+				dbus_message_get_member(message), wtpindex, wtpsn,netid, local_id, instance_id, lte_switch_data,
+				wtpmac[0], wtpmac[1], wtpmac[2], wtpmac[3], wtpmac[4], wtpmac[5],band,ID,MODE);
+
+	if( !trap_is_ap_trap_enabled(&gInsVrrpState, local_id, instance_id) ) //add 2010-10-20
+		return TRAP_SIGNAL_HANDLE_HANSI_BACKUP;
+
+	TrapDescr *tDescr = NULL;
+	TrapData *tData = NULL;
+
+	tDescr = trap_descr_list_get_item(global.gDescrList_hash, LteFiUplinkSwitch);
+
+	if (NULL == tDescr || 0==tDescr->switch_status)
+		return TRAP_SIGNAL_HANDLE_DESCR_SWITCH_OFF;
+
+	INCREASE_TIMES(tDescr);
+
+	TRAP_SIGNAL_AP_RESEND_UPPER_MACRO(wtpindex, tDescr, local_id, instance_id);
+
+
+	tData = trap_data_new_from_descr(tDescr);
+	
+	char mac_str[MAC_STR_LEN];
+	get_ap_mac_str(mac_str, sizeof(mac_str), wtpmac);
+	
+	char mac_oid[MAX_MAC_OID];
+	get_ap_mac_oid(mac_oid, sizeof(mac_oid), mac_str);
+	
+	trap_data_append_param_str(tData, "%s s %s",	EI_MAC_TRAP_DES,			mac_str);
+	trap_data_append_param_str(tData, "%s%s s %s",	EI_SN_TRAP_DES, 			mac_oid, wtpsn);
+	trap_data_append_param_str(tData, "%s%s s %s",	WTP_NET_ELEMENT_CODE_OID,	mac_oid, netid);
+	trap_data_append_param_str(tData, "%s%s s %s",	WTP_NET_ELEMENT_CODE_OID,	mac_oid, lte_switch_data);
+	trap_data_append_param_str(tData, "%s%s s %s",	WTP_NET_ELEMENT_CODE_OID,	mac_oid, band);
+	trap_data_append_param_str(tData, "%s%s s %s",	WTP_NET_ELEMENT_CODE_OID,	mac_oid, ID);
+	trap_data_append_param_str(tData, "%s%s s %s",	WTP_NET_ELEMENT_CODE_OID,	mac_oid, MODE);
+	
+
+	trap_syslog(LOG_INFO,"mac_str == %s, wtpsn == %s, netid == %s\n", mac_str,wtpsn,netid);
+	
+	trap_data_append_common_param(tData, tDescr);
+	
+	trap_send(gInsVrrpState.instance[local_id][instance_id].receivelist, &gV3UserList, tData);
+
+	TRAP_SIGNAL_AP_RESEND_LOWER_MACRO(wtpindex , tDescr, tData, local_id, instance_id);
+//	trap_data_destroy(tData);
+	return TRAP_SIGNAL_HANDLE_SEND_TRAP_OK;
+}
+
 
 
 
@@ -7189,6 +7299,10 @@ void trap_signal_register_all(TrapList *list, hashtable *ht)
 	tSignal_tmp=trap_signal_list_register(list, WID_DBUS_TRAP_WID_LTE_FI_RUN_QUIT, ap_lte_run_quit_state);
 	INIT_SIGNAL_HASH_LIST(tSignal_tmp,ht);	
 
+	tSignal_tmp=trap_signal_list_register(list, WID_DBUS_TRAP_WID_LTE_FI_UPLINK_SWITCH, wid_dbus_trap_wid_lte_fi_uplink_switch);
+
+	INIT_SIGNAL_HASH_LIST(tSignal_tmp,ht);		
+
 /*ac*/	
 	tSignal_tmp=trap_signal_list_register(list, AC_SAMPLE_OVER_THRESHOLD_SIGNAL_CPU, 			ac_cpu_over_threshold_and_clear_func);
 	INIT_SIGNAL_HASH_LIST(tSignal_tmp,ht);
@@ -7421,13 +7535,22 @@ void trap_descr_register_all(TrapList *list, hashtable *ht)
 	INIT_DESCR_HASH_LIST( descr_tmp , ht );
 
 	/*wangchao*/
-	descr_tmp=trap_descr_list_register(list, WTPLTEONLINEOFFLINE, wtpLteOnlineTrap, TRAP_SRC_AP, ".0.31", TRAP_TYPE_ENVIRO, 
-									TRAP_LEVEL_CRITIC, "wtp_LTE_is_running", "wtp_LTE_is_running");
+	descr_tmp=trap_descr_list_register(list, LTEFIQUITREASON, ReservedReason, TRAP_SRC_AP, ".0.31", TRAP_TYPE_ENVIRO, 
+									TRAP_LEVEL_CRITIC, "ReservedReason", "reserved_reason_of_Lte_Fi_quit");
 	INIT_DESCR_HASH_LIST( descr_tmp , ht );
 
-	descr_tmp=trap_descr_list_register(list, WTPLTEONLINEOFFLINE, wtpLteOfflineTrap, TRAP_SRC_AP, ".0.32", TRAP_TYPE_ENVIRO, 
-									TRAP_LEVEL_CRITIC, "wtp_LTE_is_quit", "wtp_LTE_is_quit");
+	descr_tmp=trap_descr_list_register(list, LTEFIQUITREASON, ACCTimeout, TRAP_SRC_AP, ".0.32", TRAP_TYPE_ENVIRO, 
+									TRAP_LEVEL_CRITIC, "ACCTimeout", "ACCTimeout_resulted_in_Lte_Fi_quit");
 	INIT_DESCR_HASH_LIST( descr_tmp , ht );	
+	
+	descr_tmp=trap_descr_list_register(list, LTEFIQUITREASON, ExtendReason, TRAP_SRC_AP, ".0.33", TRAP_TYPE_ENVIRO, 
+									TRAP_LEVEL_CRITIC, "ExtendReason", "extend_reason_of_Lte_Fi_quit");
+	INIT_DESCR_HASH_LIST( descr_tmp , ht );
+
+	descr_tmp=trap_descr_list_register(list, LTEUPLINKSWITCH, LteFiUplinkSwitch, TRAP_SRC_AP, ".0.34", TRAP_TYPE_ENVIRO, 
+									TRAP_LEVEL_CRITIC, "Lte_uplink_switch", "Lte_uplink_switch");
+	INIT_DESCR_HASH_LIST( descr_tmp , ht );	
+	
 //ap app
 //1.1
 	descr_tmp=trap_descr_list_register( list, WTPCHANNELOBSTRUCT, wtpChannelObstructionTrap, TRAP_SRC_AP, ".1.1", TRAP_TYPE_ENVIRO, 
