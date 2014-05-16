@@ -1323,7 +1323,7 @@ static void handle_auth(struct asd_data *wasd, struct ieee80211_mgmt *mgmt,
 	asd_printf(ASD_80211,MSG_DEBUG, "authentication: STA=" MACSTR " BSSIndex %d\n",
 		MAC2STR(mgmt->sa), wasd->BSSIndex);
 
-	asd_printf(ASD_80211,MSG_DEBUG,"mgmt->bssid:%s,  assoc_ap_addr:%s \n", mgmt->bssid,wasd->conf->assoc_ap_addr);
+	asd_printf(ASD_80211,MSG_DEBUG,"mgmt->bssid:" MACSTR ",  assoc_ap_addr:" MACSTR " \n", MAC2STR(mgmt->bssid), MAC2STR(wasd->conf->assoc_ap_addr));
 	asd_printf(ASD_80211,MSG_DEBUG,"ASD_WLAN[Wlanid]->ESSID:%s  \n", ASD_WLAN[wasd->WlanID]->ESSID);
 	asd_printf(ASD_80211,MSG_DEBUG,"ASD_BSS[%d]->SSID:%s  \n",wasd->BSSIndex, ASD_BSS[wasd->BSSIndex]->SSID);
 

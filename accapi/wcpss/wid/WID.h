@@ -1422,8 +1422,9 @@ typedef struct wlan_service_control WID_WSC;
 struct ip_info{
 	struct ip_info * next;
 	struct ip_info * hnext;
+	struct ip_info * mhnext;
 	unsigned int ip;
-	char mac[MAC_LEN];
+	unsigned char mac[MAC_LEN];
 };
 #define VIR_DHCP_HASH_SIZE     (1024)
 struct vir_pool{
@@ -1439,6 +1440,7 @@ struct vir_dhcp{
 	unsigned int high;
 	struct vir_pool dhcpfree;
 	struct vir_pool dhcplease;
+	struct ip_info *cache_hash[VIR_DHCP_HASH_SIZE];
 };
 /*end**************************************************/	
 

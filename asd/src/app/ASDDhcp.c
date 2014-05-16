@@ -9,9 +9,12 @@
 #include "wcpss/waw.h"
 #include "wcpss/wid/WID.h"
 #include "wcpss/asd/asd.h"
+#include "asd.h"
+#include "ASDDhcp.h"
 
 #define IP_HASH(ip) (ip[0]+ip[1]+ip[2]+ip[3])
 #define MAC_HASH(mac) (mac[2]+mac[3]+mac[4]+mac[5])
+#define VIR_LEASE_CACHE_TIME_OUT  (60*15)  /*15 minutes*/
 
 struct ip_info *dhcp_get_sta_by_ip
 (
@@ -30,6 +33,54 @@ struct ip_info *dhcp_get_sta_by_ip
 	
 	return s;
 }
+
+struct ip_info *dhcp_get_sta_by_mac_cache
+(
+	struct vir_dhcp *vdhcp,
+	unsigned char *mac
+)
+{	
+	struct ip_info *s = NULL;
+	
+	ASD_CHECK_POINTER(vdhcp);
+	ASD_CHECK_POINTER(mac);
+
+	s = vdhcp->cache_hash[MAC_HASH(mac)];
+	
+	while (s != NULL)
+	{
+		if(0 == strcmp(s->mac, mac))
+		{
+			return s;
+		}
+		s = s->mhnext;
+	}
+	
+	return s;
+}
+
+struct ip_info *dhcp_get_sta_by_random
+(
+	struct vir_dhcp *vdhcp
+)
+{	
+	struct ip_info *s = NULL;
+	unsigned int i = 0;
+	
+	ASD_CHECK_POINTER(vdhcp);
+	
+	for(i=0; i<VIR_DHCP_HASH_SIZE; i++)
+	{
+		s = vdhcp->cache_hash[i];
+		if(s != NULL)
+		{
+			return s;
+		}
+	}
+	
+	return s;
+}
+
 
 /* only remove next point, DON't free the node */
 static void dhcp_ip_list_del
@@ -135,10 +186,74 @@ static void dhcp_ip_hash_del
 	return;	
 }
 
+void dhcp_mac_hash_add
+(
+	struct vir_dhcp *vdhcp,
+	struct ip_info *sta
+)
+{
+	ASD_CHECK_POINTER(vdhcp);
+	ASD_CHECK_POINTER(sta);
+
+	sta->mhnext = vdhcp->cache_hash[MAC_HASH(sta->mac)];
+	vdhcp->cache_hash[MAC_HASH(sta->mac)] = sta;
+
+	asd_printf(ASD_DEFAULT,MSG_DEBUG,"%s: add sta "MACSTR" vir ip  %s \n",
+							__func__, MAC2STR(sta->mac),u32ip2str(sta->ip));	
+
+	return;
+}
+
+
+static void dhcp_mac_hash_del
+(
+	struct vir_dhcp *vdhcp,
+	struct ip_info *sta
+)
+{
+	struct ip_info *s = NULL;
+
+	ASD_CHECK_POINTER(vdhcp);
+	ASD_CHECK_POINTER(sta);
+	
+	s = vdhcp->cache_hash[MAC_HASH(sta->mac)];
+	if (s == NULL)
+	{
+		return;
+	}
+
+	/* head node in hash list */
+	if (0 == strcmp(s->mac, sta->mac))
+	{
+		vdhcp->cache_hash[MAC_HASH(sta->mac)] = s->mhnext;
+		return;
+	}
+
+	/* other node in hash list */
+	while (s->mhnext != NULL)
+	{
+		if (0 == strcmp(s->mhnext->mac, sta->mac))
+		{
+			s->mhnext = s->mhnext->mhnext;
+
+			asd_printf(ASD_DEFAULT,MSG_DEBUG,"%s: del sta "MACSTR" vir ip  %s \n",
+							__func__, MAC2STR(sta->mac),u32ip2str(sta->ip));	
+
+			return;
+		}
+
+		s = s->mhnext;
+	}
+
+	asd_printf(ASD_DEFAULT,MSG_DEBUG,"%s: no found sta "MACSTR" vir ip  %s \n",
+				__func__, MAC2STR(sta->mac),u32ip2str(sta->ip));	
+	return;	
+}
+
 struct ip_info *dhcp_add_ip
 (
 	struct vir_pool *pool,
-	int ip
+	unsigned int ip
 )
 {
 	struct ip_info *tmp = NULL;
@@ -159,6 +274,7 @@ struct ip_info *dhcp_add_ip
 	memset(tmp, 0, sizeof(struct ip_info));
 	tmp->next = NULL;
 	tmp->hnext = NULL;
+	tmp->mhnext = NULL;
 	tmp->ip = ip;
 
 	tmp->next = pool->ip_list;
@@ -203,16 +319,73 @@ int dhcp_free_pool
 	return 0;
 }
 
-
-
-struct ip_info *dhcp_assign_ip
+void dhcp_cancel_delete_timeout_virlease_cache
 (
 	struct vir_dhcp *vdhcp
 )
 {
-	struct ip_info *tmp = NULL;
+	ASD_CHECK_POINTER(vdhcp);
 
-	if (vdhcp->dhcpfree.ip_list != NULL)
+	struct ip_info *s = NULL;
+	int i=0 ;
+	int removed = 0;
+	
+	for(i=0; i<VIR_DHCP_HASH_SIZE;i++)
+	{
+		s = vdhcp->cache_hash[i];
+		
+		while(s != NULL)
+		{
+			removed = circle_cancel_timeout(delete_timeout_virlease_cache, vdhcp, s);
+
+			asd_printf(ASD_DEFAULT,MSG_DEBUG, "%s: cancel timeout vir ip %s for sta "MACSTR" num %d\n",
+						__func__, u32ip2str(s->ip), MAC2STR(s->mac), removed);	
+								
+			s = s->mhnext;
+		}
+	}
+		
+	
+}
+
+struct ip_info *dhcp_assign_ip
+(
+	struct vir_dhcp *vdhcp,
+	unsigned char *mac
+)
+{
+	struct ip_info *tmp = NULL;
+	int removed = 0;
+
+	ASD_CHECK_POINTER(vdhcp);
+	ASD_CHECK_POINTER(mac);
+
+	/*check whether sta is in cache*/
+	tmp = dhcp_get_sta_by_mac_cache(vdhcp,mac);
+	if(tmp != NULL)
+	{
+		removed = circle_cancel_timeout(delete_timeout_virlease_cache, vdhcp, tmp);
+
+		asd_printf(ASD_DEFAULT,MSG_DEBUG,"%s: cancel timeout vir ip %s for sta "MACSTR" num %d\n",
+				__func__, u32ip2str(tmp->ip),MAC2STR(tmp->mac), removed);
+		
+		dhcp_mac_hash_del(vdhcp,tmp);
+		tmp->mhnext = NULL;
+		
+		tmp->next = vdhcp->dhcplease.ip_list;
+		
+		vdhcp->dhcplease.ip_list = tmp;
+		
+		dhcp_ip_hash_add(&(vdhcp->dhcplease),tmp);
+		
+		vdhcp->dhcplease.ipnum++;	
+		
+		asd_printf(ASD_DEFAULT,MSG_DEBUG,"%s: assign vip %s from cache\n",
+				__func__, u32ip2str(tmp->ip));	
+
+		return tmp;
+	}
+	else if (vdhcp->dhcpfree.ip_list != NULL)
 	{
 		tmp = vdhcp->dhcpfree.ip_list;
 		vdhcp->dhcpfree.ip_list = tmp->next;
@@ -229,33 +402,86 @@ struct ip_info *dhcp_assign_ip
 		vdhcp->dhcplease.ip_list = tmp;
 		dhcp_ip_hash_add(&(vdhcp->dhcplease),tmp);
 		vdhcp->dhcplease.ipnum++;
+
+		asd_printf(ASD_DEFAULT,MSG_DEBUG,"%s: assign vip  %s from free \n",
+		__func__, u32ip2str(tmp->ip));	
+		
 		return tmp;
 	}
 	else
 	{
-		return NULL;
+		tmp = dhcp_get_sta_by_random(vdhcp);
+		if(tmp == NULL)
+		{
+			return NULL;
+		}
+		else
+		{
+			removed = circle_cancel_timeout(delete_timeout_virlease_cache, vdhcp, tmp);
+
+			asd_printf(ASD_DEFAULT,MSG_DEBUG,"%s: cancel timeout vir ip %s for sta "MACSTR" num %d\n",
+				__func__, u32ip2str(tmp->ip),MAC2STR(tmp->mac), removed);
+			
+			dhcp_mac_hash_del(vdhcp,tmp);
+			
+			tmp->mhnext = NULL;
+			
+			tmp->next = vdhcp->dhcplease.ip_list;
+			
+			vdhcp->dhcplease.ip_list = tmp;
+			
+			dhcp_ip_hash_add(&(vdhcp->dhcplease),tmp);
+			
+			vdhcp->dhcplease.ipnum++;	
+
+			asd_printf(ASD_DEFAULT,MSG_DEBUG,"%s: assign vip  %s from cache when free NULL\n",
+					__func__, u32ip2str(tmp->ip));	
+
+			return tmp;
+			
+		}
 	}
 }
 
-struct ip_info *dhcp_release_ip(struct vir_dhcp * vdhcp, int ip)
+struct ip_info *dhcp_release_ip
+(
+	struct vir_dhcp * vdhcp, 
+	unsigned int ip,
+	unsigned char *mac
+)
 {
 	struct ip_info *tmp = NULL, *prev = NULL;
 	
 	tmp = dhcp_get_sta_by_ip(&(vdhcp->dhcplease), ip);
-	if(tmp != NULL){
+	if(tmp != NULL)
+	{
 		/* Note: first delete node in hash list, second delete node in ip_list*/
 		dhcp_ip_hash_del(&(vdhcp->dhcplease), tmp);
 		tmp->hnext = NULL;
+		
 		dhcp_ip_list_del(&(vdhcp->dhcplease), tmp);
 		tmp->next = NULL;
+		
 		vdhcp->dhcplease.ipnum--;
 
+		asd_printf(ASD_DEFAULT,MSG_INFO,"%s: release %s\n", __func__, u32ip2str(ip));
+
+		memcpy(tmp->mac, mac, MAC_LEN);
+		
+		dhcp_mac_hash_add(vdhcp, tmp);
+
+		circle_register_timeout(VIR_LEASE_CACHE_TIME_OUT, 0, 
+							delete_timeout_virlease_cache, vdhcp, tmp);
+		
+		/*
+		#if 0
 		if (vdhcp->dhcpfree.last && (vdhcp->dhcpfree.last != tmp))
 		{
 			vdhcp->dhcpfree.last->next = tmp;
 			tmp->next = NULL;
 		}
 		else
+		#endif
 		{
 			prev = vdhcp->dhcpfree.ip_list;
 			while (prev && prev->next)
@@ -273,11 +499,13 @@ struct ip_info *dhcp_release_ip(struct vir_dhcp * vdhcp, int ip)
 				tmp->next = NULL;
 			}			
 		}
+		
 		vdhcp->dhcpfree.last = tmp;
 
 		dhcp_ip_hash_add(&(vdhcp->dhcpfree),tmp);
 		vdhcp->dhcpfree.ipnum++;
 		memset(tmp->mac, 0, MAC_LEN);
+		*/
 	}
 	return tmp;
 }
@@ -294,6 +522,8 @@ struct ip_info *b_dhcp_assign_ip
 
 	if (NULL == vdhcp->dhcpfree.ip_list)
 	{
+		asd_printf(ASD_DEFAULT,MSG_ERROR,"%s: vir dhcp no free ip\n", __func__);			
+	
 		return NULL;
 	}
 
@@ -332,6 +562,8 @@ struct ip_info *b_dhcp_assign_ip
 		}
 
 		tmp = next->next;
+		next->next = tmp->next;
+		
 		tmp->next = NULL;
 		dhcp_ip_hash_del(&(vdhcp->dhcpfree), tmp);
 		tmp->hnext = NULL;
@@ -352,4 +584,56 @@ struct ip_info *b_dhcp_assign_ip
 	return NULL;
 }
 
+void delete_timeout_virlease_cache(void *circle_ctx,void *timeout_ctx)
+{
+	struct vir_dhcp *vdhcp = circle_ctx;
+	struct ip_info *sta = timeout_ctx;
+	struct ip_info *tmp = NULL, *prev = NULL;
+	
+	ASD_CHECK_POINTER(vdhcp);
+	ASD_CHECK_POINTER(sta);	
+	
+	tmp = dhcp_get_sta_by_mac_cache(vdhcp, sta->mac);
+	if(tmp != NULL)
+	{
+		dhcp_mac_hash_del(vdhcp,tmp);
+		
+		tmp->mhnext = NULL;
+
+		prev = vdhcp->dhcpfree.ip_list;
+		
+		while (prev && prev->next)
+		{
+			prev = prev->next;
+		}
+		if (prev)
+		{
+			prev->next = tmp;
+			tmp->next = NULL;
+		}
+		else
+		{
+			vdhcp->dhcpfree.ip_list = tmp;
+			tmp->next = NULL;
+		}			
+
+		
+		vdhcp->dhcpfree.last = tmp;
+
+		dhcp_ip_hash_add(&(vdhcp->dhcpfree),tmp);
+		
+		vdhcp->dhcpfree.ipnum++;
+
+		asd_printf(ASD_DEFAULT,MSG_DEBUG,"%s: timeout release vir ip  %s for sta "MACSTR"\n",
+			__func__, u32ip2str(tmp->ip),MAC2STR(sta->mac));	
+
+		memset(tmp->mac, 0, MAC_LEN);
+	}
+	else
+	{
+		asd_printf(ASD_DEFAULT,MSG_DEBUG,"%s: sta "MACSTR" not in vir cache\n", 
+			__func__, MAC2STR(sta->mac));	
+	}
+}
+	
 

@@ -490,10 +490,10 @@ int asd_virdhcp_handle(struct asd_data *wasd, struct sta_info *sta, unsigned int
 		{
 			asd_printf(ASD_DEFAULT,MSG_ERROR,"%s sta "MACSTR" prev vir ip %x\n",
 				__func__,MAC2STR(sta->addr),  sta->vir_ip); 			
-			dhcp_release_ip(ASD_WLAN[wasd->WlanID]->wlan_dhcp, sta->vir_ip);
+			dhcp_release_ip(ASD_WLAN[wasd->WlanID]->wlan_dhcp, sta->vir_ip, sta->addr);
 		}
 		
-		tmp = dhcp_assign_ip(ASD_WLAN[wasd->WlanID]->wlan_dhcp);				
+		tmp = dhcp_assign_ip(ASD_WLAN[wasd->WlanID]->wlan_dhcp, sta->addr);				
 		if (NULL == tmp)
 		{
 			asd_printf(ASD_DEFAULT,MSG_ERROR,"%s: wlan %d vir-dhcp no free ip. sta "MACSTR"\n",
@@ -539,7 +539,7 @@ int asd_virdhcp_handle(struct asd_data *wasd, struct sta_info *sta, unsigned int
 		}
 #endif		
 		
-		tmp = dhcp_release_ip(ASD_WLAN[wasd->WlanID]->wlan_dhcp, sta->vir_ip);	
+		tmp = dhcp_release_ip(ASD_WLAN[wasd->WlanID]->wlan_dhcp, sta->vir_ip, sta->addr);	
 
 		asd_printf(ASD_DEFAULT,MSG_INFO,"%s sta "MACSTR" release vir ip %u.%u.%u.%u\n",
 			__func__,MAC2STR(sta->addr),  
@@ -644,7 +644,7 @@ int b_virdhcp_handle
 		{
 			asd_printf(ASD_DEFAULT,MSG_ERROR,"%s sta "MACSTR" prev vir ip %x\n",
 				__func__,MAC2STR(sta->addr),  sta->vir_ip); 			
-			dhcp_release_ip(ASD_WLAN[wasd->WlanID]->wlan_dhcp, sta->vir_ip);
+			dhcp_release_ip(ASD_WLAN[wasd->WlanID]->wlan_dhcp, sta->vir_ip, sta->addr);
 		}
 		
 		tmp = b_dhcp_assign_ip(ASD_WLAN[wasd->WlanID]->wlan_dhcp, viripaddr);				
@@ -683,7 +683,7 @@ int b_virdhcp_handle
 			return 0;
 		}
 #endif		
-		tmp = dhcp_release_ip(ASD_WLAN[wasd->WlanID]->wlan_dhcp, sta->vir_ip);	
+		tmp = dhcp_release_ip(ASD_WLAN[wasd->WlanID]->wlan_dhcp, sta->vir_ip, sta->addr);	
 
 		asd_printf(ASD_DEFAULT,MSG_INFO,"%s sta "MACSTR" release vir ip %u.%u.%u.%u\n",
 			__func__,MAC2STR(sta->addr),  

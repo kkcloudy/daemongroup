@@ -136,7 +136,7 @@ typedef struct sta_hash_info
 
 int b_virdhcp_handle(struct asd_data *wasd, struct sta_info *sta, unsigned int viripaddr, unsigned int addflag);
 int asd_virdhcp_handle(struct asd_data *wasd, struct sta_info *sta, unsigned int addflag);
-extern struct ip_info* dhcp_assign_ip(struct vir_dhcp * vdhcp);
-extern struct ip_info* dhcp_release_ip(struct vir_dhcp * vdhcp, int ip);
+extern struct ip_info* dhcp_assign_ip(struct vir_dhcp * vdhcp, unsigned char *mac);
+extern struct ip_info* dhcp_release_ip(struct vir_dhcp * vdhcp, unsigned int ip, unsigned char *mac);
 /*end**************************************************/
 #endif /* STA_INFO_H */

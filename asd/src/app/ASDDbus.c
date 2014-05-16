@@ -28354,7 +28354,7 @@ DBusMessage *asd_dbus_set_asd_sta_vir_dhcp(DBusConnection *conn, DBusMessage *ms
 	unsigned int lowip = 0;
 	unsigned int highip = 0;
 	unsigned int add_flag = 0;
-	int i = 0;
+	unsigned int i = 0;
 	int j = 0;
 	struct vir_dhcp *pool = NULL;
 	/*
@@ -28479,8 +28479,9 @@ DBusMessage *asd_dbus_set_asd_sta_vir_dhcp(DBusConnection *conn, DBusMessage *ms
 
 		if (NULL != pool)
 		{
-		ret = dhcp_free_pool(&(pool->dhcpfree));
-		ret = dhcp_free_pool(&(pool->dhcplease));
+			dhcp_cancel_delete_timeout_virlease_cache(pool);
+		    ret = dhcp_free_pool(&(pool->dhcpfree));
+		    ret = dhcp_free_pool(&(pool->dhcplease));
 		// TODO: notice aat delete items
 			free(pool);
 		}
