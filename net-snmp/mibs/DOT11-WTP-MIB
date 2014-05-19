@@ -10121,7 +10121,7 @@ VerifyModeTrapDescription	 			OBJECT-TYPE
 		STATUS		current
 		DESCRIPTION
 			"extend reason of Lte Fi quit "
-	::= { LTE uplink mode switch 34 }		
+	::= { wtpInnerTrap 34 }		
 	
 	
 	APAddUserFailClearTrap NOTIFICATION-TYPE
