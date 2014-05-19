@@ -34,10 +34,5 @@ void dhcp_mac_hash_add
 	struct vir_dhcp *vdhcp,
 	struct ip_info *sta
 );
-static void dhcp_mac_hash_del
-(
-	struct vir_dhcp *vdhcp,
-	struct ip_info *sta
-);
 
 #endif

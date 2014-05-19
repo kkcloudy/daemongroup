@@ -11,6 +11,7 @@
 #include "wcpss/asd/asd.h"
 #include "asd.h"
 #include "ASDDhcp.h"
+#include "circle.h"
 
 #define IP_HASH(ip) (ip[0]+ip[1]+ip[2]+ip[3])
 #define MAC_HASH(mac) (mac[2]+mac[3]+mac[4]+mac[5])
@@ -42,14 +43,14 @@ struct ip_info *dhcp_get_sta_by_mac_cache
 {	
 	struct ip_info *s = NULL;
 	
-	ASD_CHECK_POINTER(vdhcp);
-	ASD_CHECK_POINTER(mac);
+	if(NULL == vdhcp || NULL == mac)
+		return NULL;
 
 	s = vdhcp->cache_hash[MAC_HASH(mac)];
 	
 	while (s != NULL)
 	{
-		if(0 == strcmp(s->mac, mac))
+		if(0 == os_strcmp((char*)s->mac, (char*)mac))
 		{
 			return s;
 		}
@@ -67,7 +68,8 @@ struct ip_info *dhcp_get_sta_by_random
 	struct ip_info *s = NULL;
 	unsigned int i = 0;
 	
-	ASD_CHECK_POINTER(vdhcp);
+	if(NULL == vdhcp)
+		return NULL;
 	
 	for(i=0; i<VIR_DHCP_HASH_SIZE; i++)
 	{
@@ -204,7 +206,6 @@ void dhcp_mac_hash_add
 	return;
 }
 
-
 static void dhcp_mac_hash_del
 (
 	struct vir_dhcp *vdhcp,
@@ -223,7 +224,7 @@ static void dhcp_mac_hash_del
 	}
 
 	/* head node in hash list */
-	if (0 == strcmp(s->mac, sta->mac))
+	if (0 == os_strcmp((char*)s->mac, (char*)sta->mac))
 	{
 		vdhcp->cache_hash[MAC_HASH(sta->mac)] = s->mhnext;
 		return;
@@ -232,7 +233,7 @@ static void dhcp_mac_hash_del
 	/* other node in hash list */
 	while (s->mhnext != NULL)
 	{
-		if (0 == strcmp(s->mhnext->mac, sta->mac))
+		if (0 == os_strcmp((char*)s->mhnext->mac, (char*)sta->mac))
 		{
 			s->mhnext = s->mhnext->mhnext;
 
@@ -357,8 +358,8 @@ struct ip_info *dhcp_assign_ip
 	struct ip_info *tmp = NULL;
 	int removed = 0;
 
-	ASD_CHECK_POINTER(vdhcp);
-	ASD_CHECK_POINTER(mac);
+	if(NULL == vdhcp || NULL == mac)
+		return NULL;
 
 	/*check whether sta is in cache*/
 	tmp = dhcp_get_sta_by_mac_cache(vdhcp,mac);
@@ -450,7 +451,7 @@ struct ip_info *dhcp_release_ip
 	unsigned char *mac
 )
 {
-	struct ip_info *tmp = NULL, *prev = NULL;
+	struct ip_info *tmp = NULL;
 	
 	tmp = dhcp_get_sta_by_ip(&(vdhcp->dhcplease), ip);
 	if(tmp != NULL)
