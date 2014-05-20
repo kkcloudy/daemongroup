@@ -384,6 +384,9 @@ DBusMessage * hmd_dbus_hansi_show_running(DBusConnection *conn, DBusMessage *msg
 	int slot_id = 0,instID=0,islocal=0;
 	int num = 0;
 	int num2 = 0;
+	int inst_id ;
+	int depend_slot_id = 0;
+	int depend_inst_id = 0;
 	struct Hmd_L_Inst_Mgmt *LOCALHANSI[MAX_SLOT_NUM*MAX_INSTANCE];
 	int slotID[MAX_SLOT_NUM*MAX_INSTANCE] = {0};
 	struct Hmd_Inst_Mgmt * REMOTEHANSI[MAX_SLOT_NUM*MAX_INSTANCE];	
@@ -434,6 +437,7 @@ DBusMessage * hmd_dbus_hansi_show_running(DBusConnection *conn, DBusMessage *msg
 	if(0 == islocal){
 		if(num2 > 0){
 			if(1 == REMOTEHANSI[0]->HmdBakForever){
+				//hmd_syslog_info("%s,line=%d.\n",__func__,__LINE__);
 				totalLen += sprintf(cursor," config hansi bak forever enable\n");
 				cursor = showStr + totalLen; 
 			}
@@ -450,6 +454,22 @@ DBusMessage * hmd_dbus_hansi_show_running(DBusConnection *conn, DBusMessage *msg
 				}		
 			}
 			/*fengwenchao add end*/
+			/*niehy add for hansi depend config save*/
+			for(inst_id=1; inst_id<MAX_INSTANCE;inst_id++)
+			{
+				//hmd_syslog_info("######9999#####\n");
+
+    			if(HMD_BOARD[slot_id]->Hmd_Inst[instID]->depend_hansi[inst_id].Depend_Inst_ID)
+    			{
+					//hmd_syslog_info("%s,line=%d.\n",__func__,__LINE__);
+               		depend_slot_id = HMD_BOARD[slot_id]->Hmd_Inst[instID]->depend_hansi[inst_id].depend_slot_no;
+               		depend_inst_id = HMD_BOARD[slot_id]->Hmd_Inst[instID]->depend_hansi[inst_id].Depend_Inst_ID;
+					totalLen += sprintf(cursor," config hansi depend %d-%d\n",depend_slot_id,depend_inst_id);
+				    cursor = showStr + totalLen; 
+                    hmd_syslog_info("write config hansi depend successfully\n");
+    			}
+			}
+			/*niehy add for hansi depend config save end*/
 		}
 	}else{
 		if(num > 0){
@@ -616,6 +636,105 @@ DBusMessage * hmd_dbus_show_running(DBusConnection *conn, DBusMessage *msg, void
 	//hmd_syslog_info("%s,line=%d.\n",__func__,__LINE__);
 	return reply;
 }
+
+/*niehy add 2014-5-12 for hansi linkage */
+DBusMessage * hmd_dbus_config_hansi_depend_delete(DBusConnection *conn, DBusMessage *msg, void *user_data)
+{
+
+	DBusMessage* reply;
+	unsigned int  ID,otherID;
+	DBusError err;
+	int ret = HMD_DBUS_SUCCESS;
+	unsigned int slot_id = 0;
+	unsigned int otherslot_id = 0;
+	
+	dbus_error_init(&err);
+
+	if (!(dbus_message_get_args ( msg, &err,
+								DBUS_TYPE_UINT32,&ID,
+								DBUS_TYPE_UINT32,&slot_id,
+								DBUS_TYPE_UINT32,&otherID,
+								DBUS_TYPE_UINT32,&otherslot_id,			
+								DBUS_TYPE_INVALID))){
+
+		printf("Unable to get input args\n");
+				
+		if (dbus_error_is_set(&err)) {
+			printf("%s raised: %s",err.name,err.message);
+			dbus_error_free(&err);
+		}
+		return NULL;
+	}
+
+	if((slot_id < MAX_SLOT_NUM)&&(HMD_BOARD[slot_id] != NULL))
+	{
+		if(HMD_BOARD[slot_id]->Hmd_Inst[ID]->depend_hansi[otherID].Depend_Inst_ID)
+		{
+			hmd_syslog_info("depend_slot_no is %d\n",(HMD_BOARD[slot_id]->Hmd_Inst[ID]->depend_hansi[otherID].depend_slot_no));
+	        hmd_syslog_info("depend_inst_id is %d\n",(HMD_BOARD[slot_id]->Hmd_Inst[ID]->depend_hansi[otherID].Depend_Inst_ID));
+
+			HMD_BOARD[slot_id]->Hmd_Inst[ID]->depend_hansi[otherID].Depend_Inst_ID = 0;
+    		HMD_BOARD[slot_id]->Hmd_Inst[ID]->depend_hansi[otherID].depend_slot_no = 0;
+
+		}
+		hmd_syslog_info("hansi %d-%d no exit depend hansi %d\n",slot_id,ID);
+	}
+
+	reply = dbus_message_new_method_return(msg);
+	dbus_message_append_args(reply,
+							 DBUS_TYPE_UINT32,&ret,
+							 DBUS_TYPE_INVALID);
+
+	return reply;
+	
+} 
+/*niehy add 2014-5-12 for hansi linkage end*/
+
+DBusMessage * hmd_dbus_config_hansi_depend(DBusConnection *conn, DBusMessage *msg, void *user_data)
+{
+
+	DBusMessage* reply;
+	unsigned int  ID,otherID;
+	DBusError err;
+	int ret = HMD_DBUS_SUCCESS;
+	unsigned int slot_id = 0;
+	unsigned int otherslot_id = 0;
+	
+	dbus_error_init(&err);
+
+	if (!(dbus_message_get_args ( msg, &err,
+								DBUS_TYPE_UINT32,&ID,
+								DBUS_TYPE_UINT32,&slot_id,
+								DBUS_TYPE_UINT32,&otherID,
+								DBUS_TYPE_UINT32,&otherslot_id,			
+								DBUS_TYPE_INVALID))){
+
+		printf("Unable to get input args\n");
+				
+		if (dbus_error_is_set(&err)) {
+			printf("%s raised: %s",err.name,err.message);
+			dbus_error_free(&err);
+		}
+		return NULL;
+	}
+	if((slot_id < MAX_SLOT_NUM)&&(HMD_BOARD[slot_id] != NULL)){
+    		
+    		HMD_BOARD[slot_id]->Hmd_Inst[ID]->depend_hansi[otherID].Depend_Inst_ID = otherID;
+    		HMD_BOARD[slot_id]->Hmd_Inst[ID]->depend_hansi[otherID].depend_slot_no= otherslot_id;
+	}
+
+	hmd_syslog_info("depend_slot_no is %d\n",(HMD_BOARD[slot_id]->Hmd_Inst[ID]->depend_hansi[otherID].depend_slot_no));
+	hmd_syslog_info("depend_inst_id is %d\n",(HMD_BOARD[slot_id]->Hmd_Inst[ID]->depend_hansi[otherID].Depend_Inst_ID));
+
+	reply = dbus_message_new_method_return(msg);
+	dbus_message_append_args(reply,
+							 DBUS_TYPE_UINT32,&ret,
+							 DBUS_TYPE_INVALID);
+
+	return reply;
+	
+}
+
 DBusMessage * hmd_dbus_interface_config_local_hansi(DBusConnection *conn, DBusMessage *msg, void *user_data){
 
 	DBusMessage* reply;
@@ -5275,6 +5394,13 @@ static DBusHandlerResult hmd_dbus_message_handler (DBusConnection *connection, D
 		else if (dbus_message_is_method_call(message,HMD_DBUS_INTERFACE,HMD_DBUS_CONF_SHOW_AUTO_SYNC_CONFIG_STATE)){
 		reply = hmd_dbus_interface_show_sync_config_state(connection, message, user_data);
 		}
+		else if (dbus_message_is_method_call(message,HMD_DBUS_INTERFACE,HMD_DBUS_CONF_HANSI_DEPEND)){
+		reply = hmd_dbus_config_hansi_depend(connection, message, user_data);
+		}
+		else if (dbus_message_is_method_call(message,HMD_DBUS_INTERFACE,HMD_DBUS_CONF_HANSI_DEPEND_DELETE)){
+		reply = hmd_dbus_config_hansi_depend_delete(connection, message, user_data);
+		}
+
 	}
 	if (reply) {
 		dbus_connection_send (connection, reply, NULL);

@@ -2228,6 +2228,187 @@ DEFUN(set_hansi_check_state_cmd_func,
 
 	return CMD_SUCCESS;
 }
+/*niehy add 2014-5-12 for hansi linkage */
+DEFUN(no_config_hansi_depend_cmd_func,
+	  no_config_hansi_depend_cmd,
+	  "no config hansi depend DEPENDHANSI",
+	  "Cancel order\n"
+	  "Delete hansi config\n"
+	  "Delete config vrrp settings\n"
+	  "Delete config vrrp hansi dependencies\n"
+	  "Delete need linkage hansi\n"
+	 )
+	
+{	int ret,ret1;
+	unsigned char status;
+	int  slot_id = 0;
+	int index = 0;
+	unsigned int otherslot_id = 0;
+	unsigned int otherinsID;
+	char BUSNAME[PATH_LEN];
+	char OBJPATH[PATH_LEN];
+	char INTERFACE[PATH_LEN];
+	DBusMessage *query, *reply;
+	DBusError err;
+	int slot_num = 0;
+	int slot_no = 0;
+	int slot_no1 = 0;
+	int local_id = 1;
+	int flag = 0;
+
+	if(vty->node == HANSI_NODE){
+		index = vty->index;
+		slot_id = vty->slotindex;
+	}else if (vty->node == LOCAL_HANSI_NODE){
+		index = vty->index;
+		slot_id = vty->slotindex;
+	}
+
+	ret1 = parse_slot_hansi_id((char*)argv[0],&otherslot_id,&otherinsID);
+
+	if(ret1 != WID_DBUS_SUCCESS)
+	{
+		vty_out(vty,"<error> illegal input:Input exceeds the maximum value of the parameter type \n");
+		return CMD_WARNING;		
+	}
+	
+	if((otherinsID < 1)||(otherinsID >= MAX_INSTANCE) || (otherslot_id < 1) || (otherslot_id > MAX_SLOT_NUM))
+    {
+		vty_out(vty,"%% Bad parameter : %s !",argv[0]);
+		return CMD_WARNING;
+	}
+	DBusConnection *dcli_dbus_connection = NULL;
+	ReInitDbusConnection(&dcli_dbus_connection,slot_id,distributFag);
+
+	query = dbus_message_new_method_call(HMD_DBUS_BUSNAME,HMD_DBUS_OBJPATH,HMD_DBUS_INTERFACE,HMD_DBUS_CONF_HANSI_DEPEND_DELETE);
+
+	dbus_error_init(&err);
+
+	dbus_message_append_args(query,
+							 DBUS_TYPE_UINT32,&index,
+							 DBUS_TYPE_UINT32,&slot_id,
+							 DBUS_TYPE_UINT32,&otherinsID,
+							 DBUS_TYPE_UINT32,&otherslot_id,
+							 DBUS_TYPE_INVALID);
+
+	reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection,query,150000, &err);
+	
+	dbus_message_unref(query);
+	
+	if (NULL == reply) {
+		cli_syslog_info("<error> failed get reply.\n");
+		if (dbus_error_is_set(&err)) {
+			cli_syslog_info("%s raised: %s",err.name,err.message);
+			dbus_error_free_for_dcli(&err);
+		}
+		return CMD_WARNING;
+	}
+	
+	if (dbus_message_get_args ( reply, &err,
+					DBUS_TYPE_UINT32,&ret,
+					DBUS_TYPE_INVALID)) {
+		if(ret == 0){
+            vty_out(vty,"delete depend hansi %d-%d successfulliy\n",otherslot_id,otherinsID);
+		}
+		else{
+			vty_out(vty,"<error>  %d\n",ret);
+			dbus_message_unref(reply);
+			return CMD_WARNING;
+		}
+	}
+	dbus_message_unref(reply);
+	return CMD_SUCCESS;
+}
+
+DEFUN(config_hansi_depend_cmd_func,
+	  config_hansi_depend_cmd,
+	  "config hansi depend DEPENDHANSI",
+	  CONFIG_STR
+	  "Config vrrp settings\n"
+	  "Config vrrp hansi dependencies\n"
+	  "Need linkage hansi\n"
+	 )
+{	int ret,ret1;
+	unsigned char status;
+	int  slot_id = 0;
+	int index = 0;
+	unsigned int otherslot_id = 0;
+	unsigned int otherinsID;
+	char BUSNAME[PATH_LEN];
+	char OBJPATH[PATH_LEN];
+	char INTERFACE[PATH_LEN];
+	DBusMessage *query, *reply;
+	DBusError err;
+	int slot_num = 0;
+	int slot_no = 0;
+	int slot_no1 = 0;
+	int local_id = 1;
+	int flag = 0;
+
+	if(vty->node == HANSI_NODE){
+		index = vty->index;
+		slot_id = vty->slotindex;
+	}else if (vty->node == LOCAL_HANSI_NODE){
+		index = vty->index;
+		slot_id = vty->slotindex;
+	}
+
+	ret1 = parse_slot_hansi_id((char*)argv[0],&otherslot_id,&otherinsID);
+
+	if(ret1 != WID_DBUS_SUCCESS)
+	{
+		vty_out(vty,"<error> illegal input:Input exceeds the maximum value of the parameter type \n");
+		return CMD_WARNING;		
+	}
+	
+	if((otherinsID < 1)||(otherinsID >= MAX_INSTANCE) || (otherslot_id < 1) || (otherslot_id > MAX_SLOT_NUM))
+    {
+		vty_out(vty,"%% Bad parameter : %s !",argv[0]);
+		return CMD_WARNING;
+	}
+	DBusConnection *dcli_dbus_connection = NULL;
+	ReInitDbusConnection(&dcli_dbus_connection,slot_id,distributFag);
+
+	query = dbus_message_new_method_call(HMD_DBUS_BUSNAME,HMD_DBUS_OBJPATH,HMD_DBUS_INTERFACE,HMD_DBUS_CONF_HANSI_DEPEND);
+
+	dbus_error_init(&err);
+
+	dbus_message_append_args(query,
+							 DBUS_TYPE_UINT32,&index,
+							 DBUS_TYPE_UINT32,&slot_id,
+							 DBUS_TYPE_UINT32,&otherinsID,
+							 DBUS_TYPE_UINT32,&otherslot_id,
+							 DBUS_TYPE_INVALID);
+
+	reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection,query,150000, &err);
+	
+	dbus_message_unref(query);
+	
+	if (NULL == reply) {
+		cli_syslog_info("<error> failed get reply.\n");
+		if (dbus_error_is_set(&err)) {
+			cli_syslog_info("%s raised: %s",err.name,err.message);
+			dbus_error_free_for_dcli(&err);
+		}
+		return CMD_WARNING;
+	}
+	
+	if (dbus_message_get_args ( reply, &err,
+					DBUS_TYPE_UINT32,&ret,
+					DBUS_TYPE_INVALID)) {
+		if(ret == 0){
+            vty_out(vty,"config depend on hansi %d-%d successfulliy\n",otherslot_id,otherinsID);
+		}
+		else{
+			vty_out(vty,"<error>  %d\n",ret);
+			dbus_message_unref(reply);
+			return CMD_WARNING;
+		}
+	}
+	dbus_message_unref(reply);
+	return CMD_SUCCESS;
+}
+/*niehy add 2014-5-12 for hansi linkage end*/
 
 /*zhaoruijia,20100913,for ap auto update,start*/
 DEFUN(service_tftp_state_cmd_func,
@@ -3349,6 +3530,9 @@ void dcli_local_hansi_init(void) {
 	install_element(LOCAL_HANSI_NODE,&set_sync_config_time_cmd);
 	install_element(LOCAL_HANSI_NODE,&set_sync_config_switch_cmd);
 	install_element(LOCAL_HANSI_NODE,& show_sync_config_state_cmd);
+	install_element(HANSI_NODE,&config_hansi_depend_cmd);
+	install_element(HANSI_NODE,&no_config_hansi_depend_cmd);
+	
 	return;
 }
 

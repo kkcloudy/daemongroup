@@ -58,7 +58,8 @@ char HMD_DBUS_CONF_SET_AUTO_SYNC_CONFIG_IP[PATH_LEN] = "set_auto_sync_config_ip"
 char HMD_DBUS_CONF_SET_AUTO_SYNC_CONFIG_TIME[PATH_LEN] = "set_auto_sync_config_time";
 char HMD_DBUS_CONF_SET_AUTO_SYNC_CONFIG_SWITCH[PATH_LEN] = "set_auto_sync_config_switch";
 char HMD_DBUS_CONF_SHOW_AUTO_SYNC_CONFIG_STATE[PATH_LEN] = "show_auto_sync_config_state";
-
+char HMD_DBUS_CONF_HANSI_DEPEND[PATH_LEN] = "hmd_dbus_config_hansi_depend";
+char HMD_DBUS_CONF_HANSI_DEPEND_DELETE[PATH_LEN] = "hmd_dbus_config_hansi_depend_delete";
 
 #endif
 

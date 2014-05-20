@@ -99,6 +99,12 @@ struct Inst_Interface{
 	int mask;
 	char mac[MAC_LEN];
 };
+
+struct hansi_depend{
+	int Depend_Inst_ID;
+	int depend_slot_no;
+};
+
 struct Hmd_Inst_Mgmt{
 	int Inst_ID;
 	int vrrid;
@@ -122,6 +128,7 @@ struct Hmd_Inst_Mgmt{
 	struct Inst_Interface Inst_Downlink[MAX_IFNAME_NUM];
 	int Inst_GNum;
 	struct Inst_Interface Inst_Gateway[MAX_IFNAME_NUM];	
+	struct hansi_depend depend_hansi[MAX_INSTANCE];
 	struct Inst_Interface Inst_Hb;
 	int RestartTimes;
 	int priority;

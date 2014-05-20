@@ -59,7 +59,8 @@ extern char HMD_DBUS_CONF_SET_AUTO_SYNC_CONFIG_IP[PATH_LEN];
 extern char HMD_DBUS_CONF_SET_AUTO_SYNC_CONFIG_TIME[PATH_LEN];
 extern char HMD_DBUS_CONF_SET_AUTO_SYNC_CONFIG_SWITCH[PATH_LEN];
 extern char HMD_DBUS_CONF_SHOW_AUTO_SYNC_CONFIG_STATE[PATH_LEN];
-
+extern char HMD_DBUS_CONF_HANSI_DEPEND[PATH_LEN];           /*niehy add 2014-5-12 for hansi linkage*/
+extern char HMD_DBUS_CONF_HANSI_DEPEND_DELETE[PATH_LEN];    /*niehy add 2014-5-12 for hansi linkage*/
 
 
 enum hmd_dbus_result_no_e {
