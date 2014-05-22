@@ -702,7 +702,7 @@ void neighbor_ap_sta_info(TableMsg *msg)
 	int N_sta_num  = msg->u.WTP.N_WTP.cur_sta_num;
 	unsigned char mac[6] = {0};
 	if(msg->u.WTP.N_WTP.WTPMAC != NULL){
-		memcpy(mac,msg->u.WTP.N_WTP.WTPMAC,strlen((char *)msg->u.WTP.N_WTP.WTPMAC));
+		memcpy(mac,msg->u.WTP.N_WTP.WTPMAC,MAC_LEN);
 		}
 	else
 		{
@@ -3700,14 +3700,14 @@ WIDAUTOAPINFO *parse_dynamic_wtp_login_situation(CWWTPVendorInfos *valPtr)
 			memset(autoapinfo->mac,0,MAC_LEN+1);
 			
 			if(WTP_MAC && (valPtr->vendorInfos)[i].mac){
-				memcpy(WTP_MAC, (valPtr->vendorInfos)[i].mac,strlen((char *)(valPtr->vendorInfos)[i].mac));
+				memcpy(WTP_MAC, (valPtr->vendorInfos)[i].mac,MAC_LEN);
 				}
 			else
 				{
 				wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
 				}
 			if(autoapinfo->mac && (valPtr->vendorInfos)[i].mac){
-				memcpy(autoapinfo->mac, (valPtr->vendorInfos)[i].mac,strlen((char *)(valPtr->vendorInfos)[i].mac));
+				memcpy(autoapinfo->mac, (valPtr->vendorInfos)[i].mac,MAC_LEN);
 				}
 			else
 				{
@@ -3935,13 +3935,9 @@ int wid_dynamic_change_wtp_info(int wtpid,WIDAUTOAPINFO *info)
 		if(memcmp(AC_WTP[wtpid]->WTPMAC,info->mac,MAC_LEN) != 0)
 		{
 			memset(AC_WTP[wtpid]->WTPMAC,0,MAC_LEN);
-			if(AC_WTP[wtpid]->WTPMAC != NULL ){
-				memcpy(AC_WTP[wtpid]->WTPMAC,info->mac,MAC_LEN);		
-				}
-			else
-				{
-				wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
-				}
+			
+		    memcpy(AC_WTP[wtpid]->WTPMAC,info->mac,MAC_LEN);		
+				
 		}
 /*		len = strlen((char *)info->mac);
 		if(strncmp((char *)AC_WTP[wtpid]->WTPMAC,(char *)info->mac,len) != 0)

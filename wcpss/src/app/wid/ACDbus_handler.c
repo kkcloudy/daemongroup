@@ -16961,7 +16961,7 @@ white_mac_list * wid_check_white_mac()
 							CW_CREATE_OBJECT_SIZE_ERR(pmac,sizeof(struct white_mac),  WID_FREE(maclist); return NULL;);
 
 						
-							memcpy(pmac->elem_mac, AC_WTP[i]->WTP_Radio[j]->BSS[k]->BSSID, strlen((char *)AC_WTP[i]->WTP_Radio[j]->BSS[k]->BSSID));
+							memcpy(pmac->elem_mac, AC_WTP[i]->WTP_Radio[j]->BSS[k]->BSSID, MAC_LEN);
 								
 							pmac->next = NULL;
 
@@ -17437,7 +17437,7 @@ struct Neighbor_AP_ELE * create_ap_elem(struct Neighbor_AP_ELE *apelem)
 
 	
 	
-	memcpy(neighborapelem->BSSID ,apelem->BSSID,strlen((char *)apelem->BSSID));
+	memcpy(neighborapelem->BSSID ,apelem->BSSID,MAC_LEN);
 		
 	
 	neighborapelem->Rate = apelem->Rate;
@@ -32730,7 +32730,7 @@ static inline void __copy_fdb(struct fdb_entry *ent,
 			      const struct __fdb_entry *f)
 {
 	
-	memcpy(ent->mac_addr, f->mac_addr, strlen((char *)f->mac_addr));
+	memcpy(ent->mac_addr, f->mac_addr, 6);
 		
 	ent->port_no = f->port_no;
 	ent->is_local = f->is_local;

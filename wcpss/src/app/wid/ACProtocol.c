@@ -3840,7 +3840,7 @@ CWBool CWParseAttack_addr_Redirect(CWProtocolMessage *msgPtr, int len, int WTPIn
 		valPtr->StaWapiInfo[i].WlanId = wlan_id;
 		memset(valPtr->StaWapiInfo[i].mac,0,6);
 		if(valPtr->StaWapiInfo[i].mac && stamac){
-			memcpy(valPtr->StaWapiInfo[i].mac,stamac,strlen((char *)stamac));
+			memcpy(valPtr->StaWapiInfo[i].mac,stamac,MAC_LEN);
 			}
 		else
 			{
@@ -3903,7 +3903,7 @@ CWBool CWParseAP_challenge_replay(CWProtocolMessage *msgPtr, int len, int WTPInd
 		valPtr->StaWapiInfo[i].WlanId = wlan_id;
 		memset(valPtr->StaWapiInfo[i].mac,0,6);
 		if(valPtr->StaWapiInfo[i].mac && stamac){
-			memcpy(valPtr->StaWapiInfo[i].mac,stamac,strlen((char *)stamac));
+			memcpy(valPtr->StaWapiInfo[i].mac,stamac,MAC_LEN);
 			}
 		else
 			{

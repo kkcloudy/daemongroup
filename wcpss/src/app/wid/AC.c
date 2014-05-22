@@ -1731,7 +1731,7 @@ CWBool AsdWsm_BSSOp(unsigned int BSSIndex, Operate op, int both){
 	wASD.u.BSS.WlanID = AC_BSS[BSSIndex]->WlanID;
 	wASD.u.BSS.vlanid = AC_BSS[BSSIndex]->vlanid;
 	if(wASD.u.BSS.BSSID && AC_BSS[BSSIndex]->BSSID){
-		memcpy(wASD.u.BSS.BSSID,AC_BSS[BSSIndex]->BSSID, strlen((char *)AC_BSS[BSSIndex]->BSSID));
+		memcpy(wASD.u.BSS.BSSID,AC_BSS[BSSIndex]->BSSID, MAC_LEN);
 		}
 	else
 		{

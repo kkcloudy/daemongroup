@@ -29128,7 +29128,7 @@ DBusMessage * wid_dbus_interface_wlan_set_eap_mac(DBusConnection *conn, DBusMess
         if(AC_WLAN[wlanid]->eap_mac != NULL)
         {
             memset(AC_WLAN[wlanid]->eap_mac,0,18);
-            memcpy(AC_WLAN[wlanid]->eap_mac,eap_mac,strlen(eap_mac));
+            memcpy(AC_WLAN[wlanid]->eap_mac,eap_mac,MAC_LEN);
             memset(AC_WLAN[wlanid]->eap_mac2,0,MAC_LEN);
             if((eap_switch == 0)&&(eap_mac != NULL)&&(strcmp(eap_mac,"0") == 0))
             {}

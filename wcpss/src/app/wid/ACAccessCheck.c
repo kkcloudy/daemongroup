@@ -168,7 +168,7 @@ struct wtp_access_info * ap_add(WID_ACCESS *AC, struct sockaddr_in * sa, CWWTPVe
 			}
 			else if((valPtr->vendorInfos)[i].type == CW_BOARD_MAC_ADDRESS){
 				if((valPtr->vendorInfos)[i].mac != NULL){
-					memcpy(wtp->WTPMAC, (valPtr->vendorInfos)[i].mac, (valPtr->vendorInfos)[i].length);
+					memcpy(wtp->WTPMAC, (valPtr->vendorInfos)[i].mac, MAC_LEN);
 					}
 				else
 					{
@@ -332,7 +332,7 @@ struct wtp_access_info * ap_add(WID_ACCESS *AC, struct sockaddr_in * sa, CWWTPVe
 		else if((valPtr->vendorInfos)[i].type == CW_BOARD_MAC_ADDRESS){			
 			memset(wtp->WTPMAC,0,6);
 			if((valPtr->vendorInfos)[i].mac != NULL){
-				memcpy(wtp->WTPMAC, (valPtr->vendorInfos)[i].mac, (valPtr->vendorInfos)[i].length);
+				memcpy(wtp->WTPMAC, (valPtr->vendorInfos)[i].mac, MAC_LEN);
 				}
 			else
 				{

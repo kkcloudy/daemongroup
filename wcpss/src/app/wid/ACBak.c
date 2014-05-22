@@ -649,7 +649,7 @@ void bak_add_del_wtp(int sockfd,BakOperate Op,unsigned int WTPID){
 			wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
 			}
 		if(msg.Bu.WTP.WTP_MAC && AC_WTP[WTPID]->WTPMAC){
-			memcpy(msg.Bu.WTP.WTP_MAC,AC_WTP[WTPID]->WTPMAC,strlen((char *)AC_WTP[WTPID]->WTPMAC));	
+			memcpy(msg.Bu.WTP.WTP_MAC,AC_WTP[WTPID]->WTPMAC,MAC_LEN);	
 			}
 		else
 			{
@@ -955,7 +955,7 @@ void B_WTP_ADD_OP(B_Msg *msg){
 				}
 			memset(AC_WTP[WTPID]->WTPMAC,0,7);
 			if(AC_WTP[WTPID]->WTPMAC && msg->Bu.WTP.WTP_MAC){
-				memcpy(AC_WTP[WTPID]->WTPMAC,msg->Bu.WTP.WTP_MAC,strlen((char *)msg->Bu.WTP.WTP_MAC));
+				memcpy(AC_WTP[WTPID]->WTPMAC,msg->Bu.WTP.WTP_MAC,MAC_LEN);
 				}
 			else
 				{
@@ -1107,7 +1107,7 @@ void B_BSS_ADD_OP(B_Msg *msg){
 		return;
 	if((AC_BSS[BSSIndex]!=NULL)&&(AC_BSS[BSSIndex]->State != 1)){
 		if(AC_BSS[BSSIndex]->BSSID && msg->Bu.BSS.BSSID){
-			memcpy(AC_BSS[BSSIndex]->BSSID,msg->Bu.BSS.BSSID,strlen((char *)msg->Bu.BSS.BSSID));
+			memcpy(AC_BSS[BSSIndex]->BSSID,msg->Bu.BSS.BSSID,MAC_LEN);
 			}
 		else
 			{
@@ -1171,14 +1171,14 @@ void B_BSS_ADD_OP(B_Msg *msg){
 				ifinfo.wsmswitch = wsmswitch;
 				ifinfo.vlanSwitch = vlanSwitch;
 				if(ifinfo.apmac && AC_WTP[WtpID]->WTPMAC){
-					memcpy(ifinfo.apmac, AC_WTP[WtpID]->WTPMAC, strlen((char *)AC_WTP[WtpID]->WTPMAC));
+					memcpy(ifinfo.apmac, AC_WTP[WtpID]->WTPMAC, MAC_LEN);
 					}
 				else
 					{
 					wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
 					}
 				if(ifinfo.bssid && AC_BSS[BSSIndex]->BSSID){
-					memcpy(ifinfo.bssid,  AC_BSS[BSSIndex]->BSSID, strlen((char *)AC_BSS[BSSIndex]->BSSID));
+					memcpy(ifinfo.bssid,  AC_BSS[BSSIndex]->BSSID, MAC_LEN);
 					}
 				else
 					{
