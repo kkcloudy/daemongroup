@@ -50666,7 +50666,8 @@ DBusMessage * wid_dbus_interface_set_wtpname(DBusConnection *conn, DBusMessage *
 	DBusMessage* reply;
 	DBusMessageIter	 iter;
 	DBusError err;
-	int i =0;
+	int i =0,j = 0,k = 0;
+	int bssindex = 0;
 	unsigned int ID = 0;
 	unsigned int num = 0;
 	unsigned int type = 0;
@@ -50732,6 +50733,17 @@ DBusMessage * wid_dbus_interface_set_wtpname(DBusConnection *conn, DBusMessage *
 					}
 	
 			}
+			for(j=0;((AC_WTP[ID])&&(j<AC_WTP[ID]->RadioCount)&&(j<L_RADIO_NUM));j++)
+			{
+				for(k = 0;k < L_BSS_NUM; k++)
+				{
+					if((AC_WTP[ID])&&(AC_WTP[ID]->WTP_Radio[i])&&(AC_WTP[ID]->WTP_Radio[j]->BSS[k] != NULL))
+					{	
+						bssindex = AC_WTP[ID]->WTP_Radio[j]->BSS[k]->BSSIndex;
+						wid_update_bss_to_wifi(bssindex,ID,1);
+					}	
+				}
+			}
 		}
 
 	else if (type == 1){
@@ -50793,6 +50805,17 @@ DBusMessage * wid_dbus_interface_set_wtpname(DBusConnection *conn, DBusMessage *
 								}
 							
 						}
+					for(j=0;((AC_WTP[tmp->WTPID])&&(j<AC_WTP[tmp->WTPID]->RadioCount)&&(j<L_RADIO_NUM));j++)
+					{
+						for(k = 0;k < L_BSS_NUM; k++)
+						{
+							if((AC_WTP[tmp->WTPID])&&(AC_WTP[tmp->WTPID]->WTP_Radio[i])&&(AC_WTP[tmp->WTPID]->WTP_Radio[j]->BSS[k] != NULL))
+							{	
+								bssindex = AC_WTP[tmp->WTPID]->WTP_Radio[j]->BSS[k]->BSSIndex;
+								wid_update_bss_to_wifi(bssindex,ID,1);
+							}	
+						}
+					}
 					
 					if(ret2 != WID_DBUS_SUCCESS){
 						wtp_head[num].WtpId = tmp->WTPID;

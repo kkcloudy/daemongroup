@@ -441,7 +441,7 @@ int wid_update_bss_to_wifi(unsigned int bssindex,unsigned int WTPIndex,unsigned 
 			else
 			{
 				if( AC_WLAN[wlan_id]->ESSID != NULL){
-					memcpy(ifinfo.essid ,AC_WLAN[wlan_id]->ESSID ,strlen(AC_WLAN[wlan_id]->ESSID));
+					memcpy(ifinfo.essid ,AC_BSS[bssindex]->SSID ,strlen(AC_BSS[bssindex]->SSID));
 					}
 				else
 					{
@@ -10683,6 +10683,8 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_ESSID(unsigned int RadioID,unsigned char WlanI
 					return BSS_L3_INTERFACE_ADD_BR_FAIL;
 				}
 			}
+			unsigned int bssindex = AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->BSSIndex;
+			wid_update_bss_to_wifi(bssindex,WtpID,1);
 			break;
 		}
 	}	

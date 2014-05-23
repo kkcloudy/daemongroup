@@ -1200,7 +1200,7 @@ void B_BSS_ADD_OP(B_Msg *msg){
 					}
 				if(AC_WLAN[wlan_id] != NULL){
 					if(ifinfo.essid  && AC_WLAN[wlan_id]->ESSID){
-						memcpy(ifinfo.essid ,AC_WLAN[wlan_id]->ESSID ,strlen(AC_WLAN[wlan_id]->ESSID));
+						memcpy(ifinfo.essid ,AC_BSS[BSSIndex]->SSID ,strlen(AC_BSS[BSSIndex]->SSID));
 						}
 					else
 						{

@@ -781,7 +781,7 @@ CWBool ACEnterRun(int WTPIndex, CWProtocolMessage *msgPtr, CWBool dataFlag)
 										}
 									if(AC_WLAN[wlan_id] != NULL){
 										if(AC_WLAN[wlan_id]->ESSID != NULL){
-											memcpy(ifinfo.essid ,AC_WLAN[wlan_id]->ESSID ,strlen(AC_WLAN[wlan_id]->ESSID));
+											memcpy(ifinfo.essid ,AC_BSS[bssindex]->SSID ,strlen(AC_BSS[bssindex]->SSID));
 											}
 										else
 											{
