@@ -249,6 +249,37 @@ int dynamic_unregiste_if(struct interface_basic_INFO *if_info)
 	return 0;
 }
 
+int clear_radio_if_all_by_vrid(struct clear_radio_if *vrid_info) {
+
+	unsigned int vrid = 0;
+	unsigned int index = 0;
+	
+	if (vrid_info == NULL) {
+		printk("vrid_info is NULL\n");
+		return -1;
+	}
+
+	vrid = vrid_info->vrid;
+
+	if (vrid >= VRID_MAX) {
+		printk("vrid is out fo range (0,%d)\n", VRID_MAX);
+		return -2;
+	}
+
+	for (index=0; index<WIFI_INTERFACE_NUM; index++) {
+		if(wifi_device[vrid][index]) {
+			struct net_device *dev = wifi_device[vrid][index];
+			wifi_dev_private_t* priv = (wifi_dev_private_t*)dev->priv;	
+			struct net_device * device = wifi_device[vrid][index];
+			wifi_device[vrid][index] = NULL;
+			unregister_netdev(device);
+			free_netdev(device);
+			device = NULL;
+		}
+	}
+	return 0;
+}
+
 unsigned char wifi_tbl_mac_key(unsigned char *pMAC)
 {
 	return pMAC[5];

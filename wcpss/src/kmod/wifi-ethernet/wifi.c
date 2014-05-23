@@ -84,6 +84,7 @@ module_param(wifi_ipv6_dr_sw,int,0644);
 
 extern int dynamic_registe_if(struct interface_INFO *if_info);
 extern int dynamic_unregiste_if(struct interface_INFO *if_info);
+extern int clear_radio_if_all_by_vrid(struct clear_radio_if *vrid_info) ;
 extern void wifi_tasklet_rx(void);
 extern void wifi_inic_vm(void);
 extern void wifi_cleanup_vm(void);
@@ -120,6 +121,7 @@ int wifi_ioctl(struct inode *inode, struct file *filp, unsigned int cmd, unsigne
 	struct interface_INFO if_info;
 	struct interface_basic_INFO if_basic_info;
 	struct interface_batch_INFO if_batch_info;
+	struct clear_radio_if clear_radio_if_by_vrid;
 	struct HANSI_INFO HInfo;
 #if WIFI_STA_ACL_SUPPORT
 	struct wifi_nf_info wifi_nf; //caojia add for sta acl function
@@ -159,7 +161,11 @@ int wifi_ioctl(struct inode *inode, struct file *filp, unsigned int cmd, unsigne
 			printk("file-%s,funtion-%s,line-%d\n",__FILE__,__FUNCTION__,__LINE__);
 			retval = dynamic_unregiste_if(&if_basic_info);
 			break;
-			
+		case WIFI_IOC_RADIO_IF_CLEAR:
+			op_ret = copy_from_user(&clear_radio_if_by_vrid, (struct clear_radio_if *)arg, sizeof(struct clear_radio_if));
+			printk("clear radio if for vrid %d\n", clear_radio_if_by_vrid.vrid);
+			retval = clear_radio_if_all_by_vrid(&clear_radio_if_by_vrid);
+			break;
 		case WIFI_IOC_MMAP:
 			op_ret = copy_to_user((unsigned long long *)arg, &vm, 8);
 			break;

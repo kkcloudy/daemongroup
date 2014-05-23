@@ -30,6 +30,10 @@
 
 extern int wifi_eth_debug;
 
+struct clear_radio_if {
+	unsigned int vrid;
+};
+
 typedef enum{
 	IEEE802_11_MGMT = 10,
 	IEEE802_11_EAP	= 11,
@@ -61,6 +65,7 @@ typedef enum{
 #define WIFI_IOC_SET_NFMARK 	_IOWR(243, 15, struct wifi_nf_info) // caojia add for sta acl function 
 #define WIFI_IOC_GET_NFMARK 	_IOWR(243, 16, struct wifi_nf_info) // caojia add for sta acl function 
 #endif
+#define WIFI_IOC_RADIO_IF_CLEAR _IOWR(WIFI_IOC_MAGIC, 17, struct clear_radio_if)
 
 
 /* #define kthread_16 */
