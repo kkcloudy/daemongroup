@@ -473,7 +473,7 @@ int send_all_tunnel_interface_arp(){
 	int k = 0;
 	int ret = 0;
 	struct ifi_info ifinfo;
-	char name[ETH_IF_NAME_LEN];
+	char name[ETH_IF_NAME_LEN+2];
 //	printf("1\n");
 	for(i = 0; i<WLAN_NUM;i++){
 		if((AC_WLAN[i]!=NULL)&&(AC_WLAN[i]->Status == 0)){
@@ -482,7 +482,7 @@ int send_all_tunnel_interface_arp(){
 			if(AC_WLAN[i]->wlan_if_policy == WLAN_INTERFACE){
 				
 //				printf("3\n");
-				memset(name,0,ETH_IF_NAME_LEN);
+				memset(name,0,ETH_IF_NAME_LEN+2);
 				if(local)
 					sprintf(name,"wlanl%d-%d-%d",slotid,vrrid,i);
 				else
@@ -506,7 +506,7 @@ int send_all_tunnel_interface_arp(){
 				for(k = 0;k < L_BSS_NUM;k++ ){
 					if((AC_WTP[i]->WTP_Radio[j]->BSS[k] != NULL)){
 						if((AC_WTP[i]->WTP_Radio[j]->BSS[k]->BSS_IF_POLICY == BSS_INTERFACE || AC_WTP[i]->WTP_Radio[j]->BSS[k]->BSS_IF_POLICY == BSS_INTERFACE_EBR)){
-							memset(name,0,ETH_IF_NAME_LEN);
+							memset(name,0,ETH_IF_NAME_LEN+2);							
 							if(local)
 								sprintf(name,"r%d-%d-%d.%d",vrrid,i,j,AC_WTP[i]->WTP_Radio[j]->BSS[k]->WlanID);
 							else
@@ -1861,12 +1861,27 @@ void *wid_master_thread()
 {
 	wid_pid_write_v2("wid_master_thread",0,vrrid);
 	socklen_t addr_len;
-	char buf[4096+1024];
+	//char buf[4096+1024];
+	char *buf = NULL;
 	int len;
 	int wtp_count = 0;
 	int bss_count = 0;
 	unsigned int count = 0;
-	unsigned int bssindex[4096] = {0};
+	//unsigned int bssindex[4096] = {0};
+	unsigned int *bssindex = NULL;
+	buf = WID_MALLOC(4096+1024);
+	if (buf == NULL) {
+		wid_syslog_err("malloc failed: %s %d buf\n", __FUNCTION__, __LINE__);
+		pthread_exit((void *) 0);
+	}
+
+	bssindex = (unsigned int *)WID_MALLOC(4096*sizeof(unsigned int));
+	if (bssindex == NULL) {
+		wid_syslog_err("malloc_failed: %s %d bssindex\n", __FUNCTION__, __LINE__);
+		WID_FREE(buf);
+		pthread_exit((void *) 0);
+	}
+	
 	send_all_tunnel_interface_arp();
 	while(is_secondary == 0){		
 		struct bak_sock *bsock;
@@ -1909,6 +1924,8 @@ void *wid_master_thread()
 				bsock = (struct bak_sock*)WID_MALLOC(sizeof(struct bak_sock));
 				if (NULL == bsock)
 				{
+					WID_FREE(buf);
+					WID_FREE(bssindex);
 					return NULL;
 				}
 				memset(bsock,0,sizeof(struct bak_sock));
@@ -2042,6 +2059,9 @@ void *wid_master_thread()
 		}
 	}
 //	close(wid_sock);
+	WID_FREE(buf);
+	WID_FREE(bssindex);
+
 	pthread_exit((void *) 0);
 }
 
