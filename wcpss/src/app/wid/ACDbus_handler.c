@@ -1766,7 +1766,7 @@ int WID_CREATE_NEW_WTP(char *WTPNAME, unsigned int WTPID, unsigned char* WTPSN, 
 		}
 		memset(AC_WTP[WTPID]->WTPMAC,0,(MAC_LEN+1));
 		if((unsigned char *)WTPSN != NULL){
-			memcpy(AC_WTP[WTPID]->WTPMAC,(unsigned char *)WTPSN,strlen((char *)(unsigned char *)WTPSN));
+			memcpy(AC_WTP[WTPID]->WTPMAC, (unsigned char *)WTPSN, MAC_LEN);
 			}
 		else
 			{
