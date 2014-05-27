@@ -1002,12 +1002,12 @@ wtpProtoMode	 			OBJECT-TYPE
 							   a(1),
 							   b(2),
 							   g(4),
-							   b/g(6),
+							   bg(6),
 							   an(8),
-							   a/an(9),
+							   aan(9),
 							   gn(16),
-							   g/gn(20),
-							   b/g/gn(22)
+							   ggn(20),
+							   bggn(22)
 							}
 					MAX-ACCESS read-write
 					STATUS     current
@@ -2997,12 +2997,12 @@ radioType				OBJECT-TYPE
 							   a(1),
 							   b(2),
 							   g(4),
-							   b/g(6),
+							   bg(6),
 							   an(8),
-							   a/an(9),
+							   aan(9),
 							   gn(16),
-							   g/gn(20),
-							   b/g/gn(22)							
+							   ggn(20),
+							   bggn(22)							
 							   }
 					MAX-ACCESS read-write
 					STATUS     current
@@ -5275,12 +5275,12 @@ wtpWirelessIfCurrRadioModeSupport		OBJECT-TYPE
 							   a(1),
 							   b(2),
 							   g(4),
-							   b/g(6),
+							   bg(6),
 							   an(8),
-							   a/an(9),
+							   aan(9),
 							   gn(16),
-							   g/gn(20),
-							   b/g/gn(22)								
+							   ggn(20),
+							   bggn(22)								
 							   }
 						MAX-ACCESS read-only
 						STATUS     current
@@ -6511,12 +6511,12 @@ wtpStaRadioMode		OBJECT-TYPE
 						   a(1),
 						   b(2),
 						   g(4),
-						   b/g(6),
+						   bg(6),
 						   an(8),
-						   a/an(9),
+						   aan(9),
 						   gn(16),
-						   g/gn(20),
-						   b/g/gn(22)
+						   ggn(20),
+						   bggn(22)
 						}
 			MAX-ACCESS read-only
 			STATUS     current
