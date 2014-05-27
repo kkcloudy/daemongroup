@@ -7543,8 +7543,9 @@ void dcli_sys_manage_init()
 	install_element(CONFIG_NODE,&config_dbus_session_cmd);
 	install_element(CONFIG_NODE,&config_dbus_session_remote_cmd);
 	#endif
+/*
 	install_element(CONFIG_NODE,&show_dbus_session_cmd);
-
+*/
 	/**gjd : support for pfm moudle**/
 	install_element (CONFIG_NODE, &config_pfm_cmd);	
 	install_element (HIDDENDEBUG_NODE, &service_pfm_log_func_cmd);	
