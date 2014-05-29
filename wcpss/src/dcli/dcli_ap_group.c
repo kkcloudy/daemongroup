@@ -668,8 +668,8 @@ DEFUN(add_del_ap_group_member_cmd_func,
     DBusConnection *dcli_dbus_connection = NULL;
     ReInitDbusConnection(&dcli_dbus_connection,slot_id,distributFag);
 	ret = dcli_ap_group_add_del_member(localid,index,GROUPID,isadd,wtplist,&wtp_list,&apcount,dcli_dbus_connection);
-
-	if(ret == 0){
+	
+	if(ret == WID_DBUS_SUCCESS){
 		vty_out(vty,"%s ap group member successfully.\n",argv[0]);
 		if(apcount != 0){
 			vty_out(vty,"wtp ",argv[0]);
@@ -677,16 +677,38 @@ DEFUN(add_del_ap_group_member_cmd_func,
 		for(i = 0; i <apcount; i++){
 			vty_out(vty,"%d,",wtp_list[i]);
 		}
-		if(apcount != 0){
-			vty_out(vty,"%s ap group member failed.\n",argv[0]);
+		/*if(apcount != 0){
 			free(wtp_list);
 			wtp_list = NULL;
-		}
+		}*/ //lilong modify it
 	}
+	else if(ret == WID_COMMON_EXIST)
+	{
+		if(apcount != 0){
+			vty_out(vty,"wtp ",argv[0]);
+		}
+		for(i = 0; i <apcount; i++){
+			vty_out(vty,"%d,",wtp_list[i]);
+		}
+		//lilong modify it
+		vty_out(vty,"wtp already in ap-group\n");
+	} //lilong modify it 
+	else if(ret == WID_COMMON_NOT_EXIST)
+	{
+		
+		vty_out(vty,"wtp member does not exist.\n");
+	} //lilong modify it 
 	else if(ret == WLAN_ID_NOT_EXIST)
 		vty_out(vty,"<error>ap group id does not exist\n");
+	    
 	else
 		vty_out(vty,"<error>  %d\n",ret);
+
+	if(apcount != 0){
+		free(wtp_list);
+		wtp_list = NULL;
+	}
+
 
 	return CMD_SUCCESS;	
 }

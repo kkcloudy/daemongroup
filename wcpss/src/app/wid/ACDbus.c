@@ -74251,7 +74251,7 @@ DBusMessage *wid_dbus_add_del_ap_group_member(DBusConnection *conn, DBusMessage 
 	DBusMessageIter  iter1;
 	DBusError err;	
 	int ret = WID_DBUS_SUCCESS;
-	int ret1 = 0;
+	int ret1 = WID_DBUS_SUCCESS;//lilong modify it
 	unsigned int i =0;
 	unsigned int groupid;
 	unsigned int isadd;
@@ -74356,6 +74356,7 @@ DBusMessage *wid_dbus_add_del_ap_group_member(DBusConnection *conn, DBusMessage 
 					}
 				} else {
 					//the wtp has allready to an ap-group
+					ret1 = WID_COMMON_EXIST; //lilong modify it
 					wtp_list[count] = wtpid;
 					count++;
 					wid_syslog_err("wtp %d already in ap-group %d\n", wtpid, AC_WTP[wtpid]->APGroupID);
@@ -74472,6 +74473,8 @@ DBusMessage *wid_dbus_add_del_ap_group_member(DBusConnection *conn, DBusMessage 
 			}
 		}
 	}
+
+ret = ret1; //lilong add it
 
 return_to_dcli:	
 	reply = dbus_message_new_method_return(msg);
