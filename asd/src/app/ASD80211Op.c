@@ -1629,9 +1629,6 @@ static void handle_assoc(struct asd_data *wasd,
 	unsigned int wtpid = 0;
 	char reas[256] = {0};
 	char *SSID = NULL;
-	//yjl copy from aw3.1.2 for local forwarding.2014-2-28
-	char ssid_info[ESSID_LENGTH] = { 0 };
-	WID_BSS *bss = NULL;
 	
 	if(NULL == wasd || NULL == mgmt)
 	{
@@ -1785,7 +1782,7 @@ static void handle_assoc(struct asd_data *wasd,
 		Rcode = NO_RESOURCE;
 		goto fail;
 	}
-	//
+	
 	
 	if (sta == NULL || (sta->flags & WLAN_STA_AUTH) == 0) {
 		asd_printf(ASD_80211,MSG_DEBUG,"STA " MACSTR " trying to associate before "
@@ -1835,45 +1832,22 @@ static void handle_assoc(struct asd_data *wasd,
 		goto fail;
 	}
 
-    /*yjl copy from aw3.1.2 for local forwarding.2014-2-28*/
-    bss = ASD_BSS[wasd->BSSIndex];
-	ieee802_11_print_ssid(ssid_info, elems.ssid, elems.ssid_len);
-	if (bss && bss->SSIDSetFlag)
-	{
 
-		if ((elems.ssid_len != strlen(bss->SSID))
-			|| os_memcmp(elems.ssid, bss->SSID, elems.ssid_len))
-		{
-			char ssid_txt[asd_MAX_SSID_LEN + 1] = {0};
-			ieee802_11_print_ssid(ssid_txt, elems.ssid, elems.ssid_len);
-			asd_printf(ASD_80211,MSG_DEBUG,"check SSID: Station " MACSTR " tried to associate with "
-			       "unknown SSID '%s'\n", MAC2STR(sta->addr), ssid_info);
-			resp = WLAN_STATUS_UNSPECIFIED_FAILURE;
-			Rcode = UNKNOWN_SSID;
-			goto fail;
-		}
-	}
-	/*end *********************************************/
-	else
-	{
-		
-	    if (elems.ssid_len != wasd->conf->ssid.ssid_len ||
+    if (elems.ssid_len != wasd->conf->ssid.ssid_len ||
 	        os_memcmp(elems.ssid, wasd->conf->ssid.ssid, elems.ssid_len) != 0)
-	    {
-		    char ssid_txt[asd_MAX_SSID_LEN + 1] = {0};
-		    ieee802_11_print_ssid(ssid_txt, elems.ssid, elems.ssid_len);
-		    asd_printf(ASD_80211,MSG_DEBUG,"Station " MACSTR " tried to associate with "
-		         "unknown SSID '%s'\n", MAC2STR(sta->addr), ssid_info);
-		    if(gASDLOGDEBUG & BIT(0)){
-			    log_parse_reason(UNKNOWN_SSID,reas);
-			    asd_syslog_h(LOG_WARNING,"WSTA","Station Association Fail:StaMac:"MACSTR" Radio id %d SSIDName:%s Cause %d Desc:%s APID:%d\n",MAC2STR(mgmt->sa),wasd->Radio_L_ID,SSID,FLOW_BANLANCE,reas,wtpid);
-		    }
-		    resp = WLAN_STATUS_UNSPECIFIED_FAILURE;
-		    Rcode = UNKNOWN_SSID;
-		    goto fail;
-	    }
-	}
-
+    {
+        char ssid_txt[asd_MAX_SSID_LEN + 1] = {0};
+        ieee802_11_print_ssid(ssid_txt, elems.ssid, elems.ssid_len);
+        asd_printf(ASD_80211,MSG_DEBUG,"Station " MACSTR " tried to associate with "
+                    "unknown SSID '%s'\n", MAC2STR(sta->addr), ssid_txt);
+        if(gASDLOGDEBUG & BIT(0)){
+            log_parse_reason(UNKNOWN_SSID,reas);
+            asd_syslog_h(LOG_WARNING,"WSTA","Station Association Fail:StaMac:"MACSTR" Radio id %d SSIDName:%s Cause %d Desc:%s APID:%d\n",MAC2STR(mgmt->sa),wasd->Radio_L_ID,SSID,FLOW_BANLANCE,reas,wtpid);
+        }
+        resp = WLAN_STATUS_UNSPECIFIED_FAILURE;
+        Rcode = UNKNOWN_SSID;
+        goto fail;
+    }
 
 	sta->flags &= ~WLAN_STA_WME;
 	if (elems.wme && wasd->conf->wme_enabled) {
