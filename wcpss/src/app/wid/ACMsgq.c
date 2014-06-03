@@ -156,13 +156,7 @@ void WID_WLAN_CONFIG_SAVE(unsigned int WTPIndex,unsigned int local_radio)
 
 								msg.mqinfo.u.WlanInfo.HideESSid = AC_WLAN[k]->HideESSid;
 								memset(msg.mqinfo.u.WlanInfo.WlanKey,0,DEFAULT_LEN);
-								if(msg.mqinfo.u.WlanInfo.WlanKey && AC_WLAN[k]->WlanKey){
-									memcpy(msg.mqinfo.u.WlanInfo.WlanKey,AC_WLAN[k]->WlanKey,strlen(AC_WLAN[k]->WlanKey));
-									}
-								else
-									{
-									wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
-									}
+								memcpy(msg.mqinfo.u.WlanInfo.WlanKey,AC_WLAN[k]->WlanKey,strlen(AC_WLAN[k]->WlanKey));
 								msg.mqinfo.u.WlanInfo.KeyLen = AC_WLAN[k]->KeyLen;
 								msg.mqinfo.u.WlanInfo.SecurityType = AC_WLAN[k]->SecurityType;
 								msg.mqinfo.u.WlanInfo.SecurityIndex = AC_WLAN[k]->SecurityIndex;
@@ -174,7 +168,7 @@ void WID_WLAN_CONFIG_SAVE(unsigned int WTPIndex,unsigned int local_radio)
 								{
 									wid_syslog_debug_debug(WID_DEFAULT,"$$$$$$$$$$ wtp online !\n");
 									wid_syslog_debug_debug(WID_DEFAULT,"ESSID = %s\n",wlan_id->ESSID);
-									if(msg.mqinfo.u.WlanInfo.WlanEssid && wlan_id->ESSID){
+									if( wlan_id->ESSID){
 										memcpy(msg.mqinfo.u.WlanInfo.WlanEssid,wlan_id->ESSID,strlen(wlan_id->ESSID));
 										}
 									else
@@ -184,7 +178,7 @@ void WID_WLAN_CONFIG_SAVE(unsigned int WTPIndex,unsigned int local_radio)
 								}
 								else
 								{
-									if(msg.mqinfo.u.WlanInfo.WlanEssid && AC_WLAN[k]->ESSID){
+									if( AC_WLAN[k]->ESSID){
 										memcpy(msg.mqinfo.u.WlanInfo.WlanEssid,AC_WLAN[k]->ESSID,strlen(AC_WLAN[k]->ESSID));
 										}
 									else

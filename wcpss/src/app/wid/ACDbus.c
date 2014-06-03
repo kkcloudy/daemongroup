@@ -2312,12 +2312,12 @@ DBusMessage * wid_dbus_interface_show_wlanconf(DBusConnection *conn, DBusMessage
 			return NULL;
 		}
 		memset(wlankey,0,DEFAULT_LEN+1);
-		if(WLAN->WlanKey != NULL){				
+		if(WLAN != NULL){				
 		
 		memcpy(wlankey,WLAN->WlanKey,strlen((char *)WLAN->WlanKey));		
 			
 		}else
-			memcpy(wlankey," ",DEFAULT_LEN);		
+			memcpy(wlankey," ",1);		
 		reply = dbus_message_new_method_return(msg);
 			
 		dbus_message_iter_init_append (reply, &iter);
@@ -3614,7 +3614,7 @@ DBusMessage * wid_dbus_interface_show_wtplist(DBusConnection *conn, DBusMessage 
 		if(WTP[i]->WTPSN != NULL){
 			if(strlen(WTP[i]->WTPSN) > NAS_IDENTIFIER_NAME){
 				
-				memcpy(sn,WTP[i]->WTPSN,strlen((char *)WTP[i]->WTPSN));
+				memcpy(sn,WTP[i]->WTPSN,strlen(WTP[i]->WTPSN));
 				
 			}else{
 				memcpy(sn,WTP[i]->WTPSN,strlen(WTP[i]->WTPSN));
@@ -3852,8 +3852,7 @@ DBusMessage * wid_dbus_interface_show_wtp_basic_information(DBusConnection *conn
     		if(strlen(WTP[i]->WTPSN) < NAS_IDENTIFIER_NAME)
     			memcpy(sn,WTP[i]->WTPSN,strlen(WTP[i]->WTPSN));
     		else
-    		
-				memcpy(sn,WTP[i]->WTPSN,strlen((char *)WTP[i]->WTPSN));
+    			memcpy(sn,WTP[i]->WTPSN,NAS_IDENTIFIER_NAME-1);
     			
 
 			wid_syslog_debug_debug(WID_DBUS,"1111111111111111111\n");
@@ -3861,13 +3860,13 @@ DBusMessage * wid_dbus_interface_show_wtp_basic_information(DBusConnection *conn
 			memset(longitude, '\0', LONGITUDE_LATITUDE_MAX_LEN);
 			if(strlen((char *)(WTP[i]->longitude)) < LONGITUDE_LATITUDE_MAX_LEN) {
 				if (strlen((char *)(WTP[i]->longitude)) == 0) {
-					memcpy(longitude, "unknown", strlen("nknown"));
+					memcpy(longitude, "unknown", strlen("unknown"));
 				} else {
 					memcpy(longitude, (char *)WTP[i]->longitude, strlen((char *)WTP[i]->longitude));
 				}
 			} else {
 				
-					memcpy(longitude, (char *)WTP[i]->longitude, strlen((char *)WTP[i]->longitude));
+					memcpy(longitude, (char *)WTP[i]->longitude,LONGITUDE_LATITUDE_MAX_LEN-1);
 				
 			}
 
@@ -3880,32 +3879,32 @@ DBusMessage * wid_dbus_interface_show_wtp_basic_information(DBusConnection *conn
 				}
 			} else {
 			
-					memcpy(latitude, (char *)WTP[i]->latitude, strlen((char *)WTP[i]->latitude));
+					memcpy(latitude, (char *)WTP[i]->latitude, LONGITUDE_LATITUDE_MAX_LEN-1);
 				
 			}
 
 			memset(manufacture_date, '\0', MANUFACTURE_DATA_MAX_LEN);
 			if(strlen((char *)(WTP[i]->manufacture_date)) < MANUFACTURE_DATA_MAX_LEN) {
 				if (strlen((char *)(WTP[i]->manufacture_date)) == 0) {
-					memcpy(manufacture_date, "unknown", strlen("nknown"));
+					memcpy(manufacture_date, "unknown", strlen("unknown"));
 				} else {
 					memcpy(manufacture_date, (char *)WTP[i]->manufacture_date, strlen((char *)WTP[i]->manufacture_date));
 				}
 			} else {
 				
-					memcpy(manufacture_date, (char *)WTP[i]->manufacture_date, strlen((char *)WTP[i]->manufacture_date));
+					memcpy(manufacture_date, (char *)WTP[i]->manufacture_date, MANUFACTURE_DATA_MAX_LEN-1);
 					
 			}
 
 			
 			memset(mac,0,MAC_LEN+1);
     			if(WTP[i]->WTPMAC != NULL){
-					memcpy(mac,WTP[i]->WTPMAC,MAC_LEN);
-    				}
-				else
-					{
-					wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
-					}
+				memcpy(mac,WTP[i]->WTPMAC,MAC_LEN);
+    			}
+			else
+			{
+				wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+			}
     		
     		if(WTP[i]->add_time == NULL)
     		{
@@ -9650,7 +9649,7 @@ DBusMessage * wid_dbus_interface_show_wlan_ssid_stats_information(DBusConnection
 								//Essid= (char*)malloc(strlen(AC_WLAN[wlanid]->ESSID)+1);
 								memset(Essid,0,ESSID_LENGTH+1);
 								if(strlen(AC_WLAN[wlanid]->ESSID) <= ESSID_LENGTH)
-									memcpy(Essid,AC_WLAN[wlanid]->ESSID,ESSID_LENGTH);
+									memcpy(Essid,AC_WLAN[wlanid]->ESSID,strlen(AC_WLAN[wlanid]->ESSID));
 							}
 							break;	
 						}
@@ -15688,14 +15687,8 @@ if(type==0)
 		return NULL;
 	}
 	memset(AC_WTP[ID]->updateversion, 0, strlen(vs)+1);
-	if(vs != NULL){
-		memcpy(AC_WTP[ID]->updateversion, vs, strlen(vs));
-		}
-	else
-		{
-		wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
-		}
-
+	memcpy(AC_WTP[ID]->updateversion, vs, strlen(vs));
+	
 	AC_WTP[ID]->updatepath = (char*)WID_MALLOC(strlen(pt)+1);
 	if (NULL == AC_WTP[ID]->updatepath)
 	{
@@ -15703,14 +15696,8 @@ if(type==0)
 		return NULL;
 	}
 	memset(AC_WTP[ID]->updatepath, 0, strlen(pt)+1);
-	if(pt != NULL){
-		memcpy(AC_WTP[ID]->updatepath, pt, strlen(pt));	
-		}
-	else
-		{
-		wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
-		}
-
+	memcpy(AC_WTP[ID]->updatepath, pt, strlen(pt));	
+		
 
 	if((AC_WTP[ID]->WTPStat == 5)&&(commandmode == 1))
 	{
@@ -15754,14 +15741,7 @@ else if (type == 1){
 						return NULL;
 					}
 					memset(AC_WTP[tmp->WTPID]->updateversion, 0, strlen(vs)+1);
-					if(vs != NULL){
-						memcpy(AC_WTP[tmp->WTPID]->updateversion, vs, strlen(vs));
-						}
-					else
-						{
-						wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
-						}
-					
+					memcpy(AC_WTP[tmp->WTPID]->updateversion, vs, strlen(vs));
 					AC_WTP[tmp->WTPID]->updatepath = (char*)WID_MALLOC(strlen(pt)+1);
 					if (NULL == AC_WTP[tmp->WTPID]->updatepath)
 					{
@@ -15770,14 +15750,8 @@ else if (type == 1){
 						return NULL;
 					}
 					memset(AC_WTP[tmp->WTPID]->updatepath, 0, strlen(pt)+1);
-					if(pt != NULL){
-						memcpy(AC_WTP[tmp->WTPID]->updatepath, pt, strlen(pt)); 
-						}
-					else
-						{
-						wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
-						}
-					
+					memcpy(AC_WTP[tmp->WTPID]->updatepath, pt, strlen(pt)); 
+										
 					
 					if((AC_WTP[tmp->WTPID]->WTPStat == 5)&&(commandmode == 1))
 					{
@@ -15844,7 +15818,7 @@ DBusMessage * wid_dbus_interface_update_wtp_img_version(DBusConnection *conn, DB
 	DBusError err;	
 	int ret = WID_DBUS_SUCCESS;
 
-	unsigned int wtpid;
+	unsigned int wtpid,type;
 	char *vs,*pt;
 	unsigned char commandmode;
 
@@ -15890,14 +15864,7 @@ DBusMessage * wid_dbus_interface_update_wtp_img_version(DBusConnection *conn, DB
 		return NULL;
 	}
 	memset(AC_WTP[wtpid]->updateversion, 0, strlen(vs)+1);
-	if(vs != NULL){
-		memcpy(AC_WTP[wtpid]->updateversion, vs, strlen(vs));
-		}
-	else
-		{
-		wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
-		}
-
+	memcpy(AC_WTP[wtpid]->updateversion, vs, strlen(vs));
 	AC_WTP[wtpid]->updatepath = (char*)WID_MALLOC(strlen(pt)+1);
 	if (NULL == AC_WTP[wtpid]->updatepath)
 	{
@@ -15905,14 +15872,8 @@ DBusMessage * wid_dbus_interface_update_wtp_img_version(DBusConnection *conn, DB
 		return NULL;
 	}
 	memset(AC_WTP[wtpid]->updatepath, 0, strlen(pt)+1);
-	if( pt != NULL){
-		memcpy(AC_WTP[wtpid]->updatepath, pt, strlen(pt));	
-		}
-	else
-		{
-		wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
-		}
-
+	memcpy(AC_WTP[wtpid]->updatepath, pt, strlen(pt));	
+	
 
 	if((AC_WTP[wtpid]->WTPStat == 5)&&(commandmode == 1))
 	{
@@ -16167,13 +16128,7 @@ DBusMessage * wid_dbus_interface_update_wtp_img_version_list(DBusConnection *con
 				return NULL;
 			}
 			memset(AC_WTP[wtpid]->updateversion, 0, strlen(vs)+1);
-			if( vs != NULL){
-				memcpy(AC_WTP[wtpid]->updateversion, vs, strlen(vs));
-				}
-			else
-				{
-				wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
-				}
+			memcpy(AC_WTP[wtpid]->updateversion, vs, strlen(vs));
 			success_num++;    //fengwenchao add 20110516
 		}
 		/*fengwenchao add 20110516*/
@@ -16196,13 +16151,8 @@ DBusMessage * wid_dbus_interface_update_wtp_img_version_list(DBusConnection *con
 				return NULL;
 			}
 			memset(AC_WTP[wtpid]->updatepath, 0, strlen(pt)+1);
-			if( pt != NULL){
-				memcpy(AC_WTP[wtpid]->updatepath, pt, strlen(pt));	
-				}
-			else
-				{
-				wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
-				}
+			memcpy(AC_WTP[wtpid]->updatepath, pt, strlen(pt));	
+				
 		}
 
 		if((AC_WTP[wtpid] != NULL)&&(AC_WTP[wtpid]->WTPStat == 5)&&(commandmode == 1))
@@ -33177,14 +33127,8 @@ DBusMessage * wid_dbus_interface_wtp_bind_model_with_file(DBusConnection *conn, 
 				/*store the tar file name here,which is going to be used in show cmd*/
 				confignode->tar_file_name = (char*)WID_MALLOC(strlen(file_name)+1);
 				memset(confignode->tar_file_name,0,strlen(file_name)+1);
-				if(file_name != NULL){
-					memcpy(confignode->tar_file_name,file_name,strlen(file_name)); 	
-					}
-				else
-					{
-					wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
-					}
-				
+				memcpy(confignode->tar_file_name,file_name,strlen(file_name)); 	
+								
 				CWCodeInfo *codenode = confignode->code_info;
 				while(codenode != NULL){
 					wid_syslog_debug_debug(WID_DBUS, "wtp_upgrade: copy file %s from /mnt/wtp/tmp/ to /mnt/wtp/\n", 
@@ -34315,7 +34259,8 @@ DBusMessage * wid_dbus_interface_wtp_show_ap_upgrade_result(DBusConnection *conn
 				return NULL;
 			}
 			memset(wtp_ip,0,strlen(WTP_SUCC[i]->WTPIP)+1);
-			memcpy(wtp_ip,WTP_SUCC[i]->WTPIP,strlen(WTP_SUCC[i]->WTPIP));	
+			if(WTP_SUCC[i]->WTPIP != NULL)
+				memcpy(wtp_ip,WTP_SUCC[i]->WTPIP,strlen(WTP_SUCC[i]->WTPIP));	
 		}else{
 			wtp_ip = (char*)WID_MALLOC(2);
 			if (NULL == wtp_ip)
@@ -34345,6 +34290,7 @@ DBusMessage * wid_dbus_interface_wtp_show_ap_upgrade_result(DBusConnection *conn
 				return NULL;
 			}
 			memset(wtp_model,0,strlen(WTP_SUCC[i]->WTPModel)+1);
+			if(WTP_SUCC[i]->WTPModel != NULL)
 			memcpy(wtp_model,WTP_SUCC[i]->WTPModel,strlen(WTP_SUCC[i]->WTPModel));		
 		}else{
 			wtp_model = (char*)WID_MALLOC(2);
@@ -34501,6 +34447,7 @@ DBusMessage * wid_dbus_interface_wtp_show_ap_upgrade_result(DBusConnection *conn
 				return NULL;
 			}
 			memset(wtp_ip,0,strlen(WTP_OTHE[i]->WTPIP)+1);
+			if(WTP_OTHE[i]->WTPIP != NULL)
 			memcpy(wtp_ip,WTP_OTHE[i]->WTPIP,strlen(WTP_OTHE[i]->WTPIP));	
 		}else{
 			wtp_ip = (char*)WID_MALLOC(2);
@@ -34531,7 +34478,8 @@ DBusMessage * wid_dbus_interface_wtp_show_ap_upgrade_result(DBusConnection *conn
 				return NULL;
 			}
 			memset(wtp_model,0,strlen(WTP_OTHE[i]->WTPModel)+1);
-			memcpy(wtp_model,WTP_OTHE[i]->WTPModel,strlen(WTP_OTHE[i]->WTPModel));		
+			if(WTP_OTHE[i]->WTPModel != NULL)
+				memcpy(wtp_model,WTP_OTHE[i]->WTPModel,strlen(WTP_OTHE[i]->WTPModel));		
 		}else{
 			wtp_model = (char*)WID_MALLOC(2);
 			if (NULL == wtp_model)
@@ -45002,13 +44950,8 @@ DBusMessage * wid_dbus_interface_radio_set_wds_wep_key(DBusConnection *conn, DBu
 					if(AC_RADIO[ID]->cipherType == 1)
 						{
 							memset(AC_RADIO[ID]->wepkey, 0, 32);
-							if(key != NULL){
-								memcpy(AC_RADIO[ID]->wepkey, key,strlen(key));
-								}
-							else
-								{
-								wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
-								}
+							memcpy(AC_RADIO[ID]->wepkey, key,strlen(key));
+								
 							memset(command, 0, 80);
 							len = strlen(key);
 							if((len == 5)||(len == 10))
@@ -48254,18 +48197,11 @@ DBusMessage * wid_dbus_interface_qos_show_qos_extension_info(DBusConnection *con
 	dbus_message_iter_append_basic (&iter,
 										 DBUS_TYPE_UINT32,
 										 &ret);
-	if(ret == 0){
-
-		
+	if(ret == 0){	
 			memcpy(manage_name,WID_QOS[QOSID]->qos_manage_arithmetic,strlen((char *)WID_QOS[QOSID]->qos_manage_arithmetic));
-			
-		
 			memcpy(grab_name,WID_QOS[QOSID]->qos_res_grab_arithmetic,strlen((char *)WID_QOS[QOSID]->qos_res_grab_arithmetic));
-			
-		
 			memcpy(shove_name,WID_QOS[QOSID]->qos_res_shove_arithmetic,strlen((char *)WID_QOS[QOSID]->qos_res_shove_arithmetic));
 			
-
 		dbus_message_iter_append_basic (&iter,
 										 DBUS_TYPE_UINT32,
 										 &(WID_QOS[QOSID]->QosID));
@@ -48765,24 +48701,12 @@ DBusMessage * wid_dbus_interface_set_qos_policy_name(DBusConnection *conn, DBusM
 		{
 			case 1 ://grab
 					memset(WID_QOS[QosID]->qos_res_grab_arithmetic,0,WID_QOS_ARITHMETIC_NAME_LEN);
-					if(name != NULL){
-						memcpy(WID_QOS[QosID]->qos_res_grab_arithmetic,name,strlen(name));
-						}
-					else
-						{
-						wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
-						}
+					memcpy(WID_QOS[QosID]->qos_res_grab_arithmetic,name,strlen(name));
 					break;
 
 			case 2 ://shove
 					memset(WID_QOS[QosID]->qos_res_shove_arithmetic,0,WID_QOS_ARITHMETIC_NAME_LEN);
-					if( name != NULL){
-						memcpy(WID_QOS[QosID]->qos_res_shove_arithmetic,name,strlen(name));
-						}
-					else
-						{
-						wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
-						}
+					memcpy(WID_QOS[QosID]->qos_res_shove_arithmetic,name,strlen(name));
 					break;
 					
 			default : break;
@@ -48829,14 +48753,8 @@ DBusMessage * 	wid_dbus_interface_set_qos_manage_arithmetic_name(DBusConnection 
 	{
 		
 		memset(WID_QOS[QosID]->qos_manage_arithmetic,0,WID_QOS_ARITHMETIC_NAME_LEN);
-		if(name != NULL){
-			memcpy(WID_QOS[QosID]->qos_manage_arithmetic,name,strlen(name));
-			}
-		else
-			{
-			wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
-			}
-		
+		memcpy(WID_QOS[QosID]->qos_manage_arithmetic,name,strlen(name));
+					
 	}
 	
 	reply = dbus_message_new_method_return(msg);
@@ -50984,14 +50902,8 @@ DBusMessage * wid_dbus_interface_set_wtpsn(DBusConnection *conn, DBusMessage *ms
 		else
 		{
 			memset(AC_WTP[ID]->WTPSN, 0, NAS_IDENTIFIER_NAME);
-			if(AC_WTP[ID]->WTPSN && name){
-				memcpy(AC_WTP[ID]->WTPSN,name,strlen(name));
-				}
-			else
-				{
-				wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
-				}
-	
+			memcpy(AC_WTP[ID]->WTPSN,name,strlen(name));
+					
 		}
 	}
 
@@ -51022,13 +50934,7 @@ DBusMessage * wid_dbus_interface_set_wtpsn(DBusConnection *conn, DBusMessage *ms
 						else
 						{
 							memset(AC_WTP[tmp->WTPID]->WTPSN, 0, NAS_IDENTIFIER_NAME);
-							if(name != NULL){
-								memcpy(AC_WTP[tmp->WTPID]->WTPSN,name,strlen(name));
-								}
-							else
-								{
-								wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
-									}
+							memcpy(AC_WTP[tmp->WTPID]->WTPSN,name,strlen(name));
 							ret2 = WID_DBUS_SUCCESS;
 							wid_syslog_debug_debug(WID_DEFAULT,"WTP%d set sn successful\n",tmp->WTPID);
 						}
@@ -51117,14 +51023,8 @@ DBusMessage * wid_dbus_interface_set_wtpsn(DBusConnection *conn, DBusMessage *ms
 	else
 	{
 		memset(AC_WTP[wtpid]->WTPSN, 0, NAS_IDENTIFIER_NAME);
-		if(AC_WTP[wtpid]->WTPSN && name){
-			memcpy(AC_WTP[wtpid]->WTPSN,name,strlen(name));
-			}
-		else
-			{
-			wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
-			}
-	
+		memcpy(AC_WTP[wtpid]->WTPSN,name,strlen(name));
+				
 	}
 	reply = dbus_message_new_method_return(msg);
 	dbus_message_iter_init_append(reply, &iter);
@@ -51183,13 +51083,7 @@ DBusMessage * wid_dbus_interface_set_wtp_netid(DBusConnection *conn, DBusMessage
 					return NULL;
 				}
 				memset(AC_WTP[ID]->netid, 0, strlen(netid)+1);
-				if(netid != NULL){
-					memcpy(AC_WTP[ID]->netid,netid,strlen(netid));
-					}
-				else
-					{
-					wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
-					}
+				memcpy(AC_WTP[ID]->netid,netid,strlen(netid));
 				AsdWsm_WTPOp(ID,WID_MODIFY);  
 			}
 			else
@@ -51201,13 +51095,7 @@ DBusMessage * wid_dbus_interface_set_wtp_netid(DBusConnection *conn, DBusMessage
 					return NULL;
 				}
 				memset(AC_WTP[ID]->netid, 0, strlen(netid)+1);
-				if(netid != NULL){
-					memcpy(AC_WTP[ID]->netid,netid,strlen(netid));
-					}
-				else
-					{
-					wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
-					}
+				memcpy(AC_WTP[ID]->netid,netid,strlen(netid));
 				AsdWsm_WTPOp(ID,WID_MODIFY);  
 	
 			}
@@ -51241,13 +51129,7 @@ DBusMessage * wid_dbus_interface_set_wtp_netid(DBusConnection *conn, DBusMessage
 							return NULL;
 						}
 						memset(AC_WTP[tmp->WTPID]->netid, 0, strlen(netid)+1);
-						if(netid != NULL){
-							memcpy(AC_WTP[tmp->WTPID]->netid,netid,strlen(netid));
-							}
-						else
-							{
-							wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
-							}
+						memcpy(AC_WTP[tmp->WTPID]->netid,netid,strlen(netid));
 						wid_syslog_debug_debug(WID_DEFAULT,"WTP%d set wtp netid successful\n",tmp->WTPID);
 						AsdWsm_WTPOp(tmp->WTPID,WID_MODIFY);  
 					}
@@ -51261,13 +51143,7 @@ DBusMessage * wid_dbus_interface_set_wtp_netid(DBusConnection *conn, DBusMessage
 							return NULL;
 						}
 						memset(AC_WTP[tmp->WTPID]->netid, 0, strlen(netid)+1);
-						if(netid != NULL){
-							memcpy(AC_WTP[tmp->WTPID]->netid,netid,strlen(netid));
-							}
-						else
-							{
-							wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
-							}
+						memcpy(AC_WTP[tmp->WTPID]->netid,netid,strlen(netid));
 						wid_syslog_debug_debug(WID_DEFAULT,"WTP%d set wtp netid successful\n",tmp->WTPID);
 						AsdWsm_WTPOp(tmp->WTPID,WID_MODIFY);  
 					
@@ -51357,13 +51233,7 @@ DBusMessage * wid_dbus_interface_set_wtp_netid(DBusConnection *conn, DBusMessage
 			return NULL;
 		}
 		memset(AC_WTP[wtpid]->netid, 0, strlen(netid)+1);
-		if(netid != NULL){
-			memcpy(AC_WTP[wtpid]->netid,netid,strlen(netid));
-			}
-		else
-			{
-			wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
-			}
+		memcpy(AC_WTP[wtpid]->netid,netid,strlen(netid));
 		AsdWsm_WTPOp(wtpid,WID_MODIFY);  //zhangshu add for sending wtp_netid to asd, 2010-10-19
 	}
 	else
@@ -51375,13 +51245,7 @@ DBusMessage * wid_dbus_interface_set_wtp_netid(DBusConnection *conn, DBusMessage
 			return NULL;
 		}
 		memset(AC_WTP[wtpid]->netid, 0, strlen(netid)+1);
-		if(netid != NULL){
-			memcpy(AC_WTP[wtpid]->netid,netid,strlen(netid));
-			}
-		else
-			{
-			wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
-			}
+		memcpy(AC_WTP[wtpid]->netid,netid,strlen(netid));
 		AsdWsm_WTPOp(wtpid,WID_MODIFY);  //zhangshu add for sending wtp_netid to asd, 2010-10-19
 	
 	}
@@ -68536,9 +68400,7 @@ DBusMessage * wid_dbus_interface_show_ap_cm_statistics(DBusConnection *conn, DBu
 	{
 	
 			memcpy(cpu_type,AC_WTP[wtpid]->cpuType,strlen((char *)AC_WTP[wtpid]->cpuType));
-		
 			memcpy(flash_type,AC_WTP[wtpid]->flashType,strlen((char *)AC_WTP[wtpid]->flashType));
-		
 			memcpy(mem_type,AC_WTP[wtpid]->memType,strlen( (char *)AC_WTP[wtpid]->memType));
 		
 		dbus_message_iter_append_basic (&iter,DBUS_TYPE_UINT32,&AC_WTP[wtpid]->apcminfo.cpu_average); 
@@ -69421,13 +69283,8 @@ DBusMessage * wid_dbus_interface_set_ebr_add_del_if(DBusConnection *conn, DBusMe
 			is_radio = 1;
 		}
 		else{
-			if( vename != NULL){
 				memcpy(name,vename,strlen(vename));
-				}
-			else
-				{
-				wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
-				}
+			
 		}
 		if (is_radio == 1)
 		{
@@ -69943,13 +69800,8 @@ DBusMessage * wid_dbus_interface_set_ebr_add_del_uplink(DBusConnection *conn, DB
 			}	  
 		}
 		else{
-			if( vename != NULL){
 				memcpy(name,vename,strlen(vename));
-				}
-			else
-				{
-				wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
-				}
+			
 		}
 		if(ret == WID_DBUS_SUCCESS)
 		{
@@ -73084,13 +72936,8 @@ DBusMessage * wid_dbus_interface_wlan_wtp_list_sta_static_arp(DBusConnection *co
 						AC_BSS[BSSIndex]->sta_static_arp_policy = policy;
 						if(strlen(ifname) < ETH_IF_NAME_LEN){
 							memset(AC_BSS[BSSIndex]->arp_ifname,0,ETH_IF_NAME_LEN);
-							if(ifname != NULL){
-								memcpy(AC_BSS[BSSIndex]->arp_ifname,ifname, strlen(ifname));
-								}
-							else
-								{
-								wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
-								}
+							memcpy(AC_BSS[BSSIndex]->arp_ifname,ifname, strlen(ifname));
+								
 						}else{
 							AC_BSS[BSSIndex]->sta_static_arp_policy = 0;
 							continue;
@@ -73176,13 +73023,8 @@ DBusMessage * wid_dbus_interface_wlan_wtp_sta_static_arp(DBusConnection *conn, D
 							if(strlen(ifname) < ETH_IF_NAME_LEN)
 								{
 									memset(AC_BSS[BSSIndex]->arp_ifname,0,ETH_IF_NAME_LEN);
-									if( ifname != NULL){
-										memcpy(AC_BSS[BSSIndex]->arp_ifname,ifname, strlen(ifname));
-										}
-									else
-										{
-										wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
-										}
+									memcpy(AC_BSS[BSSIndex]->arp_ifname,ifname, strlen(ifname));
+										
 								}
 							else
 								{
@@ -73237,13 +73079,7 @@ DBusMessage * wid_dbus_interface_wlan_wtp_sta_static_arp(DBusConnection *conn, D
 														if(strlen(ifname) < ETH_IF_NAME_LEN)
 															{
 																memset(AC_BSS[BSSIndex]->arp_ifname,0,ETH_IF_NAME_LEN);
-																if( ifname != NULL){
-																	memcpy(AC_BSS[BSSIndex]->arp_ifname,ifname, strlen(ifname));
-																	}
-																else
-																	{
-																	wid_syslog_err("%s %d pointer is NULL\n");
-																	}
+																memcpy(AC_BSS[BSSIndex]->arp_ifname,ifname, strlen(ifname));
 																wid_syslog_debug_debug(WID_DEFAULT,"save ifname\n");
 															}
 														else
@@ -73357,13 +73193,8 @@ DBusMessage * wid_dbus_interface_wlan_wtp_sta_static_arp(DBusConnection *conn, D
 				AC_BSS[BSSIndex]->sta_static_arp_policy = policy;
 				if(strlen(ifname) < ETH_IF_NAME_LEN){
 					memset(AC_BSS[BSSIndex]->arp_ifname,0,ETH_IF_NAME_LEN);
-					if( ifname != NULL){
-						memcpy(AC_BSS[BSSIndex]->arp_ifname,ifname, strlen(ifname));
-						}
-					else
-						{
-						wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
-						}
+					memcpy(AC_BSS[BSSIndex]->arp_ifname,ifname, strlen(ifname));
+						
 				}else{
 					AC_BSS[BSSIndex]->sta_static_arp_policy = 0;
 				}

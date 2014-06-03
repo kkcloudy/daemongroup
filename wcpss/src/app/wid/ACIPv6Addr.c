@@ -192,16 +192,11 @@ int ipv6_bind_interface_for_wid(struct ifi_info *ifi, int port)
 	//printf("002 ipv6 addr = %s\n",addrstr);
 	//ret = inet_pton(AF_INET6, addrstr, &servaddr.sin6_addr);	 
 	
-	if(&(&servaddr)->sin6_addr && (&((struct sockaddr_in6 *)ifi->ifi_addr6)->sin6_addr)){
+	
 		memcpy(&(&servaddr)->sin6_addr,
 					   &((struct sockaddr_in6 *)ifi->ifi_addr6)->sin6_addr,
 					   sizeof(struct in6_addr));
-		}
-	else
-		{
-		wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
-		}
-					   
+							   
 	//servaddr.sin6_addr = in6addr_any;
 
 	if(bind(sockfd, (struct sockaddr*)&servaddr, sizeof(struct sockaddr_in6)) < 0)
@@ -425,7 +420,7 @@ struct tag_ipv6_addr_list * get_ipv6_addr_list(char * ifname)
 	dev_ipv6_addr_t addr;
 	struct tag_ipv6_addr_list *ipv6list = NULL;
 	bzero(&addr, sizeof(addr));
-	if(addr.ifname && ifname){
+	if(ifname){
 		memcpy(addr.ifname, ifname, strlen(ifname));
 		}
 	else

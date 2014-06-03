@@ -114,7 +114,7 @@ int Get_Tunnel_Interface_Info(char * ifname, struct ifi_info *ifi){
 		return -1;
 	}
 	memset(ifi->ifi_addr,0, sizeof(struct sockaddr_in));
-	if(ifi->ifi_addr && sinptr){
+	if(ifi->ifi_addr ){
 		memcpy(ifi->ifi_addr, sinptr, sizeof(struct sockaddr_in));
 		}
 	else
@@ -130,7 +130,7 @@ int Get_Tunnel_Interface_Info(char * ifname, struct ifi_info *ifi){
 		 close(sockfd);
 		 return -1;
 	 }
-	if(ifi->mac && ifr.ifr_hwaddr.sa_data){
+	if(ifi != NULL){
 		memcpy(ifi->mac,ifr.ifr_hwaddr.sa_data,strlen(ifr.ifr_hwaddr.sa_data));
 		}
 	else
@@ -218,13 +218,14 @@ struct m_arphdr
 	else
 		{
 		wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+		return -1;
 		}
 	unsigned char	*hwaddr	= MAC;
 	int	hwlen	= ETH_ALEN;
 
 	/* hardcoded for ethernet */
 	memset( eth->ether_dhost, 0xFF, ETH_ALEN );
-	if(eth->ether_shost && hwaddr){
+	if(eth->ether_shost){
 		memcpy( eth->ether_shost, hwaddr, hwlen );
 		}
 	else
@@ -240,28 +241,10 @@ struct m_arphdr
 	arph->ar_hln	= 6;
 	arph->ar_pln	= 4;
 	arph->ar_op	= htons(ARPOP_REQUEST);
-	if(arph->__ar_sha && hwaddr){
-		memcpy( arph->__ar_sha, hwaddr, hwlen );
-		}
-	else
-		{
-		wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
-		}
+	memcpy( arph->__ar_sha, hwaddr, hwlen );
 	addr = htonl(addr);
-	if( arph->__ar_sip && &addr){
-		memcpy( arph->__ar_sip, &addr, sizeof(addr) );
-		}
-	else
-		{
-		wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
-		}
-	if(arph->__ar_tip && &addr){
-		memcpy( arph->__ar_tip, &addr, sizeof(addr) );
-		}
-	else
-		{
-		wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
-		}
+	memcpy( arph->__ar_sip, &addr, sizeof(addr) );
+	memcpy( arph->__ar_tip, &addr, sizeof(addr) );
 	return vrrp_send_pkt_arp( ifname, buf, buflen );
 }
 
@@ -420,7 +403,7 @@ int hwaddr_set( char *ifname, char *addr, int addrlen )
 	ret = ioctl(fd, SIOCSIFFLAGS, (char *)&ifr);
 	if( ret )	goto end;
 	/* change the hwaddr */
-	if( ifr.ifr_hwaddr.sa_data && addr){
+	if(  NULL != addr){
 		memcpy( ifr.ifr_hwaddr.sa_data, addr, strlen(addr) );
 		}
 	else
@@ -634,52 +617,33 @@ void bak_add_del_wtp(int sockfd,BakOperate Op,unsigned int WTPID){
 	msg.Type = B_WTP_TYPE;
 	msg.Bu.WTP.WTPID = WTPID;
 	if(Op == B_ADD){
-		if(msg.Bu.WTP.SN && AC_WTP[WTPID]->WTPSN){
+		if( AC_WTP[WTPID]->WTPSN != NULL ){
 			memcpy(msg.Bu.WTP.SN,AC_WTP[WTPID]->WTPSN,strlen(AC_WTP[WTPID]->WTPSN));
 			}
 		else
 			{
 			wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
 			}
-		if(msg.Bu.WTP.WTP_IP && AC_WTP[WTPID]->WTPIP){
+		if( AC_WTP[WTPID]->WTPIP != NULL){
 			memcpy(msg.Bu.WTP.WTP_IP,AC_WTP[WTPID]->WTPIP,strlen(AC_WTP[WTPID]->WTPIP));
 			}
 		else
 			{
 			wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
 			}
-		if(msg.Bu.WTP.WTP_MAC && AC_WTP[WTPID]->WTPMAC){
+		if( AC_WTP[WTPID]->WTPMAC != NULL){
 			memcpy(msg.Bu.WTP.WTP_MAC,AC_WTP[WTPID]->WTPMAC,MAC_LEN);	
 			}
 		else
 			{
 			wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
 			}
-		if((struct sockaddr*)&(msg.Bu.WTP.addr) && (struct sockaddr*)&(gWTPs[WTPID].address)){
-			memcpy((struct sockaddr*)&(msg.Bu.WTP.addr), (struct sockaddr*)&(gWTPs[WTPID].address), sizeof(struct sockaddr));
-			}
-		else
-			{
-			wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
-			}
-
+		memcpy((struct sockaddr*)&(msg.Bu.WTP.addr), (struct sockaddr*)&(gWTPs[WTPID].address), sizeof(struct sockaddr));
 		if((AC_WTP[WTPID]->codever)&&(strlen(AC_WTP[WTPID]->codever) <= NAME_LEN))
 		{
-			if(msg.Bu.WTP.WTP_CODEVER && AC_WTP[WTPID]->codever){
 				memcpy(msg.Bu.WTP.WTP_CODEVER,AC_WTP[WTPID]->codever,strlen(AC_WTP[WTPID]->codever));
-				}
-			else
-				{
-				wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
-				}
 		}else{
-			if(msg.Bu.WTP.WTP_CODEVER!=NULL){
-				memcpy(msg.Bu.WTP.WTP_CODEVER,"none",5);
-				}
-			else
-				{
-				wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
-				}
+			memcpy(msg.Bu.WTP.WTP_CODEVER,"none",5);
 			if(AC_WTP[WTPID]->codever)
 			{	wid_syslog_err(" strlen(AC_WTP[%d]->codever)  =  %d  \n ",WTPID,strlen(AC_WTP[WTPID]->codever));}
 			else
@@ -688,21 +652,9 @@ void bak_add_del_wtp(int sockfd,BakOperate Op,unsigned int WTPID){
 		
 		if((AC_WTP[WTPID]->sysver)&&(strlen(AC_WTP[WTPID]->sysver) <= NAME_LEN))
 		{
-			if(msg.Bu.WTP.WTP_SYSVER && AC_WTP[WTPID]->sysver){
-				memcpy(msg.Bu.WTP.WTP_SYSVER,AC_WTP[WTPID]->sysver,strlen(AC_WTP[WTPID]->sysver));
-				}
-			else
-				{
-				wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
-				}
+			memcpy(msg.Bu.WTP.WTP_SYSVER,AC_WTP[WTPID]->sysver,strlen(AC_WTP[WTPID]->sysver));
 		}else{
-			if(msg.Bu.WTP.WTP_CODEVER!=NULL){
 				memcpy(msg.Bu.WTP.WTP_CODEVER,"none",5);
-				}
-			else
-				{
-				wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
-				}
 			if(AC_WTP[WTPID]->sysver)
 			{	wid_syslog_err(" strlen(AC_WTP[%d]->sysver)  =	%d	\n ",WTPID,strlen(AC_WTP[WTPID]->sysver));}
 			else
@@ -711,21 +663,9 @@ void bak_add_del_wtp(int sockfd,BakOperate Op,unsigned int WTPID){
 		
 		if((AC_WTP[WTPID]->ver)&&(strlen(AC_WTP[WTPID]->ver) <= NAME_LEN))
 		{
-			if(msg.Bu.WTP.WTP_VER && AC_WTP[WTPID]->ver){
 				memcpy(msg.Bu.WTP.WTP_VER,AC_WTP[WTPID]->ver,strlen(AC_WTP[WTPID]->ver));
-				}
-			else
-				{
-				wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
-				}
 		}else{
-			if(msg.Bu.WTP.WTP_CODEVER != NULL){
 				memcpy(msg.Bu.WTP.WTP_CODEVER,"none",5);
-				}
-			else
-				{
-				wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
-				}
 			if(AC_WTP[WTPID]->ver)
 			{	wid_syslog_err(" strlen(AC_WTP[%d]->ver)  =  %d  \n ",WTPID,strlen(AC_WTP[WTPID]->ver));}
 			else
@@ -739,13 +679,7 @@ void bak_add_del_wtp(int sockfd,BakOperate Op,unsigned int WTPID){
 		msg.Bu.WTP.ElectrifyRegisterCircle = AC_WTP[WTPID]->ElectrifyRegisterCircle;
 	}
 	len = sizeof(msg);
-	if((char*)&msg != NULL){
-		memcpy(buf,(char*)&msg,len);	
-		}
-	else
-		{
-		wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
-		}
+	memcpy(buf,(char*)&msg,len);		
 	fd_set fdset;
 	struct timeval tv;			
 	FD_ZERO(&fdset);
@@ -802,8 +736,8 @@ void bak_add_del_bss(int sockfd,BakOperate Op,unsigned int BSSIndex){
 				(v_ip >> 24) & 0xFF, (v_ip >> 16) & 0xFF,(v_ip >> 8) & 0xFF, v_ip & 0xFF);
 	msg.Bu.BSS.WTPID = v_ip;
 	if(Op == B_ADD){
-		if(msg.Bu.BSS.BSSID && AC_RADIO[radioID]->BSS[Bid]->BSSID){
-			memcpy(msg.Bu.BSS.BSSID,AC_RADIO[radioID]->BSS[Bid]->BSSID,strlen((char *)AC_RADIO[radioID]->BSS[Bid]->BSSID));
+		if( AC_RADIO[radioID]->BSS[Bid]->BSSID != NULL){
+			memcpy(msg.Bu.BSS.BSSID,AC_RADIO[radioID]->BSS[Bid]->BSSID,MAC_LEN);
 			}
 		else
 			{
@@ -811,14 +745,7 @@ void bak_add_del_bss(int sockfd,BakOperate Op,unsigned int BSSIndex){
 			}
 	}
 	len = sizeof(msg);
-	if((char*)&msg != NULL){
-		memcpy(buf,(char*)&msg,len);
-		}
-	else
-		{
-		wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
-		}
-	
+	memcpy(buf,(char*)&msg,len);
 	fd_set fdset;
 	struct timeval tv;			
 	FD_ZERO(&fdset);
@@ -946,7 +873,7 @@ void B_WTP_ADD_OP(B_Msg *msg){
 			}
 			AC_WTP[WTPID]->WTPSN = (char*)WID_MALLOC(NAS_IDENTIFIER_NAME);
 			memset(AC_WTP[WTPID]->WTPSN,0,NAS_IDENTIFIER_NAME);
-			if(AC_WTP[WTPID]->WTPSN && msg->Bu.WTP.SN){
+			if(AC_WTP[WTPID]->WTPSN && msg){
 				memcpy(AC_WTP[WTPID]->WTPSN,msg->Bu.WTP.SN,strlen((char *)(msg->Bu.WTP.SN)));
 				}
 			else
@@ -954,7 +881,7 @@ void B_WTP_ADD_OP(B_Msg *msg){
 				wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
 				}
 			memset(AC_WTP[WTPID]->WTPMAC,0,7);
-			if(AC_WTP[WTPID]->WTPMAC && msg->Bu.WTP.WTP_MAC){
+			if(AC_WTP[WTPID]->WTPMAC && msg){
 				memcpy(AC_WTP[WTPID]->WTPMAC,msg->Bu.WTP.WTP_MAC,MAC_LEN);
 				}
 			else
@@ -962,14 +889,14 @@ void B_WTP_ADD_OP(B_Msg *msg){
 				wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
 				}
 			memset(AC_WTP[WTPID]->WTPIP,0,DEFAULT_LEN);
-			if(AC_WTP[WTPID]->WTPIP && msg->Bu.WTP.WTP_IP){
+			if(AC_WTP[WTPID]->WTPIP && msg){
 				memcpy(AC_WTP[WTPID]->WTPIP,msg->Bu.WTP.WTP_IP,strlen((char *)(msg->Bu.WTP.WTP_IP)));
 				}
 			else
 				{
 				wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
 				}
-			if((struct sockaddr*)&(gWTPs[WTPID].address) && (&(msg->Bu.WTP.addr))){
+			if((struct sockaddr*)&(gWTPs[WTPID].address) && msg){
 				memcpy((struct sockaddr*)&(gWTPs[WTPID].address),&(msg->Bu.WTP.addr),sizeof(struct sockaddr));		
 				}
 			else
@@ -979,7 +906,7 @@ void B_WTP_ADD_OP(B_Msg *msg){
 			CW_FREE_OBJECT_WID(AC_WTP[WTPID]->codever);
 			AC_WTP[WTPID]->codever = (char*)WID_MALLOC(strlen((char *)(msg->Bu.WTP.WTP_CODEVER))+1);
 			memset(AC_WTP[WTPID]->codever,0,strlen((char *)(msg->Bu.WTP.WTP_CODEVER))+1);
-			if(AC_WTP[WTPID]->codever && msg->Bu.WTP.WTP_CODEVER){
+			if(AC_WTP[WTPID]->codever && msg){
 				memcpy(AC_WTP[WTPID]->codever,msg->Bu.WTP.WTP_CODEVER,strlen((char *)(msg->Bu.WTP.WTP_CODEVER)));
 				}
 			else
@@ -991,7 +918,7 @@ void B_WTP_ADD_OP(B_Msg *msg){
 			CW_FREE_OBJECT_WID(AC_WTP[WTPID]->ver);	
 			AC_WTP[WTPID]->ver = (char*)WID_MALLOC(strlen((char *)(msg->Bu.WTP.WTP_VER))+1);
 			memset(AC_WTP[WTPID]->ver,0,strlen((char *)(msg->Bu.WTP.WTP_VER))+1);
-			if(AC_WTP[WTPID]->ver && msg->Bu.WTP.WTP_VER){
+			if(AC_WTP[WTPID]->ver && msg){
 				memcpy(AC_WTP[WTPID]->ver,msg->Bu.WTP.WTP_VER,strlen((char *)(msg->Bu.WTP.WTP_VER)));
 				}
 			else
@@ -1003,7 +930,7 @@ void B_WTP_ADD_OP(B_Msg *msg){
 			CW_FREE_OBJECT_WID(AC_WTP[WTPID]->sysver);
 			AC_WTP[WTPID]->sysver = (char*)WID_MALLOC(strlen((char *)(msg->Bu.WTP.WTP_SYSVER))+1);
 			memset(AC_WTP[WTPID]->sysver,0,strlen((char *)(msg->Bu.WTP.WTP_SYSVER))+1);
-			if(AC_WTP[WTPID]->sysver && msg->Bu.WTP.WTP_SYSVER){
+			if(AC_WTP[WTPID]->sysver && msg){
 				memcpy(AC_WTP[WTPID]->sysver,msg->Bu.WTP.WTP_SYSVER,strlen((char *)(msg->Bu.WTP.WTP_SYSVER)));
 				}
 			else
@@ -1106,7 +1033,7 @@ void B_BSS_ADD_OP(B_Msg *msg){
 	if(BSSIndex >= BSS_NUM)
 		return;
 	if((AC_BSS[BSSIndex]!=NULL)&&(AC_BSS[BSSIndex]->State != 1)){
-		if(AC_BSS[BSSIndex]->BSSID && msg->Bu.BSS.BSSID){
+		if(AC_BSS[BSSIndex]->BSSID && msg){
 			memcpy(AC_BSS[BSSIndex]->BSSID,msg->Bu.BSS.BSSID,MAC_LEN);
 			}
 		else
@@ -1170,51 +1097,39 @@ void B_BSS_ADD_OP(B_Msg *msg){
 				}
 				ifinfo.wsmswitch = wsmswitch;
 				ifinfo.vlanSwitch = vlanSwitch;
-				if(ifinfo.apmac && AC_WTP[WtpID]->WTPMAC){
+				if(AC_WTP[WtpID]->WTPMAC){
 					memcpy(ifinfo.apmac, AC_WTP[WtpID]->WTPMAC, MAC_LEN);
 					}
 				else
 					{
 					wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
 					}
-				if(ifinfo.bssid && AC_BSS[BSSIndex]->BSSID){
+				if(AC_BSS[BSSIndex]->BSSID){
 					memcpy(ifinfo.bssid,  AC_BSS[BSSIndex]->BSSID, MAC_LEN);
 					}
 				else
 					{
 					wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
 					}
-				if(ifinfo.ifname && AC_WTP[WtpID]->BindingIFName){
+				if( AC_WTP[WtpID] != NULL){
 					memcpy(ifinfo.ifname, AC_WTP[WtpID]->BindingIFName,strlen(AC_WTP[WtpID]->BindingIFName));		
 					}
 				else
 					{
 					wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
 					}
-				if(ifinfo.apname && AC_WTP[WtpID]->WTPNAME){
+				if(AC_WTP[WtpID]->WTPNAME){
 					memcpy(ifinfo.apname,AC_WTP[WtpID]->WTPNAME,strlen(AC_WTP[WtpID]->WTPNAME));
 					}
 				else
 					{
 					wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
 					}
-				if(AC_WLAN[wlan_id] != NULL){
-					if(ifinfo.essid  && AC_WLAN[wlan_id]->ESSID){
-						memcpy(ifinfo.essid ,AC_BSS[BSSIndex]->SSID ,strlen(AC_BSS[BSSIndex]->SSID));
-						}
-					else
-						{
-						wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
-						}
+				if(AC_BSS[BSSIndex] != NULL){
+					memcpy(ifinfo.essid ,AC_BSS[BSSIndex]->SSID ,strlen(AC_BSS[BSSIndex]->SSID));
 					ifinfo.Eap1XServerSwitch = AC_WLAN[wlan_id]->eap_mac_switch;
 					memset(ifinfo.Eap1XServerMac,0,MAC_LEN);
-					if(ifinfo.Eap1XServerMac && AC_WLAN[wlan_id]->eap_mac2){
-						memcpy(ifinfo.Eap1XServerMac,AC_WLAN[wlan_id]->eap_mac2,MAC_LEN);
-						}
-					else
-						{
-						wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
-						}
+					memcpy(ifinfo.Eap1XServerMac,AC_WLAN[wlan_id]->eap_mac2,MAC_LEN);
 				}
 				char __str[128];			
 				memset(__str,0,128);
@@ -1232,21 +1147,10 @@ void B_BSS_ADD_OP(B_Msg *msg){
 					ifinfo.acip = v_ip;
 				}else{
 					ifinfo.isIPv6 = 1;
-					if(ifinfo.apipv6 && (&((struct sockaddr_in6 *) sa)->sin6_addr)){
-						memcpy(ifinfo.apipv6,&((struct sockaddr_in6 *) sa)->sin6_addr,sizeof(struct in6_addr));
-						}
-					else
-						{
-						wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
-						}
+					memcpy(ifinfo.apipv6,&((struct sockaddr_in6 *) sa)->sin6_addr,sizeof(struct in6_addr));
 					ifinfo.apport = ((struct sockaddr_in6 *)sa)->sin6_port +1;
-					if(ifinfo.acipv6 && (&((struct sockaddr_in6 *) sa2)->sin6_addr)){
-						memcpy(ifinfo.acipv6,&((struct sockaddr_in6 *) sa2)->sin6_addr,sizeof(struct in6_addr));
-						}
-					else
-						{
-						wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
-						}
+					memcpy(ifinfo.acipv6,&((struct sockaddr_in6 *) sa2)->sin6_addr,sizeof(struct in6_addr));
+					
 				}
 
 				ret = ioctl(fd, WIFI_IOC_IF_UPDATE, &ifinfo);
@@ -1656,13 +1560,7 @@ int update_license(int sockfd,struct sockaddr_in *addr){
 	msg.Type = B_CHECK_LICENSE;
 	check_license(&msg);
 	len = sizeof(msg);
-	if((char*)&msg != NULL){
-		memcpy(buf,(char*)&msg,len);	
-		}
-	else
-		{
-		wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
-		}
+	memcpy(buf,(char*)&msg,len);	
 	fd_set fdset;
 	struct timeval tv;			
 	FD_ZERO(&fdset);
@@ -1705,13 +1603,7 @@ int update_license_req(int sockfd,struct sockaddr_in *addr){
 	msg.Type = B_LICENSE_REQUEST;
 	check_license(&msg);
 	len = sizeof(msg);
-	if((char*)&msg != NULL){
-		memcpy(buf,(char*)&msg,len);	
-		}
-	else
-		{
-		wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
-		}
+	memcpy(buf,(char*)&msg,len);	
 	fd_set fdset;
 	struct timeval tv;			
 	FD_ZERO(&fdset);
@@ -1754,13 +1646,7 @@ int bak_check_campare_license(int sockfd,B_Msg *tmp){
 	msg.Type = B_CHECK_LICENSE;
 	check_license(&msg);
 	len = sizeof(msg);
-	if((char*)&msg != NULL){
-		memcpy(buf,(char*)&msg,len);	
-		}
-	else
-		{
-		wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
-		}
+	memcpy(buf,(char*)&msg,len);	
 	fd_set fdset;
 	struct timeval tv;			
 	FD_ZERO(&fdset);
@@ -1813,13 +1699,7 @@ int bak_check_req(int sockfd){
 	}
 	len = sizeof(msg);
 	if(len < (4096+1024)){
-		if((char*)&msg != NULL){
-			memcpy(buf,(char*)&msg,len);
-			}
-		else
-			{
-			wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
-			}
+		memcpy(buf,(char*)&msg,len);
 	}else{
 		wid_syslog_warning("%s,%d,invlid len:%d.\n",__func__,__LINE__,len);
 	}

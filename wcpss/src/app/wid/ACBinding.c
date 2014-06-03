@@ -939,7 +939,7 @@ CWBool CWBindingAssembleConfigurationUpdateRequest2(CWProtocolMessage **msgElems
 			dot11nset.RadioID = i;
 			dot11nset.mcs_count = AC_WTP[WTPIndex]->WTP_Radio[i]->mcs_count;
 			memset(dot11nset.mcs_list,0,32);
-			if(dot11nset.mcs_list && AC_WTP[WTPIndex]->WTP_Radio[i]->mcs_list){
+			if( AC_WTP[WTPIndex]->WTP_Radio[i]){
 				memcpy(dot11nset.mcs_list,AC_WTP[WTPIndex]->WTP_Radio[i]->mcs_list,dot11nset.mcs_count);
 				}
 			else

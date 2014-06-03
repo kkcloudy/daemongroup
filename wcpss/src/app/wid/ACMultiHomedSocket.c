@@ -457,7 +457,7 @@ CWBool CWNetworkInitSocketServerMultiHomed(CWMultiHomedSocket *sockPtr, int port
 			
 			CW_CREATE_OBJECT_ERR_WID(p, struct CWMultiHomedInterface, close(sock); return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
 			memset(p->ifname, 0, IFI_NAME);
-			if(p->ifname != NULL){
+			if(p != NULL){
 				memcpy(p->ifname,"LocalHost",9);
 				}
 			else
@@ -528,7 +528,7 @@ CWBool CWNetworkInitSocketServerMultiHomed(CWMultiHomedSocket *sockPtr, int port
 			
 			CW_CREATE_OBJECT_ERR_WID(p, struct CWMultiHomedInterface, close(sock); return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
 			memset(p->ifname, 0, IFI_NAME);			
-			if(p->ifname != NULL){
+			if(p != NULL){
 				memcpy(p->ifname,"LocalHost",9);
 				}
 			else

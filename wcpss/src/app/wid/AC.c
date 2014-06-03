@@ -1203,20 +1203,15 @@ CWBool AsdWsm_WTPOp(unsigned int WtpID,Operate op){
 	wASD.u.WTP.wtp_triger_num= AC_WTP[WtpID]->wtp_triger_num;
 	wASD.u.WTP.wtp_flow_triger= AC_WTP[WtpID]->wtp_flow_triger;
 	wASD.u.WTP.state = AC_WTP[WtpID]->WTPStat;
-	memset(wASD.u.WTP.BindingIFName,0,ETH_IF_NAME_LEN);
-	if(wASD.u.WTP.BindingIFName && AC_WTP[WtpID]->BindingIFName)
-		{
+	memset(wASD.u.WTP.BindingIFName,0,ETH_IF_NAME_LEN);	
+	if (AC_WTP[WtpID] != NULL)
 		memcpy(wASD.u.WTP.BindingIFName,AC_WTP[WtpID]->BindingIFName,strlen(AC_WTP[WtpID]->BindingIFName));
-		}
 	else
-		{
-			wid_syslog_err("%s %d pointer\n",__FUNCTION__,__LINE__);
-		}
-    /* zhangshu modify for netid , 2010-10-26 */
+		wid_syslog_info("%s, %d,AC_WTP[%d]is NULL!\n ",__func__,__LINE__,WtpID);
+	    /* zhangshu modify for netid , 2010-10-26 */
 	memset(wASD.u.WTP.NETID, 0, WTP_NETID_LEN);
-	if(wASD.u.WTP.NETID && AC_WTP[WtpID]->netid){
+	if (AC_WTP[WtpID]->netid != NULL)
 		memcpy(wASD.u.WTP.NETID,AC_WTP[WtpID]->netid,strlen(AC_WTP[WtpID]->netid));
-		}
 	else
 		{
 			wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
@@ -1225,7 +1220,7 @@ CWBool AsdWsm_WTPOp(unsigned int WtpID,Operate op){
 	
 	//xm add 08/12/04
 	memset(wASD.u.WTP.WTPMAC,0,MAC_LEN);
-	if(wASD.u.WTP.WTPMAC && AC_WTP[WtpID]->WTPMAC){
+	if (AC_WTP[WtpID]->WTPMAC  !=  NULL){
 		memcpy(wASD.u.WTP.WTPMAC,AC_WTP[WtpID]->WTPMAC,MAC_LEN);
 		}
 	else{
@@ -1241,7 +1236,7 @@ CWBool AsdWsm_WTPOp(unsigned int WtpID,Operate op){
 	//printf("AsdWsm_WTPOp addr = %d\n",wASD.u.WTP.WTPIP.m_v4addr);
 
 	memset(wASD.u.WTP.WTPSN,0,128);
-	if(wASD.u.WTP.WTPSN && AC_WTP[WtpID]->WTPSN){
+	if(AC_WTP[WtpID]->WTPSN != NULL){
 		memcpy(wASD.u.WTP.WTPSN,AC_WTP[WtpID]->WTPSN,strlen(AC_WTP[WtpID]->WTPSN));
 		}
 	else
@@ -1250,7 +1245,7 @@ CWBool AsdWsm_WTPOp(unsigned int WtpID,Operate op){
 		}
 	//zhaoruijia,20100916,add
 	memset(wASD.u.WTP.WTPNAME,0,256);
-	if(wASD.u.WTP.WTPNAME && AC_WTP[WtpID]->WTPNAME){
+	if(AC_WTP[WtpID]->WTPNAME != NULL){
 		memcpy(wASD.u.WTP.WTPNAME,AC_WTP[WtpID]->WTPNAME,strlen(AC_WTP[WtpID]->WTPNAME));
 		}
 	else
@@ -1259,7 +1254,7 @@ CWBool AsdWsm_WTPOp(unsigned int WtpID,Operate op){
 	}
 	if(op == WID_WIFI_INFO){
 		memset(&(wASD.u.WTP.wifi_extension_info),0,sizeof(wid_wifi_info));
-		if(&(wASD.u.WTP.wifi_extension_info) && (&(AC_WTP[WtpID]->wifi_extension_info))){
+		if(AC_WTP[WtpID] != NULL){
 			memcpy(&(wASD.u.WTP.wifi_extension_info),&(AC_WTP[WtpID]->wifi_extension_info),sizeof(wid_wifi_info));
 			}
 		else
@@ -1302,13 +1297,7 @@ CWBool Asd_neighbor_ap_sta_check_op(unsigned int WtpID,unsigned int N_WtpID,unsi
 	wASD.u.WTP.WtpID= WtpID;
 	wASD.u.WTP.N_WTP.N_WtpID = N_WtpID;
 	memset(wASD.u.WTP.N_WTP.WTPMAC,0,MAC_LEN);
-	if(wASD.u.WTP.N_WTP.WTPMAC!=NULL){
-		memcpy(wASD.u.WTP.N_WTP.WTPMAC,mac,MAC_LEN);
-		}
-	else
-		{
-		wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
-		}
+	memcpy(wASD.u.WTP.N_WTP.WTPMAC,mac,MAC_LEN);
 	len = sizeof(wASD);
 	wid_syslog_debug_debug(WID_DEFAULT,"rogue_terminal,%s\n",__func__);
 	if(sendto(sock, &wASD, len, 0, (struct sockaddr *) &toASD.addr, toASD.addrlen) < 0){
@@ -1395,7 +1384,7 @@ CWBool AsdWsm_WLANOp(unsigned char WlanID, Operate op, int both){
 	if((AC_WLAN[WlanID]->ESSID)&&(strlen(AC_WLAN[WlanID]->ESSID)<ESSID_LENGTH))
 		strcpy(wASD.u.WLAN.ESSID, AC_WLAN[WlanID]->ESSID);
 	else{
-		if(wASD.u.WLAN.ESSID && AC_WLAN[WlanID]->ESSID){
+		if(AC_WLAN[WlanID]->ESSID != NULL){
 			memcpy(wASD.u.WLAN.ESSID, AC_WLAN[WlanID]->ESSID,strlen(AC_WLAN[WlanID]->ESSID));
 			}
 		else
@@ -1481,7 +1470,7 @@ CWBool AsdWsm_WLANOp_essid(unsigned int RadioId,unsigned char WlanID, Operate op
 	}
 	else
 	{
-		if(wASD.u.WLAN.ESSID && AC_RADIO[RadioId]){
+		if(AC_RADIO[RadioId]->Wlan_Id->ESSID){
 			memcpy(wASD.u.WLAN.ESSID, AC_RADIO[RadioId]->Wlan_Id->ESSID,strlen((char *)AC_RADIO[RadioId]->Wlan_Id->ESSID));
 			}
 		else
@@ -1572,7 +1561,7 @@ CWBool Wsm_BSSOp(unsigned int BSSIndex, Operate op, int both){
 	wASD.u.BSS.Radio_G_ID = AC_BSS[BSSIndex]->Radio_G_ID;
 	wASD.u.BSS.WlanID = AC_BSS[BSSIndex]->WlanID;
 	wASD.u.BSS.vlanid = AC_BSS[BSSIndex]->vlanid;
-	if(wASD.u.BSS.BSSID && AC_BSS[BSSIndex]->BSSID){
+	if(AC_BSS[BSSIndex]->BSSID != NULL){
 		memcpy(wASD.u.BSS.BSSID,AC_BSS[BSSIndex]->BSSID, MAC_LEN);
 		}
 	else
@@ -1594,7 +1583,7 @@ CWBool Wsm_BSSOp(unsigned int BSSIndex, Operate op, int both){
 	if(op == WID_ADD){
 		if(AC_BSS[BSSIndex]->nas_port_id[0] != 0){
 			memset(wASD.u.BSS.nas_port_id,0,sizeof(wASD.u.BSS.nas_port_id));
-			if(wASD.u.BSS.nas_port_id && AC_BSS[BSSIndex]->nas_port_id){
+			if(AC_BSS[BSSIndex] != NULL){
 				memcpy(wASD.u.BSS.nas_port_id,AC_BSS[BSSIndex]->nas_port_id, strlen(AC_BSS[BSSIndex]->nas_port_id));
 				}
 			else
@@ -1604,7 +1593,7 @@ CWBool Wsm_BSSOp(unsigned int BSSIndex, Operate op, int both){
 		}
 		else if((AC_BSS[BSSIndex]->nas_port_id[0] == 0) && (AC_WLAN[wlan_id]->nas_port_id[0] != 0)){
 			memset(wASD.u.BSS.nas_port_id,0,sizeof(wASD.u.BSS.nas_port_id));
-			if(wASD.u.BSS.nas_port_id && AC_WLAN[wlan_id]->nas_port_id){
+			if(AC_BSS[BSSIndex] != NULL){
 				memcpy(wASD.u.BSS.nas_port_id,AC_WLAN[wlan_id]->nas_port_id, strlen(AC_WLAN[wlan_id]->nas_port_id));
 				}
 			else
@@ -1639,7 +1628,7 @@ CWBool Wsm_BSSOp(unsigned int BSSIndex, Operate op, int both){
 	wid_syslog_debug_debug(WID_DEFAULT,"AC_RADIO[%d]->br_ifname[%d] %s",wASD.u.BSS.Radio_G_ID,wASD.u.BSS.WlanID,AC_RADIO[wASD.u.BSS.Radio_G_ID]->br_ifname[wASD.u.BSS.WlanID]);
 
 	if(AC_RADIO[wASD.u.BSS.Radio_G_ID] != NULL){
-		if(wASD.u.BSS.br_ifname && AC_RADIO[wASD.u.BSS.Radio_G_ID]->br_ifname[wASD.u.BSS.WlanID]){
+		if( AC_RADIO[wASD.u.BSS.Radio_G_ID] != NULL){
 			memcpy(wASD.u.BSS.br_ifname,AC_RADIO[wASD.u.BSS.Radio_G_ID]->br_ifname[wASD.u.BSS.WlanID],strlen(AC_RADIO[wASD.u.BSS.Radio_G_ID]->br_ifname[wASD.u.BSS.WlanID]));
 			}
 		else
@@ -1652,7 +1641,7 @@ CWBool Wsm_BSSOp(unsigned int BSSIndex, Operate op, int both){
 	wASD.u.BSS.nas_id_len = 0;
 	if((op == WID_ADD)&&(AC_BSS[BSSIndex]->nas_id_len > 0)){
 		wASD.u.BSS.nas_id_len = AC_BSS[BSSIndex]->nas_id_len;
-		if(wASD.u.BSS.nas_id && AC_BSS[BSSIndex]->nas_id){
+		if(AC_BSS[BSSIndex] != NULL){
 			memcpy(wASD.u.BSS.nas_id, AC_BSS[BSSIndex]->nas_id, strlen(AC_BSS[BSSIndex]->nas_id));
 			}
 		else
@@ -1662,7 +1651,7 @@ CWBool Wsm_BSSOp(unsigned int BSSIndex, Operate op, int both){
 	}
 	wASD.u.BSS.bss_max_sta_num=AC_BSS[BSSIndex]->bss_max_allowed_sta_num;//xm add 08/12/04
 	wASD.u.BSS.sta_static_arp_policy=AC_BSS[BSSIndex]->sta_static_arp_policy;
-	if(wASD.u.BSS.arp_ifname && AC_BSS[BSSIndex]->arp_ifname){
+	if(AC_BSS[BSSIndex] != NULL){
 		memcpy(wASD.u.BSS.arp_ifname,AC_BSS[BSSIndex]->arp_ifname,strlen(AC_BSS[BSSIndex]->arp_ifname));
 		}
 	else
@@ -1730,7 +1719,7 @@ CWBool AsdWsm_BSSOp(unsigned int BSSIndex, Operate op, int both){
 	wASD.u.BSS.Radio_G_ID = AC_BSS[BSSIndex]->Radio_G_ID;
 	wASD.u.BSS.WlanID = AC_BSS[BSSIndex]->WlanID;
 	wASD.u.BSS.vlanid = AC_BSS[BSSIndex]->vlanid;
-	if(wASD.u.BSS.BSSID && AC_BSS[BSSIndex]->BSSID){
+	if( AC_BSS[BSSIndex]->BSSID != NULL){
 		memcpy(wASD.u.BSS.BSSID,AC_BSS[BSSIndex]->BSSID, MAC_LEN);
 		}
 	else
@@ -1738,7 +1727,7 @@ CWBool AsdWsm_BSSOp(unsigned int BSSIndex, Operate op, int both){
 		wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
 		}
 	memset(wASD.u.BSS.SSID,0,SSID_LENGTH+1);
-	if(wASD.u.BSS.SSID && AC_BSS[BSSIndex]->SSID){
+	if(AC_BSS[BSSIndex]->SSID != NULL){
 		memcpy(wASD.u.BSS.SSID,AC_BSS[BSSIndex]->SSID,strlen((char *)AC_BSS[BSSIndex]->SSID));
 		}
 	else
@@ -1762,7 +1751,7 @@ CWBool AsdWsm_BSSOp(unsigned int BSSIndex, Operate op, int both){
 	if(op == WID_ADD){
 		if(AC_BSS[BSSIndex]->nas_port_id[0] != 0){
 			memset(wASD.u.BSS.nas_port_id,0,sizeof(wASD.u.BSS.nas_port_id));
-			if(wASD.u.BSS.nas_port_id && AC_BSS[BSSIndex]->nas_port_id){
+			if( AC_BSS[BSSIndex] != NULL){
 				memcpy(wASD.u.BSS.nas_port_id,AC_BSS[BSSIndex]->nas_port_id, strlen(AC_BSS[BSSIndex]->nas_port_id));
 				}
 			else
@@ -1772,7 +1761,7 @@ CWBool AsdWsm_BSSOp(unsigned int BSSIndex, Operate op, int both){
 		}
 		else if((AC_BSS[BSSIndex]->nas_port_id[0] == 0) && (AC_WLAN[wlan_id]->nas_port_id[0] != 0)){
 			memset(wASD.u.BSS.nas_port_id,0,sizeof(wASD.u.BSS.nas_port_id));
-			if(wASD.u.BSS.nas_port_id && AC_WLAN[wlan_id]->nas_port_id){
+			if(AC_BSS[BSSIndex] != NULL){
 				memcpy(wASD.u.BSS.nas_port_id,AC_WLAN[wlan_id]->nas_port_id, strlen(AC_WLAN[wlan_id]->nas_port_id));
 				}
 			else
@@ -1813,7 +1802,7 @@ CWBool AsdWsm_BSSOp(unsigned int BSSIndex, Operate op, int both){
 	wid_syslog_debug_debug(WID_DEFAULT,"AC_RADIO[%d]->br_ifname[%d] %s",wASD.u.BSS.Radio_G_ID,wASD.u.BSS.WlanID,AC_RADIO[wASD.u.BSS.Radio_G_ID]->br_ifname[wASD.u.BSS.WlanID]);
 
 	if(AC_RADIO[wASD.u.BSS.Radio_G_ID] != NULL){
-		if(wASD.u.BSS.br_ifname && AC_RADIO[wASD.u.BSS.Radio_G_ID]->br_ifname[wASD.u.BSS.WlanID]){
+		if(AC_RADIO[wASD.u.BSS.Radio_G_ID] != NULL){
 			memcpy(wASD.u.BSS.br_ifname,AC_RADIO[wASD.u.BSS.Radio_G_ID]->br_ifname[wASD.u.BSS.WlanID],strlen(AC_RADIO[wASD.u.BSS.Radio_G_ID]->br_ifname[wASD.u.BSS.WlanID]));
 			}
 		else
@@ -1826,7 +1815,7 @@ CWBool AsdWsm_BSSOp(unsigned int BSSIndex, Operate op, int both){
 	wASD.u.BSS.nas_id_len = 0;
 	if((op == WID_ADD)&&(AC_BSS[BSSIndex]->nas_id_len > 0)){
 		wASD.u.BSS.nas_id_len = AC_BSS[BSSIndex]->nas_id_len;
-		if(wASD.u.BSS.nas_id && AC_BSS[BSSIndex]->nas_id){
+		if(AC_BSS[BSSIndex] != NULL){
 			memcpy(wASD.u.BSS.nas_id, AC_BSS[BSSIndex]->nas_id, strlen(AC_BSS[BSSIndex]->nas_id));
 			}
 		else
@@ -1837,7 +1826,7 @@ CWBool AsdWsm_BSSOp(unsigned int BSSIndex, Operate op, int both){
 	//if(op==WID_MODIFY)
 	wASD.u.BSS.bss_max_sta_num=AC_BSS[BSSIndex]->bss_max_allowed_sta_num;//xm add 08/12/04
 	wASD.u.BSS.sta_static_arp_policy=AC_BSS[BSSIndex]->sta_static_arp_policy;
-	if(wASD.u.BSS.arp_ifname && AC_BSS[BSSIndex]->arp_ifname){
+	if( AC_BSS[BSSIndex] != NULL){
 		memcpy(wASD.u.BSS.arp_ifname,AC_BSS[BSSIndex]->arp_ifname,strlen(AC_BSS[BSSIndex]->arp_ifname));
 		}
 	else
@@ -2178,7 +2167,7 @@ CWBool WIDWsm_VRRPIFOp(unsigned char* name,unsigned int ip, unsigned int op){
 	wWsm.u.vrrp_if.op = op;
 	wWsm.u.vrrp_if.ip.addr_family = AF_INET;
 	wWsm.u.vrrp_if.ip.u.ipv4_addr = ip;
-	if(wWsm.u.vrrp_if.if_name && name){
+	if( name != NULL){
 		memcpy(wWsm.u.vrrp_if.if_name, name ,strlen((char *)name));
 		}
 	else
@@ -2205,7 +2194,7 @@ CWBool WIDWsm_VRRPIFOp_IPv6(struct ifi_info *ifi, unsigned int op)
 	//wWsm.u.vrrp_if.ip.addr_family = AF_INET;
 	//wWsm.u.vrrp_if.ip.u.ipv4_addr = ip;
 	copymixwtpip(&wWsm.u.vrrp_if.ip,ifi->ifi_addr6);
-	if(wWsm.u.vrrp_if.if_name && ifi){
+	if(ifi){
 		memcpy(wWsm.u.vrrp_if.if_name, ifi->ifi_name, strlen(ifi->ifi_name));
 		}
 	else
@@ -2244,14 +2233,14 @@ int WIDBAKInfoToASD(unsigned int state,struct sockaddr_in *ipaddr, unsigned int 
 	AsdCMD.u.BAK.vrrid = vrrid;
 	AsdCMD.u.BAK.state = state;
 	AsdCMD.u.BAK.virip = virIP;
-	if(&AsdCMD.u.BAK.ipaddr && ipaddr){
+	if(ipaddr){
 		memcpy(&AsdCMD.u.BAK.ipaddr,ipaddr,sizeof(struct sockaddr_in));
 		}
 	else
 		{
 		wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
 		}
-	if(AsdCMD.u.BAK.virname && name){
+	if( name){
 		memcpy(AsdCMD.u.BAK.virname,name,strlen((char *)name));
 		}
 	else
@@ -2505,7 +2494,7 @@ CWBool AsdWsm_StationOpNew(unsigned int WTPID,char *mac, Operate op,unsigned sho
 	{
 		wASD.u.STAINFO[0].wlanId = AC_WTP[WTPID]->ControlWait->mqinfo.u.StaInfo.WLANID;
 		wASD.u.STAINFO[0].radioId= AC_WTP[WTPID]->ControlWait->mqinfo.u.StaInfo.Radio_L_ID;		
-		if(wASD.u.STA.STAMAC && AC_WTP[WTPID]->ControlWait->mqinfo.u.StaInfo.STAMAC){
+		if(AC_WTP[WTPID]->ControlWait != NULL){
 			memcpy(wASD.u.STA.STAMAC,AC_WTP[WTPID]->ControlWait->mqinfo.u.StaInfo.STAMAC,MAC_LEN);
 			}
 		else
@@ -2522,13 +2511,7 @@ CWBool AsdWsm_StationOpNew(unsigned int WTPID,char *mac, Operate op,unsigned sho
 	wASD.u.STAINFO[0].authorize_failed = reason;
 	wid_syslog_debug_debug(WID_WTPINFO,"in func %s :sta(%2X:%2X:%2X:%2X:%2X:%2X) authorize wrong!\n",__func__,mac[0],mac[1],mac[2],mac[3],mac[4],mac[5]);
 	if(mac !=NULL){
-		if(wASD.u.STA.STAMAC && mac){
-			memcpy(wASD.u.STA.STAMAC,mac,MAC_LEN);
-			}
-		else
-			{
-			wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
-			}
+		memcpy(wASD.u.STA.STAMAC,mac,MAC_LEN);
 	}
 	len = sizeof(wASD);
 	wid_syslog_debug_debug(WID_DEFAULT,"AsdWsm_StationOp**********\n");
@@ -2604,15 +2587,9 @@ CWBool WidAsd_WTPTerminalStatisticsUpdate(unsigned int WTPID,unsigned int count,
 		wASD.u.STAINFO[j].count = count;
 		wASD.u.STAINFO[j].radioId = valuesPtr[j].radioId;
 		wASD.u.STAINFO[j].wlanId = valuesPtr[j].wlanId;
-		if(&(wASD.u.STAINFO[j].wtp_sta_statistics_info) && (&(valuesPtr[j].wtp_sta_statistics_info))){
-			memcpy(&(wASD.u.STAINFO[j].wtp_sta_statistics_info),
+		memcpy(&(wASD.u.STAINFO[j].wtp_sta_statistics_info),
 				&(valuesPtr[j].wtp_sta_statistics_info),
 				sizeof(valuesPtr[j].wtp_sta_statistics_info));
-			}
-		else
-			{
-			wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
-			}
 		CW_COPY_MEMORY(wASD.u.STAINFO[j].STAMAC,valuesPtr[j].mac,MAC_LEN);
 	}
 	len = sizeof(wASD);
@@ -2779,7 +2756,7 @@ CWBool WidAsdStaWapiInfoUpdate(unsigned int WTPID,WIDStaWapiInfoList*valuesPtr)
 	int sock = sockPerThread[i];
 	wASD.Op = STA_WAPI_INFO;
 	wASD.Type = STA_TYPE;
-	if(&(wASD.u.StaWapi) &&  valuesPtr){
+	if( valuesPtr != NULL){
 		memcpy(&(wASD.u.StaWapi), valuesPtr, sizeof(WIDStaWapiInfoList));
 		}
 	else
@@ -2917,8 +2894,8 @@ CWBool wid_asd_send_wids_info(struct tag_wids_device_ele *info,unsigned int WTPI
 	int sock = sockPerThread[m];
 	
 	memset(BSSID,0,MAC_LEN);
-	if(info->vapbssid != NULL){
-	memcpy(BSSID,info->vapbssid,MAC_LEN);
+	if(info != NULL){
+		memcpy(BSSID,info->vapbssid,MAC_LEN);
 		}
 	else
 		{
@@ -2957,7 +2934,7 @@ CWBool wid_asd_send_wids_info(struct tag_wids_device_ele *info,unsigned int WTPI
 	wASD.u.WIDS_info.rssi = info->rssi;
 
 	memset(wASD.u.WIDS_info.bssid,0,MAC_LEN);
-	if(wASD.u.WIDS_info.bssid && info->bssid){
+	if(info != NULL){
 		memcpy(wASD.u.WIDS_info.bssid,info->bssid,MAC_LEN);
 		}
 	else
@@ -2965,7 +2942,7 @@ CWBool wid_asd_send_wids_info(struct tag_wids_device_ele *info,unsigned int WTPI
 		wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
 		}
 	memset(wASD.u.WIDS_info.vapbssid,0,MAC_LEN);
-	if(wASD.u.WIDS_info.vapbssid && info->vapbssid){
+	if(info != NULL){
 		memcpy(wASD.u.WIDS_info.vapbssid,info->vapbssid,MAC_LEN);
 		}
 	else
@@ -3249,6 +3226,7 @@ static void if_wtp_list_del(struct wid_wtp_info *if_wid, struct conflict_wtp_inf
 	} else
 		tmp->next = wtp->next;
 }
+
 
 
 void if_wtp_hash_add(struct wid_wtp_info *if_wid, struct conflict_wtp_info *wtp)

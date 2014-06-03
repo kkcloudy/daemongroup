@@ -155,14 +155,14 @@ CWBool ACEnterJoin(int WTPIndex, CWProtocolMessage *msgPtr)
 			{
 				CW_FREE_OBJECT_WID(AC_WTP[WTPIndex]->APCode);
 				AC_WTP[WTPIndex]->APCode = (char *)WID_MALLOC(lenmodel+1);
+				if(AC_WTP[WTPIndex]->APCode == NULL)
+				{
+					wid_syslog_err("%s %d malloc fail\n",__FUNCTION__,__LINE__);
+					return  CW_FALSE;
+				}
 				memset(AC_WTP[WTPIndex]->APCode,0,lenmodel+1);
-				if(AC_WTP[WTPIndex]->APCode && str_wtp_model){
-					memcpy(AC_WTP[WTPIndex]->APCode,str_wtp_model,strlen((char *)str_wtp_model));
-					}
-				else
-					{
-					wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
-					}
+				memcpy(AC_WTP[WTPIndex]->APCode,str_wtp_model,strlen((char *)str_wtp_model));
+					
 			}
 			//break;
 		}

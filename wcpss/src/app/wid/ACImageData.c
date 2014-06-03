@@ -516,13 +516,8 @@ CWBool ACEnterImageData(int WTPIndex, CWProtocolMessage *msgPtr)
 				return  CW_FALSE;
 			}
 			memset(AC_WTP[WTPIndex]->ApReportVer,0,strlen(valuesPtr.ImageRequest->Ver)+1);
-			if(AC_WTP[WTPIndex]->ApReportVer && valuesPtr.ImageRequest->Ver){
-				memcpy(AC_WTP[WTPIndex]->ApReportVer,valuesPtr.ImageRequest->Ver,strlen(valuesPtr.ImageRequest->Ver));
-				}
-			else
-				{
-				wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
-				}
+			memcpy(AC_WTP[WTPIndex]->ApReportVer,valuesPtr.ImageRequest->Ver,strlen(valuesPtr.ImageRequest->Ver));
+			
 			//AC_WTP[WTPIndex]->ApReportVerLen = 	valuesPtr.ImageRequest->VerLen;
 			//wid_syslog_debug_debug(WID_WTPINFO,"valuesPtr.ImageRequest->Ver = %s\n",valuesPtr.ImageRequest->Ver);
 			//wid_syslog_debug_debug(WID_WTPINFO,"AC_WTP[WTPIndex]->ApReportVer = %s\n",AC_WTP[WTPIndex]->ApReportVer);

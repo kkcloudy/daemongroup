@@ -238,7 +238,8 @@ void STA_OP(TableMsg *msg){
 			WLANID = msg->u.STA.wlanId;
 			L_Radio_ID = BSSIndex % L_RADIO_NUM;
 			memset(mac,0,MAC_LEN);
-			memcpy(mac, msg->u.STA.STAMAC, MAC_LEN);	
+			if( msg != NULL)
+				memcpy(mac, msg->u.STA.STAMAC, MAC_LEN);	
 			wid_cancel_bss_traffic_limit_sta_value(WTPIndex,L_Radio_ID,WLANID,mac[0],mac[1],mac[2],mac[3],mac[4],mac[5],0,2,0);
 			return ;
 		}
@@ -292,7 +293,7 @@ void STA_OP(TableMsg *msg){
 		else if(msg->Op == RADIUS_STA_UPDATE)
 		{		
 			unsigned char mac[MAC_LEN] ;
-			if( msg->u.STA.STAMAC != NULL){
+			if( msg != NULL){
 				memcpy(mac, msg->u.STA.STAMAC, MAC_LEN);	
 				}
 			else
@@ -317,7 +318,7 @@ void STA_OP(TableMsg *msg){
 			wid_radio_set_wlan_traffic_limit_sta_value(WTPIndex,(msg->u.STA.BSSIndex/L_BSS_NUM)%L_RADIO_NUM,AC_BSS[BSSIndex]->WlanID,mac[0],mac[1],mac[2],mac[3],mac[4],mac[5], msg->u.STA.traffic_limit,0);
 		}
 		msginfo.mqinfo.u.StaInfo.Radio_L_ID = (msg->u.STA.BSSIndex/L_BSS_NUM)%L_RADIO_NUM;
-		if(msginfo.mqinfo.u.StaInfo.STAMAC && msg->u.STA.STAMAC){
+		if(msg != NULL){
 			memcpy(msginfo.mqinfo.u.StaInfo.STAMAC, msg->u.STA.STAMAC, MAC_LEN);	
 			}
 		else
@@ -353,7 +354,7 @@ void STA_OP(TableMsg *msg){
 			CWThreadMutexLock(&(gSTARoamingMutex));
 				memset(STA_ROAM.STAMAC,0,MAC_LEN);
 				STA_ROAM.STAOP = msg->Op;
-				if(STA_ROAM.STAMAC && msg->u.STA.STAMAC){
+				if(msg != NULL){
 					memcpy(STA_ROAM.STAMAC, msg->u.STA.STAMAC, MAC_LEN);
 					}
 				else
@@ -400,14 +401,14 @@ void KEY_OP(TableMsg *msg){
 		msginfo.mqinfo.u.StaInfo.keylen = msg->u.KEY.key_len;
 		msginfo.mqinfo.u.StaInfo.keyidx = msg->u.KEY.key_idx;
 		wid_syslog_debug_debug(WID_DEFAULT,"key len %d\n",msg->u.KEY.key_len);
-		if((msginfo.mqinfo.u.StaInfo.STAMAC) && (msg->u.KEY.StaAddr)){
+		if(msg != NULL){
 			memcpy((msginfo.mqinfo.u.StaInfo.STAMAC),(msg->u.KEY.StaAddr),6);
 			}
 		else
 			{
 			wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
 			}
-		if((msginfo.mqinfo.u.StaInfo.key) && (msg->u.KEY.key)){
+		if(msg != NULL){
 			memcpy((msginfo.mqinfo.u.StaInfo.key),(msg->u.KEY.key),msg->u.KEY.key_len);
 			}
 		else
@@ -482,7 +483,7 @@ void WLAN_OP(TableMsg *msg){
 					||(AC_WLAN[WLANID]->SecurityType == WAPI_PSK))
 				{
 					AC_WLAN[WLANID]->KeyLen = msg->u.WLAN.WlanKey.key_len;
-					if(AC_WLAN[WLANID]->WlanKey && msg->u.WLAN.WlanKey.key){
+					if(msg != NULL){
 						memcpy(AC_WLAN[WLANID]->WlanKey, msg->u.WLAN.WlanKey.key, msg->u.WLAN.WlanKey.key_len);
 						}
 					else
@@ -515,7 +516,7 @@ void WLAN_OP(TableMsg *msg){
 				if((AC_WLAN[WLANID]->SecurityType == WAPI_AUTH))					
 				{
 					AC_WLAN[WLANID]->AECerLen = msg->u.WLAN.ae_cert_path_len;
-					if(AC_WLAN[WLANID]->AECerPath && msg->u.WLAN.ae_cert_path){
+					if(msg != NULL){
 						memcpy(AC_WLAN[WLANID]->AECerPath, msg->u.WLAN.ae_cert_path, msg->u.WLAN.ae_cert_path_len);
 						}
 					else
@@ -524,7 +525,7 @@ void WLAN_OP(TableMsg *msg){
 						}
 
 					AC_WLAN[WLANID]->IpLen = msg->u.WLAN.as_ip_len;
-					if(AC_WLAN[WLANID]->AsIp && msg->u.WLAN.as_ip){
+					if(msg != NULL){
 						memcpy(AC_WLAN[WLANID]->AsIp, msg->u.WLAN.as_ip, msg->u.WLAN.as_ip_len);
 						}
 					else
@@ -533,7 +534,7 @@ void WLAN_OP(TableMsg *msg){
 						}
 
 					AC_WLAN[WLANID]->ASCerLen = msg->u.WLAN.cert_path_len;
-					if(AC_WLAN[WLANID]->ASCerPath &&  msg->u.WLAN.cert_path){
+					if(msg != NULL){
 						memcpy(AC_WLAN[WLANID]->ASCerPath, msg->u.WLAN.cert_path, msg->u.WLAN.cert_path_len);
 						}
 					else
@@ -701,7 +702,7 @@ void neighbor_ap_sta_info(TableMsg *msg)
 	int N_wtpid = msg->u.WTP.N_WTP.N_WtpID;
 	int N_sta_num  = msg->u.WTP.N_WTP.cur_sta_num;
 	unsigned char mac[6] = {0};
-	if(msg->u.WTP.N_WTP.WTPMAC != NULL){
+	if(msg != NULL){
 		memcpy(mac,msg->u.WTP.N_WTP.WTPMAC,MAC_LEN);
 		}
 	else
@@ -1485,21 +1486,11 @@ void CWACManageIncomingPacket(CWSocket sock, char *buf, int readBytes, int incom
 			{
 			memset(AC_WTP[i]->WTPIP,0,DEFAULT_LEN);
 			if(strlen(ip) > DEFAULT_LEN){
-				if(AC_WTP[i]->WTPIP && ip){
-					memcpy(AC_WTP[i]->WTPIP, ip, strlen(ip));
-					}
-				else
-					{
-					wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
-					}
+				memcpy(AC_WTP[i]->WTPIP, ip, strlen(ip));
+				
 			}else{
-				if(AC_WTP[i]->WTPIP && ip){
 					memcpy(AC_WTP[i]->WTPIP, ip, strlen(ip));
-					}
-				else
-					{
-					wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
-					}
+					
 				}
 			}
 
@@ -2005,13 +1996,7 @@ CW_THREAD_RETURN_TYPE CWManageWTP(void *arg) {
 					}
 					memset((char*)&(elem->mqinfo), 0, sizeof(msgqdetail));
 					elem->next = NULL;
-					if((char*)&(elem->mqinfo) && (char*)&(WTPMsgq.mqinfo)){
-						memcpy((char*)&(elem->mqinfo),(char*)&(WTPMsgq.mqinfo),sizeof(WTPMsgq.mqinfo));
-						}
-					else
-						{
-						wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
-						}
+					memcpy((char*)&(elem->mqinfo),(char*)&(WTPMsgq.mqinfo),sizeof(WTPMsgq.mqinfo));
 					WID_INSERT_CONTROL_LIST(i, elem);
 					GoBack = 1;
 					break;
@@ -2302,14 +2287,8 @@ CW_THREAD_RETURN_TYPE CWManageWTP(void *arg) {
 
 					msg1.mqinfo.u.WtpInfo.Wtp_Op = WTP_EXTEND_CMD;
 
-					if(msg1.mqinfo.u.WtpInfo.value && wlan_cmd_expand){
-						memcpy(msg1.mqinfo.u.WtpInfo.value, wlan_cmd_expand, strlen(wlan_cmd_expand));
-						}
-					else
-						{
-						wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
-						}
-
+					memcpy(msg1.mqinfo.u.WtpInfo.value, wlan_cmd_expand, strlen(wlan_cmd_expand));
+					
 					elem1 = (struct msgqlist*)WID_MALLOC(sizeof(struct msgqlist));
 
 					if(elem1 == NULL){
@@ -2324,14 +2303,7 @@ CW_THREAD_RETURN_TYPE CWManageWTP(void *arg) {
 
 					elem1->next = NULL;
 
-					if((char*)&(elem1->mqinfo) && (char*)&(msg1.mqinfo)){
-						memcpy((char*)&(elem1->mqinfo),(char*)&(msg1.mqinfo),sizeof(msg1.mqinfo));
-						}
-					else
-						{
-						wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
-						}
-
+					memcpy((char*)&(elem1->mqinfo),(char*)&(msg1.mqinfo),sizeof(msg1.mqinfo));
 					WID_INSERT_CONTROL_LIST(i, elem1);
 					//wid_radio_set_extension_command(i,wlan_cmd_expand);
 					wid_syslog_debug_debug(WID_DEFAULT,"wlan cmd expand :sysstart (after)");
@@ -2357,14 +2329,7 @@ CW_THREAD_RETURN_TYPE CWManageWTP(void *arg) {
 
 				msg1.mqinfo.u.WtpInfo.Wtp_Op = WTP_EXTEND_CMD;
 
-				if(msg1.mqinfo.u.WtpInfo.value && wlan_cmd_expand){
-					memcpy(msg1.mqinfo.u.WtpInfo.value, wlan_cmd_expand, strlen(wlan_cmd_expand));
-					}
-				else
-					{
-					wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
-					}
-
+				memcpy(msg1.mqinfo.u.WtpInfo.value, wlan_cmd_expand, strlen(wlan_cmd_expand));
 				elem1 = (struct msgqlist*)WID_MALLOC(sizeof(struct msgqlist));
 
 				if(elem1 == NULL){
@@ -2378,14 +2343,7 @@ CW_THREAD_RETURN_TYPE CWManageWTP(void *arg) {
 				memset((char*)&(elem1->mqinfo), 0, sizeof(msgqdetail));
 
 				elem1->next = NULL;
-
-				if((char*)&(elem1->mqinfo) && (char*)&(msg1.mqinfo)){
-					memcpy((char*)&(elem1->mqinfo),(char*)&(msg1.mqinfo),sizeof(msg1.mqinfo));
-					}
-				else
-					{
-					wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
-					}
+				memcpy((char*)&(elem1->mqinfo),(char*)&(msg1.mqinfo),sizeof(msg1.mqinfo));
 
 				WID_INSERT_CONTROL_LIST(i, elem1);
 				wid_syslog_debug_debug(WID_DEFAULT,"wlan cmd expand :sysstart (after)");
@@ -2807,13 +2765,8 @@ void _CWCloseThread(int i) {
 				memset(gInterfaces[gWTPs[i].interfaceIndex].ip,0,128);
 				sock_ntop_r1(((struct sockaddr*)&(gInterfaces[gWTPs[i].interfaceIndex].addr)), gInterfaces[gWTPs[i].interfaceIndex].ip);
 				memset(gInterfaces[gWTPs[i].interfaceIndex].ifname,0,16);
-				if(gInterfaces[gWTPs[i].interfaceIndex].ifname && AC_WTP[i]->BindingIFName){
-					memcpy(gInterfaces[gWTPs[i].interfaceIndex].ifname,AC_WTP[i]->BindingIFName,strlen(AC_WTP[i]->BindingIFName));
-					}
-				else
-					{
-					wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
-					}
+				memcpy(gInterfaces[gWTPs[i].interfaceIndex].ifname,AC_WTP[i]->BindingIFName,strlen(AC_WTP[i]->BindingIFName));
+				
 			}
 		}
 		else
@@ -3580,13 +3533,7 @@ WIDAUTOAPINFO *parse_dynamic_wtp_login_situation(CWWTPVendorInfos *valPtr)
 				return NULL;
 			}
 			memset(autoapinfo->model,0,len+1);
-			if(autoapinfo->model && (valPtr->vendorInfos)[i].model){
-				memcpy(autoapinfo->model,(valPtr->vendorInfos)[i].model,strlen((char *)(valPtr->vendorInfos)[i].model));
-				}
-			else
-				{
-				wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
-				}
+			memcpy(autoapinfo->model,(valPtr->vendorInfos)[i].model,strlen((char *)(valPtr->vendorInfos)[i].model));
 			model_state = 1; 
 			//printf("wtp model(code) %s\n",autoapinfo->model);
 		}
@@ -3608,13 +3555,7 @@ WIDAUTOAPINFO *parse_dynamic_wtp_login_situation(CWWTPVendorInfos *valPtr)
 				return NULL;
 			}
 			memset(autoapinfo->sn,0,len+1);
-			if(autoapinfo->sn && (valPtr->vendorInfos)[i].SN){
-				memcpy(autoapinfo->sn, (valPtr->vendorInfos)[i].SN,strlen((char *)(valPtr->vendorInfos)[i].SN));	
-				}
-			else
-				{
-				wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
-				}
+			memcpy(autoapinfo->sn, (valPtr->vendorInfos)[i].SN,strlen((char *)(valPtr->vendorInfos)[i].SN));	
 			sn_state = 1;
 			//printf("wtp sn %s\n",autoapinfo->sn);
 		}
@@ -3632,13 +3573,7 @@ WIDAUTOAPINFO *parse_dynamic_wtp_login_situation(CWWTPVendorInfos *valPtr)
 				return NULL;
 			}
 			memset(autoapinfo->realmodel,0,len+1);
-			if(autoapinfo->realmodel && (valPtr->vendorInfos)[i].Rmodel){
-				memcpy(autoapinfo->realmodel,(valPtr->vendorInfos)[i].Rmodel,strlen((char *)(valPtr->vendorInfos)[i].Rmodel));
-				}
-			else
-				{
-				wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
-				}
+			memcpy(autoapinfo->realmodel,(valPtr->vendorInfos)[i].Rmodel,strlen((char *)(valPtr->vendorInfos)[i].Rmodel));
 			rmodel_state = 1;
 			//printf("wtp rmodel %s\n",autoapinfo->realmodel);
 		}
@@ -3698,21 +3633,9 @@ WIDAUTOAPINFO *parse_dynamic_wtp_login_situation(CWWTPVendorInfos *valPtr)
 				return NULL;
 			}
 			memset(autoapinfo->mac,0,MAC_LEN+1);
-			
-			if(WTP_MAC && (valPtr->vendorInfos)[i].mac){
-				memcpy(WTP_MAC, (valPtr->vendorInfos)[i].mac,MAC_LEN);
-				}
-			else
-				{
-				wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
-				}
-			if(autoapinfo->mac && (valPtr->vendorInfos)[i].mac){
-				memcpy(autoapinfo->mac, (valPtr->vendorInfos)[i].mac,MAC_LEN);
-				}
-			else
-				{
-				wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
-				}
+			memcpy(WTP_MAC, (valPtr->vendorInfos)[i].mac,MAC_LEN);
+			memcpy(autoapinfo->mac, (valPtr->vendorInfos)[i].mac,MAC_LEN);
+				
 			if(wid_auto_ap_mac_filter(WTP_MAC) == 0)
 			{
 				mac_state = 1;
@@ -3835,13 +3758,8 @@ int wid_auto_ap_binding(int wtpid,int ifindex)
 		if(iflist->ifindex == ifindex)
 		{
 			memset(name,0,ETH_IF_NAME_LEN+1);
-			if(iflist->ifname != NULL){
-				memcpy(name,iflist->ifname,strlen(iflist->ifname));
-				}
-			else
-				{
-				wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
-				}
+			memcpy(name,iflist->ifname,strlen(iflist->ifname));
+			
 			wlannum = iflist->wlannum;
 			for(i=0;i<L_BSS_NUM;i++)
 			{
@@ -3966,7 +3884,7 @@ int wid_dynamic_change_wtp_info(int wtpid,WIDAUTOAPINFO *info)
 			*/
 			memset(AC_WTP[wtpid]->WTPSN,0,NAS_IDENTIFIER_NAME);
 			if(wid_illegal_character_check((char*)info->sn,len,0) == 1){
-				if(AC_WTP[wtpid]->WTPSN && info->sn){
+				if(AC_WTP[wtpid]->WTPSN ){
 					memcpy(AC_WTP[wtpid]->WTPSN,info->sn,strlen((char *)info->sn));
 					}
 				else
@@ -3986,7 +3904,7 @@ int wid_dynamic_change_wtp_info(int wtpid,WIDAUTOAPINFO *info)
 			CW_FREE_OBJECT_WID(AC_WTP[wtpid]->APCode);
 			AC_WTP[wtpid]->APCode = (char *)WID_MALLOC(len+1);
 			memset(AC_WTP[wtpid]->APCode,0,len+1);
-			if(AC_WTP[wtpid]->APCode && info->model){
+			if(AC_WTP[wtpid]->APCode ){
 				memcpy(AC_WTP[wtpid]->APCode,info->model,strlen((char *)info->model));
 				}
 			else
@@ -4003,7 +3921,7 @@ int wid_dynamic_change_wtp_info(int wtpid,WIDAUTOAPINFO *info)
 			CW_FREE_OBJECT_WID(AC_WTP[wtpid]->WTPModel);
 			AC_WTP[wtpid]->WTPModel= (char *)WID_MALLOC(len+1);
 			memset(AC_WTP[wtpid]->WTPModel,0,len+1);
-		
+			if(AC_WTP[wtpid]->WTPModel != NULL)
 				memcpy(AC_WTP[wtpid]->WTPModel,info->realmodel,strlen((char *)info->realmodel));
 			
 		}
