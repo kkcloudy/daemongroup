@@ -1714,8 +1714,7 @@ int ASD_BSS_INIT(struct asd_data * wasd){
 	bss = wasd->conf;
 	memset(bss->ssid.ssid, 0, asd_MAX_SSID_LEN + 1);
 	/* Add ssid for bss, instead of essid. init wasd with ASD_BSS[]. */
-	if ((NULL != ASD_BSS[BSSIndex])
-		&& (ASD_BSS[BSSIndex]->SSIDSetFlag))/* yjl 2014-2-28 */
+	if (NULL != ASD_BSS[BSSIndex])
 	{
     	memcpy(bss->ssid.ssid, ASD_BSS[BSSIndex]->SSID, asd_MAX_SSID_LEN);
     	bss->ssid.ssid_len = strlen((char *)ASD_BSS[BSSIndex]->SSID);
@@ -2898,9 +2897,6 @@ void BSS_OP(TableMsg *msg, struct wasd_interfaces *interfaces){
 				/* Add SSID for BSS, instead of essid */
 				memset(ASD_BSS[msg->u.BSS.BSSIndex]->SSID,0,ESSID_DEFAULT_LEN+1);
 				memcpy(ASD_BSS[msg->u.BSS.BSSIndex]->SSID,msg->u.BSS.SSID,strlen((char *)msg->u.BSS.SSID));
-				ASD_BSS[msg->u.BSS.BSSIndex]->SSIDSetFlag = msg->u.BSS.SSIDSetFlag;/* yjl 2014-2-28 */
-				asd_printf(ASD_DBUS,MSG_DEBUG,"ASD_BSS[msg->u.BSS.BSSIndex]->SSID : %s,SSIDSetFlag : %d\n",ASD_BSS[msg->u.BSS.BSSIndex]->SSID, ASD_BSS[msg->u.BSS.BSSIndex]->SSIDSetFlag);
-
 				
 				ASD_BSS[msg->u.BSS.BSSIndex]->BSSID = (unsigned char*)os_zalloc(7);
 				if(ASD_BSS[msg->u.BSS.BSSIndex]->BSSID==NULL){
@@ -3161,8 +3157,6 @@ void BSS_OP(TableMsg *msg, struct wasd_interfaces *interfaces){
 				/* Add SSID for BSS, instead of essid */
 				memset(ASD_BSS[msg->u.BSS.BSSIndex]->SSID,0,ESSID_DEFAULT_LEN+1);
 				memcpy(ASD_BSS[msg->u.BSS.BSSIndex]->SSID,msg->u.BSS.SSID,strlen((char *)msg->u.BSS.SSID));
-				ASD_BSS[msg->u.BSS.BSSIndex]->SSIDSetFlag = msg->u.BSS.SSIDSetFlag;
-				asd_printf(ASD_DBUS,MSG_DEBUG,"ASD_BSS[msg->u.BSS.BSSIndex]->SSID : %s,SSIDSetFlag : %d\n",ASD_BSS[msg->u.BSS.BSSIndex]->SSID, ASD_BSS[msg->u.BSS.BSSIndex]->SSIDSetFlag);
                 /*end**************************************************/
 				
 				asd_printf(ASD_DEFAULT,MSG_INFO,"%d,%d,%d,%d,%02x:%02x:%02x:%02x:%02x:%02x\n",ASD_BSS[msg->u.BSS.BSSIndex]->BSSIndex,ASD_BSS[msg->u.BSS.BSSIndex]->WlanID,ASD_BSS[msg->u.BSS.BSSIndex]->Radio_G_ID,ASD_BSS[msg->u.BSS.BSSIndex]->Radio_L_ID,
