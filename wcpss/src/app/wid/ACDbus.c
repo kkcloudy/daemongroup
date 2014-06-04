@@ -13575,6 +13575,7 @@ DBusMessage * wid_dbus_interface_show_ac_access_wtplist(DBusConnection *conn, DB
 	unsigned int num=0;
 	DBusError err;
 	int ret = WID_DBUS_SUCCESS;
+	char *unknown = "unknown";
 	dbus_error_init(&err);
 	int i=0;
 	struct wtp_access_info * WTP = NULL;
@@ -13665,33 +13666,102 @@ DBusMessage * wid_dbus_interface_show_ac_access_wtplist(DBusConnection *conn, DB
 					(&iter_struct,
 					  DBUS_TYPE_BYTE,
 					  &(WTP->WTPMAC[5]));
-		dbus_message_iter_append_basic
-					(&iter_struct,
-					  DBUS_TYPE_STRING,
-					  &(WTP->model));
-		dbus_message_iter_append_basic
-					(&iter_struct,
-					  DBUS_TYPE_STRING,
-					  &(WTP->apcode));
-		dbus_message_iter_append_basic
-					(&iter_struct,
-					  DBUS_TYPE_STRING,
-					  &(WTP->sn));
-
-		dbus_message_iter_append_basic
-					(&iter_struct,
-					  DBUS_TYPE_STRING,
-					  &(WTP->ifname));
-
-		dbus_message_iter_append_basic
-					(&iter_struct,
-					  DBUS_TYPE_STRING,
-					  &(WTP->version));
-		dbus_message_iter_append_basic
-					(&iter_struct,
-					  DBUS_TYPE_STRING,
-					  &(WTP->codever));
-
+			if (WTP->model != NULL)
+		{
+			dbus_message_iter_append_basic
+						(&iter_struct,
+						  DBUS_TYPE_STRING,
+						  &(WTP->model));
+			wid_syslog_debug_debug(WID_DEFAULT,"WTP->model= %s\n",WTP->model);
+		}
+		else 
+		{
+			dbus_message_iter_append_basic
+						(&iter_struct,
+						  DBUS_TYPE_STRING,
+					 	 &unknown);
+			wid_syslog_debug_debug(WID_DEFAULT,"WTP->model= %s\n",unknown);
+		}
+		if (WTP->apcode != NULL)
+		{
+			dbus_message_iter_append_basic
+						(&iter_struct,
+						  DBUS_TYPE_STRING,
+						  &(WTP->apcode));
+			wid_syslog_debug_debug(WID_DEFAULT,"WTP->apcode= %s\n",WTP->apcode);
+		}
+		else 
+		{
+			dbus_message_iter_append_basic
+						(&iter_struct,
+						  DBUS_TYPE_STRING,
+					 	 &unknown);
+			wid_syslog_debug_debug(WID_DEFAULT,"WTP->apcode= %s\n",unknown);
+		}
+		if (WTP->sn != NULL)
+		{
+			dbus_message_iter_append_basic
+						(&iter_struct,
+						  DBUS_TYPE_STRING,
+						  &(WTP->sn));
+			wid_syslog_debug_debug(WID_DEFAULT,"WTP->sn= %s\n",WTP->sn);
+		}
+		else 
+		{
+			dbus_message_iter_append_basic
+						(&iter_struct,
+						  DBUS_TYPE_STRING,
+					 	 &unknown);
+			wid_syslog_debug_debug(WID_DEFAULT,"WTP->sn= %s\n",unknown);
+		}
+		if (WTP->ifname != NULL)
+		{
+			dbus_message_iter_append_basic
+						(&iter_struct,
+						  DBUS_TYPE_STRING,
+						  &(WTP->ifname));
+			wid_syslog_debug_debug(WID_DEFAULT,"WTP->ifname= %s\n",WTP->ifname);
+		}
+		else 
+		{
+			dbus_message_iter_append_basic
+						(&iter_struct,
+						  DBUS_TYPE_STRING,
+					 	 &unknown);
+			wid_syslog_debug_debug(WID_DEFAULT,"WTP->ifname %s\n",unknown);
+		}
+		if (WTP->version != NULL)
+		{
+			dbus_message_iter_append_basic
+						(&iter_struct,
+						  DBUS_TYPE_STRING,
+						  &(WTP->version));
+			wid_syslog_debug_debug(WID_DEFAULT,"WTP->version= %s\n",WTP->version);
+		}
+		else 
+		{
+			dbus_message_iter_append_basic
+						(&iter_struct,
+						  DBUS_TYPE_STRING,
+					 	 &unknown);
+			wid_syslog_debug_debug(WID_DEFAULT,"WTP->version= %s\n",unknown);
+		}
+		if (WTP->codever != NULL)
+		{
+			dbus_message_iter_append_basic
+						(&iter_struct,
+						  DBUS_TYPE_STRING,
+						  &(WTP->codever));
+			wid_syslog_debug_debug(WID_DEFAULT,"WTP->codever = %s\n",WTP->codever);
+		}
+		else 
+		{
+			dbus_message_iter_append_basic
+						(&iter_struct,
+						  DBUS_TYPE_STRING,
+					 	 &unknown);
+			wid_syslog_debug_debug(WID_DEFAULT,"WTP->codever = %s\n",unknown);
+		}
 		dbus_message_iter_close_container (&iter_array, &iter_struct);
 		WTP = WTP->next;
 	}
