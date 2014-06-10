@@ -15059,7 +15059,7 @@ DEFUN(set_neighbordead_interval_cmd_func,
 	
 	neighbordead_interval = atoi(argv[0]);
 	
-	if (neighbordead_interval < 1 || neighbordead_interval > 2000)
+	if (neighbordead_interval < 20 || neighbordead_interval > 2000) //lilong modify it
 	{	
 		vty_out(vty,"<error> input patameter should be 20 to 2000\n");
 		return CMD_SUCCESS;

@@ -74219,9 +74219,10 @@ DBusMessage *wid_dbus_add_del_ap_group_member(DBusConnection *conn, DBusMessage 
 			if (AC_WTP[wtpid] == NULL) {
 				wtp_list[count] = wtpid;
 				count++;
+				ret1 = WID_COMMON_NOT_EXIST; //lilong add it
 				wid_syslog_err("wtpid=%d is not exist\n", wtpid);
 				continue;
-			}
+			} 
 			
 			if(isadd){
 				//add wtp to ap-group
