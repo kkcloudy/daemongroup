@@ -788,6 +788,9 @@ struct dcli_ac_info* show_sta_by_interface(DBusConnection *dcli_dbus_connection,
 			
 			dbus_message_iter_next(&iter_struct);	
 			dbus_message_iter_get_basic(&iter_struct,&(bss->SecurityID));	
+
+			dbus_message_iter_next(&iter_struct);	
+			dbus_message_iter_get_basic(&iter_struct,&(bss->if_policy));
 			
 			dbus_message_iter_next(&iter_struct);	
 			dbus_message_iter_get_basic(&iter_struct,&(bss->num_assoc));	
@@ -923,6 +926,9 @@ struct dcli_ac_info* show_sta_by_interface(DBusConnection *dcli_dbus_connection,
 
 				dbus_message_iter_next(&iter_sub_struct);	
 				dbus_message_iter_get_basic(&iter_sub_struct,&(sta->txbytes));
+
+				dbus_message_iter_next(&iter_sub_struct);	
+				dbus_message_iter_get_basic(&iter_sub_struct,&(sta->realip));
 
 				dbus_message_iter_next(&iter_sub_struct);	
 				dbus_message_iter_get_basic(&iter_sub_struct,&(sta->eap_type));

@@ -6493,7 +6493,12 @@ DEFUN(show_sta_list_by_interface_func,
 					    {
                             vty_out(vty,"%x:",sta->ip6_addr.s6_addr16[m]);
 					    }
-                	}					
+                	}	
+
+					if (ASD_MAC_TYPE_TL == bss->if_policy)
+					{
+						vty_out(vty,"                  %-15s(REAL IP)\n",dcli_u32ip2str(sta->realip)); 			
+					}
 				}
 			}		
 			vty_out(vty,"==============================================================================\n");
