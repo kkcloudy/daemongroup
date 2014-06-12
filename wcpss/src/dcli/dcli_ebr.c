@@ -2048,7 +2048,7 @@ DEFUN(set_ebr_add_del_if_cmd_func,
 
 	lenth = strlen((char *)argv[1]);
 
-	if(lenth > 15)
+	if(lenth > 17) //lilong modify it
 	{		
 		vty_out(vty,"<error> if name too long\n");
 		return CMD_SUCCESS;
