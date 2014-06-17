@@ -4308,6 +4308,22 @@ void STA_OP(TableMsg *msg){
 							}
                             sta->IPv6_Prefix_length = 64;
 							
+							
+							
+
+
+							if(ASD_WLAN[wasd->WlanID] == NULL){
+    							break ;
+    						}	
+    						SID = (unsigned char)ASD_WLAN[wasd->WlanID]->SecurityID;
+
+							if((ASD_SECURITY[SID])&&((ASD_SECURITY[SID]->securityType == WPA_E)||(ASD_SECURITY[SID]->securityType == WPA2_E)||(ASD_SECURITY[SID]->securityType == WPA_P)||(ASD_SECURITY[SID]->securityType == WPA2_P)||(ASD_SECURITY[SID]->securityType == IEEE8021X)||(ASD_SECURITY[SID]->securityType == MD5)||(ASD_SECURITY[SID]->extensible_auth == 1)))
+    						{	
+    							if((ASD_SECURITY[SID]->account_after_authorize == 0)&&(sta->flags &WLAN_STA_AUTHORIZED)){
+    								accounting_sta_start(wasd,sta);
+    							}
+    						}	
+							
         					if(is_secondary == 0)
         						bak_update_sta_ip_info(wasd, sta);
         					

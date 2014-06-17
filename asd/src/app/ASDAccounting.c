@@ -67,6 +67,7 @@ static struct radius_msg * accounting_msg(struct asd_data *wasd,
 					  struct sta_info *sta,struct radius_client_info *client_info,
 					  int status_type)
 {
+	uint8_t framed_ipv6_prefix[18];
 	struct radius_msg *msg;
 	char buf[128];
 	u8 *val;
@@ -164,14 +165,13 @@ static struct radius_msg * accounting_msg(struct asd_data *wasd,
 		goto fail;
 	}
 
-#ifdef ASD_IPV6
-	if (wasd->conf->own_ip_addr.af == AF_INET6 &&
-	    !radius_msg_add_attr(msg, RADIUS_ATTR_NAS_IPV6_ADDRESS,
+
+	if (wasd->conf->own_ip_addr.af == AF_INET6 && !radius_msg_add_attr(msg, RADIUS_ATTR_NAS_IPV6_ADDRESS,
 				 (u8 *) &wasd->conf->own_ip_addr.u.v6, 16)) {
 		asd_printf(ASD_1X,MSG_DEBUG,"Could not add NAS-IPv6-Address\n");
 		goto fail;
 	}
-#endif /* ASD_IPV6 */
+
 
 	//mahz add 2010.11.30
 	if (sta && !radius_msg_add_attr(msg, RADIUS_ATTR_FRAME_IP_ADDRESS,		
@@ -180,7 +180,29 @@ static struct radius_msg * accounting_msg(struct asd_data *wasd,
 		goto fail;
 	}
 	//asd_printf(ASD_1X,MSG_DEBUG,"FRAME-IP-Address: %s\n",sta->in_addr);
-	//	
+	
+	
+	
+	if (sta && !radius_msg_add_attr(msg, RADIUS_ATTR_FRAMED_INTERFACE_ID,		
+				 (u8 *) &sta->Framed_Interface_Id, 8)) {
+		asd_printf(ASD_1X,MSG_DEBUG,"Could not add RADIUS_ATTR_FRAMED_INTERFACE_ID, in %s\n",__func__);
+		goto fail;
+	}
+	
+	framed_ipv6_prefix[0] = 0;
+	framed_ipv6_prefix[1] =sta->IPv6_Prefix_length;
+	memcpy((uint8_t *)&(framed_ipv6_prefix[2]),(uint8_t *)&(sta->Framed_IPv6_Prefix),sizeof(struct in6_addr));
+	if (sta && !radius_msg_add_attr(msg, RADIUS_ATTR_FRAMED_IPV6_PREFIX,		
+				 (u8 *) &framed_ipv6_prefix, 18)) {
+		asd_printf(ASD_1X,MSG_DEBUG,"Could not add RADIUS_ATTR_FRAMED_IPV6_PREFIX, in %s\n",__func__);
+		goto fail;
+	}	
+	if (sta && !radius_msg_add_attr(msg, RADIUS_ATTR_LOGIN_IPV6_HOST,		
+				 (u8 *) &sta->Login_IPv6_Host, 16)) {
+		asd_printf(ASD_1X,MSG_DEBUG,"Could not add RADIUS_ATTR_LOGIN_IPV6_HOST, in %s\n",__func__);
+		goto fail;
+	}	
+	
 	pthread_mutex_lock(&asd_g_hotspot_mutex);
 	if((ASD_HOTSPOT[wasd->hotspot_id]!= NULL)&&(ASD_HOTSPOT[wasd->hotspot_id]->nasid_len != 0))
 	{
