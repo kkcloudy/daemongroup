@@ -72,6 +72,13 @@ struct cmd_node hansi_node =
 	"%s(config-hansi %d-%d)# "
 };
 
+
+struct cmd_node hansi_reference_node = 
+{
+	HANSI_REFERENCE_NODE,
+	"%s(reference-hansi-group %d)# "
+};
+
 unsigned char *dcli_vrrp_err_msg[] = {	\
 /*   0 */	"%% Error none\n",
 /*   1 */	"%% General failure\n",
@@ -1889,6 +1896,583 @@ DEFUN(config_hansi_cmd_func,
 	return CMD_SUCCESS;
 }
 #else
+DEFUN(del_reference_hansi_cmd_func,
+	  del_reference_hansi_cmd,
+	  "del hansi PARAMETER",
+	  CONFIG_STR
+	  "Delete hansi from reference group\n"
+	  "Group ID for configuration\n"
+)
+{
+	//vty_out(vty,"1\n");
+	DBusMessage *query = NULL, *reply = NULL;
+	DBusError err = {0};
+	int index = 0;
+	unsigned int hmd_ret = 0;
+	unsigned int profile = 0;
+	unsigned int slot_id = HostSlotId;
+	int slot_count = get_product_info(SEM_SLOT_COUNT_PATH);
+	int ret = 0;
+
+	if(vty->node == HANSI_REFERENCE_NODE){
+        index = vty->index;
+	}
+
+	ret = parse_slot_hansi_id((char*)argv[0],&slot_id,&profile);
+
+	if(ret != WID_DBUS_SUCCESS)
+	{
+		vty_out(vty,"<error> illegal input:Input exceeds the maximum value of the parameter type \n");
+		return CMD_WARNING;		
+	}
+	
+	if((profile < 1)||(profile >= MAX_INSTANCE))
+    {
+		vty_out(vty,"%% Bad parameter : %s !",argv[0]);
+		vty_out(vty,"<error> insID id should be 1~%d!",MAX_INSTANCE);
+
+		return CMD_WARNING;
+	}
+	if((slot_id < 1) || (slot_id > slot_count))
+    {
+		vty_out(vty,"%% Bad parameter : %s \n!",argv[0]);
+		vty_out(vty,"<error> slot id should be 1~%d !\n",slot_count);
+
+		return CMD_WARNING;
+	}
+    //add create reference hansi  
+	query = dbus_message_new_method_call(HMD_DBUS_BUSNAME,HMD_DBUS_OBJPATH,HMD_DBUS_INTERFACE,HMD_DBUS_DEL_HANSI_FROM_REFERENCE_GROUP);
+
+    dbus_error_init(&err);
+	//vty_out(vty,"1\n");
+	dbus_message_append_args(query,
+							 DBUS_TYPE_UINT32,&index,
+							 DBUS_TYPE_UINT32,&slot_id,
+							 DBUS_TYPE_UINT32,&profile,
+							 DBUS_TYPE_INVALID);
+	//vty_out(vty,"2\n");
+	reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection,query,150000, &err);
+
+	//vty_out(vty,"3\n");
+	dbus_message_unref(query);
+	if (NULL == reply) {
+		vty_out(vty,"hmd failed get reply.\n");
+		if (dbus_error_is_set(&err)) {
+			printf("%s raised: %s",err.name,err.message);
+			dbus_error_free_for_dcli(&err);
+		}
+		return CMD_WARNING;
+	}
+	//vty_out(vty,"4\n");
+
+	if (dbus_message_get_args ( reply, &err,
+				DBUS_TYPE_UINT32,&hmd_ret,
+				DBUS_TYPE_INVALID))
+	{	
+
+		if(hmd_ret == HMD_DBUS_SUCCESS)
+		{
+			vty_out(vty,"Delete hansi %d-%d from reference group %d successfulliy\n",slot_id,profile,index);
+			return CMD_SUCCESS;
+		}
+		if(hmd_ret == HMD_DBUS_PERMISSION_DENIAL)
+		{
+			vty_out(vty,"<error> The Slot is not active master board, permission denial\n");			
+			return CMD_WARNING;
+		}
+		else if(hmd_ret == HMD_DBUS_SLOT_ID_NOT_EXIST)
+		{
+			vty_out(vty,"<error> The Slot is not EXIST\n");
+			return CMD_WARNING;
+		}
+		else if (hmd_ret == HMD_DBUS_HANSI_NOT_IN_GROUP)
+		{
+			vty_out(vty,"<error> hansi %d-%d is not in group %d \n",slot_id,profile,index);
+			return CMD_WARNING;
+		}
+		else
+		{
+			vty_out(vty,"<error>  %d\n",hmd_ret);
+			return CMD_WARNING;
+		}
+
+	}
+	else 
+	{	
+	
+	//vty_out(vty,"5\n");
+		if (dbus_error_is_set(&err)) 
+		{
+			printf("%s raised: %s",err.name,err.message);
+			dbus_error_free_for_dcli(&err);
+		}		
+		return CMD_WARNING;
+	}
+	dbus_message_unref(reply);
+	reply = NULL;
+	return CMD_SUCCESS;
+}
+DEFUN(add_reference_hansi_cmd_func,
+	  add_reference_hansi_cmd,
+	  "add hansi PARAMETER",
+	  CONFIG_STR
+	  "Add hansi to reference group\n"
+	  "Group ID for configuration\n"
+)
+{
+	//vty_out(vty,"1\n");
+	DBusMessage *query = NULL, *reply = NULL;
+	DBusError err = {0};
+	int index = 0;
+	unsigned int hmd_ret = 0;
+	unsigned int profile = 0;
+	unsigned int slot_id = HostSlotId;
+	int slot_count = get_product_info(SEM_SLOT_COUNT_PATH);
+	int ret = 0;
+
+	if(vty->node == HANSI_REFERENCE_NODE){
+        index = vty->index;
+	}
+
+	ret = parse_slot_hansi_id((char*)argv[0],&slot_id,&profile);
+
+	if(ret != WID_DBUS_SUCCESS)
+	{
+		vty_out(vty,"<error> illegal input:Input exceeds the maximum value of the parameter type \n");
+		return CMD_WARNING;		
+	}
+	
+	if((profile < 1)||(profile >= MAX_INSTANCE))
+    {
+		vty_out(vty,"%% Bad parameter : %s !\n",argv[0]);
+		vty_out(vty,"<error> insID id should be 1~%d !\n",MAX_INSTANCE);
+
+		return CMD_WARNING;
+	}
+    if((slot_id < 1) || (slot_id > slot_count))
+    {
+		vty_out(vty,"%% Bad parameter : %s !",argv[0]);
+		vty_out(vty,"<error> slot id should be 1~%d!",slot_count);
+
+		return CMD_WARNING;
+	}
+    //add create reference hansi  
+	query = dbus_message_new_method_call(HMD_DBUS_BUSNAME,HMD_DBUS_OBJPATH,HMD_DBUS_INTERFACE,HMD_DBUS_ADD_HANSI_TO_REFERENCE_GROUP);
+
+    dbus_error_init(&err);
+	//vty_out(vty,"1\n");
+	dbus_message_append_args(query,
+							 DBUS_TYPE_UINT32,&index,
+							 DBUS_TYPE_UINT32,&slot_id,
+							 DBUS_TYPE_UINT32,&profile,
+							 DBUS_TYPE_INVALID);
+	//vty_out(vty,"2\n");
+	reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection,query,150000, &err);
+
+	//vty_out(vty,"3\n");
+	dbus_message_unref(query);
+	if (NULL == reply) {
+		vty_out(vty,"hmd failed get reply.\n");
+		if (dbus_error_is_set(&err)) {
+			printf("%s raised: %s",err.name,err.message);
+			dbus_error_free_for_dcli(&err);
+		}
+		return CMD_WARNING;
+	}
+	//vty_out(vty,"4\n");
+
+	if (dbus_message_get_args ( reply, &err,
+				DBUS_TYPE_UINT32,&hmd_ret,
+				DBUS_TYPE_INVALID))
+	{	
+
+		if(hmd_ret == HMD_DBUS_SUCCESS)
+		{
+			vty_out(vty,"Add hansi %d-%d to reference group %d successfulliy\n",slot_id,profile,index);
+			return CMD_SUCCESS;
+		}
+		if(hmd_ret == HMD_DBUS_PERMISSION_DENIAL)
+		{
+			vty_out(vty,"<error> The Slot is not active master board, permission denial\n");			
+			return CMD_WARNING;
+		}
+		else if(hmd_ret == HMD_DBUS_SLOT_ID_NOT_EXIST)
+		{
+			vty_out(vty,"<error> The Slot is not EXIST\n");
+			return CMD_WARNING;
+		}
+		else if (hmd_ret == HMD_DBUS_HANSI_AT_OTHER_GROUP)
+		{
+			vty_out(vty,"<error> The hansi has been in groups\n");
+			return CMD_WARNING;
+		}
+		else
+		{
+			vty_out(vty,"<error>  %d\n",hmd_ret);
+			return CMD_WARNING;
+		}
+	}
+	else 
+	{		
+	    //vty_out(vty,"5\n");
+		if (dbus_error_is_set(&err)) 
+		{
+			printf("%s raised: %s",err.name,err.message);
+			dbus_error_free_for_dcli(&err);
+		}		
+		return CMD_WARNING;
+	}
+	dbus_message_unref(reply);
+	reply = NULL;
+	return CMD_SUCCESS;
+}
+
+DEFUN(show_hansi_reference_member_cmd_func,
+	  show_hansi_reference_member_cmd,
+	  "show hansi-reference member",
+      SHOW_STR	
+	  "Show hansi\n"
+	  "reference member \n"
+)
+{
+	DBusMessage *query = NULL, *reply = NULL;
+	DBusError err ;
+	char *showStr = NULL,*cursor = NULL;
+	unsigned int reference_hansi_group = 0;
+   /*  get current profile id */
+	if(HANSI_REFERENCE_NODE==vty->node){
+		reference_hansi_group = (unsigned int)(vty->index);
+	}
+
+    //add create reference hansi  
+	query = dbus_message_new_method_call(HMD_DBUS_BUSNAME,HMD_DBUS_OBJPATH,HMD_DBUS_INTERFACE,HMD_DBUS_CONF_SHOW_GROUP_MEMBER);
+
+	
+
+	dbus_error_init(&err);
+	//vty_out(vty,"1\n");
+
+	dbus_message_append_args(query,
+		                     DBUS_TYPE_UINT32,&reference_hansi_group,				 
+							 DBUS_TYPE_INVALID);
+	//vty_out(vty,"2\n");
+	reply = dbus_connection_send_with_reply_and_block(dcli_dbus_connection, query, -1, &err);
+
+	//vty_out(vty,"3\n");
+
+	dbus_message_unref(query);
+	if (NULL == reply) {
+		vty_out(vty, "failed get reply.\n");
+		if (dbus_error_is_set(&err)) {
+			printf("%s raised: %s", err.name, err.message);
+			dbus_error_free(&err);
+		}
+		return CMD_SUCCESS;
+	}
+
+	char *showRunningCfg_str = NULL;
+	int totalLen = 0;
+
+	showRunningCfg_str = (char *)malloc(MAX_HANSI_NUM*1024);
+	if (NULL == showRunningCfg_str) {
+		return 1;
+	}
+	memset(showRunningCfg_str, 0, (MAX_HANSI_NUM*1024));
+	cursor = showRunningCfg_str;
+	//vty_out(vty,"4\n");
+
+	totalLen += sprintf(cursor, "==================================================\n");
+	cursor = showRunningCfg_str + totalLen;
+
+	if (dbus_message_get_args ( reply, &err,
+				DBUS_TYPE_STRING,&showStr,
+				DBUS_TYPE_INVALID))
+	{
+		totalLen += sprintf(cursor, "%s", showStr);
+		cursor = showRunningCfg_str + totalLen;
+		/* add string "exit" */
+		totalLen += sprintf(cursor, "==================================================\n");
+		cursor = showRunningCfg_str + totalLen;
+		//*showRunningCfg = showRunningCfg_str;
+		vty_out(vty, "%s", showRunningCfg_str);
+	}
+	else 
+	{	
+	
+	    //vty_out(vty,"5\n");
+		if (dbus_error_is_set(&err)) 
+		{
+			printf("%s raised: %s",err.name,err.message);
+			dbus_error_free_for_dcli(&err);
+		}
+    	dbus_message_unref(reply);
+		if(showRunningCfg_str){
+			free(showRunningCfg_str);
+			showRunningCfg_str = NULL;
+		}
+		return CMD_WARNING;
+	}
+	dbus_message_unref(reply);
+	return CMD_SUCCESS;
+
+}
+DEFUN(show_hansi_reference_group_cmd_func,
+	  show_hansi_reference_group_cmd,
+	  "show hansi reference group",
+      SHOW_STR	
+	  "Show hansi\n"
+	  "Show hansi reference group\n"
+	  "all group\n"
+)
+{
+	DBusMessage *query = NULL, *reply = NULL;
+	DBusError err ;
+	char *showStr = NULL,*cursor = NULL;
+
+    //show create reference hansi group information 
+	query = dbus_message_new_method_call(HMD_DBUS_BUSNAME,HMD_DBUS_OBJPATH,HMD_DBUS_INTERFACE,HMD_DBUS_CONF_SHOW_HANSI_REFERENCE_GROUP);
+
+	
+
+	dbus_error_init(&err);
+	//vty_out(vty,"1\n");
+	dbus_message_append_args(query, DBUS_TYPE_INVALID);
+
+	//vty_out(vty,"2\n");
+	reply = dbus_connection_send_with_reply_and_block(dcli_dbus_connection, query, -1, &err);
+
+	//vty_out(vty,"3\n");
+
+	dbus_message_unref(query);
+	if (NULL == reply) {
+		vty_out(vty, "failed get reply.\n");
+		if (dbus_error_is_set(&err)) {
+			printf("%s raised: %s", err.name, err.message);
+			dbus_error_free(&err);
+		}
+		return CMD_SUCCESS;
+	}
+
+	char *showRunningCfg_str = NULL;
+	int totalLen = 0;
+
+	showRunningCfg_str = (char *)malloc(MAX_HANSI_NUM*1024);
+	if (NULL == showRunningCfg_str) {
+		return 1;
+	}
+	memset(showRunningCfg_str, 0, (MAX_HANSI_NUM*1024));
+	cursor = showRunningCfg_str;
+	//vty_out(vty,"4\n");
+
+	totalLen += sprintf(cursor, "==================================================\n");
+	cursor = showRunningCfg_str + totalLen;
+
+	if (dbus_message_get_args ( reply, &err,
+				DBUS_TYPE_STRING,&showStr,
+				DBUS_TYPE_INVALID))
+	{
+		totalLen += sprintf(cursor, "%s", showStr);
+		cursor = showRunningCfg_str + totalLen;
+		/* add string "exit" */
+		totalLen += sprintf(cursor, "==================================================\n");
+		cursor = showRunningCfg_str + totalLen;
+		//*showRunningCfg = showRunningCfg_str;
+		vty_out(vty, "%s", showRunningCfg_str);
+	}
+	else 
+	{	
+	
+	    vty_out(vty,"5\n");
+		if (dbus_error_is_set(&err)) 
+		{
+			printf("%s raised: %s",err.name,err.message);
+			dbus_error_free_for_dcli(&err);
+		}
+    	dbus_message_unref(reply);
+		if(showRunningCfg_str){
+			free(showRunningCfg_str);
+			showRunningCfg_str = NULL;
+		}
+		return CMD_WARNING;
+	}
+	dbus_message_unref(reply);
+	return CMD_SUCCESS;
+
+}
+DEFUN(delete_hansi_reference_group_cmd_func,
+	  delete_hansi_reference_group_cmd,
+	  "delete hansi-reference group PARAMETER",
+	  "Cancel order\n"
+	  "Delete hansi config\n"
+	  "Delete reference Hansi group\n"
+	  "Group number for configuration\n"
+)
+{
+	DBusMessage *query = NULL, *reply = NULL;
+	DBusError err = {0};
+	unsigned int hmd_ret = 0;
+	unsigned int  group_id = 0;
+	int ret = 0;
+
+	ret = parse_int_ID((char*)argv[0], &group_id);
+	if(ret != WID_DBUS_SUCCESS){
+		vty_out(vty,"<error> unknown id format\n");
+		return CMD_SUCCESS;
+	}	
+
+	//vty_out(vty,"hansi reference id is %d\n",reference_hansi_group);
+
+	if(group_id >= MAX_GROUP_NUM || group_id < 1){
+		vty_out(vty,"<error> hansi reference id should be 1~%d\n",MAX_GROUP_NUM-1 );
+		return CMD_SUCCESS;
+	}
+		
+    //delete hansi reference group  
+	query = dbus_message_new_method_call(HMD_DBUS_BUSNAME,HMD_DBUS_OBJPATH,HMD_DBUS_INTERFACE,HMD_DBUS_DELETE_HANSI_GROUP);
+
+    dbus_error_init(&err);
+	//vty_out(vty,"1\n");
+	dbus_message_append_args(query,
+							 DBUS_TYPE_UINT32,&group_id,
+							 DBUS_TYPE_INVALID);
+	//vty_out(vty,"2\n");
+	reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection,query,150000, &err);
+
+	//vty_out(vty,"3\n");
+	dbus_message_unref(query);
+	if (NULL == reply) {
+		vty_out(vty,"hmd failed get reply.\n");
+		if (dbus_error_is_set(&err)) {
+			printf("%s raised: %s",err.name,err.message);
+			dbus_error_free_for_dcli(&err);
+		}
+		return CMD_WARNING;
+	}
+	//vty_out(vty,"4\n");
+
+	if (dbus_message_get_args ( reply, &err,
+				DBUS_TYPE_UINT32,&hmd_ret,
+				DBUS_TYPE_INVALID))
+	{	
+		if(hmd_ret == HMD_DBUS_SUCCESS){
+			vty_out(vty,"delete hansi reference group %d successfulliy\n",group_id);
+			return CMD_SUCCESS;
+		}
+		else if(hmd_ret == HMD_DBUS_PERMISSION_DENIAL){
+			vty_out(vty,"<error> The Slot is not active master board, permission denial\n");			
+			return CMD_WARNING;
+		}
+		else if(hmd_ret == HMD_DBUS_NO_THIS_GROUP){
+			vty_out(vty,"<error> This is no group %d \n",group_id);			
+			return CMD_WARNING;
+		}
+		else{
+			vty_out(vty,"<error>  %d\n",hmd_ret);
+			return CMD_WARNING;
+		}
+	} 
+	else 
+	{	
+	
+	    //vty_out(vty,"5\n");
+		if (dbus_error_is_set(&err)) 
+		{
+			printf("%s raised: %s",err.name,err.message);
+			dbus_error_free_for_dcli(&err);
+		}		
+		return CMD_WARNING;
+	}
+	dbus_message_unref(reply);
+	reply = NULL;
+	return CMD_SUCCESS;
+}
+
+DEFUN(config_hansi_reference_group_cmd_func,
+	  config_hansi_reference_group_cmd,
+	  "config hansi-reference PARAMETER",
+	  CONFIG_STR
+	  "Hansi reference group\n"
+	  "Hansi reference group ID for configuration\n"
+)
+{
+	DBusMessage *query = NULL, *reply = NULL;
+	DBusError err = {0};
+	unsigned int hmd_ret = 0;
+	unsigned int  reference_hansi_group = 0;
+	int ret = 0;
+
+	ret = parse_int_ID((char*)argv[0], &reference_hansi_group);
+	if(ret != WID_DBUS_SUCCESS){
+		vty_out(vty,"<error> unknown id format\n");
+		return CMD_SUCCESS;
+	}	
+
+	//vty_out(vty,"hansi reference id is %d\n",reference_hansi_group);
+
+	if(reference_hansi_group >= MAX_GROUP_NUM || reference_hansi_group < 1){
+		vty_out(vty,"<error> hansi reference group id should be 1~%d\n",MAX_GROUP_NUM-1);
+		return CMD_SUCCESS;
+	}
+		
+    //add create hansi reference  
+	query = dbus_message_new_method_call(HMD_DBUS_BUSNAME,HMD_DBUS_OBJPATH,HMD_DBUS_INTERFACE,HMD_DBUS_CONF_HANSI_GROUP);
+
+    dbus_error_init(&err);
+	//vty_out(vty,"1\n");
+	dbus_message_append_args(query,
+							 DBUS_TYPE_UINT32,&reference_hansi_group,
+							 DBUS_TYPE_INVALID);
+	//vty_out(vty,"2\n");
+	reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection,query,150000, &err);
+
+	//vty_out(vty,"3\n");
+	dbus_message_unref(query);
+	if (NULL == reply) {
+		vty_out(vty,"hmd failed get reply.\n");
+		if (dbus_error_is_set(&err)) {
+			printf("%s raised: %s",err.name,err.message);
+			dbus_error_free_for_dcli(&err);
+		}
+		return CMD_WARNING;
+	}
+	//vty_out(vty,"4\n");
+
+	if (dbus_message_get_args ( reply, &err,
+				DBUS_TYPE_UINT32,&hmd_ret,
+				DBUS_TYPE_INVALID))
+	{	
+		if(hmd_ret == 0){
+			//vty_out(vty,"config hansi reference group %d successfulliy\n",reference_hansi_group);
+			if(vty->node == CONFIG_NODE){
+				vty->node = HANSI_REFERENCE_NODE;
+				vty->index = (void *)reference_hansi_group;
+			}
+		}
+		else if(hmd_ret == HMD_DBUS_PERMISSION_DENIAL){
+			vty_out(vty,"<error> The Slot is not active master board, permission denial\n");			
+			return CMD_WARNING;
+		}
+		else{
+			vty_out(vty,"<error>  %d\n",hmd_ret);
+			return CMD_WARNING;
+		}
+	} 
+	else 
+	{	
+	
+	//vty_out(vty,"5\n");
+		if (dbus_error_is_set(&err)) 
+		{
+			printf("%s raised: %s",err.name,err.message);
+			dbus_error_free_for_dcli(&err);
+		}		
+		return CMD_WARNING;
+	}
+	dbus_message_unref(reply);
+	reply = NULL;
+	return CMD_SUCCESS;
+}
+
 DEFUN(config_hansi_cmd_func,
 	  config_hansi_cmd,
 	  "config hansi-profile PARAMETER",
@@ -6792,7 +7376,92 @@ int g_bridge_mcast_config_save()
 }
 
 #ifdef DISTRIBUT 
-#if 1
+int dcli_hansi_reference_group_show_cfg(struct vty *vty)
+{
+	DBusMessage *query = NULL, *reply = NULL;
+	DBusError err ;
+	char *showStr = NULL,*cursor = NULL;
+	int bulid_vrrp_moudle_flg = 0;
+	char *tmp = NULL;
+
+
+    //show create reference hansi group information 
+	query = dbus_message_new_method_call(HMD_DBUS_BUSNAME,HMD_DBUS_OBJPATH,HMD_DBUS_INTERFACE,HMD_DBUS_SHOW_HANSI_GROUP);
+
+	
+
+	dbus_error_init(&err);
+	//vty_out(vty,"1\n");
+	dbus_message_append_args(query, DBUS_TYPE_INVALID);
+
+	//vty_out(vty,"2\n");
+	reply = dbus_connection_send_with_reply_and_block(dcli_dbus_connection, query, -1, &err);
+
+	//vty_out(vty,"3\n");
+
+	dbus_message_unref(query);
+	if (NULL == reply) {
+		vty_out(vty, "failed get reply.\n");
+		if (dbus_error_is_set(&err)) {
+			printf("%s raised: %s", err.name, err.message);
+			dbus_error_free(&err);
+		}
+		return CMD_SUCCESS;
+	}
+
+	char *showRunningCfg_str = NULL;
+	int totalLen = 0;
+
+	showRunningCfg_str = (char *)malloc(SHOW_RUNNING_CONFIG_LEN);
+	if (NULL == showRunningCfg_str) {
+		return 1;
+	}
+	memset(showRunningCfg_str, 0, (SHOW_RUNNING_CONFIG_LEN));
+
+	if (0 == bulid_vrrp_moudle_flg) {
+		char _tmpstr[64];
+		memset(_tmpstr,0,64);
+		sprintf(_tmpstr, BUILDING_MOUDLE, "hansi reference group");
+		vtysh_add_show_string(_tmpstr);
+		bulid_vrrp_moudle_flg = 1;
+	}
+
+	
+	cursor = showRunningCfg_str;
+	//vty_out(vty,"4\n");
+
+	if (dbus_message_get_args ( reply, &err,
+				DBUS_TYPE_STRING,&showStr,
+				DBUS_TYPE_INVALID))
+	{
+		totalLen += sprintf(cursor, "%s", showStr);
+		cursor = showRunningCfg_str + totalLen;
+		/* add string "exit" */
+		//vty_out(vty, "%s", showRunningCfg_str);
+		vtysh_add_show_string(showRunningCfg_str);		
+
+	}
+	else 
+	{	
+	
+	    //vty_out(vty,"5\n");
+		if (dbus_error_is_set(&err)) 
+		{
+			printf("%s raised: %s",err.name,err.message);
+			dbus_error_free_for_dcli(&err);
+		}
+    	dbus_message_unref(reply);
+		if(showRunningCfg_str){
+			free(showRunningCfg_str);
+			showRunningCfg_str = NULL;
+		}
+		return CMD_WARNING;
+	}
+	dbus_message_unref(reply);
+	return CMD_SUCCESS;
+
+}
+
 int dcli_vrrp_show_running_cfg(struct vty *vty)
 {	
 	char *showStr = NULL, ch = 0,tmpBuf[SHOWRUN_PERLINE_SIZE] = {0};
@@ -7575,7 +8244,6 @@ int dcli_vrrp_show_running_cfg(struct vty *vty)
 	ret = g_bridge_mcast_config_save();
 	return 0;	
 }
-#endif
 #else
 int dcli_vrrp_show_running_cfg(struct vty *vty)
 {	
@@ -8456,10 +9124,24 @@ void dcli_vrrp_element_init(void)
 //	install_node (&hansi_node, NULL, "HANSI_NODE");
 	install_default(HANSI_NODE);
 
+
+    install_node(&hansi_reference_node,dcli_hansi_reference_group_show_cfg, "HANSI_REFERENCE_NODE");
+	install_default(HANSI_REFERENCE_NODE);
+	
     install_element(CONFIG_NODE,&config_hansi_cmd);
 	install_element(CONFIG_NODE,&config_vrrp_golbal_swtich_add_del_hansi_cmd);
 	install_element(CONFIG_NODE, &config_delete_hansi_cmd);
 	install_element(CONFIG_NODE, &show_vrrp_runconfig_cmd);
+	install_element(CONFIG_NODE, &config_hansi_reference_group_cmd);
+	install_element(CONFIG_NODE, &delete_hansi_reference_group_cmd);
+	install_element(CONFIG_NODE, &show_hansi_reference_group_cmd);
+
+	//install for hansi reference node command
+	install_element(HANSI_REFERENCE_NODE, &add_reference_hansi_cmd);
+	install_element(HANSI_REFERENCE_NODE, &del_reference_hansi_cmd);
+	install_element(HANSI_REFERENCE_NODE, &show_hansi_reference_member_cmd);
+
+	
 	/*install_element(HANSI_NODE,&config_vrrp_cmd);*/
 	install_element(HANSI_NODE,&config_vrrp_with_mask_cmd);
 	install_element(HANSI_NODE,&send_arp_cmd);

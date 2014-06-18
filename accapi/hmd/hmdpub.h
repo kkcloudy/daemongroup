@@ -17,6 +17,9 @@
 #define INSTANCE_NO_CREATED	(0)		/* instance have not created.	*/
 #define SYS_COMMAND_LEN	(64*2)		/* shell command length */
 #define DHCP_QID   255
+#define MAX_GROUP_NUM  (32+1)
+#define MAX_HANSI_NUM  16
+#define MAX_STRLEN_NUM 20
 
 
 #define SERVER_TYPE 10086
@@ -148,6 +151,8 @@ struct Hmd_Inst_Mgmt{
 	int eag_check_timeout;
 	int rdc_check_timeout;
 	int pdc_check_timeout;
+	int group_id;   //add for hansi reference group
+
 };
 struct Hmd_L_Inst_Mgmt_Summary{
 	int Inst_ID;
@@ -206,6 +211,16 @@ struct Hmd_L_Inst_Mgmt{
 	int pdc_check_timeout;
 };
 
+
+struct group_node{
+    int Inst_ID;
+    int slot_id;
+};
+
+struct Hmd_Hansi_Group{
+    int group_id;
+    struct group_node hansi[MAX_HANSI_NUM];
+};
 
 struct Hmd_Board_Info{
 	int board_func_type;
@@ -403,6 +418,7 @@ extern struct Hmd_Board_Info *HOST_BOARD;
 extern struct Hmd_Board_Info *HMD_BOARD[MAX_SLOT_NUM];
 extern struct Hmd_L_Inst_Mgmt_Summary *HMD_L_HANSI[MAX_INSTANCE];
 extern struct LicenseMgmt *LICENSE_MGMT;
+extern struct Hmd_Hansi_Group *hmd_group;
 extern int global_ht_ip;
 extern int global_ht_state;
 extern int global_ht_opposite_ip;

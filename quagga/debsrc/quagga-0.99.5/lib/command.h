@@ -294,7 +294,8 @@ IGMP_NODE_DISTRIBUTED,
 MLD_NODE_DISTRIBUTED,
   MLD_VLAN_NODE,
   DNS_SER_NODE,
-  VTY_NODE			  /* Vty node. */
+  VTY_NODE,			  /* Vty node. */
+  HANSI_REFERENCE_NODE //186
 };
 
 /* Node which has some commands and prompt string and configuration

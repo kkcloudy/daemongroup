@@ -446,12 +446,13 @@ void had_profile_config_save
 				curPos = showBuf + curLen;
 			 }
 		 }
-		 
+ //Change reason: equipment launch configuration is not loaded
+/*	 	 
 		 if(vrrp->vrid != i){
 			  curLen += sprintf(curPos," set vrid %d\n",vrrp->vrid);
 			  curPos = showBuf + curLen;             
 		 }
-
+*/
 		if (VRRP_LINK_NO_SETTED != vrrp->uplink_flag)
 		{
 			/* get first uplink virtual ip */
@@ -652,6 +653,12 @@ void had_profile_config_save
  			 curLen += sprintf(curPos," config hansi preempt %s\n",vrrp->preempt ? "yes" : "no");
 			 curPos = showBuf + curLen;            
 		 }
+ //Change reason: equipment launch configuration is not loaded
+		 if(vrrp->vrid != i){
+			  curLen += sprintf(curPos," set vrid %d\n",vrrp->vrid);
+			  curPos = showBuf + curLen;             
+		 }
+
 		 if(vrrp->no_vmac != 1){
  			 curLen += sprintf(curPos," config hansi virtual mac yes\n");
 			 curPos = showBuf + curLen;

@@ -6118,6 +6118,9 @@ vtysh_prompt (void)
 	  case HANSI_NODE:
 		  snprintf (buf, sizeof buf, cmd_prompt (vty->node), hostname, vty->slotindex,vty->index);
 		  break;
+	  case HANSI_REFERENCE_NODE:
+	  	  snprintf (buf, sizeof buf, cmd_prompt (vty->node), hostname, vty->index);
+	  	  break;
 	  case LOCAL_HANSI_NODE:
 		  snprintf (buf, sizeof buf, cmd_prompt (vty->node), hostname, vty->slotindex,vty->index);
 		  break;

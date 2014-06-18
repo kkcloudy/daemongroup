@@ -80,6 +80,7 @@ struct Hmd_For_Dhcp_restart *DHCP_MONITOR;
 struct Hmd_Board_Info *HMD_BOARD[MAX_SLOT_NUM];
 struct Hmd_L_Inst_Mgmt_Summary *HMD_L_HANSI[MAX_INSTANCE];
 struct LicenseMgmt	*LICENSE_MGMT;
+struct Hmd_Hansi_Group *hmd_group;
 char MSGQ_PATH[PATH_LEN] = "/var/run/hmd/hmsgq";
 int HMDMsgqID = 0;
 unsigned int service_tftp_state = 0;//service tftp (0--disable;1--enable)
@@ -1020,6 +1021,11 @@ void HmdStateInit(){
 				}
 			}
 		}
+		/*add for hansi reference group (init group)*/
+		
+		hmd_group = (struct Hmd_Hansi_Group *)malloc(
+					sizeof(struct Hmd_Hansi_Group)*MAX_GROUP_NUM);
+		memset(hmd_group,0,sizeof(struct Hmd_Hansi_Group)*MAX_GROUP_NUM);
 	}
 	else{
 		memset(tmpbuf, 0, DEFAULT_LEN);

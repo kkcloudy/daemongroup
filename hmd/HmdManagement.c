@@ -772,6 +772,8 @@ void * HMDManagementS(){
 	unsigned int old_change_state = 0;
 	unsigned int new_change_state = 0;
 	int slot_no = 0,inst_id = 0;
+	int group_num;
+	int inst_num;
 	
 	fd = HMDTipcInit(HOST_SLOT_NO);
 	if(fd <= 0){
@@ -1492,15 +1494,16 @@ void * HMDManagementS(){
 							}
 						}
 					}
-#if 1 //add by niehy for hansi depend
+#if 0 //add by niehy for hansi depend
                     depend_s_slot_id = tmsg->S_SlotID;
                     depend_s_inst_id = tmsg->InstID;
-                	hmd_syslog_info("start chack hansi %d-%d need linkage hansi!\n",depend_s_slot_id,depend_s_inst_id);
+                	//hmd_syslog_info("start chack hansi %d-%d need linkage hansi!\n",depend_s_slot_id,depend_s_inst_id);
 
                     	for(inst_id=1; inst_id<MAX_INSTANCE;inst_id++){
-							//hmd_syslog_info("*********i = %d******\n",inst_id);
-							//hmd_syslog_info("depend_slot_id is %d  depend_inst_id is %d \n",(HMD_BOARD[depend_s_slot_id]->Hmd_Inst[depend_s_inst_id]->depend_hansi[inst_id].depend_slot_no),(HMD_BOARD[depend_s_slot_id]->Hmd_Inst[depend_s_inst_id]->depend_hansi[inst_id].Depend_Inst_ID));
-							
+
+							//hmd_syslog_info("HMD_BOARD[%d]->Hmd_Inst[%d]->depend_handsi[%d].depend_slot_no=%d",depend_s_slot_id,depend_s_inst_id,inst_id,HMD_BOARD[depend_s_slot_id]->Hmd_Inst[depend_s_inst_id]->depend_hansi[inst_id].depend_slot_no);
+							//hmd_syslog_info("HMD_BOARD[%d]->Hmd_Inst[%d]->depend_handsi[%d].Depend_Inst_ID=%d",depend_s_slot_id,depend_s_inst_id,inst_id,HMD_BOARD[depend_s_slot_id]->Hmd_Inst[depend_s_inst_id]->depend_hansi[inst_id].Depend_Inst_ID);
+
                         	if(HMD_BOARD[depend_s_slot_id]->Hmd_Inst[depend_s_inst_id]->depend_hansi[inst_id].Depend_Inst_ID )
                     		{
                 				//hmd_syslog_info("*********&&&3333333&&&&******\n");
@@ -1525,7 +1528,46 @@ void * HMDManagementS(){
 
                         	}
                     	}
+#endif
+
+#if 1 //add by niehy for hansi reference group linkage
+                    depend_s_slot_id = tmsg->S_SlotID;
+                    depend_s_inst_id = tmsg->InstID;
+                	hmd_syslog_info("start chack hansi %d-%d reference group!\n",depend_s_slot_id,depend_s_inst_id);
+
+                    for(group_num=1; group_num<MAX_GROUP_NUM;group_num++){
+
+                       	if(group_num == HMD_BOARD[depend_s_slot_id]->Hmd_Inst[depend_s_inst_id]->group_id)
+                    	{
+    						hmd_syslog_info("reference hansi group id is %d",group_num);
+
+							for(inst_num=0;inst_num<MAX_HANSI_NUM;inst_num++){
+
+								if((hmd_group[group_num].hansi[inst_num].slot_id)&&(hmd_group[group_num].hansi[inst_num].Inst_ID)){
+										
+    								depend_d_slot_id = hmd_group[group_num].hansi[inst_num].slot_id;
+    								depend_d_inst_id = hmd_group[group_num].hansi[inst_num].Inst_ID;
+									if((HMD_BOARD[depend_d_slot_id] != NULL))
+                       				{
+										if((HMD_BOARD[depend_d_slot_id]->Hmd_Inst[depend_d_inst_id] != NULL) && 
+                                             ((depend_s_slot_id!=depend_d_slot_id)||(depend_s_inst_id!=depend_d_inst_id)))
+                        				{
+                        					hmd_syslog_info("start update depend hansi %d-%d!\n",depend_d_slot_id,depend_d_inst_id);
+        									HmdNoticeToClient(depend_d_slot_id,depend_d_inst_id,0,new_change_state);
+                        					hmd_syslog_info("Linkage messages sent to hansi %d-%d \n",depend_d_slot_id,depend_d_inst_id);
+                       					}
+        								else if(HMD_BOARD[depend_d_slot_id]->Hmd_Inst[depend_d_inst_id] == NULL)
+        										hmd_syslog_info("hansi %d-%d does not exist!\n",depend_d_slot_id,depend_d_inst_id);
+                        			}
+        							else
+        								hmd_syslog_info("slot %d board does not exist!\n",depend_d_slot_id);
+								}
+
+							}
+                        }
+                    }
 #endif				
+
 					hmd_syslog_info("global switch --> Master board end dealing with vrrp change information\n");
 				}
 				break;

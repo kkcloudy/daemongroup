@@ -13,6 +13,11 @@ typedef enum continous_discrete_type{
 //#define MAX_IFNAME_LEN        20
 #define MAX_IPADDR_LEN        20
 
+// niehy add for hansi linkage commands
+#define SHOW_RUNNING_CONFIG_LEN (1024 * 1024)
+#define SEM_SLOT_COUNT_PATH       "/dbm/product/slotcount"
+//niehy add end
+
 #define DCLI_VRRP_RETURN_CODE_BASE                 (0x150000)
 #define DCLI_VRRP_RETURN_CODE_OK		              (DCLI_VRRP_RETURN_CODE_BASE + 1)
 #define DCLI_VRRP_RETURN_CODE_ERR		          (DCLI_VRRP_RETURN_CODE_BASE + 2)

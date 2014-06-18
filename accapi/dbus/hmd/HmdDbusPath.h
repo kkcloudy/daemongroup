@@ -60,6 +60,14 @@ char HMD_DBUS_CONF_SET_AUTO_SYNC_CONFIG_SWITCH[PATH_LEN] = "set_auto_sync_config
 char HMD_DBUS_CONF_SHOW_AUTO_SYNC_CONFIG_STATE[PATH_LEN] = "show_auto_sync_config_state";
 char HMD_DBUS_CONF_HANSI_DEPEND[PATH_LEN] = "hmd_dbus_config_hansi_depend";
 char HMD_DBUS_CONF_HANSI_DEPEND_DELETE[PATH_LEN] = "hmd_dbus_config_hansi_depend_delete";
+char HMD_DBUS_CONF_HANSI_GROUP[PATH_LEN] = "hmd_dbus_config_hansi_reference_group";
+char HMD_DBUS_DELETE_HANSI_GROUP[PATH_LEN] = "hmd_dbus_delete_hansi_reference_group";
+char HMD_DBUS_CONF_SHOW_HANSI_REFERENCE_GROUP[PATH_LEN] = "hmd_dbus_show_hansi_reference_group";
+char HMD_DBUS_CONF_SHOW_GROUP_MEMBER[PATH_LEN] = "hmd_dbus_show_reference_group_member";
+char HMD_DBUS_ADD_HANSI_TO_REFERENCE_GROUP[PATH_LEN] = "hmd_dbus_add_hansi_to_reference_group";
+char HMD_DBUS_DEL_HANSI_FROM_REFERENCE_GROUP[PATH_LEN] = "hmd_dbus_del_hansi_from_reference_group";
+char HMD_DBUS_METHOD_HANSI_GROUP_SHOW_RUNNING[PATH_LEN] = "hmd_dbus_hansi_reference_group_show_running";
+char HMD_DBUS_SHOW_HANSI_GROUP[PATH_LEN] ="hmd_dbus_show_hansi_group";
 
 #endif
 

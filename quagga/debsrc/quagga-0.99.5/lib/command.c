@@ -2455,6 +2455,7 @@ DEFUN (config_exit,
 	case EBR_NODE:
 #endif
 	case HANSI_NODE:
+	case HANSI_REFERENCE_NODE:
 	case LOCAL_HANSI_NODE:
 #if (defined _D_WCPSS_ || defined _D_CC_)	
     case WLAN_NODE:
@@ -2758,6 +2759,7 @@ DEFUN (config_end,
 	case EBR_NODE:
 #endif
 	case HANSI_NODE:
+	case HANSI_REFERENCE_NODE:
 	case LOCAL_HANSI_NODE:
 #if (defined _D_WCPSS_ || defined _D_CC_)	
     case WLAN_NODE:
@@ -3953,6 +3955,7 @@ install_default (enum node_type node)
 	||node == EBR_NODE
 #endif
 	||node == HANSI_NODE
+	||node == HANSI_REFERENCE_NODE
 	||node == LOCAL_HANSI_NODE
 #if (defined _D_WCPSS_ || defined _D_CC_)	
 	||node == WLAN_NODE

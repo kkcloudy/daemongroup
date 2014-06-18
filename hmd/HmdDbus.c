@@ -373,6 +373,65 @@ DBusMessage * hmd_dbus_license_show_running(DBusConnection *conn, DBusMessage *m
 	showStr = NULL;
 	return reply;
 }
+DBusMessage * hmd_dbus_hansi_reference_group_show_running(DBusConnection *conn, DBusMessage *msg, void *user_data){
+	DBusMessage*		reply;	  
+	DBusMessageIter 	iter= {0};
+	DBusError			err;   		
+	int str_len = 0;
+	int totalLen = 0;
+	char *showStr = NULL,*cursor = NULL;
+	int group_num = 0;
+	int	slot_id=0;
+	int i;
+	int inst_id ;
+
+	dbus_error_init(&err);
+	if (!(dbus_message_get_args ( msg, &err,
+								DBUS_TYPE_UINT32,&group_num,
+								DBUS_TYPE_INVALID))){
+
+		printf("Unable to get input args\n");
+				
+		if (dbus_error_is_set(&err)) {
+			printf("%s raised: %s",err.name,err.message);
+			dbus_error_free(&err);
+		}
+		return NULL;
+	}
+
+	str_len = (MAX_GROUP_NUM * MAX_HANSI_NUM + 1) * MAX_STRLEN_NUM;
+
+	showStr = (char*)malloc(str_len);
+	if(NULL == showStr) {
+		hmd_syslog_debug_debug(HMD_DBUS,"hmd alloc memory fail when mirror show reference group information\n");
+		return NULL;
+	}
+	memset(showStr,0,str_len);
+	cursor = showStr;
+
+	if(group_num == hmd_group[group_num].group_id)
+    {
+        for(i = 0;i < MAX_HANSI_NUM;i++)
+    	{
+			if((hmd_group[group_num].hansi[i].slot_id) && (hmd_group[group_num].hansi[i].Inst_ID)){
+            slot_id = hmd_group[group_num].hansi[i].slot_id;
+            inst_id = hmd_group[group_num].hansi[i].Inst_ID;
+            totalLen += sprintf(cursor," add hansi %d-%d\n",slot_id,inst_id);
+            cursor = showStr + totalLen; 
+    		}
+    	}
+  	}
+
+	reply = dbus_message_new_method_return(msg);
+	dbus_message_iter_init_append (reply, &iter);	
+	dbus_message_iter_append_basic (&iter,
+								   DBUS_TYPE_STRING,
+								   &showStr);
+	free(showStr);
+	showStr = NULL;
+	return reply;
+}
+
 
 DBusMessage * hmd_dbus_hansi_show_running(DBusConnection *conn, DBusMessage *msg, void *user_data){
 	DBusMessage*		reply;	  
@@ -677,7 +736,8 @@ DBusMessage * hmd_dbus_config_hansi_depend_delete(DBusConnection *conn, DBusMess
     		HMD_BOARD[slot_id]->Hmd_Inst[ID]->depend_hansi[otherID].depend_slot_no = 0;
 
 		}
-		hmd_syslog_info("hansi %d-%d no exit depend hansi %d\n",slot_id,ID);
+		else
+		    hmd_syslog_info("hansi %d-%d no exit depend hansi\n",slot_id,ID);
 	}
 
 	reply = dbus_message_new_method_return(msg);
@@ -1143,11 +1203,584 @@ DBusMessage * hmd_dbus_interface_config_vrrp_global_switch_add_del_hansi(DBusCon
 	
 }
 
+DBusMessage * hmd_dbus_show_hansi_group(DBusConnection *conn, DBusMessage *msg, void *user_data)
+{
+	DBusMessage*		reply;	  
+	DBusMessageIter 	iter= {0};
+	DBusError			err;   		
+	int i,j;
+	int str_len = 0;
+	int totalLen = 0;
+	int slot_id = 0;
+	int inst_id = 0;
+	char *showStr = NULL,*cursor = NULL;
+
+
+	int ret = HMD_DBUS_SUCCESS;
+
+	dbus_error_init(&err);
+	if (!(dbus_message_get_args ( msg, &err,DBUS_TYPE_INVALID)))
+	{
+	    hmd_syslog_err("show hansi group number:Unable to get input args ");
+		if (dbus_error_is_set(&err)) {
+			hmd_syslog_err("show hansi group number %s raised: %s",err.name,err.message);
+			dbus_error_free(&err);
+		}
+		return NULL;
+	}
+	
+	if(isDistributed){
+		if(isMaster&&isActive){
+			ret = HMD_DBUS_SUCCESS;
+		}else{
+			ret = HMD_DBUS_PERMISSION_DENIAL;
+		}
+	}
+
+	str_len = (MAX_GROUP_NUM * MAX_HANSI_NUM + 1) * MAX_STRLEN_NUM;
+	showStr = (char*)malloc(str_len);
+	if(NULL == showStr) {
+		hmd_syslog_debug_debug(HMD_DBUS,"hmd alloc memory fail when mirror show reference group information\n");
+		return NULL;
+	}
+	memset(showStr,0,str_len);
+
+	cursor = showStr;
+
+  
+    if(ret == HMD_DBUS_SUCCESS){
+    	for(i = 1;i < MAX_GROUP_NUM;i++)
+    	{
+    		//hmd_syslog_info("######9999#####\n");
+
+    		//hmd_syslog_info("%s,line=%d.\n",__func__,__LINE__);
+    		if(hmd_group[i].group_id)
+			{
+				totalLen += sprintf(cursor," config hansi-reference %d\n",(hmd_group[i].group_id));
+            	cursor = showStr + totalLen; 
+        	    for(j = 0;j < MAX_HANSI_NUM;j++)
+        		{
+					if((hmd_group[i].hansi[j].slot_id) && (hmd_group[i].hansi[j].Inst_ID)){
+						slot_id = hmd_group[i].hansi[j].slot_id;
+                       	inst_id = hmd_group[i].hansi[j].Inst_ID;
+                        totalLen += sprintf(cursor," add hansi %d-%d\n",slot_id,inst_id);
+                    	cursor = showStr + totalLen; 
+        			}
+        		}
+        		totalLen += sprintf(cursor," exit\n");
+        		cursor = showStr + totalLen;
+    	    }
+        }
+    }
+
+	reply = dbus_message_new_method_return(msg);
+	if(NULL == reply){		
+		hmd_syslog_err("show_hansi_group dbus reply null!\n");
+		return reply;
+	}
+
+	dbus_message_iter_init_append (reply, &iter);	
+	dbus_message_iter_append_basic (&iter,
+								   DBUS_TYPE_STRING,
+								   &showStr);
+
+	free(showStr);
+	showStr = NULL;
+	return reply;
+  }
+
+DBusMessage * hmd_dbus_show_hansi_reference_group(DBusConnection *conn, DBusMessage *msg, void *user_data)
+{
+	DBusMessage*		reply;	  
+	DBusMessageIter 	iter= {0};
+	DBusError			err;   		
+	int i,j;
+	int str_len = 0;
+	int totalLen = 0;
+	char *showStr = NULL,*cursor = NULL;
+	int slot_id = 0;
+	int inst_id = 0;
+
+	int ret = HMD_DBUS_SUCCESS;
+
+	dbus_error_init(&err);
+	if (!(dbus_message_get_args ( msg, &err,DBUS_TYPE_INVALID)))
+	{
+	    hmd_syslog_err("show reference group information:Unable to get input args ");
+		if (dbus_error_is_set(&err)) {
+			hmd_syslog_err("show reference group information %s raised: %s",err.name,err.message);
+			dbus_error_free(&err);
+		}
+		return NULL;
+	}
+	
+	if(isDistributed){
+		if(isMaster&&isActive){
+			ret = HMD_DBUS_SUCCESS;
+
+		}else{
+			ret = HMD_DBUS_PERMISSION_DENIAL;
+		}
+	}
+
+	str_len = (MAX_GROUP_NUM * MAX_HANSI_NUM + 1) * MAX_STRLEN_NUM;
+	showStr = (char*)malloc(str_len);
+	if(NULL == showStr) {
+		hmd_syslog_debug_debug(HMD_DBUS,"hmd alloc memory fail when mirror show reference group information\n");
+		return NULL;
+	}
+	memset(showStr,0,str_len);
+
+	cursor = showStr;
+
+    if(ret == HMD_DBUS_SUCCESS){
+    	for(i = 1;i < MAX_GROUP_NUM;i++)
+    	{
+    		//hmd_syslog_info("######9999#####\n");
+
+    		//hmd_syslog_info("%s,line=%d.\n",__func__,__LINE__);
+    		if(hmd_group[i].group_id)
+			{
+			    totalLen += sprintf(cursor," reference-hansi-group %d\n",(hmd_group[i].group_id));
+    	        cursor = showStr + totalLen; 
+	            for(j = 0;j < MAX_HANSI_NUM;j++)
+				{
+                    if((hmd_group[i].hansi[j].slot_id) && (hmd_group[i].hansi[j].Inst_ID)){
+                        slot_id = hmd_group[i].hansi[j].slot_id;
+               		    inst_id = hmd_group[i].hansi[j].Inst_ID;
+                	    totalLen += sprintf(cursor," hansi %d-%d\n",slot_id,inst_id);
+            	        cursor = showStr + totalLen; 
+					}
+				}
+			}
+    	}
+    }
+	
+	reply = dbus_message_new_method_return(msg);
+	dbus_message_iter_init_append (reply, &iter);	
+	dbus_message_iter_append_basic (&iter,
+								   DBUS_TYPE_STRING,
+								   &showStr);
+
+	free(showStr);
+	showStr = NULL;
+
+	return reply;
+}
+DBusMessage * hmd_dbus_show_reference_group_member(DBusConnection *conn, DBusMessage *msg, void *user_data)
+{
+	DBusMessage*		reply;	  
+	DBusMessageIter 	iter= {0};
+	DBusError			err;   		
+	unsigned int group_id = 0;
+	int i;
+	int str_len = 0;
+	int totalLen = 0;
+	char *showStr = NULL,*cursor = NULL;
+	int slot_id = 0;
+	int inst_id = 0;
+
+	int ret = HMD_DBUS_SUCCESS;
+
+	dbus_error_init(&err);
+	if (!(dbus_message_get_args ( msg, &err,
+								DBUS_TYPE_UINT32,&group_id,
+								DBUS_TYPE_INVALID))){
+	    hmd_syslog_err("show reference group member:Unable to get input args ");
+		if (dbus_error_is_set(&err)) {
+			hmd_syslog_err("show reference group member %s raised: %s",err.name,err.message);
+			dbus_error_free(&err);
+		}
+		return NULL;
+	}
+	
+	if(isDistributed){
+		if(isMaster&&isActive){
+			ret = HMD_DBUS_SUCCESS;
+		}else{
+			ret = HMD_DBUS_PERMISSION_DENIAL;
+		}
+	}
+
+	str_len = MAX_HANSI_NUM * MAX_STRLEN_NUM;
+	showStr = (char*)malloc(str_len);
+	if(NULL == showStr) {
+		hmd_syslog_debug_debug(HMD_DBUS,"hmd alloc memory fail when mirror show reference group member\n");
+		return NULL;
+	}
+	memset(showStr,0,str_len);
+
+	cursor = showStr;
+    if(ret == HMD_DBUS_SUCCESS){
+    	for(i = 0;i < MAX_HANSI_NUM;i++)
+    	{
+    		//hmd_syslog_info("######9999#####\n");
+
+    		//hmd_syslog_info("%s,line=%d.\n",__func__,__LINE__);
+    		if(hmd_group[group_id].hansi[i].Inst_ID)
+			{
+                slot_id = hmd_group[group_id].hansi[i].slot_id;
+       		    inst_id = hmd_group[group_id].hansi[i].Inst_ID;
+        	    totalLen += sprintf(cursor," hansi %d-%d\n",slot_id,inst_id);
+    	        cursor = showStr + totalLen; 
+			}
+    	}
+    }
+	
+	reply = dbus_message_new_method_return(msg);
+	dbus_message_iter_init_append (reply, &iter);	
+	dbus_message_iter_append_basic (&iter,
+								   DBUS_TYPE_STRING,
+								   &showStr);
+
+	free(showStr);
+	showStr = NULL;
+
+	return reply;
+}
+
+DBusMessage * hmd_dbus_del_hansi_from_reference_group(DBusConnection *conn, DBusMessage *msg, void *user_data)
+{
+
+	DBusMessage* reply;
+	unsigned int slot_id = 0;
+	unsigned int group_id = 0;
+	unsigned int ID = 0;
+	unsigned int i;
+	unsigned int flag = 0;
+
+	DBusError err;
+	int ret = HMD_DBUS_SUCCESS;
+	
+	dbus_error_init(&err);
+	
+	if (!(dbus_message_get_args ( msg, &err,
+							 DBUS_TYPE_UINT32,&group_id,
+							 DBUS_TYPE_UINT32,&slot_id,
+							 DBUS_TYPE_UINT32,&ID,
+							 DBUS_TYPE_INVALID))) 
+	{
+	    hmd_syslog_err("delete hansi from reference group:Unable to get input args ");
+		if (dbus_error_is_set(&err)){
+			hmd_syslog_err("delet hansi from reference group %s raised: %s",err.name,err.message);
+			dbus_error_free(&err);
+		}
+		return NULL;
+	}
+
+	//hmd_syslog_info("reference group number is %d, delete hansi%d-%d\n",group_id,slot_id,ID);
+	if(isDistributed){
+		if(isMaster&&isActive){
+			ret = HMD_DBUS_SUCCESS;
+		}else{
+			ret = HMD_DBUS_PERMISSION_DENIAL;
+		}
+	}
+
+	if((ret == HMD_DBUS_SUCCESS)&&(slot_id < MAX_SLOT_NUM)&&(HMD_BOARD[slot_id] != NULL)){
+		
+   		//hmd_syslog_info("@@@@555@@@@\n");
+   		//hmd_syslog_info("hmd_group[%d].group_id is %d\n",group_id,(hmd_group[group_id].group_id));
+
+		if(group_id == hmd_group[group_id].group_id){
+
+    		if(HMD_BOARD[slot_id] && HMD_BOARD[slot_id]->Hmd_Inst[ID]){
+
+    			HMD_BOARD[slot_id]->Hmd_Inst[ID]->group_id = 0;
+    		}
+
+        	//hmd_syslog_info("@@@@666@@@@\n");
+            for(i = 0;i < MAX_HANSI_NUM;i++)
+            {
+    			//hmd_syslog_info("######9999#####\n");
+                //hmd_syslog_info("%s,line=%d.\n",__func__,__LINE__);
+                if((ID == hmd_group[group_id].hansi[i].Inst_ID) && (slot_id == hmd_group[group_id].hansi[i].slot_id))
+                {
+        		    //hmd_group[group_id].group_id = 0;
+            		hmd_group[group_id].hansi[i].Inst_ID = 0;
+                	hmd_group[group_id].hansi[i].slot_id= 0;
+					flag = 1;
+                	break;
+            	}
+             }
+			if(flag == 0){
+        		hmd_syslog_err("hansi %d-%d is not in group %d \n",slot_id,ID,group_id);
+        		ret = HMD_DBUS_HANSI_NOT_IN_GROUP;
+			}
+			
+		}
+	}
+	else if (ret == HMD_DBUS_SUCCESS){
+
+            ret = HMD_DBUS_SLOT_ID_NOT_EXIST;
+		}
+	
+	reply = dbus_message_new_method_return(msg);
+	if(NULL == reply){		
+		hmd_syslog_err("vrrp set hansi profile dbus reply null!\n");
+		return reply;
+	}
+		
+	dbus_message_append_args(reply,
+							 DBUS_TYPE_UINT32,&ret,
+							 DBUS_TYPE_INVALID);
+	
+	return reply;
+
+}
+
+DBusMessage * hmd_dbus_add_hansi_to_reference_group(DBusConnection *conn, DBusMessage *msg, void *user_data){
+
+	DBusMessage* reply;
+	unsigned int slot_id = 0;
+	unsigned int group_id = 0;
+	unsigned int ID = 0;
+	unsigned int i,j;
+
+	DBusError err;
+	int ret = HMD_DBUS_SUCCESS;
+	
+	dbus_error_init(&err);
+	
+	if (!(dbus_message_get_args ( msg, &err,
+							 DBUS_TYPE_UINT32,&group_id,
+							 DBUS_TYPE_UINT32,&slot_id,
+							 DBUS_TYPE_UINT32,&ID,
+							 DBUS_TYPE_INVALID))) 
+	{
+	    hmd_syslog_err("add hansi to reference group:Unable to get input args ");
+		if (dbus_error_is_set(&err)) {
+			hmd_syslog_err("add hansi to reference group %s raised: %s",err.name,err.message);
+			dbus_error_free(&err);
+		}
+		return NULL;
+	}
+
+	//hmd_syslog_info("reference group number is %d, addition hansi%d-%d\n",group_id,slot_id,ID);
+
+	/*The hansi has been in the other groups*/
+    if((slot_id < MAX_SLOT_NUM)&&(HMD_BOARD[slot_id] != NULL)){
+
+        //hmd_syslog_info("@@@7777@@@\n");
+		for(i = 0;i < MAX_HANSI_NUM;i++)
+        {
+        	//hmd_syslog_info("######9999#####\n");
+       		//hmd_syslog_info("%s,line=%d.\n",__func__,__LINE__);
+        	if((ID == hmd_group[group_id].hansi[i].Inst_ID) && (slot_id == hmd_group[group_id].hansi[i].slot_id))
+    		{
+    			hmd_syslog_info("hansi %d-%d has been in group %d \n",slot_id,ID,group_id);
+    			hmd_syslog_info("The same hansi cannot appear in multiple groups\n");
+
+    			ret = HMD_DBUS_HANSI_AT_OTHER_GROUP;
+          		goto finish;
+		    }
+        }
+	}
+
+	if(isDistributed){
+		if(isMaster&&isActive){
+			ret = HMD_DBUS_SUCCESS;
+		}else{
+			ret = HMD_DBUS_PERMISSION_DENIAL;
+		}
+	}
+	if((ret == HMD_DBUS_SUCCESS)&&(slot_id < MAX_SLOT_NUM)&&(HMD_BOARD[slot_id] != NULL)){
+
+    	if((slot_id < MAX_SLOT_NUM)&&(HMD_BOARD[slot_id] != NULL)){
+            // check hansi whether in the other groups
+        	for(i = 1;i < MAX_GROUP_NUM;i++)
+        	{
+        		if((hmd_group[i].group_id) && (group_id != hmd_group[i].group_id))
+    			{
+    	            for(j = 0;j < MAX_HANSI_NUM;j++)
+    				{
+                        if((slot_id == hmd_group[i].hansi[j].slot_id) && (ID == hmd_group[i].hansi[j].Inst_ID)){
+    						ret = HMD_DBUS_HANSI_AT_OTHER_GROUP;
+                    		goto finish;
+    					}
+    				}
+    			}
+        	}
+			
+            if( HMD_BOARD[slot_id] && HMD_BOARD[slot_id]->Hmd_Inst[ID]){
+				
+				HMD_BOARD[slot_id]->Hmd_Inst[ID]->group_id = group_id;
+				hmd_syslog_info("HMD_BOARD[%d]->Hmd_Inst[%d]->group_id is %d\n",slot_id,ID,(HMD_BOARD[slot_id]->Hmd_Inst[ID]->group_id));
+			}
+			for(i = 0;i < MAX_HANSI_NUM;i++)
+    		{
+				if((!hmd_group[group_id].hansi[i].slot_id) && (!hmd_group[group_id].hansi[i].Inst_ID))
+    			{
+					hmd_group[group_id].group_id = group_id;
+                    hmd_group[group_id].hansi[i].Inst_ID = ID;
+    			    hmd_group[group_id].hansi[i].slot_id= slot_id;
+						
+					hmd_syslog_info("hmd_group[%d].group id is %d\n",group_id,hmd_group[group_id].group_id);
+        			hmd_syslog_info("hmd_group[%d].hansi[%d].Inst_ID is %d\n",group_id,i,(hmd_group[group_id].hansi[i].Inst_ID));
+        			hmd_syslog_info("hmd_group[%d].hansi[%d].slot_id is %d\n",group_id,i,(hmd_group[group_id].hansi[i].slot_id));
+
+   					break;
+   				}
+   			}
+    	}
+	}
+	else if (ret == HMD_DBUS_SUCCESS){
+
+            ret = HMD_DBUS_SLOT_ID_NOT_EXIST;
+		}
+
+finish:
+	reply = dbus_message_new_method_return(msg);
+	if(NULL == reply){		
+		hmd_syslog_err("vrrp set hansi profile dbus reply null!\n");
+		return reply;
+	}
+		
+	dbus_message_append_args(reply,
+							 DBUS_TYPE_UINT32,&ret,
+							 DBUS_TYPE_INVALID);
+	
+	return reply;
+
+}
+
+DBusMessage * hmd_dbus_delete_hansi_reference_group(DBusConnection *conn, DBusMessage *msg, void *user_data)
+{
+
+	DBusMessage* reply;
+	unsigned int group_num = 0;
+	unsigned int i,j;
+	DBusError err;
+	int ret = HMD_DBUS_SUCCESS;
+	
+	dbus_error_init(&err);
+	
+	if (!(dbus_message_get_args ( msg, &err,
+							 DBUS_TYPE_UINT32,&group_num,
+							 DBUS_TYPE_INVALID))) 
+	{
+	    hmd_syslog_err("delete hansi reference group:Unable to get input args ");
+		if (dbus_error_is_set(&err)) {
+			hmd_syslog_err("delete hansi reference group %s raised: %s",err.name,err.message);
+			dbus_error_free(&err);
+		}
+		return NULL;
+	}
+
+	hmd_syslog_info("dbus message get arguments is %d\n",group_num);
+	
+	if(group_num == 0){
+		return NULL;
+	}
+	
+	if(isDistributed){
+		if(isMaster&&isActive)
+		{
+			ret = HMD_DBUS_SUCCESS;
+		}
+		else
+		{
+			ret = HMD_DBUS_PERMISSION_DENIAL;
+		}
+	}
+	
+	if(ret == HMD_DBUS_SUCCESS){
+		for(i = 1;i < MAX_GROUP_NUM;i++)
+		{
+			if(group_num == hmd_group[i].group_id){
+            	hmd_group[i].group_id = 0;
+    			for(j=0;j < MAX_HANSI_NUM;j++)
+    			{
+                    if((hmd_group[i].hansi[j].slot_id) && (hmd_group[i].hansi[j].slot_id))
+    				{
+    					hmd_group[i].hansi[j].slot_id = 0;
+    					hmd_group[i].hansi[j].Inst_ID = 0;
+    				}
+    			}
+    		}
+    		else if(i == MAX_GROUP_NUM-1){
+				ret = HMD_DBUS_NO_THIS_GROUP;
+    		}
+    	}
+	}
+
+	reply = dbus_message_new_method_return(msg);
+	if(NULL == reply){		
+		hmd_syslog_err("delete hansi reference group dbus reply null!\n");
+		return reply;
+	}
+		
+	dbus_message_append_args(reply,
+							 DBUS_TYPE_UINT32,&ret,
+							 DBUS_TYPE_INVALID);
+	return reply;
+	
+}
+DBusMessage * hmd_dbus_config_hansi_reference_group(DBusConnection *conn, DBusMessage *msg, void *user_data){
+
+	DBusMessage* reply;
+	unsigned int group_num = 0;
+	DBusError err;
+	int ret = HMD_DBUS_SUCCESS;
+	
+	dbus_error_init(&err);
+	
+	if (!(dbus_message_get_args ( msg, &err,
+							 DBUS_TYPE_UINT32,&group_num,
+							 DBUS_TYPE_INVALID))) 
+	{
+	    hmd_syslog_err("config hansi reference group:Unable to get input args ");
+		if (dbus_error_is_set(&err)) {
+			hmd_syslog_err("set hansi reference group %s raised: %s",err.name,err.message);
+			dbus_error_free(&err);
+		}
+		return NULL;
+	}
+
+	hmd_syslog_info("dbus message get arguments is %d\n",group_num);
+	
+	if(group_num == 0){
+		return NULL;
+	}
+	
+	if(isDistributed){
+		if(isMaster&&isActive)
+		{
+			ret = HMD_DBUS_SUCCESS;
+		}
+		else
+		{
+			ret = HMD_DBUS_PERMISSION_DENIAL;
+		}
+	}
+	
+	if(ret == HMD_DBUS_SUCCESS){
+		if(!hmd_group[group_num].group_id ){
+        	hmd_group[group_num].group_id = group_num;
+		}
+	}
+
+	hmd_syslog_info("config reference group number is %d\n",(hmd_group[group_num].group_id));
+
+	reply = dbus_message_new_method_return(msg);
+	if(NULL == reply){		
+		hmd_syslog_err("vrrp set hansi group dbus reply null!\n");
+		return reply;
+	}
+		
+	dbus_message_append_args(reply,
+							 DBUS_TYPE_UINT32,&ret,
+							 DBUS_TYPE_INVALID);
+	return reply;
+	
+}
+	
 DBusMessage * hmd_dbus_interface_config_remote_hansi(DBusConnection *conn, DBusMessage *msg, void *user_data){
 
 	DBusMessage* reply;
 	unsigned int ID = 0;
 	unsigned int slot_id = 0;
+	int i,j;
 	DBusError err;
 	int ret = HMD_DBUS_SUCCESS;
 	int local_id = 0;	
@@ -1187,6 +1820,17 @@ DBusMessage * hmd_dbus_interface_config_remote_hansi(DBusConnection *conn, DBusM
 				HMD_BOARD[slot_id]->Hmd_Inst[ID]->slot_no = slot_id;
 				HMD_BOARD[slot_id]->Hmd_Inst[ID]->InstState = 0;
 				HMD_BOARD[slot_id]->Hmd_Inst[ID]->Inst_ID = ID;
+
+				if(!(HMD_BOARD[slot_id]->Hmd_Inst[ID]->group_id)){
+                   	for(i=1; i<MAX_GROUP_NUM;i++){
+    					for(j=0;j<MAX_HANSI_NUM;j++){
+                            if((slot_id == hmd_group[i].hansi[j].slot_id)&&(ID == hmd_group[i].hansi[j].Inst_ID)){
+        						HMD_BOARD[slot_id]->Hmd_Inst[ID]->group_id = hmd_group[i].group_id;
+    						}
+    					}
+                   	}
+                }
+				
 				/*flag 1 hansi is deleting,0 other*/
 				HMD_BOARD[slot_id]->Hmd_Inst[ID]->delete_flag = 0;
 				hmd_pid_write_v3(slot_id,ID,0);
@@ -5400,7 +6044,31 @@ static DBusHandlerResult hmd_dbus_message_handler (DBusConnection *connection, D
 		else if (dbus_message_is_method_call(message,HMD_DBUS_INTERFACE,HMD_DBUS_CONF_HANSI_DEPEND_DELETE)){
 		reply = hmd_dbus_config_hansi_depend_delete(connection, message, user_data);
 		}
-
+		else if (dbus_message_is_method_call(message,HMD_DBUS_INTERFACE,HMD_DBUS_CONF_HANSI_GROUP)){
+		reply = hmd_dbus_config_hansi_reference_group(connection, message, user_data);
+		}
+		else if (dbus_message_is_method_call(message,HMD_DBUS_INTERFACE,HMD_DBUS_DELETE_HANSI_GROUP)){
+		reply = hmd_dbus_delete_hansi_reference_group(connection, message, user_data);
+		}
+		else if (dbus_message_is_method_call(message,HMD_DBUS_INTERFACE,HMD_DBUS_CONF_SHOW_GROUP_MEMBER)){
+		reply = hmd_dbus_show_reference_group_member(connection, message, user_data);
+		}		
+		else if (dbus_message_is_method_call(message,HMD_DBUS_INTERFACE,HMD_DBUS_ADD_HANSI_TO_REFERENCE_GROUP)){
+		reply = hmd_dbus_add_hansi_to_reference_group(connection, message, user_data);
+		}
+		else if (dbus_message_is_method_call(message,HMD_DBUS_INTERFACE,HMD_DBUS_CONF_SHOW_HANSI_REFERENCE_GROUP)){
+		reply = hmd_dbus_show_hansi_reference_group(connection, message, user_data);
+		}
+		else if (dbus_message_is_method_call(message,HMD_DBUS_INTERFACE,HMD_DBUS_DEL_HANSI_FROM_REFERENCE_GROUP)){
+		reply = hmd_dbus_del_hansi_from_reference_group(connection, message, user_data);
+		}
+		else if(dbus_message_is_method_call(message,HMD_DBUS_INTERFACE,HMD_DBUS_METHOD_HANSI_GROUP_SHOW_RUNNING)){
+			reply = hmd_dbus_hansi_reference_group_show_running(connection,message,user_data);
+		}
+		else if(dbus_message_is_method_call(message, HMD_DBUS_INTERFACE, HMD_DBUS_SHOW_HANSI_GROUP)){
+            reply = hmd_dbus_show_hansi_group(connection,message,user_data);
+		}
+		
 	}
 	if (reply) {
 		dbus_connection_send (connection, reply, NULL);

@@ -61,7 +61,14 @@ extern char HMD_DBUS_CONF_SET_AUTO_SYNC_CONFIG_SWITCH[PATH_LEN];
 extern char HMD_DBUS_CONF_SHOW_AUTO_SYNC_CONFIG_STATE[PATH_LEN];
 extern char HMD_DBUS_CONF_HANSI_DEPEND[PATH_LEN];           /*niehy add 2014-5-12 for hansi linkage*/
 extern char HMD_DBUS_CONF_HANSI_DEPEND_DELETE[PATH_LEN];    /*niehy add 2014-5-12 for hansi linkage*/
-
+extern char HMD_DBUS_CONF_HANSI_GROUP[PATH_LEN];
+extern char HMD_DBUS_DELETE_HANSI_GROUP[PATH_LEN];
+extern char HMD_DBUS_CONF_SHOW_GROUP_MEMBER[PATH_LEN];
+extern char HMD_DBUS_CONF_SHOW_HANSI_REFERENCE_GROUP[PATH_LEN];
+extern char HMD_DBUS_METHOD_HANSI_GROUP_SHOW_RUNNING[PATH_LEN];
+extern char HMD_DBUS_ADD_HANSI_TO_REFERENCE_GROUP[PATH_LEN];
+extern char HMD_DBUS_DEL_HANSI_FROM_REFERENCE_GROUP[PATH_LEN];
+extern char HMD_DBUS_SHOW_HANSI_GROUP[PATH_LEN];
 
 enum hmd_dbus_result_no_e {
 	HMD_DBUS_SUCCESS,
@@ -90,7 +97,10 @@ enum hmd_dbus_result_no_e {
 	HMD_DBUS_DELETING_HANSI,
 	HMD_DBUS_DHCP_RESTART_ALREADY_ENABLE, //DHCP RESTART already open supf add 20130730
 	HMD_DBUS_DHCP_RESTART_ALREADY_DISABLE,
-	HMD_DBUS_HANSI_ID_EXIST//zhangchunlong add 20130819 for vrrp global switch
+	HMD_DBUS_HANSI_ID_EXIST,//zhangchunlong add 20130819 for vrrp global switch
+	HMD_DBUS_HANSI_AT_OTHER_GROUP,   //niehy add 20140523 for hansi reference group
+	HMD_DBUS_HANSI_NOT_IN_GROUP,
+	HMD_DBUS_NO_THIS_GROUP,
 };
 #define DCLI_HMD_CHECK_FAILED	(-1)
 #define DCLI_HMD_CREATED		(1)		/* HMD have created.		*/
