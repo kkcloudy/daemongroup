@@ -1181,6 +1181,7 @@ int signal_sta_leave(unsigned char mac[6],unsigned int g_rdio,unsigned int g_bss
 	return 0;
 }
 
+#if 0
 int signal_sta_come(unsigned char mac[MAC_LEN],unsigned int g_rdio,unsigned int g_bssindex,unsigned char wlanid,unsigned char rssi){
 /*	TableMsg msg;
 	int len;
@@ -1280,8 +1281,123 @@ int signal_sta_come(unsigned char mac[MAC_LEN],unsigned int g_rdio,unsigned int 
 	netid = NULL;
 	return 0;
 }
+#else
+int signal_sta_come
+(
+	struct asd_data *data,
+	struct sta_info  *sta
+)
+{
+	
+	unsigned char traplevel = 2;
+	unsigned int wtpid = 0;
+	unsigned int vrrp_id = vrrid;
+	unsigned int bssindex = 0;
+	unsigned char wlanid = 0;
+	unsigned char channel = 0;
+	unsigned char sta_mac[MAC_LEN] = {0};
+	unsigned char wtp_mac[MAC_LEN] = {0};
+	unsigned char bssid[MAC_LEN] = {0};
+	char *sn = NULL;
+	char *netid = NULL;
 
+	unsigned int local_id = local;
 
+	ASD_CHECK_POINTER_RET(data,0);
+	ASD_CHECK_POINTER_RET(sta,0);
+	
+	if (gasdtrapflag < traplevel)
+	{
+		asd_printf(ASD_DEFAULT, MSG_DEBUG,"gasdtrapflag %d traplevel %d no trap\n",
+				gasdtrapflag,
+				traplevel);
+		return 0;
+	}
+
+	DBusMessage *query = NULL; 
+	DBusError err;
+	asd_printf(ASD_DBUS,MSG_DEBUG,"sta come start\n");
+	
+	wtpid=data->Radio_G_ID/L_RADIO_NUM;
+	bssindex = data->BSSIndex;
+	wlanid = data->WlanID;
+	os_memcpy(bssid, data->own_addr,MAC_LEN );
+	channel = sta->channel;
+		
+	ASD_CHECK_POINTER_RET(ASD_WTP_AP[wtpid],0);
+	
+	os_memcpy(sta_mac, sta->addr, MAC_LEN);
+	
+	os_memcpy(wtp_mac, ASD_WTP_AP[wtpid]->WTPMAC, MAC_LEN);
+
+	sn = (char *)os_zalloc(NAS_IDENTIFIER_NAME);
+	os_memcpy(sn, ASD_WTP_AP[wtpid]->WTPSN, 
+						strlen(ASD_WTP_AP[wtpid]->WTPSN));
+	
+	netid = (char *)os_zalloc(WTP_NETID_LEN);
+	os_memcpy(netid, ASD_WTP_AP[wtpid]->NETID, WTP_NETID_LEN);
+
+	unsigned char rssi = sta->rssi;
+	
+	query = dbus_message_new_signal(ASD_DBUS_OBJPATH, "aw.trap",
+								ASD_DBUS_SIG_STA_COME);
+
+	dbus_error_init(&err);
+
+	dbus_message_append_args(query,
+					DBUS_TYPE_BYTE,&sta_mac[0],
+					DBUS_TYPE_BYTE,&sta_mac[1],
+					DBUS_TYPE_BYTE,&sta_mac[2],
+					DBUS_TYPE_BYTE,&sta_mac[3],
+					DBUS_TYPE_BYTE,&sta_mac[4],
+					DBUS_TYPE_BYTE,&sta_mac[5],
+					DBUS_TYPE_UINT32,&wtpid,
+					DBUS_TYPE_UINT32,&bssindex,
+					DBUS_TYPE_BYTE,&wlanid,
+					DBUS_TYPE_STRING,&sn,
+					DBUS_TYPE_BYTE,&wtp_mac[0],
+					DBUS_TYPE_BYTE,&wtp_mac[1],
+					DBUS_TYPE_BYTE,&wtp_mac[2],
+					DBUS_TYPE_BYTE,&wtp_mac[3],
+					DBUS_TYPE_BYTE,&wtp_mac[4],
+					DBUS_TYPE_BYTE,&wtp_mac[5],
+					DBUS_TYPE_STRING,&netid, 
+					DBUS_TYPE_UINT32,&vrrp_id,
+					DBUS_TYPE_BYTE, &rssi,
+					DBUS_TYPE_UINT32,&local_id,
+					DBUS_TYPE_INVALID);
+
+	dbus_connection_send (asd_dbus_connection3, query, NULL);
+
+	dbus_message_unref(query);
+
+	asd_printf(ASD_DEFAULT, MSG_DEBUG, "%s: sta roam to trap. sta "MACSTR" "
+		"wtpid %d bssindex %d wlanid %d wtp "MACSTR" vrrpid %d channel %d sn %s netid %s bssid "MACSTR" \n",
+				__func__,
+				MAC2STR(sta_mac),
+				wtpid,
+				bssindex,
+				wlanid,
+				MAC2STR(wtp_mac),
+				vrrp_id,
+				channel,
+				sn,
+				netid,
+				MAC2STR(bssid));
+
+	if(sn != NULL)
+	{
+		os_free(sn);
+		sn=NULL;
+	}
+	if(netid != NULL)
+	{
+		os_free(netid);   
+		netid = NULL;
+	}
+	return 0;
+}
+#endif
 int signal_wtp_deny_sta(unsigned int wtpid){
 /*
 	TableMsg msg;

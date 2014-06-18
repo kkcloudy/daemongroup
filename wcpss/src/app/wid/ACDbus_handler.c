@@ -121,6 +121,9 @@ unsigned char gessidfilterflag = 0;
 extern unsigned int sample_infor_interval;
 extern unsigned char gWIDLOGHN;//qiuchen
 int wid_dbug_trap_ssid_key_conflict(unsigned int wtpid,unsigned char radio_l_id, unsigned char wlan1, unsigned char wlan2);
+extern WID_WIFI_LOCATE_CONFIG_GROUP *WIFI_LOCATE_CONFIG_GROUP[WIFI_LOCATE_CONFIG_GROUP_SIZE];
+extern unsigned int ip_long2str(unsigned long ipAddress,unsigned char **buff);
+
 
 #define CFDISK_MIN_MEM (1000)
 #define SYSTEM_MIN_MEM (300000)
@@ -35030,3 +35033,715 @@ int read_board_ap_max_counter(unsigned int * count)
 	return 0;
 }
 /*fengwenchao add end*/
+unsigned int wifi_locate_find_radio_by_wtpid
+(
+	unsigned int wtpid, 
+	unsigned int *radioid
+)
+{
+	unsigned int index = 0;
+	
+	/*find 2.4G radio or 5.8G*/
+	/*next-step*/
+
+	if (AC_WTP[wtpid] != NULL
+		&& AC_WTP[wtpid]->WTP_Radio[index] == NULL)
+	{
+		wid_syslog_debug_debug(WID_DEFAULT,
+								"%s: wtpid %d C_WTP[wtpid]->WTP_Radio[index] == NULL\n",
+								__func__, wtpid);
+	}
+	
+	if(AC_WTP[wtpid]!=NULL&&AC_WTP[wtpid]->WTP_Radio[index]!=NULL)
+	{
+		*radioid = AC_WTP[wtpid]->WTP_Radio[index]->Radio_G_ID;
+		wid_syslog_debug_debug(WID_DEFAULT,
+								"%s: wtpid %d match radioid %d \n",
+								__func__, wtpid, *radioid);
+	}
+	
+	return 0;
+}
+
+unsigned int wifi_locate_find_5_8G_radio_by_wtpid
+(
+	unsigned int wtpid, 
+	unsigned int *radioid
+)
+{
+	unsigned int index = 1;
+	
+	/*find 2.4G radio or 5.8G*/
+	/*next-step*/
+	
+	if(AC_WTP[wtpid]!=NULL&&AC_WTP[wtpid]->WTP_Radio[index]!=NULL)
+	{
+		if(AC_WTP[wtpid]->WTP_Radio[index]->Radio_Type == IEEE80211_11A
+			||AC_WTP[wtpid]->WTP_Radio[index]->Radio_Type == (IEEE80211_11A|IEEE80211_11N)
+			||AC_WTP[wtpid]->WTP_Radio[index]->Radio_Type == (IEEE80211_11A|IEEE80211_11N|IEEE80211_11AN))
+		{
+			*radioid = AC_WTP[wtpid]->WTP_Radio[index]->Radio_G_ID;
+			wid_syslog_debug_debug(WID_DEFAULT,
+								"%s: wtpid %d match 5.8G radioid %d radiotype %d\n",
+								__func__, wtpid, *radioid,
+								AC_WTP[wtpid]->WTP_Radio[index]->Radio_Type);
+		}
+		else
+		{
+			wid_syslog_debug_debug(WID_DEFAULT,"%s: wtpid %d radioid %d type %d not 5.8G\n",
+								__func__, wtpid, AC_WTP[wtpid]->WTP_Radio[index]->Radio_G_ID,
+								AC_WTP[wtpid]->WTP_Radio[index]->Radio_Type);
+			return -1;
+		}
+
+	}
+	
+	return 0;
+}
+
+unsigned int change_all_wtp_config
+(
+	unsigned char *wtp_mac
+)
+{
+	unsigned char mac[MAC_LEN] = {0};
+	memset(mac, 255, sizeof(mac));
+	if (0== memcmp(wtp_mac, mac,sizeof(MAC_LEN)))
+	{
+		wid_syslog_debug_debug(WID_DEFAULT,
+						"%s: "MACSTR" \n",
+						__func__, MAC2STR(wtp_mac));
+		return 0;
+	}
+	else
+	{
+		return 1;
+	}
+}
+
+unsigned int wid_radio_bind_wifi_locate_config_group
+(
+	unsigned int radioid,
+	unsigned int groupid
+)
+{
+
+	wid_syslog_debug_debug(WID_DEFAULT, "%s: before bind radioid %d groupid %d\n",
+							__func__, 
+							radioid,
+							groupid);	
+	radioList *radio_node = NULL;
+	radioList *iterator1 = NULL;
+	
+	if ((WIFI_LOCATE_CONFIG_GROUP_BEGIN > groupid) 
+		|| (WIFI_LOCATE_CONFIG_GROUP_SIZE <= groupid))
+	{
+		return CONFIG_GROUP_ID_THAN_MAX;
+	}
+
+
+	WID_CHECK_POINTER_RET(AC_RADIO[radioid], RADIO_ID_NOT_EXIST);
+	WID_CHECK_POINTER_RET(WIFI_LOCATE_CONFIG_GROUP[groupid], CONFIG_GROUP_NOT_EXIST);
+
+	
+	if(AC_RADIO[radioid]->scanlocate_group.wifi_locate.groupid != 0)
+	{
+		wid_syslog_debug_debug(WID_DEFAULT, "%s: radioid %d has binded groupid %d\n",
+							__func__, 
+							radioid,
+							AC_RADIO[radioid]->scanlocate_group.wifi_locate.groupid);	
+		
+		return CONFIG_GROUP_BINDED_RADIO;
+	}
+	
+	radio_node = (radioList *)malloc(sizeof(radioList));
+	if (NULL == radio_node)
+	{
+		WID_MALLOC_ERR();
+		return MALLOC_ERROR;
+	}
+	memset(radio_node, 0 ,sizeof(radioList));
+	
+	radio_node->radioid = radioid;
+	radio_node->next = NULL;
+	
+	if(NULL == WIFI_LOCATE_CONFIG_GROUP[groupid]->radiolist)
+	{
+		WIFI_LOCATE_CONFIG_GROUP[groupid]->radiolist = radio_node;
+	}
+	else
+	{
+		radio_node->next = WIFI_LOCATE_CONFIG_GROUP[groupid]->radiolist;
+		WIFI_LOCATE_CONFIG_GROUP[groupid]->radiolist = radio_node;
+	}
+	
+	AC_RADIO[radioid]->scanlocate_group.wifi_locate.groupid = groupid;
+	WIFI_LOCATE_CONFIG_GROUP[groupid]->radio_count++;
+	
+	wid_syslog_debug_debug(WID_DEFAULT, "%s: radioid %d bind groupid %d\n",
+							__func__, 
+							radioid,
+							groupid);	
+	
+	iterator1 = WIFI_LOCATE_CONFIG_GROUP[groupid]->radiolist; 
+	
+	while(iterator1!= NULL)
+	{
+		wid_syslog_debug_debug(WID_DEFAULT, "%s:group %d contaio radioid %d next %d radio_count %d\n",
+							__func__, 
+							groupid,
+							iterator1->radioid,
+							iterator1->next,
+							WIFI_LOCATE_CONFIG_GROUP[groupid]->radio_count);	
+		iterator1 = iterator1->next;
+	}
+	return 0;
+}
+
+unsigned int wid_radio_unbind_wifi_locate_config_group
+(
+	unsigned int radioid,
+	unsigned int groupid
+)
+{
+	wid_syslog_debug_debug(WID_DEFAULT, "%s: \n",__func__);
+	
+	radioList *radio_node = NULL;
+	radioList *iterator = NULL;
+	radioList *iterator1 = NULL;
+
+	if ((WIFI_LOCATE_CONFIG_GROUP_BEGIN > groupid)
+		|| (WIFI_LOCATE_CONFIG_GROUP_SIZE <= groupid))
+	{
+		return CONFIG_GROUP_ID_THAN_MAX;
+	}
+
+
+	WID_CHECK_POINTER_RET(AC_RADIO[radioid], RADIO_ID_NOT_EXIST);
+	WID_CHECK_POINTER_RET(WIFI_LOCATE_CONFIG_GROUP[groupid], CONFIG_GROUP_NOT_EXIST);
+
+	if(AC_RADIO[radioid]->scanlocate_group.wifi_locate.groupid == 0
+		||AC_RADIO[radioid]->scanlocate_group.wifi_locate.groupid != groupid)
+	{
+		wid_syslog_debug_debug(WID_DEFAULT, "%s: err groupid  %d In radio %d \n",__func__,
+								groupid, radioid,
+								AC_RADIO[radioid]->scanlocate_group.wifi_locate.groupid);
+		return CONFIG_GROUP_NOT_EXIST;
+	}
+	
+	iterator = WIFI_LOCATE_CONFIG_GROUP[groupid]->radiolist;
+
+	if(NULL == iterator)
+	{
+		wid_syslog_debug_debug(WID_DEFAULT, "%s: err groupid  radiolist NULL \n",__func__,
+						groupid);
+						
+		return CONFIG_GROUP_RADIOLIST_NULL;
+	}
+	else
+	{	
+		wid_syslog_debug_debug(WID_DEFAULT, "%s: iterator->radioid %d radioid %d\n",
+							__func__, 
+							iterator->radioid,
+							radioid);
+		
+		if(iterator->radioid == radioid)
+		{
+			wid_syslog_debug_debug(WID_DEFAULT, "%s: first \n",__func__);
+			
+			WIFI_LOCATE_CONFIG_GROUP[groupid]->radiolist = iterator->next;
+			CW_FREE_OBJECT(iterator);
+
+			iterator1 = WIFI_LOCATE_CONFIG_GROUP[groupid]->radiolist; 
+	
+			while(iterator1!= NULL)
+			{
+				wid_syslog_debug_debug(WID_DEFAULT, "%s:group %d contaio radioid %d next %d\n",
+									__func__, 
+									groupid,
+									iterator1->radioid,
+									iterator1->next);	
+				iterator1 = iterator1->next;
+			}
+			
+		}
+		else
+		{
+			wid_syslog_debug_debug(WID_DEFAULT, "%s: second \n",__func__);
+			
+			if(iterator->next != NULL)
+			{
+				for(; iterator->next != NULL; iterator = iterator->next)
+				{
+					if(iterator->next->radioid == radioid)
+					{
+						radio_node = iterator->next;
+						iterator->next = iterator->next->next;
+						CW_FREE_OBJECT(radio_node);
+
+						iterator1 = WIFI_LOCATE_CONFIG_GROUP[groupid]->radiolist; 
+						
+						while(iterator1!= NULL)
+						{
+							wid_syslog_debug_debug(WID_DEFAULT, "%s:group %d contaio radioid %d next %d\n",
+												__func__, 
+												groupid,
+												iterator1->radioid,
+												iterator1->next);	
+							iterator1 = iterator1->next;
+						}
+						
+						break;
+					}
+				}
+			}
+			else
+			{
+				wid_syslog_debug_debug(WID_DEFAULT, "%s: iterator->next is NULL\n",__func__);
+				return 0;
+			}
+		}
+	}
+	
+	AC_RADIO[radioid]->scanlocate_group.wifi_locate.groupid = 0;
+	WIFI_LOCATE_CONFIG_GROUP[groupid]->radio_count--;
+	wid_syslog_debug_debug(WID_DEFAULT, "%s: radioid %d unbind groupid %d radio_count %d\n",
+							__func__, 
+							radioid,
+							groupid,
+							WIFI_LOCATE_CONFIG_GROUP[groupid]->radio_count);	
+	return 0;
+}
+
+unsigned int compare_wifi_locate_paramter
+(
+	WID_WIFI_LOCATE_CONFIG_GROUP temp_wifi_locate_config,
+	unsigned int *groupid
+)
+{
+	int i = 0;
+	
+	for(i = WIFI_LOCATE_CONFIG_GROUP_SNMP_BEGIN; i<WIFI_LOCATE_CONFIG_GROUP_SIZE; i++)
+	{
+		if (WIFI_LOCATE_CONFIG_GROUP[i] != NULL)
+		{
+			if ((temp_wifi_locate_config.report_interval == WIFI_LOCATE_CONFIG_GROUP[i]->report_interval)
+				&&(temp_wifi_locate_config.scan_type == WIFI_LOCATE_CONFIG_GROUP[i]->scan_type)
+				&&(temp_wifi_locate_config.channel == WIFI_LOCATE_CONFIG_GROUP[i]->channel)
+				&&(temp_wifi_locate_config.channel_scan_interval == WIFI_LOCATE_CONFIG_GROUP[i]->channel_scan_interval)
+				&&(temp_wifi_locate_config.channel_scan_dwell == WIFI_LOCATE_CONFIG_GROUP[i]->channel_scan_dwell)
+				&&(temp_wifi_locate_config.rssi == WIFI_LOCATE_CONFIG_GROUP[i]->rssi)
+				&&(temp_wifi_locate_config.server_ip == WIFI_LOCATE_CONFIG_GROUP[i]->server_ip)
+				&&(temp_wifi_locate_config.server_port == WIFI_LOCATE_CONFIG_GROUP[i]->server_port)
+				&&(temp_wifi_locate_config.groupid != WIFI_LOCATE_CONFIG_GROUP[i]->groupid))
+			{
+				*groupid = i;
+
+				wid_syslog_debug_debug(WID_DEFAULT, "%s: find same config  %d\n",
+							__func__, 
+							*groupid);	
+				return 0;
+			}
+		}
+	}
+
+	wid_syslog_debug_debug(WID_DEFAULT, "%s: not find same config\n", __func__);	
+
+	return 1;
+}
+
+unsigned int find_and_create_wifi_locate_config_group
+(
+	unsigned int *new_groupid
+)
+{
+	wid_syslog_debug_debug(WID_DEFAULT, "%s: \n", __func__);
+	unsigned int ret = 0;
+	int i = 0;
+	for(i = WIFI_LOCATE_CONFIG_GROUP_SNMP_BEGIN; i<WIFI_LOCATE_CONFIG_GROUP_SIZE; i++)
+	{
+		if (WIFI_LOCATE_CONFIG_GROUP[i] == NULL)
+		{
+			wid_syslog_debug_debug(WID_DEFAULT, "%s: groupid %d is NULL\n", __func__, i);
+			
+			ret = wid_create_new_wifi_locate_config_group(i);
+			if(WID_DBUS_SUCCESS == ret)
+			{
+			
+				
+				*new_groupid = i; 
+				wid_syslog_debug_debug(WID_DEFAULT, "%s: new groupid is %d \n", __func__, *new_groupid);
+				return 0;
+			}
+			else
+			{
+				return ret;
+			}
+		}
+	}
+	return 1;
+}
+
+unsigned int wid_to_ap_wifi_locate_config
+(
+	unsigned int radioid
+)
+{
+	msgq msg;
+	struct msgqlist *elem = NULL;	
+	unsigned int wtpid = radioid / L_RADIO_NUM;
+	unsigned int  l_radioid= radioid % L_RADIO_NUM;
+	unsigned int groupid = 0;
+	unsigned long long channel = 0;
+
+	unsigned char ip[MAX_IP_STRLEN] = {0};  
+	unsigned char *ipstr = ip;
+	
+	WID_CHECK_WTP_STANDARD_RET(wtpid, WTP_ID_LARGE_THAN_MAX);
+	WID_CHECK_POINTER_RET(AC_WTP[wtpid],WTP_ID_NOT_EXIST);
+	WID_CHECK_POINTER_RET(AC_RADIO[radioid], RADIO_ID_NOT_EXIST);
+
+	groupid = AC_RADIO[radioid]->scanlocate_group.wifi_locate.groupid;
+	WID_CHECK_POINTER_RET(WIFI_LOCATE_CONFIG_GROUP[groupid], CONFIG_GROUP_NOT_EXIST); 
+	
+	memset((char*)&msg, 0, sizeof(msg));
+	msg.mqid = wtpid%THREAD_NUM+1;
+	msg.mqinfo.WTPID = wtpid;
+	msg.mqinfo.type = CONTROL_TYPE;
+	msg.mqinfo.subtype = WTP_S_TYPE;
+	msg.mqinfo.u.WtpInfo.Wtp_Op = WTP_WIFI_LOCATE_PUBLIC_CONFIG;
+	msg.mqinfo.u.WtpInfo.i1 = l_radioid;
+	msg.mqinfo.u.WtpInfo.c1 = AC_RADIO[radioid]->scanlocate_group.wifi_locate.enable;
+	msg.mqinfo.u.WtpInfo.c2 = WIFI_LOCATE_CONFIG_GROUP[groupid]->scan_type;
+	msg.mqinfo.u.WtpInfo.value1 = WIFI_LOCATE_CONFIG_GROUP[groupid]->rssi;
+	msg.mqinfo.u.WtpInfo.s1 = WIFI_LOCATE_CONFIG_GROUP[groupid]->report_interval;
+	msg.mqinfo.u.WtpInfo.s2 = WIFI_LOCATE_CONFIG_GROUP[groupid]->channel_scan_interval;
+	msg.mqinfo.u.WtpInfo.s3 = WIFI_LOCATE_CONFIG_GROUP[groupid]->channel_scan_dwell;
+	msg.mqinfo.u.WtpInfo.value2 = WIFI_LOCATE_CONFIG_GROUP[groupid]->server_ip;
+	msg.mqinfo.u.WtpInfo.value3 = WIFI_LOCATE_CONFIG_GROUP[groupid]->server_port;
+
+	if(groupid == WIFI_LOCATE_DEFAULT_CONFIG)
+	{
+		if(DEFAULT_2_4G_RADIO == l_radioid)
+		{
+			channel = WIFI_LOCATE_CONFIG_GROUP[groupid]->channel;
+		}
+		else if (DEFAULT_5_8G_RADIO == l_radioid)
+		{
+			channel = WIFI_LOCATE_CONFIG_GROUP[groupid]->channel_5_8G;
+			msg.mqinfo.u.WtpInfo.c2 = WIFI_LOCATE_CONFIG_GROUP[groupid]->scan_type_5_8G;
+			msg.mqinfo.u.WtpInfo.value1 = WIFI_LOCATE_CONFIG_GROUP[groupid]->rssi_5_8G;
+			msg.mqinfo.u.WtpInfo.s1 = WIFI_LOCATE_CONFIG_GROUP[groupid]->report_interval_5_8G;
+			msg.mqinfo.u.WtpInfo.s2 = WIFI_LOCATE_CONFIG_GROUP[groupid]->channel_scan_interval_5_8G;
+			msg.mqinfo.u.WtpInfo.s3 = WIFI_LOCATE_CONFIG_GROUP[groupid]->channel_scan_dwell_5_8G;
+			msg.mqinfo.u.WtpInfo.value2 = WIFI_LOCATE_CONFIG_GROUP[groupid]->server_ip_5_8G;
+			msg.mqinfo.u.WtpInfo.value3 = WIFI_LOCATE_CONFIG_GROUP[groupid]->server_port_5_8G;
+		}
+		else
+		{
+			wid_syslog_err("%s:unknown l_radioid %d",__func__,l_radioid);
+			return 0;
+		}
+		memcpy(msg.mqinfo.u.WtpInfo.value, &(channel), CHANNEL_BIT_MAP);
+	}
+	else
+	{
+		channel = WIFI_LOCATE_CONFIG_GROUP[groupid]->channel;
+		memcpy(msg.mqinfo.u.WtpInfo.value, &(channel), CHANNEL_BIT_MAP);
+	}
+	
+	if(AC_WTP[wtpid]->WTPStat == WID_RUN)
+	{
+		if (msgsnd(ACDBUS_MSGQ, (msgq *)&msg, sizeof(msg.mqinfo), 0) == -1)
+		{
+			wid_syslog_err("%s:WTP[%d] msgsend %s",__func__, wtpid, strerror(errno));
+			return UNKNOWN_ERROR;
+		}
+	}
+	else
+	{
+		/*add to control-list*/
+		elem = (struct msgqlist*)malloc(sizeof(struct msgqlist));
+		if (NULL == elem)
+		{			
+			WID_MALLOC_ERR();			
+			return 0;
+		}
+		memset(elem, 0, sizeof(struct msgqlist));
+
+		elem->mqinfo.WTPID = wtpid;
+		elem->mqinfo.type = CONTROL_TYPE;
+		elem->mqinfo.subtype = WTP_S_TYPE;
+		elem->mqinfo.u.WtpInfo.Wtp_Op = WTP_WIFI_LOCATE_PUBLIC_CONFIG;
+		elem->mqinfo.u.WtpInfo.i1 = l_radioid;
+		elem->mqinfo.u.WtpInfo.c1 = AC_RADIO[radioid]->scanlocate_group.wifi_locate.enable;
+		elem->mqinfo.u.WtpInfo.c2 = WIFI_LOCATE_CONFIG_GROUP[groupid]->scan_type;
+		elem->mqinfo.u.WtpInfo.value1 = WIFI_LOCATE_CONFIG_GROUP[groupid]->rssi;
+		elem->mqinfo.u.WtpInfo.s1 = WIFI_LOCATE_CONFIG_GROUP[groupid]->report_interval;
+		elem->mqinfo.u.WtpInfo.s2 = WIFI_LOCATE_CONFIG_GROUP[groupid]->channel_scan_interval;
+		elem->mqinfo.u.WtpInfo.s3 = WIFI_LOCATE_CONFIG_GROUP[groupid]->channel_scan_dwell;
+		elem->mqinfo.u.WtpInfo.value2 = WIFI_LOCATE_CONFIG_GROUP[groupid]->server_ip;
+		elem->mqinfo.u.WtpInfo.value3 = WIFI_LOCATE_CONFIG_GROUP[groupid]->server_port;
+
+		if(groupid == WIFI_LOCATE_DEFAULT_CONFIG)
+		{
+			if(DEFAULT_2_4G_RADIO == l_radioid)
+			{
+				channel = WIFI_LOCATE_CONFIG_GROUP[groupid]->channel;
+			}
+			else if (DEFAULT_5_8G_RADIO == l_radioid)
+			{
+				channel = WIFI_LOCATE_CONFIG_GROUP[groupid]->channel_5_8G;
+				elem->mqinfo.u.WtpInfo.c2 = WIFI_LOCATE_CONFIG_GROUP[groupid]->scan_type_5_8G;
+				elem->mqinfo.u.WtpInfo.value1 = WIFI_LOCATE_CONFIG_GROUP[groupid]->rssi_5_8G;
+				elem->mqinfo.u.WtpInfo.s1 = WIFI_LOCATE_CONFIG_GROUP[groupid]->report_interval_5_8G;
+				elem->mqinfo.u.WtpInfo.s2 = WIFI_LOCATE_CONFIG_GROUP[groupid]->channel_scan_interval_5_8G;
+				elem->mqinfo.u.WtpInfo.s3 = WIFI_LOCATE_CONFIG_GROUP[groupid]->channel_scan_dwell_5_8G;
+				elem->mqinfo.u.WtpInfo.value2 = WIFI_LOCATE_CONFIG_GROUP[groupid]->server_ip_5_8G;
+				elem->mqinfo.u.WtpInfo.value3 = WIFI_LOCATE_CONFIG_GROUP[groupid]->server_port_5_8G;
+			}
+			else
+			{
+				wid_syslog_err("%s:unknown l_radioid %d",__func__,l_radioid);
+				return 0;
+			}
+			memcpy(elem->mqinfo.u.WtpInfo.value, &(channel), CHANNEL_BIT_MAP);
+	}
+	else
+	{
+		channel = WIFI_LOCATE_CONFIG_GROUP[groupid]->channel;
+		memcpy(elem->mqinfo.u.WtpInfo.value, &(channel), CHANNEL_BIT_MAP);
+	}
+		
+		WID_INSERT_CONTROL_LIST(wtpid, elem);
+	}
+	
+	ip_long2str(msg.mqinfo.u.WtpInfo.value2, &ipstr);
+	wid_syslog_debug_debug(WID_DEFAULT,"%s: msg wtpid %d radio %d state %d type %d rssi %d report %d scan_interval %d scan_time %d ip %s port %d channel %llu to message queue\n",
+			__func__,
+			wtpid,
+			radioid,
+			msg.mqinfo.u.WtpInfo.c1,
+			msg.mqinfo.u.WtpInfo.c2,
+			msg.mqinfo.u.WtpInfo.value1,
+			msg.mqinfo.u.WtpInfo.s1,
+			msg.mqinfo.u.WtpInfo.s2,
+			msg.mqinfo.u.WtpInfo.s3,
+			ipstr,
+			msg.mqinfo.u.WtpInfo.value3,
+			channel);
+	
+	return 0;
+}
+
+unsigned int wid_create_new_wifi_locate_config_group
+(
+	unsigned int groupid
+)
+{	
+	WID_WIFI_LOCATE_CONFIG_GROUP *tmp_group = NULL;
+	
+	if ((WIFI_LOCATE_CONFIG_GROUP_BEGIN > groupid) || (WIFI_LOCATE_CONFIG_GROUP_SIZE <= groupid))
+	{
+		return CONFIG_GROUP_ID_THAN_MAX;
+	}	
+
+	if (NULL != WIFI_LOCATE_CONFIG_GROUP[groupid])
+	{
+		return CONFIG_GROUP_HAS_EXIST;
+	}
+
+	
+	tmp_group = (WID_WIFI_LOCATE_CONFIG_GROUP *)malloc(sizeof(WID_WIFI_LOCATE_CONFIG_GROUP));
+	if(NULL == tmp_group)
+	{
+		WID_MALLOC_ERR();
+		return MALLOC_ERROR;
+	}
+	memset(tmp_group, 0, sizeof(WID_WIFI_LOCATE_CONFIG_GROUP));
+	
+	WIFI_LOCATE_CONFIG_GROUP[groupid] = tmp_group;
+	WIFI_LOCATE_CONFIG_GROUP[groupid]->groupid = groupid;
+	
+
+	wid_syslog_debug_debug(WID_DEFAULT, "%s: create wifi-locate group %d \n",
+										__func__,
+										WIFI_LOCATE_CONFIG_GROUP[groupid]->groupid); 
+	return 0;
+}
+
+
+void select_sort_array(unsigned char *array, int count)
+{
+	/*from min to max*/
+	int j = 0;
+	int k = 0;
+	int min = 0;
+	unsigned char temp = 0;
+	
+	for(j=0;j<count-1;j++)
+	{
+		min = j;
+		
+		for(k=j+1;k<count;k++)
+		{
+			if(array[k]<array[min])
+			{
+				min = k;
+			}
+		}
+
+		if(min != j)
+		{
+			temp = array[min];
+			array[min] = array[j];
+			array[j] = temp;
+		}
+	}
+	
+}
+
+
+unsigned int bak_wid_radio_bind_wifi_locate_config_group
+(
+	unsigned int radioid,
+	unsigned int groupid
+)
+{
+	radioList *radio_node = NULL;
+	radioList *iterator1 = NULL;
+	
+	if ((WIFI_LOCATE_CONFIG_GROUP_BEGIN > groupid) 
+		|| (WIFI_LOCATE_CONFIG_GROUP_SIZE <= groupid))
+	{
+		return CONFIG_GROUP_ID_THAN_MAX;
+	}
+	
+	WID_CHECK_POINTER_RET(AC_RADIO[radioid], RADIO_ID_NOT_EXIST);
+	WID_CHECK_POINTER_RET(WIFI_LOCATE_CONFIG_GROUP[groupid], CONFIG_GROUP_NOT_EXIST);
+	
+	radio_node = (radioList *)malloc(sizeof(radioList));
+	if (NULL == radio_node)
+	{
+		WID_MALLOC_ERR();
+		return MALLOC_ERROR;
+	}
+	memset(radio_node, 0 ,sizeof(radioList));
+	
+	radio_node->radioid = radioid;
+	radio_node->next = NULL;
+	
+	if(NULL == WIFI_LOCATE_CONFIG_GROUP[groupid]->radiolist)
+	{
+		WIFI_LOCATE_CONFIG_GROUP[groupid]->radiolist = radio_node;
+	}
+	else
+	{
+		radio_node->next = WIFI_LOCATE_CONFIG_GROUP[groupid]->radiolist;
+		WIFI_LOCATE_CONFIG_GROUP[groupid]->radiolist = radio_node;
+	}
+	
+	AC_RADIO[radioid]->scanlocate_group.wifi_locate.groupid = groupid;
+	WIFI_LOCATE_CONFIG_GROUP[groupid]->radio_count++;
+	
+	wid_syslog_debug_debug(WID_DEFAULT, "%s: radioid %d bind groupid %d\n",
+							__func__, 
+							radioid,
+							groupid);	
+	
+	iterator1 = WIFI_LOCATE_CONFIG_GROUP[groupid]->radiolist; 
+	
+	while(iterator1!= NULL)
+	{
+		wid_syslog_debug_debug(WID_DEFAULT, "%s:group %d contaio radioid %d next %d radio_count %d\n",
+							__func__, 
+							groupid,
+							iterator1->radioid,
+							iterator1->next,
+							WIFI_LOCATE_CONFIG_GROUP[groupid]->radio_count);	
+		iterator1 = iterator1->next;
+	}
+	return 0;
+}
+
+unsigned int find_wtpid_by_mac
+(
+	unsigned char *wtp_mac, 
+	unsigned int *wtp_id
+)
+{
+	unsigned int wtpid = 0;
+	unsigned int wtp_num = 0;
+	unsigned int ret = WID_DBUS_SUCCESS;
+
+	wtp_num = WTP_NUM;
+	for(wtpid=0; wtpid<wtp_num; wtpid++)
+	{
+		if (AC_WTP[wtpid] != NULL && AC_WTP[wtpid]->WTPMAC != NULL)
+		{
+			if (0 == memcmp(AC_WTP[wtpid]->WTPMAC, wtp_mac, MAC_LEN))
+			{
+				wid_syslog_debug_debug(WID_DEFAULT,
+						"%s: "MACSTR" match WTP %d mac \n",
+						__func__, MAC2STR(wtp_mac), wtpid);
+				break;
+			}
+		}
+	}
+	
+	if (wtpid == wtp_num)
+	{
+		wid_syslog_debug_debug(WID_DEFAULT,
+				"%s: "MACSTR" not match any WTP mac \n",
+				__func__, MAC2STR(wtp_mac));
+		ret =  MAC_DOESNOT_EXIT;
+	}
+	else
+	{
+		*wtp_id = wtpid;
+		ret =  WID_DBUS_SUCCESS;
+	}
+
+	return ret;
+}
+
+int wid_delete_wifi_locate_config_group(unsigned int groupid)
+{
+
+	radioList *radiolist = NULL;
+	radioList *tempradio= NULL;
+	if ((WIFI_LOCATE_CONFIG_GROUP_BEGIN > groupid) 
+		|| (WIFI_LOCATE_CONFIG_GROUP_SIZE <= groupid))
+	{
+		return CONFIG_GROUP_ID_THAN_MAX;
+	}
+
+	WID_CHECK_POINTER_RET(WIFI_LOCATE_CONFIG_GROUP[groupid], CONFIG_GROUP_NOT_EXIST);
+		
+	if (WIFI_LOCATE_CONFIG_GROUP[groupid]->radiolist)
+	{
+		
+		radiolist = WIFI_LOCATE_CONFIG_GROUP[groupid]->radiolist;
+		while (radiolist)
+		{
+			tempradio = radiolist->next;
+			if(AC_RADIO[radiolist->radioid] != NULL)
+			{
+				AC_RADIO[radiolist->radioid]->scanlocate_group.wifi_locate.groupid = 0;
+				AC_RADIO[radiolist->radioid]->scanlocate_group.wifi_locate.enable = 0;
+				
+				/*when radio apply this group, should set radio wifi-locate state disable and let WTP stop wifi-locate ?*/
+			}
+			free(radiolist);
+			radiolist = tempradio;
+		}
+		WIFI_LOCATE_CONFIG_GROUP[groupid]->radiolist = NULL;
+	}
+
+	CW_FREE_OBJECT(WIFI_LOCATE_CONFIG_GROUP[groupid]);
+	
+	wid_syslog_debug_debug(WID_DEFAULT, "%s: delete wifi locate config %d \n", 
+										__func__,
+										groupid); 
+	return 0;
+}

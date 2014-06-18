@@ -108,6 +108,16 @@ extern int glicensecount ;
 //extern struct ConflictWtp *gConflictWtp;
 extern char first_conflict;
 extern	u_int8_t g_WLAN_TUNNEL_POLICY;
+
+
+/*wifi-locate default radioid*/
+typedef enum {
+	DEFAULT_2_4G_RADIO = 0,
+	DEFAULT_5_8G_RADIO = 1
+}default_wifilocate_radio;
+
+
+
 typedef struct
 {
     unsigned char       arEther[6];
@@ -919,5 +929,34 @@ typedef enum {
 	WAW_VRRP_STATE_SECONDARY = 1,	/* secondary */
 	WAW_VRRP_STATE_NONE = 2			/* disable or none */
 }waw_vrrp_state;
+
+
+/* dcli asd dbus max timeout : 5000 ms */
+#define DCLI_ASD_DBUS_TIMEOUT		(5000)
+/* dcli wid dbus max timeout : 5000 ms */
+#define DCLI_WID_DBUS_TIMEOUT		(10000)
+
+
+#define CHANNEL_BIT_MAP	8
+#define WIFI_LOCATE_CONFIG	1
+#define RRM_CONFIG	    2
+#define RFID_SCAN_CONFIG	    3
+#define WIFILOCATE_TO_BACK_SIZE  512
+#define WIFILOCATE_TO_BACK_BUFSIZE  1280
+#define EIGHT_BIT 8
+#define BITMAP_2_4G 0xffff
+#define BITMAP_5_8G 0xffffffffffff0000LL
+
+
+
+/*wifi-locate-group-begin*/
+#define WIFI_LOCATE_CONFIG_GROUP_SIZE 500
+#define WIFI_LOCATE_CONFIG_GROUP_SNMP_BEGIN 33
+#define WIFI_LOCATE_DEFAULT_CONFIG 0
+#define WIFI_LOCATE_CONFIG_GROUP_BEGIN 1
+#define WIFI_LOCATE_CONFIG_GROUP_CONFIG_SIZE 32
+#define WIFI_LOCATE_2_4G 0
+#define WIFI_LOCATE_5_8G 1
+/*wifi-locate-group-begin*/
 
 #endif

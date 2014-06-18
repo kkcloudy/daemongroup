@@ -6,6 +6,7 @@
 int wid_dbus_init(void);
 void *wid_dbus_thread();
 
+#define MAX_IP_STRLEN 16
 #define ACDBUS_MAC_LEN 6
 #define ACDBUS_OUI_LEN 3
 #define ACDBUS_LOG_LEVEL_LEN 20
@@ -127,6 +128,7 @@ int notice_hmd_update_state_change(unsigned int vrrid,unsigned int state);
 int wid_dbug_trap_more_ssid_key_conflict(unsigned int RadioID,unsigned char wlan1, unsigned char wlan2,char *ESSID1,char *ESSID2);
 int wid_dbug_trap_ssid_key_conflict(unsigned int wtpid,unsigned char radio_l_id, unsigned char wlan1, unsigned char wlan2);
 
+unsigned int ip_long2str(unsigned long ipAddress,unsigned char **buff);
 
 #endif
 

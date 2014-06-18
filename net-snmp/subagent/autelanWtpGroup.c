@@ -133,6 +133,9 @@ init_autelanWtpGroup(void)
 	init_dot11SsidTeminalTable();
 	init_dot11DHCPIpv6PoolConfigTable();
 	init_dot11DHCPIpv6UseageTable();
+//wangchao wifi-position	
+	init_dot11WtpWifiPositionPublicInfoTable();
+	init_dot11WifiPositionGlobalInfoTable();	
 }
 
 

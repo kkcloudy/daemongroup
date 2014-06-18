@@ -1115,6 +1115,131 @@ char* dcli_hansi_ac_ip_list_show_running_config(int localid, int slot_id, int in
 	return NULL;	
 }
 
+int dcli_scanlocate_show_running_config_start(struct vty *vty) 
+{			
+	char *showStr = NULL, *cursor = NULL, ch = 0;
+	char tmpBuf[SHOWRUN_PERLINE_SIZE] = {0};
+	DBusMessage *query = NULL, *reply = NULL;
+	DBusError err;
+	int res1 = 0, res2 = 0;
+	int tmp = 0;	
+	int index = 0;
+	char BUSNAME[PATH_LEN] = {0};
+	char OBJPATH[PATH_LEN]= {0};
+	char INTERFACE[PATH_LEN] = {0};
+	
+	ReInitDbusPath(index, WID_DBUS_BUSNAME, BUSNAME);
+	ReInitDbusPath(index, WID_DBUS_OBJPATH, OBJPATH);
+	ReInitDbusPath(index, WID_DBUS_INTERFACE, INTERFACE);
+	query = dbus_message_new_method_call(BUSNAME, OBJPATH, INTERFACE,
+							WID_DBUS_CONF_METHOD_SCANLOCATE_SHOW_RUNNING_CONFIG_START);
+
+	dbus_error_init(&err);
+
+	reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection, query, 300000, &err);  
+
+	dbus_message_unref(query);
+	if (NULL == reply) 
+	{		
+		if (dbus_error_is_set(&err)) 
+		{			
+			dbus_error_free(&err);
+		}
+		return 1;
+	}
+
+	if (dbus_message_get_args ( reply, &err,
+					DBUS_TYPE_STRING, &showStr,
+					DBUS_TYPE_INVALID)) 
+	{
+		char _tmpstr[DEFAULT_LEN] = {0};
+		
+		sprintf(_tmpstr, BUILDING_MOUDLE, "SCANLOCATE1");
+		dcli_config_write(showStr,0,0,0,0,0);
+		vtysh_add_show_string(_tmpstr);
+		vtysh_add_show_string(showStr);
+		dbus_message_unref(reply);
+	} 
+	else 
+	{		
+		if (dbus_error_is_set(&err)) 
+		{			
+			dbus_error_free(&err);
+		}
+		dbus_message_unref(reply);
+		return 1;
+	}	
+
+	return 0;	
+}
+
+char* dcli_hansi_scanlocate_show_running_config_start(int localid, int slot_id ,int index) 
+{
+	char *showStr = NULL,*cursor = NULL,ch = 0;
+	char tmpBuf[SHOWRUN_PERLINE_SIZE] = {0};
+	DBusMessage *query = NULL, *reply = NULL;
+	DBusError err;
+	int res1 = 0, res2 = 0;
+	char *tmp = NULL;
+	char BUSNAME[PATH_LEN] = {0};
+	char OBJPATH[PATH_LEN] = {0};
+	char INTERFACE[PATH_LEN] = {0};
+
+	DBusConnection *dcli_dbus_connection = NULL;
+	ReInitDbusConnection(&dcli_dbus_connection,slot_id,distributFag);
+	
+	ReInitDbusPath_V2(localid, index, WID_DBUS_BUSNAME, BUSNAME);
+	ReInitDbusPath_V2(localid, index, WID_DBUS_OBJPATH, OBJPATH);
+	ReInitDbusPath_V2(localid, index, WID_DBUS_INTERFACE, INTERFACE);
+	query = dbus_message_new_method_call(BUSNAME, OBJPATH, INTERFACE,
+									WID_DBUS_CONF_METHOD_SCANLOCATE_SHOW_RUNNING_CONFIG_START);
+
+
+	dbus_error_init(&err);
+
+	reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection, query, 300000, &err); 
+
+	dbus_message_unref(query);
+	if (NULL == reply) 
+	{
+		if (dbus_error_is_set(&err)) 
+		{
+			dbus_error_free(&err);
+		}
+		return NULL;
+	}
+
+	if (dbus_message_get_args (reply, &err,
+					DBUS_TYPE_STRING, &showStr,
+					DBUS_TYPE_INVALID)) 
+	{
+		tmp = (char *)malloc(strlen(showStr)+1);
+		if(NULL == tmp)
+		{
+			dbus_message_unref(reply);
+			return NULL;
+		}
+		memset(tmp, 0, strlen(showStr)+1);
+		memcpy(tmp, showStr, strlen(showStr));	
+		dbus_message_unref(reply);
+		return tmp; 
+	} 
+	else 
+	{
+		if (dbus_error_is_set(&err)) 
+		{
+			dbus_error_free(&err);
+		}
+		dbus_message_unref(reply);
+		return NULL;
+	}
+	
+	return NULL;	
+}
+
+
+
+
 /******wangchao moved frome dcli_wtp.c******/
 struct cmd_node wtp_node =
 {
@@ -1285,7 +1410,17 @@ dcli_wireless_init(void)
 			
 }
 
+struct cmd_node scanlocate_node =
+{
+	SCANLOCATE_NODE,
+	"%s(config-air-monitor-service)# "
+};
 
+struct cmd_node hansi_scanlocate_node =
+{
+	HANSI_SCANLOCATE_NODE,
+	"%s(hansi-air-monitor-service(%d-%d)# "
+};
 
 
 

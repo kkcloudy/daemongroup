@@ -553,6 +553,66 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_ESSID(unsigned int RadioID,unsigned char WlanI
 int WID_DELETE_WLAN_APPLY_RADIO_BASE_ESSID(unsigned int RadioID,unsigned char WlanID,char *ESSID);
 
 
+unsigned int bak_wid_radio_bind_wifi_locate_config_group
+(
+	unsigned int radioid,
+	unsigned int groupid
+);
+
+unsigned int find_wtpid_by_mac
+(
+	unsigned char *wtp_mac, 
+	unsigned int *wtp_id
+);
+unsigned int wifi_locate_find_radio_by_wtpid
+(
+	unsigned int wtpid, 
+	unsigned int *radioid
+);
+unsigned int change_all_wtp_config
+(
+	unsigned char *wtp_mac
+);
+int wid_delete_wifi_locate_config_group(unsigned int groupid);
+unsigned int wid_radio_bind_wifi_locate_config_group
+(
+	unsigned int radioid,
+	unsigned int groupid
+);
+unsigned int wid_radio_unbind_wifi_locate_config_group
+(
+	unsigned int radioid,
+	unsigned int groupid
+);
+unsigned int compare_wifi_locate_paramter
+(
+	WID_WIFI_LOCATE_CONFIG_GROUP temp_wifi_locate_config,
+	unsigned int *groupid
+);
+unsigned int find_and_create_wifi_locate_config_group
+(
+	unsigned int *new_groupid
+);
+unsigned int wid_to_ap_wifi_locate_config
+(
+	unsigned int radioid
+);
+unsigned int wid_create_new_wifi_locate_config_group
+(
+	unsigned int groupid
+);
+
+void select_sort_array(unsigned char *array, int count);
+unsigned int bak_wid_radio_bind_wifi_locate_config_group
+(
+	unsigned int radioid,
+	unsigned int groupid
+);
+unsigned int wifi_locate_find_5_8G_radio_by_wtpid
+(
+	unsigned int wtpid, 
+	unsigned int *radioid
+);
 
 
 #endif

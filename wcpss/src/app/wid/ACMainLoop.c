@@ -44,6 +44,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "ACBak.h"
 #include "ACAccessCheck.h"
 #include "ACLoadbanlance.h"
+#include "AC.h"
 #ifdef DMALLOC
 #include "../dmalloc-5.5.0/dmalloc.h"
 #endif
@@ -80,6 +81,8 @@ typedef struct {
 	CWSocket sock;
 	int interfaceIndex;
 } CWACThreadArg; // argument passed to the thread func
+
+extern unsigned int wid_to_ap_wifi_locate_config(unsigned int radioid);
 
 CWBool WID_WTP_INIT(void *arg){
 		int i = ((CWACThreadArg*)arg)->index;
@@ -4041,5 +4044,204 @@ void WidDestroyAutoApLoginInfo(WIDAUTOAPINFO *info)
 	CW_FREE_OBJECT_WID(info);
 
 	return ;
+}
+
+int wid_wtp_login_loadconfig(unsigned int wtpid)
+{
+	wlan_t wlanid = 0;
+	unsigned char l_radioid = 0;
+	struct wlanid *wlan_id = NULL;
+	//unsigned int bssindex = 0;
+	unsigned int radioid = 0;
+	//unsigned int bind_wlan = 0;
+	//int i=0;
+	char apcmd[WID_SYSTEM_CMD_LENTH] = {0};
+	char *showStr = NULL;	
+	char *cursor = NULL;
+	int totalLen = 0;
+	cursor = (char*)apcmd;
+	showStr = (char*)apcmd;
+	//unsigned char ip[MAX_IP_STRLEN] = {0};  
+	//unsigned char *ipstr = ip;
+	
+	WID_CHECK_WTP_STANDARD_RET(wtpid, -1);
+
+	wid_syslog_info("%s: wtp %d enter run reload config...\n", __func__, wtpid);	
+
+	for (l_radioid = 0; (l_radioid < AC_WTP[wtpid]->RadioCount); l_radioid++)
+	{
+		memset(apcmd, 0, WID_SYSTEM_CMD_LENTH);
+		totalLen = 0;
+		cursor = (char*)apcmd;
+		showStr = (char*)apcmd;
+		
+		radioid = wtpid * L_RADIO_NUM + l_radioid;
+		
+		/* list radio config */
+		if (NULL == AC_WTP[wtpid]->WTP_Radio[l_radioid])
+		{
+			continue;
+		}
+		
+		/*radio-config-without-bind-wlan-begin*/
+		
+		wid_syslog_info("%s: local radio %d global radio %d wifi-locate is %d\n", __func__,
+							l_radioid,
+							AC_WTP[wtpid]->WTP_Radio[l_radioid]->Radio_G_ID,
+							AC_WTP[wtpid]->WTP_Radio[l_radioid]->scanlocate_group.wifi_locate.enable);
+
+		/* wifi-locate */
+		if(AC_WTP[wtpid]->WTP_Radio[l_radioid] != NULL
+			&&AC_WTP[wtpid]->WTP_Radio[l_radioid]->scanlocate_group.wifi_locate.enable == 1)
+		{
+			wid_syslog_info("%s: begin wifi-locate-config\n", __func__);
+			wid_to_ap_wifi_locate_config(radioid);
+		}
+		/*radio-config-without-bind-wlan-end*/
+
+		
+		if (0 == AC_WTP[wtpid]->WTP_Radio[l_radioid]->isBinddingWlan)
+		{
+			continue;
+		}
+
+		/* reload RADIO's wlan config */
+		wlan_id = AC_WTP[wtpid]->WTP_Radio[l_radioid]->Wlan_Id;
+		for (; NULL != wlan_id; wlan_id = wlan_id->next)
+		{
+			totalLen = 0;
+			cursor = (char*)apcmd;
+			showStr = (char*)apcmd;
+			memset(apcmd, 0,WID_SYSTEM_CMD_LENTH);
+			
+			wlanid = wlan_id->wlanid;
+			if ((wlanid >= WLAN_NUM)
+				|| (NULL == AC_WLAN[wlanid])
+				|| (0 != AC_WLAN[wlanid]->Status)) /* is wlan disable */
+			{
+				continue;
+			}
+
+			#if 0
+			//huxuefeng
+			/* wlan config */
+
+			if(AC_WLAN[wlanid]->extra_portal.isenable !=0)
+			{
+                                totalLen += sprintf(cursor,ENABLE_EXTRA_PORTAL_IP";",
+								l_radioid,wlanid);
+				cursor = showStr + totalLen;
+			}
+
+			if( AC_WLAN[wlanid]->extra_portal.ip_num !=0)
+			{
+				for(i=0; i<DEFAULT_PORTAL_IP_NUM; i++)
+				{
+					if(AC_WLAN[wlanid]->extra_portal.portal_ip[i] != 0)
+					{
+						ip_long2str(AC_WLAN[wlanid]->extra_portal.portal_ip[i], &ipstr);
+						totalLen += sprintf(cursor,ADD_EXTRA_PORTA_IP";",
+									l_radioid,wlanid, ipstr);
+						cursor = showStr + totalLen;
+					}
+
+				}
+
+			}
+			#endif
+
+#if 0
+//huxuefeng
+			if(totalLen != 0)
+			{
+				wid_syslog_debug_debug(WID_DEFAULT,"%s-%d to wtp %d cmd is %s\n",
+										__func__,  __LINE__, wtpid, apcmd);
+				wid_radio_set_extension_command(wtpid, apcmd);
+			}
+#endif
+			#if 0
+			//huxuefeng
+			/* bss config */
+			bssindex = AC_WLAN[wlanid]->S_WTP_BSS_List[wtpid][l_radioid];
+			if (0 == bssindex)
+			{
+				continue;
+			}
+			if (0 != AC_WLAN[wlanid]->balance_switch)
+			{
+				//wtp_balance_handle(wtpid, wlanid, AC_WLAN[wlanid]->balance_switch);
+				wid_bss_balance_switch(wtpid, l_radioid, wlanid);
+			}
+			/* qos config */
+			if (0 != memcmp(QOS_AP_11E_TO_1P_DEFAULT, AC_WLAN[wlanid]->qos_ap_11e_to_1p, MAX_QOS_11E_VAL+1))
+			{
+				set_ap_bss_qos_map_default(wtpid, l_radioid, QOS_MAP_11E_TO_1P, wlanid);
+			}
+			if (0 != memcmp(QOS_AP_11E_TO_DSCP_DEFAULT, AC_WLAN[wlanid]->qos_ap_11e_to_dscp, MAX_QOS_11E_VAL+1))
+			{
+				set_ap_bss_qos_map_default(wtpid, l_radioid, QOS_MAP_11E_TO_DSCP, wlanid);
+			}
+			if (0 != memcmp(QOS_AP_DSCP_TO_11E_DEFAULT, AC_WLAN[wlanid]->qos_ap_dscp_to_11e, MAX_QOS_DSCP_VAL+1))
+			{
+				set_ap_bss_qos_map_default(wtpid, l_radioid, QOS_MAP_DSCP_TO_11E, wlanid);
+			}
+			if (0 != memcmp(QOS_AP_1P_TO_11E_DEFAULT, AC_WLAN[wlanid]->qos_ap_1p_to_11e, MAX_QOS_1P_VAL+1))
+			{
+				set_ap_bss_qos_map_default(wtpid, l_radioid, QOS_MAP_1P_TO_11E, wlanid);
+			}
+			if (0 != AC_WLAN[wlanid]->qos_ap_11e_to_1p_switch)
+			{
+				set_ap_bss_qos_map_switch(wtpid, l_radioid, wlanid, QOS_MAP_11E_TO_1P, AC_WLAN[wlanid]->qos_ap_11e_to_1p_switch);
+			}
+			if (0 != AC_WLAN[wlanid]->qos_ap_11e_to_dscp_switch)
+			{
+				set_ap_bss_qos_map_switch(wtpid, l_radioid, wlanid, QOS_MAP_11E_TO_DSCP, AC_WLAN[wlanid]->qos_ap_11e_to_dscp_switch);
+			}
+			#endif
+
+			#if 0
+			//huxuefeng
+			for(bind_wlan = 0; bind_wlan < 8; bind_wlan++)
+    		{
+    			if(AC_WTP[wtpid]->WTP_Radio[l_radioid]->cpe_intf[bind_wlan].vlan_count != 0)
+    			{
+    				wid_radio_set_cpe_channel(wtpid,l_radioid,bind_wlan);
+    			}
+    		}
+			#endif
+		}
+
+		#if 0
+		//huxuefeng
+		/* reload RADIO's config */
+		if(AC_WTP[wtpid]->WTP_Radio[l_radioid]->spec_analysis.enalbe)
+		{
+		//	set_ap_spectrum_analysis(radioid);
+		}
+	
+		if(((AC_WTP[wtpid]->WTP_Radio[l_radioid]->Radio_Type&IEEE80211_11N)||(AC_WTP[wtpid]->WTP_Radio[l_radioid]->Radio_Type&IEEE80211_11AC))
+    	    &&(AC_WTP[wtpid]->WTP_Radio[l_radioid]->cwmode != 0))
+    	{
+    		wid_radio_set_cmmode(wtpid*L_RADIO_NUM+l_radioid);
+		}
+		if((AC_WTP[wtpid]->WTP_Radio[l_radioid]->Radio_Type&IEEE80211_11N)||(AC_WTP[wtpid]->WTP_Radio[l_radioid]->Radio_Type&IEEE80211_11AC))
+    	{
+            wid_radio_set_guard_interval(wtpid*L_RADIO_NUM+l_radioid);
+            wid_radio_set_guard_interval_change_rate(wtpid*L_RADIO_NUM+l_radioid);										
+			wid_radio_change_rate(wtpid*L_RADIO_NUM+l_radioid);
+		}
+		#endif
+	}
+
+	/* WTP CONFIG */
+#if 0	
+	if(1 == AC_WTP[wtpid]->mib_info.dos_def_switch)
+    {
+        wid_set_ap_dos_def_enable(wtpid);
+    }
+#endif
+//	AC_WTP[wtpid]->load_config_flag = 1;	/* DONE */
+
+	return 0;
 }
 

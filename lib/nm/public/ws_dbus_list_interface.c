@@ -119,7 +119,10 @@ static snmpd_dbus_message *new_dbus_message(dbus_parameter parameter,
         case SHOW_ALL_WTP_TABLE_METHOD: 
             ret = ((show_all_wtp_table *)method)(parameter, connection, &message);
             break;
-        
+		/*wangchao add*/	
+		case SHOW_WTP_WIFI_LOCATE_PUBLIC_CONIFG_METHOD:
+			ret = ((wifi_location*)method)(parameter, connection, &message, va_arg(var_args, long));
+            break;
         default:
             syslog(LOG_DEBUG, "unknown method %d in new_dbus_message", flag);
             break;

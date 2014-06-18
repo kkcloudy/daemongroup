@@ -7340,10 +7340,37 @@ int dcli_vrrp_show_running_cfg(struct vty *vty)
 			dcli_config_write(showRunningCfg_str,localid,slot_id,profile,0,0);		
 			dcli_config_writev2(showRunningCfg_str,slot_id,profile,"hansi_rdc",0);		
 			vtysh_add_show_string(showRunningCfg_str);		
+
+			/* for air monitor service begin */
 			memset(showRunningCfg_str, 0, DCLI_VRRP_SHOW_RUNNING_CFG_LEN);
 			cursor = showRunningCfg_str;
 			totalLen = 0;
-			
+			totalLen += sprintf(cursor, "config hansi-profile %d-%d\n",slot_id, profile);
+			cursor = showRunningCfg_str + totalLen;
+			tmp = dcli_hansi_scanlocate_show_running_config_start(localid, slot_id, profile); 
+			if(tmp != NULL){
+				if (0 != strlen(tmp)) {
+					totalLen += sprintf(cursor, "%s\n",tmp);
+					cursor = showRunningCfg_str + totalLen;
+				}
+				free(tmp);
+				tmp = NULL;
+			}else{
+				free(showRunningCfg_str);
+				return 1;
+			}
+
+			totalLen += sprintf(cursor, " exit\n", profile);
+			cursor = showRunningCfg_str + totalLen;
+			dcli_config_write(showRunningCfg_str,localid,slot_id,profile,0,0);
+
+			dcli_config_writev2(showRunningCfg_str,slot_id,profile, "AIR-MONITOR", 0);
+
+			vtysh_add_show_string(showRunningCfg_str);
+			//dcli_vrrp_update_configv2(0, 0, profile, "AIR-MONITOR");
+
+			/* for air monitor service end */
+	
 			/* pppoe config*/
 		#ifndef _VERSION_18SP7_
 			tmp = dcli_pppoe_show_running_config(localid, slot_id, profile);
@@ -7373,6 +7400,9 @@ int dcli_vrrp_show_running_cfg(struct vty *vty)
 		}
 		
 		/* dhcp config section */
+		memset(showRunningCfg_str, 0, DCLI_VRRP_SHOW_RUNNING_CFG_LEN);
+		cursor = showRunningCfg_str;
+		totalLen = 0;
 		tmp = dcli_dhcp_show_running_hansi_cfg(slot_id,profile,localid);
 		if(tmp != NULL){
 			if (0 != strlen(tmp)) {

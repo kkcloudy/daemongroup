@@ -2462,11 +2462,12 @@ static void handle_assoc(struct asd_data *wasd,
 		int i=0;
 		for(i=0;i<6;i++)
 			mac[i]=sta->addr[i];
-		unsigned char rssi = sta->rssi;	//xiaodawei add rssi for telecom, 20110301
+		//unsigned char rssi = sta->rssi;	//xiaodawei add rssi for telecom, 20110301
 		
 		if (!(sta->flags & WLAN_STA_ASSOC))		//mahz add 2011.3.28
 			wasd->acc_tms++;
-		signal_sta_come(mac,wasd->Radio_G_ID,wasd->BSSIndex,wasd->WlanID,rssi);
+		//signal_sta_come(mac,wasd->Radio_G_ID,wasd->BSSIndex,wasd->WlanID,rssi);
+		signal_sta_come(wasd, sta);
 		if(STA_STATIC_FDB_ABLE && wasd->bss_iface_type && wasd->br_ifname){
 			char ifname[IF_NAME_MAX]={0};
 			sprintf(ifname,"radio%d-%d-%d.%d",vrrid,wasd->Radio_G_ID/4,wasd->Radio_L_ID,wasd->WlanID);
@@ -2544,8 +2545,10 @@ static void handle_assoc(struct asd_data *wasd,
 		
 		if(new_assoc)							//mahz add 2011.5.9
 			wasd->acc_tms++;
-		unsigned char rssi = sta->rssi;
-		signal_sta_come(mac,wasd->Radio_G_ID,wasd->BSSIndex,wasd->WlanID,rssi);
+
+		//unsigned char rssi = sta->rssi;
+		//signal_sta_come(mac,wasd->Radio_G_ID,wasd->BSSIndex,wasd->WlanID,rssi);
+		signal_sta_come(wasd, sta);
 		if(STA_STATIC_FDB_ABLE && wasd->bss_iface_type){
 			char ifname[IF_NAME_MAX]={0};
 			sprintf(ifname,"radio%d-%d-%d.%d",vrrid,wasd->Radio_G_ID/4,wasd->Radio_L_ID,wasd->WlanID);

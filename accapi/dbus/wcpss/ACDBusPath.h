@@ -1036,4 +1036,25 @@ char WID_DBUS_STA_METHOD_SHOW_WLAN_STA_DEFAULT_ACL[PATH_LEN] = "show_wlan_sta_de
 
 char WID_DBUS_CONF_METHOD_SET_WLAN_STA_TUNNEL_SWITCH_STATE[PATH_LEN] = "set_wlan_tunnel_switch_state";/*yjl 2014-2-28*/
 char WID_DBUS_CONF_METHOD_SET_WLAN_STA_STATE[PATH_LEN] = "set_wlan_sta_state";/*yjl 2014-2-28*/
+
+
+char WID_DBUS_CONF_METHOD_SCANLOCATE_SHOW_RUNNING_CONFIG_START[PATH_LEN]=	"scanlocate_show_running_config_start";
+char WID_DBUS_CONF_METHOD_ADD_SCANLOCATE_GENERAL_CHANNEL[PATH_LEN] =  "add_scanlocate_general_config_channel";
+char WID_DBUS_CONF_METHOD_DELETE_SCANLOCATE_CONFIG[PATH_LEN] =  "delete_scanlocate_config";
+char WID_DBUS_CONF_METHOD_ADD_SCANLOCATE_GENERAL_REPORT[PATH_LEN] =   "add_scanlocate_general_config_report";
+char WID_DBUS_CONF_METHOD_ADD_SCANLOCATE_SPECIAL[PATH_LEN] =    "add_scanlocate_special_config";
+char WID_DBUS_CONF_METHOD_MODIFY_SCANLOCATE_GENERAL[PATH_LEN] =   "modify_scanlocate_general_config";
+char WID_DBUS_CONF_METHOD_MODIFY_SCANLOCATE_WIFI_SPECIAL[PATH_LEN] =   "modify_scanlocate_wifi_locate_special_config";
+char WID_DBUS_RADIO_METHOD_SET_SCANLOCATE_CONFIG_TO_RADIOLIST[PATH_LEN] =   "set_scanlocate_config_to_radiolist";
+/*wifi-locate*/
+char WID_DBUS_WTP_METHOD_SET_WIFI_LOCATE_PUBLIC_CONFIG[PATH_LEN]   = "set_wifi_locate_public_config";
+char WID_DBUS_WTP_METHOD_SHOW_WIFI_LOCATE_PUBLIC_CONFIG[PATH_LEN]   = "show_wifi_locate_public_config";
+char WID_DBUS_WTP_METHOD_SHOW_WIFI_LOCATE_PUBLIC_CONFIG_ALL[PATH_LEN]   = "show_wifi_locate_public_config_all_wtp";
+char WID_DBUS_WTP_METHOD_SET_WIFI_LOCATE_ON_OFF[PATH_LEN] = "set_wifi_locate_on_off";
+
+char WID_DBUS_WTP_METHOD_SHOW_WIFI_LOCATE_CONFIG_GROUP_DEFUALT_5_8G[PATH_LEN] =  "show_wifi_locate_config_group_default_5_8G";
+char WID_DBUS_WTP_METHOD_SHOW_WIFI_LOCATE_CONFIG_GROUP[PATH_LEN] =  "show_wifi_locate_config_group";
+char WID_DBUS_WTP_METHOD_SHOW_WIFI_LOCATE_CONFIG_GROUP_ALL[PATH_LEN] =  "show_wifi_locate_config_group_all";
+
+
 #endif

@@ -6168,7 +6168,10 @@ vtysh_prompt (void)
 	  case	  HANSI_AC_GROUP_NODE:		/*wireless ac_group_node*/
 	  case	  HANSI_PPPOE_DEVICE_NODE:			/* new pppoe node */
 		  snprintf (buf, sizeof buf, cmd_prompt (vty->node), hostname, vty->slotindex,vty->index, vty->index_sub);
-		  break;		
+		  break;
+	  case 	  HANSI_SCANLOCATE_NODE:
+	  	  snprintf (buf, sizeof buf, cmd_prompt (vty->node), hostname, vty->slotindex,vty->index);
+		  break;
 	  case	  HANSI_RADIO_NODE:
 	  	 /* rindex = vty->index_sub;*/
 	  	  rindex =(int) vty->index_sub;/*gujd: 2012-02-23, pm 5:49. In order to decrease the warning when make img .*/

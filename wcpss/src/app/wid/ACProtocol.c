@@ -39,6 +39,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../dmalloc-5.5.0/dmalloc.h"
 #endif
 
+extern unsigned int ip_long2str(unsigned long ipAddress,unsigned char **buff);
+
 //added by weiay 20080618
 CWBool CWAssembleMsgElemWTPVersion(CWProtocolMessage *msgPtr,char *version)
 {
@@ -4501,6 +4503,215 @@ CWBool  CWAssembleWtpStaFlowInformationreport(CWProtocolMessage *msgPtr,int wtpi
 	CWProtocolStore8(msgPtr, flag);
 	return CWAssembleMsgElemVendor(msgPtr, CW_MSG_ELEMENT_VENDOR_SPEC_PAYLOAD_CW_TYPE);
 
+}
+
+CWBool CWAssembleWifiLocatePublicConfig
+(
+	CWProtocolMessage *msgPtr,
+	unsigned int l_radioid,
+	unsigned char state,
+	unsigned char scan_type,
+	unsigned char rssi,
+	unsigned short report_interval,
+	unsigned short channel_scan_interval,
+	unsigned short	channel_scan_time,
+	unsigned int server_ip,
+	unsigned short server_port,
+	unsigned char *channel
+)
+{
+
+	wid_syslog_debug_debug(WID_DEFAULT,"%s:\n", __func__);
+
+/*
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+|   type = 37                    |     length                       |                          
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+|f|                        vendor_id = 31656                        |
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+| element_id = 33                |     length                       |
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+      Type = 0      |     length = 1        |    func_type         |    type = 1     |  
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    length = 1       |   func_subtype       |    type = 2           |   length = 1    |
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+      version       |   type = 3            |      length = 1       |    length      |
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+       type = 0     |     length = 1      |    func_switch     |     type = 1         |
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     length = 1     |      Scan_type     |    type = 2         |    length = 1        |
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+scan_interval   |      type = 3       |      Length = 1     |   listen_time        |
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+      Type = 4      |    length = 1       |  result_forward      |    type = 5        |
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+      Length = 1    |   report_mode       |   type = 6          |  length = 4        |
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+                                 Server_ip                                     |
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    Type = 7        |    length = 2        |           server_port                  |
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     Type = 8      |      length = 1     |       sta_num      |    type = 9         |
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     Length =1     |     radio_id       |     type = 10       |   length = 
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     flag          |      Channel_bit_map             ¡­¡­¡­¡­¡­¡­¡­¡­..
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+                                 ¡­¡­¡­¡­¡­¡­¡­¡­..         
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+¡­¡­      |    mac_len        |       MAC       ¡­¡­¡­¡­¡­¡­¡­¡­..     |
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     Type = 11     |     length = 1       |               report_interval            |
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     Type = 12     |     length = 1       |              rssi      |
++++++++++++++++++++++++++++++++++++++++
+*/
+	short int elementid = 33; 
+	short int length = 70;
+	unsigned char ip[MAX_IP_STRLEN] = {0};  
+	unsigned char *ipstr = ip;
+
+	if (NULL == msgPtr ||NULL == channel) 
+	{
+		wid_syslog_err("%s: NULL Pointer msgPtr %d mac %d", __func__, msgPtr, channel);
+		return CWErrorRaise(CW_ERROR_WRONG_ARG, NULL);	
+	}
+
+	if(state !=0 && state !=1)
+	{
+		wid_syslog_err("%s: state %d err", __func__, state);
+		return CWErrorRaise(CW_ERROR_WRONG_ARG, NULL);	
+	}
+	
+	CW_CREATE_PROTOCOL_MESSAGE(*msgPtr, 
+				length, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
+	
+	CWProtocolStore16(msgPtr, elementid);  /*elementid*/
+	
+	CWProtocolStore16(msgPtr, (length-4)); /*length*/	
+	
+	wid_syslog_debug_debug(WID_DEFAULT,"%s: ***scanning and positioning message header***/\n", __func__);
+	
+	/*scanning and positioning message header*/
+	/*type 0 sun_length = 3*/
+	CWProtocolStore8(msgPtr, 0); /*type 0*/ 
+	CWProtocolStore8(msgPtr, 1); /*type 0 length =1 */
+	CWProtocolStore8(msgPtr, 1); /*func-type:1 config 2: report*/
+	wid_syslog_debug_debug(WID_DEFAULT,"%s: type 0 length 1 config:0\n", __func__);
+	
+	/*type 1 sum_length: 6 */
+	CWProtocolStore8(msgPtr, 1); /*type 1*/ 
+	CWProtocolStore8(msgPtr, 1); /*type 1 length =1 */
+	CWProtocolStore8(msgPtr, 2); /*func-subtype:2 wifi-locate*/
+	wid_syslog_debug_debug(WID_DEFAULT,"%s: type 1 length 1 wifi-locate:2\n", __func__);
+	
+	/*type 2 sum_length: 9*/
+	CWProtocolStore8(msgPtr, 2); /*type 2*/ 
+	CWProtocolStore8(msgPtr, 1); /*type 2 length =1 */
+	CWProtocolStore8(msgPtr, 0); /*version:0*/
+	wid_syslog_debug_debug(WID_DEFAULT,"%s: type 2 length 1 version:0\n", __func__);
+	
+	/*type 3 sum_length: 13*/
+	CWProtocolStore8(msgPtr, 3); /*type 3*/ 
+	CWProtocolStore8(msgPtr, 2); /*type 3 length = 2*/
+	CWProtocolStore16(msgPtr, 53); /*type 3 length =53 */
+	wid_syslog_debug_debug(WID_DEFAULT,"%s: type 3 length 53 \n", __func__);
+
+	wid_syslog_debug_debug(WID_DEFAULT,"%s: ***scanning and positioning message body:wifi-locate***/\n", __func__);
+	/*scanning and positioning message body:wifi-locate*/
+	
+	/*type 0 length = 3 sum_length: 3*/ 
+	CWProtocolStore8(msgPtr, 0); /*type 0*/ 
+	CWProtocolStore8(msgPtr, 1); /*type 0 length =1 */
+	CWProtocolStore8(msgPtr, state);/*switch*/
+	wid_syslog_debug_debug(WID_DEFAULT,"%s: type 0 length 1 state: %d\n", __func__, state);
+	
+	/*type 1 length = 3 sum_length: 6*/ 
+	CWProtocolStore8(msgPtr, 1); /*type 1*/ 
+	CWProtocolStore8(msgPtr, 1); /*type 1 length =1 */
+	if(scan_type == 0)
+	{
+		scan_type = 3;
+	}
+	CWProtocolStore8(msgPtr, scan_type);/*scan_type*/
+	wid_syslog_debug_debug(WID_DEFAULT,"%s: type 1 length 1 scan_type: %d\n", __func__, scan_type);
+
+	/*type 2 length = 4 sum_length: 10*/ 
+	CWProtocolStore8(msgPtr, 2); /*type 2*/ 
+	CWProtocolStore8(msgPtr, 2); /*type 2 length = 2*/
+	CWProtocolStore16(msgPtr, channel_scan_interval);
+	wid_syslog_debug_debug(WID_DEFAULT,"%s: type 2 length 2 channel_scan_interval: %d\n", __func__, channel_scan_interval);
+
+	/*type 3 length = 4 sum_length: 14*/ 
+	CWProtocolStore8(msgPtr, 3); /*type 3*/ 
+	CWProtocolStore8(msgPtr, 2); /*type 3 length =2 */
+	CWProtocolStore16(msgPtr, channel_scan_time);
+	wid_syslog_debug_debug(WID_DEFAULT,"%s: type 3 length 2 channel_scan_time: %d\n", __func__, channel_scan_time);
+
+	/*type 4 length = 3 sum_length: 17*/ 
+	CWProtocolStore8(msgPtr, 4); /*type 4*/ 
+	CWProtocolStore8(msgPtr, 1); /*type 4 length =1*/
+	CWProtocolStore8(msgPtr, 1); /*1: to server, 2: to AC*/
+	wid_syslog_debug_debug(WID_DEFAULT,"%s: type 4 length 1 to server:1\n", __func__);
+
+	/*type 5 length = 3 sum_length: 20*/ 
+	CWProtocolStore8(msgPtr, 5); /*type 5*/ 
+	CWProtocolStore8(msgPtr, 1); /*type 5 length =1 */
+	CWProtocolStore8(msgPtr, 1); /*1: UDP, 2: TCP*/
+	wid_syslog_debug_debug(WID_DEFAULT,"%s: type 5 length 1 udp:1\n", __func__);
+
+	/*type 6 length = 6 sum_length: 26*/ 
+	CWProtocolStore8(msgPtr, 6); /*type 6*/ 
+	CWProtocolStore8(msgPtr, 4); /*type 6 length =4 */
+	CWProtocolStore32(msgPtr, server_ip); /*server ip*/
+	ip_long2str(server_ip, &ipstr);
+	wid_syslog_debug_debug(WID_DEFAULT,"%s: type 6 length 4 server ip:%s\n", __func__, ipstr);
+
+	/*type 7 length = 4 sum_length: 30*/ 
+	CWProtocolStore8(msgPtr, 7); /*type 7*/ 
+	CWProtocolStore8(msgPtr, 2); /*type 7 length =2 */
+	CWProtocolStore16(msgPtr, server_port); /*server port*/
+	wid_syslog_debug_debug(WID_DEFAULT,"%s: type 7 length 2 server port:%d\n", __func__, server_port);
+
+	/*type 8 length = 3 sum_length: 33*/ 
+	CWProtocolStore8(msgPtr, 8); /*type 8*/ 
+	CWProtocolStore8(msgPtr, 1); /*type 8 length =1 */
+	CWProtocolStore8(msgPtr, 0); /*sta_num*/
+	wid_syslog_debug_debug(WID_DEFAULT,"%s: type 8 length 1 sta num :0\n", __func__);
+
+	/*type 9 length = 3 sum_length: 36*/ 
+	CWProtocolStore8(msgPtr, 9); /*type 9*/ 
+	CWProtocolStore8(msgPtr, 1); /*type 9 length =1 */
+	CWProtocolStore8(msgPtr, l_radioid); /*radio id :0*/
+	wid_syslog_debug_debug(WID_DEFAULT,"%s: type 9 length 1 l_radioid %d\n", __func__, l_radioid);
+
+	/*type 10 length = 10 sum_length: 46*/ 
+	CWProtocolStore8(msgPtr, 10); /*type 11*/ 
+	CWProtocolStore8(msgPtr, CHANNEL_BIT_MAP); /*type 11 length = CHANNEL_BIT_MAP */
+	CWProtocolStoreRawBytes(msgPtr,(char *)(channel), CHANNEL_BIT_MAP); /*channel bit map*/
+	unsigned long long channel_list = (unsigned long long)channel[7] + (( (unsigned long long)channel[6])<<8) 
+		+(((unsigned long long)channel[5])<<16)
+		+(((unsigned long long) channel[4])<<24)
+		+(((unsigned long long) channel[3])<<32)
+		+(((unsigned long long) channel[2])<<40)
+		+(((unsigned long long) channel[1])<<48)
+		+(((unsigned long long) channel[0])<<54);
+	wid_syslog_debug_debug(WID_DEFAULT,"%s: type 10 length 8 channel %llu\n", __func__, channel_list);
+
+	/*type 11 length = 4 sum_length: 50*/  
+	CWProtocolStore8(msgPtr, 11); /*type 11*/ 
+	CWProtocolStore8(msgPtr, 2); /*type 11 length =2 */
+	CWProtocolStore16(msgPtr, report_interval); /*report interval*/
+	wid_syslog_debug_debug(WID_DEFAULT,"%s: type 11 length 2 report_interval %d\n", __func__, report_interval);
+
+	/*type 12 length = 3 sum_length: 53*/  
+	CWProtocolStore8(msgPtr, 12); /*type 12*/ 
+	CWProtocolStore8(msgPtr, 1); /*type 11 length =1 */
+	CWProtocolStore8(msgPtr, rssi); /*rssi*/
+	wid_syslog_debug_debug(WID_DEFAULT,"%s: type 12 length 1 rssi %d\n", __func__, rssi);
+
+	return CWAssembleMsgElemVendor(msgPtr, 
+		                 CW_MSG_ELEMENT_VENDOR_SPEC_PAYLOAD_CW_TYPE);
 }
 
 

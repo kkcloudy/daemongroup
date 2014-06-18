@@ -81,17 +81,33 @@ typedef enum{
 	WTP_CONFIGURE_ERROR_REPROT = 29,
 	WTP_STA_FLOW_OVERFLOW_RX_REPORT = 30,
 	WTP_STA_FLOW_OVERFLOW_TX_REPROT = 31,
-	WTP_STA_ONLINE_FULL_REPROT = 32
+	WTP_STA_ONLINE_FULL_REPROT = 32,
+	WTP_WIFI_LOCATE_PUBLIC_CONFIG = 33
 }WtpOP;
+
+typedef struct{
+	char mac[MAC_LEN];
+}MACTYPE;
+
 
 typedef struct{
 	WtpOP Wtp_Op;
 	unsigned int WTPID;
+	unsigned int i1;
+	unsigned int i2;
+	unsigned short s1;
+	unsigned short s2;
+	unsigned short s3;
+	unsigned char c1;
+	unsigned char c2;
 	unsigned char value1;
 	unsigned int value2;
+	unsigned short value3;
+	unsigned char value4;
 	char value[512];
 	char username[32];
 	char passwd[32];
+	MACTYPE macarry[128];
 }MQ_WTP;
 
 typedef enum{

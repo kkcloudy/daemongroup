@@ -6,6 +6,7 @@
 
 
 #define SHOW_ALL_WTP_TABLE_METHOD       1
+#define SHOW_WTP_WIFI_LOCATE_PUBLIC_CONIFG_METHOD  2 /*wangchao add*/
 
 
 typedef struct {
@@ -31,6 +32,13 @@ typedef struct instance_parameter_s {
 typedef int (show_all_wtp_table)(dbus_parameter, 
                                  DBusConnection *, 
                                  void **);
+/*wangchao add */
+typedef int (wifi_location) (dbus_parameter,
+							 DBusConnection *,
+							 void **,
+	 						 long);
+
+
                                      
 typedef void (free_table_message)(void *);
 

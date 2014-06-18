@@ -3831,6 +3831,7 @@ void STA_OP(TableMsg *msg){
 							sta->txbytes=(unsigned long long)(msg->u.STAINFO[j].tx_bytes);
 							asd_printf(ASD_DEFAULT,MSG_DEBUG,"sta "MACSTR" rxbytes %llu txbytes %llu\n",MAC2STR(msg->u.STAINFO[j].STAMAC),sta->rxbytes,sta->txbytes);
 						}
+						signal_sta_come(bss[i], sta);
 					}
 #ifdef ASD_USE_PERBSS_LOCK
 					pthread_mutex_unlock(&(bss[i]->asd_sta_mutex));

@@ -2566,6 +2566,8 @@ DEFUN (config_exit,
 	case 	HANSI_EAG_NODE:
 	case 	HANSI_PDC_NODE:
 	case 	HANSI_RDC_NODE:
+	case   	 SCANLOCATE_NODE:
+	case	HANSI_SCANLOCATE_NODE:
 	case	HANSI_POOL_NODE:			/* pool node */	
 	case	HANSI_POOLV6_NODE:
 	case	HANSI_IU_NODE:
@@ -2834,6 +2836,8 @@ DEFUN (config_end,
 	case DNSCACHE_NODE:
 	case EAG_NODE:
 	case HANSI_EAG_NODE:
+	case SCANLOCATE_NODE:
+	case HANSI_SCANLOCATE_NODE:
 	case LOCAL_HANSI_EAG_NODE:
 	case PDC_NODE:
 	case HANSI_PDC_NODE:
@@ -4045,6 +4049,8 @@ install_default (enum node_type node)
 	||node == LOCAL_HANSI_POOL_NODE
 	||node == LOCAL_HANSI_POOLV6_NODE
 	||node == LOCAL_HANSI_AC_GROUP_NODE		/*wireless ac_group_node*/
+	||node == SCANLOCATE_NODE
+	||node == HANSI_SCANLOCATE_NODE
 #endif
 #ifdef _D_CC_
 	||node == WOCDEBUG_NODE

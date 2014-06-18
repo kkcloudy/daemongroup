@@ -54,6 +54,86 @@ int parse_short_ID(char* str,unsigned short* ID){
 	
 }
 
+void delsame_radio
+(
+	update_radio_list *pradiolist
+)
+{
+	struct tag_radioid *p = NULL,
+					   *q = NULL,
+					   *temp1 = NULL,
+					   *temp2 = NULL;
+	
+	p = pradiolist->radioidlist;
+	if (p == NULL)
+	{
+		return;
+	}
+	
+	q = p->next;
+	if (q == NULL)
+	{
+		return;
+	}
+	
+	while ((p != NULL) && (p->next != NULL))
+	{
+		temp1 = p;
+		q = p->next;  
+		
+		while(q)
+		{
+			if(p->radioid != q->radioid)
+			{
+				q = q->next;
+				temp1 = temp1->next;
+			}
+			else
+			{
+				temp2 = q;
+				q = q->next;
+				temp1->next = q;
+				free(temp2);
+				temp2 = NULL;
+				
+				pradiolist->count--;
+			}
+		}
+		p = p->next;
+	}
+}
+
+
+void destroy_input_radio_list
+(
+	update_radio_list *pradiolist
+)
+{
+	if (pradiolist == NULL)
+	{
+		return;
+	}
+
+	struct tag_radioid *phead = NULL;
+	struct tag_radioid *pnext = NULL;
+	
+	phead = pradiolist->radioidlist;
+	
+	while (phead != NULL)
+	{			
+		pnext = phead->next;	
+		free(phead);
+		phead = NULL;
+		phead = pnext;
+	}	
+	
+	free(pradiolist);
+	pradiolist = NULL;
+
+	return;
+}
+
+
 int process_rate_list(int iArray[],int num) 
 { 
 

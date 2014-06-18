@@ -6686,6 +6686,168 @@ StaIPAddress		OBJECT-TYPE
 			::= { dot11BssStaInfoEntry 3 }
 
 			
+
+dot11WtpWifiPositionPublicInfoTable OBJECT-TYPE
+	    SYNTAX      SEQUENCE OF Dot11WtpWifiPositionPublicInfoEntry
+	    MAX-ACCESS  not-accessible
+	    STATUS      current
+	    DESCRIPTION
+	        "This table shows wtp station wifi position public information."
+	    ::= { wtpStation 6 }
+
+dot11WtpWifiPositionPublicInfoEntry  OBJECT-TYPE
+    SYNTAX      Dot11WtpWifiPositionPublicInfoEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "wifi position information."
+    INDEX { wtpMacAddr
+    	    ,  WifiPositionFrequency }
+    ::= { dot11WtpWifiPositionPublicInfoTable 1 }
+
+Dot11WtpWifiPositionPublicInfoEntry ::=SEQUENCE{
+	WifiPositionFrequency			INTEGER,
+        wtpWifiPositionServerIp			IpAddress,
+        wtpWifiPositionServerPort		INTEGER,
+        wtpWifiPositionScanInterval		INTEGER,
+        wtpWifiPositionScanTime			INTEGER,
+        wtpWifiPositionScanChannel		Counter64,
+        wtpWifiPositionScanType			INTEGER,
+        wtpWifiPositionDataReportInterval	INTEGER,
+        wtpWifiPositionRssiThreshold		INTEGER,
+        wtpWifiPositionScanSwitch		INTEGER
+} 
+WifiPositionFrequency			OBJECT-TYPE
+					SYNTAX     INTEGER(0..1)
+					MAX-ACCESS read-only
+					STATUS     current
+					DESCRIPTION
+						"wifi position frequency, 0 means 2.4G, 1 means 5.8G."
+					::= { dot11WtpWifiPositionPublicInfoEntry 1 }
+
+wtpWifiPositionServerIp			OBJECT-TYPE
+					SYNTAX     IpAddress
+					MAX-ACCESS read-write
+					STATUS     current
+					DESCRIPTION
+						"wtp wifi position server ip."
+					::= { dot11WtpWifiPositionPublicInfoEntry 2 }
+			
+wtpWifiPositionServerPort		OBJECT-TYPE
+					SYNTAX     INTEGER(1..65535)
+					MAX-ACCESS read-write
+					STATUS     current
+					DESCRIPTION
+						"wtp wifi position server port."
+					::= { dot11WtpWifiPositionPublicInfoEntry 3 }
+
+wtpWifiPositionScanInterval		OBJECT-TYPE
+					SYNTAX     INTEGER(0..2000)
+					MAX-ACCESS read-write
+					STATUS     current
+					DESCRIPTION
+						"wtp wifi position scan interval.(unit:ms)"
+					::= { dot11WtpWifiPositionPublicInfoEntry 4 }	
+				
+wtpWifiPositionScanTime			OBJECT-TYPE
+					SYNTAX     INTEGER(1..2000)
+					MAX-ACCESS read-write
+					STATUS     current
+					DESCRIPTION
+						"wtp wifi position scan time.(unit:ms)"
+					::= { dot11WtpWifiPositionPublicInfoEntry 5 }
+				
+wtpWifiPositionScanChannel		OBJECT-TYPE
+					SYNTAX     Counter64
+					MAX-ACCESS read-write
+					STATUS     current
+					DESCRIPTION
+						"wtp wifi position scan channel, default scan all channel."
+					::= { dot11WtpWifiPositionPublicInfoEntry 6 }	
+				
+wtpWifiPositionScanType			OBJECT-TYPE
+					SYNTAX     INTEGER{
+							  	All(0),
+								Associate(1),
+								NonAssociated(2)
+							  }
+					MAX-ACCESS read-write
+					STATUS     current
+					DESCRIPTION
+						"wtp wifi position scan type, default type is all."
+					::= { dot11WtpWifiPositionPublicInfoEntry 7 }	
+				
+wtpWifiPositionDataReportInterval	OBJECT-TYPE
+					SYNTAX     INTEGER(1000..20000) 
+					MAX-ACCESS read-write
+					STATUS     current
+					DESCRIPTION
+						"wtp wifi position data report interval.(unit:ms)"
+					::= { dot11WtpWifiPositionPublicInfoEntry 8 }	
+					
+wtpWifiPositionRssiThreshold		OBJECT-TYPE
+					SYNTAX     INTEGER(0..95)
+					MAX-ACCESS read-write
+					STATUS     current
+					DESCRIPTION
+						"wtp wifi position rssi threshold."
+					::= { dot11WtpWifiPositionPublicInfoEntry 9 }
+					
+wtpWifiPositionScanSwitch		OBJECT-TYPE
+					SYNTAX     INTEGER{
+							  	off(0),
+								on(1)
+							  }
+					MAX-ACCESS read-write
+					STATUS     current
+					DESCRIPTION
+						"wtp wifi position scan switch."
+					::= { dot11WtpWifiPositionPublicInfoEntry 10 }	
+					
+--**********************************************************************************************
+dot11WifiPositionGlobalInfoTable OBJECT-TYPE
+	    SYNTAX      SEQUENCE OF Dot11WifiPositionGlobalInfoEntry
+	    MAX-ACCESS  not-accessible
+	    STATUS      current
+	    DESCRIPTION
+	        "This table shows wifi position global information."
+	    ::= { wtpStation 7 }
+
+dot11WifiPositionGlobalInfoEntry  OBJECT-TYPE
+    SYNTAX      Dot11WifiPositionGlobalInfoEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "wifi position global information."
+    INDEX { WifiPositionFrequency }
+    ::= { dot11WifiPositionGlobalInfoTable 1 }
+
+Dot11WifiPositionGlobalInfoEntry ::=SEQUENCE{
+        WifiPositionGlobalPara			DisplayString,
+        WifiPositionGlobalScanSwitch		INTEGER
+} 
+WifiPositionGlobalPara			OBJECT-TYPE
+					SYNTAX     DisplayString
+					MAX-ACCESS read-write
+					STATUS     current
+					DESCRIPTION
+						"wifi position global parameter."
+					::= { dot11WifiPositionGlobalInfoEntry 1 }
+
+WifiPositionGlobalScanSwitch		OBJECT-TYPE
+					SYNTAX     INTEGER{
+							  	off(0),
+								on(1)
+							  }
+					MAX-ACCESS read-write
+					STATUS     current
+					DESCRIPTION
+						"wifi position global scan switch."
+					::= { dot11WifiPositionGlobalInfoEntry 2 }
+																																
+									
+
+
 			
 dot11WtpWAPIPerformanceStatsTable OBJECT-TYPE
 	    SYNTAX      SEQUENCE OF Dot11WtpWAPIPerformanceStatsEntry

@@ -7,7 +7,13 @@ int asd_dbus_init(void);
 
 int signal_sta_leave(unsigned char mac[6],unsigned int g_rdio,unsigned int g_bssindex,unsigned char wlanid,unsigned char rssi);//xiaodawei add rssi for telecom, 20110228
 int signal_sta_leave_abnormal(unsigned char mac[6],unsigned int g_rdio,unsigned int g_bssindex,unsigned char wlanid,unsigned char rssi);
-int signal_sta_come(unsigned char mac[6],unsigned int g_rdio,unsigned int g_bssindex,unsigned char wlanid,unsigned char rssi);//xiaodawei add rssi for telecom, 20110228
+//int signal_sta_come(unsigned char mac[6],unsigned int g_rdio,unsigned int g_bssindex,unsigned char wlanid,unsigned char rssi);//xiaodawei add rssi for telecom, 20110228
+int signal_sta_come
+(
+	struct asd_data *data,
+	struct sta_info  *sta
+);
+
 int signal_wtp_deny_sta(unsigned int wtpid);
 int signal_wapi_trap(unsigned char mac[MAC_LEN],unsigned int bss_index,unsigned char reason);
 int signal_sta_verify(const unsigned char mac[MAC_LEN],unsigned int bss_index);

@@ -43,6 +43,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../dmalloc-5.5.0/dmalloc.h"
 #endif
 
+extern int wid_wtp_login_loadconfig(unsigned int wtpid);
+
+
 CWBool ACEnterDataCheck (int WTPIndex, CWProtocolMessage *msgPtr)
 {
 	//CWProtocolMessage *messages = NULL;
@@ -190,7 +193,8 @@ CWBool ACEnterDataCheck (int WTPIndex, CWProtocolMessage *msgPtr)
 		}
 		else
 			wid_syslog_err("before clean and save config,wtpid %d is NULL \n",i);
-	
+
+		wid_wtp_login_loadconfig(WTPIndex);
 		gWTPs[WTPIndex].currentState = CW_ENTER_RUN;	
 		AC_WTP[WTPIndex]->WTPStat = WID_RUN;
 		gWTPs[WTPIndex].subState = CW_WAITING_REQUEST;

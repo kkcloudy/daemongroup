@@ -442,6 +442,120 @@ int parse_radio_id(char* ptr,int *wtpid,int *radioid)
 		
 }
 
+int radiolist_add_node(update_radio_list *list, unsigned int radioid)
+{
+	struct tag_radioid *tmp = NULL, *next = NULL;
+
+	if (!list || !radioid)
+	{
+		return 0;
+	}
+
+	for (next = list->radioidlist; next; next = next->next)
+	{
+		if (next->radioid == radioid)
+		{
+			return 0;
+		}
+	}
+	
+	tmp = (struct tag_radioid*)malloc(sizeof(struct tag_radioid));
+	if (!tmp)
+	{
+		return -1;
+	}
+	memset(tmp, 0, sizeof(struct tag_radioid));
+	tmp->radioid = radioid;
+	tmp->next = NULL;
+
+	tmp->next = list->radioidlist;
+	list->radioidlist = tmp;
+	list->count++;
+	
+	printf("add radio %d-%d (%d)\n", radioid / L_RADIO_NUM, radioid % L_RADIO_NUM, radioid);
+
+	return 0;
+}
+
+
+int parse_radio_list(char *ptr, update_radio_list *list)
+{
+	char  *endPtr = NULL;
+	unsigned int g_radioid = 0, wtpid = 0, id = 0;
+	
+	endPtr = ptr;
+	if (!ptr)
+	{
+		return -1;
+	}
+
+	while (endPtr && *endPtr) 
+	{
+		
+		id = strtoul(endPtr, &endPtr, 10);
+
+		/* TODO */		
+		if ((',' == *endPtr)) 
+		{
+			if (0 == wtpid)
+			{
+				if (id)
+				{
+					g_radioid = id;
+					radiolist_add_node(list, g_radioid);
+					wtpid = 0;
+				}
+			}
+			else
+			{
+				if (id >= L_RADIO_NUM)
+				{
+					return -1;
+				}
+				g_radioid = wtpid * L_RADIO_NUM + id;
+				radiolist_add_node(list, g_radioid);
+				wtpid = 0;
+			}
+			endPtr++;
+		}
+		else if ('-' == *endPtr)
+		{
+			wtpid = id;
+			endPtr++;
+		}
+		else if ('\0' == *endPtr)
+		{
+			if (0 == wtpid)
+			{
+				if (id)
+				{
+					g_radioid = id;
+					radiolist_add_node(list, g_radioid);					
+					wtpid = 0;
+				}
+			}
+			else
+			{
+				if (id >= L_RADIO_NUM)
+				{
+					return -1;
+				}
+				g_radioid = wtpid * L_RADIO_NUM + id;
+				radiolist_add_node(list, g_radioid);
+				
+				wtpid = 0;
+			}
+			break; 
+		}
+		else 
+		{
+			return -1;
+		}
+	}
+
+	return 0;	
+}
+
 
 DEFUN(show_radio_list_cmd_func,
 		 show_radio_list_cmd,

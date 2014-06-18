@@ -19,6 +19,7 @@ typedef enum{
 	B_END = 6,
 	B_CHECK_ReREQ = 7,
 	B_CHECK_LICENSE = 8,
+	B_WIFILOCATE_TYPE = 9,
 	B_LICENSE_REQUEST
 }BakMsgType;
 
@@ -70,12 +71,44 @@ typedef struct {
 }B_UPDATE_LICENSE;
 
 typedef struct {
+	u_int32_t groupid;	
+	unsigned short report_interval;
+	unsigned short report_pattern;
+	unsigned char scan_type;
+	unsigned long long channel;
+	unsigned short channel_scan_interval;
+	unsigned short channel_scan_dwell;
+	unsigned char rssi;
+	unsigned int server_ip;
+	unsigned short server_port;
+	unsigned int radio_count;
+	unsigned char bit_radioarray[WIFILOCATE_TO_BACK_SIZE];  //radio count 512*8
+	unsigned char bit_radioarray_isenable[WIFILOCATE_TO_BACK_SIZE];
+
+	unsigned int isenable;
+	unsigned int radioid;
+
+	/*for wifi-locate-0 use begin*/
+	unsigned short report_interval_5_8G;
+	unsigned short report_pattern_5_8G;
+	unsigned char scan_type_5_8G;
+	unsigned long long channel_5_8G;
+	unsigned short channel_scan_interval_5_8G;
+	unsigned short channel_scan_dwell_5_8G;
+	unsigned char rssi_5_8G;
+	unsigned int server_ip_5_8G;
+	unsigned short server_port_5_8G;
+	/*for wifi-locate-0 use end*/
+}B_UPDATE_WIFILOCATE;
+
+typedef struct {
 	BakMsgType Type;
 	BakOperate Op;
 	union{
 		B_UPDATE_WTP	WTP;
 		B_UPDATE_BSS	BSS;
 		B_UPDATE_LICENSE	LICENSE;
+		B_UPDATE_WIFILOCATE	WIFILOCATE;
 	}Bu;
 }B_Msg;
 
@@ -132,5 +165,12 @@ int update_license(int sockfd,struct sockaddr_in *addr);
 int check_license(B_Msg *tmp);
 int compare_license(B_Msg *tmp);
 extern int notice_hmd_update_state_change(unsigned int vrrid,unsigned int state);
-
+void bak_add_del_wifilocate
+(
+	int sockfd,
+	BakOperate op, 
+	unsigned int groupid, 
+	unsigned char isenable,
+	unsigned int radioid
+);
 #endif

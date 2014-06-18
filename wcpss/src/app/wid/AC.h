@@ -5,6 +5,7 @@
 void LISTEN_IF_INIT();
 int get_dir_wild_file_count(char *dir, char *wildfile);
 int wid_illegal_character_check(char *str , int len, int modify);
+#define BIT(x) (1 << (x))
 CWBool AsdWsm_WTPOp(unsigned int WtpID,Operate op);
 CWBool AsdWsm_bytes_info(unsigned int WTPID, Operate op);
 int WIDBAKInfoToASD(unsigned int state,struct sockaddr_in *ipaddr, unsigned int virIP,unsigned int vrrid,char *name, Operate op);
@@ -18,4 +19,32 @@ void CWResetWTPProtocolManager(CWWTPProtocolManager *WTPProtocolManager);
 int WIDBAKBSSInfoToASD(unsigned int vrrid,unsigned int *bssindex,unsigned int count,Operate op);
 int file_check(char *dir);
 extern unixAddr toASD_STA;
+
+#define WID_CHECK_WTP_STANDARD_RET(_wtpid_, ret)	\
+	do {	\
+		if (((_wtpid_) >= WTP_NUM) || ((_wtpid_) <= 0) || (NULL == AC_WTP[(_wtpid_)]))	\
+		{	\
+			wid_syslog_err("%s:%d wtp%d not exist\n", __func__, __LINE__, (_wtpid_));	\
+			return (ret);	\
+		}	\
+	} while (0);
+	
+
+#define WID_MALLOC_ERR()	\
+	do {	\
+			wid_syslog_err("%s:%d malloc failed: %s\n", __func__, __LINE__);	\
+	} while (0);
+
+
+#define WID_CHECK_POINTER_RET(ptr, ret)	\
+	do {	\
+		if (NULL == (ptr))	\
+		{	\
+			wid_syslog_err("%s:%d parameter NULL\n", __func__, __LINE__); \
+			return (ret); \
+		}	\
+	} while (0);
+
+	
+
 #endif

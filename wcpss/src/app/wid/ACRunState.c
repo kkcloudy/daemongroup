@@ -2100,6 +2100,7 @@ CWBool CWAssembleConfigurationUpdateRequest_WTP(CWProtocolMessage **messagesPtr,
 	CWProtocolMessage *msgElems = NULL;
 	int MsgElemCount = 0;
 	int k = -1;
+	int i = 0;
 	if(messagesPtr == NULL || fragmentsNumPtr == NULL) return CWErrorRaise(CW_ERROR_WRONG_ARG, NULL);
 	wid_syslog_debug_debug(WID_WTPINFO,"Assembling Configuration Update Request...");
 	switch(elem->mqinfo.u.WtpInfo.Wtp_Op){
@@ -2477,6 +2478,29 @@ CWBool CWAssembleConfigurationUpdateRequest_WTP(CWProtocolMessage **messagesPtr,
 			}
 			break;
 		#endif
+		case WTP_WIFI_LOCATE_PUBLIC_CONFIG:
+			MsgElemCount = 1;
+			CW_CREATE_PROTOCOL_MSG_ARRAY_ERR(msgElems, MsgElemCount, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
+			if (!(CWAssembleWifiLocatePublicConfig(&(msgElems[++k]),
+														      elem->mqinfo.u.WtpInfo.i1,
+														      elem->mqinfo.u.WtpInfo.c1,
+														      elem->mqinfo.u.WtpInfo.c2,
+														      elem->mqinfo.u.WtpInfo.value1,
+														      elem->mqinfo.u.WtpInfo.s1,
+														      elem->mqinfo.u.WtpInfo.s2,
+														      elem->mqinfo.u.WtpInfo.s3,
+														      elem->mqinfo.u.WtpInfo.value2,
+														      elem->mqinfo.u.WtpInfo.value3,
+														      (unsigned char *)elem->mqinfo.u.WtpInfo.value ))) 
+			{
+				for(i = 0; i <= k; i++)
+				{
+					CW_FREE_PROTOCOL_MESSAGE(msgElems[i]);
+				}
+				CW_FREE_OBJECT(msgElems);
+				return CW_FALSE; 
+			}
+			break;
 		default:
 			return CW_FALSE;
 	}

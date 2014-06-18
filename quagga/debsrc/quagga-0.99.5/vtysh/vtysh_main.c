@@ -260,7 +260,8 @@ int dl_dcli_init(boot_flag)
 	void (*dcli_bsd_init_func)(void);
 	void (*dcli_license_init_func)(void);
 	void (*dcli_wbridge_init_func)(void);
-
+	void (*dcli_scanlocate_init_func)(void);
+	
 	char *error;
 	int temp=boot_flag;
 
@@ -632,8 +633,18 @@ int dl_dcli_init(boot_flag)
 		{
 			(*dcli_wbridge_init_func)(); 
 		}	
-				
 
+		#if 1
+		dcli_scanlocate_init_func = dlsym(dcli_dl_handle_wid, "dcli_scanlocate_init");
+		if ((error = dlerror()) != NULL) {
+			printf(" Run without dcli_wbridge_init be called.\n");
+			fputs(error,stderr);
+		} 
+		else 
+		{
+			(*dcli_scanlocate_init_func)(); 
+		}
+		#endif
 	}
 	else 
 	{

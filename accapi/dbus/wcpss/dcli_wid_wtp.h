@@ -1351,5 +1351,40 @@ struct WtpOUIInfo_{
    struct WtpOUIInfo_ *next;
 };
 typedef struct WtpOUIInfo_ WtpOUIInfo;
+
+typedef struct DCLI_RADIOLIST
+{
+	u_int32_t  radioid;
+	struct DCLI_RADIOLIST *next;
+}dcli_radioList;
+
+struct dcli_wifi_locate_public_config    /*WIFI-LOCATE*/
+{
+	unsigned int groupid;
+	unsigned char state;    			/*state:1 enable . state:0 disable*/
+	unsigned short report_interval;
+	unsigned char scan_type;
+	unsigned long long channel;
+	unsigned short channel_scan_interval;
+	unsigned short channel_scan_time;
+	unsigned char rssi;
+	unsigned int server_ip;
+	unsigned short server_port;
+	unsigned char wtp_mac[MAC_LEN];
+	unsigned int wtpid;
+	unsigned int radio_count;
+	unsigned int wtp_num; /*wangchao add*/
+	dcli_radioList	*radiolist;
+};
+/*wangchao add*/
+typedef struct wifi_location_group
+{
+	unsigned char frequency;
+	unsigned int wtp_num;	
+	struct dcli_wifi_locate_public_config **public_config;	
+}WIFI_LOCATION_GROUP;
+
+
+
 #endif
 

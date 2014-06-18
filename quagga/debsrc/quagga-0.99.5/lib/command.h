@@ -236,6 +236,8 @@ enum node_type
   RDC_NODE,
   HANSI_RDC_NODE,
   LOCAL_HANSI_RDC_NODE,
+  SCANLOCATE_NODE,
+  HANSI_SCANLOCATE_NODE,
   SUBNET6_CONF_NODE,
   DHCRELAY_NODE,  
   ACSAMPLE_NODE,/*add by shaojunwu for acsample! whitch  supply  snmp and trap with ac info!*/

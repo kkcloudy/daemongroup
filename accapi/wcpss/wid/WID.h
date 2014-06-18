@@ -27,6 +27,8 @@ typedef unsigned char 		u_int8_t;
 typedef unsigned short 		u_int16_t;
 typedef unsigned int		u_int32_t;
 #endif/*_WCPSS_TYPE_DEF*/
+
+#define MAX_IP_STRLEN 16
 #define WID_ID_LEN	32
 #define WID_MAXN_INDEX 64
 #define WID_IP_LEN	4
@@ -133,6 +135,131 @@ typedef struct ex_ip_INFO
  unsigned int sip;
  unsigned char wtpmac[6];
 }ex_ip_info;
+
+
+
+
+struct tag_radioid{
+	unsigned int radioid;
+	struct tag_radioid *next; 
+	
+};
+
+struct tag_radioid_list{
+ 	int count;	 
+	struct tag_radioid * radioidlist;
+};
+typedef struct tag_radioid_list update_radio_list;
+
+
+
+/* add for wifi-locate-paramter-begin */
+#define MAX_CHANNEL_2_4G 13
+#define MIN_CHANNEL_2_4G 1
+#define MAX_CHANNEL_NUMBER 64 
+#define MAX_RSSI	95
+#define MIN_RSSI		0	     
+#define MAX_REPORT_INTERVAL	20000     //(ms)
+#define MIN_REPORT_INTERVAL	1000   //(ms)
+#define SCAN_TYPE_ALL	0  
+#define SCAN_TYPE_ASSOC	1
+#define SCAN_TYPE_NO_ASSOC	2
+/* add for wifi-locate-paramter-end */
+
+/*add for put portal-ip to wtp*/
+#define DEFAULT_PORTAL_IP_NUM 4
+
+#define  WID_CHECK_IP_FORMAT(ip) \
+	(\
+		((ip&(0xff000000)) == (0xff000000))\
+		||((ip& (0x000000ff )) == (0x000000ff ))\
+		||((ip& (0xff000000)) == (0x00000000 ))\
+		||((ip& (0x000000ff)) == (0x00000000))\
+	)\
+	
+//WID_CHECK_IP_FORMAT(ip) 
+//ip == 255.X.X.X
+//ip == X.X.X.255
+//ip == 0.X.X.X
+//ip == X.X.X.0
+
+typedef struct RADIOLIST
+{
+	u_int32_t  radioid;
+	struct RADIOLIST	*next;
+}radioList;
+
+typedef struct
+{
+	u_int32_t	 groupid;	
+	unsigned short report_interval;
+	unsigned short report_pattern;
+	unsigned char scan_type;
+	unsigned long long channel;
+	unsigned short channel_scan_interval;
+	unsigned short channel_scan_dwell;
+	unsigned char rssi;
+	unsigned int server_ip;
+	unsigned short server_port;
+	unsigned int radio_count;
+	radioList	*radiolist;
+	
+	unsigned char state; /*SNMP*/
+
+	/*for wifi-locate-0 use begin*/
+	unsigned short report_interval_5_8G;
+	unsigned short report_pattern_5_8G;
+	unsigned char scan_type_5_8G;
+	unsigned long long channel_5_8G;
+	unsigned short channel_scan_interval_5_8G;
+	unsigned short channel_scan_dwell_5_8G;
+	unsigned char rssi_5_8G;
+	unsigned int server_ip_5_8G;
+	unsigned short server_port_5_8G;
+	/*for wifi-locate-0 use end*/
+}WID_WIFI_LOCATE_CONFIG_GROUP;
+
+struct wid_rrm_config_group
+{
+	unsigned int groupid;
+	unsigned char enable;
+};
+
+struct wid_rfid_scan_config_group
+{
+	unsigned int groupid;
+	unsigned char enable;
+};
+
+struct wid_wifi_locate_config_group
+{
+	unsigned int groupid;
+	unsigned char enable;
+};
+
+struct wid_scanlocate_group
+{
+	struct wid_wifi_locate_config_group wifi_locate;
+	struct wid_rfid_scan_config_group rfid_scan;
+	struct wid_rrm_config_group  rrm;
+};
+
+typedef enum{
+	unkonwn_general_type=0,
+	channel_type=1,
+	channel_scan_time_type=2,
+	channel_scan_interval_type=3,
+	report_pattern_type=4,
+	report_interval_type=5,
+	server_ip_type=6,
+	server_port_type=7
+}wifi_locate_general_parameter_type;
+
+typedef enum{
+	unkonwn_special_type=0,
+	rssi_type=1,
+	scan_type_type=2
+}wifi_locate_special_parameter_type;
 
 
 /*
@@ -1097,6 +1224,7 @@ struct radio{
 	unsigned int radio_channel_width;
 	int radio_noise;
 	struct cpe_apply_wlan_vlan cpe_intf[8];
+	struct wid_scanlocate_group scanlocate_group; /*scan-locate*/
 };
 typedef struct radio WID_WTP_RADIO;
 struct wtp_extend {
@@ -2506,5 +2634,25 @@ struct wifi_nf_info
 
 /* AP EXTERNTION COMMAND MACRO */       /*yjl copy from aw3.1.2 .2014-2-28 */
 #define AP_EXT_CMD_NOTIFY_STA_PORTAL_AUTH "autelan tunnel_ctl ath.%d-%d setniflag %02X:%02X:%02X:%02X:%02X:%02X %d %u %u %u %u"
+
+struct res_node
+{
+	union
+	{
+		unsigned int wtpid;
+		unsigned int radioid;
+		wlan_t wlanid;
+	}u;
+	unsigned int res;	/* result */
+};
+
+
+struct res_head
+{
+	unsigned int num;
+	struct res_node *node;
+};
+
+
 
 #endif/*_WID_DEFINE_H*/

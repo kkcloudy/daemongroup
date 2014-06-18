@@ -196,7 +196,7 @@ void ieee802_1x_set_sta_authorized(struct asd_data *wasd,
 		for(i=0;i<6;i++)
 			mac[i]=sta->addr[i];
 
-		unsigned char rssi = sta->rssi;	//xiaodawei add rssi for telecom, 20110301
+		//unsigned char rssi = sta->rssi;	//xiaodawei add rssi for telecom, 20110301
 
 		if(!((ASD_SECURITY[SID])&&(ASD_SECURITY[SID]->hybrid_auth == 1)&&(ASD_SECURITY[SID]->extensible_auth == 1)))	//mahz add 2011.5.9
 			wasd->acc_tms++;
@@ -237,7 +237,8 @@ void ieee802_1x_set_sta_authorized(struct asd_data *wasd,
 		}
 		if(ASD_SECURITY[SID]->eap_sm_run_activated)
 			sta->reauthflag = 1;
-		signal_sta_come(mac,wasd->Radio_G_ID,wasd->BSSIndex,wasd->WlanID,rssi);
+		//signal_sta_come(mac,wasd->Radio_G_ID,wasd->BSSIndex,wasd->WlanID,rssi);
+		signal_sta_come(wasd, sta);
 		if(STA_STATIC_FDB_ABLE && wasd->bss_iface_type && wasd->br_ifname){
 			char ifname[IF_NAME_MAX]={0};
 			sprintf(ifname,"radio%d-%d-%d.%d",vrrid,wasd->Radio_G_ID/4,wasd->Radio_L_ID,wasd->WlanID);

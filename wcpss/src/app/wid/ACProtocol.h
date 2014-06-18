@@ -313,4 +313,19 @@ CWBool CWParaseWTPTerminalStatistics(
 CWBool CWAssembleMsgElemAPSetCPEChannelIntf(CWProtocolMessage *msgPtr, unsigned char op, unsigned short vlanId,unsigned char radioId,unsigned char wlanId);
 CWBool CWAssembleMsgElemRadiosetMGMTratebasewlan(CWProtocolMessage *msgPtr, unsigned char radioId,unsigned char wlanId,unsigned int rate);
 
+CWBool CWAssembleWifiLocatePublicConfig
+(
+	CWProtocolMessage *msgPtr,
+	unsigned int l_radioid,
+	unsigned char state,
+	unsigned char scan_type,
+	unsigned char rssi,
+	unsigned short report_interval,
+	unsigned short channel_scan_interval,
+	unsigned short	channel_scan_time,
+	unsigned int server_ip,
+	unsigned short server_port,
+	unsigned char *channel
+);
+
 #endif

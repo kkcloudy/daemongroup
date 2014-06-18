@@ -27,7 +27,7 @@ DCLI_MAIN_PATH = ../../../dcli/src/lib/
 
 DCLI_SHLIB_MAJOR = 0
 DCLI_SHLIB_MINOR = 1
-DCLI_OBJS = dcli_wbridge.o dcli_license.o dcli_bsd.o dcli_ap_group.o dcli_wtp.o dcli_radio.o dcli_ac.o dcli_wlan.o dcli_ebr.o dcli_ac_ip_list.o dcli_ac_roaming.o
+DCLI_OBJS = dcli_wbridge.o dcli_license.o dcli_bsd.o dcli_ap_group.o dcli_wtp.o dcli_radio.o dcli_ac.o dcli_wlan.o dcli_ebr.o dcli_ac_ip_list.o dcli_ac_roaming.o dcli_scanlocate.o
 DCLI_SHLIB_LINKERNAME = libdcli_wid.so
 DCLI_SHLIB_SONAME = $(DCLI_SHLIB_LINKERNAME).$(DCLI_SHLIB_MAJOR)
 DCLI_SHLIB_REALNAME = $(DCLI_SHLIB_SONAME).$(DCLI_SHLIB_MINOR)

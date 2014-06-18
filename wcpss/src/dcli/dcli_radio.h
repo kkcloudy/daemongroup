@@ -64,5 +64,9 @@ void CheckWIDIfPolicy(char *whichinterface, unsigned char wlan_if_policy);
 
 int parse_radio_id(char* ptr,int *wtpid,int *radioid);
 
+#define RADIO_LIST "Radio-list : for example 4,8 1-0,2-0\n"
+#define RADIO_LIST_STR "Radio-list : for example 4,8 1-0,2-0\n"
+
+
 #endif
 #endif
