@@ -1873,7 +1873,7 @@ ieee802_1x_receive_auth(struct radius_msg *msg, struct radius_msg *req,
 				    shared_secret_len);
 		ieee802_1x_store_radius_class(wasd, sta, msg);
 		ieee802_1x_update_sta_identity(wasd, sta, msg);
-		if (sm->eap_if->eapKeyAvailable &&
+		if (sm->eap_if->eapKeyAvailable && sm->eapol_key_crypt &&
 		    wpa_auth_pmksa_add(sta->wpa_sm, sm->eapol_key_crypt,
 				       session_timeout_set ?
 				       (int) session_timeout : -1, sm) == 0) {
