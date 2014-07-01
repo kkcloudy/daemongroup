@@ -591,16 +591,15 @@ extern int take_snapshot_timer_id;
 
 int takesnapshotfun()
 {
-	hmd_syslog_info("###%s line%d ###\n",__func__,__LINE__);
 
 	if(g_loable_takesnapshot_flag == 1)
 	{
-		hmd_syslog_info("###%s line%d ###\n",__func__,__LINE__);
+		
 		system("pkill takesnapshot.sh");
 	}
 	
 
-	hmd_syslog_info("###%s line%d ###\n",__func__,__LINE__);
+	
 	HmdTimerCancel(&take_snapshot_timer_id,1);
 	return 0;
 }
@@ -707,10 +706,10 @@ void HmdHandleTimer(void* arg) {
 			if (HMD_BOARD[i] != NULL)
 			{
 				for (j = 0; j < MAX_INSTANCE; j++ )
-				{		hmd_syslog_info("hmd timer num %d \n",j);
+				{		
 					if ((HMD_BOARD[i]->Hmd_Inst[j] != NULL) && (HMD_BOARD[i]->Hmd_Inst[j]->slot_no== i) && (HMD_BOARD[i]->Hmd_Inst[j]->Inst_ID == j))
 					{
-						sprintf(cmd,"sudo /opt/bin/vtysh -c \"en\n configure terminal\n  sync config %d-%d to %s\n\"" ,i,j,auto_sync_config_ip);
+						sprintf(cmd,"sudo /opt/bin/vtysh -c \"en\n configure terminal\n  sync config %d-%d to %s\n\"" ,i,j,HMD_BOARD[i]->Hmd_Inst[j]->auto_sync_config_ip);
 						hmd_syslog_info("hmd cmd: %s \n",cmd);
 						status = system(cmd);
 						ret = WEXITSTATUS(status);
@@ -723,7 +722,8 @@ void HmdHandleTimer(void* arg) {
 			}
 	
 		}
-		HMDTimerRequest(auto_sync_config_time*3600, &auto_sync_config_timerID,HMD_AUTO_SYNC_CONFIG,0,0);
+		if((auto_sync_config == 1)&&(auto_sync_config_switch == 1))
+			HMDTimerRequest(auto_sync_config_time*3600, &auto_sync_config_timerID,HMD_AUTO_SYNC_CONFIG,0,0);
 
 	}
 	HMD_FREE_OBJECT(a);

@@ -85,8 +85,8 @@ char MSGQ_PATH[PATH_LEN] = "/var/run/hmd/hmsgq";
 int HMDMsgqID = 0;
 unsigned int service_tftp_state = 0;//service tftp (0--disable;1--enable)
 unsigned int service_ftp_state = 0;//service ftp  (0--disable;1--enable)
-char auto_sync_config_ip[20] = {0};
 int auto_sync_config_time = 0;
+int auto_sync_config = 0;
 int auto_sync_config_switch= 0;
 int auto_sync_config_timerID = 0;
 

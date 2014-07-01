@@ -551,21 +551,24 @@ DBusMessage * hmd_dbus_hansi_show_running(DBusConnection *conn, DBusMessage *msg
 			/*fengwenchao add end*/
 		}
 	}
-	if (auto_sync_config_time != 0)
+	if(auto_sync_config)
 	{
-		totalLen += sprintf(cursor," set auto-sync config time %d\n",auto_sync_config_time);
-					cursor = showStr + totalLen; 
-	}
-	if (strlen(auto_sync_config_ip) > 6)
-	{
-		totalLen += sprintf(cursor," set auto-sync config ip %s\n",auto_sync_config_ip);
-					cursor = showStr + totalLen; 
-	}
-	if (auto_sync_config_switch  == 1)
-	{
-		totalLen += sprintf(cursor," set auto-sync config switch enable\n");
-					cursor = showStr + totalLen; 
-	}
+		if (auto_sync_config_time != 0)
+		{
+			totalLen += sprintf(cursor," set auto-sync config time %d\n",auto_sync_config_time);
+						cursor = showStr + totalLen; 
+		}
+		if ((HMD_BOARD[slot_id] != NULL) && (HMD_BOARD[slot_id]->Hmd_Inst[instID] != NULL) && strlen(HMD_BOARD[slot_id]->Hmd_Inst[instID]->auto_sync_config_ip) > 6)
+		{
+			totalLen += sprintf(cursor," set auto-sync config %d-%d ip %s\n",slot_id,instID,HMD_BOARD[slot_id]->Hmd_Inst[instID]->auto_sync_config_ip);
+						cursor = showStr + totalLen; 
+		}
+		if (auto_sync_config_switch  == 1)
+		{
+			totalLen += sprintf(cursor," set auto-sync config switch enable\n");
+						cursor = showStr + totalLen; 
+		}
+		}
 	if((num == 0)&&(num2 == 0)){
 		hmd_syslog_info("%s,line=%d.\n",__func__,__LINE__);
 		totalLen += sprintf(cursor,"          \n");
@@ -5768,8 +5771,12 @@ DBusMessage * hmd_dbus_interface_set_sync_config_ip(DBusConnection *conn, DBusMe
 	DBusError err;
 	dbus_error_init(&err);	
 	char *ipAddr = NULL;
+	unsigned int des_slotid = 0;
+	unsigned int insID = 0;
 	int ret = HMD_DBUS_SUCCESS;
 	if (!(dbus_message_get_args ( msg, &err,
+								DBUS_TYPE_UINT32,&des_slotid, 
+							 	DBUS_TYPE_UINT32,&insID,
 								DBUS_TYPE_STRING,&ipAddr,
 								DBUS_TYPE_INVALID))){
 
@@ -5781,21 +5788,68 @@ DBusMessage * hmd_dbus_interface_set_sync_config_ip(DBusConnection *conn, DBusMe
 		}
 		return NULL;
 	}
-	if (auto_sync_config_switch == 0 ) 
+	if( (HMD_BOARD[des_slotid] == NULL )||(HMD_BOARD[des_slotid]->Hmd_Inst[insID] == NULL))
 	{
-		memcpy(auto_sync_config_ip,ipAddr,strlen(ipAddr));
-		hmd_syslog_info("#########ip lenth :%d\n",strlen(ipAddr));
+		ret = 2;
 	}
 	else
 	{
-		ret = 1;
+		
+		if (HMD_BOARD[des_slotid]->Hmd_Inst[insID] != NULL)
+		memcpy(HMD_BOARD[des_slotid]->Hmd_Inst[insID]->auto_sync_config_ip,ipAddr,strlen(ipAddr));
+		hmd_syslog_info("ip lenth :%d\n",strlen(ipAddr));
+		
 	}
 	
 	reply = dbus_message_new_method_return(msg);	
 	dbus_message_iter_init_append(reply, &iter);
 	dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT32, &ret);
 	
-	hmd_syslog_info("set auto-sync config time %s  successfully\n",ipAddr);
+	hmd_syslog_info("set auto-sync config ip %s  successfully\n",ipAddr);
+	
+	return reply;	
+
+}
+
+DBusMessage * hmd_dbus_interface_delete_sync_config_ip(DBusConnection *conn, DBusMessage *msg, void *user_data)
+{
+	DBusMessage* reply;	
+	DBusMessageIter	 iter;
+	DBusError err;
+	dbus_error_init(&err);	
+	unsigned int des_slotid = 0;
+	unsigned int insID = 0;
+	int ret = HMD_DBUS_SUCCESS;
+	if (!(dbus_message_get_args ( msg, &err,
+								DBUS_TYPE_UINT32,&des_slotid, 
+							 	DBUS_TYPE_UINT32,&insID,
+								DBUS_TYPE_INVALID))){
+
+		hmd_syslog_err("Unable to get input args\n");
+				
+		if (dbus_error_is_set(&err)) {
+			hmd_syslog_err("%s raised: %s",err.name,err.message);
+			dbus_error_free(&err);
+		}
+		return NULL;
+	}
+	if( (HMD_BOARD[des_slotid] == NULL )||(HMD_BOARD[des_slotid]->Hmd_Inst[insID] == NULL))
+	{
+		ret = 2;
+	}
+	else
+	{
+		
+		if (HMD_BOARD[des_slotid]->Hmd_Inst[insID] != NULL)
+		memset(HMD_BOARD[des_slotid]->Hmd_Inst[insID]->auto_sync_config_ip,0,20);	
+		
+	}
+	
+	reply = dbus_message_new_method_return(msg);	
+	dbus_message_iter_init_append(reply, &iter);
+	dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT32, &ret);
+	
+	hmd_syslog_info("delete auto-sync config  successfully\n");
 	
 	return reply;	
 
@@ -5822,14 +5876,9 @@ DBusMessage * hmd_dbus_interface_set_sync_config_time(DBusConnection *conn, DBus
 		}
 		return NULL;
 	}
-	if (auto_sync_config_switch == 0 ) 
-	{
+
 		auto_sync_config_time = time;
-	}
-	else
-	{
-		ret = 1;
-	}
+	
 	reply = dbus_message_new_method_return(msg);
 	dbus_message_iter_init_append(reply, &iter);
 	dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT32, &ret);
@@ -5860,16 +5909,22 @@ DBusMessage * hmd_dbus_interface_set_sync_config_switch(DBusConnection *conn, DB
 		}
 		return NULL;
 	}
-	auto_sync_config_switch = policy;
-	if (policy == 1)
+	if(auto_sync_config)
 	{
-		HMDTimerRequest(auto_sync_config_time*3600,&auto_sync_config_timerID,HMD_AUTO_SYNC_CONFIG,0,0);
-	
+		if (policy == 1)
+		{
+			HMDTimerRequest(auto_sync_config_time*3600,&auto_sync_config_timerID,HMD_AUTO_SYNC_CONFIG,0,0);
+		
+		}
+		else
+		{	
+			HmdTimerCancel(&auto_sync_config_timerID,1);
+		}
+		auto_sync_config_switch = policy;
+		
 	}
 	else
-	{	
-		HmdTimerCancel(&auto_sync_config_timerID,1);
-	}
+		ret = 2;
 	reply = dbus_message_new_method_return(msg);
 	dbus_message_iter_init_append(reply, &iter);
 	dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT32, &ret);
@@ -5880,6 +5935,41 @@ DBusMessage * hmd_dbus_interface_set_sync_config_switch(DBusConnection *conn, DB
 
 }
 
+DBusMessage * hmd_dbus_interface_set_sync_config(DBusConnection *conn, DBusMessage *msg, void *user_data)
+{
+	DBusMessage* reply;	
+	DBusMessageIter	 iter;
+	DBusError err;
+	dbus_error_init(&err);	
+	int policy;
+	int ret = HMD_DBUS_SUCCESS;
+	if (!(dbus_message_get_args ( msg, &err,
+								DBUS_TYPE_UINT32,&policy,
+								DBUS_TYPE_INVALID))){
+
+		hmd_syslog_err("Unable to get input args\n");
+				
+		if (dbus_error_is_set(&err)) {
+			hmd_syslog_err("%s raised: %s",err.name,err.message);
+			dbus_error_free(&err);
+		}
+		return NULL;
+	}
+	if (auto_sync_config  != policy)
+		auto_sync_config = policy;
+	if (policy == 0)
+		auto_sync_config_switch = 0;
+	reply = dbus_message_new_method_return(msg);
+	dbus_message_iter_init_append(reply, &iter);
+	dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT32, &ret);
+	
+	hmd_syslog_info("set auto-sync config  %d end\n",policy);
+	
+	return reply;	
+
+}
+
+
 DBusMessage * hmd_dbus_interface_show_sync_config_state(DBusConnection *conn, DBusMessage *msg, void *user_data)
 {
 	DBusMessage* reply;	
@@ -5889,7 +5979,8 @@ DBusMessage * hmd_dbus_interface_show_sync_config_state(DBusConnection *conn, DB
 	int policy;
 	int time;
 	int state;
-	char *ip = NULL;
+	unsigned int i,j,count = 0;
+	char * ip = NULL;
 	int ret = HMD_DBUS_SUCCESS;
 	if (!(dbus_message_get_args ( msg, &err,
 								DBUS_TYPE_UINT32,&policy,
@@ -5905,13 +5996,42 @@ DBusMessage * hmd_dbus_interface_show_sync_config_state(DBusConnection *conn, DB
 	}
 	time = auto_sync_config_time;
 	state = auto_sync_config_switch;
-	ip =  auto_sync_config_ip;
 	reply = dbus_message_new_method_return(msg);
 	dbus_message_iter_init_append(reply, &iter);
 	dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT32, &ret);
 	dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT32, &time);
 	dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT32, &state);
-	dbus_message_iter_append_basic(&iter, DBUS_TYPE_STRING, &ip);
+	for (i= 0; i< MAX_SLOT_NUM; i++ )
+	{	
+		if (HMD_BOARD[i] != NULL)
+		{
+			for (j = 0; j < MAX_INSTANCE; j++ )
+			{	
+				if ((HMD_BOARD[i]->Hmd_Inst[j] != NULL) && strlen(HMD_BOARD[i]->Hmd_Inst[j]->auto_sync_config_ip) > 6)
+				{
+					count++;
+				}
+			}
+		}
+	}
+	dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT32, &count);
+	for (i= 0; i< MAX_SLOT_NUM; i++ )
+	{	
+		if (HMD_BOARD[i] != NULL)
+		{
+			for (j = 0; j < MAX_INSTANCE; j++ )
+			{	
+				if ((HMD_BOARD[i]->Hmd_Inst[j] != NULL) && strlen(HMD_BOARD[i]->Hmd_Inst[j]->auto_sync_config_ip) > 6)
+				{
+					dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT32,&i);
+					dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT32,&j);
+					ip = HMD_BOARD[i]->Hmd_Inst[j]->auto_sync_config_ip;
+					dbus_message_iter_append_basic(&iter, DBUS_TYPE_STRING, &ip );
+	
+				}
+			}
+		}
+	}
 	
 	hmd_syslog_info("show auto-sync config state end\n");
 	
@@ -6029,11 +6149,17 @@ static DBusHandlerResult hmd_dbus_message_handler (DBusConnection *connection, D
 		else if (dbus_message_is_method_call(message,HMD_DBUS_INTERFACE,HMD_DBUS_CONF_SET_AUTO_SYNC_CONFIG_IP)){
 		reply = hmd_dbus_interface_set_sync_config_ip(connection, message, user_data);
 		}
+		else if (dbus_message_is_method_call(message,HMD_DBUS_INTERFACE,HMD_DBUS_CONF_DELETE_AUTO_SYNC_CONFIG_IP)){
+		reply = hmd_dbus_interface_delete_sync_config_ip(connection, message, user_data);
+		}
 		else if (dbus_message_is_method_call(message,HMD_DBUS_INTERFACE,HMD_DBUS_CONF_SET_AUTO_SYNC_CONFIG_TIME)){
 		reply = hmd_dbus_interface_set_sync_config_time(connection, message, user_data);
 		}
 		else if (dbus_message_is_method_call(message,HMD_DBUS_INTERFACE,HMD_DBUS_CONF_SET_AUTO_SYNC_CONFIG_SWITCH)){
 		reply = hmd_dbus_interface_set_sync_config_switch(connection, message, user_data);
+		}
+		else if (dbus_message_is_method_call(message,HMD_DBUS_INTERFACE,HMD_DBUS_CONF_SET_AUTO_SYNC_CONFIG)){
+		reply = hmd_dbus_interface_set_sync_config(connection, message, user_data);
 		}
 		else if (dbus_message_is_method_call(message,HMD_DBUS_INTERFACE,HMD_DBUS_CONF_SHOW_AUTO_SYNC_CONFIG_STATE)){
 		reply = hmd_dbus_interface_show_sync_config_state(connection, message, user_data);

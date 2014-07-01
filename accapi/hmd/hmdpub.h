@@ -148,6 +148,7 @@ struct Hmd_Inst_Mgmt{
 	int wid_check_timeout;
 	int asd_check_timeout;
 	int wsm_check_timeout;
+	char auto_sync_config_ip[20];
 	int eag_check_timeout;
 	int rdc_check_timeout;
 	int pdc_check_timeout;
