@@ -14100,7 +14100,7 @@ int WID_ENABLE_WLAN_APPLY_RADIO(unsigned int RadioId, unsigned char WlanId)
 
 	msg.mqinfo.u.WlanInfo.HideESSid = AC_WLAN[WlanId]->HideESSid;
 	memset(msg.mqinfo.u.WlanInfo.WlanKey,0,DEFAULT_LEN);
-	if(msg.mqinfo.u.WlanInfo.WlanKey && AC_WLAN[WlanId]->WlanKey){
+	if( AC_WLAN[WlanId]->WlanKey){
 		memcpy(msg.mqinfo.u.WlanInfo.WlanKey,AC_WLAN[WlanId]->WlanKey,strlen(AC_WLAN[WlanId]->WlanKey));
 		}
 	else
@@ -14114,9 +14114,9 @@ int WID_ENABLE_WLAN_APPLY_RADIO(unsigned int RadioId, unsigned char WlanId)
 	msg.mqinfo.u.WlanInfo.Roaming_Policy = AC_WLAN[WlanId]->Roaming_Policy; 		/*Roaming (1 enable /0 disable)*/
 	memset(msg.mqinfo.u.WlanInfo.WlanEssid,0,ESSID_LENGTH);
 	//memcpy(msg.mqinfo.u.WlanInfo.WlanEssid,AC_WLAN[WlanId]->ESSID,ESSID_LENGTH);
-	if(AC_WLAN[WlanId]->ESSID){
-		memcpy(msg.mqinfo.u.WlanInfo.WlanEssid,AC_WLAN[WlanId]->ESSID,strlen(AC_WLAN[WlanId]->ESSID));
-		}
+	if (BSS != NULL){
+		memcpy(msg.mqinfo.u.WlanInfo.WlanEssid,BSS->SSID,strlen(BSS->SSID));
+	}
 	else
 		{
 		wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);

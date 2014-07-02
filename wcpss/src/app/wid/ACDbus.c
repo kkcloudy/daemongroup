@@ -83048,16 +83048,6 @@ int show_running_config_wtp(WID_WTP **WTP,int i,char *cursor,char **showStr2,cha
 									if((WTP[i]->WTP_Radio[j]->BSS[l_bssid]->WlanID == radioWlanid->wlanid)
 										&&(AC_WLAN[radioWlanid->wlanid] != NULL)&& (AC_WLAN[radioWlanid->wlanid]->want_to_delete != 1))		/* HuangLeilei add for AXSSZFI-1622 */
 									{
-										if(WTP[i]->WTP_Radio[j]->BSS[l_bssid]->vlanid != 0)
-										{
-											if(vrrid != 0){
-												totalLen += sprintf(cursor," ");
-												cursor = showStr + totalLen;
-											}
-											totalLen += sprintf(cursor," radio apply wlan %d base vlan %d\n",radioWlanid->wlanid,WTP[i]->WTP_Radio[j]->BSS[l_bssid]->vlanid);
-											cursor = showStr + totalLen;
-										}
-
 										if(WTP[i]->WTP_Radio[j]->BSS[l_bssid]->nas_port_id[0] != 0)
 										{
 											if(vrrid != 0){
@@ -83077,7 +83067,7 @@ int show_running_config_wtp(WID_WTP **WTP,int i,char *cursor,char **showStr2,cha
 											totalLen += sprintf(cursor," radio apply wlan %d base hotspot %d\n",radioWlanid->wlanid,WTP[i]->WTP_Radio[j]->BSS[l_bssid]->hotspot_id);
 											cursor = showStr + totalLen;
 										}
-								else if((WTP[i]->WTP_Radio[j]->BSS[l_bssid]->vlanid == 0) && ((WTP[i]->WTP_Radio[j]->BSS[l_bssid]->nas_port_id[0] == 0)) && (radioWlanid->ESSID)\
+								else if(((WTP[i]->WTP_Radio[j]->BSS[l_bssid]->nas_port_id[0] == 0)) && (radioWlanid->ESSID)\
 									&& (strcmp(AC_WLAN[radioWlanid->wlanid]->ESSID,radioWlanid->ESSID) != 0))
 								{
 									if(vrrid != 0){
@@ -83096,6 +83086,17 @@ int show_running_config_wtp(WID_WTP **WTP,int i,char *cursor,char **showStr2,cha
 									totalLen += sprintf(cursor," radio apply wlan %d\n",radioWlanid->wlanid);
 									cursor = showStr + totalLen;
 								}
+								
+								if(WTP[i]->WTP_Radio[j]->BSS[l_bssid]->vlanid != 0)
+								{
+									if(vrrid != 0){
+										totalLen += sprintf(cursor," ");
+										cursor = showStr + totalLen;
+									}
+									totalLen += sprintf(cursor," radio apply wlan %d base vlan %d\n",radioWlanid->wlanid,WTP[i]->WTP_Radio[j]->BSS[l_bssid]->vlanid);
+									cursor = showStr + totalLen;
+								}
+								
 								if(( AC_WLAN[radioWlanid->wlanid] != NULL)&&
 									(WTP[i]->WTP_Radio[j]->BSS[l_bssid]->multi_user_optimize_switch != AC_WLAN[radioWlanid->wlanid]->multi_user_optimize_switch))
 								{
