@@ -171,8 +171,8 @@ void ieee802_1x_set_sta_authorized(struct asd_data *wasd,
 		if((ASD_SECURITY[SID])&&(1 == ASD_SECURITY[SID]->account_after_authorize)){
 			accounting_sta_start(wasd, sta);
 		}
-		else if(ASD_SECURITY[SID]&&(sta->ipaddr != 0))
-		{
+		else if(ASD_SECURITY[SID]&&((sta->ip_addr.s_addr != 0) ||(asd_check_ipv6(sta->ip6_addr) != 0)))
+		{			
 			accounting_sta_start(wasd,sta);
 			if((NO_NEED_AUTH == sta->security_type) || (HYBRID_AUTH_EAPOL_SUCCESS(sta)))
 			{
@@ -182,7 +182,7 @@ void ieee802_1x_set_sta_authorized(struct asd_data *wasd,
 					AsdStaInfoToEAG(wasd,sta,ASD_AUTH);
 			}
 		}
-		if((1 ==asd_sta_getip_from_dhcpsnoop)&&(0 == sta->ipaddr))
+		if((1 ==asd_sta_getip_from_dhcpsnoop)&&(0 == sta->ip_addr.s_addr)&&(0 == asd_check_ipv6(sta->ip6_addr)))
 			asd_notice_to_dhcp(wasd,sta->addr,DHCP_IP);
 
 		/*yjl copy from aw3.1.2 for local forwarding.2014-2-28*/

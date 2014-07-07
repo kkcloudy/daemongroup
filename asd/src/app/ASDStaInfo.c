@@ -3583,6 +3583,13 @@ void asd_sta_roaming_management(struct sta_info *new_sta)
 			memset(new_sta->arpifname,0,sizeof(new_sta->arpifname));
 			memcpy(new_sta->arpifname,old_sta->arpifname,sizeof(old_sta->arpifname));
 		}
+		if(asd_check_ipv6(old_sta->ip6_addr) != 0 && asd_check_ipv6(new_sta->ip6_addr) == 0){
+			new_sta->ip6_addr = old_sta->ip6_addr;
+			memset(new_sta->in_addr,0,16);
+			memcpy(new_sta->in_addr,old_sta->in_addr,strlen(old_sta->in_addr));
+			memset(new_sta->arpifname,0,sizeof(new_sta->arpifname));
+			memcpy(new_sta->arpifname,old_sta->arpifname,sizeof(old_sta->arpifname));
+		}
 		new_sta->rflag = ASD_ROAM_2;//qiuchen
 		new_sta->PreBssIndex = old_sta->PreBssIndex;
 		new_sta->preAPID = old_sta->preAPID;
