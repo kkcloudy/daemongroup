@@ -18,6 +18,8 @@ typedef struct TrapData_t {
 	TrapList paramList;
 } TrapData;
 
+char *spaces_turn_underline(char *lte_switch_data);
+
 TrapData *trap_data_new(const char *full_oid);
 
 TrapData *trap_data_new_from_descr(TrapDescr *tDescr);

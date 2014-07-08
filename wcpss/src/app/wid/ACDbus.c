@@ -87009,7 +87009,7 @@ int wid_dbus_init(void)
 	return TRUE;
   
 }
-int wid_dbus_trap_wid_lte_fi_uplink_switch(unsigned int wtpindex)
+int wid_dbus_trap_wid_lte_fi_uplink_switchb(unsigned int wtpindex)
 {
 	DBusMessage *query;	
 	DBusError err;
@@ -87057,7 +87057,7 @@ int wid_dbus_trap_wid_lte_fi_uplink_switch(unsigned int wtpindex)
     }
 
 	
-	char *lte_mac = NULL;
+	/*char *lte_mac = NULL;
 	lte_mac = (char *)WID_MALLOC(sizeof(char)*LTE_UPLINK_MAC_LEN);
 	if (NULL == lte_mac)
 	{
@@ -87070,7 +87070,7 @@ int wid_dbus_trap_wid_lte_fi_uplink_switch(unsigned int wtpindex)
 	if((AC_WTP[wtpindex] != NULL)&&(AC_WTP[wtpindex]->lte_mac != NULL))
 	{
 		memcpy(lte_mac,AC_WTP[wtpindex]->lte_mac,LTE_UPLINK_MAC_LEN);
-	}
+	}*/
 
 	
 	unsigned short band;
@@ -87087,7 +87087,7 @@ int wid_dbus_trap_wid_lte_fi_uplink_switch(unsigned int wtpindex)
 		CW_FREE_OBJECT_WID(mac);
 		CW_FREE_OBJECT_WID(sn);
         CW_FREE_OBJECT_WID(date);
-		CW_FREE_OBJECT_WID(lte_mac);
+		//CW_FREE_OBJECT_WID(lte_mac);
 		return -1;
 	}
 	memset(ID,0,LTE_ID_LEN);
@@ -87104,7 +87104,7 @@ int wid_dbus_trap_wid_lte_fi_uplink_switch(unsigned int wtpindex)
 		CW_FREE_OBJECT_WID(mac);
 		CW_FREE_OBJECT_WID(sn);
         CW_FREE_OBJECT_WID(date);
-		CW_FREE_OBJECT_WID(lte_mac);
+		//CW_FREE_OBJECT_WID(lte_mac);
 		CW_FREE_OBJECT_WID(ID);
 		return -1;
 	}
@@ -87124,7 +87124,7 @@ int wid_dbus_trap_wid_lte_fi_uplink_switch(unsigned int wtpindex)
 			CW_FREE_OBJECT_WID(mac);
 			CW_FREE_OBJECT_WID(sn);
             CW_FREE_OBJECT_WID(date);
-			CW_FREE_OBJECT_WID(lte_mac);
+			//CW_FREE_OBJECT_WID(lte_mac);
 			CW_FREE_OBJECT_WID(ID);
 			CW_FREE_OBJECT_WID(MODE);
 			return -1;
@@ -87140,7 +87140,7 @@ int wid_dbus_trap_wid_lte_fi_uplink_switch(unsigned int wtpindex)
 			CW_FREE_OBJECT_WID(mac);
 			CW_FREE_OBJECT_WID(sn);
 			CW_FREE_OBJECT_WID(date);
-			CW_FREE_OBJECT_WID(lte_mac);
+			//CW_FREE_OBJECT_WID(lte_mac);
 			CW_FREE_OBJECT_WID(ID);
 			CW_FREE_OBJECT_WID(MODE);
 			return -1;
@@ -87160,14 +87160,15 @@ int wid_dbus_trap_wid_lte_fi_uplink_switch(unsigned int wtpindex)
 	dbus_message_append_args(query,
 						DBUS_TYPE_UINT32,&wtpindex,
 						DBUS_TYPE_STRING,&sn,
+						DBUS_TYPE_STRING,&date,
 						DBUS_TYPE_BYTE,&mac[0],
 						DBUS_TYPE_BYTE,&mac[1],
 						DBUS_TYPE_BYTE,&mac[2],
 						DBUS_TYPE_BYTE,&mac[3],
 						DBUS_TYPE_BYTE,&mac[4],
 						DBUS_TYPE_BYTE,&mac[5],
-						DBUS_TYPE_STRING,&date,
-						DBUS_TYPE_STRING,&lte_mac, 
+						
+						//DBUS_TYPE_STRING,&lte_mac, 
 						DBUS_TYPE_UINT16,&band, 
 						DBUS_TYPE_STRING,&ID,
 						DBUS_TYPE_STRING,&MODE,
@@ -87181,7 +87182,7 @@ int wid_dbus_trap_wid_lte_fi_uplink_switch(unsigned int wtpindex)
 	CW_FREE_OBJECT_WID(sn);
 	CW_FREE_OBJECT_WID(mac);
 	CW_FREE_OBJECT_WID(date);
-	CW_FREE_OBJECT_WID(lte_mac);
+	//CW_FREE_OBJECT_WID(lte_mac);
 	CW_FREE_OBJECT_WID(ID);
 	CW_FREE_OBJECT_WID(MODE);
 	CW_FREE_OBJECT_WID(netid);

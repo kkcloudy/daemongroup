@@ -1766,7 +1766,7 @@ int WID_CREATE_NEW_WTP(char *WTPNAME, unsigned int WTPID, unsigned char* WTPSN, 
 	AC_WTP[WTPID]->quitreason = WTP_UNUSED;
 	AC_WTP[WTPID]->lte_fi_quit_reason = 0;
 	AC_WTP[WTPID]->lte_switch_date = NULL;
-	AC_WTP[WTPID]->lte_mac = NULL;
+	//AC_WTP[WTPID]->lte_mac = NULL;
 	AC_WTP[WTPID]->band = 0;
 	AC_WTP[WTPID]->cell_id = NULL;
 	AC_WTP[WTPID]->lte_uplink_mode = NULL;

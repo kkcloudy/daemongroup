@@ -287,7 +287,7 @@ CWBool  CWAssembleIpMacReport(CWProtocolMessage *msgPtr,int wtpid);
 CWBool	CWAssembleTerminalDisturbInfoReport(CWProtocolMessage *msgPtr,int wtpid);
 CWBool  CWAssembleWtpEthMtu(CWProtocolMessage *msgPtr,int wtpid,unsigned char eth_index);
 void CWProtocolRetrieve64(CWProtocolMessage *msgPtr,unsigned long long *val) ;
-extern int wid_dbus_trap_wid_lte_fi_uplink_switch(unsigned int wtpindex);
+extern int wid_dbus_trap_wid_lte_fi_uplink_switchb(unsigned int wtpindex);
 extern int wid_dbus_trap_wtp_ap_ACTimeSynchroFailure(int wtpindex,unsigned char flag);
 extern int wid_dbus_trap_wtp_channel_terminal_interference(int wtpindex,unsigned char radio_id, char chchannel,unsigned char mac[6]);
 extern int wid_dbus_trap_wtp_channel_terminal_interference_clear(int wtpindex,unsigned char radio_id, char chchannel,unsigned char mac[6]);

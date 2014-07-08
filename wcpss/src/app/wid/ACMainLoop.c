@@ -3289,7 +3289,7 @@ void CWDownWTP(unsigned int WTPIndex){
 	}
 
 	if (gtrapflag >= 1 && AC_WTP[WTPIndex]->lte_switch_date) {
-		wid_dbus_trap_wid_lte_fi_uplink_switch(WTPIndex);
+		wid_dbus_trap_wid_lte_fi_uplink_switchb(WTPIndex);
 		wid_syslog_err("trap lte-fi sys-switch to snmp\n");
 		AC_WTP[WTPIndex]->lte_switch_date = NULL;
 	}

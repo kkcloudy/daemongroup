@@ -30,6 +30,22 @@ snmp_input(int operation,
     return 1;
 }
 #endif
+/* lilong add it */
+char *spaces_turn_underline(char *lte_switch_data)
+{
+	int i = 0;
+	char * srcdate = NULL;
+
+	srcdate = lte_switch_data;
+	for(i=0;i<(int)strlen(srcdate);i++)
+	{
+		if(srcdate[i]==' ')
+		{
+			srcdate[i] = '-';
+		}
+	}
+	return srcdate;
+}
 
 TrapData *trap_data_new(const char *full_oid)
 {

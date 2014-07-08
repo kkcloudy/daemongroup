@@ -5003,6 +5003,7 @@ int wid_dbus_trap_wid_lte_fi_uplink_switch(DBusMessage * message)
 	unsigned int local_id = 0;
 	unsigned int instance_id = 0;
 	char *lte_switch_data = "";
+	char *date = "";//lilong add it
 	unsigned short band = 0;
 	char *ID = "";
 	char *MODE = "";
@@ -5012,14 +5013,15 @@ int wid_dbus_trap_wid_lte_fi_uplink_switch(DBusMessage * message)
 	if (!(dbus_message_get_args(message, &error,
 							DBUS_TYPE_UINT32, &wtpindex,
 							DBUS_TYPE_STRING, &wtpsn,
+							DBUS_TYPE_STRING,&lte_switch_data,
 							DBUS_TYPE_BYTE, &wtpmac[0],
 							DBUS_TYPE_BYTE, &wtpmac[1],
 							DBUS_TYPE_BYTE, &wtpmac[2],
 							DBUS_TYPE_BYTE, &wtpmac[3],
 							DBUS_TYPE_BYTE, &wtpmac[4],
 							DBUS_TYPE_BYTE, &wtpmac[5],
-							DBUS_TYPE_STRING,&lte_switch_data,
-							DBUS_TYPE_STRING,&wtpmac, 
+						
+							//DBUS_TYPE_STRING,&wtpmac, 
 							DBUS_TYPE_UINT16,&band, 
 							DBUS_TYPE_STRING,&ID,
 							DBUS_TYPE_STRING,&MODE,							
@@ -5060,12 +5062,13 @@ int wid_dbus_trap_wid_lte_fi_uplink_switch(DBusMessage * message)
 	
 	char mac_oid[MAX_MAC_OID];
 	get_ap_mac_oid(mac_oid, sizeof(mac_oid), mac_str);
-	
+	date = spaces_turn_underline(lte_switch_data);//lilong add it
+
 	trap_data_append_param_str(tData, "%s s %s",	EI_MAC_TRAP_DES,			mac_str);
 	trap_data_append_param_str(tData, "%s%s s %s",	EI_SN_TRAP_DES, 			mac_oid, wtpsn);
 	trap_data_append_param_str(tData, "%s%s s %s",	WTP_NET_ELEMENT_CODE_OID,	mac_oid, netid);
-	trap_data_append_param_str(tData, "%s%s s %s",	WTP_NET_ELEMENT_CODE_OID,	mac_oid, lte_switch_data);
-	trap_data_append_param_str(tData, "%s%s s %s",	WTP_NET_ELEMENT_CODE_OID,	mac_oid, band);
+	trap_data_append_param_str(tData, "%s%s s %s",	WTP_NET_ELEMENT_CODE_OID,	mac_oid, date);
+	trap_data_append_param_str(tData, "%s%s s %d",	WTP_NET_ELEMENT_CODE_OID,	mac_oid, band);
 	trap_data_append_param_str(tData, "%s%s s %s",	WTP_NET_ELEMENT_CODE_OID,	mac_oid, ID);
 	trap_data_append_param_str(tData, "%s%s s %s",	WTP_NET_ELEMENT_CODE_OID,	mac_oid, MODE);
 	

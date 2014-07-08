@@ -4069,7 +4069,7 @@ CWBool CWParseLTEFITrapInfo(CWProtocolMessage *msgPtr, int len, int wtpindex) {
 	int oldOffset;
 	unsigned char quit_reason;
 	char * switch_date;
-	char * LTE_mac;
+	unsigned char * LTE_mac;
 	unsigned short band;
 	char * lte_id;
 	char * MODE;
@@ -4091,14 +4091,14 @@ CWBool CWParseLTEFITrapInfo(CWProtocolMessage *msgPtr, int len, int wtpindex) {
 			break;
 		case 2:
 			 
-			 switch_date = CWProtocolRetrieveStr(msgPtr,LTE_UPLINK_DATE_LEN);
-			 wid_syslog_debug_debug(WID_DEFAULT, "switch_date is %s\n", *switch_date);
+			 switch_date = CWProtocolRetrieveRawBytes(msgPtr,LTE_UPLINK_DATE_LEN);
+			 wid_syslog_debug_debug(WID_DEFAULT, "switch_date is %s\n", switch_date);
 			 AC_WTP[wtpindex]->lte_switch_date = switch_date;
 
 			 
-			 LTE_mac = CWProtocolRetrieveStr(msgPtr,LTE_UPLINK_MAC_LEN);
-			 wid_syslog_debug_debug(WID_DEFAULT, "LTE_mac is %s\n", *LTE_mac);
-			 AC_WTP[wtpindex]->lte_mac = LTE_mac;
+			 LTE_mac = (unsigned char *)CWProtocolRetrieveRawBytes(msgPtr,LTE_UPLINK_MAC_LEN);
+			 wid_syslog_debug_debug(WID_DEFAULT, "LTE_mac is %s\n", LTE_mac);
+			 AC_WTP[wtpindex]->WTPMAC = LTE_mac;
 
 			 
 			 band = CWProtocolRetrieve16(msgPtr);
@@ -4106,16 +4106,16 @@ CWBool CWParseLTEFITrapInfo(CWProtocolMessage *msgPtr, int len, int wtpindex) {
              AC_WTP[wtpindex]->band = band;
 
 			 
-			 lte_id = CWProtocolRetrieveStr(msgPtr,LTE_ID_LEN);	
-			 wid_syslog_debug_debug(WID_DEFAULT, "ID is %s\n", *lte_id);
+			 lte_id = CWProtocolRetrieveRawBytes(msgPtr,LTE_ID_LEN);	
+			 wid_syslog_debug_debug(WID_DEFAULT, "ID is %s\n", lte_id);
 			 AC_WTP[wtpindex]->cell_id = lte_id;
 
 			 
-			 MODE = CWProtocolRetrieveStr(msgPtr,LTE_UPLINK_MODE_LEN);
-			 wid_syslog_debug_debug(WID_DEFAULT, "MODE is %s\n", *MODE);
+			 MODE = CWProtocolRetrieveRawBytes(msgPtr,LTE_UPLINK_MODE_LEN);
+			 wid_syslog_debug_debug(WID_DEFAULT, "MODE is %s\n", MODE);
 			 AC_WTP[wtpindex]->lte_uplink_mode = MODE;
 			 
-			 wid_dbus_trap_wid_lte_fi_uplink_switch(wtpindex);
+			 wid_dbus_trap_wid_lte_fi_uplink_switchb(wtpindex);
 			 
 			 CW_FREE_OBJECT_WID(MODE);
 			 CW_FREE_OBJECT_WID(lte_id);

@@ -15,7 +15,7 @@ void *wid_dbus_thread();
 #define ACDBUS_RADOI_TYPE_LEN 8
 
 #define LTE_UPLINK_DATE_LEN 24
-#define LTE_UPLINK_MAC_LEN 6
+//#define LTE_UPLINK_MAC_LEN 6
 #define LTE_ID_LEN 10
 #define LTE_UPLINK_MODE_LEN 8
 
@@ -67,7 +67,7 @@ typedef struct
 };*/
 int wid_dbus_trap_wtp_enter_imagedata_state(int wtpindex);
 int wid_dbus_trap_wtp_imagedata_error(int wtpindex, unsigned char err_code);
-int wid_dbus_trap_wid_lte_fi_uplink_switch(unsigned int wtpindex);
+int wid_dbus_trap_wid_lte_fi_uplink_switchb(unsigned int wtpindex);
 int wid_dbus_trap_wtp_channel_change(unsigned char chan_past,unsigned char chan_curr,unsigned int radioid);
 int wid_dbus_trap_wtp_code_start(int wtpindex);
 int wid_dbus_trap_wtp_electrify_register_circle(int wtpindex, int registertimer);
