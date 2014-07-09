@@ -106,6 +106,8 @@ static void pmksa_cache_free_entry(struct rsn_pmksa_cache *pmksa,
 {
 	struct rsn_pmksa_cache_entry *pos, *prev;
 
+	if(pmksa == NULL)
+	    return;
 	pmksa->pmksa_count--;
 	pmksa->free_cb(entry, pmksa->ctx);
 	pos = pmksa->pmkid[PMKID_HASH(entry->pmkid)];
@@ -146,6 +148,8 @@ static void pmksa_cache_expire(void *circle_ctx, void *timeout_ctx)
 	struct rsn_pmksa_cache *pmksa = circle_ctx;
 	struct os_time now;
 
+    if(pmksa == NULL)
+		return;
 	os_get_time(&now);
 	while (pmksa->pmksa && pmksa->pmksa->expiration <= now.sec) {
 		struct rsn_pmksa_cache_entry *entry = pmksa->pmksa;
@@ -163,7 +167,9 @@ static void pmksa_cache_set_expiration(struct rsn_pmksa_cache *pmksa)
 {
 	int sec;
 	struct os_time now;
-
+	
+    if(pmksa == NULL)
+	    return;
 	circle_cancel_timeout(pmksa_cache_expire, pmksa, NULL);
 	if (pmksa->pmksa == NULL)
 		return;
@@ -253,6 +259,8 @@ pmksa_cache_add(struct rsn_pmksa_cache *pmksa, const u8 *pmk, size_t pmk_len,
 	struct rsn_pmksa_cache_entry *entry, *pos, *prev;
 	struct os_time now;
 
+	if(pmksa == NULL)
+		return NULL;
 	if (pmk_len > PMK_LEN)
 		return NULL;
 
@@ -432,6 +440,8 @@ struct rsn_pmksa_cache_entry * pmksa_cache_get(struct rsn_pmksa_cache *pmksa,
 {
 	struct rsn_pmksa_cache_entry *entry;
 
+    if(pmksa == NULL);
+	    return NULL;
 	if (pmkid)
 		entry = pmksa->pmkid[PMKID_HASH(pmkid)];
 	else
