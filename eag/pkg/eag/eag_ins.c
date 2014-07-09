@@ -1194,8 +1194,13 @@ terminate_appconn_by_interface(eag_ins_t *eagins,
 	head = appconn_db_get_head(eagins->appdb);
 	list_for_each_entry_safe(appconn, next, head, node) {
 		if (0 == strcmp(appconn->session.intf, captive_interface)) {
-			terminate_appconn_nowait(appconn, eagins,
-						RADIUS_TERMINATE_CAUSE_ADMIN_REBOOT);
+			if (APPCONN_STATUS_AUTHED == appconn->session.state) {
+				terminate_appconn_nowait(appconn, eagins,
+							RADIUS_TERMINATE_CAUSE_ADMIN_REBOOT);
+			} else {
+				appconn_del_from_db(appconn);
+				appconn_free(appconn);
+			}
 		}
 	}
 }
@@ -7705,35 +7710,38 @@ eag_urlparam_splice_param( struct url_param_t *param,
 	}
 	
 	switch (param->param_type) {
-    case URL_PARAM_NASIP:
-    	eag_urlparam_splice_single(param, "nasip", query_str, query_size);
-        break;
-    case URL_PARAM_USERIP:
-    	eag_urlparam_splice_single(param, "userip", query_str, query_size);
-        break;
-    case URL_PARAM_USERMAC:
-    	eag_urlparam_splice_single(param, "usermac", query_str, query_size);
-        break;
-    case URL_PARAM_APMAC:
-    	eag_urlparam_splice_single(param, "apmac", query_str, query_size);
-        break;
-    case URL_PARAM_APNAME:
-    	eag_urlparam_splice_single(param, "apname", query_str, query_size);
-        break;
-    case URL_PARAM_ESSID:
-    	eag_urlparam_splice_single(param, "essid", query_str, query_size);
-        break;
-    case URL_PARAM_NASID:
-    	eag_urlparam_splice_single(param, "nasid", query_str, query_size);
-        break;
-    case URL_PARAM_ACNAME:
-    	eag_urlparam_splice_single(param, "acname", query_str, query_size);
+		case URL_PARAM_NASIP:
+		eag_urlparam_splice_single(param, "nasip", query_str, query_size);
+	break;
+		case URL_PARAM_USERIP:
+		eag_urlparam_splice_single(param, "userip", query_str, query_size);
+	break;
+		case URL_PARAM_USERMAC:
+		eag_urlparam_splice_single(param, "usermac", query_str, query_size);
+	break;
+		case URL_PARAM_APMAC:
+		eag_urlparam_splice_single(param, "apmac", query_str, query_size);
+	break;
+		case URL_PARAM_APNAME:
+		eag_urlparam_splice_single(param, "apname", query_str, query_size);
+	break;
+		case URL_PARAM_ESSID:
+		eag_urlparam_splice_single(param, "essid", query_str, query_size);
+	break;
+		case URL_PARAM_NASID:
+		eag_urlparam_splice_single(param, "nasid", query_str, query_size);
+	break;
+		case URL_PARAM_VLANID:
+		eag_urlparam_splice_single(param, "vlanid", query_str, query_size);
+	break;
+	case URL_PARAM_ACNAME:
+		eag_urlparam_splice_single(param, "acname", query_str, query_size);
 		break;
-    case URL_PARAM_FIRSTURL:
-    	eag_urlparam_splice_single(param, "firsturl", query_str, query_size);
-        break;
-    default:
-        break;
+	case URL_PARAM_FIRSTURL:
+		eag_urlparam_splice_single(param, "firsturl", query_str, query_size);
+		break;
+	default:
+		break;
 	}
 
 	return EAG_RETURN_OK;
@@ -7810,13 +7818,13 @@ eag_urlparam_splice_wispr( char *query_str,
 	    strncat(query_str, ";", query_size-strlen(query_str)-1);
 	    eag_urlparam_splice_common(query_str, query_size, wispr, UP_WISPR);
     }
-    if(';' == query_str[strlen(query_str)-1]) {
+	if(';' == query_str[strlen(query_str)-1]) {
 		query_str[strlen(query_str)-1] = '}';
 		query_str[strlen(query_str)] = '\0';
-    } else {
-    	strncat(query_str, "}", query_size-strlen(query_str)-1);
+	} else {
+		strncat(query_str, "}", query_size-strlen(query_str)-1);
 	}
-    eag_log_debug("eag_urlparam", "eag_urlparam_splice_wispr:%s\n", query_str);
+	eag_log_debug("eag_urlparam", "eag_urlparam_splice_wispr:%s\n", query_str);
 
 	return EAG_RETURN_OK;
 }
@@ -7830,24 +7838,24 @@ eag_urlparam_save_config( struct portal_srv_t *portal_srv )
 	eag_log_debug("eag_urlparam", "eag_urlparam_save_config begin!\n");
 	portal_srv->urlparam_add = 1;
 	memset(portal_srv->save_urlparam_config, 0, sizeof(portal_srv->save_urlparam_config));
-	
+
 	if (portal_srv->urlparam_query_str.common_param_num > 0) {
-	    eag_urlparam_splice_common(portal_srv->save_urlparam_config, sizeof(portal_srv->save_urlparam_config), 
-	    						&(portal_srv->urlparam_query_str), UP_COMMON);
+		eag_urlparam_splice_common(portal_srv->save_urlparam_config, sizeof(portal_srv->save_urlparam_config), 
+								&(portal_srv->urlparam_query_str), UP_COMMON);
 	}
 	if (portal_srv->urlparam_query_str.wispr_status > 0) {
-        eag_urlparam_splice_wispr(portal_srv->save_urlparam_config, sizeof(portal_srv->save_urlparam_config), 
-        						&(portal_srv->urlparam_query_str));
+		eag_urlparam_splice_wispr(portal_srv->save_urlparam_config, sizeof(portal_srv->save_urlparam_config), 
+								&(portal_srv->urlparam_query_str));
 	}
 
 	if(';' == portal_srv->save_urlparam_config[strlen(portal_srv->save_urlparam_config)-1]) {
 		portal_srv->save_urlparam_config[strlen(portal_srv->save_urlparam_config)-1] = '\0';
-    }
+	}
     
-    eag_log_debug("eag_urlparam", "eag_urlparam_save_config query str:%s\n", 
-    				portal_srv->save_urlparam_config);
+	eag_log_debug("eag_urlparam", "eag_urlparam_save_config query str:%s\n", 
+					portal_srv->save_urlparam_config);
 
-    return EAG_RETURN_OK;
+	return EAG_RETURN_OK;
 }
 
 int
@@ -7856,31 +7864,31 @@ eag_urlparam_del_single( struct urlparam_query_str_t *urlparam,
 						URLPARAM com_or_wis, 
 						char *param_str )
 {
-    struct url_param_t *param = NULL;
-    int i = 0;
+	struct url_param_t *param = NULL;
+	int i = 0;
 
 	if (urlparam == NULL || param_str == NULL) {
 		return -1;
 	}
     
-    if (UP_COMMON == com_or_wis) {
-	    for (i = 0; i < urlparam->common_param_num; i++) {
-	        param = &(urlparam->common_param[i]);
-	        if (param->param_type == param_type) {
+	if (UP_COMMON == com_or_wis) {
+		for (i = 0; i < urlparam->common_param_num; i++) {
+			param = &(urlparam->common_param[i]);
+			if (param->param_type == param_type) {
 				urlparam->common_param_num--;
 				memcpy(param, param+1, sizeof(struct url_param_t)*(urlparam->common_param_num-i));
-	            break;
-	        }
-	    }
+				break;
+			}
+		}
 	} else if (UP_WISPR == com_or_wis) {
 		for (i = 0; i < urlparam->wispr_param_num; i++) {
-	        param = &(urlparam->wispr_param[i]);
-	        if (param->param_type == param_type) {
+			param = &(urlparam->wispr_param[i]);
+			if (param->param_type == param_type) {
 				urlparam->wispr_param_num--;
 				memcpy(param, param+1, sizeof(struct url_param_t)*(urlparam->wispr_param_num-i));
-	            break;
-	        }
-	    }
+				break;
+			}
+		}
 	}
 	
     return EAG_RETURN_OK;
@@ -7896,31 +7904,34 @@ eag_urlparam_del_param( struct urlparam_query_str_t *urlparam,
 	}
 	
 	if (strstr(param_str, "nasip")) {
-	    eag_urlparam_del_single(urlparam, URL_PARAM_NASIP, com_or_wis, param_str);
+		eag_urlparam_del_single(urlparam, URL_PARAM_NASIP, com_or_wis, param_str);
 	}
 	if (strstr(param_str, "userip")) {
-	    eag_urlparam_del_single(urlparam, URL_PARAM_USERIP, com_or_wis, param_str);
+		eag_urlparam_del_single(urlparam, URL_PARAM_USERIP, com_or_wis, param_str);
 	}
 	if (strstr(param_str, "usermac")) {
-	    eag_urlparam_del_single(urlparam, URL_PARAM_USERMAC, com_or_wis, param_str);
+		eag_urlparam_del_single(urlparam, URL_PARAM_USERMAC, com_or_wis, param_str);
 	}
 	if (strstr(param_str, "apmac")) {
-	    eag_urlparam_del_single(urlparam, URL_PARAM_APMAC, com_or_wis, param_str);
+		eag_urlparam_del_single(urlparam, URL_PARAM_APMAC, com_or_wis, param_str);
 	}
 	if (strstr(param_str, "apname")) {
-	    eag_urlparam_del_single(urlparam, URL_PARAM_APNAME, com_or_wis, param_str);
+		eag_urlparam_del_single(urlparam, URL_PARAM_APNAME, com_or_wis, param_str);
 	}
 	if (strstr(param_str, "essid")) {
-	    eag_urlparam_del_single(urlparam, URL_PARAM_ESSID, com_or_wis, param_str);
+		eag_urlparam_del_single(urlparam, URL_PARAM_ESSID, com_or_wis, param_str);
 	}
 	if (strstr(param_str, "nasid")) {
-	    eag_urlparam_del_single(urlparam, URL_PARAM_NASID, com_or_wis, param_str);
+		eag_urlparam_del_single(urlparam, URL_PARAM_NASID, com_or_wis, param_str);
+	}
+	if (strstr(param_str, "vlanid")) {
+		eag_urlparam_del_single(urlparam, URL_PARAM_VLANID, com_or_wis, param_str);
 	}
 	if (strstr(param_str, "acname")) {
-	    eag_urlparam_del_single(urlparam, URL_PARAM_ACNAME, com_or_wis, param_str);
+		eag_urlparam_del_single(urlparam, URL_PARAM_ACNAME, com_or_wis, param_str);
 	}
 	if (strstr(param_str, "firsturl")) {
-	    eag_urlparam_del_single(urlparam, URL_PARAM_FIRSTURL, com_or_wis, param_str);
+		eag_urlparam_del_single(urlparam, URL_PARAM_FIRSTURL, com_or_wis, param_str);
 	}
 
 	return EAG_RETURN_OK;
@@ -7941,17 +7952,17 @@ eag_urlparam_del_wispr( struct urlparam_query_str_t *urlparam_query_str,
 	
 	memset(wispr_str, 0, sizeof(wispr_str));
 	
-    wispr_len = eag_urlparam_get_paramstr(param_str, wispr, wispr_str, sizeof(wispr_str));
+	wispr_len = eag_urlparam_get_paramstr(param_str, wispr, wispr_str, sizeof(wispr_str));
 	if (wispr_len > 0) {
 		eag_urlparam_del_param(urlparam_query_str, wispr_str, UP_WISPR);
 		if (strlen(wispr_str) == 0) {
 			memset(&(urlparam_query_str->wispr_param[0]), 0, 
 					sizeof(struct url_param_t)*MAX_URL_PARAM_NUM);
-            urlparam_query_str->wispr_status = 0;
-            urlparam_query_str->wispr_param_num = 0;
+			urlparam_query_str->wispr_status = 0;
+			urlparam_query_str->wispr_param_num = 0;
 		}
 		pos = strstr(param_str, wispr);
-	    eag_urlparam_cover(pos, pos+wispr_len);
+		eag_urlparam_cover(pos, pos+wispr_len);
 	}
 	
 	return EAG_RETURN_OK;
@@ -7966,7 +7977,7 @@ eag_urlparam_del_urlparam( struct urlparam_query_str_t *urlparam_query_str,
 	}
 	
 	if (strstr(param_str, "wispr")) {
-        eag_urlparam_del_wispr(urlparam_query_str, param_str);
+		eag_urlparam_del_wispr(urlparam_query_str, param_str);
 	}
 
 	eag_urlparam_del_param(urlparam_query_str, param_str, UP_COMMON);
@@ -7987,42 +7998,45 @@ eag_urlparam_add_param( char *url_param_str,
 	int i = 0;
 	int param_len = 0;
 	char *pos = NULL;
-	
+
 	if (url_param_str == NULL || urlparam == NULL) {
 		return EAG_ERR_PORTAL_SET_URLPARAM_INPUT_ERR;
 	}
-	
-    memset(cmpbuf, 0, sizeof(cmpbuf));
-    memset(feature_str, 0, sizeof(feature_str));
+
+	memset(cmpbuf, 0, sizeof(cmpbuf));
+	memset(feature_str, 0, sizeof(feature_str));
 
 	switch (param_type) {
 	case URL_PARAM_NASIP:
 		namestr = "nasip=";
-        break;
+		break;
 	case URL_PARAM_USERIP:
 		namestr = "userip=";
-        break;
+		break;
 	case URL_PARAM_USERMAC:
 		namestr = "usermac=";
-        break;
+		break;
 	case URL_PARAM_APMAC:
 		namestr = "apmac=";
-        break;
+		break;
 	case URL_PARAM_APNAME:
 		namestr = "apname=";
-        break;
+		break;
 	case URL_PARAM_ESSID:
 		namestr = "essid=";
-        break;
+		break;
 	case URL_PARAM_NASID:
 		namestr = "nasid=";
-        break;
+		break;
+	case URL_PARAM_VLANID:
+		namestr = "vlanid=";
+		break;
 	case URL_PARAM_ACNAME:
 		namestr = "acname=";
-        break;
+		break;
 	case URL_PARAM_FIRSTURL:
 		namestr = "firsturl=";
-        break;
+		break;
 	default:
 		return EAG_RETURN_OK;
 	}
@@ -8030,54 +8044,54 @@ eag_urlparam_add_param( char *url_param_str,
 	param_len = eag_urlparam_get_paramstr(url_param_str, namestr, cmpbuf, sizeof(cmpbuf));
 	if (param_len > 0) {
 		if (UP_WISPR == add_urlparam) {
-	        for (i = 0; i < urlparam->wispr_param_num; i++) {
-	            param = &(urlparam->wispr_param[i]);
-	            if (param->param_type == param_type) {
-	                break;
-	            } else {
+			for (i = 0; i < urlparam->wispr_param_num; i++) {
+				param = &(urlparam->wispr_param[i]);
+				if (param->param_type == param_type) {
+					break;
+				} else {
 					param = NULL;
-	            }
-	        }
-	        if (param == NULL) {
-	        	if (urlparam->wispr_param_num < MAX_URL_PARAM_NUM) {
+				}
+			}
+			if (param == NULL) {
+				if (urlparam->wispr_param_num < MAX_URL_PARAM_NUM) {
 					param = &(urlparam->wispr_param[urlparam->wispr_param_num]);
 					urlparam->wispr_param_num++;
 				} else {
 					return EAG_ERR_PORTAL_SET_URLPARAM_MAX_NUM;
 				}
-	        } else if (param != NULL) {
-            	memset(param, 0, sizeof(struct url_param_t));
-	        }
+			} else if (param != NULL) {
+				memset(param, 0, sizeof(struct url_param_t));
+			}
 		} else if (UP_COMMON == add_urlparam) {
-	        for (i = 0; i < urlparam->common_param_num; i++) {
-	            param = &(urlparam->common_param[i]);
-	            if (param->param_type == param_type) {
-	                break;
-	            } else {
+			for (i = 0; i < urlparam->common_param_num; i++) {
+				param = &(urlparam->common_param[i]);
+				if (param->param_type == param_type) {
+					break;
+				} else {
 					param = NULL;
-	            }
-	        }
-	        if (param == NULL) {
-	        	if (urlparam->common_param_num < MAX_URL_PARAM_NUM) {
+				}
+			}
+			if (param == NULL) {
+				if (urlparam->common_param_num < MAX_URL_PARAM_NUM) {
 					param = &(urlparam->common_param[urlparam->common_param_num]);
 					urlparam->common_param_num++;
 				} else {
 					return EAG_ERR_PORTAL_SET_URLPARAM_MAX_NUM;
 				}
-	        } else if (param != NULL) {
-            	memset(param, 0, sizeof(struct url_param_t));
-	        }
+		        } else if (param != NULL) {
+		        	memset(param, 0, sizeof(struct url_param_t));
+		        }
 		}
-        
-	    param->param_type = param_type;
-	    eag_urlparam_get_namestr(cmpbuf, param->param_name, sizeof(param->param_name), 
-	    						feature_str, sizeof(feature_str));
-        eag_log_debug("eag_urlparam", "eag_urlparam_add_param:name:%s, param:%s\n", 
-        				param->param_name, feature_str);
-	    eag_urlparam_get_feature(param, feature_str);
-	    
-	    pos = strstr(url_param_str, namestr);
-	    eag_urlparam_cover(pos, pos+param_len);
+
+		param->param_type = param_type;
+		eag_urlparam_get_namestr(cmpbuf, param->param_name, sizeof(param->param_name), 
+								feature_str, sizeof(feature_str));
+		eag_log_debug("eag_urlparam", "eag_urlparam_add_param:name:%s, param:%s\n", 
+						param->param_name, feature_str);
+		eag_urlparam_get_feature(param, feature_str);
+
+		pos = strstr(url_param_str, namestr);
+		eag_urlparam_cover(pos, pos+param_len);
 	} else if (-1 == param_len) {
 		return EAG_ERR_PORTAL_SET_URLPARAM_INPUT_ERR;
 	}
@@ -8096,16 +8110,17 @@ eag_urlparam_add_common( char *url_param_buf,
 	eag_log_debug("eag_urlparam", "eag_urlparam_add_common %s begin:%s\n", 
 				(UP_COMMON==com_or_wis)?"common":"wispr", url_param_buf);
 
-    eag_urlparam_add_param(url_param_buf, urlparam, URL_PARAM_NASIP, com_or_wis);
-    eag_urlparam_add_param(url_param_buf, urlparam, URL_PARAM_USERIP, com_or_wis);
-    eag_urlparam_add_param(url_param_buf, urlparam, URL_PARAM_USERMAC, com_or_wis);
-    eag_urlparam_add_param(url_param_buf, urlparam, URL_PARAM_APMAC, com_or_wis);
-    eag_urlparam_add_param(url_param_buf, urlparam, URL_PARAM_APNAME, com_or_wis);
-    
-    eag_urlparam_add_param(url_param_buf, urlparam, URL_PARAM_ESSID, com_or_wis);
-    eag_urlparam_add_param(url_param_buf, urlparam, URL_PARAM_NASID, com_or_wis);
-    eag_urlparam_add_param(url_param_buf, urlparam, URL_PARAM_ACNAME, com_or_wis);
-    eag_urlparam_add_param(url_param_buf, urlparam, URL_PARAM_FIRSTURL, com_or_wis);
+	eag_urlparam_add_param(url_param_buf, urlparam, URL_PARAM_NASIP, com_or_wis);
+	eag_urlparam_add_param(url_param_buf, urlparam, URL_PARAM_USERIP, com_or_wis);
+	eag_urlparam_add_param(url_param_buf, urlparam, URL_PARAM_USERMAC, com_or_wis);
+	eag_urlparam_add_param(url_param_buf, urlparam, URL_PARAM_APMAC, com_or_wis);
+	eag_urlparam_add_param(url_param_buf, urlparam, URL_PARAM_APNAME, com_or_wis);
+
+	eag_urlparam_add_param(url_param_buf, urlparam, URL_PARAM_ESSID, com_or_wis);
+	eag_urlparam_add_param(url_param_buf, urlparam, URL_PARAM_NASID, com_or_wis);
+	eag_urlparam_add_param(url_param_buf, urlparam, URL_PARAM_VLANID, com_or_wis);
+	eag_urlparam_add_param(url_param_buf, urlparam, URL_PARAM_ACNAME, com_or_wis);
+	eag_urlparam_add_param(url_param_buf, urlparam, URL_PARAM_FIRSTURL, com_or_wis);
 
 	eag_log_debug("eag_urlparam", "eag_urlparam_add_common %s end:%s\n", 
 				(UP_COMMON==com_or_wis)?"common":"wispr", url_param_buf);
@@ -8122,32 +8137,32 @@ eag_urlparam_add_wispr( char *url_param_str,
 	char *namestr = "wispr";
 	char cmp_buf[URL_PARAM_WISPR_VALUE_LEN] = "";
 	char wispr_buf[URL_PARAM_WISPR_VALUE_LEN] = "";
-	
+
 	if (url_param_str == NULL || urlparam == NULL) {
 		return EAG_ERR_PORTAL_SET_URLPARAM_INPUT_ERR;
 	}
-	
-    memset(cmp_buf, 0, sizeof(cmp_buf));
-    
+
+	memset(cmp_buf, 0, sizeof(cmp_buf));
+
 	eag_log_debug("eag_urlparam", "eag_urlparam_add_wispr begin:%s\n", url_param_str);
 	wispr_len = eag_urlparam_get_paramstr(url_param_str, namestr, cmp_buf, sizeof(cmp_buf));
 	if (wispr_len > 0) {
-        memset(wispr_buf, 0, sizeof(wispr_buf));
-        
-	    urlparam->wispr_status = UP_STATUS_ON;
-        eag_urlparam_get_namestr(cmp_buf, urlparam->wispr_name, sizeof(urlparam->wispr_name), 
-        						wispr_buf, sizeof(wispr_buf));	
-        eag_log_debug("eag_urlparam", "eag_urlparam_add_wispr name:%s, param:%s\n", urlparam->wispr_name, wispr_buf);
+		memset(wispr_buf, 0, sizeof(wispr_buf));
 
-        eag_urlparam_add_common(wispr_buf, urlparam, UP_WISPR);
+		urlparam->wispr_status = UP_STATUS_ON;
+		eag_urlparam_get_namestr(cmp_buf, urlparam->wispr_name, sizeof(urlparam->wispr_name), 
+								wispr_buf, sizeof(wispr_buf));	
+		eag_log_debug("eag_urlparam", "eag_urlparam_add_wispr name:%s, param:%s\n", urlparam->wispr_name, wispr_buf);
+
+		eag_urlparam_add_common(wispr_buf, urlparam, UP_WISPR);
 
 		if (strlen(wispr_buf) != 0) {
-            /* other url param */
-            eag_urlparam_get_wispr_feature(urlparam, wispr_buf);
-        }
-        
-	    pos = strstr(url_param_str, namestr);
-	    eag_urlparam_cover(pos, pos+wispr_len);
+			/* other url param */
+			eag_urlparam_get_wispr_feature(urlparam, wispr_buf);
+		}
+
+		pos = strstr(url_param_str, namestr);
+		eag_urlparam_cover(pos, pos+wispr_len);
 	} else if (-1 == wispr_len) {
 		return EAG_ERR_PORTAL_SET_URLPARAM_INPUT_ERR;
 	}
@@ -8167,18 +8182,18 @@ eag_urlparam_add_urlparam( struct urlparam_query_str_t *urlparam_query_str,
 	}
 	eag_log_debug("eag_urlparam", "eag_urlparam_add_urlparam begin:%s\n", param_str);
 	/* wisprloginurl */
-    ret = eag_urlparam_add_wispr(param_str, urlparam_query_str);
+	ret = eag_urlparam_add_wispr(param_str, urlparam_query_str);
 	if (EAG_RETURN_OK != ret) {
 		return ret;
 	}
 	/* common param */
-    ret = eag_urlparam_add_common(param_str, urlparam_query_str, UP_COMMON);
-    if (EAG_RETURN_OK != ret) {
+	ret = eag_urlparam_add_common(param_str, urlparam_query_str, UP_COMMON);
+	if (EAG_RETURN_OK != ret) {
 		return ret;
 	}
 	eag_log_debug("eag_urlparam", "eag_urlparam_add_urlparam end:%s\n", param_str);
 
-    return EAG_RETURN_OK;
+	return EAG_RETURN_OK;
 }
 
 DBusMessage *
@@ -8215,7 +8230,7 @@ eag_dbus_method_set_urlparam(
 	
 	dbus_error_init(&err);
 	if (!(dbus_message_get_args(msg ,&err,
-						        DBUS_TYPE_UINT32, &keytype,
+								DBUS_TYPE_UINT32, &keytype,
 								DBUS_TYPE_UINT32, &keyid,
 								DBUS_TYPE_STRING, &keyword,
 								DBUS_TYPE_UINT32, &add_or_del,
@@ -8268,28 +8283,28 @@ eag_dbus_method_set_urlparam(
 	}
 
 	if (1 == add_or_del) {
-    	ret = eag_urlparam_add_urlparam(&(portal_srv_t->urlparam_query_str), url_param);
-    	if (EAG_RETURN_OK != ret) {
-            eag_log_err("eag_dbus_method_set_urlparam add urlparam error!");
-            goto replyx;
-    	}
-    } else if (0 == add_or_del) {
+		ret = eag_urlparam_add_urlparam(&(portal_srv_t->urlparam_query_str), url_param);
+		if (EAG_RETURN_OK != ret) {
+			eag_log_err("eag_dbus_method_set_urlparam add urlparam error!");
+			goto replyx;
+		}
+	} else if (0 == add_or_del) {
 		ret = eag_urlparam_del_urlparam(&(portal_srv_t->urlparam_query_str), url_param);
 		if (EAG_RETURN_OK != ret) {
-            eag_log_err("eag_dbus_method_set_urlparam del urlparam error!");
-            goto replyx;
-    	}
-    } else {
+			eag_log_err("eag_dbus_method_set_urlparam del urlparam error!");
+			goto replyx;
+		}
+	} else {
 		eag_log_err("eag_dbus_method_set_urlparam user_data error!");
 		ret = EAG_ERR_UNKNOWN;
 		goto replyx;
-    }
+	}
 
 	ret = eag_urlparam_save_config(portal_srv_t);
-    if (EAG_RETURN_OK != ret) {
-        eag_log_err("eag_dbus_method_set_urlparam save config error!");
-        goto replyx;
-    }
+	if (EAG_RETURN_OK != ret) {
+		eag_log_err("eag_dbus_method_set_urlparam save config error!");
+		goto replyx;
+	}
 replyx:
 	dbus_message_iter_init_append(reply, &iter);
 	dbus_message_iter_append_basic(&iter,

@@ -1496,7 +1496,9 @@ access_accept_proc(eag_radius_t *radius,
 	struct app_conn_t *appconn = NULL;
 	const char *errid = NULL;
 	char user_ipstr[IPX_LEN] = "";
-	
+	struct radius_attr_t *attr = NULL;
+	char facl_name[256] = "";
+
 	if (NULL == radius || NULL == packet) {
 		eag_log_err("access_accept_proc input error");
 		return -1;
@@ -1531,6 +1533,23 @@ access_accept_proc(eag_radius_t *radius,
 	appconn->session.interim_interval = radius->acct_interval;
 	
 	config_radius_session(appconn, packet);
+
+	if (!radius_getattr(packet, &attr, RADIUS_ATTR_FILTER_ID, 0, 0 ,0)) {
+		memset(facl_name, 0, sizeof(facl_name));
+		memcpy(facl_name, attr->v.t, attr->l-2);
+		facl_name[sizeof(facl_name)-1] = '\0';
+		if (!strcmp(facl_name, "actest1")){
+			appconn->session.bandwidthmaxup= 1024;
+			appconn->session.bandwidthmaxdown = 1024;
+        		eag_log_debug("eag_radius", "AUTELAN:bandwidthmaxup =%u, bandwidthmaxdown =%u",
+            			appconn->session.bandwidthmaxup, appconn->session.bandwidthmaxdown);
+		} else if (!strcmp(facl_name, "actest2")){
+			appconn->session.bandwidthmaxup= 2048;
+			appconn->session.bandwidthmaxdown = 2048;
+        		eag_log_debug("eag_radius", "AUTELAN:bandwidthmaxup =%u, bandwidthmaxdown =%u",
+            			appconn->session.bandwidthmaxup, appconn->session.bandwidthmaxdown);
+		}
+	}
 
 	eag_portal_auth_success(radius->portal, appconn);
 

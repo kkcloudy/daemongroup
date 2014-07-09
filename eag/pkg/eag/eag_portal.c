@@ -1494,8 +1494,8 @@ send:
 		char tmp_ipstr[32] = {0};
 		ip2str(appconn->session.audit_ip, tmp_ipstr, sizeof(tmp_ipstr));
 		eag_log_debug("eag_portal", "eag_portal_challenge_proc:audit_ip = %s", tmp_ipstr);
-		portal_packet_add_attr(&rsppkt, ATTR_AUDIT_IP, 
-			tmp_ipstr, strlen(tmp_ipstr));
+		//portal_packet_add_attr(&rsppkt, ATTR_AUDIT_IP, 
+			//tmp_ipstr, strlen(tmp_ipstr));
 	}
 
 	eag_log_debug("eag_portal","portal_challenge_proc userip %s, "
@@ -1874,8 +1874,8 @@ send:
 		char tmp_ipstr[32] = {0};
 		ip2str(appconn->session.audit_ip, tmp_ipstr, sizeof(tmp_ipstr));
 		eag_log_debug("eag_portal", "eag_portal_chapauth_proc:audit_ip = %s", tmp_ipstr);
-		portal_packet_add_attr(&rsppkt, ATTR_AUDIT_IP, 
-			tmp_ipstr, strlen(tmp_ipstr));
+		//portal_packet_add_attr(&rsppkt, ATTR_AUDIT_IP, 
+			//tmp_ipstr, strlen(tmp_ipstr));
 	}
 
 	eag_log_debug("eag_portal","portal_chapauth_proc userip %s, "
@@ -2254,8 +2254,8 @@ send:
 		char tmp_ipstr[32] = {0};
 		ip2str(appconn->session.audit_ip, tmp_ipstr, sizeof(tmp_ipstr));
 		eag_log_debug("eag_portal", "eag_portal_papauth_proc:audit_ip = %s", tmp_ipstr);
-		portal_packet_add_attr(&rsppkt, ATTR_AUDIT_IP, 
-			tmp_ipstr, strlen(tmp_ipstr));
+		//portal_packet_add_attr(&rsppkt, ATTR_AUDIT_IP, 
+			//tmp_ipstr, strlen(tmp_ipstr));
 	}
 
 	eag_log_debug("eag_portal","portal_papauth_proc userip %s, "
@@ -3387,8 +3387,8 @@ eag_portal_auth_failure(eag_portal_t *portal,
 		char tmp_ipstr[32] = {0};
 		ip2str(appconn->session.audit_ip, tmp_ipstr, sizeof(tmp_ipstr));
 		eag_log_debug("eag_portal", "eag_portal_auth_failure:audit_ip = %s", tmp_ipstr);
-		portal_packet_add_attr(&rsppkt, ATTR_AUDIT_IP, 
-			tmp_ipstr, strlen(tmp_ipstr));
+		//portal_packet_add_attr(&rsppkt, ATTR_AUDIT_IP, 
+			//tmp_ipstr, strlen(tmp_ipstr));
 	}
 
 	eag_log_debug("eag_portal","eag_portal_auth_failure userip %s, "
@@ -3639,8 +3639,8 @@ eag_portal_auth_success(eag_portal_t *portal,
 		char tmp_ipstr[32] = {0};
 		ip2str(appconn->session.audit_ip, tmp_ipstr, sizeof(tmp_ipstr));
 		eag_log_debug("eag_portal", "eag_portal_auth_success:audit_ip = %s", tmp_ipstr);
-		portal_packet_add_attr(&rsppkt, ATTR_AUDIT_IP, 
-			tmp_ipstr, strlen(tmp_ipstr));
+		//portal_packet_add_attr(&rsppkt, ATTR_AUDIT_IP, 
+			//tmp_ipstr, strlen(tmp_ipstr));
 	}	
 
 	portal_resp_authenticator(&rsppkt, &(portalsess->rcvpkt), portalsess->secret, 

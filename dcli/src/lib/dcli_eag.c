@@ -12080,20 +12080,19 @@ DEFUN(set_eag_portal_server_urlparam_func,
 	"key word name, specify a item of portal policy\n"
 	"add portal server url param\n"
 	"del portal server url param\n"
-	"1.urlparam-add: "\
-	"PARAM=${NEWNAME;deskey=...(len:0-8);format=-(or default :);letter=lower(or default upper);"\
-	"type=https(or default http);encode=off(or default on);value=...(len:0-127)};PARAM=${NEWNAME;...;PARAM=${NEWNEME;...}}     "\
-	"PS: You can choose PARAM from [nasip,userip,usermac,apmac,apname,essid,nasid,acname,firsturl,wisprurl], "\
-	"wisrpurl can take PARAM except wisprurl.   and deskey(for mac encrypt),format(for mac delimiter),letter(for mac upper or lower), "\
-	"so usermac and apmac need.   and type(for url type),encode(for url coding), so firsturl and wisprurl need.   "\
-	"and value for acname(also for other param you assign value).     "\
-	"For example: nasip=${acip};userip=${userip};"\
-	"usermac=${clientmac;deskey=12345678;format=-;letter=lower};apmac=${apmac;letter=lower};apname=${apname};essid=${wlan};"\
-	"nasid=${nasid};acname=${acname;value=Autelan};firsturl=${redirect;encode=on};wisprurl=${wisprlogin;type=https;encode=on;"\
-	"nasip=${...};userip=${...};usermac=${...};...}          "\
-	"2.urlparam-del: PARAM1;PARAM2;PARAM3{PARAM1;PARAM2...};PARAM4.   "\
-	"For example: nasip;userip;usermac;apmac;apname;essid;nasid;acname;firsturl;wisprurl{nasip;userip;usermac;...}.   "\
-	"or nasip;wisprurl.   you can delete one or more.\n"
+	"1.        urlparam-add:   format like: TYPE=${NEWNAME;T=V;T=V;...};TYPE=${NEWNAME;T=V;T=V;...};...        "\
+	"TYPE is param type, must be one of them: {nasip,userip,usermac,apmac,apname,essid,nasid,vlanid,acname,firsturl,wisprurl};        "\
+	"NEWNAME is param name string you can define, such as wlanuserip=19.88.9.23, so TYPE must be userip, and NEWNAME is wlanuserip;        "\
+	"T=V is for format of param value, such as  for usermac and apmac, T=V can be deskey=...(len:0-8);format=-(or default :);letter=lower(or default upper);        "\
+	"such as for firsturl and wisprurl, T=V can be type=https(or default http);encode=off(or default on); also value=...(len:0-127)} can be for all param type;        "\
+	"when TYPE is wisprurl, format can like: wisprurl=${T=V;T=V;TYPE=${NEWNAME;T=V;T=V;...};...}, but TYPE in {} can not be wisprurl;        "\
+	"For example:        nasip=${wlanacip};userip=${wlanuserip};usermac=${clientmac;deskey=12345678;format=-;letter=lower};"\
+	"acname=${acname;value=Autelan};firsturl=${wlanuserfirsturl;encode=on};"\
+	"wisprurl=${wisprlogin;type=https;encode=on;nasid=${nasid};apmac=${apmac;letter=lower};apname=${apname};essid=${ssid}}          "\
+	"2.        urlparam-del:   format like: TYPE;TYPE;TYPE;...        "\
+	"TYPE is param type, must be one of them: {nasip,userip,usermac,apmac,apname,essid,nasid,vlanid,acname,firsturl,wisprurl};"\
+	"For example:        nasip;userip;usermac;apmac;apname;essid;nasid;vlanid;acname;firsturl;wisprurl{nasip;userip;usermac;...};        "\
+	"you can delete one or more.\n"
 )
 {
 	PORTAL_KEY_TYPE key_type;

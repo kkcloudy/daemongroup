@@ -615,7 +615,7 @@ eag_redirconn_parse_request(eag_redirconn_t *redirconn)
 int
 test_char_in_set(char c)
 {
-	const char set[]="/:?#;,+=";
+	const char set[]="/:?#;,+=&";
 	int i;
 	for (i=0;i<sizeof(set);i++) {
 		if (c == set[i]) {
@@ -666,16 +666,16 @@ build_paramstr( char *url_buf,
 	if (url_buf == NULL || paramstr == NULL || name == NULL) {
 		return -1;
 	}
-	
-    strncat(url_buf, name, buf_size-strlen(url_buf)-1);
+
+	strncat(url_buf, name, buf_size-strlen(url_buf)-1);
 	strncat(url_buf, "=", buf_size-strlen(url_buf)-1);
 	if (value != NULL && strlen(value) > 0) {
-    	strncat(url_buf, value, buf_size-strlen(url_buf)-1);
+		strncat(url_buf, value, buf_size-strlen(url_buf)-1);
 	} else {
-    	strncat(url_buf, paramstr, buf_size-strlen(url_buf)-1);
-    }
-    strncat(url_buf, "&", buf_size-strlen(url_buf)-1);
-	
+		strncat(url_buf, paramstr, buf_size-strlen(url_buf)-1);
+	}
+	strncat(url_buf, "&", buf_size-strlen(url_buf)-1);
+
 	return 0;
 }
 
@@ -687,51 +687,51 @@ build_macstr( char *url_buf,
 {
 	int outlen = 0;
 	unsigned char *outbuf = NULL;       
-    unsigned char macstr[24] = "";
-    char des_macstr[100] = "";
+	unsigned char macstr[24] = "";
+	char des_macstr[100] = "";
     
-    if (url_buf == NULL || param == NULL || mac == NULL) {
+	if (url_buf == NULL || param == NULL || mac == NULL) {
 		return -1;
-    }
-    memset (macstr, 0, sizeof(macstr));
-    memset (des_macstr, 0, sizeof(des_macstr));
-    
-    if (0 == strlen(param->mac_deskey)) {
-        if (strlen(param->mac_format) > 0) {
-            mac2str(mac, (char *)macstr, sizeof(macstr), param->mac_format[0]);
-        } else {
-            mac2str(mac, (char *)macstr, sizeof(macstr), ':');
-        }
-        if (UP_LETTER_LOWER == param->letter_type) {
-            str2lower((char *)macstr);
-        }
-        build_paramstr(url_buf, buf_size, (char *)macstr, param->param_value, param->param_name);
-    }
-    
-    //des encrypt
-    if (strlen(param->mac_deskey) > 0) {
-        if (strlen(param->mac_format) > 0) {
-            mac2str(mac, (char *)macstr, sizeof(macstr), param->mac_format[0]);
-        } else {
-            mac2str(mac, (char *)macstr, sizeof(macstr), '-');
-        }
-        if (strlen(param->param_value) > 0) {
-			outlen = BIO_des_encrypt((unsigned char*)param->param_value, &outbuf, 
-                        	strlen(param->param_value), (unsigned char*)param->mac_deskey);
-        } else {
-        	outlen = BIO_des_encrypt(macstr, &outbuf, 
-                        	strlen((char *)macstr), (unsigned char*)param->mac_deskey);
+	}
+	memset (macstr, 0, sizeof(macstr));
+	memset (des_macstr, 0, sizeof(des_macstr));
+
+	if (0 == strlen(param->mac_deskey)) {
+		if (strlen(param->mac_format) > 0) {
+			mac2str(mac, (char *)macstr, sizeof(macstr), param->mac_format[0]);
+		} else {
+			mac2str(mac, (char *)macstr, sizeof(macstr), ':');
 		}
-        if (outlen > 0 && NULL != outbuf) {
-            memset( des_macstr, 0, sizeof(des_macstr) );
-            hex2str( outbuf, outlen, (unsigned char*)des_macstr, sizeof(des_macstr));
-            build_paramstr(url_buf, buf_size, des_macstr, NULL, param->param_name);
-        }
-        if (NULL != outbuf) {
-            free(outbuf);
-            outbuf = NULL;
-        }
-    }
+		if (UP_LETTER_LOWER == param->letter_type) {
+			str2lower((char *)macstr);
+		}
+		build_paramstr(url_buf, buf_size, (char *)macstr, param->param_value, param->param_name);
+	}
+    
+	//des encrypt
+	if (strlen(param->mac_deskey) > 0) {
+		if (strlen(param->mac_format) > 0) {
+			mac2str(mac, (char *)macstr, sizeof(macstr), param->mac_format[0]);
+		} else {
+			mac2str(mac, (char *)macstr, sizeof(macstr), '-');
+		}
+		if (strlen(param->param_value) > 0) {
+			outlen = BIO_des_encrypt((unsigned char*)param->param_value, &outbuf, 
+			strlen(param->param_value), (unsigned char*)param->mac_deskey);
+		} else {
+			outlen = BIO_des_encrypt(macstr, &outbuf, 
+			strlen((char *)macstr), (unsigned char*)param->mac_deskey);
+		}
+		if (outlen > 0 && NULL != outbuf) {
+			memset( des_macstr, 0, sizeof(des_macstr) );
+			hex2str( outbuf, outlen, (unsigned char*)des_macstr, sizeof(des_macstr));
+			build_paramstr(url_buf, buf_size, des_macstr, NULL, param->param_name);
+		}
+		if (NULL != outbuf) {
+			free(outbuf);
+			outbuf = NULL;
+		}
+	}
     
 	return 0;
 }
@@ -750,10 +750,10 @@ build_wisprurl( char *url_buf,
     memset (encodeurl, 0, sizeof(encodeurl));
     
 	if (UP_ENCODE_OFF == wispr->wispr_encode) {
-    	build_paramstr(url_buf, buf_size, paramstr, NULL, wispr->wispr_name);
+	    	build_paramstr(url_buf, buf_size, paramstr, NULL, wispr->wispr_name);
 	} else {
 		decodeURIComponent(encodeurl,sizeof(encodeurl),paramstr);
-    	build_paramstr(url_buf, buf_size, encodeurl, NULL, wispr->wispr_name);
+	    	build_paramstr(url_buf, buf_size, encodeurl, NULL, wispr->wispr_name);
 	}
 	
 	return 0;
@@ -765,19 +765,19 @@ build_firsturl( char *url_buf,
 				char *paramstr,
 				struct url_param_t *param )
 {
-    char encodeurl[512] = "";
-    
-    if (url_buf == NULL || paramstr == NULL || param == NULL) {
-    	return -1;
-    }
-    
-    memset(encodeurl, 0, sizeof(encodeurl));
+	char encodeurl[512] = "";
+
+	if (url_buf == NULL || paramstr == NULL || param == NULL) {
+		return -1;
+	}
+
+	memset(encodeurl, 0, sizeof(encodeurl));
     
 	if (UP_ENCODE_OFF == param->url_encode) {
-    	build_paramstr(url_buf, buf_size, paramstr, NULL, param->param_name);
+	    	build_paramstr(url_buf, buf_size, paramstr, NULL, param->param_name);
 	} else {
 		decodeURIComponent(encodeurl,sizeof(encodeurl),paramstr);
-    	build_paramstr(url_buf, buf_size, encodeurl, NULL, param->param_name);
+	    	build_paramstr(url_buf, buf_size, encodeurl, NULL, param->param_name);
 	}
 	
 	return 0;
@@ -793,6 +793,7 @@ build_param( char *url_buf,
 {
     char user_ipstr[IPX_LEN] = "";
 	char firsturl_str[512] = "";
+	char cmp_buf[16] = "";
 
 	if (url_buf == NULL || redirconn == NULL 
 		|| appconn == NULL || acip_str == NULL 
@@ -806,52 +807,57 @@ build_param( char *url_buf,
         ip2str(redirconn->user_addr.user_ip, user_ipstr, sizeof(user_ipstr));
     }
 	
-    memset(firsturl_str, 0, sizeof(firsturl_str));
+	memset(firsturl_str, 0, sizeof(firsturl_str));
     
 	switch (param->param_type) {
 	case URL_PARAM_NASIP:
-	    build_paramstr(url_buf, buf_size, acip_str, param->param_value, param->param_name);
-	    break;
+		build_paramstr(url_buf, buf_size, acip_str, param->param_value, param->param_name);
+		break;
 	case URL_PARAM_USERIP:
-	    build_paramstr(url_buf, buf_size, user_ipstr, param->param_value, param->param_name);
-	    break;
+		build_paramstr(url_buf, buf_size, user_ipstr, param->param_value, param->param_name);
+		break;
 	case URL_PARAM_USERMAC:
-	    build_macstr(url_buf, buf_size, appconn->session.usermac, param);
-	    break;
+		build_macstr(url_buf, buf_size, appconn->session.usermac, param);
+		break;
 	case URL_PARAM_APMAC:
-	    build_macstr(url_buf, buf_size, appconn->session.apmac, param);
-	    break;
+		build_macstr(url_buf, buf_size, appconn->session.apmac, param);
+		break;
 	case URL_PARAM_APNAME:
-	    build_paramstr(url_buf, buf_size, appconn->session.apname, 
-	                    param->param_value, param->param_name);
-	    break;
+		build_paramstr(url_buf, buf_size, appconn->session.apname, 
+		                param->param_value, param->param_name);
+		break;
 	case URL_PARAM_ESSID:
-	    build_paramstr(url_buf, buf_size, appconn->session.essid, 
-	                    param->param_value, param->param_name);
-	    break;
+		build_paramstr(url_buf, buf_size, appconn->session.essid, 
+		                param->param_value, param->param_name);
+		break;
 	case URL_PARAM_NASID:
-	    build_paramstr(url_buf, buf_size, appconn->session.nasid, 
-	                    param->param_value, param->param_name);
-	    break;
+		build_paramstr(url_buf, buf_size, appconn->session.nasid, 
+		                param->param_value, param->param_name);
+		break;
+	case URL_PARAM_VLANID:
+		snprintf(cmp_buf, sizeof(cmp_buf) - 1, "%u", appconn->session.vlanid);
+		build_paramstr(url_buf, buf_size, cmp_buf, 
+		                param->param_value, param->param_name);
+		break;
 	case URL_PARAM_ACNAME:
-	    build_paramstr(url_buf, buf_size, param->param_value, NULL, param->param_name);
-	    break;
+		build_paramstr(url_buf, buf_size, param->param_value, NULL, param->param_name);
+		break;
 	case URL_PARAM_FIRSTURL:
-	    if (strlen(param->param_value) > 0) {
-	        build_firsturl(url_buf, buf_size, param->param_value, param);
-	    } else {
-	        if (UP_HTTPS == param->url_type) {
-	            snprintf(firsturl_str, sizeof(firsturl_str)-1, "https://%s%s", 
-	                    redirconn->request_host, redirconn->request_url);
-	        } else {
-	            snprintf(firsturl_str, sizeof(firsturl_str)-1, "http://%s%s", 
-	                    redirconn->request_host, redirconn->request_url);
-	        }
-	        build_firsturl(url_buf, buf_size, firsturl_str, param);
-	    }
-	    break;
+		if (strlen(param->param_value) > 0) {
+			build_firsturl(url_buf, buf_size, param->param_value, param);
+		} else {
+			if (UP_HTTPS == param->url_type) {
+				snprintf(firsturl_str, sizeof(firsturl_str)-1, "https://%s%s", 
+				        redirconn->request_host, redirconn->request_url);
+			} else {
+				snprintf(firsturl_str, sizeof(firsturl_str)-1, "http://%s%s", 
+				        redirconn->request_host, redirconn->request_url);
+			}
+			build_firsturl(url_buf, buf_size, firsturl_str, param);
+		}
+		break;
 	default:
-	    break;
+		break;
 	}
 
 	return 0;
@@ -865,29 +871,29 @@ build_commonparam(  char *url_buf,
 					char *acip_str, 
 					URLPARAM com_or_wis )
 {
-    struct urlparam_query_str_t *urlparam = NULL; 
+	struct urlparam_query_str_t *urlparam = NULL; 
 	struct url_param_t *param = NULL;
 	int i = 0;
-	
+
 	if (url_buf == NULL || redirconn == NULL 
 		|| appconn == NULL || acip_str == NULL) {
 		return -1;
 	}
-	
-    urlparam = &(appconn->portal_srv.urlparam_query_str);
+
+	urlparam = &(appconn->portal_srv.urlparam_query_str);
 
 	if (UP_COMMON == com_or_wis) {
 		for(i = 0; i < urlparam->common_param_num; i++) {
 			param = &(urlparam->common_param[i]);
-	        build_param(url_buf, buf_size, redirconn, appconn, acip_str, param);
+			build_param(url_buf, buf_size, redirconn, appconn, acip_str, param);
 		}
 	} else if (UP_WISPR == com_or_wis) {
 		for(i = 0; i < urlparam->wispr_param_num; i++) {
 			param = &(urlparam->wispr_param[i]);
-	        build_param(url_buf, buf_size, redirconn, appconn, acip_str, param);
+			build_param(url_buf, buf_size, redirconn, appconn, acip_str, param);
 		}
 	}
-	
+
 	return 0;
 }
 
@@ -897,54 +903,54 @@ build_urlparam( eag_redirconn_t *redirconn,
 				char *acip_str )
 {
 	int url_len = 0;
-    struct urlparam_query_str_t *urlparam = NULL;
+	struct urlparam_query_str_t *urlparam = NULL;
 
-    if (redirconn == NULL || appconn == NULL || acip_str == NULL) {
+	if (redirconn == NULL || appconn == NULL || acip_str == NULL) {
 		return -1;
-    }
-    
+	}
+
 	urlparam = &(appconn->portal_srv.urlparam_query_str);
-	
+
 	if (urlparam->common_param_num > 0) {
 		build_commonparam(redirconn->redirurl, sizeof(redirconn->redirurl), 
 							redirconn, appconn, acip_str, UP_COMMON);
 	}
-    /*  wisprloginurl */
-    if (UP_STATUS_ON == urlparam->wispr_status) {
-        char wisprurl_str[512] = "";
-        memset (wisprurl_str, 0, sizeof(wisprurl_str));	
+	/*  wisprloginurl */
+	if (UP_STATUS_ON == urlparam->wispr_status) {
+		char wisprurl_str[512] = "";
+		memset (wisprurl_str, 0, sizeof(wisprurl_str));	
 
 		if (UP_HTTPS == urlparam->wispr_type) {
 			snprintf (wisprurl_str, sizeof(wisprurl_str)-1,
-                "https://%s:8082/wispr/login?",acip_str);
+					"https://%s:8082/wispr/login?",acip_str);
 		} else {
 			snprintf (wisprurl_str, sizeof(wisprurl_str)-1,
-                "http://%s:8081/wispr/login?",acip_str); 
+					"http://%s:8081/wispr/login?",acip_str); 
 		}
-		
+
 		if (strlen(urlparam->wispr_value) > 0) {
 			if (urlparam->wispr_param_num > 0) {
 				strncat(urlparam->wispr_value, "?", 
 						sizeof(urlparam->wispr_value)-strlen(urlparam->wispr_value));
-	        	build_commonparam(urlparam->wispr_value, sizeof(urlparam->wispr_value), 
-	        						redirconn, appconn, acip_str, UP_WISPR);
-	        	url_len = strlen(urlparam->wispr_value);
-        		if ('&' == urlparam->wispr_value[url_len-1] 
-            		|| '?' == urlparam->wispr_value[url_len-1]) {
-            		urlparam->wispr_value[url_len-1] = '\0';
-        		}
-	        }
+			    	build_commonparam(urlparam->wispr_value, sizeof(urlparam->wispr_value), 
+		    						redirconn, appconn, acip_str, UP_WISPR);
+			    	url_len = strlen(urlparam->wispr_value);
+				if ('&' == urlparam->wispr_value[url_len-1] 
+			    		|| '?' == urlparam->wispr_value[url_len-1]) {
+			    		urlparam->wispr_value[url_len-1] = '\0';
+				}
+			}
 		} else {
 			if (urlparam->wispr_param_num > 0) {
-        		build_commonparam(wisprurl_str, sizeof(wisprurl_str), 
-        							redirconn, appconn, acip_str, UP_WISPR);
-        	}
+				build_commonparam(wisprurl_str, sizeof(wisprurl_str), 
+									redirconn, appconn, acip_str, UP_WISPR);
+			}
 			url_len = strlen(wisprurl_str);
-        	if ('&' == wisprurl_str[url_len-1] 
-            	|| '?' == wisprurl_str[url_len-1]) {
-            	wisprurl_str[url_len-1] = '\0';
-        	}
-        }
+			if ('&' == wisprurl_str[url_len-1] 
+			    	|| '?' == wisprurl_str[url_len-1]) {
+			    	wisprurl_str[url_len-1] = '\0';
+			}
+		}
 
 		if (strlen(urlparam->wispr_value) > 0) {
 			build_wisprurl(redirconn->redirurl, sizeof(redirconn->redirurl), 
@@ -1043,7 +1049,7 @@ eag_redirconn_build_redirurl( eag_redirconn_t *redirconn )
 			hex2str( outbuf, outlen, (unsigned char*)wlanparameter_str, sizeof(wlanparameter_str));
 			strncat( redirconn->redirurl, "wlanparameter=", sizeof(redirconn->redirurl)-strlen(redirconn->redirurl)-1);
 			strncat( redirconn->redirurl, wlanparameter_str, sizeof(redirconn->redirurl)-strlen(redirconn->redirurl)-1);
-            strncat( redirconn->redirurl, "&", sizeof(redirconn->redirurl)-strlen(redirconn->redirurl)-1);
+			strncat( redirconn->redirurl, "&", sizeof(redirconn->redirurl)-strlen(redirconn->redirurl)-1);
 		}else{
 			eag_log_err("eag_redirconn_build_redirurl build wlanparameter error! "\
 						"outlen=%d outbuf=%p", outlen, outbuf );
@@ -1057,7 +1063,7 @@ eag_redirconn_build_redirurl( eag_redirconn_t *redirconn )
 	/* wlanapmac */
 	if (1 == portal_srv->wlanapmac) {
 		char apmac_str[20] = {0};
-        memset (apmac_str, 0, sizeof(apmac_str));
+		memset (apmac_str, 0, sizeof(apmac_str));
 		build_wlanapmac(apmac_str, appconn->session.apmac, sizeof(apmac_str));
 		strncat( redirconn->redirurl, "wlanapmac=", sizeof(redirconn->redirurl)-strlen(redirconn->redirurl)-1);
 		strncat( redirconn->redirurl, apmac_str, sizeof(redirconn->redirurl)-strlen(redirconn->redirurl)-1);
@@ -1080,7 +1086,7 @@ eag_redirconn_build_redirurl( eag_redirconn_t *redirconn )
 			hex2str( outbuf, outlen, (unsigned char*)wlanusermac_str, sizeof(wlanusermac_str));
 			strncat( redirconn->redirurl, "wlanusermac=", sizeof(redirconn->redirurl)-strlen(redirconn->redirurl)-1);
 			strncat( redirconn->redirurl, wlanusermac_str, sizeof(redirconn->redirurl)-strlen(redirconn->redirurl)-1);
-            strncat( redirconn->redirurl, "&", sizeof(redirconn->redirurl)-strlen(redirconn->redirurl)-1);
+			strncat( redirconn->redirurl, "&", sizeof(redirconn->redirurl)-strlen(redirconn->redirurl)-1);
 		}else{
 			eag_log_err("eag_redirconn_build_redirurl build wlanparameter error! "\
 						"outlen=%d outbuf=%p", outlen, outbuf );
@@ -1157,25 +1163,25 @@ eag_redirconn_build_redirurl( eag_redirconn_t *redirconn )
 	}
 
 	/* wlan_to_url */
-    if (1 == portal_srv->wlan_to_url) {
+	if (1 == portal_srv->wlan_to_url) {
 		strncat(redirconn->redirurl, "wlan=", sizeof(redirconn->redirurl)-strlen(redirconn->redirurl)-1);	
 		strncat(redirconn->redirurl, appconn->session.essid, sizeof(redirconn->redirurl)-strlen(redirconn->redirurl)-1);
 		strncat( redirconn->redirurl, "&", sizeof(redirconn->redirurl)-strlen(redirconn->redirurl)-1);
 	}
 
     /* redirect_to_url */
-    if (1 == portal_srv->redirect_to_url) {
-        char redirect[512] = {0};
+	if (1 == portal_srv->redirect_to_url) {
+		char redirect[512] = {0};
 		char redirect_encode[512];
 		memset (redirect, 0, sizeof(redirect));
 		memset (redirect_encode, 0, sizeof(redirect_encode));
-        snprintf(redirect, sizeof(redirect)-1,"http://%s%s",
+		snprintf(redirect, sizeof(redirect)-1,"http://%s%s",
                         redirconn->request_host, redirconn->request_url);
 		decodeURIComponent(redirect_encode,sizeof(redirect_encode),redirect);
-        strncat( redirconn->redirurl, "redirect=", sizeof(redirconn->redirurl)-strlen(redirconn->redirurl)-1);
-        strncat( redirconn->redirurl, redirect_encode, sizeof(redirconn->redirurl)-strlen(redirconn->redirurl)-1);
+		strncat( redirconn->redirurl, "redirect=", sizeof(redirconn->redirurl)-strlen(redirconn->redirurl)-1);
+		strncat( redirconn->redirurl, redirect_encode, sizeof(redirconn->redirurl)-strlen(redirconn->redirurl)-1);
 		strncat( redirconn->redirurl, "&", sizeof(redirconn->redirurl)-strlen(redirconn->redirurl)-1);
-    }
+	}
 
 	/* wlanuserfirsturl_to_url */
 	if (1 == portal_srv->wlanuserfirsturl) {
