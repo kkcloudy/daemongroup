@@ -5724,6 +5724,11 @@ DEFUN (set_ip_dns_func,
 {
 	char *dnsstr[3];
 	int ret,i;
+	if ((0 == strcmp(argv[0],"0.0.0.0")) ||(0 == strcmp(argv[0],"255.255.255.255")))
+	{
+		vty_out(vty,"can't set dns server ip %s \n",argv[0]);
+		return CMD_WARNING;
+	}
 
 	for(i=0;i<3;i++)
 	{
