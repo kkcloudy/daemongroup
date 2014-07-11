@@ -7235,6 +7235,7 @@ DBusMessage * wid_dbus_show_ssid_config_information_of_all_wlan(DBusConnection *
 			dbus_message_iter_append_basic(&iter_wlan,DBUS_TYPE_UINT32,&wlan_id);/*1*/
 
 			//dbus_message_iter_append_basic(&iter_wlan,DBUS_TYPE_STRING,&(WLAN[i]->ESSID));
+			char  end = 0; 
 			dbus_message_iter_open_container (&iter_wlan,
 									   DBUS_TYPE_ARRAY,
 									   DBUS_STRUCT_BEGIN_CHAR_AS_STRING  
@@ -7247,10 +7248,16 @@ DBusMessage * wid_dbus_show_ssid_config_information_of_all_wlan(DBusConnection *
 														DBUS_TYPE_STRUCT,
 														NULL,
 													  &iter_wlan_essid_struct);
-					dbus_message_iter_append_basic
-								(&iter_wlan_essid_struct,
-								  DBUS_TYPE_BYTE,
-								  &WLAN[i]->ESSID[j]);
+					if (WLAN[i]->ESSID[j] != 0)
+						dbus_message_iter_append_basic
+									(&iter_wlan_essid_struct,
+									  DBUS_TYPE_BYTE,
+									  &WLAN[i]->ESSID[j]);
+					else 
+						dbus_message_iter_append_basic
+									(&iter_wlan_essid_struct,
+									  DBUS_TYPE_BYTE,
+									  &end);
 					dbus_message_iter_close_container (&iter_wlan_essid_array, &iter_wlan_essid_struct);
 				}
 			dbus_message_iter_close_container (&iter_wlan, &iter_wlan_essid_array);				
