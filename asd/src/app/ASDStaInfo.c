@@ -3432,6 +3432,7 @@ int AsdStaInfoToEAG(struct asd_data *wasd, struct sta_info *sta, Operate op){
     msg.STA.IPv6_Prefix_length = sta->IPv6_Prefix_length;
 	
 	msg.STA.wlan_id = wasd->WlanID;
+	msg.STA.wtp_id = wtpid;
 	msg.STA.auth_type = sta->security_type;
 	msg.STA.reason = sta->acct_terminate_cause;
 
