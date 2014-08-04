@@ -90,6 +90,9 @@ extern unsigned long gWID_AC_MANAGEMENT_IP;
 extern unsigned int TUNNEL_STATISTICS_LOG_INTERVAL;
 extern unsigned int RADIO_STATISTICS_LOG_INTERVAL;
 extern WID_WIFI_LOCATE_CONFIG_GROUP *WIFI_LOCATE_CONFIG_GROUP[WIFI_LOCATE_CONFIG_GROUP_SIZE];
+char *ip_value1 = NULL;
+char *ip_value2 = NULL;
+
 static struct{
 	char rname[20];
 	int	count;
@@ -30700,6 +30703,235 @@ DBusMessage * wid_dbus_interface_wlan_delete_ifname (DBusConnection *conn, DBusM
 	name = NULL;
 	
 	return reply;	
+}
+/*added by lilong 2014.07.11*/
+
+DBusMessage * wid_dbus_interface_wlan_set_lte_fi_portal_ip (DBusConnection *conn, DBusMessage *msg, void *user_data)
+{
+
+	DBusMessage* reply;
+	DBusError err;
+	DBusMessageIter	 iter;
+	unsigned char wlanid = 0;
+	//unsigned char lte_ip_type = 0;
+    char * ipvalue = NULL;
+	int ret = WID_DBUS_SUCCESS;
+    //ip_type1 = 1;
+	 
+	dbus_error_init(&err);
+	if (!(dbus_message_get_args ( msg, &err,
+								DBUS_TYPE_BYTE,&wlanid,
+								//DBUS_TYPE_BYTE,&lte_ip_type,
+								DBUS_TYPE_STRING,&ipvalue,
+								DBUS_TYPE_INVALID)))
+	{
+
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
+				
+		if (dbus_error_is_set(&err))
+		{
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
+			dbus_error_free(&err);
+		}
+		return NULL;
+		
+	}
+	  
+	if(AC_WLAN[wlanid] == NULL)
+	{
+		ret = WLAN_ID_NOT_EXIST; 
+	}
+	else
+	{
+		if (AC_WLAN[wlanid]->want_to_delete == 1)		/* Huangleilei add for ASXXZFI-1622 */
+		{
+			ret = WID_WANT_TO_DELETE_WLAN; 
+		}
+		
+		else if(ret == WID_DBUS_SUCCESS)
+		{
+			int i = 0;
+	        int l_radio_num = 0;
+	        int wtp_num;
+			
+			ip_value1 = (char *)WID_MALLOC(strlen(ipvalue)+1);
+            if(NULL == ip_value1)
+            {
+                return NULL;
+            }
+	        memcpy(ip_value1, ipvalue, strlen(ipvalue)+1);
+			char *cmd = NULL;
+			cmd = (char *)WID_MALLOC(WID_SYSTEM_CMD_LENTH);
+			if (NULL == cmd)
+	        {
+		        return NULL;
+	        }
+			
+			char *eag_ip = NULL;
+			eag_ip = (char *)WID_MALLOC(strlen(ipvalue)+1);
+			if(NULL == eag_ip)
+			{
+			    WID_FREE(cmd);
+				return NULL;
+			}
+			
+            for(i=0;i<G_RADIO_NUM;i++){
+                wtp_num = i/L_RADIO_NUM;
+		        l_radio_num = i % L_RADIO_NUM;
+				// unsigned int wtpid = (unsigned int)wtp_num;
+				// unsigned int radioid = (unsigned int)l_radio_num;
+				
+		        if((AC_WTP[wtp_num] == NULL)||(AC_WTP[wtp_num]->WTP_Radio[l_radio_num] == NULL))
+			    {	  
+				    continue;
+			    }
+
+		        else{
+			        if(AC_WTP[wtp_num]->WTP_Radio[l_radio_num]->isBinddingWlan == 0)
+				    {	 
+					    continue;
+				    }
+			
+			        //if(lte_ip_type == 1){
+						
+						
+					   // memcpy(lte_fi_ap->portal_server_ip, ipvalue, strlen(ipvalue)+1);
+					    memcpy(eag_ip, ipvalue, strlen(ipvalue)+1);
+						dot_turn_spaces(eag_ip);
+		                sprintf(cmd, AP_EXT_CMD_NOTIFY_STA_PORTAL_IP,l_radio_num,
+						                wlanid,eag_ip);
+		                wid_syslog_debug_debug(WID_DEFAULT, "wtp %d extension command: %s\n", wtp_num, cmd);
+		                wid_radio_set_extension_command(wtp_num, cmd);
+		
+		            }
+            }
+			// wid_dbus_wlan_show_running_config_end(conn, reply, user_data);
+			 WID_FREE(eag_ip);
+			 eag_ip = NULL;
+			 WID_FREE(cmd);
+			 cmd = NULL;
+		}
+		
+	}
+	
+	reply = dbus_message_new_method_return(msg); 
+	dbus_message_iter_init_append(reply, &iter);
+	dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT32, &ret);
+	return reply;	 
+}
+/*added by lilong 2014.07.11*/
+
+DBusMessage * wid_dbus_interface_wlan_set_lte_fi_safe_ip (DBusConnection *conn, DBusMessage *msg, void *user_data)
+{
+
+	DBusMessage* reply;
+	DBusError err;
+	DBusMessageIter	 iter;
+	unsigned char wlanid = 0;
+	//unsigned char lte_ip_type = 0;
+    char * ipvalue = NULL;
+	int ret = WID_DBUS_SUCCESS;
+    //ip_type2 = 1;
+	
+    
+	  
+	dbus_error_init(&err);
+	if (!(dbus_message_get_args ( msg, &err,
+								DBUS_TYPE_BYTE,&wlanid,
+								//DBUS_TYPE_BYTE,&lte_ip_type,
+								DBUS_TYPE_STRING,&ipvalue,
+								DBUS_TYPE_INVALID)))
+	{
+
+		wid_syslog_debug_debug(WID_DEFAULT,"Unable to get input args\n");
+				
+		if (dbus_error_is_set(&err))
+		{
+			wid_syslog_debug_debug(WID_DEFAULT,"%s raised: %s",err.name,err.message);
+			dbus_error_free(&err);
+		}
+		return NULL;
+		
+	}
+    
+	
+	if(AC_WLAN[wlanid] == NULL)
+	{
+		ret = WLAN_ID_NOT_EXIST;
+	}
+	else
+	{
+		if (AC_WLAN[wlanid]->want_to_delete == 1)		/* Huangleilei add for ASXXZFI-1622 */
+		{
+			ret = WID_WANT_TO_DELETE_WLAN;
+		}
+		
+		else if(ret == WID_DBUS_SUCCESS)
+		{
+			int i = 0;
+	        int l_radio_num = 0;
+	        int wtp_num;
+			
+			ip_value2 = (char *)WID_MALLOC(strlen(ipvalue)+1);
+            if(NULL == ip_value2)
+            {
+                return NULL;
+            }
+	        memcpy(ip_value2, ipvalue, strlen(ipvalue)+1);
+			char *cmd = NULL;
+			cmd = (char *)WID_MALLOC(WID_SYSTEM_CMD_LENTH);
+			if (NULL == cmd)
+	        {
+		        return NULL;
+	        }
+			
+			char *eag_ip = NULL;
+			eag_ip = (char *)WID_MALLOC(strlen(ipvalue)+1);
+			if(NULL == eag_ip)
+			{
+			    WID_FREE(cmd);
+				return NULL;
+			}
+			
+            for(i=0;i<G_RADIO_NUM;i++){
+                wtp_num = i/L_RADIO_NUM;
+		        l_radio_num = i % L_RADIO_NUM;
+				// unsigned int wtpid = (unsigned int)wtp_num;
+				// unsigned int radioid = (unsigned int)l_radio_num;
+				
+		        if((AC_WTP[wtp_num] == NULL)||(AC_WTP[wtp_num]->WTP_Radio[l_radio_num] == NULL))
+			    {	
+				    continue;
+			    }
+
+		        else{
+			        if(AC_WTP[wtp_num]->WTP_Radio[l_radio_num]->isBinddingWlan == 0)
+				    {	
+					    continue;
+				    }
+			
+                        memcpy(eag_ip, ipvalue, strlen(ipvalue)+1);
+						dot_turn_spaces(eag_ip);
+		                sprintf(cmd, AP_EXT_CMD_NOTIFY_STA_SAFE_IP,l_radio_num,
+						                wlanid,eag_ip);
+		                wid_syslog_debug_debug(WID_DEFAULT, "wtp %d extension command: %s\n", wtp_num, cmd);
+		                wid_radio_set_extension_command(wtp_num, cmd); 
+						  
+		            }
+            }
+			// wid_dbus_wlan_show_running_config_end(conn, reply, user_data);
+			 WID_FREE(eag_ip);
+			 eag_ip = NULL;
+			 WID_FREE(cmd);
+			 cmd = NULL;
+		}
+		
+	}
+	
+	reply = dbus_message_new_method_return(msg);
+	dbus_message_iter_init_append(reply, &iter);
+	dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT32, &ret);
+	return reply;	 
 }
 DBusMessage * wid_dbus_interface_wlan_hide_essid (DBusConnection *conn, DBusMessage *msg, void *user_data)
 {
@@ -76151,6 +76383,20 @@ DBusMessage * wid_dbus_wlan_show_running_config_end(DBusConnection *conn, DBusMe
 						totalLen += sprintf(cursor," service enable\n");
 						cursor = showStr + totalLen;
 					}
+					if(ip_value1 != NULL)
+					{
+                        totalLen += sprintf(cursor," wlan set lte_portal_ip %s\n",ip_value1);
+						cursor = showStr + totalLen;
+						
+					}
+					if(ip_value2 != NULL)
+					{
+                        totalLen += sprintf(cursor," wlan set lte_safe_ip %s\n",ip_value2);
+						cursor = showStr + totalLen;
+						
+					}
+					
+					
 					if(WLAN[i]->WDSStat)
 					{	if(WLAN[i]->wds_mesh == 0){
 							totalLen += sprintf(cursor," wds enable\n");
@@ -85614,6 +85860,12 @@ static DBusHandlerResult wid_dbus_message_handler (DBusConnection *connection, D
 		else if(dbus_message_is_method_call(message,WID_DBUS_WLAN_INTERFACE,WID_DBUS_WLAN_METHOD_DELETE_IF)) {
 			reply = wid_dbus_interface_wlan_delete_ifname(connection,message,user_data);
 		}		
+		else if(dbus_message_is_method_call(message,WID_DBUS_WLAN_INTERFACE,WID_DBUS_WLAN_METHOD_SET_LTE_PORTAL_IP)) {
+			reply = wid_dbus_interface_wlan_set_lte_fi_portal_ip(connection,message,user_data);//lilong add 
+		}	
+		else if(dbus_message_is_method_call(message,WID_DBUS_WLAN_INTERFACE,WID_DBUS_WLAN_METHOD_SET_LTE_SAFE_IP)) {
+			reply = wid_dbus_interface_wlan_set_lte_fi_safe_ip(connection,message,user_data);//lilong add 
+		}	
 		else if(dbus_message_is_method_call(message,WID_DBUS_WLAN_INTERFACE,WID_DBUS_WLAN_METHOD_HIDE_ESSID)) {
 		 reply = wid_dbus_interface_wlan_hide_essid(connection,message,user_data);
 		}

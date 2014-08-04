@@ -17,6 +17,7 @@
 #define AP_OPEN_IPFORWARD  "echo 1 > /proc/sys/net/ipv4/ip_forward"
 #define AP_SPFAST_DOWM 	   "echo 1 > /proc/sys/net/capwap/spfast_down"
 #define AP_SPFAST_UP       "echo 1 > /proc/sys/net/capwap/spfast_up"
+#define GET_LTEFI_AP_IP    "autelan tunnel_ctl ath.%d-%u setcpe %s" //lilong add
 
 int istryreadipv6addr;
 int istrybindipv6addr;
@@ -189,6 +190,7 @@ int wid_set_qos_parameter_value(unsigned int qosid,unsigned int type,unsigned in
 int wid_radio_set_extension_command(int wtpid, char * command);
 int wid_radio_set_option60_parameter(int wtpid, char * command);
 
+char *dot_turn_spaces(char *eag_ip); //lilong add 2014.07.16
 int wid_radio_set_throughout(int wtpid, unsigned char bandwidth);
 int wid_mul_radio_set_throughout(unsigned int radioid,unsigned char bandwidth);
 int wid_radio_set_ip_gateway(int wtpid,unsigned int ip,unsigned int gateway,unsigned char mask);

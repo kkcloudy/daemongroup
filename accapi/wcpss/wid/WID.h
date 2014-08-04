@@ -2634,7 +2634,8 @@ struct wifi_nf_info
 
 /* AP EXTERNTION COMMAND MACRO */       /*yjl copy from aw3.1.2 .2014-2-28 */
 #define AP_EXT_CMD_NOTIFY_STA_PORTAL_AUTH "autelan tunnel_ctl ath.%d-%d setniflag %02X:%02X:%02X:%02X:%02X:%02X %d %u %u %u %u"
-
+#define AP_EXT_CMD_NOTIFY_STA_PORTAL_IP   "autelan tunnel_ctl ath.%d-%u setportal %s" //lilong add 
+#define AP_EXT_CMD_NOTIFY_STA_SAFE_IP   "autelan tunnel_ctl ath.%d-%u setsafe %s" //lilong add 
 struct res_node
 {
 	union

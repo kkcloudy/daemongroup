@@ -1443,7 +1443,16 @@ DEFUN (user_authentication_file_sync,
 	{
 		vty_out(vty,"Sync file %s failed .\n",USER_NAME_AUTHEN_FILE);
 		return CMD_WARNING;
-	  }
+	}
+	/**wangchao add**/
+	ret = sync_file_from_master_to_other_by_bsd(USER_GROUP_AUTHEN_FILE,USER_GROUP_AUTHEN_FILE);
+	if(ret < 0)
+	{
+		vty_out(vty,"Sync file %s failed .\n",USER_GROUP_AUTHEN_FILE);
+		return CMD_WARNING;
+	}
+
+	
 	
 	/*sync home dir*/
 	ret = sync_dir_from_master_to_other_by_bsd(HOME_DIR,HOME_DIR);

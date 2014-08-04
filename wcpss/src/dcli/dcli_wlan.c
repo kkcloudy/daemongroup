@@ -1994,6 +1994,256 @@ DEFUN(config_wlan_service_cmd_func,
 	return CMD_SUCCESS;
 }
 
+
+/*added by lilong 20140711*/
+DEFUN(wlan_set_lte_portal_ip_cmd_func,
+	  wlan_set_lte_portal_ip_cmd,
+	  "wlan set lte_portal_ip IPVALUE",
+	  "wlan set lte_portal_ip IPVALUE\n"
+	  "set lte_portal_ip value\n" 
+	  
+
+	 )
+
+
+{
+	int ret;
+	unsigned char WlanID = 0;
+	char * ipvalue;
+	DBusMessage *query, *reply;	
+	DBusMessageIter	 iter;
+	DBusError err;
+	
+	//WlanID = (unsigned char)vty->index;
+	
+	ipvalue = (char*)malloc(strlen(argv[0])+1);
+	memset(ipvalue, 0, strlen(argv[0])+1);
+	memcpy(ipvalue, argv[0], strlen(argv[0])+1);	
+
+	int index = 0;
+	int localid = 1;  
+	int slot_id = HostSlotId;   
+	char BUSNAME[PATH_LEN];
+	char OBJPATH[PATH_LEN];
+	char INTERFACE[PATH_LEN];
+	
+	//unsigned char lte_ip_type = 0;
+
+	//parameter check start
+	/*if (!strcmp(argv[0],"lte_portal_ip"))
+	{
+		lte_ip_type = 1;
+	}
+	if (!strcmp(argv[0],"lte_safe_ip"))
+	{
+		lte_ip_type = 2;
+	}*/
+	if(vty->node == WLAN_NODE){
+		index = 0;
+		WlanID = (int)vty->index;	
+	}else if(vty->node == HANSI_WLAN_NODE){
+		index = vty->index;			
+		WlanID = (int)vty->index_sub;	
+		localid = vty->local;  
+		slot_id = vty->slotindex; 
+	}
+	
+	else if (vty->node == LOCAL_HANSI_WLAN_NODE)
+	{
+		index = vty->index;
+		WlanID = (int)vty->index_sub;
+		localid = vty->local;
+		slot_id = vty->slotindex;
+	}
+	DBusConnection *dcli_dbus_connection = NULL;
+	ReInitDbusConnection(&dcli_dbus_connection,slot_id,distributFag);
+	/*fengwenchao add end*/
+	ReInitDbusPath_V2(localid,index,WID_DBUS_BUSNAME,BUSNAME);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_WLAN_OBJPATH,OBJPATH);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_WLAN_INTERFACE,INTERFACE);
+	
+	query = dbus_message_new_method_call(BUSNAME,OBJPATH,INTERFACE,WID_DBUS_WLAN_METHOD_SET_LTE_PORTAL_IP); 
+	dbus_error_init(&err);
+	dbus_message_append_args(query,
+							 DBUS_TYPE_BYTE,&WlanID,
+							// DBUS_TYPE_BYTE,&lte_ip_type,
+							 DBUS_TYPE_STRING,&ipvalue,
+							 DBUS_TYPE_INVALID);
+    
+	reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection,query,-1, &err);
+	dbus_message_unref(query);
+	if (NULL == reply)
+	{
+		cli_syslog_info("<error> failed get reply.\n");
+		if (dbus_error_is_set(&err))
+		{
+			cli_syslog_info("%s raised: %s",err.name,err.message);
+			dbus_error_free_for_dcli(&err);
+		}
+		if(ipvalue)
+		{
+			free(ipvalue);
+			ipvalue = NULL;
+		}
+		return CMD_SUCCESS;
+	}
+	dbus_message_iter_init(reply,&iter);
+	dbus_message_iter_get_basic(&iter,&ret);
+	if(ret == 0)
+	{ 
+		//if(lte_ip_type == 1){
+	    vty_out(vty,"wlan %d set lte_portal_ip %s successfully.\n",WlanID,ipvalue);
+		
+		/*else if(lte_ip_type == 2)
+		{
+		    vty_out(vty,"wlan %d set lte_safe_ip %s successfully.\n",WlanID,ipvalue);
+		}*/
+	}	
+	else if(ret == WLAN_ID_NOT_EXIST)
+	{
+		vty_out(vty,"<error> wlan id does not exist\n");
+	}
+	else if (ret == WID_WANT_TO_DELETE_WLAN)		
+	{
+		vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+	}
+	else{
+		vty_out(vty,"<error>  %d\n",ret);
+	}
+		
+	dbus_message_unref(reply);
+	free(ipvalue);
+	ipvalue = NULL;
+	return CMD_SUCCESS;
+}
+/*added by lilong 20140725*/
+DEFUN(wlan_set_lte_safe_ip_cmd_func,
+	  wlan_set_lte_safe_ip_cmd,
+	  "wlan set lte_safe_ip IPVALUE",
+	  "wlan set lte_safe_ip IPVALUE\n"
+	  "set lte_safe_ip value\n" 
+	  
+
+	 )
+
+
+{
+	int ret;
+	unsigned char WlanID = 0;
+	char * ipvalue;
+	DBusMessage *query, *reply;	
+	DBusMessageIter	 iter;
+	DBusError err;
+	
+	//WlanID = (unsigned char)vty->index;
+	
+	ipvalue = (char*)malloc(strlen(argv[0])+1);
+	memset(ipvalue, 0, strlen(argv[0])+1);
+	memcpy(ipvalue, argv[0], strlen(argv[0])+1);	
+
+	int index = 0;
+	int localid = 1;  
+	int slot_id = HostSlotId;   
+	char BUSNAME[PATH_LEN];
+	char OBJPATH[PATH_LEN];
+	char INTERFACE[PATH_LEN];
+	
+	//unsigned char lte_ip_type = 0;
+
+	//parameter check start
+	/*if (!strcmp(argv[0],"lte_portal_ip"))
+	{
+		lte_ip_type = 1;
+	}
+	if (!strcmp(argv[0],"lte_safe_ip"))
+	{
+		lte_ip_type = 2;
+	}*/
+	
+
+	
+	if(vty->node == WLAN_NODE){
+		index = 0;
+		WlanID = (int)vty->index;	
+	}else if(vty->node == HANSI_WLAN_NODE){
+		index = vty->index;			
+		WlanID = (int)vty->index_sub;	
+		localid = vty->local;  
+		slot_id = vty->slotindex; 
+	}
+	
+	else if (vty->node == LOCAL_HANSI_WLAN_NODE)
+	{
+		index = vty->index;
+		WlanID = (int)vty->index_sub;
+		localid = vty->local;
+		slot_id = vty->slotindex;
+	}
+	DBusConnection *dcli_dbus_connection = NULL;
+	ReInitDbusConnection(&dcli_dbus_connection,slot_id,distributFag);
+	/*fengwenchao add end*/
+	ReInitDbusPath_V2(localid,index,WID_DBUS_BUSNAME,BUSNAME);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_WLAN_OBJPATH,OBJPATH);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_WLAN_INTERFACE,INTERFACE);
+	query = dbus_message_new_method_call(BUSNAME,OBJPATH,INTERFACE,WID_DBUS_WLAN_METHOD_SET_LTE_SAFE_IP); 
+	dbus_error_init(&err);
+	dbus_message_append_args(query,
+							 DBUS_TYPE_BYTE,&WlanID,
+							 //DBUS_TYPE_BYTE,&lte_ip_type,
+							 DBUS_TYPE_STRING,&ipvalue,
+							 DBUS_TYPE_INVALID);
+
+	reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection,query,-1, &err);
+	dbus_message_unref(query);
+	
+	if (NULL == reply)
+	{
+		cli_syslog_info("<error> failed get reply.\n");
+		if (dbus_error_is_set(&err))
+		{
+			cli_syslog_info("%s raised: %s",err.name,err.message);
+			dbus_error_free_for_dcli(&err);
+		}
+		if(ipvalue)
+		{
+			free(ipvalue);
+			ipvalue = NULL;
+		}
+		return CMD_SUCCESS;
+	}
+	
+	dbus_message_iter_init(reply,&iter);
+	dbus_message_iter_get_basic(&iter,&ret);
+
+	if(ret == 0)
+	{ 
+		/*if(lte_ip_type == 1){
+		    vty_out(vty,"wlan %d set lte_portal_ip %s successfully.\n",WlanID,ipvalue);
+		}*/
+		//else if(lte_ip_type == 2)
+	
+		vty_out(vty,"wlan %d set lte_safe_ip %s successfully.\n",WlanID,ipvalue);
+	
+	}	
+	else if(ret == WLAN_ID_NOT_EXIST)
+	{
+		vty_out(vty,"<error> wlan id does not exist\n");
+	}
+	else if (ret == WID_WANT_TO_DELETE_WLAN)		
+	{
+		vty_out(vty, "<warning> you want to delete wlan, please do not operate like this\n");
+	}
+	else{
+		vty_out(vty,"<error>  %d\n",ret);
+	}
+		
+	dbus_message_unref(reply);
+	free(ipvalue);
+	ipvalue = NULL;
+	return CMD_SUCCESS;
+
+
+}
 DEFUN(config_wds_service_cmd_func,
 	  config_wds_service_cmd,
 	  "(wds|mesh) (enable|disable)",
@@ -10252,6 +10502,9 @@ void dcli_wlan_init(void) {
 	install_element(WLAN_NODE,&set_wlan_timer_able_cmd);
 	install_element(WLAN_NODE,&show_wlan_ptk_info_cmd);
 	install_element(WLAN_NODE,&set_nas_port_id_cmd);			//mahz add 2011.5.25
+	install_element(WLAN_NODE,&wlan_set_lte_portal_ip_cmd);     //lilong add 2014.07.11
+	install_element(WLAN_NODE,&wlan_set_lte_safe_ip_cmd);     //lilong add 2014.07.11
+
 
 #endif
 	
@@ -10343,6 +10596,8 @@ void dcli_wlan_init(void) {
 	install_element(HANSI_WLAN_NODE,&set_wlan_bss_multi_user_optimize_cmd);		
 	install_element(HANSI_WLAN_NODE,&set_wlan_tunnel_mode_enable_cmd);
 	install_element(HANSI_WLAN_NODE,&set_wlan_tunnel_mode_enable_add_to_ebr_cmd);
+	install_element(HANSI_WLAN_NODE,&wlan_set_lte_portal_ip_cmd); //lilong add 2014.07.11
+	install_element(HANSI_WLAN_NODE,&wlan_set_lte_safe_ip_cmd); //lilong add 2014.07.11
 
 #ifdef __ASD_STA_ACL
 	/* caojia add for sta acl function */
@@ -10439,6 +10694,8 @@ install_element(LOCAL_HANSI_WLAN_NODE,&set_wlan_muti_bro_cast_rate_set_cmd);
 install_element(LOCAL_HANSI_WLAN_NODE,&set_wlan_not_response_sta_probe_request_cmd);
 install_element(LOCAL_HANSI_WLAN_NODE,&set_wlan_tunnel_mode_enable_cmd);
 install_element(LOCAL_HANSI_WLAN_NODE,&set_wlan_tunnel_mode_enable_add_to_ebr_cmd);
+install_element(LOCAL_HANSI_WLAN_NODE,&wlan_set_lte_portal_ip_cmd); //lilong add 2014.07.11
+install_element(LOCAL_HANSI_WLAN_NODE,&wlan_set_lte_safe_ip_cmd); //lilong add 2014.07.11
 
 	return;
 }

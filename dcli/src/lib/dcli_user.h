@@ -83,6 +83,7 @@ struct dcli_user
 /*gujd : 2013-03-06, pm  2:46. Add code for user authentication file sync to  other boards.*/
 #define USER_NAME_AUTHEN_FILE	"/etc/passwd"
 #define USER_PASSWD_AUTHEN_FILE 	"/etc/shadow"
+#define USER_GROUP_AUTHEN_FILE	 "/etc/group"
 #define USER_AUTHEN_FILE_SYNC_FLAG	"/var/run/user_auth_sync"
 #define HOME_DIR					"/home"
 

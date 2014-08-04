@@ -19314,6 +19314,26 @@ int wid_set_ap_timestamp(int timestamp)
 	return 0;
 
 }
+/*added by lilong 2014.07.16*/
+char *dot_turn_spaces(char *eag_ip)
+{
+	int i = 0;
+	// int j = 0;
+	char * srcdate = NULL;
+
+	srcdate = eag_ip;
+	for(i=0;i<(int)strlen(srcdate);i++)
+	{
+		if(srcdate[i]=='.')
+		{
+			srcdate[i] = ' ';
+		}
+	}
+	// j = (int)strlen(srcdate);
+	// srcdate[j] = '\0';
+	return srcdate;
+}
+
 
 int wid_radio_set_extension_command(int wtpid, char * command)
 {

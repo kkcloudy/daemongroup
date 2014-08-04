@@ -294,6 +294,9 @@ char WID_DBUS_WTP_METHOD_DELETE_AP_MODEL[PATH_LEN]=		"wtp_delete_model";
 char WID_DBUS_WTP_METHOD_SET_AP_TIMER[PATH_LEN]=	   	"wtp_set_ap_echotimer";
 char WID_DBUS_WTP_METHOD_SET_AP_COLLECT_TIME[PATH_LEN]=		"wtp_set_ap_collect_time";/*nl add 20100713*/
 char WID_DBUS_WLAN_METHOD_DELETE_IF[PATH_LEN]=            "wlan_delete_if";
+char WID_DBUS_WLAN_METHOD_SET_LTE_PORTAL_IP[PATH_LEN]=    "wlan_set_lte_portal_ip"; //lilong add
+char WID_DBUS_WLAN_METHOD_SET_LTE_SAFE_IP[PATH_LEN]=    "wlan_set_lte_safe_ip"; //lilong add
+
 char WID_DBUS_WLAN_METHOD_SHOW_IF[PATH_LEN]=            "wlan_show_if";
 char WID_DBUS_WLAN_METHOD_HIDE_ESSID[PATH_LEN]=         "wlan_hide_essid";
 char WID_DBUS_WLAN_METHOD_L3IF_POLICY[PATH_LEN]=         "wlan_l3if_policy";

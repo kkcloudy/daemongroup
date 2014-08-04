@@ -94,6 +94,9 @@ void WID_WLAN_CONFIG_SAVE(unsigned int WTPIndex,unsigned int local_radio)
 	char *ath_str = NULL;
 	unsigned char pcy = 0;
 	char buf[DEFAULT_LEN];
+	extern char *ip_value1;//lilong add
+    extern char *ip_value2;//lilong add
+    
 	if(AC_WTP[WTPIndex] == NULL)
 	{
 		wid_syslog_err("%s WTPIndex %d is NULL\n",__func__,WTPIndex);
@@ -430,7 +433,35 @@ void WID_WLAN_CONFIG_SAVE(unsigned int WTPIndex,unsigned int local_radio)
 									wid_syslog_debug_debug(WID_DEFAULT,"Enable Wlan: set ap model cmd %s\n",apcmd);
 		                            wid_radio_set_extension_command(WTPIndex,apcmd);
 	                            }
+                                /* added by lilong 2014.07.21*/
 								
+							    if((AC_WLAN[k]!=NULL)&&(strcmp(AC_WTP[WTPIndex]->WTPModel,"AQ2000-L2N4F") == 0))
+                                {
+									memset(apcmd,0,WID_SYSTEM_CMD_LENTH);
+								    if(ip_value1 != NULL)
+								    {
+					                    // memcpy(portal_server_ip, ipvalue, strlen(ipvalue)+1);
+		                                // memcpy(eag_ip, ipvalue, strlen(ipvalue)+1);
+			                            dot_turn_spaces(ip_value1);
+                                        sprintf(apcmd, AP_EXT_CMD_NOTIFY_STA_PORTAL_IP,local_radio,AC_WLAN[k]->WlanID,ip_value1);
+                                        wid_syslog_debug_debug(WID_DEFAULT, "wtp %d extension command: %s\n", WTPIndex, apcmd);
+                                        wid_radio_set_extension_command(WTPIndex, apcmd);
+								    }
+									memset(apcmd,0,WID_SYSTEM_CMD_LENTH);
+                                    if(ip_value2 != NULL)
+                                    {
+			                            dot_turn_spaces(ip_value2);
+                                        sprintf(apcmd, AP_EXT_CMD_NOTIFY_STA_SAFE_IP,local_radio,AC_WLAN[k]->WlanID,ip_value2);
+                                        wid_syslog_debug_debug(WID_DEFAULT, "wtp %d extension command: %s\n", WTPIndex, apcmd);
+                                        wid_radio_set_extension_command(WTPIndex, apcmd);
+                                    }
+	                                    
+										memset(apcmd,0,WID_SYSTEM_CMD_LENTH);
+	                                    dot_turn_spaces(AC_WTP[WTPIndex]->WTPIP);
+	                                    sprintf(apcmd,GET_LTEFI_AP_IP,local_radio,AC_WLAN[k]->WlanID,AC_WTP[WTPIndex]->WTPIP);
+								        wid_syslog_debug_debug(WID_DEFAULT,"Enable Wlan: get lte_fi ap ip cmd %s\n",apcmd);
+	                                    wid_radio_set_extension_command(WTPIndex,apcmd);
+                                 }
 								int bssindex = AC_WLAN[k]->S_WTP_BSS_List[WTPIndex][local_radio];
 								if((AC_BSS[bssindex])&&(AC_BSS[bssindex]->BSS_IF_POLICY != NO_INTERFACE)
 									&&(AC_BSS[bssindex]->BSS_TUNNEL_POLICY != CW_802_DOT_11_TUNNEL)){

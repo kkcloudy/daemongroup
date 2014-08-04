@@ -40,6 +40,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #endif
 extern unsigned char gWIDLOGHN;//qiuchen
 
+extern char *ip_value1;//lilong add
+extern char *ip_value2;//lilong add
+
 CWBool CWAssembleResetRequestMessage(CWProtocolMessage **messagesPtr, int *fragmentsNumPtr, int PMTU, int seqNum, CWImageIdentifier *resPtr){
 	
 		CWProtocolMessage *msgElems = NULL;
@@ -167,7 +170,10 @@ CWBool ACEnterReset(int WTPIndex, CWProtocolMessage *msgPtr)
 			_CWCloseThread(WTPIndex);
 			break;
 	}
-	
+	WID_FREE(ip_value1);//lilong add 2014.07.24
+    ip_value1 = NULL;
+	WID_FREE(ip_value2);//lilong add 2014.07.24
+    ip_value2 = NULL;
 	return CW_TRUE;
 }
 
