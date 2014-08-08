@@ -177,12 +177,16 @@ eag_arp_start(eag_arplisten_t *arp)
 	ret = setsockopt(arp->sockfd, SOL_SOCKET, SO_SNDBUF, &sndbuf, sizeof(sndbuf));
 	if (ret < 0) {
 		eag_log_err("eag_arp_start setsockopt SO_SNDBUF failed: %s", safe_strerror(errno));
+		close(arp->sockfd);
+		arp->sockfd = -1;
 		return EAG_ERR_SOCKET_OPT_FAILED;
 	}
 
 	ret = setsockopt(arp->sockfd, SOL_SOCKET, SO_RCVBUF, &rcvbuf, sizeof(rcvbuf));
 	if (ret < 0) {
 		eag_log_err("eag_arp_start setsockopt SO_RCVBUF failed: %s", safe_strerror(errno));
+		close(arp->sockfd);
+		arp->sockfd = -1;
 		return EAG_ERR_SOCKET_OPT_FAILED;
 	}
 
@@ -200,6 +204,8 @@ eag_arp_start(eag_arplisten_t *arp)
 	ret = bind(arp->sockfd, (struct sockaddr*)&arp->local, sizeof(arp->local));
 	if (ret < 0) {
 		eag_log_err("eag_arp_start cannot bind netlink socket: %s", safe_strerror(errno));
+		close(arp->sockfd);
+		arp->sockfd = -1;
 		return -1;
 	}
 	addr_len = sizeof(arp->local);
@@ -207,14 +213,20 @@ eag_arp_start(eag_arplisten_t *arp)
 	ret = getsockname(arp->sockfd, (struct sockaddr*)&arp->local, &addr_len);
 	if (ret < 0) {
 		eag_log_err("eag_arp_start cannot getsockname: %s", safe_strerror(errno));
+		close(arp->sockfd);
+		arp->sockfd = -1;
 		return -1;
 	}
 	if (addr_len != sizeof(arp->local)) {
 		eag_log_err(" eag_arp_start wrong address length %d\n", addr_len);
+		close(arp->sockfd);
+		arp->sockfd = -1;
 		return -1;
 	}
 	if (arp->local.nl_family != AF_NETLINK) {
 		eag_log_err("eag_arp_start wrong address family %d\n", arp->local.nl_family);
+		close(arp->sockfd);
+		arp->sockfd = -1;
 		return -1;
 	}
 	arp->seq = time(NULL);

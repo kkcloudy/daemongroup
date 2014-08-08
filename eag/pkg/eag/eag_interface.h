@@ -75,6 +75,7 @@ struct eag_base_conf {
 	int trap_onlineusernum_switch;
 	int threshold_onlineusernum;
 	int portal_protocol;
+	int portal_private_attribute_switch;
 	int macauth_switch;
 	int macauth_ipset_auth;
 	int macauth_flux_from;
@@ -601,7 +602,12 @@ int
 eag_set_portal_protocol(DBusConnection *connection, 
 				int hansitype, int insid,
 				int portal_protocol);
-				
+
+int
+eag_set_portal_private_attribute_switch(DBusConnection *connection, 
+				int hansitype, int insid,
+				int status);
+
 int
 eag_set_telecom_idletime_valuecheck(DBusConnection *connection, 
 				int hansitype, int insid,

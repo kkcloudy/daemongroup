@@ -168,8 +168,8 @@ typedef enum {
 	ATTR_OUTPUT_PACKETS = 0x38,
 	ATTR_INPUT_GIGAWORDS = 0x39,
 	ATTR_OUTPUT_GIGAWORDS, /* Not sure 0x40 or 0x3a */
-	ATTR_SESS_ID,
-	ATTR_AUDIT_IP,
+	ATTR_SESS_ID = 0x41,
+	ATTR_AUDIT_IP = 0x42,
 	ATTR_USER_IPV6 = 0xf1, /* add by houyongtao for ipv6 */
 } ATTR_TYPE;
 
@@ -209,6 +209,12 @@ portal_set_protocol_type(int protocol_type);
 
 int
 portal_get_protocol_type(void);
+
+int
+portal_set_private_attribute_switch(int status);
+
+int
+portal_get_private_attribute_switch(void);
 
 int
 portal_packet_minsize(void);

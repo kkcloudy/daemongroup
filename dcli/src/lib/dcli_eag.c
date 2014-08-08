@@ -6028,7 +6028,10 @@ eag_base_config_show_running(struct vty* vty)
 			snprintf(showStr, sizeof(showStr), " set portal-protocol telecom");
 			vtysh_add_show_string(showStr);		
 		}
-		
+		if (1 == baseconf.portal_private_attribute_switch) {
+			snprintf(showStr, sizeof(showStr), " set portal-private-attribute on");
+			vtysh_add_show_string(showStr);		
+		}
 		if (1 == baseconf.macauth_switch) {
 			snprintf(showStr, sizeof(showStr), " set mac-auth service enable");
 			vtysh_add_show_string(showStr);		
@@ -6224,6 +6227,9 @@ eag_base_config_show_running_2(int localid, int slot_id,int index)
 		}
 		if (PORTAL_PROTOCOL_TELECOM == baseconf.portal_protocol) {
 			totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1, " set portal-protocol telecom\n");
+		}
+		if (1 == baseconf.portal_private_attribute_switch) {
+			totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1, " set portal-private-attribute on\n");
 		}
 		if (0 != baseconf.macauth_switch){
 			totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1, " set mac-auth service enable\n");
@@ -7870,6 +7876,43 @@ DEFUN(set_eag_portal_protocol_func,
 	return CMD_SUCCESS;	
 }
 
+DEFUN(set_eag_portal_private_attribute_switch_func,
+	set_eag_portal_private_attribute_switch_cmd,
+	"set portal-private-attribute (on|off)",
+	SETT_STR
+	"set portal-private-attribute\n"
+	"set portal-private-attribute switch on\n"
+	"set portal-private-attribute switch off\n"
+)
+{	
+	int status = 0;
+	int  ret = -1;
+
+	if (strncmp(argv[0], "on", strlen(argv[0])) == 0) {
+		status = 1;
+	}
+	else if (strncmp(argv[0], "off", strlen(argv[0])) == 0) {
+		status = 0;
+	}
+	else {
+		vty_out(vty, "input param error\n");
+		return CMD_SUCCESS;
+	}
+
+	EAG_DCLI_INIT_HANSI_INFO
+
+	ret = eag_set_portal_private_attribute_switch(dcli_dbus_connection_curr, 
+											hansitype, insid, 
+											status);
+	if (EAG_ERR_DBUS_FAILED == ret) {
+		vty_out(vty, "%% dbus error\n");
+	} else if ( EAG_RETURN_OK != ret ) {
+		vty_out(vty,"%% unknown error : %d\n", ret);
+	}
+	
+	return CMD_SUCCESS;	
+}
+
 DEFUN(set_eag_telecom_idletime_valuecheck_func,
 	set_eag_telecom_idletime_valuecheck_cmd,
 	"set telecom idletime-valuecheck (on|off)",
@@ -8333,7 +8376,7 @@ DEFUN(show_eag_base_conf_func,
 		ip2str( baseconf.nasip, nasip_str, sizeof(nasip_str)-1);
 		vty_out(vty, "nas ip                       :%s\n", nasip_str);
 		vty_out(vty, "ipv6 service status          :%s\n", (1 == baseconf.ipv6_switch) ? "enable" : "disable");
-        ipv6tostr( &(baseconf.nasipv6), nasipv6_str, sizeof(nasipv6_str));
+		ipv6tostr( &(baseconf.nasipv6), nasipv6_str, sizeof(nasipv6_str));
 		vty_out(vty, "nas ipv6                     :%s\n", nasipv6_str);
 		//vty_out(vty, "distributed switch        :%s\n", (1 == baseconf.is_distributed) ? "on" : "off");	
 		vty_out(vty, "rdc-distributed switch       :%s\n", (1 == baseconf.rdc_distributed) ? "on" : "off");
@@ -8374,6 +8417,7 @@ DEFUN(show_eag_base_conf_func,
 		vty_out(vty, "trap-switch online-user-num  :%s\n", (1==baseconf.trap_onlineusernum_switch)?"on":"off");
 		vty_out(vty, "threshold online-user-num    :%d\n", baseconf.threshold_onlineusernum);
 		vty_out(vty, "portal protocol              :%s\n", (PORTAL_PROTOCOL_MOBILE == baseconf.portal_protocol)?"mobile":"telecom");
+		vty_out(vty, "portal private attribute  :%s\n", (1 == baseconf.portal_private_attribute_switch)?"on":"off");
  		if (FLUX_FROM_IPTABLES_L2 == baseconf.macauth_flux_from) {
 			macauth_flux_from = "iptables_L2";
 		} else if (FLUX_FROM_WIRELESS == baseconf.macauth_flux_from) {
@@ -16476,6 +16520,10 @@ dcli_eag_init(void)
 	install_element(EAG_NODE, &set_eag_portal_protocol_cmd);
 	install_element(HANSI_EAG_NODE, &set_eag_portal_protocol_cmd);
 	install_element(LOCAL_HANSI_EAG_NODE, &set_eag_portal_protocol_cmd);
+
+	install_element(EAG_NODE, &set_eag_portal_private_attribute_switch_cmd);
+	install_element(HANSI_EAG_NODE, &set_eag_portal_private_attribute_switch_cmd);
+	install_element(LOCAL_HANSI_EAG_NODE, &set_eag_portal_private_attribute_switch_cmd);
 
 	install_element(EAG_NODE, &set_eag_telecom_idletime_valuecheck_cmd);
 	install_element(HANSI_EAG_NODE, &set_eag_telecom_idletime_valuecheck_cmd);

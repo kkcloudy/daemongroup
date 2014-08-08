@@ -48,6 +48,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "portal_packet.h"
 
 static int eag_portal_protocol_type = PORTAL_PROTOCOL_MOBILE;
+static int eag_portal_private_attribute_switch = 0; /* 0 is off, 1 is on */
 
 #if 0
 void
@@ -395,7 +396,7 @@ portal_packet_init(struct portal_packet_t *packet,
 	/* telcom and ipv6 version is same ??? */
 	packet->type = type;
 	packet->user_ip = htonl(user_addr->user_ip);
-	if (EAG_IPV6 == user_addr->family) {
+	if (EAG_IPV6 == user_addr->family || EAG_MIX == user_addr->family) {
         portal_packet_add_attr(packet, ATTR_USER_IPV6, 
 						        &(user_addr->user_ipv6), 
 						        sizeof(struct in6_addr));
@@ -415,6 +416,20 @@ int
 portal_get_protocol_type(void)
 {
 	return eag_portal_protocol_type;
+}
+
+int
+portal_set_private_attribute_switch(int status)
+{
+	eag_portal_private_attribute_switch = status;
+
+	return 0;
+}
+
+int
+portal_get_private_attribute_switch(void)
+{
+	return eag_portal_private_attribute_switch;
 }
 
 int

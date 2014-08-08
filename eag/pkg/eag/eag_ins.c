@@ -4021,12 +4021,13 @@ eag_dbus_method_get_base_conf(
 	int trap_onlineusernum_switch = 0;
 	int threshold_onlineusernum = 0;
 	int portal_protocol = 0;
+	int portal_private_attribute_switch = 0;
 	int macauth_switch = 0;
 	int macauth_ipset_auth = 0;
 	int macauth_flux_from = 0;
 	int macauth_flux_interval = 0;
 	int macauth_flux_threshold = 0;
-    int macauth_check_interval = 0;
+	int macauth_check_interval = 0;
 	int notice_bindserver = 0;
 	int autelan_log = 0;
 	int henan_log = 0;
@@ -4068,7 +4069,7 @@ replyx:
 								DBUS_TYPE_INT32, &(eagins->rdc_distributed));
 		dbus_message_iter_append_basic(&iter,
 								DBUS_TYPE_INT32, &(eagins->pdc_distributed));
-        rdc_get_server_hansi(&rdc_slotid, &rdc_insid);
+		rdc_get_server_hansi(&rdc_slotid, &rdc_insid);
 		dbus_message_iter_append_basic(&iter,
 								DBUS_TYPE_INT32, &rdc_slotid);
 		dbus_message_iter_append_basic(&iter,
@@ -4155,6 +4156,9 @@ replyx:
 		portal_protocol = portal_get_protocol_type();
 		dbus_message_iter_append_basic(&iter, 
 								DBUS_TYPE_INT32, &portal_protocol);
+		portal_private_attribute_switch = portal_get_private_attribute_switch();
+		dbus_message_iter_append_basic(&iter, 
+								DBUS_TYPE_INT32, &portal_private_attribute_switch);
 		macauth_switch = eag_macauth_get_macauth_switch(eagins->macauth);
 		dbus_message_iter_append_basic(&iter, 
 								DBUS_TYPE_INT32, &macauth_switch);
@@ -4170,8 +4174,8 @@ replyx:
 		macauth_flux_threshold = eag_macauth_get_flux_threshold(eagins->macauth);
 		dbus_message_iter_append_basic(&iter, 
 								DBUS_TYPE_INT32, &macauth_flux_threshold);
-        macauth_check_interval = eag_macauth_get_check_interval(eagins->macauth);
-        dbus_message_iter_append_basic(&iter, 
+		macauth_check_interval = eag_macauth_get_check_interval(eagins->macauth);
+		dbus_message_iter_append_basic(&iter, 
 								DBUS_TYPE_INT32, &macauth_check_interval);
 		notice_bindserver = notice_to_bindserver;
 		dbus_message_iter_append_basic(&iter, 
@@ -12247,6 +12251,54 @@ replyx:
 }
 
 DBusMessage *
+eag_dbus_method_set_portal_private_attribute_switch(
+				DBusConnection *conn, 
+				DBusMessage *msg, 
+				void *user_data )
+{
+	eag_ins_t *eagins = NULL;
+	DBusMessage* reply = NULL;
+	DBusMessageIter iter = {0};
+	DBusError		err = {0};
+	int ret = EAG_RETURN_OK;
+	int status = 0;
+	reply = dbus_message_new_method_return(msg);
+	
+	if (NULL == reply) {
+		eag_log_err("eag_dbus_method_set_portal_private_attribute_switch "\
+					"DBUS new reply message error!\n");
+		return NULL;
+	}
+	eagins = (eag_ins_t *)user_data;
+	if ( NULL == eagins ){
+		eag_log_err("eag_dbus_method_set_portal_private_attribute_switch user_data eagins error!");
+		ret = EAG_ERR_UNKNOWN;
+		goto replyx;
+	}
+	dbus_error_init(&err);
+	if (!(dbus_message_get_args(msg ,&err,
+								DBUS_TYPE_INT32, &status,		
+								DBUS_TYPE_INVALID)))
+	{							
+		eag_log_err("eag_dbus_method_set_portal_private_attribute_switch "\
+					"unable to get input args\n");
+		if (dbus_error_is_set(&err)) {
+			eag_log_err("eag_dbus_method_set_portal_private_attribute_switch %s raised:%s\n",
+							err.name, err.message);
+			dbus_error_free(&err);
+		}
+		ret = EAG_ERR_DBUS_FAILED;
+		goto replyx;
+	}
+	portal_set_private_attribute_switch(status);
+replyx:
+	dbus_message_iter_init_append(reply, &iter);
+	dbus_message_iter_append_basic(&iter,
+									DBUS_TYPE_INT32, &ret);
+	return reply;
+}
+
+DBusMessage *
 eag_dbus_method_set_telecom_idletime_valuecheck(
 				DBusConnection *conn, 
 				DBusMessage *msg, 
@@ -13023,6 +13075,8 @@ eagins_register_all_dbus_method(eag_ins_t *eagins)
 	
 	eag_dbus_register_method(eagins->eagdbus,
 		EAG_DBUS_INTERFACE, eag_dbus_method_set_portal_protocol, eagins);
+	eag_dbus_register_method(eagins->eagdbus,
+		EAG_DBUS_INTERFACE, eag_dbus_method_set_portal_private_attribute_switch, eagins);
 	eag_dbus_register_method(eagins->eagdbus,
 		EAG_DBUS_INTERFACE, eag_dbus_method_set_telecom_idletime_valuecheck, eagins);
 	eag_dbus_register_method(eagins->eagdbus,
