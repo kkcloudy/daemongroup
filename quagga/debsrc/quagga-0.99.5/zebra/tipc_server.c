@@ -6834,6 +6834,15 @@ vice_board_read (struct thread *thread)
 		  tipc_vice_interface_nd_prefix_update(ZEBRA_INTERFACE_ND_PREFIX_ADD, vice_board, length);
 	  
 		  break;
+	   case ZEBRA_INTERFACE_ND_PREFIX_POOL_ADD:
+	   	
+		  tipc_vice_interface_nd_prefix_pool_update(ZEBRA_INTERFACE_ND_PREFIX_POOL_ADD, vice_board, length);
+	  
+		  break;
+		  	
+	 case ZEBRA_INTERFACE_ND_PREFIX_POOL_DELETE:
+		 tipc_vice_interface_nd_prefix_pool_update(ZEBRA_INTERFACE_ND_PREFIX_POOL_DELETE, vice_board, length);
+		 break;
 
 	  case ZEBRA_INTERFACE_ND_PREFIX_DELETE:
 		  tipc_vice_interface_nd_prefix_update(ZEBRA_INTERFACE_ND_PREFIX_DELETE, vice_board, length);

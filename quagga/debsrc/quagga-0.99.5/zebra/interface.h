@@ -54,6 +54,7 @@ struct rtadvconf
   /* A flag indicating whether or not the router sends periodic Router
      Advertisements and responds to Router Solicitations.
      Default: FALSE */
+     struct in6_addr dst;
   int AdvSendAdvertisements;
 
   /* The maximum time allowed between sending unsolicited multicast
@@ -147,6 +148,8 @@ struct rtadvconf
      advertisement is sent. The link-local prefix SHOULD NOT be
      included in the list of advertised prefixes. */
   struct list *AdvPrefixList;
+  struct list *pool;
+  int prefix_flag;
 
   /* The TRUE/FALSE value to be placed in the "Home agent"
      flag field in the Router Advertisement.  See [RFC3775 7.1].
@@ -180,6 +183,15 @@ struct rtadvconf
 
 #endif /* RTADV */
 
+struct ipv6_pool
+{
+	struct in6_addr prefix;
+	struct in6_addr link_addr;
+	struct ipv6_pool *next;
+
+};
+
+
 /* `zebra' daemon local interface structure. */
 struct zebra_if
 {
@@ -204,6 +216,9 @@ struct zebra_if
 #ifdef RTADV
   struct rtadvconf rtadv;
 #endif /* RTADV */
+
+struct ipv6_pool *rtadv_prefix_pool[256*256];
+
 
 #ifdef HAVE_IRDP
   struct irdp_interface irdp;

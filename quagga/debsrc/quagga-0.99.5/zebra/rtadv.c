@@ -71,6 +71,7 @@ static void rtadv_event (enum rtadv_event, int,void *);
 static int if_join_all_router (int, struct interface *);
 static int if_leave_all_router (int, struct interface *);
 static void rtadv_prefix_set (struct zebra_if *zif, struct rtadv_prefix *rp);
+static void rtadv_prefix_pool_set (struct zebra_if *zif, struct rtadv_prefix *rp);
 static int rtadv_prefix_reset (struct zebra_if *zif, struct rtadv_prefix *rp);
 
 
@@ -600,6 +601,117 @@ tipc_vice_interface_nd_prefix_info_read(int command, struct stream *s,struct rta
 }
 
 
+
+struct interface *
+tipc_vice_interface_nd_prefix_pool_info_read(int command, struct stream *s,struct rtadv_prefix *rp_start,struct rtadv_prefix *rp_end)
+{
+
+	if(!s)
+	{
+	  zlog_info("%s: line %d. The stream is NULL.\n",__func__,__LINE__);
+	  return NULL;
+	}
+	
+	char ifname_tmp[INTERFACE_NAMSIZ] = {0};
+	struct interface *ifp;
+	struct zebra_if *zif;
+	int str_length = 0;
+	char prefix_str[IPV6_MAX_BITLEN]={0};
+	char prefix_end[IPV6_MAX_BITLEN]={0};
+	int ret = 0;
+	
+	stream_get (ifname_tmp, s, INTERFACE_NAMSIZ);
+	
+	if(RTM_DEBUG_RTADV)
+	 zlog_debug("%s : interface (%s) command (%s).\n", __func__,
+				ifname_tmp,zserv_command_string(command));
+	
+	 ifp = if_lookup_by_name_len (ifname_tmp,
+				   strnlen(ifname_tmp, INTERFACE_NAMSIZ));
+	 zif  = ifp->info;
+ 
+	 if(ifp == NULL) 
+	 {
+		if(RTM_DEBUG_RTADV)
+		  zlog_debug("%s : line %d, interface do not exist or the interface not match!\n",__func__,__LINE__);
+		return NULL;
+	 }
+	if (command == ZEBRA_INTERFACE_ND_PREFIX_POOL_ADD)
+	{
+	
+		 str_length = stream_getl(s);/*fetch prefixe string length.*/
+		 stream_get(prefix_str, s, str_length);/*fetch prefixe string .*/
+		 prefix_str[str_length]='\0';
+		 str_length = stream_getl(s);/*fetch prefixe string length.*/
+		 stream_get(prefix_end, s, str_length);/*fetch prefixe string .*/
+		 prefix_end[str_length]='\0';
+		
+		
+		 ret = str2prefix_ipv6 (prefix_str, (struct prefix_ipv6 *)&(rp_start->prefix));
+		 if (!ret)
+		 {
+			 zlog_warn ("Malformed IPv6 prefix[%s]", prefix_str);
+			 return NULL;
+		   }
+		  ret = str2prefix_ipv6 (prefix_end, (struct prefix_ipv6 *)&(rp_end->prefix));
+		 if (!ret)
+		 {
+			 zlog_warn ("Malformed IPv6 prefix[%s]", prefix_end);
+			 return NULL;
+		   }
+		
+			rp_start->AdvOnLinkFlag= stream_getl(s);
+			rp_start->AdvAutonomousFlag = stream_getl(s);
+			rp_start->AdvRouterAddressFlag =  stream_getl(s);
+			rp_start->AdvValidLifetime =  stream_getl(s);
+			rp_start->AdvPreferredLifetime =  stream_getl(s);
+			rp_end->AdvOnLinkFlag = stream_getl(s);
+			rp_end->AdvAutonomousFlag = stream_getl(s);
+			rp_end->AdvRouterAddressFlag =  stream_getl(s);
+			rp_end->AdvValidLifetime = stream_getl(s);
+			rp_end->AdvPreferredLifetime = stream_getl(s);
+			
+			
+			zif->rtadv.prefix_flag = 1;
+			
+			
+		   	  zlog_info("%s : interface(%s),\
+					  AdvOnLinkFlag[%d],\
+					  AdvAutonomousFlag[%d],\
+					  AdvRouterAddressFlag[%d],\
+					  AdvValidLifetime[%d],\
+					  AdvPreferredLifetime[%d]. \n",
+					  __func__,ifp->name,
+ 			rp_start->AdvOnLinkFlag ,
+			rp_start->AdvAutonomousFlag ,
+			rp_start->AdvRouterAddressFlag,
+			rp_start->AdvValidLifetime ,
+			rp_start->AdvPreferredLifetime );
+			 			
+		   	  zlog_info("%s : interface(%s),\
+					  AdvOnLinkFlag[%d],\
+					  AdvAutonomousFlag[%d],\
+					  AdvRouterAddressFlag[%d],\
+					  AdvValidLifetime[%d],\
+					  AdvPreferredLifetime[%d]. \n",
+					  __func__,ifp->name,
+ 			rp_end->AdvOnLinkFlag ,
+			rp_end->AdvAutonomousFlag ,
+			rp_end->AdvRouterAddressFlag,
+			rp_end->AdvValidLifetime ,
+			rp_end->AdvPreferredLifetime );
+			 
+			
+		 
+	}
+		
+	 
+	 return ifp;
+	
+}
+
+
+
 int
 tipc_vice_interface_nd_prefix_update(int command, tipc_server* vice_board, int length)
 {
@@ -636,6 +748,86 @@ tipc_vice_interface_nd_prefix_update(int command, tipc_server* vice_board, int l
 			zlog_info( "Non-exist IPv6 prefix.\n");
 			return -1;
 		  }
+	 }
+	else
+	{
+		zlog_warn("Unknow command [%d].\n",command);
+		return -1;
+	 }
+	
+	return 0;
+	
+}
+
+
+int
+tipc_vice_interface_nd_prefix_pool_update(int command, tipc_server* vice_board, int length)
+{
+	
+	if(!vice_board)
+	 return -1;
+	
+	struct interface *ifp;	
+	struct zebra_if *zif;
+	struct rtadv_prefix rp_start,rp_end;
+	int ret = 0;
+	
+	zlog_info("chenjun	func %s, line %d	  ZEBRA_INTERFACE_ND_PREFIX_POOL_ADD",__func__,__LINE__ );
+	ifp = tipc_vice_interface_nd_prefix_pool_info_read(command,vice_board->ibuf,&rp_start,&rp_end);
+	
+	if(!ifp)
+	  return -1;
+	
+	zif = ifp->info;
+	
+	if(command == ZEBRA_INTERFACE_ND_PREFIX_POOL_ADD)
+	{
+		if(RTM_DEBUG_RTADV)
+		  zlog_debug ("To add ipv6 nd prefix pool .\n");
+		rtadv_prefix_pool_set(zif, &rp_start);
+		rtadv_prefix_pool_set(zif, &rp_end);
+		 rtadv_prefix_pool_set (zif, &rp_start);
+		 zif->rtadv.prefix_flag = 1;
+		 
+		zlog_info("add prefix start"NIP6QUAD_FMT "\n",NIP6QUAD(rp_start.prefix.u.prefix6.s6_addr));
+		zlog_info("add prefix end"NIP6QUAD_FMT "\n",NIP6QUAD(rp_end.prefix.u.prefix6.s6_addr));
+	 }
+	else if(command == ZEBRA_INTERFACE_ND_PREFIX_POOL_DELETE)
+	{
+		if(RTM_DEBUG_RTADV)
+		  zlog_debug ("To delete ipv6 nd prefix pool .\n");
+		struct ipv6_pool *s,*p;
+		int i;
+		
+		zif->rtadv.prefix_flag = 0;
+		  if (zif->rtadv.pool->head != NULL)
+		{
+			struct rtadv_prefix *next;
+			while(zif->rtadv.pool->head != NULL)
+	  		 {
+				  next = zif->rtadv.pool->head->next;
+		  		 free (zif->rtadv.pool->head);
+				zif->rtadv.pool->head = NULL;
+		   		zif->rtadv.pool->head = next;
+		   	}
+  		}
+		for(i =0; i <= 256*256; i++)
+		{ 
+			  if ( zif->rtadv_prefix_pool[i] != NULL)
+			  {
+				  s = zif->rtadv_prefix_pool[i];
+				zif->rtadv_prefix_pool[i] = NULL;
+				  while (s != NULL)
+				  {
+					  p = s;
+					  s = s->next;
+					  free(p);
+				  }
+			}
+		  else
+			  continue;
+		}
+		
 	 }
 	else
 	{
@@ -832,6 +1024,72 @@ tipc_master_packet_interface_nd_prefix_info(tipc_client *client, int cmd,
 
 
 int
+tipc_master_packet_interface_nd_prefix_pool_info(tipc_client *client, int cmd,
+                                                   struct interface *ifp,
+                                                   struct rtadv_prefix *rp_start, 
+                                		 struct rtadv_prefix *rp_end, 
+                              		 const char *pool_start,
+                               		 const char *pool_end)
+{
+  struct stream *s;
+  struct zebra_if *zif;
+  int length = 0;
+
+  
+  zif = ifp->info;
+
+  /* Check this client need interface information. */
+  if (! client->ifinfo)
+    return 0;
+
+  s = client->obuf;
+  stream_reset (s);
+
+  tipc_packet_create_header(s, cmd);
+if (cmd ==  ZEBRA_INTERFACE_ND_PREFIX_POOL_ADD)
+{
+
+	  /* Interface information. */
+	  stream_put (s, ifp->name, INTERFACE_NAMSIZ);
+	  
+	  /*Prefix str*/
+	    length = strlen(pool_start) ;
+	  stream_putl(s,length);/*packet prefix string length*/
+	  stream_put(s,pool_start,length);/*packet prefix string*/
+	   length = strlen(pool_end) ;
+	  stream_putl(s,length);/*packet prefix string length*/
+	  stream_put(s,pool_end,length);/*packet prefix string*/
+
+	stream_putl(s, rp_start->AdvOnLinkFlag);
+	stream_putl(s, rp_start->AdvAutonomousFlag);
+	stream_putl(s, rp_start->AdvRouterAddressFlag);
+	stream_putl(s, rp_start->AdvValidLifetime);
+	stream_putl(s, rp_start->AdvPreferredLifetime);
+	stream_putl(s, rp_end->AdvOnLinkFlag);
+	stream_putl(s, rp_end->AdvAutonomousFlag);
+	stream_putl(s, rp_end->AdvRouterAddressFlag);
+	stream_putl(s, rp_end->AdvValidLifetime);
+	stream_putl(s, rp_end->AdvPreferredLifetime);
+		
+	  	
+	  zif->rtadv.prefix_flag = 1;
+	  
+}
+else
+{
+	stream_put (s, ifp->name, INTERFACE_NAMSIZ);
+	zif->rtadv.prefix_flag = 0;
+}
+stream_putw_at (s, 0, stream_get_endp (s));
+
+
+  return master_send_message_to_vice(client);
+  
+}
+
+
+
+int
 tipc_master_interface_nd_prefix_update(int command, 
                                 struct interface *ifp,
                                 struct rtadv_prefix *rp, 
@@ -860,6 +1118,54 @@ tipc_master_interface_nd_prefix_update(int command,
 			for (ALL_LIST_ELEMENTS (zebrad.vice_board_list, node, nnode, master_board)) 
 			{ 
 			   tipc_master_packet_interface_nd_prefix_info(master_board,ZEBRA_INTERFACE_ND_PREFIX_DELETE, ifp, rp, prefix_str);
+			  }
+		  }
+		else
+		 {
+		 	zlog_warn("The unkown command.\n");
+			return -1;
+		  }
+			
+		   
+	}
+
+	return 0;
+	
+}
+
+
+int
+tipc_master_interface_nd_prefix_pool_update(int command, 
+                                struct interface *ifp,
+                                struct rtadv_prefix *rp_start, 
+                                struct rtadv_prefix *rp_end, 
+                                const char *pool_start,
+                                const char *pool_end)
+{
+	struct listnode *node, *nnode;
+	tipc_client *master_board;
+
+	if(product && product->board_type == BOARD_IS_ACTIVE_MASTER)
+	{
+		if(zebrad.vice_board_list == NULL)
+		{
+			zlog_debug("There is no one vice board connect.\n");
+			return -1;
+		  }
+		
+		if(command == ZEBRA_INTERFACE_ND_PREFIX_POOL_ADD)
+		{
+			for (ALL_LIST_ELEMENTS (zebrad.vice_board_list, node, nnode, master_board)) 
+			{ 
+				
+			  tipc_master_packet_interface_nd_prefix_pool_info(master_board,ZEBRA_INTERFACE_ND_PREFIX_POOL_ADD, ifp, rp_start, rp_end,pool_start,pool_end);
+			}
+		  }
+		else if(command == ZEBRA_INTERFACE_ND_PREFIX_POOL_DELETE)
+		{
+			for (ALL_LIST_ELEMENTS (zebrad.vice_board_list, node, nnode, master_board)) 
+			{ 
+				tipc_master_packet_interface_nd_prefix_pool_info(master_board,ZEBRA_INTERFACE_ND_PREFIX_POOL_DELETE, ifp, rp_start, rp_end,pool_start,pool_end);
 			  }
 		  }
 		else
@@ -906,7 +1212,7 @@ rtadv_recv_packet (int sock, u_char *buf, int buflen,
   char adata[1024];
 
   /* Fill in message and iovec. */
-  msg.msg_name = (void *) from;
+  msg.msg_name = (void *) from;  
   msg.msg_namelen = sizeof (struct sockaddr_in6);
   msg.msg_iov = &iov;
   msg.msg_iovlen = 1;
@@ -942,10 +1248,34 @@ rtadv_recv_packet (int sock, u_char *buf, int buflen,
 	  cmsgptr->cmsg_type == IPV6_HOPLIMIT)
 	*hoplimit = *((int *) CMSG_DATA (cmsgptr));
     }
+	   
   return ret;
 }
 
 #define RTADV_MSG_SIZE 4096
+#define RTADV_GLOBAL_HASH(sta) (sta[14]<<8 |sta[15])
+
+struct ipv6_pool * rtadv_prefix_pool_hash_get(struct interface *ifp ,const struct in6_addr *sta)
+{
+	struct ipv6_pool *s = NULL;
+	struct zebra_if *zif;
+	zif = ifp->info;
+	
+	s = zif->rtadv_prefix_pool[RTADV_GLOBAL_HASH(sta->s6_addr)];
+	while (s != NULL && memcmp(&s->link_addr, sta,sizeof(struct in6_addr )) != 0)
+		s = s->next;
+	return s;
+}
+
+void rtadv_prefix_pool_hash_add(struct interface *ifp ,struct ipv6_pool*sta)
+{
+	struct zebra_if *zif;
+	zif = ifp->info;
+	
+ 	sta->next =  zif->rtadv_prefix_pool[RTADV_GLOBAL_HASH(sta->link_addr.s6_addr)];
+	 zif->rtadv_prefix_pool[RTADV_GLOBAL_HASH(sta->link_addr.s6_addr)] = sta;
+ }
+
 
 /* Send router advertisement packet. */
 static void
@@ -965,7 +1295,7 @@ rtadv_send_packet (int sock, struct interface *ifp)
   int ret;
   int len = 0;
   struct zebra_if *zif;
-  struct rtadv_prefix *rprefix;
+  struct rtadv_prefix *rprefix,*prefix_next,*prefix_step;
   u_char all_nodes_addr[] = {0xff,0x02,0,0,0,0,0,0,0,0,0,0,0,0,0,1};
   struct listnode *node;
 
@@ -1074,47 +1404,158 @@ rtadv_send_packet (int sock, struct interface *ifp)
     }
 
   /* Fill in prefix. */
-  for (ALL_LIST_ELEMENTS_RO (zif->rtadv.AdvPrefixList, node, rprefix))
-    {
-      struct nd_opt_prefix_info *pinfo;
+  
+  if (zif->rtadv.prefix_flag == 0)
+  {
+	  for (ALL_LIST_ELEMENTS_RO (zif->rtadv.AdvPrefixList, node, rprefix))
+	    {
+	      struct nd_opt_prefix_info *pinfo;
 
-      pinfo = (struct nd_opt_prefix_info *) (buf + len);
+	      pinfo = (struct nd_opt_prefix_info *) (buf + len);
 
-      pinfo->nd_opt_pi_type = ND_OPT_PREFIX_INFORMATION;
-      pinfo->nd_opt_pi_len = 4;
-      pinfo->nd_opt_pi_prefix_len = rprefix->prefix.prefixlen;
+	      pinfo->nd_opt_pi_type = ND_OPT_PREFIX_INFORMATION;
+	      pinfo->nd_opt_pi_len = 4;
+	      pinfo->nd_opt_pi_prefix_len = rprefix->prefix.prefixlen;
 
-      pinfo->nd_opt_pi_flags_reserved = 0;
-      if (rprefix->AdvOnLinkFlag)
-	pinfo->nd_opt_pi_flags_reserved |= ND_OPT_PI_FLAG_ONLINK;
-      if (rprefix->AdvAutonomousFlag)
-	pinfo->nd_opt_pi_flags_reserved |= ND_OPT_PI_FLAG_AUTO;
-      if (rprefix->AdvRouterAddressFlag)
-	pinfo->nd_opt_pi_flags_reserved |= ND_OPT_PI_FLAG_RADDR;
+	      pinfo->nd_opt_pi_flags_reserved = 0;
+	      if (rprefix->AdvOnLinkFlag)
+		pinfo->nd_opt_pi_flags_reserved |= ND_OPT_PI_FLAG_ONLINK;
+	      if (rprefix->AdvAutonomousFlag)
+		pinfo->nd_opt_pi_flags_reserved |= ND_OPT_PI_FLAG_AUTO;
+	      if (rprefix->AdvRouterAddressFlag)
+		pinfo->nd_opt_pi_flags_reserved |= ND_OPT_PI_FLAG_RADDR;
 
-      pinfo->nd_opt_pi_valid_time = htonl (rprefix->AdvValidLifetime);
-      pinfo->nd_opt_pi_preferred_time = htonl (rprefix->AdvPreferredLifetime);
-      pinfo->nd_opt_pi_reserved2 = 0;
+	      pinfo->nd_opt_pi_valid_time = htonl (rprefix->AdvValidLifetime);
+	      pinfo->nd_opt_pi_preferred_time = htonl (rprefix->AdvPreferredLifetime);
+	      pinfo->nd_opt_pi_reserved2 = 0;
 
-      memcpy (&pinfo->nd_opt_pi_prefix, &rprefix->prefix.u.prefix6,
-	      sizeof (struct in6_addr));
+	      memcpy (&pinfo->nd_opt_pi_prefix, &rprefix->prefix.u.prefix6,
+		      sizeof (struct in6_addr));
 
 #ifdef DEBUG
-      {
-	u_char buf[INET6_ADDRSTRLEN];
+	      {
+		u_char buf[INET6_ADDRSTRLEN];
 
-	zlog_debug ("DEBUG %s", inet_ntop (AF_INET6, &pinfo->nd_opt_pi_prefix, 
-	           buf, INET6_ADDRSTRLEN));
+		zlog_debug ("DEBUG %s", inet_ntop (AF_INET6, &pinfo->nd_opt_pi_prefix, 
+		           buf, INET6_ADDRSTRLEN));
 
-      }
+	      }
 #endif /* DEBUG */
 
-      len += sizeof (struct nd_opt_prefix_info);
-    }
+	      len += sizeof (struct nd_opt_prefix_info);
+	    }
+}
+ else
+ {			
+ 		
+ 			rprefix = zif->rtadv.pool->head->data;
+ 			 zlog_info("prefix start ipv6 "NIP6QUAD_FMT"\n",NIP6QUAD(rprefix->prefix.u.prefix6.s6_addr));
+			prefix_next = zif->rtadv.pool->head->next->data;
+			zlog_info(" prefix end  ipv6 "NIP6QUAD_FMT"\n",NIP6QUAD(prefix_next->prefix.u.prefix6.s6_addr));
+			prefix_step = zif->rtadv.pool->head->next->next->data;
+			zlog_info("prefix step  ipv6 "NIP6QUAD_FMT"\n",NIP6QUAD(prefix_step->prefix.u.prefix6.s6_addr));
+			struct nd_opt_prefix_info *pinfo;
+			 int num = 0,flag = 0;
+			  num = rprefix->prefix.prefixlen/8 - 1;
+			  struct ipv6_pool *new_pool,*new_prefix;
+			  struct in6_addr send_prefix;
+			  memset(&send_prefix,0 ,sizeof(struct in6_addr));
+			    zlog_info(" prefix_old  ipv6 "NIP6QUAD_FMT"\n",NIP6QUAD(prefix_step->prefix.u.prefix6.s6_addr));
+			if (zif->rtadv.dst.s6_addr16[0] == 0xFE80)
+			  {
+				new_prefix = rtadv_prefix_pool_hash_get(ifp,&zif->rtadv.dst);
+				if (new_prefix == NULL)
+				{
+					new_pool = (struct ipv6_pool *)malloc(sizeof(struct ipv6_pool));
+					if (new_pool == NULL)
+						zlog_info("malloc fail\n");
+					memset(new_pool,0,sizeof(struct ipv6_pool));
+					memcpy(&new_pool->link_addr,&zif->rtadv.dst,sizeof(struct in6_addr));
+					memcpy(&new_pool->prefix, &prefix_step->prefix.u.prefix6,sizeof(struct in6_addr));
+					new_pool->next = NULL;
+				
+					if(memcmp(prefix_step->prefix.u.prefix6.s6_addr,prefix_next->prefix.u.prefix6.s6_addr,128) < 0)
+ 					{
+						rtadv_prefix_pool_hash_add(ifp,new_pool);
+						memcpy(&send_prefix,&prefix_step->prefix.u.prefix6,sizeof(struct in6_addr));
+						unsigned short prefix_nd = ( (prefix_step->prefix.u.prefix6.s6_addr[num-1] << 8) | prefix_step->prefix.u.prefix6.s6_addr[num]) + 1;
+						prefix_step->prefix.u.prefix6.s6_addr[num-1] = (unsigned char)(prefix_nd >> 8); 
+						prefix_step->prefix.u.prefix6.s6_addr[num] = (unsigned char)(prefix_nd) ;
+						 zlog_info(" chenjun  rprefix->prefix.u.prefix6.s6_addr[num-1] %x\n",prefix_step->prefix.u.prefix6.s6_addr[num-1]);
+						zlog_info(" chenjun  rprefix->prefix.u.prefix6.s6_addr[num] %x\n",prefix_step->prefix.u.prefix6.s6_addr[num]);
+						zlog_info(" chenjun   prefix_step ipv6 "NIP6QUAD_FMT"\n",NIP6QUAD(prefix_step->prefix.u.prefix6.s6_addr));
+						flag = 0;
+					}
+					else
+					{
+						free(new_pool);
+						flag = 1;
+					}
+				}
+				else
+				{
+					memcpy(&send_prefix,&new_prefix->prefix,sizeof(struct in6_addr));
+					
+				}
+				memset(&zif->rtadv.dst,0,sizeof(struct in6_addr));
+			  }
+			  
+			  zlog_info(" 	prefix_step	ipv6 "NIP6QUAD_FMT"\n",NIP6QUAD(prefix_step->prefix.u.prefix6.s6_addr));
+			   zlog_info("  flag = %d\n",flag);
+			   
+			   zlog_info("  send prefix  ipv6 "NIP6QUAD_FMT"\n",NIP6QUAD(send_prefix.s6_addr));
+		if(flag ==0)
+		{
+			  pinfo = (struct nd_opt_prefix_info *) (buf + len);
+	
+			  pinfo->nd_opt_pi_type = ND_OPT_PREFIX_INFORMATION;
+			  pinfo->nd_opt_pi_len = 4;
+			  pinfo->nd_opt_pi_prefix_len = rprefix->prefix.prefixlen;
+	
+			  pinfo->nd_opt_pi_flags_reserved = 0;
+			  if (rprefix->AdvOnLinkFlag)
+			pinfo->nd_opt_pi_flags_reserved |= ND_OPT_PI_FLAG_ONLINK;
+			  if (rprefix->AdvAutonomousFlag)
+			pinfo->nd_opt_pi_flags_reserved |= ND_OPT_PI_FLAG_AUTO;
+			  if (rprefix->AdvRouterAddressFlag)
+			pinfo->nd_opt_pi_flags_reserved |= ND_OPT_PI_FLAG_RADDR;
+	
+			  pinfo->nd_opt_pi_valid_time = htonl (rprefix->AdvValidLifetime);
+			  pinfo->nd_opt_pi_preferred_time = htonl (rprefix->AdvPreferredLifetime);
+			  pinfo->nd_opt_pi_reserved2 = 0;
+			  
+			  	
+			
+			  memcpy (&pinfo->nd_opt_pi_prefix, &send_prefix,
+				  sizeof (struct in6_addr));
+			    zlog_info(" prefix_new ipv6 "NIP6QUAD_FMT"\n",NIP6QUAD(pinfo->nd_opt_pi_prefix.s6_addr));
+	
+#ifdef DEBUG
+			  {
+			u_char buf[INET6_ADDRSTRLEN];
+			
+			
+			zlog_debug ("DEBUG %s", inet_ntop (AF_INET6, &pinfo->nd_opt_pi_prefix, 
+					   buf, INET6_ADDRSTRLEN));
+	
+			  }
+#endif /* DEBUG */
+		
+			  len += sizeof (struct nd_opt_prefix_info);
+		    
+
+		}
+		
+
+ }
+ 	
 
   /* Hardware address. */
+  
 #ifdef HAVE_SOCKADDR_DL
+
   sdl = &ifp->sdl;
+
   if (sdl != NULL && sdl->sdl_alen != 0)
     {
       buf[len++] = ND_OPT_SOURCE_LINKADDR;
@@ -1122,16 +1563,20 @@ rtadv_send_packet (int sock, struct interface *ifp)
 
       memcpy (buf + len, LLADDR (sdl), sdl->sdl_alen);
       len += sdl->sdl_alen;
+	  
     }
 #else
   if (ifp->hw_addr_len != 0)
     {
+    
       buf[len++] = ND_OPT_SOURCE_LINKADDR;
       buf[len++] = (ifp->hw_addr_len + 2) >> 3;
 
       memcpy (buf + len, ifp->hw_addr, ifp->hw_addr_len);
       len += ifp->hw_addr_len;
+	  
     }
+  
 #endif /* HAVE_SOCKADDR_DL */
 
   msg.msg_name = (void *) &addr;
@@ -1315,7 +1760,7 @@ rtadv_process_advert (void)
 }
 
 static void
-rtadv_process_packet (u_char *buf, unsigned int len, unsigned int ifindex, int hoplimit)
+rtadv_process_packet (u_char *buf, unsigned int len, unsigned int ifindex, int hoplimit,   struct sockaddr_in6 *from)
 {
   struct icmp6_hdr *icmph;
   struct interface *ifp;
@@ -1364,7 +1809,12 @@ rtadv_process_packet (u_char *buf, unsigned int len, unsigned int ifindex, int h
 
   /* Check ICMP message type. */
   if (icmph->icmp6_type == ND_ROUTER_SOLICIT)
-    rtadv_process_solicit (ifp);
+  {
+  	 memset(&zif->rtadv.dst, 0, sizeof(struct in6_addr));
+	  memcpy(&zif->rtadv.dst, &from->sin6_addr.s6_addr, sizeof(from->sin6_addr.s6_addr));
+	  
+    	rtadv_process_solicit (ifp);
+  }
   else if (icmph->icmp6_type == ND_ROUTER_ADVERT)
     rtadv_process_advert ();
 
@@ -1401,7 +1851,7 @@ rtadv_read (struct thread *thread)
       return len;
     }
 
-  rtadv_process_packet (buf, (unsigned)len, ifindex, hoplimit);
+  rtadv_process_packet (buf, (unsigned)len, ifindex, hoplimit,&from);
 
   return 0;
 }
@@ -1533,6 +1983,19 @@ rtadv_prefix_get (struct list *rplist, struct prefix *p)
   return rprefix;
 }
 
+static struct rtadv_prefix *
+rtadv_prefix_pool_get (struct list *rplist, struct prefix *p)
+{
+  struct rtadv_prefix *rprefix;
+
+  rprefix = rtadv_prefix_new ();
+  memcpy (&rprefix->prefix, p, sizeof (struct prefix));
+  listnode_add (rplist, rprefix);
+
+  return rprefix;
+}
+
+
 static void
 rtadv_prefix_set (struct zebra_if *zif, struct rtadv_prefix *rp)
 {
@@ -1547,6 +2010,21 @@ rtadv_prefix_set (struct zebra_if *zif, struct rtadv_prefix *rp)
   rprefix->AdvAutonomousFlag = rp->AdvAutonomousFlag;
   rprefix->AdvRouterAddressFlag = rp->AdvRouterAddressFlag;
 }
+
+static void
+rtadv_prefix_pool_set(struct zebra_if *zif, struct rtadv_prefix *rp)
+{
+  struct rtadv_prefix *rprefix;
+  
+  rprefix = rtadv_prefix_pool_get (zif->rtadv.pool, &rp->prefix);
+  
+  rprefix->AdvValidLifetime = rp->AdvValidLifetime;
+  rprefix->AdvPreferredLifetime = rp->AdvPreferredLifetime;
+  rprefix->AdvOnLinkFlag = rp->AdvOnLinkFlag;
+  rprefix->AdvAutonomousFlag = rp->AdvAutonomousFlag;
+  rprefix->AdvRouterAddressFlag = rp->AdvRouterAddressFlag;
+}
+
 
 static int
 rtadv_prefix_reset (struct zebra_if *zif, struct rtadv_prefix *rp)
@@ -2895,6 +3373,157 @@ DEFUN (no_ipv6_nd_other_config_flag,
 
   return CMD_SUCCESS;
 }
+
+
+DEFUN (ipv6_nd_prefix_pool,
+       ipv6_nd_prefix_pool_cmd,
+       "ipv6 nd prefix pool X:X::X:X/M  X:X::X:X/M",
+       "Interface IPv6 config commands\n"
+       "Neighbor discovery\n"
+       "Prefix information\n"
+       "prefix pool"
+       "IPv6 prefix\n"
+       "IPv6 prefix\n"
+       )
+{
+  int i;
+  int ret;
+  int cursor = 1;
+  struct interface *ifp;
+    struct rtadv_prefix rp_start,rp_end;
+  struct zebra_if *zebra_if;
+
+#if 0
+			ifp = (struct interface *) vty->index;
+#else
+			ifp = if_get_by_vty_index(vty->index);
+			if(NULL == ifp)
+			{
+				vty_out (vty, "%% Interface %s does not exist%s", (char*)(vty->index), VTY_NEWLINE);
+				return CMD_WARNING;
+			}
+#endif
+  zebra_if = ifp->info;
+  ret = str2prefix_ipv6 (argv[0], (struct prefix_ipv6 *) &rp_start.prefix);
+    vty_out (vty, "ipv6start "NIP6QUAD_FMT"\n",NIP6QUAD(rp_start.prefix.u.prefix6.s6_addr));
+  if (!ret)
+    {
+      vty_out (vty, "Malformed IPv6 prefix%s", VTY_NEWLINE);
+      return CMD_WARNING;
+    }
+  rp_start.AdvOnLinkFlag = 1;
+  rp_start.AdvAutonomousFlag = 1;
+  rp_start.AdvRouterAddressFlag = 0;
+  rp_start.AdvValidLifetime = RTADV_VALID_LIFETIME;
+  rp_start.AdvPreferredLifetime = RTADV_PREFERRED_LIFETIME;
+
+  ret = str2prefix_ipv6 (argv[1], (struct prefix_ipv6 *) &rp_end.prefix);
+    vty_out (vty, "ipv6end "NIP6QUAD_FMT"\n",NIP6QUAD(rp_end.prefix.u.prefix6.s6_addr));
+  if (!ret)
+    {
+      vty_out (vty, "Malformed IPv6 prefix%s", VTY_NEWLINE);
+      return CMD_WARNING;
+    }
+  rp_end.AdvOnLinkFlag = 1;
+  rp_end.AdvAutonomousFlag = 1;
+  rp_end.AdvRouterAddressFlag = 0;
+  rp_end.AdvValidLifetime = RTADV_VALID_LIFETIME;
+  rp_end.AdvPreferredLifetime = RTADV_PREFERRED_LIFETIME;
+
+  
+  if ( memcmp(rp_start.prefix.u.prefix6.s6_addr,rp_end.prefix.u.prefix6.s6_addr,128) >=0)
+  {
+		vty_out (vty, "add ipv6 prefix pool fail\n");
+			   return CMD_SUCCESS;
+  }
+
+if (zebra_if->rtadv.pool->head != NULL)
+{
+	    struct rtadv_prefix *next;
+	 while(zebra_if->rtadv.pool->head != NULL)
+	 {
+		next = zebra_if->rtadv.pool->head->next;
+		 free (zebra_if->rtadv.pool->head);
+		  zebra_if->rtadv.pool->head = NULL;
+		   zebra_if->rtadv.pool->head = next;
+		 
+	 }
+}
+ 
+   rtadv_prefix_pool_set (zebra_if, &rp_start);
+   rtadv_prefix_pool_set (zebra_if, &rp_end);
+    rtadv_prefix_pool_set (zebra_if, &rp_start);
+   tipc_master_interface_nd_prefix_pool_update(ZEBRA_INTERFACE_ND_PREFIX_POOL_ADD,ifp,&rp_start,&rp_end,argv[0],argv[1]);
+  
+
+  return CMD_SUCCESS;
+}
+
+DEFUN (no_ipv6_nd_prefix_pool,
+       no_ipv6_nd_prefix_pool_cmd,
+       "no ipv6 nd prefix pool ",
+        NO_STR
+       "Interface IPv6 config commands\n"
+       "Neighbor discovery\n"
+       "Prefix information\n"
+       "prefix pool"
+             )
+{
+  int i;
+  int ret;
+  int cursor = 1;
+  struct interface *ifp;
+  struct zebra_if *zebra_if;
+  struct ipv6_pool *s,*p;
+  //struct rtadv_prefix rp,rplast;
+
+#if 0
+			ifp = (struct interface *) vty->index;
+#else
+			ifp = if_get_by_vty_index(vty->index);
+			if(NULL == ifp)
+			{
+				vty_out (vty, "%% Interface %s does not exist%s", (char*)(vty->index), VTY_NEWLINE);
+				return CMD_WARNING;
+			}
+#endif
+  zebra_if = ifp->info;
+  if (zebra_if->rtadv.pool->head != NULL)
+  {
+		  struct rtadv_prefix *next;
+	   while(zebra_if->rtadv.pool->head != NULL)
+	   {
+		  next = zebra_if->rtadv.pool->head->next;
+		   free (zebra_if->rtadv.pool->head);
+			zebra_if->rtadv.pool->head = NULL;
+			 zebra_if->rtadv.pool->head = next;
+		   
+	   	}
+  	}
+  for(i =0; i <= 256*256; i++)
+  {	
+  	if ( zebra_if->rtadv_prefix_pool[i] != NULL)
+  	{
+  		s =  zebra_if->rtadv_prefix_pool[i];
+		 zebra_if ->rtadv_prefix_pool[i] = NULL;
+		while (s != NULL)
+		{
+			p = s;
+			s = s->next;
+			free(p);
+		}
+	}
+	else
+		continue;
+  }
+  
+   tipc_master_interface_nd_prefix_pool_update(ZEBRA_INTERFACE_ND_PREFIX_POOL_DELETE,ifp,NULL,NULL,NULL,NULL);
+  
+
+  return CMD_SUCCESS;
+}
+
+
 /////////////////////////////////////other deal////////////////////////////////////
 DEFUN (ipv6_nd_prefix,
        ipv6_nd_prefix_cmd,
@@ -2932,6 +3561,7 @@ DEFUN (ipv6_nd_prefix,
   zebra_if = ifp->info;
 
   ret = str2prefix_ipv6 (argv[0], (struct prefix_ipv6 *) &rp.prefix);
+  vty_out(vty,"prefixlen = %d\n",rp.prefix.prefixlen);
   if (!ret)
     {
       vty_out (vty, "Malformed IPv6 prefix%s", VTY_NEWLINE);
@@ -3198,8 +3828,9 @@ rtadv_config_write (struct vty *vty, struct interface *ifp)
 {
   struct zebra_if *zif;
   struct listnode *node;
-  struct rtadv_prefix *rprefix;
+  struct rtadv_prefix *rprefix,*prefix_start,*prefix_end;
   u_char buf[INET6_ADDRSTRLEN];
+    u_char buf1[INET6_ADDRSTRLEN];
   int interval;
 
   if (! rtadv)
@@ -3256,7 +3887,17 @@ rtadv_config_write (struct vty *vty, struct interface *ifp)
 
   if (zif->rtadv.AdvOtherConfigFlag)
     vty_out (vty, " ipv6 nd other-config-flag%s", VTY_NEWLINE);
-
+  if (zif->rtadv.prefix_flag == 1)
+  {
+  	prefix_start = zif->rtadv.pool->head->data;
+	prefix_end = zif->rtadv.pool->head->next->data;
+	vty_out (vty, " ipv6 nd prefix pool %s/%d %s/%d\n",inet_ntop (AF_INET6, &prefix_start->prefix.u.prefix6, 
+			  (char *) buf, INET6_ADDRSTRLEN),
+	   	    	prefix_start->prefix.prefixlen,
+	   	    	inet_ntop (AF_INET6, &prefix_end->prefix.u.prefix6, 
+			  (char *) buf1, INET6_ADDRSTRLEN),
+	      		 prefix_end->prefix.prefixlen);
+  }
   for (ALL_LIST_ELEMENTS_RO (zif->rtadv.AdvPrefixList, node, rprefix))
     {
       vty_out (vty, " ipv6 nd prefix %s/%d",
@@ -3395,6 +4036,8 @@ rtadv_init (void)
   install_element (INTERFACE_NODE, &ipv6_nd_adv_interval_config_option_cmd);
   install_element (INTERFACE_NODE, &no_ipv6_nd_adv_interval_config_option_cmd);
   install_element (INTERFACE_NODE, &ipv6_nd_prefix_cmd);
+  install_element (INTERFACE_NODE, &ipv6_nd_prefix_pool_cmd);
+   install_element (INTERFACE_NODE, &no_ipv6_nd_prefix_pool_cmd);
   install_element (INTERFACE_NODE, &ipv6_nd_prefix_val_rev_rtaddr_cmd);
   install_element (INTERFACE_NODE, &ipv6_nd_prefix_val_nortaddr_cmd);
   install_element (INTERFACE_NODE, &ipv6_nd_prefix_val_rev_cmd);

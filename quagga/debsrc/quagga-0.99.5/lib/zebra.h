@@ -455,6 +455,9 @@ struct in_pktinfo
 /*ipv6 nd prefix deal*/
 #define ZEBRA_INTERFACE_ND_PREFIX_ADD           45
 #define ZEBRA_INTERFACE_ND_PREFIX_DELETE        46
+#define ZEBRA_INTERFACE_ND_PREFIX_POOL_ADD           49
+#define ZEBRA_INTERFACE_ND_PREFIX_POOL_DELETE        50   
+
 
 
 

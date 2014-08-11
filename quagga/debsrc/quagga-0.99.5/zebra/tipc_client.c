@@ -3477,6 +3477,7 @@ master_send_message_to_vice (tipc_client  *master_board)
 {
 	if(tipc_client_debug)
 		zlog_debug("enter func %s .....\n",__func__);
+	
   if (master_board->sock < 0)
   	{
   		zlog_info("%s : fd < 0 , cannot to send message .\n",__func__);
@@ -3501,6 +3502,7 @@ master_send_message_to_vice (tipc_client  *master_board)
     }
   if(tipc_client_debug)
   	zlog_debug("leave func %s ...\n",__func__);
+  
   return 0;
 }
 

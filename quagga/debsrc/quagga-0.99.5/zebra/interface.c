@@ -1412,8 +1412,10 @@ if_zebra_new_hook (struct interface *ifp)
     rtadv->HomeAgentPreference = 0;
     rtadv->HomeAgentLifetime = RTADV_ADV_DEFAULT_LIFETIME;
     rtadv->AdvIntervalOption = 0;
+    rtadv->prefix_flag = 0;
 
     rtadv->AdvPrefixList = list_new ();
+    rtadv->pool= list_new ();
   }    
 #endif /* RTADV */
 
