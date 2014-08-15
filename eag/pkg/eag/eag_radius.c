@@ -83,6 +83,7 @@ int idletime_valuecheck = 0;	/* for telecom */
 typedef struct sock_radius sock_radius_t;
 
 typedef struct radius_specific_attr {
+	uint8_t audit_ip;
 	uint8_t user_agent;
 	uint8_t user_type;
 	uint8_t framed_ipv6_address; /* user ipv6 address */
@@ -874,11 +875,13 @@ radius_auth(eag_radius_t *radius,
 		}
 	}
 
-	eag_log_info("radius_auth, appconn->session.audit_ip=%x", appconn->session.audit_ip);
-	radius_addattr(&packet, RADIUS_ATTR_VENDOR_SPECIFIC,
-			RADIUS_VENDOR_AUTELAN, 
-			RADIUS_ATTR_AUTELAN_AUDIT_IP,
+	if (radius->vendor_id && radius->radius_specific_attr.audit_ip) {
+		eag_log_info("radius_auth, appconn->session.audit_ip=%x", appconn->session.audit_ip);
+		radius_addattr(&packet, RADIUS_ATTR_VENDOR_SPECIFIC,
+			radius->vendor_id, 
+			radius->radius_specific_attr.audit_ip,
 			0, (uint8_t *)&(appconn->session.audit_ip), 4);
+	}
 
     if (radius->vendor_id && radius->radius_specific_attr.user_agent) {
 		len = strlen(appconn->user_agent);
@@ -982,11 +985,13 @@ radius_acct_req(eag_radius_t *radius,
 	radius_addattr(&packet, RADIUS_ATTR_NAS_IP_ADDRESS, 0, 0,
 			appconn->session.nasip, NULL, 0);
 
-	radius_addattr(&packet, RADIUS_ATTR_VENDOR_SPECIFIC,
-			RADIUS_VENDOR_AUTELAN, 
-			RADIUS_ATTR_AUTELAN_AUDIT_IP,
+	if (radius->vendor_id && radius->radius_specific_attr.audit_ip) {
+		radius_addattr(&packet, RADIUS_ATTR_VENDOR_SPECIFIC,
+			radius->vendor_id, 
+			radius->radius_specific_attr.audit_ip,
 			0, (uint8_t *)&(appconn->session.audit_ip), 4);
-	
+	}
+
 	if (0 == appconn->session.radius_srv.class_to_bandwidth) {
 		if (appconn->session.class_attr_len > 0) {
 			radius_addattr(&packet, RADIUS_ATTR_CLASS, 0, 0, 0,
@@ -2378,6 +2383,50 @@ eag_radius_get_single_specific_attr(char *line, int size,
 	if (NULL == radius_specific_attr || NULL == line) {
 		eag_log_err("eag_radius_get_single_specific_attr input error");
 		return -1;
+	}
+	specific_attr = strstr(line, "audit_ip");
+	if (NULL != specific_attr) {
+		specific_attr = strchr(line, '=');
+		*specific_attr = '\0';
+		specific_attr++;
+		radius_specific_attr->audit_ip = strtol(specific_attr, NULL, 10);
+		eag_log_debug("eag_radius", 
+				"eag_radius_get_single_specific_attr  audit_ip=%u\n",
+				radius_specific_attr->audit_ip);
+		return 0;
+	}
+	specific_attr = strstr(line, "user_agent");
+	if (NULL != specific_attr) {
+		specific_attr = strchr(line, '=');
+		*specific_attr = '\0';
+		specific_attr++;
+		radius_specific_attr->user_agent = strtol(specific_attr, NULL, 10);
+		eag_log_debug("eag_radius", 
+				"eag_radius_get_single_specific_attr  user_agent=%u\n",
+				radius_specific_attr->user_agent);
+		return 0;
+	}
+	specific_attr = strstr(line, "user_type");
+	if (NULL != specific_attr) {
+		specific_attr = strchr(line, '=');
+		*specific_attr = '\0';
+		specific_attr++;
+		radius_specific_attr->user_type = strtol(specific_attr, NULL, 10);
+		eag_log_debug("eag_radius", 
+				"eag_radius_get_single_specific_attr  user_type=%u\n",
+				radius_specific_attr->user_type);
+		return 0;
+	}
+	specific_attr = strstr(line, "framed_ipv6_address");
+	if (NULL != specific_attr) {
+		specific_attr = strchr(line, '=');
+		*specific_attr = '\0';
+		specific_attr++;
+		radius_specific_attr->framed_ipv6_address = strtol(specific_attr, NULL, 10);
+		eag_log_debug("eag_radius", 
+				"eag_radius_get_single_specific_attr  framed_ipv6_address=%u\n",
+				radius_specific_attr->framed_ipv6_address);
+		return 0;
 	}
 	specific_attr = strstr(line, "acct_ipv6_input_octets");
 	if (NULL != specific_attr) {

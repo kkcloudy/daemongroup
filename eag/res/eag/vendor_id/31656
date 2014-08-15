@@ -1,3 +1,5 @@
+user_agent=81
+audit_ip=201
 acct_ipv6_input_octets=221
 acct_ipv6_output_octets=222
 acct_ipv6_input_packets=223
