@@ -79,6 +79,79 @@ mask2binary(unsigned int mask){
 	return mask_ret;
 }
 
+static char *
+ipv6tostr(struct in6_addr *ipv6, char *str, size_t size)
+{
+	if (NULL == str || NULL == ipv6) {
+		return NULL;
+	}
+	
+	memset(str, 0, size);
+	if(!inet_ntop(AF_INET6, (const void *)ipv6, str, size)) {
+		return "[ipv6 error]";
+	}
+
+	return str;
+}
+
+static int
+ipv6_address_format2ulong(char **buf, 
+								uint32_t ipv6[4], 
+								int *prefix_length)
+{
+	char *str = NULL;
+	char *strcp = NULL;
+	char *split = "/";
+	char *token1 = NULL, *token2 = NULL;
+	char *pos = NULL;
+	int mask =0;
+	int ret = 0;
+	int length = 0;
+	
+	if(NULL == buf || NULL == *buf || NULL == ipv6 || NULL == prefix_length){
+        return CMD_WARNING;
+	}	
+	str = *buf;
+	for(pos = str; *pos; pos++) {
+		if('/' == *pos) {
+            mask++;
+			break;
+		}	
+	}
+	if(1 != mask){
+        return CMD_WARNING;
+	}
+
+	strcp = (char *)malloc(64 * sizeof(char));
+	if (NULL == strcp) {
+		return CMD_WARNING;
+	}
+	memset(strcp, '\0', 64);
+	strcpy(strcp, str);
+
+	token1 = strtok(strcp, split);
+	token2 = token1;/*token2 is ipv6 string*/
+	if(NULL != token1) {
+		ret = inet_pton(AF_INET6, token2, (struct in6_addr *)ipv6);
+		if (!ret) {			
+			return CMD_WARNING;
+		}
+		token1 = strtok(NULL, split);/*token1 is prefix length string*/
+		length = atoi(token1);
+		if(0 > length || 128 < length){			
+			return CMD_WARNING;	
+		}
+		*prefix_length = length;
+	} else {
+		return CMD_WARNING;
+	}
+
+	free(strcp);
+	strcp = NULL;
+
+	return CMD_SUCCESS;
+}
+
 unsigned int
 binary2mask(unsigned int mask){
 	int i = 0;
@@ -556,6 +629,251 @@ DEFUN(pdc_show_map_func,
 
 }
 
+DEFUN(pdc_add_ipv6_map_func,
+	pdc_add_ipv6_map_cmd,
+	"add pdc-map ipv6-user-subnet IPV6ADDR/PREFIX hansi PRARM",
+	"add\n"
+	"add pdc-map\n"
+	"add pdc-map ipv6-user-subnet\n"
+	"add pdc-map ipv6-user-subnet ipv6_address/prefix_length, like 2014::1/64\n"
+	"add pdc-map ipv6-user-subnet IPV6ADDR/PREFIX hansi\n"
+	"ipv6-user-subnet in hansi slotid-insid, like 1-1\n"
+)
+{
+	int ret = 0;
+	uint32_t useripv6[4] = {0};
+	int prefix_length = 0;
+	int eag_slotid = 0;
+	int eag_insid = 0;
+
+	ret = ipv6_address_format2ulong((char**)&argv[0], useripv6, &prefix_length);
+	if(CMD_WARNING == ret){
+		vty_out(vty, "%% invalid ipv6 address, please input like A::B.C.D.E/PREFIX or A::B:C/PREFIX\n");
+		return CMD_FAILURE;
+	}	
+
+	if (0 == memcmp(argv[0], "::", 2)) {
+		vty_out(vty, "%% invalid ipv6 address, please like A::B.C.D.E or A::B:C, A should not be NULL\n");
+		return CMD_WARNING;
+	}   
+       
+	ret = sscanf(argv[1],"%d-%d", &eag_slotid, &eag_insid );
+	if( ret != 2 ){
+		vty_out(vty, "the PARAM should format like  1-3(slotid-insid)!\n");
+		return CMD_FAILURE;
+	}
+
+	if( eag_slotid > 10 || eag_insid > 16 ||
+		eag_slotid < 0 || eag_insid < 0){
+		vty_out(vty, "Slot id should less than 10 and insid shold less than 16\n");		
+		return CMD_FAILURE;
+	}
+
+	PDC_DCLI_INIT_HANSI_INFO
+
+	ret = pdc_intf_add_ipv6_map( dcli_dbus_connection_curr,
+								hansitype, insid,
+								useripv6, prefix_length, 
+								eag_slotid, eag_insid);
+	
+	if (EAG_RETURN_OK == ret) {
+		return CMD_SUCCESS;
+	}
+	else if (EAG_ERR_DBUS_FAILED == ret) {
+		vty_out(vty, "%% dbus error\n");
+	}
+	else if (EAG_ERR_PDC_MAP_CONFLICT == ret){
+		vty_out(vty,"%% pdc map conflict\n");
+	}
+	else if (EAG_ERR_PDC_MAP_NOT_FOUND == ret){
+		vty_out(vty,"%% pdc map not found\n");
+	}
+	else if (EAG_ERR_PDC_MAP_NUM_OVERSTEP == ret){
+		vty_out(vty,"%% pdc map over limit\n");
+	}
+	else {
+		vty_out(vty, "%% unknown error: %d\n", ret);
+	}
+
+	return CMD_FAILURE;
+	
+}
+
+DEFUN(pdc_del_ipv6_map_func,
+	pdc_del_ipv6_map_cmd,
+	"delete pdc-map ipv6-user-subnet IPV6ADDR/PREFIX",
+	"delete\n"
+	"delete pdc-map\n"
+	"delete pdc-map ipv6-user-subnet\n"
+	"delete pdc-map ipv6-user-subnet ipv6_address/prefix_length, like 2014::1/64\n"	
+)
+{
+	int ret = 0;
+	uint32_t useripv6[4] = {0};
+	int prefix_length = 0;
+	
+	ret = ipv6_address_format2ulong((char**)&argv[0], useripv6, &prefix_length);	
+	if(CMD_WARNING == ret){
+		vty_out(vty, "%% invalid ipv6 address, please input like A::B.C.D.E/PREFIX or A::B:C/PREFIX\n");
+		return CMD_FAILURE;
+	}
+	
+	if (0 == memcmp(argv[0], "::", 2)) {
+		vty_out(vty, "%% invalid ipv6 address, please like A::B.C.D.E or A::B:C, A should not be NULL\n");
+		return CMD_WARNING;
+	}
+	
+	PDC_DCLI_INIT_HANSI_INFO
+
+	ret = pdc_intf_del_ipv6_map( dcli_dbus_connection_curr,
+						hansitype, insid,
+						useripv6, prefix_length);
+	
+	if (EAG_RETURN_OK == ret) {
+		return CMD_SUCCESS;
+	}
+	else if (EAG_ERR_DBUS_FAILED == ret) {
+			vty_out(vty, "%% dbus error\n");
+	}
+	else if (EAG_ERR_PDC_MAP_CONFLICT == ret){
+		vty_out(vty,"%% pdc map conflict\n");
+	}
+	else if (EAG_ERR_PDC_MAP_NOT_FOUND == ret){
+		vty_out(vty,"%% pdc map not found\n");
+	}
+	else if (EAG_ERR_PDC_MAP_NUM_OVERSTEP == ret){
+		vty_out(vty,"%% pdc map over limit\n");
+	}
+	else {
+		vty_out(vty, "%% unknown error: %d\n", ret);
+	}
+
+	return CMD_FAILURE;
+	
+}
+
+DEFUN(pdc_modify_ipv6_map_func,
+	pdc_modify_ipv6_map_cmd,
+	"set pdc-map ipv6-user-subnet IPV6ADDR/PREFIX hansi PRARM",
+	"set\n"
+	"set pdc-map\n"
+	"set pdc-map ipv6-user-subnet\n"
+	"set pdc-map ipv6-user-subnet ipv6_address/prefix_length, like 2014::1/64\n"
+	"set pdc-map ipv6-user-subnet IPV6ADDR/PREFIX hansi\n"
+	"ipv6-user-subnet in hansi slotid-insid, like 1-1\n"
+)
+{
+	
+	int ret = 0;
+	uint32_t useripv6[4] = {0};
+	int prefix_length = 0;
+	int  eag_slotid = 0;
+	int eag_insid = 0;
+	
+	ret = ipv6_address_format2ulong((char**)&argv[0], useripv6, &prefix_length);	
+	if(CMD_WARNING == ret){
+		vty_out(vty, "%% invalid ipv6 address, please input like A::B.C.D.E/PREFIX or A::B:C/PREFIX\n");
+		return CMD_FAILURE;
+	}	
+
+	if (0 == memcmp(argv[0], "::", 2)) {
+		vty_out(vty, "%% invalid ipv6 address, please like A::B.C.D.E or A::B:C, A should not be NULL\n");
+		return CMD_WARNING;
+	}	
+	
+	ret = sscanf(argv[1],"%d-%d", &eag_slotid, &eag_insid );
+	if( ret != 2 ){
+		vty_out(vty, "the PARAM should format like  1-3(slotid-insid)!\n");
+		return CMD_FAILURE;
+	}
+
+	if( eag_slotid > 10 || eag_insid > 16 ||
+		eag_slotid < 0 || eag_insid < 0){
+		vty_out(vty, "Slot id should less than 10 and insid shold less than 16\n");		
+		return CMD_FAILURE;
+	}
+
+	PDC_DCLI_INIT_HANSI_INFO
+	
+	ret = pdc_intf_modify_ipv6_map( dcli_dbus_connection_curr,
+									hansitype, insid,
+									useripv6, prefix_length, eag_slotid, eag_insid);
+	
+	if (EAG_RETURN_OK == ret) {
+		return CMD_SUCCESS;
+	}
+	else if (EAG_ERR_PDC_MAP_CONFLICT == ret){
+		vty_out(vty,"%% pdc map conflict\n");
+	}
+	else if (EAG_ERR_PDC_MAP_NOT_FOUND == ret){
+		vty_out(vty,"%% pdc map not found\n");
+	}
+	else if (EAG_ERR_PDC_MAP_NUM_OVERSTEP == ret){
+		vty_out(vty,"%% pdc map over limit\n");
+	}
+	else if (EAG_ERR_DBUS_FAILED == ret) {
+		vty_out(vty, "%% dbus error\n");
+	}
+	else {
+		vty_out(vty, "%% unknown error: %d\n", ret);
+	}
+
+	return CMD_FAILURE;
+	
+}
+
+DEFUN(pdc_show_ipv6_map_func,
+	pdc_show_ipv6_map_cmd,
+	"show pdc-ipv6-map-config",
+	SHOW_STR
+	"show pdc ipv6 map config\n"
+)
+{
+	int ret = 0;
+	int i = 0;
+	char ipstr[48] = "";
+	struct pdc_ipv6_map_conf map_conf = {0};
+
+	PDC_DCLI_INIT_HANSI_INFO
+	
+	ret = pdc_intf_show_ipv6_maps( dcli_dbus_connection_curr,
+						hansitype, insid,
+						&map_conf);
+	
+	if (EAG_RETURN_OK == ret) {
+		
+		if (0 == map_conf.num){
+			vty_out(vty, "no configuration!\n");
+			return CMD_SUCCESS;
+		}
+		vty_out(vty, "==============================\n");
+		for (i=0; i<map_conf.num; i++){
+			ipv6tostr(map_conf.map[i].userip, ipstr, sizeof(ipstr));
+			vty_out(vty, "%-15s : %s\n", "user ip", ipstr);			
+			vty_out(vty, "%-15s : %d\n", "prefix_length", map_conf.map[i].prefix_length);
+			vty_out(vty, "%-15s : %d\n", "hansi slotid", map_conf.map[i].eag_slotid);
+			vty_out(vty, "%-15s : %s\n", "hansi hansitype", (map_conf.map[i].eag_hansitype)?"local":"remote");
+			vty_out(vty, "%-15s : %d\n", "hansi hansiid", map_conf.map[i].eag_hansiid);
+			ip2str(map_conf.map[i].eag_ip, ipstr, sizeof(ipstr));
+			vty_out(vty, "%-15s : %s\n", "eag ip", ipstr);
+			vty_out(vty, "%-15s : %u\n", "eag portal port", map_conf.map[i].eag_port);
+			vty_out(vty, "==============================\n");
+		}
+		return CMD_SUCCESS;
+	}
+	else if (EAG_ERR_DBUS_FAILED == ret) {
+		vty_out(vty, "%% dbus error\n");
+	}
+	else {
+		vty_out(vty, "%% unknown error: %d\n", ret);
+	}
+
+	return CMD_FAILURE;
+
+}
+
+
+
 DEFUN(set_pdc_portal_protocol_func,
 	set_pdc_portal_protocol_cmd,
 	"set portal-protocol (mobile|telecom)",
@@ -835,13 +1153,15 @@ int pdc_has_config(void)
 int dcli_pdc_show_running_config(struct vty* vty)
 {
 	int ret = 0;
-	char showStr[256] = "";
+	char showStr[512] = "";
 	char ipstr[32] = "";
 	char userip[32] = "";
+	char ipv6str[48] = "";
 	unsigned int usermask = 0;
 	char eag_ip[32] = "";
 	struct pdc_base_conf baseconf = {0};
 	struct pdc_map_conf map_conf = {0};
+	struct pdc_ipv6_map_conf ipv6_map_conf = {0};
 	int i = 0;
 
 	snprintf(showStr, sizeof(showStr), BUILDING_MOUDLE, "PDC");
@@ -890,6 +1210,20 @@ int dcli_pdc_show_running_config(struct vty* vty)
 		}
 	}
 
+	ret = pdc_intf_show_ipv6_maps( dcli_dbus_connection,
+									HANSI_LOCAL, 0,
+									&ipv6_map_conf);
+	if (EAG_RETURN_OK == ret) {
+		for (i=0; i<ipv6_map_conf.num; i++){
+			ipv6tostr(ipv6_map_conf.map[i].userip, ipv6str, sizeof(ipv6str));
+			ip2str(ipv6_map_conf.map[i].eag_ip, eag_ip, sizeof(eag_ip));			
+			snprintf(showStr, sizeof(showStr), " add pdc-map ipv6-user-subnet %s/%d hansi %d-%d\n",
+							ipv6str, ipv6_map_conf.map[i].prefix_length, ipv6_map_conf.map[i].eag_slotid,\
+							ipv6_map_conf.map[i].eag_hansiid);
+			vtysh_add_show_string(showStr);
+		}
+	}
+
 	if (0 != baseconf.status) {
 		snprintf(showStr, sizeof(showStr), " service pdc enable");
 		vtysh_add_show_string(showStr);
@@ -911,11 +1245,13 @@ char *dcli_pdc_show_running_config_2(int localid, int slot_id,int index)
 	DBusConnection *dcli_dbus_connection_curr = NULL;
 	char ipstr[32] = "";
 	char userip[32] = "";
+	char ipv6str[48] = "";
 	unsigned int usermask = 0;
 	char eag_ip[32] = "";
 	int tmplen = 0;
 	struct pdc_base_conf baseconf = {0};
 	struct pdc_map_conf map_conf = {0};
+	struct pdc_ipv6_map_conf ipv6_map_conf = {0};
 	
 	memset (showStr, 0, sizeof(showStr));
 	cursor = showStr;
@@ -956,6 +1292,21 @@ char *dcli_pdc_show_running_config_2(int localid, int slot_id,int index)
 							" add pdc-map user-subnet %s/%d hansi %d-%d\n",
 							userip, usermask, map_conf.map[i].eag_slotid,\
 							map_conf.map[i].eag_hansiid);
+		}
+	}
+
+	ret = pdc_intf_show_ipv6_maps( dcli_dbus_connection_curr,
+									localid, index,
+									&ipv6_map_conf);
+	if (EAG_RETURN_OK == ret) {
+		for (i=0; i<ipv6_map_conf.num; i++){
+			ipv6tostr(ipv6_map_conf.map[i].userip, ipv6str, sizeof(ipv6str));
+			//ip2str(map_conf.map[i].usermask, usermask, sizeof(usermask));
+			ip2str(ipv6_map_conf.map[i].eag_ip, eag_ip, sizeof(eag_ip));	
+			totalLen += snprintf(cursor+totalLen, sizeof(showStr)-totalLen-1, 
+						" add pdc-map ipv6-user-subnet %s/%d hansi %d-%d\n",
+							ipv6str, ipv6_map_conf.map[i].prefix_length, ipv6_map_conf.map[i].eag_slotid,\
+							ipv6_map_conf.map[i].eag_hansiid);
 		}
 	}
 
@@ -1031,6 +1382,22 @@ void dcli_pdc_init(void)
 	install_element(PDC_NODE, &pdc_show_map_cmd);
 	install_element(HANSI_PDC_NODE, &pdc_show_map_cmd);
 	install_element(LOCAL_HANSI_PDC_NODE, &pdc_show_map_cmd);
+
+	install_element(PDC_NODE, &pdc_add_ipv6_map_cmd);
+	install_element(HANSI_PDC_NODE, &pdc_add_ipv6_map_cmd);
+	install_element(LOCAL_HANSI_PDC_NODE, &pdc_add_ipv6_map_cmd);
+
+	install_element(PDC_NODE, &pdc_del_ipv6_map_cmd);
+	install_element(HANSI_PDC_NODE, &pdc_del_ipv6_map_cmd);
+	install_element(LOCAL_HANSI_PDC_NODE, &pdc_del_ipv6_map_cmd);
+
+	install_element(PDC_NODE, &pdc_modify_ipv6_map_cmd);
+	install_element(HANSI_PDC_NODE, &pdc_modify_ipv6_map_cmd);
+	install_element(LOCAL_HANSI_PDC_NODE, &pdc_modify_ipv6_map_cmd);
+	
+	install_element(PDC_NODE, &pdc_show_ipv6_map_cmd);
+	install_element(HANSI_PDC_NODE, &pdc_show_ipv6_map_cmd);
+	install_element(LOCAL_HANSI_PDC_NODE, &pdc_show_ipv6_map_cmd);
 
 	install_element(PDC_NODE, &set_pdc_portal_protocol_cmd);
 	install_element(HANSI_PDC_NODE, &set_pdc_portal_protocol_cmd);

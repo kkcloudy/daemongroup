@@ -1008,6 +1008,14 @@ pdc_register_all_dbus_method(pdc_ins_t *pdcins)
 	eag_dbus_register_method(pdcins->eagdbus,
 		PDC_DBUS_INTERFACE, pdc_dbus_method_show_maps, pdcins->server);
 	eag_dbus_register_method(pdcins->eagdbus,
+		PDC_DBUS_INTERFACE, pdc_dbus_method_add_ipv6_map, pdcins->server);
+	eag_dbus_register_method(pdcins->eagdbus,
+		PDC_DBUS_INTERFACE, pdc_dbus_method_del_ipv6_map, pdcins->server);
+	eag_dbus_register_method(pdcins->eagdbus,
+		PDC_DBUS_INTERFACE, pdc_dbus_method_modify_ipv6_map, pdcins->server);
+	eag_dbus_register_method(pdcins->eagdbus,
+		PDC_DBUS_INTERFACE, pdc_dbus_method_show_ipv6_maps, pdcins->server);
+	eag_dbus_register_method(pdcins->eagdbus,
 		PDC_DBUS_INTERFACE, pdc_dbus_method_set_portal_protocol, pdcins);
 	eag_dbus_register_method(pdcins->eagdbus,
 		PDC_DBUS_INTERFACE, pdc_dbus_method_add_debug_filter, NULL);

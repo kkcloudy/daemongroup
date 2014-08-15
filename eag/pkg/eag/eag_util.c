@@ -491,6 +491,47 @@ is_net_overlap(uint32_t ip1, uint32_t mask1,
 }
 
 int
+ipv6mask2binary(int netPrefix, uint32_t prefix[4])
+{
+
+	int dev = 0, mod = 0, i = 0;
+	dev = netPrefix / 32;
+	mod = netPrefix % 32;
+	uint32_t prefix_tmp[32] = {0};
+
+	for (i = 0; i < dev; i++) {
+		prefix_tmp[i] = 0xffffffff;
+	}
+	if (0 < mod) {
+		prefix_tmp[dev] = 0xffffffff << (32 - mod);
+	}
+	memcpy(prefix, prefix_tmp, sizeof(prefix_tmp));
+
+	return prefix;
+}
+
+int
+is_ipv6net_overlap(uint32_t ip1[4], int mask1,
+					uint32_t ip2[4], int mask2)
+{
+    int i = 0;
+	int minmask;
+	uint32_t min_prefix[4] = {0};
+
+	minmask = MIN(mask1, mask2);
+	ipv6mask2binary(minmask, min_prefix);
+
+	for (i = 0; i < 4; i++) {
+		if ((ip1[i] & min_prefix[i]) != (ip2[i] & min_prefix[i])) {
+			return 0;
+		}
+	}	
+
+	return 1;
+}
+
+
+int
 read_file(const char *file, char *buf, int size)
 {
 	FILE *fp = NULL;

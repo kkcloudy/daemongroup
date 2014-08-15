@@ -63,5 +63,28 @@ pdc_dbus_method_show_maps(
 				DBusMessage *msg,
 				void *user_data );
 
+DBusMessage *
+pdc_dbus_method_add_ipv6_map(
+				DBusConnection *conn,
+				DBusMessage *msg,
+				void *user_data );
+
+DBusMessage *
+pdc_dbus_method_del_ipv6_map(
+				DBusConnection *conn,
+				DBusMessage *msg,
+				void *user_data );
+
+DBusMessage *
+pdc_dbus_method_modify_ipv6_map(
+				DBusConnection *conn,
+				DBusMessage *msg,
+				void *user_data );
+
+DBusMessage *
+pdc_dbus_method_show_ipv6_maps(
+				DBusConnection *conn,
+				DBusMessage *msg,
+				void *user_data );
 
 #endif        /* _RDC_SERVER_H */

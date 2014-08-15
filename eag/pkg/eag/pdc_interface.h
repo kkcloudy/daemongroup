@@ -13,6 +13,7 @@ typedef enum{
 
 #define PDC_DEFAULT_PORTAL_PORT 	2000
 #define MAX_PDC_MAP_NUM			128
+#define MAX_PDC_IPV6_MAP_NUM 128
 
 #define PORTAL_PROTOCOL_MOBILE		0
 #define PORTAL_PROTOCOL_TELECOM		1
@@ -34,10 +35,27 @@ struct pdc_intf_map {
 	uint16_t eag_port;
 };
 
+struct pdc_intf_ipv6_map {
+	uint32_t userip[4];
+	int prefix_length;
+	uint8_t eag_slotid;
+	uint8_t eag_hansitype;
+	uint8_t eag_hansiid;
+	uint32_t eag_ip;
+	uint16_t eag_port;
+};
+
+
 struct pdc_map_conf {
 	uint32_t num;
 	struct pdc_intf_map map[MAX_PDC_MAP_NUM];
 };
+
+struct pdc_ipv6_map_conf {
+	uint32_t num;
+	struct pdc_intf_ipv6_map map[MAX_PDC_IPV6_MAP_NUM];
+};
+
 
 int
 pdc_intf_set_nasip(DBusConnection *connection,
@@ -79,6 +97,28 @@ int
 pdc_intf_show_maps(DBusConnection *connection,
 							int hansitype, int insid,
 							struct pdc_map_conf *map_conf);
+
+int
+pdc_intf_add_ipv6_map(DBusConnection *connection,
+							int hansitype, int insid,
+							uint32_t useripv6[4], int prefix_length,
+							int  eag_slotid, int eag_insid);
+
+int
+pdc_intf_del_ipv6_map(DBusConnection *connection,
+							int hansitype, int insid,
+							uint32_t useripv6[4], int prefix_length);
+
+int
+pdc_intf_modify_ipv6_map(DBusConnection *connection,
+							int hansitype, int insid,
+							uint32_t useripv6[4], int prefix_length,
+							int  eag_slotid, int eag_insid);
+
+int
+pdc_intf_show_ipv6_maps(DBusConnection *connection,
+							int hansitype, int insid,
+							struct pdc_ipv6_map_conf *map_conf);
 
 int
 pdc_intf_set_portal_protocol(DBusConnection *connection,

@@ -94,6 +94,11 @@ is_net_overlap(uint32_t ip1, uint32_t mask1,
 				uint32_t ip2, uint32_t mask2);
 
 int
+is_ipv6net_overlap(uint32_t ip1[4], int mask1,
+					uint32_t ip2[4], int mask2);
+
+
+int
 read_file(const char *file, char *buf, int size);
 
 int
