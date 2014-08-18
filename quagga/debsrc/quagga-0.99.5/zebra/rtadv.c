@@ -771,8 +771,8 @@ tipc_vice_interface_nd_prefix_pool_update(int command, tipc_server* vice_board, 
 	struct zebra_if *zif;
 	struct rtadv_prefix rp_start,rp_end;
 	int ret = 0;
-	
-	zlog_info("chenjun	func %s, line %d	  ZEBRA_INTERFACE_ND_PREFIX_POOL_ADD",__func__,__LINE__ );
+
+	zlog_info("func %s, line %d	  ZEBRA_INTERFACE_ND_PREFIX_POOL_ADD",__func__,__LINE__ );
 	ifp = tipc_vice_interface_nd_prefix_pool_info_read(command,vice_board->ibuf,&rp_start,&rp_end);
 	
 	if(!ifp)
@@ -784,6 +784,8 @@ tipc_vice_interface_nd_prefix_pool_update(int command, tipc_server* vice_board, 
 	{
 		if(RTM_DEBUG_RTADV)
 		  zlog_debug ("To add ipv6 nd prefix pool .\n");
+		 zif->rtadv_prefix_pool = (struct ipv6_pool **)  malloc(sizeof(struct ipv6_pool *)*256*256);
+ 		 memset(zif->rtadv_prefix_pool ,0,sizeof(struct ipv6_pool *)*256*256);
 		rtadv_prefix_pool_set(zif, &rp_start);
 		rtadv_prefix_pool_set(zif, &rp_end);
 		 rtadv_prefix_pool_set (zif, &rp_start);
@@ -827,6 +829,8 @@ tipc_vice_interface_nd_prefix_pool_update(int command, tipc_server* vice_board, 
 		  else
 			  continue;
 		}
+		  free(zif->rtadv_prefix_pool );
+ 		 zif->rtadv_prefix_pool = NULL;
 		
 	 }
 	else
@@ -3453,6 +3457,8 @@ if (zebra_if->rtadv.pool->head != NULL)
    rtadv_prefix_pool_set (zebra_if, &rp_start);
    rtadv_prefix_pool_set (zebra_if, &rp_end);
     rtadv_prefix_pool_set (zebra_if, &rp_start);
+  zebra_if->rtadv_prefix_pool = (struct ipv6_pool **)  malloc(sizeof(struct ipv6_pool *)*256*256);
+  memset(zebra_if->rtadv_prefix_pool ,0,sizeof(struct ipv6_pool *)*256*256);
    tipc_master_interface_nd_prefix_pool_update(ZEBRA_INTERFACE_ND_PREFIX_POOL_ADD,ifp,&rp_start,&rp_end,argv[0],argv[1]);
   
 
@@ -3516,7 +3522,8 @@ DEFUN (no_ipv6_nd_prefix_pool,
 	else
 		continue;
   }
-  
+  free(zebra_if->rtadv_prefix_pool );
+  zebra_if->rtadv_prefix_pool = NULL;
    tipc_master_interface_nd_prefix_pool_update(ZEBRA_INTERFACE_ND_PREFIX_POOL_DELETE,ifp,NULL,NULL,NULL,NULL);
   
 

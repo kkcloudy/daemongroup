@@ -217,7 +217,7 @@ struct zebra_if
   struct rtadvconf rtadv;
 #endif /* RTADV */
 
-struct ipv6_pool *rtadv_prefix_pool[256*256];
+struct ipv6_pool **rtadv_prefix_pool;
 
 
 #ifdef HAVE_IRDP
