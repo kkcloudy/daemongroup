@@ -574,11 +574,11 @@ tipc_vice_interface_nd_prefix_info_read(int command, struct stream *s,struct rta
 	 
 	 if(command == ZEBRA_INTERFACE_ND_PREFIX_ADD)
 	{
-		rp->AdvOnLinkFlag = stream_putl(s);
-		rp->AdvAutonomousFlag = stream_putl(s);
-		rp->AdvRouterAddressFlag = stream_putl(s);
-		rp->AdvValidLifetime = stream_putl(s);
-		rp->AdvPreferredLifetime = stream_putl(s);
+		rp->AdvOnLinkFlag = stream_getl(s);
+		rp->AdvAutonomousFlag = stream_getl(s);
+		rp->AdvRouterAddressFlag = stream_getl(s);
+		rp->AdvValidLifetime = stream_getl(s);
+		rp->AdvPreferredLifetime = stream_getl(s);
 
 		if(RTM_DEBUG_RTADV)
 	   	  zlog_debug("%s : interface(%s),\
