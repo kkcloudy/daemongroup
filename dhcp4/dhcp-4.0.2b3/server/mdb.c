@@ -1405,8 +1405,10 @@ test_for_del_subnet_pool
 					} else if (FTS_BACKUP== lp->binding_state) {
 						lp->pool->backup_leases--;
 					}
-					
-					lease_delete_test(NULL, 4, lp);						/* lease_ip_hash_delete */					
+
+					pthread_mutex_unlock(&DhcpHashMutex); /* yjl add for bug AXSSZFI-2128 */
+					lease_delete_test(NULL, 4, lp);						/* lease_ip_hash_delete */	
+					pthread_mutex_lock(&DhcpHashMutex); /* yjl add for bug AXSSZFI-2128 */
 					dhcp_lease_destroy((omapi_object_t *)lp, MDL);		/* hw_hash_delete */
 
 					lp = NULL;
