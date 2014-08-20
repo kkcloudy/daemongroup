@@ -497,7 +497,7 @@ ipv6mask2binary(int netPrefix, uint32_t prefix[4])
 	int dev = 0, mod = 0, i = 0;
 	dev = netPrefix / 32;
 	mod = netPrefix % 32;
-	uint32_t prefix_tmp[32] = {0};
+	uint32_t prefix_tmp[4] = {0};
 
 	for (i = 0; i < dev; i++) {
 		prefix_tmp[i] = 0xffffffff;
