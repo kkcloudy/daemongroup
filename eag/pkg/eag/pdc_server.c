@@ -420,8 +420,9 @@ pdc_server_find_ipv6_map_by_userip(pdc_server_t *server, uint32_t useripv6[4])
 				break;
 			}
 		}
-
-		return map;
+		if (4 == i) {
+			return map;	
+		}
 	}
 
 	return NULL;
