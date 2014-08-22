@@ -4329,6 +4329,15 @@ CWBool CWParseWtp_Sta_Terminal_Disturb_Report(CWProtocolMessage *msgPtr, int len
 	wid_syslog_debug_debug(WID_DEFAULT,"radio_id = %d\n",radio_id);
 	wid_syslog_debug_debug(WID_DEFAULT,"wlan_id = %d\n",wlan_id);
 	wid_syslog_debug_debug(WID_DEFAULT,"state = %d\n",state);
+	if(AC_WTP[WTPIndex] != NULL)
+		wid_syslog_info("wtpid = %d,radioid = %d,wlan_id = %d\n ",WTPIndex,radio_id,wlan_id);
+	else
+		wid_syslog_info("AC_WTP[%d] is NULL\n",WTPIndex);
+	if (radio_id >= 4)
+	{
+		wid_syslog_err("The message: %s\n",msgPtr->msg);
+		return CW_FALSE;
+	}
 
     currentchannel = AC_WTP[WTPIndex]->WTP_Radio[radio_id]->Radio_Chan;
     
