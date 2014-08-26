@@ -152,7 +152,7 @@ struct PMK_STAINFO * pmk_ap_sta_add(WID_WLAN *WLAN, const u8 *addr)
 
 	sta = os_zalloc(sizeof(struct PMK_STAINFO));
 	if (sta == NULL) {
-		asd_printf(ASD_DEFAULT,MSG_ERROR, "malloc failed");
+		asd_printf(ASD_DEFAULT,MSG_ERROR, "sta malloc failed");
 		return NULL;
 	}	
 	os_memcpy(sta->addr, addr, ETH_ALEN);
@@ -160,6 +160,10 @@ struct PMK_STAINFO * pmk_ap_sta_add(WID_WLAN *WLAN, const u8 *addr)
 	WLAN->sta_list = sta;
 	WLAN->num_sta++;
 	sta->BSSIndex = (unsigned char*)malloc(BSS_NUM);
+	if(sta->BSSIndex == NULL){
+		asd_printf(ASD_DEFAULT,MSG_ERROR, "sta->BSSIndex malloc failed");
+		return NULL;
+	}
 	pmk_ap_sta_hash_add(WLAN, sta);
 	memset(sta->BSSIndex, 0, BSS_NUM);
 	sta->bss = NULL;
