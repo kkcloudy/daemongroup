@@ -246,6 +246,10 @@ struct rsn_pmksa_cache_entry * wlan_pmksa_cache_get(unsigned char WLANID, unsign
 			if((interfaces->iface[RadioID]!=NULL)&&(interfaces->iface[RadioID]->bss[BSS_L_ID]!=NULL))
 			{
 				wasd = interfaces->iface[RadioID]->bss[BSS_L_ID];
+				if ((wasd == NULL) ||
+					(wasd->wpa_auth == NULL) ||
+					(wasd->wpa_auth->pmksa == NULL))
+					continue;
 				entry = pmksa_cache_get(wasd->wpa_auth->pmksa, spa, NULL);
 				if(entry == NULL){
 					asd_printf(ASD_DEFAULT,MSG_WARNING, "entry is NULL in func: %s\n",__func__);
