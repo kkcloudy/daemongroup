@@ -51210,7 +51210,7 @@ DBusMessage * wid_dbus_interface_set_wtp_location(DBusConnection *conn, DBusMess
 						}
 						else
 						{
-							CW_FREE_OBJECT_WID(AC_WTP[ID]->location);
+							CW_FREE_OBJECT_WID(AC_WTP[tmp->WTPID]->location);
 							AC_WTP[tmp->WTPID]->location = (char *)WID_MALLOC(strlen(location)+1);
 							if (NULL == AC_WTP[tmp->WTPID]->location)
 							{
