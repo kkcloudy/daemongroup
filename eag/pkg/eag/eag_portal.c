@@ -871,9 +871,9 @@ eag_portal_onmacbind_timeout(eag_thread_t *thread)
 	}
 
 	portal = portalsess->portal;
-    memset(&user_addr, 0, sizeof(user_addr));
+	memset(&user_addr, 0, sizeof(user_addr));
 	memcpy(&user_addr, &(portalsess->user_addr), sizeof(user_addr_t));
-    ipx2str(&user_addr, user_ipstr, sizeof(user_ipstr));
+	ipx2str(&user_addr, user_ipstr, sizeof(user_ipstr));
 	appconn = appconn_find_by_userip(portal->appdb, &user_addr);
 	if (NULL == appconn) {
 		eag_log_warning("portal_onmacbind_timeout not found appconn userip=%s",
@@ -886,7 +886,7 @@ eag_portal_onmacbind_timeout(eag_thread_t *thread)
 	eag_log_debug("eag_portal", "portalsess onmacbind timeout userip=%s", user_ipstr);
 	if (portalsess->retry_count < portal->retry_times) {
 		/* retry macbind req  */
-		portal_packet_init(&req_packet, REQ_MACBINDING_INFO, &user_addr);
+		portal_packet_init_v2(&req_packet, REQ_MACBINDING_INFO, &user_addr, appconn->session.portal_version);
 		req_packet.serial_no = rand_serialNo();
 
 		portal_add_macbind_req_attr(&req_packet, appconn, portal);
@@ -1211,9 +1211,9 @@ eag_portal_ntf_logout_wait_timeout(eag_thread_t * thread)
 	}
 	
 	portal = portalsess->portal;
-    memset(&user_addr, 0, sizeof(user_addr));
+	memset(&user_addr, 0, sizeof(user_addr));
 	memcpy(&user_addr, &(portalsess->user_addr), sizeof(user_addr_t));
-    ipx2str(&user_addr, user_ipstr, sizeof(user_ipstr));
+	ipx2str(&user_addr, user_ipstr, sizeof(user_ipstr));
 	
 	appconn = appconn_find_by_userip(portal->appdb, &user_addr);
 	if (NULL == appconn) {
@@ -1228,7 +1228,7 @@ eag_portal_ntf_logout_wait_timeout(eag_thread_t * thread)
 		user_ipstr, portalsess->retry_count, portal->retry_times);
 		
 	if (portalsess->retry_count < portal->retry_times) {
-		portal_packet_init(&ntfpkt, NTF_LOGOUT, &user_addr);
+		portal_packet_init_v2(&ntfpkt, NTF_LOGOUT, &user_addr, appconn->session.portal_version);
 
 		eag_log_debug("eag_portal","ntf_logout_wait_timeout userip %s resend ntf_logout",
 				user_ipstr);
@@ -1630,6 +1630,7 @@ eag_portal_chapauth_proc(eag_portal_t *portal,
 			appconn->portal_srv.secret, user_ipstr);
 		return -1;
 	}
+	appconn->session.portal_version = reqpkt->version;
 	/* add username to session_filter_prefix */
 	mac2str(appconn->session.usermac, user_macstr, sizeof(user_macstr)-1, '-');
 	mac2str(appconn->session.apmac, ap_macstr, sizeof(ap_macstr)-1, '-');
@@ -2038,6 +2039,7 @@ eag_portal_papauth_proc(eag_portal_t *portal,
 			appconn->portal_srv.secret, user_ipstr);
 		return -1;
 	}
+	appconn->session.portal_version = reqpkt->version;
 	/* add username to session_filter_prefix */
 	mac2str(appconn->session.usermac, user_macstr, sizeof(user_macstr)-1, '-');
 	mac2str(appconn->session.apmac, ap_macstr, sizeof(ap_macstr)-1, '-');
@@ -3791,7 +3793,7 @@ eag_portal_notify_logout(eag_portal_t * portal,
 	portalsess->timeout = portal->retry_interval;
 	portal_sess_event(SESS_NTF_LOGOUT_WAIT_TIMEOUT, portalsess);
 
-	portal_packet_init(&ntfpkt, NTF_LOGOUT, &user_addr);
+	portal_packet_init_v2(&ntfpkt, NTF_LOGOUT, &user_addr, appconn->session.portal_version);
 
 	if (portal_get_private_attribute_switch()) {
 		portal_packet_add_attr(&ntfpkt, ATTR_SESS_ID, 
@@ -3884,7 +3886,7 @@ eag_portal_notify_logout_nowait(eag_portal_t * portal,
 		portal_sess_free(portalsess);
 	}
 	
-	portal_packet_init(&ntfpkt, NTF_LOGOUT, &user_addr);
+	portal_packet_init_v2(&ntfpkt, NTF_LOGOUT, &user_addr, appconn->session.portal_version);
 	if (portal_get_private_attribute_switch()) {
 		portal_packet_add_attr(&ntfpkt, ATTR_SESS_ID, 
 				appconn->session.sessionid, strlen(appconn->session.sessionid));
@@ -4076,7 +4078,7 @@ eag_portal_macbind_req(eag_portal_t *portal,
 	portalsess->timeout = portal->retry_interval;
 	portal_sess_event(SESS_ONMACBIND_TIMEOUT, portalsess);
 
-	portal_packet_init(&req_packet, REQ_MACBINDING_INFO, &user_addr);
+	portal_packet_init_v2(&req_packet, REQ_MACBINDING_INFO, &user_addr, appconn->session.portal_version);
 	req_packet.serial_no = rand_serialNo();
 
 	portal_add_macbind_req_attr(&req_packet, appconn, portal);
@@ -4114,7 +4116,7 @@ eag_portal_ntf_user_logon(eag_portal_t *portal,
 	memcpy(&user_addr, &(appconn->session.user_addr), sizeof(user_addr_t));
 	ipx2str(&user_addr, user_ipstr, sizeof(user_ipstr));
 
-	portal_packet_init(&req_packet, NTF_USER_LOGON, &user_addr);
+	portal_packet_init_v2(&req_packet, NTF_USER_LOGON, &user_addr, appconn->session.portal_version);
 	req_packet.serial_no = rand_serialNo();
 
 	portal_packet_add_attr(&req_packet, ATTR_USERNAME, appconn->session.username,
@@ -4190,7 +4192,7 @@ eag_portal_ntf_user_logoff(eag_portal_t *portal,
 	memcpy(&user_addr, &(appconn->session.user_addr), sizeof(user_addr_t));
 	ipx2str(&user_addr, user_ipstr, sizeof(user_ipstr));
 	
-	portal_packet_init(&req_packet, NTF_USER_LOGOUT, &user_addr);
+	portal_packet_init_v2(&req_packet, NTF_USER_LOGOUT, &user_addr, appconn->session.portal_version);
 	req_packet.serial_no = rand_serialNo();
 
 	portal_packet_add_attr(&req_packet, ATTR_USERNAME, appconn->session.username,

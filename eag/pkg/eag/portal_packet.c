@@ -393,14 +393,32 @@ portal_packet_init(struct portal_packet_t *packet,
 	} else {
 		packet->version = 0x2;
 	}
-	/* telcom and ipv6 version is same ??? */
+
 	packet->type = type;
 	packet->user_ip = htonl(user_addr->user_ip);
-	if (EAG_IPV6 == user_addr->family || EAG_MIX == user_addr->family) {
-        portal_packet_add_attr(packet, ATTR_USER_IPV6, 
-						        &(user_addr->user_ipv6), 
-						        sizeof(struct in6_addr));
+
+	return 0;
+}
+
+int
+portal_packet_init_v2(struct portal_packet_t *packet,
+				uint8_t type, user_addr_t *user_addr, uint8_t version)
+{
+	portal_packet_init(packet, type, user_addr);
+	/* When ipv4 user auth, version is 0x1, when ipv6 user auth, version is 0x2, 
+	  * Must be one user ip addr in portal packet, up to which ip addr auth.
+	  */
+	if ( (EAG_MIX == user_addr->family 
+		|| EAG_IPV6 == user_addr->family) 
+		&& 0x02 == version ) 
+	{
+		packet->version = version;
+		packet->user_ip = 0;
+		portal_packet_add_attr(packet, ATTR_USER_IPV6, 
+								&(user_addr->user_ipv6), 
+								sizeof(struct in6_addr));
 	}
+
 	return 0;
 }
 

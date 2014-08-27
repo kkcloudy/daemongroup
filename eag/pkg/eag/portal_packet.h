@@ -205,6 +205,10 @@ portal_packet_init(struct portal_packet_t *packet,
 				uint8_t type, user_addr_t *user_addr);
 
 int
+portal_packet_init_v2(struct portal_packet_t *packet,
+				uint8_t type, user_addr_t *user_addr, uint8_t version);
+
+int
 portal_set_protocol_type(int protocol_type);
 
 int

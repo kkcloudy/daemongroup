@@ -134,6 +134,11 @@ struct appsession {
 	uint8_t challenge[PORTAL_CHALLEN];
 	uint16_t chapid;
 	uint8_t chappasswd[PORTAL_CHALLEN];
+	/* houyongtao add at 2014-8-26 for portal packet version.
+	  * When ipv4 user auth, version is 0x1, when ipv6 user auth, version is 0x2.
+	  * Must be one user ip addr in portal packet, up to which ip addr auth.
+	  */
+	uint8_t portal_version;
 
 	char sessionid[MAX_SESSION_ID_LEN];
 	char nasid[RADIUS_MAX_NASID_LEN];

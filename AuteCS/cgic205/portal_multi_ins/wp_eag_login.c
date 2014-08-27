@@ -56,10 +56,16 @@ char * replaceStrPart(char *Src, const char * sReplace)
 		return -1;
 	}
 	char * replace = NULL;
-	replace = strrchr(Src, '//');
-	//fprintf(stderr,"before replace=%s\n" ,replace );
-	int partLen = strlen(replace);
-	memset(replace, "\0", partLen);
+	int partLen = 0;
+	replace = strchr(Src, '?');
+	if (NULL != replace) {
+		//fprintf(stderr,"before replace=%s\n" ,replace );
+		partLen = strlen(replace);
+		memset(replace, 0, partLen);
+	}
+	replace = strrchr(Src, '/');
+	partLen = strlen(replace);
+	memset(replace, 0, partLen);
 	//fprintf(stderr,"inner Src=%s\n" ,Src );
 	memcpy(replace, sReplace, strlen(sReplace)+1);
 	//fprintf(stderr,"later Src=%s\n" ,Src );
@@ -69,57 +75,54 @@ char * replaceStrPart(char *Src, const char * sReplace)
 /*function : send a request pkg to AC auth and wish to get response from that --tangsiqi 2010-1-18*/
 int CgiInformAc(char * clientIp, char * serverIp, PKG_TYPE Type, STAuthProcess * pAuthProc,UINT32 pro)
 {
-		int retErr=0;
-		struct in_addr user_ip;
-		struct in6_addr user_ipv6;
-		pAuthProc->pSendPkg= createPortalPkg(Type);
-		/*malloc STPortalPkg ready to rev data*/
-		fprintf(stderr,"CgiInformAc createPortalPkg suc Type is %d\n",Type );
-		pAuthProc->pRevPkg = (STPortalPkg * )malloc(sizeof(STPortalPkg));
-		memset(pAuthProc->pRevPkg, 0, sizeof(STPortalPkg));
-		fprintf(stderr,"CgiInformAc clientIp=%s\n",clientIp );
+	int retErr=0;
+	struct in_addr user_ip;
+	struct in6_addr user_ipv6;
+	pAuthProc->pSendPkg= createPortalPkg(Type);
+	/*malloc STPortalPkg ready to rev data*/
+	fprintf(stderr,"CgiInformAc createPortalPkg suc Type is %d\n",Type );
+	pAuthProc->pRevPkg = (STPortalPkg * )malloc(sizeof(STPortalPkg));
+	memset(pAuthProc->pRevPkg, 0, sizeof(STPortalPkg));
+    fprintf(stderr,"CgiInformAc serverIp=%s\n",serverIp );
 
-		setAuthType(pAuthProc->pSendPkg, pro);
-		
-		memset(&user_ip, 0, sizeof(user_ip));
-		memset(&user_ipv6, 0, sizeof(user_ipv6));
-		if (1 == inet_pton(AF_INET, clientIp, &user_ip)) {
-            fprintf(stderr,"CgiInformAc clientIp4=%s\n",clientIp );
-            setPkgUserIP( pAuthProc->pSendPkg, user_ip.s_addr );
-		}
-		if (1 == inet_pton(AF_INET6, clientIp, &user_ipv6)) {
-            fprintf(stderr,"CgiInformAc clientIp6=%s\n",clientIp );
-            setPkgUserIP( pAuthProc->pSendPkg, 0 );
-            addAttr( &(pAuthProc->pSendPkg), ATTR_USER_IPV6, &user_ipv6, sizeof(user_ipv6) );
-		}
-		
-        fprintf(stderr,"CgiInformAc serverIp=%s\n",serverIp );
-		if(sendPortalPkg(pAuthProc->fd, 3, 2000, serverIp, pAuthProc->pSendPkg) < 0 )
-		{
-			fprintf(stderr,"CgiInformAc sendPortalPkg failed\n" );
-			retErr = -1;
-		}
-		else
-		{
-			fprintf(stderr,"CgiInformAc sendPortalPkg suc\n" );
-		}
-		
-		if(getPortalPkg(pAuthProc->fd, 3, &(pAuthProc->pRevPkg))<0)
-		{
-			fprintf(stderr,"CgiInformAc getPortalPkg failed\n" );
-			retErr = -1;
-		}
-		else
-		{
-			fprintf(stderr,"CgiInformAc getPortalPkg suc\n" );
-			retErr = getErrCode(pAuthProc->pRevPkg);
-		}
-		
-		
-		fprintf(stderr,"CgiInformAc getErrCode(stAuth.pRevPkg)=%d\n", retErr );
-		
-		
-		
+	setAuthType(pAuthProc->pSendPkg, pro);
+
+	memset(&user_ip, 0, sizeof(user_ip));
+	memset(&user_ipv6, 0, sizeof(user_ipv6));
+	if (1 == inet_pton(AF_INET, clientIp, &user_ip)) {
+		fprintf(stderr,"CgiInformAc clientIp4=%s\n",clientIp );
+		setPkgUserIP( pAuthProc->pSendPkg, user_ip.s_addr );
+	} else if (1 == inet_pton(AF_INET6, clientIp, &user_ipv6)){
+		fprintf(stderr,"CgiInformAc clientIp6=%s\n",clientIp );
+		pAuthProc->pSendPkg->version = 0x02;
+		setPkgUserIP( pAuthProc->pSendPkg, 0 );
+		addAttr( &(pAuthProc->pSendPkg), ATTR_USER_IPV6, &user_ipv6, sizeof(user_ipv6) );
+	}
+	fprintf(stderr,"CgiInformAc version=%u\n",pAuthProc->pSendPkg->version );
+
+	if(sendPortalPkg(pAuthProc->fd, 3, 2000, serverIp, pAuthProc->pSendPkg) < 0 )
+	{
+		fprintf(stderr,"CgiInformAc sendPortalPkg failed\n" );
+		retErr = -1;
+	}
+	else
+	{
+		fprintf(stderr,"CgiInformAc sendPortalPkg suc\n" );
+	}
+
+	if(getPortalPkg(pAuthProc->fd, 3, &(pAuthProc->pRevPkg))<0)
+	{
+		fprintf(stderr,"CgiInformAc getPortalPkg failed\n" );
+		retErr = -1;
+	}
+	else
+	{
+		fprintf(stderr,"CgiInformAc getPortalPkg suc\n" );
+		retErr = getErrCode(pAuthProc->pRevPkg);
+	}
+
+	fprintf(stderr,"CgiInformAc getErrCode(stAuth.pRevPkg)=%d\n", retErr );
+
 	return retErr;
 }
 
@@ -139,6 +142,7 @@ int cgiMain()
 	UINT8  tmp[MD5LEN+1];
 	char acIp[32] = "";
 	char userIp[32] = "";
+	char ssid[64] = "";
 	
 	STUserInfo userInfo;
 	memset(&userInfo, 0 ,sizeof(STUserInfo));
@@ -167,10 +171,11 @@ int cgiMain()
 	memset(acIp, 0, sizeof(acIp));
 	if( cgiFormNotFound == cgiFormStringNoNewlines("wlanacip", acIp, sizeof(acIp)) ) {
 		strncpy(acIp, cgiServerName, sizeof(acIp)-1);
-    }
+	}
 	if( cgiFormNotFound == cgiFormStringNoNewlines("wlanuserip", userIp, sizeof(userIp)) ) {
 		strncpy(userIp, cgiRemoteAddr, sizeof(userIp)-1);
-    }
+	}
+	cgiFormStringNoNewlines("ssid", ssid, sizeof(ssid));
 
 	fprintf( fpOut, "<html xmlns=\"http://www.w3.org/1999/xhtml\"> \n" );
 	fprintf( fpOut, "<head> \n" );
@@ -198,8 +203,9 @@ int cgiMain()
 	char *urlNew = NULL;
 	char *replace = NULL;
 	char urlParam[128] = "";
-    struct in_addr user_ip;
-    struct in6_addr user_ipv6;
+	char urlValue[256] = "";
+	struct in_addr user_ip;
+	struct in6_addr user_ipv6;
 	
 	fprintf(stderr, "a_name=%s, a_pass=%s, op_auth=%s, userIp=%s, acIp=%s, cgiRemoteAddr=%s, cgiServerName=%s\n",
 			userInfo.usrName, userInfo.usrPass, opt, userIp, acIp, cgiRemoteAddr, cgiServerName);
@@ -222,146 +228,143 @@ int cgiMain()
 	
 	fprintf(stderr,"userInfo.usrOperation=%d\n" ,userInfo.usrOperation );
 	switch(userInfo.usrOperation)
- 	{
- 		case 1:/*login*/
- 			//stAuth.protocal = AUTH_CHAP;
- 			
- 			
- 	
- 			pstReq =  createRequirePkg(REQ_GET_AUTH_TYPE,NULL,NULL);
- 			
- 			/*connect unix sock to get auth type*/
- 			//fd = suc_connect_unix_sock();
- 			//if(fd <= -1)
- 			//{
- 			//	fprintf(stderr,"suc_connect_unix_sock: error\n");
- 			//	break;
- 			//}
- 			
- 			//fprintf(stderr,"fd=%d",fd);
+	{
+		case 1:/*login*/
+			//stAuth.protocal = AUTH_CHAP;
+
+			pstReq =  createRequirePkg(REQ_GET_AUTH_TYPE,NULL,NULL);
+
+			/*connect unix sock to get auth type*/
+			//fd = suc_connect_unix_sock();
+			//if(fd <= -1)
+			//{
+			//	fprintf(stderr,"suc_connect_unix_sock: error\n");
+			//	break;
+			//}
+
+			//fprintf(stderr,"fd=%d",fd);
 			stAuth.protocal = AUTH_CHAP;//get_authType_from_eag( pstReq, fd, 5, &(pstRsp));
- 			//fprintf(stderr,"stAuth.protocal=%d",stAuth.protocal);
- 			//close( fd );
- 			
- 			if( stAuth.protocal == AUTH_CHAP )				/*chap md5 simulation----------*/
- 			{
- 				ret_challege = CgiInformAc(userIp, acIp, REQ_CHALLENGE, &stAuth, stAuth.protocal);
- 				fprintf(stderr,"ret_challege=%d", ret_challege);
- 				if( CHALLENGE_SUCCESS == ret_challege || CHALLENGE_CONNECTED == ret_challege )/*if ret is success ,then can get attr from rev pkg*/
- 				{
- 					if((tlvPkgAttr = getAttrByAttrType(stAuth.pRevPkg, ATTR_CHALLENGE)) == NULL && CHALLENGE_CONNECTED == ret_challege)
- 					{
- 						retLogin = 0;/*容僕suc.html*/
- 						break;
- 					}
- 				}
- 				else
- 				{
- 					retLogin = -1;/*容僕fail.html*/
- 					break;
- 				}
- 				memcpy(chap_challenge, tlvPkgAttr->attr_value, tlvPkgAttr->attr_len);
- 				fprintf(stderr,"chap_challenge() value %02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x\n", \
- 						 chap_challenge[0],chap_challenge[1],chap_challenge[2],
- 						chap_challenge[3],chap_challenge[4],chap_challenge[5],chap_challenge[6],chap_challenge[7],chap_challenge[8],chap_challenge[9],
- 						chap_challenge[10],chap_challenge[11],chap_challenge[12],chap_challenge[13],chap_challenge[14],chap_challenge[15] );
- 				reqID = getRequireID(stAuth.pRevPkg);
- 				fprintf(stderr,"CHAP: reqID=%d\n",reqID);
- 				unsigned char chap_id = (unsigned char)reqID ;
- 				fprintf(stderr, "chap_id=%d\n",chap_id);
- 
- 				/*simulate MD5 encoded at portal server add by tangsiqi 2010-1-5*/
- 
- 				MD5Init(&context);
- 				MD5Update(&context, (UINT8 *)&chap_id, 1);
- 				MD5Update(&context, (UINT8 *)userInfo.usrPass, strlen(userInfo.usrPass));/*now the password is get through by redir url */
- 			    MD5Update(&context, chap_challenge, MD5LEN);
- 				MD5Final(tmp, &context);
- 				tmp[MD5LEN] = 0;/*add 0 at end of char[]*/
- 				fprintf(stderr,"CHAP: tmp=%s",tmp);
- 
- 				memcpy(chap_password, tmp, MD5LEN );
- 				chap_password[MD5LEN+1] = 0;
- 				fprintf(stderr,"...add attr CHAP_PASSWORD() value %02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x\n", \
- 						 chap_password[0],chap_password[1],chap_password[2],
- 						chap_password[3],chap_password[4],chap_password[5],chap_password[6],chap_password[7],chap_password[8],chap_password[9],
- 						chap_password[10],chap_password[11],chap_password[12],chap_password[13],chap_password[14],chap_password[15] );
- 
- 				destroyPortalPkg(stAuth.pSendPkg);
- 				destroyPortalPkg(stAuth.pRevPkg);
- 
+			//fprintf(stderr,"stAuth.protocal=%d",stAuth.protocal);
+			//close( fd );
+
+			if( stAuth.protocal == AUTH_CHAP )				/*chap md5 simulation----------*/
+			{
+				ret_challege = CgiInformAc(userIp, acIp, REQ_CHALLENGE, &stAuth, stAuth.protocal);
+				fprintf(stderr,"ret_challege=%d", ret_challege);
+				if( CHALLENGE_SUCCESS == ret_challege || CHALLENGE_CONNECTED == ret_challege )/*if ret is success ,then can get attr from rev pkg*/
+				{
+					if((tlvPkgAttr = getAttrByAttrType(stAuth.pRevPkg, ATTR_CHALLENGE)) == NULL && CHALLENGE_CONNECTED == ret_challege)
+					{
+						retLogin = 0;/*容僕suc.html*/
+						break;
+					}
+				}
+				else
+				{
+					retLogin = -1;/*容僕fail.html*/
+					break;
+				}
+				memcpy(chap_challenge, tlvPkgAttr->attr_value, tlvPkgAttr->attr_len);
+				fprintf(stderr,"chap_challenge() value %02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x\n", \
+						 chap_challenge[0],chap_challenge[1],chap_challenge[2],
+						chap_challenge[3],chap_challenge[4],chap_challenge[5],chap_challenge[6],chap_challenge[7],chap_challenge[8],chap_challenge[9],
+						chap_challenge[10],chap_challenge[11],chap_challenge[12],chap_challenge[13],chap_challenge[14],chap_challenge[15] );
+				reqID = getRequireID(stAuth.pRevPkg);
+				fprintf(stderr,"CHAP: reqID=%d\n",reqID);
+				unsigned char chap_id = (unsigned char)reqID ;
+				fprintf(stderr, "chap_id=%d\n",chap_id);
+
+				/*simulate MD5 encoded at portal server add by tangsiqi 2010-1-5*/
+
+				MD5Init(&context);
+				MD5Update(&context, (UINT8 *)&chap_id, 1);
+				MD5Update(&context, (UINT8 *)userInfo.usrPass, strlen(userInfo.usrPass));/*now the password is get through by redir url */
+				MD5Update(&context, chap_challenge, MD5LEN);
+				MD5Final(tmp, &context);
+				tmp[MD5LEN] = 0;/*add 0 at end of char[]*/
+				fprintf(stderr,"CHAP: tmp=%s",tmp);
+
+				memcpy(chap_password, tmp, MD5LEN );
+				chap_password[MD5LEN+1] = 0;
+				fprintf(stderr,"...add attr CHAP_PASSWORD() value %02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x\n", \
+						 chap_password[0],chap_password[1],chap_password[2],
+						chap_password[3],chap_password[4],chap_password[5],chap_password[6],chap_password[7],chap_password[8],chap_password[9],
+						chap_password[10],chap_password[11],chap_password[12],chap_password[13],chap_password[14],chap_password[15] );
+
+				destroyPortalPkg(stAuth.pSendPkg);
+				destroyPortalPkg(stAuth.pRevPkg);
  			}
- 
- 			/*after challege exchange*/
- 			stAuth.pSendPkg = createPortalPkg(REQ_AUTH);
- 			fprintf(stderr,"login createPortalPkg suc\n" );
- 			
- 			/*malloc STPortalPkg ready to rev data*/
- 			stAuth.pRevPkg = (STPortalPkg * )malloc(sizeof(STPortalPkg));
- 			memset(stAuth.pRevPkg, 0, sizeof(STPortalPkg));
- 			
- 			setAuthType(stAuth.pSendPkg, stAuth.protocal);
- 			setRequireID(stAuth.pSendPkg, reqID );
- 			memset(&user_ip, 0, sizeof(user_ip));
+
+			/*after challege exchange*/
+			stAuth.pSendPkg = createPortalPkg(REQ_AUTH);
+			fprintf(stderr,"login createPortalPkg suc\n" );
+
+			/*malloc STPortalPkg ready to rev data*/
+			stAuth.pRevPkg = (STPortalPkg * )malloc(sizeof(STPortalPkg));
+			memset(stAuth.pRevPkg, 0, sizeof(STPortalPkg));
+
+			setAuthType(stAuth.pSendPkg, stAuth.protocal);
+			setRequireID(stAuth.pSendPkg, reqID );
+			memset(&user_ip, 0, sizeof(user_ip));
 			memset(&user_ipv6, 0, sizeof(user_ipv6));
 			if (1 == inet_pton(AF_INET, userIp, &user_ip)) {
-                setPkgUserIP( stAuth.pSendPkg, user_ip.s_addr );
+				fprintf(stderr,"userIp4=%s\n",userIp);
+				setPkgUserIP( stAuth.pSendPkg, user_ip.s_addr );
+			} else if (1 == inet_pton(AF_INET6, userIp, &user_ipv6)){
+				fprintf(stderr,"userIp6=%s\n",userIp);
+				stAuth.pSendPkg->version = 0x02;
+				setPkgUserIP( stAuth.pSendPkg, 0 );
+				addAttr( &stAuth.pSendPkg, ATTR_USER_IPV6, &user_ipv6, sizeof(user_ipv6) );
 			}
-			if (1 == inet_pton(AF_INET6, userIp, &user_ipv6)) {
-	            setPkgUserIP( stAuth.pSendPkg, 0 );
-	            addAttr( &stAuth.pSendPkg, ATTR_USER_IPV6, &user_ipv6, sizeof(user_ipv6) );
+			fprintf(stderr,"version=%u\n", stAuth.pSendPkg->version);
+
+			addAttr( &stAuth.pSendPkg, ATTR_USERNAME, userInfo.usrName, strlen(userInfo.usrName) );
+
+			if( stAuth.protocal == AUTH_CHAP )
+			{
+				/*challenge exchange*/
+				addAttr( &stAuth.pSendPkg, ATTR_CHAPPASSWORD, chap_password, MD5LEN );
 			}
- 			
- 			addAttr( &stAuth.pSendPkg, ATTR_USERNAME, userInfo.usrName, strlen(userInfo.usrName) );
- 		
- 			if( stAuth.protocal == AUTH_CHAP )
- 			{
- 				/*challenge exchange*/
- 				addAttr( &stAuth.pSendPkg, ATTR_CHAPPASSWORD, chap_password, MD5LEN );
- 				
- 			}
- 			else/*PAP authentication*/
- 			{
- 				fprintf(stderr,"userInfo.usrPass=%s",userInfo.usrPass);
- 				addAttr( &stAuth.pSendPkg, ATTR_PASSWORD, userInfo.usrPass, strlen(userInfo.usrPass) );
- 			}
- 			
- 			
- 			
- 			
- 			if(sendPortalPkg(stAuth.fd, 6, 2000, acIp, stAuth.pSendPkg) < 0 )
- 			{
- 				fprintf(stderr,"login sendPortalPkg failed\n" );
- 				retLogin = -1;
- 			}
- 			else
- 			{
- 				fprintf(stderr,"login sendPortalPkg suc\n" );
- 			}
- 			
- 			if(getPortalPkg(stAuth.fd, 12, &(stAuth.pRevPkg))<0)
- 			{
- 				fprintf(stderr,"login getPortalPkg failed\n" );
- 				retLogin = -1;
- 			}
- 			else
- 			{
- 				fprintf(stderr,"login getPortalPkg suc\n" );
- 			}
- 			retLogin = getErrCode(stAuth.pRevPkg);
- 			fprintf(stderr,"login getErrCode(stAuth.pRevPkg)=%d\n", retLogin );
- 			
- 			
- 			destroyPortalPkg(stAuth.pSendPkg);
- 			destroyPortalPkg(stAuth.pRevPkg);
- 			break;
- 		case 2:/*logout*/
- 			retLogout = CgiInformAc(userIp, acIp, REQ_LOGOUT, &stAuth, stAuth.protocal);
- 			destroyPortalPkg(stAuth.pSendPkg);
- 			destroyPortalPkg(stAuth.pRevPkg);
- 			break;
- 		default: break;
- 	}
+			else/*PAP authentication*/
+			{
+				fprintf(stderr,"userInfo.usrPass=%s",userInfo.usrPass);
+				addAttr( &stAuth.pSendPkg, ATTR_PASSWORD, userInfo.usrPass, strlen(userInfo.usrPass) );
+			}
+
+			if(sendPortalPkg(stAuth.fd, 6, 2000, acIp, stAuth.pSendPkg) < 0 )
+			{
+				fprintf(stderr,"login sendPortalPkg failed\n" );
+				retLogin = -1;
+			}
+			else
+			{
+				fprintf(stderr,"login sendPortalPkg suc\n" );
+			}
+
+			if(getPortalPkg(stAuth.fd, 12, &(stAuth.pRevPkg))<0)
+			{
+				fprintf(stderr,"login getPortalPkg failed\n" );
+				retLogin = -1;
+			}
+			else
+			{
+				fprintf(stderr,"login getPortalPkg suc\n" );
+			}
+			retLogin = getErrCode(stAuth.pRevPkg);
+			fprintf(stderr,"login getErrCode(stAuth.pRevPkg)=%d\n", retLogin );
+
+
+			destroyPortalPkg(stAuth.pSendPkg);
+			destroyPortalPkg(stAuth.pRevPkg);
+			break;
+		case 2:/*logout*/
+			retLogout = CgiInformAc(userIp, acIp, REQ_LOGOUT, &stAuth, stAuth.protocal);
+			destroyPortalPkg(stAuth.pSendPkg);
+			destroyPortalPkg(stAuth.pRevPkg);
+			break;
+		default:
+			break;
+	}
 	
 	
 	fprintf(stderr,"retLogin=%d---retLogout=%d\n" ,retLogin,retLogout );
@@ -374,31 +377,51 @@ int cgiMain()
 		goto html_end;
 	}
 
-	
+	snprintf(urlParam, sizeof(urlParam)-1, "wlanacip=%s&wlanuserip=%s&ssid=%s", acIp, userIp, ssid);
 	if( userInfo.usrOperation == 1 )/*login*/
 	{
 		switch(retLogin)
 		{
 			case PORTAL_AUTH_SUCCESS:
-				snprintf(urlParam, sizeof(urlParam)-1, "/auth_suc.html?wlanacip=%s&wlanuserip=%s", acIp, userIp);
-				urlNew = replaceStrPart(urlPost, urlParam);
+			case PORTAL_AUTH_CONNECTED: /* urlNew = replaceStrPart(urlPost, "/auth_suc.html"); locate(fpOut, urlNew);break; */
+				snprintf(urlValue, sizeof(urlValue)-1, "/auth_suc.html?%s", urlParam);
+				urlNew = replaceStrPart(urlPost, urlValue);
 				locate(fpOut, urlNew);
 				break;
-			case PORTAL_AUTH_REJECT: 	urlNew = replaceStrPart(urlPost, "/auth_fail.html"); locate(fpOut, urlNew);break;
-			case PORTAL_AUTH_CONNECTED: urlNew = replaceStrPart(urlPost, "/auth_suc.html"); locate(fpOut, urlNew);break;
-			case PORTAL_AUTH_ONAUTH: 	urlNew = replaceStrPart(urlPost, "/auth_fail.html"); locate(fpOut, urlNew);break;
-			case PORTAL_AUTH_FAILED: 	urlNew = replaceStrPart(urlPost, "/auth_fail.html"); locate(fpOut, urlNew);break;
-			case -1:					urlNew = replaceStrPart(urlPost, "/login.html"); locate(fpOut, urlNew);break;
+			case PORTAL_AUTH_REJECT: 	/* urlNew = replaceStrPart(urlPost, "/auth_fail.html"); locate(fpOut, urlNew);break; */
+			case PORTAL_AUTH_ONAUTH: 	/* urlNew = replaceStrPart(urlPost, "/auth_fail.html"); locate(fpOut, urlNew);break; */
+			case PORTAL_AUTH_FAILED: 	/* urlNew = replaceStrPart(urlPost, "/auth_fail.html"); locate(fpOut, urlNew);break; */
+				snprintf(urlValue, sizeof(urlValue)-1, "/auth_fail.html?%s", urlParam);
+				urlNew = replaceStrPart(urlPost, urlValue);
+				locate(fpOut, urlNew);
+				break;
+			case -1:					/* urlNew = replaceStrPart(urlPost, "/login.html"); locate(fpOut, urlNew);break; */
+				snprintf(urlValue, sizeof(urlValue)-1, "/login.html?%s", urlParam);
+				urlNew = replaceStrPart(urlPost, urlValue);
+				locate(fpOut, urlNew);
+				break;
+			default:
+				break;
 		}
 	}
 	else if( userInfo.usrOperation == 2 )/*logout*/
 	{
 		switch(retLogout)
 		{
-			case EC_ACK_LOGOUT_SUCCESS: urlNew = replaceStrPart(urlPost, "/login.html"); locate(fpOut, urlNew);break;
+			case EC_ACK_LOGOUT_SUCCESS: /* urlNew = replaceStrPart(urlPost, "/login.html"); locate(fpOut, urlNew);break; */
+				snprintf(urlValue, sizeof(urlValue)-1, "/login.html?%s", urlParam);
+				urlNew = replaceStrPart(urlPost, urlValue);
+				locate(fpOut, urlNew);
+				break;
 			case -1:
-			case EC_ACK_LOGOUT_REJECT: 	urlNew = replaceStrPart(urlPost, "/auth_suc.html"); locate(fpOut, urlNew);break;
-			case EC_ACK_LOGOUT_FAILED: 	urlNew = replaceStrPart(urlPost, "/auth_suc.html"); locate(fpOut, urlNew);break;
+			case EC_ACK_LOGOUT_REJECT: 	/* urlNew = replaceStrPart(urlPost, "/auth_suc.html"); locate(fpOut, urlNew);break; */
+			case EC_ACK_LOGOUT_FAILED: 	/* urlNew = replaceStrPart(urlPost, "/auth_suc.html"); locate(fpOut, urlNew);break; */
+				snprintf(urlValue, sizeof(urlValue)-1, "/auth_suc.html?%s", urlParam);
+				urlNew = replaceStrPart(urlPost, urlValue);
+				locate(fpOut, urlNew);
+				break;
+			default:
+				break;
 		}
 	}
 html_end:
