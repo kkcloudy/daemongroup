@@ -33,7 +33,8 @@ DBUS_LIBS = dbus-1
 .SUFFIXES: .S .c .o .s
 
 all:prepare $(EXECUTABLE)
-VRRPD_OBJS = had_vrrpd.o had_libnetlink.o had_ipaddr.o had_dbus.o had_log.o had_uid.o
+VRRPD_OBJS = had_vrrpd.o had_libnetlink.o had_ipaddr.o had_dbus.o had_log.o had_uid.o had_ndisc.o
+
 
 had: $(VRRPD_OBJS)
 	$(CC) $(LIBS) $(LDFLAGS) -L. -l$(DBUS_LIBS) -o $(OBJ_DIR)/$@ $(VRRPD_OBJS)

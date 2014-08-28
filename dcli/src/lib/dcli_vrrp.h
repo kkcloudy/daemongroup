@@ -2,6 +2,32 @@
 #define __DCLI_VRRP_H__
 
 #include "command.h"
+#if 1
+//niehy add for ipv6 address print
+#define NIP6QUAD(addr) \
+	((__u8 *)&addr)[0], \
+	((__u8 *)&addr)[1], \
+	((__u8 *)&addr)[2], \
+	((__u8 *)&addr)[3], \
+	((__u8 *)&addr)[4], \
+	((__u8 *)&addr)[5], \
+	((__u8 *)&addr)[6], \
+	((__u8 *)&addr)[7], \
+	((__u8 *)&addr)[8], \
+	((__u8 *)&addr)[9], \
+	((__u8 *)&addr)[10], \
+	((__u8 *)&addr)[11], \
+	((__u8 *)&addr)[12], \
+	((__u8 *)&addr)[13], \
+	((__u8 *)&addr)[14], \
+	((__u8 *)&addr)[15]
+
+#define NIP6QUAD_FMT "%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x"
+
+/***********************niehy add Error  message *****************************/
+#define CMD_PARAMETER_ERROR          "%% Failed:command parameter format error\n"
+
+#endif
 
 #define HANSI_STR "High-Available Network Access Service Instance Configuration\n"
 

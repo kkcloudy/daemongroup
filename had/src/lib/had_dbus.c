@@ -355,6 +355,19 @@ void had_profile_config_save
 	int j = 0;
 	int first_uplink_index = 0;
 	int first_downlink_index = 0;
+	int ipv6_up_link_flag = 0;
+	int ipv6_down_link_flag = 0;
+	int ipv6_up_flag = 0;
+	int ipv6_down_flag = 0;
+	unsigned int uplink_prefix = 0;
+	unsigned int downlink_prefix = 0;
+	unsigned int uplink_linklocal_prefix = 0;
+	unsigned int downlink_linklocal_prefix = 0;
+	char ipv6_downlink_addr[INET6_ADDRSTRLEN] = {0};
+	char ipv6_uplink_addr[INET6_ADDRSTRLEN] = {0};
+	char ipv6_downlink_linklocal_addr[INET6_ADDRSTRLEN] = {0};
+	char ipv6_uplink_linklocal_addr[INET6_ADDRSTRLEN] = {0};
+
 		char tempHeartbeatlinkIfname[MAX_IFNAME_LEN] = {0};
         char tempUplinkRealipIfname[MAX_IFNAME_LEN] = {0};
         char tempDownlinkRealipIfname[MAX_IFNAME_LEN] = {0};
@@ -640,7 +653,209 @@ void had_profile_config_save
 				curPos = showBuf + curLen;
 			}
 		 }		 
-		 
+#if 1
+		/*get virtual ipv6 address*/
+		if (VRRP_LINK_NO_SETTED != vrrp->uplink_flag)
+		{
+			/* get first uplink virtual link local ipv6 addr*/
+			vrrp_syslog_dbg(
+    			"*************had_profile_config_save: ipv6 link local address "NIP6QUAD_FMT" \n",
+    			NIP6QUAD(vrrp->uplink_local_ipv6_vaddr[0].sin6_addr.s6_addr)
+    			);
+			for (j = 0; j < VRRP_LINK_MAX_CNT; j++)
+			{
+	    		if(!ipv6_addr_eq_null(vrrp->uplink_local_ipv6_vaddr[j].sin6_addr.s6_addr))  /*show virtual ipv6 link local address*/
+	            {
+	    			ipv6_up_link_flag = 1;
+	    			inet_ntop(AF_INET6, vrrp->uplink_local_ipv6_vaddr[j].sin6_addr.s6_addr, ipv6_uplink_linklocal_addr, INET6_ADDRSTRLEN); 
+	    			uplink_linklocal_prefix= vrrp->uplink_local_ipv6_vaddr[j].mask;
+					first_uplink_index = j;
+					break;
+	    		}
+			}
+			vrrp_syslog_dbg(
+    			"*************had_profile_config_save: ipv6 address  "NIP6QUAD_FMT" \n",
+    			NIP6QUAD(vrrp->uplink_ipv6_vaddr[0].sin6_addr.s6_addr)
+    			);
+			/*check vitual ipv6 addr*/
+    		if(!ipv6_addr_eq_null(vrrp->uplink_ipv6_vaddr[j].sin6_addr.s6_addr))  /*show virtual ipv6 link local address*/
+            {
+    			ipv6_up_flag = 1;
+    			inet_ntop(AF_INET6, vrrp->uplink_ipv6_vaddr[j].sin6_addr.s6_addr, ipv6_uplink_addr, INET6_ADDRSTRLEN); 
+    			uplink_prefix= vrrp->uplink_ipv6_vaddr[j].mask;
+    		}
+		}
+		if (VRRP_LINK_NO_SETTED != vrrp->downlink_flag)
+		{
+			/* get first downlink virtual link local ipv6 addr */
+			for (j = 0; j < VRRP_LINK_MAX_CNT; j++)
+			{
+				if(!ipv6_addr_eq_null(vrrp->downlink_local_ipv6_vaddr[j].sin6_addr.s6_addr))  /*show virtual ipv6 link local address*/
+	            {
+				    ipv6_down_link_flag = 1;
+					inet_ntop(AF_INET6, vrrp->downlink_local_ipv6_vaddr[j].sin6_addr.s6_addr, ipv6_downlink_linklocal_addr, INET6_ADDRSTRLEN);
+					downlink_linklocal_prefix= vrrp->downlink_local_ipv6_vaddr[j].mask;
+					first_downlink_index = j;
+					break;
+				}
+			}
+			if(!ipv6_addr_eq_null(vrrp->downlink_ipv6_vaddr[j].sin6_addr.s6_addr))  /*show virtual ipv6 link local address*/
+            {
+				ipv6_down_flag = 1;
+				inet_ntop(AF_INET6, vrrp->downlink_ipv6_vaddr[j].sin6_addr.s6_addr, ipv6_downlink_addr, INET6_ADDRSTRLEN);
+			    downlink_prefix= vrrp->downlink_ipv6_vaddr[j].mask;
+			}
+
+		}
+
+        strcpy(tempUplinkVifIfname,vrrp->uplink_vif[first_uplink_index].ifname);
+        strcpy(tempDownlinkVifIfname,vrrp->downlink_vif[first_downlink_index].ifname);
+ //               had_ifname_convert_back(tempUplinkVifIfname);
+ //               had_ifname_convert_back(tempDownlinkVifIfname);
+        if (VRRP_LINK_NO_SETTED != vrrp->uplink_flag &&
+			 VRRP_LINK_NO_SETTED != vrrp->downlink_flag){
+			 if(1 == ipv6_up_link_flag)
+			 {
+			 	 curLen += sprintf(curPos," config uplink link-local %s %s prelen %d\n",
+				 						tempUplinkVifIfname,
+				 						ipv6_uplink_linklocal_addr,
+				 						uplink_linklocal_prefix);
+				 curPos = showBuf + curLen;
+			 }
+			 if(1 == ipv6_down_link_flag)
+			 {
+			 	 curLen += sprintf(curPos," config downlink link-local %s %s prelen %d\n",
+				 						tempDownlinkVifIfname,
+				 						ipv6_downlink_linklocal_addr,
+				 						downlink_linklocal_prefix);
+				 curPos = showBuf + curLen;
+			 }
+
+			 if(1 == ipv6_up_flag && 1 == ipv6_down_flag)
+			 {
+				 curLen += sprintf(curPos," config uplink ipv6 %s %s prelen %d downlink %s %s prelen %d priority %d\n",
+				 						tempUplinkVifIfname,
+				 						ipv6_uplink_addr,
+				 						uplink_prefix,
+				 						tempDownlinkVifIfname,
+				 						ipv6_downlink_addr,
+				 						downlink_prefix,
+				 						vrrp->priority);
+				 curPos = showBuf + curLen;
+
+			 }
+         }
+		 else if(VRRP_LINK_NO_SETTED == vrrp->uplink_flag){
+			 if(1 == ipv6_down_link_flag)
+			 {
+			 	 curLen += sprintf(curPos," config downlink link-local %s %s prelen %d\n",
+				 						tempDownlinkVifIfname,
+				 						ipv6_downlink_linklocal_addr,
+				 						downlink_linklocal_prefix);
+				 curPos = showBuf + curLen;
+			 }
+			 if(1 == ipv6_down_flag)
+			 {
+			 	 curLen += sprintf(curPos," config downlink ipv6 %s %s prelen %d priority %d\n",
+				 						tempDownlinkVifIfname,
+				 						ipv6_downlink_addr,
+				 						downlink_prefix,
+				 						vrrp->priority);
+				 curPos = showBuf + curLen;
+			 }
+		 }
+		 else if(VRRP_LINK_NO_SETTED == vrrp->downlink_flag){
+			 if(1 == ipv6_up_link_flag)
+			 {
+			 	 curLen += sprintf(curPos," config uplink link-local %s %s prelen %d\n",
+				 						tempUplinkVifIfname,
+				 						ipv6_uplink_linklocal_addr,
+				 						uplink_linklocal_prefix);
+				 curPos = showBuf + curLen;
+			 }
+			 if(1 == ipv6_up_flag)
+			 {
+			 	 curLen += sprintf(curPos," config uplink ipv6 %s %s prelen %d priority %d\n",
+				 						tempUplinkVifIfname,
+				 						ipv6_uplink_addr,
+				 						uplink_prefix,
+				 						vrrp->priority);
+				 curPos = showBuf + curLen;
+			 }
+			 
+		 }
+
+		/* multi-virtual ip for uplink|downlink */
+		if ((VRRP_LINK_SETTED == vrrp->uplink_flag) &&
+			(1 < vrrp->uplink_ipv6_naddr))
+		{
+			/* j = first_uplink_index + 1
+			 * because uplink_vaddr[first_uplink_index] is not processed here 
+			 * if uplink_vaddr[first_uplink_index] has setted
+			 */
+			for (j = first_uplink_index + 1; j < VRRP_LINK_MAX_CNT; j++) {
+				if(!ipv6_addr_eq_null(vrrp->uplink_local_ipv6_vaddr[j].sin6_addr.s6_addr))  /*show virtual ipv6 link local address*/
+	            {
+                    strcpy(tempUplinkVifIfname,vrrp->uplink_vif[j].ifname);
+	    			inet_ntop(AF_INET6, vrrp->uplink_local_ipv6_vaddr[j].sin6_addr.s6_addr, 
+						ipv6_uplink_linklocal_addr, INET6_ADDRSTRLEN); 
+					uplink_linklocal_prefix= vrrp->uplink_local_ipv6_vaddr[j].mask;
+					curLen += sprintf(curPos, " add uplink ipv6 link-local %s %s prelen %d\n",
+											tempUplinkVifIfname,
+											ipv6_uplink_linklocal_addr,
+											uplink_linklocal_prefix);
+					curPos = showBuf + curLen;
+				}
+				if(!ipv6_addr_eq_null(vrrp->uplink_ipv6_vaddr[j].sin6_addr.s6_addr))  /*show virtual ipv6 address*/
+	            {
+                    strcpy(tempUplinkVifIfname,vrrp->uplink_vif[j].ifname);
+	    			inet_ntop(AF_INET6, vrrp->uplink_ipv6_vaddr[j].sin6_addr.s6_addr, 
+						ipv6_uplink_addr, INET6_ADDRSTRLEN); 
+					uplink_prefix= vrrp->uplink_ipv6_vaddr[j].mask;
+					curLen += sprintf(curPos, " add uplink ipv6 %s %s prelen %d\n",
+											tempUplinkVifIfname,
+											ipv6_uplink_addr,
+											uplink_prefix);
+					curPos = showBuf + curLen;
+				}
+			}
+		}
+		if ((VRRP_LINK_SETTED == vrrp->downlink_flag) &&
+			(1 < vrrp->downlink_ipv6_naddr))
+		{
+			/* j = first_downlink_index + 1
+			 * because downlink_vaddr[first_downlink_index] is not processed here 
+			 * if downlink_vaddr[first_downlink_index] has setted
+			 */
+			for (j = first_downlink_index + 1; j < VRRP_LINK_MAX_CNT; j++) {
+				if(!ipv6_addr_eq_null(vrrp->downlink_local_ipv6_vaddr[j].sin6_addr.s6_addr))  /*show virtual ipv6 link local address*/
+	            {
+                    strcpy(tempDownlinkVifIfname,vrrp->downlink_vif[j].ifname);
+	    			inet_ntop(AF_INET6, vrrp->downlink_local_ipv6_vaddr[j].sin6_addr.s6_addr, 
+						ipv6_downlink_linklocal_addr, INET6_ADDRSTRLEN); 
+					downlink_linklocal_prefix= vrrp->downlink_local_ipv6_vaddr[j].mask;
+					curLen += sprintf(curPos, " add downlink ipv6 link-local %s %s prelen %d\n",
+											tempDownlinkVifIfname,
+											ipv6_downlink_linklocal_addr,
+											downlink_linklocal_prefix);
+					curPos = showBuf + curLen;
+				}
+				if(!ipv6_addr_eq_null(vrrp->downlink_ipv6_vaddr[j].sin6_addr.s6_addr))  /*show virtual ipv6 address*/
+	            {
+                    strcpy(tempDownlinkVifIfname,vrrp->downlink_vif[j].ifname);
+	    			inet_ntop(AF_INET6, vrrp->downlink_ipv6_vaddr[j].sin6_addr.s6_addr, 
+						ipv6_downlink_addr, INET6_ADDRSTRLEN); 
+					downlink_prefix= vrrp->downlink_ipv6_vaddr[j].mask;
+					curLen += sprintf(curPos, " add downlink ipv6 %s %s prelen %d\n",
+											tempDownlinkVifIfname,
+											ipv6_downlink_addr,
+											downlink_prefix);
+					curPos = showBuf + curLen;
+				}
+			}
+		}
+
+#endif		 
 		 if(vrrp->adver_int != VRRP_ADVER_DFL*VRRP_TIMER_HZ){
 			 curLen += sprintf(curPos," config hansi advertime %d\n",vrrp->adver_int/VRRP_TIMER_HZ);
 			 curPos = showBuf + curLen;
@@ -1773,6 +1988,198 @@ DBusMessage * had_dbus_set_vrid(DBusConnection *conn, DBusMessage *msg, void *us
 	
 }
 
+DBusMessage * had_dbus_start_ipv6(DBusConnection *conn, DBusMessage *msg, void *user_data){
+
+	DBusMessage* reply;
+	DBusMessageIter iter = {0};
+	DBusError		err;
+    unsigned int profile = 0,priority = 0;
+	unsigned int link_local = 0;
+	char * uplink_ifname = NULL,*downlink_ifname = NULL /*,*uplink_ip = NULL,*downlink_ip = NULL*/;
+	char * u_ifname = NULL,*d_ifname = NULL;
+	unsigned int  prefix_length_up = 0;
+	unsigned int  prefix_length_down = 0;
+	struct iaddr ipv6_addr_up;
+	struct iaddr ipv6_addr_down;
+
+	unsigned int	ret = VRRP_RETURN_CODE_OK;
+	char temUplinkIfname[MAX_IFNAME_LEN] = {0},temDownlinkIfname[MAX_IFNAME_LEN] = {0};
+    vrrp_syslog_dbg("start vrrp... \n");
+
+	dbus_error_init( &err );
+
+	if( !(dbus_message_get_args( msg ,&err, \
+					DBUS_TYPE_UINT32,&profile, \
+					DBUS_TYPE_UINT32,&priority,  \
+					DBUS_TYPE_STRING,&u_ifname,
+					DBUS_TYPE_BYTE, &(ipv6_addr_up.iabuf[0]),
+					DBUS_TYPE_BYTE, &(ipv6_addr_up.iabuf[1]),
+					DBUS_TYPE_BYTE, &(ipv6_addr_up.iabuf[2]),
+					DBUS_TYPE_BYTE, &(ipv6_addr_up.iabuf[3]),
+					DBUS_TYPE_BYTE, &(ipv6_addr_up.iabuf[4]),
+					DBUS_TYPE_BYTE, &(ipv6_addr_up.iabuf[5]),
+					DBUS_TYPE_BYTE, &(ipv6_addr_up.iabuf[6]),
+					DBUS_TYPE_BYTE, &(ipv6_addr_up.iabuf[7]),
+					DBUS_TYPE_BYTE, &(ipv6_addr_up.iabuf[8]),
+					DBUS_TYPE_BYTE, &(ipv6_addr_up.iabuf[9]),
+					DBUS_TYPE_BYTE, &(ipv6_addr_up.iabuf[10]),
+					DBUS_TYPE_BYTE, &(ipv6_addr_up.iabuf[11]),
+					DBUS_TYPE_BYTE, &(ipv6_addr_up.iabuf[12]),
+					DBUS_TYPE_BYTE, &(ipv6_addr_up.iabuf[13]),
+					DBUS_TYPE_BYTE, &(ipv6_addr_up.iabuf[14]),							
+					DBUS_TYPE_BYTE, &(ipv6_addr_up.iabuf[15]),
+					DBUS_TYPE_UINT32, &prefix_length_up,
+					DBUS_TYPE_STRING,&d_ifname,
+					DBUS_TYPE_BYTE, &(ipv6_addr_down.iabuf[0]),
+					DBUS_TYPE_BYTE, &(ipv6_addr_down.iabuf[1]),
+					DBUS_TYPE_BYTE, &(ipv6_addr_down.iabuf[2]),
+					DBUS_TYPE_BYTE, &(ipv6_addr_down.iabuf[3]),
+					DBUS_TYPE_BYTE, &(ipv6_addr_down.iabuf[4]),
+					DBUS_TYPE_BYTE, &(ipv6_addr_down.iabuf[5]),
+					DBUS_TYPE_BYTE, &(ipv6_addr_down.iabuf[6]),
+					DBUS_TYPE_BYTE, &(ipv6_addr_down.iabuf[7]),
+					DBUS_TYPE_BYTE, &(ipv6_addr_down.iabuf[8]),
+					DBUS_TYPE_BYTE, &(ipv6_addr_down.iabuf[9]),
+					DBUS_TYPE_BYTE, &(ipv6_addr_down.iabuf[10]),
+					DBUS_TYPE_BYTE, &(ipv6_addr_down.iabuf[11]),
+					DBUS_TYPE_BYTE, &(ipv6_addr_down.iabuf[12]),
+					DBUS_TYPE_BYTE, &(ipv6_addr_down.iabuf[13]),
+					DBUS_TYPE_BYTE, &(ipv6_addr_down.iabuf[14]),							
+					DBUS_TYPE_BYTE, &(ipv6_addr_down.iabuf[15]),
+					DBUS_TYPE_UINT32, &prefix_length_down,					
+					DBUS_TYPE_INVALID)))
+	{
+		vrrp_syslog_dbg("vrrp unable to get input args\n");
+		if(dbus_error_is_set( &err ))
+		{
+			vrrp_syslog_error("vrrp start %s raised:%s\n",err.name ,err.message);
+			dbus_error_free( &err );
+		}
+		return NULL;
+	}
+/*
+	vrrp_syslog_info(
+		"get arguments profile = %d priority = %d uplink ifname = %s \
+		uplink ipv6 addr = "NIP6QUAD_FMT" \
+		prefix_length_up = %d downlink ifname = %s \
+		downlink ipv6 addr = "NIP6QUAD_FMT" \
+        prefix_length_down = %d \n",
+		profile,
+		priority,
+		u_ifname,
+		NIP6QUAD(ipv6_addr_up.iabuf),
+		prefix_length_up,
+		d_ifname,
+		NIP6QUAD(ipv6_addr_down.iabuf),
+		prefix_length_down
+	);
+*/	
+    if(VRRP_SERVICE_ENABLE == service_enable[profile]){
+       ret = VRRP_RETURN_CODE_SERVICE_NOT_PREPARE;
+	}
+	else{
+                /*strcpy(temUplinkIfname,uplink_ifname);
+                strcpy(temDownlinkIfname,downlink_ifname);
+                if((VRRP_RETURN_CODE_OK != had_check_and_convert_ifname(profile,temUplinkIfname))||\
+                        (VRRP_RETURN_CODE_OK != had_check_and_convert_ifname(profile,temDownlinkIfname))){
+                        ret = VRRP_RETURN_CODE_BAD_PARAM;
+                        goto out;
+                }
+                uplink_ifname = temUplinkIfname;
+                downlink_ifname = temDownlinkIfname;*/
+		uplink_ifname = (char*)malloc(MAX_IFNAME_LEN);
+		if(NULL == uplink_ifname){
+		 vrrp_syslog_error("%s %d,uplink_ifname malloc fail.\n",__func__,__LINE__);
+		   return NULL;
+		} 
+		memset(uplink_ifname,0,MAX_IFNAME_LEN);
+		memcpy(uplink_ifname,u_ifname,strlen(u_ifname));
+		
+		downlink_ifname = (char*)malloc(MAX_IFNAME_LEN);
+		if(NULL == downlink_ifname){
+		 vrrp_syslog_error("%s %d,downlink_ifname malloc fail.\n",__func__,__LINE__);
+		   if(uplink_ifname != NULL){
+				free(uplink_ifname);
+				uplink_ifname = NULL;
+		   }
+		   return NULL;
+		} 
+		memset(downlink_ifname,0,MAX_IFNAME_LEN);
+		memcpy(downlink_ifname,d_ifname,strlen(d_ifname));
+
+		char *tmp_ifname = NULL;
+		tmp_ifname = (char *)malloc(MAX_IFNAME_LEN);
+		if(NULL == tmp_ifname){
+			vrrp_syslog_error("%s %d,tmp_ifname malloc fail.\n",__func__,__LINE__);
+			if(uplink_ifname != NULL){
+				 free(uplink_ifname);
+				 uplink_ifname = NULL;
+			}
+			if(downlink_ifname != NULL){
+				 free(downlink_ifname);
+				 downlink_ifname = NULL;
+			}
+		   return NULL;
+		}	
+		memset(tmp_ifname,0,MAX_IFNAME_LEN);
+		if(!check_ve_interface(uplink_ifname,tmp_ifname)){
+			vrrp_syslog_dbg("%s,%d,uplink_ifname=%s,tmp_ifname=%s.\n",__func__,__LINE__,uplink_ifname,tmp_ifname);
+			memcpy(uplink_ifname,tmp_ifname,strlen(tmp_ifname));
+			vrrp_syslog_dbg("%s,%d,uplink_ifname=%s,tmp_ifname=%s.\n",__func__,__LINE__,uplink_ifname,tmp_ifname);
+		}else{
+			vrrp_syslog_error("%s %d,uplink_ifname %s not exsit.\n",__func__,__LINE__,uplink_ifname);
+		}
+
+		memset(tmp_ifname,0,MAX_IFNAME_LEN);
+		if(!check_ve_interface(downlink_ifname,tmp_ifname)){
+			vrrp_syslog_dbg("%s,%d,downlink_ifname=%s,tmp_ifname=%s.\n",__func__,__LINE__,downlink_ifname,tmp_ifname);
+			memcpy(downlink_ifname,tmp_ifname,strlen(tmp_ifname));
+			vrrp_syslog_dbg("%s,%d,downlink_ifname=%s,tmp_ifname=%s.\n",__func__,__LINE__,downlink_ifname,tmp_ifname);
+		}else{
+			vrrp_syslog_error("%s %d,downlink_ifname %s not exsit.\n",__func__,__LINE__,downlink_ifname);
+		}
+		free(tmp_ifname);
+		tmp_ifname = NULL;
+		
+		if((-1 == had_ifname_to_idx(uplink_ifname)) || (-1 == had_ifname_to_idx(downlink_ifname))){
+				ret = VRRP_RETURN_CODE_IF_NOT_EXIST;
+				goto out;
+		}
+
+		pthread_mutex_lock(&StateMutex); 
+		ret = had_ipv6_start(profile,priority,link_local,uplink_ifname,&ipv6_addr_up,prefix_length_up,downlink_ifname,&ipv6_addr_down,prefix_length_down);
+		pthread_mutex_unlock(&StateMutex); 
+	}
+out:
+	reply = dbus_message_new_method_return(msg);
+	if(NULL==reply)
+	{
+		vrrp_syslog_error("vrrp start dbus reply null!\n");
+		if(uplink_ifname != NULL){
+			 free(uplink_ifname);
+			 uplink_ifname = NULL;
+		}
+		if(downlink_ifname != NULL){
+			 free(downlink_ifname);
+			 downlink_ifname = NULL;
+		}
+		return reply;
+	}
+	dbus_message_iter_init_append (reply, &iter);
+	dbus_message_iter_append_basic (&iter,DBUS_TYPE_UINT32,&ret);
+
+	if(uplink_ifname != NULL){
+		 free(uplink_ifname);
+		 uplink_ifname = NULL;
+	}
+	if(downlink_ifname != NULL){
+		 free(downlink_ifname);
+		 downlink_ifname = NULL;
+	}
+	return reply;
+	
+}
+
 DBusMessage * had_dbus_start(DBusConnection *conn, DBusMessage *msg, void *user_data){
 
 	DBusMessage* reply;
@@ -1909,6 +2316,553 @@ out:
 	if(downlink_ifname != NULL){
 		 free(downlink_ifname);
 		 downlink_ifname = NULL;
+	}
+	return reply;
+	
+}
+
+DBusMessage *had_dbus_start_downlink_link_local
+(
+	DBusConnection *conn,
+	DBusMessage *msg,
+	void *user_data
+)
+{
+	DBusMessage *reply = NULL;
+	DBusMessageIter iter = {0};
+	DBusError		err = {0};
+
+	unsigned int ret = VRRP_RETURN_CODE_OK;
+	unsigned int profile = 0;
+	unsigned int link_local = 0;
+	char *downlink_ifname = NULL;
+	char *d_ifname = NULL;
+	struct iaddr ipv6_downlink;
+	unsigned int prefix_length = 0;
+
+	vrrp_syslog_dbg("start set downlink link local address:\n");
+
+	dbus_error_init(&err);
+
+	if (!(dbus_message_get_args(msg, &err,
+					DBUS_TYPE_UINT32, &profile,
+					DBUS_TYPE_STRING, &d_ifname,
+					DBUS_TYPE_UINT32, &prefix_length,
+					DBUS_TYPE_UINT32, &link_local,
+            		DBUS_TYPE_BYTE, &(ipv6_downlink.iabuf[0]),
+            		DBUS_TYPE_BYTE, &(ipv6_downlink.iabuf[1]),
+            		DBUS_TYPE_BYTE, &(ipv6_downlink.iabuf[2]),
+            		DBUS_TYPE_BYTE, &(ipv6_downlink.iabuf[3]),
+            		DBUS_TYPE_BYTE, &(ipv6_downlink.iabuf[4]),
+            		DBUS_TYPE_BYTE, &(ipv6_downlink.iabuf[5]),
+            		DBUS_TYPE_BYTE, &(ipv6_downlink.iabuf[6]),
+            		DBUS_TYPE_BYTE, &(ipv6_downlink.iabuf[7]),
+            		DBUS_TYPE_BYTE, &(ipv6_downlink.iabuf[8]),
+            		DBUS_TYPE_BYTE, &(ipv6_downlink.iabuf[9]),
+            		DBUS_TYPE_BYTE, &(ipv6_downlink.iabuf[10]),
+            		DBUS_TYPE_BYTE, &(ipv6_downlink.iabuf[11]),
+            		DBUS_TYPE_BYTE, &(ipv6_downlink.iabuf[12]),
+            		DBUS_TYPE_BYTE, &(ipv6_downlink.iabuf[13]),
+            		DBUS_TYPE_BYTE, &(ipv6_downlink.iabuf[14]),							
+            		DBUS_TYPE_BYTE, &(ipv6_downlink.iabuf[15]),
+					DBUS_TYPE_INVALID)))
+	{
+		vrrp_syslog_dbg("vrrp unable to get input args\n");
+		if (dbus_error_is_set(&err)) {
+			vrrp_syslog_error("vrrp %s raised:%s\n", err.name, err.message);
+			dbus_error_free(&err);
+		}
+		return NULL;
+	}
+	/*
+	vrrp_syslog_info(
+		"get arguments profile = %d downlink ifname = %s \
+		ipv6 addr = "NIP6QUAD_FMT" \
+		prefix_length = %d  link_local = %d\n",
+		profile,
+		d_ifname,
+		NIP6QUAD(ipv6_downlink.iabuf),
+		prefix_length,
+		link_local
+	);
+	*/
+	downlink_ifname = (char*)malloc(MAX_IFNAME_LEN);
+	if(NULL == downlink_ifname){
+	 vrrp_syslog_error("%s %d,uplink_ifname malloc fail.\n",__func__,__LINE__);
+	   return NULL;
+	} 
+	memset(downlink_ifname,0,MAX_IFNAME_LEN);
+	memcpy(downlink_ifname,d_ifname,strlen(d_ifname));
+	
+	char *tmp_ifname = NULL;
+	tmp_ifname = (char *)malloc(MAX_IFNAME_LEN);
+	if(NULL == tmp_ifname){
+		vrrp_syslog_error("%s %d,tmp_ifname malloc fail.\n",__func__,__LINE__);
+		if(downlink_ifname != NULL){
+			free(downlink_ifname);
+			downlink_ifname = NULL;
+		}
+	   return NULL;
+	}	
+	memset(tmp_ifname,0,MAX_IFNAME_LEN);
+	if(!check_ve_interface(downlink_ifname,tmp_ifname)){
+		vrrp_syslog_dbg("%s,%d,downlink_ifname=%s,tmp_ifname=%s.\n",__func__,__LINE__,downlink_ifname,tmp_ifname);
+		memcpy(downlink_ifname,tmp_ifname,strlen(tmp_ifname));
+		vrrp_syslog_dbg("%s,%d,downlink_ifname=%s,tmp_ifname=%s.\n",__func__,__LINE__,downlink_ifname,tmp_ifname);
+	}else{
+		vrrp_syslog_error("%s %d,downlink_ifname %s not exsit.\n",__func__,__LINE__,downlink_ifname);
+	}
+	free(tmp_ifname);
+	tmp_ifname = NULL;
+
+	if(VRRP_SERVICE_ENABLE == service_enable[profile]){
+       ret = VRRP_RETURN_CODE_SERVICE_NOT_PREPARE;
+	}
+	else{
+        /*strcpy(temIfname,uplink_ifname);
+        if(VRRP_RETURN_CODE_OK != had_check_and_convert_ifname(profile,temIfname)){
+                ret = VRRP_RETURN_CODE_BAD_PARAM;
+                goto out;
+        }
+        uplink_ifname = temIfname;*/
+	if(-1 == had_ifname_to_idx(downlink_ifname)){
+			ret = VRRP_RETURN_CODE_IF_NOT_EXIST;
+			goto out;
+	}
+
+    if( ipv6_downlink.iabuf[0] != 0xfe || ipv6_downlink.iabuf[1] != 0x80 ){
+		ret = VRRP_RETURN_CODE_LINKLOCAL_ERROR;
+		goto out;
+	}
+	pthread_mutex_lock(&StateMutex); 
+	ret = had_ipv6_start(profile,0,link_local,NULL,0,0,downlink_ifname,&ipv6_downlink,prefix_length);
+	pthread_mutex_unlock(&StateMutex); 
+	}
+out:	
+        vrrp_syslog_dbg("config vrrp start ret %x.\n", ret);
+	reply = dbus_message_new_method_return(msg);
+	if (NULL == reply) {
+		vrrp_syslog_error("vrrp dbus set error!\n");
+		if(downlink_ifname != NULL){
+			free(downlink_ifname);
+			downlink_ifname = NULL;
+		}
+		return reply;
+	}
+	dbus_message_iter_init_append(reply, &iter);
+	dbus_message_iter_append_basic(&iter,
+									DBUS_TYPE_UINT32, &ret);
+
+	if(downlink_ifname != NULL){
+		free(downlink_ifname);
+		downlink_ifname = NULL;
+	}
+	return reply;
+}
+
+DBusMessage *had_dbus_start_uplink_link_local
+(
+	DBusConnection *conn,
+	DBusMessage *msg,
+	void *user_data
+)
+{
+	DBusMessage *reply = NULL;
+	DBusMessageIter iter = {0};
+	DBusError		err = {0};
+
+	unsigned int ret = VRRP_RETURN_CODE_OK;
+	unsigned int profile = 0;
+	unsigned int link_local = 0;
+	char *uplink_ifname = NULL;
+	char *u_ifname = NULL;
+	struct iaddr ipv6_uplink;
+	unsigned int prefix_length = 0;
+
+	vrrp_syslog_dbg("start set uplink link local address:\n");
+
+	dbus_error_init(&err);
+
+	if (!(dbus_message_get_args(msg, &err,
+					DBUS_TYPE_UINT32, &profile,
+					DBUS_TYPE_STRING, &u_ifname,
+					DBUS_TYPE_UINT32, &prefix_length,
+					DBUS_TYPE_UINT32, &link_local,
+            		DBUS_TYPE_BYTE, &(ipv6_uplink.iabuf[0]),
+            		DBUS_TYPE_BYTE, &(ipv6_uplink.iabuf[1]),
+            		DBUS_TYPE_BYTE, &(ipv6_uplink.iabuf[2]),
+            		DBUS_TYPE_BYTE, &(ipv6_uplink.iabuf[3]),
+            		DBUS_TYPE_BYTE, &(ipv6_uplink.iabuf[4]),
+            		DBUS_TYPE_BYTE, &(ipv6_uplink.iabuf[5]),
+            		DBUS_TYPE_BYTE, &(ipv6_uplink.iabuf[6]),
+            		DBUS_TYPE_BYTE, &(ipv6_uplink.iabuf[7]),
+            		DBUS_TYPE_BYTE, &(ipv6_uplink.iabuf[8]),
+            		DBUS_TYPE_BYTE, &(ipv6_uplink.iabuf[9]),
+            		DBUS_TYPE_BYTE, &(ipv6_uplink.iabuf[10]),
+            		DBUS_TYPE_BYTE, &(ipv6_uplink.iabuf[11]),
+            		DBUS_TYPE_BYTE, &(ipv6_uplink.iabuf[12]),
+            		DBUS_TYPE_BYTE, &(ipv6_uplink.iabuf[13]),
+            		DBUS_TYPE_BYTE, &(ipv6_uplink.iabuf[14]),							
+            		DBUS_TYPE_BYTE, &(ipv6_uplink.iabuf[15]),
+					DBUS_TYPE_INVALID)))
+	{
+		vrrp_syslog_dbg("vrrp unable to get input args\n");
+		if (dbus_error_is_set(&err)) {
+			vrrp_syslog_error("vrrp %s raised:%s\n", err.name, err.message);
+			dbus_error_free(&err);
+		}
+		return NULL;
+	}
+/*	
+	vrrp_syslog_info(
+		"get arguments profile = %d downlink ifname = %s \
+		ipv6 addr = "NIP6QUAD_FMT" \
+		prefix_length = %d  link_local = %d\n",
+		profile,
+		u_ifname,
+		NIP6QUAD(ipv6_uplink.iabuf),
+		prefix_length,
+		link_local
+	);
+	*/
+	uplink_ifname = (char*)malloc(MAX_IFNAME_LEN);
+	if(NULL == uplink_ifname){
+	 vrrp_syslog_error("%s %d,uplink_ifname malloc fail.\n",__func__,__LINE__);
+	   return NULL;
+	} 
+	memset(uplink_ifname,0,MAX_IFNAME_LEN);
+	memcpy(uplink_ifname,u_ifname,strlen(u_ifname));
+	
+	char *tmp_ifname = NULL;
+	tmp_ifname = (char *)malloc(MAX_IFNAME_LEN);
+	if(NULL == tmp_ifname){
+		vrrp_syslog_error("%s %d,tmp_ifname malloc fail.\n",__func__,__LINE__);
+		if(uplink_ifname != NULL){
+			free(uplink_ifname);
+			uplink_ifname = NULL;
+		}
+	   return NULL;
+	}	
+	memset(tmp_ifname,0,MAX_IFNAME_LEN);
+	if(!check_ve_interface(uplink_ifname,tmp_ifname)){
+		vrrp_syslog_dbg("%s,%d,uplink_ifname=%s,tmp_ifname=%s.\n",__func__,__LINE__,uplink_ifname,tmp_ifname);
+		memcpy(uplink_ifname,tmp_ifname,strlen(tmp_ifname));
+		vrrp_syslog_dbg("%s,%d,uplink_ifname=%s,tmp_ifname=%s.\n",__func__,__LINE__,uplink_ifname,tmp_ifname);
+	}else{
+		vrrp_syslog_error("%s %d,uplink_ifname %s not exsit.\n",__func__,__LINE__,uplink_ifname);
+	}
+	free(tmp_ifname);
+	tmp_ifname = NULL;
+
+	if(VRRP_SERVICE_ENABLE == service_enable[profile]){
+       ret = VRRP_RETURN_CODE_SERVICE_NOT_PREPARE;
+	}
+	else{
+        /*strcpy(temIfname,uplink_ifname);
+        if(VRRP_RETURN_CODE_OK != had_check_and_convert_ifname(profile,temIfname)){
+                ret = VRRP_RETURN_CODE_BAD_PARAM;
+                goto out;
+        }
+        uplink_ifname = temIfname;*/
+	if(-1 == had_ifname_to_idx(uplink_ifname)){
+			ret = VRRP_RETURN_CODE_IF_NOT_EXIST;
+			goto out;
+	}
+
+	if( ipv6_uplink.iabuf[0] != 0xfe || ipv6_uplink.iabuf[1] != 0x80 ){
+		ret = VRRP_RETURN_CODE_LINKLOCAL_ERROR;
+		goto out;
+	}
+	pthread_mutex_lock(&StateMutex); 
+	ret = had_ipv6_start(profile,0,link_local,uplink_ifname,&ipv6_uplink,prefix_length,NULL,0,0);
+	pthread_mutex_unlock(&StateMutex); 
+	}
+out:	
+        vrrp_syslog_dbg("config vrrp start ret %x.\n", ret);
+	reply = dbus_message_new_method_return(msg);
+	if (NULL == reply) {
+		vrrp_syslog_error("vrrp dbus set error!\n");
+		if(uplink_ifname != NULL){
+			free(uplink_ifname);
+			uplink_ifname = NULL;
+		}
+		return reply;
+	}
+	dbus_message_iter_init_append(reply, &iter);
+	dbus_message_iter_append_basic(&iter,
+									DBUS_TYPE_UINT32, &ret);
+
+	if(uplink_ifname != NULL){
+		free(uplink_ifname);
+		uplink_ifname = NULL;
+	}
+	return reply;
+}
+
+DBusMessage *had_dbus_start_uplink_ipv6
+(
+	DBusConnection *conn,
+	DBusMessage *msg,
+	void *user_data
+)
+{
+	DBusMessage *reply = NULL;
+	DBusMessageIter iter = {0};
+	DBusError		err = {0};
+
+	unsigned int ret = VRRP_RETURN_CODE_OK;
+	unsigned int profile = 0;
+	unsigned int priority = 0;
+	unsigned int link_local = 0;
+	char *uplink_ifname = NULL;
+	char *u_ifname = NULL;
+	struct iaddr ipv6_uplink;
+	unsigned int prefix_length = 0;
+
+	vrrp_syslog_dbg("start vrrp uplink:\n");
+
+	dbus_error_init(&err);
+
+	if (!(dbus_message_get_args(msg, &err,
+					DBUS_TYPE_UINT32, &profile,
+					DBUS_TYPE_UINT32, &priority,
+					DBUS_TYPE_STRING, &u_ifname,
+					DBUS_TYPE_UINT32, &prefix_length,
+					DBUS_TYPE_UINT32, &link_local,
+            		DBUS_TYPE_BYTE, &(ipv6_uplink.iabuf[0]),
+            		DBUS_TYPE_BYTE, &(ipv6_uplink.iabuf[1]),
+            		DBUS_TYPE_BYTE, &(ipv6_uplink.iabuf[2]),
+            		DBUS_TYPE_BYTE, &(ipv6_uplink.iabuf[3]),
+            		DBUS_TYPE_BYTE, &(ipv6_uplink.iabuf[4]),
+            		DBUS_TYPE_BYTE, &(ipv6_uplink.iabuf[5]),
+            		DBUS_TYPE_BYTE, &(ipv6_uplink.iabuf[6]),
+            		DBUS_TYPE_BYTE, &(ipv6_uplink.iabuf[7]),
+            		DBUS_TYPE_BYTE, &(ipv6_uplink.iabuf[8]),
+            		DBUS_TYPE_BYTE, &(ipv6_uplink.iabuf[9]),
+            		DBUS_TYPE_BYTE, &(ipv6_uplink.iabuf[10]),
+            		DBUS_TYPE_BYTE, &(ipv6_uplink.iabuf[11]),
+            		DBUS_TYPE_BYTE, &(ipv6_uplink.iabuf[12]),
+            		DBUS_TYPE_BYTE, &(ipv6_uplink.iabuf[13]),
+            		DBUS_TYPE_BYTE, &(ipv6_uplink.iabuf[14]),							
+            		DBUS_TYPE_BYTE, &(ipv6_uplink.iabuf[15]),
+					DBUS_TYPE_INVALID)))
+	{
+		vrrp_syslog_dbg("vrrp unable to get input args\n");
+		if (dbus_error_is_set(&err)) {
+			vrrp_syslog_error("vrrp %s raised:%s\n", err.name, err.message);
+			dbus_error_free(&err);
+		}
+		return NULL;
+	}
+
+/*
+	vrrp_syslog_info(
+		"get arguments profile = %d priority = %d downlink ifname = %s \
+		ipv6 addr = "NIP6QUAD_FMT" \
+		prefix_length = %d  link_local = %d\n",
+		profile,
+		priority,
+		u_ifname,
+		NIP6QUAD(ipv6_uplink.iabuf),
+		prefix_length,
+		link_local
+	);
+*/	
+	uplink_ifname = (char*)malloc(MAX_IFNAME_LEN);
+	if(NULL == uplink_ifname){
+	 vrrp_syslog_error("%s %d,uplink_ifname malloc fail.\n",__func__,__LINE__);
+	   return NULL;
+	} 
+	memset(uplink_ifname,0,MAX_IFNAME_LEN);
+	memcpy(uplink_ifname,u_ifname,strlen(u_ifname));
+	
+	char *tmp_ifname = NULL;
+	tmp_ifname = (char *)malloc(MAX_IFNAME_LEN);
+	if(NULL == tmp_ifname){
+		vrrp_syslog_error("%s %d,tmp_ifname malloc fail.\n",__func__,__LINE__);
+		if(uplink_ifname != NULL){
+			free(uplink_ifname);
+			uplink_ifname = NULL;
+		}
+	   return NULL;
+	}	
+	memset(tmp_ifname,0,MAX_IFNAME_LEN);
+	if(!check_ve_interface(uplink_ifname,tmp_ifname)){
+		vrrp_syslog_dbg("%s,%d,uplink_ifname=%s,tmp_ifname=%s.\n",__func__,__LINE__,uplink_ifname,tmp_ifname);
+		memcpy(uplink_ifname,tmp_ifname,strlen(tmp_ifname));
+		vrrp_syslog_dbg("%s,%d,uplink_ifname=%s,tmp_ifname=%s.\n",__func__,__LINE__,uplink_ifname,tmp_ifname);
+	}else{
+		vrrp_syslog_error("%s %d,uplink_ifname %s not exsit.\n",__func__,__LINE__,uplink_ifname);
+	}
+	free(tmp_ifname);
+	tmp_ifname = NULL;
+
+	if(VRRP_SERVICE_ENABLE == service_enable[profile]){
+       ret = VRRP_RETURN_CODE_SERVICE_NOT_PREPARE;
+	}
+	else{
+        /*strcpy(temIfname,uplink_ifname);
+        if(VRRP_RETURN_CODE_OK != had_check_and_convert_ifname(profile,temIfname)){
+                ret = VRRP_RETURN_CODE_BAD_PARAM;
+                goto out;
+        }
+        uplink_ifname = temIfname;*/
+	if(-1 == had_ifname_to_idx(uplink_ifname)){
+			ret = VRRP_RETURN_CODE_IF_NOT_EXIST;
+			goto out;
+	}
+	pthread_mutex_lock(&StateMutex); 
+	ret = had_ipv6_start(profile,priority,link_local,uplink_ifname,&ipv6_uplink,prefix_length,NULL,0,0);
+	pthread_mutex_unlock(&StateMutex); 
+	}
+out:	
+        vrrp_syslog_dbg("config vrrp start ret %x.\n", ret);
+	reply = dbus_message_new_method_return(msg);
+	if (NULL == reply) {
+		vrrp_syslog_error("vrrp dbus set error!\n");
+		if(uplink_ifname != NULL){
+			free(uplink_ifname);
+			uplink_ifname = NULL;
+		}
+		return reply;
+	}
+	dbus_message_iter_init_append(reply, &iter);
+	dbus_message_iter_append_basic(&iter,
+									DBUS_TYPE_UINT32, &ret);
+
+	if(uplink_ifname != NULL){
+		free(uplink_ifname);
+		uplink_ifname = NULL;
+	}
+	return reply;
+}
+
+
+DBusMessage * had_dbus_start_downlink_ipv6(DBusConnection *conn, DBusMessage *msg, void *user_data){
+
+	DBusMessage* reply;
+	DBusMessageIter iter = {0};
+	DBusError		err;
+    unsigned int profile = 0,priority = 0,link_local = 0;
+	char *downlink_ifname = NULL;
+	char *d_ifname = NULL;
+	struct iaddr ipv6_downlink;
+    unsigned int prefix_length= 0;
+	unsigned int	ret = 0;
+    vrrp_syslog_dbg("start vrrp... \n");
+
+	dbus_error_init( &err );
+
+	if( !(dbus_message_get_args( msg ,&err,
+					DBUS_TYPE_UINT32,&profile,
+					DBUS_TYPE_UINT32,&priority,
+					DBUS_TYPE_STRING,&d_ifname,
+					DBUS_TYPE_UINT32,&prefix_length,	
+					DBUS_TYPE_UINT32,&link_local,			
+            		DBUS_TYPE_BYTE, &(ipv6_downlink.iabuf[0]),
+            		DBUS_TYPE_BYTE, &(ipv6_downlink.iabuf[1]),
+            		DBUS_TYPE_BYTE, &(ipv6_downlink.iabuf[2]),
+            		DBUS_TYPE_BYTE, &(ipv6_downlink.iabuf[3]),
+            		DBUS_TYPE_BYTE, &(ipv6_downlink.iabuf[4]),
+            		DBUS_TYPE_BYTE, &(ipv6_downlink.iabuf[5]),
+            		DBUS_TYPE_BYTE, &(ipv6_downlink.iabuf[6]),
+            		DBUS_TYPE_BYTE, &(ipv6_downlink.iabuf[7]),
+            		DBUS_TYPE_BYTE, &(ipv6_downlink.iabuf[8]),
+            		DBUS_TYPE_BYTE, &(ipv6_downlink.iabuf[9]),
+            		DBUS_TYPE_BYTE, &(ipv6_downlink.iabuf[10]),
+            		DBUS_TYPE_BYTE, &(ipv6_downlink.iabuf[11]),
+            		DBUS_TYPE_BYTE, &(ipv6_downlink.iabuf[12]),
+            		DBUS_TYPE_BYTE, &(ipv6_downlink.iabuf[13]),
+            		DBUS_TYPE_BYTE, &(ipv6_downlink.iabuf[14]),							
+            		DBUS_TYPE_BYTE, &(ipv6_downlink.iabuf[15]),
+					DBUS_TYPE_INVALID)))
+	{
+		vrrp_syslog_dbg("vrrp unable to get input args\n");
+		if(dbus_error_is_set( &err ))
+		{
+			vrrp_syslog_error("vrrp start downlink %s raised:%s\n",err.name ,err.message);
+			dbus_error_free( &err );
+		}
+		return NULL;
+	}
+/*
+	vrrp_syslog_info(
+		"get arguments profile = %d priority = %d downlink ifname = %s \
+		ipv6 addr = "NIP6QUAD_FMT" \
+		prefix_length = %d  link_local = %d\n",
+		profile,
+		priority,
+		d_ifname,
+		NIP6QUAD(ipv6_downlink.iabuf),
+		prefix_length,
+		link_local
+	);
+*/
+	downlink_ifname = (char*)malloc(MAX_IFNAME_LEN);
+	if(NULL == downlink_ifname){
+	 vrrp_syslog_error("%s %d,downlink_ifname malloc fail.\n",__func__,__LINE__);
+	   return NULL;
+	} 
+	memset(downlink_ifname,0,MAX_IFNAME_LEN);
+	memcpy(downlink_ifname,d_ifname,strlen(d_ifname));
+
+	char *tmp_ifname = NULL;
+	tmp_ifname = (char *)malloc(MAX_IFNAME_LEN);
+	if(NULL == tmp_ifname){
+		vrrp_syslog_error("%s %d,tmp_ifname malloc fail.\n",__func__,__LINE__);
+		if(downlink_ifname){
+			free(downlink_ifname);
+			downlink_ifname = NULL;
+		}
+	   return NULL;
+	}	
+	memset(tmp_ifname,0,MAX_IFNAME_LEN);
+	if(!check_ve_interface(downlink_ifname,tmp_ifname)){
+		vrrp_syslog_dbg("%s,%d,downlink_ifname=%s,tmp_ifname=%s.\n",__func__,__LINE__,downlink_ifname,tmp_ifname);
+		memcpy(downlink_ifname,tmp_ifname,strlen(tmp_ifname));
+		vrrp_syslog_dbg("%s,%d,downlink_ifname=%s,tmp_ifname=%s.\n",__func__,__LINE__,downlink_ifname,tmp_ifname);
+	}else{
+		vrrp_syslog_error("%s %d,downlink_ifname %s not exsit.\n",__func__,__LINE__,downlink_ifname);
+	}
+	free(tmp_ifname);
+	tmp_ifname = NULL;
+
+	if(VRRP_SERVICE_ENABLE == service_enable[profile]){
+       ret = VRRP_RETURN_CODE_SERVICE_NOT_PREPARE;
+	}
+	else{
+       /* strcpy(temIfname,downlink_ifname);
+        if(VRRP_RETURN_CODE_OK != had_check_and_convert_ifname(profile,temIfname)){
+                ret = VRRP_RETURN_CODE_BAD_PARAM;
+                goto out;
+        }
+        downlink_ifname = temIfname;*/
+		if(-1 == had_ifname_to_idx(downlink_ifname )){
+				ret = VRRP_RETURN_CODE_IF_NOT_EXIST;
+				goto out;
+		}
+
+	pthread_mutex_lock(&StateMutex); 
+	ret = had_ipv6_start(profile,priority,link_local,NULL,0,0,downlink_ifname,&ipv6_downlink,prefix_length);
+	pthread_mutex_unlock(&StateMutex); 
+	}
+out:
+	reply = dbus_message_new_method_return(msg);
+	if(NULL==reply)
+	{
+		vrrp_syslog_error("vrrp start downlink dbus reply null!\n");
+		if(downlink_ifname){
+			free(downlink_ifname);
+			downlink_ifname = NULL;
+		}
+		return reply;
+	}
+	dbus_message_iter_init_append (reply, &iter);
+	dbus_message_iter_append_basic (&iter,DBUS_TYPE_UINT32,&ret);
+
+	if(downlink_ifname){
+		free(downlink_ifname);
+		downlink_ifname = NULL;
 	}
 	return reply;
 	
@@ -5673,6 +6627,26 @@ static DBusHandlerResult had_dbus_message_handler
 			else if(dbus_message_is_method_call(message,VRRP_DBUS_INTERFACE,VRRP_DBUS_METHOD_SHOW_SWITCH_TIMES))
 			{
 				reply = had_dbus_show_switch_times(connection,message,user_data);
+			}	
+			else if(dbus_message_is_method_call(message,VRRP_DBUS_INTERFACE,VRRP_DBUS_METHOD_START_VRRP_UPLINK_IPV6))
+			{
+				reply = had_dbus_start_uplink_ipv6(connection,message,user_data);
+			}
+			else if(dbus_message_is_method_call(message,VRRP_DBUS_INTERFACE,VRRP_DBUS_METHOD_START_VRRP_DOWNLINK_IPV6))
+			{
+				reply = had_dbus_start_downlink_ipv6(connection,message,user_data);
+			}			
+			else if(dbus_message_is_method_call(message,VRRP_DBUS_INTERFACE,VRRP_DBUS_METHOD_START_VRRP_UPLINK_LINK_LOCAL))
+			{
+				reply = had_dbus_start_uplink_link_local(connection,message,user_data);
+			}
+			else if(dbus_message_is_method_call(message,VRRP_DBUS_INTERFACE,VRRP_DBUS_METHOD_START_VRRP_DOWNLINK_LINK_LOCAL))
+			{
+				reply = had_dbus_start_downlink_link_local(connection,message,user_data);
+			}
+			else if(dbus_message_is_method_call(message,VRRP_DBUS_INTERFACE,VRRP_DBUS_METHOD_START_VRRP_IPV6))
+			{
+				reply = had_dbus_start_ipv6(connection,message,user_data);
 			}	
 			else
 			{

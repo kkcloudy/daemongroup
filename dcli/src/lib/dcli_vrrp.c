@@ -4195,6 +4195,918 @@ DEFUN(config_vrrp_with_mask_cmd_func,
 }
 
 #if 1
+/* niehy add 2014-06-24,only ipv6 uplink*/
+
+static int
+str2_ipv6_addr
+( 
+	char *str,
+	struct iaddr *p
+)
+{
+	int ret;
+
+	ret = inet_pton(AF_INET6, str, p->iabuf);
+	if (ret != 1) {
+		return 0;
+	}
+	p->len= 16;
+
+	return ret;
+}
+DEFUN(config_vrrp_with_ipv6_cmd_func,
+	  config_vrrp_with_ipv6_cmd,
+	  "config uplink ipv6 IFNAME A:B:C:D:E:F:G:H prelen <64-128> downlink IFNAME A:B:C:D:E:F:G:H prelen <64-128> priority <1-255>",
+	  CONFIG_STR
+	  "Config uplink ipv6\n"
+      "Config interface ipv6 address\n"
+      "L3 interface name\n"
+	  "L3 interface virtual ipv6 \n"
+	  "Config downlink\n"
+	  "L3 interface name\n"
+	  "L3 interface virtual ipv6 \n"
+	  "ipv6 prefix length\n"
+	  "ipv6 prefix length,valid range [64-128]\n"
+	  "Hansi priority\n"
+	  "Hansi priority value\n"
+)
+{
+	DBusMessage *query = NULL, *reply = NULL;
+	DBusError err = {0};
+	unsigned int op_ret = 0;
+	unsigned int slot_id = HostSlotId;
+	unsigned int profile = 0,vrid = 0,priority = 0;
+	int split = 0;
+	char* uplink_ifname = NULL,*downlink_ifname = NULL;
+	unsigned int  prefix_length_up = 0;
+	unsigned int  prefix_length_down = 0;
+	struct iaddr ipv6_addr_up;
+	struct iaddr ipv6_addr_down;
+	unsigned int link_local = 0;
+	char cmd_1[1024] = {0};
+	char cmd_2[1024] = {0};
+    int ret1,ret2;
+
+	uplink_ifname = (char *)malloc(MAX_IFNAME_LEN);
+    if(NULL == uplink_ifname){
+       return CMD_WARNING;
+	}	
+	memset(uplink_ifname,0,MAX_IFNAME_LEN);
+	memcpy(uplink_ifname,argv[0],strlen(argv[0]));
+
+	downlink_ifname = (char *)malloc(MAX_IFNAME_LEN);	
+	if(NULL == downlink_ifname){
+       return CMD_WARNING;
+	}
+	memset(downlink_ifname,0,MAX_IFNAME_LEN);
+	memcpy(downlink_ifname,argv[3],strlen(argv[3]));
+
+	memset(&ipv6_addr_up, 0 ,sizeof(struct iaddr));
+	op_ret = str2_ipv6_addr((char*)argv[1], &ipv6_addr_up);
+	if (!op_ret) {
+		free(uplink_ifname);
+		free(downlink_ifname);
+		vty_out(vty, "%% invalid ipv6 address, please like A::B.C.D.E or A::B:C\n");
+		return CMD_WARNING;
+    }
+	if (0 == memcmp(argv[1], "::", 2)) {
+		vty_out(vty, "%% invalid ipv6 address, please like A::B.C.D.E or A::B:C, A should not be NULL\n");
+		return CMD_WARNING;
+	}
+	memset(&ipv6_addr_down, 0 ,sizeof(struct iaddr));
+	op_ret = str2_ipv6_addr((char*)argv[4], &ipv6_addr_down);
+	if (!op_ret) {
+		free(uplink_ifname);
+		free(downlink_ifname);
+		vty_out(vty, "%% invalid ipv6 address, please like A::B.C.D.E or A::B:C\n");
+		return CMD_WARNING;
+    }
+	if (0 == memcmp(argv[4], "::", 2)) {
+		vty_out(vty, "%% invalid ipv6 address, please like A::B.C.D.E or A::B:C, A should not be NULL\n");
+		return CMD_WARNING;
+	}
+
+	prefix_length_up= atoi((char *)argv[2]);
+	prefix_length_down= atoi((char *)argv[5]);
+
+	if(prefix_length_up< 64){
+		vty_out(vty,"%%error! prefix up length [64~128]!\n");
+		return CMD_WARNING;	
+	}
+	if(prefix_length_down< 64){
+		vty_out(vty,"%%error! prefix down length [64~128]!\n");
+		return CMD_WARNING;	
+	}
+
+	priority = strtoul((char *)argv[6],NULL,10);
+	if((priority < 1)||priority > 255){
+        vty_out(vty,"%% Bad parameter : %s !",argv[6]);
+		return CMD_WARNING;
+	}
+
+	if(HANSI_NODE==vty->node){
+		profile = (unsigned int)(vty->index);
+		slot_id = vty->slotindex;
+	}
+
+	char vrrp_obj_path[DCLI_VRRP_OBJPATH_LEN] = {0};
+	char vrrp_dbus_name[DCLI_VRRP_DBUSNAME_LEN] = {0};	
+
+#ifdef DISTRIBUT
+	DBusConnection *dcli_dbus_connection = NULL;
+	ReInitDbusConnection(&dcli_dbus_connection,slot_id,distributFag);
+#endif
+	dcli_vrrp_splice_objpath_string(VRRP_DBUS_OBJPATH, profile, vrrp_obj_path);
+	dcli_vrrp_splice_dbusname(VRRP_DBUS_BUSNAME, profile, vrrp_dbus_name);
+	
+	query = dbus_message_new_method_call(vrrp_dbus_name,
+										 vrrp_obj_path,
+										 VRRP_DBUS_INTERFACE,
+										 VRRP_DBUS_METHOD_START_VRRP_IPV6);
+	dbus_error_init(&err);
+
+	dbus_message_append_args(query,
+		                     DBUS_TYPE_UINT32,&profile,
+							 DBUS_TYPE_UINT32,&priority,
+							 DBUS_TYPE_STRING,&uplink_ifname,
+							 DBUS_TYPE_BYTE, &(ipv6_addr_up.iabuf[0]),
+							 DBUS_TYPE_BYTE, &(ipv6_addr_up.iabuf[1]),
+							 DBUS_TYPE_BYTE, &(ipv6_addr_up.iabuf[2]),
+							 DBUS_TYPE_BYTE, &(ipv6_addr_up.iabuf[3]),
+							 DBUS_TYPE_BYTE, &(ipv6_addr_up.iabuf[4]),
+							 DBUS_TYPE_BYTE, &(ipv6_addr_up.iabuf[5]),
+							 DBUS_TYPE_BYTE, &(ipv6_addr_up.iabuf[6]),
+							 DBUS_TYPE_BYTE, &(ipv6_addr_up.iabuf[7]),
+							 DBUS_TYPE_BYTE, &(ipv6_addr_up.iabuf[8]),
+							 DBUS_TYPE_BYTE, &(ipv6_addr_up.iabuf[9]),
+							 DBUS_TYPE_BYTE, &(ipv6_addr_up.iabuf[10]),
+							 DBUS_TYPE_BYTE, &(ipv6_addr_up.iabuf[11]),
+							 DBUS_TYPE_BYTE, &(ipv6_addr_up.iabuf[12]),
+							 DBUS_TYPE_BYTE, &(ipv6_addr_up.iabuf[13]),
+							 DBUS_TYPE_BYTE, &(ipv6_addr_up.iabuf[14]),							
+							 DBUS_TYPE_BYTE, &(ipv6_addr_up.iabuf[15]),
+							 DBUS_TYPE_UINT32, &prefix_length_up,
+							 DBUS_TYPE_STRING,&downlink_ifname,
+							 DBUS_TYPE_BYTE, &(ipv6_addr_down.iabuf[0]),
+							 DBUS_TYPE_BYTE, &(ipv6_addr_down.iabuf[1]),
+							 DBUS_TYPE_BYTE, &(ipv6_addr_down.iabuf[2]),
+							 DBUS_TYPE_BYTE, &(ipv6_addr_down.iabuf[3]),
+							 DBUS_TYPE_BYTE, &(ipv6_addr_down.iabuf[4]),
+							 DBUS_TYPE_BYTE, &(ipv6_addr_down.iabuf[5]),
+							 DBUS_TYPE_BYTE, &(ipv6_addr_down.iabuf[6]),
+							 DBUS_TYPE_BYTE, &(ipv6_addr_down.iabuf[7]),
+							 DBUS_TYPE_BYTE, &(ipv6_addr_down.iabuf[8]),
+							 DBUS_TYPE_BYTE, &(ipv6_addr_down.iabuf[9]),
+							 DBUS_TYPE_BYTE, &(ipv6_addr_down.iabuf[10]),
+							 DBUS_TYPE_BYTE, &(ipv6_addr_down.iabuf[11]),
+							 DBUS_TYPE_BYTE, &(ipv6_addr_down.iabuf[12]),
+							 DBUS_TYPE_BYTE, &(ipv6_addr_down.iabuf[13]),
+							 DBUS_TYPE_BYTE, &(ipv6_addr_down.iabuf[14]),							
+							 DBUS_TYPE_BYTE, &(ipv6_addr_down.iabuf[15]),
+							 DBUS_TYPE_UINT32, &prefix_length_down,
+							 DBUS_TYPE_INVALID);
+	
+	reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection,query,-1, &err);
+	dbus_message_unref(query);
+	if (NULL == reply) {
+		vty_out(vty,"failed get reply.\n");
+		if (dbus_error_is_set(&err)) {
+			printf("%s raised: %s",err.name,err.message);
+			dbus_error_free_for_dcli(&err);
+		}
+		return CMD_SUCCESS;
+	}
+	else if (dbus_message_get_args ( reply, &err,
+		DBUS_TYPE_UINT32,&op_ret,
+		DBUS_TYPE_INVALID)){	
+        if( DCLI_VRRP_RETURN_CODE_OK != op_ret){
+            vty_out(vty,dcli_vrrp_err_msg[op_ret - DCLI_VRRP_RETURN_CODE_OK]);
+		}
+		else{
+			sprintf(cmd_1,"sudo /opt/bin/vtysh -c \"en\n configure terminal\n config interface %s ipv6_address %s prelen %d link_local %d\"",argv[0],argv[1],argv[2],link_local);
+			//vty_out(vty,"cmd : %s\n",cmd_1);
+			int status_1 = system(cmd_1);
+			ret1 = WEXITSTATUS(status_1);
+			if (ret1 != 0)
+			{
+				vty_out(vty,"cmd : %s execute fail \n",cmd_1);
+			}
+			
+			sprintf(cmd_2,"sudo /opt/bin/vtysh -c \"en\n configure terminal\n config interface %s ipv6_address %s prelen %d link_local %d\"",argv[3],argv[4],argv[5],link_local);
+			//vty_out(vty,"cmd : %s\n",cmd_2);
+			int status_2 = system(cmd_2);
+			ret2 = WEXITSTATUS(status_2);
+			if (ret2 != 0)
+			{
+				vty_out(vty,"cmd : %s execute fail \n",cmd_2);
+			}			
+		}
+	} 
+	else 
+	{		
+		if (dbus_error_is_set(&err)) 
+		{
+			printf("%s raised: %s",err.name,err.message);
+			dbus_error_free_for_dcli(&err);
+		}
+	}
+	/*release malloc mem*/
+	free(uplink_ifname);
+	free(downlink_ifname);
+	/*
+	free(uplink_ip);
+	free(downlink_ip);
+      */
+	dbus_message_unref(reply);
+	return CMD_SUCCESS;
+}
+
+DEFUN(config_vrrp_downlink_link_local_cmd_func,
+	config_vrrp_downlink_link_local_cmd,
+	"config downlink link-local IFNAME A:B:C:D:E:F:G:H prelen <64-128>",
+	CONFIG_STR
+	"Config downlink ipv6\n"
+	"Config interface link local ipv6 address\n"
+	"L3 interface name\n"
+	"L3 interface virtual link local ipv6\n"
+	"ipv6 prefix length\n"
+	"ipv6 prefix length,valid range [64-128]\n"
+)
+{
+	DBusMessage *query = NULL, *reply = NULL;
+	DBusError err = {0};
+
+	unsigned int op_ret = 0;
+	unsigned int slot_id = HostSlotId;
+	unsigned int profile = 0;
+	unsigned int vrid = 0;
+	unsigned int priority = 0;
+	int add = 1;
+	int split = 0;
+	char *downlink_ifname = NULL;
+	unsigned int prefix_length = 0;
+	unsigned int link_local= 1;
+	char vrrp_obj_path[DCLI_VRRP_OBJPATH_LEN] = {0};
+	char vrrp_dbus_name[DCLI_VRRP_DBUSNAME_LEN] = {0};
+
+	struct iaddr ipv6_addr;
+	struct zebra_if *zif; 
+	char name[128];
+	memset(name, 0, 128);
+	char cmd[1024] = {0};
+    int ret;
+
+	if(argc > 3)
+	{
+		vty_out(vty,CMD_PARAMETER_ERROR);
+		return CMD_FAILURE;
+	}
+	downlink_ifname = (char *)malloc(MAX_IFNAME_LEN);	
+	if (NULL == downlink_ifname) {
+		return CMD_WARNING;
+	}
+	memset(downlink_ifname, 0, MAX_IFNAME_LEN);
+	memcpy(downlink_ifname, argv[0], strlen(argv[0]));
+
+	memset(&ipv6_addr, 0 ,sizeof(struct iaddr));
+	op_ret = str2_ipv6_addr((char*)argv[1], &ipv6_addr);
+	
+	if (!op_ret) {
+		free(downlink_ifname);
+		vty_out(vty, "%% invalid ipv6 address, please like A::B.C.D.E or A::B:C\n");
+		return CMD_WARNING;
+    }
+	if (0 == memcmp(argv[1], "::", 2)) {
+		vty_out(vty, "%% invalid ipv6 address, please like A::B.C.D.E or A::B:C, A should not be NULL\n");
+		return CMD_WARNING;
+	}
+
+	prefix_length = atoi((char *)argv[2]);
+	if(prefix_length < 64){
+		vty_out(vty,"%%error! prefix length [64~128]!\n");
+		return CMD_WARNING;	
+	}
+
+	if (HANSI_NODE == vty->node) {
+		profile = (unsigned int)(vty->index);
+		slot_id = vty->slotindex;
+	}
+
+#ifdef DISTRIBUT
+	DBusConnection *dcli_dbus_connection = NULL;
+	ReInitDbusConnection(&dcli_dbus_connection,slot_id,distributFag);
+#endif
+	dcli_vrrp_splice_objpath_string(VRRP_DBUS_OBJPATH, profile, vrrp_obj_path);
+	dcli_vrrp_splice_dbusname(VRRP_DBUS_BUSNAME, profile, vrrp_dbus_name);
+
+	query = dbus_message_new_method_call(vrrp_dbus_name,
+										 vrrp_obj_path,
+										 VRRP_DBUS_INTERFACE,
+										 VRRP_DBUS_METHOD_START_VRRP_DOWNLINK_LINK_LOCAL);
+	dbus_error_init(&err);
+
+	dbus_message_append_args(query,
+		                     DBUS_TYPE_UINT32, &profile,
+							 DBUS_TYPE_STRING, &downlink_ifname,
+							 DBUS_TYPE_UINT32, &prefix_length,
+							 DBUS_TYPE_UINT32, &link_local,
+							 DBUS_TYPE_BYTE, &(ipv6_addr.iabuf[0]),
+							 DBUS_TYPE_BYTE, &(ipv6_addr.iabuf[1]),
+							 DBUS_TYPE_BYTE, &(ipv6_addr.iabuf[2]),
+							 DBUS_TYPE_BYTE, &(ipv6_addr.iabuf[3]),
+							 DBUS_TYPE_BYTE, &(ipv6_addr.iabuf[4]),
+							 DBUS_TYPE_BYTE, &(ipv6_addr.iabuf[5]),
+							 DBUS_TYPE_BYTE, &(ipv6_addr.iabuf[6]),
+							 DBUS_TYPE_BYTE, &(ipv6_addr.iabuf[7]),
+							 DBUS_TYPE_BYTE, &(ipv6_addr.iabuf[8]),
+							 DBUS_TYPE_BYTE, &(ipv6_addr.iabuf[9]),
+							 DBUS_TYPE_BYTE, &(ipv6_addr.iabuf[10]),
+							 DBUS_TYPE_BYTE, &(ipv6_addr.iabuf[11]),
+							 DBUS_TYPE_BYTE, &(ipv6_addr.iabuf[12]),
+							 DBUS_TYPE_BYTE, &(ipv6_addr.iabuf[13]),
+							 DBUS_TYPE_BYTE, &(ipv6_addr.iabuf[14]),							
+							 DBUS_TYPE_BYTE, &(ipv6_addr.iabuf[15]),
+						 DBUS_TYPE_INVALID);
+/*
+vty_out(vty,
+		"send arguments profile = %d downlink ifname = %s \
+		ipv6 addr = "NIP6QUAD_FMT" \
+		prefix_length = %d  link_local = %d\n",
+		profile,
+		downlink_ifname,
+		NIP6QUAD(ipv6_addr.iabuf),
+		prefix_length,
+		link_local
+	);
+*/
+	reply = dbus_connection_send_with_reply_and_block(dcli_dbus_connection, query, -1, &err);
+	dbus_message_unref(query);
+	if (NULL == reply) {
+		vty_out(vty, "failed get reply.\n");
+		if (dbus_error_is_set(&err)) {
+			printf("%s raised: %s", err.name, err.message);
+			dbus_error_free_for_dcli(&err);
+		}
+		return CMD_SUCCESS;
+	}
+	else if (dbus_message_get_args(reply, &err,
+									DBUS_TYPE_UINT32, &op_ret,
+									DBUS_TYPE_INVALID)){	
+        if (DCLI_VRRP_RETURN_CODE_OK != op_ret) {
+            vty_out(vty, dcli_vrrp_err_msg[op_ret - DCLI_VRRP_RETURN_CODE_OK]);
+		}
+		else{
+			/*
+				sprintf(name,"config interface %s ipv6_address %s prelen %d link_local %d",argv[0],argv[1],argv[2],link_local);					
+				vtysh_client_execute(&vtysh_client[0], name, stdout);
+				*/
+			sprintf(cmd,"sudo /opt/bin/vtysh -c \"en\n configure terminal\n config interface %s ipv6_address %s prelen %d link_local %d\"",argv[0],argv[1],argv[2],link_local);
+			//vty_out(vty,"cmd : %s\n",cmd);
+			int status = system(cmd);
+			ret = WEXITSTATUS(status);
+			if (ret != 0)
+			{
+				vty_out(vty,"cmd : %s execute fail \n",cmd);
+			}	
+		}
+	} 
+	else {		
+		if (dbus_error_is_set(&err)) 
+		{
+			printf("%s raised: %s",err.name,err.message);
+			dbus_error_free_for_dcli(&err);
+		}
+	}
+	/*release malloc mem*/
+	free(downlink_ifname);
+	dbus_message_unref(reply);
+	return CMD_SUCCESS;
+}
+DEFUN(config_vrrp_uplink_link_local_cmd_func,
+	config_vrrp_uplink_link_local_cmd,
+	"config uplink link-local IFNAME A:B:C:D:E:F:G:H prelen <64-128>",
+	CONFIG_STR
+	"Config uplink ipv6\n"
+	"Config interface link local ipv6 address\n"
+	"L3 interface name\n"
+	"L3 interface virtual link local ipv6\n"
+	"ipv6 prefix length\n"
+	"ipv6 prefix length,valid range [64-128]\n"
+)
+{
+	DBusMessage *query = NULL, *reply = NULL;
+	DBusError err = {0};
+
+	unsigned int op_ret = 0;
+	unsigned int slot_id = HostSlotId;
+	unsigned int profile = 0;
+	unsigned int vrid = 0;
+	unsigned int priority = 0;
+	int add = 1;
+	int split = 0;
+	char *uplink_ifname = NULL;
+	unsigned int prefix_length = 0;
+	unsigned int link_local= 1;
+	char vrrp_obj_path[DCLI_VRRP_OBJPATH_LEN] = {0};
+	char vrrp_dbus_name[DCLI_VRRP_DBUSNAME_LEN] = {0};
+	char cmd[1024] = {0};
+    int ret;
+
+	struct iaddr ipv6_addr;
+	struct zebra_if *zif; 
+	char name[128];
+	memset(name, 0, 128);
+
+	if(argc > 3)
+	{
+		vty_out(vty,CMD_PARAMETER_ERROR);
+		return CMD_FAILURE;
+	}
+	uplink_ifname = (char *)malloc(MAX_IFNAME_LEN);	
+	if (NULL == uplink_ifname) {
+		return CMD_WARNING;
+	}
+	memset(uplink_ifname, 0, MAX_IFNAME_LEN);
+	memcpy(uplink_ifname, argv[0], strlen(argv[0]));
+
+	memset(&ipv6_addr, 0 ,sizeof(struct iaddr));
+	op_ret = str2_ipv6_addr((char*)argv[1], &ipv6_addr);
+	
+	if (!op_ret) {
+		free(uplink_ifname);
+		vty_out(vty, "%% invalid ipv6 address, please like A::B.C.D.E or A::B:C\n");
+		return CMD_WARNING;
+    }
+	if (0 == memcmp(argv[1], "::", 2)) {
+		vty_out(vty, "%% invalid ipv6 address, please like A::B.C.D.E or A::B:C, A should not be NULL\n");
+		return CMD_WARNING;
+	}
+
+	prefix_length = atoi((char *)argv[2]);
+	if(prefix_length < 64){
+		vty_out(vty,"%%error! prefix length [64~128]!\n");
+		return CMD_WARNING;	
+	}
+
+	if (HANSI_NODE == vty->node) {
+		profile = (unsigned int)(vty->index);
+		slot_id = vty->slotindex;
+	}
+
+#ifdef DISTRIBUT
+	DBusConnection *dcli_dbus_connection = NULL;
+	ReInitDbusConnection(&dcli_dbus_connection,slot_id,distributFag);
+#endif
+	dcli_vrrp_splice_objpath_string(VRRP_DBUS_OBJPATH, profile, vrrp_obj_path);
+	dcli_vrrp_splice_dbusname(VRRP_DBUS_BUSNAME, profile, vrrp_dbus_name);
+
+	query = dbus_message_new_method_call(vrrp_dbus_name,
+										 vrrp_obj_path,
+										 VRRP_DBUS_INTERFACE,
+										 VRRP_DBUS_METHOD_START_VRRP_UPLINK_LINK_LOCAL);
+	dbus_error_init(&err);
+
+	dbus_message_append_args(query,
+		                     DBUS_TYPE_UINT32, &profile,
+							 DBUS_TYPE_STRING, &uplink_ifname,
+							 DBUS_TYPE_UINT32, &prefix_length,
+							 DBUS_TYPE_UINT32, &link_local,
+							 DBUS_TYPE_BYTE, &(ipv6_addr.iabuf[0]),
+							 DBUS_TYPE_BYTE, &(ipv6_addr.iabuf[1]),
+							 DBUS_TYPE_BYTE, &(ipv6_addr.iabuf[2]),
+							 DBUS_TYPE_BYTE, &(ipv6_addr.iabuf[3]),
+							 DBUS_TYPE_BYTE, &(ipv6_addr.iabuf[4]),
+							 DBUS_TYPE_BYTE, &(ipv6_addr.iabuf[5]),
+							 DBUS_TYPE_BYTE, &(ipv6_addr.iabuf[6]),
+							 DBUS_TYPE_BYTE, &(ipv6_addr.iabuf[7]),
+							 DBUS_TYPE_BYTE, &(ipv6_addr.iabuf[8]),
+							 DBUS_TYPE_BYTE, &(ipv6_addr.iabuf[9]),
+							 DBUS_TYPE_BYTE, &(ipv6_addr.iabuf[10]),
+							 DBUS_TYPE_BYTE, &(ipv6_addr.iabuf[11]),
+							 DBUS_TYPE_BYTE, &(ipv6_addr.iabuf[12]),
+							 DBUS_TYPE_BYTE, &(ipv6_addr.iabuf[13]),
+							 DBUS_TYPE_BYTE, &(ipv6_addr.iabuf[14]),							
+							 DBUS_TYPE_BYTE, &(ipv6_addr.iabuf[15]),
+							 DBUS_TYPE_INVALID);
+/*
+	vty_out(vty,
+		"send arguments profile = %d uplink ifname = %s \
+		ipv6 addr = "NIP6QUAD_FMT" \
+		prefix_length = %d  link_local = %d\n",
+		profile,
+		uplink_ifname,
+		NIP6QUAD(ipv6_addr.iabuf),
+		prefix_length,
+		link_local
+	);
+*/
+	reply = dbus_connection_send_with_reply_and_block(dcli_dbus_connection, query, -1, &err);
+	dbus_message_unref(query);
+	if (NULL == reply) {
+		vty_out(vty, "failed get reply.\n");
+		if (dbus_error_is_set(&err)) {
+			printf("%s raised: %s", err.name, err.message);
+			dbus_error_free_for_dcli(&err);
+		}
+		return CMD_SUCCESS;
+	}
+	else if (dbus_message_get_args(reply, &err,
+									DBUS_TYPE_UINT32, &op_ret,
+									DBUS_TYPE_INVALID)){	
+        if (DCLI_VRRP_RETURN_CODE_OK != op_ret) {
+            vty_out(vty, dcli_vrrp_err_msg[op_ret - DCLI_VRRP_RETURN_CODE_OK]);
+		}
+		else{
+/*
+				sprintf(name,"config interface %s ipv6_address %s prelen %d link_local %d",argv[0],argv[1],argv[2],link_local);
+				vtysh_client_execute(&vtysh_client[0], name, stdout);
+				*/
+				sprintf(cmd,"sudo /opt/bin/vtysh -c \"en\n configure terminal\n config interface %s ipv6_address %s prelen %d link_local %d\"",argv[0],argv[1],argv[2],link_local);
+    			//vty_out(vty,"cmd : %s\n",cmd);
+    			int status = system(cmd);
+    			ret = WEXITSTATUS(status);
+    			if (ret != 0)
+    			{
+    				vty_out(vty,"cmd : %s execute fail \n",cmd);
+    			}
+		}
+	} 
+	else {		
+		if (dbus_error_is_set(&err)) 
+		{
+			printf("%s raised: %s",err.name,err.message);
+			dbus_error_free_for_dcli(&err);
+		}
+	}
+	/*release malloc mem*/
+	free(uplink_ifname);
+	dbus_message_unref(reply);
+	return CMD_SUCCESS;
+}
+
+DEFUN(config_vrrp_uplink_ipv6_cmd_func,
+	config_vrrp_uplink_ipv6_cmd,
+	"config uplink ipv6 IFNAME A:B:C:D:E:F:G:H prelen <64-128> priority <1-255> [link-local]",
+	CONFIG_STR
+	"Config uplink ipv6\n"
+	"Config interface ipv6 address\n"
+	"L3 interface name\n"
+	"L3 interface virtual ipv6\n"
+	"ipv6 prefix length\n"
+	"ipv6 prefix length,valid range [64-128]\n"
+	"Hansi priority\n"
+	"Hansi priority value, valid range [1-255]\n"
+	"virtual link local address\n"
+)
+{
+	DBusMessage *query = NULL, *reply = NULL;
+	DBusError err = {0};
+
+	unsigned int op_ret = 0;
+	unsigned int slot_id = HostSlotId;
+	unsigned int profile = 0;
+	unsigned int vrid = 0;
+	unsigned int priority = 0;
+	int add = 1;
+	int split = 0;
+	char *uplink_ifname = NULL;
+	unsigned int prefix_length = 0;
+	unsigned int link_local= 0;
+	char vrrp_obj_path[DCLI_VRRP_OBJPATH_LEN] = {0};
+	char vrrp_dbus_name[DCLI_VRRP_DBUSNAME_LEN] = {0};
+	char cmd[1024] = {0};
+    int ret;
+
+	struct iaddr ipv6_addr;
+	struct zebra_if *zif; 
+	char name[128];
+	memset(name, 0, 128);
+
+	if(argc > 5)
+	{
+		vty_out(vty,CMD_PARAMETER_ERROR);
+		return CMD_FAILURE;
+	}
+	uplink_ifname = (char *)malloc(MAX_IFNAME_LEN);	
+	if (NULL == uplink_ifname) {
+		return CMD_WARNING;
+	}
+	memset(uplink_ifname, 0, MAX_IFNAME_LEN);
+	memcpy(uplink_ifname, argv[0], strlen(argv[0]));
+
+	memset(&ipv6_addr, 0 ,sizeof(struct iaddr));
+	op_ret = str2_ipv6_addr((char*)argv[1], &ipv6_addr);
+	if (!op_ret) {
+		free(uplink_ifname);
+		vty_out(vty, "%% invalid ipv6 address, please like A::B.C.D.E or A::B:C\n");
+		return CMD_WARNING;
+    }
+	if (0 == memcmp(argv[1], "::", 2)) {
+		vty_out(vty, "%% invalid ipv6 address, please like A::B.C.D.E or A::B:C, A should not be NULL\n");
+		return CMD_WARNING;
+	}
+
+	prefix_length = atoi((char *)argv[2]);
+	if(prefix_length < 64){
+		vty_out(vty,"%%error! prefix length [64~128]!\n");
+		return CMD_WARNING;	
+	}
+
+	priority = strtoul((char *)argv[3],NULL,10);
+	if (priority < 1 ||
+		priority > 255) {
+		vty_out(vty, "%%error priority %s, valid range [1-255]!", argv[3]);
+		return CMD_WARNING;
+	}
+
+	if(argc == 5){
+    	if (!strcmp(argv[4],"link-local")){
+    		link_local = 1;
+    	}else{
+    		vty_out(vty,"parameter should be 'link-local'\n");
+    		return CMD_SUCCESS;
+    	}
+	}
+	if (HANSI_NODE == vty->node) {
+		profile = (unsigned int)(vty->index);
+		slot_id = vty->slotindex;
+	}
+
+#ifdef DISTRIBUT
+	DBusConnection *dcli_dbus_connection = NULL;
+	ReInitDbusConnection(&dcli_dbus_connection,slot_id,distributFag);
+#endif
+	dcli_vrrp_splice_objpath_string(VRRP_DBUS_OBJPATH, profile, vrrp_obj_path);
+	dcli_vrrp_splice_dbusname(VRRP_DBUS_BUSNAME, profile, vrrp_dbus_name);
+
+	query = dbus_message_new_method_call(vrrp_dbus_name,
+										 vrrp_obj_path,
+										 VRRP_DBUS_INTERFACE,
+										 VRRP_DBUS_METHOD_START_VRRP_UPLINK_IPV6);
+	dbus_error_init(&err);
+
+	dbus_message_append_args(query,
+		                     DBUS_TYPE_UINT32, &profile,
+							 DBUS_TYPE_UINT32, &priority,
+							 DBUS_TYPE_STRING, &uplink_ifname,
+							 DBUS_TYPE_UINT32, &prefix_length,
+							 DBUS_TYPE_UINT32, &link_local,
+							 DBUS_TYPE_BYTE, &(ipv6_addr.iabuf[0]),
+							 DBUS_TYPE_BYTE, &(ipv6_addr.iabuf[1]),
+							 DBUS_TYPE_BYTE, &(ipv6_addr.iabuf[2]),
+							 DBUS_TYPE_BYTE, &(ipv6_addr.iabuf[3]),
+							 DBUS_TYPE_BYTE, &(ipv6_addr.iabuf[4]),
+							 DBUS_TYPE_BYTE, &(ipv6_addr.iabuf[5]),
+							 DBUS_TYPE_BYTE, &(ipv6_addr.iabuf[6]),
+							 DBUS_TYPE_BYTE, &(ipv6_addr.iabuf[7]),
+							 DBUS_TYPE_BYTE, &(ipv6_addr.iabuf[8]),
+							 DBUS_TYPE_BYTE, &(ipv6_addr.iabuf[9]),
+							 DBUS_TYPE_BYTE, &(ipv6_addr.iabuf[10]),
+							 DBUS_TYPE_BYTE, &(ipv6_addr.iabuf[11]),
+							 DBUS_TYPE_BYTE, &(ipv6_addr.iabuf[12]),
+							 DBUS_TYPE_BYTE, &(ipv6_addr.iabuf[13]),
+							 DBUS_TYPE_BYTE, &(ipv6_addr.iabuf[14]),							
+							 DBUS_TYPE_BYTE, &(ipv6_addr.iabuf[15]),
+							 DBUS_TYPE_INVALID);
+/*
+	vty_out(vty,
+		"send arguments profile = %d priority = %d downlink ifname = %s \
+		ipv6 addr = "NIP6QUAD_FMT" \
+		prefix_length = %d  link_local = %d\n",
+		profile,
+		priority,
+		uplink_ifname,
+		NIP6QUAD(ipv6_addr.iabuf),
+		prefix_length,
+		link_local
+	);
+*/
+	reply = dbus_connection_send_with_reply_and_block(dcli_dbus_connection, query, -1, &err);
+	dbus_message_unref(query);
+	if (NULL == reply) {
+		vty_out(vty, "failed get reply.\n");
+		if (dbus_error_is_set(&err)) {
+			printf("%s raised: %s", err.name, err.message);
+			dbus_error_free_for_dcli(&err);
+		}
+		return CMD_SUCCESS;
+	}
+	else if (dbus_message_get_args(reply, &err,
+									DBUS_TYPE_UINT32, &op_ret,
+									DBUS_TYPE_INVALID)){	
+        if (DCLI_VRRP_RETURN_CODE_OK != op_ret) {
+            vty_out(vty, dcli_vrrp_err_msg[op_ret - DCLI_VRRP_RETURN_CODE_OK]);
+		}
+		else{
+			/*
+				sprintf(name,"config interface %s ipv6_address %s prelen %d link_local %d",argv[0],argv[1],argv[2],link_local);
+				vtysh_client_execute(&vtysh_client[0], name, stdout);
+			*/
+    			sprintf(cmd,"sudo /opt/bin/vtysh -c \"en\n configure terminal\n config interface %s ipv6_address %s prelen %d link_local %d\"",argv[0],argv[1],argv[2],link_local);
+    			//vty_out(vty,"cmd : %s\n",cmd);
+    			int status = system(cmd);
+    			ret = WEXITSTATUS(status);
+    			if (ret != 0)
+    			{
+    				vty_out(vty,"cmd : %s execute fail \n",cmd);
+    			}
+		}
+	} 
+	else {		
+		if (dbus_error_is_set(&err)) 
+		{
+			printf("%s raised: %s",err.name,err.message);
+			dbus_error_free_for_dcli(&err);
+		}
+	}
+	/*release malloc mem*/
+	free(uplink_ifname);
+	dbus_message_unref(reply);
+	return CMD_SUCCESS;
+}
+
+#endif
+
+/*only downlink ipv6*/
+DEFUN(config_vrrp_downlink_ipv6_cmd_func,
+	  config_vrrp_downlink_ipv6_cmd,
+      "config downlink ipv6 IFNAME A:B:C:D:E:F:G:H prelen <64-128> priority <1-255> [link-local]",
+	  CONFIG_STR
+	  "Config downlink ipv6\n"
+	  "Config interface downlink ipv6 address\n"
+	  "L3 interface name\n"
+	  "L3 interface virtual ipv6\n"
+	  "ipv6 prefix length\n"
+	  "ipv6 prefix length, valid range [64-128] \n"
+	  "Hansi priority\n"
+	  "Hansi priority value, valid range [1-255]\n"
+	  "virtual link local address\n"
+)
+{
+	DBusMessage *query = NULL, *reply = NULL;
+	DBusError err = {0};
+	unsigned int op_ret = 0;
+	unsigned int slot_id = HostSlotId;
+	unsigned int profile = 0,vrid = 0,priority = 0;
+	int add = 1;
+	int split = 0;
+	char* downlink_ifname = NULL;
+    unsigned  long downlink_ip = 0;
+	unsigned int prefix_length = 0;
+	unsigned int link_local = 0;
+	char vrrp_obj_path[DCLI_VRRP_OBJPATH_LEN] = {0};
+	char vrrp_dbus_name[DCLI_VRRP_DBUSNAME_LEN] = {0};	
+	char cmd[1024] = {0};
+    int ret;
+
+	struct iaddr ipv6_addr;
+	char name[128];
+	memset(name, 0, 128);
+
+	if(argc > 5)
+	{
+		vty_out(vty,CMD_PARAMETER_ERROR);
+		return CMD_FAILURE;
+	}
+
+
+	downlink_ifname = (char *)malloc(MAX_IFNAME_LEN);	
+	if(NULL == downlink_ifname){
+       return CMD_WARNING;
+	}
+	memset(downlink_ifname,0,MAX_IFNAME_LEN);
+	memcpy(downlink_ifname,argv[0],strlen(argv[0]));
+
+	memset(&ipv6_addr, 0 ,sizeof(struct iaddr));
+	op_ret = str2_ipv6_addr((char*)argv[1], &ipv6_addr);
+	if (!op_ret) {
+		free(downlink_ifname);
+		vty_out(vty, "%% invalid ipv6 address, please like A::B.C.D.E or A::B:C\n");
+		return CMD_WARNING;
+    }
+	if (0 == memcmp(argv[1], "::", 2)) {
+		vty_out(vty, "%% invalid ipv6 address, please like A::B.C.D.E or A::B:C, A should not be NULL\n");
+		return CMD_WARNING;
+	}
+
+	prefix_length = atoi((char *)argv[2]);
+	if(prefix_length < 64){
+		vty_out(vty,"%%error! prefix length [64~128]!\n");
+		return CMD_WARNING;	
+	}
+	priority = strtoul((char *)argv[3],NULL,10);
+	if (priority < 1 ||
+		priority > 255) {
+		vty_out(vty, "%%error priority %s, valid range [1-255]!", argv[3]);
+		return CMD_WARNING;
+	}
+	if(argc == 5){
+    	if (!strcmp(argv[4],"link-local")){
+    		link_local = 1;
+    	}else{
+    		vty_out(vty,"parameter should be 'link-local'\n");
+    		return CMD_SUCCESS;
+    	}
+	}
+	if(HANSI_NODE==vty->node){
+		profile = (unsigned int)(vty->index);
+		slot_id = vty->slotindex;
+	}
+
+#ifdef DISTRIBUT
+	DBusConnection *dcli_dbus_connection = NULL;
+	ReInitDbusConnection(&dcli_dbus_connection,slot_id,distributFag);
+#endif
+	dcli_vrrp_splice_objpath_string(VRRP_DBUS_OBJPATH, profile, vrrp_obj_path);
+	dcli_vrrp_splice_dbusname(VRRP_DBUS_BUSNAME, profile, vrrp_dbus_name);
+
+	query = dbus_message_new_method_call(vrrp_dbus_name,
+										 vrrp_obj_path,
+										 VRRP_DBUS_INTERFACE,
+										 VRRP_DBUS_METHOD_START_VRRP_DOWNLINK_IPV6);
+	dbus_error_init(&err);
+
+	dbus_message_append_args(query,
+		                     DBUS_TYPE_UINT32,&profile,
+							 DBUS_TYPE_UINT32,&priority,
+							 DBUS_TYPE_STRING,&downlink_ifname,
+							 DBUS_TYPE_UINT32, &prefix_length,
+            				 DBUS_TYPE_UINT32, &link_local,
+							 DBUS_TYPE_BYTE, &(ipv6_addr.iabuf[0]),
+							 DBUS_TYPE_BYTE, &(ipv6_addr.iabuf[1]),
+							 DBUS_TYPE_BYTE, &(ipv6_addr.iabuf[2]),
+							 DBUS_TYPE_BYTE, &(ipv6_addr.iabuf[3]),
+							 DBUS_TYPE_BYTE, &(ipv6_addr.iabuf[4]),
+							 DBUS_TYPE_BYTE, &(ipv6_addr.iabuf[5]),
+							 DBUS_TYPE_BYTE, &(ipv6_addr.iabuf[6]),
+							 DBUS_TYPE_BYTE, &(ipv6_addr.iabuf[7]),
+							 DBUS_TYPE_BYTE, &(ipv6_addr.iabuf[8]),
+							 DBUS_TYPE_BYTE, &(ipv6_addr.iabuf[9]),
+							 DBUS_TYPE_BYTE, &(ipv6_addr.iabuf[10]),
+							 DBUS_TYPE_BYTE, &(ipv6_addr.iabuf[11]),
+							 DBUS_TYPE_BYTE, &(ipv6_addr.iabuf[12]),
+							 DBUS_TYPE_BYTE, &(ipv6_addr.iabuf[13]),
+							 DBUS_TYPE_BYTE, &(ipv6_addr.iabuf[14]),							
+							 DBUS_TYPE_BYTE, &(ipv6_addr.iabuf[15]),
+							 DBUS_TYPE_INVALID);
+/*
+	vty_out(vty,
+		"send arguments profile = %d priority = %d downlink ifname = %s  \
+		ipv6 addr = "NIP6QUAD_FMT" \
+		prefix_length = %d  link_local = %d\n",
+		profile,
+		priority,
+		downlink_ifname,
+		NIP6QUAD(ipv6_addr.iabuf),
+		prefix_length,
+		link_local
+	);
+*/	
+	reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection,query,-1, &err);
+	dbus_message_unref(query);
+	if (NULL == reply) {
+		vty_out(vty,"failed get reply.\n");
+		if (dbus_error_is_set(&err)) {
+			printf("%s raised: %s",err.name,err.message);
+			dbus_error_free_for_dcli(&err);
+		}
+		return CMD_SUCCESS;
+	}
+	else if (dbus_message_get_args ( reply, &err,
+		DBUS_TYPE_UINT32,&op_ret,
+		DBUS_TYPE_INVALID)){	
+        if( DCLI_VRRP_RETURN_CODE_OK != op_ret){
+            vty_out(vty,dcli_vrrp_err_msg[op_ret - DCLI_VRRP_RETURN_CODE_OK]);
+		}
+		else {
+/*				sprintf(name,"config interface %s ipv6_address %s prelen %d link_local %d",argv[0],argv[1],argv[2],link_local);
+				vtysh_client_execute(&vtysh_client[0], name, stdout);
+				*/
+				sprintf(cmd,"sudo /opt/bin/vtysh -c \"en\n configure terminal\n config interface %s ipv6_address %s prelen %d link_local %d\"",argv[0],argv[1],argv[2],link_local);
+    			//vty_out(vty,"cmd : %s\n",cmd);
+    			int status = system(cmd);
+    			ret = WEXITSTATUS(status);
+    			if (ret != 0)
+    			{
+    				vty_out(vty,"cmd : %s execute fail \n",cmd);
+    			}
+		}
+	} 
+	else 
+	{		
+		if (dbus_error_is_set(&err)) 
+		{
+			printf("%s raised: %s",err.name,err.message);
+			dbus_error_free_for_dcli(&err);
+		}
+	}
+	/*release malloc mem*/
+	free(downlink_ifname);
+	dbus_message_unref(reply);
+	return CMD_SUCCESS;
+}
+
+#if 1
 /* add by jinpengcheng,
  * for support mode "uplink + heartbeatlink"
  */
@@ -8709,7 +9621,7 @@ int dcli_vrrp_show_hansi_running_cfg
 	 */
 	cursor = showRunningCfg_str;
 	totalLen = 0;
-	totalLen += sprintf(cursor, "==================================================\n");
+	totalLen += sprintf(cursor, "=============================================================================\n");
 	cursor = showRunningCfg_str + totalLen;
 	/* [4] fill vrrp running config string in showRunningCfg_str */
 	memset(vrrp_obj_path, 0, DCLI_VRRP_OBJPATH_LEN);
@@ -8756,7 +9668,7 @@ int dcli_vrrp_show_hansi_running_cfg
 		totalLen += sprintf(cursor, "%s", showStr);
 		cursor = showRunningCfg_str + totalLen;
 		/* add string "exit" */
-		totalLen += sprintf(cursor, "==================================================\n");
+		totalLen += sprintf(cursor, "=============================================================================\n");
 		cursor = showRunningCfg_str + totalLen;
 		vty_out(vty, "%s", showRunningCfg_str);
 	}
@@ -8821,7 +9733,7 @@ int dcli_vrrp_show_hansi_running_cfg
 	 */
 	cursor = showRunningCfg_str;
 	totalLen = 0;
-	totalLen += sprintf(cursor, "==================================================\n");
+	totalLen += sprintf(cursor, "===============================================================================\n");
 	cursor = showRunningCfg_str + totalLen;
 
 	totalLen += sprintf(cursor, "config hansi-profile %d\n", profile);
@@ -8866,7 +9778,7 @@ int dcli_vrrp_show_hansi_running_cfg
 		totalLen += sprintf(cursor, "%s", showStr);
 		cursor = showRunningCfg_str + totalLen;
 		/* add string "exit" */
-		totalLen += sprintf(cursor, "==================================================\n");
+		totalLen += sprintf(cursor, "===============================================================================\n");
 		cursor = showRunningCfg_str + totalLen;
 		vty_out(vty, "%s", showRunningCfg_str);
 	}
@@ -9199,6 +10111,12 @@ void dcli_vrrp_element_init(void)
 	install_element(HANSI_NODE,&show_hansi_backup_switch_times_cmd);
 	install_element(CONFIG_NODE,&show_vrrp_golbal_swtich_hansi_list_cmd);
 	install_element(CONFIG_NODE,&set_global_bridge_mcast_cmd);
+	install_element(HANSI_NODE,&config_vrrp_downlink_ipv6_cmd);
+	install_element(HANSI_NODE,&config_vrrp_uplink_ipv6_cmd);
+	install_element(HANSI_NODE,&config_vrrp_downlink_link_local_cmd);
+	install_element(HANSI_NODE,&config_vrrp_uplink_link_local_cmd);
+	install_element(HANSI_NODE,&config_vrrp_with_ipv6_cmd);
+
 }
 #ifdef __cplusplus
 }

@@ -1008,6 +1008,7 @@ main (int argc, char **argv)
 
   /*gujd: 2013-05-29, pm 2:12. Add for interface flow statistics.*/
   interface_flow_statistics_init();
+  rtmd_netlink_init();
 
   /* Print banner. */
   zlog_notice ("Rtmd starting: \n");

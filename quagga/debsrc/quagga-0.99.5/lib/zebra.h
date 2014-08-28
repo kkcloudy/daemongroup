@@ -457,6 +457,7 @@ struct in_pktinfo
 #define ZEBRA_INTERFACE_ND_PREFIX_DELETE        46
 #define ZEBRA_INTERFACE_ND_PREFIX_POOL_ADD           49
 #define ZEBRA_INTERFACE_ND_PREFIX_POOL_DELETE        50   
+#define ZEBRA_INTERFACE_LOCAL_LINK_ADD        51   
 
 
 

@@ -48,6 +48,15 @@
 #endif
 
 #ifdef RTADV
+
+/*niehy add max count of uplink|downlink interface */
+#define VRRP_LINK_MAX_CNT		(8)
+typedef struct {
+	struct in6_addr sin6_addr;
+	uint32_t    mask;
+	int		deletable;	/* TRUE if one of my primary addr */
+} vipv6_addr;
+
 /* Router advertisement parameter.  From RFC2461 and RFC3775. */
 struct rtadvconf
 {
@@ -55,6 +64,8 @@ struct rtadvconf
      Advertisements and responds to Router Solicitations.
      Default: FALSE */
      struct in6_addr dst;
+   int adv_if_count;
+   int ra_flag;
   int AdvSendAdvertisements;
 
   /* The maximum time allowed between sending unsolicited multicast
@@ -179,6 +190,13 @@ struct rtadvconf
 
      Default: FALSE */
   int AdvIntervalOption;
+/*vipv6_addr *vaddr*/        /* point on the ip address array */
+    vipv6_addr uplink_ipv6_vaddr[VRRP_LINK_MAX_CNT];
+								/* point on the uplink ip address array */
+	vipv6_addr downlink_ipv6_vaddr[VRRP_LINK_MAX_CNT];
+								/* point on the downlink ip address array */
+	vipv6_addr vgateway_ipv6_vaddr[VRRP_LINK_MAX_CNT];
+
 };
 
 #endif /* RTADV */

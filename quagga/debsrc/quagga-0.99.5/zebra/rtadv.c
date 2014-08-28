@@ -40,6 +40,52 @@
 #include "zebra/tipc_client.h"
 #include "zebra/tipc_server.h"
 
+
+#define NETLINK_RTMD 26
+#define MAX_PAYLOAD 1024
+
+typedef struct vrrp_state_info_s{
+	char interface_name[32];
+          int state;
+}vrrp_state_info_t;
+
+typedef struct netlink_msg_s{	
+	int msgType;
+	vrrp_state_info_t vrrpInfo;
+
+}netlink_msg_t;
+
+enum netlink_msg_type
+{
+	BOARD_STATE_NOTIFIER_EVENT,
+	SYSTEM_STATE_NOTIFIER_EVENT,
+	ASIC_ETHPORT_UPDATE_EVENT,
+	OCTEON_ETHPORT_LINK_EVENT,
+	ASIC_VLAN_SYNC_ENVET,
+	ACTIVE_STDBY_SWITCH_OCCUR_EVENT,
+	ACTIVE_STDBY_SWITCH_COMPLETE_EVENT,
+	POWER_STATE_NOTIFIER_EVENT,
+	FAN_STATE_NOTIFIER_EVENT,
+	ASIC_VLAN_NOTIFIER_ENVET,
+	BASE_MAC_ADDRESS_CHANGE_EVENT,
+	RPA_BROADCAST_MASK_ACTION_EVENT,
+	RPA_DEBUG_CMD_EVENT,
+	ASIC_DYNAMIC_TRUNK_NOTIFIER_EVENT,
+	NL_MSG_TYPE_MAX,
+	VRRP_STATE_NOTIFIER_EVENT
+
+};
+
+
+typedef struct nl_msg_head{
+	int type;
+	int object;
+          int count;
+	int pid;
+}nl_msg_head_t;
+
+
+
 extern struct zebra_privs_t zserv_privs;
 /*#define HAVE_RTADR_DEBUG 0*/
 
@@ -59,6 +105,13 @@ extern struct zebra_privs_t zserv_privs;
 
 #define ALLNODE   "ff02::1"
 #define ALLROUTER "ff02::2"
+
+int sock_vrrp_fd = 0;
+struct msghdr vrrp_msg;
+struct nlmsghdr *vrrp_head = NULL;
+struct sockaddr_nl vrrp_src_addr, vrrp_dest_addr;
+struct iovec vrrp_iov;
+
 
 extern struct zebra_t zebrad;
 
@@ -207,6 +260,7 @@ tipc_vice_interface_nd_suppress_ra_deal(int command, tipc_server *vice_board, ze
 	{
 		zlog_debug("%s : to enable interface(%s) nd suppress router advitisement.\n",
 					__func__,ifp->name);
+		zif->rtadv.ra_flag = 0;
 		if (zif->rtadv.AdvSendAdvertisements)
   #if 0
 		{
@@ -228,12 +282,12 @@ tipc_vice_interface_nd_suppress_ra_deal(int command, tipc_server *vice_board, ze
 	      zif->rtadv.AdvSendAdvertisements = 0;
 	      zif->rtadv.AdvIntervalTimer = 0;
 	    /*  rtadv->adv_if_count--;*/
-	      rtadv->adv_if_count = 0;
+	      zif->rtadv.adv_if_count = 0;
 
 	 	/*  if_leave_all_router (rtadv->sock, ifp);*/
 		  if(RTM_DEBUG_RTADV)
-		    zlog_info("%s:line %d, adv_if_count is %d .\n",__func__,__LINE__,rtadv->adv_if_count);
-	      if (rtadv->adv_if_count == 0)
+		    zlog_info("%s:line %d, adv_if_count is %d .\n",__func__,__LINE__,zif->rtadv.adv_if_count);
+	      if (zif->rtadv.adv_if_count == 0)
 	      {
 	     	/* zif->rtadv.AdvDefaultLifetime = 0;*/
 			if(RTM_DEBUG_RTADV)
@@ -250,15 +304,16 @@ tipc_vice_interface_nd_suppress_ra_deal(int command, tipc_server *vice_board, ze
 	{
 		zlog_debug("%s : to disable interface(%s) nd suppress router advitisement.\n",
 						__func__,ifp->name);
-		if (! zif->rtadv.AdvSendAdvertisements)
+		zif->rtadv.ra_flag = 1;
+	   if (! zif->rtadv.AdvSendAdvertisements)
 	    {
 	      zif->rtadv.AdvSendAdvertisements = 1;
 	      zif->rtadv.AdvIntervalTimer = 0;
-	      rtadv->adv_if_count++;////////////////////////xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+	     zif->rtadv.adv_if_count = 1;////////////////////////xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 	      if_join_all_router (rtadv->sock, ifp);
 
-	      if (rtadv->adv_if_count == 1)
+	      if (zif->rtadv.adv_if_count == 1)
 	      {
 			zlog_debug("to goto rtadv_event(RTADV_START).\n");
 			/*rtadv_event (RTADV_START, rtadv->sock);*/			
@@ -574,11 +629,11 @@ tipc_vice_interface_nd_prefix_info_read(int command, struct stream *s,struct rta
 	 
 	 if(command == ZEBRA_INTERFACE_ND_PREFIX_ADD)
 	{
-		rp->AdvOnLinkFlag = stream_getl(s);
-		rp->AdvAutonomousFlag = stream_getl(s);
-		rp->AdvRouterAddressFlag = stream_getl(s);
-		rp->AdvValidLifetime = stream_getl(s);
-		rp->AdvPreferredLifetime = stream_getl(s);
+		rp->AdvOnLinkFlag = stream_putl(s);
+		rp->AdvAutonomousFlag = stream_putl(s);
+		rp->AdvRouterAddressFlag = stream_putl(s);
+		rp->AdvValidLifetime = stream_putl(s);
+		rp->AdvPreferredLifetime = stream_putl(s);
 
 		if(RTM_DEBUG_RTADV)
 	   	  zlog_debug("%s : interface(%s),\
@@ -706,6 +761,66 @@ tipc_vice_interface_nd_prefix_pool_info_read(int command, struct stream *s,struc
 	}
 		
 	 
+	 return ifp;
+	
+}
+
+
+struct interface *
+tipc_vice_interface_local_link_info_read(int command, struct stream *s,char *ifname,struct prefix_ipv6 *addr ,int *type,int *prefix_length)
+{
+
+	if(!s)
+	{
+	  zlog_info("%s: line %d. The stream is NULL.\n",__func__,__LINE__);
+	  return NULL;
+	}
+	
+	char ifname_tmp[INTERFACE_NAMSIZ] = {0};
+	struct interface *ifp;
+	struct zebra_if *zif;
+	int str_length = 0;
+	char  ipv6_addr[IPV6_MAX_BITLEN]={0};
+	int ret = 0,type1;
+	
+	stream_get (ifname_tmp, s, INTERFACE_NAMSIZ);
+	
+	if(RTM_DEBUG_RTADV)
+	 zlog_debug("%s : interface (%s) command (%s).\n", __func__,
+				ifname_tmp,zserv_command_string(command));
+	
+	 ifp = if_lookup_by_name_len (ifname_tmp,
+				   strnlen(ifname_tmp, INTERFACE_NAMSIZ));
+	 zif  = ifp->info;
+ 
+	 if(ifp == NULL) 
+	 {
+		if(RTM_DEBUG_RTADV)
+		  zlog_debug("%s : line %d, interface do not exist or the interface not match!\n",__func__,__LINE__);
+		return NULL;
+	 }
+
+	
+		 str_length = stream_getl(s);
+		 stream_get(ifname, s, str_length);
+		 ifname[str_length]='\0';
+		 str_length = stream_getl(s);
+		 stream_get(ipv6_addr, s, str_length);
+		 ipv6_addr[str_length]='\0';
+		 *type = stream_getl(s);
+		 *prefix_length =  stream_getl(s);
+		 zlog_info("prefix_length = %d\n",*prefix_length);
+		zlog_info("type1 = %d\n",*type);
+		zlog_info("ifname %s \n",ifname);
+		zlog_info("ipv6_addr %s\n",ipv6_addr);
+		
+		 ret = str2prefix_ipv6 (ipv6_addr, (struct prefix_ipv6 *)addr);
+		 if (!ret)
+		 {
+			 zlog_warn ("Malformed IPv6 addr[%s]",ipv6_addr);
+			 return NULL;
+		   }
+		 
 	 return ifp;
 	
 }
@@ -845,6 +960,57 @@ tipc_vice_interface_nd_prefix_pool_update(int command, tipc_server* vice_board, 
 
 
 int
+tipc_vice_interface_local_link_update(int command, tipc_server* vice_board, int length)
+{
+	if(!vice_board)
+		return -1;
+	
+	struct interface *ifp;	
+	struct zebra_if *zif;
+	char ifname[MAX_IFNAME_LEN]={0};
+	struct prefix_ipv6  addr;
+	int type = 0;
+	int prefix_length;
+	
+	zlog_info("func %s, line %d	  ZEBRA_INTERFACE_LOCAL_LINK_ADD",__func__,__LINE__ );
+	ifp = tipc_vice_interface_local_link_info_read(command,vice_board->ibuf,ifname,&addr,&type,&prefix_length);
+	zlog_info("ifname = %s,type = %d\n",ifname,type);
+	
+	if(!ifp)
+	  return -1;
+	
+	zif = ifp->info;
+	
+	if(command == ZEBRA_INTERFACE_LOCAL_LINK_ADD)
+	{
+		if(type == 1){
+			memcpy(zif->rtadv.uplink_ipv6_vaddr[0].sin6_addr.s6_addr,addr.prefix.s6_addr,sizeof(char)*16);
+			zif->rtadv.uplink_ipv6_vaddr[0].mask = prefix_length;
+			zif->rtadv.uplink_ipv6_vaddr[0].deletable =0;
+			//zlog_info(" set virtual link local prefix_length = %d\n ",prefix_length);
+			//zlog_info(" set virtual link local address = "NIP6QUAD_FMT"\n",NIP6QUAD(zif->rtadv.uplink_ipv6_vaddr[0].sin6_addr.s6_addr));
+		}
+		else{
+			memcpy(zif->rtadv.uplink_ipv6_vaddr[1].sin6_addr.s6_addr,addr.prefix.s6_addr,sizeof(char)*16);
+			zif->rtadv.uplink_ipv6_vaddr[1].mask = prefix_length;
+			zif->rtadv.uplink_ipv6_vaddr[1].deletable =0;
+			//zlog_info(" set virtual link local prefix_length = %d\n ",prefix_length);
+			//zlog_info("set virtual ipv6 address = "NIP6QUAD_FMT"\n",NIP6QUAD(zif->rtadv.uplink_ipv6_vaddr[1].sin6_addr.s6_addr));
+		}
+	}
+	else
+	{
+		zlog_warn("Unknow command [%d].\n",command);
+		return -1;
+	 }
+	
+	return 0;
+ 
+}
+
+
+
+int
 tipc_master_packet_rtadv_nd_info(tipc_client *client, struct interface *ifp)
 {
   struct stream *s;
@@ -970,13 +1136,132 @@ int tipc_master_interface_nd_suppress_ra_deal(int command, struct interface *ifp
 	}
  	  
       /*send message to all of connected vice board*/
+	  char *endptr,*ptr;
+	  ptr = ifp->name;
+	  if(strncmp(ptr,"eth",3) == 0)
+	 {
+		ptr = ptr + 3;
+	  }
+	  else if (strncmp(ptr,"ve",2) == 0)
+	  {
+		ptr = ptr  + 2;
+	  }  
+	  else if (strncmp(ptr,"ebr",3) == 0)
+	  {
+		ptr = ptr  + 3;
+	  }
+	    else if (strncmp(ptr,"wlan",4) == 0)
+	  {
+		ptr = ptr + 4;
+	  }
+	  int slotID = strtoul(ptr,&endptr,10);
+	  zlog_info("the interface name %s, slotid = %d\n", ifp->name,slotID);
 	for (ALL_LIST_ELEMENTS (zebrad.vice_board_list, node, nnode, master_board)) 
    	{ 
-		zlog_debug("master send interface(%s) msg to vice board .", ifp->name); 	   
-		tipc_master_interface_nd_suppress_ra_packet_info (command, master_board, ifp);
+   		zlog_info(" master_board->board_id =  %d\n",master_board->board_id);
+   		if(slotID == master_board->board_id)
+   		{
+			zlog_debug("master send interface(%s) msg to vice board .", ifp->name); 	   
+			tipc_master_interface_nd_suppress_ra_packet_info (command, master_board, ifp);
+   		}
 	  }
  	 
 }
+
+int
+tipc_master_interface_local_link_packet_info(int cmd, tipc_client *client, struct interface *ifp,int type,const char *ifname,
+                               		 const char *ipv6_addr,int prefix_length)
+{
+  struct stream *s;
+  int length = 0;
+  
+#if 0
+  if((judge_ve_interface(ifp->name)== VE_INTERFACE)
+  	||(judge_obc_interface(ifp->name)== OBC_INTERFACE)
+  	||(judge_radio_interface(ifp->name)== DISABLE_RADIO_INTERFACE))
+  	return 0;
+#endif
+  /* Check this client need interface information. */
+  if (! client->ifinfo)
+    return 0;
+  zlog_info("%s , %d ############start####33\n",__func__,__LINE__);
+  
+
+  s = client->obuf;
+  stream_reset (s);
+
+  tipc_packet_create_header(s, cmd);
+
+  /* Interface information. */
+  stream_put (s, ifp->name, INTERFACE_NAMSIZ);
+    length = strlen(ifname) ;
+  stream_putl(s,length);/*packet prefix string length*/
+  stream_put(s,ifname,length);/*packet prefix string*/
+   length = strlen(ipv6_addr) ;
+  stream_putl(s,length);/*packet prefix string length*/
+  stream_put(s,ipv6_addr,length);/*packet prefix string*/
+  stream_putl(s, type);
+   stream_putl(s, prefix_length);
+  
+  stream_putw_at (s, 0, stream_get_endp (s));
+
+  return master_send_message_to_vice(client);
+  
+}
+
+
+int tipc_master_interface_local_link(int cmd,struct interface *ifp,int type, const char *ifname,
+                               		 const char *ipv6_addr,int prefix_length)
+{
+	if(product->board_type != BOARD_IS_ACTIVE_MASTER)
+	 return -1;
+	
+	struct listnode *node, *nnode;
+  	tipc_client *master_board;
+		
+    if(zebrad.vice_board_list == NULL)
+	{
+  	   zlog_debug("%s, line = %d, zebrad.vice_board_list is null...", __func__, __LINE__);
+       return;
+	}
+	zlog_info("%s , %d ############start####33\n",__func__,__LINE__);
+ 	  
+      /*send message to all of connected vice board*/
+	  char *endptr,*ptr;
+	  ptr = ifp->name;
+	  if(strncmp(ptr,"eth",3) == 0)
+	 {
+		ptr = ptr + 3;
+	  }
+	  else if (strncmp(ptr,"ve",2) == 0)
+	  {
+		ptr = ptr  + 2;
+	  }  
+	  else if (strncmp(ptr,"ebr",3) == 0)
+	  {
+		ptr = ptr  + 3;
+	  }
+	    else if (strncmp(ptr,"wlan",4) == 0)
+	  {
+		ptr = ptr + 4;
+	  }
+	  int slotID = strtoul(ptr,&endptr,10);
+	  
+	  zlog_info(" %s , %d\n",__func__,__LINE__);
+	  zlog_info("the interface name %s, slotid = %d\n", ifp->name,slotID);
+	for (ALL_LIST_ELEMENTS (zebrad.vice_board_list, node, nnode, master_board)) 
+   	{ 
+   		zlog_info(" master_board->board_id =  %d\n",master_board->board_id);
+   		if(slotID == master_board->board_id)
+   		{
+			zlog_debug("master send interface(%s) msg to vice board .", ifp->name); 	   
+			tipc_master_interface_local_link_packet_info (cmd, master_board, ifp,type,ifname,ipv6_addr,prefix_length);
+   		}
+	  }
+	zlog_info(" %s , %d ############end####\n",__func__,__LINE__);
+
+}
+
 
 
 int
@@ -1280,6 +1565,11 @@ void rtadv_prefix_pool_hash_add(struct interface *ifp ,struct ipv6_pool*sta)
 	 zif->rtadv_prefix_pool[RTADV_GLOBAL_HASH(sta->link_addr.s6_addr)] = sta;
  }
 
+static inline int ipv6_addr_eq_null(const struct in6_addr *a1)
+{
+	return ((a1->s6_addr32[0]==0) && (a1->s6_addr32[1]==0)&&
+		(a1->s6_addr32[2]==0) && (a1->s6_addr32[3]==0));
+}
 
 /* Send router advertisement packet. */
 static void
@@ -1485,9 +1775,9 @@ rtadv_send_packet (int sock, struct interface *ifp)
 						unsigned short prefix_nd = ( (prefix_step->prefix.u.prefix6.s6_addr[num-1] << 8) | prefix_step->prefix.u.prefix6.s6_addr[num]) + 1;
 						prefix_step->prefix.u.prefix6.s6_addr[num-1] = (unsigned char)(prefix_nd >> 8); 
 						prefix_step->prefix.u.prefix6.s6_addr[num] = (unsigned char)(prefix_nd) ;
-						 zlog_info(" chenjun  rprefix->prefix.u.prefix6.s6_addr[num-1] %x\n",prefix_step->prefix.u.prefix6.s6_addr[num-1]);
-						zlog_info(" chenjun  rprefix->prefix.u.prefix6.s6_addr[num] %x\n",prefix_step->prefix.u.prefix6.s6_addr[num]);
-						zlog_info(" chenjun   prefix_step ipv6 "NIP6QUAD_FMT"\n",NIP6QUAD(prefix_step->prefix.u.prefix6.s6_addr));
+						 zlog_info(" rprefix->prefix.u.prefix6.s6_addr[num-1] %x\n",prefix_step->prefix.u.prefix6.s6_addr[num-1]);
+						zlog_info(" rprefix->prefix.u.prefix6.s6_addr[num] %x\n",prefix_step->prefix.u.prefix6.s6_addr[num]);
+						zlog_info(" prefix_step ipv6 "NIP6QUAD_FMT"\n",NIP6QUAD(prefix_step->prefix.u.prefix6.s6_addr));
 						flag = 0;
 					}
 					else
@@ -1599,7 +1889,19 @@ rtadv_send_packet (int sock, struct interface *ifp)
   cmsgptr->cmsg_type = IPV6_PKTINFO;
 
   pkt = (struct in6_pktinfo *) CMSG_DATA (cmsgptr);
-  memset (&pkt->ipi6_addr, 0, sizeof (struct in6_addr));
+
+  if(RTM_DEBUG_RTADV)
+	  	zlog_info(" virtual link local address = "NIP6QUAD_FMT"\n",NIP6QUAD(zif->rtadv.uplink_ipv6_vaddr[0].sin6_addr.s6_addr));
+
+  if(!ipv6_addr_eq_null(zif->rtadv.uplink_ipv6_vaddr[0].sin6_addr.s6_addr))  /*store virtual ipv6 address*/
+  {
+      memcpy (&pkt->ipi6_addr, zif->rtadv.uplink_ipv6_vaddr[0].sin6_addr.s6_addr, sizeof (struct in6_addr));
+	  if(RTM_DEBUG_RTADV)
+	      zlog_info("set virtual link local address sucess\n");
+  }
+  else{
+	  memset (&pkt->ipi6_addr, 0, sizeof (struct in6_addr));
+  }
   pkt->ipi6_ifindex = ifp->ifindex;
 
   ret = sendmsg (sock, &msg, 0);
@@ -1608,6 +1910,24 @@ rtadv_send_packet (int sock, struct interface *ifp)
       zlog_err ("rtadv_send_packet: sendmsg %d (%s)\n",
 		errno, safe_strerror(errno));
     }
+  {
+		char fv6[128];
+		char tv6[128];
+		if(RTM_DEBUG_RTADV)
+	  	    zlog_info("RTADV: rtadv_send_packet from [%s] to [%s], len=%d\n", 
+    			inet_ntop(AF_INET6, &pkt->ipi6_addr, fv6, 120), 
+    			inet_ntop(AF_INET6, &addr.sin6_addr, tv6, 120), 
+    			len);
+
+		unsigned int *tmp = (unsigned int *)&buf;
+		int i,j;
+		for(i = 0; i <= len>>4; i++)
+		{
+			for(j = 0; j <= 3;j++)
+				zlog_err("%08x  ",*(tmp+i*4+j));
+				zlog_err("\n\r");
+		}		
+	}
 }
 
 static int
@@ -1636,15 +1956,28 @@ rtadv_timer (struct thread *thread)
 	continue;
 
       zif = ifp->info;
+#if 0
+	 zlog_err ("*****CHECK_IF(%s): AdvSendAdvertisements = %d AdvIntervalTimer = %d period=%d"
+		"MaxRtrAdvInterval= %d if_is_operative (ifp) = %d*****\n"
+  	    ,ifp->name
+  	    ,zif->rtadv.AdvSendAdvertisements
+  	    ,zif->rtadv.AdvIntervalTimer
+  	    ,period
+  	    ,zif->rtadv.MaxRtrAdvInterval
+  	    ,if_is_operative (ifp));
 
-      if (zif->rtadv.AdvSendAdvertisements)
+	   zlog_err ("*****zif->rtadv.ra_flag = %d *****\n",zif->rtadv.ra_flag);
+#endif
+      if (zif->rtadv.AdvSendAdvertisements && zif->rtadv.ra_flag)
 	{ 
 	  zif->rtadv.AdvIntervalTimer -= period;
 	  if (zif->rtadv.AdvIntervalTimer <= 0)
 	    {
 	      zif->rtadv.AdvIntervalTimer = zif->rtadv.MaxRtrAdvInterval;
-				if (if_is_operative (ifp))
+				if (if_is_operative (ifp) && zif->rtadv.adv_if_count ){
+					zlog_err("Router advertisement send to %s", ifp->name);
 					rtadv_send_packet (rtadv->sock, ifp);
+				}
 	    }
 	}
     }
@@ -1676,6 +2009,7 @@ rtadv_stop_pre_send_one_packet (struct interface *ifp)
       zif = ifp->info;
 	  zlog_info("%s: AdvSendAdvertisements is %d .\n",__func__,zif->rtadv.AdvSendAdvertisements);
    /* if (zif->rtadv.AdvSendAdvertisements)*/
+    if(zif->rtadv.ra_flag == 1)
 	{ 
 	  zif->rtadv.AdvIntervalTimer -= period;
 	  if (zif->rtadv.AdvIntervalTimer <= 0)
@@ -1722,7 +2056,7 @@ rtadv_process_solicit (struct interface *ifp)
 	value = labs(value);
 	if(RTM_DEBUG_RTADV)
 	  zlog_info("%s :  labs(value) = %ld .\n",__func__,value);
-	if(value >= ND_ADVER_SEND_PACKET_INTERVAL)
+	if((value >= ND_ADVER_SEND_PACKET_INTERVAL) &&(zif->rtadv.ra_flag == 1))
 	{
 	   if (if_is_operative (ifp))
 	   	{
@@ -1814,6 +2148,7 @@ rtadv_process_packet (u_char *buf, unsigned int len, unsigned int ifindex, int h
   /* Check ICMP message type. */
   if (icmph->icmp6_type == ND_ROUTER_SOLICIT)
   {
+  	zlog_err("rtadv_process_packet: RECV RS by ifname %s\r\n",ifp->name);
   	 memset(&zif->rtadv.dst, 0, sizeof(struct in6_addr));
 	  memcpy(&zif->rtadv.dst, &from->sin6_addr.s6_addr, sizeof(from->sin6_addr.s6_addr));
 	  
@@ -1859,6 +2194,182 @@ rtadv_read (struct thread *thread)
 
   return 0;
 }
+
+static int rtadv_stop_ra_send(struct interface *ifp)
+{
+	struct zebra_if *zif;
+	  zif = ifp->info;
+	
+	  if (if_is_loopback (ifp))
+		{
+		 zlog_info( "Invalid interface %s",ifp->name );
+		  return CMD_WARNING;
+		}
+	  
+	  /*gujd : 2012-05-29,am 9:53 . Change for IPv6 Ready Test.*/
+	  if(RTM_DEBUG_RTADV)
+		zlog_info("%s: line %d, AdvSendAdvertisements is %d .\n",__func__,__LINE__,zif->rtadv.AdvSendAdvertisements);
+	zif->rtadv.ra_flag = 0;
+	  if (zif->rtadv.AdvSendAdvertisements)
+		{
+		  zif->rtadv.AdvSendAdvertisements = 0;
+		  zif->rtadv.AdvIntervalTimer = 0;
+		/*	rtadv->adv_if_count--;*/
+		  zif->rtadv.adv_if_count = 0;
+#if 1 
+		 /*gujd: 2013-05-14, pm 4:14 . Add code for ipv6 nd suppress ra (enable) for Distribute System.*/
+		 if(product && product->board_type == BOARD_IS_ACTIVE_MASTER)
+		 {
+		   tipc_master_interface_nd_suppress_ra_deal(ZEBRA_INTERFACE_ND_SUPPRESS_RA_ENABLE,ifp);
+		   }
+ #endif
+	
+		/*	if_leave_all_router (rtadv->sock, ifp);*/
+		if(RTM_DEBUG_RTADV)
+		 zlog_info("%s:line %d, adv_if_count is %d .\n",__func__,__LINE__,rtadv->adv_if_count);
+		  if (zif->rtadv.adv_if_count == 0)
+		  {
+			/* zif->rtadv.AdvDefaultLifetime = 0;*/
+			if(RTM_DEBUG_RTADV)
+			 zlog_info("to RTADV_STOP_PRE \n");
+			/*rtadv_event (RTADV_STOP_PRE, 0,NULL);*/
+			rtadv_stop_pre_send_one_packet(ifp);
+			}
+	 #if 0 
+		  /*gujd: 2013-05-14, pm 4:14 . Add code for ipv6 nd suppress ra (enable) for Distribute System.*/
+		  if(product && product->board_type == BOARD_IS_ACTIVE_MASTER)
+		  {
+			tipc_master_interface_nd_suppress_ra_deal(ZEBRA_INTERFACE_ND_SUPPRESS_RA_ENABLE,ifp);
+			}
+	  #endif
+		}
+
+}
+	
+
+static  int
+	rtadv_ra_send(struct interface *ifp)
+{
+	struct zebra_if *zif;
+	zif = ifp->info;
+	
+	if (if_is_loopback (ifp))
+	  {
+		zlog_info( "Invalid interface %s",ifp->name );
+		return CMD_WARNING;
+	  }
+	
+	if(RTM_DEBUG_RTADV)
+	  zlog_info("%s: AdvSendAdvertisements is %d .\n",__func__,zif->rtadv.AdvSendAdvertisements);
+	
+	  char *endptr,*ptr;
+		ptr = ifp->name;
+		if(strncmp(ptr,"eth",3) == 0)
+	   {
+		  ptr = ptr + 3;
+		}
+		else if (strncmp(ptr,"ve",2) == 0)
+		{
+		  ptr = ptr  + 2;
+		}  
+		else if (strncmp(ptr,"ebr",3) == 0)
+		{
+		  ptr = ptr  + 3;
+		}
+		  else if (strncmp(ptr,"wlan",4) == 0)
+		{
+		  ptr = ptr + 4;
+		}
+		int slotID = strtoul(ptr,&endptr,10);
+		zlog_info("slotid = %d, board_id = %d\n",slotID,product->board_id);
+		zif->rtadv.ra_flag = 1;
+			
+		if (! zif->rtadv.AdvSendAdvertisements)
+		  {
+	  		zif->rtadv.AdvSendAdvertisements = 1;
+			  if (slotID == product->board_id)
+			{
+			     zif->rtadv.AdvIntervalTimer = 0;
+		 	  /*  rtadv->adv_if_count++;*/
+		 	  zif->rtadv.adv_if_count = 1;/*gujd : 2012-05-29,pm 9:53 . Change for IPv6 Ready Test.*/
+	
+			  if_join_all_router (rtadv->sock, ifp);
+				  if(RTM_DEBUG_RTADV)
+					   zlog_info("%s: adv_if_count is %d .\n",__func__,rtadv->adv_if_count);
+			  if (zif->rtadv.adv_if_count == 1)
+			 	  rtadv_event (RTADV_START, rtadv->sock,NULL);
+		  }
+	
+		/*gujd: 2013-05-14, pm 4:14 . Add code for ipv6 nd suppress ra (disable) for Distribute System.*/
+		if(product && product->board_type == BOARD_IS_ACTIVE_MASTER)
+		{
+			  tipc_master_interface_nd_suppress_ra_deal(ZEBRA_INTERFACE_ND_SUPPRESS_RA_DISABLE,ifp);
+		  }
+	  }
+	return 0;
+}
+
+static int
+rtmd_netlink_read (struct thread *thread)
+{
+
+  int ret;
+  int sock;
+  nl_msg_head_t* head = NULL;
+  netlink_msg_t* nl_msg = NULL;
+  struct interface *ifp;
+  struct zebra_if *zif;
+
+  zlog_info("rtmd netlink %s,%d ########start########\n",__func__,__LINE__);
+   sock = THREAD_FD(thread);
+  if(sock<=0)
+  {
+	zlog_warn ("In func %s get THREAD_FD error\n",__func__);
+	return 0;
+  	}
+  
+  zlog_info("rtmd netlink recvmsg from VRRP\n");
+    if(recvmsg(sock_vrrp_fd, &vrrp_msg, 0) < 0)
+        {
+                 zlog_info("Failed npd netlink recv : %s\n", strerror(errno));
+        }
+
+	head = (nl_msg_head_t*)NLMSG_DATA(vrrp_head);
+	nl_msg= (netlink_msg_t*)(NLMSG_DATA(vrrp_head) + sizeof(nl_msg_head_t));
+              zlog_info("VRRPnetlink object(%d) recvfrom vrrp pid:%d\n",head->object, head->pid);
+	 ifp = if_lookup_by_name_len (nl_msg->vrrpInfo.interface_name,
+		 strnlen(nl_msg->vrrpInfo.interface_name ,INTERFACE_NAMSIZ));
+	if(NULL == ifp)
+	{
+		zlog_info( " Interface %s does not exist", nl_msg->vrrpInfo.interface_name);
+		return -1;
+	}
+	zif = ifp->info;
+	if (head->count == 1)	
+	{
+	
+		if (nl_msg->msgType == VRRP_STATE_NOTIFIER_EVENT )
+		 {
+			zlog_info(" rtmd netlink msg interface name %s\n",nl_msg->vrrpInfo.interface_name);
+			if (nl_msg->vrrpInfo.state == 1)
+			{		
+				zif->rtadv.ra_flag= 1;
+			
+			}
+			else if (nl_msg->vrrpInfo.state== 0)
+			{
+				zif->rtadv.ra_flag= 0;
+			}
+		}
+	
+	}
+  thread_add_read(zebrad.master, rtmd_netlink_read, NULL,
+  					  sock_vrrp_fd);
+  zlog_info("rtmd netlink %s,%d ########end########\n",__func__,__LINE__);
+
+  return 0;
+}
+
 
 static int
 rtadv_make_socket (void)
@@ -2543,7 +3054,6 @@ DEFUN (ipv6_nd_suppress_ra,
        "Suppress Router Advertisement\n")
 {
   struct interface *ifp;
-  struct zebra_if *zif;
 
 	
 #if 0
@@ -2557,52 +3067,8 @@ DEFUN (ipv6_nd_suppress_ra,
 			}
 
 #endif
-  zif = ifp->info;
 
-  if (if_is_loopback (ifp))
-    {
-      vty_out (vty, "Invalid interface%s", VTY_NEWLINE);
-      return CMD_WARNING;
-    }
-  
-  /*gujd : 2012-05-29,am 9:53 . Change for IPv6 Ready Test.*/
-  if(RTM_DEBUG_RTADV)
-    zlog_info("%s: line %d, AdvSendAdvertisements is %d .\n",__func__,__LINE__,zif->rtadv.AdvSendAdvertisements);
-  if (zif->rtadv.AdvSendAdvertisements)
-    {
-      zif->rtadv.AdvSendAdvertisements = 0;
-      zif->rtadv.AdvIntervalTimer = 0;
-    /*  rtadv->adv_if_count--;*/
-      rtadv->adv_if_count = 0;
-#if 1 
-	 /*gujd: 2013-05-14, pm 4:14 . Add code for ipv6 nd suppress ra (enable) for Distribute System.*/
-	 if(product && product->board_type == BOARD_IS_ACTIVE_MASTER)
-	 {
-	   tipc_master_interface_nd_suppress_ra_deal(ZEBRA_INTERFACE_ND_SUPPRESS_RA_ENABLE,ifp);
-	   }
- #endif
-
- 	/*  if_leave_all_router (rtadv->sock, ifp);*/
-	if(RTM_DEBUG_RTADV)
-	 zlog_info("%s:line %d, adv_if_count is %d .\n",__func__,__LINE__,rtadv->adv_if_count);
-      if (rtadv->adv_if_count == 0)
-      {
-     	/* zif->rtadv.AdvDefaultLifetime = 0;*/
-		if(RTM_DEBUG_RTADV)
-		 zlog_info("to RTADV_STOP_PRE \n");
-		/*rtadv_event (RTADV_STOP_PRE, 0,NULL);*/
-		rtadv_stop_pre_send_one_packet(ifp);
-      	}
-	 #if 0 
-	  /*gujd: 2013-05-14, pm 4:14 . Add code for ipv6 nd suppress ra (enable) for Distribute System.*/
-	  if(product && product->board_type == BOARD_IS_ACTIVE_MASTER)
-	  {
-	  	tipc_master_interface_nd_suppress_ra_deal(ZEBRA_INTERFACE_ND_SUPPRESS_RA_ENABLE,ifp);
-	  	}
-	  #endif
-    }
-
-  return CMD_SUCCESS;
+  return rtadv_stop_ra_send(ifp);
 }
 
 DEFUN (no_ipv6_nd_suppress_ra,
@@ -2628,38 +3094,8 @@ DEFUN (no_ipv6_nd_suppress_ra,
 
 #endif
 
-  zif = ifp->info;
 
-  if (if_is_loopback (ifp))
-    {
-      vty_out (vty, "Invalid interface%s", VTY_NEWLINE);
-      return CMD_WARNING;
-    }
-  
-  if(RTM_DEBUG_RTADV)
-  	zlog_info("%s: AdvSendAdvertisements is %d .\n",__func__,zif->rtadv.AdvSendAdvertisements);
-
-  if (! zif->rtadv.AdvSendAdvertisements)
-    {
-      zif->rtadv.AdvSendAdvertisements = 1;
-      zif->rtadv.AdvIntervalTimer = 0;
-   /*  rtadv->adv_if_count++;*/
-	  rtadv->adv_if_count = 1;/*gujd : 2012-05-29,pm 9:53 . Change for IPv6 Ready Test.*/
-
-      if_join_all_router (rtadv->sock, ifp);
-	  if(RTM_DEBUG_RTADV)
-	 	 zlog_info("%s: adv_if_count is %d .\n",__func__,rtadv->adv_if_count);
-      if (rtadv->adv_if_count == 1)
-	    rtadv_event (RTADV_START, rtadv->sock,NULL);
-
-	  /*gujd: 2013-05-14, pm 4:14 . Add code for ipv6 nd suppress ra (disable) for Distribute System.*/
-	  if(product && product->board_type == BOARD_IS_ACTIVE_MASTER)
-	  {
-	  	tipc_master_interface_nd_suppress_ra_deal(ZEBRA_INTERFACE_ND_SUPPRESS_RA_DISABLE,ifp);
-	  	}
-    }
-
-  return CMD_SUCCESS;
+  return  rtadv_ra_send(ifp);
 }
 
 DEFUN (ipv6_nd_ra_interval_msec,
@@ -3829,6 +4265,137 @@ DEFUN (no_ipv6_nd_prefix,
 
   return CMD_SUCCESS;
 }
+
+DEFUN (ipv6_test_ra_send,
+       ipv6_test_ra_send_cmd,
+       "ipv6 test ra_send",
+       "Interface IPv6 config commands\n"
+       "Test\n"
+       "RA packet send\n")
+{
+  int ret;
+  struct interface *ifp;
+  struct zebra_if *zebra_if;
+  struct rtadv_prefix rp;
+ 
+#if 0
+    ifp = (struct interface *) vty->index;
+#else
+    ifp = if_get_by_vty_index(vty->index);
+    if(NULL == ifp)
+    {
+     vty_out (vty, "%% Interface %s does not exist%s", (char*)(vty->index), VTY_NEWLINE);
+     return CMD_WARNING;
+    }
+#endif
+  zebra_if = ifp->info;
+ 
+  rtadv_send_packet(rtadv->sock, ifp);
+  vty_out(vty, "Test to send RA packet once.\n");
+   
+  return CMD_SUCCESS;
+}
+
+DEFUN (set_virtual_ipv6_address,
+       set_virtual_ipv6_address_cmd,
+       "config interface IFNAME ipv6_address A:B:C:D:E:F:G:H prelen PRELEN link_local (0|1)",
+       CONFIG_STR
+       "config interface ipv6 address\n"
+       "L3 interface name\n"
+       "L3 interface virtual ipv6\n"
+       "Interface IPv6 config commands\n"
+       "ipv6 address\n"
+       "ipv6 prefix length\n"
+	   "ipv6 prefix length,valid range [64-128]\n"
+       "virtual address(0:virtual address; 1:virtual link local address)\n")
+{
+    char *ifname = NULL;
+	struct interface *ifp;
+	struct zebra_if *zif;
+	struct iaddr ipv6_addr;
+	unsigned int link_local = 0;
+	unsigned int prefix_length = 0;
+    int op_ret;
+	
+	ifname = (char *)malloc(MAX_IFNAME_LEN);	
+	if(NULL == ifname){
+        vty_out( vty, " *****1*****\n");
+        return CMD_WARNING;
+	}
+	memset(ifname,0,MAX_IFNAME_LEN);
+	memcpy(ifname,argv[0],strlen(argv[0]));
+
+	memset(&ipv6_addr, 0 ,sizeof(struct iaddr));
+	op_ret =inet_pton(AF_INET6, argv[1], ipv6_addr.iabuf);
+	if (!op_ret) {
+		free(ifname);
+		vty_out(vty, "%% invalid ipv6 address, please like A::B.C.D.E or A::B:C\n");
+		return CMD_WARNING;
+    }
+	if (0 == memcmp(argv[1], "::", 2)) {
+		vty_out(vty, "%% invalid ipv6 address, please like A::B.C.D.E or A::B:C, A should not be NULL\n");
+		return CMD_WARNING;
+	}
+	
+	prefix_length = atoi((char *)argv[2]);
+	if(prefix_length < 64){
+		vty_out(vty,"%%error! prefix length [64~128]!\n");
+		return CMD_WARNING;	
+	}
+
+	link_local = strtoul((char *)argv[3],NULL,10);
+	ifp = if_lookup_by_name_len (ifname,
+			       strnlen(ifname, INTERFACE_NAMSIZ));
+	if(NULL == ifp)
+	{
+		vty_out (vty, "%% Interface %s does not exist%s", ifname, VTY_NEWLINE);
+		return -1;
+	}
+	//vty_out(vty,"interface = %s ipv6 addr = "NIP6QUAD_FMT" link_local = %d\n",ifname,NIP6QUAD(ipv6_addr.iabuf),link_local);
+	
+	zif = ifp->info;
+
+	char *endptr,*ptr;
+	  ptr = ifp->name;
+	  if(strncmp(ptr,"eth",3) == 0)
+	 {
+		ptr = ptr + 3;
+	  }
+	  else if (strncmp(ptr,"ve",2) == 0)
+	  {
+		ptr = ptr  + 2;
+	  }  
+	  else if (strncmp(ptr,"ebr",3) == 0)
+	  {
+		ptr = ptr  + 3;
+	  }
+	    else if (strncmp(ptr,"wlan",4) == 0)
+	  {
+		ptr = ptr + 4;
+	  }
+	  int slotID = strtoul(ptr,&endptr,10);
+	if (slotID == product->board_id)
+	{
+	if(link_local == 1){
+		memcpy(zif->rtadv.uplink_ipv6_vaddr[0].sin6_addr.s6_addr,ipv6_addr.iabuf,sizeof(char)*16);
+		zif->rtadv.uplink_ipv6_vaddr[0].mask = prefix_length;
+      		  zif->rtadv.uplink_ipv6_vaddr[0].deletable =0;
+		//vty_out(vty," set virtual link local address = "NIP6QUAD_FMT"\n",NIP6QUAD(zif->rtadv.uplink_ipv6_vaddr[0].sin6_addr.s6_addr));
+	}
+	else{
+		memcpy(zif->rtadv.uplink_ipv6_vaddr[1].sin6_addr.s6_addr,ipv6_addr.iabuf,sizeof(char)*16);
+		zif->rtadv.uplink_ipv6_vaddr[1].mask = prefix_length;
+   		 zif->rtadv.uplink_ipv6_vaddr[1].deletable =0;
+		//vty_out(vty,"set virtual ipv6 address = "NIP6QUAD_FMT"\n",NIP6QUAD(zif->rtadv.uplink_ipv6_vaddr[1].sin6_addr.s6_addr));
+		}
+	}
+	  if(product && product->board_type == BOARD_IS_ACTIVE_MASTER)
+	  {
+	  	tipc_master_interface_local_link( ZEBRA_INTERFACE_LOCAL_LINK_ADD,ifp ,link_local ,argv[0],argv[1],prefix_length);
+	}
+	
+	return 0;
+}
 /* Write configuration about router advertisement. */
 void
 rtadv_config_write (struct vty *vty, struct interface *ifp)
@@ -3997,6 +4564,50 @@ rtadv_event (enum rtadv_event event, int val, void *arg)
     }
   return;
 }
+void rtmd_netlink_init(void)
+{
+ 	zlog_info("rtmd netlink ..........start.............\n");
+	memset(&vrrp_src_addr, 0, sizeof(vrrp_src_addr));
+	memset(&vrrp_dest_addr, 0, sizeof(vrrp_dest_addr));
+	memset(&vrrp_iov, 0, sizeof(vrrp_iov));
+	memset(&vrrp_msg, 0, sizeof(vrrp_msg));
+	if ((sock_vrrp_fd = socket(PF_NETLINK, SOCK_RAW, NETLINK_RTMD)) < 0) {
+		zlog_info("Failed socket\n");
+		return -1;
+	}
+
+	vrrp_src_addr.nl_family = AF_NETLINK;
+	vrrp_src_addr.nl_pid = getpid();
+	vrrp_src_addr.nl_groups = 1;
+
+	if (bind(sock_vrrp_fd, (struct sockaddr*)&vrrp_src_addr, sizeof(vrrp_src_addr)) < 0) {
+		zlog_info("Failed bind\n");
+		return -1;
+	}
+
+	vrrp_dest_addr.nl_pid = 0;
+	vrrp_dest_addr.nl_family = AF_NETLINK;
+	vrrp_dest_addr.nl_groups = 1;
+
+	if((vrrp_head= (struct nlmsghdr*)malloc(NLMSG_SPACE(MAX_PAYLOAD))) == NULL) {
+		zlog_info("Failed malloc\n");
+		return -1;
+	}
+
+	memset(vrrp_head, 0, NLMSG_SPACE(MAX_PAYLOAD));
+	vrrp_iov.iov_base = (void *)vrrp_head;
+	vrrp_iov.iov_len = NLMSG_SPACE(MAX_PAYLOAD);
+	vrrp_msg.msg_name = (void *)&vrrp_dest_addr;
+	vrrp_msg.msg_namelen = sizeof(vrrp_dest_addr);
+	vrrp_msg.msg_iov = &vrrp_iov;
+	vrrp_msg.msg_iovlen = 1;
+	
+	if (sock_vrrp_fd > 0)
+			thread_add_read(zebrad.master, rtmd_netlink_read, NULL,
+					sock_vrrp_fd);
+}
+
+
 
 void
 rtadv_init (void)
@@ -4059,6 +4670,10 @@ rtadv_init (void)
   install_element (INTERFACE_NODE, &ipv6_nd_prefix_noval_rtaddr_cmd);
   install_element (INTERFACE_NODE, &ipv6_nd_prefix_prefix_cmd);
   install_element (INTERFACE_NODE, &no_ipv6_nd_prefix_cmd);
+  install_element (INTERFACE_NODE, &ipv6_test_ra_send_cmd);
+  install_element (CONFIG_NODE, &set_virtual_ipv6_address_cmd);
+
+
 }
 
 static int

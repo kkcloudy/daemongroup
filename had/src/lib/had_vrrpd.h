@@ -12,6 +12,35 @@
 
 #define vrrpd_log syslog
 
+//niehy add for ipv6 address 
+static inline int ipv6_addr_eq_null(const struct in6_addr *a1)
+{
+	return ((a1->s6_addr32[0]==0) && (a1->s6_addr32[1]==0)&&
+		(a1->s6_addr32[2]==0) && (a1->s6_addr32[3]==0));
+}
+#define INET6_ADDRSTRLEN	(48)
+#define NIP6QUAD(addr) \
+	((__u8 *)&addr)[0], \
+	((__u8 *)&addr)[1], \
+	((__u8 *)&addr)[2], \
+	((__u8 *)&addr)[3], \
+	((__u8 *)&addr)[4], \
+	((__u8 *)&addr)[5], \
+	((__u8 *)&addr)[6], \
+	((__u8 *)&addr)[7], \
+	((__u8 *)&addr)[8], \
+	((__u8 *)&addr)[9], \
+	((__u8 *)&addr)[10], \
+	((__u8 *)&addr)[11], \
+	((__u8 *)&addr)[12], \
+	((__u8 *)&addr)[13], \
+	((__u8 *)&addr)[14], \
+	((__u8 *)&addr)[15]
+
+#define NIP6QUAD_FMT "%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x"
+extern int vrrp_ndisc_send_fd;
+/*niehy add end*/
+
 
 #ifndef _1K
 #define _1K 1024
@@ -250,6 +279,7 @@ typedef struct {	/* parameters per interface -- rfc2338.6.1.1 */
 	uint8_t		auth_data[8];	/* authentification data */
 
 	uint32_t	ipaddr;		/* the address of the interface */
+	struct in6_addr ipv6_addr;
 	char		hwaddr[6];	/* WORK: lame hardcoded for ethernet !!!! */
 	int         ifindex;
 	int         mask;
@@ -264,6 +294,14 @@ typedef struct {
 	uint32_t    mask;
 	int		deletable;	/* TRUE if one of my primary addr */
 } vip_addr;
+
+/*niehy add for ipv6 address */
+typedef struct {
+	struct in6_addr sin6_addr;
+	uint32_t    mask;
+	int		deletable;	/* TRUE if one of my primary addr */
+} vipv6_addr;
+/*niehy add end*/
 
 typedef struct dhcp_failover_s {
 	uint32_t 	peerip; 	/* failover peer interface ip address */
@@ -286,6 +324,20 @@ typedef struct vrrp_t{	/* parameters per virtual router -- rfc2338.6.1.2 */
 	vip_addr downlink_vaddr[VRRP_LINK_MAX_CNT];
 								/* point on the downlink ip address array */
 	vip_addr vgateway_vaddr[VRRP_LINK_MAX_CNT];
+	/*ipv6 address*/
+	int	uplink_ipv6_naddr;		/* number of uplink ip addresses */
+	int downlink_ipv6_naddr;     /* number of downlink ip addresses */
+	int vgateway_ipv6_naddr;		/* number of vgateway ip addresses */
+	int l2_uplink_ipv6_naddr;    /* number of l2-uplink interface configured s*/
+	/*vipv6_addr *vaddr*/        /* point on the ip address array */
+	vipv6_addr uplink_local_ipv6_vaddr[VRRP_LINK_MAX_CNT];
+	vipv6_addr uplink_ipv6_vaddr[VRRP_LINK_MAX_CNT];
+								/* point on the uplink ip address array */
+	vipv6_addr downlink_local_ipv6_vaddr[VRRP_LINK_MAX_CNT];
+	vipv6_addr downlink_ipv6_vaddr[VRRP_LINK_MAX_CNT];
+								/* point on the downlink ip address array */
+	vipv6_addr vgateway_local_ipv6_vaddr[VRRP_LINK_MAX_CNT];
+	vipv6_addr vgateway_ipv6_vaddr[VRRP_LINK_MAX_CNT];
 	int	adver_int;	/* delay between advertisements(in sec) */	
 
 #if 0	/* dynamically calculated */
@@ -364,6 +416,7 @@ typedef struct vrrp_if_real_ip_s
 	int set_flg;					/* flag for if the value setted(1: setted, 0: not setted) */
 	char ifname[MAX_IFNAME_LEN];	/* interface name */
 	int real_ip;					/* appoint real ip of the interface */
+	struct in6_addr real_ipv6;
 }vrrp_if_real_ip;
 
 typedef struct hansi_struct_s {

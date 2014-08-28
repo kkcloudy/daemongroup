@@ -44,12 +44,19 @@
 #define VRRP_RETURN_CODE_IF_UP_LIMIT          (VRRP_RETURN_CODE_BASE + 0x12)
 #define VRRP_RETURN_CODE_VMAC_NOT_PREPARE     (VRRP_RETURN_CODE_BASE + 0x13)
 #define VRRP_RETURN_CODE_NO_CONFIG			  (VRRP_RETURN_CODE_BASE + 0x14)
+#define VRRP_RETURN_CODE_LINKLOCAL_ERROR     (VRRP_RETURN_CODE_BASE + 0x15)
+#define VRRP_RETURN_CODE_VIP_FIRST_LINKLOCAL			  (VRRP_RETURN_CODE_BASE + 0x16)
 
 #define VRRP_DBUS_BUSNAME "aw.vrrpcli"
 #define VRRP_NOTIFY_DBUS_BUSNAME	"aw.vrrpnoti"
 
 #define VRRP_DBUS_OBJPATH "/aw/vrrp"
 #define VRRP_DBUS_INTERFACE "aw.vrrp"
+
+struct iaddr {
+	unsigned len;
+	unsigned char iabuf [16];
+};
 
 typedef enum
 {

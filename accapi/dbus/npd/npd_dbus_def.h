@@ -7357,6 +7357,26 @@ enum npd_dbus_result_no_e {
 #define VRRP_DBUS_METHOD_BRG_DBUG_VRRP    "vrrp_debug"
 #define VRRP_DBUS_METHOD_BRG_DBUG_VRRP_PROFILE    "vrrp_debug_profile"
 #define VRRP_DBUS_METHOD_HAD_TRAP_SWITCH	"vrrp_trap_switch"
+
+/*****************************************************************
+ * DESCRIPTION:
+ * 	start one vrrp-based hansi instance
+ * INPUT:
+ *     uint32--vrid,
+ *     uint32--priority,
+ *     char* --uplink_ifname,
+ *     iaddr --uplink_ipv6,
+ *    uint32-- uplink_prefix_length
+ *     char* --downlink_ifname,
+ *    iaddr --downlink_ipv6,
+ *   uint32----down_prefix_length
+ *
+ * OUTPUT:
+ *		uint--op_ret
+ *		
+*****************************************************************/
+#define VRRP_DBUS_METHOD_START_VRRP_IPV6   "vrrp_start_ipv6"
+
 /*****************************************************************
  * DESCRIPTION:
  * 	start one vrrp-based hansi instance
@@ -7502,6 +7522,71 @@ enum npd_dbus_result_no_e {
 *****************************************************************/
 
 #define VRRP_DBUS_METHOD_START_VRRP_UPLINK   "vrrp_start_uplink"
+
+
+/*****************************************************************
+ * DESCRIPTION:
+ * 	start one vrrp-based hansi instance,only downlink ipv6
+ * INPUT:
+ *     uint32--vrid,
+ *     uint32--priority,
+ *     char* --downlink_ifname,
+ *     char* --downlink_ipipv6,
+ *
+ *
+ * OUTPUT:
+ *		uint--op_ret
+ *		
+*****************************************************************/
+
+#define VRRP_DBUS_METHOD_START_VRRP_DOWNLINK_IPV6 "vrrp_start_downlink_ipv6"
+
+/*****************************************************************
+ * DESCRIPTION:
+ * 	start one vrrp-based hansi instance,only uplink
+ * INPUT:
+ *     uint32--vrid,
+ *     uint32--priority,
+ *     char* --uplink_ifname,
+ *     char* --uplink_ipv6,
+ *
+ * OUTPUT:
+ *		uint--op_ret
+ *		
+*****************************************************************/
+
+#define VRRP_DBUS_METHOD_START_VRRP_UPLINK_IPV6 "vrrp_start_uplink_ipv6"
+
+/*****************************************************************
+ * DESCRIPTION:
+ * 	    add uplink virtual link local ip
+ * INPUT:
+ *     uint32--vrid,
+ *     uint32--priority,
+ *     char* --uplink_ifname,
+ *     char* --uplink_ip,
+ *
+ * OUTPUT:
+ *		uint--op_ret
+ *		
+*****************************************************************/
+#define VRRP_DBUS_METHOD_START_VRRP_UPLINK_LINK_LOCAL "had_dbus_start_uplink_link_local"
+
+/*****************************************************************
+ * DESCRIPTION:
+ * 	    add downlink virtual link local ip
+ * INPUT:
+ *     uint32--vrid,
+ *     uint32--priority,
+ *     char* --downlink_ifname,
+ *     char* --downlink_ip,
+ *
+ * OUTPUT:
+ *		uint--op_ret
+ *		
+*****************************************************************/
+#define VRRP_DBUS_METHOD_START_VRRP_DOWNLINK_LINK_LOCAL "had_dbus_start_downlink_link_local"
+
 
 /*****************************************************************
  * DESCRIPTION:

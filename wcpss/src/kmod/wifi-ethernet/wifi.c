@@ -59,6 +59,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define NETLINK_WITH_ASD 27
 //u32 asd_pid = 0;
 struct sock *nl_sk = NULL;
+struct sock *vrrp_nl_sk = NULL;
 struct task_struct *my_netlink_test;
 struct HANSI_INFO hansiInfo[VRID_MAX];
 
@@ -505,6 +506,13 @@ static int __init wifi_init_module(void)
 		printk("netlink_kernel_create failed,NETLINK_WITH_ASD=%d.\n",NETLINK_WITH_ASD);
 	}else{
 		printk("netlink_kernel_create sucessful,NETLINK_WITH_ASD=%d.\n",NETLINK_WITH_ASD);
+	}
+
+	vrrp_nl_sk = netlink_kernel_create(&init_net, NETLINK_RTMD, 0, nl_data_ready, NULL, THIS_MODULE);/*creat netlink socket in kernel*/
+	if(vrrp_nl_sk == NULL){
+		printk("netlink_kernel_create failed,NETLINK_WITH_VRRP.\n");
+	}else{
+		printk("netlink_kernel_create sucessful,NETLINK_WITH_VRRP.\n");
 	}
 	/*if (IS_ERR(my_netlink_test))
 	{
