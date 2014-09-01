@@ -1304,6 +1304,11 @@ eag_vrrp_status_switch_proc(eag_hansi_t *eag_hansi, void *cbp)
 		if ( (ret = eag_redir_start(eagins->redir)) != 0) {
 			goto failed_0;
 		}
+		if (eag_ins_get_ipv6_switch(eagins)) {
+			if ((ret = eag_ipv6_redir_start(eagins->redir)) != 0) {
+				goto failed_1;
+			}
+		}
 		if ( (ret = eag_portal_start(eagins->portal)) != 0) {
 			goto failed_1;
 		}
