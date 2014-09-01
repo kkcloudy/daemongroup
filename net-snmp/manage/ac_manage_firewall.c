@@ -326,6 +326,21 @@ manage_get_iptableCmd(const fwRule *rule, char *cmd) {
 	if(FW_WALL == rule->type && FW_TCPMSS == rule->act && strlen(rule->tcpmss_var)) {
 		strcat( cmd, " -m tcp --tcp-flags FIN,SYN,RST SYN -j TCPMSS --set-mss " );
 		strcat( cmd, rule->tcpmss_var );
+		#if 1
+		/* Add by houyongtao for set ipv6 tcpmss in ip6tables.
+		* Due to time emergenc, now is a temporary deal, 
+		* TODO: need a complete deal in the future. */
+		char temp_buf[CMD_LEN] = "";
+		memset(temp_buf, 0, sizeof(temp_buf));
+		snprintf(temp_buf, sizeof(temp_buf) - 1, "%s%s", 
+				cmd + strlen(IPTABLES_PATH"iptables -A "), " >/dev/null 2>&1;");
+		strcat(cmd, ";"IPTABLES_PATH"ip6tables -D ");
+		strcat(cmd, temp_buf);
+		strcat(cmd, IPTABLES_PATH"ip6tables -D "FW_FILTER_CHAIN" -j ACCEPT >/dev/null 2>&1;");
+		strcat(cmd, IPTABLES_PATH"ip6tables -A ");
+		strcat(cmd, temp_buf);
+		strcat(cmd, IPTABLES_PATH"ip6tables -A "FW_FILTER_CHAIN" -j ACCEPT >/dev/null 2>&1;");
+		#endif
 	}
 	else { //tcpmss
 		strcat(cmd, " -j ");
