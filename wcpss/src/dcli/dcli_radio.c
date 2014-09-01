@@ -4084,12 +4084,12 @@ DEFUN(set_radio_max_rate_cmd_func,
 #endif
 #if _GROUP_POLICY
 DEFUN(set_radio_mode_cmd_func,
-	  set_radio_mode_cmd,
+	 set_radio_mode_cmd,
 	  /*"mode (11b|11a|11g|11n|11b/g)",*/
-	  "mode (11a|11b|11g|11b/g|11b/g/n|11a/n)",
+	  "mode (11a|11b|11g|11gn|11g/gn|11b/g|11b/g/n|11a/an|11an)",   
 	  SERVICE_STR
 	  "Radio mode value\n"
-	"you can set 11b|11a|11g|11b/g/n|11a/n|11b/g\n"
+	"you can set 11b|11a|11g|11gn|11g/gn|11b/g/n|11a/an|11an|11b/g\n" 
 	 )
 {
 
@@ -4140,16 +4140,36 @@ DEFUN(set_radio_mode_cmd_func,
 		mode |= 0x04;
 		mode |= 0x08;
 	}
-	else if(!strcmp(argv[0],"11a/n"))
+	else if(!strcmp(argv[0],"11an")) //fengwenchao change "11a/n" to "11a/an" 20120131
 	{
 		mode |= 0x02;
 		mode |= 0x08;
 	}
+	/*fengwenchao add for GM,20111109*/
+	else if(!strcmp(argv[0],"11gn"))
+	{
+		mode |= 0x04;
+		mode |= 0x08;
+	}
+	else if(!strcmp(argv[0],"11a/an"))
+	{
+		mode |= 0x02;
+		mode |= 0x08;
+		mode |= 0x10;
+	}	
+	else if(!strcmp(argv[0],"11g/gn"))
+	{
+		mode |= 0x04;
+		mode |= 0x08;
+		mode |= 0x20;
+	}		
+	/*fengwenchao add end*/ 
 	else
 	{
 		modetmp = 0;
 		modetmp = atoi(argv[0]);
-		if((modetmp == 1)||(modetmp == 2)||(modetmp == 4)||(modetmp == 5)||(modetmp == 8)||(modetmp == 10)||(modetmp == 13))
+		if((modetmp == 1)||(modetmp == 2)||(modetmp == 4)||(modetmp == 5)||(modetmp == 8)||(modetmp == 10)||(modetmp == 13)
+		||(modetmp == 12)||(modetmp == 26)||(modetmp == 44))  /*fengwenchao modify 20111109 for GM*/
 		{
 			mode |= modetmp;
 		}
