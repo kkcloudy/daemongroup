@@ -251,6 +251,7 @@ struct radius_attr_t {
 #define RADIUS_ATTR_AUTELAN_IPV6_OUTPUT_GIGAWORDS	226	/* integer */
 
 /* vendor  attr - DATANG TELECOM */
+#define RADIUS_OID_DTT								5105
 #define RADIUS_VENDOR_DTT							5333
 #define RADIUS_ATTR_DTT_USER_TYPE					10	/* string */
 #define RADIUS_ATTR_DTT_FRAMED_IPV6_ADDRESS			11	/* octets (IPv6) */

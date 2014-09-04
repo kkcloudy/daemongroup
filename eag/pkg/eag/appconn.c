@@ -265,24 +265,24 @@ appconn_update_ip_htable(appconn_db_t *appdb,
 						struct app_conn_t *appconn)
 {
 	if (EAG_IPV6 == appconn->session.user_addr.family) {
-        return hashtable_check_add_node(appdb->ipv6_htable,
-                        &(appconn->session.user_addr.user_ipv6),
-                        sizeof(struct in6_addr),
-                        &(appconn->ipv6_hnode));
+		return hashtable_check_add_node(appdb->ipv6_htable,
+						&(appconn->session.user_addr.user_ipv6),
+						sizeof(struct in6_addr),
+						&(appconn->ipv6_hnode));
 	} else if (EAG_IPV4 == appconn->session.user_addr.family) {
 		return hashtable_check_add_node(appdb->ip_htable,
 						&(appconn->session.user_addr.user_ip),
 						sizeof(struct in_addr),
 						&(appconn->ip_hnode));
 	} else if (EAG_MIX == appconn->session.user_addr.family) {
-        hashtable_check_add_node(appdb->ipv6_htable,
-                                &(appconn->session.user_addr.user_ipv6),
-                                sizeof(struct in6_addr),
-                                &(appconn->ipv6_hnode));
-        hashtable_check_add_node(appdb->ip_htable,
-                                &(appconn->session.user_addr.user_ip),
-                                sizeof(struct in_addr),
-                                &(appconn->ip_hnode));
+		hashtable_check_add_node(appdb->ipv6_htable,
+						&(appconn->session.user_addr.user_ipv6),
+						sizeof(struct in6_addr),
+						&(appconn->ipv6_hnode));
+		hashtable_check_add_node(appdb->ip_htable,
+						&(appconn->session.user_addr.user_ip),
+						sizeof(struct in_addr),
+						&(appconn->ip_hnode));
 	}
 	return EAG_RETURN_OK;
 }
@@ -362,7 +362,7 @@ appconn_find_by_userip(appconn_db_t *appdb,
 	struct hlist_node *node = NULL;
 	char user_ipstr[IPX_LEN] = "";
 	//Can be optimized
-    ipx2str(user_addr, user_ipstr, sizeof(user_ipstr));
+	ipx2str(user_addr, user_ipstr, sizeof(user_ipstr));
 	if (EAG_IPV6 == user_addr->family) {
 		/* ipv6 single-stack user */
 		head = hashtable_get_hash_list( appdb->ipv6_htable, 
@@ -374,11 +374,11 @@ appconn_find_by_userip(appconn_db_t *appdb,
             return NULL;
         }
         
-        hlist_for_each_entry(appconn, node, head, ipv6_hnode) {
-            if (!memcmp_ipx(user_addr, &(appconn->session.user_addr))) {
-                return appconn;
-            }
-        }
+	hlist_for_each_entry(appconn, node, head, ipv6_hnode) {
+		if (!memcmp_ipx(user_addr, &(appconn->session.user_addr))) {
+			return appconn;
+			}
+		}
 	} else {
 		/* ipv4 single-stack user or dual-stack users */
 		head = hashtable_get_hash_list( appdb->ip_htable, 
@@ -391,7 +391,7 @@ appconn_find_by_userip(appconn_db_t *appdb,
 		}
 
 		hlist_for_each_entry(appconn, node, head, ip_hnode) {
-	        if (!memcmp_ipx(user_addr, &(appconn->session.user_addr))) {
+			if (!memcmp_ipx(user_addr, &(appconn->session.user_addr))) {
 				return appconn;
 			}
 		}
@@ -858,7 +858,7 @@ appconn_check_is_conflict(user_addr_t *user_addr, appconn_db_t *appdb, struct ap
 	eag_log_debug("eag_ipinfo", "eag_ipinfo_get before userip=%s", user_ipstr);
 	if (EAG_IPV6 == user_addr->family) {
 		eag_ipv6info_get(session->intf, sizeof(session->intf)-1, session->usermac, &(user_addr->user_ipv6));
-    } else {
+	} else {
 		eag_ipinfo_get(session->intf, sizeof(session->intf)-1, session->usermac, user_addr->user_ip);// houyt
 	}
 	mac2str(session->usermac, macstr, sizeof(macstr), ':');
@@ -1007,10 +1007,10 @@ appconn_find_by_ip_autocreate(appconn_db_t *appdb, user_addr_t *user_addr)
 	eag_log_debug("eag_ipinfo", "eag_ipinfo_get before userip=%s", user_ipstr);
 	if (EAG_IPV6 == user_addr->family) {
 		eag_ipv6info_get(appconn->session.intf, sizeof(appconn->session.intf)-1, 
-				appconn->session.usermac, &(user_addr->user_ipv6));
-    } else {
+		appconn->session.usermac, &(user_addr->user_ipv6));
+	} else {
 		eag_ipinfo_get(appconn->session.intf, sizeof(appconn->session.intf)-1,
-				appconn->session.usermac, user_addr->user_ip);
+		appconn->session.usermac, user_addr->user_ip);
 	}
 	mac2str(appconn->session.usermac, macstr, sizeof(macstr), '-');
 	eag_log_debug("eag_ipinfo", "eag_ipinfo_get after userip=%s,usermac=%s,interface=%s",
@@ -1165,16 +1165,16 @@ appconn_create_by_sta_v2(appconn_db_t * appdb, struct appsession *session)
 			sizeof(appconn->session.apmac));
 	appconn->session.vlanid = session->vlanid;
 
-    appconn->session.framed_interface_id = session->framed_interface_id;
-    memcpy(appconn->session.framed_ipv6_prefix, 
-    		session->framed_ipv6_prefix, MAX_FRAMED_IPV6_PREFIX_LEN);
-    appconn->session.login_ipv6_host = session->login_ipv6_host;
-    strncpy(appconn->session.framed_ipv6_route, 
-    		session->framed_ipv6_route, MAX_FRAMED_IPV6_ATTR_LEN - 1);
-    strncpy(appconn->session.framed_ipv6_pool, 
-    		session->framed_ipv6_pool, MAX_FRAMED_IPV6_ATTR_LEN - 1);
-    memcpy(appconn->session.delegated_ipv6_prefix, 
-    		session->delegated_ipv6_prefix, MAX_FRAMED_IPV6_PREFIX_LEN);
+	appconn->session.framed_interface_id = session->framed_interface_id;
+	memcpy(appconn->session.framed_ipv6_prefix, 
+			session->framed_ipv6_prefix, MAX_FRAMED_IPV6_PREFIX_LEN);
+	appconn->session.login_ipv6_host = session->login_ipv6_host;
+	strncpy(appconn->session.framed_ipv6_route, 
+			session->framed_ipv6_route, MAX_FRAMED_IPV6_ATTR_LEN - 1);
+	strncpy(appconn->session.framed_ipv6_pool, 
+			session->framed_ipv6_pool, MAX_FRAMED_IPV6_ATTR_LEN - 1);
+	memcpy(appconn->session.delegated_ipv6_prefix, 
+			session->delegated_ipv6_prefix, MAX_FRAMED_IPV6_PREFIX_LEN);
 
 	appconn_set_debug_prefix(appconn);
 	appconn_set_filter_prefix(appconn, appdb->hansi_type, appdb->hansi_id); /* for debug-filter,add by zhangwl */

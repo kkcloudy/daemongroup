@@ -412,7 +412,7 @@ eag_ins_do_syn_user_data(void *cbp, void *data, struct timeval *cb_tv)
 		
 		//memcpy(&(appconn->session), usersession, sizeof(struct appsession));
 		appsession_copy(&(appconn->session), usersession, cb_tv);
-        appconn_config_portalsrv_bk(appconn, &(eagins->portalconf));
+		appconn_config_portalsrv_bk(appconn, &(eagins->portalconf));
 		appconn->bk_input_octets = usersession->input_octets;
 		appconn->bk_input_packets = usersession->input_packets;
 		appconn->bk_output_octets = usersession->output_octets;
@@ -466,7 +466,7 @@ eag_ins_do_syn_user_data(void *cbp, void *data, struct timeval *cb_tv)
 				appconn->session.virtual_ip, appconn->session.intf);
 		}
 		
-        appconn_config_portalsrv_bk(appconn, &(eagins->portalconf));
+		appconn_config_portalsrv_bk(appconn, &(eagins->portalconf));
 		appconn->bk_input_octets = usersession->input_octets;
 		appconn->bk_input_packets = usersession->input_packets;
 		appconn->bk_output_octets = usersession->output_octets;
@@ -746,20 +746,20 @@ terminate_appconn(struct app_conn_t *appconn,
 		eag_bss_message_count(eagins->eagstat, appconn, BSS_NORMAL_LOGOFF_COUNT, 1);
 	} else {
 		if (NULL == appconn || EAG_AUTH_TYPE_PORTAL == appconn->session.server_auth_type) {
-            eag_bss_message_count(eagins->eagstat, appconn, BSS_ABNORMAL_LOGOFF_COUNT, 1);
+			eag_bss_message_count(eagins->eagstat, appconn, BSS_ABNORMAL_LOGOFF_COUNT, 1);
 		} else {
-            eag_bss_message_count(eagins->eagstat, appconn, BSS_MACAUTH_ABNORMAL_LOGOFF_COUNT, 1);
+			eag_bss_message_count(eagins->eagstat, appconn, BSS_MACAUTH_ABNORMAL_LOGOFF_COUNT, 1);
 		}
 		eag_send_trap_user_logoff_abnormal(appconn, eagins, terminate_cause);
 	}
 
-    if (NULL == appconn || EAG_AUTH_TYPE_PORTAL == appconn->session.server_auth_type) {
-        eag_bss_message_count(eagins->eagstat, appconn, BSS_USER_CONNECTED_TOTAL_TIME, 
-                (appconn->session.session_stop_time - appconn->session.last_connect_ap_time));
-    } else {
-        eag_bss_message_count(eagins->eagstat, appconn, BSS_MACAUTH_USER_CONNECTED_TOTAL_TIME, 
-                (appconn->session.session_stop_time - appconn->session.last_connect_ap_time));
-    }
+	if (NULL == appconn || EAG_AUTH_TYPE_PORTAL == appconn->session.server_auth_type) {
+		eag_bss_message_count(eagins->eagstat, appconn, BSS_USER_CONNECTED_TOTAL_TIME, 
+			(appconn->session.session_stop_time - appconn->session.last_connect_ap_time));
+	} else {
+		eag_bss_message_count(eagins->eagstat, appconn, BSS_MACAUTH_USER_CONNECTED_TOTAL_TIME, 
+			(appconn->session.session_stop_time - appconn->session.last_connect_ap_time));
+	}
 
 	appconn->session.terminate_cause = terminate_cause;
 	radius_acct(eagins->radius, appconn, RADIUS_STATUS_TYPE_STOP);
@@ -873,20 +873,20 @@ terminate_appconn_nowait(struct app_conn_t *appconn,
 		eag_bss_message_count(eagins->eagstat, appconn, BSS_NORMAL_LOGOFF_COUNT, 1);
 	} else {
 		if (NULL == appconn || EAG_AUTH_TYPE_PORTAL == appconn->session.server_auth_type) {
-            eag_bss_message_count(eagins->eagstat, appconn, BSS_ABNORMAL_LOGOFF_COUNT, 1);
+			eag_bss_message_count(eagins->eagstat, appconn, BSS_ABNORMAL_LOGOFF_COUNT, 1);
 		} else {
-            eag_bss_message_count(eagins->eagstat, appconn, BSS_MACAUTH_ABNORMAL_LOGOFF_COUNT, 1);
+			eag_bss_message_count(eagins->eagstat, appconn, BSS_MACAUTH_ABNORMAL_LOGOFF_COUNT, 1);
 		}
 		eag_send_trap_user_logoff_abnormal(appconn, eagins, terminate_cause);
 	}
 	
-    if (NULL == appconn || EAG_AUTH_TYPE_PORTAL == appconn->session.server_auth_type) {
-        eag_bss_message_count(eagins->eagstat, appconn, BSS_USER_CONNECTED_TOTAL_TIME, 
-                (appconn->session.session_stop_time - appconn->session.last_connect_ap_time));
-    } else {
-        eag_bss_message_count(eagins->eagstat, appconn, BSS_MACAUTH_USER_CONNECTED_TOTAL_TIME, 
-                (appconn->session.session_stop_time - appconn->session.last_connect_ap_time));
-    }
+	if (NULL == appconn || EAG_AUTH_TYPE_PORTAL == appconn->session.server_auth_type) {
+		eag_bss_message_count(eagins->eagstat, appconn, BSS_USER_CONNECTED_TOTAL_TIME, 
+			(appconn->session.session_stop_time - appconn->session.last_connect_ap_time));
+	} else {
+		eag_bss_message_count(eagins->eagstat, appconn, BSS_MACAUTH_USER_CONNECTED_TOTAL_TIME, 
+			(appconn->session.session_stop_time - appconn->session.last_connect_ap_time));
+	}
 
 	eag_portal_notify_logout_nowait(eagins->portal, appconn);
 	
@@ -1032,20 +1032,20 @@ terminate_appconn_without_backup(struct app_conn_t *appconn,
 		eag_bss_message_count(eagins->eagstat, appconn, BSS_NORMAL_LOGOFF_COUNT, 1);
 	} else {
 		if (NULL == appconn || EAG_AUTH_TYPE_PORTAL == appconn->session.server_auth_type) {
-            eag_bss_message_count(eagins->eagstat, appconn, BSS_ABNORMAL_LOGOFF_COUNT, 1);
+			eag_bss_message_count(eagins->eagstat, appconn, BSS_ABNORMAL_LOGOFF_COUNT, 1);
 		} else {
-            eag_bss_message_count(eagins->eagstat, appconn, BSS_MACAUTH_ABNORMAL_LOGOFF_COUNT, 1);
+			eag_bss_message_count(eagins->eagstat, appconn, BSS_MACAUTH_ABNORMAL_LOGOFF_COUNT, 1);
 		}
 		eag_send_trap_user_logoff_abnormal(appconn, eagins, terminate_cause);
 	}
 
-    if (NULL == appconn || EAG_AUTH_TYPE_PORTAL == appconn->session.server_auth_type) {
-        eag_bss_message_count(eagins->eagstat, appconn, BSS_USER_CONNECTED_TOTAL_TIME, 
-                (appconn->session.session_stop_time - appconn->session.last_connect_ap_time));
-    } else {
-        eag_bss_message_count(eagins->eagstat, appconn, BSS_MACAUTH_USER_CONNECTED_TOTAL_TIME, 
-                (appconn->session.session_stop_time - appconn->session.last_connect_ap_time));
-    }
+	if (NULL == appconn || EAG_AUTH_TYPE_PORTAL == appconn->session.server_auth_type) {
+		eag_bss_message_count(eagins->eagstat, appconn, BSS_USER_CONNECTED_TOTAL_TIME, 
+			(appconn->session.session_stop_time - appconn->session.last_connect_ap_time));
+	} else {
+		eag_bss_message_count(eagins->eagstat, appconn, BSS_MACAUTH_USER_CONNECTED_TOTAL_TIME, 
+			(appconn->session.session_stop_time - appconn->session.last_connect_ap_time));
+	}
 	
 	eag_portal_notify_logout_nowait(eagins->portal, appconn);
 	
@@ -1816,15 +1816,15 @@ eag_ins_start(eag_ins_t *eagins)
 				EAG_REDIR_LISTEN_PORT);
 	}
 
-    if (eag_ins_get_ipv6_switch(eagins)) {
+	if (eag_ins_get_ipv6_switch(eagins)) {
 		if (1 == eagins->pdc_distributed) {	
 			if (HANSI_LOCAL == eagins->hansi_type) {
 				snprintf(ipv6str, sizeof(ipv6str) - 1, "fe00::169.254.2.%d", 100 + eagins->hansi_id);
 			} else {
 				snprintf(ipv6str, sizeof(ipv6str) - 1, "fe00::169.254.2.%d", eagins->slot_id);
 			}
-            inet_pton(AF_INET6, ipv6str, (struct in6_addr *)&ipv6_addr);
-            eag_captive_set_ipv6_redir_srv( eagins->captive, &ipv6_addr);
+			inet_pton(AF_INET6, ipv6str, (struct in6_addr *)&ipv6_addr);
+			eag_captive_set_ipv6_redir_srv( eagins->captive, &ipv6_addr);
 		} else {
 			eag_captive_set_ipv6_redir_srv( eagins->captive, &(eagins->nasipv6));
 		}
@@ -1915,13 +1915,13 @@ eag_ins_start(eag_ins_t *eagins)
 	eagins_read_file_switch();
 
 	read_file(VENDOR_ID_FILE, buf, sizeof(buf));
-    eag_log_info("eag_ins_start vendor_id: %s\n", buf);
+	eag_log_info("eag_ins_start enterprise_snmp_oid: %s\n", buf);
 	eag_radius_set_radius_vendor_id(eagins->radius, atoi(buf));
 
 	eagins->status = 1;
 	if (l2super_vlan_switch_t) {
-    	eag_set_l2super_vlan(eagins, l2super_vlan_switch_t);
-    }
+		eag_set_l2super_vlan(eagins, l2super_vlan_switch_t);
+	}
 	return EAG_RETURN_OK;
 failed_7:
 	eag_macauth_stop(eagins->macauth);
