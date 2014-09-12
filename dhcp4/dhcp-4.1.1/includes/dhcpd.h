@@ -212,6 +212,7 @@ struct dcli_subnet {
 	struct iaddr lowip;
 	struct iaddr highip;
 	struct iaddr mask;
+	int prefix_len;              /* yjl add 2014-9-10 */
 	struct dcli_subnet *next;
 };
 
@@ -256,6 +257,7 @@ struct subnet_config {
 	struct iaddr net;
 	struct iaddr netmask;
 	struct range_config range_conf;
+	int prefix_len;     /* yjl add 2014-9-10 */
 };
 
 struct dhcp_lease_ip_info {

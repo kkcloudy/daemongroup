@@ -2936,10 +2936,10 @@ DEFUN(add_dhcp_pool_ipv6_range_cmd_func,
 		return CMD_WARNING;
 	}*/		
 	prefix_length = atoi((char *)argv[3]);
-	if(prefix_length < 64){
+	/*if(prefix_length < 64){
 		vty_out(vty,"%%error! prefix length [64~128]!\n");
 		return CMD_WARNING;	
-	}
+	}*/
 
 	ret = dcli_add_dhcp_pool_ipv6_range(add, &ipAddrl, &ipAddrh, prefix_length,index,vty);
 	if (ret) {

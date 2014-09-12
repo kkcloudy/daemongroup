@@ -3810,7 +3810,8 @@ void parse_subnet6_declaration_no_cfile
 		return;
 	}
 */
-	//subnet->net = sub_conf->net;
+	subnet->net = sub_conf->net;
+    /* 
 	if(sub_conf->net.len){
 		int i = 0;
 		subnet->net.len = sub_conf->net.len;
@@ -3821,6 +3822,7 @@ void parse_subnet6_declaration_no_cfile
 				subnet->net.iabuf[i] = sub_conf->net.iabuf[i] & 0x00;
 		}
 	}
+	*/
 /*
 	token = next_token(&val, NULL, cfile);
 	if (token != SLASH) {
@@ -3845,7 +3847,7 @@ void parse_subnet6_declaration_no_cfile
 		return;
 	}
 save it static now, change later */
-	subnet->prefix_len = 64;
+	subnet->prefix_len = sub_conf->prefix_len;
 
 	if (!is_cidr_mask_valid(&subnet->net, subnet->prefix_len)) {
 		log_error("New subnet mask too short.  \n");

@@ -1300,6 +1300,7 @@ dhcp6_dbus_set_subnet
 	sub_conf.netmask = addsubnet->mask;		
 	sub_conf.range_conf.high = addsubnet->highip;	
 	sub_conf.range_conf.low = addsubnet->lowip; 
+	sub_conf.prefix_len = addsubnet->prefix_len; /* yjl add 2014-9-10 */
 	
 	/* Make sure that high and low addresses are in this subnet. */
 	if (!addr_eq((sub_conf.net), subnet_number((sub_conf.range_conf.low), (sub_conf.netmask)))) {
@@ -5275,6 +5276,7 @@ dhcp6_dbus_add_dhcp_pool_ip_range
 			tempsub->mask.iabuf[bit_g] += (0x01<<(7-i));
 		}
 		tempsub->mask.len = DHCP_IPV6_ADDRESS_LEN;
+		tempsub->prefix_len = prefix_length; /* yjl add 2014-9-10*/
 		log_debug("addsubnet->mask.iabuf %s, len is %d\n", piaddr(tempsub->mask), prefix_length);
 
 		for(i = 0; i < bit_g; i ++) {
