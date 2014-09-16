@@ -544,7 +544,8 @@ if_prefix_add_ipv6 (struct interface *ifp, struct connected *ifc)
   struct prefix_ipv6 *p;
   struct in6_ifreq ifreq;
 
-  
+  #if 0
+  /*ipv6 not support interface loacal*/
   if(CHECK_FLAG(ifp->if_scope, INTERFACE_LOCAL))
   {
     int slot_num = 0;
@@ -555,6 +556,7 @@ if_prefix_add_ipv6 (struct interface *ifp, struct connected *ifc)
 		return -1;
 	 }
    }
+  #endif 
 
   p = (struct prefix_ipv6 *) ifc->address;
 

@@ -952,7 +952,7 @@ active_master_packet_route_info_to_send(struct prefix *p, struct rib *rib, int s
 	{
 	/*	if(comand == ZEBRA_IPV4_ROUTE_ADD ||comand == ZEBRA_IPV6_ROUTE_ADD)*/
 		{
-			if(client->board_id == slot)/*Add only send to one board.*/
+			//if(client->board_id == slot)/*Add only send to one board.*/
 			{
 			
 			   if ((p->family == AF_INET) &&(rib->type != ZEBRA_ROUTE_CONNECT))
@@ -3506,6 +3506,7 @@ rib_search_route_ipv6 (struct route_node *rn, struct rib *rib, struct prefix *p,
 	   {
 		 if (IS_ZEBRA_DEBUG_RIB)
 		 	zlog_debug("%s: line %d .nexthop type[%d].\n",__func__,__LINE__,nexthop->type);
+		
 		 switch(nexthop->type)
 		 {
 		 	case NEXTHOP_TYPE_IFINDEX:
@@ -3560,7 +3561,8 @@ rib_search_route_ipv6 (struct route_node *rn, struct rib *rib, struct prefix *p,
 
 					break;
 				
-			}
+			} 
+	
 		}
 		
 	}

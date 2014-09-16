@@ -2186,7 +2186,7 @@ tipc_client_route_multipath (int cmd, tipc_server *vice_board, u_short length)
 					 zlog_debug("%s : line %d, fetch nexthop ifname[%s].\n",__func__,__LINE__,ifname);
 					
 					/*gujd : 2013-01-10, pm 4:34 . Add for interface local used in route.*/
-					ret = check_interface_belong_to_local_board_set_local_mode(ifname);
+					//ret = check_interface_belong_to_local_board_set_local_mode(ifname);/*ipv6 not support interface loacal*/
 					if(ret == 1&&(cmd == ZEBRA_IPV4_ROUTE_ADD ||cmd == ZEBRA_IPV6_ROUTE_ADD))/*change*/
 					 {
 						zlog_debug("%s: line %d, nexthop interface(%s) set local, not to add rib.\n",__func__,__LINE__,ifname);
@@ -4303,7 +4303,7 @@ tipc_vice_connected_add_by_prefix (struct interface *ifp, struct prefix *p,
     zlog_info("%s:line %d,######### interface(%s) scope (%u)##########\n",__func__,__LINE__,ifp->name,ifp->if_scope);
 	if((product->board_type == BOARD_IS_BACKUP_MASTER )
 		||(product->board_type == BOARD_IS_VICE)
-		&& (!(CHECK_FLAG(ifp->if_scope, INTERFACE_LOCAL))))
+		/*&& (!(CHECK_FLAG(ifp->if_scope, INTERFACE_LOCAL)))*/)/*ipv6 not support interface loacal*/
 	{
 	   		zlog_info("Bakup master or Vice board , ifc have address , so install kernel .\n ");
 		/*	ifc->ifp = ifp;///////////////delet/////////////////////////////
@@ -4369,6 +4369,8 @@ tipc_vice_connected_add_by_prefix (struct interface *ifp, struct prefix *p,
 	   zlog_debug("%s: line %d , the interface %s add the same address , so couldn't go on ....\n",__func__,__LINE__,ifp->name);
 	  return NULL;
    }
+  #if 0
+  /*ipv6 not support interface loacal*/
   if((product->board_type == BOARD_IS_VICE)
 	  &&(CHECK_FLAG(ifp->if_scope, INTERFACE_LOCAL))
 	  &&((judge_real_local_interface(ifp->name))!=LOCAL_BOARD_INTERFACE))
@@ -4376,7 +4378,7 @@ tipc_vice_connected_add_by_prefix (struct interface *ifp, struct prefix *p,
 	  zlog_info("Vice board: interface(%s) is set local , but not real local interface , so not creat ifc and not install kernel. \n ",ifp->name);
 	  return NULL;
   	}
-  
+  #endif
   /* Allocate new connected address. */
   ifc = connected_new ();
   ifc->ifp = ifp;
@@ -4536,7 +4538,8 @@ tipc_vice_connected_add_by_prefix (struct interface *ifp, struct prefix *p,
    listnode_add (ifp->connected, ifc);
 	
 #endif
-
+	#if 0
+	/*ipv6 not support interface loacal*/
 	if((product->board_type == BOARD_IS_BACKUP_MASTER)
 		&&(CHECK_FLAG(ifp->if_scope, INTERFACE_LOCAL)))
 	 {
@@ -4556,6 +4559,7 @@ tipc_vice_connected_add_by_prefix (struct interface *ifp, struct prefix *p,
 	 	}
 		
 	 }
+	#endif
 	
 skip2:
 #if 0	

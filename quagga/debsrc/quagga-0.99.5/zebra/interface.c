@@ -5404,6 +5404,8 @@ ipv6_address_install (struct vty *vty, struct interface *ifp,
 				||(judge_eth_interface(ifp->name)==ETH_INTERFACE)
 				||(strncmp(ifp->name,"mng",3)== 0))
 	  {
+#if 0
+		/*ipv6 not support interface loacal*/
 		if(CHECK_FLAG(ifp->if_scope, INTERFACE_LOCAL))
 		{
 			if(ip_have_set == 1)
@@ -5439,6 +5441,7 @@ ipv6_address_install (struct vty *vty, struct interface *ifp,
 			 return CMD_SUCCESS;
 						
 		}
+#endif
 	     ret = if_prefix_add_ipv6 (ifp, ifc);
          if(ret < 0)
 		  {
