@@ -144,6 +144,16 @@ struct tag_radioid{
 	struct tag_radioid *next; 
 	
 };
+/* lilong add 2014.09.09 */
+#define WID_MAX_VLANID		(4096)
+
+struct wtp_lan_vlan		/* ENR-23 */
+{
+	unsigned char state;		/* 0 : disable, 1 : enable */
+	unsigned short vlanid;
+};
+
+
 
 struct tag_radioid_list{
  	int count;	 
@@ -1460,6 +1470,7 @@ struct wtp{
 	unsigned char image_data_percent;
 	unsigned char image_data_step;
 	unsigned char image_data_result;
+    struct wtp_lan_vlan lan_vlan;	/* ENR-23 *///lilong add 2014.09.10
 
 	//for timing upgrade ap
 	WID_WSC ap_timing_upgrade_info;

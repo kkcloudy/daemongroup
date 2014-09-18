@@ -312,7 +312,7 @@ out arg list:  // in the order as they are appended in the dbus message.
 #define WID_DBUS_WTP_METHOD_APPAY_WTP_MAX_STA   "wtp_max_sta"
 #define WID_DBUS_WTP_METHOD_APPAY_WTP_TRIGER   "wtp_triger"
 #define WID_DBUS_WTP_METHOD_APPAY_WTP_FLOW_TRIGER   "wtp_flow_triger"
-
+#define WID_DBUS_WTP_METHOD_LAN_VLAN	"wtp_lan_vlan" //lilong add 2014.09.09
 
 #define WID_DBUS_WTP_METHOD_APPAY_WTP_WLANID	"apply_wtp_wlanid"
 #define WID_DBUS_WLAN_METHOD_APPAY_WLAN_IFNAME	"apply_wlan_ifname"

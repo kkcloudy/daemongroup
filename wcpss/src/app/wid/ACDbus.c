@@ -81483,6 +81483,72 @@ DBusMessage *wid_dbus_method_show_wifi_locate_config_group_all(DBusConnection *c
 	CW_FREE_OBJECT(wifi_locate_group);
 	return reply;	
 }
+/* lilong add 2014.09.09 */
+DBusMessage *wid_dbus_interface_set_wtp_lan_vlan(DBusConnection *conn, DBusMessage *msg, void *user_data)
+{
+	DBusMessage *reply = NULL;
+	DBusError err;
+	DBusMessageIter	iter;
+	unsigned int ret = WID_DBUS_SUCCESS;
+	unsigned int wtpid = 0;
+	unsigned int enable = 0;	
+	unsigned short vlanid = 0;
+
+	dbus_error_init(&err);
+	if (!(dbus_message_get_args(msg, &err,
+								DBUS_TYPE_UINT32, &wtpid,								
+								DBUS_TYPE_UINT32, &enable,
+								DBUS_TYPE_UINT16, &vlanid,
+								DBUS_TYPE_INVALID)))
+	{
+		wid_syslog_err("%s: Unable to get input args\n", __func__);	
+		if (dbus_error_is_set(&err)) 
+		{
+			wid_syslog_err("%s raised: %s", err.name,err.message);
+			dbus_error_free(&err);
+		}
+		return NULL;
+	}
+
+	if (WTP_NUM <= wtpid)
+	{
+		ret = WTP_ID_LARGE_THAN_MAX;
+	}	
+	else if (NULL == AC_WTP[wtpid])
+	{
+		ret = WTP_ID_NOT_EXIST;
+	}
+
+	wid_syslog_info("%s: set wtp %d lan vlan %d %s", __func__, 
+		wtpid, vlanid, enable ? "enable" : "disable");
+	if (enable)
+	{
+		if (0 == AC_WTP[wtpid]->lan_vlan.state)
+		{
+			AC_WTP[wtpid]->lan_vlan.state = 1;		
+			AC_WTP[wtpid]->lan_vlan.vlanid = vlanid;
+			ret = set_wtp_lan_vlan(wtpid);
+		}
+		else
+		{
+			ret = SWITCH_IS_DISABLE;
+		}
+	}
+	else
+	{
+		if (AC_WTP[wtpid]->lan_vlan.state)
+		{
+			AC_WTP[wtpid]->lan_vlan.state = 0;
+			ret = set_wtp_lan_vlan(wtpid);
+		}
+	}
+
+	reply = dbus_message_new_method_return(msg);
+	dbus_message_iter_init_append (reply, &iter);
+	dbus_message_iter_append_basic (&iter,DBUS_TYPE_UINT32,&ret);
+	
+	return reply;
+}
 
 DBusMessage *wid_dbus_method_show_wifi_locate_config_all_wtp(DBusConnection *conn, DBusMessage *msg, void *user_data)
 {
@@ -82767,6 +82833,19 @@ int show_running_config_wtp(WID_WTP **WTP,int i,char *cursor,char **showStr2,cha
 				cursor = showStr + totalLen;
 			}*/
 			/*end*/
+			/* lilong add 2014.09.12 */
+		   if ((0 != WTP[i]->lan_vlan.state)
+                 && ((WTP[i]->lan_vlan.vlanid > 0) && (WTP[i]->lan_vlan.vlanid < WID_MAX_VLANID)))
+           {
+               if(0 != vrrid)
+               {
+                    totalLen += sprintf(cursor, " ");
+                    cursor = showStr + totalLen;
+               }
+                    totalLen += sprintf(cursor, " set wtp lan-vlan %d enable\n", WTP[i]->lan_vlan.vlanid);
+                    cursor = showStr + totalLen;						
+           }
+		   
 			if(WTP[i]->location!=NULL){
 				if(vrrid != 0){
 					totalLen += sprintf(cursor," ");
@@ -86011,6 +86090,10 @@ static DBusHandlerResult wid_dbus_message_handler (DBusConnection *connection, D
 	  else  if(dbus_message_is_method_call(message,WID_DBUS_WTP_INTERFACE,WID_DBUS_WTP_METHOD_APPAY_WTP_IFNAME_IPV6)) {
 		reply = wid_dbus_interface_wtp_apply_ifname_ipv6(connection,message,user_data);
 	  }
+	   /* lilong add 2014.09.09 */
+	  else  if(dbus_message_is_method_call(message,WID_DBUS_WTP_INTERFACE,WID_DBUS_WTP_METHOD_LAN_VLAN)) {
+		reply = wid_dbus_interface_set_wtp_lan_vlan(connection,message,user_data);
+	  }	
 	  else if(dbus_message_is_method_call(message,WID_DBUS_WTP_INTERFACE,WID_DBUS_WTP_METHOD_APPAY_WTP_WLANID)) {
 		//printf("******wid_dbus_interface_wtp_apply_wlanid start************\n");
 		reply = wid_dbus_interface_wtp_apply_wlanid(connection,message,user_data);

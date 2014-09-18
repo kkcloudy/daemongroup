@@ -19197,6 +19197,63 @@ void  dcli_del_black_white_oui_mac(unsigned int index,int localid,unsigned int *
 	dbus_message_iter_init(reply,&iter);
 	dbus_message_iter_get_basic(&iter,ret);
 }
+
+
+/* lilong add 2014.09.09 */
+unsigned int dcli_wtp_lan_vlan
+(
+    
+	unsigned int index,
+	unsigned int localid,
+	unsigned int enable,
+	unsigned int wtpid,	
+	unsigned short vlanid,
+	DBusConnection *dcli_dbus_connection
+)
+{  
+	DBusMessage *query = NULL;
+    DBusMessage *reply = NULL;
+	DBusMessageIter  iter;
+	DBusError err;
+	unsigned int ret;	
+
+	char BUSNAME[PATH_LEN];
+	char OBJPATH[PATH_LEN];
+	char INTERFACE[PATH_LEN];
+
+	
+	ReInitDbusPath_V2(localid,index,WID_DBUS_BUSNAME,BUSNAME);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_WTP_OBJPATH,OBJPATH);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_WTP_INTERFACE,INTERFACE);
+	query = dbus_message_new_method_call(BUSNAME,OBJPATH,INTERFACE,WID_DBUS_WTP_METHOD_LAN_VLAN);
+
+	dbus_error_init(&err);
+	dbus_message_append_args(query,
+									 DBUS_TYPE_UINT32,&wtpid,
+									 DBUS_TYPE_UINT32,&enable,
+									 DBUS_TYPE_UINT16,&vlanid,
+									 DBUS_TYPE_INVALID);
+	reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection,query,-1, &err);
+	dbus_message_unref(query);
+	
+	if (NULL == reply)
+	{
+		printf("%% failed get reply.\n");
+		if (dbus_error_is_set(&err))
+		{
+			printf("%s raised: %s",err.name,err.message);
+			dbus_error_free(&err);
+		}
+		return WID_DBUS_ERROR;
+	}
+
+	dbus_message_iter_init(reply,&iter);
+	dbus_message_iter_get_basic(&iter,&ret);
+	dbus_message_unref(reply);
+
+	return ret;
+}
+
 void dcli_show_black_white_oui_info_list(unsigned int index,int localid,unsigned int *ret,unsigned int ouiXmlType,WtpOUIInfo **ouiInfoList,DBusConnection *dcli_dbus_connection){
 	DBusMessage *query = NULL;
     DBusMessage *reply = NULL;

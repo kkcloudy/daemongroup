@@ -2279,6 +2279,22 @@ CWBool CWAssembleConfigurationUpdateRequest_WTP(CWProtocolMessage **messagesPtr,
 				return CW_FALSE; // error will be handled by the caller
 			}
 			break;	
+		case WTP_LAN_VLAN1:  //lilong add 2014.09.15
+		    MsgElemCount = 1;
+		    CW_CREATE_PROTOCOL_MSG_ARRAY_ERR(msgElems, MsgElemCount, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
+		    if (!(CWAssembleMsgElemWTPlanvlan(&(msgElems[++k]),
+													elem->mqinfo.u.WtpInfo.value1,	
+													elem->mqinfo.u.WtpInfo.value3))) 
+		    {
+			    for(i = 0; i <= k; i++) 
+			    {
+				    CW_FREE_PROTOCOL_MESSAGE(msgElems[i]);
+			    }
+			    CW_FREE_OBJECT(msgElems);
+			    return CW_FALSE; 
+		    }
+		    break;
+
 		case WTP_STA_WAPI_INFO_SET:
 			MsgElemCount = 1;
 			CW_CREATE_PROTOCOL_MSG_ARRAY_ERR(msgElems, MsgElemCount, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););

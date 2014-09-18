@@ -4380,7 +4380,37 @@ CWBool CWParseWtp_Sta_Terminal_Disturb_Report(CWProtocolMessage *msgPtr, int len
 	return CW_TRUE;
 	
 }
+/*lilong add 2014.09.15 */
+CWBool CWAssembleMsgElemWTPlanvlan(CWProtocolMessage *msgPtr, 
+	unsigned char state, unsigned short vlanid)
+{
+/*
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|		  element				|		   len					|
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|	  operate 	|         lan vlan vlanid   	|
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+*/
 
+	short int elementid = CW_VENDOR_CONFIG_ELEMENT_LAN_VLAN; 
+	short int length = 7;
+	
+	if(msgPtr == NULL) return CWErrorRaise(CW_ERROR_WRONG_ARG, NULL);	
+	
+	CW_CREATE_PROTOCOL_MESSAGE(*msgPtr, length, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
+	
+	CWProtocolStore16(msgPtr, elementid); 
+	CWProtocolStore16(msgPtr, (length-4));	
+
+	CWProtocolStore8(msgPtr, state);
+	CWProtocolStore16(msgPtr, vlanid);
+
+	wid_syslog_debug_debug(WID_DEFAULT,"elemid %d elemlen %d state %d lan vlan %d\n", 
+		elementid,length,state,vlanid);
+		
+	return CWAssembleMsgElemVendor(msgPtr, CW_MSG_ELEMENT_VENDOR_SPEC_PAYLOAD_CW_TYPE);
+
+}
 CWBool  CWAssembleStaticAPIPDNS(CWProtocolMessage *msgPtr,int wtpid)
 {
 	wid_syslog_debug_debug(WID_WTPINFO,"#### CWAssembleStaticAPIPDNS ####\n");

@@ -1004,6 +1004,7 @@ char WID_DBUS_CONF_METHOD_SET_WTP_COLLECT_TIME[PATH_LEN] = "set_wtp_trap_collect
 char WID_DBUS_CONF_METHOD_SHOW_DBUS_COUNT[PATH_LEN] = "wid_show_dbus_count";
 char WID_DBUS_CONF_METHOD_SET_DBUS_COUNT[PATH_LEN] = "wid_set_dbus_count";
 char WID_DBUS_CONF_METHOD_ADD_BLACK_WHITE_OUI_MAC[PATH_LEN] = "add_black_white_oui_mac";
+char WID_DBUS_WTP_METHOD_LAN_VLAN[PATH_LEN]=  "wtp_lan_vlan"; //lilong add 2014.09.09
 char WID_DBUS_CONF_METHOD_DEL_BLACK_WHITE_OUI_MAC[PATH_LEN] = "del_black_white_oui_mac";
 char WID_DBUS_CONF_METHOD_SHOW_BLACK_WHITE_OUI_INFO[PATH_LEN] = "show_black_white_oui_info_list";
 char WID_DBUS_CONF_METHOD_UPDATE_BLACK_WHITE_OUI_INFO_LIST[PATH_LEN] = "update_black_white_oui_info";

@@ -41992,6 +41992,136 @@ DEFUN(show_ap_timing_upgrade_info_cmd_func,
 
 
 
+/* lilong add 2014.09.09 */
+DEFUN(set_wtp_lan_vlan_enable_cmd_func,
+	  set_wtp_lan_vlan_enable_cmd,
+	  "set wtp lan-vlan VLANID enable",
+	  WTP_SET
+	  WTP_WTP
+	  "WTP lan vlan\n"
+	  "VLANID 1-4094\n"
+	  "WTP lan vlan enable\n")
+{	
+	unsigned int ret;
+	unsigned int wtpid = 0;
+    unsigned int enable = 0;
+	unsigned int index = 0;
+	unsigned short vlanid = 0;
+    unsigned int localid = 1;
+	int slot_id = HostSlotId;
+	
+
+	vlanid = atoi(argv[0]);
+	if ((vlanid < 1) || (vlanid >= WID_MAX_VLANID-1))
+	{
+		vty_out(vty,"%% Invalid vlanid %s. Range 1-4094!\n", argv[0]);
+		return CMD_WARNING;		
+	}
+	
+	if(vty->node == CONFIG_NODE)
+	{
+		index = 0;
+	}
+	else if(vty->node == HANSI_NODE)
+	{
+		index = vty->index;
+		localid = vty->local;
+		slot_id = vty->slotindex;
+	}
+	else if(vty->node == WTP_NODE)
+	{
+		index = 0;			
+		wtpid = (unsigned int)vty->index;
+	}
+	else if(vty->node == HANSI_WTP_NODE)
+	{
+		index = (unsigned int)vty->index; 		
+		wtpid = (unsigned int)vty->index_sub;
+		localid = vty->local;
+		slot_id = vty->slotindex;
+	}
+	else
+	{
+		vty_out(vty,"%% unsupport mode\n");
+		return CMD_WARNING;
+	}
+	
+	DBusConnection *dcli_dbus_connection = NULL;
+	ReInitDbusConnection(&dcli_dbus_connection, slot_id, distributFag);
+	ret = dcli_wtp_lan_vlan(index, localid,1, wtpid, vlanid, dcli_dbus_connection);
+	if(0 != ret)
+	{
+		if (ret)
+		{
+			vty_out(vty, "%s\n", dcli_wid_opcode2string(ret));
+		}
+	}
+	
+	return CMD_SUCCESS; 
+}
+
+/*lilong add 2014.09.12 */
+DEFUN(set_wtp_lan_vlan_disable_cmd_func,
+		set_wtp_lan_vlan_disable_cmd,
+		"set wtp lan-vlan disable",
+		WTP_SET
+		WTP_WTP
+		"WTP lan vlan\n"
+		"WTP lan vlan disable\n")
+{	
+	unsigned int ret;
+	unsigned int wtpid = 0;
+    unsigned int enable = 0;
+	unsigned int index = 0;
+	unsigned short vlanid = 0;
+    unsigned int localid = 1;
+	int slot_id = HostSlotId;
+	
+    if(vty->node == CONFIG_NODE)
+	{
+		index = 0;
+	}
+	else if(vty->node == HANSI_NODE)
+	{
+		index = vty->index;
+		localid = vty->local;
+		slot_id = vty->slotindex;
+	}
+	else if(vty->node == WTP_NODE)
+	{
+		index = 0;			
+		wtpid = (unsigned int)vty->index;
+	}
+	else if(vty->node == HANSI_WTP_NODE)
+	{
+		index = (unsigned int)vty->index; 		
+		wtpid = (unsigned int)vty->index_sub;
+		localid = vty->local;
+		slot_id = vty->slotindex;
+	}
+	else
+	{
+		vty_out(vty,"%% unsupport mode\n");
+		return CMD_WARNING;
+	}
+	
+	DBusConnection *dcli_dbus_connection = NULL;
+	ReInitDbusConnection(&dcli_dbus_connection, slot_id, distributFag);
+	
+	ret = dcli_wtp_lan_vlan(index,localid, 0, wtpid, vlanid, dcli_dbus_connection);
+	if(0 != ret)
+	{
+		if (ret)
+		{
+			vty_out(vty, "%s\n", dcli_wid_opcode2string(ret));
+		}
+	}
+	
+	return CMD_SUCCESS; 
+}
+
+
+
 /* Huangleilei copy from 1.3.18, 20130610 */
 DEFUN(wtp_set_web_report_ap_snr_range_cmd_func,
 	  wtp_set_web_report_ap_snr_range_cmd,
@@ -42558,6 +42688,8 @@ void dcli_wtp_init(void) {
 	install_element(CONFIG_NODE,&download_ap_image_slot_cmd);
 	install_element(CONFIG_NODE,&download_certificate_image_cmd);
 	install_element(CONFIG_NODE,&download_certificate_image_slot_cmd);
+	install_element(CONFIG_NODE,&set_wtp_lan_vlan_enable_cmd); //lilong add 2014.09.09
+	install_element(CONFIG_NODE,&set_wtp_lan_vlan_disable_cmd);
 	/************************************************LOCAL_HANSI_AP_GROUP_WTP_NODE_END**************************************************/
 
 	/************************************************VIEW_NODE**************************************************/
@@ -43149,7 +43281,9 @@ void dcli_wtp_init(void) {
 			install_element(HANSI_WTP_NODE, &set_ap_timing_upgrade_switch_cmd);
 			install_element(HANSI_WTP_NODE, &set_ap_timing_upgrade_timer_cmd);
 			install_element(HANSI_WTP_NODE, &show_ap_timing_upgrade_info_cmd);
-			
+				
+            install_element(HANSI_WTP_NODE,&set_wtp_lan_vlan_enable_cmd); //lilong add 2014.09.09
+            install_element(HANSI_WTP_NODE,&set_wtp_lan_vlan_disable_cmd);
 			install_element(HANSI_WTP_NODE,&set_ap_longitude_latitude_cmd);
 			install_element(HANSI_WTP_NODE, &set_ap_unauthorized_mac_switch_cmd);
 			//install_element(HANSI_WTP_NODE,&set_ap_unauthorized_mac_reportinterval_cmd);
@@ -43174,7 +43308,8 @@ void dcli_wtp_init(void) {
 			install_element(HANSI_NODE,&show_all_wlan_stats_information_cmd);							/*b7*/
 			install_element(HANSI_NODE,&show_all_wlan_ssid_stats_information_cmd);						/*b8*/
 			install_element(HANSI_NODE,&show_all_wtp_ifname_information_cmd);							/*b10*/
-				
+			install_element(HANSI_NODE,&set_wtp_lan_vlan_enable_cmd); //lilong add 2014.09.09	
+			install_element(HANSI_NODE,&set_wtp_lan_vlan_disable_cmd);
 			install_element(HANSI_NODE,&show_all_wtp_the_radio_para_information_cmd);					/*b11*/
 			install_element(HANSI_NODE,&show_all_wtp_eth_port_information_cmd);							/*b12*/
 			install_element(HANSI_NODE,&show_all_wtp_radio_stats_information_cmd);						/*b13*/

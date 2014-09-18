@@ -312,7 +312,8 @@ CWBool CWParaseWTPTerminalStatistics(
 				int wtpindex);
 CWBool CWAssembleMsgElemAPSetCPEChannelIntf(CWProtocolMessage *msgPtr, unsigned char op, unsigned short vlanId,unsigned char radioId,unsigned char wlanId);
 CWBool CWAssembleMsgElemRadiosetMGMTratebasewlan(CWProtocolMessage *msgPtr, unsigned char radioId,unsigned char wlanId,unsigned int rate);
-
+CWBool CWAssembleMsgElemWTPlanvlan(CWProtocolMessage *msgPtr, 
+	unsigned char state, unsigned short vlanid); //lilong add 2014.09.15
 CWBool CWAssembleWifiLocatePublicConfig
 (
 	CWProtocolMessage *msgPtr,

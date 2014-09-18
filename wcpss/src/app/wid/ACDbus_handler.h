@@ -553,7 +553,7 @@ int wid_set_wlan_hotspotid(unsigned char Wlanid,unsigned int hotspotid);
 int read_board_ap_max_counter(unsigned int * count);//fengwenchao add for read gMaxWTPs from  /dbm/local_board/board_ap_max_counter
 int WID_ADD_WLAN_APPLY_RADIO_BASE_ESSID(unsigned int RadioID,unsigned char WlanID,char *ESSID);
 int WID_DELETE_WLAN_APPLY_RADIO_BASE_ESSID(unsigned int RadioID,unsigned char WlanID,char *ESSID);
-
+unsigned int set_wtp_lan_vlan(unsigned int wtpid);//lilong add 2014.09.10
 
 unsigned int bak_wid_radio_bind_wifi_locate_config_group
 (

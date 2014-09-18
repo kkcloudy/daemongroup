@@ -321,6 +321,67 @@ void wid_apstatsinfo_init(unsigned int WTPID){			//xiaodawei add for apstatsinfo
 	
 	return 0;
 } 
+ /* lilong add 2014.09.09 */
+unsigned int set_wtp_lan_vlan(unsigned int wtpid)
+{
+	msgq msg;
+	struct msgqlist *elem = NULL;	
+
+	if (WTP_NUM <= wtpid)
+	{
+		return WTP_ID_LARGE_THAN_MAX;
+	}
+	if (NULL == AC_WTP[wtpid])
+	{
+		return WTP_ID_NOT_EXIST;
+	}
+
+	memset((char*)&msg, 0, sizeof(msg));
+		
+	if (WID_RUN == AC_WTP[wtpid]->WTPStat)
+	{
+		CWThreadMutexLock(&(gWTPs[wtpid].WTPThreadMutex));
+		if (gWTPs[wtpid].isNotFree && (CW_ENTER_RUN == gWTPs[wtpid].currentState))
+		{
+			msg.mqid = wtpid%THREAD_NUM+1;
+			msg.mqinfo.WTPID = wtpid;
+			msg.mqinfo.type = CONTROL_TYPE;
+			msg.mqinfo.subtype = WTP_S_TYPE;
+			msg.mqinfo.u.WtpInfo.Wtp_Op = WTP_LAN_VLAN1;
+			msg.mqinfo.u.WtpInfo.value1 = AC_WTP[wtpid]->lan_vlan.state;
+			msg.mqinfo.u.WtpInfo.value3 = AC_WTP[wtpid]->lan_vlan.vlanid;
+			
+			if (-1 == msgsnd(ACDBUS_MSGQ, (msgq *)&msg, sizeof(msg.mqinfo), 0))
+			{
+				wid_syslog_err("%s: msgsend %s", __func__, strerror(errno));
+			}
+		}		
+		CWThreadMutexUnlock(&(gWTPs[wtpid].WTPThreadMutex));
+	}
+	else if (1 == AC_WTP[wtpid]->isused)
+	{
+	
+		elem = (struct msgqlist*)malloc(sizeof(struct msgqlist));
+		if (NULL == elem)
+		{			
+			WID_MALLOC_ERR();			
+			return MALLOC_ERROR;
+		}			
+		memset(elem, 0, sizeof(struct msgqlist));
+		elem->mqinfo.WTPID = wtpid;
+		elem->mqinfo.type = CONTROL_TYPE;
+		elem->mqinfo.subtype = WTP_S_TYPE;
+		elem->mqinfo.u.WtpInfo.Wtp_Op = WTP_LAN_VLAN1;
+		elem->mqinfo.u.WtpInfo.value1 = AC_WTP[wtpid]->lan_vlan.state;
+		elem->mqinfo.u.WtpInfo.value3 = AC_WTP[wtpid]->lan_vlan.vlanid;
+		
+		WID_INSERT_CONTROL_LIST(wtpid, elem);
+		elem = NULL;
+	}
+
+	return 0;
+	
+}
 
 int wid_update_bss_to_wifi(unsigned int bssindex,unsigned int WTPIndex,unsigned char flag){
 	if(1)//((AC_BSS[bssindex]->BSS_IF_POLICY == BSS_INTERFACE)||(AC_BSS[bssindex]->BSS_IF_POLICY == WLAN_INTERFACE))

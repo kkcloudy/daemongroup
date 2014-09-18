@@ -63,6 +63,744 @@ void str2lower(char **str) {
 	
 	return;
 }
+/* lilong add 2014.09.09 */
+char *dcli_wid_opcode2string(int opcode)
+{
+	switch (opcode)
+	{
+		case -1:											/* -1 */
+			return "%% failed to get reply.";
+
+		case WID_DBUS_SUCCESS:								/* 0 */
+			return "Command operate successfully.";
+
+		case WID_DBUS_ERROR:								/* 1 */
+			return "%% Operation fail.";
+
+		case FAILED_GET_REPLY:								/* 2 */
+			return "%% Failed to get reply..";
+
+		case SYSTEM_CMD_ERROR:								/* 3 */
+			return "%% System cmd error.";
+
+		case UNKNOWN_ERROR: 								/* 4 */
+			return "%% unkonwn erro.";
+
+		case MALLOC_ERROR: 									/* 5 */
+			return "%% Out of memory.";
+			
+
+		case WLAN_ID_BE_USED:								/* 6 */
+			return "%% Wlan id exist.";
+
+		case WLAN_ID_NOT_EXIST: 							/* 7 */
+			return "%% Wlan id does not exist.";
+
+		case WLAN_ID_LARGE_THAN_MAX: 						/* 8 */
+			return "%% Wlan id is larger than max.";
+
+		case WLAN_APPLY_SECURITY_FIRST:						/* 9 */
+			return "%% Wlan should first apply security ID";
+
+		case SECURITYINDEX_IS_SAME:							/* 10 */
+			return "%% Radio apply bingding securityindex is same with other.";
+
+
+		case WLAN_NOT_BINDING_IF:							/* 11 */
+			return "%% Wlan not bind interface.";
+
+		case Wlan_IF_NOT_BE_BINDED:							/* 12 */
+			return "%% Wlan not bind interface.";
+
+		case WLAN_BE_ENABLE: 								/* 13 */
+			return "%% Wlan is enable, you should disable it first.";
+			
+		case WLAN_BE_DISABLE:								/* 14 */
+			return "%% Wlan is disable, you should enable it first.";
+
+		case WLAN_NOT_NEED_NAS: 							/* 15 */
+			return "%% No nas_id needed,please use <wlan apply interface IFNAME>,without nas_identifier.";
+				
+
+		case WLAN_CREATE_BR_FAIL:							/* 16 */
+			return "%% Wlan bridge error.";
+
+		case WLAN_DELETE_BR_FAIL: 							/* 17 */
+			return "%% Wlan delelte L3 bridge interface failed.";
+
+		case WLAN_CREATE_L3_INTERFACE_FAIL: 				/* 18 */
+			return "%% Wlan crete wlan create layer3 interface failed.";
+		
+		case WLAN_DELETE_L3_INTERFACE_FAIL: 				/* 19 */
+			return "%% Wlan delelte L3 interface failed.";
+
+		case WID_BINDING_WLAN:								/* 20 */
+			return "%% Before change binding interface, please delete binding wlan id first.";
+
+
+		case WLAN_NOT_BINDING_VLAN:							/* 21 */
+			return "%% Wlan has not binding vlan.";
+
+		case WLAN_BINDING_VLAN:								/* 22 */
+			return "%% Wlan have already binding vlan,please undo wlan-vlan binding first.";
+			
+		case WLAN_CTR_LIST_ENABLE:							/* 23 */
+			return "%% WLAN control list is enable, you should disable it first.";
+
+		case WLAN_SERVICE_CONTROL_BE_USED:					/* 24 */
+			return "%% Wlan starttimer or stoptimer should be disabled.";
+
+		case WTP_ID_BE_USED:								/* 25 */
+			return "%% Wtp is used, should unused it first.";
+
+
+		case WTP_ID_NOT_EXIST:								/* 26 */
+			return "%% Wtp id does not exist.";
+			
+		case WTP_ID_LARGE_THAN_MAX: 						/* 27 */
+			return "%% Wtp id larger than max.";
+
+		case WTP_OVER_MAX_NUM: 								/* 28 */
+			return "%% Create wtp count reach to max wtp count.";
+
+		case WTP_MAC_BE_USED: 								/* 29 */
+			return "%% Wtp mac exist.";
+			
+		case WTP_SN_BE_USED:								/* 30 */
+			return "%% Wtp sn exist.";
+
+
+		case WTP_BE_USING:									/* 31 */
+			return "%% This wtp is used and active, unused it first.";
+
+		case WTP_IS_NOT_BINDING_WLAN_ID:					/* 32 */
+			return "%% wtp is not binding wlan.";
+
+		case WTP_CLEAR_BINDING_WLAN_SUCCESS:				/* 33 */
+			return "%% Clear wtp binding wlan list successfully.";
+
+		case WTP_WLAN_BINDING_NOT_MATCH:					/* 34 */
+			return "%% Wtp wlan binding interface not match.";
+
+		case WTP_IF_NOT_BE_BINDED:							/* 35 */
+			return "%% Wtp not bind interface.";
+
+			
+		case WTP_NOT_IN_RUN_STATE:							/* 36 */
+			return "%% Wtp is not in run state.";
+
+		case WTP_NO_SURPORT_TYPE:							/* 37 */
+			return "%% Radio type conflict, please check it first.";
+
+		case WTP_NO_SURPORT_Rate:							/* 38 */
+			return "%% Wtp mode conflict, does not support this rate.";
+
+		case WTP_LESS_THAN_STATIC_WTP: 						/* 39 */
+			return "%% Set max wtp must over current static wtp.";
+
+		case WTP_OVER_MAX_BSS_NUM:							/* 40 */
+			return "%% Bss num is already 32.";
+
+
+		case WTP_WEP_NUM_OVER:								/* 41 */
+			return "%% Wtp over max wep wlan count 4 or wep index conflict.";
+			
+		case WTP_NO_NEIGHBORAP: 							/* 42 */
+			return "%% No ap have neighbor ap.";
+
+		case WID_NO_SURPORT_MODEL:							/* 43 */
+			return "%% System does not surport this model.";
+
+		case WTP_NO_SURPORT_CHANNEL: 						/* 44 */
+			return "%% Radio type doesn't support this channel.";
+
+		case WID_AP_NO_STATICS: 							/* 45 */
+			return "%% AP have not statistics information.";
+
+
+		case AUTO_AP_LOGIN_INTERFACE_ERROR: 				/* 46 */
+			return "%% This interface is not auto login interface.";
+	
+		case AUTO_AP_LOGIN_INTERFACE_NOT_SET:				/* 47 */
+			return "%% Auto ap login interface not set.";
+	
+		case AUTO_AP_LOGIN_WLAN_NOT_SET:					/* 48 */
+			return "%% Auto ap login not binding wlan.";
+	
+		case AUTO_AP_LOGIN_SWITCH_IS_DISABLE:				/* 49 */
+			return "%% Auto ap login switch is enable,you should disable it first.";
+			
+		case AUTO_AP_LOGIN_SWITCH_HAS_ALREADY_SETTED:		/* 50 */
+			return "%% ";	
+
+
+		case RADIO_ID_BE_USED:								/* 51 */
+			return "%% Radio id exist.";
+
+		case RADIO_ID_NOT_EXIST:							/* 52 */
+			return "%% Radio id does not exist.";
+
+		case RADIO_ID_LARGE_THAN_MAX:						/* 53 */
+			return "%% Radio id is larger than max.";
+
+		case RADIO_NO_BINDING_WLAN:							/* 54 */
+			return "%% Radio doesn't bind wlan.";
+
+		case RADIO_IS_DISABLE:								/* 55 */
+			return "%% Radio is disable, please enable it first.";
+
+
+		case RADIO_NOT_SUPPORT_COMMAND: 					/* 56 */
+			return "%% Radio not support this command.";
+
+		case RADIO_SUPPORT_RATE_EMPTY:						/* 57 */
+			return "%% Radio list is empty.";
+
+		case RADIO_SUPPORT_RATE_ONE:						/* 58 */
+			return "%% ";
+
+		case RADIO_SUPPORT_RATE_EXIST:						/* 59 */
+			return "%% ";
+
+		case RADIO_SUPPORT_RATE_NOT_EXIST:					/* 60 */
+			return "%% Radio support rate does not exist.";
+
+
+		case RADIO_SUPPORT_RATE_CONFLICT: 					/* 61 */
+			return "%% Radio type is conflict, please check it first.";
+
+		case RADIO_SUPPORT_MAX_RATE_NOT_ONE:				/* 62 */
+			return "%% ";
+
+		case RADIO_MODE_IS_11N:								/* 63 */
+			return "%% Radio mode is not 11N or 11AC, don't support this command.";
+
+		case RADIO_MODE_IS_PURE_N: 							/* 64 */
+			return "%% Radio mode is an or gn, belong to puren, can't set to mixed.";
+
+		case RADIO_ENCRYPTION_NO_MATCH:						/* 65 */
+			return "%% ";
+
+
+		case RADIO_BRMAC_NOT_EXIST:							/* 66 */
+			return "%% ";
+
+		case RADIO_SECTOR_DISABLE:							/* 67 */
+			return "%% Some of sectors is disable,enable it/them first.";
+
+		case RADIO_AMPDU_DISABLE: 							/* 68 */
+			return "%% Ampdu switch is disable.";
+
+		case RADIO_11N_AMPDU_MUTEX:							/* 69 */
+			return "%% Ampdu switch is enable, please disable it first.";
+
+		case RADIO_11N_AMSDU_MUTEX:							/* 70 */
+			return "%% Amsdu switch is enable, please disable it first.";
+
+		case RADIO_CHANNEL_OFFSET_NEED_BE_RESET:			/* 71 */
+			return "%% ";
+		
+		case RADIO_HT_IS_NOT_40:							/* 72 */
+			return "%% Radio channel bandwidth is not 40,don't support this command.";
+
+		case RADIO_IN_EBR: 									/* 73 */
+			return "%% Radio interface is in ebr,please delete it from ebr first.";
+
+		case RADIO_CHAINMASK_NUM_1: 						/* 74 */
+			return "%% Radio chainmask number is 1, only support single flow.";
+	
+		case RADIO_CHAINMASK_NUM_2: 						/* 75 */
+			return "%% Radio chainmask number is 2, only support single flow or double flow.";
+
+	
+		case RADIO_CHAINMASK_NUM_3: 						/* 76 */
+			return "%% Radio chainmask number is 3, only support single flow, double flow or three flow.";
+
+		case RADIO_CHAINMASK_STATE_1:						/* 77 */
+			return "%% Chainmask state is single flow, mcs should be 0 to 7.";
+
+		case RADIO_CHAINMASK_STATE_2:						/* 78 */
+			return "%% Chainmask state is double flow, mcs should be 0 to 15.";
+
+		case RADIO_CHAINMASK_STATE_3:						/* 79 */
+			return "%% Chainmask state is three flow, mcs should be 0 to 23.";
+
+		case RADIO_NO_BINDING_WQOS:							/* 80 */
+			return "%% Radio doesn't bind qos.";
+
+
+		case TXPOWER_OVER_TW: 								/* 81 */
+			return "%% This radio max txpower is 20.";
+
+		case TXPOWER_OVER_TW_THREE:							/* 82 */
+			return "%% This radio max txpower is 27.";
+
+		case TXPOWEROFF_LARGER_THAN_MAX: 					/* 83 */
+			return "%% Txpoweroffset is larger than max txpower! Please checkout txpowerstep!";
+
+		case MODEL_NO_EXIST: 								/* 84 */
+			return "%% Model doesn't exist.";
+
+		case MODEL_NO_CONFIG: 								/* 85 */
+			return "%% The model is not configuration please change others.";
+
+			
+		case BSS_ID_LARGE_THAN_MAX: 						/* 86 */
+			return "%% ";
+	
+		case BSS_NOT_EXIST:									/* 87 */
+			return "%% Bss not exist";
+
+		case BSS_NOT_ENABLE:								/* 88 */
+			return "%% BSS is disable.";
+
+		case BSS_BE_ENABLE:									/* 89*/
+			return  "%% BSS is enable, if you want to operate this, please disable it first.";
+
+		case BSS_IF_NEED_CREATE:							/* 90*/
+			return "%% BSS L3 interface not exist, you should create this interface first.";
+			
+			
+		case BSS_IF_NEED_DELETE: 							/* 91 */
+			return  "%% BSS L3 interface is exist, you should delete this interface first.";
+
+		case BSS_CREATE_L3_INTERFACE_FAIL:					/* 92 */
+			return  "%% BSS create L3 interface fail.";
+
+		case BSS_DELETE_L3_INTERFACE_FAIL:					/* 93 */
+			return  "%% BSS delete L3 interface fail.";
+
+		case BSS_L3_INTERFACE_ADD_BR_FAIL: 					/* 94 */
+			return  "%% Add bss interface to wlan bridge fail.";
+
+		case BSS_L3_INTERFACE_DEL_BR_FAIL:					/* 95 */
+			return  "%% Remove bss interface from wlan bridge fail.";
+
+
+		case PAST_L3_INTERFACE_ERROE:						/* 96 */
+			return "%% ";
+
+		case APPLY_IF_FAIL:									/* 97 */
+			return "%% Interface is wrong, there is no index or flag or interface down.";
+			
+		case L3_INTERFACE_ERROR:							/* 98 */
+			return "%% Map layer3 interace failed.";
+			
+		case ETH_NOT_EXIST: 								/* 99 */
+			return "%% The eth interface does not exist.";
+
+		case WID_EBR_IF_NOEXIT: 							/* 100 */
+			return "%% Interface does not add to br or br uplink.";
+
+			
+		case BINDING_IPV6_ADDRE_RROR:						/* 101 */
+			return "%% Bingding ipv6 addr error make sure interface have ipv6 address";
+
+		case INTERFACE_NOT_BE_BINDED:               		/* 102 */
+			return "%% Should apply interface first.";
+
+		case INTERFACE_NOT_EXIST:       					/* 103 */
+			return "%% Interface %s does not exist.";
+
+		case INTERFACE_HAVE_NO_IP_ADDR:       	 			/* 104 */
+			return "%% Interface have no ip address,please binding ip address first!!";
+
+		case WID_ADD_RADIO_IF_FAIL: 						/* 105 */
+			return "%% interface may have been in other EBR.";
+
+
+		case INTERFACE_NOT_L3_IF:							/* 106 */
+			return "%% This interface is not L3 interface.";
+
+		case IF_BINDING_FLAG:								/* 107 */
+			return	"%% Interface has be binded in other hansi.";
+			
+		case IF_POLICY_CONFLICT:							/* 108 */
+			return "%% ";	
+			
+		case WID_QOS_BE_USED:								/* 109 */
+			return "%% Qos id exist.";
+
+		case WID_QOS_NOT_EXIST:								/* 110 */
+			return "%% Qos profile does not exist.";
+
+
+		case WID_QOS_RADIO_SHOULD_BE_DISABLE: 				/* 111 */
+			return "%% This qos profile is used by some radios,please disable them first.";
+
+		case WID_QOS_WMM_MAP_DISABLE:						/* 112 */
+			return "%% This qos map is disable,please enable it first.";
+
+		case WID_QOS_STREAM_ERROR:							/* 113 */
+			return "%% ";
+
+		case WID_QOS_PARAMETER_ERROR:						/* 114 */
+			return "%% ";
+
+		case WID_QOS_PARAMETER_VALUE_ERROR: 				/* 115 */
+			return "%% ";
+
+
+		case WID_EBR_ERROR:									/* 116 */
+			return "%% EBR interface error";
+
+		case WID_EBR_BE_USED:								/* 117 */
+			return "%% EBR id exist";
+
+		case WID_EBR_NOT_EXIST:								/* 118 */
+			return "%% EBR id does not exist.";
+
+		case WID_EBR_SHOULD_BE_DISABLE:						/* 119 */
+			return "%% Ebr is enable,please disable it first.";
+
+		case WID_EBR_IFLIST_EMPTY: 							/* 120 */
+			return "%% ";
+
+
+		case WID_WTP_LOCATION_NOT_SET: 						/* 121 */
+			return "%% Wtp does not set location.";
+
+		case SUPPORT_VERSION_NOT_EXIST:						/* 122 */
+			return "%% AC support model does not set.";
+
+		case VERSION_NOT_SUPPORTED: 						/* 123*/
+			return "%% This model does not supportted, set it first.";
+
+		case SAMPLE_THROUGHPUT_NOT_ENABLE: 					/* 124 */
+			return "%% Sample switch disable,enable it first.";
+
+		case WID_UNKNOWN_ID:								/* 125 */
+			return "%% TIMEID is repeat.";
+
+
+		case WID_NO_WHITELIST:								/* 126 */
+			return "%% ";
+
+		case WID_NO_BLACKLIST:								/* 127 */
+			return "%% ";
+
+		case WID_AP_SCANNING_DISABLE:						/* 128 */
+			return "%% Radio resource managment is disable please enable first.";
+
+		case WID_TRANSMIT_POWER_CONTROL_DISABLE:			/* 129 */
+			return "%% ";
+			
+		case WDS_MODE_BE_USED: 								/* 130 */
+			return "%% Another WDS mode be used, disable first";
+
+
+		case SWITCH_IS_DISABLE: 							/* 131 */
+			return "%% The switch is enable, you should disable it first.";
+
+		case SWITCH_HAS_ALREADY_SETTED:						/* 132 */
+			return "%% ";
+
+		case RAOMING_DISABLE_FIRST: 						/* 133 */
+			return "%% Roaming should be disable first.";
+
+		case ISOLATION_CONFLICT:							/* 134 */
+			return "%% Sameportswitch and isolation are conflict,disable sameportswitch first.";
+
+		case UPDATE_CONFIG_FAIL: 							/* 135 */
+			return "%% ";
+			
+
+		case NO_WIDS_DEVICE: 								/* 136 */
+			return "%% There is no wids device.";
+
+		case NO_SURPPORT_IPIP:								/* 137 */
+			return "%% ";
+
+		case VALUE_IS_NONEED_TO_CHANGE:						/* 138 */
+			return "%% The value is no need to change.";
+
+		case UPDATE_PROCESS: 								/* 139 */
+			return "%% Update is process,please wait several minutes.";
+
+		case AUTO_CHANNEL_STATE: 							/* 140 */
+			return "%% ";
+			
+
+		case AC_IP_EXIST:									/* 141 */
+			return "%% AC IP address already exist.";
+
+		case AC_IP_NOT_EXIST:								/* 142 */
+			return "%% AC IP address not exist.";
+
+		case AC_IP_BIND_IF_EXIST:							/* 143 */
+			return "%% Interface already exist.";
+
+		case AC_BALANCE_STATE:								/* 144 */
+			return "%% ";
+
+		case AC_BALANCE_FLOW:								/* 145 */
+			return "%% ";
+
+
+		case AC_BALANCE_NUM:								/* 146 */
+			return "%% ";
+
+		case WID_NEED_REBOOT:								/* 147 */
+			return "%% ";
+
+		case GROUP_ID_EXIST:								/* 148 */
+			return  "%% Group id is exist.";
+
+		case GROUP_ID_NOT_EXIST:							/* 149 */
+			return "%% Group id is not exist.";
+
+		case WID_ILLEGAL_INPUT:								/* 150 */
+			return "%% Illegal input:Input exceeds the maximum value of the parameter type.";
+
+
+		case INVALID_LICENSE_TYPE: 							/* 151 */
+			return "%% ";
+			
+		case WRONG_LICENSE_LIST:							/* 152 */
+			return "%% ";
+
+		case LICENSE_NUM_LARGER_THAN_MAX:					/* 153 */
+			return "%% Exceed the max number of license type.";
+
+		case LICENSE_NUM_LESS_THAN_TWO: 					/* 154 */
+			return "%% The number of license type should be more than one.";
+
+		case LICENSE_NOT_EXIST: 							/* 155 */
+			return "%% The license type doesn't exist.";
+
+
+		case LICENSE_TYPE_DUPLICATED: 						/* 156 */
+			return "%% Duplicated license type.";
+
+		case LICENSE_TYPE_BINDED:							/* 157 */
+			return "%% The license type has been binded.";
+
+		case LICENSE_NO_BINDING_SUCCESS:					/* 158 */
+			return "%% Set license nobinding successfully.";
+
+		case LICENSE_NOT_BINDED: 							/* 159 */
+			return "%% The license type has not been binded.";
+
+		case LICENSE_BINDED_ANOTHER: 						/* 160 */
+			return "%% ";
+
+
+		case CURRENT_NUM_MORE_THAN_MAX:						/* 161 */
+			return "%% ";
+
+		case AP_L2_ISOLATION_ENABLE_OR_DIS_ALREADY: 		/* 162 */
+			return "%% ";
+
+		case FLOW_CHECK_BE_DISABLE: 						/* 163 */
+			return "%% ";
+
+		case ACCOUNT_AFTER_AUTHORIZE:						/* 164 */
+			return "%% ";
+
+		case MODEL_BIND_EVER:								/* 165 */
+			return "%% This model has been bound ever.";
+
+
+		case MODEL_BIND_NEVER:								/* 166 */
+			return "%% ";
+
+		case WID_MAC_ADD_ALREADY:							/* 167 */
+			return "%% ";
+
+		case WID_UPGRADE_NUM_OVERFLOW: 						/* 168 */
+			return "%% ";
+
+		case NO_SET_GROUP_RADIO_MEMBER:						/* 169 */
+			return "%% Not set group radio member.";
+
+		case NO_CONFIG_PARA:								/* 170 */
+			return "%% No configuration parameters.";
+
+
+		case WID_UNKNOWN_MAC:								/* 171 */
+			return  "%% Mac is not in the list.";
+				
+		case MAC_DOESNOT_EXIT: 								/* 172 */
+			return "%% SRC MAC isn't exist.";
+
+		case MAC_ALREADY_EXIT:								/* 173 */
+			return "%% DST MAC already in list.";
+
+		case PARAM_NULL_POINTER:							/* 174 */
+			return "%% Parameter null pointer.";
+
+		case TIME_ID_REPEAT:								/* 175 */
+			return  "%% Time id is repeat";
+
+
+		case TIME_VALUE_REPEAT:								/* 176 */
+			return  "%% Time value same with other, please stagger it.";
+
+		case TIME_ID_NOT_EXSIT:								/* 177 */
+			return  "%% Time id is not exist.";
+
+		case TIME_SERVICE_NULL: 							/* 178 */
+			return  "%% Time service list is null.";
+
+		case GROUP_ID_OVER_MAX:								/* 179 */
+			return  "%% Group id is larger than max.";
+
+		case RADIO_GROUP_SERVICE_BE_USED: 					/* 180 */
+			return  "%% Radio group service is in use.";
+
+
+		case RADIO_GROUP_SERVICE_CONTROL_BE_USED:    		/* 181 */
+			return  "%% Group_radio time service switch should be disabled.";
+
+		case VALUE_OUT_OF_RANGE:							/* 182 */
+			return  "%% Input out of legal range.";
+
+		case MIN_LARGER_THAN_MAX: 							/* 183 */
+			return  "%% ";
+
+		case NO_WTP_IN_RUN_STATE: 							/* 184 */
+			return  "%% No wtp in run state.";
+
+		case AC_BAK_STATE: 									/* 185 */
+			return  "%% Ac in bak state.";
+
+
+		case VLAN_GROUP_ID_LARGE_THAN_MAX:					/* 186 */
+			return  "%% Group id is larger than max.";
+
+		case VLAN_GROUP_SERVICE_ENABLE:						/* 187 */
+			return  "%% Vlan group service is enable, you should disable it first.";
+
+		case VLAN_GROUP_SERVICE_DISABLE:					/* 188 */
+			return  "%% Vlan group service already disable.";
+
+		case GROUP_MEMBER_OVER_MAX_NUM:						/* 189 */
+			return  "%% Add group member count reach to max count.";
+
+		case RADIO_ID_NOT_IN_VLANGRP: 						/* 190 */
+			return  "%% Radio id not in group.";
+
+
+		case VLAN_ID_NOT_EXIST: 							/* 191 */
+			return  "%% Vlan id is not exist.";
+
+		case NO_SET_VLANGRP_WLAN: 							/* 192 */
+			return  "%% Not set vlan group wlan.";
+
+		case NO_SET_VLANGRP_VLAN: 							/* 193 */
+			return  "%% Not set vlan group vlan.";
+					
+		case BSS_IN_OTHER_VLANGRP: 							/* 194 */
+			return  "%% The bss has been set vlan in the other vlan group.";
+		
+		case DYNAMIC_VLAN_NOT_DISABLE: 						/* 195 */
+			return  "%% dynamic-vlan not disable.";
+
+			
+		case DYNAMIC_VLAN_PARAMTER_ERROR: 					/* 196 */
+			return  "%% input illegal dynamic-vlan list";
+			
+		case DYNAMIC_VLAN_DELETE_ERROR: 					/* 197 */
+			return  "%% can't delete dynamic-vlan id which is not existed";
+			
+		case DYNAMIC_VLAN_ADD_ERROR: 						/* 198 */
+			return  "%% amount of dynamic-vlan id can't more than 1024";
+		case RADIO_SA_IS_ENABLE:							/* 199 */
+			return	"%% The service is enable, you should disable it first.";
+			
+		case RADIO_SA_PARA_INVALID:							/* 200 */
+			return	"%% Invalid parameter.";
+
+
+		case WID_PARA_RANGE_INVALID: 						/* 201 */
+			return	"%% Invalid parameter range.";
+
+		case MAC_GROUP_EXIST: 								/* 202 */
+			return	"%% The macgroup id is exist.";
+
+		case MAC_GROUP_NOT_EXIST:							/* 203 */
+			return	"%% The macgroup id is not exist.";	
+				
+		case MAC_IN_LIST:									/* 204 */
+			return	"%% The mac already in macgroup.";
+
+	 	case MAC_NOT_IN_LIST:								/* 205 */
+		 	return  "%% The mac not in macgroup.";
+			
+		 
+		case RADIO_NO_BINDING_MACGROUP:					 	/* 206 */
+			return  "%% .";
+			 
+		case GROUP_ID_LARGE_THAN_MAX:						/* 207 */
+			return  "%% Input macgroup id should be 1 to 128.";
+			 
+		case MACGRP_IS_BINDED:					 			/* 208 */
+			return  "%% The macgroup is binded,please unbind first.";
+
+		case WTP_BIND_MACGRP:					 			/* 209 */
+			return  "%% The wtp already bind macgroup.";
+
+		case WLAN_BIND_MACGRP:					 			/* 210 */
+			return  "%% The wlan already bind macgroup.";
+			
+
+	 	case MAC_LIST_IS_FULL: 				 				/* 211 */
+		 	return  "%% Mac count over 128.";
+		
+	 	case ESSID_IS_EXIST: 				 				/* 212 */
+		 	return  "%% Essid already exist.";
+		
+	 	case ESSID_NOT_EXIST: 				 				/* 213 */
+		 	return  "%% Essid not exist.";
+			
+		case UPGRADE_IS_WORKING:                            /* 226 */
+			return  "%% upgrade is working.";
+			
+		case WTP_NOT_MATCH_RADIO:                           /* 227 */
+			return "%% wtp has no suitable radio.";
+			
+		case CONFIG_GROUP_ID_THAN_MAX:                      /* 228 */
+			return "%% groupid more than max groupid.";
+			
+		case CONFIG_GROUP_NOT_EXIST:   						/* 229 */
+			return "%% group not exist.";
+			
+		case CONFIG_GROUP_HAS_EXIST:  						/* 230 */
+			return "%% group is exist.";
+		
+		
+		case CONFIG_GROUP_BINDED_RADIO:                     /* 231 */
+			return "%% group has bind to radio.";
+		
+		case CONFIG_GROUP_RADIOLIST_NULL:  					/* 232 */
+			return "%% no radio bind to group";
+		
+		case WTP_NO_ROGUEAP:								/* 233 */
+			return;	
+		
+		case MAC_IN_ROGUE_WHITELIST: 						/* 234 */
+			return "%% mac has in white list";
+		
+		case MAC_IN_ROGUE_BLACKLIST: 						/* 235 */
+			return "%% mac has in black list";
+
+		case WID_AP_SCANNING_COUNTERMEASURES_DISABLE: 		/* 236 */
+			return "%% Radio resource managment countermeasures is disable enable first.";
+
+		case RADIO_MODE_IS_NOT_11AC:  					    /* 237 */
+			return "%% Radio mode is not 11AC, don't support this command.";
+			
+		case IP_NOT_EXIST:  					    /* 238 */
+			return "%% portal ip is not exist. ";
+
+		case PROTAL_IP_ARRAY_IS_FULL:  					    /* 239 */
+			return "%% number of ip should not more than 4 (include the ip you add before).";
+		default :
+			return "%% command operate failed.";
+	}
+		/* never get here */
+	return;
+}
 
 int strcheck(char **str) {  
 	int i,len;
