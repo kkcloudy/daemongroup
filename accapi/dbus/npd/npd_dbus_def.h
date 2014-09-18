@@ -7587,7 +7587,55 @@ enum npd_dbus_result_no_e {
 *****************************************************************/
 #define VRRP_DBUS_METHOD_START_VRRP_DOWNLINK_LINK_LOCAL "had_dbus_start_downlink_link_local"
 
+/*****************************************************************
+ * DESCRIPTION:
+ * 	    add downlink virtual link local ip
+ * INPUT:
+ *     uint32--vrid,
+ *     uint32--priority,
+ *     char* --vgateway_ifname,
+ *     char* --vgateway_ip,
+ *
+ * OUTPUT:
+ *		uint--op_ret
+ *		
+*****************************************************************/
+#define VRRP_DBUS_METHOD_V6_GATEWAY "vrrp_vgateway_ipv6"
 
+/*****************************************************************
+ * DESCRIPTION:
+ *		delete uplink|downlink virtual ipv6
+ * INPUT:
+ *		uint32 --profile,
+ *		uint32 --opt_type,
+ *		uint32 --link_type,
+ *		char*  --ifname,
+ *		uint32 --virtual_ipv6,
+ *		uint32 --prefix_length
+ *
+ * OUTPUT:
+ *		uint --op_ret
+ *		
+*****************************************************************/
+#define VRRP_DBUS_METHOD_VRRP_LINK_DEL_VIPV6   "vrrp_link_del_vipv6"
+
+/*****************************************************************
+ * DESCRIPTION:
+ *		add uplink|downlink virtual ipv6
+ * INPUT:
+ *		uint32 --profile,
+ *		uint32 --opt_type,
+ *		uint32 --link_type,
+ *		char*  --ifname,
+ *		uint32 --virtual_ipv6,
+ *		uint32 --prefix_length
+ *
+ * OUTPUT:
+ *		uint --op_ret
+ *		
+*****************************************************************/
+#define VRRP_DBUS_METHOD_VRRP_LINK_ADD_VIPV6   "vrrp_link_add_vipv6"
+ 
 /*****************************************************************
  * DESCRIPTION:
  *		add|delete uplink|downlink virtual ip
