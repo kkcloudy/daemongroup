@@ -9907,7 +9907,7 @@ DEFUN(wtp_max_sta_cmd_func,
 		"set wtp max sta num NUM",
 		"wtp set max sta num\n"
 		"max num of sta \n" 
-		"value should be <0-64>\n"
+		"value should be <0-128>\n"
 		)
 {
 
@@ -9936,9 +9936,9 @@ DEFUN(wtp_max_sta_cmd_func,
 		return CMD_SUCCESS;
 	}	
 	/*fengwenchao add 20110504*/
-	if((wtp_max_sta < 0)||(wtp_max_sta > 64))
+	if((wtp_max_sta < 0)||(wtp_max_sta > 128))
 	{
-		vty_out(vty,"<error> input num should be 0-64\n");
+		vty_out(vty,"<error> input num should be 0-128\n");
 		return CMD_SUCCESS;
 	}
 	/*fengwenchao add end*/
