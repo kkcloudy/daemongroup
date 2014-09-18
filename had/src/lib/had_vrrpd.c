@@ -60,6 +60,7 @@ extern "C"
 #include <pthread.h>
 #include <fcntl.h>
 #include <dbus/dbus.h>
+#include <sys/wait.h>
 
 #if 1
 #include <netdb.h>
@@ -3539,6 +3540,308 @@ void had_cfg_delete_downlink_ipaddr
 
 /*
  *******************************************************************************
+ * had_cfg_vlink_add_ip6addr_check()
+ *
+ *  DESCRIPTION:
+ *		check hansi instance different link types ip6 address, such as
+ *	uplink / downlink /vgateway interface
+ *			
+ *  INPUTS:
+ *		vsrv 	- vrrp instance info,
+ *		link_type	- interface link type,
+ *		struct iaddr  *ipaddr,
+ *	    unsigned int prefix_length,
+ *		index 	- index of the ip address' array
+ *
+ *  OUTPUTS:
+ * 	 	NULL
+ *
+ *  RETURN VALUE:
+ *		0					- successful
+ *		0					- failure
+ *
+ *******************************************************************************
+ */
+static int had_cfg_vlink_add_ip6addr_check
+(
+	vrrp_rt *vsrv,
+	unsigned int link_type,
+	struct iaddr  *ip6addr,
+	unsigned int prefix_length,
+	unsigned int link_local,
+	int index
+)
+{
+
+	vrrp_syslog_info("had_cfg_vlink_add_ip6addr_check: get ip6 address "NIP6QUAD_FMT"/%d index = %d\n",NIP6QUAD(ip6addr->iabuf),prefix_length,index);
+	if(!vsrv) {
+		vrrp_syslog_error("add %s ip6 with null instance info!\n", VRRP_LINK_TYPE_DESCANT(link_type));
+		return 1;
+	}
+
+	if(index >= VRRP_LINK_MAX_CNT) {
+		vrrp_syslog_error("add %s ip6 with index %d out of range!\n", VRRP_LINK_TYPE_DESCANT(link_type), index);
+		return 1;
+	}
+	
+	switch(link_type) {
+		default:
+			return 1;
+		case VRRP_LINK_TYPE_DOWNLINK:
+			if(link_local){
+                if(!ipv6_addr_eq_null(vsrv->downlink_local_ipv6_vaddr[index].sin6_addr.s6_addr))
+                	return 1;
+			}
+			else{
+			    //memcpy(&vip6->sin6_addr.s6_addr, &(vsrv->downlink_ipv6_vaddr[index]),sizeof(vipv6_addr));
+			    if(ipv6_addr_eq_null(vsrv->downlink_local_ipv6_vaddr[index].sin6_addr.s6_addr)
+			    	|| !ipv6_addr_eq_null(vsrv->downlink_ipv6_vaddr[index].sin6_addr.s6_addr))
+			    	return 1;/*这里改成返回对应的错误值*/
+			}
+			break;
+		case VRRP_LINK_TYPE_UPLINK:
+			//vip6 = &(vsrv->uplink_ipv6_vaddr[index]);
+			if(link_local){
+                 if(!ipv6_addr_eq_null(vsrv->uplink_local_ipv6_vaddr[index].sin6_addr.s6_addr))
+                	return 1;
+			}
+			else{
+				 if(ipv6_addr_eq_null(vsrv->uplink_local_ipv6_vaddr[index].sin6_addr.s6_addr)
+			    	|| !ipv6_addr_eq_null(vsrv->uplink_ipv6_vaddr[index].sin6_addr.s6_addr))
+			    	return 1;
+            }
+			break;
+		case VRRP_LINK_TYPE_VGATEWAY:
+			//vip6 = &(vsrv->vgateway_ipv6_vaddr[index]);
+			if(link_local){
+				if(!ipv6_addr_eq_null(vsrv->vgateway_local_ipv6_vaddr[index].sin6_addr.s6_addr))
+                	return 1;
+			}
+			else{
+				if(ipv6_addr_eq_null(vsrv->vgateway_local_ipv6_vaddr[index].sin6_addr.s6_addr)
+			    	|| !ipv6_addr_eq_null(vsrv->vgateway_ipv6_vaddr[index].sin6_addr.s6_addr))
+			    	return 1;
+			}
+			break;
+	}
+	
+	return 0;
+}
+
+/*
+ *******************************************************************************
+ * had_cfg_vlink_add_ip6addr()
+ *
+ *  DESCRIPTION:
+ *		add hansi instance different link types ip6 address, such as
+ *	uplink / downlink /vgateway interface
+ *			
+ *  INPUTS:
+ *		vsrv 	- vrrp instance info,
+ *		link_type	- interface link type,
+ *		struct iaddr  *ipaddr,
+ *	    unsigned int prefix_length,
+ *		index 	- index of the ip address' array
+ *
+ *  OUTPUTS:
+ * 	 	NULL
+ *
+ *  RETURN VALUE:
+ *		VRRP_RETURN_CODE_BAD_PARAM					- null parameter or error linktype
+ *		VRRP_RETURN_CODE_SERVICE_NOT_PREPARE		- service enabled
+ *		VRRP_RETURN_CODE_VIP_EXIST					- the virtual ip6 has exist
+ *		VRRP_RETURN_CODE_IF_EXIST					- the interface has exist
+ *		VRRP_RETURN_CODE_OK							- add success
+ *
+ *******************************************************************************
+ */
+ static int had_cfg_vlink_add_ip6addr
+(
+	vrrp_rt *vsrv,
+	unsigned int link_type,
+	struct iaddr  *ip6addr,
+	unsigned int prefix_length,
+	unsigned int link_local,
+	int index
+)
+{
+	vipv6_addr *vip6 = NULL;
+	int *naddr = NULL;
+
+	vrrp_syslog_dbg("%s: get ip6 address "NIP6QUAD_FMT"/%d index = %d\n",__func__,NIP6QUAD(ip6addr->iabuf),prefix_length,index);
+	if(!vsrv) {
+		vrrp_syslog_error("add %s ip6 with null instance info!\n", VRRP_LINK_TYPE_DESCANT(link_type));
+		return VRRP_RETURN_CODE_BAD_PARAM;
+	}
+
+	if(index >= VRRP_LINK_MAX_CNT) {
+		vrrp_syslog_error("add %s ip6 with index %d out of range!\n", VRRP_LINK_TYPE_DESCANT(link_type), index);
+		return VRRP_RETURN_CODE_BAD_PARAM;
+	}
+	
+	switch(link_type) {
+		default:
+			return VRRP_RETURN_CODE_BAD_PARAM;
+		case VRRP_LINK_TYPE_DOWNLINK:
+			if(link_local){
+                vip6 = &(vsrv->downlink_local_ipv6_vaddr[index]);
+			}
+			else{
+			    if(ipv6_addr_eq_null(vsrv->downlink_local_ipv6_vaddr[index].sin6_addr.s6_addr))
+			    	return VRRP_RETURN_CODE_BAD_PARAM;
+			    vip6 = &(vsrv->downlink_ipv6_vaddr[index]);
+			}
+			naddr = &(vsrv->downlink_ipv6_naddr);
+			break;
+		case VRRP_LINK_TYPE_UPLINK:
+			if(link_local){
+                vip6 = &(vsrv->uplink_local_ipv6_vaddr[index]);
+			}
+			else
+			{
+			    if(ipv6_addr_eq_null(vsrv->uplink_local_ipv6_vaddr[index].sin6_addr.s6_addr))
+			    	return VRRP_RETURN_CODE_BAD_PARAM;
+			    vip6 = &(vsrv->uplink_ipv6_vaddr[index]);
+			}
+			naddr = &(vsrv->uplink_ipv6_naddr);
+			break;
+		case VRRP_LINK_TYPE_VGATEWAY:
+			if(link_local){
+                vip6 = &(vsrv->vgateway_local_ipv6_vaddr[index]);
+			}
+			else
+			{
+			    if(ipv6_addr_eq_null(vsrv->vgateway_local_ipv6_vaddr[index].sin6_addr.s6_addr))
+			    	return VRRP_RETURN_CODE_BAD_PARAM;
+			    vip6 = &(vsrv->vgateway_ipv6_vaddr[index]);
+			}
+			naddr = &(vsrv->vgateway_ipv6_naddr);
+			break;
+	}
+
+	if(link_local)
+		(*naddr)++;
+	memcpy(&vip6->sin6_addr,&ip6addr->iabuf,sizeof(struct in6_addr));
+	vip6->mask = prefix_length;
+	vrrp_syslog_dbg("%s: vip6->sin6_addr "NIP6QUAD_FMT"/%d\n",__func__,NIP6QUAD(vip6->sin6_addr),vip6->mask);
+	vrrp_syslog_dbg("%s: ip6addr->iabuf "NIP6QUAD_FMT"/%d\n",__func__,NIP6QUAD(ip6addr->iabuf),vip6->mask);
+	vip6->deletable = 0;
+	
+	return VRRP_RETURN_CODE_OK;
+}
+
+/*
+ *******************************************************************************
+ * had_cfg_vlink_del_ip6addr()
+ *
+ *  DESCRIPTION:
+ *		delete hansi instance different link types ip6 address, such as
+ *	uplink / downlink /vgateway interface
+ *			
+ *  INPUTS:
+ *		vsrv 	- vrrp instance info,
+ *		link_type	- interface link type,
+ *		struct iaddr  *ipaddr,
+ *	    unsigned int prefix_length,
+ *		index 	- index of the ip address' array
+ *
+ *  OUTPUTS:
+ * 	 	NULL
+ *
+ *  RETURN VALUE:
+ *		VRRP_RETURN_CODE_BAD_PARAM					- null parameter or error linktype
+ *		VRRP_RETURN_CODE_SERVICE_NOT_PREPARE		- service enabled
+ *		VRRP_RETURN_CODE_VIP_EXIST					- the virtual ip6 has exist
+ *		VRRP_RETURN_CODE_IF_EXIST					- the interface has exist
+ *		VRRP_RETURN_CODE_OK							- add success
+ *
+ *******************************************************************************
+ */
+ static int had_cfg_vlink_del_ip6addr
+(
+	vrrp_rt *vsrv,
+	unsigned int link_type,
+	char *ifname,
+	struct iaddr  *ip6addr,
+	unsigned int prefix_length,
+	unsigned int link_local,
+	int index
+)
+{
+	vipv6_addr *vip6 = NULL;
+	int *naddr = NULL;
+	char cmd[1024] = {0};
+
+	//vrrp_syslog_info("had_cfg_vlink_del_ip6addr: get ip6 address "NIP6QUAD_FMT"/%d\n",NIP6QUAD(ip6addr->iabuf),prefix_length);
+	if(!vsrv) {
+		vrrp_syslog_error("del %s ip6 with null instance info!\n", VRRP_LINK_TYPE_DESCANT(link_type));
+		return VRRP_RETURN_CODE_BAD_PARAM;
+	}
+
+	if(index >= VRRP_LINK_MAX_CNT) {
+		vrrp_syslog_error("del %s ip6 with index %d out of range!\n", VRRP_LINK_TYPE_DESCANT(link_type), index);
+		return VRRP_RETURN_CODE_BAD_PARAM;
+	}
+	if (!ifname) {
+		vrrp_syslog_error("%s: ifname is null, parameter error!\n",__func__);
+		return VRRP_RETURN_CODE_ERR;
+	}
+
+	switch(link_type) {
+		default:
+			return VRRP_RETURN_CODE_BAD_PARAM;
+		case VRRP_LINK_TYPE_DOWNLINK:
+			if(link_local){
+				vip6 = &(vsrv->downlink_local_ipv6_vaddr[index]);
+			}
+			else
+				vip6 = &(vsrv->downlink_ipv6_vaddr[index]);
+			naddr = &(vsrv->downlink_ipv6_naddr);
+			break;
+		case VRRP_LINK_TYPE_UPLINK:
+			if(link_local){
+				vip6 = &(vsrv->uplink_local_ipv6_vaddr[index]);
+			}
+			else
+				vip6 = &(vsrv->uplink_ipv6_vaddr[index]);
+			naddr = &(vsrv->uplink_ipv6_naddr);
+			break;
+		case VRRP_LINK_TYPE_VGATEWAY:
+			if(link_local){
+    			vip6 = &(vsrv->vgateway_local_ipv6_vaddr[index]);
+			}
+			else
+				vip6 = &(vsrv->vgateway_ipv6_vaddr[index]);
+			naddr = &(vsrv->vgateway_ipv6_naddr);
+			break;
+	}
+
+	if(link_local)
+		(*naddr)--;
+
+	/* clear the data */
+	memset(vip6, 0, sizeof(vipv6_addr));
+
+#if 1/* notify rtmd */
+	/*
+		sprintf(name,"config interface %s ipv6_address %s prelen %d link_local %d",argv[0],argv[1],argv[2],link_local);
+		vtysh_client_execute(&vtysh_client[0], name, stdout);
+	*/
+    sprintf(cmd,"sudo /opt/bin/vtysh -c \"en\n configure terminal\n no config interface %s \"",ifname);
+    vrrp_syslog_info("cmd : %s\n",cmd);
+    int status = system(cmd);
+	unsigned int ret = 0;
+    ret = WEXITSTATUS(status);
+    if (ret != 0)
+    {
+    	vrrp_syslog_info("cmd : %s execute fail \n",cmd);
+    }
+#endif	
+	return VRRP_RETURN_CODE_OK;
+}
+
+/*
+ *******************************************************************************
  * had_cfg_vlink_add_ipaddr()
  *
  *  DESCRIPTION:
@@ -3682,6 +3985,79 @@ void had_cfg_delete_downlink_ipaddr
 	/* clear the data */
 	memset(vip, 0, sizeof(vip_addr));
 	return VRRP_RETURN_CODE_OK;
+}
+
+/*
+ *******************************************************************************
+ * had_cfg_vlink_ip6addr_change()
+ *
+ *  DESCRIPTION:
+ *		add or delete hansi instance different link types ip6 address, such as
+ *	uplink / downlink /vgateway interface
+ *			
+ *  INPUTS:
+ *		vsrv 	- vrrp instance info,
+ *		link_type	- interface link type,
+ *		op 		- add or delete
+ *		ipaddr 	- ip6 address
+ *		prefix_length	- ip6 prefix length
+ *		index 	- index of the ip address' array
+ *
+ *  OUTPUTS:
+ * 	 	NULL
+ *
+ *  RETURN VALUE:
+ *		VRRP_RETURN_CODE_BAD_PARAM					- null parameter or error linktype
+ *		VRRP_RETURN_CODE_SERVICE_NOT_PREPARE		- service enabled
+ *		VRRP_RETURN_CODE_VIP_EXIST					- the virtual ip has exist
+ *		VRRP_RETURN_CODE_IF_EXIST					- the interface has exist
+ *		VRRP_RETURN_CODE_OK							- add success
+ *
+ *******************************************************************************
+ */
+ static int had_cfg_vlink_ip6addr_change
+(
+	vrrp_rt *vsrv,
+	unsigned int link_type,
+	char *ifname,
+	unsigned int op,
+	struct iaddr  *ipaddr,
+	unsigned int prefix_length,
+	int index,
+	unsigned int link_local
+)
+{
+	int ret = VRRP_RETURN_CODE_OK;
+
+    if(ipaddr ){
+	    vrrp_syslog_dbg("%s: %s index = %d ip6 "NIP6QUAD_FMT"/%d !\n", __func__ ,VRRP_LINK_TYPE_DESCANT(link_type),index, NIP6QUAD(ipaddr->iabuf), prefix_length);			
+    }
+    else{
+    	vrrp_syslog_dbg("%s: %s index = %d !\n",__func__,VRRP_LINK_TYPE_DESCANT(link_type),index);			
+    }
+
+	if(!vsrv) {
+		vrrp_syslog_error("change %s %d null pointer error!\n", VRRP_LINK_TYPE_DESCANT(link_type),index);
+		return VRRP_RETURN_CODE_BAD_PARAM;
+	}
+	if (!ifname) {
+		vrrp_syslog_error("%s: ifname is null, parameter error!\n",__func__);
+		return VRRP_RETURN_CODE_ERR;
+	}
+
+	switch(op) {
+		default:
+			vrrp_syslog_error("%s: change %s %d ip6 bad op type %d!\n",__func__ ,VRRP_LINK_TYPE_DESCANT(link_type),index,op);			
+			return VRRP_RETURN_CODE_BAD_PARAM;
+		case VRRP_VIP_OPT_TYPE_ADD:
+			ret = had_cfg_vlink_add_ip6addr(vsrv, link_type, ipaddr, prefix_length,link_local,index);
+			break;
+		case VRRP_VIP_OPT_TYPE_DEL:			
+			ret = had_cfg_vlink_del_ip6addr(vsrv, link_type, ifname, ipaddr, prefix_length,link_local, index);
+			break;
+	}
+
+	return ret;
 }
 
 /*
@@ -4039,6 +4415,127 @@ unsigned int had_get_link_realip_index_by_ifname
 	
 	return ret;
 }
+/*
+ *******************************************************************************
+ *had_check_link_vipv6_exist()
+ *
+ *  DESCRIPTION:
+ *		check if the virtual ipv6 exist.
+ *
+ *  INPUTS:
+ *		vrrp_rt *vsrv,					- vrrps
+ *		struct iaddr  *vipv6,   		- virtual ip
+ *		unsigned int prefix_length,		- mask
+ *		unsigned int up_down_flg		- link type
+ *
+ *  OUTPUTS:
+ *		NULL
+ *
+ *  RETURN VALUE:
+ *		VRRP_RETURN_CODE_VIP_NOT_EXIST		- the virtual ip is not exist.
+ *		VRRP_RETURN_CODE_VIP_EXIST			- the virtual ip is exist.
+ *
+ *******************************************************************************
+ */
+unsigned int had_check_link_vip6_exist
+(
+	vrrp_rt *vsrv,
+	struct iaddr  *vip6,
+	unsigned int prefix_length,
+	unsigned int link_local,
+	unsigned int up_down_flg
+)
+{
+	unsigned int ret = VRRP_RETURN_CODE_VIP_NOT_EXIST;
+	unsigned int i = 0;
+	vipv6_addr *ptrVip = NULL;
+
+	if (!vsrv) {
+		vrrp_syslog_error("check if virtual ip exist null parameter error\n");
+		return VRRP_RETURN_CODE_VIP_NOT_EXIST;
+	}
+
+	switch (up_down_flg)
+	{
+		case VRRP_LINK_TYPE_UPLINK :
+			{
+				//ptrVip = &(vsrv->uplink_ipv6_vaddr[0]);
+				if(link_local){
+    				ptrVip = &(vsrv->uplink_local_ipv6_vaddr[0]);
+				}
+				else 
+					ptrVip = &(vsrv->uplink_ipv6_vaddr[0]);
+
+				#if 0
+				for (i = 0; i < VRRP_LINK_MAX_CNT; i++) {
+					if ((ntohl(vip) == vsrv->uplink_vaddr[i].addr) &&
+						(mask == vsrv->uplink_vaddr[i].mask))
+					{
+						ret = VRRP_RETURN_CODE_VIP_EXIST;
+					}
+				}
+				#endif
+				break;
+			}
+		case VRRP_LINK_TYPE_DOWNLINK :
+			{
+				//ptrVip = &(vsrv->downlink_ipv6_vaddr[0]);
+				if(link_local){
+    				ptrVip = &(vsrv->downlink_local_ipv6_vaddr[0]);
+				}
+				else 
+					ptrVip = &(vsrv->downlink_ipv6_vaddr[0]);
+
+				#if 0
+				for (i = 0; i < VRRP_LINK_MAX_CNT; i++) {
+					if ((ntohl(vip) == vsrv->downlink_vaddr[i].addr) &&
+						(mask == vsrv->downlink_vaddr[i].mask))
+					{
+						ret = VRRP_RETURN_CODE_VIP_EXIST;
+					}
+				}
+				#endif
+				break;
+			}
+		case VRRP_LINK_TYPE_VGATEWAY:
+			{
+				//ptrVip = &(vsrv->vgateway_ipv6_vaddr[0]);
+				if(link_local){
+    				ptrVip = &(vsrv->vgateway_local_ipv6_vaddr[0]);
+				}
+				else 
+					ptrVip = &(vsrv->vgateway_ipv6_vaddr[0]);
+
+			}
+			break;
+		default :
+			{
+				vrrp_syslog_error("not such link type %d\n", up_down_flg);
+				ret = VRRP_RETURN_CODE_VIP_NOT_EXIST;
+				break;
+			}
+	}
+	
+	for (i = 0; i < VRRP_LINK_MAX_CNT; i++) {
+
+		if (!memcmp(vip6->iabuf,ptrVip[i].sin6_addr.s6_addr,sizeof(char)*16) && (prefix_length == ptrVip[i].mask))
+		{
+			ret = VRRP_RETURN_CODE_VIP_EXIST;
+		}
+	}
+
+	if (VRRP_RETURN_CODE_VIP_EXIST == ret)
+	{
+		vrrp_syslog_info("virtual ipv6 addr : "NIP6QUAD_FMT"/%d exist in %s.\n",
+        		NIP6QUAD(vip6->iabuf),
+        		prefix_length,
+        		VRRP_LINK_TYPE_DESCANT(up_down_flg)
+                );
+
+	}
+	
+	return ret;
+}
 
 /*
  *******************************************************************************
@@ -4143,6 +4640,252 @@ unsigned int had_check_link_vip_exist
 	return ret;
 }
 
+/*
+ *******************************************************************************
+ *had_add_vip6_to_linkvif()
+ *
+ *  DESCRIPTION:
+ *		add interface to uplink_vif|downlink_vif array.
+ *
+ *  INPUTS:
+ *		int profile,					- hansi profile
+ *		vrrp_rt *vsrv,					- vrrps
+ *		unsigned int up_down_flg		- link type
+ *		char * ifname,					- interface name
+ *		int index						- add position
+ *
+ *  OUTPUTS:
+ *		NULL
+ *
+ *  RETURN VALUE:
+ *		VRRP_RETURN_CODE_ERR		- add faild
+ *		VRRP_RETURN_CODE_OK			- add success
+ *
+ *******************************************************************************
+ */
+unsigned int had_add_vip6_to_linkvif
+(
+	int profile,
+	vrrp_rt *vsrv,
+	unsigned int up_down_flg,
+	char *ifname,
+	int index
+)
+{
+	unsigned int ret = VRRP_RETURN_CODE_OK;
+	vipv6_addr real_ip6 ;
+	int realip_index = -1;
+	hansi_s *hansiNode = NULL;
+	vrrp_if *ptrVif = NULL;
+	unsigned int *set_flag = NULL;
+
+	if (!vsrv || !ifname) {
+		vrrp_syslog_error("vrrp %d add virtual ip to link vif, null parameter error\n", profile);
+		return VRRP_RETURN_CODE_BAD_PARAM;
+	}
+
+	if (index < 0 ||
+		index > VRRP_LINK_MAX_CNT)
+	{
+		vrrp_syslog_error("vrrp %d add virtual ip to link vif, index %d out of valid range.\n",
+							profile, index);
+		return VRRP_RETURN_CODE_BAD_PARAM;
+	}
+
+	if (MAX_IFNAME_LEN < strlen(ifname)) {
+		vrrp_syslog_error("add virtual ip to link vif, length of interface name out of valid range.\n");		
+		return VRRP_RETURN_CODE_BAD_PARAM;
+	}
+
+	hansiNode = had_get_profile_node(profile);
+	if (NULL == hansiNode) {
+		vrrp_syslog_error("vrrp %d not create profile node.\n", profile);
+		return VRRP_RETURN_CODE_PROFILE_NOTEXIST;
+	}
+
+	switch (up_down_flg)
+	{
+		case VRRP_LINK_TYPE_UPLINK :
+			{	/* uplink */
+				ptrVif = &(vsrv->uplink_vif[index]);
+				set_flag = &(vsrv->uplink_flag);
+				#if 0
+				memset(vsrv->uplink_vif[index].ifname, 0, MAX_IFNAME_LEN);
+				memcpy(vsrv->uplink_vif[index].ifname, ifname, strlen(ifname));
+
+				/*real ip if appointed*/
+				if (VRRP_RETURN_CODE_IF_NOT_EXIST ==
+					had_get_link_realip_index_by_ifname(hansiNode, ifname, up_down_flg, &realip_index))
+				{
+					ret = had_ifname_to_ip(ifname, &real_ip);
+					if (VRRP_RETURN_CODE_OK != ret) {
+						vrrp_syslog_error("get real ip address by ifname %s error\n",
+											ifname);
+						ret = VRRP_RETURN_CODE_ERR;
+						break;
+					}
+					vsrv->uplink_vif[index].ipaddr = real_ip;
+				}
+				else{
+					vsrv->uplink_vif[index].ipaddr = hansiNode->uplink_real_ip[realip_index].real_ip;
+				}
+				vrrp_syslog_dbg("interface %s ip addr %x\n",
+								ifname, vsrv->uplink_vif[index].ipaddr);
+
+				/* ifindex */
+				vsrv->uplink_vif[index].ifindex = had_ifname_to_idx(vsrv->uplink_vif[index].ifname);
+				vrrp_syslog_dbg("interface index 0x%x\n",
+								vsrv->uplink_vif[index].ifindex);
+				
+				/* hwaddress */
+				if (had_hwaddr_get(vsrv->uplink_vif[index].ifname,
+							   vsrv->uplink_vif[index].hwaddr,
+							   sizeof(vsrv->uplink_vif[index].hwaddr)))
+				{
+					vrrp_syslog_dbg("Can't read the hwaddr on interface %s!\n",
+									vsrv->uplink_vif[index].ifname);
+					ret = VRRP_RETURN_CODE_ERR;
+					break;
+				}
+
+				/*init aute_type*/
+				vsrv->uplink_vif[index].auth_type = VRRP_AUTH_PASS;
+				if (VRRP_LINK_NO_SETTED == vsrv->uplink_flag) {
+					vsrv->uplink_flag = VRRP_LINK_SETTED;
+				}
+				vsrv->uplink_vif[index].linkstate = vrrp_get_ifname_linkstate(vsrv->uplink_vif[index].ifname);
+				vsrv->uplink_vif[index].set_flg = VRRP_LINK_SETTED;
+
+				ret = VRRP_RETURN_CODE_OK;
+				#endif
+				break;
+			}
+		case VRRP_LINK_TYPE_DOWNLINK :
+			{	/* downlink */
+				ptrVif = &(vsrv->downlink_vif[index]);
+				set_flag = &(vsrv->downlink_flag);
+				#if 0
+				memset(vsrv->downlink_vif[index].ifname, 0, MAX_IFNAME_LEN);
+				memcpy(vsrv->downlink_vif[index].ifname, ifname, strlen(ifname));
+
+				/*real ip if appointed*/
+				if (VRRP_RETURN_CODE_IF_NOT_EXIST ==
+					had_get_link_realip_index_by_ifname(hansiNode, ifname, up_down_flg, &realip_index))
+				{
+					ret = had_ifname_to_ip(ifname, &real_ip);
+					if (VRRP_RETURN_CODE_OK != ret) {
+						vrrp_syslog_error("get real ip address by ifname %s error\n",
+											ifname);
+						ret = VRRP_RETURN_CODE_ERR;
+						break;
+					}
+					vsrv->downlink_vif[index].ipaddr = real_ip;
+				}
+				else{
+					vsrv->downlink_vif[index].ipaddr = hansiNode->downlink_real_ip[realip_index].real_ip;
+				}
+				vrrp_syslog_dbg("interface %s ip addr %x\n",
+								ifname, vsrv->downlink_vif[index].ipaddr);
+
+				/* ifindex */
+				vsrv->downlink_vif[index].ifindex = had_ifname_to_idx(vsrv->downlink_vif[index].ifname);
+				vrrp_syslog_dbg("interface index 0x%x\n",
+								vsrv->downlink_vif[index].ifindex);
+				
+				/* hwaddress */
+				if (had_hwaddr_get(vsrv->downlink_vif[index].ifname,
+							   vsrv->downlink_vif[index].hwaddr,
+							   sizeof(vsrv->downlink_vif[index].hwaddr)))
+				{
+					vrrp_syslog_dbg("Can't read the hwaddr on interface %s!\n",
+									vsrv->downlink_vif[index].ifname);
+					ret = VRRP_RETURN_CODE_ERR;
+					break;
+				}
+
+				/*init aute_type*/
+				vsrv->downlink_vif[index].auth_type = VRRP_AUTH_PASS;
+				if (VRRP_LINK_NO_SETTED == vsrv->downlink_flag) {
+					vsrv->downlink_flag = VRRP_LINK_SETTED;
+				}
+				vsrv->downlink_vif[index].linkstate = vrrp_get_ifname_linkstate(vsrv->downlink_vif[index].ifname);
+				vsrv->downlink_vif[index].set_flg = VRRP_LINK_SETTED;
+
+				ret = VRRP_RETURN_CODE_OK;
+				#endif
+				break;
+			}
+		case VRRP_LINK_TYPE_VGATEWAY:
+			{	/* vgateway */			
+				ptrVif = &(vsrv->vgateway_vif[index]);
+				set_flag = &(vsrv->vgateway_flag);
+			}
+			break;
+		case VRRP_LINK_TYPE_L2_UPLINK :
+			{	/* l2-uplink */
+				ptrVif = &(vsrv->l2_uplink_vif[index]);
+				set_flag = &(vsrv->l2_uplink_flag);
+			}
+			break;//hjw add may be a special logic
+		default :
+			{
+				vrrp_syslog_error("not such link type %d\n", up_down_flg);
+				return VRRP_RETURN_CODE_ERR;
+			}
+	}
+
+	memset(ptrVif->ifname, 0, MAX_IFNAME_LEN);
+	memcpy(ptrVif->ifname, ifname, strlen(ifname));
+	
+	if(VRRP_LINK_TYPE_L2_UPLINK != up_down_flg){
+	/*real ip if appointed*/
+	if (VRRP_RETURN_CODE_IF_NOT_EXIST ==
+		had_get_link_realip_index_by_ifname(hansiNode, ifname, up_down_flg, &realip_index))
+	{
+		memset(&real_ip6,0,sizeof(real_ip6));
+		ret = had_ifname_to_ipv6(ifname, &real_ip6);
+		if (VRRP_RETURN_CODE_OK != ret) {
+			vrrp_syslog_error("get real ip address by ifname %s error\n",
+								ifname);
+			return VRRP_RETURN_CODE_ERR;
+		}
+		memcpy(&ptrVif->ipaddr, &real_ip6,sizeof(real_ip6));
+	}
+	else{
+		memcpy(&ptrVif->ipaddr, &hansiNode->downlink_real_ip[realip_index].real_ip,sizeof(struct in6_addr));
+	}
+	
+	vrrp_syslog_info("interface %s ip addr "NIP6QUAD_FMT"\n", ifname, NIP6QUAD(ptrVif->ipaddr));
+	
+	}
+	/* ifindex */
+	ptrVif->ifindex = had_ifname_to_idx(ptrVif->ifname);
+	vrrp_syslog_info("interface index 0x%x\n", ptrVif->ifindex);
+	
+	/* hwaddress */
+	/* replace with vrrp_global_mac	  
+	if (had_hwaddr_get(ptrVif->ifname, ptrVif->hwaddr, sizeof(ptrVif->hwaddr)))
+	{
+		vrrp_syslog_dbg("Can't read the hwaddr on interface %s!\n", ptrVif->ifname);
+		return VRRP_RETURN_CODE_ERR;
+	}
+	*/
+	memcpy(ptrVif->hwaddr, vrrp_global_mac, sizeof(vrrp_global_mac));
+	/*init aute_type*/
+	ptrVif->auth_type = VRRP_AUTH_PASS;
+	if (VRRP_LINK_NO_SETTED == *set_flag) {
+		*set_flag = VRRP_LINK_SETTED;
+	}
+	ptrVif->linkstate = vrrp_get_ifname_linkstate(ptrVif->ifname);
+	ptrVif->set_flg = VRRP_LINK_SETTED;
+	if (VRRP_RETURN_CODE_OK == ret) {
+		vrrp_syslog_info("add interface %s to %s_vif array success.\n",
+						ifname,
+						VRRP_LINK_TYPE_DESCANT(up_down_flg));
+	}
+
+	return ret;
+}
 /*
  *******************************************************************************
  *had_add_vip_to_linkvif()
@@ -4426,20 +5169,20 @@ unsigned int had_del_vip_from_linkvif
 	unsigned int *set_flag = NULL;
 
 	if (!vsrv || !ifname) {
-		vrrp_syslog_error("delete virtual ip from link vif, null parameter error\n");
+		vrrp_syslog_error("delete virtual ip6 from link vif, null parameter error\n");
 		return VRRP_RETURN_CODE_ERR;
 	}
 
 	if (index < 0 ||
 		index > VRRP_LINK_MAX_CNT)
 	{
-		vrrp_syslog_error("delete virtual ip from link vif, index %d out of valid range.\n",
+		vrrp_syslog_error("delete virtual ip6 from link vif, index %d out of valid range.\n",
 							index);
 		return VRRP_RETURN_CODE_ERR;
 	}
 
 	if (MAX_IFNAME_LEN < strlen(ifname)) {
-		vrrp_syslog_error("delete virtual ip from link vif, length of interface name out of valid range.\n");		
+		vrrp_syslog_error("delete virtual ip6 from link vif, length of interface name out of valid range.\n");		
 		return VRRP_RETURN_CODE_ERR;
 	}
 
@@ -4530,6 +5273,422 @@ unsigned int had_del_vip_from_linkvif
 		vrrp_syslog_dbg("delete interface %s from %s [%d] success.\n",
 						ifname, VRRP_LINK_TYPE_DESCANT(up_down_flg), index);
 	}
+
+	return ret;
+}
+
+/*
+ *******************************************************************************
+ *had_add_vipv6()
+ *
+ *  DESCRIPTION:
+ *		add link virtual ipv6, and fill uplink_vif|downlink_vif.
+ *		before add must setted linkmode(linktype + priority)
+ *
+ *  INPUTS:
+ *		unsigned int profile,			- vrid
+ *		char *uplink_ifname,			- uplink interface name
+ *		struct iaddr  *uplink_ip,		- virtual ipv6 address
+ *		unsigned int uplink_prefix,		- prefix length
+ *		unsigned int up_down_flg		- link type
+ *
+ *  OUTPUTS:
+ *		NULL
+ *
+ *  RETURN VALUE:
+ *		VRRP_RETURN_CODE_ERR						- null parameter or error linktype
+ *		VRRP_RETURN_CODE_PROFILE_NOTEXIST			- profile not exist
+ *		VRRP_RETURN_CODE_SERVICE_NOT_PREPARE		- service enabled
+ *		VRRP_RETURN_CODE_LINKMODE_NO_SETTED			- not setted linkmode
+ *		VRRP_RETURN_CODE_VIP_EXIST					- the virtual ip has exist
+ *		VRRP_RETURN_CODE_IF_EXIST					- the interface has exist
+ *		VRRP_RETURN_CODE_OK							- add success
+ *
+ *******************************************************************************
+ */
+ 
+unsigned int had_add_vipv6
+(
+	unsigned int profile,
+	char *ifname,
+	struct iaddr  *vip6,
+	unsigned int prefix_length,
+	unsigned int link_local,
+	unsigned int up_down_flg
+)
+{
+	unsigned int ret = VRRP_RETURN_CODE_OK;
+	vrrp_rt *vsrv = NULL;
+	hansi_s *hansiNode = NULL;
+	int index = -1, i = 0;
+	unsigned int set_flag = VRRP_LINK_NO_SETTED;
+	vipv6_addr *ipPtr = NULL;
+	vrrp_if *linkIf = NULL;
+
+	if (!ifname) {
+		vrrp_syslog_error("vrrp %d add %s virtual ip6 null parameter error!\n",
+							profile,
+							VRRP_LINK_TYPE_DESCANT(up_down_flg));
+		return VRRP_RETURN_CODE_ERR;
+	}
+	
+	pthread_mutex_lock(&StateMutex);
+	hansiNode = had_get_profile_node(profile);
+	if (NULL == hansiNode) {
+		vrrp_syslog_error("vrrp %d not create profile node.\n", profile);
+		ret = VRRP_RETURN_CODE_PROFILE_NOTEXIST;
+	}
+	else if (NULL == (vsrv = hansiNode->vlist)) {
+		vrrp_syslog_error("vrrp %d not create vrrp node.\n", profile);
+		ret = VRRP_RETURN_CODE_PROFILE_NOTEXIST;
+	}
+	else if (VRRP_SERVICE_ENABLE == service_enable[profile]) {
+		vrrp_syslog_error("vrrp %d service enabled.\n", profile);
+		ret = VRRP_RETURN_CODE_SERVICE_NOT_PREPARE;
+	}
+	else {
+		switch (up_down_flg)
+		{
+			case VRRP_LINK_TYPE_UPLINK :
+				{
+					set_flag = vsrv->uplink_flag;
+					linkIf = &(vsrv->uplink_vif[0]);
+					if(link_local){
+    					ipPtr = &(vsrv->uplink_local_ipv6_vaddr[0]);
+					}
+					else 
+						ipPtr = &(vsrv->uplink_ipv6_vaddr[0]);
+					break;
+				}
+			case VRRP_LINK_TYPE_DOWNLINK :
+				{
+					set_flag = vsrv->downlink_flag;
+					linkIf = &(vsrv->downlink_vif[0]);
+					if(link_local){
+    					ipPtr = &(vsrv->downlink_local_ipv6_vaddr[0]);
+					}
+					else 
+						ipPtr = &(vsrv->downlink_ipv6_vaddr[0]);
+
+					break;
+				}
+			case VRRP_LINK_TYPE_VGATEWAY:
+				{
+					set_flag = VRRP_LINK_SETTED;
+					linkIf = &(vsrv->vgateway_vif[0]);
+					if(link_local){
+    					ipPtr = &(vsrv->vgateway_local_ipv6_vaddr[0]);
+					}
+					else 
+						ipPtr = &(vsrv->vgateway_ipv6_vaddr[0]);
+
+				}
+				break;
+			case VRRP_LINK_TYPE_L2_UPLINK:
+				{
+					set_flag = VRRP_LINK_SETTED;
+					linkIf = &(vsrv->l2_uplink_vif[0]);
+				}
+				break;
+			default :
+				{
+					vrrp_syslog_error("not such link type %d\n", up_down_flg);
+					ret = VRRP_RETURN_CODE_ERR;
+					break;
+				}
+		}
+		
+		if(VRRP_RETURN_CODE_OK == ret) {
+			if (VRRP_LINK_SETTED != set_flag)
+			{	/* check if the link setted */
+				vrrp_syslog_error("add %s vip6 faild, not setted right (link+priority) mode.\n",
+									VRRP_LINK_TYPE_DESCANT(up_down_flg));
+				ret = VRRP_RETURN_CODE_LINKMODE_NO_SETTED;
+				goto end;
+			}
+			
+			if(VRRP_RETURN_CODE_IF_EXIST == had_get_link_index_by_ifname(vsrv, 
+						ifname, up_down_flg, &index))
+			{	/* check the link interface name exist. */
+
+				if( had_cfg_vlink_add_ip6addr_check(vsrv, up_down_flg,vip6, prefix_length ,link_local, index) ){
+					ret = VRRP_RETURN_CODE_IF_EXIST;
+					goto end;
+				}
+			}
+			
+			if((VRRP_LINK_TYPE_L2_UPLINK != up_down_flg)&& (VRRP_RETURN_CODE_VIP_EXIST == had_check_link_vip6_exist(vsrv, &vip6, prefix_length, link_local,up_down_flg)))
+			{	/* check if the virtual ip has setted.*/
+				ret = VRRP_RETURN_CODE_VIP_EXIST;
+			}
+			else
+			{	/* add uplink to uplink_vif */
+				/* index is first empty position in uplink_vif array */
+				ret = had_add_vip6_to_linkvif(profile, vsrv, up_down_flg, ifname, index);
+				if (VRRP_RETURN_CODE_OK != ret) {
+					vrrp_syslog_error("add interface %s to %s index %d error!\n",
+									ifname,
+									VRRP_LINK_TYPE_DESCANT(up_down_flg),
+									index);
+				}
+				else
+				{
+add_addr:
+					if(VRRP_LINK_TYPE_L2_UPLINK != up_down_flg){
+						/* add uplink virtual ip*/
+						had_cfg_vlink_ip6addr_change(vsrv, up_down_flg, ifname,VRRP_VIP_OPT_TYPE_ADD, vip6, prefix_length, index,link_local);
+					    ipPtr +=index;
+					}
+					else{
+						vsrv->l2_uplink_naddr ++;
+					}
+					vrrp_syslog_info("%s: add %s ipv6 "NIP6QUAD_FMT"/%d index = %d success.\n", __func__ ,\
+							VRRP_LINK_TYPE_DESCANT(up_down_flg), NIP6QUAD(vip6->iabuf), prefix_length, index);
+		
+				}
+			}
+			
+			/* for debug */
+			for (i = 0; i < VRRP_LINK_MAX_CNT; i++)
+			{
+				if (VRRP_LINK_SETTED == linkIf[i].set_flg) {
+					vrrp_syslog_info("had_add_vipv6: %s vip6 addr "NIP6QUAD_FMT"/%d\n",
+                            		VRRP_LINK_TYPE_DESCANT(up_down_flg),
+                            		NIP6QUAD(ipPtr->sin6_addr.s6_addr),
+                            		prefix_length);
+				}
+			}
+		}
+	}
+end:
+	pthread_mutex_unlock(&StateMutex);
+
+	return ret;
+}
+
+/*
+ *******************************************************************************
+ *had_delete_vipv6()
+ *
+ *  DESCRIPTION:
+ *		delete link virtual ip, and delete uplink_vif|downlink_vif,
+ *		before delete must be sure setted linkmode(linktype + priority),
+ *		and virtual ip which configured by "config uplink | downlink priority"
+ *		is not allow to delete.
+ *
+ *  INPUTS:
+ *		unsigned int profile,			- vrid
+ *		char *uplink_ifname,			- uplink interface name
+ *		struct iaddr  *uplink_ip,		- virtual ipv6 address
+ *		unsigned int uplink_prefix,		- prefix length
+ *		unsigned int up_down_flg		- link type
+ *
+ *  OUTPUTS:
+ *		NULL
+ *
+ *  RETURN VALUE:
+ *		VRRP_RETURN_CODE_ERR						- null parameter or error linktype
+ *		VRRP_RETURN_CODE_PROFILE_NOTEXIST			- profile not exist
+ *		VRRP_RETURN_CODE_SERVICE_NOT_PREPARE		- service enabled
+ *		VRRP_RETURN_CODE_LINKMODE_NO_SETTED			- not setted linkmode
+ *		VRRP_RETURN_CODE_IFNAME_ERROR				- link interface name error
+ *		VRRP_RETURN_CODE_VIP_NOT_EXIST				- the virtual ip has not exist
+ *		VRRP_RETURN_CODE_VIP_LAST_ONE				- virtual ip is last one, not allow to deletes
+ *
+ *******************************************************************************
+ */
+unsigned int had_delete_vipv6
+(
+	unsigned int profile,
+	char *ifname,
+	struct iaddr  *vip6,
+	unsigned int prefix_length,
+	unsigned int link_local,
+	unsigned int up_down_flg
+)
+{
+	unsigned int ret = VRRP_RETURN_CODE_OK;
+	vrrp_rt *vsrv = NULL;
+	hansi_s *hansiNode = NULL;
+	int index = -1;
+	unsigned int set_flag = VRRP_LINK_NO_SETTED;
+	int naddr = 0;
+	vip_addr *ipPtr = NULL;
+	vrrp_if *linkIf = NULL;
+	int *ptrFd = NULL;
+
+	if (!ifname) {
+		vrrp_syslog_error("vrrp %d delete %s virtual ip null parameter error!\n",
+							profile,
+							VRRP_LINK_TYPE_DESCANT(up_down_flg));
+		return VRRP_RETURN_CODE_ERR;
+	}
+	
+	pthread_mutex_lock(&StateMutex);
+	hansiNode = had_get_profile_node(profile);
+	if (NULL == hansiNode) {
+		vrrp_syslog_error("vrrp %d not create profile node.\n", profile);
+		ret = VRRP_RETURN_CODE_PROFILE_NOTEXIST;
+	}
+	else if (NULL == (vsrv = hansiNode->vlist)) {
+		vrrp_syslog_error("vrrp %d not create vrrp node.\n", profile);
+		ret = VRRP_RETURN_CODE_PROFILE_NOTEXIST;
+	}
+	else if (VRRP_SERVICE_ENABLE == service_enable[profile]) {
+		vrrp_syslog_error("vrrp %d service enabled.\n", profile);
+		ret = VRRP_RETURN_CODE_SERVICE_NOT_PREPARE;
+	}
+	else {
+		switch (up_down_flg)
+		{
+			case VRRP_LINK_TYPE_UPLINK :
+				{
+					set_flag = vsrv->uplink_flag;
+					linkIf = &(vsrv->uplink_vif[0]);
+					if(link_local){
+    					ipPtr = &(vsrv->uplink_local_ipv6_vaddr[0]);
+					}
+					else 
+						ipPtr = &(vsrv->uplink_ipv6_vaddr[0]);
+
+					naddr = vsrv->uplink_naddr;
+					break;
+				}
+			case VRRP_LINK_TYPE_DOWNLINK :
+				{
+					set_flag = vsrv->downlink_flag;
+					linkIf = &(vsrv->downlink_vif[0]);
+					naddr = vsrv->downlink_naddr;
+					ptrFd = &(vsrv->downlink_fd[index]);
+					if(link_local){
+    					ipPtr = &(vsrv->downlink_local_ipv6_vaddr[0]);
+					}
+					else 
+						ipPtr = &(vsrv->downlink_ipv6_vaddr[0]);
+					break;
+				}
+			case VRRP_LINK_TYPE_VGATEWAY:
+				{
+					set_flag = vsrv->vgateway_flag;
+					linkIf = &(vsrv->vgateway_vif[0]);
+					naddr = vsrv->vgateway_naddr;
+					if(link_local){
+    					ipPtr = &(vsrv->vgateway_local_ipv6_vaddr[0]);
+					}
+					else 
+						ipPtr = &(vsrv->vgateway_ipv6_vaddr[0]);
+
+					ptrFd = NULL;
+				}
+				break;
+			case VRRP_LINK_TYPE_L2_UPLINK :
+				{
+					set_flag = vsrv->l2_uplink_flag;
+					linkIf = &(vsrv->l2_uplink_vif[0]);
+					naddr = vsrv->l2_uplink_naddr;
+					ptrFd = NULL;
+				}
+				break;//hjw add
+			default :
+				{
+					vrrp_syslog_error("not such link type %d\n", up_down_flg);
+					ret = VRRP_RETURN_CODE_ERR;
+					break;
+				}
+		}
+		if (VRRP_LINK_SETTED != set_flag)
+		{	/* check if the link setted */
+			vrrp_syslog_error("delete %s vip faild, not setted right (link+priority) mode.\n",
+								VRRP_LINK_TYPE_DESCANT(up_down_flg));
+			ret = VRRP_RETURN_CODE_LINKMODE_NO_SETTED;
+		}
+		else if (VRRP_RETURN_CODE_IF_NOT_EXIST == had_get_link_index_by_ifname(vsrv, ifname, up_down_flg, &index))
+		{	/* check the link interface name exist. */
+			ret = VRRP_RETURN_CODE_IF_NOT_EXIST;
+		}
+		else if((VRRP_LINK_TYPE_L2_UPLINK == up_down_flg)&& (VRRP_RETURN_CODE_VIP_NOT_EXIST == had_check_link_vip6_exist(vsrv, &vip6, prefix_length,link_local, up_down_flg)))
+		{	/* check if the virtual ip has setted.*/
+			ret = VRRP_RETURN_CODE_VIP_NOT_EXIST;
+		}
+		else if ((1 == naddr)&&(VRRP_LINK_TYPE_VGATEWAY != up_down_flg)&&(VRRP_LINK_TYPE_L2_UPLINK != up_down_flg))
+		{	/* if the virtual ip is last, not allow to delete.*/
+			ret = VRRP_RETURN_CODE_VIP_LAST_ONE;
+		}
+		else
+		{
+			if(vsrv){
+				switch (up_down_flg)
+				{
+					case VRRP_LINK_TYPE_UPLINK :
+					{
+						ptrFd = &(vsrv->uplink_fd[index]);
+						break;
+					}
+					case VRRP_LINK_TYPE_DOWNLINK :
+					{
+						ptrFd = &(vsrv->downlink_fd[index]);
+						break;
+					}
+					case VRRP_LINK_TYPE_VGATEWAY:
+					{
+						ptrFd = NULL;
+						break;
+					}
+					case VRRP_LINK_TYPE_L2_UPLINK :
+					{
+						ptrFd = NULL;
+						break;//hjw add
+					}
+					default :
+					{
+						break;
+					}
+				}			/* close socket fd */
+			if(ptrFd) {
+				close(*ptrFd);
+				*ptrFd = 0;
+				}
+			}
+			/* delelte downlink from downlink_vif */
+			ret = had_del_vip_from_linkvif(vsrv, up_down_flg, ifname, index);
+			if (VRRP_RETURN_CODE_OK != ret) {
+				vrrp_syslog_error("delete interface %s from %s_vif[%d] error, ret %x.\n",
+									ifname,
+									VRRP_LINK_TYPE_DESCANT(up_down_flg),
+									index,
+									ret);
+				ret = VRRP_RETURN_CODE_ERR;
+			}
+			else
+			{
+				if(VRRP_LINK_TYPE_L2_UPLINK != up_down_flg){
+					/* delete downlink virtual ip*/
+					vrrp_syslog_info("had_delete_vipv6: ip6 "NIP6QUAD_FMT"/ !\n",NIP6QUAD(vip6->iabuf), prefix_length);			
+					had_cfg_vlink_ip6addr_change(vsrv, up_down_flg, ifname, VRRP_VIP_OPT_TYPE_DEL, vip6, prefix_length, index,link_local);
+				}
+				else{
+					vsrv->l2_uplink_naddr --;
+				}
+				/*had_cfg_delete_downlink_ipaddr(vsrv, vip, mask, index);*/
+				vrrp_syslog_info("delete %s %d vip6 "NIP6QUAD_FMT"/%d success.\n",
+								VRRP_LINK_TYPE_DESCANT(up_down_flg),index,NIP6QUAD(vip6->iabuf),prefix_length);
+				ret = VRRP_RETURN_CODE_OK;
+			}
+		}
+		
+		/* for debug */
+		int i = 0;
+		for (i = 0; i < VRRP_LINK_MAX_CNT; i++)
+		{
+			if (VRRP_LINK_SETTED == linkIf[i].set_flg) {
+					vrrp_syslog_info("had_delete_vipv6 %s vip6 addr "NIP6QUAD_FMT"/%d\n",
+                            		VRRP_LINK_TYPE_DESCANT(up_down_flg),
+                            		NIP6QUAD(vip6->iabuf),
+                            		prefix_length);
+			}
+		}
+	}
+	pthread_mutex_unlock(&StateMutex);
 
 	return ret;
 }
@@ -5106,7 +6265,9 @@ unsigned int had_delete_vip
 			{
 				if(VRRP_LINK_TYPE_L2_UPLINK != up_down_flg){
 					/* delete downlink virtual ip*/
-					had_cfg_vlink_ipaddr_change(vsrv, up_down_flg, VRRP_VIP_OPT_TYPE_DEL, vip, mask, index);
+						had_cfg_vlink_ipaddr_change(vsrv, up_down_flg, VRRP_VIP_OPT_TYPE_DEL, vip, mask, index);
+                        had_cfg_vlink_ip6addr_change(vsrv, up_down_flg, ifname, VRRP_VIP_OPT_TYPE_DEL, NULL, 0, index,1);
+    					had_cfg_vlink_ip6addr_change(vsrv, up_down_flg, ifname, VRRP_VIP_OPT_TYPE_DEL, NULL, 0, index,0);
 				}
 				else{
 					vsrv->l2_uplink_naddr --;
@@ -11049,7 +12210,7 @@ int had_ipv6_start
 		}
 		naddr = had_ipv6addr_list( had_ifname_to_idx(uplink_if),addr,sizeof(addr)/sizeof(addr[0]));
 		for( i = 0; i < naddr; i+=4 ){
-			if(!memcmp(&uplink_ip->iabuf, &(addr[i]),sizeof(struct in6_addr))){// real ip == vir ip
+			if(!memcmp(uplink_ip->iabuf, &(addr[i]),sizeof(struct in6_addr))){// real ip == vir ip
 				return VRRP_RETURN_CODE_BAD_PARAM;
 			}
 		}
@@ -11346,6 +12507,7 @@ int had_start
    	unsigned int	addr[1024] = {0};
 	int naddr = 0;
 	int i = 0;
+	int ifinit=0;
 	vrid = profile;
 	if (VRRP_IS_BAD_VID(vrid))
 	{
@@ -11390,23 +12552,37 @@ int had_start
 	   vrrp = hansiNode->vlist;
 	   if(NULL != vrrp){
 		 vrrp_syslog_dbg("first to delete old vrrp!\n");
-		 ret = had_end(profile);	
+		 if( NULL != uplink_if 
+		 		&& strlen(vrrp->uplink_vif[0].ifname) != 0 
+		 		&& memcmp(vrrp->uplink_vif[0].ifname,uplink_if,strlen(uplink_if))!=0){
+		 		return VRRP_RETURN_CODE_BAD_PARAM;
+		 }
+		 
+		 if( NULL != downlink_if 
+		 		&& strlen(vrrp->downlink_vif[0].ifname) != 0 
+		 		&& memcmp(vrrp->downlink_vif[0].ifname,downlink_if,strlen(downlink_if))!=0){
+		 		return VRRP_RETURN_CODE_BAD_PARAM;
+		 }
+		 //ret = had_end(profile);	
 	   }	   
    }
+   if(NULL == vrrp ){
 
-   vrrp_syslog_dbg("malloc new vrrp %d!\n",vrid);
-   vrrp = ( vrrp_rt*)malloc(sizeof(vrrp_rt));
-   if(NULL == vrrp){
-   	 return VRRP_RETURN_CODE_MALLOC_FAILED;
+       vrrp_syslog_dbg("malloc new vrrp %d!\n",vrid);
+       vrrp = ( vrrp_rt*)malloc(sizeof(vrrp_rt));
+       if(NULL == vrrp){
+       	 return VRRP_RETURN_CODE_MALLOC_FAILED;
+       }
+       memset(vrrp, 0, sizeof(vrrp_rt));
+       #if 0
+       /*get sysmac as intf stored mac*/
+       had_get_sys_mac(sysmac);
+       #endif
+       
+       had_init_virtual_srv(vrrp);
+	   ifinit = 1;
+
    }
-   memset(vrrp, 0, sizeof(vrrp_rt));
-   #if 0
-   /*get sysmac as intf stored mac*/
-   had_get_sys_mac(sysmac);
-   #endif
-   
-   had_init_virtual_srv(vrrp);
-
    /*
     if(((NULL == uplink_if)||(NULL == downlink_if))||((NULL == uplink_ip)||(NULL == downlink_ip))){
         return VRRP_RETURN_CODE_BAD_PARAM;
@@ -11521,46 +12697,126 @@ int had_start
        ;
 	   //vrrp->downlink_flag = 0;
    }
-
-   vrrp->vrid = vrid;
-   vrrp->profile = profile;
-   vrrp_syslog_dbg("init vrrp vrid to %d\n",vrrp->vrid);
-   vrrp->no_vmac = 1; 
-   /*set priority*/
-   vrrp->priority = priority;  
-   vrrp->vrrp_trap_sw = VRRP_ON;
-   /* check if the minimal configuration has been done */
-   if( had_chk_min_cfg(vrrp) ){
-		free(vrrp);
-	  return VRRP_RETURN_CODE_BAD_PARAM;
-   }
+    if(ifinit == 1 ){
+       vrrp->vrid = vrid;
+       vrrp->profile = profile;
+       vrrp_syslog_dbg("init vrrp vrid to %d\n",vrrp->vrid);
+       vrrp->no_vmac = 1; 
+       /*set priority*/
+       vrrp->priority = priority;  
+       vrrp->vrrp_trap_sw = VRRP_ON;
+       /* check if the minimal configuration has been done */
+       if( had_chk_min_cfg(vrrp) ){
+    		free(vrrp);
+    	  return VRRP_RETURN_CODE_BAD_PARAM;
+       }
 
 #if 0
-	/* shoud move to service enable */
-   if( had_open_sock(vrrp) ){/*set socket to add to multicast ip group*/
-		free(vrrp);
-		return VRRP_RETURN_CODE_ERR;
-   }
+    	/* shoud move to service enable */
+       if( had_open_sock(vrrp) ){/*set socket to add to multicast ip group*/
+    		free(vrrp);
+    		return VRRP_RETURN_CODE_ERR;
+       }
 #endif
-   /* the init is completed */
-   vrrp->initF = 1;
-   vrrp->next = NULL;
+       /* the init is completed */
+       vrrp->initF = 1;
+       vrrp->next = NULL;
 
-   if(NULL == hansiNode){
-      ret = had_profile_create(profile,vrid);
-	  hansiNode = had_get_profile_node(profile);
-	  if(hansiNode == NULL){
-	  	vrrp_syslog_error("profile is:%d!\n",profile);
-	  	return VRRP_RETURN_CODE_BAD_PARAM;
-	  }
+       if(NULL == hansiNode){
+          ret = had_profile_create(profile,vrid);
+    	  hansiNode = had_get_profile_node(profile);
+    	  if(hansiNode == NULL){
+    	  	vrrp_syslog_error("profile is:%d!\n",profile);
+    	  	return VRRP_RETURN_CODE_BAD_PARAM;
+    	  }
+       }
+       /*insert into the global list*/
+       if(NULL == hansiNode->vlist){
+    	   hansiNode->vlist = vrrp;
+    	   hansiNode->vrid = vrid;
+       }
+       /*log trace */
+       had_init_trace(profile);
+    }
+	return  VRRP_RETURN_CODE_OK;
+
+}
+
+int had_vip6_gateway
+(
+   unsigned int profile,
+   char*  vgateway_if,
+   struct iaddr *vgateway_ip ,
+   unsigned int prefix_length,
+   unsigned int link_local
+   
+)
+{
+   int  i =0,ret = 0,err = 0;
+   vrrp_rt*	vrrp = NULL;
+   hansi_s* hansi = NULL;
+   struct in6_addr in;
+   unsigned int addr[1024] = {0};
+   int index = 0;
+   //add check vip realip conflict
+   int naddr = 0;
+   struct in6_addr real_ipv6;
+
+   hansi = had_get_profile_node(profile);
+   if(NULL == hansi){
+      return VRRP_RETURN_CODE_PROFILE_NOTEXIST;
    }
-   /*insert into the global list*/
-   if(NULL == hansiNode->vlist){
-	   hansiNode->vlist = vrrp;
-	   hansiNode->vrid = vrid;
+   vrrp = hansi->vlist;
+   if(NULL == vrrp){
+	 ret = VRRP_RETURN_CODE_PROFILE_NOTEXIST;	
+	 return ret;
    }
-   /*log trace */
-   had_init_trace(profile);
+   /*check virtual ip conflict real ip*/
+	if(NULL != vgateway_if){
+		memset(&real_ipv6,0,sizeof(real_ipv6));
+		ret = had_ifname_to_ipv6(vgateway_if, &real_ipv6);// no ip
+		if (VRRP_RETURN_CODE_OK != ret) {
+			vrrp_syslog_error("ifname %s no interface found!\n",vgateway_if);
+			return VRRP_RETURN_CODE_BAD_PARAM;
+		}
+		naddr = had_ipv6addr_list( had_ifname_to_idx(vgateway_if),addr,sizeof(addr)/sizeof(addr[0]));
+		for( i = 0; i < naddr; i+=4 ){
+			if(!memcmp(vgateway_ip->iabuf, &(addr[i]),sizeof(struct in6_addr))){// real ip == vir ip
+				return VRRP_RETURN_CODE_BAD_PARAM;
+			}
+		}
+	}
+	vrrp_syslog_dbg("%s: ip6 = "NIP6QUAD_FMT"/%d \n",__func__,NIP6QUAD(vgateway_ip->iabuf), prefix_length);			
+	ret = had_add_vipv6( profile,vgateway_if,vgateway_ip,prefix_length,link_local,VRRP_LINK_TYPE_VGATEWAY);
+	if(ret != VRRP_RETURN_CODE_OK){
+		return ret;
+	}
+   /*check if ip already exist in the interface*/
+	ret = had_ipv6addr_list( had_ifname_to_idx(vgateway_if),addr,sizeof(addr)/sizeof(addr[0]) );
+	for( i = 0; i < ret; i+=4 ){
+	   if(!memcmp(vgateway_ip->iabuf, &(addr[i]),sizeof(struct in6_addr))){
+		  break;
+	   	}
+	} 
+	
+	if(i != ret){
+       /*already exist before*/
+	   if(VRRP_STATE_MAST == vrrp->state){
+	   	   had_ndisc_send_vgateway_unsolicited_na(vrrp,&vrrp->vgateway_vif[index].ipv6_addr,index,1);
+	   }
+	}
+	else if(VRRP_STATE_MAST == vrrp->state){
+		if(0 != (err = had_ip6addr_op_withmask(vrrp->vgateway_vif[index].ifindex, \
+								vrrp->vgateway_vif[index].ipv6_addr,prefix_length,1))){
+           memcpy(&in.s6_addr,&vrrp->vgateway_vif[index].ipv6_addr,sizeof(struct in6_addr)); 		
+		   vrrp_syslog_error("cant set the address "NIP6QUAD_FMT"%to vgateway %s\n", 
+					   		in.s6_addr, vrrp->vgateway_vif[index].ifname);
+		   return VRRP_RETURN_CODE_ERR;
+	   }
+	   /*send arp*/
+	   had_ndisc_send_vgateway_unsolicited_na(vrrp,&vrrp->vgateway_vif[index].ipv6_addr,index,1);
+	}
+
    return  VRRP_RETURN_CODE_OK;
 }
 

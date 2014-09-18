@@ -12,7 +12,7 @@
 
 #define vrrpd_log syslog
 
-//niehy add for ipv6 address 
+//niehy add for ipv6 address,address is null return 1 
 static inline int ipv6_addr_eq_null(const struct in6_addr *a1)
 {
 	return ((a1->s6_addr32[0]==0) && (a1->s6_addr32[1]==0)&&

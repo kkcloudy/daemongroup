@@ -285,6 +285,53 @@ int had_ipv6addr_op( int ifindex, struct in6_addr *addr, uint32_t mask,int addF 
 }
 
 /****************************************************************
+ NAME	: had_ip6addr_op_withmask				2014.8.27 16:21:00
+ AIM	: add or remove 
+ REMARK	:
+****************************************************************/
+int had_ip6addr_op_withmask( int ifindex, struct in6_addr *addr, int prefix_length,int addF )
+{
+	struct rtnl_handle	rth;
+	struct {
+		struct nlmsghdr 	n;
+		struct ifaddrmsg 	ifa;
+		char   			buf[256];
+	} req;
+	char name[IF_NAMESIZE] = {0};
+	
+	//vrrp_syslog_dbg("start ip6 op: ifindex %d,ip6addr "NIP6QUAD_FMT",%s\n",ifindex,NIP6QUAD((*addr)),addF ? "RTM_NEWADDR" : "RTM_DELADDR");
+	vrrp_syslog_info("had_ip6addr_op_withmask: ifindex %d,ip6addr "NIP6QUAD_FMT",%s\n",ifindex,NIP6QUAD((*addr)),addF ? "RTM_NEWADDR" : "RTM_DELADDR");
+	memset(&req, 0, sizeof(req));
+
+	req.n.nlmsg_len		= NLMSG_LENGTH(sizeof(struct ifaddrmsg));
+	req.n.nlmsg_flags	= NLM_F_REQUEST;
+	req.n.nlmsg_type	= addF ? RTM_NEWADDR : RTM_DELADDR;
+	req.ifa.ifa_family	= AF_INET6;
+	req.ifa.ifa_index	= ifindex;
+	req.ifa.ifa_prefixlen	= prefix_length;
+	
+	had_addattr_l(&req.n, sizeof(req), IFA_LOCAL, addr, sizeof(struct in6_addr) );
+
+	if (had_rtnl_open(&rth, 0) < 0){
+		vrrp_syslog_error("had_ip6addr_op_withmask: open netlink socket failed when %s ip6 "NIP6QUAD_FMT"/%d on %s!\n", \
+						addF ? "add" : "delete", NIP6QUAD((*addr)),prefix_length,if_indextoname(ifindex, name) ? name : "nil");
+
+		return -1;
+	}
+	if (had_rtnl_talk(&rth, &req.n, 0, 0, NULL, NULL, NULL) < 0){
+		vrrp_syslog_error("had_ip6addr_op_withmask: netlink talk failed when %s ip6 "NIP6QUAD_FMT"/%d on %s!\n", \
+						addF ? "add" : "delete", NIP6QUAD((*addr)),prefix_length,if_indextoname(ifindex, name) ? name : "nil");
+
+		return -1;
+    }
+	
+	/* to close the clocket */
+ 	had_rtnl_close( &rth );
+
+	return(0);
+}
+
+/****************************************************************
  NAME	: had_ipaddr_op_withmask				00/06/02 23:00:58
  AIM	: add or remove 
  REMARK	:
