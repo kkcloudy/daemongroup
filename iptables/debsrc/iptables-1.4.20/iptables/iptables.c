@@ -1253,13 +1253,14 @@ static void command_match(struct iptables_command_state *cs)
 	if (cs->invert)
 		xtables_error(PARAMETER_PROBLEM,
 			   "unexpected ! flag before --match");
+
 	m = xtables_find_match(optarg, XTF_LOAD_MUST_SUCCEED, &cs->matches);
 	size = XT_ALIGN(sizeof(struct xt_entry_match)) + m->size;
 	m->m = xtables_calloc(1, size);
 	m->m->u.match_size = size;
 	if (m->real_name == NULL) {
 		strcpy(m->m->u.user.name, m->name);
-	} else {	    
+	} else {
 		strcpy(m->m->u.user.name, m->real_name);
 		if (!(m->ext_flags & XTABLES_EXT_ALIAS))
 			fprintf(stderr, "Notice: the %s match is converted into %s match "
@@ -1744,7 +1745,7 @@ int do_command4(int argc, char *argv[], char **table,
 	/* only allocate handle if we weren't called with a handle */
 	if (!*handle)
 		*handle = iptc_init(*table);
-    //printf("wangchao11111enter iptables insmod\n");
+
 	/* try to insmod the module if iptc_init failed */
 	if (!*handle && xtables_load_ko(xtables_modprobe_program, false) != -1)
 		*handle = iptc_init(*table);

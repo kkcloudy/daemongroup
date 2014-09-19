@@ -3,11 +3,6 @@
 #include <xtables.h>
 #include <linux/netfilter/xt_MARK.h>
 
-/**wangchao add, xt_MARK.h can't work***/
-struct xt_mark_tginfo2 {
-	    __u32 mark, mask;
-};
-
 /* Version 0 */
 struct xt_mark_target_info {
 	unsigned long mark;
@@ -127,7 +122,6 @@ static void MARK_parse_v1(struct xt_option_call *cb)
 	}
 	markinfo->mark = cb->val.u32;
 }
-
 
 static void mark_tg_parse(struct xt_option_call *cb)
 {

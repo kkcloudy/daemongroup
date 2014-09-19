@@ -339,6 +339,7 @@ int xtables_insmod(const char *modname, const char *modprobe, bool quiet)
 	char *buf = NULL;
 	char *argv[4];
 	int status;
+
 	/* If they don't explicitly set it, read out of kernel */
 	if (!modprobe) {
 		buf = get_modprobe();
@@ -403,6 +404,7 @@ int xtables_load_ko(const char *modprobe, bool quiet)
 {
 	static bool loaded = false;
 	int ret;
+
 	if (loaded)
 		return 0;
 
@@ -554,6 +556,7 @@ static void *load_extension(const char *search_path, const char *af_prefix,
 			snprintf(path, sizeof(path), "%.*s/%s%s.so",
 			         (unsigned int)(next - dir), dir,
 			         *prefix, name);
+
 			if (stat(path, &sb) != 0) {
 				if (errno == ENOENT)
 					continue;
@@ -594,6 +597,7 @@ xtables_find_match(const char *name, enum xtables_tryload tryload,
 	struct xtables_match **dptr;
 	struct xtables_match *ptr;
 	const char *icmp6 = "icmp6";
+
 	if (strlen(name) >= XT_EXTENSION_MAXNAMELEN)
 		xtables_error(PARAMETER_PROBLEM,
 			   "Invalid match name \"%s\" (%u chars max)",
@@ -643,6 +647,7 @@ xtables_find_match(const char *name, enum xtables_tryload tryload,
 	if (!ptr && tryload != XTF_DONT_LOAD && tryload != XTF_DURING_LOAD) {
 		ptr = load_extension(xtables_libdir, afinfo->libprefix,
 		      name, false);
+
 		if (ptr == NULL && tryload == XTF_LOAD_MUST_SUCCEED)
 			xt_params->exit_err(PARAMETER_PROBLEM,
 				   "Couldn't load match `%s':%s\n",
@@ -715,6 +720,7 @@ xtables_find_target(const char *name, enum xtables_tryload tryload)
 	if (!ptr && tryload != XTF_DONT_LOAD && tryload != XTF_DURING_LOAD) {
 		ptr = load_extension(xtables_libdir, afinfo->libprefix,
 		      name, true);
+
 		if (ptr == NULL && tryload == XTF_LOAD_MUST_SUCCEED)
 			xt_params->exit_err(PARAMETER_PROBLEM,
 				   "Couldn't load target `%s':%s\n",
@@ -744,6 +750,7 @@ static int compatible_revision(const char *name, uint8_t revision, int opt)
 	struct xt_get_revision rev;
 	socklen_t s = sizeof(rev);
 	int max_rev, sockfd;
+
 	sockfd = socket(afinfo->family, SOCK_RAW, IPPROTO_RAW);
 	if (sockfd < 0) {
 		if (errno == EPERM) {

@@ -7,7 +7,6 @@
 #include <sys/socket.h>
 #include <errno.h>
 
-/*#define DEBUG wangchao add*/
 #ifdef DEBUG
 #define DEBUGP(x, args...) fprintf(stderr, x , ## args)
 #else
