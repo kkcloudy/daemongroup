@@ -58965,8 +58965,8 @@ DBusMessage * wid_dbus_interface_set_ap_if_eth_rate(DBusConnection *conn, DBusMe
 	DBusError err;
 	dbus_error_init(&err);
 	if (!(dbus_message_get_args ( msg, &err,
-								DBUS_TYPE_UINT32,&ID,
 								DBUS_TYPE_UINT32,&type,
+								DBUS_TYPE_UINT32,&ID,
 								DBUS_TYPE_BYTE,&ifindex,
 								DBUS_TYPE_UINT32,&rate,
 								DBUS_TYPE_INVALID))){
