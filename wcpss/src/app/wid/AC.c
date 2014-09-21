@@ -1834,8 +1834,9 @@ CWBool AsdWsm_BSSOp(unsigned int BSSIndex, Operate op, int both){
 	}
 	wid_syslog_debug_debug(WID_DEFAULT,"AC_RADIO[%d]->br_ifname[%d] %s",wASD.u.BSS.Radio_G_ID,wASD.u.BSS.WlanID,AC_RADIO[wASD.u.BSS.Radio_G_ID]->br_ifname[wASD.u.BSS.WlanID]);
 
+	memset(wASD.u.BSS.br_ifname, 0, IF_NAME_MAX);
 	if(AC_RADIO[wASD.u.BSS.Radio_G_ID] != NULL){
-		if(AC_RADIO[wASD.u.BSS.Radio_G_ID] != NULL){
+		if(AC_RADIO[wASD.u.BSS.Radio_G_ID]->br_ifname[wASD.u.BSS.WlanID] != NULL){
 			memcpy(wASD.u.BSS.br_ifname,AC_RADIO[wASD.u.BSS.Radio_G_ID]->br_ifname[wASD.u.BSS.WlanID],strlen(AC_RADIO[wASD.u.BSS.Radio_G_ID]->br_ifname[wASD.u.BSS.WlanID]));
 			}
 		else
