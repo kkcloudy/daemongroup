@@ -5491,6 +5491,7 @@ int Repair_WID_Listening_Socket(struct CWMultiHomedInterface *inf){
 		}
 		tmp = tmp->if_next;
 	}
+	Check_gACSokcet_Poll(&gACSocket);
 	return 0;
 }
 void Check_gACSokcet_Poll(CWMultiHomedSocket *ptr){
@@ -18438,9 +18439,9 @@ int WID_INTERFACE_SET_NASID(unsigned char WlanID,char* ifname,char* nas_id)
 	struct ifreq	ifr;
 	struct ifi *wif;
 	struct ifi *wifnext;
-	int ret = Check_And_Bind_Interface_For_WID(ifname);
+	/*int ret = Check_And_Bind_Interface_For_WID(ifname);
 	if(ret != 0)
-		return ret;
+		return ret;*/
 	sockfd = socket(AF_INET, SOCK_DGRAM, 0);
 
 	strncpy(ifr.ifr_name,ifname, sizeof(ifr.ifr_name));
