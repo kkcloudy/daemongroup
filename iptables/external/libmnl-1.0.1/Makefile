@@ -282,8 +282,8 @@ all: config.h
 .SUFFIXES:
 am--refresh:
 	@:
-$(srcdir)/Makefile.in:  $(srcdir)/Makefile.am $(top_srcdir)/Make_global.am $(am__configure_deps)
-	@for dep in $?; do \
+#$(srcdir)/Makefile.in:  $(srcdir)/Makefile.am $(top_srcdir)/Make_global.am $(am__configure_deps)
+#	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
 	    *$$dep*) \
 	      echo ' cd $(srcdir) && $(AUTOMAKE) --foreign'; \
@@ -295,9 +295,9 @@ $(srcdir)/Makefile.in:  $(srcdir)/Makefile.am $(top_srcdir)/Make_global.am $(am_
 	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign Makefile'; \
 	$(am__cd) $(top_srcdir) && \
 	  $(AUTOMAKE) --foreign Makefile
-.PRECIOUS: Makefile
-Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
-	@case '$?' in \
+#.PRECIOUS: Makefile
+#Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
+#	@case '$?' in \
 	  *config.status*) \
 	    echo ' $(SHELL) ./config.status'; \
 	    $(SHELL) ./config.status;; \
@@ -306,14 +306,14 @@ Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	    cd $(top_builddir) && $(SHELL) ./config.status $@ $(am__depfiles_maybe);; \
 	esac;
 
-$(top_builddir)/config.status: $(top_srcdir)/configure $(CONFIG_STATUS_DEPENDENCIES)
-	$(SHELL) ./config.status --recheck
+#$(top_builddir)/config.status: $(top_srcdir)/configure $(CONFIG_STATUS_DEPENDENCIES)
+#	$(SHELL) ./config.status --recheck
 
-$(top_srcdir)/configure:  $(am__configure_deps)
-	$(am__cd) $(srcdir) && $(AUTOCONF)
-$(ACLOCAL_M4):  $(am__aclocal_m4_deps)
-	$(am__cd) $(srcdir) && $(ACLOCAL) $(ACLOCAL_AMFLAGS)
-$(am__aclocal_m4_deps):
+#$(top_srcdir)/configure:  $(am__configure_deps)
+#	$(am__cd) $(srcdir) && $(AUTOCONF)
+#$(ACLOCAL_M4):  $(am__aclocal_m4_deps)
+#	$(am__cd) $(srcdir) && $(ACLOCAL) $(ACLOCAL_AMFLAGS)
+#$(am__aclocal_m4_deps):
 
 config.h: stamp-h1
 	@if test ! -f $@; then \
