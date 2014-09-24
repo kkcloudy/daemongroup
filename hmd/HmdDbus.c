@@ -1259,7 +1259,7 @@ DBusMessage * hmd_dbus_show_hansi_group(DBusConnection *conn, DBusMessage *msg, 
     		//hmd_syslog_info("%s,line=%d.\n",__func__,__LINE__);
     		if(hmd_group[i].group_id)
 			{
-				totalLen += sprintf(cursor," config hansi-reference %d\n",(hmd_group[i].group_id));
+				totalLen += sprintf(cursor," config reference-hansi %d\n",(hmd_group[i].group_id));
             	cursor = showStr + totalLen; 
         	    for(j = 0;j < MAX_HANSI_NUM;j++)
         		{

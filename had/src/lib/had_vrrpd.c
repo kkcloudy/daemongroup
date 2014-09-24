@@ -301,7 +301,7 @@ void had_state_notifier_rtmd(char *ifname,int state)
 	memcpy(nl_msg->msgData.vrrpInfo.interface, ifname, strlen(ifname));
     nl_msg->msgData.vrrpInfo.state = state;
 
-	vrrp_syslog_info("\tNetlink send vrrp state to RTMD ready, vrrp state is %s\n",(state == 1)?"MASTER":"BACK");
+	vrrp_syslog_info("\t%s netlink send state to RTMD, vrrp state is %s(%d)\n",__func__,(state == 1)?"MASTER":"OTHER",state);
 	
     int len = sizeof(nl_msg_head_t) + head->count*sizeof(netlink_msg_t);
     had_netlink_send(chBuf, len);
@@ -1659,7 +1659,7 @@ unsigned int had_ifname_to_ipv6
 	freeifaddrs(ifaddr);
 	
 	if( flag == 1 ){
-		vrrp_syslog_info("ioctl to get interface %s ipv6 address success\n",ifname);
+		vrrp_syslog_dbg("ioctl to get interface %s ipv6 address success\n",ifname);
 	}
 	return VRRP_RETURN_CODE_OK;
 
@@ -3573,20 +3573,18 @@ static int had_cfg_vlink_add_ip6addr_check
 )
 {
 
-	vrrp_syslog_info("had_cfg_vlink_add_ip6addr_check: get ip6 address "NIP6QUAD_FMT"/%d index = %d\n",NIP6QUAD(ip6addr->iabuf),prefix_length,index);
+	vrrp_syslog_info("%s: get ip6 address "NIP6QUAD_FMT"/%d index = %d\n",__func__,NIP6QUAD(ip6addr->iabuf),prefix_length,index);
 	if(!vsrv) {
 		vrrp_syslog_error("add %s ip6 with null instance info!\n", VRRP_LINK_TYPE_DESCANT(link_type));
-		return 1;
+		return VRRP_RETURN_CODE_BAD_PARAM;
 	}
 
 	if(index >= VRRP_LINK_MAX_CNT) {
 		vrrp_syslog_error("add %s ip6 with index %d out of range!\n", VRRP_LINK_TYPE_DESCANT(link_type), index);
-		return 1;
+		return VRRP_RETURN_CODE_BAD_PARAM;
 	}
 	
 	switch(link_type) {
-		default:
-			return 1;
 		case VRRP_LINK_TYPE_DOWNLINK:
 			if(link_local){
                 if(!ipv6_addr_eq_null(vsrv->downlink_local_ipv6_vaddr[index].sin6_addr.s6_addr))
@@ -3596,7 +3594,7 @@ static int had_cfg_vlink_add_ip6addr_check
 			    //memcpy(&vip6->sin6_addr.s6_addr, &(vsrv->downlink_ipv6_vaddr[index]),sizeof(vipv6_addr));
 			    if(ipv6_addr_eq_null(vsrv->downlink_local_ipv6_vaddr[index].sin6_addr.s6_addr)
 			    	|| !ipv6_addr_eq_null(vsrv->downlink_ipv6_vaddr[index].sin6_addr.s6_addr))
-			    	return 1;/*这里改成返回对应的错误值*/
+			    	return VRRP_RETURN_CODE_VIP_FIRST_LINKLOCAL;
 			}
 			break;
 		case VRRP_LINK_TYPE_UPLINK:
@@ -3608,7 +3606,7 @@ static int had_cfg_vlink_add_ip6addr_check
 			else{
 				 if(ipv6_addr_eq_null(vsrv->uplink_local_ipv6_vaddr[index].sin6_addr.s6_addr)
 			    	|| !ipv6_addr_eq_null(vsrv->uplink_ipv6_vaddr[index].sin6_addr.s6_addr))
-			    	return 1;
+			    	return VRRP_RETURN_CODE_VIP_FIRST_LINKLOCAL;
             }
 			break;
 		case VRRP_LINK_TYPE_VGATEWAY:
@@ -3620,12 +3618,16 @@ static int had_cfg_vlink_add_ip6addr_check
 			else{
 				if(ipv6_addr_eq_null(vsrv->vgateway_local_ipv6_vaddr[index].sin6_addr.s6_addr)
 			    	|| !ipv6_addr_eq_null(vsrv->vgateway_ipv6_vaddr[index].sin6_addr.s6_addr))
-			    	return 1;
+			    	return VRRP_RETURN_CODE_VIP_FIRST_LINKLOCAL;
 			}
 			break;
+		default:
+				vrrp_syslog_error("not such link type %d\n", link_type);
+				return VRRP_RETURN_CODE_ERR;
+
 	}
 	
-	return 0;
+	return VRRP_RETURN_CODE_OK;
 }
 
 /*
@@ -3825,8 +3827,8 @@ static int had_cfg_vlink_add_ip6addr_check
 #if 1/* notify rtmd */
 	/*
 		sprintf(name,"config interface %s ipv6_address %s prelen %d link_local %d",argv[0],argv[1],argv[2],link_local);
-		vtysh_client_execute(&vtysh_client[0], name, stdout);
-	*/
+		vtysh_client_execute(&vtysh_client[0], name, stdout); */
+/*
     sprintf(cmd,"sudo /opt/bin/vtysh -c \"en\n configure terminal\n no config interface %s \"",ifname);
     vrrp_syslog_info("cmd : %s\n",cmd);
     int status = system(cmd);
@@ -3836,6 +3838,9 @@ static int had_cfg_vlink_add_ip6addr_check
     {
     	vrrp_syslog_info("cmd : %s execute fail \n",cmd);
     }
+	*/
+    vrrp_syslog_info("cmd : %s execute fail \n",cmd);
+
 #endif	
 	return VRRP_RETURN_CODE_OK;
 }
@@ -5410,9 +5415,12 @@ unsigned int had_add_vipv6
 			if(VRRP_RETURN_CODE_IF_EXIST == had_get_link_index_by_ifname(vsrv, 
 						ifname, up_down_flg, &index))
 			{	/* check the link interface name exist. */
-
-				if( had_cfg_vlink_add_ip6addr_check(vsrv, up_down_flg,vip6, prefix_length ,link_local, index) ){
-					ret = VRRP_RETURN_CODE_IF_EXIST;
+                ret = had_cfg_vlink_add_ip6addr_check(vsrv, up_down_flg,vip6, prefix_length ,link_local, index);
+				if(VRRP_RETURN_CODE_OK != ret){
+					vrrp_syslog_error("add interface %s to %s index %d error!\n",
+									ifname,
+									VRRP_LINK_TYPE_DESCANT(up_down_flg),
+									index);
 					goto end;
 				}
 			}
@@ -11044,7 +11052,7 @@ int had_state_back
     		if( strlen(vsrv->uplink_vif[i].ifname) == 0 ){
 				continue;
     		}
-    		had_state_notifier_rtmd((vsrv->uplink_vif[i].ifname),0);
+    		had_state_notifier_rtmd((vsrv->uplink_vif[i].ifname),VRRP_NOTIFY_RTMD_STATE_BACK);
 			vrrp_syslog_info("uplink interface name : %s . vrrp state to BACK ,netlink notifier rtmd success!!\n",vsrv->uplink_vif[i].ifname);
     	}
 	}
@@ -11053,7 +11061,7 @@ int had_state_back
     		if( strlen(vsrv->downlink_vif[i].ifname) == 0 ){
     		    continue;
     		}
-    		had_state_notifier_rtmd((vsrv->downlink_vif[i].ifname),0);
+    		had_state_notifier_rtmd((vsrv->downlink_vif[i].ifname),VRRP_NOTIFY_RTMD_STATE_BACK);
 			vrrp_syslog_info("down link interface name : %s . vrrp state to BACK ,netlink notifier rtmd success!!\n",vsrv->downlink_vif[i].ifname);
     	}
 	}
@@ -12297,7 +12305,8 @@ int had_ipv6_start
 		  ret = had_ifname_to_ipv6(uplink_if, &real_ipv6);
 		  if (VRRP_RETURN_CODE_OK != ret) {
 			   vrrp_syslog_dbg("ifname %s no interface found!\n",uplink_if);
-			   free(vrrp);
+			   if(1 == ifinit)
+				    free(vrrp);
 			   return VRRP_RETURN_CODE_BAD_PARAM;
 		  }
 	      memcpy(&vrrp->uplink_vif[0].ipv6_addr, &real_ipv6,sizeof(real_ipv6));
@@ -12338,7 +12347,8 @@ int had_ipv6_start
 	   {
 	   	    if(ipv6_addr_eq_null(vrrp->uplink_local_ipv6_vaddr[0].sin6_addr.s6_addr)){
 				vrrp_syslog_error("uplink %s : error, set link-local address firstly!\n",uplink_if);
-				free(vrrp);
+				if(1 == ifinit)
+				    free(vrrp);
 				return VRRP_RETURN_CODE_VIP_FIRST_LINKLOCAL;
 			}
     	   had_cfg_add_uplink_ipv6addr(vrrp,uplink_ip,uplink_mask, 0,0);
@@ -12371,7 +12381,8 @@ int had_ipv6_start
 		   ret = had_ifname_to_ipv6(downlink_if, &real_ipv6);
 		   if (VRRP_RETURN_CODE_OK != ret) {
 				vrrp_syslog_error("ifname %s no interface found!\n",downlink_if);
-				free(vrrp);
+				if(1 == ifinit)
+				    free(vrrp);
 				return VRRP_RETURN_CODE_BAD_PARAM;
 		   }
 		   memcpy(&vrrp->downlink_vif[0].ipv6_addr,&real_ipv6,sizeof(real_ipv6));
@@ -12413,7 +12424,8 @@ int had_ipv6_start
 	   {
 		   if(ipv6_addr_eq_null(vrrp->downlink_local_ipv6_vaddr[0].sin6_addr.s6_addr)){
 				vrrp_syslog_error("downlink %s : error, set link-local address firstly!\n",downlink_if);
-			   free(vrrp);
+                if(1 == ifinit)
+					free(vrrp);
 			   return VRRP_RETURN_CODE_VIP_FIRST_LINKLOCAL;
 	   	    }
     	   had_cfg_add_downlink_ipv6addr(vrrp,downlink_ip,downlink_mask, 0,0);
@@ -12507,7 +12519,6 @@ int had_start
    	unsigned int	addr[1024] = {0};
 	int naddr = 0;
 	int i = 0;
-	int ifinit=0;
 	vrid = profile;
 	if (VRRP_IS_BAD_VID(vrid))
 	{
@@ -12552,37 +12563,23 @@ int had_start
 	   vrrp = hansiNode->vlist;
 	   if(NULL != vrrp){
 		 vrrp_syslog_dbg("first to delete old vrrp!\n");
-		 if( NULL != uplink_if 
-		 		&& strlen(vrrp->uplink_vif[0].ifname) != 0 
-		 		&& memcmp(vrrp->uplink_vif[0].ifname,uplink_if,strlen(uplink_if))!=0){
-		 		return VRRP_RETURN_CODE_BAD_PARAM;
-		 }
-		 
-		 if( NULL != downlink_if 
-		 		&& strlen(vrrp->downlink_vif[0].ifname) != 0 
-		 		&& memcmp(vrrp->downlink_vif[0].ifname,downlink_if,strlen(downlink_if))!=0){
-		 		return VRRP_RETURN_CODE_BAD_PARAM;
-		 }
-		 //ret = had_end(profile);	
+		 ret = had_end(profile);	
 	   }	   
    }
-   if(NULL == vrrp ){
 
-       vrrp_syslog_dbg("malloc new vrrp %d!\n",vrid);
-       vrrp = ( vrrp_rt*)malloc(sizeof(vrrp_rt));
-       if(NULL == vrrp){
-       	 return VRRP_RETURN_CODE_MALLOC_FAILED;
-       }
-       memset(vrrp, 0, sizeof(vrrp_rt));
-       #if 0
-       /*get sysmac as intf stored mac*/
-       had_get_sys_mac(sysmac);
-       #endif
-       
-       had_init_virtual_srv(vrrp);
-	   ifinit = 1;
-
+   vrrp_syslog_dbg("malloc new vrrp %d!\n",vrid);
+   vrrp = ( vrrp_rt*)malloc(sizeof(vrrp_rt));
+   if(NULL == vrrp){
+   	 return VRRP_RETURN_CODE_MALLOC_FAILED;
    }
+   memset(vrrp, 0, sizeof(vrrp_rt));
+   #if 0
+   /*get sysmac as intf stored mac*/
+   had_get_sys_mac(sysmac);
+   #endif
+   
+   had_init_virtual_srv(vrrp);
+
    /*
     if(((NULL == uplink_if)||(NULL == downlink_if))||((NULL == uplink_ip)||(NULL == downlink_ip))){
         return VRRP_RETURN_CODE_BAD_PARAM;
@@ -12640,8 +12637,7 @@ int had_start
 	   vrrp->uplink_vif[0].set_flg = VRRP_LINK_SETTED;
    }
    else{
-   	    ;
-	   //vrrp->uplink_flag = 0;
+	   vrrp->uplink_flag = 0;
 
    }
    if(NULL != downlink_if){
@@ -12694,50 +12690,48 @@ int had_start
 	   vrrp->downlink_vif[0].set_flg = VRRP_LINK_SETTED;
    }
    else{
-       ;
-	   //vrrp->downlink_flag = 0;
+	   vrrp->downlink_flag = 0;
    }
-    if(ifinit == 1 ){
-       vrrp->vrid = vrid;
-       vrrp->profile = profile;
-       vrrp_syslog_dbg("init vrrp vrid to %d\n",vrrp->vrid);
-       vrrp->no_vmac = 1; 
-       /*set priority*/
-       vrrp->priority = priority;  
-       vrrp->vrrp_trap_sw = VRRP_ON;
-       /* check if the minimal configuration has been done */
-       if( had_chk_min_cfg(vrrp) ){
-    		free(vrrp);
-    	  return VRRP_RETURN_CODE_BAD_PARAM;
-       }
+
+   vrrp->vrid = vrid;
+   vrrp->profile = profile;
+   vrrp_syslog_dbg("init vrrp vrid to %d\n",vrrp->vrid);
+   vrrp->no_vmac = 1; 
+   /*set priority*/
+   vrrp->priority = priority;  
+   vrrp->vrrp_trap_sw = VRRP_ON;
+   /* check if the minimal configuration has been done */
+   if( had_chk_min_cfg(vrrp) ){
+		free(vrrp);
+	  return VRRP_RETURN_CODE_BAD_PARAM;
+   }
 
 #if 0
-    	/* shoud move to service enable */
-       if( had_open_sock(vrrp) ){/*set socket to add to multicast ip group*/
-    		free(vrrp);
-    		return VRRP_RETURN_CODE_ERR;
-       }
+	/* shoud move to service enable */
+   if( had_open_sock(vrrp) ){/*set socket to add to multicast ip group*/
+		free(vrrp);
+		return VRRP_RETURN_CODE_ERR;
+   }
 #endif
-       /* the init is completed */
-       vrrp->initF = 1;
-       vrrp->next = NULL;
+   /* the init is completed */
+   vrrp->initF = 1;
+   vrrp->next = NULL;
 
-       if(NULL == hansiNode){
-          ret = had_profile_create(profile,vrid);
-    	  hansiNode = had_get_profile_node(profile);
-    	  if(hansiNode == NULL){
-    	  	vrrp_syslog_error("profile is:%d!\n",profile);
-    	  	return VRRP_RETURN_CODE_BAD_PARAM;
-    	  }
-       }
-       /*insert into the global list*/
-       if(NULL == hansiNode->vlist){
-    	   hansiNode->vlist = vrrp;
-    	   hansiNode->vrid = vrid;
-       }
-       /*log trace */
-       had_init_trace(profile);
-    }
+   if(NULL == hansiNode){
+      ret = had_profile_create(profile,vrid);
+	  hansiNode = had_get_profile_node(profile);
+	  if(hansiNode == NULL){
+	  	vrrp_syslog_error("profile is:%d!\n",profile);
+	  	return VRRP_RETURN_CODE_BAD_PARAM;
+	  }
+   }
+   /*insert into the global list*/
+   if(NULL == hansiNode->vlist){
+	   hansiNode->vlist = vrrp;
+	   hansiNode->vrid = vrid;
+   }
+   /*log trace */
+   had_init_trace(profile);
 	return  VRRP_RETURN_CODE_OK;
 
 }

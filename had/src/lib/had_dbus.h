@@ -84,6 +84,15 @@ typedef enum
 	VRRP_VIP_OPT_TYPE_DEL
 }VRRP_VIP_OPT_TYPE;
 
+/*vrrp notify rtmd option state_notifier_rtmd*/
+typedef enum
+{
+	VRRP_NOTIFY_RTMD_STATE_BACK = 0,
+	VRRP_NOTIFY_RTMD_STATE_MASTER,
+	VRRP_NOTIFY_RTMD_OPT_DEL,
+	VRRP_NOTIFY_RTMD_OPT_ADD
+}VRRP_NOTIFY_RTMD_OPT_TYPE;
+
 #define VRRP_VIP_OPT_TYPE_DESCANT(opttype)		\
 ({												\
 	(opttype == VRRP_VIP_OPT_TYPE_ADD) ? "add" :	\
