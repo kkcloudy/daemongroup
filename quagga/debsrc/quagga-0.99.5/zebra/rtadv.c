@@ -2044,7 +2044,9 @@ rtadv_process_solicit (struct interface *ifp)
 	
 	if(RTM_DEBUG_RTADV)
   	  zlog_info ("Router solicitation received on %s", ifp->name);
-	
+	  if (if_is_operative (ifp))
+		   rtadv_send_packet (rtadv->sock, ifp);
+#if 0
 	this_time.tv_sec = quagga_gettimeofday_only_second(this_time);
 	if(RTM_DEBUG_RTADV)
 	  zlog_info("%s: send before, this time is (%u), last time is %u \n",__func__,this_time.tv_sec,zif->time_memory.tv_sec);
@@ -2056,25 +2058,26 @@ rtadv_process_solicit (struct interface *ifp)
 	value = labs(value);
 	if(RTM_DEBUG_RTADV)
 	  zlog_info("%s :  labs(value) = %ld .\n",__func__,value);
-	if((value >= ND_ADVER_SEND_PACKET_INTERVAL) &&(zif->rtadv.ra_flag == 1))
-	{
-	   if (if_is_operative (ifp))
-	   	{
-		 rtadv_send_packet (rtadv->sock, ifp);
-	  /*  last_time.tv_sec = quagga_gettimeofday_only_second(last_time);	*/	 
-		 zif->time_memory.tv_sec = quagga_gettimeofday_only_second(zif->time_memory);
-		 if(RTM_DEBUG_RTADV)
-		   zlog_info("%s: send over,this time is %u , last time is (%u) .\n",__func__,this_time.tv_sec,zif->time_memory.tv_sec);
-	   	}
-	}
-	else
-	{
-		if(RTM_DEBUG_RTADV)
-		  zlog_info("%s: to set timer, this time is %u , last time is (%u). \n",__func__,this_time.tv_sec,zif->time_memory.tv_sec);
-	  /* value = value*1000 + 500;*/
-		rtadv->ra_timer_send = NULL;
-		rtadv_event (RTADV_TIMER_MSEC_IF, 3000,ifp);/*ms*/
-	}
+		if(value >= ND_ADVER_SEND_PACKET_INTERVAL) 
+		{
+		   if (if_is_operative (ifp))
+		   	{
+			 rtadv_send_packet (rtadv->sock, ifp);
+		  /*  last_time.tv_sec = quagga_gettimeofday_only_second(last_time);	*/	 
+			 zif->time_memory.tv_sec = quagga_gettimeofday_only_second(zif->time_memory);
+			 if(RTM_DEBUG_RTADV)
+			   zlog_info("%s: send over,this time is %u , last time is (%u) .\n",__func__,this_time.tv_sec,zif->time_memory.tv_sec);
+		   	}
+		}
+		else
+		{
+			if(RTM_DEBUG_RTADV)
+			  zlog_info("%s: to set timer, this time is %u , last time is (%u). \n",__func__,this_time.tv_sec,zif->time_memory.tv_sec);
+		  /* value = value*1000 + 500;*/
+			rtadv->ra_timer_send = NULL;
+			rtadv_event (RTADV_TIMER_MSEC_IF, 3000,ifp);/*ms*/
+		}
+	#endif
 		
 }
 
@@ -2117,7 +2120,7 @@ rtadv_process_packet (u_char *buf, unsigned int len, unsigned int ifindex, int h
 
   /* Check interface configuration. */
   zif = ifp->info;
-  if (! zif->rtadv.AdvSendAdvertisements)
+  if ((! zif->rtadv.AdvSendAdvertisements) &&(!zif->rtadv.ra_flag))
     return;
 
   /* ICMP message length check. */
