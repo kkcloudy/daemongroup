@@ -581,8 +581,15 @@ stamsg_receive(eag_thread_t *thread)
 	}
 
 	memcpy(usermac, sta_msg.STA.addr, sizeof(sta_msg.STA.addr));
-	user_addr.family = EAG_IPV4;
 	user_addr.user_ip = sta_msg.STA.ipaddr;
+	user_addr.user_ipv6 = sta_msg.STA.ip6_addr;
+	if (0 == user_addr.user_ip && 0 != ipv6_compare_null(&(user_addr.user_ipv6))) {
+		user_addr.family = EAG_IPV6;
+	} else if (0 != user_addr.user_ip && 0 == ipv6_compare_null(&(user_addr.user_ipv6))) {
+		user_addr.family = EAG_IPV4;
+	} else if (0 != user_addr.user_ip && 0 != ipv6_compare_null(&(user_addr.user_ipv6))) {
+		user_addr.family = EAG_MIX;
+	}
 	ipx2str(&user_addr, user_ipstr, sizeof(user_ipstr));
 	mac2str(usermac, user_macstr, sizeof(user_macstr), ':');
 	
