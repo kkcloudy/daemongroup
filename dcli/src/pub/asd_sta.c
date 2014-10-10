@@ -243,9 +243,13 @@ void dcli_free_sta_v2(struct dcli_sta_info_v2 *sta)
 {
 	if(sta == NULL)
 		return;
-	if(sta->essid!= NULL) {
+	if(sta->essid != NULL) {
 		free(sta->essid);
 		sta->essid = NULL;
+	}
+	if(sta->wtp_name != NULL) {
+		free(sta->wtp_name);
+		sta->wtp_name = NULL;
 	}
 	free(sta);
 	sta = NULL;
