@@ -100,6 +100,8 @@ unsigned char *dcli_vrrp_err_msg[] = {	\
 /*    11 */  "%% No more items can be configed for this command!\n",
 /*	  12 */  "%% Virtual mac should be enable first\n",
 /*    13 */  "%% The value is out of range!\n",
+/*    14 */  "%% Link local address error, eg: fe80:: !\n",
+/*    15 */  "%% The link local address must be the first configuration!\n",
 
 };
 
@@ -482,6 +484,8 @@ int dcli_show_hansi_profile_detail
 	unsigned int l2_uplink_flag = 0;
 	char *l2_uplink_ifname = NULL;
 	int l2_uplink_naddr = 0;
+#if 1
+    int uplink_ipv6_naddr =0,downlink_ipv6_naddr =0,vgateway_ipv6_naddr =0;
 	unsigned int  prefix_length_up = 0;
 	unsigned int  prefix_length_down = 0;
 	unsigned int  prefix_length_vgateway = 0;
@@ -490,7 +494,7 @@ int dcli_show_hansi_profile_detail
 	char local_tmp_ipv6[16] = {0};
 	char tmp_ipv6[16] = {0};
 	char tmpbuf[INET6_ADDRSTRLEN+1];
-
+#endif
 	/* [1] check if had process has started before or not */
 	instRun = dcli_hmd_hansi_is_running(vty,slot_id, 0,profile);
 	if (INSTANCE_NO_CREATED == instRun) {
@@ -582,6 +586,17 @@ int dcli_show_hansi_profile_detail
 							((ip& 0xff00) >> 8),(ip & 0xff), \
 							((uplink_ip & 0xff000000) >> 24),((uplink_ip & 0xff0000) >> 16),	\
 						((uplink_ip& 0xff00) >> 8),(uplink_ip & 0xff));
+		}
+#if 1		
+		dbus_message_iter_next(&iter);
+		dbus_message_iter_get_basic(&iter, &uplink_ipv6_naddr);
+		for (i = 0; i < uplink_ipv6_naddr; i++)
+		{
+			dbus_message_iter_next(&iter);
+			dbus_message_iter_get_basic(&iter,&uplink_ifname);	
+			dbus_message_iter_next(&iter);
+			dbus_message_iter_get_basic(&iter,&link);
+
 			memset(tmp_ipv6,0,16);
 		    dbus_message_iter_next(&iter);
 			dbus_message_iter_get_basic(&iter, &tmp_ipv6[0]);
@@ -616,8 +631,11 @@ int dcli_show_hansi_profile_detail
 			dbus_message_iter_next(&iter);
 			dbus_message_iter_get_basic(&iter, &tmp_ipv6[15]);
 
+			vty_out(vty, "%-7s%-3d%-s[%-s] ", "", i+1, uplink_ifname ? uplink_ifname : "nil", link ? "U":"D");
+/*
 			vty_out(vty, "%-10s", "");
 		    vty_out(vty,"%-s ",uplink_ifname ? uplink_ifname : "nil");
+			*/
 			if(ipv6_addr_eq_null(tmp_ipv6)) {
 				vty_out(vty, "0\n");
 			}
@@ -657,8 +675,12 @@ int dcli_show_hansi_profile_detail
 			dbus_message_iter_get_basic(&iter, &tmp_ipv6[14]);
 			dbus_message_iter_next(&iter);
 			dbus_message_iter_get_basic(&iter, &tmp_ipv6[15]);
+/*
 			vty_out(vty, "%-10s", "");
 		    vty_out(vty,"%-s ",uplink_ifname ? uplink_ifname : "nil");
+*/
+			vty_out(vty, "%-10s%-s[%-s] ", "", uplink_ifname ? uplink_ifname : "nil", link ? "U":"D");
+
 			if(ipv6_addr_eq_null(tmp_ipv6)) {
 				vty_out(vty, "0\n");
 			}
@@ -666,6 +688,7 @@ int dcli_show_hansi_profile_detail
 				vty_out(vty,"%s\n",inet_ntop(AF_INET6,tmp_ipv6,tmpbuf,INET6_ADDRSTRLEN));
 			}
 		}
+#endif		
 	}
 	else {
 		vty_out(vty, "%-7snot configured\n", "");
@@ -717,6 +740,17 @@ int dcli_show_hansi_profile_detail
 							((ip& 0xff00) >> 8),(ip & 0xff), \
 							((downlink_ip & 0xff000000) >> 24),((downlink_ip & 0xff0000) >> 16),	\
 						((downlink_ip & 0xff00) >> 8),(downlink_ip & 0xff));
+		}
+#if 1		
+		dbus_message_iter_next(&iter);
+		dbus_message_iter_get_basic(&iter, &downlink_ipv6_naddr);
+		for (i = 0; i < downlink_ipv6_naddr; i++)
+		{
+			dbus_message_iter_next(&iter);
+			dbus_message_iter_get_basic(&iter,&downlink_ifname);	
+			dbus_message_iter_next(&iter);
+			dbus_message_iter_get_basic(&iter,&link);
+
 			memset(tmp_ipv6,0,16);
 		    dbus_message_iter_next(&iter);
 			dbus_message_iter_get_basic(&iter, &tmp_ipv6[0]);
@@ -751,8 +785,11 @@ int dcli_show_hansi_profile_detail
 			dbus_message_iter_next(&iter);
 			dbus_message_iter_get_basic(&iter, &tmp_ipv6[15]);
 
+			vty_out(vty, "%-7s%-3d%-s[%-s] ", "", i+1, downlink_ifname ? downlink_ifname : "nil", link ? "U":"D");
+/*
 			vty_out(vty, "%-10s", "");
-		    vty_out(vty,"%-s ",downlink_ifname ? downlink_ifname : "nil");
+		    vty_out(vty,"%-s ",uplink_ifname ? uplink_ifname : "nil");
+			*/
 			if(ipv6_addr_eq_null(tmp_ipv6)) {
 				vty_out(vty, "0\n");
 			}
@@ -792,16 +829,20 @@ int dcli_show_hansi_profile_detail
 			dbus_message_iter_get_basic(&iter, &tmp_ipv6[14]);
 			dbus_message_iter_next(&iter);
 			dbus_message_iter_get_basic(&iter, &tmp_ipv6[15]);
+/*
 			vty_out(vty, "%-10s", "");
-		    vty_out(vty,"%-s ",downlink_ifname ? downlink_ifname : "nil");
+		    vty_out(vty,"%-s ",uplink_ifname ? uplink_ifname : "nil");
+*/
+			vty_out(vty, "%-10s%-s[%-s] ", "", downlink_ifname ? downlink_ifname : "nil", link ? "U":"D");
+
 			if(ipv6_addr_eq_null(tmp_ipv6)) {
 				vty_out(vty, "0\n");
 			}
 			else {
 				vty_out(vty,"%s\n",inet_ntop(AF_INET6,tmp_ipv6,tmpbuf,INET6_ADDRSTRLEN));
 			}
-
-		}
+	    }
+#endif
 	}
 	else {
 		vty_out(vty, "%-7snot configured\n","");
@@ -876,6 +917,17 @@ int dcli_show_hansi_profile_detail
 				vty_out(vty, "/%d", vgateway_mask);
 			}
 			vty_out(vty, "\n");
+		}
+#if 1		
+		dbus_message_iter_next(&iter);
+		dbus_message_iter_get_basic(&iter, &vgateway_ipv6_naddr);
+		for (i = 0; i < vgateway_ipv6_naddr; i++)
+		{
+			dbus_message_iter_next(&iter);
+			dbus_message_iter_get_basic(&iter,&vgateway_ifname);	
+			dbus_message_iter_next(&iter);
+			dbus_message_iter_get_basic(&iter,&link);
+
 			memset(tmp_ipv6,0,16);
 		    dbus_message_iter_next(&iter);
 			dbus_message_iter_get_basic(&iter, &tmp_ipv6[0]);
@@ -910,8 +962,11 @@ int dcli_show_hansi_profile_detail
 			dbus_message_iter_next(&iter);
 			dbus_message_iter_get_basic(&iter, &tmp_ipv6[15]);
 
+			vty_out(vty, "%-7s%-3d%-s[%-s] ", "", i+1, vgateway_ifname ? vgateway_ifname : "nil", link ? "U":"D");
+/*
 			vty_out(vty, "%-10s", "");
-		    vty_out(vty,"%-s ",vgateway_ifname ? vgateway_ifname : "nil");
+		    vty_out(vty,"%-s ",uplink_ifname ? uplink_ifname : "nil");
+			*/
 			if(ipv6_addr_eq_null(tmp_ipv6)) {
 				vty_out(vty, "0\n");
 			}
@@ -951,15 +1006,21 @@ int dcli_show_hansi_profile_detail
 			dbus_message_iter_get_basic(&iter, &tmp_ipv6[14]);
 			dbus_message_iter_next(&iter);
 			dbus_message_iter_get_basic(&iter, &tmp_ipv6[15]);
+/*
 			vty_out(vty, "%-10s", "");
-		    vty_out(vty,"%-s ",vgateway_ifname ? vgateway_ifname : "nil");
+		    vty_out(vty,"%-s ",uplink_ifname ? uplink_ifname : "nil");
+*/
+			vty_out(vty, "%-10s%-s[%-s] ", "", vgateway_ifname ? vgateway_ifname : "nil", link ? "U":"D");
+
 			if(ipv6_addr_eq_null(tmp_ipv6)) {
 				vty_out(vty, "0\n");
 			}
 			else {
 				vty_out(vty,"%s\n",inet_ntop(AF_INET6,tmp_ipv6,tmpbuf,INET6_ADDRSTRLEN));
 			}
-		}
+
+	}
+#endif
 	}
 	else{
 		vty_out(vty, "%-7snot configured\n","");
@@ -1020,6 +1081,7 @@ int dcli_show_hansi_profile
 	unsigned int uplink_set_flg = 0, downlink_set_flg = 0, heartbeat_set_flg = 0, vgateway_set_flg;
 	unsigned int failover_peer = 0, failover_local = 0;
 	unsigned int l2_uplink_set_flg = 0;
+    int uplink_ipv6_naddr =0,downlink_ipv6_naddr =0,vgateway_ipv6_naddr =0;
 	char local_tmp_ipv6[16] = {0};
 	char tmp_ipv6[16] = {0};
 	char tmpbuf[INET6_ADDRSTRLEN+1];
@@ -1095,6 +1157,15 @@ int dcli_show_hansi_profile
 				vty_out(vty,"%d.%d.%d.%d\n",((uplink_ip & 0xff000000) >> 24),((uplink_ip & 0xff0000) >> 16),	\
 						((uplink_ip& 0xff00) >> 8),(uplink_ip & 0xff));
 		}
+		}
+#if 1		
+		dbus_message_iter_next(&iter);
+		dbus_message_iter_get_basic(&iter, &uplink_ipv6_naddr);
+		for (i = 0; i < uplink_ipv6_naddr; i++)
+		{
+			dbus_message_iter_next(&iter);
+			dbus_message_iter_get_basic(&iter,&uplink_ifname);	
+
 			memset(tmp_ipv6,0,16);
 		    dbus_message_iter_next(&iter);
 			dbus_message_iter_get_basic(&iter, &tmp_ipv6[0]);
@@ -1129,8 +1200,11 @@ int dcli_show_hansi_profile
 			dbus_message_iter_next(&iter);
 			dbus_message_iter_get_basic(&iter, &tmp_ipv6[15]);
 
+			vty_out(vty, "%-7s%-3d%-s ", "", i+1, uplink_ifname ? uplink_ifname : "nil");
+/*
 			vty_out(vty, "%-10s", "");
 		    vty_out(vty,"%-s ",uplink_ifname ? uplink_ifname : "nil");
+			*/
 			if(ipv6_addr_eq_null(tmp_ipv6)) {
 				vty_out(vty, "0\n");
 			}
@@ -1170,8 +1244,12 @@ int dcli_show_hansi_profile
 			dbus_message_iter_get_basic(&iter, &tmp_ipv6[14]);
 			dbus_message_iter_next(&iter);
 			dbus_message_iter_get_basic(&iter, &tmp_ipv6[15]);
+/*
 			vty_out(vty, "%-10s", "");
 		    vty_out(vty,"%-s ",uplink_ifname ? uplink_ifname : "nil");
+*/
+			vty_out(vty, "%-10s%-s ", "", uplink_ifname ? uplink_ifname : "nil");
+
 			if(ipv6_addr_eq_null(tmp_ipv6)) {
 				vty_out(vty, "0\n");
 			}
@@ -1179,6 +1257,8 @@ int dcli_show_hansi_profile
 				vty_out(vty,"%s\n",inet_ntop(AF_INET6,tmp_ipv6,tmpbuf,INET6_ADDRSTRLEN));
 			}
 		}
+#endif		
+
 	} 
 	else {
 		vty_out(vty,"%-7snot configured\n","");
@@ -1217,6 +1297,15 @@ int dcli_show_hansi_profile
 				vty_out(vty,"%d.%d.%d.%d\n",((downlink_ip & 0xff000000) >> 24),((downlink_ip & 0xff0000) >> 16),	\
 						((downlink_ip& 0xff00) >> 8),(downlink_ip & 0xff));
 			}
+		}
+#if 1		
+		dbus_message_iter_next(&iter);
+		dbus_message_iter_get_basic(&iter, &downlink_ipv6_naddr);
+		for (i = 0; i < downlink_ipv6_naddr; i++)
+		{
+			dbus_message_iter_next(&iter);
+			dbus_message_iter_get_basic(&iter,&downlink_ifname);	
+
 			memset(tmp_ipv6,0,16);
 		    dbus_message_iter_next(&iter);
 			dbus_message_iter_get_basic(&iter, &tmp_ipv6[0]);
@@ -1251,8 +1340,11 @@ int dcli_show_hansi_profile
 			dbus_message_iter_next(&iter);
 			dbus_message_iter_get_basic(&iter, &tmp_ipv6[15]);
 
+			vty_out(vty, "%-7s%-3d%-s ", "", i+1, downlink_ifname ? downlink_ifname : "nil");
+/*
 			vty_out(vty, "%-10s", "");
-		    vty_out(vty,"%-s ",downlink_ifname ? downlink_ifname : "nil");
+		    vty_out(vty,"%-s ",uplink_ifname ? uplink_ifname : "nil");
+			*/
 			if(ipv6_addr_eq_null(tmp_ipv6)) {
 				vty_out(vty, "0\n");
 			}
@@ -1292,15 +1384,21 @@ int dcli_show_hansi_profile
 			dbus_message_iter_get_basic(&iter, &tmp_ipv6[14]);
 			dbus_message_iter_next(&iter);
 			dbus_message_iter_get_basic(&iter, &tmp_ipv6[15]);
+/*
 			vty_out(vty, "%-10s", "");
-		    vty_out(vty,"%-s ",downlink_ifname ? downlink_ifname : "nil");
+		    vty_out(vty,"%-s ",uplink_ifname ? uplink_ifname : "nil");
+*/
+			vty_out(vty, "%-10s%-s ", "", downlink_ifname ? downlink_ifname : "nil");
+
 			if(ipv6_addr_eq_null(tmp_ipv6)) {
 				vty_out(vty, "0\n");
 			}
 			else {
 				vty_out(vty,"%s\n",inet_ntop(AF_INET6,tmp_ipv6,tmpbuf,INET6_ADDRSTRLEN));
 			}
-		}
+	    }
+#endif
+
 	}
 	else {
 		vty_out(vty,"%-7snot configured\n","");
@@ -1362,6 +1460,15 @@ int dcli_show_hansi_profile
 				}
 				vty_out(vty, "\n");
 			}
+		}
+#if 1		
+		dbus_message_iter_next(&iter);
+		dbus_message_iter_get_basic(&iter, &vgateway_ipv6_naddr);
+		for (i = 0; i < vgateway_ipv6_naddr; i++)
+		{
+			dbus_message_iter_next(&iter);
+			dbus_message_iter_get_basic(&iter,&vgateway_ifname);	
+
 			memset(tmp_ipv6,0,16);
 		    dbus_message_iter_next(&iter);
 			dbus_message_iter_get_basic(&iter, &tmp_ipv6[0]);
@@ -1396,8 +1503,11 @@ int dcli_show_hansi_profile
 			dbus_message_iter_next(&iter);
 			dbus_message_iter_get_basic(&iter, &tmp_ipv6[15]);
 
+			vty_out(vty, "%-7s%-3d%-s ", "", i+1, vgateway_ifname ? vgateway_ifname : "nil");
+/*
 			vty_out(vty, "%-10s", "");
-		    vty_out(vty,"%-s ",vgateway_ifname ? vgateway_ifname : "nil");
+		    vty_out(vty,"%-s ",uplink_ifname ? uplink_ifname : "nil");
+			*/
 			if(ipv6_addr_eq_null(tmp_ipv6)) {
 				vty_out(vty, "0\n");
 			}
@@ -1437,15 +1547,21 @@ int dcli_show_hansi_profile
 			dbus_message_iter_get_basic(&iter, &tmp_ipv6[14]);
 			dbus_message_iter_next(&iter);
 			dbus_message_iter_get_basic(&iter, &tmp_ipv6[15]);
+/*
 			vty_out(vty, "%-10s", "");
-		    vty_out(vty,"%-s ",vgateway_ifname ? vgateway_ifname : "nil");
+		    vty_out(vty,"%-s ",uplink_ifname ? uplink_ifname : "nil");
+*/
+			vty_out(vty, "%-10s%-s ", "", vgateway_ifname ? vgateway_ifname : "nil");
+
 			if(ipv6_addr_eq_null(tmp_ipv6)) {
 				vty_out(vty, "0\n");
 			}
 			else {
 				vty_out(vty,"%s\n",inet_ntop(AF_INET6,tmp_ipv6,tmpbuf,INET6_ADDRSTRLEN));
 			}
-		}
+	}
+#endif
+
 	}
 	else {
 		vty_out(vty, "%-7snot configured\n", "");
@@ -5745,6 +5861,7 @@ DEFUN(config_vrrp_link_add_vipv6_cmd_func,
 							 DBUS_TYPE_BYTE, &(ipv6_addr.iabuf[14]),							
 							 DBUS_TYPE_BYTE, &(ipv6_addr.iabuf[15]),
 							 DBUS_TYPE_INVALID);
+/*
 	vty_out(vty,
 		"send arguments profile = %d opt_type: %s link_type = %d ifname = %s \
 		ipv6 addr = "NIP6QUAD_FMT" \
@@ -5757,7 +5874,7 @@ DEFUN(config_vrrp_link_add_vipv6_cmd_func,
 		prefix_length,
 		link_local
 	);
-
+*/
 	reply = dbus_connection_send_with_reply_and_block(dcli_dbus_connection, query, -1, &err);
 	dbus_message_unref(query);
 	if (NULL == reply) {
@@ -5781,7 +5898,7 @@ DEFUN(config_vrrp_link_add_vipv6_cmd_func,
 				vtysh_client_execute(&vtysh_client[0], name, stdout);
 			*/
     			sprintf(cmd,"sudo /opt/bin/vtysh -c \"en\n configure terminal\n config interface %s ipv6_address %s prelen %d link_local %d\"",argv[1],argv[2],prefix_length,link_local);
-    			vty_out(vty,"cmd : %s\n",cmd);
+    			//vty_out(vty,"cmd : %s\n",cmd);
     			int status = system(cmd);
 				unsigned int ret = 0;
     			ret = WEXITSTATUS(status);
@@ -5949,6 +6066,7 @@ DEFUN(config_vrrp_link_del_vipv6_cmd_func,
         if (DCLI_VRRP_RETURN_CODE_OK != op_ret) {
             vty_out(vty, dcli_vrrp_err_msg[op_ret - DCLI_VRRP_RETURN_CODE_OK]);
 		}
+#if 0
 		else{
 			/*
 				sprintf(name,"config interface %s ipv6_address %s prelen %d link_local %d",argv[0],argv[1],argv[2],link_local);
@@ -5964,6 +6082,7 @@ DEFUN(config_vrrp_link_del_vipv6_cmd_func,
     				vty_out(vty,"cmd : %s execute fail \n",cmd);
     			}
 		}
+#endif
 	}
 	else
 	{
