@@ -163,6 +163,22 @@ reget:
 	session->g_radioid = sta->radio_g_id;
 	session->radioid = sta->radio_g_id%L_RADIO_NUM;
 	session->wtpid= sta->radio_g_id/L_RADIO_NUM;
+
+	if (0 != sta->ip_addr.s_addr) {
+		session->user_addr.user_ip = sta->ip_addr.s_addr;
+	}
+	if (0 != ipv6_compare_null(&(sta->ip6_addr))) {
+		session->user_addr.user_ipv6 = sta->ip6_addr;
+	}
+	if (0 != session->user_addr.user_ip 
+		&& 0 != ipv6_compare_null(&(session->user_addr.user_ipv6))) {
+		session->user_addr.family = EAG_MIX;
+	} else if (0 != session->user_addr.user_ip) {
+		session->user_addr.family = EAG_IPV4;
+	} else {
+		session->user_addr.family = EAG_IPV6;
+	}
+
 	if (notice_to_asd) {
 		session->audit_ip = sta->realip;
 	} else {
@@ -182,16 +198,6 @@ reget:
 	memcpy(session->apmac, sta->addr, sizeof(session->apmac));
 	session->vlanid = sta->vlan_id;
 	*security_type = sta->auth_type;
-	
-	if (EAG_IPV4 == session->user_addr.family
-		&& 0 != ipv6_compare_null(&(sta->ip6_addr))) {
-		session->user_addr.user_ipv6 = sta->ip6_addr;
-		session->user_addr.family = EAG_MIX;
-	} else if (EAG_IPV6 == session->user_addr.family
-		&& 0 != sta->ip_addr.s_addr) {
-		session->user_addr.user_ip = sta->ip_addr.s_addr;
-		session->user_addr.family = EAG_MIX;
-	}
 
 	session->framed_interface_id = sta->Framed_Interface_Id;
 	session->framed_ipv6_prefix[0] = 0;

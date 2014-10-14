@@ -366,27 +366,27 @@ appconn_find_by_userip(appconn_db_t *appdb,
 	if (EAG_IPV6 == user_addr->family) {
 		/* ipv6 single-stack user */
 		head = hashtable_get_hash_list( appdb->ipv6_htable, 
-										&(user_addr->user_ipv6), 
-										sizeof(struct in6_addr) );
-        if (NULL == head) {
-            eag_log_err("appconn_find_by_userip "
-                "hashtable_get_hash_list failed, userip %s", user_ipstr);
-            return NULL;
-        }
-        
-	hlist_for_each_entry(appconn, node, head, ipv6_hnode) {
-		if (!memcmp_ipx(user_addr, &(appconn->session.user_addr))) {
-			return appconn;
+									&(user_addr->user_ipv6), 
+									sizeof(struct in6_addr) );
+		if (NULL == head) {
+			eag_log_err("appconn_find_by_userip "
+						"hashtable_get_hash_list failed, userip %s", user_ipstr);
+			return NULL;
+		}
+
+		hlist_for_each_entry(appconn, node, head, ipv6_hnode) {
+			if (!memcmp_ipx(user_addr, &(appconn->session.user_addr))) {
+				return appconn;
 			}
 		}
 	} else {
 		/* ipv4 single-stack user or dual-stack users */
 		head = hashtable_get_hash_list( appdb->ip_htable, 
-										&(user_addr->user_ip), 
-										sizeof(struct in_addr) );
+									&(user_addr->user_ip), 
+									sizeof(struct in_addr) );
 		if (NULL == head) {
 			eag_log_err("appconn_find_by_userip "
-				"hashtable_get_hash_list failed, userip %s", user_ipstr);
+			"hashtable_get_hash_list failed, userip %s", user_ipstr);
 			return NULL;
 		}
 
@@ -2180,8 +2180,8 @@ flush_all_appconn_flux_from_ip6tables(appconn_db_t *appdb, int time_interval)
 			{
 				rule_num++;
 				eag_log_debug("appconn", "flush_all_appconn_flux_from_ip6tables dst addr = %s",
-						ipv6tostr(&(p_entry->ipv6.dst), ipv6_str, sizeof(ipv6_str)));
-				if (ipv6_compare_null(&(p_entry->ipv6.dst)) == 0)
+						ipv6tostr((struct in6_addr *)&(p_entry->ipv6.dst), ipv6_str, sizeof(ipv6_str)));
+				if (ipv6_compare_null((struct in6_addr *)&(p_entry->ipv6.dst)) == 0)
 				{
 					continue;
 				}
@@ -2206,8 +2206,8 @@ flush_all_appconn_flux_from_ip6tables(appconn_db_t *appdb, int time_interval)
 			{
 				rule_num++;
 				eag_log_debug("appconn", "flush_all_appconn_flux_from_ip6tables src addr = %s",
-                    	ipv6tostr(&(p_entry->ipv6.src), ipv6_str, sizeof(ipv6_str)));
-				if (ipv6_compare_null(&(p_entry->ipv6.src)) == 0)
+                    	ipv6tostr((struct in6_addr *)&(p_entry->ipv6.src), ipv6_str, sizeof(ipv6_str)));
+				if (ipv6_compare_null((struct in6_addr *)&(p_entry->ipv6.src)) == 0)
 				{
  					continue;
 				}

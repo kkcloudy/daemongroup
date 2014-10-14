@@ -159,21 +159,21 @@ ipx2str(user_addr_t *user_addr, char *str, size_t size)
 	char cmp_v4[32] = "";
 	char cmp_v6[48] = "";
 	if (NULL == user_addr || NULL == str) {
-		return -1;
+		return NULL;
 	}
 	
-    memset(str, 0, size);
-    memset(cmp_v4, 0, sizeof(cmp_v4));
-    memset(cmp_v6, 0, sizeof(cmp_v6));
+	memset(str, 0, size);
+	memset(cmp_v4, 0, sizeof(cmp_v4));
+	memset(cmp_v6, 0, sizeof(cmp_v6));
 	if (EAG_IPV4 == user_addr->family) {
-        ip2str(user_addr->user_ip, str, size - 1);
+        	ip2str(user_addr->user_ip, str, size - 1);
 	} else if (EAG_IPV6 == user_addr->family) {
-        ipv6tostr(&(user_addr->user_ipv6), cmp_v6, sizeof(cmp_v6) - 1);
-        snprintf(str, size - 1, "[%s]", cmp_v6);
+	        ipv6tostr(&(user_addr->user_ipv6), cmp_v6, sizeof(cmp_v6) - 1);
+	        snprintf(str, size - 1, "[%s]", cmp_v6);
 	} else if (EAG_MIX == user_addr->family) {
-        ip2str(user_addr->user_ip, cmp_v4, sizeof(cmp_v4) - 1);
-        ipv6tostr(&(user_addr->user_ipv6), cmp_v6, sizeof(cmp_v6) - 1);
-        snprintf(str, size - 1, "%s[%s]", cmp_v4, cmp_v6);
+	        ip2str(user_addr->user_ip, cmp_v4, sizeof(cmp_v4) - 1);
+	        ipv6tostr(&(user_addr->user_ipv6), cmp_v6, sizeof(cmp_v6) - 1);
+	        snprintf(str, size - 1, "%s[%s]", cmp_v4, cmp_v6);
 	}
 	
 	return str;
@@ -208,10 +208,10 @@ memcmp_ipx(user_addr_t *user_addr1, user_addr_t *user_addr2)
 			|| EAG_IPV4 == user_addr2->family) {
 			return memcmp(&(user_addr1->user_ip), &(user_addr2->user_ip), sizeof(struct in_addr));
 		} else if (EAG_IPV6 == user_addr1->family 
-			|| EAG_IPV6 == user_addr1->family){
+			|| EAG_IPV6 == user_addr2->family){
 			return memcmp(&(user_addr1->user_ipv6), &(user_addr2->user_ipv6), sizeof(struct in6_addr));
 		} else if (EAG_MIX == user_addr1->family 
-			&& EAG_MIX == user_addr1->family) {
+			&& EAG_MIX == user_addr2->family) {
 			return memcmp(user_addr1, user_addr2, sizeof(user_addr_t));
 		}
 	} else {/* if user_addr2 is NULL, Compare user_addr1 to zero*/
@@ -490,7 +490,7 @@ is_net_overlap(uint32_t ip1, uint32_t mask1,
 	return (ip1 & minmask) == (ip2 & minmask);
 }
 
-int
+uint32_t *
 ipv6mask2binary(int netPrefix, uint32_t prefix[4])
 {
 

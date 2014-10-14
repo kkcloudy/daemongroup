@@ -438,7 +438,7 @@ eag_ins_do_syn_user_data(void *cbp, void *data, struct timeval *cb_tv)
 			goto ack_data;
 		}
 		appconn_add_to_db(eagins->appdb, appconn);
-		appconn_update_name_htable(eagins->appdb, appconn);
+		//appconn_update_name_htable(eagins->appdb, appconn);
 		if (FLUX_FROM_FASTFWD == eagins->flux_from
 			||FLUX_FROM_FASTFWD_IPTABLES == eagins->flux_from)
 		{
@@ -497,7 +497,7 @@ eag_ins_do_syn_user_data(void *cbp, void *data, struct timeval *cb_tv)
 			appdb_authed_user_num_decrease(eagins->appdb);
 			
 			appconn_del_from_db(appconn);
-			appconn_del_name_htable(appconn);
+			//appconn_del_name_htable(appconn);
 			appconn_free(appconn);
 		}
 	}
@@ -836,7 +836,7 @@ terminate_appconn(struct app_conn_t *appconn,
 	}
 	
 	appconn_del_from_db(appconn);
-	appconn_del_name_htable(appconn);
+	//appconn_del_name_htable(appconn);
 	appconn_free(appconn);
 }
 
@@ -960,7 +960,7 @@ terminate_appconn_nowait(struct app_conn_t *appconn,
 	}
 	
 	appconn_del_from_db(appconn);
-	appconn_del_name_htable(appconn);
+	//appconn_del_name_htable(appconn);
 	appconn_free(appconn);
 }
 
@@ -994,7 +994,7 @@ terminate_appconn_without_ntf(struct app_conn_t *appconn,
 	appdb_authed_user_num_decrease(eagins->appdb);
 
 	appconn_del_from_db(appconn);
-	appconn_del_name_htable(appconn);
+	//appconn_del_name_htable(appconn);
 	appconn_free(appconn);
 }
 
@@ -1117,7 +1117,7 @@ terminate_appconn_without_backup(struct app_conn_t *appconn,
 	}
 	
 	appconn_del_from_db(appconn);
-	appconn_del_name_htable(appconn);
+	//appconn_del_name_htable(appconn);
 	appconn_free(appconn);
 }
 

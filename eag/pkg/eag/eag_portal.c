@@ -490,8 +490,6 @@ portal_packet_init_ipx(const struct portal_packet_t *reqpkt,
 	attr = portal_packet_get_attr(reqpkt, ATTR_USER_IPV6);
 	if (NULL == attr && 0 != user_addr->user_ip) {
 		user_addr->family = EAG_IPV4;
-		eag_log_err("portal_packet_init_ipx userip %#x "
-			" not get user ipv6 attr", user_addr->user_ip);
 	} else if (NULL != attr && 0 == user_addr->user_ip) {
 		user_addr->family = EAG_IPV6;
 		memcpy(&(user_addr->user_ipv6), attr->value, attr->len - 2);
@@ -1677,7 +1675,8 @@ eag_portal_chapauth_proc(eag_portal_t *portal,
 		err_reason = PORTAL_ERR_REASON_SESSION_FAILED;
 		goto send;
 	}
-	strncpy(portalsess->username, username, sizeof(portalsess->username));
+	memset(portalsess->username, 0, sizeof(portalsess->username));
+	strncpy(portalsess->username, username, sizeof(portalsess->username) - 1);
 	
 	eag_log_debug("eag_portal", "eag_portal_chapauth_proc "
 			"userip %s, sess_status %u, user_state %d",
@@ -1728,7 +1727,7 @@ eag_portal_chapauth_proc(eag_portal_t *portal,
 		memset(appconn->session.username, 0,
 				sizeof(appconn->session.username));
 		strncpy(appconn->session.username, username,
-				sizeof(appconn->session.username));
+				sizeof(appconn->session.username) - 1);
 		appconn_set_filter_prefix(appconn,portal->hansi_type, portal->hansi_id);
 
 		if (PORTAL_PROTOCOL_TELECOM == portal_get_protocol_type()
@@ -1757,6 +1756,7 @@ eag_portal_chapauth_proc(eag_portal_t *portal,
 			break;
 		}
 
+		#if 0 //Delete it because it lead to eag dead
 		if (1 == username_check_switch) {
 			appconn_by_name = appconn_find_by_username(portal->appdb, appconn->session.username);
 	    
@@ -1769,7 +1769,7 @@ eag_portal_chapauth_proc(eag_portal_t *portal,
 		       break;
 		    }
 		}
-
+		#endif
 		ret = appconn_config_radiussrv_by_domain(appconn, portal->radiusconf);
 		if (EAG_RETURN_OK != ret) {
 			eag_log_err("eag_portal_chapauth_proc userip %s, "
@@ -1821,7 +1821,8 @@ eag_portal_chapauth_proc(eag_portal_t *portal,
 		memcpy(portalsess->secret, appconn->portal_srv.secret, PORTAL_SECRETSIZE);
 		portalsess->secretlen = appconn->portal_srv.secretlen;
 		portalsess->status = SESS_STATUS_ON_CHAPAUTH;
-		strncpy(portalsess->username, username, sizeof(portalsess->username));
+		memset(portalsess->username, 0, sizeof(portalsess->username));
+		strncpy(portalsess->username, username, sizeof(portalsess->username) - 1);
 		eag_radius_get_retry_params(portal->radius, 
 				&retry_interval, &retry_times, &vice_retry_times);
 		portalsess->timeout = 
@@ -2083,7 +2084,8 @@ eag_portal_papauth_proc(eag_portal_t *portal,
 		err_reason = PORTAL_ERR_REASON_SESSION_FAILED;
 		goto send;
 	}
-	strncpy(portalsess->username, username, sizeof(portalsess->username));
+	memset(portalsess->username, 0, sizeof(portalsess->username));
+	strncpy(portalsess->username, username, sizeof(portalsess->username) - 1);
 	
 	eag_log_debug("eag_portal", "eag_portal_papauth_proc "
 			"userip %s, sess_status %u, user_state %d",
@@ -2119,7 +2121,7 @@ eag_portal_papauth_proc(eag_portal_t *portal,
 		memset(appconn->session.username, 0,
 				sizeof(appconn->session.username));
 		strncpy(appconn->session.username, username,
-				sizeof(appconn->session.username));
+				sizeof(appconn->session.username) - 1);
 		appconn_set_filter_prefix(appconn,portal->hansi_type, portal->hansi_id);
 
 		if (PORTAL_PROTOCOL_TELECOM == portal_get_protocol_type()
@@ -2147,7 +2149,7 @@ eag_portal_papauth_proc(eag_portal_t *portal,
 			err_reason = PORTAL_ERR_REASON_USER_NAME_WRONG;
 			break;
 		}
-		
+		#if 0 //Delete it because it lead to eag dead
 		if (1 == username_check_switch) {
 			appconn_by_name = appconn_find_by_username(portal->appdb, appconn->session.username);
 	    
@@ -2160,7 +2162,7 @@ eag_portal_papauth_proc(eag_portal_t *portal,
 		        break;
 		    }
 		}
-		
+		#endif
 		ret = appconn_config_radiussrv_by_domain(appconn,
 								portal->radiusconf);
 		if (EAG_RETURN_OK != ret) {
@@ -2202,7 +2204,8 @@ eag_portal_papauth_proc(eag_portal_t *portal,
 		memcpy(portalsess->secret, appconn->portal_srv.secret, PORTAL_SECRETSIZE);
 		portalsess->secretlen = appconn->portal_srv.secretlen;
 		portalsess->status = SESS_STATUS_ON_PAPAUTH;
-		strncpy(portalsess->username, username, sizeof(portalsess->username));
+		memset(portalsess->username, 0, sizeof(portalsess->username));
+		strncpy(portalsess->username, username, sizeof(portalsess->username) - 1);
 		eag_radius_get_retry_params(radius, 
 				&retry_interval, &retry_times, &vice_retry_times);
 		portalsess->timeout = 
@@ -3550,7 +3553,7 @@ eag_portal_auth_success(eag_portal_t *portal,
 
 	/* authorize */
 	eag_captive_authorize(portal->cap, &(appconn->session));
-	appconn_update_name_htable(portal->appdb, appconn);
+	//appconn_update_name_htable(portal->appdb, appconn);
 	
 	mac2str(appconn->session.apmac, ap_macstr, sizeof(ap_macstr)-1, '-');
 	ip2str(appconn->session.nasip, nas_ipstr, sizeof(nas_ipstr));

@@ -222,7 +222,7 @@ stamsg_proc(eag_stamsg_t *stamsg, uint8_t usermac[6],
 	macauth_switch = eag_macauth_get_macauth_switch(stamsg->macauth);
 	
 	switch(sta_msg->Op) {
-	case WID_ADD:
+	case WID_ADD: /* 0 */
 		if (0 == memcmp_ipx(user_addr, NULL)) {
 			eag_log_warning("stamsg_proc receive WID_ADD, userip = 0");
 		}
@@ -237,13 +237,13 @@ stamsg_proc(eag_stamsg_t *stamsg, uint8_t usermac[6],
 				user_macstr);
 			return 0;
 		}
-		
+
 		appconn = appconn_find_by_usermac(stamsg->appdb, usermac);
 		if (NULL == appconn) {
 			eag_log_info("stamsg_proc, appconn not exist, usermac=%s",
 				user_macstr);
 			return 0;
-		}		
+		}
 		appconn->session.sta_state = SESSION_STA_STATUS_CONNECT;
 
 		tmpsession.idle_check = 1;
@@ -262,21 +262,21 @@ stamsg_proc(eag_stamsg_t *stamsg, uint8_t usermac[6],
 		tmpsession.vlanid = sta_msg->STA.vlan_id;
 		security_type = sta_msg->STA.auth_type;
 
-        tmpsession.framed_interface_id = sta_msg->STA.Framed_Interface_Id;
-        tmpsession.framed_ipv6_prefix[0] = 0;
-        tmpsession.framed_ipv6_prefix[1] = sta_msg->STA.IPv6_Prefix_length;
-        memcpy((uint8_t *)&(tmpsession.framed_ipv6_prefix[2]), 
-                (uint8_t *)&(sta_msg->STA.Framed_IPv6_Prefix), sizeof(struct in6_addr));
-        tmpsession.login_ipv6_host = sta_msg->STA.Login_IPv6_Host;
+		tmpsession.framed_interface_id = sta_msg->STA.Framed_Interface_Id;
+		tmpsession.framed_ipv6_prefix[0] = 0;
+		tmpsession.framed_ipv6_prefix[1] = sta_msg->STA.IPv6_Prefix_length;
+		memcpy((uint8_t *)&(tmpsession.framed_ipv6_prefix[2]), 
+		        (uint8_t *)&(sta_msg->STA.Framed_IPv6_Prefix), sizeof(struct in6_addr));
+		tmpsession.login_ipv6_host = sta_msg->STA.Login_IPv6_Host;
 
-        ipv6tostr((struct in6_addr *)&(tmpsession.framed_ipv6_prefix[2]),
-                framed_ipv6_prefix_str, sizeof(framed_ipv6_prefix_str));
-        snprintf(tmpsession.framed_ipv6_pool, MAX_FRAMED_IPV6_ATTR_LEN - 1, 
-                "%s/%hhu", framed_ipv6_prefix_str, tmpsession.framed_ipv6_prefix[1]);
-        snprintf(tmpsession.framed_ipv6_route, MAX_FRAMED_IPV6_ATTR_LEN - 1,
-                "%s %s1 1", tmpsession.framed_ipv6_pool, framed_ipv6_prefix_str);
-        memcpy(tmpsession.delegated_ipv6_prefix, 
-                tmpsession.framed_ipv6_prefix, MAX_FRAMED_IPV6_PREFIX_LEN);
+		ipv6tostr((struct in6_addr *)&(tmpsession.framed_ipv6_prefix[2]),
+		        framed_ipv6_prefix_str, sizeof(framed_ipv6_prefix_str));
+		snprintf(tmpsession.framed_ipv6_pool, MAX_FRAMED_IPV6_ATTR_LEN - 1, 
+		        "%s/%hhu", framed_ipv6_prefix_str, tmpsession.framed_ipv6_prefix[1]);
+		snprintf(tmpsession.framed_ipv6_route, MAX_FRAMED_IPV6_ATTR_LEN - 1,
+		        "%s %s1 1", tmpsession.framed_ipv6_pool, framed_ipv6_prefix_str);
+		memcpy(tmpsession.delegated_ipv6_prefix, 
+		        tmpsession.framed_ipv6_prefix, MAX_FRAMED_IPV6_PREFIX_LEN);
 
 		mac2str(tmpsession.apmac, new_apmacstr, sizeof(new_apmacstr), ':');
 
@@ -304,12 +304,12 @@ stamsg_proc(eag_stamsg_t *stamsg, uint8_t usermac[6],
 		} else {   /* essid not changed */
 			if (APPCONN_STATUS_AUTHED == appconn->session.state) {
 				if (EAG_AUTH_TYPE_PORTAL == appconn->session.server_auth_type) {
-        			eag_bss_message_count(stamsg->eagstat, appconn, BSS_USER_CONNECTED_TOTAL_TIME, 
-                        	(timenow - appconn->session.last_connect_ap_time));
-    			} else {
-        			eag_bss_message_count(stamsg->eagstat, appconn, BSS_MACAUTH_USER_CONNECTED_TOTAL_TIME, 
-                        	(timenow - appconn->session.last_connect_ap_time));
-    			}
+	        			eag_bss_message_count(stamsg->eagstat, appconn, BSS_USER_CONNECTED_TOTAL_TIME, 
+	                        	(timenow - appconn->session.last_connect_ap_time));
+	    			} else {
+	        			eag_bss_message_count(stamsg->eagstat, appconn, BSS_MACAUTH_USER_CONNECTED_TOTAL_TIME, 
+	                        	(timenow - appconn->session.last_connect_ap_time));
+	    			}
 			}
 			appconn->session.last_connect_ap_time = timenow;
 			appconn->session.wlanid = tmpsession.wlanid;
@@ -324,16 +324,16 @@ stamsg_proc(eag_stamsg_t *stamsg, uint8_t usermac[6],
 							sizeof(appconn->session.apmac));
 			appconn->session.vlanid = tmpsession.vlanid;
 
-            appconn->session.framed_interface_id = tmpsession.framed_interface_id;
-            memcpy(appconn->session.framed_ipv6_prefix, 
-            		tmpsession.framed_ipv6_prefix, MAX_FRAMED_IPV6_PREFIX_LEN);
-            appconn->session.login_ipv6_host = tmpsession.login_ipv6_host;
-            strncpy(appconn->session.framed_ipv6_route, 
-            		tmpsession.framed_ipv6_route, MAX_FRAMED_IPV6_ATTR_LEN - 1);
-            strncpy(appconn->session.framed_ipv6_pool, 
-            		tmpsession.framed_ipv6_pool, MAX_FRAMED_IPV6_ATTR_LEN - 1);
-            memcpy(appconn->session.delegated_ipv6_prefix, 
-            		tmpsession.delegated_ipv6_prefix, MAX_FRAMED_IPV6_PREFIX_LEN);
+			appconn->session.framed_interface_id = tmpsession.framed_interface_id;
+			memcpy(appconn->session.framed_ipv6_prefix, 
+					tmpsession.framed_ipv6_prefix, MAX_FRAMED_IPV6_PREFIX_LEN);
+			appconn->session.login_ipv6_host = tmpsession.login_ipv6_host;
+			strncpy(appconn->session.framed_ipv6_route, 
+					tmpsession.framed_ipv6_route, MAX_FRAMED_IPV6_ATTR_LEN - 1);
+			strncpy(appconn->session.framed_ipv6_pool, 
+					tmpsession.framed_ipv6_pool, MAX_FRAMED_IPV6_ATTR_LEN - 1);
+			memcpy(appconn->session.delegated_ipv6_prefix, 
+					tmpsession.delegated_ipv6_prefix, MAX_FRAMED_IPV6_PREFIX_LEN);
 
 			appconn_set_nasid(appconn, stamsg->nasidconf);
 			appconn_set_nasportid(appconn, stamsg->nasportidconf);
@@ -355,7 +355,7 @@ stamsg_proc(eag_stamsg_t *stamsg, uint8_t usermac[6],
 			}
 		}
 		break;		
-	case WID_DEL:
+	case WID_DEL: /* 1 */
 		if (0 == memcmp_ipx(user_addr, NULL)) {
 			eag_log_warning("stamsg_proc receive WID_DEL, userip = 0");
 		}
@@ -417,7 +417,7 @@ stamsg_proc(eag_stamsg_t *stamsg, uint8_t usermac[6],
 			appconn_free(appconn);
 		}
 		break;	
-	case OPEN_ROAM:
+	case OPEN_ROAM: /* 26 */
 		/* STAMSG_ROAM */
 		if (0 == memcmp_ipx(user_addr, NULL)) {
 			eag_log_warning("stamsg_proc receive OPEN_ROAM, userip = 0");

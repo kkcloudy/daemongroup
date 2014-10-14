@@ -153,12 +153,12 @@ struct mac_preauth_t {
 };
 
 typedef struct dhcp_sta_msg {
-    uint8_t family;
+	uint8_t family;
 	uint8_t usermac[6];
-    union {
+	union {
 		uint32_t userip;
 		struct in6_addr user_ipv6;
-    } addr;
+	} addr;
 }dhcp_sta_msg_t;
 
 typedef enum {
@@ -238,12 +238,12 @@ mac_preauth_free(struct mac_preauth_t *preauth)
 	
 	list_del(&(preauth->node));
 	if (EAG_IPV4 == preauth->user_addr.family) {
-        hlist_del(&(preauth->hnode));
+        	hlist_del(&(preauth->hnode));
 	} else if (EAG_IPV6 == preauth->user_addr.family) {
-        hlist_del(&(preauth->ipv6_hnode));
+        	hlist_del(&(preauth->ipv6_hnode));
 	} else if (EAG_MIX == preauth->user_addr.family) {
-        hlist_del(&(preauth->hnode));
-        hlist_del(&(preauth->ipv6_hnode));
+	        hlist_del(&(preauth->hnode));
+	        hlist_del(&(preauth->ipv6_hnode));
 	}
 	hlist_del(&(preauth->mac_hnode));
 	eag_blkmem_free_item(macauth->blkmem, preauth);
@@ -262,41 +262,41 @@ mac_preauth_find_by_userip(eag_macauth_t *macauth,
 
 	ipx2str(user_addr, user_ipstr, sizeof(user_ipstr));
 	if (EAG_IPV6 == user_addr->family) {
-        head = hashtable_get_hash_list( macauth->ipv6_htable, 
-							            &(user_addr->user_ipv6),
-							            sizeof(struct in6_addr) );
-        if (NULL == head) {
-            eag_log_err("mac_preauth_find_by_userip head is null");
-            return NULL;
-        }
-        
-        hlist_for_each_entry(preauth, node, head, ipv6_hnode) {
-            if (!memcmp_ipx(user_addr, &(preauth->user_addr))) {
-                eag_log_debug("eag_macauth", "found mac_preauth by userip %s", 
-                    user_ipstr);
-                return preauth;
-            }
-        }
-	} else {
-        head = hashtable_get_hash_list( macauth->htable, 
-										&(user_addr->user_ip),
-							            sizeof(struct in_addr) );
+		head = hashtable_get_hash_list( macauth->ipv6_htable, 
+									&(user_addr->user_ipv6),
+									sizeof(struct in6_addr) );
 		if (NULL == head) {
 			eag_log_err("mac_preauth_find_by_userip head is null");
 			return NULL;
 		}
-	
+
+		hlist_for_each_entry(preauth, node, head, ipv6_hnode) {
+			if (!memcmp_ipx(user_addr, &(preauth->user_addr))) {
+				eag_log_debug("eag_macauth", "found mac_preauth by userip %s", 
+								user_ipstr);
+				return preauth;
+			}
+		}
+	} else {
+		head = hashtable_get_hash_list( macauth->htable, 
+									&(user_addr->user_ip),
+									sizeof(struct in_addr) );
+		if (NULL == head) {
+			eag_log_err("mac_preauth_find_by_userip head is null");
+			return NULL;
+		}
+
 		hlist_for_each_entry(preauth, node, head, hnode) {
 			if (!memcmp_ipx(user_addr, &(preauth->user_addr))) {
 				eag_log_debug("eag_macauth", "found mac_preauth by userip %s", 
-					user_ipstr);
+								user_ipstr);
 				return preauth;
 			}
 		}
 	}
 
 	eag_log_debug("eag_macauth", "not found mac_preauth by userip %s", 
-				user_ipstr);
+					user_ipstr);
 	return NULL;
 }
 
@@ -522,7 +522,6 @@ macauth_proc(eag_macauth_t *macauth,
 	unsigned int security_type = 0;
 	struct appsession session = {0};
 	int ret = 0;
-	//DBusConnection *dbus_conn = NULL;
 	char user_ipstr[IPX_LEN] = "";
 	char user_macstr[32] = "";
 	struct app_conn_t *appconn = NULL;
@@ -534,8 +533,10 @@ macauth_proc(eag_macauth_t *macauth,
 			user_macstr);
 		return -1;
 	}
-	
-	//dbus_conn = eag_dbus_get_dbus_conn(macauth->eagdbus);
+	ipx2str(user_addr, user_ipstr, sizeof(user_ipstr));
+	eag_log_info("receive msg from dhcp-snooping, usermac=%s, userip=%s", 
+		user_macstr, user_ipstr);
+
 	ret = eag_get_sta_info_by_mac_v2(macauth->eagdbus, macauth->hansi_type,
 				macauth->hansi_id, usermac, &session, &security_type,
 				eag_ins_get_notice_to_asd(macauth->eagins));
@@ -544,11 +545,12 @@ macauth_proc(eag_macauth_t *macauth,
 			user_macstr, macauth->hansi_type, macauth->hansi_id, ret);
 		return 0;
 	}
-	if ( 0 == memcmp_ipx(user_addr, &(session.user_addr)) ) {
+	if ( 0 == memcmp_ipx(user_addr, &(session.user_addr)) 
+		&& user_addr->family != session.user_addr.family ) {
 		memcpy(user_addr, &(session.user_addr), sizeof(user_addr_t));
 	}
 	ipx2str(user_addr, user_ipstr, sizeof(user_ipstr));
-	eag_log_info("receive msg from dhcp-snooping, usermac=%s, userip=%s, and security_type=%d",
+	eag_log_info("after eag_get_sta_info_by_mac_v2, usermac=%s, userip=%s, and security_type=%d",
 		user_macstr, user_ipstr, security_type);
 	if (SECURITY_MAC_AUTH == security_type && macauth->macauth_switch) {
 		appconn = appconn_find_by_userip(macauth->appdb, user_addr);
@@ -611,10 +613,10 @@ eag_macauth_receive(eag_thread_t *thread)
 	memcpy(usermac, dhcpmsg.usermac, sizeof(usermac));
 	memset(&user_addr, 0, sizeof(user_addr_t));
 	if (EAG_IPV4 == dhcpmsg.family) {
-        user_addr.user_ip = dhcpmsg.addr.userip;
+		user_addr.user_ip = dhcpmsg.addr.userip;
 		user_addr.family = EAG_IPV4;
 	} else if (EAG_IPV6 == dhcpmsg.family) {
-        user_addr.user_ipv6 = dhcpmsg.addr.user_ipv6;		
+		user_addr.user_ipv6 = dhcpmsg.addr.user_ipv6;		
 		user_addr.family = EAG_IPV6;
 	} else {
 		eag_log_err("eag_macauth_receive recvfrom msg error: family=EAG_IPV%d",
@@ -843,8 +845,7 @@ flush_all_preauth_flux_from_ip6tables (eag_macauth_t *macauth)
 	{
 		rule_num++;
 		my_counter = ip6tc_read_counter(chain_name, rule_num, handle);
-		if ( 0 != ipv6_compare_null(&(p_entry->ipv6.dst))
-            && 0 != ipv6_compare_null(&(p_entry->ipv6.src)) )
+		if (0 != ipv6_compare_null((struct in6_addr *)&(p_entry->ipv6.dst)))
 		{
 			user_addr.family = EAG_IPV6;
 			user_addr.user_ipv6 = p_entry->ipv6.dst;
@@ -859,8 +860,7 @@ flush_all_preauth_flux_from_ip6tables (eag_macauth_t *macauth)
 			preauth->ip6tables_input_octets = my_counter->bcnt;
 			set_mac_preauth_flux(preauth);
 		}
-		else if ( 0 != ipv6_compare_null(&(p_entry->ipv6.dst))
-            && 0 != ipv6_compare_null(&(p_entry->ipv6.src)) )
+		else if (0 != ipv6_compare_null((struct in6_addr *)&(p_entry->ipv6.src)))
 		{
 			user_addr.family = EAG_IPV6;
 			user_addr.user_ipv6 = p_entry->ipv6.src;
@@ -1142,13 +1142,21 @@ eag_add_mac_preauth(eag_macauth_t *macauth,
 		user_addr_t *user_addr, uint8_t usermac[6])
 {
 	struct mac_preauth_t *preauth = NULL;
+	user_addr_t user_addr_tmp= {0};
 	int flux_from = 0;
 	char user_ipstr[IPX_LEN] = "";
+	char user_ipstr_tmp[IPX_LEN] = "";
 	char user_macstr[32] = "";
 	int find = 0;
 
-	ipx2str(user_addr, user_ipstr, sizeof(user_ipstr));
 	mac2str(usermac, user_macstr, sizeof(user_macstr), '-');
+
+	if (0 == memcmp_ipx(user_addr, NULL)) {
+		eag_log_warning("eag_add_mac_preauth usermac=%s, but userip=0",
+			user_macstr);
+		return -1;
+	}
+	ipx2str(user_addr, user_ipstr, sizeof(user_ipstr));
 	flux_from = eag_macauth_get_flux_from(macauth);
 	if (NULL != (preauth = mac_preauth_find_by_userip(macauth, user_addr))) {
 		if (0 != memcmp(usermac, preauth->usermac, 6)) {
@@ -1164,6 +1172,7 @@ eag_add_mac_preauth(eag_macauth_t *macauth,
 		}
 		find = 1;
 	}
+
 	if (!find) {
 		preauth = mac_preauth_new(macauth, user_addr, usermac);
 		if (NULL == preauth) {
@@ -1177,6 +1186,43 @@ eag_add_mac_preauth(eag_macauth_t *macauth,
 			|| FLUX_FROM_FASTFWD_IPTABLES == flux_from) 
 		{
 			eag_fastfwd_send(macauth->fastfwd, user_addr, SE_AGENT_USER_ONLINE);
+		}
+		else if (FLUX_FROM_WIRELESS == flux_from) {
+			preauth_init_flux_from_wireless(preauth);
+		}
+	}
+
+	if (find && user_addr->family != preauth->user_addr.family) {
+		eag_log_info("add mac_preauth userip=%s usermac=%s", 
+			user_ipstr, user_macstr);
+		if (EAG_MIX == user_addr->family && EAG_IPV4 == preauth->user_addr.family) {
+			user_addr_tmp.family = EAG_IPV6;
+			memcpy(&(user_addr_tmp.user_ipv6), &(user_addr->user_ipv6), sizeof(user_addr_t));
+			hashtable_check_add_node(macauth->ipv6_htable, 
+									&(user_addr_tmp.user_ipv6), 
+									sizeof(struct in6_addr), 
+									&(preauth->ipv6_hnode));
+		} else if (EAG_MIX == user_addr->family && EAG_IPV6 == preauth->user_addr.family) {
+			user_addr_tmp.family = EAG_IPV4;
+			user_addr_tmp.user_ip = user_addr->user_ip;
+			hashtable_check_add_node(macauth->htable, 
+									&(user_addr_tmp.user_ip), 
+									sizeof(struct in_addr), 
+									&(preauth->hnode));
+		} else {
+			/* TODO */
+			return 0;
+		}
+		memcpy(&(preauth->user_addr), user_addr, sizeof(user_addr_t));
+		ipx2str(&user_addr_tmp, user_ipstr_tmp, sizeof(user_ipstr_tmp));
+		ipx2str(&(preauth->user_addr), user_ipstr, sizeof(user_ipstr));
+		eag_log_info("update mac_preauth userip=%s usermac=%s complete userip=%s", 
+			user_ipstr_tmp, user_macstr, user_ipstr);
+		eag_captive_macpre_authorize(macauth->captive, &user_addr_tmp);
+		if (FLUX_FROM_FASTFWD == flux_from
+			|| FLUX_FROM_FASTFWD_IPTABLES == flux_from) 
+		{
+			eag_fastfwd_send(macauth->fastfwd, &user_addr_tmp, SE_AGENT_USER_ONLINE);
 		}
 		else if (FLUX_FROM_WIRELESS == flux_from) {
 			preauth_init_flux_from_wireless(preauth);

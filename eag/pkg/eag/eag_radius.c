@@ -2561,12 +2561,12 @@ eag_radius_set_radius_vendor_id(eag_radius_t *radius,
 	} else {
 		radius->vendor_id = vendor_id;
 	}
-	eag_log_info("eag_radius_set_radius_vendor_id vendor_id: %lu\n", radius->vendor_id);
+	eag_log_info("eag_radius_set_radius_vendor_id vendor_id: %u\n", radius->vendor_id);
 	radius_specific_attr = &(radius->radius_specific_attr);
 
 	memset(radius_specific_attr_file, 0, sizeof(radius_specific_attr_file));
 	snprintf(radius_specific_attr_file, sizeof(radius_specific_attr_file)-1, 
-				"%s/%lu", RADIUS_SPECIFIC_ATTR_PATH, radius->vendor_id);
+				"%s/%u", RADIUS_SPECIFIC_ATTR_PATH, radius->vendor_id);
 	eag_log_debug("eag_radius", 
 			"eag_radius_set_radius_vendor_id  specific_attr_file=%s\n", radius_specific_attr_file);
 

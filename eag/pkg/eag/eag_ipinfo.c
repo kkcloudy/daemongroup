@@ -30,6 +30,7 @@
 #include "eag_errcode.h"
 #include "eag_log.h"
 #include "eag_ipinfo.h"	
+#include "eag_util.h"
 
 #define SIOCIARP	0x8956		/* get ARP table entry and intf name */
 
