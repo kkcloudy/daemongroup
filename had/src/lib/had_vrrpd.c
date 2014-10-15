@@ -301,7 +301,7 @@ void had_state_notifier_rtmd(char *ifname,int state)
 	memcpy(nl_msg->msgData.vrrpInfo.interface, ifname, strlen(ifname));
     nl_msg->msgData.vrrpInfo.state = state;
 
-	vrrp_syslog_info("\t%s netlink send state to RTMD, vrrp state is %s(%d)\n",__func__,(state == 1)?"MASTER":"OTHER",state);
+	vrrp_syslog_info("\t%s netlink send to RTMD,interface is %s vrrp state is %s(%d)\n",__func__,ifname,(state == 1)?"MASTER":"OTHER",state);
 	
     int len = sizeof(nl_msg_head_t) + head->count*sizeof(netlink_msg_t);
     had_netlink_send(chBuf, len);
@@ -2134,6 +2134,58 @@ static int had_ipaddr_ops
 									in.s_addr, vsrv->vgateway_vif[i].ifname);
 			}
 	   }
+#if 1	
+		/*support ipv6 vgateway interface*/
+		for (i = 0; i < VRRP_LINK_MAX_CNT; i++) {	
+			/* not setted, skip it */
+			if (VRRP_LINK_NO_SETTED == vsrv->vgateway_vif[i].set_flg) {
+				continue;
+			}
+            /* virtual link local ipv6*/
+			vipv6_addr *v6add = &vsrv->vgateway_local_ipv6_vaddr[i];
+
+			if(ipv6_addr_eq_null(&v6add->sin6_addr)){
+            	vrrp_syslog_error("%s,%d,error.\n",__func__,__LINE__);
+            	continue;
+            }
+			if(0 != (err = had_ip6addr_op_withmask(vsrv->vgateway_vif[i].ifindex,&v6add->sin6_addr,v6add->mask,addF)))
+			{
+				vrrp_syslog_error("%s: cannot %s the vgateway linklocal ipv6 address "NIP6QUAD_FMT" to %s\n", 
+					                __func__,addF ? "add" : "delete", 
+									NIP6QUAD(vsrv->vgateway_local_ipv6_vaddr[i].sin6_addr.s6_addr), 
+									vsrv->vgateway_vif[i].ifname ? vsrv->vgateway_vif[i].ifname : "nil");
+			}
+			else{
+				vrrp_syslog_info("%s: %s the vgateway linklocal ip6 address "NIP6QUAD_FMT" to %s\n",
+					            __func__,addF ? "add" : "delete",
+					            NIP6QUAD(vsrv->vgateway_local_ipv6_vaddr[i].sin6_addr.s6_addr),
+					            vsrv->vgateway_vif[i].ifname ? vsrv->vgateway_vif[i].ifname : "nil");
+				had_state_notifier_rtmd((vsrv->vgateway_vif[i].ifname),addF);
+			}
+
+			/* virtual ipv6*/
+			v6add = &vsrv->vgateway_ipv6_vaddr[i];
+
+			if(ipv6_addr_eq_null(&v6add->sin6_addr)){
+            	vrrp_syslog_error("%s,%d,error.\n",__func__,__LINE__);
+            	continue;
+            }
+			if(0 != (err = had_ip6addr_op_withmask(vsrv->vgateway_vif[i].ifindex,&v6add->sin6_addr,v6add->mask,addF)))
+			{
+				vrrp_syslog_error("%s: cannot %s the vgateway ipv6 address "NIP6QUAD_FMT" to %s\n", 
+					                __func__,addF ? "add" : "delete", 
+									NIP6QUAD(vsrv->vgateway_ipv6_vaddr[i].sin6_addr.s6_addr), 
+									vsrv->vgateway_vif[i].ifname ? vsrv->vgateway_vif[i].ifname : "nil");
+			}
+			else{
+				vrrp_syslog_info("%s: %s the vgateway ip6 address "NIP6QUAD_FMT" to %s\n",
+					            __func__,addF ? "add" : "delete",
+					            NIP6QUAD(vsrv->vgateway_ipv6_vaddr[i].sin6_addr.s6_addr),
+					            vsrv->vgateway_vif[i].ifname ? vsrv->vgateway_vif[i].ifname : "nil");
+				had_state_notifier_rtmd((vsrv->vgateway_vif[i].ifname),addF);
+			}
+	   }
+#endif
 	}
 	return err;
 }
@@ -3839,6 +3891,7 @@ static int had_cfg_vlink_add_ip6addr_check
     	vrrp_syslog_info("cmd : %s execute fail \n",cmd);
     }
 	*/
+    had_state_notifier_rtmd(ifname,VRRP_NOTIFY_RTMD_OPT_DEL);
     vrrp_syslog_info("cmd : %s execute fail \n",cmd);
 
 #endif	
@@ -11062,7 +11115,16 @@ int had_state_back
     		    continue;
     		}
     		had_state_notifier_rtmd((vsrv->downlink_vif[i].ifname),VRRP_NOTIFY_RTMD_STATE_BACK);
-			vrrp_syslog_info("down link interface name : %s . vrrp state to BACK ,netlink notifier rtmd success!!\n",vsrv->downlink_vif[i].ifname);
+			vrrp_syslog_info("downlink interface name : %s . vrrp state to BACK ,netlink notifier rtmd success!!\n",vsrv->downlink_vif[i].ifname);
+    	}
+	}
+	if (VRRP_LINK_NO_SETTED != vsrv->vgateway_flag){
+    	for (i = 0; i < VRRP_LINK_MAX_CNT; i++){
+    		if( strlen(vsrv->vgateway_vif[i].ifname) == 0 ){
+    		    continue;
+    		}
+    		had_state_notifier_rtmd((vsrv->vgateway_vif[i].ifname),VRRP_NOTIFY_RTMD_STATE_BACK);
+			vrrp_syslog_info("vgateway interface name : %s . vrrp state to BACK ,netlink notifier rtmd success!!\n",vsrv->vgateway_vif[i].ifname);
     	}
 	}
 	return 0;

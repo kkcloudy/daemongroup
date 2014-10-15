@@ -1918,7 +1918,7 @@ rtadv_send_packet (int sock, struct interface *ifp)
     			inet_ntop(AF_INET6, &pkt->ipi6_addr, fv6, 120), 
     			inet_ntop(AF_INET6, &addr.sin6_addr, tv6, 120), 
     			len);
-
+/*
 		unsigned int *tmp = (unsigned int *)&buf;
 		int i,j;
 		for(i = 0; i <= len>>4; i++)
@@ -1926,7 +1926,8 @@ rtadv_send_packet (int sock, struct interface *ifp)
 			for(j = 0; j <= 3;j++)
 				zlog_err("%08x  ",*(tmp+i*4+j));
 				zlog_err("\n\r");
-		}		
+		}
+*/
 	}
 }
 
@@ -2363,8 +2364,13 @@ rtmd_netlink_read (struct thread *thread)
 			{
 				zif->rtadv.ra_flag= 0;
 			}
+			else if (nl_msg->vrrpInfo.state== 2)
+			{
+				ret = clear_virtual_ipv6_address(ifp->name);
+				if (ret != 0)
+					zlog_info("clean_virtual_ipv6_address ERROR\n");
 		}
-	
+		}
 	}
   thread_add_read(zebrad.master, rtmd_netlink_read, NULL,
   					  sock_vrrp_fd);
@@ -4395,6 +4401,40 @@ DEFUN (set_virtual_ipv6_address,
 	  if(product && product->board_type == BOARD_IS_ACTIVE_MASTER)
 	  {
 	  	tipc_master_interface_local_link( ZEBRA_INTERFACE_LOCAL_LINK_ADD,ifp ,link_local ,argv[0],argv[1],prefix_length);
+	}
+
+	return 0;
+}
+
+int
+clear_virtual_ipv6_address(char *ifname)
+{
+
+	struct interface *ifp;
+	struct zebra_if *zif;
+	struct iaddr ipv6_addr;
+	if (NULL == ifname) {
+		zlog_debug("ifname is NULL !\n");
+		return -1;
+	}
+
+	ifp = if_lookup_by_name_len (ifname,
+			strnlen(ifname, INTERFACE_NAMSIZ));
+	if(NULL == ifp)
+	{
+		zlog_debug("Interface %s does not exist\n", ifname);
+		return -1;
+	}
+	//vty_out(vty,"interface = %s ipv6 addr = "NIP6QUAD_FMT" link_local = %d\n",ifname,NIP6QUAD(ipv6_addr.iabuf),link_local);
+	
+	if (NULL == ifp->info){
+		return -1;
+	}
+	else 
+	{
+		zif = ifp->info;	
+		zif->rtadv.ra_flag = 1;
+		memset(zif->rtadv.uplink_ipv6_vaddr,0,sizeof(zif->rtadv.uplink_ipv6_vaddr));
 	}
 	
 	return 0;
