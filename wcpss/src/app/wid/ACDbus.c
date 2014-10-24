@@ -55447,10 +55447,10 @@ DBusMessage * wid_dbus_interface_set_wtp_extension_infomation_interval(DBusConne
 				{
 					ret = WID_DBUS_SUCCESS;
 				}
-			else if(gWTPs[ID].currentState != CW_ENTER_RUN)
+			/*else if(gWTPs[ID].currentState != CW_ENTER_RUN)
 				{
 					ret = WTP_NOT_IN_RUN_STATE;
-				}	
+				}*/
 			else
 				{
 					AC_WTP[ID]->wifi_extension_reportinterval = interval;
@@ -56880,10 +56880,10 @@ DBusMessage * wid_dbus_interface_set_wtp_sta_infomation_enable(DBusConnection *c
 			{
 				ret = WTP_ID_NOT_EXIST;
 			}
-			else if(gWTPs[ID].currentState != CW_ENTER_RUN)
+			/*else if(gWTPs[ID].currentState != CW_ENTER_RUN)
 			{
 				ret = WTP_NOT_IN_RUN_STATE;
-			}
+			}*/
 
 			else if(AC_WTP[ID]->ap_sta_report_switch == policy)
 			{
@@ -57910,9 +57910,9 @@ DBusMessage * wid_dbus_interface_set_wtp_if_info_report_interval(DBusConnection 
 		else if(AC_WTP[ID] == NULL){
 			ret = WTP_ID_NOT_EXIST;
 		}
-		else if(gWTPs[ID].currentState != CW_ENTER_RUN){
+		/*else if(gWTPs[ID].currentState != CW_ENTER_RUN){
 			ret = WTP_NOT_IN_RUN_STATE;
-		}
+		}*/
 		else if(AC_WTP[ID]->apifinfo.report_interval == interval){
 			ret = WID_DBUS_SUCCESS;
 		}
