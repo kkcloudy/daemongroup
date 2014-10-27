@@ -304,6 +304,7 @@ typedef struct{
 	char            NETID[WTP_NETID_LEN]; //zhangshu modify, modify netid from point to array,2010-10-26
 	wid_wifi_info	wifi_extension_info;
 	char 			BindingIFName[ETH_IF_NAME_LEN];
+	unsigned int    wtp_flow_switch;   //xk add for asd sta check
 	
 }wASD_WTP;	/*WID update WLAN information to ASD*/
 

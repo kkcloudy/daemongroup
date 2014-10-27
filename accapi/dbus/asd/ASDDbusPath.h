@@ -333,4 +333,6 @@ char ASD_DBUS_STA_METHOD_SET_ASD_STA_VIR_DHCP_STATE[PATH_LEN]=	 "set_asd_sta_vir
 char ASD_DBUS_STA_METHOD_SET_ASD_STA_TUNNEL_SWITCH_STATE[PATH_LEN]=	 "set_asd_sta_tunnel_switch_state";
 char ASD_DBUS_STA_METHOD_VIR_DHCP_SHOW_RUNNING_CONFIG[PATH_LEN]= 	"vir_dhcp_show_running_config";
 /*end**************************************************/
+char ASD_DBUS_STA_METHOD_SET_ASD_STA_CHECK_TIME[PATH_LEN]=  "set_asd_sta_check_time";   //xk add for check sta
+char ASD_DBUS_STA_METHOD_SET_ASD_STA_CHECK_TIME_SWITCH[PATH_LEN]= "set_asd_sta_check_time_switch";  //xk add for check sta
 #endif

@@ -56870,9 +56870,10 @@ DBusMessage * wid_dbus_interface_set_wtp_sta_infomation_enable(DBusConnection *c
 				for(i=0;i<WTP_NUM;i++){
 					if(AC_WTP[i] != NULL){
 							if(AC_WTP[i]->ap_sta_report_switch != policy){
+								AC_WTP[i]->ap_sta_report_switch = policy;   // xk add 
 								ret = wid_set_ap_sta_infomation_report(i);
 							}
-						
+					        AsdWsm_WTPOp(i,WID_MODIFY);      //xk add for asd sta check
 					}
 				}
 			} /*wcl add for globle variable*/
@@ -56888,12 +56889,15 @@ DBusMessage * wid_dbus_interface_set_wtp_sta_infomation_enable(DBusConnection *c
 			else if(AC_WTP[ID]->ap_sta_report_switch == policy)
 			{
 				ret = WID_DBUS_SUCCESS;
+				AsdWsm_WTPOp(ID,WID_MODIFY);   //xk add for asd sta check
+				
 			}
 			else
 			{
 				AC_WTP[ID]->ap_sta_report_switch = policy;
 
 				ret = wid_set_ap_sta_infomation_report(ID);
+				AsdWsm_WTPOp(ID,WID_MODIFY);   //xk add for asd sta check
 			}
 		}
 
@@ -56922,12 +56926,14 @@ DBusMessage * wid_dbus_interface_set_wtp_sta_infomation_enable(DBusConnection *c
 							{
 								ret2 = WID_DBUS_SUCCESS;
 								wid_syslog_debug_debug(WID_DEFAULT,"WTP%d had this policy yet\n",tmp->WTPID);
+								AsdWsm_WTPOp(ID,WID_MODIFY);   //xk add for asd sta check
 								//printf("%%%%ret2= %d\n",ret2);
 							}
 
 						 else 
 							{	AC_WTP[tmp->WTPID]->ap_sta_report_switch = policy;
 								ret2 = wid_set_ap_sta_infomation_report(tmp->WTPID);
+								AsdWsm_WTPOp(ID,WID_MODIFY);  //xk add for asd sta check
 								//printf("!!!!!ret2= %d\n",ret2);
 							}
 						if(ret2 != WID_DBUS_SUCCESS){

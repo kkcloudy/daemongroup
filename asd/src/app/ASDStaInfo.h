@@ -101,6 +101,8 @@ struct sta_info * asd_sta_hash_get(const u8 *sta);
 void asd_sta_hash_add(struct sta_info *sta);
 int AsdStaInfoToEAG(struct asd_data *wasd, struct sta_info *sta, Operate op);
 void asd_sta_roaming_management(struct sta_info *new_sta);
+void asd_sta_delete(void *circle_ctx,void *timeout_ctx);//xk add fro asd sta check
+
 #ifdef __ASD_STA_ACL
 /* caojia add for sta acl function */
 int AsdStaInfo2Wifi(struct asd_data *wasd, struct sta_info *sta, Operate op);

@@ -229,6 +229,7 @@ struct _wtp_asd {
  	unsigned int ap_max_allowed_sta_num;
 	unsigned int wtp_triger_num;
 	unsigned int wtp_flow_triger;
+	unsigned int wtp_flow_switch;
 	struct acl_config *acl_conf;
 	FLOW_IE      radio_flow_info[L_RADIO_NUM];   /*xm add*/
 

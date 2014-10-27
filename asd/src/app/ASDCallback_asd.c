@@ -2627,6 +2627,8 @@ void WTP_OP(TableMsg *msg){
 				ASD_WTP_AP[msg->u.WTP.WtpID]->ap_max_allowed_sta_num=msg->u.WTP.wtp_max_sta_num;
 				ASD_WTP_AP[msg->u.WTP.WtpID]->wtp_triger_num=msg->u.WTP.wtp_triger_num;
 				ASD_WTP_AP[msg->u.WTP.WtpID]->wtp_flow_triger=msg->u.WTP.wtp_flow_triger;
+				ASD_WTP_AP[msg->u.WTP.WtpID]->wtp_flow_switch=msg->u.WTP.wtp_flow_switch;   // xk add for asd sta check
+				asd_printf(ASD_DEFAULT,MSG_DEBUG,"wtp_flow_switch = %d\n",ASD_WTP_AP[msg->u.WTP.WtpID]->wtp_flow_switch);
 				asd_printf(ASD_DEFAULT,MSG_DEBUG,"wtp max sta %d\nmsg->max sta %d\n",ASD_WTP_AP[msg->u.WTP.WtpID]->ap_max_allowed_sta_num,msg->u.WTP.wtp_max_sta_num);
 				asd_printf(ASD_DEFAULT,MSG_DEBUG,"ap accessed sta %d---%d\n",ASD_WTP_AP[msg->u.WTP.WtpID]->ap_accessed_sta_num,sta_num);
 
@@ -2685,6 +2687,8 @@ void WTP_OP(TableMsg *msg){
 				ASD_WTP_AP[msg->u.WTP.WtpID]->ap_max_allowed_sta_num=msg->u.WTP.wtp_max_sta_num;
 				ASD_WTP_AP[msg->u.WTP.WtpID]->wtp_triger_num=msg->u.WTP.wtp_triger_num;
 				ASD_WTP_AP[msg->u.WTP.WtpID]->wtp_flow_triger=msg->u.WTP.wtp_flow_triger;
+				ASD_WTP_AP[msg->u.WTP.WtpID]->wtp_flow_switch=msg->u.WTP.wtp_flow_switch;   // xk add for asd sta check
+				asd_printf(ASD_DEFAULT,MSG_DEBUG,"wtp_flow_switch = %d\n",ASD_WTP_AP[msg->u.WTP.WtpID]->wtp_flow_switch);
 				asd_printf(ASD_DEFAULT,MSG_DEBUG,"\t\t\t2wtp max sta %d\n\t\t\tmsg->max sta %d\n",ASD_WTP_AP[msg->u.WTP.WtpID]->ap_max_allowed_sta_num,msg->u.WTP.wtp_max_sta_num);
 				os_memset(ASD_WTP_AP[msg->u.WTP.WtpID]->Binding_IF_NAME,0,ETH_IF_NAME_LEN);
 				os_memcpy(ASD_WTP_AP[msg->u.WTP.WtpID]->Binding_IF_NAME,msg->u.WTP.BindingIFName,ETH_IF_NAME_LEN);
@@ -2763,6 +2767,8 @@ void WTP_OP(TableMsg *msg){
 				ASD_WTP_AP[msg->u.WTP.WtpID]->ap_max_allowed_sta_num=msg->u.WTP.wtp_max_sta_num;
 				ASD_WTP_AP[msg->u.WTP.WtpID]->wtp_triger_num=msg->u.WTP.wtp_triger_num;
 				ASD_WTP_AP[msg->u.WTP.WtpID]->wtp_flow_triger=msg->u.WTP.wtp_flow_triger;
+				ASD_WTP_AP[msg->u.WTP.WtpID]->wtp_flow_switch=msg->u.WTP.wtp_flow_switch;   // xk add for asd sta check
+				asd_printf(ASD_DEFAULT,MSG_DEBUG,"wtp_flow_switch = %d\n",ASD_WTP_AP[msg->u.WTP.WtpID]->wtp_flow_switch);
 				asd_printf(ASD_DEFAULT,MSG_DEBUG,"wtp max sta %d\nmsg->max sta %d\n",ASD_WTP_AP[msg->u.WTP.WtpID]->ap_max_allowed_sta_num,msg->u.WTP.wtp_max_sta_num);
 				asd_printf(ASD_DEFAULT,MSG_DEBUG,"ap accessed sta %d---%d\n",ASD_WTP_AP[msg->u.WTP.WtpID]->ap_accessed_sta_num,sta_num);
 

@@ -272,6 +272,7 @@
 #define ASD_DBUS_STA_METHOD_SHOW_BSS_STA_NUM_BY_WLANID_AND_RADIOID "show_asd_bss_sta_num_by_wlanid_and_radioid"
 #define ASD_DBUS_CONF_METHOD_SHOW_STATISTICS_INFOMATION_OF_ALL_WTP_WHOLE "show_statistics_information_of_all_wtp_whole"  //fengwenchao add 20110331
 #define ASD_DBUS_STA_METHOD_SET_ASD_STA_IDLE_TIME "set_asd_sta_idle_time"
+#define ASD_DBUS_STA_METHOD_SET_ASD_STA_CHECK_TIME "set_asd_sta_idle_time"  //xk add for check sta
 /*----------------------------------------------------------------------------------------------*/
 
 

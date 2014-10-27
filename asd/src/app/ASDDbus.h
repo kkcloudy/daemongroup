@@ -44,7 +44,9 @@ extern unsigned char asd_sta_static_arp;
 extern unsigned char asd_sta_getip_from_dhcpsnoop;
 extern unsigned int ASD_SWITCH ;
 extern unsigned int asd_sta_idle_time;
+extern unsigned int asd_sta_check_time;  // xk add for asd sta check
 extern unsigned char asd_sta_idle_time_switch;
+extern unsigned char asd_sta_check_time_switch;  //xk add for asd sta check
 extern unsigned char tablesock_flag ;
 extern unsigned char datasock_flag ;
 extern unsigned char tablesend_flag;

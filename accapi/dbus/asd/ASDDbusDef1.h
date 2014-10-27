@@ -333,6 +333,8 @@ extern char ASD_DBUS_STA_METHOD_SET_ASD_STA_VIR_DHCP_STATE[PATH_LEN];
 extern char ASD_DBUS_STA_METHOD_SET_ASD_STA_TUNNEL_SWITCH_STATE[PATH_LEN];
 extern char ASD_DBUS_STA_METHOD_VIR_DHCP_SHOW_RUNNING_CONFIG[PATH_LEN];
 /*end**************************************************/
+extern char ASD_DBUS_STA_METHOD_SET_ASD_STA_CHECK_TIME[PATH_LEN];   //xk add for check sta
+extern char ASD_DBUS_STA_METHOD_SET_ASD_STA_CHECK_TIME_SWITCH[PATH_LEN]; //xk add for check sta
 enum asd_dbus_result {
 	ASD_DBUS_SUCCESS,
 	ASD_DBUS_ERROR,

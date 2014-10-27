@@ -1236,6 +1236,7 @@ CWBool AsdWsm_WTPOp(unsigned int WtpID,Operate op){
 	wASD.u.WTP.wtp_triger_num= AC_WTP[WtpID]->wtp_triger_num;
 	wASD.u.WTP.wtp_flow_triger= AC_WTP[WtpID]->wtp_flow_triger;
 	wASD.u.WTP.state = AC_WTP[WtpID]->WTPStat;
+	wASD.u.WTP.wtp_flow_switch = AC_WTP[WtpID]->ap_sta_report_switch;    //xk add for asd sta check
 	memset(wASD.u.WTP.BindingIFName,0,ETH_IF_NAME_LEN);	
 	if (AC_WTP[WtpID] != NULL)
 		memcpy(wASD.u.WTP.BindingIFName,AC_WTP[WtpID]->BindingIFName,strlen(AC_WTP[WtpID]->BindingIFName));

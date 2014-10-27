@@ -133,6 +133,8 @@ unsigned char asd_sta_getip_from_dhcpsnoop = 0;
 extern struct acl_config ac_acl_conf;
 unsigned char asd_sta_idle_time_switch = 1;
 unsigned int asd_sta_idle_time = 8;
+unsigned char asd_sta_check_time_switch= 0;//xk add for asd sta check
+unsigned int asd_sta_check_time = 60;  //xk add for asd sta check
 unsigned char asd_ipset_switch = 0;
 unsigned int asd_bak_sta_update_time = 360;
 int ASD_NOTICE_STA_INFO_TO_PORTAL=0;
@@ -28747,6 +28749,81 @@ DBusMessage *asd_dbus_set_asd_sta_tunnel_switch_state(DBusConnection *conn, DBus
 }
 /*yjl copy from aw3.1.2 for local forwarding.  ************************** end */
 
+/***************xk add for check sta***********/
+DBusMessage *asd_dbus_set_asd_sta_check_time(DBusConnection *conn, DBusMessage *msg, void *user_data)
+{
+	DBusMessage* reply; 	
+	DBusMessageIter  iter;
+	DBusError err;
+	int ret = ASD_DBUS_SUCCESS;
+	unsigned int time=0;	
+	
+	dbus_error_init(&err);
+	if (!(dbus_message_get_args ( msg, &err,
+								DBUS_TYPE_UINT32,&time,
+								DBUS_TYPE_INVALID))){
+	
+		asd_printf(ASD_DEFAULT,MSG_DEBUG,"Unable to get input args\n");
+				
+		if (dbus_error_is_set(&err)) {
+			asd_printf(ASD_DEFAULT,MSG_DEBUG,"%s raised: %s",err.name,err.message);
+			dbus_error_free(&err);
+		}
+		return NULL;
+	}
+	if(asd_sta_check_time!= time){
+		asd_sta_check_time = time;
+		circle_cancel_timeout(asd_sta_delete,NULL,NULL);
+		circle_register_timeout(60*asd_sta_check_time,0,asd_sta_delete,NULL,NULL);
+		ret = ASD_DBUS_SUCCESS;
+	}
+	reply = dbus_message_new_method_return(msg);
+			
+	dbus_message_iter_init_append (reply, &iter);	
+
+	dbus_message_iter_append_basic (&iter,
+									DBUS_TYPE_UINT32,
+									&ret); 
+
+	return reply;	
+}
+
+DBusMessage *asd_dbus_set_asd_sta_check_time_switch(DBusConnection *conn, DBusMessage *msg, void *user_data)
+{
+	DBusMessage* reply; 	
+	DBusMessageIter  iter;
+	DBusError err;
+	int ret = ASD_DBUS_SUCCESS;
+	unsigned char type =0;	
+	
+	dbus_error_init(&err);
+	if (!(dbus_message_get_args ( msg, &err,
+								DBUS_TYPE_BYTE,&type,
+								DBUS_TYPE_INVALID))){
+	
+		asd_printf(ASD_DEFAULT,MSG_DEBUG,"Unable to get input args\n");
+				
+		if (dbus_error_is_set(&err)) {
+			asd_printf(ASD_DEFAULT,MSG_DEBUG,"%s raised: %s",err.name,err.message);
+			dbus_error_free(&err);
+		}
+		return NULL;
+	}
+	if(asd_sta_check_time_switch!= type){
+		asd_sta_check_time_switch = type;
+		ret = ASD_DBUS_SUCCESS;
+	}
+	reply = dbus_message_new_method_return(msg);
+			
+	dbus_message_iter_init_append (reply, &iter);	
+
+	dbus_message_iter_append_basic (&iter,
+									DBUS_TYPE_UINT32,
+									&ret); 
+
+	return reply;	
+}
+
 DBusMessage *asd_dbus_show_static_sta_running_config(DBusConnection *conn, DBusMessage *msg, void *user_data)
 {
 	DBusMessage* reply;
@@ -28965,6 +29042,14 @@ DBusMessage *asd_dbus_security_show_running_config(DBusConnection *conn, DBusMes
 				totalLen += sprintf(cursor,"set asd sta idle time switch disable\n");
 				cursor = showStr + totalLen;
 			}
+			if(asd_sta_check_time != 60){
+				totalLen += sprintf(cursor,"set asd sta check time interval %d\n",asd_sta_check_time);
+				cursor = showStr + totalLen;
+			}
+			if(asd_sta_check_time_switch == 1){
+				totalLen += sprintf(cursor,"set asd sta check time switch enable\n");
+				cursor = showStr + totalLen;
+			}
 			/*if(asd_ipset_switch == 1)
 			{
 				totalLen += sprintf(cursor,"set asd  ipset switch enable\n");
@@ -29138,7 +29223,15 @@ DBusMessage *asd_dbus_security_show_running_config(DBusConnection *conn, DBusMes
 			if(asd_sta_idle_time_switch == 0){
 				totalLen += sprintf(cursor,"set asd sta idle time switch disable\n");
 				cursor = showStr + totalLen;
-			}			
+			}	
+			if(asd_sta_check_time != 60){
+				totalLen += sprintf(cursor,"set asd sta check time interval %d\n",asd_sta_check_time);
+				cursor = showStr + totalLen;
+			}
+			if(asd_sta_check_time_switch == 1){
+				totalLen += sprintf(cursor,"set asd sta check time switch enable\n");
+				cursor = showStr + totalLen;
+			}
 			/*if(asd_ipset_switch == 1)
 			{
 				totalLen += sprintf(cursor,"set asd  ipset switch enable\n");
@@ -29901,8 +29994,14 @@ static DBusHandlerResult asd_dbus_message_handler (DBusConnection *connection, D
 		else if(dbus_message_is_method_call(message,ASD_DBUS_STA_INTERFACE,ASD_DBUS_STA_METHOD_SET_ASD_STA_IDLE_TIME)) {
 			reply = asd_dbus_set_asd_sta_idle_time(connection,message,user_data);
 		}
+		else if(dbus_message_is_method_call(message,ASD_DBUS_STA_INTERFACE,ASD_DBUS_STA_METHOD_SET_ASD_STA_CHECK_TIME)) {
+			reply = asd_dbus_set_asd_sta_check_time(connection,message,user_data);
+		}   
 		else if(dbus_message_is_method_call(message,ASD_DBUS_STA_INTERFACE,ASD_DBUS_STA_METHOD_SET_ASD_STA_IDLE_TIME_SWITCH)) {
 			reply = asd_dbus_set_asd_sta_idle_time_switch(connection,message,user_data);
+		}
+		else if(dbus_message_is_method_call(message,ASD_DBUS_STA_INTERFACE,ASD_DBUS_STA_METHOD_SET_ASD_STA_CHECK_TIME_SWITCH)) {
+			reply = asd_dbus_set_asd_sta_check_time_switch(connection,message,user_data);
 		}
 		else if(dbus_message_is_method_call(message,ASD_DBUS_STA_INTERFACE,ASD_DBUS_STA_METHOD_SET_ASD_IPSET_SWITCH)) {
 			reply = asd_dbus_set_asd_ipset_switch(connection,message,user_data);

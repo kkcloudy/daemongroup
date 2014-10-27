@@ -3633,5 +3633,88 @@ void asd_sta_roaming_management(struct sta_info *new_sta)
 	    ap_free_sta(owasd,old_sta,0);		
 	}
 }
+void asd_sta_delete(void *circle_ctx,void *timeout_ctx) //xk add for asd sta check
+{
+	asd_printf(ASD_DEFAULT,MSG_DEBUG,"now in %s\n",__func__);
+    int i = 0;
+	unsigned int num = 0;
+	unsigned int BssIndex = 0;
+	unsigned char SID = 0;
+	unsigned wtpid = 0;
+	u8 mac[MAC_LEN];
+	struct sta_info *sta;
+	struct sta_info *pre_sta;
+	struct asd_data **bss;
+	
+	bss = os_zalloc(BSS_NUM*sizeof(struct asd_data *));
+	if( bss == NULL){
+		asd_printf(ASD_DEFAULT,MSG_DEBUG,"%s :malloc fail.\n",__func__);
+		exit(1);
+	}	
+	
+	pthread_mutex_lock(&asd_g_sta_mutex);   
+	num = ASD_SEARCH_ALL_STA(bss);
+	asd_printf(ASD_DEFAULT,MSG_DEBUG,"ASD_SEARCH_ALL_STA finish\n");
+	if(asd_sta_check_time_switch ==1){
+	    for(i = 0;i < num;i++){
+            wtpid = ((bss[i]->BSSIndex)/L_BSS_NUM)/L_RADIO_NUM;
+            asd_printf(ASD_DEFAULT,MSG_DEBUG, "wtp_flow_switch = %d\n", ASD_WTP_AP[wtpid]->wtp_flow_switch);
+	        if(ASD_WTP_AP[wtpid]->wtp_flow_switch == 0) continue;
+			sta = bss[i]->sta_list;
+			while(sta){
+				asd_printf(ASD_DEFAULT,MSG_DEBUG,"sta->txbytes = %llu\n",sta->txbytes);
+				asd_printf(ASD_DEFAULT,MSG_DEBUG,"sta->pre_txbytes= %llu\n",sta->pre_txbytes);
+				asd_printf(ASD_DEFAULT,MSG_DEBUG,"sta->rxbytes = %llu\n",sta->rxbytes);
+				asd_printf(ASD_DEFAULT,MSG_DEBUG,"sta->pre_rxbytes= %llu\n",sta->pre_rxbytes);
+                if((sta->txbytes - sta->pre_txbytes) < 102400 && (sta->rxbytes - sta->pre_rxbytes) < 102400){
+					pre_sta = sta;
+					sta = sta->next;
+					BssIndex = bss[i]->BSSIndex;
+	                memcpy(mac,pre_sta->addr,MAC_LEN);
+	                asd_printf(ASD_DEFAULT,MSG_DEBUG,"BssIndex = %d\n",BssIndex);
+	                asd_printf(ASD_DEFAULT,MSG_DEBUG, "Removing station " MACSTR"  because of asd sta check !", MAC2STR(pre_sta->addr));
+					if (pre_sta->flags & WLAN_STA_AUTH) {
+		                mlme_deauthenticate_indication(bss[i], pre_sta, WLAN_REASON_UNSPECIFIED);
+	                }
+					SID = bss[i]->SecurityID;
+					if((ASD_SECURITY[SID])&&((ASD_SECURITY[SID]->securityType == WPA_E)||(ASD_SECURITY[SID]->securityType == WPA2_E)||(ASD_SECURITY[SID]->securityType == WPA_P)||(ASD_SECURITY[SID]->securityType == WPA2_P)||(ASD_SECURITY[SID]->securityType == IEEE8021X)||(ASD_SECURITY[SID]->securityType == MD5)||(ASD_SECURITY[SID]->extensible_auth == 1))){
+		                if(ASD_SECURITY[SID]->securityType == WPA2_E){
+			                struct PMK_STAINFO *pmk_sta = NULL;
+			                pmk_sta = pmk_ap_get_sta(ASD_WLAN[bss[i]->WlanID],pre_sta->addr);
+			                if(pmk_sta)
+				                pmk_ap_free_sta(ASD_WLAN[bss[i]->WlanID],pmk_sta);
+		                }
+		                wpa_auth_sm_event(pre_sta->wpa_sm, WPA_DEAUTH);
+		                mlme_deauthenticate_indication(bss[i], pre_sta, 0);
+		                ieee802_1x_notify_port_enabled(pre_sta->eapol_sm, 0);
+	                }
+	
+	                if(ASD_NOTICE_STA_INFO_TO_PORTAL){
+		                sta->initiative_leave = 0;
+		                AsdStaInfoToEAG(bss[i],pre_sta,WID_DEL);
+	                }
+	                if(ASD_WLAN[bss[i]->WlanID]!=NULL&&ASD_WLAN[bss[i]->WlanID]->balance_switch == 1&&ASD_WLAN[bss[i]->WlanID]->balance_method==1){
+		                ap_free_sta(bss[i], pre_sta,1);
+	                }
+	                else{
+		                ap_free_sta(bss[i], pre_sta,0);
+	                }
+	                AsdStaInfoToWID(bss[i],mac,WID_DEL);
+				}
+				else {  
+					    sta->pre_txbytes = sta->txbytes;
+						sta->pre_rxbytes = sta->rxbytes;
+				        sta = sta->next;
+				}
+			}      	
+	    }
+	}
+	os_free(bss);
+	bss = NULL;
+	circle_register_timeout(60*asd_sta_check_time,0,asd_sta_delete,NULL,NULL);
+	asd_printf(ASD_DEFAULT,MSG_DEBUG,"asd_sta_check_time = %d min\n",asd_sta_check_time);
+	pthread_mutex_unlock(&asd_g_sta_mutex);
+	
+}
 
 
