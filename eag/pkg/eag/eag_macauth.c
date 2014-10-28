@@ -554,9 +554,15 @@ macauth_proc(eag_macauth_t *macauth,
 		user_macstr, user_ipstr, security_type);
 	if (SECURITY_MAC_AUTH == security_type && macauth->macauth_switch) {
 		appconn = appconn_find_by_userip(macauth->appdb, user_addr);
-		if (NULL != appconn && APPCONN_STATUS_AUTHED == appconn->session.state) {
-			eag_log_info("userip %s is already authed, not need mac-preauth", user_ipstr);
-			return 0;
+		if (NULL != appconn) {
+			if (memcmp(&user_addr, &(appconn->session.user_addr), sizeof(user_addr_t))) {
+				appconn_clean_conflict(appconn, macauth->eagins);
+			} else {
+				if (APPCONN_STATUS_AUTHED == appconn->session.state) {
+					eag_log_info("userip %s is already authed, not need mac-preauth", user_ipstr);
+					return 0;
+				}
+			}
 		}
 		
 		eag_add_mac_preauth(macauth, user_addr, usermac);

@@ -117,6 +117,10 @@ appconn_add_to_db(appconn_db_t *appdb,
 int
 appconn_del_from_db(struct app_conn_t *appconn);
 
+int
+appconn_clean_conflict(struct app_conn_t *appconn, 
+					eag_ins_t *eagins);
+
 struct app_conn_t *
 appconn_find_by_userip(appconn_db_t *appdb,
 		user_addr_t *user_addr);

@@ -57,7 +57,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "appconn.h"
 #include "eag_iptables.h"
 #include "eag_ins.h"
-
+#include "radius_packet.h"
 
 #define debug_appconn(fmt,args...)	eag_log_debug("appconn", fmt, ##args)
 #define error_appconn				eag_log_err
@@ -351,6 +351,30 @@ appconn_del_from_db(struct app_conn_t *appconn)
 	hlist_del(&(appconn->mac_hnode));
 
 	return EAG_RETURN_OK;
+}
+
+int
+appconn_clean_conflict(struct app_conn_t *appconn, 
+					eag_ins_t *eagins)
+{
+	char user_ipstr[IPX_LEN] = "";
+
+	if (NULL == appconn || NULL == eagins) {
+		eag_log_err("appconn_clean_conflict input error!");
+		return -1;
+	}
+	ipx2str(&(appconn->session.user_addr), user_ipstr, sizeof(user_ipstr));
+
+	if (APPCONN_STATUS_AUTHED == appconn->session.state) {
+		eag_log_info("appconn_clean_conflict authed appconn userip=%s", user_ipstr);
+		terminate_appconn_nowait(appconn, eagins, RADIUS_TERMINATE_CAUSE_LOST_CARRIER);
+	} else {
+		eag_log_info("appconn_clean_conflict un-authed appconn userip=%s", user_ipstr);
+		appconn_del_from_db(appconn);
+		appconn_free(appconn);
+	}
+
+	return 0;
 }
 
 struct app_conn_t *

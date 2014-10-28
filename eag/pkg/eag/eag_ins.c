@@ -389,7 +389,8 @@ eag_ins_do_syn_user_data(void *cbp, void *data, struct timeval *cb_tv)
 	user_addr_t user_addr = {0};
 	char user_ipstr[IPX_LEN] = "";
 	int ret = EAG_RETURN_OK;
-	
+	user_addr_t user_addr_cmp = {0};
+
 	memset(&user_addr, 0, sizeof(user_addr));
 	memcpy(&user_addr, &(usersession->user_addr), sizeof(user_addr_t));
 	ipx2str(&user_addr, user_ipstr, sizeof(user_ipstr));
@@ -460,8 +461,9 @@ eag_ins_do_syn_user_data(void *cbp, void *data, struct timeval *cb_tv)
 				"is not equal backup data virtual_ip %#X, userip %s",
 				appconn->session.virtual_ip, usersession->virtual_ip, user_ipstr);
 		} else {
-			//memcpy(&(appconn->session), usersession, sizeof(struct appsession));
+			memcpy(&user_addr_cmp, &(appconn->session.user_addr), sizeof(user_addr_t));
 			appsession_copy(&(appconn->session), usersession, cb_tv);
+			memcpy(&(appconn->session.user_addr), &user_addr_cmp, sizeof(user_addr_t));
 			set_down_interface_by_virtual_ip(eagins->eaghansi,
 				appconn->session.virtual_ip, appconn->session.intf);
 		}
@@ -490,7 +492,7 @@ eag_ins_do_syn_user_data(void *cbp, void *data, struct timeval *cb_tv)
 			{
 				eag_log_info("eag_ins_do_syn_user_data fastfwd_send userip:%s offline",
 					user_ipstr);
-				eag_fastfwd_send(eagins->fastfwd, &user_addr, SE_AGENT_USER_OFFLINE);
+				eag_fastfwd_send(eagins->fastfwd, &(appconn->session.user_addr), SE_AGENT_USER_OFFLINE);
 			}
 			
 			/* online user count--, add by zhangwl 2012-8-1 */
