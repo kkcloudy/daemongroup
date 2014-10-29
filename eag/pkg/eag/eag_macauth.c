@@ -553,9 +553,9 @@ macauth_proc(eag_macauth_t *macauth,
 	eag_log_info("after eag_get_sta_info_by_mac_v2, usermac=%s, userip=%s, and security_type=%d",
 		user_macstr, user_ipstr, security_type);
 	if (SECURITY_MAC_AUTH == security_type && macauth->macauth_switch) {
-		appconn = appconn_find_by_userip(macauth->appdb, user_addr);
+		appconn = appconn_find_by_usermac(macauth->appdb, usermac);
 		if (NULL != appconn) {
-			if (EAG_MIX == user_addr->family 
+			if (user_addr->family != appconn->session.user_addr.family 
 				&& EAG_MIX != appconn->session.user_addr.family) {
 				appconn_clean_conflict(appconn, macauth->eagins);
 			} else {
