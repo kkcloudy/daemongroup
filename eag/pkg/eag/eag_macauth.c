@@ -555,7 +555,8 @@ macauth_proc(eag_macauth_t *macauth,
 	if (SECURITY_MAC_AUTH == security_type && macauth->macauth_switch) {
 		appconn = appconn_find_by_userip(macauth->appdb, user_addr);
 		if (NULL != appconn) {
-			if (memcmp(&user_addr, &(appconn->session.user_addr), sizeof(user_addr_t))) {
+			if (EAG_MIX == user_addr->family 
+				&& EAG_MIX != appconn->session.user_addr.family) {
 				appconn_clean_conflict(appconn, macauth->eagins);
 			} else {
 				if (APPCONN_STATUS_AUTHED == appconn->session.state) {
