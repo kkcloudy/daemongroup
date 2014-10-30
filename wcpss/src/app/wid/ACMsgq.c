@@ -462,6 +462,13 @@ void WID_WLAN_CONFIG_SAVE(unsigned int WTPIndex,unsigned int local_radio)
 								        wid_syslog_debug_debug(WID_DEFAULT,"Enable Wlan: get lte_fi ap ip cmd %s\n",apcmd);
 	                                    wid_radio_set_extension_command(WTPIndex,apcmd);
                                  }
+								/*add by lilong 2014.10.29 */
+								if((AC_WLAN[k]!=NULL)&&(AC_WTP[WTPIndex]->lan_vlan.state = 1))
+								{
+                                   wid_syslog_debug_debug(WID_DEFAULT, "set wtp lan-vlan enable\n");  
+								   set_wtp_lan_vlan(WTPIndex);
+								}
+								
 								int bssindex = AC_WLAN[k]->S_WTP_BSS_List[WTPIndex][local_radio];
 								if((AC_BSS[bssindex])&&(AC_BSS[bssindex]->BSS_IF_POLICY != NO_INTERFACE)
 									&&(AC_BSS[bssindex]->BSS_TUNNEL_POLICY != CW_802_DOT_11_TUNNEL)){
