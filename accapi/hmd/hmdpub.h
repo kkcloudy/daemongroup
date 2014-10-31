@@ -403,6 +403,16 @@ enum hmd_reload_type
 	HMD_RELOAD_MOD_PDC = 5,
 };
 
+enum wcpss_restart_type
+{
+	ASD_MEMORY_LEAK = 0,
+	WID_MEMORY_LEAK = 1,
+	HAD_MEMORY_LEAK = 2,
+	ASD_HANG_DEAD = 3,
+	WID_HANG_DEAD = 4,
+	HAD_HANG_DEAD = 5,	
+};
+
 #define SEM_PATHNAME_HMD	"/opt/bin"
 #define SEM_PROJ_ID_HMD		0x02
 

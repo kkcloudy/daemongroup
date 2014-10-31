@@ -1611,7 +1611,7 @@ int notice_hmd_server_state_change(int InstID, int islocaled, HmdOP op, InstStat
 	}
 	if(fd <= 0){
 		hmd_syslog_err("%s,%d,invaid fd:%d.\n",__func__,__LINE__,fd);
-		return 0;
+		return -1;
 	}
 	tmsg.op = op;
 	if(islocaled)
@@ -2067,6 +2067,86 @@ void DHCP_CHECK(){
 	
 }
 
+/* yjl add for checking memory and process of asd ,wid and had. 2014-10-30 */ 
+/* get memory check flag from file. 
+    flag = 1, asd memory usage out of limits.
+    flag = 2, wid
+    flag = 3, had */
+int get_memory_check_flag(int InstID, int islocaled, int* flag)
+{
+    char defaultPath[128] = {0};
+	FILE* fp = NULL;
+	enum wcpss_restart_type type = 0;
+
+	sprintf(defaultPath,"/var/run/wcpss/memory_check_flag%d_%d", islocaled, InstID);
+	
+	fp = fopen(defaultPath, "r");
+	if(NULL == fp){
+		hmd_syslog_warning("open file %s failed .\n", defaultPath);
+		return -1;
+	}
+	fscanf(fp, "%d", flag);
+	fclose(fp);
+
+	switch(*flag){
+		case 1:
+			type = ASD_MEMORY_LEAK;
+			hmd_syslog_warning("asd memory usage out of limits, need restart wcpss, type %d.\n", type);
+		    break;
+		case 2:
+			type = WID_MEMORY_LEAK;
+			hmd_syslog_warning("wid memory usage out of limits, need restart wcpss, type %d.\n", type);
+			break;
+		case 3:
+			type = HAD_MEMORY_LEAK;
+			hmd_syslog_warning("had memory usage out of limits, need restart wcpss, type %d.\n", type);
+			break;
+		default:
+			break;
+	}				
+	
+	return 0;
+}
+
+/* get process check flag from file. 
+    flag = 1, asd process hang dead
+    flag = 2, wid
+    flag = 3, had */
+int get_process_check_flag(int InstID, int islocaled, int* flag)
+{
+    char defaultPath[128] = {0};
+	FILE* fp = NULL;
+	enum wcpss_restart_type type = 0;
+
+	sprintf(defaultPath,"/var/run/wcpss/process_check_flag%d_%d", islocaled, InstID);
+	
+	fp = fopen(defaultPath, "r");
+	if(NULL == fp){
+		hmd_syslog_warning("open file %s failed .\n", defaultPath);
+		return -1;
+	}
+	fscanf(fp, "%d", flag);
+	fclose(fp);
+
+	switch(*flag){
+		case 1:
+		    type = ASD_HANG_DEAD;
+			hmd_syslog_warning("asd process hang dead, need restart wcpss, type %d.\n", type);
+		    break;
+		case 2:
+			type = WID_HANG_DEAD;
+			hmd_syslog_warning("wid process hang dead, need restart wcpss, type %d.\n", type);
+			break;
+		case 3:
+			type = HAD_HANG_DEAD;
+			hmd_syslog_warning("had process hang dead, need restart wcpss, type %d.\n", type);
+			break;
+		default:
+			break;
+	}				
+	
+	return 0;
+}
 
 void HANSI_CHECKING(int InstID, int islocaled){
 	//int ret = HMD_TRUE;
@@ -2076,6 +2156,8 @@ void HANSI_CHECKING(int InstID, int islocaled){
 	int vip;
 	int mask;
 	enum hmd_reload_type type = 0;
+	int process_check_flag = 0, memory_check_flag = 0; 
+	char buf[128] = {0};
 
 	hmd_syslog_warning("HANSI_CHECKING\n");
 	if(HANSI_CHECK_OP){
@@ -2084,6 +2166,29 @@ void HANSI_CHECKING(int InstID, int islocaled){
 		if (HMD_RELOAD_MOD_NONE != type) {
 			hmd_syslog_warning("check wireless false,need restart wcpss.\n");
 			hansi_state_check(InstID, islocaled, type);
+		}
+				
+		/* yjl add for checking memory and process of asd ,wid and had. 2014-10-30 */ 
+		get_process_check_flag(InstID, islocaled, &process_check_flag);
+		get_memory_check_flag(InstID, islocaled, &memory_check_flag);
+		if((process_check_flag != 0) || (memory_check_flag != 0)){
+			type = HMD_RELOAD_MOD_WCPSS;
+		}
+		
+		if (HMD_RELOAD_MOD_NONE != type){
+			hmd_syslog_warning("check wireless false,need restart wcpss.\n");
+			hansi_state_check(InstID, islocaled, type);
+
+			/* wcpss restarted, change check flag to 0 */
+			if(process_check_flag != 0){
+				sprintf(buf, "echo 0 > /var/run/wcpss/process_check_flag%d_%d", islocaled, InstID);
+				system(buf);
+			}
+			if(memory_check_flag != 0){
+				memset(buf, 0, sizeof(buf));
+				sprintf(buf, "echo 0 > /var/run/wcpss/memory_check_flag%d_%d", islocaled, InstID);
+				system(buf);
+			}
 		}
 		hmd_syslog_warning("checking eag\n");
 		type = hansi_eag_checking(InstID, islocaled);
