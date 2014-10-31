@@ -77263,7 +77263,7 @@ DBusMessage * wid_dbus_wtp_show_running_config_start(DBusConnection *conn, DBusM
 						totalLen += sprintf(cursor,"set ap interface eth%d mtu %d\n",jj,gAPIFINFOETH_MTU[jj]);
 						cursor = showStr + totalLen;							
 					}
-					if(gAPIFINFOETH_RATE[jj] != 100) 
+					if((gAPIFINFOETH_RATE[jj] == 10) ||(gAPIFINFOETH_RATE[jj] == 1000)) 
 					{
 						totalLen += sprintf(cursor,"set ap interface eth %d rate %d\n",jj,gAPIFINFOETH_RATE[jj]);
 						cursor = showStr + totalLen;							
@@ -83282,7 +83282,7 @@ int show_running_config_wtp(WID_WTP **WTP,int i,char *cursor,char **showStr2,cha
 					totalLen += sprintf(cursor," set ap interface eth%d mtu %d\n",jj,WTP[i]->apifinfo.eth[jj].eth_mtu);
 					cursor = showStr + totalLen;							
 				}
-				if(WTP[i]->apifinfo.eth[jj].eth_rate != gAPIFINFOETH_RATE[jj]) /*wcl modify for globle variable*/
+				if((WTP[i]->apifinfo.eth[jj].eth_rate == 10) ||(WTP[i]->apifinfo.eth[jj].eth_rate == 1000) )/*wcl modify for globle variable*/
 				{
 					totalLen += sprintf(cursor," set ap interface eth %d rate %d\n",jj,WTP[i]->apifinfo.eth[jj].eth_rate);
 					cursor = showStr + totalLen;							

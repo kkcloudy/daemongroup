@@ -1812,7 +1812,7 @@ CWBool CWParseMsgElemAPStaInfoReport(CWProtocolMessage *msgPtr, int len, WIDStat
 
 		wid_syslog_debug_debug(WID_DEFAULT,"valPtr->radioId:%d ***\n",valPtr1[i].radioId);
 		wid_syslog_debug_debug(WID_DEFAULT,"valPtr->wlanId:%d ***\n",valPtr1[i].wlanId);
-		wid_syslog_debug_debug(WID_DEFAULT,"valPtr->mac:%s ***\n",valPtr1[i].mac);
+		wid_syslog_debug_debug(WID_DEFAULT,"valPtr->mac:"MACSTR"***\n",MAC2STR(valPtr1[i].mac));
 		wid_syslog_debug_debug(WID_DEFAULT,"valPtr->mode:%d ***\n",valPtr1[i].mode);
 		wid_syslog_debug_debug(WID_DEFAULT,"valPtr->channel:%d ***\n",valPtr1[i].channel);
 		wid_syslog_debug_debug(WID_DEFAULT,"valPtr->rssi:%d ***\n",valPtr1[i].rssi);

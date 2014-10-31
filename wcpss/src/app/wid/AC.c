@@ -2048,7 +2048,7 @@ CWBool AsdWsm_BssMacOp(unsigned int BSSIndex, Operate op){
 			wASD.u.BSS.deny_mac[m1][4] = deny_tmp->addr[4];
 			wASD.u.BSS.deny_mac[m1][5] = deny_tmp->addr[5];
 			
-			wid_syslog_debug_debug(WID_DEFAULT,"the %dst mac is : "MACSTR"\n",m1,deny_tmp->addr);
+			wid_syslog_debug_debug(WID_DEFAULT,"the %dst mac is : "MACSTR"\n",m1,MAC2STR(deny_tmp->addr));
 			
 			wid_syslog_debug_debug(WID_DEFAULT,"the %dst mac is : "MACSTR"\n",m1,wASD.u.BSS.deny_mac[m1]);
 			wASD.u.BSS.deny_mac_num = m1+1;
