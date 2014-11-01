@@ -81527,25 +81527,28 @@ DBusMessage *wid_dbus_interface_set_wtp_lan_vlan(DBusConnection *conn, DBusMessa
 
 	wid_syslog_info("%s: set wtp %d lan vlan %d %s", __func__, 
 		wtpid, vlanid, enable ? "enable" : "disable");
-	if (enable)
+	if (WID_DBUS_SUCCESS == ret)
 	{
-		if (0 == AC_WTP[wtpid]->lan_vlan.state)
+		if (enable)
 		{
-			AC_WTP[wtpid]->lan_vlan.state = 1;		
-			AC_WTP[wtpid]->lan_vlan.vlanid = vlanid;
-			ret = set_wtp_lan_vlan(wtpid);
+			if (0 == AC_WTP[wtpid]->lan_vlan.state)
+			{
+				AC_WTP[wtpid]->lan_vlan.state = 1;		
+				AC_WTP[wtpid]->lan_vlan.vlanid = vlanid;
+				ret = set_wtp_lan_vlan(wtpid);
+			}
+			else
+			{
+				ret = SWITCH_IS_DISABLE;
+			}
 		}
 		else
 		{
-			ret = SWITCH_IS_DISABLE;
-		}
-	}
-	else
-	{
-		if (AC_WTP[wtpid]->lan_vlan.state)
-		{
-			AC_WTP[wtpid]->lan_vlan.state = 0;
-			ret = set_wtp_lan_vlan(wtpid);
+			if (AC_WTP[wtpid]->lan_vlan.state)
+			{
+				AC_WTP[wtpid]->lan_vlan.state = 0;
+				ret = set_wtp_lan_vlan(wtpid);
+			}
 		}
 	}
 
