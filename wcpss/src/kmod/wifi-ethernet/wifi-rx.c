@@ -185,11 +185,11 @@ int wifi_kernel_rx(struct sk_buff *skb){
 	struct iphdr *iph = NULL;
 	if(!skb){
 		printk(KERN_ERR "wifi kernel rx : skb is null\n");
-		return 2;
+		return WIFI_NEED_DROP_PACKET;
 	}
 	else if(!(skb->data)){
 		printk(KERN_ERR "wifi kernel rx : skb->data is null\n");
-		return 2;
+		return WIFI_NEED_DROP_PACKET;
 	}
 	udp = (struct udphdr *)(skb->data);
 	udp_len = udp->len;
@@ -201,7 +201,7 @@ int wifi_kernel_rx(struct sk_buff *skb){
 		{
 			if(wifi_eth_debug >= WIFI_ERROR)
 				printk(KERN_WARNING "capwap udp length(%u) is too short, need to drop.\n",udp->len);
-			return 2;/* return to drop.*/
+			return WIFI_NEED_DROP_PACKET;/* return to drop.*/
 		}
 		#if 0
 			if(wifi_eth_debug >= WIFI_WARNING)
@@ -229,7 +229,7 @@ int wifi_kernel_rx(struct sk_buff *skb){
 	//printk("wifi_port:s_port:%d,d_port:%d\n",s_port,d_port);
 	if (skb_is_nonlinear(skb) &&
 		skb_linearize(skb) != 0) {/*for data_len != 0 skb process*/
-		return 2;
+		return WIFI_NEED_DROP_PACKET;
     }
 	skb_pull(skb,len);
 	head2 = (struct capwap_head *)skb->data;
@@ -249,7 +249,7 @@ int wifi_kernel_rx(struct sk_buff *skb){
 		qos_flag = macHead->i_fc[0] & IEEE80211_FC0_SUBTYPE_QOS;
 		toDS_fromDS = macHead->i_fc[1] & IEEE80211_FC1_DIR_MASK;
 		if((proto_ver != IEEE80211_FC0_VERSION_0)||(IEEE80211_FC1_DIR_DSTODS == toDS_fromDS)){
-			return 2;/*wds or other version  drop*/
+			return WIFI_NEED_DROP_PACKET;/*wds or other version  drop*/
 		}
 		if(wifi_eth_debug >= WIFI_DEBUG)
 			printk("%s type %d(0-mgmt,4-ctrl,8-data).\n",__func__,type);
@@ -259,13 +259,13 @@ int wifi_kernel_rx(struct sk_buff *skb){
 					if(udp->len < MIN_WIFI_DOT11_DATA_LEN+4){
 						if(wifi_eth_debug >= WIFI_ERROR)
 							printk(KERN_WARNING "capwap dot11 data udp length(%u) is too short, need to drop.\n",udp->len);
-						return 2;/* return to drop.*/
+						return WIFI_NEED_DROP_PACKET;/* return to drop.*/
 					}
 				}else{
 					if(udp->len < MIN_WIFI_DOT11_DATA_LEN){
 						if(wifi_eth_debug >= WIFI_ERROR)
 							printk(KERN_WARNING "capwap dot11 data udp length(%u) is too short, need to drop.\n",udp->len);
-						return 2;/* return to drop.*/
+						return WIFI_NEED_DROP_PACKET;/* return to drop.*/
 					}
 				}
 				if(qos_flag)
@@ -281,7 +281,7 @@ int wifi_kernel_rx(struct sk_buff *skb){
 						skb_push(skb,44+len);
 					else
 						skb_push(skb,40+len);						
-					return 2; /*dtrop*/
+					return WIFI_NEED_DROP_PACKET; /*dtrop*/
 				}
 				if(wifi_eth_debug >= WIFI_DEBUG)
 				{
@@ -324,7 +324,7 @@ int wifi_kernel_rx(struct sk_buff *skb){
 						DMAC = macHead->i_addr1;
 						break;
 					default:
-						return 2;
+						return WIFI_NEED_DROP_PACKET;
 				}
 				if(wifi_eth_debug >= WIFI_DEBUG)
 					printk("%s,%d,BSSID=%02X:%02X:%02X:%02X:%02X:%02X.\n",__func__,__LINE__,BSSID[0],BSSID[1],BSSID[2],BSSID[3],BSSID[4],BSSID[5]);
@@ -336,7 +336,7 @@ int wifi_kernel_rx(struct sk_buff *skb){
 						skb_push(skb,44+len);
 					else
 						skb_push(skb,40+len);						
-					return 2; /*to drop*/
+					return WIFI_NEED_DROP_PACKET; /*to drop*/
 				}
 				if((bss->roaming_flag == 2)
 					&&((bss->Eap1XServerSwitch == 1)
@@ -351,7 +351,7 @@ int wifi_kernel_rx(struct sk_buff *skb){
 									skb_push(skb,44+len);
 								else
 									skb_push(skb,40+len);						
-								return 2; 
+								return WIFI_NEED_DROP_PACKET; 
 							}
 							if(wifi_eth_debug >= WIFI_DEBUG)	
 							{
@@ -389,7 +389,7 @@ int wifi_kernel_rx(struct sk_buff *skb){
 						if (!skb2){
 							printk("wifi.ko failed to allocate skbuff, packet dropped\n");
 							//kfree_skb(skb);
-							return 2;
+							return WIFI_NEED_DROP_PACKET;
 						}	
 					
 						skb_reserve(skb2,256);
@@ -416,7 +416,7 @@ int wifi_kernel_rx(struct sk_buff *skb){
 						skb_push(skb,40+len);						
 					if(wifi_eth_debug >= WIFI_DEBUG)
 						printk("%s,%d\n",__func__,__LINE__);
-					return 2; /*to drop*/
+					return WIFI_NEED_DROP_PACKET; /*to drop*/
 				}
 				dev = wifi_device[vrid][dev_index];
 				#if 0
@@ -504,7 +504,7 @@ int wifi_kernel_rx(struct sk_buff *skb){
 						if (!skb2){
 							printk("wifi.ko failed to allocate skbuff, packet dropped\n");
 							//kfree_skb(skb);
-							return 2;
+							return WIFI_NEED_DROP_PACKET;
 						}	
 					
 						skb_reserve(skb2,256);
@@ -550,7 +550,7 @@ int wifi_kernel_rx(struct sk_buff *skb){
 					skb_push(skb,16+len);	
 					if(wifi_eth_debug >= WIFI_DEBUG)
 						printk("%s %d,asdswitch is %d,drop msg.\n",__func__,__LINE__,asdswitch);
-					return 2;				
+					return WIFI_NEED_DROP_PACKET;				
 				}else{
 					DataMsgHead *pdata = NULL;
 
@@ -562,7 +562,7 @@ int wifi_kernel_rx(struct sk_buff *skb){
 					if(bss == NULL){
 						if(wifi_eth_debug >= WIFI_DEBUG)
 							printk("%s (bss == NULL).\n",__func__);
-						return 2; 
+						return WIFI_NEED_DROP_PACKET; 
 					}
 					vrid = bss->vrid;
 					priv = (wifi_dev_private_t*)&(bss->priv);
@@ -570,7 +570,7 @@ int wifi_kernel_rx(struct sk_buff *skb){
 					skb2 = dev_alloc_skb(skb->len + 256);
 					if (!skb2){
 						printk("wifi.ko failed to allocate skbuff, packet dropped\n");
-						return 2;
+						return WIFI_NEED_DROP_PACKET;
 					}	
 				
 					skb_reserve(skb2,256);
@@ -597,9 +597,9 @@ int wifi_kernel_rx(struct sk_buff *skb){
 					if(wifi_eth_debug >= WIFI_DEBUG)
 						printk("%s,%d\n",__func__,__LINE__);
 					skb_push(skb,16+len);	
-					return 2;				
+					return WIFI_NEED_DROP_PACKET;				
 				}
-				return 2;
+				return WIFI_NEED_DROP_PACKET;
 		}
 	}else if(TFlag == 0){
 			if(wifi_eth_debug >= WIFI_DEBUG)
@@ -607,7 +607,7 @@ int wifi_kernel_rx(struct sk_buff *skb){
 			if(udp->len < MIN_WIFI_DOT3_DATA_LEN){
 				if(wifi_eth_debug >= WIFI_WARNING)
 					printk(KERN_WARNING "capwap dot3 data udp length(%u) is too short, need to drop.\n",udp->len);
-				return 2;/* return to drop.*/
+				return WIFI_NEED_DROP_PACKET;/* return to drop.*/
 			}
 
 			skb_pull(skb,16);/*capwap head*/
@@ -616,7 +616,7 @@ int wifi_kernel_rx(struct sk_buff *skb){
 			if(bss == NULL){
 				printk("%s,%d.\n",__func__,__LINE__);
 				skb_push(skb,16+14+len);						
-				return 2; 
+				return WIFI_NEED_DROP_PACKET; 
 			}				
 			if(wifi_eth_debug >= WIFI_DEBUG)
 				printk("%s,%d,BSSID=%02X:%02X:%02X:%02X:%02X:%02X.\n",__func__,__LINE__,BSSID[0],BSSID[1],BSSID[2],BSSID[3],BSSID[4],BSSID[5]);
@@ -626,7 +626,7 @@ int wifi_kernel_rx(struct sk_buff *skb){
 			if(wifi_device[vrid][dev_index] == NULL){
 				printk("%s,%d.\n",__func__,__LINE__);
 				skb_push(skb,16+14+len);						
-				return 2; /*to drop*/
+				return WIFI_NEED_DROP_PACKET; /*to drop*/
 			}
 		
 			dev = wifi_device[vrid][dev_index];
@@ -644,17 +644,21 @@ int wifi_kernel_rx(struct sk_buff *skb){
 						(iph->daddr >> 24) & 0xFF, (iph->daddr >> 16) & 0xFF,(iph->daddr >> 8) & 0xFF, iph->daddr & 0xFF);
 		}
 		//CWCaptrue_wifi(skb->len,skb->data);/*only printk data*/
-		return 2;				
+		return WIFI_NEED_DROP_PACKET;				
 	}
 /*wangchao add */
 	skb->dev = dev;
 
 	if (wifi_eth_debug >= WIFI_DEBUG)
 	{
-		printk(KERN_DEBUG "aat_ko_rx_hook %p ifname %s \n", aat_ko_rx_hook,skb->dev->name);
+		printk(KERN_DEBUG "aat_ko_rx_hook %p ifname %s \n", aat_ko_rx_hook, skb->dev->name);
 	}
 	if(aat_ko_rx_hook){
-		aat_ko_rx_hook(skb);
+		ret = aat_ko_rx_hook(skb);
+		if(WIFI_NEED_DROP_PACKET == ret)
+		{
+			return WIFI_NEED_DROP_PACKET; /*drop packet when AAT process error! */
+		}
 	}
 /***************************/
 	if(NULL == dev){
@@ -662,7 +666,7 @@ int wifi_kernel_rx(struct sk_buff *skb){
 			printk("<warning>%s,%d,dev=%p.",__func__,__LINE__,dev);
 		}
 		//kfree_skb(skb);
-		return 2;
+		return WIFI_NEED_DROP_PACKET;
 	}
 	skb->protocol = eth_type_trans(skb, dev);
 	skb->dev = dev;

@@ -609,6 +609,8 @@ typedef struct ap_statistic ap_statistics;
 #define AAT_IOC_ADD_STA		_IOWR(AAT_IOC_MAGIC, 1, struct io_info) // read values
 #define AAT_IOC_DEL_STA		_IOWR(AAT_IOC_MAGIC, 2, struct io_info) // read values
 #define AAT_IOC_GET_STA_IP	_IOWR(AAT_IOC_MAGIC, 3, struct io_info)
+/* use vrrid clean stas for HMD */
+#define AAT_IOC_CLEAN_STAS	_IOWR(AAT_IOC_MAGIC, 4, struct io_info)
 
 struct io_info
 {
@@ -618,6 +620,7 @@ struct io_info
 	unsigned char in_ifname[ETH_IF_NAME_LEN];
 	unsigned int staip;
 	unsigned int vrrid;
+	unsigned int seq_num;
 };
 
 
@@ -768,7 +771,7 @@ struct io_info
 				|| (WPA2_E == ASD_SECURITY[(security_id)]->securityType)))
 
 void notice_aat_mod(char *stamac, unsigned int ip,char *acmac, char *ifname, char *in_ifname, int is_add);
-unsigned asd_get_sta_realip(unsigned char *haddr);
+unsigned int asd_get_sta_realip(struct asd_data *wasd, unsigned char *haddr);
 /*end**************************************************yjl copy from aw3.1.2 for local forwarding.2014-2-28*/
 
 #endif /* asd_H */

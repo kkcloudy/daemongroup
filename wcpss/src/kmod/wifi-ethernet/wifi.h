@@ -230,5 +230,7 @@ int kernel_to_asd(struct sk_buff *skb,unsigned int vrid);
 int handle_data_msg(struct sk_buff *skb);
 void CWCaptrue_wifi(int n ,unsigned char *buffer);
 
+#define WIFI_NEED_DROP_PACKET	2
+
 
 #endif

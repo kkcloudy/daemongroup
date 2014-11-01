@@ -9603,7 +9603,7 @@ DBusMessage *asd_dbus_show_sta_info_of_all_wtp(DBusConnection *conn, DBusMessage
 				{
 					if (0 == sta->realip)
 					{
-						realip = asd_get_sta_realip(sta->addr);
+						realip = asd_get_sta_realip(bss[j], sta->addr);
 						if (0 != realip)
 						{
 							sta->realip = realip;
@@ -14441,7 +14441,7 @@ DBusMessage *asd_dbus_show_sta_v2(DBusConnection *conn, DBusMessage *msg, void *
 													 &auth_type);
 				
                 /*yjl copy from aw3.1.2 for local forwarding.2014-2-28*/
-				ipaddr = asd_get_sta_realip(stainfo->sta->addr);
+				ipaddr = asd_get_sta_realip(stainfo->bss, stainfo->sta->addr);
 			    dbus_message_iter_append_basic (&iter, DBUS_TYPE_UINT32, &ipaddr);			
 			    asd_printf(ASD_DBUS,MSG_DEBUG,"sta %s real ip %s\n", mac2str(stainfo->sta->addr), u32ip2str(ipaddr));
 				/*end**************************************************/
@@ -19282,7 +19282,7 @@ DBusMessage *asd_dbus_show_stalist_by_group(DBusConnection *conn, DBusMessage *m
             /*yjl copy from aw3.1.2 for local forwarding.2014-2-28*/
 		    if ((ASD_MAC_TYPE_TL == if_policy))
 			{
-				realip = asd_get_sta_realip(sta->addr);
+				realip = asd_get_sta_realip(bss[i], sta->addr);
 				if (0 != realip)
 				{
 					sta->realip = realip;

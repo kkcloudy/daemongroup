@@ -30,6 +30,7 @@
 #include "dbus/wcpss/wsm_dbus_def.h"
 #include <dbus/npd/npd_dbus_def.h>
 #include "dbus/dhcp/dhcp_dbus_def.h"
+#include "HmdMonitor.h"
 
 #define VRRP_RETURN_CODE_OK (0x150001)
 extern  struct Hmd_For_Dhcp_restart *DHCP_MONITOR;
@@ -1852,8 +1853,37 @@ int hmd_pdc_reload(unsigned slotid, unsigned int islocal, unsigned int vrrid)
 	return 0;
 }
 
+/* copy form aw3.0: notice AAT to clean sta list when hmd reset wcpss instance. 2014-11-1 by yjl */
+int hmd_notice_aat_clean_stas(unsigned int vrrid)
+{
+	struct io_info tmp;
+	int ret = 0;	
+	static int fd = -1;
 
+	if (vrrid >= MAX_INSTANCE)
+	{
+		hmd_syslog_err("vrrid %d not vaild range <0-16>\n", vrrid);
+		return 1;
+	}
+	
+	if (fd < 0)
+	{
+		if ((fd = open("/dev/aat0", O_RDWR)) < 0)
+		{		
+			hmd_syslog_err("%s: open failed:%s\n", __func__, strerror(errno));
+			return 1;
+		}
+	}
+	
+	memset(&tmp, 0, sizeof(struct io_info));
+	tmp.vrrid = vrrid;
+	
+	ret = ioctl(fd, AAT_IOC_CLEAN_STAS, &tmp);
 
+	//close(fd);
+	
+	return 0;
+}
 
 int take_snapshot_timer_id;
 int hmd_wcpss_reload(int vrrid,int islocal)
@@ -1861,6 +1891,9 @@ int hmd_wcpss_reload(int vrrid,int islocal)
 	char buf[128] = {0};
 	char defaultPath[] = "/var/run/config/Instconfig";
 	hmd_syslog_info("###%s hmd begin vrrid is %d islocal is %d line %d###\n",__func__,vrrid,islocal,__LINE__);
+
+	hmd_syslog_info("%s notice AAT clean hansi %d STAS\n", __func__, vrrid);
+	hmd_notice_aat_clean_stas(vrrid);
 
 	if(HOST_BOARD->Hmd_Inst[vrrid] != NULL){
 		notice_vrrp_config_service_change_state(vrrid, 0);

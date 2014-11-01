@@ -561,6 +561,8 @@ static void __exit wifi_cleanup_module(void)
 	if(nl_sk != NULL){
 		sock_release(nl_sk->sk_socket);
 	}
+
+	wifi_ko_rx_hook = NULL;
 }
 void CWCaptrue_wifi(int n ,unsigned char *buffer){
 		int t=0;

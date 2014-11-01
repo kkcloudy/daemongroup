@@ -221,7 +221,7 @@ int bak_update_sta_ip_info(struct asd_data *wasd, struct sta_info *sta){
 	msg.Bu.U_STA.portal_ipaddr = sta->portal_server.portal_ip;
 	if (ASD_WLAN[wasd->WlanID]->wlan_tunnel_switch)
 	{
-		msg.Bu.U_STA.realip = asd_get_sta_realip(sta->addr);
+		msg.Bu.U_STA.realip = asd_get_sta_realip(wasd, sta->addr);
 	}
 	/*end**************************************************/
 	

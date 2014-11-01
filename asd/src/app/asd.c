@@ -2554,10 +2554,13 @@ void CWDestroyThreadMutex(pthread_mutex_t *theMutex)  {
 }
 
 /*yjl copy from aw3.1.2 for local forwarding.2014-2-28**********************************/
-unsigned asd_get_sta_realip(unsigned char *haddr)
+unsigned int asd_get_sta_realip(struct asd_data *wasd, unsigned char *haddr)
 {
 	struct io_info tmp;	
 	static int fd = -1;
+
+	ASD_CHECK_POINTER_RET(wasd, 0);
+	ASD_CHECK_POINTER_RET(haddr, 0);	
 
 	if (fd < 0)
 	{
@@ -2569,6 +2572,7 @@ unsigned asd_get_sta_realip(unsigned char *haddr)
 	}
 	memset(&tmp, 0, sizeof(struct io_info));
 	memcpy(tmp.stamac, haddr, MAC_LEN);
+	os_strncpy((char*)(tmp.ifname), (const char*)wasd->br_ifname, ETH_IF_NAME_LEN-1);
 
 	tmp.vrrid = vrrid;
 
@@ -2587,6 +2591,7 @@ unsigned asd_get_sta_realip(unsigned char *haddr)
 									                                            ((tmp.staip & 0xff0000) >> 16),
 									                                            ((tmp.staip & 0xff00) >> 8),
 									                                            (tmp.staip & 0xff));
+	//close(fd);
 
 	return tmp.staip;
 }
@@ -2595,6 +2600,9 @@ void notice_aat_mod(char *stamac, unsigned int ip,char *acmac, char *ifname, cha
 	struct io_info tmp;
 	int ret = 0;	
 	static int fd = -1;
+	static unsigned int seq_no_add = 0;
+	static unsigned int seq_no_del = 0;
+	
 	if (fd < 0)
 	{
 		if ((fd = open("/dev/aat0", O_RDWR)) < 0)
@@ -2611,16 +2619,37 @@ void notice_aat_mod(char *stamac, unsigned int ip,char *acmac, char *ifname, cha
 	tmp.staip = ip;
 	tmp.vrrid = vrrid;
 	if(is_add)
+	{
+		tmp.seq_num = ++seq_no_add;
 		ret = ioctl(fd, AAT_IOC_ADD_STA, &tmp);
+		
+		if(tmp.seq_num != seq_no_add + 1)
+			asd_printf(ASD_DEFAULT,MSG_INFO,"%s-%d cmd %#x %u sta %s ADD ioctl my failure fd %d\n", 
+				__func__, __LINE__, is_add  ? AAT_IOC_ADD_STA : AAT_IOC_DEL_STA, seq_no_add,
+				mac2str((unsigned char*)stamac), fd);
+	}
 	else
+	{
+		tmp.seq_num = ++seq_no_del;
 		ret = ioctl(fd, AAT_IOC_DEL_STA, &tmp);
+
+		if(tmp.seq_num != seq_no_del + 1)
+			asd_printf(ASD_DEFAULT,MSG_INFO,"%s-%d cmd %#x %u sta %s DEL ioctl my failure fd %d\n", 
+				__func__, __LINE__, is_add  ? AAT_IOC_ADD_STA : AAT_IOC_DEL_STA, seq_no_del,
+				mac2str((unsigned char*)stamac), fd);
+	}
+	asd_printf(ASD_DEFAULT,MSG_DEBUG,"%s-%d cmd %#x %u sta %s %s ioctl ret %d fd %d\n", 
+				__func__, __LINE__, is_add  ? AAT_IOC_ADD_STA : AAT_IOC_DEL_STA, tmp.seq_num,
+				mac2str((unsigned char*)stamac),	(is_add)?"add":"delete",	ret, fd);
     asd_printf(ASD_DEFAULT,MSG_DEBUG,"%s:stamac "MACSTR" acmac "MACSTR" ifname %s staip %u.%u.%u.%u ret %d\n", __func__, 
 		                                 MAC2STR(tmp.stamac), MAC2STR(tmp.acmac), tmp.ifname, 
 		                                 ((tmp.staip & 0xff000000) >> 24),
 									     ((tmp.staip & 0xff0000) >> 16),
 									     ((tmp.staip & 0xff00) >> 8),
 									     (tmp.staip & 0xff), ret);
-	
+	//close(fd);
+
+	return ;
 }
 /*end*******************************************************************************/
 
