@@ -42688,8 +42688,8 @@ void dcli_wtp_init(void) {
 	install_element(CONFIG_NODE,&download_ap_image_slot_cmd);
 	install_element(CONFIG_NODE,&download_certificate_image_cmd);
 	install_element(CONFIG_NODE,&download_certificate_image_slot_cmd);
-	install_element(CONFIG_NODE,&set_wtp_lan_vlan_enable_cmd); //lilong add 2014.09.09
-	install_element(CONFIG_NODE,&set_wtp_lan_vlan_disable_cmd);
+	//install_element(CONFIG_NODE,&set_wtp_lan_vlan_enable_cmd); //lilong add 2014.09.09
+	//install_element(CONFIG_NODE,&set_wtp_lan_vlan_disable_cmd);
 	/************************************************LOCAL_HANSI_AP_GROUP_WTP_NODE_END**************************************************/
 
 	/************************************************VIEW_NODE**************************************************/
@@ -43308,8 +43308,8 @@ void dcli_wtp_init(void) {
 			install_element(HANSI_NODE,&show_all_wlan_stats_information_cmd);							/*b7*/
 			install_element(HANSI_NODE,&show_all_wlan_ssid_stats_information_cmd);						/*b8*/
 			install_element(HANSI_NODE,&show_all_wtp_ifname_information_cmd);							/*b10*/
-			install_element(HANSI_NODE,&set_wtp_lan_vlan_enable_cmd); //lilong add 2014.09.09	
-			install_element(HANSI_NODE,&set_wtp_lan_vlan_disable_cmd);
+			//install_element(HANSI_NODE,&set_wtp_lan_vlan_enable_cmd); //lilong add 2014.09.09	
+			//install_element(HANSI_NODE,&set_wtp_lan_vlan_disable_cmd);
 			install_element(HANSI_NODE,&show_all_wtp_the_radio_para_information_cmd);					/*b11*/
 			install_element(HANSI_NODE,&show_all_wtp_eth_port_information_cmd);							/*b12*/
 			install_element(HANSI_NODE,&show_all_wtp_radio_stats_information_cmd);						/*b13*/
