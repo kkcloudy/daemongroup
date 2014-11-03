@@ -641,7 +641,7 @@ nexthop_active_ipv4_update(struct rib *rib, struct nexthop *nexthop, int set,
 						  if (IS_ZEBRA_DEBUG_RIB)
 						    zlog_debug("%s: line %d , rib(%p),rib->rib_scope(%d),nexthop other interface[name:%s], nexthop->index[%d].\n",
 						  			__func__,__LINE__,rib,rib->rib_scope,ifp->name,nexthop->ifindex);
-						  
+						  nexthop->ifindex = newhop->ifindex;					  
 						  SET_FLAG (rib->rib_scope,ZEBRA_FLAG_INTERFACE_LOCAL_ROUTE);
 						  continue;
 						  /* break;*/

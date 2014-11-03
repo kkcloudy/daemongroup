@@ -1109,6 +1109,8 @@ vty_show_ip_route (struct vty *vty, struct route_node *rn, struct rib *rib)
   char buf[BUFSIZ];
   char *ifname = NULL;
   char buf2[BUFSIZ];
+  int slot_num = -1;  
+  struct interface *ifp = NULL;
 
   /* Nexthop information. */
   for (nexthop = rib->nexthop; nexthop; nexthop = nexthop->next)
@@ -1190,6 +1192,13 @@ vty_show_ip_route (struct vty *vty, struct route_node *rn, struct rib *rib)
 	case NEXTHOP_TYPE_IFINDEX:
 	  vty_out (vty, " is directly connected, %s",
 		   ifindex2ifname (nexthop->ifindex));
+	  
+	  ifp = if_lookup_by_index(nexthop->ifindex);
+	  if(ifp && CHECK_FLAG(ifp->if_scope, INTERFACE_LOCAL)){
+	  		vty_out(vty,"(local)");
+		   // slot_num = get_slot_num(ifp->name); 			
+	  		//vty_out(vty,"(slot%d local interface)", slot_num);
+	  }
 	  break;
 	case NEXTHOP_TYPE_IFNAME:
 	  vty_out (vty, " is directly connected, %s", nexthop->ifname);
@@ -1200,10 +1209,23 @@ vty_show_ip_route (struct vty *vty, struct route_node *rn, struct rib *rib)
   default:
 	  break;
 	}
-      if (! CHECK_FLAG (nexthop->flags, NEXTHOP_FLAG_ACTIVE))
-	vty_out (vty, " inactive");
 
-      if (CHECK_FLAG (nexthop->flags, NEXTHOP_FLAG_RECURSIVE))
+  if (! CHECK_FLAG (nexthop->flags, NEXTHOP_FLAG_ACTIVE))
+  {
+			ifp = if_lookup_by_index(nexthop->ifindex);
+			if(ifp && CHECK_FLAG(ifp->if_scope, INTERFACE_LOCAL))
+			{
+				vty_out(vty,"(local)",slot_num);
+				//slot_num = get_slot_num(ifp->name);
+				//vty_out(vty,", slot%d local active",slot_num);
+			}
+			else
+			{	
+				vty_out(vty," inactive");
+			}
+  }
+	  
+    if (CHECK_FLAG (nexthop->flags, NEXTHOP_FLAG_RECURSIVE))
 	{
 	  vty_out (vty, " (recursive");
 		
