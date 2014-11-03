@@ -150,7 +150,7 @@ enum{
 enum {
 	EAG_IPV4 = 4, //ipv4 single-stack user
 	EAG_IPV6 = 6, //ipv6 single-stack user
-	EAG_MIX  = 7, //dual-stack users
+	EAG_MIX  = 10, //dual-stack users
 };
 
 typedef enum {

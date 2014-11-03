@@ -3237,7 +3237,6 @@ eag_dbus_method_show_captive_intfs(
 	DBusError		err = {0};
 	char *intfs = NULL;
 	int ret = 0, i =0;
-	eag_log_info("eag_dbus_method_show_captive_intfs");
 
 	reply = dbus_message_new_method_return(msg);
 	if (NULL == reply) {

@@ -135,7 +135,9 @@ int
 flush_preauth_flux_from_fastfwd(eag_macauth_t *macauth,
 		user_addr_t *user_addr,
 		uint64_t fastfwd_input_octets,
-		uint64_t fastfwd_output_octets);
+		uint64_t fastfwd_output_octets,
+		uint64_t fastfwd_ipv6_input_octets,
+		uint64_t fastfwd_ipv6_output_octets);
 
 #endif	/* _EAG_MACAUTH_H */
 

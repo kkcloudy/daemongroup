@@ -971,8 +971,8 @@ eag_redirconn_build_redirurl( eag_redirconn_t *redirconn )
 	struct portal_srv_t * portal_srv = NULL;
 	char user_ipstr[IPX_LEN] = "";
 	char acip_str[32]= "";
-    char user_mac[24] = "";
-    char ap_mac[24] = "";
+	char user_mac[24] = "";
+	char ap_mac[24] = "";
 	uint32_t nasip = 0;
 	int redirurl_len = 0;
 	eag_redir_t *redir = NULL;
@@ -984,16 +984,17 @@ eag_redirconn_build_redirurl( eag_redirconn_t *redirconn )
 	redir = redirconn->redir;
 	appdb = redir->appdb;
 	eagins = redir->eagins;
-    memset (acip_str, 0, sizeof(acip_str));
-    if (EAG_IPV6 == redirconn->user_addr.family) {
-		ipv6tostr(&(redirconn->user_addr.user_ipv6), user_ipstr, sizeof(user_ipstr));
-    } else {
-        ip2str(redirconn->user_addr.user_ip, user_ipstr, sizeof(user_ipstr));
-    }
-    nasip = eag_ins_get_nasip(eagins);
-    ip2str(nasip, acip_str, sizeof(acip_str));
 
-	appconn = appconn_find_by_userip(appdb, &(redirconn->user_addr));
+	if (EAG_IPV6 == redirconn->user_addr.family) {
+		ipv6tostr(&(redirconn->user_addr.user_ipv6), user_ipstr, sizeof(user_ipstr));
+	} else {
+		ip2str(redirconn->user_addr.user_ip, user_ipstr, sizeof(user_ipstr));
+	}
+	nasip = eag_ins_get_nasip(eagins);
+	memset (acip_str, 0, sizeof(acip_str));
+	ip2str(nasip, acip_str, sizeof(acip_str));
+
+	appconn = appconn_find_by_useripx(appdb, &(redirconn->user_addr));
 	if (NULL == appconn) {
 		eag_log_warning("redirconn build redirurl failed, cannot find appconn, userip=%s",
 			user_ipstr);
@@ -1313,7 +1314,7 @@ eag_redirconn_read(eag_thread_t *thread)
 			return ret;
 		}
 		eag_redirconn_start_write(redirconn);
-		appconn = appconn_find_by_userip(redir->appdb, &(redirconn->user_addr));
+		appconn = appconn_find_by_useripx(redir->appdb, &(redirconn->user_addr));
 		if (NULL != appconn) {
 			strncpy(appconn->user_agent, redirconn->user_agent,
 					sizeof(appconn->user_agent));
@@ -1332,7 +1333,7 @@ eag_redirconn_write(eag_thread_t *thread)
 	ssize_t writen = 0;
 	int i = 0;
 	char user_ipstr[IPX_LEN] = "";
-	
+
 	if (NULL == thread) {
 		eag_log_err("eag_redirconn_write input error");
 		return -1;
@@ -1343,7 +1344,7 @@ eag_redirconn_write(eag_thread_t *thread)
 		return -1;
 	}
 	redir = redirconn->redir;
-    ipx2str(&(redirconn->user_addr), user_ipstr, sizeof(user_ipstr));
+	ipx2str(&(redirconn->user_addr), user_ipstr, sizeof(user_ipstr));
 	eag_log_debug("eag_redir", "eag_redirconn_write send resp = %s", redirconn->ibuf);
 	writen = write(redirconn->conn_fd, redirconn->ibuf, redirconn->ibuflen);
 	if (writen < 0) {
@@ -1371,7 +1372,7 @@ eag_redirconn_write(eag_thread_t *thread)
 	eag_log_debug("eag_redir", "eag_redirconn_write ibuflen=%d, userip %s",
 		redirconn->ibuflen, user_ipstr);
 	if (redirconn->ibuflen <= 0) {
-		appconn = appconn_find_by_userip(redir->appdb, &(redirconn->user_addr));
+		appconn = appconn_find_by_useripx(redir->appdb, &(redirconn->user_addr));
 		eag_bss_message_count(redir->eagstat, appconn, BSS_HTTP_REDIR_REQ_COUNT, 1);
 		eag_bss_message_count(redir->eagstat, appconn, BSS_HTTP_REDIR_SUCCESS_COUNT, 1);
 		eag_redirconn_stop_write(redirconn);
@@ -1615,7 +1616,7 @@ eag_redir_accept(eag_thread_t *thread)
 	memset(&user_addr , 0, sizeof(user_addr));
 	user_addr.family = EAG_IPV4;
 	user_addr.user_ip = ntohl(client.sin_addr.s_addr);
-    ipx2str(&user_addr, user_ipstr, sizeof(user_ipstr));
+	ipx2str(&user_addr, user_ipstr, sizeof(user_ipstr));
 	
 	if (0 != set_nonblocking(conn_fd)) {
 		eag_log_err("eag_redir_accept set socket nonblocking failed, "
@@ -1642,7 +1643,7 @@ eag_redir_accept(eag_thread_t *thread)
 		return -1;
 	}
 #endif
-	appconn = appconn_find_by_userip(redir->appdb, &user_addr);
+	appconn = appconn_find_by_userip(redir->appdb, user_addr.user_ip);
 	if (NULL == appconn) {
 		ret = appconn_check_is_conflict(&user_addr, redir->appdb, &tmpsession, &tmp_appconn);
 		if (EAG_ERR_APPCONN_APP_IS_CONFLICT == ret && NULL != tmp_appconn) {
@@ -1672,7 +1673,7 @@ eag_redir_accept(eag_thread_t *thread)
 				eag_log_debug("eag_redir_warning", "eag_redir_accept"
 					"userip %s, usermac is zero, force_wireless enable",
 					user_ipstr);
-                eag_redirconn_free(redirconn);
+				eag_redirconn_free(redirconn);
 				return -1;
 			}
 			#if 0
@@ -1685,7 +1686,7 @@ eag_redir_accept(eag_thread_t *thread)
 					eag_log_debug("eag_redir_warning", "eag_redir_accept"
 						"ip_interface userip %s, interface not found",
 						user_ipstr);
-                    eag_redirconn_free(redirconn);
+					eag_redirconn_free(redirconn);
 					return -1;
 				}
 			}
@@ -1693,7 +1694,7 @@ eag_redir_accept(eag_thread_t *thread)
 			if (strlen(tmpsession.intf) == 0) {
 				eag_log_debug("eag_redir_warning", 
 					"userip %s, interface not found", user_ipstr);
-                eag_redirconn_free(redirconn);
+				eag_redirconn_free(redirconn);
 				return -1;
 			}
 			eag_stamsg_send(redir->stamsg, &tmpsession, EAG_NTF_ASD_STA_INFO, 0);
@@ -1748,14 +1749,12 @@ eag_redir_accept(eag_thread_t *thread)
 		eag_redirconn_free(redirconn);
 		return -1;
 	}
-	//memcpy(&(redirconn->user_addr), &(appconn->session.user_addr), sizeof(user_addr_t));
 	
 	eag_redirconn_start_read(redirconn);
 		
 	return EAG_RETURN_OK;
 }
 
-#if 1 /* add by houyongtao for ipv6 */
 int
 eag_ipv6_redir_start(eag_redir_t * redir)
 {
@@ -1879,7 +1878,7 @@ eag_ipv6_redir_accept(eag_thread_t *thread)
 	memset(&user_addr, 0, sizeof(user_addr_t));
 	user_addr.family = EAG_IPV6;
 	user_addr.user_ipv6 = client.sin6_addr;
-    ipx2str(&user_addr, user_ipstr, sizeof(user_ipstr));
+	ipx2str(&user_addr, user_ipstr, sizeof(user_ipstr));
 	eag_log_debug("eag_redir", "Accept ipv6 user:%s", user_ipstr);
 	if (0 != set_nonblocking(conn_fd)) {
 		eag_log_err("eag_ipv6_redir_accept set socket nonblocking failed, "
@@ -1906,12 +1905,12 @@ eag_ipv6_redir_accept(eag_thread_t *thread)
 		return -1;
 	}
 #endif
-	appconn = appconn_find_by_userip(redir->appdb, &user_addr);
+	appconn = appconn_find_by_useripv6(redir->appdb, &user_addr.user_ipv6);
 	if (NULL == appconn) {
 		ret = appconn_check_is_conflict(&user_addr, redir->appdb, &tmpsession, &tmp_appconn);
 		if (EAG_ERR_APPCONN_APP_IS_CONFLICT == ret && NULL != tmp_appconn) {
 			if (APPCONN_STATUS_AUTHED == tmp_appconn->session.state) {
-				//terminate_appconn_nowait(tmp_appconn, redir->eagins, RADIUS_TERMINATE_CAUSE_LOST_CARRIER);
+				terminate_appconn_nowait(tmp_appconn, redir->eagins, RADIUS_TERMINATE_CAUSE_LOST_CARRIER);
 			} else {
 				appconn_del_from_db(tmp_appconn);
 				appconn_free(tmp_appconn);
@@ -1936,7 +1935,7 @@ eag_ipv6_redir_accept(eag_thread_t *thread)
 				eag_log_debug("eag_redir_warning", "eag_ipv6_redir_accept"
 					"userip %s, usermac is zero, force_wireless enable",
 					user_ipstr);
-                eag_redirconn_free(redirconn);
+				eag_redirconn_free(redirconn);
 				return -1;
 			}
 			#if 0
@@ -1949,7 +1948,7 @@ eag_ipv6_redir_accept(eag_thread_t *thread)
 					eag_log_debug("eag_redir_warning", "eag_redir_accept"
 						"ip_interface userip %s, interface not found",
 						user_ipstr);
-                    eag_redirconn_free(redirconn);
+					eag_redirconn_free(redirconn);
 					return -1;
 				}
 			}
@@ -1957,7 +1956,7 @@ eag_ipv6_redir_accept(eag_thread_t *thread)
 			if (strlen(tmpsession.intf) == 0) {
 				eag_log_debug("eag_redir_warning", 
 					"userip %s, interface not found", user_ipstr);
-                eag_redirconn_free(redirconn);
+				eag_redirconn_free(redirconn);
 				return -1;
 			}
 			eag_stamsg_send(redir->stamsg, &tmpsession, EAG_NTF_ASD_STA_INFO, 0);
@@ -2012,13 +2011,11 @@ eag_ipv6_redir_accept(eag_thread_t *thread)
 		eag_redirconn_free(redirconn);
 		return -1;
 	}
-	//memcpy(&(redirconn->user_addr), &(appconn->session.user_addr), sizeof(user_addr_t));
 
 	eag_redirconn_start_read(redirconn);
 		
 	return EAG_RETURN_OK;
 }
-#endif
 
 int
 eag_redir_set_local_addr(eag_redir_t *redir,

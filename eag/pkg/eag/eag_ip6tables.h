@@ -24,8 +24,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *
 *	Date      :  2011-11-2
 ********************************************************************************/
-#ifndef _EAG_IPTABLES_H
-#define _EAG_IPTABLES_H
+#ifndef _EAG_IP6TABLES_H
+#define _EAG_IP6TABLES_H
 
 /*********************************************************
 *	head files														*

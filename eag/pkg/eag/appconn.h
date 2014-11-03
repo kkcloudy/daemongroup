@@ -118,11 +118,24 @@ int
 appconn_del_from_db(struct app_conn_t *appconn);
 
 int
-appconn_clean_conflict(struct app_conn_t *appconn, 
-					eag_ins_t *eagins);
+appconn_clean_conflict(eag_ins_t *eagins, 
+			struct app_conn_t *appconn);
 
 struct app_conn_t *
 appconn_find_by_userip(appconn_db_t *appdb,
+		uint32_t userip);
+
+struct app_conn_t *
+appconn_find_by_useripv6(appconn_db_t *appdb,
+		struct in6_addr *useripv6);
+
+struct app_conn_t *
+appconn_find_by_useripx(appconn_db_t *appdb,
+		user_addr_t *user_addr);
+
+int
+appconn_ipx_update(appconn_db_t *appdb, 
+		struct app_conn_t *appconn, 
 		user_addr_t *user_addr);
 
 struct app_conn_t *

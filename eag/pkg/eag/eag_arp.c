@@ -316,7 +316,7 @@ eag_arp_listen_proc(eag_arplisten_t *arp, struct nlmsghdr *arpmsg)
 		return EAG_RETURN_OK;
 	}
 
-	appconn = appconn_find_by_userip(arp->appdb, &user_addr);
+	appconn = appconn_find_by_userip(arp->appdb, user_addr.user_ip);
 	if (NULL == appconn) {
 		eag_log_debug("eag_arp", "eag_arp_listen_proc get arp(ip:%s, mac:%s) and not appconn user", ipstr, macstr);
 		return EAG_RETURN_OK;

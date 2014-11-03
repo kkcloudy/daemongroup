@@ -223,7 +223,7 @@ stamsg_proc(eag_stamsg_t *stamsg, uint8_t usermac[6],
 	
 	switch(sta_msg->Op) {
 	case WID_ADD: /* 0 */
-		if (0 == memcmp_ipx(user_addr, NULL)) {
+		if (0 == ipx_is_null(user_addr)) {
 			eag_log_warning("stamsg_proc receive WID_ADD, userip = 0");
 		}
 
@@ -356,7 +356,7 @@ stamsg_proc(eag_stamsg_t *stamsg, uint8_t usermac[6],
 		}
 		break;		
 	case WID_DEL: /* 1 */
-		if (0 == memcmp_ipx(user_addr, NULL)) {
+		if (0 == ipx_is_null(user_addr)) {
 			eag_log_warning("stamsg_proc receive WID_DEL, userip = 0");
 		}
 
@@ -419,7 +419,7 @@ stamsg_proc(eag_stamsg_t *stamsg, uint8_t usermac[6],
 		break;	
 	case OPEN_ROAM: /* 26 */
 		/* STAMSG_ROAM */
-		if (0 == memcmp_ipx(user_addr, NULL)) {
+		if (0 == ipx_is_null(user_addr)) {
 			eag_log_warning("stamsg_proc receive OPEN_ROAM, userip = 0");
 		}
 
@@ -583,11 +583,11 @@ stamsg_receive(eag_thread_t *thread)
 	memcpy(usermac, sta_msg.STA.addr, sizeof(sta_msg.STA.addr));
 	user_addr.user_ip = sta_msg.STA.ipaddr;
 	user_addr.user_ipv6 = sta_msg.STA.ip6_addr;
-	if (0 == user_addr.user_ip && 0 != ipv6_compare_null(&(user_addr.user_ipv6))) {
+	if (0 == user_addr.user_ip && 0 != ipv6_is_null(&(user_addr.user_ipv6))) {
 		user_addr.family = EAG_IPV6;
-	} else if (0 != user_addr.user_ip && 0 == ipv6_compare_null(&(user_addr.user_ipv6))) {
+	} else if (0 != user_addr.user_ip && 0 == ipv6_is_null(&(user_addr.user_ipv6))) {
 		user_addr.family = EAG_IPV4;
-	} else if (0 != user_addr.user_ip && 0 != ipv6_compare_null(&(user_addr.user_ipv6))) {
+	} else if (0 != user_addr.user_ip && 0 != ipv6_is_null(&(user_addr.user_ipv6))) {
 		user_addr.family = EAG_MIX;
 	}
 	ipx2str(&user_addr, user_ipstr, sizeof(user_ipstr));

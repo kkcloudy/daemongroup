@@ -737,7 +737,7 @@ ipv6_add_and_del_entry(const char *table_name,const char *chain_name,
 	p_entry->ipv6.src = *source_ipv6;
 	p_entry->ipv6.dst = *dest_ipv6;
 
-    if (0 == ipv6_compare_null(source_ipv6))
+    if (0 == ipv6_is_null(source_ipv6))
     {
         p_entry->ipv6.smsk = ipv6_any;
     }
@@ -745,7 +745,7 @@ ipv6_add_and_del_entry(const char *table_name,const char *chain_name,
     {
         p_entry->ipv6.smsk = ipv6_only;
     }
-    if(0 == ipv6_compare_null(dest_ipv6))
+    if(0 == ipv6_is_null(dest_ipv6))
     {
         p_entry->ipv6.dmsk = ipv6_any;
     }

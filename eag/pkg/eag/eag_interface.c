@@ -151,6 +151,7 @@
 #define EAG_DBUS_METHOD_SHOW_USER_BY_INDEX		"eag_dbus_method_show_user_by_index"
 #define EAG_DBUS_METHOD_KICK_USER_BY_USERNAME	"eag_dbus_method_kick_user_by_username"
 #define EAG_DBUS_METHOD_KICK_USER_BY_USERIP		"eag_dbus_method_kick_user_by_userip"
+#define EAG_DBUS_METHOD_KICK_USER_BY_USERIPV6	"eag_dbus_method_kick_user_by_useripv6"
 #define EAG_DBUS_METHOD_KICK_USER_BY_USERMAC	"eag_dbus_method_kick_user_by_usermac"
 #define EAG_DBUS_METHOD_KICK_USER_BY_INDEX		"eag_dbus_method_kick_user_by_index"
 #define EAG_DBUS_METHOD_SET_USER_LOG_STATUS		"eag_dbus_method_set_user_log_status"
@@ -3362,9 +3363,9 @@ eag_show_white_list(DBusConnection *connection,
 					case RULE_IPADDR:	
 						dbus_message_iter_next(&iter_struct);
 						dbus_message_iter_get_basic(&iter_struct, &(rule[i].key.ip.ipbegin));
-		                dbus_message_iter_next(&iter_struct);
-		                dbus_message_iter_next(&iter_struct);
-		                dbus_message_iter_next(&iter_struct);
+						dbus_message_iter_next(&iter_struct);
+						dbus_message_iter_next(&iter_struct);
+						dbus_message_iter_next(&iter_struct);
 		                
 						dbus_message_iter_next(&iter_struct);
 						dbus_message_iter_get_basic(&iter_struct, &(rule[i].key.ip.ipend));
@@ -3419,6 +3420,10 @@ eag_show_white_list(DBusConnection *connection,
 						strncpy(rule[i].key.ipv6.ports, ports, CP_MAX_PORTS_BUFF_LEN-1);
 
 						dbus_message_iter_next(&iter_struct);
+						break;
+					case RULE_IPV6DOMAIN:
+						break;
+					default:
 						break;
 					}
 					dbus_message_iter_next(&iter_struct);		
@@ -3512,9 +3517,9 @@ eag_show_black_list(DBusConnection *connection,
 					case RULE_IPADDR:	
 						dbus_message_iter_next(&iter_struct);
 						dbus_message_iter_get_basic(&iter_struct, &(rule[i].key.ip.ipbegin));
-		                dbus_message_iter_next(&iter_struct);
-		                dbus_message_iter_next(&iter_struct);
-		                dbus_message_iter_next(&iter_struct);
+						dbus_message_iter_next(&iter_struct);
+						dbus_message_iter_next(&iter_struct);
+						dbus_message_iter_next(&iter_struct);
 		                
 						dbus_message_iter_next(&iter_struct);
 						dbus_message_iter_get_basic(&iter_struct, &(rule[i].key.ip.ipend));
@@ -3569,6 +3574,10 @@ eag_show_black_list(DBusConnection *connection,
 						strncpy(rule[i].key.ipv6.ports, ports, CP_MAX_PORTS_BUFF_LEN-1);
 
 						dbus_message_iter_next(&iter_struct);
+						break;
+					case RULE_IPV6DOMAIN:
+						break;
+					default:
 						break;
 					}
 					dbus_message_iter_next(&iter_struct);		
@@ -7069,9 +7078,9 @@ eag_show_user_by_useripv6(DBusConnection *connection,
 
 	dbus_message_append_args(	query,
 								DBUS_TYPE_UINT32, &user_ipv6[0],
-						        DBUS_TYPE_UINT32, &user_ipv6[1],
-						        DBUS_TYPE_UINT32, &user_ipv6[2],
-						        DBUS_TYPE_UINT32, &user_ipv6[3],
+								DBUS_TYPE_UINT32, &user_ipv6[1],
+								DBUS_TYPE_UINT32, &user_ipv6[2],
+								DBUS_TYPE_UINT32, &user_ipv6[3],
 								DBUS_TYPE_INVALID );
 	
 	reply = dbus_connection_send_with_reply_and_block (
@@ -7594,6 +7603,52 @@ eag_kick_user_by_userip(DBusConnection *connection,
 	dbus_error_init(&err);
 	dbus_message_append_args(	query,
 								DBUS_TYPE_UINT32, &userip,
+								DBUS_TYPE_INVALID );
+
+	reply = dbus_connection_send_with_reply_and_block (
+						connection, query, -1, &err );
+
+	dbus_message_unref(query);
+	
+	if (NULL == reply) {
+		if (dbus_error_is_set(&err)) {
+			dbus_error_free(&err);
+		}
+		return EAG_ERR_DBUS_FAILED;
+	}else{
+		dbus_message_get_args( reply,
+								&err,
+								DBUS_TYPE_INT32, &iRet,
+								DBUS_TYPE_INVALID );
+	}
+	
+	dbus_message_unref(reply);
+	
+	return iRet;
+}
+
+int
+eag_kick_user_by_useripv6(DBusConnection *connection,
+				int hansitype, int insid,
+				uint32_t user_ipv6[4])
+{
+	DBusMessage *query = NULL;
+	DBusMessage *reply = NULL;
+	DBusError err = {0};
+	int iRet = 0;
+
+	eag_dbus_path_reinit(hansitype, insid);
+	query = dbus_message_new_method_call(
+									EAG_DBUS_NAME,
+									EAG_DBUS_OBJPATH,
+									EAG_DBUS_INTERFACE,
+									EAG_DBUS_METHOD_KICK_USER_BY_USERIPV6);
+	dbus_error_init(&err);
+	dbus_message_append_args(	query,
+								DBUS_TYPE_UINT32, &user_ipv6[0],
+								DBUS_TYPE_UINT32, &user_ipv6[1],
+								DBUS_TYPE_UINT32, &user_ipv6[2],
+								DBUS_TYPE_UINT32, &user_ipv6[3],
 								DBUS_TYPE_INVALID );
 
 	reply = dbus_connection_send_with_reply_and_block (

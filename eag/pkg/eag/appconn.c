@@ -264,25 +264,25 @@ static int
 appconn_update_ip_htable(appconn_db_t *appdb,
 						struct app_conn_t *appconn)
 {
-	if (EAG_IPV6 == appconn->session.user_addr.family) {
-		return hashtable_check_add_node(appdb->ipv6_htable,
-						&(appconn->session.user_addr.user_ipv6),
-						sizeof(struct in6_addr),
-						&(appconn->ipv6_hnode));
-	} else if (EAG_IPV4 == appconn->session.user_addr.family) {
+	if (EAG_IPV4 == appconn->session.user_addr.family) {
 		return hashtable_check_add_node(appdb->ip_htable,
 						&(appconn->session.user_addr.user_ip),
 						sizeof(struct in_addr),
 						&(appconn->ip_hnode));
 	} else if (EAG_MIX == appconn->session.user_addr.family) {
-		hashtable_check_add_node(appdb->ipv6_htable,
-						&(appconn->session.user_addr.user_ipv6),
-						sizeof(struct in6_addr),
-						&(appconn->ipv6_hnode));
 		hashtable_check_add_node(appdb->ip_htable,
 						&(appconn->session.user_addr.user_ip),
 						sizeof(struct in_addr),
 						&(appconn->ip_hnode));
+		hashtable_check_add_node(appdb->ipv6_htable,
+						&(appconn->session.user_addr.user_ipv6),
+						sizeof(struct in6_addr),
+						&(appconn->ipv6_hnode));
+	} else if (EAG_IPV6 == appconn->session.user_addr.family) {
+		return hashtable_check_add_node(appdb->ipv6_htable,
+						&(appconn->session.user_addr.user_ipv6),
+						sizeof(struct in6_addr),
+						&(appconn->ipv6_hnode));
 	}
 	return EAG_RETURN_OK;
 }
@@ -342,10 +342,10 @@ appconn_del_from_db(struct app_conn_t *appconn)
 	list_del(&(appconn->node));
 	if (EAG_IPV4 == appconn->session.user_addr.family) {
 		hlist_del(&(appconn->ip_hnode));
-	} else if (EAG_IPV6 == appconn->session.user_addr.family) {
-		hlist_del(&(appconn->ipv6_hnode));
 	} else if (EAG_MIX == appconn->session.user_addr.family) {
 		hlist_del(&(appconn->ip_hnode));
+		hlist_del(&(appconn->ipv6_hnode));
+	} else if (EAG_IPV6 == appconn->session.user_addr.family) {
 		hlist_del(&(appconn->ipv6_hnode));
 	}
 	hlist_del(&(appconn->mac_hnode));
@@ -354,8 +354,8 @@ appconn_del_from_db(struct app_conn_t *appconn)
 }
 
 int
-appconn_clean_conflict(struct app_conn_t *appconn, 
-					eag_ins_t *eagins)
+appconn_clean_conflict(eag_ins_t *eagins, 
+				struct app_conn_t *appconn)
 {
 	char user_ipstr[IPX_LEN] = "";
 
@@ -377,51 +377,145 @@ appconn_clean_conflict(struct app_conn_t *appconn,
 	return 0;
 }
 
+int
+appconn_ipx_update(appconn_db_t *appdb, struct app_conn_t *appconn, 
+					user_addr_t *user_addr)
+{
+	user_addr_t *user_addr_a = NULL;
+
+	if (NULL == appconn || NULL == user_addr || NULL == appdb) {
+		eag_log_err("appconn_ipx_update input error!");
+		return -1;
+	}
+	user_addr_a = &(appconn->session.user_addr);
+
+	if (EAG_IPV4 == user_addr_a->family 
+		&& EAG_IPV4 != user_addr->family) {
+		user_addr_a->family =  EAG_MIX;
+		user_addr_a->user_ipv6 = user_addr->user_ipv6;
+		hashtable_check_add_node(appdb->ipv6_htable,
+						&(user_addr->user_ipv6),
+						sizeof(struct in6_addr),
+						&(appconn->ipv6_hnode));
+	} else if (EAG_IPV6 == user_addr_a->family 
+		&& EAG_IPV6 != user_addr->family) {
+		user_addr_a->family =  EAG_MIX;
+		user_addr_a->user_ip = user_addr->user_ip;
+		hashtable_check_add_node(appdb->ip_htable,
+						&(user_addr->user_ip),
+						sizeof(struct in_addr),
+						&(appconn->ip_hnode));
+	} else {
+		/* TODO */
+		return 0;
+	}
+
+	return 0;
+}
+
 struct app_conn_t *
 appconn_find_by_userip(appconn_db_t *appdb,
-					user_addr_t *user_addr)
+					uint32_t userip)
 {
 	struct app_conn_t *appconn = NULL;
 	struct hlist_head *head = NULL;
 	struct hlist_node *node = NULL;
 	char user_ipstr[IPX_LEN] = "";
-	//Can be optimized
-	ipx2str(user_addr, user_ipstr, sizeof(user_ipstr));
-	if (EAG_IPV6 == user_addr->family) {
-		/* ipv6 single-stack user */
-		head = hashtable_get_hash_list( appdb->ipv6_htable, 
-									&(user_addr->user_ipv6), 
-									sizeof(struct in6_addr) );
-		if (NULL == head) {
-			eag_log_err("appconn_find_by_userip "
-						"hashtable_get_hash_list failed, userip %s", user_ipstr);
-			return NULL;
-		}
 
-		hlist_for_each_entry(appconn, node, head, ipv6_hnode) {
-			if (!memcmp_ipx(user_addr, &(appconn->session.user_addr))) {
-				return appconn;
-			}
-		}
-	} else {
-		/* ipv4 single-stack user or dual-stack users */
-		head = hashtable_get_hash_list( appdb->ip_htable, 
-									&(user_addr->user_ip), 
-									sizeof(struct in_addr) );
-		if (NULL == head) {
-			eag_log_err("appconn_find_by_userip "
-			"hashtable_get_hash_list failed, userip %s", user_ipstr);
-			return NULL;
-		}
+	if (NULL == appdb) {
+		eag_log_err("appconn_find_by_userip input error");
+		return NULL;
+	}
+	ip2str(userip, user_ipstr, sizeof(user_ipstr));
+	head = hashtable_get_hash_list(appdb->ip_htable, &userip, sizeof(userip));
+	if (NULL == head) {
+		eag_log_err("appconn_find_by_userip "
+			"hashtable_get_hash_list failed, userip=%s", user_ipstr);
+		return NULL;
+	}
 
-		hlist_for_each_entry(appconn, node, head, ip_hnode) {
-			if (!memcmp_ipx(user_addr, &(appconn->session.user_addr))) {
-				return appconn;
-			}
+	hlist_for_each_entry(appconn, node, head, ip_hnode) {
+		if (userip == appconn->session.user_addr.user_ip) {
+			return appconn;
 		}
 	}
 
-	debug_appconn("appconn_find_by_userip, not find user, userip %s", user_ipstr);
+	debug_appconn("appconn_find_by_userip, not find user, userip=%s",
+			user_ipstr);
+	return NULL;
+}
+
+struct app_conn_t *
+appconn_find_by_useripv6(appconn_db_t *appdb,
+					struct in6_addr *useripv6)
+{
+	struct app_conn_t *appconn = NULL;
+	struct hlist_head *head = NULL;
+	struct hlist_node *node = NULL;
+	char user_ipstr[IPX_LEN] = "";
+
+	if (NULL == appdb || NULL == useripv6) {
+		eag_log_err("appconn_find_by_useripv6 input error");
+		return NULL;
+	}
+	ipv6tostr(useripv6, user_ipstr, sizeof(user_ipstr));
+	head = hashtable_get_hash_list(appdb->ipv6_htable, useripv6, sizeof(struct in6_addr));
+	if (NULL == head) {
+		eag_log_err("appconn_find_by_useripv6 "
+			"hashtable_get_hash_list failed, useripv6=%s", user_ipstr);
+		return NULL;
+	}
+
+	hlist_for_each_entry(appconn, node, head, ipv6_hnode) {
+		if (!memcmp(useripv6, &(appconn->session.user_addr.user_ipv6), sizeof(struct in6_addr))) {
+			return appconn;
+		}
+	}
+
+	debug_appconn("appconn_find_by_useripv6, not find user, useripv6=%s",
+			user_ipstr);
+	return NULL;
+}
+
+struct app_conn_t *
+appconn_find_by_useripx(appconn_db_t *appdb,
+					user_addr_t *user_addr)
+{
+	struct app_conn_t *appconn_v4 = NULL;
+	struct app_conn_t *appconn_v6 = NULL;
+	char user_ipstr[IPX_LEN] = "";
+
+	if (NULL == appdb || NULL == user_addr) {
+		eag_log_err("appconn_find_by_useripx input error!");
+		return NULL;
+	}
+	ipx2str(user_addr, user_ipstr, sizeof(user_ipstr));
+	if (EAG_IPV4 == user_addr->family || EAG_MIX == user_addr->family) {
+		appconn_v4 = appconn_find_by_userip(appdb, user_addr->user_ip);
+	}
+	if (EAG_IPV6 == user_addr->family || EAG_MIX == user_addr->family) {
+		appconn_v6 = appconn_find_by_useripv6(appdb, &user_addr->user_ipv6);
+	}
+
+	if (EAG_IPV4 == user_addr->family && NULL != appconn_v4) {
+		return appconn_v4;
+	}
+	if (EAG_IPV6 == user_addr->family && NULL != appconn_v6) {
+		return appconn_v6;
+	}
+	if (EAG_MIX == user_addr->family) {
+		if (NULL != appconn_v4 && NULL == appconn_v6) {
+			return appconn_v4;
+		} else if (NULL == appconn_v4 && NULL != appconn_v6) {
+			return appconn_v6;
+		} else if (NULL != appconn_v4 && NULL != appconn_v6) {
+			if (appconn_v4 != appconn_v6) {
+				appconn_clean_conflict(appdb->eagins, appconn_v6);
+			}
+			return appconn_v4;
+		}
+	}
+
 	return NULL;
 }
 
@@ -537,7 +631,7 @@ appconn_count_by_userip(appconn_db_t *appdb,
 	
 	list_for_each_entry(appconn, &(appdb->head), node) {
 		if (APPCONN_STATUS_AUTHED == appconn->session.state
-			&& 0 == memcmp_ipx(user_addr, &(appconn->session.user_addr))) {
+			&& 0 == ipxcmp(user_addr, &(appconn->session.user_addr))) {
 			num++;
 		}
 	}
@@ -883,7 +977,7 @@ appconn_check_is_conflict(user_addr_t *user_addr, appconn_db_t *appdb, struct ap
 	if (EAG_IPV6 == user_addr->family) {
 		eag_ipv6info_get(session->intf, sizeof(session->intf)-1, session->usermac, &(user_addr->user_ipv6));
 	} else {
-		eag_ipinfo_get(session->intf, sizeof(session->intf)-1, session->usermac, user_addr->user_ip);// houyt
+		eag_ipinfo_get(session->intf, sizeof(session->intf)-1, session->usermac, user_addr->user_ip);
 	}
 	mac2str(session->usermac, macstr, sizeof(macstr), ':');
 	eag_log_debug("eag_ipinfo", "eag_ipinfo_get after userip=%s,usermac=%s,interface=%s",
@@ -897,7 +991,7 @@ appconn_check_is_conflict(user_addr_t *user_addr, appconn_db_t *appdb, struct ap
 	}
 	
 	appconn = appconn_find_by_usermac(appdb, session->usermac);
-	if (NULL != appconn && 0 != memcmp_ipx(user_addr, &(appconn->session.user_addr))) {
+	if (NULL != appconn && 0 != ipxcmp(user_addr, &(appconn->session.user_addr))) {
 		ipx2str(&(appconn->session.user_addr), user_ipstr2, sizeof(user_ipstr2));
 		eag_log_warning("appconn_check_is_conflict user mac %s conflict"
 			"ip1=%s, ip2=%s", macstr, user_ipstr, user_ipstr2);
@@ -1016,7 +1110,7 @@ appconn_find_by_ip_autocreate(appconn_db_t *appdb, user_addr_t *user_addr)
 	}
 
 	ipx2str(user_addr, user_ipstr, sizeof(user_ipstr));
-	appconn = appconn_find_by_userip(appdb, user_addr);
+	appconn = appconn_find_by_useripx(appdb, user_addr);
 	if (NULL != appconn) {
 		return appconn;
 	}
@@ -2036,7 +2130,7 @@ flush_all_appconn_flux_from_iptables(appconn_db_t *appdb, int time_interval)
 	struct ipt_counters *my_counter = NULL;
 	unsigned int rule_num = 0;
 	struct app_conn_t *appconn = NULL;
-	user_addr_t user_addr = {0};
+	uint32_t userip = 0;
 	char hansi_type = (HANSI_LOCAL == appdb->hansi_type)?'L':'R';
 	
 	eag_time_gettimeofday(&tv, NULL);
@@ -2050,10 +2144,10 @@ flush_all_appconn_flux_from_iptables(appconn_db_t *appdb, int time_interval)
 	}
 	last_time = time_now;
 
-	eag_log_info("flush_all_appconn_flux_from_iptables iptables lock");
+	eag_log_debug("appconn", "flush_all_appconn_flux_from_iptables iptables lock");
 	nmp_mutex_lock(&eag_iptables_lock);
 	handle = iptc_init("filter");
-	eag_log_info("flush_all_appconn_flux_from_iptables iptables unlock");
+	eag_log_debug("appconn", "flush_all_appconn_flux_from_iptables iptables unlock");
 	nmp_mutex_unlock(&eag_iptables_lock);
 	if (NULL == handle) {
 		eag_log_err("flush_all_appconn_flux_from_iptables can't init iptc handle");
@@ -2094,10 +2188,8 @@ flush_all_appconn_flux_from_iptables(appconn_db_t *appdb, int time_interval)
 					continue;
 				}
 				my_counter = iptc_read_counter(chain_name, rule_num, handle);
-				memset(&user_addr, 0, sizeof(user_addr_t));
-				user_addr.family = EAG_IPV4;
-				user_addr.user_ip = ntohl(p_entry->ip.dst.s_addr);
-				appconn = appconn_find_by_userip(appdb, &user_addr);
+				userip = ntohl(p_entry->ip.dst.s_addr);
+				appconn = appconn_find_by_userip(appdb, userip);
 				if (NULL != appconn) {
 					appconn->iptables_data.input_octets = my_counter->bcnt;
 					appconn->iptables_data.input_packets = my_counter->pcnt;
@@ -2120,10 +2212,8 @@ flush_all_appconn_flux_from_iptables(appconn_db_t *appdb, int time_interval)
  					continue;
 				}
 				my_counter = iptc_read_counter(chain_name,rule_num, handle);
-				memset(&user_addr, 0, sizeof(user_addr_t));
-				user_addr.family = EAG_IPV4;
-				user_addr.user_ip = ntohl(p_entry->ip.src.s_addr);
-				appconn = appconn_find_by_userip(appdb, &user_addr);
+				userip = ntohl(p_entry->ip.src.s_addr);
+				appconn = appconn_find_by_userip(appdb, userip);
 				if (NULL != appconn) {
 					appconn->iptables_data.output_octets = my_counter->bcnt;
 					appconn->iptables_data.output_packets = my_counter->pcnt;
@@ -2151,7 +2241,7 @@ flush_all_appconn_flux_from_ip6tables(appconn_db_t *appdb, int time_interval)
 	struct ip6t_counters *my_counter = NULL;
 	unsigned int rule_num = 0;
 	struct app_conn_t *appconn = NULL;
-	user_addr_t user_addr = {0};
+	struct in6_addr useripv6;
 	char hansi_type = (HANSI_LOCAL == appdb->hansi_type)?'L':'R';
 	
 	eag_time_gettimeofday(&tv, NULL);
@@ -2165,10 +2255,10 @@ flush_all_appconn_flux_from_ip6tables(appconn_db_t *appdb, int time_interval)
 	}
 	last_time = time_now;
 
-	eag_log_info("flush_all_appconn_flux_from_ip6tables ip6tables lock");
+	eag_log_debug("appconn", "flush_all_appconn_flux_from_ip6tables ip6tables lock");
 	nmp_mutex_lock(&eag_ip6tables_lock);
 	handle = ip6tc_init("filter");
-	eag_log_info("flush_all_appconn_flux_from_ip6tables ip6tables unlock");
+	eag_log_debug("appconn", "flush_all_appconn_flux_from_ip6tables ip6tables unlock");
 	nmp_mutex_unlock(&eag_ip6tables_lock);
 	if (NULL == handle) {
 		eag_log_err("flush_all_appconn_flux_from_ip6tables can't init ip6tc handle");
@@ -2203,17 +2293,15 @@ flush_all_appconn_flux_from_ip6tables(appconn_db_t *appdb, int time_interval)
 				p_entry = ip6tc_next_rule(p_entry, handle))
 			{
 				rule_num++;
-				eag_log_debug("appconn", "flush_all_appconn_flux_from_ip6tables dst addr = %s",
-						ipv6tostr((struct in6_addr *)&(p_entry->ipv6.dst), ipv6_str, sizeof(ipv6_str)));
-				if (ipv6_compare_null((struct in6_addr *)&(p_entry->ipv6.dst)) == 0)
+				ipv6tostr((struct in6_addr *)&(p_entry->ipv6.dst), ipv6_str, sizeof(ipv6_str));
+				eag_log_debug("appconn", "flush_all_appconn_flux_from_ip6tables dst addr = %s", ipv6_str);
+				if (0 == ipv6_is_null((struct in6_addr *)&(p_entry->ipv6.dst)))
 				{
 					continue;
 				}
 				my_counter = ip6tc_read_counter(chain_name, rule_num, handle);
-				memset(&user_addr, 0, sizeof(user_addr_t));
-				user_addr.family = EAG_IPV6;
-				user_addr.user_ipv6 = p_entry->ipv6.dst;
-				appconn = appconn_find_by_userip(appdb, &user_addr);
+				useripv6 = p_entry->ipv6.dst;
+				appconn = appconn_find_by_useripv6(appdb, &useripv6);
 				if (NULL != appconn) {
 					appconn->ip6tables_data.input_octets = my_counter->bcnt;
 					appconn->ip6tables_data.input_packets = my_counter->pcnt;
@@ -2229,17 +2317,15 @@ flush_all_appconn_flux_from_ip6tables(appconn_db_t *appdb, int time_interval)
 				p_entry = ip6tc_next_rule(p_entry, handle))
 			{
 				rule_num++;
-				eag_log_debug("appconn", "flush_all_appconn_flux_from_ip6tables src addr = %s",
-                    	ipv6tostr((struct in6_addr *)&(p_entry->ipv6.src), ipv6_str, sizeof(ipv6_str)));
-				if (ipv6_compare_null((struct in6_addr *)&(p_entry->ipv6.src)) == 0)
+				ipv6tostr((struct in6_addr *)&(p_entry->ipv6.src), ipv6_str, sizeof(ipv6_str));
+				eag_log_debug("appconn", "flush_all_appconn_flux_from_ip6tables src addr = %s", ipv6_str);
+				if (0 == ipv6_is_null((struct in6_addr *)&(p_entry->ipv6.src)))
 				{
  					continue;
 				}
 				my_counter = ip6tc_read_counter(chain_name,rule_num, handle);
-				memset(&user_addr, 0, sizeof(user_addr_t));
-				user_addr.family = EAG_IPV6;
-				user_addr.user_ipv6 = p_entry->ipv6.src;
-				appconn = appconn_find_by_userip(appdb, &user_addr);
+				useripv6 = p_entry->ipv6.src;
+				appconn = appconn_find_by_useripv6(appdb, &useripv6);
 				if (NULL != appconn) {
 					appconn->ip6tables_data.output_octets = my_counter->bcnt;
 					appconn->ip6tables_data.output_packets = my_counter->pcnt;

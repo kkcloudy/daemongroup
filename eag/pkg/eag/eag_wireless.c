@@ -164,18 +164,14 @@ reget:
 	session->radioid = sta->radio_g_id%L_RADIO_NUM;
 	session->wtpid= sta->radio_g_id/L_RADIO_NUM;
 
-	if (0 != sta->ip_addr.s_addr) {
-		session->user_addr.user_ip = sta->ip_addr.s_addr;
-	}
-	if (0 != ipv6_compare_null(&(sta->ip6_addr))) {
-		session->user_addr.user_ipv6 = sta->ip6_addr;
-	}
+	session->user_addr.user_ip = sta->ip_addr.s_addr;
+	session->user_addr.user_ipv6 = sta->ip6_addr;
 	if (0 != session->user_addr.user_ip 
-		&& 0 != ipv6_compare_null(&(session->user_addr.user_ipv6))) {
+		&& 0 != ipv6_is_null(&(session->user_addr.user_ipv6))) {
 		session->user_addr.family = EAG_MIX;
 	} else if (0 != session->user_addr.user_ip) {
 		session->user_addr.family = EAG_IPV4;
-	} else {
+	} else if (0 != ipv6_is_null(&(session->user_addr.user_ipv6))) {
 		session->user_addr.family = EAG_IPV6;
 	}
 
@@ -222,11 +218,11 @@ reget:
 	eag_log_info("eag_get_sta_info_by_mac_v2 success, "
 			"sta_mac=%s, sta_ip=%s, sta_ipv6=%s, radio_id=%d, wlan_id=%d, wtp_id=%d, "
 			"essid=%s, wtp_mac=%s, wtp_name=%s, vlanid=%d, idle_check=%u, "
-			"idle_timeout=%lu, idle_flow=%llu, security_type=%d,audit_ip=%x",
+			"idle_timeout=%lu, idle_flow=%llu, security_type=%d, audit_ip=%x, "
+			"framed_interface_id=%lld, login_ipv6_host=%s, framed_ipv6_prefix=%s, ipv6_prefix_length=%hhu",
 			str_sta_mac, ipstr, ipv6str, session->radioid, session->wlanid, session->wtpid,
 			session->essid, str_wtp_mac, session->apname, session->vlanid, session->idle_check,
-			session->idle_timeout, session->idle_flow, *security_type, session->audit_ip);
-	eag_log_info("framed_interface_id=%lld, login_ipv6_host=%s, framed_ipv6_prefix=%s, ipv6_prefix_length=%hhu",
+			session->idle_timeout, session->idle_flow, *security_type, session->audit_ip, 
 			session->framed_interface_id, login_ipv6_host_str, framed_ipv6_prefix_str, session->framed_ipv6_prefix[1]);
 end:
 	if( NULL != sta && NULL != dl_dcli_free_sta_v2)

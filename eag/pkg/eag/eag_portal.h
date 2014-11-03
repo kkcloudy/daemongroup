@@ -64,6 +64,11 @@ eag_portal_auth_success(eag_portal_t *portal,
 		struct app_conn_t *appconn);
 
 int
+eag_portal_auth_update(eag_portal_t *portal, 
+			struct app_conn_t *appconn, 
+			user_addr_t *user_addr);
+
+int
 eag_portal_notify_logout(eag_portal_t * portal,
 		struct app_conn_t *appconn,
 		int terminate_cause);

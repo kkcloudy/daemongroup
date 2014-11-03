@@ -37,6 +37,6 @@ int
 eag_ipset6_init();
 
 int
-eag_ipset6_init();
+eag_ipset6_exit();
 
 #endif

@@ -336,7 +336,7 @@ eag_authorize_iptables_do_authorize( eag_authorize_t *this, struct appsession *a
 		return EAG_ERR_INPUT_PARAM_ERR;
 	}
 	ipx2str(&(appsession->user_addr), user_ipstr, sizeof(user_ipstr));
-	if( strlen(appsession->intf)==0 || 0 == memcmp_ipx(&(appsession->user_addr), NULL)){
+	if( strlen(appsession->intf)==0 || 0 == ipx_is_null(&appsession->user_addr)){
 		eag_log_err("eag_authorize_iptables_do_authorize appsession if=%s ip=%s",
 						appsession->intf, user_ipstr);
 		return EAG_ERR_INPUT_PARAM_ERR;
@@ -381,7 +381,7 @@ eag_authorize_iptables_de_authorize( eag_authorize_t *this, struct appsession *a
 	
 	ipx2str(&(appsession->user_addr), user_ipstr, sizeof(user_ipstr));
 	
-	if( strlen(appsession->intf)==0 || 0 == memcmp_ipx(&(appsession->user_addr), NULL)){
+	if( strlen(appsession->intf)==0 || 0 == ipx_is_null(&appsession->user_addr)){
 		eag_log_err("eag_authorize_iptables_de_authorize appsession if=%s ip=%s",
 						appsession->intf, user_ipstr);
 		return EAG_ERR_INPUT_PARAM_ERR;
@@ -462,7 +462,7 @@ eag_authorize_iptables_do_macpre_authorize( eag_authorize_t *this, user_addr_t *
 					this, this->cap);
 		return EAG_ERR_INPUT_PARAM_ERR;
 	}
-	if(0 == memcmp_ipx(user_addr, NULL)){
+	if(0 == ipx_is_null(user_addr)){
 		eag_log_err("eag_authorize_iptables_do_macpre_authorize user_ip = 0");
 		return EAG_ERR_INPUT_PARAM_ERR;
 	}
@@ -491,17 +491,17 @@ eag_authorize_iptables_del_macpre_authorize( eag_authorize_t *this, user_addr_t 
 	char user_ipstr[IPX_LEN] = "";
 	int ret = 0;
 	
-    if( NULL == this || NULL == user_addr){
+	if ( NULL == this || NULL == user_addr){
 		eag_log_err("eag_authorize_ipset_del_macpre_authorize this = %p, user_addr = %p", this, user_addr);
 		return EAG_ERR_INPUT_PARAM_ERR;
 	}
-	if( NULL == this->cap ){
+	if ( NULL == this->cap ){
 		eag_log_err("eag_authorize_iptables_del_macpre_authorize this = %p  this->cap = %p",
 					this, this->cap);
 		return EAG_ERR_INPUT_PARAM_ERR;
 	}
-	if(0 == memcmp_ipx(user_addr, NULL)){
-		eag_log_err("eag_authorize_iptables_do_macpre_authorize user_ip = 0");
+	if (0 == ipx_is_null(user_addr)){
+		eag_log_err("eag_authorize_iptables_del_macpre_authorize user_ip = 0");
 		return EAG_ERR_INPUT_PARAM_ERR;
 	}
 	ipx2str(user_addr, user_ipstr, sizeof(user_ipstr));

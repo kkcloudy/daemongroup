@@ -63,10 +63,13 @@ char *
 ipx2str(user_addr_t *user_addr, char *str, size_t size);
 
 int
-ipv6_compare_null(struct in6_addr *ipv6);
+ipv6_is_null(struct in6_addr *ipv6);
 
 int
-memcmp_ipx(user_addr_t *user_addr1, user_addr_t *user_addr2);
+ipx_is_null(user_addr_t *user_addr);
+
+int
+ipxcmp(user_addr_t *user_addr1, user_addr_t *user_addr2);
 
 char *
 str2ipv6(struct in6_addr *ipv6, char *str);

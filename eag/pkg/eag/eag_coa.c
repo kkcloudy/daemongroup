@@ -667,7 +667,7 @@ get_appconn_by_dm_param(appconn_db_t *appdb,
 	head = appconn_db_get_head(appdb);
 	
 	if (0 == strlen(session->username)
-		&& 0 == memcmp_ipx(&(session->user_addr), NULL)
+		&& 0 == ipx_is_null(&(session->user_addr))
 		&& 0 == strlen(session->sessionid)) {
 		eag_log_warning("get_appconn_by_dm_param, all of params is null");
 		return NULL;
@@ -680,8 +680,8 @@ get_appconn_by_dm_param(appconn_db_t *appdb,
 				continue;
 			}
 			
-			if (0 != memcmp_ipx(&(session->user_addr), NULL)
-				&& 0 != memcmp_ipx(&(session->user_addr), &(appconn->session.user_addr))) {
+			if (0 != ipx_is_null(&(session->user_addr))
+				&& 0 != ipxcmp(&(session->user_addr), &(appconn->session.user_addr))) {
 				continue;
 			}
 			
@@ -775,7 +775,7 @@ eag_coa_proc_disconnect_request(eag_coa_t *coa,
 
 	get_dm_param(&session, reqpkt);
 	if (0 == strlen(session.username)
-		&& 0 == memcmp_ipx(&(session.user_addr), NULL)
+		&& 0 == ipx_is_null(&(session.user_addr))
 		&& 0 == strlen(session.sessionid)) {
 		error_cause = RADIUS_ERROR_CAUSE_402;
 		admin_log_notice("RadiusDisconnectRequest___MissingAttribute");

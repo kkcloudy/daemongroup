@@ -1376,7 +1376,7 @@ parse_string(const char *str, struct ipt_string_info *info)
 static void
 parse_bindings(const char *str, struct ipt_set_info *info)
 {
-	int i = 0;
+	//int i = 0;
 	char *ptr = NULL;
 	char *tmp = NULL;
 	char *saved = NULL;
@@ -1396,14 +1396,14 @@ parse_bindings(const char *str, struct ipt_set_info *info)
 	}
 	#endif /* modify by houyongtao */
 	info->dim = 0;
-    while (info->dim < EAG_SET_MAX_BINDINGS && tmp != NULL) {
-        info->dim++;
-        ptr = strsep(&tmp, ",");
-        if (strncmp(ptr, "src", 3) == 0)
-            info->flags |= (1 << info->dim);
-        else if (strncmp(ptr, "dst", 3) != 0)
+	while (info->dim < EAG_SET_MAX_BINDINGS && tmp != NULL) {
+		info->dim++;
+		ptr = strsep(&tmp, ",");
+		if (strncmp(ptr, "src", 3) == 0)
+			info->flags |= (1 << info->dim);
+		else if (strncmp(ptr, "dst", 3) != 0)
 			eag_log_err("You must spefify (the comma separated list of) 'src' or 'dst'.");
-    }
+	}
 
 	if (tmp) {
 		eag_log_err("Can't follow bindings deeper than %i.", 

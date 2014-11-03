@@ -1066,6 +1066,11 @@ eag_kick_user_by_userip(DBusConnection *connection,
 				uint32_t userip);
 
 int
+eag_kick_user_by_useripv6(DBusConnection *connection,
+				int hansitype, int insid,
+				uint32_t user_ipv6[4]);
+
+int
 eag_kick_user_by_usermac(DBusConnection *connection,
 				int hansitype, int insid,
 				uint8_t usermac[6]);

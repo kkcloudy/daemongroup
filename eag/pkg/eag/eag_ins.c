@@ -381,20 +381,160 @@ eag_eagins_register_hansi_param_forward(
 }
 
 static int
+eag_ins_do_syn_user_data_online(eag_ins_t *eagins, 
+						struct app_conn_t *appconn)
+{
+	char user_ipstr[IPX_LEN] = "";
+	user_addr_t *user_addr_a = NULL;
+	int ret = EAG_RETURN_OK;
+
+	if (NULL == eagins || NULL == appconn) {
+		eag_log_err("eag_ins_do_syn_user_data_online input error!");
+		return EAG_ERR_UNKNOWN;
+	}
+	user_addr_a = &(appconn->session.user_addr);
+
+	ipx2str(user_addr_a, user_ipstr, sizeof(user_ipstr));
+	eag_log_info("eag_ins_do_syn_user_data_online "
+		"appconn userip=%s online", user_ipstr);
+
+	ret = eag_captive_authorize(eagins->captive, &(appconn->session));
+	if (EAG_RETURN_OK != ret) {
+		eag_log_err("eag_ins_do_syn_user_data_online "
+			"eag_captive_authorize failed, userip=%s", user_ipstr);
+		appconn_free(appconn);
+		return ret;
+	}
+	appconn_add_to_db(eagins->appdb, appconn);
+	//appconn_update_name_htable(eagins->appdb, appconn);
+	if (FLUX_FROM_FASTFWD == eagins->flux_from
+		||FLUX_FROM_FASTFWD_IPTABLES == eagins->flux_from)
+	{
+		eag_log_info("eag_ins_do_syn_user_data_online "
+			"fastfwd_send userip=%s online", user_ipstr);
+		eag_fastfwd_send(eagins->fastfwd, user_addr_a, SE_AGENT_USER_ONLINE);
+	}
+	
+	/* online user count++,add by zhangwl 2012-8-1*/
+	appdb_authed_user_num_increase(eagins->appdb);
+	
+	appconn_set_debug_prefix(appconn);
+	appconn_set_filter_prefix(appconn, eagins->hansi_type, eagins->hansi_id); /* for debug-filter,add by zhangwl */
+	eag_log_info("eag_ins_do_syn_user_data_online "
+		"new appconn userip=%s, state authed", user_ipstr);
+
+	return EAG_RETURN_OK;
+}
+
+static int
+eag_ins_do_syn_user_data_offline(eag_ins_t *eagins, 
+						struct app_conn_t *appconn)
+{
+	char user_ipstr[IPX_LEN] = "";
+	user_addr_t *user_addr_a = NULL;
+
+	if (NULL == eagins || NULL == appconn) {
+		eag_log_err("eag_ins_do_syn_user_data_offline input error!");
+		return EAG_ERR_UNKNOWN;
+	}
+	user_addr_a = &(appconn->session.user_addr);
+
+	ipx2str(user_addr_a, user_ipstr, sizeof(user_ipstr));
+	eag_log_info("eag_ins_do_syn_user_data_offline "
+		"appconn userip=%s offline", user_ipstr);
+
+	eag_captive_deauthorize(eagins->captive, &(appconn->session));
+	if (FLUX_FROM_FASTFWD == eagins->flux_from
+		||FLUX_FROM_FASTFWD_IPTABLES == eagins->flux_from)
+	{
+		eag_log_info("eag_ins_do_syn_user_data_offline "
+			"fastfwd_send userip=%s offline", user_ipstr);
+		eag_fastfwd_send(eagins->fastfwd, user_addr_a, SE_AGENT_USER_OFFLINE);
+	}
+	
+	/* online user count--, add by zhangwl 2012-8-1 */
+	appdb_authed_user_num_decrease(eagins->appdb);
+	
+	appconn_del_from_db(appconn);
+	//appconn_del_name_htable(appconn);
+	appconn_free(appconn);
+
+	return EAG_RETURN_OK;
+}
+
+static int
+eag_ins_do_syn_user_data_update(eag_ins_t *eagins, 
+						struct app_conn_t *appconn, 
+						struct appsession *usersession, 
+						struct timeval *cb_tv)
+{
+	char user_ipstr_a[IPX_LEN] = "";
+	char user_ipstr_u[IPX_LEN] = "";
+	user_addr_t user_addr = {0};
+	user_addr_t user_addr_tmp = {0};
+	user_addr_t *user_addr_a = NULL;
+	user_addr_t *user_addr_u = NULL;
+
+	if (NULL == eagins || NULL == appconn || NULL == usersession) {
+		eag_log_err("eag_ins_do_syn_user_data_update input error!");
+		return EAG_ERR_UNKNOWN;
+	}
+	user_addr_a = &(appconn->session.user_addr);
+	user_addr_u = &(usersession->user_addr);
+	ipx2str(user_addr_a, user_ipstr_a, sizeof(user_ipstr_a));
+	ipx2str(user_addr_u, user_ipstr_u, sizeof(user_ipstr_u));
+	eag_log_info("eag_ins_do_syn_user_data_update "
+		"userip=%s needs to be updated to appconn.ip=%s", user_ipstr_u, user_ipstr_a);
+
+	memset(&user_addr, 0, sizeof(user_addr_t));
+	memset(&user_addr_tmp, 0, sizeof(user_addr_t));
+	if (EAG_IPV4 == user_addr_a->family 
+		&& EAG_IPV4 != user_addr_u->family) {
+		user_addr_tmp.family = EAG_IPV6;
+		user_addr_tmp.user_ipv6 = user_addr_u->user_ipv6;
+	} else if (EAG_IPV6 == user_addr_a->family 
+		&& EAG_IPV6 != user_addr_u->family) {
+		user_addr_tmp.family = EAG_IPV4;
+		user_addr_tmp.user_ip = user_addr_u->user_ip;
+	} else {
+		return EAG_RETURN_OK;
+	}
+	memcpy(&user_addr, &user_addr_a, sizeof(user_addr_t));
+
+	appsession_copy(&appconn->session, usersession, cb_tv);
+	memcpy(user_addr_a, &user_addr_tmp, sizeof(user_addr_t));
+	eag_captive_authorize(eagins->captive, &appconn->session);
+
+	if (FLUX_FROM_FASTFWD == eagins->flux_from
+		||FLUX_FROM_FASTFWD_IPTABLES == eagins->flux_from)
+	{
+		eag_log_info("eag_ins_do_syn_user_data_update "
+			"fastfwd_send userip=%s online", user_ipstr_u);
+		eag_fastfwd_send(eagins->fastfwd, &user_addr_tmp, SE_AGENT_USER_ONLINE);
+	}
+
+	memcpy(user_addr_a, &user_addr, sizeof(user_addr_t));
+	appconn_ipx_update(eagins->appdb, appconn, user_addr_u);
+
+	return EAG_RETURN_OK;
+}
+
+static int
 eag_ins_do_syn_user_data(void *cbp, void *data, struct timeval *cb_tv)
 {
 	eag_ins_t *eagins = (eag_ins_t *)cbp;
 	struct appsession *usersession = (struct appsession *)data;
 	struct app_conn_t *appconn = NULL;
-	user_addr_t user_addr = {0};
 	char user_ipstr[IPX_LEN] = "";
+	char user_macstr[32] = "";
 	int ret = EAG_RETURN_OK;
-	user_addr_t user_addr_cmp = {0};
+	user_addr_t user_addr_tmp = {0};
+	user_addr_t *user_addr_a = NULL;
+	user_addr_t *user_addr_u = NULL;
 
-	memset(&user_addr, 0, sizeof(user_addr));
-	memcpy(&user_addr, &(usersession->user_addr), sizeof(user_addr_t));
-	ipx2str(&user_addr, user_ipstr, sizeof(user_ipstr));
-	appconn = appconn_find_by_userip(eagins->appdb, &user_addr);
+	ipx2str(&usersession->user_addr, user_ipstr, sizeof(user_ipstr));
+	mac2str(usersession->usermac, user_macstr, sizeof(user_macstr)-1, ':');
+	appconn = appconn_find_by_usermac(eagins->appdb, usersession->usermac);
 	if (NULL == appconn) {
 		if (APPCONN_STATUS_NONE == usersession->state) {
 			eag_log_err("eag_ins_do_syn_user_data "
@@ -431,6 +571,13 @@ eag_ins_do_syn_user_data(void *cbp, void *data, struct timeval *cb_tv)
 			appconn_free(appconn);
 			goto ack_data;
 		}
+		ret = eag_ins_do_syn_user_data_online(eagins, appconn);
+		if (EAG_RETURN_OK != ret) {
+			eag_log_err("eag_ins_do_syn_user_data "
+				"eag_ins_do_syn_user_data_online failed, userip %s", user_ipstr);
+			goto ack_data;
+		}
+		#if 0
 		ret = eag_captive_authorize(eagins->captive, &(appconn->session));
 		if (EAG_RETURN_OK != ret) {
 			eag_log_err("eag_ins_do_syn_user_data "
@@ -445,7 +592,7 @@ eag_ins_do_syn_user_data(void *cbp, void *data, struct timeval *cb_tv)
 		{
 			eag_log_info("eag_ins_do_syn_user_data fastfwd_send userip:%s online",
 					user_ipstr);
-			eag_fastfwd_send(eagins->fastfwd, &user_addr, SE_AGENT_USER_ONLINE);
+			eag_fastfwd_send(eagins->fastfwd, &(appconn->session.user_addr), SE_AGENT_USER_ONLINE);
 		}
 		
 		/* online user count++,add by zhangwl 2012-8-1*/
@@ -455,15 +602,48 @@ eag_ins_do_syn_user_data(void *cbp, void *data, struct timeval *cb_tv)
 		appconn_set_filter_prefix(appconn, eagins->hansi_type, eagins->hansi_id); /* for debug-filter,add by zhangwl */
 		eag_log_info("eag_ins_do_syn_user_data new appconn userip %s, state authed",
 				user_ipstr);
+		#endif
 	} else {
 		if (appconn->session.virtual_ip != usersession->virtual_ip) {
 			eag_log_err("eag_ins_do_syn_user_data current appconn virtual_ip %#X "
 				"is not equal backup data virtual_ip %#X, userip %s",
 				appconn->session.virtual_ip, usersession->virtual_ip, user_ipstr);
 		} else {
-			memcpy(&user_addr_cmp, &(appconn->session.user_addr), sizeof(user_addr_t));
-			appsession_copy(&(appconn->session), usersession, cb_tv);
-			memcpy(&(appconn->session.user_addr), &user_addr_cmp, sizeof(user_addr_t));
+			user_addr_a = &(appconn->session.user_addr);
+			user_addr_u = &(usersession->user_addr);
+			if (EAG_IPV4 == user_addr_a->family) {
+				if (EAG_IPV6 != user_addr_u->family && user_addr_a->user_ip != user_addr_u->user_ip) {
+					eag_ins_do_syn_user_data_offline(eagins, appconn);
+					goto ack_data;
+				}
+				if (EAG_IPV4 != user_addr_u->family) {
+					eag_ins_do_syn_user_data_update(eagins, appconn, usersession, cb_tv);
+				} else {
+					appsession_copy(&appconn->session, usersession, cb_tv);
+				}
+			} else if (EAG_MIX == user_addr_a->family) {
+				if (0 != ipxcmp(user_addr_a, user_addr_u)) {
+					eag_ins_do_syn_user_data_offline(eagins, appconn);
+					goto ack_data;
+				} else {
+					memset(&user_addr_tmp, 0, sizeof(user_addr_t));
+					memcpy(&user_addr_tmp, &user_addr_a, sizeof(user_addr_t));
+					appsession_copy(&appconn->session, usersession, cb_tv);
+					memcpy(user_addr_a, &user_addr_tmp, sizeof(user_addr_t));
+				}
+			} else if (EAG_IPV6 == user_addr_a->family) {
+				if (EAG_IPV4 != user_addr_u->family 
+					&& 0 != memcmp(&user_addr_a->user_ipv6, &user_addr_u->user_ipv6, sizeof(struct in6_addr))) 
+				{
+					eag_ins_do_syn_user_data_offline(eagins, appconn);
+					goto ack_data;
+ 				}
+				if (EAG_IPV6 != user_addr_u->family) {
+					eag_ins_do_syn_user_data_update(eagins, appconn, usersession, cb_tv);
+				} else {
+					appsession_copy(&appconn->session, usersession, cb_tv);
+				}
+			} 
 			set_down_interface_by_virtual_ip(eagins->eaghansi,
 				appconn->session.virtual_ip, appconn->session.intf);
 		}
@@ -484,8 +664,9 @@ eag_ins_do_syn_user_data(void *cbp, void *data, struct timeval *cb_tv)
 		
 		if (APPCONN_STATUS_NONE == usersession->state) {
 			eag_log_info("eag_ins_do_syn_user_data "
-				"found appconn userip %s, user offline",
-				user_ipstr);
+				"found appconn usermac=%s, userip=%s, user offline", user_macstr, user_ipstr);
+			eag_ins_do_syn_user_data_offline(eagins, appconn);
+			#if 0
 			eag_captive_deauthorize(eagins->captive, &(appconn->session));
 			if (FLUX_FROM_FASTFWD == eagins->flux_from
 				||FLUX_FROM_FASTFWD_IPTABLES == eagins->flux_from)
@@ -501,6 +682,7 @@ eag_ins_do_syn_user_data(void *cbp, void *data, struct timeval *cb_tv)
 			appconn_del_from_db(appconn);
 			//appconn_del_name_htable(appconn);
 			appconn_free(appconn);
+			#endif
 		}
 	}
 	ret = EAG_RETURN_OK;
@@ -1388,7 +1570,7 @@ eag_ins_new(uint8_t hansitype, uint8_t insid)
 	eag_ins_t *eagins = NULL;
 	char buf[64] = "";
 	char ipv6str[64] = "";
-	struct in6_addr local_ipv6 = {0};
+	struct in6_addr local_ipv6;
 	uint32_t local_ip = 0;
 	int ret = EAG_RETURN_OK;
 
@@ -1780,7 +1962,7 @@ eag_ins_start(eag_ins_t *eagins)
 	int ret = 0;
 	char buf[64] = "";
 	char ipv6str[64] = "";
-	struct in6_addr ipv6_addr = {0};
+	struct in6_addr ipv6_addr;
 	
 	if (NULL == eagins) {
 		eag_log_err("eag_ins_start input error");
@@ -1798,7 +1980,7 @@ eag_ins_start(eag_ins_t *eagins)
 	}
 
 	if (1 == eagins->ipv6_switch
-		&& 0 == ipv6_compare_null(&(eagins->nasipv6))) {
+		&& 0 == ipv6_is_null(&(eagins->nasipv6))) {
 		eag_log_warning("eag_ins_start nasipv6 is 0");
 		return EAG_ERR_EAGINS_NASIPV6_IS_EMPTY;
 	}
@@ -9004,7 +9186,6 @@ eag_dbus_method_get_radius_conf(
 		goto replyx;
 	}
 
-	eag_log_info("eag_dbus_method_get_radius_conf domain=%s", domain );
 	if( strlen(domain) == 0 ){
 		//get all
 		num = eagins->radiusconf.current_num;
@@ -9063,7 +9244,6 @@ replyx:
 										NULL,
 										&iter_struct);
 			domain = radius_srv[i].domain;
-			eag_log_info("eag_dbus_method_get_radius_conf add domain %s", domain );
 			dbus_message_iter_append_basic(&iter_struct,
 											DBUS_TYPE_STRING, &domain);
 			dbus_message_iter_append_basic(&iter_struct,
@@ -10145,10 +10325,10 @@ replyx:
 									DBUS_STRUCT_BEGIN_CHAR_AS_STRING
 										DBUS_TYPE_STRING_AS_STRING
 										DBUS_TYPE_UINT32_AS_STRING	//ipv4
-							            DBUS_TYPE_UINT32_AS_STRING	//ipv6[0]
-							            DBUS_TYPE_UINT32_AS_STRING	//ipv6[1]
-							            DBUS_TYPE_UINT32_AS_STRING	//ipv6[2]
-							            DBUS_TYPE_UINT32_AS_STRING	//ipv6[3]
+										DBUS_TYPE_UINT32_AS_STRING	//ipv6[0]
+										DBUS_TYPE_UINT32_AS_STRING	//ipv6[1]
+										DBUS_TYPE_UINT32_AS_STRING	//ipv6[2]
+										DBUS_TYPE_UINT32_AS_STRING	//ipv6[3]
 										DBUS_TYPE_BYTE_AS_STRING	//mac[0]
 										DBUS_TYPE_BYTE_AS_STRING
 										DBUS_TYPE_BYTE_AS_STRING
@@ -10385,17 +10565,17 @@ replyx:
 								DBUS_TYPE_ARRAY,
 									DBUS_STRUCT_BEGIN_CHAR_AS_STRING
 										DBUS_TYPE_STRING_AS_STRING
-							            DBUS_TYPE_UINT32_AS_STRING  //ipv4
-							            DBUS_TYPE_UINT32_AS_STRING  //ipv6[0]
-							            DBUS_TYPE_UINT32_AS_STRING  //ipv6[1]
-							            DBUS_TYPE_UINT32_AS_STRING  //ipv6[2]
-							            DBUS_TYPE_UINT32_AS_STRING  //ipv6[3]
-							            DBUS_TYPE_BYTE_AS_STRING    //mac[0]
-							            DBUS_TYPE_BYTE_AS_STRING
-							            DBUS_TYPE_BYTE_AS_STRING
-							            DBUS_TYPE_BYTE_AS_STRING
-							            DBUS_TYPE_BYTE_AS_STRING
-							            DBUS_TYPE_BYTE_AS_STRING    //mac[5]
+										DBUS_TYPE_UINT32_AS_STRING  //ipv4
+										DBUS_TYPE_UINT32_AS_STRING  //ipv6[0]
+										DBUS_TYPE_UINT32_AS_STRING  //ipv6[1]
+										DBUS_TYPE_UINT32_AS_STRING  //ipv6[2]
+										DBUS_TYPE_UINT32_AS_STRING  //ipv6[3]
+										DBUS_TYPE_BYTE_AS_STRING    //mac[0]
+										DBUS_TYPE_BYTE_AS_STRING
+										DBUS_TYPE_BYTE_AS_STRING
+										DBUS_TYPE_BYTE_AS_STRING
+										DBUS_TYPE_BYTE_AS_STRING
+										DBUS_TYPE_BYTE_AS_STRING    //mac[5]
 										DBUS_TYPE_UINT32_AS_STRING
 										DBUS_TYPE_UINT64_AS_STRING
 										DBUS_TYPE_UINT64_AS_STRING
@@ -10431,7 +10611,7 @@ replyx:
 									DBUS_TYPE_UINT32, 
 									&(appconn->session.user_addr.user_ip));
 				memset(cmp, 0, sizeof(cmp));
-				memcpy(cmp, &(appconn->session.user_addr), sizeof(cmp));
+				memcpy(cmp, &(appconn->session.user_addr.user_ipv6), sizeof(cmp));
 				dbus_message_iter_append_basic(&iter_struct,
 									DBUS_TYPE_UINT32, 
 									&cmp[0]);
@@ -10595,17 +10775,17 @@ replyx:
 								DBUS_TYPE_ARRAY,
 									DBUS_STRUCT_BEGIN_CHAR_AS_STRING
 										DBUS_TYPE_STRING_AS_STRING
-							            DBUS_TYPE_UINT32_AS_STRING  //ipv4
-							            DBUS_TYPE_UINT32_AS_STRING  //ipv6[0]
-							            DBUS_TYPE_UINT32_AS_STRING  //ipv6[1]
-							            DBUS_TYPE_UINT32_AS_STRING  //ipv6[2]
-							            DBUS_TYPE_UINT32_AS_STRING  //ipv6[3]
-							            DBUS_TYPE_BYTE_AS_STRING    //mac[0]
-							            DBUS_TYPE_BYTE_AS_STRING
-							            DBUS_TYPE_BYTE_AS_STRING
-							            DBUS_TYPE_BYTE_AS_STRING
-							            DBUS_TYPE_BYTE_AS_STRING
-							            DBUS_TYPE_BYTE_AS_STRING    //mac[5]
+										DBUS_TYPE_UINT32_AS_STRING  //ipv4
+										DBUS_TYPE_UINT32_AS_STRING  //ipv6[0]
+										DBUS_TYPE_UINT32_AS_STRING  //ipv6[1]
+										DBUS_TYPE_UINT32_AS_STRING  //ipv6[2]
+										DBUS_TYPE_UINT32_AS_STRING  //ipv6[3]
+										DBUS_TYPE_BYTE_AS_STRING    //mac[0]
+										DBUS_TYPE_BYTE_AS_STRING
+										DBUS_TYPE_BYTE_AS_STRING
+										DBUS_TYPE_BYTE_AS_STRING
+										DBUS_TYPE_BYTE_AS_STRING
+										DBUS_TYPE_BYTE_AS_STRING    //mac[5]
 										DBUS_TYPE_UINT32_AS_STRING
 										DBUS_TYPE_UINT64_AS_STRING
 										DBUS_TYPE_UINT64_AS_STRING
@@ -10627,7 +10807,7 @@ replyx:
 
 		list_for_each_entry(appconn, head, node) {
 			if (APPCONN_STATUS_AUTHED == appconn->session.state
-				&& 0 == memcmp_ipx(&user_addr, &(appconn->session.user_addr))) {
+				&& 0 == ipxcmp(&user_addr, &(appconn->session.user_addr))) {
 				DBusMessageIter iter_struct = {0};
 
 				dbus_message_iter_open_container (&iter_array,
@@ -10777,9 +10957,9 @@ eag_dbus_method_show_user_by_useripv6(
 	dbus_error_init(&err);
 	if (!(dbus_message_get_args(msg, &err,
 								DBUS_TYPE_UINT32, &user_ipv6[0],
-						        DBUS_TYPE_UINT32, &user_ipv6[1],
-						        DBUS_TYPE_UINT32, &user_ipv6[2],
-						        DBUS_TYPE_UINT32, &user_ipv6[3],
+								DBUS_TYPE_UINT32, &user_ipv6[1],
+								DBUS_TYPE_UINT32, &user_ipv6[2],
+								DBUS_TYPE_UINT32, &user_ipv6[3],
 								DBUS_TYPE_INVALID))) {
 		eag_log_err("eag_dbus_method_show_user_by_useripv6 "
 					"unable to get input args");
@@ -10811,17 +10991,17 @@ replyx:
 								DBUS_TYPE_ARRAY,
 									DBUS_STRUCT_BEGIN_CHAR_AS_STRING
 										DBUS_TYPE_STRING_AS_STRING
-							            DBUS_TYPE_UINT32_AS_STRING  //ipv4
-							            DBUS_TYPE_UINT32_AS_STRING  //ipv6[0]
-							            DBUS_TYPE_UINT32_AS_STRING  //ipv6[1]
-							            DBUS_TYPE_UINT32_AS_STRING  //ipv6[2]
-							            DBUS_TYPE_UINT32_AS_STRING  //ipv6[3]
-							            DBUS_TYPE_BYTE_AS_STRING    //mac[0]
-							            DBUS_TYPE_BYTE_AS_STRING
-							            DBUS_TYPE_BYTE_AS_STRING
-							            DBUS_TYPE_BYTE_AS_STRING
-							            DBUS_TYPE_BYTE_AS_STRING
-							            DBUS_TYPE_BYTE_AS_STRING    //mac[5]
+										DBUS_TYPE_UINT32_AS_STRING  //ipv4
+										DBUS_TYPE_UINT32_AS_STRING  //ipv6[0]
+										DBUS_TYPE_UINT32_AS_STRING  //ipv6[1]
+										DBUS_TYPE_UINT32_AS_STRING  //ipv6[2]
+										DBUS_TYPE_UINT32_AS_STRING  //ipv6[3]
+										DBUS_TYPE_BYTE_AS_STRING    //mac[0]
+										DBUS_TYPE_BYTE_AS_STRING
+										DBUS_TYPE_BYTE_AS_STRING
+										DBUS_TYPE_BYTE_AS_STRING
+										DBUS_TYPE_BYTE_AS_STRING
+										DBUS_TYPE_BYTE_AS_STRING    //mac[5]
 										DBUS_TYPE_UINT32_AS_STRING
 										DBUS_TYPE_UINT64_AS_STRING
 										DBUS_TYPE_UINT64_AS_STRING
@@ -10843,7 +11023,7 @@ replyx:
 
 		list_for_each_entry(appconn, head, node) {
 			if (APPCONN_STATUS_AUTHED == appconn->session.state
-				&& 0 == memcmp_ipx(&user_addr, &(appconn->session.user_addr))) {
+				&& 0 == ipxcmp(&user_addr, &(appconn->session.user_addr))) {
 				DBusMessageIter iter_struct = {0};
 
 				dbus_message_iter_open_container (&iter_array,
@@ -11027,17 +11207,17 @@ replyx:
 								DBUS_TYPE_ARRAY,
 									DBUS_STRUCT_BEGIN_CHAR_AS_STRING
 										DBUS_TYPE_STRING_AS_STRING
-							            DBUS_TYPE_UINT32_AS_STRING  //ipv4
-							            DBUS_TYPE_UINT32_AS_STRING  //ipv6[0]
-							            DBUS_TYPE_UINT32_AS_STRING  //ipv6[1]
-							            DBUS_TYPE_UINT32_AS_STRING  //ipv6[2]
-							            DBUS_TYPE_UINT32_AS_STRING  //ipv6[3]
-							            DBUS_TYPE_BYTE_AS_STRING    //mac[0]
-							            DBUS_TYPE_BYTE_AS_STRING
-							            DBUS_TYPE_BYTE_AS_STRING
-							            DBUS_TYPE_BYTE_AS_STRING
-							            DBUS_TYPE_BYTE_AS_STRING
-							            DBUS_TYPE_BYTE_AS_STRING    //mac[5]
+										DBUS_TYPE_UINT32_AS_STRING  //ipv4
+										DBUS_TYPE_UINT32_AS_STRING  //ipv6[0]
+										DBUS_TYPE_UINT32_AS_STRING  //ipv6[1]
+										DBUS_TYPE_UINT32_AS_STRING  //ipv6[2]
+										DBUS_TYPE_UINT32_AS_STRING  //ipv6[3]
+										DBUS_TYPE_BYTE_AS_STRING    //mac[0]
+										DBUS_TYPE_BYTE_AS_STRING
+										DBUS_TYPE_BYTE_AS_STRING
+										DBUS_TYPE_BYTE_AS_STRING
+										DBUS_TYPE_BYTE_AS_STRING
+										DBUS_TYPE_BYTE_AS_STRING    //mac[5]
 										DBUS_TYPE_UINT32_AS_STRING
 										DBUS_TYPE_UINT64_AS_STRING
 										DBUS_TYPE_UINT64_AS_STRING
@@ -11073,20 +11253,20 @@ replyx:
 				dbus_message_iter_append_basic(&iter_struct,
 									DBUS_TYPE_UINT32, 
 									&(appconn->session.user_addr.user_ip));
-                memset(cmp, 0, sizeof(cmp));
-                memcpy(cmp, &(appconn->session.user_addr.user_ipv6), sizeof(cmp));
-                dbus_message_iter_append_basic(&iter_struct,
-                                    DBUS_TYPE_UINT32, 
-                                    &cmp[0]);
-                dbus_message_iter_append_basic(&iter_struct,
-                                    DBUS_TYPE_UINT32, 
-                                    &cmp[1]);
-                dbus_message_iter_append_basic(&iter_struct,
-                                    DBUS_TYPE_UINT32, 
-                                    &cmp[2]);
-                dbus_message_iter_append_basic(&iter_struct,
-                                    DBUS_TYPE_UINT32, 
-                                    &cmp[3]);
+				memset(cmp, 0, sizeof(cmp));
+				memcpy(cmp, &(appconn->session.user_addr.user_ipv6), sizeof(cmp));
+				dbus_message_iter_append_basic(&iter_struct,
+									DBUS_TYPE_UINT32, 
+									&cmp[0]);
+				dbus_message_iter_append_basic(&iter_struct,
+									DBUS_TYPE_UINT32, 
+									&cmp[1]);
+				dbus_message_iter_append_basic(&iter_struct,
+									DBUS_TYPE_UINT32, 
+									&cmp[2]);
+				dbus_message_iter_append_basic(&iter_struct,
+									DBUS_TYPE_UINT32, 
+									&cmp[3]);
 				dbus_message_iter_append_basic (&iter_struct,
 									DBUS_TYPE_BYTE,
 									&(appconn->session.usermac[0]));
@@ -11242,10 +11422,10 @@ replyx:
 									DBUS_STRUCT_BEGIN_CHAR_AS_STRING
 										DBUS_TYPE_STRING_AS_STRING
 										DBUS_TYPE_UINT32_AS_STRING	//ipv4
-							            DBUS_TYPE_UINT32_AS_STRING	//ipv6[0]
-							            DBUS_TYPE_UINT32_AS_STRING	//ipv6[1]
-							            DBUS_TYPE_UINT32_AS_STRING	//ipv6[2]
-							            DBUS_TYPE_UINT32_AS_STRING	//ipv6[3]
+										DBUS_TYPE_UINT32_AS_STRING	//ipv6[0]
+										DBUS_TYPE_UINT32_AS_STRING	//ipv6[1]
+										DBUS_TYPE_UINT32_AS_STRING	//ipv6[2]
+										DBUS_TYPE_UINT32_AS_STRING	//ipv6[3]
 										DBUS_TYPE_BYTE_AS_STRING	//mac[0]
 										DBUS_TYPE_BYTE_AS_STRING
 										DBUS_TYPE_BYTE_AS_STRING
@@ -11287,21 +11467,21 @@ replyx:
 									&username);
 					dbus_message_iter_append_basic(&iter_struct,
 									DBUS_TYPE_UINT32, 
-                        			&(appconn->session.user_addr.user_ip));
-                    memset(cmp, 0, sizeof(cmp));
-                    memcpy(cmp, &(appconn->session.user_addr.user_ipv6), sizeof(cmp));
-                    dbus_message_iter_append_basic(&iter_struct,
-                                    DBUS_TYPE_UINT32, 
-                                    &cmp[0]);
-                    dbus_message_iter_append_basic(&iter_struct,
-                                    DBUS_TYPE_UINT32, 
-                                    &cmp[1]);
-                    dbus_message_iter_append_basic(&iter_struct,
-                                    DBUS_TYPE_UINT32, 
-                                    &cmp[2]);
-                    dbus_message_iter_append_basic(&iter_struct,
-                                    DBUS_TYPE_UINT32, 
-                                    &cmp[3]);
+									&(appconn->session.user_addr.user_ip));
+					memset(cmp, 0, sizeof(cmp));
+					memcpy(cmp, &(appconn->session.user_addr.user_ipv6), sizeof(cmp));
+					dbus_message_iter_append_basic(&iter_struct,
+									DBUS_TYPE_UINT32, 
+									&cmp[0]);
+					dbus_message_iter_append_basic(&iter_struct,
+									DBUS_TYPE_UINT32, 
+									&cmp[1]);
+					dbus_message_iter_append_basic(&iter_struct,
+									DBUS_TYPE_UINT32, 
+									&cmp[2]);
+					dbus_message_iter_append_basic(&iter_struct,
+									DBUS_TYPE_UINT32, 
+									&cmp[3]);
 					dbus_message_iter_append_basic (&iter_struct,
 									DBUS_TYPE_BYTE,
 									&(appconn->session.usermac[0]));
@@ -11534,7 +11714,7 @@ eag_dbus_method_kick_user_by_userip(
 	head = appconn_db_get_head(appdb);
 	
 	if (eag_hansi_is_backup(eagins->eaghansi)) {
-		eag_log_warning("kick_user_by_username not allow, for hansi is backup");
+		eag_log_warning("eag_dbus_method_kick_user_by_userip not allow, for hansi is backup");
 		ret = EAG_ERR_HANSI_IS_BACKUP;
 		goto replyx;
 	}
@@ -11547,7 +11727,104 @@ eag_dbus_method_kick_user_by_userip(
 	
 	list_for_each_entry_safe(appconn, next, head, node) {
 		if (APPCONN_STATUS_AUTHED == appconn->session.state
-            && 0 == memcmp_ipx(&user_addr, &(appconn->session.user_addr))) {
+            && 0 == ipxcmp(&user_addr, &(appconn->session.user_addr))) {
+			eag_portal_notify_logout(eagins->portal, appconn,
+					RADIUS_TERMINATE_CAUSE_NAS_REQUEST);
+			appconn->on_ntf_logout = 1;
+			appconn->session.session_stop_time = timenow;
+		}
+	}
+	ret = EAG_RETURN_OK;
+	
+replyx:
+	dbus_message_iter_init_append(reply, &iter);
+	dbus_message_iter_append_basic(&iter,
+									DBUS_TYPE_INT32, &ret);
+	
+	return reply;
+}
+
+static DBusMessage *
+eag_dbus_method_kick_user_by_useripv6(
+				DBusConnection *conn,
+				DBusMessage *msg,
+				void *user_data )
+{
+	eag_ins_t *eagins = NULL;
+	appconn_db_t *appdb = NULL;
+	struct app_conn_t *appconn = NULL;
+	struct app_conn_t *next = NULL;
+	struct list_head *head = NULL;
+	DBusMessage *reply = NULL;
+	DBusMessageIter iter = {0};
+	DBusError err = {0};
+	user_addr_t user_addr = {0};
+	uint32_t user_ipv6[4];
+	int ret = EAG_RETURN_OK;
+	int num = 0;
+	time_t timenow = 0;
+	struct timeval tv = {0};
+
+	eag_time_gettimeofday(&tv, NULL);
+	timenow = tv.tv_sec;
+	
+	reply = dbus_message_new_method_return(msg);
+	if (NULL == reply) {
+		eag_log_err("eag_dbus_method_kick_user_by_useripv6 "
+					"DBUS new reply message error!");
+		return NULL;
+	}
+
+	eagins = (eag_ins_t *)user_data;
+	if (NULL == eagins) {
+		eag_log_err("eag_dbus_method_kick_user_by_useripv6 user_data error!");
+		ret = EAG_ERR_UNKNOWN;
+		goto replyx;
+	}
+
+	dbus_error_init(&err);
+	if (!(dbus_message_get_args(msg, &err,
+								DBUS_TYPE_UINT32, &user_ipv6[0],
+								DBUS_TYPE_UINT32, &user_ipv6[1],
+								DBUS_TYPE_UINT32, &user_ipv6[2],
+								DBUS_TYPE_UINT32, &user_ipv6[3],
+								DBUS_TYPE_INVALID))) {
+		eag_log_err("eag_dbus_method_kick_user_by_useripv6 "
+					"unable to get input args");
+		if (dbus_error_is_set(&err)) {
+			eag_log_err("eag_dbus_method_kick_user_by_useripv6 %s raised:%s",
+							err.name, err.message);
+			dbus_error_free(&err);
+		}
+		ret = EAG_ERR_DBUS_FAILED;
+		goto replyx;
+	}
+	
+	user_addr.family = EAG_IPV6;
+	memcpy(&(user_addr.user_ipv6), user_ipv6, sizeof(struct in6_addr));
+	appdb = eagins->appdb;
+	if (NULL == appdb) {
+		eag_log_err("eag_dbus_method_kick_user_by_useripv6 appdb null");
+		ret = EAG_ERR_UNKNOWN;
+		goto replyx;
+	}
+	head = appconn_db_get_head(appdb);
+	
+	if (eag_hansi_is_backup(eagins->eaghansi)) {
+		eag_log_warning("eag_dbus_method_kick_user_by_useripv6 not allow, for hansi is backup");
+		ret = EAG_ERR_HANSI_IS_BACKUP;
+		goto replyx;
+	}
+	num = appconn_count_by_userip(appdb, &user_addr);
+	if (num <= 0) {
+		eag_log_err("eag_dbus_method_kick_user_by_useripv6 num <= 0");
+		ret = EAG_ERR_APPCONN_DELAPP_NOT_INDB;
+		goto replyx;
+	}
+	
+	list_for_each_entry_safe(appconn, next, head, node) {
+		if (APPCONN_STATUS_AUTHED == appconn->session.state
+            && 0 == ipxcmp(&user_addr, &(appconn->session.user_addr))) {
 			eag_portal_notify_logout(eagins->portal, appconn,
 					RADIUS_TERMINATE_CAUSE_NAS_REQUEST);
 			appconn->on_ntf_logout = 1;
@@ -11630,7 +11907,7 @@ eag_dbus_method_kick_user_by_usermac(
 	head = appconn_db_get_head(appdb);
 	
 	if (eag_hansi_is_backup(eagins->eaghansi)) {
-		eag_log_warning("kick_user_by_username not allow, for hansi is backup");
+		eag_log_warning("eag_dbus_method_kick_user_by_usermac not allow, for hansi is backup");
 		ret = EAG_ERR_HANSI_IS_BACKUP;
 		goto replyx;
 	}
@@ -11722,7 +11999,7 @@ eag_dbus_method_kick_user_by_index(
 	head = appconn_db_get_head(appdb);
 	
 	if (eag_hansi_is_backup(eagins->eaghansi)) {
-		eag_log_warning("kick_user_by_username not allow, for hansi is backup");
+		eag_log_warning("eag_dbus_method_kick_user_by_index not allow, for hansi is backup");
 		ret = EAG_ERR_HANSI_IS_BACKUP;
 		goto replyx;
 	}
@@ -13230,6 +13507,8 @@ eagins_register_all_dbus_method(eag_ins_t *eagins)
 		EAG_DBUS_INTERFACE, eag_dbus_method_kick_user_by_username, eagins);
 	eag_dbus_register_method(eagins->eagdbus,
 		EAG_DBUS_INTERFACE, eag_dbus_method_kick_user_by_userip, eagins);
+	eag_dbus_register_method(eagins->eagdbus,
+		EAG_DBUS_INTERFACE, eag_dbus_method_kick_user_by_useripv6, eagins);
 	eag_dbus_register_method(eagins->eagdbus,
 		EAG_DBUS_INTERFACE, eag_dbus_method_kick_user_by_usermac, eagins);
 	eag_dbus_register_method(eagins->eagdbus,

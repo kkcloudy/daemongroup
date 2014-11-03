@@ -479,7 +479,7 @@ set_user_in_ipset6( const int user_id,
 	if ((user_id < 0 || user_id > MAX_CAPTIVE_ID)
 		|| (hansitype != 0 && hansitype != 1)
 		|| NULL == user_addr
-		|| 0 == memcmp_ipx(user_addr, NULL)) {
+		|| 0 == ipx_is_null(user_addr)) {
 		eag_log_debug("eag_ipset",
 				"prepare for set error.user_id=%d hansitype=%d", 
 				user_id, hansitype);
@@ -499,10 +499,10 @@ set_user_in_ipset6( const int user_id,
 
 	if (EAG_IPV4 == user_addr->family) {
 		set_ipv4_in_ipset6(handle, user_addr->user_ip, ipv4_setname, cmd);
- 	} else if (EAG_IPV6 == user_addr->family) {
-		set_ipv6_in_ipset6(handle, &(user_addr->user_ipv6), ipv6_setname, cmd);
-	} else if (EAG_MIX == user_addr->family) {
+ 	} else if (EAG_MIX == user_addr->family) {
 		set_ipv4_in_ipset6(handle, user_addr->user_ip, ipv4_setname, cmd);
+		set_ipv6_in_ipset6(handle, &(user_addr->user_ipv6), ipv6_setname, cmd);
+	} else if (EAG_IPV6 == user_addr->family) {
 		set_ipv6_in_ipset6(handle, &(user_addr->user_ipv6), ipv6_setname, cmd);
 	}
 
@@ -523,7 +523,7 @@ set_preauth_user_in_ipset6( const int user_id,
 	if ((user_id < 0 || user_id > MAX_CAPTIVE_ID)
 		|| (hansitype != 0 && hansitype != 1)
 		|| NULL == user_addr
-		|| 0 == memcmp_ipx(user_addr, NULL)) {
+		|| 0 == ipx_is_null(user_addr)) {
 		eag_log_debug("eag_ipset",
 				"prepare for set error.user_id=%d hansitype=%d", 
 				user_id, hansitype);
@@ -542,10 +542,10 @@ set_preauth_user_in_ipset6( const int user_id,
 
 	if (EAG_IPV4 == user_addr->family) {
 		set_ipv4_in_ipset6(handle, user_addr->user_ip, ipv4_setname, cmd);
- 	} else if (EAG_IPV6 == user_addr->family) {
-		set_ipv6_in_ipset6(handle, &(user_addr->user_ipv6), ipv6_setname, cmd);
-	} else if (EAG_MIX == user_addr->family) {
+ 	} else if (EAG_MIX == user_addr->family) {
 		set_ipv4_in_ipset6(handle, user_addr->user_ip, ipv4_setname, cmd);
+		set_ipv6_in_ipset6(handle, &(user_addr->user_ipv6), ipv6_setname, cmd);
+	} else if (EAG_IPV6 == user_addr->family) {
 		set_ipv6_in_ipset6(handle, &(user_addr->user_ipv6), ipv6_setname, cmd);
 	}
 	
