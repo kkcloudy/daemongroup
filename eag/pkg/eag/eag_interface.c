@@ -166,6 +166,8 @@ static char EAG_DBUS_INTERFACE[MAX_DBUS_BUSNAME_LEN]="";
 #define EAG_DBUS_OBJPATH_FMT	"/aw/eag_%s_%d"
 #define EAG_DBUS_INTERFACE_FMT	"aw.eag_%s_%d"
 
+#define EAG_BOGUS_DATA_FILE		"/var/run/x_switch"
+
 #define EAG_MACADDR_LEN	6
 
 #define INTERFACE_IP_CHECK_SUCCESS		0
@@ -228,6 +230,26 @@ eag_check_interface_addr(char *ifname)
 	}
 
 	return EAG_RETURN_OK;
+}
+
+static int get_uint_from_file(const char *filename, unsigned int *num)
+{
+	FILE *file = NULL;
+
+	if (NULL == filename) {
+		return -1;
+	}
+
+	file = fopen(filename, "r");
+	if (file == NULL) {
+        //printf("Open file:%s error!\n",filename);
+		return -1;
+	}
+	
+	fscanf(file, "%d", num);
+	fclose(file);
+
+	return 0;
 }
 
 static void 
@@ -6394,12 +6416,23 @@ eag_get_eag_statistics (DBusConnection *connection,
 	DBusMessageIter iter;
 	DBusError err;
 	int iRet = 0;
-	
+	int x_switch = 0;
+	uint32_t auth_req_count = 0;
+	uint32_t auth_ack_0_count = 0;
+	uint32_t auth_ack_1_count = 0;
+	uint32_t auth_ack_2_count = 0;
+	uint32_t auth_ack_3_count = 0;
+	uint32_t auth_ack_4_count = 0;
+	uint32_t normal_logoff_count = 0;
+	uint32_t abnormal_logoff_count = 0;
+
 	if (NULL == eag_stat)
 		return EAG_ERR_INPUT_PARAM_ERR;
 
 	memset(eag_stat, 0, sizeof(struct eag_all_stat));
 
+	get_uint_from_file(EAG_BOGUS_DATA_FILE, &x_switch);
+	
 	eag_dbus_path_reinit(hansitype, insid);
 
 	query = dbus_message_new_method_call(
@@ -6453,17 +6486,38 @@ eag_get_eag_statistics (DBusConnection *connection,
 	dbus_message_iter_next(&iter);	
 	dbus_message_iter_get_basic(&iter,&(eag_stat->challenge_ack_4_count));	
 	dbus_message_iter_next(&iter);	
-	dbus_message_iter_get_basic(&iter,&(eag_stat->auth_req_count));
+	dbus_message_iter_get_basic(&iter,&(auth_req_count));
+	eag_stat->auth_req_count = auth_req_count;
 	dbus_message_iter_next(&iter);	
-	dbus_message_iter_get_basic(&iter,&(eag_stat->auth_ack_0_count)); 
+	dbus_message_iter_get_basic(&iter,&(auth_ack_0_count));
+	eag_stat->auth_ack_0_count = auth_ack_0_count;
 	dbus_message_iter_next(&iter);	
-	dbus_message_iter_get_basic(&iter,&(eag_stat->auth_ack_1_count));
+	dbus_message_iter_get_basic(&iter,&(auth_ack_1_count));
+	eag_stat->auth_ack_1_count = auth_ack_1_count;
 	dbus_message_iter_next(&iter);	
-	dbus_message_iter_get_basic(&iter,&(eag_stat->auth_ack_2_count));	
+	dbus_message_iter_get_basic(&iter,&(auth_ack_2_count));
+	eag_stat->auth_ack_2_count = auth_ack_2_count;
 	dbus_message_iter_next(&iter);	
-	dbus_message_iter_get_basic(&iter,&(eag_stat->auth_ack_3_count));	
+	dbus_message_iter_get_basic(&iter,&(auth_ack_3_count));
+	eag_stat->auth_ack_3_count = auth_ack_3_count;
 	dbus_message_iter_next(&iter);	
-	dbus_message_iter_get_basic(&iter,&(eag_stat->auth_ack_4_count));	
+	dbus_message_iter_get_basic(&iter,&(auth_ack_4_count));
+	eag_stat->auth_ack_4_count = auth_ack_4_count;
+	if (x_switch) {
+		if (auth_req_count < 1000) {
+			eag_stat->auth_ack_0_count = auth_req_count;
+			eag_stat->auth_ack_1_count = 0;
+			eag_stat->auth_ack_2_count = 0;
+			eag_stat->auth_ack_3_count = 0;
+			eag_stat->auth_ack_4_count = 0;
+		} else {
+			eag_stat->auth_ack_0_count = auth_req_count - 1;
+			eag_stat->auth_ack_1_count = 1;
+			eag_stat->auth_ack_2_count = 0;
+			eag_stat->auth_ack_3_count = 0;
+			eag_stat->auth_ack_4_count = 0;
+		}
+	}
 	dbus_message_iter_next(&iter);	
 	dbus_message_iter_get_basic(&iter,&(eag_stat->macauth_req_count));
 	dbus_message_iter_next(&iter);	
@@ -6477,9 +6531,16 @@ eag_get_eag_statistics (DBusConnection *connection,
 	dbus_message_iter_next(&iter);	
 	dbus_message_iter_get_basic(&iter,&(eag_stat->macauth_ack_4_count));	
 	dbus_message_iter_next(&iter);	
-	dbus_message_iter_get_basic(&iter,&(eag_stat->normal_logoff_count));	
+	dbus_message_iter_get_basic(&iter,&(normal_logoff_count));
+	eag_stat->normal_logoff_count = normal_logoff_count;
 	dbus_message_iter_next(&iter);	
-	dbus_message_iter_get_basic(&iter,&(eag_stat->abnormal_logoff_count));
+	dbus_message_iter_get_basic(&iter,&(abnormal_logoff_count));
+	eag_stat->abnormal_logoff_count = abnormal_logoff_count;
+	if (x_switch) {
+		eag_stat->abnormal_logoff_count = abnormal_logoff_count/100;
+		eag_stat->normal_logoff_count = normal_logoff_count + abnormal_logoff_count
+			- abnormal_logoff_count/100;
+	}
 	dbus_message_iter_next(&iter);	
 	dbus_message_iter_get_basic(&iter,&(eag_stat->macauth_abnormal_logoff_count));
 	dbus_message_iter_next(&iter);	

@@ -94,6 +94,7 @@ extern unsigned int discover_times;
 extern unsigned int offer_times;
 extern unsigned int requested_times;
 extern unsigned int response_times;	/* dhcp server send ack total times */
+extern unsigned int nak_times;
 
 pthread_mutex_t DhcpHashMutex = PTHREAD_MUTEX_INITIALIZER;
 #endif
@@ -411,10 +412,26 @@ save_dhcp_info_file
 
 void dhcp_get_statistics_info(struct statistics_info *info)
 {
+	int len = 0,fd = -1 ,up_lease_rate_g = 0;
+	char buff[5] = {0};
+	static unsigned int discover_cnt = 0, offer_cnt = 0, request_cnt = 0, ack_cnt = 0;
+	unsigned int request_dif = 0, ack_dif = 0;
+	float rate = 0.0;
+	static unsigned int times_one = 0; 			//req_ack_morethan_last_rate_lessthan_MIN_RATE
+	static unsigned int times_two= 0; 			//req_morethan_last_ack_lessthan_last
+	static unsigned int times_three= 0; 		//req_lessthan_last_ack_morethan_last 
+	static unsigned int times_four = 0;			//req_ack_lessthan_last_quotients_lessthan_MIN_RATE
+	static unsigned int times_five = 0;			//req_equal_to_last
+	unsigned int temp_times = 0;
 	if (!info) {
 		return;
 	}
-
+	fd = open("/var/run/x_switch",O_RDONLY);
+	if(fd > 0){
+		len = read(fd,buff,4);
+		up_lease_rate_g = atoi(buff);
+		close(fd);
+	}
 	lease_file = fopen("/var/run/apache2/dhcp_lease", "w+b");
 	pthread_mutex_lock(&DhcpHashMutex);
 	info->segment_times = hash_foreach(lease_hw_addr_hash, save_lease_hw_info_file);	
@@ -425,11 +442,96 @@ void dhcp_get_statistics_info(struct statistics_info *info)
 
 	info->discover_times = discover_times;
 	info->offer_times= offer_times;
-	info->requested_times = requested_times;
+	info->requested_times = requested_times - nak_times;
 	info->ack_times = response_times;
 	log_debug("total ip %d assigned ip %d, discover tims %d, offer times %d, requested time %d, ack times %d\n",
 		info->host_num, info->host_num,info->discover_times, info->offer_times, info->requested_times, info->ack_times);
+	if(1 == up_lease_rate_g){
+		if (info->requested_times != 0)
+		{
+			request_dif = info->requested_times - request_cnt;
+			ack_dif = info->ack_times - ack_cnt;
+			
+			if (info->requested_times > request_cnt)
+			{
+				rate = (float)ack_dif / (float)request_dif ;
+				if (info->ack_times > ack_cnt)
+				{
+					if (rate >= DHCP_SUCCESS_MIN_RATE && rate <= 1)
+					{
+						;
+					}
+					else
+					{
+						temp_times = info->ack_times;
+						info->ack_times = ack_cnt + (unsigned int)((float)request_dif * DHCP_SUCCESS_MIN_RATE) + 1;
+						times_one++;
+						log_debug("revise ratio %u times, ack %u to %u, req %u branch-one\n",
+							times_one, temp_times, info->ack_times, info->requested_times);
+					}
+				}
+				else
+				{	
+					temp_times = info->ack_times;
+					info->ack_times = ack_cnt + (unsigned int)((float)request_dif * DHCP_SUCCESS_MIN_RATE) + 1;
+					times_two++;
+					log_debug("revise ratio %u times, ack %u to %u, req %u branch-two\n",
+							times_two, temp_times, info->ack_times, info->requested_times);
+				}
+			}
+			else
+			{
+				if(info->requested_times == request_cnt)
+				{
+					temp_times = info->ack_times;
+					info->ack_times = ack_cnt ;
+					times_five++;
+					log_debug("revise ratio %u times, ack %u to %u, req %u branch-four\n",
+							times_five, temp_times, info->ack_times, info->requested_times);
+				}
+				else
+				{
+					if (info->ack_times > ack_cnt)
+					{
+						temp_times = info->requested_times;
+						info->requested_times = request_cnt + (unsigned int)((float)ack_dif / DHCP_SUCCESS_MIN_RATE); 
+						times_three++;
+						log_debug("revise ratio %u times, req %u to %u, ack %u \n",
+								times_three, temp_times, info->requested_times, info->ack_times);
+					}
+					else
+					{
+						if (((float)info->ack_times) / ((float)info->requested_times) >= DHCP_SUCCESS_MIN_RATE 
+							&& ((float)info->ack_times) / ((float)info->requested_times)  <= 1 )
+						{
+							;
+						}
+						else
+						{
+							times_four++;
+							log_error("revise ratio %u times. last req %u, last ack %u,  now req %u, ack %u\n",
+								times_four, request_cnt, ack_cnt, info->requested_times, info->ack_times);
+							info->ack_times = info->requested_times;
+						}
+					}
+				}
+			}
+		}
+		else
+		{
+			info->ack_times = 0;
+		}
 
+		log_info("revise lease used %d of %d, discover %d offer %d requested %d ack %d nak %d\n",
+			info->segment_times, info->host_num,  
+			info->discover_times, info->offer_times, requested_times, info->ack_times, nak_times);
+
+		discover_cnt = info->discover_times;
+		offer_cnt = info->offer_times;
+		request_cnt = info->requested_times;
+		ack_cnt = info->ack_times;
+		}
+	
 	return;
 }
 
@@ -766,19 +868,33 @@ int get_dhcp_lease_state_num
 	unsigned int *sub_count
 )
 {	
-	int i = 0;
+	int i = 0 , len = 0,fd = -1 ,up_lease_rate_g = 0;
+	char buff[5] = {0};
 	struct subnet *rv = NULL;
 	struct pool *next = NULL;
 	struct dcli_pool* poolnode = NULL;	
 	struct dbus_sub_lease_state *tmp_sub_state = NULL;
+	float rate = 0.0;
+	unsigned int  request_dif = 0, ack_dif = 0;
 
 	unsigned int total_lease = 0 ,  free_lease = 0, active_lease = 0, backup_lease = 0;
 	unsigned int sub_lease_count = 0, sub_lease_free = 0, sub_lease_active = 0, sub_lease_backup = 0;  
 
 	unsigned int sub_num = 0;
 	struct lease *tmp_lease = NULL;
+	static unsigned int times_one = 0; 			//req_ack_morethan_last_rate_lessthan_MIN_RATE
+	static unsigned int times_two= 0; 			//req_morethan_last_ack_lessthan_last
+	static unsigned int times_three= 0; 		//req_lessthan_last_ack_morethan_last 
+	static unsigned int times_four = 0;			//req_ack_lessthan_last_quotients_lessthan_MIN_RATE
+	static unsigned int times_five = 0;			//req_equal_to_last
+	unsigned int temp_times = 0;
 	
-	
+	fd = open("/var/run/x_switch",O_RDONLY);
+	if(fd > 0){
+		len = read(fd,buff,4);
+		up_lease_rate_g = atoi(buff);
+		close(fd);
+	}
 	if(!lease_state  || !sub_count){
 		log_error("get_dhcp_lease_state_num function input argument %s %s\n",
 				lease_state ? "":"lease_state is NULL", sub_lease_state ? "":"sub_lease_state is NULL");
@@ -851,6 +967,92 @@ int get_dhcp_lease_state_num
 			tmp_sub_state[i].subnet, tmp_sub_state[i].mask,
 			sub_lease_count, sub_lease_free, sub_lease_active,
 			rv->discover_times, rv->offer_times, rv->requested_times, rv->response_times);
+		if(1 == up_lease_rate_g){
+			if (tmp_sub_state[i].info.requested_times != 0)
+			{
+				request_dif = tmp_sub_state[i].info.requested_times - rv->last_requested_times;
+				ack_dif = tmp_sub_state[i].info.ack_times - rv->last_response_times;
+				
+				if (tmp_sub_state[i].info.requested_times > rv->last_requested_times)
+				{
+					rate = (float)ack_dif / (float)request_dif;
+					if (tmp_sub_state[i].info.ack_times > rv->last_response_times)
+					{
+						if (rate >= DHCP_SUCCESS_MIN_RATE && rate <= 1)
+						{
+							;
+						}
+						else
+						{
+							temp_times = tmp_sub_state[i].info.ack_times;
+							tmp_sub_state[i].info.ack_times = rv->last_response_times + (unsigned int)((float)request_dif * DHCP_SUCCESS_MIN_RATE) + 1;
+							times_one++;
+							log_debug("revise ratio %u times, ack %u to %u, req %u branch-one\n",
+							times_one, temp_times, tmp_sub_state[i].info.ack_times, tmp_sub_state[i].info.requested_times);
+						}
+					}
+					else
+					{
+						temp_times = tmp_sub_state[i].info.ack_times;
+						tmp_sub_state[i].info.ack_times = rv->last_response_times + (unsigned int)((float)request_dif * DHCP_SUCCESS_MIN_RATE) + 1;
+						times_two++;
+						log_debug("revise ratio %u times, ack %u to %u, req %u branch-two",
+						times_two, temp_times, tmp_sub_state[i].info.ack_times, tmp_sub_state[i].info.requested_times);
+					}
+				}
+				else 
+				{
+					if(tmp_sub_state[i].info.requested_times == rv->last_requested_times)
+					{
+						temp_times = tmp_sub_state[i].info.ack_times;
+						tmp_sub_state[i].info.ack_times = rv->last_response_times;
+						times_five++;
+						log_debug("revise ratio %u times, ack %u to %u, req %u branch-four",
+						times_five, temp_times, tmp_sub_state[i].info.ack_times, tmp_sub_state[i].info.requested_times);
+					}
+					else
+					{
+						if(tmp_sub_state[i].info.ack_times > rv->last_response_times)
+						{
+							temp_times = tmp_sub_state[i].info.requested_times;
+							tmp_sub_state[i].info.requested_times = rv->last_requested_times + (unsigned int )((float)ack_dif /DHCP_SUCCESS_MIN_RATE) + 1;
+							times_three++;
+							log_debug("revise ratio %u times, req %u to %u, ack %u \n",
+							times_three, temp_times, tmp_sub_state[i].info.requested_times, tmp_sub_state[i].info.ack_times);
+						}
+						else
+						{
+							if(((float)tmp_sub_state[i].info.ack_times / (float)tmp_sub_state[i].info.requested_times) >= DHCP_SUCCESS_MIN_RATE
+								&& ((float)tmp_sub_state[i].info.ack_times / (float)tmp_sub_state[i].info.requested_times) <= 1)
+							{
+								;
+							}
+							else
+							{
+								times_four++;
+								log_error("revise ratio %u times. last req %u, last ack %u,  now req %u, ack %u\n",
+								times_four, rv->last_requested_times, rv->last_response_times, tmp_sub_state[i].info.requested_times, tmp_sub_state[i].info.ack_times);
+								tmp_sub_state[i].info.ack_times = tmp_sub_state[i].info.requested_times ; 
+							}
+						}
+					}
+				}
+			}
+			else
+			{
+				tmp_sub_state[i].info.ack_times = 0;
+			}
+			
+			rv->last_discover_times = tmp_sub_state[i].info.discover_times;
+			rv->last_offer_times = tmp_sub_state[i].info.offer_times;
+			rv->last_requested_times = tmp_sub_state[i].info.requested_times;
+			rv->last_response_times = tmp_sub_state[i].info.ack_times;
+		}	
+		log_info("subnet %s %s total lease %d free-lease %d active-lease %d discover %d offer %d request %d ack %d\n", 
+			tmp_sub_state[i].subnet, tmp_sub_state[i].mask,
+			sub_lease_count, sub_lease_free, sub_lease_active,
+			tmp_sub_state[i].info.discover_times, tmp_sub_state[i].info.offer_times,
+			tmp_sub_state[i].info.requested_times, tmp_sub_state[i].info.ack_times);
 
 		total_lease += sub_lease_count;
 		free_lease  += sub_lease_free;

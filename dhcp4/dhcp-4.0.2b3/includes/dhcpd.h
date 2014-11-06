@@ -362,6 +362,10 @@ struct dhcp_lease_info { /*add interface info*/
 	struct dhcp_lease_ip_info lease_ip[1]; /* dhcp lease info */
 };
 
+
+/* dhcp min request success rate */
+#define DHCP_SUCCESS_MIN_RATE		(0.999)
+
 #endif
 
 #if !defined (BYTE_NAME_HASH_SIZE)
@@ -1092,6 +1096,13 @@ struct subnet {
 	unsigned int offer_times;			/* dhcp server send offer times */	
 	unsigned int requested_times;			/* client request times */
 	unsigned int response_times;		/* dhcp server send ack times */
+	unsigned int nak_times;				/* dhcp server send nak times */
+
+	unsigned int last_discover_times;		/* last client discover times */
+	unsigned int last_offer_times;			/* last dhcp server send offer times */	
+	unsigned int last_requested_times;		/* last client request times */
+	unsigned int last_response_times;		/* last dhcp server send ack times */
+	unsigned int last_nak_times; 			/* last dhcp server send nak times */
 };
 
 struct collection {

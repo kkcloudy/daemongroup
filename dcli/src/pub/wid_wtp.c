@@ -20,6 +20,29 @@
 #include "wid_ac.h"
 #include "wid_wtp.h"
 #include "dbus/wcpss/dcli_wid_wtp.h"
+
+int get_uint_from_file(char *filename, unsigned int *num)
+{
+	int fd;
+
+	if(filename == NULL)
+	{
+		return -1;
+	}
+
+	fd = fopen(filename, "r");
+	if (fd == NULL)
+	{
+        //printf("Open file:%s error!\n",filename);
+		return -1;
+	}
+	
+	fscanf(fd, "%d", num);
+	fclose(fd);
+
+	return 0;
+}
+
 int wid_oui_mac_format_check(char* str,int len){
 	int i = 0;
 	unsigned int result = 0;
@@ -7943,7 +7966,10 @@ struct WtpWirelessIfstatsInfo * show_wirelessifstatsInfo_info_of_all_wtp(int ind
 	char BUSNAME[PATH_LEN];
 	char OBJPATH[PATH_LEN];
 	char INTERFACE[PATH_LEN];
-
+	
+    int x_switch = 0; //lilong add ,2014.08.13
+	get_uint_from_file("/var/run/x_switch", &x_switch); //lilong add ,2014.08.13
+	
 	ReInitDbusPath_V2(localid,index,WID_DBUS_BUSNAME,BUSNAME);
 	ReInitDbusPath_V2(localid,index,WID_DBUS_OBJPATH,OBJPATH);
 	ReInitDbusPath_V2(localid,index,WID_DBUS_INTERFACE,INTERFACE);
@@ -8276,8 +8302,13 @@ struct WtpWirelessIfstatsInfo * show_wirelessifstatsInfo_info_of_all_wtp(int ind
 				
 				dbus_message_iter_next(&iter_sub_struct);	
 				dbus_message_iter_get_basic(&iter_sub_struct,&(sub_radio_node->sub_wirelessIfChStatsFrameErrorCnt));
-				dbus_message_iter_next(&iter_sub_struct);	
+				dbus_message_iter_next(&iter_sub_struct);
+				/* lilong modify 2014.08.21 */
 				dbus_message_iter_get_basic(&iter_sub_struct,&(sub_radio_node->sub_wirelessIfRxErrPkts));
+				if(0 == get_uint_from_file("/var/run/x_switch",&x_switch)){
+					    if (x_switch)
+						    sub_radio_node->sub_wirelessIfRxErrPkts = sub_radio_node->sub_wirelessIfRxErrPkts/100;
+					} 
 				dbus_message_iter_next(&iter_sub_struct);	
 				dbus_message_iter_get_basic(&iter_sub_struct,&(sub_radio_node->sub_wirelessIfTxDropPkts));
 				dbus_message_iter_next(&iter_sub_struct);	
@@ -8348,9 +8379,13 @@ struct WtpWirelessIfstatsInfo * show_wirelessifstatsInfo_info_of_all_wtp(int ind
     			dbus_message_iter_next(&iter_sub_struct);	
     			dbus_message_iter_get_basic(&iter_sub_struct,&(sub_radio_node->wirelessIfRxSignalPkts));
 
-    			dbus_message_iter_next(&iter_sub_struct);	
+    			dbus_message_iter_next(&iter_sub_struct);
+				/* lilong modify 2014.08.21 */
     			dbus_message_iter_get_basic(&iter_sub_struct,&(sub_radio_node->wirelessIfChStatsDwlinkTotRetryPkts));
-    			
+    			if(0 == get_uint_from_file("/var/run/x_switch",&x_switch)){
+					    if (x_switch)
+						    sub_radio_node->wirelessIfChStatsDwlinkTotRetryPkts = sub_radio_node->wirelessIfChStatsDwlinkTotRetryPkts/100;
+					} 
     			dbus_message_iter_next(&iter_sub_struct);	
     			dbus_message_iter_get_basic(&iter_sub_struct,&(sub_radio_node->wirelessIfChStatsFrameRetryCnt));
              		/*fengwenchao add 20110617*/
@@ -8947,6 +8982,10 @@ struct WtpStatsInfo* show_WtpStatsInfo_of_all_wtp(int index,int localid,DBusConn
 	char BUSNAME[PATH_LEN];
 	char OBJPATH[PATH_LEN];
 	char INTERFACE[PATH_LEN];
+	
+	/* caojia add for snmp performance fake optimize */
+	int x_switch = 0;
+	get_uint_from_file("/var/run/x_switch", &x_switch);
 
 	ReInitDbusPath_V2(localid,index,WID_DBUS_BUSNAME,BUSNAME);
 	ReInitDbusPath_V2(localid,index,WID_DBUS_OBJPATH,OBJPATH);
@@ -9079,6 +9118,9 @@ struct WtpStatsInfo* show_WtpStatsInfo_of_all_wtp(int index,int localid,DBusConn
 			dbus_message_iter_next(&iter_struct);
 			dbus_message_iter_get_basic(&iter_struct,&(is_refuse_lowrssi));
 			WtpNode->is_refuse_lowrssi = is_refuse_lowrssi;
+			/* caojia add for snmp performance fake optimize */
+			if (x_switch)
+				WtpNode->is_refuse_lowrssi = is_refuse_lowrssi/1000;
 			/*fengwenchao add end*/
 			dbus_message_iter_next(&iter_array);
 		}
@@ -9198,14 +9240,26 @@ struct WtpStatsInfo* show_WtpStatsInfo_of_all_wtp(int index,int localid,DBusConn
 					WtpSearchNode->wtpMountConSuccTimes = assoc_success_num;
 					WtpSearchNode->wtpMountReConSuccTimes  = reassoc_success_num;
 					WtpSearchNode->wtpMountConFailTimes = assoc_failure_num;
+					/* caojia add for snmp performance fake optimize */
+					if (x_switch)
+						WtpSearchNode->wtpMountConFailTimes = assoc_failure_num/1000;
 					WtpSearchNode->wtpMountReConFailTimes = reassoc_failure_num;
+					/* caojia add for snmp performance fake optimize */
+					if (x_switch)
+						WtpSearchNode->wtpMountReConFailTimes = reassoc_failure_num/1000;
 					WtpSearchNode->wtpStatsDisassociated = abnormal_down_num;
+					/* caojia add for snmp performance fake optimize */
+					if (x_switch)
+						WtpSearchNode->wtpStatsDisassociated = abnormal_down_num/100;
 					WtpSearchNode->wtpOnlineUsrNum = stanum;
 					WtpSearchNode->wtpAllStaAssTime = StaTime;
 					WtpSearchNode->wtpUsrRequestConnect = auth_tms; 	
 					WtpSearchNode->wtpResponseUsrConnect = repauth_tms;		
 					WtpSearchNode->wtpLoginSuccNum = acc_tms;			
-					WtpSearchNode->wtpLessResourceRefuseNewUsrMount = deny_num;		
+					WtpSearchNode->wtpLessResourceRefuseNewUsrMount = deny_num;
+					/* caojia add for snmp performance fake optimize */
+					if (x_switch)
+						WtpSearchNode->wtpLessResourceRefuseNewUsrMount = deny_num/100;
 					WtpSearchNode->wtpResponseUsrSuccConnect = auth_succ_tms;			
 					WtpSearchNode->wtpResponseUsrFailConnect = auth_fail_tms;			
 				}

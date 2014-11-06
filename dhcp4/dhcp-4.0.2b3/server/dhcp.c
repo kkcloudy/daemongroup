@@ -49,6 +49,7 @@ unsigned int discover_times = 0;	/* client discover total times */
 unsigned int offer_times = 0;		/* dhcp server send offer total times */
 unsigned int requested_times = 0;	/* client send request total times */
 unsigned int response_times = 0;	/* dhcp server send ack total times */
+unsigned int nak_times = 0;	/* dhcp server send ack total times */
 
 extern struct dcli_host head_host;
 
@@ -739,6 +740,10 @@ void dhcprequest (packet, ms_nulltp, ip_lease)
 			log_debug ("%s: lease reset by administrator", msgbuf);
 			if(local7)
 			log_local7_dhcp("%s,ErrReason[DH4]:lease reset by administrator", msgbuf);
+			if (subnet)
+			{
+				subnet->nak_times++;
+			}
 			nak_lease (packet, &cip);
 			goto out;
 		}
@@ -823,6 +828,11 @@ void dhcprequest (packet, ms_nulltp, ip_lease)
 		if (!packet -> shared_network) {
 			if (subnet && subnet -> group -> authoritative) {
 				log_error("%s: wrong network.", msgbuf);
+				
+				if (subnet)
+				{
+					subnet->nak_times++;
+				}
 				nak_lease (packet, &cip);
 				goto out;
 			}
@@ -843,6 +853,10 @@ void dhcprequest (packet, ms_nulltp, ip_lease)
 			if (packet->shared_network && packet->shared_network -> group && packet->shared_network -> group -> authoritative)
 			{
 				log_info("%s: wrong network.", msgbuf);
+				if (subnet)
+				{
+					subnet->nak_times++;
+				}
 				nak_lease (packet, &cip);
 				goto out;
 			} else {
@@ -851,6 +865,10 @@ void dhcprequest (packet, ms_nulltp, ip_lease)
 				log_info("%s: (requested address not available).", msgbuf);
 				if(local7)
 				log_local7_dhcp("%s,ErrReason[DH3]:(requested address not available).", msgbuf);
+				if (subnet)
+				{
+					subnet->nak_times++;
+				}		
 				nak_lease (packet, &cip);
 				goto out;
 				}	
@@ -868,6 +886,10 @@ void dhcprequest (packet, ms_nulltp, ip_lease)
 		log_info ("%s: lease %s unavailable.", msgbuf, piaddr (cip));
 		if(local7)
 		log_local7_dhcp("%s,ErrReason[DH2]:(lease %s unavailable).", msgbuf, piaddr (cip));
+		if (subnet)
+		{
+			subnet->nak_times++;
+		}
 		nak_lease (packet, &cip);
 		goto out;
 	}
@@ -1554,6 +1576,12 @@ void nak_lease (packet, cip)
 	memset (&raw, 0, sizeof raw);
 	outgoing.raw = &raw;
 
+		
+#ifndef __AX_PLATFORM__
+		nak_times++;
+		log_debug("client send dhcp nak total times %d\n", nak_times);
+#endif
+	
 	/* Set DHCP_MESSAGE_TYPE to DHCPNAK */
 	if (!option_cache_allocate (&oc, MDL)) {
 		log_error ("No memory for DHCPNAK message type.");

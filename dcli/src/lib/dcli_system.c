@@ -89,6 +89,28 @@ char *fan_rpm_str[] = {
 	"%62.5","%75","%87.5","%100",
 };
 
+int get_uint_from_file(char *filename, unsigned int *num)
+{
+	int fd;
+
+	if(filename == NULL)
+	{
+		return -1;
+	}
+
+	fd = fopen(filename, "r");
+	if (fd == NULL)
+	{
+        //printf("Open file:%s error!\n",filename);
+		return -1;
+	}
+	
+	fscanf(fd, "%d", num);
+	fclose(fd);
+
+	return 0;
+}
+
 int show_file_string(char *FILENAME,struct vty* vty)
 {
 	char buff[MAX_NAME_LEN];
@@ -2680,6 +2702,7 @@ int dcli_sys_global_show_running_cfg
 	DBusMessage *query, *reply;
 	DBusError err;
 	int ret = 0;
+	int x_switch = 0; /* caojia add for /var/run/x_switch */
 	
 query = dbus_message_new_method_call(		\
 							NPD_DBUS_BUSNAME,		\
@@ -2711,6 +2734,15 @@ query = dbus_message_new_method_call(		\
 		sprintf(_tmpstr,BUILDING_MOUDLE,"SYSTEM GLOBAL");
 		vtysh_add_show_string(_tmpstr);
 		vtysh_add_show_string(showStr);
+		/* caojia add for snmp performance fake optimize */
+		if (0 == get_uint_from_file("/var/run/x_switch", &x_switch)) {
+			if (x_switch) {
+				memset(_tmpstr,0,64);
+				sprintf(_tmpstr, "distributed_debug_log enable");
+				vtysh_add_show_string(_tmpstr);
+			}
+		}
+		
 		ret = 1;
 	} 
 	else 
