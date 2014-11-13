@@ -263,11 +263,11 @@ eag_arp_listen_proc(eag_arplisten_t *arp, struct nlmsghdr *arpmsg)
 	struct app_conn_t *appconn = NULL;
 	struct ndmsg *arp_data = NULL;
 	struct rtattr *tb[RTA_MAX+1];	
-	user_addr_t user_addr = {0};
+	uint32_t ip = 0;
 	unsigned char *lladdr = NULL;
 	char macstr[32] = {0};
 	char macstr2[32] = {0};
-	char ipstr[IPX_LEN] = {0};
+	char ipstr[32] = {0};
 	int len = 0;	
 
 	if (NULL == arp || NULL == arpmsg) {
@@ -299,9 +299,8 @@ eag_arp_listen_proc(eag_arplisten_t *arp, struct nlmsghdr *arpmsg)
 	parse_rtattr(tb, RTA_MAX, RTM_RTA(arp_data), len);
 
 	if (tb[NDA_DST]) {
-		user_addr.family = EAG_IPV4;
-		user_addr.user_ip = *(uint32_t *)RTA_DATA(tb[NDA_DST]);
-		ipx2str(&user_addr, ipstr, sizeof(ipstr));
+		ip = *(uint32_t *)RTA_DATA(tb[NDA_DST]);
+		ip2str(ip, ipstr, sizeof(ipstr));
 	}
 	if (tb[NDA_LLADDR]) {
 		lladdr = (unsigned char *)RTA_DATA(tb[NDA_LLADDR]);
@@ -316,7 +315,7 @@ eag_arp_listen_proc(eag_arplisten_t *arp, struct nlmsghdr *arpmsg)
 		return EAG_RETURN_OK;
 	}
 
-	appconn = appconn_find_by_userip(arp->appdb, user_addr.user_ip);
+	appconn = appconn_find_by_userip(arp->appdb, ip);
 	if (NULL == appconn) {
 		eag_log_debug("eag_arp", "eag_arp_listen_proc get arp(ip:%s, mac:%s) and not appconn user", ipstr, macstr);
 		return EAG_RETURN_OK;

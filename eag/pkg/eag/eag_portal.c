@@ -3776,7 +3776,12 @@ eag_portal_auth_update(eag_portal_t *portal,
 	int flux_from = 0;
 	struct timeval tv = {0};
 	time_t timenow = 0;
+	char user_ipstr[IPX_LEN] = "";
 
+	if (NULL == portal || NULL == appconn || NULL == user_addr) {
+		eag_log_err("eag_portal_auth_update input error!");
+		return -1;
+	}
 	eagins = portal->eagins;
 	eag_time_gettimeofday(&tv, NULL);
 	timenow = tv.tv_sec;
@@ -3785,6 +3790,9 @@ eag_portal_auth_update(eag_portal_t *portal,
 	memcpy(&session, &appconn->session, sizeof(struct appsession));
 	memset(&session.user_addr, 0, sizeof(user_addr_t));
 	memcpy(&session.user_addr, user_addr, sizeof(user_addr_t));
+
+	ipx2str(user_addr, user_ipstr, sizeof(user_ipstr));
+	eag_log_debug("eag_portal", "eag_portal_auth_update userip=%s", user_ipstr);
 
 	/* authorize */
 	eag_captive_authorize(portal->cap, &session);
@@ -3802,7 +3810,7 @@ eag_portal_auth_update(eag_portal_t *portal,
 	}
 	if (eag_macauth_get_macauth_switch(portal->macauth)) {
 		/* del mac pre_auth */
-		eag_del_mac_preauth(portal->macauth, &user_addr);
+		eag_del_mac_preauth(portal->macauth, user_addr);
 	}
 
 	/*flux */
@@ -3812,7 +3820,7 @@ eag_portal_auth_update(eag_portal_t *portal,
 	} else if (FLUX_FROM_FASTFWD == flux_from
 		|| FLUX_FROM_FASTFWD_IPTABLES == flux_from)
 	{
-		eag_fastfwd_send(portal->fastfwd, &user_addr, SE_AGENT_USER_ONLINE);
+		eag_fastfwd_send(portal->fastfwd, user_addr, SE_AGENT_USER_ONLINE);
 		appconn->session.last_fastfwd_flow_time = timenow;
 	}
 

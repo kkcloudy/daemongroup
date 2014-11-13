@@ -352,6 +352,9 @@ eag_fastfwd_send(eag_fastfwd_t *fastfwd,
 	} else if (EAG_MIX == user_addr->family) {
 		se_data.fccp_cmd.fccp_data.user_info.user_ip = user_addr->user_ip;
 		memcpy(&(se_data.fccp_cmd.fccp_data.user_info.user_ipv6), &user_addr->user_ipv6, sizeof(struct in6_addr));
+	} else {
+		eag_log_err("eag_fastfwd_send user_addr error!");
+		return EAG_ERR_UNKNOWN;
 	}
 	ipx2str(user_addr, user_ipstr, sizeof(user_ipstr));
 	eag_log_debug("eag_fastfwd", 
