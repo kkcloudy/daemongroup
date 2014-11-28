@@ -19402,7 +19402,8 @@ int wid_radio_set_extension_command(int wtpid, char * command)
 	msgq msg;
 	struct msgqlist *elem;
 	
-//	int WTPIndex = wtpid;
+	int WTPIndex = wtpid;
+	#if 0
 	WID_FREE(AC_WTP[wtpid]->WTP_Radio[0]->excommand);
 	AC_WTP[wtpid]->WTP_Radio[0]->excommand = NULL;
 	
@@ -19419,7 +19420,7 @@ int wid_radio_set_extension_command(int wtpid, char * command)
 		{
 		wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
 		}
-
+#endif
 	if((strlen(command) == 8)&&(strcmp(command, "poweroff") == 0))
 	{
 			
@@ -19435,11 +19436,13 @@ int wid_radio_set_extension_command(int wtpid, char * command)
 	}
 	if((AC_WTP[wtpid] != NULL)&&(AC_WTP[wtpid]->WTPStat == 5))
 	{
+		
+		CWThreadMutexLock(&(gWTPs[WTPIndex].WTPThreadMutex));
 		AC_WTP[wtpid]->WTP_Radio[0]->CMD |= 0x0400;
 		AC_WTP[wtpid]->CMD->radioid[0] += 1;
 		AC_WTP[wtpid]->CMD->setCMD = 1;	
-		int WTPIndex = wtpid;
-		CWThreadMutexLock(&(gWTPs[WTPIndex].WTPThreadMutex));
+		//int WTPIndex = wtpid;
+		//CWThreadMutexLock(&(gWTPs[WTPIndex].WTPThreadMutex));
 		if(gWTPs[WTPIndex].isNotFree && (gWTPs[WTPIndex].currentState == CW_ENTER_RUN))
 		{
 			memset((char*)&msg, 0, sizeof(msg));
