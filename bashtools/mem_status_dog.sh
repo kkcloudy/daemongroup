@@ -36,17 +36,34 @@ LOGTRAPTAG="trapcheck"
 SUBAGENT_MAXMEM=30000
 SNMPD_MAXMEM=200000
 TRAP_MAXMEM=300000
+ACSAMPLE_MAX=200000
 #SNMPD_PORTMAX=10000000
 SNMPD_PORTMAX=122543
 COREFILE_MAX=200000
 snmpexceprstarttimes=0
 snmpdrestarttimes=0
+acsample_restarttimes=0
 traprestarttimes=0
 trapexceprstarttimes=0
 logger -p daemon.info -t $LOGTAG "Snmp check start."
 while true
 do
 	sleep 50
+	ps -ef | grep acsample | grep -v grep >/dev/null 2>&1 
+	result=$?
+	if [ $result -eq 0 ];then
+		acsamplepid=`pidof acsample`
+		mem_load=`pmap -x $acsamplepid | grep "total" | awk '{print $3}'`
+		if [ $mem_load -gt $ACSAMPLE_MAX ];then
+			kill -9 $acsamplepid
+			sudo /opt/bin/acsample >/dev/null 2>&1 &
+			acsample_restarttimes=$(($acsample_restarttimes+1))		
+			echo "acsample memory leak times is:"$acsample_restarttimes--"time is:"`date` >>/var/log/snmp_restart_times.log
+		fi
+	fi
+
+    sleep 10
+
 	ps -ef | grep snmpd | grep -v grep
 	result_snmpd=$?
 	if [ $result_snmpd -eq 0 ];then
