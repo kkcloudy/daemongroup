@@ -1586,7 +1586,9 @@ eag_redir_accept(eag_thread_t *thread)
 	socklen_t len = 0;
 	user_addr_t user_addr = {0};
 	char user_ipstr[IPX_LEN] = "";
+	char intf[MAX_IF_NAME_LEN] = "";
 	char macstr[32] = "";
+	uint8_t usermac[PKT_ETH_ALEN] = {0};
 	uint8_t zero_mac[6] = {0};
 	struct app_conn_t *appconn = NULL;
 	struct app_conn_t *tmp_appconn = NULL;
@@ -1647,71 +1649,103 @@ eag_redir_accept(eag_thread_t *thread)
 	if (NULL == appconn) {
 		ret = appconn_check_is_conflict(&user_addr, redir->appdb, &tmpsession, &tmp_appconn);
 		if (EAG_ERR_APPCONN_APP_IS_CONFLICT == ret && NULL != tmp_appconn) {
-			if (APPCONN_STATUS_AUTHED == tmp_appconn->session.state) {
-				terminate_appconn_nowait(tmp_appconn, redir->eagins, RADIUS_TERMINATE_CAUSE_LOST_CARRIER);
-			} else {
-				appconn_del_from_db(tmp_appconn);
-				appconn_free(tmp_appconn);
+			if (EAG_MIX != tmp_appconn->session.user_addr.family 
+				&& user_addr.family != tmp_appconn->session.user_addr.family) {
+				appconn_ipx_update(redir->appdb, tmp_appconn, &user_addr);
+				appconn = tmp_appconn;
+				if (APPCONN_STATUS_AUTHED == tmp_appconn->session.state) {
+					eag_portal_auth_update(redir->portal, tmp_appconn, &user_addr);
+					tmp_appconn = NULL;
+					return 0;
+				}
+				tmp_appconn = NULL;				
 			}
-			tmp_appconn = NULL;
+			else {
+				if (APPCONN_STATUS_AUTHED == tmp_appconn->session.state) {
+					terminate_appconn_nowait(tmp_appconn, redir->eagins, RADIUS_TERMINATE_CAUSE_LOST_CARRIER);
+				} else {
+					appconn_del_from_db(tmp_appconn);
+					appconn_free(tmp_appconn);
+				}
+					tmp_appconn = NULL;
+			}
 		} else if (EAG_RETURN_OK != ret) {
-			eag_redirconn_free(redirconn);
-			return -1;
-		}
-		mac2str(tmpsession.usermac, macstr, sizeof(macstr), ':');
-		
-		ret = eag_get_sta_info_by_mac_v2(redir->eagdbus, redir->hansi_type, redir->hansi_id,
-					tmpsession.usermac, &tmpsession, &security_type,
-					eag_ins_get_notice_to_asd(redir->eagins));
-		
-		force_wireless = appconn_db_get_force_wireless(redir->appdb);
-		if (0 == ret && NO_NEED_AUTH == security_type) {
-			eag_log_info("eag_redir_accept  eap or none authorize user_ip=%s by user redir",
-				user_ipstr);
-			if (0 == memcmp(zero_mac, tmpsession.usermac, 6)
-				&& force_wireless) {
-				eag_log_debug("eag_redir_warning", "eag_redir_accept"
-					"userip %s, usermac is zero, force_wireless enable",
-					user_ipstr);
 				eag_redirconn_free(redirconn);
 				return -1;
+		}
+	}else if (EAG_MIX != appconn->session.user_addr.family){
+		eag_ipinfo_get(intf, sizeof(intf)-1, usermac, user_addr.user_ip);
+		mac2str(usermac, macstr, sizeof(macstr), ':');
+		eag_log_debug("eag_ipinfo", "eag_ipinfo_get after userip=%s,usermac=%s,interface=%s",
+		user_ipstr, macstr, intf);
+		ret = eag_get_sta_info_by_mac_v2(redir->eagdbus, redir->hansi_type, redir->hansi_id,
+						usermac, &tmpsession, &security_type,
+						eag_ins_get_notice_to_asd(redir->eagins));
+		if (EAG_MIX == tmpsession.user_addr.family) {
+			appconn_ipx_update(redir->appdb, appconn, &(tmpsession.user_addr));
+			if (APPCONN_STATUS_AUTHED == appconn->session.state) {
+				eag_portal_auth_update(redir->portal, appconn, &(tmpsession.user_addr));
+				return 0;
 			}
-			#if 0
-			if (strlen(tmpsession.intf) == 0) {
-				ip_interface(user_ip, tmpsession.intf,  
-						sizeof(tmpsession.intf)-1);
-				eag_log_debug("eag_redir","eag_redir_accept ip_interface userip %s, interface(%s)",
-					user_ipstr, tmpsession.intf);
-				if (strlen(tmpsession.intf) == 0) {
+		}
+	}
+	
+	mac2str(tmpsession.usermac, macstr, sizeof(macstr), ':');
+
+	if (NULL == appconn) {
+		ret = eag_get_sta_info_by_mac_v2(redir->eagdbus, redir->hansi_type, redir->hansi_id,
+						tmpsession.usermac, &tmpsession, &security_type,
+						eag_ins_get_notice_to_asd(redir->eagins));
+			
+			force_wireless = appconn_db_get_force_wireless(redir->appdb);
+			if (0 == ret && NO_NEED_AUTH == security_type) {
+				eag_log_info("eag_redir_accept	eap or none authorize user_ip=%s by user redir",
+					user_ipstr);
+				if (0 == memcmp(zero_mac, tmpsession.usermac, 6)
+					&& force_wireless) {
 					eag_log_debug("eag_redir_warning", "eag_redir_accept"
-						"ip_interface userip %s, interface not found",
+						"userip %s, usermac is zero, force_wireless enable",
 						user_ipstr);
 					eag_redirconn_free(redirconn);
 					return -1;
 				}
-			}
-			#endif
-			if (strlen(tmpsession.intf) == 0) {
-				eag_log_debug("eag_redir_warning", 
-					"userip %s, interface not found", user_ipstr);
+		#if 0
+				if (strlen(tmpsession.intf) == 0) {
+					ip_interface(user_ip, tmpsession.intf,	
+							sizeof(tmpsession.intf)-1);
+					eag_log_debug("eag_redir","eag_redir_accept ip_interface userip %s, interface(%s)",
+						user_ipstr, tmpsession.intf);
+					if (strlen(tmpsession.intf) == 0) {
+						eag_log_debug("eag_redir_warning", "eag_redir_accept"
+							"ip_interface userip %s, interface not found",
+							user_ipstr);
+						eag_redirconn_free(redirconn);
+						return -1;
+					}
+				}
+		#endif
+				if (strlen(tmpsession.intf) == 0) {
+					eag_log_debug("eag_redir_warning", 
+						"userip %s, interface not found", user_ipstr);
+					eag_redirconn_free(redirconn);
+					return -1;
+				}
+				eag_stamsg_send(redir->stamsg, &tmpsession, EAG_NTF_ASD_STA_INFO, 0);
+				//redirconn->asd_auth = 1;
+				//eag_redirconn_start_read(redirconn);
+				eag_redirconn_free(redirconn);
+				return EAG_RETURN_OK;
+			} else if (0 != ret && force_wireless) {
+				eag_log_debug("eag_redir_err", "eag_redir_accept "
+					"eag_get_sta_info_by_mac_v2 failed, userip=%s, usermac=%s, ret=%d",
+					user_ipstr, macstr, ret);
 				eag_redirconn_free(redirconn);
 				return -1;
+			} else {
+				appconn = appconn_create_by_sta_v2(redir->appdb, &tmpsession);
 			}
-			eag_stamsg_send(redir->stamsg, &tmpsession, EAG_NTF_ASD_STA_INFO, 0);
-			//redirconn->asd_auth = 1;
-			//eag_redirconn_start_read(redirconn);
-			eag_redirconn_free(redirconn);
-			return EAG_RETURN_OK;
-		} else if (0 != ret && force_wireless) {
-			eag_log_debug("eag_redir_err", "eag_redir_accept "
-				"eag_get_sta_info_by_mac_v2 failed, userip=%s, usermac=%s, ret=%d",
-				user_ipstr, macstr, ret);
-			eag_redirconn_free(redirconn);
-			return -1;
-		} else {
-			appconn = appconn_create_by_sta_v2(redir->appdb, &tmpsession);
-		}
-	}
+
+	}	
 
 	if (NULL == appconn) {
 		eag_log_debug("eag_redir_warning", "eag_redir_accept "
@@ -1848,6 +1882,8 @@ eag_ipv6_redir_accept(eag_thread_t *thread)
 	socklen_t len = 0;
 	user_addr_t user_addr = {0};
 	char user_ipstr[IPX_LEN] = "";
+	char intf[MAX_IF_NAME_LEN] = "";
+	uint8_t usermac[PKT_ETH_ALEN] = {0};
 	char macstr[32] = "";
 	uint8_t zero_mac[6] = {0};
 	struct app_conn_t *appconn = NULL;
@@ -1909,19 +1945,50 @@ eag_ipv6_redir_accept(eag_thread_t *thread)
 	if (NULL == appconn) {
 		ret = appconn_check_is_conflict(&user_addr, redir->appdb, &tmpsession, &tmp_appconn);
 		if (EAG_ERR_APPCONN_APP_IS_CONFLICT == ret && NULL != tmp_appconn) {
-			if (APPCONN_STATUS_AUTHED == tmp_appconn->session.state) {
-				terminate_appconn_nowait(tmp_appconn, redir->eagins, RADIUS_TERMINATE_CAUSE_LOST_CARRIER);
-			} else {
-				appconn_del_from_db(tmp_appconn);
-				appconn_free(tmp_appconn);
+			if (EAG_MIX != tmp_appconn->session.user_addr.family 
+				&& user_addr.family != tmp_appconn->session.user_addr.family) {
+				appconn_ipx_update(redir->appdb, tmp_appconn, &user_addr);
+				appconn = tmp_appconn;
+				if (APPCONN_STATUS_AUTHED == tmp_appconn->session.state) {
+					eag_portal_auth_update(redir->portal, tmp_appconn, &user_addr);
+					tmp_appconn = NULL;
+					return 0;
+				}
+				tmp_appconn = NULL;				
 			}
-			tmp_appconn = NULL;
+			else {
+				if (APPCONN_STATUS_AUTHED == tmp_appconn->session.state) {
+					terminate_appconn_nowait(tmp_appconn, redir->eagins, RADIUS_TERMINATE_CAUSE_LOST_CARRIER);
+				} else {
+					appconn_del_from_db(tmp_appconn);
+					appconn_free(tmp_appconn);
+				}
+					tmp_appconn = NULL;
+			}
 		} else if (EAG_RETURN_OK != ret) {
-			eag_redirconn_free(redirconn);
-			return -1;
+				eag_redirconn_free(redirconn);
+				return -1;
 		}
-		mac2str(tmpsession.usermac, macstr, sizeof(macstr), ':');
-		
+	}else if (EAG_MIX != appconn->session.user_addr.family){
+		eag_ipv6info_get(intf, sizeof(intf)-1, usermac, &(user_addr.user_ipv6));
+		mac2str(usermac, macstr, sizeof(macstr), ':');
+		eag_log_debug("eag_ipinfo", "eag_ipinfo_get after userip=%s,usermac=%s,interface=%s",
+		user_ipstr, macstr, intf);
+		ret = eag_get_sta_info_by_mac_v2(redir->eagdbus, redir->hansi_type, redir->hansi_id,
+						usermac, &tmpsession, &security_type,
+						eag_ins_get_notice_to_asd(redir->eagins));
+		if (EAG_MIX == tmpsession.user_addr.family) {
+			appconn_ipx_update(redir->appdb, appconn, &(tmpsession.user_addr));
+			if (APPCONN_STATUS_AUTHED == appconn->session.state) {
+				eag_portal_auth_update(redir->portal, appconn, &(tmpsession.user_addr));
+				return 0;
+			}
+		}
+	}
+	
+	mac2str(tmpsession.usermac, macstr, sizeof(macstr), ':');
+
+	if (NULL == appconn) {
 		ret = eag_get_sta_info_by_mac_v2(redir->eagdbus, redir->hansi_type, redir->hansi_id,
 					tmpsession.usermac, &tmpsession, &security_type,
 					eag_ins_get_notice_to_asd(redir->eagins));
@@ -1970,8 +2037,8 @@ eag_ipv6_redir_accept(eag_thread_t *thread)
 				user_ipstr, macstr, ret);
 			eag_redirconn_free(redirconn);
 			return -1;
-		} else {
-			appconn = appconn_create_by_sta_v2(redir->appdb, &tmpsession);
+		} else {			
+			appconn = appconn_create_by_sta_v2(redir->appdb, &tmpsession);							
 		}
 	}
 
