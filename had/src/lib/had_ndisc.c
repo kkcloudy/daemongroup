@@ -536,6 +536,7 @@ void had_ndisc_thread_main(void){
 	vrrp_syslog_info("send ND thread create global socket success! fd %d\n", vrrp_ndisc_send_fd);
 
 	vrrp_debug_tell_whoami("NDEcho", 0);
+#if 0
 	while(1){
 		/*sleep 5 seconds*/
 		if(global_state_change_bit){
@@ -615,6 +616,7 @@ void had_ndisc_thread_main(void){
 		pthread_mutex_unlock(&StateMutex);	
 	}
 	close(vrrp_ndisc_send_fd);
+#endif
 	return;     
 }
 

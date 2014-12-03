@@ -9484,6 +9484,16 @@ had_notify_to_hmd(vsrv,VRRP_STATE_BACK);
 			if (VRRP_LINK_SETTED == vsrv->uplink_vif[i].set_flg) {
                 had_send_uplink_gratuitous_arp( vsrv, vsrv->uplink_vif[i].ipaddr, i, 1 );
 				had_send_uplink_gratuitous_arp( vsrv, vsrv->uplink_vaddr[i].addr, i, 1 );
+
+				/*for IPv6 send Unsolicited Neighbor Advertisements*/
+                if(!ipv6_addr_eq_null(vsrv->uplink_local_ipv6_vaddr[i].sin6_addr.s6_addr) && 
+					    !ipv6_addr_eq_null(vsrv->uplink_ipv6_vaddr[i].sin6_addr.s6_addr))
+			    {
+					 had_ndisc_send_uplink_unsolicited_na(vsrv,&vsrv->uplink_vif[i].ipv6_addr,i,1);
+					 had_ndisc_send_uplink_unsolicited_na(vsrv,&vsrv->uplink_local_ipv6_vaddr[i].sin6_addr,i,1);
+					 //had_ndisc_send_uplink_unsolicited_na(vsrv,&vsrv->uplink_ipv6_vaddr[i].sin6_addr,i,1);
+					 vrrp_syslog_info("GOTO MASTER uplink send Unsolicited NA( Neighbor Advertisements )"); 			
+				}
 			}
 		}
 	}
@@ -9493,6 +9503,16 @@ had_notify_to_hmd(vsrv,VRRP_STATE_BACK);
 			if (VRRP_LINK_SETTED == vsrv->downlink_vif[i].set_flg) {
                 had_send_downlink_gratuitous_arp( vsrv, vsrv->downlink_vif[i].ipaddr, i, 1 );
 				had_send_downlink_gratuitous_arp( vsrv, vsrv->downlink_vaddr[i].addr, i, 1 );
+
+                /*for IPv6 send Unsolicited Neighbor Advertisements*/
+                if(!ipv6_addr_eq_null(vsrv->downlink_local_ipv6_vaddr[i].sin6_addr.s6_addr) && 
+					    !ipv6_addr_eq_null(vsrv->downlink_ipv6_vaddr[i].sin6_addr.s6_addr))
+			    {
+					 had_ndisc_send_downlink_unsolicited_na(vsrv,&vsrv->downlink_vif[i].ipv6_addr,i,1);
+					 had_ndisc_send_downlink_unsolicited_na(vsrv,&vsrv->downlink_local_ipv6_vaddr[i].sin6_addr,i,1);
+					 //had_ndisc_send_downlink_unsolicited_na(vsrv,&vsrv->downlink_ipv6_vaddr[i].sin6_addr,i,1);
+					 vrrp_syslog_info("GOTO MASTER downlink send Unsolicited NA( Neighbor Advertisements )"); 			
+				}
 			}
 		}
 	}	
@@ -9506,7 +9526,17 @@ had_notify_to_hmd(vsrv,VRRP_STATE_BACK);
             if(VRRP_LINK_SETTED == vsrv->vgateway_vif[i].set_flg){
                 had_send_vgateway_gratuitous_arp(vsrv,vsrv->vgateway_vif[i].ipaddr,i,1);
                 had_send_vgateway_gratuitous_arp(vsrv,vsrv->vgateway_vaddr[i].addr,i,1);
-            }
+
+                /*for IPv6 send Unsolicited Neighbor Advertisements*/
+                if(!ipv6_addr_eq_null(vsrv->vgateway_local_ipv6_vaddr[i].sin6_addr.s6_addr) && 
+					    !ipv6_addr_eq_null(vsrv->vgateway_ipv6_vaddr[i].sin6_addr.s6_addr))
+			    {
+					 had_ndisc_send_vgateway_unsolicited_na(vsrv,&vsrv->vgateway_vif[i].ipv6_addr,i,1);
+					 had_ndisc_send_vgateway_unsolicited_na(vsrv,&vsrv->vgateway_local_ipv6_vaddr[i].sin6_addr,i,1);
+					//had_ndisc_send_vgateway_unsolicited_na(vsrv,&vsrv->vgateway_ipv6_vaddr[i].sin6_addr,i,1);
+					 vrrp_syslog_info("GOTO MASTER vgateway send Unsolicited NA( Neighbor Advertisements )"); 			
+				}
+			}
         }
 	}
 	had_vrrp_vif_rcv_pck_ON(vsrv);
@@ -9555,6 +9585,9 @@ void had_state_leave_master
 )
 {
 	uint32_t addr[1024] = {0};
+	uint32_t addrv6[1024] = {0};
+	int naddrv6 = 0;
+
 	int delay = 0;
 	vrrp_if *uplink_vif = NULL;
 	vrrp_if *downlink_vif = NULL;
@@ -9691,7 +9724,25 @@ void had_state_leave_master
 					}
 				}
 			}
+			/*for IPv6 send Unsolicited Neighbor Advertisements*/
+			for (j = 0; j < VRRP_LINK_MAX_CNT; j++)
+			{
+				uplink_vif = NULL;
+				if (VRRP_LINK_SETTED == vsrv->uplink_vif[j].set_flg){
+					if(!ipv6_addr_eq_null(vsrv->uplink_local_ipv6_vaddr[i].sin6_addr.s6_addr) && 
+					        !ipv6_addr_eq_null(vsrv->uplink_ipv6_vaddr[i].sin6_addr.s6_addr)){
+    					memset(addrv6, 0, sizeof(addrv6));
+    					uplink_vif = &(vsrv->uplink_vif[j]);
+    					naddrv6 = had_ipv6addr_list( had_ifname_to_idx(uplink_vif->ifname), addrv6
+    							, sizeof(addrv6)/sizeof(addrv6[0]) );
+						had_ndisc_send_uplink_unsolicited_na(vsrv,&vsrv->uplink_vif[j].ipv6_addr,j,0);
 
+    					for( i = 0; i < naddrv6; i++ ) {
+    						had_ndisc_send_uplink_unsolicited_na( vsrv, addrv6[i], j, 0 );
+    					}
+					}
+				}
+			}
 		}
 		/*downlink */
 		if(VRRP_LINK_NO_SETTED != vsrv->downlink_flag){
@@ -9707,6 +9758,25 @@ void had_state_leave_master
 					had_send_downlink_gratuitous_arp( vsrv, vsrv->downlink_vif[j].ipaddr, j, 0 );
 					for( i = 0; i < naddr; i++ ) {
 						had_send_downlink_gratuitous_arp( vsrv, addr[i], j, 0 );
+					}
+				}
+			}
+			/*for IPv6 send Unsolicited Neighbor Advertisements*/
+			for (j = 0; j < VRRP_LINK_MAX_CNT; j++)
+			{
+				downlink_vif = NULL;
+				if (VRRP_LINK_SETTED == vsrv->downlink_vif[j].set_flg){
+					if(!ipv6_addr_eq_null(vsrv->downlink_local_ipv6_vaddr[i].sin6_addr.s6_addr) && 
+					        !ipv6_addr_eq_null(vsrv->downlink_ipv6_vaddr[i].sin6_addr.s6_addr)){
+    					memset(addrv6, 0, sizeof(addrv6));
+    					downlink_vif = &(vsrv->downlink_vif[j]);
+    					naddrv6 = had_ipv6addr_list( had_ifname_to_idx(downlink_vif->ifname), addrv6
+    							, sizeof(addrv6)/sizeof(addrv6[0]) );
+						had_ndisc_send_downlink_unsolicited_na(vsrv,&vsrv->downlink_vif[j].ipv6_addr,j,0);
+
+    					for( i = 0; i < naddrv6; i++ ) {
+    						had_ndisc_send_downlink_unsolicited_na( vsrv, addrv6[i], j, 0 );
+    					}
 					}
 				}
 			}
@@ -9729,6 +9799,21 @@ void had_state_leave_master
 				/*had_hwaddr_get(vsrv->vgateway_vif[j].ifname,vsrv->vgateway_vif[j].hwaddr,6);*/
 				for( i = 0; i < naddr; i++ ){
 					had_send_vgateway_gratuitous_arp( vsrv, addr[i], j, 0 );
+				}
+			}
+			/*for IPv6 send Unsolicited Neighbor Advertisements*/
+			for (j = 0; j < VRRP_LINK_MAX_CNT; j++)
+			{
+				if (VRRP_LINK_SETTED == vsrv->vgateway_vif[j].set_flg){
+					if(!ipv6_addr_eq_null(vsrv->vgateway_local_ipv6_vaddr[i].sin6_addr.s6_addr) && 
+					        !ipv6_addr_eq_null(vsrv->vgateway_ipv6_vaddr[i].sin6_addr.s6_addr)){
+    					memset(addrv6, 0, sizeof(addrv6));
+    					naddrv6 = had_ipv6addr_list( had_ifname_to_idx(vsrv->vgateway_vif[j].ifname), addrv6
+    							, sizeof(addrv6)/sizeof(addrv6[0]) );
+    					for( i = 0; i < naddrv6; i++ ) {
+    						had_ndisc_send_downlink_unsolicited_na( vsrv, addrv6[i], j, 0 );
+    					}
+					}
 				}
 			}
 		}		
@@ -11317,6 +11402,16 @@ static void had_change_mac
 			if (VRRP_LINK_SETTED == vsrv->uplink_vif[i].set_flg) {
 				had_send_uplink_gratuitous_arp( vsrv, vsrv->uplink_vif[i].ipaddr, i, 1 );
 				had_send_uplink_gratuitous_arp( vsrv, vsrv->uplink_vaddr[i].addr, i, 1 );
+
+				/*for IPv6 send Unsolicited Neighbor Advertisements*/
+                if(!ipv6_addr_eq_null(vsrv->uplink_local_ipv6_vaddr[i].sin6_addr.s6_addr) && 
+					    !ipv6_addr_eq_null(vsrv->uplink_ipv6_vaddr[i].sin6_addr.s6_addr))
+			    {
+					 had_ndisc_send_uplink_unsolicited_na(vsrv,&vsrv->uplink_vif[i].ipv6_addr,i,1);
+					 had_ndisc_send_uplink_unsolicited_na(vsrv,&vsrv->uplink_local_ipv6_vaddr[i].sin6_addr,i,1);
+					 //had_ndisc_send_uplink_unsolicited_na(vsrv,&vsrv->uplink_ipv6_vaddr[i].sin6_addr,i,1);
+					 vrrp_syslog_info("GOTO MASTER uplink send Unsolicited NA( Neighbor Advertisements )"); 			
+				}
 			}
 		}
 		if(vsrv->state == VRRP_STATE_MAST){
@@ -11329,6 +11424,16 @@ static void had_change_mac
 			if (VRRP_LINK_SETTED == vsrv->downlink_vif[i].set_flg) {
 				had_send_downlink_gratuitous_arp( vsrv, vsrv->downlink_vif[i].ipaddr, i, 1 );
 				had_send_downlink_gratuitous_arp( vsrv, vsrv->downlink_vaddr[i].addr, i, 1 );
+
+				/*for IPv6 send Unsolicited Neighbor Advertisements*/
+                if(!ipv6_addr_eq_null(vsrv->uplink_local_ipv6_vaddr[i].sin6_addr.s6_addr) && 
+					    !ipv6_addr_eq_null(vsrv->uplink_ipv6_vaddr[i].sin6_addr.s6_addr))
+			    {
+					 had_ndisc_send_downlink_unsolicited_na(vsrv,&vsrv->downlink_vif[i].ipv6_addr,i,1);
+					 had_ndisc_send_downlink_unsolicited_na(vsrv,&vsrv->downlink_local_ipv6_vaddr[i].sin6_addr,i,1);
+					 //had_ndisc_send_downlink_unsolicited_na(vsrv,&vsrv->downlink_ipv6_vaddr[i].sin6_addr,i,1);
+					 vrrp_syslog_info("GOTO MASTER downlink send Unsolicited NA( Neighbor Advertisements )"); 			
+				}
 			}
 		}
 		if(vsrv->state == VRRP_STATE_MAST){
@@ -11341,6 +11446,16 @@ static void had_change_mac
 			if (VRRP_LINK_SETTED == vsrv->vgateway_vif[i].set_flg) {
                 had_send_vgateway_gratuitous_arp(vsrv,vsrv->vgateway_vif[i].ipaddr,i,1);
 		        had_send_vgateway_gratuitous_arp(vsrv,vsrv->vgateway_vaddr[i].addr,i,1);
+
+				/*for IPv6 send Unsolicited Neighbor Advertisements*/
+                if(!ipv6_addr_eq_null(vsrv->vgateway_local_ipv6_vaddr[i].sin6_addr.s6_addr) && 
+					    !ipv6_addr_eq_null(vsrv->vgateway_ipv6_vaddr[i].sin6_addr.s6_addr))
+			    {
+					 had_ndisc_send_vgateway_unsolicited_na(vsrv,&vsrv->vgateway_vif[i].ipv6_addr,i,1);
+					 had_ndisc_send_vgateway_unsolicited_na(vsrv,&vsrv->vgateway_local_ipv6_vaddr[i].sin6_addr,i,1);
+					 //had_ndisc_send_vgateway_unsolicited_na(vsrv,&vsrv->vgateway_ipv6_vaddr[i].sin6_addr,i,1);
+					 vrrp_syslog_info("GOTO MASTER vgateway send Unsolicited NA( Neighbor Advertisements )"); 			
+				}
 			}
 		}
 	}
@@ -12869,7 +12984,7 @@ int had_vip6_gateway
 					   		in.s6_addr, vrrp->vgateway_vif[index].ifname);
 		   return VRRP_RETURN_CODE_ERR;
 	   }
-	   /*send arp*/
+	   /*send Unsolicited Router Advertisements */
 	   had_ndisc_send_vgateway_unsolicited_na(vrrp,&vrrp->vgateway_vif[index].ipv6_addr,index,1);
 	}
 
