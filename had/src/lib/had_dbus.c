@@ -997,7 +997,7 @@ void had_profile_config_save
 			curPos = showBuf + curLen;
 		}
 		
-		 if(VRRP_SERVICE_DISABLE != service_enable[vrrp->vrid]){
+		 if(VRRP_SERVICE_DISABLE != service_enable[i]){
  			 curLen += sprintf(curPos," config service enable\n");
 			 curPos = showBuf + curLen;               
 		 }
