@@ -12,6 +12,7 @@
 #include "asd.h"
 #include "ASDDhcp.h"
 #include "circle.h"
+#include <linux/rtnetlink.h>
 
 #define IP_HASH(ip) (ip[0]+ip[1]+ip[2]+ip[3])
 #define MAC_HASH(mac) (mac[2]+mac[3]+mac[4]+mac[5])
@@ -637,4 +638,101 @@ void delete_timeout_virlease_cache(void *circle_ctx,void *timeout_ctx)
 	}
 }
 	
+void dhcp_release_ip_bymac(struct vir_dhcp * vdhcp, unsigned char* mac)
+{
+	struct vir_pool lease_pool = vdhcp->dhcplease;
+	struct ip_info *iterator = lease_pool.ip_list;
+	struct ip_info *tmp = NULL;
+	int ret = 0;
+	unsigned char stamac[32] = {0};
+	unsigned char staip[32] = {0};
+	unsigned char *ip = NULL;
+	int flag = 0;
+
+	while(iterator != NULL)
+	{
+		if (0 == memcmp(iterator->mac, mac,MAC_LEN))
+		{
+			flag = 1;
+			asd_printf(ASD_DEFAULT,MSG_DEBUG,"%s find sta "MACSTR" match vir ip s%u.%u.%u.%u\n", __func__,
+						MAC2STR(mac),  (iterator->ip)>>24 & 0xff, (iterator->ip)>>16 & 0xff, 
+						(iterator->ip)>>8 & 0xff, (iterator->ip) & 0xff);
+			
+			tmp = dhcp_release_ip_from_use_to_free(vdhcp, iterator->ip);
+
+			if (tmp != NULL)
+			{									
+				ip = (unsigned char*)&(tmp->ip);
+				sprintf((char*)stamac,"%02X:%02X:%02X:%02X:%02X:%02X",MAC2STR(mac));
+				sprintf((char*)staip,"%u.%u.%u.%u",ip[0],ip[1],ip[2],ip[3]);
+				ret = ipneigh_modify(RTM_DELNEIGH, 0, (char*)staip, (char*)stamac, vdhcp->ifname);
+				asd_printf(ASD_DEFAULT,MSG_DEBUG,"%s delete arp sta %s %s interface %s ret %d\n", __func__,
+						stamac,  staip,  vdhcp->ifname, ret);
+			}
+
+			iterator = (vdhcp->dhcplease).ip_list;
+		}
+		else
+		{
+			iterator = iterator->next;
+		}
+	}
+
+	if(flag ==0)
+	{
+		asd_printf(ASD_DEFAULT,MSG_DEBUG,"%s sta "MACSTR" has  no repeated element in vir dhcp table base mac\n", 
+			__func__, MAC2STR(mac));
+	}
+	
+	return ;
+}
+
+struct ip_info *dhcp_release_ip_from_use_to_free(struct vir_dhcp * vdhcp, unsigned int ip)
+{
+	struct ip_info *tmp = NULL, *prev = NULL;
+	
+	tmp = dhcp_get_sta_by_ip(&(vdhcp->dhcplease), ip);
+	if(tmp != NULL){
+		/* Note: first delete node in hash list, second delete node in ip_list*/
+		dhcp_ip_hash_del(&(vdhcp->dhcplease), tmp);
+		tmp->hnext = NULL;
+		dhcp_ip_list_del(&(vdhcp->dhcplease), tmp);
+		tmp->next = NULL;
+		vdhcp->dhcplease.ipnum--;
+
+		asd_printf(ASD_DEFAULT,MSG_DEBUG,"%s: release %s\n", __func__, u32ip2str(ip));
+		
+		#if 0
+		if (vdhcp->dhcpfree.last && (vdhcp->dhcpfree.last != tmp))
+		{
+			vdhcp->dhcpfree.last->next = tmp;
+			tmp->next = NULL;
+		}
+		else
+		#endif
+		{
+			prev = vdhcp->dhcpfree.ip_list;
+			while (prev && prev->next)
+			{
+				prev = prev->next;
+			}
+			if (prev)
+			{
+				prev->next = tmp;
+				tmp->next = NULL;
+			}
+			else
+			{
+				vdhcp->dhcpfree.ip_list = tmp;
+				tmp->next = NULL;
+			}			
+		}
+		vdhcp->dhcpfree.last = tmp;
+
+		dhcp_ip_hash_add(&(vdhcp->dhcpfree),tmp);
+		vdhcp->dhcpfree.ipnum++;
+		memset(tmp->mac, 0, MAC_LEN);
+	}
+	return tmp;
+}
 

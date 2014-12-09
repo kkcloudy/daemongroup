@@ -35,4 +35,17 @@ void dhcp_mac_hash_add
 	struct ip_info *sta
 );
 
+void dhcp_release_ip_bymac
+(
+	struct vir_dhcp * vdhcp, 
+	unsigned char* mac
+);
+struct ip_info *dhcp_release_ip_from_use_to_free
+(
+	struct vir_dhcp * vdhcp,
+	unsigned int ip
+);
+
+extern int ipneigh_modify(int cmd, int flags, char *ip, char * mac, char * dev);
+
 #endif

@@ -2572,6 +2572,14 @@ static void handle_assoc(struct asd_data *wasd,
 		ieee802_1x_notify_port_enabled(sta->eapol_sm, 1);
 		asd_printf(ASD_80211,MSG_DEBUG,"return from ieee802_1x_notify_port_enabled\n");
 	}
+
+	/* yjl add for mac_auth in tl. 2014-11-18*/
+	if((ASD_SECURITY[SID])&&(ASD_SECURITY[SID]->extensible_auth == 0)&&(ASD_SECURITY[SID]->hybrid_auth == 1)&&(ASD_SECURITY[SID]->mac_auth == 1)
+		&&(ASD_WLAN[wasd->WlanID])&&(ASD_WLAN[wasd->WlanID]->wlan_tunnel_switch == 1)&&(resp == 0)){
+
+		asd_notify_to_protal(sta->vir_ip, sta->addr);
+	}
+	
 	if((resp == 0)&&(asd_sta_getip_from_dhcpsnoop == 1)&&(1 == check_sta_authorized(wasd,sta)))
 	{
 		asd_notice_to_dhcp(wasd,sta->addr,DHCP_IP);     /* send msg to dhcp, get ipv4/ipv6 address */

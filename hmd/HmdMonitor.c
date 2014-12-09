@@ -2115,7 +2115,7 @@ int get_memory_check_flag(int InstID, int islocaled, int* flag)
 	
 	fp = fopen(defaultPath, "r");
 	if(NULL == fp){
-		hmd_syslog_warning("open file %s failed .\n", defaultPath);
+		hmd_syslog_warning("open file %s failed: %s.\n", defaultPath, strerror(errno));
 		return -1;
 	}
 	fscanf(fp, "%d", flag);
@@ -2155,7 +2155,7 @@ int get_process_check_flag(int InstID, int islocaled, int* flag)
 	
 	fp = fopen(defaultPath, "r");
 	if(NULL == fp){
-		hmd_syslog_warning("open file %s failed .\n", defaultPath);
+		hmd_syslog_warning("open file %s failed: %s.\n", defaultPath, strerror(errno));
 		return -1;
 	}
 	fscanf(fp, "%d", flag);

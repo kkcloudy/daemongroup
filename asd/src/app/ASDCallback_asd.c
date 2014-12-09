@@ -5169,7 +5169,7 @@ void EAG_OP(EagMsg *msg)
 						ieee802_1x_free_station(sta);
 					}
 					else if(ASD_SECURITY[SID]&&(ASD_SECURITY[SID]->hybrid_auth == 1)&&(ASD_SECURITY[SID]->extensible_auth == 0)){
-						asd_printf(ASD_DEFAULT,MSG_DEBUG,"receive EAG_AUTH msg in MAC AUTH\n");
+						asd_printf(ASD_DEFAULT,MSG_DEBUG,"receive EAG_MAC_AUTH msg in MAC AUTH\n");
 					}
 
 					/*yjl copy from aw3.1.2 for local forwarding.2014-2-28*/
@@ -5193,6 +5193,41 @@ void EAG_OP(EagMsg *msg)
 			break;
 		case EAG_MAC_DEL_AUTH:
 			asd_printf(ASD_DEFAULT,MSG_DEBUG,"receive EAG_MAC_DEL_AUTH msg\n");
+			
+			/* yjl add for mac_auth in tl. 2014-11-19 */
+			ret = AsdCheckWTPID(wtpid);
+			if(ret == 0)
+				return ;
+			num = ASD_SEARCH_WTP_STA(wtpid, bss);
+			for(i = 0; i < num; i++){
+#ifdef ASD_USE_PERBSS_LOCK
+			    pthread_mutex_lock(&(bss[i]->asd_sta_mutex));
+#endif
+				sta = ap_get_sta(bss[i], msg->STA.addr);
+				if(sta != NULL){
+					if(ASD_WLAN[bss[i]->WlanID]){
+						SID = ASD_WLAN[bss[i]->WlanID]->SecurityID;
+					}
+					if(ASD_SECURITY[SID]&&(ASD_SECURITY[SID]->hybrid_auth == 1)&&(ASD_SECURITY[SID]->extensible_auth == 0)&&(ASD_SECURITY[SID]->mac_auth == 1)){
+					    if((msg->STA.portal_info_switch == 1) && (ASD_WLAN[bss[i]->WlanID]->wlan_tunnel_switch == 1)){
+				            sta->portal_server.portal_ip = msg->STA.portal_info.portal_ip;
+				            memcpy(sta->portal_server.portal_mac, msg->STA.portal_info.portal_mac, ETH_ALEN);
+
+				            AsdStaInfoToWID(bss[i], msg->STA.addr, STA_PORTAL_DEAUTH);
+			            }
+			            sta->portal_server.portal_ip = 0;
+			            memset(sta->portal_server.portal_mac, 0, MAC_LEN);
+			
+			            /* update portal server info to bak */
+			            bak_update_sta_ip_info(bss[i], sta);
+					}
+				}
+				
+#ifdef ASD_USE_PERBSS_LOCK
+				pthread_mutex_unlock(&(bss[i]->asd_sta_mutex));
+#endif
+			}
+			/*end**************************************************/
 			break;
 		case EAG_AUTH:
 			

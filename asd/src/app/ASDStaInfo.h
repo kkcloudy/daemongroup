@@ -100,6 +100,7 @@ void sta_acct_info_del(u8 *acct_id);
 struct sta_info * asd_sta_hash_get(const u8 *sta);
 void asd_sta_hash_add(struct sta_info *sta);
 int AsdStaInfoToEAG(struct asd_data *wasd, struct sta_info *sta, Operate op);
+int asd_notify_to_protal(uint32_t userip, uint8_t *usermac); /* yjl add for mac_auth in tl */
 void asd_sta_roaming_management(struct sta_info *new_sta);
 void asd_sta_delete(void *circle_ctx,void *timeout_ctx);//xk add fro asd sta check
 

@@ -432,6 +432,8 @@ int asd_virdhcp_handle(struct asd_data *wasd, struct sta_info *sta, unsigned int
 	unsigned char in_ifname[ETH_IF_NAME_LEN] = {0};
 	unsigned char *ip = NULL;
 	struct ip_info *tmp = NULL;
+	struct ip_info *tmp2 = NULL;
+	int ret_ipneigh = 0;
 	// *yjl* struct sta_hash_info *s = NULL;
 	// *yjl* struct asd_data *prev_wasd = NULL;
 	char *ifname = NULL;
@@ -490,8 +492,22 @@ int asd_virdhcp_handle(struct asd_data *wasd, struct sta_info *sta, unsigned int
 		{
 			asd_printf(ASD_DEFAULT,MSG_ERROR,"%s sta "MACSTR" prev vir ip %x\n",
 				__func__,MAC2STR(sta->addr),  sta->vir_ip); 			
-			dhcp_release_ip(ASD_WLAN[wasd->WlanID]->wlan_dhcp, sta->vir_ip, sta->addr);
+			tmp2 = dhcp_release_ip(ASD_WLAN[wasd->WlanID]->wlan_dhcp, sta->vir_ip, sta->addr);
+			if(tmp2 !=NULL)
+			{
+				memcpy(tmp2->mac, sta->addr, MAC_LEN);										
+				ip = (unsigned char*)&(tmp2->ip);
+				sprintf((char*)mac,"%02X:%02X:%02X:%02X:%02X:%02X",MAC2STR(sta->addr));
+				sprintf((char*)staip,"%u.%u.%u.%u",ip[0],ip[1],ip[2],ip[3]);
+				ret_ipneigh = ipneigh_modify(RTM_DELNEIGH, 0, (char*)staip, (char*)mac, ifname);
+				asd_printf(ASD_DEFAULT,MSG_DEBUG,"%s delete arp sta %s %s interface %s ret %d\n", __func__,
+						mac,  staip,  ifname, ret_ipneigh);
+			}
 		}
+
+		asd_printf(ASD_DEFAULT,MSG_DEBUG,"%s check if sta "MACSTR" has repeated element in vir dhcp table base mac before add\n", 
+			__func__, MAC2STR(sta->addr));
+		dhcp_release_ip_bymac(ASD_WLAN[wasd->WlanID]->wlan_dhcp, sta->addr);
 		
 		tmp = dhcp_assign_ip(ASD_WLAN[wasd->WlanID]->wlan_dhcp, sta->addr);				
 		if (NULL == tmp)
@@ -510,12 +526,11 @@ int asd_virdhcp_handle(struct asd_data *wasd, struct sta_info *sta, unsigned int
 		asd_printf(ASD_DEFAULT,MSG_INFO,"%s sta %s %s interface %s add arp\n", 
 			__func__, mac, staip, ifname);
 
-		/*yjl add 2014-4-11*/
+		/* yjl add 2014-4-11 ,assign ip of sta's table item for show*/
 		memset(sta->in_addr, 0, 16);
 		strcpy(sta->in_addr, (char*)staip);
 		inet_aton(sta->in_addr,&sta->ip_addr);
 		
-		int ret_ipneigh = 0;
 		ret_ipneigh = ipneigh_modify(RTM_DELNEIGH, 0, (char*)staip, NULL, ifname);
 		asd_printf(ASD_DEFAULT,MSG_DEBUG,"delete arp sta %s %s interface %s ret %d\n", 
 								mac,  staip,  ifname, ret_ipneigh);
@@ -526,9 +541,8 @@ int asd_virdhcp_handle(struct asd_data *wasd, struct sta_info *sta, unsigned int
 		
 		notice_aat_mod((char *)sta->addr,tmp->ip,ASD_WLAN[wasd->WlanID]->wlan_dhcp->ifmac, ifname, (char *)in_ifname, 1);
 		
-		asd_printf(ASD_DEFAULT,MSG_INFO,"%s sta "MACSTR" assign vir ip %u.%u.%u.%u\n",
-			__func__,MAC2STR(sta->addr),  
-			sta->vir_ip>>24 & 0xff, sta->vir_ip>>16 & 0xff, sta->vir_ip>>8 & 0xff, sta->vir_ip & 0xff);
+		asd_printf(ASD_DEFAULT,MSG_INFO,"%s sta "MACSTR" assign vir ip %s.\n",
+			__func__,MAC2STR(sta->addr), u32ip2str(sta->vir_ip));
 	}
 	else
 	{
@@ -541,9 +555,8 @@ int asd_virdhcp_handle(struct asd_data *wasd, struct sta_info *sta, unsigned int
 		
 		tmp = dhcp_release_ip(ASD_WLAN[wasd->WlanID]->wlan_dhcp, sta->vir_ip, sta->addr);	
 
-		asd_printf(ASD_DEFAULT,MSG_INFO,"%s sta "MACSTR" release vir ip %u.%u.%u.%u\n",
-			__func__,MAC2STR(sta->addr),  
-			sta->vir_ip>>24 & 0xff, sta->vir_ip>>16 & 0xff, sta->vir_ip>>8 & 0xff, sta->vir_ip & 0xff);
+		asd_printf(ASD_DEFAULT,MSG_INFO,"%s sta "MACSTR" release vir ip %s.\n",
+			__func__,MAC2STR(sta->addr), u32ip2str(sta->vir_ip));
 
 		if (tmp != NULL)
 		{
@@ -553,7 +566,6 @@ int asd_virdhcp_handle(struct asd_data *wasd, struct sta_info *sta, unsigned int
 			asd_printf(ASD_DEFAULT,MSG_INFO,"%s sta %s %s interface %s delete arp\n", 
 				__func__, mac, staip, ASD_WLAN[wasd->WlanID]->wlan_dhcp->ifname);
 			
-			int ret_ipneigh = 0;
 			ret_ipneigh= ipneigh_modify(RTM_DELNEIGH, 0,(char*)staip,(char*)mac, ifname);
 			asd_printf(ASD_DEFAULT,MSG_DEBUG,"delete arp sta %s %s interface %s ret %d\n", 
 								mac,  staip,  ifname, ret_ipneigh);
@@ -561,6 +573,10 @@ int asd_virdhcp_handle(struct asd_data *wasd, struct sta_info *sta, unsigned int
 			notice_aat_mod((char *)sta->addr,tmp->ip,ASD_WLAN[wasd->WlanID]->wlan_dhcp->ifmac, ifname, (char *)in_ifname, 0);
 			sta->vir_ip = 0;
 		}
+
+		asd_printf(ASD_DEFAULT,MSG_DEBUG,"%s check if sta "MACSTR" has repeated element in vir dhcp table base mac after delete\n", 
+				__func__, MAC2STR(sta->addr));
+		dhcp_release_ip_bymac(ASD_WLAN[wasd->WlanID]->wlan_dhcp, sta->addr);
 	}
 	
 	return 0;
@@ -671,9 +687,8 @@ int b_virdhcp_handle
 		ipneigh_modify(RTM_NEWNEIGH, NLM_F_CREATE|NLM_F_REPLACE,(char*)staip,(char*) mac, ifname);
 		notice_aat_mod((char *)sta->addr,tmp->ip,ASD_WLAN[wasd->WlanID]->wlan_dhcp->ifmac, ifname, (char *)in_ifname, 1);
 		
-		asd_printf(ASD_DEFAULT,MSG_INFO,"%s sta "MACSTR" assign vir ip %u.%u.%u.%u\n",
-			__func__,MAC2STR(sta->addr),  
-			sta->vir_ip>>24 & 0xff, sta->vir_ip>>16 & 0xff, sta->vir_ip>>8 & 0xff, sta->vir_ip & 0xff);
+		asd_printf(ASD_DEFAULT,MSG_INFO,"%s sta "MACSTR" assign vir ip %s.\n",
+			__func__,MAC2STR(sta->addr), u32ip2str(sta->vir_ip));
 	}
 	else
 	{
@@ -685,9 +700,8 @@ int b_virdhcp_handle
 #endif		
 		tmp = dhcp_release_ip(ASD_WLAN[wasd->WlanID]->wlan_dhcp, sta->vir_ip, sta->addr);	
 
-		asd_printf(ASD_DEFAULT,MSG_INFO,"%s sta "MACSTR" release vir ip %u.%u.%u.%u\n",
-			__func__,MAC2STR(sta->addr),  
-			sta->vir_ip>>24 & 0xff, sta->vir_ip>>16 & 0xff, sta->vir_ip>>8 & 0xff, sta->vir_ip & 0xff);
+		asd_printf(ASD_DEFAULT,MSG_INFO,"%s sta "MACSTR" release vir ip %s.\n",
+			__func__,MAC2STR(sta->addr), u32ip2str(sta->vir_ip));
 
 		if (tmp != NULL)
 		{
@@ -3471,6 +3485,77 @@ int AsdStaInfoToEAG(struct asd_data *wasd, struct sta_info *sta, Operate op){
 	asd_printf(ASD_DEFAULT,MSG_DEBUG,"auth_type = %d\n",msg.STA.auth_type );
 	asd_printf(ASD_DEFAULT,MSG_DEBUG,"essid : %s\n",msg.STA.essid);
 	asd_printf(ASD_DEFAULT,MSG_DEBUG,"wtpid : %d, wtp_name: %s\n",wtpid,msg.STA.wtp_name);
+	return 0;
+}
+
+/* yjl add for mac_auth in tl. 2014-11-18 */
+int asd_init_tipc_sock(void)
+{
+	int sockfd = -1;
+	
+	sockfd = socket(AF_TIPC, SOCK_RDM, 0);
+	if (sockfd < 0) {
+		asd_printf(ASD_DEFAULT, MSG_ERROR, "%s init TIPC socket to eag faild!\n", __func__);
+		return -1;
+	}
+
+	return sockfd;
+}
+int asd_notify_to_protal(uint32_t userip, uint8_t *usermac)
+{
+#define MACAUTH_SERVER_TYPE			0x4000
+#define MACAUTH_SERVER_INSTANCE		0x10000
+
+	struct dhcp_sta_msg {
+			uint8_t family;
+			uint8_t usermac[ETH_ALEN];
+			union {
+			uint32_t userip;
+			struct in6_addr user_ipv6; /* tl not support ipv6 now,2014-11-18 */
+			} addr;
+	};
+
+	static int sock_fd = -1;
+
+	size_t size = 0;
+	struct sockaddr_tipc servaddr;
+	struct dhcp_sta_msg msg;
+
+	if (!usermac) {
+		return -1;
+	}
+	
+	if (sock_fd < 0) {
+		sock_fd = asd_init_tipc_sock();
+	}
+	
+	if (sock_fd >= 0) {
+		/* server address */
+		memset(&servaddr, 0, sizeof(struct sockaddr_tipc));
+		servaddr.family = AF_TIPC;
+		servaddr.addrtype = TIPC_ADDR_NAMESEQ;
+		servaddr.addr.nameseq.type = MACAUTH_SERVER_TYPE;
+		servaddr.addr.nameseq.lower = MACAUTH_SERVER_INSTANCE;
+		servaddr.addr.nameseq.upper = MACAUTH_SERVER_INSTANCE;
+		servaddr.scope = TIPC_CLUSTER_SCOPE;
+
+		/* msg */
+		memset(&msg, 0, sizeof(msg));
+		msg.addr.userip = userip;
+		memcpy(msg.usermac, usermac, ETH_ALEN);
+		msg.family = 4;
+
+		asd_printf(ASD_DEFAULT, MSG_DEBUG, "msg to potal(ipv4) %s "MACSTR"\n", u32ip2str(userip), MAC2STR(usermac));
+
+		size = sendto(sock_fd, &msg, sizeof(msg), MSG_DONTWAIT, 
+			(struct sockaddr *)(&servaddr), sizeof(servaddr));
+		if (size != sizeof(msg)) {
+			asd_printf(ASD_DEFAULT, MSG_ERROR, "%s %s "MACSTR"\n",
+				"send msg to portal failed", u32ip2str(userip), MAC2STR(usermac));
+			return -1;
+		}
+	}
+	
 	return 0;
 }
 
