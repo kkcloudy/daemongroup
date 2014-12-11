@@ -1177,9 +1177,9 @@ macauth_preauth_interval(struct mac_preauth_t *preauth,
 	}
 
 	if (0 == preauth->macbind_req_time
-		&& (preauth->output_octets > preauth->last_output_octets)
+		&& (preauth->output_octets >= preauth->last_output_octets)
 		&& (preauth->output_octets + preauth->input_octets 
-			> preauth->last_output_octets + preauth->last_input_octets + macauth->flux_threshold))
+			>= preauth->last_output_octets + preauth->last_input_octets + macauth->flux_threshold))
 	{
 		appconn = appconn_find_by_useripx(macauth->appdb, &preauth->user_addr);
 		if (NULL == appconn) {
