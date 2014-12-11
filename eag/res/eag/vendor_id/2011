@@ -1,0 +1,6 @@
+acct_ipv6_input_octets=144
+acct_ipv6_output_octets=145
+acct_ipv6_input_packets=146
+acct_ipv6_output_packets=147
+acct_ipv6_input_gigawords=148
+acct_ipv6_output_gigawords=149
