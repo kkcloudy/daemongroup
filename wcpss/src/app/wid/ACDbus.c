@@ -27342,6 +27342,63 @@ DBusMessage * wid_dbus_interface_set_roaming_policy(DBusConnection *conn, DBusMe
 	return reply;
 
 } 
+/* lilong add 2014.12.01 */
+DBusMessage * wid_dbus_interface_wtp_electronic_menu
+(
+	DBusConnection *conn, 
+	DBusMessage *msg, 
+	void *user_data
+)
+{
+	DBusMessage *reply = NULL;
+	DBusError err;
+	DBusMessageIter	iter;
+	unsigned int wtpid = 0;
+	unsigned int state = 0;
+	int ret = WID_DBUS_ERROR;
+
+	dbus_error_init(&err);
+	if (!(dbus_message_get_args ( msg, &err,
+								DBUS_TYPE_UINT32,&wtpid,
+								DBUS_TYPE_UINT32,&state,
+								DBUS_TYPE_INVALID)))
+	{
+		printf("Unable to get input args\n");
+				
+		if (dbus_error_is_set(&err))
+		{
+			printf("%s raised: %s",err.name,err.message);
+			dbus_error_free(&err);
+		}
+		return NULL;
+	}		
+
+	wid_syslog_debug_debug(WID_DEFAULT, "wtp %d local-survival current state %s"
+										"set local-survival %s\n", wtpid,										 
+										(AC_WTP[wtpid]->electronic_menu) ? "enable" : "disable",
+										state ? "enable" : "disable");
+
+		
+	if(AC_WTP[wtpid] == NULL)
+	{
+		ret = WTP_ID_NOT_EXIST;
+	}
+	else if(AC_WTP[wtpid]->electronic_menu != state)
+	{
+		ret = set_wtp_local_survival(wtpid,state);
+	}	
+
+	reply = dbus_message_new_method_return(msg);
+	
+	dbus_message_iter_init_append (reply, &iter);
+	
+	dbus_message_iter_append_basic (&iter,
+									 DBUS_TYPE_UINT32,
+									 &ret);
+	return reply;
+}
+
+
 DBusMessage * wid_dbus_interface_set_wlan_br_isolation(DBusConnection *conn, DBusMessage *msg, void *user_data){
 	DBusMessage* reply;
 	DBusError err;
@@ -83132,7 +83189,12 @@ int show_running_config_wtp(WID_WTP **WTP,int i,char *cursor,char **showStr2,cha
 				totalLen += sprintf(cursor, "set ap sta flow rx overflow report switch enable\n");
 				cursor = showStr + totalLen;
 			}
-
+			/* lilong add 2014.12.01 */
+            if(0 != WTP[i]->electronic_menu)
+			{
+			    totalLen += sprintf(cursor," set local-survival %s\n",WTP[i]->electronic_menu?"enable":"disable");						
+				cursor = showStr + totalLen;
+			}
 			//set sta flow overlfow tx report switch
 			if (WTP[i]->sta_flow_overflow_tx_reportswitch == STA_FLOW_OVERFLOW_TRAP_RX_SWITCH_ENABLE) {
 				if (vrrid != 0) {
@@ -86136,8 +86198,11 @@ static DBusHandlerResult wid_dbus_message_handler (DBusConnection *connection, D
 		reply = wid_dbus_interface_wtp_flow_triger(connection,message,user_data);
 			  
 	}
-
-
+    /* lilong add 2014.12.01 */
+    else if (dbus_message_is_method_call(message,WID_DBUS_WTP_INTERFACE,WID_DBUS_WTP_METHOD_ELECTRONIC_MENU))
+	{
+		reply = wid_dbus_interface_wtp_electronic_menu(connection,message,user_data);
+	}
 	  else if(dbus_message_is_method_call(message,WID_DBUS_WTP_INTERFACE,WID_DBUS_WTP_METHOD_WTP_USED)) {
 	  		//intf("******* wid_dbus_interface_wtp_used start  *****\n");
 			reply = wid_dbus_interface_wtp_used(connection,message,user_data);

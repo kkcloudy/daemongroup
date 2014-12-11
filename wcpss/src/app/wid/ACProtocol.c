@@ -711,6 +711,48 @@ CWBool CWAssembleMsgElemAPExtensinCommandSet(CWProtocolMessage *msgPtr,int wtpid
 	return CWAssembleMsgElem(msgPtr, CW_MSG_ELEMENT_VENDOR_SPEC_PAYLOAD_CW_TYPE);
 
 }
+
+/* lilong add 2014.12.01 */
+CWBool CWAssembleMsgElemAPElectronicMenu
+(
+	CWProtocolMessage *msgPtr,
+	unsigned char wlanid,
+	unsigned char radioid,
+	unsigned char level,
+	unsigned char state
+)
+{
+/*
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|            Element ID         |        Element Length         |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|     switch    |   level       |   radio id    |   wlan id     |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+*/
+	short int elementid = 25; 
+	short int length = 8;
+	
+	if(msgPtr == NULL)
+	{
+		return CWErrorRaise(CW_ERROR_WRONG_ARG, NULL);
+	}
+	CW_CREATE_PROTOCOL_MESSAGE(*msgPtr, length, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
+	
+	CWProtocolStore16(msgPtr, elementid); 
+	CWProtocolStore16(msgPtr, (length-4));	
+	CWProtocolStore8(msgPtr, state); 
+	CWProtocolStore8(msgPtr, level); 
+	CWProtocolStore8(msgPtr, radioid); 
+	CWProtocolStore8(msgPtr, wlanid); 
+
+	wid_syslog_debug_debug(WID_WTPINFO, "%s \n", __func__);
+	wid_syslog_debug_debug(WID_WTPINFO, "elementid %d length %d\n", elementid, length);
+	wid_syslog_debug_debug(WID_WTPINFO, "state = %d; level = %d; radio = %d; wlan = %d\n",
+										state, level, radioid, wlanid);
+		
+	return CWAssembleMsgElemVendor(msgPtr, CW_MSG_ELEMENT_VENDOR_SPEC_PAYLOAD_CW_TYPE);
+}
+
 CWBool CWAssembleMsgElemAPOption60ParameterSet(CWProtocolMessage *msgPtr,int wtpid,char *parameter)
 {
 	wid_syslog_debug_debug(WID_WTPINFO,"#### CWAssembleMsgElemAPOption60ParameterSet ####\n");

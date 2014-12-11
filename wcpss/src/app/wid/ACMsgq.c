@@ -953,6 +953,13 @@ void WID_CONFIG_SAVE(unsigned int WTPIndex){
 		WID_INSERT_CONTROL_LIST(WTPIndex, elem);
 		
 	}
+	/* lilong add 2014.12.01 */
+	if(AC_WTP[WTPIndex]->electronic_menu == 1)
+	{
+		int state = 1;
+		set_wtp_local_survival(WTPIndex,state);
+	}	
+
 }
 struct msgqlist * WID_GET_CONTROL_LIST_ELEM(unsigned int WTPID){
 	struct msgqlist *tmp = NULL;

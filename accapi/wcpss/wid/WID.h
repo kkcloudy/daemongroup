@@ -270,7 +270,12 @@ typedef enum{
 	rssi_type=1,
 	scan_type_type=2
 }wifi_locate_special_parameter_type;
-
+/* lilong add 2014.12.01 */
+typedef enum{
+	LEVEL_AP	= 0,
+	LEVEL_RADIO	= 1,
+	LEVEL_WLAN	= 2
+}op_level;
 
 /*
 
@@ -1482,6 +1487,8 @@ struct wtp{
 	unsigned short band;
 	char * cell_id;
 	char * lte_uplink_mode;
+	unsigned short link_quality_report_interval;
+	u_int8_t electronic_menu; //lilong add 2014.12.01
 };
 typedef struct wtp WID_WTP;
 

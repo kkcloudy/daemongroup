@@ -489,6 +489,7 @@ int wid_radio_set_chainmask(unsigned int RadioID, unsigned char type); // zhangs
 int wid_radio_set_cpe_channel(unsigned int WTPIndex,unsigned char local_radio_id,unsigned int bind_wlan);
 
 int wid_set_radio_netgear_supper_g_technology_state(unsigned int wtpid,	unsigned int l_radioid,unsigned short supper_g_type,unsigned int supper_g_state);
+int set_wtp_local_survival(unsigned int wtpid, unsigned char state);
 CWBool check_radio_bind_wlan(unsigned int wtpid,unsigned char radio_l_id,unsigned char wlanId);
 int br_read_fdb(const char *bridge, struct fdb_entry *fdbs,unsigned long offset, int num);
 int create_ac_ip_list_group(unsigned char ID,char *IFNAME);

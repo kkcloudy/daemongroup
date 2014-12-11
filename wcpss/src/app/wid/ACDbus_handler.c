@@ -33182,6 +33182,80 @@ int delete_ap_group(unsigned int ID){
 	return 0;
 
 }
+/* lilong add 2014.12.01 */
+int set_wtp_local_survival(unsigned int wtpid, unsigned char state)
+{
+	unsigned char WlanID = 0;
+	unsigned char localradio_id = 0;
+	msgq msg;
+	struct msgqlist *elem = NULL;	
+	
+	WID_CHECK_WTP_STANDARD_RET(wtpid, WTP_ID_NOT_EXIST);
+
+	if (NULL == AC_WTP[wtpid])
+	{
+		return WTP_ID_NOT_EXIST;
+	}
+	
+	AC_WTP[wtpid]->electronic_menu = state;
+	
+	wid_syslog_debug_debug(WID_DEFAULT, "%s, set local-survival new state %s\n", __func__,
+										 (AC_WTP[wtpid]->electronic_menu) ? "enable" : "disable");
+		
+	if ((AC_WTP[wtpid] != NULL)&&(AC_WTP[wtpid]->WTPStat == WID_RUN))
+	{
+		CWThreadMutexLock(&(gWTPs[wtpid].WTPThreadMutex));
+
+		if (gWTPs[wtpid].isNotFree && (CW_ENTER_RUN == gWTPs[wtpid].currentState))
+		{
+			memset((char*)&msg, 0, sizeof(msg));
+			msg.mqid = wtpid%THREAD_NUM+1;
+			msg.mqinfo.WTPID = wtpid;
+			msg.mqinfo.type = CONTROL_TYPE;
+			msg.mqinfo.subtype = WTP_S_TYPE;
+			msg.mqinfo.u.WtpInfo.Wtp_Op = WTP_ELECTRONIC_MENU;
+			msg.mqinfo.u.WtpInfo.value[0] = WlanID;
+			msg.mqinfo.u.WtpInfo.value[1] = localradio_id;
+			msg.mqinfo.u.WtpInfo.value[2] = LEVEL_AP;
+			msg.mqinfo.u.WtpInfo.value[3] = state;
+
+			if (-1 == msgsnd(ACDBUS_MSGQ, (msgq *)&msg, sizeof(msg), 0))
+			{
+				wid_syslog_info("%s msgsend %s", __func__, strerror(errno));
+			}
+			
+			wid_syslog_debug_debug(WID_DEFAULT, "send local-survival state %d msg OK\n",
+												AC_WTP[wtpid]->electronic_menu);
+				
+		}		
+		CWThreadMutexUnlock(&(gWTPs[wtpid].WTPThreadMutex));
+	}
+	else if (NULL != AC_WTP[wtpid])
+	{		
+		elem = (struct msgqlist*)malloc(sizeof(struct msgqlist));
+		if (elem == NULL)
+		{
+			WID_MALLOC_ERR();
+			return MALLOC_ERROR;
+		}
+		
+		memset(elem, 0, sizeof(struct msgqlist));
+		elem->mqinfo.WTPID = wtpid;
+		elem->mqinfo.type = CONTROL_TYPE;
+		elem->mqinfo.subtype = WTP_S_TYPE;
+		elem->mqinfo.u.WtpInfo.Wtp_Op = WTP_ELECTRONIC_MENU;
+		elem->mqinfo.u.WtpInfo.value[0] = WlanID;
+		elem->mqinfo.u.WtpInfo.value[1] = localradio_id;
+		elem->mqinfo.u.WtpInfo.value[2] = LEVEL_AP;
+		elem->mqinfo.u.WtpInfo.value[3] = state;
+		WID_INSERT_CONTROL_LIST(wtpid, elem);		
+		
+		wid_syslog_debug_debug(WID_DEFAULT, "insert local-survival state %d msg to controllist OK\n",
+											AC_WTP[wtpid]->electronic_menu);
+	}
+
+	return 0;	
+}
 
 int do_check_ap_group_config(unsigned int GID, unsigned int WTPID){
 	return 0;

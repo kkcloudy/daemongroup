@@ -7421,6 +7421,97 @@ DEFUN(config_wtp_service_cmd_func,
 
 	return CMD_SUCCESS;	
 }*/
+/* lilong add 2014.12.01 */
+DEFUN(wtp_set_local_survival_cmd_func,
+	  wtp_set_local_survival_cmd,
+	  "set local-survival (enable|disable)",
+	  WTP_SET
+	  "Local-survival configuration\n"
+	  "enable service\n"
+	  "disable service\n")
+{
+	DBusMessage *query = NULL, *reply = NULL;
+	DBusError err;
+	DBusMessageIter	iter;
+	unsigned int ret = 0;
+	unsigned int wtp_id = 0;
+	int state = 0;	
+	unsigned int index = 0;
+	int localid = 1;
+	int slot_id = HostSlotId;
+	char BUSNAME[PATH_LEN] = {0};
+	char OBJPATH[PATH_LEN] = {0};
+	char INTERFACE[PATH_LEN] = {0};
+	
+	if (!strncmp(argv[0], "enable", strlen(argv[0])))
+	{
+        state = 1;
+	}
+	else if (!strncmp(argv[0], "disable", strlen(argv[0])))
+	{
+        state = 0;
+	}
+	else
+	{
+		vty_out(vty, "%% Bad parameter %s!\n", argv[0]);
+		return CMD_WARNING;
+	}
+
+	if(vty->node == WTP_NODE){
+		index = 0;			
+		wtp_id = (int)vty->index;
+	}else if(vty->node == HANSI_WTP_NODE){
+		index = vty->index; 		
+		wtp_id = (int)vty->index_sub;
+		localid = vty->local;
+		slot_id = vty->slotindex;
+	}else if(vty->node == LOCAL_HANSI_WTP_NODE){
+		index = vty->index; 		
+		wtp_id = (int)vty->index_sub;
+		localid = vty->local;
+		slot_id = vty->slotindex;
+	}
+
+	DBusConnection *dcli_dbus_connection = NULL;
+	ReInitDbusConnection(&dcli_dbus_connection,slot_id,distributFag);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_BUSNAME,BUSNAME);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_WTP_OBJPATH,OBJPATH);
+	ReInitDbusPath_V2(localid,index,WID_DBUS_WTP_INTERFACE,INTERFACE);
+	
+	query = dbus_message_new_method_call(BUSNAME,OBJPATH,INTERFACE,WID_DBUS_WTP_METHOD_ELECTRONIC_MENU);
+	dbus_error_init(&err);
+	
+	dbus_message_append_args(query,
+							 DBUS_TYPE_UINT32, &wtp_id,
+							 DBUS_TYPE_UINT32, &state,
+							 DBUS_TYPE_INVALID);
+	reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection, query, -1, &err);	
+	dbus_message_unref(query);
+	if (NULL == reply) 
+	{
+		vty_out(vty,"%% failed get reply.\n");
+		if (dbus_error_is_set(&err)) 
+		{
+			vty_out(vty,"%s raised: %s", err.name,err.message);
+			dbus_error_free(&err);
+		}
+		return CMD_SUCCESS;
+	}	
+
+	dbus_message_iter_init(reply, &iter);
+	dbus_message_iter_get_basic(&iter, &ret);
+	dbus_message_unref(reply);
+		
+	if (0 == ret)
+	{
+		vty_out(vty, "set local-survival %s successfully\n", argv[0]);
+	}
+	else
+	{
+		vty_out(vty, "%s\n", dcli_wid_opcode2string(ret));
+	}	
+	return CMD_SUCCESS;
+}
 
 #if _GROUP_POLICY
 DEFUN(config_wtp_service_cmd_func,
@@ -43195,6 +43286,7 @@ void dcli_wtp_init(void) {
 			install_element(HANSI_WTP_NODE,&set_ap_moment_infomation_enable_cmd);/*wtp moment report interval by nl 2010-08-18*/
 			install_element(HANSI_WTP_NODE,&wtp_apply_interface_cmd);
 			install_element(HANSI_WTP_NODE,&wtp_apply_wlan_cmd);
+			install_element(HANSI_WTP_NODE,&wtp_set_local_survival_cmd);//lilong add 2014.12.01
 			install_element(HANSI_WTP_NODE,&config_wtp_service_cmd);
 			install_element(HANSI_WTP_NODE,&wtp_delete_wlan_cmd);/*20080701*/
 			install_element(HANSI_WTP_NODE,&wtp_enable_wlan_cmd);
@@ -43453,6 +43545,7 @@ void dcli_wtp_init(void) {
 			install_element(LOCAL_HANSI_WTP_NODE,&set_ap_moment_infomation_enable_cmd);/*wtp moment report interval by nl 2010-08-18*/
 			install_element(LOCAL_HANSI_WTP_NODE,&wtp_apply_interface_cmd);
 			install_element(LOCAL_HANSI_WTP_NODE,&wtp_apply_wlan_cmd);
+			install_element(LOCAL_HANSI_WTP_NODE,&wtp_set_local_survival_cmd);//lilong add 2014.12.01
 			install_element(LOCAL_HANSI_WTP_NODE,&config_wtp_service_cmd);
 			install_element(LOCAL_HANSI_WTP_NODE,&wtp_delete_wlan_cmd);/*20080701*/
 			install_element(LOCAL_HANSI_WTP_NODE,&wtp_enable_wlan_cmd);

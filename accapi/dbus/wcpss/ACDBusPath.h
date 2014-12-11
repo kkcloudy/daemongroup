@@ -199,6 +199,7 @@ char WID_DBUS_WLAN_METHOD_APPAY_WLAN_FLOW_BALANCE_PARA[PATH_LEN]=	"wlan_flow_bal
 
 char WID_DBUS_WLAN_METHOD_APPAY_WLAN_BALANCE_SWITCH[PATH_LEN]=	"wlan_balance_switch"; /*xm  08/12/29*/
 char WID_DBUS_WTP_METHOD_WTP_USED[PATH_LEN]=            "wtp_used";
+char WID_DBUS_WTP_METHOD_ELECTRONIC_MENU[PATH_LEN]=     "wtp_electronic_menu"; //lilong add 2014.12.01
 /*added by weiay 20080701*/
 char WID_DBUS_WTP_METHOD_DELETE_WLAN_ID[PATH_LEN]=            "wtp_delete_wlan_id";
 char WID_DBUS_WTP_METHOD_DISABLE_WLAN_ID[PATH_LEN]=            "wtp_disable_wlan_id";

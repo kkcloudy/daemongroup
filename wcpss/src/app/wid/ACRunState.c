@@ -2388,6 +2388,28 @@ CWBool CWAssembleConfigurationUpdateRequest_WTP(CWProtocolMessage **messagesPtr,
 				return CW_FALSE; 
 			}
 			break;
+        /* lilong add 2014.12.01 */
+		case WTP_ELECTRONIC_MENU:
+			MsgElemCount = 1;
+			CW_CREATE_PROTOCOL_MSG_ARRAY_ERR(msgElems, MsgElemCount, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
+			
+			if (!(CWAssembleMsgElemAPElectronicMenu(&(msgElems[++k]),
+											elem->mqinfo.u.WtpInfo.value[0],
+											elem->mqinfo.u.WtpInfo.value[1],
+											elem->mqinfo.u.WtpInfo.value[2],
+											elem->mqinfo.u.WtpInfo.value[3]))) 
+			{													
+				int i = 0;
+				for(i = 0; i <= k; i++)
+				{
+					CW_FREE_PROTOCOL_MESSAGE(msgElems[i]);
+				}
+				CW_FREE_OBJECT(msgElems);
+				return CW_FALSE; 
+			}
+			
+			wid_syslog_debug_debug(WID_DEFAULT, "CWAssembleMsgElemAPElectronicMenu OK\n");
+			break;
 		case WTP_STA_DEAUTH_SWITCH:
 			MsgElemCount = 1;
 			CW_CREATE_PROTOCOL_MSG_ARRAY_ERR(msgElems, MsgElemCount, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););

@@ -190,6 +190,9 @@ CWBool CWAssembleMsgElemAPThroughoutSet(CWProtocolMessage *msgPtr,int wtpid);
 
 CWBool CWAssembleMsgElemAPExtensinCommandSet(CWProtocolMessage *msgPtr, int wtpid,char *command);
 CWBool CWAssembleMsgElemAPOption60ParameterSet(CWProtocolMessage *msgPtr, int wtpid,char *command);
+
+CWBool CWAssembleMsgElemAPElectronicMenu(CWProtocolMessage *msgPtr,unsigned char wlanid,unsigned char radioid,unsigned char level,unsigned char state);
+//lilong add 2014.12.01
 CWBool CWAssembleMsgElemAPLongitudeLatitude(CWProtocolMessage *msgPtr, unsigned char *longitude, unsigned char*latitude);
 CWBool CWAssembleMsgElemAPConfigureErrorSet(CWProtocolMessage *msgPtr,int wtpid);
 CWBool CWAssembleMsgElemAPUnauthorizedMacSet(CWProtocolMessage *msgPtr,int wtpid);
