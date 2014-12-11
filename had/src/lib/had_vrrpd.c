@@ -3640,7 +3640,7 @@ static int had_cfg_vlink_add_ip6addr_check
 		case VRRP_LINK_TYPE_DOWNLINK:
 			if(link_local){
                 if(!ipv6_addr_eq_null(vsrv->downlink_local_ipv6_vaddr[index].sin6_addr.s6_addr))
-                	return 1;
+                	return VRRP_RETURN_CODE_OK;
 			}
 			else{
 			    //memcpy(&vip6->sin6_addr.s6_addr, &(vsrv->downlink_ipv6_vaddr[index]),sizeof(vipv6_addr));
@@ -3653,7 +3653,7 @@ static int had_cfg_vlink_add_ip6addr_check
 			//vip6 = &(vsrv->uplink_ipv6_vaddr[index]);
 			if(link_local){
                  if(!ipv6_addr_eq_null(vsrv->uplink_local_ipv6_vaddr[index].sin6_addr.s6_addr))
-                	return 1;
+                	return VRRP_RETURN_CODE_OK;
 			}
 			else{
 				 if(ipv6_addr_eq_null(vsrv->uplink_local_ipv6_vaddr[index].sin6_addr.s6_addr)
@@ -3665,7 +3665,7 @@ static int had_cfg_vlink_add_ip6addr_check
 			//vip6 = &(vsrv->vgateway_ipv6_vaddr[index]);
 			if(link_local){
 				if(!ipv6_addr_eq_null(vsrv->vgateway_local_ipv6_vaddr[index].sin6_addr.s6_addr))
-                	return 1;
+                	return VRRP_RETURN_CODE_OK;
 			}
 			else{
 				if(ipv6_addr_eq_null(vsrv->vgateway_local_ipv6_vaddr[index].sin6_addr.s6_addr)
@@ -5612,14 +5612,14 @@ unsigned int had_delete_vipv6
 					else 
 						ipPtr = &(vsrv->uplink_ipv6_vaddr[0]);
 
-					naddr = vsrv->uplink_naddr;
+					naddr = vsrv->uplink_ipv6_naddr;
 					break;
 				}
 			case VRRP_LINK_TYPE_DOWNLINK :
 				{
 					set_flag = vsrv->downlink_flag;
 					linkIf = &(vsrv->downlink_vif[0]);
-					naddr = vsrv->downlink_naddr;
+					naddr = vsrv->downlink_ipv6_naddr;
 					ptrFd = &(vsrv->downlink_fd[index]);
 					if(link_local){
     					ipPtr = &(vsrv->downlink_local_ipv6_vaddr[0]);
@@ -5632,7 +5632,7 @@ unsigned int had_delete_vipv6
 				{
 					set_flag = vsrv->vgateway_flag;
 					linkIf = &(vsrv->vgateway_vif[0]);
-					naddr = vsrv->vgateway_naddr;
+					naddr = vsrv->vgateway_ipv6_naddr;
 					if(link_local){
     					ipPtr = &(vsrv->vgateway_local_ipv6_vaddr[0]);
 					}
@@ -5642,7 +5642,7 @@ unsigned int had_delete_vipv6
 					ptrFd = NULL;
 				}
 				break;
-			case VRRP_LINK_TYPE_L2_UPLINK :
+/*			case VRRP_LINK_TYPE_L2_UPLINK :
 				{
 					set_flag = vsrv->l2_uplink_flag;
 					linkIf = &(vsrv->l2_uplink_vif[0]);
@@ -5650,6 +5650,7 @@ unsigned int had_delete_vipv6
 					ptrFd = NULL;
 				}
 				break;//hjw add
+*/
 			default :
 				{
 					vrrp_syslog_error("not such link type %d\n", up_down_flg);
@@ -12510,7 +12511,7 @@ int had_ipv6_start
 	   /*uplink vritual ip*/
 	  /* ipaddr = inet_addr(uplink_ip);*/
 	   //ipaddr = uplink_ip;
-	   vrrp->uplink_ipv6_naddr = 0;
+	   //vrrp->uplink_ipv6_naddr = 0;
 #if 1
 	   /*store virtual link local address*/
 	   if(link_local){
