@@ -2022,26 +2022,23 @@ netlink_route_multipath(int cmd, struct prefix *p, struct rib *rib,
 	not let this local interface of nexthop gate to install kernel route.*/				
 #if 1
 				struct interface *iifp = NULL;
-				iifp = if_lookup_by_index(nexthop->ifindex);\
-				if (bytelen == 4)
-				{ /*ipv6 not support interface loacal*/
-					if(iifp && product)
+				iifp = if_lookup_by_index(nexthop->ifindex);
+				if(iifp && product)
+				{
+					int slot_num = 0;
+					slot_num = get_slot_num(iifp->name);
+					if(CHECK_FLAG(iifp->if_scope, INTERFACE_LOCAL)&& (slot_num != product->board_id))
 					{
-						int slot_num = 0;
-						slot_num = get_slot_num(iifp->name);
-						if(CHECK_FLAG(iifp->if_scope, INTERFACE_LOCAL)&& (slot_num != product->board_id))
-						{
-							zlog_info("****(single hop).Set local and not local baord, not install route to kernel : nexthop(%s)****\n",
-										iifp->name);
-							if (cmd == RTM_NEWROUTE)/* to set NEXTHOP_FLAG_FIB, in order for show ip route " *>"  */
-								SET_FLAG(nexthop->flags, NEXTHOP_FLAG_FIB);
-							
-							continue;
-							}
+						zlog_info("****(single hop).Set local and not local baord, not install route to kernel : nexthop(%s)****\n",
+									iifp->name);
+						if (cmd == RTM_NEWROUTE)/* to set NEXTHOP_FLAG_FIB, in order for show ip route " *>"  */
+							SET_FLAG(nexthop->flags, NEXTHOP_FLAG_FIB);
 						
-						/*zlog_info("####(single hop).Set local , but is local board , install route to kernel : nexthop(%s)####.\n",
-									iifp->name);*/
-					}
+						continue;
+						}
+					
+					/*zlog_info("####(single hop).Set local , but is local board , install route to kernel : nexthop(%s)####.\n",
+								iifp->name);*/
 				}
 #endif
 
@@ -2257,25 +2254,22 @@ netlink_route_multipath(int cmd, struct prefix *p, struct rib *rib,
 #if 1
 				struct interface *iifp = NULL;
 				iifp = if_lookup_by_index(nexthop->ifindex);
-				if (bytelen == 4)
-				{/*ipv6 not support interface loacal*/
-					if(iifp && product)
+				if(iifp && product)
+				{
+					int slot_num = 0;
+					slot_num = get_slot_num(iifp->name);
+					if(CHECK_FLAG(iifp->if_scope, INTERFACE_LOCAL)&& (slot_num != product->board_id))
 					{
-						int slot_num = 0;
-						slot_num = get_slot_num(iifp->name);
-						if(CHECK_FLAG(iifp->if_scope, INTERFACE_LOCAL)&& (slot_num != product->board_id))
-						{
-							zlog_info("****Set local and not local baord, not install route to kernel : nexthop(%s)****\n",
-										iifp->name);
-							if (cmd == RTM_NEWROUTE)/* to set NEXTHOP_FLAG_FIB, in order for show ip route " *>"  */
-								SET_FLAG(nexthop->flags, NEXTHOP_FLAG_FIB);
-							
-							continue;
-							}
+						zlog_info("****Set local and not local baord, not install route to kernel : nexthop(%s)****\n",
+									iifp->name);
+						if (cmd == RTM_NEWROUTE)/* to set NEXTHOP_FLAG_FIB, in order for show ip route " *>"  */
+							SET_FLAG(nexthop->flags, NEXTHOP_FLAG_FIB);
 						
-						/*zlog_info("####Set local , but is local board , install route to kernel : nexthop(%s)####.\n",
-									iifp->name);*/
-					}
+						continue;
+						}
+					
+					/*zlog_info("####Set local , but is local board , install route to kernel : nexthop(%s)####.\n",
+								iifp->name);*/
 				}
 #endif						
 

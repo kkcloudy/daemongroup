@@ -1077,7 +1077,9 @@ vice_rib_ipv6_delete_static_route(struct prefix * p,struct rib * rib_del)
 		  {
 		  	  if(nexthop->type== NEXTHOP_TYPE_IPV6_IFINDEX)
 				nexthop->ifname = ifindex2ifname(nexthop->ifindex);/*gateway is: x.x.x.x/m ifname*/
-			  vice_static_delete_ipv6( p,STATIC_IPV6_GATEWAY_IFNAME,&nexthop->gate.ipv6,nexthop->ifname, rib_del->distance, 0);
+			//  vice_static_delete_ipv6( p,STATIC_IPV6_GATEWAY_IFNAME,&nexthop->gate.ipv6,nexthop->ifname, rib_del->distance, 0);		
+			/*wangchao add to sync ipv6 address*/
+			vice_static_delete_ipv6( p,STATIC_IPV6_GATEWAY,&nexthop->gate.ipv6, NULL, rib_del->distance, 0);
 			  }
 		  else if(nexthop->type == NEXTHOP_TYPE_IPV6)/*gateway is : x.x.x.x/m*/
 		  {
@@ -1135,7 +1137,9 @@ vice_rib_ipv6_add_static_route(struct prefix * p,struct rib * rib)
 		  {
 		  	  if(nexthop->type== NEXTHOP_TYPE_IPV6_IFINDEX)
 				nexthop->ifname = ifindex2ifname(nexthop->ifindex);/*gateway is: x.x.x.x/m ifname*/
-			  vice_static_add_ipv6( p,STATIC_IPV6_GATEWAY_IFNAME,&nexthop->gate.ipv6,nexthop->ifname,rib->flags, rib->distance, 0);
+			 // vice_static_add_ipv6( p,STATIC_IPV6_GATEWAY_IFNAME,&nexthop->gate.ipv6,nexthop->ifname,rib->flags, rib->distance, 0);		  
+			 /*wangchao add for can't sync ipv6 route*/
+			  vice_static_add_ipv6( p,STATIC_IPV6_GATEWAY,&nexthop->gate.ipv6,NULL,rib->flags, rib->distance, 0);
 			  }
 		  else if(nexthop->type == NEXTHOP_TYPE_IPV6)/*gateway is : x.x.x.x/m*/
 		  {
@@ -2186,13 +2190,16 @@ tipc_client_route_multipath (int cmd, tipc_server *vice_board, u_short length)
 					 zlog_debug("%s : line %d, fetch nexthop ifname[%s].\n",__func__,__LINE__,ifname);
 					
 					/*gujd : 2013-01-10, pm 4:34 . Add for interface local used in route.*/
-					//ret = check_interface_belong_to_local_board_set_local_mode(ifname);/*ipv6 not support interface loacal*/
-					if(ret == 1&&(cmd == ZEBRA_IPV4_ROUTE_ADD ||cmd == ZEBRA_IPV6_ROUTE_ADD))/*change*/
+					ret = check_interface_belong_to_local_board_set_local_mode(ifname);
+					if(ret == 1&&(cmd == ZEBRA_IPV6_ROUTE_DELETE ||cmd == ZEBRA_IPV6_ROUTE_ADD))/*change*/
 					 {
 						zlog_debug("%s: line %d, nexthop interface(%s) set local, not to add rib.\n",__func__,__LINE__,ifname);
 						/*break;*/
 						set_local_count++;
-						break;
+						//XFREE(MTYPE_RIB,rib)
+						//return 0;
+						//break;
+						goto skip;/*wangchao add*/
 					 }
 					ifindex = ifname2ifindex_by_namelen(ifname,strnlen(ifname, INTERFACE_NAMSIZ));
 					
@@ -4303,7 +4310,7 @@ tipc_vice_connected_add_by_prefix (struct interface *ifp, struct prefix *p,
     zlog_info("%s:line %d,######### interface(%s) scope (%u)##########\n",__func__,__LINE__,ifp->name,ifp->if_scope);
 	if((product->board_type == BOARD_IS_BACKUP_MASTER )
 		||(product->board_type == BOARD_IS_VICE)
-		/*&& (!(CHECK_FLAG(ifp->if_scope, INTERFACE_LOCAL)))*/)/*ipv6 not support interface loacal*/
+		&& (!(CHECK_FLAG(ifp->if_scope, INTERFACE_LOCAL))))
 	{
 	   		zlog_info("Bakup master or Vice board , ifc have address , so install kernel .\n ");
 		/*	ifc->ifp = ifp;///////////////delet/////////////////////////////
@@ -4369,8 +4376,6 @@ tipc_vice_connected_add_by_prefix (struct interface *ifp, struct prefix *p,
 	   zlog_debug("%s: line %d , the interface %s add the same address , so couldn't go on ....\n",__func__,__LINE__,ifp->name);
 	  return NULL;
    }
-  #if 0
-  /*ipv6 not support interface loacal*/
   if((product->board_type == BOARD_IS_VICE)
 	  &&(CHECK_FLAG(ifp->if_scope, INTERFACE_LOCAL))
 	  &&((judge_real_local_interface(ifp->name))!=LOCAL_BOARD_INTERFACE))
@@ -4378,7 +4383,7 @@ tipc_vice_connected_add_by_prefix (struct interface *ifp, struct prefix *p,
 	  zlog_info("Vice board: interface(%s) is set local , but not real local interface , so not creat ifc and not install kernel. \n ",ifp->name);
 	  return NULL;
   	}
-  #endif
+  
   /* Allocate new connected address. */
   ifc = connected_new ();
   ifc->ifp = ifp;
@@ -4538,8 +4543,7 @@ tipc_vice_connected_add_by_prefix (struct interface *ifp, struct prefix *p,
    listnode_add (ifp->connected, ifc);
 	
 #endif
-	#if 0
-	/*ipv6 not support interface loacal*/
+
 	if((product->board_type == BOARD_IS_BACKUP_MASTER)
 		&&(CHECK_FLAG(ifp->if_scope, INTERFACE_LOCAL)))
 	 {
@@ -4559,7 +4563,6 @@ tipc_vice_connected_add_by_prefix (struct interface *ifp, struct prefix *p,
 	 	}
 		
 	 }
-	#endif
 	
 skip2:
 #if 0	
@@ -4888,6 +4891,12 @@ skip:
 			{
 	     		zlog_debug("%s, line %d, kernel uninstall ipv6 address failed:( %s).\n", 
 					__func__, __LINE__,safe_strerror(errno));
+
+				/*wangchao fix*/
+				listnode_delete (ifp->connected, ifc);
+				return ifc;
+
+				#if 0
 				if(CHECK_FLAG(ifp->if_scope, INTERFACE_LOCAL))
 		       	{
 					int slot_num = 0;
@@ -4903,7 +4912,8 @@ skip:
 				else
 				{
 	     			return NULL;
-					}
+				}
+				#endif
 	     	}
 		  }
 		 else/*err : other*/

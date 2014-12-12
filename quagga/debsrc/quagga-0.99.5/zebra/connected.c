@@ -468,11 +468,9 @@ connected_up_ipv6 (struct interface *ifp, struct connected *ifc)
   
   if(product != NULL && product->board_type != BOARD_IS_ACTIVE_MASTER)
   	goto skip;
- #if 0
-/*ipv6 not support interface loacal*/
   if(product != NULL && product->board_type == BOARD_IS_ACTIVE_MASTER &&CHECK_FLAG(ifp->if_scope, INTERFACE_LOCAL))
   	goto skip;/*local interface , skip the check the ifc->conf, because the ip address not install in the kernel .*/
-#endif
+
   if (! CHECK_FLAG (ifc->conf, ZEBRA_IFC_REAL))
     return;
 

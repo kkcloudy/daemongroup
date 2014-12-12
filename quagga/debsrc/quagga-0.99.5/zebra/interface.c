@@ -2093,6 +2093,7 @@ if_up_redistribute(struct interface *ifp)
 #ifdef HAVE_IPV6
 	  else if (p->family == AF_INET6){
 			/*if(!CHECK_FLAG (ifc->conf, ZEBRA_IFC_REAL)&&CHECK_FLAG (ifc->conf, ZEBRA_IFC_CONFIGURED)){*/
+		#if 0 /*wangchao delete*/	
 			if(CHECK_FLAG (ifc->conf, ZEBRA_IFC_CONFIGURED)){
 				ret = if_prefix_add_ipv6 (ifp, ifc);
 				if (ret < 0)
@@ -2113,6 +2114,7 @@ if_up_redistribute(struct interface *ifp)
 			zebra_interface_address_add_update (ifp, ifc);
 	
 	}
+	#endif		
 	    connected_up_ipv6 (ifp, ifc);
 			
 		}
@@ -2161,8 +2163,10 @@ if_up (struct interface *ifp)
 	  else if (p->family == AF_INET6)
 	  {
 		/*	if(!CHECK_FLAG (ifc->conf, ZEBRA_IFC_REAL)&&CHECK_FLAG (ifc->conf, ZEBRA_IFC_CONFIGURED)){*/
+			/* wangchao delete
 			if(CHECK_FLAG (ifc->conf, ZEBRA_IFC_CONFIGURED))
 	         {
+	        
 				ret = if_prefix_add_ipv6 (ifp, ifc);
 				if (ret < 0)
 				{
@@ -2178,8 +2182,9 @@ if_up (struct interface *ifp)
 					}
 				}
 			SET_FLAG (ifc->conf, ZEBRA_IFC_REAL);
+			
 			zebra_interface_address_add_update (ifp, ifc);
-	       }
+	       }*/
 	    connected_up_ipv6 (ifp, ifc);
 			
 		}
@@ -2194,6 +2199,65 @@ if_up (struct interface *ifp)
   /* Examine all static routes. */
    rib_update ();
 }
+
+
+/*wangchao add for syncing rtmd and kernel. Deleted all ipv6 address of ifc(don't delete kernel address)*/
+int
+del_ifc_address_ipv6(struct interface *ifp)
+{
+	struct listnode *node;
+	struct listnode *next;
+	struct listnode *first;
+	struct listnode *last;
+	struct connected *ifc;
+	struct prefix *p;
+	struct route_node *rn;
+
+	if (if_is_up(ifp))
+	{
+		zlog_err ("interface %s index %d is still up while being deleted.",
+				ifp->name, ifp->ifindex);
+		return;
+	}
+
+	UNSET_FLAG (ifp->status, ZEBRA_INTERFACE_ACTIVE);
+
+	if (IS_ZEBRA_DEBUG_KERNEL)
+		zlog_debug ("In func del_ifc_address_ipv6:interface %s index %d is now inactive.",
+				ifp->name, ifp->ifindex);
+
+	if (ifp->connected)
+	{
+		last = NULL;
+		while ((node = (last ? last->next : listhead (ifp->connected))))
+		{
+			ifc = listgetdata (node);
+			p = ifc->address;
+
+			if (p->family == AF_INET6)
+			{
+				connected_down_ipv6 (ifp, ifc);
+
+				if (CHECK_FLAG (ifc->ipv6_config, RTMD_IPV6_ADDR_CONFIG))
+					UNSET_FLAG (ifc->ipv6_config, RTMD_IPV6_ADDR_CONFIG);
+
+				zebra_interface_address_delete_update (ifp, ifc);
+				
+				UNSET_FLAG (ifc->conf, ZEBRA_IFC_REAL);
+
+				if (CHECK_FLAG (ifc->conf, ZEBRA_IFC_CONFIGURED))
+					last = node;
+
+				router_id_del_address(ifc);
+				listnode_delete (ifp->connected, ifc);
+				connected_free (ifc);
+			}
+			last = node;
+		}
+	}
+	return 0;
+}
+
 
 /* Interface goes down.  We have to manage different behavior of based
    OS. */
@@ -2222,16 +2286,27 @@ if_down (struct interface *ifp)
 	{
 	  p = ifc->address;
 
-	  if (p->family == AF_INET)
-	    connected_down_ipv4 (ifp, ifc);
-#ifdef HAVE_IPV6
-	  else if (p->family == AF_INET6)
-	    connected_down_ipv6 (ifp, ifc);
+			if (p->family == AF_INET)
+				connected_down_ipv4 (ifp, ifc);
+//#ifdef HAVE_IPV6
+#if 0
+			else if (p->family == AF_INET6)
+			{	/*wangchao delete*/
+				//del_interface_address_ipv6(ifp,ifc);
+				//connected_down_ipv6 (ifp, ifc);
+			}
 #endif /* HAVE_IPV6 */
+		}
 	}
-    }
-  gettimeofday(&timer_now,0);
-  ifp->time = timer_now.tv_sec ;
+	
+#ifdef HAVE_IPV6
+	/*wangchao add*/
+	del_ifc_address_ipv6(ifp);
+#endif /* HAVE_IPV6 */
+
+	
+	gettimeofday(&timer_now,0);
+	ifp->time = timer_now.tv_sec ;
 
   /* Examine all static routes which direct to the interface. */
   if (IS_ZEBRA_DEBUG_RIB)
@@ -3946,12 +4021,15 @@ for (ALL_LIST_ELEMENTS (ifp->connected, node, next, ifc))
 	  }
 				  
 	 SET_FLAG (ifc->conf, ZEBRA_IFC_REAL); 
+
+	 /*wangchao delete for can't delete connected route*/
+	 /*
 	 if(if_is_operative(ifp))
 	 {
 		zlog_debug("%s : line %d, goto up connect route(ipv6) when turn global......\n",__func__,__LINE__);
 	 	connected_up_ipv6(ifp,ifc);
-	 	}
-	 
+	 }
+	 */
 	 if (CHECK_FLAG (ifc->conf, ZEBRA_IFC_REAL)) 
 	 {
 		 zlog_debug("%s : line %d, goto send interface address(ipv6) when turn global......\n",__func__,__LINE__);
@@ -5404,8 +5482,6 @@ ipv6_address_install (struct vty *vty, struct interface *ifp,
 				||(judge_eth_interface(ifp->name)==ETH_INTERFACE)
 				||(strncmp(ifp->name,"mng",3)== 0))
 	  {
-#if 0
-		/*ipv6 not support interface loacal*/
 		if(CHECK_FLAG(ifp->if_scope, INTERFACE_LOCAL))
 		{
 			if(ip_have_set == 1)
@@ -5441,7 +5517,6 @@ ipv6_address_install (struct vty *vty, struct interface *ifp,
 			 return CMD_SUCCESS;
 						
 		}
-#endif
 	     ret = if_prefix_add_ipv6 (ifp, ifc);
          if(ret < 0)
 		  {

@@ -641,7 +641,7 @@ nexthop_active_ipv4_update(struct rib *rib, struct nexthop *nexthop, int set,
 						  if (IS_ZEBRA_DEBUG_RIB)
 						    zlog_debug("%s: line %d , rib(%p),rib->rib_scope(%d),nexthop other interface[name:%s], nexthop->index[%d].\n",
 						  			__func__,__LINE__,rib,rib->rib_scope,ifp->name,nexthop->ifindex);
-						  nexthop->ifindex = newhop->ifindex;					  
+								nexthop->ifindex = newhop->ifindex;	/*wangchao add for display interface*/				  
 						  SET_FLAG (rib->rib_scope,ZEBRA_FLAG_INTERFACE_LOCAL_ROUTE);
 						  continue;
 						  /* break;*/
@@ -827,6 +827,8 @@ nexthop_active_ipv6 (struct rib *rib, struct nexthop *nexthop, int set,
   struct route_node *rn;
   struct rib *match;
   struct nexthop *newhop;
+	int slot_num = -1;
+	struct interface *ifp = NULL;
 
   if (nexthop->type == NEXTHOP_TYPE_IPV6)
     nexthop->ifindex = 0;
@@ -854,10 +856,12 @@ nexthop_active_ipv6 (struct rib *rib, struct nexthop *nexthop, int set,
       if (rn == top)
 	return 0;
 
-      /* Pick up selected route. */
-      for (match = rn->info; match; match = match->next)
-	if (CHECK_FLAG (match->flags, ZEBRA_FLAG_SELECTED))
-	  break;
+		/* Pick up selected route. */
+		for (match = rn->info; match; match = match->next)
+		{
+			if (CHECK_FLAG (match->flags, ZEBRA_FLAG_SELECTED))
+			{
+				//break;
 
       /* If there is no selected route or matched route is EGP, go up
          tree. */
@@ -877,42 +881,93 @@ nexthop_active_ipv6 (struct rib *rib, struct nexthop *nexthop, int set,
 	      /* Directly point connected route. */
 	      newhop = match->nexthop;
 
-	      if (newhop && nexthop->type == NEXTHOP_TYPE_IPV6)
-		nexthop->ifindex = newhop->ifindex;
-	      
-	      return 1;
-	    }
-	  else if (CHECK_FLAG (rib->flags, ZEBRA_FLAG_INTERNAL))
-	    {
-	      for (newhop = match->nexthop; newhop; newhop = newhop->next)
-		if (CHECK_FLAG (newhop->flags, NEXTHOP_FLAG_FIB)
-		    && ! CHECK_FLAG (newhop->flags, NEXTHOP_FLAG_RECURSIVE))
-		  {
-		    if (set)
-		      {
-			SET_FLAG (nexthop->flags, NEXTHOP_FLAG_RECURSIVE);
-			nexthop->rtype = newhop->type;
-			if (newhop->type == NEXTHOP_TYPE_IPV6
-			    || newhop->type == NEXTHOP_TYPE_IPV6_IFINDEX
-			    || newhop->type == NEXTHOP_TYPE_IPV6_IFNAME)
-			  nexthop->rgate.ipv6 = newhop->gate.ipv6;
-			if (newhop->type == NEXTHOP_TYPE_IFINDEX
-			    || newhop->type == NEXTHOP_TYPE_IFNAME
-			    || newhop->type == NEXTHOP_TYPE_IPV6_IFINDEX
-			    || newhop->type == NEXTHOP_TYPE_IPV6_IFNAME)
-			  nexthop->rifindex = newhop->ifindex;
-		      }
-		    return 1;
-		  }
-	      return 0;
-	    }
-	  else
-	    {
-	      return 0;
-	    }
+						/*wangchao add for Ipv6 local interface*/
+						if(product->product_type == PRODUCT_TYPE_7605I ||product->product_type==PRODUCT_TYPE_8603)
+						{					
+							if (newhop && (nexthop->type == NEXTHOP_TYPE_IPV6||nexthop->type == NEXTHOP_TYPE_IPV6_IFINDEX))
+							{							
+								ifp = if_lookup_by_index(newhop->ifindex);
+								if(!ifp)
+								{
+									zlog_debug("%s : line %d , unkown nexthop interface index[%d] return[0]\n",__func__,__LINE__,nexthop->ifindex);
+									return 0;
+									/* break;*/
+								}
+
+								if(CHECK_FLAG(ifp->if_scope, INTERFACE_LOCAL))
+								{
+									slot_num = get_slot_num(ifp->name);
+									if(slot_num == product->board_id)/*local board local interface*/
+									{
+										zlog_debug("%s: line %d , nexthop local interface[name:%s],nexthop->index[%d], return [1]\n",__func__,__LINE__,ifp->name,nexthop->ifindex);
+										nexthop->ifindex = newhop->ifindex;
+										return 1;
+									}
+									else
+									{
+										if (IS_ZEBRA_DEBUG_RIB)
+											zlog_debug("%s: line %d , rib(%p),rib->rib_scope(%d),nexthop other interface[name:%s], nexthop->index[%d].\n",
+													__func__,__LINE__,rib,rib->rib_scope,ifp->name,nexthop->ifindex);
+										nexthop->ifindex = newhop->ifindex;				  
+										SET_FLAG (rib->rib_scope,ZEBRA_FLAG_INTERFACE_LOCAL_ROUTE);
+										continue;
+									}
+								}
+								else
+								{
+									if(nexthop->type == NEXTHOP_TYPE_IPV6)
+									{
+										if (IS_ZEBRA_DEBUG_RIB)
+											zlog_debug("%s: line %d ,nexthop type[%d].\n",__func__,__LINE__,nexthop->type);
+										nexthop->ifindex = newhop->ifindex;
+										return 1;
+									}
+								}	
+							}
+
+						}/*end if(product == 8610 && 7605i)*/
+						else
+						{
+							if (newhop && nexthop->type == NEXTHOP_TYPE_IPV6)
+								nexthop->ifindex = newhop->ifindex;					
+							return 1;
+						}
+					}
+					else if (CHECK_FLAG (rib->flags, ZEBRA_FLAG_INTERNAL))
+					{
+						for (newhop = match->nexthop; newhop; newhop = newhop->next)
+							if (CHECK_FLAG (newhop->flags, NEXTHOP_FLAG_FIB)
+									&& ! CHECK_FLAG (newhop->flags, NEXTHOP_FLAG_RECURSIVE))
+							{
+								if (set)
+								{
+									SET_FLAG (nexthop->flags, NEXTHOP_FLAG_RECURSIVE);
+									nexthop->rtype = newhop->type;
+									if (newhop->type == NEXTHOP_TYPE_IPV6
+											|| newhop->type == NEXTHOP_TYPE_IPV6_IFINDEX
+											|| newhop->type == NEXTHOP_TYPE_IPV6_IFNAME)
+										nexthop->rgate.ipv6 = newhop->gate.ipv6;
+									if (newhop->type == NEXTHOP_TYPE_IFINDEX
+											|| newhop->type == NEXTHOP_TYPE_IFNAME
+											|| newhop->type == NEXTHOP_TYPE_IPV6_IFINDEX
+											|| newhop->type == NEXTHOP_TYPE_IPV6_IFNAME)
+										nexthop->rifindex = newhop->ifindex;
+								}
+								return 1;
+							}
+						return 0;
+					}
+					else
+					{
+						return 0;
+					}
+				}
+
+			}/*if*/
+		}/*for*/	
+		return 0;
 	}
-    }
-  return 0;
+	return 0;
 }
 #endif /* HAVE_IPV6 */
 
@@ -922,6 +977,11 @@ int check_interface_belong_to_local_board_set_local_mode(const char *ifname)
 	int slot_num = 0;
 	
 	ifp = if_lookup_by_name(ifname);
+	
+	if(tipc_server_debug)
+		zlog_debug("%s: line %d ,ifp->name == %s,ifp->scope == %d.\n",__func__,__LINE__,ifp->name,
+		CHECK_FLAG(ifp->if_scope, INTERFACE_LOCAL));
+	
 	if(product && ifp && CHECK_FLAG(ifp->if_scope, INTERFACE_LOCAL))/*only local*/
 	{
 	/*	target->gate.ifname = ifp->name;*/
@@ -952,7 +1012,7 @@ active_master_packet_route_info_to_send(struct prefix *p, struct rib *rib, int s
 	{
 	/*	if(comand == ZEBRA_IPV4_ROUTE_ADD ||comand == ZEBRA_IPV6_ROUTE_ADD)*/
 		{
-			//if(client->board_id == slot)/*Add only send to one board.*/
+			if(client->board_id == slot)/*Add only send to one board.*/
 			{
 			
 			   if ((p->family == AF_INET) &&(rib->type != ZEBRA_ROUTE_CONNECT))
@@ -1589,8 +1649,11 @@ rib_process (struct work_queue *wq, void *data)
   if (IS_ZEBRA_DEBUG_RIB)
 	  zlog_debug("enter func %s.....\n",__func__);
 
-  if (IS_ZEBRA_DEBUG_RIB)
-    zlog_debug ("%s: processing rn %p with prefix %s/%d", __func__, rn,inet_ntoa (rn->p.u.prefix4),rn->p.prefixlen);
+	if (IS_ZEBRA_DEBUG_RIB)
+	zlog_debug ("%s: processing rn %p with prefix %s/%d",
+		__func__, rn, 
+		rn->p.family == AF_INET ? inet_ntoa(rn->p.u.prefix4):inet6_ntoa(rn->p.u.prefix6),
+		rn->p.prefixlen);
 
   /*gjd: fixed for AXSSZFI-484 , 2011-11-19: am 11:00*/
   if(!rn->info)
@@ -1928,7 +1991,11 @@ rib_queue_add (struct zebra_t *zebra, struct route_node *rn)
 #endif
   
   if (IS_ZEBRA_DEBUG_RIB)
-    zlog_debug ("%s: processing rn %p with prefix %s/%d", __func__, rn,inet_ntoa (rn->p.u.prefix4),rn->p.prefixlen);
+      zlog_debug ("%s: processing rn %p with prefix %s/%d",
+    	  __func__, rn, 
+    	  rn->p.family == AF_INET ? inet_ntoa(rn->p.u.prefix4):inet6_ntoa(rn->p.u.prefix6),
+    	  rn->p.prefixlen);
+  
   /* Pointless to queue a route_node with no RIB entries to add or remove */
   if (!rn->info)
     {    
@@ -1967,23 +2034,29 @@ rib_queue_add (struct zebra_t *zebra, struct route_node *rn)
 
   route_lock_node (rn); /* rib queue lock */
 
-  if (IS_ZEBRA_DEBUG_RIB_Q)
-    zlog_info ("%s: work queue added %s/%d", __func__, inet_ntoa (rn->p.u.prefix4),rn->p.prefixlen);
-/*
-  assert (zebra);
-*/
-  if (zebra->ribq == NULL){
-	  zlog_err ("%s: work_queue does not exist!", __func__);
-	  route_unlock_node (rn);
-	  return;
+	if (IS_ZEBRA_DEBUG_RIB_Q)
+		zlog_info ("%s: work queue added %s/%d", __func__,
+		rn->p.family == AF_INET ? inet_ntoa (rn->p.u.prefix4):inet6_ntoa(rn->p.u.prefix6),
+		rn->p.prefixlen);
+	 
+	/*
+	   assert (zebra);
+	   */
+	if (zebra->ribq == NULL){
+		zlog_err ("%s: work_queue does not exist!", __func__);
+		route_unlock_node (rn);
+		return;
 	}
   
   work_queue_add (zebra->ribq, rn);
 
   SET_FLAG (((struct rib *)rn->info)->rn_status, RIB_ROUTE_QUEUED);
 
-  if (IS_ZEBRA_DEBUG_RIB_Q)
-    zlog_debug ("%s: rn %p queued %s/%d", __func__, rn, inet_ntoa (rn->p.u.prefix4),rn->p.prefixlen);
+	if (IS_ZEBRA_DEBUG_RIB_Q)
+		zlog_debug ("%s: rn %p queued %s/%d", __func__, rn, 
+		rn->p.family == AF_INET ? inet_ntoa (rn->p.u.prefix4):inet6_ntoa(rn->p.u.prefix6),
+		rn->p.prefixlen);
+
 
   return;
 }
@@ -2111,7 +2184,9 @@ rib_addnode (struct route_node *rn, struct rib *rib)
     {
       if (IS_ZEBRA_DEBUG_RIB)
         zlog_debug ("%s: rn %p, un-removed rib %p with prefix %s/%d",
-                    __func__, rn, rib,inet_ntoa (rn->p.u.prefix4),rn->p.prefixlen);
+					__func__, rn, rib,
+			rn->p.family == AF_INET ? inet_ntoa (rn->p.u.prefix4):inet6_ntoa(rn->p.u.prefix6),
+			rn->p.prefixlen);
       UNSET_FLAG (rib->status, RIB_ENTRY_REMOVED);
       return;
     }
@@ -2173,10 +2248,13 @@ rib_unlink (struct route_node *rn, struct rib *rib)
 void
 rib_delnode (struct route_node *rn, struct rib *rib)
 {
-  if (IS_ZEBRA_DEBUG_RIB)
-    zlog_debug ("%s: rn %p, rib %p, removing with prefix %s/%d ", __func__, rn, rib,inet_ntoa (rn->p.u.prefix4),rn->p.prefixlen);
-  SET_FLAG (rib->status, RIB_ENTRY_REMOVED);
+	if (IS_ZEBRA_DEBUG_RIB)
+		zlog_debug ("%s: rn %p, rib %p, removing with prefix %s/%d ", __func__, rn, rib,
+		rn->p.family == AF_INET ? inet_ntoa (rn->p.u.prefix4):inet6_ntoa(rn->p.u.prefix6),
+		rn->p.prefixlen);
 	
+	SET_FLAG (rib->status, RIB_ENTRY_REMOVED);
+
 	if (rib->type == ZEBRA_ROUTE_CONNECT)
   	SET_FLAG (rib->rn_status, RIB_ROUTE_HEAD);
 		
@@ -3791,20 +3869,25 @@ rib_delete_ipv6 (int type, int flags, struct prefix_ipv6 *p,
 	      route_unlock_node (rn);
 	      route_unlock_node (rn);
 	      return 0;
-	    }
+			}
 	  same = rib;
 	  break;
 	}
       /* Make sure that the route found has the same gateway. */
-      else if (gate == NULL ||
-	       ((nexthop = rib->nexthop) &&
-	        (IPV6_ADDR_SAME (&nexthop->gate.ipv6, gate) ||
-		 IPV6_ADDR_SAME (&nexthop->rgate.ipv6, gate))))
-	{
-	  same = rib;
-	  break;
+	/*	else if (gate == NULL ||
+				((nexthop = rib->nexthop) &&
+				 (IPV6_ADDR_SAME (&nexthop->gate.ipv6, gate) ||
+				  IPV6_ADDR_SAME (&nexthop->rgate.ipv6, gate))))
+		*/
+		/*wangchao add*/
+		else if((gate == NULL && (nexthop = rib->nexthop) && (ifindex == nexthop->ifindex))||
+		(gate && (nexthop = rib->nexthop)&& (IPV6_ADDR_SAME (&nexthop->gate.ipv6, gate) ||
+				  IPV6_ADDR_SAME (&nexthop->rgate.ipv6, gate))))
+		{
+			same = rib;
+			break;
+		}
 	}
-    }
 
   /* If same type of route can't be found and this message is from
      kernel. */

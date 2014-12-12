@@ -1050,23 +1050,20 @@ skip:
     if(product->board_type == BOARD_IS_ACTIVE_MASTER)
      {
      /*7605i and 8603*/
-	 if (p->family == AF_INET  )
-	 {	 /*ipv6 not support interface loacal*/
-	     	if((product->product_type == PRODUCT_TYPE_7605I
-				||product->product_type == PRODUCT_TYPE_8603) 
-				&&(judge_ve_sub_interface(ifp->name)==VE_SUB_INTERFACE)
-				&&(CHECK_FLAG(ifp->if_scope,INTERFACE_LOCAL)))
-	     	  {
-	     	  	int slot_id = 0;
-				slot_id = get_slot_num(ifp->name);
-				if(slot_id == product->board_id)
-				{
-					zlog_debug("The interface %s is local active master interface .\n",ifp->name);
-					return;
-				 }
-					
-	     	  }
-	 }
+     	if((product->product_type == PRODUCT_TYPE_7605I
+			||product->product_type == PRODUCT_TYPE_8603) 
+			&&(judge_ve_sub_interface(ifp->name)==VE_SUB_INTERFACE)
+			&&(CHECK_FLAG(ifp->if_scope,INTERFACE_LOCAL)))
+     	  {
+     	  	int slot_id = 0;
+			slot_id = get_slot_num(ifp->name);
+			if(slot_id == product->board_id)
+			{
+				zlog_debug("The interface %s is local active master interface .\n",ifp->name);
+				return;
+			 }
+				
+     	  }
 		if(zebrad.vice_board_list == NULL)
 		  {
 		   #ifdef DP_DEBUG
@@ -1082,16 +1079,8 @@ skip:
 			}
 	     
 	      /*send message to all of connected vice board*/
-		  if (p->family == AF_INET	)
-			 for (ALL_LIST_ELEMENTS (zebrad.vice_board_list, node, nnode, master_board)) {
-	  			if (  CHECK_FLAG (ifc->conf, ZEBRA_IFC_REAL)||CHECK_FLAG(ifp->if_scope,INTERFACE_LOCAL)) 
-				{
-					master_send_interface_address (ZEBRA_INTERFACE_ADDRESS_ADD, master_board, ifp, ifc);
-	  		     }
-			  }
-		else 
-			  for (ALL_LIST_ELEMENTS (zebrad.vice_board_list, node, nnode, master_board)) {
-	  			if (  CHECK_FLAG (ifc->conf, ZEBRA_IFC_REAL)) 
+		 for (ALL_LIST_ELEMENTS (zebrad.vice_board_list, node, nnode, master_board)) {
+  			if (  CHECK_FLAG (ifc->conf, ZEBRA_IFC_REAL)||CHECK_FLAG(ifp->if_scope,INTERFACE_LOCAL)) 
 				{
 					master_send_interface_address (ZEBRA_INTERFACE_ADDRESS_ADD, master_board, ifp, ifc);
 	  		     }
