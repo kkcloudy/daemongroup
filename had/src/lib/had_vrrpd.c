@@ -3777,6 +3777,10 @@ static int had_cfg_vlink_add_ip6addr_check
 		(*naddr)++;
 	memcpy(&vip6->sin6_addr,&ip6addr->iabuf,sizeof(struct in6_addr));
 	vip6->mask = prefix_length;
+	vrrp_syslog_dbg("#############%s: link_type: %s Index: %d IP6:"NIP6QUAD_FMT" addr_Num:%d!\n",
+				 __func__,
+				 VRRP_LINK_TYPE_DESCANT(link_type), index,
+				 NIP6QUAD(vip6->sin6_addr),*naddr);
 	vrrp_syslog_dbg("%s: vip6->sin6_addr "NIP6QUAD_FMT"/%d\n",__func__,NIP6QUAD(vip6->sin6_addr),vip6->mask);
 	vrrp_syslog_dbg("%s: ip6addr->iabuf "NIP6QUAD_FMT"/%d\n",__func__,NIP6QUAD(ip6addr->iabuf),vip6->mask);
 	vip6->deletable = 0;
@@ -4907,14 +4911,17 @@ unsigned int had_add_vip6_to_linkvif
 								ifname);
 			return VRRP_RETURN_CODE_ERR;
 		}
-		memcpy(&ptrVif->ipaddr, &real_ip6,sizeof(real_ip6));
+		//memcpy(&ptrVif->ipaddr, &real_ip6,sizeof(real_ip6));
+		memcpy(&ptrVif->ipv6_addr, &real_ip6,sizeof(real_ip6));
 	}
 	else{
-		memcpy(&ptrVif->ipaddr, &hansiNode->downlink_real_ip[realip_index].real_ip,sizeof(struct in6_addr));
+		//memcpy(&ptrVif->ipaddr, &hansiNode->downlink_real_ip[realip_index].real_ip,sizeof(struct in6_addr));
+		memcpy(&ptrVif->ipv6_addr, &hansiNode->downlink_real_ip[realip_index].real_ip,sizeof(struct in6_addr));
 	}
 	
-	vrrp_syslog_info("interface %s ip addr "NIP6QUAD_FMT"\n", ifname, NIP6QUAD(ptrVif->ipaddr));
-	
+//	vrrp_syslog_info("interface %s ip addr "NIP6QUAD_FMT"\n", ifname, NIP6QUAD(ptrVif->ipaddr));
+	vrrp_syslog_info("interface %s ipv6 address "NIP6QUAD_FMT"\n", ifname, NIP6QUAD(ptrVif->ipv6_addr));
+
 	}
 	/* ifindex */
 	ptrVif->ifindex = had_ifname_to_idx(ptrVif->ifname);
@@ -5312,7 +5319,14 @@ unsigned int had_del_vip_from_linkvif
 			}
 	}
    //delete uplink or downlink or vgateway specific members
-	memset(ptrVif, 0, sizeof(vrrp_if));
+   
+   /*niehy@autelan.com add by AXSSZFI-2165*/
+   if((ipv6_addr_eq_null(&ptrVif->ipv6_addr)) && (ipv6_addr_eq_null(&ptrVif->ipaddr)))
+   {
+        memset(ptrVif, 0, sizeof(vrrp_if));
+		vrrp_syslog_info("delete interface %s from %s_vif[%d] \n",
+						    ifname,VRRP_LINK_TYPE_DESCANT(up_down_flg),index);
+   }
 	for (i = 0; i < VRRP_LINK_MAX_CNT; i++) {
 		if (VRRP_LINK_SETTED == ptrTmp[i].set_flg) {
 			set_cnt++;
@@ -5477,7 +5491,9 @@ unsigned int had_add_vipv6
 					goto end;
 				}
 			}
-			
+			vrrp_syslog_dbg("###########%s£ºGet IF %s index %d up_down_flag:%s \n",
+									__func__,ifname,index,
+									VRRP_LINK_TYPE_DESCANT(up_down_flg));
 			if((VRRP_LINK_TYPE_L2_UPLINK != up_down_flg)&& (VRRP_RETURN_CODE_VIP_EXIST == had_check_link_vip6_exist(vsrv, &vip6, prefix_length, link_local,up_down_flg)))
 			{	/* check if the virtual ip has setted.*/
 				ret = VRRP_RETURN_CODE_VIP_EXIST;
