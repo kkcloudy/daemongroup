@@ -305,6 +305,31 @@ check_mem_state()
 	fi
 }
 
+#check dhcpv6 db file /var/db/dhcpd6.leases, size larger than MAXSIZE rebuild it
+check_dhcp6_db()
+{
+	if [ -f /var/db/db_maxsize ] ; then
+		MAX_DB_SIZE=`cat /var/db/db_maxsize 2>/dev/null`
+		if [ "$MAX_DB_SIZE"x = x -o "$MAX_DB_SIZE" = "0" ] ; then
+			MAX_DB_SIZE=$((32 * 1024 * 1024))
+		fi
+	else
+		MAX_DB_SIZE=$((32 * 1024 * 1024))
+	fi
+
+	DHCP6_DB="/var/db/dhcpd6.leases"
+	if [ -f $DHCP6_DB ] ; then
+		logger -t DHCP6CK -p cron.info "checking $DHCP6_DB."
+		logger -t DHCP6CK -p daemon.info "checking $DHCP6_DB."
+		DBSIZE=`ls -l $DHCP6_DB | awk '{print $5}'`
+		if [ $DBSIZE -ge $MAX_DB_SIZE ] ; then
+		logger -t DHCP6CK -p cron.notice "$DHCP6_DB with size [$DBSIZE] is larger than max size [$MAX_DB_SIZE] will be cleaned."
+		logger -t DHCP6CK -p daemon.notice "$DHCP6_DB with size [$DBSIZE] is larger than max size [$MAX_DB_SIZE] will be cleaned."
+		echo   > $DHCP6_DB
+		fi
+	fi
+}
+
 # check log file size
 checkdir /var/log
 
@@ -315,6 +340,9 @@ check_logfile_state /var/log/system.log
 
 # check syslog-ng running state
 check_syslog_state
+
+#check /var/db/dhcpd6.leases
+check_dhcp6_db
 
 # check memory state
 check_mem_state
