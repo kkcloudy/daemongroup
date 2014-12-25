@@ -2234,6 +2234,10 @@ del_ifc_address_ipv6(struct interface *ifp)
 			ifc = listgetdata (node);
 			p = ifc->address;
 
+			if (p->family == AF_INET)
+			{
+				last = node;
+			}
 			if (p->family == AF_INET6)
 			{
 				connected_down_ipv6 (ifp, ifc);
@@ -2245,14 +2249,14 @@ del_ifc_address_ipv6(struct interface *ifp)
 				
 				UNSET_FLAG (ifc->conf, ZEBRA_IFC_REAL);
 
-				if (CHECK_FLAG (ifc->conf, ZEBRA_IFC_CONFIGURED))
-					last = node;
+				//if (CHECK_FLAG (ifc->conf, ZEBRA_IFC_CONFIGURED))
+				last = node;
 
 				router_id_del_address(ifc);
 				listnode_delete (ifp->connected, ifc);
 				connected_free (ifc);
 			}
-			last = node;
+			//last = node;
 		}
 	}
 	return 0;
