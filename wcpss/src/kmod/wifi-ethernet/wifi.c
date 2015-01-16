@@ -79,6 +79,10 @@ unsigned short wifi_8021q_type = 0x8100;//default 0x8100
 module_param(wifi_8021q_type,short,0644);
 unsigned int wifi_ipv6_dr_sw = 0;//0--disable;1--enable
 module_param(wifi_ipv6_dr_sw,int,0644);
+int wifi_protocol_check_switch = 0;
+module_param(wifi_protocol_check_switch, int, 0644);
+int wifi_check_ieee80211_fragments = 0;
+module_param(wifi_check_ieee80211_fragments, int, 0644);
 
 #define DRIVER_NAME "wifi"
 #define WIFI_SDK_VERSION_STRING "wifi_1.1"

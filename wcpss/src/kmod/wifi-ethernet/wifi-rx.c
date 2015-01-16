@@ -48,6 +48,8 @@ extern struct tasklet_struct wifi_tasklet[];
 extern struct net_device * wifi_device[VRID_MAX][WIFI_INTERFACE_NUM];
 extern int wifi_QoS_open;
 extern int wifi_dp;
+extern int wifi_protocol_check_switch;
+extern int wifi_check_ieee80211_fragments;
 
 extern int wifi_if_index(unsigned int vrid, int wlanID, int BSSIndex);
 extern int kthread_should_stop(void);
@@ -168,7 +170,7 @@ int wifi_kernel_rx(struct sk_buff *skb){
 	struct vlan_h *vh = NULL;
 	wifi_dev_private_t *priv = NULL;
 	unsigned short *isEAP=NULL;
-	unsigned char proto_ver=0, type=0, toDS_fromDS=0, qos_flag=0;	
+	unsigned char proto_ver=0, type=0, toDS_fromDS=0, qos_flag=0, more_fragments_flag = 0, fragment_number = 0;	
 	unsigned char *BSSID = NULL;
 	unsigned char *DMAC = NULL;
 	unsigned char *SMAC = NULL;	
@@ -243,7 +245,14 @@ int wifi_kernel_rx(struct sk_buff *skb){
 	}
 	if((TFlag==1)&&(wbidFlag == 1)){
 		skb_pull(skb,16);/*capwap header*/
-		macHead = (struct ieee80211_frame *)(skb->data);
+		macHead = (struct ieee80211_frame *)(skb->data);		
+		if(wifi_check_ieee80211_fragments){
+            more_fragments_flag = macHead->i_fc[1] & 0x04;
+			fragment_number = macHead->i_seq[0] & 0x0F;
+			if((more_fragments_flag != 0) || (fragment_number != 0))
+				return WIFI_NEED_DROP_PACKET;/* 80211 packet L2 fragment, drop */
+		}
+		
 		proto_ver = macHead->i_fc[0] & IEEE80211_FC0_VERSION_MASK;
 		type = macHead->i_fc[0] & IEEE80211_FC0_TYPE_MASK;	
 		qos_flag = macHead->i_fc[0] & IEEE80211_FC0_SUBTYPE_QOS;
@@ -645,6 +654,19 @@ int wifi_kernel_rx(struct sk_buff *skb){
 		}
 		//CWCaptrue_wifi(skb->len,skb->data);/*only printk data*/
 		return WIFI_NEED_DROP_PACKET;				
+	}
+
+	if(skb->len <= 32)
+	    return WIFI_NEED_DROP_PACKET;
+	if(wifi_protocol_check_switch){
+        struct ethhdr *eth111 = NULL;
+		eth111 = (struct ethhdr *)(skb->data);
+		
+		/* 0x0800: IPv4; 0x0806: arp; 0x8100: vlan tag; 0x888E: 802.1x; 0x86DD: IPv6; 0x8863/0x8864: PPPoE */
+		if((eth111->h_proto != 0x0800) && (eth111->h_proto != 0x0806) && (eth111->h_proto != 0x8100)
+            && (eth111->h_proto != 0x888E) && (eth111->h_proto != 0x86DD) && (eth111->h_proto != 0x8863)
+			&& (eth111->h_proto != 0x8864))
+            return WIFI_NEED_DROP_PACKET;
 	}
 /*wangchao add */
 	skb->dev = dev;
