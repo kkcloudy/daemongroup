@@ -405,6 +405,8 @@ void dot11WtpVersionFileUpdateTable_load()
     															"",
     															1);		
 					FREE_OBJECT(q->WTPMAC);
+					FREE_OBJECT(q->WTPNAME); //lilong add 2015.1.19
+					FREE_OBJECT(q->WTPModel); //lilong add 2015.1.19
     			}
     		}
     	}	
@@ -490,6 +492,7 @@ dot11WtpVersionFileUpdateTable_handler(
                 
                 char ap_version[50] = { 0 };
 				memset(ap_version,0,50);
+				#if 0
 				DCLI_WTP_API_GROUP_ONE *WTPINFO;
 
 				ret = show_version(table_entry->parameter, connection,&WTPINFO);
@@ -507,11 +510,11 @@ dot11WtpVersionFileUpdateTable_handler(
 						}
 					}						
 				}
-				
+				#endif
                 snmp_set_var_typed_value( request->requestvb, ASN_OCTET_STR,
-                                          (u_char*)ap_version,
-                                          strlen(ap_version));
-
+                                          (u_char*)(table_entry->wtpVersionFileName),
+                                          strlen(table_entry->wtpVersionFileName));
+                #if 0
 				if(ret==1)
 				{
 					Free_wtp_model(WTPINFO);
@@ -519,6 +522,7 @@ dot11WtpVersionFileUpdateTable_handler(
 				else if (SNMPD_CONNECTION_ERROR == ret){
                     close_slot_dbus_connection(table_entry->parameter.slot_id);
 				}
+				#endif
             }
                 break;
             case COLUMN_WTPMODE:
