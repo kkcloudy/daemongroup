@@ -11980,6 +11980,7 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_HOTSPOT_ID(unsigned int RadioID,unsigned char 
 	int ret = -1;
 	int k1 = 0; 
 	int i = 0;
+	int essid_len = 0;
 	char nas_id[NAS_IDENTIFIER_NAME];//zhanglei add
 	unsigned int nas_id_len = 0;//zhanglei add
 	int WtpID = RadioID/L_RADIO_NUM;
@@ -12041,6 +12042,29 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_HOTSPOT_ID(unsigned int RadioID,unsigned char 
 		
 	struct wlanid *wlan_id;
 	struct wlanid *wlan_id_next;
+	
+	wlan_id = (struct wlanid*)WID_MALLOC(sizeof(struct wlanid));
+	if (NULL == wlan_id)
+	{
+		return MALLOC_ERROR;
+	}
+	essid_len = strlen((char *)AC_WLAN[WlanID]->ESSID);
+	wlan_id->ESSID = (char *)WID_MALLOC(essid_len + 1);
+	if (NULL == wlan_id->ESSID)
+	{
+		CW_FREE_OBJECT_WID(wlan_id);
+		return MALLOC_ERROR;
+	}
+	wlan_id->wlanid= WlanID;
+	memset(wlan_id->ESSID,0,essid_len+1);
+	if( AC_WLAN[WlanID]->ESSID != NULL){
+		memcpy(wlan_id->ESSID,AC_WLAN[WlanID]->ESSID,essid_len);
+		}
+	else
+		{
+		wid_syslog_err("%s %d pointer is NULL\n",__FUNCTION__,__LINE__);
+		}
+	#if 0
 	wlan_id = (struct wlanid*)WID_MALLOC(sizeof(struct wlanid));
 	if (NULL == wlan_id)
 	{
@@ -12054,6 +12078,7 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_HOTSPOT_ID(unsigned int RadioID,unsigned char 
 	wlan_id->wlanid= WlanID;
 	memset(wlan_id->ESSID, 0, strlen(AC_WLAN[WlanID]->ESSID)+1);
 	strncpy(wlan_id->ESSID, AC_WLAN[WlanID]->ESSID, strlen(AC_WLAN[WlanID]->ESSID));
+	#endif
 	wlan_id->next = NULL;
 	wid_syslog_debug_debug(WID_DEFAULT,"*** wtp binding wlan id  is %d*\n", wlan_id->wlanid);
 	
@@ -12130,6 +12155,8 @@ int WID_ADD_WLAN_APPLY_RADIO_BASE_HOTSPOT_ID(unsigned int RadioID,unsigned char 
 					return MALLOC_ERROR;
 				}
 				memset(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->BSSID,0,6);
+				memset(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->SSID,0,SSID_LENGTH+1);
+				memcpy(AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->SSID,wlan_id->ESSID,strlen((char *)wlan_id->ESSID));
 				AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->bss_max_allowed_sta_num=128;//xm add
 				AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->WlanID = WlanID;
 				AC_WTP[WtpID]->WTP_Radio[localradio_id]->BSS[k1]->Radio_G_ID = RadioID;
