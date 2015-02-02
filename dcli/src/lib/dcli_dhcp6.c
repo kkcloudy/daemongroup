@@ -2891,6 +2891,46 @@ dcli_add_dhcp_pool_ipv6_range
    }
 }
 
+/* check whether the address configured for ipv6 pool is a special addr or not
+ * return: 0, yes; 1,no
+ */
+int ipv6_special_addr_check(struct iaddr *p, int prefix_length)
+{
+	char ipv6_addr1[15] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}; // ::
+	char ipv6_addr2[15] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}; // ::1
+	char ipv6_addr3[15] = {255, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}; //ff01::1
+	char ipv6_addr4[15] = {255, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}; //ff02::1
+	char ipv6_addr5[15] = {255, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2}; //ff02::2
+	char ipv6_addr6[15] = {255, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2}; //ff05::2
+
+	if(0 == strncmp(p->iabuf, ipv6_addr1, 16)){
+		return 0;
+	}
+	if(0 == strncmp(p->iabuf, ipv6_addr2, 16)){
+		return 0;
+	}
+	if(0 == strncmp(p->iabuf, ipv6_addr3, 16)){
+		return 0;
+	}
+	if(0 == strncmp(p->iabuf, ipv6_addr4, 16)){
+		return 0;
+	}
+	if(0 == strncmp(p->iabuf, ipv6_addr5, 16)){
+		return 0;
+	}
+	if(0 == strncmp(p->iabuf, ipv6_addr6, 16)){
+		return 0;
+	}
+	if((p->iabuf[0] == 0xff) && (prefix_length == 8)){
+		return 0;		
+	}
+	if((p->iabuf[0] == 0xfe) && (p->iabuf[1] == 0x80) && (prefix_length == 64)){
+		return 0;		
+	}
+	
+	return 1;		
+}
+
 DEFUN(add_dhcp_pool_ipv6_range_cmd_func,
 	add_dhcp_pool_ipv6_range_cmd,
 	"(add|delete) rangev6 IPV6 IPV6 prefix-length <1-128>",
@@ -2903,7 +2943,7 @@ DEFUN(add_dhcp_pool_ipv6_range_cmd_func,
 )
 {
 	struct iaddr ipAddrl, ipAddrh;
-	unsigned int ret = 0, add = 0, index = 0, prefix_length = 0;
+	unsigned int ret = 0, add = 0, index = 0, prefix_length = 0, i = 0;
 
 	memset(&ipAddrh, 0 ,sizeof(struct iaddr));
 	memset(&ipAddrl, 0 ,sizeof(struct iaddr));
@@ -2931,16 +2971,32 @@ DEFUN(add_dhcp_pool_ipv6_range_cmd_func,
 		vty_out(vty,"bad command patameter!\n");
 		return CMD_WARNING;
 	}
-	/* need do it
-	if (ipAddrl > ipAddrh) {
-		return CMD_WARNING;
-	}*/		
+	
 	prefix_length = atoi((char *)argv[3]);
 	/*if(prefix_length < 64){
 		vty_out(vty,"%%error! prefix length [64~128]!\n");
 		return CMD_WARNING;	
 	}*/
+    ret = ipv6_special_addr_check(&ipAddrl, prefix_length);
+	if (!ret) {
+		vty_out(vty,"Error: special ipv6 address can not be configured!\n");
+		return CMD_WARNING;
+	}
+	ret = ipv6_special_addr_check(&ipAddrh, prefix_length);
+	if (!ret) {
+		vty_out(vty,"Error: special ipv6 address can not be configured!\n");
+		return CMD_WARNING;
+	}
 
+	for(i = 0;i < 16; i++){
+		if(ipAddrl.iabuf[i] != ipAddrh.iabuf[i])
+			break;
+	}
+	if(ipAddrl.iabuf[i] > ipAddrh.iabuf[i]){
+		vty_out(vty,"Error: Low address higher than high address!\n");
+		return CMD_WARNING;
+	}
+	
 	ret = dcli_add_dhcp_pool_ipv6_range(add, &ipAddrl, &ipAddrh, prefix_length,index,vty);
 	if (ret) {
 		vty_out(vty, "%s ip range fail \n", add ? "delete" : "add");

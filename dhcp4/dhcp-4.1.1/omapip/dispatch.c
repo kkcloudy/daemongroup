@@ -512,7 +512,7 @@ isc_result_t omapi_one_dispatch (omapi_object_t *wo,
 		
 	}
 
-	for (io = omapi_io_states.next; io; io = io -> next) {
+	for (io = omapi_io_states.next; io->next; io = io -> next) {
 		if (!io -> inner)
 			continue;
 		omapi_object_reference (&tmp, io -> inner, MDL);

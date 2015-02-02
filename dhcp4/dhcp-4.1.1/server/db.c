@@ -510,6 +510,8 @@ write_ia(const struct ia_xx *ia) {
 	char *s;
 	int fprintf_ret;
 
+	if(NULL == ia)
+		return 0;
 	/* 
 	 * If the lease file is corrupt, don't try to write any more 
 	 * leases until we've written a good lease file. 
