@@ -2902,6 +2902,7 @@ int ipv6_special_addr_check(struct iaddr *p, int prefix_length)
 	char ipv6_addr4[15] = {255, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}; //ff02::1
 	char ipv6_addr5[15] = {255, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2}; //ff02::2
 	char ipv6_addr6[15] = {255, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2}; //ff05::2
+	char ipv6_addr7[15] = {255, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2}; //ff02::1:2
 
 	if(0 == strncmp(p->iabuf, ipv6_addr1, 16)){
 		return 0;
@@ -2921,11 +2922,25 @@ int ipv6_special_addr_check(struct iaddr *p, int prefix_length)
 	if(0 == strncmp(p->iabuf, ipv6_addr6, 16)){
 		return 0;
 	}
+	if(0 == strncmp(p->iabuf, ipv6_addr7, 16)){
+		return 0;
+	}
 	if((p->iabuf[0] == 0xff) && (prefix_length == 8)){
 		return 0;		
 	}
 	if((p->iabuf[0] == 0xfe) && (p->iabuf[1] == 0x80) && (prefix_length == 64)){
-		return 0;		
+		return 0;
+	}
+	if(prefix_length == 128){
+	    if((p->iabuf[0] == 0xfe) && (p->iabuf[1] == 0x80)){
+		    int i = 0;
+		    for(i = 2; i < 8; i++){
+			    if(p->iabuf[i] == 0)
+				    continue;
+		    }
+		    if(i == 8)
+		        return 0;		
+	    }
 	}
 	
 	return 1;		
@@ -3251,12 +3266,22 @@ DEFUN(ipv6_dhcp_server_option52_cmd_func,
 	unsigned int size = 0, index = 0, len = 0;
 	unsigned int ret = 0, op_ret = 0, mode = 0;
 	int i, j;
+	struct iaddr ipAddr;
 
 	for(i = 0 ; i < argc ; ++i){
 		if(check_ipv6_address(argv[i])){
-		 	vty_out(vty, "%% address %s  is Illegal\n", argv[i]);
-			 return CMD_WARNING;
-		}		
+		    vty_out(vty, "%% address %s  is Illegal\n", argv[i]);
+		    return CMD_WARNING;
+		}else{
+		    memset(&ipAddr, 0, sizeof(struct iaddr));
+		    str2_ipv6_addr((char*)argv[i], &ipAddr);
+		    ret = ipv6_special_addr_check(&ipAddr, 128);
+	        if (!ret) {
+		        vty_out(vty,"Error: special ipv6 address can not be configured!\n");
+		        return CMD_WARNING;
+	        }
+		}
+		
 	}
 
 	ap_via_address = (char **)malloc(sizeof(char *) * MAX_OPTION52_ADDRESS_LIST);
@@ -3479,6 +3504,16 @@ DEFUN(ipv6_dhcp_server_domain_search_cmd_func,
 	char* domainName = NULL;
 	unsigned int nameSize = 0, nodeSave = 0, index = 0;
 	unsigned int ret = 0, op_ret = 0, mode = 0;
+	struct iaddr ipAddr;
+
+	ret = str2_ipv6_addr((char*)argv[0], &ipAddr);
+	if (1 == ret) {
+		ret = ipv6_special_addr_check(&ipAddr, 128);
+	    if (!ret) {
+		    vty_out(vty,"Error: special ipv6 address can not be configured!\n");
+		    return CMD_WARNING;
+	    }
+	}
 
 	//printf("before parse_vlan_name %s length %d\n",argv[1],strlen(argv[1]));
 	domainName = (char*)malloc(ALIAS_NAME_SIZE);
@@ -3705,9 +3740,14 @@ DEFUN(ipv6_dhcp_server_name_servers_cmd_func,
 	for(;i < ipnum; i++) {
 		ret = str2_ipv6_addr((char*)argv[i], &ipAddr[i]);
 		if (!ret) {
-		vty_out(vty,"bad command patameter!\n");
-		return CMD_WARNING;
+		    vty_out(vty,"bad command patameter!\n");
+		    return CMD_WARNING;
 		}
+		ret = ipv6_special_addr_check(&ipAddr[i], 128);
+	    if (!ret) {
+		    vty_out(vty,"Error: special ipv6 address can not be configured!\n");
+		    return CMD_WARNING;
+	    }
 	}
 	if((CONFIG_NODE == vty->node) || (HANSI_NODE  == vty->node) || (LOCAL_HANSI_NODE  == vty->node)) {
 		mode = 0;
