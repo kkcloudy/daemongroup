@@ -484,17 +484,9 @@ int dcli_show_hansi_profile_detail
 	unsigned int l2_uplink_flag = 0;
 	char *l2_uplink_ifname = NULL;
 	int l2_uplink_naddr = 0;
-#if 1
     int uplink_ipv6_naddr =0,downlink_ipv6_naddr =0,vgateway_ipv6_naddr =0;
-	unsigned int  prefix_length_up = 0;
-	unsigned int  prefix_length_down = 0;
-	unsigned int  prefix_length_vgateway = 0;
-	//struct iaddr uplink_ipv6,downlink_ipv6,vgateway_ipv6;
-	//struct iaddr uplink_local_ipv6,downlink_local_ipv6,vgateway_local_ipv6;
-	char local_tmp_ipv6[16] = {0};
-	char tmp_ipv6[16] = {0};
-	char tmpbuf[INET6_ADDRSTRLEN+1];
-#endif
+	char *tmp_ipv6 = NULL;
+
 	/* [1] check if had process has started before or not */
 	instRun = dcli_hmd_hansi_is_running(vty,slot_id, 0,profile);
 	if (INSTANCE_NO_CREATED == instRun) {
@@ -597,95 +589,29 @@ int dcli_show_hansi_profile_detail
 			dbus_message_iter_next(&iter);
 			dbus_message_iter_get_basic(&iter,&link);
 
-			memset(tmp_ipv6,0,16);
-		    dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[0]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[1]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[2]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[3]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[4]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[5]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[6]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[7]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[8]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[9]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[10]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[11]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[12]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[13]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[14]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[15]);
-
+            tmp_ipv6 = NULL;
+			dbus_message_iter_next(&iter);	
+			dbus_message_iter_get_basic(&iter,&tmp_ipv6);	
 			vty_out(vty, "%-7s%-3d%-s[%-s] ", "", i+1, uplink_ifname ? uplink_ifname : "nil", link ? "U":"D");
-/*
-			vty_out(vty, "%-10s", "");
-		    vty_out(vty,"%-s ",uplink_ifname ? uplink_ifname : "nil");
-			*/
-			if(ipv6_addr_eq_null(tmp_ipv6)) {
+
+			if(!tmp_ipv6) {
 				vty_out(vty, "0\n");
 			}
 			else {
-				vty_out(vty,"%s link_local\n",inet_ntop(AF_INET6,tmp_ipv6,tmpbuf,INET6_ADDRSTRLEN));
+				vty_out(vty,"%s link_local\n",tmp_ipv6);
+
 			}
-		    memset(tmp_ipv6,0,16);
-		    dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[0]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[1]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[2]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[3]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[4]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[5]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[6]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[7]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[8]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[9]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[10]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[11]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[12]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[13]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[14]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[15]);
-/*
-			vty_out(vty, "%-10s", "");
-		    vty_out(vty,"%-s ",uplink_ifname ? uplink_ifname : "nil");
-*/
+           	tmp_ipv6 = NULL;
+			dbus_message_iter_next(&iter);	
+			dbus_message_iter_get_basic(&iter,&tmp_ipv6);	
+
 			vty_out(vty, "%-10s%-s[%-s] ", "", uplink_ifname ? uplink_ifname : "nil", link ? "U":"D");
 
-			if(ipv6_addr_eq_null(tmp_ipv6)) {
+			if(!tmp_ipv6) {
 				vty_out(vty, "0\n");
 			}
 			else {
-				vty_out(vty,"%s\n",inet_ntop(AF_INET6,tmp_ipv6,tmpbuf,INET6_ADDRSTRLEN));
+				vty_out(vty,"%s\n",tmp_ipv6);
 			}
 		}
 #endif		
@@ -751,95 +677,30 @@ int dcli_show_hansi_profile_detail
 			dbus_message_iter_next(&iter);
 			dbus_message_iter_get_basic(&iter,&link);
 
-			memset(tmp_ipv6,0,16);
-		    dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[0]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[1]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[2]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[3]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[4]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[5]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[6]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[7]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[8]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[9]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[10]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[11]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[12]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[13]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[14]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[15]);
+			tmp_ipv6 = NULL;
+			dbus_message_iter_next(&iter);	
+			dbus_message_iter_get_basic(&iter,&tmp_ipv6);	
 
 			vty_out(vty, "%-7s%-3d%-s[%-s] ", "", i+1, downlink_ifname ? downlink_ifname : "nil", link ? "U":"D");
-/*
-			vty_out(vty, "%-10s", "");
-		    vty_out(vty,"%-s ",uplink_ifname ? uplink_ifname : "nil");
-			*/
-			if(ipv6_addr_eq_null(tmp_ipv6)) {
+
+			if(!tmp_ipv6) {
 				vty_out(vty, "0\n");
 			}
 			else {
-				vty_out(vty,"%s link_local\n",inet_ntop(AF_INET6,tmp_ipv6,tmpbuf,INET6_ADDRSTRLEN));
+				vty_out(vty,"%s link_local\n",tmp_ipv6);
 			}
-		    memset(tmp_ipv6,0,16);
-		    dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[0]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[1]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[2]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[3]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[4]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[5]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[6]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[7]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[8]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[9]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[10]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[11]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[12]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[13]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[14]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[15]);
-/*
-			vty_out(vty, "%-10s", "");
-		    vty_out(vty,"%-s ",uplink_ifname ? uplink_ifname : "nil");
-*/
+          	tmp_ipv6 = NULL;
+			dbus_message_iter_next(&iter);	
+			dbus_message_iter_get_basic(&iter,&tmp_ipv6);	
+
 			vty_out(vty, "%-10s%-s[%-s] ", "", downlink_ifname ? downlink_ifname : "nil", link ? "U":"D");
 
-			if(ipv6_addr_eq_null(tmp_ipv6)) {
+			if(!tmp_ipv6) {
 				vty_out(vty, "0\n");
 			}
 			else {
-				vty_out(vty,"%s\n",inet_ntop(AF_INET6,tmp_ipv6,tmpbuf,INET6_ADDRSTRLEN));
+				vty_out(vty,"%s\n",tmp_ipv6);
+
 			}
 	    }
 #endif
@@ -928,95 +789,29 @@ int dcli_show_hansi_profile_detail
 			dbus_message_iter_next(&iter);
 			dbus_message_iter_get_basic(&iter,&link);
 
-			memset(tmp_ipv6,0,16);
-		    dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[0]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[1]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[2]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[3]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[4]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[5]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[6]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[7]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[8]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[9]);
-			dbus_message_iter_next(&iter);			
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[10]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[11]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[12]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[13]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[14]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[15]);
+           	tmp_ipv6 = NULL;
+			dbus_message_iter_next(&iter);	
+			dbus_message_iter_get_basic(&iter,&tmp_ipv6);	
 
 			vty_out(vty, "%-7s%-3d%-s[%-s] ", "", i+1, vgateway_ifname ? vgateway_ifname : "nil", link ? "U":"D");
-/*
-			vty_out(vty, "%-10s", "");
-		    vty_out(vty,"%-s ",uplink_ifname ? uplink_ifname : "nil");
-			*/
-			if(ipv6_addr_eq_null(tmp_ipv6)) {
+			if(!tmp_ipv6) {
 				vty_out(vty, "0\n");
 			}
 			else {
-				vty_out(vty,"%s link_local\n",inet_ntop(AF_INET6,tmp_ipv6,tmpbuf,INET6_ADDRSTRLEN));
+				vty_out(vty,"%s link_local\n",tmp_ipv6);
 			}
-		    memset(tmp_ipv6,0,16);
-		    dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[0]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[1]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[2]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[3]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[4]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[5]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[6]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[7]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[8]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[9]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[10]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[11]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[12]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[13]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[14]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[15]);
-/*
-			vty_out(vty, "%-10s", "");
-		    vty_out(vty,"%-s ",uplink_ifname ? uplink_ifname : "nil");
-*/
+
+           	tmp_ipv6 = NULL;
+			dbus_message_iter_next(&iter);	
+			dbus_message_iter_get_basic(&iter,&tmp_ipv6);	
+
 			vty_out(vty, "%-10s%-s[%-s] ", "", vgateway_ifname ? vgateway_ifname : "nil", link ? "U":"D");
 
-			if(ipv6_addr_eq_null(tmp_ipv6)) {
+			if(!tmp_ipv6) {
 				vty_out(vty, "0\n");
 			}
 			else {
-				vty_out(vty,"%s\n",inet_ntop(AF_INET6,tmp_ipv6,tmpbuf,INET6_ADDRSTRLEN));
+				vty_out(vty,"%s\n",tmp_ipv6);
 			}
 
 	}
@@ -1082,9 +877,7 @@ int dcli_show_hansi_profile
 	unsigned int failover_peer = 0, failover_local = 0;
 	unsigned int l2_uplink_set_flg = 0;
     int uplink_ipv6_naddr =0,downlink_ipv6_naddr =0,vgateway_ipv6_naddr =0;
-	char local_tmp_ipv6[16] = {0};
-	char tmp_ipv6[16] = {0};
-	char tmpbuf[INET6_ADDRSTRLEN+1];
+	char *tmp_ipv6 = NULL;
 
 	/* [1] check if had process has started before or not*/
 	instRun =  dcli_hmd_hansi_is_running(vty,slot_id, 0,profile);
@@ -1166,95 +959,28 @@ int dcli_show_hansi_profile
 			dbus_message_iter_next(&iter);
 			dbus_message_iter_get_basic(&iter,&uplink_ifname);	
 
-			memset(tmp_ipv6,0,16);
-		    dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[0]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[1]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[2]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[3]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[4]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[5]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[6]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[7]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[8]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[9]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[10]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[11]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[12]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[13]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[14]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[15]);
+            tmp_ipv6 = NULL;
+			dbus_message_iter_next(&iter);	
+			dbus_message_iter_get_basic(&iter,&tmp_ipv6);	
 
 			vty_out(vty, "%-7s%-3d%-s ", "", i+1, uplink_ifname ? uplink_ifname : "nil");
-/*
-			vty_out(vty, "%-10s", "");
-		    vty_out(vty,"%-s ",uplink_ifname ? uplink_ifname : "nil");
-			*/
-			if(ipv6_addr_eq_null(tmp_ipv6)) {
+			if(!tmp_ipv6) {
 				vty_out(vty, "0\n");
 			}
 			else {
-				vty_out(vty,"%s link_local\n",inet_ntop(AF_INET6,tmp_ipv6,tmpbuf,INET6_ADDRSTRLEN));
+				vty_out(vty,"%s link_local\n",tmp_ipv6);
 			}
-		    memset(tmp_ipv6,0,16);
-		    dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[0]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[1]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[2]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[3]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[4]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[5]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[6]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[7]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[8]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[9]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[10]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[11]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[12]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[13]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[14]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[15]);
-/*
-			vty_out(vty, "%-10s", "");
-		    vty_out(vty,"%-s ",uplink_ifname ? uplink_ifname : "nil");
-*/
+            tmp_ipv6 = NULL;
+			dbus_message_iter_next(&iter);	
+			dbus_message_iter_get_basic(&iter,&tmp_ipv6);	
+            				
 			vty_out(vty, "%-10s%-s ", "", uplink_ifname ? uplink_ifname : "nil");
 
-			if(ipv6_addr_eq_null(tmp_ipv6)) {
+			if(!tmp_ipv6) {
 				vty_out(vty, "0\n");
 			}
 			else {
-				vty_out(vty,"%s\n",inet_ntop(AF_INET6,tmp_ipv6,tmpbuf,INET6_ADDRSTRLEN));
+				vty_out(vty,"%s\n",tmp_ipv6);
 			}
 		}
 #endif		
@@ -1306,95 +1032,28 @@ int dcli_show_hansi_profile
 			dbus_message_iter_next(&iter);
 			dbus_message_iter_get_basic(&iter,&downlink_ifname);	
 
-			memset(tmp_ipv6,0,16);
-		    dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[0]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[1]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[2]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[3]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[4]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[5]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[6]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[7]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[8]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[9]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[10]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[11]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[12]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[13]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[14]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[15]);
+			tmp_ipv6 = NULL;
+			dbus_message_iter_next(&iter);	
+			dbus_message_iter_get_basic(&iter,&tmp_ipv6);	
 
 			vty_out(vty, "%-7s%-3d%-s ", "", i+1, downlink_ifname ? downlink_ifname : "nil");
-/*
-			vty_out(vty, "%-10s", "");
-		    vty_out(vty,"%-s ",uplink_ifname ? uplink_ifname : "nil");
-			*/
-			if(ipv6_addr_eq_null(tmp_ipv6)) {
+			if(!tmp_ipv6) {
 				vty_out(vty, "0\n");
 			}
 			else {
-				vty_out(vty,"%s link_local\n",inet_ntop(AF_INET6,tmp_ipv6,tmpbuf,INET6_ADDRSTRLEN));
+				vty_out(vty,"%s link_local\n",tmp_ipv6);
+
 			}
-		    memset(tmp_ipv6,0,16);
-		    dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[0]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[1]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[2]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[3]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[4]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[5]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[6]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[7]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[8]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[9]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[10]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[11]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[12]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[13]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[14]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[15]);
-/*
-			vty_out(vty, "%-10s", "");
-		    vty_out(vty,"%-s ",uplink_ifname ? uplink_ifname : "nil");
-*/
+			tmp_ipv6 = NULL;
+			dbus_message_iter_next(&iter);	
+			dbus_message_iter_get_basic(&iter,&tmp_ipv6);	
 			vty_out(vty, "%-10s%-s ", "", downlink_ifname ? downlink_ifname : "nil");
 
-			if(ipv6_addr_eq_null(tmp_ipv6)) {
+			if(!tmp_ipv6) {
 				vty_out(vty, "0\n");
 			}
 			else {
-				vty_out(vty,"%s\n",inet_ntop(AF_INET6,tmp_ipv6,tmpbuf,INET6_ADDRSTRLEN));
+				vty_out(vty,"%s\n",tmp_ipv6);
 			}
 	    }
 #endif
@@ -1469,95 +1128,29 @@ int dcli_show_hansi_profile
 			dbus_message_iter_next(&iter);
 			dbus_message_iter_get_basic(&iter,&vgateway_ifname);	
 
-			memset(tmp_ipv6,0,16);
-		    dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[0]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[1]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[2]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[3]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[4]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[5]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[6]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[7]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[8]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[9]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[10]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[11]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[12]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[13]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[14]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[15]);
+			tmp_ipv6 = NULL;
+			dbus_message_iter_next(&iter);	
+			dbus_message_iter_get_basic(&iter,&tmp_ipv6);	
 
 			vty_out(vty, "%-7s%-3d%-s ", "", i+1, vgateway_ifname ? vgateway_ifname : "nil");
-/*
-			vty_out(vty, "%-10s", "");
-		    vty_out(vty,"%-s ",uplink_ifname ? uplink_ifname : "nil");
-			*/
-			if(ipv6_addr_eq_null(tmp_ipv6)) {
+			if(!tmp_ipv6) {
 				vty_out(vty, "0\n");
 			}
 			else {
-				vty_out(vty,"%s link_local\n",inet_ntop(AF_INET6,tmp_ipv6,tmpbuf,INET6_ADDRSTRLEN));
+				vty_out(vty,"%s link_local\n",tmp_ipv6);
+
 			}
-		    memset(tmp_ipv6,0,16);
-		    dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[0]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[1]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[2]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[3]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[4]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[5]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[6]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[7]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[8]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[9]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[10]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[11]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[12]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[13]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[14]);
-			dbus_message_iter_next(&iter);
-			dbus_message_iter_get_basic(&iter, &tmp_ipv6[15]);
-/*
-			vty_out(vty, "%-10s", "");
-		    vty_out(vty,"%-s ",uplink_ifname ? uplink_ifname : "nil");
-*/
+			tmp_ipv6 = NULL;
+			dbus_message_iter_next(&iter);	
+			dbus_message_iter_get_basic(&iter,&tmp_ipv6);	
+
 			vty_out(vty, "%-10s%-s ", "", vgateway_ifname ? vgateway_ifname : "nil");
 
-			if(ipv6_addr_eq_null(tmp_ipv6)) {
+			if(!tmp_ipv6) {
 				vty_out(vty, "0\n");
 			}
 			else {
-				vty_out(vty,"%s\n",inet_ntop(AF_INET6,tmp_ipv6,tmpbuf,INET6_ADDRSTRLEN));
+				vty_out(vty,"%s\n",tmp_ipv6);
 			}
 	}
 #endif

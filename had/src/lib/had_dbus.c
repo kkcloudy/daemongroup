@@ -4684,13 +4684,15 @@ DBusMessage * had_dbus_show(DBusConnection *conn, DBusMessage *msg, void *user_d
 	int i = 0;
 	char *ifname = NULL;
 	hansi_s* hansiNode = NULL;
+	int uplink_cnt = 0, downlink_cnt = 0, vgateway_cnt = 0;
 	int uplink_ipv6_cnt = 0, downlink_ipv6_cnt = 0, vgateway_ipv6_cnt = 0;
-	struct iaddr local_ipv6_uplink;
-	struct iaddr ipv6_uplink;
-	struct iaddr local_ipv6_downlink;
-	struct iaddr ipv6_downlink;
-	struct iaddr local_ipv6_vgateway;
-	struct iaddr ipv6_vgateway;
+	char ipv6_uplink_addr[INET6_ADDRSTRLEN] = {0};
+	char ipv6_uplink_linklocal_addr[INET6_ADDRSTRLEN] = {0};
+	char ipv6_downlink_addr[INET6_ADDRSTRLEN] = {0};
+	char ipv6_downlink_linklocal_addr[INET6_ADDRSTRLEN] = {0};
+	char ipv6_vgateway_linklocal_addr[INET6_ADDRSTRLEN] = {0};
+	char ipv6_vgateway_addr[INET6_ADDRSTRLEN] = {0};
+	char *ipv6_addr = NULL;
 
 	dbus_error_init( &err );
 
@@ -4749,13 +4751,14 @@ DBusMessage * had_dbus_show(DBusConnection *conn, DBusMessage *msg, void *user_d
 			/* show first config of uplink */
 			for (i = 0; i < VRRP_LINK_MAX_CNT; i++)
 			{
-				if (VRRP_LINK_SETTED == vrrp->uplink_vif[i].set_flg)
+				if (VRRP_LINK_SETTED == vrrp->uplink_vif[i].set_flg && (uplink_cnt < vrrp->uplink_naddr))
 				{
 					ifname = vrrp->uplink_vif[i].ifname;
 
 					dbus_message_iter_append_basic (&iter,DBUS_TYPE_STRING,&ifname);
 					dbus_message_iter_append_basic (&iter,DBUS_TYPE_UINT32,&(vrrp->uplink_vaddr[i].addr));
 					ifname = NULL;
+					uplink_cnt++;
 				}
 			}
 #if 1
@@ -4769,43 +4772,19 @@ DBusMessage * had_dbus_show(DBusConnection *conn, DBusMessage *msg, void *user_d
 					dbus_message_iter_append_basic (&iter,DBUS_TYPE_STRING,&ifname);  
 					vrrp_syslog_dbg("  %d:%-10s \n", uplink_ipv6_cnt, ifname ? ifname:"nil");
 
-					memcpy(local_ipv6_uplink.iabuf,&vrrp->uplink_local_ipv6_vaddr[i].sin6_addr,sizeof(struct in6_addr));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(local_ipv6_uplink.iabuf[0]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(local_ipv6_uplink.iabuf[1]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(local_ipv6_uplink.iabuf[2]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(local_ipv6_uplink.iabuf[3]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(local_ipv6_uplink.iabuf[4]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(local_ipv6_uplink.iabuf[5]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(local_ipv6_uplink.iabuf[6]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(local_ipv6_uplink.iabuf[7]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(local_ipv6_uplink.iabuf[8]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(local_ipv6_uplink.iabuf[9]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(local_ipv6_uplink.iabuf[10]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(local_ipv6_uplink.iabuf[11]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(local_ipv6_uplink.iabuf[12]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(local_ipv6_uplink.iabuf[13]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(local_ipv6_uplink.iabuf[14]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(local_ipv6_uplink.iabuf[15]));	
-					vrrp_syslog_dbg("%s: uplink local ip6 = "NIP6QUAD_FMT"\n",__func__,NIP6QUAD(local_ipv6_uplink.iabuf));
+                	memset(ipv6_uplink_linklocal_addr,0,INET6_ADDRSTRLEN);
+                    ipv6_addr = NULL;
+        			inet_ntop(AF_INET6, vrrp->uplink_local_ipv6_vaddr[i].sin6_addr.s6_addr, ipv6_uplink_linklocal_addr, INET6_ADDRSTRLEN); 
+					ipv6_addr = ipv6_uplink_linklocal_addr;
+    				dbus_message_iter_append_basic (&iter,DBUS_TYPE_STRING, &ipv6_addr);	
+					vrrp_syslog_dbg("%d  ipv6_uplink_linklocal_addr = %s \n",i, ipv6_addr);
 
-					memcpy(ipv6_uplink.iabuf,&vrrp->uplink_ipv6_vaddr[i].sin6_addr,sizeof(struct in6_addr));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(ipv6_uplink.iabuf[0]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(ipv6_uplink.iabuf[1]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(ipv6_uplink.iabuf[2]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(ipv6_uplink.iabuf[3]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(ipv6_uplink.iabuf[4]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(ipv6_uplink.iabuf[5]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(ipv6_uplink.iabuf[6]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(ipv6_uplink.iabuf[7]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(ipv6_uplink.iabuf[8]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(ipv6_uplink.iabuf[9]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(ipv6_uplink.iabuf[10]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(ipv6_uplink.iabuf[11]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(ipv6_uplink.iabuf[12]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(ipv6_uplink.iabuf[13]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(ipv6_uplink.iabuf[14]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(ipv6_uplink.iabuf[15]));										
-					vrrp_syslog_dbg("%s: uplink ip6 = "NIP6QUAD_FMT"\n",__func__,NIP6QUAD(ipv6_uplink.iabuf));
+                	memset(ipv6_uplink_addr,0,INET6_ADDRSTRLEN);
+					ipv6_addr = NULL;
+        			inet_ntop(AF_INET6, vrrp->uplink_ipv6_vaddr[i].sin6_addr.s6_addr, ipv6_uplink_addr, INET6_ADDRSTRLEN); 
+					ipv6_addr = ipv6_uplink_addr;
+    				dbus_message_iter_append_basic (&iter,DBUS_TYPE_STRING, &ipv6_addr);	
+					vrrp_syslog_dbg("%d  ipv6_uplink_addr = %s \n",i, ipv6_addr);
 					ifname = NULL;
 					uplink_ipv6_cnt++;
 				}
@@ -4838,17 +4817,18 @@ DBusMessage * had_dbus_show(DBusConnection *conn, DBusMessage *msg, void *user_d
 			/* show first config of downlink */
 			for (i = 0; i < VRRP_LINK_MAX_CNT; i++)
 			{
-				if (VRRP_LINK_SETTED == vrrp->downlink_vif[i].set_flg)
+				if ((VRRP_LINK_SETTED == vrrp->downlink_vif[i].set_flg) && (downlink_cnt < vrrp->downlink_naddr))
 				{
 					ifname = vrrp->downlink_vif[i].ifname;
 
 					dbus_message_iter_append_basic (&iter,DBUS_TYPE_STRING,&ifname);
 					dbus_message_iter_append_basic (&iter,DBUS_TYPE_UINT32,&(vrrp->downlink_vaddr[i].addr));  
 					ifname = NULL;
+					downlink_cnt++;
 				}
 			}
 #if 1
-			vrrp_syslog_dbg("%d downlink ipv6 interfaces\n", vrrp->downlink_ipv6_naddr);
+			vrrp_syslog_dbg("%d downlink ipv6 interfaces line = %d\n", vrrp->downlink_ipv6_naddr,__LINE__);
 			dbus_message_iter_append_basic (&iter,DBUS_TYPE_UINT32,&vrrp->downlink_ipv6_naddr);
 			for (i = 0; i < VRRP_LINK_MAX_CNT; i++)
 			{
@@ -4856,45 +4836,22 @@ DBusMessage * had_dbus_show(DBusConnection *conn, DBusMessage *msg, void *user_d
 				{
 					ifname = vrrp->downlink_vif[i].ifname;
 					dbus_message_iter_append_basic (&iter,DBUS_TYPE_STRING,&ifname);  
-					vrrp_syslog_dbg("  %d:%-10s \n", downlink_ipv6_cnt, ifname ? ifname:"nil");
+					vrrp_syslog_dbg("#####  %d:%-10s \n", downlink_ipv6_cnt, ifname ? ifname:"nil");
 
-                	memcpy(local_ipv6_downlink.iabuf,&vrrp->downlink_local_ipv6_vaddr[i].sin6_addr,sizeof(struct in6_addr));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(local_ipv6_downlink.iabuf[0]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(local_ipv6_downlink.iabuf[1]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(local_ipv6_downlink.iabuf[2]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(local_ipv6_downlink.iabuf[3]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(local_ipv6_downlink.iabuf[4]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(local_ipv6_downlink.iabuf[5]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(local_ipv6_downlink.iabuf[6]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(local_ipv6_downlink.iabuf[7]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(local_ipv6_downlink.iabuf[8]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(local_ipv6_downlink.iabuf[9]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(local_ipv6_downlink.iabuf[10]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(local_ipv6_downlink.iabuf[11]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(local_ipv6_downlink.iabuf[12]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(local_ipv6_downlink.iabuf[13]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(local_ipv6_downlink.iabuf[14]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(local_ipv6_downlink.iabuf[15]));	
-					vrrp_syslog_dbg("%s: downlink local ip6 = "NIP6QUAD_FMT"\n",__func__,NIP6QUAD(local_ipv6_downlink.iabuf));
+                	memset(ipv6_downlink_linklocal_addr,0,INET6_ADDRSTRLEN);
+                    ipv6_addr = NULL;
+        			inet_ntop(AF_INET6, vrrp->downlink_local_ipv6_vaddr[i].sin6_addr.s6_addr, ipv6_downlink_linklocal_addr, INET6_ADDRSTRLEN); 
+					ipv6_addr = ipv6_downlink_linklocal_addr;
+    				dbus_message_iter_append_basic (&iter,DBUS_TYPE_STRING, &ipv6_addr);	
+					vrrp_syslog_dbg("%d  ipv6_downlink_linklocal_addr = %s \n",i, ipv6_addr);
 
-					memcpy(ipv6_downlink.iabuf,&vrrp->downlink_ipv6_vaddr[i].sin6_addr,sizeof(struct in6_addr));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(ipv6_downlink.iabuf[0]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(ipv6_downlink.iabuf[1]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(ipv6_downlink.iabuf[2]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(ipv6_downlink.iabuf[3]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(ipv6_downlink.iabuf[4]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(ipv6_downlink.iabuf[5]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(ipv6_downlink.iabuf[6]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(ipv6_downlink.iabuf[7]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(ipv6_downlink.iabuf[8]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(ipv6_downlink.iabuf[9]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(ipv6_downlink.iabuf[10]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(ipv6_downlink.iabuf[11]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(ipv6_downlink.iabuf[12]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(ipv6_downlink.iabuf[13]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(ipv6_downlink.iabuf[14]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(ipv6_downlink.iabuf[15]));										
-					vrrp_syslog_dbg("%s: downlink ip6 = "NIP6QUAD_FMT"\n",__func__,NIP6QUAD(ipv6_downlink.iabuf));
+                	memset(ipv6_downlink_addr,0,INET6_ADDRSTRLEN);
+					ipv6_addr = NULL;
+					inet_ntop(AF_INET6, vrrp->downlink_ipv6_vaddr[i].sin6_addr.s6_addr, ipv6_downlink_addr, INET6_ADDRSTRLEN); 
+					ipv6_addr = ipv6_downlink_addr;
+    				dbus_message_iter_append_basic (&iter,DBUS_TYPE_STRING, &ipv6_addr);	
+					vrrp_syslog_dbg("%d  ipv6_downlink_addr = %s \n",i, ipv6_addr);
+
 					ifname = NULL;
 					downlink_ipv6_cnt++;
 				}
@@ -4945,16 +4902,18 @@ DBusMessage * had_dbus_show(DBusConnection *conn, DBusMessage *msg, void *user_d
 			vgateway_set_flg = vrrp->vgateway_naddr > vrrp->vgateway_ipv6_naddr ? vrrp->vgateway_naddr:vrrp->vgateway_ipv6_naddr;
 			dbus_message_iter_append_basic (&iter,DBUS_TYPE_UINT32,&vgateway_set_flg);
 			for(i = 0; i < VRRP_LINK_MAX_CNT; i++) {
-				if(VRRP_LINK_SETTED == vrrp->vgateway_vif[i].set_flg) {
+				if((VRRP_LINK_SETTED == vrrp->vgateway_vif[i].set_flg) && (vgateway_cnt < vrrp->vgateway_naddr)) {
 					ifname = vrrp->vgateway_vif[i].ifname;
 
 					dbus_message_iter_append_basic (&iter,DBUS_TYPE_STRING,&ifname);
 					dbus_message_iter_append_basic (&iter,DBUS_TYPE_UINT32,&vrrp->vgateway_vaddr[i].addr);
 					dbus_message_iter_append_basic (&iter,DBUS_TYPE_UINT32,&vrrp->vgateway_vaddr[i].mask);	
+					ifname = NULL;
+					vgateway_cnt++;
 				}
 			}
 #if 1
-			vrrp_syslog_dbg("%d vgateway ipv6 interfaces\n", vrrp->vgateway_ipv6_naddr);
+			vrrp_syslog_dbg("%d vgateway ipv6 interfaces line = %d\n", vrrp->vgateway_ipv6_naddr,__LINE__);
 			dbus_message_iter_append_basic (&iter,DBUS_TYPE_UINT32,&vrrp->vgateway_ipv6_naddr);
 			for (i = 0; i < VRRP_LINK_MAX_CNT; i++)
 			{
@@ -4962,45 +4921,21 @@ DBusMessage * had_dbus_show(DBusConnection *conn, DBusMessage *msg, void *user_d
 				{
 					ifname = vrrp->vgateway_vif[i].ifname;
 					dbus_message_iter_append_basic (&iter,DBUS_TYPE_STRING,&ifname);  
-					vrrp_syslog_dbg("  %d:%-10s \n", vgateway_ipv6_cnt, ifname ? ifname:"nil");
+					vrrp_syslog_dbg("@@@@@  %d:%-10s \n", vgateway_ipv6_cnt, ifname ? ifname:"nil");
 
-					memcpy(local_ipv6_vgateway.iabuf,&vrrp->vgateway_local_ipv6_vaddr[i].sin6_addr,sizeof(struct in6_addr));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(local_ipv6_vgateway.iabuf[0]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(local_ipv6_vgateway.iabuf[1]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(local_ipv6_vgateway.iabuf[2]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(local_ipv6_vgateway.iabuf[3]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(local_ipv6_vgateway.iabuf[4]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(local_ipv6_vgateway.iabuf[5]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(local_ipv6_vgateway.iabuf[6]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(local_ipv6_vgateway.iabuf[7]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(local_ipv6_vgateway.iabuf[8]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(local_ipv6_vgateway.iabuf[9]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(local_ipv6_vgateway.iabuf[10]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(local_ipv6_vgateway.iabuf[11]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(local_ipv6_vgateway.iabuf[12]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(local_ipv6_vgateway.iabuf[13]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(local_ipv6_vgateway.iabuf[14]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(local_ipv6_vgateway.iabuf[15]));	
-                	vrrp_syslog_dbg("%s: vgateway local ip6 = "NIP6QUAD_FMT"\n",__func__,NIP6QUAD(local_ipv6_vgateway.iabuf));
+					memset(ipv6_vgateway_linklocal_addr,0,INET6_ADDRSTRLEN);
+                    ipv6_addr = NULL;
+					inet_ntop(AF_INET6, vrrp->vgateway_local_ipv6_vaddr[i].sin6_addr.s6_addr, ipv6_vgateway_linklocal_addr, INET6_ADDRSTRLEN); 
+					ipv6_addr = ipv6_vgateway_linklocal_addr;
+    				dbus_message_iter_append_basic (&iter,DBUS_TYPE_STRING, &ipv6_addr);	
+					vrrp_syslog_dbg("%d  ipv6_vgateway_linklocal_addr = %s \n",i, ipv6_addr);
 
-					memcpy(ipv6_vgateway.iabuf,&vrrp->vgateway_ipv6_vaddr[i].sin6_addr,sizeof(struct in6_addr));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(ipv6_vgateway.iabuf[0]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(ipv6_vgateway.iabuf[1]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(ipv6_vgateway.iabuf[2]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(ipv6_vgateway.iabuf[3]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(ipv6_vgateway.iabuf[4]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(ipv6_vgateway.iabuf[5]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(ipv6_vgateway.iabuf[6]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(ipv6_vgateway.iabuf[7]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(ipv6_vgateway.iabuf[8]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(ipv6_vgateway.iabuf[9]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(ipv6_vgateway.iabuf[10]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(ipv6_vgateway.iabuf[11]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(ipv6_vgateway.iabuf[12]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(ipv6_vgateway.iabuf[13]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(ipv6_vgateway.iabuf[14]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(ipv6_vgateway.iabuf[15]));	
-					vrrp_syslog_dbg("%s: vgateway ip6 = "NIP6QUAD_FMT"\n",__func__,NIP6QUAD(ipv6_vgateway.iabuf));
+					memset(ipv6_vgateway_addr,0,INET6_ADDRSTRLEN);
+					ipv6_addr = NULL;
+        			inet_ntop(AF_INET6, vrrp->vgateway_ipv6_vaddr[i].sin6_addr.s6_addr, ipv6_vgateway_addr, INET6_ADDRSTRLEN); 
+					ipv6_addr = ipv6_vgateway_addr;
+    				dbus_message_iter_append_basic (&iter,DBUS_TYPE_STRING, &ipv6_addr);	
+					vrrp_syslog_dbg("%d  ipv6_vgateway_addr = %s \n",i, ipv6_addr);
 
 					ifname = NULL;
 					vgateway_ipv6_cnt++;
@@ -5036,12 +4971,13 @@ DBusMessage * had_dbus_show_detail(DBusConnection *conn, DBusMessage *msg, void 
 	unsigned heartbeat_set_flg = VRRP_LINK_NO_SETTED;
 
 	int uplink_ipv6_cnt = 0, downlink_ipv6_cnt = 0, vgateway_ipv6_cnt = 0;
-	struct iaddr local_ipv6_uplink;
-	struct iaddr ipv6_uplink;
-	struct iaddr local_ipv6_downlink;
-	struct iaddr ipv6_downlink;
-	struct iaddr local_ipv6_vgateway;
-	struct iaddr ipv6_vgateway;
+	char ipv6_uplink_addr[INET6_ADDRSTRLEN] = {0};
+	char ipv6_uplink_linklocal_addr[INET6_ADDRSTRLEN] = {0};
+	char ipv6_downlink_addr[INET6_ADDRSTRLEN] = {0};
+	char ipv6_downlink_linklocal_addr[INET6_ADDRSTRLEN] = {0};
+	char ipv6_vgateway_linklocal_addr[INET6_ADDRSTRLEN] = {0};
+	char ipv6_vgateway_addr[INET6_ADDRSTRLEN] = {0};
+	char *ipv6_addr = NULL;
 
 	dbus_error_init( &err );
 
@@ -5125,43 +5061,18 @@ DBusMessage * had_dbus_show_detail(DBusConnection *conn, DBusMessage *msg, void 
 					dbus_message_iter_append_basic (&iter,DBUS_TYPE_BYTE,&vrrp->uplink_vif[i].linkstate);  
 					vrrp_syslog_dbg("  %d:%-10s %-4s \n", uplink_ipv6_cnt, ifname ? ifname:"nil",vrrp->uplink_vif[i].linkstate ? "Up":"Down");
 
-					memcpy(local_ipv6_uplink.iabuf,&vrrp->uplink_local_ipv6_vaddr[i].sin6_addr,sizeof(struct in6_addr));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(local_ipv6_uplink.iabuf[0]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(local_ipv6_uplink.iabuf[1]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(local_ipv6_uplink.iabuf[2]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(local_ipv6_uplink.iabuf[3]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(local_ipv6_uplink.iabuf[4]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(local_ipv6_uplink.iabuf[5]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(local_ipv6_uplink.iabuf[6]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(local_ipv6_uplink.iabuf[7]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(local_ipv6_uplink.iabuf[8]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(local_ipv6_uplink.iabuf[9]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(local_ipv6_uplink.iabuf[10]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(local_ipv6_uplink.iabuf[11]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(local_ipv6_uplink.iabuf[12]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(local_ipv6_uplink.iabuf[13]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(local_ipv6_uplink.iabuf[14]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(local_ipv6_uplink.iabuf[15]));	
-					vrrp_syslog_dbg("%s: uplink local ip6 = "NIP6QUAD_FMT"\n",__func__,NIP6QUAD(local_ipv6_uplink.iabuf));
+                	memset(ipv6_uplink_linklocal_addr,0,INET6_ADDRSTRLEN);
+                	ipv6_addr = NULL;
+        			inet_ntop(AF_INET6, vrrp->uplink_local_ipv6_vaddr[i].sin6_addr.s6_addr, ipv6_uplink_linklocal_addr, INET6_ADDRSTRLEN); 
+					ipv6_addr = ipv6_uplink_linklocal_addr;
+    				dbus_message_iter_append_basic (&iter,DBUS_TYPE_STRING, &ipv6_addr);	
 
-					memcpy(ipv6_uplink.iabuf,&vrrp->uplink_ipv6_vaddr[i].sin6_addr,sizeof(struct in6_addr));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(ipv6_uplink.iabuf[0]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(ipv6_uplink.iabuf[1]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(ipv6_uplink.iabuf[2]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(ipv6_uplink.iabuf[3]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(ipv6_uplink.iabuf[4]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(ipv6_uplink.iabuf[5]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(ipv6_uplink.iabuf[6]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(ipv6_uplink.iabuf[7]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(ipv6_uplink.iabuf[8]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(ipv6_uplink.iabuf[9]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(ipv6_uplink.iabuf[10]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(ipv6_uplink.iabuf[11]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(ipv6_uplink.iabuf[12]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(ipv6_uplink.iabuf[13]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(ipv6_uplink.iabuf[14]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(ipv6_uplink.iabuf[15]));	
-					vrrp_syslog_dbg("%s: uplink ip6 = "NIP6QUAD_FMT"\n",__func__,NIP6QUAD(ipv6_uplink.iabuf));
+                	memset(ipv6_uplink_addr,0,INET6_ADDRSTRLEN);
+					ipv6_addr = NULL;
+					inet_ntop(AF_INET6, vrrp->uplink_ipv6_vaddr[i].sin6_addr.s6_addr, ipv6_uplink_addr, INET6_ADDRSTRLEN); 
+					ipv6_addr = ipv6_uplink_addr;
+    				dbus_message_iter_append_basic (&iter,DBUS_TYPE_STRING, &ipv6_addr);	
+
 					ifname = NULL;
 					uplink_ipv6_cnt++;
 				}
@@ -5224,43 +5135,18 @@ DBusMessage * had_dbus_show_detail(DBusConnection *conn, DBusMessage *msg, void 
 					dbus_message_iter_append_basic (&iter,DBUS_TYPE_BYTE,&vrrp->downlink_vif[i].linkstate);  
 					vrrp_syslog_dbg("  %d:%-10s %-4s \n", downlink_ipv6_cnt, ifname ? ifname:"nil",vrrp->downlink_vif[i].linkstate ? "Up":"Down");
 
-					memcpy(local_ipv6_downlink.iabuf,&vrrp->downlink_local_ipv6_vaddr[i].sin6_addr,sizeof(struct in6_addr));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(local_ipv6_downlink.iabuf[0]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(local_ipv6_downlink.iabuf[1]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(local_ipv6_downlink.iabuf[2]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(local_ipv6_downlink.iabuf[3]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(local_ipv6_downlink.iabuf[4]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(local_ipv6_downlink.iabuf[5]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(local_ipv6_downlink.iabuf[6]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(local_ipv6_downlink.iabuf[7]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(local_ipv6_downlink.iabuf[8]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(local_ipv6_downlink.iabuf[9]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(local_ipv6_downlink.iabuf[10]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(local_ipv6_downlink.iabuf[11]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(local_ipv6_downlink.iabuf[12]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(local_ipv6_downlink.iabuf[13]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(local_ipv6_downlink.iabuf[14]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(local_ipv6_downlink.iabuf[15]));	
-					vrrp_syslog_dbg("%s: downlink local ip6 = "NIP6QUAD_FMT"\n",__func__,NIP6QUAD(local_ipv6_downlink.iabuf));
-				
-					memcpy(ipv6_downlink.iabuf,&vrrp->downlink_ipv6_vaddr[i].sin6_addr,sizeof(struct in6_addr));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(ipv6_downlink.iabuf[0]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(ipv6_downlink.iabuf[1]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(ipv6_downlink.iabuf[2]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(ipv6_downlink.iabuf[3]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(ipv6_downlink.iabuf[4]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(ipv6_downlink.iabuf[5]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(ipv6_downlink.iabuf[6]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(ipv6_downlink.iabuf[7]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(ipv6_downlink.iabuf[8]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(ipv6_downlink.iabuf[9]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(ipv6_downlink.iabuf[10]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(ipv6_downlink.iabuf[11]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(ipv6_downlink.iabuf[12]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(ipv6_downlink.iabuf[13]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(ipv6_downlink.iabuf[14]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(ipv6_downlink.iabuf[15]));	
-					vrrp_syslog_dbg("%s: downlink ip6 = "NIP6QUAD_FMT"\n",__func__,NIP6QUAD(ipv6_downlink.iabuf));
+                	memset(ipv6_downlink_linklocal_addr,0,INET6_ADDRSTRLEN);
+					ipv6_addr = NULL;
+        			inet_ntop(AF_INET6, vrrp->downlink_local_ipv6_vaddr[i].sin6_addr.s6_addr, ipv6_downlink_linklocal_addr, INET6_ADDRSTRLEN); 
+					ipv6_addr = ipv6_downlink_linklocal_addr;
+    				dbus_message_iter_append_basic (&iter,DBUS_TYPE_STRING, &ipv6_addr);	
+
+                	memset(ipv6_downlink_addr,0,INET6_ADDRSTRLEN);
+					ipv6_addr = NULL;
+					inet_ntop(AF_INET6, vrrp->downlink_ipv6_vaddr[i].sin6_addr.s6_addr, ipv6_downlink_addr, INET6_ADDRSTRLEN);
+					ipv6_addr = ipv6_downlink_addr;
+    				dbus_message_iter_append_basic (&iter,DBUS_TYPE_STRING, &ipv6_addr);	
+
 					ifname = NULL;
 					downlink_ipv6_cnt++;
 				}
@@ -5346,43 +5232,17 @@ DBusMessage * had_dbus_show_detail(DBusConnection *conn, DBusMessage *msg, void 
 					dbus_message_iter_append_basic (&iter,DBUS_TYPE_BYTE,&vrrp->vgateway_vif[i].linkstate);  
 					vrrp_syslog_dbg("  %d:%-10s %-4s \n", vgateway_ipv6_cnt, ifname ? ifname:"nil",vrrp->vgateway_vif[i].linkstate ? "Up":"Down");
 
-					memcpy(local_ipv6_vgateway.iabuf,&vrrp->vgateway_local_ipv6_vaddr[i].sin6_addr,sizeof(struct in6_addr));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(local_ipv6_vgateway.iabuf[0]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(local_ipv6_vgateway.iabuf[1]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(local_ipv6_vgateway.iabuf[2]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(local_ipv6_vgateway.iabuf[3]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(local_ipv6_vgateway.iabuf[4]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(local_ipv6_vgateway.iabuf[5]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(local_ipv6_vgateway.iabuf[6]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(local_ipv6_vgateway.iabuf[7]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(local_ipv6_vgateway.iabuf[8]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(local_ipv6_vgateway.iabuf[9]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(local_ipv6_vgateway.iabuf[10]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(local_ipv6_vgateway.iabuf[11]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(local_ipv6_vgateway.iabuf[12]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(local_ipv6_vgateway.iabuf[13]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(local_ipv6_vgateway.iabuf[14]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(local_ipv6_vgateway.iabuf[15]));	
-                	vrrp_syslog_dbg("%s: vgateway local ip6 = "NIP6QUAD_FMT"\n",__func__,NIP6QUAD(local_ipv6_vgateway.iabuf));
+                	memset(ipv6_vgateway_linklocal_addr,0,INET6_ADDRSTRLEN);
+					ipv6_addr = NULL;
+        			inet_ntop(AF_INET6, vrrp->vgateway_local_ipv6_vaddr[i].sin6_addr.s6_addr, ipv6_vgateway_linklocal_addr, INET6_ADDRSTRLEN); 
+					ipv6_addr = ipv6_vgateway_linklocal_addr;
+    				dbus_message_iter_append_basic (&iter,DBUS_TYPE_STRING, &ipv6_addr);	
 
-					memcpy(ipv6_vgateway.iabuf,&vrrp->vgateway_ipv6_vaddr[i].sin6_addr,sizeof(struct in6_addr));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(ipv6_vgateway.iabuf[0]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(ipv6_vgateway.iabuf[1]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(ipv6_vgateway.iabuf[2]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(ipv6_vgateway.iabuf[3]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(ipv6_vgateway.iabuf[4]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(ipv6_vgateway.iabuf[5]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(ipv6_vgateway.iabuf[6]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(ipv6_vgateway.iabuf[7]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(ipv6_vgateway.iabuf[8]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(ipv6_vgateway.iabuf[9]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(ipv6_vgateway.iabuf[10]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(ipv6_vgateway.iabuf[11]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(ipv6_vgateway.iabuf[12]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(ipv6_vgateway.iabuf[13]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(ipv6_vgateway.iabuf[14]));
-            		dbus_message_iter_append_basic(&iter,DBUS_TYPE_BYTE, &(ipv6_vgateway.iabuf[15]));	
-					vrrp_syslog_dbg("%s: vgateway ip6 = "NIP6QUAD_FMT"\n",__func__,NIP6QUAD(ipv6_vgateway.iabuf));
+					memset(ipv6_vgateway_addr,0,INET6_ADDRSTRLEN);
+					ipv6_addr = NULL;
+					inet_ntop(AF_INET6, vrrp->vgateway_ipv6_vaddr[i].sin6_addr.s6_addr, ipv6_vgateway_addr, INET6_ADDRSTRLEN); 
+					ipv6_addr = ipv6_vgateway_addr;
+    				dbus_message_iter_append_basic (&iter,DBUS_TYPE_STRING, &ipv6_addr);	
 
 					ifname = NULL;
 					vgateway_ipv6_cnt++;
