@@ -5804,7 +5804,20 @@ char dcli_vty_ifname[INTERFACE_NAMSIZ+1] = {0};
 
 
         int ret = 0;
-
+	char cmd[128];
+	pid_t status;
+	memset(cmd,0,128);
+	sprintf(cmd,"sudo brctl show |grep %s > /dev/null 2>&1",argv[0]);
+	status = system(cmd);
+	if (status != -1) {
+		if (WIFEXITED(status)) {
+			if (0 == WEXITSTATUS(status)) {
+				vty_out(vty, "The interface already in the ebr.\n");
+				return CMD_SUCCESS;
+			}
+		}
+	}
+	
         /*if ifname is wlan*/
         if (!strncasecmp(argv[0],"wlan",4))
         {
