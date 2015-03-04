@@ -713,6 +713,9 @@ int dcli_acinfo_show_running_config(struct vty* vty)
 	int retu = 0;
 	char sid[10] = {0};
 	char netip[32] = {0};
+	int slot=0;
+	int type=0;
+	int hansi=0;
 	retu = read_acinfo_xml(&ahead,&confnum);
 	
 	if(0 == retu)
@@ -734,22 +737,36 @@ int dcli_acinfo_show_running_config(struct vty* vty)
 		aq = ahead.netipst.next;
 		while(aq != NULL)
 		{
+			slot=0;
+			type=0;
+			hansi=0;
 			memset(sid,0,sizeof(sid));
 			memset(netip,0,sizeof(netip));
 			sscanf(aq->netip,"%s %s",sid,netip);
+			sscanf(sid,"%d-%d-%d",&slot,&type,&hansi);
 			memset(cmd,0,sizeof(cmd)-1);
-			snprintf(cmd,sizeof(cmd)-1," set redundancy backup instance %s IPV4 network-manage %s\n",sid,netip);
+			if(type==0)
+				snprintf(cmd,sizeof(cmd)-1,"set redundancy backup network-manage-ipaddress remote_hansi %d-%d ip %s\n",slot,hansi,netip);
+			else if(type==1)
+				snprintf(cmd,sizeof(cmd)-1,"set redundancy backup network-manage-ipaddress local_hansi %d-%d ip %s\n",slot,hansi,netip);
 			vtysh_add_show_string(cmd );
 			aq = aq->next;
 		}
 		aq = ahead.netipst_ipv6.next;
 		while(aq != NULL)
 		{
+			slot=0;
+			type=0;
+			hansi=0;
 			memset(sid,0,sizeof(sid));
 			memset(netip,0,sizeof(netip));
 			sscanf(aq->netip,"%s %s",sid,netip);
+			sscanf(sid,"%d-%d-%d",&slot,&type,&hansi);
 			memset(cmd,0,sizeof(cmd)-1);
-			snprintf(cmd,sizeof(cmd)-1," set redundancy backup instance %s IPV6 network-manage %s\n",sid,netip);
+			if(type==0)
+				snprintf(cmd,sizeof(cmd)-1,"set redundancy backup network-manage-ipaddress remote_hansi %d-%d ipv6 %s\n",slot,hansi,netip);
+			else if(type==1)
+				snprintf(cmd,sizeof(cmd)-1,"set redundancy backup network-manage-ipaddress local_hansi %d-%d ipv6 %s\n",slot,hansi,netip);
 			vtysh_add_show_string(cmd );
 			aq = aq->next;
 		}
