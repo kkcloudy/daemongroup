@@ -639,6 +639,145 @@ rc = acUplinkKbyteRate_get(rowreq_ctx, (u_long *)var->val.string );
 rc = acDownlinkKbyteRate_get(rowreq_ctx, (u_long *)var->val.string );
     break;
 
+    /* acipv6IfInReceivesPkts(21)/COUNTER64/ASN_COUNTER64/U64(U64)//l/A/w/e/r/d/h */
+    case COLUMN_ACIPV6IFINRECEIVESPKTS:
+    var->val_len = sizeof(unsigned long long);
+    var->type = ASN_COUNTER64;
+rc = acipv6IfInReceivesPkts_get(rowreq_ctx, (unsigned long long *)var->val.string );
+        break;
+
+    /* acipv6IfInHdrErrorsPkts(22)/COUNTER64/ASN_COUNTER64/U64(U64)//l/A/w/e/r/d/h */
+    case COLUMN_ACIPV6IFINHDRERRORSPKTS:
+    var->val_len = sizeof(unsigned long long);
+    var->type = ASN_COUNTER64;
+rc = acipv6IfInHdrErrorsPkts_get(rowreq_ctx, (unsigned long long *)var->val.string );
+        break;
+
+    /* acipv6IfInTooBigErrorsPkts(23)/COUNTER64/ASN_COUNTER64/U64(U64)//l/A/w/e/r/d/h */
+    case COLUMN_ACIPV6IFINTOOBIGERRORSPKTS:
+    var->val_len = sizeof(unsigned long long);
+    var->type = ASN_COUNTER64;
+rc = acipv6IfInTooBigErrorsPkts_get(rowreq_ctx, (unsigned long long *)var->val.string );
+        break;
+
+    /* acipv6IfInNoRoutesPkts(24)/COUNTER64/ASN_COUNTER64/U64(U64)//l/A/w/e/r/d/h */
+    case COLUMN_ACIPV6IFINNOROUTESPKTS:
+    var->val_len = sizeof(unsigned long long);
+    var->type = ASN_COUNTER64;
+rc = acipv6IfInNoRoutesPkts_get(rowreq_ctx, (unsigned long long *)var->val.string );
+        break;
+
+    /* acipv6IfInAddrErrorsPkts(25)/COUNTER64/ASN_COUNTER64/U64(U64)//l/A/w/e/r/d/h */
+    case COLUMN_ACIPV6IFINADDRERRORSPKTS:
+    var->val_len = sizeof(unsigned long long);
+    var->type = ASN_COUNTER64;
+rc = acipv6IfInAddrErrorsPkts_get(rowreq_ctx, (unsigned long long *)var->val.string );
+        break;
+
+    /* acipv6IfInUnknownProtosPkts(26)/COUNTER64/ASN_COUNTER64/U64(U64)//l/A/w/e/r/d/h */
+    case COLUMN_ACIPV6IFINUNKNOWNPROTOSPKTS:
+    var->val_len = sizeof(unsigned long long);
+    var->type = ASN_COUNTER64;
+rc = acipv6IfInUnknownProtosPkts_get(rowreq_ctx, (unsigned long long *)var->val.string );
+        break;
+
+    /* acipv6IfInTruncatedPkts(27)/COUNTER64/ASN_COUNTER64/U64(U64)//l/A/w/e/r/d/h */
+    case COLUMN_ACIPV6IFINTRUNCATEDPKTS:
+    var->val_len = sizeof(unsigned long long);
+    var->type = ASN_COUNTER64;
+rc = acipv6IfInTruncatedPkts_get(rowreq_ctx, (unsigned long long *)var->val.string );
+        break;
+
+    /* acipv6IfInDiscardsPkts(28)/COUNTER64/ASN_COUNTER64/U64(U64)//l/A/w/e/r/d/h */
+    case COLUMN_ACIPV6IFINDISCARDSPKTS:
+    var->val_len = sizeof(unsigned long long);
+    var->type = ASN_COUNTER64;
+rc = acipv6IfInDiscardsPkts_get(rowreq_ctx, (unsigned long long *)var->val.string );
+        break;
+
+    /* acipv6IfInDeliversPkts(29)/COUNTER64/ASN_COUNTER64/U64(U64)//l/A/w/e/r/d/h */
+    case COLUMN_ACIPV6IFINDELIVERSPKTS:
+    var->val_len = sizeof(unsigned long long);
+    var->type = ASN_COUNTER64;
+rc = acipv6IfInDeliversPkts_get(rowreq_ctx, (unsigned long long *)var->val.string );
+        break;
+
+    /* acipv6IfOutForwDatagramsPkts(30)/COUNTER64/ASN_COUNTER64/U64(U64)//l/A/w/e/r/d/h */
+    case COLUMN_ACIPV6IFOUTFORWDATAGRAMSPKTS:
+    var->val_len = sizeof(unsigned long long);
+    var->type = ASN_COUNTER64;
+rc = acipv6IfOutForwDatagramsPkts_get(rowreq_ctx, (unsigned long long *)var->val.string );
+        break;
+
+    /* acipv6IfOutRequestsPkts(31)/COUNTER64/ASN_COUNTER64/U64(U64)//l/A/w/e/r/d/h */
+    case COLUMN_ACIPV6IFOUTREQUESTSPKTS:
+    var->val_len = sizeof(unsigned long long);
+    var->type = ASN_COUNTER64;
+rc = acipv6IfOutRequestsPkts_get(rowreq_ctx, (unsigned long long *)var->val.string );
+        break;
+
+    /* acipv6IfOutDiscardsPkts(32)/COUNTER64/ASN_COUNTER64/U64(U64)//l/A/w/e/r/d/h */
+    case COLUMN_ACIPV6IFOUTDISCARDSPKTS:
+    var->val_len = sizeof(unsigned long long);
+    var->type = ASN_COUNTER64;
+rc = acipv6IfOutDiscardsPkts_get(rowreq_ctx, (unsigned long long *)var->val.string );
+        break;
+
+    /* acipv6IfOutFragOKsPkts(33)/COUNTER64/ASN_COUNTER64/U64(U64)//l/A/w/e/r/d/h */
+    case COLUMN_ACIPV6IFOUTFRAGOKSPKTS:
+    var->val_len = sizeof(unsigned long long);
+    var->type = ASN_COUNTER64;
+rc = acipv6IfOutFragOKsPkts_get(rowreq_ctx, (unsigned long long *)var->val.string );
+        break;
+
+    /* acipv6IfOutFragFailsPkts(34)/COUNTER64/ASN_COUNTER64/U64(U64)//l/A/w/e/r/d/h */
+    case COLUMN_ACIPV6IFOUTFRAGFAILSPKTS:
+    var->val_len = sizeof(unsigned long long);
+    var->type = ASN_COUNTER64;
+rc = acipv6IfOutFragFailsPkts_get(rowreq_ctx, (unsigned long long *)var->val.string );
+        break;
+
+    /* acipv6IfOutFragCreatesPkts(35)/COUNTER64/ASN_COUNTER64/U64(U64)//l/A/w/e/r/d/h */
+    case COLUMN_ACIPV6IFOUTFRAGCREATESPKTS:
+    var->val_len = sizeof(unsigned long long);
+    var->type = ASN_COUNTER64;
+rc = acipv6IfOutFragCreatesPkts_get(rowreq_ctx, (unsigned long long *)var->val.string );
+        break;
+
+    /* acipv6IfReasmReqdsPkts(36)/COUNTER64/ASN_COUNTER64/U64(U64)//l/A/w/e/r/d/h */
+    case COLUMN_ACIPV6IFREASMREQDSPKTS:
+    var->val_len = sizeof(unsigned long long);
+    var->type = ASN_COUNTER64;
+rc = acipv6IfReasmReqdsPkts_get(rowreq_ctx, (unsigned long long *)var->val.string );
+        break;
+
+    /* acipv6IfReasmOKsPkts(37)/COUNTER64/ASN_COUNTER64/U64(U64)//l/A/w/e/r/d/h */
+    case COLUMN_ACIPV6IFREASMOKSPKTS:
+    var->val_len = sizeof(unsigned long long);
+    var->type = ASN_COUNTER64;
+rc = acipv6IfReasmOKsPkts_get(rowreq_ctx, (unsigned long long *)var->val.string );
+        break;
+
+    /* acipv6IfReasmFailsPkts(38)/COUNTER64/ASN_COUNTER64/U64(U64)//l/A/w/e/r/d/h */
+    case COLUMN_ACIPV6IFREASMFAILSPKTS:
+    var->val_len = sizeof(unsigned long long);
+    var->type = ASN_COUNTER64;
+rc = acipv6IfReasmFailsPkts_get(rowreq_ctx, (unsigned long long *)var->val.string );
+        break;
+
+    /* acipv6IfInMcastPkts(39)/COUNTER64/ASN_COUNTER64/U64(U64)//l/A/w/e/r/d/h */
+    case COLUMN_ACIPV6IFINMCASTPKTS:
+    var->val_len = sizeof(unsigned long long);
+    var->type = ASN_COUNTER64;
+rc = acipv6IfInMcastPkts_get(rowreq_ctx, (unsigned long long *)var->val.string );
+        break;
+
+    /* acipv6IfOutMcastPkts(40)/COUNTER64/ASN_COUNTER64/U64(U64)//l/A/w/e/r/d/h */
+    case COLUMN_ACIPV6IFOUTMCASTPKTS:
+    var->val_len = sizeof(unsigned long long);
+    var->type = ASN_COUNTER64;
+rc = acipv6IfOutMcastPkts_get(rowreq_ctx, (unsigned long long *)var->val.string );
+        break;
 
      default:
          snmp_log(LOG_ERR,"unknown column %d in _dot11AcIfCapabilityTable_get_column\n", column);

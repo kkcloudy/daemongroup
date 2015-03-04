@@ -685,43 +685,45 @@ rc = wtpSysRestart_get(rowreq_ctx, (u_long *)var->val.string );
 rc = wtpSysReset_get(rowreq_ctx, (u_long *)var->val.string );
         break;
 
-    /* wtpColdReboot(17)/INTEGER/ASN_INTEGER/long(u_long)//l/A/W/E/r/d/h */
+    /* wtpColdReboot(16)/INTEGER/ASN_INTEGER/long(u_long)//l/A/W/E/r/d/h */
     case COLUMN_WTPCOLDREBOOT:
     var->val_len = sizeof(u_long);
     var->type = ASN_INTEGER;
 rc = wtpColdReboot_get(rowreq_ctx, (u_long *)var->val.string );
         break;
 
-    /* wtplongitude(23)/DisplayString/ASN_OCTET_STR/char(char)//L/A/W/e/R/d/H */
+    /* wtplongitude(17)/DisplayString/ASN_OCTET_STR/char(char)//L/A/W/e/R/d/H */
     case COLUMN_WTPLONGITUDE:
     var->type = ASN_OCTET_STR;
 rc = wtplongitude_get(rowreq_ctx, (char **)&var->val.string, &var->val_len );
         break;
 
-    /* wtplatitude(24)/DisplayString/ASN_OCTET_STR/char(char)//L/A/W/e/R/d/H */
+    /* wtplatitude(18)/DisplayString/ASN_OCTET_STR/char(char)//L/A/W/e/R/d/H */
     case COLUMN_WTPLATITUDE:
     var->type = ASN_OCTET_STR;
 rc = wtplatitude_get(rowreq_ctx, (char **)&var->val.string, &var->val_len );
         break;
 
-    /* wtpPowerType(25)/DisplayString/ASN_OCTET_STR/char(char)//L/A/w/e/R/d/H */
+    /* wtpPowerType(19)/DisplayString/ASN_OCTET_STR/char(char)//L/A/w/e/R/d/H */
     case COLUMN_WTPPOWERTYPE:
     var->type = ASN_OCTET_STR;
 rc = wtpPowerType_get(rowreq_ctx, (char **)&var->val.string, &var->val_len );
         break;
 
-    /* wtpManufactureDate(26)/DisplayString/ASN_OCTET_STR/char(char)//L/A/w/e/R/d/H */
+    /* wtpManufactureDate(20)/DisplayString/ASN_OCTET_STR/char(char)//L/A/w/e/R/d/H */
     case COLUMN_WTPMANUFACTUREDATE:
     var->type = ASN_OCTET_STR;
 rc = wtpManufactureDate_get(rowreq_ctx, (char **)&var->val.string, &var->val_len );
         break;
 
-    /* wtpForwardMode(27)/INTEGER/ASN_INTEGER/long(u_long)//l/A/w/E/r/d/h */
+    /* wtpForwardMode(21)/INTEGER/ASN_INTEGER/long(u_long)//l/A/w/E/r/d/h */
     case COLUMN_WTPFORWARDMODE:
     var->val_len = sizeof(u_long);
     var->type = ASN_INTEGER;
 rc = wtpForwardMode_get(rowreq_ctx, (u_long *)var->val.string );
         break;
+
+    
 
      default:
          snmp_log(LOG_ERR,"unknown column %d in _dot11WtpInfoTable_get_column\n", column);
@@ -987,7 +989,24 @@ _dot11WtpInfoTable_check_column( dot11WtpInfoTable_rowreq_ctx *rowreq_ctx,
             rc = SNMP_ERR_GENERR;
         }
     }
-	break;
+        break;
+
+    /* wtpPowerType(19)/DisplayString/ASN_OCTET_STR/char(char)//L/A/w/e/R/d/H */
+    case COLUMN_WTPPOWERTYPE:
+        rc = SNMP_ERR_NOTWRITABLE;
+        break;
+
+    /* wtpManufactureDate(20)/DisplayString/ASN_OCTET_STR/char(char)//L/A/w/e/R/d/H */
+    case COLUMN_WTPMANUFACTUREDATE:
+        rc = SNMP_ERR_NOTWRITABLE;
+        break;
+
+    /* wtpForwardMode(21)/INTEGER/ASN_INTEGER/long(u_long)//l/A/w/E/r/d/h */
+    case COLUMN_WTPFORWARDMODE:
+        rc = SNMP_ERR_NOTWRITABLE;
+        break;
+
+   
 
         default: /** We shouldn't get here */
             rc = SNMP_ERR_GENERR;
@@ -1110,19 +1129,19 @@ _dot11WtpInfoTable_undo_setup_column( dot11WtpInfoTable_rowreq_ctx *rowreq_ctx, 
         rc = wtpSysReset_undo_setup(rowreq_ctx );
         break;
 
-    /* wtpColdReboot(17)/INTEGER/ASN_INTEGER/long(u_long)//l/A/W/E/r/d/h */
+    /* wtpColdReboot(16)/INTEGER/ASN_INTEGER/long(u_long)//l/A/W/E/r/d/h */
     case COLUMN_WTPCOLDREBOOT:
         rowreq_ctx->column_set_flags |= FLAG_WTPCOLDREBOOT;
         rc = wtpColdReboot_undo_setup(rowreq_ctx );
         break;
 
-    /* wtplongitude(23)/DisplayString/ASN_OCTET_STR/char(char)//L/A/W/e/R/d/H */
+    /* wtplongitude(17)/DisplayString/ASN_OCTET_STR/char(char)//L/A/W/e/R/d/H */
     case COLUMN_WTPLONGITUDE:
         rowreq_ctx->column_set_flags |= COLUMN_WTPLONGITUDE_FLAG;
         rc = wtplongitude_undo_setup(rowreq_ctx );
         break;
 
-    /* wtplatitude(24)/DisplayString/ASN_OCTET_STR/char(char)//L/A/W/e/R/d/H */
+    /* wtplatitude(18)/DisplayString/ASN_OCTET_STR/char(char)//L/A/W/e/R/d/H */
     case COLUMN_WTPLATITUDE:
         rowreq_ctx->column_set_flags |= COLUMN_WTPLATITUDE_FLAG;
         rc = wtplatitude_undo_setup(rowreq_ctx );
@@ -1322,13 +1341,13 @@ _dot11WtpInfoTable_set_column( dot11WtpInfoTable_rowreq_ctx *rowreq_ctx,
         rc = wtpColdReboot_set(rowreq_ctx, *((u_long *)var->val.string) );
         break;
 
-    /* wtplongitude(23)/DisplayString/ASN_OCTET_STR/char(char)//L/A/W/e/R/d/H */
+    /* wtplongitude(17)/DisplayString/ASN_OCTET_STR/char(char)//L/A/W/e/R/d/H */
     case COLUMN_WTPLONGITUDE:
         rowreq_ctx->column_set_flags |= COLUMN_WTPLONGITUDE_FLAG;
         rc = wtplongitude_set(rowreq_ctx, (char *)var->val.string, var->val_len );
         break;
 
-    /* wtplatitude(24)/DisplayString/ASN_OCTET_STR/char(char)//L/A/W/e/R/d/H */
+    /* wtplatitude(18)/DisplayString/ASN_OCTET_STR/char(char)//L/A/W/e/R/d/H */
     case COLUMN_WTPLATITUDE:
         rowreq_ctx->column_set_flags |= COLUMN_WTPLATITUDE_FLAG;
         rc = wtplatitude_set(rowreq_ctx, (char *)var->val.string, var->val_len );

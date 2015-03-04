@@ -381,6 +381,34 @@ rtm_if_flow_stats_data_packet(process_info *process_information, struct interfac
   stream_putq (s, ifp->stats.tx_fifo_errors);
   stream_putq (s, ifp->stats.tx_heartbeat_errors);
   stream_putq (s, ifp->stats.tx_window_errors);
+  stream_putq (s, ifp->stats.Ip6InReceives);                          
+  stream_putq (s, ifp->stats.Ip6InHdrErrors);                          
+  stream_putq (s, ifp->stats.Ip6InTooBigErrors);                       
+  stream_putq (s, ifp->stats.Ip6InNoRoutes);                           
+  stream_putq (s, ifp->stats.Ip6InAddrErrors);                         
+  stream_putq (s, ifp->stats.Ip6InUnknownProtos);                      
+  stream_putq (s, ifp->stats.Ip6InTruncatedPkts);                     
+  stream_putq (s, ifp->stats.Ip6InDiscards);                
+  stream_putq (s, ifp->stats.Ip6InDelivers);                         
+  stream_putq (s, ifp->stats.Ip6OutForwDatagrams);                     
+  stream_putq (s, ifp->stats.Ip6OutRequests);               
+  stream_putq (s, ifp->stats.Ip6OutDiscards);                         
+  stream_putq (s, ifp->stats.Ip6OutNoRoutes);                         
+  stream_putq (s, ifp->stats.Ip6ReasmTimeout);                         
+  stream_putq (s, ifp->stats.Ip6ReasmReqds);                      
+  stream_putq (s, ifp->stats.Ip6ReasmOKs);                        
+  stream_putq (s, ifp->stats.Ip6ReasmFails);                           
+  stream_putq (s, ifp->stats.Ip6FragOKs);                       
+  stream_putq (s, ifp->stats.Ip6FragFails);                            
+  stream_putq (s, ifp->stats.Ip6FragCreates);                          
+  stream_putq (s, ifp->stats.Ip6InMcastPkts);                         
+  stream_putq (s, ifp->stats.Ip6OutMcastPkts);                         
+  stream_putq (s, ifp->stats.Ip6InOctets);                    
+  stream_putq (s, ifp->stats.Ip6OutOctets);                            
+  stream_putq (s, ifp->stats.Ip6InMcastOctets);                        
+  stream_putq (s, ifp->stats.Ip6OutMcastOctets);                       
+  stream_putq (s, ifp->stats.Ip6InBcastOctets);                     
+  stream_putq (s, ifp->stats.Ip6OutBcastOctets);   
 
   /* Write packet size. */
   stream_putw_at (s, 4, stream_get_endp (s));
@@ -707,6 +735,7 @@ rtm_get_if_flow_stats_from_linx_system(void)
 	  
 #ifdef HAVE_PROC_NET_DEV
 	  ifstat_update_proc ();
+      ipv6_ifstat_update_proc (); //lilong add 2015.2.8
 #endif /* HAVE_PROC_NET_DEV */
 
 #ifdef HAVE_NET_RT_IFLIST

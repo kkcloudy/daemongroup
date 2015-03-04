@@ -39,7 +39,7 @@ typedef struct ifi_info
 
 typedef struct inf
 {
-	char if_addr[32];
+	char if_addr[256];
 	char if_name[32];
 	char if_stat[32];
 	char if_mask[32];

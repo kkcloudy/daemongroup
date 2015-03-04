@@ -79,6 +79,10 @@ int Ipv6DHCPRowStatus_undo_setup( dot11DHCPIpv6PoolConfigTable_rowreq_ctx *rowre
 int Ipv6DHCPRowStatus_set( dot11DHCPIpv6PoolConfigTable_rowreq_ctx *rowreq_ctx, u_long Ipv6DHCPRowStatus_val );
 int Ipv6DHCPRowStatus_undo( dot11DHCPIpv6PoolConfigTable_rowreq_ctx *rowreq_ctx );
 
+int SysIPv6GWAddr_check_value( dot11DHCPIpv6PoolConfigTable_rowreq_ctx *rowreq_ctx, char *SysIPv6GWAddr_val_ptr,  size_t SysIPv6GWAddr_val_ptr_len);
+int SysIPv6GWAddr_undo_setup( dot11DHCPIpv6PoolConfigTable_rowreq_ctx *rowreq_ctx );
+int SysIPv6GWAddr_set( dot11DHCPIpv6PoolConfigTable_rowreq_ctx *rowreq_ctx, char *SysIPv6GWAddr_val_ptr,  size_t SysIPv6GWAddr_val_ptr_len );
+int SysIPv6GWAddr_undo( dot11DHCPIpv6PoolConfigTable_rowreq_ctx *rowreq_ctx );
 
 int dot11DHCPIpv6PoolConfigTable_check_dependencies(dot11DHCPIpv6PoolConfigTable_rowreq_ctx *ctx);
 

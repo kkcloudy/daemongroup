@@ -213,6 +213,36 @@ struct if_stats
   unsigned long long tx_fifo_errors;
   unsigned long long tx_heartbeat_errors;
   unsigned long long tx_window_errors;
+
+  /*lilong add 2015.2.8 */
+  unsigned long long  Ip6InReceives;                           
+  unsigned long long  Ip6InHdrErrors;                          
+  unsigned long long  Ip6InTooBigErrors;                       
+  unsigned long long  Ip6InNoRoutes;                           
+  unsigned long long  Ip6InAddrErrors;                         
+  unsigned long long  Ip6InUnknownProtos;                      
+  unsigned long long  Ip6InTruncatedPkts;                      
+  unsigned long long  Ip6InDiscards;                     
+  unsigned long long  Ip6InDelivers;                          
+  unsigned long long  Ip6OutForwDatagrams;                     
+  unsigned long long  Ip6OutRequests;                          
+  unsigned long long  Ip6OutDiscards;                          
+  unsigned long long  Ip6OutNoRoutes;                          
+  unsigned long long  Ip6ReasmTimeout;                         
+  unsigned long long  Ip6ReasmReqds;                           
+  unsigned long long  Ip6ReasmOKs;                             
+  unsigned long long  Ip6ReasmFails;                           
+  unsigned long long  Ip6FragOKs;                              
+  unsigned long long  Ip6FragFails;                            
+  unsigned long long  Ip6FragCreates;                          
+  unsigned long long  Ip6InMcastPkts;                          
+  unsigned long long  Ip6OutMcastPkts;                         
+  unsigned long long  Ip6InOctets;                             
+  unsigned long long  Ip6OutOctets;                            
+  unsigned long long  Ip6InMcastOctets;                        
+  unsigned long long  Ip6OutMcastOctets;                       
+  unsigned long long  Ip6InBcastOctets;                        
+  unsigned long long  Ip6OutBcastOctets;     
 };
 
 

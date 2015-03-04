@@ -603,6 +603,13 @@ rc = DHCPIpv6poolName_get(rowreq_ctx, (char **)&var->val.string, &var->val_len )
 rc = DHCPIpv6PoolUseage_get(rowreq_ctx, (long *)var->val.string );
         break;
 
+    /* DHCPIpv6ReqTimes(4)/COUNTER/ASN_COUNTER/u_long(u_long)//l/A/w/e/r/d/h */
+    case COLUMN_DHCPIPV6REQTIMES:
+    var->val_len = sizeof(u_long);
+    var->type = ASN_COUNTER;
+
+
+
      default:
         if (DOT11DHCPIPV6USEAGETABLE_MIN_COL <= column && column <= DOT11DHCPIPV6USEAGETABLE_MAX_COL) {
             DEBUGMSGTL(("internal:dot11DHCPIpv6UseageTable:_mfd_dot11DHCPIpv6UseageTable_get_column",

@@ -106,7 +106,7 @@ struct radius_req_rate {
 
 typedef struct inf
 {
-	char if_addr[32];
+	char if_addr[256];
 	char if_name[32];
 	char if_stat[32];
 	char if_mask[32];
@@ -131,11 +131,11 @@ typedef struct if_list_t{
 
 #define IFI_ALIAS 1
 struct ifi_info *get_ifi_info(int, int);
-
+struct ifi_info *get_ifi_info_v6(int, int);
 extern void free_ifi_info(ifi_info *ifihead);
 
 extern ifi_info *get_ifi_info(int family, int doaliases);
-
+extern ifi_info *get_ifi_info_v6(int family, int doaliases);
 extern char *sock_ntop(const struct sockaddr *sa, socklen_t salen);
 
 extern int interface_list_ioctl (int af,struct inf * interface);

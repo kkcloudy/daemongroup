@@ -159,6 +159,102 @@ typedef struct dot11AcIfCapabilityTable_data_s {
    u_long acUplinkKbyteRate;
    
    u_long acDownlinkKbyteRate;
+   unsigned long long   acipv6IfInReceivesPkts;
+    
+        /*
+         * acipv6IfInHdrErrorsPkts(22)/COUNTER64/ASN_COUNTER64/U64(U64)//l/A/w/e/r/d/h
+         */
+   unsigned long long   acipv6IfInHdrErrorsPkts;
+    
+        /*
+         * acipv6IfInTooBigErrorsPkts(23)/COUNTER64/ASN_COUNTER64/U64(U64)//l/A/w/e/r/d/h
+         */
+   unsigned long long   acipv6IfInTooBigErrorsPkts;
+    
+        /*
+         * acipv6IfInNoRoutesPkts(24)/COUNTER64/ASN_COUNTER64/U64(U64)//l/A/w/e/r/d/h
+         */
+   unsigned long long   acipv6IfInNoRoutesPkts;
+    
+        /*
+         * acipv6IfInAddrErrorsPkts(25)/COUNTER64/ASN_COUNTER64/U64(U64)//l/A/w/e/r/d/h
+         */
+   unsigned long long   acipv6IfInAddrErrorsPkts;
+    
+        /*
+         * acipv6IfInUnknownProtosPkts(26)/COUNTER64/ASN_COUNTER64/U64(U64)//l/A/w/e/r/d/h
+         */
+   unsigned long long   acipv6IfInUnknownProtosPkts;
+    
+        /*
+         * acipv6IfInTruncatedPkts(27)/COUNTER64/ASN_COUNTER64/U64(U64)//l/A/w/e/r/d/h
+         */
+   unsigned long long   acipv6IfInTruncatedPkts;
+    
+        /*
+         * acipv6IfInDiscardsPkts(28)/COUNTER64/ASN_COUNTER64/U64(U64)//l/A/w/e/r/d/h
+         */
+   unsigned long long   acipv6IfInDiscardsPkts;
+    
+        /*
+         * acipv6IfInDeliversPkts(29)/COUNTER64/ASN_COUNTER64/U64(U64)//l/A/w/e/r/d/h
+         */
+   unsigned long long   acipv6IfInDeliversPkts;
+    
+        /*
+         * acipv6IfOutForwDatagramsPkts(30)/COUNTER64/ASN_COUNTER64/U64(U64)//l/A/w/e/r/d/h
+         */
+   unsigned long long   acipv6IfOutForwDatagramsPkts;
+    
+        /*
+         * acipv6IfOutRequestsPkts(31)/COUNTER64/ASN_COUNTER64/U64(U64)//l/A/w/e/r/d/h
+         */
+   unsigned long long   acipv6IfOutRequestsPkts;
+    
+        /*
+         * acipv6IfOutDiscardsPkts(32)/COUNTER64/ASN_COUNTER64/U64(U64)//l/A/w/e/r/d/h
+         */
+   unsigned long long   acipv6IfOutDiscardsPkts;
+    
+        /*
+         * acipv6IfOutFragOKsPkts(33)/COUNTER64/ASN_COUNTER64/U64(U64)//l/A/w/e/r/d/h
+         */
+   unsigned long long   acipv6IfOutFragOKsPkts;
+    
+        /*
+         * acipv6IfOutFragFailsPkts(34)/COUNTER64/ASN_COUNTER64/U64(U64)//l/A/w/e/r/d/h
+         */
+   unsigned long long   acipv6IfOutFragFailsPkts;
+    
+        /*
+         * acipv6IfOutFragCreatesPkts(35)/COUNTER64/ASN_COUNTER64/U64(U64)//l/A/w/e/r/d/h
+         */
+   unsigned long long   acipv6IfOutFragCreatesPkts;
+    
+        /*
+         * acipv6IfReasmReqdsPkts(36)/COUNTER64/ASN_COUNTER64/U64(U64)//l/A/w/e/r/d/h
+         */
+   unsigned long long   acipv6IfReasmReqdsPkts;
+    
+        /*
+         * acipv6IfReasmOKsPkts(37)/COUNTER64/ASN_COUNTER64/U64(U64)//l/A/w/e/r/d/h
+         */
+   unsigned long long   acipv6IfReasmOKsPkts;
+    
+        /*
+         * acipv6IfReasmFailsPkts(38)/COUNTER64/ASN_COUNTER64/U64(U64)//l/A/w/e/r/d/h
+         */
+   unsigned long long   acipv6IfReasmFailsPkts;
+    
+        /*
+         * acipv6IfInMcastPkts(39)/COUNTER64/ASN_COUNTER64/U64(U64)//l/A/w/e/r/d/h
+         */
+   unsigned long long   acipv6IfInMcastPkts;
+    
+        /*
+         * acipv6IfOutMcastPkts(40)/COUNTER64/ASN_COUNTER64/U64(U64)//l/A/w/e/r/d/h
+         */
+   unsigned long long   acipv6IfOutMcastPkts;
 } dot11AcIfCapabilityTable_data;
 
 

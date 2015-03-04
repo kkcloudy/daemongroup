@@ -78,8 +78,7 @@ extern "C" {
     int wtpPowerType_get( dot11WtpInfoTable_rowreq_ctx *rowreq_ctx, char **wtpPowerType_val_ptr_ptr, size_t *wtpPowerType_val_ptr_len_ptr );
     int wtpManufactureDate_get( dot11WtpInfoTable_rowreq_ctx *rowreq_ctx, char **wtpManufactureDate_val_ptr_ptr, size_t *wtpManufactureDate_val_ptr_len_ptr );
     int wtpForwardMode_get( dot11WtpInfoTable_rowreq_ctx *rowreq_ctx, u_long * wtpForwardMode_val_ptr );
-
-
+    
 int dot11WtpInfoTable_indexes_set_tbl_idx(dot11WtpInfoTable_mib_index *tbl_idx, char *wtpMacAddr_val_ptr,  size_t wtpMacAddr_val_ptr_len);
 int dot11WtpInfoTable_indexes_set(dot11WtpInfoTable_rowreq_ctx *rowreq_ctx, char *wtpMacAddr_val_ptr,  size_t wtpMacAddr_val_ptr_len);
 

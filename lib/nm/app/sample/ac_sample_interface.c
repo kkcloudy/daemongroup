@@ -454,6 +454,35 @@ struct rtmd_if_stats {
 	unsigned long long tx_fifo_errors;
 	unsigned long long tx_heartbeat_errors;
 	unsigned long long tx_window_errors;
+
+	unsigned long long  Ip6InReceives;                           
+    unsigned long long  Ip6InHdrErrors;                          
+    unsigned long long  Ip6InTooBigErrors;                       
+    unsigned long long  Ip6InNoRoutes;                           
+    unsigned long long  Ip6InAddrErrors;                         
+    unsigned long long  Ip6InUnknownProtos;                      
+    unsigned long long  Ip6InTruncatedPkts;                      
+    unsigned long long  Ip6InDiscards;                     
+    unsigned long long  Ip6InDelivers;                          
+    unsigned long long  Ip6OutForwDatagrams;                     
+    unsigned long long  Ip6OutRequests;                          
+    unsigned long long  Ip6OutDiscards;                          
+    unsigned long long  Ip6OutNoRoutes;                          
+    unsigned long long  Ip6ReasmTimeout;                         
+    unsigned long long  Ip6ReasmReqds;                           
+    unsigned long long  Ip6ReasmOKs;                             
+    unsigned long long  Ip6ReasmFails;                           
+    unsigned long long  Ip6FragOKs;                              
+    unsigned long long  Ip6FragFails;                            
+    unsigned long long  Ip6FragCreates;                          
+    unsigned long long  Ip6InMcastPkts;                          
+    unsigned long long  Ip6OutMcastPkts;                         
+    unsigned long long  Ip6InOctets;                             
+    unsigned long long  Ip6OutOctets;                            
+    unsigned long long  Ip6InMcastOctets;                        
+    unsigned long long  Ip6OutMcastOctets;                       
+    unsigned long long  Ip6InBcastOctets;                        
+    unsigned long long  Ip6OutBcastOctets;     
 };
 
 struct if_flow_stats {
@@ -686,11 +715,38 @@ int sample_rtmd_get_interface_flow(struct sample_rtmd_info *info, int *ifnum, st
 		pos[i].stats.tx_fifo_errors = buf[i].stats.tx_fifo_errors;
 		pos[i].stats.tx_heartbeat_errors = buf[i].stats.tx_heartbeat_errors;
 		pos[i].stats.tx_window_errors = buf[i].stats.tx_window_errors;
-
+        pos[i].stats.Ip6InReceives =  buf[i].stats.Ip6InReceives;                       
+        pos[i].stats.Ip6InHdrErrors =  buf[i].stats.Ip6InHdrErrors;                        
+        pos[i].stats.Ip6InTooBigErrors =  buf[i].stats.Ip6InTooBigErrors;                   
+        pos[i].stats.Ip6InNoRoutes =   buf[i].stats.Ip6InNoRoutes;                   
+        pos[i].stats.Ip6InAddrErrors =   buf[i].stats.Ip6InAddrErrors;                       
+        pos[i].stats.Ip6InUnknownProtos =  buf[i].stats.Ip6InUnknownProtos;                     
+        pos[i].stats.Ip6InTruncatedPkts =   buf[i].stats.Ip6InTruncatedPkts;                  
+        pos[i].stats.Ip6InDiscards =   buf[i].stats.Ip6InDiscards;       
+        pos[i].stats.Ip6InDelivers =    buf[i].stats.Ip6InDelivers;                     
+        pos[i].stats.Ip6OutForwDatagrams = buf[i].stats.Ip6OutForwDatagrams;                     
+        pos[i].stats.Ip6OutRequests =   buf[i].stats.Ip6OutRequests;            
+        pos[i].stats.Ip6OutDiscards =   buf[i].stats.Ip6OutDiscards;                      
+        pos[i].stats.Ip6OutNoRoutes =   buf[i].stats.Ip6OutNoRoutes;                       
+        pos[i].stats.Ip6ReasmTimeout =   buf[i].stats.Ip6ReasmTimeout;                      
+        pos[i].stats.Ip6ReasmReqds =   buf[i].stats.Ip6ReasmReqds;                    
+        pos[i].stats.Ip6ReasmOKs =   buf[i].stats.Ip6ReasmOKs;                     
+        pos[i].stats.Ip6ReasmFails =  buf[i].stats.Ip6ReasmFails;                          
+        pos[i].stats.Ip6FragOKs =    buf[i].stats.Ip6FragOKs;                   
+        pos[i].stats.Ip6FragFails =   buf[i].stats.Ip6FragFails;                          
+        pos[i].stats.Ip6FragCreates =  buf[i].stats.Ip6FragCreates;                        
+        pos[i].stats.Ip6InMcastPkts =   buf[i].stats.Ip6InMcastPkts;                       
+        pos[i].stats.Ip6OutMcastPkts =  buf[i].stats.Ip6OutMcastPkts;                       
+        pos[i].stats.Ip6InOctets =   buf[i].stats.Ip6InOctets;                  
+        pos[i].stats.Ip6OutOctets =   buf[i].stats.Ip6OutOctets;                         
+        pos[i].stats.Ip6InMcastOctets =   buf[i].stats.Ip6InMcastOctets;                      
+        pos[i].stats.Ip6OutMcastOctets =   buf[i].stats.Ip6OutMcastOctets;                    
+        pos[i].stats.Ip6InBcastOctets =   buf[i].stats.Ip6InBcastOctets;                  
+        pos[i].stats.Ip6OutBcastOctets =  buf[i].stats.Ip6OutBcastOctets;
 		syslog(LOG_DEBUG, "sample_rtmd_get_interface_flow %d:ifname=%s tx_packets=%llu"	\
-					" rx_packets=%llu tx_bytes=%llu rx_bytes=%llu\n",	\
+					" rx_packets=%llu tx_bytes=%llu rx_bytes=%llu Ip6InReceives=%11u\n",	\
 					i, buf[i].name, buf[i].stats.tx_packets, buf[i].stats.rx_packets,
-					buf[i].stats.tx_bytes, buf[i].stats.rx_bytes);
+					buf[i].stats.tx_bytes, buf[i].stats.rx_bytes,buf[i].stats.Ip6InReceives);
 	}
 	*data = pos;
 	return AS_RTN_OK;

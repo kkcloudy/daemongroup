@@ -2062,9 +2062,9 @@ wtpColdReboot_get( dot11WtpInfoTable_rowreq_ctx *rowreq_ctx, u_long * wtpColdReb
 
 /*---------------------------------------------------------------------
  * DOT11-WTP-MIB::dot11WtpInfoEntry.wtplongitude
- * wtplongitude is subid 23 of dot11WtpInfoEntry.
+ * wtplongitude is subid 17 of dot11WtpInfoEntry.
  * Its status is Current, and its access level is ReadWrite.
- * OID: .1.3.6.1.4.1.31656.6.1.1.1.1.1.23
+ * OID: .1.3.6.1.4.1.31656.6.1.1.1.1.1.17
  * Description:
 The location of AP longitude.
  *
@@ -2147,9 +2147,9 @@ wtplongitude_get( dot11WtpInfoTable_rowreq_ctx *rowreq_ctx, char **wtplongitude_
 
 /*---------------------------------------------------------------------
  * DOT11-WTP-MIB::dot11WtpInfoEntry.wtplatitude
- * wtplatitude is subid 24 of dot11WtpInfoEntry.
+ * wtplatitude is subid 18 of dot11WtpInfoEntry.
  * Its status is Current, and its access level is ReadWrite.
- * OID: .1.3.6.1.4.1.31656.6.1.1.1.1.1.24
+ * OID: .1.3.6.1.4.1.31656.6.1.1.1.1.1.18
  * Description:
 The location of AP latitude.
  *
@@ -2232,9 +2232,9 @@ wtplatitude_get( dot11WtpInfoTable_rowreq_ctx *rowreq_ctx, char **wtplatitude_va
 
 /*---------------------------------------------------------------------
  * DOT11-WTP-MIB::dot11WtpInfoEntry.wtpPowerType
- * wtpPowerType is subid 25 of dot11WtpInfoEntry.
+ * wtpPowerType is subid 19 of dot11WtpInfoEntry.
  * Its status is Current, and its access level is ReadOnly.
- * OID: .1.3.6.1.4.1.31656.6.1.1.1.1.1.25
+ * OID: .1.3.6.1.4.1.31656.6.1.1.1.1.1.19
  * Description:
 The power type of AP device.
  *
@@ -2317,9 +2317,9 @@ wtpPowerType_get( dot11WtpInfoTable_rowreq_ctx *rowreq_ctx, char **wtpPowerType_
 
 /*---------------------------------------------------------------------
  * DOT11-WTP-MIB::dot11WtpInfoEntry.wtpManufactureDate
- * wtpManufactureDate is subid 26 of dot11WtpInfoEntry.
+ * wtpManufactureDate is subid 20 of dot11WtpInfoEntry.
  * Its status is Current, and its access level is ReadOnly.
- * OID: .1.3.6.1.4.1.31656.6.1.1.1.1.1.26
+ * OID: .1.3.6.1.4.1.31656.6.1.1.1.1.1.20
  * Description:
 The manufacture date of AP device.
  *
@@ -2402,9 +2402,9 @@ wtpManufactureDate_get( dot11WtpInfoTable_rowreq_ctx *rowreq_ctx, char **wtpManu
 
 /*---------------------------------------------------------------------
  * DOT11-WTP-MIB::dot11WtpInfoEntry.wtpForwardMode
- * wtpForwardMode is subid 27 of dot11WtpInfoEntry.
+ * wtpForwardMode is subid 21 of dot11WtpInfoEntry.
  * Its status is Current, and its access level is ReadOnly.
- * OID: .1.3.6.1.4.1.31656.6.1.1.1.1.1.27
+ * OID: .1.3.6.1.4.1.31656.6.1.1.1.1.1.21
  * Description:
 The forward mode of AP device.
  *

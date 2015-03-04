@@ -108,7 +108,7 @@ ifi_info *get_ifi_info(int family, int doaliases)
     switch (ifr->ifr_addr.sa_family)
     {
 #ifdef IPV6
-    case: AF_INET6:
+    case AF_INET6:
       LEN = sizeof(struct sockaddr_in6);
       break;
 #endif
@@ -194,6 +194,155 @@ ifi_info *get_ifi_info(int family, int doaliases)
 //////////////
       }
       break;
+	  
+
+    default:
+      break;
+    }
+  }
+  free(buf);
+  close(sockfd);
+  return(ifihead);
+}
+ifi_info *get_ifi_info_v6(int family, int doaliases)
+{
+  ifi_info *ifi, *ifihead, **ifipnext;
+  int sockfd, len, lastlen, flags, myflags;
+  char *ptr, *buf, lastname[IFNAMSIZ], *cptr;
+  struct ifconf ifc;
+  struct ifreq *ifr, ifrcopy;
+  struct sockaddr_in6 *sinptr;
+
+  if ((sockfd=socket(AF_INET6, SOCK_DGRAM, 0))<0) {
+    //printf("socket error.\n");
+	return NULL;
+//	exit(1);
+  }
+
+  lastlen = 0;
+
+  len = 10*sizeof(struct ifreq);
+  while (1)
+  {
+    buf = (char*)malloc(len);
+    ifc.ifc_len = len;
+    ifc.ifc_buf = buf;
+    if (ioctl(sockfd, SIOCGIFCONF, &ifc)<0)
+    {
+      if (errno!=EINVAL||lastlen!=0)
+      {
+        printf("ioctl error.\n");
+      }
+    }
+    else 
+    {
+      if (ifc.ifc_len == lastlen)
+        break;
+      lastlen = ifc.ifc_len;
+    }
+    len += 10*sizeof(struct ifreq);
+    free(buf);
+  }
+  ifihead = NULL;
+  ifipnext = &ifihead;
+  lastname[0] = 0;
+
+  for (ptr = buf; ptr<buf+ifc.ifc_len;)
+  {
+    ifr = (struct ifreq*)ptr;
+#ifdef HAVE_SOCKADDR_SA_LEN
+    len = sizeof(struct sockaddr)>ifr->ifr_addr.sa_len?sizeof(struct sockaddr):ifr->ifr_addr.sa_len;
+#else
+    switch (ifr->ifr_addr.sa_family)
+    {
+#ifdef IPV6
+    case AF_INET6:
+      len = sizeof(struct sockaddr_in6);
+      break;
+#endif
+    case AF_INET:
+    default:
+      len = sizeof(struct sockaddr);
+      break;
+    }
+#endif
+
+    ptr += sizeof(ifr->ifr_name) + len;
+
+    if (ifr->ifr_addr.sa_family != family)
+      continue;
+
+    myflags = 0;
+    if ((cptr=strchr(ifr->ifr_name, ':'))!=NULL)
+      *cptr = 0;
+    if (strncmp(lastname, ifr->ifr_name, IFNAMSIZ)==0)
+    {
+      if (doaliases == 0)
+        continue;
+      myflags = IFI_ALIAS;
+    }
+
+    memcpy(lastname, ifr->ifr_name, IFNAMSIZ);
+
+    ifrcopy = *ifr;
+    ioctl(sockfd, SIOCGIFFLAGS, &ifrcopy);
+    flags = ifrcopy.ifr_flags;
+   /* if ((flags&IFF_UP)==0)
+      continue;
+    
+    if ((flags&IFF_BROADCAST)==0)
+      continue;
+    */
+    ifi = calloc(1, sizeof(struct ifi_info));
+    *ifipnext = ifi;
+    ifipnext = &ifi->ifi_next;
+    ifi->ifi_flags = flags;
+    ifi->ifi_myflags = myflags;
+    memcpy(ifi->ifi_name, ifr->ifr_name, IFI_NAME);
+    ifi->ifi_name[IFI_NAME-1] = '\0';
+
+    switch (ifr->ifr_addr.sa_family)
+    {
+    
+	  case AF_INET6:
+      sinptr = (struct sockaddr_in6 *)&ifr->ifr_addr;
+      if (ifi->ifi_addr == NULL)
+      {
+        ifi->ifi_addr = calloc(1, sizeof(struct sockaddr_in6));
+        memcpy(ifi->ifi_addr, sinptr, sizeof(struct sockaddr_in6));
+#ifdef SIOCGIFBRDADDR
+        if (flags & IFF_BROADCAST)
+        {
+          ioctl(sockfd, SIOCGIFBRDADDR, &ifrcopy);
+          sinptr = (struct sockaddr_in6 *)&ifrcopy.ifr_broadaddr;
+          ifi->ifi_brdaddr = calloc(1, sizeof(struct sockaddr_in6));
+          memcpy(ifi->ifi_brdaddr, sinptr, sizeof(struct sockaddr_in6));
+        }
+#endif
+#ifdef SIOCGIFDSTADDR
+        if (flags & IFF_POINTOPOINT)
+        {
+          ioctl(sockfd, SIOCGIFDSTADDR, &ifrcopy);
+          sinptr = (struct sockaddr_in6*)&ifrcopy.ifr_dstaddr;
+          ifi->ifi_dstaddr = calloc(1, sizeof(struct sockaddr_in6));
+          memcpy(ifi->ifi_dstaddr, sinptr, sizeof(struct sockaddr_in6));
+        }
+#endif
+///////////////
+#ifdef SIOCGIFNETMASK
+
+//if (flags & IFF_BROADCAST)
+        {
+          ioctl(sockfd, SIOCGIFNETMASK, &ifrcopy);
+          sinptr = (struct sockaddr_in6 *)&ifrcopy.ifr_netmask;
+          ifi->ifi_mask= calloc(1, sizeof(struct sockaddr_in6));
+          memcpy(ifi->ifi_mask, sinptr, sizeof(struct sockaddr_in6));
+        }
+
+#endif
+//////////////
+      }
+      break;
     default:
       break;
     }
@@ -228,7 +377,7 @@ void free_ifi_info(ifi_info *ifihead)
 char *sock_ntop(const struct sockaddr *sa, socklen_t salen)
 {
   char portstr[7];
-  static char str[128];
+  static char str[256];
 
   switch (sa->sa_family)
   {
@@ -279,9 +428,15 @@ int interface_list_ioctl (int af,struct inf * interface)
 	int i, family, doaliases;
 	
 	if (af == 0)
-		family = AF_INET;
+		{
+		    family = AF_INET;
+	        ifi = get_ifi_info(family, doaliases);
+	    }
 	else if (af == 1)
-		family =AF_INET6;
+		{
+		    family =AF_INET6;
+	        ifi = get_ifi_info_v6(family, doaliases);
+	    }
 	else {
 		//printf("invalid <address-family>");
 		return -1;
@@ -292,8 +447,7 @@ int interface_list_ioctl (int af,struct inf * interface)
 	// infi *p_head = NULL;
 
   
-  for(ifihead = ifi = get_ifi_info(family, doaliases);
-      ifi!=NULL;ifi=ifi->ifi_next)
+  for(ifihead = ifi;ifi!=NULL;ifi=ifi->ifi_next)
   {
    infi * p = (infi *)malloc(sizeof(infi));
   memset(p,0,sizeof(infi));

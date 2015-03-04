@@ -123,6 +123,12 @@ size_t      SeconDNSServerIPv6Address_len; /* # of char elements, not bytes */
          */
    u_long   Ipv6DHCPRowStatus;
     
+        /*
+         * SysIPv6GWAddr(10)/InetAddressIPv6/ASN_OCTET_STR/char(char)//L/A/w/e/R/d/H
+         */
+   char   SysIPv6GWAddr[50];
+size_t      SysIPv6GWAddr_len; /* # of char elements, not bytes */
+    
 } dot11DHCPIpv6PoolConfigTable_data;
 
 

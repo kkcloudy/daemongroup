@@ -806,7 +806,20 @@ dot11WtpInfoTable_cache_load(netsnmp_container *container)
 		{
 			rowreq_ctx->data.wtpForwardMode = 2;
 		}
-        
+		
+		/*
+     * setup/save data for wtpIpv6-Prefix
+     * wtpIpv6-Prefix(28)/DisplayString/ASN_OCTET_STR/char(char)//L/A/w/e/R/d/H
+     */
+    /** no mapping */
+    /*
+     * make sure there is enough space for wtpIpv6-Prefix data
+     */
+
+
+	
+    
+
         /*
          * insert into table container
          */

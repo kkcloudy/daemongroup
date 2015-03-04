@@ -676,6 +676,91 @@ Ipv6DHCPRowStatus_get( dot11DHCPIpv6PoolConfigTable_rowreq_ctx *rowreq_ctx, u_lo
     return MFD_SUCCESS;
 } /* Ipv6DHCPRowStatus_get */
 
+/*---------------------------------------------------------------------
+ * DOT11-AC-MIB::dot11DHCPIpv6PoolConfigEntry.SysIPv6GWAddr
+ * SysIPv6GWAddr is subid 10 of dot11DHCPIpv6PoolConfigEntry.
+ * Its status is Current, and its access level is ReadOnly.
+ * OID: .1.3.6.1.4.1.31656.6.1.2.6.7.1.10
+ * Description:
+AP IPV6 Gateway address.
+ *
+ * Attributes:
+ *   accessible 1     isscalar 0     enums  0      hasdefval 0
+ *   readable   1     iscolumn 1     ranges 1      hashint   1
+ *   settable   0
+ *   hint: 2x:
+ *
+ * Ranges:  50;
+ *
+ * Its syntax is InetAddressIPv6 (based on perltype OCTETSTR)
+ * The net-snmp type is ASN_OCTET_STR. The C type decl is char (char)
+ * This data type requires a length.  (Max 50)
+ */
+/**
+ * Extract the current value of the SysIPv6GWAddr data.
+ *
+ * Set a value using the data context for the row.
+ *
+ * @param rowreq_ctx
+ *        Pointer to the row request context.
+ * @param SysIPv6GWAddr_val_ptr_ptr
+ *        Pointer to storage for a char variable
+ * @param SysIPv6GWAddr_val_ptr_len_ptr
+ *        Pointer to a size_t. On entry, it will contain the size (in bytes)
+ *        pointed to by SysIPv6GWAddr.
+ *        On exit, this value should contain the data size (in bytes).
+ *
+ * @retval MFD_SUCCESS         : success
+ * @retval MFD_SKIP            : skip this node (no value for now)
+ * @retval MFD_ERROR           : Any other error
+*
+ * @note If you need more than (*SysIPv6GWAddr_val_ptr_len_ptr) bytes of memory,
+ *       allocate it using malloc() and update SysIPv6GWAddr_val_ptr_ptr.
+ *       <b>DO NOT</b> free the previous pointer.
+ *       The MFD helper will release the memory you allocate.
+ *
+ * @remark If you call this function yourself, you are responsible
+ *         for checking if the pointer changed, and freeing any
+ *         previously allocated memory. (Not necessary if you pass
+ *         in a pointer to static memory, obviously.)
+ */
+int
+SysIPv6GWAddr_get( dot11DHCPIpv6PoolConfigTable_rowreq_ctx *rowreq_ctx, char **SysIPv6GWAddr_val_ptr_ptr, size_t *SysIPv6GWAddr_val_ptr_len_ptr )
+{
+   /** we should have a non-NULL pointer and enough storage */
+   netsnmp_assert( (NULL != SysIPv6GWAddr_val_ptr_ptr) && (NULL != *SysIPv6GWAddr_val_ptr_ptr));
+   netsnmp_assert( NULL != SysIPv6GWAddr_val_ptr_len_ptr );
+
+
+    DEBUGMSGTL(("verbose:dot11DHCPIpv6PoolConfigTable:SysIPv6GWAddr_get","called\n"));
+
+    netsnmp_assert(NULL != rowreq_ctx);
+
+/*
+ * TODO:231:o: |-> Extract the current value of the SysIPv6GWAddr data.
+ * copy (* SysIPv6GWAddr_val_ptr_ptr ) data and (* SysIPv6GWAddr_val_ptr_len_ptr ) from rowreq_ctx->data
+ */
+    /*
+     * make sure there is enough space for SysIPv6GWAddr data
+     */
+    if ((NULL == (* SysIPv6GWAddr_val_ptr_ptr )) ||
+        ((* SysIPv6GWAddr_val_ptr_len_ptr ) <
+         (rowreq_ctx->data.SysIPv6GWAddr_len* sizeof(rowreq_ctx->data.SysIPv6GWAddr[0])))) {
+        /*
+         * allocate space for SysIPv6GWAddr data
+         */
+        (* SysIPv6GWAddr_val_ptr_ptr ) = malloc(rowreq_ctx->data.SysIPv6GWAddr_len* sizeof(rowreq_ctx->data.SysIPv6GWAddr[0]));
+        if(NULL == (* SysIPv6GWAddr_val_ptr_ptr )) {
+            snmp_log(LOG_ERR,"could not allocate memory\n");
+            return MFD_ERROR;
+        }
+    }
+    (* SysIPv6GWAddr_val_ptr_len_ptr ) = rowreq_ctx->data.SysIPv6GWAddr_len* sizeof(rowreq_ctx->data.SysIPv6GWAddr[0]);
+    memcpy( (* SysIPv6GWAddr_val_ptr_ptr ), rowreq_ctx->data.SysIPv6GWAddr, rowreq_ctx->data.SysIPv6GWAddr_len* sizeof(rowreq_ctx->data.SysIPv6GWAddr[0]) );
+
+    return MFD_SUCCESS;
+} /* SysIPv6GWAddr_get */
+
 
 
 /** @} */

@@ -29,32 +29,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *
 *******************************************************************************/
 
-//#ifndef DOT11ACPARA_H
-//#define DOT11ACPARA_H
 
 /* function declarations */
-void init_dot11AcPara(void);
-Netsnmp_Node_Handler handle_acIpAddress;
-Netsnmp_Node_Handler handle_acNetMask;
-Netsnmp_Node_Handler handle_acNetElementCode;
-Netsnmp_Node_Handler handle_acAuthenMothedsupp;
-Netsnmp_Node_Handler handle_acMacAddress;
-Netsnmp_Node_Handler handle_acConPortalURL;
-Netsnmp_Node_Handler handle_acPortalServerPort;
-Netsnmp_Node_Handler handle_acMaxPortalOnlineUsers;
-Netsnmp_Node_Handler handle_acPortalOnlineUsers;
-Netsnmp_Node_Handler handle_acMaxPPPoEOnlineUsers;
-Netsnmp_Node_Handler handle_acPPPoEOnlineUsers;
-Netsnmp_Node_Handler handle_acCertifServerType;
-Netsnmp_Node_Handler handle_acConASServerIP;
-Netsnmp_Node_Handler handle_acFirstConDNSServer;
-Netsnmp_Node_Handler handle_acSeconConDNSServer;
-Netsnmp_Node_Handler handle_acTrapDesIPAddress;
-Netsnmp_Node_Handler handle_acSNMPPort;
-Netsnmp_Node_Handler handle_SysGWAddr;
-Netsnmp_Node_Handler handle_acTrapPort;
-Netsnmp_Node_Handler handle_acIpv6Address;
-Netsnmp_Node_Handler handle_acIpv6Prefix;
-Netsnmp_Node_Handler handle_acIpv6type;
+void init_wtpIpv6Info(void);
+Netsnmp_Node_Handler handle_wtpIpv6Prefix;
+Netsnmp_Node_Handler handle_wtpIpv6Type;
 
-//#endif /* DOT11ACPARA_H */
+//#endif /* WTPIPV6INFO_H */

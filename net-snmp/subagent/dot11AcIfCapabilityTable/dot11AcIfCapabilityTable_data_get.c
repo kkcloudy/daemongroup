@@ -1583,5 +1583,1275 @@ acDownlinkKbyteRate_get( dot11AcIfCapabilityTable_rowreq_ctx *rowreq_ctx, u_long
     return MFD_SUCCESS;
 } /* acDownlinkKbyteRate_get */
 
+int
+acipv6IfInReceivesPkts_map(unsigned long long *mib_acipv6IfInReceivesPkts_val_ptr, unsigned long long raw_acipv6IfInReceivesPkts_val)
+{
+    netsnmp_assert(NULL != mib_acipv6IfInReceivesPkts_val_ptr);
+    
+    DEBUGMSGTL(("verbose:dot11AcIfCapabilityTable:acipv6IfInReceivesPkts_map","called\n"));
+    
+    /*
+     * TODO:241:o: |-> Implement acIfInUcastPkts mapping.
+     * If the values for your data type don't exactly match the
+     * possible values defined by the mib, you should map them here.
+     */
+    (*mib_acipv6IfInReceivesPkts_val_ptr) = raw_acipv6IfInReceivesPkts_val;
+
+    return MFD_SUCCESS;
+}
+int
+acipv6IfInReceivesPkts_get( dot11AcIfCapabilityTable_rowreq_ctx *rowreq_ctx, unsigned long long * acipv6IfInReceivesPkts_val_ptr )
+{
+   /** we should have a non-NULL pointer */
+   netsnmp_assert( NULL != acipv6IfInReceivesPkts_val_ptr );
+   DEBUGMSGTL(("verbose:dot11AcIfCapabilityTable:acipv6IfInReceivesPkts_get","called\n"));
+/*
+ * TODO:231:o: |-> copy acipv6IfInReceivesPkts data.
+ * get (* acipv6IfInReceivesPkts_val_ptr ).low and (* acipv6IfInReceivesPkts_val_ptr ).high from rowreq_ctx->data
+ */
+    (* acipv6IfInReceivesPkts_val_ptr ) = rowreq_ctx->data.acipv6IfInReceivesPkts;
+    
+
+    return MFD_SUCCESS;
+} /* acipv6IfInReceivesPkts_get */
+
+/*---------------------------------------------------------------------
+ * DOT11-AC-MIB::dot11AcIfCapabilityEntry.acipv6IfInHdrErrorsPkts
+ * acipv6IfInHdrErrorsPkts is subid 22 of dot11AcIfCapabilityEntry.
+ * Its status is Current, and its access level is ReadOnly.
+ * OID: .1.3.6.1.4.1.31656.6.1.2.4.3.1.22
+ * Description:
+The total number of ipv6 packets the interface ready to throw away.
+ *
+ * Attributes:
+ *   accessible 1     isscalar 0     enums  0      hasdefval 0
+ *   readable   1     iscolumn 1     ranges 0      hashint   0
+ *   settable   0
+ *
+ *
+ * Its syntax is COUNTER64 (based on perltype COUNTER64)
+ * The net-snmp type is ASN_COUNTER64. The C type decl is U64 (U64)
+ */
+/**
+ * Extract the current value of the acipv6IfInHdrErrorsPkts data.
+ *
+ * Set a value using the data context for the row.
+ *
+ * @param rowreq_ctx
+ *        Pointer to the row request context.
+ * @param acipv6IfInHdrErrorsPkts_val_ptr
+ *        Pointer to storage for a U64 variable
+ *
+ * @retval MFD_SUCCESS         : success
+ * @retval MFD_SKIP            : skip this node (no value for now)
+ * @retval MFD_ERROR           : Any other error
+ */
+
+int
+acipv6IfInHdrErrorsPkts_map(unsigned long long *mib_acipv6IfInHdrErrorsPkts_val_ptr, unsigned long long raw_acipv6IfInHdrErrorsPkts_val)
+{
+    netsnmp_assert(NULL != mib_acipv6IfInHdrErrorsPkts_val_ptr);
+    
+    DEBUGMSGTL(("verbose:dot11AcIfCapabilityTable:acipv6IfInHdrErrorsPkts_map","called\n"));
+    
+    /*
+     * TODO:241:o: |-> Implement acIfInUcastPkts mapping.
+     * If the values for your data type don't exactly match the
+     * possible values defined by the mib, you should map them here.
+     */
+    (*mib_acipv6IfInHdrErrorsPkts_val_ptr) = raw_acipv6IfInHdrErrorsPkts_val;
+
+    return MFD_SUCCESS;
+}
+int
+acipv6IfInHdrErrorsPkts_get( dot11AcIfCapabilityTable_rowreq_ctx *rowreq_ctx, unsigned long long * acipv6IfInHdrErrorsPkts_val_ptr )
+{
+   /** we should have a non-NULL pointer */
+   netsnmp_assert( NULL != acipv6IfInHdrErrorsPkts_val_ptr );
+
+
+
+   DEBUGMSGTL(("verbose:dot11AcIfCapabilityTable:acipv6IfInHdrErrorsPkts_get","called\n"));
+/*
+ * TODO:231:o: |-> copy acipv6IfInHdrErrorsPkts data.
+ * get (* acipv6IfInHdrErrorsPkts_val_ptr ).low and (* acipv6IfInHdrErrorsPkts_val_ptr ).high from rowreq_ctx->data
+ */
+    (* acipv6IfInHdrErrorsPkts_val_ptr )= rowreq_ctx->data.acipv6IfInHdrErrorsPkts;
+    
+
+
+    return MFD_SUCCESS;
+} /* acipv6IfInHdrErrorsPkts_get */
+
+/*---------------------------------------------------------------------
+ * DOT11-AC-MIB::dot11AcIfCapabilityEntry.acipv6IfInTooBigErrorsPkts
+ * acipv6IfInTooBigErrorsPkts is subid 23 of dot11AcIfCapabilityEntry.
+ * Its status is Current, and its access level is ReadOnly.
+ * OID: .1.3.6.1.4.1.31656.6.1.2.4.3.1.23
+ * Description:
+The total number of ipv6 packets those of too big to forward.
+ *
+ * Attributes:
+ *   accessible 1     isscalar 0     enums  0      hasdefval 0
+ *   readable   1     iscolumn 1     ranges 0      hashint   0
+ *   settable   0
+ *
+ *
+ * Its syntax is COUNTER64 (based on perltype COUNTER64)
+ * The net-snmp type is ASN_COUNTER64. The C type decl is U64 (U64)
+ */
+/**
+ * Extract the current value of the acipv6IfInTooBigErrorsPkts data.
+ *
+ * Set a value using the data context for the row.
+ *
+ * @param rowreq_ctx
+ *        Pointer to the row request context.
+ * @param acipv6IfInTooBigErrorsPkts_val_ptr
+ *        Pointer to storage for a U64 variable
+ *
+ * @retval MFD_SUCCESS         : success
+ * @retval MFD_SKIP            : skip this node (no value for now)
+ * @retval MFD_ERROR           : Any other error
+ */
+
+int
+acipv6IfInTooBigErrorsPkts_map(unsigned long long *mib_acipv6IfInTooBigErrorsPkts_val_ptr, unsigned long long raw_acipv6IfInTooBigErrorsPkts_val)
+{
+    netsnmp_assert(NULL != mib_acipv6IfInTooBigErrorsPkts_val_ptr);
+    
+    DEBUGMSGTL(("verbose:dot11AcIfCapabilityTable:acipv6IfInTooBigErrorsPkts_map","called\n"));
+    
+    /*
+     * TODO:241:o: |-> Implement acIfInUcastPkts mapping.
+     * If the values for your data type don't exactly match the
+     * possible values defined by the mib, you should map them here.
+     */
+    (*mib_acipv6IfInTooBigErrorsPkts_val_ptr) = raw_acipv6IfInTooBigErrorsPkts_val;
+
+    return MFD_SUCCESS;
+}
+int
+acipv6IfInTooBigErrorsPkts_get( dot11AcIfCapabilityTable_rowreq_ctx *rowreq_ctx, unsigned long long * acipv6IfInTooBigErrorsPkts_val_ptr )
+{
+   /** we should have a non-NULL pointer */
+   netsnmp_assert( NULL != acipv6IfInTooBigErrorsPkts_val_ptr );
+   DEBUGMSGTL(("verbose:dot11AcIfCapabilityTable:acipv6IfInTooBigErrorsPkts_get","called\n"));
+/*
+ * TODO:231:o: |-> copy acipv6IfInTooBigErrorsPkts data.
+ * get (* acipv6IfInTooBigErrorsPkts_val_ptr ).low and (* acipv6IfInTooBigErrorsPkts_val_ptr ).high from rowreq_ctx->data
+ */
+    (* acipv6IfInTooBigErrorsPkts_val_ptr ) = rowreq_ctx->data.acipv6IfInTooBigErrorsPkts;
+    
+
+
+    return MFD_SUCCESS;
+} /* acipv6IfInTooBigErrorsPkts_get */
+
+/*---------------------------------------------------------------------
+ * DOT11-AC-MIB::dot11AcIfCapabilityEntry.acipv6IfInNoRoutesPkts
+ * acipv6IfInNoRoutesPkts is subid 24 of dot11AcIfCapabilityEntry.
+ * Its status is Current, and its access level is ReadOnly.
+ * OID: .1.3.6.1.4.1.31656.6.1.2.4.3.1.24
+ * Description:
+The total number of ipv6 packets those of no routing and discarded.
+ *
+ * Attributes:
+ *   accessible 1     isscalar 0     enums  0      hasdefval 0
+ *   readable   1     iscolumn 1     ranges 0      hashint   0
+ *   settable   0
+ *
+ *
+ * Its syntax is COUNTER64 (based on perltype COUNTER64)
+ * The net-snmp type is ASN_COUNTER64. The C type decl is U64 (U64)
+ */
+/**
+ * Extract the current value of the acipv6IfInNoRoutesPkts data.
+ *
+ * Set a value using the data context for the row.
+ *
+ * @param rowreq_ctx
+ *        Pointer to the row request context.
+ * @param acipv6IfInNoRoutesPkts_val_ptr
+ *        Pointer to storage for a U64 variable
+ *
+ * @retval MFD_SUCCESS         : success
+ * @retval MFD_SKIP            : skip this node (no value for now)
+ * @retval MFD_ERROR           : Any other error
+ */
+
+int
+acipv6IfInNoRoutesPkts_map(unsigned long long *mib_acipv6IfInNoRoutesPkts_val_ptr, unsigned long long raw_acipv6IfInNoRoutesPkts_val)
+{
+    netsnmp_assert(NULL != mib_acipv6IfInNoRoutesPkts_val_ptr);
+    
+    DEBUGMSGTL(("verbose:dot11AcIfCapabilityTable:acipv6IfInNoRoutesPkts_map","called\n"));
+    
+    /*
+     * TODO:241:o: |-> Implement acIfInUcastPkts mapping.
+     * If the values for your data type don't exactly match the
+     * possible values defined by the mib, you should map them here.
+     */
+    (*mib_acipv6IfInNoRoutesPkts_val_ptr) = raw_acipv6IfInNoRoutesPkts_val;
+
+    return MFD_SUCCESS;
+}
+int
+acipv6IfInNoRoutesPkts_get( dot11AcIfCapabilityTable_rowreq_ctx *rowreq_ctx, unsigned long long * acipv6IfInNoRoutesPkts_val_ptr )
+{
+   /** we should have a non-NULL pointer */
+   netsnmp_assert( NULL != acipv6IfInNoRoutesPkts_val_ptr );
+   DEBUGMSGTL(("verbose:dot11AcIfCapabilityTable:acipv6IfInNoRoutesPkts_get","called\n"));
+/*
+ * TODO:231:o: |-> copy acipv6IfInNoRoutesPkts data.
+ * get (* acipv6IfInNoRoutesPkts_val_ptr ).low and (* acipv6IfInNoRoutesPkts_val_ptr ).high from rowreq_ctx->data
+ */
+    (* acipv6IfInNoRoutesPkts_val_ptr )= rowreq_ctx->data.acipv6IfInNoRoutesPkts;
+    
+
+
+    return MFD_SUCCESS;
+} /* acipv6IfInNoRoutesPkts_get */
+
+/*---------------------------------------------------------------------
+ * DOT11-AC-MIB::dot11AcIfCapabilityEntry.acipv6IfInAddrErrorsPkts
+ * acipv6IfInAddrErrorsPkts is subid 25 of dot11AcIfCapabilityEntry.
+ * Its status is Current, and its access level is ReadOnly.
+ * OID: .1.3.6.1.4.1.31656.6.1.2.4.3.1.25
+ * Description:
+The total number of ipv6 packets due to the input of IPv6 address illegal .
+ *
+ * Attributes:
+ *   accessible 1     isscalar 0     enums  0      hasdefval 0
+ *   readable   1     iscolumn 1     ranges 0      hashint   0
+ *   settable   0
+ *
+ *
+ * Its syntax is COUNTER64 (based on perltype COUNTER64)
+ * The net-snmp type is ASN_COUNTER64. The C type decl is U64 (U64)
+ */
+/**
+ * Extract the current value of the acipv6IfInAddrErrorsPkts data.
+ *
+ * Set a value using the data context for the row.
+ *
+ * @param rowreq_ctx
+ *        Pointer to the row request context.
+ * @param acipv6IfInAddrErrorsPkts_val_ptr
+ *        Pointer to storage for a U64 variable
+ *
+ * @retval MFD_SUCCESS         : success
+ * @retval MFD_SKIP            : skip this node (no value for now)
+ * @retval MFD_ERROR           : Any other error
+ */
+
+int
+acipv6IfInAddrErrorsPkts_map(unsigned long long *mib_acipv6IfInAddrErrorsPkts_val_ptr, unsigned long long raw_acipv6IfInAddrErrorsPkts_val)
+{
+    netsnmp_assert(NULL != mib_acipv6IfInAddrErrorsPkts_val_ptr);
+    
+    DEBUGMSGTL(("verbose:dot11AcIfCapabilityTable:acipv6IfInAddrErrorsPkts_map","called\n"));
+    
+    /*
+     * TODO:241:o: |-> Implement acIfInUcastPkts mapping.
+     * If the values for your data type don't exactly match the
+     * possible values defined by the mib, you should map them here.
+     */
+    (*mib_acipv6IfInAddrErrorsPkts_val_ptr) = raw_acipv6IfInAddrErrorsPkts_val;
+
+    return MFD_SUCCESS;
+}
+int
+acipv6IfInAddrErrorsPkts_get( dot11AcIfCapabilityTable_rowreq_ctx *rowreq_ctx, unsigned long long * acipv6IfInAddrErrorsPkts_val_ptr )
+{
+   /** we should have a non-NULL pointer */
+   netsnmp_assert( NULL != acipv6IfInAddrErrorsPkts_val_ptr );
+   DEBUGMSGTL(("verbose:dot11AcIfCapabilityTable:acipv6IfInAddrErrorsPkts_get","called\n"));
+/*
+ * TODO:231:o: |-> copy acipv6IfInAddrErrorsPkts data.
+ * get (* acipv6IfInAddrErrorsPkts_val_ptr ).low and (* acipv6IfInAddrErrorsPkts_val_ptr ).high from rowreq_ctx->data
+ */
+    (* acipv6IfInAddrErrorsPkts_val_ptr ) = rowreq_ctx->data.acipv6IfInAddrErrorsPkts;
+    
+
+
+    return MFD_SUCCESS;
+} /* acipv6IfInAddrErrorsPkts_get */
+
+/*---------------------------------------------------------------------
+ * DOT11-AC-MIB::dot11AcIfCapabilityEntry.acipv6IfInUnknownProtosPkts
+ * acipv6IfInUnknownProtosPkts is subid 26 of dot11AcIfCapabilityEntry.
+ * Its status is Current, and its access level is ReadOnly.
+ * OID: .1.3.6.1.4.1.31656.6.1.2.4.3.1.26
+ * Description:
+The total number of ipv6 packets due to unknown or does not support agreement .
+ *
+ * Attributes:
+ *   accessible 1     isscalar 0     enums  0      hasdefval 0
+ *   readable   1     iscolumn 1     ranges 0      hashint   0
+ *   settable   0
+ *
+ *
+ * Its syntax is COUNTER64 (based on perltype COUNTER64)
+ * The net-snmp type is ASN_COUNTER64. The C type decl is U64 (U64)
+ */
+/**
+ * Extract the current value of the acipv6IfInUnknownProtosPkts data.
+ *
+ * Set a value using the data context for the row.
+ *
+ * @param rowreq_ctx
+ *        Pointer to the row request context.
+ * @param acipv6IfInUnknownProtosPkts_val_ptr
+ *        Pointer to storage for a U64 variable
+ *
+ * @retval MFD_SUCCESS         : success
+ * @retval MFD_SKIP            : skip this node (no value for now)
+ * @retval MFD_ERROR           : Any other error
+ */
+
+int
+acipv6IfInUnknownProtosPkts_map(unsigned long long *mib_acipv6IfInUnknownProtosPkts_val_ptr, unsigned long long raw_acipv6IfInUnknownProtosPkts_val)
+{
+    netsnmp_assert(NULL != mib_acipv6IfInUnknownProtosPkts_val_ptr);
+    
+    DEBUGMSGTL(("verbose:dot11AcIfCapabilityTable:acipv6IfInUnknownProtosPkts_map","called\n"));
+    
+    /*
+     * TODO:241:o: |-> Implement acIfInUcastPkts mapping.
+     * If the values for your data type don't exactly match the
+     * possible values defined by the mib, you should map them here.
+     */
+    (*mib_acipv6IfInUnknownProtosPkts_val_ptr) = raw_acipv6IfInUnknownProtosPkts_val;
+
+    return MFD_SUCCESS;
+}
+int
+acipv6IfInUnknownProtosPkts_get( dot11AcIfCapabilityTable_rowreq_ctx *rowreq_ctx, unsigned long long * acipv6IfInUnknownProtosPkts_val_ptr )
+{
+   /** we should have a non-NULL pointer */
+   netsnmp_assert( NULL != acipv6IfInUnknownProtosPkts_val_ptr );
+   DEBUGMSGTL(("verbose:dot11AcIfCapabilityTable:acipv6IfInUnknownProtosPkts_get","called\n"));
+/*
+ * TODO:231:o: |-> copy acipv6IfInUnknownProtosPkts data.
+ * get (* acipv6IfInUnknownProtosPkts_val_ptr ).low and (* acipv6IfInUnknownProtosPkts_val_ptr ).high from rowreq_ctx->data
+ */
+    (* acipv6IfInUnknownProtosPkts_val_ptr ) = rowreq_ctx->data.acipv6IfInUnknownProtosPkts;
+    
+
+
+    return MFD_SUCCESS;
+} /* acipv6IfInUnknownProtosPkts_get */
+
+/*---------------------------------------------------------------------
+ * DOT11-AC-MIB::dot11AcIfCapabilityEntry.acipv6IfInTruncatedPkts
+ * acipv6IfInTruncatedPkts is subid 27 of dot11AcIfCapabilityEntry.
+ * Its status is Current, and its access level is ReadOnly.
+ * OID: .1.3.6.1.4.1.31656.6.1.2.4.3.1.27
+ * Description:
+The total number of ipv6 packets due to the incomplete data .
+ *
+ * Attributes:
+ *   accessible 1     isscalar 0     enums  0      hasdefval 0
+ *   readable   1     iscolumn 1     ranges 0      hashint   0
+ *   settable   0
+ *
+ *
+ * Its syntax is COUNTER64 (based on perltype COUNTER64)
+ * The net-snmp type is ASN_COUNTER64. The C type decl is U64 (U64)
+ */
+/**
+ * Extract the current value of the acipv6IfInTruncatedPkts data.
+ *
+ * Set a value using the data context for the row.
+ *
+ * @param rowreq_ctx
+ *        Pointer to the row request context.
+ * @param acipv6IfInTruncatedPkts_val_ptr
+ *        Pointer to storage for a U64 variable
+ *
+ * @retval MFD_SUCCESS         : success
+ * @retval MFD_SKIP            : skip this node (no value for now)
+ * @retval MFD_ERROR           : Any other error
+ */
+
+int
+acipv6IfInTruncatedPkts_map(unsigned long long *mib_acipv6IfInTruncatedPkts_val_ptr, unsigned long long raw_acipv6IfInTruncatedPkts_val)
+{
+    netsnmp_assert(NULL != mib_acipv6IfInTruncatedPkts_val_ptr);
+    
+    DEBUGMSGTL(("verbose:dot11AcIfCapabilityTable:acipv6IfInTruncatedPkts_map","called\n"));
+    
+    /*
+     * TODO:241:o: |-> Implement acIfInUcastPkts mapping.
+     * If the values for your data type don't exactly match the
+     * possible values defined by the mib, you should map them here.
+     */
+    (*mib_acipv6IfInTruncatedPkts_val_ptr) = raw_acipv6IfInTruncatedPkts_val;
+
+    return MFD_SUCCESS;
+}
+int
+acipv6IfInTruncatedPkts_get( dot11AcIfCapabilityTable_rowreq_ctx *rowreq_ctx, unsigned long long * acipv6IfInTruncatedPkts_val_ptr )
+{
+   /** we should have a non-NULL pointer */
+   netsnmp_assert( NULL != acipv6IfInTruncatedPkts_val_ptr );
+   DEBUGMSGTL(("verbose:dot11AcIfCapabilityTable:acipv6IfInTruncatedPkts_get","called\n"));
+/*
+ * TODO:231:o: |-> copy acipv6IfInTruncatedPkts data.
+ * get (* acipv6IfInTruncatedPkts_val_ptr ).low and (* acipv6IfInTruncatedPkts_val_ptr ).high from rowreq_ctx->data
+ */
+    (* acipv6IfInTruncatedPkts_val_ptr ) = rowreq_ctx->data.acipv6IfInTruncatedPkts;
+    
+
+
+    return MFD_SUCCESS;
+} /* acipv6IfInTruncatedPkts_get */
+
+/*---------------------------------------------------------------------
+ * DOT11-AC-MIB::dot11AcIfCapabilityEntry.acipv6IfInDiscardsPkts
+ * acipv6IfInDiscardsPkts is subid 28 of dot11AcIfCapabilityEntry.
+ * Its status is Current, and its access level is ReadOnly.
+ * OID: .1.3.6.1.4.1.31656.6.1.2.4.3.1.28
+ * Description:
+The total number of ipv6 packets unable to continue processing .
+ *
+ * Attributes:
+ *   accessible 1     isscalar 0     enums  0      hasdefval 0
+ *   readable   1     iscolumn 1     ranges 0      hashint   0
+ *   settable   0
+ *
+ *
+ * Its syntax is COUNTER64 (based on perltype COUNTER64)
+ * The net-snmp type is ASN_COUNTER64. The C type decl is U64 (U64)
+ */
+/**
+ * Extract the current value of the acipv6IfInDiscardsPkts data.
+ *
+ * Set a value using the data context for the row.
+ *
+ * @param rowreq_ctx
+ *        Pointer to the row request context.
+ * @param acipv6IfInDiscardsPkts_val_ptr
+ *        Pointer to storage for a U64 variable
+ *
+ * @retval MFD_SUCCESS         : success
+ * @retval MFD_SKIP            : skip this node (no value for now)
+ * @retval MFD_ERROR           : Any other error
+ */
+
+int
+acipv6IfInDiscardsPkts_map(unsigned long long *mib_acipv6IfInDiscardsPkts_val_ptr, unsigned long long raw_acipv6IfInDiscardsPkts_val)
+{
+    netsnmp_assert(NULL != mib_acipv6IfInDiscardsPkts_val_ptr);
+    
+    DEBUGMSGTL(("verbose:dot11AcIfCapabilityTable:acipv6IfInDiscardsPkts_map","called\n"));
+    
+    /*
+     * TODO:241:o: |-> Implement acIfInUcastPkts mapping.
+     * If the values for your data type don't exactly match the
+     * possible values defined by the mib, you should map them here.
+     */
+    (*mib_acipv6IfInDiscardsPkts_val_ptr) = raw_acipv6IfInDiscardsPkts_val;
+
+    return MFD_SUCCESS;
+}
+int
+acipv6IfInDiscardsPkts_get( dot11AcIfCapabilityTable_rowreq_ctx *rowreq_ctx, unsigned long long * acipv6IfInDiscardsPkts_val_ptr )
+{
+   /** we should have a non-NULL pointer */
+   netsnmp_assert( NULL != acipv6IfInDiscardsPkts_val_ptr );
+   DEBUGMSGTL(("verbose:dot11AcIfCapabilityTable:acipv6IfInDiscardsPkts_get","called\n"));
+/*
+ * TODO:231:o: |-> copy acipv6IfInDiscardsPkts data.
+ * get (* acipv6IfInDiscardsPkts_val_ptr ).low and (* acipv6IfInDiscardsPkts_val_ptr ).high from rowreq_ctx->data
+ */
+    (* acipv6IfInDiscardsPkts_val_ptr ) = rowreq_ctx->data.acipv6IfInDiscardsPkts;
+    
+
+
+    return MFD_SUCCESS;
+} /* acipv6IfInDiscardsPkts_get */
+
+/*---------------------------------------------------------------------
+ * DOT11-AC-MIB::dot11AcIfCapabilityEntry.acipv6IfInDeliversPkts
+ * acipv6IfInDeliversPkts is subid 29 of dot11AcIfCapabilityEntry.
+ * Its status is Current, and its access level is ReadOnly.
+ * OID: .1.3.6.1.4.1.31656.6.1.2.4.3.1.29
+ * Description:
+The total number of ipv6 packets all ipv6 user agreement sent successfully .
+ *
+ * Attributes:
+ *   accessible 1     isscalar 0     enums  0      hasdefval 0
+ *   readable   1     iscolumn 1     ranges 0      hashint   0
+ *   settable   0
+ *
+ *
+ * Its syntax is COUNTER64 (based on perltype COUNTER64)
+ * The net-snmp type is ASN_COUNTER64. The C type decl is U64 (U64)
+ */
+/**
+ * Extract the current value of the acipv6IfInDeliversPkts data.
+ *
+ * Set a value using the data context for the row.
+ *
+ * @param rowreq_ctx
+ *        Pointer to the row request context.
+ * @param acipv6IfInDeliversPkts_val_ptr
+ *        Pointer to storage for a U64 variable
+ *
+ * @retval MFD_SUCCESS         : success
+ * @retval MFD_SKIP            : skip this node (no value for now)
+ * @retval MFD_ERROR           : Any other error
+ */
+
+int
+acipv6IfInDeliversPkts_map(unsigned long long *mib_acipv6IfInDeliversPkts_val_ptr, unsigned long long raw_acipv6IfInDeliversPkts_val)
+{
+    netsnmp_assert(NULL != mib_acipv6IfInDeliversPkts_val_ptr);
+    
+    DEBUGMSGTL(("verbose:dot11AcIfCapabilityTable:acipv6IfInDeliversPkts_map","called\n"));
+    
+    /*
+     * TODO:241:o: |-> Implement acIfInUcastPkts mapping.
+     * If the values for your data type don't exactly match the
+     * possible values defined by the mib, you should map them here.
+     */
+    (*mib_acipv6IfInDeliversPkts_val_ptr) = raw_acipv6IfInDeliversPkts_val;
+
+    return MFD_SUCCESS;
+}
+int
+acipv6IfInDeliversPkts_get( dot11AcIfCapabilityTable_rowreq_ctx *rowreq_ctx, unsigned long long * acipv6IfInDeliversPkts_val_ptr )
+{
+   /** we should have a non-NULL pointer */
+   netsnmp_assert( NULL != acipv6IfInDeliversPkts_val_ptr );
+   DEBUGMSGTL(("verbose:dot11AcIfCapabilityTable:acipv6IfInDeliversPkts_get","called\n"));
+/*
+ * TODO:231:o: |-> copy acipv6IfInDeliversPkts data.
+ * get (* acipv6IfInDeliversPkts_val_ptr ).low and (* acipv6IfInDeliversPkts_val_ptr ).high from rowreq_ctx->data
+ */
+    (* acipv6IfInDeliversPkts_val_ptr ) = rowreq_ctx->data.acipv6IfInDeliversPkts;
+    
+
+
+    return MFD_SUCCESS;
+} /* acipv6IfInDeliversPkts_get */
+
+/*---------------------------------------------------------------------
+ * DOT11-AC-MIB::dot11AcIfCapabilityEntry.acipv6IfOutForwDatagramsPkts
+ * acipv6IfOutForwDatagramsPkts is subid 30 of dot11AcIfCapabilityEntry.
+ * Its status is Current, and its access level is ReadOnly.
+ * OID: .1.3.6.1.4.1.31656.6.1.2.4.3.1.30
+ * Description:
+The total number of ipv6 packets those received and forwarded to the final node successfully .
+ *
+ * Attributes:
+ *   accessible 1     isscalar 0     enums  0      hasdefval 0
+ *   readable   1     iscolumn 1     ranges 0      hashint   0
+ *   settable   0
+ *
+ *
+ * Its syntax is COUNTER64 (based on perltype COUNTER64)
+ * The net-snmp type is ASN_COUNTER64. The C type decl is U64 (U64)
+ */
+/**
+ * Extract the current value of the acipv6IfOutForwDatagramsPkts data.
+ *
+ * Set a value using the data context for the row.
+ *
+ * @param rowreq_ctx
+ *        Pointer to the row request context.
+ * @param acipv6IfOutForwDatagramsPkts_val_ptr
+ *        Pointer to storage for a U64 variable
+ *
+ * @retval MFD_SUCCESS         : success
+ * @retval MFD_SKIP            : skip this node (no value for now)
+ * @retval MFD_ERROR           : Any other error
+ */
+
+int
+acipv6IfOutForwDatagramsPkts_map(unsigned long long *mib_acipv6IfOutForwDatagramsPkts_val_ptr, unsigned long long raw_acipv6IfOutForwDatagramsPkts_val)
+{
+    netsnmp_assert(NULL != mib_acipv6IfOutForwDatagramsPkts_val_ptr);
+    
+    DEBUGMSGTL(("verbose:dot11AcIfCapabilityTable:acipv6IfOutForwDatagramsPkts_map","called\n"));
+    
+    /*
+     * TODO:241:o: |-> Implement acIfInUcastPkts mapping.
+     * If the values for your data type don't exactly match the
+     * possible values defined by the mib, you should map them here.
+     */
+    (*mib_acipv6IfOutForwDatagramsPkts_val_ptr) = raw_acipv6IfOutForwDatagramsPkts_val;
+
+    return MFD_SUCCESS;
+}
+int
+acipv6IfOutForwDatagramsPkts_get( dot11AcIfCapabilityTable_rowreq_ctx *rowreq_ctx, unsigned long long * acipv6IfOutForwDatagramsPkts_val_ptr )
+{
+   /** we should have a non-NULL pointer */
+   netsnmp_assert( NULL != acipv6IfOutForwDatagramsPkts_val_ptr );
+   DEBUGMSGTL(("verbose:dot11AcIfCapabilityTable:acipv6IfOutForwDatagramsPkts_get","called\n"));
+/*
+ * TODO:231:o: |-> copy acipv6IfOutForwDatagramsPkts data.
+ * get (* acipv6IfOutForwDatagramsPkts_val_ptr ).low and (* acipv6IfOutForwDatagramsPkts_val_ptr ).high from rowreq_ctx->data
+ */
+    (* acipv6IfOutForwDatagramsPkts_val_ptr ) = rowreq_ctx->data.acipv6IfOutForwDatagramsPkts;
+    
+
+
+    return MFD_SUCCESS;
+} /* acipv6IfOutForwDatagramsPkts_get */
+
+/*---------------------------------------------------------------------
+ * DOT11-AC-MIB::dot11AcIfCapabilityEntry.acipv6IfOutRequestsPkts
+ * acipv6IfOutRequestsPkts is subid 31 of dot11AcIfCapabilityEntry.
+ * Its status is Current, and its access level is ReadOnly.
+ * OID: .1.3.6.1.4.1.31656.6.1.2.4.3.1.31
+ * Description:
+Transport requirements of the local IPv6 all user agreement output message number .
+ *
+ * Attributes:
+ *   accessible 1     isscalar 0     enums  0      hasdefval 0
+ *   readable   1     iscolumn 1     ranges 0      hashint   0
+ *   settable   0
+ *
+ *
+ * Its syntax is COUNTER64 (based on perltype COUNTER64)
+ * The net-snmp type is ASN_COUNTER64. The C type decl is U64 (U64)
+ */
+/**
+ * Extract the current value of the acipv6IfOutRequestsPkts data.
+ *
+ * Set a value using the data context for the row.
+ *
+ * @param rowreq_ctx
+ *        Pointer to the row request context.
+ * @param acipv6IfOutRequestsPkts_val_ptr
+ *        Pointer to storage for a U64 variable
+ *
+ * @retval MFD_SUCCESS         : success
+ * @retval MFD_SKIP            : skip this node (no value for now)
+ * @retval MFD_ERROR           : Any other error
+ */
+
+int
+acipv6IfOutRequestsPkts_map(unsigned long long *mib_acipv6IfOutRequestsPkts_val_ptr, unsigned long long raw_acipv6IfOutRequestsPkts_val)
+{
+    netsnmp_assert(NULL != mib_acipv6IfOutRequestsPkts_val_ptr);
+    
+    DEBUGMSGTL(("verbose:dot11AcIfCapabilityTable:acipv6IfOutRequestsPkts_map","called\n"));
+    
+    /*
+     * TODO:241:o: |-> Implement acIfInUcastPkts mapping.
+     * If the values for your data type don't exactly match the
+     * possible values defined by the mib, you should map them here.
+     */
+    (*mib_acipv6IfOutRequestsPkts_val_ptr) = raw_acipv6IfOutRequestsPkts_val;
+
+    return MFD_SUCCESS;
+}
+int
+acipv6IfOutRequestsPkts_get( dot11AcIfCapabilityTable_rowreq_ctx *rowreq_ctx, unsigned long long * acipv6IfOutRequestsPkts_val_ptr )
+{
+   /** we should have a non-NULL pointer */
+   netsnmp_assert( NULL != acipv6IfOutRequestsPkts_val_ptr );
+   DEBUGMSGTL(("verbose:dot11AcIfCapabilityTable:acipv6IfOutRequestsPkts_get","called\n"));
+/*
+ * TODO:231:o: |-> copy acipv6IfOutRequestsPkts data.
+ * get (* acipv6IfOutRequestsPkts_val_ptr ).low and (* acipv6IfOutRequestsPkts_val_ptr ).high from rowreq_ctx->data
+ */
+    (* acipv6IfOutRequestsPkts_val_ptr ) = rowreq_ctx->data.acipv6IfOutRequestsPkts;
+    
+
+
+    return MFD_SUCCESS;
+} /* acipv6IfOutRequestsPkts_get */
+
+/*---------------------------------------------------------------------
+ * DOT11-AC-MIB::dot11AcIfCapabilityEntry.acipv6IfOutDiscardsPkts
+ * acipv6IfOutDiscardsPkts is subid 32 of dot11AcIfCapabilityEntry.
+ * Its status is Current, and its access level is ReadOnly.
+ * OID: .1.3.6.1.4.1.31656.6.1.2.4.3.1.32
+ * Description:
+Due to be continue to transmit discarded IPv6 output message number .
+ *
+ * Attributes:
+ *   accessible 1     isscalar 0     enums  0      hasdefval 0
+ *   readable   1     iscolumn 1     ranges 0      hashint   0
+ *   settable   0
+ *
+ *
+ * Its syntax is COUNTER64 (based on perltype COUNTER64)
+ * The net-snmp type is ASN_COUNTER64. The C type decl is U64 (U64)
+ */
+/**
+ * Extract the current value of the acipv6IfOutDiscardsPkts data.
+ *
+ * Set a value using the data context for the row.
+ *
+ * @param rowreq_ctx
+ *        Pointer to the row request context.
+ * @param acipv6IfOutDiscardsPkts_val_ptr
+ *        Pointer to storage for a U64 variable
+ *
+ * @retval MFD_SUCCESS         : success
+ * @retval MFD_SKIP            : skip this node (no value for now)
+ * @retval MFD_ERROR           : Any other error
+ */
+
+int
+acipv6IfOutDiscardsPkts_map(unsigned long long *mib_acipv6IfOutDiscardsPkts_val_ptr, unsigned long long raw_acipv6IfOutDiscardsPkts_val)
+{
+    netsnmp_assert(NULL != mib_acipv6IfOutDiscardsPkts_val_ptr);
+    
+    DEBUGMSGTL(("verbose:dot11AcIfCapabilityTable:acipv6IfOutDiscardsPkts_map","called\n"));
+    
+    /*
+     * TODO:241:o: |-> Implement acIfInUcastPkts mapping.
+     * If the values for your data type don't exactly match the
+     * possible values defined by the mib, you should map them here.
+     */
+    (*mib_acipv6IfOutDiscardsPkts_val_ptr) = raw_acipv6IfOutDiscardsPkts_val;
+
+    return MFD_SUCCESS;
+}
+int
+acipv6IfOutDiscardsPkts_get( dot11AcIfCapabilityTable_rowreq_ctx *rowreq_ctx, unsigned long long * acipv6IfOutDiscardsPkts_val_ptr )
+{
+   /** we should have a non-NULL pointer */
+   netsnmp_assert( NULL != acipv6IfOutDiscardsPkts_val_ptr );
+   DEBUGMSGTL(("verbose:dot11AcIfCapabilityTable:acipv6IfOutDiscardsPkts_get","called\n"));
+/*
+ * TODO:231:o: |-> copy acipv6IfOutDiscardsPkts data.
+ * get (* acipv6IfOutDiscardsPkts_val_ptr ).low and (* acipv6IfOutDiscardsPkts_val_ptr ).high from rowreq_ctx->data
+ */
+    (* acipv6IfOutDiscardsPkts_val_ptr ) = rowreq_ctx->data.acipv6IfOutDiscardsPkts;
+    
+
+
+    return MFD_SUCCESS;
+} /* acipv6IfOutDiscardsPkts_get */
+
+/*---------------------------------------------------------------------
+ * DOT11-AC-MIB::dot11AcIfCapabilityEntry.acipv6IfOutFragOKsPkts
+ * acipv6IfOutFragOKsPkts is subid 33 of dot11AcIfCapabilityEntry.
+ * Its status is Current, and its access level is ReadOnly.
+ * OID: .1.3.6.1.4.1.31656.6.1.2.4.3.1.33
+ * Description:
+Output interface successful shard of IPv6 output message number .
+ *
+ * Attributes:
+ *   accessible 1     isscalar 0     enums  0      hasdefval 0
+ *   readable   1     iscolumn 1     ranges 0      hashint   0
+ *   settable   0
+ *
+ *
+ * Its syntax is COUNTER64 (based on perltype COUNTER64)
+ * The net-snmp type is ASN_COUNTER64. The C type decl is U64 (U64)
+ */
+/**
+ * Extract the current value of the acipv6IfOutFragOKsPkts data.
+ *
+ * Set a value using the data context for the row.
+ *
+ * @param rowreq_ctx
+ *        Pointer to the row request context.
+ * @param acipv6IfOutFragOKsPkts_val_ptr
+ *        Pointer to storage for a U64 variable
+ *
+ * @retval MFD_SUCCESS         : success
+ * @retval MFD_SKIP            : skip this node (no value for now)
+ * @retval MFD_ERROR           : Any other error
+ */
+
+int
+acipv6IfOutFragOKsPkts_map(unsigned long long *mib_acipv6IfOutFragOKsPkts_val_ptr, unsigned long long raw_acipv6IfOutFragOKsPkts_val)
+{
+    netsnmp_assert(NULL != mib_acipv6IfOutFragOKsPkts_val_ptr);
+    
+    DEBUGMSGTL(("verbose:dot11AcIfCapabilityTable:acipv6IfOutFragOKsPkts_map","called\n"));
+    
+    /*
+     * TODO:241:o: |-> Implement acIfInUcastPkts mapping.
+     * If the values for your data type don't exactly match the
+     * possible values defined by the mib, you should map them here.
+     */
+    (*mib_acipv6IfOutFragOKsPkts_val_ptr) = raw_acipv6IfOutFragOKsPkts_val;
+
+    return MFD_SUCCESS;
+}
+int
+acipv6IfOutFragOKsPkts_get( dot11AcIfCapabilityTable_rowreq_ctx *rowreq_ctx, unsigned long long * acipv6IfOutFragOKsPkts_val_ptr )
+{
+   /** we should have a non-NULL pointer */
+   netsnmp_assert( NULL != acipv6IfOutFragOKsPkts_val_ptr );
+   DEBUGMSGTL(("verbose:dot11AcIfCapabilityTable:acipv6IfOutFragOKsPkts_get","called\n"));
+/*
+ * TODO:231:o: |-> copy acipv6IfOutFragOKsPkts data.
+ * get (* acipv6IfOutFragOKsPkts_val_ptr ).low and (* acipv6IfOutFragOKsPkts_val_ptr ).high from rowreq_ctx->data
+ */
+    (* acipv6IfOutFragOKsPkts_val_ptr ) = rowreq_ctx->data.acipv6IfOutFragOKsPkts;
+    
+
+
+    return MFD_SUCCESS;
+} /* acipv6IfOutFragOKsPkts_get */
+
+/*---------------------------------------------------------------------
+ * DOT11-AC-MIB::dot11AcIfCapabilityEntry.acipv6IfOutFragFailsPkts
+ * acipv6IfOutFragFailsPkts is subid 34 of dot11AcIfCapabilityEntry.
+ * Its status is Current, and its access level is ReadOnly.
+ * OID: .1.3.6.1.4.1.31656.6.1.2.4.3.1.34
+ * Description:
+Due to the output interface to fragmentation and number of IPv6 packet is discarded .
+ *
+ * Attributes:
+ *   accessible 1     isscalar 0     enums  0      hasdefval 0
+ *   readable   1     iscolumn 1     ranges 0      hashint   0
+ *   settable   0
+ *
+ *
+ * Its syntax is COUNTER64 (based on perltype COUNTER64)
+ * The net-snmp type is ASN_COUNTER64. The C type decl is U64 (U64)
+ */
+/**
+ * Extract the current value of the acipv6IfOutFragFailsPkts data.
+ *
+ * Set a value using the data context for the row.
+ *
+ * @param rowreq_ctx
+ *        Pointer to the row request context.
+ * @param acipv6IfOutFragFailsPkts_val_ptr
+ *        Pointer to storage for a U64 variable
+ *
+ * @retval MFD_SUCCESS         : success
+ * @retval MFD_SKIP            : skip this node (no value for now)
+ * @retval MFD_ERROR           : Any other error
+ */
+
+int
+acipv6IfOutFragFailsPkts_map(unsigned long long *mib_acipv6IfOutFragFailsPkts_val_ptr, unsigned long long raw_acipv6IfOutFragFailsPkts_val)
+{
+    netsnmp_assert(NULL != mib_acipv6IfOutFragFailsPkts_val_ptr);
+    
+    DEBUGMSGTL(("verbose:dot11AcIfCapabilityTable:acipv6IfOutFragFailsPkts_map","called\n"));
+    
+    /*
+     * TODO:241:o: |-> Implement acIfInUcastPkts mapping.
+     * If the values for your data type don't exactly match the
+     * possible values defined by the mib, you should map them here.
+     */
+    (*mib_acipv6IfOutFragFailsPkts_val_ptr) = raw_acipv6IfOutFragFailsPkts_val;
+
+    return MFD_SUCCESS;
+}
+int
+acipv6IfOutFragFailsPkts_get( dot11AcIfCapabilityTable_rowreq_ctx *rowreq_ctx, unsigned long long * acipv6IfOutFragFailsPkts_val_ptr )
+{
+   /** we should have a non-NULL pointer */
+   netsnmp_assert( NULL != acipv6IfOutFragFailsPkts_val_ptr );
+   DEBUGMSGTL(("verbose:dot11AcIfCapabilityTable:acipv6IfOutFragFailsPkts_get","called\n"));
+/*
+ * TODO:231:o: |-> copy acipv6IfOutFragFailsPkts data.
+ * get (* acipv6IfOutFragFailsPkts_val_ptr ).low and (* acipv6IfOutFragFailsPkts_val_ptr ).high from rowreq_ctx->data
+ */
+    (* acipv6IfOutFragFailsPkts_val_ptr ) = rowreq_ctx->data.acipv6IfOutFragFailsPkts;
+    
+
+
+    return MFD_SUCCESS;
+} /* acipv6IfOutFragFailsPkts_get */
+
+/*---------------------------------------------------------------------
+ * DOT11-AC-MIB::dot11AcIfCapabilityEntry.acipv6IfOutFragCreatesPkts
+ * acipv6IfOutFragCreatesPkts is subid 35 of dot11AcIfCapabilityEntry.
+ * Its status is Current, and its access level is ReadOnly.
+ * OID: .1.3.6.1.4.1.31656.6.1.2.4.3.1.35
+ * Description:
+Output interface based on fragmentation results of IPv6 packet fragmentation .
+ *
+ * Attributes:
+ *   accessible 1     isscalar 0     enums  0      hasdefval 0
+ *   readable   1     iscolumn 1     ranges 0      hashint   0
+ *   settable   0
+ *
+ *
+ * Its syntax is COUNTER64 (based on perltype COUNTER64)
+ * The net-snmp type is ASN_COUNTER64. The C type decl is U64 (U64)
+ */
+/**
+ * Extract the current value of the acipv6IfOutFragCreatesPkts data.
+ *
+ * Set a value using the data context for the row.
+ *
+ * @param rowreq_ctx
+ *        Pointer to the row request context.
+ * @param acipv6IfOutFragCreatesPkts_val_ptr
+ *        Pointer to storage for a U64 variable
+ *
+ * @retval MFD_SUCCESS         : success
+ * @retval MFD_SKIP            : skip this node (no value for now)
+ * @retval MFD_ERROR           : Any other error
+ */
+
+
+int
+acipv6IfOutFragCreatesPkts_map(unsigned long long *mib_acipv6IfOutFragCreatesPkts_val_ptr, unsigned long long raw_acipv6IfOutFragCreatesPkts_val)
+{
+    netsnmp_assert(NULL != mib_acipv6IfOutFragCreatesPkts_val_ptr);
+    
+    DEBUGMSGTL(("verbose:dot11AcIfCapabilityTable:acipv6IfOutFragCreatesPkts_map","called\n"));
+    
+    /*
+     * TODO:241:o: |-> Implement acIfInUcastPkts mapping.
+     * If the values for your data type don't exactly match the
+     * possible values defined by the mib, you should map them here.
+     */
+    (*mib_acipv6IfOutFragCreatesPkts_val_ptr) = raw_acipv6IfOutFragCreatesPkts_val;
+
+    return MFD_SUCCESS;
+}
+int
+acipv6IfOutFragCreatesPkts_get( dot11AcIfCapabilityTable_rowreq_ctx *rowreq_ctx, unsigned long long * acipv6IfOutFragCreatesPkts_val_ptr )
+{
+   /** we should have a non-NULL pointer */
+   netsnmp_assert( NULL != acipv6IfOutFragCreatesPkts_val_ptr );
+   DEBUGMSGTL(("verbose:dot11AcIfCapabilityTable:acipv6IfOutFragCreatesPkts_get","called\n"));
+/*
+ * TODO:231:o: |-> copy acipv6IfOutFragCreatesPkts data.
+ * get (* acipv6IfOutFragCreatesPkts_val_ptr ).low and (* acipv6IfOutFragCreatesPkts_val_ptr ).high from rowreq_ctx->data
+ */
+    (* acipv6IfOutFragCreatesPkts_val_ptr ) = rowreq_ctx->data.acipv6IfOutFragCreatesPkts;
+    
+
+
+    return MFD_SUCCESS;
+} /* acipv6IfOutFragCreatesPkts_get */
+
+/*---------------------------------------------------------------------
+ * DOT11-AC-MIB::dot11AcIfCapabilityEntry.acipv6IfReasmReqdsPkts
+ * acipv6IfReasmReqdsPkts is subid 36 of dot11AcIfCapabilityEntry.
+ * Its status is Current, and its access level is ReadOnly.
+ * OID: .1.3.6.1.4.1.31656.6.1.2.4.3.1.36
+ * Description:
+IPv6 subdivision number of interfaces need to restructure .
+ *
+ * Attributes:
+ *   accessible 1     isscalar 0     enums  0      hasdefval 0
+ *   readable   1     iscolumn 1     ranges 0      hashint   0
+ *   settable   0
+ *
+ *
+ * Its syntax is COUNTER64 (based on perltype COUNTER64)
+ * The net-snmp type is ASN_COUNTER64. The C type decl is U64 (U64)
+ */
+/**
+ * Extract the current value of the acipv6IfReasmReqdsPkts data.
+ *
+ * Set a value using the data context for the row.
+ *
+ * @param rowreq_ctx
+ *        Pointer to the row request context.
+ * @param acipv6IfReasmReqdsPkts_val_ptr
+ *        Pointer to storage for a U64 variable
+ *
+ * @retval MFD_SUCCESS         : success
+ * @retval MFD_SKIP            : skip this node (no value for now)
+ * @retval MFD_ERROR           : Any other error
+ */
+
+int
+acipv6IfReasmReqdsPkts_map(unsigned long long *mib_acipv6IfReasmReqdsPkts_val_ptr, unsigned long long raw_acipv6IfReasmReqdsPkts_val)
+{
+    netsnmp_assert(NULL != mib_acipv6IfReasmReqdsPkts_val_ptr);
+    
+    DEBUGMSGTL(("verbose:dot11AcIfCapabilityTable:acipv6IfReasmReqdsPkts_map","called\n"));
+    
+    /*
+     * TODO:241:o: |-> Implement acIfInUcastPkts mapping.
+     * If the values for your data type don't exactly match the
+     * possible values defined by the mib, you should map them here.
+     */
+    (*mib_acipv6IfReasmReqdsPkts_val_ptr) = raw_acipv6IfReasmReqdsPkts_val;
+
+    return MFD_SUCCESS;
+}
+int
+acipv6IfReasmReqdsPkts_get( dot11AcIfCapabilityTable_rowreq_ctx *rowreq_ctx, unsigned long long * acipv6IfReasmReqdsPkts_val_ptr )
+{
+   /** we should have a non-NULL pointer */
+   netsnmp_assert( NULL != acipv6IfReasmReqdsPkts_val_ptr );
+   DEBUGMSGTL(("verbose:dot11AcIfCapabilityTable:acipv6IfReasmReqdsPkts_get","called\n"));
+/*
+ * TODO:231:o: |-> copy acipv6IfReasmReqdsPkts data.
+ * get (* acipv6IfReasmReqdsPkts_val_ptr ).low and (* acipv6IfReasmReqdsPkts_val_ptr ).high from rowreq_ctx->data
+ */
+    (* acipv6IfReasmReqdsPkts_val_ptr ) = rowreq_ctx->data.acipv6IfReasmReqdsPkts;
+    
+
+
+    return MFD_SUCCESS;
+} /* acipv6IfReasmReqdsPkts_get */
+
+/*---------------------------------------------------------------------
+ * DOT11-AC-MIB::dot11AcIfCapabilityEntry.acipv6IfReasmOKsPkts
+ * acipv6IfReasmOKsPkts is subid 37 of dot11AcIfCapabilityEntry.
+ * Its status is Current, and its access level is ReadOnly.
+ * OID: .1.3.6.1.4.1.31656.6.1.2.4.3.1.37
+ * Description:
+Successful restructuring of IPv6 packet number .
+ *
+ * Attributes:
+ *   accessible 1     isscalar 0     enums  0      hasdefval 0
+ *   readable   1     iscolumn 1     ranges 0      hashint   0
+ *   settable   0
+ *
+ *
+ * Its syntax is COUNTER64 (based on perltype COUNTER64)
+ * The net-snmp type is ASN_COUNTER64. The C type decl is U64 (U64)
+ */
+/**
+ * Extract the current value of the acipv6IfReasmOKsPkts data.
+ *
+ * Set a value using the data context for the row.
+ *
+ * @param rowreq_ctx
+ *        Pointer to the row request context.
+ * @param acipv6IfReasmOKsPkts_val_ptr
+ *        Pointer to storage for a U64 variable
+ *
+ * @retval MFD_SUCCESS         : success
+ * @retval MFD_SKIP            : skip this node (no value for now)
+ * @retval MFD_ERROR           : Any other error
+ */
+
+int
+acipv6IfReasmOKsPkts_map(unsigned long long *mib_acipv6IfReasmOKsPkts_val_ptr, unsigned long long raw_acipv6IfReasmOKsPkts_val)
+{
+    netsnmp_assert(NULL != mib_acipv6IfReasmOKsPkts_val_ptr);
+    
+    DEBUGMSGTL(("verbose:dot11AcIfCapabilityTable:acipv6IfReasmOKsPkts_map","called\n"));
+    
+    /*
+     * TODO:241:o: |-> Implement acIfInUcastPkts mapping.
+     * If the values for your data type don't exactly match the
+     * possible values defined by the mib, you should map them here.
+     */
+    (*mib_acipv6IfReasmOKsPkts_val_ptr) = raw_acipv6IfReasmOKsPkts_val;
+
+    return MFD_SUCCESS;
+}
+int
+acipv6IfReasmOKsPkts_get( dot11AcIfCapabilityTable_rowreq_ctx *rowreq_ctx, unsigned long long * acipv6IfReasmOKsPkts_val_ptr )
+{
+   /** we should have a non-NULL pointer */
+   netsnmp_assert( NULL != acipv6IfReasmOKsPkts_val_ptr );
+   DEBUGMSGTL(("verbose:dot11AcIfCapabilityTable:acipv6IfReasmOKsPkts_get","called\n"));
+/*
+ * TODO:231:o: |-> copy acipv6IfReasmOKsPkts data.
+ * get (* acipv6IfReasmOKsPkts_val_ptr ).low and (* acipv6IfReasmOKsPkts_val_ptr ).high from rowreq_ctx->data
+ */
+    (* acipv6IfReasmOKsPkts_val_ptr ) = rowreq_ctx->data.acipv6IfReasmOKsPkts;
+    
+
+
+    return MFD_SUCCESS;
+} /* acipv6IfReasmOKsPkts_get */
+
+/*---------------------------------------------------------------------
+ * DOT11-AC-MIB::dot11AcIfCapabilityEntry.acipv6IfReasmFailsPkts
+ * acipv6IfReasmFailsPkts is subid 38 of dot11AcIfCapabilityEntry.
+ * Its status is Current, and its access level is ReadOnly.
+ * OID: .1.3.6.1.4.1.31656.6.1.2.4.3.1.38
+ * Description:
+Due to the failure of fragmentation of IPv6 reorganization algorithm .
+ *
+ * Attributes:
+ *   accessible 1     isscalar 0     enums  0      hasdefval 0
+ *   readable   1     iscolumn 1     ranges 0      hashint   0
+ *   settable   0
+ *
+ *
+ * Its syntax is COUNTER64 (based on perltype COUNTER64)
+ * The net-snmp type is ASN_COUNTER64. The C type decl is U64 (U64)
+ */
+/**
+ * Extract the current value of the acipv6IfReasmFailsPkts data.
+ *
+ * Set a value using the data context for the row.
+ *
+ * @param rowreq_ctx
+ *        Pointer to the row request context.
+ * @param acipv6IfReasmFailsPkts_val_ptr
+ *        Pointer to storage for a U64 variable
+ *
+ * @retval MFD_SUCCESS         : success
+ * @retval MFD_SKIP            : skip this node (no value for now)
+ * @retval MFD_ERROR           : Any other error
+ */
+
+int
+acipv6IfReasmFailsPkts_map(unsigned long long *mib_acipv6IfReasmFailsPkts_val_ptr, unsigned long long raw_acipv6IfReasmFailsPkts_val)
+{
+    netsnmp_assert(NULL != mib_acipv6IfReasmFailsPkts_val_ptr);
+    
+    DEBUGMSGTL(("verbose:dot11AcIfCapabilityTable:acipv6IfReasmFailsPkts_map","called\n"));
+    
+    /*
+     * TODO:241:o: |-> Implement acIfInUcastPkts mapping.
+     * If the values for your data type don't exactly match the
+     * possible values defined by the mib, you should map them here.
+     */
+    (*mib_acipv6IfReasmFailsPkts_val_ptr) = raw_acipv6IfReasmFailsPkts_val;
+
+    return MFD_SUCCESS;
+}
+int
+acipv6IfReasmFailsPkts_get( dot11AcIfCapabilityTable_rowreq_ctx *rowreq_ctx, unsigned long long * acipv6IfReasmFailsPkts_val_ptr )
+{
+   /** we should have a non-NULL pointer */
+   netsnmp_assert( NULL != acipv6IfReasmFailsPkts_val_ptr );
+   DEBUGMSGTL(("verbose:dot11AcIfCapabilityTable:acipv6IfReasmFailsPkts_get","called\n"));
+/*
+ * TODO:231:o: |-> copy acipv6IfReasmFailsPkts data.
+ * get (* acipv6IfReasmFailsPkts_val_ptr ).low and (* acipv6IfReasmFailsPkts_val_ptr ).high from rowreq_ctx->data
+ */
+    (* acipv6IfReasmFailsPkts_val_ptr ) = rowreq_ctx->data.acipv6IfReasmFailsPkts;
+    
+
+
+    return MFD_SUCCESS;
+} /* acipv6IfReasmFailsPkts_get */
+
+/*---------------------------------------------------------------------
+ * DOT11-AC-MIB::dot11AcIfCapabilityEntry.acipv6IfInMcastPkts
+ * acipv6IfInMcastPkts is subid 39 of dot11AcIfCapabilityEntry.
+ * Its status is Current, and its access level is ReadOnly.
+ * OID: .1.3.6.1.4.1.31656.6.1.2.4.3.1.39
+ * Description:
+Interface receives the IPv6 multicast packets .
+ *
+ * Attributes:
+ *   accessible 1     isscalar 0     enums  0      hasdefval 0
+ *   readable   1     iscolumn 1     ranges 0      hashint   0
+ *   settable   0
+ *
+ *
+ * Its syntax is COUNTER64 (based on perltype COUNTER64)
+ * The net-snmp type is ASN_COUNTER64. The C type decl is U64 (U64)
+ */
+/**
+ * Extract the current value of the acipv6IfInMcastPkts data.
+ *
+ * Set a value using the data context for the row.
+ *
+ * @param rowreq_ctx
+ *        Pointer to the row request context.
+ * @param acipv6IfInMcastPkts_val_ptr
+ *        Pointer to storage for a U64 variable
+ *
+ * @retval MFD_SUCCESS         : success
+ * @retval MFD_SKIP            : skip this node (no value for now)
+ * @retval MFD_ERROR           : Any other error
+ */
+
+int
+acipv6IfInMcastPkts_map(unsigned long long *mib_acipv6IfInMcastPkts_val_ptr, unsigned long long raw_acipv6IfInMcastPkts_val)
+{
+    netsnmp_assert(NULL != mib_acipv6IfInMcastPkts_val_ptr);
+    
+    DEBUGMSGTL(("verbose:dot11AcIfCapabilityTable:acipv6IfInMcastPkts_map","called\n"));
+    
+    /*
+     * TODO:241:o: |-> Implement acIfInUcastPkts mapping.
+     * If the values for your data type don't exactly match the
+     * possible values defined by the mib, you should map them here.
+     */
+    (*mib_acipv6IfInMcastPkts_val_ptr) = raw_acipv6IfInMcastPkts_val;
+
+    return MFD_SUCCESS;
+}
+int
+acipv6IfInMcastPkts_get( dot11AcIfCapabilityTable_rowreq_ctx *rowreq_ctx, unsigned long long * acipv6IfInMcastPkts_val_ptr )
+{
+   /** we should have a non-NULL pointer */
+   netsnmp_assert( NULL != acipv6IfInMcastPkts_val_ptr );
+   DEBUGMSGTL(("verbose:dot11AcIfCapabilityTable:acipv6IfInMcastPkts_get","called\n"));
+/*
+ * TODO:231:o: |-> copy acipv6IfInMcastPkts data.
+ * get (* acipv6IfInMcastPkts_val_ptr ).low and (* acipv6IfInMcastPkts_val_ptr ).high from rowreq_ctx->data
+ */
+    (* acipv6IfInMcastPkts_val_ptr ) = rowreq_ctx->data.acipv6IfInMcastPkts;
+    
+
+
+    return MFD_SUCCESS;
+} /* acipv6IfInMcastPkts_get */
+
+/*---------------------------------------------------------------------
+ * DOT11-AC-MIB::dot11AcIfCapabilityEntry.acipv6IfOutMcastPkts
+ * acipv6IfOutMcastPkts is subid 40 of dot11AcIfCapabilityEntry.
+ * Its status is Current, and its access level is ReadOnly.
+ * OID: .1.3.6.1.4.1.31656.6.1.2.4.3.1.40
+ * Description:
+Interface transmit IPv6 multicast packets .
+ *
+ * Attributes:
+ *   accessible 1     isscalar 0     enums  0      hasdefval 0
+ *   readable   1     iscolumn 1     ranges 0      hashint   0
+ *   settable   0
+ *
+ *
+ * Its syntax is COUNTER64 (based on perltype COUNTER64)
+ * The net-snmp type is ASN_COUNTER64. The C type decl is U64 (U64)
+ */
+/**
+ * Extract the current value of the acipv6IfOutMcastPkts data.
+ *
+ * Set a value using the data context for the row.
+ *
+ * @param rowreq_ctx
+ *        Pointer to the row request context.
+ * @param acipv6IfOutMcastPkts_val_ptr
+ *        Pointer to storage for a U64 variable
+ *
+ * @retval MFD_SUCCESS         : success
+ * @retval MFD_SKIP            : skip this node (no value for now)
+ * @retval MFD_ERROR           : Any other error
+ */
+
+int
+acipv6IfOutMcastPkts_map(unsigned long long *mib_acipv6IfOutMcastPkts_val_ptr, unsigned long long raw_acipv6IfOutMcastPkts_val)
+{
+    netsnmp_assert(NULL != mib_acipv6IfOutMcastPkts_val_ptr);
+    
+    DEBUGMSGTL(("verbose:dot11AcIfCapabilityTable:acipv6IfOutMcastPkts_map","called\n"));
+    
+    /*
+     * TODO:241:o: |-> Implement acIfInUcastPkts mapping.
+     * If the values for your data type don't exactly match the
+     * possible values defined by the mib, you should map them here.
+     */
+    (*mib_acipv6IfOutMcastPkts_val_ptr) = raw_acipv6IfOutMcastPkts_val;
+
+    return MFD_SUCCESS;
+}
+int
+acipv6IfOutMcastPkts_get( dot11AcIfCapabilityTable_rowreq_ctx *rowreq_ctx, unsigned long long * acipv6IfOutMcastPkts_val_ptr )
+{
+   /** we should have a non-NULL pointer */
+   netsnmp_assert( NULL != acipv6IfOutMcastPkts_val_ptr );
+   DEBUGMSGTL(("verbose:dot11AcIfCapabilityTable:acipv6IfOutMcastPkts_get","called\n"));
+/*
+ * TODO:231:o: |-> copy acipv6IfOutMcastPkts data.
+ * get (* acipv6IfOutMcastPkts_val_ptr ).low and (* acipv6IfOutMcastPkts_val_ptr ).high from rowreq_ctx->data
+ */
+    (* acipv6IfOutMcastPkts_val_ptr ) = rowreq_ctx->data.acipv6IfOutMcastPkts;
+    
+
+
+    return MFD_SUCCESS;
+} /* acipv6IfOutMcastPkts_get */
 
 /** @} */

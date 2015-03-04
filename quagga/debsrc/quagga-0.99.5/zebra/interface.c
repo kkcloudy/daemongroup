@@ -4057,6 +4057,7 @@ DEFUN (show_interface, show_interface_cmd,
   /* If system has interface statistics via proc file system, update
      statistics. */
   ifstat_update_proc ();
+  ipv6_ifstat_update_proc (); //lilong add 2015.2.8
 #endif /* HAVE_PROC_NET_DEV */
 #ifdef HAVE_NET_RT_IFLIST
   ifstat_update_sysctl ();

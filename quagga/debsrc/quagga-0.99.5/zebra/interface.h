@@ -268,6 +268,7 @@ extern void if_down_redistribute(struct interface * ifp);
 
 #ifdef HAVE_PROC_NET_DEV
 extern void ifstat_update_proc (void);
+extern void ipv6_ifstat_update_proc (void); //lilong add 2015.2.8
 #endif /* HAVE_PROC_NET_DEV */
 #ifdef HAVE_NET_RT_IFLIST
 extern void ifstat_update_sysctl (void);

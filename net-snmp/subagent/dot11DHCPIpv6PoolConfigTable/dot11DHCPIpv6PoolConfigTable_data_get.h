@@ -50,6 +50,7 @@ extern "C" {
     int SeconDNSServerIPv6Address_get( dot11DHCPIpv6PoolConfigTable_rowreq_ctx *rowreq_ctx, char **SeconDNSServerIPv6Address_val_ptr_ptr, size_t *SeconDNSServerIPv6Address_val_ptr_len_ptr );
     int Ipv6LeasePeriod_get( dot11DHCPIpv6PoolConfigTable_rowreq_ctx *rowreq_ctx, u_long * Ipv6LeasePeriod_val_ptr );
     int Ipv6DHCPRowStatus_get( dot11DHCPIpv6PoolConfigTable_rowreq_ctx *rowreq_ctx, u_long * Ipv6DHCPRowStatus_val_ptr );
+    int SysIPv6GWAddr_get( dot11DHCPIpv6PoolConfigTable_rowreq_ctx *rowreq_ctx, char **SysIPv6GWAddr_val_ptr_ptr, size_t *SysIPv6GWAddr_val_ptr_len_ptr );
 
 
 int dot11DHCPIpv6PoolConfigTable_indexes_set_tbl_idx(dot11DHCPIpv6PoolConfigTable_mib_index *tbl_idx, long Ipv6DHCPID_val);

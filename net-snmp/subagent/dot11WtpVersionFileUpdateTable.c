@@ -836,8 +836,9 @@ dot11WtpVersionFileUpdateTable_handler(
 					int ret= 0;
 					snprintf(wtpID,sizeof(wtpID)-1,"%d",table_entry->wtpCurrID);
 					ret =add_mibs_node_attr_z(MIBS_XML_FPAHT,"pid","id",wtpID);
-					strncpy(input_string,request->requestvb->val.string,request->requestvb->val_len);
 					FREE_OBJECT(table_entry->wtpVersionFileName);
+					strncpy(input_string,request->requestvb->val.string,request->requestvb->val_len);
+					
 					table_entry->wtpVersionFileName     = strdup(input_string);
 					mod_mibs_node_z(MIBS_XML_FPAHT,"pid","id",wtpID,MIBS_XML_VNAME,table_entry->wtpVersionFileName);
 				}

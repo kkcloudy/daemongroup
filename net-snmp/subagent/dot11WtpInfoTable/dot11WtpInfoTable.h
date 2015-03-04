@@ -160,38 +160,40 @@ size_t      wtpDomain_len; /* # of char elements, not bytes */
    u_long   wtpSysReset;
     
         /*
-         * wtpColdReboot(17)/INTEGER/ASN_INTEGER/long(u_long)//l/A/W/E/r/d/h
+         * wtpColdReboot(16)/INTEGER/ASN_INTEGER/long(u_long)//l/A/W/E/r/d/h
          */
    u_long   wtpColdReboot;
     
         /*
-         * wtplongitude(23)/DisplayString/ASN_OCTET_STR/char(char)//L/A/W/e/R/d/H
+         * wtplongitude(17)/DisplayString/ASN_OCTET_STR/char(char)//L/A/W/e/R/d/H
          */
    char   wtplongitude[255];
 size_t      wtplongitude_len; /* # of char elements, not bytes */
     
         /*
-         * wtplatitude(24)/DisplayString/ASN_OCTET_STR/char(char)//L/A/W/e/R/d/H
+         * wtplatitude(18)/DisplayString/ASN_OCTET_STR/char(char)//L/A/W/e/R/d/H
          */
    char   wtplatitude[255];
 size_t      wtplatitude_len; /* # of char elements, not bytes */
     
         /*
-         * wtpPowerType(25)/DisplayString/ASN_OCTET_STR/char(char)//L/A/w/e/R/d/H
+         * wtpPowerType(19)/DisplayString/ASN_OCTET_STR/char(char)//L/A/w/e/R/d/H
          */
    char   wtpPowerType[255];
 size_t      wtpPowerType_len; /* # of char elements, not bytes */
     
         /*
-         * wtpManufactureDate(26)/DisplayString/ASN_OCTET_STR/char(char)//L/A/w/e/R/d/H
+         * wtpManufactureDate(20)/DisplayString/ASN_OCTET_STR/char(char)//L/A/w/e/R/d/H
          */
    char   wtpManufactureDate[255];
 size_t      wtpManufactureDate_len; /* # of char elements, not bytes */
     
         /*
-         * wtpForwardMode(27)/INTEGER/ASN_INTEGER/long(u_long)//l/A/w/E/r/d/h
+         * wtpForwardMode(21)/INTEGER/ASN_INTEGER/long(u_long)//l/A/w/E/r/d/h
          */
    u_long   wtpForwardMode;
+    
+        
     
 } dot11WtpInfoTable_data;
 
@@ -281,6 +283,10 @@ typedef struct dot11WtpInfoTable_ref_rowreq_ctx_s {
  */
     int dot11WtpInfoTable_pre_request(dot11WtpInfoTable_registration_ptr user_context);
     int dot11WtpInfoTable_post_request(dot11WtpInfoTable_registration_ptr user_context);
+
+    int dot11WtpInfoTable_rowreq_ctx_init(dot11WtpInfoTable_rowreq_ctx *rowreq_ctx,
+                                   void *user_init_ctx);
+    void dot11WtpInfoTable_rowreq_ctx_cleanup(dot11WtpInfoTable_rowreq_ctx *rowreq_ctx);
 
     int dot11WtpInfoTable_check_dependencies(dot11WtpInfoTable_rowreq_ctx * rowreq_ctx); 
     int dot11WtpInfoTable_commit(dot11WtpInfoTable_rowreq_ctx * rowreq_ctx);

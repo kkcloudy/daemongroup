@@ -80,7 +80,48 @@ extern "C" {
     int acIfOutBroadcastPkts_get( dot11AcIfCapabilityTable_rowreq_ctx *rowreq_ctx, u_long * acIfOutBroadcastPkts_val_ptr );
     int acUplinkKbyteRate_get( dot11AcIfCapabilityTable_rowreq_ctx *rowreq_ctx, u_long * acUplinkKbyteRate_val_ptr );
     int acDownlinkKbyteRate_get( dot11AcIfCapabilityTable_rowreq_ctx *rowreq_ctx, u_long * acDownlinkKbyteRate_val_ptr );
-    
+	int acipv6IfInReceivesPkts_map(unsigned long long *mib_acipv6IfInReceivesPkts_val_ptr, unsigned long long raw_acipv6IfInReceivesPkts_val);
+    int acipv6IfInReceivesPkts_get( dot11AcIfCapabilityTable_rowreq_ctx *rowreq_ctx, unsigned long long * acipv6IfInReceivesPkts_val_ptr );
+	int acipv6IfInHdrErrorsPkts_map(unsigned long long *mib_acipv6IfInHdrErrorsPkts_val_ptr, unsigned long long raw_acipv6IfInHdrErrorsPkts_val);
+    int acipv6IfInHdrErrorsPkts_get( dot11AcIfCapabilityTable_rowreq_ctx *rowreq_ctx, unsigned long long * acipv6IfInHdrErrorsPkts_val_ptr );
+	int acipv6IfInTooBigErrorsPkts_map(unsigned long long *mib_acipv6IfInTooBigErrorsPkts_val_ptr, unsigned long long raw_acipv6IfInTooBigErrorsPkts_val);
+    int acipv6IfInTooBigErrorsPkts_get( dot11AcIfCapabilityTable_rowreq_ctx *rowreq_ctx, unsigned long long * acipv6IfInTooBigErrorsPkts_val_ptr );
+	int acipv6IfInNoRoutesPkts_map(unsigned long long *mib_acipv6IfInNoRoutesPkts_val_ptr, unsigned long long raw_acipv6IfInNoRoutesPkts_val);
+    int acipv6IfInNoRoutesPkts_get( dot11AcIfCapabilityTable_rowreq_ctx *rowreq_ctx, unsigned long long * acipv6IfInNoRoutesPkts_val_ptr );
+	int acipv6IfInAddrErrorsPkts_map(unsigned long long *mib_acipv6IfInAddrErrorsPkts_val_ptr, unsigned long long raw_acipv6IfInAddrErrorsPkts_val);
+    int acipv6IfInAddrErrorsPkts_get( dot11AcIfCapabilityTable_rowreq_ctx *rowreq_ctx, unsigned long long * acipv6IfInAddrErrorsPkts_val_ptr );
+	int acipv6IfInUnknownProtosPkts_map(unsigned long long *mib_acipv6IfInUnknownProtosPkts_val_ptr, unsigned long long raw_acipv6IfInUnknownProtosPkts_val);
+    int acipv6IfInUnknownProtosPkts_get( dot11AcIfCapabilityTable_rowreq_ctx *rowreq_ctx, unsigned long long * acipv6IfInUnknownProtosPkts_val_ptr );
+	int acipv6IfInTruncatedPkts_map(unsigned long long *mib_acipv6IfInTruncatedPkts_val_ptr, unsigned long long raw_acipv6IfInTruncatedPkts_val);
+    int acipv6IfInTruncatedPkts_get( dot11AcIfCapabilityTable_rowreq_ctx *rowreq_ctx, unsigned long long * acipv6IfInTruncatedPkts_val_ptr );
+	int acipv6IfInDiscardsPkts_map(unsigned long long *mib_acipv6IfInDiscardsPkts_val_ptr, unsigned long long raw_acipv6IfInDiscardsPkts_val);
+    int acipv6IfInDiscardsPkts_get( dot11AcIfCapabilityTable_rowreq_ctx *rowreq_ctx, unsigned long long * acipv6IfInDiscardsPkts_val_ptr );
+	int acipv6IfInDeliversPkts_map(unsigned long long *mib_acipv6IfInDeliversPkts_val_ptr, unsigned long long raw_acipv6IfInDeliversPkts_val);
+    int acipv6IfInDeliversPkts_get( dot11AcIfCapabilityTable_rowreq_ctx *rowreq_ctx, unsigned long long * acipv6IfInDeliversPkts_val_ptr );
+	int acipv6IfOutForwDatagramsPkts_map(unsigned long long *mib_acipv6IfOutForwDatagramsPkts_val_ptr, unsigned long long raw_acipv6IfOutForwDatagramsPkts_val);
+    int acipv6IfOutForwDatagramsPkts_get( dot11AcIfCapabilityTable_rowreq_ctx *rowreq_ctx, unsigned long long * acipv6IfOutForwDatagramsPkts_val_ptr );
+	int acipv6IfOutRequestsPkts_map(unsigned long long *mib_acipv6IfOutRequestsPkts_val_ptr, unsigned long long raw_acipv6IfOutRequestsPkts_val);
+    int acipv6IfOutRequestsPkts_get( dot11AcIfCapabilityTable_rowreq_ctx *rowreq_ctx, unsigned long long * acipv6IfOutRequestsPkts_val_ptr );
+	int acipv6IfOutDiscardsPkts_map(unsigned long long *mib_acipv6IfOutDiscardsPkts_val_ptr, unsigned long long raw_acipv6IfOutDiscardsPkts_val);
+    int acipv6IfOutDiscardsPkts_get( dot11AcIfCapabilityTable_rowreq_ctx *rowreq_ctx, unsigned long long * acipv6IfOutDiscardsPkts_val_ptr );
+	int acipv6IfOutFragOKsPkts_map(unsigned long long *mib_acipv6IfOutFragOKsPkts_val_ptr, unsigned long long raw_acipv6IfOutFragOKsPkts_val);
+    int acipv6IfOutFragOKsPkts_get( dot11AcIfCapabilityTable_rowreq_ctx *rowreq_ctx, unsigned long long * acipv6IfOutFragOKsPkts_val_ptr );
+	int acipv6IfOutFragFailsPkts_map(unsigned long long *mib_acipv6IfOutFragFailsPkts_val_ptr, unsigned long long raw_acipv6IfOutFragFailsPkts_val);
+    int acipv6IfOutFragFailsPkts_get( dot11AcIfCapabilityTable_rowreq_ctx *rowreq_ctx, unsigned long long * acipv6IfOutFragFailsPkts_val_ptr );
+	int acipv6IfOutFragCreatesPkts_map(unsigned long long *mib_acipv6IfOutFragCreatesPkts_val_ptr, unsigned long long raw_acipv6IfOutFragCreatesPkts_val);
+    int acipv6IfOutFragCreatesPkts_get( dot11AcIfCapabilityTable_rowreq_ctx *rowreq_ctx, unsigned long long * acipv6IfOutFragCreatesPkts_val_ptr );
+	int acipv6IfReasmReqdsPkts_map(unsigned long long *mib_acipv6IfReasmReqdsPkts_val_ptr, unsigned long long raw_acipv6IfReasmReqdsPkts_val);
+    int acipv6IfReasmReqdsPkts_get( dot11AcIfCapabilityTable_rowreq_ctx *rowreq_ctx, unsigned long long * acipv6IfReasmReqdsPkts_val_ptr );
+	int acipv6IfReasmOKsPkts_map(unsigned long long *mib_acipv6IfReasmOKsPkts_val_ptr, unsigned long long raw_acipv6IfReasmOKsPkts_val);
+    int acipv6IfReasmOKsPkts_get( dot11AcIfCapabilityTable_rowreq_ctx *rowreq_ctx, unsigned long long * acipv6IfReasmOKsPkts_val_ptr );
+	int acipv6IfReasmFailsPkts_map(unsigned long long *mib_acipv6IfReasmFailsPkts_val_ptr, unsigned long long raw_acipv6IfReasmFailsPkts_val);
+    int acipv6IfReasmFailsPkts_get( dot11AcIfCapabilityTable_rowreq_ctx *rowreq_ctx, unsigned long long * acipv6IfReasmFailsPkts_val_ptr );
+	int acipv6IfInMcastPkts_map(unsigned long long *mib_acipv6IfInMcastPkts_val_ptr, unsigned long long raw_acipv6IfInMcastPkts_val);
+    int acipv6IfInMcastPkts_get( dot11AcIfCapabilityTable_rowreq_ctx *rowreq_ctx, unsigned long long * acipv6IfInMcastPkts_val_ptr );
+	int acipv6IfOutMcastPkts_map(unsigned long long *mib_acipv6IfOutMcastPkts_val_ptr, unsigned long long raw_acipv6IfOutMcastPkts_val);
+    int acipv6IfOutMcastPkts_get( dot11AcIfCapabilityTable_rowreq_ctx *rowreq_ctx, unsigned long long * acipv6IfOutMcastPkts_val_ptr );
+
+
 int dot11AcIfCapabilityTable_indexes_set_tbl_idx(dot11AcIfCapabilityTable_mib_index *tbl_idx, long ifIndex_val);
 int dot11AcIfCapabilityTable_indexes_set(dot11AcIfCapabilityTable_rowreq_ctx *rowreq_ctx, long ifIndex_val);
 

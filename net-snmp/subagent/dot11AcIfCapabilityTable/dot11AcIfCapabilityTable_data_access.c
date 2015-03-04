@@ -542,6 +542,8 @@ dot11AcIfCapabilityTable_cache_load(netsnmp_container *container)
 	unsigned int if_num = 0;
 	struct if_stats_list *if_stats_array = NULL;
 	int i = 0;	
+
+	system("show_intf_ipv6.sh >/dev/null");//lilong add 2014.2.8
 	
 	if (intf_flow_info.sockfd > 0) 
 	{
@@ -770,6 +772,159 @@ dot11AcIfCapabilityTable_cache_load(netsnmp_container *container)
 				 
 				rowreq_ctx->data.acDownlinkRate = txsample;
 				
+				 
+				rowreq_ctx->data.acipv6IfInReceivesPkts = if_stats_array[i].stats.Ip6InReceives;
+                
+                /*
+                 * setup/save data for acipv6IfInHdrErrorsPkts
+                 * acipv6IfInHdrErrorsPkts(22)/COUNTER64/ASN_COUNTER64/U64(U64)//l/A/w/e/r/d/h
+                 */
+                /** no mapping */
+                rowreq_ctx->data.acipv6IfInHdrErrorsPkts = if_stats_array[i].stats.Ip6InHdrErrors;
+                
+
+                /*
+                 * setup/save data for acipv6IfInTooBigErrorsPkts
+                 * acipv6IfInTooBigErrorsPkts(23)/COUNTER64/ASN_COUNTER64/U64(U64)//l/A/w/e/r/d/h
+                 */
+                /** no mapping */
+                rowreq_ctx->data.acipv6IfInTooBigErrorsPkts = if_stats_array[i].stats.Ip6InTooBigErrors;
+                
+                /*
+                 * setup/save data for acipv6IfInNoRoutesPkts
+                 * acipv6IfInNoRoutesPkts(24)/COUNTER64/ASN_COUNTER64/U64(U64)//l/A/w/e/r/d/h
+                 */
+                /** no mapping */
+                rowreq_ctx->data.acipv6IfInNoRoutesPkts = if_stats_array[i].stats.Ip6InNoRoutes;
+                
+
+                /*
+                 * setup/save data for acipv6IfInAddrErrorsPkts
+                 * acipv6IfInAddrErrorsPkts(25)/COUNTER64/ASN_COUNTER64/U64(U64)//l/A/w/e/r/d/h
+                 */
+                /** no mapping */
+                rowreq_ctx->data.acipv6IfInAddrErrorsPkts = if_stats_array[i].stats.Ip6InAddrErrors;
+                
+
+                /*
+                 * setup/save data for acipv6IfInUnknownProtosPkts
+                 * acipv6IfInUnknownProtosPkts(26)/COUNTER64/ASN_COUNTER64/U64(U64)//l/A/w/e/r/d/h
+                 */
+                /** no mapping */
+                rowreq_ctx->data.acipv6IfInUnknownProtosPkts = if_stats_array[i].stats.Ip6InUnknownProtos;
+                
+                /*
+                 * setup/save data for acipv6IfInTruncatedPkts
+                 * acipv6IfInTruncatedPkts(27)/COUNTER64/ASN_COUNTER64/U64(U64)//l/A/w/e/r/d/h
+                 */
+                /** no mapping */
+                rowreq_ctx->data.acipv6IfInTruncatedPkts = if_stats_array[i].stats.Ip6InTruncatedPkts;
+                
+
+                /*
+                 * setup/save data for acipv6IfInDiscardsPkts
+                 * acipv6IfInDiscardsPkts(28)/COUNTER64/ASN_COUNTER64/U64(U64)//l/A/w/e/r/d/h
+                 */
+                /** no mapping */
+                rowreq_ctx->data.acipv6IfInDiscardsPkts = if_stats_array[i].stats.Ip6InDiscards;
+                
+
+                /*
+                 * setup/save data for acipv6IfInDeliversPkts
+                 * acipv6IfInDeliversPkts(29)/COUNTER64/ASN_COUNTER64/U64(U64)//l/A/w/e/r/d/h
+                 */
+                /** no mapping */
+                rowreq_ctx->data.acipv6IfInDeliversPkts = if_stats_array[i].stats.Ip6InDelivers;
+                
+
+                /*
+                 * setup/save data for acipv6IfOutForwDatagramsPkts
+                 * acipv6IfOutForwDatagramsPkts(30)/COUNTER64/ASN_COUNTER64/U64(U64)//l/A/w/e/r/d/h
+                 */
+                /** no mapping */
+                rowreq_ctx->data.acipv6IfOutForwDatagramsPkts = if_stats_array[i].stats.Ip6OutForwDatagrams;
+                
+
+                /*
+                 * setup/save data for acipv6IfOutRequestsPkts
+                 * acipv6IfOutRequestsPkts(31)/COUNTER64/ASN_COUNTER64/U64(U64)//l/A/w/e/r/d/h
+                 */
+                /** no mapping */
+                rowreq_ctx->data.acipv6IfOutRequestsPkts = if_stats_array[i].stats.Ip6OutRequests;
+                
+
+                /*
+                 * setup/save data for acipv6IfOutDiscardsPkts
+                 * acipv6IfOutDiscardsPkts(32)/COUNTER64/ASN_COUNTER64/U64(U64)//l/A/w/e/r/d/h
+                 */
+                /** no mapping */
+                rowreq_ctx->data.acipv6IfOutDiscardsPkts = if_stats_array[i].stats.Ip6OutDiscards;
+                
+
+                /*
+                 * setup/save data for acipv6IfOutFragOKsPkts
+                 * acipv6IfOutFragOKsPkts(33)/COUNTER64/ASN_COUNTER64/U64(U64)//l/A/w/e/r/d/h
+                 */
+                /** no mapping */
+                rowreq_ctx->data.acipv6IfOutFragOKsPkts = if_stats_array[i].stats.Ip6FragOKs;
+                
+
+                /*
+                 * setup/save data for acipv6IfOutFragFailsPkts
+                 * acipv6IfOutFragFailsPkts(34)/COUNTER64/ASN_COUNTER64/U64(U64)//l/A/w/e/r/d/h
+                 */
+                /** no mapping */
+                rowreq_ctx->data.acipv6IfOutFragFailsPkts = if_stats_array[i].stats.Ip6FragFails;
+               
+
+                /*
+                 * setup/save data for acipv6IfOutFragCreatesPkts
+                 * acipv6IfOutFragCreatesPkts(35)/COUNTER64/ASN_COUNTER64/U64(U64)//l/A/w/e/r/d/h
+                 */
+                /** no mapping */
+                rowreq_ctx->data.acipv6IfOutFragCreatesPkts = if_stats_array[i].stats.Ip6FragCreates;
+                
+                
+                /*
+                 * setup/save data for acipv6IfReasmReqdsPkts
+                 * acipv6IfReasmReqdsPkts(36)/COUNTER64/ASN_COUNTER64/U64(U64)//l/A/w/e/r/d/h
+                 */
+                /** no mapping */
+                rowreq_ctx->data.acipv6IfReasmReqdsPkts = if_stats_array[i].stats.Ip6ReasmReqds;
+                
+                
+                /*
+                 * setup/save data for acipv6IfReasmOKsPkts
+                 * acipv6IfReasmOKsPkts(37)/COUNTER64/ASN_COUNTER64/U64(U64)//l/A/w/e/r/d/h
+                 */
+                /** no mapping */
+                rowreq_ctx->data.acipv6IfReasmOKsPkts = if_stats_array[i].stats.Ip6ReasmOKs;
+                
+                
+                /*
+                 * setup/save data for acipv6IfReasmFailsPkts
+                 * acipv6IfReasmFailsPkts(38)/COUNTER64/ASN_COUNTER64/U64(U64)//l/A/w/e/r/d/h
+                 */
+                /** no mapping */
+                rowreq_ctx->data.acipv6IfReasmFailsPkts = if_stats_array[i].stats.Ip6ReasmFails;
+                
+                
+                /*
+                 * setup/save data for acipv6IfInMcastPkts
+                 * acipv6IfInMcastPkts(39)/COUNTER64/ASN_COUNTER64/U64(U64)//l/A/w/e/r/d/h
+                 */
+                /** no mapping */
+                rowreq_ctx->data.acipv6IfInMcastPkts = if_stats_array[i].stats.Ip6InMcastPkts;
+                
+                
+                /*
+                 * setup/save data for acipv6IfOutMcastPkts
+                 * acipv6IfOutMcastPkts(40)/COUNTER64/ASN_COUNTER64/U64(U64)//l/A/w/e/r/d/h
+                 */
+                /** no mapping */
+                rowreq_ctx->data.acipv6IfOutMcastPkts = if_stats_array[i].stats.Ip6OutMcastPkts;
+                
+            				
 				
 				rowreq_ctx->data.acBandwidthUsage = (((rxsample)+(txsample))*8*100)/(1000*1024*1024);
 				
@@ -1230,6 +1385,162 @@ dot11AcIfCapabilityTable_cache_load(netsnmp_container *container)
 	     */
 	     
             rowreq_ctx->data.acDownlinkRate = txsample;
+			
+			
+			rowreq_ctx->data.acipv6IfInReceivesPkts.high = acipv6IfInReceivesPkts.high;
+    rowreq_ctx->data.acipv6IfInReceivesPkts.low = acipv6IfInReceivesPkts.low;
+    
+    /*
+     * setup/save data for acipv6IfInHdrErrorsPkts
+     * acipv6IfInHdrErrorsPkts(22)/COUNTER64/ASN_COUNTER64/U64(U64)//l/A/w/e/r/d/h
+     */
+    /** no mapping */
+    rowreq_ctx->data.acipv6IfInHdrErrorsPkts.high = acipv6IfInHdrErrorsPkts.high;
+    rowreq_ctx->data.acipv6IfInHdrErrorsPkts.low = acipv6IfInHdrErrorsPkts.low;
+    
+    /*
+     * setup/save data for acipv6IfInTooBigErrorsPkts
+     * acipv6IfInTooBigErrorsPkts(23)/COUNTER64/ASN_COUNTER64/U64(U64)//l/A/w/e/r/d/h
+     */
+    /** no mapping */
+    rowreq_ctx->data.acipv6IfInTooBigErrorsPkts.high = acipv6IfInTooBigErrorsPkts.high;
+    rowreq_ctx->data.acipv6IfInTooBigErrorsPkts.low = acipv6IfInTooBigErrorsPkts.low;
+    
+    /*
+     * setup/save data for acipv6IfInNoRoutesPkts
+     * acipv6IfInNoRoutesPkts(24)/COUNTER64/ASN_COUNTER64/U64(U64)//l/A/w/e/r/d/h
+     */
+    /** no mapping */
+    rowreq_ctx->data.acipv6IfInNoRoutesPkts.high = acipv6IfInNoRoutesPkts.high;
+    rowreq_ctx->data.acipv6IfInNoRoutesPkts.low = acipv6IfInNoRoutesPkts.low;
+    
+    /*
+     * setup/save data for acipv6IfInAddrErrorsPkts
+     * acipv6IfInAddrErrorsPkts(25)/COUNTER64/ASN_COUNTER64/U64(U64)//l/A/w/e/r/d/h
+     */
+    /** no mapping */
+    rowreq_ctx->data.acipv6IfInAddrErrorsPkts.high = acipv6IfInAddrErrorsPkts.high;
+    rowreq_ctx->data.acipv6IfInAddrErrorsPkts.low = acipv6IfInAddrErrorsPkts.low;
+    
+    /*
+     * setup/save data for acipv6IfInUnknownProtosPkts
+     * acipv6IfInUnknownProtosPkts(26)/COUNTER64/ASN_COUNTER64/U64(U64)//l/A/w/e/r/d/h
+     */
+    /** no mapping */
+    rowreq_ctx->data.acipv6IfInUnknownProtosPkts.high = acipv6IfInUnknownProtosPkts.high;
+    rowreq_ctx->data.acipv6IfInUnknownProtosPkts.low = acipv6IfInUnknownProtosPkts.low;
+    
+    /*
+     * setup/save data for acipv6IfInTruncatedPkts
+     * acipv6IfInTruncatedPkts(27)/COUNTER64/ASN_COUNTER64/U64(U64)//l/A/w/e/r/d/h
+     */
+    /** no mapping */
+    rowreq_ctx->data.acipv6IfInTruncatedPkts.high = acipv6IfInTruncatedPkts.high;
+    rowreq_ctx->data.acipv6IfInTruncatedPkts.low = acipv6IfInTruncatedPkts.low;
+    
+    /*
+     * setup/save data for acipv6IfInDiscardsPkts
+     * acipv6IfInDiscardsPkts(28)/COUNTER64/ASN_COUNTER64/U64(U64)//l/A/w/e/r/d/h
+     */
+    /** no mapping */
+    rowreq_ctx->data.acipv6IfInDiscardsPkts.high = acipv6IfInDiscardsPkts.high;
+    rowreq_ctx->data.acipv6IfInDiscardsPkts.low = acipv6IfInDiscardsPkts.low;
+    
+    /*
+     * setup/save data for acipv6IfInDeliversPkts
+     * acipv6IfInDeliversPkts(29)/COUNTER64/ASN_COUNTER64/U64(U64)//l/A/w/e/r/d/h
+     */
+    /** no mapping */
+    rowreq_ctx->data.acipv6IfInDeliversPkts.high = acipv6IfInDeliversPkts.high;
+    rowreq_ctx->data.acipv6IfInDeliversPkts.low = acipv6IfInDeliversPkts.low;
+    
+    /*
+     * setup/save data for acipv6IfOutForwDatagramsPkts
+     * acipv6IfOutForwDatagramsPkts(30)/COUNTER64/ASN_COUNTER64/U64(U64)//l/A/w/e/r/d/h
+     */
+    /** no mapping */
+    rowreq_ctx->data.acipv6IfOutForwDatagramsPkts.high = acipv6IfOutForwDatagramsPkts.high;
+    rowreq_ctx->data.acipv6IfOutForwDatagramsPkts.low = acipv6IfOutForwDatagramsPkts.low;
+    
+    /*
+     * setup/save data for acipv6IfOutRequestsPkts
+     * acipv6IfOutRequestsPkts(31)/COUNTER64/ASN_COUNTER64/U64(U64)//l/A/w/e/r/d/h
+     */
+    /** no mapping */
+    rowreq_ctx->data.acipv6IfOutRequestsPkts.high = acipv6IfOutRequestsPkts.high;
+    rowreq_ctx->data.acipv6IfOutRequestsPkts.low = acipv6IfOutRequestsPkts.low;
+    
+    /*
+     * setup/save data for acipv6IfOutDiscardsPkts
+     * acipv6IfOutDiscardsPkts(32)/COUNTER64/ASN_COUNTER64/U64(U64)//l/A/w/e/r/d/h
+     */
+    /** no mapping */
+    rowreq_ctx->data.acipv6IfOutDiscardsPkts.high = acipv6IfOutDiscardsPkts.high;
+    rowreq_ctx->data.acipv6IfOutDiscardsPkts.low = acipv6IfOutDiscardsPkts.low;
+    
+    /*
+     * setup/save data for acipv6IfOutFragOKsPkts
+     * acipv6IfOutFragOKsPkts(33)/COUNTER64/ASN_COUNTER64/U64(U64)//l/A/w/e/r/d/h
+     */
+    /** no mapping */
+    rowreq_ctx->data.acipv6IfOutFragOKsPkts.high = acipv6IfOutFragOKsPkts.high;
+    rowreq_ctx->data.acipv6IfOutFragOKsPkts.low = acipv6IfOutFragOKsPkts.low;
+    
+    /*
+     * setup/save data for acipv6IfOutFragFailsPkts
+     * acipv6IfOutFragFailsPkts(34)/COUNTER64/ASN_COUNTER64/U64(U64)//l/A/w/e/r/d/h
+     */
+    /** no mapping */
+    rowreq_ctx->data.acipv6IfOutFragFailsPkts.high = acipv6IfOutFragFailsPkts.high;
+    rowreq_ctx->data.acipv6IfOutFragFailsPkts.low = acipv6IfOutFragFailsPkts.low;
+    
+    /*
+     * setup/save data for acipv6IfOutFragCreatesPkts
+     * acipv6IfOutFragCreatesPkts(35)/COUNTER64/ASN_COUNTER64/U64(U64)//l/A/w/e/r/d/h
+     */
+    /** no mapping */
+    rowreq_ctx->data.acipv6IfOutFragCreatesPkts.high = acipv6IfOutFragCreatesPkts.high;
+    rowreq_ctx->data.acipv6IfOutFragCreatesPkts.low = acipv6IfOutFragCreatesPkts.low;
+    
+    /*
+     * setup/save data for acipv6IfReasmReqdsPkts
+     * acipv6IfReasmReqdsPkts(36)/COUNTER64/ASN_COUNTER64/U64(U64)//l/A/w/e/r/d/h
+     */
+    /** no mapping */
+    rowreq_ctx->data.acipv6IfReasmReqdsPkts.high = acipv6IfReasmReqdsPkts.high;
+    rowreq_ctx->data.acipv6IfReasmReqdsPkts.low = acipv6IfReasmReqdsPkts.low;
+    
+    /*
+     * setup/save data for acipv6IfReasmOKsPkts
+     * acipv6IfReasmOKsPkts(37)/COUNTER64/ASN_COUNTER64/U64(U64)//l/A/w/e/r/d/h
+     */
+    /** no mapping */
+    rowreq_ctx->data.acipv6IfReasmOKsPkts.high = acipv6IfReasmOKsPkts.high;
+    rowreq_ctx->data.acipv6IfReasmOKsPkts.low = acipv6IfReasmOKsPkts.low;
+    
+    /*
+     * setup/save data for acipv6IfReasmFailsPkts
+     * acipv6IfReasmFailsPkts(38)/COUNTER64/ASN_COUNTER64/U64(U64)//l/A/w/e/r/d/h
+     */
+    /** no mapping */
+    rowreq_ctx->data.acipv6IfReasmFailsPkts.high = acipv6IfReasmFailsPkts.high;
+    rowreq_ctx->data.acipv6IfReasmFailsPkts.low = acipv6IfReasmFailsPkts.low;
+    
+    /*
+     * setup/save data for acipv6IfInMcastPkts
+     * acipv6IfInMcastPkts(39)/COUNTER64/ASN_COUNTER64/U64(U64)//l/A/w/e/r/d/h
+     */
+    /** no mapping */
+    rowreq_ctx->data.acipv6IfInMcastPkts.high = acipv6IfInMcastPkts.high;
+    rowreq_ctx->data.acipv6IfInMcastPkts.low = acipv6IfInMcastPkts.low;
+    
+    /*
+     * setup/save data for acipv6IfOutMcastPkts
+     * acipv6IfOutMcastPkts(40)/COUNTER64/ASN_COUNTER64/U64(U64)//l/A/w/e/r/d/h
+     */
+    /** no mapping */
+    rowreq_ctx->data.acipv6IfOutMcastPkts.high = acipv6IfOutMcastPkts.high;
+    rowreq_ctx->data.acipv6IfOutMcastPkts.low = acipv6IfOutMcastPkts.low;
 
 
             rowreq_ctx->data.acBandwidthUsage = (((rxsample)+(txsample))*8*100)/(1000*1024*1024);

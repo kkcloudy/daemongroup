@@ -88,6 +88,9 @@ dbus_parameter dot11AcPara_parameter = { 0 };
 #define	ACSNMPPORT				"2.2.17"
 #define SYSGWADDR				"2.2.18"
 #define TRAPPORT                "2.2.19"
+#define ACIPV6ADDRESS			"2.2.20"
+#define ACIPV6PREFIX            "2.2.21"
+#define ACIPV6TYPE				"2.2.22" 
 void
 init_dot11AcPara(void)
 {
@@ -110,7 +113,9 @@ init_dot11AcPara(void)
 	static oid acSNMPPort_oid[128]				= { 0 };
 	static oid SysGWAddr_oid[128] 				= { 0};
 	static oid acTrapPort_oid[128]                  = { 0 };
-
+    static oid acIpv6Address_oid[128] 			= {0};
+	static oid acIpv6Prefix_oid[128]            = { 0 };
+    static oid acIpv6type_oid[128]              = { 0 };
     size_t public_oid_len   = 0;
 	mad_dev_oid(acIpAddress_oid,ACIPADDRESS,&public_oid_len,enterprise_pvivate_oid);
 	mad_dev_oid(acNetMask_oid,ACNETMASK,&public_oid_len,enterprise_pvivate_oid);
@@ -131,7 +136,9 @@ init_dot11AcPara(void)
 	mad_dev_oid(acSNMPPort_oid,ACSNMPPORT,&public_oid_len,enterprise_pvivate_oid);
 	mad_dev_oid(SysGWAddr_oid,SYSGWADDR,&public_oid_len,enterprise_pvivate_oid);
 	mad_dev_oid(acTrapPort_oid,TRAPPORT,&public_oid_len,enterprise_pvivate_oid);
-
+	mad_dev_oid(acIpv6Address_oid,ACIPV6ADDRESS,&public_oid_len,enterprise_pvivate_oid);
+	mad_dev_oid(acIpv6Prefix_oid,ACIPV6PREFIX,&public_oid_len,enterprise_pvivate_oid);
+	mad_dev_oid(acIpv6type_oid,ACIPV6TYPE,&public_oid_len,enterprise_pvivate_oid);
   DEBUGMSGTL(("dot11AcPara", "Initializing\n"));
 
     netsnmp_register_scalar(
@@ -227,6 +234,21 @@ init_dot11AcPara(void)
 	netsnmp_register_scalar(
         netsnmp_create_handler_registration("acTrapPort", handle_acTrapPort,
                                acTrapPort_oid, public_oid_len,
+                               HANDLER_CAN_RONLY
+        ));
+	netsnmp_register_scalar(
+        netsnmp_create_handler_registration("acIpv6Address", handle_acIpv6Address,
+                               acIpv6Address_oid, public_oid_len,
+                               HANDLER_CAN_RONLY
+        ));
+	netsnmp_register_scalar(
+        netsnmp_create_handler_registration("acIpv6Prefix", handle_acIpv6Prefix,
+                               acIpv6Prefix_oid, public_oid_len,
+                               HANDLER_CAN_RONLY
+        ));
+    netsnmp_register_scalar(
+        netsnmp_create_handler_registration("acIpv6type", handle_acIpv6type,
+                               acIpv6type_oid, public_oid_len,
                                HANDLER_CAN_RONLY
         ));
 }
@@ -1623,3 +1645,119 @@ handle_acTrapPort(netsnmp_mib_handler *handler,
 	snmp_log(LOG_DEBUG, "exit handle_acTrapPort\n");
 	return SNMP_ERR_NOERROR;
 }
+int
+handle_acIpv6Address(netsnmp_mib_handler *handler,
+                          netsnmp_handler_registration *reginfo,
+                          netsnmp_agent_request_info   *reqinfo,
+                          netsnmp_request_info         *requests)
+{
+    /* We are never called for a GETNEXT if it's registered as a
+       "instance", as it's "magically" handled for us.  */
+
+    /* a instance handler also only hands us one request at a time, so
+       we don't need to loop over a list of requests; we'll only get one. */
+    snmp_log(LOG_DEBUG, "enter handle_acIpv6Address\n");
+    char acIpv6Address[256] = {0};
+	memset(acIpv6Address,0,256);
+    switch(reqinfo->mode) {
+
+        case MODE_GET:
+		{		
+			infi  interf,*q = NULL;
+
+			interface_list_ioctl(1, &interf);
+			for(q = interf.next; NULL != q; q = q->next) {
+				
+				if((strcmp(q->if_name,"ve01f1.100")==0)&&(strncmp(q->if_addr,"fe80:",5)==0)){
+					snmp_log(LOG_DEBUG, "11111111111111111111111acIpv6Address:%s\n",q->if_addr);
+					strncpy(acIpv6Address,q->if_addr,sizeof(acIpv6Address)-1);
+					break;
+				}
+			}
+			free_inf(&interf);
+			
+			snmp_set_var_typed_value(requests->requestvb, ASN_OCTET_STR,
+										(u_char *)acIpv6Address,
+										sizeof(acIpv6Address));
+										
+		}
+		break;
+    
+        default:
+            /* we should never get here, so this is a really bad error */
+            snmp_log(LOG_ERR, "unknown mode (%d) in handle_acIpv6Address\n", reqinfo->mode );
+            return SNMP_ERR_GENERR;
+    }
+    snmp_log(LOG_DEBUG, "exit handle_acIpv6Address\n");
+    return SNMP_ERR_NOERROR;
+}
+
+
+int
+handle_acIpv6Prefix(netsnmp_mib_handler *handler,
+                          netsnmp_handler_registration *reginfo,
+                          netsnmp_agent_request_info   *reqinfo,
+                          netsnmp_request_info         *requests)
+{
+    /* We are never called for a GETNEXT if it's registered as a
+       "instance", as it's "magically" handled for us.  */
+
+    /* a instance handler also only hands us one request at a time, so
+       we don't need to loop over a list of requests; we'll only get one. */
+    
+    switch(reqinfo->mode) {
+
+        case MODE_GET:
+		{
+		    char *acipv6prefix = "fe80::21f:64ff";
+            snmp_set_var_typed_value(requests->requestvb, ASN_OCTET_STR,
+                                     (u_char *)acipv6prefix, 
+                                      strlen(acipv6prefix));
+		}
+        break;
+
+
+        default:
+            /* we should never get here, so this is a really bad error */
+            snmp_log(LOG_ERR, "unknown mode (%d) in handle_acIpv6Prefix\n", reqinfo->mode );
+            return SNMP_ERR_GENERR;
+    }
+
+    return SNMP_ERR_NOERROR;
+}
+int
+handle_acIpv6type(netsnmp_mib_handler *handler,
+                          netsnmp_handler_registration *reginfo,
+                          netsnmp_agent_request_info   *reqinfo,
+                          netsnmp_request_info         *requests)
+{
+    /* We are never called for a GETNEXT if it's registered as a
+       "instance", as it's "magically" handled for us.  */
+
+    /* a instance handler also only hands us one request at a time, so
+       we don't need to loop over a list of requests; we'll only get one. */
+    
+	
+    switch(reqinfo->mode) {
+
+        case MODE_GET:
+        {   
+			char *acipv6type = "link-local address";
+			snmp_set_var_typed_value(requests->requestvb, ASN_OCTET_STR,
+                                     (u_char *)acipv6type, 
+                                    strlen(acipv6type));
+		}
+		
+        break;
+
+
+        default:
+            /* we should never get here, so this is a really bad error */
+            snmp_log(LOG_ERR, "unknown mode (%d) in handle_acIpv6type\n", reqinfo->mode );
+            return SNMP_ERR_GENERR;
+    }
+
+    return SNMP_ERR_NOERROR;
+}
+
+

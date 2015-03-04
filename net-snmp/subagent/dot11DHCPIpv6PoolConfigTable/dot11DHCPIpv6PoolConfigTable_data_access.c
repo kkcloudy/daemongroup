@@ -378,7 +378,12 @@ dot11DHCPIpv6PoolConfigTable_container_load(netsnmp_container *container)
 					/*
 					 * insert into table container
 					 */
-					 
+					 if(pq->range_low_ip)
+				 	 {
+						rowreq_ctx->data.SysIPv6GWAddr_len=MIN(strlen(pq->range_low_ip),sizeof(rowreq_ctx->data.IPv6PoolStartAddr)-1);
+						memcpy( rowreq_ctx->data.SysIPv6GWAddr, pq->range_low_ip, rowreq_ctx->data.IPv6PoolStartAddr_len );
+					 }
+					  
 					if(CONTAINER_INSERT(container, rowreq_ctx)) {
 						    dot11DHCPIpv6PoolConfigTable_release_rowreq_ctx(rowreq_ctx);
 					    }

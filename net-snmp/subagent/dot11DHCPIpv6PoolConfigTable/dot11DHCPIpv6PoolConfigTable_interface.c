@@ -836,6 +836,12 @@ rc = Ipv6LeasePeriod_get(rowreq_ctx, (u_long *)var->val.string );
 rc = Ipv6DHCPRowStatus_get(rowreq_ctx, (u_long *)var->val.string );
         break;
 
+    /* SysIPv6GWAddr(10)/InetAddressIPv6/ASN_OCTET_STR/char(char)//L/A/w/e/R/d/H */
+    case COLUMN_SYSIPV6GWADDR:
+    var->type = ASN_OCTET_STR;
+rc = SysIPv6GWAddr_get(rowreq_ctx, (char **)&var->val.string, &var->val_len );
+        break;
+
      default:
         if (DOT11DHCPIPV6POOLCONFIGTABLE_MIN_COL <= column && column <= DOT11DHCPIPV6POOLCONFIGTABLE_MAX_COL) {
             DEBUGMSGTL(("internal:dot11DHCPIpv6PoolConfigTable:_mfd_dot11DHCPIpv6PoolConfigTable_get_column",
@@ -1182,6 +1188,11 @@ rc = netsnmp_check_vb_rowstatus_value(var);
             rc = SNMP_ERR_GENERR;
         }
     }
+        break;
+
+    /* SysIPv6GWAddr(10)/InetAddressIPv6/ASN_OCTET_STR/char(char)//L/A/w/e/R/d/H */
+    case COLUMN_SYSIPV6GWADDR:
+        rc = SNMP_ERR_NOTWRITABLE;
         break;
 
         default: /** We shouldn't get here */
@@ -2311,6 +2322,11 @@ _dot11DHCPIpv6PoolConfigTable_container_col_save(
             buf += sprintf(buf,"%ld",rowreq_ctx->data.Ipv6DHCPRowStatus);
         break;
     
+        case COLUMN_SYSIPV6GWADDR: /** InetAddressIPv6 = ASN_OCTET_STR */
+            buf = read_config_save_octet_string(buf, rowreq_ctx->data.SysIPv6GWAddr,
+                                                rowreq_ctx->data.SysIPv6GWAddr_len );
+        break;
+    
     default: /** We shouldn't get here */
         snmp_log(LOG_ERR, "unknown column %d in "
                  "_dot11DHCPIpv6PoolConfigTable_container_col_save\n", col);
@@ -2397,6 +2413,13 @@ _dot11DHCPIpv6PoolConfigTable_container_col_restore(
             buf = read_config_read_memory(ASN_INTEGER, buf,
                                           (char*)&rowreq_ctx->data.Ipv6DHCPRowStatus,
                                           &len);
+        break;
+    
+        case COLUMN_SYSIPV6GWADDR: /** InetAddressIPv6 = ASN_OCTET_STR */
+            rowreq_ctx->data.SysIPv6GWAddr_len = sizeof(rowreq_ctx->data.SysIPv6GWAddr);
+            buf = read_config_read_memory(ASN_OCTET_STR,buf,
+                                          (char*)&rowreq_ctx->data.SysIPv6GWAddr,
+                                          (size_t*)&rowreq_ctx->data.SysIPv6GWAddr_len );
         break;
     
     default: /** We shouldn't get here */

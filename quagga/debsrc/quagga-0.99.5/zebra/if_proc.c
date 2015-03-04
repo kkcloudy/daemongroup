@@ -123,6 +123,45 @@ ifstat_dev_fields (int version, char *buf, struct interface *ifp)
   return 0;
 }
 
+/*lilong add 2015.2.8*/
+static int
+ipv6_ifstat_dev_fields (char *buf, struct interface *ifp)
+{
+ 
+  sscanf(buf,
+     "%llu %llu %llu %llu %llu %llu %llu %llu %llu %llu %llu %llu %llu %llu %llu %llu llu %llu %llu %llu %llu %llu %llu %llu %llu %llu %llu %llu",
+     &ifp->stats.Ip6InReceives,                          
+     &ifp->stats.Ip6InHdrErrors,                          
+     &ifp->stats.Ip6InTooBigErrors,                       
+     &ifp->stats.Ip6InNoRoutes,                           
+     &ifp->stats.Ip6InAddrErrors,                         
+     &ifp->stats.Ip6InUnknownProtos,                      
+     &ifp->stats.Ip6InTruncatedPkts,                      
+     &ifp->stats.Ip6InDiscards,                
+     &ifp->stats.Ip6InDelivers,                          
+     &ifp->stats.Ip6OutForwDatagrams,                     
+     &ifp->stats.Ip6OutRequests,                     
+     &ifp->stats.Ip6OutDiscards,                          
+     &ifp->stats.Ip6OutNoRoutes,                          
+     &ifp->stats.Ip6ReasmTimeout,                         
+     &ifp->stats.Ip6ReasmReqds,                         
+     &ifp->stats.Ip6ReasmOKs,                           
+     &ifp->stats.Ip6ReasmFails,                           
+     &ifp->stats.Ip6FragOKs,                           
+     &ifp->stats.Ip6FragFails,                            
+     &ifp->stats.Ip6FragCreates,                          
+     &ifp->stats.Ip6InMcastPkts,                          
+     &ifp->stats.Ip6OutMcastPkts,                         
+     &ifp->stats.Ip6InOctets,                         
+     &ifp->stats.Ip6OutOctets,                            
+     &ifp->stats.Ip6InMcastOctets,                        
+     &ifp->stats.Ip6OutMcastOctets,                       
+     &ifp->stats.Ip6InBcastOctets,                       
+     &ifp->stats.Ip6OutBcastOctets                       
+);
+  
+  return 0;
+}
 /* Update interface's statistics. */
 void
 ifstat_update_proc (void)
@@ -180,6 +219,56 @@ ifstat_update_proc (void)
 				  ||(judge_real_local_interface(ifp->name)==LOCAL_BOARD_INTERFACE))
 
       	ifstat_dev_fields (version, stat, ifp);
+	  else
+	  	continue;
+    }
+  fclose(fp);
+  return;
+}
+/*lilong add 2015.2.8*/
+void
+ipv6_ifstat_update_proc (void)
+{
+  FILE *fp;
+  char buf[PROCBUFSIZ];
+  struct interface *ifp;
+  char *stat;
+  char *name;
+
+  /* Open /proc/net/dev. */
+  fp = fopen ("/var/run/data.txt", "r");
+  if (fp == NULL)
+    {
+      zlog_warn ("Can't open proc file %s: %s",
+		 "/var/run/data.txt", safe_strerror (errno));
+      return;
+    }
+
+  /* Update each interface's statistics. */
+  while (fgets (buf, PROCBUFSIZ, fp) != NULL)
+    {
+      stat = interface_name_cut (buf, &name);
+	  /*gujd : 2013-02-22, pm 4:43. Add code for radio interface info switch.*/
+	  if((memcmp(name,"r",1) == 0)&&(radio_interface_show_enable == 0))
+	  	continue;
+	  	
+      ifp = if_get_by_name (name);
+	  /*judge the local real interface .*/
+	  if((memcmp(ifp->name,"radio",5) == 0) 		  
+				  ||(memcmp(ifp->name,"r",1) == 0)
+				  ||(memcmp(ifp->name,"sit0",4) == 0)
+				  ||(memcmp(ifp->name,"obc0",4) == 0)
+				  ||(memcmp(ifp->name,"obc1",4) == 0)
+				  ||(memcmp(ifp->name,"pimreg",6) == 0)
+				  ||(memcmp(ifp->name,"ppp",3) == 0)
+				  ||(memcmp(ifp->name,"lo",2) == 0)
+				  ||(memcmp(ifp->name,"oct",3) == 0)
+				  ||(judge_ve_interface(ifp->name)==VE_INTERFACE)
+				  ||(judge_eth_debug_interface(ifp->name)==ETH_DEBUG_INTERFACE)
+				  ||(memcmp(ifp->name,"mng",3) == 0)
+				  ||(judge_real_local_interface(ifp->name)==LOCAL_BOARD_INTERFACE))
+
+      	ipv6_ifstat_dev_fields (stat, ifp);
 	  else
 	  	continue;
     }

@@ -1444,9 +1444,9 @@ wtpColdReboot_undo( dot11WtpInfoTable_rowreq_ctx *rowreq_ctx)
 
 /*---------------------------------------------------------------------
  * DOT11-WTP-MIB::dot11WtpInfoEntry.wtplongitude
- * wtplongitude is subid 23 of dot11WtpInfoEntry.
+ * wtplongitude is subid 17 of dot11WtpInfoEntry.
  * Its status is Current, and its access level is ReadWrite.
- * OID: .1.3.6.1.4.1.31656.6.1.1.1.1.1.23
+ * OID: .1.3.6.1.4.1.31656.6.1.1.1.1.1.17
  * Description:
 The location of AP longitude.
  *
@@ -1653,9 +1653,9 @@ wtplongitude_undo( dot11WtpInfoTable_rowreq_ctx *rowreq_ctx)
 
 /*---------------------------------------------------------------------
  * DOT11-WTP-MIB::dot11WtpInfoEntry.wtplatitude
- * wtplatitude is subid 24 of dot11WtpInfoEntry.
+ * wtplatitude is subid 18 of dot11WtpInfoEntry.
  * Its status is Current, and its access level is ReadWrite.
- * OID: .1.3.6.1.4.1.31656.6.1.1.1.1.1.24
+ * OID: .1.3.6.1.4.1.31656.6.1.1.1.1.1.18
  * Description:
 The location of AP latitude.
  *
