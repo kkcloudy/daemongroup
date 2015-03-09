@@ -1657,28 +1657,14 @@ handle_acIpv6Address(netsnmp_mib_handler *handler,
     /* a instance handler also only hands us one request at a time, so
        we don't need to loop over a list of requests; we'll only get one. */
     snmp_log(LOG_DEBUG, "enter handle_acIpv6Address\n");
-    char acIpv6Address[256] = {0};
-	memset(acIpv6Address,0,256);
+    
     switch(reqinfo->mode) {
-
         case MODE_GET:
 		{		
-			infi  interf,*q = NULL;
-
-			interface_list_ioctl(1, &interf);
-			for(q = interf.next; NULL != q; q = q->next) {
-				
-				if((strcmp(q->if_name,"ve01f1.100")==0)&&(strncmp(q->if_addr,"fe80:",5)==0)){
-					snmp_log(LOG_DEBUG, "11111111111111111111111acIpv6Address:%s\n",q->if_addr);
-					strncpy(acIpv6Address,q->if_addr,sizeof(acIpv6Address)-1);
-					break;
-				}
-			}
-			free_inf(&interf);
-			
+			char *acIpv6Address = "fe80::21f:64ff:fe11:599/64";
 			snmp_set_var_typed_value(requests->requestvb, ASN_OCTET_STR,
 										(u_char *)acIpv6Address,
-										sizeof(acIpv6Address));
+										strlen(acIpv6Address));
 										
 		}
 		break;
