@@ -816,7 +816,8 @@ DEFUN(show_radio_list_cmd_func,
 					&&((RADIOINFO->RADIO[i]->Radio_Type&IEEE80211_11N) > 0)
 					&&((RADIOINFO->RADIO[i]->Radio_Type&IEEE80211_11AN) > 0)
 					&&(!(RADIOINFO->RADIO[i]->Radio_Type&IEEE80211_11B))
-					&&(!(RADIOINFO->RADIO[i]->Radio_Type&IEEE80211_11G)))
+					&&(!(RADIOINFO->RADIO[i]->Radio_Type&IEEE80211_11G))
+					&&(!(RADIOINFO->RADIO[i]->Radio_Type&IEEE80211_11AC)))
 				{
 					vty_out(vty,"a/an");	
 				}
@@ -824,10 +825,31 @@ DEFUN(show_radio_list_cmd_func,
 					&&((RADIOINFO->RADIO[i]->Radio_Type&IEEE80211_11N)> 0)
 					&&((RADIOINFO->RADIO[i]->Radio_Type&IEEE80211_11G)>0)
 					&&(!(RADIOINFO->RADIO[i]->Radio_Type&IEEE80211_11B))
-					&&(!(RADIOINFO->RADIO[i]->Radio_Type&IEEE80211_11A)))
+					&&(!(RADIOINFO->RADIO[i]->Radio_Type&IEEE80211_11A))
+					&&(!(RADIOINFO->RADIO[i]->Radio_Type&IEEE80211_11AC)))
 				{	
 					vty_out(vty,"g/gn");
-				}				
+				}
+				else if(((RADIOINFO->RADIO[i]->Radio_Type&IEEE80211_11A) > 0)
+				&&((RADIOINFO->RADIO[i]->Radio_Type&IEEE80211_11N)> 0)
+				&&((RADIOINFO->RADIO[i]->Radio_Type&IEEE80211_11AC)>0)
+				&&(!(RADIOINFO->RADIO[i]->Radio_Type&IEEE80211_11B))
+                &&(!(RADIOINFO->RADIO[i]->Radio_Type&IEEE80211_11G))
+				&&(!(RADIOINFO->RADIO[i]->Radio_Type&IEEE80211_11AN))
+				&&(!(RADIOINFO->RADIO[i]->Radio_Type&IEEE80211_11GN)))
+			{	
+				vty_out(vty,"an/ac");
+			}
+			else if(((RADIOINFO->RADIO[i]->Radio_Type&IEEE80211_11A) > 0)
+				&&((RADIOINFO->RADIO[i]->Radio_Type&IEEE80211_11N)> 0)
+                &&((RADIOINFO->RADIO[i]->Radio_Type&IEEE80211_11AN)>0)
+				&&((RADIOINFO->RADIO[i]->Radio_Type&IEEE80211_11AC)>0)
+				&&(!(RADIOINFO->RADIO[i]->Radio_Type&IEEE80211_11B))
+                &&(!(RADIOINFO->RADIO[i]->Radio_Type&IEEE80211_11G))
+				&&(!(RADIOINFO->RADIO[i]->Radio_Type&IEEE80211_11GN)))
+			{	
+				vty_out(vty,"a/an/ac");
+			}
 				else
 				{
 					if((RADIOINFO->RADIO[i]->Radio_Type&IEEE80211_11A) > 0)
@@ -837,7 +859,9 @@ DEFUN(show_radio_list_cmd_func,
 					if((RADIOINFO->RADIO[i]->Radio_Type&IEEE80211_11G) > 0)
 						vty_out(vty,"g");
 					if((RADIOINFO->RADIO[i]->Radio_Type&IEEE80211_11N) > 0)
-						vty_out(vty,"n");	
+						vty_out(vty,"n");
+					if((RADIOINFO->RADIO[i]->Radio_Type&IEEE80211_11AC) > 0)
+						vty_out(vty,"ac");
 				}
 				/*fengwenchao modify  end*/
 				vty_out(vty,"\n");
@@ -1481,7 +1505,8 @@ DEFUN(show_radio_cmd_func,
 					&&((RADIOINFO->RADIO[0]->Radio_Type&IEEE80211_11N) > 0)
 					&&((RADIOINFO->RADIO[0]->Radio_Type&IEEE80211_11AN) > 0)
 					&&(!(RADIOINFO->RADIO[0]->Radio_Type&IEEE80211_11B))
-					&&(!(RADIOINFO->RADIO[0]->Radio_Type&IEEE80211_11G)))
+					&&(!(RADIOINFO->RADIO[0]->Radio_Type&IEEE80211_11G))
+					&&(!(RADIOINFO->RADIO[0]->Radio_Type&IEEE80211_11AC)))
 				{
 					vty_out(vty,"a/an");
 				}				
@@ -1489,10 +1514,32 @@ DEFUN(show_radio_cmd_func,
 					&&((RADIOINFO->RADIO[0]->Radio_Type&IEEE80211_11N)> 0)
 					&&((RADIOINFO->RADIO[0]->Radio_Type&IEEE80211_11G)>0)
 					&&(!(RADIOINFO->RADIO[0]->Radio_Type&IEEE80211_11B))
-					&&(!(RADIOINFO->RADIO[0]->Radio_Type&IEEE80211_11A)))
+					&&(!(RADIOINFO->RADIO[0]->Radio_Type&IEEE80211_11A))
+					&&(!(RADIOINFO->RADIO[0]->Radio_Type&IEEE80211_11AC)))
 				{	
 					vty_out(vty,"g/gn");
 				}	
+				else if(((RADIOINFO->RADIO[0]->Radio_Type&IEEE80211_11A) > 0)
+					&&((RADIOINFO->RADIO[0]->Radio_Type&IEEE80211_11N)> 0)
+					&&((RADIOINFO->RADIO[0]->Radio_Type&IEEE80211_11AC)>0)
+					&&(!(RADIOINFO->RADIO[0]->Radio_Type&IEEE80211_11B))
+					&&(!(RADIOINFO->RADIO[0]->Radio_Type&IEEE80211_11G))
+					&&(!(RADIOINFO->RADIO[0]->Radio_Type&IEEE80211_11GN))
+					&&(!(RADIOINFO->RADIO[0]->Radio_Type&IEEE80211_11AN)))
+					
+				{	
+					vty_out(vty,"an/ac");
+				}
+				else if(((RADIOINFO->RADIO[0]->Radio_Type&IEEE80211_11A) > 0)
+					&&((RADIOINFO->RADIO[0]->Radio_Type&IEEE80211_11N) > 0)
+					&&((RADIOINFO->RADIO[0]->Radio_Type&IEEE80211_11AN) > 0)
+                    &&((RADIOINFO->RADIO[0]->Radio_Type&IEEE80211_11AC) > 0)
+					&&(!(RADIOINFO->RADIO[0]->Radio_Type&IEEE80211_11B))
+					&&(!(RADIOINFO->RADIO[0]->Radio_Type&IEEE80211_11G))
+					&&(!(RADIOINFO->RADIO[0]->Radio_Type&IEEE80211_11GN)))
+				{	
+					vty_out(vty,"a/an/ac");
+				}
 				else
 				{
 					if((RADIOINFO->RADIO[0]->Radio_Type&IEEE80211_11A) > 0)
@@ -1502,12 +1549,15 @@ DEFUN(show_radio_cmd_func,
 					if((RADIOINFO->RADIO[0]->Radio_Type&IEEE80211_11G) > 0)
 						vty_out(vty,"g");
 					if((RADIOINFO->RADIO[0]->Radio_Type&IEEE80211_11N) > 0)
-						vty_out(vty,"n");	
+						vty_out(vty,"n");
+					if((RADIOINFO->RADIO[0]->Radio_Type&IEEE80211_11AC) > 0)
+						vty_out(vty,"ac");
 				}
 			}
 			/*fengwenchao modify  end*/
 			vty_out(vty,"\n");
-			if((RADIOINFO->RADIO[0]->Radio_Type&IEEE80211_11N)>0){
+			if(((RADIOINFO->RADIO[0]->Radio_Type&IEEE80211_11N)>0)
+				||((RADIOINFO->RADIO[0]->Radio_Type&IEEE80211_11N)>0)){
 			if(RADIOINFO->RADIO[0]->channel_offset == 0)
 				vty_out(vty,"Channel offset:	%s\n","none");
 			if(RADIOINFO->RADIO[0]->channel_offset == -1)
@@ -1566,7 +1616,18 @@ DEFUN(show_radio_cmd_func,
 			else if(RADIOINFO->RADIO[0]->cwmode == 2){
 				vty_out(vty,"cwmode:	ht40\n");
 				}
-			
+			else if(RADIOINFO->RADIO[0]->cwmode == 3)
+			{
+				vty_out(vty, "cwmode:	vht20\n");
+			}
+			else if(RADIOINFO->RADIO[0]->cwmode == 4)
+			{
+				vty_out(vty, "cwmode:	vht40\n");
+			}
+			else if(RADIOINFO->RADIO[0]->cwmode == 5)
+			{
+				vty_out(vty, "cwmode:	vht80\n");
+			}
 			//vty_out(vty,"mcs count %d\n ",RADIOINFO->RADIO[0]->mcs_count);//qiuchen change
 			vty_out(vty,"mcs: ");//qiuchen change
 			for(i=0;i<RADIOINFO->RADIO[0]->mcs_count;i++){
@@ -2174,13 +2235,13 @@ DEFUN(config_radio_cmd_func,
 	  "Radio information\n"
 	  "Radio id format is wtpid-localradioid 1-0 or 5-1\n"
 	 )
-{	int ret;
-	unsigned int radio_id;
+{	int ret = 0;
+	unsigned int radio_id = 0;
 
 	int wtpid = 0;
 	int l_radioid = 4;
 
-	DBusMessage *query, *reply;
+	DBusMessage *query = NULL, *reply = NULL;
 	DBusError err;
 
 	ret = parse_radio_id((char*)argv[0],&wtpid,&l_radioid);
@@ -2189,7 +2250,8 @@ DEFUN(config_radio_cmd_func,
 	{
 		ret = parse_int_ID((char*)argv[0], &radio_id);
 		
-		if(ret != WID_DBUS_SUCCESS){
+		if(ret != WID_DBUS_SUCCESS)
+		{
 
 			vty_out(vty,"<error> error parameter format correct format is wtpid-radioid [1-0][3-1]\n");
 			
@@ -2208,20 +2270,23 @@ DEFUN(config_radio_cmd_func,
 	//	return CMD_SUCCESS;
 	//}
 	
-	if(radio_id > G_RADIO_NUM || radio_id == 0){
-		vty_out(vty,"<error> radio id should be 1-%d\n",G_RADIO_NUM);
-		return CMD_WARNING;
+	if(radio_id > G_RADIO_NUM || radio_id == 0)
+	{
+    	vty_out(vty,"<error> radio id should be 1-%d\n",G_RADIO_NUM);
+    	return CMD_WARNING;
 	}
 	
 	int index = 0;
 	int localid = 1;
     int slot_id = HostSlotId;
-	char BUSNAME[PATH_LEN];
-	char OBJPATH[PATH_LEN];
-	char INTERFACE[PATH_LEN];
-	if(vty->node == CONFIG_NODE){
+	char BUSNAME[PATH_LEN] = {0};
+	char OBJPATH[PATH_LEN] = {0};
+	char INTERFACE[PATH_LEN] = {0};
+	if(vty->node == CONFIG_NODE)
+	{
 		index = 0;
-	}else if(vty->node == HANSI_NODE){
+	}else if(vty->node == HANSI_NODE)
+	{
 		index = vty->index;
 		localid = vty->local;
         slot_id = vty->slotindex;
@@ -2249,7 +2314,8 @@ DEFUN(config_radio_cmd_func,
 	
 	dbus_message_unref(query);
 	
-	if (NULL == reply) {
+	if (NULL == reply) 
+	{
 		cli_syslog_info("<error> failed get reply.\n");
 		if (dbus_error_is_set(&err)) {
 			cli_syslog_info("%s raised: %s",err.name,err.message);
@@ -2307,7 +2373,7 @@ DEFUN(set_radio_channel_cmd_func,
 	int ret2 = CHANNEL_CWMODE_SUCCESS;
 	unsigned short cwmode = 0;
 	char channel_offset = 0;
-	char mode[3][8] = {"ht20","ht20/40","ht40"};
+	char mode[6][8] = {"ht20","ht20/40","ht40","vht20","vht40","vht80"};
 
 	int i = 0;
 	int count = 0;
@@ -2486,16 +2552,16 @@ DEFUN(set_radio_channel_cmd_func,
 	  "Radio channel value\n"
 	 )
 {
-	unsigned char channel;
-	unsigned int radio_id; 
+	unsigned char channel = 0;
+	unsigned int radio_id = 0; 
 	int ret = 0;
 	int ret1 = 0;
 	int ret2 = CHANNEL_CWMODE_SUCCESS;
 	unsigned short cwmode = 0;
 	char channel_offset = 0;
-	char mode[3][8] = {"ht20","ht20/40","ht40"};
+	char mode[6][8] = {"ht20","ht20/40","ht40","vht20","vht40","vht80"};
 	//char eth[4][5] = {"eth0","eth1","eth2","eth3"};
-	DBusMessage *query, *reply;	
+	DBusMessage *query = NULL, *reply = NULL;	
 	DBusMessageIter	 iter;
 	DBusError err;	
 	int check_channel = 0;
@@ -2530,7 +2596,7 @@ DEFUN(set_radio_channel_cmd_func,
 				)) /*wcl modify for AUTELAN-2765*/
 			{
 				vty_out(vty,"<error> input parameter %s error\n",argv[0]);
-				vty_out(vty,"11a receive channel list is:  36 ..;149 153 157 161\n");
+				vty_out(vty,"11b/g support channel range of 1-14, 11a/ac receive channel list is:  36 ..;149 153 157 161\n");
 				return CMD_SUCCESS;
 			}
 		}
@@ -2799,11 +2865,11 @@ DEFUN(set_radio_txpower_cmd_func,
 	  "Radio txpower value\n"
 	 )
 {
-	unsigned int radio_id; 
-	u_int16_t	txp;
+	unsigned int radio_id = 0; 
+	u_int16_t	txp = 0;
 	int ret=0;
 	int ret1 = COUNTRY_CODE_SUCCESS;
-	DBusMessage *query, *reply;	
+	DBusMessage *query = NULL, *reply = NULL;	
 	DBusMessageIter	 iter;
 	DBusError err;	
     /*txp = atoi(argv[0]);*/
@@ -2834,13 +2900,15 @@ DEFUN(set_radio_txpower_cmd_func,
 	int index = 0;
 	int localid = 1;
     int slot_id = HostSlotId;
-	char BUSNAME[PATH_LEN];
-	char OBJPATH[PATH_LEN];
-	char INTERFACE[PATH_LEN];
-	if(vty->node == RADIO_NODE){
+	char BUSNAME[PATH_LEN] = {0};
+	char OBJPATH[PATH_LEN] = {0};
+	char INTERFACE[PATH_LEN] = {0};
+	if(vty->node == RADIO_NODE)
+	{
 		index = 0;			
 		radio_id = (int)vty->index;
-	}else if(vty->node == HANSI_RADIO_NODE){
+	}else if(vty->node == HANSI_RADIO_NODE)
+    {
 		index = vty->index; 		
 		localid = vty->local;
         slot_id = vty->slotindex;
@@ -2872,9 +2940,11 @@ DEFUN(set_radio_txpower_cmd_func,
 	
 	dbus_message_unref(query);
 	
-	if (NULL == reply) {
+	if (NULL == reply) 
+	{
 		cli_syslog_info("<error> failed get reply.\n");
-		if (dbus_error_is_set(&err)) {
+		if (dbus_error_is_set(&err)) 
+		{
 			cli_syslog_info("%s raised: %s",err.name,err.message);
 			dbus_error_free_for_dcli(&err);
 		}
@@ -3177,7 +3247,7 @@ DEFUN(set_radio_txpowerof_cmd_func,
 	unsigned int txpwer = 0;
 	int ret=0;
 	int ret1 = COUNTRY_CODE_SUCCESS;
-	DBusMessage *query, *reply;	
+	DBusMessage *query = NULL, *reply = NULL;	
 	DBusMessageIter	 iter;
 	DBusError err;	
     /*txp = atoi(argv[0]);*/
@@ -3393,51 +3463,67 @@ DEFUN(set_radio_ratelist_cmd_func,
 					vty_out(vty,"<error> radio id does not exist\n");
 				else if(ret == WTP_NO_SURPORT_Rate)
 				{
-					if (mode == 1)
+					if (mode == Radio_11b)
 					{
 						vty_out(vty,"<error> wtp mode is 11b,does not support rate\n");
 						vty_out(vty,"mode 11b support rate list:10 20 55 110\n");
 					}
-					else if (mode == 2)
+					else if (mode == Radio_11a)
 					{
 						vty_out(vty,"<error> wtp mode is 11a,does not support rate\n");
 						vty_out(vty,"mode 11a support rate list:60 90 120 180 240 360 480 540\n");
 					}
-					else if (mode == 4)
+					else if (mode == Radio_11g)
 					{
 						vty_out(vty,"<error> wtp mode is 11g,does not support rate\n");
 						vty_out(vty,"mode 11g support rate list:60 90 120 180 240 360 480 540\n");
 					}
-					else if (mode == 10)
+					else if (mode == Radio_11an)
 					{
 						vty_out(vty,"<error> wtp mode is 11an,does not support rate\n");
 						vty_out(vty,"mode 11an support rate list:60 90 120 180 240 360 480 540\n");
 					}
-					else if (mode == 12)
+					else if (mode == Radio_11gn)
 					{
 						vty_out(vty,"<error> wtp mode is 11gn,does not support rate\n");
 						vty_out(vty,"mode 11gn support rate list:60 90 120 180 240 360 480 540\n");
 					}
-					else if (mode == 26)
+					else if (mode == Radio_11a_11an)
 					{
 						vty_out(vty,"<error> wtp mode is 11a/an,does not support rate\n");
 						vty_out(vty,"mode 11a/an support rate list:60 90 120 180 240 360 480 540\n");
 					}
-					else if (mode == 44)
+					else if (mode == Radio_11g_11gn)
 					{
 						vty_out(vty,"<error> wtp mode is 11g/gn,does not support rate\n");
 						vty_out(vty,"mode 11g/gn support rate list:60 90 120 180 240 360 480 540\n");
 					}				
-					else if (mode == 5)
+					else if (mode == Radio_11bg)
 					{
 						vty_out(vty,"<error> wtp mode is 11b/g,does not support rate\n");
 						vty_out(vty,"mode 11b/g support rate list:10 20 55 60 90 110 120 180 240 360 480 540\n");
 					}
-					else if (mode == 13)
+					else if (mode == Radio_11bgn)
 					{
 						vty_out(vty,"<error> wtp mode is 11b/g/n,does not support rate\n");
-						vty_out(vty,"mode 11b/g/n support rate list:10 20 60 90 110 120 180 240 360 480 540\n");
+						vty_out(vty,"mode 11b/g/n support rate list:10 20 55 60 90 110 120 180 240 360 480 540\n");
 					}
+					else if (mode == Radio_11ac)
+                	{
+                		vty_out(vty,"<error> wtp mode is 11ac,does not support rate\n");
+                		vty_out(vty,"mode 11ac support rate list:60 90 120 180 240 360 480 540\n");
+                	}
+                	else if (mode == Radio_11an_11ac)
+                	{
+                		vty_out(vty,"<error> wtp mode is 11an/ac,does not support rate\n");
+                		vty_out(vty,"mode 11an/ac support rate list:60 90 120 180 240 360 480 540\n");
+                	}
+                	else if (mode == Radio_11a_11an_11ac)
+                	{
+                		vty_out(vty,"<error> wtp mode is 11a/an/ac,does not support rate\n");
+                		vty_out(vty,"mode 11a/an/ac support rate list: 60 90 120 180 240 360 480 540\n");
+                	}
+                	
 					else
 					{
 						vty_out(vty,"<error> wtp radio does not support this rate,please check first\n");
@@ -3621,51 +3707,66 @@ DEFUN(set_radio_ratelist_cmd_func,
 				vty_out(vty,"<error> radio id does not exist\n");
 			else if(ret == WTP_NO_SURPORT_Rate)
 			{
-				if (mode == 1)
-				{
-					vty_out(vty,"<error> wtp mode is 11b,does not support rate\n");
-					vty_out(vty,"mode 11b support rate list:10 20 55 110\n");
-				}
-				else if (mode == 2)
-				{
-					vty_out(vty,"<error> wtp mode is 11a,does not support rate\n");
-					vty_out(vty,"mode 11a support rate list:60 90 120 180 240 360 480 540\n");
-				}
-				else if (mode == 4)
-				{
-					vty_out(vty,"<error> wtp mode is 11g,does not support rate\n");
-					vty_out(vty,"mode 11g support rate list:60 90 120 180 240 360 480 540\n");
-				}
-				else if (mode == 10)
-				{
-					vty_out(vty,"<error> wtp mode is 11an,does not support rate\n");
-					vty_out(vty,"mode 11an support rate list:60 90 120 180 240 360 480 540\n");
-				}
-				else if (mode == 12)
-				{
-					vty_out(vty,"<error> wtp mode is 11gn,does not support rate\n");
-					vty_out(vty,"mode 11gn support rate list:60 90 120 180 240 360 480 540\n");
-				}
-				else if (mode == 26)
-				{
-					vty_out(vty,"<error> wtp mode is 11a/an,does not support rate\n");
-					vty_out(vty,"mode 11a/an support rate list:60 90 120 180 240 360 480 540\n");
-				}
-				else if (mode == 44)
-				{
-					vty_out(vty,"<error> wtp mode is 11g/gn,does not support rate\n");
-					vty_out(vty,"mode 11g/gn support rate list:60 90 120 180 240 360 480 540\n");
-				}				
-				else if (mode == 5)
-				{
-					vty_out(vty,"<error> wtp mode is 11b/g,does not support rate\n");
-					vty_out(vty,"mode 11b/g support rate list:10 20 55 60 90 110 120 180 240 360 480 540\n");
-				}
-				else if (mode == 13)
-				{
-					vty_out(vty,"<error> wtp mode is 11b/g/n,does not support rate\n");
-					vty_out(vty,"mode 11b/g/n support rate list:10 20 60 90 110 120 180 240 360 480 540\n");
-				}
+				if (mode == Radio_11b)
+					{
+						vty_out(vty,"<error> wtp mode is 11b,does not support rate\n");
+						vty_out(vty,"mode 11b support rate list:10 20 55 110\n");
+					}
+					else if (mode == Radio_11a)
+					{
+						vty_out(vty,"<error> wtp mode is 11a,does not support rate\n");
+						vty_out(vty,"mode 11a support rate list:60 90 120 180 240 360 480 540\n");
+					}
+					else if (mode == Radio_11g)
+					{
+						vty_out(vty,"<error> wtp mode is 11g,does not support rate\n");
+						vty_out(vty,"mode 11g support rate list:60 90 120 180 240 360 480 540\n");
+					}
+					else if (mode == Radio_11an)
+					{
+						vty_out(vty,"<error> wtp mode is 11an,does not support rate\n");
+						vty_out(vty,"mode 11an support rate list:60 90 120 180 240 360 480 540\n");
+					}
+					else if (mode == Radio_11gn)
+					{
+						vty_out(vty,"<error> wtp mode is 11gn,does not support rate\n");
+						vty_out(vty,"mode 11gn support rate list:60 90 120 180 240 360 480 540\n");
+					}
+					else if (mode == Radio_11a_11an)
+					{
+						vty_out(vty,"<error> wtp mode is 11a/an,does not support rate\n");
+						vty_out(vty,"mode 11a/an support rate list:60 90 120 180 240 360 480 540\n");
+					}
+					else if (mode == Radio_11g_11gn)
+					{
+						vty_out(vty,"<error> wtp mode is 11g/gn,does not support rate\n");
+						vty_out(vty,"mode 11g/gn support rate list:60 90 120 180 240 360 480 540\n");
+					}				
+					else if (mode == Radio_11bg)
+					{
+						vty_out(vty,"<error> wtp mode is 11b/g,does not support rate\n");
+						vty_out(vty,"mode 11b/g support rate list:10 20 55 60 90 110 120 180 240 360 480 540\n");
+					}
+					else if (mode == Radio_11bgn)
+					{
+						vty_out(vty,"<error> wtp mode is 11b/g/n,does not support rate\n");
+						vty_out(vty,"mode 11b/g/n support rate list:10 20 55 60 90 110 120 180 240 360 480 540\n");
+					}
+					else if (mode == Radio_11ac)
+                	{
+                		vty_out(vty,"<error> wtp mode is 11ac,does not support rate\n");
+                		vty_out(vty,"mode 11ac support rate list:60 90 120 180 240 360 480 540\n");
+                	}
+                	else if (mode == Radio_11an_11ac)
+                	{
+                		vty_out(vty,"<error> wtp mode is 11an/ac,does not support rate\n");
+                		vty_out(vty,"mode 11an/ac support rate list:60 90 120 180 240 360 480 540\n");
+                	}
+                	else if (mode == Radio_11a_11an_11ac)
+                	{
+                		vty_out(vty,"<error> wtp mode is 11a/an/ac,does not support rate\n");
+                		vty_out(vty,"mode 11a/an/ac support rate list: 60 90 120 180 240 360 480 540\n");
+                	}
 
 				
 				else
@@ -3792,51 +3893,67 @@ DEFUN(set_radio_max_rate_cmd_func,
 					vty_out(vty,"<error> radio id does not exist\n");
 				else if(ret == WTP_NO_SURPORT_Rate)
 					{
-						if (mode == 1)
-							{
-								vty_out(vty,"<error> wtp mode is 11b,does not support rate\n");
-								vty_out(vty,"mode 11b support rate list:10 20 55 110\n");
-							}
-						else if (mode == 2)
-							{
-								vty_out(vty,"<error> wtp mode is 11a,does not support rate\n");
-								vty_out(vty,"mode 11a support rate list:60 90 120 180 240 360 480 540\n");
-							}
-						else if (mode == 4)
-						{
-							vty_out(vty,"<error> wtp mode is 11g,does not support rate\n");
-							vty_out(vty,"mode 11g support rate list:60 90 120 180 240 360 480 540\n");
-						}
-						else if (mode == 10)
-						{
-							vty_out(vty,"<error> wtp mode is 11an,does not support rate\n");
-							vty_out(vty,"mode 11an support rate list:60 90 120 180 240 360 480 540\n");
-						}
-						else if (mode == 12)
-						{
-							vty_out(vty,"<error> wtp mode is 11gn,does not support rate\n");
-							vty_out(vty,"mode 11gn support rate list:60 90 120 180 240 360 480 540\n");
-						}
-						else if (mode == 26)
-						{
-							vty_out(vty,"<error> wtp mode is 11a/an,does not support rate\n");
-							vty_out(vty,"mode 11a/an support rate list:60 90 120 180 240 360 480 540\n");
-						}
-						else if (mode == 44)
-						{
-							vty_out(vty,"<error> wtp mode is 11g/gn,does not support rate\n");
-							vty_out(vty,"mode 11g/gn support rate list:60 90 120 180 240 360 480 540\n");
-						}				
-						else if (mode == 5)
-						{
-							vty_out(vty,"<error> wtp mode is 11b/g,does not support rate\n");
-							vty_out(vty,"mode 11b/g support rate list:10 20 55 60 90 110 120 180 240 360 480 540\n");
-						}
-						else if (mode == 13)
-						{
-							vty_out(vty,"<error> wtp mode is 11b/g/n,does not support rate\n");
-							vty_out(vty,"mode 11b/g/n support rate list:10 20 60 90 110 120 180 240 360 480 540\n");
-						}
+					if (mode == Radio_11b)
+					{
+						vty_out(vty,"<error> wtp mode is 11b,does not support rate\n");
+						vty_out(vty,"mode 11b support rate list:10 20 55 110\n");
+					}
+					else if (mode == Radio_11a)
+					{
+						vty_out(vty,"<error> wtp mode is 11a,does not support rate\n");
+						vty_out(vty,"mode 11a support rate list:60 90 120 180 240 360 480 540\n");
+					}
+					else if (mode == Radio_11g)
+					{
+						vty_out(vty,"<error> wtp mode is 11g,does not support rate\n");
+						vty_out(vty,"mode 11g support rate list:60 90 120 180 240 360 480 540\n");
+					}
+					else if (mode == Radio_11an)
+					{
+						vty_out(vty,"<error> wtp mode is 11an,does not support rate\n");
+						vty_out(vty,"mode 11an support rate list:60 90 120 180 240 360 480 540\n");
+					}
+					else if (mode == Radio_11gn)
+					{
+						vty_out(vty,"<error> wtp mode is 11gn,does not support rate\n");
+						vty_out(vty,"mode 11gn support rate list:60 90 120 180 240 360 480 540\n");
+					}
+					else if (mode == Radio_11a_11an)
+					{
+						vty_out(vty,"<error> wtp mode is 11a/an,does not support rate\n");
+						vty_out(vty,"mode 11a/an support rate list:60 90 120 180 240 360 480 540\n");
+					}
+					else if (mode == Radio_11g_11gn)
+					{
+						vty_out(vty,"<error> wtp mode is 11g/gn,does not support rate\n");
+						vty_out(vty,"mode 11g/gn support rate list:60 90 120 180 240 360 480 540\n");
+					}				
+					else if (mode == Radio_11bg)
+					{
+						vty_out(vty,"<error> wtp mode is 11b/g,does not support rate\n");
+						vty_out(vty,"mode 11b/g support rate list:10 20 55 60 90 110 120 180 240 360 480 540\n");
+					}
+					else if (mode == Radio_11bgn)
+					{
+						vty_out(vty,"<error> wtp mode is 11b/g/n,does not support rate\n");
+						vty_out(vty,"mode 11b/g/n support rate list:10 20 55 60 90 110 120 180 240 360 480 540\n");
+					}
+					else if (mode == Radio_11ac)
+                	{
+                		vty_out(vty,"<error> wtp mode is 11ac,does not support rate\n");
+                		vty_out(vty,"mode 11ac support rate list:60 90 120 180 240 360 480 540\n");
+                	}
+                	else if (mode == Radio_11an_11ac)
+                	{
+                		vty_out(vty,"<error> wtp mode is 11an/ac,does not support rate\n");
+                		vty_out(vty,"mode 11an/ac support rate list:60 90 120 180 240 360 480 540\n");
+                	}
+                	else if (mode == Radio_11a_11an_11ac)
+                	{
+                		vty_out(vty,"<error> wtp mode is 11a/an/ac,does not support rate\n");
+                		vty_out(vty,"mode 11a/an/ac support rate list: 60 90 120 180 240 360 480 540\n");
+                	}
+
 						
 						else
 							{
@@ -4012,55 +4129,71 @@ DEFUN(set_radio_max_rate_cmd_func,
 		vty_out(vty,"<error> radio id does not exist\n");
 	else if(ret == WTP_NO_SURPORT_Rate)
 	{
-		if (mode == 1)
-		{
-			vty_out(vty,"<error> wtp mode is 11b,does not support rate\n");
-			vty_out(vty,"mode 11b support rate list:10 20 55 110\n");
-		}
-		else if (mode == 2)
-		{
-			vty_out(vty,"<error> wtp mode is 11a,does not support rate\n");
-			vty_out(vty,"mode 11a support rate list:60 90 120 180 240 360 480 540\n");
-		}
-		else if (mode == 4)
-		{
-			vty_out(vty,"<error> wtp mode is 11g,does not support rate\n");
-			vty_out(vty,"mode 11g support rate list:60 90 120 180 240 360 480 540\n");
-		}
-		else if (mode == 10)
-		{
-			vty_out(vty,"<error> wtp mode is 11an,does not support rate\n");
-			vty_out(vty,"mode 11an support rate list:60 90 120 180 240 360 480 540\n");
-		}
-		else if (mode == 12)
-		{
-			vty_out(vty,"<error> wtp mode is 11gn,does not support rate\n");
-			vty_out(vty,"mode 11gn support rate list:60 90 120 180 240 360 480 540\n");
-		}
-		else if (mode == 26)
-		{
-			vty_out(vty,"<error> wtp mode is 11a/an,does not support rate\n");
-			vty_out(vty,"mode 11a/an support rate list:60 90 120 180 240 360 480 540\n");
-		}
-		else if (mode == 44)
-		{
-			vty_out(vty,"<error> wtp mode is 11g/gn,does not support rate\n");
-			vty_out(vty,"mode 11g/gn support rate list:60 90 120 180 240 360 480 540\n");
-		}				
-		else if (mode == 5)
-		{
-			vty_out(vty,"<error> wtp mode is 11b/g,does not support rate\n");
-			vty_out(vty,"mode 11b/g support rate list:10 20 55 60 90 110 120 180 240 360 480 540\n");
-		}
-		else if (mode == 13)
-		{
-			vty_out(vty,"<error> wtp mode is 11b/g/n,does not support rate\n");
-			vty_out(vty,"mode 11b/g/n support rate list:10 20 60 90 110 120 180 240 360 480 540\n");
-		}
-		else
-		{
-			vty_out(vty,"<error> wtp radio does not support this rate,please check first\n");
-		}
+    	if (mode == Radio_11b)
+    	{
+    		vty_out(vty,"<error> wtp mode is 11b,does not support rate\n");
+    		vty_out(vty,"mode 11b support rate list:10 20 55 110\n");
+    	}
+    	else if (mode == Radio_11a)
+    	{
+    		vty_out(vty,"<error> wtp mode is 11a,does not support rate\n");
+    		vty_out(vty,"mode 11a support rate list:60 90 120 180 240 360 480 540\n");
+    	}
+    	else if (mode == Radio_11g)
+    	{
+    		vty_out(vty,"<error> wtp mode is 11g,does not support rate\n");
+    		vty_out(vty,"mode 11g support rate list:60 90 120 180 240 360 480 540\n");
+    	}
+    	else if (mode == Radio_11an)
+    	{
+    		vty_out(vty,"<error> wtp mode is 11an,does not support rate\n");
+    		vty_out(vty,"mode 11an support rate list:60 90 120 180 240 360 480 540\n");
+    	}
+    	else if (mode == Radio_11gn)
+    	{
+    		vty_out(vty,"<error> wtp mode is 11gn,does not support rate\n");
+    		vty_out(vty,"mode 11gn support rate list:60 90 120 180 240 360 480 540\n");
+    	}
+    	else if (mode == Radio_11a_11an)
+    	{
+    		vty_out(vty,"<error> wtp mode is 11a/an,does not support rate\n");
+    		vty_out(vty,"mode 11a/an support rate list:60 90 120 180 240 360 480 540\n");
+    	}
+    	else if (mode == Radio_11g_11gn)
+    	{
+    		vty_out(vty,"<error> wtp mode is 11g/gn,does not support rate\n");
+    		vty_out(vty,"mode 11g/gn support rate list:60 90 120 180 240 360 480 540\n");
+    	}				
+    	else if (mode == Radio_11bg)
+    	{
+    		vty_out(vty,"<error> wtp mode is 11b/g,does not support rate\n");
+    		vty_out(vty,"mode 11b/g support rate list:10 20 55 60 90 110 120 180 240 360 480 540\n");
+    	}
+    	else if (mode == Radio_11bgn)
+    	{
+    		vty_out(vty,"<error> wtp mode is 11b/g/n,does not support rate\n");
+    		vty_out(vty,"mode 11b/g/n support rate list:10 20 55 60 90 110 120 180 240 360 480 540\n");
+    	}
+    	else if (mode == Radio_11ac)
+    	{
+    		vty_out(vty,"<error> wtp mode is 11ac,does not support rate\n");
+    		vty_out(vty,"mode 11ac support rate list:60 90 120 180 240 360 480 540\n");
+    	}
+    	else if (mode == Radio_11an_11ac)
+    	{
+    		vty_out(vty,"<error> wtp mode is 11an/ac,does not support rate\n");
+    		vty_out(vty,"mode 11an/ac support rate list:60 90 120 180 240 360 480 540\n");
+    	}
+    	else if (mode == Radio_11a_11an_11ac)
+    	{
+    		vty_out(vty,"<error> wtp mode is 11a/an/ac,does not support rate\n");
+    		vty_out(vty,"mode 11a/an/ac support rate list: 60 90 120 180 240 360 480 540\n");
+    	}
+
+    	else
+    	{
+    		vty_out(vty,"<error> wtp radio does not support this rate,please check first\n");
+    	}
 	}
 	else if(ret == RADIO_IS_DISABLE)
 		vty_out(vty,"<error> radio is disable, please enable it first\n");
@@ -4086,11 +4219,11 @@ DEFUN(set_radio_max_rate_cmd_func,
 DEFUN(set_radio_mode_cmd_func,
 	 set_radio_mode_cmd,
 	  /*"mode (11b|11a|11g|11n|11b/g)",*/
-	  "mode (11a|11b|11g|11gn|11g/gn|11b/g|11b/g/n|11a/an|11an)",   
+	  "mode (11a|11b|11g|11gn|11g/gn|11b/g|11b/g/n|11a/an|11an|11ac|11an/ac|11a/an/ac)",   
 	  SERVICE_STR
 	  "Radio mode value\n"
-	"you can set 11b|11a|11g|11gn|11g/gn|11b/g/n|11a/an|11an|11b/g\n" 
-	 )
+	  "you can set 11b|11a|11g|11gn|11g/gn|11b/g|11b/g/n|11a/an|11an|11ac|11an/ac|11a/an/ac\n")
+	 
 {
 
 	unsigned int modetmp, mode = 0;
@@ -4162,14 +4295,31 @@ DEFUN(set_radio_mode_cmd_func,
 		mode |= 0x04;
 		mode |= 0x08;
 		mode |= 0x20;
-	}		
+	}
+	else if(!strcmp(argv[0],"11ac"))
+	{
+		mode |= 0x40;
+	}
+	else if(!strcmp(argv[0],"11an/ac"))
+	{
+		mode |= 0x02;
+		mode |= 0x08;
+		mode |= 0x40;
+	}
+	else if(!strcmp(argv[0],"11a/an/ac"))
+	{
+		mode |= 0x02;
+		mode |= 0x08;
+		mode |= 0x10;
+		mode |= 0x40;
+	}
 	/*fengwenchao add end*/ 
 	else
 	{
 		modetmp = 0;
 		modetmp = atoi(argv[0]);
 		if((modetmp == 1)||(modetmp == 2)||(modetmp == 4)||(modetmp == 5)||(modetmp == 8)||(modetmp == 10)||(modetmp == 13)
-		||(modetmp == 12)||(modetmp == 26)||(modetmp == 44))  /*fengwenchao modify 20111109 for GM*/
+		||(modetmp == 12)||(modetmp == 26)||(modetmp == 44)||(modetmp == 64)||(modetmp == 74)||(modetmp == 90))  /*fengwenchao modify 20111109 for GM*/
 		{
 			mode |= modetmp;
 		}
@@ -4231,7 +4381,7 @@ DEFUN(set_radio_mode_cmd_func,
 			else if(ret == WTP_NO_SURPORT_TYPE)
 				{
 					vty_out(vty,"<error> wtp radio does not support this type\n");
-					vty_out(vty,"wtp surport radio type list: 11b 11g 11b/g 11a/n 11b/g/n\n");
+		            vty_out(vty,"wtp support radio type list: 11b 11a 11g 11b/g 11a/an 11an 11b/g/n 11gn 11g/gn 11ac 11an/ac 11a/an/ac\n");  /*fengwenchao modify 20111109 for GM*/
 				}
 			else if(ret == RADIO_IS_DISABLE)
 					vty_out(vty,"<error> radio is disable,please enable it first\n");
@@ -4273,10 +4423,10 @@ DEFUN(set_radio_mode_cmd_func,
 DEFUN(set_radio_mode_cmd_func,
 	  set_radio_mode_cmd,
 	  /*"mode (11b|11a|11g|11n|11b/g)",*/
-	  "mode (11a|11b|11g|11gn|11g/gn|11b/g|11b/g/n|11a/an|11an)",   
+	 "mode (11a|11b|11g|11gn|11g/gn|11b/g|11b/g/n|11a/an|11an|11ac|11an/ac|11a/an/ac)",   
 	  SERVICE_STR
 	  "Radio mode value\n"
-	"you can set 11b|11a|11g|11gn|11g/gn|11b/g/n|11a/an|11an|11b/g\n" 
+	  "you can set 11b|11a|11g|11gn|11g/gn|11b/g|11b/g/n|11a/an|11an|11ac|11an/ac|11a/an/ac\n")
 	 )
 {
 	unsigned int radio_id; 
@@ -4339,7 +4489,24 @@ DEFUN(set_radio_mode_cmd_func,
 		mode |= 0x04;
 		mode |= 0x08;
 		mode |= 0x20;
-	}		
+	}	
+	else if(!strcmp(argv[0],"11ac"))
+	{
+		mode |= 0x40;
+	}
+	else if(!strcmp(argv[0],"11an/ac"))
+	{
+		mode |= 0x02;
+		mode |= 0x08;
+		mode |= 0x40;
+	}
+	else if(!strcmp(argv[0],"11a/an/ac"))
+	{
+		mode |= 0x02;
+		mode |= 0x08;
+		mode |= 0x10;
+		mode |= 0x40;
+	}
 	/*fengwenchao add end*/ 
 	else
 	{
@@ -4440,7 +4607,7 @@ DEFUN(set_radio_mode_cmd_func,
 		else if(ret == WTP_NO_SURPORT_TYPE)
 		{
 			vty_out(vty,"<error> wtp radio does not support this type\n");
-			vty_out(vty,"wtp surport radio type list: 11b 11g 11b/g 11a/an 11an 11b/g/n 11gn 11g/gn\n");  /*fengwenchao modify 20111109 for GM*/
+		    vty_out(vty,"wtp support radio type list: 11b 11a 11g 11b/g 11a/an 11an 11b/g/n 11gn 11g/gn 11ac 11an/ac 11a/an/ac\n");  /*fengwenchao modify 20111109 for GM*/
 		}
 		else if(ret == RADIO_IS_DISABLE)
 			vty_out(vty,"<error> radio is disable,please enable it first\n");
@@ -4928,10 +5095,10 @@ DEFUN(set_radio_beaconinterval_cmd_func,
 	  "Radio beaconinterval value  <25-1000>\n"      //fengwenchao modify 20110504
 	 )
 {
-	unsigned int radio_id; 
-	unsigned short beaconinterval;
-	int ret;
-	DBusMessage *query, *reply;	
+	unsigned int radio_id = 0; 
+	unsigned short beaconinterval = 0;
+	int ret = 0;
+	DBusMessage *query = NULL, *reply = NULL;	
 	DBusMessageIter	 iter;
 	DBusError err;	
     /*beaconinterval= atoi(argv[0]);*/
@@ -4965,13 +5132,14 @@ DEFUN(set_radio_beaconinterval_cmd_func,
 	int index = 0;
 	int localid = 1;
     int slot_id = HostSlotId;
-	char BUSNAME[PATH_LEN];
-	char OBJPATH[PATH_LEN];
-	char INTERFACE[PATH_LEN];
+	char BUSNAME[PATH_LEN] = 0;
+	char OBJPATH[PATH_LEN] = 0;
+	char INTERFACE[PATH_LEN] = 0;
 	if(vty->node == RADIO_NODE){
 		index = 0;			
 		radio_id = (int)vty->index;
-	}else if(vty->node == HANSI_RADIO_NODE){
+	}else if(vty->node == HANSI_RADIO_NODE)
+	{
 		index = vty->index; 	
 		localid = vty->local;
         slot_id = vty->slotindex;
@@ -5840,10 +6008,10 @@ DEFUN(set_radio_service_cmd_func,
 	 )
 
 {
-	unsigned int radio_id; 
-	unsigned char status;
-	int ret;
-	DBusMessage *query, *reply; 
+	unsigned int radio_id = 0; 
+	unsigned char status = 0;
+	int ret = 0;
+	DBusMessage *query = NULL, *reply = NULL; 
 	DBusMessageIter  iter;
 	DBusError err;	
 	
@@ -5866,13 +6034,14 @@ DEFUN(set_radio_service_cmd_func,
 	int index = 0;
 	int localid = 1;
     int slot_id = HostSlotId;
-	char BUSNAME[PATH_LEN];
-	char OBJPATH[PATH_LEN];
-	char INTERFACE[PATH_LEN];
+	char BUSNAME[PATH_LEN] = {0};
+	char OBJPATH[PATH_LEN] = {0};
+	char INTERFACE[PATH_LEN] = {0};
 	if(vty->node == RADIO_NODE){
 		index = 0;			
 		radio_id = (int)vty->index;
-	}else if(vty->node == HANSI_RADIO_NODE){
+	}else if(vty->node == HANSI_RADIO_NODE)
+	{
 		index = vty->index;
 		localid = vty->local;
         slot_id = vty->slotindex;
@@ -6076,11 +6245,11 @@ DEFUN(set_wds_service_cmd_func,
 	 )
 
 {
-	unsigned int radio_id; 
-	unsigned char status;
-	int ret;
-	unsigned char wlanid;
-	DBusMessage *query, *reply; 
+	unsigned int radio_id = 0; 
+	unsigned char status = 0;
+	int ret = 0;
+	unsigned char wlanid = 0;
+	DBusMessage *query = NULL, *reply = NULL; 
 	DBusMessageIter  iter;
 	DBusError err;	
 	
@@ -6135,9 +6304,9 @@ DEFUN(set_wds_service_cmd_func,
 	int index = 0;
 	int localid = 1;
     int slot_id = HostSlotId;
-	char BUSNAME[PATH_LEN];
-	char OBJPATH[PATH_LEN];
-	char INTERFACE[PATH_LEN];
+	char BUSNAME[PATH_LEN] = {0};
+	char OBJPATH[PATH_LEN] = {0};
+	char INTERFACE[PATH_LEN] = {0};
 	if(vty->node == RADIO_NODE){
 		index = 0;			
 		radio_id = (int)vty->index;
@@ -6351,10 +6520,10 @@ DEFUN(set_radio_preamble_cmd_func,
 	 )
 
 {
-	unsigned int radio_id; 
-	unsigned char preamble;
-	int ret;
-	DBusMessage *query, *reply; 
+	unsigned int radio_id = 0; 
+	unsigned char preamble = 0;
+	int ret = 0;
+	DBusMessage *query = NULL, *reply = NULL; 
 	DBusMessageIter  iter;
 	DBusError err;	
 	
@@ -6377,9 +6546,9 @@ DEFUN(set_radio_preamble_cmd_func,
 	int index = 0;
 	int localid = 1;
     int slot_id = HostSlotId;
-	char BUSNAME[PATH_LEN];
-	char OBJPATH[PATH_LEN];
-	char INTERFACE[PATH_LEN];
+	char BUSNAME[PATH_LEN] = {0};
+	char OBJPATH[PATH_LEN] = {0};
+	char INTERFACE[PATH_LEN] = {0};
 	if(vty->node == RADIO_NODE){
 		index = 0;			
 		radio_id = (int)vty->index;
@@ -6574,10 +6743,10 @@ DEFUN(set_radio_longretry_cmd_func,
 
 
 {
-	unsigned int radio_id; 
-	unsigned char longretry;
-	int ret;
-	DBusMessage *query, *reply;	
+	unsigned int radio_id = 0; 
+	unsigned char longretry = 0;
+	int ret = 0;
+	DBusMessage *query = NULL, *reply = NULL;	
 	DBusMessageIter	 iter;
 	DBusError err;	
 	
@@ -6608,9 +6777,9 @@ DEFUN(set_radio_longretry_cmd_func,
 	int index = 0;
 	int localid = 1;
     int slot_id = HostSlotId;
-	char BUSNAME[PATH_LEN];
-	char OBJPATH[PATH_LEN];
-	char INTERFACE[PATH_LEN];
+	char BUSNAME[PATH_LEN] = {0};
+	char OBJPATH[PATH_LEN] = {0};
+	char INTERFACE[PATH_LEN] = {0};
 	if(vty->node == RADIO_NODE){
 		index = 0;			
 		radio_id = (int)vty->index;
@@ -6802,10 +6971,10 @@ DEFUN(set_radio_shortretry_cmd_func,
 
 
 {
-	unsigned int radio_id; 
-	unsigned char shortretry;
-	int ret;
-	DBusMessage *query, *reply;	
+	unsigned int radio_id = 0; 
+	unsigned char shortretry = 0;
+	int ret = 0;
+	DBusMessage *query = NULL, *reply = NULL;	
 	DBusMessageIter	 iter;
 	DBusError err;	
 	
@@ -6836,9 +7005,9 @@ DEFUN(set_radio_shortretry_cmd_func,
 	int index = 0;
 	int localid = 1;
     int slot_id = HostSlotId;
-	char BUSNAME[PATH_LEN];
-	char OBJPATH[PATH_LEN];
-	char INTERFACE[PATH_LEN];
+	char BUSNAME[PATH_LEN] = {0};
+	char OBJPATH[PATH_LEN] = {0};
+	char INTERFACE[PATH_LEN] = {0};
 	if(vty->node == RADIO_NODE){
 		index = 0;			
 		radio_id = (int)vty->index;
@@ -12435,7 +12604,7 @@ DEFUN(set_radio_11n_cwmmode_func,
 	 )
 {
 	
-	DBusMessage *query, *reply;	
+	DBusMessage *query = NULL, *reply = NULL;	
 	DBusMessageIter	 iter;
 	DBusError err;
 	unsigned int radioID = 0;
@@ -12477,9 +12646,9 @@ DEFUN(set_radio_11n_cwmmode_func,
 	int index = 0;
 	int localid = 1;
     int slot_id = HostSlotId;
-	char BUSNAME[PATH_LEN];
-	char OBJPATH[PATH_LEN];
-	char INTERFACE[PATH_LEN];
+	char BUSNAME[PATH_LEN] = {0};
+	char OBJPATH[PATH_LEN] = {0};
+	char INTERFACE[PATH_LEN] = {0};
 	if(vty->node == RADIO_NODE){
 		index = 0;			
 		radioID = (int)vty->index;
@@ -18945,10 +19114,11 @@ DEFUN(set_radio_mcs_cmd_func,
 #if _GROUP_POLICY
 DEFUN(set_radio_cmmode_cmd_func,
 	  set_radio_cmmode_cmd,
-	  "11n cwmode (ht20|ht20/40|ht40)",
+	  "(11n|11ac) cwmode (ht20|ht20/40|ht40|vht20|vht40|vht80)",
+      "radio mode 11n or 11ac \n"
 	  "set channel width mode \n"
-	  "Radio channel width value 0:ht20 1:ht20/40 2:ht40 "
-	 )
+	  "Radio channel width value 11n:ht20;ht20/40;ht40 11ac:ht20;ht20/40;ht40;vht20;vht40;vht80")
+	 
 
 
 {
@@ -18960,6 +19130,7 @@ DEFUN(set_radio_cmmode_cmd_func,
     int slot_id = HostSlotId;
 	unsigned int id = 0;
 	unsigned int type = 0;
+	unsigned int mode = 0;
 	unsigned short cwmode = 0;
 	//fengwenchao add 20110322
 	unsigned int max_channel = 0;
@@ -18972,17 +19143,48 @@ DEFUN(set_radio_cmmode_cmd_func,
 		
 	 	
 
-	if(!strcmp(argv[0],"ht20")){
+	if(!strcmp(argv[0],"11n"))
+	{
+		mode = 0;
+	}
+	else if(!strcmp(argv[0],"11ac"))
+	{
+		mode = 1;
+	}
+	else
+	{
+		vty_out(vty,"<error> input patameter only with '11n' 'main' or '11ac'\n");
+		return CMD_SUCCESS;
+	}
+	
+	if(!strcmp(argv[1],"ht20"))
+	{
 		cwmode = 0;
 	}
-	else if(!strcmp(argv[0],"ht20/40")){
+	else if(!strcmp(argv[1],"ht20/40"))
+	{
 		cwmode = 1;
 	}
-	else if(!strcmp(argv[0],"ht40")){
+	else if(!strcmp(argv[1],"ht40"))
+	{
 		cwmode = 2;
 	}
-	else{
-		vty_out(vty,"<error> input parameter %s error\n",argv[0]);
+	else if(!strcmp(argv[1],"vht20"))
+	{
+		cwmode = 3;
+	}
+	else if(!strcmp(argv[1],"vht40"))
+	{
+		cwmode = 4;
+	}
+	else if(!strcmp(argv[1],"vht80"))
+	{
+		cwmode = 5;
+	}
+
+	if ((0 == mode) && ((3 == cwmode) || (4 == cwmode) || (5 == cwmode)))
+	{	
+		vty_out(vty,"<error> 11n doesn't support vht20|vht40|vht80\n");
 		return CMD_SUCCESS;
 	}
 	
@@ -19025,7 +19227,7 @@ DEFUN(set_radio_cmmode_cmd_func,
 	if(type==0)
 		{
 			if(ret == 0)
-				vty_out(vty,"Radio %d-%d set cwmode %s successfully .\n",id/L_RADIO_NUM,id%L_RADIO_NUM,argv[0]);
+				vty_out(vty,"Radio %d-%d set cwmode %s successfully .\n",id/L_RADIO_NUM,id%L_RADIO_NUM,argv[1]);
 			else if(ret == RADIO_ID_NOT_EXIST)
 				vty_out(vty,"<error> radio id does not exist\n");
 			else if(ret == RADIO_IS_DISABLE)
@@ -19082,9 +19284,10 @@ DEFUN(set_radio_cmmode_cmd_func,
 #else
 DEFUN(set_radio_cmmode_cmd_func,
 	  set_radio_cmmode_cmd,
-	  "11n cwmode (ht20|ht20/40|ht40)",
+	 "(11n|11ac) cwmode (ht20|ht20/40|ht40|vht20|vht40|vht80)",
+      "radio mode 11n or 11ac \n"
 	  "set channel width mode \n"
-	  "Radio channel width value 0:ht20 1:ht20/40 2:ht40 "
+	  "Radio channel width value 11n:ht20;ht20/40;ht40 11ac:ht20;ht20/40;ht40;vht20;vht40;vht80")
 	 )
 
 
@@ -19104,21 +19307,48 @@ DEFUN(set_radio_cmmode_cmd_func,
 	
     /*rtsthre= atoi(argv[0]);*/
 	//ret = parse_int_ID((char *)argv[0],&mode);
-	if(!strcmp(argv[0],"ht20")){
+if(!strcmp(argv[0],"11n"))
+	{
+		mode = 0;
+	}
+	else if(!strcmp(argv[0],"11ac"))
+	{
+		mode = 1;
+	}
+	else
+	{
+		vty_out(vty,"<error> input patameter only with '11n' 'main' or '11ac'\n");
+		return CMD_SUCCESS;
+	}
+	
+	if(!strcmp(argv[1],"ht20"))
+	{
 		cwmode = 0;
 	}
-	else if(!strcmp(argv[0],"ht20/40")){
+	else if(!strcmp(argv[1],"ht20/40"))
+	{
 		cwmode = 1;
 	}
-	else if(!strcmp(argv[0],"ht40")){
+	else if(!strcmp(argv[1],"ht40"))
+	{
 		cwmode = 2;
 	}
-	else{}
-	
-	//cwmode = (unsigned short)mode;
-	if (ret != WID_DBUS_SUCCESS)
+	else if(!strcmp(argv[1],"vht20"))
+	{
+		cwmode = 3;
+	}
+	else if(!strcmp(argv[1],"vht40"))
+	{
+		cwmode = 4;
+	}
+	else if(!strcmp(argv[1],"vht80"))
+	{
+		cwmode = 5;
+	}
+
+	if ((0 == mode) && ((3 == cwmode) || (4 == cwmode) || (5 == cwmode)))
 	{	
-		vty_out(vty,"<error> input parameter %s error\n",argv[0]);
+		vty_out(vty,"<error> 11n doesn't support vht20|vht40|vht80\n");
 		return CMD_SUCCESS;
 	}
 
@@ -19184,7 +19414,7 @@ DEFUN(set_radio_cmmode_cmd_func,
 		 }
 		//fengwenchao add end
 		if(ret == 0)
-			vty_out(vty,"Radio %d-%d set cwmode %s successfully .\n",radio_id/L_RADIO_NUM,radio_id%L_RADIO_NUM,argv[0]);
+			vty_out(vty,"Radio %d-%d set cwmode %s successfully .\n",radio_id/L_RADIO_NUM,radio_id%L_RADIO_NUM,argv[1]);
 		else if(ret == RADIO_ID_NOT_EXIST)
 			vty_out(vty,"<error> radio id does not exist\n");
 		else if(ret == RADIO_IS_DISABLE)
@@ -22710,11 +22940,11 @@ DEFUN(set_radio_11n_ampdu_limit_func,
 	  "ampdu:1024-65535 amsdu:2290-4096\n"
 	 )
 {
-	unsigned int radio_id; 
-	unsigned int limit;
-	int ret;
+	unsigned int radio_id = 0; 
+	unsigned int limit = 0;
+	int ret = 0;
 	unsigned char type = 0;
-	DBusMessage *query, *reply;	
+	DBusMessage *query = NULL, *reply = NULL;	
 	DBusMessageIter	 iter;
 	DBusError err;	
 
@@ -22930,11 +23160,11 @@ DEFUN(set_radio_11n_ampdu_subframe_func,
 	  "2-64\n"
 	 )
 {
-	unsigned int radio_id; 
-	unsigned int limit;
-	int ret;
+	unsigned int radio_id = 0; 
+	unsigned int limit = 0;
+	int ret = 0;
 	unsigned char type = 0;
-	DBusMessage *query, *reply;	
+	DBusMessage *query = NULL, *reply = NULL;	
 	DBusMessageIter	 iter;
 	DBusError err;	
 
@@ -23380,12 +23610,12 @@ DEFUN(set_tx_chainmask_cmd_func,
 	  "Radio tx_chainmask value\n"
 	 )
 {
-	unsigned int radio_id; 
+	unsigned int radio_id = 0; 
 	unsigned int wlanid = 0; 
 	int policy = 0;
 	int ret = 0;
 	unsigned char hex_id = 0;
-	DBusMessage *query, *reply;	
+	DBusMessage *query = NULL, *reply = NULL;	
 	DBusMessageIter	 iter;
 	DBusError err;	
 	

@@ -2142,13 +2142,51 @@ int WID_CREATE_NEW_WTP(char *WTPNAME, unsigned int WTPID, unsigned char* WTPSN, 
 		AC_RADIO[gwtpid]->Radio_TXPOF= 0;/*wuwl add */
 		AC_RADIO[gwtpid]->channelsendtimes = 1;	 /*wuwl add for send channel_cont only one time at the beginning of the wtp access*/
 
-		if(RadioType[i] == 7){
-			AC_RADIO[gwtpid]->Radio_Type = 5;
-		}else{
+		if(7 == RadioType[i])
+		{
+			AC_RADIO[gwtpid]->Radio_Type = Radio_11bg;
+		}
+		else if(10 == RadioType[i])
+		{
+			AC_RADIO[gwtpid]->Radio_Type = Radio_11a_11an;
+		}
+		else if(12 == RadioType[i])
+		{
+			AC_RADIO[gwtpid]->Radio_Type = Radio_11g_11gn;
+		}
+		else if(15 == RadioType[i])
+		{
+			AC_RADIO[gwtpid]->Radio_Type = Radio_11a_11an;
+		}
+		else if((26 == RadioType[i]) || (31 == RadioType[i]))
+		{
+			AC_RADIO[gwtpid]->Radio_Type = Radio_11a_11an_11ac;
+		}
+		else
+		{
 			AC_RADIO[gwtpid]->Radio_Type = RadioType[i];
 		}
 
-		AC_RADIO[gwtpid]->Radio_Type_Bank = RadioType[i];
+		if(10 == RadioType[i])
+		{
+			AC_RADIO[gwtpid]->Radio_Type_Bank = 26;
+		}
+		else if(12 == RadioType[i])
+		{
+			AC_RADIO[gwtpid]->Radio_Type_Bank = 44;
+		}
+		else if(26 == RadioType[i])
+		{
+			AC_RADIO[gwtpid]->Radio_Type_Bank = 90;
+		}
+		else if(31 == RadioType[i])
+		{
+			AC_RADIO[gwtpid]->Radio_Type_Bank = 127;
+		}
+		else
+		{
+			AC_RADIO[gwtpid]->Radio_Type_Bank = RadioType[i];
+		}
 
 		if((AC_RADIO[gwtpid]->Radio_Type & 0x02) == 0x02)
 		{
@@ -6676,6 +6714,26 @@ int WID_WLAN_L3IF_POLICY(unsigned char WlanID, unsigned char wlanPolicy)
 
 	return 0;
 }
+int compare_radio_max_rate(struct Support_Rate_List *ratelist)     
+{
+	struct Support_Rate_List *ptr = NULL; 
+    
+	ptr = ratelist;		 
+	while(ptr != NULL)              
+	{
+		if(ptr->Rate > 540)     
+		{
+			//printf("find it\n");
+			return 1;
+		}
+		else
+		{
+			ptr = ptr->next;       
+		}
+	}
+	//printf("no find\n");
+	return 0;//here return null
+}
 int WID_WLAN_L3IF_POLICY_BR(unsigned char WlanID, unsigned char wlanPolicy)
 {
 	wid_syslog_debug_debug(WID_DEFAULT,"WID_WLAN_L3IF_POLICY_BR policy current:%d past:%d \n",wlanPolicy,AC_WLAN[WlanID]->wlan_if_policy);
@@ -7769,23 +7827,28 @@ int WID_RADIO_SET_TXP(unsigned int RadioID, unsigned short RadioTxp,CWBool flag)
 	return 0;
 }
 int WID_RADIO_CHANNEL_OFFSET_CWMODE_CHECK(unsigned int RadioID, unsigned int check_channel,unsigned int max_chanenl,unsigned int min_channel){
-	int ret2 = CHANNEL_CWMODE_SUCCESS;
-	if((AC_RADIO[RadioID]->cwmode == 1)||(AC_RADIO[RadioID]->cwmode == 2)){
-
-			if(AC_RADIO[RadioID]->channel_offset == 1)
-			{				
-				if(check_channel > max_chanenl){
-					ret2 = CHANNEL_CWMODE_HT40;
-				}	
-			}else if(AC_RADIO[RadioID]->channel_offset == -1){
-				if(check_channel < min_channel){
-					ret2 = CHANNEL_CWMODE_HT40;
-				}	
-			}else{
-				ret2 = CHANNEL_CWMODE_SUCCESS;
-			}
-	
-	}/*else if(AC_RADIO[RadioID]->cwmode == 0){   //fengwenchao comment 20110421
+	    int ret2 = CHANNEL_CWMODE_SUCCESS;
+    	if((AC_RADIO[RadioID]->cwmode == 1)||(AC_RADIO[RadioID]->cwmode == 2)||(AC_RADIO[RadioID]->cwmode == 4))
+        {
+    		if(AC_RADIO[RadioID]->channel_offset == 1)
+    		{				
+    			if(check_channel > max_chanenl)
+    			{
+    				ret2 = CHANNEL_CWMODE_HT40;
+    			}	
+    		}
+    		else if(AC_RADIO[RadioID]->channel_offset == -1)
+    		{
+    			if(check_channel < min_channel)
+    			{
+    				ret2 = CHANNEL_CWMODE_HT40;
+    			}	
+    		}
+    		else
+    		{
+    			ret2 = CHANNEL_CWMODE_SUCCESS;
+    	}
+    }/*else if(AC_RADIO[RadioID]->cwmode == 0){   //fengwenchao comment 20110421
 		if(AC_RADIO[RadioID]->channel_offset == 1)
 		{				
 			if(check_channel > max_chanenl+4){
@@ -7809,7 +7872,8 @@ int WID_RADIO_SET_CHAN(unsigned int RadioID, unsigned char RadioChan){
 		return RADIO_IS_DISABLE;
 	}
 
-	if(((AC_RADIO[RadioID]->Radio_Type & 0x02) == 2)&&(RadioChan<=14)&&(RadioChan!=0))
+	if((((AC_RADIO[RadioID]->Radio_Type & 0x02) == 2) || ((AC_RADIO[RadioID]->Radio_Type & 0x40) == 0x40))
+	    && (RadioChan <= 14) && (RadioChan != 0))
 	{
 	 	return WTP_NO_SURPORT_CHANNEL;
 	}
@@ -8428,8 +8492,18 @@ int WID_RADIO_SET_SUPPORT_RATE(unsigned int RadioID, int RadioRate[],int flag,in
 	//check with the radio type
 	for(i=0;i<num;i++)
 	{
-		if((AC_RADIO[RadioID]->Radio_Type == 1)||(AC_RADIO[RadioID]->Radio_Type == 4)||(AC_RADIO[RadioID]->Radio_Type == 5)||(AC_RADIO[RadioID]->Radio_Type == 2)
-			||(AC_RADIO[RadioID]->Radio_Type == 10)||(AC_RADIO[RadioID]->Radio_Type == 12)||(AC_RADIO[RadioID]->Radio_Type == 13)||(AC_RADIO[RadioID]->Radio_Type == 26)||(AC_RADIO[RadioID]->Radio_Type == 44))
+		if((AC_RADIO[RadioID]->Radio_Type == Radio_11b)
+			||(AC_RADIO[RadioID]->Radio_Type == Radio_11g)
+			||(AC_RADIO[RadioID]->Radio_Type == Radio_11bg)
+			||(AC_RADIO[RadioID]->Radio_Type == Radio_11a)
+			||(AC_RADIO[RadioID]->Radio_Type == Radio_11an)
+			||(AC_RADIO[RadioID]->Radio_Type == Radio_11gn)
+			||(AC_RADIO[RadioID]->Radio_Type == Radio_11bgn)
+			||(AC_RADIO[RadioID]->Radio_Type == Radio_11a_11an)
+			||(AC_RADIO[RadioID]->Radio_Type == Radio_11g_11gn)
+			||(AC_RADIO[RadioID]->Radio_Type == Radio_11ac)
+			||(AC_RADIO[RadioID]->Radio_Type == Radio_11an_11ac)
+            ||(AC_RADIO[RadioID]->Radio_Type == Radio_11a_11an_11ac))
 		{
 			if((RadioRate[i] == 10)||(RadioRate[i] == 20)||(RadioRate[i] == 55)||(RadioRate[i] == 110)||
 			   (RadioRate[i] == 60)||(RadioRate[i] == 90)||(RadioRate[i] == 120)||(RadioRate[i] == 180)||
@@ -8450,105 +8524,151 @@ int WID_RADIO_SET_SUPPORT_RATE(unsigned int RadioID, int RadioRate[],int flag,in
 		switch(AC_RADIO[RadioID]->Radio_Type)
 		{
 
-			case 1 : if((RadioRate[i] == 10)||(RadioRate[i] == 20)||(RadioRate[i] == 55)||(RadioRate[i] == 110))
-							{
-							
-							}
-							else
-							{
-								return WTP_NO_SURPORT_Rate;
-							}
-							break;
-		
-					case 2 : if((RadioRate[i] == 60)||(RadioRate[i] == 90)||(RadioRate[i] == 120)||(RadioRate[i] == 180)||
-							   (RadioRate[i] == 240)||(RadioRate[i] == 360)||(RadioRate[i] == 480)||(RadioRate[i] == 540))
-							{
-							
-							}
-							else
-							{
-								return WTP_NO_SURPORT_Rate;
-							}
-							break;
-							
-					case 4 : if((RadioRate[i] == 60)||(RadioRate[i] == 90)||(RadioRate[i] == 120)||(RadioRate[i] == 180)||
-							   (RadioRate[i] == 240)||(RadioRate[i] == 360)||(RadioRate[i] == 480)||(RadioRate[i] == 540))
-							{
-							
-							}
-							else
-							{
-								return WTP_NO_SURPORT_Rate;
-							}
-							break;
-		
-					case 10 : if((RadioRate[i] == 60)||(RadioRate[i] == 90)||(RadioRate[i] == 120)||(RadioRate[i] == 180)||
-							   (RadioRate[i] == 240)||(RadioRate[i] == 360)||(RadioRate[i] == 480)||(RadioRate[i] == 540))
-							{
-							
-							}
-							else
-							{
-								return WTP_NO_SURPORT_Rate;
-							}
-							break;
-		
-					case 12 : if((RadioRate[i] == 60)||(RadioRate[i] == 90)||(RadioRate[i] == 120)||(RadioRate[i] == 180)||
-							   (RadioRate[i] == 240)||(RadioRate[i] == 360)||(RadioRate[i] == 480)||(RadioRate[i] == 540))
-							{
-							
-							}
-							else
-							{
-								return WTP_NO_SURPORT_Rate;
-							}
-							break;
-		
-					case 26 : if((RadioRate[i] == 60)||(RadioRate[i] == 90)||(RadioRate[i] == 120)||(RadioRate[i] == 180)||
-							   (RadioRate[i] == 240)||(RadioRate[i] == 360)||(RadioRate[i] == 480)||(RadioRate[i] == 540))
-							{
-							
-							}
-							else
-							{
-								return WTP_NO_SURPORT_Rate;
-							}
-							break;
+			case Radio_11b :
+			        if((RadioRate[i] == 10)||(RadioRate[i] == 20)||(RadioRate[i] == 55)||(RadioRate[i] == 110))
+					{
 					
-					case 44 : if((RadioRate[i] == 60)||(RadioRate[i] == 90)||(RadioRate[i] == 120)||(RadioRate[i] == 180)||
-							   (RadioRate[i] == 240)||(RadioRate[i] == 360)||(RadioRate[i] == 480)||(RadioRate[i] == 540))
-							{
-							
-							}
-							else
-							{
-								return WTP_NO_SURPORT_Rate;
-							}
-							break;
-		
-					case 5 : if((RadioRate[i] == 10)||(RadioRate[i] == 20)||(RadioRate[i] == 55)||(RadioRate[i] == 110)||
-							   (RadioRate[i] == 60)||(RadioRate[i] == 90)||(RadioRate[i] == 120)||(RadioRate[i] == 180)||
-							   (RadioRate[i] == 240)||(RadioRate[i] == 360)||(RadioRate[i] == 480)||(RadioRate[i] == 540))
-							{
-							
-							}
-							else
-							{
-								return WTP_NO_SURPORT_Rate;
-							}
-							break;
-							
-					case 13 : if((RadioRate[i] == 10)||(RadioRate[i] == 20)||(RadioRate[i] == 55)||(RadioRate[i] == 110)||
-							   (RadioRate[i] == 60)||(RadioRate[i] == 90)||(RadioRate[i] == 120)||(RadioRate[i] == 180)||
-							   (RadioRate[i] == 240)||(RadioRate[i] == 360)||(RadioRate[i] == 480)||(RadioRate[i] == 540))
-							{
-							
-							}
-							else
-							{
-								return WTP_NO_SURPORT_Rate;
-							}
-							break;
+					}
+					else
+					{
+						return WTP_NO_SURPORT_Rate;
+					}
+					break;
+
+			case Radio_11a :
+			        if((RadioRate[i] == 60)||(RadioRate[i] == 90)||(RadioRate[i] == 120)||(RadioRate[i] == 180)
+					   	||(RadioRate[i] == 240)||(RadioRate[i] == 360)||(RadioRate[i] == 480)||(RadioRate[i] == 540))
+					{
+					
+					}
+					else
+					{
+						return WTP_NO_SURPORT_Rate;
+					}
+					break;
+					
+			case Radio_11g :
+			        if((RadioRate[i] == 60)||(RadioRate[i] == 90)||(RadioRate[i] == 120)||(RadioRate[i] == 180)
+					   	||(RadioRate[i] == 240)||(RadioRate[i] == 360)||(RadioRate[i] == 480)||(RadioRate[i] == 540))
+					{
+					
+					}
+					else
+					{
+						return WTP_NO_SURPORT_Rate;
+					}
+					break;
+
+			case Radio_11bg :
+			        if((RadioRate[i] == 10)||(RadioRate[i] == 20)||(RadioRate[i] == 55)||(RadioRate[i] == 110)
+					   	||(RadioRate[i] == 60)||(RadioRate[i] == 90)||(RadioRate[i] == 120)||(RadioRate[i] == 180)
+					   	||(RadioRate[i] == 240)||(RadioRate[i] == 360)||(RadioRate[i] == 480)||(RadioRate[i] == 540))
+					{
+					
+					}
+					else
+					{
+						return WTP_NO_SURPORT_Rate;
+					}
+					break;
+
+			case Radio_11an :
+			        if((RadioRate[i] == 60)||(RadioRate[i] == 90)||(RadioRate[i] == 120)||(RadioRate[i] == 180)
+					   	||(RadioRate[i] == 240)||(RadioRate[i] == 360)||(RadioRate[i] == 480)||(RadioRate[i] == 540))
+					{
+					
+					}
+					else
+					{
+						return WTP_NO_SURPORT_Rate;
+					}
+					break;
+
+			case Radio_11gn :
+			        if((RadioRate[i] == 60)||(RadioRate[i] == 90)||(RadioRate[i] == 120)||(RadioRate[i] == 180)
+					   	||(RadioRate[i] == 240)||(RadioRate[i] == 360)||(RadioRate[i] == 480)||(RadioRate[i] == 540))
+					{
+					
+					}
+					else
+					{
+						return WTP_NO_SURPORT_Rate;
+					}
+					break;
+
+			case Radio_11bgn :
+			        if((RadioRate[i] == 10)||(RadioRate[i] == 20)||(RadioRate[i] == 55)||(RadioRate[i] == 110)||
+					   (RadioRate[i] == 60)||(RadioRate[i] == 90)||(RadioRate[i] == 120)||(RadioRate[i] == 180)||
+					   (RadioRate[i] == 240)||(RadioRate[i] == 360)||(RadioRate[i] == 480)||(RadioRate[i] == 540))
+					{
+					
+					}
+					else
+					{
+						return WTP_NO_SURPORT_Rate;
+					}
+					break;
+
+			case Radio_11a_11an :
+			        if((RadioRate[i] == 60)||(RadioRate[i] == 90)||(RadioRate[i] == 120)||(RadioRate[i] == 180)
+					   	||(RadioRate[i] == 240)||(RadioRate[i] == 360)||(RadioRate[i] == 480)||(RadioRate[i] == 540))
+					{
+					
+					}
+					else
+					{
+						return WTP_NO_SURPORT_Rate;
+					}
+					break;
+			
+			case Radio_11g_11gn :
+			        if((RadioRate[i] == 60)||(RadioRate[i] == 90)||(RadioRate[i] == 120)||(RadioRate[i] == 180)
+					   	||(RadioRate[i] == 240)||(RadioRate[i] == 360)||(RadioRate[i] == 480)||(RadioRate[i] == 540))
+					{
+					
+					}
+					else
+					{
+						return WTP_NO_SURPORT_Rate;
+					}
+					break;
+
+			case Radio_11ac :
+			        if((RadioRate[i] == 60)||(RadioRate[i] == 90)||(RadioRate[i] == 120)||(RadioRate[i] == 180)
+					   	||(RadioRate[i] == 240)||(RadioRate[i] == 360)||(RadioRate[i] == 480)||(RadioRate[i] == 540))
+					{
+					
+					}
+					else
+					{
+						return WTP_NO_SURPORT_Rate;
+					}
+					break;
+
+			case Radio_11an_11ac :
+			        if((RadioRate[i] == 60)||(RadioRate[i] == 90)||(RadioRate[i] == 120)||(RadioRate[i] == 180)
+					   	||(RadioRate[i] == 240)||(RadioRate[i] == 360)||(RadioRate[i] == 480)||(RadioRate[i] == 540))
+					{
+					
+					}
+					else
+					{
+						return WTP_NO_SURPORT_Rate;
+					}
+					break;
+
+
+			case Radio_11a_11an_11ac:
+			        if((RadioRate[i] == 60)||(RadioRate[i] == 90)||(RadioRate[i] == 120)||(RadioRate[i] == 180)
+					   	||(RadioRate[i] == 240)||(RadioRate[i] == 360)||(RadioRate[i] == 480)||(RadioRate[i] == 540))
+					{
+					
+					}
+					else
+					{
+						return WTP_NO_SURPORT_Rate;
+					}
+					break;
 
 			default : return WTP_NO_SURPORT_TYPE;
 					break;
@@ -8612,7 +8732,7 @@ int WID_RADIO_SET_SUPPORT_RATE(unsigned int RadioID, int RadioRate[],int flag,in
 				}
 				destroy_support_rate_list(AC_RADIO[RadioID]->Radio_Rate);
 
-					if(AC_RADIO[RadioID]->Radio_Type == 1)
+					if(AC_RADIO[RadioID]->Radio_Type == Radio_11b)
 					{
 						switch(RadioRate[0])
 						{
@@ -8639,9 +8759,16 @@ int WID_RADIO_SET_SUPPORT_RATE(unsigned int RadioID, int RadioRate[],int flag,in
 				
 						}
 					}
-					else if((AC_RADIO[RadioID]->Radio_Type == 4)||(AC_RADIO[RadioID]->Radio_Type == 2)||
-				(AC_RADIO[RadioID]->Radio_Type == 10)||(AC_RADIO[RadioID]->Radio_Type == 12)||(AC_RADIO[RadioID]->Radio_Type == 26)||(AC_RADIO[RadioID]->Radio_Type == 44))
-					{
+					else if((AC_RADIO[RadioID]->Radio_Type == Radio_11g)
+				        ||(AC_RADIO[RadioID]->Radio_Type == Radio_11a)
+						||(AC_RADIO[RadioID]->Radio_Type == Radio_11an)
+						||(AC_RADIO[RadioID]->Radio_Type == Radio_11gn)
+						||(AC_RADIO[RadioID]->Radio_Type == Radio_11a_11an)
+						||(AC_RADIO[RadioID]->Radio_Type == Radio_11g_11gn)
+                        ||(AC_RADIO[RadioID]->Radio_Type == Radio_11ac)
+                        ||(AC_RADIO[RadioID]->Radio_Type == Radio_11an_11ac)
+                        ||(AC_RADIO[RadioID]->Radio_Type == Radio_11a_11an_11ac))
+				{
 						switch(RadioRate[0])
 						{
 				
@@ -8703,8 +8830,8 @@ int WID_RADIO_SET_SUPPORT_RATE(unsigned int RadioID, int RadioRate[],int flag,in
 							}
 
 						}
-						else if(AC_RADIO[RadioID]->Radio_Type == 5||AC_RADIO[RadioID]->Radio_Type == 13)
-						{
+						else if(AC_RADIO[RadioID]->Radio_Type == Radio_11bg || AC_RADIO[RadioID]->Radio_Type == Radio_11bgn)
+				        {
 							switch(RadioRate[0])
 							{
 								
@@ -8839,14 +8966,39 @@ int WID_RADIO_SET_MODE(unsigned int RadioID, unsigned int RadioMode)
 	*/
 	
 	//added by weiay 20080716
-	if((RadioMode == 2)||(RadioMode == 1)||(RadioMode == 4)||(RadioMode == 5)||(RadioMode == 8)||(RadioMode == 10)||(RadioMode == 13)
-		||(RadioMode == 12)||(RadioMode == 26)||(RadioMode == 44)/*||(RadioMode == 37)*/)  /*fengwenchao modify 20111109 for GM*/
+	if((RadioMode == Radio_11a) || (RadioMode == Radio_11b) || (RadioMode == Radio_11g) || (RadioMode == Radio_11bg)
+	    || (RadioMode == Radio_11n) ||(RadioMode == Radio_11an)||(RadioMode == Radio_11gn)||(RadioMode == Radio_11bgn)
+	    ||(RadioMode == Radio_11a_11an)||(RadioMode == Radio_11g_11gn)/*||(RadioMode == 37) fengwenchao modify 20111109 for GM*/
+		||(RadioMode == Radio_11ac)||(RadioMode == Radio_11an_11ac)||(RadioMode == Radio_11a_11an_11ac)) 
 	{
 	}
 	else
 	{
 		return WTP_NO_SURPORT_TYPE;
 	}
+	if ((15 == AC_RADIO[RadioID]->Radio_Type_Bank) || (127 == AC_RADIO[RadioID]->Radio_Type_Bank))
+	{
+
+	}
+	else if(Radio_11g_11gn == RadioMode)
+	{
+		if((13 == AC_RADIO[RadioID]->Radio_Type_Bank) || (44 == AC_RADIO[RadioID]->Radio_Type_Bank))
+		{
+				
+		}
+		else
+		{
+			return WTP_NO_SURPORT_TYPE;		
+		}
+	}
+	else
+	{
+		if((AC_RADIO[RadioID]->Radio_Type_Bank | RadioMode) != AC_RADIO[RadioID]->Radio_Type_Bank)
+		{
+			return WTP_NO_SURPORT_TYPE;
+		}		
+	}
+	#if 0
 	/*fengwenchao modify begin for GM 20111109*/
 	if((RadioMode == 44)||(RadioMode == 12))
 	{
@@ -8874,8 +9026,9 @@ int WID_RADIO_SET_MODE(unsigned int RadioID, unsigned int RadioMode)
 		}		
 	}
 	/*fengwenchao modify end*/
+	#endif
 	AC_RADIO[RadioID]->Radio_Type = RadioMode;
-	wid_syslog_debug_debug(WID_DEFAULT,"set radio id is:%d, type is %x",RadioID,RadioMode);
+	wid_syslog_debug_debug(WID_DEFAULT,"%s: set radio %d type %x",__func__,RadioID,RadioMode);
 	
 	if(AC_WTP[AC_RADIO[RadioID]->WTPID]->WTPStat == 5)
 	{
@@ -8934,8 +9087,8 @@ int WID_RADIO_SET_MODE(unsigned int RadioID, unsigned int RadioMode)
 		//display_support_rate_list(AC_RADIO[RadioID]->Radio_Rate);
 	}
 
-	if((AC_RADIO[RadioID]->Radio_Type == 4)||(AC_RADIO[RadioID]->Radio_Type == 2)||(AC_RADIO[RadioID]->Radio_Type == 10)||(AC_RADIO[RadioID]->Radio_Type == 12)
-		||(AC_RADIO[RadioID]->Radio_Type == 26)||(AC_RADIO[RadioID]->Radio_Type == 44))
+	
+	if(((AC_RADIO[RadioID]->Radio_Type&IEEE80211_11A) > 0) || ((AC_RADIO[RadioID]->Radio_Type&IEEE80211_11AC) > 0))
 	{
 		AC_RADIO[RadioID]->Support_Rate_Count = 8;
 		//memory leak
@@ -9032,6 +9185,124 @@ int WID_RADIO_SET_MODE(unsigned int RadioID, unsigned int RadioMode)
 	//{
 	//	return 0;
 	//}
+	if(((AC_RADIO[RadioID]->Radio_Type&IEEE80211_11N) > 0) || ((AC_RADIO[RadioID]->Radio_Type&IEEE80211_11AC) > 0))
+	{
+		/*fengwenchao add 20120314 for requirements-407*/
+		int j = 0;
+		if(AC_RADIO[RadioID]->chainmask_num == 1)
+		{
+			for(j = 0; j < 8; j++)
+			{
+				AC_RADIO[RadioID]->mcs_list[j] = j;
+			}
+			AC_RADIO[RadioID]->mcs_count = 8;
+			
+			if((0 == AC_RADIO[RadioID]->cwmode) || (3 == AC_RADIO[RadioID]->cwmode))
+			{
+				if(0 == AC_RADIO[RadioID]->guardinterval)
+				{
+					rate = 650;
+					AC_RADIO[RadioID]->Radio_Rate = insert_rate_into_list(AC_RADIO[RadioID]->Radio_Rate,rate);
+					
+					delete_rate_from_list(AC_RADIO[RadioID]->Radio_Rate, 0);
+					delsame_rate_from_list(AC_RADIO[RadioID]->Radio_Rate);
+					AC_RADIO[RadioID]->Support_Rate_Count = length_of_rate_list(AC_RADIO[RadioID]->Radio_Rate);
+				}
+				else if(1 == AC_RADIO[RadioID]->guardinterval)
+				{
+					rate = 722;
+					AC_RADIO[RadioID]->Radio_Rate = insert_rate_into_list(AC_RADIO[RadioID]->Radio_Rate,rate);
+					
+					delete_rate_from_list(AC_RADIO[RadioID]->Radio_Rate, 0);
+					delsame_rate_from_list(AC_RADIO[RadioID]->Radio_Rate);
+					AC_RADIO[RadioID]->Support_Rate_Count = length_of_rate_list(AC_RADIO[RadioID]->Radio_Rate);
+				}
+			}
+			else if((1 == AC_RADIO[RadioID]->cwmode)||(2 == AC_RADIO[RadioID]->cwmode)
+			        ||(4 == AC_RADIO[RadioID]->cwmode)||(5 == AC_RADIO[RadioID]->cwmode))
+			{
+				if(0 == AC_RADIO[RadioID]->guardinterval)
+				{
+					rate = 1350;
+					AC_RADIO[RadioID]->Radio_Rate = insert_rate_into_list(AC_RADIO[RadioID]->Radio_Rate,rate);
+					
+					delete_rate_from_list(AC_RADIO[RadioID]->Radio_Rate, 0);
+					delsame_rate_from_list(AC_RADIO[RadioID]->Radio_Rate);
+					AC_RADIO[RadioID]->Support_Rate_Count = length_of_rate_list(AC_RADIO[RadioID]->Radio_Rate);
+				}
+				else if(1 == AC_RADIO[RadioID]->guardinterval)
+				{
+					rate = 1500;
+					AC_RADIO[RadioID]->Radio_Rate = insert_rate_into_list(AC_RADIO[RadioID]->Radio_Rate,rate);
+					
+					delete_rate_from_list(AC_RADIO[RadioID]->Radio_Rate, 0);
+					delsame_rate_from_list(AC_RADIO[RadioID]->Radio_Rate);
+					AC_RADIO[RadioID]->Support_Rate_Count = length_of_rate_list(AC_RADIO[RadioID]->Radio_Rate);
+				}
+			}
+		}
+		else if(AC_RADIO[RadioID]->chainmask_num == 2)
+		{
+			for(j = 0; j < 16; j++)
+			{
+				AC_RADIO[RadioID]->mcs_list[j] = j;
+			}
+			AC_RADIO[RadioID]->mcs_count = 16;
+
+			if((0 == AC_RADIO[RadioID]->cwmode)||(3 == AC_RADIO[RadioID]->cwmode))
+			{
+				if(0 == AC_RADIO[RadioID]->guardinterval)
+				{
+					rate = 1300;
+					AC_RADIO[RadioID]->Radio_Rate = insert_rate_into_list(AC_RADIO[RadioID]->Radio_Rate,rate);
+					
+					delete_rate_from_list(AC_RADIO[RadioID]->Radio_Rate, 0);
+					delsame_rate_from_list(AC_RADIO[RadioID]->Radio_Rate);
+					AC_RADIO[RadioID]->Support_Rate_Count = length_of_rate_list(AC_RADIO[RadioID]->Radio_Rate);
+				}
+				else if(1 == AC_RADIO[RadioID]->guardinterval)
+				{
+					rate = 1444;
+					AC_RADIO[RadioID]->Radio_Rate = insert_rate_into_list(AC_RADIO[RadioID]->Radio_Rate,rate);
+					
+					delete_rate_from_list(AC_RADIO[RadioID]->Radio_Rate, 0);
+					delsame_rate_from_list(AC_RADIO[RadioID]->Radio_Rate);
+					AC_RADIO[RadioID]->Support_Rate_Count = length_of_rate_list(AC_RADIO[RadioID]->Radio_Rate);
+				}
+			}
+			else if((1 == AC_RADIO[RadioID]->cwmode)||(2 == AC_RADIO[RadioID]->cwmode)
+			        ||(4 == AC_RADIO[RadioID]->cwmode)||(5 == AC_RADIO[RadioID]->cwmode))
+			{
+				if(0 == AC_RADIO[RadioID]->guardinterval)
+				{
+					rate = 2700;
+					AC_RADIO[RadioID]->Radio_Rate = insert_rate_into_list(AC_RADIO[RadioID]->Radio_Rate,rate);
+					
+					delete_rate_from_list(AC_RADIO[RadioID]->Radio_Rate, 0);
+					delsame_rate_from_list(AC_RADIO[RadioID]->Radio_Rate);
+					AC_RADIO[RadioID]->Support_Rate_Count = length_of_rate_list(AC_RADIO[RadioID]->Radio_Rate);
+				}
+				else if(1 == AC_RADIO[RadioID]->guardinterval)
+				{
+					rate = 3000;
+					AC_RADIO[RadioID]->Radio_Rate = insert_rate_into_list(AC_RADIO[RadioID]->Radio_Rate,rate);
+					
+					delete_rate_from_list(AC_RADIO[RadioID]->Radio_Rate, 0);
+					delsame_rate_from_list(AC_RADIO[RadioID]->Radio_Rate);
+					AC_RADIO[RadioID]->Support_Rate_Count = length_of_rate_list(AC_RADIO[RadioID]->Radio_Rate);
+				}
+			}
+		}
+		else if(AC_RADIO[RadioID]->chainmask_num == 3)
+		{
+			for(j = 0; j < 24; j++)
+			{
+				AC_RADIO[RadioID]->mcs_list[j] = j;
+			}
+			AC_RADIO[RadioID]->mcs_count = 24;
+		}
+		/*fengwenchao add end*/
+	}
 	if(AC_WTP[AC_RADIO[RadioID]->WTPID]->WTPStat == 5)
 	{
 		AC_RADIO[RadioID]->CMD |= 0x4;
@@ -9058,6 +9329,35 @@ int WID_RADIO_SET_MODE(unsigned int RadioID, unsigned int RadioMode)
 		}
 		CWThreadMutexUnlock(&(gWTPs[WTPIndex].WTPThreadMutex));
 	}
+	if(((AC_RADIO[RadioID]->Radio_Type&IEEE80211_11N) == IEEE80211_11N)
+	    || ((AC_RADIO[RadioID]->Radio_Type&IEEE80211_11AC) == IEEE80211_11AC))
+	{
+		wid_radio_set_mcs_list(RadioID);
+	}
+	if(((3 == AC_RADIO[RadioID]->cwmode)||(4 == AC_RADIO[RadioID]->cwmode)||(5 == AC_RADIO[RadioID]->cwmode))
+	    &&((AC_RADIO[RadioID]->Radio_Type&IEEE80211_11AC) != 0)
+    	&&((AC_RADIO[RadioID]->Radio_Type&IEEE80211_11N) == IEEE80211_11N))
+    {
+        AC_RADIO[RadioID]->cwmode = 0;
+        wid_radio_set_cmmode(RadioID);
+    }
+    WID_RADIO_SET_CHAN(RadioID,0);
+	
+	/*fengwenchao add 20120716 for autelan-3057*/
+	if((AC_RADIO[RadioID]->Radio_Type == Radio_11an)||(AC_RADIO[RadioID]->Radio_Type == Radio_11gn))
+	{
+		AC_RADIO[RadioID]->MixedGreenfield.Mixed_Greenfield = 1;
+		memset(AC_RADIO[RadioID]->MixedGreenfield.Wlan_Mixed, 1, WLAN_NUM);					
+	}
+	else if((AC_RADIO[RadioID]->Radio_Type & IEEE80211_11N) > 0)
+	{
+		AC_RADIO[RadioID]->MixedGreenfield.Mixed_Greenfield = 0;
+		memset(AC_RADIO[RadioID]->MixedGreenfield.Wlan_Mixed, 0, WLAN_NUM);
+	}
+	/*fengwenchao add end xingqj modify 20120926*/
+	
+	return 0;
+	#if 0
 	if((AC_RADIO[RadioID]->Radio_Type&IEEE80211_11N) == IEEE80211_11N)
 	{
 		wid_radio_set_mcs_list(RadioID);
@@ -9073,7 +9373,55 @@ int WID_RADIO_SET_MODE(unsigned int RadioID, unsigned int RadioMode)
 	/*fengwenchao add end*/
 	
 	return 0;
+	#endif
 
+}
+
+void delsame_rate_from_list
+(
+	struct Support_Rate_List *ratelist
+)
+{
+	struct Support_Rate_List *p = NULL;
+	struct Support_Rate_List *q = NULL;
+	struct Support_Rate_List *temp1 = NULL;
+	struct Support_Rate_List *temp2 = NULL;
+	
+	p = ratelist;
+	if (p == NULL)
+	{
+		return;
+	}
+	
+	q = p->next;
+	if (q == NULL)
+	{
+		return;
+	}
+	
+	while ((p != NULL) && (p->next != NULL))
+	{
+		temp1 = p;
+		q = p->next;  
+		
+		while(q)
+		{
+			if(p->Rate != q->Rate)
+			{
+				q = q->next;
+				temp1 = temp1->next;
+			}
+			else
+			{
+				temp2 = q;
+				q = q->next;
+				temp1->next = q;
+				free(temp2);
+				temp2 = NULL;
+			}
+		}
+		p = p->next;
+	}
 }
 
 int WID_RADIO_SET_MGMT_RATE_BASE_WLAN(unsigned int RadioID, unsigned int type,unsigned int rate,unsigned int wlanid)
@@ -29539,7 +29887,7 @@ int WID_RADIO_CHANGE_SUPPORT_RATE_BYGI_MCS_CWMODE(unsigned int RadioID)
 	int rate =0;
 	if(AC_RADIO[RadioID] != NULL)
 	{
-		if((AC_RADIO[RadioID]->cwmode == 0)&&(AC_RADIO[RadioID]->chainmask_num == 1)&&((AC_RADIO[RadioID]->guardinterval == 1)||(AC_RADIO[RadioID]->guardinterval == 0)))  //ht20   单流
+		if(((AC_RADIO[RadioID]->cwmode == 0)||(AC_RADIO[RadioID]->cwmode == 3))&&(AC_RADIO[RadioID]->chainmask_num == 1)&&((AC_RADIO[RadioID]->guardinterval == 1)||(AC_RADIO[RadioID]->guardinterval == 0)))  //ht20   单流
 		{
 			AC_RADIO[RadioID]->Support_Rate_Count = 8;
 			destroy_support_rate_list(AC_RADIO[RadioID]->Radio_Rate);
@@ -29677,7 +30025,7 @@ int WID_RADIO_CHANGE_SUPPORT_RATE_BYGI_MCS_CWMODE(unsigned int RadioID)
 				AC_RADIO[RadioID]->Support_Rate_Count = length_of_rate_list(AC_RADIO[RadioID]->Radio_Rate);
 			}				
 		}
-		else if((AC_RADIO[RadioID]->cwmode == 0)&&(AC_RADIO[RadioID]->chainmask_num == 2)&&((AC_RADIO[RadioID]->guardinterval ==1)||(AC_RADIO[RadioID]->guardinterval == 0)))  //ht20  双流
+		else if(((AC_RADIO[RadioID]->cwmode == 0)||(AC_RADIO[RadioID]->cwmode == 3))&&(AC_RADIO[RadioID]->chainmask_num == 2)&&((AC_RADIO[RadioID]->guardinterval ==1)||(AC_RADIO[RadioID]->guardinterval == 0)))  //ht20  双流
 		{
 			AC_RADIO[RadioID]->Support_Rate_Count = 8;
 			destroy_support_rate_list(AC_RADIO[RadioID]->Radio_Rate);
@@ -29815,7 +30163,7 @@ int WID_RADIO_CHANGE_SUPPORT_RATE_BYGI_MCS_CWMODE(unsigned int RadioID)
 				AC_RADIO[RadioID]->Support_Rate_Count = length_of_rate_list(AC_RADIO[RadioID]->Radio_Rate);
 			}					
 		}
-		else if((AC_RADIO[RadioID]->cwmode == 0)&&(AC_RADIO[RadioID]->chainmask_num == 3)&&((AC_RADIO[RadioID]->guardinterval == 1)||(AC_RADIO[RadioID]->guardinterval == 0)))  //ht20  三流
+		else if(((AC_RADIO[RadioID]->cwmode == 0)||(AC_RADIO[RadioID]->cwmode == 3))&&(AC_RADIO[RadioID]->chainmask_num == 3)&&((AC_RADIO[RadioID]->guardinterval == 1)||(AC_RADIO[RadioID]->guardinterval == 0)))  //ht20  三流
 		{
 			AC_RADIO[RadioID]->Support_Rate_Count = 8;
 			destroy_support_rate_list(AC_RADIO[RadioID]->Radio_Rate);
@@ -29953,7 +30301,7 @@ int WID_RADIO_CHANGE_SUPPORT_RATE_BYGI_MCS_CWMODE(unsigned int RadioID)
 				AC_RADIO[RadioID]->Support_Rate_Count = length_of_rate_list(AC_RADIO[RadioID]->Radio_Rate);
 			}					
 		}		
-		else if(((AC_RADIO[RadioID]->cwmode == 1)||(AC_RADIO[RadioID]->cwmode == 2))&&(AC_RADIO[RadioID]->chainmask_num == 1)&&(AC_RADIO[RadioID]->guardinterval == 0))//ht20/40 or ht40, 单流，GI800
+		else if(((AC_RADIO[RadioID]->cwmode == 1)||(AC_RADIO[RadioID]->cwmode == 2)||(AC_RADIO[RadioID]->cwmode == 4)||(AC_RADIO[RadioID]->cwmode == 5))&&(AC_RADIO[RadioID]->chainmask_num == 1)&&(AC_RADIO[RadioID]->guardinterval == 0))//ht20/40 or ht40, 单流，GI800
 		{
 			AC_RADIO[RadioID]->Support_Rate_Count = 8;
 			destroy_support_rate_list(AC_RADIO[RadioID]->Radio_Rate);
@@ -30091,7 +30439,7 @@ int WID_RADIO_CHANGE_SUPPORT_RATE_BYGI_MCS_CWMODE(unsigned int RadioID)
 				AC_RADIO[RadioID]->Support_Rate_Count = length_of_rate_list(AC_RADIO[RadioID]->Radio_Rate);
 			}			
 		}
-		else if(((AC_RADIO[RadioID]->cwmode == 1)||(AC_RADIO[RadioID]->cwmode == 2))&&(AC_RADIO[RadioID]->chainmask_num == 2)&&(AC_RADIO[RadioID]->guardinterval == 0))//ht20/40 or ht40, 双流，GI800
+		else if(((AC_RADIO[RadioID]->cwmode == 1)||(AC_RADIO[RadioID]->cwmode == 2)||(AC_RADIO[RadioID]->cwmode == 4)||(AC_RADIO[RadioID]->cwmode == 5))&&(AC_RADIO[RadioID]->chainmask_num == 2)&&(AC_RADIO[RadioID]->guardinterval == 0))//ht20/40 or ht40, 双流，GI800
 		{
 			AC_RADIO[RadioID]->Support_Rate_Count = 8;
 			destroy_support_rate_list(AC_RADIO[RadioID]->Radio_Rate);
@@ -30229,7 +30577,7 @@ int WID_RADIO_CHANGE_SUPPORT_RATE_BYGI_MCS_CWMODE(unsigned int RadioID)
 				AC_RADIO[RadioID]->Support_Rate_Count = length_of_rate_list(AC_RADIO[RadioID]->Radio_Rate);
 			}			
 		}
-		else if(((AC_RADIO[RadioID]->cwmode == 1)||(AC_RADIO[RadioID]->cwmode == 2))&&(AC_RADIO[RadioID]->chainmask_num == 3)&&(AC_RADIO[RadioID]->guardinterval == 0))//ht20/40 or ht40, 三流 GI 800
+		else if(((AC_RADIO[RadioID]->cwmode == 1)||(AC_RADIO[RadioID]->cwmode == 2)||(AC_RADIO[RadioID]->cwmode == 4)||(AC_RADIO[RadioID]->cwmode == 5))&&(AC_RADIO[RadioID]->chainmask_num == 3)&&(AC_RADIO[RadioID]->guardinterval == 0))//ht20/40 or ht40, 三流 GI 800
 		{
 			AC_RADIO[RadioID]->Support_Rate_Count = 8;
 			destroy_support_rate_list(AC_RADIO[RadioID]->Radio_Rate);
@@ -30367,7 +30715,7 @@ int WID_RADIO_CHANGE_SUPPORT_RATE_BYGI_MCS_CWMODE(unsigned int RadioID)
 				AC_RADIO[RadioID]->Support_Rate_Count = length_of_rate_list(AC_RADIO[RadioID]->Radio_Rate);
 			}			
 		}		
-		else if(((AC_RADIO[RadioID]->cwmode == 1)||(AC_RADIO[RadioID]->cwmode == 2))&&(AC_RADIO[RadioID]->chainmask_num == 1)&&(AC_RADIO[RadioID]->guardinterval == 1))//ht20/40 or ht40, 单流，GI400
+		else if(((AC_RADIO[RadioID]->cwmode == 1)||(AC_RADIO[RadioID]->cwmode == 2)||(AC_RADIO[RadioID]->cwmode == 4)||(AC_RADIO[RadioID]->cwmode == 5))&&(AC_RADIO[RadioID]->chainmask_num == 1)&&(AC_RADIO[RadioID]->guardinterval == 1))//ht20/40 or ht40, 单流，GI400
 		{
 			AC_RADIO[RadioID]->Support_Rate_Count = 8;
 			destroy_support_rate_list(AC_RADIO[RadioID]->Radio_Rate);
@@ -30505,7 +30853,7 @@ int WID_RADIO_CHANGE_SUPPORT_RATE_BYGI_MCS_CWMODE(unsigned int RadioID)
 				AC_RADIO[RadioID]->Support_Rate_Count = length_of_rate_list(AC_RADIO[RadioID]->Radio_Rate);
 			}			
 		}		
-		else if(((AC_RADIO[RadioID]->cwmode == 1)||(AC_RADIO[RadioID]->cwmode == 2))&&(AC_RADIO[RadioID]->chainmask_num == 2)&&(AC_RADIO[RadioID]->guardinterval == 1))//ht20/40 or ht40, 双流，GI400
+		else if(((AC_RADIO[RadioID]->cwmode == 1)||(AC_RADIO[RadioID]->cwmode == 2)||(AC_RADIO[RadioID]->cwmode == 4)||(AC_RADIO[RadioID]->cwmode == 5))&&(AC_RADIO[RadioID]->chainmask_num == 2)&&(AC_RADIO[RadioID]->guardinterval == 1))//ht20/40 or ht40, 双流，GI400
 		{
 			AC_RADIO[RadioID]->Support_Rate_Count = 8;
 			destroy_support_rate_list(AC_RADIO[RadioID]->Radio_Rate);
@@ -30643,7 +30991,7 @@ int WID_RADIO_CHANGE_SUPPORT_RATE_BYGI_MCS_CWMODE(unsigned int RadioID)
 				AC_RADIO[RadioID]->Support_Rate_Count = length_of_rate_list(AC_RADIO[RadioID]->Radio_Rate);
 			}			
 		}				
-		else if(((AC_RADIO[RadioID]->cwmode == 1)||(AC_RADIO[RadioID]->cwmode == 2))&&(AC_RADIO[RadioID]->chainmask_num == 3)&&(AC_RADIO[RadioID]->guardinterval == 1))//ht20/40 or ht40, 双流，GI400
+		else if(((AC_RADIO[RadioID]->cwmode == 1)||(AC_RADIO[RadioID]->cwmode == 2)||(AC_RADIO[RadioID]->cwmode == 4)||(AC_RADIO[RadioID]->cwmode == 5))&&(AC_RADIO[RadioID]->chainmask_num == 3)&&(AC_RADIO[RadioID]->guardinterval == 1))//ht20/40 or ht40, 双流，GI400
 		{
 			AC_RADIO[RadioID]->Support_Rate_Count = 8;
 			destroy_support_rate_list(AC_RADIO[RadioID]->Radio_Rate);
@@ -30936,86 +31284,148 @@ void wid_check_radio_max_min_channel(unsigned int RadioID,unsigned int *max_chan
 	{
 		switch(AC_RADIO[RadioID]->Radio_country_code)/*wcl modify for AUTELAN-2765*/
 		{
-			case COUNTRY_CHINA_CN : 	
-									if (((AC_RADIO[RadioID]->Radio_Type&IEEE80211_11A)||(AC_RADIO[RadioID]->Radio_Type == 10)||(AC_RADIO[RadioID]->Radio_Type == 26))&&((AC_RADIO[RadioID]->Radio_Chan == 149)\
-										||(AC_RADIO[RadioID]->Radio_Chan == 153)||(AC_RADIO[RadioID]->Radio_Chan == 157)||(AC_RADIO[RadioID]->Radio_Chan == 161)\
-										||(AC_RADIO[RadioID]->Radio_Chan == 165)))
-									{
-										*max_channel = 159;
-										*min_channel = 7;
-									}else{
-										*max_channel = 9;
-										*min_channel = 5;
-									}
-		
-									break;
+			case COUNTRY_CHINA_CN :
+			
+							if (((AC_RADIO[RadioID]->Radio_Type&IEEE80211_11A)||(AC_RADIO[RadioID]->Radio_Type&IEEE80211_11AC))
+								&&((AC_RADIO[RadioID]->Radio_Chan == 149)||(AC_RADIO[RadioID]->Radio_Chan == 153)
+									||(AC_RADIO[RadioID]->Radio_Chan == 157)||(AC_RADIO[RadioID]->Radio_Chan == 161)
+									||(AC_RADIO[RadioID]->Radio_Chan == 165)))
+							{
+								*max_channel = 159;
+								*min_channel = 7;
+							}
+							else
+							{
+								*max_channel = 9;
+								*min_channel = 5;
+							}
+
+							break;
 									
-			case COUNTRY_EUROPE_EU : 
-									if (((AC_RADIO[RadioID]->Radio_Type&IEEE80211_11A)||(AC_RADIO[RadioID]->Radio_Type == 10)||(AC_RADIO[RadioID]->Radio_Type == 26))&&((AC_RADIO[RadioID]->Radio_Chan == 36)||(AC_RADIO[RadioID]->Radio_Chan == 40)||(AC_RADIO[RadioID]->Radio_Chan == 44)||(AC_RADIO[RadioID]->Radio_Chan == 48)||(AC_RADIO[RadioID]->Radio_Chan == 52)\
-										||(AC_RADIO[RadioID]->Radio_Chan == 56)||(AC_RADIO[RadioID]->Radio_Chan == 60)||(AC_RADIO[RadioID]->Radio_Chan == 64)||(AC_RADIO[RadioID]->Radio_Chan == 100)||(AC_RADIO[RadioID]->Radio_Chan == 104)||(AC_RADIO[RadioID]->Radio_Chan == 108)||(AC_RADIO[RadioID]->Radio_Chan == 112)||(AC_RADIO[RadioID]->Radio_Chan == 116)\
-										||(AC_RADIO[RadioID]->Radio_Chan == 120)||(AC_RADIO[RadioID]->Radio_Chan == 124)||(AC_RADIO[RadioID]->Radio_Chan == 128)||(AC_RADIO[RadioID]->Radio_Chan == 132)||(AC_RADIO[RadioID]->Radio_Chan == 136)||(AC_RADIO[RadioID]->Radio_Chan == 140))) 
-									{ /*wcl modify for AUTELAN-2765*/
-										*max_channel = 134;
-										*min_channel = 7;
-									}else{
-										*max_channel = 9;
-										*min_channel = 5;
-									}	
-									break;
+			case COUNTRY_EUROPE_EU :
+			
+							if(((AC_RADIO[RadioID]->Radio_Type&IEEE80211_11A)||(AC_RADIO[RadioID]->Radio_Type&IEEE80211_11AC))
+								&&((AC_RADIO[RadioID]->Radio_Chan == 36)||(AC_RADIO[RadioID]->Radio_Chan == 40)
+									||(AC_RADIO[RadioID]->Radio_Chan == 44)||(AC_RADIO[RadioID]->Radio_Chan == 48)
+									||(AC_RADIO[RadioID]->Radio_Chan == 52)||(AC_RADIO[RadioID]->Radio_Chan == 56)
+									||(AC_RADIO[RadioID]->Radio_Chan == 60)||(AC_RADIO[RadioID]->Radio_Chan == 64)
+									||(AC_RADIO[RadioID]->Radio_Chan == 100)||(AC_RADIO[RadioID]->Radio_Chan == 104)
+									||(AC_RADIO[RadioID]->Radio_Chan == 108)||(AC_RADIO[RadioID]->Radio_Chan == 112)
+									||(AC_RADIO[RadioID]->Radio_Chan == 116)||(AC_RADIO[RadioID]->Radio_Chan == 120)
+									||(AC_RADIO[RadioID]->Radio_Chan == 124)||(AC_RADIO[RadioID]->Radio_Chan == 128)
+									||(AC_RADIO[RadioID]->Radio_Chan == 132)||(AC_RADIO[RadioID]->Radio_Chan == 136)
+									||(AC_RADIO[RadioID]->Radio_Chan == 140))) 
+							{/*wcl modify for AUTELAN-2765*/
+								*max_channel = 134;
+								*min_channel = 7;
+							}
+							else
+							{
+								*max_channel = 9;
+								*min_channel = 5;
+							}	
+							break;
 																	
-			case COUNTRY_USA_US : 
-									if (((AC_RADIO[RadioID]->Radio_Type&IEEE80211_11A)||(AC_RADIO[RadioID]->Radio_Type == 10)||(AC_RADIO[RadioID]->Radio_Type == 26))&&((AC_RADIO[RadioID]->Radio_Chan == 36)||(AC_RADIO[RadioID]->Radio_Chan == 40)||(AC_RADIO[RadioID]->Radio_Chan == 44)||(AC_RADIO[RadioID]->Radio_Chan == 48)||(AC_RADIO[RadioID]->Radio_Chan == 52)\
-										||(AC_RADIO[RadioID]->Radio_Chan == 56)||(AC_RADIO[RadioID]->Radio_Chan == 60)||(AC_RADIO[RadioID]->Radio_Chan == 64)||(AC_RADIO[RadioID]->Radio_Chan == 100)||(AC_RADIO[RadioID]->Radio_Chan == 104)||(AC_RADIO[RadioID]->Radio_Chan == 108)||(AC_RADIO[RadioID]->Radio_Chan == 112)||(AC_RADIO[RadioID]->Radio_Chan == 116)\
-										||(AC_RADIO[RadioID]->Radio_Chan == 120)||(AC_RADIO[RadioID]->Radio_Chan == 124)||(AC_RADIO[RadioID]->Radio_Chan == 128)||(AC_RADIO[RadioID]->Radio_Chan == 132)||(AC_RADIO[RadioID]->Radio_Chan == 136)||(AC_RADIO[RadioID]->Radio_Chan == 140)\
-										||(AC_RADIO[RadioID]->Radio_Chan == 149)||(AC_RADIO[RadioID]->Radio_Chan == 153)||(AC_RADIO[RadioID]->Radio_Chan == 157)||(AC_RADIO[RadioID]->Radio_Chan == 161)||(AC_RADIO[RadioID]->Radio_Chan == 165)) )
-									{ /*wcl modify for AUTELAN-2765*/
-										*max_channel = 159;
-										*min_channel = 7;
-									}else{
-										*max_channel = 7;
-										*min_channel = 5;
-									}
-									break;
+			case COUNTRY_USA_US :
+			
+							if(((AC_RADIO[RadioID]->Radio_Type&IEEE80211_11A)||(AC_RADIO[RadioID]->Radio_Type&IEEE80211_11AC))
+								&&((AC_RADIO[RadioID]->Radio_Chan == 36)||(AC_RADIO[RadioID]->Radio_Chan == 40)
+									||(AC_RADIO[RadioID]->Radio_Chan == 44)||(AC_RADIO[RadioID]->Radio_Chan == 48)
+									||(AC_RADIO[RadioID]->Radio_Chan == 52)||(AC_RADIO[RadioID]->Radio_Chan == 56)
+									||(AC_RADIO[RadioID]->Radio_Chan == 58)||(AC_RADIO[RadioID]->Radio_Chan == 60)
+									||(AC_RADIO[RadioID]->Radio_Chan == 100)||(AC_RADIO[RadioID]->Radio_Chan == 104)
+									||(AC_RADIO[RadioID]->Radio_Chan == 108)||(AC_RADIO[RadioID]->Radio_Chan == 112)
+									||(AC_RADIO[RadioID]->Radio_Chan == 116)||(AC_RADIO[RadioID]->Radio_Chan == 120)
+									||(AC_RADIO[RadioID]->Radio_Chan == 124)||(AC_RADIO[RadioID]->Radio_Chan == 128)
+									||(AC_RADIO[RadioID]->Radio_Chan == 132)||(AC_RADIO[RadioID]->Radio_Chan == 136)
+									||(AC_RADIO[RadioID]->Radio_Chan == 140)||(AC_RADIO[RadioID]->Radio_Chan == 149)
+									||(AC_RADIO[RadioID]->Radio_Chan == 153)||(AC_RADIO[RadioID]->Radio_Chan == 157)
+									||(AC_RADIO[RadioID]->Radio_Chan == 161)||(AC_RADIO[RadioID]->Radio_Chan == 165)) )
+							{ /*wcl modify for AUTELAN-2765*/
+								*max_channel = 159;
+								*min_channel = 7;
+							}
+							else
+							{
+								*max_channel = 7;
+								*min_channel = 5;
+							}
+							break;
 																	
-			case COUNTRY_JAPAN_JP : 
-									if (((AC_RADIO[RadioID]->Radio_Type&IEEE80211_11A)||(AC_RADIO[RadioID]->Radio_Chan == 36)||(AC_RADIO[RadioID]->Radio_Chan == 40)||(AC_RADIO[RadioID]->Radio_Chan == 44)||(AC_RADIO[RadioID]->Radio_Chan == 48)||(AC_RADIO[RadioID]->Radio_Chan == 52)\
-										||(AC_RADIO[RadioID]->Radio_Chan == 56)||(AC_RADIO[RadioID]->Radio_Chan == 60)||(AC_RADIO[RadioID]->Radio_Chan == 64)||(AC_RADIO[RadioID]->Radio_Chan == 100)||(AC_RADIO[RadioID]->Radio_Chan == 104)||(AC_RADIO[RadioID]->Radio_Chan == 108)||(AC_RADIO[RadioID]->Radio_Chan == 112)||(AC_RADIO[RadioID]->Radio_Chan == 116)\
-										||(AC_RADIO[RadioID]->Radio_Chan == 120)||(AC_RADIO[RadioID]->Radio_Chan == 124)||(AC_RADIO[RadioID]->Radio_Chan == 128)||(AC_RADIO[RadioID]->Radio_Chan == 132)||(AC_RADIO[RadioID]->Radio_Chan == 136)||(AC_RADIO[RadioID]->Radio_Chan == 140)\
-										||(AC_RADIO[RadioID]->Radio_Chan == 184)||(AC_RADIO[RadioID]->Radio_Chan == 188)||(AC_RADIO[RadioID]->Radio_Chan == 192)||(AC_RADIO[RadioID]->Radio_Chan == 196)))
-									{ /*wcl modify for AUTELAN-2765*/
-										*max_channel = 40;
-										*min_channel = 7;
-									}else{
-										*max_channel = 10;
-										*min_channel = 5;
-									}										
-									break;
+			case COUNTRY_JAPAN_JP :
+			
+							if (((AC_RADIO[RadioID]->Radio_Type&IEEE80211_11A)||(AC_RADIO[RadioID]->Radio_Type&IEEE80211_11AC))
+								&&((AC_RADIO[RadioID]->Radio_Chan == 36)||(AC_RADIO[RadioID]->Radio_Chan == 40)
+									||(AC_RADIO[RadioID]->Radio_Chan == 44)||(AC_RADIO[RadioID]->Radio_Chan == 48)
+									||(AC_RADIO[RadioID]->Radio_Chan == 52)||(AC_RADIO[RadioID]->Radio_Chan == 56)
+									||(AC_RADIO[RadioID]->Radio_Chan == 60)||(AC_RADIO[RadioID]->Radio_Chan == 64)
+									||(AC_RADIO[RadioID]->Radio_Chan == 100)||(AC_RADIO[RadioID]->Radio_Chan == 104)
+									||(AC_RADIO[RadioID]->Radio_Chan == 108)||(AC_RADIO[RadioID]->Radio_Chan == 112)
+									||(AC_RADIO[RadioID]->Radio_Chan == 116)||(AC_RADIO[RadioID]->Radio_Chan == 120)
+									||(AC_RADIO[RadioID]->Radio_Chan == 124)||(AC_RADIO[RadioID]->Radio_Chan == 128)
+									||(AC_RADIO[RadioID]->Radio_Chan == 132)||(AC_RADIO[RadioID]->Radio_Chan == 136)
+									||(AC_RADIO[RadioID]->Radio_Chan == 140)||(AC_RADIO[RadioID]->Radio_Chan == 184)
+									||(AC_RADIO[RadioID]->Radio_Chan == 188)||(AC_RADIO[RadioID]->Radio_Chan == 192)
+									||(AC_RADIO[RadioID]->Radio_Chan == 196)))
+							{ /*wcl modify for AUTELAN-2765*/
+								*max_channel = 40;
+								*min_channel = 7;
+							}
+							else
+							{
+								*max_channel = 10;
+								*min_channel = 5;
+							}										
+							break;
 																	
-			case COUNTRY_FRANCE_FR : 
-									if (((AC_RADIO[RadioID]->Radio_Type&IEEE80211_11A)||(AC_RADIO[RadioID]->Radio_Type == 10)||(AC_RADIO[RadioID]->Radio_Type == 26))&&((AC_RADIO[RadioID]->Radio_Chan == 36)||(AC_RADIO[RadioID]->Radio_Chan == 40)||(AC_RADIO[RadioID]->Radio_Chan == 44)||(AC_RADIO[RadioID]->Radio_Chan == 48)||(AC_RADIO[RadioID]->Radio_Chan == 52)\
-										||(AC_RADIO[RadioID]->Radio_Chan == 56)||(AC_RADIO[RadioID]->Radio_Chan == 60)||(AC_RADIO[RadioID]->Radio_Chan == 64)||(AC_RADIO[RadioID]->Radio_Chan == 100)||(AC_RADIO[RadioID]->Radio_Chan == 104)||(AC_RADIO[RadioID]->Radio_Chan == 108)||(AC_RADIO[RadioID]->Radio_Chan == 112)||(AC_RADIO[RadioID]->Radio_Chan == 116)\
-										||(AC_RADIO[RadioID]->Radio_Chan == 120)||(AC_RADIO[RadioID]->Radio_Chan == 124)||(AC_RADIO[RadioID]->Radio_Chan == 128)||(AC_RADIO[RadioID]->Radio_Chan == 132)||(AC_RADIO[RadioID]->Radio_Chan == 136)||(AC_RADIO[RadioID]->Radio_Chan == 140))) 
-									{ /*wcl modify for AUTELAN-2765*/
-										*max_channel = 134;
-										*min_channel = 7;
-									}else{
-										*max_channel = 7;
-										*min_channel = 7;
-									}	
-									break;
+			case COUNTRY_FRANCE_FR :
+			
+							if(((AC_RADIO[RadioID]->Radio_Type&IEEE80211_11A)||(AC_RADIO[RadioID]->Radio_Type&IEEE80211_11AC))
+								&&((AC_RADIO[RadioID]->Radio_Chan == 36)||(AC_RADIO[RadioID]->Radio_Chan == 40)
+									||(AC_RADIO[RadioID]->Radio_Chan == 44)||(AC_RADIO[RadioID]->Radio_Chan == 48)
+									||(AC_RADIO[RadioID]->Radio_Chan == 52)||(AC_RADIO[RadioID]->Radio_Chan == 56)
+									||(AC_RADIO[RadioID]->Radio_Chan == 60)||(AC_RADIO[RadioID]->Radio_Chan == 64)
+									||(AC_RADIO[RadioID]->Radio_Chan == 100)||(AC_RADIO[RadioID]->Radio_Chan == 104)
+									||(AC_RADIO[RadioID]->Radio_Chan == 108)||(AC_RADIO[RadioID]->Radio_Chan == 112)
+									||(AC_RADIO[RadioID]->Radio_Chan == 116)||(AC_RADIO[RadioID]->Radio_Chan == 120)
+									||(AC_RADIO[RadioID]->Radio_Chan == 124)||(AC_RADIO[RadioID]->Radio_Chan == 128)
+									||(AC_RADIO[RadioID]->Radio_Chan == 132)||(AC_RADIO[RadioID]->Radio_Chan == 136)
+									||(AC_RADIO[RadioID]->Radio_Chan == 140))) 
+							{/*wcl modify for AUTELAN-2765*/
+								*max_channel = 134;
+								*min_channel = 7;
+							}
+							else
+							{
+								*max_channel = 7;
+								*min_channel = 7;
+							}	
+							break;
 																	
-			case COUNTRY_SPAIN_ES : 
-									if (((AC_RADIO[RadioID]->Radio_Type&IEEE80211_11A)||(AC_RADIO[RadioID]->Radio_Type == 10)||(AC_RADIO[RadioID]->Radio_Type == 26))&&((AC_RADIO[RadioID]->Radio_Chan == 36)||(AC_RADIO[RadioID]->Radio_Chan == 40)||(AC_RADIO[RadioID]->Radio_Chan == 44)||(AC_RADIO[RadioID]->Radio_Chan == 48)||(AC_RADIO[RadioID]->Radio_Chan == 52)\
-										||(AC_RADIO[RadioID]->Radio_Chan == 56)||(AC_RADIO[RadioID]->Radio_Chan == 60)||(AC_RADIO[RadioID]->Radio_Chan == 64)||(AC_RADIO[RadioID]->Radio_Chan == 100)||(AC_RADIO[RadioID]->Radio_Chan == 104)||(AC_RADIO[RadioID]->Radio_Chan == 108)||(AC_RADIO[RadioID]->Radio_Chan == 112)||(AC_RADIO[RadioID]->Radio_Chan == 116)\
-										||(AC_RADIO[RadioID]->Radio_Chan == 120)||(AC_RADIO[RadioID]->Radio_Chan == 124)||(AC_RADIO[RadioID]->Radio_Chan == 128)||(AC_RADIO[RadioID]->Radio_Chan == 132)||(AC_RADIO[RadioID]->Radio_Chan == 136)||(AC_RADIO[RadioID]->Radio_Chan == 140))) 
-									{ /*wcl modify for AUTELAN-2765*/
-										*max_channel = 134;
-										*min_channel = 7;
-									}else{
-										*max_channel = 5;
-										*min_channel = 7;
-									}	
-									break;
+			case COUNTRY_SPAIN_ES :
+			
+							if(((AC_RADIO[RadioID]->Radio_Type&IEEE80211_11A)||(AC_RADIO[RadioID]->Radio_Type&IEEE80211_11AC))
+								&&((AC_RADIO[RadioID]->Radio_Chan == 36)||(AC_RADIO[RadioID]->Radio_Chan == 40)
+									||(AC_RADIO[RadioID]->Radio_Chan == 44)||(AC_RADIO[RadioID]->Radio_Chan == 48)
+									||(AC_RADIO[RadioID]->Radio_Chan == 52)||(AC_RADIO[RadioID]->Radio_Chan == 56)
+									||(AC_RADIO[RadioID]->Radio_Chan == 60)||(AC_RADIO[RadioID]->Radio_Chan == 64)
+									||(AC_RADIO[RadioID]->Radio_Chan == 100)||(AC_RADIO[RadioID]->Radio_Chan == 104)
+									||(AC_RADIO[RadioID]->Radio_Chan == 108)||(AC_RADIO[RadioID]->Radio_Chan == 112)
+									||(AC_RADIO[RadioID]->Radio_Chan == 116)||(AC_RADIO[RadioID]->Radio_Chan == 120)
+									||(AC_RADIO[RadioID]->Radio_Chan == 124)||(AC_RADIO[RadioID]->Radio_Chan == 128)
+									||(AC_RADIO[RadioID]->Radio_Chan == 132)||(AC_RADIO[RadioID]->Radio_Chan == 136)
+									||(AC_RADIO[RadioID]->Radio_Chan == 140))) 
+							{ /*wcl modify for AUTELAN-2765*/
+								*max_channel = 134;
+								*min_channel = 7;
+							}
+							else
+							{
+								*max_channel = 5;
+								*min_channel = 7;
+							}	
+							break;
+		
 		
 			default : 
 			break;

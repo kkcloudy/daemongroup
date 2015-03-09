@@ -63,6 +63,9 @@ int WID_ADD_WLAN_APPLY_RADIO(unsigned int RadioID,unsigned char WlanID);
 //int WID_RADIO_SET_RATE(unsigned int RadioID, unsigned short RadioRate);
 int WID_RADIO_SET_SUPPORT_RATE(unsigned int RadioID,int RadioRate [ ],int flag,int num);
 int WID_RADIO_SET_MODE(unsigned int RadioID, unsigned int RadioMode);
+int compare_radio_max_rate(struct Support_Rate_List *ratelist); 
+void delsame_rate_from_list(struct Support_Rate_List *ratelist);
+
 //added end
 int WID_RADIO_SET_MGMT_RATE_BASE_WLAN(unsigned int RadioID, unsigned int type,unsigned int rate,unsigned int wlanid);
 int WID_RADIO_CLEAR_RATE_FOR_WLAN(unsigned int RadioID,unsigned int wlanid);

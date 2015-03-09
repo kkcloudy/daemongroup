@@ -329,7 +329,7 @@ enum wid_radio_type {
 	IEEE80211_11N = 0x8,
 	IEEE80211_11AN = 0x10,      //fengwenchao add for GM 20111109
 	IEEE80211_11GN = 0x20,      //fengwenchao add for GM 20111109
-
+    IEEE80211_11AC = 0x40, 
 };
 
 enum wid_check_type {

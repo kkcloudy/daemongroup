@@ -364,6 +364,25 @@ struct radio_info_type_dcli{
 	char reserved2;
 	unsigned short reserved3;	
 };
+
+enum radio_type_e
+{
+	Radio_none = 0,
+	Radio_11b = 1,
+	Radio_11a = 2,
+	Radio_11g = 4,
+	Radio_11bg = 5,
+	Radio_11n = 8,
+	Radio_11an = 10,
+	Radio_11gn = 12,
+	Radio_11bgn = 13,
+	Radio_11a_11an = 26,
+	Radio_11g_11gn = 44,
+	Radio_11ac = 64,
+    Radio_11an_11ac = 74,
+    Radio_11a_11an_11ac = 90,
+};
+
 typedef enum{
 	DOWN_LINK_IF_TYPE = 0x1,		
 	DOWN_LINK_IP_TYPE = 0x2,
@@ -429,7 +448,7 @@ typedef struct
 	unsigned char L_RadioID;
 	unsigned char WlanID;
 	unsigned char Mixed_Greenfield;
-	
+	unsigned char Wlan_Mixed[WLAN_NUM];	
 }MixedGreenfieldParameter;
 struct tag_wtpid{
 	unsigned int wtpid;

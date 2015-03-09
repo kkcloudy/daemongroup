@@ -36834,7 +36834,7 @@ DBusMessage * wid_dbus_interface_radio_set_chan(DBusConnection *conn, DBusMessag
 													{
 														ret1 = COUNTRY_CHINA_CN;
 													}
-												if (((AC_RADIO[ID]->Radio_Type&IEEE80211_11A)||(AC_RADIO[ID]->Radio_Type == 10))&&((check_channel == 149)||(check_channel == 153)||(check_channel == 157)||(check_channel == 161)||(check_channel == 165)) )
+												if (((AC_RADIO[ID]->Radio_Type&IEEE80211_11A)||(AC_RADIO[ID]->Radio_Type&IEEE80211_11AC))&&((check_channel == 149)||(check_channel == 153)||(check_channel == 157)||(check_channel == 161)||(check_channel == 165)) )
 													{
 														ret1 = COUNTRY_CODE_SUCCESS;
 														max_chanenl = 159;
@@ -36842,116 +36842,139 @@ DBusMessage * wid_dbus_interface_radio_set_chan(DBusConnection *conn, DBusMessag
 													}
 												else
 													{
-														max_chanenl = 7;
-														min_channel = 7;
+														max_chanenl = 9;
+														min_channel = 5;
 													}
 
 												break;
 									
 						case COUNTRY_EUROPE_EU : 
-												if(check_channel >= 14)
-													{
-														ret1 = COUNTRY_EUROPE_EU;
-													}
-												if (((AC_RADIO[ID]->Radio_Type&IEEE80211_11A)||(AC_RADIO[ID]->Radio_Type == 10))&&((check_channel == 36)||(check_channel == 40)||(check_channel == 44)||(check_channel == 48)||(check_channel == 52)\
-												||(check_channel == 56)||(check_channel == 58)||(check_channel == 60)||(check_channel == 100)||(check_channel == 104)||(check_channel == 108)||(check_channel == 112)||(check_channel == 116)\
-												||(check_channel == 120)||(check_channel == 124)||(check_channel == 128)||(check_channel == 132)||(check_channel == 136)||(check_channel == 140))) 
-													{
-														ret1 = COUNTRY_CODE_SUCCESS;
-														max_chanenl = 134;
-														min_channel = 7;
-													}
-												else
-													{
-														max_chanenl = 7;
-														min_channel = 7;
-													}	
-												break;
+														
+                       						    if(check_channel >= 14)
+                        						{
+                        							ret1 = COUNTRY_EUROPE_EU;
+                        						}
+                        						if(((AC_RADIO[ID]->Radio_Type & IEEE80211_11A)||(AC_RADIO[ID]->Radio_Type & IEEE80211_11AC))
+                        							&&((check_channel == 36)||(check_channel == 40)||(check_channel == 44)||(check_channel == 48)
+                        								||(check_channel == 52)||(check_channel == 56)||(check_channel == 60)||(check_channel == 64)
+                        								||(check_channel == 100)||(check_channel == 104)||(check_channel == 108)||(check_channel == 112)
+                        								||(check_channel == 116)||(check_channel == 120)||(check_channel == 124)||(check_channel == 128)
+                        								||(check_channel == 132)||(check_channel == 136)||(check_channel == 140))) /*wcl modify for AUTELAN-2765*/
+                        						{
+                        							ret1 = COUNTRY_CODE_SUCCESS;
+                        							max_chanenl = 134;
+                        							min_channel = 7;
+                        						}
+                        						else
+                        						{
+                        							max_chanenl = 9;
+                        							min_channel = 5;
+                        						}	
+                        						break;
+                     							
 																	
 						case COUNTRY_USA_US : 
-											if((check_channel >= 12))
-												{
-													ret1 = COUNTRY_USA_US;
-												}
-											if (((AC_RADIO[ID]->Radio_Type&IEEE80211_11A)||(AC_RADIO[ID]->Radio_Type == 10))&&((check_channel == 36)||(check_channel == 40)||(check_channel == 44)||(check_channel == 48)||(check_channel == 52)\
-												||(check_channel == 56)||(check_channel == 60)||(check_channel == 64)||(check_channel == 100)||(check_channel == 104)||(check_channel == 108)||(check_channel == 112)||(check_channel == 116)\
-												||(check_channel == 120)||(check_channel == 124)||(check_channel == 128)||(check_channel == 132)||(check_channel == 136)||(check_channel == 140)||(check_channel == 149)||(check_channel == 153)||(check_channel == 157)||(check_channel == 161)||(check_channel == 165)) )/*wcl modify for AUTELAN-2765*/
-												{
-													ret1 = COUNTRY_CODE_SUCCESS;
-													max_chanenl = 159;
-													min_channel = 7;
-												}
-											else
-												{
-													max_chanenl = 5;
-													min_channel = 7;
-												}
-											break;
+			
+    						if((check_channel >= 12))
+    						{
+    							ret1 = COUNTRY_USA_US;
+    						}
+    						if(((AC_RADIO[ID]->Radio_Type & IEEE80211_11A)||(AC_RADIO[ID]->Radio_Type & IEEE80211_11AC))
+    							&&((check_channel == 36)||(check_channel == 40)||(check_channel == 44)||(check_channel == 48)
+    								||(check_channel == 52)||(check_channel == 56)||(check_channel == 60)||(check_channel == 64)
+    								||(check_channel == 100)||(check_channel == 104)||(check_channel == 108)||(check_channel == 112)
+    								||(check_channel == 116)||(check_channel == 120)||(check_channel == 124)||(check_channel == 128)
+    								||(check_channel == 132)||(check_channel == 136)||(check_channel == 140)||(check_channel == 149)
+    								||(check_channel == 153)||(check_channel == 157)||(check_channel == 161)||(check_channel == 165)))/*wcl modify for AUTELAN-2765*/
+    						{
+    							ret1 = COUNTRY_CODE_SUCCESS;
+    							max_chanenl = 159;
+    							min_channel = 7;
+    						}
+    						else
+    						{
+    							max_chanenl = 7;
+    							min_channel = 5;
+    						}
+    						break;
 																	
-						case COUNTRY_JAPAN_JP : 
-											if((check_channel >= 15))
-												{
-													ret1 = COUNTRY_JAPAN_JP;
-												}
-											if (((AC_RADIO[ID]->Radio_Type&IEEE80211_11A)||(AC_RADIO[ID]->Radio_Type == 10))&&((check_channel == 36)||(check_channel == 40)||(check_channel == 44)||(check_channel == 48)||(check_channel == 52)\
-												||(check_channel == 56)||(check_channel == 60)||(check_channel == 64)||(check_channel == 100)||(check_channel == 104)||(check_channel == 108)||(check_channel == 112)||(check_channel == 116)\
-												||(check_channel == 120)||(check_channel == 124)||(check_channel == 128)||(check_channel == 132)||(check_channel == 136)||(check_channel == 140)||(check_channel == 184)||(check_channel == 188)||(check_channel == 192)||(check_channel == 196)) )/*wcl modify for AUTELAN-2765*/
-												{
-													ret1 = COUNTRY_CODE_SUCCESS;
-													max_chanenl = 40;
-													min_channel = 7;
-												}
-											else
-												{
-													max_chanenl = 8;
-													min_channel = 7;
-												}										
-											break;
+			case COUNTRY_JAPAN_JP :
+			
+							if((check_channel >= 15))
+							{
+								ret1 = COUNTRY_JAPAN_JP;
+							}
+							if(((AC_RADIO[ID]->Radio_Type & IEEE80211_11A)||(AC_RADIO[ID]->Radio_Type & IEEE80211_11AC))
+								&&((check_channel == 36)||(check_channel == 40)||(check_channel == 44)||(check_channel == 48)
+									||(check_channel == 52)||(check_channel == 56)||(check_channel == 60)||(check_channel == 64)
+									||(check_channel == 100)||(check_channel == 104)||(check_channel == 108)||(check_channel == 112)
+									||(check_channel == 116)||(check_channel == 120)||(check_channel == 124)||(check_channel == 128)
+									||(check_channel == 132)||(check_channel == 136)||(check_channel == 140)||(check_channel == 184)
+									||(check_channel == 188)||(check_channel == 192)||(check_channel == 196)))/*wcl modify for AUTELAN-2765*/
+							{
+								ret1 = COUNTRY_CODE_SUCCESS;
+								max_chanenl = 40;
+								min_channel = 7;
+							}
+							else
+							{
+								max_chanenl = 10;
+								min_channel = 5;
+							}										
+							break;
 																	
-						case COUNTRY_FRANCE_FR : 
-											if((check_channel != 0)&&(check_channel != 10)&&(check_channel != 11)&&(check_channel != 12)&&(check_channel != 13))
-												{
-													ret1 = COUNTRY_FRANCE_FR;
-												}
-											if (((AC_RADIO[ID]->Radio_Type&IEEE80211_11A)||(AC_RADIO[ID]->Radio_Type == 10))&&((check_channel == 36)||(check_channel == 40)||(check_channel == 44)||(check_channel == 48)||(check_channel == 52)\
-												||(check_channel == 56)||(check_channel == 60)||(check_channel == 64)||(check_channel == 100)||(check_channel == 104)||(check_channel == 108)||(check_channel == 112)||(check_channel == 116)\
-												||(check_channel == 120)||(check_channel == 124)||(check_channel == 128)||(check_channel == 132)||(check_channel == 136)||(check_channel == 140))) /*wcl modify for AUTELAN-2765*/
-												{
-												ret1 = COUNTRY_CODE_SUCCESS;
-												max_chanenl = 134;
-												min_channel = 7;
-												}
-											else
-												{
-													max_chanenl = 7;
-													min_channel = 7;
-												}	
-											break;
+			case COUNTRY_FRANCE_FR :
+			
+							if((check_channel != 0)&&(check_channel != 10)&&(check_channel != 11)&&(check_channel != 12)&&(check_channel != 13))
+							{
+								ret1 = COUNTRY_FRANCE_FR;
+							}
+							if (((AC_RADIO[ID]->Radio_Type & IEEE80211_11A)||(AC_RADIO[ID]->Radio_Type & IEEE80211_11AC))
+								&&((check_channel == 36)||(check_channel == 40)||(check_channel == 44)||(check_channel == 48)
+									||(check_channel == 52)||(check_channel == 56)||(check_channel == 60)||(check_channel == 64)
+									||(check_channel == 100)||(check_channel == 104)||(check_channel == 108)||(check_channel == 112)
+									||(check_channel == 116)||(check_channel == 120)||(check_channel == 124)||(check_channel == 128)
+									||(check_channel == 132)||(check_channel == 136)||(check_channel == 140))) /*wcl modify for AUTELAN-2765*/
+							{
+								ret1 = COUNTRY_CODE_SUCCESS;
+								max_chanenl = 134;
+								min_channel = 7;
+							}
+							else
+							{
+								max_chanenl = 7;
+								min_channel = 7;
+							}	
+							break;
 																	
-						case COUNTRY_SPAIN_ES : 
-											if((check_channel != 0)&&(check_channel != 10)&&(check_channel != 11))
-												{
-													ret1 = COUNTRY_SPAIN_ES;
-												}
-											if (((AC_RADIO[ID]->Radio_Type&IEEE80211_11A)||(AC_RADIO[ID]->Radio_Type == 10))&&((check_channel == 36)||(check_channel == 40)||(check_channel == 44)||(check_channel == 48)||(check_channel == 52)\
-												||(check_channel == 56)||(check_channel == 60)||(check_channel == 64)||(check_channel == 100)||(check_channel == 104)||(check_channel == 108)||(check_channel == 112)||(check_channel == 116)\
-												||(check_channel == 120)||(check_channel == 124)||(check_channel == 128)||(check_channel == 132)||(check_channel == 136)||(check_channel == 140))) /*wcl modify for AUTELAN-2765*/
-												{
-													ret1 = COUNTRY_CODE_SUCCESS;
-													max_chanenl = 134;
-													min_channel = 7;
-												}
-											else
-												{
-													max_chanenl = 5;
-													min_channel = 7;
-												}	
-											break;
+			case COUNTRY_SPAIN_ES :
+			
+							if((check_channel != 0)&&(check_channel != 10)&&(check_channel != 11))
+							{
+								ret1 = COUNTRY_SPAIN_ES;
+							}
+							if (((AC_RADIO[ID]->Radio_Type & IEEE80211_11A)||(AC_RADIO[ID]->Radio_Type & IEEE80211_11AC))
+								&&((check_channel == 36)||(check_channel == 40)||(check_channel == 44)||(check_channel == 48)
+									||(check_channel == 52)||(check_channel == 56)||(check_channel == 60)||(check_channel == 64)
+									||(check_channel == 100)||(check_channel == 104)||(check_channel == 108)||(check_channel == 112)
+									||(check_channel == 116)||(check_channel == 120)||(check_channel == 124)||(check_channel == 128)
+									||(check_channel == 132)||(check_channel == 136)||(check_channel == 140))) /*wcl modify for AUTELAN-2765*/
+							{
+								ret1 = COUNTRY_CODE_SUCCESS;
+								max_chanenl = 134;
+								min_channel = 7;
+							}
+							else
+							{
+								max_chanenl = 5;
+								min_channel = 7;
+							}	
+							break;
 
 						default : ret1 = COUNTRY_CODE_SUCCESS;break;
 				}
 		/*11n channel offset check*/
-			if(AC_RADIO[ID]->Radio_Type&IEEE80211_11N)
+			if((AC_RADIO[ID]->Radio_Type&IEEE80211_11N)||(AC_RADIO[ID]->Radio_Type&IEEE80211_11AC))
 				{
 					ret2 = WID_RADIO_CHANNEL_OFFSET_CWMODE_CHECK(ID,check_channel,max_chanenl,min_channel);
 				}
@@ -37282,37 +37305,41 @@ DBusMessage * wid_dbus_interface_radio_set_chan(DBusConnection *conn, DBusMessag
 		{
 			case COUNTRY_CHINA_CN : 
 									if(check_channel >= 14)
-									{
-										ret1 = COUNTRY_CHINA_CN;
-									}
-									if (((AC_RADIO[RadioID]->Radio_Type&IEEE80211_11A)||(AC_RADIO[RadioID]->Radio_Type == 10))&&((check_channel == 149)||(check_channel == 153)||(check_channel == 157)||(check_channel == 161)||(check_channel == 165)) )
-									{
-										ret1 = COUNTRY_CODE_SUCCESS;
-										max_chanenl = 159;
-										min_channel = 7;
-									}else{
-										max_chanenl = 9;
-										min_channel = 5;
-									}
+										{
+											ret1 = COUNTRY_CHINA_CN;
+										}
+									if (((AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_Type&IEEE80211_11A)||(AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_Type == 10))&&((check_channel == 149)||(check_channel == 153)||(check_channel == 157)||(check_channel == 161)||(check_channel == 165)) )
+										{
+											ret1 = COUNTRY_CODE_SUCCESS;
+											max_chanenl = 159;
+											min_channel = 7;
+										}
+									else
+										{
+											max_chanenl = 7;
+											min_channel = 7;
+										}
 
 									break;
 									
 			case COUNTRY_EUROPE_EU : 
 									if(check_channel >= 14)
-									{
-										ret1 = COUNTRY_EUROPE_EU;
-									}
-									if (((AC_RADIO[RadioID]->Radio_Type&IEEE80211_11A)||(AC_RADIO[RadioID]->Radio_Type == 10))&&((check_channel == 36)||(check_channel == 40)||(check_channel == 44)||(check_channel == 48)||(check_channel == 52)\
-										||(check_channel == 56)||(check_channel == 60)||(check_channel == 64)||(check_channel == 100)||(check_channel == 104)||(check_channel == 108)||(check_channel == 112)||(check_channel == 116)\
-										||(check_channel == 120)||(check_channel == 124)||(check_channel == 128)||(check_channel == 132)||(check_channel == 136)||(check_channel == 140))) /*wcl modify for AUTELAN-2765*/
-									{
-										ret1 = COUNTRY_CODE_SUCCESS;
-										max_chanenl = 134;
-										min_channel = 7;
-									}else{
-										max_chanenl = 9;
-										min_channel = 5;
-									}	
+										{
+											ret1 = COUNTRY_EUROPE_EU;
+										}
+									if (((AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_Type&IEEE80211_11A)||(AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_Type == 10))&&((check_channel == 36)||(check_channel == 40)||(check_channel == 44)||(check_channel == 48)||(check_channel == 52)\
+									||(check_channel == 56)||(check_channel == 60)||(check_channel == 64)||(check_channel == 100)||(check_channel == 104)||(check_channel == 108)||(check_channel == 112)||(check_channel == 116)\
+									||(check_channel == 120)||(check_channel == 124)||(check_channel == 128)||(check_channel == 132)||(check_channel == 136)||(check_channel == 140))) /*wcl modify for AUTELAN-2765*/
+										{
+											ret1 = COUNTRY_CODE_SUCCESS;
+											max_chanenl = 134;
+											min_channel = 7;
+										}
+									else
+										{
+											max_chanenl = 7;
+											min_channel = 7;
+										}	
 									break;
 																	
 			case COUNTRY_USA_US : 
@@ -37320,16 +37347,18 @@ DBusMessage * wid_dbus_interface_radio_set_chan(DBusConnection *conn, DBusMessag
 									{
 										ret1 = COUNTRY_USA_US;
 									}
-									if (((AC_RADIO[RadioID]->Radio_Type&IEEE80211_11A)||(AC_RADIO[RadioID]->Radio_Type == 10))&&((check_channel == 36)||(check_channel == 40)||(check_channel == 44)||(check_channel == 48)||(check_channel == 52)\
-												||(check_channel == 56)||(check_channel == 60)||(check_channel == 64)||(check_channel == 100)||(check_channel == 104)||(check_channel == 108)||(check_channel == 112)||(check_channel == 116)\
-												||(check_channel == 120)||(check_channel == 124)||(check_channel == 128)||(check_channel == 132)||(check_channel == 136)||(check_channel == 140)||(check_channel == 149)||(check_channel == 153)||(check_channel == 157)||(check_channel == 161)||(check_channel == 165)) )/*wcl modify for AUTELAN-2765*/
+								if (((AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_Type&IEEE80211_11A)||(AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_Type == 10))&&((check_channel == 36)||(check_channel == 40)||(check_channel == 44)||(check_channel == 48)||(check_channel == 52)\
+	||(check_channel == 56)||(check_channel == 60)||(check_channel == 64)||(check_channel == 100)||(check_channel == 104)||(check_channel == 108)||(check_channel == 112)||(check_channel == 116)\
+	||(check_channel == 120)||(check_channel == 124)||(check_channel == 128)||(check_channel == 132)||(check_channel == 136)||(check_channel == 140)||(check_channel == 149)||(check_channel == 153)||(check_channel == 157)||(check_channel == 161)||(check_channel == 165)) )/*wcl modify for AUTELAN-2765*/
 									{
 										ret1 = COUNTRY_CODE_SUCCESS;
 										max_chanenl = 159;
 										min_channel = 7;
-									}else{
-										max_chanenl = 7;
-										min_channel = 5;
+									}
+								else
+									{
+										max_chanenl = 5;
+										min_channel = 7;
 									}
 									break;
 																	
@@ -37338,50 +37367,56 @@ DBusMessage * wid_dbus_interface_radio_set_chan(DBusConnection *conn, DBusMessag
 									{
 										ret1 = COUNTRY_JAPAN_JP;
 									}
-									if (((AC_RADIO[RadioID]->Radio_Type&IEEE80211_11A)||(AC_RADIO[RadioID]->Radio_Type == 10))&&((check_channel == 36)||(check_channel == 40)||(check_channel == 44)||(check_channel == 48)||(check_channel == 52)\
-												||(check_channel == 56)||(check_channel == 60)||(check_channel == 64)||(check_channel == 100)||(check_channel == 104)||(check_channel == 108)||(check_channel == 112)||(check_channel == 116)\
-												||(check_channel == 120)||(check_channel == 124)||(check_channel == 128)||(check_channel == 132)||(check_channel == 136)||(check_channel == 140)||(check_channel == 184)||(check_channel == 188)||(check_channel == 192)||(check_channel == 196)) )/*wcl modify for AUTELAN-2765*/
+								if (((AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_Type&IEEE80211_11A)||(AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_Type == 10))&&((check_channel == 36)||(check_channel == 40)||(check_channel == 44)||(check_channel == 48)||(check_channel == 52)\
+	||(check_channel == 56)||(check_channel == 60)||(check_channel == 64)||(check_channel == 100)||(check_channel == 104)||(check_channel == 108)||(check_channel == 112)||(check_channel == 116)\
+	||(check_channel == 120)||(check_channel == 124)||(check_channel == 128)||(check_channel == 132)||(check_channel == 136)||(check_channel == 140)||(check_channel == 184)||(check_channel == 188)||(check_channel == 192)||(check_channel == 196)) )/*wcl modify for AUTELAN-2765*/
 									{
 										ret1 = COUNTRY_CODE_SUCCESS;
 										max_chanenl = 40;
 										min_channel = 7;
-									}else{
-										max_chanenl = 10;
-										min_channel = 5;
+									}
+								else
+									{
+										max_chanenl = 8;
+										min_channel = 7;
 									}										
 									break;
 																	
 			case COUNTRY_FRANCE_FR : 
-									if((check_channel != 0)&&(check_channel != 10)&&(check_channel != 11)&&(check_channel != 12)&&(check_channel != 13))
+								if((check_channel != 0)&&(check_channel != 10)&&(check_channel != 11)&&(check_channel != 12)&&(check_channel != 13))
 									{
 										ret1 = COUNTRY_FRANCE_FR;
 									}
-									if (((AC_RADIO[RadioID]->Radio_Type&IEEE80211_11A)||(AC_RADIO[RadioID]->Radio_Type == 10))&&((check_channel == 36)||(check_channel == 40)||(check_channel == 44)||(check_channel == 48)||(check_channel == 52)\
-										||(check_channel == 56)||(check_channel == 60)||(check_channel == 64)||(check_channel == 100)||(check_channel == 104)||(check_channel == 108)||(check_channel == 112)||(check_channel == 116)\
-										||(check_channel == 120)||(check_channel == 124)||(check_channel == 128)||(check_channel == 132)||(check_channel == 136)||(check_channel == 140))) /*wcl modify for AUTELAN-2765*/
+								if (((AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_Type&IEEE80211_11A)||(AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_Type == 10))&&((check_channel == 36)||(check_channel == 40)||(check_channel == 44)||(check_channel == 48)||(check_channel == 52)\
+								||(check_channel == 56)||(check_channel == 60)||(check_channel == 64)||(check_channel == 100)||(check_channel == 104)||(check_channel == 108)||(check_channel == 112)||(check_channel == 116)\
+								||(check_channel == 120)||(check_channel == 124)||(check_channel == 128)||(check_channel == 132)||(check_channel == 136)||(check_channel == 140))) /*wcl modify for AUTELAN-2765*/
 									{
-										ret1 = COUNTRY_CODE_SUCCESS;
-										max_chanenl = 134;
-										min_channel = 7;
-									}else{
+									ret1 = COUNTRY_CODE_SUCCESS;
+									max_chanenl = 134;
+									min_channel = 7;
+									}
+								else
+									{
 										max_chanenl = 7;
 										min_channel = 7;
 									}	
 									break;
 																	
 			case COUNTRY_SPAIN_ES : 
-									if((check_channel != 0)&&(check_channel != 10)&&(check_channel != 11))
+								if((check_channel != 0)&&(check_channel != 10)&&(check_channel != 11))
 									{
 										ret1 = COUNTRY_SPAIN_ES;
 									}
-									if (((AC_RADIO[RadioID]->Radio_Type&IEEE80211_11A)||(AC_RADIO[RadioID]->Radio_Type == 10))&&((check_channel == 36)||(check_channel == 40)||(check_channel == 44)||(check_channel == 48)||(check_channel == 52)\
-										||(check_channel == 56)||(check_channel == 60)||(check_channel == 64)||(check_channel == 100)||(check_channel == 104)||(check_channel == 108)||(check_channel == 112)||(check_channel == 116)\
-										||(check_channel == 120)||(check_channel == 124)||(check_channel == 128)||(check_channel == 132)||(check_channel == 136)||(check_channel == 140))) /*wcl modify for AUTELAN-2765*/
+								if (((AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_Type&IEEE80211_11A)||(AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_Type == 10))&&((check_channel == 36)||(check_channel == 40)||(check_channel == 44)||(check_channel == 48)||(check_channel == 52)\
+									||(check_channel == 56)||(check_channel == 60)||(check_channel == 64)||(check_channel == 100)||(check_channel == 104)||(check_channel == 108)||(check_channel == 112)||(check_channel == 116)\
+									||(check_channel == 120)||(check_channel == 124)||(check_channel == 128)||(check_channel == 132)||(check_channel == 136)||(check_channel == 140))) /*wcl modify for AUTELAN-2765*/
 									{
 										ret1 = COUNTRY_CODE_SUCCESS;
 										max_chanenl = 134;
 										min_channel = 7;
-									}else{
+									}
+								else
+									{
 										max_chanenl = 5;
 										min_channel = 7;
 									}	
@@ -37390,7 +37425,7 @@ DBusMessage * wid_dbus_interface_radio_set_chan(DBusConnection *conn, DBusMessag
 			default : ret1 = COUNTRY_CODE_SUCCESS;break;
 		}
 		/*11n channel offset check*/
-		if(AC_RADIO[RadioID]->Radio_Type&IEEE80211_11N){
+		if((AC_RADIO[RadioID]->Radio_Type&IEEE80211_11N)||(AC_RADIO[RadioID]->Radio_Type&IEEE80211_11AC)){
 			ret2 = WID_RADIO_CHANNEL_OFFSET_CWMODE_CHECK(RadioID,check_channel,max_chanenl,min_channel);
 		}
 
@@ -43148,7 +43183,7 @@ DBusMessage * wid_dbus_interface_radio_set_ampdu_able(DBusConnection *conn, DBus
 												ret2 = WTP_IS_NOT_BINDING_WLAN_ID;
 												wid_syslog_debug_debug(WID_DEFAULT,"WTP%d radio%d is NOT binding wlan id\n",tmp->WTPID,AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
 											}
-										else if((AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_Type&IEEE80211_11N) != IEEE80211_11N)
+										else if(((AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_Type&IEEE80211_11N) != IEEE80211_11N)&&((AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_Type&IEEE80211_11AC) != IEEE80211_11AC))
 											{
 												ret2 = RADIO_MODE_IS_11N;
 												wid_syslog_debug_debug(WID_DEFAULT,"WTP%d radio%d mode is 11N\n",tmp->WTPID,AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
@@ -43288,7 +43323,7 @@ DBusMessage * wid_dbus_interface_radio_set_ampdu_able(DBusConnection *conn, DBus
 	{
 		ret = RADIO_NO_BINDING_WLAN;
 	}
-	else if((AC_RADIO[RadioID]->Radio_Type&IEEE80211_11N) != IEEE80211_11N)
+	else if(((AC_RADIO[RadioID]->Radio_Type&IEEE80211_11N) != IEEE80211_11N)&&((AC_RADIO[RadioID]->Radio_Type&IEEE80211_11AC) != IEEE80211_11AC))
 	{
 		ret = RADIO_MODE_IS_11N;
 	}
@@ -43397,7 +43432,7 @@ DBusMessage * wid_dbus_interface_radio_set_ampdu_limit(DBusConnection *conn, DBu
 				{
 					ret = RADIO_NO_BINDING_WLAN;
 				}
-			else if((AC_RADIO[ID]->Radio_Type&IEEE80211_11N) != IEEE80211_11N)
+			else if(((AC_RADIO[ID]->Radio_Type&IEEE80211_11N) != IEEE80211_11N)&&((AC_RADIO[ID]->Radio_Type&IEEE80211_11AC) != IEEE80211_11AC))
 				{
 					ret = RADIO_MODE_IS_11N;
 				}
@@ -43615,7 +43650,7 @@ DBusMessage * wid_dbus_interface_radio_set_ampdu_limit(DBusConnection *conn, DBu
 	{
 		ret = RADIO_NO_BINDING_WLAN;
 	}
-	else if((AC_RADIO[RadioID]->Radio_Type&IEEE80211_11N) != IEEE80211_11N)
+	else if(((AC_RADIO[RadioID]->Radio_Type&IEEE80211_11N) != IEEE80211_11N)&&((AC_RADIO[RadioID]->Radio_Type&IEEE80211_11AC) != IEEE80211_11AC))
 	{
 		ret = RADIO_MODE_IS_11N;
 	}
@@ -43721,7 +43756,7 @@ DBusMessage * wid_dbus_interface_radio_set_ampdu_subframe(DBusConnection *conn, 
 				{
 					ret = RADIO_NO_BINDING_WLAN;
 				}
-			else if((AC_RADIO[ID]->Radio_Type&IEEE80211_11N) != IEEE80211_11N)
+			else if(((AC_RADIO[ID]->Radio_Type&IEEE80211_11N) != IEEE80211_11N)&&((AC_RADIO[ID]->Radio_Type&IEEE80211_11AC) != IEEE80211_11AC))
 				{
 					ret = RADIO_MODE_IS_11N;
 				}
@@ -43940,7 +43975,7 @@ DBusMessage * wid_dbus_interface_radio_set_ampdu_subframe(DBusConnection *conn, 
 	{
 		ret = RADIO_NO_BINDING_WLAN;
 	}
-	else if((AC_RADIO[RadioID]->Radio_Type&IEEE80211_11N) != IEEE80211_11N)
+	else if(((AC_RADIO[RadioID]->Radio_Type&IEEE80211_11N) != IEEE80211_11N)&&((AC_RADIO[RadioID]->Radio_Type&IEEE80211_11AC) != IEEE80211_11AC))
 	{
 		ret = RADIO_MODE_IS_11N;
 	}
@@ -44068,7 +44103,7 @@ DBusMessage * wid_dbus_interface_radio_set_mixed_puren_switch(DBusConnection *co
 				{
 					ret = RADIO_NO_BINDING_WLAN;
 				}
-			else if((AC_RADIO[ID]->Radio_Type&IEEE80211_11N) != IEEE80211_11N)
+			else if(((AC_RADIO[ID]->Radio_Type&IEEE80211_11N) != IEEE80211_11N)&&((AC_RADIO[ID]->Radio_Type&IEEE80211_11AC) != IEEE80211_11AC))
 				{
 					ret = RADIO_MODE_IS_11N;
 				}
@@ -44292,7 +44327,7 @@ DBusMessage * wid_dbus_interface_radio_set_mixed_puren_switch(DBusConnection *co
 	{
 		ret = RADIO_NO_BINDING_WLAN;
 	}
-	else if((AC_RADIO[RadioID]->Radio_Type&IEEE80211_11N) != IEEE80211_11N)
+	else if(((AC_RADIO[RadioID]->Radio_Type&IEEE80211_11N) != IEEE80211_11N)&&((AC_RADIO[RadioID]->Radio_Type&IEEE80211_11AC) != IEEE80211_11AC))
 	{
 		ret = RADIO_MODE_IS_11N;
 	}
@@ -44393,17 +44428,17 @@ DBusMessage * wid_dbus_interface_radio_set_channel_offset(DBusConnection *conn, 
 				{
 					ret = WTP_IS_NOT_BINDING_WLAN_ID;
 				}
-			else if((AC_RADIO[ID]->Radio_Type&IEEE80211_11N) != IEEE80211_11N)
+			else if(((AC_RADIO[ID]->Radio_Type&IEEE80211_11N) != IEEE80211_11N)&&((AC_RADIO[ID]->Radio_Type&IEEE80211_11AC) != IEEE80211_11AC))
 				{
 					ret = RADIO_MODE_IS_11N;
 				}
    			/*zhaoruijia,20100817,修改信道偏移只让在带宽为40或20/40 的情况下生效.start*/
-			else if(((AC_RADIO[ID]->Radio_Type&IEEE80211_11N) == IEEE80211_11N)&&
-		       		(AC_RADIO[ID]->cwmode==0))
-				{
-
-        			ret = RADIO_HT_IS_NOT_40;
-    			}
+			else if((((AC_RADIO[ID]->Radio_Type&IEEE80211_11N) == IEEE80211_11N)
+	                || ((AC_RADIO[ID]->Radio_Type&IEEE80211_11AC) == IEEE80211_11AC))
+			        &&((AC_RADIO[ID]->cwmode == 0) || (AC_RADIO[ID]->cwmode == 3) || (AC_RADIO[ID]->cwmode == 5)))
+	            {
+                    ret = RADIO_HT_IS_NOT_40;
+                }
 			 /*zhaoruijia,20100817,修改信道偏移只让在带宽为40的情况下生效end*/
 		   /*fengwenchao copy from (zhaoruijia,20101230),if the current channel is larger than the max_channel or less than the min_channel ,we dont allow for set channel offset,start*/
 			else if(policy == 1)
@@ -44474,17 +44509,17 @@ DBusMessage * wid_dbus_interface_radio_set_channel_offset(DBusConnection *conn, 
 												ret2 = WTP_IS_NOT_BINDING_WLAN_ID;
 												wid_syslog_debug_debug(WID_DEFAULT,"WTP%d radio%d is NOT binding wlan id\n",tmp->WTPID,AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
 											}
-										else if((AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_Type&IEEE80211_11N) != IEEE80211_11N)
-											{
-												ret2 = RADIO_MODE_IS_11N;
-												wid_syslog_debug_debug(WID_DEFAULT,"WTP%d radio%d mode is  not 11N\n",tmp->WTPID,AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
-											}
-										else if(((AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_Type&IEEE80211_11N) == IEEE80211_11N)&&
-		       									(AC_WTP[tmp->WTPID]->WTP_Radio[i]->cwmode==0))
-											{
-     	 							  			ret2 = RADIO_HT_IS_NOT_40;
-												wid_syslog_debug_debug(WID_DEFAULT,"WTP%d radio%d ht is not 40\n",tmp->WTPID,AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
-    										}
+                            			else if(((AC_RADIO[ID]->Radio_Type&IEEE80211_11N) != IEEE80211_11N)&&((AC_RADIO[ID]->Radio_Type&IEEE80211_11AC) != IEEE80211_11AC))
+                            				{
+                            					ret = RADIO_MODE_IS_11N;
+                            				}
+                               			/*zhaoruijia,20100817,修改信道偏移只让在带宽为40或20/40 的情况下生效.start*/
+                            			else if((((AC_RADIO[ID]->Radio_Type&IEEE80211_11N) == IEEE80211_11N)
+                            	                || ((AC_RADIO[ID]->Radio_Type&IEEE80211_11AC) == IEEE80211_11AC))
+                            			        &&((AC_RADIO[ID]->cwmode == 0) || (AC_RADIO[ID]->cwmode == 3) || (AC_RADIO[ID]->cwmode == 5)))
+                            	            {
+                                                ret = RADIO_HT_IS_NOT_40;
+                }
 										/*fengwenchao copy from (zhaoruijia,20101230),if the current channel is larger than the max_channel or less than the min_channel ,we dont allow for set channel offset,start*/
 										else if(policy == 1)
 									    {				
@@ -44598,15 +44633,15 @@ DBusMessage * wid_dbus_interface_radio_set_channel_offset(DBusConnection *conn, 
 	{
 		ret = WTP_IS_NOT_BINDING_WLAN_ID;
 	}
-	else if((AC_RADIO[RadioID]->Radio_Type&IEEE80211_11N) != IEEE80211_11N)
+	else if(((AC_RADIO[ID]->Radio_Type&IEEE80211_11N) != IEEE80211_11N)&&((AC_RADIO[ID]->Radio_Type&IEEE80211_11AC) != IEEE80211_11AC))
 	{
 		ret = RADIO_MODE_IS_11N;
 	}
-   /*zhaoruijia,20100817,修改信道偏移只让在带宽为40或20/40 的情况下生效.start*/
-	else if(((AC_RADIO[RadioID]->Radio_Type&IEEE80211_11N) == IEEE80211_11N)&&
-		       (AC_RADIO[RadioID]->cwmode==0))
-	{
-
+	/*zhaoruijia,20100817,修改信道偏移只让在带宽为40或20/40 的情况下生效.start*/
+    else if((((AC_RADIO[ID]->Radio_Type&IEEE80211_11N) == IEEE80211_11N)
+        || ((AC_RADIO[ID]->Radio_Type&IEEE80211_11AC) == IEEE80211_11AC))
+        &&((AC_RADIO[ID]->cwmode == 0) || (AC_RADIO[ID]->cwmode == 3) || (AC_RADIO[ID]->cwmode == 5)))
+    {
         ret = RADIO_HT_IS_NOT_40;
     }
 	 /*zhaoruijia,20100817,修改信道偏移只让在带宽为40的情况下生效end*/
@@ -45059,24 +45094,36 @@ DBusMessage * wid_dbus_interface_radio_set_cmmode(DBusConnection *conn, DBusMess
 				{
 					ret = WTP_IS_NOT_BINDING_WLAN_ID;
 				}
+			else if(((AC_RADIO[ID]->Radio_Type&IEEE80211_11N) != IEEE80211_11N)
+	            &&((AC_RADIO[ID]->Radio_Type&IEEE80211_11AC) != IEEE80211_11AC))
+            	{
+            		ret = RADIO_MODE_IS_11N;
+            	}
+            else if(((AC_RADIO[ID]->Radio_Type&IEEE80211_11AC) != IEEE80211_11AC)
+            	        &&((3 == cwmode) || (4 == cwmode) || (5 == cwmode)))
+            	{
+            		ret = RADIO_MODE_IS_NOT_11AC;
+            	}
 		  /*zhaoruijia,20100825, 当用户先做了信道偏移，然后将模式从40 、20/40 修改到20时需要提醒用户先取消信道偏移设置.start*/
 			else if(((AC_RADIO[ID]->channel_offset==1) || (AC_RADIO[ID]->channel_offset==-1))&&
-		  		     	(0 == cwmode))
+		  		     	((0 == cwmode)||(3 == cwmode)||(5 == cwmode)))
 		  		{
         			ret = RADIO_CHANNEL_OFFSET_NEED_BE_RESET;
 				}
 		 /*zhaoruijia,20100825, 当用户先做了信道偏移，然后将模式从40 、20/40 修改到20时需要提醒用户先取消信道偏移设置.end*/
 			 /*fengwenchao add 20110322,用户做了ht20到ht20/40,或ht40模式改变时需要判断当前信道是否大于最大信道 start*/
-			 else if((AC_RADIO[ID]->Radio_Chan > max_channel)&&((1 == cwmode)||(2 == cwmode))&&(AC_RADIO[ID]->cwmode == 0)){
-			 
-				   ret = CHANNEL_CROSS_THE_BORDER;	   /*信道越界*/
-			 }
+			else if((AC_RADIO[ID]->Radio_Chan > max_channel)
+			    &&((1 == cwmode) || (2 == cwmode) || (4 == cwmode))
+			    &&((AC_RADIO[ID]->cwmode == 0)||(AC_RADIO[ID]->cwmode == 3)))
+            	{	 
+            		ret = CHANNEL_CROSS_THE_BORDER;	   /*信道越界*/
+            	}
 			 
 			 /*fengwenchao add 20110322,用户做了ht20到ht20/40,或ht40模式改变时需要判断当前信道是否大于最大信道 end*/
 			else
 				{
 					/*fengwenchao add 20110421,模式从20 跳到20/40或40模式时，如果信道偏移没NONE，调整为上偏*/
-			 	    if((AC_RADIO[ID]->cwmode == 0)&&((1 == cwmode)||(2 == cwmode)))
+			 	    if((AC_RADIO[ID]->cwmode == 0)&&((1 == cwmode)||(2 == cwmode)||(4 == cwmode)))
 					{      
 					      AC_RADIO[ID]->channel_offset = 1;
 				    }
@@ -45134,25 +45181,36 @@ DBusMessage * wid_dbus_interface_radio_set_cmmode(DBusConnection *conn, DBusMess
 												   ret2 = WTP_IS_NOT_BINDING_WLAN_ID;
 												   wid_syslog_debug_debug(WID_DEFAULT,"WTP%d radio%d is NOT binding wlan\n",tmp->WTPID,AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
 											}
+										 else if(((AC_RADIO[ID]->Radio_Type&IEEE80211_11N) != IEEE80211_11N)
+                            	            &&((AC_RADIO[ID]->Radio_Type&IEEE80211_11AC) != IEEE80211_11AC))
+                                        	{
+                                        		ret = RADIO_MODE_IS_11N;
+                                                                    	}
+                                        else if(((AC_RADIO[ID]->Radio_Type&IEEE80211_11AC) != IEEE80211_11AC)
+                                        	        &&((3 == cwmode) || (4 == cwmode) || (5 == cwmode)))
+                                        	{
+                                        		ret = RADIO_MODE_IS_NOT_11AC;
+                                        	}
 										 /*zhaoruijia,20100825, 当用户先做了信道偏移，然后将模式从40 、20/40 修改到20时需要提醒用户先取消信道偏移设置.start*/
 										   else if(((AC_WTP[tmp->WTPID]->WTP_Radio[i]->channel_offset==1) || (AC_WTP[tmp->WTPID]->WTP_Radio[i]->channel_offset==-1))&&
-													   (0 == cwmode))
+													   ((0 == cwmode)||(3 == cwmode)||(5 == cwmode)))
 											   {
 												   ret2 = RADIO_CHANNEL_OFFSET_NEED_BE_RESET;
 												   wid_syslog_debug_debug(WID_DEFAULT,"WTP%d radio%d channel offset need be reset\n",tmp->WTPID,AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
 											   }
 										/*zhaoruijia,20100825, 当用户先做了信道偏移，然后将模式从40 、20/40 修改到20时需要提醒用户先取消信道偏移设置.end*/
 											/*fengwenchao add 20110322,用户做了ht20到ht20/40,或ht40模式改变时需要判断当前信道是否大于最大信道 start*/
-											 else if((AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_Chan > max_channel)&&((1 == cwmode)||(2 == cwmode))&&(AC_WTP[tmp->WTPID]->WTP_Radio[i]->cwmode == 0)){
-											 
-												   ret2 = CHANNEL_CROSS_THE_BORDER;	   /*信道越界*/
-												   wid_syslog_debug_debug(WID_DEFAULT,"WTP%d radio%d channel cross the border max channel\n",tmp->WTPID,AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
-											 }									 
+											 else if((AC_RADIO[ID]->Radio_Chan > max_channel)
+                                			    &&((1 == cwmode) || (2 == cwmode) || (4 == cwmode))
+                                			    &&((AC_RADIO[ID]->cwmode == 0)||(AC_RADIO[ID]->cwmode == 3)))
+                                            	{	 
+                                            		ret = CHANNEL_CROSS_THE_BORDER;	   /*信道越界*/
+                                            	}								 
 			 								/*fengwenchao add 20110322,用户做了ht20到ht20/40,或ht40模式改变时需要判断当前信道是否大于最大信道 end*/	 
 										   else
 											   {
 													/*fengwenchao add 20110421,模式从20 跳到20/40或40模式时，如果信道偏移没NONE，调整为上偏*/
-											 	    if((AC_WTP[tmp->WTPID]->WTP_Radio[i]->cwmode == 0)&&((1 == cwmode)||(2 == cwmode)))
+											 	    if((AC_WTP[tmp->WTPID]->WTP_Radio[i]->cwmode == 0)&&((1 == cwmode)||(2 == cwmode)||(4 == cwmode)))
 													{      
 													      AC_WTP[tmp->WTPID]->WTP_Radio[i]->channel_offset = 1;
 												    }
@@ -45271,15 +45329,27 @@ DBusMessage * wid_dbus_interface_radio_set_cmmode(DBusConnection *conn, DBusMess
 	{
 		ret = WTP_IS_NOT_BINDING_WLAN_ID;
 	}
+	else if(((AC_RADIO[RadioID]->Radio_Type&IEEE80211_11N) != IEEE80211_11N)
+        &&((AC_RADIO[RadioID]->Radio_Type&IEEE80211_11AC) != IEEE80211_11AC))
+    	{
+    		ret = RADIO_MODE_IS_11N;
+                                	}
+    else if(((AC_RADIO[RadioID]->Radio_Type&IEEE80211_11AC) != IEEE80211_11AC)
+    	        &&((3 == cwmode) || (4 == cwmode) || (5 == cwmode)))
+    	{
+    		ret = RADIO_MODE_IS_NOT_11AC;
+    	}
 	else if((AC_RADIO[RadioID]->Radio_Type&IEEE80211_11N) != IEEE80211_11N)
 	{
 		ret = RADIO_MODE_IS_11N;
 	}
 	 /*fengwenchao add 20110322,用户做了ht20到ht20/40,或ht40模式改变时需要判断当前信道是否大于最大信道 start*/
-	 else if((AC_RADIO[RadioID]->Radio_Chan > max_channel)&&((1 == cwmode)||(2 == cwmode))&&(AC_RADIO[RadioID]->cwmode == 0)){
-	 
-		   ret = CHANNEL_CROSS_THE_BORDER;	   /*信道越界*/
-	 }
+	else if((AC_RADIO[RadioID]->Radio_Chan > max_channel)
+        &&((1 == cwmode) || (2 == cwmode) || (4 == cwmode))
+        &&((AC_RADIO[RadioID]->cwmode == 0)||(AC_RADIO[RadioID]->cwmode == 3)))
+	{	 
+		ret = CHANNEL_CROSS_THE_BORDER;	   /*信道越界*/
+	}	
 	 
 	 /*fengwenchao add 20110322,用户做了ht20到ht20/40,或ht40模式改变时需要判断当前信道是否大于最大信道 end*/	
 	else{
@@ -45294,7 +45364,7 @@ DBusMessage * wid_dbus_interface_radio_set_cmmode(DBusConnection *conn, DBusMess
  /*zhaoruijia,20101220, 当用户先做了信道偏移，然后将模式从40 、20/40 修改到20时将信道偏移置为0，方便显示.end*/
  /*zhaoruijia,20100825, 当用户先做了信道偏移，然后将模式从40 、20/40 修改到20时需要提醒用户先取消信道偏移设置.end*/
  /*fengwenchao add 20110421,模式从20 跳到20/40或40模式时，如果信道偏移没NONE，调整为上偏*/
- 	    if((AC_RADIO[RadioID]->cwmode == 0)&&((1 == cwmode)||(2 == cwmode)))
+ 	    if((AC_RADIO[RadioID]->cwmode == 0)&&((1 == cwmode)||(2 == cwmode)||(4 == cwmode)))
 		{      
 		      AC_RADIO[RadioID]->channel_offset = 1;
 	    }
@@ -68053,7 +68123,7 @@ DBusMessage * wid_dbus_interface_set_radio_chainmask_value(DBusConnection *conn,
 				ret = WTP_ID_NOT_EXIST;
 			}else if(AC_RADIO[ID] == NULL) {
 				ret = RADIO_ID_NOT_EXIST;
-			}else if((AC_RADIO[ID]->Radio_Type&IEEE80211_11N) != IEEE80211_11N) {
+			}else if(((AC_RADIO[ID]->Radio_Type&IEEE80211_11N) != IEEE80211_11N)&&((AC_RADIO[ID]->Radio_Type&IEEE80211_11AC) != IEEE80211_11AC)) {
 				ret = RADIO_MODE_IS_11N;
 			}else {	
 				if(type == 1) {
@@ -68119,7 +68189,7 @@ DBusMessage * wid_dbus_interface_set_radio_chainmask_value(DBusConnection *conn,
 												wid_syslog_debug_debug(WID_DEFAULT,"WTP%d radio%d is not exist\n",tmp->WTPID,AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
 												//printf("33333333333333333333333\n");
 											}			
-										else if((AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_Type&IEEE80211_11N) != IEEE80211_11N)
+										else if(((AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_Type&IEEE80211_11N) != IEEE80211_11N)&&((AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_Type&IEEE80211_11AC) != IEEE80211_11AC))
 											{
 												ret2 = RADIO_MODE_IS_11N;
 												wid_syslog_debug_debug(WID_DEFAULT,"WTP%d radio%d mode is 11N\n",tmp->WTPID,AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_G_ID);
@@ -68240,7 +68310,7 @@ DBusMessage * wid_dbus_interface_set_radio_chainmask_value(DBusConnection *conn,
 		ret = WTP_ID_NOT_EXIST;
 	}else if(AC_RADIO[radioid] == NULL) {
 		ret = RADIO_ID_NOT_EXIST;
-	}else if((AC_RADIO[radioid]->Radio_Type&IEEE80211_11N) != IEEE80211_11N) {
+	}else if(((AC_RADIO[radioid]->Radio_Type&IEEE80211_11N) != IEEE80211_11N)&&((AC_WTP[tmp->WTPID]->WTP_Radio[i]->Radio_Type&IEEE80211_11AC) != IEEE80211_11AC)) {
 		ret = RADIO_MODE_IS_11N;
 	}else {	
 		if(type == 1) {
@@ -83965,7 +84035,7 @@ int show_running_config_wtp(WID_WTP **WTP,int i,char *cursor,char **showStr2,cha
     									totalLen += sprintf(cursor," ");
     									cursor = showStr + totalLen;
     								}
-    								strcpy(radio_type, "11a/n");
+    								strcpy(radio_type, "11an");
     								totalLen += sprintf(cursor," mode %s\n",radio_type);
     								break;	
     							case 13: 
@@ -84000,7 +84070,34 @@ int show_running_config_wtp(WID_WTP **WTP,int i,char *cursor,char **showStr2,cha
     								}
     								strcpy(radio_type, "11g/gn");
     								totalLen += sprintf(cursor," mode %s\n",radio_type);
-    								break;								
+    								break;
+							    case Radio_11ac: 
+        							if(vrrid != 0)
+        							{
+        								totalLen += sprintf(cursor, " ");
+        								cursor = showStr + totalLen;
+        							}
+        							strcpy(radio_type, " 11ac");
+        							totalLen += sprintf(cursor, " mode %s\n", radio_type);
+        							break;	
+        					 	case Radio_11an_11ac: 
+        							if(vrrid != 0)
+        							{
+        								totalLen += sprintf(cursor, " ");
+        								cursor = showStr + totalLen;
+        							}
+        							strcpy(radio_type, " 11an/ac");
+        							totalLen += sprintf(cursor, " mode %s\n", radio_type);
+        							break;	
+        					 	case Radio_11a_11an_11ac: 
+        							if(vrrid != 0)
+        							{
+        								totalLen += sprintf(cursor, " ");
+        								cursor = showStr + totalLen;
+        							}
+        							strcpy(radio_type, " 11a/an/ac");
+        							totalLen += sprintf(cursor, " mode %s\n", radio_type);
+        							break;	
 							/*fengwenchao add end*/
     							default : strcpy(radio_type, "unknown");break;
     							}
@@ -84009,8 +84106,8 @@ int show_running_config_wtp(WID_WTP **WTP,int i,char *cursor,char **showStr2,cha
 						    cursor = showStr + totalLen;
 						}
 						//#endif
-						if(((WTP[i]->WTP_Radio[j]->Radio_Type&IEEE80211_11N) == 0)&&(WTP[i]->WTP_Radio[j]->Support_Rate_Count != 12))//sz change ratelist
-						{
+						if((WTP[i]->WTP_Radio[j]->Support_Rate_Count != 12)&& (0 == compare_radio_max_rate(WTP[i]->WTP_Radio[j]->Radio_Rate)))
+				        {
 							//////
 							int m = 0;
 							int derate[12] = {10,20,55,60,90,110,120,180,240,360,480,540};
@@ -84314,8 +84411,11 @@ int show_running_config_wtp(WID_WTP **WTP,int i,char *cursor,char **showStr2,cha
 							cursor = showStr + totalLen;
 						}
 						/*fengwenchao modify 20120203 for autelan-2821 begin*/
-						if(((WTP[i]->WTP_Radio[j]->Radio_Type & IEEE80211_11N) != IEEE80211_11N)&&(WTP[i]->WTP_Radio[j]->diversity != 0)&&(((WTP[i]->APCode != NULL)&&(WTP[i]->APCode[strlen(WTP[i]->APCode)-1] != 'H'))&&(WTP[i]->WTP_Radio[j]->ishighpower  != 1)))   //fengwenchao modify 20110428
-						{
+						if(((WTP[i]->WTP_Radio[j]->Radio_Type & IEEE80211_11N) != IEEE80211_11N)
+        				    &&((WTP[i]->WTP_Radio[j]->Radio_Type & IEEE80211_11AC) != IEEE80211_11AC)
+        				    &&(WTP[i]->WTP_Radio[j]->diversity != 0)
+        				    &&(((WTP[i]->APCode != NULL)&&(WTP[i]->APCode[strlen(WTP[i]->APCode)-1] != 'H'))&&(WTP[i]->WTP_Radio[j]->ishighpower  != 1)))   //fengwenchao modify 20110428
+        				{
 							if(vrrid != 0){
 								totalLen += sprintf(cursor," ");
 								cursor = showStr + totalLen;
@@ -84323,8 +84423,10 @@ int show_running_config_wtp(WID_WTP **WTP,int i,char *cursor,char **showStr2,cha
 							totalLen += sprintf(cursor," set radio diversity enable\n");
 							cursor = showStr + totalLen;
 						}
-						else if(((WTP[i]->WTP_Radio[j]->Radio_Type & IEEE80211_11N) == IEEE80211_11N)&&(WTP[i]->WTP_Radio[j]->diversity != 1)&&(((WTP[i]->APCode != NULL)&&(WTP[i]->APCode[strlen(WTP[i]->APCode)-1] != 'H'))&&(WTP[i]->WTP_Radio[j]->ishighpower  != 1)))
-						{
+						else if((((WTP[i]->WTP_Radio[j]->Radio_Type & IEEE80211_11N) == IEEE80211_11N)||((WTP[i]->WTP_Radio[j]->Radio_Type & IEEE80211_11AC) == IEEE80211_11AC))
+        				        &&(WTP[i]->WTP_Radio[j]->diversity != 1)
+        				        &&(((WTP[i]->APCode != NULL)&&(WTP[i]->APCode[strlen(WTP[i]->APCode)-1] != 'H'))&&(WTP[i]->WTP_Radio[j]->ishighpower  != 1)))
+        				{
 							if(vrrid != 0){
 								totalLen += sprintf(cursor," ");
 								cursor = showStr + totalLen;
@@ -84333,8 +84435,10 @@ int show_running_config_wtp(WID_WTP **WTP,int i,char *cursor,char **showStr2,cha
 							cursor = showStr + totalLen;
 						}
 
-						if(((WTP[i]->WTP_Radio[j]->Radio_Type & IEEE80211_11N) != IEEE80211_11N)&&(WTP[i]->WTP_Radio[j]->txantenna == 0))
-						{
+						if(((WTP[i]->WTP_Radio[j]->Radio_Type & IEEE80211_11N) != IEEE80211_11N)
+        				    && ((WTP[i]->WTP_Radio[j]->Radio_Type & IEEE80211_11AC) != IEEE80211_11AC)
+        				    && (WTP[i]->WTP_Radio[j]->txantenna == 0))
+        				{
 							if(vrrid != 0){
 								totalLen += sprintf(cursor," ");
 								cursor = showStr + totalLen;
@@ -84342,8 +84446,9 @@ int show_running_config_wtp(WID_WTP **WTP,int i,char *cursor,char **showStr2,cha
 							totalLen += sprintf(cursor," set radio txantenna auto\n");
 							cursor = showStr + totalLen;
 						}
-						else if(((WTP[i]->WTP_Radio[j]->Radio_Type & IEEE80211_11N) == IEEE80211_11N)&&(WTP[i]->WTP_Radio[j]->txantenna == 1))
-						{
+						else if((((WTP[i]->WTP_Radio[j]->Radio_Type & IEEE80211_11N) == IEEE80211_11N)||((WTP[i]->WTP_Radio[j]->Radio_Type & IEEE80211_11AC) == IEEE80211_11AC))
+        				        && (WTP[i]->WTP_Radio[j]->txantenna == 1))
+        				{
 							if(vrrid != 0){
 								totalLen += sprintf(cursor," ");
 								cursor = showStr + totalLen;
@@ -84363,7 +84468,7 @@ int show_running_config_wtp(WID_WTP **WTP,int i,char *cursor,char **showStr2,cha
 						}
 
                         /* zhangshu add for save 11n paras, 2010-11-25 */
-                        if((WTP[i]->WTP_Radio[j]->Radio_Type & IEEE80211_11N) == IEEE80211_11N){
+                        if(((WTP[i]->WTP_Radio[j]->Radio_Type & IEEE80211_11N) == IEEE80211_11N)||((WTP[i]->WTP_Radio[j]->Radio_Type & IEEE80211_11AC) == IEEE80211_11AC)){
 						
     						if(WTP[i]->WTP_Radio[j]->Ampdu.AmpduLimit != 65535)
     						{
@@ -84607,6 +84712,36 @@ int show_running_config_wtp(WID_WTP **WTP,int i,char *cursor,char **showStr2,cha
 								totalLen += sprintf(cursor," 11n cwmode ht40\n");
 								cursor = showStr + totalLen;
 							}
+							else if(WTP[i]->WTP_Radio[j]->cwmode == 3)
+    						{
+    							if(vrrid != 0)
+    							{
+    								totalLen += sprintf(cursor, " ");
+    								cursor = showStr + totalLen;
+    							}
+    							totalLen += sprintf(cursor, " 11ac cwmode vht20\n");
+    							cursor = showStr + totalLen;
+    						}
+    						else if(WTP[i]->WTP_Radio[j]->cwmode == 4)
+    						{
+    							if(vrrid != 0)
+    							{
+    								totalLen += sprintf(cursor, " ");
+    								cursor = showStr + totalLen;
+    							}
+    							totalLen += sprintf(cursor, " 11ac cwmode vht40\n");
+    							cursor = showStr + totalLen;
+    						}
+    						else if(WTP[i]->WTP_Radio[j]->cwmode == 5)
+    						{
+    							if(vrrid != 0)
+    							{
+    								totalLen += sprintf(cursor, " ");
+    								cursor = showStr + totalLen;
+    							}
+    							totalLen += sprintf(cursor, " 11ac cwmode vht80\n");
+    							cursor = showStr + totalLen;
+    						}
 						}
 					/*	if(WTP[i]->WTP_Radio[j]->mcs != 0){
 							if(vrrid != 0){

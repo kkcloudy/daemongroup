@@ -2115,10 +2115,29 @@ DEFUN(show_wtp_cmd_func,
 					&&((WTPINFO->WTP[0]->WTP_Radio[i]->Radio_Type&IEEE80211_11N) > 0)
 					&&((WTPINFO->WTP[0]->WTP_Radio[i]->Radio_Type&IEEE80211_11AN) > 0)
 					&&(!(WTPINFO->WTP[0]->WTP_Radio[i]->Radio_Type&IEEE80211_11B))
-					&&(!(WTPINFO->WTP[0]->WTP_Radio[i]->Radio_Type&IEEE80211_11G)))
+					&&(!(WTPINFO->WTP[0]->WTP_Radio[i]->Radio_Type&IEEE80211_11G))
+					&&(!(WTPINFO->WTP[0]->WTP_Radio[i]->Radio_Type&IEEE80211_11AC)))
 				{
 					vty_out(vty,"a/an");
 				}
+				else if(((WTPINFO->WTP[0]->WTP_Radio[i]->Radio_Type&IEEE80211_11A) > 0)
+    				&&((WTPINFO->WTP[0]->WTP_Radio[i]->Radio_Type&IEEE80211_11N) > 0)
+    				&&((WTPINFO->WTP[0]->WTP_Radio[i]->Radio_Type&IEEE80211_11AC) > 0)
+    				&&(!(WTPINFO->WTP[0]->WTP_Radio[i]->Radio_Type&IEEE80211_11B))
+    				&&(!(WTPINFO->WTP[0]->WTP_Radio[i]->Radio_Type&IEEE80211_11G))
+    				&&(!(WTPINFO->WTP[0]->WTP_Radio[i]->Radio_Type&IEEE80211_11AN)))
+        			{
+    				vty_out(vty,"an/ac");
+    			}
+			else if(((WTPINFO->WTP[0]->WTP_Radio[i]->Radio_Type&IEEE80211_11A) > 0)
+    				&&((WTPINFO->WTP[0]->WTP_Radio[i]->Radio_Type&IEEE80211_11N) > 0)
+    				&&((WTPINFO->WTP[0]->WTP_Radio[i]->Radio_Type&IEEE80211_11AN) > 0)
+                    &&((WTPINFO->WTP[0]->WTP_Radio[i]->Radio_Type&IEEE80211_11AC) > 0)
+    				&&(!(WTPINFO->WTP[0]->WTP_Radio[i]->Radio_Type&IEEE80211_11B))
+    				&&(!(WTPINFO->WTP[0]->WTP_Radio[i]->Radio_Type&IEEE80211_11G)))
+    			{
+    				vty_out(vty,"a/an/ac");
+    			}
 				else if(((WTPINFO->WTP[0]->WTP_Radio[i]->Radio_Type&IEEE80211_11GN) > 0)
 					&&((WTPINFO->WTP[0]->WTP_Radio[i]->Radio_Type&IEEE80211_11N)> 0)
 					&&((WTPINFO->WTP[0]->WTP_Radio[i]->Radio_Type&IEEE80211_11G)>0)
@@ -2136,7 +2155,9 @@ DEFUN(show_wtp_cmd_func,
 					if((WTPINFO->WTP[0]->WTP_Radio[i]->Radio_Type&IEEE80211_11G) > 0)
 						vty_out(vty,"g");		
 					if((WTPINFO->WTP[0]->WTP_Radio[i]->Radio_Type&IEEE80211_11N) > 0)
-						vty_out(vty,"n");	
+						vty_out(vty,"n");
+					if((WTPINFO->WTP[0]->WTP_Radio[i]->Radio_Type&IEEE80211_11AC) > 0)
+						vty_out(vty,"ac");
 				}
 				/*fengwenchao modify end*/			
 				vty_out(vty,"\n");
