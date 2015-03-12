@@ -54,9 +54,41 @@ if test -f $TRAPDATA_PATH
 	chmod 666 /opt/services/option/trapdata_option
 fi
 echo "Start Network Base Config...."
-if test -f /mnt/cli.conf
-	then
-		vtysh -b
+FLAG=`cat /mnt/new_config_flag`
+SLOT_NUM=`cat /dbm/product/slotcount`
+if [ 1 -eq $FLAG ]; then
+	echo "start new config load....."
+	echo `date`
+	sudo /opt/bin/vtysh -f /mnt/new_config/conf_xml1.conf -b
+	NUM=1
+	while [ $NUM -le $SLOT_NUM ]
+	do
+		VRRID=1
+		while [ $VRRID -le 16 ]
+		do
+			if test -f /var/run/config/Instconfig$NUM-0-$VRRID
+				then
+				sudo /opt/bin/vtysh -f /var/run/config/Instconfig$NUM-0-$VRRID -b &
+			fi
+			VRRID=$(($VRRID+1))
+		done
+		NUM=$(($NUM+1))
+	done
+	pidof vtysh  >/dev/null 
+	flag=$?
+	while [ 0 -eq $flag ]
+	do
+		sleep 10
+		pidof vtysh  >/dev/null 
+		flag=$?
+	done
+	sudo /opt/bin/vtysh -f /mnt/new_config/conf_xml3.conf -b
+	echo `date`
+else
+	if test -f /mnt/cli.conf
+		then
+			vtysh -b
+	fi
 fi
 echo "Start Network Services...."
 #$EXEC_PATH 

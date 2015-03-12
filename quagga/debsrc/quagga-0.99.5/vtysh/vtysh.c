@@ -4279,7 +4279,13 @@ DEFUN (vtysh_write_memory,
 		return CMD_WARNING;
 
 	}
+	memset(cmd1,0,256);
+	sprintf(cmd1,"sudo new_config.sh > /dev/null 2> /dev/null");
+	ret=system(cmd1);
+	if(-1==ret){
+		return CMD_WARNING;
 
+	}
 	return ret;
   }
 return CMD_SUCCESS;
@@ -5789,6 +5795,36 @@ DEFUN (no_set_idle_time_func,
 	
 	return CMD_SUCCESS;
 }
+
+DEFUN (set_loading_config_func,
+       set_loading_config_func_cmd,
+       "loading config (new |old)",
+       "loading config file\n"
+       "loading config file\n"
+	 "set loading config new or old\n")
+{
+	int ret=0;
+	char cmd[128];
+	if (!strcmp(argv[0],"new"))
+		ret =1;
+	else if (!strcmp(argv[0],"old"))
+		ret = 0;
+	else{
+		vty_out(vty,"<error> input patameter only with 'new' or 'old'\n");
+		return CMD_SUCCESS;
+	}
+	memset(cmd,0,128);
+	sprintf(cmd,"sudo mount /blk >/dev/null;echo  %d > /blk/new_config_flag ;sudo umount /blk >/dev/null;",ret);
+	/*vty_out(vty,"cmd : %s",cmd);*/
+	ret=system(cmd);
+	if(-1==ret){
+		return CMD_WARNING;
+
+	}
+	return CMD_SUCCESS;
+}
+
+
 extern 	struct termios bktty;
 void show_input_echo(void)
 {
@@ -6292,6 +6328,7 @@ install_node (&config_node, NULL, "CONFIG_NODE");
   install_element (VIEW_NODE, &vtysh_exit_all_cmd);
   install_element (VIEW_NODE, &vtysh_quit_all_cmd);
   install_element (CONFIG_NODE, &vtysh_exit_all_cmd);
+  install_element (CONFIG_NODE, &set_loading_config_func_cmd);
    install_element (CONFIG_NODE, &vtysh_quit_all_cmd); 
   install_element (ENABLE_NODE, &vtysh_exit_all_cmd);
   install_element (ENABLE_NODE, &vtysh_quit_all_cmd);
