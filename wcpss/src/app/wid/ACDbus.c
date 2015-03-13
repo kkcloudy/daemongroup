@@ -28463,7 +28463,8 @@ DBusMessage * wid_dbus_interface_set_wlan_ascii_essid(DBusConnection *conn, DBus
 	char *tmp_essid = NULL;
 	memset(ESSID,0,ESSID_DEFAULT_LEN+1);
 	unsigned char wlanid = 0;
-	int i = 0,j = 0;
+	int i = 0,j=0;
+	int k1=0;
 	dbus_error_init(&err);
 		
 	if (!(dbus_message_get_args ( msg, &err,
@@ -28616,6 +28617,19 @@ DBusMessage * wid_dbus_interface_set_wlan_ascii_essid(DBusConnection *conn, DBus
 									}
 									memset(wlan_id->ESSID,0,strlen((char*)ESSID)+1);
 									memcpy(wlan_id->ESSID,ESSID,strlen((char*)ESSID));
+									int radio_id = 4*i+j;
+									for(k1 = 0; k1 < L_BSS_NUM; k1++)
+									{	
+										int bssindex = radio_id*L_BSS_NUM+k1;
+										if((AC_RADIO[radio_id] != NULL)&&(AC_RADIO[radio_id]->BSS[k1] != NULL)&&(AC_BSS[bssindex] != NULL)&&(AC_RADIO[radio_id]->BSS[k1]->WlanID ==wlanid))
+										{
+											
+											memset(AC_BSS[bssindex]->SSID,0,SSID_LENGTH+1);
+											memcpy(AC_BSS[bssindex]->SSID,ESSID,strlen((char *)ESSID));
+											AsdWsm_BSSOp(bssindex,WID_MODIFY,0);
+											wid_update_bss_to_wifi(bssindex,i,1);
+										}
+									}
 								}
 								break;
 							}

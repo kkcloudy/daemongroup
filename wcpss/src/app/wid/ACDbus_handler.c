@@ -1694,7 +1694,7 @@ int WID_CREATE_NEW_WTP(char *WTPNAME, unsigned int WTPID, char* WTPSN, char* WTP
 
 int WID_CREATE_NEW_WTP(char *WTPNAME, unsigned int WTPID, unsigned char* WTPSN, char* WTPModel,int issn, int apcodeflag, char* code){
 
-	if((gStaticWTPs >= WTP_NUM)||((gStaticWTPs > gMaxWTPs)))
+	if((gStaticWTPs >= WTP_NUM)||((gStaticWTPs >=gMaxWTPs)))
 	{
 		return WTP_OVER_MAX_NUM;//
 	}
