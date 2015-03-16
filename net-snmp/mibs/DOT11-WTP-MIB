@@ -96,6 +96,25 @@ wlanPortal              OBJECT IDENTIFIER::={ dot11WtpGroup 17 }
 --Trap
 dot11WtpTrap OBJECT IDENTIFIER
 		::={ dot11-wireless 4 }
+		
+wtpIpv6Info              OBJECT IDENTIFIER::={ dot11WtpGroup 18 }
+
+wtpIpv6Prefix	 			OBJECT-TYPE
+					SYNTAX     	DisplayString 
+					MAX-ACCESS 	read-only
+					STATUS     	current
+					DESCRIPTION
+				        	"AP IPv6 address prefix."
+					::= { wtpIpv6Info 1 }
+
+wtpIpv6Type	 			OBJECT-TYPE
+					SYNTAX     	DisplayString 
+					MAX-ACCESS 	read-only
+					STATUS     	current
+					DESCRIPTION
+				        	"AP IPv6 address type."
+					::= { wtpIpv6Info 2 }
+					
 dot11WtpInfoTable OBJECT-TYPE
     SYNTAX      SEQUENCE OF Dot11WtpInfoEntry
     MAX-ACCESS  not-accessible
@@ -272,7 +291,7 @@ wtpColdReboot				OBJECT-TYPE
 					STATUS		current
 					DESCRIPTION
 						"AP cold reboot"
-					::={  dot11WtpInfoEntry 17 }
+					::={  dot11WtpInfoEntry 16 }
 
 wtplongitude	 			OBJECT-TYPE
 					SYNTAX     	DisplayString
@@ -280,7 +299,7 @@ wtplongitude	 			OBJECT-TYPE
 					STATUS     	current
 					DESCRIPTION
 				        	"AP device's longitude."
-					::= { dot11WtpInfoEntry 23 }
+					::= { dot11WtpInfoEntry 17 }
 
 wtplatitude	 			OBJECT-TYPE
 					SYNTAX     	DisplayString
@@ -288,7 +307,7 @@ wtplatitude	 			OBJECT-TYPE
 					STATUS     	current
 					DESCRIPTION
 				        	"AP device's latitude."
-					::= { dot11WtpInfoEntry 24 }
+					::= { dot11WtpInfoEntry 18 }
 
 wtpPowerType	 			OBJECT-TYPE
 					SYNTAX     	DisplayString
@@ -296,7 +315,7 @@ wtpPowerType	 			OBJECT-TYPE
 					STATUS     	current
 					DESCRIPTION
 				        	"AP device's PowerType."
-					::= { dot11WtpInfoEntry 25 }
+					::= { dot11WtpInfoEntry 19 }
 
 wtpManufactureDate	 			OBJECT-TYPE
 					SYNTAX     	DisplayString
@@ -304,7 +323,7 @@ wtpManufactureDate	 			OBJECT-TYPE
 					STATUS     	current
 					DESCRIPTION
 				        	"AP device's ManufactureDate."
-					::= { dot11WtpInfoEntry 26 }
+					::= { dot11WtpInfoEntry 20 }
 
 wtpForwardMode	 			OBJECT-TYPE
 					SYNTAX     	INTEGER{
@@ -316,7 +335,9 @@ wtpForwardMode	 			OBJECT-TYPE
 					STATUS     	current
 					DESCRIPTION
 				        	"AP device's ForwardMode."
-					::= { dot11WtpInfoEntry 27 }
+					::= { dot11WtpInfoEntry 21 }
+					
+
 
 
 dot11WtpSignalTable OBJECT-TYPE

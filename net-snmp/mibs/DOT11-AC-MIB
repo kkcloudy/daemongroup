@@ -799,7 +799,29 @@ acTrapPort	 		OBJECT-TYPE
 				STATUS		current
 				DESCRIPTION
 					"AC Trap Port."
-				::={  dot11AcPara 19 }			
+				::={  dot11AcPara 19 }
+				
+acIpv6Address  			OBJECT-TYPE
+				SYNTAX   InetAddressIPv6
+				MAX-ACCESS  read-only
+				STATUS  current
+				DESCRIPTION
+					"AC IPv6 address . "
+				::= { dot11AcPara  20}	
+acIpv6Prefix  			OBJECT-TYPE
+				SYNTAX   DisplayString
+				MAX-ACCESS  read-only
+				STATUS  current
+				DESCRIPTION
+					"AC IPv6 address prefix . "
+				::= { dot11AcPara  21}	
+acIpv6type  			OBJECT-TYPE
+				SYNTAX   DisplayString
+				MAX-ACCESS  read-only
+				STATUS  current
+				DESCRIPTION
+					"AC IPv6 address type. "
+				::= { dot11AcPara  22}			
 -- **********************************************************************
 -- * dot11AcStats
 -- **********************************************************************
@@ -1608,7 +1630,27 @@ Dot11AcIfCapabilityEntry ::=SEQUENCE{
 		acDropUsage			Counter32,
 		acIfOutBroadcastPkts		Counter32,
 		acUplinkKbyteRate		Counter32,
-		acDownlinkKbyteRate		Counter32	
+		acDownlinkKbyteRate		Counter32,
+		acipv6IfInReceivesPkts		Counter64,
+		acipv6IfInHdrErrorsPkts		Counter64,
+		acipv6IfInTooBigErrorsPkts	Counter64,
+		acipv6IfInNoRoutesPkts			Counter64,
+		acipv6IfInAddrErrorsPkts		Counter64,
+		acipv6IfInUnknownProtosPkts		Counter64,
+		acipv6IfInTruncatedPkts		Counter64,
+		acipv6IfInDiscardsPkts		Counter64,
+		acipv6IfInDeliversPkts		Counter64,
+		acipv6IfOutForwDatagramsPkts		Counter64,
+		acipv6IfOutRequestsPkts			Counter64,
+		acipv6IfOutDiscardsPkts			Counter64,
+		acipv6IfOutFragOKsPkts		Counter64,
+		acipv6IfOutFragFailsPkts 		Counter64,
+		acipv6IfOutFragCreatesPkts		Counter64,
+		acipv6IfReasmReqdsPkts			Counter64,
+		acipv6IfReasmOKsPkts			Counter64,
+		acipv6IfReasmFailsPkts			Counter64,
+		acipv6IfInMcastPkts   Counter64,
+		acipv6IfOutMcastPkts	Counter64	
 }
 acIfInUcastPkts			OBJECT-TYPE
 				SYNTAX    Counter64
@@ -1769,6 +1811,167 @@ acDownlinkKbyteRate		OBJECT-TYPE
 				DESCRIPTION
 					"The  ac downlink rate.(unit(Kbyte/s))"
 				::= {  dot11AcIfCapabilityEntry  20 }					
+
+acipv6IfInReceivesPkts			OBJECT-TYPE
+				SYNTAX    Counter64
+				MAX-ACCESS  read-only
+				STATUS  current
+				DESCRIPTION
+					"The total number of ipv6 packets the interface received."
+				::= {  dot11AcIfCapabilityEntry  21 }
+				
+acipv6IfInHdrErrorsPkts			OBJECT-TYPE
+				SYNTAX    Counter64
+				MAX-ACCESS  read-only
+				STATUS  current
+				DESCRIPTION
+					"The total number of ipv6 packets the interface ready to throw away."
+				::= {  dot11AcIfCapabilityEntry  22 }
+				
+acipv6IfInTooBigErrorsPkts			OBJECT-TYPE
+				SYNTAX    Counter64
+				MAX-ACCESS  read-only
+				STATUS  current
+				DESCRIPTION
+					"The total number of ipv6 packets those of too big to forward."
+				::= {  dot11AcIfCapabilityEntry  23 }
+				
+acipv6IfInNoRoutesPkts			OBJECT-TYPE
+				SYNTAX    Counter64
+				MAX-ACCESS  read-only
+				STATUS  current
+				DESCRIPTION
+					"The total number of ipv6 packets those of no routing and discarded."
+				::= {  dot11AcIfCapabilityEntry  24 }
+				
+acipv6IfInAddrErrorsPkts			OBJECT-TYPE
+				SYNTAX    Counter64
+				MAX-ACCESS  read-only
+				STATUS  current
+				DESCRIPTION
+					"The total number of ipv6 packets due to the input of IPv6 address illegal ."
+				::= {  dot11AcIfCapabilityEntry  25 }
+				
+acipv6IfInUnknownProtosPkts			OBJECT-TYPE
+				SYNTAX    Counter64
+				MAX-ACCESS  read-only
+				STATUS  current
+				DESCRIPTION
+					"The total number of ipv6 packets due to unknown or does not support agreement ."
+				::= {  dot11AcIfCapabilityEntry  26 }
+				
+acipv6IfInTruncatedPkts			OBJECT-TYPE
+				SYNTAX    Counter64
+				MAX-ACCESS  read-only
+				STATUS  current
+				DESCRIPTION
+					"The total number of ipv6 packets due to the incomplete data ."
+				::= {  dot11AcIfCapabilityEntry  27 }
+				
+acipv6IfInDiscardsPkts			OBJECT-TYPE
+				SYNTAX    Counter64
+				MAX-ACCESS  read-only
+				STATUS  current
+				DESCRIPTION
+					"The total number of ipv6 packets unable to continue processing ."
+				::= {  dot11AcIfCapabilityEntry  28 }
+				
+acipv6IfInDeliversPkts			OBJECT-TYPE
+				SYNTAX    Counter64
+				MAX-ACCESS  read-only
+				STATUS  current
+				DESCRIPTION
+					"The total number of ipv6 packets all ipv6 user agreement sent successfully ."
+				::= {  dot11AcIfCapabilityEntry  29 }
+				
+acipv6IfOutForwDatagramsPkts			OBJECT-TYPE
+				SYNTAX    Counter64
+				MAX-ACCESS  read-only
+				STATUS  current
+				DESCRIPTION
+					"The total number of ipv6 packets those received and forwarded to the final node successfully ."
+				::= {  dot11AcIfCapabilityEntry  30 }
+				
+acipv6IfOutRequestsPkts			OBJECT-TYPE
+				SYNTAX    Counter64
+				MAX-ACCESS  read-only
+				STATUS  current
+				DESCRIPTION
+					"Transport requirements of the local IPv6 all user agreement output message number ."
+				::= {  dot11AcIfCapabilityEntry  31 }
+				
+acipv6IfOutDiscardsPkts			OBJECT-TYPE
+				SYNTAX    Counter64
+				MAX-ACCESS  read-only
+				STATUS  current
+				DESCRIPTION
+					"Due to be continue to transmit discarded IPv6 output message number ."
+				::= {  dot11AcIfCapabilityEntry  32 }
+				
+acipv6IfOutFragOKsPkts			OBJECT-TYPE
+				SYNTAX    Counter64
+				MAX-ACCESS  read-only
+				STATUS  current
+				DESCRIPTION
+					"Output interface successful shard of IPv6 output message number ."
+				::= {  dot11AcIfCapabilityEntry  33 }
+				
+acipv6IfOutFragFailsPkts			OBJECT-TYPE
+				SYNTAX    Counter64
+				MAX-ACCESS  read-only
+				STATUS  current
+				DESCRIPTION
+					"Due to the output interface to fragmentation and number of IPv6 packet is discarded ."
+				::= {  dot11AcIfCapabilityEntry  34 }
+				
+acipv6IfOutFragCreatesPkts			OBJECT-TYPE
+				SYNTAX    Counter64
+				MAX-ACCESS  read-only
+				STATUS  current
+				DESCRIPTION
+					"Output interface based on fragmentation results of IPv6 packet fragmentation ."
+				::= {  dot11AcIfCapabilityEntry  35 }
+				
+acipv6IfReasmReqdsPkts			OBJECT-TYPE
+				SYNTAX    Counter64
+				MAX-ACCESS  read-only
+				STATUS  current
+				DESCRIPTION
+					"IPv6 subdivision number of interfaces need to restructure ."
+				::= {  dot11AcIfCapabilityEntry  36 }
+				
+acipv6IfReasmOKsPkts			OBJECT-TYPE
+				SYNTAX    Counter64
+				MAX-ACCESS  read-only
+				STATUS  current
+				DESCRIPTION
+					"Successful restructuring of IPv6 packet number ."
+				::= {  dot11AcIfCapabilityEntry  37 }
+				
+acipv6IfReasmFailsPkts			OBJECT-TYPE
+				SYNTAX    Counter64
+				MAX-ACCESS  read-only
+				STATUS  current
+				DESCRIPTION
+					"Due to the failure of fragmentation of IPv6 reorganization algorithm ."
+				::= {  dot11AcIfCapabilityEntry  38 }
+				
+acipv6IfInMcastPkts			OBJECT-TYPE
+				SYNTAX    Counter64
+				MAX-ACCESS  read-only
+				STATUS  current
+				DESCRIPTION
+					"Interface receives the IPv6 multicast packets ."
+				::= {  dot11AcIfCapabilityEntry  39 }
+				
+acipv6IfOutMcastPkts			OBJECT-TYPE
+				SYNTAX    Counter64
+				MAX-ACCESS  read-only
+				STATUS  current
+				DESCRIPTION
+					"Interface transmit IPv6 multicast packets ."
+				::= {  dot11AcIfCapabilityEntry  40 }
+				
 
 dot11AcInterfaceTable OBJECT-TYPE
 			    SYNTAX      SEQUENCE OF Dot11AcInterfaceEntry
@@ -5930,7 +6133,8 @@ Dot11DHCPIpv6PoolConfigEntry	::=SEQUENCE{
         FirDNSServerIPv6Address 	InetAddressIPv6,
         SeconDNSServerIPv6Address 	InetAddressIPv6,
         Ipv6LeasePeriod            	TimeTicks,
-        Ipv6DHCPRowStatus		RowStatus
+        Ipv6DHCPRowStatus		RowStatus,
+        SysIPv6GWAddr			InetAddressIPv6
 }
 Ipv6DHCPID			OBJECT-TYPE
 				SYNTAX  INTEGER
@@ -6005,6 +6209,14 @@ Ipv6DHCPRowStatus	        OBJECT-TYPE
 			        	"This variable is used to create, modify, and/or delete a row
 			        	 in this table."
 			    	::= { dot11DHCPIpv6PoolConfigEntry 9 }	
+			    	
+SysIPv6GWAddr 	        OBJECT-TYPE
+				SYNTAX      	InetAddressIPv6
+				MAX-ACCESS  	read-only
+				STATUS      	current
+				DESCRIPTION
+				      "AP IPV6 Gateway address."
+				::= { dot11DHCPIpv6PoolConfigEntry 10 }
 
 dot11DHCPIpv6UseageTable		OBJECT-TYPE
 			    	SYNTAX      SEQUENCE OF Dot11DHCPIpv6UseageEntry
@@ -6026,7 +6238,9 @@ dot11DHCPIpv6UseageEntry  	OBJECT-TYPE
 Dot11DHCPIpv6UseageEntry	::=SEQUENCE{
         Ipv6DHCPUSEID              	INTEGER,
 	DHCPIpv6poolName		DisplayString,
-	DHCPIpv6PoolUseage		INTEGER
+	DHCPIpv6PoolUseage		INTEGER,
+	DHCPIpv6ReqTimes		Counter32,
+	DHCPIpv6ReqSucTimes		Counter32
 }	
 Ipv6DHCPUSEID			OBJECT-TYPE
 				SYNTAX  INTEGER
