@@ -107,7 +107,7 @@ handle_wtpIpv6Prefix(netsnmp_mib_handler *handler,
 
         case MODE_GET:
 		{
-		    char *wtpipv6prefix = "fe80::21f:64ff";
+		    char *wtpipv6prefix = "fe80:0:0:0";
             snmp_set_var_typed_value(requests->requestvb, ASN_OCTET_STR,
                                      (u_char *)wtpipv6prefix, 
                                       strlen(wtpipv6prefix));

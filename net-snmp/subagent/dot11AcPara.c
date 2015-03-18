@@ -1695,7 +1695,7 @@ handle_acIpv6Prefix(netsnmp_mib_handler *handler,
 
         case MODE_GET:
 		{
-		    char *acipv6prefix = "fe80::21f:64ff";
+		    char *acipv6prefix = "fe80:0:0:0";
             snmp_set_var_typed_value(requests->requestvb, ASN_OCTET_STR,
                                      (u_char *)acipv6prefix, 
                                       strlen(acipv6prefix));
