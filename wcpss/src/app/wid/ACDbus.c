@@ -84538,25 +84538,7 @@ int show_running_config_wtp(WID_WTP **WTP,int i,char *cursor,char **showStr2,cha
     							totalLen += sprintf(cursor," 11n amsdu enable\n");
     							cursor = showStr + totalLen;
     						}
-    						
-    						if(WTP[i]->WTP_Radio[j]->channel_offset == 1)/*wuwl default value is 0*/
-    						{
-    							if(vrrid != 0){
-    								totalLen += sprintf(cursor," ");
-    								cursor = showStr + totalLen;
-    							}
-    							totalLen += sprintf(cursor," channel offset up\n");
-    							cursor = showStr + totalLen;
-    						}
-    						else if(WTP[i]->WTP_Radio[j]->channel_offset == -1)
-    						{
-    							if(vrrid != 0){
-    								totalLen += sprintf(cursor," ");
-    								cursor = showStr + totalLen;
-    							}
-    							totalLen += sprintf(cursor," channel offset down\n");
-    							cursor = showStr + totalLen;
-    						}
+    												
     						if((WTP[i]->WTP_Radio[j]->MixedGreenfield.Mixed_Greenfield != 0)
 						&& (WTP[i]->WTP_Radio[j]->MixedGreenfield.WlanID != 0)		/* HuangLeilei add for AXSSZFI-1622 */
 						&&((WTP[i]->WTP_Radio[j]->Radio_Type != 10)&&(WTP[i]->WTP_Radio[j]->Radio_Type !=12))) // fengwenchao modify 20120716 for autelan-3057
@@ -84766,6 +84748,24 @@ int show_running_config_wtp(WID_WTP **WTP,int i,char *cursor,char **showStr2,cha
 							cursor = showStr + totalLen;
 						}*/
 						/*fengwenchao add 20120314 for requirements-407*/
+						if(WTP[i]->WTP_Radio[j]->channel_offset == 1)/*wuwl default value is 0*/
+    						{
+    							if(vrrid != 0){
+    								totalLen += sprintf(cursor," ");
+    								cursor = showStr + totalLen;
+    							}
+    							totalLen += sprintf(cursor," channel offset up\n");
+    							cursor = showStr + totalLen;
+    						}
+    						else if(WTP[i]->WTP_Radio[j]->channel_offset == -1)
+    						{
+    							if(vrrid != 0){
+    								totalLen += sprintf(cursor," ");
+    								cursor = showStr + totalLen;
+    							}
+    							totalLen += sprintf(cursor," channel offset down\n");
+    							cursor = showStr + totalLen;
+    						}
 						if(check_ac_whether_or_not_set_mcs_list(WTP[i]->WTPID,j) == 1)
 						{
 							int q = 0;
