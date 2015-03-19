@@ -8713,4 +8713,9 @@ enum npd_dbus_result_no_e {
 /* use in dcli_acl.c */
 #define	SLOT_PORT_ANALYSIS_SLOT(combination, slot) 	(slot = (((combination)>>6) & 0x1f) + 1)
 #define VRRP_DBUS_METHOD_SHOW_SWITCH_TIMES      "had_show_switch_times"
+#define NPD_DBUS_METHOD_SHOW_AX81_12X_PORT_STATE    "show_ax81_12x_port_state"
+#define NPD_DBUS_METHOD_CONFIG_PHY_88X2140_INIT     "config_ax81_12x_phy_88x2140_init"
+#define NPD_DBUS_METHOD_CONFIG_SERDES_POWER_STATE   "config_ax81_12x_serdes_power_state"
+#define NPD_DBUS_METHOD_CONFIG_AX81_12X_PORT_STATE  "config_ax81_12x_port_state"
+
 #endif
