@@ -267,6 +267,15 @@ struct nlmsghdr *had_nlh = NULL;
 struct sockaddr_nl had_src_addr, had_dest_addr;
 struct iovec had_iov;
 
+/* Utility function for making IPv6 address string. */
+const char *inet6_ntoa (struct in6_addr addr)
+{
+  static char buf[INET6_ADDRSTRLEN];
+
+  inet_ntop (AF_INET6, &addr, buf, INET6_ADDRSTRLEN);
+  return buf;
+}
+
 int had_netlink_send(char *msgBuf, int len)
 {
 	memcpy(NLMSG_DATA(had_nlh), msgBuf, len);
@@ -3896,8 +3905,6 @@ static int had_cfg_vlink_add_ip6addr_check
     }
 	*/
     had_state_notifier_rtmd(ifname,VRRP_NOTIFY_RTMD_OPT_DEL);
-    vrrp_syslog_info("cmd : %s execute fail \n",cmd);
-
 #endif	
 	return VRRP_RETURN_CODE_OK;
 }
@@ -4091,11 +4098,9 @@ static int had_cfg_vlink_add_ip6addr_check
 {
 	int ret = VRRP_RETURN_CODE_OK;
 
-    if(ipaddr ){
-	    vrrp_syslog_dbg("%s: %s index = %d ip6 "NIP6QUAD_FMT"/%d !\n", __func__ ,VRRP_LINK_TYPE_DESCANT(link_type),index, NIP6QUAD(ipaddr->iabuf), prefix_length);			
-    }
-    else{
-    	vrrp_syslog_dbg("%s: %s index = %d !\n",__func__,VRRP_LINK_TYPE_DESCANT(link_type),index);			
+    if(!ipaddr ){
+	    vrrp_syslog_error("%s: delete interface %s form %s_vif[%d] null pointer error!\n", __func__ ,ifname,VRRP_LINK_TYPE_DESCANT(link_type),index);	
+		return VRRP_RETURN_CODE_ERR;
     }
 
 	if(!vsrv) {
@@ -5231,6 +5236,9 @@ unsigned int had_del_vip_from_linkvif
 	int i = 0;
 	int set_cnt = 0;
 	vrrp_if *ptrVif = NULL, *ptrTmp = NULL;
+	vipv6_addr *ip6Ptr = NULL,*ip6Ptr_link = NULL;
+	vip_addr *vip = NULL;
+
 	unsigned int *set_flag = NULL;
 
 	if (!vsrv || !ifname) {
@@ -5258,6 +5266,11 @@ unsigned int had_del_vip_from_linkvif
 				ptrTmp = &(vsrv->uplink_vif[0]);
 				ptrVif = &(vsrv->uplink_vif[index]);
 				set_flag = &(vsrv->uplink_flag);
+				/*for check interface ip address */
+				vip = &(vsrv->uplink_vaddr[index]);
+				ip6Ptr_link = &(vsrv->uplink_local_ipv6_vaddr[index]);
+				ip6Ptr = &(vsrv->uplink_ipv6_vaddr[index]);
+
 				#if 0
 				memset(&(vsrv->uplink_vif[index]), 0, sizeof(vrrp_if));
 				for (i = 0; i < VRRP_LINK_MAX_CNT; i++) {
@@ -5284,6 +5297,10 @@ unsigned int had_del_vip_from_linkvif
 				ptrTmp = &(vsrv->downlink_vif[0]);
 				ptrVif = &(vsrv->downlink_vif[index]);
 				set_flag = &(vsrv->downlink_flag);
+				vip = &(vsrv->downlink_vaddr[index]);
+				ip6Ptr_link = &(vsrv->downlink_local_ipv6_vaddr[index]);
+				ip6Ptr = &(vsrv->downlink_ipv6_vaddr[index]);
+
 				#if 0
 				memset(&(vsrv->downlink_vif[index]), 0, sizeof(vrrp_if));
 				for (i = 0; i < VRRP_LINK_MAX_CNT; i++) {
@@ -5309,6 +5326,10 @@ unsigned int had_del_vip_from_linkvif
                 ptrTmp = &(vsrv->vgateway_vif[0]);
 				ptrVif = &(vsrv->vgateway_vif[index]);
 				set_flag = &(vsrv->vgateway_flag);
+				vip = &(vsrv->vgateway_vaddr[index]);
+				ip6Ptr_link = &(vsrv->vgateway_local_ipv6_vaddr[index]);
+				ip6Ptr = &(vsrv->vgateway_ipv6_vaddr[index]);
+
 			    break;
 		    }
 			
@@ -5321,7 +5342,11 @@ unsigned int had_del_vip_from_linkvif
    //delete uplink or downlink or vgateway specific members
    
    /*niehy@autelan.com add by AXSSZFI-2165*/
-   if((ipv6_addr_eq_null(&ptrVif->ipv6_addr)) && (ipv6_addr_eq_null(&ptrVif->ipaddr)))
+   //vrrp_syslog_error("ipv6_link_local = %d ipv6 = %d  ipv4 = %d \n",ipv6_addr_eq_null(&ip6Ptr_link->sin6_addr),ipv6_addr_eq_null(&ip6Ptr->sin6_addr),vip->addr);
+   vrrp_syslog_dbg("interface %s ipv6_link_local address %s   ", ifname, inet6_ntoa(ip6Ptr_link->sin6_addr));
+   vrrp_syslog_dbg("ipv6 address %s\n",inet6_ntoa(ip6Ptr->sin6_addr));
+
+   if((ipv6_addr_eq_null(&ip6Ptr_link->sin6_addr)) && (ipv6_addr_eq_null(&ip6Ptr->sin6_addr)) && (0 == vip->addr))
    {
         memset(ptrVif, 0, sizeof(vrrp_if));
 		vrrp_syslog_info("delete interface %s from %s_vif[%d] \n",
@@ -5529,9 +5554,9 @@ add_addr:
 			for (i = 0; i < VRRP_LINK_MAX_CNT; i++)
 			{
 				if (VRRP_LINK_SETTED == linkIf[i].set_flg) {
-					vrrp_syslog_info("had_add_vipv6: %s vip6 addr "NIP6QUAD_FMT"/%d\n",
+					vrrp_syslog_dbg("had_add_vipv6: %s vip6 addr %s/%d\n",
                             		VRRP_LINK_TYPE_DESCANT(up_down_flg),
-                            		NIP6QUAD(ipPtr->sin6_addr.s6_addr),
+                            		inet6_ntoa(ipPtr->sin6_addr),
                             		prefix_length);
 				}
 			}
@@ -5728,6 +5753,32 @@ unsigned int had_delete_vipv6
 				}
 			}
 			/* delelte downlink from downlink_vif */
+
+			ret = had_cfg_vlink_ip6addr_change(vsrv, up_down_flg, ifname, VRRP_VIP_OPT_TYPE_DEL, vip6, prefix_length, index,link_local);
+            if(VRRP_RETURN_CODE_OK != ret)
+			{
+				vrrp_syslog_error("delete %s_vif[%d] ip6 address error, ret %x.\n",
+									VRRP_LINK_TYPE_DESCANT(up_down_flg),
+									index,
+									ret);
+				ret = VRRP_RETURN_CODE_ERR;
+			}
+			else
+			{
+				ret = had_del_vip_from_linkvif(vsrv, up_down_flg, ifname, index);
+				if (VRRP_RETURN_CODE_OK != ret) {
+					vrrp_syslog_error("delete %s from %s_vif[%d] error, ret %x.\n",
+    									ifname,
+    									VRRP_LINK_TYPE_DESCANT(up_down_flg),
+    									index,
+    									ret);
+    				ret = VRRP_RETURN_CODE_ERR;
+			    }
+				else
+					vrrp_syslog_info("delete %s_vif[%d] ip6 success.\n",VRRP_LINK_TYPE_DESCANT(up_down_flg),index);
+			}
+			
+#if 0		// for delete interface error	
 			ret = had_del_vip_from_linkvif(vsrv, up_down_flg, ifname, index);
 			if (VRRP_RETURN_CODE_OK != ret) {
 				vrrp_syslog_error("delete interface %s from %s_vif[%d] error, ret %x.\n",
@@ -5741,7 +5792,7 @@ unsigned int had_delete_vipv6
 			{
 				if(VRRP_LINK_TYPE_L2_UPLINK != up_down_flg){
 					/* delete downlink virtual ip*/
-					vrrp_syslog_info("had_delete_vipv6: ip6 "NIP6QUAD_FMT"/ !\n",NIP6QUAD(vip6->iabuf), prefix_length);			
+					vrrp_syslog_info("had_delete_vipv6: ip6 "NIP6QUAD_FMT" !\n",NIP6QUAD(vip6->iabuf), prefix_length);			
 					had_cfg_vlink_ip6addr_change(vsrv, up_down_flg, ifname, VRRP_VIP_OPT_TYPE_DEL, vip6, prefix_length, index,link_local);
 				}
 				else{
@@ -5752,6 +5803,7 @@ unsigned int had_delete_vipv6
 								VRRP_LINK_TYPE_DESCANT(up_down_flg),index,NIP6QUAD(vip6->iabuf),prefix_length);
 				ret = VRRP_RETURN_CODE_OK;
 			}
+#endif 
 		}
 		
 		/* for debug */
@@ -5759,10 +5811,9 @@ unsigned int had_delete_vipv6
 		for (i = 0; i < VRRP_LINK_MAX_CNT; i++)
 		{
 			if (VRRP_LINK_SETTED == linkIf[i].set_flg) {
-					vrrp_syslog_info("had_delete_vipv6 %s vip6 addr "NIP6QUAD_FMT"/%d\n",
-                            		VRRP_LINK_TYPE_DESCANT(up_down_flg),
-                            		NIP6QUAD(vip6->iabuf),
-                            		prefix_length);
+					vrrp_syslog_dbg("had_delete_vipv6 %s vip6 addr\n",
+                            		VRRP_LINK_TYPE_DESCANT(up_down_flg)
+                            		);
 			}
 		}
 	}
@@ -6080,6 +6131,7 @@ unsigned int had_delete_vip
 )
 {
 	unsigned int ret = VRRP_RETURN_CODE_OK;
+	unsigned int ret_ip6 = VRRP_RETURN_CODE_OK;
 	vrrp_rt *vsrv = NULL;
 	hansi_s *hansiNode = NULL;
 	int index = -1;
@@ -6330,9 +6382,32 @@ unsigned int had_delete_vip
 				}
 			}
 			/* delelte downlink from downlink_vif */
+			ret = had_cfg_vlink_ipaddr_change(vsrv, up_down_flg, VRRP_VIP_OPT_TYPE_DEL, vip, mask, index);
+            if(VRRP_RETURN_CODE_OK != ret)
+			{
+				vrrp_syslog_error("delete %s ip error, ret %x.\n",
+									VRRP_LINK_TYPE_DESCANT(up_down_flg),
+									ret);
+				ret = VRRP_RETURN_CODE_ERR;
+			}
+			else
+			{
+				ret = had_del_vip_from_linkvif(vsrv, up_down_flg, ifname, index);
+				if (VRRP_RETURN_CODE_OK != ret) {
+					vrrp_syslog_error("delete %s from %s_vif[%d] error, ret %x.\n",
+    									ifname,
+    									VRRP_LINK_TYPE_DESCANT(up_down_flg),
+    									index,
+    									ret);
+    				ret = VRRP_RETURN_CODE_ERR;
+			    }
+				else
+					vrrp_syslog_info("delete %s_vif[%d] success.\n",VRRP_LINK_TYPE_DESCANT(up_down_flg),index);
+			}
+#if 0   /* niehy@autelan.com fixed for AXSSZFI-2206, 2015-3-20*/
 			ret = had_del_vip_from_linkvif(vsrv, up_down_flg, ifname, index);
 			if (VRRP_RETURN_CODE_OK != ret) {
-				vrrp_syslog_error("delete interface %s from %s_vif[%d] error, ret %x.\n",
+				vrrp_syslog_error("delete %s from %s_vif[%d] error, ret %x.\n",
 									ifname,
 									VRRP_LINK_TYPE_DESCANT(up_down_flg),
 									index,
@@ -6355,6 +6430,7 @@ unsigned int had_delete_vip
 								VRRP_LINK_TYPE_DESCANT(up_down_flg));
 				ret = VRRP_RETURN_CODE_OK;
 			}
+#endif
 		}
 		
 		/* for debug */
@@ -12998,7 +13074,7 @@ int had_vip6_gateway
 								vrrp->vgateway_vif[index].ipv6_addr,prefix_length,1))){
            memcpy(&in.s6_addr,&vrrp->vgateway_vif[index].ipv6_addr,sizeof(struct in6_addr)); 		
 		   vrrp_syslog_error("cant set the address "NIP6QUAD_FMT"%to vgateway %s\n", 
-					   		in.s6_addr, vrrp->vgateway_vif[index].ifname);
+					   		NIP6QUAD(in.s6_addr), vrrp->vgateway_vif[index].ifname);
 		   return VRRP_RETURN_CODE_ERR;
 	   }
 	   /*send Unsolicited Router Advertisements */

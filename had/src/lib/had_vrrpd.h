@@ -39,6 +39,7 @@ static inline int ipv6_addr_eq_null(const struct in6_addr *a1)
 
 #define NIP6QUAD_FMT "%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x"
 extern int vrrp_ndisc_send_fd;
+extern const char *inet6_ntoa (struct in6_addr);
 /*niehy add end*/
 
 
