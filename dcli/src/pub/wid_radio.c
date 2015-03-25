@@ -2882,7 +2882,7 @@ struct WtpList * set_radio_txpowerof_cmd_txpoweroffset(int localid, int index,DB
 	char fail_reason = 0;
 	struct RadioList  *RadioNode = NULL;
 	struct RadioList *radio_list_head = NULL;
-	printf("struct :  txpof = %d \n",txpof);
+	//printf("struct :  txpof = %d \n",txpof);
 	ReInitDbusPath_V2(localid,index,WID_DBUS_BUSNAME,BUSNAME);
 	ReInitDbusPath_V2(localid,index,WID_DBUS_RADIO_OBJPATH,OBJPATH);
 	ReInitDbusPath_V2(localid,index,WID_DBUS_RADIO_INTERFACE,INTERFACE);
@@ -2912,7 +2912,7 @@ struct WtpList * set_radio_txpowerof_cmd_txpoweroffset(int localid, int index,DB
 	dbus_message_iter_get_basic(&iter,ret);
 	if(type==0)
 		{
-			printf("ZZZZZZZZZZZZZZZZZZZZZZZ\n");
+			//printf("ZZZZZZZZZZZZZZZZZZZZZZZ\n");
 			dbus_message_iter_next(&iter);
 			dbus_message_iter_get_basic(&iter,ret1);
 		}

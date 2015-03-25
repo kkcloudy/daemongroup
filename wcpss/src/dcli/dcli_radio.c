@@ -3119,8 +3119,8 @@ DEFUN(set_radio_txpowerof_cmd_func,
 
 	ret = parse_int_ID((char *)argv[0],&txpwer);
 	txpof = (u_int16_t)txpwer;
-	vty_out(vty,"txpof = %d \n",txpof);
-	vty_out(vty,"txpwer = %d \n",txpwer);
+	//vty_out(vty,"txpof = %d \n",txpof);
+	//vty_out(vty,"txpwer = %d \n",txpwer);
 	if (ret != WID_DBUS_SUCCESS)
 	{	
 		vty_out(vty,"<error> input parameter %s error\n",argv[0]);
