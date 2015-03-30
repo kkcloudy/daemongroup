@@ -103,7 +103,10 @@ static int X509_encode(void *cert_st, unsigned char **out, int outlen)
 	{
 	
 		
-		unsigned char *p = *out;
+		unsigned char *p;   //xk debug:dereference after null check
+		if(out != NULL)
+			p = *out;
+		
 		unsigned char len1 = 0;
 		
 		asd_printf(ASD_WAPI,MSG_DEBUG,"%s: %d lines :len =%d\n", __func__, __LINE__, len);

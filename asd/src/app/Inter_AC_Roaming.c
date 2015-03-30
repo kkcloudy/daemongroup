@@ -222,7 +222,10 @@ int init_asd_sctp_socket(unsigned int port){
 	{	printf("tcp socket create failed\n");
 		return -1;
 	}	
-	setsockopt(sock_tcp, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes));
+	if(setsockopt(sock_tcp, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) != 0){  //xk debug:uncheck return
+		printf("sock_tcp setsocket failed\n");
+		return -1;
+	}
 //	setsockopt(sock_tcp, SOL_SOCKET, SO_REUSEPORT, &yes, sizeof(yes));
 	my_addr.sin_family = AF_INET;	
 	my_addr.sin_port = htons(port);	
@@ -232,7 +235,10 @@ int init_asd_sctp_socket(unsigned int port){
 	{	printf("udp bind failed\n");		
 		//exit(1);	
 	}		
-	listen(sock_tcp, 5);
+	if(listen(sock_tcp, 5) != 0){   //xk debug:uncheck return
+        asd_printf(ASD_DEFAULT,MSG_ERROR,"listen:%s",strerror(errno));
+		return -1;
+	}
 	return sock_tcp;
 }
 
@@ -311,6 +317,7 @@ int ACGroupRoamingCheck(unsigned char WLANID, struct asd_data *wasd, const unsig
 						
 						if ((sock = socket(PF_INET, SOCK_STREAM, IPPROTO_SCTP)) ==-1)
 						{	printf("tcp socket create failed\n");
+						    os_free(tmp);   //xk debug:resource leak
 							return 0;
 						}
 						tmp->sock = sock;
@@ -572,6 +579,7 @@ int ac_group_syn_request(int sockfd, unsigned char group_id){
 
 int ac_group_syn_end(int sockfd, unsigned char group_id){
 	G_Msg msg;
+	memset(&msg,0,sizeof(msg));  //xk debug:using unitialized value
 	//unsigned int sid;
 	int len;
 	int ret;

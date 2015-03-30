@@ -729,7 +729,11 @@ int check_ve_interface(char *ifname, char *name){
 		return 0;
 	}
 	else{
-		sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+		if((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0){       //xk debug:negative returns
+                perror("socket");
+				return -1;
+        }
+			
 		strncpy(ifr.ifr_name,ifname, sizeof(ifr.ifr_name)); 		
 		
 		if(parse_int_ve(ifname+2,&slotid,&vlanid,&vlanid2,cpu_id,&port)== 1)//fengwenchao add "vlanid2" for axsszfi-1506
@@ -28773,8 +28777,6 @@ DBusMessage *asd_dbus_set_asd_sta_check_time(DBusConnection *conn, DBusMessage *
 	}
 	if(asd_sta_check_time!= time){
 		asd_sta_check_time = time;
-		circle_cancel_timeout(asd_sta_delete,NULL,NULL);
-		circle_register_timeout(60*asd_sta_check_time,0,asd_sta_delete,NULL,NULL);
 		ret = ASD_DBUS_SUCCESS;
 	}
 	reply = dbus_message_new_method_return(msg);
@@ -28811,6 +28813,11 @@ DBusMessage *asd_dbus_set_asd_sta_check_time_switch(DBusConnection *conn, DBusMe
 	}
 	if(asd_sta_check_time_switch!= type){
 		asd_sta_check_time_switch = type;
+		if(type == 1){
+			pthread_mutex_lock(&asd_g_wtp_mutex);
+            asd_sta_check_all();
+			pthread_mutex_unlock(&asd_g_wtp_mutex);
+		}
 		ret = ASD_DBUS_SUCCESS;
 	}
 	reply = dbus_message_new_method_return(msg);

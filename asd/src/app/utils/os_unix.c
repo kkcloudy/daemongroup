@@ -239,6 +239,10 @@ char * os_readfile(const char *name, size_t *len)
 
 	fseek(f, 0, SEEK_END);
 	*len = ftell(f);
+	if(*len < 0){     //xk debug:negative returns
+        fclose(f);
+		return NULL;
+	}
 	fseek(f, 0, SEEK_SET);
 
 	buf = malloc(*len);
@@ -247,7 +251,11 @@ char * os_readfile(const char *name, size_t *len)
 		return NULL;
 	}
 
-	fread(buf, 1, *len, f);
+	if(fread(buf, 1, *len, f) < 0){   //xk debug:negative returns
+       perror("fread");
+	   fclose(f);
+	   return NULL;
+	}
 	fclose(f);
 
 	return buf;

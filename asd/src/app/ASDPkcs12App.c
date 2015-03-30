@@ -1532,7 +1532,11 @@ int rotate_serial(char *serialfile, char *new_suffix, char *old_suffix)
 			"unable to rename %s to %s\n",
 			buf[0],serialfile);
 		perror("reason");
-		rename(buf[1],serialfile);
+		if(rename(buf[1],serialfile) < 0)   //xk debug:uncheck return
+		    BIO_printf(bio_err,
+			"unable to rename %s to %s\n",
+			buf[1],serialfile);
+		
 		goto err;
 		}
 	return 1;
@@ -1589,7 +1593,9 @@ CA_DB *load_index(char *dbfile, DB_ATTR *db_attr)
 		}
 	if ((tmpdb = TXT_DB_read(in,DB_NUMBER)) == NULL)
 		{
+		#if 0  //xk debug:logically dead code 
 		if (tmpdb != NULL) TXT_DB_free(tmpdb);
+		#endif
 		goto err;
 		}
 
@@ -1822,7 +1828,12 @@ int rotate_index(const char *dbfile, const char *new_suffix, const char *old_suf
 			"unable to rename %s to %s\n",
 			buf[0],dbfile);
 		perror("reason");
-		rename(buf[1],dbfile);
+		if(rename(buf[1],dbfile) < 0){   // xk debug:uncheck return
+            BIO_printf(bio_err,
+			"unable to rename %s to %s\n",
+			buf[1],dbfile);
+		perror("reason");
+		}
 		goto err;
 		}
 	if (stat(buf[4],&sb) < 0)
@@ -1861,9 +1872,18 @@ int rotate_index(const char *dbfile, const char *new_suffix, const char *old_suf
 			"unable to rename %s to %s\n",
 			buf[2],buf[4]);
 		perror("reason");
-		rename(buf[3],buf[4]);
-		rename(dbfile,buf[0]);
-		rename(buf[1],dbfile);
+		if(rename(buf[3],buf[4]) < 0)   //xk debug:uncheck return
+		    BIO_printf(bio_err,
+			"unable to rename %s to %s\n",
+			buf[3],buf[4]);
+		if(rename(dbfile,buf[0]) < 0)
+			BIO_printf(bio_err,
+			"unable to rename %s to %s\n",
+			dbfile,buf[0]);
+		if(rename(buf[1],dbfile) < 0)
+			BIO_printf(bio_err,
+			"unable to rename %s to %s\n",
+			buf[1],dbfile);
 		goto err;
 		}
 	return 1;

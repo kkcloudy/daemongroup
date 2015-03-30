@@ -181,7 +181,10 @@ int init_asd_bak_socket(){
 		}	
 		#endif	
 	
-		setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes));
+		if(setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) != 0){   //xk debug:uncheck return
+            asd_printf(ASD_DEFAULT,MSG_ERROR,"setsockopt failed\n");
+			return -1;
+        }
 		my_addr.sin_family = AF_INET;	
 		my_addr.sin_port = htons(ASD_BAK_AC_PORT+local*MAX_INSTANCE+vrrid);	
 		my_addr.sin_addr.s_addr = INADDR_ANY;	
@@ -194,8 +197,15 @@ int init_asd_bak_socket(){
 		listen(sock, 5);
 #endif
 	}
-	setsockopt(sock,SOL_SOCKET,SO_SNDBUF,&sndbuf,sizeof(sndbuf));
-	setsockopt(sock,SOL_SOCKET,SO_RCVBUF,&rcvbuf,sizeof(rcvbuf));
+	if(setsockopt(sock,SOL_SOCKET,SO_SNDBUF,&sndbuf,sizeof(sndbuf)) != 0){   //xk debug:uncheck return
+            asd_printf(ASD_DEFAULT,MSG_ERROR,"setsockopt failed\n");
+			return -1;
+        }
+		
+	if(setsockopt(sock,SOL_SOCKET,SO_RCVBUF,&rcvbuf,sizeof(rcvbuf)) !=0){  
+            asd_printf(ASD_DEFAULT,MSG_ERROR,"setsockopt failed\n");
+			return -1;
+        }
 	return sock;
 }
 

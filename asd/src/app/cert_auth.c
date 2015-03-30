@@ -793,27 +793,34 @@ int access_auth_res(struct auth_sta_info_t *wapi_sta_info,
 	if(wapi_sta_info->flag & WAI_FLAG_AUTH_CERT)/*bit2  ASUE 要求验证AE证书*/
 		flag |= WAI_FLAG_OPTION_BYTE;/*bit3*/
 
-	offset = c_pack_packet_head(&head,sendto_asue,offset,FROM_AS_LEN);
+	offset = c_pack_packet_head(&head,sendto_asue,offset,FROM_AS_LEN);   //xk debug:negative returns
+	if( offset==PACK_ERROR ) return PACK_ERROR;
 	offset = c_pack_byte((u8 *)&flag,sendto_asue,offset,FROM_AS_LEN);
+	if( offset==PACK_ERROR ) return PACK_ERROR;
 	offset = c_pack_32bytes((u8 *)&wapi_sta_info->asue_nonce,sendto_asue,offset,FROM_AS_LEN);
+	if( offset==PACK_ERROR ) return PACK_ERROR;
 	offset = c_pack_32bytes((u8 *)&wapi_sta_info->ae_nonce,sendto_asue,offset,FROM_AS_LEN);
+	if( offset==PACK_ERROR ) return PACK_ERROR;
 	offset = c_pack_byte(&wapi_sta_info->auth_result,sendto_asue,offset,FROM_AS_LEN);
+	if( offset==PACK_ERROR ) return PACK_ERROR;
 	offset = c_pack_byte_data(&wapi_sta_info->asue_key_data,sendto_asue,offset,FROM_AS_LEN);
-	if(offset == PACK_ERROR) return -1;
+	if( offset==PACK_ERROR ) return PACK_ERROR;
 	offset = c_pack_byte_data(&wapi_sta_info->ae_key_data,sendto_asue,offset,FROM_AS_LEN);
-	if(offset == PACK_ERROR) return -1;
+    if( offset==PACK_ERROR ) return PACK_ERROR;
 	/*AE身份*/
 	offset = c_pack_word(&tmp_circle->ae_id.id_flag,sendto_asue,offset,FROM_AS_LEN);
-	offset = c_pack_word(&tmp_circle->ae_id.id_len,sendto_asue,offset,FROM_AS_LEN);
-	if(offset == PACK_ERROR) return -1;//qiuchen
+	if( offset==PACK_ERROR ) return PACK_ERROR;
+    offset = c_pack_word(&tmp_circle->ae_id.id_len,sendto_asue,offset,FROM_AS_LEN);
+    if( offset==PACK_ERROR ) return PACK_ERROR;
 	memcpy(sendto_asue + offset, tmp_circle->ae_id.id_data, tmp_circle->ae_id.id_len);
 	//c_pack_htons_id(sendto_asue + offset);/*转换身份字段中的长度*/
 	offset += tmp_circle->ae_id.id_len;
 	
 	/*ASUE身份*/
 	offset = c_pack_word(&wapi_sta_info->asue_id.id_flag,sendto_asue,offset,FROM_AS_LEN);
+	if( offset==PACK_ERROR ) return PACK_ERROR;
 	offset = c_pack_word(&wapi_sta_info->asue_id.id_len,sendto_asue,offset,FROM_AS_LEN);
-	if(offset == PACK_ERROR) return -1;//qiuchen
+	if( offset==PACK_ERROR ) return PACK_ERROR;
 	memcpy(sendto_asue + offset, wapi_sta_info->asue_id.id_data, wapi_sta_info->asue_id.id_len);
 	//c_pack_htons_id(sendto_asue + offset);
 	offset +=  wapi_sta_info->asue_id.id_len;
@@ -848,16 +855,18 @@ int access_auth_res(struct auth_sta_info_t *wapi_sta_info,
 
 	/*AE身份*/
 	offset = c_pack_word(&tmp_circle->ae_id.id_flag,sendto_asue,offset,FROM_AS_LEN);
+	if( offset==PACK_ERROR ) return PACK_ERROR;
 	offset = c_pack_word(&tmp_circle->ae_id.id_len,sendto_asue,offset,FROM_AS_LEN);
-	if(offset == PACK_ERROR) return -1;//qiuchen
+	if( offset==PACK_ERROR ) return PACK_ERROR;
 	memcpy(sendto_asue + offset, &tmp_circle->ae_id.id_data, tmp_circle->ae_id.id_len);
 	offset += tmp_circle->ae_id.id_len;
 	
 	/*签名算法,没有参数*/
 	offset = c_pack_sign_alg(&pap->sign_alg, sendto_asue,offset,FROM_AS_LEN);
+	if( offset==PACK_ERROR ) return PACK_ERROR;
 	offset = c_pack_word((u16 *)&sign_val_len,sendto_asue,offset,FROM_AS_LEN);
+	if( offset==PACK_ERROR ) return PACK_ERROR;
 	
-	if(offset == PACK_ERROR) return -1;//qiuchen
 	memcpy(sendto_asue + offset, sign.data, 48);
 	offset += 48;
 
@@ -1144,22 +1153,29 @@ int certificate_auth_req (const struct _sta_auth_request *sta_auth_requ,
 	head.frame_sc = 0;
 
 	/*构造分组头*/
-	offset = c_pack_packet_head(&head,sendto_as,offset,FROM_MT_LEN);
+	offset = c_pack_packet_head(&head,sendto_as,offset,FROM_MT_LEN);  //xk debug:negative returns
+	if( offset==PACK_ERROR ) return PACK_ERROR;
 	//DPrint_string_array("APAUTHREQUEST head", sendto_as, sizeof(packet_head));
 
 	/*构造ADDID*/
 	offset = pack_mac((u8 *)pap->macaddr, sendto_as, offset);
+	if( offset==PACK_ERROR ) return PACK_ERROR;
 	offset = pack_mac((u8 *)wapi_sta_info->mac, sendto_as, offset);
+	if( offset==PACK_ERROR ) return PACK_ERROR;
 	
 	/*构造AE和ASUE的挑战*/
 	get_random(wapi_sta_info->ae_nonce , 32);
 	smash_random(wapi_sta_info->ae_nonce, 32);
 	offset = c_pack_32bytes(wapi_sta_info->ae_nonce, sendto_as, offset, FROM_MT_LEN);
+	if( offset==PACK_ERROR ) return PACK_ERROR;
 	offset = c_pack_32bytes(wapi_sta_info->asue_nonce, sendto_as, offset, FROM_MT_LEN);
+	if( offset==PACK_ERROR ) return PACK_ERROR;
 
 	/*ASUE certificate*/
 	offset = c_pack_word(&sta_auth_requ->asue_cert.cert_flag,sendto_as ,offset,FROM_MT_LEN);
+	if( offset==PACK_ERROR ) return PACK_ERROR;
 	offset = c_pack_word(&sta_auth_requ->asue_cert.cert_bin.length,sendto_as ,offset,FROM_MT_LEN);
+	if( offset==PACK_ERROR ) return PACK_ERROR;
 	memcpy(sendto_as + offset, sta_auth_requ->asue_cert.cert_bin.data, sta_auth_requ->asue_cert.cert_bin.length);
 	offset += sta_auth_requ->asue_cert.cert_bin.length;
 
@@ -1167,7 +1183,9 @@ int certificate_auth_req (const struct _sta_auth_request *sta_auth_requ,
 	asd_printf(ASD_WAPI,MSG_DEBUG,"process_access request:cert_index=%d\n",tmp_circle->cert_info.config.used_cert);
 	//offset = c_pack_word(&APData.cert_info.config.used_cert,sendto_as ,offset,FROM_MT_LEN);
 	offset = c_pack_word(&tmp_circle->cert_info.config.used_cert, sendto_as ,offset,FROM_MT_LEN);
+	if( offset==PACK_ERROR ) return PACK_ERROR;
 	offset = c_pack_word(&ap_cert_obj->cert_bin->length,sendto_as,offset,FROM_MT_LEN);
+	if( offset==PACK_ERROR ) return PACK_ERROR;
 	memcpy(sendto_as + offset, ap_cert_obj->cert_bin->data, ap_cert_obj->cert_bin->length);
 	offset += tmp_circle->cert_info.ap_cert_obj->cert_bin->length;
 	//DPrint_string_array("ae cert", ap_cert_obj->cert_bin->data, ap_cert_obj->cert_bin->length);
@@ -1178,15 +1196,19 @@ int certificate_auth_req (const struct _sta_auth_request *sta_auth_requ,
 		
 		offset = c_pack_byte((u8 *)&(sta_auth_requ->asu_id_list.identifier),
 			               sendto_as, offset,FROM_MT_LEN);
+		if( offset==PACK_ERROR ) return PACK_ERROR;
 		
 		offset = c_pack_word((u16 *)&(sta_auth_requ->asu_id_list.length),
 		                                  sendto_as,offset,FROM_MT_LEN);
+		if( offset==PACK_ERROR ) return PACK_ERROR;
 			  
 		offset = c_pack_byte((u8 *)&(sta_auth_requ->asu_id_list.rev),
 		               sendto_as, offset,FROM_MT_LEN);
+		if( offset==PACK_ERROR ) return PACK_ERROR;
 		
        	offset = c_pack_word((u16 *)&(sta_auth_requ->asu_id_list.id_no),
 	                                  sendto_as,offset,FROM_MT_LEN);
+		if( offset==PACK_ERROR ) return PACK_ERROR;
 
 	   	for(i=0;i<sta_auth_requ->asu_id_list.id_no;i++)
 	   	{
@@ -1194,15 +1216,17 @@ int certificate_auth_req (const struct _sta_auth_request *sta_auth_requ,
 	   	//身份标识
 		 offset = c_pack_word((u16 *)&(sta_auth_requ->asu_id_list.id[i].id_flag),
                                                    sendto_as,offset,FROM_MT_LEN);
+		 if( offset==PACK_ERROR ) return PACK_ERROR;
 		//身份长度
 		 offset = c_pack_word((u16 *)&(sta_auth_requ->asu_id_list.id[i].id_len),
 	                                                sendto_as,offset,FROM_MT_LEN);
+		 if( offset==PACK_ERROR ) return PACK_ERROR;
 
 		//身份数据
 		 offset = c_pack_nbytes((u8 *)&(sta_auth_requ->asu_id_list.id[i].id_data), 
 		 	                                sta_auth_requ->asu_id_list.id[i].id_len, sendto_as,
 		 	                                offset,FROM_MT_LEN);	
-	  
+	    if( offset==PACK_ERROR ) return PACK_ERROR;
 		}
 		   
 		//offset += sta_auth_requ->asu_id_list.id_no * 4 + 6;

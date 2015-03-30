@@ -1141,7 +1141,7 @@ radius_msg_add_attr_user_password(struct radius_msg *msg,
 	size_t len[2];
 	u8 hash[16];
 
-	if (data_len > 128)
+	if (data_len >= 128)   //xk debug:out of bound
 		return NULL;
 
 	os_memcpy(buf, data, data_len);

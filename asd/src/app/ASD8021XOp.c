@@ -741,7 +741,8 @@ static void ieee802_1x_encapsulate_radius(struct asd_data *wasd,
 			memcpy(wtp_name, ASD_WTP_AP[wtpid]->WTPNAME, strlen(ASD_WTP_AP[wtpid]->WTPNAME));
     		asd_printf(ASD_1X,MSG_DEBUG,"ieee802_1x_encapsulate_radius(): wtp_name: %s,  len: %d\n",wtp_name, strlen(ASD_WTP_AP[wtpid]->WTPNAME));			
     		os_snprintf(buf, sizeof(buf), "%s:%s", wtp_name, wasd->conf->ssid.ssid);
-        	asd_printf(ASD_1X,MSG_DEBUG,"Called-Station-Id: %s \n",buf);				
+        	asd_printf(ASD_1X,MSG_DEBUG,"Called-Station-Id: %s \n",buf);
+			os_free(wtp_name);   // xk debug:resource leak
 		}
     	else
     	{
@@ -2312,7 +2313,7 @@ void ieee802_1x_deinit(struct asd_data *wasd)
 {
 	circle_cancel_timeout(ieee802_1x_rekey, wasd, NULL);
 
-	if (wasd->driver != NULL &&
+	if (wasd->driver != NULL && wasd->conf !=NULL &&     //xk debug:check after deref
 	    (wasd->conf->ieee802_1x || wasd->conf->wpa))
 		asd_set_ieee8021x(wasd->conf->iface, wasd, 0);
 

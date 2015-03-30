@@ -242,7 +242,12 @@ int save_global_conf(char type, char* filename, char *command, char *key, char *
 	fclose(fidIn);
 	fclose(fidOut);
 	unlink(filename);
-	rename(tmp_fname,filename);
+	if(rename(tmp_fname,filename) < 0){   //xk debug:uncheck return
+		perror("rename");
+		return 0;
+        
+	}
+		
 	return 1;
 }
 

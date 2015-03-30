@@ -57028,9 +57028,9 @@ DBusMessage * wid_dbus_interface_set_wtp_sta_infomation_enable(DBusConnection *c
 								AC_WTP[i]->ap_sta_report_switch = policy;   // xk add 
 								ret = wid_set_ap_sta_infomation_report(i);
 							}
-					        AsdWsm_WTPOp(i,WID_MODIFY);      //xk add for asd sta check
 					}
 				}
+				wid_notice_asd_switch(ID,policy);   //xk add for asd sta check
 			} /*wcl add for globle variable*/
 			else if(AC_WTP[ID] == NULL)
 			{
@@ -57043,16 +57043,14 @@ DBusMessage * wid_dbus_interface_set_wtp_sta_infomation_enable(DBusConnection *c
 
 			else if(AC_WTP[ID]->ap_sta_report_switch == policy)
 			{
-				ret = WID_DBUS_SUCCESS;
-				AsdWsm_WTPOp(ID,WID_MODIFY);   //xk add for asd sta check
-				
+				ret = WID_DBUS_SUCCESS;				
 			}
 			else
 			{
 				AC_WTP[ID]->ap_sta_report_switch = policy;
 
 				ret = wid_set_ap_sta_infomation_report(ID);
-				AsdWsm_WTPOp(ID,WID_MODIFY);   //xk add for asd sta check
+				wid_notice_asd_switch(ID,policy);   //xk add for asd sta check
 			}
 		}
 
@@ -57081,14 +57079,13 @@ DBusMessage * wid_dbus_interface_set_wtp_sta_infomation_enable(DBusConnection *c
 							{
 								ret2 = WID_DBUS_SUCCESS;
 								wid_syslog_debug_debug(WID_DEFAULT,"WTP%d had this policy yet\n",tmp->WTPID);
-								AsdWsm_WTPOp(ID,WID_MODIFY);   //xk add for asd sta check
 								//printf("%%%%ret2= %d\n",ret2);
 							}
 
 						 else 
 							{	AC_WTP[tmp->WTPID]->ap_sta_report_switch = policy;
 								ret2 = wid_set_ap_sta_infomation_report(tmp->WTPID);
-								AsdWsm_WTPOp(ID,WID_MODIFY);  //xk add for asd sta check
+								wid_notice_asd_switch(tmp->WTPID,policy);
 								//printf("!!!!!ret2= %d\n",ret2);
 							}
 						if(ret2 != WID_DBUS_SUCCESS){
@@ -57175,6 +57172,7 @@ DBusMessage * wid_dbus_interface_set_wtp_sta_infomation_enable(DBusConnection *c
 				
 			}
 		}
+		wid_notice_asd_switch(wtpid,policy);   //xk add for asd sta check
 	} /*wcl add for globle variable*/
 	else if(AC_WTP[wtpid] == NULL)
 	{
@@ -57193,6 +57191,7 @@ DBusMessage * wid_dbus_interface_set_wtp_sta_infomation_enable(DBusConnection *c
 		AC_WTP[wtpid]->ap_sta_report_switch = policy;
 
 		ret = wid_set_ap_sta_infomation_report(wtpid);
+		wid_notice_asd_switch(wtpid,policy);   //xk add for asd sta check
 	}
 	
 		

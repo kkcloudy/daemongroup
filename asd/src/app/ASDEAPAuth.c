@@ -200,6 +200,7 @@ int set_adtip(ip_set_id_t index, const ip_set_ip_t adt, unsigned op)
 	data = malloc(size);
 	if(data == NULL){
 		asd_printf(ASD_DEFAULT,MSG_INFO, "set_adtip malloc data error!");
+		os_free(ipdata);   //xk debug:resource leak
 		return -1;
 	}
 	/* Fill out the request */

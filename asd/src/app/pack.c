@@ -250,7 +250,8 @@ short  c_pack_comm_data(const comm_data* pData,void* buffer,u16 offset,unsigned 
 		(pData->length - 2 > COMM_DATA_LEN)|| (pData->length == 0))
 		return PACK_ERROR;
 
-	offset = c_pack_word(&pData->length,buffer,offset,bufflen);
+	offset = c_pack_word(&pData->length,buffer,offset,bufflen);  //xk debug:negative returns
+	if( offset==PACK_ERROR ) return PACK_ERROR;
 	memcpy((u8*)buffer+offset,pData->data,pData->length);
 	offset += pData->length;
 
@@ -262,11 +263,16 @@ short  c_pack_sign_alg(const wai_fixdata_alg *pSign_alg,void* buffer,u16 offset,
 {
 	if( offset+pSign_alg->alg_length + 2>bufflen ) return PACK_ERROR;
 	
-	offset = c_pack_word(&pSign_alg->alg_length,buffer,offset,bufflen);
+	offset = c_pack_word(&pSign_alg->alg_length,buffer,offset,bufflen);  //xk debug:negative returns
+	if( offset==PACK_ERROR ) return PACK_ERROR;
 	offset = c_pack_byte(&pSign_alg->sha256_flag,buffer,offset,bufflen);
+	if( offset==PACK_ERROR ) return PACK_ERROR;
 	offset = c_pack_byte(&pSign_alg->sign_alg,buffer,offset,bufflen);
+	if( offset==PACK_ERROR ) return PACK_ERROR;
 	offset = c_pack_byte(&pSign_alg->sign_para.para_flag,buffer,offset,bufflen);
+	if( offset==PACK_ERROR ) return PACK_ERROR;
 	offset = c_pack_word(&pSign_alg->sign_para.para_len,buffer,offset,bufflen);
+	if( offset==PACK_ERROR ) return PACK_ERROR;
 	if(offset > bufflen) return PACK_ERROR; 
 	memcpy(buffer + offset, pSign_alg->sign_para.para_data, pSign_alg->sign_para.para_len);
 	offset += pSign_alg->sign_para.para_len;
@@ -278,14 +284,23 @@ short  c_pack_packet_head( packet_head *pHead,void* buffer,u16 offset,unsigned s
 	if( bufflen<sizeof(packet_head) ) 
 		return PACK_ERROR;
 	
-	offset = c_pack_word(&(pHead->version),buffer,offset,bufflen);
-	offset = c_pack_byte(&(pHead->type),buffer,offset,bufflen);
+	offset = c_pack_word(&(pHead->version),buffer,offset,bufflen);   //xk debug:negative returns
+	if( offset==PACK_ERROR ) return PACK_ERROR;
+    offset = c_pack_byte(&(pHead->type),buffer,offset,bufflen);
+	if( offset==PACK_ERROR ) return PACK_ERROR;
 	offset = c_pack_byte(&(pHead->sub_type),buffer,offset,bufflen);
+	if( offset==PACK_ERROR ) return PACK_ERROR;
 	offset = c_pack_word(&(pHead->reserved),buffer,offset,bufflen);
+	if( offset==PACK_ERROR ) return PACK_ERROR;
 	offset = c_pack_word(&(pHead->data_len),buffer,offset,bufflen);
+	if( offset==PACK_ERROR ) return PACK_ERROR;
 	offset = c_pack_word(&(pHead->group_sc),buffer,offset,bufflen);
+	if( offset==PACK_ERROR ) return PACK_ERROR;
 	offset = c_pack_byte(&(pHead->frame_sc),buffer,offset,bufflen);
+	if( offset==PACK_ERROR ) return PACK_ERROR;
 	offset = c_pack_byte(&(pHead->flag),buffer,offset,bufflen);
+	if( offset==PACK_ERROR ) return PACK_ERROR;
+
 	
 	return offset;
 }
@@ -314,22 +329,31 @@ short  pack_auth_active(const auth_active* pContent,void* buffer,unsigned short 
 	head.flag = 0x00;
 
 	asd_printf(ASD_DEFAULT,MSG_DEBUG,"%s\n",__func__);
-	offset = c_pack_packet_head(&head,buffer,offset,bufflen);
+	offset = c_pack_packet_head(&head,buffer,offset,bufflen);  
+	if( offset==PACK_ERROR ) return PACK_ERROR;        //xk debug:negative returns
 
 	offset = c_pack_byte((u8 *)&pContent->flag,buffer,offset,bufflen);
-	offset = c_pack_32bytes((u8 *)&pContent->ae_auth_flag,buffer,offset,bufflen);
-
+	if( offset==PACK_ERROR ) return PACK_ERROR;
+	offset= c_pack_32bytes((u8 *)&pContent->ae_auth_flag,buffer,offset,bufflen);
+	if( offset==PACK_ERROR ) return PACK_ERROR;
+	
 	offset = c_pack_word(&pContent->asu_id.id_flag,buffer,offset,bufflen);
-	offset = c_pack_word(&pContent->asu_id.id_len,buffer,offset,bufflen);
+	if( offset==PACK_ERROR ) return PACK_ERROR;
+    offset = c_pack_word(&pContent->asu_id.id_len,buffer,offset,bufflen);
+	if( offset==PACK_ERROR ) return PACK_ERROR;
+	
 	if(offset > bufflen) return PACK_ERROR; 
 	memcpy(buffer + offset, &pContent->asu_id.id_data, pContent->asu_id.id_len);
 	offset +=	pContent->asu_id.id_len;
 	offset = c_pack_word(&pContent->ae_cer.cert_flag,buffer,offset,bufflen);
+	if( offset==PACK_ERROR ) return PACK_ERROR;
 	offset = c_pack_word(&pContent->ae_cer.cert_bin.length,buffer,offset,bufflen);
+	if( offset==PACK_ERROR ) return PACK_ERROR;
 	if(offset > bufflen) return PACK_ERROR; 
 	memcpy(buffer + offset, pContent->ae_cer.cert_bin.data, pContent->ae_cer.cert_bin.length);
 	offset += pContent->ae_cer.cert_bin.length;
 	offset = c_pack_byte((u8 *)&pContent->ecdh.para_flag,buffer,offset,bufflen);
+	if( offset==PACK_ERROR ) return PACK_ERROR;
 	if(offset > bufflen) return PACK_ERROR; 
 
 	((unsigned char *)buffer)[offset]= (pContent->ecdh.para_len >> 8)&0xff;
@@ -441,13 +465,17 @@ short  c_unpack_pubkey(pubkey_data* p_pubkey,const void* buffer,u16 offset,u16 b
 {
 	memset((u8 *)p_pubkey, 0, sizeof(pubkey_data));
 	
-	offset = c_unpack_word(&p_pubkey->length, buffer,offset,bufflen);
+	offset = c_unpack_word(&p_pubkey->length, buffer,offset,bufflen);   //xk debug:negative returns
+	if( offset==PACK_ERROR ) return PACK_ERROR;
 	
 	if( offset+p_pubkey->length >bufflen ) return PACK_ERROR;
 
 	offset = c_unpack_byte(&p_pubkey->pubkey_alg_flag, buffer,offset,bufflen);
+	if( offset==PACK_ERROR ) return PACK_ERROR;
 	offset = c_unpack_byte(&p_pubkey->pubkey_para.para_flag, buffer,offset,bufflen);
+	if( offset==PACK_ERROR ) return PACK_ERROR;
 	offset = c_unpack_word(&p_pubkey->pubkey_para.para_len, buffer,offset,bufflen);
+	if( offset==PACK_ERROR ) return PACK_ERROR;
 	
 	if(offset > bufflen) return PACK_ERROR; 
 	if(p_pubkey->pubkey_para.para_len  > MAX_PARA_LEN)   return PACK_ERROR;
@@ -515,7 +543,9 @@ short  c_unpack_byte_data(byte_data *p_byte_data, const void* buffer, u16 offset
  short  c_unpack_id_data(cert_id_data *p_byte_data, const void* buffer, u16 offset,u16 bufflen)
 {
 	/*应用于证书用户名，证书的颁发者名称和证书序列号*/ 
-	offset = c_unpack_word(&p_byte_data->length, buffer, offset, bufflen);
+	offset = c_unpack_word(&p_byte_data->length, buffer, offset, bufflen); //xk debug:negative returns
+	if( offset==PACK_ERROR ) return PACK_ERROR;
+	
 	
 	if( (offset+p_byte_data->length > bufflen) ||
 		(p_byte_data->length > MAX_ID_DATA_LEN)||
@@ -532,19 +562,26 @@ short  c_unpack_byte_data(byte_data *p_byte_data, const void* buffer, u16 offset
 short  unpack_head(packet_head *p_head,const void* buffer,u16 bufflen)
 {
 	u16 offset = 0;
-	
-	offset = c_unpack_word(&p_head->version, buffer,offset,bufflen); 
+	offset = c_unpack_word(&p_head->version, buffer,offset,bufflen);   //xk debug:negative returns
+	if( offset==PACK_ERROR ) return PACK_ERROR;
 	
 	if(p_head->version != VERSIONNOW) return PACK_ERROR;
 	offset = c_unpack_byte(&p_head->type, buffer,offset,bufflen);
+	if( offset==PACK_ERROR ) return PACK_ERROR;
 	offset = c_unpack_byte(&p_head->sub_type, buffer,offset,bufflen);
+	if( offset==PACK_ERROR ) return PACK_ERROR;
 	offset = c_unpack_word(&p_head->reserved, buffer,offset,bufflen);
+	if( offset==PACK_ERROR ) return PACK_ERROR;
 	offset = c_unpack_word(&p_head->data_len, buffer,offset,bufflen);
+	if( offset==PACK_ERROR ) return PACK_ERROR;
 	if( p_head->data_len != bufflen)  return PACK_ERROR;
 	
 	offset = c_unpack_word(&p_head->group_sc, buffer,offset,bufflen);
+	if( offset==PACK_ERROR ) return PACK_ERROR;	
 	offset = c_unpack_byte(&p_head->frame_sc, buffer,offset,bufflen);
+	if( offset==PACK_ERROR ) return PACK_ERROR;
 	offset = c_unpack_byte(&p_head->flag, buffer,offset,bufflen);
+	if( offset==PACK_ERROR ) return PACK_ERROR;
 	
 	return offset;
 }
@@ -584,8 +621,11 @@ short unpack_wai_attridata_cert_check_result(wai_attridata_auth_result*pid_list,
 	/*get 验证结果*/
 	if(bufflen < offset+1+2) return PACK_ERROR;
 	
-	offset = c_unpack_byte(&pid_list->identifier, buffer,  offset, bufflen);
+	offset = c_unpack_byte(&pid_list->identifier, buffer,  offset, bufflen);   //xk debug:negative returns
+	if( offset==PACK_ERROR ) return PACK_ERROR;
 	offset = c_unpack_word(&pid_list->length, buffer,  offset, bufflen);
+	if( offset==PACK_ERROR ) return PACK_ERROR;
+	
 	if(offset + pid_list->length > bufflen) 
 	{
 		return PACK_ERROR;
@@ -593,16 +633,22 @@ short unpack_wai_attridata_cert_check_result(wai_attridata_auth_result*pid_list,
 	
 	if(bufflen < offset+32+32+1) return PACK_ERROR;
 	offset = c_unpack_32bytes((u8 *)&pid_list->ae_challenge, buffer,  offset, bufflen);
-	offset = c_unpack_32bytes((u8 *)&pid_list->asue_challenge, buffer,  offset, bufflen);
+	if( offset==PACK_ERROR ) return PACK_ERROR;
+	offset= c_unpack_32bytes((u8 *)&pid_list->asue_challenge, buffer,  offset, bufflen);
+    if( offset==PACK_ERROR ) return PACK_ERROR;
 	offset = c_unpack_byte(&pid_list->auth_result1, buffer,  offset, bufflen);
+	if( offset==PACK_ERROR ) return PACK_ERROR;
 	
-	offset = unpack_wai_fixdata_cert(&pid_list->cert1, buffer,offset, bufflen);
+	offset= unpack_wai_fixdata_cert(&pid_list->cert1, buffer,offset, bufflen);
 	if(offset == PACK_ERROR ) return PACK_ERROR;
 
 	if(offset + 1 > bufflen) return PACK_ERROR;
 	offset = c_unpack_byte(&pid_list->auth_result2, buffer,  offset, bufflen);
+	if( offset==PACK_ERROR ) return PACK_ERROR;
 	
 	offset = unpack_wai_fixdata_cert(&pid_list->cert2, buffer,offset, bufflen);
+	if( offset==PACK_ERROR ) return PACK_ERROR;
+	
 	if(pid_list->length != 32 /*ae_challenge*/
 					+ 32 /*asue_challenge*/
 					+ 1 /*auth_result1*/
@@ -623,10 +669,15 @@ short unpack_wai_attridata_id_list(wai_attridata_id_list*pid_list, const void* b
 
 	if(offset +1+2+1+2 >bufflen  ) return PACK_ERROR;
 	/*get 身份列表*/
-	offset = c_unpack_byte(&pid_list->identifier, buffer,  offset, bufflen);
-	offset = c_unpack_word(&pid_list->length, buffer,  offset, bufflen);
+	offset = c_unpack_byte(&pid_list->identifier, buffer,  offset, bufflen);   //xk debug:negative returns
+	if( offset==PACK_ERROR ) return PACK_ERROR;
+	offset= c_unpack_word(&pid_list->length, buffer,  offset, bufflen);
+	if( offset==PACK_ERROR ) return PACK_ERROR;
 	offset = c_unpack_byte(&pid_list->rev, buffer,  offset, bufflen);
+	if( offset==PACK_ERROR ) return PACK_ERROR;
 	offset = c_unpack_word(&pid_list->id_no, buffer,  offset, bufflen);
+	if( offset==PACK_ERROR ) return PACK_ERROR;
+	
 	
 	for(i =0; i< pid_list->id_no; i++)/*第i 个身份*/
 	{
@@ -688,12 +739,16 @@ short  unpack_sta_auth_request(sta_auth_request *p_sta_auth_request,const void* 
 		return PACK_ERROR;
 	}
 	
-	offset = unpack_head(&head, buffer,bufflen);
+	offset = unpack_head(&head, buffer,bufflen);  //xk debug:negative returns
+	if( offset==PACK_ERROR ) return PACK_ERROR;
 	
-	offset = c_unpack_byte((u8 *)&p_sta_auth_request->flag,buffer,offset,bufflen);   
-	offset = c_unpack_32bytes((u8 *)&p_sta_auth_request->ae_auth_flag,buffer,offset,bufflen);   
-	offset = c_unpack_32bytes((u8 *)&p_sta_auth_request->asue_challenge,buffer,offset,bufflen);   
-	offset = c_unpack_byte_data(&p_sta_auth_request->key_data,buffer,offset,bufflen);   
+	offset = c_unpack_byte((u8 *)&p_sta_auth_request->flag,buffer,offset,bufflen);
+	if( offset==PACK_ERROR ) return PACK_ERROR;
+	offset = c_unpack_32bytes((u8 *)&p_sta_auth_request->ae_auth_flag,buffer,offset,bufflen); 
+	if( offset==PACK_ERROR ) return PACK_ERROR;
+	offset= c_unpack_32bytes((u8 *)&p_sta_auth_request->asue_challenge,buffer,offset,bufflen);
+    if( offset==PACK_ERROR ) return PACK_ERROR;
+	offset= c_unpack_byte_data(&p_sta_auth_request->key_data,buffer,offset,bufflen);
 	if( offset==PACK_ERROR ) 	return PACK_ERROR;
 	
 	/*get AE的身份*/
@@ -808,9 +863,12 @@ short  unpack_ucastkey_neg_response(session_key_neg_response *p_session_key_neg_
 		+2/*WIE ID+WIE LENGTH*/
 		)
 		return PACK_ERROR;
-	offset = unpack_head(&head, buffer,bufflen);
-	offset = c_unpack_byte((u8 *)&p_session_key_neg_response->flag,buffer,offset,bufflen);   
-	offset = c_unpack_16bytes(p_session_key_neg_response->bkid,buffer,offset,bufflen);  
+	offset = unpack_head(&head, buffer,bufflen);   //xk debug:negative returns
+	if( offset==PACK_ERROR ) return PACK_ERROR;
+	offset = c_unpack_byte((u8 *)&p_session_key_neg_response->flag,buffer,offset,bufflen);
+	if( offset==PACK_ERROR ) return PACK_ERROR;
+	offset = c_unpack_16bytes(p_session_key_neg_response->bkid,buffer,offset,bufflen);
+	if( offset==PACK_ERROR ) return PACK_ERROR;
 	offset = c_unpack_byte(&p_session_key_neg_response->uskid, buffer, offset, bufflen);  
 	if(offset == PACK_ERROR) return PACK_ERROR;
 	
@@ -820,7 +878,9 @@ short  unpack_ucastkey_neg_response(session_key_neg_response *p_session_key_neg_
 	offset += 6;
 
 	offset = c_unpack_32bytes(p_session_key_neg_response->asue_challenge, buffer, offset, bufflen);
+	if( offset==PACK_ERROR ) return PACK_ERROR;
 	offset = c_unpack_32bytes(p_session_key_neg_response->ae_challenge, buffer, offset, bufflen);
+	if( offset==PACK_ERROR ) return PACK_ERROR;
 	
 	wie_len = *((u8 *)buffer + offset + 1);
 	if(offset +wie_len +2 >bufflen)
@@ -857,10 +917,15 @@ short unpack_msk_announcement_res(groupkey_notice_response *p_groupkey_notice_re
 		return PACK_ERROR;
 
 
-	offset = unpack_head(&head, buffer,bufflen);
+	offset = unpack_head(&head, buffer,bufflen);   //xk debug:negative returns
+	if( offset==PACK_ERROR ) return PACK_ERROR;
 	offset = c_unpack_byte((u8 *)&p_groupkey_notice_response->flag, buffer, offset, bufflen);
+	if( offset==PACK_ERROR ) return PACK_ERROR;
 	offset = c_unpack_byte(&p_groupkey_notice_response->notice_keyid, buffer, offset, bufflen);
-	offset = c_unpack_byte(&p_groupkey_notice_response->uskid, buffer, offset, bufflen);
+	if( offset==PACK_ERROR ) return PACK_ERROR;
+	offset= c_unpack_byte(&p_groupkey_notice_response->uskid, buffer, offset, bufflen);
+	if( offset==PACK_ERROR ) return PACK_ERROR;
+	
 	
 	if(offset+6>bufflen) return PACK_ERROR;	
 	memcpy(p_groupkey_notice_response->addid.mac1, buffer + offset, 6);
@@ -871,9 +936,14 @@ short unpack_msk_announcement_res(groupkey_notice_response *p_groupkey_notice_re
 	offset += 6;
 
 	offset = c_unpack_dword(&p_groupkey_notice_response->g_nonce[0], buffer, offset, bufflen);
+    if( offset==PACK_ERROR ) return PACK_ERROR;
 	offset = c_unpack_dword(&p_groupkey_notice_response->g_nonce[1], buffer, offset, bufflen);
+	if( offset==PACK_ERROR ) return PACK_ERROR;
 	offset = c_unpack_dword(&p_groupkey_notice_response->g_nonce[2], buffer, offset, bufflen);
+	if( offset==PACK_ERROR ) return PACK_ERROR;
 	offset = c_unpack_dword(&p_groupkey_notice_response->g_nonce[3], buffer, offset, bufflen);
+	if( offset==PACK_ERROR ) return PACK_ERROR;
+	
 
 	if(offset+HMAC_LEN>bufflen) return PACK_ERROR;
 	memcpy(p_groupkey_notice_response->mic, (u8*)buffer+offset, HMAC_LEN);

@@ -2805,7 +2805,6 @@ int main(int argc, char *argv[])
 		asd_printf(ASD_DEFAULT,MSG_ERROR,"ASD_STA_MANAGE thread failed!\n");
 		return -1;
 	}
-    asd_sta_delete(NULL,NULL);
 	ASD_NETLINIK_INIT();
 	interfaces.config = asd_interfaces_init(0);
 	interfaces.config->interfaces = &interfaces;

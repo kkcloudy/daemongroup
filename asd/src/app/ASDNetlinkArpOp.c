@@ -166,7 +166,11 @@ int do_one_request(struct nlmsghdr *n)
 					sprintf(stainfo->sta->in_addr,"%d.%d.%d.%d",ip[0],ip[1],ip[2],ip[3]);						
 
 					//mahz	add 2011.3.16
-					inet_aton(stainfo->sta->in_addr,&(stainfo->sta->ip_addr));
+					if(inet_aton(stainfo->sta->in_addr,&(stainfo->sta->ip_addr)) == 0){
+                        asd_printf(ASD_DEFAULT,MSG_DEBUG,"inet_aton failed\n");
+						return -1;
+						
+					}
 
 					if(ASD_WLAN[stainfo->bss->WlanID])
 						SID = (unsigned char)ASD_WLAN[stainfo->bss->WlanID]->SecurityID;
@@ -270,7 +274,8 @@ int do_one_request(struct nlmsghdr *n)
 							stainfo->sta = NULL;
 							free(stainfo);
 							stainfo = NULL;
-						}	
+						}
+						pthread_mutex_unlock(&(asd_g_sta_mutex));  //xk debug:missing lock
 						return 0;
 					}
 					if(stainfo->sta->ipaddr != 0){

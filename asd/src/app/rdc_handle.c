@@ -80,7 +80,10 @@ rdc_get_active_master_slotid(  )
 		return 0;
 	}
 
-	fscanf( fp, "%d", &ret);
+	if(fscanf( fp, "%d", &ret) < 0){ //xk debug:uncheck return
+		fclose(fp);
+        return 0;
+	}
 	fclose( fp );
 
 	return ret;

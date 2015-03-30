@@ -133,7 +133,8 @@ int fips186_2_prf(const u8 *seed, size_t seed_len, u8 *x, size_t xlen)
 	/* FIPS 186-2 + change notice 1 */
 
 	os_memcpy(xkey, seed, seed_len);
-	os_memset(xkey + seed_len, 0, 64 - seed_len);
+	if(seed_len < 64)        //xk debug:out of bound
+	    os_memset(xkey + seed_len, 0, 64 - seed_len);
 	t[0] = 0x67452301;
 	t[1] = 0xEFCDAB89;
 	t[2] = 0x98BADCFE;
@@ -319,6 +320,7 @@ struct crypto_cipher * crypto_cipher_init(enum crypto_cipher_alg alg,
 		break;
 #endif /* OPENSSL_NO_RC2 */
 	default:
+	    os_free(ctx);   //xk debug:resource leak
 		return NULL;
 	}
 

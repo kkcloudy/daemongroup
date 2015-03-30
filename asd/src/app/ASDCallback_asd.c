@@ -234,7 +234,12 @@ void *netlink_sendto_wifi(void *priv, const void *buf, size_t len,
 	msg.msg_iovlen = 1;
 
 	/* Send message to kernel */
-	sendmsg(nl_sock, &msg, 0);
+	if((sendmsg(nl_sock, &msg, 0)) < 0){      //xk debug:uncheck value
+        perror("sendmsg");
+		free(nlh);
+		nlh = NULL;
+		return NULL;
+	}
 
 	if(nlh != NULL)
 	{
@@ -272,7 +277,10 @@ void ASD_NETLINIK_INIT()
 		perror("setsockopt");
 		return;
 	}
-	fcntl(nl_sock, F_SETFL, O_NONBLOCK);	
+	if((fcntl(nl_sock, F_SETFL, O_NONBLOCK)) < 0){    //xk debug:uncheck value
+        perror("fcntl");
+		return;
+	}	
 	/* Assign src_addr */
 	src_addr.nl_family = AF_NETLINK;
 	src_addr.nl_pid = getpid(); /* self pid */
@@ -317,7 +325,13 @@ void ASD_NETLINIK_INIT()
 	msg.msg_iovlen = 1;
 	asd_printf(ASD_DBUS,MSG_INFO,"iov.iov_len=%d,nlh->nlmsg_len=%d.\n",iov.iov_len,nlh->nlmsg_len);
 #ifndef _nl_ioctl_
-	int fd = open("/dev/wifi0", O_RDWR);		
+	int fd = open("/dev/wifi0", O_RDWR);	
+    if(fd < 0){                 //xk debug:negative returna
+		perror("open");
+		free(nlh);
+		nlh = NULL;
+		return;	
+	}
 	ret = ioctl(fd, WIFI_IOC_ASD_THRED_ID, &HInfo);
 	if(ret < 0){
 		asd_printf(ASD_DBUS,MSG_ERROR,"IOCTL fail:nl_sock=%d,strerror(errno)=%s.\n", nl_sock,strerror(errno));
@@ -753,7 +767,10 @@ int get_wapi_conf(struct asd_wapi *wapi, int wapi_type, int SID)
 		
 		if(inet_aton(ASD_SECURITY[SID]->wapi_as.as_ip, &(wapi->as_addr.sin_addr)) == 0)
 		{
-			inet_aton("127.0.0.1", &(wapi->as_addr.sin_addr));
+			if(inet_aton("127.0.0.1", &(wapi->as_addr.sin_addr)) == 0){   //xk debug:uncheck return
+                asd_printf(ASD_WAPI,MSG_DEBUG,"bad address\n");
+                return -1;
+			}
 		}
 		
 		if((wapi->as_udp_sk = open_socket_for_asu()) < 0) 
@@ -2839,6 +2856,33 @@ void WTP_OP(TableMsg *msg){
 			}
 			break;
 		}
+		case STA_CHECK:{
+			asd_printf(ASD_DEFAULT,MSG_DEBUG,"now in case STA_CHECK!!!");
+			int i;
+			unsigned int wtpid = msg->u.WTP.WtpID;
+			unsigned int policy = msg->u.WTP.wtp_flow_switch;
+			if(wtpid == 0){
+				for(i=0;i<WTP_NUM;i++){
+                    if(ASD_WTP_AP[i] != NULL){
+                        if(ASD_WTP_AP[i]->wtp_flow_switch != policy) {
+                            ASD_WTP_AP[i]->wtp_flow_switch = policy;
+						}             
+					}
+				}
+                if(policy == 1) 
+					asd_sta_check_all();
+			}
+			else{
+                if(ASD_WTP_AP[wtpid] != NULL){
+                    if(ASD_WTP_AP[wtpid]->wtp_flow_switch != policy) {
+                            ASD_WTP_AP[wtpid]->wtp_flow_switch = policy;
+					}
+					if(policy == 1)
+						asd_sta_check_wtp(wtpid);
+				}
+			}
+			break;
+        }
 		default :
 			return;
 	}
@@ -2903,6 +2947,8 @@ void BSS_OP(TableMsg *msg, struct wasd_interfaces *interfaces){
 				/* Add SSID for BSS, instead of essid */
 				memset(ASD_BSS[msg->u.BSS.BSSIndex]->SSID,0,ESSID_DEFAULT_LEN+1);
 				memcpy(ASD_BSS[msg->u.BSS.BSSIndex]->SSID,msg->u.BSS.SSID,strlen((char *)msg->u.BSS.SSID));
+				asd_printf(ASD_DBUS,MSG_DEBUG,"ASD_BSS[msg->u.BSS.BSSIndex]->SSID : %s\n",ASD_BSS[msg->u.BSS.BSSIndex]->SSID);
+
 				
 				ASD_BSS[msg->u.BSS.BSSIndex]->BSSID = (unsigned char*)os_zalloc(7);
 				if(ASD_BSS[msg->u.BSS.BSSIndex]->BSSID==NULL){

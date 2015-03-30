@@ -219,6 +219,7 @@ struct sta_info {
 #ifdef __ASD_STA_ACL
 	acl_policy_t acl; // caojia add for sta acl function
 #endif
+    unsigned int sta_check_flag;
 };
 struct sta_acct_info{	
 	u8 acct_id[ACCT_ID_LEN+1];

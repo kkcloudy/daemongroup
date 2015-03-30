@@ -1182,7 +1182,9 @@ void ap_free_sta_without_wsm(struct asd_data *wasd, struct sta_info *sta, unsign
 		circle_cancel_timeout(ap_handle_session_timer, wasd, sta);
 		circle_cancel_timeout(ap_sta_idle_timeout,wasd,sta);
 		circle_cancel_timeout(ap_sta_eap_auth_timer,wasd,sta);
-		circle_cancel_timeout(wapi_radius_auth_send, wasd, sta);	
+		circle_cancel_timeout(wapi_radius_auth_send, wasd, sta);
+		if(sta->sta_check_flag == 1)
+			circle_cancel_timeout(asd_sta_check,wasd,sta);
 		if(is_secondary == 0)
 			bak_del_sta(wasd,sta);
 		
@@ -1364,6 +1366,8 @@ void ap_free_sta(struct asd_data *wasd, struct sta_info *sta, unsigned int state
 	circle_cancel_timeout(ap_sta_eap_auth_timer,wasd,sta);
 	circle_cancel_timeout(wapi_radius_auth_send, wasd, sta);	//
 	circle_cancel_timeout(ap_sta_idle_timeout,wasd,sta);
+	if(sta->sta_check_flag == 1)
+			circle_cancel_timeout(asd_sta_check,wasd,sta);
 	if((is_secondary == 0)&&(is_notice == 1))
 		bak_del_sta(wasd,sta);
 
@@ -2583,6 +2587,16 @@ struct sta_info * ap_sta_add(struct asd_data *wasd, const u8 *addr, int both)
 			asd_get_ip_v2(sta);
 		if(asd_sta_idle_time_switch)
 			circle_register_timeout(asd_sta_idle_time*3600,0,ap_sta_idle_timeout,wasd,sta);
+		/*****xk add for asd sta check*****/
+		if(asd_sta_check_time_switch){
+			if((ASD_WTP_AP[wasd->Radio_G_ID/L_RADIO_NUM]!=NULL) && (ASD_WTP_AP[wasd->Radio_G_ID/L_RADIO_NUM]->wtp_flow_switch == 1)){
+		        if(sta->sta_check_flag == 0){
+                    circle_register_timeout(asd_sta_check_time*60,0,asd_sta_check,wasd,sta);
+					sta->sta_check_flag = 1;
+		        }
+			}
+        }
+		/*********************************/
 		if(is_secondary == 1)
 			wasd->authorized_sta_num++;
 	/*	if(ASD_NOTICE_STA_INFO_TO_PORTAL)
@@ -2812,6 +2826,8 @@ void ap_free_sta_for_pmk(struct asd_data *wasd, struct sta_info *sta)
 		circle_cancel_timeout(ap_handle_session_timer, wasd, sta);
 		circle_cancel_timeout(ap_sta_idle_timeout,wasd,sta);
 		circle_cancel_timeout(ap_sta_eap_auth_timer,wasd,sta);
+		if(sta->sta_check_flag == 1)
+			circle_cancel_timeout(asd_sta_check,wasd,sta);
 		if(ASD_BSS[wasd->BSSIndex])
 			ASD_BSS[wasd->BSSIndex]->bss_accessed_sta_num--;
 		if(ASD_WLAN[wasd->WlanID])
@@ -3718,88 +3734,127 @@ void asd_sta_roaming_management(struct sta_info *new_sta)
 	    ap_free_sta(owasd,old_sta,0);		
 	}
 }
-void asd_sta_delete(void *circle_ctx,void *timeout_ctx) //xk add for asd sta check
+/*****xk add for asd sta check*****/
+void asd_sta_check(void *circle_ctx,void *timeout_ctx)
 {
-	asd_printf(ASD_DEFAULT,MSG_DEBUG,"now in %s\n",__func__);
-    int i = 0;
-	unsigned int num = 0;
+	asd_printf(ASD_DEFAULT,MSG_DEBUG,"now in func :%s\n",__func__);
+	struct asd_data *wasd = circle_ctx;
+	struct sta_info *sta = timeout_ctx;
 	unsigned int BssIndex = 0;
 	unsigned char SID = 0;
-	unsigned wtpid = 0;
 	u8 mac[MAC_LEN];
+	if((wasd == NULL)||(sta == NULL)){
+		asd_printf(ASD_DEFAULT,MSG_ERROR,"wasd or sta is NULL in func:%s\n",__func__);
+		return;
+	}
+	if(asd_sta_check_time_switch == 0) {
+        sta->sta_check_flag = 0;
+		return;
+	}
+	pthread_mutex_lock(&(asd_g_sta_mutex));
+	if((sta->txbytes - sta->pre_txbytes) < 102400 && (sta->rxbytes - sta->pre_rxpackets) < 102400){
+		sta->sta_check_flag = 0;
+	    memset(mac,0,MAC_LEN);
+	    BssIndex = wasd->BSSIndex;
+	    memcpy(mac,sta->addr,MAC_LEN);
+	    asd_printf(ASD_DEFAULT,MSG_DEBUG,"BssIndex = %d\n",BssIndex);
+	    asd_printf(ASD_DEFAULT,MSG_DEBUG, "Removing station " MACSTR"  because of asd sta check!",MAC2STR(sta->addr));
+	    if (sta->flags & WLAN_STA_AUTH) {
+		    mlme_deauthenticate_indication(
+			    wasd, sta, WLAN_REASON_UNSPECIFIED);
+	    }
+	    SID = wasd->SecurityID;
+	    if((ASD_SECURITY[SID])&&((ASD_SECURITY[SID]->securityType == WPA_E)||(ASD_SECURITY[SID]->securityType == WPA2_E)||(ASD_SECURITY[SID]->securityType == WPA_P)||(ASD_SECURITY[SID]->securityType == WPA2_P)||(ASD_SECURITY[SID]->securityType == IEEE8021X)||(ASD_SECURITY[SID]->securityType == MD5)||(ASD_SECURITY[SID]->extensible_auth == 1))){
+		    if(ASD_SECURITY[SID]->securityType == WPA2_E){
+			    struct PMK_STAINFO *pmk_sta = NULL;
+			    pmk_sta = pmk_ap_get_sta(ASD_WLAN[wasd->WlanID],sta->addr);
+			    if(pmk_sta)
+				    pmk_ap_free_sta(ASD_WLAN[wasd->WlanID],pmk_sta);
+		    }
+		    wpa_auth_sm_event(sta->wpa_sm, WPA_DEAUTH);
+		    mlme_deauthenticate_indication(
+		    wasd, sta, 0);
+		    ieee802_1x_notify_port_enabled(sta->eapol_sm, 0);
+	    }
+	    ieee802_11_send_deauth(wasd, sta->addr, 3);
+	    if(ASD_NOTICE_STA_INFO_TO_PORTAL){
+		    AsdStaInfoToEAG(wasd,sta,WID_DEL);
+	    }
+	    if(ASD_WLAN[wasd->WlanID]!=NULL&&ASD_WLAN[wasd->WlanID]->balance_switch == 1&&ASD_WLAN[wasd->WlanID]->balance_method==1){
+		    ap_free_sta(wasd, sta,1);
+	    }
+	    else{
+		    ap_free_sta(wasd, sta,0);
+	    }
+	    AsdStaInfoToWID(wasd,mac,WID_DEL);
+	}
+	else{
+		sta->pre_txbytes = sta->txbytes;
+		sta->pre_rxbytes = sta->rxbytes;
+        circle_register_timeout(asd_sta_check_time*60,0,asd_sta_check,wasd,sta);
+	}
+    pthread_mutex_unlock(&(asd_g_sta_mutex));
+	return;
+}
+void asd_sta_check_all(void)
+{
+    asd_printf(ASD_DEFAULT,MSG_DEBUG,"now in %s\n",__func__);
+    int i;
+	int wtpid;
+	unsigned int num = 0;
 	struct sta_info *sta;
-	struct sta_info *pre_sta;
 	struct asd_data **bss;
-	
+	if(asd_sta_check_time_switch == 0) 
+		return;
 	bss = os_zalloc(BSS_NUM*sizeof(struct asd_data *));
 	if( bss == NULL){
 		asd_printf(ASD_DEFAULT,MSG_DEBUG,"%s :malloc fail.\n",__func__);
 		exit(1);
-	}	
-	
+	}	 
 	pthread_mutex_lock(&asd_g_sta_mutex);   
 	num = ASD_SEARCH_ALL_STA(bss);
-	asd_printf(ASD_DEFAULT,MSG_DEBUG,"ASD_SEARCH_ALL_STA finish\n");
-	if(asd_sta_check_time_switch ==1){
-	    for(i = 0;i < num;i++){
-            wtpid = ((bss[i]->BSSIndex)/L_BSS_NUM)/L_RADIO_NUM;
-            asd_printf(ASD_DEFAULT,MSG_DEBUG, "wtp_flow_switch = %d\n", ASD_WTP_AP[wtpid]->wtp_flow_switch);
-	        if(ASD_WTP_AP[wtpid]->wtp_flow_switch == 0) continue;
-			sta = bss[i]->sta_list;
-			while(sta){
-				asd_printf(ASD_DEFAULT,MSG_DEBUG,"sta->txbytes = %llu\n",sta->txbytes);
-				asd_printf(ASD_DEFAULT,MSG_DEBUG,"sta->pre_txbytes= %llu\n",sta->pre_txbytes);
-				asd_printf(ASD_DEFAULT,MSG_DEBUG,"sta->rxbytes = %llu\n",sta->rxbytes);
-				asd_printf(ASD_DEFAULT,MSG_DEBUG,"sta->pre_rxbytes= %llu\n",sta->pre_rxbytes);
-                if((sta->txbytes - sta->pre_txbytes) < 102400 && (sta->rxbytes - sta->pre_rxbytes) < 102400){
-					pre_sta = sta;
-					sta = sta->next;
-					BssIndex = bss[i]->BSSIndex;
-	                memcpy(mac,pre_sta->addr,MAC_LEN);
-	                asd_printf(ASD_DEFAULT,MSG_DEBUG,"BssIndex = %d\n",BssIndex);
-	                asd_printf(ASD_DEFAULT,MSG_DEBUG, "Removing station " MACSTR"  because of asd sta check !", MAC2STR(pre_sta->addr));
-					if (pre_sta->flags & WLAN_STA_AUTH) {
-		                mlme_deauthenticate_indication(bss[i], pre_sta, WLAN_REASON_UNSPECIFIED);
-	                }
-					SID = bss[i]->SecurityID;
-					if((ASD_SECURITY[SID])&&((ASD_SECURITY[SID]->securityType == WPA_E)||(ASD_SECURITY[SID]->securityType == WPA2_E)||(ASD_SECURITY[SID]->securityType == WPA_P)||(ASD_SECURITY[SID]->securityType == WPA2_P)||(ASD_SECURITY[SID]->securityType == IEEE8021X)||(ASD_SECURITY[SID]->securityType == MD5)||(ASD_SECURITY[SID]->extensible_auth == 1))){
-		                if(ASD_SECURITY[SID]->securityType == WPA2_E){
-			                struct PMK_STAINFO *pmk_sta = NULL;
-			                pmk_sta = pmk_ap_get_sta(ASD_WLAN[bss[i]->WlanID],pre_sta->addr);
-			                if(pmk_sta)
-				                pmk_ap_free_sta(ASD_WLAN[bss[i]->WlanID],pmk_sta);
-		                }
-		                wpa_auth_sm_event(pre_sta->wpa_sm, WPA_DEAUTH);
-		                mlme_deauthenticate_indication(bss[i], pre_sta, 0);
-		                ieee802_1x_notify_port_enabled(pre_sta->eapol_sm, 0);
-	                }
-	
-	                if(ASD_NOTICE_STA_INFO_TO_PORTAL){
-		                sta->initiative_leave = 0;
-		                AsdStaInfoToEAG(bss[i],pre_sta,WID_DEL);
-	                }
-	                if(ASD_WLAN[bss[i]->WlanID]!=NULL&&ASD_WLAN[bss[i]->WlanID]->balance_switch == 1&&ASD_WLAN[bss[i]->WlanID]->balance_method==1){
-		                ap_free_sta(bss[i], pre_sta,1);
-	                }
-	                else{
-		                ap_free_sta(bss[i], pre_sta,0);
-	                }
-	                AsdStaInfoToWID(bss[i],mac,WID_DEL);
+	asd_printf(ASD_DEFAULT,MSG_DEBUG,"ASD_SEARCH_ALL_STA finish \n");
+    for(i=0;i<num;i++){
+		wtpid = ((bss[i]->BSSIndex)/L_BSS_NUM)/L_RADIO_NUM;
+		if((ASD_WTP_AP[wtpid]) != NULL && (ASD_WTP_AP[wtpid]->wtp_flow_switch == 1)){
+		    sta = bss[i]->sta_list;
+		    while(sta){
+				if(sta->sta_check_flag == 0){
+                    circle_register_timeout(asd_sta_check_time*60,0,asd_sta_check,bss[i],sta);
+					sta->sta_check_flag = 1;
 				}
-				else {  
-					    sta->pre_txbytes = sta->txbytes;
-						sta->pre_rxbytes = sta->rxbytes;
-				        sta = sta->next;
-				}
-			}      	
+			    sta = sta->next;
+		    }
 	    }
 	}
 	os_free(bss);
 	bss = NULL;
-	circle_register_timeout(60*asd_sta_check_time,0,asd_sta_delete,NULL,NULL);
-	asd_printf(ASD_DEFAULT,MSG_DEBUG,"asd_sta_check_time = %d min\n",asd_sta_check_time);
 	pthread_mutex_unlock(&asd_g_sta_mutex);
+	return;
+}
+void asd_sta_check_wtp(unsigned wtpid)
+{
+	asd_printf(ASD_DEFAULT,MSG_DEBUG,"now in %s\n",__func__);
+	int i;
+	unsigned int num = 0;
+	struct sta_info *sta;
+    struct asd_data *bss[L_BSS_NUM*L_RADIO_NUM];
+	if(asd_sta_check_time_switch == 0) 
+		return;
 	
+	pthread_mutex_lock(&asd_g_sta_mutex);
+	num = ASD_SEARCH_WTP_BSS(wtpid,bss);
+	for(i=0;i<num;i++){
+        sta = bss[i]->sta_list;
+		while(sta){
+			if(sta->sta_check_flag == 0){
+                circle_register_timeout(asd_sta_check_time*60,0,asd_sta_check,bss[i],sta);
+				sta->sta_check_flag = 1;
+			}
+		    sta = sta->next;
+		}
+	}
+    pthread_mutex_unlock(&asd_g_sta_mutex);
 }
 
 

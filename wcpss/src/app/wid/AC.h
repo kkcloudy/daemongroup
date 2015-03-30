@@ -19,6 +19,7 @@ void CWResetWTPProtocolManager(CWWTPProtocolManager *WTPProtocolManager);
 int WIDBAKBSSInfoToASD(unsigned int vrrid,unsigned int *bssindex,unsigned int count,Operate op);
 int file_check(char *dir);
 extern unixAddr toASD_STA;
+int wid_notice_asd_switch(unsigned int wtpid,unsigned int policy);
 
 #define WID_CHECK_WTP_STANDARD_RET(_wtpid_, ret)	\
 	do {	\

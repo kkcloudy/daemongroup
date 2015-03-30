@@ -1002,12 +1002,14 @@ void eap_sm_process_nak(struct eap_sm *sm, const u8 *nak_list, size_t len)
 
 	not_found:
 		/* not found - remove from the list */
-		os_memmove(&sm->user->methods[i], &sm->user->methods[i + 1],
-			   (EAP_MAX_METHODS - i - 1) *
-			   sizeof(sm->user->methods[0]));
-		sm->user->methods[EAP_MAX_METHODS - 1].vendor =
-			EAP_VENDOR_IETF;
-		sm->user->methods[EAP_MAX_METHODS - 1].method = EAP_TYPE_NONE;
+		if(i < (EAP_MAX_METHODS-1)){                             //xk debug: out of bound
+		    os_memmove(&sm->user->methods[i], &sm->user->methods[i + 1],
+			    (EAP_MAX_METHODS - i - 1) *
+			    sizeof(sm->user->methods[0]));
+		    sm->user->methods[EAP_MAX_METHODS - 1].vendor =
+			    EAP_VENDOR_IETF;
+		    sm->user->methods[EAP_MAX_METHODS - 1].method = EAP_TYPE_NONE;
+		}
 	}
 
 	wpa_hexdump(MSG_MSGDUMP, "EAP: new list of configured methods",

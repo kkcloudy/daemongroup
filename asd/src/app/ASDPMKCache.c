@@ -440,7 +440,7 @@ struct rsn_pmksa_cache_entry * pmksa_cache_get(struct rsn_pmksa_cache *pmksa,
 {
 	struct rsn_pmksa_cache_entry *entry;
 
-    if(pmksa == NULL);
+    if(pmksa == NULL)    //xk debug
 	    return NULL;
 	if (pmkid)
 		entry = pmksa->pmkid[PMKID_HASH(pmkid)];

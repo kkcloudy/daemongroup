@@ -266,7 +266,8 @@ static struct radius_msg * accounting_msg(struct asd_data *wasd,
 			memcpy(wtp_name, ASD_WTP_AP[wtpid]->WTPNAME, strlen(ASD_WTP_AP[wtpid]->WTPNAME));
     		asd_printf(ASD_1X,MSG_DEBUG,"accounting_msg(): wtp_name: %s,  len: %d\n",wtp_name, strlen(ASD_WTP_AP[wtpid]->WTPNAME));			
     		os_snprintf(buf, sizeof(buf), "%s:%s", wtp_name, wasd->conf->ssid.ssid);
-        	asd_printf(ASD_1X,MSG_DEBUG,"Called-Station-Id: %s \n",buf);				
+        	asd_printf(ASD_1X,MSG_DEBUG,"Called-Station-Id: %s \n",buf);
+			os_free(wtp_name);   //xk debug:resource leak
 		}
     	else
     	{

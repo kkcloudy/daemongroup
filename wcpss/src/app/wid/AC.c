@@ -3353,5 +3353,26 @@ int wid_del_wtp(struct wtp_con_info * con_info){
 	allif.list_len --;
 	return 0;
 }
+/*****xk add for asd sta check*****/
+int wid_notice_asd_switch(unsigned int wtpid,unsigned int policy)   
+{
 
+    TableMsg wASD;
+	int len;
+	wASD.Type = WTP_TYPE;
+	wASD.Op = STA_CHECK;
+	wASD.u.WTP.wtp_flow_switch = policy;
+    wASD.u.WTP.WtpID= wtpid;
+				
+	len = sizeof(wASD);
+	int sock_index = wtpid%SOCK_NUM;
+	int sock = sockPerThread[sock_index];
+	if(sendto(sock, &wASD, len, 0, (struct sockaddr *) &toASD.addr, toASD.addrlen) < 0){
+        wid_syslog_info("%s sendto %s",__func__,strerror(errno));
+		perror("send(wASDSocket)");
+		return -1;
+	 }
+	wid_syslog_debug_debug(WID_DEFAULT,"wid_notice_asd_switch.\n");
+	return 0;
+}
 

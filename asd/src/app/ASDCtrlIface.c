@@ -259,8 +259,9 @@ static void asd_ctrl_iface_receive(int sock, void *circle_ctx,
 
 	reply = os_zalloc(reply_size);
 	if (reply == NULL) {
-		sendto(sock, "FAIL\n", 5, 0, (struct sockaddr *) &from,
-		       fromlen);
+		if(sendto(sock, "FAIL\n", 5, 0, (struct sockaddr *) &from,fromlen) < 0){
+            asd_printf(ASD_DEFAULT,MSG_DEBUG,"func: %s, sendto:%s\n", __func__, strerror(errno)); 
+		}
 		return;
 	}
 

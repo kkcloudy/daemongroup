@@ -211,14 +211,15 @@ static void wpa_sta_disconnect(struct wpa_authenticator *wpa_auth,
 			       const u8 *addr)
 {
 	struct asd_data *wasd = NULL;
-	if (wpa_auth->cb.disconnect == NULL)
+	if (wpa_auth->cb.disconnect == NULL || addr == NULL)
 		return;
 	wpa_auth->cb.disconnect(wpa_auth->cb.ctx, addr,
 				WLAN_REASON_PREV_AUTH_NOT_VALID);
 	
-	if(wpa_auth->cb.ctx != NULL)
+	if(wpa_auth->cb.ctx != NULL) { //xk debug:dereferenced null point
 		wasd = wpa_auth->cb.ctx;
 		signal_sta_verify_failed(addr,wasd->BSSIndex); //ht add 090216
+	}
 }
 
 
@@ -475,6 +476,9 @@ wpa_auth_sta_init(struct wpa_authenticator *wpa_auth, const u8 *addr)
 {
 	struct wpa_state_machine *sm;
 	struct asd_data *wasd = NULL;
+	
+	if (wpa_auth == NULL || addr == NULL)
+		return NULL;
 
 	sm = os_zalloc(sizeof(struct wpa_state_machine));
 	if (sm == NULL)
@@ -484,9 +488,10 @@ wpa_auth_sta_init(struct wpa_authenticator *wpa_auth, const u8 *addr)
 	sm->wpa_auth = wpa_auth;
 	sm->group = wpa_auth->group;
 	
-	if(sm->wpa_auth->cb.ctx != NULL)
+	if(sm->wpa_auth->cb.ctx != NULL) { //xk debug:dereferenced null point
 		wasd = sm->wpa_auth->cb.ctx;
-	signal_sta_verify(addr,wasd->BSSIndex);	//ht add 090218
+		signal_sta_verify(addr,wasd->BSSIndex);	//ht add 090218
+	}
 	return sm;
 }
 

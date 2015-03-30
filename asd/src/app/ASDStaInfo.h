@@ -102,8 +102,11 @@ void asd_sta_hash_add(struct sta_info *sta);
 int AsdStaInfoToEAG(struct asd_data *wasd, struct sta_info *sta, Operate op);
 int asd_notify_to_protal(uint32_t userip, uint8_t *usermac); /* yjl add for mac_auth in tl */
 void asd_sta_roaming_management(struct sta_info *new_sta);
-void asd_sta_delete(void *circle_ctx,void *timeout_ctx);//xk add fro asd sta check
-
+/*****xk add for asd sta check*****/
+void asd_sta_check(void *circle_ctx,void *timeout_ctx);
+void asd_sta_check_all(void);
+void asd_sta_check_wtp(unsigned wtpid);
+/**********************************/
 #ifdef __ASD_STA_ACL
 /* caojia add for sta acl function */
 int AsdStaInfo2Wifi(struct asd_data *wasd, struct sta_info *sta, Operate op);
