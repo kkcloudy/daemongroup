@@ -550,7 +550,8 @@ typedef enum{
 	STA_WTP_TERMINAL_STATISTICS = 49,
 	STA_PORTAL_AUTH = 50,    /* yjl 2014-2-28 */
 	STA_PORTAL_DEAUTH = 51,  /* yjl 2014-2-28 */
-	DHCP_IPv6 = 52
+	DHCP_IPv6 = 52,
+	STA_CHECK = 53
 }Operate;
 
 typedef enum{
